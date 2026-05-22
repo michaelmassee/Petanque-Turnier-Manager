@@ -1,7 +1,7 @@
 /*
  * Erstellung 2026 / Michael Massee
  */
-package de.petanqueturniermanager.helper.rangliste;
+package de.petanqueturniermanager.helper.sheetsync;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -17,6 +17,7 @@ import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.rangliste.SignaturQuellen;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
@@ -24,10 +25,10 @@ import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrund
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerTurnierTestDaten;
 
 /**
- * End-to-End-UI-Test des Skip-Pfads für den Rangliste-Refresh.
+ * End-to-End-UI-Test des Skip-Pfads für den Sheet-Sync.
  * <p>
  * Verifiziert anhand eines vollständig generierten Schweizer-Turniers, dass die
- * {@link RanglisteEingabeSignatur} die zentrale Anforderung erfüllt: <i>Rebuild nur
+ * {@link EingabeSignatur} die zentrale Anforderung erfüllt: <i>Rebuild nur
  * wenn sich relevante Eingaben tatsächlich geändert haben.</i>
  * <p>
  * Geprüfte Eigenschaften:
@@ -47,7 +48,7 @@ import de.petanqueturniermanager.schweizer.spielrunde.SchweizerTurnierTestDaten;
  * </ol>
  */
 @Tag("beispielturnier")
-class RanglisteSignaturSkipPfadUITest extends BaseCalcUITest {
+class SheetSyncSignaturSkipPfadUITest extends BaseCalcUITest {
 
     /** Hilfsspalte rechts vom Schweizer-Datenbereich (ERG_TEAM_B = 4, FEHLER = 5). */
     private static final int HILFSSPALTE_AUSSERHALB_WHITELIST = 12;
@@ -59,7 +60,7 @@ class RanglisteSignaturSkipPfadUITest extends BaseCalcUITest {
         new SchweizerTurnierTestDaten(wkingSpreadsheet).generate();
         XSpreadsheetDocument xDoc = wkingSpreadsheet.getWorkingSpreadsheetDocument();
 
-        RanglisteEingabeSignatur engine = new RanglisteEingabeSignatur(SignaturQuellen::fuerSchweizer);
+        EingabeSignatur engine = new EingabeSignatur(SignaturQuellen::fuerSchweizer);
 
         String hash1 = berechneOk(engine, xDoc);
         String hash2 = berechneOk(engine, xDoc);
@@ -75,7 +76,7 @@ class RanglisteSignaturSkipPfadUITest extends BaseCalcUITest {
         new SchweizerTurnierTestDaten(wkingSpreadsheet).generate();
         XSpreadsheetDocument xDoc = wkingSpreadsheet.getWorkingSpreadsheetDocument();
 
-        RanglisteEingabeSignatur engine = new RanglisteEingabeSignatur(SignaturQuellen::fuerSchweizer);
+        EingabeSignatur engine = new EingabeSignatur(SignaturQuellen::fuerSchweizer);
         String hashVorher = berechneOk(engine, xDoc);
 
         XSpreadsheet runde1 = SheetMetadataHelper.findeSheetUndHeile(xDoc,
@@ -102,7 +103,7 @@ class RanglisteSignaturSkipPfadUITest extends BaseCalcUITest {
         new SchweizerTurnierTestDaten(wkingSpreadsheet).generate();
         XSpreadsheetDocument xDoc = wkingSpreadsheet.getWorkingSpreadsheetDocument();
 
-        RanglisteEingabeSignatur engine = new RanglisteEingabeSignatur(SignaturQuellen::fuerSchweizer);
+        EingabeSignatur engine = new EingabeSignatur(SignaturQuellen::fuerSchweizer);
         String hashVorher = berechneOk(engine, xDoc);
 
         XSpreadsheet runde1 = SheetMetadataHelper.findeSheetUndHeile(xDoc,
@@ -128,37 +129,37 @@ class RanglisteSignaturSkipPfadUITest extends BaseCalcUITest {
         new SchweizerTurnierTestDaten(wkingSpreadsheet).generate();
         XSpreadsheetDocument xDoc = wkingSpreadsheet.getWorkingSpreadsheetDocument();
 
-        RanglisteEingabeSignatur engine = new RanglisteEingabeSignatur(SignaturQuellen::fuerSchweizer);
+        EingabeSignatur engine = new EingabeSignatur(SignaturQuellen::fuerSchweizer);
 
-        assertThat(RanglisteSignaturStore.ladeHash(xDoc, SCHLUESSEL_SCHWEIZER))
+        assertThat(SheetSyncSignaturStore.ladeHash(xDoc, SCHLUESSEL_SCHWEIZER))
                 .as("Anfangs darf kein Hash gespeichert sein")
                 .isEmpty();
-        assertThat(RanglisteSignaturStore.verifyVeraltet(xDoc, SCHLUESSEL_SCHWEIZER,
+        assertThat(SheetSyncSignaturStore.verifyVeraltet(xDoc, SCHLUESSEL_SCHWEIZER,
                 Duration.ofMinutes(10)))
                 .as("Ohne gespeicherten Verify-Zeitstempel muss verifyVeraltet=true gelten")
                 .isTrue();
 
         String hash = berechneOk(engine, xDoc);
-        RanglisteSignaturStore.speichereNachRebuild(xDoc, SCHLUESSEL_SCHWEIZER, hash, "test-rebuild");
+        SheetSyncSignaturStore.speichereNachRebuild(xDoc, SCHLUESSEL_SCHWEIZER, hash, "test-rebuild");
 
-        assertThat(RanglisteSignaturStore.ladeHash(xDoc, SCHLUESSEL_SCHWEIZER))
+        assertThat(SheetSyncSignaturStore.ladeHash(xDoc, SCHLUESSEL_SCHWEIZER))
                 .as("Gespeicherter Hash muss dem berechneten entsprechen")
                 .hasValue(hash);
-        assertThat(RanglisteSignaturStore.verifyVeraltet(xDoc, SCHLUESSEL_SCHWEIZER,
+        assertThat(SheetSyncSignaturStore.verifyVeraltet(xDoc, SCHLUESSEL_SCHWEIZER,
                 Duration.ofMinutes(10)))
                 .as("Direkt nach Speichern darf der Verify-Zeitstempel nicht veraltet sein")
                 .isFalse();
 
         // Reine Verify-Aktualisierung darf den Hash unverändert lassen
-        RanglisteSignaturStore.aktualisiereVerifyZeit(xDoc, SCHLUESSEL_SCHWEIZER);
-        assertThat(RanglisteSignaturStore.ladeHash(xDoc, SCHLUESSEL_SCHWEIZER))
+        SheetSyncSignaturStore.aktualisiereVerifyZeit(xDoc, SCHLUESSEL_SCHWEIZER);
+        assertThat(SheetSyncSignaturStore.ladeHash(xDoc, SCHLUESSEL_SCHWEIZER))
                 .as("aktualisiereVerifyZeit DARF den Hash nicht überschreiben")
                 .hasValue(hash);
     }
 
     // -------------------------------------------------------------------------
 
-    private static String berechneOk(RanglisteEingabeSignatur engine, XSpreadsheetDocument xDoc) {
+    private static String berechneOk(EingabeSignatur engine, XSpreadsheetDocument xDoc) {
         SignaturErgebnis ergebnis = engine.berechne(xDoc, 1);
         assertThat(ergebnis)
                 .as("Engine muss Ok liefern (Schweizer-Turnier ist vollständig generiert)")
@@ -197,7 +198,7 @@ class RanglisteSignaturSkipPfadUITest extends BaseCalcUITest {
     void kioskModus_hashBerechnungIstDeterministisch() throws GenerateException {
         new SchweizerTurnierTestDaten(wkingSpreadsheet).generate();
         XSpreadsheetDocument xDoc = wkingSpreadsheet.getWorkingSpreadsheetDocument();
-        RanglisteEingabeSignatur engine = new RanglisteEingabeSignatur(SignaturQuellen::fuerSchweizer);
+        EingabeSignatur engine = new EingabeSignatur(SignaturQuellen::fuerSchweizer);
         String hashVorher = berechneOk(engine, xDoc);
 
         final String[] hashUnterKiosk = new String[1];

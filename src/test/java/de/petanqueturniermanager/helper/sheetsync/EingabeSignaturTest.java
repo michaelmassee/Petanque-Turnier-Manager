@@ -1,4 +1,4 @@
-package de.petanqueturniermanager.helper.rangliste;
+package de.petanqueturniermanager.helper.sheetsync;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -8,43 +8,43 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 /**
- * Unit-Tests für die UNO-freie Logik der Rangliste-Signatur:
+ * Unit-Tests für die UNO-freie Logik der Sheet-Sync-Signatur:
  * kanonische Wert-Normalisierung und Quellen-Validierung.
  */
-public class RanglisteEingabeSignaturTest {
+public class EingabeSignaturTest {
 
     @Test
     public void normalisiere_null_liefertNull() {
-        assertThat(RanglisteEingabeSignatur.normalisiereWert(null)).isNull();
+        assertThat(EingabeSignatur.normalisiereWert(null)).isNull();
     }
 
     @Test
     public void normalisiere_leererString_liefertNull() {
-        assertThat(RanglisteEingabeSignatur.normalisiereWert("")).isNull();
-        assertThat(RanglisteEingabeSignatur.normalisiereWert("   ")).isNull();
+        assertThat(EingabeSignatur.normalisiereWert("")).isNull();
+        assertThat(EingabeSignatur.normalisiereWert("   ")).isNull();
     }
 
     @Test
     public void normalisiere_stringMitWhitespace_wirdGetrimmt() {
-        assertThat(RanglisteEingabeSignatur.normalisiereWert("  Foo  ")).isEqualTo("Foo");
+        assertThat(EingabeSignatur.normalisiereWert("  Foo  ")).isEqualTo("Foo");
     }
 
     @Test
     public void normalisiere_ganzzahligesDouble_wirdAlsLongFormatiert() {
-        assertThat(RanglisteEingabeSignatur.normalisiereWert(13.0d)).isEqualTo("13");
-        assertThat(RanglisteEingabeSignatur.normalisiereWert(0.0d)).isEqualTo("0");
-        assertThat(RanglisteEingabeSignatur.normalisiereWert(-7.0d)).isEqualTo("-7");
+        assertThat(EingabeSignatur.normalisiereWert(13.0d)).isEqualTo("13");
+        assertThat(EingabeSignatur.normalisiereWert(0.0d)).isEqualTo("0");
+        assertThat(EingabeSignatur.normalisiereWert(-7.0d)).isEqualTo("-7");
     }
 
     @Test
     public void normalisiere_echteFliesskommazahl_wirdAlsDoubleFormatiert() {
-        assertThat(RanglisteEingabeSignatur.normalisiereWert(3.14d)).isEqualTo("3.14");
+        assertThat(EingabeSignatur.normalisiereWert(3.14d)).isEqualTo("3.14");
     }
 
     @Test
     public void normalisiere_integerObjekt_bleibtIntegerString() {
-        assertThat(RanglisteEingabeSignatur.normalisiereWert(Integer.valueOf(42))).isEqualTo("42");
-        assertThat(RanglisteEingabeSignatur.normalisiereWert(Integer.valueOf(0))).isEqualTo("0");
+        assertThat(EingabeSignatur.normalisiereWert(Integer.valueOf(42))).isEqualTo("42");
+        assertThat(EingabeSignatur.normalisiereWert(Integer.valueOf(0))).isEqualTo("0");
     }
 
     @Test

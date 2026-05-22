@@ -1,4 +1,4 @@
-package de.petanqueturniermanager.helper.rangliste;
+package de.petanqueturniermanager.helper.sheetsync;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -27,7 +27,8 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 
 /**
  * Berechnet eine kanonische SHA-256-Signatur über die semantisch relevanten
- * Eingangsdaten einer Rangliste (Meldeliste + Spielrunden + ggf. Vorrangliste).
+ * Eingangsdaten eines synchronisierbaren Sheets (Meldeliste, Spielrunden, Vorranglisten,
+ * Teilnehmerlisten, …).
  * <p>
  * Identisches Sheet-Set + identische Whitelist-Inhalte → identischer Hash. Änderungen
  * an Hilfsspalten, Formatierung, Formeln außerhalb der Whitelist beeinflussen den Hash
@@ -40,9 +41,9 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
  * Sheet-Identität läuft ausschließlich über den
  * {@link SheetMetadataHelper Named-Range-Schlüssel} – nie über Sheet-Index oder -Name.
  */
-public final class RanglisteEingabeSignatur {
+public final class EingabeSignatur {
 
-    private static final Logger logger = LogManager.getLogger(RanglisteEingabeSignatur.class);
+    private static final Logger logger = LogManager.getLogger(EingabeSignatur.class);
 
     private final Function<XSpreadsheetDocument, List<SignaturQuelle>> quellenLieferant;
 
@@ -51,7 +52,7 @@ public final class RanglisteEingabeSignatur {
      *                         {@link #berechne} aufgerufen, damit dynamische Quellen
      *                         (z.B. variable Spielrunden-Anzahl) berücksichtigt werden.
      */
-    public RanglisteEingabeSignatur(
+    public EingabeSignatur(
             Function<XSpreadsheetDocument, List<SignaturQuelle>> quellenLieferant) {
         this.quellenLieferant = checkNotNull(quellenLieferant);
     }

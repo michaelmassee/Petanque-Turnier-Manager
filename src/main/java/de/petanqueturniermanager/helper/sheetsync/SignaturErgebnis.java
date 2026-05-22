@@ -1,7 +1,7 @@
-package de.petanqueturniermanager.helper.rangliste;
+package de.petanqueturniermanager.helper.sheetsync;
 
 /**
- * Ergebnis-Typ von {@link RanglisteEingabeSignatur#berechne}.
+ * Ergebnis-Typ von {@link EingabeSignatur#berechne}.
  * <p>
  * Differenziert vier Fälle, damit der Listener entsprechend handeln kann:
  * <ul>

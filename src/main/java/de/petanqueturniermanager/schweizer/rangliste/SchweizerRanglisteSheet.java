@@ -27,8 +27,8 @@ import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.rangliste.IRangliste;
 import de.petanqueturniermanager.helper.rangliste.RangListeSorter;
 import de.petanqueturniermanager.helper.rangliste.RangListeSpalte;
-import de.petanqueturniermanager.helper.rangliste.RanglisteEingabeSignatur;
-import de.petanqueturniermanager.helper.rangliste.RanglisteSignaturStore;
+import de.petanqueturniermanager.helper.sheetsync.EingabeSignatur;
+import de.petanqueturniermanager.helper.sheetsync.SheetSyncSignaturStore;
 import de.petanqueturniermanager.helper.rangliste.SignaturQuellen;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.search.RangeSearchHelper;
@@ -139,10 +139,10 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 	/**
 	 * Signatur-Engine für den Hash-Commit nach Vollaufbau (überschreibbar für Subklassen).
 	 * Muss die identischen Quellen liefern wie der zugehörige
-	 * {@link de.petanqueturniermanager.helper.rangliste.RanglisteRefreshListener}.
+	 * {@link de.petanqueturniermanager.helper.sheetsync.SheetSyncListener}.
 	 */
-	protected RanglisteEingabeSignatur getRanglisteEingabeSignatur() {
-		return new RanglisteEingabeSignatur(SignaturQuellen::fuerSchweizer);
+	protected EingabeSignatur getEingabeSignatur() {
+		return new EingabeSignatur(SignaturQuellen::fuerSchweizer);
 	}
 
 	/**
@@ -243,10 +243,10 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 			getSheetHelper().setActiveSheet(sheet);
 			SheetRunner.unterdrückeNaechstesSelectionChange();
 		}
-		RanglisteSignaturStore.commitVollaufbau(
+		SheetSyncSignaturStore.commitVollaufbau(
 				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
 				getMetadatenSchluessel(),
-				getRanglisteEingabeSignatur());
+				getEingabeSignatur());
 		logger.debug("doRunIntern ENDE – Thread='{}'", Thread.currentThread().getName());
 	}
 

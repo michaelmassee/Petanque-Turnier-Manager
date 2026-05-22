@@ -23,7 +23,6 @@ import com.sun.star.uno.XComponentContext;
 import de.petanqueturniermanager.comp.newrelease.ReleaseUpdateService;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
-import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.konfigdialog.AbstractUnoDialog;
 
 /**
@@ -105,7 +104,8 @@ public class GlobalPropertiesDialog extends AbstractUnoDialog {
 
         // --- Log-Level ---
         fuegeFixedTextEin(xMSF, cont, "lblLogLevel", "Log-Level:", 5, 97, 60, 10);
-        fuegeComboBoxEin(xMSF, cont, CTL_CMB_LOGLEVEL, new String[]{ "", "info", "debug" },
+        fuegeComboBoxEin(xMSF, cont, CTL_CMB_LOGLEVEL,
+                new String[]{ "", "error", "warn", "info", "debug", "trace" },
                 70, 95, 120, 12, gp.getLogLevel().toLowerCase());
 
         // --- Buttons ---
@@ -143,7 +143,10 @@ public class GlobalPropertiesDialog extends AbstractUnoDialog {
         } catch (IllegalStateException e) {
             // Service nie initialisiert – ok.
         }
-        ProcessBox.applyVordergrundEinstellung();
+        // ProcessBox bewusst NICHT anzeigen/togglen — der Konfig-Dialog soll
+        // weder beim Öffnen noch beim Schließen die ProcessBox einblenden.
+        // Die neue isProzessBoxAutomatischAnzeigen-Einstellung greift erst beim
+        // nächsten SheetRunner-Lauf.
         logger.info("Plugin-Konfiguration gespeichert");
     }
 

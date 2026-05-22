@@ -10,10 +10,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.sun.star.awt.XTopWindow;
-import com.sun.star.frame.XController;
-import com.sun.star.frame.XFrame;
-import com.sun.star.frame.XModel;
 import com.sun.star.lang.DisposedException;
 import com.sun.star.lang.EventObject;
 import com.sun.star.lang.XComponent;
@@ -285,16 +281,15 @@ public abstract class SheetRunner extends Thread {
 			}
 			unregisterDisposingListener();
 
-			// Fokus deterministisch auf das Arbeits-Dokument zurückgeben.
-			// ProcessBox (Singleton, parentless Top-Window) klaut beim run() den
-			// Fokus und gibt ihn nach setVisible(false) an das älteste sichtbare
-			// Calc-Fenster zurück (= doc1 statt des tatsächlich bearbeiteten doc).
-			// Folge ohne diesen Aufruf: alle Menü-StatusListener werten gegen den
-			// "falschen" aktiven Frame, die System-Toolbar-States in doc2 bleiben
-			// alt, User sieht doc1 im Vordergrund.
-			if (isDocumentAlive()) {
-				fokussiereArbeitsDokument();
-			}
+			// Hinweis: ehemals folgte hier ein fokussiereArbeitsDokument()-Aufruf,
+			// der via XFrame.activate() + XTopWindow.toFront() aus dem Worker-Thread
+			// den Fokus auf das Arbeits-Dokument zurückbringen sollte. Auf Wayland
+			// führt dieser UNO-Call auf Frame-/Top-Window-Objekte vom Nicht-Main-
+			// Thread reproduzierbar zu LO-Crashes (siehe Vorfall-Logs vom 22.05.2026).
+			// Stabilität wird höher gewichtet als die Fokus-Korrektur — die Folge
+			// (Fokus springt nach Sheet-Operationen auf das älteste sichtbare
+			// Calc-Fenster, nicht auf das bearbeitete Doc) ist als bekannte
+			// Einschränkung in README.md dokumentiert.
 
 			long gesamtMs = (System.nanoTime() - runStartNs) / 1_000_000L;
 			PerfLog.log(logger, "[WORKER-TIMING] SheetRunner.run ENDE class={} dauer={} ms fehler={}",
@@ -313,34 +308,6 @@ public abstract class SheetRunner extends Thread {
 	}
 
 	/**
-	 * Aktiviert den Frame des {@link #workingSpreadsheet} via {@link XFrame#activate()}
-	 * und {@link XTopWindow#toFront()}. Wird am Ende eines jeden Runs aufgerufen, damit
-	 * der Fokus nach Sheet-Operationen am bearbeiteten Doc bleibt — siehe Bug-Repro
-	 * unter {@code tools/linux/fokus_neue_meldeliste.py}.
-	 */
-	private void fokussiereArbeitsDokument() {
-		try {
-			XModel xModel = Lo.qi(XModel.class, workingSpreadsheet.getWorkingSpreadsheetDocument());
-			if (xModel == null) return;
-			XController controller = xModel.getCurrentController();
-			if (controller == null) return;
-			XFrame frame = controller.getFrame();
-			if (frame == null) return;
-			logger.trace("[FOKUS-TRACE] SheetRunner.fokussiereArbeitsDokument: activate+toFront frame#{} class={}",
-					System.identityHashCode(frame), this.getClass().getSimpleName());
-			frame.activate();
-			XTopWindow top = Lo.qi(XTopWindow.class, frame.getContainerWindow());
-			if (top != null) {
-				top.toFront();
-			}
-		} catch (DisposedException e) {
-			logger.debug("fokussiereArbeitsDokument: Dokument disposed");
-		} catch (Exception e) {
-			logger.debug("fokussiereArbeitsDokument fehlgeschlagen", e);
-		}
-	}
-
-	/**
 	 * prüft ob ein Turnier vorhanden. Wenn nicht dann Fehlermeldung und Exception. Abbruch.
 	 * 
 	 * @return
@@ -354,6 +321,52 @@ public abstract class SheetRunner extends Thread {
 			MessageBox.from(workingSpreadsheet.getxContext(), MessageBoxTypeEnum.ERROR_OK)
 					.caption(I18n.get("msg.caption.kein.turnier.dok"))
 					.message(I18n.get("msg.text.kein.turnier")).show();
+			throw new GenerateException(VERARBEITUNG_ABGEBROCHEN);
+		}
+		return this;
+	}
+
+	/**
+	 * Prüft ob das Dokument NOCH KEIN Turnier hat. Wird vor „Neues Turnier"-/
+	 * Testdaten-Befehlen aufgerufen, damit User-Klicks in der nun dauerhaft
+	 * aktiven Toolbar (siehe LO-Bug tdf#172207-Workaround) keine bestehenden
+	 * Turnier-Daten überschreiben.
+	 *
+	 * @throws GenerateException wenn ein Turnier bereits vorhanden ist
+	 */
+	public SheetRunner testKeinTurnierVorhanden() throws GenerateException {
+		TurnierSystem turnierSystemAusDocument = new DocumentPropertiesHelper(workingSpreadsheet)
+				.getTurnierSystemAusDocument();
+		if (turnierSystemAusDocument != TurnierSystem.KEIN) {
+			MessageBox.from(workingSpreadsheet.getxContext(), MessageBoxTypeEnum.ERROR_OK)
+					.caption(I18n.get("msg.caption.turnier.bereits.vorhanden"))
+					.message(I18n.get("msg.text.turnier.bereits.vorhanden",
+							turnierSystemAusDocument.getBezeichnung()))
+					.show();
+			throw new GenerateException(VERARBEITUNG_ABGEBROCHEN);
+		}
+		return this;
+	}
+
+	/**
+	 * Prüft ob das Dokument das erwartete Turniersystem hat ODER noch keins
+	 * (= darf von „Neues Turnier"-Befehlen überschrieben werden ist Sache des
+	 * separaten {@link #testKeinTurnierVorhanden}). Schützt vor System-Mismatch
+	 * bei normalen Aktionen wie „Spielrunde", „Rangliste" usw.
+	 *
+	 * @param erwartet Erwartetes Turniersystem; muss != {@code KEIN} sein
+	 * @throws GenerateException wenn das Doc kein Turnier hat oder das falsche
+	 */
+	public SheetRunner testTurnierSystem(TurnierSystem erwartet) throws GenerateException {
+		TurnierSystem turnierSystemAusDocument = new DocumentPropertiesHelper(workingSpreadsheet)
+				.getTurnierSystemAusDocument();
+		if (turnierSystemAusDocument != erwartet) {
+			MessageBox.from(workingSpreadsheet.getxContext(), MessageBoxTypeEnum.ERROR_OK)
+					.caption(I18n.get("msg.caption.falsches.turniersystem"))
+					.message(I18n.get("msg.text.falsches.turniersystem",
+							erwartet.getBezeichnung(),
+							turnierSystemAusDocument.getBezeichnung()))
+					.show();
 			throw new GenerateException(VERARBEITUNG_ABGEBROCHEN);
 		}
 		return this;

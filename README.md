@@ -169,6 +169,24 @@ Damit LibreOffice die Erweiterung ausführen kann, muss die Java-Laufzeitumgebun
 
 ## ⚠️ Bekannte Einschränkungen
 
+### Fenster-Fokus springt nach „Neues Turnier" bei mehreren offenen Calc-Dokumenten
+
+Wenn du **mehrere Calc-Dokumente** offen hast und in einem davon ein neues
+Turnier anlegst, kann der Fenster-Fokus von LibreOffice anschließend auf das
+**älteste sichtbare Calc-Fenster** springen statt im gerade bearbeiteten
+Dokument zu bleiben. **Die Sheets selbst werden korrekt im richtigen
+Dokument angelegt** — nur der Fokus wandert.
+
+**Ursache:** LibreOffice 26.2 auf Wayland gibt den Fokus nach Schließen der
+ProcessBox (Singleton-Top-Window ohne Parent) deterministisch an das älteste
+Calc-Fenster. Eine frühere Extension-Lösung (`frame.activate() + toFront()`
+aus dem Worker-Thread) führte zu LO-Crashes — Stabilität wurde höher
+gewichtet als die Fokus-Korrektur.
+
+**Workaround:** nach der Aktion einmal manuell ins gewünschte Dokument klicken.
+
+---
+
 ### Toolbar-Buttons frieren ein nach „Neues Turnier"-Aktionen bei mehreren offenen Calc-Dokumenten
 
 Wenn du **mehr als ein Calc-Dokument** gleichzeitig offen hast und in einem

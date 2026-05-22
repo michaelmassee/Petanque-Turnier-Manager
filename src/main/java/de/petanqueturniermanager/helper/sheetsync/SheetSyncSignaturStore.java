@@ -1,4 +1,4 @@
-package de.petanqueturniermanager.helper.rangliste;
+package de.petanqueturniermanager.helper.sheetsync;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -14,12 +14,12 @@ import com.sun.star.sheet.XSpreadsheetDocument;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 
 /**
- * Persistenter Speicher für Rangliste-Eingangs-Signaturen.
+ * Persistenter Speicher für Sheet-Sync-Eingangs-Signaturen.
  * <p>
  * Werte werden als UserDefinedProperty des Spreadsheet-Dokuments abgelegt
  * (siehe {@link DocumentPropertiesHelper}) und überleben dadurch Reload und Speichern.
  * <p>
- * Property-Schema pro Rangliste-Schlüssel:
+ * Property-Schema pro Sync-Schlüssel:
  * <ul>
  *   <li>{@code ranking.<key>.last.rebuild.hash} – Hash der zuletzt verbauten Eingabe</li>
  *   <li>{@code ranking.<key>.last.rebuild.ts}   – ISO-8601 UTC Zeitstempel des letzten Rebuilds</li>
@@ -29,10 +29,15 @@ import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
  *   <li>{@code ranking.<key>.recovery.attempted} – true nach einmaligem Recovery-Rebuild
  *       (SheetFehlt(erwartet=true)); wird beim nächsten {@code Ok}-Pfad zurückgesetzt.</li>
  * </ul>
+ * <p>
+ * Der Property-Prefix {@code "ranking."} bleibt aus historischen Gründen erhalten
+ * (bestehende Tournament-Dokumente sollen ohne Phantom-Rebuild weiterlaufen). Der
+ * Mechanismus ist trotzdem für beliebige Sheet-Sync-Konsumenten generisch nutzbar –
+ * Eindeutigkeit kommt aus dem pro-Konsumenten gewählten {@code schluessel}.
  */
-public final class RanglisteSignaturStore {
+public final class SheetSyncSignaturStore {
 
-    private static final Logger logger = LogManager.getLogger(RanglisteSignaturStore.class);
+    private static final Logger logger = LogManager.getLogger(SheetSyncSignaturStore.class);
 
     private static final String PREFIX = "ranking.";
     private static final String SUFFIX_HASH = ".last.rebuild.hash";
@@ -41,7 +46,7 @@ public final class RanglisteSignaturStore {
     private static final String SUFFIX_VERIFY_TS = ".last.verify.ts";
     private static final String SUFFIX_RECOVERY = ".recovery.attempted";
 
-    private RanglisteSignaturStore() {
+    private SheetSyncSignaturStore() {
     }
 
     private static String propName(String schluessel, String suffix) {
@@ -145,8 +150,8 @@ public final class RanglisteSignaturStore {
 
     /**
      * Berechnet die aktuelle Eingabe-Signatur und schreibt sie nach einem Vollaufbau
-     * (forceCreate-Pfad) in den Store. Wird am Ende von
-     * {@code *RanglisteSheet.doRunIntern()} aufgerufen, damit der Listener beim
+     * (forceCreate-Pfad) in den Store. Wird am Ende von Sheet-Vollaufbauten
+     * (z.B. {@code *RanglisteSheet.doRunIntern()}) aufgerufen, damit der Listener beim
      * nächsten Trigger erkennt: „Hash unverändert" – kein zweiter Rebuild.
      * <p>
      * Nur bei {@link SignaturErgebnis.Ok} wird geschrieben. Andere Fälle werden
@@ -154,7 +159,7 @@ public final class RanglisteSignaturStore {
      * Listener-Trigger entscheidet die dann frische Signatur-Berechnung.
      */
     public static void commitVollaufbau(XSpreadsheetDocument xDoc, String schluessel,
-            RanglisteEingabeSignatur signatur) {
+            EingabeSignatur signatur) {
         checkNotNull(xDoc);
         checkNotNull(schluessel);
         checkNotNull(signatur);

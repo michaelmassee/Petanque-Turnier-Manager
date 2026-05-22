@@ -38,8 +38,8 @@ import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.rangliste.IRangliste;
 import de.petanqueturniermanager.helper.rangliste.RangListeSorter;
 import de.petanqueturniermanager.helper.rangliste.RangListeSpalte;
-import de.petanqueturniermanager.helper.rangliste.RanglisteEingabeSignatur;
-import de.petanqueturniermanager.helper.rangliste.RanglisteSignaturStore;
+import de.petanqueturniermanager.helper.sheetsync.EingabeSignatur;
+import de.petanqueturniermanager.helper.sheetsync.SheetSyncSignaturStore;
 import de.petanqueturniermanager.helper.rangliste.SignaturQuellen;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
@@ -143,10 +143,10 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
             getSheetHelper().setActiveSheet(sheet);
             SheetRunner.unterdrückeNaechstesSelectionChange();
         }
-        RanglisteSignaturStore.commitVollaufbau(
+        SheetSyncSignaturStore.commitVollaufbau(
                 getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
                 SheetMetadataHelper.SCHLUESSEL_FORMULEX_RANGLISTE,
-                new RanglisteEingabeSignatur(SignaturQuellen::fuerFormuleX));
+                new EingabeSignatur(SignaturQuellen::fuerFormuleX));
         LOGGER.debug("doRunIntern ENDE – Thread='{}'", Thread.currentThread().getName());
     }
 

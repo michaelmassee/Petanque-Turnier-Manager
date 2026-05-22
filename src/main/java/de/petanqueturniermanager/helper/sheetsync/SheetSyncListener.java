@@ -1,4 +1,4 @@
-package de.petanqueturniermanager.helper.rangliste;
+package de.petanqueturniermanager.helper.sheetsync;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -10,6 +10,7 @@ import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
+import java.util.function.IntFunction;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -24,6 +25,7 @@ import com.sun.star.view.XSelectionChangeListener;
 import com.sun.star.view.XSelectionSupplier;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
@@ -31,34 +33,36 @@ import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.perflog.PerfLog;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
-import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
- * Lauscht auf Sheet-Tab-Wechsel und OS-Fokusereignisse und löst einen Rangliste-Refresh
+ * Lauscht auf Sheet-Tab-Wechsel und OS-Fokusereignisse und löst einen Sheet-Sync
  * <b>nur dann</b> aus, wenn sich die semantisch relevanten Eingangsdaten seit dem letzten
  * Rebuild geändert haben.
  * <p>
- * Erkennung über kanonische SHA-256-Signatur ({@link RanglisteEingabeSignatur}), Vergleich
- * mit persistiertem Hash im Dokument ({@link RanglisteSignaturStore}). Trigger werden vor
- * dem Hash-Check über den {@link RanglisteRefreshDebouncer} entkoppelt, damit Event-Stürme
+ * Erkennung über kanonische SHA-256-Signatur ({@link EingabeSignatur}), Vergleich
+ * mit persistiertem Hash im Dokument ({@link SheetSyncSignaturStore}). Trigger werden vor
+ * dem Hash-Check über den {@link SheetSyncDebouncer} entkoppelt, damit Event-Stürme
  * zu einem Check zusammengezogen werden und der Hash-Check nicht im UI-Thread läuft.
+ * <p>
+ * Generisch nutzbar für jede Sheet-Art, deren Daten aus einer Eingabe-Quelle abgeleitet
+ * werden (Rangliste aus Meldeliste+Spielrunden, Teilnehmerliste aus Meldeliste, …).
  * <p>
  * Architekturregeln siehe {@code turniersysteme/RANGLISTE_LISTENER.md}.
  */
-public final class RanglisteRefreshListener implements IGlobalEventListener {
+public final class SheetSyncListener implements IGlobalEventListener {
 
-    private static final Logger logger = LogManager.getLogger(RanglisteRefreshListener.class);
+    private static final Logger logger = LogManager.getLogger(SheetSyncListener.class);
 
     /** Safety-Revalidation: nach diesem Intervall wird der gespeicherte Hash neu bestätigt. */
     private static final Duration VERIFY_INTERVAL = Duration.ofMinutes(10);
 
     private final XComponentContext xContext;
-    private final BiPredicate<XSpreadsheetDocument, XSpreadsheet> ranglisteMatch;
+    private final BiPredicate<XSpreadsheetDocument, XSpreadsheet> zielSheetMatch;
     private final TurnierSystem erwartesTurnierSystem;
     private final BiFunction<WorkingSpreadsheet, XSpreadsheet, SheetRunner> runnerFactory;
-    /** Signatur-Engine pro (Doc, Rangliste-Sheet). Spieltag-Variante: dynamisch pro Spieltag-Nr. */
-    private final BiFunction<XSpreadsheetDocument, XSpreadsheet, RanglisteEingabeSignatur> signaturLieferant;
-    /** Persistenz-Schlüssel pro (Doc, Rangliste-Sheet). Spieltag-Variante: inkl. Nr. */
+    /** Signatur-Engine pro (Doc, Ziel-Sheet). Spieltag-Variante: dynamisch pro Spieltag-Nr. */
+    private final BiFunction<XSpreadsheetDocument, XSpreadsheet, EingabeSignatur> signaturLieferant;
+    /** Persistenz-Schlüssel pro (Doc, Ziel-Sheet). Spieltag-Variante: inkl. Nr. */
     private final BiFunction<XSpreadsheetDocument, XSpreadsheet, String> schluesselLieferant;
 
     /** Bereits registrierte Dokumente – verhindert Doppelregistrierung. */
@@ -77,13 +81,13 @@ public final class RanglisteRefreshListener implements IGlobalEventListener {
     /**
      * Erzeugt einen Listener für Sheets mit festem Named-Range-Schlüssel.
      */
-    public static RanglisteRefreshListener fuerSchluessel(
+    public static SheetSyncListener fuerSchluessel(
             XComponentContext xContext,
             String namedRangeKey,
             TurnierSystem erwartesTurnierSystem,
-            RanglisteEingabeSignatur signatur,
+            EingabeSignatur signatur,
             BiFunction<WorkingSpreadsheet, XSpreadsheet, SheetRunner> runnerFactory) {
-        return new RanglisteRefreshListener(xContext,
+        return new SheetSyncListener(xContext,
                 (xDoc, sheet) -> SheetMetadataHelper.istRegistriertesSheet(xDoc, sheet, namedRangeKey),
                 erwartesTurnierSystem,
                 (xDoc, sheet) -> signatur,
@@ -95,37 +99,68 @@ public final class RanglisteRefreshListener implements IGlobalEventListener {
      * Erzeugt einen Listener für Supermelee-Spieltag-Ranglisten (dynamische Schlüssel).
      * Pro Spieltag-Nr gibt es eine eigene Signatur und einen eigenen Persistenz-Schlüssel.
      *
-     * @param signaturProSpieltagNr  Funktion {@code spieltagNr → RanglisteEingabeSignatur}.
+     * @param signaturProSpieltagNr  Funktion {@code spieltagNr → EingabeSignatur}.
      *                               Wird intern pro Nr gecached.
      */
-    public static RanglisteRefreshListener fuerSpieltagRangliste(
+    public static SheetSyncListener fuerSpieltagRangliste(
             XComponentContext xContext,
             TurnierSystem erwartesTurnierSystem,
-            java.util.function.IntFunction<RanglisteEingabeSignatur> signaturProSpieltagNr,
+            IntFunction<EingabeSignatur> signaturProSpieltagNr,
             BiFunction<WorkingSpreadsheet, XSpreadsheet, SheetRunner> runnerFactory) {
-        ConcurrentHashMap<Integer, RanglisteEingabeSignatur> cache = new ConcurrentHashMap<>();
+        return fuerSpieltagSheet(xContext, erwartesTurnierSystem,
+                SheetMetadataHelper::findeSpieltagNr,
+                "SUPERMELEE_SPIELTAG_",
+                signaturProSpieltagNr, runnerFactory);
+    }
+
+    /**
+     * Erzeugt einen Listener für Supermelee-Spieltag-Teilnehmerlisten.
+     * Pro Spieltag-Nr gibt es eine eigene Signatur und einen eigenen Persistenz-Schlüssel.
+     */
+    public static SheetSyncListener fuerSpieltagTeilnehmer(
+            XComponentContext xContext,
+            TurnierSystem erwartesTurnierSystem,
+            IntFunction<EingabeSignatur> signaturProSpieltagNr,
+            BiFunction<WorkingSpreadsheet, XSpreadsheet, SheetRunner> runnerFactory) {
+        return fuerSpieltagSheet(xContext, erwartesTurnierSystem,
+                SheetMetadataHelper::findeTeilnehmerSpieltagNr,
+                "SUPERMELEE_TEILNEHMER_",
+                signaturProSpieltagNr, runnerFactory);
+    }
+
+    /**
+     * Generischer Spieltag-Sheet-Listener: matcht alle Sheets, für die der
+     * {@code spieltagNrLookup} eine Nr liefert, und persistiert pro Nr.
+     */
+    public static SheetSyncListener fuerSpieltagSheet(
+            XComponentContext xContext,
+            TurnierSystem erwartesTurnierSystem,
+            BiFunction<XSpreadsheetDocument, XSpreadsheet, Optional<SpielTagNr>> spieltagNrLookup,
+            String persistenzPrefix,
+            IntFunction<EingabeSignatur> signaturProSpieltagNr,
+            BiFunction<WorkingSpreadsheet, XSpreadsheet, SheetRunner> runnerFactory) {
+        ConcurrentHashMap<Integer, EingabeSignatur> cache = new ConcurrentHashMap<>();
         BiFunction<XSpreadsheetDocument, XSpreadsheet, Optional<Integer>> nrLookup =
-                (xDoc, sheet) -> SheetMetadataHelper.findeSpieltagNr(xDoc, sheet)
-                        .map(SpielTagNr::getNr);
-        return new RanglisteRefreshListener(xContext,
+                (xDoc, sheet) -> spieltagNrLookup.apply(xDoc, sheet).map(SpielTagNr::getNr);
+        return new SheetSyncListener(xContext,
                 (xDoc, sheet) -> nrLookup.apply(xDoc, sheet).isPresent(),
                 erwartesTurnierSystem,
                 (xDoc, sheet) -> nrLookup.apply(xDoc, sheet)
                         .map(n -> cache.computeIfAbsent(n, signaturProSpieltagNr::apply))
                         .orElse(null),
                 (xDoc, sheet) -> nrLookup.apply(xDoc, sheet)
-                        .map(n -> "SUPERMELEE_SPIELTAG_" + n).orElse(null),
+                        .map(n -> persistenzPrefix + n).orElse(null),
                 runnerFactory);
     }
 
-    RanglisteRefreshListener(XComponentContext xContext,
-            BiPredicate<XSpreadsheetDocument, XSpreadsheet> ranglisteMatch,
+    SheetSyncListener(XComponentContext xContext,
+            BiPredicate<XSpreadsheetDocument, XSpreadsheet> zielSheetMatch,
             TurnierSystem erwartesTurnierSystem,
-            BiFunction<XSpreadsheetDocument, XSpreadsheet, RanglisteEingabeSignatur> signaturLieferant,
+            BiFunction<XSpreadsheetDocument, XSpreadsheet, EingabeSignatur> signaturLieferant,
             BiFunction<XSpreadsheetDocument, XSpreadsheet, String> schluesselLieferant,
             BiFunction<WorkingSpreadsheet, XSpreadsheet, SheetRunner> runnerFactory) {
         this.xContext = checkNotNull(xContext);
-        this.ranglisteMatch = checkNotNull(ranglisteMatch);
+        this.zielSheetMatch = checkNotNull(zielSheetMatch);
         this.erwartesTurnierSystem = checkNotNull(erwartesTurnierSystem);
         this.signaturLieferant = checkNotNull(signaturLieferant);
         this.schluesselLieferant = checkNotNull(schluesselLieferant);
@@ -199,11 +234,11 @@ public final class RanglisteRefreshListener implements IGlobalEventListener {
 
                     if (aktuellesSheet == vorherigesSheet) return;
 
-                    boolean istAufRangliste = ranglisteMatch.test(xDoc, aktuellesSheet);
-                    boolean warAufRangliste = vorherigesSheet != null
-                            && ranglisteMatch.test(xDoc, vorherigesSheet);
+                    boolean istAufZielSheet = zielSheetMatch.test(xDoc, aktuellesSheet);
+                    boolean warAufZielSheet = vorherigesSheet != null
+                            && zielSheetMatch.test(xDoc, vorherigesSheet);
 
-                    if (istAufRangliste && !warAufRangliste && !SheetRunner.isRunning()
+                    if (istAufZielSheet && !warAufZielSheet && !SheetRunner.isRunning()
                             && istPassendesDokument(xDoc)) {
                         if (SheetRunner.consumeSelectionChangeSuppression()) {
                             logger.trace("selectionChanged: Unterdrückt – ausgelöst durch setActiveSheet()");
@@ -218,11 +253,11 @@ public final class RanglisteRefreshListener implements IGlobalEventListener {
 
             @Override
             public void disposing(EventObject e) {
-                RanglisteRefreshDebouncer.get().cancelAlle(xDoc);
+                SheetSyncDebouncer.get().cancelAlle(xDoc);
             }
         });
 
-        logger.debug("XSelectionChangeListener für Rangliste registriert");
+        logger.debug("XSelectionChangeListener für Sheet-Sync registriert");
     }
 
     // ── OnFocus ─────────────────────────────────────────────────────────────
@@ -243,7 +278,7 @@ public final class RanglisteRefreshListener implements IGlobalEventListener {
             XSpreadsheet aktuellesSheet = view.getActiveSheet();
             if (aktuellesSheet == null) return;
 
-            if (!ranglisteMatch.test(xDoc, aktuellesSheet)) return;
+            if (!zielSheetMatch.test(xDoc, aktuellesSheet)) return;
             if (SheetRunner.isRunning()) return;
             if (!istPassendesDokument(xDoc)) return;
             if (SheetRunner.consumeSelectionChangeSuppression()) {
@@ -252,13 +287,13 @@ public final class RanglisteRefreshListener implements IGlobalEventListener {
             }
 
             String key = schluesselLieferant.apply(xDoc, aktuellesSheet);
-            if (key != null && RanglisteSignaturStore.verifyVeraltet(xDoc, key, VERIFY_INTERVAL)) {
+            if (key != null && SheetSyncSignaturStore.verifyVeraltet(xDoc, key, VERIFY_INTERVAL)) {
                 markiereForce(xDoc, key);
             }
             plane(xDoc, aktuellesSheet, "onFocus");
 
         } catch (RuntimeException t) {
-            logger.error("Fehler beim OnFocus-Ranglisten-Refresh", t);
+            logger.error("Fehler beim OnFocus-Sheet-Sync", t);
         }
     }
 
@@ -267,20 +302,20 @@ public final class RanglisteRefreshListener implements IGlobalEventListener {
     private void plane(XSpreadsheetDocument xDoc, XSpreadsheet sheet, String grund) {
         String key = schluesselLieferant.apply(xDoc, sheet);
         if (key == null) {
-            logger.warn("Kein Persistenz-Schlüssel ermittelbar – Refresh übersprungen");
+            logger.warn("Kein Persistenz-Schlüssel ermittelbar – Sync übersprungen");
             return;
         }
-        RanglisteEingabeSignatur sig = signaturLieferant.apply(xDoc, sheet);
+        EingabeSignatur sig = signaturLieferant.apply(xDoc, sheet);
         if (sig == null) {
-            logger.warn("Keine Signatur-Engine ermittelbar (key={}) – Refresh übersprungen", key);
+            logger.warn("Keine Signatur-Engine ermittelbar (key={}) – Sync übersprungen", key);
             return;
         }
-        RanglisteRefreshDebouncer.get().schedule(xDoc, key,
+        SheetSyncDebouncer.get().schedule(xDoc, key,
                 () -> pruefeUndStarte(xDoc, sheet, sig, key, grund, 1));
     }
 
     private void pruefeUndStarte(XSpreadsheetDocument xDoc, XSpreadsheet sheet,
-            RanglisteEingabeSignatur signatur, String key, String grund, int versuch) {
+            EingabeSignatur signatur, String key, String grund, int versuch) {
         long startNs = System.nanoTime();
         long hashStartNs = startNs;
         SignaturErgebnis ergebnis = signatur.berechne(xDoc, versuch);
@@ -291,11 +326,11 @@ public final class RanglisteRefreshListener implements IGlobalEventListener {
             case SignaturErgebnis.TransientFehler te ->
                 handleTransient(xDoc, sheet, signatur, key, grund, te);
             case SignaturErgebnis.PermanenterFehler pe -> logger.warn(
-                    "Rangliste-Signatur fehlgeschlagen (permanent, key={}): {}", key, pe.grund(),
+                    "Sheet-Sync-Signatur fehlgeschlagen (permanent, key={}): {}", key, pe.grund(),
                     pe.cause());
         }
         long gesamtMs = (System.nanoTime() - startNs) / 1_000_000L;
-        PerfLog.log(logger, "[WORKER-TIMING] RanglisteRefreshListener.pruefeUndStarte key={} system={} hash={} ms gesamt={} ms ergebnis={} thread={}",
+        PerfLog.log(logger, "[WORKER-TIMING] SheetSyncListener.pruefeUndStarte key={} system={} hash={} ms gesamt={} ms ergebnis={} thread={}",
                 key, erwartesTurnierSystem, hashDauerMs, gesamtMs,
                 ergebnis.getClass().getSimpleName(), Thread.currentThread().getName());
     }
@@ -303,58 +338,58 @@ public final class RanglisteRefreshListener implements IGlobalEventListener {
     private void handleOk(XSpreadsheetDocument xDoc, XSpreadsheet sheet, String key,
             String grund, String hash) {
         boolean force = verbrauchForce(xDoc, key);
-        Optional<String> gespeichert = RanglisteSignaturStore.ladeHash(xDoc, key);
+        Optional<String> gespeichert = SheetSyncSignaturStore.ladeHash(xDoc, key);
         if (!force && gespeichert.isPresent() && gespeichert.get().equals(hash)) {
-            RanglisteSignaturStore.aktualisiereVerifyZeit(xDoc, key);
-            logger.debug("Rangliste-Refresh übersprungen (Hash unverändert, key={})", key);
+            SheetSyncSignaturStore.aktualisiereVerifyZeit(xDoc, key);
+            logger.debug("Sheet-Sync übersprungen (Hash unverändert, key={})", key);
             return;
         }
         if (SheetRunner.isRunning()) {
-            logger.debug("Rangliste-Refresh ausgelassen – SheetRunner läuft (key={})", key);
+            logger.debug("Sheet-Sync ausgelassen – SheetRunner läuft (key={})", key);
             return;
         }
         String effektiverGrund = force ? "forcedRevalidation"
                 : (gespeichert.isEmpty() ? "erstaufbau" : "hashMismatch");
-        logger.debug("Rangliste-Refresh START – key={}, trigger={}, grund={}",
+        logger.debug("Sheet-Sync START – key={}, trigger={}, grund={}",
                 key, grund, effektiverGrund);
         // Hash vor dem asynchronen Runner speichern: stimmt mit den jetzt gelesenen Eingaben
         // überein. Sollte der Rebuild scheitern, wird beim nächsten Trigger der dann frische
         // Hash neu verglichen.
-        RanglisteSignaturStore.speichereNachRebuild(xDoc, key, hash, effektiverGrund);
+        SheetSyncSignaturStore.speichereNachRebuild(xDoc, key, hash, effektiverGrund);
         runnerFactory.apply(new WorkingSpreadsheet(xContext, xDoc), sheet).startSilent();
     }
 
     private void handleSheetFehlt(XSpreadsheetDocument xDoc, XSpreadsheet sheet, String key,
             SignaturErgebnis.SheetFehlt fehlt) {
         if (!fehlt.erwartet()) {
-            logger.debug("Rangliste-Quelle '{}' fehlt (optional) – skip", fehlt.stabileId());
+            logger.debug("Sheet-Sync-Quelle '{}' fehlt (optional) – skip", fehlt.stabileId());
             return;
         }
-        if (RanglisteSignaturStore.recoveryBereitsVersucht(xDoc, key)) {
-            logger.debug("Rangliste-Quelle '{}' fehlt erwartet, Recovery bereits versucht – skip",
+        if (SheetSyncSignaturStore.recoveryBereitsVersucht(xDoc, key)) {
+            logger.debug("Sheet-Sync-Quelle '{}' fehlt erwartet, Recovery bereits versucht – skip",
                     fehlt.stabileId());
             return;
         }
         if (SheetRunner.isRunning()) {
             return;
         }
-        logger.warn("Rangliste-Quelle '{}' fehlt erwartet (key={}) – Recovery-Rebuild",
+        logger.warn("Sheet-Sync-Quelle '{}' fehlt erwartet (key={}) – Recovery-Rebuild",
                 fehlt.stabileId(), key);
-        RanglisteSignaturStore.markiereRecoveryVersucht(xDoc, key);
+        SheetSyncSignaturStore.markiereRecoveryVersucht(xDoc, key);
         runnerFactory.apply(new WorkingSpreadsheet(xContext, xDoc), sheet).startSilent();
     }
 
     private void handleTransient(XSpreadsheetDocument xDoc, XSpreadsheet sheet,
-            RanglisteEingabeSignatur signatur, String key, String grund,
+            EingabeSignatur signatur, String key, String grund,
             SignaturErgebnis.TransientFehler te) {
-        if (te.versuch() < RanglisteRefreshDebouncer.MAX_RETRY) {
+        if (te.versuch() < SheetSyncDebouncer.MAX_RETRY) {
             int naechster = te.versuch() + 1;
-            logger.debug("Rangliste-Signatur transient fehlgeschlagen (key={}, versuch={}): {} – Retry",
+            logger.debug("Sheet-Sync-Signatur transient fehlgeschlagen (key={}, versuch={}): {} – Retry",
                     key, te.versuch(), te.grund());
-            RanglisteRefreshDebouncer.get().scheduleRetry(xDoc, key, naechster,
+            SheetSyncDebouncer.get().scheduleRetry(xDoc, key, naechster,
                     () -> pruefeUndStarte(xDoc, sheet, signatur, key, grund, naechster));
         } else {
-            logger.warn("Rangliste-Signatur transient fehlgeschlagen (key={}, versuch={}): {} – "
+            logger.warn("Sheet-Sync-Signatur transient fehlgeschlagen (key={}, versuch={}): {} – "
                     + "forceNextCheck gesetzt", key, te.versuch(), te.grund(), te.cause());
             markiereForce(xDoc, key);
         }

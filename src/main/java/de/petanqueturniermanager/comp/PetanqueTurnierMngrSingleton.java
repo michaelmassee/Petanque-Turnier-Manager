@@ -14,8 +14,8 @@ import com.sun.star.document.XEventBroadcaster;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.addins.UpdatePropertieFunctionsSheetRecalcOnLoad;
-import de.petanqueturniermanager.helper.rangliste.RanglisteEingabeSignatur;
-import de.petanqueturniermanager.helper.rangliste.RanglisteRefreshListener;
+import de.petanqueturniermanager.helper.sheetsync.EingabeSignatur;
+import de.petanqueturniermanager.helper.sheetsync.SheetSyncListener;
 import de.petanqueturniermanager.helper.rangliste.SignaturQuellen;
 import de.petanqueturniermanager.helper.perflog.PerfLog;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
@@ -27,6 +27,7 @@ import de.petanqueturniermanager.poule.rangliste.PouleVorrundenRanglisteSheetUpd
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheetUpdate;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheetUpdate;
+import de.petanqueturniermanager.supermelee.meldeliste.SupermeleeTeilnehmerSheetUpdate;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheetUpdate;
 import de.petanqueturniermanager.timer.TimerManager;
 import de.petanqueturniermanager.webserver.WebServerManager;
@@ -136,45 +137,45 @@ public class PetanqueTurnierMngrSingleton {
 		t = logTimingAndReset("addGlobalEventListener SidebarPanelDelegator", t);
 		addGlobalEventListener(new UpdatePropertieFunctionsSheetRecalcOnLoad());
 		t = logTimingAndReset("addGlobalEventListener UpdatePropertieFunctionsSheetRecalcOnLoad", t);
-		addGlobalEventListener(RanglisteRefreshListener.fuerSchluessel(context,
+		addGlobalEventListener(SheetSyncListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_RANGLISTE,
 				TurnierSystem.SCHWEIZER,
-				new RanglisteEingabeSignatur(SignaturQuellen::fuerSchweizer),
+				new EingabeSignatur(SignaturQuellen::fuerSchweizer),
 				(ws, ignored) -> new SchweizerRanglisteSheetUpdate(ws)));
-		t = logTimingAndReset("RanglisteRefreshListener SCHWEIZER", t);
-		addGlobalEventListener(RanglisteRefreshListener.fuerSchluessel(context,
+		t = logTimingAndReset("SheetSyncListener SCHWEIZER", t);
+		addGlobalEventListener(SheetSyncListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX,
 				TurnierSystem.MAASTRICHTER,
-				new RanglisteEingabeSignatur(SignaturQuellen::fuerMaastrichter),
+				new EingabeSignatur(SignaturQuellen::fuerMaastrichter),
 				(ws, ignored) -> new MaastrichterVorrundenRanglisteSheetUpdate(ws)));
-		t = logTimingAndReset("RanglisteRefreshListener MAASTRICHTER", t);
-		addGlobalEventListener(RanglisteRefreshListener.fuerSchluessel(context,
+		t = logTimingAndReset("SheetSyncListener MAASTRICHTER", t);
+		addGlobalEventListener(SheetSyncListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_POULE_VORRUNDEN_RANGLISTE,
 				TurnierSystem.POULE,
-				new RanglisteEingabeSignatur(SignaturQuellen::fuerPoule),
+				new EingabeSignatur(SignaturQuellen::fuerPoule),
 				(ws, ignored) -> new PouleVorrundenRanglisteSheetUpdate(ws)));
-		t = logTimingAndReset("RanglisteRefreshListener POULE", t);
-		addGlobalEventListener(RanglisteRefreshListener.fuerSchluessel(context,
+		t = logTimingAndReset("SheetSyncListener POULE", t);
+		addGlobalEventListener(SheetSyncListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_FORMULEX_RANGLISTE,
 				TurnierSystem.FORMULEX,
-				new RanglisteEingabeSignatur(SignaturQuellen::fuerFormuleX),
+				new EingabeSignatur(SignaturQuellen::fuerFormuleX),
 				(ws, ignored) -> new FormuleXRanglisteSheetUpdate(ws)));
-		t = logTimingAndReset("RanglisteRefreshListener FORMULEX", t);
-		addGlobalEventListener(RanglisteRefreshListener.fuerSchluessel(context,
+		t = logTimingAndReset("SheetSyncListener FORMULEX", t);
+		addGlobalEventListener(SheetSyncListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_JGJ_RANGLISTE,
 				TurnierSystem.JGJ,
-				new RanglisteEingabeSignatur(SignaturQuellen::fuerJGJ),
+				new EingabeSignatur(SignaturQuellen::fuerJGJ),
 				(ws, ignored) -> new JGJRanglisteSheetUpdate(ws)));
-		t = logTimingAndReset("RanglisteRefreshListener JGJ", t);
-		addGlobalEventListener(RanglisteRefreshListener.fuerSchluessel(context,
+		t = logTimingAndReset("SheetSyncListener JGJ", t);
+		addGlobalEventListener(SheetSyncListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_KASKADE_GRUPPENRANGLISTE,
 				TurnierSystem.KASKADE,
-				new RanglisteEingabeSignatur(SignaturQuellen::fuerKaskade),
+				new EingabeSignatur(SignaturQuellen::fuerKaskade),
 				(ws, ignored) -> new KaskadeGruppenRanglisteSheetUpdate(ws)));
-		t = logTimingAndReset("RanglisteRefreshListener KASKADE", t);
-		addGlobalEventListener(RanglisteRefreshListener.fuerSpieltagRangliste(context,
+		t = logTimingAndReset("SheetSyncListener KASKADE", t);
+		addGlobalEventListener(SheetSyncListener.fuerSpieltagRangliste(context,
 				TurnierSystem.SUPERMELEE,
-				spieltagNr -> new RanglisteEingabeSignatur(
+				spieltagNr -> new EingabeSignatur(
 						xDoc -> SignaturQuellen.fuerSupermeleeSpieltag(xDoc, spieltagNr)),
 				(ws, xSheet) -> {
 					SpielTagNr nr = SheetMetadataHelper
@@ -182,13 +183,28 @@ public class PetanqueTurnierMngrSingleton {
 							.orElse(null);
 					return new SpieltagRanglisteSheetUpdate(ws, nr);
 				}));
-		t = logTimingAndReset("RanglisteRefreshListener SUPERMELEE-SPIELTAG", t);
-		addGlobalEventListener(RanglisteRefreshListener.fuerSchluessel(context,
+		t = logTimingAndReset("SheetSyncListener SUPERMELEE-SPIELTAG", t);
+		addGlobalEventListener(SheetSyncListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_ENDRANGLISTE,
 				TurnierSystem.SUPERMELEE,
-				new RanglisteEingabeSignatur(SignaturQuellen::fuerSupermeleeEnd),
+				new EingabeSignatur(SignaturQuellen::fuerSupermeleeEnd),
 				(ws, ignored) -> new EndranglisteSheetUpdate(ws)));
-		logTimingAndReset("RanglisteRefreshListener SUPERMELEE-END", t);
+		t = logTimingAndReset("SheetSyncListener SUPERMELEE-END", t);
+		addGlobalEventListener(SheetSyncListener.fuerSpieltagTeilnehmer(context,
+				TurnierSystem.SUPERMELEE,
+				spieltagNr -> new EingabeSignatur(
+						xDoc -> SignaturQuellen.fuerSupermeleeTeilnehmer(xDoc, spieltagNr)),
+				(ws, xSheet) -> {
+					SpielTagNr nr = SheetMetadataHelper
+							.findeTeilnehmerSpieltagNr(ws.getWorkingSpreadsheetDocument(), xSheet)
+							.orElse(null);
+					SupermeleeTeilnehmerSheetUpdate update = new SupermeleeTeilnehmerSheetUpdate(ws);
+					if (nr != null) {
+						update.setSpielTagNr(nr);
+					}
+					return update;
+				}));
+		logTimingAndReset("SheetSyncListener SUPERMELEE-TEILNEHMER", t);
 
 		long initGesamtMs = (System.nanoTime() - initStartNs) / 1_000_000L;
 		PerfLog.log(logger, "[STARTUP-TIMING] PetanqueTurnierMngrSingleton.init GESAMT={} ms (jvm-uptime={} ms)",

@@ -34,8 +34,8 @@ import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.print.PrintArea;
-import de.petanqueturniermanager.helper.rangliste.RanglisteEingabeSignatur;
-import de.petanqueturniermanager.helper.rangliste.RanglisteSignaturStore;
+import de.petanqueturniermanager.helper.sheetsync.EingabeSignatur;
+import de.petanqueturniermanager.helper.sheetsync.SheetSyncSignaturStore;
 import de.petanqueturniermanager.helper.rangliste.SignaturQuellen;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
@@ -147,10 +147,10 @@ public class KaskadeGruppenRanglisteSheet extends SheetRunner implements ISheet 
         formatieren(belegungen);
         druckBereichSetzen(plan, belegungen);
 
-        RanglisteSignaturStore.commitVollaufbau(
+        SheetSyncSignaturStore.commitVollaufbau(
                 getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
                 SheetMetadataHelper.SCHLUESSEL_KASKADE_GRUPPENRANGLISTE,
-                new RanglisteEingabeSignatur(SignaturQuellen::fuerKaskade));
+                new EingabeSignatur(SignaturQuellen::fuerKaskade));
     }
 
     /**

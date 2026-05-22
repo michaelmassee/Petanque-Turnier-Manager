@@ -34,8 +34,8 @@ import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.rangliste.ISpielTagRangliste;
 import de.petanqueturniermanager.helper.rangliste.RangListeSorter;
 import de.petanqueturniermanager.helper.rangliste.RangListeSpalte;
-import de.petanqueturniermanager.helper.rangliste.RanglisteEingabeSignatur;
-import de.petanqueturniermanager.helper.rangliste.RanglisteSignaturStore;
+import de.petanqueturniermanager.helper.sheetsync.EingabeSignatur;
+import de.petanqueturniermanager.helper.sheetsync.SheetSyncSignaturStore;
 import de.petanqueturniermanager.helper.rangliste.SignaturQuellen;
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
@@ -208,10 +208,10 @@ public class SpieltagRanglisteSheet extends SheetRunner implements ISpielTagRang
 		SheetFreeze.from(getTurnierSheet()).anzZeilen(3).anzSpalten(3).doFreeze();
 
 		int nr = spielTagNr.getNr();
-		RanglisteSignaturStore.commitVollaufbau(
+		SheetSyncSignaturStore.commitVollaufbau(
 				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
 				"SUPERMELEE_SPIELTAG_" + nr,
-				new RanglisteEingabeSignatur(
+				new EingabeSignatur(
 						xDoc -> SignaturQuellen.fuerSupermeleeSpieltag(xDoc, nr)));
 	}
 

@@ -557,13 +557,32 @@ public class SheetMetadataHelper {
      */
     public static Optional<SpielTagNr> findeSpieltagNr(XSpreadsheetDocument xDoc,
                                                        XSpreadsheet xSheet) {
+        return findeSpieltagNrMitPrefix(xDoc, xSheet,
+                SCHLUESSEL_SPIELTAG_RANGLISTE_PREFIX, SCHLUESSEL_SPIELTAG_RANGLISTE_SUFFIX);
+    }
+
+    /**
+     * Sucht die Spieltag-Nummer für ein Supermelee-Teilnehmer-Sheet, indem alle
+     * {@code __PTM_SUPERMELEE_TEILNEHMER_N__}-Einträge durchsucht werden.
+     *
+     * @return SpielTagNr wenn das Sheet zugeordnet ist, sonst {@link Optional#empty()}
+     */
+    public static Optional<SpielTagNr> findeTeilnehmerSpieltagNr(XSpreadsheetDocument xDoc,
+                                                                 XSpreadsheet xSheet) {
+        return findeSpieltagNrMitPrefix(xDoc, xSheet,
+                SCHLUESSEL_SUPERMELEE_SPIELTAG_TEILNEHMER_PREFIX, SCHLUESSEL_SUFFIX);
+    }
+
+    private static Optional<SpielTagNr> findeSpieltagNrMitPrefix(XSpreadsheetDocument xDoc,
+                                                                 XSpreadsheet xSheet,
+                                                                 String prefix, String suffix) {
         try {
             XNamedRanges namedRanges = namedRangesAusDoc(xDoc);
             if (namedRanges == null) return Optional.empty();
             int targetIdx = sheetIndex(xDoc, xSheet);
             return findeSpieltagNr(namedRanges,
                     rangeObj -> sheetIndexAusNamedRangeObj(rangeObj),
-                    targetIdx);
+                    targetIdx, prefix, suffix);
         } catch (Exception e) {
             LogUtil.warn(logger, "Spieltag-Nr-Suche fehlgeschlagen", e);
         } catch (Error e) {
@@ -578,17 +597,28 @@ public class SheetMetadataHelper {
     static Optional<SpielTagNr> findeSpieltagNr(XNamedRanges namedRanges,
                                                 Function<Object, Integer> sheetIdxAusNamedRange,
                                                 int targetSheetIdx) {
+        return findeSpieltagNr(namedRanges, sheetIdxAusNamedRange, targetSheetIdx,
+                SCHLUESSEL_SPIELTAG_RANGLISTE_PREFIX, SCHLUESSEL_SPIELTAG_RANGLISTE_SUFFIX);
+    }
+
+    /**
+     * Generische Suche nach Spieltag-Nr für einen konfigurierbaren Schlüssel-Prefix/Suffix.
+     */
+    static Optional<SpielTagNr> findeSpieltagNr(XNamedRanges namedRanges,
+                                                Function<Object, Integer> sheetIdxAusNamedRange,
+                                                int targetSheetIdx,
+                                                String prefix, String suffix) {
         try {
             if (namedRanges == null) return Optional.empty();
             for (String name : namedRanges.getElementNames()) {
-                if (!name.startsWith(SCHLUESSEL_SPIELTAG_RANGLISTE_PREFIX)) continue;
-                if (!name.endsWith(SCHLUESSEL_SPIELTAG_RANGLISTE_SUFFIX)) continue;
+                if (!name.startsWith(prefix)) continue;
+                if (!name.endsWith(suffix)) continue;
                 try {
                     Object rangeObj = namedRanges.getByName(name);
                     Integer idx = sheetIdxAusNamedRange.apply(rangeObj);
                     if (idx != null && idx >= 0 && idx == targetSheetIdx) {
-                        String nStr = name.substring(SCHLUESSEL_SPIELTAG_RANGLISTE_PREFIX.length(),
-                                name.length() - SCHLUESSEL_SPIELTAG_RANGLISTE_SUFFIX.length());
+                        String nStr = name.substring(prefix.length(),
+                                name.length() - suffix.length());
                         return Optional.of(SpielTagNr.from(Integer.parseInt(nStr)));
                     }
                 } catch (Exception e) {

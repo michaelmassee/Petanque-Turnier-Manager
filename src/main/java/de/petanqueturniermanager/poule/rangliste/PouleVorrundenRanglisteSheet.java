@@ -34,8 +34,8 @@ import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.print.PrintArea;
-import de.petanqueturniermanager.helper.rangliste.RanglisteEingabeSignatur;
-import de.petanqueturniermanager.helper.rangliste.RanglisteSignaturStore;
+import de.petanqueturniermanager.helper.sheetsync.EingabeSignatur;
+import de.petanqueturniermanager.helper.sheetsync.SheetSyncSignaturStore;
 import de.petanqueturniermanager.helper.rangliste.SignaturQuellen;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
@@ -143,10 +143,10 @@ public class PouleVorrundenRanglisteSheet extends SheetRunner implements ISheet 
 
         berechnungUndSchreiben(vorrundeSheet, xSheet);
 
-        RanglisteSignaturStore.commitVollaufbau(
+        SheetSyncSignaturStore.commitVollaufbau(
                 getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
                 SheetMetadataHelper.SCHLUESSEL_POULE_VORRUNDEN_RANGLISTE,
-                new RanglisteEingabeSignatur(SignaturQuellen::fuerPoule));
+                new EingabeSignatur(SignaturQuellen::fuerPoule));
     }
 
     /**

@@ -1,4 +1,4 @@
-package de.petanqueturniermanager.helper.rangliste;
+package de.petanqueturniermanager.helper.sheetsync;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -25,9 +25,9 @@ import com.sun.star.sheet.XSpreadsheetDocument;
  * Für {@code TransientFehler} stellt {@link #scheduleRetry} eine eigene Methode mit
  * eigenem Backoff zur Verfügung – siehe {@link #BACKOFF_MS}.
  */
-public final class RanglisteRefreshDebouncer {
+public final class SheetSyncDebouncer {
 
-    private static final Logger logger = LogManager.getLogger(RanglisteRefreshDebouncer.class);
+    private static final Logger logger = LogManager.getLogger(SheetSyncDebouncer.class);
 
     /** Standard-Debounce-Fenster für Selection/Focus-Trigger. */
     public static final long DEBOUNCE_MS = 150L;
@@ -38,18 +38,18 @@ public final class RanglisteRefreshDebouncer {
     /** Maximaler Versuch (inkl.) – danach forceNextCheck statt weiteres Retry. */
     public static final int MAX_RETRY = BACKOFF_MS.length;
 
-    private static final RanglisteRefreshDebouncer INSTANZ = new RanglisteRefreshDebouncer();
+    private static final SheetSyncDebouncer INSTANZ = new SheetSyncDebouncer();
 
-    public static RanglisteRefreshDebouncer get() {
+    public static SheetSyncDebouncer get() {
         return INSTANZ;
     }
 
     private final ScheduledExecutorService executor;
     private final ConcurrentHashMap<String, ScheduledFuture<?>> ausstehend = new ConcurrentHashMap<>();
 
-    private RanglisteRefreshDebouncer() {
+    private SheetSyncDebouncer() {
         this.executor = Executors.newSingleThreadScheduledExecutor(r -> {
-            Thread t = new Thread(r, "PTM-RanglisteRefreshDebouncer");
+            Thread t = new Thread(r, "PTM-SheetSyncDebouncer");
             t.setDaemon(true);
             return t;
         });
@@ -96,7 +96,7 @@ public final class RanglisteRefreshDebouncer {
         try {
             check.run();
         } catch (RuntimeException e) {
-            logger.warn("Rangliste-Refresh-Check warf Exception (key={})", key, e);
+            logger.warn("Sheet-Sync-Check warf Exception (key={})", key, e);
         }
     }
 

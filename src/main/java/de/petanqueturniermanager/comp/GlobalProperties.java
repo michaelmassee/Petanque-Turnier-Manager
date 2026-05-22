@@ -610,8 +610,11 @@ public class GlobalProperties {
 			var loggerCfg = LogManager.getLogger(Log4J.LOGGERNAME);
 
 			switch (logLevel) {
+				case "trace" -> Configurator.setLevel(loggerCfg, Level.TRACE);
 				case "debug" -> Configurator.setLevel(loggerCfg, Level.DEBUG);
 				case "info" -> Configurator.setLevel(loggerCfg, Level.INFO);
+				case "warn" -> Configurator.setLevel(loggerCfg, Level.WARN);
+				case "error" -> Configurator.setLevel(loggerCfg, Level.ERROR);
 				default -> logger.warn("Unbekanntes LogLevel: {}", logLevel);
 			}
 

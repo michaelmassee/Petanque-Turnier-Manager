@@ -89,13 +89,31 @@ public class SupermeleeTeilnehmerSheet extends SheetRunner implements ISheet {
                 .spielTagPageStyle(getSpielTagNr())
                 .forceCreate().hideGrid().setActiv().create();
 
+        befuelleTeilnehmerDaten(true);
+    }
+
+    /**
+     * Schreibt Header, Spielerblöcke und Footer in das bereits existierende
+     * Teilnehmer-Sheet. Wird sowohl vom Vollaufbau ({@link #generate()}) als auch
+     * vom Update-Pfad ({@code SupermeleeTeilnehmerSheetUpdate}) genutzt.
+     *
+     * @param meldungLeerHinweis bei {@code true} wird eine MessageBox angezeigt, wenn
+     *                           keine aktive Meldung existiert (Erstaufbau-Pfad);
+     *                           bei {@code false} wird nur ein Log-Eintrag erzeugt
+     *                           (Listener-Pfad, kein UI-Popup während Tab-Wechsel).
+     */
+    protected void befuelleTeilnehmerDaten(boolean meldungLeerHinweis) throws GenerateException {
+        meldeliste.setSpielTag(getSpielTagNr());
+
         processBoxinfo("processbox.spieltag.meldungen.einlesen", getSpielTagNr().getNr());
         SpielerMeldungen aktiveUndAusgesetzt = meldeliste.getAktiveUndAusgesetztMeldungen();
 
         if (aktiveUndAusgesetzt.size() == 0) {
-            MessageBox.from(getWorkingSpreadsheet(), MessageBoxTypeEnum.ERROR_OK)
-                    .caption(I18n.get("msg.caption.teilnehmer.fehler"))
-                    .message(I18n.get("msg.text.keine.meldungen")).show();
+            if (meldungLeerHinweis) {
+                MessageBox.from(getWorkingSpreadsheet(), MessageBoxTypeEnum.ERROR_OK)
+                        .caption(I18n.get("msg.caption.teilnehmer.fehler"))
+                        .message(I18n.get("msg.text.keine.meldungen")).show();
+            }
             return;
         }
 

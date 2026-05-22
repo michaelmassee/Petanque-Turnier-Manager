@@ -1,4 +1,4 @@
-package de.petanqueturniermanager.helper.rangliste;
+package de.petanqueturniermanager.helper.sheetsync;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -7,7 +7,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 /**
- * Deklarative Beschreibung einer Eingangsquelle für die Rangliste-Signatur.
+ * Deklarative Beschreibung einer Eingangsquelle für eine Sheet-Sync-Signatur.
  * <p>
  * Eine Quelle adressiert ein Sheet ausschließlich über seinen Named-Range-Schlüssel
  * ({@link de.petanqueturniermanager.helper.sheet.SheetMetadataHelper}). Tab-Position,

@@ -189,13 +189,13 @@ Details und Implementierungsmuster: `turniersysteme/BLATTSCHUTZ.md`
 - Neues System: `FooBlattschutzKonfiguration implements IBlattschutzKonfiguration` + `BlattschutzRegistry.register()`
 - `CellStyleHelper.from(XSpreadsheetDocument, AbstractCellStyleDef).apply()` für Kontexte ohne ISheet
 
-## RanglisteRefreshListener – Architekturregeln
-Details und Muster: `turniersysteme/RANGLISTE_LISTENER.md`
+## SheetSyncListener – Architekturregeln
+Details und Muster: `turniersysteme/RANGLISTE_LISTENER.md`. Generische Infrastruktur in `helper/sheetsync/` (ehemals `helper/rangliste/`), genutzt für Ranglisten UND andere Sheet-Synchronisationen (z. B. Supermelee-Spieltag-Teilnehmerliste).
 
 **Kritische Regeln:**
-- **NIEMALS** `*RanglisteSheet` direkt im Listener registrieren → Race Condition mit `forceCreate()`
-- **IMMER** `*RanglisteSheetUpdate`-Klasse verwenden (nur Datenbereich, kein `forceCreate`)
-- `setActiveSheet()` nur wenn `SheetRunner.isRunning() == true`
+- **NIEMALS** Vollaufbau-Klassen (`*RanglisteSheet`, `SupermeleeTeilnehmerSheet`) direkt im Listener registrieren → Race Condition mit `forceCreate()`
+- **IMMER** `*SheetUpdate`-Klasse verwenden (nur Datenbereich, kein `forceCreate`)
+- `setActiveSheet()` in `*SheetUpdate.doRun()` verboten – revertiert LO-Tab-Klick-Handling
 
 ## Business Logic & Rules
 

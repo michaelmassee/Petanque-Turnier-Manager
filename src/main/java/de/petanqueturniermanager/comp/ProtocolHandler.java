@@ -42,7 +42,6 @@ import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
 import de.petanqueturniermanager.timer.TimerDialog;
 import de.petanqueturniermanager.timer.TimerManager;
-import de.petanqueturniermanager.timer.TimerZustand;
 import de.petanqueturniermanager.webserver.CompositeViewListeDialog;
 import de.petanqueturniermanager.webserver.WebServerManager;
 import de.petanqueturniermanager.comp.newrelease.DirectUpdate;
@@ -106,9 +105,7 @@ import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterMeldeListeS
 import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterMeldeListeSheetUpdate;
 import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterTeilnehmerSheet;
 import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterVorrundenRanglisteSheet;
-import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.maastrichter.spielrunde.MaastrichterSpielrundeSheetNaechste;
-import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrundeSheet;
 import de.petanqueturniermanager.maastrichter.spielrunde.MaastrichterSpielrundeSheetUpdate;
 import de.petanqueturniermanager.poule.Poule37TeamsTurnierTestDaten;
 import de.petanqueturniermanager.poule.PouleTurnierTestDaten;
@@ -683,316 +680,310 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			// ------------------------------
 			// SuperMelee
 			case CMD_NEUE_MELDELISTE:
-				new MeldeListeSheet_New(ws).start();
+				new MeldeListeSheet_New(ws).testKeinTurnierVorhanden().start();
 				break;
 			case CMD_UPDATE_MELDELISTE:
-				new MeldeListeSheet_Update(ws).testTurnierVorhanden().start();
+				new MeldeListeSheet_Update(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).start();
 				break;
 			case CMD_ANMELDUNGEN:
-				new AnmeldungenSheet(ws).testTurnierVorhanden().backUpDocument().start();
+				new AnmeldungenSheet(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).backUpDocument().start();
 				break;
 			case CMD_TEILNEHMER:
-				new SupermeleeTeilnehmerSheet(ws).testTurnierVorhanden().start();
+				new SupermeleeTeilnehmerSheet(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).start();
 				break;
 			case CMD_NAECHSTE_SPIELTAG:
-				new MeldeListeSheet_NeuerSpieltag(ws).testTurnierVorhanden().backUpDocument().start();
+				new MeldeListeSheet_NeuerSpieltag(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).backUpDocument().start();
 				break;
 			case CMD_MELDELISTE_TESTDATEN:
-				new MeldeListeSheet_TestDaten(ws).start();
+				new MeldeListeSheet_TestDaten(ws).testKeinTurnierVorhanden().start();
 				break;
 			case CMD_SUPERMELEE_TEAMPAARUNGEN:
-				new SupermeleeTeamPaarungenSheet(ws).testTurnierVorhanden().start();
+				new SupermeleeTeamPaarungenSheet(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).start();
 				break;
 			case CMD_AKTUELLE_SPIELRUNDE:
-				new SpielrundeSheet_Update(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+				new SpielrundeSheet_Update(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_NAECHSTE_SPIELRUNDE:
-				new SpielrundeSheet_Naechste(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+				new SpielrundeSheet_Naechste(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_SUPER_SPIELRUNDEPLAN:
-				new SpielrundePlan(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+				new SpielrundePlan(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_SPIELRUNDEN_TESTDATEN:
-				new SpielrundeSheet_TestDaten(ws).start();
+				new SpielrundeSheet_TestDaten(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).start();
 				break;
 			case CMD_SPIELTAG_RANGLISTE:
-				new SpieltagRanglisteSheet(ws).testTurnierVorhanden().backUpDocument().start();
+				new SpieltagRanglisteSheet(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).backUpDocument().start();
 				break;
 			case CMD_SPIELTAG_RANGLISTE_SORT:
-				new SpieltagRanglisteSheet_SortOnly(ws).testTurnierVorhanden().start();
+				new SpieltagRanglisteSheet_SortOnly(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).start();
 				break;
 			case CMD_SPIELTAGRANGLISTE_TESTDATEN:
-				new SpieltagRanglisteSheet_TestDaten(ws).start();
+				new SpieltagRanglisteSheet_TestDaten(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).start();
 				break;
 			case CMD_SUPERMELEE_ENDRANGLISTE:
-				new EndranglisteSheet(ws).testTurnierVorhanden().backUpDocument().start();
+				new EndranglisteSheet(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).backUpDocument().start();
 				break;
 			case CMD_SUPERMELEE_ENDRANGLISTE_SORT:
-				new EndranglisteSheet_Sort(ws).testTurnierVorhanden().start();
+				new EndranglisteSheet_Sort(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).start();
 				break;
 			case CMD_SUPERMELEE_VALIDATE:
-				new SpielrundeSheet_Validator(ws).testTurnierVorhanden().start();
+				new SpielrundeSheet_Validator(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).start();
 				break;
 			case CMD_SUPERMELEE_SPIELTAGRANGLISTE_VALIDATE:
-				new SpieltagRangliste_Validator(ws).testTurnierVorhanden().start();
+				new SpieltagRangliste_Validator(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).start();
 				break;
 			// ------------------------------
 			// Liga
 			case CMD_LIGA_NEUE_MELDELISTE:
-				new LigaMeldeListeSheetNew(ws).start();
+				new LigaMeldeListeSheetNew(ws).testKeinTurnierVorhanden().start();
 				break;
 			case CMD_LIGA_UPDATE_MELDELISTE:
-				new LigaMeldeListeSheetUpdate(ws).testTurnierVorhanden().backUpDocument().start();
+				new LigaMeldeListeSheetUpdate(ws).testTurnierSystem(TurnierSystem.LIGA).backUpDocument().start();
 				break;
 			case CMD_LIGA_TESTDATEN_MELDELISTE:
-				new LigaMeldeListeSheetTestDaten(ws, true).start();
+				new LigaMeldeListeSheetTestDaten(ws, true).testKeinTurnierVorhanden().start();
 				break;
 			case CMD_LIGA_SPIELPLAN:
-				new LigaSpielPlanSheet(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+				new LigaSpielPlanSheet(ws).testTurnierSystem(TurnierSystem.LIGA).backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_LIGA_RANGLISTE:
-				new LigaRanglisteSheet(ws).testTurnierVorhanden().backUpDocument().start();
+				new LigaRanglisteSheet(ws).testTurnierSystem(TurnierSystem.LIGA).backUpDocument().start();
 				break;
 			case CMD_LIGA_RANGLISTE_SORTIEREN:
-				new LigaRanglisteSheetSortOnly(ws).testTurnierVorhanden().start();
+				new LigaRanglisteSheetSortOnly(ws).testTurnierSystem(TurnierSystem.LIGA).start();
 				break;
 			case CMD_LIGA_DIREKTVERGLEICH:
-				new LigaRanglisteDirektvergleichSheet(ws).testTurnierVorhanden().start();
+				new LigaRanglisteDirektvergleichSheet(ws).testTurnierSystem(TurnierSystem.LIGA).start();
 				break;
 			case CMD_LIGA_SPIELPLAN_TESTDATEN:
-				new LigaSpielPlanSheetTestDaten(ws, false).start();
+				new LigaSpielPlanSheetTestDaten(ws, false).testTurnierSystem(TurnierSystem.LIGA).start();
 				break;
 			case CMD_LIGA_SPIELPLAN_TESTDATEN_MIT_FREISPIEL:
-				new LigaSpielPlanSheetTestDaten(ws, true).start();
+				new LigaSpielPlanSheetTestDaten(ws, true).testTurnierSystem(TurnierSystem.LIGA).start();
 				break;
 			case CMD_LIGA_EXPORT:
-				new LigaMeldeListeSheetExport(ws).testTurnierVorhanden().start();
+				new LigaMeldeListeSheetExport(ws).testTurnierSystem(TurnierSystem.LIGA).start();
 				break;
 			// ------------------------------
 			// Jeder gegen Jeden
 			case CMD_JGJ_NEUE_MELDELISTE:
-				new JGJMeldeListeSheet_New(ws).start();
+				new JGJMeldeListeSheet_New(ws).testKeinTurnierVorhanden().start();
 				break;
 			case CMD_JGJ_UPDATE_MELDELISTE:
-				new JGJMeldeListeSheet_Update(ws).testTurnierVorhanden().backUpDocument().start();
+				new JGJMeldeListeSheet_Update(ws).testTurnierSystem(TurnierSystem.JGJ).backUpDocument().start();
 				break;
 			case CMD_JGJ_TEILNEHMER:
-				new de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJTeilnehmerSheet(ws).testTurnierVorhanden().start();
+				new de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJTeilnehmerSheet(ws).testTurnierSystem(TurnierSystem.JGJ).start();
 				break;
 			case CMD_JGJ_SPIELPLAN:
-				new JGJSpielPlanSheet(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+				new JGJSpielPlanSheet(ws).testTurnierSystem(TurnierSystem.JGJ).backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_JGJ_RANGLISTE:
-				new JGJRanglisteSheet(ws).testTurnierVorhanden().backUpDocument().start();
+				new JGJRanglisteSheet(ws).testTurnierSystem(TurnierSystem.JGJ).backUpDocument().start();
 				break;
 			case CMD_JGJ_RANGLISTE_SORTIEREN:
-				new JGJRanglisteSheetSortOnly(ws).testTurnierVorhanden().start();
+				new JGJRanglisteSheetSortOnly(ws).testTurnierSystem(TurnierSystem.JGJ).start();
 				break;
 			case CMD_JGJ_DIREKTVERGLEICH:
-				new JGJRanglisteDirektvergleichSheet(ws).testTurnierVorhanden().start();
+				new JGJRanglisteDirektvergleichSheet(ws).testTurnierSystem(TurnierSystem.JGJ).start();
 				break;
 			case CMD_JGJ_TESTDATEN_TURNIER:
-				new JGJTurnierTestDaten(ws).start();
+				new JGJTurnierTestDaten(ws).testKeinTurnierVorhanden().start();
 				break;
 			case CMD_JGJ_TESTDATEN_TURNIER_DOUBLETTE_17:
-				new JGJDoublette17TurnierTestDaten(ws).start();
+				new JGJDoublette17TurnierTestDaten(ws).testKeinTurnierVorhanden().start();
 				break;
 			// ------------------------------
 			// Schweizer System
 			case CMD_SCHWEIZER_START:
-				new SchweizerMeldeListeSheetNew(ws).start();
+				new SchweizerMeldeListeSheetNew(ws).testKeinTurnierVorhanden().start();
 				break;
 			case CMD_SCHWEIZER_NEUE_MELDELISTE:
-				if (new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument() != TurnierSystem.SCHWEIZER) {
-					MessageBox.from(ws.getxContext(), MessageBoxTypeEnum.ERROR_OK)
-							.caption(I18n.get("msg.caption.kein.schweizer"))
-							.message(I18n.get("msg.text.kein.schweizer")).show();
-				} else {
-					new SchweizerMeldeListeSheetNew(ws).start();
-				}
+				new SchweizerMeldeListeSheetNew(ws).testTurnierSystem(TurnierSystem.SCHWEIZER).start();
 				break;
 			case CMD_SCHWEIZER_UPDATE_MELDELISTE:
-				new SchweizerMeldeListeSheetUpdate(ws).start();
+				new SchweizerMeldeListeSheetUpdate(ws).testTurnierSystem(TurnierSystem.SCHWEIZER).start();
 				break;
 			case CMD_SCHWEIZER_TEILNEHMER:
-				new de.petanqueturniermanager.schweizer.meldeliste.SchweizerTeilnehmerSheet(ws).testTurnierVorhanden().start();
+				new de.petanqueturniermanager.schweizer.meldeliste.SchweizerTeilnehmerSheet(ws).testTurnierSystem(TurnierSystem.SCHWEIZER).start();
 				break;
 			case CMD_SCHWEIZER_AKTUELLE_SPIELRUNDE:
-				new SchweizerSpielrundeSheetUpdate(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+				new SchweizerSpielrundeSheetUpdate(ws).testTurnierSystem(TurnierSystem.SCHWEIZER).backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_SCHWEIZER_NAECHSTE_SPIELRUNDE:
-				new SchweizerSpielrundeSheetNaechste(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+				new SchweizerSpielrundeSheetNaechste(ws).testTurnierSystem(TurnierSystem.SCHWEIZER).backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_SCHWEIZER_RANGLISTE:
-				new SchweizerRanglisteSheet(ws).testTurnierVorhanden().start();
+				new SchweizerRanglisteSheet(ws).testTurnierSystem(TurnierSystem.SCHWEIZER).start();
 				break;
 			case CMD_SCHWEIZER_RANGLISTE_SORTIEREN:
-				new SchweizerRanglisteSheetSortOnly(ws).testTurnierVorhanden().start();
+				new SchweizerRanglisteSheetSortOnly(ws).testTurnierSystem(TurnierSystem.SCHWEIZER).start();
 				break;
 			case CMD_SCHWEIZER_TESTDATEN_MELDELISTE:
-				new SchweizerMeldeListeSheetTestDaten(ws).start();
+				new SchweizerMeldeListeSheetTestDaten(ws).testKeinTurnierVorhanden().start();
 				break;
 			case CMD_SCHWEIZER_TESTDATEN_TURNIER:
-				new SchweizerTurnierTestDaten(ws).start();
+				new SchweizerTurnierTestDaten(ws).testKeinTurnierVorhanden().start();
 				break;
 			case CMD_SCHWEIZER_TESTDATEN_TURNIER_19:
 				// 19 Teams: ungerade → 1 Freilos pro Runde, Teamname in Spielrunde, Bahn Random
-				new SchweizerTurnierTestDaten(ws, 19, SpielplanTeamAnzeige.NAME).start();
+				new SchweizerTurnierTestDaten(ws, 19, SpielplanTeamAnzeige.NAME).testKeinTurnierVorhanden().start();
 				break;
 			// ------------------------------
 			// Maastrichter System
 			case CMD_MAASTRICHTER_START:
-				new MaastrichterMeldeListeSheetNew(ws).start();
+				new MaastrichterMeldeListeSheetNew(ws).testKeinTurnierVorhanden().start();
 				break;
 			case CMD_MAASTRICHTER_UPDATE_MELDELISTE:
-				new MaastrichterMeldeListeSheetUpdate(ws).testTurnierVorhanden().backUpDocument().start();
+				new MaastrichterMeldeListeSheetUpdate(ws).testTurnierSystem(TurnierSystem.MAASTRICHTER).backUpDocument().start();
 				break;
 			case CMD_MAASTRICHTER_NAECHSTE_VORRUNDE:
-				new MaastrichterSpielrundeSheetNaechste(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+				new MaastrichterSpielrundeSheetNaechste(ws).testTurnierSystem(TurnierSystem.MAASTRICHTER).backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_MAASTRICHTER_AKTUELLE_VORRUNDE:
-				new MaastrichterSpielrundeSheetUpdate(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+				new MaastrichterSpielrundeSheetUpdate(ws).testTurnierSystem(TurnierSystem.MAASTRICHTER).backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_MAASTRICHTER_VORRUNDEN_RANGLISTE:
-				new MaastrichterVorrundenRanglisteSheet(ws).testTurnierVorhanden().start();
+				new MaastrichterVorrundenRanglisteSheet(ws).testTurnierSystem(TurnierSystem.MAASTRICHTER).start();
 				break;
 			case CMD_MAASTRICHTER_FINALRUNDEN:
-				new MaastrichterFinalrundeSheet(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+				new MaastrichterFinalrundeSheet(ws).testTurnierSystem(TurnierSystem.MAASTRICHTER).backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_MAASTRICHTER_TEILNEHMER:
-				new MaastrichterTeilnehmerSheet(ws).testTurnierVorhanden().start();
+				new MaastrichterTeilnehmerSheet(ws).testTurnierSystem(TurnierSystem.MAASTRICHTER).start();
 				break;
 			case CMD_MAASTRICHTER_TESTDATEN_TURNIER:
-				new MaastrichterTurnierTestDaten(ws).start();
+				new MaastrichterTurnierTestDaten(ws).testKeinTurnierVorhanden().start();
 				break;
 			case CMD_MAASTRICHTER_TESTDATEN_TURNIER_57:
 				// 57 Teams: 4 Vorrunden, gruppenGroesse=16
 				// → Aufteilung [16,16,16,9] = 4 KO-Gruppen, D mit Cadrage
 				// → 57 Teams ungerade → automatisch Freilos pro Vorrunde
-				new MaastrichterTurnierTestDaten(ws, 57, 4, 16).start();
+				new MaastrichterTurnierTestDaten(ws, 57, 4, 16).testKeinTurnierVorhanden().start();
 				break;
 			case CMD_MAASTRICHTER_TESTDATEN_TURNIER_35:
 				// 35 Teams: 3 Vorrunden, gruppenGroesse=16
 				// → Aufteilung [16,16,3] = 3 Gruppen; mit 1-Team-Fold-Schutz wird der
 				//   3er-Rest als eigene Gruppe C beibehalten (≥2 Teams)
 				// → 35 Teams ungerade → automatisch Freilos pro Vorrunde
-				new MaastrichterTurnierTestDaten(ws, 35, 3, 16).start();
+				new MaastrichterTurnierTestDaten(ws, 35, 3, 16).testKeinTurnierVorhanden().start();
 				break;
 			// ------------------------------
 			// K.-O.
 			case CMD_KO_START:
-				new KoMeldeListeSheetNew(ws).start();
+				new KoMeldeListeSheetNew(ws).testKeinTurnierVorhanden().start();
 				break;
 			case CMD_KO_UPDATE_MELDELISTE:
-				new KoMeldeListeSheetUpdate(ws).testTurnierVorhanden().backUpDocument().start();
+				new KoMeldeListeSheetUpdate(ws).testTurnierSystem(TurnierSystem.KO).backUpDocument().start();
 				break;
 			case CMD_KO_TEILNEHMER:
-				new de.petanqueturniermanager.ko.meldeliste.KoTeilnehmerSheet(ws).testTurnierVorhanden().start();
+				new de.petanqueturniermanager.ko.meldeliste.KoTeilnehmerSheet(ws).testTurnierSystem(TurnierSystem.KO).start();
 				break;
 			case CMD_KO_TURNIERBAUM:
-				new KoTurnierbaumSheet(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+				new KoTurnierbaumSheet(ws).testTurnierSystem(TurnierSystem.KO).backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_KO_TESTDATEN_NUR_MELDELISTE:
-				new KoMeldeListeSheetTestDaten(ws, 8).start();
+				new KoMeldeListeSheetTestDaten(ws, 8).testKeinTurnierVorhanden().start();
 				break;
 			case CMD_KO_TESTDATEN_8_TEAMS:
-				new KoTurnierTestDaten(ws, 8).start();
+				new KoTurnierTestDaten(ws, 8).testKeinTurnierVorhanden().start();
 				break;
 			case CMD_KO_TESTDATEN_16_TEAMS:
-				new KoTurnierTestDaten(ws, 16).start();
+				new KoTurnierTestDaten(ws, 16).testKeinTurnierVorhanden().start();
 				break;
 			case CMD_KO_TESTDATEN_CADRAGE:
-				new KoTurnierTestDaten(ws, 10).start();
+				new KoTurnierTestDaten(ws, 10).testKeinTurnierVorhanden().start();
 				break;
 			// ------------------------------
 			// Formule X
 			case CMD_FORMULEX_START:
-				new FormuleXMeldeListeSheetNew(ws).start();
+				new FormuleXMeldeListeSheetNew(ws).testKeinTurnierVorhanden().start();
 				break;
 			case CMD_FORMULEX_UPDATE_MELDELISTE:
-				new FormuleXMeldeListeSheetUpdate(ws).testTurnierVorhanden().start();
+				new FormuleXMeldeListeSheetUpdate(ws).testTurnierSystem(TurnierSystem.FORMULEX).start();
 				break;
 			case CMD_FORMULEX_TEILNEHMER:
-				new FormuleXTeilnehmerSheet(ws).testTurnierVorhanden().start();
+				new FormuleXTeilnehmerSheet(ws).testTurnierSystem(TurnierSystem.FORMULEX).start();
 				break;
 			case CMD_FORMULEX_NAECHSTE_SPIELRUNDE:
-				new FormuleXSpielrundeSheetNaechste(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+				new FormuleXSpielrundeSheetNaechste(ws).testTurnierSystem(TurnierSystem.FORMULEX).backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_FORMULEX_AKTUELLE_SPIELRUNDE:
-				new FormuleXSpielrundeSheetUpdate(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+				new FormuleXSpielrundeSheetUpdate(ws).testTurnierSystem(TurnierSystem.FORMULEX).backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_FORMULEX_RANGLISTE:
-				new FormuleXRanglisteSheet(ws).testTurnierVorhanden().start();
+				new FormuleXRanglisteSheet(ws).testTurnierSystem(TurnierSystem.FORMULEX).start();
 				break;
 			case CMD_FORMULEX_TESTDATEN_MELDELISTE:
-				new FormuleXMeldeListeSheetTestDaten(ws, 17).start();
+				new FormuleXMeldeListeSheetTestDaten(ws, 17).testKeinTurnierVorhanden().start();
 				break;
 			case CMD_FORMULEX_TESTDATEN_TURNIER:
-				new FormuleXTurnierTestDaten(ws).start();
+				new FormuleXTurnierTestDaten(ws).testKeinTurnierVorhanden().start();
 				break;
 			// ------------------------------
 			// Kaskaden-KO
 			case CMD_KASKADE_START:
-				new KaskadeMeldeListeSheetNew(ws).start();
+				new KaskadeMeldeListeSheetNew(ws).testKeinTurnierVorhanden().start();
 				break;
 			case CMD_KASKADE_UPDATE_MELDELISTE:
-				new KaskadeMeldeListeSheetUpdate(ws).testTurnierVorhanden().backUpDocument().start();
+				new KaskadeMeldeListeSheetUpdate(ws).testTurnierSystem(TurnierSystem.KASKADE).backUpDocument().start();
 				break;
 			case CMD_KASKADE_TEILNEHMER:
-				new KaskadeTeilnehmerSheet(ws).testTurnierVorhanden().start();
+				new KaskadeTeilnehmerSheet(ws).testTurnierSystem(TurnierSystem.KASKADE).start();
 				break;
 			case CMD_KASKADE_TESTDATEN_MELDELISTE:
-				new KaskadeMeldeListeSheetTestDaten(ws, 73).start();
+				new KaskadeMeldeListeSheetTestDaten(ws, 73).testKeinTurnierVorhanden().start();
 				break;
 			case CMD_KASKADE_TESTDATEN_TURNIER:
-				new KaskadeTurnierTestDaten(ws).start();
+				new KaskadeTurnierTestDaten(ws).testKeinTurnierVorhanden().start();
 				break;
 			case CMD_KASKADE_NAECHSTE_RUNDE:
-				new KaskadeSpielrundeSheet(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+				new KaskadeSpielrundeSheet(ws).testTurnierSystem(TurnierSystem.KASKADE).backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_KASKADE_AKTUELLE_RUNDE:
-				new KaskadeAktuelleRundeSheet(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+				new KaskadeAktuelleRundeSheet(ws).testTurnierSystem(TurnierSystem.KASKADE).backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_KASKADE_KO_FELDER: {
 				var koFelder = new KaskadeKoFeldSheet(ws);
 				koFelder.setForceOk(true);
-				koFelder.testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+				koFelder.testTurnierSystem(TurnierSystem.KASKADE).backUpDocument().backupDocumentAfterRun().start();
 				break;
 			}
 			// ------------------------------
 			// Poule A/B
 			case CMD_POULE_START:
-				new PouleMeldeListeSheetNew(ws).start();
+				new PouleMeldeListeSheetNew(ws).testKeinTurnierVorhanden().start();
 				break;
 			case CMD_POULE_NEUE_MELDELISTE:
-				new PouleMeldeListeSheetNew(ws).start();
+				new PouleMeldeListeSheetNew(ws).testTurnierSystem(TurnierSystem.POULE).start();
 				break;
 			case CMD_POULE_UPDATE_MELDELISTE:
-				new PouleMeldeListeSheetUpdate(ws).testTurnierVorhanden().backUpDocument().start();
+				new PouleMeldeListeSheetUpdate(ws).testTurnierSystem(TurnierSystem.POULE).backUpDocument().start();
 				break;
 			case CMD_POULE_TEILNEHMER:
-				new PouleTeilnehmerSheet(ws).testTurnierVorhanden().start();
+				new PouleTeilnehmerSheet(ws).testTurnierSystem(TurnierSystem.POULE).start();
 				break;
 			case CMD_POULE_TESTDATEN_MELDELISTE:
-				new PouleMeldeListeSheetTestDaten(ws).start();
+				new PouleMeldeListeSheetTestDaten(ws).testKeinTurnierVorhanden().start();
 				break;
 			case CMD_POULE_VORRUNDE:
-				new PouleVorrundeSheet(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+				new PouleVorrundeSheet(ws).testTurnierSystem(TurnierSystem.POULE).backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_POULE_SPIELPLAENE:
-				new PouleSpielplaeneSheet(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+				new PouleSpielplaeneSheet(ws).testTurnierSystem(TurnierSystem.POULE).backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_POULE_VORRUNDEN_RANGLISTE:
-				new PouleVorrundenRanglisteSheet(ws).testTurnierVorhanden().start();
+				new PouleVorrundenRanglisteSheet(ws).testTurnierSystem(TurnierSystem.POULE).start();
 				break;
 			case CMD_POULE_KO:
-				new PouleKoSheet(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+				new PouleKoSheet(ws).testTurnierSystem(TurnierSystem.POULE).backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_POULE_TESTDATEN_TURNIER:
-				new PouleTurnierTestDaten(ws).start();
+				new PouleTurnierTestDaten(ws).testKeinTurnierVorhanden().start();
 				break;
 			case CMD_POULE_TESTDATEN_TURNIER_37:
-				new Poule37TeamsTurnierTestDaten(ws).start();
+				new Poule37TeamsTurnierTestDaten(ws).testKeinTurnierVorhanden().start();
 				break;
 			// ------------------------------
 			// Konfiguration
@@ -1305,10 +1296,11 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		List<StatusEntry> list = STATUS_LISTENERS.computeIfAbsent(command,
 				k -> Collections.synchronizedList(new ArrayList<>()));
 		list.add(new StatusEntry(listener, url));
-		logger.trace("[FOKUS-TRACE] addStatusListener: cmd='{}' handlerHash={} frameHash={} listeners[{}]={} thread={} druckvorschau={}",
+		logger.trace("[FOKUS-TRACE] addStatusListener: cmd='{}' handlerHash={} frameHash={} listeners[{}]={} listenerClass={} thread={} druckvorschau={}",
 				command, System.identityHashCode(this),
 				frame == null ? "null" : System.identityHashCode(frame),
 				command, list.size(),
+				listener == null ? "null" : listener.getClass().getName(),
 				Thread.currentThread().getName(),
 				PetanqueTurnierMngrSingleton.isDruckvorschauAktiv());
 		if (PetanqueTurnierMngrSingleton.isDruckvorschauAktiv()) {
@@ -1319,7 +1311,12 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			logger.trace("[FOKUS-TRACE] addStatusListener: cmd='{}' – postStatus übersprungen (Druckvorschau aktiv)", command);
 			return;
 		}
-		postStatus(listener, url, isEnabled(command, holeAktivesDokument()));
+		// URL-basierter Override: für alle in TOOLBAR_ONLY_CMDS aufgelisteten Befehle
+		// dauerhaft enabled (Workaround tdf#172207 — Toolbar-Listener sind nicht von
+		// Menü-Listenern unterscheidbar, daher wird der Override für diese URLs auch
+		// im Menü wirksam). Für übrige Befehle echte isEnabled-Bewertung.
+		boolean enabled = TOOLBAR_ONLY_CMDS.contains(command) || isEnabled(command, holeAktivesDokument());
+		postStatus(listener, url, enabled);
 	}
 
 	@Override
@@ -1352,6 +1349,67 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 
 	// -------------------------------------------------------------------------
 	// Zustandsprüfung und Listener-Benachrichtigung (statisch, cross-instance)
+	//
+	// Hinweis zu LO-Bug tdf#172207
+	// (https://bugs.documentfoundation.org/show_bug.cgi?id=172207):
+	// Die folgende isEnabled-Logik bestimmt das korrekte Enabled-State pro
+	// Command. Für das Menü wird sie zuverlässig ausgewertet, weil LO bei
+	// jedem Menü-Öffnen frische addStatusListener-Calls macht. Für die
+	// Addon-Toolbar wird das Ergebnis nach einem internen LO-Lifecycle-
+	// Event eingefroren (LO disposed die Status-Controller ohne Re-Register).
+	// Click-time-Validierung in dispatch() (testKeinTurnierVorhanden /
+	// testTurnierSystem) fängt den daraus resultierenden Datenverlust ab,
+	// falls der User auf einen eingefrorenen, fälschlich-enabled Button klickt.
+	//
+	// Workaround tdf#172207: URL-Commands die NUR auf der PétTurnMngr-Toolbar
+	// vorkommen (toolbar_*-Prefix) werden permanent als enabled zurückgegeben.
+	// Damit erscheinen sie nach dem LO-Bug-Trigger nicht „eingefroren disabled".
+	// Geteilte URLs (auch im Menü vorhanden — abbruch, turnier_modus,
+	// konfiguration_turnier, spielerdb_in_meldeliste, webserver_*, timer_*)
+	// folgen weiterhin der normalen Logik, weil das Menü ihre State-Genauigkeit
+	// braucht.
+
+	/**
+	 * URLs die auf einer PétTurnMngr-Addon-Toolbar (Z2/Z3/Z4) liegen. Diese
+	 * werden dauerhaft als enabled gemeldet, weil LO-Bug tdf#172207 die
+	 * Status-Controller der Addon-Toolbar nach Lifecycle-Events einfriert.
+	 *
+	 * <p>Hinweis: LO liefert Listener als UNO-Bridge-Proxies (z.B.
+	 * {@code jdk.proxy1.$Proxy10}) — Toolbar-Listener und Menü-Listener sind
+	 * extension-seitig nicht unterscheidbar. Geteilte URLs (in Toolbar UND
+	 * Menü) erscheinen im Menü daher ebenfalls als enabled; das ist der
+	 * akzeptierte Trade-off. Daten-Verlust durch fälschlich-enabled Klicks
+	 * wird in dispatch() via testKeinTurnierVorhanden/testTurnierSystem
+	 * abgefangen.
+	 */
+	private static final java.util.Set<String> TOOLBAR_ONLY_CMDS = java.util.Set.of(
+			// Z2 Toolbar
+			CMD_ABBRUCH,
+			CMD_TOOLBAR_START,
+			CMD_TOOLBAR_WEITER,
+			CMD_TOOLBAR_NEU_AUSLOSEN,
+			CMD_TOOLBAR_ABSCHLUSS,
+			CMD_TOOLBAR_VORRUNDEN_RANGLISTE,
+			CMD_TOOLBAR_TEILNEHMER,
+			CMD_TOOLBAR_NEU_IN_NEUER_DATEI,
+			CMD_TOOLBAR_OEFFNEN,
+			CMD_TOOLBAR_DRUCKEN,
+			CMD_TOOLBAR_DRUCKVORSCHAU,
+			CMD_KONFIGURATION_TURNIER,
+			CMD_SPIELERDB_IN_MELDELISTE,
+			CMD_TURNIER_MODUS,
+			CMD_WEBSERVER_STARTEN,
+			CMD_WEBSERVER_STOPPEN,
+			// Z3 SpieltagToolbar
+			CMD_TOOLBAR_GESAMTRANGLISTE,
+			CMD_TOOLBAR_NAECHSTER_SPIELTAG,
+			// Z4 TimerToolbar
+			CMD_TIMER_STARTEN_DIALOG,
+			CMD_TIMER_PAUSE_FORTSETZEN,
+			CMD_TIMER_STOPPEN,
+			CMD_TIMER_PLUS_MINUTE,
+			CMD_TIMER_MINUS_MINUTE,
+			CMD_TIMER_SNOOZE);
 
 	private static boolean isEnabled(String command, XSpreadsheetDocument document) {
 		if (SheetRunner.isRunning()) {
@@ -1383,31 +1441,23 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_SUPERMELEE_ENDRANGLISTE, CMD_SUPERMELEE_ENDRANGLISTE_SORT,
 				 CMD_SUPERMELEE_TEAMPAARUNGEN,
 				 CMD_SUPERMELEE_VALIDATE, CMD_SUPERMELEE_SPIELTAGRANGLISTE_VALIDATE -> ts == TurnierSystem.SUPERMELEE;
-			// "Spielrunde neu auslosen": nur wenn SuperMelee aktiv UND mind. 1 Spielrunde vorhanden
 			case CMD_AKTUELLE_SPIELRUNDE                    -> ts == TurnierSystem.SUPERMELEE && hatSupermeleeSpielrunde(ws);
-			// SuperMelee-Testdaten: auch wenn kein Turnier vorhanden
 			case CMD_MELDELISTE_TESTDATEN, CMD_SPIELRUNDEN_TESTDATEN,
 				 CMD_SPIELTAGRANGLISTE_TESTDATEN        -> ts == TurnierSystem.KEIN || ts == TurnierSystem.SUPERMELEE;
-			// Liga
 			case CMD_LIGA_NEUE_MELDELISTE                   -> ts == TurnierSystem.KEIN;
 			case CMD_LIGA_UPDATE_MELDELISTE, CMD_LIGA_SPIELPLAN,
 				 CMD_LIGA_RANGLISTE, CMD_LIGA_RANGLISTE_SORTIEREN,
 				 CMD_LIGA_DIREKTVERGLEICH, CMD_LIGA_EXPORT    -> ts == TurnierSystem.LIGA;
-			// Liga-Testdaten: auch wenn kein Turnier vorhanden
 			case CMD_LIGA_TESTDATEN_MELDELISTE,
 				 CMD_LIGA_SPIELPLAN_TESTDATEN,
 				 CMD_LIGA_SPIELPLAN_TESTDATEN_MIT_FREISPIEL -> ts == TurnierSystem.KEIN || ts == TurnierSystem.LIGA;
-			// Jeder gegen Jeden
 			case CMD_JGJ_NEUE_MELDELISTE                    -> ts == TurnierSystem.KEIN;
 			case CMD_JGJ_UPDATE_MELDELISTE, CMD_JGJ_SPIELPLAN,
 				 CMD_JGJ_RANGLISTE, CMD_JGJ_RANGLISTE_SORTIEREN,
 				 CMD_JGJ_DIREKTVERGLEICH, CMD_JGJ_TEILNEHMER            -> ts == TurnierSystem.JGJ;
-			// JGJ-Testdaten: auch wenn kein Turnier vorhanden
 			case CMD_JGJ_TESTDATEN_TURNIER,
 				 CMD_JGJ_TESTDATEN_TURNIER_DOUBLETTE_17     -> ts == TurnierSystem.KEIN || ts == TurnierSystem.JGJ;
-			// Schweizer
 			case CMD_SCHWEIZER_START                        -> ts == TurnierSystem.KEIN;
-			// Maastrichter
 			case CMD_MAASTRICHTER_START                     -> ts == TurnierSystem.KEIN;
 			case CMD_MAASTRICHTER_UPDATE_MELDELISTE,
 				 CMD_MAASTRICHTER_NAECHSTE_VORRUNDE,
@@ -1418,11 +1468,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_MAASTRICHTER_TESTDATEN_TURNIER,
 				 CMD_MAASTRICHTER_TESTDATEN_TURNIER_57,
 				 CMD_MAASTRICHTER_TESTDATEN_TURNIER_35      -> ts == TurnierSystem.KEIN || ts == TurnierSystem.MAASTRICHTER;
-			// K.-O.
 			case CMD_KO_START                               -> ts == TurnierSystem.KEIN;
 			case CMD_KO_UPDATE_MELDELISTE,
 				 CMD_KO_TURNIERBAUM, CMD_KO_TEILNEHMER     -> ts == TurnierSystem.KO;
-			// Formule X
 			case CMD_FORMULEX_START                         -> ts == TurnierSystem.KEIN;
 			case CMD_FORMULEX_UPDATE_MELDELISTE,
 				 CMD_FORMULEX_TEILNEHMER,
@@ -1431,7 +1479,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_FORMULEX_AKTUELLE_SPIELRUNDE           -> ts == TurnierSystem.FORMULEX && hatFormuleXSpielrunde(ws);
 			case CMD_FORMULEX_TESTDATEN_MELDELISTE,
 				 CMD_FORMULEX_TESTDATEN_TURNIER             -> ts == TurnierSystem.KEIN || ts == TurnierSystem.FORMULEX;
-			// Kaskaden-KO
 			case CMD_KASKADE_START                          -> ts == TurnierSystem.KEIN;
 			case CMD_KASKADE_UPDATE_MELDELISTE,
 				 CMD_KASKADE_TEILNEHMER                    -> ts == TurnierSystem.KASKADE;
@@ -1440,7 +1487,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_KASKADE_NAECHSTE_RUNDE,
 				 CMD_KASKADE_AKTUELLE_RUNDE,
 				 CMD_KASKADE_KO_FELDER                     -> ts == TurnierSystem.KASKADE;
-			// Poule A/B
 			case CMD_POULE_START                            -> ts == TurnierSystem.KEIN;
 			case CMD_POULE_NEUE_MELDELISTE,
 				 CMD_POULE_UPDATE_MELDELISTE,
@@ -1452,7 +1498,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_POULE_KO                               -> ts == TurnierSystem.POULE;
 			case CMD_POULE_TESTDATEN_TURNIER,
 				 CMD_POULE_TESTDATEN_TURNIER_37             -> ts == TurnierSystem.KEIN || ts == TurnierSystem.POULE;
-			// K.-O.-Testdaten: auch wenn kein Turnier vorhanden
 			case CMD_KO_TESTDATEN_NUR_MELDELISTE,
 				 CMD_KO_TESTDATEN_8_TEAMS,
 				 CMD_KO_TESTDATEN_16_TEAMS,
@@ -1463,24 +1508,18 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_SCHWEIZER_NAECHSTE_SPIELRUNDE,
 				 CMD_SCHWEIZER_RANGLISTE,
 				 CMD_SCHWEIZER_RANGLISTE_SORTIEREN          -> ts == TurnierSystem.SCHWEIZER;
-			// "Spielrunde neu auslosen": nur wenn Schweizer aktiv UND mind. 1 Spielrunde vorhanden
 			case CMD_SCHWEIZER_AKTUELLE_SPIELRUNDE          -> ts == TurnierSystem.SCHWEIZER && hatSchweizerSpielrunde(ws);
-			// Schweizer-Testdaten: auch wenn kein Turnier vorhanden
 			case CMD_SCHWEIZER_TESTDATEN_MELDELISTE,
 				 CMD_SCHWEIZER_TESTDATEN_TURNIER,
 				 CMD_SCHWEIZER_TESTDATEN_TURNIER_19        -> ts == TurnierSystem.KEIN || ts == TurnierSystem.SCHWEIZER;
-			// Konfiguration: nur wenn Turnier vorhanden
 			case CMD_KONFIGURATION_TURNIER,
 				 CMD_KONFIGURATION_KOPFFUSSZEILEN,
 				 CMD_KONFIGURATION_FARBEN,
 				 CMD_KONFIGURATION_TURNIER_STARTSEITE,
 				 CMD_KONFIGURATION_UPDATE_ERSTELLT_MIT_VERSION -> ts != TurnierSystem.KEIN;
-			// Webserver: Konfiguration immer aktiv; starten/stoppen je nach Zustand
 			case CMD_WEBSERVER_KONFIGURATION                -> true;
 			case CMD_WEBSERVER_STARTEN                      -> !WebServerManager.get().isLaeuft();
-			// Stoppen: nur das Owner-Dokument darf den WS stoppen
 			case CMD_WEBSERVER_STOPPEN                      -> WebServerManager.get().istOwnerDocument(document);
-			// URL-Slots: nur für das Owner-Dokument aktiv und sichtbar
 			case CMD_WEBSERVER_URL_1  -> WebServerManager.get().hatInstanzFuerSlot(0)
 					&& WebServerManager.get().istOwnerDocument(document);
 			case CMD_WEBSERVER_URL_2  -> WebServerManager.get().hatInstanzFuerSlot(1)
@@ -1501,7 +1540,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 					&& WebServerManager.get().istOwnerDocument(document);
 			case CMD_WEBSERVER_URL_10 -> WebServerManager.get().hatInstanzFuerSlot(9)
 					&& WebServerManager.get().istOwnerDocument(document);
-			// Release-Infos, Download, Direkt-Aktualisieren etc.: immer aktiv
 			case CMD_RELEASE_INFOS_ANZEIGEN,
 				 CMD_DOWNLOAD_EXTENSION,
 				 CMD_DIREKT_AKTUALISIEREN,
@@ -1509,10 +1547,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_PLUGIN_KONFIGURATION,
 				 CMD_PROCESSBOX_ANZEIGEN,
 				 CMD_PROJEKT_SEITE_OEFFNEN                  -> true;
-			// Abbruch: nur aktiv solange ein SheetRunner-Prozess läuft
-			// (der laufende Zweig oben liefert dafür bereits true; hier kein Prozess ⇒ false)
 			case CMD_ABBRUCH                                -> false;
-			// Symbolleiste
 			case CMD_TOOLBAR_START                          -> ts == TurnierSystem.KEIN;
 			case CMD_TOOLBAR_WEITER                         -> ts != TurnierSystem.KEIN;
 			case CMD_TOOLBAR_VORRUNDEN_RANGLISTE,
@@ -1523,14 +1558,11 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 					&& TurnierSystemToolbarStrategieRegistry.get(ts).hatAbschlussphase();
 			case CMD_TOOLBAR_NAECHSTER_SPIELTAG,
 				 CMD_TOOLBAR_GESAMTRANGLISTE                -> ts.hatMehrereSpielTage();
-			// Neues Turnier in neuer Datei / Öffnen / Drucken – immer aktiviert (unabhängig vom aktuellen Dokument)
 			case CMD_TOOLBAR_NEU_IN_NEUER_DATEI,
 				 CMD_TOOLBAR_OEFFNEN,
 				 CMD_TOOLBAR_DRUCKEN,
 				 CMD_TOOLBAR_DRUCKVORSCHAU                  -> true;
-			// Turnier Modus – immer aktiviert
 			case CMD_TURNIER_MODUS                          -> true;
-			// Spieler-DB – im Allgemeinen immer aktiviert (Verfügbarkeit der DB ist Laufzeit-Check)
 			case CMD_SPIELERDB_OEFFNEN,
 				 CMD_SPIELERDB_VEREINE,
 				 CMD_SPIELERDB_LABELS,
@@ -1540,9 +1572,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_SPIELERDB_EXPORT,
 				 CMD_SPIELERDB_IMPORT,
 				 CMD_SPIELERDB_WEBVIEW                      -> true;
-			// Übernahme in Meldeliste / Toolbar-Btn: nur wenn Turnier vorhanden
 			case CMD_SPIELERDB_IN_MELDELISTE                -> ts != TurnierSystem.KEIN;
-			// Timer – zustandsabhängig
 			case CMD_TIMER_STARTEN_DIALOG                   -> timerInaktivOderBeendet();
 			case CMD_TIMER_PAUSE_FORTSETZEN,
 				 CMD_TIMER_STOPPEN,
@@ -1556,89 +1586,61 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		}
 	}
 
-	/**
-	 * Prüft ob mindestens eine SuperMêlée-Spielrunde vorhanden ist.
-	 * Spielrunden-Sheets heißen "{spieltag}.{runde}. Spielrunde", z.B. "1.1. Spielrunde".
-	 */
 	private static boolean hatSupermeleeSpielrunde(WorkingSpreadsheet ws) {
 		try {
 			var doc = ws.getWorkingSpreadsheetDocument();
-			if (doc == null) {
-				return false;
-			}
+			if (doc == null) return false;
 			for (var name : doc.getSheets().getElementNames()) {
-				if (name.matches("\\d+\\.\\d+\\. Spielrunde")) {
-					return true;
-				}
+				if (name.matches("\\d+\\.\\d+\\. Spielrunde")) return true;
 			}
 			return false;
-		} catch (Exception e) {
-			return false;
-		}
+		} catch (Exception e) { return false; }
 	}
 
-	/**
-	 * Prüft ob mindestens eine Maastrichter-Vorrunde vorhanden ist.
-	 * Unterstützt sowohl lokalisierte Namen als auch ältere Dokumente mit deutschen Blattnamen.
-	 */
 	private static boolean hatMaastrichterVorrunde(WorkingSpreadsheet ws) {
 		try {
 			var doc = ws.getWorkingSpreadsheetDocument();
-			if (doc == null) {
-				return false;
-			}
-			String legacyName = "1. " + SheetNamen.LEGACY_MAASTRICHTER_VORRUNDE_PRAEFIX;
-			return doc.getSheets().hasByName(SheetNamen.maastrichterVorrunde(1))
+			if (doc == null) return false;
+			String legacyName = "1. " + de.petanqueturniermanager.helper.i18n.SheetNamen.LEGACY_MAASTRICHTER_VORRUNDE_PRAEFIX;
+			return doc.getSheets().hasByName(de.petanqueturniermanager.helper.i18n.SheetNamen.maastrichterVorrunde(1))
 					|| doc.getSheets().hasByName(legacyName);
-		} catch (Exception e) {
-			return false;
-		}
+		} catch (Exception e) { return false; }
 	}
 
-	/**
-	 * Prüft ob mindestens eine Schweizer-Spielrunde vorhanden ist.
-	 * Unterstützt sowohl lokalisierte Namen als auch ältere Dokumente mit deutschen Blattnamen.
-	 */
 	private static boolean hatSchweizerSpielrunde(WorkingSpreadsheet ws) {
 		try {
 			var doc = ws.getWorkingSpreadsheetDocument();
-			if (doc == null) {
-				return false;
-			}
-			String legacyName = "1. " + SchweizerAbstractSpielrundeSheet.SHEET_NAMEN;
-			return doc.getSheets().hasByName(SheetNamen.spielrunde(1))
+			if (doc == null) return false;
+			String legacyName = "1. " + de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrundeSheet.SHEET_NAMEN;
+			return doc.getSheets().hasByName(de.petanqueturniermanager.helper.i18n.SheetNamen.spielrunde(1))
 					|| doc.getSheets().hasByName(legacyName);
-		} catch (Exception e) {
-			return false;
-		}
+		} catch (Exception e) { return false; }
 	}
 
 	private static boolean hatFormuleXSpielrunde(WorkingSpreadsheet ws) {
 		try {
 			var doc = ws.getWorkingSpreadsheetDocument();
-			if (doc == null) {
-				return false;
-			}
-			return doc.getSheets().hasByName(SheetNamen.formulexSpielrunde(1))
+			if (doc == null) return false;
+			return doc.getSheets().hasByName(de.petanqueturniermanager.helper.i18n.SheetNamen.formulexSpielrunde(1))
 					|| doc.getSheets().hasByName("1. Spielrunde");
-		} catch (Exception e) {
-			return false;
-		}
+		} catch (Exception e) { return false; }
 	}
 
 	private static boolean timerInaktivOderBeendet() {
-		var zustand = TimerManager.get().getZustand();
-		return zustand == TimerZustand.INAKTIV || zustand == TimerZustand.BEENDET;
+		var zustand = de.petanqueturniermanager.timer.TimerManager.get().getZustand();
+		return zustand == de.petanqueturniermanager.timer.TimerZustand.INAKTIV
+				|| zustand == de.petanqueturniermanager.timer.TimerZustand.BEENDET;
 	}
 
 	private static boolean timerLaeuftOderPausiert() {
-		var zustand = TimerManager.get().getZustand();
-		return zustand == TimerZustand.LAEUFT || zustand == TimerZustand.PAUSIERT;
+		var zustand = de.petanqueturniermanager.timer.TimerManager.get().getZustand();
+		return zustand == de.petanqueturniermanager.timer.TimerZustand.LAEUFT
+				|| zustand == de.petanqueturniermanager.timer.TimerZustand.PAUSIERT;
 	}
 
 	private static boolean timerBeendetUndNichtSnoozed() {
-		var tm = TimerManager.get();
-		return tm.getZustand() == TimerZustand.BEENDET && !tm.getAktuellerZustand().snoozed();
+		var tm = de.petanqueturniermanager.timer.TimerManager.get();
+		return tm.getZustand() == de.petanqueturniermanager.timer.TimerZustand.BEENDET && !tm.getAktuellerZustand().snoozed();
 	}
 
 	private static final AtomicBoolean NOTIFY_ALL_FIRST_LOG = new AtomicBoolean(true);
@@ -1672,13 +1674,12 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		logger.trace("[FOKUS-TRACE] notifyAllListeners #{} START thread={} aktiverDoc={} commands={} listeners={} caller={}",
 				notifyId, Thread.currentThread().getName(), beschreibeDokument(aktivesDokument),
 				snapshot.size(), totalListeners, caller);
+		// URL-basierter Override (tdf#172207): Befehle in TOOLBAR_ONLY_CMDS dauerhaft
+		// enabled; Rest echte isEnabled-Bewertung. Pro command nur einmal berechnen.
 		int listenerAnzahl = 0;
 		for (Map.Entry<String, List<StatusEntry>> entry : snapshot.entrySet()) {
-			boolean enabled = isEnabled(entry.getKey(), aktivesDokument);
-			if (logger.isDebugEnabled()) {
-				logger.debug("[FOKUS-TRACE] notifyAll #{}: cmd='{}' enabled={} count={}",
-						notifyId, entry.getKey(), enabled, entry.getValue().size());
-			}
+			String cmd = entry.getKey();
+			boolean enabled = TOOLBAR_ONLY_CMDS.contains(cmd) || isEnabled(cmd, aktivesDokument);
 			for (StatusEntry e : new ArrayList<>(entry.getValue())) {
 				postStatus(e.listener, e.url, enabled);
 				listenerAnzahl++;

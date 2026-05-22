@@ -34,7 +34,7 @@ class SheetRunnerKoordinator {
 
     /**
      * Wird gesetzt wenn der Runner {@code setActiveSheet()} aufruft, damit der
-     * {@link de.petanqueturniermanager.helper.rangliste.RanglisteRefreshListener}
+     * {@link de.petanqueturniermanager.helper.sheetsync.SheetSyncListener}
      * das dadurch ausgelöste {@code selectionChanged}-Ereignis ignoriert.
      * Asynchrone Ereignisse aus LibreOffice können sonst nach {@code setLaeuft(false)}
      * ankommen und einen unerwünschten zweiten Neuaufbau starten.
@@ -100,7 +100,7 @@ class SheetRunnerKoordinator {
 
     /**
      * Signalisiert, dass das nächste {@code selectionChanged}-Ereignis, das auf die
-     * Rangliste zeigt, vom {@link de.petanqueturniermanager.helper.rangliste.RanglisteRefreshListener}
+     * Rangliste zeigt, vom {@link de.petanqueturniermanager.helper.sheetsync.SheetSyncListener}
      * ignoriert werden soll. Wird gesetzt bevor der Runner {@code setActiveSheet()} aufruft.
      */
     void unterdrückeNaechstesSelectionChange() {
