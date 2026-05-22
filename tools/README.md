@@ -7,6 +7,11 @@ Forensik nach realen Turnieren und Cross-Check der Java-Logik gedacht.
 
 Anforderungen: Python 3.8+, ausschliesslich Standard-Bibliothek (kein pip).
 
+Ausnahme: `linux/` enthält Skripte zur **Fernsteuerung einer laufenden
+LibreOffice-Instanz** via UNO + AT-SPI für Multi-Doc-/Modal-Repros. Diese
+benötigen `python3-gi`, `at-spi2-core` (System) sowie optional `python-uinput`
+für reine X11-Setups. Details siehe `tools/linux/README.md`.
+
 ## analyse_supermelee_spieltag.py
 
 Konsistenz-Analyse einer Supermelee-Spieltag-ODS.
