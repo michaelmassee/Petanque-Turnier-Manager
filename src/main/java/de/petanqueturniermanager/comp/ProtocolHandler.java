@@ -1083,7 +1083,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_KONFIGURATION_TURNIER_STARTSEITE ->
 					new TurnierStartseiteDialog(erzeugeWorkingSpreadsheetFuerDispatch()).zeigen();
 			case CMD_DOWNLOAD_EXTENSION   -> starteDownloadExtension();
-			case CMD_TOOLBAR_START        -> new TurnierSystemAuswahlDialog(erzeugeWorkingSpreadsheetFuerDispatch()).zeige();
+			case CMD_TOOLBAR_START        -> oeffneTurnierStartDialog();
 			case CMD_TOOLBAR_NEU_IN_NEUER_DATEI ->
 					new TurnierSystemNeueDateiAuswahlDialog(erzeugeWorkingSpreadsheetFuerDispatch()).zeige();
 			case CMD_TOOLBAR_OEFFNEN            -> erzeugeWorkingSpreadsheetFuerDispatch()
@@ -1116,6 +1116,26 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			default -> { return false; }
 		}
 		return true;
+	}
+
+	/**
+	 * Toolbar "Turnier starten": ist im aktuellen Dokument bereits ein Turnier
+	 * angelegt, erscheint eine Info-MessageBox und der Auswahl-Dialog wird
+	 * automatisch in den "Neue Datei"-Modus geleitet — das aktuelle Dokument
+	 * bleibt unverändert.
+	 */
+	private void oeffneTurnierStartDialog() throws com.sun.star.uno.Exception {
+		WorkingSpreadsheet ws = erzeugeWorkingSpreadsheetFuerDispatch();
+		boolean turnierVorhanden = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument() != TurnierSystem.KEIN;
+		if (turnierVorhanden) {
+			MessageBox.from(xContext, MessageBoxTypeEnum.INFO_OK)
+					.caption(I18n.get("toolbar.start.bestehendes.turnier.warnung.titel"))
+					.message(I18n.get("toolbar.start.bestehendes.turnier.info"))
+					.show();
+			new TurnierSystemNeueDateiAuswahlDialog(ws).zeige();
+		} else {
+			new TurnierSystemAuswahlDialog(ws).zeige();
+		}
 	}
 
 	/**

@@ -23,12 +23,8 @@ import com.sun.star.lang.XMultiComponentFactory;
 import com.sun.star.lang.XMultiServiceFactory;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
-import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
-import de.petanqueturniermanager.helper.msgbox.MessageBox;
-import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
-import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.formulex.meldeliste.FormuleXMeldeListeSheetNew;
 import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSheet_New;
 import de.petanqueturniermanager.kaskade.meldeliste.KaskadeMeldeListeSheetNew;
@@ -148,24 +144,8 @@ public class TurnierSystemAuswahlDialog extends AbstractUnoDialog {
             return;
         }
         TurnierSystem gewaehltesTurnierSystem = AUSWAHL_SYSTEME[ausgewaehltIndex];
-
-        if (isTurnierBereitsVorhanden()) {
-            MessageBoxResult antwort = MessageBox.from(ws, MessageBoxTypeEnum.QUESTION_YES_NO)
-                    .caption(I18n.get("toolbar.start.bestehendes.turnier.warnung.titel"))
-                    .message(I18n.get("toolbar.start.bestehendes.turnier.warnung"))
-                    .show();
-            if (antwort != MessageBoxResult.YES) {
-                logger.info("Turnier-Start abgebrochen (bestehendes Turnier nicht überschrieben).");
-                return;
-            }
-        }
-
         logger.info("Turnier-Start: {}", gewaehltesTurnierSystem.getBezeichnung());
         starteNeueTurnierInDokument(ws, gewaehltesTurnierSystem);
-    }
-
-    private boolean isTurnierBereitsVorhanden() {
-        return new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument() != TurnierSystem.KEIN;
     }
 
     protected static void starteNeueTurnierInDokument(WorkingSpreadsheet zielWs, TurnierSystem system)
