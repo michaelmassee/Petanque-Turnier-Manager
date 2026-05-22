@@ -544,9 +544,6 @@ class FormuleXListeDelegate implements MeldeListeKonstanten {
         RangePosition range = RangePosition.from(vornameSpalte, ERSTE_DATEN_ZEILE, vornameSpalte, maxZeile);
         RangeData data = RangeHelper.from(xSheet, sheet.getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), range)
                 .getDataFromRange();
-        if (data == null) {
-            return letzte;
-        }
         int zeile = ERSTE_DATEN_ZEILE;
         for (RowData row : data) {
             if (!row.isEmpty()) {
