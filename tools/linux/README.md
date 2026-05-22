@@ -37,7 +37,8 @@ funktioniert aber nur zuverlässig auf reinen X11-Sessions.
 | Datei | Zweck |
 |---|---|
 | `lo_uno_helpers.py` | Bibliothek: `start_soffice`, `connect_uno`, `find_lo_app`, `select_listbox_item`, `click_button`, `cleanup_environment` etc. |
-| `fokus_atspi_neues_turnier.py` | End-to-End-Repro für den Toolbar-Fokus-Bug (drei Docs, Dispatch aus Mitte, OK via AT-SPI, Fokus-Check). |
+| `fokus_atspi_neues_turnier.py` | End-to-End-Repro für den Toolbar-Fokus-Bug („Neues Turnier in neuer Datei", drei Docs, Dispatch aus Mitte, OK via AT-SPI, Fokus-Check). |
+| `fokus_dispatch_runner.py` | Repro für den SheetRunner-Fokus-Bug („normale" Toolbar-Aktion mit ProcessBox-Lauf, zwei Docs, modal-frei via `ptm:neue_meldeliste`). Erwartet nach Fix: letzte Polling-Zeile zeigt aufrufendes Doc. URL überstellbar via `PTM_URL=…`. |
 | `dispatch_routing_test.py` | Diagnose: pro Frame ein non-modaler Dispatch, zeigt im `[FOKUS-TRACE]`-Log welcher `ProtocolHandler` welche Aktion bekommt. |
 
 ## Typischer Lauf

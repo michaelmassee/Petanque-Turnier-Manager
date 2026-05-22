@@ -10,6 +10,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.sun.star.awt.XTopWindow;
+import com.sun.star.frame.XController;
+import com.sun.star.frame.XFrame;
+import com.sun.star.frame.XModel;
 import com.sun.star.lang.DisposedException;
 import com.sun.star.lang.EventObject;
 import com.sun.star.lang.XComponent;
@@ -129,7 +133,7 @@ public abstract class SheetRunner extends Thread {
 	 * Startet den SheetRunner asynchron als Thread und schließt dabei die Race-Condition,
 	 * die zwischen {@code Thread.start()} und dem eigentlichen {@code run()}-Einstieg entsteht:
 	 * In diesem Zeitfenster sah {@code isRunning()} fälschlicherweise {@code false}, was
-	 * dazu führen konnte, dass der {@link de.petanqueturniermanager.helper.rangliste.RanglisteRefreshListener}
+	 * dazu führen konnte, dass der {@link de.petanqueturniermanager.helper.sheetsync.SheetSyncListener}
 	 * parallel einen zweiten Runner startete und damit das Prozess-Fenster zweimal öffnete.
 	 * <p>
 	 * Durch {@link #koordinatorVorgekoppelt} erkennt {@link #run()}, dass der Koordinator
@@ -276,6 +280,17 @@ public abstract class SheetRunner extends Thread {
 			}
 			unregisterDisposingListener();
 
+			// Fokus deterministisch auf das Arbeits-Dokument zurückgeben.
+			// ProcessBox (Singleton, parentless Top-Window) klaut beim run() den
+			// Fokus und gibt ihn nach setVisible(false) an das älteste sichtbare
+			// Calc-Fenster zurück (= doc1 statt des tatsächlich bearbeiteten doc).
+			// Folge ohne diesen Aufruf: alle Menü-StatusListener werten gegen den
+			// "falschen" aktiven Frame, die System-Toolbar-States in doc2 bleiben
+			// alt, User sieht doc1 im Vordergrund.
+			if (isDocumentAlive()) {
+				fokussiereArbeitsDokument();
+			}
+
 			long gesamtMs = (System.nanoTime() - runStartNs) / 1_000_000L;
 			PerfLog.log(logger, "[WORKER-TIMING] SheetRunner.run ENDE class={} dauer={} ms fehler={}",
 					this.getClass().getSimpleName(), gesamtMs, isFehler);
@@ -290,6 +305,34 @@ public abstract class SheetRunner extends Thread {
 	public SheetRunner backupDocumentAfterRun() {
 		backupDocumentAfterRun = true;
 		return this;
+	}
+
+	/**
+	 * Aktiviert den Frame des {@link #workingSpreadsheet} via {@link XFrame#activate()}
+	 * und {@link XTopWindow#toFront()}. Wird am Ende eines jeden Runs aufgerufen, damit
+	 * der Fokus nach Sheet-Operationen am bearbeiteten Doc bleibt — siehe Bug-Repro
+	 * unter {@code tools/linux/fokus_neue_meldeliste.py}.
+	 */
+	private void fokussiereArbeitsDokument() {
+		try {
+			XModel xModel = Lo.qi(XModel.class, workingSpreadsheet.getWorkingSpreadsheetDocument());
+			if (xModel == null) return;
+			XController controller = xModel.getCurrentController();
+			if (controller == null) return;
+			XFrame frame = controller.getFrame();
+			if (frame == null) return;
+			logger.info("[FOKUS-TRACE] SheetRunner.fokussiereArbeitsDokument: activate+toFront frame#{} class={}",
+					System.identityHashCode(frame), this.getClass().getSimpleName());
+			frame.activate();
+			XTopWindow top = Lo.qi(XTopWindow.class, frame.getContainerWindow());
+			if (top != null) {
+				top.toFront();
+			}
+		} catch (DisposedException e) {
+			logger.debug("fokussiereArbeitsDokument: Dokument disposed");
+		} catch (Exception e) {
+			logger.debug("fokussiereArbeitsDokument fehlgeschlagen", e);
+		}
 	}
 
 	/**
@@ -443,7 +486,7 @@ public abstract class SheetRunner extends Thread {
 
 	/**
 	 * Signalisiert, dass das nächste {@code selectionChanged}-Ereignis zur Rangliste
-	 * vom {@link de.petanqueturniermanager.helper.rangliste.RanglisteRefreshListener}
+	 * vom {@link de.petanqueturniermanager.helper.sheetsync.SheetSyncListener}
 	 * ignoriert werden soll.
 	 * <p>
 	 * Muss direkt nach {@code getSheetHelper().setActiveSheet(sheet)} aufgerufen werden,
@@ -457,7 +500,7 @@ public abstract class SheetRunner extends Thread {
 
 	/**
 	 * Liest und löscht das Unterdrückungs-Flag atomar.
-	 * Wird vom {@link de.petanqueturniermanager.helper.rangliste.RanglisteRefreshListener} genutzt.
+	 * Wird vom {@link de.petanqueturniermanager.helper.sheetsync.SheetSyncListener} genutzt.
 	 *
 	 * @return {@code true} wenn das nächste selectionChanged ignoriert werden soll
 	 */
