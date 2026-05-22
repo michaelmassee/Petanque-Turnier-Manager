@@ -52,7 +52,7 @@ public class TurnierSystemNeueDateiAuswahlDialog extends TurnierSystemAuswahlDia
             return;
         }
         TurnierSystem gewaehltesTurnierSystem = AUSWAHL_SYSTEME[ausgewaehltIndex];
-        logger.info("[FOKUS-TRACE] beiOkGeklickt: System={} aufrufendesWs.doc={}",
+        logger.trace("[FOKUS-TRACE] beiOkGeklickt: System={} aufrufendesWs.doc={}",
                 gewaehltesTurnierSystem.getBezeichnung(),
                 de.petanqueturniermanager.comp.ProtocolHandler.beschreibeDokument(
                         ws.getWorkingSpreadsheetDocument()));
@@ -66,7 +66,7 @@ public class TurnierSystemNeueDateiAuswahlDialog extends TurnierSystemAuswahlDia
             logger.error("Neues Calc-Dokument konnte nicht erstellt werden.");
             return;
         }
-        logger.info("[FOKUS-TRACE] neues Dokument erstellt: {}",
+        logger.trace("[FOKUS-TRACE] neues Dokument erstellt: {}",
                 de.petanqueturniermanager.comp.ProtocolHandler.beschreibeDokument(neuesDokument));
         WorkingSpreadsheet neuesWs = new WorkingSpreadsheet(xContext, neuesDokument);
         starteNeueTurnierInDokument(neuesWs, gewaehltesTurnierSystem);
@@ -95,14 +95,14 @@ public class TurnierSystemNeueDateiAuswahlDialog extends TurnierSystemAuswahlDia
             logger.warn("[FOKUS-TRACE] fokussiereDokument: frame==null");
             return;
         }
-        logger.info("[FOKUS-TRACE] fokussiereDokument: activate+toFront auf frame#{} (doc={})",
+        logger.trace("[FOKUS-TRACE] fokussiereDokument: activate+toFront auf frame#{} (doc={})",
                 System.identityHashCode(frame),
                 de.petanqueturniermanager.comp.ProtocolHandler.beschreibeDokument(doc));
         frame.activate();
         XTopWindow topWindow = Lo.qi(XTopWindow.class, frame.getContainerWindow());
         if (topWindow != null) {
             topWindow.toFront();
-            logger.info("[FOKUS-TRACE] fokussiereDokument: toFront() OK");
+            logger.trace("[FOKUS-TRACE] fokussiereDokument: toFront() OK");
         } else {
             logger.warn("[FOKUS-TRACE] fokussiereDokument: ContainerWindow nicht XTopWindow");
         }

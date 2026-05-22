@@ -110,7 +110,7 @@ public class TurnierEventHandler {
 						eventObj.getWorkingSpreadsheetDocument());
 		synchronized (listeners) {
 			anzahl = listeners.size();
-			logger.info("[FOKUS-TRACE] TurnierEvent broadcast START quelle={} pfad={} eventDoc={} listeners={} thread={}",
+			logger.trace("[FOKUS-TRACE] TurnierEvent broadcast START quelle={} pfad={} eventDoc={} listeners={} thread={}",
 					quelle, synchronerPfad ? "sync" : "main", eventDoc, anzahl,
 					Thread.currentThread().getName());
 			for (ITurnierEventListener listner : listeners) {
@@ -122,7 +122,7 @@ public class TurnierEventHandler {
 			}
 		}
 		long dauerMs = (System.nanoTime() - startNs) / 1_000_000L;
-		logger.info("[FOKUS-TRACE] TurnierEvent broadcast ENDE quelle={} dauerMs={} listener={}",
+		logger.trace("[FOKUS-TRACE] TurnierEvent broadcast ENDE quelle={} dauerMs={} listener={}",
 				quelle, dauerMs, anzahl);
 		PerfLog.log(logger, "[WORKER-TIMING] TurnierEventHandler broadcast PropertiesChanged quelle={} pfad={} : {} ms, listener={}, thread={}",
 				quelle, synchronerPfad ? "sync" : "main", dauerMs, anzahl,

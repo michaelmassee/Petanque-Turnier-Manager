@@ -175,7 +175,7 @@ public abstract class SheetRunner extends Thread {
 		if (laueftJetzt) {
 			logger.debug("Start SheetRunner");
 			long runStartNs = System.nanoTime();
-			logger.info("[FOKUS-TRACE] SheetRunner.run START class={} workingDoc={} silentBackground={} thread={}",
+			logger.trace("[FOKUS-TRACE] SheetRunner.run START class={} workingDoc={} silentBackground={} thread={}",
 					this.getClass().getSimpleName(),
 					de.petanqueturniermanager.comp.ProtocolHandler.beschreibeDokument(
 							workingSpreadsheet.getWorkingSpreadsheetDocument()),
@@ -326,7 +326,7 @@ public abstract class SheetRunner extends Thread {
 			if (controller == null) return;
 			XFrame frame = controller.getFrame();
 			if (frame == null) return;
-			logger.info("[FOKUS-TRACE] SheetRunner.fokussiereArbeitsDokument: activate+toFront frame#{} class={}",
+			logger.trace("[FOKUS-TRACE] SheetRunner.fokussiereArbeitsDokument: activate+toFront frame#{} class={}",
 					System.identityHashCode(frame), this.getClass().getSimpleName());
 			frame.activate();
 			XTopWindow top = Lo.qi(XTopWindow.class, frame.getContainerWindow());

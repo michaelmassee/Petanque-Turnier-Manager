@@ -112,7 +112,7 @@ public final class SpieltagToolbarSteuerung {
             } catch (Exception e) {
                 logger.debug("Frame-Titel konnte nicht ermittelt werden: {}", e.getMessage());
             }
-            logger.info("[FOKUS-TRACE] SpieltagToolbar.aktualisiereInFrame frameTitle='{}' frameHash={} sichtbar={}",
+            logger.trace("[FOKUS-TRACE] SpieltagToolbar.aktualisiereInFrame frameTitle='{}' frameHash={} sichtbar={}",
                     frameTitel, System.identityHashCode(xFrame), sichtbar);
         } catch (Exception e) {
             logger.error("Fehler beim Aktualisieren der Spieltag-Toolbar in Frame '{}'",

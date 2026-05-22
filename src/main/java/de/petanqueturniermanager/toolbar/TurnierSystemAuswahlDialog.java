@@ -85,7 +85,7 @@ public class TurnierSystemAuswahlDialog extends AbstractUnoDialog {
         // nach Schließen des Dialogs der Focus beim Ursprungs-Dokument bleibt
         // (sonst entscheidet der WM bei mehreren offenen Calc-Fenstern beliebig).
         var peer = ws != null ? ws.getContainerWindowPeer() : null;
-        logger.info("[FOKUS-TRACE] {}: holeParentPeer ws={} peer={}",
+        logger.trace("[FOKUS-TRACE] {}: holeParentPeer ws={} peer={}",
                 getClass().getSimpleName(),
                 ws == null ? "null" : "set",
                 peer == null ? "null" : "set");

@@ -167,6 +167,30 @@ Damit LibreOffice die Erweiterung ausführen kann, muss die Java-Laufzeitumgebun
 
 ---
 
+## ⚠️ Bekannte Einschränkungen
+
+### Toolbar-Buttons frieren ein nach „Neues Turnier"-Aktionen bei mehreren offenen Calc-Dokumenten
+
+Wenn du **mehr als ein Calc-Dokument** gleichzeitig offen hast und in einem
+davon ein neues Turnier anlegst (Toolbar-Aktion „Start"), kann die
+PétTurnMngr-Toolbar in dem betroffenen Dokument anschließend **eingefroren**
+erscheinen — die Buttons reagieren nicht mehr auf den Turnier-Zustand
+(z. B. „Nächste Spielrunde" bleibt grau obwohl ein Turnier angelegt wurde).
+
+**Ursache:** LibreOffice 26.2 baut den Toolbar-Controller-Stack der
+Addon-Toolbar in bestimmten internen Lifecycle-Zuständen ab, ohne ihn neu
+aufzubauen. Das betrifft nur Addon-Toolbars; Menü-Aktionen, Sheets und
+Sidebar funktionieren weiter korrekt. Es handelt sich um einen
+LibreOffice-internen Bug — siehe Analyse in
+[`lo-bug-addon-toolbar-rebind.md`](lo-bug-addon-toolbar-rebind.md).
+
+**Workaround:** Betroffenes Doc einmal **schließen und wieder öffnen** —
+oder direkt mit nur einem offenen Calc-Dokument arbeiten. Menü-Aktionen
+über „PétTurnMngr" funktionieren auch bei eingefrorenen Toolbar-Buttons
+zuverlässig.
+
+---
+
 ## 📖 Dokumentation & Hilfe
 Die vollständige Dokumentation, ausführliche Erklärungen zu den einzelnen Menüpunkten sowie Tipps zur Fehlerbehebung findest du in unserem offiziellen Wiki:
 👉 **[Hier geht es zum Projekt-Wiki](https://github.com/michaelmassee/Petanque-Turnier-Manager/wiki)**

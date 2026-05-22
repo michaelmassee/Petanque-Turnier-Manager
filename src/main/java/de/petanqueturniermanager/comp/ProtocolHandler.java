@@ -370,7 +370,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		SHARED_CONTEXT = xContext;
 		long ctorStartNs = System.nanoTime();
 		int ctorNum = CTOR_COUNTER.incrementAndGet();
-		logger.info("[FOKUS-TRACE] ProtocolHandler-ctor #{} handlerHash={} thread={}",
+		logger.trace("[FOKUS-TRACE] ProtocolHandler-ctor #{} handlerHash={} thread={}",
 				ctorNum, System.identityHashCode(this), Thread.currentThread().getName());
 		PetanqueTurnierMngrSingleton.init(xContext);
 		long t = System.nanoTime();
@@ -404,25 +404,25 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			PetanqueTurnierMngrSingleton.addGlobalEventListener(new IGlobalEventListener() {
 				@Override
 				public void onFocus(Object source) {
-					logger.info("[FOKUS-TRACE] onFocus: source={}", beschreibeSource(source));
+					logger.trace("[FOKUS-TRACE] onFocus: source={}", beschreibeSource(source));
 					notifyAllListeners();
 				}
 
 				@Override
 				public void onLoadFinished(Object source) {
-					logger.info("[FOKUS-TRACE] onLoadFinished: source={}", beschreibeSource(source));
+					logger.trace("[FOKUS-TRACE] onLoadFinished: source={}", beschreibeSource(source));
 					notifyAllListeners();
 				}
 
 				@Override
 				public void onNew(Object source) {
-					logger.info("[FOKUS-TRACE] onNew: source={}", beschreibeSource(source));
+					logger.trace("[FOKUS-TRACE] onNew: source={}", beschreibeSource(source));
 					notifyAllListeners();
 				}
 
 				@Override
 				public void onLoad(Object source) {
-					logger.info("[FOKUS-TRACE] onLoad: source={}", beschreibeSource(source));
+					logger.trace("[FOKUS-TRACE] onLoad: source={}", beschreibeSource(source));
 					var doc = DocumentHelper.getCurrentSpreadsheetDocumentFrom(source);
 					if (doc != null) {
 						var ws = new WorkingSpreadsheet(xContext, doc);
@@ -442,7 +442,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 
 				@Override
 				public void onUnload(Object source) {
-					logger.info("[FOKUS-TRACE] onUnload: source={}", beschreibeSource(source));
+					logger.trace("[FOKUS-TRACE] onUnload: source={}", beschreibeSource(source));
 					// WS stoppen wenn das Owner-Dokument geschlossen wird → andere Dokumente
 					// können danach wieder starten
 					var geschlossenesDoc = DocumentHelper.getCurrentSpreadsheetDocumentFrom(source);
@@ -455,6 +455,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 
 				@Override
 				public void onViewClosed(Object source) {
+					logger.trace("[FOKUS-TRACE] onViewClosed: source={}", beschreibeSource(source));
 					// Druckvorschau-Übergang loggen: Controller bereits gewechselt wenn dieses Event feuert.
 					// DRUCKVORSCHAU_AKTIV wird hier NICHT zurückgesetzt – FillToolbar läuft noch.
 					// Der Reset erfolgt erst in onViewCreated, wenn der neue Controller vollständig aktiv ist.
@@ -463,7 +464,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 						if (xModel == null) return;
 						var controller = xModel.getCurrentController();
 						boolean jetzt = controller == null || Lo.qi(XSpreadsheetView.class, controller) == null;
-						logger.debug("onViewClosed: aktuellerController={} DRUCKVORSCHAU_AKTIV={}→bleibt",
+						logger.trace("[FOKUS-TRACE] onViewClosed: aktuellerController={} DRUCKVORSCHAU_AKTIV={}→bleibt",
 								jetzt ? "Druckvorschau" : "ScTabViewShell", PetanqueTurnierMngrSingleton.isDruckvorschauAktiv());
 					} catch (Exception e) {
 						logger.error("Fehler in onViewClosed beim Druckvorschau-Tracking", e);
@@ -472,6 +473,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 
 				@Override
 				public void onViewCreated(Object source) {
+					logger.trace("[FOKUS-TRACE] onViewCreated: source={}", beschreibeSource(source));
 					// Druckvorschau-Tracking: Controller-Typ des neuen Views bestimmen.
 					// ScPreviewController implementiert XSpreadsheetView nicht.
 					try {
@@ -482,9 +484,20 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 								|| Lo.qi(XSpreadsheetView.class, controller) == null;
 						if (istDruckvorschau != PetanqueTurnierMngrSingleton.isDruckvorschauAktiv()) {
 							PetanqueTurnierMngrSingleton.setDruckvorschauAktiv(istDruckvorschau);
-							logger.debug("onViewCreated: DRUCKVORSCHAU_AKTIV={}", istDruckvorschau);
+							logger.trace("[FOKUS-TRACE] onViewCreated: DRUCKVORSCHAU_AKTIV={}", istDruckvorschau);
 						}
 						if (!istDruckvorschau) {
+							// EXPERIMENT: Toolbar-Rebind nach View-Wechsel triggern.
+							// Hypothese: requestElement(TOOLBAR_URL) auf XLayoutManager
+							// veranlasst LO die Toolbar-Controller (und damit XStatusListener)
+							// neu zu erzeugen. Wenn das funktioniert, sehen wir nach diesem
+							// Aufruf einen Schwall neuer addStatusListener-Logs.
+							// Wenn nicht – kein Schaden (showElement ist idempotent).
+							logger.trace("[FOKUS-TRACE] onViewCreated: EXPERIMENT requestElement Toolbar-Rebind beginnt");
+							long tBefore = System.nanoTime();
+							ToolbarAnzeigenListener.zeigeToolbarInAllenFrames(xContext);
+							long dauerMs = (System.nanoTime() - tBefore) / 1_000_000L;
+							logger.trace("[FOKUS-TRACE] onViewCreated: EXPERIMENT zeigeToolbarInAllenFrames dauer={} ms", dauerMs);
 							notifyAllListeners();
 						}
 					} catch (Exception e) {
@@ -497,7 +510,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				public void onPropertiesChanged(ITurnierEvent event) {
 					XSpreadsheetDocument quelldoc = event == null ? null : event.getWorkingSpreadsheetDocument();
 					XSpreadsheetDocument globalDoc = holeAktivesDokument();
-					logger.info("[FOKUS-TRACE] TurnierEvent onPropertiesChanged: quelldoc={} globalAktivesDoc={} match={}",
+					logger.trace("[FOKUS-TRACE] TurnierEvent onPropertiesChanged: quelldoc={} globalAktivesDoc={} match={}",
 							beschreibeDokument(quelldoc), beschreibeDokument(globalDoc),
 							quelldoc != null && quelldoc.equals(globalDoc));
 					notifyAllListeners();
@@ -529,7 +542,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		XFrame xFrame = Lo.qi(XFrame.class, arguments[0]);
 		if (xFrame != null) {
 			frame = xFrame;
-			logger.info("[FOKUS-TRACE] initialize: handlerHash={} frameHash={} frameTitle='{}'",
+			logger.trace("[FOKUS-TRACE] initialize: handlerHash={} frameHash={} frameTitle='{}'",
 					System.identityHashCode(this), System.identityHashCode(xFrame), holeFrameTitle(xFrame));
 		}
 	}
@@ -552,7 +565,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	private WorkingSpreadsheet erzeugeWorkingSpreadsheetFuerDispatch() {
 		XSpreadsheetDocument doc = ermittleDokumentAusFrame();
 		if (doc != null) {
-			logger.info("[FOKUS-TRACE] erzeugeWS: handlerHash={} frameHash={} frameTitle='{}' doc={}",
+			logger.trace("[FOKUS-TRACE] erzeugeWS: handlerHash={} frameHash={} frameTitle='{}' doc={}",
 					System.identityHashCode(this), System.identityHashCode(frame),
 					holeFrameTitle(frame), beschreibeDokument(doc));
 			return new WorkingSpreadsheet(xContext, doc);
@@ -641,7 +654,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	@Override
 	public void dispatch(URL url, PropertyValue[] args) {
 		String command = url.Path;
-		logger.info("[FOKUS-TRACE] dispatch: cmd='{}' handlerHash={} frameHash={} frameTitle='{}'",
+		logger.trace("[FOKUS-TRACE] dispatch: cmd='{}' handlerHash={} frameHash={} frameTitle='{}'",
 				command, System.identityHashCode(this),
 				frame == null ? "null" : System.identityHashCode(frame),
 				holeFrameTitle(frame));
@@ -1292,7 +1305,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		List<StatusEntry> list = STATUS_LISTENERS.computeIfAbsent(command,
 				k -> Collections.synchronizedList(new ArrayList<>()));
 		list.add(new StatusEntry(listener, url));
-		logger.info("[FOKUS-TRACE] addStatusListener: cmd='{}' handlerHash={} frameHash={} listeners[{}]={} thread={} druckvorschau={}",
+		logger.trace("[FOKUS-TRACE] addStatusListener: cmd='{}' handlerHash={} frameHash={} listeners[{}]={} thread={} druckvorschau={}",
 				command, System.identityHashCode(this),
 				frame == null ? "null" : System.identityHashCode(frame),
 				command, list.size(),
@@ -1303,7 +1316,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			// postStatus() → statusChanged() als Re-Entrant-Callback in LO C++ korrumpiert
 			// den Frame-Zustand → SIGSEGV nach OnCopyToDone. Guard: erst nach OnViewCreated
 			// (dort ruft notifyAllListeners() alle neuen Controller korrekt auf).
-			logger.info("[FOKUS-TRACE] addStatusListener: cmd='{}' – postStatus übersprungen (Druckvorschau aktiv)", command);
+			logger.trace("[FOKUS-TRACE] addStatusListener: cmd='{}' – postStatus übersprungen (Druckvorschau aktiv)", command);
 			return;
 		}
 		postStatus(listener, url, isEnabled(command, holeAktivesDokument()));
@@ -1318,7 +1331,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			list.removeIf(e -> e.listener == listener);
 		}
 		int sizeAfter = list == null ? 0 : list.size();
-		logger.info("[FOKUS-TRACE] removeStatusListener: cmd='{}' handlerHash={} listeners[{}]: {}→{} thread={}",
+		logger.trace("[FOKUS-TRACE] removeStatusListener: cmd='{}' handlerHash={} listeners[{}]: {}→{} thread={}",
 				command, System.identityHashCode(this), command, sizeBefore, sizeAfter,
 				Thread.currentThread().getName());
 	}
@@ -1635,7 +1648,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 
 	static void notifyAllListeners() {
 		if (PetanqueTurnierMngrSingleton.isDruckvorschauAktiv()) {
-			logger.info("[FOKUS-TRACE] notifyAllListeners: Druckvorschau aktiv – übersprungen (thread={})",
+			logger.trace("[FOKUS-TRACE] notifyAllListeners: Druckvorschau aktiv – übersprungen (thread={})",
 					Thread.currentThread().getName());
 			return;
 		}
@@ -1656,7 +1669,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		}
 		var aktivesDokument = holeAktivesDokument();
 		int totalListeners = snapshot.values().stream().mapToInt(List::size).sum();
-		logger.info("[FOKUS-TRACE] notifyAllListeners #{} START thread={} aktiverDoc={} commands={} listeners={} caller={}",
+		logger.trace("[FOKUS-TRACE] notifyAllListeners #{} START thread={} aktiverDoc={} commands={} listeners={} caller={}",
 				notifyId, Thread.currentThread().getName(), beschreibeDokument(aktivesDokument),
 				snapshot.size(), totalListeners, caller);
 		int listenerAnzahl = 0;
@@ -1676,7 +1689,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			SpieltagToolbarSteuerung.aktualisiereInAllenFrames(ctx);
 		}
 		long dauerMs = (System.nanoTime() - startNs) / 1_000_000L;
-		logger.info("[FOKUS-TRACE] notifyAllListeners #{} ENDE listenerAnzahl={} dauerMs={}",
+		logger.trace("[FOKUS-TRACE] notifyAllListeners #{} ENDE listenerAnzahl={} dauerMs={}",
 				notifyId, listenerAnzahl, dauerMs);
 		if (NOTIFY_ALL_FIRST_LOG.compareAndSet(true, false)) {
 			PerfLog.log(logger, "[STARTUP-TIMING] notifyAllListeners (erster Aufruf): {} ms, Listener-Anzahl={}, thread={}",

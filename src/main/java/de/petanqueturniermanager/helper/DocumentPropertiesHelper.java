@@ -122,7 +122,7 @@ public class DocumentPropertiesHelper {
 				setStringPropertyInDocument(propName, val);
 				currentPropListe.put(propName, val);
 				if (logger.isInfoEnabled()) {
-					logger.info("[FOKUS-TRACE] setStringProperty: name='{}' old='{}' new='{}' doc={}",
+					logger.trace("[FOKUS-TRACE] setStringProperty: name='{}' old='{}' new='{}' doc={}",
 							propName, oldVal, val,
 							de.petanqueturniermanager.comp.ProtocolHandler.beschreibeDokument(xSpreadsheetDocument));
 				}
