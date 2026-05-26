@@ -77,14 +77,27 @@ public class KoTeilnehmerSheet extends SheetRunner implements ISheet {
         NewSheet.from(this, SheetNamen.teilnehmer(), SheetMetadataHelper.SCHLUESSEL_TEILNEHMER)
                 .tabColor(getKonfigurationSheet().getTeilnehmerTabFarbe()).pos(DefaultSheetPos.KO_TURNIERBAUM)
                 .forceCreate().hideGrid().setActiv().create();
+        befuelleTeilnehmerDaten(true);
+    }
 
+    /**
+     * Schreibt Header und Datenbereich der Teilnehmerliste anhand der aktuellen Meldeliste.
+     * Setzt voraus, dass das Teilnehmer-Sheet bereits existiert.
+     *
+     * @param meldungLeerHinweis bei {@code true} wird eine Hinweis-MessageBox gezeigt, falls keine
+     *                           aktiven Meldungen vorliegen (Menü-Pfad); bei {@code false} wird
+     *                           still abgebrochen (Listener-Pfad).
+     */
+    protected void befuelleTeilnehmerDaten(boolean meldungLeerHinweis) throws GenerateException {
         processBoxinfo("processbox.teilnehmer.meldungen.einlesen");
         TeamMeldungen aktiveMeldungen = meldeliste.getAktiveMeldungen();
 
         if (aktiveMeldungen.size() == 0) {
-            MessageBox.from(getWorkingSpreadsheet(), MessageBoxTypeEnum.ERROR_OK)
-                    .caption(I18n.get("msg.caption.teilnehmer.fehler"))
-                    .message(I18n.get("msg.text.keine.meldungen")).show();
+            if (meldungLeerHinweis) {
+                MessageBox.from(getWorkingSpreadsheet(), MessageBoxTypeEnum.ERROR_OK)
+                        .caption(I18n.get("msg.caption.teilnehmer.fehler"))
+                        .message(I18n.get("msg.text.keine.meldungen")).show();
+            }
             return;
         }
 

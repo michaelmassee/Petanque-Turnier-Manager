@@ -19,11 +19,18 @@ import de.petanqueturniermanager.helper.sheetsync.SheetSyncListener;
 import de.petanqueturniermanager.helper.rangliste.SignaturQuellen;
 import de.petanqueturniermanager.helper.perflog.PerfLog;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
+import de.petanqueturniermanager.formulex.meldeliste.FormuleXTeilnehmerSheetUpdate;
 import de.petanqueturniermanager.formulex.rangliste.FormuleXRanglisteSheetUpdate;
+import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJTeilnehmerSheetUpdate;
 import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteSheetUpdate;
+import de.petanqueturniermanager.kaskade.meldeliste.KaskadeTeilnehmerSheetUpdate;
 import de.petanqueturniermanager.kaskade.spielrunde.KaskadeGruppenRanglisteSheetUpdate;
+import de.petanqueturniermanager.ko.meldeliste.KoTeilnehmerSheetUpdate;
+import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterTeilnehmerSheetUpdate;
 import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterVorrundenRanglisteSheetUpdate;
+import de.petanqueturniermanager.poule.meldeliste.PouleTeilnehmerSheetUpdate;
 import de.petanqueturniermanager.poule.rangliste.PouleVorrundenRanglisteSheetUpdate;
+import de.petanqueturniermanager.schweizer.meldeliste.SchweizerTeilnehmerSheetUpdate;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheetUpdate;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheetUpdate;
@@ -204,7 +211,47 @@ public class PetanqueTurnierMngrSingleton {
 					}
 					return update;
 				}));
-		logTimingAndReset("SheetSyncListener SUPERMELEE-TEILNEHMER", t);
+		t = logTimingAndReset("SheetSyncListener SUPERMELEE-TEILNEHMER", t);
+
+		// Teilnehmerlisten der Einzel-Sheet-Systeme: alle unter dem generischen
+		// SCHLUESSEL_TEILNEHMER registriert; die Eindeutigkeit ergibt sich aus dem
+		// TurnierSystem-Gate. Synchronisiert die Liste beim Tab-Wechsel mit der Meldeliste.
+		addGlobalEventListener(SheetSyncListener.fuerSchluessel(context,
+				SheetMetadataHelper.SCHLUESSEL_TEILNEHMER,
+				TurnierSystem.SCHWEIZER,
+				new EingabeSignatur(SignaturQuellen::fuerSchweizerTeilnehmer),
+				(ws, ignored) -> new SchweizerTeilnehmerSheetUpdate(ws)));
+		addGlobalEventListener(SheetSyncListener.fuerSchluessel(context,
+				SheetMetadataHelper.SCHLUESSEL_TEILNEHMER,
+				TurnierSystem.JGJ,
+				new EingabeSignatur(SignaturQuellen::fuerJGJTeilnehmer),
+				(ws, ignored) -> new JGJTeilnehmerSheetUpdate(ws)));
+		addGlobalEventListener(SheetSyncListener.fuerSchluessel(context,
+				SheetMetadataHelper.SCHLUESSEL_TEILNEHMER,
+				TurnierSystem.KO,
+				new EingabeSignatur(SignaturQuellen::fuerKoTeilnehmer),
+				(ws, ignored) -> new KoTeilnehmerSheetUpdate(ws)));
+		addGlobalEventListener(SheetSyncListener.fuerSchluessel(context,
+				SheetMetadataHelper.SCHLUESSEL_TEILNEHMER,
+				TurnierSystem.MAASTRICHTER,
+				new EingabeSignatur(SignaturQuellen::fuerMaastrichterTeilnehmer),
+				(ws, ignored) -> new MaastrichterTeilnehmerSheetUpdate(ws)));
+		addGlobalEventListener(SheetSyncListener.fuerSchluessel(context,
+				SheetMetadataHelper.SCHLUESSEL_TEILNEHMER,
+				TurnierSystem.KASKADE,
+				new EingabeSignatur(SignaturQuellen::fuerKaskadeTeilnehmer),
+				(ws, ignored) -> new KaskadeTeilnehmerSheetUpdate(ws)));
+		addGlobalEventListener(SheetSyncListener.fuerSchluessel(context,
+				SheetMetadataHelper.SCHLUESSEL_TEILNEHMER,
+				TurnierSystem.FORMULEX,
+				new EingabeSignatur(SignaturQuellen::fuerFormuleXTeilnehmer),
+				(ws, ignored) -> new FormuleXTeilnehmerSheetUpdate(ws)));
+		addGlobalEventListener(SheetSyncListener.fuerSchluessel(context,
+				SheetMetadataHelper.SCHLUESSEL_TEILNEHMER,
+				TurnierSystem.POULE,
+				new EingabeSignatur(SignaturQuellen::fuerPouleTeilnehmer),
+				(ws, ignored) -> new PouleTeilnehmerSheetUpdate(ws)));
+		logTimingAndReset("SheetSyncListener TEILNEHMER (Einzel-Sheet-Systeme)", t);
 
 		long initGesamtMs = (System.nanoTime() - initStartNs) / 1_000_000L;
 		PerfLog.log(logger, "[STARTUP-TIMING] PetanqueTurnierMngrSingleton.init GESAMT={} ms (jvm-uptime={} ms)",

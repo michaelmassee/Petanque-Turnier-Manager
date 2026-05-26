@@ -184,6 +184,55 @@ public final class SignaturQuellen {
         return quellen;
     }
 
+    // ── Teilnehmerlisten ──────────────────────────────────────────────────────
+    // Teilnehmerlisten hängen – anders als Ranglisten – ausschließlich von der
+    // Meldeliste ab (keine Spielrunden). Eigene stabileId pro System für getrennte
+    // Hash-Persistierung. Whitelist deckt Nr, Namen und Aktiv-Status der Meldeliste ab.
+
+    /** Quelle für die Schweizer-Teilnehmerliste. */
+    public static List<SignaturQuelle> fuerSchweizerTeilnehmer(XSpreadsheetDocument xDoc) {
+        return List.of(meldelisteSchweizerLike("SCHWEIZER-TEILNEHMER-MELDELISTE",
+                SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_MELDELISTE));
+    }
+
+    /** Quelle für die JGJ-Teilnehmerliste. */
+    public static List<SignaturQuelle> fuerJGJTeilnehmer(XSpreadsheetDocument xDoc) {
+        return List.of(meldelisteSchweizerLike("JGJ-TEILNEHMER-MELDELISTE",
+                SheetMetadataHelper.SCHLUESSEL_JGJ_MELDELISTE));
+    }
+
+    /** Quelle für die K.-O.-Teilnehmerliste. */
+    public static List<SignaturQuelle> fuerKoTeilnehmer(XSpreadsheetDocument xDoc) {
+        return List.of(meldelisteSchweizerLike("KO-TEILNEHMER-MELDELISTE",
+                SheetMetadataHelper.SCHLUESSEL_KO_MELDELISTE));
+    }
+
+    /** Quelle für die Maastrichter-Teilnehmerliste. */
+    public static List<SignaturQuelle> fuerMaastrichterTeilnehmer(XSpreadsheetDocument xDoc) {
+        return List.of(meldelisteSchweizerLike("MAASTRICHTER-TEILNEHMER-MELDELISTE",
+                SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_MELDELISTE));
+    }
+
+    /** Quelle für die Formule-X-Teilnehmerliste. */
+    public static List<SignaturQuelle> fuerFormuleXTeilnehmer(XSpreadsheetDocument xDoc) {
+        return List.of(meldelisteSchweizerLike("FORMULEX-TEILNEHMER-MELDELISTE",
+                SheetMetadataHelper.SCHLUESSEL_FORMULEX_MELDELISTE));
+    }
+
+    /** Quelle für die Poule-A/B-Teilnehmerliste. */
+    public static List<SignaturQuelle> fuerPouleTeilnehmer(XSpreadsheetDocument xDoc) {
+        return List.of(meldelisteSchweizerLike("POULE-TEILNEHMER-MELDELISTE",
+                SheetMetadataHelper.SCHLUESSEL_POULE_MELDELISTE));
+    }
+
+    /** Quelle für die Kaskaden-KO-Teilnehmerliste. */
+    public static List<SignaturQuelle> fuerKaskadeTeilnehmer(XSpreadsheetDocument xDoc) {
+        return List.of(new SignaturQuelle("KASKADE-TEILNEHMER-MELDELISTE",
+                SheetMetadataHelper.SCHLUESSEL_KASKADE_MELDELISTE,
+                KASKADE_MELDELISTE_ERSTE_DATEN_ZEILE, MELDELISTE_MAX_ZEILEN,
+                MELDELISTE_BREIT_SPALTEN, true));
+    }
+
     /**
      * Quellen für eine konkrete Supermelee-Spieltag-Rangliste:
      * Meldeliste + alle Spielrunden dieses Spieltags.
