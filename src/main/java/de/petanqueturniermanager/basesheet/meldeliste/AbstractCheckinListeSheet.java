@@ -251,7 +251,8 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 		ColumnProperties columnPropName = ColumnProperties.from().setHoriJustify(CellHoriJustify.CENTER)
 				.setWidth(getNameSpalteWidth());
 		ColumnProperties columnPropChkBox = ColumnProperties.from().setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH);
-		RangeProperties rangePropBorderOnly = RangeProperties.from().setBorder(BorderFactory.from().allThin().toBorder());
+		RangeProperties rangePropBorderOnly = RangeProperties.from().setBorder(BorderFactory.from().allThin().toBorder())
+				.setShrinkToFit(true);
 
 		int maxMeldungZeile = 0;
 		int letzteSpalte = 0;
