@@ -1565,7 +1565,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_JGJ_NEUE_MELDELISTE                    -> ts == TurnierSystem.KEIN;
 			case CMD_JGJ_UPDATE_MELDELISTE, CMD_JGJ_SPIELPLAN,
 				 CMD_JGJ_RANGLISTE, CMD_JGJ_RANGLISTE_SORTIEREN,
-				 CMD_JGJ_DIREKTVERGLEICH, CMD_JGJ_TEILNEHMER            -> ts == TurnierSystem.JGJ;
+				 CMD_JGJ_DIREKTVERGLEICH, CMD_JGJ_TEILNEHMER, CMD_JGJ_CHECKIN -> ts == TurnierSystem.JGJ;
 			case CMD_JGJ_TESTDATEN_TURNIER,
 				 CMD_JGJ_TESTDATEN_TURNIER_DOUBLETTE_17     -> ts == TurnierSystem.KEIN || ts == TurnierSystem.JGJ;
 			case CMD_SCHWEIZER_START                        -> ts == TurnierSystem.KEIN;
@@ -1574,17 +1574,17 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_MAASTRICHTER_NAECHSTE_VORRUNDE,
 				 CMD_MAASTRICHTER_VORRUNDEN_RANGLISTE,
 				 CMD_MAASTRICHTER_FINALRUNDEN,
-				 CMD_MAASTRICHTER_TEILNEHMER                -> ts == TurnierSystem.MAASTRICHTER;
+				 CMD_MAASTRICHTER_TEILNEHMER, CMD_MAASTRICHTER_CHECKIN -> ts == TurnierSystem.MAASTRICHTER;
 			case CMD_MAASTRICHTER_AKTUELLE_VORRUNDE         -> ts == TurnierSystem.MAASTRICHTER && hatMaastrichterVorrunde(ws);
 			case CMD_MAASTRICHTER_TESTDATEN_TURNIER,
 				 CMD_MAASTRICHTER_TESTDATEN_TURNIER_57,
 				 CMD_MAASTRICHTER_TESTDATEN_TURNIER_35      -> ts == TurnierSystem.KEIN || ts == TurnierSystem.MAASTRICHTER;
 			case CMD_KO_START                               -> ts == TurnierSystem.KEIN;
 			case CMD_KO_UPDATE_MELDELISTE,
-				 CMD_KO_TURNIERBAUM, CMD_KO_TEILNEHMER     -> ts == TurnierSystem.KO;
+				 CMD_KO_TURNIERBAUM, CMD_KO_TEILNEHMER, CMD_KO_CHECKIN -> ts == TurnierSystem.KO;
 			case CMD_FORMULEX_START                         -> ts == TurnierSystem.KEIN;
 			case CMD_FORMULEX_UPDATE_MELDELISTE,
-				 CMD_FORMULEX_TEILNEHMER,
+				 CMD_FORMULEX_TEILNEHMER, CMD_FORMULEX_CHECKIN,
 				 CMD_FORMULEX_NAECHSTE_SPIELRUNDE,
 				 CMD_FORMULEX_RANGLISTE                     -> ts == TurnierSystem.FORMULEX;
 			case CMD_FORMULEX_AKTUELLE_SPIELRUNDE           -> ts == TurnierSystem.FORMULEX && hatFormuleXSpielrunde(ws);
@@ -1592,7 +1592,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_FORMULEX_TESTDATEN_TURNIER             -> ts == TurnierSystem.KEIN || ts == TurnierSystem.FORMULEX;
 			case CMD_KASKADE_START                          -> ts == TurnierSystem.KEIN;
 			case CMD_KASKADE_UPDATE_MELDELISTE,
-				 CMD_KASKADE_TEILNEHMER                    -> ts == TurnierSystem.KASKADE;
+				 CMD_KASKADE_TEILNEHMER, CMD_KASKADE_CHECKIN -> ts == TurnierSystem.KASKADE;
 			case CMD_KASKADE_TESTDATEN_MELDELISTE,
 				 CMD_KASKADE_TESTDATEN_TURNIER             -> ts == TurnierSystem.KEIN || ts == TurnierSystem.KASKADE;
 			case CMD_KASKADE_NAECHSTE_RUNDE,
@@ -1601,7 +1601,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_POULE_START                            -> ts == TurnierSystem.KEIN;
 			case CMD_POULE_NEUE_MELDELISTE,
 				 CMD_POULE_UPDATE_MELDELISTE,
-				 CMD_POULE_TEILNEHMER                      -> ts == TurnierSystem.POULE;
+				 CMD_POULE_TEILNEHMER, CMD_POULE_CHECKIN   -> ts == TurnierSystem.POULE;
 			case CMD_POULE_TESTDATEN_MELDELISTE             -> ts == TurnierSystem.KEIN || ts == TurnierSystem.POULE;
 			case CMD_POULE_VORRUNDE,
 				 CMD_POULE_SPIELPLAENE,
@@ -1615,7 +1615,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_KO_TESTDATEN_CADRAGE                   -> ts == TurnierSystem.KEIN || ts == TurnierSystem.KO;
 			case CMD_SCHWEIZER_NEUE_MELDELISTE,
 				 CMD_SCHWEIZER_UPDATE_MELDELISTE,
-				 CMD_SCHWEIZER_TEILNEHMER,
+				 CMD_SCHWEIZER_TEILNEHMER, CMD_SCHWEIZER_CHECKIN,
 				 CMD_SCHWEIZER_NAECHSTE_SPIELRUNDE,
 				 CMD_SCHWEIZER_RANGLISTE,
 				 CMD_SCHWEIZER_RANGLISTE_SORTIEREN          -> ts == TurnierSystem.SCHWEIZER;
