@@ -4,56 +4,46 @@
 
 package de.petanqueturniermanager.supermelee.meldeliste;
 
-import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
-
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.List;
 
 import com.sun.star.sheet.XSpreadsheet;
-import com.sun.star.table.CellHoriJustify;
 
-import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
+import de.petanqueturniermanager.basesheet.meldeliste.AbstractCheckinListeSheet;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.helper.ColorHelper;
-import de.petanqueturniermanager.helper.ISheet;
-import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
-import de.petanqueturniermanager.helper.border.BorderFactory;
-import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
-import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
-import de.petanqueturniermanager.helper.cellvalue.properties.RangeProperties;
-import de.petanqueturniermanager.helper.position.Position;
-import de.petanqueturniermanager.helper.position.RangePosition;
-import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
-import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
-import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
-import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
-import de.petanqueturniermanager.model.Spieler;
-import de.petanqueturniermanager.model.SpielerMeldungen;
+import de.petanqueturniermanager.model.IMeldung;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
-import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
 
-public class AnmeldungenSheet extends SheetRunner implements ISheet {
-	public static final int ERSTE_DATEN_ZEILE = 0;
-	public static final int SPIELER_NR_SPALTE = 0; // Spalte A=0
-	public static final int SPIELER_NAME_SPALTE = 1; // Spalte A=0
-	public static final int MAX_ANZSPIELER_IN_SPALTE = 40;
+/**
+ * Checkin-Liste des Supermelee-Systems je Spieltag (früher "Anmeldungen").
+ * Kompakte Druckansicht zum Abhaken der anwesenden Spieler, gespeist aus der Meldeliste.
+ */
+public class AnmeldungenSheet extends AbstractCheckinListeSheet {
 
 	private final SuperMeleeKonfigurationSheet konfigurationSheet;
 	private final MeldeListeSheet_Update meldeliste;
 	private SpielTagNr spielTag = null;
 
 	public AnmeldungenSheet(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet, TurnierSystem.SUPERMELEE, "Anmeldungen");
+		super(workingSpreadsheet, TurnierSystem.SUPERMELEE, "Checkin Liste");
 		konfigurationSheet = new SuperMeleeKonfigurationSheet(workingSpreadsheet);
 		meldeliste = new MeldeListeSheet_Update(workingSpreadsheet);
+	}
+
+	@Override
+	protected void doRun() throws GenerateException {
+		setSpielTag(getKonfigurationSheet().getAktiveSpieltag());
+		meldeliste.setSpielTag(getSpielTag());
+		super.doRun();
 	}
 
 	@Override
@@ -62,140 +52,67 @@ public class AnmeldungenSheet extends SheetRunner implements ISheet {
 	}
 
 	@Override
-	protected void doRun() throws GenerateException {
-		setSpielTag(getKonfigurationSheet().getAktiveSpieltag());
+	protected void meldelisteVorbereiten() throws GenerateException {
 		meldeliste.setSpielTag(getSpielTag());
 		meldeliste.upDateSheet();
-		generate();
 	}
 
-	public void generate() throws GenerateException {
+	@Override
+	protected void meldelisteAusrichten() {
 		meldeliste.setSpielTag(getSpielTag());
+	}
 
-		// wenn hier dann immer neu erstellen, force = true
-		NewSheet.from(this, getSheetName(getSpielTag()),
-				SheetMetadataHelper.schluesselSupermeleeAnmeldungen(getSpielTag().getNr()))
-				.tabColor(konfigurationSheet.getTeilnehmerTabFarbe()).pos(DefaultSheetPos.SUPERMELEE_WORK).spielTagPageStyle(getSpielTag())
-				.forceCreate().hideGrid().setActiv().create();
+	@Override
+	protected void meldelisteSortieren(int spalteNr, boolean aufsteigend) throws GenerateException {
+		meldeliste.doSort(spalteNr, aufsteigend);
+	}
 
-		// meldeliste nach namen sortieren !
-		meldeliste.doSort(meldeliste.getSpielerNameErsteSpalte(), true);
+	@Override
+	protected int getNachnameSpalteMeldeliste() {
+		return meldeliste.getMeldungenSpalte().getLetzteMeldungNameSpalte();
+	}
 
+	@Override
+	protected int getNummerSpalteMeldeliste() {
+		return meldeliste.getMeldungenSpalte().getSpielerNrSpalte();
+	}
+
+	@Override
+	protected List<Integer> ladeSortierteNummern() throws GenerateException {
 		processBoxinfo("processbox.spieltag.meldungen.einlesen", getSpielTag().getNr());
-		SpielerMeldungen alleMeldungen = meldeliste.getAlleMeldungen();
-		filleBereichNew(alleMeldungen);
-
+		return meldeliste.getAlleMeldungen().getMeldungen().stream()
+				.map(IMeldung::getNr)
+				.toList();
 	}
 
-	/**
-	 * verwende array helper um der komplette inhalt auf einmal zu erstellen
-	 *
-	 * @param alleMeldungen
-	 * @throws GenerateException
-	 */
-	private void filleBereichNew(SpielerMeldungen alleMeldungen) throws GenerateException {
-
-		if (alleMeldungen.size() < 1) {
-			processBoxinfo("processbox.abbruch");
-			return; // keine Daten
-		}
-		// Anzahl blöcke ?
-		int anzBloecke = (int) Math.ceil((double) alleMeldungen.size() / MAX_ANZSPIELER_IN_SPALTE);
-
-		RangeData data = new RangeData();
-		List<Spieler> spielrList = alleMeldungen.spieler();
-
-		for (int lnCntr = 0; lnCntr < MAX_ANZSPIELER_IN_SPALTE; lnCntr++) {
-			RowData zeileData = data.addNewRow();
-			for (int blkCntr = 1; blkCntr <= anzBloecke; blkCntr++) {
-				int idx = lnCntr + (blkCntr - 1) * MAX_ANZSPIELER_IN_SPALTE;
-				if (idx < alleMeldungen.size()) {
-					Spieler spieler = spielrList.get(idx);
-					zeileData.newInt(spieler.getNr());
-					zeileData.newString("name?");
-					// nichte letzte Block ?
-					if (blkCntr != anzBloecke) {
-						zeileData.newEmpty(); // leere spalte
-						zeileData.newEmpty(); // leere spalte
-					}
-				}
-			}
-		}
-		RangePosition rangePosition = data.getRangePosition(Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE));
-		RangeHelper.from(this, rangePosition).setDataInRange(data);
-
-		// spalten formatieren
-
-		// .setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH)
-		RangeProperties rangePropNr = RangeProperties.from().setHoriJustify(CellHoriJustify.CENTER).setCharColor(ColorHelper.CHAR_COLOR_GRAY_SPIELER_NR);
-		ColumnProperties columnPropNr = ColumnProperties.from().setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH);
-
-		ColumnProperties columnPropName = ColumnProperties.from().setHoriJustify(CellHoriJustify.CENTER).setWidth(SuperMeleeKonfigurationSheet.SUPER_MELEE_MELDUNG_NAME_WIDTH);
-		StringCellValue nameFormula = StringCellValue.from(getXSpreadSheet(), Position.from(SPIELER_NAME_SPALTE, ERSTE_DATEN_ZEILE)).setShrinkToFit(true)
-				.setColumnProperties(columnPropName);
-
-		ColumnProperties columnPropChkBox = ColumnProperties.from().setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH);
-		RangeProperties rangePropBorderOnly = RangeProperties.from().setBorder(BorderFactory.from().allThin().toBorder());
-
-		int maxMeldungZeile = 0;
-		int letzteSpalte = 0;
-
-		for (int blkCntr = 0; blkCntr < anzBloecke; blkCntr++) {
-
-			int letzteZeile = ERSTE_DATEN_ZEILE + MAX_ANZSPIELER_IN_SPALTE - 1;
-
-			// letzte Block ?
-			if (blkCntr + 1 == anzBloecke) {
-				// letztZeile berechnen
-				letzteZeile = (alleMeldungen.size() - ((anzBloecke - 1) * MAX_ANZSPIELER_IN_SPALTE)) - 1;
-			}
-
-			maxMeldungZeile = (maxMeldungZeile < letzteZeile) ? letzteZeile : maxMeldungZeile;
-
-			RangePosition rangePositionBlock = RangePosition.from(SPIELER_NR_SPALTE + (blkCntr * 4), ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE + (blkCntr * 4), letzteZeile);
-			Position startNrPos = Position.from(rangePositionBlock.getStart()); // start merken fuer Formula
-			{
-				RangeHelper.from(this, rangePositionBlock).setRangeProperties(rangePropNr);
-				getSheetHelper().setColumnProperties(getXSpreadSheet(), rangePositionBlock.getStartSpalte(), columnPropNr);
-			}
-			rangePositionBlock.spaltePlusEins();
-
-			// Formula
-			{
-				String formulaSverweisSpielernamen = meldeliste.formulaSverweisSpielernamen(startNrPos.getAddress()); // A1 geht weil beim fildown automatisch hoch
-				nameFormula.setPos((Position) rangePositionBlock.getStart()).setFillAutoDown(letzteZeile).setValue(formulaSverweisSpielernamen);
-				getSheetHelper().setFormulaInCell(nameFormula);
-			}
-
-			rangePositionBlock.spaltePlusEins();
-			// checkBox
-			{
-				getSheetHelper().setColumnProperties(getXSpreadSheet(), rangePositionBlock.getStartSpalte(), columnPropChkBox); // Width
-			}
-
-			// Border
-			RangePosition rangePositionBlockAll = RangePosition.from(Position.from(startNrPos), Position.from(rangePositionBlock.getEnde()));
-			RangeHelper.from(this, rangePositionBlockAll).setRangeProperties(rangePropBorderOnly);
-
-			// zwischen den blöcke, nur spalte breite
-			getSheetHelper().setColumnProperties(getXSpreadSheet(), rangePositionBlock.getEnde().getSpalte() + 1, columnPropNr);
-
-			letzteSpalte = rangePositionBlock.getEnde().getSpalte();
-		}
-
-		printBereichDefinieren(maxMeldungZeile, letzteSpalte);
+	@Override
+	protected String getNameFormula(String nrZelleAdresse) throws GenerateException {
+		return meldeliste.formulaSverweisSpielernamen(nrZelleAdresse);
 	}
 
-	private void printBereichDefinieren(int letzteZeile, int letzteSpalte) throws GenerateException {
-		processBoxinfo("processbox.print.bereich");
-		Position linksOben = Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE);
-		Position rechtsUnten = Position.from(letzteSpalte, letzteZeile);
-		PrintArea.from(getXSpreadSheet(), getWorkingSpreadsheet()).setPrintArea(RangePosition.from(linksOben, rechtsUnten));
+	@Override
+	protected int getNameSpalteWidth() {
+		return SuperMeleeKonfigurationSheet.SUPER_MELEE_MELDUNG_NAME_WIDTH;
 	}
 
-	public String getSheetName(SpielTagNr spieltagNr) {
-		checkNotNull(spieltagNr);
-		return SheetNamen.anmeldungen(spieltagNr.getNr());
+	@Override
+	protected short getSheetPos() {
+		return DefaultSheetPos.SUPERMELEE_WORK;
+	}
+
+	@Override
+	protected void seitenStilAnwenden(NewSheet newSheet) {
+		newSheet.spielTagPageStyle(getSpielTag());
+	}
+
+	@Override
+	protected String getCheckinSheetName() {
+		return SheetNamen.checkinListe(getSpielTag().getNr());
+	}
+
+	@Override
+	protected String getMetadatenSchluessel() {
+		return SheetMetadataHelper.schluesselSupermeleeAnmeldungen(getSpielTag().getNr());
 	}
 
 	@Override
@@ -203,7 +120,7 @@ public class AnmeldungenSheet extends SheetRunner implements ISheet {
 		return SheetMetadataHelper.findeSheetUndHeile(
 				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
 				SheetMetadataHelper.schluesselSupermeleeAnmeldungen(getSpielTag().getNr()),
-				getSheetName(getSpielTag()));
+				getCheckinSheetName());
 	}
 
 	@Override
@@ -220,5 +137,4 @@ public class AnmeldungenSheet extends SheetRunner implements ISheet {
 		checkNotNull(spielTag);
 		this.spielTag = spielTag;
 	}
-
 }

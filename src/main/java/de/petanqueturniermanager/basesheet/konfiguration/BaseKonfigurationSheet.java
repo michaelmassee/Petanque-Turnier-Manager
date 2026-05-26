@@ -238,6 +238,11 @@ public abstract class BaseKonfigurationSheet extends SheetRunner implements IPro
 		return getPropertiesSpalte().getDirektvergleichTabFarbe();
 	}
 
+	@Override
+	public final de.petanqueturniermanager.basesheet.meldeliste.CheckinListeSortModus getCheckinListeSortModus() {
+		return getPropertiesSpalte().getCheckinListeSortModus();
+	}
+
 	/**
 	 * @return the propertiesSpalte
 	 */

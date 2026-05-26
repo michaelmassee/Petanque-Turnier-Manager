@@ -25,6 +25,7 @@ public class PoulePropertiesSpalte extends BasePropertiesSpalte implements IPoul
 
     static {
         ADDBaseProp(KONFIG_PROPERTIES, false); // Rangliste-Farben noch nicht benötigt
+        addCheckinSortProp(KONFIG_PROPERTIES);
     }
 
     private static final String KONFIG_PROP_MELDELISTE_FORMATION   = "Meldeliste Formation";

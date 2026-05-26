@@ -39,6 +39,7 @@ public final class SheetNamen {
     public static final String KEY_VORRUNDEN_HILFSBLATT             = "sheet.name.vorrunden.hilfsblatt";
     public static final String KEY_MAASTRICHTER_VR_RANGLISTE        = "sheet.name.maastrichter.vorrunden.rangliste";
     public static final String KEY_ANMELDUNGEN                      = "sheet.name.anmeldungen";
+    public static final String KEY_CHECKIN_LISTE                    = "sheet.name.checkin.liste";
     public static final String KEY_TEILNEHMER                       = "sheet.name.teilnehmer";
     public static final String KEY_POULE_VORRUNDE                   = "sheet.name.poule.vorrunde";
     public static final String KEY_POULE_TEILNEHMER                 = "sheet.name.poule.teilnehmer";
@@ -67,6 +68,8 @@ public final class SheetNamen {
     public static final String KEY_KO_FINALE_GRUPPE_MUSTER          = "sheet.name.ko.finale.gruppe.muster";
     /** Supermelee Anmeldungen: {0} = Spieltagnummer. Beispiel: "1. Spieltag Anmeldungen" */
     public static final String KEY_ANMELDUNGEN_MUSTER               = "sheet.name.anmeldungen.muster";
+    /** Supermelee Checkin-Liste: {0} = Spieltagnummer. Beispiel: "1. Spieltag Checkin Liste" */
+    public static final String KEY_CHECKIN_LISTE_MUSTER             = "sheet.name.checkin.liste.muster";
     /** Supermelee Teilnehmer: {0} = Spieltagnummer. Beispiel: "1. Spieltag Teilnehmer" */
     public static final String KEY_TEILNEHMER_MUSTER                = "sheet.name.teilnehmer.muster";
     /** Poule-Spielplan: {0} = Gruppennummer. Beispiel: "Poule 1 Spielplan" */
@@ -99,6 +102,7 @@ public final class SheetNamen {
     public static final String LEGACY_VORRUNDEN_HILFSBLATT          = "VorRunden";
     public static final String LEGACY_MAASTRICHTER_VR_RANGLISTE     = "Vorrunden-Rangliste";
     public static final String LEGACY_ANMELDUNGEN                   = "Anmeldungen";
+    public static final String LEGACY_CHECKIN_LISTE                 = "Checkin Liste";
     public static final String LEGACY_TEILNEHMER                    = "Teilnehmer";
     public static final String LEGACY_KO_TURNIERBAUM_EINZEL         = "KO Turnierbaum";
     public static final String LEGACY_SPIELRUNDE_PRAEFIX            = "Spielrunde";
@@ -191,6 +195,15 @@ public final class SheetNamen {
 
     public static String anmeldungen() {
         return getOderFallback(KEY_ANMELDUNGEN, LEGACY_ANMELDUNGEN);
+    }
+
+    /**
+     * Checkin-Liste (ohne Spieltag-Bezug) für Systeme mit einer einzelnen Meldeliste: z.B. "Checkin Liste".
+     *
+     * @return lokalisierter Tabellenname
+     */
+    public static String checkinListe() {
+        return getOderFallback(KEY_CHECKIN_LISTE, LEGACY_CHECKIN_LISTE);
     }
 
     public static String teilnehmer() {
@@ -333,13 +346,17 @@ public final class SheetNamen {
     }
 
     /**
-     * Supermelee Anmeldungen: z.B. "1. Spieltag Anmeldungen".
+     * Supermelee Checkin-Liste je Spieltag: z.B. "1. Spieltag Checkin Liste".
+     * <p>
+     * Löst den früheren Namen "{0}. Spieltag Anmeldungen" ab. Ältere Dokumente werden weiterhin
+     * über den Metadaten-Schlüssel ({@code SheetMetadataHelper.schluesselSupermeleeAnmeldungen})
+     * erkannt, unabhängig vom angezeigten Tabellennamen.
      *
      * @param spieltagNr Nummer des Spieltags
      * @return lokalisierter Tabellenname
      */
-    public static String anmeldungen(int spieltagNr) {
-        var muster = getOderFallback(KEY_ANMELDUNGEN_MUSTER, "{0}. Spieltag " + LEGACY_ANMELDUNGEN);
+    public static String checkinListe(int spieltagNr) {
+        var muster = getOderFallback(KEY_CHECKIN_LISTE_MUSTER, "{0}. Spieltag " + LEGACY_CHECKIN_LISTE);
         return new MessageFormat(muster, Locale.ROOT).format(new Object[]{spieltagNr});
     }
 

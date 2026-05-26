@@ -272,6 +272,14 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	// Teilnehmer
 	public static final String CMD_SCHWEIZER_TEILNEHMER = "schweizer_teilnehmer";
 	public static final String CMD_JGJ_TEILNEHMER       = "jgj_teilnehmer";
+	// Checkin-Listen (je System, außer Liga)
+	public static final String CMD_JGJ_CHECKIN          = "jgj_checkin";
+	public static final String CMD_KO_CHECKIN           = "ko_checkin";
+	public static final String CMD_KASKADE_CHECKIN      = "kaskade_checkin";
+	public static final String CMD_FORMULEX_CHECKIN     = "formulex_checkin";
+	public static final String CMD_SCHWEIZER_CHECKIN    = "schweizer_checkin";
+	public static final String CMD_POULE_CHECKIN        = "poule_checkin";
+	public static final String CMD_MAASTRICHTER_CHECKIN = "maastrichter_checkin";
 	// Poule A/B
 	public static final String CMD_POULE_START               = "poule_start";
 	public static final String CMD_POULE_NEUE_MELDELISTE     = "poule_neue_meldeliste";
@@ -783,6 +791,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_JGJ_TEILNEHMER:
 				new de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJTeilnehmerSheet(ws).testTurnierSystem(TurnierSystem.JGJ).start();
 				break;
+			case CMD_JGJ_CHECKIN:
+				new de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJCheckinListeSheet(ws).testTurnierSystem(TurnierSystem.JGJ).backUpDocument().start();
+				break;
 			case CMD_JGJ_SPIELPLAN:
 				new JGJSpielPlanSheet(ws).testTurnierSystem(TurnierSystem.JGJ).backUpDocument().backupDocumentAfterRun().start();
 				break;
@@ -814,6 +825,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				break;
 			case CMD_SCHWEIZER_TEILNEHMER:
 				new de.petanqueturniermanager.schweizer.meldeliste.SchweizerTeilnehmerSheet(ws).testTurnierSystem(TurnierSystem.SCHWEIZER).start();
+				break;
+			case CMD_SCHWEIZER_CHECKIN:
+				new de.petanqueturniermanager.schweizer.meldeliste.SchweizerCheckinListeSheet(ws).testTurnierSystem(TurnierSystem.SCHWEIZER).backUpDocument().start();
 				break;
 			case CMD_SCHWEIZER_AKTUELLE_SPIELRUNDE:
 				new SchweizerSpielrundeSheetUpdate(ws).testTurnierSystem(TurnierSystem.SCHWEIZER).backUpDocument().backupDocumentAfterRun().start();
@@ -860,6 +874,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_MAASTRICHTER_TEILNEHMER:
 				new MaastrichterTeilnehmerSheet(ws).testTurnierSystem(TurnierSystem.MAASTRICHTER).start();
 				break;
+			case CMD_MAASTRICHTER_CHECKIN:
+				new de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterCheckinListeSheet(ws).testTurnierSystem(TurnierSystem.MAASTRICHTER).backUpDocument().start();
+				break;
 			case CMD_MAASTRICHTER_TESTDATEN_TURNIER:
 				new MaastrichterTurnierTestDaten(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
@@ -887,6 +904,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_KO_TEILNEHMER:
 				new de.petanqueturniermanager.ko.meldeliste.KoTeilnehmerSheet(ws).testTurnierSystem(TurnierSystem.KO).start();
 				break;
+			case CMD_KO_CHECKIN:
+				new de.petanqueturniermanager.ko.meldeliste.KoCheckinListeSheet(ws).testTurnierSystem(TurnierSystem.KO).backUpDocument().start();
+				break;
 			case CMD_KO_TURNIERBAUM:
 				new KoTurnierbaumSheet(ws).testTurnierSystem(TurnierSystem.KO).backUpDocument().backupDocumentAfterRun().start();
 				break;
@@ -913,6 +933,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_FORMULEX_TEILNEHMER:
 				new FormuleXTeilnehmerSheet(ws).testTurnierSystem(TurnierSystem.FORMULEX).start();
 				break;
+			case CMD_FORMULEX_CHECKIN:
+				new de.petanqueturniermanager.formulex.meldeliste.FormuleXCheckinListeSheet(ws).testTurnierSystem(TurnierSystem.FORMULEX).backUpDocument().start();
+				break;
 			case CMD_FORMULEX_NAECHSTE_SPIELRUNDE:
 				new FormuleXSpielrundeSheetNaechste(ws).testTurnierSystem(TurnierSystem.FORMULEX).backUpDocument().backupDocumentAfterRun().start();
 				break;
@@ -938,6 +961,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				break;
 			case CMD_KASKADE_TEILNEHMER:
 				new KaskadeTeilnehmerSheet(ws).testTurnierSystem(TurnierSystem.KASKADE).start();
+				break;
+			case CMD_KASKADE_CHECKIN:
+				new de.petanqueturniermanager.kaskade.meldeliste.KaskadeCheckinListeSheet(ws).testTurnierSystem(TurnierSystem.KASKADE).backUpDocument().start();
 				break;
 			case CMD_KASKADE_TESTDATEN_MELDELISTE:
 				new KaskadeMeldeListeSheetTestDaten(ws, 73).testKeinAnderesTurnierVorhanden().start();
@@ -970,6 +996,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				break;
 			case CMD_POULE_TEILNEHMER:
 				new PouleTeilnehmerSheet(ws).testTurnierSystem(TurnierSystem.POULE).start();
+				break;
+			case CMD_POULE_CHECKIN:
+				new de.petanqueturniermanager.poule.meldeliste.PouleCheckinListeSheet(ws).testTurnierSystem(TurnierSystem.POULE).backUpDocument().start();
 				break;
 			case CMD_POULE_TESTDATEN_MELDELISTE:
 				new PouleMeldeListeSheetTestDaten(ws).testKeinAnderesTurnierVorhanden().start();

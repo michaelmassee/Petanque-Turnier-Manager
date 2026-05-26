@@ -27,6 +27,7 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 
 	static {
 		ADDBaseProp(KONFIG_PROPERTIES);
+		addCheckinSortProp(KONFIG_PROPERTIES);
 	}
 
 	public static final String KONFIG_PROP_NAME_SPIELTAG = "Spieltag";

@@ -129,6 +129,16 @@ public class SheetMetadataHelper {
     public static final String SCHLUESSEL_FORME_CADRAGE = "__PTM_FORME_CADRAGE__";
     public static final String SCHLUESSEL_FORME_KO_GRUPPE = "__PTM_FORME_KO_GRUPPE__";
 
+    // ── Konstanten: Checkin-Listen (je System, außer Supermelee/Liga) ─────────
+
+    public static final String SCHLUESSEL_JGJ_CHECKIN_LISTE = "__PTM_JGJ_CHECKIN_LISTE__";
+    public static final String SCHLUESSEL_KO_CHECKIN_LISTE = "__PTM_KO_CHECKIN_LISTE__";
+    public static final String SCHLUESSEL_KASKADE_CHECKIN_LISTE = "__PTM_KASKADE_CHECKIN_LISTE__";
+    public static final String SCHLUESSEL_FORMULEX_CHECKIN_LISTE = "__PTM_FORMULEX_CHECKIN_LISTE__";
+    public static final String SCHLUESSEL_SCHWEIZER_CHECKIN_LISTE = "__PTM_SCHWEIZER_CHECKIN_LISTE__";
+    public static final String SCHLUESSEL_POULE_CHECKIN_LISTE = "__PTM_POULE_CHECKIN_LISTE__";
+    public static final String SCHLUESSEL_MAASTRICHTER_CHECKIN_LISTE = "__PTM_MAASTRICHTER_CHECKIN_LISTE__";
+
     /**
      * Gemeinsames Suffix für alle dynamisch erzeugten Schlüssel.
      */

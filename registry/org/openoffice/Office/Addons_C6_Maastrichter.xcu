@@ -182,6 +182,22 @@
 								</prop>
 							</node>
 
+							<node oor:name="C6A13" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Check-in List</value>
+									<value xml:lang="de">Checkin Liste</value>
+									<value xml:lang="es">Lista de registro</value>
+									<value xml:lang="fr">Liste de pointage</value>
+									<value xml:lang="nl">Inchecklijst</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:maastrichter_checkin</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
 						</node>
 					</node>
 					<!-- ****************************************************************** -->

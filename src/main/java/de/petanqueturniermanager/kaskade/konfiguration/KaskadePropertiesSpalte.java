@@ -25,6 +25,7 @@ public class KaskadePropertiesSpalte extends BasePropertiesSpalte {
 
     static {
         ADDBaseProp(KONFIG_PROPERTIES);
+        addCheckinSortProp(KONFIG_PROPERTIES);
     }
 
     private static final String KONFIG_PROP_KOPF_ZEILE_LINKS      = "Kopfzeile Links";

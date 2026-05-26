@@ -20,10 +20,13 @@ import de.petanqueturniermanager.helper.StringTools;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGeradeStyle;
+import de.petanqueturniermanager.basesheet.meldeliste.CheckinListeSortModus;
 import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
+import de.petanqueturniermanager.konfigdialog.AuswahlConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
 import de.petanqueturniermanager.konfigdialog.HeaderFooterConfigProperty;
+import de.petanqueturniermanager.helper.i18n.I18n;
 
 /**
  * @author Michael Massee
@@ -59,6 +62,8 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 
 	public static final String KONFIG_PROP_ANZ_TEILNEHMER_IN_SPALTE = "Teilnehmerliste Anzahl je Spalte";
 	private static final int DEFAULT_ANZ_TEILNEHMER_IN_SPALTE = 40;
+
+	public static final String KONFIG_PROP_CHECKIN_LISTE_SORT_MODUS = "Checkin-Liste Sortierung";
 
 	// Tab-Farben (Document Properties Schlüssel)
 	public static final String KONFIG_PROP_TAB_COLOR_MELDELISTE      = "Tab-Farbe Meldeliste";
@@ -139,6 +144,23 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TAB_COLOR_DIREKTVERGLEICH)
 				.setDefaultVal(SheetTabFarben.DIREKTVERGLEICH)
 				.setDescription("config.desc.tab.farbe.direktvergleich").tabFarbe());
+	}
+
+	/**
+	 * Fügt die Auswahl-Property für die Checkin-Listen-Sortierung hinzu (Default {@link CheckinListeSortModus#NACHNAME}).
+	 * <p>
+	 * Bewusst NICHT Teil von {@link #ADDBaseProp(List)}, da das Liga-System keine Checkin-Liste besitzt.
+	 * Jedes Nicht-Liga-System ruft diese Methode in seinem statischen Initialisierer auf.
+	 *
+	 * @param KONFIG_PROPERTIES Property-Liste des jeweiligen Systems
+	 */
+	protected static void addCheckinSortProp(List<ConfigProperty<?>> KONFIG_PROPERTIES) {
+		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_CHECKIN_LISTE_SORT_MODUS)
+				.setDefaultVal(CheckinListeSortModus.NACHNAME.getKey())
+				.setDescription("config.desc.checkin.sort.modus"))
+				.addAuswahl(CheckinListeSortModus.NACHNAME.getKey(), I18n.get("config.checkin.sort.nachname"))
+				.addAuswahl(CheckinListeSortModus.NUMMER.getKey(), I18n.get("config.checkin.sort.nummer"))
+				.inSideBar());
 	}
 
 	protected BasePropertiesSpalte(ISheet sheet) {
@@ -339,6 +361,12 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	@Override
 	public int getDirektvergleichTabFarbe() {
 		return readIntProperty(KONFIG_PROP_TAB_COLOR_DIREKTVERGLEICH);
+	}
+
+	@Override
+	public CheckinListeSortModus getCheckinListeSortModus() {
+		return readEnumProperty(KONFIG_PROP_CHECKIN_LISTE_SORT_MODUS, CheckinListeSortModus.class,
+				CheckinListeSortModus.NACHNAME);
 	}
 
 	@Override
