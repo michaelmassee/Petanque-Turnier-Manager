@@ -3,10 +3,12 @@
  */
 package de.petanqueturniermanager.basesheet.meldeliste;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import com.sun.star.awt.FontWeight;
+import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 
 import de.petanqueturniermanager.SheetRunner;
@@ -27,6 +29,7 @@ import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
+import de.petanqueturniermanager.basesheet.meldeliste.TeilnehmerSheetBuilder.TeilnehmerEintrag;
 
 /**
  * Gemeinsame Basis für die Checkin-Listen aller Turniersysteme (außer Liga).
@@ -37,7 +40,9 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
  * Meldeliste) und eine leere Checkbox-Spalte.
  * <p>
  * Die Sortierreihenfolge ist über die Turnier-Konfiguration einstellbar
- * ({@link CheckinListeSortModus}, Default {@link CheckinListeSortModus#NACHNAME}).
+ * ({@link TeilnehmerListeSortModus}, Default {@link TeilnehmerListeSortModus#NAME}) und wird
+ * in-memory angewandt. Systeme ohne Teamname lassen den Teamname-Modus auf den Namen zurückfallen
+ * ({@link #teamnameVerfuegbar()}).
  * <p>
  * Konkrete Subklassen liefern die system-spezifische Meldeliste-Anbindung über die
  * abstrakten Hook-Methoden.
@@ -101,23 +106,41 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 	}
 
 	/**
-	 * Sortiert die Meldeliste (sofern Einträge vorhanden) nach dem konfigurierten
-	 * {@link CheckinListeSortModus} und befüllt den Checkin-Bereich.
+	 * Sortiert die Melde-/Teamnummern (sofern vorhanden) in-memory nach dem konfigurierten
+	 * {@link TeilnehmerListeSortModus} und befüllt den Checkin-Bereich. Es wird – anders als früher –
+	 * <b>nicht</b> die Meldeliste physisch umsortiert.
+	 * <p>
+	 * Hat das System keinen Teamnamen ({@link #teamnameVerfuegbar()} {@code == false}), fällt
+	 * der Modus {@link TeilnehmerListeSortModus#TEAMNAME} auf {@link TeilnehmerListeSortModus#NAME}
+	 * zurück.
 	 * <p>
 	 * Bei leerer Meldeliste wird dennoch eine gültige (leere) Checkin-Liste erstellt.
-	 * Sortierung/Spaltenermittlung nur bei vorhandenen Einträgen, um Edge-Cases auf
-	 * leerer Meldeliste zu vermeiden.
 	 */
 	private void sortiereUndFuelle() throws GenerateException {
-		List<Integer> nummern = ladeSortierteNummern();
+		List<Integer> nummern = ladeNummern();
 		if (!nummern.isEmpty()) {
-			int sortSpalte = (getKonfigurationSheet().getCheckinListeSortModus() == CheckinListeSortModus.NUMMER)
-					? getNummerSpalteMeldeliste()
-					: getNachnameSpalteMeldeliste();
-			meldelisteSortieren(sortSpalte, true);
-			nummern = ladeSortierteNummern();
+			TeilnehmerListeSortModus modus = getKonfigurationSheet().getCheckinListeSortModus();
+			if (modus == TeilnehmerListeSortModus.TEAMNAME && !teamnameVerfuegbar()) {
+				modus = TeilnehmerListeSortModus.NAME;
+			}
+			nummern = sortiereNummern(nummern, ladeSortDaten(), modus);
 		}
 		fuelleBereich(nummern);
+	}
+
+	/**
+	 * Sortiert die Nummern in-memory über den {@link TeilnehmerListeSortModus#comparator()}.
+	 * Nummern ohne Sortierdaten werden mit leeren Schlüsseln behandelt.
+	 */
+	private static List<Integer> sortiereNummern(List<Integer> nummern, Map<Integer, SortSchluessel> sortDaten,
+			TeilnehmerListeSortModus modus) {
+		List<TeilnehmerEintrag> eintraege = new ArrayList<>(nummern.size());
+		for (int nr : nummern) {
+			SortSchluessel sk = sortDaten.getOrDefault(nr, SortSchluessel.LEER);
+			eintraege.add(new TeilnehmerEintrag(nr, sk.teamname(), "", sk.sortNachname()));
+		}
+		eintraege.sort(modus.comparator());
+		return eintraege.stream().map(TeilnehmerEintrag::nr).toList();
 	}
 
 	/** Löscht den bisherigen Inhalt der existierenden Checkin-Liste (Update-Pfad). */
@@ -296,17 +319,68 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 		// Standard: nichts auszurichten (Systeme mit einer einzelnen Meldeliste)
 	}
 
-	/** Sortiert die Meldeliste nach der angegebenen Spalte. */
-	protected abstract void meldelisteSortieren(int spalteNr, boolean aufsteigend) throws GenerateException;
+	/** Alle Melde-/Teamnummern in der Reihenfolge der Meldeliste (unsortiert – Sortierung erfolgt in-memory). */
+	protected abstract List<Integer> ladeNummern() throws GenerateException;
 
-	/** Spaltenindex der Nachname-Spalte in der Meldeliste. */
-	protected abstract int getNachnameSpalteMeldeliste() throws GenerateException;
+	/**
+	 * Liefert je Melde-/Teamnummer die Sortierschlüssel (Teamname und Nachname-Schlüssel).
+	 * Für Systeme ohne Teamname bleibt {@link SortSchluessel#teamname()} leer.
+	 */
+	protected abstract Map<Integer, SortSchluessel> ladeSortDaten() throws GenerateException;
 
-	/** Spaltenindex der Nummer-Spalte in der Meldeliste. */
-	protected abstract int getNummerSpalteMeldeliste() throws GenerateException;
+	/**
+	 * Ob in diesem System überhaupt ein Teamname zum Sortieren verfügbar ist. Default {@code false}
+	 * (Einzelspieler-Systeme). Bei {@code false} fällt der Teamname-Modus auf den Namen zurück.
+	 */
+	protected boolean teamnameVerfuegbar() {
+		return false;
+	}
 
-	/** Alle Melde-/Teamnummern in der aktuellen (sortierten) Reihenfolge der Meldeliste. */
-	protected abstract List<Integer> ladeSortierteNummern() throws GenerateException;
+	/**
+	 * Liest aus einer Meldeliste je Nummer den Nachnamen als Sortierschlüssel (Teamname leer).
+	 * Hilfsmethode für Einzelspieler-Systeme (JGJ, Supermelee), die den Nachnamen direkt aus dem
+	 * Sheet beziehen.
+	 *
+	 * @param meldelisteSheet Quell-Meldeliste
+	 * @param nrSpalte        Spaltenindex der Melde-Nummer
+	 * @param nachnameSpalte  Spaltenindex der Nachname-Spalte
+	 * @param ersteDatenZeile erste Datenzeile (0-basiert)
+	 */
+	protected final Map<Integer, SortSchluessel> leseNachnameSortDaten(ISheet meldelisteSheet, int nrSpalte,
+			int nachnameSpalte, int ersteDatenZeile) throws GenerateException {
+		Map<Integer, SortSchluessel> ergebnis = new java.util.HashMap<>();
+		XSpreadsheet xSheet = meldelisteSheet.getXSpreadSheet();
+		if (xSheet == null) {
+			return ergebnis;
+		}
+		int maxSpalte = Math.max(nrSpalte, nachnameSpalte);
+		RangeData data = RangeHelper.from(xSheet, getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
+				RangePosition.from(0, ersteDatenZeile, maxSpalte, ersteDatenZeile + CLEAR_LETZTE_ZEILE))
+				.getDataFromRange();
+		for (RowData row : data) {
+			if (row.isEmpty()) {
+				break;
+			}
+			int nr = row.get(nrSpalte).getIntVal(0);
+			if (nr <= 0) {
+				break;
+			}
+			String nachname = nachnameSpalte < row.size() ? row.get(nachnameSpalte).getStringVal() : "";
+			ergebnis.put(nr, new SortSchluessel("", nachname != null ? nachname.trim() : ""));
+		}
+		return ergebnis;
+	}
+
+	/**
+	 * Sortierschlüssel einer Melde-/Teamnummer für die Checkin-Liste.
+	 *
+	 * @param teamname     freier Teamname (leer, wenn nicht verfügbar)
+	 * @param sortNachname Nachname-Schlüssel (Nachname Spieler 1, Fallback Vorname)
+	 */
+	protected record SortSchluessel(String teamname, String sortNachname) {
+		/** Leerer Schlüssel als Fallback für Nummern ohne Sortierdaten. */
+		public static final SortSchluessel LEER = new SortSchluessel("", "");
+	}
 
 	/**
 	 * Steuert die Namens-Quelle der Checkin-Liste.

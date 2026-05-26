@@ -239,7 +239,7 @@ public abstract class BaseKonfigurationSheet extends SheetRunner implements IPro
 	}
 
 	@Override
-	public final de.petanqueturniermanager.basesheet.meldeliste.CheckinListeSortModus getCheckinListeSortModus() {
+	public final de.petanqueturniermanager.basesheet.meldeliste.TeilnehmerListeSortModus getCheckinListeSortModus() {
 		return getPropertiesSpalte().getCheckinListeSortModus();
 	}
 

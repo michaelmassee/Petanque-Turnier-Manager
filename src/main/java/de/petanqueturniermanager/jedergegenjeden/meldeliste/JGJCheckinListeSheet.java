@@ -4,6 +4,7 @@
 package de.petanqueturniermanager.jedergegenjeden.meldeliste;
 
 import java.util.List;
+import java.util.Map;
 
 import com.sun.star.sheet.XSpreadsheet;
 
@@ -43,25 +44,17 @@ public class JGJCheckinListeSheet extends AbstractCheckinListeSheet {
 	}
 
 	@Override
-	protected void meldelisteSortieren(int spalteNr, boolean aufsteigend) throws GenerateException {
-		meldeliste.doSort(spalteNr, aufsteigend);
-	}
-
-	@Override
-	protected int getNachnameSpalteMeldeliste() {
-		return meldeliste.getMeldungenSpalte().getLetzteMeldungNameSpalte();
-	}
-
-	@Override
-	protected int getNummerSpalteMeldeliste() {
-		return meldeliste.getMeldungenSpalte().getSpielerNrSpalte();
-	}
-
-	@Override
-	protected List<Integer> ladeSortierteNummern() throws GenerateException {
+	protected List<Integer> ladeNummern() throws GenerateException {
 		return meldeliste.getAlleMeldungen().getMeldungen().stream()
 				.map(IMeldung::getNr)
 				.toList();
+	}
+
+	@Override
+	protected Map<Integer, SortSchluessel> ladeSortDaten() throws GenerateException {
+		var meldungenSpalte = meldeliste.getMeldungenSpalte();
+		return leseNachnameSortDaten(meldeliste, meldungenSpalte.getSpielerNrSpalte(),
+				meldungenSpalte.getLetzteMeldungNameSpalte(), meldungenSpalte.getErsteDatenZiele());
 	}
 
 	@Override

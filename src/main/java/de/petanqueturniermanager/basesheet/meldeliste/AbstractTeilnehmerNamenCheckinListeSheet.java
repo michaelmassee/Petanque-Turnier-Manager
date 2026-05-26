@@ -40,11 +40,15 @@ public abstract class AbstractTeilnehmerNamenCheckinListeSheet extends AbstractC
 		return false;
 	}
 
+	/** Liest Spielernamen, Teamnamen und Sortierschlüssel der Meldeliste in einem Durchgang. */
+	private TeilnehmerNamen leseTeilnehmerNamen() throws GenerateException {
+		return TeilnehmerNamenLeser.from(getMeldelisteSheet(), getMeldelisteErsteDatenZeile(),
+				getFormation(), istTeamnameAktiv(), istVereinsnameAktiv()).lesen();
+	}
+
 	@Override
 	protected Map<Integer, String> namenNachNummer() throws GenerateException {
-		boolean teamnameAktiv = istTeamnameAktiv();
-		TeilnehmerNamen namen = TeilnehmerNamenLeser.from(getMeldelisteSheet(), getMeldelisteErsteDatenZeile(),
-				getFormation(), teamnameAktiv, istVereinsnameAktiv()).lesen();
+		TeilnehmerNamen namen = leseTeilnehmerNamen();
 		Map<Integer, String> spielerNamen = namen.spielerNamen();
 		Map<Integer, String> teamnamen = namen.teamnamen();
 
@@ -67,7 +71,7 @@ public abstract class AbstractTeilnehmerNamenCheckinListeSheet extends AbstractC
 	}
 
 	@Override
-	protected List<Integer> ladeSortierteNummern() throws GenerateException {
+	protected List<Integer> ladeNummern() throws GenerateException {
 		List<Integer> nummern = new ArrayList<>();
 		ISheet meldelisteSheet = getMeldelisteSheet();
 		XSpreadsheet xSheet = meldelisteSheet.getXSpreadSheet();
@@ -88,6 +92,23 @@ public abstract class AbstractTeilnehmerNamenCheckinListeSheet extends AbstractC
 			nummern.add(nr);
 		}
 		return nummern;
+	}
+
+	@Override
+	protected Map<Integer, SortSchluessel> ladeSortDaten() throws GenerateException {
+		TeilnehmerNamen namen = leseTeilnehmerNamen();
+		Map<Integer, String> teamnamen = namen.teamnamen();
+		Map<Integer, String> sortNamen = namen.sortNamen();
+		Map<Integer, SortSchluessel> ergebnis = new java.util.HashMap<>();
+		for (Integer nr : sortNamen.keySet()) {
+			ergebnis.put(nr, new SortSchluessel(teamnamen.getOrDefault(nr, ""), sortNamen.getOrDefault(nr, "")));
+		}
+		return ergebnis;
+	}
+
+	@Override
+	protected boolean teamnameVerfuegbar() {
+		return istTeamnameAktiv();
 	}
 
 	// ── system-spezifische Hooks ─────────────────────────────────────────────

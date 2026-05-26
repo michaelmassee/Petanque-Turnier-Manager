@@ -44,21 +44,6 @@ public class KaskadeCheckinListeSheet extends AbstractTeilnehmerNamenCheckinList
 	}
 
 	@Override
-	protected void meldelisteSortieren(int spalteNr, boolean aufsteigend) throws GenerateException {
-		meldeliste.doSort(spalteNr, aufsteigend);
-	}
-
-	@Override
-	protected int getNachnameSpalteMeldeliste() throws GenerateException {
-		return meldeliste.getNachnameSpalte(0);
-	}
-
-	@Override
-	protected int getNummerSpalteMeldeliste() {
-		return meldeliste.getNrSpalte();
-	}
-
-	@Override
 	protected ISheet getMeldelisteSheet() {
 		return meldeliste;
 	}
