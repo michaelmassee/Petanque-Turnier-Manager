@@ -3,6 +3,26 @@
 
 **Filed as:** [tdf#172207](https://bugs.documentfoundation.org/show_bug.cgi?id=172207)
 
+**Fix eingereicht:** [Gerrit 205731](https://gerrit.libreoffice.org/c/core/+/205731) —
+Patch unter `upstream/libreoffice/tdf172207-toolbar-keep-controllers-on-imagemgr-dispose.patch`.
+
+> **Aktualisierte Root-Cause (über die ursprüngliche Analyse hinaus):**
+> Die eigentliche Ursache liegt **nicht** im `ToolbarLayoutManager`-Cache,
+> sondern in `ToolBarManager::disposing(const EventObject&)`
+> (`framework/source/uielement/toolbarmanager.cxx`): die Methode rief
+> `RemoveControllers()` **bedingungslos für jede Disposing-Quelle**. Der
+> ToolBarManager ist via `addConfigurationListener` als
+> `XUIConfigurationListener` auf dem **Doc- und Modul-ImageManager**
+> registriert. Wird der Doc-ImageManager unabhängig vom Frame disposed und neu
+> erzeugt (passiert z. B. während `storeToURL` auf dem Autosave-Pfad), feuert
+> ein `disposing`-Event mit der ImageManager-Component als `Source` — und
+> `RemoveControllers()` zerstörte daraufhin **alle** Toolbar-Item-Controller
+> samt ihrer `XStatusListener`-Registrierungen. Der Manager selbst wird dabei
+> **nicht** disposed (`m_bDisposed` bleibt `false`, `m_xFrame` intakt), daher
+> hat die Extension keinen Recovery-Pfad. **Fix:** Bei ImageManager-Quellen nur
+> die jeweilige Referenz droppen und früh zurückkehren; nur ein disposender
+> Frame macht die Toolbar obsolet.
+
 ## Component
 - Framework / UI Configuration
 - Module: `framework/source/uielement/toolbarmanager.cxx`,
