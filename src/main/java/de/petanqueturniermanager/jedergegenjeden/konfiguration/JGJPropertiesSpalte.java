@@ -41,6 +41,7 @@ public class JGJPropertiesSpalte extends BasePropertiesSpalte implements IJGJPro
 	static {
 		ADDBaseProp(KONFIG_PROPERTIES);
 		addCheckinSortProp(KONFIG_PROPERTIES);
+		addTeilnehmerListeSortProp(KONFIG_PROPERTIES);
 	}
 
 	static {

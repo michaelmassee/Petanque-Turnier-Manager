@@ -29,6 +29,7 @@ public class FormuleXPropertiesSpalte extends BasePropertiesSpalte implements IF
     static {
         ADDBaseProp(KONFIG_PROPERTIES);
         addCheckinSortProp(KONFIG_PROPERTIES);
+        addTeilnehmerListeSortProp(KONFIG_PROPERTIES);
     }
 
     private static final String KONFIG_PROP_KOPF_ZEILE_LINKS      = "Kopfzeile Links";

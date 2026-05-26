@@ -4,7 +4,6 @@
 package de.petanqueturniermanager.poule.meldeliste;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -99,14 +98,16 @@ public class PouleTeilnehmerSheet extends SheetRunner implements ISheet {
                     konfigurationSheet.isMeldeListeVereinsnameAnzeigen()).lesen();
             Map<Integer, String> spielerNamen = namen.spielerNamen();
             Map<Integer, String> teamnamen = namen.teamnamen();
+            Map<Integer, String> sortNamen = namen.sortNamen();
 
             for (Team team : aktiveMeldungen.getTeamList()) {
                 int nr = team.getNr();
                 eintraege.add(new TeilnehmerEintrag(nr,
                         teamnamen.getOrDefault(nr, ""),
-                        spielerNamen.getOrDefault(nr, "")));
+                        spielerNamen.getOrDefault(nr, ""),
+                        sortNamen.getOrDefault(nr, "")));
             }
-            eintraege.sort(Comparator.comparingInt(TeilnehmerEintrag::nr));
+            eintraege.sort(konfigurationSheet.getTeilnehmerListeSortModus().comparator());
         }
 
         processBoxinfo("processbox.teilnehmer.meldungen.einfuegen", eintraege.size());

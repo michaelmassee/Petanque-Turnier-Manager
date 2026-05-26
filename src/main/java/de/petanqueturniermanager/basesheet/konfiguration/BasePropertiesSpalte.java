@@ -21,6 +21,7 @@ import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.basesheet.meldeliste.CheckinListeSortModus;
+import de.petanqueturniermanager.basesheet.meldeliste.TeilnehmerListeSortModus;
 import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.konfigdialog.AuswahlConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
@@ -64,6 +65,8 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	private static final int DEFAULT_ANZ_TEILNEHMER_IN_SPALTE = 40;
 
 	public static final String KONFIG_PROP_CHECKIN_LISTE_SORT_MODUS = "Checkin-Liste Sortierung";
+
+	public static final String KONFIG_PROP_TEILNEHMER_LISTE_SORT_MODUS = "Teilnehmerliste Sortierung";
 
 	// Tab-Farben (Document Properties Schlüssel)
 	public static final String KONFIG_PROP_TAB_COLOR_MELDELISTE      = "Tab-Farbe Meldeliste";
@@ -160,6 +163,26 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 				.setDescription("config.desc.checkin.sort.modus"))
 				.addAuswahl(CheckinListeSortModus.NACHNAME.getKey(), I18n.get("config.checkin.sort.nachname"))
 				.addAuswahl(CheckinListeSortModus.NUMMER.getKey(), I18n.get("config.checkin.sort.nummer"))
+				.inSideBar());
+	}
+
+	/**
+	 * Fügt die Auswahl-Property für die Teilnehmerlisten-Sortierung hinzu
+	 * (Default {@link TeilnehmerListeSortModus#NAME}).
+	 * <p>
+	 * Bewusst NICHT Teil von {@link #ADDBaseProp(List)}, da das Liga-System keine Teilnehmerliste besitzt.
+	 * Jedes System mit Teilnehmerliste ruft diese Methode in seinem statischen Initialisierer auf.
+	 *
+	 * @param KONFIG_PROPERTIES Property-Liste des jeweiligen Systems
+	 */
+	protected static void addTeilnehmerListeSortProp(List<ConfigProperty<?>> KONFIG_PROPERTIES) {
+		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty
+				.from(KONFIG_PROP_TEILNEHMER_LISTE_SORT_MODUS)
+				.setDefaultVal(TeilnehmerListeSortModus.NAME.getKey())
+				.setDescription("config.desc.teilnehmer.sort.modus"))
+				.addAuswahl(TeilnehmerListeSortModus.NUMMER.getKey(), I18n.get("config.teilnehmer.sort.nummer"))
+				.addAuswahl(TeilnehmerListeSortModus.NAME.getKey(), I18n.get("config.teilnehmer.sort.name"))
+				.addAuswahl(TeilnehmerListeSortModus.TEAMNAME.getKey(), I18n.get("config.teilnehmer.sort.teamname"))
 				.inSideBar());
 	}
 
@@ -367,6 +390,12 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	public CheckinListeSortModus getCheckinListeSortModus() {
 		return readEnumProperty(KONFIG_PROP_CHECKIN_LISTE_SORT_MODUS, CheckinListeSortModus.class,
 				CheckinListeSortModus.NACHNAME);
+	}
+
+	@Override
+	public TeilnehmerListeSortModus getTeilnehmerListeSortModus() {
+		return readEnumProperty(KONFIG_PROP_TEILNEHMER_LISTE_SORT_MODUS, TeilnehmerListeSortModus.class,
+				TeilnehmerListeSortModus.NAME);
 	}
 
 	@Override

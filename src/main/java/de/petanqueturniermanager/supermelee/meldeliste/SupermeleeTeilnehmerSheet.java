@@ -5,7 +5,6 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -108,9 +107,11 @@ public class SupermeleeTeilnehmerSheet extends SheetRunner implements ISheet {
             Map<Integer, String> spielerNamen = leseSpielerNamenAusMeldeliste();
             for (Spieler spieler : aktiveUndAusgesetzt.getSpielerList()) {
                 int nr = spieler.getNr();
-                eintraege.add(new TeilnehmerEintrag(nr, "", spielerNamen.getOrDefault(nr, "")));
+                // Anzeige ist bereits "Nachname, Vorname" → dient zugleich als Sortierschlüssel.
+                String anzeigeName = spielerNamen.getOrDefault(nr, "");
+                eintraege.add(new TeilnehmerEintrag(nr, "", anzeigeName, anzeigeName));
             }
-            eintraege.sort(Comparator.comparingInt(TeilnehmerEintrag::nr));
+            eintraege.sort(konfigurationSheet.getTeilnehmerListeSortModus().comparator());
         }
 
         processBoxinfo("processbox.spieltag.meldungen.einfuegen", getSpielTagNr().getNr(), eintraege.size());

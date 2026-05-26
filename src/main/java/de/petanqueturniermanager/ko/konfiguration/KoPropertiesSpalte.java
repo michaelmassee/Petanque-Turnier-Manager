@@ -26,6 +26,7 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 	static {
 		ADDBaseProp(KONFIG_PROPERTIES, false);
 		addCheckinSortProp(KONFIG_PROPERTIES);
+		addTeilnehmerListeSortProp(KONFIG_PROPERTIES);
 	}
 
 	public static final String KONFIG_PROP_TAB_COLOR_KO_TURNIERBAUM       = "Tab-Farbe KO-Turnierbaum";

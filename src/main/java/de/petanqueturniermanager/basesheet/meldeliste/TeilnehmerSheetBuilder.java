@@ -38,7 +38,11 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
  */
 public final class TeilnehmerSheetBuilder {
 
-    public record TeilnehmerEintrag(int nr, String teamname, String spielerNamen) {
+    /**
+     * Ein Eintrag der Teilnehmerliste. {@code sortNachname} (Nachname von Spieler 1) dient
+     * ausschließlich der Sortierung und wird nicht angezeigt.
+     */
+    public record TeilnehmerEintrag(int nr, String teamname, String spielerNamen, String sortNachname) {
     }
 
     public static final int ERSTE_DATEN_ZEILE = 1;
