@@ -222,7 +222,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_JGJ_TESTDATEN_TURNIER_DOUBLETTE_17 = "jgj_testdaten_turnier_doublette_17";
 	// Schweizer
 	public static final String CMD_SCHWEIZER_START = "schweizer_start";
-	public static final String CMD_SCHWEIZER_NEUE_MELDELISTE = "schweizer_neue_meldeliste";
 	public static final String CMD_SCHWEIZER_UPDATE_MELDELISTE = "schweizer_update_meldeliste";
 	public static final String CMD_SCHWEIZER_AKTUELLE_SPIELRUNDE = "schweizer_aktuelle_spielrunde";
 	public static final String CMD_SCHWEIZER_NAECHSTE_SPIELRUNDE = "schweizer_naechste_spielrunde";
@@ -282,7 +281,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_MAASTRICHTER_CHECKIN = "maastrichter_checkin";
 	// Poule A/B
 	public static final String CMD_POULE_START               = "poule_start";
-	public static final String CMD_POULE_NEUE_MELDELISTE     = "poule_neue_meldeliste";
 	public static final String CMD_POULE_UPDATE_MELDELISTE   = "poule_update_meldeliste";
 	public static final String CMD_POULE_TEILNEHMER          = "poule_teilnehmer";
 	public static final String CMD_POULE_TESTDATEN_MELDELISTE = "poule_testdaten_meldeliste";
@@ -817,9 +815,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_SCHWEIZER_START:
 				new SchweizerMeldeListeSheetNew(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
-			case CMD_SCHWEIZER_NEUE_MELDELISTE:
-				new SchweizerMeldeListeSheetNew(ws).testTurnierSystem(TurnierSystem.SCHWEIZER).start();
-				break;
 			case CMD_SCHWEIZER_UPDATE_MELDELISTE:
 				new SchweizerMeldeListeSheetUpdate(ws).testTurnierSystem(TurnierSystem.SCHWEIZER).start();
 				break;
@@ -987,9 +982,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			// Poule A/B
 			case CMD_POULE_START:
 				new PouleMeldeListeSheetNew(ws).testKeinAnderesTurnierVorhanden().start();
-				break;
-			case CMD_POULE_NEUE_MELDELISTE:
-				new PouleMeldeListeSheetNew(ws).testTurnierSystem(TurnierSystem.POULE).start();
 				break;
 			case CMD_POULE_UPDATE_MELDELISTE:
 				new PouleMeldeListeSheetUpdate(ws).testTurnierSystem(TurnierSystem.POULE).backUpDocument().start();
@@ -1599,8 +1591,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_KASKADE_AKTUELLE_RUNDE,
 				 CMD_KASKADE_KO_FELDER                     -> ts == TurnierSystem.KASKADE;
 			case CMD_POULE_START                            -> ts == TurnierSystem.KEIN;
-			case CMD_POULE_NEUE_MELDELISTE,
-				 CMD_POULE_UPDATE_MELDELISTE,
+			case CMD_POULE_UPDATE_MELDELISTE,
 				 CMD_POULE_TEILNEHMER, CMD_POULE_CHECKIN   -> ts == TurnierSystem.POULE;
 			case CMD_POULE_TESTDATEN_MELDELISTE             -> ts == TurnierSystem.KEIN || ts == TurnierSystem.POULE;
 			case CMD_POULE_VORRUNDE,
@@ -1613,8 +1604,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_KO_TESTDATEN_8_TEAMS,
 				 CMD_KO_TESTDATEN_16_TEAMS,
 				 CMD_KO_TESTDATEN_CADRAGE                   -> ts == TurnierSystem.KEIN || ts == TurnierSystem.KO;
-			case CMD_SCHWEIZER_NEUE_MELDELISTE,
-				 CMD_SCHWEIZER_UPDATE_MELDELISTE,
+			case CMD_SCHWEIZER_UPDATE_MELDELISTE,
 				 CMD_SCHWEIZER_TEILNEHMER, CMD_SCHWEIZER_CHECKIN,
 				 CMD_SCHWEIZER_NAECHSTE_SPIELRUNDE,
 				 CMD_SCHWEIZER_RANGLISTE,
