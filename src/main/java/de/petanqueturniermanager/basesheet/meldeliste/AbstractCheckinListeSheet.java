@@ -6,6 +6,7 @@ package de.petanqueturniermanager.basesheet.meldeliste;
 import java.util.List;
 import java.util.Map;
 
+import com.sun.star.awt.FontWeight;
 import com.sun.star.table.CellHoriJustify;
 
 import de.petanqueturniermanager.SheetRunner;
@@ -18,6 +19,7 @@ import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.RangeProperties;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.print.PrintArea;
@@ -95,8 +97,9 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 	 */
 	private void fuelleBereich(List<Integer> nummern) throws GenerateException {
 		if (nummern.isEmpty()) {
-			// Leere Meldeliste: leere, aber gültige Checkin-Liste hinterlassen (Druckbereich auf erste Zelle).
-			printBereichDefinieren(ERSTE_DATEN_ZEILE, NR_SPALTE);
+			// Leere Meldeliste: dennoch eine Kopfzeile (Überschrift) anzeigen und Druckbereich setzen.
+			kopfzeileSchreiben();
+			printBereichDefinieren(ERSTE_DATEN_ZEILE, NAME_SPALTE);
 			return;
 		}
 
@@ -180,6 +183,29 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 		}
 
 		printBereichDefinieren(maxMeldungZeile, letzteSpalte);
+	}
+
+	/**
+	 * Schreibt eine Kopfzeile (Spaltenüberschriften „Nr"/„Name") in die erste Datenzeile.
+	 * Wird genutzt, damit auch bei leerer Meldeliste eine aussagekräftige Überschrift erscheint.
+	 */
+	private void kopfzeileSchreiben() throws GenerateException {
+		int headerColor = getKonfigurationSheet().getMeldeListeHeaderFarbe();
+		var border = BorderFactory.from().allThin().boldLn().forTop().toBorder();
+
+		StringCellValue nrHeader = StringCellValue.from(getXSpreadSheet(), Position.from(NR_SPALTE, ERSTE_DATEN_ZEILE))
+				.setValue(I18n.get("column.header.nr")).setCharWeight(FontWeight.BOLD)
+				.setCellBackColor(headerColor).setBorder(border)
+				.addColumnProperties(ColumnProperties.from().setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH)
+						.setHoriJustify(CellHoriJustify.CENTER));
+		getSheetHelper().setStringValueInCell(nrHeader);
+
+		StringCellValue nameHeader = StringCellValue.from(getXSpreadSheet(), Position.from(NAME_SPALTE, ERSTE_DATEN_ZEILE))
+				.setValue(I18n.get("column.header.name")).setCharWeight(FontWeight.BOLD)
+				.setCellBackColor(headerColor).setBorder(border)
+				.addColumnProperties(ColumnProperties.from().setWidth(getNameSpalteWidth())
+						.setHoriJustify(CellHoriJustify.CENTER));
+		getSheetHelper().setStringValueInCell(nameHeader);
 	}
 
 	private void printBereichDefinieren(int letzteZeile, int letzteSpalte) throws GenerateException {
