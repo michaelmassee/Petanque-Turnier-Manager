@@ -327,17 +327,22 @@ public abstract class SheetRunner extends Thread {
 	}
 
 	/**
-	 * Prüft ob das Dokument NOCH KEIN Turnier hat. Wird vor „Neues Turnier"-/
-	 * Testdaten-Befehlen aufgerufen, damit User-Klicks in der nun dauerhaft
-	 * aktiven Toolbar (siehe LO-Bug tdf#172207-Workaround) keine bestehenden
-	 * Turnier-Daten überschreiben.
+	 * Prüft ob das Dokument kein Turnier eines <em>anderen</em> Typs enthält. Wird vor
+	 * „Neues Turnier"-/Testdaten-Befehlen aufgerufen, damit User-Klicks in der nun dauerhaft
+	 * aktiven Toolbar (siehe LO-Bug tdf#172207-Workaround) kein bestehendes Turnier eines
+	 * fremden Systems überschreiben.
+	 * <p>
+	 * Ein bereits vorhandenes Turnier <em>desselben</em> Typs ist hier ausdrücklich erlaubt –
+	 * dieser Fall wird anschließend in {@code doRun()} über den
+	 * {@link de.petanqueturniermanager.helper.NewTestDatenValidator} mit einer Ja/Nein-Abfrage
+	 * („Daten überschreiben?") behandelt.
 	 *
-	 * @throws GenerateException wenn ein Turnier bereits vorhanden ist
+	 * @throws GenerateException wenn ein Turnier eines anderen Typs bereits vorhanden ist
 	 */
-	public SheetRunner testKeinTurnierVorhanden() throws GenerateException {
+	public SheetRunner testKeinAnderesTurnierVorhanden() throws GenerateException {
 		TurnierSystem turnierSystemAusDocument = new DocumentPropertiesHelper(workingSpreadsheet)
 				.getTurnierSystemAusDocument();
-		if (turnierSystemAusDocument != TurnierSystem.KEIN) {
+		if (turnierSystemAusDocument != TurnierSystem.KEIN && turnierSystemAusDocument != getTurnierSystem()) {
 			MessageBox.from(workingSpreadsheet.getxContext(), MessageBoxTypeEnum.ERROR_OK)
 					.caption(I18n.get("msg.caption.turnier.bereits.vorhanden"))
 					.message(I18n.get("msg.text.turnier.bereits.vorhanden",
@@ -351,7 +356,7 @@ public abstract class SheetRunner extends Thread {
 	/**
 	 * Prüft ob das Dokument das erwartete Turniersystem hat ODER noch keins
 	 * (= darf von „Neues Turnier"-Befehlen überschrieben werden ist Sache des
-	 * separaten {@link #testKeinTurnierVorhanden}). Schützt vor System-Mismatch
+	 * separaten {@link #testKeinAnderesTurnierVorhanden}). Schützt vor System-Mismatch
 	 * bei normalen Aktionen wie „Spielrunde", „Rangliste" usw.
 	 *
 	 * @param erwartet Erwartetes Turniersystem; muss != {@code KEIN} sein

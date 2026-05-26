@@ -680,7 +680,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			// ------------------------------
 			// SuperMelee
 			case CMD_NEUE_MELDELISTE:
-				new MeldeListeSheet_New(ws).testKeinTurnierVorhanden().start();
+				new MeldeListeSheet_New(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_UPDATE_MELDELISTE:
 				new MeldeListeSheet_Update(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).start();
@@ -695,7 +695,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				new MeldeListeSheet_NeuerSpieltag(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).backUpDocument().start();
 				break;
 			case CMD_MELDELISTE_TESTDATEN:
-				new MeldeListeSheet_TestDaten(ws).testKeinTurnierVorhanden().start();
+				new MeldeListeSheet_TestDaten(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_SUPERMELEE_TEAMPAARUNGEN:
 				new SupermeleeTeamPaarungenSheet(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).start();
@@ -736,13 +736,13 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			// ------------------------------
 			// Liga
 			case CMD_LIGA_NEUE_MELDELISTE:
-				new LigaMeldeListeSheetNew(ws).testKeinTurnierVorhanden().start();
+				new LigaMeldeListeSheetNew(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_LIGA_UPDATE_MELDELISTE:
 				new LigaMeldeListeSheetUpdate(ws).testTurnierSystem(TurnierSystem.LIGA).backUpDocument().start();
 				break;
 			case CMD_LIGA_TESTDATEN_MELDELISTE:
-				new LigaMeldeListeSheetTestDaten(ws, true).testKeinTurnierVorhanden().start();
+				new LigaMeldeListeSheetTestDaten(ws, true).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_LIGA_SPIELPLAN:
 				new LigaSpielPlanSheet(ws).testTurnierSystem(TurnierSystem.LIGA).backUpDocument().backupDocumentAfterRun().start();
@@ -768,7 +768,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			// ------------------------------
 			// Jeder gegen Jeden
 			case CMD_JGJ_NEUE_MELDELISTE:
-				new JGJMeldeListeSheet_New(ws).testKeinTurnierVorhanden().start();
+				new JGJMeldeListeSheet_New(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_JGJ_UPDATE_MELDELISTE:
 				new JGJMeldeListeSheet_Update(ws).testTurnierSystem(TurnierSystem.JGJ).backUpDocument().start();
@@ -789,15 +789,15 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				new JGJRanglisteDirektvergleichSheet(ws).testTurnierSystem(TurnierSystem.JGJ).start();
 				break;
 			case CMD_JGJ_TESTDATEN_TURNIER:
-				new JGJTurnierTestDaten(ws).testKeinTurnierVorhanden().start();
+				new JGJTurnierTestDaten(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_JGJ_TESTDATEN_TURNIER_DOUBLETTE_17:
-				new JGJDoublette17TurnierTestDaten(ws).testKeinTurnierVorhanden().start();
+				new JGJDoublette17TurnierTestDaten(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
 			// ------------------------------
 			// Schweizer System
 			case CMD_SCHWEIZER_START:
-				new SchweizerMeldeListeSheetNew(ws).testKeinTurnierVorhanden().start();
+				new SchweizerMeldeListeSheetNew(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_SCHWEIZER_NEUE_MELDELISTE:
 				new SchweizerMeldeListeSheetNew(ws).testTurnierSystem(TurnierSystem.SCHWEIZER).start();
@@ -821,19 +821,19 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				new SchweizerRanglisteSheetSortOnly(ws).testTurnierSystem(TurnierSystem.SCHWEIZER).start();
 				break;
 			case CMD_SCHWEIZER_TESTDATEN_MELDELISTE:
-				new SchweizerMeldeListeSheetTestDaten(ws).testKeinTurnierVorhanden().start();
+				new SchweizerMeldeListeSheetTestDaten(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_SCHWEIZER_TESTDATEN_TURNIER:
-				new SchweizerTurnierTestDaten(ws).testKeinTurnierVorhanden().start();
+				new SchweizerTurnierTestDaten(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_SCHWEIZER_TESTDATEN_TURNIER_19:
 				// 19 Teams: ungerade → 1 Freilos pro Runde, Teamname in Spielrunde, Bahn Random
-				new SchweizerTurnierTestDaten(ws, 19, SpielplanTeamAnzeige.NAME).testKeinTurnierVorhanden().start();
+				new SchweizerTurnierTestDaten(ws, 19, SpielplanTeamAnzeige.NAME).testKeinAnderesTurnierVorhanden().start();
 				break;
 			// ------------------------------
 			// Maastrichter System
 			case CMD_MAASTRICHTER_START:
-				new MaastrichterMeldeListeSheetNew(ws).testKeinTurnierVorhanden().start();
+				new MaastrichterMeldeListeSheetNew(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_MAASTRICHTER_UPDATE_MELDELISTE:
 				new MaastrichterMeldeListeSheetUpdate(ws).testTurnierSystem(TurnierSystem.MAASTRICHTER).backUpDocument().start();
@@ -854,25 +854,25 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				new MaastrichterTeilnehmerSheet(ws).testTurnierSystem(TurnierSystem.MAASTRICHTER).start();
 				break;
 			case CMD_MAASTRICHTER_TESTDATEN_TURNIER:
-				new MaastrichterTurnierTestDaten(ws).testKeinTurnierVorhanden().start();
+				new MaastrichterTurnierTestDaten(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_MAASTRICHTER_TESTDATEN_TURNIER_57:
 				// 57 Teams: 4 Vorrunden, gruppenGroesse=16
 				// → Aufteilung [16,16,16,9] = 4 KO-Gruppen, D mit Cadrage
 				// → 57 Teams ungerade → automatisch Freilos pro Vorrunde
-				new MaastrichterTurnierTestDaten(ws, 57, 4, 16).testKeinTurnierVorhanden().start();
+				new MaastrichterTurnierTestDaten(ws, 57, 4, 16).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_MAASTRICHTER_TESTDATEN_TURNIER_35:
 				// 35 Teams: 3 Vorrunden, gruppenGroesse=16
 				// → Aufteilung [16,16,3] = 3 Gruppen; mit 1-Team-Fold-Schutz wird der
 				//   3er-Rest als eigene Gruppe C beibehalten (≥2 Teams)
 				// → 35 Teams ungerade → automatisch Freilos pro Vorrunde
-				new MaastrichterTurnierTestDaten(ws, 35, 3, 16).testKeinTurnierVorhanden().start();
+				new MaastrichterTurnierTestDaten(ws, 35, 3, 16).testKeinAnderesTurnierVorhanden().start();
 				break;
 			// ------------------------------
 			// K.-O.
 			case CMD_KO_START:
-				new KoMeldeListeSheetNew(ws).testKeinTurnierVorhanden().start();
+				new KoMeldeListeSheetNew(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_KO_UPDATE_MELDELISTE:
 				new KoMeldeListeSheetUpdate(ws).testTurnierSystem(TurnierSystem.KO).backUpDocument().start();
@@ -884,21 +884,21 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				new KoTurnierbaumSheet(ws).testTurnierSystem(TurnierSystem.KO).backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_KO_TESTDATEN_NUR_MELDELISTE:
-				new KoMeldeListeSheetTestDaten(ws, 8).testKeinTurnierVorhanden().start();
+				new KoMeldeListeSheetTestDaten(ws, 8).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_KO_TESTDATEN_8_TEAMS:
-				new KoTurnierTestDaten(ws, 8).testKeinTurnierVorhanden().start();
+				new KoTurnierTestDaten(ws, 8).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_KO_TESTDATEN_16_TEAMS:
-				new KoTurnierTestDaten(ws, 16).testKeinTurnierVorhanden().start();
+				new KoTurnierTestDaten(ws, 16).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_KO_TESTDATEN_CADRAGE:
-				new KoTurnierTestDaten(ws, 10).testKeinTurnierVorhanden().start();
+				new KoTurnierTestDaten(ws, 10).testKeinAnderesTurnierVorhanden().start();
 				break;
 			// ------------------------------
 			// Formule X
 			case CMD_FORMULEX_START:
-				new FormuleXMeldeListeSheetNew(ws).testKeinTurnierVorhanden().start();
+				new FormuleXMeldeListeSheetNew(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_FORMULEX_UPDATE_MELDELISTE:
 				new FormuleXMeldeListeSheetUpdate(ws).testTurnierSystem(TurnierSystem.FORMULEX).start();
@@ -916,15 +916,15 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				new FormuleXRanglisteSheet(ws).testTurnierSystem(TurnierSystem.FORMULEX).start();
 				break;
 			case CMD_FORMULEX_TESTDATEN_MELDELISTE:
-				new FormuleXMeldeListeSheetTestDaten(ws, 17).testKeinTurnierVorhanden().start();
+				new FormuleXMeldeListeSheetTestDaten(ws, 17).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_FORMULEX_TESTDATEN_TURNIER:
-				new FormuleXTurnierTestDaten(ws).testKeinTurnierVorhanden().start();
+				new FormuleXTurnierTestDaten(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
 			// ------------------------------
 			// Kaskaden-KO
 			case CMD_KASKADE_START:
-				new KaskadeMeldeListeSheetNew(ws).testKeinTurnierVorhanden().start();
+				new KaskadeMeldeListeSheetNew(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_KASKADE_UPDATE_MELDELISTE:
 				new KaskadeMeldeListeSheetUpdate(ws).testTurnierSystem(TurnierSystem.KASKADE).backUpDocument().start();
@@ -933,10 +933,10 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				new KaskadeTeilnehmerSheet(ws).testTurnierSystem(TurnierSystem.KASKADE).start();
 				break;
 			case CMD_KASKADE_TESTDATEN_MELDELISTE:
-				new KaskadeMeldeListeSheetTestDaten(ws, 73).testKeinTurnierVorhanden().start();
+				new KaskadeMeldeListeSheetTestDaten(ws, 73).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_KASKADE_TESTDATEN_TURNIER:
-				new KaskadeTurnierTestDaten(ws).testKeinTurnierVorhanden().start();
+				new KaskadeTurnierTestDaten(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_KASKADE_NAECHSTE_RUNDE:
 				new KaskadeSpielrundeSheet(ws).testTurnierSystem(TurnierSystem.KASKADE).backUpDocument().backupDocumentAfterRun().start();
@@ -953,7 +953,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			// ------------------------------
 			// Poule A/B
 			case CMD_POULE_START:
-				new PouleMeldeListeSheetNew(ws).testKeinTurnierVorhanden().start();
+				new PouleMeldeListeSheetNew(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_POULE_NEUE_MELDELISTE:
 				new PouleMeldeListeSheetNew(ws).testTurnierSystem(TurnierSystem.POULE).start();
@@ -965,7 +965,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				new PouleTeilnehmerSheet(ws).testTurnierSystem(TurnierSystem.POULE).start();
 				break;
 			case CMD_POULE_TESTDATEN_MELDELISTE:
-				new PouleMeldeListeSheetTestDaten(ws).testKeinTurnierVorhanden().start();
+				new PouleMeldeListeSheetTestDaten(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_POULE_VORRUNDE:
 				new PouleVorrundeSheet(ws).testTurnierSystem(TurnierSystem.POULE).backUpDocument().backupDocumentAfterRun().start();
@@ -980,10 +980,10 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				new PouleKoSheet(ws).testTurnierSystem(TurnierSystem.POULE).backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_POULE_TESTDATEN_TURNIER:
-				new PouleTurnierTestDaten(ws).testKeinTurnierVorhanden().start();
+				new PouleTurnierTestDaten(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_POULE_TESTDATEN_TURNIER_37:
-				new Poule37TeamsTurnierTestDaten(ws).testKeinTurnierVorhanden().start();
+				new Poule37TeamsTurnierTestDaten(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
 			// ------------------------------
 			// Konfiguration
@@ -1377,7 +1377,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	// jedem Menü-Öffnen frische addStatusListener-Calls macht. Für die
 	// Addon-Toolbar wird das Ergebnis nach einem internen LO-Lifecycle-
 	// Event eingefroren (LO disposed die Status-Controller ohne Re-Register).
-	// Click-time-Validierung in dispatch() (testKeinTurnierVorhanden /
+	// Click-time-Validierung in dispatch() (testKeinAnderesTurnierVorhanden /
 	// testTurnierSystem) fängt den daraus resultierenden Datenverlust ab,
 	// falls der User auf einen eingefrorenen, fälschlich-enabled Button klickt.
 	//
@@ -1399,7 +1399,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	 * extension-seitig nicht unterscheidbar. Geteilte URLs (in Toolbar UND
 	 * Menü) erscheinen im Menü daher ebenfalls als enabled; das ist der
 	 * akzeptierte Trade-off. Daten-Verlust durch fälschlich-enabled Klicks
-	 * wird in dispatch() via testKeinTurnierVorhanden/testTurnierSystem
+	 * wird in dispatch() via testKeinAnderesTurnierVorhanden/testTurnierSystem
 	 * abgefangen.
 	 */
 	private static final java.util.Set<String> TOOLBAR_ONLY_CMDS = java.util.Set.of(
