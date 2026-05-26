@@ -76,13 +76,18 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 		seitenStilAnwenden(newSheet);
 		newSheet.create();
 
-		// Meldeliste gemäß Konfiguration sortieren, damit die VLOOKUP-Namen in der gewünschten Reihenfolge stehen
-		int sortSpalte = (getKonfigurationSheet().getCheckinListeSortModus() == CheckinListeSortModus.NUMMER)
-				? getNummerSpalteMeldeliste()
-				: getNachnameSpalteMeldeliste();
-		meldelisteSortieren(sortSpalte, true);
-
-		fuelleBereich(ladeSortierteNummern());
+		// Bei leerer Meldeliste wird dennoch eine gültige (leere) Checkin-Liste erstellt.
+		// Sortierung/Spaltenermittlung nur bei vorhandenen Einträgen, um Edge-Cases auf
+		// leerer Meldeliste zu vermeiden.
+		List<Integer> nummern = ladeSortierteNummern();
+		if (!nummern.isEmpty()) {
+			int sortSpalte = (getKonfigurationSheet().getCheckinListeSortModus() == CheckinListeSortModus.NUMMER)
+					? getNummerSpalteMeldeliste()
+					: getNachnameSpalteMeldeliste();
+			meldelisteSortieren(sortSpalte, true);
+			nummern = ladeSortierteNummern();
+		}
+		fuelleBereich(nummern);
 	}
 
 	/**
@@ -90,7 +95,8 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 	 */
 	private void fuelleBereich(List<Integer> nummern) throws GenerateException {
 		if (nummern.isEmpty()) {
-			processBoxinfo("processbox.abbruch");
+			// Leere Meldeliste: leere, aber gültige Checkin-Liste hinterlassen (Druckbereich auf erste Zelle).
+			printBereichDefinieren(ERSTE_DATEN_ZEILE, NR_SPALTE);
 			return;
 		}
 
