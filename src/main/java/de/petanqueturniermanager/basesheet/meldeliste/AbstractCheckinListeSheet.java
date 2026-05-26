@@ -52,7 +52,9 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 	public static final int ERSTE_DATEN_ZEILE = 1;
 	public static final int NR_SPALTE = 0;
 
-	private static final int DEFAULT_NAME_SPALTE_WIDTH = 4000;
+	/** Spieler-Spaltenbreite – wie {@code TeilnehmerSheetBuilder.SPIELER_SPALTE_DEFAULT_WIDTH}. */
+	private static final int DEFAULT_NAME_SPALTE_WIDTH = 6000;
+	/** Teamname-Spaltenbreite – wie {@code TeilnehmerSheetBuilder.TEAMNAME_SPALTE_WIDTH}. */
 	private static final int TEAMNAME_SPALTE_WIDTH = 4000;
 
 	/**
