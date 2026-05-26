@@ -44,7 +44,8 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
  */
 public abstract class AbstractCheckinListeSheet extends SheetRunner implements ISheet {
 
-	public static final int ERSTE_DATEN_ZEILE = 0;
+	public static final int KOPF_ZEILE = 0;
+	public static final int ERSTE_DATEN_ZEILE = 1;
 	public static final int NR_SPALTE = 0;
 	public static final int NAME_SPALTE = 1;
 
@@ -98,8 +99,8 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 	private void fuelleBereich(List<Integer> nummern) throws GenerateException {
 		if (nummern.isEmpty()) {
 			// Leere Meldeliste: dennoch eine Kopfzeile (Überschrift) anzeigen und Druckbereich setzen.
-			kopfzeileSchreiben();
-			printBereichDefinieren(ERSTE_DATEN_ZEILE, NAME_SPALTE);
+			kopfzeileSchreiben(NR_SPALTE);
+			printBereichDefinieren(KOPF_ZEILE, NAME_SPALTE);
 			return;
 		}
 
@@ -151,9 +152,12 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 		for (int blkCntr = 0; blkCntr < anzBloecke; blkCntr++) {
 			int letzteZeile = ERSTE_DATEN_ZEILE + maxProSpalte - 1;
 			if (blkCntr + 1 == anzBloecke) {
-				letzteZeile = (nummern.size() - ((anzBloecke - 1) * maxProSpalte)) - 1;
+				letzteZeile = ERSTE_DATEN_ZEILE + (nummern.size() - ((anzBloecke - 1) * maxProSpalte)) - 1;
 			}
 			maxMeldungZeile = Math.max(maxMeldungZeile, letzteZeile);
+
+			// Kopfzeile (Überschrift) je Block über der Nr-/Namens-Spalte
+			kopfzeileSchreiben(NR_SPALTE + (blkCntr * SPALTEN_PRO_BLOCK));
 
 			RangePosition blockNrRange = RangePosition.from(NR_SPALTE + (blkCntr * SPALTEN_PRO_BLOCK), ERSTE_DATEN_ZEILE,
 					NR_SPALTE + (blkCntr * SPALTEN_PRO_BLOCK), letzteZeile);
@@ -186,21 +190,23 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 	}
 
 	/**
-	 * Schreibt eine Kopfzeile (Spaltenüberschriften „Nr"/„Name") in die erste Datenzeile.
-	 * Wird genutzt, damit auch bei leerer Meldeliste eine aussagekräftige Überschrift erscheint.
+	 * Schreibt eine Kopfzeile (Spaltenüberschriften „Nr"/„Name") in {@link #KOPF_ZEILE}
+	 * ab der angegebenen Nr-Spalte (je Block). Wird im befüllten wie im leeren Fall genutzt.
+	 *
+	 * @param nrSpalte Spaltenindex der Nr-Spalte des Blocks (Name folgt in {@code nrSpalte + 1})
 	 */
-	private void kopfzeileSchreiben() throws GenerateException {
+	private void kopfzeileSchreiben(int nrSpalte) throws GenerateException {
 		int headerColor = getKonfigurationSheet().getMeldeListeHeaderFarbe();
 		var border = BorderFactory.from().allThin().boldLn().forTop().toBorder();
 
-		StringCellValue nrHeader = StringCellValue.from(getXSpreadSheet(), Position.from(NR_SPALTE, ERSTE_DATEN_ZEILE))
+		StringCellValue nrHeader = StringCellValue.from(getXSpreadSheet(), Position.from(nrSpalte, KOPF_ZEILE))
 				.setValue(I18n.get("column.header.nr")).setCharWeight(FontWeight.BOLD)
 				.setCellBackColor(headerColor).setBorder(border)
 				.addColumnProperties(ColumnProperties.from().setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH)
 						.setHoriJustify(CellHoriJustify.CENTER));
 		getSheetHelper().setStringValueInCell(nrHeader);
 
-		StringCellValue nameHeader = StringCellValue.from(getXSpreadSheet(), Position.from(NAME_SPALTE, ERSTE_DATEN_ZEILE))
+		StringCellValue nameHeader = StringCellValue.from(getXSpreadSheet(), Position.from(nrSpalte + 1, KOPF_ZEILE))
 				.setValue(I18n.get("column.header.name")).setCharWeight(FontWeight.BOLD)
 				.setCellBackColor(headerColor).setBorder(border)
 				.addColumnProperties(ColumnProperties.from().setWidth(getNameSpalteWidth())
@@ -210,7 +216,7 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 
 	private void printBereichDefinieren(int letzteZeile, int letzteSpalte) throws GenerateException {
 		processBoxinfo("processbox.print.bereich");
-		Position linksOben = Position.from(NR_SPALTE, ERSTE_DATEN_ZEILE);
+		Position linksOben = Position.from(NR_SPALTE, KOPF_ZEILE);
 		Position rechtsUnten = Position.from(letzteSpalte, letzteZeile);
 		PrintArea.from(getXSpreadSheet(), getWorkingSpreadsheet()).setPrintArea(RangePosition.from(linksOben, rechtsUnten));
 	}
