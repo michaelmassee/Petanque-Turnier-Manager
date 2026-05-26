@@ -22,8 +22,6 @@ import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
-import de.petanqueturniermanager.helper.msgbox.MessageBox;
-import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
@@ -89,35 +87,24 @@ public class SupermeleeTeilnehmerSheet extends SheetRunner implements ISheet {
                 .spielTagPageStyle(getSpielTagNr())
                 .forceCreate().hideGrid().setActiv().create();
 
-        befuelleTeilnehmerDaten(true);
+        befuelleTeilnehmerDaten();
     }
 
     /**
      * Schreibt Header, Spielerblöcke und Footer in das bereits existierende
      * Teilnehmer-Sheet. Wird sowohl vom Vollaufbau ({@link #generate()}) als auch
-     * vom Update-Pfad ({@code SupermeleeTeilnehmerSheetUpdate}) genutzt.
-     *
-     * @param meldungLeerHinweis bei {@code true} wird eine MessageBox angezeigt, wenn
-     *                           keine aktive Meldung existiert (Erstaufbau-Pfad);
-     *                           bei {@code false} wird nur ein Log-Eintrag erzeugt
-     *                           (Listener-Pfad, kein UI-Popup während Tab-Wechsel).
+     * vom Update-Pfad ({@code SupermeleeTeilnehmerSheetUpdate}) genutzt. Bei leerer
+     * Meldeliste wird dennoch eine gültige (leere) Teilnehmerliste mit Header, Footer
+     * und Druckbereich erstellt.
      */
-    protected void befuelleTeilnehmerDaten(boolean meldungLeerHinweis) throws GenerateException {
+    protected void befuelleTeilnehmerDaten() throws GenerateException {
         meldeliste.setSpielTag(getSpielTagNr());
 
         processBoxinfo("processbox.spieltag.meldungen.einlesen", getSpielTagNr().getNr());
         SpielerMeldungen aktiveUndAusgesetzt = meldeliste.getAktiveUndAusgesetztMeldungen();
 
-        // Bei leerer Meldeliste wird dennoch eine gültige (leere) Teilnehmerliste mit Header,
-        // Footer und Druckbereich erstellt. Auf dem Menü-Pfad gibt es zusätzlich einen Hinweis.
         List<TeilnehmerEintrag> eintraege = new ArrayList<>(aktiveUndAusgesetzt.size());
-        if (aktiveUndAusgesetzt.size() == 0) {
-            if (meldungLeerHinweis) {
-                MessageBox.from(getWorkingSpreadsheet(), MessageBoxTypeEnum.ERROR_OK)
-                        .caption(I18n.get("msg.caption.teilnehmer.fehler"))
-                        .message(I18n.get("msg.text.keine.meldungen")).show();
-            }
-        } else {
+        if (aktiveUndAusgesetzt.size() > 0) {
             Map<Integer, String> spielerNamen = leseSpielerNamenAusMeldeliste();
             for (Spieler spieler : aktiveUndAusgesetzt.getSpielerList()) {
                 int nr = spieler.getNr();

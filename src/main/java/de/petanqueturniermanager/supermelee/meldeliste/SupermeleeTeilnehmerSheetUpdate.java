@@ -55,7 +55,7 @@ public class SupermeleeTeilnehmerSheetUpdate extends SupermeleeTeilnehmerSheet {
         processBoxinfo("processbox.teilnehmer.aktualisieren", getSpielTagNr().getNr());
 
         loescheBisherigenInhalt(sheet);
-        befuelleTeilnehmerDaten(false);
+        befuelleTeilnehmerDaten();
 
         // Bewusst KEIN setActiveSheet(sheet): Im Listener-Pfad ist der User schon auf dem
         // Teilnehmer-Sheet; ein zusätzliches setActiveSheet aus dem selectionChanged-Handler

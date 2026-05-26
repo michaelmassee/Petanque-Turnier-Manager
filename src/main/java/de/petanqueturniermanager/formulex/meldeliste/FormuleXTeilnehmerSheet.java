@@ -20,8 +20,6 @@ import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
-import de.petanqueturniermanager.helper.msgbox.MessageBox;
-import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
@@ -77,33 +75,22 @@ public class FormuleXTeilnehmerSheet extends SheetRunner implements ISheet {
         NewSheet.from(this, SheetNamen.teilnehmer(), SheetMetadataHelper.SCHLUESSEL_TEILNEHMER)
                 .tabColor(konfigurationSheet.getTeilnehmerTabFarbe()).pos(DefaultSheetPos.KO_TURNIERBAUM)
                 .forceCreate().hideGrid().setActiv().create();
-        befuelleTeilnehmerDaten(true);
+        befuelleTeilnehmerDaten();
     }
 
     /**
      * Schreibt Header und Datenbereich der Teilnehmerliste anhand der aktuellen Meldeliste.
-     * Setzt voraus, dass das Teilnehmer-Sheet bereits existiert.
-     *
-     * @param meldungLeerHinweis bei {@code true} wird eine Hinweis-MessageBox gezeigt, falls keine
-     *                           aktiven Meldungen vorliegen (Menü-Pfad); bei {@code false} wird
-     *                           still abgebrochen (Listener-Pfad).
+     * Setzt voraus, dass das Teilnehmer-Sheet bereits existiert. Bei leerer Meldeliste wird
+     * dennoch eine gültige (leere) Teilnehmerliste mit Header, Footer und Druckbereich erstellt.
      */
-    protected void befuelleTeilnehmerDaten(boolean meldungLeerHinweis) throws GenerateException {
+    protected void befuelleTeilnehmerDaten() throws GenerateException {
         processBoxinfo("processbox.teilnehmer.meldungen.einlesen");
         TeamMeldungen aktiveMeldungen = meldeliste.getAktiveMeldungen();
 
         boolean teamnameAktiv = konfigurationSheet.isMeldeListeTeamnameAnzeigen();
 
-        // Bei leerer Meldeliste wird dennoch eine gültige (leere) Teilnehmerliste mit Header,
-        // Footer und Druckbereich erstellt. Auf dem Menü-Pfad gibt es zusätzlich einen Hinweis.
         List<TeilnehmerEintrag> eintraege = new ArrayList<>(aktiveMeldungen.size());
-        if (aktiveMeldungen.size() == 0) {
-            if (meldungLeerHinweis) {
-                MessageBox.from(getWorkingSpreadsheet(), MessageBoxTypeEnum.ERROR_OK)
-                        .caption(I18n.get("msg.caption.teilnehmer.fehler"))
-                        .message(I18n.get("msg.text.keine.meldungen")).show();
-            }
-        } else {
+        if (aktiveMeldungen.size() > 0) {
             TeilnehmerNamen namen = TeilnehmerNamenLeser.from(meldeliste, MELDELISTE_ERSTE_DATEN_ZEILE,
                     konfigurationSheet.getMeldeListeFormation(), teamnameAktiv,
                     konfigurationSheet.isMeldeListeVereinsnameAnzeigen()).lesen();

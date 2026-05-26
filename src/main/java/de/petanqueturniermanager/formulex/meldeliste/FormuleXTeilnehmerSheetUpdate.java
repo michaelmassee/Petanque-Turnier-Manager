@@ -43,7 +43,7 @@ public class FormuleXTeilnehmerSheetUpdate extends FormuleXTeilnehmerSheet {
         }
         processBoxinfo("processbox.teilnehmer.aktualisieren.einfach");
         loescheBisherigenInhalt(sheet);
-        befuelleTeilnehmerDaten(false);
+        befuelleTeilnehmerDaten();
 
         // Bewusst KEIN setActiveSheet(sheet): Im Listener-Pfad ist der User schon auf dem
         // Teilnehmer-Sheet; ein zusätzliches setActiveSheet aus dem selectionChanged-Handler
