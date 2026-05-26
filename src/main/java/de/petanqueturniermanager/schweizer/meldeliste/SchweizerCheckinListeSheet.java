@@ -69,11 +69,6 @@ public class SchweizerCheckinListeSheet extends AbstractTeilnehmerNamenCheckinLi
 	}
 
 	@Override
-	protected boolean istProTeam() {
-		return true;
-	}
-
-	@Override
 	protected short getSheetPos() {
 		return DefaultSheetPos.SCHWEIZER_WORK;
 	}

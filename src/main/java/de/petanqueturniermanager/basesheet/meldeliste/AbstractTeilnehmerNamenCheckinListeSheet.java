@@ -24,7 +24,9 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
  * <p>
  * Die Namen werden als feste Werte aus der Meldeliste gelesen ({@link TeilnehmerNamenLeser}) und
  * je nach Formation/Teamname-/Vereinsname-Option zusammengesetzt.
- * Je nach {@link #istProTeam()} wird der freie Teamname oder die Spielernamen angezeigt.
+ * <p>
+ * Das Spaltenlayout folgt der Teilnehmerliste: Ist {@link #istTeamnameAktiv()} {@code true}, wird
+ * eine eigene Teamname-Spalte vor der (immer zusammengesetzten) Spieler-Spalte angezeigt.
  */
 public abstract class AbstractTeilnehmerNamenCheckinListeSheet extends AbstractCheckinListeSheet {
 
@@ -43,26 +45,17 @@ public abstract class AbstractTeilnehmerNamenCheckinListeSheet extends AbstractC
 
 	@Override
 	protected Map<Integer, String> namenNachNummer() throws GenerateException {
-		TeilnehmerNamen namen = leseTeilnehmerNamen();
-		Map<Integer, String> spielerNamen = namen.spielerNamen();
-		Map<Integer, String> teamnamen = namen.teamnamen();
-
-		Map<Integer, String> ergebnis = new java.util.HashMap<>();
-		for (Integer nr : spielerNamen.keySet()) {
-			String spieler = spielerNamen.getOrDefault(nr, "");
-			String team = teamnamen.getOrDefault(nr, "");
-			ergebnis.put(nr, waehleAnzeigeName(istProTeam(), team, spieler));
-		}
-		return ergebnis;
+		return leseTeilnehmerNamen().spielerNamen();
 	}
 
-	private static String waehleAnzeigeName(boolean proTeam, String teamname, String spielerName) {
-		String bevorzugt = proTeam ? teamname : spielerName;
-		String alternative = proTeam ? spielerName : teamname;
-		if (bevorzugt != null && !bevorzugt.isBlank()) {
-			return bevorzugt;
-		}
-		return alternative != null ? alternative : "";
+	@Override
+	protected boolean teamSpalteAktiv() {
+		return istTeamnameAktiv();
+	}
+
+	@Override
+	protected Map<Integer, String> teamnamenNachNummer() throws GenerateException {
+		return leseTeilnehmerNamen().teamnamen();
 	}
 
 	@Override
@@ -122,7 +115,4 @@ public abstract class AbstractTeilnehmerNamenCheckinListeSheet extends AbstractC
 
 	/** Ob in der Meldeliste eine Vereinsname-Spalte aktiv ist. */
 	protected abstract boolean istVereinsnameAktiv();
-
-	/** {@code true}: Teamname als Anzeigename bevorzugen; {@code false}: Spielernamen bevorzugen. */
-	protected abstract boolean istProTeam();
 }

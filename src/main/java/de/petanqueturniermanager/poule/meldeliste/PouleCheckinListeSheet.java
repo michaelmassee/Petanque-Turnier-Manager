@@ -69,11 +69,6 @@ public class PouleCheckinListeSheet extends AbstractTeilnehmerNamenCheckinListeS
 	}
 
 	@Override
-	protected boolean istProTeam() {
-		return true;
-	}
-
-	@Override
 	protected short getSheetPos() {
 		return DefaultSheetPos.POULE_WORK;
 	}

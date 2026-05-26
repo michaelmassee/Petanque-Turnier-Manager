@@ -89,11 +89,6 @@ public class AnmeldungenSheet extends AbstractTeilnehmerNamenCheckinListeSheet {
 		return false;
 	}
 
-	@Override
-	protected boolean istProTeam() {
-		return false;
-	}
-
 	/** Nummernquelle: die Meldungen des aktiven Spieltags. */
 	@Override
 	protected List<Integer> ladeNummern() throws GenerateException {

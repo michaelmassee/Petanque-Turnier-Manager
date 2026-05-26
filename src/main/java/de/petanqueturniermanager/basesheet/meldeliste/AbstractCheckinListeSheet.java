@@ -51,10 +51,51 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 	public static final int KOPF_ZEILE = 0;
 	public static final int ERSTE_DATEN_ZEILE = 1;
 	public static final int NR_SPALTE = 0;
-	public static final int NAME_SPALTE = 1;
 
-	private static final int SPALTEN_PRO_BLOCK = 4; // Nr, Name, Checkbox, Trennspalte
 	private static final int DEFAULT_NAME_SPALTE_WIDTH = 4000;
+	private static final int TEAMNAME_SPALTE_WIDTH = 4000;
+
+	/**
+	 * Spalten-Geometrie eines Checkin-Blocks – analog zur Teilnehmerliste, ergänzt um die
+	 * Checkbox- und Trennspalte:
+	 * <ul>
+	 * <li>{@code teamSpalte = false}: Nr · Spieler · Checkbox · (Trennspalte)</li>
+	 * <li>{@code teamSpalte = true}:  Nr · Teamname · Spieler · Checkbox · (Trennspalte)</li>
+	 * </ul>
+	 * Alle Spaltenindizes sind relativ zum Sheet (inkl. Block-Versatz).
+	 */
+	private record BlockLayout(boolean teamSpalte) {
+		/** Spalten je Block inkl. Checkbox und Trennspalte. */
+		int spaltenProBlock() {
+			return teamSpalte ? 5 : 4;
+		}
+
+		int basis(int blk) {
+			return NR_SPALTE + blk * spaltenProBlock();
+		}
+
+		int nrSpalte(int blk) {
+			return basis(blk);
+		}
+
+		/** Nur gültig, wenn {@link #teamSpalte()}. */
+		int teamSpalte(int blk) {
+			return basis(blk) + 1;
+		}
+
+		int spielerSpalte(int blk) {
+			return basis(blk) + (teamSpalte ? 2 : 1);
+		}
+
+		int checkboxSpalte(int blk) {
+			return spielerSpalte(blk) + 1;
+		}
+
+		/** Letzte Spalte des Blocks (Checkbox) – Grenze für Rahmen und Druckbereich. */
+		int letzteBlockSpalte(int blk) {
+			return checkboxSpalte(blk);
+		}
+	}
 
 	/** Großzügige Clear-Range für den Update-Pfad: deckt jede plausible Block-Konfiguration ab. */
 	private static final int CLEAR_LETZTE_SPALTE = 40;
@@ -151,17 +192,21 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 	 * Befüllt den Checkin-Bereich blockweise als Block-Schreibvorgang (kein zellenweises Schreiben).
 	 */
 	private void fuelleBereich(List<Integer> nummern) throws GenerateException {
+		final BlockLayout layout = new BlockLayout(teamSpalteAktiv());
+
 		if (nummern.isEmpty()) {
 			// Leere Meldeliste: dennoch Kopfzeile + Fußzeile (Anzahl 0) anzeigen und Druckbereich setzen.
-			kopfzeileSchreiben(NR_SPALTE);
-			int footerZeile = footerSchreiben(0, KOPF_ZEILE, NAME_SPALTE);
-			printBereichDefinieren(footerZeile, NAME_SPALTE);
+			kopfzeileSchreiben(0, layout);
+			int letzteSpalte = layout.spielerSpalte(0);
+			int footerZeile = footerSchreiben(0, KOPF_ZEILE, letzteSpalte);
+			printBereichDefinieren(footerZeile, letzteSpalte);
 			return;
 		}
 
 		final int maxProSpalte = getMaxProSpalte();
 		final int anzBloecke = (int) Math.ceil((double) nummern.size() / maxProSpalte);
-		final Map<Integer, String> namen = namenNachNummer();
+		final Map<Integer, String> spielerNamen = namenNachNummer();
+		final Map<Integer, String> teamnamen = layout.teamSpalte() ? teamnamenNachNummer() : Map.of();
 
 		RangeData data = new RangeData();
 		for (int zeileImBlock = 0; zeileImBlock < maxProSpalte; zeileImBlock++) {
@@ -171,7 +216,10 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 				if (idx < nummern.size()) {
 					int nr = nummern.get(idx);
 					zeileData.newInt(nr);
-					zeileData.newString(namen.getOrDefault(nr, ""));
+					if (layout.teamSpalte()) {
+						zeileData.newString(teamnamen.getOrDefault(nr, ""));
+					}
+					zeileData.newString(spielerNamen.getOrDefault(nr, ""));
 					if (blkCntr != anzBloecke) {
 						zeileData.newEmpty(); // Checkbox-Spalte
 						zeileData.newEmpty(); // Trennspalte
@@ -182,7 +230,7 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 		RangePosition rangePosition = data.getRangePosition(Position.from(NR_SPALTE, ERSTE_DATEN_ZEILE));
 		RangeHelper.from(this, rangePosition).setDataInRange(data);
 
-		FormatErgebnis fmt = spaltenFormatieren(nummern, anzBloecke, maxProSpalte);
+		FormatErgebnis fmt = spaltenFormatieren(nummern, anzBloecke, maxProSpalte, layout);
 		int footerZeile = footerSchreiben(nummern.size(), fmt.letzteDatenZeile(), fmt.letzteSpalte());
 		printBereichDefinieren(footerZeile, fmt.letzteSpalte());
 	}
@@ -191,15 +239,15 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 	private record FormatErgebnis(int letzteDatenZeile, int letzteSpalte) {
 	}
 
-	private FormatErgebnis spaltenFormatieren(List<Integer> nummern, int anzBloecke, int maxProSpalte)
-			throws GenerateException {
+	private FormatErgebnis spaltenFormatieren(List<Integer> nummern, int anzBloecke, int maxProSpalte,
+			BlockLayout layout) throws GenerateException {
 		RangeProperties rangePropNr = RangeProperties.from().setHoriJustify(CellHoriJustify.CENTER)
 				.setCharColor(ColorHelper.CHAR_COLOR_GRAY_SPIELER_NR);
 		ColumnProperties columnPropNr = ColumnProperties.from().setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH);
-
+		ColumnProperties columnPropTeam = ColumnProperties.from().setHoriJustify(CellHoriJustify.LEFT)
+				.setWidth(TEAMNAME_SPALTE_WIDTH);
 		ColumnProperties columnPropName = ColumnProperties.from().setHoriJustify(CellHoriJustify.CENTER)
 				.setWidth(getNameSpalteWidth());
-
 		ColumnProperties columnPropChkBox = ColumnProperties.from().setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH);
 		RangeProperties rangePropBorderOnly = RangeProperties.from().setBorder(BorderFactory.from().allThin().toBorder());
 
@@ -213,28 +261,28 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 			}
 			maxMeldungZeile = Math.max(maxMeldungZeile, letzteZeile);
 
-			// Kopfzeile (Überschrift) je Block über der Nr-/Namens-Spalte
-			kopfzeileSchreiben(NR_SPALTE + (blkCntr * SPALTEN_PRO_BLOCK));
+			// Kopfzeile (Überschrift) je Block
+			kopfzeileSchreiben(blkCntr, layout);
 
-			RangePosition blockNrRange = RangePosition.from(NR_SPALTE + (blkCntr * SPALTEN_PRO_BLOCK), ERSTE_DATEN_ZEILE,
-					NR_SPALTE + (blkCntr * SPALTEN_PRO_BLOCK), letzteZeile);
-			Position startNrPos = Position.from(blockNrRange.getStart());
-
-			RangeHelper.from(this, blockNrRange).setRangeProperties(rangePropNr);
-			getSheetHelper().setColumnProperties(getXSpreadSheet(), blockNrRange.getStartSpalte(), columnPropNr);
+			int nrSpalte = layout.nrSpalte(blkCntr);
+			RangePosition nrRange = RangePosition.from(nrSpalte, ERSTE_DATEN_ZEILE, nrSpalte, letzteZeile);
+			RangeHelper.from(this, nrRange).setRangeProperties(rangePropNr);
+			getSheetHelper().setColumnProperties(getXSpreadSheet(), nrSpalte, columnPropNr);
 
 			// Namen sind bereits als Werte geschrieben; nur Spaltenbreite/Ausrichtung setzen.
-			blockNrRange.spaltePlusEins();
-			getSheetHelper().setColumnProperties(getXSpreadSheet(), blockNrRange.getStartSpalte(), columnPropName);
+			if (layout.teamSpalte()) {
+				getSheetHelper().setColumnProperties(getXSpreadSheet(), layout.teamSpalte(blkCntr), columnPropTeam);
+			}
+			getSheetHelper().setColumnProperties(getXSpreadSheet(), layout.spielerSpalte(blkCntr), columnPropName);
+			getSheetHelper().setColumnProperties(getXSpreadSheet(), layout.checkboxSpalte(blkCntr), columnPropChkBox);
 
-			blockNrRange.spaltePlusEins();
-			getSheetHelper().setColumnProperties(getXSpreadSheet(), blockNrRange.getStartSpalte(), columnPropChkBox);
-
-			RangePosition blockAll = RangePosition.from(Position.from(startNrPos), Position.from(blockNrRange.getEnde()));
+			int blockEnde = layout.letzteBlockSpalte(blkCntr);
+			RangePosition blockAll = RangePosition.from(nrSpalte, ERSTE_DATEN_ZEILE, blockEnde, letzteZeile);
 			RangeHelper.from(this, blockAll).setRangeProperties(rangePropBorderOnly);
 
-			getSheetHelper().setColumnProperties(getXSpreadSheet(), blockNrRange.getEnde().getSpalte() + 1, columnPropNr);
-			letzteSpalte = blockNrRange.getEnde().getSpalte();
+			// Trennspalte hinter dem Block auf Nr-Breite zurücksetzen
+			getSheetHelper().setColumnProperties(getXSpreadSheet(), blockEnde + 1, columnPropNr);
+			letzteSpalte = blockEnde;
 		}
 
 		return new FormatErgebnis(maxMeldungZeile, letzteSpalte);
@@ -257,29 +305,39 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 	}
 
 	/**
-	 * Schreibt eine Kopfzeile (Spaltenüberschriften „Nr"/„Name") in {@link #KOPF_ZEILE}
-	 * ab der angegebenen Nr-Spalte (je Block). Wird im befüllten wie im leeren Fall genutzt.
+	 * Schreibt die Kopfzeile eines Blocks in {@link #KOPF_ZEILE} – im Stil der Teilnehmerliste.
+	 * Bei aktiver Teamname-Spalte werden drei Überschriften („Nr"/„Teamname"/„Spieler") gesetzt,
+	 * sonst zwei („Nr"/„Name"). Wird im befüllten wie im leeren Fall genutzt.
 	 *
-	 * @param nrSpalte Spaltenindex der Nr-Spalte des Blocks (Name folgt in {@code nrSpalte + 1})
+	 * @param blkCntr Block-Index (0-basiert)
+	 * @param layout  Spalten-Geometrie des Blocks
 	 */
-	private void kopfzeileSchreiben(int nrSpalte) throws GenerateException {
+	private void kopfzeileSchreiben(int blkCntr, BlockLayout layout) throws GenerateException {
 		int headerColor = getKonfigurationSheet().getMeldeListeHeaderFarbe();
 		// Header-Stil wie Teilnehmerliste: untere fette Trennlinie, nicht fett, ShrinkToFit.
 		var border = BorderFactory.from().allThin().boldLn().forBottom().toBorder();
 
-		StringCellValue nrHeader = StringCellValue.from(getXSpreadSheet(), Position.from(nrSpalte, KOPF_ZEILE))
-				.setValue(I18n.get("column.header.nr"))
-				.setCellBackColor(headerColor).setBorder(border).setShrinkToFit(true)
-				.addColumnProperties(ColumnProperties.from().setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH)
-						.setHoriJustify(CellHoriJustify.CENTER));
-		getSheetHelper().setStringValueInCell(nrHeader);
+		headerZelleSchreiben(layout.nrSpalte(blkCntr), "column.header.nr",
+				MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH, headerColor, border);
+		if (layout.teamSpalte()) {
+			headerZelleSchreiben(layout.teamSpalte(blkCntr), "column.header.teamname",
+					TEAMNAME_SPALTE_WIDTH, headerColor, border);
+			headerZelleSchreiben(layout.spielerSpalte(blkCntr), "column.header.spieler",
+					getNameSpalteWidth(), headerColor, border);
+		} else {
+			headerZelleSchreiben(layout.spielerSpalte(blkCntr), "column.header.name",
+					getNameSpalteWidth(), headerColor, border);
+		}
+	}
 
-		StringCellValue nameHeader = StringCellValue.from(getXSpreadSheet(), Position.from(nrSpalte + 1, KOPF_ZEILE))
-				.setValue(I18n.get("column.header.name"))
+	private void headerZelleSchreiben(int spalte, String i18nKey, int spaltenBreite, int headerColor,
+			com.sun.star.table.TableBorder2 border) throws GenerateException {
+		StringCellValue header = StringCellValue.from(getXSpreadSheet(), Position.from(spalte, KOPF_ZEILE))
+				.setValue(I18n.get(i18nKey))
 				.setCellBackColor(headerColor).setBorder(border).setShrinkToFit(true)
-				.addColumnProperties(ColumnProperties.from().setWidth(getNameSpalteWidth())
+				.addColumnProperties(ColumnProperties.from().setWidth(spaltenBreite)
 						.setHoriJustify(CellHoriJustify.CENTER));
-		getSheetHelper().setStringValueInCell(nameHeader);
+		getSheetHelper().setStringValueInCell(header);
 	}
 
 	private void printBereichDefinieren(int letzteZeile, int letzteSpalte) throws GenerateException {
@@ -361,10 +419,28 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 	}
 
 	/**
-	 * Liefert je Melde-/Teamnummer den anzuzeigenden Namen (als Wert). Default leer; konkrete
-	 * Subklassen (bzw. {@link AbstractTeilnehmerNamenCheckinListeSheet}) liefern die Namen.
+	 * Liefert je Melde-/Teamnummer den anzuzeigenden Spielernamen (zusammengesetzt, als Wert).
+	 * Default leer; konkrete Subklassen (bzw. {@link AbstractTeilnehmerNamenCheckinListeSheet})
+	 * liefern die Namen.
 	 */
 	protected Map<Integer, String> namenNachNummer() throws GenerateException {
+		return Map.of();
+	}
+
+	/**
+	 * Ob – analog zur Teilnehmerliste – eine eigene Teamname-Spalte zwischen Nr und Spieler
+	 * angezeigt wird. Default {@code false}. Bei {@code true} muss {@link #teamnamenNachNummer()}
+	 * die freien Teamnamen liefern.
+	 */
+	protected boolean teamSpalteAktiv() {
+		return false;
+	}
+
+	/**
+	 * Liefert je Melde-/Teamnummer den freien Teamnamen (als Wert) – nur relevant, wenn
+	 * {@link #teamSpalteAktiv()} {@code true} ist. Default leer.
+	 */
+	protected Map<Integer, String> teamnamenNachNummer() throws GenerateException {
 		return Map.of();
 	}
 }

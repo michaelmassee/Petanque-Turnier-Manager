@@ -69,11 +69,6 @@ public class MaastrichterCheckinListeSheet extends AbstractTeilnehmerNamenChecki
 	}
 
 	@Override
-	protected boolean istProTeam() {
-		return true;
-	}
-
-	@Override
 	protected short getSheetPos() {
 		return DefaultSheetPos.MAASTRICHTER_WORK;
 	}

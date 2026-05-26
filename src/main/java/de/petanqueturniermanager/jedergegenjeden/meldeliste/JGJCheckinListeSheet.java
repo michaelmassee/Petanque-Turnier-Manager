@@ -71,11 +71,6 @@ public class JGJCheckinListeSheet extends AbstractTeilnehmerNamenCheckinListeShe
 		return konfigurationSheet.isMeldeListeVereinsnameAnzeigen();
 	}
 
-	@Override
-	protected boolean istProTeam() {
-		return true;
-	}
-
 	/** Nummernquelle: nur die aktiven Meldungen (nicht alle Meldeliste-Zeilen). */
 	@Override
 	protected List<Integer> ladeNummern() throws GenerateException {

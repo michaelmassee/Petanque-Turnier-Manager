@@ -69,11 +69,6 @@ public class FormuleXCheckinListeSheet extends AbstractTeilnehmerNamenCheckinLis
 	}
 
 	@Override
-	protected boolean istProTeam() {
-		return false;
-	}
-
-	@Override
 	protected short getSheetPos() {
 		return DefaultSheetPos.KO_TURNIERBAUM;
 	}
