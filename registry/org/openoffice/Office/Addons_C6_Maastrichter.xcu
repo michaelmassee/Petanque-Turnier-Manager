@@ -79,94 +79,6 @@
 							</node>
 
 							<node oor:name="C6A4" oor:op="replace">
-								<prop oor:name="URL" oor:type="xs:string">
-									<value>private:separator</value>
-								</prop>
-							</node>
-
-							<node oor:name="C6A5" oor:op="replace">
-								<prop oor:name="Title">
-									<value xml:lang="de">Neue Vorrunde</value>
-									<value xml:lang="en">New Preliminary Round</value>
-									<value xml:lang="es">Nueva ronda preliminar</value>
-									<value xml:lang="fr">Nouveau tour préliminaire</value>
-									<value xml:lang="nl">Nieuwe voorronde</value>
-								</prop>
-								<prop oor:name="URL">
-									<value>ptm:maastrichter_naechste_vorrunde</value>
-								</prop>
-								<prop oor:name="Target" oor:type="xs:string">
-									<value>_self</value>
-								</prop>
-							</node>
-
-							<node oor:name="C6A6" oor:op="replace">
-								<prop oor:name="Title">
-									<value xml:lang="de">Vorrunde neu auslosen</value>
-									<value xml:lang="en">Re-draw Preliminary Round</value>
-									<value xml:lang="es">Volver a sortear la ronda preliminar</value>
-									<value xml:lang="fr">Retirer le tour préliminaire</value>
-									<value xml:lang="nl">Voorronde opnieuw loten</value>
-								</prop>
-								<prop oor:name="URL">
-									<value>ptm:maastrichter_aktuelle_vorrunde</value>
-								</prop>
-								<prop oor:name="Target" oor:type="xs:string">
-									<value>_self</value>
-								</prop>
-							</node>
-
-							<node oor:name="C6A7" oor:op="replace">
-								<prop oor:name="URL" oor:type="xs:string">
-									<value>private:separator</value>
-								</prop>
-							</node>
-
-							<node oor:name="C6A8" oor:op="replace">
-								<prop oor:name="Title">
-									<value xml:lang="de">Vorrunden-Rangliste</value>
-									<value xml:lang="en">Preliminary Round Ranking</value>
-									<value xml:lang="es">Clasificación de la ronda preliminar</value>
-									<value xml:lang="fr">Classement des tours préliminaires</value>
-									<value xml:lang="nl">Ranglijst voorronde</value>
-								</prop>
-								<prop oor:name="URL">
-									<value>ptm:maastrichter_vorrunden_rangliste</value>
-								</prop>
-								<prop oor:name="Target" oor:type="xs:string">
-									<value>_self</value>
-								</prop>
-							</node>
-
-							<node oor:name="C6A9" oor:op="replace">
-								<prop oor:name="URL" oor:type="xs:string">
-									<value>private:separator</value>
-								</prop>
-							</node>
-
-							<node oor:name="C6A10" oor:op="replace">
-								<prop oor:name="Title">
-									<value xml:lang="de">Finalrunden erstellen</value>
-									<value xml:lang="en">Create Final Rounds</value>
-									<value xml:lang="es">Crear rondas finales</value>
-									<value xml:lang="fr">Créer les tours finaux</value>
-									<value xml:lang="nl">Finalronden aanmaken</value>
-								</prop>
-								<prop oor:name="URL">
-									<value>ptm:maastrichter_finalrunden</value>
-								</prop>
-								<prop oor:name="Target" oor:type="xs:string">
-									<value>_self</value>
-								</prop>
-							</node>
-
-							<node oor:name="C6A11" oor:op="replace">
-								<prop oor:name="URL" oor:type="xs:string">
-									<value>private:separator</value>
-								</prop>
-							</node>
-
-							<node oor:name="C6A12" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Teilnehmerliste</value>
 									<value xml:lang="en">Participants List</value>
@@ -182,7 +94,7 @@
 								</prop>
 							</node>
 
-							<node oor:name="C6A13" oor:op="replace">
+							<node oor:name="C6A5" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Check-in List</value>
 									<value xml:lang="de">Checkin Liste</value>
@@ -192,6 +104,88 @@
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:maastrichter_checkin</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+							<node oor:name="C6A6" oor:op="replace">
+								<prop oor:name="URL" oor:type="xs:string">
+									<value>private:separator</value>
+								</prop>
+							</node>
+
+							<node oor:name="C6A7" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Neue Vorrunde</value>
+									<value xml:lang="en">New Preliminary Round</value>
+									<value xml:lang="es">Nueva ronda preliminar</value>
+									<value xml:lang="fr">Nouveau tour préliminaire</value>
+									<value xml:lang="nl">Nieuwe voorronde</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:maastrichter_naechste_vorrunde</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+							<node oor:name="C6A8" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Vorrunde neu auslosen</value>
+									<value xml:lang="en">Re-draw Preliminary Round</value>
+									<value xml:lang="es">Volver a sortear la ronda preliminar</value>
+									<value xml:lang="fr">Retirer le tour préliminaire</value>
+									<value xml:lang="nl">Voorronde opnieuw loten</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:maastrichter_aktuelle_vorrunde</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+							<node oor:name="C6A9" oor:op="replace">
+								<prop oor:name="URL" oor:type="xs:string">
+									<value>private:separator</value>
+								</prop>
+							</node>
+
+							<node oor:name="C6A10" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Vorrunden-Rangliste</value>
+									<value xml:lang="en">Preliminary Round Ranking</value>
+									<value xml:lang="es">Clasificación de la ronda preliminar</value>
+									<value xml:lang="fr">Classement des tours préliminaires</value>
+									<value xml:lang="nl">Ranglijst voorronde</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:maastrichter_vorrunden_rangliste</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+							<node oor:name="C6A11" oor:op="replace">
+								<prop oor:name="URL" oor:type="xs:string">
+									<value>private:separator</value>
+								</prop>
+							</node>
+
+							<node oor:name="C6A12" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Finalrunden erstellen</value>
+									<value xml:lang="en">Create Final Rounds</value>
+									<value xml:lang="es">Crear rondas finales</value>
+									<value xml:lang="fr">Créer les tours finaux</value>
+									<value xml:lang="nl">Finalronden aanmaken</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:maastrichter_finalrunden</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
