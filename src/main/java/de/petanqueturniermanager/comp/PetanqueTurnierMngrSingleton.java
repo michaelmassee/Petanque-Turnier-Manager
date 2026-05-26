@@ -19,21 +19,29 @@ import de.petanqueturniermanager.helper.sheetsync.SheetSyncListener;
 import de.petanqueturniermanager.helper.rangliste.SignaturQuellen;
 import de.petanqueturniermanager.helper.perflog.PerfLog;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
+import de.petanqueturniermanager.formulex.meldeliste.FormuleXCheckinListeSheetUpdate;
 import de.petanqueturniermanager.formulex.meldeliste.FormuleXTeilnehmerSheetUpdate;
 import de.petanqueturniermanager.formulex.rangliste.FormuleXRanglisteSheetUpdate;
+import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJCheckinListeSheetUpdate;
 import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJTeilnehmerSheetUpdate;
 import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteSheetUpdate;
+import de.petanqueturniermanager.kaskade.meldeliste.KaskadeCheckinListeSheetUpdate;
 import de.petanqueturniermanager.kaskade.meldeliste.KaskadeTeilnehmerSheetUpdate;
 import de.petanqueturniermanager.kaskade.spielrunde.KaskadeGruppenRanglisteSheetUpdate;
+import de.petanqueturniermanager.ko.meldeliste.KoCheckinListeSheetUpdate;
 import de.petanqueturniermanager.ko.meldeliste.KoTeilnehmerSheetUpdate;
+import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterCheckinListeSheetUpdate;
 import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterTeilnehmerSheetUpdate;
 import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterVorrundenRanglisteSheetUpdate;
+import de.petanqueturniermanager.poule.meldeliste.PouleCheckinListeSheetUpdate;
 import de.petanqueturniermanager.poule.meldeliste.PouleTeilnehmerSheetUpdate;
 import de.petanqueturniermanager.poule.rangliste.PouleVorrundenRanglisteSheetUpdate;
+import de.petanqueturniermanager.schweizer.meldeliste.SchweizerCheckinListeSheetUpdate;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerTeilnehmerSheetUpdate;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheetUpdate;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheetUpdate;
+import de.petanqueturniermanager.supermelee.meldeliste.AnmeldungenSheetUpdate;
 import de.petanqueturniermanager.supermelee.meldeliste.SupermeleeTeilnehmerSheetUpdate;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheetUpdate;
 import de.petanqueturniermanager.timer.TimerManager;
@@ -251,7 +259,59 @@ public class PetanqueTurnierMngrSingleton {
 				TurnierSystem.POULE,
 				new EingabeSignatur(SignaturQuellen::fuerPouleTeilnehmer),
 				(ws, ignored) -> new PouleTeilnehmerSheetUpdate(ws)));
-		logTimingAndReset("SheetSyncListener TEILNEHMER (Einzel-Sheet-Systeme)", t);
+		t = logTimingAndReset("SheetSyncListener TEILNEHMER (Einzel-Sheet-Systeme)", t);
+
+		// Checkin-Listen: synchronisieren beim Tab-Wechsel mit der Meldeliste – analog zu den
+		// Teilnehmerlisten. Eingabe-Quelle ist (wie dort) ausschließlich die Meldeliste, daher
+		// werden die vorhandenen SignaturQuellen.fuer*Teilnehmer wiederverwendet. Jedes System
+		// hat einen eigenen Checkin-Schlüssel; die Eindeutigkeit ergibt sich aus dem
+		// TurnierSystem-Gate.
+		addGlobalEventListener(SheetSyncListener.fuerSchluessel(context,
+				SheetMetadataHelper.SCHLUESSEL_POULE_CHECKIN_LISTE, TurnierSystem.POULE,
+				new EingabeSignatur(SignaturQuellen::fuerPouleTeilnehmer),
+				(ws, ignored) -> new PouleCheckinListeSheetUpdate(ws)));
+		addGlobalEventListener(SheetSyncListener.fuerSchluessel(context,
+				SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_CHECKIN_LISTE, TurnierSystem.SCHWEIZER,
+				new EingabeSignatur(SignaturQuellen::fuerSchweizerTeilnehmer),
+				(ws, ignored) -> new SchweizerCheckinListeSheetUpdate(ws)));
+		addGlobalEventListener(SheetSyncListener.fuerSchluessel(context,
+				SheetMetadataHelper.SCHLUESSEL_KO_CHECKIN_LISTE, TurnierSystem.KO,
+				new EingabeSignatur(SignaturQuellen::fuerKoTeilnehmer),
+				(ws, ignored) -> new KoCheckinListeSheetUpdate(ws)));
+		addGlobalEventListener(SheetSyncListener.fuerSchluessel(context,
+				SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_CHECKIN_LISTE, TurnierSystem.MAASTRICHTER,
+				new EingabeSignatur(SignaturQuellen::fuerMaastrichterTeilnehmer),
+				(ws, ignored) -> new MaastrichterCheckinListeSheetUpdate(ws)));
+		addGlobalEventListener(SheetSyncListener.fuerSchluessel(context,
+				SheetMetadataHelper.SCHLUESSEL_KASKADE_CHECKIN_LISTE, TurnierSystem.KASKADE,
+				new EingabeSignatur(SignaturQuellen::fuerKaskadeTeilnehmer),
+				(ws, ignored) -> new KaskadeCheckinListeSheetUpdate(ws)));
+		addGlobalEventListener(SheetSyncListener.fuerSchluessel(context,
+				SheetMetadataHelper.SCHLUESSEL_FORMULEX_CHECKIN_LISTE, TurnierSystem.FORMULEX,
+				new EingabeSignatur(SignaturQuellen::fuerFormuleXTeilnehmer),
+				(ws, ignored) -> new FormuleXCheckinListeSheetUpdate(ws)));
+		addGlobalEventListener(SheetSyncListener.fuerSchluessel(context,
+				SheetMetadataHelper.SCHLUESSEL_JGJ_CHECKIN_LISTE, TurnierSystem.JGJ,
+				new EingabeSignatur(SignaturQuellen::fuerJGJTeilnehmer),
+				(ws, ignored) -> new JGJCheckinListeSheetUpdate(ws)));
+		// Supermelee-Anmeldungen (Checkin-Liste) sind spieltag-variabel – eigener Schlüssel je Nr.
+		addGlobalEventListener(SheetSyncListener.fuerSpieltagSheet(context,
+				TurnierSystem.SUPERMELEE,
+				SheetMetadataHelper::findeAnmeldungenSpieltagNr,
+				"SUPERMELEE_ANMELDUNGEN_",
+				spieltagNr -> new EingabeSignatur(
+						xDoc -> SignaturQuellen.fuerSupermeleeTeilnehmer(xDoc, spieltagNr)),
+				(ws, xSheet) -> {
+					SpielTagNr nr = SheetMetadataHelper
+							.findeAnmeldungenSpieltagNr(ws.getWorkingSpreadsheetDocument(), xSheet)
+							.orElse(null);
+					AnmeldungenSheetUpdate update = new AnmeldungenSheetUpdate(ws);
+					if (nr != null) {
+						update.setSpielTag(nr);
+					}
+					return update;
+				}));
+		logTimingAndReset("SheetSyncListener CHECKIN-LISTEN", t);
 
 		long initGesamtMs = (System.nanoTime() - initStartNs) / 1_000_000L;
 		PerfLog.log(logger, "[STARTUP-TIMING] PetanqueTurnierMngrSingleton.init GESAMT={} ms (jvm-uptime={} ms)",

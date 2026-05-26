@@ -583,6 +583,18 @@ public class SheetMetadataHelper {
                 SCHLUESSEL_SUPERMELEE_SPIELTAG_TEILNEHMER_PREFIX, SCHLUESSEL_SUFFIX);
     }
 
+    /**
+     * Sucht die Spieltag-Nummer für ein Supermelee-Anmeldungen-Sheet (Checkin-Liste), indem alle
+     * {@code __PTM_SUPERMELEE_ANMELDUNGEN_N__}-Einträge durchsucht werden.
+     *
+     * @return SpielTagNr wenn das Sheet zugeordnet ist, sonst {@link Optional#empty()}
+     */
+    public static Optional<SpielTagNr> findeAnmeldungenSpieltagNr(XSpreadsheetDocument xDoc,
+                                                                  XSpreadsheet xSheet) {
+        return findeSpieltagNrMitPrefix(xDoc, xSheet,
+                SCHLUESSEL_SUPERMELEE_ANMELDUNGEN_PREFIX, SCHLUESSEL_SUFFIX);
+    }
+
     private static Optional<SpielTagNr> findeSpieltagNrMitPrefix(XSpreadsheetDocument xDoc,
                                                                  XSpreadsheet xSheet,
                                                                  String prefix, String suffix) {

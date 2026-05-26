@@ -52,6 +52,10 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 	private static final int SPALTEN_PRO_BLOCK = 4; // Nr, Name, Checkbox, Trennspalte
 	private static final int DEFAULT_NAME_SPALTE_WIDTH = 4000;
 
+	/** Großzügige Clear-Range für den Update-Pfad: deckt jede plausible Block-Konfiguration ab. */
+	private static final int CLEAR_LETZTE_SPALTE = 40;
+	private static final int CLEAR_LETZTE_ZEILE = 200;
+
 	protected AbstractCheckinListeSheet(WorkingSpreadsheet workingSpreadsheet, TurnierSystem turnierSystem,
 			String logPrefix) {
 		super(workingSpreadsheet, turnierSystem, logPrefix);
@@ -78,10 +82,33 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 				.pos(getSheetPos()).forceCreate().hideGrid().setActiv();
 		seitenStilAnwenden(newSheet);
 		newSheet.create();
+		sortiereUndFuelle();
+	}
 
-		// Bei leerer Meldeliste wird dennoch eine gültige (leere) Checkin-Liste erstellt.
-		// Sortierung/Spaltenermittlung nur bei vorhandenen Einträgen, um Edge-Cases auf
-		// leerer Meldeliste zu vermeiden.
+	/**
+	 * Aktualisiert den Inhalt einer <b>bereits existierenden</b> Checkin-Liste, ohne das Sheet
+	 * neu zu erzeugen (kein {@code forceCreate}, kein {@code setActiv}).
+	 * <p>
+	 * Wird vom {@link de.petanqueturniermanager.helper.sheetsync.SheetSyncListener} über die
+	 * {@code *CheckinListeSheetUpdate}-Subklassen aufgerufen, um die Liste bei einem Tab-Wechsel
+	 * mit der Meldeliste zu synchronisieren. Der Erstaufbau erfolgt ausschließlich über das Menü
+	 * ({@link #generate()}).
+	 */
+	protected final void aktualisiereInhalt() throws GenerateException {
+		meldelisteAusrichten();
+		leereDatenbereich();
+		sortiereUndFuelle();
+	}
+
+	/**
+	 * Sortiert die Meldeliste (sofern Einträge vorhanden) nach dem konfigurierten
+	 * {@link CheckinListeSortModus} und befüllt den Checkin-Bereich.
+	 * <p>
+	 * Bei leerer Meldeliste wird dennoch eine gültige (leere) Checkin-Liste erstellt.
+	 * Sortierung/Spaltenermittlung nur bei vorhandenen Einträgen, um Edge-Cases auf
+	 * leerer Meldeliste zu vermeiden.
+	 */
+	private void sortiereUndFuelle() throws GenerateException {
 		List<Integer> nummern = ladeSortierteNummern();
 		if (!nummern.isEmpty()) {
 			int sortSpalte = (getKonfigurationSheet().getCheckinListeSortModus() == CheckinListeSortModus.NUMMER)
@@ -91,6 +118,11 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 			nummern = ladeSortierteNummern();
 		}
 		fuelleBereich(nummern);
+	}
+
+	/** Löscht den bisherigen Inhalt der existierenden Checkin-Liste (Update-Pfad). */
+	private void leereDatenbereich() throws GenerateException {
+		RangeHelper.from(this, RangePosition.from(0, 0, CLEAR_LETZTE_SPALTE, CLEAR_LETZTE_ZEILE)).clearRange();
 	}
 
 	/**
