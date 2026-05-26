@@ -91,32 +91,34 @@ public class JGJTeilnehmerSheet extends SheetRunner implements ISheet {
         processBoxinfo("processbox.teilnehmer.meldungen.einlesen");
         TeamMeldungen aktiveMeldungen = meldeliste.getAktiveMeldungen();
 
+        boolean teamnameAktiv = konfigurationSheet.isMeldeListeTeamnameAnzeigen();
+
+        // Bei leerer Meldeliste wird dennoch eine gültige (leere) Teilnehmerliste mit Header,
+        // Footer und Druckbereich erstellt. Auf dem Menü-Pfad gibt es zusätzlich einen Hinweis.
+        List<TeilnehmerEintrag> eintraege = new ArrayList<>(aktiveMeldungen.size());
         if (aktiveMeldungen.size() == 0) {
             if (meldungLeerHinweis) {
                 MessageBox.from(getWorkingSpreadsheet(), MessageBoxTypeEnum.ERROR_OK)
                         .caption(I18n.get("msg.caption.teilnehmer.fehler"))
                         .message(I18n.get("msg.text.keine.meldungen")).show();
             }
-            return;
+        } else {
+            TeilnehmerNamen namen = TeilnehmerNamenLeser.from(meldeliste, MELDELISTE_ERSTE_DATEN_ZEILE,
+                    konfigurationSheet.getMeldeListeFormation(), teamnameAktiv,
+                    konfigurationSheet.isMeldeListeVereinsnameAnzeigen()).lesen();
+            Map<Integer, String> spielerNamen = namen.spielerNamen();
+            Map<Integer, String> teamnamen = namen.teamnamen();
+
+            for (Team team : aktiveMeldungen.getTeamList()) {
+                int nr = team.getNr();
+                eintraege.add(new TeilnehmerEintrag(nr,
+                        teamnamen.getOrDefault(nr, ""),
+                        spielerNamen.getOrDefault(nr, "")));
+            }
+            eintraege.sort(Comparator.comparingInt(TeilnehmerEintrag::nr));
         }
 
-        boolean teamnameAktiv = konfigurationSheet.isMeldeListeTeamnameAnzeigen();
-        TeilnehmerNamen namen = TeilnehmerNamenLeser.from(meldeliste, MELDELISTE_ERSTE_DATEN_ZEILE,
-                konfigurationSheet.getMeldeListeFormation(), teamnameAktiv,
-                konfigurationSheet.isMeldeListeVereinsnameAnzeigen()).lesen();
-        Map<Integer, String> spielerNamen = namen.spielerNamen();
-        Map<Integer, String> teamnamen = namen.teamnamen();
-
-        List<TeilnehmerEintrag> eintraege = new ArrayList<>(aktiveMeldungen.size());
-        for (Team team : aktiveMeldungen.getTeamList()) {
-            int nr = team.getNr();
-            eintraege.add(new TeilnehmerEintrag(nr,
-                    teamnamen.getOrDefault(nr, ""),
-                    spielerNamen.getOrDefault(nr, "")));
-        }
-        eintraege.sort(Comparator.comparingInt(TeilnehmerEintrag::nr));
-
-        processBoxinfo("processbox.teilnehmer.meldungen.einfuegen", aktiveMeldungen.size());
+        processBoxinfo("processbox.teilnehmer.meldungen.einfuegen", eintraege.size());
 
         TeilnehmerSheetBuilder builder = TeilnehmerSheetBuilder.from(this)
                 .daten(eintraege)

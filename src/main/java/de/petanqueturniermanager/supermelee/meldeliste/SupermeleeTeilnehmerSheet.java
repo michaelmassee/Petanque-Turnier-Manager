@@ -108,25 +108,25 @@ public class SupermeleeTeilnehmerSheet extends SheetRunner implements ISheet {
         processBoxinfo("processbox.spieltag.meldungen.einlesen", getSpielTagNr().getNr());
         SpielerMeldungen aktiveUndAusgesetzt = meldeliste.getAktiveUndAusgesetztMeldungen();
 
+        // Bei leerer Meldeliste wird dennoch eine gültige (leere) Teilnehmerliste mit Header,
+        // Footer und Druckbereich erstellt. Auf dem Menü-Pfad gibt es zusätzlich einen Hinweis.
+        List<TeilnehmerEintrag> eintraege = new ArrayList<>(aktiveUndAusgesetzt.size());
         if (aktiveUndAusgesetzt.size() == 0) {
             if (meldungLeerHinweis) {
                 MessageBox.from(getWorkingSpreadsheet(), MessageBoxTypeEnum.ERROR_OK)
                         .caption(I18n.get("msg.caption.teilnehmer.fehler"))
                         .message(I18n.get("msg.text.keine.meldungen")).show();
             }
-            return;
+        } else {
+            Map<Integer, String> spielerNamen = leseSpielerNamenAusMeldeliste();
+            for (Spieler spieler : aktiveUndAusgesetzt.getSpielerList()) {
+                int nr = spieler.getNr();
+                eintraege.add(new TeilnehmerEintrag(nr, "", spielerNamen.getOrDefault(nr, "")));
+            }
+            eintraege.sort(Comparator.comparingInt(TeilnehmerEintrag::nr));
         }
 
-        Map<Integer, String> spielerNamen = leseSpielerNamenAusMeldeliste();
-
-        List<TeilnehmerEintrag> eintraege = new ArrayList<>(aktiveUndAusgesetzt.size());
-        for (Spieler spieler : aktiveUndAusgesetzt.getSpielerList()) {
-            int nr = spieler.getNr();
-            eintraege.add(new TeilnehmerEintrag(nr, "", spielerNamen.getOrDefault(nr, "")));
-        }
-        eintraege.sort(Comparator.comparingInt(TeilnehmerEintrag::nr));
-
-        processBoxinfo("processbox.spieltag.meldungen.einfuegen", getSpielTagNr().getNr(), aktiveUndAusgesetzt.size());
+        processBoxinfo("processbox.spieltag.meldungen.einfuegen", getSpielTagNr().getNr(), eintraege.size());
 
         TeilnehmerSheetBuilder builder = TeilnehmerSheetBuilder.from(this)
                 .daten(eintraege)
@@ -141,12 +141,12 @@ public class SupermeleeTeilnehmerSheet extends SheetRunner implements ISheet {
         int letzteSpalte = builder.getLetzteDatenSpalte();
         int footerZeile = builder.getLetzteDatenZeile() + 1;
         StringCellValue footer = StringCellValue.from(getXSpreadSheet(), Position.from(0, footerZeile))
-                .setValue(I18n.get("teilnehmer.footer.anzahl", aktiveUndAusgesetzt.size()))
+                .setValue(I18n.get("teilnehmer.footer.anzahl", eintraege.size()))
                 .setEndPosMergeSpalte(letzteSpalte).setCharWeight(FontWeight.BOLD).setCharHeight(12)
                 .setShrinkToFit(true);
         getSheetHelper().setStringValueInCell(footer);
 
-        SuperMeleeTeamRechner teamRechner = new SuperMeleeTeamRechner(aktiveUndAusgesetzt.size());
+        SuperMeleeTeamRechner teamRechner = new SuperMeleeTeamRechner(eintraege.size());
         footer.zeilePlusEins().setValue(I18n.get("teilnehmer.footer.teams",
                 teamRechner.getAnzDoublette(), teamRechner.getAnzTriplette()));
         getSheetHelper().setStringValueInCell(footer);
