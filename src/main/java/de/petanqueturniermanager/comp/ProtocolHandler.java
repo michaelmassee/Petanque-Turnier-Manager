@@ -18,6 +18,7 @@ import com.sun.star.beans.PropertyValue;
 import com.sun.star.frame.DispatchDescriptor;
 import com.sun.star.frame.FeatureStateEvent;
 import com.sun.star.frame.XController;
+import com.sun.star.frame.XController2;
 import com.sun.star.frame.XDispatch;
 import com.sun.star.frame.XDispatchProvider;
 import com.sun.star.frame.XFrame;
@@ -32,6 +33,9 @@ import com.sun.star.lib.uno.helper.WeakBase;
 import com.sun.star.registry.XRegistryKey;
 import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.sheet.XSpreadsheetView;
+import com.sun.star.ui.XDeck;
+import com.sun.star.ui.XDecks;
+import com.sun.star.ui.XSidebarProvider;
 import com.sun.star.ui.dialogs.ExecutableDialogResults;
 import com.sun.star.ui.dialogs.FolderPicker;
 import com.sun.star.ui.dialogs.XFolderPicker2;
@@ -345,6 +349,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_TOOLBAR_GESAMTRANGLISTE       = "toolbar_gesamtrangliste";
 	public static final String CMD_TOOLBAR_DRUCKEN               = "toolbar_drucken";
 	public static final String CMD_TOOLBAR_DRUCKVORSCHAU         = "toolbar_druckvorschau";
+	public static final String CMD_SIDEBAR_TOGGLE               = "sidebar_toggle";
+	/** Deck-ID der PétTurnMngr-Seitenleiste, siehe registry/.../UI/Sidebar.xcu. */
+	private static final String SIDEBAR_DECK_ID = "PetanqueTurnierManagerDeck";
 	// Turnier Modus
 	public static final String CMD_TURNIER_MODUS                 = "turnier_modus";
 	private final XComponentContext xContext;
@@ -1092,6 +1099,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 					.executeDispatch(".uno:Print", "_self", 0, new PropertyValue[0]);
 			case CMD_TOOLBAR_DRUCKVORSCHAU      -> erzeugeWorkingSpreadsheetFuerDispatch()
 					.executeDispatch(".uno:PrintPreview", "_self", 0, new PropertyValue[0]);
+			case CMD_SIDEBAR_TOGGLE            -> toggleSidebar();
 			// Spieler-DB-Aktionen: alle ohne ProcessBox, damit Dialoge nicht überdeckt werden
 			case CMD_SPIELERDB_OEFFNEN          -> de.petanqueturniermanager.spielerdb.ui.SpielerDbDispatcher
 					.oeffneSpielerVerwaltung(erzeugeWorkingSpreadsheetFuerDispatch());
@@ -1136,6 +1144,59 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		} else {
 			new TurnierSystemAuswahlDialog(ws).zeige();
 		}
+	}
+
+	/**
+	 * Blendet die PétTurnMngr-Seitenleiste ({@link #SIDEBAR_DECK_ID}) ein bzw. aus.
+	 * <p>
+	 * Bewusst über die UNO-Sidebar-API ({@link XController2#getSidebar()}) statt über
+	 * {@code .uno:SidebarDeck.<DeckId>}: jener Master/Slave-Command bekommt die Deck-ID
+	 * nur bei per URLTransformer geparster URL als Slot-Argument; aus einer Add-on-Toolbar
+	 * wird er ohne dieses Argument dispatcht und bleibt wirkungslos.
+	 * <p>
+	 * Toggle-Logik: Ist die Seitenleiste sichtbar und unser Deck aktiv, wird sie
+	 * ausgeblendet; andernfalls eingeblendet und unser Deck aktiviert.
+	 */
+	private void toggleSidebar() {
+		XFrame f = frame;
+		if (f == null) {
+			logger.warn("Sidebar-Toggle: frame==null – initialize() wurde nicht aufgerufen");
+			return;
+		}
+		XController2 controller = Lo.qi(XController2.class, f.getController());
+		if (controller == null) {
+			logger.warn("Sidebar-Toggle: XController2 nicht verfügbar");
+			return;
+		}
+		XSidebarProvider sidebar = controller.getSidebar();
+		if (sidebar == null) {
+			logger.warn("Sidebar-Toggle: XSidebarProvider==null");
+			return;
+		}
+		XDeck deck = ermittleSidebarDeck(sidebar);
+		boolean sichtbar = sidebar.isVisible();
+		boolean unserDeckAktiv = deck != null && deck.isActive();
+		if (sichtbar && unserDeckAktiv) {
+			sidebar.setVisible(false);
+		} else {
+			sidebar.setVisible(true);
+			if (deck != null) {
+				deck.activate(true);
+			}
+		}
+	}
+
+	/** Liefert das PétTurnMngr-Deck der Seitenleiste oder {@code null}, wenn nicht vorhanden. */
+	private XDeck ermittleSidebarDeck(XSidebarProvider sidebar) {
+		try {
+			XDecks decks = sidebar.getDecks();
+			if (decks != null && decks.hasByName(SIDEBAR_DECK_ID)) {
+				return Lo.qi(XDeck.class, decks.getByName(SIDEBAR_DECK_ID));
+			}
+		} catch (com.sun.star.uno.Exception e) {
+			logger.warn("Sidebar-Toggle: Deck '{}' nicht ermittelbar: {}", SIDEBAR_DECK_ID, e.getMessage(), e);
+		}
+		return null;
 	}
 
 	/**
@@ -1415,6 +1476,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			CMD_TOOLBAR_OEFFNEN,
 			CMD_TOOLBAR_DRUCKEN,
 			CMD_TOOLBAR_DRUCKVORSCHAU,
+			CMD_SIDEBAR_TOGGLE,
 			CMD_KONFIGURATION_TURNIER,
 			CMD_SPIELERDB_IN_MELDELISTE,
 			CMD_TURNIER_MODUS,
@@ -1581,7 +1643,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_TOOLBAR_NEU_IN_NEUER_DATEI,
 				 CMD_TOOLBAR_OEFFNEN,
 				 CMD_TOOLBAR_DRUCKEN,
-				 CMD_TOOLBAR_DRUCKVORSCHAU                  -> true;
+				 CMD_TOOLBAR_DRUCKVORSCHAU,
+				 CMD_SIDEBAR_TOGGLE                         -> true;
 			case CMD_TURNIER_MODUS                          -> true;
 			case CMD_SPIELERDB_OEFFNEN,
 				 CMD_SPIELERDB_VEREINE,

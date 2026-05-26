@@ -462,13 +462,15 @@
 
                 <!-- ****************************************************************** -->
                 <!-- Schaltfläche: PétTurnMngr-Seitenleiste ein-/ausblenden (Toggle).
-                     .uno:SidebarDeck.<DeckId> ist ein eingebauter LO-Befehl, der das
-                     benannte Deck togglet (sfx2 SidebarController::OpenThenToggleDeck:
-                     sichtbar -> schließen, sonst öffnen). DeckId stammt aus
-                     UI/Sidebar.xcu (PetanqueTurnierManagerDeck). -->
+                     Eigenes ptm:-Kommando statt .uno:SidebarDeck.<DeckId>: Letzteres ist
+                     ein Master/Slave-Command, dessen Deck-ID nur bei per URLTransformer
+                     geparster URL als Slot-Argument ankommt (sfx2 unoctitm.cxx). Aus einer
+                     Add-on-Toolbar wird die URL nur als .Complete dispatcht -> Argument
+                     fehlt -> Klick verpufft. ProtocolHandler togglet das Deck stattdessen
+                     direkt über die UNO-Sidebar-API (XController2.getSidebar). -->
                 <node oor:name="m27" oor:op="replace">
                     <prop oor:name="URL" oor:type="xs:string">
-                        <value>.uno:SidebarDeck.PetanqueTurnierManagerDeck</value>
+                        <value>ptm:sidebar_toggle</value>
                     </prop>
                     <prop oor:name="Title">
                         <value xml:lang="de">Seitenleiste ein-/ausblenden</value>
@@ -721,7 +723,7 @@
 
             <node oor:name="de.petanqueturniermanager.toolbar.sidebar" oor:op="replace">
                 <prop oor:name="URL" oor:type="xs:string">
-                    <value>.uno:SidebarDeck.PetanqueTurnierManagerDeck</value>
+                    <value>ptm:sidebar_toggle</value>
                 </prop>
                 <node oor:name="UserDefinedImages">
                     <prop oor:name="ImageSmallURL" oor:type="xs:string">
