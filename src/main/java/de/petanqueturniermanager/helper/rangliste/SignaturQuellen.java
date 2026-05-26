@@ -9,6 +9,9 @@ import java.util.TreeSet;
 
 import com.sun.star.sheet.XSpreadsheetDocument;
 
+import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
+import de.petanqueturniermanager.basesheet.meldeliste.TeilnehmerListeSortModus;
+import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheetsync.EingabeSignatur;
 import de.petanqueturniermanager.helper.sheetsync.SignaturQuelle;
@@ -290,6 +293,28 @@ public final class SignaturQuellen {
                         SPIELTAG_RANGLISTE_ERSTE_DATEN_ZEILE, SPIELTAG_RANGLISTE_MAX_ZEILEN,
                         SPIELTAG_RANGLISTE_SPALTEN, false));
         return quellen;
+    }
+
+    // ── Zusatz-Kontext: Sortier-Konfiguration ──────────────────────────────────
+    // Die Sortierung von Teilnehmer- und Checkin-Listen ist eine Dokument-Property,
+    // keine Sheet-Zelle. Damit ein Wechsel der Sortierung in der Turnier-Konfiguration
+    // einen einmaligen Re-Sync (= Umsortieren) der jeweiligen Liste auslöst, fließt der
+    // Property-Wert über den {@link EingabeSignatur}-Zusatz-Kontext in den Hash ein.
+
+    /** Zusatz-Kontext für Teilnehmerlisten: aktueller {@link TeilnehmerListeSortModus}. */
+    public static String teilnehmerSortKontext(XSpreadsheetDocument xDoc) {
+        return sortModusKontext(xDoc, BasePropertiesSpalte.KONFIG_PROP_TEILNEHMER_LISTE_SORT_MODUS);
+    }
+
+    /** Zusatz-Kontext für Checkin-Listen: aktueller {@link TeilnehmerListeSortModus}. */
+    public static String checkinSortKontext(XSpreadsheetDocument xDoc) {
+        return sortModusKontext(xDoc, BasePropertiesSpalte.KONFIG_PROP_CHECKIN_LISTE_SORT_MODUS);
+    }
+
+    private static String sortModusKontext(XSpreadsheetDocument xDoc, String propertySchluessel) {
+        String wert = new DocumentPropertiesHelper(xDoc)
+                .getStringProperty(propertySchluessel, TeilnehmerListeSortModus.NAME.getKey());
+        return propertySchluessel + "=" + wert;
     }
 
     // ── Helfer für Prefix-Suche ─────────────────────────────────────────────

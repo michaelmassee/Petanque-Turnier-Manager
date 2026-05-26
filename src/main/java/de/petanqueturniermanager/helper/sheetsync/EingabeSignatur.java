@@ -45,7 +45,11 @@ public final class EingabeSignatur {
 
     private static final Logger logger = LogManager.getLogger(EingabeSignatur.class);
 
+    /** Zusatz-Kontext, der keiner Sheet-Quelle entspricht (z.B. Default-Konstante). */
+    private static final Function<XSpreadsheetDocument, String> KEIN_ZUSATZ_KONTEXT = xDoc -> "";
+
     private final Function<XSpreadsheetDocument, List<SignaturQuelle>> quellenLieferant;
+    private final Function<XSpreadsheetDocument, String> zusatzKontextLieferant;
 
     /**
      * @param quellenLieferant liefert die aktuelle Quellen-Liste; wird bei jedem
@@ -54,7 +58,24 @@ public final class EingabeSignatur {
      */
     public EingabeSignatur(
             Function<XSpreadsheetDocument, List<SignaturQuelle>> quellenLieferant) {
+        this(quellenLieferant, KEIN_ZUSATZ_KONTEXT);
+    }
+
+    /**
+     * @param quellenLieferant      liefert die aktuelle Quellen-Liste (siehe oben).
+     * @param zusatzKontextLieferant liefert eine zusätzliche, nicht aus Sheet-Zellen ableitbare
+     *                              Zeichenkette, die in den Hash einfließt (z.B. eine
+     *                              Sortier-Konfiguration aus den Dokument-Properties). Ändert sich
+     *                              dieser Wert, ändert sich der Hash – und der Sheet-Sync wird
+     *                              ausgelöst, obwohl die Eingabe-Sheets unverändert sind. Liefert
+     *                              die Funktion einen leeren String, bleibt der Hash unverändert
+     *                              gegenüber der Variante ohne Zusatz-Kontext.
+     */
+    public EingabeSignatur(
+            Function<XSpreadsheetDocument, List<SignaturQuelle>> quellenLieferant,
+            Function<XSpreadsheetDocument, String> zusatzKontextLieferant) {
         this.quellenLieferant = checkNotNull(quellenLieferant);
+        this.zusatzKontextLieferant = checkNotNull(zusatzKontextLieferant);
     }
 
     /**
@@ -94,6 +115,19 @@ public final class EingabeSignatur {
             if (teilErgebnis != null) {
                 return teilErgebnis;
             }
+        }
+
+        String zusatzKontext;
+        try {
+            zusatzKontext = zusatzKontextLieferant.apply(xDoc);
+        } catch (DisposedException e) {
+            return new SignaturErgebnis.TransientFehler("Zusatz-Kontext verworfen", e, versuch);
+        } catch (RuntimeException e) {
+            logger.warn("Zusatz-Kontext-Lieferant warf RuntimeException", e);
+            return new SignaturErgebnis.PermanenterFehler("Zusatz-Kontext-Lieferant fehlerhaft", e);
+        }
+        if (zusatzKontext != null && !zusatzKontext.isEmpty()) {
+            digest.update(("CTX=" + zusatzKontext + "\n").getBytes(StandardCharsets.UTF_8));
         }
 
         String hex = HexFormat.of().formatHex(digest.digest());

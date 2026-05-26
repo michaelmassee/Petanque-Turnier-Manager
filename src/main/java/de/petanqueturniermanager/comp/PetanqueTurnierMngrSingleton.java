@@ -208,7 +208,8 @@ public class PetanqueTurnierMngrSingleton {
 		addGlobalEventListener(SheetSyncListener.fuerSpieltagTeilnehmer(context,
 				TurnierSystem.SUPERMELEE,
 				spieltagNr -> new EingabeSignatur(
-						xDoc -> SignaturQuellen.fuerSupermeleeTeilnehmer(xDoc, spieltagNr)),
+						xDoc -> SignaturQuellen.fuerSupermeleeTeilnehmer(xDoc, spieltagNr),
+						SignaturQuellen::teilnehmerSortKontext),
 				(ws, xSheet) -> {
 					SpielTagNr nr = SheetMetadataHelper
 							.findeTeilnehmerSpieltagNr(ws.getWorkingSpreadsheetDocument(), xSheet)
@@ -227,37 +228,44 @@ public class PetanqueTurnierMngrSingleton {
 		addGlobalEventListener(SheetSyncListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_TEILNEHMER,
 				TurnierSystem.SCHWEIZER,
-				new EingabeSignatur(SignaturQuellen::fuerSchweizerTeilnehmer),
+				new EingabeSignatur(SignaturQuellen::fuerSchweizerTeilnehmer,
+						SignaturQuellen::teilnehmerSortKontext),
 				(ws, ignored) -> new SchweizerTeilnehmerSheetUpdate(ws)));
 		addGlobalEventListener(SheetSyncListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_TEILNEHMER,
 				TurnierSystem.JGJ,
-				new EingabeSignatur(SignaturQuellen::fuerJGJTeilnehmer),
+				new EingabeSignatur(SignaturQuellen::fuerJGJTeilnehmer,
+						SignaturQuellen::teilnehmerSortKontext),
 				(ws, ignored) -> new JGJTeilnehmerSheetUpdate(ws)));
 		addGlobalEventListener(SheetSyncListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_TEILNEHMER,
 				TurnierSystem.KO,
-				new EingabeSignatur(SignaturQuellen::fuerKoTeilnehmer),
+				new EingabeSignatur(SignaturQuellen::fuerKoTeilnehmer,
+						SignaturQuellen::teilnehmerSortKontext),
 				(ws, ignored) -> new KoTeilnehmerSheetUpdate(ws)));
 		addGlobalEventListener(SheetSyncListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_TEILNEHMER,
 				TurnierSystem.MAASTRICHTER,
-				new EingabeSignatur(SignaturQuellen::fuerMaastrichterTeilnehmer),
+				new EingabeSignatur(SignaturQuellen::fuerMaastrichterTeilnehmer,
+						SignaturQuellen::teilnehmerSortKontext),
 				(ws, ignored) -> new MaastrichterTeilnehmerSheetUpdate(ws)));
 		addGlobalEventListener(SheetSyncListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_TEILNEHMER,
 				TurnierSystem.KASKADE,
-				new EingabeSignatur(SignaturQuellen::fuerKaskadeTeilnehmer),
+				new EingabeSignatur(SignaturQuellen::fuerKaskadeTeilnehmer,
+						SignaturQuellen::teilnehmerSortKontext),
 				(ws, ignored) -> new KaskadeTeilnehmerSheetUpdate(ws)));
 		addGlobalEventListener(SheetSyncListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_TEILNEHMER,
 				TurnierSystem.FORMULEX,
-				new EingabeSignatur(SignaturQuellen::fuerFormuleXTeilnehmer),
+				new EingabeSignatur(SignaturQuellen::fuerFormuleXTeilnehmer,
+						SignaturQuellen::teilnehmerSortKontext),
 				(ws, ignored) -> new FormuleXTeilnehmerSheetUpdate(ws)));
 		addGlobalEventListener(SheetSyncListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_TEILNEHMER,
 				TurnierSystem.POULE,
-				new EingabeSignatur(SignaturQuellen::fuerPouleTeilnehmer),
+				new EingabeSignatur(SignaturQuellen::fuerPouleTeilnehmer,
+						SignaturQuellen::teilnehmerSortKontext),
 				(ws, ignored) -> new PouleTeilnehmerSheetUpdate(ws)));
 		t = logTimingAndReset("SheetSyncListener TEILNEHMER (Einzel-Sheet-Systeme)", t);
 
@@ -268,31 +276,38 @@ public class PetanqueTurnierMngrSingleton {
 		// TurnierSystem-Gate.
 		addGlobalEventListener(SheetSyncListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_POULE_CHECKIN_LISTE, TurnierSystem.POULE,
-				new EingabeSignatur(SignaturQuellen::fuerPouleTeilnehmer),
+				new EingabeSignatur(SignaturQuellen::fuerPouleTeilnehmer,
+						SignaturQuellen::checkinSortKontext),
 				(ws, ignored) -> new PouleCheckinListeSheetUpdate(ws)));
 		addGlobalEventListener(SheetSyncListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_CHECKIN_LISTE, TurnierSystem.SCHWEIZER,
-				new EingabeSignatur(SignaturQuellen::fuerSchweizerTeilnehmer),
+				new EingabeSignatur(SignaturQuellen::fuerSchweizerTeilnehmer,
+						SignaturQuellen::checkinSortKontext),
 				(ws, ignored) -> new SchweizerCheckinListeSheetUpdate(ws)));
 		addGlobalEventListener(SheetSyncListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_KO_CHECKIN_LISTE, TurnierSystem.KO,
-				new EingabeSignatur(SignaturQuellen::fuerKoTeilnehmer),
+				new EingabeSignatur(SignaturQuellen::fuerKoTeilnehmer,
+						SignaturQuellen::checkinSortKontext),
 				(ws, ignored) -> new KoCheckinListeSheetUpdate(ws)));
 		addGlobalEventListener(SheetSyncListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_CHECKIN_LISTE, TurnierSystem.MAASTRICHTER,
-				new EingabeSignatur(SignaturQuellen::fuerMaastrichterTeilnehmer),
+				new EingabeSignatur(SignaturQuellen::fuerMaastrichterTeilnehmer,
+						SignaturQuellen::checkinSortKontext),
 				(ws, ignored) -> new MaastrichterCheckinListeSheetUpdate(ws)));
 		addGlobalEventListener(SheetSyncListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_KASKADE_CHECKIN_LISTE, TurnierSystem.KASKADE,
-				new EingabeSignatur(SignaturQuellen::fuerKaskadeTeilnehmer),
+				new EingabeSignatur(SignaturQuellen::fuerKaskadeTeilnehmer,
+						SignaturQuellen::checkinSortKontext),
 				(ws, ignored) -> new KaskadeCheckinListeSheetUpdate(ws)));
 		addGlobalEventListener(SheetSyncListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_FORMULEX_CHECKIN_LISTE, TurnierSystem.FORMULEX,
-				new EingabeSignatur(SignaturQuellen::fuerFormuleXTeilnehmer),
+				new EingabeSignatur(SignaturQuellen::fuerFormuleXTeilnehmer,
+						SignaturQuellen::checkinSortKontext),
 				(ws, ignored) -> new FormuleXCheckinListeSheetUpdate(ws)));
 		addGlobalEventListener(SheetSyncListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_JGJ_CHECKIN_LISTE, TurnierSystem.JGJ,
-				new EingabeSignatur(SignaturQuellen::fuerJGJTeilnehmer),
+				new EingabeSignatur(SignaturQuellen::fuerJGJTeilnehmer,
+						SignaturQuellen::checkinSortKontext),
 				(ws, ignored) -> new JGJCheckinListeSheetUpdate(ws)));
 		// Supermelee-Anmeldungen (Checkin-Liste) sind spieltag-variabel – eigener Schlüssel je Nr.
 		addGlobalEventListener(SheetSyncListener.fuerSpieltagSheet(context,
@@ -300,7 +315,8 @@ public class PetanqueTurnierMngrSingleton {
 				SheetMetadataHelper::findeAnmeldungenSpieltagNr,
 				"SUPERMELEE_ANMELDUNGEN_",
 				spieltagNr -> new EingabeSignatur(
-						xDoc -> SignaturQuellen.fuerSupermeleeTeilnehmer(xDoc, spieltagNr)),
+						xDoc -> SignaturQuellen.fuerSupermeleeTeilnehmer(xDoc, spieltagNr),
+						SignaturQuellen::checkinSortKontext),
 				(ws, xSheet) -> {
 					SpielTagNr nr = SheetMetadataHelper
 							.findeAnmeldungenSpieltagNr(ws.getWorkingSpreadsheetDocument(), xSheet)

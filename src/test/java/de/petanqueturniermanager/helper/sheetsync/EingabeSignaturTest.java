@@ -3,6 +3,7 @@ package de.petanqueturniermanager.helper.sheetsync;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.List;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
@@ -60,6 +61,12 @@ public class EingabeSignaturTest {
                 .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> new SignaturQuelle("id", "key", 0, 10, Set.of(), true))
                 .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void konstruktor_nullZusatzKontextLieferant_wirft() {
+        assertThatThrownBy(() -> new EingabeSignatur(xDoc -> List.of(), null))
+                .isInstanceOf(NullPointerException.class);
     }
 
     @Test
