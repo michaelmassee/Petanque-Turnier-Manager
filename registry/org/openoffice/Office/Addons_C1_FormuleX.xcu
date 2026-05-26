@@ -92,12 +92,28 @@
 							</node>
 
 							<node oor:name="C1A5" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Check-in List</value>
+									<value xml:lang="de">Checkin Liste</value>
+									<value xml:lang="es">Lista de registro</value>
+									<value xml:lang="fr">Liste de pointage</value>
+									<value xml:lang="nl">Inchecklijst</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:formulex_checkin</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+							<node oor:name="C1A6" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
 
-							<node oor:name="C1A6" oor:op="replace">
+							<node oor:name="C1A7" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Next Round</value>
 									<value xml:lang="de">Nächste Spielrunde</value>
@@ -113,7 +129,7 @@
 								</prop>
 							</node>
 
-							<node oor:name="C1A7" oor:op="replace">
+							<node oor:name="C1A8" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Rebuild Current Round</value>
 									<value xml:lang="de">Aktuelle Spielrunde aktualisieren</value>
@@ -129,13 +145,13 @@
 								</prop>
 							</node>
 
-							<node oor:name="C1A8" oor:op="replace">
+							<node oor:name="C1A9" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
 
-							<node oor:name="C1A9" oor:op="replace">
+							<node oor:name="C1A10" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Ranking</value>
 									<value xml:lang="de">Rangliste</value>
@@ -145,22 +161,6 @@
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:formulex_rangliste</value>
-								</prop>
-								<prop oor:name="Target" oor:type="xs:string">
-									<value>_self</value>
-								</prop>
-							</node>
-
-							<node oor:name="C1A10" oor:op="replace">
-								<prop oor:name="Title">
-									<value xml:lang="en">Check-in List</value>
-									<value xml:lang="de">Checkin Liste</value>
-									<value xml:lang="es">Lista de registro</value>
-									<value xml:lang="fr">Liste de pointage</value>
-									<value xml:lang="nl">Inchecklijst</value>
-								</prop>
-								<prop oor:name="URL">
-									<value>ptm:formulex_checkin</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>

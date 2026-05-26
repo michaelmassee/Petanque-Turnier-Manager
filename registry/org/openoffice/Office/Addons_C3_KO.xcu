@@ -92,28 +92,6 @@
 							</node>
 
 							<node oor:name="C3A5" oor:op="replace">
-								<prop oor:name="URL" oor:type="xs:string">
-									<value>private:separator</value>
-								</prop>
-							</node>
-
-							<node oor:name="C3A6" oor:op="replace">
-								<prop oor:name="Title">
-									<value xml:lang="en">Create Tournament Bracket</value>
-									<value xml:lang="de">Turnierbaum erstellen</value>
-									<value xml:lang="es">Crear árbol del torneo</value>
-									<value xml:lang="fr">Créer le tableau du tournoi</value>
-									<value xml:lang="nl">Toernooiboom aanmaken</value>
-								</prop>
-								<prop oor:name="URL">
-									<value>ptm:ko_turnierbaum</value>
-								</prop>
-								<prop oor:name="Target" oor:type="xs:string">
-									<value>_self</value>
-								</prop>
-							</node>
-
-							<node oor:name="C3A7" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Check-in List</value>
 									<value xml:lang="de">Checkin Liste</value>
@@ -123,6 +101,28 @@
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:ko_checkin</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+							<node oor:name="C3A6" oor:op="replace">
+								<prop oor:name="URL" oor:type="xs:string">
+									<value>private:separator</value>
+								</prop>
+							</node>
+
+							<node oor:name="C3A7" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Create Tournament Bracket</value>
+									<value xml:lang="de">Turnierbaum erstellen</value>
+									<value xml:lang="es">Crear árbol del torneo</value>
+									<value xml:lang="fr">Créer le tableau du tournoi</value>
+									<value xml:lang="nl">Toernooiboom aanmaken</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:ko_turnierbaum</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>

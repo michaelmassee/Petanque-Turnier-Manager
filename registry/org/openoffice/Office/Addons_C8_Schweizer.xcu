@@ -111,74 +111,6 @@
 							</node>
 
 							<node oor:name="C8A6" oor:op="replace">
-								<prop oor:name="URL" oor:type="xs:string">
-									<value>private:separator</value>
-								</prop>
-							</node>
-
-							<node oor:name="C8A7" oor:op="replace">
-								<prop oor:name="Title">
-									<value xml:lang="de">Neue Spielrunde</value>
-								<value xml:lang="en">New Round</value>
-									<value xml:lang="es">Nueva ronda</value>
-									<value xml:lang="fr">Nouveau tour</value>
-									<value xml:lang="nl">Nieuwe ronde</value>
-								</prop>
-								<prop oor:name="URL">
-									<value>ptm:schweizer_naechste_spielrunde</value>
-								</prop>
-								<prop oor:name="Target" oor:type="xs:string"><value>_self</value></prop>
-							</node>
-
-							<node oor:name="C8A8" oor:op="replace">
-								<prop oor:name="Title">
-									<value xml:lang="de">Spielrunde neu auslosen</value>
-								<value xml:lang="en">Re-draw Round</value>
-									<value xml:lang="es">Volver a sortear la ronda</value>
-									<value xml:lang="fr">Retirer la manche</value>
-									<value xml:lang="nl">Ronde opnieuw loten</value>
-								</prop>
-								<prop oor:name="URL">
-									<value>ptm:schweizer_aktuelle_spielrunde</value>
-								</prop>
-								<prop oor:name="Target" oor:type="xs:string"><value>_self</value></prop>
-							</node>
-
-							<node oor:name="C8A9" oor:op="replace">
-								<prop oor:name="URL" oor:type="xs:string">
-									<value>private:separator</value>
-								</prop>
-							</node>
-
-							<node oor:name="C8A10" oor:op="replace">
-								<prop oor:name="Title">
-									<value xml:lang="en">Ranking</value>
-									<value xml:lang="de">Rangliste</value>
-									<value xml:lang="es">Clasificación</value>
-									<value xml:lang="fr">Classement</value>
-									<value xml:lang="nl">Ranglijst</value>
-								</prop>
-								<prop oor:name="URL">
-									<value>ptm:schweizer_rangliste</value>
-								</prop>
-								<prop oor:name="Target" oor:type="xs:string"><value>_self</value></prop>
-							</node>
-
-							<node oor:name="C8A11" oor:op="replace">
-								<prop oor:name="Title">
-									<value xml:lang="en">Sort Ranking</value>
-									<value xml:lang="de">Rangliste Sortieren</value>
-									<value xml:lang="es">Ordenar clasificación</value>
-									<value xml:lang="fr">Trier le classement</value>
-									<value xml:lang="nl">Ranglijst sorteren</value>
-								</prop>
-								<prop oor:name="URL">
-									<value>ptm:schweizer_rangliste_sortieren</value>
-								</prop>
-								<prop oor:name="Target" oor:type="xs:string"><value>_self</value></prop>
-							</node>
-
-							<node oor:name="C8A12" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Check-in List</value>
 									<value xml:lang="de">Checkin Liste</value>
@@ -192,6 +124,74 @@
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
 								</prop>
+							</node>
+
+							<node oor:name="C8A7" oor:op="replace">
+								<prop oor:name="URL" oor:type="xs:string">
+									<value>private:separator</value>
+								</prop>
+							</node>
+
+							<node oor:name="C8A8" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Neue Spielrunde</value>
+								<value xml:lang="en">New Round</value>
+									<value xml:lang="es">Nueva ronda</value>
+									<value xml:lang="fr">Nouveau tour</value>
+									<value xml:lang="nl">Nieuwe ronde</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:schweizer_naechste_spielrunde</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string"><value>_self</value></prop>
+							</node>
+
+							<node oor:name="C8A9" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Spielrunde neu auslosen</value>
+								<value xml:lang="en">Re-draw Round</value>
+									<value xml:lang="es">Volver a sortear la ronda</value>
+									<value xml:lang="fr">Retirer la manche</value>
+									<value xml:lang="nl">Ronde opnieuw loten</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:schweizer_aktuelle_spielrunde</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string"><value>_self</value></prop>
+							</node>
+
+							<node oor:name="C8A10" oor:op="replace">
+								<prop oor:name="URL" oor:type="xs:string">
+									<value>private:separator</value>
+								</prop>
+							</node>
+
+							<node oor:name="C8A11" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Ranking</value>
+									<value xml:lang="de">Rangliste</value>
+									<value xml:lang="es">Clasificación</value>
+									<value xml:lang="fr">Classement</value>
+									<value xml:lang="nl">Ranglijst</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:schweizer_rangliste</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string"><value>_self</value></prop>
+							</node>
+
+							<node oor:name="C8A12" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Sort Ranking</value>
+									<value xml:lang="de">Rangliste Sortieren</value>
+									<value xml:lang="es">Ordenar clasificación</value>
+									<value xml:lang="fr">Trier le classement</value>
+									<value xml:lang="nl">Ranglijst sorteren</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:schweizer_rangliste_sortieren</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string"><value>_self</value></prop>
 							</node>
 
 						</node>
