@@ -20,10 +20,10 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 
 /**
  * Checkin-Listen-Basis für Systeme, deren Meldeliste das spaltenbasierte Teamnamen-/Spieler-Layout
- * verwendet (Schweizer, Poule, Maastrichter, KO, Kaskade, FormuleX).
+ * verwendet (Schweizer, Poule, Maastrichter, KO, Kaskade, FormuleX, JGJ, Supermelee).
  * <p>
- * Die Namen werden – im Gegensatz zur Formel-Variante in {@link AbstractCheckinListeSheet} –
- * als feste Werte aus der Meldeliste gelesen ({@link TeilnehmerNamenLeser}).
+ * Die Namen werden als feste Werte aus der Meldeliste gelesen ({@link TeilnehmerNamenLeser}) und
+ * je nach Formation/Teamname-/Vereinsname-Option zusammengesetzt.
  * Je nach {@link #istProTeam()} wird der freie Teamname oder die Spielernamen angezeigt.
  */
 public abstract class AbstractTeilnehmerNamenCheckinListeSheet extends AbstractCheckinListeSheet {
@@ -33,11 +33,6 @@ public abstract class AbstractTeilnehmerNamenCheckinListeSheet extends AbstractC
 	protected AbstractTeilnehmerNamenCheckinListeSheet(WorkingSpreadsheet workingSpreadsheet,
 			TurnierSystem turnierSystem, String logPrefix) {
 		super(workingSpreadsheet, turnierSystem, logPrefix);
-	}
-
-	@Override
-	protected boolean nameAlsFormel() {
-		return false;
 	}
 
 	/** Liest Spielernamen, Teamnamen und Sortierschlüssel der Meldeliste in einem Durchgang. */

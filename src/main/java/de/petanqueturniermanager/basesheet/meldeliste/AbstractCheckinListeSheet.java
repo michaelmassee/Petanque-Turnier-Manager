@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.sun.star.awt.FontWeight;
-import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 
 import de.petanqueturniermanager.SheetRunner;
@@ -36,8 +35,8 @@ import de.petanqueturniermanager.basesheet.meldeliste.TeilnehmerSheetBuilder.Tei
  * <p>
  * Erzeugt eine kompakte, druckbare Ansicht zum Abhaken der anwesenden Teilnehmer:
  * mehrere Blöcke nebeneinander (je {@link #getMaxProSpalte()} Einträge pro Block),
- * je Eintrag eine Nummer-Spalte, eine Namens-Spalte (per VLOOKUP-Formel aus der
- * Meldeliste) und eine leere Checkbox-Spalte.
+ * je Eintrag eine Nummer-Spalte, eine Namens-Spalte (als Wert aus der Meldeliste,
+ * {@link #namenNachNummer()}) und eine leere Checkbox-Spalte.
  * <p>
  * Die Sortierreihenfolge ist über die Turnier-Konfiguration einstellbar
  * ({@link TeilnehmerListeSortModus}, Default {@link TeilnehmerListeSortModus#NAME}) und wird
@@ -153,16 +152,16 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 	 */
 	private void fuelleBereich(List<Integer> nummern) throws GenerateException {
 		if (nummern.isEmpty()) {
-			// Leere Meldeliste: dennoch eine Kopfzeile (Überschrift) anzeigen und Druckbereich setzen.
+			// Leere Meldeliste: dennoch Kopfzeile + Fußzeile (Anzahl 0) anzeigen und Druckbereich setzen.
 			kopfzeileSchreiben(NR_SPALTE);
-			printBereichDefinieren(KOPF_ZEILE, NAME_SPALTE);
+			int footerZeile = footerSchreiben(0, KOPF_ZEILE, NAME_SPALTE);
+			printBereichDefinieren(footerZeile, NAME_SPALTE);
 			return;
 		}
 
 		final int maxProSpalte = getMaxProSpalte();
 		final int anzBloecke = (int) Math.ceil((double) nummern.size() / maxProSpalte);
-		final boolean nameAlsFormel = nameAlsFormel();
-		final Map<Integer, String> namen = nameAlsFormel ? Map.of() : namenNachNummer();
+		final Map<Integer, String> namen = namenNachNummer();
 
 		RangeData data = new RangeData();
 		for (int zeileImBlock = 0; zeileImBlock < maxProSpalte; zeileImBlock++) {
@@ -172,8 +171,7 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 				if (idx < nummern.size()) {
 					int nr = nummern.get(idx);
 					zeileData.newInt(nr);
-					// Im Formel-Modus wird die Namens-Spalte später per Fill-Down-Formel gesetzt.
-					zeileData.newString(nameAlsFormel ? "" : namen.getOrDefault(nr, ""));
+					zeileData.newString(namen.getOrDefault(nr, ""));
 					if (blkCntr != anzBloecke) {
 						zeileData.newEmpty(); // Checkbox-Spalte
 						zeileData.newEmpty(); // Trennspalte
@@ -184,10 +182,16 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 		RangePosition rangePosition = data.getRangePosition(Position.from(NR_SPALTE, ERSTE_DATEN_ZEILE));
 		RangeHelper.from(this, rangePosition).setDataInRange(data);
 
-		spaltenFormatieren(nummern, anzBloecke, maxProSpalte, nameAlsFormel);
+		FormatErgebnis fmt = spaltenFormatieren(nummern, anzBloecke, maxProSpalte);
+		int footerZeile = footerSchreiben(nummern.size(), fmt.letzteDatenZeile(), fmt.letzteSpalte());
+		printBereichDefinieren(footerZeile, fmt.letzteSpalte());
 	}
 
-	private void spaltenFormatieren(List<Integer> nummern, int anzBloecke, int maxProSpalte, boolean nameAlsFormel)
+	/** Ergebnis der Spaltenformatierung: letzte Datenzeile und letzte Spalte des Blockbereichs. */
+	private record FormatErgebnis(int letzteDatenZeile, int letzteSpalte) {
+	}
+
+	private FormatErgebnis spaltenFormatieren(List<Integer> nummern, int anzBloecke, int maxProSpalte)
 			throws GenerateException {
 		RangeProperties rangePropNr = RangeProperties.from().setHoriJustify(CellHoriJustify.CENTER)
 				.setCharColor(ColorHelper.CHAR_COLOR_GRAY_SPIELER_NR);
@@ -195,8 +199,6 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 
 		ColumnProperties columnPropName = ColumnProperties.from().setHoriJustify(CellHoriJustify.CENTER)
 				.setWidth(getNameSpalteWidth());
-		StringCellValue nameFormula = StringCellValue.from(getXSpreadSheet(), Position.from(NAME_SPALTE, ERSTE_DATEN_ZEILE))
-				.setShrinkToFit(true).setColumnProperties(columnPropName);
 
 		ColumnProperties columnPropChkBox = ColumnProperties.from().setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH);
 		RangeProperties rangePropBorderOnly = RangeProperties.from().setBorder(BorderFactory.from().allThin().toBorder());
@@ -221,15 +223,9 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 			RangeHelper.from(this, blockNrRange).setRangeProperties(rangePropNr);
 			getSheetHelper().setColumnProperties(getXSpreadSheet(), blockNrRange.getStartSpalte(), columnPropNr);
 
+			// Namen sind bereits als Werte geschrieben; nur Spaltenbreite/Ausrichtung setzen.
 			blockNrRange.spaltePlusEins();
-			if (nameAlsFormel) {
-				String formula = getNameFormula(startNrPos.getAddress());
-				nameFormula.setPos((Position) blockNrRange.getStart()).setFillAutoDown(letzteZeile).setValue(formula);
-				getSheetHelper().setFormulaInCell(nameFormula);
-			} else {
-				// Namen sind bereits als Werte geschrieben; nur Spaltenbreite/Ausrichtung setzen.
-				getSheetHelper().setColumnProperties(getXSpreadSheet(), blockNrRange.getStartSpalte(), columnPropName);
-			}
+			getSheetHelper().setColumnProperties(getXSpreadSheet(), blockNrRange.getStartSpalte(), columnPropName);
 
 			blockNrRange.spaltePlusEins();
 			getSheetHelper().setColumnProperties(getXSpreadSheet(), blockNrRange.getStartSpalte(), columnPropChkBox);
@@ -241,7 +237,23 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 			letzteSpalte = blockNrRange.getEnde().getSpalte();
 		}
 
-		printBereichDefinieren(maxMeldungZeile, letzteSpalte);
+		return new FormatErgebnis(maxMeldungZeile, letzteSpalte);
+	}
+
+	/**
+	 * Schreibt die Fußzeile mit der Teilnehmer-Anzahl (gemergt über die Blockbreite) eine Zeile
+	 * unter dem Datenbereich – im Stil der Teilnehmerliste.
+	 *
+	 * @return Zeilenindex der Fußzeile (für den Druckbereich)
+	 */
+	private int footerSchreiben(int anzahl, int letzteDatenZeile, int letzteSpalte) throws GenerateException {
+		int footerZeile = letzteDatenZeile + 1;
+		StringCellValue footer = StringCellValue.from(getXSpreadSheet(), Position.from(NR_SPALTE, footerZeile))
+				.setValue(I18n.get("teilnehmer.footer.anzahl", anzahl))
+				.setEndPosMergeSpalte(letzteSpalte).setCharWeight(FontWeight.BOLD).setCharHeight(12)
+				.setShrinkToFit(true);
+		getSheetHelper().setStringValueInCell(footer);
+		return footerZeile;
 	}
 
 	/**
@@ -252,18 +264,19 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 	 */
 	private void kopfzeileSchreiben(int nrSpalte) throws GenerateException {
 		int headerColor = getKonfigurationSheet().getMeldeListeHeaderFarbe();
-		var border = BorderFactory.from().allThin().boldLn().forTop().toBorder();
+		// Header-Stil wie Teilnehmerliste: untere fette Trennlinie, nicht fett, ShrinkToFit.
+		var border = BorderFactory.from().allThin().boldLn().forBottom().toBorder();
 
 		StringCellValue nrHeader = StringCellValue.from(getXSpreadSheet(), Position.from(nrSpalte, KOPF_ZEILE))
-				.setValue(I18n.get("column.header.nr")).setCharWeight(FontWeight.BOLD)
-				.setCellBackColor(headerColor).setBorder(border)
+				.setValue(I18n.get("column.header.nr"))
+				.setCellBackColor(headerColor).setBorder(border).setShrinkToFit(true)
 				.addColumnProperties(ColumnProperties.from().setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH)
 						.setHoriJustify(CellHoriJustify.CENTER));
 		getSheetHelper().setStringValueInCell(nrHeader);
 
 		StringCellValue nameHeader = StringCellValue.from(getXSpreadSheet(), Position.from(nrSpalte + 1, KOPF_ZEILE))
-				.setValue(I18n.get("column.header.name")).setCharWeight(FontWeight.BOLD)
-				.setCellBackColor(headerColor).setBorder(border)
+				.setValue(I18n.get("column.header.name"))
+				.setCellBackColor(headerColor).setBorder(border).setShrinkToFit(true)
 				.addColumnProperties(ColumnProperties.from().setWidth(getNameSpalteWidth())
 						.setHoriJustify(CellHoriJustify.CENTER));
 		getSheetHelper().setStringValueInCell(nameHeader);
@@ -337,41 +350,6 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 	}
 
 	/**
-	 * Liest aus einer Meldeliste je Nummer den Nachnamen als Sortierschlüssel (Teamname leer).
-	 * Hilfsmethode für Einzelspieler-Systeme (JGJ, Supermelee), die den Nachnamen direkt aus dem
-	 * Sheet beziehen.
-	 *
-	 * @param meldelisteSheet Quell-Meldeliste
-	 * @param nrSpalte        Spaltenindex der Melde-Nummer
-	 * @param nachnameSpalte  Spaltenindex der Nachname-Spalte
-	 * @param ersteDatenZeile erste Datenzeile (0-basiert)
-	 */
-	protected final Map<Integer, SortSchluessel> leseNachnameSortDaten(ISheet meldelisteSheet, int nrSpalte,
-			int nachnameSpalte, int ersteDatenZeile) throws GenerateException {
-		Map<Integer, SortSchluessel> ergebnis = new java.util.HashMap<>();
-		XSpreadsheet xSheet = meldelisteSheet.getXSpreadSheet();
-		if (xSheet == null) {
-			return ergebnis;
-		}
-		int maxSpalte = Math.max(nrSpalte, nachnameSpalte);
-		RangeData data = RangeHelper.from(xSheet, getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
-				RangePosition.from(0, ersteDatenZeile, maxSpalte, ersteDatenZeile + CLEAR_LETZTE_ZEILE))
-				.getDataFromRange();
-		for (RowData row : data) {
-			if (row.isEmpty()) {
-				break;
-			}
-			int nr = row.get(nrSpalte).getIntVal(0);
-			if (nr <= 0) {
-				break;
-			}
-			String nachname = nachnameSpalte < row.size() ? row.get(nachnameSpalte).getStringVal() : "";
-			ergebnis.put(nr, new SortSchluessel("", nachname != null ? nachname.trim() : ""));
-		}
-		return ergebnis;
-	}
-
-	/**
 	 * Sortierschlüssel einer Melde-/Teamnummer für die Checkin-Liste.
 	 *
 	 * @param teamname     freier Teamname (leer, wenn nicht verfügbar)
@@ -383,27 +361,8 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 	}
 
 	/**
-	 * Steuert die Namens-Quelle der Checkin-Liste.
-	 *
-	 * @return {@code true} (Default): Namen werden als Fill-Down-VLOOKUP-Formel gesetzt
-	 *         (über {@link #getNameFormula(String)}); {@code false}: Namen werden als feste
-	 *         Werte geschrieben (über {@link #namenNachNummer()}).
-	 */
-	protected boolean nameAlsFormel() {
-		return true;
-	}
-
-	/**
-	 * VLOOKUP-Formel, die zu einer Nummer-Zelladresse den anzuzeigenden Namen liefert.
-	 * Nur relevant, wenn {@link #nameAlsFormel()} {@code true} liefert.
-	 */
-	protected String getNameFormula(String nrZelleAdresse) throws GenerateException {
-		throw new GenerateException("getNameFormula() nicht implementiert");
-	}
-
-	/**
-	 * Liefert je Melde-/Teamnummer den anzuzeigenden Namen.
-	 * Nur relevant, wenn {@link #nameAlsFormel()} {@code false} liefert.
+	 * Liefert je Melde-/Teamnummer den anzuzeigenden Namen (als Wert). Default leer; konkrete
+	 * Subklassen (bzw. {@link AbstractTeilnehmerNamenCheckinListeSheet}) liefern die Namen.
 	 */
 	protected Map<Integer, String> namenNachNummer() throws GenerateException {
 		return Map.of();

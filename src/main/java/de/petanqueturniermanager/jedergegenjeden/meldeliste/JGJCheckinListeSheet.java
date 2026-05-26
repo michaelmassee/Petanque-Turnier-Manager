@@ -4,14 +4,15 @@
 package de.petanqueturniermanager.jedergegenjeden.meldeliste;
 
 import java.util.List;
-import java.util.Map;
 
 import com.sun.star.sheet.XSpreadsheet;
 
-import de.petanqueturniermanager.basesheet.meldeliste.AbstractCheckinListeSheet;
+import de.petanqueturniermanager.basesheet.meldeliste.AbstractTeilnehmerNamenCheckinListeSheet;
+import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
@@ -21,8 +22,10 @@ import de.petanqueturniermanager.model.IMeldung;
 
 /**
  * Checkin-Liste des Jeder-gegen-Jeden-Systems: kompakte Druckansicht zum Abhaken der Teilnehmer.
+ * Die Namen werden – wie bei den übrigen Systemen – als Werte aus der Meldeliste zusammengesetzt
+ * (Formation/Teamname/Vereinsname); die Nummernquelle bleiben die aktiven Meldungen.
  */
-public class JGJCheckinListeSheet extends AbstractCheckinListeSheet {
+public class JGJCheckinListeSheet extends AbstractTeilnehmerNamenCheckinListeSheet {
 
 	private final JGJKonfigurationSheet konfigurationSheet;
 	private final JGJMeldeListeSheet_Update meldeliste;
@@ -44,22 +47,41 @@ public class JGJCheckinListeSheet extends AbstractCheckinListeSheet {
 	}
 
 	@Override
+	protected ISheet getMeldelisteSheet() {
+		return meldeliste;
+	}
+
+	@Override
+	protected int getMeldelisteErsteDatenZeile() {
+		return meldeliste.getErsteDatenZiele();
+	}
+
+	@Override
+	protected Formation getFormation() {
+		return konfigurationSheet.getMeldeListeFormation();
+	}
+
+	@Override
+	protected boolean istTeamnameAktiv() {
+		return konfigurationSheet.isMeldeListeTeamnameAnzeigen();
+	}
+
+	@Override
+	protected boolean istVereinsnameAktiv() {
+		return konfigurationSheet.isMeldeListeVereinsnameAnzeigen();
+	}
+
+	@Override
+	protected boolean istProTeam() {
+		return true;
+	}
+
+	/** Nummernquelle: nur die aktiven Meldungen (nicht alle Meldeliste-Zeilen). */
+	@Override
 	protected List<Integer> ladeNummern() throws GenerateException {
 		return meldeliste.getAlleMeldungen().getMeldungen().stream()
 				.map(IMeldung::getNr)
 				.toList();
-	}
-
-	@Override
-	protected Map<Integer, SortSchluessel> ladeSortDaten() throws GenerateException {
-		var meldungenSpalte = meldeliste.getMeldungenSpalte();
-		return leseNachnameSortDaten(meldeliste, meldungenSpalte.getSpielerNrSpalte(),
-				meldungenSpalte.getLetzteMeldungNameSpalte(), meldungenSpalte.getErsteDatenZiele());
-	}
-
-	@Override
-	protected String getNameFormula(String nrZelleAdresse) {
-		return meldeliste.formulaSverweisSpielernamen(nrZelleAdresse);
 	}
 
 	@Override

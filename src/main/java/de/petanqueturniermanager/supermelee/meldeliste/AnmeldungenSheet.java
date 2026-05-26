@@ -7,14 +7,15 @@ package de.petanqueturniermanager.supermelee.meldeliste;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.List;
-import java.util.Map;
 
 import com.sun.star.sheet.XSpreadsheet;
 
-import de.petanqueturniermanager.basesheet.meldeliste.AbstractCheckinListeSheet;
+import de.petanqueturniermanager.basesheet.meldeliste.AbstractTeilnehmerNamenCheckinListeSheet;
+import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
@@ -28,7 +29,7 @@ import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfiguratio
  * Checkin-Liste des Supermelee-Systems je Spieltag (früher "Anmeldungen").
  * Kompakte Druckansicht zum Abhaken der anwesenden Spieler, gespeist aus der Meldeliste.
  */
-public class AnmeldungenSheet extends AbstractCheckinListeSheet {
+public class AnmeldungenSheet extends AbstractTeilnehmerNamenCheckinListeSheet {
 
 	private final SuperMeleeKonfigurationSheet konfigurationSheet;
 	private final MeldeListeSheet_Update meldeliste;
@@ -64,23 +65,42 @@ public class AnmeldungenSheet extends AbstractCheckinListeSheet {
 	}
 
 	@Override
+	protected ISheet getMeldelisteSheet() {
+		return meldeliste;
+	}
+
+	@Override
+	protected int getMeldelisteErsteDatenZeile() {
+		return meldeliste.getMeldungenSpalte().getErsteDatenZiele();
+	}
+
+	@Override
+	protected Formation getFormation() {
+		return Formation.MELEE;
+	}
+
+	@Override
+	protected boolean istTeamnameAktiv() {
+		return false;
+	}
+
+	@Override
+	protected boolean istVereinsnameAktiv() {
+		return false;
+	}
+
+	@Override
+	protected boolean istProTeam() {
+		return false;
+	}
+
+	/** Nummernquelle: die Meldungen des aktiven Spieltags. */
+	@Override
 	protected List<Integer> ladeNummern() throws GenerateException {
 		processBoxinfo("processbox.spieltag.meldungen.einlesen", getSpielTag().getNr());
 		return meldeliste.getAlleMeldungen().getMeldungen().stream()
 				.map(IMeldung::getNr)
 				.toList();
-	}
-
-	@Override
-	protected Map<Integer, SortSchluessel> ladeSortDaten() throws GenerateException {
-		var meldungenSpalte = meldeliste.getMeldungenSpalte();
-		return leseNachnameSortDaten(meldeliste, meldungenSpalte.getSpielerNrSpalte(),
-				meldungenSpalte.getLetzteMeldungNameSpalte(), meldungenSpalte.getErsteDatenZiele());
-	}
-
-	@Override
-	protected String getNameFormula(String nrZelleAdresse) throws GenerateException {
-		return meldeliste.formulaSverweisSpielernamen(nrZelleAdresse);
 	}
 
 	@Override
