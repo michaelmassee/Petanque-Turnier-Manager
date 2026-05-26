@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+
+  <!-- Fensterrahmen -->
+  <rect x="6" y="12" width="52" height="40" rx="4" fill="#FFFFFF" stroke="#1F2937" stroke-width="2.5"/>
+
+  <!-- Sidebar-Panel rechts (Info-Blau) -->
+  <path d="M 40 13.25 L 53.75 13.25 A 2.75 2.75 0 0 1 56.5 16 L 56.5 48 A 2.75 2.75 0 0 1 53.75 50.75 L 40 50.75 Z" fill="#2563EB" stroke="#1F2937" stroke-width="1.5" stroke-linejoin="round"/>
+
+  <!-- Trennlinie Hauptbereich / Panel -->
+  <line x1="40" y1="12" x2="40" y2="52" stroke="#1F2937" stroke-width="2"/>
+
+  <!-- Inhaltszeilen im Hauptbereich -->
+  <line x1="12" y1="22" x2="34" y2="22" stroke="#D1D5DB" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="12" y1="30" x2="34" y2="30" stroke="#D1D5DB" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="12" y1="38" x2="28" y2="38" stroke="#D1D5DB" stroke-width="2.5" stroke-linecap="round"/>
+
+  <!-- Panel-Zeilen (weiß) -->
+  <line x1="44" y1="21" x2="52.5" y2="21" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/>
+  <line x1="44" y1="28" x2="52.5" y2="28" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/>
+  <line x1="44" y1="35" x2="52.5" y2="35" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/>
+
+</svg>

@@ -453,6 +453,38 @@
                     </prop>
                 </node>
                 <!-- ****************************************************************** -->
+                <!-- Trennlinie -->
+                <node oor:name="m26" oor:op="replace">
+                    <prop oor:name="URL" oor:type="xs:string">
+                        <value>private:separator</value>
+                    </prop>
+                </node>
+
+                <!-- ****************************************************************** -->
+                <!-- Schaltfläche: PétTurnMngr-Seitenleiste ein-/ausblenden (Toggle).
+                     .uno:SidebarDeck.<DeckId> ist ein eingebauter LO-Befehl, der das
+                     benannte Deck togglet (sfx2 SidebarController::OpenThenToggleDeck:
+                     sichtbar -> schließen, sonst öffnen). DeckId stammt aus
+                     UI/Sidebar.xcu (PetanqueTurnierManagerDeck). -->
+                <node oor:name="m27" oor:op="replace">
+                    <prop oor:name="URL" oor:type="xs:string">
+                        <value>.uno:SidebarDeck.PetanqueTurnierManagerDeck</value>
+                    </prop>
+                    <prop oor:name="Title">
+                        <value xml:lang="de">Seitenleiste ein-/ausblenden</value>
+                        <value xml:lang="en">Toggle Sidebar</value>
+                        <value xml:lang="es">Mostrar/ocultar barra lateral</value>
+                        <value xml:lang="fr">Afficher/masquer le volet latéral</value>
+                        <value xml:lang="nl">Zijbalk in-/uitschakelen</value>
+                    </prop>
+                    <prop oor:name="Target" oor:type="xs:string">
+                        <value>_self</value>
+                    </prop>
+                    <prop oor:name="Context" oor:type="xs:string">
+                        <value>com.sun.star.sheet.SpreadsheetDocument</value>
+                    </prop>
+                </node>
+                <!-- ****************************************************************** -->
 
             </node>
 
@@ -683,6 +715,20 @@
                     </prop>
                     <prop oor:name="ImageBigURL" oor:type="xs:string">
                         <value>%origin%/images/toolbar-druckvorschau.png</value>
+                    </prop>
+                </node>
+            </node>
+
+            <node oor:name="de.petanqueturniermanager.toolbar.sidebar" oor:op="replace">
+                <prop oor:name="URL" oor:type="xs:string">
+                    <value>.uno:SidebarDeck.PetanqueTurnierManagerDeck</value>
+                </prop>
+                <node oor:name="UserDefinedImages">
+                    <prop oor:name="ImageSmallURL" oor:type="xs:string">
+                        <value>%origin%/images/toolbar-sidebar.png</value>
+                    </prop>
+                    <prop oor:name="ImageBigURL" oor:type="xs:string">
+                        <value>%origin%/images/toolbar-sidebar.png</value>
                     </prop>
                 </node>
             </node>
