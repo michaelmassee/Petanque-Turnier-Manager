@@ -92,7 +92,11 @@
                 </node>
 
                 <!-- ****************************************************************** -->
-                <!-- Schaltfläche 4: Teilnehmer -->
+                <!-- Schaltfläche 4: Teilnehmer.
+                     ControlType=ToggleDropdownButton analog zum Checkin-Button (m3):
+                     Hauptklick = Teilnehmerliste öffnen; Dropdown-Pfeil = Sortierung
+                     (Nr/Name/Team) wählen. Dropdown-Einträge per "SetList" zur Laufzeit,
+                     Auswahl als dispatch-Argument "Text" (ProtocolHandler). -->
                 <node oor:name="m4" oor:op="replace">
                     <prop oor:name="URL" oor:type="xs:string">
                         <value>ptm:toolbar_teilnehmer</value>
@@ -103,6 +107,9 @@
                         <value xml:lang="es">Participantes</value>
                         <value xml:lang="fr">Participants</value>
                         <value xml:lang="nl">Deelnemers</value>
+                    </prop>
+                    <prop oor:name="ControlType" oor:type="xs:string">
+                        <value>ToggleDropdownButton</value>
                     </prop>
                     <prop oor:name="Target" oor:type="xs:string">
                         <value>_self</value>

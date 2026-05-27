@@ -1079,7 +1079,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				ToolbarAktionDispatcher.vorrundenRangliste(ws);
 				break;
 			case CMD_TOOLBAR_TEILNEHMER:
-				ToolbarAktionDispatcher.teilnehmer(ws);
+				behandleTeilnehmerDispatch(ws, args);
 				break;
 			case CMD_TOOLBAR_CHECKIN:
 				behandleCheckinDispatch(ws, args);
@@ -1436,40 +1436,51 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		// im Menü wirksam). Für übrige Befehle echte isEnabled-Bewertung.
 		boolean enabled = TOOLBAR_ONLY_CMDS.contains(command) || isEnabled(command, holeAktivesDokument());
 		postStatus(listener, url, enabled);
-		// Checkin-Button ist ein ToggleDropdownButton (siehe Addons_Z2_Toolbar.xcu).
-		// Seine Dropdown-Einträge (Sortierung nach Nr/Name/Team) werden hier per
-		// ControlCommand "SetList" an den Controller gemeldet.
+		// Checkin- und Teilnehmer-Button sind ToggleDropdownButtons (siehe
+		// Addons_Z2_Toolbar.xcu). Ihre Dropdown-Einträge (Sortierung nach Nr/Name/Team)
+		// werden hier per ControlCommand "SetList" an den Controller gemeldet.
 		if (CMD_TOOLBAR_CHECKIN.equals(command)) {
-			postCheckinDropdownListe(listener, url);
+			postSortDropdownListe(listener, url, CHECKIN_SORT_I18N_PREFIX);
+		} else if (CMD_TOOLBAR_TEILNEHMER.equals(command)) {
+			postSortDropdownListe(listener, url, TEILNEHMER_SORT_I18N_PREFIX);
 		}
 	}
 
 	// -------------------------------------------------------------------------
-	// Checkin-Toolbar-Dropdown (Sortierung der Checkin-Liste)
+	// Sortier-Dropdowns der Toolbar (Checkin-Liste / Teilnehmerliste)
+	//
+	// Beide Buttons (ControlType=ToggleDropdownButton) bieten im Dropdown die
+	// Sortierung nach Nr/Name/Team an. Der Mechanismus ist identisch und nur über
+	// den i18n-Label-Präfix und die Ziel-Dokument-Property parametrisiert.
 
-	/** Reihenfolge der Sortier-Einträge im Checkin-Dropdown. */
-	private static final List<TeilnehmerListeSortModus> CHECKIN_SORT_REIHENFOLGE = List.of(
+	/** i18n-Schlüssel-Präfix der Checkin-Sortier-Labels ({@code <prefix>nummer|name|teamname}). */
+	private static final String CHECKIN_SORT_I18N_PREFIX = "toolbar.checkin.sort.";
+	/** i18n-Schlüssel-Präfix der Teilnehmer-Sortier-Labels. */
+	private static final String TEILNEHMER_SORT_I18N_PREFIX = "toolbar.teilnehmer.sort.";
+
+	/** Reihenfolge der Sortier-Einträge in den Dropdowns. */
+	private static final List<TeilnehmerListeSortModus> SORT_DROPDOWN_REIHENFOLGE = List.of(
 			TeilnehmerListeSortModus.NUMMER,
 			TeilnehmerListeSortModus.NAME,
 			TeilnehmerListeSortModus.TEAMNAME);
 
-	/** Lokalisiertes Dropdown-Label für einen Sortier-Modus. */
-	private static String checkinSortLabel(TeilnehmerListeSortModus modus) {
-		return I18n.get(switch (modus) {
-			case NUMMER -> "toolbar.checkin.sort.nummer";
-			case NAME -> "toolbar.checkin.sort.name";
-			case TEAMNAME -> "toolbar.checkin.sort.teamname";
+	/** Lokalisiertes Dropdown-Label für einen Sortier-Modus unter dem gegebenen i18n-Präfix. */
+	private static String sortLabel(String i18nPrefix, TeilnehmerListeSortModus modus) {
+		return I18n.get(i18nPrefix + switch (modus) {
+			case NUMMER -> "nummer";
+			case NAME -> "name";
+			case TEAMNAME -> "teamname";
 		});
 	}
 
 	/**
-	 * Sendet die Dropdown-Liste des Checkin-Buttons via ControlCommand "SetList" an den
+	 * Sendet die Sortier-Dropdown-Liste via ControlCommand "SetList" an den
 	 * Toolbar-Controller (LO {@code ToggleButtonToolbarController}).
 	 */
-	private static void postCheckinDropdownListe(XStatusListener listener, URL url) {
+	private static void postSortDropdownListe(XStatusListener listener, URL url, String i18nPrefix) {
 		try {
-			String[] labels = CHECKIN_SORT_REIHENFOLGE.stream()
-					.map(ProtocolHandler::checkinSortLabel)
+			String[] labels = SORT_DROPDOWN_REIHENFOLGE.stream()
+					.map(modus -> sortLabel(i18nPrefix, modus))
 					.toArray(String[]::new);
 			com.sun.star.frame.ControlCommand setList = new com.sun.star.frame.ControlCommand();
 			setList.Command = "SetList";
@@ -1482,9 +1493,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			event.State = setList;
 			listener.statusChanged(event);
 		} catch (DisposedException e) {
-			logger.debug("postCheckinDropdownListe: Listener disposed");
+			logger.debug("postSortDropdownListe: Listener disposed");
 		} catch (Exception e) {
-			logger.warn("postCheckinDropdownListe fehlgeschlagen: {}", e.getMessage());
+			logger.warn("postSortDropdownListe fehlgeschlagen: {}", e.getMessage());
 		}
 	}
 
@@ -1495,19 +1506,39 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	 * erzeugt/aktualisiert, die ihren Modus aus eben dieser Property liest.
 	 */
 	private void behandleCheckinDispatch(WorkingSpreadsheet ws, PropertyValue[] args) throws Exception {
-		TeilnehmerListeSortModus modus = checkinSortModusAusArgs(args);
-		if (modus != null) {
-			// setStringPropertyOhneEvent: kein PropertiesChanged-TurnierEvent auf dem
-			// Main-Thread auslösen (vgl. RanglisteSignaturStore-Threading-Trap); die
-			// nachfolgende checkin()-Aktion baut die Liste ohnehin neu auf.
-			new DocumentPropertiesHelper(ws).setStringPropertyOhneEvent(
-					BasePropertiesSpalte.KONFIG_PROP_CHECKIN_LISTE_SORT_MODUS, modus.getKey());
-		}
+		persistiereSortModus(ws, args, CHECKIN_SORT_I18N_PREFIX,
+				BasePropertiesSpalte.KONFIG_PROP_CHECKIN_LISTE_SORT_MODUS);
 		ToolbarAktionDispatcher.checkin(ws);
 	}
 
+	/**
+	 * Behandelt einen Klick auf den Teilnehmer-Toolbar-Button. Analog zu
+	 * {@link #behandleCheckinDispatch(WorkingSpreadsheet, PropertyValue[])}, nur für die
+	 * Teilnehmerliste und deren Sortier-Property.
+	 */
+	private void behandleTeilnehmerDispatch(WorkingSpreadsheet ws, PropertyValue[] args) throws Exception {
+		persistiereSortModus(ws, args, TEILNEHMER_SORT_I18N_PREFIX,
+				BasePropertiesSpalte.KONFIG_PROP_TEILNEHMER_LISTE_SORT_MODUS);
+		ToolbarAktionDispatcher.teilnehmer(ws);
+	}
+
+	/**
+	 * Liest die Dropdown-Auswahl aus den Dispatch-Argumenten und persistiert den gewählten
+	 * Sortier-Modus in der angegebenen Dokument-Property. Bei Hauptklick ohne Auswahl passiert nichts.
+	 */
+	private void persistiereSortModus(WorkingSpreadsheet ws, PropertyValue[] args, String i18nPrefix,
+			String propertyKey) {
+		TeilnehmerListeSortModus modus = sortModusAusArgs(args, i18nPrefix);
+		if (modus != null) {
+			// setStringPropertyOhneEvent: kein PropertiesChanged-TurnierEvent auf dem
+			// Main-Thread auslösen (vgl. RanglisteSignaturStore-Threading-Trap); die
+			// nachfolgende Listen-Aktion baut die Liste ohnehin neu auf.
+			new DocumentPropertiesHelper(ws).setStringPropertyOhneEvent(propertyKey, modus.getKey());
+		}
+	}
+
 	/** Liest das {@code Text}-Argument des Dropdown-Klicks und mappt es auf einen Sortier-Modus (oder {@code null}). */
-	private static TeilnehmerListeSortModus checkinSortModusAusArgs(PropertyValue[] args) {
+	private static TeilnehmerListeSortModus sortModusAusArgs(PropertyValue[] args, String i18nPrefix) {
 		if (args == null) {
 			return null;
 		}
@@ -1521,8 +1552,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		if (text == null || text.isEmpty()) {
 			return null;
 		}
-		for (TeilnehmerListeSortModus modus : CHECKIN_SORT_REIHENFOLGE) {
-			if (checkinSortLabel(modus).equals(text)) {
+		for (TeilnehmerListeSortModus modus : SORT_DROPDOWN_REIHENFOLGE) {
+			if (sortLabel(i18nPrefix, modus).equals(text)) {
 				return modus;
 			}
 		}
