@@ -59,113 +59,8 @@
                 </node>
 
                 <!-- ****************************************************************** -->
-                <!-- Schaltfläche 3: Weiter (nächste Runde) -->
+                <!-- Schaltfläche 3: Checkin-Liste -->
                 <node oor:name="m3" oor:op="replace">
-                    <prop oor:name="URL" oor:type="xs:string">
-                        <value>ptm:toolbar_weiter</value>
-                    </prop>
-                    <prop oor:name="Title">
-                        <value xml:lang="de">Weiter</value>
-                        <value xml:lang="en">Next Round</value>
-                        <value xml:lang="es">Siguiente ronda</value>
-                        <value xml:lang="fr">Ronde suivante</value>
-                        <value xml:lang="nl">Volgende ronde</value>
-                    </prop>
-                    <prop oor:name="Target" oor:type="xs:string">
-                        <value>_self</value>
-                    </prop>
-                    <prop oor:name="Context" oor:type="xs:string">
-                        <value>com.sun.star.sheet.SpreadsheetDocument</value>
-                    </prop>
-                </node>
-
-                <!-- ****************************************************************** -->
-                <!-- Schaltfläche 4: Neu Auslosen -->
-                <node oor:name="m4" oor:op="replace">
-                    <prop oor:name="URL" oor:type="xs:string">
-                        <value>ptm:toolbar_neu_auslosen</value>
-                    </prop>
-                    <prop oor:name="Title">
-                        <value xml:lang="de">Neu Auslosen</value>
-                        <value xml:lang="en">Re-Draw</value>
-                        <value xml:lang="es">Nuevo sorteo</value>
-                        <value xml:lang="fr">Nouveau tirage</value>
-                        <value xml:lang="nl">Nieuw loten</value>
-                    </prop>
-                    <prop oor:name="Target" oor:type="xs:string">
-                        <value>_self</value>
-                    </prop>
-                    <prop oor:name="Context" oor:type="xs:string">
-                        <value>com.sun.star.sheet.SpreadsheetDocument</value>
-                    </prop>
-                </node>
-
-                <!-- ****************************************************************** -->
-                <!-- Schaltfläche 5: Abschlussphase -->
-                <node oor:name="m5" oor:op="replace">
-                    <prop oor:name="URL" oor:type="xs:string">
-                        <value>ptm:toolbar_abschluss</value>
-                    </prop>
-                    <prop oor:name="Title">
-                        <value xml:lang="de">Abschlussphase</value>
-                        <value xml:lang="en">Final Phase</value>
-                        <value xml:lang="es">Fase final</value>
-                        <value xml:lang="fr">Phase finale</value>
-                        <value xml:lang="nl">Slotfase</value>
-                    </prop>
-                    <prop oor:name="Target" oor:type="xs:string">
-                        <value>_self</value>
-                    </prop>
-                    <prop oor:name="Context" oor:type="xs:string">
-                        <value>com.sun.star.sheet.SpreadsheetDocument</value>
-                    </prop>
-                </node>
-
-                <!-- ****************************************************************** -->
-                <!-- Schaltfläche 6: Vorrunden Rangliste -->
-                <node oor:name="m6" oor:op="replace">
-                    <prop oor:name="URL" oor:type="xs:string">
-                        <value>ptm:toolbar_vorrunden_rangliste</value>
-                    </prop>
-                    <prop oor:name="Title">
-                        <value xml:lang="de">Vorrunden Rangliste</value>
-                        <value xml:lang="en">Preliminary Ranking</value>
-                        <value xml:lang="es">Clasificación preliminar</value>
-                        <value xml:lang="fr">Classement préliminaire</value>
-                        <value xml:lang="nl">Voorronde klassement</value>
-                    </prop>
-                    <prop oor:name="Target" oor:type="xs:string">
-                        <value>_self</value>
-                    </prop>
-                    <prop oor:name="Context" oor:type="xs:string">
-                        <value>com.sun.star.sheet.SpreadsheetDocument</value>
-                    </prop>
-                </node>
-
-                <!-- ****************************************************************** -->
-                <!-- Schaltfläche 7: Teilnehmer -->
-                <node oor:name="m7" oor:op="replace">
-                    <prop oor:name="URL" oor:type="xs:string">
-                        <value>ptm:toolbar_teilnehmer</value>
-                    </prop>
-                    <prop oor:name="Title">
-                        <value xml:lang="de">Teilnehmer</value>
-                        <value xml:lang="en">Participants</value>
-                        <value xml:lang="es">Participantes</value>
-                        <value xml:lang="fr">Participants</value>
-                        <value xml:lang="nl">Deelnemers</value>
-                    </prop>
-                    <prop oor:name="Target" oor:type="xs:string">
-                        <value>_self</value>
-                    </prop>
-                    <prop oor:name="Context" oor:type="xs:string">
-                        <value>com.sun.star.sheet.SpreadsheetDocument</value>
-                    </prop>
-                </node>
-
-                <!-- ****************************************************************** -->
-                <!-- Schaltfläche 8: Checkin-Liste -->
-                <node oor:name="m8" oor:op="replace">
                     <prop oor:name="URL" oor:type="xs:string">
                         <value>ptm:toolbar_checkin</value>
                     </prop>
@@ -185,8 +80,120 @@
                 </node>
 
                 <!-- ****************************************************************** -->
-                <!-- Schaltfläche 9: Turnier Konfiguration -->
+                <!-- Schaltfläche 4: Teilnehmer -->
+                <node oor:name="m4" oor:op="replace">
+                    <prop oor:name="URL" oor:type="xs:string">
+                        <value>ptm:toolbar_teilnehmer</value>
+                    </prop>
+                    <prop oor:name="Title">
+                        <value xml:lang="de">Teilnehmer</value>
+                        <value xml:lang="en">Participants</value>
+                        <value xml:lang="es">Participantes</value>
+                        <value xml:lang="fr">Participants</value>
+                        <value xml:lang="nl">Deelnemers</value>
+                    </prop>
+                    <prop oor:name="Target" oor:type="xs:string">
+                        <value>_self</value>
+                    </prop>
+                    <prop oor:name="Context" oor:type="xs:string">
+                        <value>com.sun.star.sheet.SpreadsheetDocument</value>
+                    </prop>
+                </node>
+                <!-- ****************************************************************** -->
+                <!-- Trennlinie -->
+                <node oor:name="m5" oor:op="replace">
+                    <prop oor:name="URL" oor:type="xs:string">
+                        <value>private:separator</value>
+                    </prop>
+                </node>
+
+                <!-- ****************************************************************** -->
+                <!-- Schaltfläche 6: Weiter (nächste Runde) -->
+                <node oor:name="m6" oor:op="replace">
+                    <prop oor:name="URL" oor:type="xs:string">
+                        <value>ptm:toolbar_weiter</value>
+                    </prop>
+                    <prop oor:name="Title">
+                        <value xml:lang="de">Weiter</value>
+                        <value xml:lang="en">Next Round</value>
+                        <value xml:lang="es">Siguiente ronda</value>
+                        <value xml:lang="fr">Ronde suivante</value>
+                        <value xml:lang="nl">Volgende ronde</value>
+                    </prop>
+                    <prop oor:name="Target" oor:type="xs:string">
+                        <value>_self</value>
+                    </prop>
+                    <prop oor:name="Context" oor:type="xs:string">
+                        <value>com.sun.star.sheet.SpreadsheetDocument</value>
+                    </prop>
+                </node>
+
+                <!-- ****************************************************************** -->
+                <!-- Schaltfläche 7: Neu Auslosen -->
+                <node oor:name="m7" oor:op="replace">
+                    <prop oor:name="URL" oor:type="xs:string">
+                        <value>ptm:toolbar_neu_auslosen</value>
+                    </prop>
+                    <prop oor:name="Title">
+                        <value xml:lang="de">Neu Auslosen</value>
+                        <value xml:lang="en">Re-Draw</value>
+                        <value xml:lang="es">Nuevo sorteo</value>
+                        <value xml:lang="fr">Nouveau tirage</value>
+                        <value xml:lang="nl">Nieuw loten</value>
+                    </prop>
+                    <prop oor:name="Target" oor:type="xs:string">
+                        <value>_self</value>
+                    </prop>
+                    <prop oor:name="Context" oor:type="xs:string">
+                        <value>com.sun.star.sheet.SpreadsheetDocument</value>
+                    </prop>
+                </node>
+
+                <!-- ****************************************************************** -->
+                <!-- Schaltfläche 8: Abschlussphase -->
+                <node oor:name="m8" oor:op="replace">
+                    <prop oor:name="URL" oor:type="xs:string">
+                        <value>ptm:toolbar_abschluss</value>
+                    </prop>
+                    <prop oor:name="Title">
+                        <value xml:lang="de">Abschlussphase</value>
+                        <value xml:lang="en">Final Phase</value>
+                        <value xml:lang="es">Fase final</value>
+                        <value xml:lang="fr">Phase finale</value>
+                        <value xml:lang="nl">Slotfase</value>
+                    </prop>
+                    <prop oor:name="Target" oor:type="xs:string">
+                        <value>_self</value>
+                    </prop>
+                    <prop oor:name="Context" oor:type="xs:string">
+                        <value>com.sun.star.sheet.SpreadsheetDocument</value>
+                    </prop>
+                </node>
+
+                <!-- ****************************************************************** -->
+                <!-- Schaltfläche 9: Vorrunden Rangliste -->
                 <node oor:name="m9" oor:op="replace">
+                    <prop oor:name="URL" oor:type="xs:string">
+                        <value>ptm:toolbar_vorrunden_rangliste</value>
+                    </prop>
+                    <prop oor:name="Title">
+                        <value xml:lang="de">Vorrunden Rangliste</value>
+                        <value xml:lang="en">Preliminary Ranking</value>
+                        <value xml:lang="es">Clasificación preliminar</value>
+                        <value xml:lang="fr">Classement préliminaire</value>
+                        <value xml:lang="nl">Voorronde klassement</value>
+                    </prop>
+                    <prop oor:name="Target" oor:type="xs:string">
+                        <value>_self</value>
+                    </prop>
+                    <prop oor:name="Context" oor:type="xs:string">
+                        <value>com.sun.star.sheet.SpreadsheetDocument</value>
+                    </prop>
+                </node>
+
+                <!-- ****************************************************************** -->
+                <!-- Schaltfläche 10: Turnier Konfiguration -->
+                <node oor:name="m10" oor:op="replace">
                     <prop oor:name="URL" oor:type="xs:string">
                         <value>ptm:konfiguration_turnier</value>
                     </prop>
@@ -207,15 +214,15 @@
 
                 <!-- ****************************************************************** -->
                 <!-- Trennlinie -->
-                <node oor:name="m10" oor:op="replace">
+                <node oor:name="m11" oor:op="replace">
                     <prop oor:name="URL" oor:type="xs:string">
                         <value>private:separator</value>
                     </prop>
                 </node>
 
                 <!-- ****************************************************************** -->
-                <!-- Schaltfläche 11: Turnier Modus (Kiosk-Toggle) -->
-                <node oor:name="m11" oor:op="replace">
+                <!-- Schaltfläche 12: Turnier Modus (Kiosk-Toggle) -->
+                <node oor:name="m12" oor:op="replace">
                     <prop oor:name="URL" oor:type="xs:string">
                         <value>ptm:turnier_modus</value>
                     </prop>
@@ -236,15 +243,15 @@
 
                 <!-- ****************************************************************** -->
                 <!-- Trennlinie -->
-                <node oor:name="m12" oor:op="replace">
+                <node oor:name="m13" oor:op="replace">
                     <prop oor:name="URL" oor:type="xs:string">
                         <value>private:separator</value>
                     </prop>
                 </node>
 
                 <!-- ****************************************************************** -->
-                <!-- Schaltfläche 13: Webserver starten -->
-                <node oor:name="m13" oor:op="replace">
+                <!-- Schaltfläche 14: Webserver starten -->
+                <node oor:name="m14" oor:op="replace">
                     <prop oor:name="URL" oor:type="xs:string">
                         <value>ptm:webserver_starten</value>
                     </prop>
@@ -264,8 +271,8 @@
                 </node>
 
                 <!-- ****************************************************************** -->
-                <!-- Schaltfläche 14: Webserver stoppen -->
-                <node oor:name="m14" oor:op="replace">
+                <!-- Schaltfläche 15: Webserver stoppen -->
+                <node oor:name="m15" oor:op="replace">
                     <prop oor:name="URL" oor:type="xs:string">
                         <value>ptm:webserver_stoppen</value>
                     </prop>
@@ -287,7 +294,7 @@
 
                 <!-- ****************************************************************** -->
                 <!-- Trennlinie -->
-                <node oor:name="m15" oor:op="replace">
+                <node oor:name="m16" oor:op="replace">
                     <prop oor:name="URL" oor:type="xs:string">
                         <value>private:separator</value>
                     </prop>
@@ -295,8 +302,8 @@
 
 
                 <!-- ****************************************************************** -->
-                <!-- Schaltfläche 16: Neues Turnier in neuer Datei -->
-                <node oor:name="m16" oor:op="replace">
+                <!-- Schaltfläche 17: Neues Turnier in neuer Datei -->
+                <node oor:name="m17" oor:op="replace">
                     <prop oor:name="URL" oor:type="xs:string">
                         <value>ptm:toolbar_neu_in_neuer_datei</value>
                     </prop>
@@ -316,7 +323,7 @@
                 </node>
 
 
-                <node oor:name="m17" oor:op="replace">
+                <node oor:name="m18" oor:op="replace">
                     <prop oor:name="URL" oor:type="xs:string">
                         <value>ptm:toolbar_oeffnen</value>
                     </prop>
@@ -333,7 +340,7 @@
 
 
                 </node>
-                <node oor:name="m18" oor:op="replace">
+                <node oor:name="m19" oor:op="replace">
                     <prop oor:name="CommandURL"><value>.uno:Save</value></prop>
 
                     <prop oor:name="URL" oor:type="xs:string">
@@ -350,7 +357,7 @@
                         <value>_self</value>
                     </prop>
                 </node>
-                <node oor:name="m19" oor:op="replace">
+                <node oor:name="m20" oor:op="replace">
                     <prop oor:name="URL" oor:type="xs:string">
                         <value>ptm:toolbar_drucken</value>
                     </prop>
@@ -365,7 +372,7 @@
                         <value>_self</value>
                     </prop>
                 </node>
-                <node oor:name="m20" oor:op="replace">
+                <node oor:name="m21" oor:op="replace">
                     <prop oor:name="URL" oor:type="xs:string">
                         <value>ptm:toolbar_druckvorschau</value>
                     </prop>
@@ -380,7 +387,7 @@
                         <value>_self</value>
                     </prop>
                 </node>
-                <node oor:name="m21" oor:op="replace">
+                <node oor:name="m22" oor:op="replace">
                     <prop oor:name="URL" oor:type="xs:string">
                         <value>.uno:ExportToPDF</value>
                     </prop>
@@ -398,7 +405,7 @@
 
                 <!-- ****************************************************************** -->
                 <!-- Druckbereich festlegen -->
-                <node oor:name="m22" oor:op="replace">
+                <node oor:name="m23" oor:op="replace">
                     <prop oor:name="URL" oor:type="xs:string">
                         <value>.uno:DefinePrintArea</value>
                     </prop>
@@ -416,7 +423,7 @@
 
                 <!-- ****************************************************************** -->
                 <!-- Trennlinie -->
-                <node oor:name="m23" oor:op="replace">
+                <node oor:name="m24" oor:op="replace">
                     <prop oor:name="URL" oor:type="xs:string">
                         <value>private:separator</value>
                     </prop>
@@ -425,7 +432,7 @@
                 <!-- ****************************************************************** -->
                 <!-- Spieler-DB: Meldungen in Meldeliste übernehmen
                      (nur aktiv wenn Turnier vorhanden) -->
-                <node oor:name="m24" oor:op="replace">
+                <node oor:name="m25" oor:op="replace">
                     <prop oor:name="URL" oor:type="xs:string">
                         <value>ptm:spielerdb_in_meldeliste</value>
                     </prop>
@@ -445,7 +452,7 @@
                 </node>
                 <!-- ****************************************************************** -->
                 <!-- Trennlinie -->
-                <node oor:name="m25" oor:op="replace">
+                <node oor:name="m26" oor:op="replace">
                     <prop oor:name="URL" oor:type="xs:string">
                         <value>private:separator</value>
                     </prop>
@@ -455,7 +462,7 @@
                 <!-- Schaltfläche: Verarbeitung abbrechen
                      (gleiche Aktion wie Menü "Verarbeitung abbrechen" und Stop-Button in der ProzessBox:
                       ruft SheetRunner.cancelRunner() über CMD_ABBRUCH) -->
-                <node oor:name="m26" oor:op="replace">
+                <node oor:name="m27" oor:op="replace">
                     <prop oor:name="URL" oor:type="xs:string">
                         <value>ptm:abbruch</value>
                     </prop>
@@ -475,7 +482,7 @@
                 </node>
                 <!-- ****************************************************************** -->
                 <!-- Trennlinie -->
-                <node oor:name="m27" oor:op="replace">
+                <node oor:name="m28" oor:op="replace">
                     <prop oor:name="URL" oor:type="xs:string">
                         <value>private:separator</value>
                     </prop>
@@ -489,7 +496,7 @@
                      Add-on-Toolbar wird die URL nur als .Complete dispatcht -> Argument
                      fehlt -> Klick verpufft. ProtocolHandler togglet das Deck stattdessen
                      direkt über die UNO-Sidebar-API (XController2.getSidebar). -->
-                <node oor:name="m28" oor:op="replace">
+                <node oor:name="m29" oor:op="replace">
                     <prop oor:name="URL" oor:type="xs:string">
                         <value>ptm:sidebar_toggle</value>
                     </prop>
