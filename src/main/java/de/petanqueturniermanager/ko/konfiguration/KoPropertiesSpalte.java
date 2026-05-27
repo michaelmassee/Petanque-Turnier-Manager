@@ -77,33 +77,33 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 
 	static {
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_LINKS)
-				.setDescription("config.desc.header.links").inSideBar());
+				.setDescription("config.desc.header.links"));
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_MITTE)
-				.setDescription("config.desc.header.mitte").inSideBar());
+				.setDescription("config.desc.header.mitte"));
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_RECHTS)
-				.setDescription("config.desc.header.rechts").inSideBar());
+				.setDescription("config.desc.header.rechts"));
 
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_MELDELISTE_FORMATION)
 				.setDefaultVal(Formation.DOUBLETTE.name())
 				.setDescription("config.desc.ko.formation"))
 				.addAuswahl(Formation.TETE.name(), Formation.TETE.getBezeichnung())
 				.addAuswahl(Formation.DOUBLETTE.name(), Formation.DOUBLETTE.getBezeichnung())
-				.addAuswahl(Formation.TRIPLETTE.name(), Formation.TRIPLETTE.getBezeichnung()).inSideBar());
+				.addAuswahl(Formation.TRIPLETTE.name(), Formation.TRIPLETTE.getBezeichnung()));
 
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_MELDELISTE_TEAMNAME)
 				.setDefaultVal("J").setDescription("config.desc.meldeliste.teamname"))
-				.addAuswahl("J", "Ja").addAuswahl("N", "Nein").inSideBar());
+				.addAuswahl("J", "Ja").addAuswahl("N", "Nein"));
 
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_MELDELISTE_VEREINSNAME)
 				.setDefaultVal("N").setDescription("config.desc.ko.vereinsname"))
-				.addAuswahl("J", "Ja").addAuswahl("N", "Nein").inSideBar());
+				.addAuswahl("J", "Ja").addAuswahl("N", "Nein"));
 
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty
 				.from(KONFIG_PROP_SPIELBAUM_TEAM_ANZEIGE)
 				.setDefaultVal(KoSpielbaumTeamAnzeige.NR.name())
 				.setDescription("config.desc.ko.spielbaum.team.anzeige"))
 				.addAuswahl(KoSpielbaumTeamAnzeige.NR.name(), "Teamnummer")
-				.addAuswahl(KoSpielbaumTeamAnzeige.NAME.name(), "Teamname").inSideBar());
+				.addAuswahl(KoSpielbaumTeamAnzeige.NAME.name(), "Teamname"));
 
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_SPIELBAUM_SPIELBAHN)
 				.setDefaultVal(SpielrundeSpielbahn.X.name())
@@ -111,29 +111,29 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 				.addAuswahl(SpielrundeSpielbahn.X.name(), "Keine Spalte")
 				.addAuswahl(SpielrundeSpielbahn.L.name(), "Leere Spalte")
 				.addAuswahl(SpielrundeSpielbahn.N.name(), "Durchnummerieren (1-n)")
-				.addAuswahl(SpielrundeSpielbahn.R.name(), "Zufällig vergeben").inSideBar());
+				.addAuswahl(SpielrundeSpielbahn.R.name(), "Zufällig vergeben"));
 
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_SPIELBAUM_PLATZ3)
 				.setDefaultVal("N")
 				.setDescription("config.desc.ko.spielbaum.platz3"))
-				.addAuswahl("J", "Ja").addAuswahl("N", "Nein").inSideBar());
+				.addAuswahl("J", "Ja").addAuswahl("N", "Nein"));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TAB_COLOR_KO_TURNIERBAUM)
 				.setDefaultVal(SheetTabFarben.KO_TURNIERBAUM)
 				.setDescription("config.desc.tab.farbe.ko.turnierbaum").tabFarbe());
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TURNIERBAUM_COLOR_HEADER)
-				.setDefaultVal(0x2544DD).setDescription("config.desc.ko.turnierbaum.header").inSideBar());
+				.setDefaultVal(0x2544DD).setDescription("config.desc.ko.turnierbaum.header"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TURNIERBAUM_COLOR_TEAM_A)
-				.setDefaultVal(0xDCEEFA).setDescription("config.desc.ko.turnierbaum.team.a").inSideBar());
+				.setDefaultVal(0xDCEEFA).setDescription("config.desc.ko.turnierbaum.team.a"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TURNIERBAUM_COLOR_TEAM_B)
-				.setDefaultVal(0xF0F7FF).setDescription("config.desc.ko.turnierbaum.team.b").inSideBar());
+				.setDefaultVal(0xF0F7FF).setDescription("config.desc.ko.turnierbaum.team.b"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TURNIERBAUM_COLOR_SIEGER)
-				.setDefaultVal(0xFFD700).setDescription("config.desc.ko.turnierbaum.sieger").inSideBar());
+				.setDefaultVal(0xFFD700).setDescription("config.desc.ko.turnierbaum.sieger"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TURNIERBAUM_COLOR_BAHN)
-				.setDefaultVal(0xEEEEEE).setDescription("config.desc.ko.turnierbaum.bahn").inSideBar());
+				.setDefaultVal(0xEEEEEE).setDescription("config.desc.ko.turnierbaum.bahn"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TURNIERBAUM_COLOR_DRITTE_PLATZ)
-				.setDefaultVal(0xCD7F32).setDescription("config.desc.ko.turnierbaum.dritte.platz").inSideBar());
+				.setDefaultVal(0xCD7F32).setDescription("config.desc.ko.turnierbaum.dritte.platz"));
 
 		KONFIG_PROPERTIES.add(buildGruppenGroesseProperty());
 	}
@@ -146,7 +146,7 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 			String s = val.toString();
 			prop.addAuswahl(s, s);
 		}
-		return (AuswahlConfigProperty) prop.inSideBar();
+		return prop;
 	}
 
 	/**
@@ -160,7 +160,7 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 				.setDefaultVal(KoSpielbaumTeamAnzeige.NR.name())
 				.setDescription("config.desc.ko.spielbaum.team.anzeige"))
 				.addAuswahl(KoSpielbaumTeamAnzeige.NR.name(), "Teamnummer")
-				.addAuswahl(KoSpielbaumTeamAnzeige.NAME.name(), "Teamname").inSideBar());
+				.addAuswahl(KoSpielbaumTeamAnzeige.NAME.name(), "Teamname"));
 
 		props.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_SPIELBAUM_SPIELBAHN)
 				.setDefaultVal(SpielrundeSpielbahn.X.name())
@@ -168,12 +168,12 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 				.addAuswahl(SpielrundeSpielbahn.X.name(), "Keine Spalte")
 				.addAuswahl(SpielrundeSpielbahn.L.name(), "Leere Spalte")
 				.addAuswahl(SpielrundeSpielbahn.N.name(), "Durchnummerieren (1-n)")
-				.addAuswahl(SpielrundeSpielbahn.R.name(), "Zufällig vergeben").inSideBar());
+				.addAuswahl(SpielrundeSpielbahn.R.name(), "Zufällig vergeben"));
 
 		props.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_SPIELBAUM_PLATZ3)
 				.setDefaultVal("N")
 				.setDescription("config.desc.ko.spielbaum.platz3"))
-				.addAuswahl("J", "Ja").addAuswahl("N", "Nein").inSideBar());
+				.addAuswahl("J", "Ja").addAuswahl("N", "Nein"));
 
 		props.add(buildGruppenGroesseProperty());
 	}
@@ -187,17 +187,17 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 				.setDefaultVal(SheetTabFarben.KO_TURNIERBAUM)
 				.setDescription("config.desc.tab.farbe.ko.turnierbaum").tabFarbe());
 		props.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TURNIERBAUM_COLOR_HEADER)
-				.setDefaultVal(0x2544DD).setDescription("config.desc.ko.turnierbaum.header").inSideBar());
+				.setDefaultVal(0x2544DD).setDescription("config.desc.ko.turnierbaum.header"));
 		props.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TURNIERBAUM_COLOR_TEAM_A)
-				.setDefaultVal(0xDCEEFA).setDescription("config.desc.ko.turnierbaum.team.a").inSideBar());
+				.setDefaultVal(0xDCEEFA).setDescription("config.desc.ko.turnierbaum.team.a"));
 		props.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TURNIERBAUM_COLOR_TEAM_B)
-				.setDefaultVal(0xF0F7FF).setDescription("config.desc.ko.turnierbaum.team.b").inSideBar());
+				.setDefaultVal(0xF0F7FF).setDescription("config.desc.ko.turnierbaum.team.b"));
 		props.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TURNIERBAUM_COLOR_SIEGER)
-				.setDefaultVal(0xFFD700).setDescription("config.desc.ko.turnierbaum.sieger").inSideBar());
+				.setDefaultVal(0xFFD700).setDescription("config.desc.ko.turnierbaum.sieger"));
 		props.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TURNIERBAUM_COLOR_BAHN)
-				.setDefaultVal(0xEEEEEE).setDescription("config.desc.ko.turnierbaum.bahn").inSideBar());
+				.setDefaultVal(0xEEEEEE).setDescription("config.desc.ko.turnierbaum.bahn"));
 		props.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TURNIERBAUM_COLOR_DRITTE_PLATZ)
-				.setDefaultVal(0xCD7F32).setDescription("config.desc.ko.turnierbaum.dritte.platz").inSideBar());
+				.setDefaultVal(0xCD7F32).setDescription("config.desc.ko.turnierbaum.dritte.platz"));
 	}
 
 	KoPropertiesSpalte(ISheet sheet) {

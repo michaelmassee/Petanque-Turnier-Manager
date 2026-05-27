@@ -18,8 +18,6 @@ public class ConfigProperty<V> {
 	private V defaultVal;
 	private String description;
 	private Object[] descriptionArgs;
-	private boolean inSideBar; // uebergang properties nach sidebar
-	private boolean inSideBarInfoPanel; // obere Panel, read only felder
 	private boolean tabFarbe; // Tab-Farben-Dialog
 	private boolean intern; // interner Zustand – nicht in Dialogen anzeigen
 	private Consumer<WorkingSpreadsheet> nachSpeichernAktion;
@@ -27,8 +25,6 @@ public class ConfigProperty<V> {
 	protected ConfigProperty(ConfigPropertyType type, String key) {
 		this.type = checkNotNull(type);
 		this.key = checkNotNull(key);
-		inSideBar = false;
-		inSideBarInfoPanel = false;
 		tabFarbe = false;
 		intern = false;
 	}
@@ -73,32 +69,6 @@ public class ConfigProperty<V> {
 
 	public ConfigPropertyType getType() {
 		return this.type;
-	}
-
-	public ConfigProperty<V> inSideBar() {
-		this.inSideBar = true;
-		return this;
-	}
-
-	public final boolean isInSideBar() {
-		return inSideBar;
-	}
-
-	/**
-	 * Übergang, beiden flags werden gesetzt<br>
-	 * inSideBarInfoPanel und inSideBar= true
-	 *
-	 * @return
-	 */
-
-	public ConfigProperty<V> inSideBarInfoPanel() {
-		this.inSideBarInfoPanel = true;
-		this.inSideBar = true;
-		return this;
-	}
-
-	public final boolean isInSideBarInfoPanel() {
-		return inSideBarInfoPanel;
 	}
 
 	public ConfigProperty<V> tabFarbe() {

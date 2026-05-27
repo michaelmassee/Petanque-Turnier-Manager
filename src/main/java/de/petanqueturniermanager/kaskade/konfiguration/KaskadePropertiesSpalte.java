@@ -44,38 +44,37 @@ public class KaskadePropertiesSpalte extends BasePropertiesSpalte {
 
     static {
         KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_LINKS)
-                .setDescription("config.desc.header.links").inSideBar());
+                .setDescription("config.desc.header.links"));
         KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_MITTE)
-                .setDescription("config.desc.header.mitte").inSideBar());
+                .setDescription("config.desc.header.mitte"));
         KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_RECHTS)
-                .setDescription("config.desc.header.rechts").inSideBar());
+                .setDescription("config.desc.header.rechts"));
 
         KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_MELDELISTE_FORMATION)
                 .setDefaultVal(Formation.DOUBLETTE.name())
                 .setDescription("config.desc.ko.formation"))
                 .addAuswahl(Formation.TETE.name(), Formation.TETE.getBezeichnung())
                 .addAuswahl(Formation.DOUBLETTE.name(), Formation.DOUBLETTE.getBezeichnung())
-                .addAuswahl(Formation.TRIPLETTE.name(), Formation.TRIPLETTE.getBezeichnung()).inSideBar());
+                .addAuswahl(Formation.TRIPLETTE.name(), Formation.TRIPLETTE.getBezeichnung()));
 
         KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_MELDELISTE_TEAMNAME)
                 .setDefaultVal("J").setDescription("config.desc.meldeliste.teamname"))
-                .addAuswahl("J", "Ja").addAuswahl("N", "Nein").inSideBar());
+                .addAuswahl("J", "Ja").addAuswahl("N", "Nein"));
 
         KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_MELDELISTE_VEREINSNAME)
                 .setDefaultVal("N").setDescription("config.desc.ko.vereinsname"))
-                .addAuswahl("J", "Ja").addAuswahl("N", "Nein").inSideBar());
+                .addAuswahl("J", "Ja").addAuswahl("N", "Nein"));
 
         KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_ANZAHL_KASKADEN)
                 .setDefaultVal("2")
-                .setDescription("config.desc.kaskade.anzahl.kaskaden")
-                .inSideBar())
+                .setDescription("config.desc.kaskade.anzahl.kaskaden"))
                 .addAuswahl("2", "ACBD")
                 .addAuswahl("3", "ACBDEFGH"));
 
         KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_FREISPIEL_PUNKTE_PLUS)
-                .setDefaultVal(13).setDescription("config.desc.freispiel.punkte.plus").inSideBar());
+                .setDefaultVal(13).setDescription("config.desc.freispiel.punkte.plus"));
         KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_FREISPIEL_PUNKTE_MINUS)
-                .setDefaultVal(7).setDescription("config.desc.freispiel.punkte.minus").inSideBar());
+                .setDefaultVal(7).setDescription("config.desc.freispiel.punkte.minus"));
 
         // Interne Zustandseigenschaften – weder in der Sidebar noch im Optionsdialog sichtbar
         KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_AKTIVE_KASKADENRUNDE)

@@ -42,19 +42,19 @@ public class PoulePropertiesSpalte extends BasePropertiesSpalte implements IPoul
                 .setDescription("config.desc.meldeliste.formation"))
                 .addAuswahl(Formation.TETE.name(), Formation.TETE.getBezeichnung())
                 .addAuswahl(Formation.DOUBLETTE.name(), Formation.DOUBLETTE.getBezeichnung())
-                .addAuswahl(Formation.TRIPLETTE.name(), Formation.TRIPLETTE.getBezeichnung()).inSideBar());
+                .addAuswahl(Formation.TRIPLETTE.name(), Formation.TRIPLETTE.getBezeichnung()));
 
         KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_MELDELISTE_TEAMNAME)
                 .setDefaultVal("J").setDescription("config.desc.meldeliste.teamname"))
-                .addAuswahl("J", "Ja").addAuswahl("N", "Nein").inSideBar());
+                .addAuswahl("J", "Ja").addAuswahl("N", "Nein"));
 
         KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_MELDELISTE_VEREINSNAME)
                 .setDefaultVal("N").setDescription("config.desc.schweizer.vereinsname"))
-                .addAuswahl("J", "Ja").addAuswahl("N", "Nein").inSideBar());
+                .addAuswahl("J", "Ja").addAuswahl("N", "Nein"));
 
         KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_SPIELPLAN_MIT_BAHN)
                 .setDefaultVal("N").setDescription("config.desc.poule.spielplan.mit.bahnspalte"))
-                .addAuswahl("J", "Ja").addAuswahl("N", "Nein").inSideBar());
+                .addAuswahl("J", "Ja").addAuswahl("N", "Nein"));
 
         KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TAB_COLOR_POULE_VORRUNDE)
                 .setDefaultVal(SheetTabFarben.POULE_VORRUNDE)

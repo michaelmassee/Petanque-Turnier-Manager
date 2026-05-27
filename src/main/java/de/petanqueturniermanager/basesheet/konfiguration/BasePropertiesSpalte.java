@@ -85,9 +85,9 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	protected static void ADDBaseProp(List<ConfigProperty<?>> KONFIG_PROPERTIES, boolean mitRangliste) {
 
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_FUSSZEILE_LINKS)
-				.setDescription("config.desc.footer.links").inSideBar());
+				.setDescription("config.desc.footer.links"));
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_FUSSZEILE_MITTE)
-				.setDescription("config.desc.footer.mitte").inSideBar());
+				.setDescription("config.desc.footer.mitte"));
 
 		// Hinweis: KONFIG_PROP_TURNIERLOGO_URL wird nicht mehr als Sidebar/Konfig-Sheet-Property
 		// gepflegt. Der Wert wird nun direkt im Dialog „Turnier Startseite" als
@@ -96,7 +96,6 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 		KONFIG_PROPERTIES.add(ConfigProperty.<Boolean>from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_EDITIERBARE_FELDER_HERVORHEBEN)
 				.setDefaultVal(true)
 				.setDescription("config.desc.editierbare.felder.hervorheben")
-				.inSideBar()
 				.mitNachSpeichernAktion(ws -> {
 					var calc = Lo.qi(com.sun.star.sheet.XCalculatable.class, ws.getWorkingSpreadsheetDocument());
 					if (calc != null) {
@@ -106,30 +105,28 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_MELDELISTE_COLOR_BACK_GERADE)
 				.setDefaultVal(DEFAULT_GERADE_BACK_COLOR)
-				.setDescription("config.desc.meldeliste.gerade").inSideBar());
+				.setDescription("config.desc.meldeliste.gerade"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_MELDELISTE_COLOR_BACK_UNGERADE)
 				.setDefaultVal(DEFAULT_UNGERADE_BACK_COLOR)
-				.setDescription("config.desc.meldeliste.ungerade").inSideBar());
+				.setDescription("config.desc.meldeliste.ungerade"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_MELDELISTE_COLOR_BACK_HEADER)
 				.setDefaultVal(DEFAULT_HEADER_BACK_COLOR)
-				.setDescription("config.desc.meldeliste.header").inSideBar());
+				.setDescription("config.desc.meldeliste.header"));
 
 		if (mitRangliste) {
 			KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_RANGLISTE_COLOR_BACK_GERADE)
-					.setDefaultVal(DEFAULT_GERADE_BACK_COLOR).setDescription("config.desc.rangliste.gerade")
-					.inSideBar());
+					.setDefaultVal(DEFAULT_GERADE_BACK_COLOR).setDescription("config.desc.rangliste.gerade"));
 			KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_RANGLISTE_COLOR_BACK_UNGERADE)
 					.setDefaultVal(DEFAULT_UNGERADE_BACK_COLOR)
-					.setDescription("config.desc.rangliste.ungerade").inSideBar());
+					.setDescription("config.desc.rangliste.ungerade"));
 			KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_RANGLISTE_COLOR_BACK_HEADER)
 					.setDefaultVal(DEFAULT_HEADER_BACK_COLOR)
-					.setDescription("config.desc.rangliste.header").inSideBar());
+					.setDescription("config.desc.rangliste.header"));
 		}
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_ANZ_TEILNEHMER_IN_SPALTE)
 				.setDefaultVal(DEFAULT_ANZ_TEILNEHMER_IN_SPALTE)
-				.setDescription("config.desc.teilnehmer.anzahl.spalte")
-				.inSideBar());
+				.setDescription("config.desc.teilnehmer.anzahl.spalte"));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TAB_COLOR_MELDELISTE)
 				.setDefaultVal(SheetTabFarben.MELDELISTE)
@@ -166,8 +163,7 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 				.setDescription("config.desc.checkin.sort.modus"))
 				.addAuswahl(TeilnehmerListeSortModus.NUMMER.getKey(), I18n.get("config.teilnehmer.sort.nummer"))
 				.addAuswahl(TeilnehmerListeSortModus.NAME.getKey(), I18n.get("config.teilnehmer.sort.name"))
-				.addAuswahl(TeilnehmerListeSortModus.TEAMNAME.getKey(), I18n.get("config.teilnehmer.sort.teamname"))
-				.inSideBar());
+				.addAuswahl(TeilnehmerListeSortModus.TEAMNAME.getKey(), I18n.get("config.teilnehmer.sort.teamname")));
 	}
 
 	/**
@@ -186,8 +182,7 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 				.setDescription("config.desc.teilnehmer.sort.modus"))
 				.addAuswahl(TeilnehmerListeSortModus.NUMMER.getKey(), I18n.get("config.teilnehmer.sort.nummer"))
 				.addAuswahl(TeilnehmerListeSortModus.NAME.getKey(), I18n.get("config.teilnehmer.sort.name"))
-				.addAuswahl(TeilnehmerListeSortModus.TEAMNAME.getKey(), I18n.get("config.teilnehmer.sort.teamname"))
-				.inSideBar());
+				.addAuswahl(TeilnehmerListeSortModus.TEAMNAME.getKey(), I18n.get("config.teilnehmer.sort.teamname")));
 	}
 
 	protected BasePropertiesSpalte(ISheet sheet) {

@@ -74,89 +74,87 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	static {
 
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_LINKS)
-				.setDescription("config.desc.header.links").inSideBar());
+				.setDescription("config.desc.header.links"));
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_MITTE)
-				.setDescription("config.desc.header.mitte").inSideBar());
+				.setDescription("config.desc.header.mitte"));
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_RECHTS)
-				.setDescription("config.desc.header.rechts").inSideBar());
+				.setDescription("config.desc.header.rechts"));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELTAG)
-				.setDefaultVal(1).setDescription("config.desc.supermelee.spieltag").inSideBarInfoPanel());
+				.setDefaultVal(1).setDescription("config.desc.supermelee.spieltag"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELRUNDE)
-				.setDefaultVal(1).setDescription("config.desc.supermelee.spielrunde").inSideBarInfoPanel());
+				.setDefaultVal(1).setDescription("config.desc.supermelee.spielrunde"));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELRUNDE_NEU_AUSLOSEN)
-				.setDefaultVal(0).setDescription("config.desc.supermelee.spielrunde.neu.auslosen").inSideBar());
+				.setDefaultVal(0).setDescription("config.desc.supermelee.spielrunde.neu.auslosen"));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELRUNDE_COLOR_BACK_GERADE)
 				.setDefaultVal(DEFAULT_GERADE_BACK_COLOR)
-				.setDescription("config.desc.spielrunde.gerade").inSideBar());
+				.setDescription("config.desc.spielrunde.gerade"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELRUNDE_COLOR_BACK_UNGERADE)
 				.setDefaultVal(DEFAULT_UNGERADE_BACK_COLOR)
-				.setDescription("config.desc.spielrunde.ungerade").inSideBar());
+				.setDescription("config.desc.spielrunde.ungerade"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELRUNDE_COLOR_BACK_HEADER)
-				.setDefaultVal(DEFAULT_HEADER_BACK_COLOR).setDescription("config.desc.spielrunde.header")
-				.inSideBar());
+				.setDefaultVal(DEFAULT_HEADER_BACK_COLOR).setDescription("config.desc.spielrunde.header"));
 
 		KONFIG_PROPERTIES.add(ConfigProperty
 				.from(ConfigPropertyType.COLOR, KONFIG_PROP_STREICH_SPIELTAG_COLOR_BACK_GERADE).setDefaultVal(14540253)
-				.setDescription("config.desc.supermelee.streich.gerade").inSideBar());
+				.setDescription("config.desc.supermelee.streich.gerade"));
 		KONFIG_PROPERTIES
 				.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_STREICH_SPIELTAG_COLOR_BACK_UNGERADE)
 						.setDefaultVal(Integer.valueOf("ccc8c1", 16))
-						.setDescription("config.desc.supermelee.streich.ungerade").inSideBar());
+						.setDescription("config.desc.supermelee.streich.ungerade"));
 
 		KONFIG_PROPERTIES
 				.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_RANGLISTE_NICHT_GESPIELTE_RND_PLUS)
-						.setDefaultVal(0).setDescription("config.desc.supermelee.nicht.gespielt.plus").inSideBar());
+						.setDefaultVal(0).setDescription("config.desc.supermelee.nicht.gespielt.plus"));
 		KONFIG_PROPERTIES
 				.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_RANGLISTE_NICHT_GESPIELTE_RND_MINUS)
-						.setDefaultVal(13).setDescription("config.desc.supermelee.nicht.gespielt.minus").inSideBar());
+						.setDefaultVal(13).setDescription("config.desc.supermelee.nicht.gespielt.minus"));
 
 		KONFIG_PROPERTIES
 				.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_NICHT_GESPIELT_COLOR_BACK_GERADE)
 						.setDefaultVal(Integer.valueOf("FFFF99", 16))
-						.setDescription("config.desc.supermelee.nicht.gespielt.farbe.gerade").inSideBar());
+						.setDescription("config.desc.supermelee.nicht.gespielt.farbe.gerade"));
 		KONFIG_PROPERTIES
 				.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_NICHT_GESPIELT_COLOR_BACK_UNGERADE)
 						.setDefaultVal(Integer.valueOf("FFE766", 16))
-						.setDescription("config.desc.supermelee.nicht.gespielt.farbe.ungerade").inSideBar());
+						.setDescription("config.desc.supermelee.nicht.gespielt.farbe.ungerade"));
 
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_SPIELRUNDE_SPIELBAHN)
 				.setDefaultVal(SpielrundeSpielbahn.X.name()).setDescription("config.desc.spielbahn"))
 				.addAuswahl(SpielrundeSpielbahn.X.name(), "Keine Spalte")
 				.addAuswahl(SpielrundeSpielbahn.L.name(), "Leere Spalte")
 				.addAuswahl(SpielrundeSpielbahn.N.name(), "Durchnummerieren (1-n)")
-				.addAuswahl(SpielrundeSpielbahn.R.name(), "Zufällig vergeben").inSideBar());
+				.addAuswahl(SpielrundeSpielbahn.R.name(), "Zufällig vergeben"));
 
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_SUPERMELEE_MODE)
 				.setDefaultVal(SuperMeleeMode.Triplette.getKey())
 				.setDescription("config.desc.supermelee.modus"))
 				.addAuswahl(SuperMeleeMode.Triplette.getKey(), "Triplette")
-				.addAuswahl(SuperMeleeMode.Doublette.getKey(), "Doublette").inSideBar());
+				.addAuswahl(SuperMeleeMode.Doublette.getKey(), "Doublette"));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_ANZ_GESPIELTE_SPIELTAGE)
 				.setDefaultVal(99)
-				.setDescription("config.desc.supermelee.anz.gespielte.spieltage")
-				.inSideBar());
+				.setDescription("config.desc.supermelee.anz.gespielte.spieltage"));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_ANZ_SPIELER_IN_SPALTE)
 				.setDefaultVal(MAX_ANZSPIELER_IN_SPALTE)
-				.setDescription("config.desc.supermelee.anz.spieler.spalte").inSideBar());
+				.setDescription("config.desc.supermelee.anz.spieler.spalte"));
 
 		KONFIG_PROPERTIES.add(
 				ConfigProperty.from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_SPIELRUNDE_1_HEADER).setDefaultVal(false)
-						.inSideBar().setDescription("config.desc.supermelee.spielrunde.1.header"));
+						.setDescription("config.desc.supermelee.spielrunde.1.header"));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_SPIELRUNDE_PLAN)
-				.setDefaultVal(false).inSideBar()
+				.setDefaultVal(false)
 				.setDescription("config.desc.supermelee.spielrunde.plan"));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_SETZ_POS).setDefaultVal(true)
-				.inSideBar().setDescription("config.desc.supermelee.setz.pos"));
+				.setDescription("config.desc.supermelee.setz.pos"));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_FRAGE_GLEICHE_PAARUNGEN)
-				.setDefaultVal(false).inSideBar().setDescription("config.desc.supermelee.gleiche.paarungen"));
+				.setDefaultVal(false).setDescription("config.desc.supermelee.gleiche.paarungen"));
 
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_ENDRANGLISTE_SORT_MODE)
 				.setDefaultVal(SuprMleEndranglisteSortMode.DEFAULT.getKey()).setDescription("config.desc.supermelee.endrangliste.sort.modus"))
@@ -164,7 +162,7 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 				.addAuswahl(SuprMleEndranglisteSortMode.ANZTAGE.getKey(), "Sp+,AnzTage,SpΔ,PktΔ,Pkt+"));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_SPIELTAGRANGLISTE_RUNDENSUMMEN)
-				.setDefaultVal(true).inSideBar()
+				.setDefaultVal(true)
 				.setDescription("config.desc.supermelee.spieltagrangliste.rundensummen"));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TAB_COLOR_SUPERMELEE_TEAM_PAARUNGEN)
@@ -174,8 +172,7 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 		// Spieltag Header
 		for (int spieltagcntr = 1; spieltagcntr <= SuperMeleeKonfigurationSheet.MAX_SPIELTAG; spieltagcntr++) {
 			KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(PROP_SPIELTAG_KOPFZEILE(spieltagcntr))
-					.setDefaultVal(spieltagcntr + ". Spieltag").setDescription("config.desc.supermelee.spieltag.kopfzeile", spieltagcntr)
-					.inSideBar());
+					.setDefaultVal(spieltagcntr + ". Spieltag").setDescription("config.desc.supermelee.spieltag.kopfzeile", spieltagcntr));
 		}
 	}
 
