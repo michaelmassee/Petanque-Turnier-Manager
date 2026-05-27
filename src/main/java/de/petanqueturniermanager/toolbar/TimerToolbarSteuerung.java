@@ -15,6 +15,7 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.comp.DocumentHelper;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.LoMainThread;
 import de.petanqueturniermanager.timer.TimerListener;
 import de.petanqueturniermanager.timer.TimerState;
 import de.petanqueturniermanager.timer.TimerZustand;
@@ -49,7 +50,11 @@ public final class TimerToolbarSteuerung implements TimerListener {
     @Override
     public void onChange(TimerState state) {
         if (state.zustand() == TimerZustand.LAEUFT) {
-            zeigeToolbarInAllenFrames();
+            // onChange feuert auf dem PTM-Timer-Executor-Thread (TimerManager.emittiere).
+            // requestElement()/showElement() sind VCL-Toolbar-Operationen und dürfen NICHT
+            // off-thread laufen – unter Windows korrumpiert das den Toolbar-Aufbau
+            // (vgl. LoMainThread-Doku, schwarze Icon-Flächen). Auf den Main-Thread marshallen.
+            LoMainThread.post(xContext, this::zeigeToolbarInAllenFrames);
         }
     }
 
