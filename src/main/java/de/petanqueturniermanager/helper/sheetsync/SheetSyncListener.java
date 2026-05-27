@@ -28,6 +28,8 @@ import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
+import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
+import de.petanqueturniermanager.comp.turnierevent.ITurnierEventListener;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.perflog.PerfLog;
@@ -48,8 +50,14 @@ import de.petanqueturniermanager.supermelee.SpielTagNr;
  * werden (Rangliste aus Meldeliste+Spielrunden, Teilnehmerliste aus Meldeliste, …).
  * <p>
  * Architekturregeln siehe {@code turniersysteme/RANGLISTE_LISTENER.md}.
+ * <p>
+ * Zusätzlich {@link ITurnierEventListener}: Ein {@code PropertiesChanged}-Event (z.B.
+ * Wechsel des Sortiermodus im Konfig-Dialog) ist nicht aus Sheet-Zellen ableitbar und
+ * löst daher keinen Tab-Wechsel/Fokus-Trigger aus. Reagiert der Listener auf das Event,
+ * wird – sofern das Ziel-Sheet gerade aktiv ist – sofort ein Hash-Check geplant; bei
+ * geänderter Signatur (Sortier-Zusatzkontext) folgt der Re-Sync live.
  */
-public final class SheetSyncListener implements IGlobalEventListener {
+public final class SheetSyncListener implements IGlobalEventListener, ITurnierEventListener {
 
     private static final Logger logger = LogManager.getLogger(SheetSyncListener.class);
 
@@ -295,6 +303,41 @@ public final class SheetSyncListener implements IGlobalEventListener {
         } catch (RuntimeException t) {
             logger.error("Fehler beim OnFocus-Sheet-Sync", t);
         }
+    }
+
+    // ── PropertiesChanged ───────────────────────────────────────────────────
+
+    /**
+     * Reagiert auf einen Konfig-Property-Wechsel: Ist das Ziel-Sheet im auslösenden
+     * Dokument gerade aktiv, wird ein Hash-Check geplant. Nur bei tatsächlich geänderter
+     * Signatur (z.B. neuer Sortier-Zusatzkontext) startet danach der Re-Sync – andere
+     * Property-Änderungen lassen den Hash unverändert und werden so übersprungen.
+     */
+    @Override
+    public void onPropertiesChanged(ITurnierEvent eventObj) {
+        try {
+            if (eventObj == null) return;
+            XSpreadsheetDocument xDoc = eventObj.getWorkingSpreadsheetDocument();
+            if (xDoc == null) return;
+            if (SheetRunner.isRunning()) return;
+            if (!istPassendesDokument(xDoc)) return;
+
+            XSpreadsheet aktuellesSheet = aktivesSheet(xDoc);
+            if (aktuellesSheet == null) return;
+            if (!zielSheetMatch.test(xDoc, aktuellesSheet)) return;
+
+            plane(xDoc, aktuellesSheet, "propertiesChanged");
+        } catch (RuntimeException t) {
+            logger.error("Fehler beim PropertiesChanged-Sheet-Sync", t);
+        }
+    }
+
+    private static XSpreadsheet aktivesSheet(XSpreadsheetDocument xDoc) {
+        XModel xModel = Lo.qi(XModel.class, xDoc);
+        if (xModel == null) return null;
+        XSpreadsheetView view = Lo.qi(XSpreadsheetView.class, xModel.getCurrentController());
+        if (view == null) return null;
+        return view.getActiveSheet();
     }
 
     // ── Plan + Check ────────────────────────────────────────────────────────
