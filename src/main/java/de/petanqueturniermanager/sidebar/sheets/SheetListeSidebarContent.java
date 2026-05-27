@@ -35,6 +35,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.LoMainThread;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
@@ -114,12 +115,34 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
         }
     };
 
+    /**
+     * Reagiert auf SheetRunner-Zustandswechsel.
+     * <p>
+     * {@code SheetRunner} ruft {@code benachrichtigeListener()} aus seinem Worker-Thread
+     * (siehe {@code SheetRunner.run()}). {@code listBoxAktivierungAktualisieren()} und vor
+     * allem {@code listeNeuAufbauen()} ({@code window.dispose()} + Fenster-Neuaufbau) sind
+     * VCL-Operationen und dürfen NICHT vom Worker-Thread laufen – das blockiert unter
+     * Windows die SolarMutex und friert LibreOffice komplett ein. Die UI-Arbeit wird daher
+     * via {@link LoMainThread#post} auf den LO-Main-Thread verschoben. Der Laufzustand wird
+     * im Worker-Thread erfasst (zum Benachrichtigungszeitpunkt korrekt), die Aktion erst
+     * danach auf dem Main-Thread ausgeführt.
+     */
     private final Runnable prozessZustandListener = () -> {
-        if (SheetRunner.isRunning()) {
-            listBoxAktivierungAktualisieren();
-        } else {
-            listeNeuAufbauen();
+        boolean laeuft = SheetRunner.isRunning();
+        var ws = getCurrentSpreadsheet();
+        if (ws == null) {
+            return;
         }
+        LoMainThread.post(ws.getxContext(), () -> {
+            if (getCurrentSpreadsheet() == null) {
+                return;
+            }
+            if (laeuft) {
+                listBoxAktivierungAktualisieren();
+            } else {
+                listeNeuAufbauen();
+            }
+        });
     };
 
     public SheetListeSidebarContent(WorkingSpreadsheet workingSpreadsheet, XWindow parentWindow,
