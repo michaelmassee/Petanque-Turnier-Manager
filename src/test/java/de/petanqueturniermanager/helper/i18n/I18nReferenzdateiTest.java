@@ -31,6 +31,11 @@ import org.junit.jupiter.api.Test;
  * (mindestens zwei punkt-getrennte Segmente aus Kleinbuchstaben/Ziffern), werden als potenzielle
  * Schlüssel behandelt. Damit werden sowohl direkte {@code I18n.get("key")}-Aufrufe als auch
  * Konstanten, Enum-Werte und andere indirekte Verwendungen erfasst.
+ * <p>
+ * <b>Präfix-Literale:</b> Schlüssel, die im Code dynamisch als {@code PRÄFIX + suffix} zusammengesetzt
+ * werden (z.B. {@code I18n.get("toolbar.checkin.sort." + modus)}), erscheinen nie als vollständiges
+ * Literal. Solche auf einen Punkt endenden Literale (z.B. {@code "toolbar.checkin.sort."}) werden
+ * separat erkannt; jeder Referenzschlüssel mit passendem Präfix gilt dann als genutzt.
  */
 class I18nReferenzdateiTest {
 
@@ -44,6 +49,14 @@ class I18nReferenzdateiTest {
      */
     private static final Pattern I18N_SCHLUESSEL_MUSTER = Pattern.compile(
             "\"([a-z][a-z0-9_]*(?:\\.[a-z0-9][a-z0-9_]*)+)\"");
+
+    /**
+     * Erkennt auf einen Punkt endende Präfix-Literale (z.B. {@code "toolbar.checkin.sort."}), die im
+     * Code zur Laufzeit mit einem Suffix zum vollständigen Schlüssel ergänzt werden. Das erfasste
+     * Präfix enthält den abschließenden Punkt.
+     */
+    private static final Pattern I18N_PRAEFIX_MUSTER = Pattern.compile(
+            "\"([a-z][a-z0-9_]*(?:\\.[a-z0-9][a-z0-9_]*)+\\.)\"");
 
     @Test
     void alleVerwendetenSchluesselSindInReferenzdatei() throws IOException {
@@ -105,19 +118,27 @@ class I18nReferenzdateiTest {
         }
 
         Set<String> gefunden = new TreeSet<>();
+        // Dynamisch zusammengesetzte Schlüssel (PRÄFIX + suffix) erscheinen nie als volles Literal;
+        // ihre Präfix-Literale werden hier gesammelt und anschließend zu Referenzschlüsseln aufgelöst.
+        Set<String> literalPraefixe = new TreeSet<>();
         SoftAssertions soft = new SoftAssertions();
         try (var stream = Files.walk(QUELL_ORDNER)) {
             stream.filter(p -> p.toString().endsWith(".java"))
                     .forEach(datei -> {
                         try {
-                            var matcher = I18N_SCHLUESSEL_MUSTER.matcher(
-                                    Files.readString(datei, StandardCharsets.UTF_8));
+                            String quelltext = Files.readString(datei, StandardCharsets.UTF_8);
+                            var matcher = I18N_SCHLUESSEL_MUSTER.matcher(quelltext);
                             while (matcher.find()) {
                                 String schluessel = matcher.group(1);
-                                boolean hatGueltigePraefix = gueltigePraefixe.stream()
-                                        .anyMatch(schluessel::startsWith);
-                                if (hatGueltigePraefix) {
+                                if (gueltigePraefixe.stream().anyMatch(schluessel::startsWith)) {
                                     gefunden.add(schluessel);
+                                }
+                            }
+                            var praefixMatcher = I18N_PRAEFIX_MUSTER.matcher(quelltext);
+                            while (praefixMatcher.find()) {
+                                String praefix = praefixMatcher.group(1);
+                                if (gueltigePraefixe.stream().anyMatch(praefix::startsWith)) {
+                                    literalPraefixe.add(praefix);
                                 }
                             }
                         } catch (IOException e) {
@@ -126,6 +147,11 @@ class I18nReferenzdateiTest {
                     });
         }
         soft.assertAll();
+
+        // Referenzschlüssel, die unter einem im Code gefundenen Präfix-Literal liegen, gelten als genutzt.
+        referenzKeys.stream()
+                .filter(key -> literalPraefixe.stream().anyMatch(key::startsWith))
+                .forEach(gefunden::add);
         return gefunden;
     }
 
