@@ -668,6 +668,18 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				frame == null ? "null" : System.identityHashCode(frame),
 				holeFrameTitle(frame));
 		StartupClock.logErstesVorkommen("dispatch:first", "ProtocolHandler.dispatch erster Aufruf (" + command + ")");
+		// Guard: In der Druckvorschau bleibt die Add-on-Toolbar (LO-Bug) fälschlich aktiviert.
+		// Ein Klick würde über erzeugeWorkingSpreadsheetFuerDispatch() ein WorkingSpreadsheet
+		// ohne XSpreadsheetView aufbauen → nachfolgende Sheet-/Dialog-Operationen crashen.
+		// Daher alle Befehle in der Vorschau blocken und den Nutzer informieren.
+		if (PetanqueTurnierMngrSingleton.isDruckvorschauAktiv()) {
+			logger.warn("dispatch: cmd='{}' in Druckvorschau ignoriert", command);
+			MessageBox.from(xContext, MessageBoxTypeEnum.INFO_OK)
+					.caption(I18n.get("druckvorschau.aktion.nicht.verfuegbar.titel"))
+					.message(I18n.get("druckvorschau.aktion.nicht.verfuegbar.info"))
+					.show();
+			return;
+		}
 		try {
 			// Timer-Befehle laufen nicht im SheetRunner-Thread → direkt behandeln
 			if (behandleTimerBefehl(command)) {
