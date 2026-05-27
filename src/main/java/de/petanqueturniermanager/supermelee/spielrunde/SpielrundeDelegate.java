@@ -197,8 +197,7 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 
 		SuperMeleePaarungenV2 paarungen = new SuperMeleePaarungenV2();
 		int urspruenglichMaxSpieltage = sheet.getMaxAnzGespielteSpieltage();
-		int anzVergangeneSpieltage = sheet.getSpielTag().getNr() - 1;
-		int effMaxSpieltage = Math.min(urspruenglichMaxSpieltage, anzVergangeneSpieltage);
+		int effMaxSpieltage = urspruenglichMaxSpieltage;
 		MeleeSpielRunde meleeSpielRunde = null;
 		AlgorithmenException lastEx = null;
 
