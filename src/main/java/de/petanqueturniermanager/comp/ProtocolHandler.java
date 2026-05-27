@@ -1440,9 +1440,11 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		// Addons_Z2_Toolbar.xcu). Ihre Dropdown-Einträge (Sortierung nach Nr/Name/Team)
 		// werden hier per ControlCommand "SetList" an den Controller gemeldet.
 		if (CMD_TOOLBAR_CHECKIN.equals(command)) {
-			postSortDropdownListe(listener, url, CHECKIN_SORT_I18N_PREFIX);
+			postSortDropdownListe(listener, url, CHECKIN_SORT_I18N_PREFIX,
+					BasePropertiesSpalte.KONFIG_PROP_CHECKIN_LISTE_SORT_MODUS);
 		} else if (CMD_TOOLBAR_TEILNEHMER.equals(command)) {
-			postSortDropdownListe(listener, url, TEILNEHMER_SORT_I18N_PREFIX);
+			postSortDropdownListe(listener, url, TEILNEHMER_SORT_I18N_PREFIX,
+					BasePropertiesSpalte.KONFIG_PROP_TEILNEHMER_LISTE_SORT_MODUS);
 		}
 	}
 
@@ -1475,9 +1477,11 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 
 	/**
 	 * Sendet die Sortier-Dropdown-Liste via ControlCommand "SetList" an den
-	 * Toolbar-Controller (LO {@code ToggleButtonToolbarController}).
+	 * Toolbar-Controller (LO {@code ToggleButtonToolbarController}) und markiert anschließend
+	 * per "CheckItemPos" den aktuell konfigurierten Sortier-Modus (Haken im Dropdown).
 	 */
-	private static void postSortDropdownListe(XStatusListener listener, URL url, String i18nPrefix) {
+	private static void postSortDropdownListe(XStatusListener listener, URL url, String i18nPrefix,
+			String propertyKey) {
 		try {
 			String[] labels = SORT_DROPDOWN_REIHENFOLGE.stream()
 					.map(modus -> sortLabel(i18nPrefix, modus))
@@ -1486,16 +1490,48 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			setList.Command = "SetList";
 			setList.Arguments = new com.sun.star.beans.NamedValue[] {
 					new com.sun.star.beans.NamedValue("List", labels) };
-			FeatureStateEvent event = new FeatureStateEvent();
-			event.FeatureURL = url;
-			event.IsEnabled = true;
-			event.Requery = false;
-			event.State = setList;
-			listener.statusChanged(event);
+			postControlCommand(listener, url, setList);
+
+			// SetList löscht im Controller die aktuelle Auswahl → ohne CheckItemPos bliebe
+			// der Haken weg. Index des konfigurierten Modus nachreichen.
+			int checkPos = SORT_DROPDOWN_REIHENFOLGE.indexOf(aktuellerSortModus(propertyKey));
+			if (checkPos >= 0) {
+				com.sun.star.frame.ControlCommand checkPosCmd = new com.sun.star.frame.ControlCommand();
+				checkPosCmd.Command = "CheckItemPos";
+				checkPosCmd.Arguments = new com.sun.star.beans.NamedValue[] {
+						new com.sun.star.beans.NamedValue("Pos", Integer.valueOf(checkPos)) };
+				postControlCommand(listener, url, checkPosCmd);
+			}
 		} catch (DisposedException e) {
 			logger.debug("postSortDropdownListe: Listener disposed");
 		} catch (Exception e) {
 			logger.warn("postSortDropdownListe fehlgeschlagen: {}", e.getMessage());
+		}
+	}
+
+	/** Sendet ein {@link com.sun.star.frame.ControlCommand} als {@code State} eines FeatureStateEvent an den Listener. */
+	private static void postControlCommand(XStatusListener listener, URL url,
+			com.sun.star.frame.ControlCommand command) {
+		FeatureStateEvent event = new FeatureStateEvent();
+		event.FeatureURL = url;
+		event.IsEnabled = true;
+		event.Requery = false;
+		event.State = command;
+		listener.statusChanged(event);
+	}
+
+	/** Liest den aktuell konfigurierten Sortier-Modus aus der Dokument-Property (Default {@link TeilnehmerListeSortModus#NAME}). */
+	private static TeilnehmerListeSortModus aktuellerSortModus(String propertyKey) {
+		try {
+			XSpreadsheetDocument doc = holeAktivesDokument();
+			if (doc == null) {
+				return TeilnehmerListeSortModus.NAME;
+			}
+			String key = new DocumentPropertiesHelper(doc).getStringProperty(propertyKey,
+					TeilnehmerListeSortModus.NAME.getKey());
+			return TeilnehmerListeSortModus.valueOf(key);
+		} catch (Exception e) {
+			return TeilnehmerListeSortModus.NAME;
 		}
 	}
 
