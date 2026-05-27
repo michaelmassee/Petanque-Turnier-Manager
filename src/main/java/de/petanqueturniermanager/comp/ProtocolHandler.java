@@ -43,6 +43,8 @@ import com.sun.star.util.URL;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
+import de.petanqueturniermanager.basesheet.meldeliste.TeilnehmerListeSortModus;
 import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
 import de.petanqueturniermanager.timer.TimerDialog;
 import de.petanqueturniermanager.timer.TimerManager;
@@ -1080,7 +1082,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				ToolbarAktionDispatcher.teilnehmer(ws);
 				break;
 			case CMD_TOOLBAR_CHECKIN:
-				ToolbarAktionDispatcher.checkin(ws);
+				behandleCheckinDispatch(ws, args);
 				break;
 			case CMD_TOOLBAR_NAECHSTER_SPIELTAG:
 				ToolbarAktionDispatcher.naechsterSpieltag(ws);
@@ -1434,6 +1436,97 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		// im Menü wirksam). Für übrige Befehle echte isEnabled-Bewertung.
 		boolean enabled = TOOLBAR_ONLY_CMDS.contains(command) || isEnabled(command, holeAktivesDokument());
 		postStatus(listener, url, enabled);
+		// Checkin-Button ist ein ToggleDropdownButton (siehe Addons_Z2_Toolbar.xcu).
+		// Seine Dropdown-Einträge (Sortierung nach Nr/Name/Team) werden hier per
+		// ControlCommand "SetList" an den Controller gemeldet.
+		if (CMD_TOOLBAR_CHECKIN.equals(command)) {
+			postCheckinDropdownListe(listener, url);
+		}
+	}
+
+	// -------------------------------------------------------------------------
+	// Checkin-Toolbar-Dropdown (Sortierung der Checkin-Liste)
+
+	/** Reihenfolge der Sortier-Einträge im Checkin-Dropdown. */
+	private static final List<TeilnehmerListeSortModus> CHECKIN_SORT_REIHENFOLGE = List.of(
+			TeilnehmerListeSortModus.NUMMER,
+			TeilnehmerListeSortModus.NAME,
+			TeilnehmerListeSortModus.TEAMNAME);
+
+	/** Lokalisiertes Dropdown-Label für einen Sortier-Modus. */
+	private static String checkinSortLabel(TeilnehmerListeSortModus modus) {
+		return I18n.get(switch (modus) {
+			case NUMMER -> "toolbar.checkin.sort.nummer";
+			case NAME -> "toolbar.checkin.sort.name";
+			case TEAMNAME -> "toolbar.checkin.sort.teamname";
+		});
+	}
+
+	/**
+	 * Sendet die Dropdown-Liste des Checkin-Buttons via ControlCommand "SetList" an den
+	 * Toolbar-Controller (LO {@code ToggleButtonToolbarController}).
+	 */
+	private static void postCheckinDropdownListe(XStatusListener listener, URL url) {
+		try {
+			String[] labels = CHECKIN_SORT_REIHENFOLGE.stream()
+					.map(ProtocolHandler::checkinSortLabel)
+					.toArray(String[]::new);
+			com.sun.star.frame.ControlCommand setList = new com.sun.star.frame.ControlCommand();
+			setList.Command = "SetList";
+			setList.Arguments = new com.sun.star.beans.NamedValue[] {
+					new com.sun.star.beans.NamedValue("List", labels) };
+			FeatureStateEvent event = new FeatureStateEvent();
+			event.FeatureURL = url;
+			event.IsEnabled = true;
+			event.Requery = false;
+			event.State = setList;
+			listener.statusChanged(event);
+		} catch (DisposedException e) {
+			logger.debug("postCheckinDropdownListe: Listener disposed");
+		} catch (Exception e) {
+			logger.warn("postCheckinDropdownListe fehlgeschlagen: {}", e.getMessage());
+		}
+	}
+
+	/**
+	 * Behandelt einen Klick auf den Checkin-Toolbar-Button. Kommt über das Dropdown ein
+	 * Sortier-Label im Argument {@code Text} herein, wird der Sortier-Modus als Dokument-
+	 * Property persistiert; danach (bzw. bei Hauptklick ohne Auswahl) wird die Checkin-Liste
+	 * erzeugt/aktualisiert, die ihren Modus aus eben dieser Property liest.
+	 */
+	private void behandleCheckinDispatch(WorkingSpreadsheet ws, PropertyValue[] args) throws Exception {
+		TeilnehmerListeSortModus modus = checkinSortModusAusArgs(args);
+		if (modus != null) {
+			// setStringPropertyOhneEvent: kein PropertiesChanged-TurnierEvent auf dem
+			// Main-Thread auslösen (vgl. RanglisteSignaturStore-Threading-Trap); die
+			// nachfolgende checkin()-Aktion baut die Liste ohnehin neu auf.
+			new DocumentPropertiesHelper(ws).setStringPropertyOhneEvent(
+					BasePropertiesSpalte.KONFIG_PROP_CHECKIN_LISTE_SORT_MODUS, modus.getKey());
+		}
+		ToolbarAktionDispatcher.checkin(ws);
+	}
+
+	/** Liest das {@code Text}-Argument des Dropdown-Klicks und mappt es auf einen Sortier-Modus (oder {@code null}). */
+	private static TeilnehmerListeSortModus checkinSortModusAusArgs(PropertyValue[] args) {
+		if (args == null) {
+			return null;
+		}
+		String text = null;
+		for (PropertyValue arg : args) {
+			if ("Text".equals(arg.Name) && arg.Value instanceof String s) {
+				text = s;
+				break;
+			}
+		}
+		if (text == null || text.isEmpty()) {
+			return null;
+		}
+		for (TeilnehmerListeSortModus modus : CHECKIN_SORT_REIHENFOLGE) {
+			if (checkinSortLabel(modus).equals(text)) {
+				return modus;
+			}
+		}
+		return null;
 	}
 
 	@Override

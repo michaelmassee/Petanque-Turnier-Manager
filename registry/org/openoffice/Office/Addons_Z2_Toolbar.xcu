@@ -59,7 +59,16 @@
                 </node>
 
                 <!-- ****************************************************************** -->
-                <!-- Schaltfläche 3: Checkin-Liste -->
+                <!-- Schaltfläche 3: Checkin-Liste.
+                     ControlType=ToggleDropdownButton macht daraus einen Button mit
+                     Dropdown-Pfeil (LO: framework/.../toolbarmerger.cxx ->
+                     ToggleButtonToolbarController, ToolBoxItemBits::DROPDOWN).
+                     Hauptklick = Checkin-Liste öffnen; Dropdown-Pfeil = Sortierung
+                     (Nr/Name/Team) wählen. Die Dropdown-Einträge stehen NICHT in der
+                     XCU – sie werden zur Laufzeit per ControlCommand "SetList" vom
+                     ProtocolHandler-Dispatch an den Controller geschickt
+                     (ComplexToolbarController::statusChanged). Die Auswahl kommt als
+                     Argument "Text" in dispatch() zurück. -->
                 <node oor:name="m3" oor:op="replace">
                     <prop oor:name="URL" oor:type="xs:string">
                         <value>ptm:toolbar_checkin</value>
@@ -70,6 +79,9 @@
                         <value xml:lang="es">Registro</value>
                         <value xml:lang="fr">Émargement</value>
                         <value xml:lang="nl">Check-in</value>
+                    </prop>
+                    <prop oor:name="ControlType" oor:type="xs:string">
+                        <value>ToggleDropdownButton</value>
                     </prop>
                     <prop oor:name="Target" oor:type="xs:string">
                         <value>_self</value>
