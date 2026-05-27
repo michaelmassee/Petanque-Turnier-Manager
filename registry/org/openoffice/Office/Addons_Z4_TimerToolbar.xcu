@@ -184,10 +184,10 @@
             </prop>
             <node oor:name="UserDefinedImages">
                 <prop oor:name="ImageSmallURL" oor:type="xs:string">
-                    <value>%origin%/images/toolbar-timer-start.png</value>
+                    <value>%origin%/images/16/toolbar-timer-start.png</value>
                 </prop>
                 <prop oor:name="ImageBigURL" oor:type="xs:string">
-                    <value>%origin%/images/toolbar-timer-start.png</value>
+                    <value>%origin%/images/24/toolbar-timer-start.png</value>
                 </prop>
             </node>
         </node>
@@ -198,10 +198,10 @@
             </prop>
             <node oor:name="UserDefinedImages">
                 <prop oor:name="ImageSmallURL" oor:type="xs:string">
-                    <value>%origin%/images/toolbar-timer-pause.png</value>
+                    <value>%origin%/images/16/toolbar-timer-pause.png</value>
                 </prop>
                 <prop oor:name="ImageBigURL" oor:type="xs:string">
-                    <value>%origin%/images/toolbar-timer-pause.png</value>
+                    <value>%origin%/images/24/toolbar-timer-pause.png</value>
                 </prop>
             </node>
         </node>
@@ -212,10 +212,10 @@
             </prop>
             <node oor:name="UserDefinedImages">
                 <prop oor:name="ImageSmallURL" oor:type="xs:string">
-                    <value>%origin%/images/toolbar-timer-stop.png</value>
+                    <value>%origin%/images/16/toolbar-timer-stop.png</value>
                 </prop>
                 <prop oor:name="ImageBigURL" oor:type="xs:string">
-                    <value>%origin%/images/toolbar-timer-stop.png</value>
+                    <value>%origin%/images/24/toolbar-timer-stop.png</value>
                 </prop>
             </node>
         </node>
@@ -227,10 +227,10 @@
             </prop>
             <node oor:name="UserDefinedImages">
                 <prop oor:name="ImageSmallURL" oor:type="xs:string">
-                    <value>%origin%/images/toolbar-timer-plus1.png</value>
+                    <value>%origin%/images/16/toolbar-timer-plus1.png</value>
                 </prop>
                 <prop oor:name="ImageBigURL" oor:type="xs:string">
-                    <value>%origin%/images/toolbar-timer-plus1.png</value>
+                    <value>%origin%/images/24/toolbar-timer-plus1.png</value>
                 </prop>
             </node>
         </node>
@@ -242,10 +242,10 @@
             </prop>
             <node oor:name="UserDefinedImages">
                 <prop oor:name="ImageSmallURL" oor:type="xs:string">
-                    <value>%origin%/images/toolbar-timer-minus1.png</value>
+                    <value>%origin%/images/16/toolbar-timer-minus1.png</value>
                 </prop>
                 <prop oor:name="ImageBigURL" oor:type="xs:string">
-                    <value>%origin%/images/toolbar-timer-minus1.png</value>
+                    <value>%origin%/images/24/toolbar-timer-minus1.png</value>
                 </prop>
             </node>
         </node>
@@ -256,10 +256,10 @@
             </prop>
             <node oor:name="UserDefinedImages">
                 <prop oor:name="ImageSmallURL" oor:type="xs:string">
-                    <value>%origin%/images/toolbar-timer-snooze.png</value>
+                    <value>%origin%/images/16/toolbar-timer-snooze.png</value>
                 </prop>
                 <prop oor:name="ImageBigURL" oor:type="xs:string">
-                    <value>%origin%/images/toolbar-timer-snooze.png</value>
+                    <value>%origin%/images/24/toolbar-timer-snooze.png</value>
                 </prop>
             </node>
         </node>

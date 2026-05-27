@@ -16,8 +16,10 @@ import com.sun.star.sheet.XSpreadsheetView;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.comp.DocumentHelper;
+import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
 import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.LoMainThread;
 import de.petanqueturniermanager.helper.perflog.PerfLog;
 
 /**
@@ -59,6 +61,35 @@ public class ToolbarAnzeigenListener implements IGlobalEventListener {
 
     // ---------------------------------------------------------------------------
     // Statische Hilfsmethode für den ProtocolHandler-Konstruktor
+
+    /**
+     * Wie {@link #zeigeToolbarInAllenFrames(XComponentContext)}, aber auf den LO-Main-Thread
+     * <em>verzögert</em> via {@code com.sun.star.awt.AsyncCallback} gepostet.
+     * <p>
+     * Hintergrund: Der {@code ProtocolHandler}-Konstruktor (und {@code onViewCreated}) kann
+     * <em>innerhalb</em> von LibreOffices laufendem {@code FillToolbar()} ausgeführt werden.
+     * Ein synchroner {@code showElement()}/{@code requestElement()} stößt dann re-entrant einen
+     * zweiten Toolbar-Aufbau an, dessen Buttons noch nicht aufgelöste Images haben → unter
+     * Windows beim Calc-Start sichtbar als schwarze Icon-Flächen. Das Posten stellt sicher, dass
+     * der Aufbau erst <em>nach</em> dem laufenden Fill auf dem Main-Thread läuft – nie re-entrant.
+     * <p>
+     * Der Druckvorschau-Guard wird zum Ausführungszeitpunkt erneut geprüft, da sich der Zustand
+     * zwischen Post und Ausführung geändert haben kann.
+     */
+    public static void zeigeToolbarInAllenFramesVerzoegert(XComponentContext xContext) {
+        if (PetanqueTurnierMngrSingleton.isDruckvorschauAktiv()) {
+            logger.debug("zeigeToolbarInAllenFramesVerzoegert: Druckvorschau aktiv – übersprungen");
+            return;
+        }
+        LoMainThread.post(xContext, () -> {
+            // Guard zum Ausführungszeitpunkt erneut prüfen – Zustand kann sich seit dem Post
+            // geändert haben (z.B. Wechsel in die Druckvorschau).
+            if (PetanqueTurnierMngrSingleton.isDruckvorschauAktiv()) {
+                return;
+            }
+            zeigeToolbarInAllenFrames(xContext);
+        });
+    }
 
     /**
      * Zeigt die Symbolleiste in allen aktuell offenen Frames, die ein Calc-Dokument enthalten.

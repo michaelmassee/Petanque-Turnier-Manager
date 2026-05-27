@@ -503,10 +503,10 @@
                 </prop>
                 <node oor:name="UserDefinedImages">
                     <prop oor:name="ImageSmallURL" oor:type="xs:string">
-                        <value>%origin%/images/toolbar-start.png</value>
+                        <value>%origin%/images/16/toolbar-start.png</value>
                     </prop>
                     <prop oor:name="ImageBigURL" oor:type="xs:string">
-                        <value>%origin%/images/toolbar-start.png</value>
+                        <value>%origin%/images/24/toolbar-start.png</value>
                     </prop>
                 </node>
             </node>
@@ -517,10 +517,10 @@
                 </prop>
                 <node oor:name="UserDefinedImages">
                     <prop oor:name="ImageSmallURL" oor:type="xs:string">
-                        <value>%origin%/images/toolbar-weiter.png</value>
+                        <value>%origin%/images/16/toolbar-weiter.png</value>
                     </prop>
                     <prop oor:name="ImageBigURL" oor:type="xs:string">
-                        <value>%origin%/images/toolbar-weiter.png</value>
+                        <value>%origin%/images/24/toolbar-weiter.png</value>
                     </prop>
                 </node>
             </node>
@@ -531,10 +531,10 @@
                 </prop>
                 <node oor:name="UserDefinedImages">
                     <prop oor:name="ImageSmallURL" oor:type="xs:string">
-                        <value>%origin%/images/toolbar-neu-auslosen.png</value>
+                        <value>%origin%/images/16/toolbar-neu-auslosen.png</value>
                     </prop>
                     <prop oor:name="ImageBigURL" oor:type="xs:string">
-                        <value>%origin%/images/toolbar-neu-auslosen.png</value>
+                        <value>%origin%/images/24/toolbar-neu-auslosen.png</value>
                     </prop>
                 </node>
             </node>
@@ -545,10 +545,10 @@
                 </prop>
                 <node oor:name="UserDefinedImages">
                     <prop oor:name="ImageSmallURL" oor:type="xs:string">
-                        <value>%origin%/images/toolbar-abschluss.png</value>
+                        <value>%origin%/images/16/toolbar-abschluss.png</value>
                     </prop>
                     <prop oor:name="ImageBigURL" oor:type="xs:string">
-                        <value>%origin%/images/toolbar-abschluss.png</value>
+                        <value>%origin%/images/24/toolbar-abschluss.png</value>
                     </prop>
                 </node>
             </node>
@@ -559,10 +559,10 @@
                 </prop>
                 <node oor:name="UserDefinedImages">
                     <prop oor:name="ImageSmallURL" oor:type="xs:string">
-                        <value>%origin%/images/toolbar-vorrunden-rangliste.png</value>
+                        <value>%origin%/images/16/toolbar-vorrunden-rangliste.png</value>
                     </prop>
                     <prop oor:name="ImageBigURL" oor:type="xs:string">
-                        <value>%origin%/images/toolbar-vorrunden-rangliste.png</value>
+                        <value>%origin%/images/24/toolbar-vorrunden-rangliste.png</value>
                     </prop>
                 </node>
             </node>
@@ -573,10 +573,10 @@
                 </prop>
                 <node oor:name="UserDefinedImages">
                     <prop oor:name="ImageSmallURL" oor:type="xs:string">
-                        <value>%origin%/images/toolbar-teilnehmer.png</value>
+                        <value>%origin%/images/16/toolbar-teilnehmer.png</value>
                     </prop>
                     <prop oor:name="ImageBigURL" oor:type="xs:string">
-                        <value>%origin%/images/toolbar-teilnehmer.png</value>
+                        <value>%origin%/images/24/toolbar-teilnehmer.png</value>
                     </prop>
                 </node>
             </node>
@@ -587,10 +587,10 @@
                 </prop>
                 <node oor:name="UserDefinedImages">
                     <prop oor:name="ImageSmallURL" oor:type="xs:string">
-                        <value>%origin%/images/toolbar-konfiguration.png</value>
+                        <value>%origin%/images/16/toolbar-konfiguration.png</value>
                     </prop>
                     <prop oor:name="ImageBigURL" oor:type="xs:string">
-                        <value>%origin%/images/toolbar-konfiguration.png</value>
+                        <value>%origin%/images/24/toolbar-konfiguration.png</value>
                     </prop>
                 </node>
             </node>
@@ -601,10 +601,10 @@
                 </prop>
                 <node oor:name="UserDefinedImages">
                     <prop oor:name="ImageSmallURL" oor:type="xs:string">
-                        <value>%origin%/images/toolbar-turnier-modus.png</value>
+                        <value>%origin%/images/16/toolbar-turnier-modus.png</value>
                     </prop>
                     <prop oor:name="ImageBigURL" oor:type="xs:string">
-                        <value>%origin%/images/toolbar-turnier-modus.png</value>
+                        <value>%origin%/images/24/toolbar-turnier-modus.png</value>
                     </prop>
                 </node>
             </node>
@@ -615,10 +615,10 @@
                 </prop>
                 <node oor:name="UserDefinedImages">
                     <prop oor:name="ImageSmallURL" oor:type="xs:string">
-                        <value>%origin%/images/toolbar-webserver-starten.png</value>
+                        <value>%origin%/images/16/toolbar-webserver-starten.png</value>
                     </prop>
                     <prop oor:name="ImageBigURL" oor:type="xs:string">
-                        <value>%origin%/images/toolbar-webserver-starten.png</value>
+                        <value>%origin%/images/24/toolbar-webserver-starten.png</value>
                     </prop>
                 </node>
             </node>
@@ -629,10 +629,10 @@
                 </prop>
                 <node oor:name="UserDefinedImages">
                     <prop oor:name="ImageSmallURL" oor:type="xs:string">
-                        <value>%origin%/images/toolbar-webserver-stoppen.png</value>
+                        <value>%origin%/images/16/toolbar-webserver-stoppen.png</value>
                     </prop>
                     <prop oor:name="ImageBigURL" oor:type="xs:string">
-                        <value>%origin%/images/toolbar-webserver-stoppen.png</value>
+                        <value>%origin%/images/24/toolbar-webserver-stoppen.png</value>
                     </prop>
                 </node>
             </node>
@@ -643,10 +643,10 @@
                 </prop>
                 <node oor:name="UserDefinedImages">
                     <prop oor:name="ImageSmallURL" oor:type="xs:string">
-                        <value>%origin%/images/toolbar-oeffnen.png</value>
+                        <value>%origin%/images/16/toolbar-oeffnen.png</value>
                     </prop>
                     <prop oor:name="ImageBigURL" oor:type="xs:string">
-                        <value>%origin%/images/toolbar-oeffnen.png</value>
+                        <value>%origin%/images/24/toolbar-oeffnen.png</value>
                     </prop>
                 </node>
             </node>
@@ -657,10 +657,10 @@
                 </prop>
                 <node oor:name="UserDefinedImages">
                     <prop oor:name="ImageSmallURL" oor:type="xs:string">
-                        <value>%origin%/images/toolbar-neu-in-neuer-datei.png</value>
+                        <value>%origin%/images/16/toolbar-neu-in-neuer-datei.png</value>
                     </prop>
                     <prop oor:name="ImageBigURL" oor:type="xs:string">
-                        <value>%origin%/images/toolbar-neu-in-neuer-datei.png</value>
+                        <value>%origin%/images/24/toolbar-neu-in-neuer-datei.png</value>
                     </prop>
                 </node>
             </node>
@@ -671,10 +671,10 @@
                 </prop>
                 <node oor:name="UserDefinedImages">
                     <prop oor:name="ImageSmallURL" oor:type="xs:string">
-                        <value>%origin%/images/toolbar-drucken.png</value>
+                        <value>%origin%/images/16/toolbar-drucken.png</value>
                     </prop>
                     <prop oor:name="ImageBigURL" oor:type="xs:string">
-                        <value>%origin%/images/toolbar-drucken.png</value>
+                        <value>%origin%/images/24/toolbar-drucken.png</value>
                     </prop>
                 </node>
             </node>
@@ -685,10 +685,10 @@
                 </prop>
                 <node oor:name="UserDefinedImages">
                     <prop oor:name="ImageSmallURL" oor:type="xs:string">
-                        <value>%origin%/images/toolbar-spielerdb-meldungen.png</value>
+                        <value>%origin%/images/16/toolbar-spielerdb-meldungen.png</value>
                     </prop>
                     <prop oor:name="ImageBigURL" oor:type="xs:string">
-                        <value>%origin%/images/toolbar-spielerdb-meldungen.png</value>
+                        <value>%origin%/images/24/toolbar-spielerdb-meldungen.png</value>
                     </prop>
                 </node>
             </node>
@@ -699,10 +699,10 @@
                 </prop>
                 <node oor:name="UserDefinedImages">
                     <prop oor:name="ImageSmallURL" oor:type="xs:string">
-                        <value>%origin%/images/toolbar-abbruch.png</value>
+                        <value>%origin%/images/16/toolbar-abbruch.png</value>
                     </prop>
                     <prop oor:name="ImageBigURL" oor:type="xs:string">
-                        <value>%origin%/images/toolbar-abbruch.png</value>
+                        <value>%origin%/images/24/toolbar-abbruch.png</value>
                     </prop>
                 </node>
             </node>
@@ -713,10 +713,10 @@
                 </prop>
                 <node oor:name="UserDefinedImages">
                     <prop oor:name="ImageSmallURL" oor:type="xs:string">
-                        <value>%origin%/images/toolbar-druckvorschau.png</value>
+                        <value>%origin%/images/16/toolbar-druckvorschau.png</value>
                     </prop>
                     <prop oor:name="ImageBigURL" oor:type="xs:string">
-                        <value>%origin%/images/toolbar-druckvorschau.png</value>
+                        <value>%origin%/images/24/toolbar-druckvorschau.png</value>
                     </prop>
                 </node>
             </node>
@@ -727,10 +727,10 @@
                 </prop>
                 <node oor:name="UserDefinedImages">
                     <prop oor:name="ImageSmallURL" oor:type="xs:string">
-                        <value>%origin%/images/toolbar-sidebar.png</value>
+                        <value>%origin%/images/16/toolbar-sidebar.png</value>
                     </prop>
                     <prop oor:name="ImageBigURL" oor:type="xs:string">
-                        <value>%origin%/images/toolbar-sidebar.png</value>
+                        <value>%origin%/images/24/toolbar-sidebar.png</value>
                     </prop>
                 </node>
             </node>

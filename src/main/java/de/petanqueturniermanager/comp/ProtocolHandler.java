@@ -56,6 +56,7 @@ import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEventListener;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.LoMainThread;
 import de.petanqueturniermanager.helper.perflog.PerfLog;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
@@ -392,14 +393,18 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		// nach dem Druckvorschau-Exit neu aufgebaut wird. showElement()/requestElement() in
 		// diesem Moment erzeugen Re-Entranz in LO → SIGSEGV. Daher: überspringen wenn Preview aktiv.
 		if (!PetanqueTurnierMngrSingleton.isDruckvorschauAktiv()) {
-			ToolbarAnzeigenListener.zeigeToolbarInAllenFrames(xContext);
+			// Verzögert auf den Main-Thread posten: der ctor kann re-entrant innerhalb von
+			// LO's FillToolbar() laufen – ein synchroner Aufbau verursacht dann schwarze
+			// Icon-Flächen (Windows, Calc-Start). Siehe ToolbarAnzeigenListener.
+			ToolbarAnzeigenListener.zeigeToolbarInAllenFramesVerzoegert(xContext);
 			long tNachToolbar = System.nanoTime();
-			PerfLog.log(logger, "[STARTUP-TIMING] ProtocolHandler-ctor ToolbarAnzeigenListener.zeigeToolbarInAllenFrames: {} ms",
+			PerfLog.log(logger, "[STARTUP-TIMING] ProtocolHandler-ctor Toolbar-Anzeige (verzögert gepostet): {} ms",
 					(tNachToolbar - t) / 1_000_000L);
 			t = tNachToolbar;
-			SpieltagToolbarSteuerung.aktualisiereInAllenFrames(xContext);
+			// Ebenfalls verzögert posten: gleiches Re-Entranz-Fenster wie die Haupt-Toolbar.
+			LoMainThread.post(xContext, () -> SpieltagToolbarSteuerung.aktualisiereInAllenFrames(xContext));
 			long tNachSpieltag = System.nanoTime();
-			PerfLog.log(logger, "[STARTUP-TIMING] ProtocolHandler-ctor SpieltagToolbarSteuerung.aktualisiereInAllenFrames: {} ms",
+			PerfLog.log(logger, "[STARTUP-TIMING] ProtocolHandler-ctor Spieltag-Toolbar (verzögert gepostet): {} ms",
 					(tNachSpieltag - t) / 1_000_000L);
 			t = tNachSpieltag;
 		} else {
@@ -497,17 +502,11 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 							logger.trace("[FOKUS-TRACE] onViewCreated: DRUCKVORSCHAU_AKTIV={}", istDruckvorschau);
 						}
 						if (!istDruckvorschau) {
-							// EXPERIMENT: Toolbar-Rebind nach View-Wechsel triggern.
-							// Hypothese: requestElement(TOOLBAR_URL) auf XLayoutManager
-							// veranlasst LO die Toolbar-Controller (und damit XStatusListener)
-							// neu zu erzeugen. Wenn das funktioniert, sehen wir nach diesem
-							// Aufruf einen Schwall neuer addStatusListener-Logs.
-							// Wenn nicht – kein Schaden (showElement ist idempotent).
-							logger.trace("[FOKUS-TRACE] onViewCreated: EXPERIMENT requestElement Toolbar-Rebind beginnt");
-							long tBefore = System.nanoTime();
-							ToolbarAnzeigenListener.zeigeToolbarInAllenFrames(xContext);
-							long dauerMs = (System.nanoTime() - tBefore) / 1_000_000L;
-							logger.trace("[FOKUS-TRACE] onViewCreated: EXPERIMENT zeigeToolbarInAllenFrames dauer={} ms", dauerMs);
+							// Toolbar-Rebind nach View-Wechsel anstoßen. Verzögert auf den
+							// Main-Thread posten (nie re-entrant in ein laufendes FillToolbar),
+							// damit die Toolbar-Controller/XStatusListener sauber neu erzeugt
+							// werden, ohne schwarze Icon-Flächen.
+							ToolbarAnzeigenListener.zeigeToolbarInAllenFramesVerzoegert(xContext);
 							notifyAllListeners();
 						}
 					} catch (Exception e) {

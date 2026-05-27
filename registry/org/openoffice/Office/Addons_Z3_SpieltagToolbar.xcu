@@ -81,10 +81,10 @@
                 </prop>
                 <node oor:name="UserDefinedImages">
                     <prop oor:name="ImageSmallURL" oor:type="xs:string">
-                        <value>%origin%/images/toolbar-naechster-spieltag.png</value>
+                        <value>%origin%/images/16/toolbar-naechster-spieltag.png</value>
                     </prop>
                     <prop oor:name="ImageBigURL" oor:type="xs:string">
-                        <value>%origin%/images/toolbar-naechster-spieltag.png</value>
+                        <value>%origin%/images/24/toolbar-naechster-spieltag.png</value>
                     </prop>
                 </node>
             </node>
@@ -95,10 +95,10 @@
                 </prop>
                 <node oor:name="UserDefinedImages">
                     <prop oor:name="ImageSmallURL" oor:type="xs:string">
-                        <value>%origin%/images/toolbar-gesamtrangliste.png</value>
+                        <value>%origin%/images/16/toolbar-gesamtrangliste.png</value>
                     </prop>
                     <prop oor:name="ImageBigURL" oor:type="xs:string">
-                        <value>%origin%/images/toolbar-gesamtrangliste.png</value>
+                        <value>%origin%/images/24/toolbar-gesamtrangliste.png</value>
                     </prop>
                 </node>
             </node>

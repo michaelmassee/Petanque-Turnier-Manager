@@ -294,11 +294,18 @@ tasks.register('buildOXT', Zip) {
         into 'registry/org/openoffice/Office/UI/images'
     }
 
-    // Toolbar-Icons: %origin% in Addons_Z2_Toolbar.xcu ist relativ zur XCU-Datei,
+    // Toolbar-Icons: %origin% in den Addons_Z*_*.xcu ist relativ zur XCU-Datei,
     // daher müssen die Bilder auch unter registry/org/openoffice/Office/images/ liegen.
-    from('images') {
+    // Passgenaue Größen ausliefern (16px für ImageSmallURL, 24px für ImageBigURL),
+    // damit LibreOffice die Icons NICHT zur Toolbar-Fill-Zeit herunterskalieren muss
+    // (Skalierung großer PNGs verursachte unter Windows beim Start schwarze Icon-Flächen).
+    from('images/icons/png/16') {
         include 'toolbar-*.png'
-        into 'registry/org/openoffice/Office/images'
+        into 'registry/org/openoffice/Office/images/16'
+    }
+    from('images/icons/png/24') {
+        include 'toolbar-*.png'
+        into 'registry/org/openoffice/Office/images/24'
     }
 
     // Runtime dependencies (libs)
