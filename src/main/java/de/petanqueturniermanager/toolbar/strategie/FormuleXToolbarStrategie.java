@@ -38,11 +38,6 @@ public class FormuleXToolbarStrategie implements ITurnierSystemToolbarStrategie 
     }
 
     @Override
-    public boolean hatCheckin() {
-        return true;
-    }
-
-    @Override
     public void checkin(WorkingSpreadsheet ws) throws Exception {
         new FormuleXCheckinListeSheet(ws).testTurnierVorhanden().backUpDocument().start();
     }

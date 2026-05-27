@@ -33,11 +33,6 @@ public class MaastrichterToolbarStrategie implements ITurnierSystemToolbarStrate
     }
 
     @Override
-    public boolean hatCheckin() {
-        return true;
-    }
-
-    @Override
     public void checkin(WorkingSpreadsheet ws) throws Exception {
         new MaastrichterCheckinListeSheet(ws).testTurnierVorhanden().backUpDocument().start();
     }

@@ -34,11 +34,6 @@ public class SchweizerToolbarStrategie implements ITurnierSystemToolbarStrategie
     }
 
     @Override
-    public boolean hatCheckin() {
-        return true;
-    }
-
-    @Override
     public void checkin(WorkingSpreadsheet ws) throws Exception {
         new SchweizerCheckinListeSheet(ws).testTurnierVorhanden().backUpDocument().start();
     }

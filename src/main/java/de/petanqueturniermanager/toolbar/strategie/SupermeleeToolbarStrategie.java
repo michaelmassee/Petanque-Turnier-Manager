@@ -36,11 +36,6 @@ public class SupermeleeToolbarStrategie implements ITurnierSystemToolbarStrategi
     }
 
     @Override
-    public boolean hatCheckin() {
-        return true;
-    }
-
-    @Override
     public void checkin(WorkingSpreadsheet ws) throws Exception {
         new AnmeldungenSheet(ws).testTurnierVorhanden().backUpDocument().start();
     }

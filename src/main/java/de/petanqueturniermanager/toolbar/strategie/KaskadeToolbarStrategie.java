@@ -39,11 +39,6 @@ public class KaskadeToolbarStrategie implements ITurnierSystemToolbarStrategie {
     }
 
     @Override
-    public boolean hatCheckin() {
-        return true;
-    }
-
-    @Override
     public void checkin(WorkingSpreadsheet ws) throws Exception {
         new KaskadeCheckinListeSheet(ws).testTurnierVorhanden().backUpDocument().start();
     }

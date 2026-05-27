@@ -35,11 +35,6 @@ public class JGJToolbarStrategie implements ITurnierSystemToolbarStrategie {
     }
 
     @Override
-    public boolean hatCheckin() {
-        return true;
-    }
-
-    @Override
     public void checkin(WorkingSpreadsheet ws) throws Exception {
         new JGJCheckinListeSheet(ws).testTurnierVorhanden().backUpDocument().start();
     }

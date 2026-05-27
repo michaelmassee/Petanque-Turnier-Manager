@@ -1669,8 +1669,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_TOOLBAR_WEITER                         -> ts != TurnierSystem.KEIN;
 			case CMD_TOOLBAR_VORRUNDEN_RANGLISTE,
 				 CMD_TOOLBAR_TEILNEHMER                     -> ts != TurnierSystem.KEIN && ts != TurnierSystem.LIGA;
-			case CMD_TOOLBAR_CHECKIN -> ts != TurnierSystem.KEIN
-					&& TurnierSystemToolbarStrategieRegistry.get(ts).hatCheckin();
+			// Checkin bewusst NICHT systemabhängig deaktivieren (LO-Toolbar-Bug bei enable/disable):
+			// immer klickbar, Systeme ohne Checkin zeigen beim Klick eine Hinweis-Meldung (Fallback-Strategie).
+			case CMD_TOOLBAR_CHECKIN                        -> ts != TurnierSystem.KEIN;
 			case CMD_TOOLBAR_NEU_AUSLOSEN -> ts != TurnierSystem.KEIN
 					&& TurnierSystemToolbarStrategieRegistry.get(ts).hatNeuAuslosen();
 			case CMD_TOOLBAR_ABSCHLUSS    -> ts != TurnierSystem.KEIN
