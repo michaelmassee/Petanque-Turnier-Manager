@@ -196,8 +196,15 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 		}
 
 		SuperMeleePaarungenV2 paarungen = new SuperMeleePaarungenV2();
-		int urspruenglichMaxSpieltage = sheet.getMaxAnzGespielteSpieltage();
-		int effMaxSpieltage = urspruenglichMaxSpieltage;
+		// Den konfigurierten Wert auf die tatsächlich vorhandenen vergangenen Spieltage deckeln:
+		// mehr zu berücksichtigen ist wirkungslos (gespieltenRundenEinlesenMitLimit floored ohnehin),
+		// erzeugt aber im Lockerungs-Loop zahlreiche identische, erneut scheiternde Auslosungsversuche.
+		// Wichtig: Der Write-Back unten vergleicht gegen diesen gedeckelten Startwert, nicht gegen den
+		// rohen Config-Wert – sonst würde an frühen Spieltagen bereits der erfolgreiche Erstversuch
+		// einen (zu kleinen) Wert in die Konfiguration zurückschreiben.
+		int anzVergangeneSpieltage = Math.max(0, sheet.getSpielTag().getNr() - 1);
+		int startMaxSpieltage = Math.min(sheet.getMaxAnzGespielteSpieltage(), anzVergangeneSpieltage);
+		int effMaxSpieltage = startMaxSpieltage;
 		MeleeSpielRunde meleeSpielRunde = null;
 		AlgorithmenException lastEx = null;
 
@@ -258,11 +265,11 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 			randomFallbackAktiv = true;
 		}
 
-		if (!randomFallbackAktiv && effMaxSpieltage < urspruenglichMaxSpieltage) {
+		if (!randomFallbackAktiv && effMaxSpieltage < startMaxSpieltage) {
 			logger.info("Auslosung erfolgreich nach Lockerung: maxAnzGespielteSpieltage {} → {}",
-					urspruenglichMaxSpieltage, effMaxSpieltage);
+					startMaxSpieltage, effMaxSpieltage);
 			sheet.processBoxinfo("processbox.spielrunde.lockerung.uebernommen",
-					urspruenglichMaxSpieltage, effMaxSpieltage);
+					startMaxSpieltage, effMaxSpieltage);
 			konfigurationSheet.setMaxAnzGespielteSpieltage(effMaxSpieltage);
 		}
 
