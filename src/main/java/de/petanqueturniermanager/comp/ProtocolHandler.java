@@ -1808,7 +1808,12 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		}
 		var ctx = SHARED_CONTEXT;
 		if (ctx != null) {
-			SpieltagToolbarSteuerung.aktualisiereInAllenFrames(ctx);
+			// notifyAllListeners() feuert aus Fremd-Threads (SheetRunner, TimerManager,
+			// TurnierEvent, ReleaseUpdateService, GlobalEventListener). aktualisiereInAllenFrames
+			// ruft requestElement()/showElement() (VCL-Toolbar-Ops) – diese MÜSSEN auf dem
+			// LO-Main-Thread laufen, sonst reißt die Off-Thread-Mutation den Fokus weg und ein
+			// offenes Menü schließt sich (vgl. CLAUDE.md, analog Fix 8e3eb41e für TimerToolbarSteuerung).
+			LoMainThread.post(ctx, () -> SpieltagToolbarSteuerung.aktualisiereInAllenFrames(ctx));
 		}
 		long dauerMs = (System.nanoTime() - startNs) / 1_000_000L;
 		logger.trace("[FOKUS-TRACE] notifyAllListeners #{} ENDE listenerAnzahl={} dauerMs={}",
