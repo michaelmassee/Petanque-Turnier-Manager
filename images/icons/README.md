@@ -42,19 +42,20 @@ Die einheitliche Stoppuhr macht die Gruppe in der Toolbar sofort als zusammengeh
 | m5 Abschlussphase | `ptm:toolbar_abschluss` | `toolbar-abschluss.png` |
 | m6 Vorrunden Rangliste | `ptm:toolbar_vorrunden_rangliste` | `toolbar-vorrunden-rangliste.png` |
 | m7 Teilnehmer | `ptm:toolbar_teilnehmer` | `toolbar-teilnehmer.png` |
-| m8 Turnier Konfiguration | `ptm:konfiguration_turnier` | `toolbar-konfiguration.png` |
-| m10 Turnieransicht (Kiosk) | `ptm:turnier_modus` | `toolbar-turnier-modus.png` |
-| m12 Webserver starten | `ptm:webserver_starten` | `toolbar-webserver-starten.png` |
-| m13 Webserver stoppen | `ptm:webserver_stoppen` | `toolbar-webserver-stoppen.png` |
-| m15 Neues Turnier in neuer Datei | `ptm:toolbar_neu_in_neuer_datei` | `toolbar-neu-in-neuer-datei.png` |
-| m16 Öffnen | `ptm:toolbar_oeffnen` | `toolbar-oeffnen.png` |
-| m17 Speichern | `.uno:Save` | *LibreOffice-Standard, nicht eigenes Icon* |
-| m18 Drucken | `ptm:toolbar_drucken` | `toolbar-drucken.png` |
-| m19 Druckvorschau | `ptm:toolbar_druckvorschau` | `toolbar-druckvorschau.png` |
-| m20 Als PDF exportieren | `.uno:ExportToPDF` | *LibreOffice-Standard* |
-| m21 Druckbereich | `.uno:DefinePrintArea` | *LibreOffice-Standard* |
-| m23 Spieler-DB → Meldungen | `ptm:spielerdb_in_meldeliste` | `toolbar-spielerdb-meldungen.png` |
-| m25 Verarbeitung abbrechen | `ptm:abbruch` | `toolbar-abbruch.png` |
+| m8 Checkin | `ptm:toolbar_checkin` | `toolbar-checkin.png` |
+| m9 Turnier Konfiguration | `ptm:konfiguration_turnier` | `toolbar-konfiguration.png` |
+| m11 Turnieransicht (Kiosk) | `ptm:turnier_modus` | `toolbar-turnier-modus.png` |
+| m13 Webserver starten | `ptm:webserver_starten` | `toolbar-webserver-starten.png` |
+| m14 Webserver stoppen | `ptm:webserver_stoppen` | `toolbar-webserver-stoppen.png` |
+| m16 Neues Turnier in neuer Datei | `ptm:toolbar_neu_in_neuer_datei` | `toolbar-neu-in-neuer-datei.png` |
+| m17 Öffnen | `ptm:toolbar_oeffnen` | `toolbar-oeffnen.png` |
+| m18 Speichern | `.uno:Save` | *LibreOffice-Standard, nicht eigenes Icon* |
+| m19 Drucken | `ptm:toolbar_drucken` | `toolbar-drucken.png` |
+| m20 Druckvorschau | `ptm:toolbar_druckvorschau` | `toolbar-druckvorschau.png` |
+| m21 Als PDF exportieren | `.uno:ExportToPDF` | *LibreOffice-Standard* |
+| m22 Druckbereich | `.uno:DefinePrintArea` | *LibreOffice-Standard* |
+| m24 Spieler-DB → Meldungen | `ptm:spielerdb_in_meldeliste` | `toolbar-spielerdb-meldungen.png` |
+| m26 Verarbeitung abbrechen | `ptm:abbruch` | `toolbar-abbruch.png` |
 
 ### Spieltag-Toolbar (`Addons_Z3_SpieltagToolbar.xcu`)
 

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+
+  <!-- Klemmbrett / Anwesenheitsliste -->
+  <rect x="14" y="10" width="36" height="46" rx="3" fill="#FFFFFF" stroke="#1F2937" stroke-width="1.5"/>
+  <rect x="26" y="6" width="12" height="7" rx="2" fill="#9CA3AF" stroke="#1F2937" stroke-width="1.5"/>
+  <!-- Zeilen mit abgehakten Teilnehmern -->
+  <path d="M 19 22 l 3 3 l 5 -6" fill="none" stroke="#16A34A" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="31" y1="22" x2="45" y2="22" stroke="#D1D5DB" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M 19 33 l 3 3 l 5 -6" fill="none" stroke="#16A34A" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="31" y1="33" x2="45" y2="33" stroke="#D1D5DB" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="19" y1="44" x2="27" y2="44" stroke="#D1D5DB" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="31" y1="44" x2="45" y2="44" stroke="#D1D5DB" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- Großes Check-Badge unten rechts -->
+  <circle cx="48" cy="48" r="12" fill="#16A34A" stroke="#1F2937" stroke-width="1.5"/>
+  <path d="M 42 48 l 4 4 l 8 -9" fill="none" stroke="#FFFFFF" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/>
+
+</svg>

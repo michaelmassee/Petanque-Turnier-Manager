@@ -348,6 +348,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_TOOLBAR_WEITER                = "toolbar_weiter";
 	public static final String CMD_TOOLBAR_VORRUNDEN_RANGLISTE   = "toolbar_vorrunden_rangliste";
 	public static final String CMD_TOOLBAR_TEILNEHMER            = "toolbar_teilnehmer";
+	public static final String CMD_TOOLBAR_CHECKIN               = "toolbar_checkin";
 	public static final String CMD_TOOLBAR_NEU_IN_NEUER_DATEI    = "toolbar_neu_in_neuer_datei";
 	public static final String CMD_TOOLBAR_OEFFNEN               = "toolbar_oeffnen";
 	public static final String CMD_TOOLBAR_NEU_AUSLOSEN          = "toolbar_neu_auslosen";
@@ -1078,6 +1079,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_TOOLBAR_TEILNEHMER:
 				ToolbarAktionDispatcher.teilnehmer(ws);
 				break;
+			case CMD_TOOLBAR_CHECKIN:
+				ToolbarAktionDispatcher.checkin(ws);
+				break;
 			case CMD_TOOLBAR_NAECHSTER_SPIELTAG:
 				ToolbarAktionDispatcher.naechsterSpieltag(ws);
 				break;
@@ -1504,6 +1508,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			CMD_TOOLBAR_ABSCHLUSS,
 			CMD_TOOLBAR_VORRUNDEN_RANGLISTE,
 			CMD_TOOLBAR_TEILNEHMER,
+			CMD_TOOLBAR_CHECKIN,
 			CMD_TOOLBAR_NEU_IN_NEUER_DATEI,
 			CMD_TOOLBAR_OEFFNEN,
 			CMD_TOOLBAR_DRUCKEN,
@@ -1664,6 +1669,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_TOOLBAR_WEITER                         -> ts != TurnierSystem.KEIN;
 			case CMD_TOOLBAR_VORRUNDEN_RANGLISTE,
 				 CMD_TOOLBAR_TEILNEHMER                     -> ts != TurnierSystem.KEIN && ts != TurnierSystem.LIGA;
+			case CMD_TOOLBAR_CHECKIN -> ts != TurnierSystem.KEIN
+					&& TurnierSystemToolbarStrategieRegistry.get(ts).hatCheckin();
 			case CMD_TOOLBAR_NEU_AUSLOSEN -> ts != TurnierSystem.KEIN
 					&& TurnierSystemToolbarStrategieRegistry.get(ts).hatNeuAuslosen();
 			case CMD_TOOLBAR_ABSCHLUSS    -> ts != TurnierSystem.KEIN

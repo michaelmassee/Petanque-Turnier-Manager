@@ -35,6 +35,11 @@ public class SupermeleeToolbarStrategie implements ITurnierSystemToolbarStrategi
     }
 
     @Override
+    public void checkin(WorkingSpreadsheet ws) throws Exception {
+        fallback.checkin(ws);
+    }
+
+    @Override
     public boolean hatNeuAuslosen() {
         return true;
     }

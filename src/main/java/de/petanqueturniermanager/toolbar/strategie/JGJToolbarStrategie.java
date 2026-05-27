@@ -7,6 +7,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteSheet;
 import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJSpielPlanSheet;
 import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJTeilnehmerSheet;
+import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJCheckinListeSheet;
 import de.petanqueturniermanager.toolbar.ITurnierSystemToolbarStrategie;
 
 /**
@@ -31,6 +32,16 @@ public class JGJToolbarStrategie implements ITurnierSystemToolbarStrategie {
     @Override
     public void teilnehmer(WorkingSpreadsheet ws) throws Exception {
         new JGJTeilnehmerSheet(ws).testTurnierVorhanden().start();
+    }
+
+    @Override
+    public boolean hatCheckin() {
+        return true;
+    }
+
+    @Override
+    public void checkin(WorkingSpreadsheet ws) throws Exception {
+        new JGJCheckinListeSheet(ws).testTurnierVorhanden().backUpDocument().start();
     }
 
     @Override

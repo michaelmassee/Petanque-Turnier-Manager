@@ -26,7 +26,7 @@ SIZES = [16, 24, 32, 48, 64, 128]
 # Reihenfolge: Haupt-Toolbar, Spieltag-Toolbar, Timer-Toolbar
 HAUPT = [
     "toolbar-start", "toolbar-neu-in-neuer-datei", "toolbar-oeffnen",
-    "toolbar-konfiguration", "toolbar-teilnehmer", "toolbar-turnier-modus",
+    "toolbar-konfiguration", "toolbar-teilnehmer", "toolbar-checkin", "toolbar-turnier-modus",
     "toolbar-sidebar",
     "toolbar-spielerdb-meldungen", "toolbar-neu-auslosen", "toolbar-weiter",
     "toolbar-vorrunden-rangliste", "toolbar-abschluss", "toolbar-abbruch",
@@ -47,6 +47,7 @@ LABELS = {
     "toolbar-oeffnen":            ("Öffnen",              "ptm:toolbar_oeffnen"),
     "toolbar-konfiguration":      ("Konfiguration",       "ptm:konfiguration_turnier"),
     "toolbar-teilnehmer":         ("Teilnehmer",          "ptm:toolbar_teilnehmer"),
+    "toolbar-checkin":            ("Checkin",             "ptm:toolbar_checkin"),
     "toolbar-turnier-modus":      ("Turnieransicht",      "ptm:turnier_modus"),
     "toolbar-sidebar":            ("Seitenleiste",        ".uno:SidebarDeck.PetanqueTurnierManagerDeck"),
     "toolbar-spielerdb-meldungen": ("Spieler-DB Übernahme", "ptm:spielerdb_in_meldeliste"),
