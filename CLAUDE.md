@@ -214,7 +214,13 @@ Details und Muster: `turniersysteme/RANGLISTE_LISTENER.md`. Generische Infrastru
 
 **Neuer Listener-Code:** Vor dem Commit prüfen, ob der Callback auf einem Fremd-Thread feuert. Wenn ja UND er UI anfasst → `LoMainThread.post` ist Pflicht.
 
-**Absicherung:** `HintergrundListenerVclKonventionTest` (Quelltext-Scan, läuft in `./gradlew test`) schlägt fehl, wenn eine Klasse einen Fremd-Thread-Listener registriert/implementiert UND eindeutige VCL-Control-APIs (`showElement`/`requestElement`/`XFixedText`/`XListBox`/`XControl`/…) referenziert, ohne `LoMainThread`/`runOnMain` zu nutzen. Heuristik (kein Call-Graph): UI-Mutation, die in eine Hilfsklasse ausgelagert ist, wird nicht erkannt — die Regel hier bleibt also bindend.
+**Absicherung (zweistufig):**
+
+1. `HintergrundListenerVclKonventionTest` (Quelltext-Scan) schlägt fehl, wenn eine Klasse einen Fremd-Thread-Listener registriert/implementiert UND eindeutige VCL-Control-APIs (`showElement`/`requestElement`/`XFixedText`/`XListBox`/`XControl`/…) referenziert, ohne `LoMainThread`/`runOnMain` zu nutzen. Heuristik: UI-Mutation, die in eine **Hilfsklasse** ausgelagert ist, wird hier nicht erkannt.
+
+2. `ThreadingCallGraphArchTest` (ArchUnit, `src/test/java/de/petanqueturniermanager/arch/`) schließt genau diese Hilfsklassen-Lücke: er verfolgt den **klassenübergreifenden Aufruf-Graphen** ab den Off-Thread-Wurzeln (`TimerListener`, `ITurnierEventListener`, `IGlobalEventListener`, `ProtocolHandler.notifyAllListeners`) und meldet jede erreichbare UNO-UI/VCL-Senke (`XLayoutManager.requestElement/showElement/hideElement`, `XFixedText.setText`, …). Wrapper: `FreezingArchRule` — der eingefrorene Bestand liegt in `config/archunit/frozen-threading-violations/`, **nur NEU** hinzukommende Off-Thread→VCL-Kanten brechen den Build.
+
+**Wichtig zum Freeze:** Eingefrorene Einträge sind NICHT automatisch „ok". ArchUnit faltet inline-Lambdas (`LoMainThread.post(ctx, () -> …)`) in die umschließende Methode → der Marshalling-Schnitt ist im Graph unsichtbar, korrekt-marshallte Pfade erscheinen daher als (akzeptierte) Verstöße. **Methodenreferenzen** (`post(ctx, this::foo)`) wirken dagegen als echter Schnitt und tauchen gar nicht erst auf — bei neuem Marshalling-Code daher Methodenreferenz bevorzugen. Re-Freeze nur nach manueller Prüfung, dass der neue Pfad wirklich über `LoMainThread.post`/`runOnMain` läuft: `freeze.refreeze=true` in `src/test/resources/archunit.properties` setzen, einmal laufen lassen, Store committen, Flag zurücknehmen.
 
 ## Business Logic & Rules
 
