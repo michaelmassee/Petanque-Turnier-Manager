@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.basesheet.meldeliste.TeilnehmerNamenLeser.TeilnehmerNamen;
@@ -83,6 +85,32 @@ public abstract class AbstractTeilnehmerNamenCheckinListeSheet extends AbstractC
 	}
 
 	@Override
+	protected Map<Integer, Boolean> checkboxStatusNachNummer() throws GenerateException {
+		Map<Integer, Boolean> ergebnis = new java.util.HashMap<>();
+		ISheet meldelisteSheet = getMeldelisteSheet();
+		XSpreadsheet xSheet = meldelisteSheet.getXSpreadSheet();
+		if (xSheet == null) {
+			return ergebnis;
+		}
+		int aktivSpalte = getMeldelisteAktivSpalte();
+		int ersteZeile = getMeldelisteErsteDatenZeile();
+		RangeData data = RangeHelper.from(xSheet, getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
+				RangePosition.from(0, ersteZeile, aktivSpalte, ersteZeile + LESE_BIS_ZEILE_OFFSET)).getDataFromRange();
+		for (RowData row : data) {
+			if (row.isEmpty()) {
+				break;
+			}
+			int nr = row.get(0).getIntVal(0);
+			if (nr <= 0) {
+				break;
+			}
+			boolean aktivGesetzt = StringUtils.isNotBlank(row.get(aktivSpalte).getStringVal());
+			ergebnis.put(nr, aktivGesetzt);
+		}
+		return ergebnis;
+	}
+
+	@Override
 	protected Map<Integer, SortSchluessel> ladeSortDaten() throws GenerateException {
 		TeilnehmerNamen namen = leseTeilnehmerNamen();
 		Map<Integer, String> teamnamen = namen.teamnamen();
@@ -106,6 +134,9 @@ public abstract class AbstractTeilnehmerNamenCheckinListeSheet extends AbstractC
 
 	/** Erste Datenzeile der Meldeliste (0-basiert). */
 	protected abstract int getMeldelisteErsteDatenZeile();
+
+	/** Spaltenindex der Aktiv-Spalte in der Meldeliste. */
+	protected abstract int getMeldelisteAktivSpalte() throws GenerateException;
 
 	/** Formation der Meldeliste (Anzahl Spieler je Team). */
 	protected abstract Formation getFormation();

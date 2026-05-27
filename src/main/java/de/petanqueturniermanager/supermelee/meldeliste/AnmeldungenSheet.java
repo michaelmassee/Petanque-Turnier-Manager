@@ -74,6 +74,12 @@ public class AnmeldungenSheet extends AbstractTeilnehmerNamenCheckinListeSheet {
 		return meldeliste.getMeldungenSpalte().getErsteDatenZiele();
 	}
 
+	/** Aktiv-Status je Spieltag: die Spalte des aktuell eingestellten Spieltags. */
+	@Override
+	protected int getMeldelisteAktivSpalte() {
+		return meldeliste.spieltagSpalte(getSpielTag());
+	}
+
 	@Override
 	protected Formation getFormation() {
 		return Formation.MELEE;

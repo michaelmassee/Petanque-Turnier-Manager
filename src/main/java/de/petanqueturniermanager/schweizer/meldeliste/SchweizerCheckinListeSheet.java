@@ -54,6 +54,11 @@ public class SchweizerCheckinListeSheet extends AbstractTeilnehmerNamenCheckinLi
 	}
 
 	@Override
+	protected int getMeldelisteAktivSpalte() throws GenerateException {
+		return meldeliste.getAktivSpalte();
+	}
+
+	@Override
 	protected Formation getFormation() {
 		return konfigurationSheet.getMeldeListeFormation();
 	}

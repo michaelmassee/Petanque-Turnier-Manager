@@ -209,6 +209,8 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 		final int anzBloecke = (int) Math.ceil((double) nummern.size() / maxProSpalte);
 		final Map<Integer, String> spielerNamen = namenNachNummer();
 		final Map<Integer, String> teamnamen = layout.teamSpalte() ? teamnamenNachNummer() : Map.of();
+		final Map<Integer, Boolean> checkboxStatus = checkboxStatusNachNummer();
+		final String haken = I18n.get("checkinliste.haken");
 
 		RangeData data = new RangeData();
 		for (int zeileImBlock = 0; zeileImBlock < maxProSpalte; zeileImBlock++) {
@@ -222,8 +224,13 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 						zeileData.newString(teamnamen.getOrDefault(nr, ""));
 					}
 					zeileData.newString(spielerNamen.getOrDefault(nr, ""));
+					// Checkbox-Spalte: Haken, wenn der Aktiv-Status in der Meldeliste gesetzt ist.
+					if (checkboxStatus.getOrDefault(nr, false)) {
+						zeileData.newString(haken);
+					} else {
+						zeileData.newEmpty();
+					}
 					if (blkCntr != anzBloecke) {
-						zeileData.newEmpty(); // Checkbox-Spalte
 						zeileData.newEmpty(); // Trennspalte
 					}
 				}
@@ -250,7 +257,8 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 				.setWidth(TEAMNAME_SPALTE_WIDTH);
 		ColumnProperties columnPropName = ColumnProperties.from().setHoriJustify(CellHoriJustify.CENTER)
 				.setWidth(getNameSpalteWidth());
-		ColumnProperties columnPropChkBox = ColumnProperties.from().setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH);
+		ColumnProperties columnPropChkBox = ColumnProperties.from().setHoriJustify(CellHoriJustify.CENTER)
+				.setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH);
 		RangeProperties rangePropBorderOnly = RangeProperties.from().setBorder(BorderFactory.from().allThin().toBorder())
 				.setShrinkToFit(true);
 
@@ -427,6 +435,16 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 	 * liefern die Namen.
 	 */
 	protected Map<Integer, String> namenNachNummer() throws GenerateException {
+		return Map.of();
+	}
+
+	/**
+	 * Liefert je Melde-/Teamnummer, ob die Checkbox in der Checkin-Liste angehakt werden soll
+	 * ({@code true} ⇒ Haken). Default leer (keine Haken). Konkrete Subklassen
+	 * (bzw. {@link AbstractTeilnehmerNamenCheckinListeSheet}) leiten dies aus dem Aktiv-Status
+	 * der Meldeliste ab.
+	 */
+	protected Map<Integer, Boolean> checkboxStatusNachNummer() throws GenerateException {
 		return Map.of();
 	}
 

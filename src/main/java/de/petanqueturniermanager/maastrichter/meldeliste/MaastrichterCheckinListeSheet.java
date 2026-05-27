@@ -54,6 +54,11 @@ public class MaastrichterCheckinListeSheet extends AbstractTeilnehmerNamenChecki
 	}
 
 	@Override
+	protected int getMeldelisteAktivSpalte() throws GenerateException {
+		return meldeliste.getAktivSpalte();
+	}
+
+	@Override
 	protected Formation getFormation() {
 		return konfigurationSheet.getMeldeListeFormation();
 	}
