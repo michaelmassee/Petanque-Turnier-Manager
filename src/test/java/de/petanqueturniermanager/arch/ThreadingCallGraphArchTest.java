@@ -3,11 +3,15 @@
  */
 package de.petanqueturniermanager.arch;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
 
@@ -74,6 +78,15 @@ public class ThreadingCallGraphArchTest {
     private static final String NOTIFY_METHODE = "notifyAllListeners";
 
     /**
+     * Namensmuster für „feuert alle Listener"-Broadcast-Methoden. Dient ausschließlich der Absicherung
+     * des Hardcodes {@link #NOTIFY_METHODE}: Da {@code ProtocolHandler.notifyAllListeners} per
+     * Methodenreferenz (nicht über ein Interface) als Off-Thread-Wurzel registriert wird, würde ein
+     * Umbenennen oder eine zweite Broadcast-Methode (z.B. {@code fireListeners}/{@code dispatchListeners})
+     * die BFS-Wurzel <b>lautlos</b> entwerten. {@link #wurzelKonstanteBleibtVollstaendig()} bricht dann.
+     */
+    private static final Pattern BROADCAST_METHODE = Pattern.compile("(notify|fire|dispatch|broadcast).*[Ll]isteners?");
+
+    /**
      * Verbotene UNO-UI/VCL-Ziele (Owner-FQN → Methodennamen). Kuratierte Startmenge; jede Erweiterung
      * erfordert ein Re-Freeze. Bewusst auf eindeutige UI-Mutationen beschränkt.
      */
@@ -93,6 +106,31 @@ public class ThreadingCallGraphArchTest {
                         + "(VCL/UNO-UI nur auf dem LO-Main-Thread, siehe CLAUDE.md)");
 
         FreezingArchRule.freeze(regel).check(classes);
+    }
+
+    /**
+     * Günstige Absicherung gegen das lautlose Entwerten der Methodenreferenz-Wurzel
+     * {@link #NOTIFY_OWNER}#{@link #NOTIFY_METHODE} (Variante „c" aus der Review-Diskussion): Die
+     * Wurzel ist hier rein namensbasiert hartkodiert, weil sie nicht über ein {@link #ROOT_INTERFACES}
+     * erfasst werden kann. Dieser Test stellt sicher, dass {@code ProtocolHandler} genau <b>eine</b>
+     * Broadcast-Methode (Muster {@link #BROADCAST_METHODE}) besitzt und diese {@link #NOTIFY_METHODE}
+     * heißt. Bricht damit bei Umbenennung (Konstante nachziehen) wie bei einer zweiten Broadcast-Methode
+     * (Wurzel-Liste erweitern) — und zwingt so zur bewussten Pflege des Hardcodes.
+     */
+    @Test
+    void wurzelKonstanteBleibtVollstaendig() {
+        JavaClasses classes = new ClassFileImporter().importPackages("de.petanqueturniermanager.comp");
+        JavaClass protocolHandler = classes.get(NOTIFY_OWNER);
+
+        Set<String> broadcastMethoden = protocolHandler.getMethods().stream()
+                .map(JavaMethod::getName)
+                .filter(name -> BROADCAST_METHODE.matcher(name).matches())
+                .collect(Collectors.toSet());
+
+        assertThat(broadcastMethoden)
+                .as("ProtocolHandler darf genau eine Off-Thread-Broadcast-Methode haben, sonst ist die "
+                        + "hartkodierte BFS-Wurzel NOTIFY_METHODE unvollständig (siehe Javadoc BROADCAST_METHODE)")
+                .containsExactly(NOTIFY_METHODE);
     }
 
     private static ArchCondition<JavaMethod> erreichtKeineVclSenkeAusFremdThread() {
@@ -119,11 +157,7 @@ public class ThreadingCallGraphArchTest {
                                             + target.getOwner().getFullName() + "." + target.getName()
                                             + " (aufgerufen in " + aktuell.getFullName() + ")"));
                         }
-                        target.resolveMember().ifPresent(member -> {
-                            if (member instanceof JavaCodeUnit codeUnit) {
-                                queue.add(codeUnit);
-                            }
-                        });
+                        target.resolveMember().ifPresent(queue::add);
                     }
                 }
             }
