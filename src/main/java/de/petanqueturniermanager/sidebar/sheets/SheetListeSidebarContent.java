@@ -38,6 +38,7 @@ import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.LoMainThread;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
+import de.petanqueturniermanager.helper.perflog.PerfLog;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
@@ -64,6 +65,11 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
     private static final int ZEILEN_HOEHE = 22;
     private static final int MIN_HOEHE = 60;
 
+    /** Trennzeichen zwischen Eintrags-Anzeigetexten in der Struktur-Signatur (in keinem Anzeigetext enthalten). */
+    private static final char SIGNATUR_TRENNER = '\u0001';
+    /** Signatur-Marker für „kein Turnier-Dokument" – verschieden von einer leeren Eintragsliste. */
+    private static final String SIGNATUR_KEIN_DOKUMENT = "KEIN_DOKUMENT";
+
     private XListBox sheetListBox;
     private List<BlattBaumEintrag> baumEintraege;
     private Set<SheetGruppe> kollabierteGruppen;
@@ -71,6 +77,15 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
     private Set<String> kollabierteUnterGruppen;
     private SheetBaumOrganisierer organisierer;
     private String gespeichertesSheet = null;
+    /**
+     * Signatur der zuletzt <em>tatsächlich angezeigten</em> Blattstruktur (Reihenfolge,
+     * Namen, Kollaps-Zustand). Dient dazu, den teuren Vollaufbau
+     * ({@code window.dispose()} + Fenster-/ListBox-Neuaufbau) zu überspringen, wenn ein
+     * {@code felderAktualisieren}/{@code listeNeuAufbauen}-Trigger feuert, ohne dass sich
+     * die Struktur geändert hat (z.B. Ergebniseingabe, Tab-Wechsel – beides ändert keine
+     * Blätter). {@code null} = noch nie aufgebaut → Vollaufbau erzwingen.
+     */
+    private String aktuelleStrukturSignatur = null;
     private XSelectionSupplier selectionSupplier = null;
     /** Kurzfristig {@code true} während programmatischer {@code selectItemPos}-Aufrufe. */
     private volatile boolean unterdrueckeItemListener = false;
@@ -185,12 +200,14 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
         }
         var xDoc = dokumentOderNull();
         if (xDoc == null) {
+            aktuelleStrukturSignatur = SIGNATUR_KEIN_DOKUMENT;
             sheetListeAufbauenLeer();
             return;
         }
 
         heileVeralteteMetadaten(xDoc);
         baumEintraege = organisierer.baumAufbauen(xDoc, kollabierteGruppen, kollabierteSpielTage, kollabierteUnterGruppen);
+        aktuelleStrukturSignatur = signaturAus(baumEintraege);
 
         if (baumEintraege.isEmpty()) {
             sheetListeAufbauenLeer();
@@ -270,8 +287,49 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
     }
 
     private void listeNeuAufbauen() {
+        if (kannVollaufbauUeberspringen()) {
+            // Struktur unverändert – der teure window.dispose()/Neuaufbau ist unnötig.
+            // Nur den Aktivierungs-Zustand (Enabled) der ListBox nachziehen.
+            PerfLog.log(logger, "[SIDEBAR-TIMING] {} listeNeuAufbauen: Struktur unverändert, Vollaufbau übersprungen, thread={}",
+                    getClass().getSimpleName(), Thread.currentThread().getName());
+            listBoxAktivierungAktualisieren();
+            return;
+        }
         auswahlMerken();
         allesFelderEntfernenUndNeuFenster();
+    }
+
+    /**
+     * Prüft, ob sich die anzuzeigende Blattstruktur gegenüber der zuletzt aufgebauten
+     * geändert hat. Baut dazu den Kandidaten-Baum (rein datenseitig, keine VCL-Operationen)
+     * und vergleicht dessen Signatur mit {@link #aktuelleStrukturSignatur}. Stimmen sie
+     * überein, kann der teure Fenster-Neuaufbau entfallen.
+     */
+    private boolean kannVollaufbauUeberspringen() {
+        if (sheetListBox == null || organisierer == null || aktuelleStrukturSignatur == null) {
+            return false;
+        }
+        var xDoc = dokumentOderNull();
+        if (xDoc == null) {
+            return false; // Vollaufbau baut die Leer-Ansicht auf
+        }
+        heileVeralteteMetadaten(xDoc);
+        var kandidat = organisierer.baumAufbauen(xDoc, kollabierteGruppen, kollabierteSpielTage, kollabierteUnterGruppen);
+        return aktuelleStrukturSignatur.equals(signaturAus(kandidat));
+    }
+
+    /**
+     * Bildet eine Struktur-Signatur aus den Anzeigetexten der Baum-Einträge. Der
+     * Anzeigetext kodiert bereits Reihenfolge, Blattnamen und – über die Auf-/Zuklappen-
+     * Pfeile der Kopf-Einträge – den Kollaps-Zustand. Ändert sich irgendetwas davon,
+     * ändert sich die Signatur.
+     */
+    private static String signaturAus(List<BlattBaumEintrag> eintraege) {
+        var sb = new StringBuilder(eintraege.size() * 24);
+        for (BlattBaumEintrag eintrag : eintraege) {
+            sb.append(eintrag.anzeigeText()).append(SIGNATUR_TRENNER);
+        }
+        return sb.toString();
     }
 
     private void auswahlMerken() {
@@ -496,6 +554,7 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
             baumEintraege.clear();
         }
         gespeichertesSheet = null;
+        aktuelleStrukturSignatur = null;
     }
 
     // ── Hilfsmethoden ────────────────────────────────────────────────────────
