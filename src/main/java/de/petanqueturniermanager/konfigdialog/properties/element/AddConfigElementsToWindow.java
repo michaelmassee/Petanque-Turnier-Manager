@@ -1,7 +1,7 @@
 /*
  * Erstellung 07.02.2020 / Michael Massee
  */
-package de.petanqueturniermanager.sidebar.config;
+package de.petanqueturniermanager.konfigdialog.properties.element;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -9,7 +9,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.konfigdialog.AuswahlConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.sidebar.GuiFactoryCreateParam;
-import de.petanqueturniermanager.sidebar.config.color.BackgrnColorConfigSidebarElement;
+import de.petanqueturniermanager.konfigdialog.properties.element.color.BackgrnColorConfigElement;
 import de.petanqueturniermanager.sidebar.layout.Layout;
 
 /**
@@ -36,36 +36,36 @@ public class AddConfigElementsToWindow {
 
 			if (configProperty instanceof AuswahlConfigProperty) {
 				// ComboBox
-				AuswahlConfigSidebarElement auswahlConfigSidebarElement = new AuswahlConfigSidebarElement(
+				AuswahlConfigElement auswahlConfigElement = new AuswahlConfigElement(
 						guiFactoryCreateParam, (AuswahlConfigProperty) configProperty, currentSpreadsheet);
-				layout.addLayout(auswahlConfigSidebarElement.getLayout(), 1);
+				layout.addLayout(auswahlConfigElement.getLayout(), 1);
 			} else {
 				// create textfield mit btn
 				@SuppressWarnings("unchecked")
-				StringConfigSidebarElement stringConfigSidebarElement = new StringConfigSidebarElement(
+				StringConfigElement stringConfigElement = new StringConfigElement(
 						guiFactoryCreateParam, (ConfigProperty<String>) configProperty, currentSpreadsheet);
-				layout.addLayout(stringConfigSidebarElement.getLayout(), 1);
+				layout.addLayout(stringConfigElement.getLayout(), 1);
 			}
 			break;
 		case BOOLEAN:
 			// create checkbox
 			@SuppressWarnings("unchecked")
-			BooleanConfigSidebarElement booleanConfigSidebarElement = new BooleanConfigSidebarElement(
+			BooleanConfigElement booleanConfigElement = new BooleanConfigElement(
 					guiFactoryCreateParam, (ConfigProperty<Boolean>) configProperty, currentSpreadsheet);
-			layout.addLayout(booleanConfigSidebarElement.getLayout(), 1);
+			layout.addLayout(booleanConfigElement.getLayout(), 1);
 			break;
 		case COLOR:
 			// create colorpicker
 			@SuppressWarnings("unchecked")
-			BackgrnColorConfigSidebarElement backgrnColorConfigSidebarElement = new BackgrnColorConfigSidebarElement(
+			BackgrnColorConfigElement backgrnColorConfigElement = new BackgrnColorConfigElement(
 					guiFactoryCreateParam, (ConfigProperty<Integer>) configProperty, currentSpreadsheet);
-			layout.addLayout(backgrnColorConfigSidebarElement.getLayout(), 1);
+			layout.addLayout(backgrnColorConfigElement.getLayout(), 1);
 			break;
 		case INTEGER:
 			@SuppressWarnings("unchecked")
-			IntegerConfigSidebarElement integerConfigSidebarElement = new IntegerConfigSidebarElement(
+			IntegerConfigElement integerConfigElement = new IntegerConfigElement(
 					guiFactoryCreateParam, (ConfigProperty<Integer>) configProperty, currentSpreadsheet);
-			layout.addLayout(integerConfigSidebarElement.getLayout(), 1);
+			layout.addLayout(integerConfigElement.getLayout(), 1);
 			break;
 		default:
 			break;

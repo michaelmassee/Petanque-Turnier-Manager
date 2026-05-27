@@ -1,7 +1,7 @@
 /*
  * Erstellung 24.01.2020 / Michael Massee
  */
-package de.petanqueturniermanager.sidebar.config;
+package de.petanqueturniermanager.konfigdialog.properties.element;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -23,13 +23,13 @@ import de.petanqueturniermanager.sidebar.layout.Layout;
  * @author Michael Massee
  *
  */
-public class AuswahlConfigSidebarElement implements ConfigSidebarElement, XItemListener {
+public class AuswahlConfigElement implements ConfigElement, XItemListener {
 
 	private LabelPlusCombobox labelPlusCombobox;
 	private AuswahlConfigProperty configProperty;
 	private WorkingSpreadsheet workingSpreadsheet;
 
-	public AuswahlConfigSidebarElement(GuiFactoryCreateParam guiFactoryCreateParam,
+	public AuswahlConfigElement(GuiFactoryCreateParam guiFactoryCreateParam,
 			AuswahlConfigProperty configProperty, WorkingSpreadsheet workingSpreadsheet) {
 		this.configProperty = checkNotNull(configProperty);
 		this.workingSpreadsheet = checkNotNull(workingSpreadsheet);

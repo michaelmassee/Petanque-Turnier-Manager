@@ -131,8 +131,10 @@ public class LabelPlusNumericField extends BaseField<LabelPlusNumericField> impl
 	}
 
 	/**
-	 * @param integerConfigSidebarElement
-	 * @return
+	 * Registriert einen {@link XTextListener} am Zahlenfeld.
+	 *
+	 * @param xTextListener der zu registrierende Listener
+	 * @return diese Instanz (Fluent-API)
 	 */
 	public LabelPlusNumericField addXTextListener(XTextListener xTextListener) {
 		if (textfield != null) {

@@ -1,7 +1,7 @@
 /*
  * Erstellung 24.01.2020 / Michael Massee
  */
-package de.petanqueturniermanager.sidebar.config.color;
+package de.petanqueturniermanager.konfigdialog.properties.element.color;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -18,7 +18,7 @@ import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.farbe.FarbwahlDialog;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.sidebar.GuiFactoryCreateParam;
-import de.petanqueturniermanager.sidebar.config.ConfigSidebarElement;
+import de.petanqueturniermanager.konfigdialog.properties.element.ConfigElement;
 import de.petanqueturniermanager.sidebar.fields.LabelPlusBackgrColorAndColorChooser;
 import de.petanqueturniermanager.sidebar.layout.Layout;
 
@@ -26,9 +26,9 @@ import de.petanqueturniermanager.sidebar.layout.Layout;
  * @author Michael Massee
  *
  */
-public class BackgrnColorConfigSidebarElement implements ConfigSidebarElement {
+public class BackgrnColorConfigElement implements ConfigElement {
 
-	static final Logger logger = LogManager.getLogger(BackgrnColorConfigSidebarElement.class);
+	static final Logger logger = LogManager.getLogger(BackgrnColorConfigElement.class);
 
 	LabelPlusBackgrColorAndColorChooser labelPlusBackgrColorAndColorChooser;
 	ConfigProperty<?> configProperty;
@@ -37,7 +37,7 @@ public class BackgrnColorConfigSidebarElement implements ConfigSidebarElement {
 	 *  Parent für den UNO-ColorPicker benötigt — sonst öffnet er hinter dem Dialog. */
 	XWindowPeer parentPeer;
 
-	public BackgrnColorConfigSidebarElement(GuiFactoryCreateParam guiFactoryCreateParam, ConfigProperty<Integer> configProperty, WorkingSpreadsheet workingSpreadsheet) {
+	public BackgrnColorConfigElement(GuiFactoryCreateParam guiFactoryCreateParam, ConfigProperty<Integer> configProperty, WorkingSpreadsheet workingSpreadsheet) {
 		this.configProperty = checkNotNull(configProperty);
 		this.workingSpreadsheet = checkNotNull(workingSpreadsheet);
 		this.parentPeer = guiFactoryCreateParam.getWindowPeer();

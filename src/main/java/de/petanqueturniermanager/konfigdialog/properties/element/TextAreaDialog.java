@@ -1,7 +1,7 @@
 /*
  * Erstellung 08.05.2019 / Michael Massee
  */
-package de.petanqueturniermanager.sidebar.config;
+package de.petanqueturniermanager.konfigdialog.properties.element;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -26,7 +26,7 @@ import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.konfigdialog.dialog.element.UITextAreaProperty;
 
 /**
- * wird in sidebar von StringConfigSidebarElement verwendet um text zu editieren
+ * wird in sidebar von StringConfigElement verwendet um text zu editieren
  *
  * @author Michael Massee
  *

@@ -1,7 +1,7 @@
 /*
  * Erstellung 24.01.2020 / Michael Massee
  */
-package de.petanqueturniermanager.sidebar.config;
+package de.petanqueturniermanager.konfigdialog.properties.element;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -22,17 +22,17 @@ import de.petanqueturniermanager.sidebar.layout.Layout;
  * @author Michael Massee
  *
  */
-public class BooleanConfigSidebarElement implements ConfigSidebarElement, XItemListener {
+public class BooleanConfigElement implements ConfigElement, XItemListener {
 
 	private LabelPlusCheckBox labelPlusCheckBox;
 	private ConfigProperty<Boolean> configProperty;
 	private WorkingSpreadsheet workingSpreadsheet;
 
-	public BooleanConfigSidebarElement(GuiFactoryCreateParam guiFactoryCreateParam, ConfigProperty<Boolean> configProperty, WorkingSpreadsheet workingSpreadsheet) {
+	public BooleanConfigElement(GuiFactoryCreateParam guiFactoryCreateParam, ConfigProperty<Boolean> configProperty, WorkingSpreadsheet workingSpreadsheet) {
 		this(guiFactoryCreateParam, configProperty, workingSpreadsheet, false);
 	}
 
-	public BooleanConfigSidebarElement(GuiFactoryCreateParam guiFactoryCreateParam, ConfigProperty<Boolean> configProperty, WorkingSpreadsheet workingSpreadsheet,
+	public BooleanConfigElement(GuiFactoryCreateParam guiFactoryCreateParam, ConfigProperty<Boolean> configProperty, WorkingSpreadsheet workingSpreadsheet,
 			boolean readOnly) {
 		this.configProperty = checkNotNull(configProperty);
 		this.workingSpreadsheet = checkNotNull(workingSpreadsheet);

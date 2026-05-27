@@ -30,6 +30,11 @@ import com.sun.star.awt.XControl;
 import com.sun.star.awt.XControlContainer;
 import com.sun.star.awt.XControlModel;
 import com.sun.star.awt.XDialog;
+import com.sun.star.awt.Point;
+import com.sun.star.awt.PosSize;
+import com.sun.star.awt.Rectangle;
+import com.sun.star.awt.Size;
+import com.sun.star.awt.XUnitConversion;
 import com.sun.star.awt.XRequestCallback;
 import com.sun.star.awt.XToolkit;
 import com.sun.star.awt.Selection;
@@ -39,14 +44,17 @@ import com.sun.star.awt.XTopWindowListener;
 import com.sun.star.awt.XWindow;
 import com.sun.star.awt.XWindow2;
 import com.sun.star.beans.XPropertySet;
+import com.sun.star.frame.XFrame;
 import com.sun.star.container.XNameContainer;
 import com.sun.star.lang.EventObject;
 import com.sun.star.lang.XComponent;
 import com.sun.star.lang.XMultiComponentFactory;
 import com.sun.star.lang.XMultiServiceFactory;
 import com.sun.star.uno.XComponentContext;
+import com.sun.star.util.MeasureUnit;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.comp.DocumentHelper;
 import de.petanqueturniermanager.comp.GlobalProperties;
 import de.petanqueturniermanager.comp.Log4J;
 import de.petanqueturniermanager.comp.newrelease.ReleaseUpdateService;
@@ -80,6 +88,8 @@ public class ProcessBox implements TimerListener {
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");
 
     // Dialog-Geometrie in AppFont-Einheiten (ca. 1.5 px pro Einheit)
+    private static final int DLG_POS_X = 60;
+    private static final int DLG_POS_Y = 60;
     private static final int DLG_WIDTH = 320;
     private static final int PAD = 4;
     private static final int LOG_HEIGHT = 110;
@@ -240,8 +250,8 @@ public class ProcessBox implements TimerListener {
         Object dialogModel = mcf.createInstanceWithContext(
                 "com.sun.star.awt.UnoControlDialogModel", xContext);
         XPropertySet dlgProps = Lo.qi(XPropertySet.class, dialogModel);
-        dlgProps.setPropertyValue("PositionX", 60);
-        dlgProps.setPropertyValue("PositionY", 60);
+        dlgProps.setPropertyValue("PositionX", DLG_POS_X);
+        dlgProps.setPropertyValue("PositionY", DLG_POS_Y);
         dlgProps.setPropertyValue("Width", DLG_WIDTH);
         dlgProps.setPropertyValue("Height", DLG_HEIGHT);
         dlgProps.setPropertyValue("Moveable", Boolean.TRUE);
@@ -366,6 +376,10 @@ public class ProcessBox implements TimerListener {
         xWindow.setVisible(false);
         dialogControl.createPeer(xToolkit, null);
 
+        // Top-Level-Peer übernimmt die AppFont-Modellmaße nicht zuverlässig (Dialog
+        // erscheint sonst maximiert) → Größe/Position explizit in Pixel erzwingen.
+        wendeFenstergroesseAn();
+
         // XTopWindowListener für Klick auf das X (Close-Button im Fensterrahmen)
         XTopWindow xTopWindow = Lo.qi(XTopWindow.class, dialogControl.getPeer());
         if (xTopWindow != null) {
@@ -431,6 +445,51 @@ public class ProcessBox implements TimerListener {
             logger.warn("Konnte Resource {} nicht extrahieren", resourceName, e);
             return null;
         }
+    }
+
+    /**
+     * Setzt Fenstergröße und -position explizit in Pixel. Die Modellmaße liegen in
+     * AppFont-Einheiten vor; der frisch erzeugte Top-Level-Peer wendet sie nicht
+     * zuverlässig an, weshalb der Dialog sonst maximiert erscheint.
+     *
+     * <p>Positioniert wird relativ zum LibreOffice-Fenster (über dessen Mitte), damit
+     * der Dialog im Multi-Monitor-Betrieb auf demselben Bildschirm wie Calc erscheint
+     * und nicht an einer absoluten Desktop-Koordinate auf dem Primärmonitor.
+     */
+    private void wendeFenstergroesseAn() {
+        XUnitConversion conversion = Lo.qi(XUnitConversion.class, dialogControl.getPeer());
+        if (conversion == null || xWindow == null) {
+            return;
+        }
+        try {
+            Size groessePx = conversion.convertSizeToPixel(
+                    new Size(DLG_WIDTH, DLG_HEIGHT), MeasureUnit.APPFONT);
+            Point positionPx = ermittlePosition(conversion, groessePx);
+            xWindow.setPosSize(positionPx.X, positionPx.Y, groessePx.Width, groessePx.Height,
+                    PosSize.POSSIZE);
+        } catch (com.sun.star.lang.IllegalArgumentException e) {
+            logger.debug("Fenstergröße konnte nicht in Pixel umgerechnet werden", e);
+        }
+    }
+
+    /**
+     * Liefert die Pixel-Position des Dialogs: zentriert über dem LibreOffice-Fenster
+     * (gleicher Monitor). Fällt auf die absolute AppFont-Standardposition zurück, wenn
+     * kein aktuelles Frame-/Containerfenster verfügbar ist.
+     */
+    private Point ermittlePosition(XUnitConversion conversion, Size dialogGroessePx)
+            throws com.sun.star.lang.IllegalArgumentException {
+        XFrame frame = DocumentHelper.getCurrentFrame(xContext);
+        if (frame != null) {
+            XWindow containerWindow = frame.getContainerWindow();
+            if (containerWindow != null) {
+                Rectangle loFenster = containerWindow.getPosSize();
+                int x = loFenster.X + Math.max(0, (loFenster.Width - dialogGroessePx.Width) / 2);
+                int y = loFenster.Y + Math.max(0, (loFenster.Height - dialogGroessePx.Height) / 3);
+                return new Point(x, y);
+            }
+        }
+        return conversion.convertPointToPixel(new Point(DLG_POS_X, DLG_POS_Y), MeasureUnit.APPFONT);
     }
 
     // ── Dispose ────────────────────────────────────────────────────────────────

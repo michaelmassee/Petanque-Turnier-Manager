@@ -722,7 +722,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				new SpielrundePlan(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_SPIELRUNDEN_TESTDATEN:
-				new SpielrundeSheet_TestDaten(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).start();
+				new SpielrundeSheet_TestDaten(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_SPIELTAG_RANGLISTE:
 				new SpieltagRanglisteSheet(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).backUpDocument().start();
@@ -731,7 +731,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				new SpieltagRanglisteSheet_SortOnly(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).start();
 				break;
 			case CMD_SPIELTAGRANGLISTE_TESTDATEN:
-				new SpieltagRanglisteSheet_TestDaten(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).start();
+				new SpieltagRanglisteSheet_TestDaten(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_SUPERMELEE_ENDRANGLISTE:
 				new EndranglisteSheet(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).backUpDocument().start();
@@ -769,10 +769,10 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				new LigaRanglisteDirektvergleichSheet(ws).testTurnierSystem(TurnierSystem.LIGA).start();
 				break;
 			case CMD_LIGA_SPIELPLAN_TESTDATEN:
-				new LigaSpielPlanSheetTestDaten(ws, false).testTurnierSystem(TurnierSystem.LIGA).start();
+				new LigaSpielPlanSheetTestDaten(ws, false).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_LIGA_SPIELPLAN_TESTDATEN_MIT_FREISPIEL:
-				new LigaSpielPlanSheetTestDaten(ws, true).testTurnierSystem(TurnierSystem.LIGA).start();
+				new LigaSpielPlanSheetTestDaten(ws, true).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_LIGA_EXPORT:
 				new LigaMeldeListeSheetExport(ws).testTurnierSystem(TurnierSystem.LIGA).start();

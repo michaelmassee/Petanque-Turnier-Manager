@@ -1,7 +1,7 @@
 /*
  * Erstellung 24.01.2020 / Michael Massee
  */
-package de.petanqueturniermanager.sidebar.config;
+package de.petanqueturniermanager.konfigdialog.properties.element;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -25,20 +25,20 @@ import de.petanqueturniermanager.sidebar.layout.Layout;
  * @author Michael Massee
  *
  */
-public class IntegerConfigSidebarElement implements ConfigSidebarElement, XTextListener {
+public class IntegerConfigElement implements ConfigElement, XTextListener {
 
-	static final Logger logger = LogManager.getLogger(IntegerConfigSidebarElement.class);
+	static final Logger logger = LogManager.getLogger(IntegerConfigElement.class);
 
 	LabelPlusNumericField labelPlusNumericField;
 	ConfigProperty<?> configProperty;
 	private WorkingSpreadsheet workingSpreadsheet;
 	TextAreaDialog textAreaDialog;
 
-	public IntegerConfigSidebarElement(GuiFactoryCreateParam guiFactoryCreateParam, ConfigProperty<Integer> configProperty, WorkingSpreadsheet workingSpreadsheet) {
+	public IntegerConfigElement(GuiFactoryCreateParam guiFactoryCreateParam, ConfigProperty<Integer> configProperty, WorkingSpreadsheet workingSpreadsheet) {
 		this(guiFactoryCreateParam, configProperty, workingSpreadsheet, false);
 	}
 
-	public IntegerConfigSidebarElement(GuiFactoryCreateParam guiFactoryCreateParam, ConfigProperty<Integer> configProperty, WorkingSpreadsheet workingSpreadsheet,
+	public IntegerConfigElement(GuiFactoryCreateParam guiFactoryCreateParam, ConfigProperty<Integer> configProperty, WorkingSpreadsheet workingSpreadsheet,
 			boolean readOnly) {
 		this.configProperty = checkNotNull(configProperty);
 		this.workingSpreadsheet = checkNotNull(workingSpreadsheet);

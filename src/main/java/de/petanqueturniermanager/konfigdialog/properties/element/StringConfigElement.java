@@ -1,7 +1,7 @@
 /*
  * Erstellung 24.01.2020 / Michael Massee
  */
-package de.petanqueturniermanager.sidebar.config;
+package de.petanqueturniermanager.konfigdialog.properties.element;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -30,16 +30,16 @@ import de.petanqueturniermanager.sidebar.layout.Layout;
  * @author Michael Massee
  *
  */
-public class StringConfigSidebarElement implements ConfigSidebarElement, XTextListener {
+public class StringConfigElement implements ConfigElement, XTextListener {
 
-	static final Logger logger = LogManager.getLogger(StringConfigSidebarElement.class);
+	static final Logger logger = LogManager.getLogger(StringConfigElement.class);
 
 	LabelPlusTextPlusTextareaBox labelPlusTextPlusTextareaBox;
 	ConfigProperty<?> configProperty;
 	private WorkingSpreadsheet workingSpreadsheet;
 	TextAreaDialog textAreaDialog;
 
-	public StringConfigSidebarElement(GuiFactoryCreateParam guiFactoryCreateParam, ConfigProperty<String> configProperty, WorkingSpreadsheet workingSpreadsheet) {
+	public StringConfigElement(GuiFactoryCreateParam guiFactoryCreateParam, ConfigProperty<String> configProperty, WorkingSpreadsheet workingSpreadsheet) {
 		this.configProperty = checkNotNull(configProperty);
 		this.workingSpreadsheet = checkNotNull(workingSpreadsheet);
 		textAreaDialog = new TextAreaDialog(workingSpreadsheet);

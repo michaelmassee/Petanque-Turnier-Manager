@@ -34,7 +34,7 @@ import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.konfigdialog.AbstractUnoDialog;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.sidebar.GuiFactoryCreateParam;
-import de.petanqueturniermanager.sidebar.config.AddConfigElementsToWindow;
+import de.petanqueturniermanager.konfigdialog.properties.element.AddConfigElementsToWindow;
 import de.petanqueturniermanager.sidebar.layout.Layout;
 import de.petanqueturniermanager.sidebar.layout.VerticalLayout;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
