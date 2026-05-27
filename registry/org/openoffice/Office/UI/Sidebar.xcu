@@ -14,10 +14,10 @@
                     <value>PetanqueTurnierManagerDeck</value>
                 </prop>
                 <prop oor:name="IconURL" oor:type="xs:string">
-                    <value>%origin%/images/petanqueturniermanager-logo-32px.png</value>
+                    <value>%origin%/images/petanqueturniermanager-logo-sidebar-24px.png</value>
                 </prop>
                 <prop oor:name="HighContrastIconURL" oor:type="xs:string">
-                    <value>%origin%/images/petanqueturniermanager-logo-32px.png</value>
+                    <value>%origin%/images/petanqueturniermanager-logo-sidebar-24px.png</value>
                 </prop>
                 <prop oor:name="ContextList">
                     <value oor:separator=";">

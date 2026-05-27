@@ -16,8 +16,8 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
+import de.petanqueturniermanager.konfigdialog.gui.LabelPlusNumericField;
 import de.petanqueturniermanager.sidebar.GuiFactoryCreateParam;
-import de.petanqueturniermanager.sidebar.fields.LabelPlusNumericField;
 import de.petanqueturniermanager.sidebar.layout.HorizontalLayout;
 import de.petanqueturniermanager.sidebar.layout.Layout;
 

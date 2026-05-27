@@ -1,7 +1,7 @@
 /*
  * Erstellung 19.01.2020 / Michael Massee
  */
-package de.petanqueturniermanager.sidebar.fields;
+package de.petanqueturniermanager.konfigdialog.gui;
 
 import java.util.HashMap;
 import java.util.List;

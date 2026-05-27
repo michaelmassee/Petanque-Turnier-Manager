@@ -86,7 +86,7 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
         }
 
         var schrittBildUrl = ExtensionsHelper.from(getCurrentSpreadsheet().getxContext())
-                .getImageUrlDir() + "sidebar-fortschritt.png";
+                .getImageUrlDir() + "sidebar/fortschritt-20px.png";
         XControl schrittIconControl = GuiFactory.createBildControl(
                 getGuiFactoryCreateParam(), schrittBildUrl, new Rectangle(0, 0, 20, 20), null);
 
@@ -330,9 +330,9 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
 
     private String timerIconDateiname(TimerState state) {
         return switch (state.zustand()) {
-            case LAEUFT -> "toolbar-timer-start.png";
-            case PAUSIERT -> "toolbar-timer-pause.png";
-            default -> "toolbar-timer-stop.png";
+            case LAEUFT -> "sidebar/timer-start-20px.png";
+            case PAUSIERT -> "sidebar/timer-pause-20px.png";
+            default -> "sidebar/timer-stop-20px.png";
         };
     }
 
@@ -344,8 +344,8 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
 
     private String webserverIconDateiname() {
         return WebServerManager.get().isLaeuft()
-                ? "toolbar-webserver-starten.png"
-                : "toolbar-webserver-stoppen.png";
+                ? "sidebar/webserver-starten-20px.png"
+                : "sidebar/webserver-stoppen-20px.png";
     }
 
     private void webserverStatusAktualisieren() {

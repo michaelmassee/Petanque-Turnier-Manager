@@ -111,3 +111,29 @@ icons_v2/
 Änderungen am Design zentral in `build_icons_v2.py` im `C`-Dictionary; danach `python3 build_icons_v2.py && python3 render_v2.py`.
 
 Abhängigkeiten: `cairosvg`, `Pillow`.
+
+## Sidebar-Deck-Icon (separat)
+
+Das Sidebar-Deck-Tab-Icon ist **nicht** Teil dieses SVG-Sets. Es wird aus dem Logo-Master
+`images/petanqueturniermanager-logo.png` passgenau auf 24×24px gerendert (Design-Größe der
+LO-Sidebar-TabBar), damit LibreOffice das Icon nicht zur Laufzeit skalieren muss:
+
+```bash
+python3 images/render_logo.py   # → images/petanqueturniermanager-logo-sidebar-24px.png
+```
+
+Abhängigkeit: `Pillow`. Eingebunden in `registry/org/openoffice/Office/UI/Sidebar.xcu` (`IconURL`).
+
+## Sidebar-Info-Panel-Icons (separat)
+
+Das Info-Panel (`InfoSidebarContent`) zeigt Status-Icons (Fortschritt, Timer, Webserver) in
+20×20px-Controls. Damit LibreOffice die früher geladenen 128px-/648×730px-Master nicht zur
+Laufzeit herunterskalieren muss, werden passgenaue 20×20-PNGs nach `images/sidebar/` gerendert:
+
+```bash
+python3 images/render_sidebar_icons.py   # → images/sidebar/*-20px.png
+```
+
+Abhängigkeit: `Pillow`. Quellen: die 128px-Toolbar-Master (Timer/Webserver) bzw. der
+`sidebar-fortschritt.png`-Master. Referenziert in `InfoSidebarContent` über
+`getImageUrlDir() + "sidebar/..."`.

@@ -1,7 +1,7 @@
 /*
  * Erstellung 22.01.2020 / Michael Massee
  */
-package de.petanqueturniermanager.sidebar.fields;
+package de.petanqueturniermanager.konfigdialog.gui;
 
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.logging.log4j.LogManager;

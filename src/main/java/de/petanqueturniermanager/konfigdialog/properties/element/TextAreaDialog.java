@@ -26,7 +26,7 @@ import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.konfigdialog.dialog.element.UITextAreaProperty;
 
 /**
- * wird in sidebar von StringConfigElement verwendet um text zu editieren
+ * wird im Konfigurations-Dialog von StringConfigElement verwendet um text zu editieren
  *
  * @author Michael Massee
  *

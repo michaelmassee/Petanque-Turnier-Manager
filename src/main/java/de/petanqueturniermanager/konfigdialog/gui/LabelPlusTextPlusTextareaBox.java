@@ -1,7 +1,7 @@
 /*
  * Erstellung 19.01.2020 / Michael Massee
  */
-package de.petanqueturniermanager.sidebar.fields;
+package de.petanqueturniermanager.konfigdialog.gui;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -34,9 +34,6 @@ import de.petanqueturniermanager.sidebar.GuiFactoryCreateParam;
  */
 public class LabelPlusTextPlusTextareaBox extends BaseField<LabelPlusTextPlusTextareaBox> implements XActionListener {
 
-	// private static final Logger logger = LogManager.getLogger(LabelPlusTextPlusTextareaBox.class);
-	// https://www.flaticon.com/free-icon/color-wheel_1373048 = color chooser
-
 	XFixedText label;
 	XTextComponent field;
 	XButton btn;
@@ -44,8 +41,8 @@ public class LabelPlusTextPlusTextareaBox extends BaseField<LabelPlusTextPlusTex
 
 	// https://www.flaticon.com/authors/freepikhttps://www.flaticon.com/authors/freepik
 	// https://www.flaticon.com/packs/electronic-and-web-element-collection-2
-	// https://www.flaticon.com/free-icon/edit_391171 = sidebar-texfield
-	public static final String btnImage = "sidebar-texfield.png"; // 19x21
+	// https://www.flaticon.com/free-icon/edit_391171 = textarea-edit
+	public static final String btnImage = "konfig/textarea-edit.png"; // 19x21, nativ angezeigt (kein Scaling)
 
 	private LabelPlusTextPlusTextareaBox(GuiFactoryCreateParam guiFactoryCreateParam) {
 		super(guiFactoryCreateParam);

@@ -21,8 +21,8 @@ import com.sun.star.uno.Exception;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
+import de.petanqueturniermanager.konfigdialog.gui.LabelPlusTextPlusTextareaBox;
 import de.petanqueturniermanager.sidebar.GuiFactoryCreateParam;
-import de.petanqueturniermanager.sidebar.fields.LabelPlusTextPlusTextareaBox;
 import de.petanqueturniermanager.sidebar.layout.HorizontalLayout;
 import de.petanqueturniermanager.sidebar.layout.Layout;
 

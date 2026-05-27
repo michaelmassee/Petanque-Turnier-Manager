@@ -17,9 +17,9 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.farbe.FarbwahlDialog;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
-import de.petanqueturniermanager.sidebar.GuiFactoryCreateParam;
+import de.petanqueturniermanager.konfigdialog.gui.LabelPlusBackgrColorAndColorChooser;
 import de.petanqueturniermanager.konfigdialog.properties.element.ConfigElement;
-import de.petanqueturniermanager.sidebar.fields.LabelPlusBackgrColorAndColorChooser;
+import de.petanqueturniermanager.sidebar.GuiFactoryCreateParam;
 import de.petanqueturniermanager.sidebar.layout.Layout;
 
 /**

@@ -1,7 +1,7 @@
 /*
  * Erstellung 19.01.2020 / Michael Massee
  */
-package de.petanqueturniermanager.sidebar.fields;
+package de.petanqueturniermanager.konfigdialog.gui;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -36,7 +36,7 @@ public class LabelPlusBackgrColorAndColorChooser extends BaseField<LabelPlusBack
 		implements XActionListener {
 
 	// https://www.flaticon.com/free-icon/color-wheel_1373048 = color chooser
-	public static final String btnImage = "sidebar-colorpicker.png"; // 24x24
+	public static final String btnImage = "konfig/colorpicker.png"; // 21x21, nativ angezeigt (kein Scaling)
 
 	XFixedText label;
 	XMultiPropertySet labelProperties;

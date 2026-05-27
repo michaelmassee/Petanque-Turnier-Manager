@@ -289,8 +289,10 @@ tasks.register('buildOXT', Zip) {
 
     // Logo für Sidebar-Deck-Icon: %origin% in Sidebar.xcu ist relativ zur XCU-Datei,
     // daher muss das Bild auch unter registry/org/openoffice/Office/UI/images/ liegen.
+    // Passgenaue 24px-Größe ausliefern (Design-Größe der Sidebar-TabBar, vgl. LOs eigene
+    // sidebar-*-large.png), damit LibreOffice das Icon NICHT zur Laufzeit skalieren muss.
     from('images') {
-        include 'petanqueturniermanager-logo-32px.png'
+        include 'petanqueturniermanager-logo-sidebar-24px.png'
         into 'registry/org/openoffice/Office/UI/images'
     }
 

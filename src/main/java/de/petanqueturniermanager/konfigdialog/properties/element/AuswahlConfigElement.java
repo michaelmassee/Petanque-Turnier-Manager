@@ -14,8 +14,8 @@ import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.StringTools;
 import de.petanqueturniermanager.konfigdialog.AuswahlConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ComboBoxItem;
+import de.petanqueturniermanager.konfigdialog.gui.LabelPlusCombobox;
 import de.petanqueturniermanager.sidebar.GuiFactoryCreateParam;
-import de.petanqueturniermanager.sidebar.fields.LabelPlusCombobox;
 import de.petanqueturniermanager.sidebar.layout.HorizontalLayout;
 import de.petanqueturniermanager.sidebar.layout.Layout;
 
