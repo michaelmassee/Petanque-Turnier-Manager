@@ -1,6 +1,7 @@
 package de.petanqueturniermanager.supermelee.spieltagrangliste;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.InputStream;
 import java.util.LinkedHashMap;
@@ -16,6 +17,7 @@ import com.sun.star.container.XNamed;
 import com.sun.star.sheet.XNamedRanges;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
+import com.sun.star.sheet.XSpreadsheets;
 
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -260,5 +262,93 @@ public class SupermeleeTurnierTestDatenUITest extends BaseCalcUITest {
 		assertThat(sheetHlp.findByName(SheetNamen.spieltagRangliste(1)))
 				.as("Spieltag-Rangliste 1 muss nach Kiosk-Update weiterhin existieren")
 				.isNotNull();
+	}
+
+	/**
+	 * Anwender-Szenario „Blatt kopieren": kopiert der Anwender ein Turnier-Blatt (hier eine
+	 * minimal von Hand aufgebaute Meldeliste mit Identitäts-Schlüssel), erzwingt LibreOffice
+	 * einen neuen, eindeutigen Blattnamen. Der dokumentweite PTM-Identitäts-Schlüssel
+	 * (globaler Named Range) darf dabei NICHT dupliziert werden: er zeigt weiterhin nur auf das
+	 * Originalblatt, die Kopie trägt keinen eigenen Identitäts-Schlüssel. Andernfalls entstünde
+	 * ein Doppel-Eintrag in der Sidebar-Blätterliste.
+	 */
+	@Test
+	public void kopiertesBlattErzeugtKeinenDoppeltenIdentitaetsSchluessel() {
+		XSpreadsheetDocument xDoc = wkingSpreadsheet.getWorkingSpreadsheetDocument();
+		final String quellName = "Meldeliste";
+		final String kopieName = "Meldeliste_2";
+
+		XSpreadsheet quelle = sheetHlp.newIfNotExist(quellName, (short) 0);
+		SheetMetadataHelper.schreibeSheetMetadaten(xDoc, quelle,
+				SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_MELDELISTE);
+		assertThat(schluesselFuer(quelle))
+				.as("Quellblatt trägt vor dem Kopieren genau den Supermelee-Meldeliste-Schlüssel")
+				.containsExactly(SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_MELDELISTE);
+
+		XSpreadsheets sheets = xDoc.getSheets();
+
+		// Kopie mit neuem, eindeutigem Namen (Index >= Blattanzahl bedeutet „anhängen").
+		sheets.copyByName(quellName, kopieName, (short) sheets.getElementNames().length);
+		XSpreadsheet kopie = sheetHlp.findByName(kopieName);
+		assertThat(kopie).as("Kopie muss unter dem neuen Namen existieren").isNotNull();
+
+		// Kern-Erwartung: der dokumentweite Identitäts-Schlüssel wurde nicht dupliziert.
+		assertThat(identitaetsSchluesselProBlatt().get(quellName))
+				.as("Identitäts-Schlüssel zeigt nach dem Kopieren weiterhin nur auf das Originalblatt")
+				.containsExactly(SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_MELDELISTE);
+		assertThat(schluesselFuer(kopie))
+				.as("die Kopie darf keinen (doppelten) Identitäts-Schlüssel tragen")
+				.isEmpty();
+
+		// LO erzwingt einen eindeutigen Namen: Kopie auf einen bereits vergebenen Namen schlägt fehl.
+		assertThatThrownBy(() -> sheets.copyByName(quellName, quellName, (short) sheets.getElementNames().length))
+				.as("LO darf kein Blatt unter einem bereits vergebenen Namen anlegen")
+				.isInstanceOf(com.sun.star.uno.RuntimeException.class);
+	}
+
+	/**
+	 * Anwender-Szenario „Blatt umbenennen": Die Verbindung Identitäts-Schlüssel → Blatt ist
+	 * intern index-basiert (Tab-Index in der Named-Range-Referenz), nicht namensbasiert. Wird das
+	 * Blatt umbenannt, bleibt der Tab-Index unverändert – der Schlüssel zeigt weiterhin auf
+	 * dasselbe (jetzt umbenannte) Blatt, und der Lookup greift über den neuen Namen. Es entsteht
+	 * weder ein verwaister noch ein doppelter Schlüssel.
+	 */
+	@Test
+	public void umbenanntesBlattBehaeltSeinenIdentitaetsSchluessel() {
+		XSpreadsheetDocument xDoc = wkingSpreadsheet.getWorkingSpreadsheetDocument();
+		final String altName = "Meldeliste";
+		final String neuName = "Meldeliste_Umbenannt";
+
+		XSpreadsheet blatt = sheetHlp.newIfNotExist(altName, (short) 0);
+		SheetMetadataHelper.schreibeSheetMetadaten(xDoc, blatt,
+				SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_MELDELISTE);
+		assertThat(SheetMetadataHelper.istRegistriertesSheet(xDoc, blatt,
+				SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_MELDELISTE))
+				.as("vor dem Umbenennen ist das Blatt unter dem Schlüssel registriert")
+				.isTrue();
+
+		assertThat(sheetHlp.reNameSheet(blatt, neuName)).as("Umbenennen muss gelingen").isTrue();
+
+		assertThat(sheetHlp.findByName(neuName)).as("Blatt unter neuem Namen muss existieren").isNotNull();
+		assertThat(sheetHlp.findByName(altName)).as("alter Blattname darf nicht mehr existieren").isNull();
+
+		// Schlüssel folgt dem Blatt: zeigt weiterhin auf dasselbe (umbenannte) Blatt, kein Duplikat, kein Waise.
+		assertThat(identitaetsSchluesselProBlatt().get(neuName))
+				.as("Identitäts-Schlüssel zeigt nach dem Umbenennen auf das Blatt unter dem neuen Namen")
+				.containsExactly(SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_MELDELISTE);
+		assertThat(identitaetsSchluesselProBlatt()).as("kein Schlüssel hängt am alten Namen")
+				.doesNotContainKey(altName);
+
+		// Lookup über den Schlüssel liefert exakt das umbenannte Blatt (index-basierte Auflösung).
+		XSpreadsheet aufgeloest = SheetMetadataHelper.findeSheet(xDoc,
+				SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_MELDELISTE).orElse(null);
+		assertThat(aufgeloest).as("Schlüssel-Lookup muss ein Blatt liefern").isNotNull();
+		assertThat(Lo.qi(XNamed.class, aufgeloest).getName())
+				.as("Schlüssel-Lookup liefert das Blatt unter dem neuen Namen")
+				.isEqualTo(neuName);
+		assertThat(SheetMetadataHelper.istRegistriertesSheet(xDoc, blatt,
+				SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_MELDELISTE))
+				.as("dieselbe Blatt-Referenz bleibt nach dem Umbenennen registriert")
+				.isTrue();
 	}
 }
