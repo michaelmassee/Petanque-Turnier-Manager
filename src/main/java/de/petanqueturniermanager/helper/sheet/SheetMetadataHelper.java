@@ -149,6 +149,20 @@ public class SheetMetadataHelper {
     private SheetMetadataHelper() {
     }
 
+    /**
+     * Prüft, ob der Named-Range-Inhalt eine kaputte Referenz auf ein gelöschtes Blatt ist
+     * ({@code #REF!}).
+     * <p>
+     * {@link XNamedRange#getContent()} rendert den Inhalt immer mit {@code GRAM_API} – einer
+     * festen, nicht lokalisierten Formel-Grammatik (siehe LO {@code ScNamedRangeObj::getContent},
+     * Symbol-Tabelle {@code RID_STRLIST_FUNCTION_NAMES_ENGLISH_API} mit hartkodiertem
+     * {@code "#REF!"}). Der Fehler-String ist damit in jeder Locale (DE/EN/FR/NL/ES) identisch
+     * {@code #REF!}; ein lokalisiertes {@code #BEZUG!} kann hier nicht auftreten.
+     */
+    private static boolean istKaputteReferenz(String content) {
+        return content != null && content.contains("#REF!");
+    }
+
     // ── Builder für dynamische Schlüssel ────────────────────────────────────
 
     public static String schluesselSpieltagRangliste(int spieltagNr) {
@@ -282,8 +296,7 @@ public class SheetMetadataHelper {
         if (namedRanges == null || !namedRanges.hasByName(scoreSchluessel)) return Optional.empty();
         XNamedRange range = Lo.qi(XNamedRange.class, namedRanges.getByName(scoreSchluessel));
         if (range == null) return Optional.empty();
-        String content = range.getContent();
-        if (content != null && (content.contains("#REF!") || content.contains("#BEZUG!"))) return Optional.empty();
+        if (istKaputteReferenz(range.getContent())) return Optional.empty();
         XCellRangeReferrer referrer = Lo.qi(XCellRangeReferrer.class, range);
         if (referrer == null) return Optional.empty();
         XCellRangeAddressable addrAble = Lo.qi(XCellRangeAddressable.class, referrer.getReferredCells());
@@ -735,7 +748,7 @@ public class SheetMetadataHelper {
                 if (name.startsWith("__PTM_")) {
                     Object rangeObj = namedRanges.getByName(name);
                     String content = namedRangeContentAusObj.apply(rangeObj);
-                    if (content != null && (content.contains("#REF!") || content.contains("#BEZUG!"))) {
+                    if (istKaputteReferenz(content)) {
                         namedRanges.removeByName(name);
                         logger.debug("Verwaisten Metadaten-Schlüssel '{}' gelöscht (zeigte ins Leere).", name);
                     }
@@ -776,7 +789,7 @@ public class SheetMetadataHelper {
             if (range == null) return -1;
             // --- Prüfen ob die Referenz durch Löschen kaputt gegangen ist ---
             String content = range.getContent();
-            if (content != null && (content.contains("#REF!") || content.contains("#BEZUG!"))) {
+            if (istKaputteReferenz(content)) {
                 logger.debug("Named-Range Referenz ist ungültig geworden ({}). Sheet wurde gelöscht.", content);
                 return -1;
             }
