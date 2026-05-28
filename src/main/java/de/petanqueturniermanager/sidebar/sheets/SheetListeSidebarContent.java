@@ -447,7 +447,20 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
 
     private void sheetAktivieren(BlattKnoten knoten) {
         try {
-            TurnierSheet.from(knoten.sheet(), getCurrentSpreadsheet()).setActiv();
+            // Sheet live über den Identitäts-Schlüssel auflösen statt das zur Bauzeit gecachte
+            // XSpreadsheet zu verwenden: Der gecachte UNO-Proxy bleibt an seinen damaligen Tab-Index
+            // gebunden und folgt einer späteren Blatt-Einfügung nicht (z.B. ein dazwischen eingefügtes
+            // Nicht-PTM-Blatt verschiebt das Ziel-Blatt, ohne die Baum-Signatur zu ändern → der
+            // Vollaufbau wird übersprungen und der Knoten behält den veralteten Proxy). Named Ranges
+            // überleben Verschieben/Einfügen, daher löst findeSheet stets das aktuell richtige Blatt auf.
+            var xDoc = dokumentOderNull();
+            var sheet = xDoc == null
+                    ? null
+                    : SheetMetadataHelper.findeSheet(xDoc, knoten.metadatenSchluessel()).orElse(null);
+            if (sheet == null) {
+                sheet = knoten.sheet();
+            }
+            TurnierSheet.from(sheet, getCurrentSpreadsheet()).setActiv();
             logger.debug("sheetAktivieren: Sheet '{}' aktiviert", knoten.metadatenSchluessel());
         } catch (Exception e) {
             logger.error("Fehler beim Aktivieren des Sheets '{}'", knoten.metadatenSchluessel(), e);
