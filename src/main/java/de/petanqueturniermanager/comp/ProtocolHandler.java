@@ -1267,14 +1267,15 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	 */
 	private boolean behandleWebserverBefehl(String command) throws com.sun.star.uno.Exception {
 		switch (command) {
-			case CMD_WEBSERVER_KONFIGURATION -> new CompositeViewListeDialog(xContext).zeigen(null);
+			case CMD_WEBSERVER_KONFIGURATION ->
+					new CompositeViewListeDialog(erzeugeWorkingSpreadsheetFuerDispatch()).zeigen(null);
 			case CMD_WEBSERVER_STARTEN -> {
 				var props = GlobalProperties.get();
 				if (props.getCompositeViewKonfigurationen().isEmpty()) {
 					MessageBox.from(xContext, MessageBoxTypeEnum.INFO_OK)
 							.caption(I18n.get("webserver.starten"))
 							.message(I18n.get("webserver.keine.ports.konfiguriert")).show();
-					new CompositeViewListeDialog(xContext).zeigen(null);
+					new CompositeViewListeDialog(erzeugeWorkingSpreadsheetFuerDispatch()).zeigen(null);
 				} else {
 					ProcessBox.init(xContext).visibleWennAutomatisch().clear().run();
 					try {
