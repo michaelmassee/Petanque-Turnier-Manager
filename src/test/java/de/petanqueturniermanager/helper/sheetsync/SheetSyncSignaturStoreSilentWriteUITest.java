@@ -11,12 +11,14 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import org.junit.jupiter.api.Test;
 
 import com.sun.star.sheet.XSpreadsheetDocument;
+import com.sun.star.util.XModifiable;
 
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEventListener;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
+import de.petanqueturniermanager.helper.Lo;
 
 /**
  * Regressionstest für den LO-Crash beim Blättern zwischen Spieltagen.
@@ -34,6 +36,9 @@ import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
  *   <li>Alle {@link SheetSyncSignaturStore}-Writes feuern <b>kein</b> TurnierEvent.</li>
  *   <li>Reguläres {@link DocumentPropertiesHelper#setStringProperty} feuert weiterhin
  *       — Sanity-Check, damit der Test nicht stillschweigend false-positive wird.</li>
+ *   <li>Die reinen Infra-Writes markieren ein sauberes Dokument <b>nicht</b> als geändert
+ *       (via {@link DocumentPropertiesHelper#ohneModifiedFlag}), lassen aber eine bereits
+ *       ausstehende echte User-Änderung erhalten.</li>
  * </ul>
  */
 class SheetSyncSignaturStoreSilentWriteUITest extends BaseCalcUITest {
@@ -68,6 +73,48 @@ class SheetSyncSignaturStoreSilentWriteUITest extends BaseCalcUITest {
                     .isEmpty();
         } finally {
             PetanqueTurnierMngrSingleton.removeTurnierEventListener(sammler);
+        }
+    }
+
+    @Test
+    void storeWritesMarkierenSauberesDokumentNichtAlsGeaendert() {
+        XSpreadsheetDocument xDoc = wkingSpreadsheet.getWorkingSpreadsheetDocument();
+        XModifiable xModifiable = Lo.qi(XModifiable.class, xDoc);
+        try {
+            xModifiable.setModified(false);
+            assertThat(xModifiable.isModified())
+                    .as("Vorbedingung: Dokument als unverändert markiert")
+                    .isFalse();
+
+            SheetSyncSignaturStore.speichereNachRebuild(xDoc, TEST_SCHLUESSEL, "hash-clean", "test");
+            SheetSyncSignaturStore.aktualisiereVerifyZeit(xDoc, TEST_SCHLUESSEL);
+            SheetSyncSignaturStore.markiereRecoveryVersucht(xDoc, TEST_SCHLUESSEL);
+
+            assertThat(xModifiable.isModified())
+                    .as("reine Infra-Writes dürfen ein sauberes Dokument nicht als geändert markieren")
+                    .isFalse();
+        } catch (com.sun.star.beans.PropertyVetoException e) {
+            throw new AssertionError("setModified abgelehnt", e);
+        }
+    }
+
+    @Test
+    void echteUserAenderungBleibtTrotzStoreWriteErhalten() {
+        XSpreadsheetDocument xDoc = wkingSpreadsheet.getWorkingSpreadsheetDocument();
+        XModifiable xModifiable = Lo.qi(XModifiable.class, xDoc);
+        try {
+            xModifiable.setModified(true);
+            assertThat(xModifiable.isModified())
+                    .as("Vorbedingung: ausstehende User-Änderung simuliert")
+                    .isTrue();
+
+            SheetSyncSignaturStore.aktualisiereVerifyZeit(xDoc, TEST_SCHLUESSEL);
+
+            assertThat(xModifiable.isModified())
+                    .as("Store-Write darf eine echte User-Änderung nicht wegwerfen")
+                    .isTrue();
+        } catch (com.sun.star.beans.PropertyVetoException e) {
+            throw new AssertionError("setModified abgelehnt", e);
         }
     }
 

@@ -30,6 +30,7 @@ import com.sun.star.lang.WrappedTargetException;
 import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.uno.Any;
 import com.sun.star.uno.Type;
+import com.sun.star.util.XModifiable;
 
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
@@ -155,6 +156,28 @@ public class DocumentPropertiesHelper {
 	 */
 	public void setBooleanPropertyOhneEvent(String propName, Boolean newVal) {
 		setStringPropertyOhneEvent(propName, StringTools.booleanToString(newVal));
+	}
+
+	/**
+	 * Führt {@code aktion} aus und stellt anschließend das Modified-Flag des Dokuments wieder her,
+	 * falls es vor der Aktion {@code false} war. Reine Infrastruktur-Buchführung (z.B. SheetSync-
+	 * Signaturen) schreibt UserDefined-Properties; das setzt in LibreOffice das Modified-Flag, auch
+	 * ohne inhaltliche Änderung. Damit ein bloßer Lese-/Verify-Vorgang das Anwender-Dokument nicht
+	 * als „geändert" markiert (sonst „Speichern?"-Abfrage beim Schließen), wird das Flag hier nur dann
+	 * zurückgesetzt, wenn das Dokument zuvor unverändert war – echte User-Änderungen bleiben erhalten.
+	 */
+	public void ohneModifiedFlag(Runnable aktion) {
+		checkNotNull(aktion);
+		XModifiable xModifiable = Lo.qi(XModifiable.class, xSpreadsheetDocument);
+		boolean warVorherModified = xModifiable != null && xModifiable.isModified();
+		aktion.run();
+		if (xModifiable != null && !warVorherModified) {
+			try {
+				xModifiable.setModified(false);
+			} catch (PropertyVetoException e) {
+				logger.warn("Modified-Flag zurücksetzen abgelehnt", e);
+			}
+		}
 	}
 
 	/**

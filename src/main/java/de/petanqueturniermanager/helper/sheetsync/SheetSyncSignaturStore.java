@@ -80,11 +80,13 @@ public final class SheetSyncSignaturStore {
         try {
             DocumentPropertiesHelper props = new DocumentPropertiesHelper(xDoc);
             String jetzt = Instant.now().toString();
-            props.setStringPropertyOhneEvent(propName(schluessel, SUFFIX_HASH), hash);
-            props.setStringPropertyOhneEvent(propName(schluessel, SUFFIX_REBUILD_TS), jetzt);
-            props.setStringPropertyOhneEvent(propName(schluessel, SUFFIX_REASON), reason);
-            props.setStringPropertyOhneEvent(propName(schluessel, SUFFIX_VERIFY_TS), jetzt);
-            props.setBooleanPropertyOhneEvent(propName(schluessel, SUFFIX_RECOVERY), false);
+            props.ohneModifiedFlag(() -> {
+                props.setStringPropertyOhneEvent(propName(schluessel, SUFFIX_HASH), hash);
+                props.setStringPropertyOhneEvent(propName(schluessel, SUFFIX_REBUILD_TS), jetzt);
+                props.setStringPropertyOhneEvent(propName(schluessel, SUFFIX_REASON), reason);
+                props.setStringPropertyOhneEvent(propName(schluessel, SUFFIX_VERIFY_TS), jetzt);
+                props.setBooleanPropertyOhneEvent(propName(schluessel, SUFFIX_RECOVERY), false);
+            });
         } catch (RuntimeException e) {
             logger.warn("Hash speichern fehlgeschlagen für '{}'", schluessel, e);
         }
@@ -99,8 +101,9 @@ public final class SheetSyncSignaturStore {
         checkNotNull(xDoc);
         checkNotNull(schluessel);
         try {
-            new DocumentPropertiesHelper(xDoc).setStringPropertyOhneEvent(
-                    propName(schluessel, SUFFIX_VERIFY_TS), Instant.now().toString());
+            DocumentPropertiesHelper props = new DocumentPropertiesHelper(xDoc);
+            props.ohneModifiedFlag(() -> props.setStringPropertyOhneEvent(
+                    propName(schluessel, SUFFIX_VERIFY_TS), Instant.now().toString()));
         } catch (RuntimeException e) {
             logger.warn("Verify-Zeit aktualisieren fehlgeschlagen für '{}'", schluessel, e);
         }
@@ -176,8 +179,9 @@ public final class SheetSyncSignaturStore {
         checkNotNull(xDoc);
         checkNotNull(schluessel);
         try {
-            new DocumentPropertiesHelper(xDoc).setBooleanPropertyOhneEvent(
-                    propName(schluessel, SUFFIX_RECOVERY), true);
+            DocumentPropertiesHelper props = new DocumentPropertiesHelper(xDoc);
+            props.ohneModifiedFlag(() -> props.setBooleanPropertyOhneEvent(
+                    propName(schluessel, SUFFIX_RECOVERY), true));
         } catch (RuntimeException e) {
             logger.warn("Recovery-Flag setzen fehlgeschlagen für '{}'", schluessel, e);
         }
