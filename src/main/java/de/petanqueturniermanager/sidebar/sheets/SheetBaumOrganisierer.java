@@ -244,6 +244,11 @@ public class SheetBaumOrganisierer {
                 .map(k -> new BlattKnoten(k.sheet(), blattName(k), k.metadatenSchluessel()))
                 .forEach(ergebnis::add);
 
+        koKnoten.stream()
+                .filter(k -> SheetMetadataHelper.SCHLUESSEL_KO_CHECKIN_LISTE.equals(k.metadatenSchluessel()))
+                .map(k -> new BlattKnoten(k.sheet(), blattName(k), k.metadatenSchluessel()))
+                .forEach(ergebnis::add);
+
         allgemeinKnoten.stream()
                 .map(k -> new BlattKnoten(k.sheet(), blattName(k), k.metadatenSchluessel()))
                 .forEach(ergebnis::add);
@@ -265,6 +270,11 @@ public class SheetBaumOrganisierer {
 
         knoten.stream()
                 .filter(k -> SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_MELDELISTE.equals(k.metadatenSchluessel()))
+                .map(k -> new BlattKnoten(k.sheet(), blattName(k), k.metadatenSchluessel()))
+                .forEach(ergebnis::add);
+
+        knoten.stream()
+                .filter(k -> SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_CHECKIN_LISTE.equals(k.metadatenSchluessel()))
                 .map(k -> new BlattKnoten(k.sheet(), blattName(k), k.metadatenSchluessel()))
                 .forEach(ergebnis::add);
 
@@ -297,6 +307,11 @@ public class SheetBaumOrganisierer {
                 .map(k -> new BlattKnoten(k.sheet(), blattName(k), k.metadatenSchluessel()))
                 .forEach(ergebnis::add);
 
+        knoten.stream()
+                .filter(k -> SheetMetadataHelper.SCHLUESSEL_FORMULEX_CHECKIN_LISTE.equals(k.metadatenSchluessel()))
+                .map(k -> new BlattKnoten(k.sheet(), blattName(k), k.metadatenSchluessel()))
+                .forEach(ergebnis::add);
+
         allgemeinKnoten.stream()
                 .map(k -> new BlattKnoten(k.sheet(), blattName(k), k.metadatenSchluessel()))
                 .forEach(ergebnis::add);
@@ -324,6 +339,11 @@ public class SheetBaumOrganisierer {
 
         knoten.stream()
                 .filter(k -> SheetMetadataHelper.SCHLUESSEL_JGJ_MELDELISTE.equals(k.metadatenSchluessel()))
+                .map(k -> new BlattKnoten(k.sheet(), blattName(k), k.metadatenSchluessel()))
+                .forEach(ergebnis::add);
+
+        knoten.stream()
+                .filter(k -> SheetMetadataHelper.SCHLUESSEL_JGJ_CHECKIN_LISTE.equals(k.metadatenSchluessel()))
                 .map(k -> new BlattKnoten(k.sheet(), blattName(k), k.metadatenSchluessel()))
                 .forEach(ergebnis::add);
 
@@ -370,6 +390,12 @@ public class SheetBaumOrganisierer {
                 .map(k -> new BlattKnoten(k.sheet(), blattName(k), k.metadatenSchluessel()))
                 .forEach(ergebnis::add);
 
+        // Checkin-Liste direkt nach der Meldeliste
+        pouleKnoten.stream()
+                .filter(k -> SheetMetadataHelper.SCHLUESSEL_POULE_CHECKIN_LISTE.equals(k.metadatenSchluessel()))
+                .map(k -> new BlattKnoten(k.sheet(), blattName(k), k.metadatenSchluessel()))
+                .forEach(ergebnis::add);
+
         // Teilnehmer aus ALLGEMEIN direkt danach
         allgemeinKnoten.stream()
                 .map(k -> new BlattKnoten(k.sheet(), blattName(k), k.metadatenSchluessel()))
@@ -378,6 +404,7 @@ public class SheetBaumOrganisierer {
         // Vorrunde-Untergruppe
         var vorrundeKnoten = pouleKnoten.stream()
                 .filter(k -> !SheetMetadataHelper.SCHLUESSEL_POULE_MELDELISTE.equals(k.metadatenSchluessel())
+                        && !SheetMetadataHelper.SCHLUESSEL_POULE_CHECKIN_LISTE.equals(k.metadatenSchluessel())
                         && !k.metadatenSchluessel().startsWith(SheetMetadataHelper.SCHLUESSEL_POULE_KO_PREFIX))
                 .map(k -> new BlattKnoten(k.sheet(), "  " + blattName(k), k.metadatenSchluessel()))
                 .toList();
@@ -430,6 +457,11 @@ public class SheetBaumOrganisierer {
 
         maastrichterKnoten.stream()
                 .filter(k -> SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_MELDELISTE.equals(k.metadatenSchluessel()))
+                .map(k -> new BlattKnoten(k.sheet(), blattName(k), k.metadatenSchluessel()))
+                .forEach(ergebnis::add);
+
+        maastrichterKnoten.stream()
+                .filter(k -> SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_CHECKIN_LISTE.equals(k.metadatenSchluessel()))
                 .map(k -> new BlattKnoten(k.sheet(), blattName(k), k.metadatenSchluessel()))
                 .forEach(ergebnis::add);
 
@@ -488,6 +520,11 @@ public class SheetBaumOrganisierer {
 
         kaskadeKnoten.stream()
                 .filter(k -> SheetMetadataHelper.SCHLUESSEL_KASKADE_MELDELISTE.equals(k.metadatenSchluessel()))
+                .map(k -> new BlattKnoten(k.sheet(), blattName(k), k.metadatenSchluessel()))
+                .forEach(ergebnis::add);
+
+        kaskadeKnoten.stream()
+                .filter(k -> SheetMetadataHelper.SCHLUESSEL_KASKADE_CHECKIN_LISTE.equals(k.metadatenSchluessel()))
                 .map(k -> new BlattKnoten(k.sheet(), blattName(k), k.metadatenSchluessel()))
                 .forEach(ergebnis::add);
 
