@@ -83,9 +83,23 @@ public class SuperMeleePaarungenV2 {
     /** Maximale Anzahl Backtracking-Knoten als Sicherheitsnetz gegen Endlossuche. */
     private static final int MAX_BACKTRACK_KNOTEN = 10_000_000;
 
+    /** Spieltag-Nummer ausschließlich zur Anreicherung der Log-Meldungen; {@code 0} = nicht gesetzt. */
+    private int spieltagNrFuerLog;
+
     // =========================================================================
     // Öffentliche API — kompatibel zu SuperMeleePaarungen (V1)
     // =========================================================================
+
+    /**
+     * Setzt die Spieltag-Nummer, die ausschließlich zur Anreicherung der
+     * Log-Meldungen verwendet wird (z. B. bei ausgeschöpften Kombinationen).
+     * Ohne Aufruf bleiben die Log-Meldungen ohne Spieltag-Angabe.
+     *
+     * @param spieltagNr Spieltag-Nummer für die Log-Ausgabe
+     */
+    public void setSpieltagNrFuerLog(int spieltagNr) {
+        this.spieltagNrFuerLog = spieltagNr;
+    }
 
     /**
      * Erzeugt eine neue Spielrunde im Standard-Triplette-Modus.
@@ -641,8 +655,9 @@ public class SuperMeleePaarungenV2 {
                     + "Möglicherweise müssen Wiederholungen in den Regeln zugelassen werden.");
         }
 
-        logger.warn("Spielrunde {}: Alle möglichen Spielerkombinationen ausgeschöpft ({} Spieler).",
-                rndNr, n);
+        String spieltagPraefix = spieltagNrFuerLog > 0 ? "Spieltag " + spieltagNrFuerLog + ", " : "";
+        logger.warn("{}Spielrunde {}: Alle möglichen Spielerkombinationen ausgeschöpft ({} Spieler).",
+                spieltagPraefix, rndNr, n);
         throw new AlgorithmenException(
                 "Keine gültige Spielrunde für Runde " + rndNr + " möglich — "
                 + "alle Spielerkombinationen sind ausgeschöpft. "
