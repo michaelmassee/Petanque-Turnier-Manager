@@ -1,5 +1,7 @@
 package de.petanqueturniermanager.helper.sheet;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.IntFunction;
@@ -380,6 +382,7 @@ public class SheetMetadataHelper {
     static void schreibeSheetMetadaten(XNamedRanges namedRanges,
                                        String sheetName, int sheetIdx, String namedRangeKey) {
         try {
+            entferneFremdeIdentitaetsSchluessel(namedRanges, sheetIdx, namedRangeKey);
             if (namedRanges.hasByName(namedRangeKey)) {
                 namedRanges.removeByName(namedRangeKey);
             }
@@ -395,6 +398,58 @@ public class SheetMetadataHelper {
         }
     }
 
+
+    /**
+     * Erzwingt die Invariante <em>„höchstens ein Identitäts-Schlüssel pro Blatt"</em>: entfernt
+     * alle {@code __PTM_*}-Schlüssel (außer {@code __PTM_SCORE_*}, die legitim mit dem
+     * Identitäts-Schlüssel auf Bracket-Blättern koexistieren), die bereits auf das Ziel-Blatt
+     * {@code sheetIdx} zeigen – außer dem gerade zu schreibenden {@code behalteSchluessel}.
+     * <p>
+     * Hintergrund: Generische Blattnamen (z.B. „Meldeliste", „Rangliste", „Teilnehmer") werden
+     * über mehrere Turniersysteme geteilt, jedes mit eigenem Schlüssel. Ohne diese Bereinigung
+     * behält ein von System A beanspruchtes Blatt beim Wechsel zu System B den fremden
+     * A-Schlüssel und erscheint doppelt in der Sidebar (zwei Einträge, dasselbe Blatt).
+     * <p>
+     * Konservativ: {@code #REF!}-Schlüssel (Index -1) werden hier nicht angefasst – die
+     * übernimmt {@link #bereinigeVerwaisteMetadaten}.
+     */
+    private static void entferneFremdeIdentitaetsSchluessel(XNamedRanges namedRanges,
+                                                            int sheetIdx, String behalteSchluessel) {
+        if (namedRanges == null || sheetIdx < 0) {
+            return;
+        }
+        String[] namen = namedRanges.getElementNames();
+        if (namen == null) {
+            return;
+        }
+        List<String> zuEntfernen = new ArrayList<>();
+        for (String name : namen) {
+            if (!name.startsWith("__PTM_") || name.startsWith("__PTM_SCORE_") || name.equals(behalteSchluessel)) {
+                continue;
+            }
+            try {
+                int idx = sheetIndexAusNamedRangeObj(namedRanges.getByName(name));
+                if (idx >= 0 && idx == sheetIdx) {
+                    zuEntfernen.add(name);
+                }
+            } catch (Exception e) {
+                LogUtil.warn(logger, "Fremdschlüssel-Prüfung fehlgeschlagen für '" + name + "'", e);
+            } catch (Error e) {
+                throw e;
+            }
+        }
+        for (String name : zuEntfernen) {
+            try {
+                namedRanges.removeByName(name);
+                logger.debug("Fremden Identitäts-Schlüssel '{}' von Blatt-Index {} entfernt (Blatt-Eindeutigkeit).",
+                        name, sheetIdx);
+            } catch (Exception e) {
+                LogUtil.warn(logger, "Entfernen des Fremdschlüssels '" + name + "' fehlgeschlagen", e);
+            } catch (Error e) {
+                throw e;
+            }
+        }
+    }
 
     // ── Lesen / Suchen ───────────────────────────────────────────────────────
 
@@ -658,25 +713,6 @@ public class SheetMetadataHelper {
     }
 
     // ── Hilfsmethoden ────────────────────────────────────────────────────────
-
-    /**
-     * Löscht einen einzelnen PTM-Metadaten-Schlüssel (Named Range) aus dem Dokument,
-     * falls er vorhanden ist. Kein Fehler wenn der Schlüssel nicht existiert.
-     */
-    public static void loescheSchluessel(XSpreadsheetDocument xDoc, String schluessel) {
-        try {
-            XNamedRanges namedRanges = namedRangesAusDoc(xDoc);
-            if (namedRanges == null || !namedRanges.hasByName(schluessel)) {
-                return;
-            }
-            namedRanges.removeByName(schluessel);
-            logger.debug("Metadaten-Schlüssel '{}' gelöscht.", schluessel);
-        } catch (Exception e) {
-            LogUtil.warn(logger, "Metadaten-Schlüssel löschen fehlgeschlagen für '" + schluessel + "'", e);
-        } catch (Error e) {
-            throw e;
-        }
-    }
 
     /**
      * Sucht nach allen PTM-Metadaten (Named Ranges), die ins Leere zeigen (#REF!)

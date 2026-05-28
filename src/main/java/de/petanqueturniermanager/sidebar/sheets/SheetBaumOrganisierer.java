@@ -1,6 +1,7 @@
 package de.petanqueturniermanager.sidebar.sheets;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.List;
@@ -75,6 +76,14 @@ public class SheetBaumOrganisierer {
             XSpreadsheetDocument xDoc) {
         var gruppenMap = new EnumMap<SheetGruppe, List<BlattKnoten>>(SheetGruppe.class);
         var allKeys = SheetMetadataHelper.getSchluesselMitPrefix(xDoc, "__PTM_");
+        // Deterministische Reihenfolge, damit bei (in Alt-Dokumenten möglichen) Mehrfach-Schlüsseln
+        // auf demselben Blatt stets derselbe Eintrag gewinnt.
+        Arrays.sort(allKeys);
+        // Blatt-Eindeutigkeit in der Anzeige: ein Blatt, das (z.B. nach Systemwechsel) mehrere
+        // Identitäts-Schlüssel trägt, darf nur EINEN Eintrag erzeugen. Nicht-destruktiv – heilt
+        // bestehende Dokumente in der Ansicht, ohne sie zu verändern (der schreib-seitige Purge
+        // in SheetMetadataHelper bereinigt sie dauerhaft bei der nächsten Metadaten-Schreibung).
+        var belegteBlaetter = new HashSet<String>();
         for (var schluessel : allKeys) {
             if (schluessel.startsWith("__PTM_SCORE_")) {
                 continue;
@@ -82,6 +91,12 @@ public class SheetBaumOrganisierer {
             var gruppeOpt = SheetGruppe.fuerSchluessel(schluessel);
             var gruppe = gruppeOpt.orElse(SheetGruppe.ALLGEMEIN);
             SheetMetadataHelper.findeSheet(xDoc, schluessel).ifPresent(sheet -> {
+                var named = Lo.qi(XNamed.class, sheet);
+                if (named != null && !belegteBlaetter.add(named.getName())) {
+                    logger.debug("Blatt '{}' bereits durch anderen Schlüssel belegt – Schlüssel '{}' übersprungen",
+                            named.getName(), schluessel);
+                    return;
+                }
                 // Diese Gruppen erscheinen auf oberster Ebene (keine Einrückung)
                 var einrueckung = (gruppe == SheetGruppe.SUPERMELEE || gruppe == SheetGruppe.LIGA
                         || gruppe == SheetGruppe.SCHWEIZER || gruppe == SheetGruppe.KO

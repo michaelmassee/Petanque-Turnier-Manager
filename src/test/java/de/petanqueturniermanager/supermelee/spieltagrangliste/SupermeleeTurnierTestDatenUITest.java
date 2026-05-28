@@ -3,18 +3,28 @@ package de.petanqueturniermanager.supermelee.spieltagrangliste;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.sun.star.container.XNamed;
+import com.sun.star.sheet.XNamedRanges;
 import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.sheet.XSpreadsheetDocument;
 
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.random.RandomSource;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
@@ -113,6 +123,120 @@ public class SupermeleeTurnierTestDatenUITest extends BaseCalcUITest {
 
 		InputStream jsonFile = SupermeleeTurnierTestDatenUITest.class.getResourceAsStream(referenzDatei);
 		validateWithJson(rangeData, jsonFile);
+	}
+
+	/**
+	 * DIAGNOSE (temporär): dumpt alle {@code __PTM_*}-Named-Ranges nach Blatt und deckt Dubletten auf
+	 * (zwei verschiedene Identitäts-Schlüssel, die auf dasselbe Blatt zeigen).
+	 */
+	/**
+	 * Invariante „höchstens ein Identitäts-Schlüssel pro Blatt": nach vollständiger Generierung
+	 * (inkl. Teams, SpielrundePlan, Endrangliste) darf kein Blatt von zwei verschiedenen
+	 * Nicht-Score-Schlüsseln referenziert werden – sonst entstünden Doppel-Einträge in der Sidebar.
+	 */
+	@Test
+	public void keinBlattMitMehrerenIdentitaetsSchluesseln() throws Exception {
+		new SupermeleeTurnierTestDaten(wkingSpreadsheet).generate();
+		new de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet(wkingSpreadsheet).run();
+		new de.petanqueturniermanager.supermelee.spielrunde.SpielrundePlan(wkingSpreadsheet).run();
+		new de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet(wkingSpreadsheet).run();
+
+		Map<String, List<String>> proBlatt = identitaetsSchluesselProBlatt();
+		assertThat(proBlatt).as("kein Blatt darf mehr als einen Identitäts-Schlüssel tragen")
+				.allSatisfy((blatt, schluessel) -> assertThat(schluessel)
+						.as("Schlüssel auf Blatt '%s'", blatt).hasSize(1));
+	}
+
+	/**
+	 * Schreib-seitiger Purge: schreibt man den Schlüssel eines anderen Turniersystems auf ein
+	 * bereits beanspruchtes (gleichnamiges) Blatt, muss der alte Schlüssel verschwinden – das
+	 * Blatt darf nie zwei Identitäts-Schlüssel gleichzeitig tragen.
+	 */
+	@Test
+	public void systemwechselSchreibtNurEinenSchluesselAufGeteiltesBlatt() throws Exception {
+		new SupermeleeTurnierTestDaten(wkingSpreadsheet).generate();
+		XSpreadsheetDocument xDoc = wkingSpreadsheet.getWorkingSpreadsheetDocument();
+
+		XSpreadsheet meldeliste = sheetHlp.findByName(SheetNamen.meldeliste());
+		assertThat(meldeliste).as("Meldeliste muss existieren").isNotNull();
+		assertThat(schluesselFuer(meldeliste))
+				.as("vor Systemwechsel: nur der Supermelee-Schlüssel")
+				.containsExactly(SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_MELDELISTE);
+
+		// Systemwechsel simulieren: Schweizer beansprucht dasselbe physische "Meldeliste"-Blatt
+		SheetMetadataHelper.schreibeSheetMetadaten(xDoc, meldeliste,
+				SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_MELDELISTE);
+
+		assertThat(schluesselFuer(meldeliste))
+				.as("nach Systemwechsel: alter Supermelee-Schlüssel gepurgt, nur Schweizer übrig")
+				.containsExactly(SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_MELDELISTE);
+	}
+
+	/**
+	 * Anzeige-seitige Heilung: ein (z.B. durch eine Altversion) künstlich doppelt beschlüsseltes
+	 * Blatt darf in der Sidebar-Baumstruktur trotzdem nur EINEN Eintrag erzeugen.
+	 */
+	@Test
+	public void sidebarBaumZeigtDoppeltBeschluesseltesBlattNurEinmal() throws Exception {
+		new SupermeleeTurnierTestDaten(wkingSpreadsheet).generate();
+		XSpreadsheetDocument xDoc = wkingSpreadsheet.getWorkingSpreadsheetDocument();
+		XSpreadsheet meldeliste = sheetHlp.findByName(SheetNamen.meldeliste());
+
+		// Fremdschlüssel am Purge vorbei direkt injizieren (simuliert Alt-Dokument)
+		injiziereRohenSchluessel(xDoc, SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_MELDELISTE,
+				Lo.qi(XNamed.class, meldeliste).getName());
+		assertThat(schluesselFuer(meldeliste))
+				.as("Injektion erzeugt absichtlich zwei Schlüssel auf demselben Blatt")
+				.hasSize(2);
+
+		var baum = new de.petanqueturniermanager.sidebar.sheets.SheetBaumOrganisierer()
+				.baumAufbauen(xDoc, Set.of(), Set.of(), Set.of());
+		String meldelisteName = Lo.qi(XNamed.class, meldeliste).getName();
+		long anzEintraege = baum.stream()
+				.filter(e -> e instanceof de.petanqueturniermanager.sidebar.sheets.BlattBaumEintrag.BlattKnoten)
+				.map(e -> (de.petanqueturniermanager.sidebar.sheets.BlattBaumEintrag.BlattKnoten) e)
+				.filter(k -> meldelisteName.equals(Lo.qi(XNamed.class, k.sheet()).getName()))
+				.count();
+		assertThat(anzEintraege).as("Meldeliste darf trotz Doppel-Schlüssel nur einmal erscheinen").isEqualTo(1);
+	}
+
+	/** Liefert alle Nicht-Score-Identitäts-Schlüssel gruppiert nach aufgelöstem Blattnamen. */
+	private Map<String, List<String>> identitaetsSchluesselProBlatt() {
+		XSpreadsheetDocument xDoc = wkingSpreadsheet.getWorkingSpreadsheetDocument();
+		Map<String, List<String>> proBlatt = new LinkedHashMap<>();
+		for (String schluessel : SheetMetadataHelper.getSchluesselMitPrefix(xDoc, "__PTM_")) {
+			if (schluessel.startsWith("__PTM_SCORE_")) {
+				continue;
+			}
+			SheetMetadataHelper.findeSheet(xDoc, schluessel).ifPresent(sheet ->
+					proBlatt.computeIfAbsent(Lo.qi(XNamed.class, sheet).getName(), k -> new ArrayList<>())
+							.add(schluessel));
+		}
+		return proBlatt;
+	}
+
+	/** Liefert die Identitäts-Schlüssel, die auf das gegebene Blatt zeigen. */
+	private List<String> schluesselFuer(XSpreadsheet sheet) {
+		String name = Lo.qi(XNamed.class, sheet).getName();
+		return identitaetsSchluesselProBlatt().getOrDefault(name, List.of());
+	}
+
+	/** Schreibt einen Named Range direkt (am schreib-seitigen Purge vorbei), um Alt-Datenstände zu simulieren. */
+	private void injiziereRohenSchluessel(XSpreadsheetDocument xDoc, String schluessel, String blattName)
+			throws Exception {
+		XNamedRanges namedRanges = Lo.qi(XNamedRanges.class,
+				Lo.qi(com.sun.star.beans.XPropertySet.class, xDoc).getPropertyValue("NamedRanges"));
+		short idx = 0;
+		String[] namen = xDoc.getSheets().getElementNames();
+		for (short i = 0; i < namen.length; i++) {
+			if (blattName.equals(namen[i])) {
+				idx = i;
+				break;
+			}
+		}
+		com.sun.star.table.CellAddress addr = new com.sun.star.table.CellAddress();
+		addr.Sheet = idx;
+		namedRanges.addNewByName(schluessel, "$'" + blattName.replace("'", "''") + "'.$A$1", addr, 0);
 	}
 
 	/**

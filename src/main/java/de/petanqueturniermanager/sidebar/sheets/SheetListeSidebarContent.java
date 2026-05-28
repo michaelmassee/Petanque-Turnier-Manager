@@ -576,7 +576,10 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
         var system = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();
         switch (system) {
             case LIGA -> heileLigaMetadaten(xDoc);
-            case MAASTRICHTER -> heileMaastrichterMetadaten(xDoc);
+            // Maastrichter-Altdokumente (Vorrunden unter Schweizer-Schlüssel) werden nicht mehr
+            // gesondert geheilt: der schreib-seitige Purge in SheetMetadataHelper entfernt fremde
+            // Identitäts-Schlüssel auf demselben Blatt bei der nächsten Vorrunden-Schreibung, und
+            // SheetBaumOrganisierer dedupliziert die Anzeige bereits beim Aufbau.
             default -> { /* keine Migration nötig */ }
         }
     }
@@ -586,17 +589,5 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
         SheetMetadataHelper.findeSheetUndHeile(xDoc, SheetMetadataHelper.SCHLUESSEL_LIGA_SPIELPLAN, SheetNamen.LEGACY_SPIELPLAN);
         SheetMetadataHelper.findeSheetUndHeile(xDoc, SheetMetadataHelper.SCHLUESSEL_LIGA_DIREKTVERGLEICH, SheetNamen.LEGACY_DIREKTVERGLEICH);
         SheetMetadataHelper.findeSheetUndHeile(xDoc, SheetMetadataHelper.SCHLUESSEL_LIGA_RANGLISTE, SheetNamen.LEGACY_RANGLISTE);
-    }
-
-    /**
-     * Entfernt veraltete Schweizer-Spielrunden-Schlüssel aus Maastrichter-Dokumenten.
-     * Ältere Plugin-Versionen speicherten die Maastrichter-Vorrunden unter dem Schweizer-Schlüssel.
-     * Die neuen Maastrichter-Schlüssel wurden bereits bei der ersten Aktion gespeichert;
-     * die alten Schweizer-Schlüssel müssen manuell entfernt werden.
-     */
-    private void heileMaastrichterMetadaten(XSpreadsheetDocument xDoc) {
-        for (int n = 1; n <= 10; n++) {
-            SheetMetadataHelper.loescheSchluessel(xDoc, SheetMetadataHelper.schluesselSchweizerSpielrunde(n));
-        }
     }
 }
