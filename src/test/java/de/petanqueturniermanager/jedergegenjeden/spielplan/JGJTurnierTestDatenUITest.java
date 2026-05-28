@@ -3,6 +3,8 @@ package de.petanqueturniermanager.jedergegenjeden.spielplan;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.InputStream;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,6 +17,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.random.RandomSource;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteDirektvergleichSheet;
 import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteSheet;
@@ -75,6 +78,46 @@ public class JGJTurnierTestDatenUITest extends BaseCalcUITest {
 
 		new JGJRanglisteDirektvergleichSheet(wkingSpreadsheet).run();
 		validiereDirektvergleichPerJson(anzTeams, "jgj-direktvergleich-17.json");
+	}
+
+	/**
+	 * Korrektheit der PTM-Metadaten (10 Teams Tête): Meldeliste, Spielplan, Rangliste und das
+	 * separat erzeugte Direktvergleich-Blatt müssen je exakt ihren Identitäts-Schlüssel tragen.
+	 */
+	@Test
+	public void jedesBlattTraegtKorrektenSchluessel10TeamsTete() throws GenerateException {
+		new JGJTurnierTestDaten(wkingSpreadsheet).generate();
+		new JGJRanglisteDirektvergleichSheet(wkingSpreadsheet).run();
+
+		Map<String, String> erwartung = jgjBasisErwartung();
+		pruefeJedesBlattTraegtKorrektenSchluessel(erwartung);
+	}
+
+	/**
+	 * Korrektheit der PTM-Metadaten (17 Teams Doublette, Gruppengröße 6 → 3 Gruppen): zusätzlich
+	 * zu den Standard-Blättern müssen die drei Gruppen-Spielplan-Blätter A/B/C ihren
+	 * jeweiligen Identitäts-Schlüssel tragen.
+	 */
+	@Test
+	public void jedesBlattTraegtKorrektenSchluessel17TeamsDoublette() throws GenerateException {
+		new JGJDoublette17TurnierTestDaten(wkingSpreadsheet).generate();
+		new JGJRanglisteDirektvergleichSheet(wkingSpreadsheet).run();
+
+		Map<String, String> erwartung = jgjBasisErwartung();
+		for (String gruppe : new String[]{"A", "B", "C"}) {
+			erwartung.put(SheetNamen.jgjGruppeSpielplan(gruppe),
+					SheetMetadataHelper.schluesselJgjGruppeSpielplan(gruppe));
+		}
+		pruefeJedesBlattTraegtKorrektenSchluessel(erwartung);
+	}
+
+	private Map<String, String> jgjBasisErwartung() {
+		Map<String, String> erwartung = new LinkedHashMap<>();
+		erwartung.put(SheetNamen.meldeliste(), SheetMetadataHelper.SCHLUESSEL_JGJ_MELDELISTE);
+		erwartung.put(SheetNamen.spielplan(), SheetMetadataHelper.SCHLUESSEL_JGJ_SPIELPLAN);
+		erwartung.put(SheetNamen.rangliste(), SheetMetadataHelper.SCHLUESSEL_JGJ_RANGLISTE);
+		erwartung.put(SheetNamen.direktvergleich(), SheetMetadataHelper.SCHLUESSEL_JGJ_DIREKTVERGLEICH);
+		return erwartung;
 	}
 
 	private void validiereGrundstruktur() {

@@ -3,6 +3,8 @@ package de.petanqueturniermanager.ko;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.InputStream;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,6 +18,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.random.RandomSource;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 
 /**
@@ -70,6 +73,52 @@ public class KoTurnierTestDatenUITest extends BaseCalcUITest {
 		validiereGrundstruktur(10);
 		validiereMeldelistePerJson(10, "ko-meldeliste-10-cadrage.json");
 		validiereTurnierbaumPerJson(SheetNamen.koTurnierbaumEinzel(), "ko-turnierbaum-10-cadrage.json");
+	}
+
+	/**
+	 * Korrektheit der PTM-Metadaten (8 Teams, Einzel-Bracket): Meldeliste und das einzelne
+	 * Turnierbaum-Blatt müssen je exakt ihren Identitäts-Schlüssel tragen.
+	 */
+	@Test
+	public void jedesBlattTraegtKorrektenSchluessel8Teams() throws GenerateException {
+		new KoTurnierTestDaten(wkingSpreadsheet, 8).generate();
+
+		Map<String, String> erwartung = new LinkedHashMap<>();
+		erwartung.put(SheetNamen.meldeliste(), SheetMetadataHelper.SCHLUESSEL_KO_MELDELISTE);
+		erwartung.put(SheetNamen.koTurnierbaumEinzel(), SheetMetadataHelper.schluesselKoTurnierbaum(""));
+
+		pruefeJedesBlattTraegtKorrektenSchluessel(erwartung);
+	}
+
+	/**
+	 * Korrektheit der PTM-Metadaten (16 Teams, 2 Gruppen): Meldeliste plus die beiden
+	 * Gruppen-Turnierbäume A/B müssen je exakt ihren Identitäts-Schlüssel tragen.
+	 */
+	@Test
+	public void jedesBlattTraegtKorrektenSchluessel16TeamsMitGruppen() throws GenerateException {
+		new Ko16TeamsTurnierTestDaten(wkingSpreadsheet).generate();
+
+		Map<String, String> erwartung = new LinkedHashMap<>();
+		erwartung.put(SheetNamen.meldeliste(), SheetMetadataHelper.SCHLUESSEL_KO_MELDELISTE);
+		erwartung.put(SheetNamen.koTurnierbaumGruppe("A"), SheetMetadataHelper.schluesselKoTurnierbaum("A"));
+		erwartung.put(SheetNamen.koTurnierbaumGruppe("B"), SheetMetadataHelper.schluesselKoTurnierbaum("B"));
+
+		pruefeJedesBlattTraegtKorrektenSchluessel(erwartung);
+	}
+
+	/**
+	 * Korrektheit der PTM-Metadaten (10 Teams mit Cadrage, Einzel-Bracket): Meldeliste und das
+	 * einzelne Turnierbaum-Blatt müssen je exakt ihren Identitäts-Schlüssel tragen.
+	 */
+	@Test
+	public void jedesBlattTraegtKorrektenSchluessel10TeamsCadrage() throws GenerateException {
+		new KoCadrageTurnierTestDaten(wkingSpreadsheet).generate();
+
+		Map<String, String> erwartung = new LinkedHashMap<>();
+		erwartung.put(SheetNamen.meldeliste(), SheetMetadataHelper.SCHLUESSEL_KO_MELDELISTE);
+		erwartung.put(SheetNamen.koTurnierbaumEinzel(), SheetMetadataHelper.schluesselKoTurnierbaum(""));
+
+		pruefeJedesBlattTraegtKorrektenSchluessel(erwartung);
 	}
 
 	private void validiereGrundstruktur(int erwarteteTeams) throws GenerateException {
