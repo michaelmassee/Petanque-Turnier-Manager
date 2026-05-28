@@ -14,10 +14,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.sun.star.container.XNamed;
+import com.sun.star.sheet.XNamedRange;
 import com.sun.star.sheet.XNamedRanges;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.sheet.XSpreadsheets;
+import com.sun.star.table.XColumnRowRange;
+import com.sun.star.table.XTableColumns;
 
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -350,5 +353,54 @@ public class SupermeleeTurnierTestDatenUITest extends BaseCalcUITest {
 				SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_MELDELISTE))
 				.as("dieselbe Blatt-Referenz bleibt nach dem Umbenennen registriert")
 				.isTrue();
+	}
+
+	/**
+	 * Belegt gegen echtes LibreOffice den von den Unit-Tests nur gemockten Sachverhalt:
+	 * Ein dokumentweiter Named Range mit kaputter Referenz liefert über
+	 * {@link XNamedRange#getContent()} (via {@code GRAM_API}) locale-unabhängig {@code #REF!} –
+	 * genau die Grundlage von {@code SheetMetadataHelper.istKaputteReferenz}.
+	 * <p>
+	 * Wichtig: Das bloße Löschen des Blattes erzeugt <em>keinen</em> Waisen – LO entfernt den
+	 * abhängigen globalen Named Range dann selbst. Eine kaputte Referenz bei <em>überlebendem</em>
+	 * Namen entsteht, wenn der A1-Anker wegbricht; hier wird dazu Spalte A des Blattes gelöscht.
+	 * Anschließend muss {@code findeSheet} nichts mehr liefern und
+	 * {@code bereinigeVerwaisteMetadaten} den Schlüssel entfernen.
+	 */
+	@Test
+	public void kaputteReferenzLiefertRefFehlerUndWirdBereinigt() throws Exception {
+		XSpreadsheetDocument xDoc = wkingSpreadsheet.getWorkingSpreadsheetDocument();
+		final String blattName = "Meldeliste";
+		final String schluessel = SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_MELDELISTE;
+
+		XSpreadsheet blatt = sheetHlp.newIfNotExist(blattName, (short) 0);
+		SheetMetadataHelper.schreibeSheetMetadaten(xDoc, blatt, schluessel);
+		assertThat(SheetMetadataHelper.findeSheet(xDoc, schluessel))
+				.as("vor dem Bruch muss das Blatt über den Schlüssel auffindbar sein").isPresent();
+
+		// A1-Anker brechen: Spalte A löschen. Der Name überlebt (Blatt existiert), die Referenz
+		// wird zu #REF! – im Gegensatz zum Blatt-Löschen, das den Namen ganz entfernen würde.
+		XTableColumns spalten = Lo.qi(XColumnRowRange.class, blatt).getColumns();
+		spalten.removeByIndex(0, 1);
+
+		// Kern-Beweis: getContent() rendert die kaputte Referenz locale-unabhängig als "#REF!".
+		XNamedRanges namedRanges = Lo.qi(XNamedRanges.class,
+				Lo.qi(com.sun.star.beans.XPropertySet.class, xDoc).getPropertyValue("NamedRanges"));
+		assertThat(namedRanges.hasByName(schluessel))
+				.as("der Named Range überlebt das Spalten-Löschen (nur die Referenz bricht)").isTrue();
+		XNamedRange referenz = Lo.qi(XNamedRange.class, namedRanges.getByName(schluessel));
+		assertThat(referenz.getContent())
+				.as("getContent() rendert die kaputte Referenz via GRAM_API als #REF!")
+				.contains("#REF!");
+
+		// findeSheet erkennt die kaputte Referenz und liefert das Blatt nicht mehr.
+		assertThat(SheetMetadataHelper.findeSheet(xDoc, schluessel))
+				.as("eine kaputte Referenz darf kein Blatt mehr auflösen").isEmpty();
+
+		// Cleanup entfernt den verwaisten Schlüssel ersatzlos.
+		SheetMetadataHelper.bereinigeVerwaisteMetadaten(xDoc);
+		assertThat(SheetMetadataHelper.getSchluesselMitPrefix(xDoc, "__PTM_"))
+				.as("nach der Bereinigung ist der verwaiste Schlüssel entfernt")
+				.doesNotContain(schluessel);
 	}
 }
