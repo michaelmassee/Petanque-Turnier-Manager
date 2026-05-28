@@ -17,6 +17,7 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.random.RandomSource;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
@@ -30,6 +31,8 @@ public class SupermeleeTurnierTestDatenUITest extends BaseCalcUITest {
 
 	private static final long SEED_FUER_TESTS = 42L;
 	private static final int ANZ_SPIELER = 100;
+	private static final int ANZ_SPIELTAGE = 5;
+	private static final int MIN_ANZ_AKTIVE_SPIELER = 30;
 	private static final int MELDELISTE_ERSTE_DATEN_ZEILE = 3;
 
 	@BeforeEach
@@ -55,12 +58,29 @@ public class SupermeleeTurnierTestDatenUITest extends BaseCalcUITest {
 		assertThat(sheetHlp.findByName(SheetNamen.spieltagRangliste(5)))
 				.as("Spieltag-Rangliste 5 muss existieren").isNotNull();
 
+		validiereMindestensAktiveProSpieltag();
 		validiereMeldelistePerJson();
 		validiereSpieltagRanglistePerJson(1, "supermelee-spieltagrangliste-1.json");
 		validiereSpieltagRanglistePerJson(2, "supermelee-spieltagrangliste-2.json");
 		validiereSpieltagRanglistePerJson(3, "supermelee-spieltagrangliste-3.json");
 		validiereSpieltagRanglistePerJson(4, "supermelee-spieltagrangliste-4.json");
 		validiereSpieltagRanglistePerJson(5, "supermelee-spieltagrangliste-5.json");
+	}
+
+	/**
+	 * Garantie aus der Testdaten-Generierung: jeder Spieltag hat mindestens
+	 * {@link #MIN_ANZ_AKTIVE_SPIELER} aktive Meldungen. Die Meldeliste-JSON erfasst nur
+	 * Nr/Vorname/Nachname (nicht die Spieltag-Aktiv-Spalten), daher ist diese Assertion der
+	 * eigentliche Nachweis – eine gruene JSON-Validierung allein belegt die Grenze nicht.
+	 */
+	private void validiereMindestensAktiveProSpieltag() throws GenerateException {
+		MeldeListeSheet_Update meldeListe = new MeldeListeSheet_Update(wkingSpreadsheet);
+		for (int spieltagNr = 1; spieltagNr <= ANZ_SPIELTAGE; spieltagNr++) {
+			meldeListe.setSpielTag(SpielTagNr.from(spieltagNr));
+			assertThat(meldeListe.getAktiveMeldungen().size())
+					.as("Aktive Meldungen Spieltag %d", spieltagNr)
+					.isGreaterThanOrEqualTo(MIN_ANZ_AKTIVE_SPIELER);
+		}
 	}
 
 	private void validiereMeldelistePerJson() throws GenerateException {
