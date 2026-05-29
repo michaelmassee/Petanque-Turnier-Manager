@@ -196,6 +196,7 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 		}
 
 		SuperMeleePaarungenV2 paarungen = new SuperMeleePaarungenV2();
+		paarungen.setSpieltagNrFuerLog(sheet.getSpielTag().getNr());
 		// Den konfigurierten Wert auf die tatsächlich vorhandenen vergangenen Spieltage deckeln:
 		// mehr zu berücksichtigen ist wirkungslos (gespieltenRundenEinlesenMitLimit floored ohnehin),
 		// erzeugt aber im Lockerungs-Loop zahlreiche identische, erneut scheiternde Auslosungsversuche.

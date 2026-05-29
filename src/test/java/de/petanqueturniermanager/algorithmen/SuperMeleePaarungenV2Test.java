@@ -1393,8 +1393,8 @@ public class SuperMeleePaarungenV2Test {
      * <br>
      * Vor dem Multi-Shuffle-Fix dauerte jeder scheiternde Versuch bis zu 10 M Knoten lang,
      * was bei 5 Spieltag-Levels × 5 Fairness-Levels × 10 M ≈ 50 Sekunden Blockade ergab.
-     * Mit {@code MAX_KNOTEN_PRO_PASS=200_000} und {@code MAX_SHUFFLE_VERSUCHE=10} sind es
-     * maximal 4 M Knoten pro Algorithmus-Aufruf — typischerweise weit darunter.
+     * Mit {@code maxKnotenProPass(12)=50_000} und {@code MAX_SHUFFLE_VERSUCHE=10} sind es
+     * maximal 1 M Knoten pro Algorithmus-Aufruf — typischerweise weit darunter.
      */
     @Test
     @org.junit.jupiter.api.Timeout(value = 5)
@@ -1411,6 +1411,37 @@ public class SuperMeleePaarungenV2Test {
         assertThat(exceptionGeworfen)
                 .as("Nach erschöpften Kombinationen muss AlgorithmenException geworfen werden")
                 .isTrue();
+    }
+
+    // =========================================================================
+    // maxKnotenProPass
+    // =========================================================================
+
+    @Test
+    public void testMaxKnotenProPass_skaliertMitN() {
+        assertThat(SuperMeleePaarungenV2.maxKnotenProPass(12)).isEqualTo(50_000);
+        assertThat(SuperMeleePaarungenV2.maxKnotenProPass(24)).isEqualTo(50_000);
+        assertThat(SuperMeleePaarungenV2.maxKnotenProPass(25)).isEqualTo(200_000);
+        assertThat(SuperMeleePaarungenV2.maxKnotenProPass(36)).isEqualTo(200_000);
+        assertThat(SuperMeleePaarungenV2.maxKnotenProPass(37)).isEqualTo(400_000);
+        assertThat(SuperMeleePaarungenV2.maxKnotenProPass(48)).isEqualTo(400_000);
+        assertThat(SuperMeleePaarungenV2.maxKnotenProPass(49)).isEqualTo(600_000);
+        assertThat(SuperMeleePaarungenV2.maxKnotenProPass(60)).isEqualTo(600_000);
+    }
+
+    @Test
+    public void testMaxKnotenFairnessVersuch_kleinerAlsVollesBudget() {
+        assertThat(SuperMeleePaarungenV2.maxKnotenFairnessVersuch(12)).isEqualTo(20_000);
+        assertThat(SuperMeleePaarungenV2.maxKnotenFairnessVersuch(24)).isEqualTo(20_000);
+        assertThat(SuperMeleePaarungenV2.maxKnotenFairnessVersuch(36)).isEqualTo(25_000);
+        assertThat(SuperMeleePaarungenV2.maxKnotenFairnessVersuch(42)).isEqualTo(50_000);
+        assertThat(SuperMeleePaarungenV2.maxKnotenFairnessVersuch(48)).isEqualTo(50_000);
+        assertThat(SuperMeleePaarungenV2.maxKnotenFairnessVersuch(60)).isEqualTo(75_000);
+        // Muss immer kleiner als das volle Budget sein
+        for (int n = 6; n <= 60; n += 6) {
+            assertThat(SuperMeleePaarungenV2.maxKnotenFairnessVersuch(n))
+                    .isLessThan(SuperMeleePaarungenV2.maxKnotenProPass(n));
+        }
     }
 
     // =========================================================================
