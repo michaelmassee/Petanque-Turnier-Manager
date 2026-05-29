@@ -284,9 +284,28 @@ tasks.register('buildOXT', Zip) {
         into 'registry'
     }
 
-    // Images (OXT-Root)
+    // Images (OXT-Root) – nur Laufzeit-Assets:
+    // - Logo-PNGs für description.xml (32px Default, 256px High-Contrast)
+    // - Sidebar-24px-Logo (Quelle für den registry/-Kopierschritt darunter)
+    // - Sidebar-Icons (geladen via getImageUrlDir() + "sidebar/…" durch InfoSidebarContent)
+    // - Konfig-Dialog-Icons (geladen via getImageUrlDir() + "konfig/…" durch konfigdialog)
+    // NICHT enthalten: images/icons/{32,48,64,128,svg,*.py,README,preview*},
+    //   images/toolbar-*.png (Root-Ebene), images/petanqueturniermanager-logo.png,
+    //   images/sidebar-fortschritt.png, images/pdf-download.png (Classpath-Res. im JAR),
+    //   images/*.py, images/*.readme
     from('images') {
+        include 'petanqueturniermanager-logo-32px.png'
+        include 'petanqueturniermanager-logo-256px.png'
+        include 'petanqueturniermanager-logo-sidebar-24px.png'
         into 'images'
+    }
+    from('images/sidebar') {
+        include '*.png'
+        into 'images/sidebar'
+    }
+    from('images/konfig') {
+        include '*.png'
+        into 'images/konfig'
     }
 
     // Logo für Sidebar-Deck-Icon: %origin% in Sidebar.xcu ist relativ zur XCU-Datei,
@@ -315,11 +334,6 @@ tasks.register('buildOXT', Zip) {
     // Runtime dependencies (libs)
     from(layout.buildDirectory.dir('runtime-libs')) {
         into 'libs'
-    }
-
-    // IDL files
-    from('idl') {
-        into 'idl'
     }
 
     // RDB Type Registry (kompiliert aus IDL)
