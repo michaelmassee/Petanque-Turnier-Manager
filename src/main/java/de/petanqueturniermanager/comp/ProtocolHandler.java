@@ -342,9 +342,12 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_PLUGIN_KONFIGURATION  = "pluginKonfiguration";
 	public static final String CMD_PROCESSBOX_ANZEIGEN   = "processboxAnzeigen";
 	public static final String CMD_PROJEKT_SEITE_OEFFNEN = "projekt_seite_oeffnen";
+	public static final String CMD_FEEDBACK              = "feedback";
 
 	private static final String PROJEKT_SEITE_URL =
 			"https://michaelmassee.github.io/Petanque-Turnier-Manager/";
+	private static final String FEEDBACK_MAILTO_URL =
+			"mailto:michael@massee.de?subject=Feedback%3A%20P%C3%A9tanque%20Turnier-Manager";
 	// Symbolleiste
 	public static final String CMD_TOOLBAR_START                 = "toolbar_start";
 	public static final String CMD_TOOLBAR_WEITER                = "toolbar_weiter";
@@ -1059,6 +1062,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				break;
 			case CMD_PROJEKT_SEITE_OEFFNEN:
 				oeffneBrowserUrl(PROJEKT_SEITE_URL);
+				break;
+			case CMD_FEEDBACK:
+				oeffneBrowserUrl(FEEDBACK_MAILTO_URL);
 				break;
 			case CMD_ABBRUCH:
 				SheetRunner.cancelRunner();
@@ -1824,7 +1830,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_LOGFILE_ANZEIGEN,
 				 CMD_PLUGIN_KONFIGURATION,
 				 CMD_PROCESSBOX_ANZEIGEN,
-				 CMD_PROJEKT_SEITE_OEFFNEN                  -> true;
+				 CMD_PROJEKT_SEITE_OEFFNEN,
+				 CMD_FEEDBACK                               -> true;
 			case CMD_ABBRUCH                                -> false;
 			case CMD_TOOLBAR_START                          -> ts == TurnierSystem.KEIN;
 			case CMD_TOOLBAR_WEITER                         -> ts != TurnierSystem.KEIN;
