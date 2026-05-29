@@ -144,3 +144,51 @@ generiereRundeMitFesteTeamGroese():
 | `Team` | `addSpielerWennNichtVorhanden()` | warImTeamMit-Einträge beim Generieren |
 | `Spieler` | `warImTeamMit(other)` | Hard-Constraint-Abfrage (+ SetzPos) |
 | `Spieler` | `warImSpielMit(other)` | Soft-Constraint-Abfrage |
+
+---
+
+## 5. Nebenwirkung: Gegner-Qualität leidet bei effMaxSpieltage-Reset
+
+Wenn der `effMaxSpieltage`-Reset auf 0 ausgelöst wird (Knotenlimit), lädt
+`gespieltenRundenEinlesenMitLimit` nur den laufenden Spieltag. Dabei wird
+`addGegner` **nur für die bereits gespielten Runden dieses Spieltags**
+wiederhergestellt — die Gegner-Geschichte früherer Spieltage ist für den
+Optimizer in `optimiereGegnerPaarung` unsichtbar.
+
+**Effekt**: Paare, die in ST1–3 bereits mehrfach Gegner waren, erscheinen
+dem Optimizer als "frisch". Der Score berechnet sich nur aus den laufenden
+Spieltag-Runden → der Optimizer vermeidet sie weniger stark.
+
+**Messbare Folge** (analysiert an `super-test-alk.ods`):
+
+| ST | Gegner-Sättigung vorher | Intra-ST-Wiederholungen | Ursache |
+|---|---|---|---|
+| 1 | 0 % | 1 | Optimizer-Grenze (alle Alternativen gleich schlecht) |
+| 2 | 6 % | 1 | dto. |
+| 3 | 9 % | 2 | dto. |
+| 4 | 13 % | **5** | effMaxSpieltage-Reset → cross-ST-Gegnergeschichte verloren |
+| 5 | 13 % | 1 | Reset seltener nötig (Multi-Shuffle-Fix greift) |
+
+Meiners/Radde (ST4): vor ST4 bereits **3× Gegner** in ST1–3, aber beim
+Reset unsichtbar → Optimizer sah nur 10 bzw. 20 Pkt statt 40/50 Pkt →
+wurde trotz hoher Vorbelastung dreimal in ST4 zusammengelost.
+
+**Fix**: Multi-Shuffle (Commit b4db75fb) reduziert effMaxSpieltage-Resets
+drastisch → cross-ST-Gegnergeschichte bleibt erhalten → Optimizer arbeitet
+mit vollständiger Information.
+
+### Analyse-Werkzeuge
+
+```bash
+# Überblick aller Spieltage (Tabelle: Mitspieler-Wdh, Gegner-Wdh, Crossover)
+python3 tools/analyse_alle_spieltage.py turnier.ods
+
+# Kumulierte Gegner-Sättigung + Ursachenanalyse je Runde
+python3 tools/analyse_gegner_kumuliert.py turnier.ods
+
+# Detaillierte Scores je Spiel für einen Spieltag
+python3 tools/analyse_gegner_kumuliert.py turnier.ods --spieltag 4 --scores
+
+# Einzelner Spieltag (vollständige 5-Punkte-Analyse)
+python3 tools/analyse_supermelee_spieltag.py turnier.ods --spieltag 4
+```
