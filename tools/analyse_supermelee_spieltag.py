@@ -259,24 +259,19 @@ def main():
             print(f'     {n}× : {a:>3} {nm(a):28s}  vs  {b:>3} {nm(b)}')
     print()
 
-    # --- 3) Crossover (Team + Gegner kombiniert) ---
-    crossover = Counter()
-    for k, v in mitspieler.items():
-        crossover[k] += v
-    for k, v in gegner.items():
-        crossover[k] += v
-    cw = {k: v for k, v in crossover.items() if v > 1}
-    print('--- 3) CROSSOVER (Paare mehrfach im selben Spiel, Team ODER Gegner) ---')
-    print(f'  Spielerpaare insgesamt im selben Spiel: {len(crossover)}, davon mehrfach: {len(cw)}')
-    vt = Counter(cw.values())
-    for n in sorted(vt):
-        print(f'     {vt[n]} Paare {n}× im selben Spiel')
+    # --- 3) Crossover: Paar war sowohl Mitspieler als auch Gegner (Rollenwechsel) ---
+    # Nur Paare mit mitspieler > 0 UND gegner > 0 — Fall "2× Mitspieler" oder
+    # "2× Gegner" ist bereits in den vorigen Abschnitten erfasst und zählt hier nicht.
+    alle_paare = set(mitspieler) | set(gegner)
+    cw = {k: (mitspieler.get(k, 0), gegner.get(k, 0))
+          for k in alle_paare
+          if mitspieler.get(k, 0) > 0 and gegner.get(k, 0) > 0}
+    print('--- 3) CROSSOVER (Paar war sowohl Mitspieler als auch Gegner) ---')
+    print(f'  Spielerpaare insgesamt im selben Spiel: {len(alle_paare)}, davon Rollenwechsel: {len(cw)}')
     if cw:
         def nm(n): return stats.get(n, {}).get('name') or f'#{n}'
-        for (a, b), n in sorted(cw.items(), key=lambda x: (-x[1], x[0])):
-            ms = mitspieler.get((a, b), 0)
-            gg = gegner.get((a, b), 0)
-            print(f'     {n}× : {a:>3} {nm(a):28s}  +  {b:>3} {nm(b):28s}  (Team {ms}×, Gegner {gg}×)')
+        for (a, b), (ms, gg) in sorted(cw.items(), key=lambda x: (-(x[1][0]+x[1][1]), x[0])):
+            print(f'     {a:>3} {nm(a):28s}  +  {b:>3} {nm(b):28s}  (Team {ms}×, Gegner {gg}×)')
     print()
 
     # --- 4) Rangliste-Werte ---

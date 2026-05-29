@@ -153,10 +153,9 @@ def analysiere_spieltag(root, meta_xml, spieltag_nr, pkt_plus_def, pkt_minus_def
 
     mw = sum(1 for v in mitspieler.values() if v > 1)
     gw = {k: v for k, v in gegner.items() if v > 1}
-    crossover = Counter()
-    for k, v in mitspieler.items(): crossover[k] += v
-    for k, v in gegner.items():     crossover[k] += v
-    cw = sum(1 for v in crossover.values() if v > 1)
+    # Crossover = Rollenwechsel: Paar war sowohl Mitspieler als auch Gegner
+    cw = sum(1 for k in set(mitspieler) | set(gegner)
+             if mitspieler.get(k, 0) > 0 and gegner.get(k, 0) > 0)
     max_gegner_wdh = max(gw.values(), default=0)
 
     # Namen aus Rangliste befüllen
@@ -254,7 +253,7 @@ def main():
     print(f'Supermelee-Überblick: {args.ods}')
     print()
     print(f'{"ST":>3} | {"Spieler":>7} | {"Runden":>6} | '
-          f'{"Mitspieler-Wdh":>14} | {"Gegner-Wdh":>14} | {"Crossover":>9} | Rangliste')
+          f'{"Mitspieler-Wdh":>14} | {"Gegner-Wdh":>14} | {"Rollenwechsel":>13} | Rangliste')
     print('-' * 80)
 
     fehler_gesamt = False
@@ -265,7 +264,7 @@ def main():
         cw_str = str(r['crossover']) if r['crossover'] > 0 else '✓ 0'
         rl_str = ('✓' if r['rl_ok'] else ('❌' if r['rl_ok'] is False else '?'))
         print(f'{r["spieltag"]:>3} | {r["spieler"]:>7} | {r["runden"]:>6} | '
-              f'{ms_ok:>14} | {gw_str:>14} | {cw_str:>9} | {rl_str}')
+              f'{ms_ok:>14} | {gw_str:>14} | {cw_str:>13} | {rl_str}')
         if r['mitspieler_wdh'] > 0:
             fehler_gesamt = True
 
