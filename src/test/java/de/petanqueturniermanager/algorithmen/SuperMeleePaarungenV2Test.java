@@ -1345,6 +1345,75 @@ public class SuperMeleePaarungenV2Test {
     }
 
     // =========================================================================
+    // Multi-Shuffle / Knotenlimit-Resilienz
+    // =========================================================================
+
+    /**
+     * Szenario: dichte Soft-Matrix, leere Hard-Matrix.<br>
+     * <br>
+     * Nach vielen Spieltagen haben alle 12 Spieler jeden anderen als {@code warImSpielMit}
+     * eingetragen (gesättigte Soft-Matrix). Die Hard-Matrix (warImTeamMit) ist leer —
+     * viele gültige Lösungen existieren.<br>
+     * <br>
+     * Erwartetes Verhalten mit Multi-Shuffle:
+     * <ul>
+     *   <li>Pass 1 (unionMatrix = all-true): Forward-Checking erkennt Unmöglichkeit bei
+     *       Tiefe ~4 (Spieler 5 kann keinem 1-Spieler-Team beitreten) — wenige Knoten.</li>
+     *   <li>Pass 2 (hardMatrix = all-false): jede Zuweisung gültig, Lösung in ~n Knoten.</li>
+     * </ul>
+     * Vor dem Multi-Shuffle-Fix konnte Pass 1 mit moderater Union-Dichte das gesamte
+     * 10-M-Budget erschöpfen und Pass 2 ohne Budget stehen lassen.
+     */
+    @Test
+    public void testDichteSoftMatrix_leereHardMatrix_findestLoesungSchnell() throws AlgorithmenException {
+        SpielerMeldungen meldungen = newTestMeldungen(12);
+
+        // Alle warImSpielMit-Einträge setzen (gesättigte Soft-Matrix)
+        List<Spieler> spieler = new ArrayList<>(meldungen.spieler());
+        for (int i = 0; i < spieler.size(); i++) {
+            for (int j = i + 1; j < spieler.size(); j++) {
+                spieler.get(i).addWarImSpielMit(spieler.get(j));
+            }
+        }
+
+        // Lösung muss trotz gesättigter Soft-Matrix gefunden werden
+        MeleeSpielRunde runde = paarungen.generiereRundeMitFesteTeamGroese(1, 3, meldungen);
+        assertThat(runde).isNotNull();
+        assertThat(runde.teams()).hasSize(4);
+        pruefeKeineDoppeltenSpieler(runde);
+        pruefeAlleSpielerInTeam(runde, meldungen);
+    }
+
+    /**
+     * Performance-Regressionstest: scheitert schnell nach Erschöpfung der Kombinationen.<br>
+     * <br>
+     * Reproduziert das Benutzer-Szenario "5 Spieltage, wenige Runden, ausreichende Spieler":
+     * 12 Spieler im Triplette-Modus werden so lange ausgelost, bis keine gültige Runde
+     * mehr möglich ist. Der Test darf insgesamt nicht länger als 5 Sekunden dauern.<br>
+     * <br>
+     * Vor dem Multi-Shuffle-Fix dauerte jeder scheiternde Versuch bis zu 10 M Knoten lang,
+     * was bei 5 Spieltag-Levels × 5 Fairness-Levels × 10 M ≈ 50 Sekunden Blockade ergab.
+     * Mit {@code MAX_KNOTEN_PRO_PASS=200_000} und {@code MAX_SHUFFLE_VERSUCHE=10} sind es
+     * maximal 4 M Knoten pro Algorithmus-Aufruf — typischerweise weit darunter.
+     */
+    @Test
+    @org.junit.jupiter.api.Timeout(value = 5)
+    public void testVieleRunden_scheitertSchnellNachErschoepfung() {
+        SpielerMeldungen meldungen = newTestMeldungen(12);
+        boolean exceptionGeworfen = false;
+        for (int rnd = 1; rnd <= 20 && !exceptionGeworfen; rnd++) {
+            try {
+                paarungen.neueSpielrundeTripletteMode(rnd, meldungen, false);
+            } catch (AlgorithmenException e) {
+                exceptionGeworfen = true;
+            }
+        }
+        assertThat(exceptionGeworfen)
+                .as("Nach erschöpften Kombinationen muss AlgorithmenException geworfen werden")
+                .isTrue();
+    }
+
+    // =========================================================================
     // Performance-Benchmark
     // =========================================================================
 

@@ -80,8 +80,12 @@ public class SuperMeleePaarungenV2 {
     private static final int DUMMY_SPIELER_START_NR = 10000;
     /** SetzPos der Dummy-Spieler; verhindert via {@code gleicheSetzPos}, dass zwei Dummies ins selbe Team gelost werden. */
     private static final int DUMMY_SPIELER_SETZPOS = 999;
-    /** Maximale Anzahl Backtracking-Knoten als Sicherheitsnetz gegen Endlossuche. */
-    private static final int MAX_BACKTRACK_KNOTEN = 10_000_000;
+    /** Maximale Backtracking-Knoten pro Pass (Pass 1 + Pass 2) in einem einzelnen Shuffle-Versuch. */
+    @VisibleForTesting
+    static final int MAX_KNOTEN_PRO_PASS = 200_000;
+    /** Anzahl Shuffle-Versuche in {@link #generiereRundeMitFesteTeamGroese}. */
+    @VisibleForTesting
+    static final int MAX_SHUFFLE_VERSUCHE = 10;
 
     /** Spieltag-Nummer ausschließlich zur Anreicherung der Log-Meldungen; {@code 0} = nicht gesetzt. */
     private int spieltagNrFuerLog;
@@ -363,7 +367,7 @@ public class SuperMeleePaarungenV2 {
         if (aktScore >= bestScore[0]) {
             return; // Branch-Cut: aktueller Pfad kann nicht besser werden
         }
-        Team team1 = teams.get(0);
+        Team team1 = teams.getFirst();
         for (int i = 1; i < teams.size(); i++) {
             Team partner = teams.get(i);
             int score = berechneGegnerScore(team1, partner);
@@ -376,8 +380,8 @@ public class SuperMeleePaarungenV2 {
             aktuelle.add(team1);
             aktuelle.add(partner);
             suchePaarungenRekursiv(remaining, aktuelle, aktScore + score, besteReihenfolge, bestScore);
-            aktuelle.remove(aktuelle.size() - 1);
-            aktuelle.remove(aktuelle.size() - 1);
+            aktuelle.removeLast();
+            aktuelle.removeLast();
         }
     }
 
@@ -387,8 +391,8 @@ public class SuperMeleePaarungenV2 {
      * unvermeidbare 5er-Partie mit der geringsten gemeinsamen Geschichte.
      */
     private Team[] besteMischpaarung(List<Team> doublettes, List<Team> triplettes) {
-        Team bestD = doublettes.get(0);
-        Team bestT = triplettes.get(0);
+        Team bestD = doublettes.getFirst();
+        Team bestT = triplettes.getFirst();
         int bestScore = Integer.MAX_VALUE;
         for (Team d : doublettes) {
             for (Team t : triplettes) {
@@ -582,80 +586,93 @@ public class SuperMeleePaarungenV2 {
         int n = spieler.size();
         int numTeams = n / teamSize;
 
-        // Schritt 1: Zufällig mischen — für unterschiedliche Lösungen je Runde
-        Collections.shuffle(spieler, RandomSource.asJavaRandom());
+        // Mehrere Shuffle-Versuche mit kleinem Budget pro Pass. Existiert eine Lösung,
+        // findet MCV+Forward-Checking sie typischerweise in <<1 000 Knoten im ersten
+        // Versuch. Ist die Aufgabe unlösbar, scheitert jeder Versuch schnell (≤ MAX_KNOTEN_PRO_PASS).
+        // Dadurch wird die Gesamt-Suchzeit von O(N × Fairness-Level × SpieltagsLevel × MAX_KNOTEN)
+        // auf ein handhabbares Maß reduziert.
+        boolean irgendeinLimitErreicht = false;
 
-        // Schritt 2: Adjazenz-Matrix aufbauen + MCV-Grade in einem einzigen O(n²)-Durchlauf.
-        // Parallel die Soft-Matrix für „war schon im selben Spiel" — wird nur als
-        // Value-Ordering-Heuristik im Backtracking verwendet, nicht zum Pruning.
-        boolean[][] matrix = new boolean[n][n];
-        boolean[][] softMatrix = new boolean[n][n];
-        int[] degrees = new int[n];
-        for (int i = 0; i < n; i++) {
-            for (int j = i + 1; j < n; j++) {
-                if (spieler.get(i).warImTeamMit(spieler.get(j))) {
-                    matrix[i][j] = matrix[j][i] = true;
-                    degrees[i]++;
-                    degrees[j]++;
+        for (int versuch = 0; versuch < MAX_SHUFFLE_VERSUCHE; versuch++) {
+            // Schritt 1: Zufällig mischen — jeder Versuch startet mit anderer Spieler-Reihenfolge
+            Collections.shuffle(spieler, RandomSource.asJavaRandom());
+
+            // Schritt 2: Adjazenz-Matrix aufbauen + MCV-Grade in einem einzigen O(n²)-Durchlauf.
+            // Parallel die Soft-Matrix für „war schon im selben Spiel" — wird nur als
+            // Value-Ordering-Heuristik im Backtracking verwendet, nicht zum Pruning.
+            boolean[][] matrix = new boolean[n][n];
+            boolean[][] softMatrix = new boolean[n][n];
+            int[] degrees = new int[n];
+            for (int i = 0; i < n; i++) {
+                for (int j = i + 1; j < n; j++) {
+                    if (spieler.get(i).warImTeamMit(spieler.get(j))) {
+                        matrix[i][j] = matrix[j][i] = true;
+                        degrees[i]++;
+                        degrees[j]++;
+                    }
+                    if (spieler.get(i).warImSpielMit(spieler.get(j))) {
+                        softMatrix[i][j] = softMatrix[j][i] = true;
+                    }
                 }
-                if (spieler.get(i).warImSpielMit(spieler.get(j))) {
-                    softMatrix[i][j] = softMatrix[j][i] = true;
+            }
+
+            // Schritt 3: MCV-Sortierung — Index-Array nach Constraint-Grad absteigend sortieren
+            Integer[] order = new Integer[n];
+            for (int i = 0; i < n; i++) {
+                order[i] = i;
+            }
+            Arrays.sort(order, (a, b) -> Integer.compare(degrees[b], degrees[a]));
+
+            List<List<Integer>> teams = new ArrayList<>(numTeams);
+            for (int i = 0; i < numTeams; i++) {
+                teams.add(new ArrayList<>(teamSize));
+            }
+
+            // Pass 1: Soft-Constraint als zusätzlichen harten Constraint behandeln —
+            // Adjazenz wird zur Union (matrix OR softMatrix). Findet das Backtracking
+            // hier eine Lösung, hat sie 0 Mitspieler-Crossover (keine zwei Spieler im
+            // selben Team waren bereits gemeinsam in einer früheren Partie als Team-
+            // Partner oder Gegner). Damit ist das vom Anwender als störend empfundene
+            // "Team-dann-Gegner"-Muster vermieden.
+            boolean[][] unionMatrix = new boolean[n][n];
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < n; j++) {
+                    unionMatrix[i][j] = matrix[i][j] || softMatrix[i][j];
                 }
+            }
+            int[] zaehler1 = {0};
+            if (backtrack(order, 0, teams, teamSize, unionMatrix, softMatrix, zaehler1)) {
+                return buildSpielRunde(rndNr, teams, spieler, meldungen);
+            }
+            if (zaehler1[0] >= MAX_KNOTEN_PRO_PASS) {
+                irgendeinLimitErreicht = true;
+            }
+
+            // Pass 2: Soft-Constraint nur noch als Value-Ordering-Tie-Breaker (nicht zum Pruning).
+            // Jeder Pass bekommt einen eigenen Zähler, damit Pass 2 unabhängig vom
+            // Verbrauch in Pass 1 sein volles Budget erhält.
+            for (List<Integer> team : teams) {
+                team.clear();
+            }
+            int[] zaehler2 = {0};
+            if (backtrack(order, 0, teams, teamSize, matrix, softMatrix, zaehler2)) {
+                return buildSpielRunde(rndNr, teams, spieler, meldungen);
+            }
+            if (zaehler2[0] >= MAX_KNOTEN_PRO_PASS) {
+                irgendeinLimitErreicht = true;
             }
         }
 
-        // Schritt 3: MCV-Sortierung — Index-Array nach Constraint-Grad absteigend sortieren
-        Integer[] order = new Integer[n];
-        for (int i = 0; i < n; i++) {
-            order[i] = i;
-        }
-        Arrays.sort(order, (a, b) -> Integer.compare(degrees[b], degrees[a]));
-
-        List<List<Integer>> teams = new ArrayList<>(numTeams);
-        for (int i = 0; i < numTeams; i++) {
-            teams.add(new ArrayList<>(teamSize));
-        }
-
-        int[] knotenZaehler = {0};
-
-        // Pass 1: Soft-Constraint als zusätzlichen harten Constraint behandeln —
-        // Adjazenz wird zur Union (matrix OR softMatrix). Findet das Backtracking
-        // hier eine Lösung, hat sie 0 Mitspieler-Crossover (keine zwei Spieler im
-        // selben Team waren bereits gemeinsam in einer früheren Partie als Team-
-        // Partner oder Gegner). Damit ist das vom Anwender als störend empfundene
-        // "Team-dann-Gegner"-Muster vermieden.
-        boolean[][] unionMatrix = new boolean[n][n];
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < n; j++) {
-                unionMatrix[i][j] = matrix[i][j] || softMatrix[i][j];
-            }
-        }
-        if (backtrack(order, 0, teams, teamSize, unionMatrix, softMatrix, knotenZaehler)) {
-            return buildSpielRunde(rndNr, teams, spieler, meldungen);
-        }
-
-        // Pass 1 unmöglich — Teams zurücksetzen und ohne Soft-Constraint erneut
-        // versuchen (Crossover wird dann nur noch als Value-Ordering-Tie-Breaker
-        // im Backtracking sowie als Tie-Breaker in der Greedy-Gegnerpaarung
-        // genutzt). Knotenzähler bleibt erhalten, das Limit gilt summarisch
-        // über beide Pässe.
-        for (List<Integer> team : teams) {
-            team.clear();
-        }
-        if (backtrack(order, 0, teams, teamSize, matrix, softMatrix, knotenZaehler)) {
-            return buildSpielRunde(rndNr, teams, spieler, meldungen);
-        }
-
-        if (knotenZaehler[0] >= MAX_BACKTRACK_KNOTEN) {
-            logger.warn("Spielrunde {}: Knotenlimit ({}) erreicht nach {} Knoten ({} Spieler).",
-                    rndNr, MAX_BACKTRACK_KNOTEN, knotenZaehler[0], n);
+        if (irgendeinLimitErreicht) {
+            logger.warn("Spielrunde {}: Knotenlimit ({} Knoten/Pass × 2 Pässe × {} Versuche) erreicht ({} Spieler).",
+                    rndNr, MAX_KNOTEN_PRO_PASS, MAX_SHUFFLE_VERSUCHE, n);
             throw new AlgorithmenException(
                     "Keine gültige Spielrunde für Runde " + rndNr + " möglich — "
-                    + "Knotenlimit (" + MAX_BACKTRACK_KNOTEN + ") erreicht. "
+                    + "Knotenlimit (" + MAX_KNOTEN_PRO_PASS + " × 2 Pässe × " + MAX_SHUFFLE_VERSUCHE + " Versuche) erreicht. "
                     + "Möglicherweise müssen Wiederholungen in den Regeln zugelassen werden.");
         }
 
-        String spieltagPraefix = spieltagNrFuerLog > 0 ? "Spieltag " + spieltagNrFuerLog + ", " : "";
+        var spieltagPraefix = spieltagNrFuerLog > 0 ? "Spieltag " + spieltagNrFuerLog + ", " : "";
         logger.warn("{}Spielrunde {}: Alle möglichen Spielerkombinationen ausgeschöpft ({} Spieler).",
                 spieltagPraefix, rndNr, n);
         throw new AlgorithmenException(
@@ -700,8 +717,8 @@ public class SuperMeleePaarungenV2 {
             return true; // Alle Spieler erfolgreich zugewiesen
         }
 
-        if (++knotenZaehler[0] >= MAX_BACKTRACK_KNOTEN) {
-            return false; // Sicherheitsnetz: Knotenlimit erreicht
+        if (++knotenZaehler[0] >= MAX_KNOTEN_PRO_PASS) {
+            return false; // Sicherheitsnetz: Knotenlimit pro Pass erreicht
         }
 
         int currentOrigIdx = order[idx];
@@ -733,7 +750,7 @@ public class SuperMeleePaarungenV2 {
                         && backtrack(order, idx + 1, teams, teamSize, matrix, softMatrix, knotenZaehler)) {
                     return true;
                 }
-                team.remove(team.size() - 1); // Backtrack: Zuweisung rückgängig machen
+                team.removeLast(); // Backtrack: Zuweisung rückgängig machen
             }
         }
 
