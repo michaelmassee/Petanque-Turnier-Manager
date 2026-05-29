@@ -80,6 +80,11 @@ public class SupermeleeTurnierTestDatenUITest extends BaseCalcUITest {
 		validiereSpieltagRanglistePerJson(3, "supermelee-spieltagrangliste-3.json");
 		validiereSpieltagRanglistePerJson(4, "supermelee-spieltagrangliste-4.json");
 		validiereSpieltagRanglistePerJson(5, "supermelee-spieltagrangliste-5.json");
+
+		var analyseAssert = SupermeleeSpieltagAnalyseAssert.fuer(wkingSpreadsheet);
+		for (int spieltagNr = 1; spieltagNr <= ANZ_SPIELTAGE; spieltagNr++) {
+			analyseAssert.pruefe(spieltagNr, ANZ_SPIELRUNDEN_PRO_SPIELTAG);
+		}
 	}
 
 	/**

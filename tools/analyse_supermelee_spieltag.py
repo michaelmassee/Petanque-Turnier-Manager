@@ -17,6 +17,10 @@ sie, gelten die Defaults aus SuperMeleePropertiesSpalte.java (0 / 13).
 
 Verwendung:
     python3 tools/analyse_supermelee_spieltag.py <pfad/zur/datei.ods>
+
+SYNC-CHECK: Spalten-Konstanten und Prüflogik müssen synchron mit
+SupermeleeSpieltagAnalyseAssert.java (src/test/java/.../spieltagrangliste/) bleiben.
+Sync-Verifikation: python3 tools/test_analyse_supermelee_sync.py
 """
 import argparse
 import re
