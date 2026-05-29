@@ -605,19 +605,23 @@ public class GlobalProperties {
 	private void safeSetLogLevel() {
 		try {
 			var logLevel = getLogLevel();
-			if (logLevel.isBlank()) return;
-
-			var loggerCfg = LogManager.getLogger(Log4J.LOGGERNAME);
-
-			switch (logLevel) {
-				case "trace" -> Configurator.setLevel(loggerCfg, Level.TRACE);
-				case "debug" -> Configurator.setLevel(loggerCfg, Level.DEBUG);
-				case "info" -> Configurator.setLevel(loggerCfg, Level.INFO);
-				case "warn" -> Configurator.setLevel(loggerCfg, Level.WARN);
-				case "error" -> Configurator.setLevel(loggerCfg, Level.ERROR);
-				default -> logger.warn("Unbekanntes LogLevel: {}", logLevel);
+			Level level = switch (logLevel) {
+				case "trace" -> Level.TRACE;
+				case "debug" -> Level.DEBUG;
+				case "info" -> Level.INFO;
+				case "warn" -> Level.WARN;
+				case "error" -> Level.ERROR;
+				case "" -> Level.INFO;
+				default -> {
+					logger.warn("Unbekanntes LogLevel: {}", logLevel);
+					yield null;
+				}
+			};
+			if (level != null) {
+				// setLevel(String, Level) ruft intern ctx.updateLoggers() auf und propagiert
+				// die Änderung an alle bereits erzeugten Logger-Instanzen.
+				Configurator.setLevel(Log4J.LOGGERNAME, level);
 			}
-
 		} catch (Exception e) {
 			logger.error("Fehler beim Setzen des LogLevels", e);
 		}
