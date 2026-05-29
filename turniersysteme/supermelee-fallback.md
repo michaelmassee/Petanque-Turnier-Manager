@@ -26,12 +26,15 @@ SpielrundeDelegate.neueSpielrunde()
 │          resetAllHistorie() + gespieltenRundenEinlesenMitLimit(effMaxSpieltage)
 │          → weiter in der WHILE-Schleife
 │
+│  Ladereihenfolge: LETZT → ÄLTESTE (neueste Spieltage zuerst eingelesen)
+│  Fallback-Abbau:  älteste werden ZUERST entfernt — neueste bleiben am längsten
+│
 │  Konkrete Retry-Stufen bei Spieltag 5 (effMaxSpieltage startet bei 4):
-│   Stufe 1: effMaxSpieltage=4 → Spieltage 4,3,2,1 + aktueller ST geladen
-│   Stufe 2: effMaxSpieltage=3 → Spieltage 4,3,2   + aktueller ST geladen
-│   Stufe 3: effMaxSpieltage=2 → Spieltage 4,3     + aktueller ST geladen
-│   Stufe 4: effMaxSpieltage=1 → Spieltag 4        + aktueller ST geladen
-│   Stufe 5: effMaxSpieltage=0 → NUR aktueller ST  → BREAK wenn nächster Fehler
+│   Stufe 1: effMaxSpieltage=4 → lädt ST4,ST3,ST2,ST1  + aktueller ST
+│   Stufe 2: effMaxSpieltage=3 → lädt ST4,ST3,ST2       + aktueller ST  ← ST1 entfernt
+│   Stufe 3: effMaxSpieltage=2 → lädt ST4,ST3           + aktueller ST  ← ST1,ST2 entfernt
+│   Stufe 4: effMaxSpieltage=1 → lädt ST4               + aktueller ST  ← nur neuester
+│   Stufe 5: effMaxSpieltage=0 → NUR aktueller ST       → BREAK wenn nächster Fehler
 │
 ├─ [meleeSpielRunde == null nach WHILE]:
 │   └─ erzeugeZufallsRunde()  ← NOTNAGEL: rein zufällig, KEINE Constraints
