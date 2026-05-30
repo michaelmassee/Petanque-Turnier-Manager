@@ -179,6 +179,8 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testImplementation 'org.assertj:assertj-core:3.27.6'
     testImplementation 'org.mockito:mockito-core:5.21.0'
+    // Spike: ArchUnit Call-Graph-Analyse (Threading-Konventionstest, Helper-Klassen-Lücke)
+    testImplementation 'com.tngtech.archunit:archunit:1.4.1'
 
     // Block B4: NullAway via ErrorProne. JSpecify als Annotations-Standard.
     errorprone 'com.google.errorprone:error_prone_core:2.36.0'
@@ -282,33 +284,56 @@ tasks.register('buildOXT', Zip) {
         into 'registry'
     }
 
-    // Images (OXT-Root)
+    // Images (OXT-Root) – nur Laufzeit-Assets:
+    // - Logo-PNGs für description.xml (32px Default, 256px High-Contrast)
+    // - Sidebar-24px-Logo (Quelle für den registry/-Kopierschritt darunter)
+    // - Sidebar-Icons (geladen via getImageUrlDir() + "sidebar/…" durch InfoSidebarContent)
+    // - Konfig-Dialog-Icons (geladen via getImageUrlDir() + "konfig/…" durch konfigdialog)
+    // NICHT enthalten: images/icons/{32,48,64,128,svg,*.py,README,preview*},
+    //   images/toolbar-*.png (Root-Ebene), images/petanqueturniermanager-logo.png,
+    //   images/sidebar-fortschritt.png, images/pdf-download.png (Classpath-Res. im JAR),
+    //   images/*.py, images/*.readme
     from('images') {
+        include 'petanqueturniermanager-logo-32px.png'
+        include 'petanqueturniermanager-logo-256px.png'
+        include 'petanqueturniermanager-logo-sidebar-24px.png'
         into 'images'
+    }
+    from('images/sidebar') {
+        include '*.png'
+        into 'images/sidebar'
+    }
+    from('images/konfig') {
+        include '*.png'
+        into 'images/konfig'
     }
 
     // Logo für Sidebar-Deck-Icon: %origin% in Sidebar.xcu ist relativ zur XCU-Datei,
     // daher muss das Bild auch unter registry/org/openoffice/Office/UI/images/ liegen.
+    // Passgenaue 24px-Größe ausliefern (Design-Größe der Sidebar-TabBar, vgl. LOs eigene
+    // sidebar-*-large.png), damit LibreOffice das Icon NICHT zur Laufzeit skalieren muss.
     from('images') {
-        include 'petanqueturniermanager-logo-32px.png'
+        include 'petanqueturniermanager-logo-sidebar-24px.png'
         into 'registry/org/openoffice/Office/UI/images'
     }
 
-    // Toolbar-Icons: %origin% in Addons_Z2_Toolbar.xcu ist relativ zur XCU-Datei,
+    // Toolbar-Icons: %origin% in den Addons_Z*_*.xcu ist relativ zur XCU-Datei,
     // daher müssen die Bilder auch unter registry/org/openoffice/Office/images/ liegen.
-    from('images') {
+    // Passgenaue Größen ausliefern (16px für ImageSmallURL, 24px für ImageBigURL),
+    // damit LibreOffice die Icons NICHT zur Toolbar-Fill-Zeit herunterskalieren muss
+    // (Skalierung großer PNGs verursachte unter Windows beim Start schwarze Icon-Flächen).
+    from('images/icons/png/16') {
         include 'toolbar-*.png'
-        into 'registry/org/openoffice/Office/images'
+        into 'registry/org/openoffice/Office/images/16'
+    }
+    from('images/icons/png/24') {
+        include 'toolbar-*.png'
+        into 'registry/org/openoffice/Office/images/24'
     }
 
     // Runtime dependencies (libs)
     from(layout.buildDirectory.dir('runtime-libs')) {
         into 'libs'
-    }
-
-    // IDL files
-    from('idl') {
-        into 'idl'
     }
 
     // RDB Type Registry (kompiliert aus IDL)
@@ -331,10 +356,26 @@ tasks.register('installExtension', Exec) {
     }
 }
 
+// Task zum Beenden laufender LibreOffice-Instanzen (nötig vor (De-)Installation)
+tasks.register('stopLibreOffice', Exec) {
+    group = 'LibreOffice'
+    description = 'Beendet alle laufenden LibreOffice-Instanzen'
+    commandLine 'pkill', '-x', 'soffice.bin'
+    ignoreExitValue = true
+
+    doLast {
+        if (executionResult.get().exitValue == 0) {
+            println "LibreOffice wurde beendet."
+            Thread.sleep(1500)
+        }
+    }
+}
+
 // Task zum Deinstallieren der Extension
 tasks.register('uninstallExtension', Exec) {
     group = 'LibreOffice'
     description = 'Deinstalliert die Extension aus LibreOffice'
+    dependsOn 'stopLibreOffice'
     commandLine "${libreOfficePath}/program/unopkg", 'remove', extensionId
     ignoreExitValue = true
     errorOutput = new ByteArrayOutputStream()

@@ -79,12 +79,44 @@
 							</node>
 
 							<node oor:name="C6A4" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Teilnehmerliste</value>
+									<value xml:lang="en">Participants List</value>
+									<value xml:lang="es">Lista de participantes</value>
+									<value xml:lang="fr">Liste des participants</value>
+									<value xml:lang="nl">Deelnemerslijst</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:maastrichter_teilnehmer</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+							<node oor:name="C6A5" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Check-in List</value>
+									<value xml:lang="de">Checkin Liste</value>
+									<value xml:lang="es">Lista de registro</value>
+									<value xml:lang="fr">Liste de pointage</value>
+									<value xml:lang="nl">Inchecklijst</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:maastrichter_checkin</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+							<node oor:name="C6A6" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
 
-							<node oor:name="C6A5" oor:op="replace">
+							<node oor:name="C6A7" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Neue Vorrunde</value>
 									<value xml:lang="en">New Preliminary Round</value>
@@ -100,7 +132,7 @@
 								</prop>
 							</node>
 
-							<node oor:name="C6A6" oor:op="replace">
+							<node oor:name="C6A8" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Vorrunde neu auslosen</value>
 									<value xml:lang="en">Re-draw Preliminary Round</value>
@@ -116,13 +148,13 @@
 								</prop>
 							</node>
 
-							<node oor:name="C6A7" oor:op="replace">
+							<node oor:name="C6A9" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
 
-							<node oor:name="C6A8" oor:op="replace">
+							<node oor:name="C6A10" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Vorrunden-Rangliste</value>
 									<value xml:lang="en">Preliminary Round Ranking</value>
@@ -138,13 +170,13 @@
 								</prop>
 							</node>
 
-							<node oor:name="C6A9" oor:op="replace">
+							<node oor:name="C6A11" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
 
-							<node oor:name="C6A10" oor:op="replace">
+							<node oor:name="C6A12" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Finalrunden erstellen</value>
 									<value xml:lang="en">Create Final Rounds</value>
@@ -154,28 +186,6 @@
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:maastrichter_finalrunden</value>
-								</prop>
-								<prop oor:name="Target" oor:type="xs:string">
-									<value>_self</value>
-								</prop>
-							</node>
-
-							<node oor:name="C6A11" oor:op="replace">
-								<prop oor:name="URL" oor:type="xs:string">
-									<value>private:separator</value>
-								</prop>
-							</node>
-
-							<node oor:name="C6A12" oor:op="replace">
-								<prop oor:name="Title">
-									<value xml:lang="de">Teilnehmerliste</value>
-									<value xml:lang="en">Participants List</value>
-									<value xml:lang="es">Lista de participantes</value>
-									<value xml:lang="fr">Liste des participants</value>
-									<value xml:lang="nl">Deelnemerslijst</value>
-								</prop>
-								<prop oor:name="URL">
-									<value>ptm:maastrichter_teilnehmer</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>

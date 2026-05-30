@@ -32,6 +32,11 @@ public class LigaToolbarStrategie implements ITurnierSystemToolbarStrategie {
     }
 
     @Override
+    public void checkin(WorkingSpreadsheet ws) throws Exception {
+        fallback.checkin(ws);
+    }
+
+    @Override
     public void neuAuslosen(WorkingSpreadsheet ws) throws Exception {
         fallback.neuAuslosen(ws);
     }

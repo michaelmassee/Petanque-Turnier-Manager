@@ -130,7 +130,8 @@ public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet {
 		MaastrichterGruppenModus gruppenModus = konfigSheet.getMaastrichterGruppenModus();
 		List<List<SchweizerTeamErgebnis>> gruppen = switch (gruppenModus) {
 			case NACH_SIEGEN -> teileNachSiegen(sortiert, anzVorrunden);
-			case NACH_GROESSE -> teileNachGroesse(sortiert, konfigSheet.getGruppenGroesse());
+			case NACH_GROESSE -> teileNachGroesse(sortiert, konfigSheet.getGruppenGroesse(),
+					konfigSheet.getMinLetzteGruppeGroesse());
 		};
 
 		// Alte Finale-Blätter löschen
@@ -141,6 +142,7 @@ public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet {
 		KoTurnierbaumSheet koSheet = new KoTurnierbaumSheet(getWorkingSpreadsheet());
 		short sheetPos = DefaultSheetPos.MAASTRICHTER_FINALE;
 		char naechsterBuchstabe = 'A';
+		Map<Integer, String> teamNrZuGruppe = new HashMap<>();
 
 		for (List<SchweizerTeamErgebnis> gruppeErg : gruppen) {
 			SheetRunner.testDoCancelTask();
@@ -152,9 +154,18 @@ public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet {
 				koSheet.erstelleGruppeBracket(gruppeTeams, sheetName, sheetPos, konfigSheet,
 						SheetMetadataHelper.schluesselMaastrichterFinalrunde(gruppenBuchstabe), gruppenBuchstabe);
 				sheetPos++;
+				for (SchweizerTeamErgebnis erg : gruppeErg) {
+					teamNrZuGruppe.put(erg.teamNr(), gruppenBuchstabe);
+				}
 			}
 		}
 
+		// Gruppen-Buchstaben einmalig in die Vorrunden-Rangliste schreiben
+		// (Spalte "Gruppe"). Nachfolgende Rangliste-Refreshs erhalten die Werte.
+		if (!teamNrZuGruppe.isEmpty()) {
+			new MaastrichterVorrundenRanglisteSheetUpdate(getWorkingSpreadsheet())
+					.schreibeGruppenZuweisungen(teamNrZuGruppe);
+		}
 	}
 
 	/**
@@ -181,12 +192,13 @@ public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet {
 
 	/**
 	 * Teilt die sortierten Teams nach Rang in Chunks gemäß {@link GruppenAufteilungRechner}.
+	 * Kleine letzte Gruppen werden in die vorherige gefaltet; Cadrage übernimmt den Ausgleich.
 	 */
 	private List<List<SchweizerTeamErgebnis>> teileNachGroesse(
-			List<SchweizerTeamErgebnis> sortiert, int gruppenGroesse) {
+			List<SchweizerTeamErgebnis> sortiert, int gruppenGroesse, int minLetzteGruppe) {
 
 		List<Integer> gruppenGroessen = GruppenAufteilungRechner.berechne(
-				sortiert.size(), gruppenGroesse);
+				sortiert.size(), gruppenGroesse, minLetzteGruppe);
 		List<List<SchweizerTeamErgebnis>> gruppen = new ArrayList<>();
 		int startIndex = 0;
 		for (int groesse : gruppenGroessen) {

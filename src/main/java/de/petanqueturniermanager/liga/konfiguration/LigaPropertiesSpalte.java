@@ -42,36 +42,33 @@ public class LigaPropertiesSpalte extends BasePropertiesSpalte implements ILigaP
 
 	static {
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELPLAN_COLOR_BACK_GERADE)
-				.setDefaultVal(DEFAULT_GERADE_BACK_COLOR).setDescription("config.desc.liga.spielplan.gerade")
-				.inSideBar());
+				.setDefaultVal(DEFAULT_GERADE_BACK_COLOR).setDescription("config.desc.liga.spielplan.gerade"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELPLAN_COLOR_BACK_UNGERADE)
 				.setDefaultVal(DEFAULT_UNGERADE_BACK_COLOR)
-				.setDescription("config.desc.liga.spielplan.ungerade").inSideBar());
+				.setDescription("config.desc.liga.spielplan.ungerade"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELPLAN_COLOR_BACK_HEADER)
-				.setDefaultVal(DEFAULT_HEADER_BACK_COLOR).setDescription("config.desc.liga.spielplan.header")
-				.inSideBar());
+				.setDefaultVal(DEFAULT_HEADER_BACK_COLOR).setDescription("config.desc.liga.spielplan.header"));
 
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_LINKS)
-				.setDescription("config.desc.header.links").inSideBar());
+				.setDescription("config.desc.header.links"));
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_MITTE)
-				.setDescription("config.desc.header.mitte").inSideBar());
+				.setDescription("config.desc.header.mitte"));
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_RECHTS)
-				.setDescription("config.desc.header.rechts").inSideBar());
+				.setDescription("config.desc.header.rechts"));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_NAME_GRUPPE).setDefaultVal("")
-				.setDescription("config.desc.liga.gruppenname").inSideBar());
+				.setDescription("config.desc.liga.gruppenname"));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_PDF_IMG_URL)
 				.setDefaultVal("pdf-download.png").setDescription("config.desc.liga.pdf.img.url"));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_DOWNLOAD_URL).setDefaultVal("")
-				.setDescription("config.desc.liga.download.url")
-				.inSideBar());
+				.setDescription("config.desc.liga.download.url"));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_FREISPIEL_PUNKTE_PLUS)
-				.setDefaultVal(13).setDescription("config.desc.freispiel.punkte.plus").inSideBar());
+				.setDefaultVal(13).setDescription("config.desc.freispiel.punkte.plus"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_FREISPIEL_PUNKTE_MINUS)
-				.setDefaultVal(7).setDescription("config.desc.freispiel.punkte.minus").inSideBar());
+				.setDefaultVal(7).setDescription("config.desc.freispiel.punkte.minus"));
 	}
 
 	/**

@@ -21,7 +21,7 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
  * Andernfalls werden nur die Daten neu berechnet und geschrieben,
  * ohne das Sheet via {@code forceCreate()} zu löschen und neu anzulegen.
  * Dadurch werden keine Sheet-Events ausgelöst, die eine Race Condition
- * mit dem {@code RanglisteRefreshListener} verursachen könnten.
+ * mit dem {@code SheetSyncListener} verursachen könnten.
  */
 public class PouleVorrundenRanglisteSheetUpdate extends PouleVorrundenRanglisteSheet {
 

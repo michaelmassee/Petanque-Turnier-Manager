@@ -19,7 +19,7 @@ import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
 import de.petanqueturniermanager.sidebar.GuiFactory;
 import de.petanqueturniermanager.sidebar.GuiFactoryCreateParam;
-import de.petanqueturniermanager.sidebar.config.AddConfigElementsToWindow;
+import de.petanqueturniermanager.konfigdialog.properties.element.AddConfigElementsToWindow;
 import de.petanqueturniermanager.sidebar.layout.ControlLayout;
 
 /**

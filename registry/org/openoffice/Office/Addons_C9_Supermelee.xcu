@@ -81,22 +81,6 @@
 
 							<node oor:name="C9A4" oor:op="replace">
 								<prop oor:name="Title">
-									<value xml:lang="en">Registrations</value>
-									<value xml:lang="de">Anmeldungen</value>
-									<value xml:lang="es">Inscripciones</value>
-									<value xml:lang="fr">Inscriptions</value>
-									<value xml:lang="nl">Aanmeldingen</value>
-								</prop>
-								<prop oor:name="URL">
-									<value>ptm:anmeldungen</value>
-								</prop>
-								<prop oor:name="Target" oor:type="xs:string">
-									<value>_self</value>
-								</prop>
-							</node>
-
-							<node oor:name="C9A5" oor:op="replace">
-								<prop oor:name="Title">
 									<value xml:lang="en">Playerlist</value>
 									<value xml:lang="de">Teilnehmer</value>
 									<value xml:lang="es">Lista de jugadores</value>
@@ -105,6 +89,22 @@
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:teilnehmer</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+							<node oor:name="C9A5" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Check-in List</value>
+									<value xml:lang="de">Checkin Liste</value>
+									<value xml:lang="es">Lista de registro</value>
+									<value xml:lang="fr">Liste de pointage</value>
+									<value xml:lang="nl">Inchecklijst</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:anmeldungen</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>

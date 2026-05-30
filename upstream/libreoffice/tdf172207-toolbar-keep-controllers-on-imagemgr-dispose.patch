@@ -1,0 +1,66 @@
+From c60dfc200d6f48ecb41682ee756ccf6f79fd06b7 Mon Sep 17 00:00:00 2001
+From: Michael Massee <michael@massee.de>
+Date: Tue, 26 May 2026 17:44:36 +0200
+Subject: [PATCH] tdf#172207 framework: don't drop toolbar controllers on image
+ mgr dispose
+
+ToolBarManager::disposing(EventObject) called RemoveControllers()
+unconditionally for every disposing source. The toolbar manager registers
+itself as XUIConfigurationListener on both the document and the module image
+manager. When the document image manager is disposed and recreated
+independently of the toolbar's frame - which happens e.g. while a document is
+written via storeToURL on the autosave path - the resulting disposing event
+destroyed all toolbar item controllers and removed their XStatusListener
+registrations.
+
+For addon_* toolbars this is unrecoverable: the controllers (and the
+XStatusListener registrations of an extension's XDispatchProvider) are never
+recreated, the ToolbarLayoutManager keeps the cached UIElement, and the
+toolbar stays visible but frozen on its last state snapshot. The manager
+itself is not actually disposed (m_bDisposed stays false, m_xFrame is intact),
+so there is no API path for the extension to recover.
+
+Only a disposing frame makes the toolbar manager obsolete. When the source is
+one of the image managers, just drop that reference and keep the controllers
+intact.
+
+Change-Id: Iae22eff2d06bfa1b71da78334e4fb486e9fd0509
+---
+ framework/source/uielement/toolbarmanager.cxx | 21 +++++++++++++++++++
+ 1 file changed, 21 insertions(+)
+
+diff --git a/framework/source/uielement/toolbarmanager.cxx b/framework/source/uielement/toolbarmanager.cxx
+index be60ae37bebb..04f67a36c83a 100644
+--- a/framework/source/uielement/toolbarmanager.cxx
++++ b/framework/source/uielement/toolbarmanager.cxx
+@@ -778,6 +778,27 @@ void SAL_CALL ToolBarManager::disposing( const EventObject& Source )
+     if ( m_bDisposed )
+         return;
+ 
++    // tdf#172207: A disposing image manager must not tear down the toolbar.
++    // The document image manager (and, in theory, the module image manager)
++    // can be disposed and replaced independently of this toolbar's frame,
++    // e.g. while a document is saved via storeToURL (autosave path). In that
++    // case only the corresponding image manager reference has to be dropped -
++    // calling RemoveControllers() here would permanently destroy all toolbar
++    // item controllers together with their XStatusListener registrations
++    // (e.g. those of an extension's dispatch provider) without ever
++    // recreating them, leaving the toolbar visible but frozen on its last
++    // state snapshot. Only a disposing frame makes this toolbar obsolete.
++    if ( Source.Source == Reference< XInterface >( m_xDocImageManager, UNO_QUERY ) )
++    {
++        m_xDocImageManager.clear();
++        return;
++    }
++    if ( Source.Source == Reference< XInterface >( m_xModuleImageManager, UNO_QUERY ) )
++    {
++        m_xModuleImageManager.clear();
++        return;
++    }
++
+     RemoveControllers();
+ 
+     if ( m_xDocImageManager.is() )
+-- 
+2.43.0
+

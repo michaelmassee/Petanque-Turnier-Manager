@@ -268,17 +268,6 @@ class SheetMetadataHelperTest {
 	}
 
 	@Test
-	void bereinigeVerwaisteMetadaten_loeschtBezugFehlerBeiPtmRange() throws Exception {
-		var rangeObj = new Object();
-		when(mockRanges.getElementNames()).thenReturn(new String[]{"__PTM_TEST__"});
-		when(mockRanges.getByName("__PTM_TEST__")).thenReturn(rangeObj);
-
-		SheetMetadataHelper.bereinigeVerwaisteMetadaten(mockRanges, obj -> "#BEZUG!");
-
-		verify(mockRanges).removeByName("__PTM_TEST__");
-	}
-
-	@Test
 	void bereinigeVerwaisteMetadaten_behaeltGueltigeRangesBestand() throws Exception {
 		var rangeObj = new Object();
 		when(mockRanges.getElementNames()).thenReturn(new String[]{"__PTM_TEST__"});

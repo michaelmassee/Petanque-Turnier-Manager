@@ -93,23 +93,23 @@ public class FormuleXBlattschutzKonfiguration implements IBlattschutzKonfigurati
         var schluessel = SheetMetadataHelper.getSchluesselMitPrefix(xDoc,
                 SheetMetadataHelper.SCHLUESSEL_FORMULEX_SPIELRUNDE_PREFIX);
         for (var key : schluessel) {
-            SheetMetadataHelper.findeSheet(xDoc, key).ifPresent(sheet ->
-                    infos.add(SheetSchutzInfo.mitEditierbarenBereichen(sheet,
-                            List.of(berechneSpielrundeErgebnisBereich(sheet)))));
+            SheetMetadataHelper.findeSheet(xDoc, key).ifPresent(sheet -> {
+                try {
+                    int letzteZeile = ermittleLetzteSpielrundeZeile(sheet);
+                    List<RangePosition> editierbar = FormuleXAbstractSpielrundeSheet
+                            .ermittleEditierbareErgebnisRanges(sheet, xDoc, letzteZeile);
+                    infos.add(SheetSchutzInfo.mitEditierbarenBereichen(sheet, editierbar));
+                } catch (GenerateException e) {
+                    LOGGER.warn("Editierbare Spielrunde-Bereiche konnten nicht berechnet werden: {}",
+                            e.getMessage(), e);
+                }
+            });
         }
     }
 
     private void sammleVollGesperrteSheets(XSpreadsheetDocument xDoc, List<SheetSchutzInfo> infos) {
         SheetMetadataHelper.findeSheet(xDoc, SheetMetadataHelper.SCHLUESSEL_FORMULEX_RANGLISTE)
                 .ifPresent(sheet -> infos.add(SheetSchutzInfo.vollGesperrt(sheet)));
-    }
-
-    private RangePosition berechneSpielrundeErgebnisBereich(com.sun.star.sheet.XSpreadsheet sheet) {
-        return RangePosition.from(
-                FormuleXAbstractSpielrundeSheet.ERG_TEAM_A_SPALTE,
-                FormuleXAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE,
-                FormuleXAbstractSpielrundeSheet.ERG_TEAM_B_SPALTE,
-                ermittleLetzteSpielrundeZeile(sheet));
     }
 
     private int ermittleLetzteSpielrundeZeile(com.sun.star.sheet.XSpreadsheet sheet) {

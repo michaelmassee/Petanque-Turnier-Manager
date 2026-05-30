@@ -20,10 +20,13 @@ import de.petanqueturniermanager.helper.StringTools;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGeradeStyle;
+import de.petanqueturniermanager.basesheet.meldeliste.TeilnehmerListeSortModus;
 import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
+import de.petanqueturniermanager.konfigdialog.AuswahlConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
 import de.petanqueturniermanager.konfigdialog.HeaderFooterConfigProperty;
+import de.petanqueturniermanager.helper.i18n.I18n;
 
 /**
  * @author Michael Massee
@@ -60,6 +63,10 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	public static final String KONFIG_PROP_ANZ_TEILNEHMER_IN_SPALTE = "Teilnehmerliste Anzahl je Spalte";
 	private static final int DEFAULT_ANZ_TEILNEHMER_IN_SPALTE = 40;
 
+	public static final String KONFIG_PROP_CHECKIN_LISTE_SORT_MODUS = "Checkin-Liste Sortierung";
+
+	public static final String KONFIG_PROP_TEILNEHMER_LISTE_SORT_MODUS = "Teilnehmerliste Sortierung";
+
 	// Tab-Farben (Document Properties Schlüssel)
 	public static final String KONFIG_PROP_TAB_COLOR_MELDELISTE      = "Tab-Farbe Meldeliste";
 	public static final String KONFIG_PROP_TAB_COLOR_TEILNEHMER      = "Tab-Farbe Teilnehmer";
@@ -78,9 +85,9 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	protected static void ADDBaseProp(List<ConfigProperty<?>> KONFIG_PROPERTIES, boolean mitRangliste) {
 
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_FUSSZEILE_LINKS)
-				.setDescription("config.desc.footer.links").inSideBar());
+				.setDescription("config.desc.footer.links"));
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_FUSSZEILE_MITTE)
-				.setDescription("config.desc.footer.mitte").inSideBar());
+				.setDescription("config.desc.footer.mitte"));
 
 		// Hinweis: KONFIG_PROP_TURNIERLOGO_URL wird nicht mehr als Sidebar/Konfig-Sheet-Property
 		// gepflegt. Der Wert wird nun direkt im Dialog „Turnier Startseite" als
@@ -89,7 +96,6 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 		KONFIG_PROPERTIES.add(ConfigProperty.<Boolean>from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_EDITIERBARE_FELDER_HERVORHEBEN)
 				.setDefaultVal(true)
 				.setDescription("config.desc.editierbare.felder.hervorheben")
-				.inSideBar()
 				.mitNachSpeichernAktion(ws -> {
 					var calc = Lo.qi(com.sun.star.sheet.XCalculatable.class, ws.getWorkingSpreadsheetDocument());
 					if (calc != null) {
@@ -99,30 +105,28 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_MELDELISTE_COLOR_BACK_GERADE)
 				.setDefaultVal(DEFAULT_GERADE_BACK_COLOR)
-				.setDescription("config.desc.meldeliste.gerade").inSideBar());
+				.setDescription("config.desc.meldeliste.gerade"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_MELDELISTE_COLOR_BACK_UNGERADE)
 				.setDefaultVal(DEFAULT_UNGERADE_BACK_COLOR)
-				.setDescription("config.desc.meldeliste.ungerade").inSideBar());
+				.setDescription("config.desc.meldeliste.ungerade"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_MELDELISTE_COLOR_BACK_HEADER)
 				.setDefaultVal(DEFAULT_HEADER_BACK_COLOR)
-				.setDescription("config.desc.meldeliste.header").inSideBar());
+				.setDescription("config.desc.meldeliste.header"));
 
 		if (mitRangliste) {
 			KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_RANGLISTE_COLOR_BACK_GERADE)
-					.setDefaultVal(DEFAULT_GERADE_BACK_COLOR).setDescription("config.desc.rangliste.gerade")
-					.inSideBar());
+					.setDefaultVal(DEFAULT_GERADE_BACK_COLOR).setDescription("config.desc.rangliste.gerade"));
 			KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_RANGLISTE_COLOR_BACK_UNGERADE)
 					.setDefaultVal(DEFAULT_UNGERADE_BACK_COLOR)
-					.setDescription("config.desc.rangliste.ungerade").inSideBar());
+					.setDescription("config.desc.rangliste.ungerade"));
 			KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_RANGLISTE_COLOR_BACK_HEADER)
 					.setDefaultVal(DEFAULT_HEADER_BACK_COLOR)
-					.setDescription("config.desc.rangliste.header").inSideBar());
+					.setDescription("config.desc.rangliste.header"));
 		}
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_ANZ_TEILNEHMER_IN_SPALTE)
 				.setDefaultVal(DEFAULT_ANZ_TEILNEHMER_IN_SPALTE)
-				.setDescription("config.desc.teilnehmer.anzahl.spalte")
-				.inSideBar());
+				.setDescription("config.desc.teilnehmer.anzahl.spalte"));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TAB_COLOR_MELDELISTE)
 				.setDefaultVal(SheetTabFarben.MELDELISTE)
@@ -139,6 +143,46 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TAB_COLOR_DIREKTVERGLEICH)
 				.setDefaultVal(SheetTabFarben.DIREKTVERGLEICH)
 				.setDescription("config.desc.tab.farbe.direktvergleich").tabFarbe());
+	}
+
+	/**
+	 * Fügt die Auswahl-Property für die Checkin-Listen-Sortierung hinzu
+	 * (Default {@link TeilnehmerListeSortModus#NAME}).
+	 * <p>
+	 * Bewusst NICHT Teil von {@link #ADDBaseProp(List)}, da das Liga-System keine Checkin-Liste besitzt.
+	 * Jedes Nicht-Liga-System ruft diese Methode in seinem statischen Initialisierer auf.
+	 * <p>
+	 * Verwendet dieselbe Modi-Enum und dieselben Option-Labels wie die Teilnehmerliste
+	 * ({@link TeilnehmerListeSortModus}), bleibt aber eine eigenständige Property.
+	 *
+	 * @param KONFIG_PROPERTIES Property-Liste des jeweiligen Systems
+	 */
+	protected static void addCheckinSortProp(List<ConfigProperty<?>> KONFIG_PROPERTIES) {
+		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_CHECKIN_LISTE_SORT_MODUS)
+				.setDefaultVal(TeilnehmerListeSortModus.NAME.getKey())
+				.setDescription("config.desc.checkin.sort.modus"))
+				.addAuswahl(TeilnehmerListeSortModus.NUMMER.getKey(), I18n.get("config.teilnehmer.sort.nummer"))
+				.addAuswahl(TeilnehmerListeSortModus.NAME.getKey(), I18n.get("config.teilnehmer.sort.name"))
+				.addAuswahl(TeilnehmerListeSortModus.TEAMNAME.getKey(), I18n.get("config.teilnehmer.sort.teamname")));
+	}
+
+	/**
+	 * Fügt die Auswahl-Property für die Teilnehmerlisten-Sortierung hinzu
+	 * (Default {@link TeilnehmerListeSortModus#NAME}).
+	 * <p>
+	 * Bewusst NICHT Teil von {@link #ADDBaseProp(List)}, da das Liga-System keine Teilnehmerliste besitzt.
+	 * Jedes System mit Teilnehmerliste ruft diese Methode in seinem statischen Initialisierer auf.
+	 *
+	 * @param KONFIG_PROPERTIES Property-Liste des jeweiligen Systems
+	 */
+	protected static void addTeilnehmerListeSortProp(List<ConfigProperty<?>> KONFIG_PROPERTIES) {
+		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty
+				.from(KONFIG_PROP_TEILNEHMER_LISTE_SORT_MODUS)
+				.setDefaultVal(TeilnehmerListeSortModus.NAME.getKey())
+				.setDescription("config.desc.teilnehmer.sort.modus"))
+				.addAuswahl(TeilnehmerListeSortModus.NUMMER.getKey(), I18n.get("config.teilnehmer.sort.nummer"))
+				.addAuswahl(TeilnehmerListeSortModus.NAME.getKey(), I18n.get("config.teilnehmer.sort.name"))
+				.addAuswahl(TeilnehmerListeSortModus.TEAMNAME.getKey(), I18n.get("config.teilnehmer.sort.teamname")));
 	}
 
 	protected BasePropertiesSpalte(ISheet sheet) {
@@ -339,6 +383,18 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	@Override
 	public int getDirektvergleichTabFarbe() {
 		return readIntProperty(KONFIG_PROP_TAB_COLOR_DIREKTVERGLEICH);
+	}
+
+	@Override
+	public TeilnehmerListeSortModus getCheckinListeSortModus() {
+		return readEnumProperty(KONFIG_PROP_CHECKIN_LISTE_SORT_MODUS, TeilnehmerListeSortModus.class,
+				TeilnehmerListeSortModus.NAME);
+	}
+
+	@Override
+	public TeilnehmerListeSortModus getTeilnehmerListeSortModus() {
+		return readEnumProperty(KONFIG_PROP_TEILNEHMER_LISTE_SORT_MODUS, TeilnehmerListeSortModus.class,
+				TeilnehmerListeSortModus.NAME);
 	}
 
 	@Override

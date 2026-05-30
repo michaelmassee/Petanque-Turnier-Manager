@@ -1,123 +1,46 @@
 [
   [
     {
-      "data": 101.0
+      "data": 167.0
     },
     {
-      "data": "Anett"
+      "data": "Theodore"
     },
     {
-      "data": "Jakobs"
+      "data": "Baake"
     }
   ],
   [
     {
-      "data": 102.0
+      "data": 56.0
     },
     {
-      "data": "Angelika"
+      "data": "Rita"
     },
     {
-      "data": "Elsen"
+      "data": "Bäder"
     }
   ],
   [
     {
-      "data": 103.0
+      "data": 145.0
     },
     {
-      "data": "Anika"
+      "data": "Maria"
     },
     {
-      "data": "Drees"
+      "data": "Bieder"
     }
   ],
   [
     {
-      "data": 100.0
+      "data": 163.0
     },
     {
-      "data": "Annehilde"
+      "data": "Sieghardt"
     },
     {
-      "data": "Matthiessen"
-    }
-  ],
-  [
-    {
-      "data": 68.0
-    },
-    {
-      "data": "Anneke"
-    },
-    {
-      "data": "Wonneberger"
-    }
-  ],
-  [
-    {
-      "data": 104.0
-    },
-    {
-      "data": "Annika"
-    },
-    {
-      "data": "Härle"
-    }
-  ],
-  [
-    {
-      "data": 39.0
-    },
-    {
-      "data": "Annika"
-    },
-    {
-      "data": "Runkel"
-    }
-  ],
-  [
-    {
-      "data": 28.0
-    },
-    {
-      "data": "Annkatrin"
-    },
-    {
-      "data": "Eisenhardt"
-    }
-  ],
-  [
-    {
-      "data": 73.0
-    },
-    {
-      "data": "Arabella"
-    },
-    {
-      "data": "Käding"
-    }
-  ],
-  [
-    {
-      "data": 74.0
-    },
-    {
-      "data": "Arne"
-    },
-    {
-      "data": "Mühlmann"
-    }
-  ],
-  [
-    {
-      "data": 105.0
-    },
-    {
-      "data": "Benjamin"
-    },
-    {
-      "data": "Stocker"
+      "data": "Bitsch"
     }
   ],
   [
@@ -133,72 +56,6 @@
   ],
   [
     {
-      "data": 106.0
-    },
-    {
-      "data": "Berndt"
-    },
-    {
-      "data": "Meinzer"
-    }
-  ],
-  [
-    {
-      "data": 108.0
-    },
-    {
-      "data": "Bianka"
-    },
-    {
-      "data": "Wels"
-    }
-  ],
-  [
-    {
-      "data": 109.0
-    },
-    {
-      "data": "Birk"
-    },
-    {
-      "data": "Reuß"
-    }
-  ],
-  [
-    {
-      "data": 38.0
-    },
-    {
-      "data": "Borwin"
-    },
-    {
-      "data": "Meiners"
-    }
-  ],
-  [
-    {
-      "data": 110.0
-    },
-    {
-      "data": "Brandolf"
-    },
-    {
-      "data": "Knuth"
-    }
-  ],
-  [
-    {
-      "data": 111.0
-    },
-    {
-      "data": "Chantall"
-    },
-    {
-      "data": "Knöchel"
-    }
-  ],
-  [
-    {
       "data": 112.0
     },
     {
@@ -206,83 +63,6 @@
     },
     {
       "data": "Bohnet"
-    }
-  ],
-  [
-    {
-      "data": 113.0
-    },
-    {
-      "data": "Collin"
-    },
-    {
-      "data": "Knöpfle"
-    }
-  ],
-  [
-    {
-      "data": 114.0
-    },
-    {
-      "data": "Conrad"
-    },
-    {
-      "data": "Steck"
-    }
-  ],
-  [
-    {
-      "data": 115.0
-    },
-    {
-      "data": "Danny"
-    },
-    {
-      "data": "Witschel"
-    }
-  ],
-  [
-    {
-      "data": 116.0
-    },
-    {
-      "data": "Detmar"
-    },
-    {
-      "data": "Ciftci"
-    }
-  ],
-  [
-    {
-      "data": 117.0
-    },
-    {
-      "data": "Diethelm"
-    },
-    {
-      "data": "Steinbrink"
-    }
-  ],
-  [
-    {
-      "data": 49.0
-    },
-    {
-      "data": "Diethmar"
-    },
-    {
-      "data": "Herget"
-    }
-  ],
-  [
-    {
-      "data": 118.0
-    },
-    {
-      "data": "Dietmar"
-    },
-    {
-      "data": "Kühnle"
     }
   ],
   [
@@ -298,6 +78,578 @@
   ],
   [
     {
+      "data": 61.0
+    },
+    {
+      "data": "Adolf"
+    },
+    {
+      "data": "Bulut"
+    }
+  ],
+  [
+    {
+      "data": 162.0
+    },
+    {
+      "data": "Selma"
+    },
+    {
+      "data": "Burmeister"
+    }
+  ],
+  [
+    {
+      "data": 116.0
+    },
+    {
+      "data": "Detmar"
+    },
+    {
+      "data": "Ciftci"
+    }
+  ],
+  [
+    {
+      "data": 155.0
+    },
+    {
+      "data": "Petra"
+    },
+    {
+      "data": "Daum"
+    }
+  ],
+  [
+    {
+      "data": 54.0
+    },
+    {
+      "data": "Evi"
+    },
+    {
+      "data": "Doege"
+    }
+  ],
+  [
+    {
+      "data": 154.0
+    },
+    {
+      "data": "Otbert"
+    },
+    {
+      "data": "Dold"
+    }
+  ],
+  [
+    {
+      "data": 151.0
+    },
+    {
+      "data": "Muthild"
+    },
+    {
+      "data": "Döll"
+    }
+  ],
+  [
+    {
+      "data": 103.0
+    },
+    {
+      "data": "Anika"
+    },
+    {
+      "data": "Drees"
+    }
+  ],
+  [
+    {
+      "data": 147.0
+    },
+    {
+      "data": "Mark"
+    },
+    {
+      "data": "Drewitz"
+    }
+  ],
+  [
+    {
+      "data": 28.0
+    },
+    {
+      "data": "Annkatrin"
+    },
+    {
+      "data": "Eisenhardt"
+    }
+  ],
+  [
+    {
+      "data": 102.0
+    },
+    {
+      "data": "Angelika"
+    },
+    {
+      "data": "Elsen"
+    }
+  ],
+  [
+    {
+      "data": 130.0
+    },
+    {
+      "data": "Gesine"
+    },
+    {
+      "data": "Enzmann"
+    }
+  ],
+  [
+    {
+      "data": 146.0
+    },
+    {
+      "data": "Mariegret"
+    },
+    {
+      "data": "Erickson"
+    }
+  ],
+  [
+    {
+      "data": 165.0
+    },
+    {
+      "data": "Siska"
+    },
+    {
+      "data": "Erl"
+    }
+  ],
+  [
+    {
+      "data": 142.0
+    },
+    {
+      "data": "Leander"
+    },
+    {
+      "data": "Fessler"
+    }
+  ],
+  [
+    {
+      "data": 75.0
+    },
+    {
+      "data": "Marina"
+    },
+    {
+      "data": "Gehrig"
+    }
+  ],
+  [
+    {
+      "data": 123.0
+    },
+    {
+      "data": "Evchen"
+    },
+    {
+      "data": "Geisen"
+    }
+  ],
+  [
+    {
+      "data": 160.0
+    },
+    {
+      "data": "Rotraut"
+    },
+    {
+      "data": "Gentsch"
+    }
+  ],
+  [
+    {
+      "data": 153.0
+    },
+    {
+      "data": "Niko"
+    },
+    {
+      "data": "Gerhard"
+    }
+  ],
+  [
+    {
+      "data": 122.0
+    },
+    {
+      "data": "Eustachius"
+    },
+    {
+      "data": "Goetze"
+    }
+  ],
+  [
+    {
+      "data": 44.0
+    },
+    {
+      "data": "Gerlach"
+    },
+    {
+      "data": "Görgens"
+    }
+  ],
+  [
+    {
+      "data": 127.0
+    },
+    {
+      "data": "Franka"
+    },
+    {
+      "data": "Grau"
+    }
+  ],
+  [
+    {
+      "data": 104.0
+    },
+    {
+      "data": "Annika"
+    },
+    {
+      "data": "Härle"
+    }
+  ],
+  [
+    {
+      "data": 78.0
+    },
+    {
+      "data": "Marielene"
+    },
+    {
+      "data": "Heering"
+    }
+  ],
+  [
+    {
+      "data": 168.0
+    },
+    {
+      "data": "Willhart"
+    },
+    {
+      "data": "Hempel"
+    }
+  ],
+  [
+    {
+      "data": 49.0
+    },
+    {
+      "data": "Diethmar"
+    },
+    {
+      "data": "Herget"
+    }
+  ],
+  [
+    {
+      "data": 82.0
+    },
+    {
+      "data": "Volkwart"
+    },
+    {
+      "data": "Hey"
+    }
+  ],
+  [
+    {
+      "data": 161.0
+    },
+    {
+      "data": "Rupertus"
+    },
+    {
+      "data": "Hupp"
+    }
+  ],
+  [
+    {
+      "data": 138.0
+    },
+    {
+      "data": "Isedore"
+    },
+    {
+      "data": "Husmann"
+    }
+  ],
+  [
+    {
+      "data": 132.0
+    },
+    {
+      "data": "Gretchen"
+    },
+    {
+      "data": "Hüttel"
+    }
+  ],
+  [
+    {
+      "data": 101.0
+    },
+    {
+      "data": "Anett"
+    },
+    {
+      "data": "Jakobs"
+    }
+  ],
+  [
+    {
+      "data": 73.0
+    },
+    {
+      "data": "Arabella"
+    },
+    {
+      "data": "Käding"
+    }
+  ],
+  [
+    {
+      "data": 126.0
+    },
+    {
+      "data": "Felix"
+    },
+    {
+      "data": "Kamps"
+    }
+  ],
+  [
+    {
+      "data": 31.0
+    },
+    {
+      "data": "Erhardt"
+    },
+    {
+      "data": "Karch"
+    }
+  ],
+  [
+    {
+      "data": 57.0
+    },
+    {
+      "data": "Zoé"
+    },
+    {
+      "data": "Kieslich"
+    }
+  ],
+  [
+    {
+      "data": 111.0
+    },
+    {
+      "data": "Chantall"
+    },
+    {
+      "data": "Knöchel"
+    }
+  ],
+  [
+    {
+      "data": 113.0
+    },
+    {
+      "data": "Collin"
+    },
+    {
+      "data": "Knöpfle"
+    }
+  ],
+  [
+    {
+      "data": 110.0
+    },
+    {
+      "data": "Brandolf"
+    },
+    {
+      "data": "Knuth"
+    }
+  ],
+  [
+    {
+      "data": 134.0
+    },
+    {
+      "data": "Hasko"
+    },
+    {
+      "data": "Köhnen"
+    }
+  ],
+  [
+    {
+      "data": 164.0
+    },
+    {
+      "data": "Siegulf"
+    },
+    {
+      "data": "Krauss"
+    }
+  ],
+  [
+    {
+      "data": 148.0
+    },
+    {
+      "data": "Max"
+    },
+    {
+      "data": "Krischer"
+    }
+  ],
+  [
+    {
+      "data": 118.0
+    },
+    {
+      "data": "Dietmar"
+    },
+    {
+      "data": "Kühnle"
+    }
+  ],
+  [
+    {
+      "data": 85.0
+    },
+    {
+      "data": "Roger"
+    },
+    {
+      "data": "Linder"
+    }
+  ],
+  [
+    {
+      "data": 128.0
+    },
+    {
+      "data": "Friedhilde"
+    },
+    {
+      "data": "Linner"
+    }
+  ],
+  [
+    {
+      "data": 150.0
+    },
+    {
+      "data": "Milan"
+    },
+    {
+      "data": "Lott"
+    }
+  ],
+  [
+    {
+      "data": 100.0
+    },
+    {
+      "data": "Annehilde"
+    },
+    {
+      "data": "Matthiessen"
+    }
+  ],
+  [
+    {
+      "data": 38.0
+    },
+    {
+      "data": "Borwin"
+    },
+    {
+      "data": "Meiners"
+    }
+  ],
+  [
+    {
+      "data": 106.0
+    },
+    {
+      "data": "Berndt"
+    },
+    {
+      "data": "Meinzer"
+    }
+  ],
+  [
+    {
+      "data": 90.0
+    },
+    {
+      "data": "Huldine"
+    },
+    {
+      "data": "Meiß"
+    }
+  ],
+  [
+    {
+      "data": 19.0
+    },
+    {
+      "data": "Kornelia"
+    },
+    {
+      "data": "Molz"
+    }
+  ],
+  [
+    {
+      "data": 125.0
+    },
+    {
+      "data": "Falk"
+    },
+    {
+      "data": "Moog"
+    }
+  ],
+  [
+    {
+      "data": 74.0
+    },
+    {
+      "data": "Arne"
+    },
+    {
+      "data": "Mühlmann"
+    }
+  ],
+  [
+    {
       "data": 27.0
     },
     {
@@ -305,6 +657,72 @@
     },
     {
       "data": "Murphy"
+    }
+  ],
+  [
+    {
+      "data": 133.0
+    },
+    {
+      "data": "Hartwig"
+    },
+    {
+      "data": "Ney"
+    }
+  ],
+  [
+    {
+      "data": 152.0
+    },
+    {
+      "data": "Nadine"
+    },
+    {
+      "data": "Nienaber"
+    }
+  ],
+  [
+    {
+      "data": 22.0
+    },
+    {
+      "data": "Joana"
+    },
+    {
+      "data": "Nuber"
+    }
+  ],
+  [
+    {
+      "data": 143.0
+    },
+    {
+      "data": "Manfried"
+    },
+    {
+      "data": "Ott"
+    }
+  ],
+  [
+    {
+      "data": 47.0
+    },
+    {
+      "data": "Sibylla"
+    },
+    {
+      "data": "Panitz"
+    }
+  ],
+  [
+    {
+      "data": 158.0
+    },
+    {
+      "data": "Roseliese"
+    },
+    {
+      "data": "Petter"
     }
   ],
   [
@@ -331,112 +749,13 @@
   ],
   [
     {
-      "data": 121.0
+      "data": 71.0
     },
     {
-      "data": "Engelbert"
+      "data": "Irmgardt"
     },
     {
-      "data": "Radde"
-    }
-  ],
-  [
-    {
-      "data": 31.0
-    },
-    {
-      "data": "Erhardt"
-    },
-    {
-      "data": "Karch"
-    }
-  ],
-  [
-    {
-      "data": 122.0
-    },
-    {
-      "data": "Eustachius"
-    },
-    {
-      "data": "Goetze"
-    }
-  ],
-  [
-    {
-      "data": 123.0
-    },
-    {
-      "data": "Evchen"
-    },
-    {
-      "data": "Geisen"
-    }
-  ],
-  [
-    {
-      "data": 124.0
-    },
-    {
-      "data": "Eveline"
-    },
-    {
-      "data": "Schneeweiß"
-    }
-  ],
-  [
-    {
-      "data": 54.0
-    },
-    {
-      "data": "Evi"
-    },
-    {
-      "data": "Doege"
-    }
-  ],
-  [
-    {
-      "data": 125.0
-    },
-    {
-      "data": "Falk"
-    },
-    {
-      "data": "Moog"
-    }
-  ],
-  [
-    {
-      "data": 126.0
-    },
-    {
-      "data": "Felix"
-    },
-    {
-      "data": "Kamps"
-    }
-  ],
-  [
-    {
-      "data": 127.0
-    },
-    {
-      "data": "Franka"
-    },
-    {
-      "data": "Grau"
-    }
-  ],
-  [
-    {
-      "data": 128.0
-    },
-    {
-      "data": "Friedhilde"
-    },
-    {
-      "data": "Linner"
+      "data": "Prüfer"
     }
   ],
   [
@@ -452,116 +771,6 @@
   ],
   [
     {
-      "data": 44.0
-    },
-    {
-      "data": "Gerlach"
-    },
-    {
-      "data": "Görgens"
-    }
-  ],
-  [
-    {
-      "data": 130.0
-    },
-    {
-      "data": "Gesine"
-    },
-    {
-      "data": "Enzmann"
-    }
-  ],
-  [
-    {
-      "data": 131.0
-    },
-    {
-      "data": "Goswin"
-    },
-    {
-      "data": "Riederer"
-    }
-  ],
-  [
-    {
-      "data": 132.0
-    },
-    {
-      "data": "Gretchen"
-    },
-    {
-      "data": "Hüttel"
-    }
-  ],
-  [
-    {
-      "data": 133.0
-    },
-    {
-      "data": "Hartwig"
-    },
-    {
-      "data": "Ney"
-    }
-  ],
-  [
-    {
-      "data": 134.0
-    },
-    {
-      "data": "Hasko"
-    },
-    {
-      "data": "Köhnen"
-    }
-  ],
-  [
-    {
-      "data": 29.0
-    },
-    {
-      "data": "Helfrid"
-    },
-    {
-      "data": "Siegrist"
-    }
-  ],
-  [
-    {
-      "data": 90.0
-    },
-    {
-      "data": "Huldine"
-    },
-    {
-      "data": "Meiß"
-    }
-  ],
-  [
-    {
-      "data": 135.0
-    },
-    {
-      "data": "Ilsetraud"
-    },
-    {
-      "data": "Wetzig"
-    }
-  ],
-  [
-    {
-      "data": 50.0
-    },
-    {
-      "data": "Imke"
-    },
-    {
-      "data": "Romero"
-    }
-  ],
-  [
-    {
       "data": 136.0
     },
     {
@@ -569,138 +778,6 @@
     },
     {
       "data": "Quadt"
-    }
-  ],
-  [
-    {
-      "data": 71.0
-    },
-    {
-      "data": "Irmgardt"
-    },
-    {
-      "data": "Prüfer"
-    }
-  ],
-  [
-    {
-      "data": 137.0
-    },
-    {
-      "data": "Irmintraud"
-    },
-    {
-      "data": "Staub"
-    }
-  ],
-  [
-    {
-      "data": 138.0
-    },
-    {
-      "data": "Isedore"
-    },
-    {
-      "data": "Husmann"
-    }
-  ],
-  [
-    {
-      "data": 139.0
-    },
-    {
-      "data": "Jil"
-    },
-    {
-      "data": "Rackow"
-    }
-  ],
-  [
-    {
-      "data": 22.0
-    },
-    {
-      "data": "Joana"
-    },
-    {
-      "data": "Nuber"
-    }
-  ],
-  [
-    {
-      "data": 42.0
-    },
-    {
-      "data": "Joana"
-    },
-    {
-      "data": "Steinborn"
-    }
-  ],
-  [
-    {
-      "data": 19.0
-    },
-    {
-      "data": "Kornelia"
-    },
-    {
-      "data": "Molz"
-    }
-  ],
-  [
-    {
-      "data": 9.0
-    },
-    {
-      "data": "Kreszenzia"
-    },
-    {
-      "data": "Thielmann"
-    }
-  ],
-  [
-    {
-      "data": 140.0
-    },
-    {
-      "data": "Kristine"
-    },
-    {
-      "data": "Schenck"
-    }
-  ],
-  [
-    {
-      "data": 141.0
-    },
-    {
-      "data": "Kurth"
-    },
-    {
-      "data": "Zipfel"
-    }
-  ],
-  [
-    {
-      "data": 142.0
-    },
-    {
-      "data": "Leander"
-    },
-    {
-      "data": "Fessler"
-    }
-  ],
-  [
-    {
-      "data": 143.0
-    },
-    {
-      "data": "Manfried"
-    },
-    {
-      "data": "Ott"
     }
   ],
   [
@@ -716,299 +793,24 @@
   ],
   [
     {
-      "data": 145.0
+      "data": 139.0
     },
     {
-      "data": "Maria"
+      "data": "Jil"
     },
     {
-      "data": "Bieder"
+      "data": "Rackow"
     }
   ],
   [
     {
-      "data": 146.0
+      "data": 121.0
     },
     {
-      "data": "Mariegret"
+      "data": "Engelbert"
     },
     {
-      "data": "Erickson"
-    }
-  ],
-  [
-    {
-      "data": 78.0
-    },
-    {
-      "data": "Marielene"
-    },
-    {
-      "data": "Heering"
-    }
-  ],
-  [
-    {
-      "data": 75.0
-    },
-    {
-      "data": "Marina"
-    },
-    {
-      "data": "Gehrig"
-    }
-  ],
-  [
-    {
-      "data": 147.0
-    },
-    {
-      "data": "Mark"
-    },
-    {
-      "data": "Drewitz"
-    }
-  ],
-  [
-    {
-      "data": 148.0
-    },
-    {
-      "data": "Max"
-    },
-    {
-      "data": "Krischer"
-    }
-  ],
-  [
-    {
-      "data": 149.0
-    },
-    {
-      "data": "Michaela"
-    },
-    {
-      "data": "Thielemann"
-    }
-  ],
-  [
-    {
-      "data": 150.0
-    },
-    {
-      "data": "Milan"
-    },
-    {
-      "data": "Lott"
-    }
-  ],
-  [
-    {
-      "data": 151.0
-    },
-    {
-      "data": "Muthild"
-    },
-    {
-      "data": "Döll"
-    }
-  ],
-  [
-    {
-      "data": 152.0
-    },
-    {
-      "data": "Nadine"
-    },
-    {
-      "data": "Nienaber"
-    }
-  ],
-  [
-    {
-      "data": 153.0
-    },
-    {
-      "data": "Niko"
-    },
-    {
-      "data": "Gerhard"
-    }
-  ],
-  [
-    {
-      "data": 154.0
-    },
-    {
-      "data": "Otbert"
-    },
-    {
-      "data": "Dold"
-    }
-  ],
-  [
-    {
-      "data": 155.0
-    },
-    {
-      "data": "Petra"
-    },
-    {
-      "data": "Daum"
-    }
-  ],
-  [
-    {
-      "data": 156.0
-    },
-    {
-      "data": "Rigobert"
-    },
-    {
-      "data": "Asmus"
-    }
-  ],
-  [
-    {
-      "data": 56.0
-    },
-    {
-      "data": "Rita"
-    },
-    {
-      "data": "Bäder"
-    }
-  ],
-  [
-    {
-      "data": 85.0
-    },
-    {
-      "data": "Roger"
-    },
-    {
-      "data": "Linder"
-    }
-  ],
-  [
-    {
-      "data": 157.0
-    },
-    {
-      "data": "Rosa"
-    },
-    {
-      "data": "Tafel"
-    }
-  ],
-  [
-    {
-      "data": 158.0
-    },
-    {
-      "data": "Roseliese"
-    },
-    {
-      "data": "Petter"
-    }
-  ],
-  [
-    {
-      "data": 159.0
-    },
-    {
-      "data": "Rosmarie"
-    },
-    {
-      "data": "Zoll"
-    }
-  ],
-  [
-    {
-      "data": 160.0
-    },
-    {
-      "data": "Rotraut"
-    },
-    {
-      "data": "Gentsch"
-    }
-  ],
-  [
-    {
-      "data": 161.0
-    },
-    {
-      "data": "Rupertus"
-    },
-    {
-      "data": "Hupp"
-    }
-  ],
-  [
-    {
-      "data": 162.0
-    },
-    {
-      "data": "Selma"
-    },
-    {
-      "data": "Burmeister"
-    }
-  ],
-  [
-    {
-      "data": 47.0
-    },
-    {
-      "data": "Sibylla"
-    },
-    {
-      "data": "Panitz"
-    }
-  ],
-  [
-    {
-      "data": 163.0
-    },
-    {
-      "data": "Sieghardt"
-    },
-    {
-      "data": "Bitsch"
-    }
-  ],
-  [
-    {
-      "data": 164.0
-    },
-    {
-      "data": "Siegulf"
-    },
-    {
-      "data": "Krauss"
-    }
-  ],
-  [
-    {
-      "data": 165.0
-    },
-    {
-      "data": "Siska"
-    },
-    {
-      "data": "Erl"
-    }
-  ],
-  [
-    {
-      "data": 166.0
-    },
-    {
-      "data": "Sophie"
-    },
-    {
-      "data": "Stabel"
+      "data": "Radde"
     }
   ],
   [
@@ -1024,24 +826,46 @@
   ],
   [
     {
-      "data": 167.0
+      "data": 109.0
     },
     {
-      "data": "Theodore"
+      "data": "Birk"
     },
     {
-      "data": "Baake"
+      "data": "Reuß"
     }
   ],
   [
     {
-      "data": 82.0
+      "data": 131.0
     },
     {
-      "data": "Volkwart"
+      "data": "Goswin"
     },
     {
-      "data": "Hey"
+      "data": "Riederer"
+    }
+  ],
+  [
+    {
+      "data": 50.0
+    },
+    {
+      "data": "Imke"
+    },
+    {
+      "data": "Romero"
+    }
+  ],
+  [
+    {
+      "data": 39.0
+    },
+    {
+      "data": "Annika"
+    },
+    {
+      "data": "Runkel"
     }
   ],
   [
@@ -1057,6 +881,94 @@
   ],
   [
     {
+      "data": 140.0
+    },
+    {
+      "data": "Kristine"
+    },
+    {
+      "data": "Schenck"
+    }
+  ],
+  [
+    {
+      "data": 124.0
+    },
+    {
+      "data": "Eveline"
+    },
+    {
+      "data": "Schneeweiß"
+    }
+  ],
+  [
+    {
+      "data": 29.0
+    },
+    {
+      "data": "Helfrid"
+    },
+    {
+      "data": "Siegrist"
+    }
+  ],
+  [
+    {
+      "data": 166.0
+    },
+    {
+      "data": "Sophie"
+    },
+    {
+      "data": "Stabel"
+    }
+  ],
+  [
+    {
+      "data": 137.0
+    },
+    {
+      "data": "Irmintraud"
+    },
+    {
+      "data": "Staub"
+    }
+  ],
+  [
+    {
+      "data": 114.0
+    },
+    {
+      "data": "Conrad"
+    },
+    {
+      "data": "Steck"
+    }
+  ],
+  [
+    {
+      "data": 42.0
+    },
+    {
+      "data": "Joana"
+    },
+    {
+      "data": "Steinborn"
+    }
+  ],
+  [
+    {
+      "data": 117.0
+    },
+    {
+      "data": "Diethelm"
+    },
+    {
+      "data": "Steinbrink"
+    }
+  ],
+  [
+    {
       "data": 64.0
     },
     {
@@ -1068,24 +980,112 @@
   ],
   [
     {
-      "data": 168.0
+      "data": 105.0
     },
     {
-      "data": "Willhart"
+      "data": "Benjamin"
     },
     {
-      "data": "Hempel"
+      "data": "Stocker"
     }
   ],
   [
     {
-      "data": 57.0
+      "data": 157.0
     },
     {
-      "data": "Zoé"
+      "data": "Rosa"
     },
     {
-      "data": "Kieslich"
+      "data": "Tafel"
+    }
+  ],
+  [
+    {
+      "data": 149.0
+    },
+    {
+      "data": "Michaela"
+    },
+    {
+      "data": "Thielemann"
+    }
+  ],
+  [
+    {
+      "data": 9.0
+    },
+    {
+      "data": "Kreszenzia"
+    },
+    {
+      "data": "Thielmann"
+    }
+  ],
+  [
+    {
+      "data": 108.0
+    },
+    {
+      "data": "Bianka"
+    },
+    {
+      "data": "Wels"
+    }
+  ],
+  [
+    {
+      "data": 135.0
+    },
+    {
+      "data": "Ilsetraud"
+    },
+    {
+      "data": "Wetzig"
+    }
+  ],
+  [
+    {
+      "data": 115.0
+    },
+    {
+      "data": "Danny"
+    },
+    {
+      "data": "Witschel"
+    }
+  ],
+  [
+    {
+      "data": 68.0
+    },
+    {
+      "data": "Anneke"
+    },
+    {
+      "data": "Wonneberger"
+    }
+  ],
+  [
+    {
+      "data": 141.0
+    },
+    {
+      "data": "Kurth"
+    },
+    {
+      "data": "Zipfel"
+    }
+  ],
+  [
+    {
+      "data": 159.0
+    },
+    {
+      "data": "Rosmarie"
+    },
+    {
+      "data": "Zoll"
     }
   ],
   [

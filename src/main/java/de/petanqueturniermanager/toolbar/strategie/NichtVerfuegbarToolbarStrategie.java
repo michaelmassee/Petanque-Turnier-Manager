@@ -36,6 +36,11 @@ public class NichtVerfuegbarToolbarStrategie implements ITurnierSystemToolbarStr
     }
 
     @Override
+    public void checkin(WorkingSpreadsheet ws) throws Exception {
+        zeigeNichtVerfuegbar(ws, I18n.get("toolbar.checkin.nicht.verfuegbar"));
+    }
+
+    @Override
     public void neuAuslosen(WorkingSpreadsheet ws) throws Exception {
         zeigeNichtVerfuegbar(ws, I18n.get("toolbar.neu.auslosen.nicht.verfuegbar"));
     }

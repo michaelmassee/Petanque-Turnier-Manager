@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
+import de.petanqueturniermanager.basesheet.konfiguration.IFreispielPropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.helper.ISheet;
@@ -21,12 +22,14 @@ import de.petanqueturniermanager.supermelee.SpielRundeNr;
 /**
  * Konfigurationseigenschaften für das Formule X Turniersystem.
  */
-public class FormuleXPropertiesSpalte extends BasePropertiesSpalte {
+public class FormuleXPropertiesSpalte extends BasePropertiesSpalte implements IFreispielPropertiesSpalte {
 
     public static final List<ConfigProperty<?>> KONFIG_PROPERTIES = new ArrayList<>();
 
     static {
         ADDBaseProp(KONFIG_PROPERTIES);
+        addCheckinSortProp(KONFIG_PROPERTIES);
+        addTeilnehmerListeSortProp(KONFIG_PROPERTIES);
     }
 
     private static final String KONFIG_PROP_KOPF_ZEILE_LINKS      = "Kopfzeile Links";
@@ -45,51 +48,58 @@ public class FormuleXPropertiesSpalte extends BasePropertiesSpalte {
     private static final String KONFIG_PROP_MELDELISTE_TEAMNAME    = "Meldeliste Teamname";
     private static final String KONFIG_PROP_MELDELISTE_VEREINSNAME = "Meldeliste Vereinsname";
 
+    private static final String KONFIG_PROP_FREISPIEL_PUNKTE_PLUS  = "Freispiel Punkte +";
+    private static final String KONFIG_PROP_FREISPIEL_PUNKTE_MINUS = "Freispiel Punkte -";
+
     static {
         KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_LINKS)
-                .setDescription("config.desc.header.links").inSideBar());
+                .setDescription("config.desc.header.links"));
         KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_MITTE)
-                .setDescription("config.desc.header.mitte").inSideBar());
+                .setDescription("config.desc.header.mitte"));
         KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_RECHTS)
-                .setDescription("config.desc.header.rechts").inSideBar());
+                .setDescription("config.desc.header.rechts"));
 
         KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELRUNDE)
-                .setDefaultVal(1).setDescription("config.desc.aktuelle.spielrunde").inSideBarInfoPanel());
+                .setDefaultVal(1).setDescription("config.desc.aktuelle.spielrunde"));
 
         KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_ANZAHL_RUNDEN)
-                .setDefaultVal(4).setDescription("config.desc.formulex.anzahl.runden").inSideBar());
+                .setDefaultVal(4).setDescription("config.desc.formulex.anzahl.runden"));
 
         KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELRUNDE_COLOR_BACK_GERADE)
                 .setDefaultVal(DEFAULT_GERADE_BACK_COLOR)
-                .setDescription("config.desc.spielrunde.gerade").inSideBar());
+                .setDescription("config.desc.spielrunde.gerade"));
         KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELRUNDE_COLOR_BACK_UNGERADE)
                 .setDefaultVal(DEFAULT_UNGERADE_BACK_COLOR)
-                .setDescription("config.desc.spielrunde.ungerade").inSideBar());
+                .setDescription("config.desc.spielrunde.ungerade"));
         KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELRUNDE_COLOR_BACK_HEADER)
-                .setDefaultVal(DEFAULT_HEADER_BACK_COLOR).setDescription("config.desc.spielrunde.header")
-                .inSideBar());
+                .setDefaultVal(DEFAULT_HEADER_BACK_COLOR).setDescription("config.desc.spielrunde.header"));
 
         KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_SPIELRUNDE_SPIELBAHN)
                 .setDefaultVal(SpielrundeSpielbahn.X.name()).setDescription("config.desc.spielbahn"))
                 .addAuswahl(SpielrundeSpielbahn.X.name(), "Keine Spalte")
                 .addAuswahl(SpielrundeSpielbahn.L.name(), "Leere Spalte")
                 .addAuswahl(SpielrundeSpielbahn.N.name(), "Durchnummerieren (1-n)")
-                .addAuswahl(SpielrundeSpielbahn.R.name(), "Zufällig vergeben").inSideBar());
+                .addAuswahl(SpielrundeSpielbahn.R.name(), "Zufällig vergeben"));
 
         KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_MELDELISTE_FORMATION)
                 .setDefaultVal(Formation.TRIPLETTE.name())
                 .setDescription("config.desc.meldeliste.formation"))
                 .addAuswahl(Formation.TETE.name(), Formation.TETE.getBezeichnung())
                 .addAuswahl(Formation.DOUBLETTE.name(), Formation.DOUBLETTE.getBezeichnung())
-                .addAuswahl(Formation.TRIPLETTE.name(), Formation.TRIPLETTE.getBezeichnung()).inSideBar());
+                .addAuswahl(Formation.TRIPLETTE.name(), Formation.TRIPLETTE.getBezeichnung()));
 
         KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_MELDELISTE_TEAMNAME)
                 .setDefaultVal("J").setDescription("config.desc.meldeliste.teamname"))
-                .addAuswahl("J", "Ja").addAuswahl("N", "Nein").inSideBar());
+                .addAuswahl("J", "Ja").addAuswahl("N", "Nein"));
 
         KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_MELDELISTE_VEREINSNAME)
                 .setDefaultVal("N").setDescription("config.desc.schweizer.vereinsname"))
-                .addAuswahl("J", "Ja").addAuswahl("N", "Nein").inSideBar());
+                .addAuswahl("J", "Ja").addAuswahl("N", "Nein"));
+
+        KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_FREISPIEL_PUNKTE_PLUS)
+                .setDefaultVal(13).setDescription("config.desc.freispiel.punkte.plus"));
+        KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_FREISPIEL_PUNKTE_MINUS)
+                .setDefaultVal(0).setDescription("config.desc.freispiel.punkte.minus"));
     }
 
     FormuleXPropertiesSpalte(ISheet sheet) {
@@ -184,5 +194,15 @@ public class FormuleXPropertiesSpalte extends BasePropertiesSpalte {
 
     public void setMeldeListeVereinsnameAnzeigen(boolean anzeigen) {
         setStringProperty(KONFIG_PROP_MELDELISTE_VEREINSNAME, anzeigen ? "J" : "N");
+    }
+
+    @Override
+    public Integer getFreispielPunktePlus() {
+        return readIntProperty(KONFIG_PROP_FREISPIEL_PUNKTE_PLUS);
+    }
+
+    @Override
+    public Integer getFreispielPunkteMinus() {
+        return readIntProperty(KONFIG_PROP_FREISPIEL_PUNKTE_MINUS);
     }
 }

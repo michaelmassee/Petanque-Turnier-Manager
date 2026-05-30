@@ -15,6 +15,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 
+import de.petanqueturniermanager.helper.perflog.PerfLog;
 import de.petanqueturniermanager.webserver.CompositeViewKonfiguration;
 import de.petanqueturniermanager.webserver.PanelAusrichtung;
 import de.petanqueturniermanager.webserver.PanelKonfiguration;
@@ -35,6 +36,7 @@ public class GlobalProperties {
 	private static final String NEW_VERSION_CHECK_PROP = "newversioncheck";
 	private static final String PROZESSBOX_AUTOMATISCH_ANZEIGEN_PROP = "prozessbox.automatisch.anzeigen";
 	private static final String PROZESSBOX_AUTOMATISCH_SCHLIESSEN_PROP = "prozessbox.automatisch.schliessen";
+	private static final String PERFORMANCE_LOGGING_PROP = "performance.logging";
 
 	private static final String WEBSERVER_AKTIV_PROP = "webserver_aktiv";
 
@@ -282,6 +284,10 @@ public class GlobalProperties {
 		return getBooleanMitDefault(PROZESSBOX_AUTOMATISCH_SCHLIESSEN_PROP, true);
 	}
 
+	public boolean isPerformanceLogging() {
+		return getBoolean(PERFORMANCE_LOGGING_PROP);
+	}
+
 	public boolean isWebserverAktiv() {
 		return getBoolean(WEBSERVER_AKTIV_PROP);
 	}
@@ -517,11 +523,13 @@ public class GlobalProperties {
 	// ----------------------------------------------------
 
 	public void speichern(boolean autosave, boolean backup, boolean newVersionCheck,
-			boolean prozessBoxAutomatischAnzeigen, boolean prozessBoxAutomatischSchliessen, String logLevel) {
+			boolean prozessBoxAutomatischAnzeigen, boolean prozessBoxAutomatischSchliessen,
+			boolean performanceLogging, String logLevel) {
 		try {
 			setBooleanProp(AUTOSAVE_PROP, autosave);
 			setBooleanProp(CREATE_BACKUP_PROP, backup);
 			setBooleanProp(NEW_VERSION_CHECK_PROP, newVersionCheck);
+			setBooleanProp(PERFORMANCE_LOGGING_PROP, performanceLogging);
 			// Default-true-Properties: explizit "false" persistieren, sonst greift beim Lesen wieder der Default.
 			propMap.put(PROZESSBOX_AUTOMATISCH_ANZEIGEN_PROP, Boolean.toString(prozessBoxAutomatischAnzeigen));
 			propMap.put(PROZESSBOX_AUTOMATISCH_SCHLIESSEN_PROP, Boolean.toString(prozessBoxAutomatischSchliessen));
@@ -534,6 +542,7 @@ public class GlobalProperties {
 
 			speichernDatei();
 			safeSetLogLevel();
+			PerfLog.invalidateCache();
 
 		} catch (Exception e) {
 			logger.error("Fehler beim Speichern", e);
@@ -596,16 +605,23 @@ public class GlobalProperties {
 	private void safeSetLogLevel() {
 		try {
 			var logLevel = getLogLevel();
-			if (logLevel.isBlank()) return;
-
-			var loggerCfg = LogManager.getLogger(Log4J.LOGGERNAME);
-
-			switch (logLevel) {
-				case "debug" -> Configurator.setLevel(loggerCfg, Level.DEBUG);
-				case "info" -> Configurator.setLevel(loggerCfg, Level.INFO);
-				default -> logger.warn("Unbekanntes LogLevel: {}", logLevel);
+			Level level = switch (logLevel) {
+				case "trace" -> Level.TRACE;
+				case "debug" -> Level.DEBUG;
+				case "info" -> Level.INFO;
+				case "warn" -> Level.WARN;
+				case "error" -> Level.ERROR;
+				case "" -> Level.INFO;
+				default -> {
+					logger.warn("Unbekanntes LogLevel: {}", logLevel);
+					yield null;
+				}
+			};
+			if (level != null) {
+				// setLevel(String, Level) ruft intern ctx.updateLoggers() auf und propagiert
+				// die Änderung an alle bereits erzeugten Logger-Instanzen.
+				Configurator.setLevel(Log4J.LOGGERNAME, level);
 			}
-
 		} catch (Exception e) {
 			logger.error("Fehler beim Setzen des LogLevels", e);
 		}

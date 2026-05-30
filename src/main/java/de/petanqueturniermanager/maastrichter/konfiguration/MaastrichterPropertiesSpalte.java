@@ -34,14 +34,13 @@ public class MaastrichterPropertiesSpalte extends SchweizerPropertiesSpalte {
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TAB_COLOR_CADRAGE)
 				.setDefaultVal(SheetTabFarben.FORME_CADRAGE).tabFarbe());
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_ANZ_VORRUNDEN)
-				.setDefaultVal(3).setDescription("config.desc.maastrichter.anz.vorrunden").inSideBar());
+				.setDefaultVal(3).setDescription("config.desc.maastrichter.anz.vorrunden"));
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty
 				.from(KONFIG_PROP_GRUPPEN_MODUS)
 				.setDefaultVal(MaastrichterGruppenModus.NACH_GROESSE.name())
 				.setDescription("config.desc.maastrichter.gruppen.modus"))
 				.addAuswahl(MaastrichterGruppenModus.NACH_GROESSE.name(), "Nach Gruppengröße (Standard)")
-				.addAuswahl(MaastrichterGruppenModus.NACH_SIEGEN.name(), "Nach Siegen (Alternative)")
-				.inSideBar());
+				.addAuswahl(MaastrichterGruppenModus.NACH_SIEGEN.name(), "Nach Siegen (Alternative)"));
 		// KO-Bracket-Properties wiederverwenden (keine Duplikation)
 		KoPropertiesSpalte.addKoBracketProperties(KONFIG_PROPERTIES);
 		KoPropertiesSpalte.addKoBracketColorProperties(KONFIG_PROPERTIES);
@@ -98,6 +97,16 @@ public class MaastrichterPropertiesSpalte extends SchweizerPropertiesSpalte {
 	public void setGruppenGroesse(int gruppenGroesse) {
 		setStringProperty(KoPropertiesSpalte.KONFIG_PROP_GRUPPEN_GROESSE,
 				Integer.toString(KoPropertiesSpalte.normalisiereGruppenGroesse(gruppenGroesse)));
+	}
+
+	public int getMinLetzteGruppeGroesse() {
+		return KoPropertiesSpalte.normalisiereMinLetzteGruppeGroesse(
+				readStringProperty(KoPropertiesSpalte.KONFIG_PROP_MIN_LETZTE_GRUPPE_GROESSE));
+	}
+
+	public void setMinLetzteGruppeGroesse(int wert) {
+		setStringProperty(KoPropertiesSpalte.KONFIG_PROP_MIN_LETZTE_GRUPPE_GROESSE,
+				Integer.toString(KoPropertiesSpalte.normalisiereMinLetzteGruppeGroesse(wert)));
 	}
 
 	public MaastrichterGruppenModus getMaastrichterGruppenModus() {

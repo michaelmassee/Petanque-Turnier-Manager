@@ -4,6 +4,7 @@
 package de.petanqueturniermanager.basesheet.konfiguration;
 
 import de.petanqueturniermanager.basesheet.SheetTabFarben;
+import de.petanqueturniermanager.basesheet.meldeliste.TeilnehmerListeSortModus;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGeradeStyle;
 
@@ -67,6 +68,21 @@ public interface IPropertiesSpalte {
 
 	default boolean isEditierbareFelder() {
 		return true;
+	}
+
+	/**
+	 * Sortierreihenfolge der Checkin-Liste. Default {@link TeilnehmerListeSortModus#NAME}.
+	 * Verwendet dieselbe Modi-Enum wie die Teilnehmerliste.
+	 */
+	default TeilnehmerListeSortModus getCheckinListeSortModus() {
+		return TeilnehmerListeSortModus.NAME;
+	}
+
+	/**
+	 * Sortierreihenfolge der Teilnehmerliste. Default {@link TeilnehmerListeSortModus#NAME}.
+	 */
+	default TeilnehmerListeSortModus getTeilnehmerListeSortModus() {
+		return TeilnehmerListeSortModus.NAME;
 	}
 
 }

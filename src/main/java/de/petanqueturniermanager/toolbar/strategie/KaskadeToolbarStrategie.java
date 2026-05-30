@@ -5,6 +5,7 @@ package de.petanqueturniermanager.toolbar.strategie;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.kaskade.meldeliste.KaskadeTeilnehmerSheet;
+import de.petanqueturniermanager.kaskade.meldeliste.KaskadeCheckinListeSheet;
 import de.petanqueturniermanager.kaskade.spielrunde.KaskadeAktuelleRundeSheet;
 import de.petanqueturniermanager.kaskade.spielrunde.KaskadeKoFeldSheet;
 import de.petanqueturniermanager.kaskade.spielrunde.KaskadeSpielrundeSheet;
@@ -35,6 +36,11 @@ public class KaskadeToolbarStrategie implements ITurnierSystemToolbarStrategie {
     @Override
     public void teilnehmer(WorkingSpreadsheet ws) throws Exception {
         new KaskadeTeilnehmerSheet(ws).testTurnierVorhanden().start();
+    }
+
+    @Override
+    public void checkin(WorkingSpreadsheet ws) throws Exception {
+        new KaskadeCheckinListeSheet(ws).testTurnierVorhanden().backUpDocument().start();
     }
 
     @Override

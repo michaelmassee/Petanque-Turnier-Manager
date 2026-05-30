@@ -17,8 +17,8 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
-import de.petanqueturniermanager.helper.rangliste.RanglisteEingabeSignatur;
-import de.petanqueturniermanager.helper.rangliste.SignaturErgebnis;
+import de.petanqueturniermanager.helper.sheetsync.EingabeSignatur;
+import de.petanqueturniermanager.helper.sheetsync.SignaturErgebnis;
 import de.petanqueturniermanager.helper.rangliste.SignaturQuellen;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
@@ -33,7 +33,7 @@ import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteS
 
 /**
  * End-to-End-UI-Test des Skip-Pfads für Supermelee: prüft pro Spieltag-Rangliste
- * <i>und</i> für die Endrangliste, dass {@link RanglisteEingabeSignatur} nur dann
+ * <i>und</i> für die Endrangliste, dass {@link EingabeSignatur} nur dann
  * einen geänderten Hash liefert, wenn sich semantisch relevante Eingaben tatsächlich
  * geändert haben.
  * <p>
@@ -159,18 +159,18 @@ class SupermeleeSignaturSkipPfadUITest extends BaseCalcUITest {
     }
 
     private static String berechneSpieltagHash(XSpreadsheetDocument xDoc, int spieltagNr) {
-        RanglisteEingabeSignatur engine = new RanglisteEingabeSignatur(
+        EingabeSignatur engine = new EingabeSignatur(
                 doc -> SignaturQuellen.fuerSupermeleeSpieltag(doc, spieltagNr));
         return berechneOk(engine, xDoc, "Spieltag " + spieltagNr);
     }
 
     private static String berechneEndranglisteHash(XSpreadsheetDocument xDoc) {
-        RanglisteEingabeSignatur engine = new RanglisteEingabeSignatur(
+        EingabeSignatur engine = new EingabeSignatur(
                 SignaturQuellen::fuerSupermeleeEnd);
         return berechneOk(engine, xDoc, "Endrangliste");
     }
 
-    private static String berechneOk(RanglisteEingabeSignatur engine, XSpreadsheetDocument xDoc,
+    private static String berechneOk(EingabeSignatur engine, XSpreadsheetDocument xDoc,
             String bez) {
         SignaturErgebnis ergebnis = engine.berechne(xDoc, 1);
         assertThat(ergebnis)

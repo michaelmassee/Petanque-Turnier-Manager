@@ -42,6 +42,14 @@ public final class ToolbarAktionDispatcher {
     }
 
     /**
+     * Erstellt die Checkin-Liste des aktiven Turniersystems.
+     */
+    public static void checkin(WorkingSpreadsheet ws) throws Exception {
+        TurnierSystem system = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();
+        TurnierSystemToolbarStrategieRegistry.get(system).checkin(ws);
+    }
+
+    /**
      * Löst die aktuelle Spielrunde des aktiven Turniersystems neu aus.
      */
     public static void neuAuslosen(WorkingSpreadsheet ws) throws Exception {

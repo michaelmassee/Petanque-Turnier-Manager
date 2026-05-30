@@ -200,13 +200,38 @@ Details und Implementierungsmuster: `turniersysteme/BLATTSCHUTZ.md`
 - Neues System: `FooBlattschutzKonfiguration implements IBlattschutzKonfiguration` + `BlattschutzRegistry.register()`
 - `CellStyleHelper.from(XSpreadsheetDocument, AbstractCellStyleDef).apply()` für Kontexte ohne ISheet
 
-## RanglisteRefreshListener – Architekturregeln
-Details und Muster: `turniersysteme/RANGLISTE_LISTENER.md`
+## SheetSyncListener – Architekturregeln
+Details und Muster: `turniersysteme/RANGLISTE_LISTENER.md`. Generische Infrastruktur in `helper/sheetsync/` (ehemals `helper/rangliste/`), genutzt für Ranglisten UND andere Sheet-Synchronisationen (z. B. Supermelee-Spieltag-Teilnehmerliste).
 
 **Kritische Regeln:**
-- **NIEMALS** `*RanglisteSheet` direkt im Listener registrieren → Race Condition mit `forceCreate()`
-- **IMMER** `*RanglisteSheetUpdate`-Klasse verwenden (nur Datenbereich, kein `forceCreate`)
-- `setActiveSheet()` nur wenn `SheetRunner.isRunning() == true`
+- **NIEMALS** Vollaufbau-Klassen (`*RanglisteSheet`, `SupermeleeTeilnehmerSheet`) direkt im Listener registrieren → Race Condition mit `forceCreate()`
+- **IMMER** `*SheetUpdate`-Klasse verwenden (nur Datenbereich, kein `forceCreate`)
+- `setActiveSheet()` in `*SheetUpdate.doRun()` verboten – revertiert LO-Tab-Klick-Handling
+
+## Threading: VCL/UNO-UI NUR auf dem LO-Main-Thread
+
+**Eiserne Regel:** Jede VCL-/UNO-UI-Operation MUSS auf dem LO-Main-Thread laufen. Dazu gehören u.a. `window.dispose()`, Fenster-/Control-Neuaufbau, `XFixedText.setText()`, `XPropertySet.setPropertyValue(...)` auf UI-Models/Peers, `XLayoutManager.requestElement()/showElement()`, `setVisible(...)`.
+
+**Warum:** VCL ist durch die SolarMutex geschützt und nicht thread-safe. Die UNO-Bridge synchronisiert nur **Inter-Prozess**-Aufrufe, NICHT in-process-Java-Calls — ein direkter UI-Aufruf aus einem Fremd-Thread geht ungebremst an VCL. Folge: **Deadlock/Freeze** (v.a. Windows; Linux-Backend ist toleranter und maskiert den Bug) oder **SIGSEGV**. Symptom einer solchen Race: „mit TRACE-Logging langsamer, aber stabiler".
+
+**Hintergrund-Thread-Notification-Quellen (Callbacks feuern NICHT auf dem Main-Thread):**
+- `SheetRunner.benachrichtigeListener()` → SheetRunner-Worker-Thread
+- `TimerManager.emittiere()` → `PTM-Timer`-Executor-Thread (jeder Tick)
+- `WebServerManager` / `ReleaseUpdateService`-StatusListener → eigene Threads
+
+**Pflicht:** In jedem Listener/Callback, der aus einem dieser Threads feuert, NIE direkt UI anfassen. Stattdessen Zustand im Fremd-Thread lesen, dann die UI-Arbeit per **`LoMainThread.post(xContext, () -> ...)`** auf den Main-Thread marshallen. `LoMainThread.post` reiht das Runnable via `AsyncCallback`/`PostUserEvent` in die Main-Thread-Queue ein (FIFO, läuft erst nach dem aktuellen Event → löst zugleich Thread-Wechsel UND VCL-Re-Entranz). Referenz-Implementierungen: `ProcessBox` (`runOnMain`), `InfoSidebarContent` (`aufMainThread`), `SheetListeSidebarContent`, `TimerToolbarSteuerung`.
+
+**Ausnahme:** Reines „Pull"-Statusmelden ist ok — z.B. `ProtocolHandler.notifyAllListeners()` feuert nur `statusChanged(FeatureStateEvent)`; LO holt sich den Zustand thread-sicher selbst ab.
+
+**Neuer Listener-Code:** Vor dem Commit prüfen, ob der Callback auf einem Fremd-Thread feuert. Wenn ja UND er UI anfasst → `LoMainThread.post` ist Pflicht.
+
+**Absicherung (zweistufig):**
+
+1. `HintergrundListenerVclKonventionTest` (Quelltext-Scan) schlägt fehl, wenn eine Klasse einen Fremd-Thread-Listener registriert/implementiert UND eindeutige VCL-Control-APIs (`showElement`/`requestElement`/`XFixedText`/`XListBox`/`XControl`/…) referenziert, ohne `LoMainThread`/`runOnMain` zu nutzen. Heuristik: UI-Mutation, die in eine **Hilfsklasse** ausgelagert ist, wird hier nicht erkannt.
+
+2. `ThreadingCallGraphArchTest` (ArchUnit, `src/test/java/de/petanqueturniermanager/arch/`) schließt genau diese Hilfsklassen-Lücke: er verfolgt den **klassenübergreifenden Aufruf-Graphen** ab den Off-Thread-Wurzeln (`TimerListener`, `ITurnierEventListener`, `IGlobalEventListener`, `ProtocolHandler.notifyAllListeners`) und meldet jede erreichbare UNO-UI/VCL-Senke (`XLayoutManager.requestElement/showElement/hideElement`, `XFixedText.setText`, …). Wrapper: `FreezingArchRule` — der eingefrorene Bestand liegt in `config/archunit/frozen-threading-violations/`, **nur NEU** hinzukommende Off-Thread→VCL-Kanten brechen den Build.
+
+**Wichtig zum Freeze:** Eingefrorene Einträge sind NICHT automatisch „ok". ArchUnit faltet inline-Lambdas (`LoMainThread.post(ctx, () -> …)`) in die umschließende Methode → der Marshalling-Schnitt ist im Graph unsichtbar, korrekt-marshallte Pfade erscheinen daher als (akzeptierte) Verstöße. **Methodenreferenzen** (`post(ctx, this::foo)`) wirken dagegen als echter Schnitt und tauchen gar nicht erst auf — bei neuem Marshalling-Code daher Methodenreferenz bevorzugen. Re-Freeze nur nach manueller Prüfung, dass der neue Pfad wirklich über `LoMainThread.post`/`runOnMain` läuft: `freeze.refreeze=true` in `src/test/resources/archunit.properties` setzen, einmal laufen lassen, Store committen, Flag zurücknehmen.
 
 ## Business Logic & Rules
 

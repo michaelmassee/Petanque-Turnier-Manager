@@ -69,6 +69,11 @@ public class JGJMeldeListeSheet_Update extends SheetRunner implements IMeldelist
 		return delegate.getAktiveMeldungen();
 	}
 
+	/** Spaltenindex der Aktiv-Spalte in der Meldeliste. */
+	public int getAktivSpalte() {
+		return delegate.getAktivSpalte();
+	}
+
 	@Override
 	public TeamMeldungen getInAktiveMeldungen() throws GenerateException {
 		return new TeamMeldungen();

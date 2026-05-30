@@ -1,7 +1,6 @@
 package de.petanqueturniermanager.jedergegenjeden.meldeliste;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -19,8 +18,6 @@ import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
-import de.petanqueturniermanager.helper.msgbox.MessageBox;
-import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
@@ -76,34 +73,40 @@ public class JGJTeilnehmerSheet extends SheetRunner implements ISheet {
         NewSheet.from(this, SheetNamen.teilnehmer(), SheetMetadataHelper.SCHLUESSEL_TEILNEHMER)
                 .tabColor(getKonfigurationSheet().getTeilnehmerTabFarbe()).pos(DefaultSheetPos.JGJ_WORK)
                 .forceCreate().hideGrid().setActiv().create();
+        befuelleTeilnehmerDaten();
+    }
 
+    /**
+     * Schreibt Header und Datenbereich der Teilnehmerliste anhand der aktuellen Meldeliste.
+     * Setzt voraus, dass das Teilnehmer-Sheet bereits existiert. Bei leerer Meldeliste wird
+     * dennoch eine gültige (leere) Teilnehmerliste mit Header, Footer und Druckbereich erstellt.
+     */
+    protected void befuelleTeilnehmerDaten() throws GenerateException {
         processBoxinfo("processbox.teilnehmer.meldungen.einlesen");
         TeamMeldungen aktiveMeldungen = meldeliste.getAktiveMeldungen();
 
-        if (aktiveMeldungen.size() == 0) {
-            MessageBox.from(getWorkingSpreadsheet(), MessageBoxTypeEnum.ERROR_OK)
-                    .caption(I18n.get("msg.caption.teilnehmer.fehler"))
-                    .message(I18n.get("msg.text.keine.meldungen")).show();
-            return;
-        }
-
         boolean teamnameAktiv = konfigurationSheet.isMeldeListeTeamnameAnzeigen();
-        TeilnehmerNamen namen = TeilnehmerNamenLeser.from(meldeliste, MELDELISTE_ERSTE_DATEN_ZEILE,
-                konfigurationSheet.getMeldeListeFormation(), teamnameAktiv,
-                konfigurationSheet.isMeldeListeVereinsnameAnzeigen()).lesen();
-        Map<Integer, String> spielerNamen = namen.spielerNamen();
-        Map<Integer, String> teamnamen = namen.teamnamen();
 
         List<TeilnehmerEintrag> eintraege = new ArrayList<>(aktiveMeldungen.size());
-        for (Team team : aktiveMeldungen.getTeamList()) {
-            int nr = team.getNr();
-            eintraege.add(new TeilnehmerEintrag(nr,
-                    teamnamen.getOrDefault(nr, ""),
-                    spielerNamen.getOrDefault(nr, "")));
-        }
-        eintraege.sort(Comparator.comparingInt(TeilnehmerEintrag::nr));
+        if (aktiveMeldungen.size() > 0) {
+            TeilnehmerNamen namen = TeilnehmerNamenLeser.from(meldeliste, MELDELISTE_ERSTE_DATEN_ZEILE,
+                    konfigurationSheet.getMeldeListeFormation(), teamnameAktiv,
+                    konfigurationSheet.isMeldeListeVereinsnameAnzeigen()).lesen();
+            Map<Integer, String> spielerNamen = namen.spielerNamen();
+            Map<Integer, String> teamnamen = namen.teamnamen();
+            Map<Integer, String> sortNamen = namen.sortNamen();
 
-        processBoxinfo("processbox.teilnehmer.meldungen.einfuegen", aktiveMeldungen.size());
+            for (Team team : aktiveMeldungen.getTeamList()) {
+                int nr = team.getNr();
+                eintraege.add(new TeilnehmerEintrag(nr,
+                        teamnamen.getOrDefault(nr, ""),
+                        spielerNamen.getOrDefault(nr, ""),
+                        sortNamen.getOrDefault(nr, "")));
+            }
+            eintraege.sort(konfigurationSheet.getTeilnehmerListeSortModus().comparator());
+        }
+
+        processBoxinfo("processbox.teilnehmer.meldungen.einfuegen", eintraege.size());
 
         TeilnehmerSheetBuilder builder = TeilnehmerSheetBuilder.from(this)
                 .daten(eintraege)

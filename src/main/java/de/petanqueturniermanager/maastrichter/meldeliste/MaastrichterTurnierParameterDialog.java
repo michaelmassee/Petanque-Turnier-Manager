@@ -55,12 +55,13 @@ public class MaastrichterTurnierParameterDialog {
 		public final SpielrundeSpielbahn spielbaumSpielbahn;
 		public final boolean spielUmPlatz3;
 		public final int gruppenGroesse;
+		public final int minLetzteGruppeGroesse;
 		public final MaastrichterGruppenModus gruppenModus;
 
 		public TurnierParameter(Formation formation, boolean teamnameAnzeigen, boolean vereinsnameAnzeigen,
 				SpielplanTeamAnzeige spielplanTeamAnzeige, SchweizerRankingModus rankingModus, int anzVorrunden,
 				KoSpielbaumTeamAnzeige spielbaumTeamAnzeige, SpielrundeSpielbahn spielbaumSpielbahn,
-				boolean spielUmPlatz3, int gruppenGroesse,
+				boolean spielUmPlatz3, int gruppenGroesse, int minLetzteGruppeGroesse,
 				MaastrichterGruppenModus gruppenModus) {
 			this.formation = formation;
 			this.teamnameAnzeigen = teamnameAnzeigen;
@@ -72,6 +73,7 @@ public class MaastrichterTurnierParameterDialog {
 			this.spielbaumSpielbahn = spielbaumSpielbahn;
 			this.spielUmPlatz3 = spielUmPlatz3;
 			this.gruppenGroesse = gruppenGroesse;
+			this.minLetzteGruppeGroesse = minLetzteGruppeGroesse;
 			this.gruppenModus = gruppenModus;
 		}
 	}
@@ -87,7 +89,7 @@ public class MaastrichterTurnierParameterDialog {
 			boolean defaultVereinsnameAnzeigen, SpielplanTeamAnzeige defaultSpielplanTeamAnzeige,
 			SchweizerRankingModus defaultRankingModus, int defaultAnzVorrunden,
 			KoSpielbaumTeamAnzeige defaultSpielbaumTeamAnzeige, SpielrundeSpielbahn defaultSpielbaumSpielbahn,
-			boolean defaultSpielUmPlatz3, int defaultGruppenGroesse,
+			boolean defaultSpielUmPlatz3, int defaultGruppenGroesse, int defaultMinLetzteGruppeGroesse,
 			MaastrichterGruppenModus defaultGruppenModus)
 			throws com.sun.star.uno.Exception {
 
@@ -101,7 +103,7 @@ public class MaastrichterTurnierParameterDialog {
 		dlgProps.setPropertyValue("PositionX", Integer.valueOf(50));
 		dlgProps.setPropertyValue("PositionY", Integer.valueOf(50));
 		dlgProps.setPropertyValue("Width", Integer.valueOf(160));
-		dlgProps.setPropertyValue("Height", Integer.valueOf(218));
+		dlgProps.setPropertyValue("Height", Integer.valueOf(235));
 		dlgProps.setPropertyValue("Title", I18n.get("dialog.maastrichter.titel"));
 		dlgProps.setPropertyValue("Moveable", Boolean.TRUE);
 
@@ -171,8 +173,13 @@ public class MaastrichterTurnierParameterDialog {
 		addListBox(xMSF, cont, "lstGruppenGroesse", erlaubteGruppenGroessenAlsStrings(),
 				(short) KoPropertiesSpalte.indexAusGruppenGroesse(defaultGruppenGroesse), 92, 175, 60, 12);
 
-		addButton(xMSF, cont, "btnOk", I18n.get("dialog.ok"), 22, 195, 50, 14);
-		addButton(xMSF, cont, "btnCancel", I18n.get("dialog.abbrechen"), 88, 195, 60, 14);
+		addFixedLine(xMSF, cont, "sep8", 5, 191, 150, 2);
+		addLabel(xMSF, cont, "lblMinLetzteGruppe", I18n.get("dialog.maastrichter.min.letzte.gruppe.label"), 8, 197, 80, 10);
+		addListBox(xMSF, cont, "lstMinLetzteGruppe", erlaubteMinLetzteGruppenGroessenAlsStrings(),
+				(short) KoPropertiesSpalte.indexAusMinLetzteGruppenGroesse(defaultMinLetzteGruppeGroesse), 92, 195, 60, 12);
+
+		addButton(xMSF, cont, "btnOk", I18n.get("dialog.ok"), 22, 212, 50, 14);
+		addButton(xMSF, cont, "btnCancel", I18n.get("dialog.abbrechen"), 88, 212, 60, 14);
 
 		XDialog xDialog = Lo.qi(XDialog.class, dialog);
 		okPressed = false;
@@ -223,9 +230,11 @@ public class MaastrichterTurnierParameterDialog {
 					? MaastrichterGruppenModus.NACH_GROESSE : MaastrichterGruppenModus.NACH_SIEGEN;
 			int gruppenGroesse = KoPropertiesSpalte.getErlaubteGruppenGroessen()
 					.get(readListBoxSelected(xcc, "lstGruppenGroesse"));
+			int minLetzteGruppeGroesse = KoPropertiesSpalte.getErlaubteMinLetzteGruppenGroessen()
+					.get(readListBoxSelected(xcc, "lstMinLetzteGruppe"));
 			result = Optional.of(new TurnierParameter(formation, teamnameAnzeigen, vereinsnameAnzeigen,
 					spielplanAnzeige, rankingModus, anzVorrunden, spielbaumTeamAnzeige,
-					SpielrundeSpielbahn.X, spielUmPlatz3, gruppenGroesse, gruppenModus));
+					SpielrundeSpielbahn.X, spielUmPlatz3, gruppenGroesse, minLetzteGruppeGroesse, gruppenModus));
 		}
 
 		Lo.qi(XComponent.class, dialog).dispose();
@@ -240,6 +249,11 @@ public class MaastrichterTurnierParameterDialog {
 
 	private static String[] erlaubteGruppenGroessenAlsStrings() {
 		return KoPropertiesSpalte.getErlaubteGruppenGroessen().stream()
+				.map(String::valueOf).toArray(String[]::new);
+	}
+
+	private static String[] erlaubteMinLetzteGruppenGroessenAlsStrings() {
+		return KoPropertiesSpalte.getErlaubteMinLetzteGruppenGroessen().stream()
 				.map(String::valueOf).toArray(String[]::new);
 	}
 

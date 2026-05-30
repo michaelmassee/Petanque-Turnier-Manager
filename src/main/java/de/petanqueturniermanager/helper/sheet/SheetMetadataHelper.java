@@ -1,5 +1,7 @@
 package de.petanqueturniermanager.helper.sheet;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.IntFunction;
@@ -135,12 +137,36 @@ public class SheetMetadataHelper {
     public static final String SCHLUESSEL_FORME_CADRAGE = "__PTM_FORME_CADRAGE__";
     public static final String SCHLUESSEL_FORME_KO_GRUPPE = "__PTM_FORME_KO_GRUPPE__";
 
+    // ── Konstanten: Checkin-Listen (je System, außer Supermelee/Liga) ─────────
+
+    public static final String SCHLUESSEL_JGJ_CHECKIN_LISTE = "__PTM_JGJ_CHECKIN_LISTE__";
+    public static final String SCHLUESSEL_KO_CHECKIN_LISTE = "__PTM_KO_CHECKIN_LISTE__";
+    public static final String SCHLUESSEL_KASKADE_CHECKIN_LISTE = "__PTM_KASKADE_CHECKIN_LISTE__";
+    public static final String SCHLUESSEL_FORMULEX_CHECKIN_LISTE = "__PTM_FORMULEX_CHECKIN_LISTE__";
+    public static final String SCHLUESSEL_SCHWEIZER_CHECKIN_LISTE = "__PTM_SCHWEIZER_CHECKIN_LISTE__";
+    public static final String SCHLUESSEL_POULE_CHECKIN_LISTE = "__PTM_POULE_CHECKIN_LISTE__";
+    public static final String SCHLUESSEL_MAASTRICHTER_CHECKIN_LISTE = "__PTM_MAASTRICHTER_CHECKIN_LISTE__";
+
     /**
      * Gemeinsames Suffix für alle dynamisch erzeugten Schlüssel.
      */
     public static final String SCHLUESSEL_SUFFIX = "__";
 
     private SheetMetadataHelper() {
+    }
+
+    /**
+     * Prüft, ob der Named-Range-Inhalt eine kaputte Referenz auf ein gelöschtes Blatt ist
+     * ({@code #REF!}).
+     * <p>
+     * {@link XNamedRange#getContent()} rendert den Inhalt immer mit {@code GRAM_API} – einer
+     * festen, nicht lokalisierten Formel-Grammatik (siehe LO {@code ScNamedRangeObj::getContent},
+     * Symbol-Tabelle {@code RID_STRLIST_FUNCTION_NAMES_ENGLISH_API} mit hartkodiertem
+     * {@code "#REF!"}). Der Fehler-String ist damit in jeder Locale (DE/EN/FR/NL/ES) identisch
+     * {@code #REF!}; ein lokalisiertes {@code #BEZUG!} kann hier nicht auftreten.
+     */
+    private static boolean istKaputteReferenz(String content) {
+        return content != null && content.contains("#REF!");
     }
 
     // ── Builder für dynamische Schlüssel ────────────────────────────────────
@@ -276,8 +302,7 @@ public class SheetMetadataHelper {
         if (namedRanges == null || !namedRanges.hasByName(scoreSchluessel)) return Optional.empty();
         XNamedRange range = Lo.qi(XNamedRange.class, namedRanges.getByName(scoreSchluessel));
         if (range == null) return Optional.empty();
-        String content = range.getContent();
-        if (content != null && (content.contains("#REF!") || content.contains("#BEZUG!"))) return Optional.empty();
+        if (istKaputteReferenz(range.getContent())) return Optional.empty();
         XCellRangeReferrer referrer = Lo.qi(XCellRangeReferrer.class, range);
         if (referrer == null) return Optional.empty();
         XCellRangeAddressable addrAble = Lo.qi(XCellRangeAddressable.class, referrer.getReferredCells());
@@ -376,6 +401,7 @@ public class SheetMetadataHelper {
     static void schreibeSheetMetadaten(XNamedRanges namedRanges,
                                        String sheetName, int sheetIdx, String namedRangeKey) {
         try {
+            entferneFremdeIdentitaetsSchluessel(namedRanges, sheetIdx, namedRangeKey);
             if (namedRanges.hasByName(namedRangeKey)) {
                 namedRanges.removeByName(namedRangeKey);
             }
@@ -391,6 +417,58 @@ public class SheetMetadataHelper {
         }
     }
 
+
+    /**
+     * Erzwingt die Invariante <em>„höchstens ein Identitäts-Schlüssel pro Blatt"</em>: entfernt
+     * alle {@code __PTM_*}-Schlüssel (außer {@code __PTM_SCORE_*}, die legitim mit dem
+     * Identitäts-Schlüssel auf Bracket-Blättern koexistieren), die bereits auf das Ziel-Blatt
+     * {@code sheetIdx} zeigen – außer dem gerade zu schreibenden {@code behalteSchluessel}.
+     * <p>
+     * Hintergrund: Generische Blattnamen (z.B. „Meldeliste", „Rangliste", „Teilnehmer") werden
+     * über mehrere Turniersysteme geteilt, jedes mit eigenem Schlüssel. Ohne diese Bereinigung
+     * behält ein von System A beanspruchtes Blatt beim Wechsel zu System B den fremden
+     * A-Schlüssel und erscheint doppelt in der Sidebar (zwei Einträge, dasselbe Blatt).
+     * <p>
+     * Konservativ: {@code #REF!}-Schlüssel (Index -1) werden hier nicht angefasst – die
+     * übernimmt {@link #bereinigeVerwaisteMetadaten}.
+     */
+    private static void entferneFremdeIdentitaetsSchluessel(XNamedRanges namedRanges,
+                                                            int sheetIdx, String behalteSchluessel) {
+        if (namedRanges == null || sheetIdx < 0) {
+            return;
+        }
+        String[] namen = namedRanges.getElementNames();
+        if (namen == null) {
+            return;
+        }
+        List<String> zuEntfernen = new ArrayList<>();
+        for (String name : namen) {
+            if (!name.startsWith("__PTM_") || name.startsWith("__PTM_SCORE_") || name.equals(behalteSchluessel)) {
+                continue;
+            }
+            try {
+                int idx = sheetIndexAusNamedRangeObj(namedRanges.getByName(name));
+                if (idx >= 0 && idx == sheetIdx) {
+                    zuEntfernen.add(name);
+                }
+            } catch (Exception e) {
+                LogUtil.warn(logger, "Fremdschlüssel-Prüfung fehlgeschlagen für '" + name + "'", e);
+            } catch (Error e) {
+                throw e;
+            }
+        }
+        for (String name : zuEntfernen) {
+            try {
+                namedRanges.removeByName(name);
+                logger.debug("Fremden Identitäts-Schlüssel '{}' von Blatt-Index {} entfernt (Blatt-Eindeutigkeit).",
+                        name, sheetIdx);
+            } catch (Exception e) {
+                LogUtil.warn(logger, "Entfernen des Fremdschlüssels '" + name + "' fehlgeschlagen", e);
+            } catch (Error e) {
+                throw e;
+            }
+        }
+    }
 
     // ── Lesen / Suchen ───────────────────────────────────────────────────────
 
@@ -563,13 +641,44 @@ public class SheetMetadataHelper {
      */
     public static Optional<SpielTagNr> findeSpieltagNr(XSpreadsheetDocument xDoc,
                                                        XSpreadsheet xSheet) {
+        return findeSpieltagNrMitPrefix(xDoc, xSheet,
+                SCHLUESSEL_SPIELTAG_RANGLISTE_PREFIX, SCHLUESSEL_SPIELTAG_RANGLISTE_SUFFIX);
+    }
+
+    /**
+     * Sucht die Spieltag-Nummer für ein Supermelee-Teilnehmer-Sheet, indem alle
+     * {@code __PTM_SUPERMELEE_TEILNEHMER_N__}-Einträge durchsucht werden.
+     *
+     * @return SpielTagNr wenn das Sheet zugeordnet ist, sonst {@link Optional#empty()}
+     */
+    public static Optional<SpielTagNr> findeTeilnehmerSpieltagNr(XSpreadsheetDocument xDoc,
+                                                                 XSpreadsheet xSheet) {
+        return findeSpieltagNrMitPrefix(xDoc, xSheet,
+                SCHLUESSEL_SUPERMELEE_SPIELTAG_TEILNEHMER_PREFIX, SCHLUESSEL_SUFFIX);
+    }
+
+    /**
+     * Sucht die Spieltag-Nummer für ein Supermelee-Anmeldungen-Sheet (Checkin-Liste), indem alle
+     * {@code __PTM_SUPERMELEE_ANMELDUNGEN_N__}-Einträge durchsucht werden.
+     *
+     * @return SpielTagNr wenn das Sheet zugeordnet ist, sonst {@link Optional#empty()}
+     */
+    public static Optional<SpielTagNr> findeAnmeldungenSpieltagNr(XSpreadsheetDocument xDoc,
+                                                                  XSpreadsheet xSheet) {
+        return findeSpieltagNrMitPrefix(xDoc, xSheet,
+                SCHLUESSEL_SUPERMELEE_ANMELDUNGEN_PREFIX, SCHLUESSEL_SUFFIX);
+    }
+
+    private static Optional<SpielTagNr> findeSpieltagNrMitPrefix(XSpreadsheetDocument xDoc,
+                                                                 XSpreadsheet xSheet,
+                                                                 String prefix, String suffix) {
         try {
             XNamedRanges namedRanges = namedRangesAusDoc(xDoc);
             if (namedRanges == null) return Optional.empty();
             int targetIdx = sheetIndex(xDoc, xSheet);
             return findeSpieltagNr(namedRanges,
                     rangeObj -> sheetIndexAusNamedRangeObj(rangeObj),
-                    targetIdx);
+                    targetIdx, prefix, suffix);
         } catch (Exception e) {
             LogUtil.warn(logger, "Spieltag-Nr-Suche fehlgeschlagen", e);
         } catch (Error e) {
@@ -584,17 +693,28 @@ public class SheetMetadataHelper {
     static Optional<SpielTagNr> findeSpieltagNr(XNamedRanges namedRanges,
                                                 Function<Object, Integer> sheetIdxAusNamedRange,
                                                 int targetSheetIdx) {
+        return findeSpieltagNr(namedRanges, sheetIdxAusNamedRange, targetSheetIdx,
+                SCHLUESSEL_SPIELTAG_RANGLISTE_PREFIX, SCHLUESSEL_SPIELTAG_RANGLISTE_SUFFIX);
+    }
+
+    /**
+     * Generische Suche nach Spieltag-Nr für einen konfigurierbaren Schlüssel-Prefix/Suffix.
+     */
+    static Optional<SpielTagNr> findeSpieltagNr(XNamedRanges namedRanges,
+                                                Function<Object, Integer> sheetIdxAusNamedRange,
+                                                int targetSheetIdx,
+                                                String prefix, String suffix) {
         try {
             if (namedRanges == null) return Optional.empty();
             for (String name : namedRanges.getElementNames()) {
-                if (!name.startsWith(SCHLUESSEL_SPIELTAG_RANGLISTE_PREFIX)) continue;
-                if (!name.endsWith(SCHLUESSEL_SPIELTAG_RANGLISTE_SUFFIX)) continue;
+                if (!name.startsWith(prefix)) continue;
+                if (!name.endsWith(suffix)) continue;
                 try {
                     Object rangeObj = namedRanges.getByName(name);
                     Integer idx = sheetIdxAusNamedRange.apply(rangeObj);
                     if (idx != null && idx >= 0 && idx == targetSheetIdx) {
-                        String nStr = name.substring(SCHLUESSEL_SPIELTAG_RANGLISTE_PREFIX.length(),
-                                name.length() - SCHLUESSEL_SPIELTAG_RANGLISTE_SUFFIX.length());
+                        String nStr = name.substring(prefix.length(),
+                                name.length() - suffix.length());
                         return Optional.of(SpielTagNr.from(Integer.parseInt(nStr)));
                     }
                 } catch (Exception e) {
@@ -612,25 +732,6 @@ public class SheetMetadataHelper {
     }
 
     // ── Hilfsmethoden ────────────────────────────────────────────────────────
-
-    /**
-     * Löscht einen einzelnen PTM-Metadaten-Schlüssel (Named Range) aus dem Dokument,
-     * falls er vorhanden ist. Kein Fehler wenn der Schlüssel nicht existiert.
-     */
-    public static void loescheSchluessel(XSpreadsheetDocument xDoc, String schluessel) {
-        try {
-            XNamedRanges namedRanges = namedRangesAusDoc(xDoc);
-            if (namedRanges == null || !namedRanges.hasByName(schluessel)) {
-                return;
-            }
-            namedRanges.removeByName(schluessel);
-            logger.debug("Metadaten-Schlüssel '{}' gelöscht.", schluessel);
-        } catch (Exception e) {
-            LogUtil.warn(logger, "Metadaten-Schlüssel löschen fehlgeschlagen für '" + schluessel + "'", e);
-        } catch (Error e) {
-            throw e;
-        }
-    }
 
     /**
      * Sucht nach allen PTM-Metadaten (Named Ranges), die ins Leere zeigen (#REF!)
@@ -653,7 +754,7 @@ public class SheetMetadataHelper {
                 if (name.startsWith("__PTM_")) {
                     Object rangeObj = namedRanges.getByName(name);
                     String content = namedRangeContentAusObj.apply(rangeObj);
-                    if (content != null && (content.contains("#REF!") || content.contains("#BEZUG!"))) {
+                    if (istKaputteReferenz(content)) {
                         namedRanges.removeByName(name);
                         logger.debug("Verwaisten Metadaten-Schlüssel '{}' gelöscht (zeigte ins Leere).", name);
                     }
@@ -694,7 +795,7 @@ public class SheetMetadataHelper {
             if (range == null) return -1;
             // --- Prüfen ob die Referenz durch Löschen kaputt gegangen ist ---
             String content = range.getContent();
-            if (content != null && (content.contains("#REF!") || content.contains("#BEZUG!"))) {
+            if (istKaputteReferenz(content)) {
                 logger.debug("Named-Range Referenz ist ungültig geworden ({}). Sheet wurde gelöscht.", content);
                 return -1;
             }

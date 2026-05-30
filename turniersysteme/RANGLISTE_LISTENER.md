@@ -1,4 +1,9 @@
-# RanglisteRefreshListener – Architekturregeln
+# SheetSyncListener – Architekturregeln
+
+> Die Infrastruktur war ursprünglich Rangliste-spezifisch (`RanglisteRefreshListener` etc.).
+> Seit dem Refactor in `helper/sheetsync/` ist sie generisch und wird auch für andere
+> Sheet-Synchronisationen genutzt (z. B. Supermelee-Spieltag-Teilnehmerliste). Die hier
+> beschriebenen Regeln gelten für **alle** Konsumenten.
 
 ## Refresh nur bei tatsächlichen Änderungen (Signatur-basiert)
 
@@ -7,18 +12,26 @@ semantisch relevanten Eingaben (Meldeliste, Spielergebnisse, ggf. Vorranglisten)
 vergleicht sie mit dem im Dokument persistierten Hash. Nur bei Abweichung wird
 neu aufgebaut.
 
-**Bausteine** (`helper/rangliste/`):
+**Bausteine** (`helper/sheetsync/`):
 - `SignaturQuelle` (Record) – beschreibt eine Eingangsquelle deklarativ: stabile ID,
   Named-Range-Schlüssel, Datenzeilen-Bereich, Whitelist-Spalten, `erwartet`-Flag.
-- `RanglisteEingabeSignatur` – generische Engine: bekommt einen
+- `EingabeSignatur` – generische Engine: bekommt einen
   `Function<XSpreadsheetDocument, List<SignaturQuelle>>`-Lieferanten und liefert ein
   `SignaturErgebnis` (`Ok`/`SheetFehlt`/`TransientFehler`/`PermanenterFehler`).
-- `SignaturQuellen` – Builder pro Turniersystem (z. B. `fuerSchweizer`,
-  `fuerSupermeleeSpieltag`). Keine system-spezifischen Signatur-Klassen.
-- `RanglisteSignaturStore` – persistiert Hash + Zeitstempel + Recovery-Flag als
-  DocumentProperty (`ranking.<key>.last.rebuild.hash` etc.).
-- `RanglisteRefreshDebouncer` – kollabiert Event-Stürme zu einem Hash-Check pro
+- `SignaturQuellen` (in `helper/rangliste/`) – Builder pro Turniersystem (z. B.
+  `fuerSchweizer`, `fuerSupermeleeSpieltag`, `fuerSupermeleeTeilnehmer`). Keine
+  system-spezifischen Signatur-Klassen.
+- `SheetSyncSignaturStore` – persistiert Hash + Zeitstempel + Recovery-Flag als
+  DocumentProperty (`ranking.<key>.last.rebuild.hash` etc. – der Prefix `ranking.`
+  bleibt aus Kompatibilität mit bestehenden Tournament-Dokumenten erhalten).
+- `SheetSyncDebouncer` – kollabiert Event-Stürme zu einem Hash-Check pro
   Doc+Schlüssel (Default 150 ms), bietet auch `scheduleRetry` für TransientFehler.
+
+**Aktuelle Konsumenten:**
+- Rangliste-Updates: Schweizer, Maastrichter, Poule, FormuleX, JGJ, Kaskade,
+  Supermelee-Spieltag, Supermelee-End.
+- Sheet-Sync (kein Rangliste-Kontext): Supermelee-Spieltag-Teilnehmerliste
+  (`SupermeleeTeilnehmerSheetUpdate`).
 
 **Disziplin – semantische Whitelist:**
 - Im Hash landen ausschließlich **Eingabezellen**: Spieler-/Team-Nr, Namen, Setzposition,
@@ -49,12 +62,12 @@ Debouncer), keine 8 Signatur-Subklassen (Engine + Konfiguration genügt).
 
 ## Problem: Race Condition bei forceCreate()
 
-`NewSheet.forceCreate().create()` **löscht** das bestehende Sheet und legt es neu an. Das triggert LibreOffice-interne Events (u.a. `selectionChanged`). Wenn der `RanglisteRefreshListener` dabei das Rangliste-Sheet als aktiv erkennt **und** `SheetRunner.isRunning() == false` ist (was bei direkten `doRun()`-Aufrufen immer der Fall ist, da diese den `SheetRunnerKoordinator` umgehen), startet der Listener sofort einen zweiten parallelen Thread → beide Threads schreiben gleichzeitig auf dasselbe Sheet → Datenverlust/Korruption.
+`NewSheet.forceCreate().create()` **löscht** das bestehende Sheet und legt es neu an. Das triggert LibreOffice-interne Events (u.a. `selectionChanged`). Wenn der `SheetSyncListener` dabei das Ziel-Sheet als aktiv erkennt **und** `SheetRunner.isRunning() == false` ist (was bei direkten `doRun()`-Aufrufen immer der Fall ist, da diese den `SheetRunnerKoordinator` umgehen), startet der Listener sofort einen zweiten parallelen Thread → beide Threads schreiben gleichzeitig auf dasselbe Sheet → Datenverlust/Korruption.
 
 ## Regel: Listener müssen `*SheetUpdate`-Klassen verwenden
 
-**NIEMALS** eine `*RanglisteSheet`-Klasse (Vollaufbau) direkt im `RanglisteRefreshListener` registrieren.
-**IMMER** eine `*RanglisteSheetUpdate`-Klasse (nur Datenbereich) verwenden.
+**NIEMALS** eine Vollaufbau-Klasse (z. B. `*RanglisteSheet`, `SupermeleeTeilnehmerSheet`) direkt im `SheetSyncListener` registrieren.
+**IMMER** eine `*SheetUpdate`-Klasse (nur Datenbereich) verwenden.
 
 | Listener-Registrierung in `PetanqueTurnierMngrSingleton` | Klasse |
 |---|---|
@@ -62,22 +75,23 @@ Debouncer), keine 8 Signatur-Subklassen (Engine + Konfiguration genügt).
 | Maastrichter Vorrunden-Rangliste | `MaastrichterVorrundenRanglisteSheetUpdate` |
 | Formule X Rangliste | `FormuleXRanglisteSheetUpdate` |
 | Poule Vorrunden-Rangliste | `PouleVorrundenRanglisteSheetUpdate` |
+| Supermelee-Spieltag-Teilnehmer | `SupermeleeTeilnehmerSheetUpdate` |
 
-## Muster für neue Turniersysteme
+## Muster für neue Sheet-Sync-Konsumenten
 
-Jedes neue Turniersystem, das einen `RanglisteRefreshListener` bekommt, benötigt eine `*SheetUpdate`-Klasse:
+Jeder neue Konsument (Rangliste oder anderer Sheet-Typ), der einen `SheetSyncListener` bekommt, benötigt eine `*SheetUpdate`-Klasse:
 
-1. `FooRanglisteSheet` – vollständiger Aufbau (Menüaktion, Erstaufbau): verwendet `NewSheet.forceCreate()`
-2. `FooRanglisteSheetUpdate extends FooRanglisteSheet` – Update-Pfad (Listener):
+1. `FooSheet` – vollständiger Aufbau (Menüaktion, Erstaufbau): verwendet `NewSheet.forceCreate()`
+2. `FooSheetUpdate extends FooSheet` – Update-Pfad (Listener):
    - Überschreibt `doRun()`: **kein** `forceCreate`, kein Sheet-Event, keine Race Condition
-   - Prüft ob Sheet existiert; falls nicht → Fallback auf `FooRanglisteSheet.doRun()` (Erstaufbau)
-   - Schreibt nur den Datenbereich neu via `berechnungUndSchreiben()` (shared protected method)
-   - Löscht überzählige Zeilen wenn Teamanzahl gesunken ist (via `RanglisteUpdateHelper.loescheDatenzeilen()`)
-   - Registrierung in `PetanqueTurnierMngrSingleton` via `RanglisteRefreshListener.fuerSchluessel(..., (ws, ignored) -> new FooRanglisteSheetUpdate(ws))`
+   - Prüft ob Sheet existiert; falls nicht → Fallback auf Vollaufbau ODER silent return (Teilnehmer-Pattern: Erstaufbau erfolgt nur über Menü, nicht über Listener)
+   - Schreibt nur den Datenbereich neu (Rangliste: `berechnungUndSchreiben()`; Teilnehmer: `loescheBisherigenInhalt() + befuelleTeilnehmerDaten(false)`)
+   - Löscht überzählige Zeilen wenn Datenmenge gesunken ist (Rangliste: `RanglisteUpdateHelper.loescheDatenzeilen()`; sonst eigener Clear-Range)
+   - Registrierung in `PetanqueTurnierMngrSingleton` via `SheetSyncListener.fuerSchluessel(..., (ws, ignored) -> new FooSheetUpdate(ws))` (bzw. `fuerSpieltagSheet` für spieltag-abhängige Sheets)
 
-## `setActiveSheet()` in `*RanglisteSheetUpdate` – verboten
+## `setActiveSheet()` in `*SheetUpdate` – verboten
 
-`getSheetHelper().setActiveSheet(sheet)` darf am Ende von `*RanglisteSheetUpdate.doRun()` **nicht** aufgerufen werden – auch nicht hinter einer `SheetRunner.isRunning()`-Abfrage.
+`getSheetHelper().setActiveSheet(sheet)` darf am Ende von `*SheetUpdate.doRun()` **nicht** aufgerufen werden – auch nicht hinter einer `SheetRunner.isRunning()`-Abfrage.
 
 **Grund:** Der Listener ruft `runnerFactory.apply(...).run()` synchron im UI-Thread aus dem `selectionChanged`-Handler heraus auf. Während dieser Verarbeitung ist `SheetRunner.isRunning() == true`, also wäre die Abfrage wirkungslos. Ein zusätzliches `setActiveSheet(sheet)` aus dem `selectionChanged`-Handler heraus kollidiert mit LO-internem Tab-Klick-/Navigator-Handling: LO revertiert daraufhin den Tab-Wechsel; der User braucht 2–3 Klicks bis das Sheet aktiv bleibt. (Über die eigene Sidebar-Liste tritt das Problem nicht auf, weil dort `view.setActiveSheet(...)` programmatisch *vor* dem Event ausgeführt wird.)
 

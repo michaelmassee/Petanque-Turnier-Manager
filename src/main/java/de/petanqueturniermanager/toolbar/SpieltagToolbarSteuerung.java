@@ -105,7 +105,15 @@ public final class SpieltagToolbarSteuerung {
             } else {
                 xLayoutManager.hideElement(SPIELTAG_TOOLBAR_URL);
             }
-            logger.debug("aktualisiereInFrame '{}': sichtbar={}", xFrame.getName(), sichtbar);
+            String frameTitel = "<unknown>";
+            try {
+                var xTitle = Lo.qi(com.sun.star.frame.XTitle.class, xFrame);
+                if (xTitle != null) frameTitel = xTitle.getTitle();
+            } catch (Exception e) {
+                logger.debug("Frame-Titel konnte nicht ermittelt werden: {}", e.getMessage());
+            }
+            logger.trace("[FOKUS-TRACE] SpieltagToolbar.aktualisiereInFrame frameTitle='{}' frameHash={} sichtbar={}",
+                    frameTitel, System.identityHashCode(xFrame), sichtbar);
         } catch (Exception e) {
             logger.error("Fehler beim Aktualisieren der Spieltag-Toolbar in Frame '{}'",
                     xFrame.getName(), e);

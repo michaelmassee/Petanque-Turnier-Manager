@@ -3,6 +3,8 @@ package de.petanqueturniermanager.liga.spielplan;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.InputStream;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,6 +17,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.random.RandomSource;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
@@ -68,6 +71,23 @@ public class LigaTurnierTestDatenUITest extends BaseCalcUITest {
 		validiereMeldelistePerJson(anzTeams, "liga-freispiel-meldeliste.json");
 		validiereSpielplanPerJson("liga-freispiel-spielplan.json");
 		validiereRanglistePerJson(anzTeams, "liga-freispiel-rangliste.json");
+	}
+
+	/**
+	 * Korrektheit der PTM-Metadaten (6 Teams): Meldeliste, Spielplan und Rangliste müssen je
+	 * exakt ihren Identitäts-Schlüssel tragen – kein weiteres Blatt einen unerwarteten.
+	 * (Liga erzeugt kein Direktvergleich-Blatt im Beispielturnier.)
+	 */
+	@Test
+	public void jedesBlattTraegtKorrektenSchluessel() throws GenerateException {
+		new LigaTurnierTestDaten(wkingSpreadsheet).erzeugeBeispielturnier();
+
+		Map<String, String> erwartung = new LinkedHashMap<>();
+		erwartung.put(SheetNamen.meldeliste(), SheetMetadataHelper.SCHLUESSEL_LIGA_MELDELISTE);
+		erwartung.put(SheetNamen.spielplan(), SheetMetadataHelper.SCHLUESSEL_LIGA_SPIELPLAN);
+		erwartung.put(SheetNamen.rangliste(), SheetMetadataHelper.SCHLUESSEL_LIGA_RANGLISTE);
+
+		pruefeJedesBlattTraegtKorrektenSchluessel(erwartung);
 	}
 
 	private void validiereGrundstruktur() {

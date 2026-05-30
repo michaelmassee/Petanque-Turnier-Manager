@@ -19,6 +19,7 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.comp.GlobalProperties;
+import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.webserver.WebServerManager;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -27,7 +28,9 @@ import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
+import de.petanqueturniermanager.helper.perflog.PerfLog;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
+import de.petanqueturniermanager.helper.sheet.ControllerLock;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
 import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzRegistry;
@@ -126,7 +129,7 @@ public abstract class SheetRunner extends Thread {
 	 * Startet den SheetRunner asynchron als Thread und schließt dabei die Race-Condition,
 	 * die zwischen {@code Thread.start()} und dem eigentlichen {@code run()}-Einstieg entsteht:
 	 * In diesem Zeitfenster sah {@code isRunning()} fälschlicherweise {@code false}, was
-	 * dazu führen konnte, dass der {@link de.petanqueturniermanager.helper.rangliste.RanglisteRefreshListener}
+	 * dazu führen konnte, dass der {@link de.petanqueturniermanager.helper.sheetsync.SheetSyncListener}
 	 * parallel einen zweiten Runner startete und damit das Prozess-Fenster zweimal öffnete.
 	 * <p>
 	 * Durch {@link #koordinatorVorgekoppelt} erkennt {@link #run()}, dass der Koordinator
@@ -167,71 +170,100 @@ public abstract class SheetRunner extends Thread {
 		boolean laueftJetzt = koordinatorVorgekoppelt || !koordinator.getAndSetLaeuft(true);
 		if (laueftJetzt) {
 			logger.debug("Start SheetRunner");
+			long runStartNs = System.nanoTime();
+			logger.trace("[FOKUS-TRACE] SheetRunner.run START class={} workingDoc={} silentBackground={} thread={}",
+					this.getClass().getSimpleName(),
+					de.petanqueturniermanager.comp.ProtocolHandler.beschreibeDokument(
+							workingSpreadsheet.getWorkingSpreadsheetDocument()),
+					silentBackground, Thread.currentThread().getName());
+			PerfLog.log(logger, "[WORKER-TIMING] SheetRunner.run START class={} thread={}",
+					this.getClass().getSimpleName(), Thread.currentThread().getName());
 			registerDisposingListener();
 			koordinator.setRunner(this);
 			koordinator.benachrichtigeListener(); // Menü deaktivieren
 			boolean isFehler = false;
 
-			try {
-				if (koordinatorVorgekoppelt && !silentBackground) {
-					processBox().run(); // Nur Menü-Aktionen: ProcessBox animieren und sichtbar halten
-				}
-				if (turnierSystem != TurnierSystem.KEIN && isUpdateKonfigurationSheetBeforeDoRun()
-						&& isDocumentAlive()) {
-					updateKonfigurationSheet();
-				}
-				// Lazy-Unprotect-Scope öffnen: ein einziges entsperren/schuetzen pro Kommando
-				// statt mehrfaches Toggle in jeder Sub-Operation. Echte Entsperrung passiert
-				// erst beim ersten Style-/CF-Trigger (ConditionalFormatHelper / RangeHelper.clearRange).
-				if (turnierSystem != TurnierSystem.KEIN && TurnierModus.get().istAktiv()) {
-					BlattschutzRegistry.fuer(turnierSystem)
-							.ifPresent(k -> BlattschutzManager.get().beginCommandScope(k, workingSpreadsheet));
-				}
-				if (isDocumentAlive()) {
-					doRun();
-					WebServerManager.get().sseRefreshSenden(workingSpreadsheet);
-					// Während des Runners eingetroffene Modify-Events wurden vom Listener
-					// zwar als dirty markiert, aber nicht eingeplant. Hier nachholen,
-					// damit kein Benutzer-Event verloren geht.
-					WebServerManager.get().getModifyListener().markDirtyAndSchedule();
-				}
-			} catch (DisposedException e) {
-				documentDisposed = true;
-				logger.debug("Dokument disposed während SheetRunner – sauberer Abbruch", e);
-			} catch (GenerateException e) {
-				handleGenerateException(e);
-			} catch (Exception e) {
-				isFehler = true;
-				processBox().fehler(I18n.get("processbox.interner.fehler", e.getClass().getName())).fehler(e.getMessage())
-						.fehler(I18n.get("processbox.log.hinweis"));
-				getLogger().error(e.getMessage(), e);
-			} finally {
-				koordinator.setLaeuft(false); // Immer an erste stelle diesen flag zurück
-				// Lazy-Unprotect-Scope schließen: wenn unterwegs entsperrt wurde, jetzt einmal schützen.
-				// Idempotent (No-Op falls kein Scope offen war), eigene try/finally-Robustheit im Manager.
-				BlattschutzManager.get().endCommandScope();
-				koordinator.setRunner(null);
-				koordinator.benachrichtigeListener(); // Menü reaktivieren
-				if (documentDisposed) {
-					logger.debug("SheetRunner-Cleanup: Dokument bereits disposed, keine UI-Updates");
-				} else if ((koordinatorVorgekoppelt && !silentBackground) || isFehler) {
-					// Menü-Aktion oder Fehler: ProcessBox-Fenster sichtbar zeigen
-					if (isFehler) {
-						processBox().visible().fehler(I18n.get("processbox.fehler.status")).ready();
+			// Renderpfad des Calc-Dokuments für die Dauer des Laufs sperren: LO
+			// unterdrückt das Repaint zwischen den (potentiell hunderten) UNO-
+			// Property-Writes. Auf Windows mit D3D-Backend ist das die Schutzklammer
+			// gegen native Renderer-Crashes (scfiltlo / D3DScreenUpdateManager,
+			// nachgewiesen via Minidump beim Anwender). Der Lock umschließt
+			// bewusst auch das finally – endCommandScope() macht den Großteil
+			// der Protect/Unprotect- und CellStyle-Last und muss ebenfalls unter
+			// dem Lock laufen.
+			try (ControllerLock _ = ControllerLock.lock(workingSpreadsheet.getWorkingSpreadsheetDocument())) {
+				try {
+					if (koordinatorVorgekoppelt && !silentBackground) {
+						processBox().run(); // Nur Menü-Aktionen: ProcessBox animieren und sichtbar halten
+					}
+					if (turnierSystem != TurnierSystem.KEIN && isUpdateKonfigurationSheetBeforeDoRun()
+							&& isDocumentAlive()) {
+						updateKonfigurationSheet();
+					}
+					// Lazy-Unprotect-Scope öffnen: ein einziges entsperren/schuetzen pro Kommando
+					// statt mehrfaches Toggle in jeder Sub-Operation. Echte Entsperrung passiert
+					// erst beim ersten Style-/CF-Trigger (ConditionalFormatHelper / RangeHelper.clearRange).
+					if (turnierSystem != TurnierSystem.KEIN && TurnierModus.get().istAktiv()) {
+						BlattschutzRegistry.fuer(turnierSystem)
+								.ifPresent(k -> BlattschutzManager.get().beginCommandScope(k, workingSpreadsheet));
+					}
+					if (isDocumentAlive()) {
+						doRun();
+						WebServerManager.get().sseRefreshSenden(workingSpreadsheet);
+						// Während des Runners eingetroffene Modify-Events wurden vom Listener
+						// zwar als dirty markiert, aber nicht eingeplant. Hier nachholen,
+						// damit kein Benutzer-Event verloren geht.
+						WebServerManager.get().getModifyListener().markDirtyAndSchedule();
+					}
+				} catch (DisposedException e) {
+					documentDisposed = true;
+					logger.debug("Dokument disposed während SheetRunner – sauberer Abbruch", e);
+				} catch (GenerateException e) {
+					handleGenerateException(e);
+				} catch (Exception e) {
+					isFehler = true;
+					processBox().fehler(I18n.get("processbox.interner.fehler", e.getClass().getName())).fehler(e.getMessage())
+							.fehler(I18n.get("processbox.log.hinweis"));
+					getLogger().error(e.getMessage(), e);
+				} finally {
+					koordinator.setLaeuft(false); // Immer an erste stelle diesen flag zurück
+					// Lazy-Unprotect-Scope schließen: wenn unterwegs entsperrt wurde, jetzt einmal schützen.
+					// Idempotent (No-Op falls kein Scope offen war), eigene try/finally-Robustheit im Manager.
+					BlattschutzManager.get().endCommandScope();
+					koordinator.setRunner(null);
+					koordinator.benachrichtigeListener(); // Menü reaktivieren
+					if (documentDisposed) {
+						logger.debug("SheetRunner-Cleanup: Dokument bereits disposed, keine UI-Updates");
+					} else if ((koordinatorVorgekoppelt && !silentBackground) || isFehler) {
+						// Menü-Aktion oder Fehler: ProcessBox-Fenster sichtbar zeigen
+						if (isFehler) {
+							processBox().visible().fehler(I18n.get("processbox.fehler.status")).ready();
+						} else {
+							processBox().visibleWennAutomatisch().info(I18n.get("processbox.fertig.status")).ready();
+						}
 					} else {
-						processBox().visibleWennAutomatisch().info(I18n.get("processbox.fertig.status")).ready();
+						// Listener-ausgelöst oder silent-Background: nur in ProcessBox loggen, Fenster NICHT aufpoppen
+						processBox().info(I18n.get("processbox.fertig.status"));
 					}
-				} else {
-					// Listener-ausgelöst oder silent-Background: nur in ProcessBox loggen, Fenster NICHT aufpoppen
-					processBox().info(I18n.get("processbox.fertig.status"));
+					if (isDocumentAlive()) {
+						try {
+							getxCalculatable().enableAutomaticCalculation(true); // falls abgeschaltet wurde
+						} catch (DisposedException e) {
+							documentDisposed = true;
+							logger.debug("Dokument disposed bei enableAutomaticCalculation", e);
+						}
+					}
 				}
-				if (isDocumentAlive()) {
-					try {
-						getxCalculatable().enableAutomaticCalculation(true); // falls abgeschaltet wurde
-					} catch (DisposedException e) {
-						documentDisposed = true;
-						logger.debug("Dokument disposed bei enableAutomaticCalculation", e);
-					}
+			}
+			// Während des Laufs koaleszierte TurnierEvents jetzt einmal feuern.
+			// isRunning() ist hier bereits false (im finally gesetzt), der Dispatch
+			// erfolgt über AsyncCallback auf den LO-Main-Thread und kollidiert daher
+			// nicht mit den Aufräumarbeiten dieses Worker-Threads.
+			if (isDocumentAlive()) {
+				try {
+					PetanqueTurnierMngrSingleton.flushPendingTurnierEvent();
+				} catch (RuntimeException e) {
+					getLogger().warn("Fehler beim flushPendingTurnierEvent: " + e.getMessage(), e);
 				}
 			}
 			if (isDocumentAlive()) {
@@ -248,6 +280,20 @@ public abstract class SheetRunner extends Thread {
 				}
 			}
 			unregisterDisposingListener();
+
+			// Hinweis: ehemals folgte hier ein fokussiereArbeitsDokument()-Aufruf,
+			// der via XFrame.activate() + XTopWindow.toFront() aus dem Worker-Thread
+			// den Fokus auf das Arbeits-Dokument zurückbringen sollte. Auf Wayland
+			// führt dieser UNO-Call auf Frame-/Top-Window-Objekte vom Nicht-Main-
+			// Thread reproduzierbar zu LO-Crashes (siehe Vorfall-Logs vom 22.05.2026).
+			// Stabilität wird höher gewichtet als die Fokus-Korrektur — die Folge
+			// (Fokus springt nach Sheet-Operationen auf das älteste sichtbare
+			// Calc-Fenster, nicht auf das bearbeitete Doc) ist als bekannte
+			// Einschränkung in README.md dokumentiert.
+
+			long gesamtMs = (System.nanoTime() - runStartNs) / 1_000_000L;
+			PerfLog.log(logger, "[WORKER-TIMING] SheetRunner.run ENDE class={} dauer={} ms fehler={}",
+					this.getClass().getSimpleName(), gesamtMs, isFehler);
 
 		} else {
 			MessageBox.from(getxContext(), MessageBoxTypeEnum.WARN_OK)
@@ -275,6 +321,57 @@ public abstract class SheetRunner extends Thread {
 			MessageBox.from(workingSpreadsheet.getxContext(), MessageBoxTypeEnum.ERROR_OK)
 					.caption(I18n.get("msg.caption.kein.turnier.dok"))
 					.message(I18n.get("msg.text.kein.turnier")).show();
+			throw new GenerateException(VERARBEITUNG_ABGEBROCHEN);
+		}
+		return this;
+	}
+
+	/**
+	 * Prüft ob das Dokument kein Turnier eines <em>anderen</em> Typs enthält. Wird vor
+	 * „Neues Turnier"-/Testdaten-Befehlen aufgerufen, damit User-Klicks in der nun dauerhaft
+	 * aktiven Toolbar (siehe LO-Bug tdf#172207-Workaround) kein bestehendes Turnier eines
+	 * fremden Systems überschreiben.
+	 * <p>
+	 * Ein bereits vorhandenes Turnier <em>desselben</em> Typs ist hier ausdrücklich erlaubt –
+	 * dieser Fall wird anschließend in {@code doRun()} über den
+	 * {@link de.petanqueturniermanager.helper.NewTestDatenValidator} mit einer Ja/Nein-Abfrage
+	 * („Daten überschreiben?") behandelt.
+	 *
+	 * @throws GenerateException wenn ein Turnier eines anderen Typs bereits vorhanden ist
+	 */
+	public SheetRunner testKeinAnderesTurnierVorhanden() throws GenerateException {
+		TurnierSystem turnierSystemAusDocument = new DocumentPropertiesHelper(workingSpreadsheet)
+				.getTurnierSystemAusDocument();
+		if (turnierSystemAusDocument != TurnierSystem.KEIN && turnierSystemAusDocument != getTurnierSystem()) {
+			MessageBox.from(workingSpreadsheet.getxContext(), MessageBoxTypeEnum.ERROR_OK)
+					.caption(I18n.get("msg.caption.turnier.bereits.vorhanden"))
+					.message(I18n.get("msg.text.turnier.bereits.vorhanden",
+							turnierSystemAusDocument.getBezeichnung()))
+					.show();
+			throw new GenerateException(VERARBEITUNG_ABGEBROCHEN);
+		}
+		return this;
+	}
+
+	/**
+	 * Prüft ob das Dokument das erwartete Turniersystem hat ODER noch keins
+	 * (= darf von „Neues Turnier"-Befehlen überschrieben werden ist Sache des
+	 * separaten {@link #testKeinAnderesTurnierVorhanden}). Schützt vor System-Mismatch
+	 * bei normalen Aktionen wie „Spielrunde", „Rangliste" usw.
+	 *
+	 * @param erwartet Erwartetes Turniersystem; muss != {@code KEIN} sein
+	 * @throws GenerateException wenn das Doc kein Turnier hat oder das falsche
+	 */
+	public SheetRunner testTurnierSystem(TurnierSystem erwartet) throws GenerateException {
+		TurnierSystem turnierSystemAusDocument = new DocumentPropertiesHelper(workingSpreadsheet)
+				.getTurnierSystemAusDocument();
+		if (turnierSystemAusDocument != erwartet) {
+			MessageBox.from(workingSpreadsheet.getxContext(), MessageBoxTypeEnum.ERROR_OK)
+					.caption(I18n.get("msg.caption.falsches.turniersystem"))
+					.message(I18n.get("msg.text.falsches.turniersystem",
+							erwartet.getBezeichnung(),
+							turnierSystemAusDocument.getBezeichnung()))
+					.show();
 			throw new GenerateException(VERARBEITUNG_ABGEBROCHEN);
 		}
 		return this;
@@ -412,7 +509,7 @@ public abstract class SheetRunner extends Thread {
 
 	/**
 	 * Signalisiert, dass das nächste {@code selectionChanged}-Ereignis zur Rangliste
-	 * vom {@link de.petanqueturniermanager.helper.rangliste.RanglisteRefreshListener}
+	 * vom {@link de.petanqueturniermanager.helper.sheetsync.SheetSyncListener}
 	 * ignoriert werden soll.
 	 * <p>
 	 * Muss direkt nach {@code getSheetHelper().setActiveSheet(sheet)} aufgerufen werden,
@@ -426,7 +523,7 @@ public abstract class SheetRunner extends Thread {
 
 	/**
 	 * Liest und löscht das Unterdrückungs-Flag atomar.
-	 * Wird vom {@link de.petanqueturniermanager.helper.rangliste.RanglisteRefreshListener} genutzt.
+	 * Wird vom {@link de.petanqueturniermanager.helper.sheetsync.SheetSyncListener} genutzt.
 	 *
 	 * @return {@code true} wenn das nächste selectionChanged ignoriert werden soll
 	 */

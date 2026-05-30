@@ -27,8 +27,8 @@ import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.print.PrintArea;
-import de.petanqueturniermanager.helper.rangliste.RanglisteEingabeSignatur;
-import de.petanqueturniermanager.helper.rangliste.RanglisteSignaturStore;
+import de.petanqueturniermanager.helper.sheetsync.EingabeSignatur;
+import de.petanqueturniermanager.helper.sheetsync.SheetSyncSignaturStore;
 import de.petanqueturniermanager.helper.rangliste.SignaturQuellen;
 import de.petanqueturniermanager.helper.rangliste.IRangliste;
 import de.petanqueturniermanager.helper.rangliste.RangListeSpalte;
@@ -161,10 +161,10 @@ public class JGJRanglisteSheet extends SheetRunner implements ISheet, IRangliste
             getSheetHelper().setActiveSheet(sheet);
             SheetRunner.unterdrückeNaechstesSelectionChange();
         }
-        RanglisteSignaturStore.commitVollaufbau(
+        SheetSyncSignaturStore.commitVollaufbau(
                 getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
                 METADATA_SCHLUESSEL,
-                new RanglisteEingabeSignatur(SignaturQuellen::fuerJGJ));
+                new EingabeSignatur(SignaturQuellen::fuerJGJ));
     }
 
     /**

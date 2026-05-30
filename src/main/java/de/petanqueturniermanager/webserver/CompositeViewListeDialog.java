@@ -26,11 +26,13 @@ import com.sun.star.lang.EventObject;
 import com.sun.star.lang.WrappedTargetException;
 import com.sun.star.lang.XMultiComponentFactory;
 import com.sun.star.lang.XMultiServiceFactory;
-import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.GlobalProperties;
 import de.petanqueturniermanager.comp.GlobalProperties.CompositeViewEintragRoh;
 import de.petanqueturniermanager.comp.GlobalProperties.PanelEintragRoh;
+import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
@@ -86,6 +88,9 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
     private String[] komboBoxItems;
     private XCheckBox cbAktiv;
 
+    /** Aktives Turniersystem des Dokuments – steuert die ComboBox-Filterung; {@code null} = alle. */
+    private final TurnierSystem aktivesSystem;
+
     /** Interne Exception für Validierungsfehler. */
     private static final class UngueltigeEingabeException extends Exception {
         private static final long serialVersionUID = 1L;
@@ -94,8 +99,12 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
         }
     }
 
-    public CompositeViewListeDialog(XComponentContext xContext) {
-        super(xContext);
+    public CompositeViewListeDialog(WorkingSpreadsheet ws) {
+        super(ws.getxContext());
+        var doc = ws.getWorkingSpreadsheetDocument();
+        this.aktivesSystem = doc == null
+                ? null
+                : new DocumentPropertiesHelper(doc).getTurnierSystemAusDocument();
     }
 
     public void zeigen(XWindowPeer parentPeer) throws com.sun.star.uno.Exception {
@@ -131,7 +140,7 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
         this.dialogPeer = peer;
 
         eintraege = new ArrayList<>(GlobalProperties.get().getCompositeViewEintraege());
-        komboBoxItems = SheetResolverFactory.SHEET_TYPEN;
+        komboBoxItems = SheetResolverFactory.sheetTypenFuer(aktivesSystem);
 
         erstelleStatischeControls();
         aktualisiereZeilenArea();

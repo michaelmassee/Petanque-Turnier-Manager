@@ -49,22 +49,10 @@ class SheetMetadataCleanupTest {
 
     @Test
     void testVerwaistePtmMetadatenMitRefWerdenGeloescht() throws Exception {
-        // Setup: Ein Named Range, dessen Sheet gelöscht wurde (englische LibreOffice Version)
+        // Setup: Ein Named Range, dessen Sheet gelöscht wurde. getContent() liefert via GRAM_API
+        // locale-unabhängig immer "#REF!".
         String kaputterSchluessel = "__PTM_KO_TURNIERBAUM_A__";
         setupNamedRange(kaputterSchluessel, "#REF!.$A$1");
-
-        // Act
-        SheetMetadataHelper.bereinigeVerwaisteMetadaten(xDocMock);
-
-        // Assert: removeByName MUSS für diesen Schlüssel aufgerufen werden
-        verify(namedRangesMock, times(1)).removeByName(kaputterSchluessel);
-    }
-
-    @Test
-    void testVerwaistePtmMetadatenMitBezugWerdenGeloescht() throws Exception {
-        // Setup: Ein Named Range, dessen Sheet gelöscht wurde (deutsche LibreOffice Version)
-        String kaputterSchluessel = "__PTM_SCHWEIZER_RANGLISTE__";
-        setupNamedRange(kaputterSchluessel, "#BEZUG!.$A$1");
 
         // Act
         SheetMetadataHelper.bereinigeVerwaisteMetadaten(xDocMock);
@@ -100,7 +88,7 @@ class SheetMetadataCleanupTest {
         when(rangePtmKaputt.getContent()).thenReturn("#REF!.$A$1");
 
         XNamedRange rangeFremdKaputt = mock(XNamedRange.class);
-        when(rangeFremdKaputt.getContent()).thenReturn("#BEZUG!.$A$1");
+        when(rangeFremdKaputt.getContent()).thenReturn("#REF!.$A$1");
 
         // Simuliere die Liste der Namen im Dokument
         when(namedRangesMock.getElementNames()).thenReturn(new String[]{ptmGueltig, ptmKaputt, fremdKaputt});

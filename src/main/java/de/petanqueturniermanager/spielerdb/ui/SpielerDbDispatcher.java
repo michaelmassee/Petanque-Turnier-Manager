@@ -8,10 +8,21 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.formulex.meldeliste.FormuleXMeldeListeSheetUpdate;
+import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSheet_Update;
+import de.petanqueturniermanager.kaskade.meldeliste.KaskadeMeldeListeSheetUpdate;
+import de.petanqueturniermanager.ko.meldeliste.KoMeldeListeSheetUpdate;
+import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterMeldeListeSheetUpdate;
+import de.petanqueturniermanager.poule.meldeliste.PouleMeldeListeSheetUpdate;
+import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetUpdate;
+import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
+import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
+import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
@@ -87,18 +98,53 @@ public final class SpielerDbDispatcher {
         if (warSichtbar) {
             pb.hide();
         }
-        try {
-            new SpielerSucheDialog(ctx,
-                    new SpielerRepository(conn.get()),
-                    new VereinRepository(conn.get()),
-                    new LabelRepository(conn.get()),
-                    ziel.get()).zeigen();
+        SpielerSucheDialog dialog = new SpielerSucheDialog(ctx,
+                new SpielerRepository(conn.get()),
+                new VereinRepository(conn.get()),
+                new LabelRepository(conn.get()),
+                ziel.get());
+        try (var _ = BlattschutzManager.get().scopeFuer(aktivesTurnierSystem(ws), ws)) {
+            dialog.zeigen();
         } catch (com.sun.star.uno.Exception e) {
             logger.error("Spieler-Suche-Dialog fehlgeschlagen", e);
         } finally {
             if (warSichtbar) {
                 pb.visibleWennAutomatisch();
             }
+        }
+        // Nach Dialog-Schließen (Scope geschlossen, ProcessBox wiederhergestellt):
+        // wurden Spieler übernommen, vergibt der Aktualisieren-Lauf die Team-Nr.
+        if (dialog.wurdenSpielerUebernommen()) {
+            starteMeldelisteUpdate(ws, aktivesTurnierSystem(ws));
+        }
+    }
+
+    /**
+     * Startet den system-passenden "Meldeliste aktualisieren"-Lauf als {@link SheetRunner}
+     * (asynchron, eigener Thread, eigener Blattschutz-Scope) — analog zum Menü-Dispatch in
+     * {@code ProtocolHandler}. LIGA/KEIN sind nicht erreichbar, da
+     * {@link MeldelisteZielFactory#fuerAktivesSheet} dafür kein Ziel liefert; der Zweig bleibt
+     * defensiv ohne Aktion.
+     */
+    private static void starteMeldelisteUpdate(WorkingSpreadsheet ws, TurnierSystem ts) {
+        try {
+            SheetRunner runner = switch (ts) {
+                case SUPERMELEE -> new MeldeListeSheet_Update(ws).testTurnierSystem(TurnierSystem.SUPERMELEE);
+                case SCHWEIZER -> new SchweizerMeldeListeSheetUpdate(ws).testTurnierSystem(TurnierSystem.SCHWEIZER);
+                case FORMULEX -> new FormuleXMeldeListeSheetUpdate(ws).testTurnierSystem(TurnierSystem.FORMULEX);
+                case KO -> new KoMeldeListeSheetUpdate(ws).testTurnierSystem(TurnierSystem.KO).backUpDocument();
+                case JGJ -> new JGJMeldeListeSheet_Update(ws).testTurnierSystem(TurnierSystem.JGJ).backUpDocument();
+                case MAASTRICHTER -> new MaastrichterMeldeListeSheetUpdate(ws).testTurnierSystem(TurnierSystem.MAASTRICHTER).backUpDocument();
+                case KASKADE -> new KaskadeMeldeListeSheetUpdate(ws).testTurnierSystem(TurnierSystem.KASKADE).backUpDocument();
+                case POULE -> new PouleMeldeListeSheetUpdate(ws).testTurnierSystem(TurnierSystem.POULE).backUpDocument();
+                case TRIPTETE -> new de.petanqueturniermanager.triptete.meldeliste.TripTeteMeldeListeSheetUpdate(ws).testTurnierSystem(TurnierSystem.TRIPTETE).backUpDocument();
+                case LIGA, KEIN -> null;
+            };
+            if (runner != null) {
+                runner.start();
+            }
+        } catch (GenerateException e) {
+            logger.error("Meldeliste-Aktualisieren nach Spieler-Übernahme fehlgeschlagen", e);
         }
     }
 
@@ -118,7 +164,7 @@ public final class SpielerDbDispatcher {
         if (warSichtbar) {
             pb.hide();
         }
-        try {
+        try (var _ = BlattschutzManager.get().scopeFuer(aktivesTurnierSystem(ws), ws)) {
             new SpielerDbAbgleichDialog(ctx,
                     new SpielerRepository(conn.get()),
                     new VereinRepository(conn.get()),
@@ -134,7 +180,7 @@ public final class SpielerDbDispatcher {
 
     public static void vorlageErstellen(WorkingSpreadsheet ws) {
         XComponentContext ctx = ws.getxContext();
-        try {
+        try (var _ = BlattschutzManager.get().scopeFuer(aktivesTurnierSystem(ws), ws)) {
             SpielerDbVorlageSheet.bereitstellen(ws);
         } catch (GenerateException | RuntimeException e) {
             logger.error("Vorlage-Sheet konnte nicht angelegt werden", e);
@@ -170,7 +216,7 @@ public final class SpielerDbDispatcher {
         if (warSichtbar) {
             pb.hide();
         }
-        try {
+        try (var _ = BlattschutzManager.get().scopeFuer(aktivesTurnierSystem(ws), ws)) {
             new SpielerDbAbgleichDialog(ctx,
                     new SpielerRepository(conn.get()),
                     new VereinRepository(conn.get()),
@@ -316,6 +362,16 @@ public final class SpielerDbDispatcher {
         } catch (RuntimeException e) {
             logger.warn("Meldeliste-Sheet konnte nicht aktiviert werden", e);
         }
+    }
+
+    /**
+     * Ermittelt das Turniersystem des aktuellen Dokuments. Die Spieler-DB-Dialoge
+     * laufen direkt aus {@code ProtocolHandler.behandleDialogBefehl} ohne
+     * {@code SheetRunner}, daher müssen sie selbst einen {@link BlattschutzManager}-
+     * Scope öffnen, sonst werfen Sheet-Schreibvorgänge im Turnier-Modus.
+     */
+    private static TurnierSystem aktivesTurnierSystem(WorkingSpreadsheet ws) {
+        return new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();
     }
 
     private static Optional<SpielerDbConnection> oeffneOderMelde(XComponentContext ctx) {

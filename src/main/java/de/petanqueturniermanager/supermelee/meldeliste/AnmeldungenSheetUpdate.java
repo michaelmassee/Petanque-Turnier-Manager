@@ -1,0 +1,39 @@
+/*
+ * Erstellung 2026 / Michael Massee
+ */
+package de.petanqueturniermanager.supermelee.meldeliste;
+
+import com.sun.star.sheet.XSpreadsheet;
+
+import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.exception.GenerateException;
+
+/**
+ * Aktualisiert die Supermelee-Checkin-Liste (Anmeldungen) eines Spieltags, ohne das Sheet
+ * neu zu erstellen.
+ * <p>
+ * Im Gegensatz zu {@link AnmeldungenSheet#generate()} (vollständiger Neuaufbau mit
+ * {@code NewSheet.forceCreate()}) schreibt diese Klasse nur den Datenbereich neu. Wird vom
+ * {@link de.petanqueturniermanager.helper.sheetsync.SheetSyncListener} verwendet, um bei einem
+ * Tab-Wechsel zur Checkin-Liste deren Inhalt mit der Meldeliste zu synchronisieren.
+ * <p>
+ * Wenn die Checkin-Liste noch nicht existiert, wird der Update-Lauf still abgebrochen – das
+ * initiale Anlegen erfolgt ausschließlich über den Menüpunkt, nicht über einen Listener.
+ */
+public class AnmeldungenSheetUpdate extends AnmeldungenSheet {
+
+	public AnmeldungenSheetUpdate(WorkingSpreadsheet workingSpreadsheet) {
+		super(workingSpreadsheet);
+	}
+
+	@Override
+	protected void doRun() throws GenerateException {
+		setSpielTag(getKonfigurationSheet().getAktiveSpieltag());
+		XSpreadsheet sheet = getXSpreadSheet();
+		if (sheet == null) {
+			return; // Erstaufbau erfolgt ausschließlich über Menü
+		}
+		processBoxinfo("processbox.checkin.aktualisieren");
+		aktualisiereInhalt();
+	}
+}

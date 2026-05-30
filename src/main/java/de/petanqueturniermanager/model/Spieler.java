@@ -17,6 +17,10 @@ public class Spieler extends NrComparable implements IMeldung<Spieler> {
 	private int setzPos; // spieler mit der gleiche setztposition dürfen nicht im gleichen Team.
 	private final HashSet<Integer> warImTeamMit = new HashSet<>();
 	private final HashSet<Integer> gegner = new HashSet<>();
+	// Union aus Mitspielern und Gegnern: alle Spieler, mit denen man bereits in
+	// einer Partie war (egal ob Team oder Gegner). Dient dem Supermêlée-Algorithmus
+	// als weicher Constraint, um Crossover-Wiederholungen zu vermeiden.
+	private final HashSet<Integer> warImSpielMit = new HashSet<>();
 	private WeakReference<Team> wkRefteam;
 	private boolean istInTeam;
 	private boolean hatteFreilos; // Spieler hatte bereits ein freilos
@@ -59,6 +63,29 @@ public class Spieler extends NrComparable implements IMeldung<Spieler> {
 	public boolean warGegnerVon(Spieler spieler) {
 		checkNotNull(spieler, "spieler == null");
 		return gegner.contains(spieler.getNr());
+	}
+
+	/**
+	 * Wahr, wenn beide Spieler bereits in einer früheren Runde im selben Spiel
+	 * waren – als Mitspieler oder als Gegner.
+	 */
+	public boolean warImSpielMit(Spieler spieler) {
+		checkNotNull(spieler, "spieler == null");
+		return warImSpielMit.contains(spieler.getNr());
+	}
+
+	/**
+	 * Spieler gegenseitig als „war im selben Spiel" eintragen, wenn nicht
+	 * vorhanden. Wird vom Supermêlée-Algorithmus nach Abschluss einer Runde
+	 * für alle Paare im selben Spiel (Team ∪ Gegner) aufgerufen.
+	 */
+	public Spieler addWarImSpielMit(Spieler spieler) {
+		checkNotNull(spieler, "spieler == null");
+		if (!spieler.equals(this) && !warImSpielMit.contains(spieler.getNr())) {
+			warImSpielMit.add(spieler.getNr());
+			spieler.addWarImSpielMit(this);
+		}
+		return this;
 	}
 
 	public Spieler deleteTeam() throws AlgorithmenException {
@@ -194,6 +221,20 @@ public class Spieler extends NrComparable implements IMeldung<Spieler> {
 	}
 
 	public Spieler resetAnzMalKleinesTeam() {
+		anzMalKleinesTeam = 0;
+		return this;
+	}
+
+	/**
+	 * Setzt die komplette Paarungs-Historie des Spielers zurück: Mitspieler-,
+	 * Gegner- und Spiel-Historie sowie den Counter für Ausnahme-Teamgrößen.
+	 * Wird vom Lockerungs-Retry in der Supermelee-Paarungslogik genutzt, um die
+	 * Historie aus weniger vergangenen Spieltagen neu aufbauen zu können.
+	 */
+	public Spieler resetHistorie() {
+		warImTeamMit.clear();
+		gegner.clear();
+		warImSpielMit.clear();
 		anzMalKleinesTeam = 0;
 		return this;
 	}

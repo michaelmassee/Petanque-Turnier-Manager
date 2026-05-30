@@ -134,6 +134,25 @@ ICONS["toolbar-teilnehmer"] = svg(f'''
 ''')
 
 # ============================================================
+# 5b. CHECKIN — Anwesenheitsliste (Klemmbrett) mit grünem Haken-Badge
+# ============================================================
+ICONS["toolbar-checkin"] = svg(f'''
+  <!-- Klemmbrett / Anwesenheitsliste -->
+  <rect x="14" y="10" width="36" height="46" rx="3" fill="{C['paper']}" stroke="{C['ink']}" stroke-width="{S}"/>
+  <rect x="26" y="6" width="12" height="7" rx="2" fill="{C['silver']}" stroke="{C['ink']}" stroke-width="{S}"/>
+  <!-- Zeilen mit abgehakten Teilnehmern -->
+  <path d="M 19 22 l 3 3 l 5 -6" fill="none" stroke="{C['go']}" stroke-width="{S*1.4}" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="31" y1="22" x2="45" y2="22" stroke="{C['line']}" stroke-width="{S}" stroke-linecap="round"/>
+  <path d="M 19 33 l 3 3 l 5 -6" fill="none" stroke="{C['go']}" stroke-width="{S*1.4}" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="31" y1="33" x2="45" y2="33" stroke="{C['line']}" stroke-width="{S}" stroke-linecap="round"/>
+  <line x1="19" y1="44" x2="27" y2="44" stroke="{C['line']}" stroke-width="{S}" stroke-linecap="round"/>
+  <line x1="31" y1="44" x2="45" y2="44" stroke="{C['line']}" stroke-width="{S}" stroke-linecap="round"/>
+  <!-- Großes Check-Badge unten rechts -->
+  <circle cx="48" cy="48" r="12" fill="{C['go']}" stroke="{C['ink']}" stroke-width="{S}"/>
+  <path d="M 42 48 l 4 4 l 8 -9" fill="none" stroke="{C['paper']}" stroke-width="{S*1.8}" stroke-linecap="round" stroke-linejoin="round"/>
+''')
+
+# ============================================================
 # 6. TURNIER-MODUS — KIOSK / Vollbild-Monitor (THEMATISCH KORREKT)
 # ============================================================
 ICONS["toolbar-turnier-modus"] = svg(f'''

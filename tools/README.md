@@ -7,6 +7,11 @@ Forensik nach realen Turnieren und Cross-Check der Java-Logik gedacht.
 
 Anforderungen: Python 3.8+, ausschliesslich Standard-Bibliothek (kein pip).
 
+Ausnahme: `linux/` enthält Skripte zur **Fernsteuerung einer laufenden
+LibreOffice-Instanz** via UNO + AT-SPI für Multi-Doc-/Modal-Repros. Diese
+benötigen `python3-gi`, `at-spi2-core` (System) sowie optional `python-uinput`
+für reine X11-Setups. Details siehe `tools/linux/README.md`.
+
 ## analyse_supermelee_spieltag.py
 
 Konsistenz-Analyse einer Supermelee-Spieltag-ODS.
@@ -55,3 +60,17 @@ Beispiel-Output (gekürzt):
 Annahmen über das Sheet-Layout sind aus `SpielrundeSheetKonstanten.java`
 übernommen und an einer Stelle im Skript zentralisiert — bei Layout-Änderungen
 in der Extension nachziehen.
+
+## test_analyse_supermelee_sync.py
+
+Sync-Check zwischen `analyse_supermelee_spieltag.py` und
+`SupermeleeSpieltagAnalyseAssert.java` (automatischer UITest).
+
+Beide Dateien implementieren dieselbe Prüflogik in zwei Runtimes. Dieses Skript
+liest die Java-Quellkonstanten per Regex und verifiziert, dass die Python-
+Hardcodes damit übereinstimmen. Schlägt es fehl, müssen beide Dateien zusammen
+angepasst werden.
+
+```bash
+python3 tools/test_analyse_supermelee_sync.py
+```

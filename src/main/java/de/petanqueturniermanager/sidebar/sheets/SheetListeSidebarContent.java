@@ -35,8 +35,10 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.LoMainThread;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
+import de.petanqueturniermanager.helper.perflog.PerfLog;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
@@ -63,6 +65,11 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
     private static final int ZEILEN_HOEHE = 22;
     private static final int MIN_HOEHE = 60;
 
+    /** Trennzeichen zwischen Eintrags-Anzeigetexten in der Struktur-Signatur (in keinem Anzeigetext enthalten). */
+    private static final char SIGNATUR_TRENNER = '\u0001';
+    /** Signatur-Marker für „kein Turnier-Dokument" – verschieden von einer leeren Eintragsliste. */
+    private static final String SIGNATUR_KEIN_DOKUMENT = "KEIN_DOKUMENT";
+
     private XListBox sheetListBox;
     private List<BlattBaumEintrag> baumEintraege;
     private Set<SheetGruppe> kollabierteGruppen;
@@ -70,6 +77,15 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
     private Set<String> kollabierteUnterGruppen;
     private SheetBaumOrganisierer organisierer;
     private String gespeichertesSheet = null;
+    /**
+     * Signatur der zuletzt <em>tatsächlich angezeigten</em> Blattstruktur (Reihenfolge,
+     * Namen, Kollaps-Zustand). Dient dazu, den teuren Vollaufbau
+     * ({@code window.dispose()} + Fenster-/ListBox-Neuaufbau) zu überspringen, wenn ein
+     * {@code felderAktualisieren}/{@code listeNeuAufbauen}-Trigger feuert, ohne dass sich
+     * die Struktur geändert hat (z.B. Ergebniseingabe, Tab-Wechsel – beides ändert keine
+     * Blätter). {@code null} = noch nie aufgebaut → Vollaufbau erzwingen.
+     */
+    private String aktuelleStrukturSignatur = null;
     private XSelectionSupplier selectionSupplier = null;
     /** Kurzfristig {@code true} während programmatischer {@code selectItemPos}-Aufrufe. */
     private volatile boolean unterdrueckeItemListener = false;
@@ -114,12 +130,34 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
         }
     };
 
+    /**
+     * Reagiert auf SheetRunner-Zustandswechsel.
+     * <p>
+     * {@code SheetRunner} ruft {@code benachrichtigeListener()} aus seinem Worker-Thread
+     * (siehe {@code SheetRunner.run()}). {@code listBoxAktivierungAktualisieren()} und vor
+     * allem {@code listeNeuAufbauen()} ({@code window.dispose()} + Fenster-Neuaufbau) sind
+     * VCL-Operationen und dürfen NICHT vom Worker-Thread laufen – das blockiert unter
+     * Windows die SolarMutex und friert LibreOffice komplett ein. Die UI-Arbeit wird daher
+     * via {@link LoMainThread#post} auf den LO-Main-Thread verschoben. Der Laufzustand wird
+     * im Worker-Thread erfasst (zum Benachrichtigungszeitpunkt korrekt), die Aktion erst
+     * danach auf dem Main-Thread ausgeführt.
+     */
     private final Runnable prozessZustandListener = () -> {
-        if (SheetRunner.isRunning()) {
-            listBoxAktivierungAktualisieren();
-        } else {
-            listeNeuAufbauen();
+        boolean laeuft = SheetRunner.isRunning();
+        var ws = getCurrentSpreadsheet();
+        if (ws == null) {
+            return;
         }
+        LoMainThread.post(ws.getxContext(), () -> {
+            if (getCurrentSpreadsheet() == null) {
+                return;
+            }
+            if (laeuft) {
+                listBoxAktivierungAktualisieren();
+            } else {
+                listeNeuAufbauen();
+            }
+        });
     };
 
     public SheetListeSidebarContent(WorkingSpreadsheet workingSpreadsheet, XWindow parentWindow,
@@ -162,12 +200,14 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
         }
         var xDoc = dokumentOderNull();
         if (xDoc == null) {
+            aktuelleStrukturSignatur = SIGNATUR_KEIN_DOKUMENT;
             sheetListeAufbauenLeer();
             return;
         }
 
         heileVeralteteMetadaten(xDoc);
         baumEintraege = organisierer.baumAufbauen(xDoc, kollabierteGruppen, kollabierteSpielTage, kollabierteUnterGruppen);
+        aktuelleStrukturSignatur = signaturAus(baumEintraege);
 
         if (baumEintraege.isEmpty()) {
             sheetListeAufbauenLeer();
@@ -247,8 +287,49 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
     }
 
     private void listeNeuAufbauen() {
+        if (kannVollaufbauUeberspringen()) {
+            // Struktur unverändert – der teure window.dispose()/Neuaufbau ist unnötig.
+            // Nur den Aktivierungs-Zustand (Enabled) der ListBox nachziehen.
+            PerfLog.log(logger, "[SIDEBAR-TIMING] {} listeNeuAufbauen: Struktur unverändert, Vollaufbau übersprungen, thread={}",
+                    getClass().getSimpleName(), Thread.currentThread().getName());
+            listBoxAktivierungAktualisieren();
+            return;
+        }
         auswahlMerken();
         allesFelderEntfernenUndNeuFenster();
+    }
+
+    /**
+     * Prüft, ob sich die anzuzeigende Blattstruktur gegenüber der zuletzt aufgebauten
+     * geändert hat. Baut dazu den Kandidaten-Baum (rein datenseitig, keine VCL-Operationen)
+     * und vergleicht dessen Signatur mit {@link #aktuelleStrukturSignatur}. Stimmen sie
+     * überein, kann der teure Fenster-Neuaufbau entfallen.
+     */
+    private boolean kannVollaufbauUeberspringen() {
+        if (sheetListBox == null || organisierer == null || aktuelleStrukturSignatur == null) {
+            return false;
+        }
+        var xDoc = dokumentOderNull();
+        if (xDoc == null) {
+            return false; // Vollaufbau baut die Leer-Ansicht auf
+        }
+        heileVeralteteMetadaten(xDoc);
+        var kandidat = organisierer.baumAufbauen(xDoc, kollabierteGruppen, kollabierteSpielTage, kollabierteUnterGruppen);
+        return aktuelleStrukturSignatur.equals(signaturAus(kandidat));
+    }
+
+    /**
+     * Bildet eine Struktur-Signatur aus den Anzeigetexten der Baum-Einträge. Der
+     * Anzeigetext kodiert bereits Reihenfolge, Blattnamen und – über die Auf-/Zuklappen-
+     * Pfeile der Kopf-Einträge – den Kollaps-Zustand. Ändert sich irgendetwas davon,
+     * ändert sich die Signatur.
+     */
+    private static String signaturAus(List<BlattBaumEintrag> eintraege) {
+        var sb = new StringBuilder(eintraege.size() * 24);
+        for (BlattBaumEintrag eintrag : eintraege) {
+            sb.append(eintrag.anzeigeText()).append(SIGNATUR_TRENNER);
+        }
+        return sb.toString();
     }
 
     private void auswahlMerken() {
@@ -366,7 +447,20 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
 
     private void sheetAktivieren(BlattKnoten knoten) {
         try {
-            TurnierSheet.from(knoten.sheet(), getCurrentSpreadsheet()).setActiv();
+            // Sheet live über den Identitäts-Schlüssel auflösen statt das zur Bauzeit gecachte
+            // XSpreadsheet zu verwenden: Der gecachte UNO-Proxy bleibt an seinen damaligen Tab-Index
+            // gebunden und folgt einer späteren Blatt-Einfügung nicht (z.B. ein dazwischen eingefügtes
+            // Nicht-PTM-Blatt verschiebt das Ziel-Blatt, ohne die Baum-Signatur zu ändern → der
+            // Vollaufbau wird übersprungen und der Knoten behält den veralteten Proxy). Named Ranges
+            // überleben Verschieben/Einfügen, daher löst findeSheet stets das aktuell richtige Blatt auf.
+            var xDoc = dokumentOderNull();
+            var sheet = xDoc == null
+                    ? null
+                    : SheetMetadataHelper.findeSheet(xDoc, knoten.metadatenSchluessel()).orElse(null);
+            if (sheet == null) {
+                sheet = knoten.sheet();
+            }
+            TurnierSheet.from(sheet, getCurrentSpreadsheet()).setActiv();
             logger.debug("sheetAktivieren: Sheet '{}' aktiviert", knoten.metadatenSchluessel());
         } catch (Exception e) {
             logger.error("Fehler beim Aktivieren des Sheets '{}'", knoten.metadatenSchluessel(), e);
@@ -473,6 +567,7 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
             baumEintraege.clear();
         }
         gespeichertesSheet = null;
+        aktuelleStrukturSignatur = null;
     }
 
     // ── Hilfsmethoden ────────────────────────────────────────────────────────
@@ -494,7 +589,10 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
         var system = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();
         switch (system) {
             case LIGA -> heileLigaMetadaten(xDoc);
-            case MAASTRICHTER -> heileMaastrichterMetadaten(xDoc);
+            // Maastrichter-Altdokumente (Vorrunden unter Schweizer-Schlüssel) werden nicht mehr
+            // gesondert geheilt: der schreib-seitige Purge in SheetMetadataHelper entfernt fremde
+            // Identitäts-Schlüssel auf demselben Blatt bei der nächsten Vorrunden-Schreibung, und
+            // SheetBaumOrganisierer dedupliziert die Anzeige bereits beim Aufbau.
             default -> { /* keine Migration nötig */ }
         }
     }
@@ -504,17 +602,5 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
         SheetMetadataHelper.findeSheetUndHeile(xDoc, SheetMetadataHelper.SCHLUESSEL_LIGA_SPIELPLAN, SheetNamen.LEGACY_SPIELPLAN);
         SheetMetadataHelper.findeSheetUndHeile(xDoc, SheetMetadataHelper.SCHLUESSEL_LIGA_DIREKTVERGLEICH, SheetNamen.LEGACY_DIREKTVERGLEICH);
         SheetMetadataHelper.findeSheetUndHeile(xDoc, SheetMetadataHelper.SCHLUESSEL_LIGA_RANGLISTE, SheetNamen.LEGACY_RANGLISTE);
-    }
-
-    /**
-     * Entfernt veraltete Schweizer-Spielrunden-Schlüssel aus Maastrichter-Dokumenten.
-     * Ältere Plugin-Versionen speicherten die Maastrichter-Vorrunden unter dem Schweizer-Schlüssel.
-     * Die neuen Maastrichter-Schlüssel wurden bereits bei der ersten Aktion gespeichert;
-     * die alten Schweizer-Schlüssel müssen manuell entfernt werden.
-     */
-    private void heileMaastrichterMetadaten(XSpreadsheetDocument xDoc) {
-        for (int n = 1; n <= 10; n++) {
-            SheetMetadataHelper.loescheSchluessel(xDoc, SheetMetadataHelper.schluesselSchweizerSpielrunde(n));
-        }
     }
 }

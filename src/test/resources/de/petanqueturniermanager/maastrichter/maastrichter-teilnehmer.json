@@ -1,48 +1,6 @@
 [
   [
     {
-      "data": 1.0
-    },
-    {
-      "data": "Team 1"
-    },
-    {
-      "data": "Otbert Dold / Rigobert Asmus"
-    },
-    {
-      "data": ""
-    }
-  ],
-  [
-    {
-      "data": 2.0
-    },
-    {
-      "data": "Team 2"
-    },
-    {
-      "data": "Roseliese Petter / Muthild Döll"
-    },
-    {
-      "data": ""
-    }
-  ],
-  [
-    {
-      "data": 3.0
-    },
-    {
-      "data": "Team 3"
-    },
-    {
-      "data": "Niko Gerhard / Theodeline Rentschler"
-    },
-    {
-      "data": ""
-    }
-  ],
-  [
-    {
       "data": 4.0
     },
     {
@@ -57,55 +15,13 @@
   ],
   [
     {
-      "data": 5.0
+      "data": 1.0
     },
     {
-      "data": "Team 5"
+      "data": "Team 1"
     },
     {
-      "data": "Kreszenzia Thielmann / Franka Grau"
-    },
-    {
-      "data": ""
-    }
-  ],
-  [
-    {
-      "data": 6.0
-    },
-    {
-      "data": "Team 6"
-    },
-    {
-      "data": "Hartwig Ney / Angelika Elsen"
-    },
-    {
-      "data": ""
-    }
-  ],
-  [
-    {
-      "data": 7.0
-    },
-    {
-      "data": "Team 7"
-    },
-    {
-      "data": "Rosa Tafel / Sophie Stabel"
-    },
-    {
-      "data": ""
-    }
-  ],
-  [
-    {
-      "data": 8.0
-    },
-    {
-      "data": "Team 8"
-    },
-    {
-      "data": "Rotraut Gentsch / Maria Bieder"
+      "data": "Otbert Dold / Rigobert Asmus"
     },
     {
       "data": ""
@@ -127,13 +43,27 @@
   ],
   [
     {
-      "data": 10.0
+      "data": 8.0
     },
     {
-      "data": "Team 10"
+      "data": "Team 8"
     },
     {
-      "data": "Kornelia Molz / Felix Kamps"
+      "data": "Rotraut Gentsch / Maria Bieder"
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": 3.0
+    },
+    {
+      "data": "Team 3"
+    },
+    {
+      "data": "Niko Gerhard / Theodeline Rentschler"
     },
     {
       "data": ""
@@ -155,6 +85,48 @@
   ],
   [
     {
+      "data": 10.0
+    },
+    {
+      "data": "Team 10"
+    },
+    {
+      "data": "Kornelia Molz / Felix Kamps"
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": 6.0
+    },
+    {
+      "data": "Team 6"
+    },
+    {
+      "data": "Hartwig Ney / Angelika Elsen"
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": 2.0
+    },
+    {
+      "data": "Team 2"
+    },
+    {
+      "data": "Roseliese Petter / Muthild Döll"
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
       "data": 12.0
     },
     {
@@ -162,6 +134,34 @@
     },
     {
       "data": "Birk Reuß / Anett Jakobs"
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": 7.0
+    },
+    {
+      "data": "Team 7"
+    },
+    {
+      "data": "Rosa Tafel / Sophie Stabel"
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": 5.0
+    },
+    {
+      "data": "Team 5"
+    },
+    {
+      "data": "Kreszenzia Thielmann / Franka Grau"
     },
     {
       "data": ""

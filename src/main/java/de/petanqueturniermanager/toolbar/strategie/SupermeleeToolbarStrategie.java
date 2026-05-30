@@ -5,6 +5,7 @@ package de.petanqueturniermanager.toolbar.strategie;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet;
+import de.petanqueturniermanager.supermelee.meldeliste.AnmeldungenSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_NeuerSpieltag;
 import de.petanqueturniermanager.supermelee.meldeliste.SupermeleeTeilnehmerSheet;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Naechste;
@@ -32,6 +33,11 @@ public class SupermeleeToolbarStrategie implements ITurnierSystemToolbarStrategi
     @Override
     public void teilnehmer(WorkingSpreadsheet ws) throws Exception {
         new SupermeleeTeilnehmerSheet(ws).testTurnierVorhanden().start();
+    }
+
+    @Override
+    public void checkin(WorkingSpreadsheet ws) throws Exception {
+        new AnmeldungenSheet(ws).testTurnierVorhanden().backUpDocument().start();
     }
 
     @Override

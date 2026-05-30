@@ -9,10 +9,15 @@ import java.util.TreeSet;
 
 import com.sun.star.sheet.XSpreadsheetDocument;
 
+import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
+import de.petanqueturniermanager.basesheet.meldeliste.TeilnehmerListeSortModus;
+import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
+import de.petanqueturniermanager.helper.sheetsync.EingabeSignatur;
+import de.petanqueturniermanager.helper.sheetsync.SignaturQuelle;
 
 /**
- * Builder-Helfer für die {@link RanglisteEingabeSignatur}: stellt pro Turniersystem
+ * Builder-Helfer für die {@link EingabeSignatur}: stellt pro Turniersystem
  * die jeweilige Liste der {@link SignaturQuelle}n bereit.
  * <p>
  * Die Whitelist-Spalten pro Quelle ist <b>bewusst eng</b> gefasst (nur semantisch
@@ -64,6 +69,11 @@ public final class SignaturQuellen {
     private static final Set<Integer> SUPERMELEE_MELDELISTE_SPALTEN = unmodifiableIntRange(0, 20);
     private static final int SUPERMELEE_MELDELISTE_ERSTE_DATEN_ZEILE = 2;
     private static final int SUPERMELEE_MELDELISTE_MAX_ZEILEN = 1000;
+
+    // ── Supermelee Teilnehmer (Meldeliste-Subset für Spieltag-Teilnehmer-Sync) ──
+    // Namensspalten + Spieltag-Aktiv-Spalten; SPIELER_NR(0) bewusst ausgeschlossen,
+    // damit reine Re-Nummerierung keinen Teilnehmer-Rebuild auslöst.
+    private static final Set<Integer> SUPERMELEE_TEILNEHMER_SPALTEN = unmodifiableIntRange(1, 20);
 
     // ── Spieltag-Rangliste (für Endrangliste-Eingabe) ─────────────────────
     // SPIELER_NR(0), Name(1), RANGLISTE(2), Spielrunden-Ergebnisse (3..20)
@@ -191,6 +201,55 @@ public final class SignaturQuellen {
         return quellen;
     }
 
+    // ── Teilnehmerlisten ──────────────────────────────────────────────────────
+    // Teilnehmerlisten hängen – anders als Ranglisten – ausschließlich von der
+    // Meldeliste ab (keine Spielrunden). Eigene stabileId pro System für getrennte
+    // Hash-Persistierung. Whitelist deckt Nr, Namen und Aktiv-Status der Meldeliste ab.
+
+    /** Quelle für die Schweizer-Teilnehmerliste. */
+    public static List<SignaturQuelle> fuerSchweizerTeilnehmer(XSpreadsheetDocument xDoc) {
+        return List.of(meldelisteSchweizerLike("SCHWEIZER-TEILNEHMER-MELDELISTE",
+                SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_MELDELISTE));
+    }
+
+    /** Quelle für die JGJ-Teilnehmerliste. */
+    public static List<SignaturQuelle> fuerJGJTeilnehmer(XSpreadsheetDocument xDoc) {
+        return List.of(meldelisteSchweizerLike("JGJ-TEILNEHMER-MELDELISTE",
+                SheetMetadataHelper.SCHLUESSEL_JGJ_MELDELISTE));
+    }
+
+    /** Quelle für die K.-O.-Teilnehmerliste. */
+    public static List<SignaturQuelle> fuerKoTeilnehmer(XSpreadsheetDocument xDoc) {
+        return List.of(meldelisteSchweizerLike("KO-TEILNEHMER-MELDELISTE",
+                SheetMetadataHelper.SCHLUESSEL_KO_MELDELISTE));
+    }
+
+    /** Quelle für die Maastrichter-Teilnehmerliste. */
+    public static List<SignaturQuelle> fuerMaastrichterTeilnehmer(XSpreadsheetDocument xDoc) {
+        return List.of(meldelisteSchweizerLike("MAASTRICHTER-TEILNEHMER-MELDELISTE",
+                SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_MELDELISTE));
+    }
+
+    /** Quelle für die Formule-X-Teilnehmerliste. */
+    public static List<SignaturQuelle> fuerFormuleXTeilnehmer(XSpreadsheetDocument xDoc) {
+        return List.of(meldelisteSchweizerLike("FORMULEX-TEILNEHMER-MELDELISTE",
+                SheetMetadataHelper.SCHLUESSEL_FORMULEX_MELDELISTE));
+    }
+
+    /** Quelle für die Poule-A/B-Teilnehmerliste. */
+    public static List<SignaturQuelle> fuerPouleTeilnehmer(XSpreadsheetDocument xDoc) {
+        return List.of(meldelisteSchweizerLike("POULE-TEILNEHMER-MELDELISTE",
+                SheetMetadataHelper.SCHLUESSEL_POULE_MELDELISTE));
+    }
+
+    /** Quelle für die Kaskaden-KO-Teilnehmerliste. */
+    public static List<SignaturQuelle> fuerKaskadeTeilnehmer(XSpreadsheetDocument xDoc) {
+        return List.of(new SignaturQuelle("KASKADE-TEILNEHMER-MELDELISTE",
+                SheetMetadataHelper.SCHLUESSEL_KASKADE_MELDELISTE,
+                KASKADE_MELDELISTE_ERSTE_DATEN_ZEILE, MELDELISTE_MAX_ZEILEN,
+                MELDELISTE_BREIT_SPALTEN, true));
+    }
+
     /**
      * Quellen für eine konkrete Supermelee-Spieltag-Rangliste:
      * Meldeliste + alle Spielrunden dieses Spieltags.
@@ -214,6 +273,24 @@ public final class SignaturQuellen {
     }
 
     /**
+     * Quellen für eine Supermelee-Spieltag-Teilnehmerliste: nur Meldeliste,
+     * mit eng gefasster Whitelist (Namen + Spieltag-Aktiv-Spalten, ohne Spieler-Nr).
+     * <p>
+     * Der {@code spieltagNr}-Parameter ist Teil der Signatur, damit unterschiedliche
+     * Spieltage eigenständige Hashes erzeugen (die stabile Quell-ID enthält die Nr).
+     */
+    public static List<SignaturQuelle> fuerSupermeleeTeilnehmer(XSpreadsheetDocument xDoc,
+            int spieltagNr) {
+        List<SignaturQuelle> quellen = new ArrayList<>();
+        quellen.add(new SignaturQuelle(
+                "SUPERMELEE-TEILNEHMER-MELDELISTE-" + spieltagNr,
+                SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_MELDELISTE,
+                SUPERMELEE_MELDELISTE_ERSTE_DATEN_ZEILE, SUPERMELEE_MELDELISTE_MAX_ZEILEN,
+                SUPERMELEE_TEILNEHMER_SPALTEN, true));
+        return quellen;
+    }
+
+    /**
      * Quellen für Supermelee-Endrangliste: Meldeliste + alle Spieltag-Ranglisten
      * (sortiert nach Spieltag-Nr).
      */
@@ -230,6 +307,28 @@ public final class SignaturQuellen {
                         SPIELTAG_RANGLISTE_ERSTE_DATEN_ZEILE, SPIELTAG_RANGLISTE_MAX_ZEILEN,
                         SPIELTAG_RANGLISTE_SPALTEN, false));
         return quellen;
+    }
+
+    // ── Zusatz-Kontext: Sortier-Konfiguration ──────────────────────────────────
+    // Die Sortierung von Teilnehmer- und Checkin-Listen ist eine Dokument-Property,
+    // keine Sheet-Zelle. Damit ein Wechsel der Sortierung in der Turnier-Konfiguration
+    // einen einmaligen Re-Sync (= Umsortieren) der jeweiligen Liste auslöst, fließt der
+    // Property-Wert über den {@link EingabeSignatur}-Zusatz-Kontext in den Hash ein.
+
+    /** Zusatz-Kontext für Teilnehmerlisten: aktueller {@link TeilnehmerListeSortModus}. */
+    public static String teilnehmerSortKontext(XSpreadsheetDocument xDoc) {
+        return sortModusKontext(xDoc, BasePropertiesSpalte.KONFIG_PROP_TEILNEHMER_LISTE_SORT_MODUS);
+    }
+
+    /** Zusatz-Kontext für Checkin-Listen: aktueller {@link TeilnehmerListeSortModus}. */
+    public static String checkinSortKontext(XSpreadsheetDocument xDoc) {
+        return sortModusKontext(xDoc, BasePropertiesSpalte.KONFIG_PROP_CHECKIN_LISTE_SORT_MODUS);
+    }
+
+    private static String sortModusKontext(XSpreadsheetDocument xDoc, String propertySchluessel) {
+        String wert = new DocumentPropertiesHelper(xDoc)
+                .getStringProperty(propertySchluessel, TeilnehmerListeSortModus.NAME.getKey());
+        return propertySchluessel + "=" + wert;
     }
 
     // ── Helfer für Prefix-Suche ─────────────────────────────────────────────

@@ -2,6 +2,9 @@ package de.petanqueturniermanager.schweizer.spielrunde;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -11,6 +14,7 @@ import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheet;
@@ -110,6 +114,25 @@ public class SchweizerTurnierTestDatenUITest extends BaseCalcUITest {
 				.as("FBHZ muss >= 0 sein")
 				.extracting(row -> row.get(SchweizerRanglisteSheet.FBHZ_SPALTE).getIntVal(-1))
 				.allSatisfy(fbhz -> assertThat(fbhz).isGreaterThanOrEqualTo(0));
+	}
+
+	/**
+	 * Korrektheit der PTM-Metadaten: nach voller Generierung (Meldeliste, 3 Spielrunden,
+	 * Rangliste) muss jedes Blatt exakt seinen erwarteten Identitäts-Schlüssel tragen –
+	 * und kein weiteres Blatt einen unerwarteten.
+	 */
+	@Test
+	public void jedesBlattTraegtKorrektenSchluessel() throws GenerateException {
+		testDaten.generate();
+
+		Map<String, String> erwartung = new LinkedHashMap<>();
+		erwartung.put(SheetNamen.meldeliste(), SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_MELDELISTE);
+		for (int runde = 1; runde <= ANZ_RUNDEN; runde++) {
+			erwartung.put(SheetNamen.spielrunde(runde), SheetMetadataHelper.schluesselSchweizerSpielrunde(runde));
+		}
+		erwartung.put(SheetNamen.rangliste(), SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_RANGLISTE);
+
+		pruefeJedesBlattTraegtKorrektenSchluessel(erwartung);
 	}
 
 	/**

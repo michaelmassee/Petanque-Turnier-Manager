@@ -3,6 +3,8 @@ package de.petanqueturniermanager.maastrichter;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.InputStream;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,6 +17,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.random.RandomSource;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.maastrichter.korunde.KoGruppeABSheet;
 import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterVorrundenRanglisteSheetUpdate;
@@ -116,6 +119,51 @@ public class MaastrichterTurnierTestDatenUITest extends BaseCalcUITest {
 
 		XSpreadsheet koRunde = sheetHlp.findByName(SheetNamen.koRunde());
 		assertThat(koRunde).as("KoRunde-Sheet (Forme) muss nach KoGruppeABSheet.run() existieren").isNotNull();
+	}
+
+	/**
+	 * Korrektheit der PTM-Metadaten (12 Teams, 3 Vorrunden, A-Finale): Meldeliste, alle drei
+	 * Vorrunden, Vorrunden-Rangliste, Teilnehmer und das A-Finale-Bracket müssen je exakt ihren
+	 * Identitäts-Schlüssel tragen – kein weiteres Blatt einen unerwarteten.
+	 */
+	@Test
+	public void jedesBlattTraegtKorrektenSchluessel12Teams() throws GenerateException {
+		new MaastrichterTurnierTestDaten(wkingSpreadsheet).generate();
+
+		Map<String, String> erwartung = maastrichterBasisErwartung(3);
+		erwartung.put(SheetNamen.koFinaleGruppe("A"), SheetMetadataHelper.schluesselMaastrichterFinalrunde("A"));
+
+		pruefeJedesBlattTraegtKorrektenSchluessel(erwartung);
+	}
+
+	/**
+	 * Korrektheit der PTM-Metadaten (57 Teams, 4 Vorrunden, Finalgruppen A–D): zusätzlich zu den
+	 * vier Vorrunden müssen alle vier Finalgruppen-Brackets ihren Identitäts-Schlüssel tragen.
+	 */
+	@Test
+	public void jedesBlattTraegtKorrektenSchluessel57TeamsVierGruppen() throws GenerateException {
+		new Maastrichter57TeamsTurnierTestDaten(wkingSpreadsheet).generate();
+
+		Map<String, String> erwartung = maastrichterBasisErwartung(4);
+		for (String gruppe : new String[]{"A", "B", "C", "D"}) {
+			erwartung.put(SheetNamen.koFinaleGruppe(gruppe),
+					SheetMetadataHelper.schluesselMaastrichterFinalrunde(gruppe));
+		}
+
+		pruefeJedesBlattTraegtKorrektenSchluessel(erwartung);
+	}
+
+	private Map<String, String> maastrichterBasisErwartung(int anzVorrunden) {
+		Map<String, String> erwartung = new LinkedHashMap<>();
+		erwartung.put(SheetNamen.meldeliste(), SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_MELDELISTE);
+		for (int runde = 1; runde <= anzVorrunden; runde++) {
+			erwartung.put(SheetNamen.maastrichterVorrunde(runde),
+					SheetMetadataHelper.schluesselMaastrichterVorrunde(runde));
+		}
+		erwartung.put(SheetNamen.maastrichterVorrundenRangliste(),
+				SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX);
+		erwartung.put(SheetNamen.teilnehmer(), SheetMetadataHelper.SCHLUESSEL_TEILNEHMER);
+		return erwartung;
 	}
 
 	private void validiereMeldelistePerJson(int anzTeams, String referenzDatei) throws GenerateException {

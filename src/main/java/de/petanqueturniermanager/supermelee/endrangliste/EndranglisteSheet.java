@@ -42,8 +42,8 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.rangliste.RangListeSorter;
 import de.petanqueturniermanager.helper.rangliste.RangListeSpalte;
-import de.petanqueturniermanager.helper.rangliste.RanglisteEingabeSignatur;
-import de.petanqueturniermanager.helper.rangliste.RanglisteSignaturStore;
+import de.petanqueturniermanager.helper.sheetsync.EingabeSignatur;
+import de.petanqueturniermanager.helper.sheetsync.SheetSyncSignaturStore;
 import de.petanqueturniermanager.helper.rangliste.SignaturQuellen;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
@@ -160,10 +160,10 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 			processBoxinfo("processbox.header.festsetzen");
 			SheetFreeze.from(getTurnierSheet()).anzZeilen(3).anzSpalten(3).doFreeze();
 		}
-		RanglisteSignaturStore.commitVollaufbau(
+		SheetSyncSignaturStore.commitVollaufbau(
 				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
 				METADATA_SCHLUESSEL,
-				new RanglisteEingabeSignatur(SignaturQuellen::fuerSupermeleeEnd));
+				new EingabeSignatur(SignaturQuellen::fuerSupermeleeEnd));
 	}
 
 	private void printBereichDefinieren(Position footerPos) throws GenerateException {

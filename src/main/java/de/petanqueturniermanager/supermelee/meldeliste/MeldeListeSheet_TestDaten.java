@@ -35,7 +35,15 @@ import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfiguratio
 public class MeldeListeSheet_TestDaten extends SheetRunner implements ISheet {
 
 	public static final int ANZ_TESTNAMEN = 100;
-	private static final int MIN_ANZ_SPIELER = 10;
+	/** Garantierte Mindestanzahl aktiver Spieler pro Spieltag/Runde. */
+	private static final int MIN_ANZ_AKTIVE_SPIELER = 30;
+	/**
+	 * Obergrenze (exklusiv) fuer das Aktivierungs-Los der Initialbefuellung. Ein Treffer
+	 * ({@code los < AKTIVIERUNGS_SCHWELLE}) aktiviert den Spieler. Bei Los-Bereich {@code [1,5)}
+	 * ergibt der Wert 3 eine Trefferquote von ~50 % (Lose 1 und 2 von 1..4) und damit im Schnitt
+	 * deutlich mehr als {@link #MIN_ANZ_AKTIVE_SPIELER} Aktive.
+	 */
+	private static final int AKTIVIERUNGS_SCHWELLE = 3;
 
 	private final SuperMeleeKonfigurationSheet konfigurationSheet;
 	private final MeldeListeSheet_New meldeListe;
@@ -99,18 +107,26 @@ public class MeldeListeSheet_TestDaten extends SheetRunner implements ISheet {
 			}
 		}
 
-		if (meldeListe.getAktiveMeldungen().size() < MIN_ANZ_SPIELER) {
-			// zu wenig spieler, einfach 10 dazu
-			int cntr = MIN_ANZ_SPIELER;
-			Iterable<Spieler> spielerList = meldeListe.getInAktiveMeldungen().shuffle().getSpielerList();
-			for (Spieler spieler : spielerList) {
-				int spielerZeile = meldeListe.getSpielerZeileNr(spieler.getNr());
-				numVal.zeile(spielerZeile);
-				getSheetHelper().setNumberValueInCell(numVal.setValue((double) 1));
-				cntr--;
-				if (cntr < 0) {
-					break;
-				}
+		aktiveMeldungenAuffuellenAufMindestanzahl(numVal);
+	}
+
+	/**
+	 * Aktiviert so lange zufaellig ausgewaehlte inaktive Spieler, bis mindestens
+	 * {@link #MIN_ANZ_AKTIVE_SPIELER} aktive Meldungen vorliegen. Es werden nur so viele Spieler
+	 * ergaenzt, wie zum Erreichen der Grenze noetig sind (kein Ueber-Auffuellen).
+	 */
+	private void aktiveMeldungenAuffuellenAufMindestanzahl(NumberCellValue numVal) throws GenerateException {
+		int fehlende = MIN_ANZ_AKTIVE_SPIELER - meldeListe.getAktiveMeldungen().size();
+		if (fehlende <= 0) {
+			return;
+		}
+		for (Spieler spieler : meldeListe.getInAktiveMeldungen().shuffle().getSpielerList()) {
+			SheetRunner.testDoCancelTask();
+			int spielerZeile = meldeListe.getSpielerZeileNr(spieler.getNr());
+			numVal.zeile(spielerZeile);
+			getSheetHelper().setNumberValueInCell(numVal.setValue((double) 1));
+			if (--fehlende <= 0) {
+				break;
 			}
 		}
 	}
@@ -129,10 +145,12 @@ public class MeldeListeSheet_TestDaten extends SheetRunner implements ISheet {
 
 			int randomNum = RandomSource.nextInt(1, 5);
 			numVal.zeile(zeileCnt);
-			if (randomNum == 1) {
+			if (randomNum < AKTIVIERUNGS_SCHWELLE) {
 				getSheetHelper().setNumberValueInCell(numVal.setValue((double) 1));
 			}
 		}
+
+		aktiveMeldungenAuffuellenAufMindestanzahl(numVal);
 	}
 
 	/**

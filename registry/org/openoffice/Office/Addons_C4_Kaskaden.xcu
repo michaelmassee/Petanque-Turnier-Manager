@@ -92,12 +92,28 @@
 							</node>
 
 							<node oor:name="C4A5" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Check-in List</value>
+									<value xml:lang="de">Checkin Liste</value>
+									<value xml:lang="es">Lista de registro</value>
+									<value xml:lang="fr">Liste de pointage</value>
+									<value xml:lang="nl">Inchecklijst</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:kaskade_checkin</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+							<node oor:name="C4A6" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
 
-							<node oor:name="C4A6" oor:op="replace">
+							<node oor:name="C4A7" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Next Cascade Round</value>
 									<value xml:lang="de">Neue Kaskadenrunde</value>
@@ -113,7 +129,7 @@
 								</prop>
 							</node>
 
-							<node oor:name="C4A7" oor:op="replace">
+							<node oor:name="C4A8" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Rebuild Current Round</value>
 									<value xml:lang="de">Aktuelle Runde neu erstellen</value>
@@ -129,13 +145,13 @@
 								</prop>
 							</node>
 
-							<node oor:name="C4A8" oor:op="replace">
+							<node oor:name="C4A9" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
 
-							<node oor:name="C4A9" oor:op="replace">
+							<node oor:name="C4A10" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Create KO Fields</value>
 									<value xml:lang="de">KO-Felder erstellen</value>

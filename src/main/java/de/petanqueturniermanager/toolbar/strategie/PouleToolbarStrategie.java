@@ -6,6 +6,7 @@ package de.petanqueturniermanager.toolbar.strategie;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.poule.ko.PouleKoSheet;
 import de.petanqueturniermanager.poule.meldeliste.PouleTeilnehmerSheet;
+import de.petanqueturniermanager.poule.meldeliste.PouleCheckinListeSheet;
 import de.petanqueturniermanager.poule.rangliste.PouleVorrundenRanglisteSheet;
 import de.petanqueturniermanager.poule.vorrunde.PouleVorrundeSheet;
 import de.petanqueturniermanager.toolbar.ITurnierSystemToolbarStrategie;
@@ -30,6 +31,11 @@ public class PouleToolbarStrategie implements ITurnierSystemToolbarStrategie {
     @Override
     public void teilnehmer(WorkingSpreadsheet ws) throws Exception {
         new PouleTeilnehmerSheet(ws).testTurnierVorhanden().start();
+    }
+
+    @Override
+    public void checkin(WorkingSpreadsheet ws) throws Exception {
+        new PouleCheckinListeSheet(ws).testTurnierVorhanden().backUpDocument().start();
     }
 
     @Override

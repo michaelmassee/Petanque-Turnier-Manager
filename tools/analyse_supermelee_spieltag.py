@@ -5,9 +5,11 @@ Konsistenz-Analyse für eine Supermelee-Spieltag-ODS.
 Liest direkt aus der ODS (content.xml + meta.xml) und prüft:
   1. Mitspieler-Wiederholungen (gleiche Spieler 2× im selben Team)
   2. Gegner-Wiederholungen (Spielerpaar trifft sich mehrfach als Gegner)
-  3. Rangliste-Werte (Σ+, Σ-, Δ, Siege, Punkte) gegen Spielrunden-Daten,
+  3. Crossover (Spielerpaar mehrfach im selben Spiel — egal ob Mitspieler
+     oder Gegner; weicher Constraint des Supermelee-Algorithmus)
+  4. Rangliste-Werte (Σ+, Σ-, Δ, Siege, Punkte) gegen Spielrunden-Daten,
      inkl. der konfigurierten Default-Punkte für nicht angetretene Spieler
-  4. Rangliste-Sortierung (Siege ↓ → Punkte ↓ → Δ ↓ → Σ+ ↓)
+  5. Rangliste-Sortierung (Siege ↓ → Punkte ↓ → Δ ↓ → Σ+ ↓)
 
 Konfiguration wird aus den ODS-Document-Properties gelesen (meta.xml,
 Property-Namen "Nicht gespielte Runde, + Punkte" / "... - Punkte"); fehlt
@@ -15,6 +17,10 @@ sie, gelten die Defaults aus SuperMeleePropertiesSpalte.java (0 / 13).
 
 Verwendung:
     python3 tools/analyse_supermelee_spieltag.py <pfad/zur/datei.ods>
+
+SYNC-CHECK: Spalten-Konstanten und Prüflogik müssen synchron mit
+SupermeleeSpieltagAnalyseAssert.java (src/test/java/.../spieltagrangliste/) bleiben.
+Sync-Verifikation: python3 tools/test_analyse_supermelee_sync.py
 """
 import argparse
 import re
@@ -257,8 +263,23 @@ def main():
             print(f'     {n}× : {a:>3} {nm(a):28s}  vs  {b:>3} {nm(b)}')
     print()
 
-    # --- 3) Rangliste-Werte ---
-    print(f'--- 3) RANGLISTE-WERTE  ({rl_name}) ---')
+    # --- 3) Crossover: Paar war sowohl Mitspieler als auch Gegner (Rollenwechsel) ---
+    # Nur Paare mit mitspieler > 0 UND gegner > 0 — Fall "2× Mitspieler" oder
+    # "2× Gegner" ist bereits in den vorigen Abschnitten erfasst und zählt hier nicht.
+    alle_paare = set(mitspieler) | set(gegner)
+    cw = {k: (mitspieler.get(k, 0), gegner.get(k, 0))
+          for k in alle_paare
+          if mitspieler.get(k, 0) > 0 and gegner.get(k, 0) > 0}
+    print('--- 3) CROSSOVER (Paar war sowohl Mitspieler als auch Gegner) ---')
+    print(f'  Spielerpaare insgesamt im selben Spiel: {len(alle_paare)}, davon Rollenwechsel: {len(cw)}')
+    if cw:
+        def nm(n): return stats.get(n, {}).get('name') or f'#{n}'
+        for (a, b), (ms, gg) in sorted(cw.items(), key=lambda x: (-(x[1][0]+x[1][1]), x[0])):
+            print(f'     {a:>3} {nm(a):28s}  +  {b:>3} {nm(b):28s}  (Team {ms}×, Gegner {gg}×)')
+    print()
+
+    # --- 4) Rangliste-Werte ---
+    print(f'--- 4) RANGLISTE-WERTE  ({rl_name}) ---')
     if rangliste is None:
         print('  ⚠ Rangliste-Sheet nicht gefunden')
     else:
@@ -300,9 +321,9 @@ def main():
             for rl, fehlt, diffs in abweich[:30]:
                 print(f'     #{rl["nr"]:>3} {rl["name"]:30s} fehlt={fehlt}  {", ".join(diffs)}')
 
-    # --- 4) Sortierung ---
+    # --- 5) Sortierung ---
     print()
-    print('--- 4) RANGLISTE-SORTIERUNG (Siege ↓ → Punkte ↓ → Δ ↓ → Σ+ ↓) ---')
+    print('--- 5) RANGLISTE-SORTIERUNG (Siege ↓ → Punkte ↓ → Δ ↓ → Σ+ ↓) ---')
     if rangliste:
         soll = sorted(rangliste,
                       key=lambda x: (-(x['siege'] or 0), -(x['punkte'] or 0),

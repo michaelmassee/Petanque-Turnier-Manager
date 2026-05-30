@@ -5,6 +5,7 @@ package de.petanqueturniermanager.toolbar.strategie;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.formulex.meldeliste.FormuleXTeilnehmerSheet;
+import de.petanqueturniermanager.formulex.meldeliste.FormuleXCheckinListeSheet;
 import de.petanqueturniermanager.formulex.spielrunde.FormuleXSpielrundeSheetNaechste;
 import de.petanqueturniermanager.formulex.spielrunde.FormuleXSpielrundeSheetUpdate;
 import de.petanqueturniermanager.toolbar.ITurnierSystemToolbarStrategie;
@@ -34,6 +35,11 @@ public class FormuleXToolbarStrategie implements ITurnierSystemToolbarStrategie 
     @Override
     public void teilnehmer(WorkingSpreadsheet ws) throws Exception {
         new FormuleXTeilnehmerSheet(ws).testTurnierVorhanden().start();
+    }
+
+    @Override
+    public void checkin(WorkingSpreadsheet ws) throws Exception {
+        new FormuleXCheckinListeSheet(ws).testTurnierVorhanden().backUpDocument().start();
     }
 
     @Override

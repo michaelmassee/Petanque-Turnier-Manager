@@ -30,24 +30,22 @@ public class TripTetePropertiesSpalte extends BasePropertiesSpalte implements IT
 		ADDBaseProp(KONFIG_PROPERTIES);
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELPLAN_COLOR_BACK_GERADE)
-				.setDefaultVal(DEFAULT_GERADE_BACK_COLOR).setDescription("config.desc.triptete.spielplan.gerade")
-				.inSideBar());
+				.setDefaultVal(DEFAULT_GERADE_BACK_COLOR).setDescription("config.desc.triptete.spielplan.gerade"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELPLAN_COLOR_BACK_UNGERADE)
 				.setDefaultVal(DEFAULT_UNGERADE_BACK_COLOR)
-				.setDescription("config.desc.triptete.spielplan.ungerade").inSideBar());
+				.setDescription("config.desc.triptete.spielplan.ungerade"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELPLAN_COLOR_BACK_HEADER)
-				.setDefaultVal(DEFAULT_HEADER_BACK_COLOR).setDescription("config.desc.triptete.spielplan.header")
-				.inSideBar());
+				.setDefaultVal(DEFAULT_HEADER_BACK_COLOR).setDescription("config.desc.triptete.spielplan.header"));
 
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_LINKS)
-				.setDescription("config.desc.header.links").inSideBar());
+				.setDescription("config.desc.header.links"));
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_MITTE)
-				.setDescription("config.desc.header.mitte").inSideBar());
+				.setDescription("config.desc.header.mitte"));
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_RECHTS)
-				.setDescription("config.desc.header.rechts").inSideBar());
+				.setDescription("config.desc.header.rechts"));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_SPIELZIEL)
-				.setDefaultVal(13).setDescription("config.desc.triptete.spielziel").inSideBar());
+				.setDefaultVal(13).setDescription("config.desc.triptete.spielziel"));
 	}
 
 	TripTetePropertiesSpalte(ISheet sheet) {

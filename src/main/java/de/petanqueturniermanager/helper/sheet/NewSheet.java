@@ -170,7 +170,7 @@ public class NewSheet extends BaseHelper {
 			turnierSheet = TurnierSheet.from(sheet, getWorkingSpreadsheet());
 			if (createNewIfExist) {
 				// setActiv() nur wenn der User einen Dialog sieht – bei forceCreate() (programmatisch)
-				// würde setActiv() unnötig den RanglisteRefreshListener auslösen (isRunning=false im Test)
+				// würde setActiv() unnötig den SheetSyncListener auslösen (isRunning=false im Test)
 				if (!forceOkCreateNewWhenExist) {
 					turnierSheet.setActiv();
 				}

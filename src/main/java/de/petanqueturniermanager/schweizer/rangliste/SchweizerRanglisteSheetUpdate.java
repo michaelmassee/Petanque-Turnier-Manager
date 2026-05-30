@@ -19,7 +19,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
  * {@code NewSheet.forceCreate()}) schreibt diese Klasse nur den Datenbereich neu.
  * Header, Spaltenbreiten und Metadaten bleiben unverändert.
  * <p>
- * Wird vom {@link de.petanqueturniermanager.helper.rangliste.RanglisteRefreshListener}
+ * Wird vom {@link de.petanqueturniermanager.helper.sheetsync.SheetSyncListener}
  * verwendet, um bei einem Tab-Wechsel zur Rangliste nur die Daten zu aktualisieren –
  * ohne das Sheet zu löschen und neu anzulegen.
  * <p>

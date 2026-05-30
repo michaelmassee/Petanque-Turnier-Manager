@@ -9,12 +9,18 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 import com.sun.star.beans.XPropertySet;
+import com.sun.star.container.XNamed;
 import com.sun.star.sheet.XCalculatable;
 import com.sun.star.util.CellProtection;
 import com.sun.star.util.XProtectable;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.assertj.core.api.SoftAssertions;
@@ -33,6 +39,7 @@ import com.sun.star.sheet.XSpreadsheetDocument;
 
 import de.petanqueturniermanager.comp.OfficeDocumentHelper;
 import de.petanqueturniermanager.comp.OfficeStarter;
+import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
@@ -193,6 +200,10 @@ public abstract class BaseCalcUITest {
 	@AfterAll
 	public static void shutDown() {
 		BaseCalcUITest.starter.closeOffice();
+		// Static-State der Test-JVM zurücksetzen: turnierEventHandler-Dispatcher und sharedContext
+		// zeigen sonst auf die soeben terminierte LO-Instanz und reißen die nächste Test-Klasse
+		// mit DisposedException ab.
+		PetanqueTurnierMngrSingleton.resetForTest();
 	}
 
 	@AfterEach
@@ -374,6 +385,59 @@ public abstract class BaseCalcUITest {
 				}
 			}
 		}
+		soft.assertAll();
+	}
+
+	/**
+	 * Liefert alle Nicht-Score-Identitäts-Schlüssel ({@code __PTM_*}, ohne {@code __PTM_SCORE_*})
+	 * gruppiert nach dem Blattnamen, auf den ihr Named Range aufgelöst wird. Grundlage für die
+	 * Eindeutigkeits- und Korrektheitsprüfungen der PTM-Metadaten.
+	 */
+	protected Map<String, List<String>> identitaetsSchluesselProBlatt() {
+		XSpreadsheetDocument xDoc = wkingSpreadsheet.getWorkingSpreadsheetDocument();
+		Map<String, List<String>> proBlatt = new LinkedHashMap<>();
+		for (String schluessel : SheetMetadataHelper.getSchluesselMitPrefix(xDoc, "__PTM_")) {
+			if (schluessel.startsWith("__PTM_SCORE_")) {
+				continue;
+			}
+			SheetMetadataHelper.findeSheet(xDoc, schluessel).ifPresent(sheet ->
+					proBlatt.computeIfAbsent(Lo.qi(XNamed.class, sheet).getName(), k -> new ArrayList<>())
+							.add(schluessel));
+		}
+		return proBlatt;
+	}
+
+	/** Liefert die Identitäts-Schlüssel, die auf das gegebene Blatt zeigen. */
+	protected List<String> schluesselFuer(XSpreadsheet sheet) {
+		String name = Lo.qi(XNamed.class, sheet).getName();
+		return identitaetsSchluesselProBlatt().getOrDefault(name, List.of());
+	}
+
+	/**
+	 * Prüft, dass nach vollständiger Turnier-Generierung jedes Blatt exakt seinen erwarteten
+	 * PTM-Identitäts-Schlüssel trägt. Geprüft wird in beide Richtungen:
+	 * <ol>
+	 *   <li><b>Korrektheit:</b> jedes in {@code erwartung} genannte Blatt existiert und trägt
+	 *       genau den dort hinterlegten Schlüssel (kein fehlender, kein fremder, kein zweiter).</li>
+	 *   <li><b>Vollständigkeit:</b> kein darüber hinausgehendes Blatt trägt einen
+	 *       Identitäts-Schlüssel.</li>
+	 * </ol>
+	 * Alle Abweichungen werden über {@link SoftAssertions} gesammelt, damit ein einzelner
+	 * Testlauf das komplette Soll/Ist-Delta meldet.
+	 *
+	 * @param erwartung Soll-Zuordnung Blattname → erwarteter Identitäts-Schlüssel
+	 */
+	protected void pruefeJedesBlattTraegtKorrektenSchluessel(Map<String, String> erwartung) {
+		Map<String, List<String>> proBlatt = identitaetsSchluesselProBlatt();
+		SoftAssertions soft = new SoftAssertions();
+		erwartung.forEach((blattName, erwarteterSchluessel) ->
+				soft.assertThat(proBlatt.get(blattName))
+						.as("Blatt '%s' muss genau den Identitäts-Schlüssel '%s' tragen",
+								blattName, erwarteterSchluessel)
+						.containsExactly(erwarteterSchluessel));
+		soft.assertThat(proBlatt.keySet())
+				.as("Nur die erwarteten Blätter dürfen einen Identitäts-Schlüssel tragen")
+				.containsExactlyInAnyOrderElementsOf(erwartung.keySet());
 		soft.assertAll();
 	}
 

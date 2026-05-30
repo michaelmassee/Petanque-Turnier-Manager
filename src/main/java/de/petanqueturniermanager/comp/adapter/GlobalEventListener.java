@@ -13,6 +13,7 @@ import com.sun.star.frame.XModel;
 import com.sun.star.lang.EventObject;
 import com.sun.star.sheet.XSpreadsheetView;
 
+import de.petanqueturniermanager.comp.StartupClock;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.LogUtil;
@@ -56,6 +57,8 @@ public class GlobalEventListener implements XEventListener {
 			if (logger.isDebugEnabled()) {
 				logger.debug("{} [controller={}]", event, ermittleControllerTyp(docEvent.Source));
 			}
+			// Erstes Vorkommen jedes Event-Typs zur Startup-Vermessung loggen
+			StartupClock.logErstesVorkommen("event:" + event, "GlobalEvent " + event);
 
 			// https://wiki.openoffice.org/wiki/Documentation/DevGuide/WritingUNO/Jobs/List_of_Supported_Events
 			// https://api.libreoffice.org/docs/idl/ref/servicecom_1_1sun_1_1star_1_1document_1_1Events.html

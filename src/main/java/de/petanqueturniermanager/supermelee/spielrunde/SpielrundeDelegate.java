@@ -119,11 +119,14 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 		return true;
 	}
 
-	boolean neueSpielrunde(SpielerMeldungen meldungen, SpielRundeNr neueSpielrundeNr) throws GenerateException {
-		return neueSpielrunde(meldungen, neueSpielrundeNr, sheet.isForceOk());
+	boolean neueSpielrunde(SpielerMeldungen meldungen, SpielRundeNr neueSpielrundeNr,
+			int historieAbSpielrunde, int historieBisSpielrunde) throws GenerateException {
+		return neueSpielrunde(meldungen, neueSpielrundeNr, sheet.isForceOk(),
+				historieAbSpielrunde, historieBisSpielrunde);
 	}
 
-	boolean neueSpielrunde(SpielerMeldungen meldungen, SpielRundeNr neueSpielrundeNr, boolean force)
+	boolean neueSpielrunde(SpielerMeldungen meldungen, SpielRundeNr neueSpielrundeNr, boolean force,
+			int historieAbSpielrunde, int historieBisSpielrunde)
 			throws GenerateException {
 		checkNotNull(meldungen);
 
@@ -193,48 +196,130 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 		}
 
 		SuperMeleePaarungenV2 paarungen = new SuperMeleePaarungenV2();
+		paarungen.setSpieltagNrFuerLog(sheet.getSpielTag().getNr());
+		// Den konfigurierten Wert auf die tatsächlich vorhandenen vergangenen Spieltage deckeln:
+		// mehr zu berücksichtigen ist wirkungslos (gespieltenRundenEinlesenMitLimit floored ohnehin),
+		// erzeugt aber im Lockerungs-Loop zahlreiche identische, erneut scheiternde Auslosungsversuche.
+		// Wichtig: Der Write-Back unten vergleicht gegen diesen gedeckelten Startwert, nicht gegen den
+		// rohen Config-Wert – sonst würde an frühen Spieltagen bereits der erfolgreiche Erstversuch
+		// einen (zu kleinen) Wert in die Konfiguration zurückschreiben.
+		int anzVergangeneSpieltage = Math.max(0, sheet.getSpielTag().getNr() - 1);
+		int startMaxSpieltage = Math.min(sheet.getMaxAnzGespielteSpieltage(), anzVergangeneSpieltage);
+		int effMaxSpieltage = startMaxSpieltage;
+		MeleeSpielRunde meleeSpielRunde = null;
+		AlgorithmenException lastEx = null;
+
+		while (meleeSpielRunde == null) {
+			try {
+				if (superMeleeMode == SuperMeleeMode.Triplette) {
+					meleeSpielRunde = paarungen.neueSpielrundeTripletteMode(neueSpielrundeNr.getNr(), meldungen,
+							doubletteRunde);
+				} else {
+					meleeSpielRunde = paarungen.neueSpielrundeDoubletteMode(neueSpielrundeNr.getNr(), meldungen,
+							tripletteRunde);
+				}
+			} catch (AlgorithmenException e) {
+				lastEx = e;
+				if (effMaxSpieltage <= 0) {
+					break;
+				}
+				effMaxSpieltage--;
+				logger.info(
+						"Auslosung fehlgeschlagen ({}). Lockerung: berücksichtige nur noch {} vergangene Spieltage.",
+						e.getMessage(), effMaxSpieltage);
+				sheet.processBoxinfo("processbox.spielrunde.lockerung", effMaxSpieltage);
+				try {
+					meldungen.resetTeam();
+				} catch (AlgorithmenException resetEx) {
+					logger.error(resetEx.getMessage(), resetEx);
+					throw new GenerateException(I18n.get("error.spielrunde.einlesen"));
+				}
+				meldungen.resetAllHistorie();
+				gespieltenRundenEinlesenMitLimit(meldungen, effMaxSpieltage,
+						historieAbSpielrunde, historieBisSpielrunde);
+			}
+		}
+
+		boolean randomFallbackAktiv = false;
+		if (meleeSpielRunde == null) {
+			logger.warn("Auslosung mit Lockerung gescheitert — erzeuge Zufalls-Spielplan. Ursache: {}",
+					lastEx.getMessage());
+			try {
+				meldungen.resetTeam();
+			} catch (AlgorithmenException resetEx) {
+				logger.error(resetEx.getMessage(), resetEx);
+				throw new GenerateException(I18n.get("error.spielrunde.einlesen"));
+			}
+			meldungen.resetAllHistorie();
+			try {
+				meleeSpielRunde = paarungen.erzeugeZufallsRunde(neueSpielrundeNr.getNr(), meldungen, doubletteRunde);
+			} catch (AlgorithmenException randomEx) {
+				logger.error(randomEx.getMessage(), randomEx);
+				sheet.getSheetHelper().setActiveSheet(getMeldeListe().getXSpreadSheet());
+				sheet.getSheetHelper().removeSheet(getSheetName(sheet.getSpielTag(), sheet.getSpielRundeNr()));
+				konfigurationSheet.setAktiveSpielRunde(SpielRundeNr.from(sheet.getSpielRundeNr().getNr() - 1));
+				MessageBox.from(sheet.getxContext(), MessageBoxTypeEnum.ERROR_OK)
+						.caption(I18n.get("msg.caption.fehler.auslosen"))
+						.message(randomEx.getMessage()).show();
+				throw new RuntimeException(randomEx);
+			}
+			randomFallbackAktiv = true;
+		}
+
+		if (!randomFallbackAktiv && effMaxSpieltage < startMaxSpieltage) {
+			logger.info("Auslosung erfolgreich nach Lockerung: maxAnzGespielteSpieltage {} → {}",
+					startMaxSpieltage, effMaxSpieltage);
+			sheet.processBoxinfo("processbox.spielrunde.lockerung.uebernommen",
+					startMaxSpieltage, effMaxSpieltage);
+			konfigurationSheet.setMaxAnzGespielteSpieltage(effMaxSpieltage);
+		}
+
 		try {
-			MeleeSpielRunde meleeSpielRunde;
-			if (superMeleeMode == SuperMeleeMode.Triplette) {
-				meleeSpielRunde = paarungen.neueSpielrundeTripletteMode(neueSpielrundeNr.getNr(), meldungen,
-						doubletteRunde);
-			} else {
-				meleeSpielRunde = paarungen.neueSpielrundeDoubletteMode(neueSpielrundeNr.getNr(), meldungen,
-						tripletteRunde);
-			}
-
 			meleeSpielRunde.validateSpielerTeam(null);
-			headerPaarungen(sheet.getXSpreadSheet(), meleeSpielRunde);
-			headerSpielerNr(sheet.getXSpreadSheet());
-			spielerNummerEinfuegen(meleeSpielRunde);
-			vertikaleErgbnisseFormulaEinfuegen(meleeSpielRunde);
-			datenErsteSpalte();
-			datenformatieren(sheet.getXSpreadSheet());
-			spielrundeProperties(sheet.getXSpreadSheet());
-			wennNurDoubletteRundeDannSpaltenAusblenden(sheet.getXSpreadSheet(), doubletteRunde);
-			printBereichDefinieren(sheet.getXSpreadSheet());
-			if (konfigurationSheet.getSpielrundePlan()) {
-				new SpielrundePlan(sheet.getWorkingSpreadsheet()).generate();
-			}
-
 		} catch (AlgorithmenException e) {
 			logger.error(e.getMessage(), e);
-			sheet.getSheetHelper().setActiveSheet(getMeldeListe().getXSpreadSheet());
-			sheet.getSheetHelper().removeSheet(getSheetName(sheet.getSpielTag(), sheet.getSpielRundeNr()));
-			konfigurationSheet.setAktiveSpielRunde(SpielRundeNr.from(sheet.getSpielRundeNr().getNr() - 1));
-			MessageBox.from(sheet.getxContext(), MessageBoxTypeEnum.ERROR_OK)
-					.caption(I18n.get("msg.caption.fehler.auslosen"))
-					.message(e.getMessage()).show();
-			throw new RuntimeException(e);
+			throw new GenerateException(e.getMessage());
+		}
+		headerPaarungen(sheet.getXSpreadSheet(), meleeSpielRunde);
+		headerSpielerNr(sheet.getXSpreadSheet());
+		spielerNummerEinfuegen(meleeSpielRunde);
+		vertikaleErgbnisseFormulaEinfuegen(meleeSpielRunde);
+		datenErsteSpalte();
+		datenformatieren(sheet.getXSpreadSheet());
+		spielrundeProperties(sheet.getXSpreadSheet());
+		wennNurDoubletteRundeDannSpaltenAusblenden(sheet.getXSpreadSheet(), doubletteRunde);
+		printBereichDefinieren(sheet.getXSpreadSheet());
+		if (konfigurationSheet.getSpielrundePlan()) {
+			new SpielrundePlan(sheet.getWorkingSpreadsheet()).generate();
+		}
+
+		if (randomFallbackAktiv) {
+			MessageBox.from(sheet.getxContext(), MessageBoxTypeEnum.WARN_OK)
+					.forceOk(force)
+					.caption(I18n.get("msg.caption.zufalls.spielplan"))
+					.message(I18n.get("msg.text.zufalls.spielplan",
+							sheet.getSpielTag().getNr(), neueSpielrundeNr.getNr()))
+					.show();
 		}
 		return true;
 	}
 
 	void gespieltenRundenEinlesen(SpielerMeldungen aktiveMeldungen, int abSpielrunde, int bisSpielrunde)
 			throws GenerateException {
+		gespieltenRundenEinlesenMitLimit(aktiveMeldungen, sheet.getMaxAnzGespielteSpieltage(),
+				abSpielrunde, bisSpielrunde);
+	}
+
+	/**
+	 * Liest die Paarungs-Historie aus den vergangenen Spieltagen + aktuellem Spieltag
+	 * in {@code aktiveMeldungen} ein. Im Gegensatz zu {@link #gespieltenRundenEinlesen}
+	 * wird das Spieltag-Limit hier explizit übergeben — dadurch kann der Retry-Pfad
+	 * der Auslosung mit schrittweise reduziertem Historienfenster reloaden.
+	 */
+	void gespieltenRundenEinlesenMitLimit(SpielerMeldungen aktiveMeldungen, int maxAnzGespielteSpieltage,
+			int abSpielrunde, int bisSpielrunde) throws GenerateException {
 		SpielTagNr aktuelleSpielTag = sheet.getSpielTag();
 
-		Integer maxAnzGespielteSpieltage = sheet.getMaxAnzGespielteSpieltage();
 		int bisVergangeneSpieltag = aktuelleSpielTag.getNr() - 1 - maxAnzGespielteSpieltage;
 		if (bisVergangeneSpieltag < 0) {
 			bisVergangeneSpieltag = 0;

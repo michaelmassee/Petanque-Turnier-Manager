@@ -24,6 +24,7 @@ import de.petanqueturniermanager.webserver.TurnierStatusErmittler;
 import de.petanqueturniermanager.webserver.WebServerManager;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.LoMainThread;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.sidebar.BaseSidebarContent;
 import de.petanqueturniermanager.sidebar.GuiFactory;
@@ -49,9 +50,13 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
     private volatile XControl timerIconControl;
     private volatile XControl webserverIconControl;
     private volatile XFixedText webserverStatusLabel;
-    private final Runnable runnerZustandListener = this::runnerZustandAktualisieren;
-    private final Runnable webserverStatusListener = this::webserverStatusAktualisieren;
-    private final Runnable versionUpdateCallback = this::versionLabelAktualisieren;
+    // Diese Listener feuern aus Hintergrund-Threads (SheetRunner-Worker, WebServerManager,
+    // ReleaseUpdateService). Ihre Rümpfe rufen label.setText(...) auf – eine VCL-Operation,
+    // die NUR auf dem LO-Main-Thread laufen darf (sonst Freeze/Deadlock auf der SolarMutex,
+    // v.a. Windows). Daher via aufMainThread(...) marshallen.
+    private final Runnable runnerZustandListener = () -> aufMainThread(this::runnerZustandAktualisieren);
+    private final Runnable webserverStatusListener = () -> aufMainThread(this::webserverStatusAktualisieren);
+    private final Runnable versionUpdateCallback = () -> aufMainThread(this::versionLabelAktualisieren);
 
     public InfoSidebarContent(WorkingSpreadsheet workingSpreadsheet, XWindow parentWindow, XSidebar xSidebar) {
         super(workingSpreadsheet, parentWindow, xSidebar);
@@ -86,7 +91,7 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
         }
 
         var schrittBildUrl = ExtensionsHelper.from(getCurrentSpreadsheet().getxContext())
-                .getImageUrlDir() + "sidebar-fortschritt.png";
+                .getImageUrlDir() + "sidebar/fortschritt-20px.png";
         XControl schrittIconControl = GuiFactory.createBildControl(
                 getGuiFactoryCreateParam(), schrittBildUrl, new Rectangle(0, 0, 20, 20), null);
 
@@ -147,6 +152,11 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
 
     @Override
     public void onChange(TimerState state) {
+        // Feuert aus dem TimerManager-Thread → VCL-Updates auf den Main-Thread verschieben.
+        aufMainThread(() -> timerAnzeigeAktualisieren(state));
+    }
+
+    private void timerAnzeigeAktualisieren(TimerState state) {
         var label = timerLabel;
         if (label != null) {
             try {
@@ -222,6 +232,19 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
         } catch (IllegalStateException e) {
             // Service nie initialisiert worden – ok.
         }
+    }
+
+    /**
+     * Verschiebt eine UI-Aktualisierung via {@link LoMainThread#post} auf den LO-Main-Thread.
+     * Wird von den aus Hintergrund-Threads gefeuerten Listenern genutzt, damit VCL-Operationen
+     * (z.B. {@code setText}) nicht off-thread laufen.
+     */
+    private void aufMainThread(Runnable aktion) {
+        var ws = getCurrentSpreadsheet();
+        if (ws == null) {
+            return;
+        }
+        LoMainThread.post(ws.getxContext(), aktion);
     }
 
     private void runnerZustandAktualisieren() {
@@ -330,9 +353,9 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
 
     private String timerIconDateiname(TimerState state) {
         return switch (state.zustand()) {
-            case LAEUFT -> "toolbar-timer-start.png";
-            case PAUSIERT -> "toolbar-timer-pause.png";
-            default -> "toolbar-timer-stop.png";
+            case LAEUFT -> "sidebar/timer-start-20px.png";
+            case PAUSIERT -> "sidebar/timer-pause-20px.png";
+            default -> "sidebar/timer-stop-20px.png";
         };
     }
 
@@ -344,8 +367,8 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
 
     private String webserverIconDateiname() {
         return WebServerManager.get().isLaeuft()
-                ? "toolbar-webserver-starten.png"
-                : "toolbar-webserver-stoppen.png";
+                ? "sidebar/webserver-starten-20px.png"
+                : "sidebar/webserver-stoppen-20px.png";
     }
 
     private void webserverStatusAktualisieren() {

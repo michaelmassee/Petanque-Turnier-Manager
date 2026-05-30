@@ -28,6 +28,15 @@ public interface ITurnierSystemToolbarStrategie {
     void teilnehmer(WorkingSpreadsheet ws) throws Exception;
 
     /**
+     * Erstellt oder aktualisiert die Checkin-Liste des Turniersystems.
+     * Nur für Systeme mit Checkin-Liste implementiert; alle anderen Systeme
+     * delegieren an {@link de.petanqueturniermanager.toolbar.strategie.NichtVerfuegbarToolbarStrategie},
+     * die beim Klick eine Hinweis-Meldung anzeigt (der Toolbar-Button wird
+     * bewusst nicht deaktiviert, siehe LO-Toolbar-Bug bei enable/disable).
+     */
+    void checkin(WorkingSpreadsheet ws) throws Exception;
+
+    /**
      * Löst die aktuelle Spielrunde neu aus. Nur für rundenbasierte Systeme implementiert;
      * alle anderen Systeme delegieren an {@link de.petanqueturniermanager.toolbar.strategie.NichtVerfuegbarToolbarStrategie}.
      */

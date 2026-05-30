@@ -126,9 +126,9 @@ public class SpielrundeSheet_Naechste extends SheetRunner
 		return delegate.canStart(meldungen);
 	}
 
-	protected boolean neueSpielrunde(SpielerMeldungen meldungen, SpielRundeNr neueSpielrundeNr)
-			throws GenerateException {
-		return delegate.neueSpielrunde(meldungen, neueSpielrundeNr);
+	protected boolean neueSpielrunde(SpielerMeldungen meldungen, SpielRundeNr neueSpielrundeNr,
+			int historieAbSpielrunde, int historieBisSpielrunde) throws GenerateException {
+		return delegate.neueSpielrunde(meldungen, neueSpielrundeNr, historieAbSpielrunde, historieBisSpielrunde);
 	}
 
 	void gespieltenRundenEinlesen(SpielerMeldungen aktiveMeldungen, int abSpielrunde, int bisSpielrunde)
@@ -182,14 +182,15 @@ public class SpielrundeSheet_Naechste extends SheetRunner
 			neueSpielrunde++;
 		}
 
-		gespieltenRundenEinlesen(aktiveMeldungen, getKonfigurationSheet().getSpielRundeNeuAuslosenAb(),
-				neueSpielrunde - 1);
+		int historieAb = getKonfigurationSheet().getSpielRundeNeuAuslosenAb();
+		int historieBis = neueSpielrunde - 1;
+		gespieltenRundenEinlesen(aktiveMeldungen, historieAb, historieBis);
 
 		if (neueSpielrunde >= 2) {
 			vorNaechsterRunde();
 		}
 
-		return neueSpielrunde(aktiveMeldungen, SpielRundeNr.from(neueSpielrunde));
+		return neueSpielrunde(aktiveMeldungen, SpielRundeNr.from(neueSpielrunde), historieAb, historieBis);
 	}
 
 	/**

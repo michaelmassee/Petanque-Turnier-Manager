@@ -18,6 +18,7 @@ import com.sun.star.beans.PropertyValue;
 import com.sun.star.frame.DispatchDescriptor;
 import com.sun.star.frame.FeatureStateEvent;
 import com.sun.star.frame.XController;
+import com.sun.star.frame.XController2;
 import com.sun.star.frame.XDispatch;
 import com.sun.star.frame.XDispatchProvider;
 import com.sun.star.frame.XFrame;
@@ -32,6 +33,9 @@ import com.sun.star.lib.uno.helper.WeakBase;
 import com.sun.star.registry.XRegistryKey;
 import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.sheet.XSpreadsheetView;
+import com.sun.star.ui.XDeck;
+import com.sun.star.ui.XDecks;
+import com.sun.star.ui.XSidebarProvider;
 import com.sun.star.ui.dialogs.ExecutableDialogResults;
 import com.sun.star.ui.dialogs.FolderPicker;
 import com.sun.star.ui.dialogs.XFolderPicker2;
@@ -39,10 +43,11 @@ import com.sun.star.util.URL;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
+import de.petanqueturniermanager.basesheet.meldeliste.TeilnehmerListeSortModus;
 import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
 import de.petanqueturniermanager.timer.TimerDialog;
 import de.petanqueturniermanager.timer.TimerManager;
-import de.petanqueturniermanager.timer.TimerZustand;
 import de.petanqueturniermanager.webserver.CompositeViewListeDialog;
 import de.petanqueturniermanager.webserver.WebServerManager;
 import de.petanqueturniermanager.comp.newrelease.DirectUpdate;
@@ -53,6 +58,8 @@ import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEventListener;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.LoMainThread;
+import de.petanqueturniermanager.helper.perflog.PerfLog;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
@@ -111,9 +118,7 @@ import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterMeldeListeS
 import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterMeldeListeSheetUpdate;
 import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterTeilnehmerSheet;
 import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterVorrundenRanglisteSheet;
-import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.maastrichter.spielrunde.MaastrichterSpielrundeSheetNaechste;
-import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrundeSheet;
 import de.petanqueturniermanager.maastrichter.spielrunde.MaastrichterSpielrundeSheetUpdate;
 import de.petanqueturniermanager.poule.Poule37TeamsTurnierTestDaten;
 import de.petanqueturniermanager.poule.PouleTurnierTestDaten;
@@ -234,7 +239,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_JGJ_TESTDATEN_TURNIER_DOUBLETTE_17 = "jgj_testdaten_turnier_doublette_17";
 	// Schweizer
 	public static final String CMD_SCHWEIZER_START = "schweizer_start";
-	public static final String CMD_SCHWEIZER_NEUE_MELDELISTE = "schweizer_neue_meldeliste";
 	public static final String CMD_SCHWEIZER_UPDATE_MELDELISTE = "schweizer_update_meldeliste";
 	public static final String CMD_SCHWEIZER_AKTUELLE_SPIELRUNDE = "schweizer_aktuelle_spielrunde";
 	public static final String CMD_SCHWEIZER_NAECHSTE_SPIELRUNDE = "schweizer_naechste_spielrunde";
@@ -284,9 +288,16 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	// Teilnehmer
 	public static final String CMD_SCHWEIZER_TEILNEHMER = "schweizer_teilnehmer";
 	public static final String CMD_JGJ_TEILNEHMER       = "jgj_teilnehmer";
+	// Checkin-Listen (je System, außer Liga)
+	public static final String CMD_JGJ_CHECKIN          = "jgj_checkin";
+	public static final String CMD_KO_CHECKIN           = "ko_checkin";
+	public static final String CMD_KASKADE_CHECKIN      = "kaskade_checkin";
+	public static final String CMD_FORMULEX_CHECKIN     = "formulex_checkin";
+	public static final String CMD_SCHWEIZER_CHECKIN    = "schweizer_checkin";
+	public static final String CMD_POULE_CHECKIN        = "poule_checkin";
+	public static final String CMD_MAASTRICHTER_CHECKIN = "maastrichter_checkin";
 	// Poule A/B
 	public static final String CMD_POULE_START               = "poule_start";
-	public static final String CMD_POULE_NEUE_MELDELISTE     = "poule_neue_meldeliste";
 	public static final String CMD_POULE_UPDATE_MELDELISTE   = "poule_update_meldeliste";
 	public static final String CMD_POULE_TEILNEHMER          = "poule_teilnehmer";
 	public static final String CMD_POULE_TESTDATEN_MELDELISTE = "poule_testdaten_meldeliste";
@@ -345,14 +356,18 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_PLUGIN_KONFIGURATION  = "pluginKonfiguration";
 	public static final String CMD_PROCESSBOX_ANZEIGEN   = "processboxAnzeigen";
 	public static final String CMD_PROJEKT_SEITE_OEFFNEN = "projekt_seite_oeffnen";
+	public static final String CMD_FEEDBACK              = "feedback";
 
 	private static final String PROJEKT_SEITE_URL =
 			"https://michaelmassee.github.io/Petanque-Turnier-Manager/";
+	private static final String FEEDBACK_MAILTO_URL =
+			"mailto:michael@massee.de?subject=Feedback%3A%20P%C3%A9tanque%20Turnier-Manager";
 	// Symbolleiste
 	public static final String CMD_TOOLBAR_START                 = "toolbar_start";
 	public static final String CMD_TOOLBAR_WEITER                = "toolbar_weiter";
 	public static final String CMD_TOOLBAR_VORRUNDEN_RANGLISTE   = "toolbar_vorrunden_rangliste";
 	public static final String CMD_TOOLBAR_TEILNEHMER            = "toolbar_teilnehmer";
+	public static final String CMD_TOOLBAR_CHECKIN               = "toolbar_checkin";
 	public static final String CMD_TOOLBAR_NEU_IN_NEUER_DATEI    = "toolbar_neu_in_neuer_datei";
 	public static final String CMD_TOOLBAR_OEFFNEN               = "toolbar_oeffnen";
 	public static final String CMD_TOOLBAR_NEU_AUSLOSEN          = "toolbar_neu_auslosen";
@@ -361,6 +376,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_TOOLBAR_GESAMTRANGLISTE       = "toolbar_gesamtrangliste";
 	public static final String CMD_TOOLBAR_DRUCKEN               = "toolbar_drucken";
 	public static final String CMD_TOOLBAR_DRUCKVORSCHAU         = "toolbar_druckvorschau";
+	public static final String CMD_SIDEBAR_TOGGLE               = "sidebar_toggle";
+	/** Deck-ID der PétTurnMngr-Seitenleiste, siehe registry/.../UI/Sidebar.xcu. */
+	private static final String SIDEBAR_DECK_ID = "PetanqueTurnierManagerDeck";
 	// Turnier Modus
 	public static final String CMD_TURNIER_MODUS                 = "turnier_modus";
 	private final XComponentContext xContext;
@@ -375,18 +393,40 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	 */
 	private XFrame frame;
 
+	private static final java.util.concurrent.atomic.AtomicInteger CTOR_COUNTER =
+			new java.util.concurrent.atomic.AtomicInteger();
+
 	public ProtocolHandler(XComponentContext xContext) {
 		this.xContext = xContext;
 		SHARED_CONTEXT = xContext;
+		long ctorStartNs = System.nanoTime();
+		int ctorNum = CTOR_COUNTER.incrementAndGet();
+		logger.trace("[FOKUS-TRACE] ProtocolHandler-ctor #{} handlerHash={} thread={}",
+				ctorNum, System.identityHashCode(this), Thread.currentThread().getName());
 		PetanqueTurnierMngrSingleton.init(xContext);
+		long t = System.nanoTime();
+		PerfLog.log(logger, "[STARTUP-TIMING] ProtocolHandler-ctor PetanqueTurnierMngrSingleton.init: {} ms",
+				(t - ctorStartNs) / 1_000_000L);
 		// Symbolleiste sofort einblenden – deckt das erste Dokument ab, das geöffnet wurde
 		// bevor der GlobalEventListener registriert war (ProtocolHandler wird lazy erzeugt).
 		// Guard: Konstruktor kann von LO's FillToolbar() aufgerufen werden während die Toolbar
 		// nach dem Druckvorschau-Exit neu aufgebaut wird. showElement()/requestElement() in
 		// diesem Moment erzeugen Re-Entranz in LO → SIGSEGV. Daher: überspringen wenn Preview aktiv.
 		if (!PetanqueTurnierMngrSingleton.isDruckvorschauAktiv()) {
-			ToolbarAnzeigenListener.zeigeToolbarInAllenFrames(xContext);
-			SpieltagToolbarSteuerung.aktualisiereInAllenFrames(xContext);
+			// Verzögert auf den Main-Thread posten: der ctor kann re-entrant innerhalb von
+			// LO's FillToolbar() laufen – ein synchroner Aufbau verursacht dann schwarze
+			// Icon-Flächen (Windows, Calc-Start). Siehe ToolbarAnzeigenListener.
+			ToolbarAnzeigenListener.zeigeToolbarInAllenFramesVerzoegert(xContext);
+			long tNachToolbar = System.nanoTime();
+			PerfLog.log(logger, "[STARTUP-TIMING] ProtocolHandler-ctor Toolbar-Anzeige (verzögert gepostet): {} ms",
+					(tNachToolbar - t) / 1_000_000L);
+			t = tNachToolbar;
+			// Ebenfalls verzögert posten: gleiches Re-Entranz-Fenster wie die Haupt-Toolbar.
+			LoMainThread.post(xContext, () -> SpieltagToolbarSteuerung.aktualisiereInAllenFrames(xContext));
+			long tNachSpieltag = System.nanoTime();
+			PerfLog.log(logger, "[STARTUP-TIMING] ProtocolHandler-ctor Spieltag-Toolbar (verzögert gepostet): {} ms",
+					(tNachSpieltag - t) / 1_000_000L);
+			t = tNachSpieltag;
 		} else {
 			logger.debug("ProtocolHandler Konstruktor: Druckvorschau aktiv – Toolbar-Initialisierung übersprungen");
 		}
@@ -399,21 +439,25 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			PetanqueTurnierMngrSingleton.addGlobalEventListener(new IGlobalEventListener() {
 				@Override
 				public void onFocus(Object source) {
+					logger.trace("[FOKUS-TRACE] onFocus: source={}", beschreibeSource(source));
 					notifyAllListeners();
 				}
 
 				@Override
 				public void onLoadFinished(Object source) {
+					logger.trace("[FOKUS-TRACE] onLoadFinished: source={}", beschreibeSource(source));
 					notifyAllListeners();
 				}
 
 				@Override
 				public void onNew(Object source) {
+					logger.trace("[FOKUS-TRACE] onNew: source={}", beschreibeSource(source));
 					notifyAllListeners();
 				}
 
 				@Override
 				public void onLoad(Object source) {
+					logger.trace("[FOKUS-TRACE] onLoad: source={}", beschreibeSource(source));
 					var doc = DocumentHelper.getCurrentSpreadsheetDocumentFrom(source);
 					if (doc != null) {
 						var ws = new WorkingSpreadsheet(xContext, doc);
@@ -433,6 +477,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 
 				@Override
 				public void onUnload(Object source) {
+					logger.trace("[FOKUS-TRACE] onUnload: source={}", beschreibeSource(source));
 					// WS stoppen wenn das Owner-Dokument geschlossen wird → andere Dokumente
 					// können danach wieder starten
 					var geschlossenesDoc = DocumentHelper.getCurrentSpreadsheetDocumentFrom(source);
@@ -445,6 +490,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 
 				@Override
 				public void onViewClosed(Object source) {
+					logger.trace("[FOKUS-TRACE] onViewClosed: source={}", beschreibeSource(source));
 					// Druckvorschau-Übergang loggen: Controller bereits gewechselt wenn dieses Event feuert.
 					// DRUCKVORSCHAU_AKTIV wird hier NICHT zurückgesetzt – FillToolbar läuft noch.
 					// Der Reset erfolgt erst in onViewCreated, wenn der neue Controller vollständig aktiv ist.
@@ -453,7 +499,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 						if (xModel == null) return;
 						var controller = xModel.getCurrentController();
 						boolean jetzt = controller == null || Lo.qi(XSpreadsheetView.class, controller) == null;
-						logger.debug("onViewClosed: aktuellerController={} DRUCKVORSCHAU_AKTIV={}→bleibt",
+						logger.trace("[FOKUS-TRACE] onViewClosed: aktuellerController={} DRUCKVORSCHAU_AKTIV={}→bleibt",
 								jetzt ? "Druckvorschau" : "ScTabViewShell", PetanqueTurnierMngrSingleton.isDruckvorschauAktiv());
 					} catch (Exception e) {
 						logger.error("Fehler in onViewClosed beim Druckvorschau-Tracking", e);
@@ -462,6 +508,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 
 				@Override
 				public void onViewCreated(Object source) {
+					logger.trace("[FOKUS-TRACE] onViewCreated: source={}", beschreibeSource(source));
 					// Druckvorschau-Tracking: Controller-Typ des neuen Views bestimmen.
 					// ScPreviewController implementiert XSpreadsheetView nicht.
 					try {
@@ -472,9 +519,14 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 								|| Lo.qi(XSpreadsheetView.class, controller) == null;
 						if (istDruckvorschau != PetanqueTurnierMngrSingleton.isDruckvorschauAktiv()) {
 							PetanqueTurnierMngrSingleton.setDruckvorschauAktiv(istDruckvorschau);
-							logger.debug("onViewCreated: DRUCKVORSCHAU_AKTIV={}", istDruckvorschau);
+							logger.trace("[FOKUS-TRACE] onViewCreated: DRUCKVORSCHAU_AKTIV={}", istDruckvorschau);
 						}
 						if (!istDruckvorschau) {
+							// Toolbar-Rebind nach View-Wechsel anstoßen. Verzögert auf den
+							// Main-Thread posten (nie re-entrant in ein laufendes FillToolbar),
+							// damit die Toolbar-Controller/XStatusListener sauber neu erzeugt
+							// werden, ohne schwarze Icon-Flächen.
+							ToolbarAnzeigenListener.zeigeToolbarInAllenFramesVerzoegert(xContext);
 							notifyAllListeners();
 						}
 					} catch (Exception e) {
@@ -485,11 +537,22 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			PetanqueTurnierMngrSingleton.addTurnierEventListener(new ITurnierEventListener() {
 				@Override
 				public void onPropertiesChanged(ITurnierEvent event) {
+					XSpreadsheetDocument quelldoc = event == null ? null : event.getWorkingSpreadsheetDocument();
+					XSpreadsheetDocument globalDoc = holeAktivesDokument();
+					logger.trace("[FOKUS-TRACE] TurnierEvent onPropertiesChanged: quelldoc={} globalAktivesDoc={} match={}",
+							beschreibeDokument(quelldoc), beschreibeDokument(globalDoc),
+							quelldoc != null && quelldoc.equals(globalDoc));
 					notifyAllListeners();
 				}
 			});
 			SheetRunner.addStateChangeListener(ProtocolHandler::notifyAllListeners);
+			long tNachRegistriert = System.nanoTime();
+			PerfLog.log(logger, "[STARTUP-TIMING] ProtocolHandler-ctor REGISTERED-Block (IGlobalEventListener+ITurnierEventListener+SheetRunner): {} ms",
+					(tNachRegistriert - t) / 1_000_000L);
+			t = tNachRegistriert;
 		}
+		long ctorGesamtMs = (System.nanoTime() - ctorStartNs) / 1_000_000L;
+		PerfLog.log(logger, "[STARTUP-TIMING] ProtocolHandler-ctor GESAMT={} ms", ctorGesamtMs);
 	}
 
 	// -------------------------------------------------------------------------
@@ -502,12 +565,24 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	@Override
 	public void initialize(Object[] arguments) {
 		if (arguments == null || arguments.length == 0) {
+			logger.warn("[FOKUS-TRACE] initialize: ohne Argumente (handlerHash={})", System.identityHashCode(this));
 			return;
 		}
 		XFrame xFrame = Lo.qi(XFrame.class, arguments[0]);
 		if (xFrame != null) {
 			frame = xFrame;
+			logger.trace("[FOKUS-TRACE] initialize: handlerHash={} frameHash={} frameTitle='{}'",
+					System.identityHashCode(this), System.identityHashCode(xFrame), holeFrameTitle(xFrame));
 		}
+	}
+
+	private static String holeFrameTitle(XFrame f) {
+		if (f == null) return "<null>";
+		try {
+			var titled = Lo.qi(com.sun.star.frame.XTitle.class, f);
+			if (titled != null) return titled.getTitle();
+		} catch (Exception ignore) { }
+		return "<no-title>";
 	}
 
 	/**
@@ -519,29 +594,66 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	private WorkingSpreadsheet erzeugeWorkingSpreadsheetFuerDispatch() {
 		XSpreadsheetDocument doc = ermittleDokumentAusFrame();
 		if (doc != null) {
+			logger.trace("[FOKUS-TRACE] erzeugeWS: handlerHash={} frameHash={} frameTitle='{}' doc={}",
+					System.identityHashCode(this), System.identityHashCode(frame),
+					holeFrameTitle(frame), beschreibeDokument(doc));
 			return new WorkingSpreadsheet(xContext, doc);
 		}
+		logger.warn("[FOKUS-TRACE] erzeugeWS: FALLBACK auf getCurrentSpreadsheetDocument (frame={}) – Ziel nicht deterministisch!",
+				frame == null ? "null" : System.identityHashCode(frame));
 		return new WorkingSpreadsheet(xContext);
 	}
 
 	private XSpreadsheetDocument ermittleDokumentAusFrame() {
 		XFrame f = frame;
 		if (f == null) {
+			logger.warn("[FOKUS-TRACE] ermittleDokumentAusFrame: frame==null – initialize() wurde nicht aufgerufen");
 			return null;
 		}
 		try {
 			XController controller = f.getController();
 			if (controller == null) {
+				logger.warn("[FOKUS-TRACE] ermittleDokumentAusFrame: controller==null (frameHash={})", System.identityHashCode(f));
 				return null;
 			}
 			XModel model = controller.getModel();
 			if (model == null) {
+				logger.warn("[FOKUS-TRACE] ermittleDokumentAusFrame: model==null (frameHash={})", System.identityHashCode(f));
 				return null;
 			}
 			return Lo.qi(XSpreadsheetDocument.class, model);
 		} catch (DisposedException e) {
 			logger.debug("Frame disposed beim Auflösen des Ziel-Dokuments – Fallback auf aktuelles Dokument");
 			return null;
+		}
+	}
+
+	/**
+	 * Hilfs-Logging für GlobalEventListener-Quellen (XModel/XComponent). Versucht
+	 * URL und identityHash zu extrahieren – defensiv, niemals throw.
+	 */
+	static String beschreibeSource(Object source) {
+		if (source == null) return "null";
+		try {
+			XModel m = Lo.qi(XModel.class, source);
+			String url = m != null && m.getURL() != null && !m.getURL().isEmpty() ? m.getURL() : "<unbenannt>";
+			return url + "#" + System.identityHashCode(source);
+		} catch (Exception e) {
+			return "<err:" + e.getMessage() + ">#" + System.identityHashCode(source);
+		}
+	}
+
+	/** Hilfs-Logging: liefert URL+identityHash eines Dokuments für Fokus-Trace. */
+	public static String beschreibeDokument(XSpreadsheetDocument doc) {
+		if (doc == null) {
+			return "null";
+		}
+		try {
+			XModel m = Lo.qi(XModel.class, doc);
+			String url = m != null && m.getURL() != null && !m.getURL().isEmpty() ? m.getURL() : "<unbenannt>";
+			return url + "#" + System.identityHashCode(doc);
+		} catch (Exception e) {
+			return "<err:" + e.getMessage() + ">#" + System.identityHashCode(doc);
 		}
 	}
 
@@ -571,6 +683,23 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	@Override
 	public void dispatch(URL url, PropertyValue[] args) {
 		String command = url.Path;
+		logger.trace("[FOKUS-TRACE] dispatch: cmd='{}' handlerHash={} frameHash={} frameTitle='{}'",
+				command, System.identityHashCode(this),
+				frame == null ? "null" : System.identityHashCode(frame),
+				holeFrameTitle(frame));
+		StartupClock.logErstesVorkommen("dispatch:first", "ProtocolHandler.dispatch erster Aufruf (" + command + ")");
+		// Guard: In der Druckvorschau bleibt die Add-on-Toolbar (LO-Bug) fälschlich aktiviert.
+		// Ein Klick würde über erzeugeWorkingSpreadsheetFuerDispatch() ein WorkingSpreadsheet
+		// ohne XSpreadsheetView aufbauen → nachfolgende Sheet-/Dialog-Operationen crashen.
+		// Daher alle Befehle in der Vorschau blocken und den Nutzer informieren.
+		if (PetanqueTurnierMngrSingleton.isDruckvorschauAktiv()) {
+			logger.warn("dispatch: cmd='{}' in Druckvorschau ignoriert", command);
+			MessageBox.from(xContext, MessageBoxTypeEnum.INFO_OK)
+					.caption(I18n.get("druckvorschau.aktion.nicht.verfuegbar.titel"))
+					.message(I18n.get("druckvorschau.aktion.nicht.verfuegbar.info"))
+					.show();
+			return;
+		}
 		try {
 			// Timer-Befehle laufen nicht im SheetRunner-Thread → direkt behandeln
 			if (behandleTimerBefehl(command)) {
@@ -595,90 +724,90 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			// ------------------------------
 			// SuperMelee
 			case CMD_NEUE_MELDELISTE:
-				new MeldeListeSheet_New(ws).start();
+				new MeldeListeSheet_New(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_UPDATE_MELDELISTE:
-				new MeldeListeSheet_Update(ws).testTurnierVorhanden().start();
+				new MeldeListeSheet_Update(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).start();
 				break;
 			case CMD_ANMELDUNGEN:
-				new AnmeldungenSheet(ws).testTurnierVorhanden().backUpDocument().start();
+				new AnmeldungenSheet(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).backUpDocument().start();
 				break;
 			case CMD_TEILNEHMER:
-				new SupermeleeTeilnehmerSheet(ws).testTurnierVorhanden().start();
+				new SupermeleeTeilnehmerSheet(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).start();
 				break;
 			case CMD_NAECHSTE_SPIELTAG:
-				new MeldeListeSheet_NeuerSpieltag(ws).testTurnierVorhanden().backUpDocument().start();
+				new MeldeListeSheet_NeuerSpieltag(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).backUpDocument().start();
 				break;
 			case CMD_MELDELISTE_TESTDATEN:
-				new MeldeListeSheet_TestDaten(ws).start();
+				new MeldeListeSheet_TestDaten(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_SUPERMELEE_TEAMPAARUNGEN:
-				new SupermeleeTeamPaarungenSheet(ws).testTurnierVorhanden().start();
+				new SupermeleeTeamPaarungenSheet(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).start();
 				break;
 			case CMD_AKTUELLE_SPIELRUNDE:
-				new SpielrundeSheet_Update(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+				new SpielrundeSheet_Update(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_NAECHSTE_SPIELRUNDE:
-				new SpielrundeSheet_Naechste(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+				new SpielrundeSheet_Naechste(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_SUPER_SPIELRUNDEPLAN:
-				new SpielrundePlan(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+				new SpielrundePlan(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_SPIELRUNDEN_TESTDATEN:
-				new SpielrundeSheet_TestDaten(ws).start();
+				new SpielrundeSheet_TestDaten(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_SPIELTAG_RANGLISTE:
-				new SpieltagRanglisteSheet(ws).testTurnierVorhanden().backUpDocument().start();
+				new SpieltagRanglisteSheet(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).backUpDocument().start();
 				break;
 			case CMD_SPIELTAG_RANGLISTE_SORT:
-				new SpieltagRanglisteSheet_SortOnly(ws).testTurnierVorhanden().start();
+				new SpieltagRanglisteSheet_SortOnly(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).start();
 				break;
 			case CMD_SPIELTAGRANGLISTE_TESTDATEN:
-				new SpieltagRanglisteSheet_TestDaten(ws).start();
+				new SpieltagRanglisteSheet_TestDaten(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_SUPERMELEE_ENDRANGLISTE:
-				new EndranglisteSheet(ws).testTurnierVorhanden().backUpDocument().start();
+				new EndranglisteSheet(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).backUpDocument().start();
 				break;
 			case CMD_SUPERMELEE_ENDRANGLISTE_SORT:
-				new EndranglisteSheet_Sort(ws).testTurnierVorhanden().start();
+				new EndranglisteSheet_Sort(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).start();
 				break;
 			case CMD_SUPERMELEE_VALIDATE:
-				new SpielrundeSheet_Validator(ws).testTurnierVorhanden().start();
+				new SpielrundeSheet_Validator(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).start();
 				break;
 			case CMD_SUPERMELEE_SPIELTAGRANGLISTE_VALIDATE:
-				new SpieltagRangliste_Validator(ws).testTurnierVorhanden().start();
+				new SpieltagRangliste_Validator(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).start();
 				break;
 			// ------------------------------
 			// Liga
 			case CMD_LIGA_NEUE_MELDELISTE:
-				new LigaMeldeListeSheetNew(ws).start();
+				new LigaMeldeListeSheetNew(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_LIGA_UPDATE_MELDELISTE:
-				new LigaMeldeListeSheetUpdate(ws).testTurnierVorhanden().backUpDocument().start();
+				new LigaMeldeListeSheetUpdate(ws).testTurnierSystem(TurnierSystem.LIGA).backUpDocument().start();
 				break;
 			case CMD_LIGA_TESTDATEN_MELDELISTE:
-				new LigaMeldeListeSheetTestDaten(ws, true).start();
+				new LigaMeldeListeSheetTestDaten(ws, true).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_LIGA_SPIELPLAN:
-				new LigaSpielPlanSheet(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+				new LigaSpielPlanSheet(ws).testTurnierSystem(TurnierSystem.LIGA).backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_LIGA_RANGLISTE:
-				new LigaRanglisteSheet(ws).testTurnierVorhanden().backUpDocument().start();
+				new LigaRanglisteSheet(ws).testTurnierSystem(TurnierSystem.LIGA).backUpDocument().start();
 				break;
 			case CMD_LIGA_RANGLISTE_SORTIEREN:
-				new LigaRanglisteSheetSortOnly(ws).testTurnierVorhanden().start();
+				new LigaRanglisteSheetSortOnly(ws).testTurnierSystem(TurnierSystem.LIGA).start();
 				break;
 			case CMD_LIGA_DIREKTVERGLEICH:
-				new LigaRanglisteDirektvergleichSheet(ws).testTurnierVorhanden().start();
+				new LigaRanglisteDirektvergleichSheet(ws).testTurnierSystem(TurnierSystem.LIGA).start();
 				break;
 			case CMD_LIGA_SPIELPLAN_TESTDATEN:
-				new LigaSpielPlanSheetTestDaten(ws, false).start();
+				new LigaSpielPlanSheetTestDaten(ws, false).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_LIGA_SPIELPLAN_TESTDATEN_MIT_FREISPIEL:
-				new LigaSpielPlanSheetTestDaten(ws, true).start();
+				new LigaSpielPlanSheetTestDaten(ws, true).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_LIGA_EXPORT:
-				new LigaMeldeListeSheetExport(ws).testTurnierVorhanden().start();
+				new LigaMeldeListeSheetExport(ws).testTurnierSystem(TurnierSystem.LIGA).start();
 				break;
 			// ------------------------------
 			// Trip-Tête
@@ -703,228 +832,237 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			// ------------------------------
 			// Jeder gegen Jeden
 			case CMD_JGJ_NEUE_MELDELISTE:
-				new JGJMeldeListeSheet_New(ws).start();
+				new JGJMeldeListeSheet_New(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_JGJ_UPDATE_MELDELISTE:
-				new JGJMeldeListeSheet_Update(ws).testTurnierVorhanden().backUpDocument().start();
+				new JGJMeldeListeSheet_Update(ws).testTurnierSystem(TurnierSystem.JGJ).backUpDocument().start();
 				break;
 			case CMD_JGJ_TEILNEHMER:
-				new de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJTeilnehmerSheet(ws).testTurnierVorhanden().start();
+				new de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJTeilnehmerSheet(ws).testTurnierSystem(TurnierSystem.JGJ).start();
+				break;
+			case CMD_JGJ_CHECKIN:
+				new de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJCheckinListeSheet(ws).testTurnierSystem(TurnierSystem.JGJ).backUpDocument().start();
 				break;
 			case CMD_JGJ_SPIELPLAN:
-				new JGJSpielPlanSheet(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+				new JGJSpielPlanSheet(ws).testTurnierSystem(TurnierSystem.JGJ).backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_JGJ_RANGLISTE:
-				new JGJRanglisteSheet(ws).testTurnierVorhanden().backUpDocument().start();
+				new JGJRanglisteSheet(ws).testTurnierSystem(TurnierSystem.JGJ).backUpDocument().start();
 				break;
 			case CMD_JGJ_RANGLISTE_SORTIEREN:
-				new JGJRanglisteSheetSortOnly(ws).testTurnierVorhanden().start();
+				new JGJRanglisteSheetSortOnly(ws).testTurnierSystem(TurnierSystem.JGJ).start();
 				break;
 			case CMD_JGJ_DIREKTVERGLEICH:
-				new JGJRanglisteDirektvergleichSheet(ws).testTurnierVorhanden().start();
+				new JGJRanglisteDirektvergleichSheet(ws).testTurnierSystem(TurnierSystem.JGJ).start();
 				break;
 			case CMD_JGJ_TESTDATEN_TURNIER:
-				new JGJTurnierTestDaten(ws).start();
+				new JGJTurnierTestDaten(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_JGJ_TESTDATEN_TURNIER_DOUBLETTE_17:
-				new JGJDoublette17TurnierTestDaten(ws).start();
+				new JGJDoublette17TurnierTestDaten(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
 			// ------------------------------
 			// Schweizer System
 			case CMD_SCHWEIZER_START:
-				new SchweizerMeldeListeSheetNew(ws).start();
-				break;
-			case CMD_SCHWEIZER_NEUE_MELDELISTE:
-				if (new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument() != TurnierSystem.SCHWEIZER) {
-					MessageBox.from(ws.getxContext(), MessageBoxTypeEnum.ERROR_OK)
-							.caption(I18n.get("msg.caption.kein.schweizer"))
-							.message(I18n.get("msg.text.kein.schweizer")).show();
-				} else {
-					new SchweizerMeldeListeSheetNew(ws).start();
-				}
+				new SchweizerMeldeListeSheetNew(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_SCHWEIZER_UPDATE_MELDELISTE:
-				new SchweizerMeldeListeSheetUpdate(ws).start();
+				new SchweizerMeldeListeSheetUpdate(ws).testTurnierSystem(TurnierSystem.SCHWEIZER).start();
 				break;
 			case CMD_SCHWEIZER_TEILNEHMER:
-				new de.petanqueturniermanager.schweizer.meldeliste.SchweizerTeilnehmerSheet(ws).testTurnierVorhanden().start();
+				new de.petanqueturniermanager.schweizer.meldeliste.SchweizerTeilnehmerSheet(ws).testTurnierSystem(TurnierSystem.SCHWEIZER).start();
+				break;
+			case CMD_SCHWEIZER_CHECKIN:
+				new de.petanqueturniermanager.schweizer.meldeliste.SchweizerCheckinListeSheet(ws).testTurnierSystem(TurnierSystem.SCHWEIZER).backUpDocument().start();
 				break;
 			case CMD_SCHWEIZER_AKTUELLE_SPIELRUNDE:
-				new SchweizerSpielrundeSheetUpdate(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+				new SchweizerSpielrundeSheetUpdate(ws).testTurnierSystem(TurnierSystem.SCHWEIZER).backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_SCHWEIZER_NAECHSTE_SPIELRUNDE:
-				new SchweizerSpielrundeSheetNaechste(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+				new SchweizerSpielrundeSheetNaechste(ws).testTurnierSystem(TurnierSystem.SCHWEIZER).backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_SCHWEIZER_RANGLISTE:
-				new SchweizerRanglisteSheet(ws).testTurnierVorhanden().start();
+				new SchweizerRanglisteSheet(ws).testTurnierSystem(TurnierSystem.SCHWEIZER).start();
 				break;
 			case CMD_SCHWEIZER_RANGLISTE_SORTIEREN:
-				new SchweizerRanglisteSheetSortOnly(ws).testTurnierVorhanden().start();
+				new SchweizerRanglisteSheetSortOnly(ws).testTurnierSystem(TurnierSystem.SCHWEIZER).start();
 				break;
 			case CMD_SCHWEIZER_TESTDATEN_MELDELISTE:
-				new SchweizerMeldeListeSheetTestDaten(ws).start();
+				new SchweizerMeldeListeSheetTestDaten(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_SCHWEIZER_TESTDATEN_TURNIER:
-				new SchweizerTurnierTestDaten(ws).start();
+				new SchweizerTurnierTestDaten(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_SCHWEIZER_TESTDATEN_TURNIER_19:
 				// 19 Teams: ungerade → 1 Freilos pro Runde, Teamname in Spielrunde, Bahn Random
-				new SchweizerTurnierTestDaten(ws, 19, SpielplanTeamAnzeige.NAME).start();
+				new SchweizerTurnierTestDaten(ws, 19, SpielplanTeamAnzeige.NAME).testKeinAnderesTurnierVorhanden().start();
 				break;
 			// ------------------------------
 			// Maastrichter System
 			case CMD_MAASTRICHTER_START:
-				new MaastrichterMeldeListeSheetNew(ws).start();
+				new MaastrichterMeldeListeSheetNew(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_MAASTRICHTER_UPDATE_MELDELISTE:
-				new MaastrichterMeldeListeSheetUpdate(ws).testTurnierVorhanden().backUpDocument().start();
+				new MaastrichterMeldeListeSheetUpdate(ws).testTurnierSystem(TurnierSystem.MAASTRICHTER).backUpDocument().start();
 				break;
 			case CMD_MAASTRICHTER_NAECHSTE_VORRUNDE:
-				new MaastrichterSpielrundeSheetNaechste(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+				new MaastrichterSpielrundeSheetNaechste(ws).testTurnierSystem(TurnierSystem.MAASTRICHTER).backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_MAASTRICHTER_AKTUELLE_VORRUNDE:
-				new MaastrichterSpielrundeSheetUpdate(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+				new MaastrichterSpielrundeSheetUpdate(ws).testTurnierSystem(TurnierSystem.MAASTRICHTER).backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_MAASTRICHTER_VORRUNDEN_RANGLISTE:
-				new MaastrichterVorrundenRanglisteSheet(ws).testTurnierVorhanden().start();
+				new MaastrichterVorrundenRanglisteSheet(ws).testTurnierSystem(TurnierSystem.MAASTRICHTER).start();
 				break;
 			case CMD_MAASTRICHTER_FINALRUNDEN:
-				new MaastrichterFinalrundeSheet(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+				new MaastrichterFinalrundeSheet(ws).testTurnierSystem(TurnierSystem.MAASTRICHTER).backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_MAASTRICHTER_TEILNEHMER:
-				new MaastrichterTeilnehmerSheet(ws).testTurnierVorhanden().start();
+				new MaastrichterTeilnehmerSheet(ws).testTurnierSystem(TurnierSystem.MAASTRICHTER).start();
+				break;
+			case CMD_MAASTRICHTER_CHECKIN:
+				new de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterCheckinListeSheet(ws).testTurnierSystem(TurnierSystem.MAASTRICHTER).backUpDocument().start();
 				break;
 			case CMD_MAASTRICHTER_TESTDATEN_TURNIER:
-				new MaastrichterTurnierTestDaten(ws).start();
+				new MaastrichterTurnierTestDaten(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_MAASTRICHTER_TESTDATEN_TURNIER_57:
 				// 57 Teams: 4 Vorrunden, gruppenGroesse=16
 				// → Aufteilung [16,16,16,9] = 4 KO-Gruppen, D mit Cadrage
 				// → 57 Teams ungerade → automatisch Freilos pro Vorrunde
-				new MaastrichterTurnierTestDaten(ws, 57, 4, 16).start();
+				new MaastrichterTurnierTestDaten(ws, 57, 4, 16).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_MAASTRICHTER_TESTDATEN_TURNIER_35:
 				// 35 Teams: 3 Vorrunden, gruppenGroesse=16
 				// → Aufteilung [16,16,3] = 3 Gruppen; mit 1-Team-Fold-Schutz wird der
 				//   3er-Rest als eigene Gruppe C beibehalten (≥2 Teams)
 				// → 35 Teams ungerade → automatisch Freilos pro Vorrunde
-				new MaastrichterTurnierTestDaten(ws, 35, 3, 16).start();
+				new MaastrichterTurnierTestDaten(ws, 35, 3, 16).testKeinAnderesTurnierVorhanden().start();
 				break;
 			// ------------------------------
 			// K.-O.
 			case CMD_KO_START:
-				new KoMeldeListeSheetNew(ws).start();
+				new KoMeldeListeSheetNew(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_KO_UPDATE_MELDELISTE:
-				new KoMeldeListeSheetUpdate(ws).testTurnierVorhanden().backUpDocument().start();
+				new KoMeldeListeSheetUpdate(ws).testTurnierSystem(TurnierSystem.KO).backUpDocument().start();
 				break;
 			case CMD_KO_TEILNEHMER:
-				new de.petanqueturniermanager.ko.meldeliste.KoTeilnehmerSheet(ws).testTurnierVorhanden().start();
+				new de.petanqueturniermanager.ko.meldeliste.KoTeilnehmerSheet(ws).testTurnierSystem(TurnierSystem.KO).start();
+				break;
+			case CMD_KO_CHECKIN:
+				new de.petanqueturniermanager.ko.meldeliste.KoCheckinListeSheet(ws).testTurnierSystem(TurnierSystem.KO).backUpDocument().start();
 				break;
 			case CMD_KO_TURNIERBAUM:
-				new KoTurnierbaumSheet(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+				new KoTurnierbaumSheet(ws).testTurnierSystem(TurnierSystem.KO).backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_KO_TESTDATEN_NUR_MELDELISTE:
-				new KoMeldeListeSheetTestDaten(ws, 8).start();
+				new KoMeldeListeSheetTestDaten(ws, 8).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_KO_TESTDATEN_8_TEAMS:
-				new KoTurnierTestDaten(ws, 8).start();
+				new KoTurnierTestDaten(ws, 8).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_KO_TESTDATEN_16_TEAMS:
-				new KoTurnierTestDaten(ws, 16).start();
+				new KoTurnierTestDaten(ws, 16).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_KO_TESTDATEN_CADRAGE:
-				new KoTurnierTestDaten(ws, 10).start();
+				new KoTurnierTestDaten(ws, 10).testKeinAnderesTurnierVorhanden().start();
 				break;
 			// ------------------------------
 			// Formule X
 			case CMD_FORMULEX_START:
-				new FormuleXMeldeListeSheetNew(ws).start();
+				new FormuleXMeldeListeSheetNew(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_FORMULEX_UPDATE_MELDELISTE:
-				new FormuleXMeldeListeSheetUpdate(ws).testTurnierVorhanden().start();
+				new FormuleXMeldeListeSheetUpdate(ws).testTurnierSystem(TurnierSystem.FORMULEX).start();
 				break;
 			case CMD_FORMULEX_TEILNEHMER:
-				new FormuleXTeilnehmerSheet(ws).testTurnierVorhanden().start();
+				new FormuleXTeilnehmerSheet(ws).testTurnierSystem(TurnierSystem.FORMULEX).start();
+				break;
+			case CMD_FORMULEX_CHECKIN:
+				new de.petanqueturniermanager.formulex.meldeliste.FormuleXCheckinListeSheet(ws).testTurnierSystem(TurnierSystem.FORMULEX).backUpDocument().start();
 				break;
 			case CMD_FORMULEX_NAECHSTE_SPIELRUNDE:
-				new FormuleXSpielrundeSheetNaechste(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+				new FormuleXSpielrundeSheetNaechste(ws).testTurnierSystem(TurnierSystem.FORMULEX).backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_FORMULEX_AKTUELLE_SPIELRUNDE:
-				new FormuleXSpielrundeSheetUpdate(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+				new FormuleXSpielrundeSheetUpdate(ws).testTurnierSystem(TurnierSystem.FORMULEX).backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_FORMULEX_RANGLISTE:
-				new FormuleXRanglisteSheet(ws).testTurnierVorhanden().start();
+				new FormuleXRanglisteSheet(ws).testTurnierSystem(TurnierSystem.FORMULEX).start();
 				break;
 			case CMD_FORMULEX_TESTDATEN_MELDELISTE:
-				new FormuleXMeldeListeSheetTestDaten(ws, 17).start();
+				new FormuleXMeldeListeSheetTestDaten(ws, 17).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_FORMULEX_TESTDATEN_TURNIER:
-				new FormuleXTurnierTestDaten(ws).start();
+				new FormuleXTurnierTestDaten(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
 			// ------------------------------
 			// Kaskaden-KO
 			case CMD_KASKADE_START:
-				new KaskadeMeldeListeSheetNew(ws).start();
+				new KaskadeMeldeListeSheetNew(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_KASKADE_UPDATE_MELDELISTE:
-				new KaskadeMeldeListeSheetUpdate(ws).testTurnierVorhanden().backUpDocument().start();
+				new KaskadeMeldeListeSheetUpdate(ws).testTurnierSystem(TurnierSystem.KASKADE).backUpDocument().start();
 				break;
 			case CMD_KASKADE_TEILNEHMER:
-				new KaskadeTeilnehmerSheet(ws).testTurnierVorhanden().start();
+				new KaskadeTeilnehmerSheet(ws).testTurnierSystem(TurnierSystem.KASKADE).start();
+				break;
+			case CMD_KASKADE_CHECKIN:
+				new de.petanqueturniermanager.kaskade.meldeliste.KaskadeCheckinListeSheet(ws).testTurnierSystem(TurnierSystem.KASKADE).backUpDocument().start();
 				break;
 			case CMD_KASKADE_TESTDATEN_MELDELISTE:
-				new KaskadeMeldeListeSheetTestDaten(ws, 73).start();
+				new KaskadeMeldeListeSheetTestDaten(ws, 73).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_KASKADE_TESTDATEN_TURNIER:
-				new KaskadeTurnierTestDaten(ws).start();
+				new KaskadeTurnierTestDaten(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_KASKADE_NAECHSTE_RUNDE:
-				new KaskadeSpielrundeSheet(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+				new KaskadeSpielrundeSheet(ws).testTurnierSystem(TurnierSystem.KASKADE).backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_KASKADE_AKTUELLE_RUNDE:
-				new KaskadeAktuelleRundeSheet(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+				new KaskadeAktuelleRundeSheet(ws).testTurnierSystem(TurnierSystem.KASKADE).backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_KASKADE_KO_FELDER: {
 				var koFelder = new KaskadeKoFeldSheet(ws);
 				koFelder.setForceOk(true);
-				koFelder.testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+				koFelder.testTurnierSystem(TurnierSystem.KASKADE).backUpDocument().backupDocumentAfterRun().start();
 				break;
 			}
 			// ------------------------------
 			// Poule A/B
 			case CMD_POULE_START:
-				new PouleMeldeListeSheetNew(ws).start();
-				break;
-			case CMD_POULE_NEUE_MELDELISTE:
-				new PouleMeldeListeSheetNew(ws).start();
+				new PouleMeldeListeSheetNew(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_POULE_UPDATE_MELDELISTE:
-				new PouleMeldeListeSheetUpdate(ws).testTurnierVorhanden().backUpDocument().start();
+				new PouleMeldeListeSheetUpdate(ws).testTurnierSystem(TurnierSystem.POULE).backUpDocument().start();
 				break;
 			case CMD_POULE_TEILNEHMER:
-				new PouleTeilnehmerSheet(ws).testTurnierVorhanden().start();
+				new PouleTeilnehmerSheet(ws).testTurnierSystem(TurnierSystem.POULE).start();
+				break;
+			case CMD_POULE_CHECKIN:
+				new de.petanqueturniermanager.poule.meldeliste.PouleCheckinListeSheet(ws).testTurnierSystem(TurnierSystem.POULE).backUpDocument().start();
 				break;
 			case CMD_POULE_TESTDATEN_MELDELISTE:
-				new PouleMeldeListeSheetTestDaten(ws).start();
+				new PouleMeldeListeSheetTestDaten(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_POULE_VORRUNDE:
-				new PouleVorrundeSheet(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+				new PouleVorrundeSheet(ws).testTurnierSystem(TurnierSystem.POULE).backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_POULE_SPIELPLAENE:
-				new PouleSpielplaeneSheet(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+				new PouleSpielplaeneSheet(ws).testTurnierSystem(TurnierSystem.POULE).backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_POULE_VORRUNDEN_RANGLISTE:
-				new PouleVorrundenRanglisteSheet(ws).testTurnierVorhanden().start();
+				new PouleVorrundenRanglisteSheet(ws).testTurnierSystem(TurnierSystem.POULE).start();
 				break;
 			case CMD_POULE_KO:
-				new PouleKoSheet(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+				new PouleKoSheet(ws).testTurnierSystem(TurnierSystem.POULE).backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_POULE_TESTDATEN_TURNIER:
-				new PouleTurnierTestDaten(ws).start();
+				new PouleTurnierTestDaten(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_POULE_TESTDATEN_TURNIER_37:
-				new Poule37TeamsTurnierTestDaten(ws).start();
+				new Poule37TeamsTurnierTestDaten(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
 			// ------------------------------
 			// Konfiguration
@@ -937,11 +1075,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_KONFIGURATION_FARBEN:
 				handleKonfiguration(command, ws);
 				break;
-			case CMD_KONFIGURATION_TURNIER_STARTSEITE:
-				handleKonfiguration(command, ws);
-				break;
 			// ------------------------------
-			// Spieler-DB-Aktionen werden in behandleDialogBefehl() ohne ProcessBox abgewickelt.
+			// Spieler-DB-Aktionen und Turnier-Startseite werden in behandleDialogBefehl() ohne ProcessBox abgewickelt.
 			case CMD_KONFIGURATION_UPDATE_ERSTELLT_MIT_VERSION:
 				handleKonfiguration(command, ws);
 				break;
@@ -962,6 +1097,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_PROJEKT_SEITE_OEFFNEN:
 				oeffneBrowserUrl(PROJEKT_SEITE_URL);
 				break;
+			case CMD_FEEDBACK:
+				oeffneMailtoUrl(FEEDBACK_MAILTO_URL);
+				break;
 			case CMD_ABBRUCH:
 				SheetRunner.cancelRunner();
 				break;
@@ -981,7 +1119,10 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				ToolbarAktionDispatcher.vorrundenRangliste(ws);
 				break;
 			case CMD_TOOLBAR_TEILNEHMER:
-				ToolbarAktionDispatcher.teilnehmer(ws);
+				behandleTeilnehmerDispatch(ws, args);
+				break;
+			case CMD_TOOLBAR_CHECKIN:
+				behandleCheckinDispatch(ws, args);
 				break;
 			case CMD_TOOLBAR_NAECHSTER_SPIELTAG:
 				ToolbarAktionDispatcher.naechsterSpieltag(ws);
@@ -1024,15 +1165,19 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	private boolean behandleDialogBefehl(String command) throws com.sun.star.uno.Exception {
 		switch (command) {
 			case CMD_PLUGIN_KONFIGURATION -> new GlobalPropertiesDialog(xContext).zeigen();
+			case CMD_KONFIGURATION_TURNIER_STARTSEITE ->
+					new TurnierStartseiteDialog(erzeugeWorkingSpreadsheetFuerDispatch()).zeigen();
 			case CMD_DOWNLOAD_EXTENSION   -> starteDownloadExtension();
-			case CMD_TOOLBAR_START        -> new TurnierSystemAuswahlDialog(erzeugeWorkingSpreadsheetFuerDispatch()).zeige();
-			case CMD_TOOLBAR_NEU_IN_NEUER_DATEI -> new TurnierSystemNeueDateiAuswahlDialog(xContext).zeige();
+			case CMD_TOOLBAR_START        -> oeffneTurnierStartDialog();
+			case CMD_TOOLBAR_NEU_IN_NEUER_DATEI ->
+					new TurnierSystemNeueDateiAuswahlDialog(erzeugeWorkingSpreadsheetFuerDispatch()).zeige();
 			case CMD_TOOLBAR_OEFFNEN            -> erzeugeWorkingSpreadsheetFuerDispatch()
 					.executeDispatch(".uno:Open", "_self", 0, new PropertyValue[0]);
 			case CMD_TOOLBAR_DRUCKEN            -> erzeugeWorkingSpreadsheetFuerDispatch()
 					.executeDispatch(".uno:Print", "_self", 0, new PropertyValue[0]);
 			case CMD_TOOLBAR_DRUCKVORSCHAU      -> erzeugeWorkingSpreadsheetFuerDispatch()
 					.executeDispatch(".uno:PrintPreview", "_self", 0, new PropertyValue[0]);
+			case CMD_SIDEBAR_TOGGLE            -> toggleSidebar();
 			// Spieler-DB-Aktionen: alle ohne ProcessBox, damit Dialoge nicht überdeckt werden
 			case CMD_SPIELERDB_OEFFNEN          -> de.petanqueturniermanager.spielerdb.ui.SpielerDbDispatcher
 					.oeffneSpielerVerwaltung(erzeugeWorkingSpreadsheetFuerDispatch());
@@ -1057,6 +1202,79 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			default -> { return false; }
 		}
 		return true;
+	}
+
+	/**
+	 * Toolbar "Turnier starten": ist im aktuellen Dokument bereits ein Turnier
+	 * angelegt, erscheint eine Info-MessageBox und der Auswahl-Dialog wird
+	 * automatisch in den "Neue Datei"-Modus geleitet — das aktuelle Dokument
+	 * bleibt unverändert.
+	 */
+	private void oeffneTurnierStartDialog() throws com.sun.star.uno.Exception {
+		WorkingSpreadsheet ws = erzeugeWorkingSpreadsheetFuerDispatch();
+		boolean turnierVorhanden = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument() != TurnierSystem.KEIN;
+		if (turnierVorhanden) {
+			MessageBox.from(xContext, MessageBoxTypeEnum.INFO_OK)
+					.caption(I18n.get("toolbar.start.bestehendes.turnier.warnung.titel"))
+					.message(I18n.get("toolbar.start.bestehendes.turnier.info"))
+					.show();
+			new TurnierSystemNeueDateiAuswahlDialog(ws).zeige();
+		} else {
+			new TurnierSystemAuswahlDialog(ws).zeige();
+		}
+	}
+
+	/**
+	 * Blendet die PétTurnMngr-Seitenleiste ({@link #SIDEBAR_DECK_ID}) ein bzw. aus.
+	 * <p>
+	 * Bewusst über die UNO-Sidebar-API ({@link XController2#getSidebar()}) statt über
+	 * {@code .uno:SidebarDeck.<DeckId>}: jener Master/Slave-Command bekommt die Deck-ID
+	 * nur bei per URLTransformer geparster URL als Slot-Argument; aus einer Add-on-Toolbar
+	 * wird er ohne dieses Argument dispatcht und bleibt wirkungslos.
+	 * <p>
+	 * Toggle-Logik: Ist die Seitenleiste sichtbar und unser Deck aktiv, wird sie
+	 * ausgeblendet; andernfalls eingeblendet und unser Deck aktiviert.
+	 */
+	private void toggleSidebar() {
+		XFrame f = frame;
+		if (f == null) {
+			logger.warn("Sidebar-Toggle: frame==null – initialize() wurde nicht aufgerufen");
+			return;
+		}
+		XController2 controller = Lo.qi(XController2.class, f.getController());
+		if (controller == null) {
+			logger.warn("Sidebar-Toggle: XController2 nicht verfügbar");
+			return;
+		}
+		XSidebarProvider sidebar = controller.getSidebar();
+		if (sidebar == null) {
+			logger.warn("Sidebar-Toggle: XSidebarProvider==null");
+			return;
+		}
+		XDeck deck = ermittleSidebarDeck(sidebar);
+		boolean sichtbar = sidebar.isVisible();
+		boolean unserDeckAktiv = deck != null && deck.isActive();
+		if (sichtbar && unserDeckAktiv) {
+			sidebar.setVisible(false);
+		} else {
+			sidebar.setVisible(true);
+			if (deck != null) {
+				deck.activate(true);
+			}
+		}
+	}
+
+	/** Liefert das PétTurnMngr-Deck der Seitenleiste oder {@code null}, wenn nicht vorhanden. */
+	private XDeck ermittleSidebarDeck(XSidebarProvider sidebar) {
+		try {
+			XDecks decks = sidebar.getDecks();
+			if (decks != null && decks.hasByName(SIDEBAR_DECK_ID)) {
+				return Lo.qi(XDeck.class, decks.getByName(SIDEBAR_DECK_ID));
+			}
+		} catch (com.sun.star.uno.Exception e) {
+			logger.warn("Sidebar-Toggle: Deck '{}' nicht ermittelbar: {}", SIDEBAR_DECK_ID, e.getMessage(), e);
+		}
+		return null;
 	}
 
 	/**
@@ -1089,14 +1307,15 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	 */
 	private boolean behandleWebserverBefehl(String command) throws com.sun.star.uno.Exception {
 		switch (command) {
-			case CMD_WEBSERVER_KONFIGURATION -> new CompositeViewListeDialog(xContext).zeigen(null);
+			case CMD_WEBSERVER_KONFIGURATION ->
+					new CompositeViewListeDialog(erzeugeWorkingSpreadsheetFuerDispatch()).zeigen(null);
 			case CMD_WEBSERVER_STARTEN -> {
 				var props = GlobalProperties.get();
 				if (props.getCompositeViewKonfigurationen().isEmpty()) {
 					MessageBox.from(xContext, MessageBoxTypeEnum.INFO_OK)
 							.caption(I18n.get("webserver.starten"))
 							.message(I18n.get("webserver.keine.ports.konfiguriert")).show();
-					new CompositeViewListeDialog(xContext).zeigen(null);
+					new CompositeViewListeDialog(erzeugeWorkingSpreadsheetFuerDispatch()).zeigen(null);
 				} else {
 					ProcessBox.init(xContext).visibleWennAutomatisch().clear().run();
 					try {
@@ -1155,6 +1374,21 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	 * Öffnet die übergebene URL im Standard-Browser.
 	 * Nutzt {@link java.awt.Desktop#browse} als Primärweg, {@link Runtime#exec} als Fallback.
 	 */
+	private void oeffneMailtoUrl(String url) {
+		ProcessBox.from().info(I18n.get("webserver.prozessbox.browser.oeffnen", url));
+		try {
+			if (java.awt.Desktop.isDesktopSupported()
+					&& java.awt.Desktop.getDesktop().isSupported(java.awt.Desktop.Action.MAIL)) {
+				java.awt.Desktop.getDesktop().mail(new java.net.URI(url));
+			} else {
+				oeffneBrowserUrlFallback(url);
+			}
+		} catch (Exception e) {
+			logger.warn("Desktop.mail fehlgeschlagen, Fallback aktiv: {}", e.getMessage());
+			oeffneBrowserUrlFallback(url);
+		}
+	}
+
 	private void oeffneBrowserUrl(String url) {
 		ProcessBox.from().info(I18n.get("webserver.prozessbox.browser.oeffnen", url));
 		try {
@@ -1220,9 +1454,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_KONFIGURATION_FARBEN:
 				new FarbenDialog(ws).createDialog();
 				break;
-			case CMD_KONFIGURATION_TURNIER_STARTSEITE:
-				new TurnierStartseiteDialog(ws).zeigen();
-				break;
 			case CMD_KONFIGURATION_UPDATE_ERSTELLT_MIT_VERSION:
 				DocumentHelper.setDocErstelltMitVersion(ws);
 				break;
@@ -1237,42 +1468,283 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	@Override
 	public void addStatusListener(XStatusListener listener, URL url) {
 		String command = url.Path;
-		logger.trace("addStatusListener: command={} thread={} druckvorschauAktiv={}",
-				command, Thread.currentThread().getName(), PetanqueTurnierMngrSingleton.isDruckvorschauAktiv());
-		STATUS_LISTENERS.computeIfAbsent(command, k -> Collections.synchronizedList(new ArrayList<>()))
-				.add(new StatusEntry(listener, url));
+		List<StatusEntry> list = STATUS_LISTENERS.computeIfAbsent(command,
+				k -> Collections.synchronizedList(new ArrayList<>()));
+		list.add(new StatusEntry(listener, url));
+		logger.trace("[FOKUS-TRACE] addStatusListener: cmd='{}' handlerHash={} frameHash={} listeners[{}]={} listenerClass={} thread={} druckvorschau={}",
+				command, System.identityHashCode(this),
+				frame == null ? "null" : System.identityHashCode(frame),
+				command, list.size(),
+				listener == null ? "null" : listener.getClass().getName(),
+				Thread.currentThread().getName(),
+				PetanqueTurnierMngrSingleton.isDruckvorschauAktiv());
 		if (PetanqueTurnierMngrSingleton.isDruckvorschauAktiv()) {
 			// C++-Toolbar-Controller werden während FillToolbar (Druckvorschau-Exit) angelegt.
 			// postStatus() → statusChanged() als Re-Entrant-Callback in LO C++ korrumpiert
 			// den Frame-Zustand → SIGSEGV nach OnCopyToDone. Guard: erst nach OnViewCreated
 			// (dort ruft notifyAllListeners() alle neuen Controller korrekt auf).
-			logger.trace("addStatusListener: command={} – postStatus übersprungen (Druckvorschau aktiv)", command);
+			logger.trace("[FOKUS-TRACE] addStatusListener: cmd='{}' – postStatus übersprungen (Druckvorschau aktiv)", command);
 			return;
 		}
-		postStatus(listener, url, isEnabled(command, holeAktivesDokument()));
+		// URL-basierter Override: für alle in TOOLBAR_ONLY_CMDS aufgelisteten Befehle
+		// dauerhaft enabled (Workaround tdf#172207 — Toolbar-Listener sind nicht von
+		// Menü-Listenern unterscheidbar, daher wird der Override für diese URLs auch
+		// im Menü wirksam). Für übrige Befehle echte isEnabled-Bewertung.
+		boolean enabled = TOOLBAR_ONLY_CMDS.contains(command) || isEnabled(command, holeAktivesDokument());
+		postStatus(listener, url, enabled);
+		// Checkin- und Teilnehmer-Button sind ToggleDropdownButtons (siehe
+		// Addons_Z2_Toolbar.xcu). Ihre Dropdown-Einträge (Sortierung nach Nr/Name/Team)
+		// werden hier per ControlCommand "SetList" an den Controller gemeldet.
+		if (CMD_TOOLBAR_CHECKIN.equals(command)) {
+			postSortDropdownListe(listener, url, CHECKIN_SORT_I18N_PREFIX,
+					BasePropertiesSpalte.KONFIG_PROP_CHECKIN_LISTE_SORT_MODUS);
+		} else if (CMD_TOOLBAR_TEILNEHMER.equals(command)) {
+			postSortDropdownListe(listener, url, TEILNEHMER_SORT_I18N_PREFIX,
+					BasePropertiesSpalte.KONFIG_PROP_TEILNEHMER_LISTE_SORT_MODUS);
+		}
+	}
+
+	// -------------------------------------------------------------------------
+	// Sortier-Dropdowns der Toolbar (Checkin-Liste / Teilnehmerliste)
+	//
+	// Beide Buttons (ControlType=ToggleDropdownButton) bieten im Dropdown die
+	// Sortierung nach Nr/Name/Team an. Der Mechanismus ist identisch und nur über
+	// den i18n-Label-Präfix und die Ziel-Dokument-Property parametrisiert.
+
+	/** i18n-Schlüssel-Präfix der Checkin-Sortier-Labels ({@code <prefix>nummer|name|teamname}). */
+	private static final String CHECKIN_SORT_I18N_PREFIX = "toolbar.checkin.sort.";
+	/** i18n-Schlüssel-Präfix der Teilnehmer-Sortier-Labels. */
+	private static final String TEILNEHMER_SORT_I18N_PREFIX = "toolbar.teilnehmer.sort.";
+
+	/** Reihenfolge der Sortier-Einträge in den Dropdowns. */
+	private static final List<TeilnehmerListeSortModus> SORT_DROPDOWN_REIHENFOLGE = List.of(
+			TeilnehmerListeSortModus.NUMMER,
+			TeilnehmerListeSortModus.NAME,
+			TeilnehmerListeSortModus.TEAMNAME);
+
+	/** Lokalisiertes Dropdown-Label für einen Sortier-Modus unter dem gegebenen i18n-Präfix. */
+	private static String sortLabel(String i18nPrefix, TeilnehmerListeSortModus modus) {
+		return I18n.get(i18nPrefix + switch (modus) {
+			case NUMMER -> "nummer";
+			case NAME -> "name";
+			case TEAMNAME -> "teamname";
+		});
+	}
+
+	/**
+	 * Sendet die Sortier-Dropdown-Liste via ControlCommand "SetList" an den
+	 * Toolbar-Controller (LO {@code ToggleButtonToolbarController}) und markiert anschließend
+	 * per "CheckItemPos" den aktuell konfigurierten Sortier-Modus (Haken im Dropdown).
+	 */
+	private static void postSortDropdownListe(XStatusListener listener, URL url, String i18nPrefix,
+			String propertyKey) {
+		try {
+			String[] labels = SORT_DROPDOWN_REIHENFOLGE.stream()
+					.map(modus -> sortLabel(i18nPrefix, modus))
+					.toArray(String[]::new);
+			com.sun.star.frame.ControlCommand setList = new com.sun.star.frame.ControlCommand();
+			setList.Command = "SetList";
+			setList.Arguments = new com.sun.star.beans.NamedValue[] {
+					new com.sun.star.beans.NamedValue("List", labels) };
+			postControlCommand(listener, url, setList);
+
+			// SetList löscht im Controller die aktuelle Auswahl → ohne CheckItemPos bliebe
+			// der Haken weg. Index des konfigurierten Modus nachreichen.
+			int checkPos = SORT_DROPDOWN_REIHENFOLGE.indexOf(aktuellerSortModus(propertyKey));
+			if (checkPos >= 0) {
+				com.sun.star.frame.ControlCommand checkPosCmd = new com.sun.star.frame.ControlCommand();
+				checkPosCmd.Command = "CheckItemPos";
+				checkPosCmd.Arguments = new com.sun.star.beans.NamedValue[] {
+						new com.sun.star.beans.NamedValue("Pos", Integer.valueOf(checkPos)) };
+				postControlCommand(listener, url, checkPosCmd);
+			}
+		} catch (DisposedException e) {
+			logger.debug("postSortDropdownListe: Listener disposed");
+		} catch (Exception e) {
+			logger.warn("postSortDropdownListe fehlgeschlagen: {}", e.getMessage());
+		}
+	}
+
+	/** Sendet ein {@link com.sun.star.frame.ControlCommand} als {@code State} eines FeatureStateEvent an den Listener. */
+	private static void postControlCommand(XStatusListener listener, URL url,
+			com.sun.star.frame.ControlCommand command) {
+		FeatureStateEvent event = new FeatureStateEvent();
+		event.FeatureURL = url;
+		event.IsEnabled = true;
+		event.Requery = false;
+		event.State = command;
+		listener.statusChanged(event);
+	}
+
+	/** Liest den aktuell konfigurierten Sortier-Modus aus der Dokument-Property (Default {@link TeilnehmerListeSortModus#NAME}). */
+	private static TeilnehmerListeSortModus aktuellerSortModus(String propertyKey) {
+		try {
+			XSpreadsheetDocument doc = holeAktivesDokument();
+			if (doc == null) {
+				return TeilnehmerListeSortModus.NAME;
+			}
+			String key = new DocumentPropertiesHelper(doc).getStringProperty(propertyKey,
+					TeilnehmerListeSortModus.NAME.getKey());
+			return TeilnehmerListeSortModus.valueOf(key);
+		} catch (Exception e) {
+			return TeilnehmerListeSortModus.NAME;
+		}
+	}
+
+	/**
+	 * Behandelt einen Klick auf den Checkin-Toolbar-Button. Kommt über das Dropdown ein
+	 * Sortier-Label im Argument {@code Text} herein, wird der Sortier-Modus als Dokument-
+	 * Property persistiert; danach (bzw. bei Hauptklick ohne Auswahl) wird die Checkin-Liste
+	 * erzeugt/aktualisiert, die ihren Modus aus eben dieser Property liest.
+	 */
+	private void behandleCheckinDispatch(WorkingSpreadsheet ws, PropertyValue[] args) throws Exception {
+		persistiereSortModus(ws, args, CHECKIN_SORT_I18N_PREFIX,
+				BasePropertiesSpalte.KONFIG_PROP_CHECKIN_LISTE_SORT_MODUS);
+		ToolbarAktionDispatcher.checkin(ws);
+	}
+
+	/**
+	 * Behandelt einen Klick auf den Teilnehmer-Toolbar-Button. Analog zu
+	 * {@link #behandleCheckinDispatch(WorkingSpreadsheet, PropertyValue[])}, nur für die
+	 * Teilnehmerliste und deren Sortier-Property.
+	 */
+	private void behandleTeilnehmerDispatch(WorkingSpreadsheet ws, PropertyValue[] args) throws Exception {
+		persistiereSortModus(ws, args, TEILNEHMER_SORT_I18N_PREFIX,
+				BasePropertiesSpalte.KONFIG_PROP_TEILNEHMER_LISTE_SORT_MODUS);
+		ToolbarAktionDispatcher.teilnehmer(ws);
+	}
+
+	/**
+	 * Liest die Dropdown-Auswahl aus den Dispatch-Argumenten und persistiert den gewählten
+	 * Sortier-Modus in der angegebenen Dokument-Property. Bei Hauptklick ohne Auswahl passiert nichts.
+	 */
+	private void persistiereSortModus(WorkingSpreadsheet ws, PropertyValue[] args, String i18nPrefix,
+			String propertyKey) {
+		TeilnehmerListeSortModus modus = sortModusAusArgs(args, i18nPrefix);
+		if (modus != null) {
+			// setStringPropertyOhneEvent: kein PropertiesChanged-TurnierEvent auf dem
+			// Main-Thread auslösen (vgl. RanglisteSignaturStore-Threading-Trap); die
+			// nachfolgende Listen-Aktion baut die Liste ohnehin neu auf.
+			new DocumentPropertiesHelper(ws).setStringPropertyOhneEvent(propertyKey, modus.getKey());
+		}
+	}
+
+	/** Liest das {@code Text}-Argument des Dropdown-Klicks und mappt es auf einen Sortier-Modus (oder {@code null}). */
+	private static TeilnehmerListeSortModus sortModusAusArgs(PropertyValue[] args, String i18nPrefix) {
+		if (args == null) {
+			return null;
+		}
+		String text = null;
+		for (PropertyValue arg : args) {
+			if ("Text".equals(arg.Name) && arg.Value instanceof String s) {
+				text = s;
+				break;
+			}
+		}
+		if (text == null || text.isEmpty()) {
+			return null;
+		}
+		for (TeilnehmerListeSortModus modus : SORT_DROPDOWN_REIHENFOLGE) {
+			if (sortLabel(i18nPrefix, modus).equals(text)) {
+				return modus;
+			}
+		}
+		return null;
 	}
 
 	@Override
 	public void removeStatusListener(XStatusListener listener, URL url) {
 		String command = url.Path;
-		logger.trace("removeStatusListener: command={} thread={}", command, Thread.currentThread().getName());
 		List<StatusEntry> list = STATUS_LISTENERS.get(command);
+		int sizeBefore = list == null ? 0 : list.size();
 		if (list != null) {
 			list.removeIf(e -> e.listener == listener);
 		}
+		int sizeAfter = list == null ? 0 : list.size();
+		logger.trace("[FOKUS-TRACE] removeStatusListener: cmd='{}' handlerHash={} listeners[{}]: {}→{} thread={}",
+				command, System.identityHashCode(this), command, sizeBefore, sizeAfter,
+				Thread.currentThread().getName());
 	}
 
 	/** Liefert das aktuell aktive Spreadsheet-Dokument, oder {@code null} wenn keines aktiv ist. */
 	private static XSpreadsheetDocument holeAktivesDokument() {
 		try {
-			return DocumentHelper.getCurrentSpreadsheetDocument(SHARED_CONTEXT);
+			XSpreadsheetDocument doc = DocumentHelper.getCurrentSpreadsheetDocument(SHARED_CONTEXT);
+			if (logger.isDebugEnabled()) {
+				logger.debug("[FOKUS-TRACE] holeAktivesDokument: {}", beschreibeDokument(doc));
+			}
+			return doc;
 		} catch (Exception e) {
+			logger.debug("[FOKUS-TRACE] holeAktivesDokument: Exception {}", e.getMessage());
 			return null;
 		}
 	}
 
 	// -------------------------------------------------------------------------
 	// Zustandsprüfung und Listener-Benachrichtigung (statisch, cross-instance)
+	//
+	// Hinweis zu LO-Bug tdf#172207
+	// (https://bugs.documentfoundation.org/show_bug.cgi?id=172207):
+	// Die folgende isEnabled-Logik bestimmt das korrekte Enabled-State pro
+	// Command. Für das Menü wird sie zuverlässig ausgewertet, weil LO bei
+	// jedem Menü-Öffnen frische addStatusListener-Calls macht. Für die
+	// Addon-Toolbar wird das Ergebnis nach einem internen LO-Lifecycle-
+	// Event eingefroren (LO disposed die Status-Controller ohne Re-Register).
+	// Click-time-Validierung in dispatch() (testKeinAnderesTurnierVorhanden /
+	// testTurnierSystem) fängt den daraus resultierenden Datenverlust ab,
+	// falls der User auf einen eingefrorenen, fälschlich-enabled Button klickt.
+	//
+	// Workaround tdf#172207: URL-Commands die NUR auf der PétTurnMngr-Toolbar
+	// vorkommen (toolbar_*-Prefix) werden permanent als enabled zurückgegeben.
+	// Damit erscheinen sie nach dem LO-Bug-Trigger nicht „eingefroren disabled".
+	// Geteilte URLs (auch im Menü vorhanden — abbruch, turnier_modus,
+	// konfiguration_turnier, spielerdb_in_meldeliste, webserver_*, timer_*)
+	// folgen weiterhin der normalen Logik, weil das Menü ihre State-Genauigkeit
+	// braucht.
+
+	/**
+	 * URLs die auf einer PétTurnMngr-Addon-Toolbar (Z2/Z3/Z4) liegen. Diese
+	 * werden dauerhaft als enabled gemeldet, weil LO-Bug tdf#172207 die
+	 * Status-Controller der Addon-Toolbar nach Lifecycle-Events einfriert.
+	 *
+	 * <p>Hinweis: LO liefert Listener als UNO-Bridge-Proxies (z.B.
+	 * {@code jdk.proxy1.$Proxy10}) — Toolbar-Listener und Menü-Listener sind
+	 * extension-seitig nicht unterscheidbar. Geteilte URLs (in Toolbar UND
+	 * Menü) erscheinen im Menü daher ebenfalls als enabled; das ist der
+	 * akzeptierte Trade-off. Daten-Verlust durch fälschlich-enabled Klicks
+	 * wird in dispatch() via testKeinAnderesTurnierVorhanden/testTurnierSystem
+	 * abgefangen.
+	 */
+	private static final java.util.Set<String> TOOLBAR_ONLY_CMDS = java.util.Set.of(
+			// Z2 Toolbar
+			CMD_ABBRUCH,
+			CMD_TOOLBAR_START,
+			CMD_TOOLBAR_WEITER,
+			CMD_TOOLBAR_NEU_AUSLOSEN,
+			CMD_TOOLBAR_ABSCHLUSS,
+			CMD_TOOLBAR_VORRUNDEN_RANGLISTE,
+			CMD_TOOLBAR_TEILNEHMER,
+			CMD_TOOLBAR_CHECKIN,
+			CMD_TOOLBAR_NEU_IN_NEUER_DATEI,
+			CMD_TOOLBAR_OEFFNEN,
+			CMD_TOOLBAR_DRUCKEN,
+			CMD_TOOLBAR_DRUCKVORSCHAU,
+			CMD_SIDEBAR_TOGGLE,
+			CMD_KONFIGURATION_TURNIER,
+			CMD_SPIELERDB_IN_MELDELISTE,
+			CMD_TURNIER_MODUS,
+			CMD_WEBSERVER_STARTEN,
+			CMD_WEBSERVER_STOPPEN,
+			// Z3 SpieltagToolbar
+			CMD_TOOLBAR_GESAMTRANGLISTE,
+			CMD_TOOLBAR_NAECHSTER_SPIELTAG,
+			// Z4 TimerToolbar
+			CMD_TIMER_STARTEN_DIALOG,
+			CMD_TIMER_PAUSE_FORTSETZEN,
+			CMD_TIMER_STOPPEN,
+			CMD_TIMER_PLUS_MINUTE,
+			CMD_TIMER_MINUS_MINUTE,
+			CMD_TIMER_SNOOZE);
 
 	private static boolean isEnabled(String command, XSpreadsheetDocument document) {
 		if (SheetRunner.isRunning()) {
@@ -1287,6 +1759,11 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 					? new WorkingSpreadsheet(ctx, document)
 					: new WorkingSpreadsheet(ctx);
 			TurnierSystem ts = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();
+			if (logger.isDebugEnabled()) {
+				logger.debug("[FOKUS-TRACE] isEnabled cmd='{}' doc-arg={} effective-doc={} turnierSystem={}",
+						command, beschreibeDokument(document),
+						beschreibeDokument(ws.getWorkingSpreadsheetDocument()), ts);
+			}
 			return switch (command) {
 			// SuperMelee: neues Turnier nur wenn keins aktiv
 			case CMD_NEUE_MELDELISTE                        -> ts == TurnierSystem.KEIN;
@@ -1299,26 +1776,20 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_SUPERMELEE_ENDRANGLISTE, CMD_SUPERMELEE_ENDRANGLISTE_SORT,
 				 CMD_SUPERMELEE_TEAMPAARUNGEN,
 				 CMD_SUPERMELEE_VALIDATE, CMD_SUPERMELEE_SPIELTAGRANGLISTE_VALIDATE -> ts == TurnierSystem.SUPERMELEE;
-			// "Spielrunde neu auslosen": nur wenn SuperMelee aktiv UND mind. 1 Spielrunde vorhanden
 			case CMD_AKTUELLE_SPIELRUNDE                    -> ts == TurnierSystem.SUPERMELEE && hatSupermeleeSpielrunde(ws);
-			// SuperMelee-Testdaten: auch wenn kein Turnier vorhanden
 			case CMD_MELDELISTE_TESTDATEN, CMD_SPIELRUNDEN_TESTDATEN,
 				 CMD_SPIELTAGRANGLISTE_TESTDATEN        -> ts == TurnierSystem.KEIN || ts == TurnierSystem.SUPERMELEE;
-			// Liga
 			case CMD_LIGA_NEUE_MELDELISTE                   -> ts == TurnierSystem.KEIN;
 			case CMD_LIGA_UPDATE_MELDELISTE, CMD_LIGA_SPIELPLAN,
 				 CMD_LIGA_RANGLISTE, CMD_LIGA_RANGLISTE_SORTIEREN,
 				 CMD_LIGA_DIREKTVERGLEICH, CMD_LIGA_EXPORT    -> ts == TurnierSystem.LIGA;
-			// Liga-Testdaten: auch wenn kein Turnier vorhanden
 			case CMD_LIGA_TESTDATEN_MELDELISTE,
 				 CMD_LIGA_SPIELPLAN_TESTDATEN,
 				 CMD_LIGA_SPIELPLAN_TESTDATEN_MIT_FREISPIEL -> ts == TurnierSystem.KEIN || ts == TurnierSystem.LIGA;
-			// Jeder gegen Jeden
 			case CMD_JGJ_NEUE_MELDELISTE                    -> ts == TurnierSystem.KEIN;
 			case CMD_JGJ_UPDATE_MELDELISTE, CMD_JGJ_SPIELPLAN,
 				 CMD_JGJ_RANGLISTE, CMD_JGJ_RANGLISTE_SORTIEREN,
-				 CMD_JGJ_DIREKTVERGLEICH, CMD_JGJ_TEILNEHMER            -> ts == TurnierSystem.JGJ;
-			// JGJ-Testdaten: auch wenn kein Turnier vorhanden
+				 CMD_JGJ_DIREKTVERGLEICH, CMD_JGJ_TEILNEHMER, CMD_JGJ_CHECKIN -> ts == TurnierSystem.JGJ;
 			case CMD_JGJ_TESTDATEN_TURNIER,
 				 CMD_JGJ_TESTDATEN_TURNIER_DOUBLETTE_17     -> ts == TurnierSystem.KEIN || ts == TurnierSystem.JGJ;
 			// Trip-Tête
@@ -1330,44 +1801,38 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_TRIPTETE_TESTDATEN                     -> ts == TurnierSystem.KEIN || ts == TurnierSystem.TRIPTETE;
 			// Schweizer
 			case CMD_SCHWEIZER_START                        -> ts == TurnierSystem.KEIN;
-			// Maastrichter
 			case CMD_MAASTRICHTER_START                     -> ts == TurnierSystem.KEIN;
 			case CMD_MAASTRICHTER_UPDATE_MELDELISTE,
 				 CMD_MAASTRICHTER_NAECHSTE_VORRUNDE,
 				 CMD_MAASTRICHTER_VORRUNDEN_RANGLISTE,
 				 CMD_MAASTRICHTER_FINALRUNDEN,
-				 CMD_MAASTRICHTER_TEILNEHMER                -> ts == TurnierSystem.MAASTRICHTER;
+				 CMD_MAASTRICHTER_TEILNEHMER, CMD_MAASTRICHTER_CHECKIN -> ts == TurnierSystem.MAASTRICHTER;
 			case CMD_MAASTRICHTER_AKTUELLE_VORRUNDE         -> ts == TurnierSystem.MAASTRICHTER && hatMaastrichterVorrunde(ws);
 			case CMD_MAASTRICHTER_TESTDATEN_TURNIER,
 				 CMD_MAASTRICHTER_TESTDATEN_TURNIER_57,
 				 CMD_MAASTRICHTER_TESTDATEN_TURNIER_35      -> ts == TurnierSystem.KEIN || ts == TurnierSystem.MAASTRICHTER;
-			// K.-O.
 			case CMD_KO_START                               -> ts == TurnierSystem.KEIN;
 			case CMD_KO_UPDATE_MELDELISTE,
-				 CMD_KO_TURNIERBAUM, CMD_KO_TEILNEHMER     -> ts == TurnierSystem.KO;
-			// Formule X
+				 CMD_KO_TURNIERBAUM, CMD_KO_TEILNEHMER, CMD_KO_CHECKIN -> ts == TurnierSystem.KO;
 			case CMD_FORMULEX_START                         -> ts == TurnierSystem.KEIN;
 			case CMD_FORMULEX_UPDATE_MELDELISTE,
-				 CMD_FORMULEX_TEILNEHMER,
+				 CMD_FORMULEX_TEILNEHMER, CMD_FORMULEX_CHECKIN,
 				 CMD_FORMULEX_NAECHSTE_SPIELRUNDE,
 				 CMD_FORMULEX_RANGLISTE                     -> ts == TurnierSystem.FORMULEX;
 			case CMD_FORMULEX_AKTUELLE_SPIELRUNDE           -> ts == TurnierSystem.FORMULEX && hatFormuleXSpielrunde(ws);
 			case CMD_FORMULEX_TESTDATEN_MELDELISTE,
 				 CMD_FORMULEX_TESTDATEN_TURNIER             -> ts == TurnierSystem.KEIN || ts == TurnierSystem.FORMULEX;
-			// Kaskaden-KO
 			case CMD_KASKADE_START                          -> ts == TurnierSystem.KEIN;
 			case CMD_KASKADE_UPDATE_MELDELISTE,
-				 CMD_KASKADE_TEILNEHMER                    -> ts == TurnierSystem.KASKADE;
+				 CMD_KASKADE_TEILNEHMER, CMD_KASKADE_CHECKIN -> ts == TurnierSystem.KASKADE;
 			case CMD_KASKADE_TESTDATEN_MELDELISTE,
 				 CMD_KASKADE_TESTDATEN_TURNIER             -> ts == TurnierSystem.KEIN || ts == TurnierSystem.KASKADE;
 			case CMD_KASKADE_NAECHSTE_RUNDE,
 				 CMD_KASKADE_AKTUELLE_RUNDE,
 				 CMD_KASKADE_KO_FELDER                     -> ts == TurnierSystem.KASKADE;
-			// Poule A/B
 			case CMD_POULE_START                            -> ts == TurnierSystem.KEIN;
-			case CMD_POULE_NEUE_MELDELISTE,
-				 CMD_POULE_UPDATE_MELDELISTE,
-				 CMD_POULE_TEILNEHMER                      -> ts == TurnierSystem.POULE;
+			case CMD_POULE_UPDATE_MELDELISTE,
+				 CMD_POULE_TEILNEHMER, CMD_POULE_CHECKIN   -> ts == TurnierSystem.POULE;
 			case CMD_POULE_TESTDATEN_MELDELISTE             -> ts == TurnierSystem.KEIN || ts == TurnierSystem.POULE;
 			case CMD_POULE_VORRUNDE,
 				 CMD_POULE_SPIELPLAENE,
@@ -1375,35 +1840,27 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_POULE_KO                               -> ts == TurnierSystem.POULE;
 			case CMD_POULE_TESTDATEN_TURNIER,
 				 CMD_POULE_TESTDATEN_TURNIER_37             -> ts == TurnierSystem.KEIN || ts == TurnierSystem.POULE;
-			// K.-O.-Testdaten: auch wenn kein Turnier vorhanden
 			case CMD_KO_TESTDATEN_NUR_MELDELISTE,
 				 CMD_KO_TESTDATEN_8_TEAMS,
 				 CMD_KO_TESTDATEN_16_TEAMS,
 				 CMD_KO_TESTDATEN_CADRAGE                   -> ts == TurnierSystem.KEIN || ts == TurnierSystem.KO;
-			case CMD_SCHWEIZER_NEUE_MELDELISTE,
-				 CMD_SCHWEIZER_UPDATE_MELDELISTE,
-				 CMD_SCHWEIZER_TEILNEHMER,
+			case CMD_SCHWEIZER_UPDATE_MELDELISTE,
+				 CMD_SCHWEIZER_TEILNEHMER, CMD_SCHWEIZER_CHECKIN,
 				 CMD_SCHWEIZER_NAECHSTE_SPIELRUNDE,
 				 CMD_SCHWEIZER_RANGLISTE,
 				 CMD_SCHWEIZER_RANGLISTE_SORTIEREN          -> ts == TurnierSystem.SCHWEIZER;
-			// "Spielrunde neu auslosen": nur wenn Schweizer aktiv UND mind. 1 Spielrunde vorhanden
 			case CMD_SCHWEIZER_AKTUELLE_SPIELRUNDE          -> ts == TurnierSystem.SCHWEIZER && hatSchweizerSpielrunde(ws);
-			// Schweizer-Testdaten: auch wenn kein Turnier vorhanden
 			case CMD_SCHWEIZER_TESTDATEN_MELDELISTE,
 				 CMD_SCHWEIZER_TESTDATEN_TURNIER,
 				 CMD_SCHWEIZER_TESTDATEN_TURNIER_19        -> ts == TurnierSystem.KEIN || ts == TurnierSystem.SCHWEIZER;
-			// Konfiguration: nur wenn Turnier vorhanden
 			case CMD_KONFIGURATION_TURNIER,
 				 CMD_KONFIGURATION_KOPFFUSSZEILEN,
 				 CMD_KONFIGURATION_FARBEN,
 				 CMD_KONFIGURATION_TURNIER_STARTSEITE,
 				 CMD_KONFIGURATION_UPDATE_ERSTELLT_MIT_VERSION -> ts != TurnierSystem.KEIN;
-			// Webserver: Konfiguration immer aktiv; starten/stoppen je nach Zustand
 			case CMD_WEBSERVER_KONFIGURATION                -> true;
 			case CMD_WEBSERVER_STARTEN                      -> !WebServerManager.get().isLaeuft();
-			// Stoppen: nur das Owner-Dokument darf den WS stoppen
 			case CMD_WEBSERVER_STOPPEN                      -> WebServerManager.get().istOwnerDocument(document);
-			// URL-Slots: nur für das Owner-Dokument aktiv und sichtbar
 			case CMD_WEBSERVER_URL_1  -> WebServerManager.get().hatInstanzFuerSlot(0)
 					&& WebServerManager.get().istOwnerDocument(document);
 			case CMD_WEBSERVER_URL_2  -> WebServerManager.get().hatInstanzFuerSlot(1)
@@ -1424,36 +1881,34 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 					&& WebServerManager.get().istOwnerDocument(document);
 			case CMD_WEBSERVER_URL_10 -> WebServerManager.get().hatInstanzFuerSlot(9)
 					&& WebServerManager.get().istOwnerDocument(document);
-			// Release-Infos, Download, Direkt-Aktualisieren etc.: immer aktiv
 			case CMD_RELEASE_INFOS_ANZEIGEN,
 				 CMD_DOWNLOAD_EXTENSION,
 				 CMD_DIREKT_AKTUALISIEREN,
 				 CMD_LOGFILE_ANZEIGEN,
 				 CMD_PLUGIN_KONFIGURATION,
 				 CMD_PROCESSBOX_ANZEIGEN,
-				 CMD_PROJEKT_SEITE_OEFFNEN                  -> true;
-			// Abbruch: nur aktiv solange ein SheetRunner-Prozess läuft
-			// (der laufende Zweig oben liefert dafür bereits true; hier kein Prozess ⇒ false)
+				 CMD_PROJEKT_SEITE_OEFFNEN,
+				 CMD_FEEDBACK                               -> true;
 			case CMD_ABBRUCH                                -> false;
-			// Symbolleiste
 			case CMD_TOOLBAR_START                          -> ts == TurnierSystem.KEIN;
 			case CMD_TOOLBAR_WEITER                         -> ts != TurnierSystem.KEIN;
 			case CMD_TOOLBAR_VORRUNDEN_RANGLISTE,
 				 CMD_TOOLBAR_TEILNEHMER                     -> ts != TurnierSystem.KEIN && ts != TurnierSystem.LIGA;
+			// Checkin bewusst NICHT systemabhängig deaktivieren (LO-Toolbar-Bug bei enable/disable):
+			// immer klickbar, Systeme ohne Checkin zeigen beim Klick eine Hinweis-Meldung (Fallback-Strategie).
+			case CMD_TOOLBAR_CHECKIN                        -> ts != TurnierSystem.KEIN;
 			case CMD_TOOLBAR_NEU_AUSLOSEN -> ts != TurnierSystem.KEIN
 					&& TurnierSystemToolbarStrategieRegistry.get(ts).hatNeuAuslosen();
 			case CMD_TOOLBAR_ABSCHLUSS    -> ts != TurnierSystem.KEIN
 					&& TurnierSystemToolbarStrategieRegistry.get(ts).hatAbschlussphase();
 			case CMD_TOOLBAR_NAECHSTER_SPIELTAG,
 				 CMD_TOOLBAR_GESAMTRANGLISTE                -> ts.hatMehrereSpielTage();
-			// Neues Turnier in neuer Datei / Öffnen / Drucken – immer aktiviert (unabhängig vom aktuellen Dokument)
 			case CMD_TOOLBAR_NEU_IN_NEUER_DATEI,
 				 CMD_TOOLBAR_OEFFNEN,
 				 CMD_TOOLBAR_DRUCKEN,
-				 CMD_TOOLBAR_DRUCKVORSCHAU                  -> true;
-			// Turnier Modus – immer aktiviert
+				 CMD_TOOLBAR_DRUCKVORSCHAU,
+				 CMD_SIDEBAR_TOGGLE                         -> true;
 			case CMD_TURNIER_MODUS                          -> true;
-			// Spieler-DB – im Allgemeinen immer aktiviert (Verfügbarkeit der DB ist Laufzeit-Check)
 			case CMD_SPIELERDB_OEFFNEN,
 				 CMD_SPIELERDB_VEREINE,
 				 CMD_SPIELERDB_LABELS,
@@ -1463,9 +1918,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_SPIELERDB_EXPORT,
 				 CMD_SPIELERDB_IMPORT,
 				 CMD_SPIELERDB_WEBVIEW                      -> true;
-			// Übernahme in Meldeliste / Toolbar-Btn: nur wenn Turnier vorhanden
 			case CMD_SPIELERDB_IN_MELDELISTE                -> ts != TurnierSystem.KEIN;
-			// Timer – zustandsabhängig
 			case CMD_TIMER_STARTEN_DIALOG                   -> timerInaktivOderBeendet();
 			case CMD_TIMER_PAUSE_FORTSETZEN,
 				 CMD_TIMER_STOPPEN,
@@ -1479,115 +1932,120 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		}
 	}
 
-	/**
-	 * Prüft ob mindestens eine SuperMêlée-Spielrunde vorhanden ist.
-	 * Spielrunden-Sheets heißen "{spieltag}.{runde}. Spielrunde", z.B. "1.1. Spielrunde".
-	 */
 	private static boolean hatSupermeleeSpielrunde(WorkingSpreadsheet ws) {
 		try {
 			var doc = ws.getWorkingSpreadsheetDocument();
-			if (doc == null) {
-				return false;
-			}
+			if (doc == null) return false;
 			for (var name : doc.getSheets().getElementNames()) {
-				if (name.matches("\\d+\\.\\d+\\. Spielrunde")) {
-					return true;
-				}
+				if (name.matches("\\d+\\.\\d+\\. Spielrunde")) return true;
 			}
 			return false;
-		} catch (Exception e) {
-			return false;
-		}
+		} catch (Exception e) { return false; }
 	}
 
-	/**
-	 * Prüft ob mindestens eine Maastrichter-Vorrunde vorhanden ist.
-	 * Unterstützt sowohl lokalisierte Namen als auch ältere Dokumente mit deutschen Blattnamen.
-	 */
 	private static boolean hatMaastrichterVorrunde(WorkingSpreadsheet ws) {
 		try {
 			var doc = ws.getWorkingSpreadsheetDocument();
-			if (doc == null) {
-				return false;
-			}
-			String legacyName = "1. " + SheetNamen.LEGACY_MAASTRICHTER_VORRUNDE_PRAEFIX;
-			return doc.getSheets().hasByName(SheetNamen.maastrichterVorrunde(1))
+			if (doc == null) return false;
+			String legacyName = "1. " + de.petanqueturniermanager.helper.i18n.SheetNamen.LEGACY_MAASTRICHTER_VORRUNDE_PRAEFIX;
+			return doc.getSheets().hasByName(de.petanqueturniermanager.helper.i18n.SheetNamen.maastrichterVorrunde(1))
 					|| doc.getSheets().hasByName(legacyName);
-		} catch (Exception e) {
-			return false;
-		}
+		} catch (Exception e) { return false; }
 	}
 
-	/**
-	 * Prüft ob mindestens eine Schweizer-Spielrunde vorhanden ist.
-	 * Unterstützt sowohl lokalisierte Namen als auch ältere Dokumente mit deutschen Blattnamen.
-	 */
 	private static boolean hatSchweizerSpielrunde(WorkingSpreadsheet ws) {
 		try {
 			var doc = ws.getWorkingSpreadsheetDocument();
-			if (doc == null) {
-				return false;
-			}
-			String legacyName = "1. " + SchweizerAbstractSpielrundeSheet.SHEET_NAMEN;
-			return doc.getSheets().hasByName(SheetNamen.spielrunde(1))
+			if (doc == null) return false;
+			String legacyName = "1. " + de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrundeSheet.SHEET_NAMEN;
+			return doc.getSheets().hasByName(de.petanqueturniermanager.helper.i18n.SheetNamen.spielrunde(1))
 					|| doc.getSheets().hasByName(legacyName);
-		} catch (Exception e) {
-			return false;
-		}
+		} catch (Exception e) { return false; }
 	}
 
 	private static boolean hatFormuleXSpielrunde(WorkingSpreadsheet ws) {
 		try {
 			var doc = ws.getWorkingSpreadsheetDocument();
-			if (doc == null) {
-				return false;
-			}
-			return doc.getSheets().hasByName(SheetNamen.formulexSpielrunde(1))
+			if (doc == null) return false;
+			return doc.getSheets().hasByName(de.petanqueturniermanager.helper.i18n.SheetNamen.formulexSpielrunde(1))
 					|| doc.getSheets().hasByName("1. Spielrunde");
-		} catch (Exception e) {
-			return false;
-		}
+		} catch (Exception e) { return false; }
 	}
 
 	private static boolean timerInaktivOderBeendet() {
-		var zustand = TimerManager.get().getZustand();
-		return zustand == TimerZustand.INAKTIV || zustand == TimerZustand.BEENDET;
+		var zustand = de.petanqueturniermanager.timer.TimerManager.get().getZustand();
+		return zustand == de.petanqueturniermanager.timer.TimerZustand.INAKTIV
+				|| zustand == de.petanqueturniermanager.timer.TimerZustand.BEENDET;
 	}
 
 	private static boolean timerLaeuftOderPausiert() {
-		var zustand = TimerManager.get().getZustand();
-		return zustand == TimerZustand.LAEUFT || zustand == TimerZustand.PAUSIERT;
+		var zustand = de.petanqueturniermanager.timer.TimerManager.get().getZustand();
+		return zustand == de.petanqueturniermanager.timer.TimerZustand.LAEUFT
+				|| zustand == de.petanqueturniermanager.timer.TimerZustand.PAUSIERT;
 	}
 
 	private static boolean timerBeendetUndNichtSnoozed() {
-		var tm = TimerManager.get();
-		return tm.getZustand() == TimerZustand.BEENDET && !tm.getAktuellerZustand().snoozed();
+		var tm = de.petanqueturniermanager.timer.TimerManager.get();
+		return tm.getZustand() == de.petanqueturniermanager.timer.TimerZustand.BEENDET && !tm.getAktuellerZustand().snoozed();
 	}
+
+	private static final AtomicBoolean NOTIFY_ALL_FIRST_LOG = new AtomicBoolean(true);
+
+	private static final java.util.concurrent.atomic.AtomicInteger NOTIFY_COUNTER =
+			new java.util.concurrent.atomic.AtomicInteger();
 
 	static void notifyAllListeners() {
 		if (PetanqueTurnierMngrSingleton.isDruckvorschauAktiv()) {
-			logger.debug("notifyAllListeners: Druckvorschau aktiv – übersprungen (thread={})",
+			logger.trace("[FOKUS-TRACE] notifyAllListeners: Druckvorschau aktiv – übersprungen (thread={})",
 					Thread.currentThread().getName());
 			return;
 		}
+		int notifyId = NOTIFY_COUNTER.incrementAndGet();
+		long startNs = System.nanoTime();
 		Map<String, List<StatusEntry>> snapshot;
 		synchronized (STATUS_LISTENERS) {
 			snapshot = new HashMap<>(STATUS_LISTENERS);
 		}
-		// Menü/Toolbar-Zustand immer anhand des aktuell fokussierten Dokuments bewerten.
-		// Ein gespeichertes "eigensDokument" würde bei Singleton-Handler immer auf das erste
-		// Dokument zeigen → zweites Dokument zeigt falschen Menüzustand (Bug: zweites Dokument
-		// übernimmt Turniersystem-Zustand des ersten Dokuments).
+		// Top-Frames im Aufruf-Stack loggen damit klar ist, wer notifyAllListeners triggert
+		StackTraceElement[] stack = Thread.currentThread().getStackTrace();
+		StringBuilder caller = new StringBuilder();
+		for (int i = 2; i < Math.min(stack.length, 6); i++) {
+			if (caller.length() > 0) caller.append(" ← ");
+			caller.append(stack[i].getClassName().substring(stack[i].getClassName().lastIndexOf('.') + 1))
+					.append('.').append(stack[i].getMethodName())
+					.append(':').append(stack[i].getLineNumber());
+		}
 		var aktivesDokument = holeAktivesDokument();
+		int totalListeners = snapshot.values().stream().mapToInt(List::size).sum();
+		logger.trace("[FOKUS-TRACE] notifyAllListeners #{} START thread={} aktiverDoc={} commands={} listeners={} caller={}",
+				notifyId, Thread.currentThread().getName(), beschreibeDokument(aktivesDokument),
+				snapshot.size(), totalListeners, caller);
+		// URL-basierter Override (tdf#172207): Befehle in TOOLBAR_ONLY_CMDS dauerhaft
+		// enabled; Rest echte isEnabled-Bewertung. Pro command nur einmal berechnen.
+		int listenerAnzahl = 0;
 		for (Map.Entry<String, List<StatusEntry>> entry : snapshot.entrySet()) {
+			String cmd = entry.getKey();
+			boolean enabled = TOOLBAR_ONLY_CMDS.contains(cmd) || isEnabled(cmd, aktivesDokument);
 			for (StatusEntry e : new ArrayList<>(entry.getValue())) {
-				postStatus(e.listener, e.url, isEnabled(entry.getKey(), aktivesDokument));
+				postStatus(e.listener, e.url, enabled);
+				listenerAnzahl++;
 			}
 		}
-		// Spieltag-Toolbar je nach aktivem Turniersystem ein-/ausblenden
 		var ctx = SHARED_CONTEXT;
 		if (ctx != null) {
-			SpieltagToolbarSteuerung.aktualisiereInAllenFrames(ctx);
+			// notifyAllListeners() feuert aus Fremd-Threads (SheetRunner, TimerManager,
+			// TurnierEvent, ReleaseUpdateService, GlobalEventListener). aktualisiereInAllenFrames
+			// ruft requestElement()/showElement() (VCL-Toolbar-Ops) – diese MÜSSEN auf dem
+			// LO-Main-Thread laufen, sonst reißt die Off-Thread-Mutation den Fokus weg und ein
+			// offenes Menü schließt sich (vgl. CLAUDE.md, analog Fix 8e3eb41e für TimerToolbarSteuerung).
+			LoMainThread.post(ctx, () -> SpieltagToolbarSteuerung.aktualisiereInAllenFrames(ctx));
+		}
+		long dauerMs = (System.nanoTime() - startNs) / 1_000_000L;
+		logger.trace("[FOKUS-TRACE] notifyAllListeners #{} ENDE listenerAnzahl={} dauerMs={}",
+				notifyId, listenerAnzahl, dauerMs);
+		if (NOTIFY_ALL_FIRST_LOG.compareAndSet(true, false)) {
+			PerfLog.log(logger, "[STARTUP-TIMING] notifyAllListeners (erster Aufruf): {} ms, Listener-Anzahl={}, thread={}",
+					dauerMs, listenerAnzahl, Thread.currentThread().getName());
 		}
 	}
 

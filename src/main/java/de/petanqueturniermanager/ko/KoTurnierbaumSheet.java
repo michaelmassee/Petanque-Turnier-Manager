@@ -439,7 +439,8 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 			return;
 		}
 		int gruppenGroesse = getKonfigurationSheet().getGruppenGroesse();
-		erstelleAlleGruppenBaeume(alleMeldungen, gruppenGroesse);
+		int minLetzteGruppe = getKonfigurationSheet().getMinLetzteGruppeGroesse();
+		erstelleAlleGruppenBaeume(alleMeldungen, gruppenGroesse, minLetzteGruppe);
 	}
 
 	/**
@@ -573,7 +574,8 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		}
 
 		int gruppenGroesse = getKonfigurationSheet().getGruppenGroesse();
-		erstelleAlleGruppenBaeume(alleMeldungen, gruppenGroesse);
+		int minLetzteGruppe = getKonfigurationSheet().getMinLetzteGruppeGroesse();
+		erstelleAlleGruppenBaeume(alleMeldungen, gruppenGroesse, minLetzteGruppe);
 	}
 
 	private void pruefeUndFragObAlleAktivieren() throws GenerateException {
@@ -600,13 +602,13 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 
 	/**
 	 * Teilt alle Meldungen in Gruppen auf und erstellt pro Gruppe einen eigenen Turnierbaum-Sheet.
-	 * Die Aufteilung erfolgt gemäß {@link GruppenAufteilungRechner} (einfache Chunk-Aufteilung,
-	 * Rest erhält eigene Folgegruppe; 1-Team-Rest wird in vorherige Gruppe gefaltet).
+	 * Die Aufteilung erfolgt gemäß {@link GruppenAufteilungRechner}: kleine letzte Gruppen werden
+	 * in die vorherige Gruppe gefaltet; Cadrage übernimmt dort den Ausgleich.
 	 */
-	private void erstelleAlleGruppenBaeume(TeamMeldungen alleMeldungen, int gruppenGroesse)
-			throws GenerateException {
+	private void erstelleAlleGruppenBaeume(TeamMeldungen alleMeldungen, int gruppenGroesse,
+			int minLetzteGruppe) throws GenerateException {
 		List<Integer> gruppenGroessen = GruppenAufteilungRechner.berechne(
-				alleMeldungen.size(), gruppenGroesse);
+				alleMeldungen.size(), gruppenGroesse, minLetzteGruppe);
 		int anzGruppen = gruppenGroessen.size();
 
 		alleGruppenSheetNamenLoeschen();

@@ -27,7 +27,13 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
  */
 public final class TeilnehmerNamenLeser {
 
-    public record TeilnehmerNamen(Map<Integer, String> spielerNamen, Map<Integer, String> teamnamen) {
+    /**
+     * @param spielerNamen verkettete Anzeigenamen pro Team-Nr
+     * @param teamnamen    freie Teamnamen pro Team-Nr (nur bei aktivem Teamname)
+     * @param sortNamen    Nachname von Spieler 1 pro Team-Nr (Fallback Vorname) – nur zum Sortieren
+     */
+    public record TeilnehmerNamen(Map<Integer, String> spielerNamen, Map<Integer, String> teamnamen,
+            Map<Integer, String> sortNamen) {
     }
 
     private static final int LESE_BIS_ZEILE_OFFSET = 999;
@@ -56,10 +62,11 @@ public final class TeilnehmerNamenLeser {
     public TeilnehmerNamen lesen() throws GenerateException {
         Map<Integer, String> spielerNamen = new HashMap<>();
         Map<Integer, String> teamnamen = new HashMap<>();
+        Map<Integer, String> sortNamen = new HashMap<>();
 
         XSpreadsheet xSheet = sheet.getXSpreadSheet();
         if (xSheet == null) {
-            return new TeilnehmerNamen(spielerNamen, teamnamen);
+            return new TeilnehmerNamen(spielerNamen, teamnamen, sortNamen);
         }
 
         int ersterSpielerOffset = teamnameAktiv ? 2 : 1;
@@ -80,12 +87,23 @@ public final class TeilnehmerNamenLeser {
                 break;
             }
             spielerNamen.put(nr, bauSpielerNamenZusammen(row, ersterSpielerOffset, spaltenProSpieler));
+            sortNamen.put(nr, leseSortNachname(row, ersterSpielerOffset));
             if (teamnameAktiv && row.size() > 1) {
                 String teamname = row.get(1).getStringVal();
                 teamnamen.put(nr, teamname != null ? teamname : "");
             }
         }
-        return new TeilnehmerNamen(spielerNamen, teamnamen);
+        return new TeilnehmerNamen(spielerNamen, teamnamen, sortNamen);
+    }
+
+    /** Nachname von Spieler 1 als Sortierschlüssel; fällt auf den Vornamen zurück, wenn leer. */
+    private static String leseSortNachname(RowData row, int ersterSpielerOffset) {
+        int vorSpalte = ersterSpielerOffset;
+        int nachSpalte = vorSpalte + 1;
+        String vorname = vorSpalte < row.size() ? row.get(vorSpalte).getStringVal() : "";
+        String nachname = nachSpalte < row.size() ? row.get(nachSpalte).getStringVal() : "";
+        String nn = nachname != null ? nachname.trim() : "";
+        return !nn.isEmpty() ? nn : (vorname != null ? vorname.trim() : "");
     }
 
     private String bauSpielerNamenZusammen(RowData row, int ersterSpielerOffset, int spaltenProSpieler) {

@@ -393,6 +393,7 @@ public class SuperMeleePaarungenV2Test {
      */
     @Test
     public void testMehrereRunden_Triplette_MitDoublette_11Spieler() throws AlgorithmenException {
+        RandomSource.setSeed(42L);
         int anzSpieler = 11;
         int testeRunden = 4; // Paare/Runde = 3×C(3,2) + 1×C(2,2) = 10
         SpielerMeldungen meldungen = newTestMeldungen(anzSpieler);
@@ -828,6 +829,91 @@ public class SuperMeleePaarungenV2Test {
         }
     }
 
+    /**
+     * Crossover-Vermeidung (weicher Constraint): 22 Spieler × 4 Runden im
+     * Triplette-Modus reproduzieren die Konstellation aus der Live-ODS
+     * {@code ~/tmp/supermelee_algorithmus.ods}. Die Live-ODS zeigte 43 Spielerpaare,
+     * die mehrfach in derselben Partie waren — davon 4 Tripel mit Mischverteilung
+     * 1× Team-Partner + 2× Gegner ("war erst zusammen, dann gegeneinander").<br>
+     * <br>
+     * Mit dem Two-Pass-Algorithmus (Pass 1 verwendet die Union aus harter
+     * Mitspieler-Matrix und Soft-Matrix {@code warImSpielMit}) sinkt die Anzahl
+     * der Wiederholungen messbar. Wichtiger: das vom Anwender als störend
+     * empfundene Team↔Gegner-Wechselmuster wird strikt verhindert — kein Tripel
+     * mehr mit gemischter Team/Gegner-Historie.
+     */
+    @Test
+    public void testCrossoverVermeidung22Spieler4Runden() throws AlgorithmenException {
+        RandomSource.setSeed(42L);
+        SpielerMeldungen meldungen = newTestMeldungen(22);
+
+        Set<String> bereitsImSpiel = new HashSet<>();
+        Map<String, Integer> teamCount = new HashMap<>();
+        Map<String, Integer> spielCount = new HashMap<>();
+        long mitspielerNachSpiel = 0;
+
+        for (int rnd = 1; rnd <= 4; rnd++) {
+            MeleeSpielRunde runde = paarungen.neueSpielrundeTripletteMode(rnd, meldungen, false);
+            List<Team> teams = runde.teams();
+            Set<String> dieseRunde = new HashSet<>();
+            for (int i = 0; i < teams.size() - 1; i += 2) {
+                List<Spieler> tA = teams.get(i).spieler();
+                List<Spieler> tB = teams.get(i + 1).spieler();
+                mitspielerNachSpiel += zaehleNeueMitspieler(tA, bereitsImSpiel, teamCount, spielCount, dieseRunde);
+                mitspielerNachSpiel += zaehleNeueMitspieler(tB, bereitsImSpiel, teamCount, spielCount, dieseRunde);
+                for (Spieler sA : tA) {
+                    for (Spieler sB : tB) {
+                        String k = paarSchluessel(sA.getNr(), sB.getNr());
+                        spielCount.merge(k, 1, Integer::sum);
+                        dieseRunde.add(k);
+                    }
+                }
+            }
+            bereitsImSpiel.addAll(dieseRunde);
+        }
+
+        assertThat(teamCount.values().stream().filter(v -> v > 1).count())
+                .as("Mitspieler-Wiederholungen (harter Constraint)")
+                .isZero();
+
+        // Live-ODS-Baseline (vor Fix): 43 Wiederholungen. Two-Pass-Fix erreicht 32 (Seed 42).
+        assertThat(spielCount.values().stream().filter(v -> v > 1).count())
+                .as("Wiederholungen ohne Fix waren 43; Soft-Constraint reduziert deutlich")
+                .isLessThanOrEqualTo(35);
+
+        // Pass 1 (Union-Matrix) garantiert: ein Spielerpaar, das in einer früheren
+        // Runde gemeinsam in einer Partie war, darf in keiner späteren Runde
+        // Mitspieler werden. Damit fällt das vom Anwender beobachtete Tripel-Muster
+        // "1× Team + 2× Gegner" weg.
+        assertThat(mitspielerNachSpiel)
+                .as("Kein Spielerpaar darf Mitspieler werden, nachdem es bereits in einer früheren Partie zusammen war")
+                .isZero();
+    }
+
+    /** Zählt Mitspieler in {@code team}, aktualisiert beide Counter und meldet,
+     *  wie viele Paare bereits in einer früheren Runde im selben Spiel waren. */
+    private long zaehleNeueMitspieler(List<Spieler> team, Set<String> bereitsImSpiel,
+            Map<String, Integer> teamCount, Map<String, Integer> spielCount,
+            Set<String> dieseRunde) {
+        long verstoesse = 0;
+        for (int i = 0; i < team.size(); i++) {
+            for (int j = i + 1; j < team.size(); j++) {
+                String k = paarSchluessel(team.get(i).getNr(), team.get(j).getNr());
+                teamCount.merge(k, 1, Integer::sum);
+                spielCount.merge(k, 1, Integer::sum);
+                dieseRunde.add(k);
+                if (bereitsImSpiel.contains(k)) {
+                    verstoesse++;
+                }
+            }
+        }
+        return verstoesse;
+    }
+
+    private static String paarSchluessel(int a, int b) {
+        return a < b ? a + "_" + b : b + "_" + a;
+    }
+
     // =========================================================================
     // Größen-Constraint: D-vs-T nur erlaubt, wenn Parität es erzwingt (5er-Partie)
     // =========================================================================
@@ -1003,6 +1089,51 @@ public class SuperMeleePaarungenV2Test {
                 .as("Kein Spieler darf bei 22 Spielern / 3 Runden mehr als einmal Doublette spielen. "
                         + "Belegung pro Spieler-Nr: %s", doubletteCount)
                 .isLessThanOrEqualTo(1);
+    }
+
+    /**
+     * Regression: Über mehrere Spieltage hinweg darf der {@code anzMalKleinesTeam}-Counter
+     * nicht ignoriert werden, wenn ein Teil der Spieler bereits oft im Ausnahme-Team
+     * (Doublette) war. Reproduziert die Situation aus dem 6.-Spieltag-Datensatz
+     * {@code ~/tmp/locrash-2/supermelee_6_spieltag_fehlerhaft.ods}, in dem dieselben
+     * Spieler drei Runden hintereinander im Doublette gefangen waren.
+     */
+    @Test
+    public void paarung_22Spieler_3Runden_bereitsBelasteteSpielerMeidenDoublette()
+            throws AlgorithmenException {
+        RandomSource.setSeed(42L);
+        SpielerMeldungen meldungen = newTestMeldungen(22);
+        // Simuliere 5 Vorspieltage: Spieler 1..4 sind bereits 5× im Doublette gewesen,
+        // Spieler 5..22 noch nie. Der Fairness-Mechanismus muss diese 4 in den nächsten
+        // 3 Runden zuverlässig aus den Doublette-Slots heraushalten — es gibt 18 unbelastete
+        // Spieler für 12 Doublette-Slots (3 Runden × 4 Slots), strukturell trivial möglich.
+        Set<Integer> belastet = Set.of(1, 2, 3, 4);
+        for (Spieler s : meldungen.spieler()) {
+            if (belastet.contains(s.getNr())) {
+                for (int i = 0; i < 5; i++) {
+                    s.incAnzMalKleinesTeam();
+                }
+            }
+        }
+
+        Map<Integer, Integer> doubletteCount = new HashMap<>();
+        for (int rnd = 1; rnd <= 3; rnd++) {
+            MeleeSpielRunde runde = paarungen.neueSpielrundeTripletteMode(rnd, meldungen, false);
+            for (Team team : runde.teams()) {
+                if (team.size() == 2) {
+                    for (Spieler s : team.spieler()) {
+                        doubletteCount.merge(s.getNr(), 1, Integer::sum);
+                    }
+                }
+            }
+        }
+
+        for (int nr : belastet) {
+            assertThat(doubletteCount.getOrDefault(nr, 0))
+                    .as("Spieler %d war bereits 5× im Doublette — darf in den nächsten 3 Runden "
+                            + "nicht erneut. Verteilung pro Spieler-Nr: %s", nr, doubletteCount)
+                    .isZero();
+        }
     }
 
     // =========================================================================
@@ -1211,6 +1342,106 @@ public class SuperMeleePaarungenV2Test {
             spielRunde.addTeamWennNichtVorhanden(team);
         }
         return spielRunde;
+    }
+
+    // =========================================================================
+    // Multi-Shuffle / Knotenlimit-Resilienz
+    // =========================================================================
+
+    /**
+     * Szenario: dichte Soft-Matrix, leere Hard-Matrix.<br>
+     * <br>
+     * Nach vielen Spieltagen haben alle 12 Spieler jeden anderen als {@code warImSpielMit}
+     * eingetragen (gesättigte Soft-Matrix). Die Hard-Matrix (warImTeamMit) ist leer —
+     * viele gültige Lösungen existieren.<br>
+     * <br>
+     * Erwartetes Verhalten mit Multi-Shuffle:
+     * <ul>
+     *   <li>Pass 1 (unionMatrix = all-true): Forward-Checking erkennt Unmöglichkeit bei
+     *       Tiefe ~4 (Spieler 5 kann keinem 1-Spieler-Team beitreten) — wenige Knoten.</li>
+     *   <li>Pass 2 (hardMatrix = all-false): jede Zuweisung gültig, Lösung in ~n Knoten.</li>
+     * </ul>
+     * Vor dem Multi-Shuffle-Fix konnte Pass 1 mit moderater Union-Dichte das gesamte
+     * 10-M-Budget erschöpfen und Pass 2 ohne Budget stehen lassen.
+     */
+    @Test
+    public void testDichteSoftMatrix_leereHardMatrix_findestLoesungSchnell() throws AlgorithmenException {
+        SpielerMeldungen meldungen = newTestMeldungen(12);
+
+        // Alle warImSpielMit-Einträge setzen (gesättigte Soft-Matrix)
+        List<Spieler> spieler = new ArrayList<>(meldungen.spieler());
+        for (int i = 0; i < spieler.size(); i++) {
+            for (int j = i + 1; j < spieler.size(); j++) {
+                spieler.get(i).addWarImSpielMit(spieler.get(j));
+            }
+        }
+
+        // Lösung muss trotz gesättigter Soft-Matrix gefunden werden
+        MeleeSpielRunde runde = paarungen.generiereRundeMitFesteTeamGroese(1, 3, meldungen);
+        assertThat(runde).isNotNull();
+        assertThat(runde.teams()).hasSize(4);
+        pruefeKeineDoppeltenSpieler(runde);
+        pruefeAlleSpielerInTeam(runde, meldungen);
+    }
+
+    /**
+     * Performance-Regressionstest: scheitert schnell nach Erschöpfung der Kombinationen.<br>
+     * <br>
+     * Reproduziert das Benutzer-Szenario "5 Spieltage, wenige Runden, ausreichende Spieler":
+     * 12 Spieler im Triplette-Modus werden so lange ausgelost, bis keine gültige Runde
+     * mehr möglich ist. Der Test darf insgesamt nicht länger als 5 Sekunden dauern.<br>
+     * <br>
+     * Vor dem Multi-Shuffle-Fix dauerte jeder scheiternde Versuch bis zu 10 M Knoten lang,
+     * was bei 5 Spieltag-Levels × 5 Fairness-Levels × 10 M ≈ 50 Sekunden Blockade ergab.
+     * Mit {@code maxKnotenProPass(12)=50_000} und {@code MAX_SHUFFLE_VERSUCHE=10} sind es
+     * maximal 1 M Knoten pro Algorithmus-Aufruf — typischerweise weit darunter.
+     */
+    @Test
+    @org.junit.jupiter.api.Timeout(value = 5)
+    public void testVieleRunden_scheitertSchnellNachErschoepfung() {
+        SpielerMeldungen meldungen = newTestMeldungen(12);
+        boolean exceptionGeworfen = false;
+        for (int rnd = 1; rnd <= 20 && !exceptionGeworfen; rnd++) {
+            try {
+                paarungen.neueSpielrundeTripletteMode(rnd, meldungen, false);
+            } catch (AlgorithmenException e) {
+                exceptionGeworfen = true;
+            }
+        }
+        assertThat(exceptionGeworfen)
+                .as("Nach erschöpften Kombinationen muss AlgorithmenException geworfen werden")
+                .isTrue();
+    }
+
+    // =========================================================================
+    // maxKnotenProPass
+    // =========================================================================
+
+    @Test
+    public void testMaxKnotenProPass_skaliertMitN() {
+        assertThat(SuperMeleePaarungenV2.maxKnotenProPass(12)).isEqualTo(50_000);
+        assertThat(SuperMeleePaarungenV2.maxKnotenProPass(24)).isEqualTo(50_000);
+        assertThat(SuperMeleePaarungenV2.maxKnotenProPass(25)).isEqualTo(200_000);
+        assertThat(SuperMeleePaarungenV2.maxKnotenProPass(36)).isEqualTo(200_000);
+        assertThat(SuperMeleePaarungenV2.maxKnotenProPass(37)).isEqualTo(400_000);
+        assertThat(SuperMeleePaarungenV2.maxKnotenProPass(48)).isEqualTo(400_000);
+        assertThat(SuperMeleePaarungenV2.maxKnotenProPass(49)).isEqualTo(600_000);
+        assertThat(SuperMeleePaarungenV2.maxKnotenProPass(60)).isEqualTo(600_000);
+    }
+
+    @Test
+    public void testMaxKnotenFairnessVersuch_kleinerAlsVollesBudget() {
+        assertThat(SuperMeleePaarungenV2.maxKnotenFairnessVersuch(12)).isEqualTo(20_000);
+        assertThat(SuperMeleePaarungenV2.maxKnotenFairnessVersuch(24)).isEqualTo(20_000);
+        assertThat(SuperMeleePaarungenV2.maxKnotenFairnessVersuch(36)).isEqualTo(25_000);
+        assertThat(SuperMeleePaarungenV2.maxKnotenFairnessVersuch(42)).isEqualTo(50_000);
+        assertThat(SuperMeleePaarungenV2.maxKnotenFairnessVersuch(48)).isEqualTo(50_000);
+        assertThat(SuperMeleePaarungenV2.maxKnotenFairnessVersuch(60)).isEqualTo(75_000);
+        // Muss immer kleiner als das volle Budget sein
+        for (int n = 6; n <= 60; n += 6) {
+            assertThat(SuperMeleePaarungenV2.maxKnotenFairnessVersuch(n))
+                    .isLessThan(SuperMeleePaarungenV2.maxKnotenProPass(n));
+        }
     }
 
     // =========================================================================

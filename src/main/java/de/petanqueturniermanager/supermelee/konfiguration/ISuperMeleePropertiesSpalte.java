@@ -51,6 +51,8 @@ public interface ISuperMeleePropertiesSpalte extends IPropertiesSpalte {
 
 	Integer getMaxAnzGespielteSpieltage();
 
+	void setMaxAnzGespielteSpieltage(int val);
+
 	Integer getMaxAnzSpielerInSpalte();
 
 	@Override

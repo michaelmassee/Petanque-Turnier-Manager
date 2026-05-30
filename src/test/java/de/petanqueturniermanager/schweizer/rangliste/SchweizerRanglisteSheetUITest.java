@@ -265,7 +265,7 @@ public class SchweizerRanglisteSheetUITest extends BaseCalcUITest {
 	 * das Rangliste-Sheet NICHT als aktives Sheet setzt.
 	 * <p>
 	 * Hintergrund: {@code setActiveSheet()} am Ende von {@code doRunIntern()} löst den
-	 * {@code SelectionChangeListener} aus. Der {@link de.petanqueturniermanager.helper.rangliste.RanglisteRefreshListener}
+	 * {@code SelectionChangeListener} aus. Der {@link de.petanqueturniermanager.helper.sheetsync.SheetSyncListener}
 	 * prüft {@code SheetRunner.isRunning()} – ist dieses {@code false} (Direktaufruf),
 	 * würde er sofort einen zweiten konkurrierenden {@code doRun()} starten und das Sheet
 	 * korrumpieren. Der Fix: {@code setActiveSheet()} wird nur aufgerufen wenn
@@ -296,7 +296,7 @@ public class SchweizerRanglisteSheetUITest extends BaseCalcUITest {
 		// Wäre sie es, hätte setActiveSheet() den SelectionChangeListener ausgelöst,
 		// der (isRunning=false) sofort einen zweiten konkurrierenden doRun() startet.
 		assertThat(aktivesSheet())
-				.as("Direktes doRun() darf setActiveSheet() nicht aufrufen (würde RanglisteRefreshListener triggern)")
+				.as("Direktes doRun() darf setActiveSheet() nicht aufrufen (würde SheetSyncListener triggern)")
 				.isNotSameAs(ranglisteSheet);
 	}
 

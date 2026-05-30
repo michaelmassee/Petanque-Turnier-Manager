@@ -114,6 +114,21 @@ public class PouleMeldeListeSheetUpdate extends SheetRunner implements ISheet, M
         return delegate.getAktiveMeldungen();
     }
 
+    /**
+     * Sortiert die Meldeliste nach der angegebenen Spalte. Wird von der Checkin-Liste verwendet,
+     * um vor der Ausgabe nach Name oder Nummer zu sortieren.
+     */
+    public void doSort(int spalteNr, boolean aufsteigend) throws GenerateException {
+        XSpreadsheet xSheet = getXSpreadSheet();
+        int letzteZeile = letzteZeileMitDaten(xSheet);
+        if (letzteZeile < ERSTE_DATEN_ZEILE) {
+            return;
+        }
+        RangePosition range = RangePosition.from(getTeamNrSpalte(), ERSTE_DATEN_ZEILE,
+                getSetzPositionSpalte(), letzteZeile);
+        SortHelper.from(this, range).spalteToSort(spalteNr).aufSteigendSortieren(aufsteigend).doSort();
+    }
+
     protected int letzteZeileMitDaten(XSpreadsheet xSheet) throws GenerateException {
         return delegate.letzteZeileMitDaten(xSheet);
     }

@@ -166,4 +166,72 @@ public class SpielerEndranglisteErgebnisTest {
         assertThat(erg.compareTo(erg)).isZero();
     }
 
+    @Test
+    public void testGetSpielDivNull() throws Exception {
+        SpielerEndranglisteErgebnis erg = new SpielerEndranglisteErgebnis(1);
+        erg.setSpielPlus(4).setSpielMinus(4);
+        assertThat(erg.getSpielDiv()).isZero();
+    }
+
+    @Test
+    public void testGetPunkteDivNegativ() throws Exception {
+        SpielerEndranglisteErgebnis erg = new SpielerEndranglisteErgebnis(1);
+        erg.setPunktePlus(5).setPunkteMinus(12);
+        assertThat(erg.getPunkteDiv()).isEqualTo(-7);
+    }
+
+    @Test
+    public void testGetPunkteDivNull() throws Exception {
+        SpielerEndranglisteErgebnis erg = new SpielerEndranglisteErgebnis(1);
+        erg.setPunktePlus(8).setPunkteMinus(8);
+        assertThat(erg.getPunkteDiv()).isZero();
+    }
+
+    @Test
+    public void testIsValidNegativesSpielPlus() throws Exception {
+        SpielerEndranglisteErgebnis erg = new SpielerEndranglisteErgebnis(1);
+        erg.setSpielPlus(-1);
+        assertThat(erg.isValid()).isFalse();
+    }
+
+    @Test
+    public void testIsValidNegativesPunkteMinus() throws Exception {
+        SpielerEndranglisteErgebnis erg = new SpielerEndranglisteErgebnis(1);
+        erg.setPunkteMinus(-1);
+        assertThat(erg.isValid()).isFalse();
+    }
+
+    @Test
+    public void testCompareTo_nurSpielerNrUnterscheidet_niedrigereZuerst() throws Exception {
+        // alle Sort-Kriterien identisch, nur spielerNr unterschiedlich
+        SpielerEndranglisteErgebnis kleinerNr = new SpielerEndranglisteErgebnis(3);
+        kleinerNr.setSpielPlus(4).setSpielMinus(2).setPunktePlus(15).setPunkteMinus(10);
+
+        SpielerEndranglisteErgebnis groessereNr = new SpielerEndranglisteErgebnis(8);
+        groessereNr.setSpielPlus(4).setSpielMinus(2).setPunktePlus(15).setPunkteMinus(10);
+
+        assertThat(kleinerNr.compareTo(groessereNr)).isNegative();
+        assertThat(groessereNr.compareTo(kleinerNr)).isPositive();
+    }
+
+    @Test
+    public void testEquals_bleibtIdentitaetsbasiert() throws Exception {
+        // siehe Architektur-Exclude EQ_COMPARETO_USE_OBJECT_EQUALS in spotbugs/exclude.xml:
+        // compareTo definiert Sortierung, equals bleibt identitaetsbasiert.
+        SpielerEndranglisteErgebnis erg1 = new SpielerEndranglisteErgebnis(1);
+        SpielerEndranglisteErgebnis erg2 = new SpielerEndranglisteErgebnis(1);
+
+        assertThat(erg1).isNotEqualTo(erg2);
+        assertThat(erg1).isEqualTo(erg1);
+    }
+
+    @Test
+    public void testFluentChaining_alleSetterGebenSelfZurueck() throws Exception {
+        SpielerEndranglisteErgebnis erg = new SpielerEndranglisteErgebnis(1);
+        assertThat(erg.setSpielPlus(1)).isSameAs(erg);
+        assertThat(erg.setSpielMinus(1)).isSameAs(erg);
+        assertThat(erg.setPunktePlus(1)).isSameAs(erg);
+        assertThat(erg.setPunkteMinus(1)).isSameAs(erg);
+    }
+
 }

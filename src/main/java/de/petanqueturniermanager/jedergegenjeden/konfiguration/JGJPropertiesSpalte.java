@@ -40,55 +40,55 @@ public class JGJPropertiesSpalte extends BasePropertiesSpalte implements IJGJPro
 
 	static {
 		ADDBaseProp(KONFIG_PROPERTIES);
+		addCheckinSortProp(KONFIG_PROPERTIES);
+		addTeilnehmerListeSortProp(KONFIG_PROPERTIES);
 	}
 
 	static {
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELPLAN_COLOR_BACK_GERADE)
-				.setDefaultVal(DEFAULT_GERADE_BACK_COLOR).setDescription("config.desc.jgj.spielplan.gerade")
-				.inSideBar());
+				.setDefaultVal(DEFAULT_GERADE_BACK_COLOR).setDescription("config.desc.jgj.spielplan.gerade"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELPLAN_COLOR_BACK_UNGERADE)
 				.setDefaultVal(DEFAULT_UNGERADE_BACK_COLOR)
-				.setDescription("config.desc.jgj.spielplan.ungerade").inSideBar());
+				.setDescription("config.desc.jgj.spielplan.ungerade"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELPLAN_COLOR_BACK_HEADER)
-				.setDefaultVal(DEFAULT_HEADER_BACK_COLOR).setDescription("config.desc.jgj.spielplan.header")
-				.inSideBar());
+				.setDefaultVal(DEFAULT_HEADER_BACK_COLOR).setDescription("config.desc.jgj.spielplan.header"));
 
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_LINKS)
-				.setDescription("config.desc.header.links").inSideBar());
+				.setDescription("config.desc.header.links"));
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_MITTE)
-				.setDescription("config.desc.header.mitte").inSideBar());
+				.setDescription("config.desc.header.mitte"));
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_RECHTS)
-				.setDescription("config.desc.header.rechts").inSideBar());
+				.setDescription("config.desc.header.rechts"));
 
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_MELDELISTE_FORMATION)
 				.setDefaultVal(Formation.TETE.name())
 				.setDescription("config.desc.meldeliste.formation"))
 				.addAuswahl(Formation.TETE.name(), Formation.TETE.getBezeichnung())
 				.addAuswahl(Formation.DOUBLETTE.name(), Formation.DOUBLETTE.getBezeichnung())
-				.addAuswahl(Formation.TRIPLETTE.name(), Formation.TRIPLETTE.getBezeichnung()).inSideBar());
+				.addAuswahl(Formation.TRIPLETTE.name(), Formation.TRIPLETTE.getBezeichnung()));
 
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_MELDELISTE_TEAMNAME)
 				.setDefaultVal("N").setDescription("config.desc.meldeliste.teamname"))
-				.addAuswahl("J", "Ja").addAuswahl("N", "Nein").inSideBar());
+				.addAuswahl("J", "Ja").addAuswahl("N", "Nein"));
 
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_MELDELISTE_VEREINSNAME)
 				.setDefaultVal("N").setDescription("config.desc.jgj.vereinsname"))
-				.addAuswahl("J", "Ja").addAuswahl("N", "Nein").inSideBar());
+				.addAuswahl("J", "Ja").addAuswahl("N", "Nein"));
 
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE)
 				.setDefaultVal(SpielplanTeamAnzeige.NR.name())
 				.setDescription("config.desc.jgj.spielplan.team.anzeige"))
 				.addAuswahl(SpielplanTeamAnzeige.NR.name(), "Teamnummer")
-				.addAuswahl(SpielplanTeamAnzeige.NAME.name(), "Teamname").inSideBar());
+				.addAuswahl(SpielplanTeamAnzeige.NAME.name(), "Teamname"));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_FREISPIEL_PUNKTE_PLUS)
-				.setDefaultVal(13).setDescription("config.desc.freispiel.punkte.plus").inSideBar());
+				.setDefaultVal(13).setDescription("config.desc.freispiel.punkte.plus"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_FREISPIEL_PUNKTE_MINUS)
-				.setDefaultVal(7).setDescription("config.desc.freispiel.punkte.minus").inSideBar());
+				.setDefaultVal(7).setDescription("config.desc.freispiel.punkte.minus"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_GRUPPENGROESSE)
-				.setDefaultVal(0).setDescription("config.desc.jgj.gruppengroesse").inSideBar());
+				.setDefaultVal(0).setDescription("config.desc.jgj.gruppengroesse"));
 		KONFIG_PROPERTIES.add(ConfigProperty.<Boolean>from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_RUECKRUNDE)
-				.setDefaultVal(Boolean.FALSE).setDescription("config.desc.jgj.rueckrunde").inSideBar());
+				.setDefaultVal(Boolean.FALSE).setDescription("config.desc.jgj.rueckrunde"));
 	}
 
 	/**

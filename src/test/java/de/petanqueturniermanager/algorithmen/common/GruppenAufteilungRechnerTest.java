@@ -93,6 +93,46 @@ public class GruppenAufteilungRechnerTest {
     }
 
     // ---------------------------------------------------------------
+    // 3-Param: minLetzteGruppeGroesse
+    // ---------------------------------------------------------------
+
+    @Test
+    public void test35Teams_gruppe16_minLetzte4_fold() {
+        // 35 Teams, max 16, minLetzte 4 → [16, 16, 3] → 3 < 4 → [16, 19]
+        assertThat(GruppenAufteilungRechner.berechne(35, 16, 4)).containsExactly(16, 19);
+    }
+
+    @Test
+    public void test35Teams_gruppe16_minLetzte3_keinFold() {
+        // 35 Teams, max 16, minLetzte 3 → [16, 16, 3] → 3 >= 3 → kein Fold
+        assertThat(GruppenAufteilungRechner.berechne(35, 16, 3)).containsExactly(16, 16, 3);
+    }
+
+    @Test
+    public void test57Teams_gruppe16_minLetzte10_fold() {
+        // 57 Teams, max 16, minLetzte 10 → [16, 16, 16, 9] → 9 < 10 → [16, 16, 25]
+        assertThat(GruppenAufteilungRechner.berechne(57, 16, 10)).containsExactly(16, 16, 25);
+    }
+
+    @Test
+    public void testNurEineGruppe_keinFoldMoeglich() {
+        // 3 Teams, max 16, minLetzte 4 → [3] → nur 1 Gruppe → kein Fold möglich
+        assertThat(GruppenAufteilungRechner.berechne(3, 16, 4)).containsExactly(3);
+    }
+
+    @Test
+    public void test18Teams_gruppe16_minLetzte4_fold() {
+        // 18 Teams, max 16, minLetzte 4 → [16, 2] → 2 < 4 → [18]
+        assertThat(GruppenAufteilungRechner.berechne(18, 16, 4)).containsExactly(18);
+    }
+
+    @Test
+    public void testIllegalArg_minLetzteGruppeGroesseZuKlein() {
+        assertThatThrownBy(() -> GruppenAufteilungRechner.berechne(16, 8, 1))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    // ---------------------------------------------------------------
     // IllegalArgumentException
     // ---------------------------------------------------------------
 

@@ -3,6 +3,8 @@ package de.petanqueturniermanager.formulex.spielrunde;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.InputStream;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,6 +19,7 @@ import de.petanqueturniermanager.formulex.rangliste.FormuleXRanglisteSheetUpdate
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.random.RandomSource;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 
 /**
@@ -62,6 +65,27 @@ public class FormuleXTurnierTestDatenUITest extends BaseCalcUITest {
 		validiereSpielrundePerJson(4, "formulex-spielrunde-4.json");
 		validiereSpielrundePerJson(5, "formulex-spielrunde-5.json");
 		validiereRanglistePerJson();
+	}
+
+	/**
+	 * Korrektheit der PTM-Metadaten (39 Teams, 5 Spielrunden): Meldeliste, alle fünf
+	 * Spielrunden, Rangliste und Teilnehmerliste müssen je exakt ihren Identitäts-Schlüssel
+	 * tragen – kein weiteres Blatt einen unerwarteten.
+	 */
+	@Test
+	public void jedesBlattTraegtKorrektenSchluessel() throws GenerateException {
+		new FormuleXTurnierTestDaten(wkingSpreadsheet).generate();
+
+		Map<String, String> erwartung = new LinkedHashMap<>();
+		erwartung.put(SheetNamen.meldeliste(), SheetMetadataHelper.SCHLUESSEL_FORMULEX_MELDELISTE);
+		for (int runde = 1; runde <= FormuleXTurnierTestDaten.ANZ_RUNDEN; runde++) {
+			erwartung.put(SheetNamen.formulexSpielrunde(runde),
+					SheetMetadataHelper.schluesselFormuleXSpielrunde(runde));
+		}
+		erwartung.put(SheetNamen.formulexRangliste(), SheetMetadataHelper.SCHLUESSEL_FORMULEX_RANGLISTE);
+		erwartung.put(SheetNamen.teilnehmer(), SheetMetadataHelper.SCHLUESSEL_TEILNEHMER);
+
+		pruefeJedesBlattTraegtKorrektenSchluessel(erwartung);
 	}
 
 	private void validiereMeldelistePerJson() throws GenerateException {

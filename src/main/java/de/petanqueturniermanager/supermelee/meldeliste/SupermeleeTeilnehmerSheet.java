@@ -5,7 +5,6 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,8 +21,6 @@ import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
-import de.petanqueturniermanager.helper.msgbox.MessageBox;
-import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
@@ -89,26 +86,35 @@ public class SupermeleeTeilnehmerSheet extends SheetRunner implements ISheet {
                 .spielTagPageStyle(getSpielTagNr())
                 .forceCreate().hideGrid().setActiv().create();
 
+        befuelleTeilnehmerDaten();
+    }
+
+    /**
+     * Schreibt Header, Spielerblöcke und Footer in das bereits existierende
+     * Teilnehmer-Sheet. Wird sowohl vom Vollaufbau ({@link #generate()}) als auch
+     * vom Update-Pfad ({@code SupermeleeTeilnehmerSheetUpdate}) genutzt. Bei leerer
+     * Meldeliste wird dennoch eine gültige (leere) Teilnehmerliste mit Header, Footer
+     * und Druckbereich erstellt.
+     */
+    protected void befuelleTeilnehmerDaten() throws GenerateException {
+        meldeliste.setSpielTag(getSpielTagNr());
+
         processBoxinfo("processbox.spieltag.meldungen.einlesen", getSpielTagNr().getNr());
         SpielerMeldungen aktiveUndAusgesetzt = meldeliste.getAktiveUndAusgesetztMeldungen();
 
-        if (aktiveUndAusgesetzt.size() == 0) {
-            MessageBox.from(getWorkingSpreadsheet(), MessageBoxTypeEnum.ERROR_OK)
-                    .caption(I18n.get("msg.caption.teilnehmer.fehler"))
-                    .message(I18n.get("msg.text.keine.meldungen")).show();
-            return;
-        }
-
-        Map<Integer, String> spielerNamen = leseSpielerNamenAusMeldeliste();
-
         List<TeilnehmerEintrag> eintraege = new ArrayList<>(aktiveUndAusgesetzt.size());
-        for (Spieler spieler : aktiveUndAusgesetzt.getSpielerList()) {
-            int nr = spieler.getNr();
-            eintraege.add(new TeilnehmerEintrag(nr, "", spielerNamen.getOrDefault(nr, "")));
+        if (aktiveUndAusgesetzt.size() > 0) {
+            Map<Integer, String> spielerNamen = leseSpielerNamenAusMeldeliste();
+            for (Spieler spieler : aktiveUndAusgesetzt.getSpielerList()) {
+                int nr = spieler.getNr();
+                // Anzeige ist bereits "Nachname, Vorname" → dient zugleich als Sortierschlüssel.
+                String anzeigeName = spielerNamen.getOrDefault(nr, "");
+                eintraege.add(new TeilnehmerEintrag(nr, "", anzeigeName, anzeigeName));
+            }
+            eintraege.sort(konfigurationSheet.getTeilnehmerListeSortModus().comparator());
         }
-        eintraege.sort(Comparator.comparingInt(TeilnehmerEintrag::nr));
 
-        processBoxinfo("processbox.spieltag.meldungen.einfuegen", getSpielTagNr().getNr(), aktiveUndAusgesetzt.size());
+        processBoxinfo("processbox.spieltag.meldungen.einfuegen", getSpielTagNr().getNr(), eintraege.size());
 
         TeilnehmerSheetBuilder builder = TeilnehmerSheetBuilder.from(this)
                 .daten(eintraege)
@@ -123,12 +129,12 @@ public class SupermeleeTeilnehmerSheet extends SheetRunner implements ISheet {
         int letzteSpalte = builder.getLetzteDatenSpalte();
         int footerZeile = builder.getLetzteDatenZeile() + 1;
         StringCellValue footer = StringCellValue.from(getXSpreadSheet(), Position.from(0, footerZeile))
-                .setValue(I18n.get("teilnehmer.footer.anzahl", aktiveUndAusgesetzt.size()))
+                .setValue(I18n.get("teilnehmer.footer.anzahl", eintraege.size()))
                 .setEndPosMergeSpalte(letzteSpalte).setCharWeight(FontWeight.BOLD).setCharHeight(12)
                 .setShrinkToFit(true);
         getSheetHelper().setStringValueInCell(footer);
 
-        SuperMeleeTeamRechner teamRechner = new SuperMeleeTeamRechner(aktiveUndAusgesetzt.size());
+        SuperMeleeTeamRechner teamRechner = new SuperMeleeTeamRechner(eintraege.size());
         footer.zeilePlusEins().setValue(I18n.get("teilnehmer.footer.teams",
                 teamRechner.getAnzDoublette(), teamRechner.getAnzTriplette()));
         getSheetHelper().setStringValueInCell(footer);

@@ -86,6 +86,8 @@ public final class SpielerSucheDialog extends AbstractUnoDialog {
     /** Single-Shot-Timer fürs automatische Leeren des Inline-Status-Labels nach erfolgreicher Übernahme. */
     @Nullable private Timer statusTimer;
     private static final int STATUS_ANZEIGEDAUER_MS = 3000;
+    /** Summe der über die Dialog-Lebensdauer in die Meldeliste übernommenen Spieler. */
+    private int anzahlUebernommeneSpieler = 0;
 
     /** Rohe (ungefilterte) Trefferliste aus dem Repository – Quelle für Re-Renderings nach Sammelliste-Mutationen. */
     private List<SpielerMitVerein> rohTreffer = List.of();
@@ -124,6 +126,15 @@ public final class SpielerSucheDialog extends AbstractUnoDialog {
             stoppeStatusTimer();
             controls = null;
         }
+    }
+
+    /**
+     * Liefert {@code true}, wenn über die Dialog-Lebensdauer mindestens ein Spieler
+     * in die Meldeliste übernommen wurde. Der Aufrufer kann daraufhin nach dem
+     * Schließen einen "Meldeliste aktualisieren"-Lauf anstoßen (Team-Nr-Vergabe).
+     */
+    public boolean wurdenSpielerUebernommen() {
+        return anzahlUebernommeneSpieler > 0;
     }
 
     @Override protected String getTitel() {
@@ -708,6 +719,7 @@ public final class SpielerSucheDialog extends AbstractUnoDialog {
         }
         try {
             int n = ziel.schreibeBlock(spieler);
+            anzahlUebernommeneSpieler += n;
             zeigeKurzStatus(I18n.get("spielerdb.info.uebernommen", n));
             // Frisch übernommene Spieler aus der sichtbaren Trefferliste entfernen,
             // wenn der Filter aktiv ist — sonst tauchen sie weiter auf.
