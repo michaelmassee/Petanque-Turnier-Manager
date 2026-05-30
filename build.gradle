@@ -648,6 +648,20 @@ tasks.register('startCalc') {
     }
 }
 
+// Task: Calc ohne Extension starten (zum Testen ob Bug extension-unabhängig ist)
+tasks.register('startCalcNaked') {
+    group = 'LibreOffice'
+    description = 'Deinstalliert Extension, startet Calc ohne Plugin (non-blocking)'
+    dependsOn 'uninstallExtension'
+
+    doLast {
+        println "Starte LibreOffice Calc (ohne Extension)..."
+        new ProcessBuilder("${libreOfficePath}/program/soffice", '--calc')
+            .inheritIO()
+            .start()
+    }
+}
+
 // ===================================================
 // Frontend (React/Vite)
 // ===================================================
