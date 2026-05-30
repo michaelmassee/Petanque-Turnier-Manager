@@ -48,8 +48,7 @@ public class TripTeteRanglisteSheet extends SheetRunner implements ISheet {
 	public static final int RANG_SPALTE      = 2;
 	public static final int BEG_SIEGE_SPALTE = 3;
 	public static final int PAR_SIEGE_SPALTE = 4;
-	public static final int BUCHHOLZ_SPALTE  = 5;
-	public static final int LETZTE_SPALTE    = BUCHHOLZ_SPALTE;
+	public static final int LETZTE_SPALTE    = PAR_SIEGE_SPALTE;
 
 	private final TripTeteKonfigurationSheet konfigurationSheet;
 	private final TripTeteMeldeListeSheetUpdate meldeListe;
@@ -134,7 +133,6 @@ public class TripTeteRanglisteSheet extends SheetRunner implements ISheet {
 		getSheetHelper().setStringValueInCell(stVal.setValue("Rang").spalte(RANG_SPALTE));
 		getSheetHelper().setStringValueInCell(stVal.setValue("Beg.-Siege").spalte(BEG_SIEGE_SPALTE));
 		getSheetHelper().setStringValueInCell(stVal.setValue("Partien Σ").spalte(PAR_SIEGE_SPALTE));
-		getSheetHelper().setStringValueInCell(stVal.setValue("BHZ").spalte(BUCHHOLZ_SPALTE));
 
 		RangePosition headerRange = RangePosition.from(TEAM_NR_SPALTE, 2, LETZTE_SPALTE, 2);
 		RangeHelper.from(this, headerRange).setRangeProperties(
