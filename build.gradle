@@ -635,31 +635,31 @@ tasks.named('beispielturnierTests').configure { mustRunAfter('uiTests') }
 
 // Task: Bauen, installieren und Calc im Hintergrund starten (Gradle blockiert nicht)
 tasks.named('buildOXT').configure { mustRunAfter('clean') }
-tasks.register('startCalc') {
+tasks.register('startCalc', Exec) {
     group = 'LibreOffice'
     description = 'Baut OXT frisch (clean), installiert Extension und startet LibreOffice Calc (non-blocking)'
-    dependsOn 'clean', 'reinstallExtension'
+    dependsOn 'clean','reinstallExtension'
 
-    doLast {
+    commandLine "${libreOfficePath}/program/soffice", '--calc'
+
+    doFirst {
         println "Starte LibreOffice Calc..."
-        new ProcessBuilder("${libreOfficePath}/program/soffice", '--calc')
-            .inheritIO()
-            .start()
     }
+
 }
 
 // Task: Calc ohne Extension starten (zum Testen ob Bug extension-unabhängig ist)
-tasks.register('startCalcNaked') {
+tasks.register('startCalcNaked', Exec) {
     group = 'LibreOffice'
     description = 'Deinstalliert Extension, startet Calc ohne Plugin (non-blocking)'
     dependsOn 'uninstallExtension'
 
-    doLast {
+    commandLine "${libreOfficePath}/program/soffice", '--calc'
+
+    doFirst {
         println "Starte LibreOffice Calc (ohne Extension)..."
-        new ProcessBuilder("${libreOfficePath}/program/soffice", '--calc')
-            .inheritIO()
-            .start()
     }
+
 }
 
 // ===================================================
