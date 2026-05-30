@@ -67,4 +67,54 @@ public class TripTeteBegegnungErgebnisTest {
 		assertThat(erg.getPartieErgebnis(TripTetePartie.TRIPLETTE)).contains(triplette);
 		assertThat(erg.getPartieErgebnis(TripTetePartie.DOUBLETTE)).isEmpty();
 	}
+
+	@Test
+	public void teamAVerliert1zu2() {
+		// Verliererseite: A gewinnt nur Triplette, verliert Doublette und Tête
+		TripTeteBegegnungErgebnis erg = new TripTeteBegegnungErgebnis(Team.from(1), Team.from(2));
+		erg.setPartieErgebnis(TripTetePartie.TRIPLETTE, new SpielErgebnis(13, 9));
+		erg.setPartieErgebnis(TripTetePartie.DOUBLETTE, new SpielErgebnis(6, 13));
+		erg.setPartieErgebnis(TripTetePartie.TETE, new SpielErgebnis(11, 13));
+
+		assertThat(erg.istVollstaendig()).isTrue();
+		assertThat(erg.begegnungPunkteA()).isEqualTo(1);
+		assertThat(erg.begegnungPunkteB()).isEqualTo(2);
+		assertThat(erg.siegA()).isFalse();
+		assertThat(erg.siegB()).isTrue();
+		assertThat(erg.unentschieden()).isFalse();
+		assertThat(erg.sieger()).isPresent().get().extracting(Team::getNr).isEqualTo(2);
+	}
+
+	@Test
+	public void teamAVerliert0zu3() {
+		TripTeteBegegnungErgebnis erg = new TripTeteBegegnungErgebnis(Team.from(1), Team.from(2));
+		erg.setPartieErgebnis(TripTetePartie.TRIPLETTE, new SpielErgebnis(5, 13));
+		erg.setPartieErgebnis(TripTetePartie.DOUBLETTE, new SpielErgebnis(7, 13));
+		erg.setPartieErgebnis(TripTetePartie.TETE, new SpielErgebnis(11, 13));
+
+		assertThat(erg.begegnungPunkteA()).isZero();
+		assertThat(erg.begegnungPunkteB()).isEqualTo(3);
+		assertThat(erg.siegA()).isFalse();
+		assertThat(erg.siegB()).isTrue();
+		assertThat(erg.sieger()).isPresent().get().extracting(Team::getNr).isEqualTo(2);
+		assertThat(erg.kugelDiffA()).isEqualTo((5 + 7 + 11) - (13 + 13 + 13));
+	}
+
+	@Test
+	public void unentschiedenWennEinePartieGeteilt() {
+		// Unentschieden auf Begegnungsebene ist nur möglich wenn eine Partie unentschieden endet
+		// (z. B. 13:13), sodass jede Seite 1 Partienpunkt hat
+		TripTeteBegegnungErgebnis erg = new TripTeteBegegnungErgebnis(Team.from(1), Team.from(2));
+		erg.setPartieErgebnis(TripTetePartie.TRIPLETTE, new SpielErgebnis(13, 9));  // A
+		erg.setPartieErgebnis(TripTetePartie.DOUBLETTE, new SpielErgebnis(6, 13)); // B
+		erg.setPartieErgebnis(TripTetePartie.TETE, new SpielErgebnis(13, 13));     // unentschieden
+
+		assertThat(erg.istVollstaendig()).isTrue();
+		assertThat(erg.begegnungPunkteA()).isEqualTo(1);
+		assertThat(erg.begegnungPunkteB()).isEqualTo(1);
+		assertThat(erg.siegA()).isFalse();
+		assertThat(erg.siegB()).isFalse();
+		assertThat(erg.unentschieden()).isTrue();
+		assertThat(erg.sieger()).isEmpty();
+	}
 }

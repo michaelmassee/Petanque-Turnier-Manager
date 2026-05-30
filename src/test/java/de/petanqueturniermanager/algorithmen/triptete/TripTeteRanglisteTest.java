@@ -89,6 +89,55 @@ public class TripTeteRanglisteTest {
 	}
 
 	@Test
+	public void tiebreakAlleKriterienGleich() {
+		Team a = Team.from(1);
+		Team b = Team.from(2);
+		Team c = Team.from(3);
+		Team d = Team.from(4);
+
+		TripTeteRangliste rangliste = new TripTeteRangliste();
+		// A und B: exakt gleiche Werte in allen 4 Kriterien → Reihenfolge stabil (keine Exception)
+		rangliste.addBegegnung(begegnung(a, c, 13, 10, 13, 10, 13, 10));
+		rangliste.addBegegnung(begegnung(b, d, 13, 10, 13, 10, 13, 10));
+
+		List<TripTeteTeamErgebnis> liste = rangliste.getRangliste();
+		assertThat(liste).hasSize(4);
+		// Die ersten zwei (A und B) haben identische Werte — kein Absturz, stabile Ausgabe
+		assertThat(liste.get(0).getBegegnungenGewonnen()).isEqualTo(liste.get(1).getBegegnungenGewonnen());
+		assertThat(liste.get(0).getPartienGewonnen()).isEqualTo(liste.get(1).getPartienGewonnen());
+		assertThat(liste.get(0).getKugelDiff()).isEqualTo(liste.get(1).getKugelDiff());
+		assertThat(liste.get(0).getKugelnPlus()).isEqualTo(liste.get(1).getKugelnPlus());
+	}
+
+	@Test
+	public void unentschiedenesBegegnungsErgebnisWirdKorrektVerbucht() {
+		Team a = Team.from(1);
+		Team b = Team.from(2);
+
+		// Unentschieden: je 1 Partienpunkt (eine Partie 13:13)
+		TripTeteBegegnungErgebnis erg = new TripTeteBegegnungErgebnis(a, b)
+				.setPartieErgebnis(TripTetePartie.TRIPLETTE, new SpielErgebnis(13, 9))
+				.setPartieErgebnis(TripTetePartie.DOUBLETTE, new SpielErgebnis(6, 13))
+				.setPartieErgebnis(TripTetePartie.TETE, new SpielErgebnis(13, 13));
+
+		TripTeteRangliste rangliste = new TripTeteRangliste();
+		rangliste.addBegegnung(erg);
+
+		List<TripTeteTeamErgebnis> liste = rangliste.getRangliste();
+		TripTeteTeamErgebnis ergA = liste.stream().filter(e -> e.getTeam().getNr() == 1).findFirst().orElseThrow();
+		TripTeteTeamErgebnis ergB = liste.stream().filter(e -> e.getTeam().getNr() == 2).findFirst().orElseThrow();
+
+		assertThat(ergA.getBegegnungenGewonnen()).isZero();
+		assertThat(ergA.getBegegnungenUnentschieden()).isEqualTo(1);
+		assertThat(ergA.getBegegnungenVerloren()).isZero();
+		assertThat(ergA.getPartienGewonnen()).isEqualTo(1);
+
+		assertThat(ergB.getBegegnungenGewonnen()).isZero();
+		assertThat(ergB.getBegegnungenUnentschieden()).isEqualTo(1);
+		assertThat(ergB.getPartienGewonnen()).isEqualTo(1);
+	}
+
+	@Test
 	public void unvollstaendigeBegegnungWirdAbgelehnt() {
 		TripTeteBegegnungErgebnis erg = new TripTeteBegegnungErgebnis(Team.from(1), Team.from(2));
 		erg.setPartieErgebnis(TripTetePartie.TRIPLETTE, new SpielErgebnis(13, 9));
