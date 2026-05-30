@@ -10,6 +10,7 @@ import static de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem.MAAST
 import static de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem.POULE;
 import static de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem.SCHWEIZER;
 import static de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem.SUPERMELEE;
+import static de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem.TRIPTETE;
 
 import java.util.EnumMap;
 import java.util.LinkedHashMap;
@@ -222,6 +223,7 @@ public final class SheetResolverFactory {
         m.put(KASKADE, new MetadatenSheetResolver(SheetMetadataHelper.SCHLUESSEL_KASKADE_GRUPPENRANGLISTE, name));
         m.put(POULE, new MetadatenSheetResolver(SheetMetadataHelper.SCHLUESSEL_POULE_VORRUNDEN_RANGLISTE, name));
         m.put(KO, new MetadatenSheetResolver(SheetMetadataHelper.SCHLUESSEL_FORME_VORRUNDEN, name));
+        m.put(TRIPTETE, new MetadatenSheetResolver(SheetMetadataHelper.SCHLUESSEL_TRIPTETE_RANGLISTE, name));
         m.put(SUPERMELEE, new MetadatenPrefixSheetResolver(
                 SheetMetadataHelper.SCHLUESSEL_SPIELTAG_RANGLISTE_PREFIX,
                 SheetMetadataHelper.SCHLUESSEL_SPIELTAG_RANGLISTE_SUFFIX, name));
@@ -250,6 +252,7 @@ public final class SheetResolverFactory {
         m.put(POULE, new MetadatenSheetResolver(SheetMetadataHelper.SCHLUESSEL_POULE_VORRUNDE, name));
         m.put(JGJ, new MetadatenSheetResolver(SheetMetadataHelper.SCHLUESSEL_JGJ_SPIELPLAN, name));
         m.put(LIGA, new MetadatenSheetResolver(SheetMetadataHelper.SCHLUESSEL_LIGA_SPIELPLAN, name));
+        m.put(TRIPTETE, new MetadatenSheetResolver(SheetMetadataHelper.SCHLUESSEL_TRIPTETE_SPIELPLAN, name));
         return m;
     }
 
@@ -265,6 +268,7 @@ public final class SheetResolverFactory {
         m.put(POULE, new MetadatenSheetResolver(SheetMetadataHelper.SCHLUESSEL_POULE_MELDELISTE, name));
         m.put(KASKADE, new MetadatenSheetResolver(SheetMetadataHelper.SCHLUESSEL_KASKADE_MELDELISTE, name));
         m.put(FORMULEX, new MetadatenSheetResolver(SheetMetadataHelper.SCHLUESSEL_FORMULEX_MELDELISTE, name));
+        m.put(TRIPTETE, new MetadatenSheetResolver(SheetMetadataHelper.SCHLUESSEL_TRIPTETE_MELDELISTE, name));
         return m;
     }
 
@@ -281,6 +285,7 @@ public final class SheetResolverFactory {
         m.put(SUPERMELEE, new MetadatenPrefixSheetResolver(
                 SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_ANMELDUNGEN_PREFIX,
                 SheetMetadataHelper.SCHLUESSEL_SUFFIX, name));
+        m.put(TRIPTETE, new MetadatenSheetResolver(SheetMetadataHelper.SCHLUESSEL_TRIPTETE_CHECKIN_LISTE, name));
         // LIGA: kein Checkin-Blatt.
         return m;
     }

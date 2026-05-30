@@ -224,6 +224,12 @@ public final class SignaturQuellen {
                 SheetMetadataHelper.SCHLUESSEL_KO_MELDELISTE));
     }
 
+    /** Quelle für die Trip-Tête-Teilnehmerliste. */
+    public static List<SignaturQuelle> fuerTripTeteTeilnehmer(XSpreadsheetDocument xDoc) {
+        return List.of(meldelisteSchweizerLike("TRIPTETE-TEILNEHMER-MELDELISTE",
+                SheetMetadataHelper.SCHLUESSEL_TRIPTETE_MELDELISTE));
+    }
+
     /** Quelle für die Maastrichter-Teilnehmerliste. */
     public static List<SignaturQuelle> fuerMaastrichterTeilnehmer(XSpreadsheetDocument xDoc) {
         return List.of(meldelisteSchweizerLike("MAASTRICHTER-TEILNEHMER-MELDELISTE",

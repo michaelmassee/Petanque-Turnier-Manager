@@ -39,6 +39,8 @@ import de.petanqueturniermanager.poule.rangliste.PouleVorrundenRanglisteSheetUpd
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerCheckinListeSheetUpdate;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerTeilnehmerSheetUpdate;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheetUpdate;
+import de.petanqueturniermanager.triptete.meldeliste.TripTeteCheckinListeSheetUpdate;
+import de.petanqueturniermanager.triptete.meldeliste.TripTeteTeilnehmerSheetUpdate;
 import de.petanqueturniermanager.triptete.rangliste.TripTeteRanglisteSheetUpdate;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheetUpdate;
@@ -274,6 +276,12 @@ public class PetanqueTurnierMngrSingleton {
 				new EingabeSignatur(SignaturQuellen::fuerPouleTeilnehmer,
 						SignaturQuellen::teilnehmerSortKontext),
 				(ws, ignored) -> new PouleTeilnehmerSheetUpdate(ws)));
+		addSheetSyncMitPropertyTrigger(SheetSyncListener.fuerSchluessel(context,
+				SheetMetadataHelper.SCHLUESSEL_TEILNEHMER,
+				TurnierSystem.TRIPTETE,
+				new EingabeSignatur(SignaturQuellen::fuerTripTeteTeilnehmer,
+						SignaturQuellen::teilnehmerSortKontext),
+				(ws, ignored) -> new TripTeteTeilnehmerSheetUpdate(ws)));
 		t = logTimingAndReset("SheetSyncListener TEILNEHMER (Einzel-Sheet-Systeme)", t);
 
 		// Checkin-Listen: synchronisieren beim Tab-Wechsel mit der Meldeliste – analog zu den
@@ -316,6 +324,11 @@ public class PetanqueTurnierMngrSingleton {
 				new EingabeSignatur(SignaturQuellen::fuerJGJTeilnehmer,
 						SignaturQuellen::checkinSortKontext),
 				(ws, ignored) -> new JGJCheckinListeSheetUpdate(ws)));
+		addSheetSyncMitPropertyTrigger(SheetSyncListener.fuerSchluessel(context,
+				SheetMetadataHelper.SCHLUESSEL_TRIPTETE_CHECKIN_LISTE, TurnierSystem.TRIPTETE,
+				new EingabeSignatur(SignaturQuellen::fuerTripTeteTeilnehmer,
+						SignaturQuellen::checkinSortKontext),
+				(ws, ignored) -> new TripTeteCheckinListeSheetUpdate(ws)));
 		// Supermelee-Anmeldungen (Checkin-Liste) sind spieltag-variabel – eigener Schlüssel je Nr.
 		addSheetSyncMitPropertyTrigger(SheetSyncListener.fuerSpieltagSheet(context,
 				TurnierSystem.SUPERMELEE,

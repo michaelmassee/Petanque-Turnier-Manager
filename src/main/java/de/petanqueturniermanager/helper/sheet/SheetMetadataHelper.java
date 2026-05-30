@@ -90,9 +90,10 @@ public class SheetMetadataHelper {
 
     // ── Konstanten: TripTete ─────────────────────────────────────────────────
 
-    public static final String SCHLUESSEL_TRIPTETE_MELDELISTE  = "__PTM_TRIPTETE_MELDELISTE__";
-    public static final String SCHLUESSEL_TRIPTETE_SPIELPLAN   = "__PTM_TRIPTETE_SPIELPLAN__";
-    public static final String SCHLUESSEL_TRIPTETE_RANGLISTE   = "__PTM_TRIPTETE_RANGLISTE__";
+    public static final String SCHLUESSEL_TRIPTETE_MELDELISTE   = "__PTM_TRIPTETE_MELDELISTE__";
+    public static final String SCHLUESSEL_TRIPTETE_SPIELPLAN    = "__PTM_TRIPTETE_SPIELPLAN__";
+    public static final String SCHLUESSEL_TRIPTETE_RANGLISTE    = "__PTM_TRIPTETE_RANGLISTE__";
+    public static final String SCHLUESSEL_TRIPTETE_CHECKIN_LISTE = "__PTM_TRIPTETE_CHECKIN_LISTE__";
 
     // ── Konstanten: Schweizer ────────────────────────────────────────────────
 
