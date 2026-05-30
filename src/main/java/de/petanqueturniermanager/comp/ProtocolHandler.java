@@ -1064,7 +1064,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				oeffneBrowserUrl(PROJEKT_SEITE_URL);
 				break;
 			case CMD_FEEDBACK:
-				oeffneBrowserUrl(FEEDBACK_MAILTO_URL);
+				oeffneMailtoUrl(FEEDBACK_MAILTO_URL);
 				break;
 			case CMD_ABBRUCH:
 				SheetRunner.cancelRunner();
@@ -1340,6 +1340,21 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	 * Öffnet die übergebene URL im Standard-Browser.
 	 * Nutzt {@link java.awt.Desktop#browse} als Primärweg, {@link Runtime#exec} als Fallback.
 	 */
+	private void oeffneMailtoUrl(String url) {
+		ProcessBox.from().info(I18n.get("webserver.prozessbox.browser.oeffnen", url));
+		try {
+			if (java.awt.Desktop.isDesktopSupported()
+					&& java.awt.Desktop.getDesktop().isSupported(java.awt.Desktop.Action.MAIL)) {
+				java.awt.Desktop.getDesktop().mail(new java.net.URI(url));
+			} else {
+				oeffneBrowserUrlFallback(url);
+			}
+		} catch (Exception e) {
+			logger.warn("Desktop.mail fehlgeschlagen, Fallback aktiv: {}", e.getMessage());
+			oeffneBrowserUrlFallback(url);
+		}
+	}
+
 	private void oeffneBrowserUrl(String url) {
 		ProcessBox.from().info(I18n.get("webserver.prozessbox.browser.oeffnen", url));
 		try {

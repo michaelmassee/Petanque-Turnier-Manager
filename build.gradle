@@ -356,10 +356,26 @@ tasks.register('installExtension', Exec) {
     }
 }
 
+// Task zum Beenden laufender LibreOffice-Instanzen (nötig vor (De-)Installation)
+tasks.register('stopLibreOffice', Exec) {
+    group = 'LibreOffice'
+    description = 'Beendet alle laufenden LibreOffice-Instanzen'
+    commandLine 'pkill', '-x', 'soffice.bin'
+    ignoreExitValue = true
+
+    doLast {
+        if (executionResult.get().exitValue == 0) {
+            println "LibreOffice wurde beendet."
+            Thread.sleep(1500)
+        }
+    }
+}
+
 // Task zum Deinstallieren der Extension
 tasks.register('uninstallExtension', Exec) {
     group = 'LibreOffice'
     description = 'Deinstalliert die Extension aus LibreOffice'
+    dependsOn 'stopLibreOffice'
     commandLine "${libreOfficePath}/program/unopkg", 'remove', extensionId
     ignoreExitValue = true
     errorOutput = new ByteArrayOutputStream()
