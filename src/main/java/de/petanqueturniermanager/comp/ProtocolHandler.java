@@ -224,6 +224,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	// Trip-Tête
 	public static final String CMD_TRIPTETE_NEUE_MELDELISTE   = "triptete_neue_meldeliste";
 	public static final String CMD_TRIPTETE_UPDATE_MELDELISTE = "triptete_update_meldeliste";
+	public static final String CMD_TRIPTETE_TEILNEHMER        = "triptete_teilnehmer";
+	public static final String CMD_TRIPTETE_CHECKIN           = "triptete_checkin";
 	public static final String CMD_TRIPTETE_SPIELPLAN         = "triptete_spielplan";
 	public static final String CMD_TRIPTETE_RANGLISTE         = "triptete_rangliste";
 	public static final String CMD_TRIPTETE_KONFIGURATION     = "triptete_konfiguration";
@@ -816,6 +818,12 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				break;
 			case CMD_TRIPTETE_UPDATE_MELDELISTE:
 				new TripTeteMeldeListeSheetUpdate(ws).testTurnierVorhanden().backUpDocument().start();
+				break;
+			case CMD_TRIPTETE_TEILNEHMER:
+				new de.petanqueturniermanager.triptete.meldeliste.TripTeteTeilnehmerSheet(ws).testTurnierVorhanden().start();
+				break;
+			case CMD_TRIPTETE_CHECKIN:
+				new de.petanqueturniermanager.triptete.meldeliste.TripTeteCheckinListeSheet(ws).testTurnierVorhanden().backUpDocument().start();
 				break;
 			case CMD_TRIPTETE_SPIELPLAN:
 				new TripTeteSpielPlanSheet(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
@@ -1795,6 +1803,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			// Trip-Tête
 			case CMD_TRIPTETE_NEUE_MELDELISTE               -> ts == TurnierSystem.KEIN;
 			case CMD_TRIPTETE_UPDATE_MELDELISTE,
+				 CMD_TRIPTETE_TEILNEHMER, CMD_TRIPTETE_CHECKIN,
 				 CMD_TRIPTETE_SPIELPLAN,
 				 CMD_TRIPTETE_RANGLISTE,
 				 CMD_TRIPTETE_KONFIGURATION                 -> ts == TurnierSystem.TRIPTETE;

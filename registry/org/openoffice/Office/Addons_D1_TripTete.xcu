@@ -75,12 +75,44 @@
 							</node>
 
 							<node oor:name="D1A4" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Participants</value>
+									<value xml:lang="de">Teilnehmer</value>
+									<value xml:lang="es">Participantes</value>
+									<value xml:lang="fr">Participants</value>
+									<value xml:lang="nl">Deelnemers</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:triptete_teilnehmer</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+							<node oor:name="D1A5" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Check-in List</value>
+									<value xml:lang="de">Checkin Liste</value>
+									<value xml:lang="es">Lista de registro</value>
+									<value xml:lang="fr">Liste de pointage</value>
+									<value xml:lang="nl">Inchecklijst</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:triptete_checkin</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+							<node oor:name="D1A6" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
 
-							<node oor:name="D1A5" oor:op="replace">
+							<node oor:name="D1A7" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Gameplan</value>
 									<value xml:lang="de">Spielplan</value>
@@ -96,7 +128,7 @@
 								</prop>
 							</node>
 
-							<node oor:name="D1A6" oor:op="replace">
+							<node oor:name="D1A8" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Ranking</value>
 									<value xml:lang="de">Rangliste</value>
@@ -112,13 +144,13 @@
 								</prop>
 							</node>
 
-							<node oor:name="D1A7" oor:op="replace">
+							<node oor:name="D1A9" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
 
-							<node oor:name="D1A8" oor:op="replace">
+							<node oor:name="D1A10" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Configuration</value>
 									<value xml:lang="de">Konfiguration</value>

@@ -59,21 +59,22 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet {
 
 	public static final int SPIEL_NR_SPALTE     = 0;
 	public static final int BAHN_TRI_SPALTE     = 1;
-	public static final int BAHN_DT_SPALTE      = 2;
-	public static final int NAME_A_SPALTE       = 3;
-	public static final int NAME_B_SPALTE       = 4;
-	public static final int TRI_A_SPALTE        = 5;
-	public static final int TRI_B_SPALTE        = 6;
-	public static final int DOU_A_SPALTE        = 7;
-	public static final int DOU_B_SPALTE        = 8;
-	public static final int TETE_A_SPALTE       = 9;
-	public static final int TETE_B_SPALTE       = 10;
-	public static final int PARTIE_SIEGE_A      = 11;
-	public static final int PARTIE_SIEGE_B      = 12;
-	public static final int BEG_PUNKT_A         = 13;
-	public static final int BEG_PUNKT_B         = 14;
+	public static final int BAHN_DOU_SPALTE     = 2;
+	public static final int BAHN_TETE_SPALTE    = 3;
+	public static final int NAME_A_SPALTE       = 4;
+	public static final int NAME_B_SPALTE       = 5;
+	public static final int TRI_A_SPALTE        = 6;
+	public static final int TRI_B_SPALTE        = 7;
+	public static final int DOU_A_SPALTE        = 8;
+	public static final int DOU_B_SPALTE        = 9;
+	public static final int TETE_A_SPALTE       = 10;
+	public static final int TETE_B_SPALTE       = 11;
+	public static final int PARTIE_SIEGE_A      = 12;
+	public static final int PARTIE_SIEGE_B      = 13;
+	public static final int BEG_PUNKT_A         = 14;
+	public static final int BEG_PUNKT_B         = 15;
 
-	public static final int TEAM_A_NR_SPALTE    = 16;
+	public static final int TEAM_A_NR_SPALTE    = 17;
 	public static final int TEAM_B_NR_SPALTE    = TEAM_A_NR_SPALTE + 1;
 
 	private static final int PUNKTE_NR_WIDTH = AbstractSuperMeleeRanglisteFormatter.ENDSUMME_NUMBER_WIDTH;
@@ -170,30 +171,39 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet {
 		StringCellValue stValHeader = StringCellValue.from(getXSpreadSheet(), headerPos)
 				.setColumnProperties(colPropSchmal);
 
-		getSheetHelper().setStringValueInCell(stValHeader.setValue("Nr.").setEndPosMergeZeilePlus(1));
+		// Nr. – überspannt beide Headerzeilen
+		getSheetHelper().setStringValueInCell(
+				stValHeader.setValue(I18n.get("column.header.nr")).setEndPosMergeZeilePlus(1));
+
+		// Bahn-Gruppe: „Bahn" in Zeile 0 über 3 Spalten; Zeile 1 erhält Kürzel Tri/Dou/Tête
 		colPropSchmal.setWidth(900);
 		getSheetHelper().setStringValueInCell(
-				stValHeader.setValue("Bahn-T").spalte(BAHN_TRI_SPALTE).setEndPosMergeZeilePlus(1));
-		getSheetHelper().setStringValueInCell(
-				stValHeader.setValue("Bahn-D+T").spalte(BAHN_DT_SPALTE).setEndPosMergeZeilePlus(1));
+				stValHeader.setValue(I18n.get("column.header.bahn")).spalte(BAHN_TRI_SPALTE)
+						.setEndPosMergeSpaltePlus(2));
 
-		// Heim / Gast Namen
+		// Heim / Gast – überspannen beide Headerzeilen
 		getSheetHelper().setStringValueInCell(
-				stValHeader.setValue("Heim").spalte(NAME_A_SPALTE).setEndPosMergeZeilePlus(1));
+				stValHeader.setValue(I18n.get("column.header.heim")).spalte(NAME_A_SPALTE)
+						.setEndPosMergeZeilePlus(1));
 		getSheetHelper().setStringValueInCell(
-				stValHeader.setValue("Gast").spalte(NAME_B_SPALTE).setEndPosMergeZeilePlus(1));
+				stValHeader.setValue(I18n.get("column.header.gast")).spalte(NAME_B_SPALTE)
+						.setEndPosMergeZeilePlus(1));
 
 		// Partie-Gruppen-Header (Zeile 0, gemerged über je 2 Spalten)
 		ColumnProperties colPropPunkt = ColumnProperties.from().setWidth(PUNKTE_NR_WIDTH).centerJustify();
 		stValHeader.setColumnProperties(colPropPunkt);
 		getSheetHelper().setStringValueInCell(
-				stValHeader.setValue("Triplette").spalte(TRI_A_SPALTE).setEndPosMergeSpaltePlus(1));
+				stValHeader.setValue(I18n.get("enum.formation.triplette")).spalte(TRI_A_SPALTE)
+						.setEndPosMergeSpaltePlus(1));
 		getSheetHelper().setStringValueInCell(
-				stValHeader.setValue("Doublette").spalte(DOU_A_SPALTE).setEndPosMergeSpaltePlus(1));
+				stValHeader.setValue(I18n.get("enum.formation.doublette")).spalte(DOU_A_SPALTE)
+						.setEndPosMergeSpaltePlus(1));
 		getSheetHelper().setStringValueInCell(
-				stValHeader.setValue("Tête-à-tête").spalte(TETE_A_SPALTE).setEndPosMergeSpaltePlus(1));
+				stValHeader.setValue(I18n.get("enum.formation.tete")).spalte(TETE_A_SPALTE)
+						.setEndPosMergeSpaltePlus(1));
 		getSheetHelper().setStringValueInCell(
-				stValHeader.setValue("Partien").spalte(PARTIE_SIEGE_A).setEndPosMergeSpaltePlus(1));
+				stValHeader.setValue(I18n.get("column.header.partien")).spalte(PARTIE_SIEGE_A)
+						.setEndPosMergeSpaltePlus(1));
 		getSheetHelper().setStringValueInCell(
 				stValHeader.setValue(I18n.get("column.header.punkte")).spalte(BEG_PUNKT_A)
 						.setEndPosMergeSpaltePlus(1));
@@ -203,18 +213,28 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet {
 		getSheetHelper().setColumnProperties(getXSpreadSheet(), NAME_A_SPALTE, colPropName);
 		getSheetHelper().setColumnProperties(getXSpreadSheet(), NAME_B_SPALTE, colPropName);
 
-		// Zeile 2: H/G-Unterheader
+		// Zeile 1: Bahn-Kürzel + H/G-Unterheader
 		stValHeader.setEndPosMerge(null).zeilePlusEins();
-		getSheetHelper().setStringValueInCell(stValHeader.setValue("H").spalte(TRI_A_SPALTE));
-		getSheetHelper().setStringValueInCell(stValHeader.setValue("G").spalte(TRI_B_SPALTE));
-		getSheetHelper().setStringValueInCell(stValHeader.setValue("H").spalte(DOU_A_SPALTE));
-		getSheetHelper().setStringValueInCell(stValHeader.setValue("G").spalte(DOU_B_SPALTE));
-		getSheetHelper().setStringValueInCell(stValHeader.setValue("H").spalte(TETE_A_SPALTE));
-		getSheetHelper().setStringValueInCell(stValHeader.setValue("G").spalte(TETE_B_SPALTE));
-		getSheetHelper().setStringValueInCell(stValHeader.setValue("H").spalte(PARTIE_SIEGE_A));
-		getSheetHelper().setStringValueInCell(stValHeader.setValue("G").spalte(PARTIE_SIEGE_B));
-		getSheetHelper().setStringValueInCell(stValHeader.setValue("H").spalte(BEG_PUNKT_A));
-		getSheetHelper().setStringValueInCell(stValHeader.setValue("G").spalte(BEG_PUNKT_B));
+		stValHeader.setColumnProperties(ColumnProperties.from().setWidth(900).centerJustify().setShrinkToFit(true));
+		getSheetHelper().setStringValueInCell(
+				stValHeader.setValue(I18n.get("spielplan.bahn.triplette")).spalte(BAHN_TRI_SPALTE));
+		getSheetHelper().setStringValueInCell(
+				stValHeader.setValue(I18n.get("spielplan.bahn.doublette")).spalte(BAHN_DOU_SPALTE));
+		getSheetHelper().setStringValueInCell(
+				stValHeader.setValue(I18n.get("spielplan.bahn.tete")).spalte(BAHN_TETE_SPALTE));
+		stValHeader.setColumnProperties(ColumnProperties.from().setWidth(PUNKTE_NR_WIDTH).centerJustify());
+		String heim = I18n.get("column.header.heim.kurz");
+		String gast = I18n.get("column.header.gast.kurz");
+		getSheetHelper().setStringValueInCell(stValHeader.setValue(heim).spalte(TRI_A_SPALTE));
+		getSheetHelper().setStringValueInCell(stValHeader.setValue(gast).spalte(TRI_B_SPALTE));
+		getSheetHelper().setStringValueInCell(stValHeader.setValue(heim).spalte(DOU_A_SPALTE));
+		getSheetHelper().setStringValueInCell(stValHeader.setValue(gast).spalte(DOU_B_SPALTE));
+		getSheetHelper().setStringValueInCell(stValHeader.setValue(heim).spalte(TETE_A_SPALTE));
+		getSheetHelper().setStringValueInCell(stValHeader.setValue(gast).spalte(TETE_B_SPALTE));
+		getSheetHelper().setStringValueInCell(stValHeader.setValue(heim).spalte(PARTIE_SIEGE_A));
+		getSheetHelper().setStringValueInCell(stValHeader.setValue(gast).spalte(PARTIE_SIEGE_B));
+		getSheetHelper().setStringValueInCell(stValHeader.setValue(heim).spalte(BEG_PUNKT_A));
+		getSheetHelper().setStringValueInCell(stValHeader.setValue(gast).spalte(BEG_PUNKT_B));
 	}
 
 	private void insertSpielNrSpalte(List<List<TeamPaarung>> spielPlan) throws GenerateException {
@@ -231,15 +251,20 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet {
 	}
 
 	private void insertBahnenSpalten(List<List<TeamPaarung>> spielPlan) throws GenerateException {
-		// Pro Runde Bahnen 1..n vergeben: Bahn-Triplette = laufende Nr in der Runde,
-		// Bahn-D+T = gleiche Bahn (sequenziell nach Triplette gespielt) plus zweite Bahn.
+		// Pro Runde werden 2 physische Bahnen pro Begegnung vergeben:
+		//   Bahn-Tri (ungerade): Triplette läuft hier, danach Doublette (sequenziell)
+		//   Bahn-Dou (ungerade): dieselbe Bahn wie Tri – Doublette folgt Triplette
+		//   Bahn-Tête (gerade):  parallel zur Doublette, separate Bahn
 		RangeData rangeData = new RangeData();
 		for (List<TeamPaarung> runde : spielPlan) {
 			int bahnInRunde = 1;
 			for (TeamPaarung ignored : runde) {
+				int bahnTri = 2 * bahnInRunde - 1;
+				int bahnTete = 2 * bahnInRunde;
 				RowData row = rangeData.addNewRow();
-				row.newInt(bahnInRunde);
-				row.newInt(bahnInRunde);
+				row.newInt(bahnTri);
+				row.newInt(bahnTri);  // Doublette auf gleicher Bahn wie Triplette (sequenziell)
+				row.newInt(bahnTete); // Tête auf separater Parallelbahn
 				bahnInRunde++;
 			}
 		}
@@ -358,7 +383,7 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet {
 
 		// Editierbare Zellen: Bahnen + Ergebnisse aller drei Partien
 		EditierbaresZelleFormatHelper.anwenden(this, RangePosition.from(
-				BAHN_TRI_SPALTE, ERSTE_DATEN_ZEILE, BAHN_DT_SPALTE, letzteSpielZeile));
+				BAHN_TRI_SPALTE, ERSTE_DATEN_ZEILE, BAHN_TETE_SPALTE, letzteSpielZeile));
 		EditierbaresZelleFormatHelper.anwenden(this, RangePosition.from(
 				TRI_A_SPALTE, ERSTE_DATEN_ZEILE, TETE_B_SPALTE, letzteSpielZeile));
 
@@ -380,7 +405,7 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet {
 		RangeProperties vTrennerBold = RangeProperties.from()
 				.setBorder(BorderFactory.from().boldLn().forRight().toBorder());
 		RangePosition vRange = RangePosition.from(SPIEL_NR_SPALTE, ERSTE_HEADER_ZEILE, SPIEL_NR_SPALTE, letzteSpielZeile);
-		RangeHelper.from(this, vRange.spalte(BAHN_DT_SPALTE)).setRangeProperties(vTrennerBold);
+		RangeHelper.from(this, vRange.spalte(BAHN_TETE_SPALTE)).setRangeProperties(vTrennerBold);
 		RangeHelper.from(this, vRange.spalte(NAME_B_SPALTE)).setRangeProperties(vTrennerBold);
 		RangeHelper.from(this, vRange.spalte(TRI_B_SPALTE)).setRangeProperties(vTrennerBold);
 		RangeHelper.from(this, vRange.spalte(DOU_B_SPALTE)).setRangeProperties(vTrennerBold);

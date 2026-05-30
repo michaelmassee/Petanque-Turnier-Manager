@@ -16,6 +16,7 @@ import de.petanqueturniermanager.toolbar.strategie.NichtVerfuegbarToolbarStrateg
 import de.petanqueturniermanager.toolbar.strategie.PouleToolbarStrategie;
 import de.petanqueturniermanager.toolbar.strategie.SchweizerToolbarStrategie;
 import de.petanqueturniermanager.toolbar.strategie.SupermeleeToolbarStrategie;
+import de.petanqueturniermanager.toolbar.strategie.TripTeteToolbarStrategie;
 
 /**
  * Registry, die jedem {@link TurnierSystem} eine passende
@@ -34,7 +35,8 @@ public final class TurnierSystemToolbarStrategieRegistry {
             TurnierSystem.JGJ,          new JGJToolbarStrategie(),
             TurnierSystem.KO,           new KoToolbarStrategie(),
             TurnierSystem.KASKADE,      new KaskadeToolbarStrategie(),
-            TurnierSystem.FORMULEX,     new FormuleXToolbarStrategie()
+            TurnierSystem.FORMULEX,     new FormuleXToolbarStrategie(),
+            TurnierSystem.TRIPTETE,     new TripTeteToolbarStrategie()
     );
 
     private TurnierSystemToolbarStrategieRegistry() {

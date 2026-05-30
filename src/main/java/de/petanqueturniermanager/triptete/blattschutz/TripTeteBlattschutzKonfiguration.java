@@ -82,7 +82,7 @@ public final class TripTeteBlattschutzKonfiguration implements IBlattschutzKonfi
 			int letzteZeile = ermittleLetzteSpielplanZeile(sheet);
 			var bereiche = List.of(
 					RangePosition.from(TripTeteSpielPlanSheet.BAHN_TRI_SPALTE, ersteDatenZeile,
-							TripTeteSpielPlanSheet.BAHN_DT_SPALTE, letzteZeile),
+							TripTeteSpielPlanSheet.BAHN_TETE_SPALTE, letzteZeile),
 					RangePosition.from(TripTeteSpielPlanSheet.TRI_A_SPALTE, ersteDatenZeile,
 							TripTeteSpielPlanSheet.TETE_B_SPALTE, letzteZeile));
 			infos.add(SheetSchutzInfo.mitEditierbarenBereichen(sheet, bereiche));
