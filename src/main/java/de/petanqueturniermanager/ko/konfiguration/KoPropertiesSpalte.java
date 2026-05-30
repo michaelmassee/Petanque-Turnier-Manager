@@ -58,6 +58,16 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 
 	private static final int DEFAULT_GRUPPEN_GROESSE = 16;
 
+	public static final String KONFIG_PROP_MIN_LETZTE_GRUPPE_GROESSE = "Turnierbaum Min. letzte Gruppe";
+
+	/**
+	 * Erlaubte Werte für {@link #KONFIG_PROP_MIN_LETZTE_GRUPPE_GROESSE}.
+	 * Ist die letzte Gruppe kleiner, wird sie in die vorherige gefaltet.
+	 */
+	private static final List<Integer> ERLAUBTE_MIN_LETZTE_GRUPPEN_GROESSEN = List.of(2, 3, 4, 5, 6, 8, 10, 12);
+
+	public static final int DEFAULT_MIN_LETZTE_GRUPPE_GROESSE = 4;
+
 	/**
 	 * Liste der für {@link #KONFIG_PROP_GRUPPEN_GROESSE} erlaubten Werte (Zweierpotenzen).
 	 * Wird von Dialog-Komponenten benötigt, die eine ListBox mit denselben Werten füllen.
@@ -73,6 +83,16 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 	public static int indexAusGruppenGroesse(int wert) {
 		int snapped = normalisiereGruppenGroesse(wert);
 		return ERLAUBTE_GRUPPEN_GROESSEN.indexOf(snapped);
+	}
+
+	public static List<Integer> getErlaubteMinLetzteGruppenGroessen() {
+		return ERLAUBTE_MIN_LETZTE_GRUPPEN_GROESSEN;
+	}
+
+	public static int indexAusMinLetzteGruppenGroesse(int wert) {
+		int snapped = normalisiereMinLetzteGruppeGroesse(wert);
+		int idx = ERLAUBTE_MIN_LETZTE_GRUPPEN_GROESSEN.indexOf(snapped);
+		return idx >= 0 ? idx : 0;
 	}
 
 	static {
@@ -136,6 +156,7 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 				.setDefaultVal(0xCD7F32).setDescription("config.desc.ko.turnierbaum.dritte.platz"));
 
 		KONFIG_PROPERTIES.add(buildGruppenGroesseProperty());
+		KONFIG_PROPERTIES.add(buildMinLetzteGruppeGroesseProperty());
 	}
 
 	private static AuswahlConfigProperty buildGruppenGroesseProperty() {
@@ -143,6 +164,18 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 				.setDefaultVal(Integer.toString(DEFAULT_GRUPPEN_GROESSE))
 				.setDescription("config.desc.ko.gruppen.groesse");
 		for (Integer val : ERLAUBTE_GRUPPEN_GROESSEN) {
+			String s = val.toString();
+			prop.addAuswahl(s, s);
+		}
+		return prop;
+	}
+
+	private static AuswahlConfigProperty buildMinLetzteGruppeGroesseProperty() {
+		AuswahlConfigProperty prop = (AuswahlConfigProperty) AuswahlConfigProperty
+				.from(KONFIG_PROP_MIN_LETZTE_GRUPPE_GROESSE)
+				.setDefaultVal(Integer.toString(DEFAULT_MIN_LETZTE_GRUPPE_GROESSE))
+				.setDescription("config.desc.ko.min.letzte.gruppe.groesse");
+		for (Integer val : ERLAUBTE_MIN_LETZTE_GRUPPEN_GROESSEN) {
 			String s = val.toString();
 			prop.addAuswahl(s, s);
 		}
@@ -176,6 +209,7 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 				.addAuswahl("J", "Ja").addAuswahl("N", "Nein"));
 
 		props.add(buildGruppenGroesseProperty());
+		props.add(buildMinLetzteGruppeGroesseProperty());
 	}
 
 	/**
@@ -285,6 +319,38 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 	public void setGruppenGroesse(int gruppenGroesse) {
 		setStringProperty(KONFIG_PROP_GRUPPEN_GROESSE,
 				Integer.toString(normalisiereGruppenGroesse(gruppenGroesse)));
+	}
+
+	public int getMinLetzteGruppeGroesse() {
+		return normalisiereMinLetzteGruppeGroesse(readStringProperty(KONFIG_PROP_MIN_LETZTE_GRUPPE_GROESSE));
+	}
+
+	public void setMinLetzteGruppeGroesse(int wert) {
+		setStringProperty(KONFIG_PROP_MIN_LETZTE_GRUPPE_GROESSE,
+				Integer.toString(normalisiereMinLetzteGruppeGroesse(wert)));
+	}
+
+	public static int normalisiereMinLetzteGruppeGroesse(int wert) {
+		if (wert <= 0) {
+			return DEFAULT_MIN_LETZTE_GRUPPE_GROESSE;
+		}
+		for (Integer erlaubt : ERLAUBTE_MIN_LETZTE_GRUPPEN_GROESSEN) {
+			if (wert <= erlaubt) {
+				return erlaubt;
+			}
+		}
+		return ERLAUBTE_MIN_LETZTE_GRUPPEN_GROESSEN.getLast();
+	}
+
+	public static int normalisiereMinLetzteGruppeGroesse(String wert) {
+		if (wert == null || wert.isBlank()) {
+			return DEFAULT_MIN_LETZTE_GRUPPE_GROESSE;
+		}
+		try {
+			return normalisiereMinLetzteGruppeGroesse((int) Math.round(Double.parseDouble(wert.trim())));
+		} catch (NumberFormatException e) {
+			return DEFAULT_MIN_LETZTE_GRUPPE_GROESSE;
+		}
 	}
 
 	/**

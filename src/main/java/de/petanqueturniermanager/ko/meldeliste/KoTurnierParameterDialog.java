@@ -28,6 +28,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.ko.konfiguration.KoPropertiesSpalte;
 import de.petanqueturniermanager.ko.konfiguration.KoSpielbaumTeamAnzeige;
@@ -59,10 +60,11 @@ public class KoTurnierParameterDialog {
 		public final SpielrundeSpielbahn spielbaumSpielbahn;
 		public final boolean spielUmPlatz3;
 		public final int gruppenGroesse;
+		public final int minLetzteGruppeGroesse;
 
 		public TurnierParameter(Formation formation, boolean teamnameAnzeigen, boolean vereinsnameAnzeigen,
 				KoSpielbaumTeamAnzeige spielbaumTeamAnzeige, SpielrundeSpielbahn spielbaumSpielbahn,
-				boolean spielUmPlatz3, int gruppenGroesse) {
+				boolean spielUmPlatz3, int gruppenGroesse, int minLetzteGruppeGroesse) {
 			this.formation = formation;
 			this.teamnameAnzeigen = teamnameAnzeigen;
 			this.vereinsnameAnzeigen = vereinsnameAnzeigen;
@@ -70,6 +72,7 @@ public class KoTurnierParameterDialog {
 			this.spielbaumSpielbahn = spielbaumSpielbahn;
 			this.spielUmPlatz3 = spielUmPlatz3;
 			this.gruppenGroesse = gruppenGroesse;
+			this.minLetzteGruppeGroesse = minLetzteGruppeGroesse;
 		}
 	}
 
@@ -92,7 +95,7 @@ public class KoTurnierParameterDialog {
 	public Optional<TurnierParameter> show(Formation defaultFormation, boolean defaultTeamnameAnzeigen,
 			boolean defaultVereinsnameAnzeigen, KoSpielbaumTeamAnzeige defaultSpielbaumTeamAnzeige,
 			SpielrundeSpielbahn defaultSpielbahn, boolean defaultSpielUmPlatz3,
-			int defaultGruppenGroesse) throws com.sun.star.uno.Exception {
+			int defaultGruppenGroesse, int defaultMinLetzteGruppeGroesse) throws com.sun.star.uno.Exception {
 
 		ProcessBox.from().hide();
 
@@ -105,7 +108,7 @@ public class KoTurnierParameterDialog {
 		dlgProps.setPropertyValue("PositionX", Integer.valueOf(50));
 		dlgProps.setPropertyValue("PositionY", Integer.valueOf(50));
 		dlgProps.setPropertyValue("Width", Integer.valueOf(160));
-		dlgProps.setPropertyValue("Height", Integer.valueOf(195));
+		dlgProps.setPropertyValue("Height", Integer.valueOf(215));
 		dlgProps.setPropertyValue("Title", "K.-O. Turnier \u2013 Parameter");
 		dlgProps.setPropertyValue("Moveable", Boolean.TRUE);
 
@@ -159,8 +162,14 @@ public class KoTurnierParameterDialog {
 
 		addFixedLine(xMSF, cont, "sep6", 5, 158, 150, 2);
 
-		addButton(xMSF, cont, "btnOk", "OK", 22, 175, 50, 14);
-		addButton(xMSF, cont, "btnCancel", "Abbrechen", 88, 175, 60, 14);
+		addLabel(xMSF, cont, "lblMinLetzteGruppe", I18n.get("dialog.ko.min.letzte.gruppe.label"), 8, 164, 80, 10);
+		addListBox(xMSF, cont, "lstMinLetzteGruppe", erlaubteMinLetzteGruppenGroessenAlsStrings(),
+				(short) KoPropertiesSpalte.indexAusMinLetzteGruppenGroesse(defaultMinLetzteGruppeGroesse), 92, 176, 60, 12);
+
+		addFixedLine(xMSF, cont, "sep7", 5, 192, 150, 2);
+
+		addButton(xMSF, cont, "btnOk", "OK", 22, 198, 50, 14);
+		addButton(xMSF, cont, "btnCancel", "Abbrechen", 88, 198, 60, 14);
 
 		// 4. Button-Listener anhängen
 		XDialog xDialog = Lo.qi(XDialog.class, dialog);
@@ -214,8 +223,10 @@ public class KoTurnierParameterDialog {
 			boolean spielUmPlatz3 = readCheckBoxState(xcc, "cbPlatz3");
 			int gruppenGroesse = KoPropertiesSpalte.getErlaubteGruppenGroessen()
 					.get(readListBoxSelected(xcc, "lstGruppenGroesse"));
+			int minLetzteGruppeGroesse = KoPropertiesSpalte.getErlaubteMinLetzteGruppenGroessen()
+					.get(readListBoxSelected(xcc, "lstMinLetzteGruppe"));
 			result = Optional.of(new TurnierParameter(formation, teamnameAnzeigen, vereinsnameAnzeigen,
-					spielbaumAnzeige, spielbahn, spielUmPlatz3, gruppenGroesse));
+					spielbaumAnzeige, spielbahn, spielUmPlatz3, gruppenGroesse, minLetzteGruppeGroesse));
 		}
 
 		Lo.qi(XComponent.class, dialog).dispose();
@@ -273,6 +284,11 @@ public class KoTurnierParameterDialog {
 
 	private static String[] erlaubteGruppenGroessenAlsStrings() {
 		return KoPropertiesSpalte.getErlaubteGruppenGroessen().stream()
+				.map(String::valueOf).toArray(String[]::new);
+	}
+
+	private static String[] erlaubteMinLetzteGruppenGroessenAlsStrings() {
+		return KoPropertiesSpalte.getErlaubteMinLetzteGruppenGroessen().stream()
 				.map(String::valueOf).toArray(String[]::new);
 	}
 

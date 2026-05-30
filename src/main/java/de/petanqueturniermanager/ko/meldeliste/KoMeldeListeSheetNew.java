@@ -146,7 +146,8 @@ public class KoMeldeListeSheetNew extends SheetRunner implements ISheet, MeldeLi
 							konfig.getSpielbaumTeamAnzeige(),
 							konfig.getSpielbaumSpielbahn(),
 							konfig.isSpielbaumSpielUmPlatz3(),
-							konfig.getGruppenGroesse());
+							konfig.getGruppenGroesse(),
+							konfig.getMinLetzteGruppeGroesse());
 		} catch (com.sun.star.uno.Exception e) {
 			String errMsg = I18n.get("error.dialog.parameterdialog", e.getMessage());
 			logger.error(errMsg, e);
@@ -166,6 +167,7 @@ public class KoMeldeListeSheetNew extends SheetRunner implements ISheet, MeldeLi
 		konfig.setSpielbaumSpielbahn(params.spielbaumSpielbahn);
 		konfig.setSpielbaumSpielUmPlatz3(params.spielUmPlatz3);
 		konfig.setGruppenGroesse(params.gruppenGroesse);
+		konfig.setMinLetzteGruppeGroesse(params.minLetzteGruppeGroesse);
 
 		// KonfigSheet mit neuen Werten neu rendern
 		getKonfigurationSheet().update();

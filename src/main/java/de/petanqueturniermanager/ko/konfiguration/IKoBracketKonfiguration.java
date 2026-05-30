@@ -14,6 +14,7 @@ import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
  */
 public interface IKoBracketKonfiguration {
 	int getGruppenGroesse();
+	default int getMinLetzteGruppeGroesse() { return KoPropertiesSpalte.DEFAULT_MIN_LETZTE_GRUPPE_GROESSE; }
 	KoSpielbaumTeamAnzeige getSpielbaumTeamAnzeige();
 	SpielrundeSpielbahn getSpielbaumSpielbahn();
 	boolean isSpielbaumSpielUmPlatz3();

@@ -130,7 +130,8 @@ public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet {
 		MaastrichterGruppenModus gruppenModus = konfigSheet.getMaastrichterGruppenModus();
 		List<List<SchweizerTeamErgebnis>> gruppen = switch (gruppenModus) {
 			case NACH_SIEGEN -> teileNachSiegen(sortiert, anzVorrunden);
-			case NACH_GROESSE -> teileNachGroesse(sortiert, konfigSheet.getGruppenGroesse());
+			case NACH_GROESSE -> teileNachGroesse(sortiert, konfigSheet.getGruppenGroesse(),
+					konfigSheet.getMinLetzteGruppeGroesse());
 		};
 
 		// Alte Finale-Blätter löschen
@@ -191,12 +192,13 @@ public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet {
 
 	/**
 	 * Teilt die sortierten Teams nach Rang in Chunks gemäß {@link GruppenAufteilungRechner}.
+	 * Kleine letzte Gruppen werden in die vorherige gefaltet; Cadrage übernimmt den Ausgleich.
 	 */
 	private List<List<SchweizerTeamErgebnis>> teileNachGroesse(
-			List<SchweizerTeamErgebnis> sortiert, int gruppenGroesse) {
+			List<SchweizerTeamErgebnis> sortiert, int gruppenGroesse, int minLetzteGruppe) {
 
 		List<Integer> gruppenGroessen = GruppenAufteilungRechner.berechne(
-				sortiert.size(), gruppenGroesse);
+				sortiert.size(), gruppenGroesse, minLetzteGruppe);
 		List<List<SchweizerTeamErgebnis>> gruppen = new ArrayList<>();
 		int startIndex = 0;
 		for (int groesse : gruppenGroessen) {

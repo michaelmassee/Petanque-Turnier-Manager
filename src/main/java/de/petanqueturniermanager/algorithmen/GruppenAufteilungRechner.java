@@ -25,6 +25,8 @@ public class GruppenAufteilungRechner {
 
     /**
      * Berechnet die Gruppengrößen für die Aufteilung auf A-, B-, C-Turniere.
+     * Delegiert an {@link #berechne(int, int, int)} mit {@code minLetzteGruppeGroesse = 2}
+     * (bisheriges Verhalten: nur 1-Team-Rest wird gefaltet).
      *
      * @param anzTeams          Gesamtanzahl Teams (muss &gt; 0 sein)
      * @param maxGruppenGroesse Maximale Gruppengröße (z. B. 16)
@@ -33,17 +35,38 @@ public class GruppenAufteilungRechner {
      *                                  {@code maxGruppenGroesse} &lt; 2
      */
     public static List<Integer> berechne(int anzTeams, int maxGruppenGroesse) {
+        return berechne(anzTeams, maxGruppenGroesse, 2);
+    }
+
+    /**
+     * Berechnet die Gruppengrößen für die Aufteilung auf A-, B-, C-Turniere.
+     *
+     * <p>Ist die letzte Gruppe kleiner als {@code minLetzteGruppeGroesse}, wird sie in die
+     * vorherige Gruppe gefaltet. Die vorherige Gruppe kann dadurch größer als
+     * {@code maxGruppenGroesse} werden — Cadrage übernimmt dann den Ausgleich auf eine
+     * Zweierpotenz.
+     *
+     * <p>Beispiel: 35 Teams, max=16, minLetzte=4 → [16, 16, 3] → 3 &lt; 4 → [16, 19]
+     *
+     * @param anzTeams               Gesamtanzahl Teams (muss &gt; 0 sein)
+     * @param maxGruppenGroesse      Maximale Gruppengröße (z. B. 16)
+     * @param minLetzteGruppeGroesse Mindestgröße der letzten Gruppe; ist sie kleiner,
+     *                               wird sie in die vorherige Gruppe gefaltet (muss &gt;= 2 sein)
+     * @return unveränderliche Liste der Gruppengrößen (Index 0 = Gruppe A usw.)
+     * @throws IllegalArgumentException wenn Vorbedingungen verletzt sind
+     */
+    public static List<Integer> berechne(int anzTeams, int maxGruppenGroesse, int minLetzteGruppeGroesse) {
         checkArgument(anzTeams > 0, "anzTeams muss groesser als 0 sein");
         checkArgument(maxGruppenGroesse >= 2, "maxGruppenGroesse muss >= 2 sein, war: %s", maxGruppenGroesse);
+        checkArgument(minLetzteGruppeGroesse >= 2, "minLetzteGruppeGroesse muss >= 2 sein, war: %s", minLetzteGruppeGroesse);
 
         List<Integer> ergebnis = new ArrayList<>();
         for (int start = 0; start < anzTeams; start += maxGruppenGroesse) {
             ergebnis.add(Math.min(maxGruppenGroesse, anzTeams - start));
         }
-        // 1-Team-Rest in vorherige Gruppe falten (Gruppen mit < 2 Teams können kein KO bilden)
-        if (ergebnis.size() >= 2 && ergebnis.get(ergebnis.size() - 1) < 2) {
-            int rest = ergebnis.remove(ergebnis.size() - 1);
-            ergebnis.set(ergebnis.size() - 1, ergebnis.get(ergebnis.size() - 1) + rest);
+        if (ergebnis.size() >= 2 && ergebnis.getLast() < minLetzteGruppeGroesse) {
+            int rest = ergebnis.removeLast();
+            ergebnis.set(ergebnis.size() - 1, ergebnis.getLast() + rest);
         }
         return ergebnis;
     }

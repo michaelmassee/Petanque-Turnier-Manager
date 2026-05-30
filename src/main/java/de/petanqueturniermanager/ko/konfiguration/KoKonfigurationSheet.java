@@ -127,6 +127,15 @@ public class KoKonfigurationSheet extends BaseKonfigurationSheet implements IKoB
 		propertiesSpalte.setGruppenGroesse(gruppenGroesse);
 	}
 
+	@Override
+	public int getMinLetzteGruppeGroesse() {
+		return propertiesSpalte.getMinLetzteGruppeGroesse();
+	}
+
+	public void setMinLetzteGruppeGroesse(int wert) {
+		propertiesSpalte.setMinLetzteGruppeGroesse(wert);
+	}
+
 	@Override public int getKoTurnierbaumTabFarbe()       { return propertiesSpalte.getKoTurnierbaumTabFarbe(); }
 	@Override public int getTurnierbaumHeaderFarbe()      { return propertiesSpalte.getTurnierbaumHeaderFarbe(); }
 	@Override public int getTurnierbaumTeamAFarbe()       { return propertiesSpalte.getTurnierbaumTeamAFarbe(); }

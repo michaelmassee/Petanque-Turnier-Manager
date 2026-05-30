@@ -99,6 +99,16 @@ public class MaastrichterPropertiesSpalte extends SchweizerPropertiesSpalte {
 				Integer.toString(KoPropertiesSpalte.normalisiereGruppenGroesse(gruppenGroesse)));
 	}
 
+	public int getMinLetzteGruppeGroesse() {
+		return KoPropertiesSpalte.normalisiereMinLetzteGruppeGroesse(
+				readStringProperty(KoPropertiesSpalte.KONFIG_PROP_MIN_LETZTE_GRUPPE_GROESSE));
+	}
+
+	public void setMinLetzteGruppeGroesse(int wert) {
+		setStringProperty(KoPropertiesSpalte.KONFIG_PROP_MIN_LETZTE_GRUPPE_GROESSE,
+				Integer.toString(KoPropertiesSpalte.normalisiereMinLetzteGruppeGroesse(wert)));
+	}
+
 	public MaastrichterGruppenModus getMaastrichterGruppenModus() {
 		return readEnumProperty(KONFIG_PROP_GRUPPEN_MODUS, MaastrichterGruppenModus.class,
 				MaastrichterGruppenModus.NACH_GROESSE);
