@@ -69,12 +69,14 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet {
 	public static final int DOU_B_SPALTE        = 9;
 	public static final int TETE_A_SPALTE       = 10;
 	public static final int TETE_B_SPALTE       = 11;
-	public static final int PARTIE_SIEGE_A      = 12;
-	public static final int PARTIE_SIEGE_B      = 13;
-	public static final int BEG_PUNKT_A         = 14;
-	public static final int BEG_PUNKT_B         = 15;
+	public static final int PUNKTE_A            = 12;
+	public static final int PUNKTE_B            = 13;
+	public static final int SIEGE_A             = 14;
+	public static final int SIEGE_B             = 15;
+	public static final int SP_PUNKTE_A         = 16;
+	public static final int SP_PUNKTE_B         = 17;
 
-	public static final int TEAM_A_NR_SPALTE    = 17;
+	public static final int TEAM_A_NR_SPALTE    = 19;
 	public static final int TEAM_B_NR_SPALTE    = TEAM_A_NR_SPALTE + 1;
 
 	private static final int PUNKTE_NR_WIDTH = AbstractSuperMeleeRanglisteFormatter.ENDSUMME_NUMBER_WIDTH;
@@ -144,7 +146,7 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet {
 			insertSpielNrSpalte(spielPlan);
 			insertBahnenSpalten(spielPlan);
 			insertFormulaTeamNamen();
-			insertFormulaPartieSiegeUndBegegnungsPunkt();
+			insertFormulaWertSpalten();
 			formatieren(spielPlan);
 			printBereichDefinieren();
 			SheetFreeze.from(getTurnierSheet()).anzZeilen(2).doFreeze();
@@ -161,7 +163,7 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet {
 	public RangePosition printBereichRangePosition() throws GenerateException {
 		List<List<TeamPaarung>> spielPlan = TripTetePaarungen.jederGegenJeden(meldeListe.getAlleMeldungen());
 		int anzZeilen = spielPlan.size() * spielPlan.get(0).size() - 1;
-		Position rechtsUnten = Position.from(BEG_PUNKT_B, ERSTE_DATEN_ZEILE + anzZeilen);
+		Position rechtsUnten = Position.from(SP_PUNKTE_B, ERSTE_DATEN_ZEILE + anzZeilen);
 		return RangePosition.from(Position.from(0, 0), rechtsUnten);
 	}
 
@@ -202,10 +204,13 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet {
 				stValHeader.setValue(I18n.get("enum.formation.tete")).spalte(TETE_A_SPALTE)
 						.setEndPosMergeSpaltePlus(1));
 		getSheetHelper().setStringValueInCell(
-				stValHeader.setValue(I18n.get("column.header.partien")).spalte(PARTIE_SIEGE_A)
+				stValHeader.setValue(I18n.get("column.header.punkte")).spalte(PUNKTE_A)
 						.setEndPosMergeSpaltePlus(1));
 		getSheetHelper().setStringValueInCell(
-				stValHeader.setValue(I18n.get("column.header.punkte")).spalte(BEG_PUNKT_A)
+				stValHeader.setValue(I18n.get("column.header.siege")).spalte(SIEGE_A)
+						.setEndPosMergeSpaltePlus(1));
+		getSheetHelper().setStringValueInCell(
+				stValHeader.setValue(I18n.get("column.header.sp.punkte")).spalte(SP_PUNKTE_A)
 						.setEndPosMergeSpaltePlus(1));
 
 		// Name-Spaltenbreite
@@ -231,10 +236,12 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet {
 		getSheetHelper().setStringValueInCell(stValHeader.setValue(gast).spalte(DOU_B_SPALTE));
 		getSheetHelper().setStringValueInCell(stValHeader.setValue(heim).spalte(TETE_A_SPALTE));
 		getSheetHelper().setStringValueInCell(stValHeader.setValue(gast).spalte(TETE_B_SPALTE));
-		getSheetHelper().setStringValueInCell(stValHeader.setValue(heim).spalte(PARTIE_SIEGE_A));
-		getSheetHelper().setStringValueInCell(stValHeader.setValue(gast).spalte(PARTIE_SIEGE_B));
-		getSheetHelper().setStringValueInCell(stValHeader.setValue(heim).spalte(BEG_PUNKT_A));
-		getSheetHelper().setStringValueInCell(stValHeader.setValue(gast).spalte(BEG_PUNKT_B));
+		getSheetHelper().setStringValueInCell(stValHeader.setValue(heim).spalte(PUNKTE_A));
+		getSheetHelper().setStringValueInCell(stValHeader.setValue(gast).spalte(PUNKTE_B));
+		getSheetHelper().setStringValueInCell(stValHeader.setValue(heim).spalte(SIEGE_A));
+		getSheetHelper().setStringValueInCell(stValHeader.setValue(gast).spalte(SIEGE_B));
+		getSheetHelper().setStringValueInCell(stValHeader.setValue(heim).spalte(SP_PUNKTE_A));
+		getSheetHelper().setStringValueInCell(stValHeader.setValue(gast).spalte(SP_PUNKTE_B));
 	}
 
 	private void insertSpielNrSpalte(List<List<TeamPaarung>> spielPlan) throws GenerateException {
@@ -317,38 +324,40 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet {
 		return "WENNNV(" + formulaName + ";\"" + I18n.get("spielplan.freispiel.name") + "\")";
 	}
 
-	private void insertFormulaPartieSiegeUndBegegnungsPunkt() throws GenerateException {
+	private void insertFormulaWertSpalten() throws GenerateException {
 		int letzteSpielZeile = letzteSpielZeile();
 
-		// Partien-Siege A = Σ über drei Partien (1 wenn A > B)
-		String formelPartienA = partienSiegeFormel(true);
-		StringCellValue pa = StringCellValue.from(getXSpreadSheet()).setValue(formelPartienA)
-				.setPos(Position.from(PARTIE_SIEGE_A, ERSTE_DATEN_ZEILE)).setFillAutoDown(letzteSpielZeile);
-		getSheetHelper().setFormulaInCell(pa);
+		// Siege: Σ Partie-Siege (muss vor Punkte berechnet werden, da Punkte darauf verweist)
+		StringCellValue siegeA = StringCellValue.from(getXSpreadSheet()).setValue(siegeFormel(true))
+				.setPos(Position.from(SIEGE_A, ERSTE_DATEN_ZEILE)).setFillAutoDown(letzteSpielZeile);
+		getSheetHelper().setFormulaInCell(siegeA);
+		StringCellValue siegeB = StringCellValue.from(getXSpreadSheet()).setValue(siegeFormel(false))
+				.setPos(Position.from(SIEGE_B, ERSTE_DATEN_ZEILE)).setFillAutoDown(letzteSpielZeile);
+		getSheetHelper().setFormulaInCell(siegeB);
 
-		String formelPartienB = partienSiegeFormel(false);
-		StringCellValue pb = StringCellValue.from(getXSpreadSheet()).setValue(formelPartienB)
-				.setPos(Position.from(PARTIE_SIEGE_B, ERSTE_DATEN_ZEILE)).setFillAutoDown(letzteSpielZeile);
-		getSheetHelper().setFormulaInCell(pb);
+		// Punkte: Begegnungssieg = 1 wenn Siege >= 2
+		Position siegeAPos = Position.from(SIEGE_A, ERSTE_DATEN_ZEILE);
+		Position siegeBPos = Position.from(SIEGE_B, ERSTE_DATEN_ZEILE);
+		StringCellValue punkteA = StringCellValue.from(getXSpreadSheet())
+				.setValue("WENN(" + siegeAPos.getAddress() + ">=2;1;0)")
+				.setPos(Position.from(PUNKTE_A, ERSTE_DATEN_ZEILE)).setFillAutoDown(letzteSpielZeile);
+		getSheetHelper().setFormulaInCell(punkteA);
+		StringCellValue punkteB = StringCellValue.from(getXSpreadSheet())
+				.setValue("WENN(" + siegeBPos.getAddress() + ">=2;1;0)")
+				.setPos(Position.from(PUNKTE_B, ERSTE_DATEN_ZEILE)).setFillAutoDown(letzteSpielZeile);
+		getSheetHelper().setFormulaInCell(punkteB);
 
-		// Begegnungs-Punkt A = 1 wenn PartieSiegeA >= 2
-		Position pSiegeA = Position.from(PARTIE_SIEGE_A, ERSTE_DATEN_ZEILE);
-		Position pSiegeB = Position.from(PARTIE_SIEGE_B, ERSTE_DATEN_ZEILE);
-		String formelBegA = "WENN(" + pSiegeA.getAddress() + ">=2;1;0)";
-		StringCellValue ba = StringCellValue.from(getXSpreadSheet()).setValue(formelBegA)
-				.setPos(Position.from(BEG_PUNKT_A, ERSTE_DATEN_ZEILE)).setFillAutoDown(letzteSpielZeile);
-		getSheetHelper().setFormulaInCell(ba);
-
-		String formelBegB = "WENN(" + pSiegeB.getAddress() + ">=2;1;0)";
-		StringCellValue bb = StringCellValue.from(getXSpreadSheet()).setValue(formelBegB)
-				.setPos(Position.from(BEG_PUNKT_B, ERSTE_DATEN_ZEILE)).setFillAutoDown(letzteSpielZeile);
-		getSheetHelper().setFormulaInCell(bb);
+		// spPunkte: Σ Kugeln (Triplette + Doublette + Tête)
+		StringCellValue spA = StringCellValue.from(getXSpreadSheet()).setValue(spPunkteFormel(true))
+				.setPos(Position.from(SP_PUNKTE_A, ERSTE_DATEN_ZEILE)).setFillAutoDown(letzteSpielZeile);
+		getSheetHelper().setFormulaInCell(spA);
+		StringCellValue spB = StringCellValue.from(getXSpreadSheet()).setValue(spPunkteFormel(false))
+				.setPos(Position.from(SP_PUNKTE_B, ERSTE_DATEN_ZEILE)).setFillAutoDown(letzteSpielZeile);
+		getSheetHelper().setFormulaInCell(spB);
 	}
 
-	/**
-	 * Σ Partie-Siege: für jede der drei Partien 1 wenn A>B (bzw. B>A), sonst 0.
-	 */
-	private String partienSiegeFormel(boolean fuerA) {
+	/** Σ Partie-Siege: für jede der drei Partien 1 wenn eigene > gegnerische Kugeln, sonst 0. */
+	private String siegeFormel(boolean fuerA) {
 		Position triA = Position.from(TRI_A_SPALTE, ERSTE_DATEN_ZEILE);
 		Position triB = Position.from(TRI_B_SPALTE, ERSTE_DATEN_ZEILE);
 		Position douA = Position.from(DOU_A_SPALTE, ERSTE_DATEN_ZEILE);
@@ -366,16 +375,30 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet {
 				+ "+WENN(" + aTeteAdr + ">" + bTeteAdr + ";1;0)";
 	}
 
+	/** Σ Kugeln: Summe aller drei Partie-Kugeln für ein Team. */
+	private String spPunkteFormel(boolean fuerA) {
+		Position triA = Position.from(TRI_A_SPALTE, ERSTE_DATEN_ZEILE);
+		Position triB = Position.from(TRI_B_SPALTE, ERSTE_DATEN_ZEILE);
+		Position douA = Position.from(DOU_A_SPALTE, ERSTE_DATEN_ZEILE);
+		Position douB = Position.from(DOU_B_SPALTE, ERSTE_DATEN_ZEILE);
+		Position teteA = Position.from(TETE_A_SPALTE, ERSTE_DATEN_ZEILE);
+		Position teteB = Position.from(TETE_B_SPALTE, ERSTE_DATEN_ZEILE);
+		if (fuerA) {
+			return triA.getAddress() + "+" + douA.getAddress() + "+" + teteA.getAddress();
+		}
+		return triB.getAddress() + "+" + douB.getAddress() + "+" + teteB.getAddress();
+	}
+
 	private void formatieren(List<List<TeamPaarung>> spielPlan) throws GenerateException {
 		int letzteSpielZeile = letzteSpielZeile();
 		RangePosition allDataMitHeader = RangePosition.from(SPIEL_NR_SPALTE, ERSTE_HEADER_ZEILE,
-				BEG_PUNKT_B, letzteSpielZeile);
+				SP_PUNKTE_B, letzteSpielZeile);
 		RangeProperties rangeProp = RangeProperties.from().setBorder(BorderFactory.from().allThin().toBorder())
 				.centerJustify().setShrinkToFit(true).topMargin(110).bottomMargin(110).setCharHeight(10);
 		RangeHelper.from(this, allDataMitHeader).setRangeProperties(rangeProp);
 
 		// gerade/ungerade
-		RangePosition runden = RangePosition.from(SPIEL_NR_SPALTE, ERSTE_DATEN_ZEILE, BEG_PUNKT_B, letzteSpielZeile);
+		RangePosition runden = RangePosition.from(SPIEL_NR_SPALTE, ERSTE_DATEN_ZEILE, SP_PUNKTE_B, letzteSpielZeile);
 		Integer farbeGerade = getKonfigurationSheet().getSpielPlanHintergrundFarbeGerade();
 		Integer farbeUngerade = getKonfigurationSheet().getSpielPlanHintergrundFarbeUnGerade();
 		RanglisteGeradeUngeradeFormatHelper.from(this, runden).geradeFarbe(farbeGerade)
@@ -396,7 +419,7 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet {
 		for (int i = 1; i < anzRunden; i++) {
 			trennerPos.zeilePlus(anzPaarungen - 1);
 			RangePosition trennerRange = RangePosition.from(SPIEL_NR_SPALTE, trennerPos.getZeile(),
-					BEG_PUNKT_B, trennerPos.getZeile());
+					SP_PUNKTE_B, trennerPos.getZeile());
 			RangeHelper.from(this, trennerRange).setRangeProperties(trenner);
 			trennerPos.zeilePlusEins();
 		}
@@ -410,10 +433,11 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet {
 		RangeHelper.from(this, vRange.spalte(TRI_B_SPALTE)).setRangeProperties(vTrennerBold);
 		RangeHelper.from(this, vRange.spalte(DOU_B_SPALTE)).setRangeProperties(vTrennerBold);
 		RangeHelper.from(this, vRange.spalte(TETE_B_SPALTE)).setRangeProperties(vTrennerBold);
-		RangeHelper.from(this, vRange.spalte(PARTIE_SIEGE_B)).setRangeProperties(vTrennerBold);
+		RangeHelper.from(this, vRange.spalte(PUNKTE_B)).setRangeProperties(vTrennerBold);
+		RangeHelper.from(this, vRange.spalte(SIEGE_B)).setRangeProperties(vTrennerBold);
 
 		// Header-Farbe
-		RangePosition headerRange = RangePosition.from(SPIEL_NR_SPALTE, ERSTE_HEADER_ZEILE, BEG_PUNKT_B,
+		RangePosition headerRange = RangePosition.from(SPIEL_NR_SPALTE, ERSTE_HEADER_ZEILE, SP_PUNKTE_B,
 				ERSTE_HEADER_ZEILE + 1);
 		RangeHelper.from(this, headerRange).setRangeProperties(
 				RangeProperties.from().setCellBackColor(getKonfigurationSheet().getSpielPlanHeaderFarbe()));

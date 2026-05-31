@@ -54,6 +54,6 @@ public class TripTeteRanglisteSheetUpdate extends SheetRunner implements ISheet 
 		if (getSheetHelper().findByName(SheetNamen.rangliste()) == null) {
 			return;
 		}
-		TripTeteRanglisteDatenSchreiber.from(this, meldeListe).schreibeDaten();
+		TripTeteRanglisteDatenSchreiber.from(this, meldeListe, getWorkingSpreadsheet()).schreibeDaten();
 	}
 }

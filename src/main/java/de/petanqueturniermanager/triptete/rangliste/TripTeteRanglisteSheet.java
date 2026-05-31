@@ -31,11 +31,10 @@ import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.triptete.konfiguration.TripTeteKonfigurationSheet;
 import de.petanqueturniermanager.triptete.meldeliste.TripTeteMeldeListeSheetUpdate;
-import de.petanqueturniermanager.triptete.spielplan.TripTeteSpielPlanSheet;
 
 /**
- * Trip-Tête-Rangliste – berechnet pro Team die Begegnungs-Siege, Partie-Siege
- * (Σ) und Buchholz-Zahl per SUMIF-Formel aus dem Spielplan-Sheet.
+ * Trip-Tête-Rangliste – schreibt pro Team Begegnungssiege (Punkte), Partiensiege (Siege),
+ * erzielte Kugeln (spPunkte) und Kugel-Differenz direkt als Werte (kein SUMIF).
  */
 public class TripTeteRanglisteSheet extends SheetRunner implements ISheet {
 
@@ -43,12 +42,14 @@ public class TripTeteRanglisteSheet extends SheetRunner implements ISheet {
 
 	public static final int ERSTE_DATEN_ZEILE = 3;
 
-	public static final int TEAM_NR_SPALTE   = 0;
-	public static final int NAME_SPALTE      = 1;
-	public static final int RANG_SPALTE      = 2;
-	public static final int BEG_SIEGE_SPALTE = 3;
-	public static final int PAR_SIEGE_SPALTE = 4;
-	public static final int LETZTE_SPALTE    = PAR_SIEGE_SPALTE;
+	public static final int TEAM_NR_SPALTE    = 0;
+	public static final int NAME_SPALTE       = 1;
+	public static final int RANG_SPALTE       = 2;
+	public static final int PUNKTE_SPALTE     = 3;
+	public static final int SIEGE_SPALTE      = 4;
+	public static final int SP_PUNKTE_SPALTE  = 5;
+	public static final int KUGEL_DIFF_SPALTE = 6;
+	public static final int LETZTE_SPALTE     = KUGEL_DIFF_SPALTE;
 
 	private final TripTeteKonfigurationSheet konfigurationSheet;
 	private final TripTeteMeldeListeSheetUpdate meldeListe;
@@ -108,7 +109,7 @@ public class TripTeteRanglisteSheet extends SheetRunner implements ISheet {
 			}
 
 			insertHeader();
-			TripTeteRanglisteDatenSchreiber.from(this, meldeListe).schreibeDaten();
+			TripTeteRanglisteDatenSchreiber.from(this, meldeListe, getWorkingSpreadsheet()).schreibeDaten();
 			insertFooter(meldungen.size());
 			formatieren(meldungen.size());
 			printBereichDefinieren(meldungen.size());
@@ -124,15 +125,24 @@ public class TripTeteRanglisteSheet extends SheetRunner implements ISheet {
 		ColumnProperties colSchmal = ColumnProperties.from().setWidth(900).centerJustify();
 		StringCellValue stVal = StringCellValue.from(getXSpreadSheet(), Position.from(TEAM_NR_SPALTE, 2))
 				.setColumnProperties(colSchmal);
-		getSheetHelper().setStringValueInCell(stVal.setValue("Nr").spalte(TEAM_NR_SPALTE));
+		getSheetHelper().setStringValueInCell(stVal.setValue(I18n.get("column.header.nr")).spalte(TEAM_NR_SPALTE));
 
 		ColumnProperties colName = ColumnProperties.from().setWidth(6000);
 		getSheetHelper().setColumnProperties(getXSpreadSheet(), NAME_SPALTE, colName);
-		getSheetHelper().setStringValueInCell(stVal.setColumnProperties(ColumnProperties.from()).setValue("Team").spalte(NAME_SPALTE));
+		getSheetHelper().setStringValueInCell(
+				stVal.setColumnProperties(ColumnProperties.from()).setValue(I18n.get("column.header.teamname"))
+						.spalte(NAME_SPALTE));
 
-		getSheetHelper().setStringValueInCell(stVal.setValue("Rang").spalte(RANG_SPALTE));
-		getSheetHelper().setStringValueInCell(stVal.setValue("Beg.-Siege").spalte(BEG_SIEGE_SPALTE));
-		getSheetHelper().setStringValueInCell(stVal.setValue("Partien Σ").spalte(PAR_SIEGE_SPALTE));
+		getSheetHelper().setStringValueInCell(
+				stVal.setColumnProperties(colSchmal).setValue(I18n.get("column.header.rang")).spalte(RANG_SPALTE));
+		getSheetHelper().setStringValueInCell(
+				stVal.setValue(I18n.get("column.header.punkte")).spalte(PUNKTE_SPALTE));
+		getSheetHelper().setStringValueInCell(
+				stVal.setValue(I18n.get("column.header.siege")).spalte(SIEGE_SPALTE));
+		getSheetHelper().setStringValueInCell(
+				stVal.setValue(I18n.get("column.header.sp.punkte")).spalte(SP_PUNKTE_SPALTE));
+		getSheetHelper().setStringValueInCell(
+				stVal.setValue(I18n.get("column.header.kugel.diff")).spalte(KUGEL_DIFF_SPALTE));
 
 		RangePosition headerRange = RangePosition.from(TEAM_NR_SPALTE, 2, LETZTE_SPALTE, 2);
 		RangeHelper.from(this, headerRange).setRangeProperties(
