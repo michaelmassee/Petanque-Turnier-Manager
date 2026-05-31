@@ -21,4 +21,8 @@ public interface ITripTetePropertiesSpalte extends IPropertiesSpalte {
 
 	Integer getSpielZiel();
 
+	boolean isMeldeListeTeamnameAnzeigen();
+
+	boolean isMeldeListeVereinsnameAnzeigen();
+
 }

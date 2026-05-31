@@ -5,6 +5,7 @@ import java.util.List;
 
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.konfigdialog.AuswahlConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
 import de.petanqueturniermanager.konfigdialog.HeaderFooterConfigProperty;
@@ -18,6 +19,9 @@ public class TripTetePropertiesSpalte extends BasePropertiesSpalte implements IT
 
 	public static final String KONFIG_PROP_SPIELZIEL = "Punktegrenze Partie";
 
+	private static final String KONFIG_PROP_MELDELISTE_TEAMNAME    = "Meldeliste Teamname";
+	private static final String KONFIG_PROP_MELDELISTE_VEREINSNAME = "Meldeliste Vereinsname";
+
 	private static final String KONFIG_PROP_SPIELPLAN_COLOR_BACK_GERADE = "Spielplan Hintergrund Gerade";
 	private static final String KONFIG_PROP_SPIELPLAN_COLOR_BACK_UNGERADE = "Spielplan Hintergrund Ungerade";
 	private static final String KONFIG_PROP_SPIELPLAN_COLOR_BACK_HEADER = "Spielplan Header";
@@ -28,6 +32,14 @@ public class TripTetePropertiesSpalte extends BasePropertiesSpalte implements IT
 
 	static {
 		ADDBaseProp(KONFIG_PROPERTIES);
+
+		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_MELDELISTE_TEAMNAME)
+				.setDefaultVal("N").setDescription("config.desc.meldeliste.teamname"))
+				.addAuswahl("J", "Ja").addAuswahl("N", "Nein"));
+
+		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_MELDELISTE_VEREINSNAME)
+				.setDefaultVal("N").setDescription("config.desc.schweizer.vereinsname"))
+				.addAuswahl("J", "Ja").addAuswahl("N", "Nein"));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELPLAN_COLOR_BACK_GERADE)
 				.setDefaultVal(DEFAULT_GERADE_BACK_COLOR).setDescription("config.desc.triptete.spielplan.gerade"));
@@ -90,5 +102,15 @@ public class TripTetePropertiesSpalte extends BasePropertiesSpalte implements IT
 	@Override
 	public Integer getSpielZiel() {
 		return readIntProperty(KONFIG_PROP_SPIELZIEL);
+	}
+
+	@Override
+	public boolean isMeldeListeTeamnameAnzeigen() {
+		return "J".equalsIgnoreCase(readStringProperty(KONFIG_PROP_MELDELISTE_TEAMNAME));
+	}
+
+	@Override
+	public boolean isMeldeListeVereinsnameAnzeigen() {
+		return "J".equalsIgnoreCase(readStringProperty(KONFIG_PROP_MELDELISTE_VEREINSNAME));
 	}
 }

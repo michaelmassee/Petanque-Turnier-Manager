@@ -70,10 +70,15 @@ public final class TripTeteBlattschutzKonfiguration implements IBlattschutzKonfi
 	}
 
 	private void sammleMeldelisteSchutzInfo(XSpreadsheetDocument xDoc, List<SheetSchutzInfo> infos) {
+		// Editierbare Spalten: Teamname bis Aktiv (max. Breite: 1 Teamname + 3×3 Spieler + 1 Aktiv = Spalte 11)
+		// Spalte 0 = Nr (gesperrt), Spalten 1..MAX = editierbar (ohne Teamname/Vereinsname-Konfigurationsabhängigkeit
+		// statische Obergrenze verwenden, damit alle Konfigurationsvarianten abgedeckt sind)
+		int ersteEditierbareSpalte = SPIELER_NR_SPALTE + 1;
+		int letzteEditierbareSpalte = 11; // max: Teamname(1) + 3 Spieler à 3 Spalten + Aktiv = Spalte 11
 		SheetMetadataHelper.findeSheet(xDoc, SheetMetadataHelper.SCHLUESSEL_TRIPTETE_MELDELISTE).ifPresent(sheet ->
 				infos.add(SheetSchutzInfo.mitEditierbarenBereichen(sheet, List.of(
-						RangePosition.from(SPIELER_NR_SPALTE + 1, ERSTE_DATEN_ZEILE,
-								SPIELER_NR_SPALTE + 1, MeldungenSpalte.MAX_ANZ_MELDUNGEN)))));
+						RangePosition.from(ersteEditierbareSpalte, 3 /* ERSTE_DATEN_ZEILE_OVERRIDE */,
+								letzteEditierbareSpalte, MeldungenSpalte.MAX_ANZ_MELDUNGEN)))));
 	}
 
 	private void sammleSpielplanSchutzInfo(XSpreadsheetDocument xDoc, List<SheetSchutzInfo> infos) {

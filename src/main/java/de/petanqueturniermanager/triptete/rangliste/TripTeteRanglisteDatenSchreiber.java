@@ -1,10 +1,7 @@
 package de.petanqueturniermanager.triptete.rangliste;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.algorithmen.triptete.TripTeteBegegnungErgebnis;
 import de.petanqueturniermanager.algorithmen.triptete.TripTeteRangliste;
@@ -14,7 +11,6 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
-import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.model.TeamMeldungen;
@@ -88,19 +84,6 @@ final class TripTeteRanglisteDatenSchreiber {
 	}
 
 	private Map<Integer, String> namenMap() throws GenerateException {
-		var ms = meldeListe.getMeldungenSpalte();
-		XSpreadsheet sheet = meldeListe.getXSpreadSheet();
-		SheetHelper sh = meldeListe.getSheetHelper();
-		int nrSpalte = ms.getSpielerNrSpalte();
-		int letzte = ms.getLetzteMitDatenZeileInSpielerNrSpalte();
-
-		Map<Integer, String> map = new HashMap<>();
-		for (int z = ms.getErsteDatenZiele(); z <= letzte; z++) {
-			int nr = sh.getIntFromCell(sheet, Position.from(nrSpalte, z));
-			if (nr > 0) {
-				map.put(nr, ms.leseSpielerNameZeile(sheet, z));
-			}
-		}
-		return map;
+		return meldeListe.leseTeamNamenMap();
 	}
 }

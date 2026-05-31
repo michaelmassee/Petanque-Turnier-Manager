@@ -81,4 +81,14 @@ public class TripTeteKonfigurationSheet extends BaseKonfigurationSheet
 	public Integer getSpielZiel() {
 		return propertiesSpalte.getSpielZiel();
 	}
+
+	@Override
+	public boolean isMeldeListeTeamnameAnzeigen() {
+		return propertiesSpalte.isMeldeListeTeamnameAnzeigen();
+	}
+
+	@Override
+	public boolean isMeldeListeVereinsnameAnzeigen() {
+		return propertiesSpalte.isMeldeListeVereinsnameAnzeigen();
+	}
 }
