@@ -40,7 +40,7 @@ public class TripTeteRanglisteSheet extends SheetRunner implements ISheet {
 
 	private static final String METADATA_SCHLUESSEL = SheetMetadataHelper.SCHLUESSEL_TRIPTETE_RANGLISTE;
 
-	public static final int ERSTE_DATEN_ZEILE = 3;
+	public static final int ERSTE_DATEN_ZEILE = 1;
 
 	public static final int TEAM_NR_SPALTE    = 0;
 	public static final int NAME_SPALTE       = 1;
@@ -121,9 +121,10 @@ public class TripTeteRanglisteSheet extends SheetRunner implements ISheet {
 
 	private void insertHeader() throws GenerateException {
 		int headerBackColor = konfigurationSheet.getRanglisteHeaderFarbe();
+		int headerZeile = ERSTE_DATEN_ZEILE - 1;
 
 		ColumnProperties colSchmal = ColumnProperties.from().setWidth(900).centerJustify();
-		StringCellValue stVal = StringCellValue.from(getXSpreadSheet(), Position.from(TEAM_NR_SPALTE, 2))
+		StringCellValue stVal = StringCellValue.from(getXSpreadSheet(), Position.from(TEAM_NR_SPALTE, headerZeile))
 				.setColumnProperties(colSchmal);
 		getSheetHelper().setStringValueInCell(stVal.setValue(I18n.get("column.header.nr")).spalte(TEAM_NR_SPALTE));
 
@@ -144,11 +145,14 @@ public class TripTeteRanglisteSheet extends SheetRunner implements ISheet {
 		getSheetHelper().setStringValueInCell(
 				stVal.setValue(I18n.get("column.header.kugel.diff")).spalte(KUGEL_DIFF_SPALTE));
 
-		RangePosition headerRange = RangePosition.from(TEAM_NR_SPALTE, 2, LETZTE_SPALTE, 2);
+		RangePosition headerRange = RangePosition.from(TEAM_NR_SPALTE, headerZeile, LETZTE_SPALTE, headerZeile);
 		RangeHelper.from(this, headerRange).setRangeProperties(
-				RangeProperties.from().setCellBackColor(headerBackColor).centerJustify()
+				RangeProperties.from()
+						.setCellBackColor(headerBackColor)
+						.centerJustify()
 						.setBorder(BorderFactory.from().allThin().boldLn().forBottom().toBorder())
-						.setCharHeight(11).setCharWeight(com.sun.star.awt.FontWeight.BOLD));
+						.margin(120)
+						.setShrinkToFit(true));
 	}
 
 	private void insertFooter(int anzTeams) throws GenerateException {
