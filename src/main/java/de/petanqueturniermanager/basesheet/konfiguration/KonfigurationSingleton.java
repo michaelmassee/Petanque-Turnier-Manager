@@ -20,6 +20,7 @@ import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterProperti
 import de.petanqueturniermanager.poule.konfiguration.PoulePropertiesSpalte;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerPropertiesSpalte;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleePropertiesSpalte;
+import de.petanqueturniermanager.triptete.konfiguration.TripTetePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
@@ -60,6 +61,8 @@ public final class KonfigurationSingleton {
 					return KaskadePropertiesSpalte.KONFIG_PROPERTIES;
 				case FORMULEX:
 					return FormuleXPropertiesSpalte.KONFIG_PROPERTIES;
+				case TRIPTETE:
+					return TripTetePropertiesSpalte.KONFIG_PROPERTIES;
 				default:
 					logger.error("TurnierSystem ungültig " + turnierSystem.getBezeichnung());
 					break;
