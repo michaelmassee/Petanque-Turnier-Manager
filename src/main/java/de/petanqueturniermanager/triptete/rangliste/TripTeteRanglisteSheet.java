@@ -27,6 +27,8 @@ import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.RanglisteGeradeUngeradeFormatHelper;
+import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
+import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
@@ -42,7 +44,7 @@ public class TripTeteRanglisteSheet extends SheetRunner implements ISheet {
 
 	private static final String METADATA_SCHLUESSEL = SheetMetadataHelper.SCHLUESSEL_TRIPTETE_RANGLISTE;
 
-	public static final int ERSTE_DATEN_ZEILE = 1;
+	public static final int ERSTE_DATEN_ZEILE = 2;
 
 	public static final int TEAM_NR_SPALTE    = 0;
 	public static final int NAME_SPALTE       = 1;
@@ -123,47 +125,73 @@ public class TripTeteRanglisteSheet extends SheetRunner implements ISheet {
 
 	private void insertHeader() throws GenerateException {
 		int headerBackColor = konfigurationSheet.getRanglisteHeaderFarbe();
-		int headerZeile = ERSTE_DATEN_ZEILE - 1;
+		int headerZeile0 = ERSTE_DATEN_ZEILE - 2;
+		int headerZeile1 = ERSTE_DATEN_ZEILE - 1;
 
+		var brdDaten = BorderFactory.from().allThin().boldLn().forBottom().toBorder();
+		var brdInnen = BorderFactory.from().allThin().toBorder();
 		ColumnProperties colSchmal = ColumnProperties.from().setWidth(900).centerJustify();
-		StringCellValue stVal = StringCellValue.from(getXSpreadSheet(), Position.from(TEAM_NR_SPALTE, headerZeile))
-				.setColumnProperties(colSchmal);
-		getSheetHelper().setStringValueInCell(stVal.setValue(I18n.get("column.header.nr")).spalte(TEAM_NR_SPALTE));
 
-		ColumnProperties colName = ColumnProperties.from().setWidth(6000);
-		getSheetHelper().setColumnProperties(getXSpreadSheet(), NAME_SPALTE, colName);
+		// Nr – überspannt beide Header-Zeilen
 		getSheetHelper().setStringValueInCell(
-				stVal.setColumnProperties(ColumnProperties.from()).setValue(I18n.get("column.header.teamname"))
-						.spalte(NAME_SPALTE));
-
-		getSheetHelper().setStringValueInCell(
-				stVal.setColumnProperties(colSchmal).setValue(I18n.get("column.header.punkte")).spalte(PUNKTE_SPALTE));
-		getSheetHelper().setStringValueInCell(
-				stVal.setValue(I18n.get("column.header.siege")).spalte(SIEGE_SPALTE));
-		getSheetHelper().setStringValueInCell(
-				stVal.setValue(I18n.get("column.header.sp.punkte")).spalte(SP_PUNKTE_SPALTE));
-		getSheetHelper().setStringValueInCell(
-				stVal.setValue(I18n.get("column.header.sp.punkte.diff")).spalte(SP_PUNKTE_DIFF_SPALTE));
-
-		RangePosition headerRange = RangePosition.from(TEAM_NR_SPALTE, headerZeile, LETZTE_SPALTE, headerZeile);
-		RangeHelper.from(this, headerRange).setRangeProperties(
-				RangeProperties.from()
+				StringCellValue.from(getXSpreadSheet(), Position.from(TEAM_NR_SPALTE, headerZeile0))
+						.setColumnProperties(colSchmal)
+						.setValue(I18n.get("column.header.nr"))
 						.setCellBackColor(headerBackColor)
-						.centerJustify()
-						.setBorder(BorderFactory.from().allThin().boldLn().forBottom().toBorder())
-						.margin(120)
+						.setBorder(brdDaten)
+						.setHoriJustify(CellHoriJustify.CENTER)
+						.setEndPosMergeZeilePlus(1)
 						.setShrinkToFit(true));
 
+		// Name – überspannt beide Header-Zeilen
+		getSheetHelper().setColumnProperties(getXSpreadSheet(), NAME_SPALTE, ColumnProperties.from().setWidth(6000));
 		getSheetHelper().setStringValueInCell(
-				StringCellValue.from(getXSpreadSheet(), Position.from(RANG_SPALTE, headerZeile))
+				StringCellValue.from(getXSpreadSheet(), Position.from(NAME_SPALTE, headerZeile0))
+						.setValue(I18n.get("column.header.teamname"))
+						.setCellBackColor(headerBackColor)
+						.setBorder(brdDaten)
+						.setHoriJustify(CellHoriJustify.CENTER)
+						.setEndPosMergeZeilePlus(1)
+						.setShrinkToFit(true));
+
+		// Platz – überspannt beide Header-Zeilen, hochkant
+		getSheetHelper().setStringValueInCell(
+				StringCellValue.from(getXSpreadSheet(), Position.from(RANG_SPALTE, headerZeile0))
 						.setColumnProperties(colSchmal)
 						.setValue(I18n.get("column.header.platz"))
 						.setRotate90()
 						.setVertJustify(CellVertJustify2.CENTER)
 						.setCellBackColor(headerBackColor)
-						.setBorder(BorderFactory.from().allThin().boldLn().forBottom().toBorder())
+						.setBorder(brdDaten)
+						.setEndPosMergeZeilePlus(1)
 						.setShrinkToFit(true)
 						.setCharWeight(FontWeight.BOLD));
+
+		// "Summen" – überspannt alle Datenspalten in der oberen Header-Zeile
+		getSheetHelper().setStringValueInCell(
+				StringCellValue.from(getXSpreadSheet(), Position.from(PUNKTE_SPALTE, headerZeile0))
+						.setValue(I18n.get("column.header.summen"))
+						.setCellBackColor(headerBackColor)
+						.setBorder(brdInnen)
+						.setHoriJustify(CellHoriJustify.CENTER)
+						.setEndPosMergeSpaltePlus(SP_PUNKTE_DIFF_SPALTE - PUNKTE_SPALTE)
+						.setShrinkToFit(true));
+
+		// Spalten-Labels in der unteren Header-Zeile
+		RangeData headerData = new RangeData();
+		RowData zeile = headerData.addNewRow();
+		zeile.newString(I18n.get("column.header.punkte"));
+		zeile.newString(I18n.get("column.header.siege"));
+		zeile.newString(I18n.get("column.header.sp.punkte"));
+		zeile.newString(I18n.get("column.header.sp.punkte.diff"));
+		RangeHelper.from(this, headerData.getRangePosition(Position.from(PUNKTE_SPALTE, headerZeile1)))
+				.setDataInRange(headerData)
+				.setRangeProperties(RangeProperties.from()
+						.setCellBackColor(headerBackColor)
+						.centerJustify()
+						.setBorder(brdDaten)
+						.margin(120)
+						.setShrinkToFit(true));
 	}
 
 	private void insertFooter(int anzTeams) throws GenerateException {
