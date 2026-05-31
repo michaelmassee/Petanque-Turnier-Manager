@@ -2,7 +2,9 @@ package de.petanqueturniermanager.triptete.rangliste;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.awt.FontWeight;
 import com.sun.star.table.CellHoriJustify;
+import com.sun.star.table.CellVertJustify2;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
@@ -135,9 +137,7 @@ public class TripTeteRanglisteSheet extends SheetRunner implements ISheet {
 						.spalte(NAME_SPALTE));
 
 		getSheetHelper().setStringValueInCell(
-				stVal.setColumnProperties(colSchmal).setValue(I18n.get("column.header.rang")).spalte(RANG_SPALTE));
-		getSheetHelper().setStringValueInCell(
-				stVal.setValue(I18n.get("column.header.punkte")).spalte(PUNKTE_SPALTE));
+				stVal.setColumnProperties(colSchmal).setValue(I18n.get("column.header.punkte")).spalte(PUNKTE_SPALTE));
 		getSheetHelper().setStringValueInCell(
 				stVal.setValue(I18n.get("column.header.siege")).spalte(SIEGE_SPALTE));
 		getSheetHelper().setStringValueInCell(
@@ -153,6 +153,17 @@ public class TripTeteRanglisteSheet extends SheetRunner implements ISheet {
 						.setBorder(BorderFactory.from().allThin().boldLn().forBottom().toBorder())
 						.margin(120)
 						.setShrinkToFit(true));
+
+		getSheetHelper().setStringValueInCell(
+				StringCellValue.from(getXSpreadSheet(), Position.from(RANG_SPALTE, headerZeile))
+						.setColumnProperties(colSchmal)
+						.setValue(I18n.get("column.header.platz"))
+						.setRotate90()
+						.setVertJustify(CellVertJustify2.CENTER)
+						.setCellBackColor(headerBackColor)
+						.setBorder(BorderFactory.from().allThin().boldLn().forBottom().toBorder())
+						.setShrinkToFit(true)
+						.setCharWeight(FontWeight.BOLD));
 	}
 
 	private void insertFooter(int anzTeams) throws GenerateException {

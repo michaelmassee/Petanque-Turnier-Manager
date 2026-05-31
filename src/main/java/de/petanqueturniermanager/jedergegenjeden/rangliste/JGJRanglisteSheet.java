@@ -366,13 +366,17 @@ public class JGJRanglisteSheet extends SheetRunner implements ISheet, IRangliste
             var border = einzelSpalten[i][1] == 1
                     ? BorderFactory.from().allThin().boldLn().forBottom().forRight().toBorder()
                     : BorderFactory.from().allThin().boldLn().forBottom().toBorder();
-            getSheetHelper().setStringValueInCell(StringCellValue
+            var cv = StringCellValue
                     .from(sheet, Position.from(col, HEADER_ZEILE), einzelTexte[i])
                     .setCellBackColor(headerFarbe)
                     .setBorder(border)
                     .setHoriJustify(CellHoriJustify.CENTER)
                     .setEndPosMergeZeilePlus(1)
-                    .setShrinkToFit(true));
+                    .setShrinkToFit(true);
+            if (col == PLATZ_SPALTE) {
+                cv.setRotate90().setVertJustify(CellVertJustify2.CENTER);
+            }
+            getSheetHelper().setStringValueInCell(cv);
         }
 
         getSheetHelper().setStringValueInCell(StringCellValue
