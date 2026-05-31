@@ -18,8 +18,8 @@ import de.petanqueturniermanager.model.Team;
  * <ol>
  *   <li>Begegnungssiege (Hauptkriterium)</li>
  *   <li>Partiensiege (Tiebreak 1)</li>
- *   <li>Kugel-Differenz (Tiebreak 2)</li>
- *   <li>Erzielte Kugeln (Σ+) (Tiebreak 3)</li>
+ *   <li>Spielpunkte-Differenz (Tiebreak 2)</li>
+ *   <li>Erzielte Spielpunkte (Σ+) (Tiebreak 3)</li>
  * </ol>
  * <p>
  * Hinweis: {@code compareTo} definiert nur die Sortierung; {@code equals} bleibt absichtlich
@@ -32,8 +32,8 @@ public class TripTeteTeamErgebnis implements Comparable<TripTeteTeamErgebnis> {
 	private static final Comparator<TripTeteTeamErgebnis> SORTIERUNG = Comparator
 			.comparingInt(TripTeteTeamErgebnis::getBegegnungenGewonnen).reversed()
 			.thenComparing(Comparator.comparingInt(TripTeteTeamErgebnis::getPartienGewonnen).reversed())
-			.thenComparing(Comparator.comparingInt(TripTeteTeamErgebnis::getKugelDiff).reversed())
-			.thenComparing(Comparator.comparingInt(TripTeteTeamErgebnis::getKugelnPlus).reversed());
+			.thenComparing(Comparator.comparingInt(TripTeteTeamErgebnis::getSpielPunkteDiff).reversed())
+			.thenComparing(Comparator.comparingInt(TripTeteTeamErgebnis::getSpielPunktePlus).reversed());
 
 	private final Team team;
 	private int begegnungenGespielt;
@@ -42,8 +42,8 @@ public class TripTeteTeamErgebnis implements Comparable<TripTeteTeamErgebnis> {
 	private int begegnungenUnentschieden;
 	private int partienGewonnen;
 	private int partienVerloren;
-	private int kugelnPlus;
-	private int kugelnMinus;
+	private int spielpunktePlus;
+	private int spielpunkteMinus;
 
 	public TripTeteTeamErgebnis(Team team) {
 		this.team = checkNotNull(team, "team == null");
@@ -63,14 +63,14 @@ public class TripTeteTeamErgebnis implements Comparable<TripTeteTeamErgebnis> {
 
 		int eigenePartien = istTeamA ? ergebnis.begegnungPunkteA() : ergebnis.begegnungPunkteB();
 		int gegnerPartien = istTeamA ? ergebnis.begegnungPunkteB() : ergebnis.begegnungPunkteA();
-		int eigeneKugeln = istTeamA ? ergebnis.kugelnFuerA() : ergebnis.kugelnGegenA();
-		int gegnerKugeln = istTeamA ? ergebnis.kugelnGegenA() : ergebnis.kugelnFuerA();
+		int eigeneKugeln = istTeamA ? ergebnis.spielpunkteFuerA() : ergebnis.spielpunkteGegenA();
+		int gegnerKugeln = istTeamA ? ergebnis.spielpunkteGegenA() : ergebnis.spielpunkteFuerA();
 
 		begegnungenGespielt++;
 		partienGewonnen += eigenePartien;
 		partienVerloren += gegnerPartien;
-		kugelnPlus += eigeneKugeln;
-		kugelnMinus += gegnerKugeln;
+		spielpunktePlus += eigeneKugeln;
+		spielpunkteMinus += gegnerKugeln;
 
 		if (eigenePartien > gegnerPartien) {
 			begegnungenGewonnen++;
@@ -115,16 +115,16 @@ public class TripTeteTeamErgebnis implements Comparable<TripTeteTeamErgebnis> {
 		return partienVerloren;
 	}
 
-	public int getKugelnPlus() {
-		return kugelnPlus;
+	public int getSpielPunktePlus() {
+		return spielpunktePlus;
 	}
 
-	public int getKugelnMinus() {
-		return kugelnMinus;
+	public int getSpielPunkteMinus() {
+		return spielpunkteMinus;
 	}
 
-	public int getKugelDiff() {
-		return kugelnPlus - kugelnMinus;
+	public int getSpielPunkteDiff() {
+		return spielpunktePlus - spielpunkteMinus;
 	}
 
 	@Override
@@ -133,8 +133,8 @@ public class TripTeteTeamErgebnis implements Comparable<TripTeteTeamErgebnis> {
 				.add("team", team.getNr())
 				.add("begSiege", begegnungenGewonnen)
 				.add("partSiege", partienGewonnen)
-				.add("kugelDiff", getKugelDiff())
-				.add("kugelnPlus", kugelnPlus)
+				.add("spielpunkteDiff", getSpielPunkteDiff())
+				.add("spielpunktePlus", spielpunktePlus)
 				.toString();
 	}
 }

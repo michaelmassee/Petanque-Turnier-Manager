@@ -54,37 +54,37 @@ public class TripTeteRanglisteTest {
 	}
 
 	@Test
-	public void tiebreakKugelDifferenzBeiGleichenPartien() {
+	public void tiebreakSpielPunkteDifferenzBeiGleichenPartien() {
 		Team a = Team.from(1);
 		Team b = Team.from(2);
 		Team c = Team.from(3);
 		Team d = Team.from(4);
 
 		TripTeteRangliste rangliste = new TripTeteRangliste();
-		// beide gewinnen 3:0, gleiche Partiensiege, A mit größerer Kugel-Δ
+		// beide gewinnen 3:0, gleiche Partiensiege, A mit größerer SpPunkte-Δ
 		rangliste.addBegegnung(begegnung(a, c, 13, 0, 13, 0, 13, 0));
 		rangliste.addBegegnung(begegnung(b, d, 13, 10, 13, 10, 13, 10));
 
 		List<TripTeteTeamErgebnis> liste = rangliste.getRangliste();
 		assertThat(liste).extracting(e -> e.getTeam().getNr()).startsWith(1, 2);
-		assertThat(liste.get(0).getKugelDiff()).isEqualTo(39);
-		assertThat(liste.get(1).getKugelDiff()).isEqualTo(9);
+		assertThat(liste.get(0).getSpielPunkteDiff()).isEqualTo(39);
+		assertThat(liste.get(1).getSpielPunkteDiff()).isEqualTo(9);
 	}
 
 	@Test
-	public void tiebreakKugelnPlusBeiGleicherDifferenz() {
+	public void tiebreakSpielPunktePlusBeiGleicherDifferenz() {
 		Team a = Team.from(1);
 		Team b = Team.from(2);
 		Team c = Team.from(3);
 		Team d = Team.from(4);
 
 		TripTeteRangliste rangliste = new TripTeteRangliste();
-		// gleiche Begegnungs-/Partiensiege, gleiche Kugel-Δ, aber A mit mehr Σ+
+		// gleiche Begegnungs-/Partiensiege, gleiche SpPunkte-Δ, aber A mit mehr Σ+
 		rangliste.addBegegnung(begegnung(a, c, 13, 10, 13, 10, 13, 10));
 		rangliste.addBegegnung(begegnung(b, d, 12, 9, 12, 9, 12, 9));
 
 		List<TripTeteTeamErgebnis> liste = rangliste.getRangliste();
-		assertThat(liste.get(0).getKugelDiff()).isEqualTo(liste.get(1).getKugelDiff());
+		assertThat(liste.get(0).getSpielPunkteDiff()).isEqualTo(liste.get(1).getSpielPunkteDiff());
 		assertThat(liste).extracting(e -> e.getTeam().getNr()).startsWith(1, 2);
 	}
 
@@ -105,8 +105,8 @@ public class TripTeteRanglisteTest {
 		// Die ersten zwei (A und B) haben identische Werte — kein Absturz, stabile Ausgabe
 		assertThat(liste.get(0).getBegegnungenGewonnen()).isEqualTo(liste.get(1).getBegegnungenGewonnen());
 		assertThat(liste.get(0).getPartienGewonnen()).isEqualTo(liste.get(1).getPartienGewonnen());
-		assertThat(liste.get(0).getKugelDiff()).isEqualTo(liste.get(1).getKugelDiff());
-		assertThat(liste.get(0).getKugelnPlus()).isEqualTo(liste.get(1).getKugelnPlus());
+		assertThat(liste.get(0).getSpielPunkteDiff()).isEqualTo(liste.get(1).getSpielPunkteDiff());
+		assertThat(liste.get(0).getSpielPunktePlus()).isEqualTo(liste.get(1).getSpielPunktePlus());
 	}
 
 	@Test

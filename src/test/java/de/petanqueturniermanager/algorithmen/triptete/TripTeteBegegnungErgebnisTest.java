@@ -26,9 +26,9 @@ public class TripTeteBegegnungErgebnisTest {
 		assertThat(erg.siegA()).isTrue();
 		assertThat(erg.siegB()).isFalse();
 		assertThat(erg.unentschieden()).isFalse();
-		assertThat(erg.kugelnFuerA()).isEqualTo(9 + 13 + 13);
-		assertThat(erg.kugelnGegenA()).isEqualTo(13 + 6 + 11);
-		assertThat(erg.kugelDiffA()).isEqualTo(5);
+		assertThat(erg.spielpunkteFuerA()).isEqualTo(9 + 13 + 13);
+		assertThat(erg.spielpunkteGegenA()).isEqualTo(13 + 6 + 11);
+		assertThat(erg.spielpunkteDiffA()).isEqualTo(5);
 		assertThat(erg.sieger()).isPresent().get().extracting(Team::getNr).isEqualTo(1);
 	}
 
@@ -42,7 +42,7 @@ public class TripTeteBegegnungErgebnisTest {
 		assertThat(erg.siegB()).isFalse();
 		assertThat(erg.sieger()).isEmpty();
 		assertThat(erg.begegnungPunkteA()).isEqualTo(1);
-		assertThat(erg.kugelDiffA()).isEqualTo(4);
+		assertThat(erg.spielpunkteDiffA()).isEqualTo(4);
 	}
 
 	@Test
@@ -54,7 +54,7 @@ public class TripTeteBegegnungErgebnisTest {
 
 		assertThat(erg.siegB()).isTrue();
 		assertThat(erg.begegnungPunkteB()).isEqualTo(3);
-		assertThat(erg.kugelDiffA()).isEqualTo(-16);
+		assertThat(erg.spielpunkteDiffA()).isEqualTo(-16);
 		assertThat(erg.sieger()).isPresent().get().extracting(Team::getNr).isEqualTo(4);
 	}
 
@@ -97,7 +97,7 @@ public class TripTeteBegegnungErgebnisTest {
 		assertThat(erg.siegA()).isFalse();
 		assertThat(erg.siegB()).isTrue();
 		assertThat(erg.sieger()).isPresent().get().extracting(Team::getNr).isEqualTo(2);
-		assertThat(erg.kugelDiffA()).isEqualTo((5 + 7 + 11) - (13 + 13 + 13));
+		assertThat(erg.spielpunkteDiffA()).isEqualTo((5 + 7 + 11) - (13 + 13 + 13));
 	}
 
 	@Test

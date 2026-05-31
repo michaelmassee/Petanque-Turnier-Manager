@@ -34,7 +34,7 @@ import de.petanqueturniermanager.triptete.meldeliste.TripTeteMeldeListeSheetUpda
 
 /**
  * Trip-Tête-Rangliste – schreibt pro Team Begegnungssiege (Punkte), Partiensiege (Siege),
- * erzielte Kugeln (spPunkte) und Kugel-Differenz direkt als Werte (kein SUMIF).
+ * SpPunkte+ und SpPunkte-Differenz direkt als Werte (kein SUMIF).
  */
 public class TripTeteRanglisteSheet extends SheetRunner implements ISheet {
 
@@ -48,8 +48,8 @@ public class TripTeteRanglisteSheet extends SheetRunner implements ISheet {
 	public static final int PUNKTE_SPALTE     = 3;
 	public static final int SIEGE_SPALTE      = 4;
 	public static final int SP_PUNKTE_SPALTE  = 5;
-	public static final int KUGEL_DIFF_SPALTE = 6;
-	public static final int LETZTE_SPALTE     = KUGEL_DIFF_SPALTE;
+	public static final int SP_PUNKTE_DIFF_SPALTE = 6;
+	public static final int LETZTE_SPALTE         = SP_PUNKTE_DIFF_SPALTE;
 
 	private final TripTeteKonfigurationSheet konfigurationSheet;
 	private final TripTeteMeldeListeSheetUpdate meldeListe;
@@ -113,7 +113,7 @@ public class TripTeteRanglisteSheet extends SheetRunner implements ISheet {
 			insertFooter(meldungen.size());
 			formatieren(meldungen.size());
 			printBereichDefinieren(meldungen.size());
-			SheetFreeze.from(getTurnierSheet()).anzZeilen(ERSTE_DATEN_ZEILE).anzSpalten(2).doFreeze();
+			SheetFreeze.from(getTurnierSheet()).anzZeilen(ERSTE_DATEN_ZEILE).anzSpalten(3).doFreeze();
 		} finally {
 			getxCalculatable().enableAutomaticCalculation(true);
 		}
@@ -143,7 +143,7 @@ public class TripTeteRanglisteSheet extends SheetRunner implements ISheet {
 		getSheetHelper().setStringValueInCell(
 				stVal.setValue(I18n.get("column.header.sp.punkte")).spalte(SP_PUNKTE_SPALTE));
 		getSheetHelper().setStringValueInCell(
-				stVal.setValue(I18n.get("column.header.kugel.diff")).spalte(KUGEL_DIFF_SPALTE));
+				stVal.setValue(I18n.get("column.header.sp.punkte.diff")).spalte(SP_PUNKTE_DIFF_SPALTE));
 
 		RangePosition headerRange = RangePosition.from(TEAM_NR_SPALTE, headerZeile, LETZTE_SPALTE, headerZeile);
 		RangeHelper.from(this, headerRange).setRangeProperties(
@@ -167,8 +167,8 @@ public class TripTeteRanglisteSheet extends SheetRunner implements ISheet {
 		int letzteDatenZeile = ERSTE_DATEN_ZEILE + anzTeams - 1;
 		RangePosition daten = RangePosition.from(TEAM_NR_SPALTE, ERSTE_DATEN_ZEILE, LETZTE_SPALTE, letzteDatenZeile);
 		RangeHelper.from(this, daten).setRangeProperties(
-				RangeProperties.from().setBorder(BorderFactory.from().allThin().toBorder())
-						.centerJustify().setShrinkToFit(true));
+				RangeProperties.from().setBorder(BorderFactory.from().allThin().boldLn().forTop().toBorder())
+						.centerJustify().margin(120).setShrinkToFit(true));
 
 		Integer farbeGerade = konfigurationSheet.getRanglisteHintergrundFarbeGerade();
 		Integer farbeUngerade = konfigurationSheet.getRanglisteHintergrundFarbeUnGerade();

@@ -24,7 +24,7 @@ import de.petanqueturniermanager.triptete.spielplan.TripTeteSpielPlanSheet;
 
 /**
  * Schreibt die Daten-Zeilen der Trip-Tête-Rangliste direkt als Werte (ohne Formeln):
- * Team-Nr, Name, Rang, Begegnungssiege (Punkte), Partiensiege (Siege), Kugeln+ (spPunkte), Kugel-Δ.
+ * Team-Nr, Name, Rang, Begegnungssiege (Punkte), Partiensiege (Siege), SpPunkte+ (spPunkte), SpPunkte-Δ.
  * <p>
  * Liest die Spielplan-Daten über {@link TripTeteSpielPlanLeser}, berechnet die Rangliste
  * via {@link TripTeteRangliste}-Algorithmus und schreibt alles als Block per RangeHelper.
@@ -78,8 +78,8 @@ final class TripTeteRanglisteDatenSchreiber {
 			row.newInt(rang);
 			row.newInt(ergebnis.getBegegnungenGewonnen());
 			row.newInt(ergebnis.getPartienGewonnen());
-			row.newInt(ergebnis.getKugelnPlus());
-			row.newInt(ergebnis.getKugelDiff());
+			row.newInt(ergebnis.getSpielPunktePlus());
+			row.newInt(ergebnis.getSpielPunkteDiff());
 		}
 
 		Position startPos = Position.from(TripTeteRanglisteSheet.TEAM_NR_SPALTE,

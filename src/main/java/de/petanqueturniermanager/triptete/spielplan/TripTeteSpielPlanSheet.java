@@ -347,7 +347,7 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet {
 				.setPos(Position.from(PUNKTE_B, ERSTE_DATEN_ZEILE)).setFillAutoDown(letzteSpielZeile);
 		getSheetHelper().setFormulaInCell(punkteB);
 
-		// spPunkte: Σ Kugeln (Triplette + Doublette + Tête)
+		// spPunkte: Σ Spielpunkte (Triplette + Doublette + Tête)
 		StringCellValue spA = StringCellValue.from(getXSpreadSheet()).setValue(spPunkteFormel(true))
 				.setPos(Position.from(SP_PUNKTE_A, ERSTE_DATEN_ZEILE)).setFillAutoDown(letzteSpielZeile);
 		getSheetHelper().setFormulaInCell(spA);
@@ -356,7 +356,7 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet {
 		getSheetHelper().setFormulaInCell(spB);
 	}
 
-	/** Σ Partie-Siege: für jede der drei Partien 1 wenn eigene > gegnerische Kugeln, sonst 0. */
+	/** Σ Partie-Siege: für jede der drei Partien 1 wenn eigene > gegnerische Spielpunkte, sonst 0. */
 	private String siegeFormel(boolean fuerA) {
 		Position triA = Position.from(TRI_A_SPALTE, ERSTE_DATEN_ZEILE);
 		Position triB = Position.from(TRI_B_SPALTE, ERSTE_DATEN_ZEILE);
@@ -375,7 +375,7 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet {
 				+ "+WENN(" + aTeteAdr + ">" + bTeteAdr + ";1;0)";
 	}
 
-	/** Σ Kugeln: Summe aller drei Partie-Kugeln für ein Team. */
+	/** Σ Spielpunkte: Summe aller drei Partie-Spielpunkte für ein Team. */
 	private String spPunkteFormel(boolean fuerA) {
 		Position triA = Position.from(TRI_A_SPALTE, ERSTE_DATEN_ZEILE);
 		Position triB = Position.from(TRI_B_SPALTE, ERSTE_DATEN_ZEILE);

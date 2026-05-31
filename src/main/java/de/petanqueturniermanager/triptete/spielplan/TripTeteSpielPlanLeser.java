@@ -17,7 +17,7 @@ import de.petanqueturniermanager.model.Team;
 /**
  * Liest den TripTête-Spielplan zeilenweise und erzeugt daraus
  * {@link TripTeteBegegnungErgebnis}-Objekte für den Ranglisten-Algorithmus.
- * Zeilen ohne eingetragene Ergebnisse (Kugel-Zellen leer) werden übersprungen.
+ * Zeilen ohne eingetragene Ergebnisse (Spielpunkte-Zellen leer) werden übersprungen.
  * Freilos-Zeilen (Team B = 0) werden übersprungen.
  */
 public final class TripTeteSpielPlanLeser {

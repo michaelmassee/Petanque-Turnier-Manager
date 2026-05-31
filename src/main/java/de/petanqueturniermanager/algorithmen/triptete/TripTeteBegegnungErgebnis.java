@@ -57,16 +57,16 @@ public class TripTeteBegegnungErgebnis {
 		return (int) partien.values().stream().filter(SpielErgebnis::siegB).count();
 	}
 
-	public int kugelnFuerA() {
+	public int spielpunkteFuerA() {
 		return partien.values().stream().mapToInt(SpielErgebnis::getSpielPunkteA).sum();
 	}
 
-	public int kugelnGegenA() {
+	public int spielpunkteGegenA() {
 		return partien.values().stream().mapToInt(SpielErgebnis::getSpielPunkteB).sum();
 	}
 
-	public int kugelDiffA() {
-		return kugelnFuerA() - kugelnGegenA();
+	public int spielpunkteDiffA() {
+		return spielpunkteFuerA() - spielpunkteGegenA();
 	}
 
 	public boolean siegA() {
@@ -111,7 +111,7 @@ public class TripTeteBegegnungErgebnis {
 				.add("B", teamB.getNr())
 				.add("punkteA", begegnungPunkteA())
 				.add("punkteB", begegnungPunkteB())
-				.add("kugelDiffA", kugelDiffA())
+				.add("spielpunkteDiffA", spielpunkteDiffA())
 				.toString();
 	}
 }

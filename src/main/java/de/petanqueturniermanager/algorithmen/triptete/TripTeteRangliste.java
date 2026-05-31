@@ -17,7 +17,7 @@ import de.petanqueturniermanager.model.Team;
  * Berechnet die Trip-Tête-Rangliste aus verbuchten Begegnungs-Ergebnissen.
  * <p>
  * Sortier-Reihenfolge wird durch {@link TripTeteTeamErgebnis#compareTo(TripTeteTeamErgebnis)} bestimmt:
- * Begegnungssiege ↓ → Partiensiege ↓ → Kugel-Δ ↓ → Σ Kugeln+ ↓.
+ * Begegnungssiege ↓ → Partiensiege ↓ → SpPunkte-Δ ↓ → Σ SpPunkte+ ↓.
  *
  * @author Michael Massee
  */
