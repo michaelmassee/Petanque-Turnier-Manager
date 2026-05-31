@@ -18,8 +18,8 @@ import de.petanqueturniermanager.model.Team;
  * <ol>
  *   <li>Begegnungssiege (Hauptkriterium)</li>
  *   <li>Partiensiege (Tiebreak 1)</li>
- *   <li>Spielpunkte-Differenz (Tiebreak 2)</li>
- *   <li>Erzielte Spielpunkte (Σ+) (Tiebreak 3)</li>
+ *   <li>Erzielte Spielpunkte (Σ+) (Tiebreak 2)</li>
+ *   <li>Spielpunkte-Differenz Δ (Tiebreak 3)</li>
  * </ol>
  * <p>
  * Hinweis: {@code compareTo} definiert nur die Sortierung; {@code equals} bleibt absichtlich
@@ -32,8 +32,8 @@ public class TripTeteTeamErgebnis implements Comparable<TripTeteTeamErgebnis> {
 	private static final Comparator<TripTeteTeamErgebnis> SORTIERUNG = Comparator
 			.comparingInt(TripTeteTeamErgebnis::getBegegnungenGewonnen).reversed()
 			.thenComparing(Comparator.comparingInt(TripTeteTeamErgebnis::getPartienGewonnen).reversed())
-			.thenComparing(Comparator.comparingInt(TripTeteTeamErgebnis::getSpielPunkteDiff).reversed())
-			.thenComparing(Comparator.comparingInt(TripTeteTeamErgebnis::getSpielPunktePlus).reversed());
+			.thenComparing(Comparator.comparingInt(TripTeteTeamErgebnis::getSpielPunktePlus).reversed())
+			.thenComparing(Comparator.comparingInt(TripTeteTeamErgebnis::getSpielPunkteDiff).reversed());
 
 	private final Team team;
 	private int begegnungenGespielt;
