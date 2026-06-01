@@ -144,28 +144,6 @@
 								</prop>
 							</node>
 
-							<node oor:name="D1A9" oor:op="replace">
-								<prop oor:name="URL" oor:type="xs:string">
-									<value>private:separator</value>
-								</prop>
-							</node>
-
-							<node oor:name="D1A10" oor:op="replace">
-								<prop oor:name="Title">
-									<value xml:lang="en">Configuration</value>
-									<value xml:lang="de">Konfiguration</value>
-									<value xml:lang="es">Configuración</value>
-									<value xml:lang="fr">Configuration</value>
-									<value xml:lang="nl">Configuratie</value>
-								</prop>
-								<prop oor:name="URL">
-									<value>ptm:triptete_konfiguration</value>
-								</prop>
-								<prop oor:name="Target" oor:type="xs:string">
-									<value>_self</value>
-								</prop>
-							</node>
-
 						</node>
 					</node>
 					<!-- ****************************************************************** -->
