@@ -5,14 +5,18 @@ import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.awt.FontWeight;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
+import com.sun.star.table.TableBorder2;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.algorithmen.liga.JederGegenJeden;
+import de.petanqueturniermanager.algorithmen.triptete.TripTetePaarungen;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.RangeProperties;
 import de.petanqueturniermanager.helper.i18n.I18n;
@@ -37,23 +41,39 @@ import de.petanqueturniermanager.triptete.konfiguration.TripTeteKonfigurationShe
 import de.petanqueturniermanager.triptete.meldeliste.TripTeteMeldeListeSheetUpdate;
 
 /**
- * Trip-Tête-Rangliste – schreibt pro Team Begegnungssiege (Punkte), Partiensiege (Siege),
- * SpPunkte+ und SpPunkte-Differenz direkt als Werte (kein SUMIF).
+ * Trip-Tête-Rangliste – 3-zeiliger Header analog zur Liga-Rangliste.
+ * <p>
+ * Spaltenstruktur: Nr | Name | Platz | je Runde 6 Spalten (BegGew+, BegVer-, PartGew+, PartVer-,
+ * SpPnkt+, SpPnkt-) | 8 Summen-Spalten | 1 Begegnungs-Spalte.
  */
 public class TripTeteRanglisteSheet extends SheetRunner implements ISheet {
 
+	private static final int MARGIN = 120;
 	private static final String METADATA_SCHLUESSEL = SheetMetadataHelper.SCHLUESSEL_TRIPTETE_RANGLISTE;
 
-	public static final int ERSTE_DATEN_ZEILE = 2;
+	public static final int ERSTE_DATEN_ZEILE = 3;
 
-	public static final int TEAM_NR_SPALTE    = 0;
-	public static final int NAME_SPALTE       = 1;
-	public static final int RANG_SPALTE       = 2;
-	public static final int PUNKTE_SPALTE     = 3;
-	public static final int SIEGE_SPALTE      = 4;
-	public static final int SP_PUNKTE_SPALTE  = 5;
-	public static final int SP_PUNKTE_DIFF_SPALTE = 6;
-	public static final int LETZTE_SPALTE         = SP_PUNKTE_DIFF_SPALTE;
+	public static final int TEAM_NR_SPALTE = 0;
+	public static final int NAME_SPALTE    = 1;
+	public static final int RANG_SPALTE    = 2;
+
+	/** Erste Spalte der Rundendaten (nach Nr / Name / Rang). */
+	public static final int ERSTE_SPIELTAG_SPALTE = 3;
+	/** Anzahl Spalten pro Runde: BegGew+, BegVer-, PartGew+, PartVer-, SpPnkt+, SpPnkt-. */
+	public static final int ANZ_SPALTEN_PRO_RUNDE = 6;
+	/**
+	 * Anzahl Summen-Spalten (inkl. Begegnungen-Spalte):
+	 * BegGew+, BegVer-, PartGew+, PartVer-, PartΔ, SpPnkt+, SpPnkt-, SpPnktΔ, Begegnungen.
+	 */
+	public static final int ANZ_SUMMEN_SPALTEN = 9;
+
+	public static int ersteSummenSpalte(int anzRunden) {
+		return ERSTE_SPIELTAG_SPALTE + anzRunden * ANZ_SPALTEN_PRO_RUNDE;
+	}
+
+	public static int letzteSpalte(int anzRunden) {
+		return ersteSummenSpalte(anzRunden) + ANZ_SUMMEN_SPALTEN - 1;
+	}
 
 	private final TripTeteKonfigurationSheet konfigurationSheet;
 	private final TripTeteMeldeListeSheetUpdate meldeListe;
@@ -112,86 +132,138 @@ public class TripTeteRanglisteSheet extends SheetRunner implements ISheet {
 				return;
 			}
 
-			insertHeader();
+			int anzRunden = new JederGegenJeden(meldungen).anzRunden();
+			insertHeader(anzRunden);
 			TripTeteRanglisteDatenSchreiber.from(this, meldeListe, getWorkingSpreadsheet()).schreibeDaten();
 			insertFooter(meldungen.size());
-			formatieren(meldungen.size());
-			printBereichDefinieren(meldungen.size());
+			formatieren(meldungen.size(), anzRunden);
+			printBereichDefinieren(meldungen.size(), anzRunden);
 			SheetFreeze.from(getTurnierSheet()).anzZeilen(ERSTE_DATEN_ZEILE).anzSpalten(3).doFreeze();
 		} finally {
 			getxCalculatable().enableAutomaticCalculation(true);
 		}
 	}
 
-	private void insertHeader() throws GenerateException {
+	private void insertHeader(int anzRunden) throws GenerateException {
 		int headerBackColor = konfigurationSheet.getRanglisteHeaderFarbe();
-		int headerZeile0 = ERSTE_DATEN_ZEILE - 2;
-		int headerZeile1 = ERSTE_DATEN_ZEILE - 1;
 
-		var brdDaten = BorderFactory.from().allThin().boldLn().forBottom().toBorder();
-		var brdInnen = BorderFactory.from().allThin().toBorder();
+		BorderFactory borderFact = BorderFactory.from().allThin().boldLn().forBottom();
+		TableBorder2 brdDaten = borderFact.toBorder();
+		CellProperties headerProp = CellProperties.from().setAllThinBorder().margin(MARGIN).centerJustify()
+				.setCellBackColor(headerBackColor).setShrinkToFit(true);
 		ColumnProperties colSchmal = ColumnProperties.from().setWidth(900).centerJustify();
 
-		// Nr – überspannt beide Header-Zeilen
+		// Nr – überspannt alle 3 Header-Zeilen
 		getSheetHelper().setStringValueInCell(
-				StringCellValue.from(getXSpreadSheet(), Position.from(TEAM_NR_SPALTE, headerZeile0))
+				StringCellValue.from(getXSpreadSheet(), Position.from(TEAM_NR_SPALTE, 0))
 						.setColumnProperties(colSchmal)
 						.setValue(I18n.get("column.header.nr"))
 						.setCellBackColor(headerBackColor)
 						.setBorder(brdDaten)
 						.setHoriJustify(CellHoriJustify.CENTER)
-						.setEndPosMergeZeilePlus(1)
+						.setEndPosMergeZeilePlus(2)
 						.setShrinkToFit(true));
 
-		// Name – überspannt beide Header-Zeilen
+		// Name – überspannt alle 3 Header-Zeilen
 		getSheetHelper().setColumnProperties(getXSpreadSheet(), NAME_SPALTE, ColumnProperties.from().setWidth(6000));
 		getSheetHelper().setStringValueInCell(
-				StringCellValue.from(getXSpreadSheet(), Position.from(NAME_SPALTE, headerZeile0))
+				StringCellValue.from(getXSpreadSheet(), Position.from(NAME_SPALTE, 0))
 						.setValue(I18n.get("column.header.teamname"))
 						.setCellBackColor(headerBackColor)
 						.setBorder(brdDaten)
 						.setHoriJustify(CellHoriJustify.CENTER)
-						.setEndPosMergeZeilePlus(1)
+						.setEndPosMergeZeilePlus(2)
 						.setShrinkToFit(true));
 
-		// Platz – überspannt beide Header-Zeilen, hochkant
+		// Platz – überspannt alle 3 Header-Zeilen, hochkant
 		getSheetHelper().setStringValueInCell(
-				StringCellValue.from(getXSpreadSheet(), Position.from(RANG_SPALTE, headerZeile0))
+				StringCellValue.from(getXSpreadSheet(), Position.from(RANG_SPALTE, 0))
 						.setColumnProperties(colSchmal)
 						.setValue(I18n.get("column.header.platz"))
 						.setRotate90()
 						.setVertJustify(CellVertJustify2.CENTER)
 						.setCellBackColor(headerBackColor)
 						.setBorder(brdDaten)
-						.setEndPosMergeZeilePlus(1)
+						.setEndPosMergeZeilePlus(2)
 						.setShrinkToFit(true)
 						.setCharWeight(FontWeight.BOLD));
 
-		// "Summen" – überspannt alle Datenspalten in der oberen Header-Zeile
-		getSheetHelper().setStringValueInCell(
-				StringCellValue.from(getXSpreadSheet(), Position.from(PUNKTE_SPALTE, headerZeile0))
-						.setValue(I18n.get("column.header.summen"))
-						.setCellBackColor(headerBackColor)
-						.setBorder(brdInnen)
-						.setHoriJustify(CellHoriJustify.CENTER)
-						.setEndPosMergeSpaltePlus(SP_PUNKTE_DIFF_SPALTE - PUNKTE_SPALTE)
-						.setShrinkToFit(true));
+		// ---- Header-Zeile 3 (unterste): +/- Labels ----
+		RangeData zeile3Data = new RangeData();
+		RowData zeile3 = zeile3Data.addNewRow();
+		for (int r = 0; r < anzRunden; r++) {
+			zeile3.newString("+"); zeile3.newString("-"); // Punkte
+			zeile3.newString("+"); zeile3.newString("-"); // Spiele
+			zeile3.newString("+"); zeile3.newString("-"); // SpPnkte
+		}
+		// Summen
+		zeile3.newString("+"); zeile3.newString("-");           // Punkte
+		zeile3.newString("+"); zeile3.newString("-"); zeile3.newString("Δ"); // Spiele + Diff
+		zeile3.newString("+"); zeile3.newString("-"); zeile3.newString("Δ"); // Spielpunkte + Diff
 
-		// Spalten-Labels in der unteren Header-Zeile
-		RangeData headerData = new RangeData();
-		RowData zeile = headerData.addNewRow();
-		zeile.newString(I18n.get("column.header.punkte"));
-		zeile.newString(I18n.get("column.header.siege"));
-		zeile.newString(I18n.get("column.header.sp.punkte"));
-		zeile.newString(I18n.get("column.header.sp.punkte.diff"));
-		RangeHelper.from(this, headerData.getRangePosition(Position.from(PUNKTE_SPALTE, headerZeile1)))
-				.setDataInRange(headerData)
-				.setRangeProperties(RangeProperties.from()
-						.setCellBackColor(headerBackColor)
+		RangeHelper.from(this, zeile3Data.getRangePosition(Position.from(ERSTE_SPIELTAG_SPALTE, 2)))
+				.setDataInRange(zeile3Data)
+				.setRangeProperties(RangeProperties.from().centerJustify().setBorder(brdDaten)
+						.setCellBackColor(headerBackColor).margin(MARGIN).setShrinkToFit(true));
+
+		// ---- Header-Zeile 2: Punkte/Spiele/SpPnkte Labels ----
+		StringCellValue header2val = StringCellValue.from(getXSpreadSheet())
+				.setPos(Position.from(ERSTE_SPIELTAG_SPALTE, 1))
+				.setEndPosMergeSpaltePlus(1).setCellProperties(headerProp);
+
+		for (int r = 0; r < anzRunden; r++) {
+			header2val.setValue(I18n.get("column.header.punkte"));
+			getSheetHelper().setStringValueInCell(header2val);
+			header2val.spaltePlus(2);
+
+			header2val.setValue(I18n.get("column.header.spiele"));
+			getSheetHelper().setStringValueInCell(header2val);
+			header2val.spaltePlus(2);
+
+			header2val.setValue(I18n.get("column.header.sppnkte"));
+			getSheetHelper().setStringValueInCell(header2val);
+			header2val.spaltePlus(2);
+		}
+		// Summen Zeile 2
+		header2val.setValue(I18n.get("column.header.punkte"));
+		getSheetHelper().setStringValueInCell(header2val);
+		header2val.spaltePlus(2);
+
+		header2val.setValue(I18n.get("column.header.spiele")).setEndPosMergeSpaltePlus(2);
+		getSheetHelper().setStringValueInCell(header2val);
+		header2val.spaltePlus(3);
+
+		header2val.setValue(I18n.get("column.header.spielpunkte")).setEndPosMergeSpaltePlus(2);
+		getSheetHelper().setStringValueInCell(header2val);
+
+		// ---- Header-Zeile 1 (oberste): Runde N + Summen + Begegn. ----
+		StringCellValue header1val = StringCellValue.from(getXSpreadSheet())
+				.setPos(Position.from(ERSTE_SPIELTAG_SPALTE, 0))
+				.setEndPosMergeSpaltePlus(ANZ_SPALTEN_PRO_RUNDE - 1).setCellProperties(headerProp);
+
+		for (int r = 0; r < anzRunden; r++) {
+			header1val.setValue(I18n.get("column.header.runde.nr", r + 1));
+			getSheetHelper().setStringValueInCell(header1val);
+			header1val.spaltePlus(ANZ_SPALTEN_PRO_RUNDE);
+		}
+
+		// Summen-Block (8 Spalten, ohne Begegnungen)
+		header1val.setValue(I18n.get("column.header.summen")).setEndPosMergeSpaltePlus(ANZ_SUMMEN_SPALTEN - 2);
+		getSheetHelper().setStringValueInCell(header1val);
+
+		// Begegn. (überspannt alle 3 Zeilen, hochkant)
+		TableBorder2 begegnungenBrd = BorderFactory.from(borderFact).doubleLn().forLeft().toBorder();
+		int begegnungenSpalte = ersteSummenSpalte(anzRunden) + ANZ_SUMMEN_SPALTEN - 1;
+		getSheetHelper().setStringValueInCell(
+				StringCellValue.from(getXSpreadSheet()).setPos(Position.from(begegnungenSpalte, 0))
+						.setValue(I18n.get("column.header.begegn"))
+						.setRotate90()
+						.setEndPosMergeZeilePlus(2)
 						.centerJustify()
-						.setBorder(brdDaten)
-						.margin(120)
-						.setShrinkToFit(true));
+						.setBorder(begegnungenBrd)
+						.setCellBackColor(headerBackColor)
+						.setShrinkToFit(true)
+						.setComment(I18n.get("comment.begegnungen")));
 	}
 
 	private void insertFooter(int anzTeams) throws GenerateException {
@@ -202,12 +274,13 @@ public class TripTeteRanglisteSheet extends SheetRunner implements ISheet {
 				stVal.setValue(I18n.get("triptete.rangliste.reihenfolge.platzierung")));
 	}
 
-	private void formatieren(int anzTeams) throws GenerateException {
+	private void formatieren(int anzTeams, int anzRunden) throws GenerateException {
+		int letzteSpalte = letzteSpalte(anzRunden);
 		int letzteDatenZeile = ERSTE_DATEN_ZEILE + anzTeams - 1;
-		RangePosition daten = RangePosition.from(TEAM_NR_SPALTE, ERSTE_DATEN_ZEILE, LETZTE_SPALTE, letzteDatenZeile);
+		RangePosition daten = RangePosition.from(TEAM_NR_SPALTE, ERSTE_DATEN_ZEILE, letzteSpalte, letzteDatenZeile);
 		RangeHelper.from(this, daten).setRangeProperties(
 				RangeProperties.from().setBorder(BorderFactory.from().allThin().boldLn().forTop().toBorder())
-						.centerJustify().margin(120).setShrinkToFit(true));
+						.centerJustify().margin(MARGIN).setShrinkToFit(true));
 
 		Integer farbeGerade = konfigurationSheet.getRanglisteHintergrundFarbeGerade();
 		Integer farbeUngerade = konfigurationSheet.getRanglisteHintergrundFarbeUnGerade();
@@ -215,9 +288,9 @@ public class TripTeteRanglisteSheet extends SheetRunner implements ISheet {
 				.ungeradeFarbe(farbeUngerade).apply();
 	}
 
-	private void printBereichDefinieren(int anzTeams) throws GenerateException {
+	private void printBereichDefinieren(int anzTeams, int anzRunden) throws GenerateException {
 		PrintArea.from(getXSpreadSheet(), getWorkingSpreadsheet()).setPrintArea(
-				RangePosition.from(0, 0, LETZTE_SPALTE, ERSTE_DATEN_ZEILE + anzTeams + 1));
+				RangePosition.from(0, 0, letzteSpalte(anzRunden), ERSTE_DATEN_ZEILE + anzTeams + 1));
 	}
 
 	public TripTeteMeldeListeSheetUpdate getMeldeListe() {
