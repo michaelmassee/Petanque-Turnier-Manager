@@ -16,6 +16,7 @@ import de.petanqueturniermanager.ko.konfiguration.KoKonfigurationSheet;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
 import de.petanqueturniermanager.poule.konfiguration.PouleKonfigurationSheet;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
+import de.petanqueturniermanager.triptete.konfiguration.TripTeteKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
@@ -118,7 +119,12 @@ public final class MeldelisteZielFactory {
                     yield Optional.of(new MeldelisteLayout(k.getMeldeListeFormation(),
                             k.isMeldeListeTeamnameAnzeigen(), k.isMeldeListeVereinsnameAnzeigen()));
                 }
-                case LIGA, TRIPTETE, KEIN -> Optional.empty();
+                case TRIPTETE -> {
+                    TripTeteKonfigurationSheet k = new TripTeteKonfigurationSheet(ws);
+                    yield Optional.of(new MeldelisteLayout(Formation.TRIPLETTE,
+                            k.isMeldeListeTeamnameAnzeigen(), k.isMeldeListeVereinsnameAnzeigen()));
+                }
+                case LIGA, KEIN -> Optional.empty();
             };
         } catch (RuntimeException e) {
             logger.warn("Konfig-Layout für {} konnte nicht gelesen werden", ts, e);
