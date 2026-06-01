@@ -155,10 +155,10 @@ public class TripTeteRanglisteSheet extends SheetRunner implements ISheet {
 						.setEndPosMergeZeilePlus(1)
 						.setShrinkToFit(true));
 
-		// Name – überspannt Header-Zeilen 1 und 2, identisch wie Nr
+		// Name – überspannt Header-Zeilen 1 und 2, identisch wie Nr, Mindestbreite 10 cm
 		getSheetHelper().setStringValueInCell(
 				StringCellValue.from(getXSpreadSheet(), Position.from(NAME_SPALTE, 1))
-						.setColumnProperties(colSchmal)
+						.setColumnProperties(ColumnProperties.from().setWidth(10000).centerJustify())
 						.setValue(I18n.get("column.header.name"))
 						.setCellBackColor(headerBackColor)
 						.setBorder(brdDaten)
