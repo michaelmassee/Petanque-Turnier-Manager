@@ -87,6 +87,21 @@ public class SuperMeleePaarungenV2 {
     /** Anzahl Shuffle-Versuche in {@link #generiereRundeMitFesteTeamGroese}. */
     @VisibleForTesting
     static final int MAX_SHUFFLE_VERSUCHE = 10;
+    /** Begrenzung der Best-Effort-Optimierung, damit spaete Runden performant bleiben. */
+    private static final int MAX_BEWERTETE_LAYOUTS_PRO_PASS = 128;
+
+    private static final class BacktrackingErgebnis {
+        private List<List<Integer>> besteTeams;
+        private int besterScore = Integer.MAX_VALUE;
+        private int bewerteteLayouts;
+        private boolean limitErreicht;
+        private boolean bewertungslimitErreicht;
+        private boolean perfekteLoesungGefunden;
+
+        private boolean hatLoesung() {
+            return besteTeams != null;
+        }
+    }
 
     /**
      * Maximale Backtracking-Knoten pro Pass, abhängig von der Spieleranzahl {@code n}.<br>
@@ -457,11 +472,148 @@ public class SuperMeleePaarungenV2 {
         int score = 0;
         for (Spieler s1 : team1.spieler()) {
             for (Spieler s2 : team2.spieler()) {
-                if (s1.warGegnerVon(s2)) {
-                    score += GEGNER_WIEDERHOLUNG_GEWICHT;
-                } else if (s1.warImSpielMit(s2)) {
-                    score += CROSSOVER_GEWICHT;
+                score += berechneSpielerPaarScore(s1, s2);
+            }
+        }
+        return score;
+    }
+
+    private int berechneSpielerPaarScore(Spieler s1, Spieler s2) {
+        if (s1.warGegnerVon(s2)) {
+            return GEGNER_WIEDERHOLUNG_GEWICHT;
+        }
+        if (s1.warImSpielMit(s2)) {
+            return CROSSOVER_GEWICHT;
+        }
+        return 0;
+    }
+
+    /**
+     * Bewertet ein vollstaendiges Backtracking-Layout ohne Modell-Mutation. Die
+     * Bewertung simuliert die spaetere Gegner-Paarung inklusive Doublette/Triplette-
+     * Gruppierung, damit die Teambildung nicht nur die erstbeste gueltige Loesung nimmt.
+     */
+    private int berechneLayoutGegnerScore(List<List<Integer>> teams, List<Spieler> spieler) {
+        List<List<Integer>> doublettes = new ArrayList<>();
+        List<List<Integer>> triplettes = new ArrayList<>();
+        for (List<Integer> team : teams) {
+            List<Integer> effektivesTeam = effektivesTeamOhneDummies(team, spieler);
+            if (effektivesTeam.isEmpty()) {
+                continue;
+            }
+            (effektivesTeam.size() == 2 ? doublettes : triplettes).add(effektivesTeam);
+        }
+
+        int score = berechneTeamInternenCrossoverScore(doublettes, spieler)
+                + berechneTeamInternenCrossoverScore(triplettes, spieler);
+        if (doublettes.size() % 2 != 0 && triplettes.size() % 2 != 0) {
+            int[] mixed = besteMischpaarungIndex(doublettes, triplettes, spieler);
+            score += mixed[2];
+            doublettes.remove(mixed[0]);
+            triplettes.remove(mixed[1]);
+        }
+        score += berechneBesteGruppenPaarungScore(doublettes, spieler);
+        score += berechneBesteGruppenPaarungScore(triplettes, spieler);
+        return score;
+    }
+
+    private int berechneTeamInternenCrossoverScore(List<List<Integer>> teams, List<Spieler> spieler) {
+        int score = 0;
+        for (List<Integer> team : teams) {
+            for (int i = 0; i < team.size(); i++) {
+                for (int j = i + 1; j < team.size(); j++) {
+                    Spieler a = spieler.get(team.get(i));
+                    Spieler b = spieler.get(team.get(j));
+                    if (a.warImSpielMit(b)) {
+                        score += CROSSOVER_GEWICHT;
+                    }
                 }
+            }
+        }
+        return score;
+    }
+
+    private List<Integer> effektivesTeamOhneDummies(List<Integer> team, List<Spieler> spieler) {
+        List<Integer> effektiv = new ArrayList<>(team.size());
+        for (int spielerIdx : team) {
+            if (spieler.get(spielerIdx).getNr() < DUMMY_SPIELER_START_NR) {
+                effektiv.add(spielerIdx);
+            }
+        }
+        return effektiv;
+    }
+
+    private int[] besteMischpaarungIndex(List<List<Integer>> doublettes, List<List<Integer>> triplettes,
+            List<Spieler> spieler) {
+        int bestD = 0;
+        int bestT = 0;
+        int bestScore = Integer.MAX_VALUE;
+        for (int d = 0; d < doublettes.size(); d++) {
+            for (int t = 0; t < triplettes.size(); t++) {
+                int score = berechneIndexTeamScore(doublettes.get(d), triplettes.get(t), spieler);
+                if (score < bestScore) {
+                    bestScore = score;
+                    bestD = d;
+                    bestT = t;
+                }
+            }
+        }
+        return new int[] { bestD, bestT, bestScore };
+    }
+
+    private int berechneBesteGruppenPaarungScore(List<List<Integer>> gruppe, List<Spieler> spieler) {
+        if (gruppe.size() < 2) {
+            return 0;
+        }
+        int[] bestScore = {Integer.MAX_VALUE};
+        sucheIndexPaarungenRekursiv(new ArrayList<>(gruppe), 0, bestScore, spieler);
+        return bestScore[0];
+    }
+
+    private void sucheIndexPaarungenRekursiv(List<List<Integer>> teams, int aktScore, int[] bestScore,
+            List<Spieler> spieler) {
+        if (teams.isEmpty()) {
+            bestScore[0] = Math.min(bestScore[0], aktScore);
+            return;
+        }
+        if (teams.size() == 1) {
+            bestScore[0] = Math.min(bestScore[0], aktScore);
+            return;
+        }
+        if (aktScore >= bestScore[0]) {
+            return;
+        }
+        if (teams.size() % 2 != 0) {
+            for (int i = 0; i < teams.size(); i++) {
+                List<List<Integer>> remaining = new ArrayList<>(teams.size() - 1);
+                for (int j = 0; j < teams.size(); j++) {
+                    if (j != i) {
+                        remaining.add(teams.get(j));
+                    }
+                }
+                sucheIndexPaarungenRekursiv(remaining, aktScore, bestScore, spieler);
+            }
+            return;
+        }
+        List<Integer> team1 = teams.getFirst();
+        for (int i = 1; i < teams.size(); i++) {
+            List<Integer> partner = teams.get(i);
+            int score = berechneIndexTeamScore(team1, partner, spieler);
+            List<List<Integer>> remaining = new ArrayList<>(teams.size() - 2);
+            for (int j = 1; j < teams.size(); j++) {
+                if (j != i) {
+                    remaining.add(teams.get(j));
+                }
+            }
+            sucheIndexPaarungenRekursiv(remaining, aktScore + score, bestScore, spieler);
+        }
+    }
+
+    private int berechneIndexTeamScore(List<Integer> team1, List<Integer> team2, List<Spieler> spieler) {
+        int score = 0;
+        for (int idx1 : team1) {
+            for (int idx2 : team2) {
+                score += berechneSpielerPaarScore(spieler.get(idx1), spieler.get(idx2));
             }
         }
         return score;
@@ -715,10 +867,13 @@ public class SuperMeleePaarungenV2 {
                     }
                 }
                 int[] zaehler1 = {0};
-                if (backtrack(order, 0, teams, teamSize, unionMatrix, softMatrix, zaehler1, maxKnoten)) {
-                    return buildSpielRunde(rndNr, teams, spieler, meldungen);
+                BacktrackingErgebnis ergebnis1 = new BacktrackingErgebnis();
+                backtrackBeste(order, 0, teams, teamSize, unionMatrix, softMatrix, zaehler1, maxKnoten,
+                        spieler, ergebnis1);
+                if (ergebnis1.hatLoesung()) {
+                    return buildSpielRunde(rndNr, ergebnis1.besteTeams, spieler, meldungen);
                 }
-                if (zaehler1[0] >= maxKnoten) {
+                if (ergebnis1.limitErreicht) {
                     irgendeinLimitErreicht = true;
                 }
                 for (List<Integer> team : teams) {
@@ -729,10 +884,13 @@ public class SuperMeleePaarungenV2 {
             // Pass 2: Soft-Constraint nur noch als Value-Ordering-Tie-Breaker (nicht zum Pruning).
             // Bekommt ein eigenes Budget — unabhaengig davon, ob Pass 1 ausgefuehrt wurde.
             int[] zaehler2 = {0};
-            if (backtrack(order, 0, teams, teamSize, matrix, softMatrix, zaehler2, maxKnoten)) {
-                return buildSpielRunde(rndNr, teams, spieler, meldungen);
+            BacktrackingErgebnis ergebnis2 = new BacktrackingErgebnis();
+            backtrackBeste(order, 0, teams, teamSize, matrix, softMatrix, zaehler2, maxKnoten,
+                    spieler, ergebnis2);
+            if (ergebnis2.hatLoesung()) {
+                return buildSpielRunde(rndNr, ergebnis2.besteTeams, spieler, meldungen);
             }
-            if (zaehler2[0] >= maxKnoten) {
+            if (ergebnis2.limitErreicht) {
                 irgendeinLimitErreicht = true;
             }
         }
@@ -787,16 +945,30 @@ public class SuperMeleePaarungenV2 {
      * @param softMatrix    vorberechnete Crossover-Matrix; nur Value-Ordering-Heuristik, kein Pruning
      * @param knotenZaehler einelementiges Array zum Mitzählen der Backtracking-Knoten (Safety-Limit)
      * @param knotenLimit   maximale Knotenanzahl pro Pass (abhängig von n, berechnet via {@link #maxKnotenProPass})
-     * @return {@code true} wenn eine vollständige gültige Zuweisung gefunden wurde
      */
-    private boolean backtrack(Integer[] order, int idx, List<List<Integer>> teams,
-            int teamSize, boolean[][] matrix, boolean[][] softMatrix, int[] knotenZaehler, int knotenLimit) {
+    private void backtrackBeste(Integer[] order, int idx, List<List<Integer>> teams,
+            int teamSize, boolean[][] matrix, boolean[][] softMatrix, int[] knotenZaehler, int knotenLimit,
+            List<Spieler> spieler, BacktrackingErgebnis ergebnis) {
+        if (ergebnis.perfekteLoesungGefunden || ergebnis.limitErreicht || ergebnis.bewertungslimitErreicht) {
+            return;
+        }
         if (idx == order.length) {
-            return true; // Alle Spieler erfolgreich zugewiesen
+            int score = berechneLayoutGegnerScore(teams, spieler);
+            ergebnis.bewerteteLayouts++;
+            if (score < ergebnis.besterScore) {
+                ergebnis.besterScore = score;
+                ergebnis.besteTeams = kopiereTeams(teams);
+                ergebnis.perfekteLoesungGefunden = (score == 0);
+            }
+            if (ergebnis.bewerteteLayouts >= MAX_BEWERTETE_LAYOUTS_PRO_PASS) {
+                ergebnis.bewertungslimitErreicht = true;
+            }
+            return;
         }
 
         if (++knotenZaehler[0] >= knotenLimit) {
-            return false; // Sicherheitsnetz: Knotenlimit pro Pass erreicht
+            ergebnis.limitErreicht = true;
+            return; // Sicherheitsnetz: Knotenlimit pro Pass erreicht
         }
 
         int currentOrigIdx = order[idx];
@@ -824,15 +996,16 @@ public class SuperMeleePaarungenV2 {
             if (kannTeamBeitreten(currentOrigIdx, team, matrix)) {
                 team.add(currentOrigIdx);
                 boolean teamVoll = (team.size() >= teamSize);
-                if (vorwaertsCheckInkrementell(currentOrigIdx, order, idx + 1, teams, teamSize, matrix, teamVoll)
-                        && backtrack(order, idx + 1, teams, teamSize, matrix, softMatrix, knotenZaehler, knotenLimit)) {
-                    return true;
+                if (vorwaertsCheckInkrementell(currentOrigIdx, order, idx + 1, teams, teamSize, matrix, teamVoll)) {
+                    backtrackBeste(order, idx + 1, teams, teamSize, matrix, softMatrix, knotenZaehler, knotenLimit,
+                            spieler, ergebnis);
                 }
                 team.removeLast(); // Backtrack: Zuweisung rückgängig machen
+                if (ergebnis.perfekteLoesungGefunden || ergebnis.limitErreicht || ergebnis.bewertungslimitErreicht) {
+                    return;
+                }
             }
         }
-
-        return false; // kein gültiger Platz gefunden — eine Ebene zurückgehen
     }
 
     /**
@@ -914,6 +1087,14 @@ public class SuperMeleePaarungenV2 {
             }
         }
         return true;
+    }
+
+    private List<List<Integer>> kopiereTeams(List<List<Integer>> teams) {
+        List<List<Integer>> kopie = new ArrayList<>(teams.size());
+        for (List<Integer> team : teams) {
+            kopie.add(new ArrayList<>(team));
+        }
+        return kopie;
     }
 
     // =========================================================================
