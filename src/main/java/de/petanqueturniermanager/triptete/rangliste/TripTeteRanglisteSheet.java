@@ -144,26 +144,26 @@ public class TripTeteRanglisteSheet extends SheetRunner implements ISheet {
 				.setCellBackColor(headerBackColor).setShrinkToFit(true);
 		ColumnProperties colSchmal = ColumnProperties.from().setWidth(900).centerJustify();
 
-		// Nr – überspannt alle 3 Header-Zeilen
+		// Nr – überspannt Header-Zeilen 1 und 2 (analog Liga-MeldungenSpalte)
 		getSheetHelper().setStringValueInCell(
-				StringCellValue.from(getXSpreadSheet(), Position.from(TEAM_NR_SPALTE, 0))
+				StringCellValue.from(getXSpreadSheet(), Position.from(TEAM_NR_SPALTE, 1))
 						.setColumnProperties(colSchmal)
 						.setValue(I18n.get("column.header.nr"))
 						.setCellBackColor(headerBackColor)
 						.setBorder(brdDaten)
 						.setHoriJustify(CellHoriJustify.CENTER)
-						.setEndPosMergeZeilePlus(2)
+						.setEndPosMergeZeilePlus(1)
 						.setShrinkToFit(true));
 
-		// Name – überspannt alle 3 Header-Zeilen
+		// Name – überspannt Header-Zeilen 1 und 2
 		getSheetHelper().setColumnProperties(getXSpreadSheet(), NAME_SPALTE, ColumnProperties.from().setWidth(6000));
 		getSheetHelper().setStringValueInCell(
-				StringCellValue.from(getXSpreadSheet(), Position.from(NAME_SPALTE, 0))
+				StringCellValue.from(getXSpreadSheet(), Position.from(NAME_SPALTE, 1))
 						.setValue(I18n.get("column.header.teamname"))
 						.setCellBackColor(headerBackColor)
 						.setBorder(brdDaten)
 						.setHoriJustify(CellHoriJustify.CENTER)
-						.setEndPosMergeZeilePlus(2)
+						.setEndPosMergeZeilePlus(1)
 						.setShrinkToFit(true));
 
 		// Platz – überspannt alle 3 Header-Zeilen, hochkant
