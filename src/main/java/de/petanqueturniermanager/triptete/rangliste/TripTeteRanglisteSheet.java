@@ -155,11 +155,11 @@ public class TripTeteRanglisteSheet extends SheetRunner implements ISheet {
 						.setEndPosMergeZeilePlus(1)
 						.setShrinkToFit(true));
 
-		// Name – überspannt Header-Zeilen 1 und 2
-		getSheetHelper().setColumnProperties(getXSpreadSheet(), NAME_SPALTE, ColumnProperties.from().setWidth(6000));
+		// Name – überspannt Header-Zeilen 1 und 2, identisch wie Nr
 		getSheetHelper().setStringValueInCell(
 				StringCellValue.from(getXSpreadSheet(), Position.from(NAME_SPALTE, 1))
-						.setValue(I18n.get("column.header.teamname"))
+						.setColumnProperties(colSchmal)
+						.setValue(I18n.get("column.header.name"))
 						.setCellBackColor(headerBackColor)
 						.setBorder(brdDaten)
 						.setHoriJustify(CellHoriJustify.CENTER)
