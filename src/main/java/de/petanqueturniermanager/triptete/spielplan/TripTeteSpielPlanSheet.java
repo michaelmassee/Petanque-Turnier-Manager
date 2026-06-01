@@ -183,13 +183,12 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet {
 				stValHeader.setValue(I18n.get("column.header.bahn")).spalte(BAHN_TRI_SPALTE)
 						.setEndPosMergeSpaltePlus(2));
 
-		// Team A / Team B – überspannen beide Headerzeilen
+		// Team A / Team B – Zeile 0: „Team", Zeile 1: „A" / „B" (kein Zeilenmerge)
 		getSheetHelper().setStringValueInCell(
-				stValHeader.setValue(I18n.get("column.header.team.a")).spalte(NAME_A_SPALTE)
-						.setEndPosMergeZeilePlus(1));
+				stValHeader.setValue(I18n.get("column.header.team")).spalte(NAME_A_SPALTE)
+						.setEndPosMerge(null));
 		getSheetHelper().setStringValueInCell(
-				stValHeader.setValue(I18n.get("column.header.team.b")).spalte(NAME_B_SPALTE)
-						.setEndPosMergeZeilePlus(1));
+				stValHeader.setValue(I18n.get("column.header.team")).spalte(NAME_B_SPALTE));
 
 		// Partie-Gruppen-Header (Zeile 0, gemerged über je 2 Spalten)
 		ColumnProperties colPropPunkt = ColumnProperties.from().setWidth(PUNKTE_NR_WIDTH).centerJustify();
@@ -242,6 +241,12 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet {
 		getSheetHelper().setStringValueInCell(stValHeader.setValue(gast).spalte(SIEGE_B));
 		getSheetHelper().setStringValueInCell(stValHeader.setValue(heim).spalte(SP_PUNKTE_A));
 		getSheetHelper().setStringValueInCell(stValHeader.setValue(gast).spalte(SP_PUNKTE_B));
+
+		// Name-Spalten Zeile 1: A / B (ohne ColumnProperties, Breite bleibt bei 6000)
+		StringCellValue nameZeile1 = StringCellValue.from(getXSpreadSheet(),
+				Position.from(NAME_A_SPALTE, ERSTE_HEADER_ZEILE + 1)).setValue(heim);
+		getSheetHelper().setStringValueInCell(nameZeile1);
+		getSheetHelper().setStringValueInCell(nameZeile1.setValue(gast).spalte(NAME_B_SPALTE));
 	}
 
 	private void insertSpielNrSpalte(List<List<TeamPaarung>> spielPlan) throws GenerateException {

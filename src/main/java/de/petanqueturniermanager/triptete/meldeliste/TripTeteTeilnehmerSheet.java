@@ -9,7 +9,6 @@ import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
-import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.TeilnehmerNamenLeser;
 import de.petanqueturniermanager.basesheet.meldeliste.TeilnehmerNamenLeser.TeilnehmerNamen;
 import de.petanqueturniermanager.basesheet.meldeliste.TeilnehmerSheetBuilder;
@@ -35,7 +34,7 @@ import de.petanqueturniermanager.triptete.konfiguration.TripTeteKonfigurationShe
  */
 public class TripTeteTeilnehmerSheet extends SheetRunner implements ISheet {
 
-    private static final int MELDELISTE_ERSTE_DATEN_ZEILE = MeldeListeKonstanten.ERSTE_DATEN_ZEILE;
+    private static final int MELDELISTE_ERSTE_DATEN_ZEILE = TripTeteMeldeListeDelegate.ERSTE_DATEN_ZEILE_OVERRIDE;
 
     private final TripTeteKonfigurationSheet konfigurationSheet;
     private final TripTeteMeldeListeSheetUpdate meldeliste;
@@ -85,7 +84,7 @@ public class TripTeteTeilnehmerSheet extends SheetRunner implements ISheet {
         List<TeilnehmerEintrag> eintraege = new ArrayList<>(aktiveMeldungen.size());
         if (aktiveMeldungen.size() > 0) {
             TeilnehmerNamen namen = TeilnehmerNamenLeser.from(meldeliste, MELDELISTE_ERSTE_DATEN_ZEILE,
-                    Formation.TETE, false, false).lesen();
+                    Formation.TRIPLETTE, false, false).lesen();
             Map<Integer, String> spielerNamen = namen.spielerNamen();
             Map<Integer, String> teamnamen = namen.teamnamen();
             Map<Integer, String> sortNamen = namen.sortNamen();

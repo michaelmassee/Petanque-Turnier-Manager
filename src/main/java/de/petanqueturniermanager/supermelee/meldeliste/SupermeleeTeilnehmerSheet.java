@@ -120,7 +120,6 @@ public class SupermeleeTeilnehmerSheet extends SheetRunner implements ISheet {
                 .daten(eintraege)
                 .teamnameAktiv(false)
                 .maxProBlock(konfigurationSheet.getMaxAnzTeilnehmerInSpalte())
-                .spielerSpalteWidth(SuperMeleeKonfigurationSheet.SUPER_MELEE_MELDUNG_NAME_WIDTH)
                 .headerFarbe(konfigurationSheet.getMeldeListeHeaderFarbe())
                 .zebraFarben(konfigurationSheet.getMeldeListeHintergrundFarbeGerade(),
                         konfigurationSheet.getMeldeListeHintergrundFarbeUnGerade())

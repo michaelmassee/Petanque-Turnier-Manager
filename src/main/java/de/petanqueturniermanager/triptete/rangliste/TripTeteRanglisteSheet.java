@@ -28,6 +28,7 @@ import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.RanglisteGeradeUngeradeFormatHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
@@ -126,7 +127,9 @@ public class TripTeteRanglisteSheet extends SheetRunner implements ISheet {
 
 			insertHeader();
 			TripTeteRanglisteDatenSchreiber.from(this, meldeListe, getWorkingSpreadsheet()).schreibeDaten();
-			getSheetHelper().setOptimaleBreitePlusMarge(getXSpreadSheet(), NAME_SPALTE, 200);
+			for (int spalte = TEAM_NR_SPALTE; spalte <= LETZTE_SPALTE; spalte++) {
+				getSheetHelper().setOptimaleBreitePlusMarge(getXSpreadSheet(), spalte, SheetHelper.OPTIMALE_BREITE_MARGE);
+			}
 			insertFooter(meldungen.size());
 			formatieren(meldungen.size());
 			printBereichDefinieren(meldungen.size());
@@ -244,6 +247,10 @@ public class TripTeteRanglisteSheet extends SheetRunner implements ISheet {
 		RangeHelper.from(this, daten).setRangeProperties(
 				RangeProperties.from().setBorder(BorderFactory.from().allThin().boldLn().forTop().toBorder())
 						.centerJustify().margin(MARGIN).setShrinkToFit(true));
+
+		RangePosition begegnungenDaten = RangePosition.from(BEGEGNUNGEN_SPALTE, ERSTE_DATEN_ZEILE, BEGEGNUNGEN_SPALTE, letzteDatenZeile);
+		RangeHelper.from(this, begegnungenDaten).setRangeProperties(
+				RangeProperties.from().setBorder(BorderFactory.from().allThin().boldLn().forTop().doubleLn().forLeft().toBorder()));
 
 		Integer farbeGerade = konfigurationSheet.getRanglisteHintergrundFarbeGerade();
 		Integer farbeUngerade = konfigurationSheet.getRanglisteHintergrundFarbeUnGerade();

@@ -4,7 +4,6 @@ import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.basesheet.meldeliste.AbstractTeilnehmerNamenCheckinListeSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
-import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -20,14 +19,7 @@ import de.petanqueturniermanager.triptete.konfiguration.TripTeteKonfigurationShe
  */
 public class TripTeteCheckinListeSheet extends AbstractTeilnehmerNamenCheckinListeSheet {
 
-    private static final int MELDELISTE_ERSTE_DATEN_ZEILE = MeldeListeKonstanten.ERSTE_DATEN_ZEILE;
-
-    /**
-     * Spalte jenseits der Namensspalte – in TripTête gibt es keine Aktiv-Spalte.
-     * Da alle Teams immer aktiv sind, liefert diese leere Spalte stets blank → Checkboxen
-     * starten unmarkiert (= noch nicht erschienen).
-     */
-    private static final int MELDELISTE_AKTIV_SPALTE = MeldeListeKonstanten.SPIELER_NR_SPALTE + 2;
+    private static final int MELDELISTE_ERSTE_DATEN_ZEILE = TripTeteMeldeListeDelegate.ERSTE_DATEN_ZEILE_OVERRIDE;
 
     private final TripTeteKonfigurationSheet konfigurationSheet;
     private final TripTeteMeldeListeSheetUpdate meldeliste;
@@ -59,13 +51,15 @@ public class TripTeteCheckinListeSheet extends AbstractTeilnehmerNamenCheckinLis
     }
 
     @Override
-    protected int getMeldelisteAktivSpalte() {
-        return MELDELISTE_AKTIV_SPALTE;
+    protected int getMeldelisteAktivSpalte() throws GenerateException {
+        // TripTête hat keine Checkin-Spalte; letzteSpielTagSpalte() liegt hinter dem Datenbereich
+        // → immer leer → alle Checkboxen starten unmarkiert (= noch nicht erschienen)
+        return meldeliste.letzteSpielTagSpalte();
     }
 
     @Override
     protected Formation getFormation() {
-        return Formation.TETE;
+        return Formation.TRIPLETTE;
     }
 
     @Override

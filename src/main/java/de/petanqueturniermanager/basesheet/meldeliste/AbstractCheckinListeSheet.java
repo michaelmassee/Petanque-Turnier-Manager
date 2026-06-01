@@ -26,6 +26,7 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.basesheet.meldeliste.TeilnehmerSheetBuilder.TeilnehmerEintrag;
@@ -253,10 +254,8 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 		RangeProperties rangePropNr = RangeProperties.from().setHoriJustify(CellHoriJustify.CENTER)
 				.setCharColor(ColorHelper.CHAR_COLOR_GRAY_SPIELER_NR);
 		ColumnProperties columnPropNr = ColumnProperties.from().setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH);
-		ColumnProperties columnPropTeam = ColumnProperties.from().setHoriJustify(CellHoriJustify.LEFT)
-				.setWidth(TEAMNAME_SPALTE_WIDTH);
-		ColumnProperties columnPropName = ColumnProperties.from().setHoriJustify(CellHoriJustify.CENTER)
-				.setWidth(getNameSpalteWidth());
+		ColumnProperties columnPropTeam = ColumnProperties.from().setHoriJustify(CellHoriJustify.LEFT);
+		ColumnProperties columnPropName = ColumnProperties.from().setHoriJustify(CellHoriJustify.CENTER);
 		ColumnProperties columnPropChkBox = ColumnProperties.from().setHoriJustify(CellHoriJustify.CENTER)
 				.setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH);
 		RangeProperties rangePropBorderOnly = RangeProperties.from().setBorder(BorderFactory.from().allThin().toBorder())
@@ -283,8 +282,12 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 			// Namen sind bereits als Werte geschrieben; nur Spaltenbreite/Ausrichtung setzen.
 			if (layout.teamSpalte()) {
 				getSheetHelper().setColumnProperties(getXSpreadSheet(), layout.teamSpalte(blkCntr), columnPropTeam);
+				getSheetHelper().setOptimaleBreitePlusMarge(getXSpreadSheet(), layout.teamSpalte(blkCntr),
+						SheetHelper.OPTIMALE_BREITE_MARGE);
 			}
 			getSheetHelper().setColumnProperties(getXSpreadSheet(), layout.spielerSpalte(blkCntr), columnPropName);
+			getSheetHelper().setOptimaleBreitePlusMarge(getXSpreadSheet(), layout.spielerSpalte(blkCntr),
+					SheetHelper.OPTIMALE_BREITE_MARGE);
 			getSheetHelper().setColumnProperties(getXSpreadSheet(), layout.checkboxSpalte(blkCntr), columnPropChkBox);
 
 			int blockEnde = layout.letzteBlockSpalte(blkCntr);

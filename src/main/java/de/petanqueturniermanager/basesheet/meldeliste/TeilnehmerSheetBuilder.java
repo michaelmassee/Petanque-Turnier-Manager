@@ -49,14 +49,11 @@ public final class TeilnehmerSheetBuilder {
     public static final int HEADER_ZEILE = 0;
 
     private static final int NR_SPALTE_WIDTH = MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH;
-    private static final int TEAMNAME_SPALTE_WIDTH = 4000;
-    private static final int SPIELER_SPALTE_DEFAULT_WIDTH = 6000;
 
     private final ISheet sheet;
     private List<TeilnehmerEintrag> daten = List.of();
     private boolean teamnameAktiv = false;
     private int maxProBlock = 40;
-    private int spielerSpalteWidth = SPIELER_SPALTE_DEFAULT_WIDTH;
     private int headerFarbe = 0xC0C0C0;
     private int geradeFarbe = 0xFFFFFF;
     private int ungeradeFarbe = 0xE0E0E0;
@@ -86,11 +83,6 @@ public final class TeilnehmerSheetBuilder {
 
     public TeilnehmerSheetBuilder maxProBlock(int n) {
         this.maxProBlock = Math.max(1, n);
-        return this;
-    }
-
-    public TeilnehmerSheetBuilder spielerSpalteWidth(int width) {
-        this.spielerSpalteWidth = width;
         return this;
     }
 
@@ -132,6 +124,7 @@ public final class TeilnehmerSheetBuilder {
         }
 
         datenSchreiben(anzBloecke, spaltenProBlock, zeilenProBlock, totalSpalten);
+        optimaleBreiteSetzen(anzBloecke, spaltenProBlock);
         datenBorderSetzen(anzBloecke, spaltenProBlock, zeilenProBlock);
         zebraFarbenSetzen(anzBloecke, spaltenProBlock, zeilenProBlock);
 
@@ -186,10 +179,8 @@ public final class TeilnehmerSheetBuilder {
         SheetHelper sheetHelper = sheet.getSheetHelper();
         var xSheet = sheet.getXSpreadSheet();
         ColumnProperties propNr = ColumnProperties.from().setHoriJustify(CellHoriJustify.CENTER).setWidth(NR_SPALTE_WIDTH);
-        ColumnProperties propTeamname = ColumnProperties.from().setHoriJustify(CellHoriJustify.LEFT)
-                .setWidth(TEAMNAME_SPALTE_WIDTH);
-        ColumnProperties propSpieler = ColumnProperties.from().setHoriJustify(CellHoriJustify.LEFT)
-                .setWidth(spielerSpalteWidth);
+        ColumnProperties propTeamname = ColumnProperties.from().setHoriJustify(CellHoriJustify.LEFT);
+        ColumnProperties propSpieler = ColumnProperties.from().setHoriJustify(CellHoriJustify.LEFT);
         ColumnProperties propLeer = ColumnProperties.from().setWidth(NR_SPALTE_WIDTH);
 
         for (int b = 0; b < anzBloecke; b++) {
@@ -203,6 +194,20 @@ public final class TeilnehmerSheetBuilder {
             }
             if (b < anzBloecke - 1) {
                 sheetHelper.setColumnProperties(xSheet, base + datenSpaltenProBlock, propLeer);
+            }
+        }
+    }
+
+    private void optimaleBreiteSetzen(int anzBloecke, int spaltenProBlock) throws GenerateException {
+        SheetHelper sheetHelper = sheet.getSheetHelper();
+        var xSheet = sheet.getXSpreadSheet();
+        for (int b = 0; b < anzBloecke; b++) {
+            int base = b * spaltenProBlock;
+            if (teamnameAktiv) {
+                sheetHelper.setOptimaleBreitePlusMarge(xSheet, base + 1, SheetHelper.OPTIMALE_BREITE_MARGE);
+                sheetHelper.setOptimaleBreitePlusMarge(xSheet, base + 2, SheetHelper.OPTIMALE_BREITE_MARGE);
+            } else {
+                sheetHelper.setOptimaleBreitePlusMarge(xSheet, base + 1, SheetHelper.OPTIMALE_BREITE_MARGE);
             }
         }
     }
