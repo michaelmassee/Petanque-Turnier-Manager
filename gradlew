@@ -85,6 +85,11 @@ done
 APP_BASE_NAME=${0##*/}
 APP_HOME=$( cd "${APP_HOME:-./}" && pwd -P ) || exit
 
+if [ -z "$JAVA_HOME" ] && [ -x "/home/michael/.sdkman/candidates/java/25.0.2-tem/bin/java" ] ; then
+    JAVA_HOME="/home/michael/.sdkman/candidates/java/25.0.2-tem"
+    export JAVA_HOME
+fi
+
 # Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.
 DEFAULT_JVM_OPTS='"-Xmx64m" "-Xms64m"'
 

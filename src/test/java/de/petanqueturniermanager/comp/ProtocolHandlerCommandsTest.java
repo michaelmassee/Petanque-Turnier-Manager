@@ -22,6 +22,8 @@ import org.junit.jupiter.api.Test;
 public class ProtocolHandlerCommandsTest {
 
 	private static final Pattern PTM_PATTERN = Pattern.compile("ptm:([\\w]+)");
+	private static final Set<String> VERSTECKTE_COMMANDS_OHNE_XCU = Set.of(
+			ProtocolHandler.CMD_TRIPTETE_KONFIGURATION);
 
 	/** Alle CMD_*-Konstanten aus ProtocolHandler per Reflection einlesen. */
 	private Set<String> constantValues() throws IllegalAccessException {
@@ -80,6 +82,7 @@ public class ProtocolHandlerCommandsTest {
 
 		Set<String> nichtInXcu = new HashSet<>(constants);
 		nichtInXcu.removeAll(xcu);
+		nichtInXcu.removeAll(VERSTECKTE_COMMANDS_OHNE_XCU);
 
 		assertThat(nichtInXcu)
 				.as("CMD_-Konstanten ohne ptm:-Eintrag in XCU-Dateien")
