@@ -80,6 +80,10 @@ public class SuperMeleePaarungenV2 {
     private static final int DUMMY_SPIELER_START_NR = 10000;
     /** SetzPos der Dummy-Spieler; verhindert via {@code gleicheSetzPos}, dass zwei Dummies ins selbe Team gelost werden. */
     private static final int DUMMY_SPIELER_SETZPOS = 999;
+    /** Gegner-Wiederholungen dominieren Crossover-Tie-Breaker in der Gegner-Paarung. */
+    private static final int GEGNER_WIEDERHOLUNG_GEWICHT = 10_000;
+    /** Crossover bleibt nur Tie-Breaker, wenn die Gegner-Wiederholungszahl gleich ist. */
+    private static final int CROSSOVER_GEWICHT = 1;
     /** Anzahl Shuffle-Versuche in {@link #generiereRundeMitFesteTeamGroese}. */
     @VisibleForTesting
     static final int MAX_SHUFFLE_VERSUCHE = 10;
@@ -442,20 +446,21 @@ public class SuperMeleePaarungenV2 {
     }
 
     /**
-     * Berechnet den gewichteten Score zweier Teams für die Greedy-Gegnerpaarung.
-     * Gegner-Wiederholung bleibt dominant (Faktor 10), Crossover (Spieler-Paar war
+     * Berechnet den gewichteten Score zweier Teams für die Gegnerpaarung.
+     * Gegner-Wiederholung bleibt dominant, Crossover (Spieler-Paar war
      * in einer früheren Runde gemeinsam im selben Spiel — egal ob Team oder Gegner)
-     * wird als Tie-Breaker mit Gewicht 1 hinzugerechnet.
+     * wird als Tie-Breaker hinzugerechnet. Gegner-Wiederholung und Crossover
+     * werden exklusiv bewertet: eine echte Gegner-Wiederholung zählt nicht
+     * zusätzlich als Crossover.
      */
     private int berechneGegnerScore(Team team1, Team team2) {
         int score = 0;
         for (Spieler s1 : team1.spieler()) {
             for (Spieler s2 : team2.spieler()) {
                 if (s1.warGegnerVon(s2)) {
-                    score += 10;
-                }
-                if (s1.warImSpielMit(s2)) {
-                    score++;
+                    score += GEGNER_WIEDERHOLUNG_GEWICHT;
+                } else if (s1.warImSpielMit(s2)) {
+                    score += CROSSOVER_GEWICHT;
                 }
             }
         }

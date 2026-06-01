@@ -7,6 +7,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -830,6 +832,43 @@ public class SuperMeleePaarungenV2Test {
     }
 
     /**
+     * Regression: Gegner-Wiederholungen müssen stärker zählen als Crossover-Score.
+     * <br>
+     * Die Teamzusammenstellung ist bereits fest und gültig; getestet wird isoliert
+     * die Gegner-Paarung. Wiederholungsfreie Alternativen müssen gegen eine
+     * Paarung mit alter Gegnerbeziehung gewinnen, auch wenn sie höheren
+     * Crossover-Score haben.
+     */
+    @Test
+    public void gegnerWiederholungHatVorrangVorCrossoverScore() throws Exception {
+        SpielerMeldungen meldungen = newTestMeldungen(12);
+        Spieler s1 = meldungen.findSpielerByNr(1);
+        Spieler s4 = meldungen.findSpielerByNr(4);
+        s1.addGegner(s4);
+
+        // Alternative Paarungen Team1-Team3/Team2-Team4 und Team1-Team4/Team2-Team3
+        // bekommen je 18 Crossover-Punkte. Das darf eine echte Gegner-Wiederholung
+        // nicht attraktiver machen.
+        fuegeCrossoverHistorieHinzu(meldungen, List.of(1, 2, 3), List.of(7, 8, 9));
+        fuegeCrossoverHistorieHinzu(meldungen, List.of(4, 5, 6), List.of(10, 11, 12));
+        fuegeCrossoverHistorieHinzu(meldungen, List.of(1, 2, 3), List.of(10, 11, 12));
+        fuegeCrossoverHistorieHinzu(meldungen, List.of(4, 5, 6), List.of(7, 8, 9));
+
+        MeleeSpielRunde runde = buildTestRunde(1, meldungen, List.of(
+                new Integer[] {1, 2, 3},
+                new Integer[] {4, 5, 6},
+                new Integer[] {7, 8, 9},
+                new Integer[] {10, 11, 12}));
+
+        Set<String> gegnerVorher = gegnerHistorie(meldungen);
+        optimiereGegnerPaarung(runde);
+
+        assertThat(aktuelleGegnerWiederholungen(runde, gegnerVorher))
+                .as("Aktuelle Gegner-Paarung darf keine bereits bekannte Gegnerbeziehung wiederholen")
+                .isEmpty();
+    }
+
+    /**
      * Crossover-Vermeidung (weicher Constraint): 22 Spieler × 4 Runden im
      * Triplette-Modus reproduzieren die Konstellation aus der Live-ODS
      * {@code ~/tmp/supermelee_algorithmus.ods}. Die Live-ODS zeigte 43 Spielerpaare,
@@ -1161,6 +1200,57 @@ public class SuperMeleePaarungenV2Test {
             meldungen.addSpielerWennNichtVorhanden(Spieler.from(i));
         }
         return meldungen;
+    }
+
+    private void fuegeCrossoverHistorieHinzu(SpielerMeldungen meldungen, List<Integer> links, List<Integer> rechts) {
+        for (int nrLinks : links) {
+            Spieler linksSpieler = meldungen.findSpielerByNr(nrLinks);
+            for (int nrRechts : rechts) {
+                linksSpieler.addWarImSpielMit(meldungen.findSpielerByNr(nrRechts));
+            }
+        }
+    }
+
+    private Set<String> gegnerHistorie(SpielerMeldungen meldungen) {
+        Set<String> ergebnis = new HashSet<>();
+        List<Spieler> spieler = meldungen.spieler();
+        for (int i = 0; i < spieler.size(); i++) {
+            for (int j = i + 1; j < spieler.size(); j++) {
+                if (spieler.get(i).warGegnerVon(spieler.get(j))) {
+                    ergebnis.add(paarSchluessel(spieler.get(i).getNr(), spieler.get(j).getNr()));
+                }
+            }
+        }
+        return ergebnis;
+    }
+
+    private Set<String> aktuelleGegnerWiederholungen(MeleeSpielRunde runde, Set<String> gegnerVorher) {
+        Set<String> wiederholungen = new HashSet<>();
+        List<Team> teams = runde.teams();
+        for (int i = 0; i + 1 < teams.size(); i += 2) {
+            for (Spieler links : teams.get(i).spieler()) {
+                for (Spieler rechts : teams.get(i + 1).spieler()) {
+                    String paar = paarSchluessel(links.getNr(), rechts.getNr());
+                    if (gegnerVorher.contains(paar)) {
+                        wiederholungen.add(paar);
+                    }
+                }
+            }
+        }
+        return wiederholungen;
+    }
+
+    private void optimiereGegnerPaarung(MeleeSpielRunde runde) throws Exception {
+        Method methode = SuperMeleePaarungenV2.class.getDeclaredMethod("optimiereGegnerPaarung", MeleeSpielRunde.class);
+        methode.setAccessible(true);
+        try {
+            methode.invoke(paarungen, runde);
+        } catch (InvocationTargetException e) {
+            if (e.getCause() instanceof AlgorithmenException algorithmenException) {
+                throw algorithmenException;
+            }
+            throw e;
+        }
     }
 
     /**
