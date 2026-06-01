@@ -191,8 +191,13 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
                     .apply();
         }
 
-        int letzteZeile = sortiert.isEmpty() ? ZWEITE_HEADER_ZEILE
-                : ERSTE_DATEN_ZEILE + sortiert.size() - 1;
+        int letzteZeile;
+        if (sortiert.isEmpty()) {
+            letzteZeile = ZWEITE_HEADER_ZEILE;
+        } else {
+            insertFooter(sheet, sortiert.size());
+            letzteZeile = ERSTE_DATEN_ZEILE + sortiert.size() + 1;
+        }
         setzeDruckbereich(sheet, letzteZeile);
         getxCalculatable().calculateAll();
     }
@@ -496,6 +501,17 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
         getSheetHelper().setPropertiesInRange(sheet,
                 RangePosition.from(WERTUNG_SPALTE, ERSTE_DATEN_ZEILE, PUNKTE_DIFF_SPALTE, letzteZeile),
                 CellProperties.from().setAllThinBorder().setHoriJustify(CellHoriJustify.CENTER));
+    }
+
+    private void insertFooter(XSpreadsheet sheet, int anzTeams) throws GenerateException {
+        processBoxinfo("processbox.fusszeile.einfuegen");
+        int footerZeile = ERSTE_DATEN_ZEILE + anzTeams + 1;
+        getSheetHelper().setStringValueInCell(StringCellValue
+                .from(sheet, Position.from(TEAM_NR_SPALTE, footerZeile),
+                        I18n.get("formulex.rangliste.reihenfolge.platzierung"))
+                .setHoriJustify(CellHoriJustify.LEFT)
+                .setCharHeight(8)
+                .setEndPosMergeSpalte(PUNKTE_DIFF_SPALTE));
     }
 
     private void setzeDruckbereich(XSpreadsheet sheet, int letzteZeile) throws GenerateException {

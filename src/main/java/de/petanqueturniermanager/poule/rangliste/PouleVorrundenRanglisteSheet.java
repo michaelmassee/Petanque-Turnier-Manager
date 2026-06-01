@@ -169,7 +169,8 @@ public class PouleVorrundenRanglisteSheet extends SheetRunner implements ISheet 
 
         int letzteDatenZeile = aktuelleZeile - 1;
         if (letzteDatenZeile >= HEADER_ZEILEN) {
-            printBereichSetzen(xSheet, letzteDatenZeile);
+            int footerZeile = insertFooter(xSheet, letzteDatenZeile);
+            printBereichSetzen(xSheet, footerZeile);
         }
 
         if (SheetRunner.isRunning()) {
@@ -529,6 +530,18 @@ public class PouleVorrundenRanglisteSheet extends SheetRunner implements ISheet 
                 ColumnProperties.from().setWidth(BREITE_ZAHL).setHoriJustify(CellHoriJustify.CENTER));
         getSheetHelper().setColumnProperties(xSheet, SPALTE_TURNIER,
                 ColumnProperties.from().setWidth(BREITE_TURNIER).setHoriJustify(CellHoriJustify.CENTER));
+    }
+
+    private int insertFooter(XSpreadsheet xSheet, int letzteDatenZeile) throws GenerateException {
+        processBoxinfo("processbox.fusszeile.einfuegen");
+        int footerZeile = letzteDatenZeile + 2;
+        getSheetHelper().setStringValueInCell(StringCellValue
+                .from(xSheet, Position.from(SPALTE_PLATZ, footerZeile),
+                        I18n.get("poule.rangliste.reihenfolge.platzierung"))
+                .setHoriJustify(CellHoriJustify.LEFT)
+                .setCharHeight(8)
+                .setEndPosMergeSpalte(LETZTE_SPALTE));
+        return footerZeile;
     }
 
     private void printBereichSetzen(XSpreadsheet xSheet, int letzteDatenZeile) throws GenerateException {

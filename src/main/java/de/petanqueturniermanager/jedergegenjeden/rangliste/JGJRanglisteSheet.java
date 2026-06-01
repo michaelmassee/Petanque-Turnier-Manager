@@ -200,7 +200,7 @@ public class JGJRanglisteSheet extends SheetRunner implements ISheet, IRangliste
 
         int letzteZeile = ERSTE_DATEN_ZEILE + sortiert.size() - 1;
         addFooter(sheet, letzteZeile + 2);
-        setzeDruckbereich(sheet, letzteZeile);
+        setzeDruckbereich(sheet, letzteZeile + 2);
         SheetFreeze.from(getTurnierSheet()).anzZeilen(ERSTE_DATEN_ZEILE).anzSpalten(PLATZ_SPALTE + 1).doFreeze();
         getxCalculatable().calculateAll();
     }
@@ -229,7 +229,7 @@ public class JGJRanglisteSheet extends SheetRunner implements ISheet, IRangliste
 
         int letzteZeile = aktuelleZeile - 1;
         addFooter(sheet, letzteZeile + 2);
-        setzeDruckbereich(sheet, letzteZeile);
+        setzeDruckbereich(sheet, letzteZeile + 2);
         SheetFreeze.from(getTurnierSheet()).anzZeilen(ERSTE_DATEN_ZEILE).anzSpalten(0).doFreeze();
         getxCalculatable().calculateAll();
     }
@@ -497,7 +497,8 @@ public class JGJRanglisteSheet extends SheetRunner implements ISheet, IRangliste
         getSheetHelper().setStringValueInCell(StringCellValue
                 .from(sheet, Position.from(TEAM_NR_SPALTE, fusszeile), I18n.get("jgj.rangliste.fusszeile"))
                 .setHoriJustify(CellHoriJustify.LEFT)
-                .setCharHeight(8));
+                .setCharHeight(8)
+                .setEndPosMergeSpalte(SPIELPUNKTE_DIFF_SPALTE));
     }
 
     private void setzeDruckbereich(XSpreadsheet sheet, int letzteZeile) throws GenerateException {

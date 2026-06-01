@@ -317,9 +317,14 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 					.apply();
 		}
 
-		// Druckbereich: Header + Daten, ohne Validator-Spalte
-		int letzteZeile = sortiert.isEmpty() ? ZWEITE_HEADER_ZEILE
-				: ERSTE_DATEN_ZEILE + sortiert.size() - 1;
+		// Footer und Druckbereich
+		int letzteZeile;
+		if (sortiert.isEmpty()) {
+			letzteZeile = ZWEITE_HEADER_ZEILE;
+		} else {
+			insertFooter(sheet, sortiert.size(), modus);
+			letzteZeile = ERSTE_DATEN_ZEILE + sortiert.size() + 1;
+		}
 		setzeDruckbereich(sheet, letzteZeile);
 		getxCalculatable().calculateAll();
 	}
@@ -719,6 +724,19 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 	}
 
 	// ── Hilfsmethoden ────────────────────────────────────────────────────────────
+
+	private void insertFooter(XSpreadsheet sheet, int anzTeams, SchweizerRankingModus modus) throws GenerateException {
+		processBoxinfo("processbox.fusszeile.einfuegen");
+		int footerZeile = ERSTE_DATEN_ZEILE + anzTeams + 1;
+		String schluessel = modus == SchweizerRankingModus.OHNE_BUCHHOLZ
+				? "schweizer.rangliste.reihenfolge.platzierung.ohnebuchholz"
+				: "schweizer.rangliste.reihenfolge.platzierung";
+		getSheetHelper().setStringValueInCell(StringCellValue
+				.from(sheet, Position.from(TEAM_NR_SPALTE, footerZeile), I18n.get(schluessel))
+				.setHoriJustify(CellHoriJustify.LEFT)
+				.setCharHeight(8)
+				.setEndPosMergeSpalte(letzteAnzeigeSpalte()));
+	}
 
 	/** Setzt den Druckbereich: Spalten A bis letzteAnzeigeSpalte (ohne Validator-Spalte), Zeilen 1 bis letzteZeile. */
 	private void setzeDruckbereich(XSpreadsheet sheet, int letzteZeile) throws GenerateException {

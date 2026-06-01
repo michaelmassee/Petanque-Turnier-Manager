@@ -232,7 +232,8 @@ public class TripTeteRanglisteSheet extends SheetRunner implements ISheet {
 	private void insertFooter(int anzTeams) throws GenerateException {
 		int footerZeile = ERSTE_DATEN_ZEILE + anzTeams + 1;
 		StringCellValue stVal = StringCellValue.from(this, Position.from(TEAM_NR_SPALTE, footerZeile))
-				.setHoriJustify(CellHoriJustify.LEFT).setCharHeight(8);
+				.setHoriJustify(CellHoriJustify.LEFT).setCharHeight(8)
+				.setEndPosMergeSpalte(LETZTE_SPALTE);
 		getSheetHelper().setStringValueInCell(
 				stVal.setValue(I18n.get("triptete.rangliste.reihenfolge.platzierung")));
 	}
