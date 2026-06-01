@@ -87,8 +87,10 @@ public class SuperMeleePaarungenV2 {
     /** Anzahl Shuffle-Versuche in {@link #generiereRundeMitFesteTeamGroese}. */
     @VisibleForTesting
     static final int MAX_SHUFFLE_VERSUCHE = 10;
-    /** Begrenzung der Best-Effort-Optimierung, damit spaete Runden performant bleiben. */
+    /** Begrenzung der Best-Effort-Optimierung, damit die Zusatzbewertung performant bleibt. */
     private static final int MAX_BEWERTETE_LAYOUTS_PRO_PASS = 128;
+    /** Bis zu dieser Gruppengroesse wird die simulierte Gegner-Paarung exakt bewertet. */
+    private static final int MAX_EXAKT_BEWERTETE_GRUPPENTEAMS = 12;
 
     private static final class BacktrackingErgebnis {
         private List<List<Integer>> besteTeams;
@@ -565,9 +567,51 @@ public class SuperMeleePaarungenV2 {
         if (gruppe.size() < 2) {
             return 0;
         }
+        if (gruppe.size() > MAX_EXAKT_BEWERTETE_GRUPPENTEAMS) {
+            return berechneGreedyGruppenPaarungScore(gruppe, spieler);
+        }
         int[] bestScore = {Integer.MAX_VALUE};
         sucheIndexPaarungenRekursiv(new ArrayList<>(gruppe), 0, bestScore, spieler);
         return bestScore[0];
+    }
+
+    private int berechneGreedyGruppenPaarungScore(List<List<Integer>> gruppe, List<Spieler> spieler) {
+        List<List<Integer>> offen = new ArrayList<>(gruppe);
+        int score = 0;
+        while (offen.size() > 1) {
+            int teamIndex = findeTeamMitHoechstemKonfliktpotenzial(offen, spieler);
+            List<Integer> team = offen.remove(teamIndex);
+            int besterPartnerIndex = 0;
+            int besterPartnerScore = Integer.MAX_VALUE;
+            for (int i = 0; i < offen.size(); i++) {
+                int partnerScore = berechneIndexTeamScore(team, offen.get(i), spieler);
+                if (partnerScore < besterPartnerScore) {
+                    besterPartnerScore = partnerScore;
+                    besterPartnerIndex = i;
+                }
+            }
+            score += besterPartnerScore;
+            offen.remove(besterPartnerIndex);
+        }
+        return score;
+    }
+
+    private int findeTeamMitHoechstemKonfliktpotenzial(List<List<Integer>> teams, List<Spieler> spieler) {
+        int besterIndex = 0;
+        int hoechstesPotenzial = -1;
+        for (int i = 0; i < teams.size(); i++) {
+            int potenzial = 0;
+            for (int j = 0; j < teams.size(); j++) {
+                if (i != j) {
+                    potenzial += berechneIndexTeamScore(teams.get(i), teams.get(j), spieler);
+                }
+            }
+            if (potenzial > hoechstesPotenzial) {
+                hoechstesPotenzial = potenzial;
+                besterIndex = i;
+            }
+        }
+        return besterIndex;
     }
 
     private void sucheIndexPaarungenRekursiv(List<List<Integer>> teams, int aktScore, int[] bestScore,
@@ -873,7 +917,7 @@ public class SuperMeleePaarungenV2 {
                 if (ergebnis1.hatLoesung()) {
                     return buildSpielRunde(rndNr, ergebnis1.besteTeams, spieler, meldungen);
                 }
-                if (ergebnis1.limitErreicht) {
+                if (ergebnis1.limitErreicht || ergebnis1.bewertungslimitErreicht) {
                     irgendeinLimitErreicht = true;
                 }
                 for (List<Integer> team : teams) {
@@ -890,7 +934,7 @@ public class SuperMeleePaarungenV2 {
             if (ergebnis2.hatLoesung()) {
                 return buildSpielRunde(rndNr, ergebnis2.besteTeams, spieler, meldungen);
             }
-            if (ergebnis2.limitErreicht) {
+            if (ergebnis2.limitErreicht || ergebnis2.bewertungslimitErreicht) {
                 irgendeinLimitErreicht = true;
             }
         }

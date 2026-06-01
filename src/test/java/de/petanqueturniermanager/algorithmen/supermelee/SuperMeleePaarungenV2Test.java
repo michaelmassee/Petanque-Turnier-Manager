@@ -887,6 +887,19 @@ public class SuperMeleePaarungenV2Test {
                 .isGreaterThan(berechneLayoutGegnerScore(besseresLayout, spieler));
     }
 
+    @Test
+    public void grosseGruppenBewertungBleibtBegrenzt() throws Exception {
+        SpielerMeldungen meldungen = newTestMeldungen(28);
+        List<List<Integer>> teams = new ArrayList<>();
+        for (int i = 0; i < 28; i += 2) {
+            teams.add(List.of(i, i + 1));
+        }
+
+        assertThat(berechneBesteGruppenPaarungScore(teams, meldungen.spieler()))
+                .as("Gruppen oberhalb der Exakt-Grenze werden per begrenzter Heuristik bewertet")
+                .isZero();
+    }
+
     /**
      * Crossover-Vermeidung (weicher Constraint): 22 Spieler × 4 Runden im
      * Triplette-Modus reproduzieren die Konstellation aus der Live-ODS
@@ -1261,6 +1274,12 @@ public class SuperMeleePaarungenV2Test {
 
     private int berechneLayoutGegnerScore(List<List<Integer>> teams, List<Spieler> spieler) throws Exception {
         Method methode = SuperMeleePaarungenV2.class.getDeclaredMethod("berechneLayoutGegnerScore", List.class, List.class);
+        methode.setAccessible(true);
+        return (Integer) methode.invoke(paarungen, teams, spieler);
+    }
+
+    private int berechneBesteGruppenPaarungScore(List<List<Integer>> teams, List<Spieler> spieler) throws Exception {
+        Method methode = SuperMeleePaarungenV2.class.getDeclaredMethod("berechneBesteGruppenPaarungScore", List.class, List.class);
         methode.setAccessible(true);
         return (Integer) methode.invoke(paarungen, teams, spieler);
     }
