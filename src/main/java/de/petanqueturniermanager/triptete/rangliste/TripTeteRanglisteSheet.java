@@ -126,6 +126,7 @@ public class TripTeteRanglisteSheet extends SheetRunner implements ISheet {
 
 			insertHeader();
 			TripTeteRanglisteDatenSchreiber.from(this, meldeListe, getWorkingSpreadsheet()).schreibeDaten();
+			getSheetHelper().setOptimaleBreitePlusMarge(getXSpreadSheet(), NAME_SPALTE, 200);
 			insertFooter(meldungen.size());
 			formatieren(meldungen.size());
 			printBereichDefinieren(meldungen.size());
@@ -155,10 +156,10 @@ public class TripTeteRanglisteSheet extends SheetRunner implements ISheet {
 						.setEndPosMergeZeilePlus(1)
 						.setShrinkToFit(true));
 
-		// Name – überspannt Header-Zeilen 1 und 2, identisch wie Nr, Mindestbreite 10 cm
+		// Name – überspannt Header-Zeilen 1 und 2, identisch wie Nr
 		getSheetHelper().setStringValueInCell(
 				StringCellValue.from(getXSpreadSheet(), Position.from(NAME_SPALTE, 1))
-						.setColumnProperties(ColumnProperties.from().setWidth(10000).centerJustify())
+						.setColumnProperties(colSchmal)
 						.setValue(I18n.get("column.header.name"))
 						.setCellBackColor(headerBackColor)
 						.setBorder(brdDaten)
