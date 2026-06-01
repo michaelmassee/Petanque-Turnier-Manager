@@ -105,6 +105,17 @@ public class SuperMeleePaarungenV2 {
         }
     }
 
+    private static final class RundenKandidat {
+        private List<List<Integer>> teams;
+        private List<Spieler> spieler;
+        private int score = Integer.MAX_VALUE;
+        private int passPrioritaet = Integer.MAX_VALUE;
+
+        private boolean hatLoesung() {
+            return teams != null;
+        }
+    }
+
     /**
      * Maximale Backtracking-Knoten pro Pass, abhängig von der Spieleranzahl {@code n}.<br>
      * <br>
@@ -836,6 +847,7 @@ public class SuperMeleePaarungenV2 {
         // Das Budget skaliert mit n: kleine Turniere erkennen Unlösbarkeit schneller,
         // grosse Turniere erhalten mehr Suchraum.
         boolean irgendeinLimitErreicht = false;
+        RundenKandidat besterKandidat = new RundenKandidat();
 
         // Pass-1-Tauglichkeit: warImSpielMit-Beziehungen aendern sich zwischen Shuffles nicht.
         // Daher reicht eine einmalige Pruefung im ersten Versuch.
@@ -915,7 +927,10 @@ public class SuperMeleePaarungenV2 {
                 backtrackBeste(order, 0, teams, teamSize, unionMatrix, softMatrix, zaehler1, maxKnoten,
                         spieler, ergebnis1);
                 if (ergebnis1.hatLoesung()) {
-                    return buildSpielRunde(rndNr, ergebnis1.besteTeams, spieler, meldungen);
+                    aktualisiereBestenKandidaten(besterKandidat, ergebnis1, spieler, 1);
+                    if (ergebnis1.perfekteLoesungGefunden) {
+                        return buildSpielRunde(rndNr, besterKandidat.teams, besterKandidat.spieler, meldungen);
+                    }
                 }
                 if (ergebnis1.limitErreicht || ergebnis1.bewertungslimitErreicht) {
                     irgendeinLimitErreicht = true;
@@ -932,11 +947,18 @@ public class SuperMeleePaarungenV2 {
             backtrackBeste(order, 0, teams, teamSize, matrix, softMatrix, zaehler2, maxKnoten,
                     spieler, ergebnis2);
             if (ergebnis2.hatLoesung()) {
-                return buildSpielRunde(rndNr, ergebnis2.besteTeams, spieler, meldungen);
+                aktualisiereBestenKandidaten(besterKandidat, ergebnis2, spieler, 2);
+                if (pass1NichtLoesbar && ergebnis2.perfekteLoesungGefunden) {
+                    return buildSpielRunde(rndNr, besterKandidat.teams, besterKandidat.spieler, meldungen);
+                }
             }
             if (ergebnis2.limitErreicht || ergebnis2.bewertungslimitErreicht) {
                 irgendeinLimitErreicht = true;
             }
+        }
+
+        if (besterKandidat.hatLoesung()) {
+            return buildSpielRunde(rndNr, besterKandidat.teams, besterKandidat.spieler, meldungen);
         }
 
         if (irgendeinLimitErreicht) {
@@ -958,6 +980,17 @@ public class SuperMeleePaarungenV2 {
                 "Keine gültige Spielrunde für Runde " + rndNr + " möglich — "
                 + "alle Spielerkombinationen sind ausgeschöpft. "
                 + "Möglicherweise müssen Wiederholungen in den Regeln zugelassen werden.");
+    }
+
+    private void aktualisiereBestenKandidaten(RundenKandidat kandidat, BacktrackingErgebnis ergebnis,
+            List<Spieler> spieler, int passPrioritaet) {
+        if (passPrioritaet < kandidat.passPrioritaet
+                || (passPrioritaet == kandidat.passPrioritaet && ergebnis.besterScore < kandidat.score)) {
+            kandidat.passPrioritaet = passPrioritaet;
+            kandidat.score = ergebnis.besterScore;
+            kandidat.teams = kopiereTeams(ergebnis.besteTeams);
+            kandidat.spieler = new ArrayList<>(spieler);
+        }
     }
 
     // =========================================================================
