@@ -868,6 +868,25 @@ public class SuperMeleePaarungenV2Test {
                 .isEmpty();
     }
 
+    @Test
+    public void layoutBewertungBevorzugtWenigerGegnerWiederholungen() throws Exception {
+        SpielerMeldungen meldungen = newTestMeldungen(8);
+        Spieler s1 = meldungen.findSpielerByNr(1);
+        s1.addGegner(meldungen.findSpielerByNr(3));
+        s1.addGegner(meldungen.findSpielerByNr(5));
+        s1.addGegner(meldungen.findSpielerByNr(7));
+
+        List<Spieler> spieler = meldungen.spieler();
+        List<List<Integer>> schlechtesLayout = List.of(
+                List.of(0, 1), List.of(2, 3), List.of(4, 5), List.of(6, 7));
+        List<List<Integer>> besseresLayout = List.of(
+                List.of(0, 2), List.of(1, 3), List.of(4, 6), List.of(5, 7));
+
+        assertThat(berechneLayoutGegnerScore(schlechtesLayout, spieler))
+                .as("Layout, in dem Spieler 1 zwingend gegen alte Gegner gepaart wird")
+                .isGreaterThan(berechneLayoutGegnerScore(besseresLayout, spieler));
+    }
+
     /**
      * Crossover-Vermeidung (weicher Constraint): 22 Spieler × 4 Runden im
      * Triplette-Modus reproduzieren die Konstellation aus der Live-ODS
@@ -1238,6 +1257,12 @@ public class SuperMeleePaarungenV2Test {
             }
         }
         return wiederholungen;
+    }
+
+    private int berechneLayoutGegnerScore(List<List<Integer>> teams, List<Spieler> spieler) throws Exception {
+        Method methode = SuperMeleePaarungenV2.class.getDeclaredMethod("berechneLayoutGegnerScore", List.class, List.class);
+        methode.setAccessible(true);
+        return (Integer) methode.invoke(paarungen, teams, spieler);
     }
 
     private void optimiereGegnerPaarung(MeleeSpielRunde runde) throws Exception {
