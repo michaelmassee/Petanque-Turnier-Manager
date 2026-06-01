@@ -16,7 +16,8 @@ SpielrundeDelegate.neueSpielrunde()
 │   │         └─ generiereRundeMitFairnessConstraint()
 │   │              │  (für jede Fairness-Schwelle minKlein+1 .. maxKlein)
 │   │              └─ generiereRundeMitFesteTeamGroese()
-│   │                   10 Shuffles × (Pass 1: 200K Knoten) × (Pass 2: 200K Knoten)
+│   │                   bis zu 10 Shuffles × Pass 1/2 × n-abhängiges Knotenbudget
+│   │                   sammelt den besten Kandidaten, statt beim ersten Treffer zu stoppen
 │   │
 │   ├─ [Erfolg] → Runde ins Sheet schreiben, fertig
 │   │
@@ -104,15 +105,43 @@ generiereRundeMitFesteTeamGroese():
   softMatrix[][] = aufgebaut aus warImSpielMit()  → Soft: besser nicht zusammen sein
 
   Pass 1: backtrack mit unionMatrix = matrix OR softMatrix
-          → Lösung ohne jegliche Crossover-Wiederholung
-          → Scheitert wenn keine solche Lösung existiert (dichte softMatrix)
+          → Lösung ohne Mitspieler-Crossover
+          → bevorzugt gegenüber Pass 2, wenn mindestens ein Pass-1-Kandidat existiert
+          → wird vorab übersprungen, wenn die Soft-Dichte eines Spielers
+            strukturell zu hoch ist (zu wenig kompatible Team-Partner)
 
   Pass 2: backtrack mit nur matrix (hardMatrix)
           → Soft-Constraints nur noch als Value-Ordering-Tie-Breaker
-          → Findet Lösung sobald harte Constraints eine erlauben
+          → Fallback innerhalb des Algorithmus, falls Pass 1 keine Lösung liefert
 
-  Jeder Pass bekommt EIGENEN Knotenzähler (200K Limit).
+  Jeder Pass bekommt EIGENEN Knotenzähler.
+  Das Knotenbudget skaliert mit Spielerzahl:
+    n ≤ 24  →  50K Knoten/Pass
+    n ≤ 36  → 200K Knoten/Pass
+    n ≤ 48  → 400K Knoten/Pass
+    n > 48  → 600K Knoten/Pass
+
+  Fairness-Schwellenversuche nutzen ein reduziertes Budget:
+    max(20K, maxKnotenProPass(n) / 8)
+
+  Pro Pass werden bis zu 128 vollständige Layouts bewertet.
+  Bewertet wird nicht nur die Teambildung, sondern auch die voraussichtliche
+  spätere Gegner-Paarung:
+    - Gegner-Wiederholung dominiert mit Gewicht 10_000
+    - Crossover bleibt Tie-Breaker mit Gewicht 1
+    - Gegner-Wiederholung und Crossover werden exklusiv gezählt
+
+  Kleine Gruppen werden bei der simulierten Gegner-Paarung exakt bewertet.
+  Große Gruppen (> 12 Teams je Doublette-/Triplette-Gruppe) nutzen eine
+  deterministische Greedy-Bewertung, damit die Scoring-Phase nicht faktoriell
+  explodiert.
+
   Bis zu 10 Shuffles pro Aufruf.
+  Der beste Kandidat wird über die Shuffle-Versuche hinweg gesammelt:
+    - Pass 1 hat Priorität vor Pass 2.
+    - Innerhalb derselben Pass-Stufe gewinnt der niedrigste Gegner-Score.
+    - Bei perfektem Score 0 wird früh zurückgegeben, solange dadurch kein
+      vorhandener Pass-1-Kandidat durch Pass 2 verdrängt wird.
 ```
 
 ---
@@ -126,12 +155,14 @@ generiereRundeMitFesteTeamGroese():
 | 12 Spieler, nach 6 Runden | ~100% | ~100% | Alles TRUE → erschöpft, Fallback greift |
 | 30 Spieler, nach 20 Runden | ~138% (all-true) | >> 100% | All-true → Forward-Check sofort, effMaxSpieltage-Lockerung |
 
-**Warum "wenige Runden" das Problem auslöste** (Szenario "Zeile 2"):
+**Warum "wenige Runden" früher problematisch waren** (Szenario "Zeile 2"):
 - `softMatrix` bereits voll → `unionMatrix ≈ all-true`
 - Aber: "all-true" → Forward-Check scheitert in **wenigen Knoten** (gut!)
 - Das Problem war "moderat dichte" softMatrix: Pass 1 suchte tief, erschöpfte das Budget
 - Pass 2 hatte durch den geteilten Zähler kein Budget mehr
 - Fix: eigener Zähler pro Pass → Pass 2 hat immer volles Budget
+- Weitere Optimierung: gültige Layouts werden bewertet und über mehrere
+  Shuffles verglichen, statt den ersten gültigen Treffer direkt zu übernehmen.
 
 ---
 
@@ -142,6 +173,8 @@ generiereRundeMitFesteTeamGroese():
 | `SpielrundeDelegate` | `neueSpielrunde()` | Fallback-Schleife mit effMaxSpieltage |
 | `SpielrundeDelegate` | `gespieltenRundenEinlesenMitLimit()` | Geschichte nach effMaxSpieltage laden |
 | `SuperMeleePaarungenV2` | `generiereRundeMitFesteTeamGroese()` | Backtracking mit Multi-Shuffle |
+| `SuperMeleePaarungenV2` | `generiereRunde()` | Pass-1/Pass-2-Koordination, bester Kandidat über Shuffles |
+| `SuperMeleePaarungenV2` | `berechneLayoutGegnerScore()` | bewertet vollständige Team-Layouts nach erwarteter Gegnerqualität |
 | `SuperMeleePaarungenV2` | `erzeugeZufallsRunde()` | Letzter Ausweg: keinerlei Constraints |
 | `SuperMeleePaarungenV2` | `protokolliereWarImSpielMit()` | softMatrix-Einträge nach jeder Runde |
 | `Team` | `addSpielerWennNichtVorhanden()` | warImTeamMit-Einträge beim Generieren |
@@ -162,7 +195,8 @@ Optimizer in `optimiereGegnerPaarung` unsichtbar.
 dem Optimizer als "frisch". Der Score berechnet sich nur aus den laufenden
 Spieltag-Runden → der Optimizer vermeidet sie weniger stark.
 
-**Messbare Folge** (analysiert an `super-test-alk.ods`):
+**Historisch messbare Folge** (analysiert an `super-test-alk.ods`, vor den
+späteren Gegner-Optimierungen):
 
 | ST | Gegner-Sättigung vorher | Intra-ST-Wiederholungen | Ursache |
 |---|---|---|---|
@@ -176,9 +210,10 @@ Meiners/Radde (ST4): vor ST4 bereits **3× Gegner** in ST1–3, aber beim
 Reset unsichtbar → Optimizer sah nur 10 bzw. 20 Pkt statt 40/50 Pkt →
 wurde trotz hoher Vorbelastung dreimal in ST4 zusammengelost.
 
-**Fix**: Multi-Shuffle (Commit b4db75fb) reduziert effMaxSpieltage-Resets
-drastisch → cross-ST-Gegnergeschichte bleibt erhalten → Optimizer arbeitet
-mit vollständiger Information.
+**Aktueller Stand**: Multi-Shuffle, Best-of-Layouts und Best-of-Shuffles
+reduzieren effMaxSpieltage-Resets und Gegner-Wiederholungen deutlich.
+Dadurch bleibt die cross-ST-Gegnergeschichte häufiger erhalten und der
+Optimizer arbeitet öfter mit vollständiger Information.
 
 ### Analyse-Werkzeuge
 

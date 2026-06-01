@@ -289,7 +289,7 @@ public class SuperMeleePaarungenV2 {
                 team.addSpielerWennNichtVorhanden(shuffled.get(idx++));
             }
         }
-        return runde;
+        return finalizeRunde(runde);
     }
 
     /**
@@ -984,8 +984,8 @@ public class SuperMeleePaarungenV2 {
 
     private void aktualisiereBestenKandidaten(RundenKandidat kandidat, BacktrackingErgebnis ergebnis,
             List<Spieler> spieler, int passPrioritaet) {
-        if (passPrioritaet < kandidat.passPrioritaet
-                || (passPrioritaet == kandidat.passPrioritaet && ergebnis.besterScore < kandidat.score)) {
+        if (ergebnis.besterScore < kandidat.score
+                || (ergebnis.besterScore == kandidat.score && passPrioritaet < kandidat.passPrioritaet)) {
             kandidat.passPrioritaet = passPrioritaet;
             kandidat.score = ergebnis.besterScore;
             kandidat.teams = kopiereTeams(ergebnis.besteTeams);
