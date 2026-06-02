@@ -231,6 +231,9 @@ public class LigaRanglisteSheet extends SheetRunner implements ISheet, IRanglist
 						LigaSpielPlanSheet.SPIELPNKT_B_SPALTE, startZeile + MAX_SPIELPLAN_ZEILEN))
 				.getDataFromRange();
 
+		int freispielSpPktPlus = konfigurationSheet.getFreispielPunktePlus();
+		int freispielSpPktMinus = konfigurationSheet.getFreispielPunkteMinus();
+
 		for (int i = 0; i < teamNrData.size(); i++) {
 			RowData teamNrZeile = teamNrData.get(i);
 			if (teamNrZeile.size() < 2) {
@@ -253,11 +256,8 @@ public class LigaRanglisteSheet extends SheetRunner implements ISheet, IRanglist
 			int spPktB = erg.get(5).getIntVal(0);
 
 			if (nrB <= 0) {
-				// Freispiel: nur Team A
-				if (pktA <= 0 && spA <= 0 && spPktA <= 0) {
-					continue;
-				}
-				statsMap.computeIfPresent(nrA, (k, s) -> s.plus(pktA, 0, spA, 0, spPktA, 0));
+				// Freispiel: immer ein Sieg für Team A; Spielpunkte aus Konfiguration
+				statsMap.computeIfPresent(nrA, (k, s) -> s.plus(1, 0, spA, 0, freispielSpPktPlus, freispielSpPktMinus));
 				continue;
 			}
 
@@ -422,7 +422,7 @@ public class LigaRanglisteSheet extends SheetRunner implements ISheet, IRanglist
 
 		// Zeile 0: Begegnungen – 2 Zeilen hoch, 90°
 		getSheetHelper().setStringValueInCell(StringCellValue
-				.from(sheet, Position.from(BEGEGNUNGEN_SPALTE, 0), I18n.get("comment.begegnungen"))
+				.from(sheet, Position.from(BEGEGNUNGEN_SPALTE, 0), I18n.get("column.header.begegn"))
 				.setCellProperties(CellProperties.from().setAllThinBorder()
 						.setCellBackColor(headerFarbe).margin(MARGIN).centerJustify().setShrinkToFit(true))
 				.setEndPosMergeZeilePlus(1).setRotate90());
