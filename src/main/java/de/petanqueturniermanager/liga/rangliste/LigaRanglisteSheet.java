@@ -380,44 +380,52 @@ public class LigaRanglisteSheet extends SheetRunner implements ISheet, IRanglist
 	private void insertHeader(XSpreadsheet sheet) throws GenerateException {
 		int headerFarbe = konfigurationSheet.getRanglisteHeaderFarbe();
 		TableBorder2 borderBottom = BorderFactory.from().allThin().boldLn().forBottom().toBorder();
-		CellProperties headerProp = CellProperties.from().setAllThinBorder()
-				.setCellBackColor(headerFarbe).margin(MARGIN).centerJustify().setShrinkToFit(true);
 
-		// Zeile 0: Gruppen-Header für Nr, Name, Rang (je merged 2 Zeilen)
-		for (int[] colRows : new int[][] {
-				{ TEAM_NR_SPALTE, 0 }, { TEAM_NAME_SPALTE, 0 }, { RANGLISTE_SPALTE, 1 } }) {
-			var cv = StringCellValue
-					.from(sheet, Position.from(colRows[0], 0), colRows[0] == TEAM_NR_SPALTE
-							? I18n.get("column.header.nr")
-							: colRows[0] == TEAM_NAME_SPALTE ? I18n.get("column.header.name")
-									: I18n.get("column.header.platz"))
-					.setCellProperties(headerProp).setEndPosMergeZeilePlus(1);
-			if (colRows[0] == RANGLISTE_SPALTE) {
-				cv.setRotate90();
-				cv.setBorder(BorderFactory.from().allThin().boldLn().forBottom().forRight().toBorder());
-			}
-			getSheetHelper().setStringValueInCell(cv);
+		// Zeile 0: Nr, Name – je 2 Zeilen hoch
+		for (int col : new int[] { TEAM_NR_SPALTE, TEAM_NAME_SPALTE }) {
+			getSheetHelper().setStringValueInCell(StringCellValue
+					.from(sheet, Position.from(col, 0),
+							col == TEAM_NR_SPALTE ? I18n.get("column.header.nr") : I18n.get("column.header.name"))
+					.setCellProperties(CellProperties.from().setAllThinBorder()
+							.setCellBackColor(headerFarbe).margin(MARGIN).centerJustify().setShrinkToFit(true))
+					.setEndPosMergeZeilePlus(1));
 		}
 
-		// Zeile 0: Gruppen-Überschriften für Statistik-Blöcke
-		String[][] gruppenHeader = {
-				{ I18n.get("column.header.punkte"), String.valueOf(PUNKTE_PLUS_SPALTE), "1" },
-				{ I18n.get("column.header.spiele"), String.valueOf(SPIELE_PLUS_SPALTE), "2" },
-				{ "Spielpunkte", String.valueOf(SP_PUNKTE_PLUS_SPALTE), "2" },
-				{ I18n.get("comment.begegnungen"), String.valueOf(BEGEGNUNGEN_SPALTE), "0" },
-		};
-		for (String[] gh : gruppenHeader) {
-			int col = Integer.parseInt(gh[1]);
-			int mergeExtra = Integer.parseInt(gh[2]);
-			var cv = StringCellValue.from(sheet, Position.from(col, 0), gh[0])
-					.setCellProperties(headerProp);
-			if (mergeExtra > 0) {
-				cv.setEndPosMergeSpaltePlus(mergeExtra);
-			} else {
-				cv.setEndPosMergeZeilePlus(1).setRotate90();
-			}
-			getSheetHelper().setStringValueInCell(cv);
-		}
+		// Zeile 0: Rang – 2 Zeilen hoch, 90°
+		getSheetHelper().setStringValueInCell(StringCellValue
+				.from(sheet, Position.from(RANGLISTE_SPALTE, 0), I18n.get("column.header.platz"))
+				.setCellProperties(CellProperties.from().setAllThinBorder()
+						.setCellBackColor(headerFarbe).margin(MARGIN).centerJustify().setShrinkToFit(true)
+						.setBorder(BorderFactory.from().allThin().boldLn().forBottom().forRight().toBorder()))
+				.setEndPosMergeZeilePlus(1).setRotate90());
+
+		// Zeile 0: Punkte-Gruppe (2 Spalten breit)
+		getSheetHelper().setStringValueInCell(StringCellValue
+				.from(sheet, Position.from(PUNKTE_PLUS_SPALTE, 0), I18n.get("column.header.punkte"))
+				.setCellProperties(CellProperties.from().setAllThinBorder()
+						.setCellBackColor(headerFarbe).margin(MARGIN).centerJustify().setShrinkToFit(true))
+				.setEndPosMergeSpaltePlus(1));
+
+		// Zeile 0: Spiele-Gruppe (3 Spalten breit)
+		getSheetHelper().setStringValueInCell(StringCellValue
+				.from(sheet, Position.from(SPIELE_PLUS_SPALTE, 0), I18n.get("column.header.spiele"))
+				.setCellProperties(CellProperties.from().setAllThinBorder()
+						.setCellBackColor(headerFarbe).margin(MARGIN).centerJustify().setShrinkToFit(true))
+				.setEndPosMergeSpaltePlus(2));
+
+		// Zeile 0: Spielpunkte-Gruppe (3 Spalten breit)
+		getSheetHelper().setStringValueInCell(StringCellValue
+				.from(sheet, Position.from(SP_PUNKTE_PLUS_SPALTE, 0), I18n.get("column.header.spielpunkte"))
+				.setCellProperties(CellProperties.from().setAllThinBorder()
+						.setCellBackColor(headerFarbe).margin(MARGIN).centerJustify().setShrinkToFit(true))
+				.setEndPosMergeSpaltePlus(2));
+
+		// Zeile 0: Begegnungen – 2 Zeilen hoch, 90°
+		getSheetHelper().setStringValueInCell(StringCellValue
+				.from(sheet, Position.from(BEGEGNUNGEN_SPALTE, 0), I18n.get("comment.begegnungen"))
+				.setCellProperties(CellProperties.from().setAllThinBorder()
+						.setCellBackColor(headerFarbe).margin(MARGIN).centerJustify().setShrinkToFit(true))
+				.setEndPosMergeZeilePlus(1).setRotate90());
 
 		// Zeile 1: Sub-Header +/-/Δ
 		RangeData subHeader = new RangeData();
