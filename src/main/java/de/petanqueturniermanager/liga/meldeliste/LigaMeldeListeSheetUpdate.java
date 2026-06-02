@@ -5,6 +5,7 @@
 package de.petanqueturniermanager.liga.meldeliste;
 
 import java.util.List;
+import java.util.Map;
 
 import com.sun.star.sheet.XSpreadsheet;
 
@@ -126,6 +127,10 @@ public class LigaMeldeListeSheetUpdate extends SheetRunner implements IMeldelist
 	@Override
 	public int letzteZeileMitSpielerName() throws GenerateException {
 		return delegate.letzteZeileMitSpielerName();
+	}
+
+	public Map<Integer, String> leseTeamNamenMap() throws GenerateException {
+		return delegate.leseTeamNamenMap();
 	}
 
 	public void upDateSheet() throws GenerateException {

@@ -3,19 +3,21 @@
  */
 package de.petanqueturniermanager.liga.rangliste;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.TableBorder2;
 
-import de.petanqueturniermanager.algorithmen.liga.JederGegenJeden;
-import de.petanqueturniermanager.basesheet.meldeliste.Formation;
-import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
+import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
@@ -31,8 +33,9 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.rangliste.IRangliste;
-import de.petanqueturniermanager.helper.rangliste.RangListeSorter;
 import de.petanqueturniermanager.helper.rangliste.RangListeSpalte;
+import de.petanqueturniermanager.helper.rangliste.RangListeSorter;
+import de.petanqueturniermanager.helper.rangliste.SignaturQuellen;
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
@@ -43,11 +46,12 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
-import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.helper.sheet.search.RangeSearchHelper;
+import de.petanqueturniermanager.helper.sheetsync.EingabeSignatur;
+import de.petanqueturniermanager.helper.sheetsync.SheetSyncSignaturStore;
 import de.petanqueturniermanager.liga.konfiguration.LigaKonfigurationSheet;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheetUpdate;
 import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet;
-import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 
@@ -58,32 +62,34 @@ public class LigaRanglisteSheet extends SheetRunner implements ISheet, IRanglist
 
 	private static final int MARGIN = 120;
 	private static final String METADATA_SCHLUESSEL = SheetMetadataHelper.SCHLUESSEL_LIGA_RANGLISTE;
-	private static final int ERSTE_DATEN_ZEILE = 3; // Zeile 4
-	private static final int TEAM_NR_SPALTE = 0; // Spalte A=0
-	public static final int RANGLISTE_SPALTE = 2; // Spalte C=2
 
-	private static final int ERSTE_SPIELTAG_SPALTE = TEAM_NR_SPALTE + 3; // nr + name + rangliste
-	private static final int PUNKTE_NR_WIDTH = MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH;
-	private static final int ANZ_SUMMEN_SPALTEN = 9; // Punkte +/- Spiele +/-/Diff SpielPunkte +/-/Diff + anz runden
-	private static final int ERSTE_SORTSPALTE_OFFSET = 3; // zur letzte spalte = anz Spieltage
+	static final int ERSTE_DATEN_ZEILE = 2;
+	static final int TEAM_NR_SPALTE = 0;
+	static final int TEAM_NAME_SPALTE = 1;
+	public static final int RANGLISTE_SPALTE = 2;
+	static final int PUNKTE_PLUS_SPALTE = 3;
+	private static final int PUNKTE_MINUS_SPALTE = 4;
+	static final int SPIELE_PLUS_SPALTE = 5;
+	private static final int SPIELE_MINUS_SPALTE = 6;
+	private static final int SPIELE_DIFF_SPALTE = 7;
+	static final int SP_PUNKTE_PLUS_SPALTE = 8;
+	private static final int SP_PUNKTE_MINUS_SPALTE = 9;
+	static final int SP_PUNKTE_DIFF_SPALTE = 10;
+	private static final int BEGEGNUNGEN_SPALTE = 11;
+
+	private static final int COL_WIDTH_NR = 800;
+	private static final int COL_WIDTH_NAME = 7000;
+	private static final int COL_WIDTH_RANGLISTE = 800;
+	private static final int COL_WIDTH_DATA = 1400;
+	private static final int MAX_SPIELPLAN_ZEILEN = 5000;
 
 	private final LigaKonfigurationSheet konfigurationSheet;
-	private final MeldungenSpalte<TeamMeldungen, Team> meldungenSpalte;
 	private final LigaMeldeListeSheetUpdate meldeListe;
 	private final RangListeSorter rangListeSorter;
-	private volatile int cachedAnzZeilen = -1;
 
-	/**
-	 * @param workingSpreadsheet
-	 * @param logPrefix
-	 * @throws GenerateException
-	 */
 	public LigaRanglisteSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, TurnierSystem.LIGA, "Liga-RanglisteSheet");
 		konfigurationSheet = new LigaKonfigurationSheet(workingSpreadsheet);
-		meldungenSpalte = MeldungenSpalte.builder().spalteMeldungNameWidth(LigaKonfigurationSheet.LIGA_MELDUNG_NAME_WIDTH)
-				.ersteDatenZiele(ERSTE_DATEN_ZEILE).spielerNrSpalte(TEAM_NR_SPALTE).sheet(this)
-				.formation(Formation.TETE).anzZeilenInHeader(2).build();
 		meldeListe = initMeldeListeSheet(workingSpreadsheet);
 		rangListeSorter = new RangListeSorter(this);
 	}
@@ -93,9 +99,12 @@ public class LigaRanglisteSheet extends SheetRunner implements ISheet, IRanglist
 		return konfigurationSheet;
 	}
 
-	@VisibleForTesting
 	LigaMeldeListeSheetUpdate initMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet) {
 		return new LigaMeldeListeSheetUpdate(workingSpreadsheet);
+	}
+
+	protected LigaMeldeListeSheetUpdate getMeldeListe() {
+		return meldeListe;
 	}
 
 	@Override
@@ -113,23 +122,16 @@ public class LigaRanglisteSheet extends SheetRunner implements ISheet, IRanglist
 		return rangListeSorter;
 	}
 
-	private TeamMeldungen getAlleMeldungen() throws GenerateException {
-		return meldeListe.getAlleMeldungen(); // inhalt kann sich später ändern
+	public TeamMeldungen getAlleMeldungen() throws GenerateException {
+		return meldeListe.getAlleMeldungen();
 	}
 
-	private JederGegenJeden newJederGegenJeden() throws GenerateException {
-		return new JederGegenJeden(getAlleMeldungen());
-	}
-
-	/**
-	 * @throws GenerateException
-	 */
 	public void upDateSheet() throws GenerateException {
-		cachedAnzZeilen = -1;
 		meldeListe.upDateSheet();
 
-		getxCalculatable().enableAutomaticCalculation(false); // speed up
-		if (!getAlleMeldungen().isValid()) {
+		getxCalculatable().enableAutomaticCalculation(false);
+		TeamMeldungen aktiveMeldungen = getAlleMeldungen();
+		if (!aktiveMeldungen.isValid()) {
 			processBoxinfo("processbox.abbruch");
 			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption(I18n.get("msg.caption.liga.spielplan"))
 					.message(I18n.get("msg.text.ungueltige.anzahl.meldungen")).show();
@@ -139,29 +141,299 @@ public class LigaRanglisteSheet extends SheetRunner implements ISheet, IRanglist
 		if (!NewSheet.from(this, SheetNamen.rangliste(), METADATA_SCHLUESSEL)
 				.pos(DefaultSheetPos.LIGA_ENDRANGLISTE).setForceCreate(true).setActiv()
 				.hideGrid().tabColor(getKonfigurationSheet().getRanglisteTabFarbe()).create().isDidCreate()) {
-			ProcessBox.from().info("Abbruch vom Benutzer, Liga SpielPlan wurde nicht erstellt");
+			ProcessBox.from().info("Abbruch vom Benutzer, Liga Rangliste wurde nicht erstellt");
 			return;
 		}
 
-		meldungenSpalte.alleAktiveUndAusgesetzteMeldungenAusmeldelisteEinfuegen(meldeListe);
-		int headerBackColor = getKonfigurationSheet().getRanglisteHeaderFarbe();
-		meldungenSpalte.insertHeaderInSheet(headerBackColor);
-		spieltageFormulaEinfuegen(newJederGegenJeden());
-		summenSpaltenEinfuegen();
+		XSpreadsheet sheet = getXSpreadSheet();
+		if (sheet == null) {
+			return;
+		}
 
-		RangListeSpalte rangListeSpalte = new RangListeSpalte(RANGLISTE_SPALTE, this);
-		rangListeSpalte.upDateRanglisteSpalte();
-		rangListeSpalte.insertHeaderInSheet(headerBackColor);
-		rangListeSorter.insertSortValidateSpalte(false);
-		rangListeSorter.insertManuelsortSpalten(false);
-		rangListeSorter.doSort();
+		berechnungUndSchreiben(sheet, meldeListe, aktiveMeldungen);
 
-		insertHeader();
-		formatData();
-		meldungenSpalte.formatSpielrNrUndNamenspalten(false);
+		if (SheetRunner.isRunning()) {
+			getSheetHelper().setActiveSheet(sheet);
+			SheetRunner.unterdrückeNaechstesSelectionChange();
+		}
+		SheetSyncSignaturStore.commitVollaufbau(
+				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
+				METADATA_SCHLUESSEL,
+				new EingabeSignatur(SignaturQuellen::fuerLiga));
+	}
+
+	protected void berechnungUndSchreiben(XSpreadsheet sheet, LigaMeldeListeSheetUpdate meldeliste,
+			TeamMeldungen aktiveMeldungen) throws GenerateException {
+		processBoxinfo("processbox.rangliste.einfuegen");
+
+		insertHeader(sheet);
+		setzeSpaltenBreiten(sheet);
+
+		Map<Integer, String> teamNamen = meldeliste.leseTeamNamenMap();
+		List<LigaTeamStats> sortiert = berechneUndSortiere(aktiveMeldungen, teamNamen);
+
+		schreibeDatenAlsWerte(sheet, sortiert);
+
+		if (!sortiert.isEmpty()) {
+			new RangListeSpalte(RANGLISTE_SPALTE, this).upDateRanglisteSpalte();
+			rangListeSorter.insertSortValidateSpalte(true);
+			rangListeSorter.insertManuelsortSpalten(false);
+			rangListeSorter.doSort();
+			formatiereZebraStreifen(sheet, sortiert.size());
+			formatiereBegegnungenSpalte(sheet, sortiert.size());
+		}
+
 		addFooter();
 		printBereichDefinieren();
-		SheetFreeze.from(getTurnierSheet()).anzZeilen(3).anzSpalten(3).doFreeze();
+		SheetFreeze.from(getTurnierSheet()).anzZeilen(ERSTE_DATEN_ZEILE).anzSpalten(RANGLISTE_SPALTE + 1).doFreeze();
+		getxCalculatable().calculateAll();
+	}
+
+	private List<LigaTeamStats> berechneUndSortiere(TeamMeldungen aktiveMeldungen,
+			Map<Integer, String> teamNamen) throws GenerateException {
+		Map<Integer, LigaTeamStats> statsMap = leseSpielplanStats(aktiveMeldungen, teamNamen);
+		List<LigaTeamStats> daten = new ArrayList<>();
+		for (Team team : aktiveMeldungen.teams()) {
+			daten.add(statsMap.getOrDefault(team.getNr(), new LigaTeamStats(team.getNr(),
+					teamNamen.getOrDefault(team.getNr(), ""), 0, 0, 0, 0, 0, 0)));
+		}
+		daten.sort(Comparator.comparingInt(LigaTeamStats::punktePlus).reversed()
+				.thenComparing(Comparator.comparingInt(LigaTeamStats::spielePlus).reversed())
+				.thenComparing(Comparator.comparingInt(LigaTeamStats::spPunktePlus).reversed())
+				.thenComparing(Comparator.comparingInt(LigaTeamStats::spPunkteDiff).reversed()));
+		return daten;
+	}
+
+	private Map<Integer, LigaTeamStats> leseSpielplanStats(TeamMeldungen aktiveMeldungen,
+			Map<Integer, String> teamNamen) throws GenerateException {
+		Map<Integer, LigaTeamStats> statsMap = new HashMap<>();
+		for (Team team : aktiveMeldungen.teams()) {
+			statsMap.put(team.getNr(), new LigaTeamStats(team.getNr(),
+					teamNamen.getOrDefault(team.getNr(), ""), 0, 0, 0, 0, 0, 0));
+		}
+
+		var xDoc = getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
+		XSpreadsheet spielplanSheet = SheetMetadataHelper.findeSheetUndHeile(
+				xDoc, SheetMetadataHelper.SCHLUESSEL_LIGA_SPIELPLAN, LigaSpielPlanSheet.LEGACY_SHEET_NAMEN);
+		if (spielplanSheet == null) {
+			return statsMap;
+		}
+
+		int startZeile = LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE;
+		RangeData teamNrData = RangeHelper.from(spielplanSheet, xDoc,
+				RangePosition.from(LigaSpielPlanSheet.TEAM_A_NR_SPALTE, startZeile,
+						LigaSpielPlanSheet.TEAM_B_NR_SPALTE, startZeile + MAX_SPIELPLAN_ZEILEN))
+				.getDataFromRange();
+
+		// PUNKTE_A(8) bis SPIELPNKT_B(13) = 6 Spalten
+		RangeData ergebnisData = RangeHelper.from(spielplanSheet, xDoc,
+				RangePosition.from(LigaSpielPlanSheet.PUNKTE_A_SPALTE, startZeile,
+						LigaSpielPlanSheet.SPIELPNKT_B_SPALTE, startZeile + MAX_SPIELPLAN_ZEILEN))
+				.getDataFromRange();
+
+		for (int i = 0; i < teamNrData.size(); i++) {
+			RowData teamNrZeile = teamNrData.get(i);
+			if (teamNrZeile.size() < 2) {
+				break;
+			}
+			int nrA = teamNrZeile.get(0).getIntVal(0);
+			if (nrA <= 0) {
+				continue;
+			}
+			int nrB = teamNrZeile.get(1).getIntVal(0);
+			RowData erg = ergebnisData.get(i);
+			if (erg.size() < 6) {
+				continue;
+			}
+			int pktA = erg.get(0).getIntVal(0);
+			int pktB = erg.get(1).getIntVal(0);
+			int spA = erg.get(2).getIntVal(0);
+			int spB = erg.get(3).getIntVal(0);
+			int spPktA = erg.get(4).getIntVal(0);
+			int spPktB = erg.get(5).getIntVal(0);
+
+			if (nrB <= 0) {
+				// Freispiel: nur Team A
+				if (pktA <= 0 && spA <= 0 && spPktA <= 0) {
+					continue;
+				}
+				statsMap.computeIfPresent(nrA, (k, s) -> s.plus(pktA, 0, spA, 0, spPktA, 0));
+				continue;
+			}
+
+			if (pktA <= 0 && pktB <= 0 && spA <= 0 && spB <= 0 && spPktA <= 0 && spPktB <= 0) {
+				continue; // noch nicht gespielt
+			}
+
+			statsMap.computeIfPresent(nrA, (k, s) -> s.plus(pktA, pktB, spA, spB, spPktA, spPktB));
+			statsMap.computeIfPresent(nrB, (k, s) -> s.plus(pktB, pktA, spB, spA, spPktB, spPktA));
+		}
+		return statsMap;
+	}
+
+	private void schreibeDatenAlsWerte(XSpreadsheet sheet, List<LigaTeamStats> sortiert) throws GenerateException {
+		if (sortiert.isEmpty()) {
+			return;
+		}
+		int letzteZeile = ERSTE_DATEN_ZEILE + sortiert.size() - 1;
+
+		// Block 1: Nr, Name
+		RangeData block1 = new RangeData();
+		for (LigaTeamStats s : sortiert) {
+			RowData row = block1.addNewRow();
+			row.newInt(s.teamNr());
+			row.newString(s.teamName());
+		}
+		RangeHelper.from(this, RangePosition.from(TEAM_NR_SPALTE, ERSTE_DATEN_ZEILE, TEAM_NAME_SPALTE, letzteZeile))
+				.setDataInRange(block1);
+
+		// Block 2: Statistik (9 Spalten)
+		RangeData block2 = new RangeData();
+		for (LigaTeamStats s : sortiert) {
+			RowData row = block2.addNewRow();
+			row.newInt(s.punktePlus());
+			row.newInt(s.punkteMinus());
+			row.newInt(s.spielePlus());
+			row.newInt(s.spieleMinus());
+			row.newInt(s.spieleDiff());
+			row.newInt(s.spPunktePlus());
+			row.newInt(s.spPunkteMinus());
+			row.newInt(s.spPunkteDiff());
+			row.newInt(s.begegnungen());
+		}
+		RangeHelper.from(this, block2.getRangePosition(Position.from(PUNKTE_PLUS_SPALTE, ERSTE_DATEN_ZEILE)))
+				.setDataInRange(block2);
+
+		// Nr-Spalte: grau + doppelte rechte Linie
+		getSheetHelper().setPropertiesInRange(sheet,
+				RangePosition.from(TEAM_NR_SPALTE, ERSTE_DATEN_ZEILE, TEAM_NR_SPALTE, letzteZeile),
+				CellProperties.from()
+						.setCharColor(ColorHelper.CHAR_COLOR_GRAY_SPIELER_NR)
+						.setBorder(BorderFactory.from().allThin().doubleLn().forRight().toBorder()));
+
+		// Name-Spalte: linksbündig
+		getSheetHelper().setPropertiesInRange(sheet,
+				RangePosition.from(TEAM_NAME_SPALTE, ERSTE_DATEN_ZEILE, TEAM_NAME_SPALTE, letzteZeile),
+				CellProperties.from().setAllThinBorder().setHoriJustify(CellHoriJustify.LEFT));
+
+		// Statistik-Spalten: zentriert, thin border, bold-top
+		getSheetHelper().setPropertiesInRange(sheet,
+				RangePosition.from(RANGLISTE_SPALTE, ERSTE_DATEN_ZEILE, BEGEGNUNGEN_SPALTE, letzteZeile),
+				CellProperties.from().setAllThinBorder()
+						.setBorder(BorderFactory.from().allThin().boldLn().forTop().toBorder())
+						.setHoriJustify(CellHoriJustify.CENTER).margin(MARGIN));
+
+		// Doppelte Trennlinien: Spiele-Block (col 5) und SpPunkte-Block (col 8)
+		for (int spalte : new int[] { SPIELE_PLUS_SPALTE, SP_PUNKTE_PLUS_SPALTE }) {
+			getSheetHelper().setPropertiesInRange(sheet,
+					RangePosition.from(spalte, ERSTE_DATEN_ZEILE - 2, spalte, letzteZeile),
+					CellProperties.from().setBorder(BorderFactory.from().doubleLn().forLeft().toBorder()));
+		}
+	}
+
+	private void formatiereZebraStreifen(XSpreadsheet sheet, int anzTeams) throws GenerateException {
+		int letzteZeile = ERSTE_DATEN_ZEILE + anzTeams - 1;
+		RangePosition datenRange = RangePosition.from(TEAM_NR_SPALTE, ERSTE_DATEN_ZEILE, SP_PUNKTE_DIFF_SPALTE, letzteZeile);
+		RanglisteGeradeUngeradeFormatHelper.from(this, datenRange)
+				.geradeFarbe(konfigurationSheet.getRanglisteHintergrundFarbeGerade())
+				.ungeradeFarbe(konfigurationSheet.getRanglisteHintergrundFarbeUnGerade())
+				.validateSpalte(validateSpalte())
+				.apply();
+	}
+
+	private void formatiereBegegnungenSpalte(XSpreadsheet sheet, int anzTeams) throws GenerateException {
+		int letzteZeile = ERSTE_DATEN_ZEILE + anzTeams - 1;
+		RangePosition begegnungenSpalte = RangePosition.from(BEGEGNUNGEN_SPALTE, ERSTE_DATEN_ZEILE,
+				BEGEGNUNGEN_SPALTE, letzteZeile);
+		String maxFormula = ConditionalFormatHelper.FORMULA_CURRENT_CELL + "<MAX(" + begegnungenSpalte.getAddressWith$() + ")";
+		String orangeFormulaGerade = "AND(" + ConditionalFormatHelper.FORMULA_ISEVEN_ROW + ";" + maxFormula + ")";
+		String orangeFormulaUngerade = "AND(" + ConditionalFormatHelper.FORMULA_ISODD_ROW + ";" + maxFormula + ")";
+		RanglisteGeradeUngeradeFormatHelper.from(this, begegnungenSpalte)
+				.geradeFarbe(konfigurationSheet.getRanglisteHintergrundFarbeGerade())
+				.ungeradeFarbe(konfigurationSheet.getRanglisteHintergrundFarbeUnGerade())
+				.orangeCharFormulaGerade(orangeFormulaGerade)
+				.orangeCharFormulaUnGerade(orangeFormulaUngerade)
+				.apply();
+	}
+
+	private void setzeSpaltenBreiten(XSpreadsheet sheet) throws GenerateException {
+		int[][] breiten = {
+				{ TEAM_NR_SPALTE, COL_WIDTH_NR },
+				{ TEAM_NAME_SPALTE, COL_WIDTH_NAME },
+				{ RANGLISTE_SPALTE, COL_WIDTH_RANGLISTE },
+				{ PUNKTE_PLUS_SPALTE, COL_WIDTH_DATA },
+				{ PUNKTE_MINUS_SPALTE, COL_WIDTH_DATA },
+				{ SPIELE_PLUS_SPALTE, COL_WIDTH_DATA },
+				{ SPIELE_MINUS_SPALTE, COL_WIDTH_DATA },
+				{ SPIELE_DIFF_SPALTE, COL_WIDTH_DATA },
+				{ SP_PUNKTE_PLUS_SPALTE, COL_WIDTH_DATA },
+				{ SP_PUNKTE_MINUS_SPALTE, COL_WIDTH_DATA },
+				{ SP_PUNKTE_DIFF_SPALTE, COL_WIDTH_DATA },
+				{ BEGEGNUNGEN_SPALTE, COL_WIDTH_DATA },
+		};
+		for (int[] bw : breiten) {
+			getSheetHelper().setColumnProperties(sheet, bw[0],
+					ColumnProperties.from().setWidth(bw[1]).setHoriJustify(CellHoriJustify.CENTER));
+		}
+	}
+
+	private void insertHeader(XSpreadsheet sheet) throws GenerateException {
+		int headerFarbe = konfigurationSheet.getRanglisteHeaderFarbe();
+		TableBorder2 borderBottom = BorderFactory.from().allThin().boldLn().forBottom().toBorder();
+		CellProperties headerProp = CellProperties.from().setAllThinBorder()
+				.setCellBackColor(headerFarbe).margin(MARGIN).centerJustify().setShrinkToFit(true);
+
+		// Zeile 0: Gruppen-Header für Nr, Name, Rang (je merged 2 Zeilen)
+		for (int[] colRows : new int[][] {
+				{ TEAM_NR_SPALTE, 0 }, { TEAM_NAME_SPALTE, 0 }, { RANGLISTE_SPALTE, 1 } }) {
+			var cv = StringCellValue
+					.from(sheet, Position.from(colRows[0], 0), colRows[0] == TEAM_NR_SPALTE
+							? I18n.get("column.header.nr")
+							: colRows[0] == TEAM_NAME_SPALTE ? I18n.get("column.header.name")
+									: I18n.get("column.header.platz"))
+					.setCellProperties(headerProp).setEndPosMergeZeilePlus(1);
+			if (colRows[0] == RANGLISTE_SPALTE) {
+				cv.setRotate90();
+				cv.setBorder(BorderFactory.from().allThin().boldLn().forBottom().forRight().toBorder());
+			}
+			getSheetHelper().setStringValueInCell(cv);
+		}
+
+		// Zeile 0: Gruppen-Überschriften für Statistik-Blöcke
+		String[][] gruppenHeader = {
+				{ I18n.get("column.header.punkte"), String.valueOf(PUNKTE_PLUS_SPALTE), "1" },
+				{ I18n.get("column.header.spiele"), String.valueOf(SPIELE_PLUS_SPALTE), "2" },
+				{ "Spielpunkte", String.valueOf(SP_PUNKTE_PLUS_SPALTE), "2" },
+				{ I18n.get("comment.begegnungen"), String.valueOf(BEGEGNUNGEN_SPALTE), "0" },
+		};
+		for (String[] gh : gruppenHeader) {
+			int col = Integer.parseInt(gh[1]);
+			int mergeExtra = Integer.parseInt(gh[2]);
+			var cv = StringCellValue.from(sheet, Position.from(col, 0), gh[0])
+					.setCellProperties(headerProp);
+			if (mergeExtra > 0) {
+				cv.setEndPosMergeSpaltePlus(mergeExtra);
+			} else {
+				cv.setEndPosMergeZeilePlus(1).setRotate90();
+			}
+			getSheetHelper().setStringValueInCell(cv);
+		}
+
+		// Zeile 1: Sub-Header +/-/Δ
+		RangeData subHeader = new RangeData();
+		RowData subRow = subHeader.addNewRow();
+		subRow.newString("+");
+		subRow.newString("-");
+		subRow.newString("+");
+		subRow.newString("-");
+		subRow.newString("Δ");
+		subRow.newString("+");
+		subRow.newString("-");
+		subRow.newString("Δ");
+		RangeHelper.from(this, subHeader.getRangePosition(Position.from(PUNKTE_PLUS_SPALTE, 1)))
+				.setDataInRange(subHeader)
+				.setRangeProperties(RangeProperties.from().centerJustify()
+						.setBorder(borderBottom).setCellBackColor(headerFarbe).margin(MARGIN).setShrinkToFit(true));
 	}
 
 	private void printBereichDefinieren() throws GenerateException {
@@ -170,14 +442,11 @@ public class LigaRanglisteSheet extends SheetRunner implements ISheet, IRanglist
 	}
 
 	public RangePosition printBereichRangePosition() throws GenerateException {
-		Position linksOben = Position.from(0, 0);
-		Position rechtsUnten = Position.from(getLetzteSpalte(), getFooterZeile());
-		return RangePosition.from(linksOben, rechtsUnten);
+		return RangePosition.from(0, 0, getLetzteSpalte(), getFooterZeile());
 	}
 
 	public StringCellValue addFooter() throws GenerateException {
 		processBoxinfo("processbox.fusszeile.einfuegen");
-
 		int ersteFooterZeile = getFooterZeile();
 		StringCellValue stringVal = StringCellValue.from(this, Position.from(TEAM_NR_SPALTE, ersteFooterZeile))
 				.setHoriJustify(CellHoriJustify.LEFT).setCharHeight(8)
@@ -191,356 +460,21 @@ public class LigaRanglisteSheet extends SheetRunner implements ISheet, IRanglist
 		return getLetzteMitDatenZeileInSpielerNrSpalte() + 2;
 	}
 
-	/**
-	 * @throws GenerateException
-	 */
-	private void insertHeader() throws GenerateException {
-		int headerBackColor = getKonfigurationSheet().getRanglisteHeaderFarbe();
-		int anzGesamtRunden = anzGesamtRunden();
-		RangeData data = new RangeData();
-		RowData headerZeile3 = data.addNewRow();
-
-		for (int rundeCntr = 0; rundeCntr < anzGesamtRunden; rundeCntr++) {
-			// 6 spalten pro Runde(Spieltag)
-			for (int i = 0; i < 3; i++) {
-				headerZeile3.newString("+");
-				headerZeile3.newString("-");
-			}
-		}
-		// ------------------------------------------------------------------------------------------------------------------------------------------------------------
-		// 3 header zeile
-		// ------------------------------------------------------------------------------------------------------------------------------------------------------------
-		// summen spalten
-		headerZeile3.newString("+");
-		headerZeile3.newString("-");
-		headerZeile3.newString("+");
-		headerZeile3.newString("-");
-		headerZeile3.newString("Δ"); // Spiele diff Delta Δ
-		headerZeile3.newString("+");
-		headerZeile3.newString("-");
-		headerZeile3.newString("Δ"); // Spiele diff Delta Δ
-
-		BorderFactory borderHeaderFact = BorderFactory.from().allThin().boldLn().forBottom();
-		TableBorder2 borderHeader3 = borderHeaderFact.toBorder();
-		RangeProperties rangePropZeile3 = RangeProperties.from().centerJustify().setBorder(borderHeader3)
-				.setCellBackColor(headerBackColor).margin(MARGIN).setShrinkToFit(true);
-		RangeHelper.from(this, data.getRangePosition(Position.from(ERSTE_SPIELTAG_SPALTE, ERSTE_DATEN_ZEILE - 1)))
-				.setDataInRange(data).setRangeProperties(rangePropZeile3);
-
-		// ------------------------------------------------------------------------------------------------------------------------------------------------------------
-		// 2 header zeile
-		// ------------------------------------------------------------------------------------------------------------------------------------------------------------
-		// Runden
-		Position header2Pos = Position.from(ERSTE_SPIELTAG_SPALTE, ERSTE_DATEN_ZEILE - 2);
-		CellProperties headerProp = CellProperties.from().setAllThinBorder().margin(MARGIN).centerJustify()
-				.setCellBackColor(headerBackColor).setShrinkToFit(true);
-		StringCellValue header2val = StringCellValue.from(getXSpreadSheet()).setPos(header2Pos)
-				.setEndPosMergeSpaltePlus(1).setCellProperties(headerProp);
-		for (int rundeCntr = 0; rundeCntr < anzGesamtRunden; rundeCntr++) {
-			header2val.setValue(I18n.get("column.header.punkte"));
-			getSheetHelper().setStringValueInCell(header2val);
-
-			header2val.spaltePlus(2);
-			header2val.setValue(I18n.get("column.header.spiele"));
-			getSheetHelper().setStringValueInCell(header2val);
-
-			header2val.spaltePlus(2);
-			header2val.setValue("SpPnkte");
-			getSheetHelper().setStringValueInCell(header2val);
-
-			header2val.spaltePlus(2);
-		}
-
-		// 2 header zeile
-		// Summen
-		header2val.setValue(I18n.get("column.header.punkte"));
-		getSheetHelper().setStringValueInCell(header2val);
-
-		header2val.spaltePlus(2);
-		header2val.setValue(I18n.get("column.header.spiele")).setEndPosMergeSpaltePlus(2);
-		getSheetHelper().setStringValueInCell(header2val);
-
-		header2val.spaltePlus(3);
-		header2val.setValue("Spielpunkte");
-		getSheetHelper().setStringValueInCell(header2val);
-
-		// ------------------------------------------------------------------------------------------------------------------------------------------------------------
-		// 1 header zeile
-		// ------------------------------------------------------------------------------------------------------------------------------------------------------------
-		Position header1Pos = Position.from(ERSTE_SPIELTAG_SPALTE, ERSTE_DATEN_ZEILE - 3);
-		StringCellValue header1val = StringCellValue.from(getXSpreadSheet()).setPos(header1Pos)
-				.setEndPosMergeSpaltePlus(5).setCellProperties(headerProp);
-		for (int rundeCntr = 0; rundeCntr < anzGesamtRunden; rundeCntr++) {
-			header1val.setValue(I18n.get("column.header.runde.nr", rundeCntr + 1));
-			getSheetHelper().setStringValueInCell(header1val);
-			header1val.spaltePlus(6);
-		}
-
-		// 1 header zeile
-		// summen
-		header1val.setValue(I18n.get("column.header.summen")).setEndPosMergeSpaltePlus(7);
-		getSheetHelper().setStringValueInCell(header1val);
-
-		// Begegnungen
-		TableBorder2 begegnungenBrd = BorderFactory.from(borderHeaderFact).doubleLn().forLeft().toBorder();
-		StringCellValue begegnungenHeader = StringCellValue.from(getXSpreadSheet());
-		begegnungenHeader.setPos(header1val.getPos()).spaltePlus(8);
-		begegnungenHeader.setValue("Begegn.").setRotate90().setEndPosMergeZeilePlus(2).centerJustify()
-				.setBorder(begegnungenBrd).setCellBackColor(headerBackColor).setShrinkToFit(true)
-				.setComment(I18n.get("comment.begegnungen"));
-		getSheetHelper().setStringValueInCell(begegnungenHeader);
-
-	}
-
-	/**
-	 * @param jederGegenJedenf
-	 * @throws GenerateException
-	 */
-	private void formatData() throws GenerateException {
-
-		int anzGesamtRunden = anzGesamtRunden();
-		int ersteSummeSpalte = getErsteSummeSpalte();
-		int letzteDatenZeile = getLetzteMitDatenZeileInSpielerNrSpalte();
-
-		RangeProperties rangeProp = RangeProperties.from()
-				.setBorder(BorderFactory.from().allThin().boldLn().forTop().toBorder()).centerJustify().margin(MARGIN);
-		RangeHelper.from(this, allDatenRange()).setRangeProperties(rangeProp);
-
-		RanglisteGeradeUngeradeFormatHelper.from(this, allDatenRange())
-				.geradeFarbe(getKonfigurationSheet().getRanglisteHintergrundFarbeGerade())
-				.ungeradeFarbe(getKonfigurationSheet().getRanglisteHintergrundFarbeUnGerade()).endeSpaltePlus(-1) // ende Spalte ist anz begegnungen
-				.validateSpalte(validateSpalte()).apply();
-
-		// Spalte Begegnungen
-		RangePosition begegnungenSpalte = RangePosition.from(ersteSummeSpalte + (ANZ_SUMMEN_SPALTEN - 1),
-				ERSTE_DATEN_ZEILE, ersteSummeSpalte + (ANZ_SUMMEN_SPALTEN - 1), ERSTE_DATEN_ZEILE + (anzZeilen() - 1));
-		// "AND(" + FORMULA_ISEVEN_ROW + ";" + FORMULA_CURRENT_CELL + "=" + val + ")";
-		String maxFormula = ConditionalFormatHelper.FORMULA_CURRENT_CELL + "<MAX(" + begegnungenSpalte.getAddressWith$()
-				+ ")";
-		String orangeFormulaEven = "AND(" + ConditionalFormatHelper.FORMULA_ISEVEN_ROW + ";" + maxFormula + ")";
-		String orangeFormulaOdd = "AND(" + ConditionalFormatHelper.FORMULA_ISODD_ROW + ";" + maxFormula + ")";
-		RanglisteGeradeUngeradeFormatHelper.from(this, begegnungenSpalte)
-				.geradeFarbe(getKonfigurationSheet().getRanglisteHintergrundFarbeGerade())
-				.ungeradeFarbe(getKonfigurationSheet().getRanglisteHintergrundFarbeUnGerade())
-				.orangeCharFormulaGerade(orangeFormulaEven).orangeCharFormulaUnGerade(orangeFormulaOdd).apply();
-
-		// Runden
-		RangePosition rundenErsteSpalteRange = RangePosition.from(ERSTE_SPIELTAG_SPALTE, ERSTE_DATEN_ZEILE - 3,
-				ERSTE_SPIELTAG_SPALTE, letzteDatenZeile);
-		for (int rundeCntr = 0; rundeCntr < anzGesamtRunden; rundeCntr++) {
-			RangeHelper.from(this, rundenErsteSpalteRange).setRangeProperties(
-					RangeProperties.from().setBorder(BorderFactory.from().boldLn().forLeft().toBorder()));
-			rundenErsteSpalteRange.spaltePlus(6); // runde = 6 spalten
-		}
-
-		// Horizontal
-		// Summen
-		RangeHelper
-				.from(this, ersteSummeSpalte, ERSTE_DATEN_ZEILE - 3, ersteSummeSpalte + ANZ_SUMMEN_SPALTEN - 1,
-						letzteDatenZeile)
-				.setRangeProperties(RangeProperties.from()
-						.setBorder(BorderFactory.from().boldLn().forLeft().forRight().toBorder()));
-
-		// doppelte trenn linien blöcke
-		RangePosition trennPos = RangePosition.from(ersteSummeSpalte + 2, ERSTE_DATEN_ZEILE - 2, ersteSummeSpalte + 2,
-				letzteDatenZeile);
-		RangeHelper.from(this, trennPos).setRangeProperties(
-				RangeProperties.from().setBorder(BorderFactory.from().doubleLn().forLeft().toBorder()));
-		RangeHelper.from(this, trennPos.spaltePlus(3)).setRangeProperties(
-				RangeProperties.from().setBorder(BorderFactory.from().doubleLn().forLeft().toBorder()));
-		RangeHelper.from(this, trennPos.spaltePlus(3)).setRangeProperties(
-				RangeProperties.from().setBorder(BorderFactory.from().doubleLn().forLeft().toBorder()));
-
-	}
-
-	private RangePosition allDatenRange() throws GenerateException {
-		int ersteSummeSpalte = getErsteSummeSpalte();
-		return RangePosition.from(TEAM_NR_SPALTE, ERSTE_DATEN_ZEILE, ersteSummeSpalte + (ANZ_SUMMEN_SPALTEN - 1),
-				ERSTE_DATEN_ZEILE + (anzZeilen() - 1));
-	}
-
-	private int anzZeilen() throws GenerateException {
-		if (cachedAnzZeilen < 0) {
-			cachedAnzZeilen = newJederGegenJeden().getAnzMeldungen();
-		}
-		return cachedAnzZeilen;
-	}
-
-	private int anzGesamtRunden() throws GenerateException {
-		return newJederGegenJeden().anzRunden() * 2; // *2 weil hin und rückrunde
-	}
-
-	private void summenSpaltenEinfuegen() throws GenerateException {
-		int anzRunden = anzGesamtRunden();
-		int ersteSummeSpalte = getErsteSummeSpalte();
-		int autoFillDownZeilePlus = anzZeilen() - 1;
-		ColumnProperties columnProperties = ColumnProperties.from().setWidth(PUNKTE_NR_WIDTH + 100);
-		ColumnProperties columnPropertiesSpielPnktSmn = ColumnProperties.from().setWidth(1100);
-
-		int endSummeSpalteOffs = 0;
-		for (int summeSpalte = 0; summeSpalte < 6; summeSpalte++) {
-			Position summePos = Position.from(ersteSummeSpalte + endSummeSpalteOffs, ERSTE_DATEN_ZEILE);
-			String summenFormulaSummeStr = "";
-			for (int rndCnt = 0; rndCnt < anzRunden; rndCnt++) {
-				Position punktePlusPos = Position.from(ERSTE_SPIELTAG_SPALTE + summeSpalte + (rndCnt * 6),
-						ERSTE_DATEN_ZEILE);
-				summenFormulaSummeStr += punktePlusPos.getAddress() + ((rndCnt + 1 < anzRunden) ? "+" : "");
-			}
-			StringCellValue summenFormulaSumme = StringCellValue.from(getXSpreadSheet()).setPos(summePos)
-					.setFillAutoDownZeilePlus(autoFillDownZeilePlus).setValue(summenFormulaSummeStr)
-					.setColumnProperties(columnProperties);
-
-			if (endSummeSpalteOffs > 4) {
-				summenFormulaSumme.setColumnProperties(columnPropertiesSpielPnktSmn);
-			}
-
-			getSheetHelper().setFormulaInCell(summenFormulaSumme);
-			endSummeSpalteOffs++;
-
-			// Spiele (Siege) Diff einfuegen ?
-			if (endSummeSpalteOffs == 4) {
-				Position summeSpielePlusPos = Position.from((ersteSummeSpalte + endSummeSpalteOffs) - 2,
-						ERSTE_DATEN_ZEILE);
-				Position summeSpieleMinusPos = Position.from((ersteSummeSpalte + endSummeSpalteOffs) - 1,
-						ERSTE_DATEN_ZEILE);
-				String summenFormulaDiffSpieleStr = summeSpielePlusPos.getAddress() + "-"
-						+ summeSpieleMinusPos.getAddress();
-				StringCellValue summenFormulaDiffSpiele = StringCellValue.from(getXSpreadSheet()).setPos(summePos)
-						.spaltePlusEins().setFillAutoDownZeilePlus(autoFillDownZeilePlus)
-						.setValue(summenFormulaDiffSpieleStr).setColumnProperties(columnProperties);
-				getSheetHelper().setFormulaInCell(summenFormulaDiffSpiele);
-				endSummeSpalteOffs++;
-			}
-		}
-
-		// Spielpunkte summen diff
-
-		Position summeSpielPnktPlusPos = Position.from((ersteSummeSpalte + endSummeSpalteOffs) - 2, ERSTE_DATEN_ZEILE);
-		Position summeSpielPnktMinusPos = Position.from((ersteSummeSpalte + endSummeSpalteOffs) - 1, ERSTE_DATEN_ZEILE);
-		String summenFormulaDiffSpielPnktStr = summeSpielPnktPlusPos.getAddress() + "-"
-				+ summeSpielPnktMinusPos.getAddress();
-		StringCellValue summenFormulaDiffSpielPnkt = StringCellValue.from(getXSpreadSheet())
-				.setPos(summeSpielPnktMinusPos.spaltePlusEins()).setFillAutoDownZeilePlus(autoFillDownZeilePlus)
-				.setValue(summenFormulaDiffSpielPnktStr).setColumnProperties(columnPropertiesSpielPnktSmn);
-		getSheetHelper().setFormulaInCell(summenFormulaDiffSpielPnkt);
-
-		// anz gespielte Runden
-		Position summePunktPlusPos = Position.from(summeSpielPnktPlusPos).spaltePlus(-5);
-		Position summePunktMinusPos = Position.from(summePunktPlusPos).spaltePlus(1);
-
-		String summenAnzRundenFormula = summePunktPlusPos.getAddress() + "+" + summePunktMinusPos.getAddress();
-		StringCellValue summenAnzRunden = StringCellValue.from(getXSpreadSheet())
-				.setPos(summeSpielPnktMinusPos.spaltePlusEins()).setFillAutoDownZeilePlus(autoFillDownZeilePlus)
-				.setValue(summenFormulaDiffSpielPnktStr).setColumnProperties(columnProperties)
-				.setValue(summenAnzRundenFormula);
-		getSheetHelper().setFormulaInCell(summenAnzRunden);
-	}
-
-	private void spieltageFormulaEinfuegen(JederGegenJeden jederGegenJeden) throws GenerateException {
-
-		// =WENNNV(INDEX($'Liga Spielplan'.F3:F5;VERGLEICH(A3;$'Liga Spielplan'.O3:O5;0)); INDEX($'Liga Spielplan'.G3:G5;VERGLEICH(A3;$'Liga Spielplan'.P3:P5;0)))
-
-		int erstePaarungSpieltagZeileInSpielplan = LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE;
-		Position spielTagFormulaPos = Position.from(ERSTE_SPIELTAG_SPALTE, ERSTE_DATEN_ZEILE);
-
-		int anzRunden = jederGegenJeden.anzRunden();
-		int anzPaarungen = jederGegenJeden.anzPaarungen();
-
-		for (int hinruckrunde = 0; hinruckrunde < 2; hinruckrunde++) {
-			for (int rndCnt = 0; rndCnt < anzRunden; rndCnt++) {
-				spieltagEinfuegen(erstePaarungSpieltagZeileInSpielplan, Position.from(spielTagFormulaPos),
-						anzPaarungen);
-				// 6 Spalten pro Spieltag
-				spielTagFormulaPos.spaltePlus(6);
-				erstePaarungSpieltagZeileInSpielplan += anzPaarungen;
-			}
-		}
-	}
-
-	private void spieltagEinfuegen(int erstePaarungSpieltagZeileInSpielplan, Position spielTagFormulaPos,
-			int anzPaarungen) throws GenerateException {
-		int[] spalteA = new int[] { LigaSpielPlanSheet.PUNKTE_A_SPALTE, LigaSpielPlanSheet.SPIELE_A_SPALTE,
-				LigaSpielPlanSheet.SPIELPNKT_A_SPALTE };
-		int[] spalteB = new int[] { LigaSpielPlanSheet.PUNKTE_B_SPALTE, LigaSpielPlanSheet.SPIELE_B_SPALTE,
-				LigaSpielPlanSheet.SPIELPNKT_B_SPALTE };
-
-		for (int idx = 0; idx < spalteA.length; idx++) {
-			// SPIELPNKT-Zellen werden beim Erstellen des Spielplans für Freispiele vorbelegt
-			verweisAufErgbnisseEinfuegen(spalteA[idx], spalteB[idx], erstePaarungSpieltagZeileInSpielplan,
-					anzPaarungen, Position.from(spielTagFormulaPos), null, null);
-			spielTagFormulaPos.spaltePlus(2);
-		}
-	}
-
-	private void verweisAufErgbnisseEinfuegen(int spalteA, int spalteB, int startZeile, int anzPaarungen,
-			Position startFormulaPos, Integer freispielPlusWert, Integer freispielMinusWert) throws GenerateException {
-		Position ersteTeamNrPos = Position.from(TEAM_NR_SPALTE, ERSTE_DATEN_ZEILE);
-
-		Position punkteAStartPos = Position.from(spalteA, startZeile);
-		Position punkteAEndePos = Position.from(punkteAStartPos).zeilePlus(anzPaarungen - 1);
-		Position punkteBStartPos = Position.from(spalteB, startZeile);
-		Position punkteBEndePos = Position.from(punkteBStartPos).zeilePlus(anzPaarungen - 1);
-
-		String rangeStrAPlus = punkteAStartPos.getAddressWith$() + ":" + punkteAEndePos.getAddressWith$();
-		String rangeStrBPlus = punkteBStartPos.getAddressWith$() + ":" + punkteBEndePos.getAddressWith$();
-
-		Position teamNrAStartPos = Position.from(LigaSpielPlanSheet.TEAM_A_NR_SPALTE, startZeile);
-		Position teamNrAEndePos = Position.from(teamNrAStartPos).zeilePlus(anzPaarungen - 1);
-		Position teamNrBStartPos = Position.from(LigaSpielPlanSheet.TEAM_B_NR_SPALTE, startZeile);
-		Position teamNrBEndePos = Position.from(teamNrBStartPos).zeilePlus(anzPaarungen - 1);
-
-		String rangeStrATeamNr = teamNrAStartPos.getAddressWith$() + ":" + teamNrAEndePos.getAddressWith$();
-		String rangeStrBTeamNr = teamNrBStartPos.getAddressWith$() + ":" + teamNrBEndePos.getAddressWith$();
-
-		String sheetRef = "$'" + LigaSpielPlanSheet.sheetName() + "'.";
-		String matchInA = "MATCH(" + ersteTeamNrPos.getAddress() + ";" + sheetRef + rangeStrATeamNr + ";0)";
-		String matchInB = "MATCH(" + ersteTeamNrPos.getAddress() + ";" + sheetRef + rangeStrBTeamNr + ";0)";
-
-		// @formatter:off
-        String formulaPunktePlus;
-        String formulaPunkteMinus;
-
-        if (freispielPlusWert != null) {
-            // Mit Freispiel-Check: wenn Team B = 0, Freispiel-Wert zurückgeben
-            String freispielCheck = "INDEX(" + sheetRef + rangeStrBTeamNr + ";" + matchInA + ")=0";
-            formulaPunktePlus  = "IFNA(IF(" + freispielCheck + ";" + freispielPlusWert
-                    + ";INDEX(" + sheetRef + rangeStrAPlus + ";" + matchInA + "));"
-                    + "INDEX(" + sheetRef + rangeStrBPlus + ";" + matchInB + "))";
-            formulaPunkteMinus = "IFNA(IF(" + freispielCheck + ";" + freispielMinusWert
-                    + ";INDEX(" + sheetRef + rangeStrBPlus + ";" + matchInA + "));"
-                    + "INDEX(" + sheetRef + rangeStrAPlus + ";" + matchInB + "))";
-        } else {
-            formulaPunktePlus  = "IFNA(INDEX(" + sheetRef + rangeStrAPlus + ";" + matchInA + ");"
-                    + "INDEX(" + sheetRef + rangeStrBPlus + ";" + matchInB + "))";
-            formulaPunkteMinus = "IFNA(INDEX(" + sheetRef + rangeStrBPlus + ";" + matchInA + ");"
-                    + "INDEX(" + sheetRef + rangeStrAPlus + ";" + matchInB + "))";
-        }
-        // @formatter:on
-		ColumnProperties columnProperties = ColumnProperties.from().setWidth(PUNKTE_NR_WIDTH).isVisible(false);
-
-		StringCellValue spielTagFormula = StringCellValue.from(getXSpreadSheet()).setPos(startFormulaPos)
-				.setValue(formulaPunktePlus).setFillAutoDownZeilePlus(anzZeilen() - 1)
-				.addColumnProperties(columnProperties);
-		getSheetHelper().setFormulaInCell(spielTagFormula);
-
-		spielTagFormula.spaltePlusEins().setFillAutoDownZeilePlus(anzZeilen() - 1).setValue(formulaPunkteMinus);
-		getSheetHelper().setFormulaInCell(spielTagFormula);
-
-	}
+	// ─── IRangliste ──────────────────────────────────────────────────────────
 
 	@Override
 	public int getErsteSummeSpalte() throws GenerateException {
-		return ERSTE_SPIELTAG_SPALTE + (anzGesamtRunden() * 6); // 6 = Anzahl summen spalte pro spieltag;
+		return PUNKTE_PLUS_SPALTE;
 	}
 
 	@Override
 	public int getLetzteSpalte() throws GenerateException {
-		return getErsteSummeSpalte() + ANZ_SUMMEN_SPALTEN - 1;
+		return BEGEGNUNGEN_SPALTE;
 	}
 
 	@Override
 	public int getLetzteMitDatenZeileInSpielerNrSpalte() throws GenerateException {
-		return getErsteDatenZiele() + anzZeilen() - 1;
+		return sucheLetzteZeileMitSpielerNummer();
 	}
 
 	@Override
@@ -550,25 +484,21 @@ public class LigaRanglisteSheet extends SheetRunner implements ISheet, IRanglist
 
 	@Override
 	public int getManuellSortSpalte() throws GenerateException {
-		return getLetzteSpalte() + ERSTE_SORTSPALTE_OFFSET;
+		return getLetzteSpalte() + 3;
 	}
 
 	@Override
 	public List<Position> getRanglisteSpalten() throws GenerateException {
-		int punktespalte = getErsteSummeSpalte();
-		Position sort1 = Position.from(punktespalte, getErsteDatenZiele());     // Punkte +
-		Position sort2 = Position.from(punktespalte + 2, getErsteDatenZiele()); // Spiele +
-		Position sort3 = Position.from(punktespalte + 5, getErsteDatenZiele()); // Spielpunkte +
-		Position sort4 = Position.from(punktespalte + 7, getErsteDatenZiele()); // Spielpunkte Δ
-
-		Position[] arraylist = new Position[] { sort1, sort2, sort3, sort4 };
-		return Arrays.asList(arraylist);
+		return List.of(
+				Position.from(PUNKTE_PLUS_SPALTE, ERSTE_DATEN_ZEILE),
+				Position.from(SPIELE_PLUS_SPALTE, ERSTE_DATEN_ZEILE),
+				Position.from(SP_PUNKTE_PLUS_SPALTE, ERSTE_DATEN_ZEILE),
+				Position.from(SP_PUNKTE_DIFF_SPALTE, ERSTE_DATEN_ZEILE));
 	}
 
 	@Override
 	public int validateSpalte() throws GenerateException {
-		int anzSortSpalten = getRanglisteSpalten().size();
-		return getManuellSortSpalte() + anzSortSpalten + 1;
+		return getManuellSortSpalte() + getRanglisteSpalten().size() + 1;
 	}
 
 	@Override
@@ -578,7 +508,7 @@ public class LigaRanglisteSheet extends SheetRunner implements ISheet, IRanglist
 
 	@Override
 	public void calculateAll() {
-		getxCalculatable().calculateAll();
+		// via calculateAll() am Ende von berechnungUndSchreiben() erledigt
 	}
 
 	@Override
@@ -588,7 +518,12 @@ public class LigaRanglisteSheet extends SheetRunner implements ISheet, IRanglist
 
 	@Override
 	public int sucheLetzteZeileMitSpielerNummer() throws GenerateException {
-		return meldungenSpalte.sucheLetzteZeileMitSpielerNummer();
+		var searchProp = new HashMap<String, Object>();
+		searchProp.put(RangeSearchHelper.SEARCH_BACKWARDS, true);
+		Position result = RangeSearchHelper.from(this,
+				RangePosition.from(TEAM_NR_SPALTE, ERSTE_DATEN_ZEILE, TEAM_NR_SPALTE, ERSTE_DATEN_ZEILE + 999))
+				.searchNachRegExprInSpalte("^\\d", searchProp);
+		return result != null ? result.getZeile() : ERSTE_DATEN_ZEILE;
 	}
 
 }

@@ -4,7 +4,9 @@
 
 package de.petanqueturniermanager.liga.meldeliste;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.sun.star.sheet.XSpreadsheet;
 
@@ -24,6 +26,9 @@ import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
+import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
+import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
@@ -187,6 +192,43 @@ class LigaMeldeListeDelegate implements MeldeListeKonstanten {
 
 	int letzteZeileMitSpielerName() throws GenerateException {
 		return meldungenSpalte.letzteZeileMitSpielerName();
+	}
+
+	Map<Integer, String> leseTeamNamenMap() throws GenerateException {
+		Map<Integer, String> result = new HashMap<>();
+		XSpreadsheet mlSheet = sheet.getXSpreadSheet();
+		if (mlSheet == null) {
+			return result;
+		}
+		var xDoc = sheet.getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
+		RangeData data = RangeHelper.from(mlSheet, xDoc,
+				RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE + 2, ERSTE_DATEN_ZEILE + 999))
+				.getDataFromRange();
+		for (RowData row : data) {
+			if (row.isEmpty()) {
+				break;
+			}
+			int nr = row.get(0).getIntVal(0);
+			if (nr <= 0) {
+				continue;
+			}
+			String nachname = row.size() > 1 ? row.get(1).getStringVal() : "";
+			String vorname = row.size() > 2 ? row.get(2).getStringVal() : "";
+			result.put(nr, teamName(nachname, vorname));
+		}
+		return result;
+	}
+
+	private static String teamName(String nachname, String vorname) {
+		var n = nachname.trim();
+		var v = vorname.trim();
+		if (n.isEmpty()) {
+			return v;
+		}
+		if (v.isEmpty()) {
+			return n;
+		}
+		return n + ", " + v;
 	}
 
 }

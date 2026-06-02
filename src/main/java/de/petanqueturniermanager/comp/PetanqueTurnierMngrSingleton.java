@@ -25,6 +25,7 @@ import de.petanqueturniermanager.formulex.rangliste.FormuleXRanglisteSheetUpdate
 import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJCheckinListeSheetUpdate;
 import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJTeilnehmerSheetUpdate;
 import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteSheetUpdate;
+import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheetUpdate;
 import de.petanqueturniermanager.kaskade.meldeliste.KaskadeCheckinListeSheetUpdate;
 import de.petanqueturniermanager.kaskade.meldeliste.KaskadeTeilnehmerSheetUpdate;
 import de.petanqueturniermanager.kaskade.spielrunde.KaskadeGruppenRanglisteSheetUpdate;
@@ -185,6 +186,12 @@ public class PetanqueTurnierMngrSingleton {
 				new EingabeSignatur(SignaturQuellen::fuerJGJ),
 				(ws, ignored) -> new JGJRanglisteSheetUpdate(ws)));
 		t = logTimingAndReset("SheetSyncListener JGJ", t);
+		addGlobalEventListener(SheetSyncListener.fuerSchluessel(context,
+				SheetMetadataHelper.SCHLUESSEL_LIGA_RANGLISTE,
+				TurnierSystem.LIGA,
+				new EingabeSignatur(SignaturQuellen::fuerLiga),
+				(ws, ignored) -> new LigaRanglisteSheetUpdate(ws)));
+		t = logTimingAndReset("SheetSyncListener LIGA", t);
 		addGlobalEventListener(SheetSyncListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_KASKADE_GRUPPENRANGLISTE,
 				TurnierSystem.KASKADE,

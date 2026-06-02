@@ -15,6 +15,7 @@ import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheetsync.EingabeSignatur;
 import de.petanqueturniermanager.helper.sheetsync.SignaturQuelle;
+import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet;
 
 /**
  * Builder-Helfer für die {@link EingabeSignatur}: stellt pro Turniersystem
@@ -142,6 +143,18 @@ public final class SignaturQuellen {
         sammelePraefixSchluessel(xDoc, SheetMetadataHelper.SCHLUESSEL_FORMULEX_SPIELRUNDE_PREFIX,
                 "FORMULEX-SPIELRUNDE-", quellen, SignaturQuellen::spielrundeSchweizerLike);
         return quellen;
+    }
+
+    /** Quellen für Liga-Rangliste: Meldeliste + Spielplan. */
+    public static List<SignaturQuelle> fuerLiga(XSpreadsheetDocument xDoc) {
+        return List.of(
+                meldelisteSchweizerLike("LIGA-MELDELISTE", SheetMetadataHelper.SCHLUESSEL_LIGA_MELDELISTE),
+                new SignaturQuelle("LIGA-SPIELPLAN",
+                        SheetMetadataHelper.SCHLUESSEL_LIGA_SPIELPLAN,
+                        LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE,
+                        /* maxZeilen */ 5000,
+                        // PUNKTE_A(8)..SPIELPNKT_B(13), TEAM_A_NR(14), TEAM_B_NR(15)
+                        Set.of(8, 9, 10, 11, 12, 13, 14, 15), true));
     }
 
     /** Quellen für JGJ-Rangliste. */
