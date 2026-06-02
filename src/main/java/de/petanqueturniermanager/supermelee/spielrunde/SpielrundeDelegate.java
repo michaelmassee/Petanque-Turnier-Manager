@@ -27,6 +27,7 @@ import com.sun.star.util.CellProtection;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.algorithmen.supermelee.SuperMeleePaarungenV2;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeHelper;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
@@ -740,7 +741,7 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 
 		Position datenEnd = letztePositionRechtsUnten();
 
-		CellProperties cellPropBez = CellProperties.from().margin(150).setHoriJustify(CellHoriJustify.RIGHT)
+		CellProperties cellPropBez = CellProperties.from().margin(MeldeListeKonstanten.CELL_MARGIN).setHoriJustify(CellHoriJustify.RIGHT)
 				.setVertJustify(CellVertJustify2.CENTER).setBorder(BorderFactory.from().allThin().toBorder());
 
 		StringCellValue propName = StringCellValue

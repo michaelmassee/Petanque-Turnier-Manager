@@ -18,7 +18,7 @@ public interface MeldeListeKonstanten {
 		return SheetNamen.meldeliste();
 	}
 
-	int CELL_MARGIN = 100;
+	int CELL_MARGIN = 120;
 
 	int ERSTE_DATEN_ZEILE = 2; // Zeile 3
 	int SPIELER_NR_SPALTE = 0; // Spalte A=0
