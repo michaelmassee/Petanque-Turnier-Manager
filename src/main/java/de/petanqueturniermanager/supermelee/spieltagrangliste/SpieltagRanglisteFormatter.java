@@ -12,10 +12,12 @@ import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.TableBorder2;
 
+import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
@@ -135,6 +137,11 @@ public class SpieltagRanglisteFormatter extends AbstractSuperMeleeRanglisteForma
 		}
 
 		formatDatenSpielTagSpalten(rangliste.getErsteSummeSpalte());
+
+		RangePosition gesamtDatenRange = RangePosition.from(
+				ersteSpielRundeSpalte, ersteDatenZeile, rangliste.getLetzteSpalte(), letzteDatenZeile);
+		getSheetHelper().setPropertiesInRange(rangliste.getXSpreadSheet(), gesamtDatenRange,
+				CellProperties.from().margin(MeldeListeKonstanten.CELL_MARGIN));
 	}
 
 	@Override
