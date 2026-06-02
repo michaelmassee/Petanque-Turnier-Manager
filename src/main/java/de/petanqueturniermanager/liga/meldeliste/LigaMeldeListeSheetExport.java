@@ -5,10 +5,13 @@
 package de.petanqueturniermanager.liga.meldeliste;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 import org.apache.commons.io.FilenameUtils;
@@ -16,25 +19,25 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.sun.star.frame.XStorable;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.meldeliste.IMeldeliste;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
-import de.petanqueturniermanager.helper.sheet.io.HtmlExport;
 import de.petanqueturniermanager.helper.sheet.io.PdfExport;
 import de.petanqueturniermanager.liga.konfiguration.LigaKonfigurationSheet;
 import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheet;
 import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
-import de.petanqueturniermanager.helper.i18n.I18n;
-import de.petanqueturniermanager.helper.i18n.SheetNamen;
-import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
  * Exportiert die Tabellen nach pdf und erstelt eine html datei
@@ -44,9 +47,6 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 public class LigaMeldeListeSheetExport extends SheetRunner implements IMeldeliste<TeamMeldungen, Team> {
 
 	private static final Logger logger = LogManager.getLogger(LigaMeldeListeSheetExport.class);
-	private static final String PDF_BILDER_VERZEICHNIS = "images";
-	private static final String PDF_BILD_DATEINAME = "pdf-download.png";
-	private static final String PDF_BILD_RESSOURCE = PDF_BILDER_VERZEICHNIS + "/" + PDF_BILD_DATEINAME;
 
 	private final LigaMeldeListeDelegate delegate;
 
@@ -174,80 +174,74 @@ public class LigaMeldeListeSheetExport extends SheetRunner implements IMeldelist
 		processBox().info(fileNamePdfRangliste);
 
 		processBox().info("Exportiere nach HTML");
-		URI htmlExportFile = HtmlExport.from(getWorkingSpreadsheet()).doExport();
-		processBox().info(htmlExportFile.toString());
-		cleanUpLigaHtml(htmlExportFile, fileNamePdfSpielplan, fileNamePdfRangliste);
+		erstelleUndSchreibeHtml(fileNamePdfSpielplan, fileNamePdfRangliste);
 	}
 
-	private void cleanUpLigaHtml(URI htmlExportFileUri, String fileNamePdfSpielplan, String fileNamePdfRangliste) {
-
-		processBox().info("Clean und reformat html");
-
-		String fileNameOnlyPdfSpielplan = FilenameUtils.getName(fileNamePdfSpielplan);
-		String fileNameOnlyPdfRangliste = FilenameUtils.getName(fileNamePdfRangliste);
+	private void erstelleUndSchreibeHtml(String fileNamePdfSpielplan, String fileNamePdfRangliste)
+			throws GenerateException {
 
 		try {
+			LigaKonfigurationSheet konfiguration = delegate.getKonfigurationSheet();
+			String baseDownloadUrl = StringUtils.strip(konfiguration.getBaseDownloadUrl());
+			String turnierlogoUrl = StringUtils.strip(konfiguration.getTurnierlogoUrl());
+			String gruppenname = StringUtils.strip(konfiguration.getGruppenname());
 
-			String baseDownloadUrl = StringUtils.strip(delegate.getKonfigurationSheet().getBaseDownloadUrl());
 			if (StringUtils.isNotEmpty(baseDownloadUrl)) {
 				processBox().info("Download URL Verzeichnis: " + baseDownloadUrl);
 			}
-
-			String turnierlogoUrl = StringUtils.strip(delegate.getKonfigurationSheet().getTurnierlogoUrl());
 			if (StringUtils.isEmpty(turnierlogoUrl)) {
 				processBox().info(I18n.get("export.warnung.turnierlogo.fehlt"));
 			} else {
 				processBox().info(I18n.get("export.info.turnierlogo", turnierlogoUrl));
 			}
 
-			File htmlExportFile = new File(htmlExportFileUri);
-			File htmlExportVerzeichnis = htmlExportFile.getParentFile();
+			String spielplanPdfUrl = buildPdfUrl(baseDownloadUrl, fileNamePdfSpielplan);
+			String ranglistePdfUrl = buildPdfUrl(baseDownloadUrl, fileNamePdfRangliste);
 
-			String pdfImgUr = pdfBildInExportVerzeichnisKopieren(htmlExportVerzeichnis);
-			if (pdfImgUr != null) {
-				processBox().info(I18n.get("liga.export.pdf.bild.kopiert"));
-			}
+			var ws = getWorkingSpreadsheet();
+			String html = LigaHtmlExportSeite.from(ws)
+					.logoUrl(turnierlogoUrl)
+					.gruppenname(gruppenname)
+					.spielplanPdfUrl(spielplanPdfUrl)
+					.ranglistePdfUrl(ranglistePdfUrl)
+					.erstelle();
 
-			String gruppenname = StringUtils.strip(delegate.getKonfigurationSheet().getGruppenname());
-			if (StringUtils.isEmpty(gruppenname)) {
-				processBox().info("Warnung: Gruppenname fehlt in der Turnierkonfiguration");
-			} else {
-				processBox().info("Gruppenname: " + gruppenname);
-			}
+			File zieldatei = htmlZieldatei();
+			Files.writeString(zieldatei.toPath(), html, StandardCharsets.UTF_8);
+			processBox().info(zieldatei.toString());
 
-			String name = FilenameUtils.getName(htmlExportFile.getCanonicalPath());
-			name = name.replace(".html", ".clean.html");
-			File target = new File(FilenameUtils.getFullPath(htmlExportFile.getCanonicalPath()), name);
-			File cleanHtml = LigaHtmlCleaner.from(htmlExportFileUri, target).logoUrl(turnierlogoUrl)
-					.ranglistePdfName(fileNameOnlyPdfRangliste).spielplanPdfName(fileNameOnlyPdfSpielplan)
-					.pdfImageUrl(pdfImgUr).pdfDownloadBaseUrl(baseDownloadUrl).cleanUp();
-
-			processBox().info(cleanHtml.toString());
 		} catch (IOException e) {
 			logger.error(e.getMessage(), e);
+			throw new GenerateException(e.getMessage());
 		}
 	}
 
-	private String pdfBildInExportVerzeichnisKopieren(File htmlExportVerzeichnis) throws IOException {
-		File bilderVerzeichnis = new File(htmlExportVerzeichnis, PDF_BILDER_VERZEICHNIS);
-
-		if (!bilderVerzeichnis.exists() && !bilderVerzeichnis.mkdirs()) {
-			throw new IOException("Konnte Bilderverzeichnis nicht erstellen: " + bilderVerzeichnis);
+	private String buildPdfUrl(String baseDownloadUrl, String fullPdfPath) {
+		String dateiname = FilenameUtils.getName(fullPdfPath);
+		if (StringUtils.isNotBlank(baseDownloadUrl)) {
+			String base = baseDownloadUrl.endsWith("/") ? baseDownloadUrl : baseDownloadUrl + "/";
+			return base + dateiname;
 		}
+		return StringUtils.isNotBlank(dateiname) ? dateiname : null;
+	}
 
-		File zielDatei = new File(bilderVerzeichnis, PDF_BILD_DATEINAME);
-		if (!zielDatei.exists()) {
-			try (InputStream in = LigaMeldeListeSheetExport.class.getResourceAsStream(PDF_BILD_RESSOURCE)) {
-				if (in == null) {
-					logger.error("Classpath-Ressource nicht gefunden: {}", PDF_BILD_RESSOURCE);
-					processBox().info(I18n.get("liga.export.pdf.bild.ressource.fehler"));
-					return null;
-				}
-				try (var out = new FileOutputStream(zielDatei)) {
-					in.transferTo(out);
-				}
+	private File htmlZieldatei() throws GenerateException {
+		XStorable xStorable = getWorkingSpreadsheet().getXStorable();
+		String location = xStorable != null ? xStorable.getLocation() : null;
+		if (StringUtils.isBlank(location)) {
+			throw new GenerateException(I18n.get("error.dokument.nicht.gespeichert"));
+		}
+		try {
+			Path path = Path.of(URI.create(location).toURL().toURI());
+			Path eltern = path.getParent();
+			Path dateiname = path.getFileName();
+			if (eltern == null || dateiname == null) {
+				throw new GenerateException(I18n.get("error.dokument.nicht.gespeichert"));
 			}
+			String basisName = FilenameUtils.removeExtension(dateiname.toString());
+			return eltern.resolve(basisName + ".html").toFile();
+		} catch (MalformedURLException | URISyntaxException e) {
+			throw new GenerateException(e.getMessage());
 		}
-		return PDF_BILD_RESSOURCE;
 	}
 }
