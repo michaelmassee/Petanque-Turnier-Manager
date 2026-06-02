@@ -49,6 +49,7 @@ import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSheet_U
 import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJSpielPlanSheet;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
@@ -460,13 +461,14 @@ public class JGJRanglisteSheet extends SheetRunner implements ISheet, IRangliste
         getSheetHelper().setPropertiesInRange(sheet,
                 RangePosition.from(TEAM_NR_SPALTE, startZeile, TEAM_NR_SPALTE, letzteZeile),
                 CellProperties.from()
+                        .margin(MeldeListeKonstanten.CELL_MARGIN)
                         .setCharColor(ColorHelper.CHAR_COLOR_GRAY_SPIELER_NR)
                         .setBorder(BorderFactory.from().allThin().doubleLn().forRight().toBorder()));
 
         // Name-Spalte: linksbündig
         getSheetHelper().setPropertiesInRange(sheet,
                 RangePosition.from(TEAM_NAME_SPALTE, startZeile, TEAM_NAME_SPALTE, letzteZeile),
-                CellProperties.from().setAllThinBorder().setHoriJustify(CellHoriJustify.LEFT));
+                CellProperties.from().margin(MeldeListeKonstanten.CELL_MARGIN).setAllThinBorder().setHoriJustify(CellHoriJustify.LEFT));
     }
 
     private void formatiereZahlenSpalten(XSpreadsheet sheet, int startZeile, int anzTeams)
@@ -475,6 +477,7 @@ public class JGJRanglisteSheet extends SheetRunner implements ISheet, IRangliste
         getSheetHelper().setPropertiesInRange(sheet,
                 RangePosition.from(PLATZ_SPALTE, startZeile, SPIELPUNKTE_DIFF_SPALTE, letzteZeile),
                 CellProperties.from()
+                        .margin(MeldeListeKonstanten.CELL_MARGIN)
                         .setAllThinBorder()
                         .setHoriJustify(CellHoriJustify.CENTER)
                         .setBorder(BorderFactory.from().allThin().boldLn().forTop().toBorder()));

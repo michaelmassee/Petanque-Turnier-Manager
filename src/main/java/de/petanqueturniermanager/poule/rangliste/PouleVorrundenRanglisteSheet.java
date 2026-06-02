@@ -47,6 +47,7 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.poule.konfiguration.PouleKonfigurationSheet;
 import de.petanqueturniermanager.poule.vorrunde.AbstractPouleVorrundeSheet;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
@@ -367,7 +368,7 @@ public class PouleVorrundenRanglisteSheet extends SheetRunner implements ISheet 
         int letzteZeile = aktuelleZeile - 1;
         getSheetHelper().setPropertiesInRange(xSheet,
                 RangePosition.from(SPALTE_PLATZ, HEADER_ZEILEN, LETZTE_SPALTE, letzteZeile),
-                CellProperties.from().setBorder(BorderFactory.from().allThin().toBorder())
+                CellProperties.from().margin(MeldeListeKonstanten.CELL_MARGIN).setBorder(BorderFactory.from().allThin().toBorder())
                         .setHoriJustify(CellHoriJustify.CENTER));
 
         // Vertikale Trennlinien aus dem Header in den Datenbereich übernehmen

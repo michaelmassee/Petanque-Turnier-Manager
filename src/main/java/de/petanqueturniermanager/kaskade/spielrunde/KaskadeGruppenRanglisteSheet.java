@@ -29,6 +29,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.Position;
@@ -47,6 +48,7 @@ import de.petanqueturniermanager.helper.sheet.rangedata.CellData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.kaskade.konfiguration.KaskadeKonfigurationSheet;
 import de.petanqueturniermanager.kaskade.meldeliste.KaskadeMeldeListeSheetUpdate;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
@@ -322,6 +324,7 @@ public class KaskadeGruppenRanglisteSheet extends SheetRunner implements ISheet 
         TableBorder2 border = BorderFactory.from().allThin().toBorder();
         getSheetHelper().setPropertyInRange(sheet, datenRange, TABLE_BORDER2, border);
         getSheetHelper().setPropertyInRange(sheet, datenRange, HORI_JUSTIFY, CellHoriJustify.CENTER);
+        getSheetHelper().setPropertiesInRange(sheet, datenRange, CellProperties.from().margin(MeldeListeKonstanten.CELL_MARGIN));
         getSheetHelper().setPropertyInRange(sheet, datenRange, VERT_JUSTIFY, CellVertJustify2.CENTER);
         getSheetHelper().setPropertyInRange(sheet, datenRange, CHAR_HEIGHT,  CHARHEIGHT_DATEN);
 

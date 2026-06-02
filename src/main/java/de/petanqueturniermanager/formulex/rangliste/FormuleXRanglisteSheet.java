@@ -53,6 +53,7 @@ import de.petanqueturniermanager.helper.sheet.search.RangeSearchHelper;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
@@ -176,6 +177,7 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
             getSheetHelper().setPropertiesInRange(sheet,
                     RangePosition.from(PLATZ_SPALTE, ERSTE_DATEN_ZEILE, PLATZ_SPALTE, letzteZeilePlatz),
                     CellProperties.from()
+                            .margin(MeldeListeKonstanten.CELL_MARGIN)
                             .setBorder(BorderFactory.from().allThin().boldLn().forTop().forRight().toBorder())
                             .setCharWeight(com.sun.star.awt.FontWeight.BOLD));
         }
@@ -491,16 +493,17 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
         getSheetHelper().setPropertiesInRange(sheet,
                 RangePosition.from(TEAM_NR_SPALTE, ERSTE_DATEN_ZEILE, TEAM_NR_SPALTE, letzteZeile),
                 CellProperties.from()
+                        .margin(MeldeListeKonstanten.CELL_MARGIN)
                         .setCharColor(ColorHelper.CHAR_COLOR_GRAY_SPIELER_NR)
                         .setBorder(BorderFactory.from().allThin().doubleLn().forRight().toBorder()));
 
         getSheetHelper().setPropertiesInRange(sheet,
                 RangePosition.from(TEAM_NAME_SPALTE, ERSTE_DATEN_ZEILE, TEAM_NAME_SPALTE, letzteZeile),
-                CellProperties.from().setAllThinBorder().setHoriJustify(CellHoriJustify.LEFT));
+                CellProperties.from().margin(MeldeListeKonstanten.CELL_MARGIN).setAllThinBorder().setHoriJustify(CellHoriJustify.LEFT));
 
         getSheetHelper().setPropertiesInRange(sheet,
                 RangePosition.from(WERTUNG_SPALTE, ERSTE_DATEN_ZEILE, PUNKTE_DIFF_SPALTE, letzteZeile),
-                CellProperties.from().setAllThinBorder().setHoriJustify(CellHoriJustify.CENTER));
+                CellProperties.from().margin(MeldeListeKonstanten.CELL_MARGIN).setAllThinBorder().setHoriJustify(CellHoriJustify.CENTER));
     }
 
     private void insertFooter(XSpreadsheet sheet, int anzTeams) throws GenerateException {

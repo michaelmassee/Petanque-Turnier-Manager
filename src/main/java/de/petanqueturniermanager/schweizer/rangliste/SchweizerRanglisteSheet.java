@@ -50,6 +50,7 @@ import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerRankingModus;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetUpdate;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrundeSheet;
 
@@ -298,6 +299,7 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 			getSheetHelper().setPropertiesInRange(sheet,
 					RangePosition.from(PLATZ_SPALTE, ERSTE_DATEN_ZEILE, PLATZ_SPALTE, letzteZeilePlatz),
 					CellProperties.from()
+							.margin(MeldeListeKonstanten.CELL_MARGIN)
 							.setBorder(BorderFactory.from().allThin().boldLn().forTop().forRight().toBorder())
 							.setCharWeight(com.sun.star.awt.FontWeight.BOLD));
 		}
@@ -643,18 +645,19 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 		getSheetHelper().setPropertiesInRange(sheet,
 				RangePosition.from(TEAM_NR_SPALTE, ERSTE_DATEN_ZEILE, TEAM_NR_SPALTE, letzteZeile),
 				CellProperties.from()
+						.margin(MeldeListeKonstanten.CELL_MARGIN)
 						.setCharColor(ColorHelper.CHAR_COLOR_GRAY_SPIELER_NR)
 						.setBorder(BorderFactory.from().allThin().doubleLn().forRight().toBorder()));
 
 		// Teamname: links ausgerichtet
 		getSheetHelper().setPropertiesInRange(sheet,
 				RangePosition.from(TEAM_NAME_SPALTE, ERSTE_DATEN_ZEILE, TEAM_NAME_SPALTE, letzteZeile),
-				CellProperties.from().setAllThinBorder().setHoriJustify(CellHoriJustify.LEFT));
+				CellProperties.from().margin(MeldeListeKonstanten.CELL_MARGIN).setAllThinBorder().setHoriJustify(CellHoriJustify.LEFT));
 
 		// Zahlen-Spalten: zentriert
 		getSheetHelper().setPropertiesInRange(sheet,
 				RangePosition.from(SIEGE_SPALTE, ERSTE_DATEN_ZEILE, PUNKTE_DIFF_SPALTE, letzteZeile),
-				CellProperties.from().setAllThinBorder().setHoriJustify(CellHoriJustify.CENTER));
+				CellProperties.from().margin(MeldeListeKonstanten.CELL_MARGIN).setAllThinBorder().setHoriJustify(CellHoriJustify.CENTER));
 	}
 
 	// ── IRangliste ──────────────────────────────────────────────────────────────
