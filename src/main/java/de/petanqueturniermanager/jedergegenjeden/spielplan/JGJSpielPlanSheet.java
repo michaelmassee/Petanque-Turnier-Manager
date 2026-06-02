@@ -161,7 +161,7 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 		}
 
 		if (!NewSheet.from(this, sheetName(), METADATA_SCHLUESSEL)
-				.pos(DefaultSheetPos.JGJ_WORK).setForceCreate(true).setActiv().hideGrid()
+				.pos(DefaultSheetPos.JGJ_WORK).setActiv().hideGrid()
 				.tabColor(getKonfigurationSheet().getSpielrundeTabFarbe()).create().isDidCreate()) {
 			ProcessBox.from().info("Abbruch vom Benutzer, Jeder gegen Jeden SpielPlan wurde nicht erstellt");
 			return;

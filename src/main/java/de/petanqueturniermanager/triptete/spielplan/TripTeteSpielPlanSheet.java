@@ -131,7 +131,7 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet {
 		}
 
 		if (!NewSheet.from(this, sheetName(), METADATA_SCHLUESSEL)
-				.pos(DefaultSheetPos.TRIPTETE_WORK).setForceCreate(true).setActiv().hideGrid()
+				.pos(DefaultSheetPos.TRIPTETE_WORK).setActiv().hideGrid()
 				.tabColor(konfigurationSheet.getSpielrundeTabFarbe()).create().isDidCreate()) {
 			ProcessBox.from().info("Abbruch vom Benutzer, Trip-Tête-Spielplan wurde nicht erstellt");
 			return;

@@ -138,7 +138,7 @@ public class LigaSpielPlanSheet extends SheetRunner implements ISheet {
 		}
 
 		if (!NewSheet.from(this, sheetName(), METADATA_SCHLUESSEL)
-				.pos(DefaultSheetPos.LIGA_WORK).setForceCreate(true).setActiv().hideGrid()
+				.pos(DefaultSheetPos.LIGA_WORK).setActiv().hideGrid()
 				.tabColor(konfigurationSheet.getSpielrundeTabFarbe()).create().isDidCreate()) {
 			ProcessBox.from().info("Abbruch vom Benutzer, Liga SpielPlan wurde nicht erstellt");
 			return;
