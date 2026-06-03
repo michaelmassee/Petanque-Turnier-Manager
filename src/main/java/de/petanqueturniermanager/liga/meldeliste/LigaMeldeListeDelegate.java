@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.table.CellHoriJustify;
+import com.sun.star.table.CellVertJustify2;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.IMeldeliste;
@@ -20,10 +22,14 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import com.sun.star.util.CellProtection;
 
+import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGeradeStyle;
+import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
+import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
@@ -44,6 +50,19 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 class LigaMeldeListeDelegate implements MeldeListeKonstanten {
 
 	private static final int MIN_ANZAHL_MELDUNGEN_ZEILEN = 7;
+
+	static final int MANNSCHAFTSFUEHRER_SPALTE = SPIELER_NR_SPALTE + 2;
+	static final int EMAIL_SPALTE = SPIELER_NR_SPALTE + 3;
+	static final int TELEFON_SPALTE = SPIELER_NR_SPALTE + 4;
+	static final int STARTSPIELZEIT_SPALTE = SPIELER_NR_SPALTE + 5;
+	static final int ADRESSE_SPALTE = SPIELER_NR_SPALTE + 6;
+	static final int LETZTE_INFO_SPALTE = ADRESSE_SPALTE;
+
+	private static final int MANNSCHAFTSFUEHRER_WIDTH = 5000;
+	private static final int EMAIL_WIDTH = 5000;
+	private static final int TELEFON_WIDTH = 3000;
+	private static final int STARTSPIELZEIT_WIDTH = 2500;
+	private static final int ADRESSE_WIDTH = 8000;
 
 	private final IMeldeliste<TeamMeldungen, Team> sheet;
 	private final LigaKonfigurationSheet konfigurationSheet;
@@ -114,6 +133,7 @@ class LigaMeldeListeDelegate implements MeldeListeKonstanten {
 		meldeListeHelper.doSort(meldungenSpalte.getSpielerNrSpalte(), true);
 		meldungenSpalte.formatSpielrNrUndNamenspalten();
 		formatDaten();
+		formatInfoSpalten(headerBackColor);
 
 		meldeListeHelper.insertTurnierSystemInHeader(turnierSystem);
 
@@ -144,6 +164,50 @@ class LigaMeldeListeDelegate implements MeldeListeKonstanten {
 		editierbar.IsLocked = false;
 		sheet.getSheetHelper().setPropertiesInRange(sheet.getXSpreadSheet(), nameSpalteRange,
 				CellProperties.from().setCellProtection(editierbar));
+	}
+
+	private void formatInfoSpalten(int headerBackColor) throws GenerateException {
+		sheet.processBoxinfo("processbox.meldeliste.spalten.formatieren");
+
+		int letzteDatenZeile = meldungenSpalte.getLetzteDatenZeileUseMin();
+
+		infoSpaltenHeaderSchreiben(headerBackColor);
+
+		var infoRange = RangePosition.from(MANNSCHAFTSFUEHRER_SPALTE, ERSTE_DATEN_ZEILE, LETZTE_INFO_SPALTE, letzteDatenZeile);
+		sheet.getSheetHelper().setPropertiesInRange(sheet.getXSpreadSheet(), infoRange, CellProperties.from()
+				.setBorder(BorderFactory.from().allThin().boldLn().forTop().toBorder()).setShrinkToFit(true));
+
+		EditierbaresZelleFormatHelper.anwenden(sheet, infoRange);
+
+		var editierbar = new CellProtection();
+		editierbar.IsLocked = false;
+		sheet.getSheetHelper().setPropertiesInRange(sheet.getXSpreadSheet(), infoRange,
+				CellProperties.from().setCellProtection(editierbar));
+	}
+
+	private void infoSpaltenHeaderSchreiben(int headerBackColor) throws GenerateException {
+		record InfoSpalte(int spalte, String i18nKey, int breite) {}
+		var spalten = List.of(
+				new InfoSpalte(MANNSCHAFTSFUEHRER_SPALTE, "liga.meldeliste.column.header.mannschaftsfuehrer", MANNSCHAFTSFUEHRER_WIDTH),
+				new InfoSpalte(EMAIL_SPALTE, "liga.meldeliste.column.header.email", EMAIL_WIDTH),
+				new InfoSpalte(TELEFON_SPALTE, "liga.meldeliste.column.header.telefon", TELEFON_WIDTH),
+				new InfoSpalte(STARTSPIELZEIT_SPALTE, "liga.meldeliste.column.header.startspielzeit", STARTSPIELZEIT_WIDTH),
+				new InfoSpalte(ADRESSE_SPALTE, "liga.meldeliste.column.header.adresse", ADRESSE_WIDTH));
+
+		for (var info : spalten) {
+			var colProps = ColumnProperties.from().setWidth(info.breite())
+					.setHoriJustify(CellHoriJustify.CENTER).setVertJustify(CellVertJustify2.CENTER)
+					.margin(MeldeListeKonstanten.CELL_MARGIN);
+			var celVal = StringCellValue
+					.from(sheet.getXSpreadSheet(), Position.from(info.spalte(), ZWEITE_HEADER_ZEILE),
+							I18n.get(info.i18nKey()))
+					.addColumnProperties(colProps)
+					.setBorder(BorderFactory.from().allThin().boldLn().forTop().toBorder())
+					.setCellBackColor(headerBackColor)
+					.setVertJustify(CellVertJustify2.CENTER)
+					.setShrinkToFit(true);
+			sheet.getSheetHelper().setStringValueInCell(celVal);
+		}
 	}
 
 	String formulaSverweisSpielernamen(String spielrNrAdresse) {
@@ -182,8 +246,8 @@ class LigaMeldeListeDelegate implements MeldeListeKonstanten {
 		return meldungenSpalte.getLetzteDatenZeileUseMin();
 	}
 
-	int letzteSpielTagSpalte() throws GenerateException {
-		return meldeListeHelper.ersteSpieltagSpalte();
+	int letzteSpielTagSpalte() {
+		return LETZTE_INFO_SPALTE;
 	}
 
 	int getSpielerNameErsteSpalte() {
@@ -202,7 +266,7 @@ class LigaMeldeListeDelegate implements MeldeListeKonstanten {
 		}
 		var xDoc = sheet.getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
 		RangeData data = RangeHelper.from(mlSheet, xDoc,
-				RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE + 2, ERSTE_DATEN_ZEILE + 999))
+				RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE + 1, ERSTE_DATEN_ZEILE + 999))
 				.getDataFromRange();
 		for (RowData row : data) {
 			if (row.isEmpty()) {
@@ -212,23 +276,10 @@ class LigaMeldeListeDelegate implements MeldeListeKonstanten {
 			if (nr <= 0) {
 				continue;
 			}
-			String nachname = row.size() > 1 ? row.get(1).getStringVal() : "";
-			String vorname = row.size() > 2 ? row.get(2).getStringVal() : "";
-			result.put(nr, teamName(nachname, vorname));
+			String name = row.size() > 1 ? row.get(1).getStringVal().trim() : "";
+			result.put(nr, name);
 		}
 		return result;
-	}
-
-	private static String teamName(String nachname, String vorname) {
-		var n = nachname.trim();
-		var v = vorname.trim();
-		if (n.isEmpty()) {
-			return v;
-		}
-		if (v.isEmpty()) {
-			return n;
-		}
-		return n + ", " + v;
 	}
 
 }

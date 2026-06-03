@@ -89,7 +89,7 @@ public class LigaMeldeListeSheetNew extends SheetRunner implements IMeldeliste<T
 	}
 
 	@Override
-	public int letzteSpielTagSpalte() throws GenerateException {
+	public int letzteSpielTagSpalte() {
 		return delegate.letzteSpielTagSpalte();
 	}
 
