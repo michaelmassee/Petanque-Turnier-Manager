@@ -491,11 +491,11 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 					.setCellBackColor(headerColor)
 					.setBorder(border)
 					.setHoriJustify(CellHoriJustify.CENTER)
+					.setVertJustify(CellVertJustify2.CENTER)
 					.setEndPosMergeZeilePlus(1)  // vertikal Row 0 + Row 1
 					.setShrinkToFit(true);
 			if (col == PLATZ_SPALTE) {
-				cv.setRotate90().setCharWeight(com.sun.star.awt.FontWeight.BOLD)
-						.setVertJustify(CellVertJustify2.CENTER);
+				cv.setRotate90().setCharWeight(com.sun.star.awt.FontWeight.BOLD);
 			}
 			getSheetHelper().setStringValueInCell(cv);
 		}
@@ -521,6 +521,7 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 					.setCellBackColor(headerColor)
 					.setBorder(BorderFactory.from().allThin().boldLn().forBottom().toBorder())
 					.setHoriJustify(CellHoriJustify.CENTER)
+					.setVertJustify(CellVertJustify2.CENTER)
 					.setShrinkToFit(true));
 		}
 
@@ -642,23 +643,25 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 				.setDataInRange(block2);
 
 		// ── Formatierung ───────────────────────────────────────────────────────
-		// TeamNr: grau + doppelte rechte Linie
+		// TeamNr: grau + doppelte rechte Linie + zentriert
 		getSheetHelper().setPropertiesInRange(sheet,
 				RangePosition.from(TEAM_NR_SPALTE, ERSTE_DATEN_ZEILE, TEAM_NR_SPALTE, letzteZeile),
 				CellProperties.from()
 						.margin(MeldeListeKonstanten.CELL_MARGIN)
 						.setCharColor(ColorHelper.CHAR_COLOR_GRAY_SPIELER_NR)
-						.setBorder(BorderFactory.from().allThin().doubleLn().forRight().toBorder()));
+						.setBorder(BorderFactory.from().allThin().doubleLn().forRight().toBorder())
+						.centerJustify());
 
-		// Teamname: links ausgerichtet
+		// Teamname: links ausgerichtet, vertikal zentriert
 		getSheetHelper().setPropertiesInRange(sheet,
 				RangePosition.from(TEAM_NAME_SPALTE, ERSTE_DATEN_ZEILE, TEAM_NAME_SPALTE, letzteZeile),
-				CellProperties.from().margin(MeldeListeKonstanten.CELL_MARGIN).setAllThinBorder().setHoriJustify(CellHoriJustify.LEFT));
+				CellProperties.from().margin(MeldeListeKonstanten.CELL_MARGIN).setAllThinBorder()
+						.setHoriJustify(CellHoriJustify.LEFT).centerVertJustify());
 
-		// Zahlen-Spalten: zentriert
+		// Zahlen-Spalten: horizontal + vertikal zentriert
 		getSheetHelper().setPropertiesInRange(sheet,
 				RangePosition.from(SIEGE_SPALTE, ERSTE_DATEN_ZEILE, PUNKTE_DIFF_SPALTE, letzteZeile),
-				CellProperties.from().margin(MeldeListeKonstanten.CELL_MARGIN).setAllThinBorder().setHoriJustify(CellHoriJustify.CENTER));
+				CellProperties.from().margin(MeldeListeKonstanten.CELL_MARGIN).setAllThinBorder().centerJustify());
 	}
 
 	// ── IRangliste ──────────────────────────────────────────────────────────────

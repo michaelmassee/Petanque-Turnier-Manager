@@ -168,7 +168,7 @@ public final class MaastrichterGruppenSpalteHelper {
 						GRUPPE_SPALTE, letzteZeile),
 				CellProperties.from()
 						.setAllThinBorder()
-						.setHoriJustify(CellHoriJustify.CENTER)
+						.centerJustify()
 						.setCharWeight(FontWeight.BOLD));
 	}
 }
