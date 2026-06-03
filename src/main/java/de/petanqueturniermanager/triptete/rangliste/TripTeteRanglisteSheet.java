@@ -156,6 +156,7 @@ public class TripTeteRanglisteSheet extends SheetRunner implements ISheet {
 						.setCellBackColor(headerBackColor)
 						.setBorder(BorderFactory.from(borderFact).doubleLn().forRight().toBorder())
 						.setHoriJustify(CellHoriJustify.CENTER)
+						.setVertJustify(CellVertJustify2.CENTER)
 						.setEndPosMergeZeilePlus(1)
 						.setShrinkToFit(true));
 
@@ -170,7 +171,7 @@ public class TripTeteRanglisteSheet extends SheetRunner implements ISheet {
 						.setEndPosMergeZeilePlus(1)
 						.setShrinkToFit(true));
 
-		// Platz – überspannt alle 3 Header-Zeilen, hochkant
+		// Platz – überspannt alle 3 Header-Zeilen, hochkant, dicke rechte Linie
 		getSheetHelper().setStringValueInCell(
 				StringCellValue.from(getXSpreadSheet(), Position.from(RANG_SPALTE, 0))
 						.setColumnProperties(colSchmal)
@@ -178,7 +179,7 @@ public class TripTeteRanglisteSheet extends SheetRunner implements ISheet {
 						.setRotate90()
 						.setVertJustify(CellVertJustify2.CENTER)
 						.setCellBackColor(headerBackColor)
-						.setBorder(brdDaten)
+						.setBorder(BorderFactory.from(borderFact).forRight().toBorder())
 						.setEndPosMergeZeilePlus(2)
 						.setShrinkToFit(true)
 						.setCharWeight(FontWeight.BOLD));
@@ -261,6 +262,13 @@ public class TripTeteRanglisteSheet extends SheetRunner implements ISheet {
 		getSheetHelper().setPropertiesInRange(getXSpreadSheet(),
 				RangePosition.from(TEAM_NR_SPALTE, ERSTE_DATEN_ZEILE, TEAM_NR_SPALTE, letzteDatenZeile),
 				CellProperties.from().centerJustify());
+
+		// Platz-Spalte: fett + dicke rechte Linie
+		getSheetHelper().setPropertiesInRange(getXSpreadSheet(),
+				RangePosition.from(RANG_SPALTE, ERSTE_DATEN_ZEILE, RANG_SPALTE, letzteDatenZeile),
+				CellProperties.from()
+						.setCharWeight(FontWeight.BOLD)
+						.setBorder(BorderFactory.from().allThin().boldLn().forTop().forRight().toBorder()));
 
 		Integer farbeGerade = konfigurationSheet.getRanglisteHintergrundFarbeGerade();
 		Integer farbeUngerade = konfigurationSheet.getRanglisteHintergrundFarbeUnGerade();

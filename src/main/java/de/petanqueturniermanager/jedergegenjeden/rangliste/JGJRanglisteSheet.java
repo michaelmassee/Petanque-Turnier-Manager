@@ -373,10 +373,11 @@ public class JGJRanglisteSheet extends SheetRunner implements ISheet, IRangliste
                     .setCellBackColor(headerFarbe)
                     .setBorder(border)
                     .setHoriJustify(CellHoriJustify.CENTER)
+                    .setVertJustify(CellVertJustify2.CENTER)
                     .setEndPosMergeZeilePlus(1)
                     .setShrinkToFit(true);
             if (col == PLATZ_SPALTE) {
-                cv.setRotate90().setVertJustify(CellVertJustify2.CENTER);
+                cv.setRotate90().setCharWeight(com.sun.star.awt.FontWeight.BOLD);
             }
             getSheetHelper().setStringValueInCell(cv);
         }
@@ -458,13 +459,14 @@ public class JGJRanglisteSheet extends SheetRunner implements ISheet, IRangliste
         RangeHelper.from(this, block2.getRangePosition(Position.from(SPIELE_PLUS_SPALTE, startZeile)))
                 .setDataInRange(block2);
 
-        // Nr-Spalte: grau + doppelte rechte Linie
+        // Nr-Spalte: grau + doppelte rechte Linie + zentriert
         getSheetHelper().setPropertiesInRange(sheet,
                 RangePosition.from(TEAM_NR_SPALTE, startZeile, TEAM_NR_SPALTE, letzteZeile),
                 CellProperties.from()
                         .margin(MeldeListeKonstanten.CELL_MARGIN)
                         .setCharColor(ColorHelper.CHAR_COLOR_GRAY_SPIELER_NR)
-                        .setBorder(BorderFactory.from().allThin().doubleLn().forRight().toBorder()));
+                        .setBorder(BorderFactory.from().allThin().doubleLn().forRight().toBorder())
+                        .centerJustify());
 
         // Name-Spalte: linksbündig
         getSheetHelper().setPropertiesInRange(sheet,
@@ -482,6 +484,14 @@ public class JGJRanglisteSheet extends SheetRunner implements ISheet, IRangliste
                         .setAllThinBorder()
                         .setHoriJustify(CellHoriJustify.CENTER)
                         .setBorder(BorderFactory.from().allThin().boldLn().forTop().toBorder()));
+
+        // Platz-Spalte: fett + dicke rechte Linie (überschreibt bulk-Formatierung)
+        getSheetHelper().setPropertiesInRange(sheet,
+                RangePosition.from(PLATZ_SPALTE, startZeile, PLATZ_SPALTE, letzteZeile),
+                CellProperties.from()
+                        .margin(MeldeListeKonstanten.CELL_MARGIN)
+                        .setCharWeight(com.sun.star.awt.FontWeight.BOLD)
+                        .setBorder(BorderFactory.from().allThin().boldLn().forTop().forRight().toBorder()));
     }
 
     private void formatiereZebraStreifen(XSpreadsheet sheet, int startZeile, int anzTeams)

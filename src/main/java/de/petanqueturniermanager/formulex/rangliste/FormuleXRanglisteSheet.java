@@ -448,11 +448,11 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
                     .setCellBackColor(headerColor)
                     .setCellProperties(headerCellProps)
                     .setHoriJustify(CellHoriJustify.CENTER)
+                    .setVertJustify(CellVertJustify2.CENTER)
                     .setEndPosMergeZeilePlus(1)
                     .setShrinkToFit(true);
             if (col == PLATZ_SPALTE) {
-                cv.setRotate90().setCharWeight(com.sun.star.awt.FontWeight.BOLD)
-                        .setVertJustify(CellVertJustify2.CENTER);
+                cv.setRotate90().setCharWeight(com.sun.star.awt.FontWeight.BOLD);
             }
             getSheetHelper().setStringValueInCell(cv);
         }
@@ -494,7 +494,8 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
                 CellProperties.from()
                         .margin(MeldeListeKonstanten.CELL_MARGIN)
                         .setCharColor(ColorHelper.CHAR_COLOR_GRAY_SPIELER_NR)
-                        .setBorder(BorderFactory.from().allThin().doubleLn().forRight().toBorder()));
+                        .setBorder(BorderFactory.from().allThin().doubleLn().forRight().toBorder())
+                        .centerJustify());
 
         getSheetHelper().setPropertiesInRange(sheet,
                 RangePosition.from(TEAM_NAME_SPALTE, ERSTE_DATEN_ZEILE, TEAM_NAME_SPALTE, letzteZeile),
@@ -509,10 +510,12 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
                 RangePosition.from(TEAM_NR_SPALTE, HEADER_ZEILE, TEAM_NR_SPALTE, letzteZeile),
                 CellProperties.from().setBorder(BorderFactory.from().doubleLn().forRight().toBorder()));
 
-        // Platz-Spalte: durchgängig dicke rechte Linie (Header + Daten)
+        // Platz-Spalte: fett + durchgängig dicke rechte Linie (Header + Daten)
         getSheetHelper().setPropertiesInRange(sheet,
                 RangePosition.from(PLATZ_SPALTE, HEADER_ZEILE, PLATZ_SPALTE, letzteZeile),
-                CellProperties.from().setBorder(BorderFactory.from().boldLn().forRight().toBorder()));
+                CellProperties.from()
+                        .setCharWeight(com.sun.star.awt.FontWeight.BOLD)
+                        .setBorder(BorderFactory.from().boldLn().forRight().toBorder()));
     }
 
     private void insertFooter(XSpreadsheet sheet, int anzTeams) throws GenerateException {

@@ -305,13 +305,14 @@ public class LigaRanglisteSheet extends SheetRunner implements ISheet, IRanglist
 		RangeHelper.from(this, block2.getRangePosition(Position.from(PUNKTE_PLUS_SPALTE, ERSTE_DATEN_ZEILE)))
 				.setDataInRange(block2);
 
-		// Nr-Spalte: grau + doppelte rechte Linie
+		// Nr-Spalte: grau + doppelte rechte Linie + zentriert
 		getSheetHelper().setPropertiesInRange(sheet,
 				RangePosition.from(TEAM_NR_SPALTE, ERSTE_DATEN_ZEILE, TEAM_NR_SPALTE, letzteZeile),
 				CellProperties.from()
 						.setCharColor(ColorHelper.CHAR_COLOR_GRAY_SPIELER_NR)
 						.setBorder(BorderFactory.from().allThin().doubleLn().forRight().toBorder())
-						.margin(MARGIN));
+						.margin(MARGIN)
+						.centerJustify());
 
 		// Name-Spalte: linksbündig
 		getSheetHelper().setPropertiesInRange(sheet,
@@ -330,10 +331,12 @@ public class LigaRanglisteSheet extends SheetRunner implements ISheet, IRanglist
 				RangePosition.from(TEAM_NR_SPALTE, ERSTE_DATEN_ZEILE - 2, TEAM_NR_SPALTE, letzteZeile),
 				CellProperties.from().setBorder(BorderFactory.from().doubleLn().forRight().toBorder()));
 
-		// Platz-Spalte: durchgängig dicke rechte Linie
+		// Platz-Spalte: fett + durchgängig dicke rechte Linie
 		getSheetHelper().setPropertiesInRange(sheet,
 				RangePosition.from(RANGLISTE_SPALTE, ERSTE_DATEN_ZEILE - 2, RANGLISTE_SPALTE, letzteZeile),
-				CellProperties.from().setBorder(BorderFactory.from().boldLn().forRight().toBorder()));
+				CellProperties.from()
+						.setCharWeight(com.sun.star.awt.FontWeight.BOLD)
+						.setBorder(BorderFactory.from().boldLn().forRight().toBorder()));
 
 		// Begegnungen-Spalte: durchgängig dicke linke Linie
 		getSheetHelper().setPropertiesInRange(sheet,
@@ -408,11 +411,12 @@ public class LigaRanglisteSheet extends SheetRunner implements ISheet, IRanglist
 					.setEndPosMergeZeilePlus(1));
 		}
 
-		// Zeile 0: Rang – 2 Zeilen hoch, 90°
+		// Zeile 0: Rang – 2 Zeilen hoch, 90°, fett
 		getSheetHelper().setStringValueInCell(StringCellValue
 				.from(sheet, Position.from(RANGLISTE_SPALTE, 0), I18n.get("column.header.platz"))
 				.setCellProperties(CellProperties.from().setAllThinBorder()
 						.setCellBackColor(headerFarbe).margin(MARGIN).centerJustify().setShrinkToFit(true)
+						.setCharWeight(com.sun.star.awt.FontWeight.BOLD)
 						.setBorder(BorderFactory.from().allThin().boldLn().forBottom().forRight().toBorder()))
 				.setEndPosMergeZeilePlus(1).setRotate90());
 

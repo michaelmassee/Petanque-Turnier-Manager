@@ -392,6 +392,18 @@ public class PouleVorrundenRanglisteSheet extends SheetRunner implements ISheet 
                 RangePosition.from(SPALTE_TURNIER, HEADER_ZEILEN, SPALTE_TURNIER, letzteZeile),
                 CellProperties.from().setCharWeight(FontWeight.BOLD));
 
+        // Nr-Spalte: vertikal zentriert (horizontal bereits via Bulk gesetzt)
+        getSheetHelper().setPropertiesInRange(xSheet,
+                RangePosition.from(SPALTE_NR, HEADER_ZEILEN, SPALTE_NR, letzteZeile),
+                CellProperties.from().centerVertJustify());
+
+        // Platz-Spalte: fett + dicke rechte Linie
+        getSheetHelper().setPropertiesInRange(xSheet,
+                RangePosition.from(SPALTE_PLATZ, HEADER_ZEILEN, SPALTE_PLATZ, letzteZeile),
+                CellProperties.from()
+                        .setCharWeight(FontWeight.BOLD)
+                        .setBorder(BorderFactory.from().allThin().boldLn().forRight().toBorder()));
+
         // Hintergrundfarbe: A-Turnier (grün)
         for (int zeile : aTurnierZeilen) {
             getSheetHelper().setPropertiesInRange(xSheet,
@@ -415,7 +427,7 @@ public class PouleVorrundenRanglisteSheet extends SheetRunner implements ISheet 
         getSheetHelper().setStringValueInCell(
                 StringCellValue.from(xSheet, Position.from(SPALTE_PLATZ, 0), I18n.get("column.header.platz"))
                         .setCellBackColor(headerFarbe)
-                        .setBorder(border)
+                        .setBorder(BorderFactory.from().allThin().boldLn().forBottom().forRight().toBorder())
                         .setCharWeight(FontWeight.BOLD)
                         .setHoriJustify(CellHoriJustify.CENTER)
                         .setVertJustify(CellVertJustify2.CENTER)

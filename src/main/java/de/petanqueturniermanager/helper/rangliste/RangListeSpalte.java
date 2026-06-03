@@ -113,9 +113,11 @@ public class RangListeSpalte {
 			throw new GenerateException("Platz-Spalte konnte nicht beschrieben werden: " + e.getMessage());
 		}
 
-		// Border
+		// Platz-Spalte: fett + dicke rechte Linie
 		getSheetHelper().setPropertiesInRange(getSheet(), platzRange,
-				CellProperties.from().setBorder(BorderFactory.from().allThin().boldLn().forTop().toBorder()));
+				CellProperties.from()
+						.setCharWeight(FontWeight.BOLD)
+						.setBorder(BorderFactory.from().allThin().boldLn().forTop().forRight().toBorder()));
 	}
 
 	/**
