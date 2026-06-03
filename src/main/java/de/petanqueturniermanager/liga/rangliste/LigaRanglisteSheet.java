@@ -309,12 +309,13 @@ public class LigaRanglisteSheet extends SheetRunner implements ISheet, IRanglist
 				RangePosition.from(TEAM_NR_SPALTE, ERSTE_DATEN_ZEILE, TEAM_NR_SPALTE, letzteZeile),
 				CellProperties.from()
 						.setCharColor(ColorHelper.CHAR_COLOR_GRAY_SPIELER_NR)
-						.setBorder(BorderFactory.from().allThin().doubleLn().forRight().toBorder()));
+						.setBorder(BorderFactory.from().allThin().doubleLn().forRight().toBorder())
+						.margin(MARGIN));
 
 		// Name-Spalte: linksbündig
 		getSheetHelper().setPropertiesInRange(sheet,
 				RangePosition.from(TEAM_NAME_SPALTE, ERSTE_DATEN_ZEILE, TEAM_NAME_SPALTE, letzteZeile),
-				CellProperties.from().setAllThinBorder().setHoriJustify(CellHoriJustify.LEFT));
+				CellProperties.from().setAllThinBorder().setHoriJustify(CellHoriJustify.LEFT).margin(MARGIN));
 
 		// Statistik-Spalten: zentriert, thin border, bold-top
 		getSheetHelper().setPropertiesInRange(sheet,
@@ -322,6 +323,21 @@ public class LigaRanglisteSheet extends SheetRunner implements ISheet, IRanglist
 				CellProperties.from().setAllThinBorder()
 						.setBorder(BorderFactory.from().allThin().boldLn().forTop().toBorder())
 						.setHoriJustify(CellHoriJustify.CENTER).margin(MARGIN));
+
+		// Nr-Spalte: durchgängig doppelte rechte Linie
+		getSheetHelper().setPropertiesInRange(sheet,
+				RangePosition.from(TEAM_NR_SPALTE, ERSTE_DATEN_ZEILE - 2, TEAM_NR_SPALTE, letzteZeile),
+				CellProperties.from().setBorder(BorderFactory.from().doubleLn().forRight().toBorder()));
+
+		// Platz-Spalte: durchgängig dicke rechte Linie
+		getSheetHelper().setPropertiesInRange(sheet,
+				RangePosition.from(RANGLISTE_SPALTE, ERSTE_DATEN_ZEILE - 2, RANGLISTE_SPALTE, letzteZeile),
+				CellProperties.from().setBorder(BorderFactory.from().boldLn().forRight().toBorder()));
+
+		// Begegnungen-Spalte: durchgängig dicke linke Linie
+		getSheetHelper().setPropertiesInRange(sheet,
+				RangePosition.from(BEGEGNUNGEN_SPALTE, ERSTE_DATEN_ZEILE - 2, BEGEGNUNGEN_SPALTE, letzteZeile),
+				CellProperties.from().setBorder(BorderFactory.from().boldLn().forLeft().toBorder()));
 
 		// Doppelte Trennlinien: Spiele-Block (col 5) und SpPunkte-Block (col 8)
 		for (int spalte : new int[] { SPIELE_PLUS_SPALTE, SP_PUNKTE_PLUS_SPALTE }) {
@@ -386,7 +402,8 @@ public class LigaRanglisteSheet extends SheetRunner implements ISheet, IRanglist
 			getSheetHelper().setStringValueInCell(StringCellValue
 					.from(sheet, Position.from(col, 0),
 							col == TEAM_NR_SPALTE ? I18n.get("column.header.nr") : I18n.get("column.header.name"))
-					.setCellProperties(CellProperties.from().setAllThinBorder()
+					.setCellProperties(CellProperties.from()
+							.setBorder(BorderFactory.from().allThin().boldLn().forBottom().toBorder())
 							.setCellBackColor(headerFarbe).margin(MARGIN).centerJustify().setShrinkToFit(true))
 					.setEndPosMergeZeilePlus(1));
 		}

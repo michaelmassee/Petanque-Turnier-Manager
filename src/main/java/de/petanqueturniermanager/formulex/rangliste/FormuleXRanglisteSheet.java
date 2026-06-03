@@ -437,17 +437,15 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
                 WERTUNG_SPALTE, SIEGE_SPALTE, PUNKTE_PLUS_SPALTE, PUNKTE_DIFF_SPALTE,
         };
 
+        var headerCellProps = CellProperties.from()
+                .setBorder(BorderFactory.from().allThin().boldLn().forBottom().toBorder())
+                .margin(MeldeListeKonstanten.CELL_MARGIN);
         for (int i = 0; i < spalten.length; i++) {
             int col = spalten[i];
-            var border = (col == TEAM_NR_SPALTE)
-                    ? BorderFactory.from().allThin().doubleLn().forBottom().forRight().toBorder()
-                    : (col == PLATZ_SPALTE)
-                    ? BorderFactory.from().allThin().boldLn().forBottom().forRight().toBorder()
-                    : BorderFactory.from().allThin().boldLn().forBottom().toBorder();
             var cv = StringCellValue
                     .from(sheet, Position.from(col, HEADER_ZEILE), texte[i])
                     .setCellBackColor(headerColor)
-                    .setBorder(border)
+                    .setCellProperties(headerCellProps)
                     .setHoriJustify(CellHoriJustify.CENTER)
                     .setEndPosMergeZeilePlus(1)
                     .setShrinkToFit(true);
@@ -504,6 +502,16 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
         getSheetHelper().setPropertiesInRange(sheet,
                 RangePosition.from(WERTUNG_SPALTE, ERSTE_DATEN_ZEILE, PUNKTE_DIFF_SPALTE, letzteZeile),
                 CellProperties.from().margin(MeldeListeKonstanten.CELL_MARGIN).setAllThinBorder().setHoriJustify(CellHoriJustify.CENTER));
+
+        // Nr-Spalte: durchgängig doppelte rechte Linie (Header + Daten)
+        getSheetHelper().setPropertiesInRange(sheet,
+                RangePosition.from(TEAM_NR_SPALTE, HEADER_ZEILE, TEAM_NR_SPALTE, letzteZeile),
+                CellProperties.from().setBorder(BorderFactory.from().doubleLn().forRight().toBorder()));
+
+        // Platz-Spalte: durchgängig dicke rechte Linie (Header + Daten)
+        getSheetHelper().setPropertiesInRange(sheet,
+                RangePosition.from(PLATZ_SPALTE, HEADER_ZEILE, PLATZ_SPALTE, letzteZeile),
+                CellProperties.from().setBorder(BorderFactory.from().boldLn().forRight().toBorder()));
     }
 
     private void insertFooter(XSpreadsheet sheet, int anzTeams) throws GenerateException {
