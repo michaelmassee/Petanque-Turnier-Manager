@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.BaseCalcUITest;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.RangePosition;
@@ -54,6 +55,21 @@ public class TripTeteTurnierTestDatenUITest extends BaseCalcUITest {
         validiereMeldelistePerJson("triptete-meldeliste.json");
         validiereSpielplanPerJson("triptete-spielplan.json");
         validiereRanglistePerJson("triptete-rangliste.json");
+    }
+
+    /**
+     * Regression im Kiosk-Modus: nach voller 6-Team-Turniergenerierung muss ein
+     * erneutes {@link TripTeteRanglisteSheet#run()} unter aktivem TurnierModus +
+     * TripTête-Blattschutz sauber durchlaufen.
+     */
+    @Test
+    public void kioskModus_ranglisteUpdateNach6TeamTurnier() throws GenerateException {
+        new TripTeteSpielPlanSheetTestDaten(wkingSpreadsheet).generate();
+        mitKioskModus(TurnierSystem.TRIPTETE, () -> new TripTeteRanglisteSheet(wkingSpreadsheet).run());
+
+        assertThat(sheetHlp.findByName(SheetNamen.rangliste()))
+                .as("TripTête-Rangliste muss nach Kiosk-Update weiterhin existieren")
+                .isNotNull();
     }
 
     @Test
