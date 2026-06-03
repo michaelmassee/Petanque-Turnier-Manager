@@ -1,0 +1,68 @@
+[
+  [
+    {
+      "data": 1.0
+    },
+    {
+      "data": "Lukas"
+    },
+    {
+      "data": "Fischer"
+    }
+  ],
+  [
+    {
+      "data": 2.0
+    },
+    {
+      "data": "Tobias"
+    },
+    {
+      "data": "Zimmermann"
+    }
+  ],
+  [
+    {
+      "data": 3.0
+    },
+    {
+      "data": "Sophie"
+    },
+    {
+      "data": "Meyer"
+    }
+  ],
+  [
+    {
+      "data": 4.0
+    },
+    {
+      "data": "Peter"
+    },
+    {
+      "data": "Schmitt"
+    }
+  ],
+  [
+    {
+      "data": 5.0
+    },
+    {
+      "data": "Christian"
+    },
+    {
+      "data": "Braun"
+    }
+  ],
+  [
+    {
+      "data": 6.0
+    },
+    {
+      "data": "Hans"
+    },
+    {
+      "data": "Müller"
+    }
+  ]
+]

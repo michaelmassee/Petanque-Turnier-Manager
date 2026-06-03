@@ -27,6 +27,10 @@ public class TripTeteSpielPlanSheetTestDaten extends TripTeteSpielPlanSheet {
 		super(workingSpreadsheet);
 	}
 
+	public void generate() throws GenerateException {
+		doRun();
+	}
+
 	@Override
 	protected void doRun() throws GenerateException {
 		if (!NewTestDatenValidator.from(getWorkingSpreadsheet(), getSheetHelper(), TurnierSystem.TRIPTETE)

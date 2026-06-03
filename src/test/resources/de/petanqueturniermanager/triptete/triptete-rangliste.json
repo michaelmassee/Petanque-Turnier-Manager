@@ -1,0 +1,306 @@
+[
+  [
+    {
+      "data": 4.0
+    },
+    {
+      "data": "Peter Schmitt / Maria Bauer / Thomas Klein"
+    },
+    {
+      "data": 1.0
+    },
+    {
+      "data": 4.0
+    },
+    {
+      "data": 1.0
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": 5.0
+    },
+    {
+      "data": 5.0
+    },
+    {
+      "data": 163.0
+    },
+    {
+      "data": 108.0
+    },
+    {
+      "data": 55.0
+    },
+    {
+      "data": 5.0
+    }
+  ],
+  [
+    {
+      "data": 3.0
+    },
+    {
+      "data": "Sophie Meyer / Stefan Wolf / Laura Richter"
+    },
+    {
+      "data": 2.0
+    },
+    {
+      "data": 4.0
+    },
+    {
+      "data": 1.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 6.0
+    },
+    {
+      "data": 3.0
+    },
+    {
+      "data": 135.0
+    },
+    {
+      "data": 132.0
+    },
+    {
+      "data": 3.0
+    },
+    {
+      "data": 5.0
+    }
+  ],
+  [
+    {
+      "data": 5.0
+    },
+    {
+      "data": "Christian Braun / Julia Koch / Michael Schäfer"
+    },
+    {
+      "data": 3.0
+    },
+    {
+      "data": 2.0
+    },
+    {
+      "data": 3.0
+    },
+    {
+      "data": 8.0
+    },
+    {
+      "data": 7.0
+    },
+    {
+      "data": 1.0
+    },
+    {
+      "data": 147.0
+    },
+    {
+      "data": 145.0
+    },
+    {
+      "data": 2.0
+    },
+    {
+      "data": 5.0
+    }
+  ],
+  [
+    {
+      "data": 2.0
+    },
+    {
+      "data": "Tobias Zimmermann / Sandra Hartmann / David Krause"
+    },
+    {
+      "data": 4.0
+    },
+    {
+      "data": 2.0
+    },
+    {
+      "data": 3.0
+    },
+    {
+      "data": 6.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": -3.0
+    },
+    {
+      "data": 142.0
+    },
+    {
+      "data": 149.0
+    },
+    {
+      "data": -7.0
+    },
+    {
+      "data": 5.0
+    }
+  ],
+  [
+    {
+      "data": 1.0
+    },
+    {
+      "data": "Lukas Fischer / Eva Hofmann / Markus Weber"
+    },
+    {
+      "data": 5.0
+    },
+    {
+      "data": 2.0
+    },
+    {
+      "data": 3.0
+    },
+    {
+      "data": 6.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": -3.0
+    },
+    {
+      "data": 124.0
+    },
+    {
+      "data": 145.0
+    },
+    {
+      "data": -21.0
+    },
+    {
+      "data": 5.0
+    }
+  ],
+  [
+    {
+      "data": 6.0
+    },
+    {
+      "data": "Hans Müller / Klaus Schreiber / Anna Wagner"
+    },
+    {
+      "data": 6.0
+    },
+    {
+      "data": 1.0
+    },
+    {
+      "data": 4.0
+    },
+    {
+      "data": 6.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": -3.0
+    },
+    {
+      "data": 123.0
+    },
+    {
+      "data": 155.0
+    },
+    {
+      "data": -32.0
+    },
+    {
+      "data": 5.0
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": "Reihenfolge zur Ermittlung der Platzierung: 1. Punkte +, 2. Siege +, 3. Spielpunkte +, 4. Spielpunkte-Δ, 5. das Los"
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ]
+]

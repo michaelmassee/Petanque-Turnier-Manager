@@ -2,6 +2,9 @@ package de.petanqueturniermanager.triptete.rangliste;
 
 import com.sun.star.sheet.XSpreadsheet;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -20,6 +23,7 @@ import de.petanqueturniermanager.triptete.meldeliste.TripTeteMeldeListeSheetUpda
  */
 public class TripTeteRanglisteSheetUpdate extends SheetRunner implements ISheet {
 
+	private static final Logger logger = LogManager.getLogger(TripTeteRanglisteSheetUpdate.class);
 	private static final String METADATA_SCHLUESSEL = SheetMetadataHelper.SCHLUESSEL_TRIPTETE_RANGLISTE;
 
 	private final TripTeteKonfigurationSheet konfigurationSheet;
@@ -50,10 +54,13 @@ public class TripTeteRanglisteSheetUpdate extends SheetRunner implements ISheet 
 
 	@Override
 	protected void doRun() throws GenerateException {
-		// Nur ausführen wenn ein Rangliste-Sheet bereits existiert
-		if (getSheetHelper().findByName(SheetNamen.rangliste()) == null) {
+		XSpreadsheet sheet = getXSpreadSheet();
+		if (sheet == null) {
+			logger.debug("RanglisteUpdate: Trip-Tête-Rangliste nicht vorhanden – übersprungen");
 			return;
 		}
+		logger.debug("RanglisteUpdate START – Thread='{}'", Thread.currentThread().getName());
 		TripTeteRanglisteDatenSchreiber.from(this, meldeListe, getWorkingSpreadsheet()).schreibeDaten();
+		logger.debug("RanglisteUpdate ENDE");
 	}
 }
