@@ -33,11 +33,13 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
+import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.liga.konfiguration.LigaKonfigurationSheet;
@@ -127,34 +129,42 @@ class LigaMeldeListeDelegate implements MeldeListeKonstanten {
 		meldeListeHelper.testDoppelteMeldungen();
 
 		int headerBackColor = konfigurationSheet.getMeldeListeHeaderFarbe();
+		var geradeStyle = konfigurationSheet.getMeldeListeHintergrundFarbeGeradeStyle();
+		var ungeradeStyle = konfigurationSheet.getMeldeListeHintergrundFarbeUnGeradeStyle();
 		meldungenSpalte.insertHeaderInSheet(headerBackColor);
 		meldeListeHelper.zeileOhneSpielerNamenEntfernen();
 		meldeListeHelper.updateMeldungenNr();
 		meldeListeHelper.doSort(meldungenSpalte.getSpielerNrSpalte(), true);
 		meldungenSpalte.formatSpielrNrUndNamenspalten();
-		formatDaten();
-		formatInfoSpalten(headerBackColor);
+		formatDaten(geradeStyle, ungeradeStyle);
+		formatInfoSpalten(headerBackColor, geradeStyle, ungeradeStyle);
 
 		meldeListeHelper.insertTurnierSystemInHeader(turnierSystem);
 
 		SheetFreeze.from(sheet.getTurnierSheet()).anzZeilen(2).doFreeze();
+		printBereichDefinieren();
 	}
 
-	void formatDaten() throws GenerateException {
+	private void printBereichDefinieren() throws GenerateException {
+		int letzteDatenZeile = meldungenSpalte.letzteZeileMitSpielerName();
+		if (letzteDatenZeile < ERSTE_DATEN_ZEILE) {
+			return;
+		}
+		var bereich = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_HEADER_ZEILE, LETZTE_INFO_SPALTE, letzteDatenZeile);
+		PrintArea.from(sheet.getXSpreadSheet(), sheet.getWorkingSpreadsheet()).setPrintArea(bereich);
+	}
+
+	void formatDaten(MeldungenHintergrundFarbeGeradeStyle geradeStyle,
+			MeldungenHintergrundFarbeUnGeradeStyle ungeradeStyle) throws GenerateException {
 		sheet.processBoxinfo("processbox.meldeliste.spalten.formatieren");
 
 		int letzteDatenZeile = meldungenSpalte.getLetzteDatenZeileUseMin();
 
-		MeldungenHintergrundFarbeGeradeStyle meldungenHintergrundFarbeGeradeStyle = konfigurationSheet
-				.getMeldeListeHintergrundFarbeGeradeStyle();
-		MeldungenHintergrundFarbeUnGeradeStyle meldungenHintergrundFarbeUnGeradeStyle = konfigurationSheet
-				.getMeldeListeHintergrundFarbeUnGeradeStyle();
-
 		meldeListeHelper.insertFormulaFuerDoppelteSpielerNrGeradeUngradeFarbe(letzteDatenZeile, sheet,
-				meldungenHintergrundFarbeGeradeStyle, meldungenHintergrundFarbeUnGeradeStyle);
+				geradeStyle, ungeradeStyle);
 
 		meldeListeHelper.insertFormulaFuerDoppelteNamenGeradeUngradeFarbe(SPIELER_NR_SPALTE + 1, SPIELER_NR_SPALTE + 1,
-				letzteDatenZeile, sheet, meldungenHintergrundFarbeGeradeStyle, meldungenHintergrundFarbeUnGeradeStyle);
+				letzteDatenZeile, sheet, geradeStyle, ungeradeStyle);
 
 		var nameSpalteRange = RangePosition.from(SPIELER_NR_SPALTE + 1, ERSTE_DATEN_ZEILE,
 				SPIELER_NR_SPALTE + 1, letzteDatenZeile);
@@ -166,7 +176,8 @@ class LigaMeldeListeDelegate implements MeldeListeKonstanten {
 				CellProperties.from().setCellProtection(editierbar));
 	}
 
-	private void formatInfoSpalten(int headerBackColor) throws GenerateException {
+	private void formatInfoSpalten(int headerBackColor, MeldungenHintergrundFarbeGeradeStyle geradeStyle,
+			MeldungenHintergrundFarbeUnGeradeStyle ungeradeStyle) throws GenerateException {
 		sheet.processBoxinfo("processbox.meldeliste.spalten.formatieren");
 
 		int letzteDatenZeile = meldungenSpalte.getLetzteDatenZeileUseMin();
@@ -176,6 +187,8 @@ class LigaMeldeListeDelegate implements MeldeListeKonstanten {
 		var infoRange = RangePosition.from(MANNSCHAFTSFUEHRER_SPALTE, ERSTE_DATEN_ZEILE, LETZTE_INFO_SPALTE, letzteDatenZeile);
 		sheet.getSheetHelper().setPropertiesInRange(sheet.getXSpreadSheet(), infoRange, CellProperties.from()
 				.setBorder(BorderFactory.from().allThin().boldLn().forTop().toBorder()).setShrinkToFit(true));
+
+		SheetHelper.faerbeZeilenAbwechselnd(sheet, infoRange, geradeStyle.getFarbe(), ungeradeStyle.getFarbe());
 
 		EditierbaresZelleFormatHelper.anwenden(sheet, infoRange);
 
