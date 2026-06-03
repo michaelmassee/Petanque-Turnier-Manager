@@ -257,6 +257,11 @@ public class TripTeteRanglisteSheet extends SheetRunner implements ISheet {
 				.setRangeProperties(RangeProperties.from()
 						.setBorder(BorderFactory.from().doubleLn().forRight().toBorder()));
 
+		// Nr-Spalte: Datenzellen explizit zentriert (horizontal + vertikal)
+		getSheetHelper().setPropertiesInRange(getXSpreadSheet(),
+				RangePosition.from(TEAM_NR_SPALTE, ERSTE_DATEN_ZEILE, TEAM_NR_SPALTE, letzteDatenZeile),
+				CellProperties.from().centerJustify());
+
 		Integer farbeGerade = konfigurationSheet.getRanglisteHintergrundFarbeGerade();
 		Integer farbeUngerade = konfigurationSheet.getRanglisteHintergrundFarbeUnGerade();
 		RanglisteGeradeUngeradeFormatHelper.from(this, daten).geradeFarbe(farbeGerade)
