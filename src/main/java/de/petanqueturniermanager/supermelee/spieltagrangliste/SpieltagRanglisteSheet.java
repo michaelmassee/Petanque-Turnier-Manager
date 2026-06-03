@@ -192,6 +192,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements ISpielTagRang
 		nichtGespieltSpalteHeader();
 		berechnungUndSchreiben(getXSpreadSheet(), anzSpielRunden);
 		getSpielerSpalte().formatSpielrNrUndNamenspalten(false);
+		getSheetHelper().setOptimaleBreitePlusMarge(getXSpreadSheet(), SPIELER_NR_SPALTE, SheetHelper.OPTIMALE_BREITE_MARGE);
 		getRangListeSpalte().insertHeaderInSheet(headerColor);
 		ranglisteFormatter.formatDaten();
 		ranglisteFormatter.formatDatenErrorGeradeUngerade(validateSpalte());

@@ -45,6 +45,7 @@ import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.RanglisteGeradeUngeradeFormatHelper;
+import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
@@ -168,6 +169,7 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
 
         Map<Integer, String> teamNrZuName = leseTeamnamen(meldeliste);
         insertDatenAlsWerte(sheet, sortiert, wertungMap, teamNrZuName, akkumulierung.siegeMap());
+        getSheetHelper().setOptimaleBreitePlusMarge(sheet, TEAM_NR_SPALTE, SheetHelper.OPTIMALE_BREITE_MARGE);
 
         if (!sortiert.isEmpty()) {
             new RangListeSpalte(PLATZ_SPALTE, this).upDateRanglisteSpalte();
@@ -409,7 +411,6 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
         Integer headerColor = konfigurationSheet.getMeldeListeHeaderFarbe();
 
         int[][] spaltenBreiten = {
-                { TEAM_NR_SPALTE,     COL_WIDTH_NR   },
                 { TEAM_NAME_SPALTE,   COL_WIDTH_NAME  },
                 { PLATZ_SPALTE,       COL_WIDTH_NR   },
                 { WERTUNG_SPALTE,     COL_WIDTH_DATA  },

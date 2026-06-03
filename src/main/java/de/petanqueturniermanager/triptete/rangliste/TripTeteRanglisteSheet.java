@@ -154,7 +154,7 @@ public class TripTeteRanglisteSheet extends SheetRunner implements ISheet {
 						.setColumnProperties(colSchmal)
 						.setValue(I18n.get("column.header.nr"))
 						.setCellBackColor(headerBackColor)
-						.setBorder(brdDaten)
+						.setBorder(BorderFactory.from(borderFact).doubleLn().forRight().toBorder())
 						.setHoriJustify(CellHoriJustify.CENTER)
 						.setEndPosMergeZeilePlus(1)
 						.setShrinkToFit(true));
@@ -251,6 +251,11 @@ public class TripTeteRanglisteSheet extends SheetRunner implements ISheet {
 		RangePosition begegnungenDaten = RangePosition.from(BEGEGNUNGEN_SPALTE, ERSTE_DATEN_ZEILE, BEGEGNUNGEN_SPALTE, letzteDatenZeile);
 		RangeHelper.from(this, begegnungenDaten).setRangeProperties(
 				RangeProperties.from().setBorder(BorderFactory.from().allThin().boldLn().forTop().doubleLn().forLeft().toBorder()));
+
+		// Nr-Spalte: durchgehend rechte doppelte Linie (von Row 0 bis letzte Datenzeile)
+		RangeHelper.from(this, RangePosition.from(TEAM_NR_SPALTE, 0, TEAM_NR_SPALTE, letzteDatenZeile))
+				.setRangeProperties(RangeProperties.from()
+						.setBorder(BorderFactory.from().doubleLn().forRight().toBorder()));
 
 		Integer farbeGerade = konfigurationSheet.getRanglisteHintergrundFarbeGerade();
 		Integer farbeUngerade = konfigurationSheet.getRanglisteHintergrundFarbeUnGerade();

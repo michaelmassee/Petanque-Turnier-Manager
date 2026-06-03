@@ -38,6 +38,7 @@ import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.RanglisteGeradeUngeradeFormatHelper;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
+import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
@@ -183,6 +184,7 @@ public class JGJRanglisteSheet extends SheetRunner implements ISheet, IRangliste
         } else {
             berechnungUndSchreibenEinzel(sheet, meldeListe, aktiveMeldungen);
         }
+        getSheetHelper().setOptimaleBreitePlusMarge(sheet, TEAM_NR_SPALTE, SheetHelper.OPTIMALE_BREITE_MARGE);
     }
 
     private void berechnungUndSchreibenEinzel(XSpreadsheet sheet, JGJMeldeListeSheet_Update meldeListe,
@@ -335,7 +337,6 @@ public class JGJRanglisteSheet extends SheetRunner implements ISheet, IRangliste
         Integer headerFarbe = konfigurationSheet.getRanglisteHeaderFarbe();
 
         int[][] spaltenBreiten = {
-                { TEAM_NR_SPALTE, COL_WIDTH_NR },
                 { TEAM_NAME_SPALTE, COL_WIDTH_NAME },
                 { PLATZ_SPALTE, COL_WIDTH_NR },
                 { SPIELE_PLUS_SPALTE, COL_WIDTH_DATA },

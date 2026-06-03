@@ -40,6 +40,7 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.RanglisteGeradeUngeradeFormatHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.CellData;
@@ -290,6 +291,7 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 		// Teamnamen direkt aus der Meldeliste lesen
 		Map<Integer, String> teamNrZuName = leseTeamnamenAusSheet(meldeliste);
 		insertDatenAlsWerte(sheet, sortiert, bhzMap, fbhzMap, teamNrZuName);
+		getSheetHelper().setOptimaleBreitePlusMarge(sheet, TEAM_NR_SPALTE, SheetHelper.OPTIMALE_BREITE_MARGE);
 
 		if (!sortiert.isEmpty()) {
 			new RangListeSpalte(PLATZ_SPALTE, this).upDateRanglisteSpalte();
@@ -438,7 +440,6 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 		// ── Spaltenbreiten setzen ──────────────────────────────────────────────────
 		int[][] spaltenBreiten = {
 				{ PLATZ_SPALTE,        COL_WIDTH_NR   },
-				{ TEAM_NR_SPALTE,      COL_WIDTH_NR   },
 				{ TEAM_NAME_SPALTE,    COL_WIDTH_NAME  },
 				{ SIEGE_SPALTE,        COL_WIDTH_DATA  },
 				{ BHZ_SPALTE,          COL_WIDTH_DATA  },

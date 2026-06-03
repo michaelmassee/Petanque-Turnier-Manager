@@ -51,6 +51,7 @@ import de.petanqueturniermanager.helper.sheet.ControllerLock;
 import de.petanqueturniermanager.helper.sheet.RanglisteGeradeUngeradeFormatHelper;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
+import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
@@ -142,6 +143,7 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 			anzSpieltageSpalteHeader();
 
 			berechnungUndSchreiben(getXSpreadSheet());
+			getSheetHelper().setOptimaleBreitePlusMarge(getXSpreadSheet(), SPIELER_NR_SPALTE, SheetHelper.OPTIMALE_BREITE_MARGE);
 
 			endRanglisteFormatter.formatDaten();
 			rangListeSpalte.insertHeaderInSheet(headerColor);

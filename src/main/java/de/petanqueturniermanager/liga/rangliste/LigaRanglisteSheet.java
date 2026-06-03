@@ -42,6 +42,7 @@ import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.RanglisteGeradeUngeradeFormatHelper;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
+import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
@@ -77,7 +78,6 @@ public class LigaRanglisteSheet extends SheetRunner implements ISheet, IRanglist
 	static final int SP_PUNKTE_DIFF_SPALTE = 10;
 	private static final int BEGEGNUNGEN_SPALTE = 11;
 
-	private static final int COL_WIDTH_NR = 800;
 	private static final int COL_WIDTH_NAME = 7000;
 	private static final int COL_WIDTH_RANGLISTE = 800;
 	private static final int COL_WIDTH_DATA = 1400;
@@ -173,6 +173,7 @@ public class LigaRanglisteSheet extends SheetRunner implements ISheet, IRanglist
 		List<LigaTeamStats> sortiert = berechneUndSortiere(aktiveMeldungen, teamNamen);
 
 		schreibeDatenAlsWerte(sheet, sortiert);
+		getSheetHelper().setOptimaleBreitePlusMarge(sheet, TEAM_NR_SPALTE, SheetHelper.OPTIMALE_BREITE_MARGE);
 
 		if (!sortiert.isEmpty()) {
 			new RangListeSpalte(RANGLISTE_SPALTE, this).upDateRanglisteSpalte();
@@ -374,7 +375,6 @@ public class LigaRanglisteSheet extends SheetRunner implements ISheet, IRanglist
 
 	private void setzeSpaltenBreiten(XSpreadsheet sheet) throws GenerateException {
 		int[][] breiten = {
-				{ TEAM_NR_SPALTE, COL_WIDTH_NR },
 				{ TEAM_NAME_SPALTE, COL_WIDTH_NAME },
 				{ RANGLISTE_SPALTE, COL_WIDTH_RANGLISTE },
 				{ PUNKTE_PLUS_SPALTE, COL_WIDTH_DATA },
