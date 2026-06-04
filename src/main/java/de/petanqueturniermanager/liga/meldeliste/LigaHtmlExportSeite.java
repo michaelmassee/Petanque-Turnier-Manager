@@ -67,16 +67,18 @@ public class LigaHtmlExportSeite {
 
     public String erstelle() throws GenerateException {
         var doc = workingSpreadsheet.getWorkingSpreadsheetDocument();
+        var meldeliste = renderSheet(SheetNamen.meldeliste(), doc);
         var spielplan = renderSheet(LigaSpielPlanSheet.sheetName(), doc);
         var rangliste = renderSheet(SheetNamen.rangliste(), doc);
         var direktvergleich = renderSheet(SheetNamen.direktvergleich(), doc);
 
-        return assembliere(spielplan, rangliste, direktvergleich);
+        return assembliere(meldeliste, spielplan, rangliste, direktvergleich);
     }
 
     /** Nur für Tests: assembliert die Seite aus vorgerenderten Tabellen-HTML-Strings. */
-    String erstelleAusRendertHtml(String spielplanHtml, String ranglisteHtml, String direktvergleichHtml) {
-        return assembliere(spielplanHtml, ranglisteHtml, direktvergleichHtml);
+    String erstelleAusRendertHtml(String meldelisteHtml, String spielplanHtml,
+            String ranglisteHtml, String direktvergleichHtml) {
+        return assembliere(meldelisteHtml, spielplanHtml, ranglisteHtml, direktvergleichHtml);
     }
 
     /** Nur für Tests: liefert eine Instanz ohne UNO-Abhängigkeit (WorkingSpreadsheet darf null sein). */
@@ -94,7 +96,8 @@ public class LigaHtmlExportSeite {
         return tabelleHtmlRenderer.render(model);
     }
 
-    private String assembliere(String spielplanHtml, String ranglisteHtml, String direktvergleichHtml) {
+    private String assembliere(String meldelisteHtml, String spielplanHtml,
+            String ranglisteHtml, String direktvergleichHtml) {
         var sb = new StringBuilder(8192);
 
         sb.append("<!DOCTYPE html>\n<html lang=\"de\">\n<head>\n");
@@ -124,12 +127,14 @@ public class LigaHtmlExportSeite {
         sb.append("\n</header>\n");
 
         sb.append("<nav>\n");
+        sb.append(navLink("meldeliste", I18n.get("export.liga.nav.meldeliste")));
         sb.append(navLink("spielplan", I18n.get("export.liga.nav.spielplan")));
         sb.append(navLink("rangliste", I18n.get("export.liga.nav.rangliste")));
         sb.append(navLink("direktvergleich", I18n.get("export.liga.nav.direktvergleich")));
         sb.append("\n</nav>\n");
 
         sb.append("<main>\n");
+        appendSection(sb, "meldeliste", I18n.get("export.liga.nav.meldeliste"), null, meldelisteHtml);
         appendSection(sb, "spielplan", I18n.get("export.liga.nav.spielplan"), spielplanPdfUrl, spielplanHtml);
         appendSection(sb, "rangliste", I18n.get("export.liga.nav.rangliste"), ranglistePdfUrl, ranglisteHtml);
         appendSection(sb, "direktvergleich", I18n.get("export.liga.nav.direktvergleich"), null, direktvergleichHtml);
