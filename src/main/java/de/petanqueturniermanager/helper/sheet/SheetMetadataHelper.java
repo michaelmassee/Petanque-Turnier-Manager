@@ -635,6 +635,37 @@ public class SheetMetadataHelper {
     }
 
     /**
+     * Prüft ob dem angegebenen Sheet irgendein Metadaten-Schlüssel zugeordnet ist,
+     * der mit {@code praefix} beginnt. Nützlich für Systeme mit dynamischen
+     * Schlüsseln (z.B. {@code __PTM_SCHWEIZER_SPIELRUNDE_1__}, {@code _2__} …).
+     */
+    public static boolean hatPraefixSchluessel(XSpreadsheetDocument xDoc,
+                                               XSpreadsheet xSheet, String praefix) {
+        try {
+            XNamedRanges namedRanges = namedRangesAusDoc(xDoc);
+            if (namedRanges == null) return false;
+            int targetIdx = sheetIndex(xDoc, xSheet);
+            for (String name : namedRanges.getElementNames()) {
+                if (!name.startsWith(praefix)) continue;
+                try {
+                    Object rangeObj = namedRanges.getByName(name);
+                    Integer idx = sheetIndexAusNamedRangeObj(rangeObj);
+                    if (idx != null && idx == targetIdx) return true;
+                } catch (Exception e) {
+                    LogUtil.warn(logger, "Named-Range '" + name + "' Präfix-Check fehlgeschlagen", e);
+                } catch (Error e) {
+                    throw e;
+                }
+            }
+        } catch (Exception e) {
+            LogUtil.warn(logger, "Präfix-Schlüssel-Suche fehlgeschlagen für '" + praefix + "'", e);
+        } catch (Error e) {
+            throw e;
+        }
+        return false;
+    }
+
+    /**
      * Sucht die Spieltag-Nummer für das angegebene Sheet, indem alle
      * {@code __PTM_SPIELTAG_N__}-Einträge durchsucht werden.
      *

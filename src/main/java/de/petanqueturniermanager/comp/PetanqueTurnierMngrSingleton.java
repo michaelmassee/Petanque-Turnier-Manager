@@ -25,7 +25,32 @@ import de.petanqueturniermanager.formulex.rangliste.FormuleXRanglisteSheetUpdate
 import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJCheckinListeSheetUpdate;
 import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJTeilnehmerSheetUpdate;
 import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteSheetUpdate;
+import de.petanqueturniermanager.formulex.blattschutz.FormuleXBlattschutzKonfiguration;
+import de.petanqueturniermanager.formulex.konfiguration.FormuleXKonfigurationSheet;
+import de.petanqueturniermanager.formulex.spielrunde.FormuleXAbstractSpielrundeSheet;
+import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.sheet.search.RangeSearchHelper;
+import de.petanqueturniermanager.helper.sheetsync.SpielplanFormatiererActivationListener;
+import de.petanqueturniermanager.helper.sheetsync.SpielplanFormatiererKonfig;
+import de.petanqueturniermanager.helper.sheetsync.SpielplanFormatiererSheetRunner;
+import de.petanqueturniermanager.jedergegenjeden.blattschutz.JGJBlattschutzKonfiguration;
+import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationSheet;
+import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJSpielPlanSheet;
+import de.petanqueturniermanager.liga.blattschutz.LigaBlattschutzKonfiguration;
+import de.petanqueturniermanager.liga.konfiguration.LigaKonfigurationSheet;
 import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheetUpdate;
+import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet;
+import de.petanqueturniermanager.maastrichter.blattschutz.MaastrichterBlattschutzKonfiguration;
+import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
+import de.petanqueturniermanager.schweizer.blattschutz.SchweizerBlattschutzKonfiguration;
+import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
+import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrundeSheet;
+import de.petanqueturniermanager.supermelee.blattschutz.SupermeleeBlattschutzKonfiguration;
+import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
+import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheetKonstanten;
+import de.petanqueturniermanager.triptete.blattschutz.TripTeteBlattschutzKonfiguration;
+import de.petanqueturniermanager.triptete.konfiguration.TripTeteKonfigurationSheet;
+import de.petanqueturniermanager.triptete.spielplan.TripTeteSpielPlanSheet;
 import de.petanqueturniermanager.kaskade.meldeliste.KaskadeCheckinListeSheetUpdate;
 import de.petanqueturniermanager.kaskade.meldeliste.KaskadeTeilnehmerSheetUpdate;
 import de.petanqueturniermanager.kaskade.spielrunde.KaskadeGruppenRanglisteSheetUpdate;
@@ -355,6 +380,184 @@ public class PetanqueTurnierMngrSingleton {
 					return update;
 				}));
 		logTimingAndReset("SheetSyncListener CHECKIN-LISTEN", t);
+
+		// Spielplan-Formatierer: reparieren Zebra und editierbare-Felder-CF beim Tab-Aktivieren
+		addGlobalEventListener(SpielplanFormatiererActivationListener.fuerSchluessel(context,
+				SheetMetadataHelper.SCHLUESSEL_LIGA_SPIELPLAN,
+				(ws, xSheet) -> new SpielplanFormatiererSheetRunner(ws, xSheet, iSheet -> {
+					int letzteZeile = LigaSpielPlanSheet.letzteSpielZeile(iSheet);
+					if (letzteZeile < LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE) return null;
+					var konfig = new LigaKonfigurationSheet(ws);
+					var datenRange = RangePosition.from(LigaSpielPlanSheet.SPIEL_NR_SPALTE,
+							LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE,
+							LigaSpielPlanSheet.SPIELPNKT_B_SPALTE, letzteZeile);
+					var editierbar = java.util.List.of(
+							RangePosition.from(LigaSpielPlanSheet.DATUM_SPALTE,
+									LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE,
+									LigaSpielPlanSheet.ORT_SPALTE, letzteZeile),
+							RangePosition.from(LigaSpielPlanSheet.PUNKTE_A_SPALTE,
+									LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE,
+									LigaSpielPlanSheet.SPIELPNKT_B_SPALTE, letzteZeile));
+					return new SpielplanFormatiererKonfig(datenRange, editierbar,
+							konfig.getSpielPlanHintergrundFarbeGerade(),
+							konfig.getSpielPlanHintergrundFarbeUnGerade(),
+							LigaBlattschutzKonfiguration.get());
+				})));
+
+		addGlobalEventListener(SpielplanFormatiererActivationListener.fuerSchluessel(context,
+				SheetMetadataHelper.SCHLUESSEL_JGJ_SPIELPLAN,
+				(ws, xSheet) -> new SpielplanFormatiererSheetRunner(ws, xSheet, iSheet -> {
+					int letzteZeile = RangeSearchHelper.from(iSheet, RangePosition.from(
+							JGJSpielPlanSheet.SPIEL_NR_SPALTE, 0, JGJSpielPlanSheet.SPIEL_NR_SPALTE, 999))
+							.searchLastNotEmptyInSpalte().getZeile();
+					if (letzteZeile < JGJSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE) return null;
+					var konfig = new JGJKonfigurationSheet(ws);
+					var datenRange = RangePosition.from(JGJSpielPlanSheet.SPIEL_NR_SPALTE,
+							JGJSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE,
+							JGJSpielPlanSheet.SPIELPNKT_B_SPALTE, letzteZeile);
+					var editierbar = java.util.List.of(RangePosition.from(JGJSpielPlanSheet.SPIELPNKT_A_SPALTE,
+							JGJSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE,
+							JGJSpielPlanSheet.SPIELPNKT_B_SPALTE, letzteZeile));
+					return new SpielplanFormatiererKonfig(datenRange, editierbar,
+							konfig.getSpielPlanHintergrundFarbeGerade(),
+							konfig.getSpielPlanHintergrundFarbeUnGerade(),
+							JGJBlattschutzKonfiguration.get());
+				})));
+
+		addGlobalEventListener(SpielplanFormatiererActivationListener.fuerSchluessel(context,
+				SheetMetadataHelper.SCHLUESSEL_TRIPTETE_SPIELPLAN,
+				(ws, xSheet) -> new SpielplanFormatiererSheetRunner(ws, xSheet, iSheet -> {
+					int letzteZeile = RangeSearchHelper.from(iSheet, RangePosition.from(
+							TripTeteSpielPlanSheet.SPIEL_NR_SPALTE, 0, TripTeteSpielPlanSheet.SPIEL_NR_SPALTE, 999))
+							.searchLastNotEmptyInSpalte().getZeile();
+					if (letzteZeile < TripTeteSpielPlanSheet.ERSTE_DATEN_ZEILE) return null;
+					var konfig = new TripTeteKonfigurationSheet(ws);
+					var datenRange = RangePosition.from(TripTeteSpielPlanSheet.SPIEL_NR_SPALTE,
+							TripTeteSpielPlanSheet.ERSTE_DATEN_ZEILE,
+							TripTeteSpielPlanSheet.TETE_B_SPALTE, letzteZeile);
+					var editierbar = java.util.List.of(
+							RangePosition.from(TripTeteSpielPlanSheet.BAHN_TRI_SPALTE,
+									TripTeteSpielPlanSheet.ERSTE_DATEN_ZEILE,
+									TripTeteSpielPlanSheet.BAHN_TETE_SPALTE, letzteZeile),
+							RangePosition.from(TripTeteSpielPlanSheet.TRI_A_SPALTE,
+									TripTeteSpielPlanSheet.ERSTE_DATEN_ZEILE,
+									TripTeteSpielPlanSheet.TETE_B_SPALTE, letzteZeile));
+					return new SpielplanFormatiererKonfig(datenRange, editierbar,
+							konfig.getSpielPlanHintergrundFarbeGerade(),
+							konfig.getSpielPlanHintergrundFarbeUnGerade(),
+							TripTeteBlattschutzKonfiguration.get());
+				})));
+
+		addGlobalEventListener(SpielplanFormatiererActivationListener.fuerPraefix(context,
+				SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_SPIELRUNDE_PREFIX,
+				(ws, xSheet) -> new SpielplanFormatiererSheetRunner(ws, xSheet, iSheet -> {
+					int letzteZeile = RangeSearchHelper.from(iSheet, RangePosition.from(
+							SchweizerAbstractSpielrundeSheet.BAHN_NR_SPALTE, 0,
+							SchweizerAbstractSpielrundeSheet.BAHN_NR_SPALTE, 999))
+							.searchLastNotEmptyInSpalte().getZeile();
+					if (letzteZeile < SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE) return null;
+					var konfig = new SchweizerKonfigurationSheet(ws);
+					var datenRange = RangePosition.from(SchweizerAbstractSpielrundeSheet.BAHN_NR_SPALTE,
+							SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE,
+							SchweizerAbstractSpielrundeSheet.ERG_TEAM_B_SPALTE, letzteZeile);
+					var editierbar = java.util.List.of(RangePosition.from(
+							SchweizerAbstractSpielrundeSheet.ERG_TEAM_A_SPALTE,
+							SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE,
+							SchweizerAbstractSpielrundeSheet.ERG_TEAM_B_SPALTE, letzteZeile));
+					return new SpielplanFormatiererKonfig(datenRange, editierbar,
+							konfig.getSpielRundeHintergrundFarbeGerade(),
+							konfig.getSpielRundeHintergrundFarbeUnGerade(),
+							SchweizerBlattschutzKonfiguration.get());
+				})));
+
+		addGlobalEventListener(SpielplanFormatiererActivationListener.fuerPraefix(context,
+				SheetMetadataHelper.SCHLUESSEL_FORMULEX_SPIELRUNDE_PREFIX,
+				(ws, xSheet) -> new SpielplanFormatiererSheetRunner(ws, xSheet, iSheet -> {
+					int letzteZeile = RangeSearchHelper.from(iSheet, RangePosition.from(
+							FormuleXAbstractSpielrundeSheet.BAHN_NR_SPALTE, 0,
+							FormuleXAbstractSpielrundeSheet.BAHN_NR_SPALTE, 999))
+							.searchLastNotEmptyInSpalte().getZeile();
+					if (letzteZeile < FormuleXAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE) return null;
+					var konfig = new FormuleXKonfigurationSheet(ws);
+					var datenRange = RangePosition.from(FormuleXAbstractSpielrundeSheet.BAHN_NR_SPALTE,
+							FormuleXAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE,
+							FormuleXAbstractSpielrundeSheet.ERG_TEAM_B_SPALTE, letzteZeile);
+					// Freilos-Zellen haben keine editierbare CF → CF-Repair nur bei komplett fehlendem CF
+					var editierbar = java.util.List.of(RangePosition.from(
+							FormuleXAbstractSpielrundeSheet.ERG_TEAM_A_SPALTE,
+							FormuleXAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE,
+							FormuleXAbstractSpielrundeSheet.ERG_TEAM_B_SPALTE, letzteZeile));
+					return new SpielplanFormatiererKonfig(datenRange, editierbar,
+							konfig.getSpielRundeHintergrundFarbeGerade(),
+							konfig.getSpielRundeHintergrundFarbeUnGerade(),
+							FormuleXBlattschutzKonfiguration.get());
+				})));
+
+		addGlobalEventListener(SpielplanFormatiererActivationListener.fuerPraefix(context,
+				SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_SPIELRUNDE_PREFIX,
+				(ws, xSheet) -> new SpielplanFormatiererSheetRunner(ws, xSheet, iSheet -> {
+					int letzteZeile = RangeSearchHelper.from(iSheet, RangePosition.from(
+							SpielrundeSheetKonstanten.PAARUNG_CNTR_SPALTE, 0,
+							SpielrundeSheetKonstanten.PAARUNG_CNTR_SPALTE, 999))
+							.searchLastNotEmptyInSpalte().getZeile();
+					if (letzteZeile < SpielrundeSheetKonstanten.ERSTE_DATEN_ZEILE) return null;
+					var konfig = new SuperMeleeKonfigurationSheet(ws);
+					var datenRange = RangePosition.from(SpielrundeSheetKonstanten.NUMMER_SPALTE_RUNDESPIELPLAN,
+							SpielrundeSheetKonstanten.ERSTE_DATEN_ZEILE,
+							SpielrundeSheetKonstanten.ERSTE_SPALTE_ERGEBNISSE + 1, letzteZeile);
+					var editierbar = java.util.List.of(RangePosition.from(
+							SpielrundeSheetKonstanten.ERSTE_SPALTE_ERGEBNISSE,
+							SpielrundeSheetKonstanten.ERSTE_DATEN_ZEILE,
+							SpielrundeSheetKonstanten.ERSTE_SPALTE_ERGEBNISSE + 1, letzteZeile));
+					return new SpielplanFormatiererKonfig(datenRange, editierbar,
+							konfig.getSpielRundeHintergrundFarbeGerade(),
+							konfig.getSpielRundeHintergrundFarbeUnGerade(),
+							SupermeleeBlattschutzKonfiguration.get());
+				})));
+
+		addGlobalEventListener(SpielplanFormatiererActivationListener.fuerPraefix(context,
+				SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX,
+				(ws, xSheet) -> new SpielplanFormatiererSheetRunner(ws, xSheet, iSheet -> {
+					int letzteZeile = RangeSearchHelper.from(iSheet, RangePosition.from(
+							SchweizerAbstractSpielrundeSheet.BAHN_NR_SPALTE, 0,
+							SchweizerAbstractSpielrundeSheet.BAHN_NR_SPALTE, 999))
+							.searchLastNotEmptyInSpalte().getZeile();
+					if (letzteZeile < SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE) return null;
+					var konfig = new MaastrichterKonfigurationSheet(ws);
+					var datenRange = RangePosition.from(SchweizerAbstractSpielrundeSheet.BAHN_NR_SPALTE,
+							SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE,
+							SchweizerAbstractSpielrundeSheet.ERG_TEAM_B_SPALTE, letzteZeile);
+					var editierbar = java.util.List.of(RangePosition.from(
+							SchweizerAbstractSpielrundeSheet.ERG_TEAM_A_SPALTE,
+							SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE,
+							SchweizerAbstractSpielrundeSheet.ERG_TEAM_B_SPALTE, letzteZeile));
+					return new SpielplanFormatiererKonfig(datenRange, editierbar,
+							konfig.getSpielRundeHintergrundFarbeGerade(),
+							konfig.getSpielRundeHintergrundFarbeUnGerade(),
+							MaastrichterBlattschutzKonfiguration.get());
+				})));
+
+		addGlobalEventListener(SpielplanFormatiererActivationListener.fuerPraefix(context,
+				SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_FINALRUNDE_PREFIX,
+				(ws, xSheet) -> new SpielplanFormatiererSheetRunner(ws, xSheet, iSheet -> {
+					int letzteZeile = RangeSearchHelper.from(iSheet, RangePosition.from(
+							SchweizerAbstractSpielrundeSheet.BAHN_NR_SPALTE, 0,
+							SchweizerAbstractSpielrundeSheet.BAHN_NR_SPALTE, 999))
+							.searchLastNotEmptyInSpalte().getZeile();
+					if (letzteZeile < SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE) return null;
+					var konfig = new MaastrichterKonfigurationSheet(ws);
+					var datenRange = RangePosition.from(SchweizerAbstractSpielrundeSheet.BAHN_NR_SPALTE,
+							SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE,
+							SchweizerAbstractSpielrundeSheet.ERG_TEAM_B_SPALTE, letzteZeile);
+					var editierbar = java.util.List.of(RangePosition.from(
+							SchweizerAbstractSpielrundeSheet.ERG_TEAM_A_SPALTE,
+							SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE,
+							SchweizerAbstractSpielrundeSheet.ERG_TEAM_B_SPALTE, letzteZeile));
+					return new SpielplanFormatiererKonfig(datenRange, editierbar,
+							konfig.getSpielRundeHintergrundFarbeGerade(),
+							konfig.getSpielRundeHintergrundFarbeUnGerade(),
+							MaastrichterBlattschutzKonfiguration.get());
+				})));
 
 		long initGesamtMs = (System.nanoTime() - initStartNs) / 1_000_000L;
 		PerfLog.log(logger, "[STARTUP-TIMING] PetanqueTurnierMngrSingleton.init GESAMT={} ms (jvm-uptime={} ms)",

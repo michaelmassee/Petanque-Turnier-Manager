@@ -472,7 +472,16 @@ public class LigaSpielPlanSheet extends SheetRunner implements ISheet {
 	}
 
 	private int letzteSpielZeile() throws GenerateException {
-		return RangeSearchHelper.from(this, RangePosition.from(SPIEL_NR_SPALTE, 0, SPIEL_NR_SPALTE, 999))
+		return letzteSpielZeile(this);
+	}
+
+	/**
+	 * Statische Variante: ermittelt die letzte Daten-Zeile des Spielplans anhand der
+	 * Spiel-Nr-Spalte. Nutzbar ohne vollständig initialisiertes {@code LigaSpielPlanSheet}
+	 * (z.B. im Formatierer-Runner oder in {@link de.petanqueturniermanager.liga.blattschutz.LigaBlattschutzKonfiguration}).
+	 */
+	public static int letzteSpielZeile(ISheet iSheet) throws GenerateException {
+		return RangeSearchHelper.from(iSheet, RangePosition.from(SPIEL_NR_SPALTE, 0, SPIEL_NR_SPALTE, 999))
 				.searchLastNotEmptyInSpalte().getZeile();
 	}
 
