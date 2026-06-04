@@ -354,8 +354,11 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	public String getTurnierlogoUrl() {
 		var val = readStringProperty(KONFIG_PROP_TURNIERLOGO_URL);
 		if (val.isEmpty()) {
-			// Migration: alten Liga-spezifischen Schlüssel übernehmen
+			// Migration: alten Liga-spezifischen Schlüssel einmalig in neuen Schlüssel übertragen
 			val = readStringProperty("Liga-Logo Url");
+			if (!val.isEmpty()) {
+				setStringProperty(KONFIG_PROP_TURNIERLOGO_URL, val);
+			}
 		}
 		return val;
 	}
