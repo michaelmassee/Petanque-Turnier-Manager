@@ -19,11 +19,9 @@ import com.sun.star.lang.XMultiServiceFactory;
 import com.sun.star.sheet.XCellRangeAddressable;
 import com.sun.star.sheet.XHeaderFooterContent;
 import com.sun.star.sheet.XPrintAreas;
-import com.sun.star.sheet.XSheetCellCursor;
 import com.sun.star.sheet.XSheetCellRange;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
-import com.sun.star.sheet.XUsedAreaCursor;
 import com.sun.star.style.XStyleFamiliesSupplier;
 import com.sun.star.table.CellContentType;
 import com.sun.star.table.CellHoriJustify;
@@ -614,9 +612,9 @@ public class TabellenMapper {
                 }
             }
         } catch (Exception e) {
-            logger.debug("Druckbereich nicht ermittelbar, verwende Used Area", e);
+            logger.debug("Druckbereich nicht ermittelbar", e);
         }
-        return ermittleUsedArea(sheet);
+        return null;
     }
 
     /**
@@ -636,20 +634,6 @@ public class TabellenMapper {
             box.EndRow = Math.max(box.EndRow, bereiche[i].EndRow);
         }
         return box;
-    }
-
-    private CellRangeAddress ermittleUsedArea(XSpreadsheet sheet) {
-        try {
-            XSheetCellCursor cursor = sheet.createCursor();
-            var usedCursor = Lo.qi(XUsedAreaCursor.class, cursor);
-            usedCursor.gotoStartOfUsedArea(false);
-            usedCursor.gotoEndOfUsedArea(true);
-            var addrAble = Lo.qi(XCellRangeAddressable.class, cursor);
-            return addrAble.getRangeAddress();
-        } catch (Exception e) {
-            logger.error("Fehler beim Ermitteln des Used-Area", e);
-            return null;
-        }
     }
 
     private List<List<String>> rohGitterZuListe(String[][] gitterRaw, int numZeilen) {

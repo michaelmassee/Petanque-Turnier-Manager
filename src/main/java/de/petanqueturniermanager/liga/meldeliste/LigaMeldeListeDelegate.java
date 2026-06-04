@@ -39,7 +39,6 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
-import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.liga.konfiguration.LigaKonfigurationSheet;
@@ -142,16 +141,6 @@ class LigaMeldeListeDelegate implements MeldeListeKonstanten {
 		meldeListeHelper.insertTurnierSystemInHeader(turnierSystem);
 
 		SheetFreeze.from(sheet.getTurnierSheet()).anzZeilen(2).doFreeze();
-		printBereichDefinieren();
-	}
-
-	private void printBereichDefinieren() throws GenerateException {
-		int letzteDatenZeile = meldungenSpalte.letzteZeileMitSpielerName();
-		if (letzteDatenZeile < ERSTE_DATEN_ZEILE) {
-			return;
-		}
-		var bereich = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_HEADER_ZEILE, LETZTE_INFO_SPALTE, letzteDatenZeile);
-		PrintArea.from(sheet.getXSpreadSheet(), sheet.getWorkingSpreadsheet()).setPrintArea(bereich);
 	}
 
 	void formatDaten(MeldungenHintergrundFarbeGeradeStyle geradeStyle,

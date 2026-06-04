@@ -9,15 +9,14 @@ import org.junit.jupiter.api.Test;
 
 class LigaHtmlExportSeiteTest {
 
-    private static final String MELDELISTE_HTML = "<table><tbody><tr><td>Spieler</td></tr></tbody></table>";
     private static final String SPIELPLAN_HTML = "<table><tbody><tr><td>KW</td></tr></tbody></table>";
     private static final String RANGLISTE_HTML = "<table><tbody><tr><td>Platz</td></tr></tbody></table>";
     private static final String DIREKTVERGLEICH_HTML = "<table><tbody><tr><td>DV</td></tr></tbody></table>";
 
     @Test
-    void vierSectionIdsVorhanden() {
-        var html = seite().erstelleAusRendertHtml(MELDELISTE_HTML, SPIELPLAN_HTML, RANGLISTE_HTML, DIREKTVERGLEICH_HTML);
-        assertThat(html).contains("id=\"meldeliste\"");
+    void dreiSectionIdsVorhandenKeineMeldeliste() {
+        var html = seite().erstelleAusRendertHtml(SPIELPLAN_HTML, RANGLISTE_HTML, DIREKTVERGLEICH_HTML);
+        assertThat(html).doesNotContain("id=\"meldeliste\"");
         assertThat(html).contains("id=\"spielplan\"");
         assertThat(html).contains("id=\"rangliste\"");
         assertThat(html).contains("id=\"direktvergleich\"");
@@ -27,14 +26,14 @@ class LigaHtmlExportSeiteTest {
     void pdfLinkErscheint_wennSpielplanUrlGesetzt() {
         var html = seite()
                 .spielplanPdfUrl("https://example.com/spielplan.pdf")
-                .erstelleAusRendertHtml(MELDELISTE_HTML, SPIELPLAN_HTML, RANGLISTE_HTML, DIREKTVERGLEICH_HTML);
+                .erstelleAusRendertHtml(SPIELPLAN_HTML, RANGLISTE_HTML, DIREKTVERGLEICH_HTML);
         assertThat(html).contains("href=\"https://example.com/spielplan.pdf\"");
         assertThat(html).contains("class=\"pdf-btn\"");
     }
 
     @Test
     void keinPdfLink_wennUrlFehlt() {
-        var html = seite().erstelleAusRendertHtml(MELDELISTE_HTML, SPIELPLAN_HTML, RANGLISTE_HTML, DIREKTVERGLEICH_HTML);
+        var html = seite().erstelleAusRendertHtml(SPIELPLAN_HTML, RANGLISTE_HTML, DIREKTVERGLEICH_HTML);
         assertThat(html).doesNotContain("<a class=\"pdf-btn\"");
     }
 
@@ -42,7 +41,7 @@ class LigaHtmlExportSeiteTest {
     void pdfLinkErscheint_wennRanglisteUrlGesetzt() {
         var html = seite()
                 .ranglistePdfUrl("https://example.com/rangliste.pdf")
-                .erstelleAusRendertHtml(MELDELISTE_HTML, SPIELPLAN_HTML, RANGLISTE_HTML, DIREKTVERGLEICH_HTML);
+                .erstelleAusRendertHtml(SPIELPLAN_HTML, RANGLISTE_HTML, DIREKTVERGLEICH_HTML);
         assertThat(html).contains("href=\"https://example.com/rangliste.pdf\"");
     }
 
@@ -50,7 +49,7 @@ class LigaHtmlExportSeiteTest {
     void logoUrlWirdEscaped() {
         var html = seite()
                 .logoUrl("https://example.com/logo.png?a=1&b=2")
-                .erstelleAusRendertHtml(MELDELISTE_HTML, SPIELPLAN_HTML, RANGLISTE_HTML, DIREKTVERGLEICH_HTML);
+                .erstelleAusRendertHtml(SPIELPLAN_HTML, RANGLISTE_HTML, DIREKTVERGLEICH_HTML);
         assertThat(html).contains("src=\"https://example.com/logo.png?a=1&amp;b=2\"");
         assertThat(html).doesNotContain("src=\"https://example.com/logo.png?a=1&b=2\"");
     }
@@ -59,15 +58,14 @@ class LigaHtmlExportSeiteTest {
     void grOuppennameWirdEscaped() {
         var html = seite()
                 .gruppenname("<Gruppe A>")
-                .erstelleAusRendertHtml(MELDELISTE_HTML, SPIELPLAN_HTML, RANGLISTE_HTML, DIREKTVERGLEICH_HTML);
+                .erstelleAusRendertHtml(SPIELPLAN_HTML, RANGLISTE_HTML, DIREKTVERGLEICH_HTML);
         assertThat(html).contains("&lt;Gruppe A&gt;");
         assertThat(html).doesNotContain("<Gruppe A>");
     }
 
     @Test
     void tabellenHtmlWirdEingebettet() {
-        var html = seite().erstelleAusRendertHtml(MELDELISTE_HTML, SPIELPLAN_HTML, RANGLISTE_HTML, DIREKTVERGLEICH_HTML);
-        assertThat(html).contains(MELDELISTE_HTML);
+        var html = seite().erstelleAusRendertHtml(SPIELPLAN_HTML, RANGLISTE_HTML, DIREKTVERGLEICH_HTML);
         assertThat(html).contains(SPIELPLAN_HTML);
         assertThat(html).contains(RANGLISTE_HTML);
         assertThat(html).contains(DIREKTVERGLEICH_HTML);
@@ -75,8 +73,8 @@ class LigaHtmlExportSeiteTest {
 
     @Test
     void navLinksVorhanden() {
-        var html = seite().erstelleAusRendertHtml(MELDELISTE_HTML, SPIELPLAN_HTML, RANGLISTE_HTML, DIREKTVERGLEICH_HTML);
-        assertThat(html).contains("href=\"#meldeliste\"");
+        var html = seite().erstelleAusRendertHtml(SPIELPLAN_HTML, RANGLISTE_HTML, DIREKTVERGLEICH_HTML);
+        assertThat(html).doesNotContain("href=\"#meldeliste\"");
         assertThat(html).contains("href=\"#spielplan\"");
         assertThat(html).contains("href=\"#rangliste\"");
         assertThat(html).contains("href=\"#direktvergleich\"");
@@ -86,7 +84,7 @@ class LigaHtmlExportSeiteTest {
     void pdfUrlWirdEscaped() {
         var html = seite()
                 .spielplanPdfUrl("https://example.com/datei?name=a&b=c")
-                .erstelleAusRendertHtml(MELDELISTE_HTML, SPIELPLAN_HTML, RANGLISTE_HTML, DIREKTVERGLEICH_HTML);
+                .erstelleAusRendertHtml(SPIELPLAN_HTML, RANGLISTE_HTML, DIREKTVERGLEICH_HTML);
         assertThat(html).contains("href=\"https://example.com/datei?name=a&amp;b=c\"");
     }
 
