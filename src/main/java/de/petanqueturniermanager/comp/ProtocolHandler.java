@@ -343,6 +343,16 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_SPIELERDB_WEBVIEW       = "spielerdb_webview";
 	// Konfiguration
 	public static final String CMD_KONFIGURATION_TURNIER = "konfiguration_turnier";
+	/**
+	 * Eigener Command für den Menüpunkt „Konfiguration → Turnier". Der
+	 * Toolbar-Button m10 nutzt {@link #CMD_KONFIGURATION_TURNIER} und muss wegen
+	 * LO-Bug tdf#172207 dauerhaft enabled bleiben (steht in
+	 * {@code TOOLBAR_ONLY_CMDS}). Der Menüpunkt soll dagegen deaktiviert sein,
+	 * solange kein Turnier vorhanden ist. Da Toolbar- und Menü-Listener nicht an
+	 * derselben URL unterscheidbar sind, bekommt das Menü hier eine eigene URL,
+	 * die der echten {@code isEnabled}-Bewertung unterliegt.
+	 */
+	public static final String CMD_KONFIGURATION_TURNIER_MENU = "konfiguration_turnier_menu";
 	public static final String CMD_KONFIGURATION_KOPFFUSSZEILEN = "konfiguration_kopffusszeilen";
 	public static final String CMD_KONFIGURATION_FARBEN = "konfiguration_farben";
 	public static final String CMD_KONFIGURATION_TURNIER_STARTSEITE = "konfiguration_turnier_startseite";
@@ -1075,6 +1085,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			// ------------------------------
 			// Konfiguration
 			case CMD_KONFIGURATION_TURNIER:
+			case CMD_KONFIGURATION_TURNIER_MENU:
 				handleKonfiguration(command, ws);
 				break;
 			case CMD_KONFIGURATION_KOPFFUSSZEILEN:
@@ -1454,6 +1465,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		try {
 			switch (command) {
 			case CMD_KONFIGURATION_TURNIER:
+			case CMD_KONFIGURATION_TURNIER_MENU:
 				new TurnierDialog(ws).createDialog();
 				break;
 			case CMD_KONFIGURATION_KOPFFUSSZEILEN:
@@ -1863,6 +1875,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_SCHWEIZER_TESTDATEN_TURNIER,
 				 CMD_SCHWEIZER_TESTDATEN_TURNIER_19        -> ts == TurnierSystem.KEIN || ts == TurnierSystem.SCHWEIZER;
 			case CMD_KONFIGURATION_TURNIER,
+				 CMD_KONFIGURATION_TURNIER_MENU,
 				 CMD_KONFIGURATION_KOPFFUSSZEILEN,
 				 CMD_KONFIGURATION_FARBEN,
 				 CMD_KONFIGURATION_TURNIER_STARTSEITE,

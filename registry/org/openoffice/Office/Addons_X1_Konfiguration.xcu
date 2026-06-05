@@ -42,7 +42,7 @@
 									<value xml:lang="nl">Toernooi</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>ptm:konfiguration_turnier</value>
+									<value>ptm:konfiguration_turnier_menu</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
