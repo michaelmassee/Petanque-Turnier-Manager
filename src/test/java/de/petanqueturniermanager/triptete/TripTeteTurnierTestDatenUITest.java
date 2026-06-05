@@ -10,21 +10,17 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.sun.star.beans.XPropertySet;
 import com.sun.star.sheet.XSpreadsheet;
-import com.sun.star.util.CellProtection;
 
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.random.RandomSource;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.triptete.rangliste.TripTeteRanglisteSheet;
-import de.petanqueturniermanager.triptete.spielplan.TripTeteSpielPlanSheet;
 import de.petanqueturniermanager.triptete.spielplan.TripTeteSpielPlanSheetTestDaten;
 
 /**
@@ -74,46 +70,6 @@ public class TripTeteTurnierTestDatenUITest extends BaseCalcUITest {
         assertThat(sheetHlp.findByName(SheetNamen.rangliste()))
                 .as("TripTête-Rangliste muss nach Kiosk-Update weiterhin existieren")
                 .isNotNull();
-    }
-
-    /**
-     * Regression (In-Place-Heilung): Die Formel-Wertspalten (Punkte/Siege/SpPunkte) müssen
-     * im Kiosk-Modus gesperrt sein – auch wenn sie wie in einem Bestandsdokument zuvor
-     * fälschlich entsperrt waren. Die editierbaren Ergebnis-Spalten bleiben entsperrt.
-     */
-    @Test
-    public void kioskModus_formelWertspaltenWerdenGesperrt() throws Exception {
-        new TripTeteSpielPlanSheetTestDaten(wkingSpreadsheet).generate();
-        XSpreadsheet spielplan = sheetHlp.findByName(SheetNamen.spielplan());
-        int zeile = TripTeteSpielPlanSheet.ERSTE_DATEN_ZEILE;
-
-        // Bestandsdokument simulieren: Formel-Wertspalten vorab fälschlich entsperren
-        setzeIsLocked(spielplan, TripTeteSpielPlanSheet.PUNKTE_A, zeile,
-                TripTeteSpielPlanSheet.SP_PUNKTE_B, zeile, false);
-
-        mitKioskModus(TurnierSystem.TRIPTETE, () -> { /* nur Schutz anwenden, keine Aktion */ });
-
-        assertThat(istGesperrt(spielplan, TripTeteSpielPlanSheet.PUNKTE_A, zeile))
-                .as("Punkte H (Formelspalte) muss im Kiosk-Modus gesperrt sein").isTrue();
-        assertThat(istGesperrt(spielplan, TripTeteSpielPlanSheet.SP_PUNKTE_B, zeile))
-                .as("SpPunkte G (Formelspalte) muss im Kiosk-Modus gesperrt sein").isTrue();
-        assertThat(istGesperrt(spielplan, TripTeteSpielPlanSheet.TRI_A_SPALTE, zeile))
-                .as("Tri H (editierbar) darf im Kiosk-Modus nicht gesperrt sein").isFalse();
-    }
-
-    private boolean istGesperrt(XSpreadsheet sheet, int spalte, int zeile) throws Exception {
-        var cell = sheet.getCellByPosition(spalte, zeile);
-        XPropertySet props = Lo.qi(XPropertySet.class, cell);
-        return ((CellProtection) props.getPropertyValue("CellProtection")).IsLocked;
-    }
-
-    private void setzeIsLocked(XSpreadsheet sheet, int startSpalte, int startZeile,
-            int endeSpalte, int endeZeile, boolean locked) throws Exception {
-        var range = sheet.getCellRangeByPosition(startSpalte, startZeile, endeSpalte, endeZeile);
-        XPropertySet props = Lo.qi(XPropertySet.class, range);
-        var cp = new CellProtection();
-        cp.IsLocked = locked;
-        props.setPropertyValue("CellProtection", cp);
     }
 
     @Test

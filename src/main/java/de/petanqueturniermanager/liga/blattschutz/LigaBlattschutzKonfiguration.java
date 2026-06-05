@@ -91,11 +91,7 @@ public class LigaBlattschutzKonfiguration implements IBlattschutzKonfiguration, 
                             LigaSpielPlanSheet.ORT_SPALTE, letzteZeile),
                     RangePosition.from(LigaSpielPlanSheet.SPIELE_A_SPALTE, ersteDatenZeile,
                             LigaSpielPlanSheet.SPIELPNKT_B_SPALTE, letzteZeile));
-            // Gesamten Datenbereich zuerst sperren, damit die Punkte-Formelspalten auch in
-            // Bestandsdokumenten (früher entsperrt) zuverlässig gesperrt sind.
-            var gesamtBereich = RangePosition.from(LigaSpielPlanSheet.SPIEL_NR_SPALTE, ersteDatenZeile,
-                    LigaSpielPlanSheet.SPIELPNKT_B_SPALTE, letzteZeile);
-            infos.add(SheetSchutzInfo.mitGesperrtemGesamtbereich(sheet, gesamtBereich, bereiche));
+            infos.add(SheetSchutzInfo.mitEditierbarenBereichen(sheet, bereiche));
         });
     }
 

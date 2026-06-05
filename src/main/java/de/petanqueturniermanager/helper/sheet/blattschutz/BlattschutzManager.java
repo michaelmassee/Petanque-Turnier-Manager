@@ -276,12 +276,6 @@ public class BlattschutzManager {
         for (var info : infos) {
             try {
                 entsperreSheetFallsNoetig(info.sheet());
-                // Optional: Gesamtbereich zuerst komplett sperren, damit Zellen außerhalb der
-                // editierbaren Bereiche zuverlässig gesperrt sind (auch in Bestandsdokumenten,
-                // in denen eine Spalte früher entsperrt war).
-                if (info.zuSperrenderGesamtbereich() != null) {
-                    setzeZellSchutzGesperrt(info.sheet(), info.zuSperrenderGesamtbereich());
-                }
                 for (var range : info.editierbareBereich()) {
                     setzeZellSchutzFreigegeben(info.sheet(), range);
                 }
@@ -368,31 +362,6 @@ public class BlattschutzManager {
             }
         } catch (Exception e) {
             logger.error("Zellschutz für Bereich {} konnte nicht gesetzt werden: {}",
-                    range, e.getMessage(), e);
-        }
-    }
-
-    /**
-     * Setzt {@code CellProtection.IsLocked = true} auf dem angegebenen Bereich.
-     * <p>
-     * Wird vor dem Entsperren der editierbaren Bereiche aufgerufen, um das Modell
-     * „alles gesperrt außer editierbare Bereiche" idempotent durchzusetzen. Schreibt
-     * – wie {@link #setzeZellSchutzFreigegeben} – bewusst ein frisches
-     * {@link CellProtection}-Objekt, ohne den alten Wert zu lesen (vermeidet die
-     * Mehr-Zellen-Ambiguitäts-Exception von {@code getPropertyValue}).
-     */
-    private void setzeZellSchutzGesperrt(XSpreadsheet sheet, RangePosition range) {
-        try {
-            var xRange = sheet.getCellRangeByPosition(
-                    range.getStartSpalte(), range.getStartZeile(),
-                    range.getEndeSpalte(), range.getEndeZeile());
-            var props = Lo.qi(XPropertySet.class, xRange);
-
-            var cp = new CellProtection();
-            cp.IsLocked = true;  // Standard-Schutz: Zelle bei Sheet-Schutz nicht editierbar
-            props.setPropertyValue("CellProtection", cp);
-        } catch (Exception e) {
-            logger.error("Zellschutz (gesperrt) für Bereich {} konnte nicht gesetzt werden: {}",
                     range, e.getMessage(), e);
         }
     }

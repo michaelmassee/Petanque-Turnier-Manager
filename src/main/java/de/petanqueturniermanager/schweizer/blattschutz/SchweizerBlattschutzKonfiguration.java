@@ -97,23 +97,9 @@ public class SchweizerBlattschutzKonfiguration implements IBlattschutzKonfigurat
                 SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_SPIELRUNDE_PREFIX);
         for (var key : schluessel) {
             SheetMetadataHelper.findeSheet(xDoc, key).ifPresent(sheet ->
-                    infos.add(SheetSchutzInfo.mitGesperrtemGesamtbereich(sheet,
-                            berechneSpielrundeGesamtbereich(sheet),
+                    infos.add(SheetSchutzInfo.mitEditierbarenBereichen(sheet,
                             List.of(berechneSpielrundeErgebnisBereich(sheet)))));
         }
-    }
-
-    /**
-     * Gesamter sichtbarer Datenbereich einer Spielrunde (Bahn-Nr + Teamnamen + Ergebnisse).
-     * Wird beim Schützen zuerst komplett gesperrt, damit die nicht-editierbaren Spalten
-     * (Bahn-Nr, Teamnamen) auch in Bestandsdokumenten zuverlässig gesperrt sind.
-     */
-    private RangePosition berechneSpielrundeGesamtbereich(XSpreadsheet sheet) {
-        return RangePosition.from(
-                SchweizerAbstractSpielrundeSheet.BAHN_NR_SPALTE,
-                SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE,
-                SchweizerAbstractSpielrundeSheet.ERG_TEAM_B_SPALTE,
-                ermittleLetzteSpielrundeZeile(sheet));
     }
 
     private void sammleVollGesperrteSheets(XSpreadsheetDocument xDoc, List<SheetSchutzInfo> infos) {
