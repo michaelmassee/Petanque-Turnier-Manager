@@ -235,8 +235,10 @@ public class LigaSpielPlanSheet extends SheetRunner implements ISheet {
 
 		EditierbaresZelleFormatHelper.anwenden(this, RangePosition.from(
 				DATUM_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE, ORT_SPALTE, letzteSpielZeile));
+		// Punkte H/G (PUNKTE_A/PUNKTE_B) sind Formelspalten → NICHT editierbar, keine Editierbar-
+		// Hintergrundfarbe. Editierbar nur Siege + SpPunkte (SPIELE_A..SPIELPNKT_B).
 		EditierbaresZelleFormatHelper.anwenden(this, RangePosition.from(
-				PUNKTE_A_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE, SPIELPNKT_B_SPALTE, letzteSpielZeile));
+				SPIELE_A_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE, SPIELPNKT_B_SPALTE, letzteSpielZeile));
 
 		RangeProperties horTrennerDouble = RangeProperties.from()
 				.setBorder(BorderFactory.from().doubleLn().forBottom().toBorder());

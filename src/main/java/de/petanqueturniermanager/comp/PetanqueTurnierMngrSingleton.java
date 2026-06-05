@@ -395,7 +395,7 @@ public class PetanqueTurnierMngrSingleton {
 							RangePosition.from(LigaSpielPlanSheet.DATUM_SPALTE,
 									LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE,
 									LigaSpielPlanSheet.ORT_SPALTE, letzteZeile),
-							RangePosition.from(LigaSpielPlanSheet.PUNKTE_A_SPALTE,
+							RangePosition.from(LigaSpielPlanSheet.SPIELE_A_SPALTE,
 									LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE,
 									LigaSpielPlanSheet.SPIELPNKT_B_SPALTE, letzteZeile));
 					return new SpielplanFormatiererKonfig(datenRange, editierbar,

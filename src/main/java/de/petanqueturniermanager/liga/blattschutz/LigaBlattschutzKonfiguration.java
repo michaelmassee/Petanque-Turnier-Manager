@@ -84,10 +84,12 @@ public class LigaBlattschutzKonfiguration implements IBlattschutzKonfiguration, 
         SheetMetadataHelper.findeSheet(xDoc, SheetMetadataHelper.SCHLUESSEL_LIGA_SPIELPLAN).ifPresent(sheet -> {
             int ersteDatenZeile = LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE;
             int letzteZeile = ermittleLetzteSpielplanZeile(sheet);
+            // Punkte H/G (PUNKTE_A/PUNKTE_B) sind Formelspalten → gesperrt, nicht editierbar.
+            // Editierbar nur Siege + SpPunkte (SPIELE_A..SPIELPNKT_B).
             var bereiche = List.of(
                     RangePosition.from(LigaSpielPlanSheet.DATUM_SPALTE, ersteDatenZeile,
                             LigaSpielPlanSheet.ORT_SPALTE, letzteZeile),
-                    RangePosition.from(LigaSpielPlanSheet.PUNKTE_A_SPALTE, ersteDatenZeile,
+                    RangePosition.from(LigaSpielPlanSheet.SPIELE_A_SPALTE, ersteDatenZeile,
                             LigaSpielPlanSheet.SPIELPNKT_B_SPALTE, letzteZeile));
             infos.add(SheetSchutzInfo.mitEditierbarenBereichen(sheet, bereiche));
         });
