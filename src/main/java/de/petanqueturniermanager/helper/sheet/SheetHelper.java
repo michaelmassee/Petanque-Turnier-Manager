@@ -850,19 +850,42 @@ public class SheetHelper {
 
 		XSheetCellRangeContainer geradeContainer = Lo.qi(XSheetCellRangeContainer.class, geradeRanges);
 		XSheetCellRangeContainer ungeradeContainer = Lo.qi(XSheetCellRangeContainer.class, ungeradeRanges);
+		boolean hatGerade = false;
+		boolean hatUngerade = false;
 		for (int zeile = startZeile; zeile <= endZeile; zeile++) {
 			// zeile ist 0-basiert; ROW()-Formel wäre zeile+1 (1-basiert)
 			CellRangeAddress addr = new CellRangeAddress(sheetIdx, startSpalte, zeile, endSpalte, zeile);
 			if ((zeile & 1) == 1) {
 				geradeContainer.addRangeAddress(addr, false);
+				hatGerade = true;
 			} else {
 				ungeradeContainer.addRangeAddress(addr, false);
+				hatUngerade = true;
 			}
 		}
 
+		if (hatGerade) {
+			setzeHintergrundFallsAbweichend(geradeRanges, geradeFarbe);
+		}
+		if (hatUngerade) {
+			setzeHintergrundFallsAbweichend(ungeradeRanges, ungeradeFarbe);
+		}
+	}
+
+	/**
+	 * Setzt {@code CellBackColor} eines Range-Containers nur, wenn die Ist-Farbe vom Soll abweicht.
+	 * <p>
+	 * {@code getPropertyValue("CellBackColor")} liefert bei durchgehend einheitlicher Farbe genau
+	 * diese, bei gemischten Farben {@code -1}. Dadurch bleibt bereits korrekt gefärbtes Zebra
+	 * unangetastet (kein Schreibzugriff → kein Repaint, kein Modified-Flag).
+	 */
+	private static void setzeHintergrundFallsAbweichend(XSheetCellRanges ranges, int sollFarbe) {
+		XPropertySet props = Lo.qi(XPropertySet.class, ranges);
 		try {
-			Lo.qi(XPropertySet.class, geradeRanges).setPropertyValue("CellBackColor", geradeFarbe);
-			Lo.qi(XPropertySet.class, ungeradeRanges).setPropertyValue("CellBackColor", ungeradeFarbe);
+			if (props.getPropertyValue("CellBackColor") instanceof Integer istFarbe && istFarbe == sollFarbe) {
+				return;
+			}
+			props.setPropertyValue("CellBackColor", sollFarbe);
 		} catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException
 				| WrappedTargetException e) {
 			logger.error(e.getMessage(), e);

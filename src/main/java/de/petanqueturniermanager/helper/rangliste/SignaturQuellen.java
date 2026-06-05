@@ -54,14 +54,21 @@ public final class SignaturQuellen {
     private static final int KASKADE_MELDELISTE_ERSTE_DATEN_ZEILE = 3;
 
     // ── Poule Vorrunde ────────────────────────────────────────────────────
-    // SPALTE_POULE_NR(2), SPALTE_TEAM_A_NR(3), SPALTE_TEAM_B_NR(5), SPALTE_ERG_A(7), SPALTE_ERG_B(8)
-    private static final Set<Integer> POULE_VORRUNDE_SPALTEN = Set.of(2, 3, 5, 7, 8);
+    // Nur Eingaben: SPALTE_POULE_NR(2) = stabiler Struktur-Wert, SPALTE_ERG_A(7)/ERG_B(8) =
+    // manuell eingetragene Ergebnisse (verknuepfeMitVorrunde()==false im Vorrunde-Sheet).
+    // TEAM_A_NR(3)/TEAM_B_NR(5) sind in den Sieger-/Verlierer-/Barrage-Zeilen Formeln
+    // (schreibeSpielZeileFormula) → raus (Recalc-Flapping); die R1-Paarung wird ohnehin nur beim
+    // Vollaufbau (forceCreate → commitVollaufbau) gesetzt, nicht inkrementell editiert.
+    private static final Set<Integer> POULE_VORRUNDE_SPALTEN = Set.of(2, 7, 8);
     private static final int POULE_VORRUNDE_ERSTE_DATEN_ZEILE = 2;
     private static final int POULE_VORRUNDE_MAX_ZEILEN = 1000;
 
     // ── Supermelee Spielrunde ─────────────────────────────────────────────
-    // ERSTE_SPIELERNR_SPALTE(11) + SPALTE_VERTIKALE_ERGEBNISSE_PLUS(19) + MINUS(20)
-    private static final Set<Integer> SUPERMELEE_SPIELRUNDE_SPALTEN = Set.of(11, 19, 20);
+    // Nur Eingaben (alles Werte, exakt wie SpielrundeSheet_Update.ergebnisseEinlesen() liest):
+    // ERSTE_SPALTE_ERGEBNISSE(7)+(8) = eingetragene Ergebnisse,
+    // ERSTE_SPIELERNR_SPALTE(11)..(16) = Spieler-Zuordnung.
+    // VERT_ERGEBNISSE_PLUS(19)/MINUS(20) sind Formel-Aggregate → raus (Recalc-Flapping).
+    private static final Set<Integer> SUPERMELEE_SPIELRUNDE_SPALTEN = Set.of(7, 8, 11, 12, 13, 14, 15, 16);
     private static final int SUPERMELEE_SPIELRUNDE_ERSTE_DATEN_ZEILE = 2;
     private static final int SUPERMELEE_SPIELRUNDE_MAX_ZEILEN = 1000;
 
@@ -153,8 +160,9 @@ public final class SignaturQuellen {
                         SheetMetadataHelper.SCHLUESSEL_LIGA_SPIELPLAN,
                         LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE,
                         /* maxZeilen */ 5000,
-                        // PUNKTE_A(8)..SPIELPNKT_B(13), TEAM_A_NR(14), TEAM_B_NR(15)
-                        Set.of(8, 9, 10, 11, 12, 13, 14, 15), true));
+                        // Nur Eingaben: SPIELE_A(10),SPIELE_B(11),SPIELPNKT_A(12),SPIELPNKT_B(13) +
+                        // Paarung TEAM_A_NR(14),TEAM_B_NR(15). PUNKTE_A(8)/PUNKTE_B(9) sind Formeln → raus.
+                        Set.of(10, 11, 12, 13, 14, 15), true));
     }
 
     /** Quellen für JGJ-Rangliste. */
@@ -167,9 +175,9 @@ public final class SignaturQuellen {
                 SheetMetadataHelper.SCHLUESSEL_JGJ_SPIELPLAN,
                 /* ersteZeile */ 2,
                 /* maxZeilen */ 5000,
-                // SPIEL_NR(0), TEAM_A_NR(14), TEAM_B_NR(15), SPIELE_A(12), SPIELE_B(13),
-                // SPIELPNKT_A(?), SPIELPNKT_B(?) – breit für Robustheit.
-                unmodifiableIntRange(0, 18), true));
+                // Nur Eingaben: SPIELPNKT_A(3),SPIELPNKT_B(4) + Paarung TEAM_A_NR(14),TEAM_B_NR(15).
+                // NAME_A/B(1,2), EINGABE_VALIDIERUNG(5), SPIELE_A/B(12,13) sind Formeln → raus.
+                Set.of(3, 4, 14, 15), true));
         return quellen;
     }
 
@@ -178,12 +186,14 @@ public final class SignaturQuellen {
         List<SignaturQuelle> quellen = new ArrayList<>();
         quellen.add(meldelisteSchweizerLike("TRIPTETE-MELDELISTE",
                 SheetMetadataHelper.SCHLUESSEL_TRIPTETE_MELDELISTE));
-        // Spielplan: Bahnen + Triplette/Doublette/Tête-Ergebnisspalten + Arbeitsspalten.
+        // Spielplan: nur Eingaben – Triplette/Doublette/Tête-Ergebnisse A/B (6..11) +
+        // Paarung TEAM_A_NR(19),TEAM_B_NR(20). NAME(4,5), PUNKTE(12,13), SIEGE(14,15),
+        // SP_PUNKTE(16,17) sind Formeln → raus.
         quellen.add(new SignaturQuelle("TRIPTETE-SPIELPLAN",
                 SheetMetadataHelper.SCHLUESSEL_TRIPTETE_SPIELPLAN,
                 /* ersteZeile */ 2,
                 /* maxZeilen */ 5000,
-                unmodifiableIntRange(0, 18), true));
+                Set.of(6, 7, 8, 9, 10, 11, 19, 20), true));
         return quellen;
     }
 

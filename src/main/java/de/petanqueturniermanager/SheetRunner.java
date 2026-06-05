@@ -16,6 +16,7 @@ import com.sun.star.lang.XComponent;
 import com.sun.star.lang.XEventListener;
 import com.sun.star.sheet.XCalculatable;
 import com.sun.star.uno.XComponentContext;
+import com.sun.star.util.XModifiable;
 
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.comp.GlobalProperties;
@@ -443,9 +444,18 @@ public abstract class SheetRunner extends Thread {
 	}
 
 	private void autoSave() {
-		if (GlobalProperties.get().isAutoSave()) {
-			BackUp.from(workingSpreadsheet).doSave();
+		if (!GlobalProperties.get().isAutoSave()) {
+			return;
 		}
+		// Nur speichern, wenn der Lauf das Dokument tatsächlich verändert hat. Idempotente bzw.
+		// reine Infrastruktur-Läufe (z.B. der Spielplan-Formatierer oder ein Sheet-Sync-Verify
+		// beim Tab-Wechsel) lassen das Modified-Flag über ohneModifiedFlag() auf false – dann gibt
+		// es nichts zu sichern und eine Phantom-Speicherung bei jedem Tab-Wechsel unterbleibt.
+		XModifiable xModifiable = Lo.qi(XModifiable.class, workingSpreadsheet.getWorkingSpreadsheetDocument());
+		if (xModifiable != null && !xModifiable.isModified()) {
+			return;
+		}
+		BackUp.from(workingSpreadsheet).doSave();
 	}
 
 	protected void handleGenerateException(GenerateException e) {
