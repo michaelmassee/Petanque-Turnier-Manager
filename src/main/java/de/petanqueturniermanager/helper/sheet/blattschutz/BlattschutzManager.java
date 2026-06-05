@@ -18,6 +18,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
@@ -134,7 +135,18 @@ public class BlattschutzManager {
             return;
         }
         try {
-            doSchuetzen(state.konfig, state.ws);
+            // doSchuetzen() toggelt Protect/Unprotect und aktualisiert CellStyles → das setzt in
+            // LibreOffice das Modified-Flag. Hat der Lauf selbst nichts geändert (Dokument vor dem
+            // Schützen unverändert – z.B. ein idempotenter Formatierer-Lauf beim Tab-Wechsel), darf
+            // das bloße Wiederherstellen des Schutzes das Dokument NICHT als geändert markieren –
+            // sonst Phantom-Speicherung/„Speichern?"-Abfrage. Bei echten Änderungen war das Flag
+            // bereits vor doSchuetzen true und bleibt erhalten.
+            var xDoc = state.ws.getWorkingSpreadsheetDocument();
+            if (xDoc == null) {
+                doSchuetzen(state.konfig, state.ws);
+            } else {
+                new DocumentPropertiesHelper(xDoc).ohneModifiedFlag(() -> doSchuetzen(state.konfig, state.ws));
+            }
         } finally {
             SCOPE.remove();
         }
