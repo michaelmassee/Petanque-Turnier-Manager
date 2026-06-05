@@ -398,7 +398,13 @@ public class PetanqueTurnierMngrSingleton {
 							RangePosition.from(LigaSpielPlanSheet.SPIELE_A_SPALTE,
 									LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE,
 									LigaSpielPlanSheet.SPIELPNKT_B_SPALTE, letzteZeile));
-					return new SpielplanFormatiererKonfig(datenRange, editierbar,
+					// Punkte H/G sind Formelspalten → veraltete Editierbar-CF entfernen,
+					// damit dort nur normales Zebra (kein Editierfeld-Hintergrund) sichtbar ist.
+					var cfLoeschen = java.util.List.of(
+							RangePosition.from(LigaSpielPlanSheet.PUNKTE_A_SPALTE,
+									LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE,
+									LigaSpielPlanSheet.PUNKTE_B_SPALTE, letzteZeile));
+					return new SpielplanFormatiererKonfig(datenRange, editierbar, cfLoeschen,
 							konfig.getSpielPlanHintergrundFarbeGerade(),
 							konfig.getSpielPlanHintergrundFarbeUnGerade(),
 							LigaBlattschutzKonfiguration.get());

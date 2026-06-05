@@ -21,6 +21,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
@@ -88,6 +89,7 @@ public final class SpielplanFormatiererSheetRunner extends SheetRunner implement
         // istModifiedFlagTransparent()) – SheetRunner.run() stellt den Vor-Lauf-Modified-Zustand
         // nach dem Freigeben des ControllerLocks wieder her und unterdrückt das autoSave.
         formatiereZebra(konfig);
+        loescheVeralteteCf(konfig);
         if (cfFehlt(konfig)) {
             setzeEditierbarCF(konfig);
         }
@@ -105,6 +107,32 @@ public final class SpielplanFormatiererSheetRunner extends SheetRunner implement
     private void formatiereZebra(SpielplanFormatiererKonfig konfig) throws GenerateException {
         SheetHelper.faerbeZeilenAbwechselnd(this, konfig.datenRange(),
                 konfig.geradeFarbe(), konfig.ungeradeFarbe());
+    }
+
+    /**
+     * Entfernt veraltete bedingte Formatierung auf Formelspalten (z.B. eine frühere
+     * Editierbar-CF), damit dort nur noch das direkte Zebra sichtbar ist. Löscht nur,
+     * wenn auf der ersten Zelle des Bereichs tatsächlich CF vorhanden ist – so bleiben
+     * frisch aufgebaute Sheets unangetastet.
+     */
+    private void loescheVeralteteCf(SpielplanFormatiererKonfig konfig) {
+        for (RangePosition range : konfig.cfLoeschenRanges()) {
+            if (hatCf(range)) {
+                ConditionalFormatHelper.clearOnly(this, range);
+            }
+        }
+    }
+
+    private boolean hatCf(RangePosition range) {
+        try {
+            var cell = xSheet.getCellByPosition(range.getStartSpalte(), range.getStartZeile());
+            XSheetConditionalEntries cf = Lo.qi(XSheetConditionalEntries.class,
+                    Lo.qi(XPropertySet.class, cell).getPropertyValue("ConditionalFormat"));
+            return cf != null && cf.getCount() > 0;
+        } catch (Exception e) {
+            logger.warn("CF-Check (Löschen) fehlgeschlagen – überspringe", e);
+            return false;
+        }
     }
 
     private boolean cfFehlt(SpielplanFormatiererKonfig konfig) {

@@ -7,14 +7,20 @@ import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.sun.star.beans.XPropertySet;
 import com.sun.star.sheet.XCalculatable;
+import com.sun.star.sheet.XSheetConditionalEntries;
 import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.util.CellProtection;
 
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.sheetsync.SpielplanFormatiererKonfig;
+import de.petanqueturniermanager.helper.sheetsync.SpielplanFormatiererSheetRunner;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.liga.rangliste.LigaTestMeldeListeErstellen;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
@@ -179,5 +185,89 @@ public class LigaSpielPlanSheetUITest extends BaseCalcUITest {
 		assertThat(sheetHlp.findByName(de.petanqueturniermanager.helper.i18n.SheetNamen.spielplan()))
 				.as("Spielplan muss nach Kiosk-Rebuild weiterhin existieren")
 				.isNotNull();
+	}
+
+	/**
+	 * Regression (Bug "Punkte H/G editierbar im Turniermodus"): Die Punkte-Formelspalten
+	 * (PUNKTE_A/PUNKTE_B) müssen im Kiosk-Modus gesperrt sein – auch dann, wenn sie wie in
+	 * einem Bestandsdokument zuvor fälschlich entsperrt waren. Die editierbaren Siege-Spalten
+	 * bleiben dagegen entsperrt.
+	 */
+	@Test
+	public void kioskModus_punkteFormelSpaltenWerdenGesperrt() throws Exception {
+		LigaSpielPlanSheet spielPlan = new LigaSpielPlanSheet(wkingSpreadsheet);
+		spielPlan.run();
+		XSpreadsheet sheet = spielPlan.getXSpreadSheet();
+		int ersteZeile = LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE;
+		int letzteZeile = ersteZeile + ANZ_DATEN_ZEILEN - 1;
+
+		// Bestandsdokument simulieren: Punkte-Spalten vorab fälschlich entsperren
+		setzeIsLocked(sheet, LigaSpielPlanSheet.PUNKTE_A_SPALTE, ersteZeile,
+				LigaSpielPlanSheet.PUNKTE_B_SPALTE, letzteZeile, false);
+
+		mitKioskModus(TurnierSystem.LIGA, () -> { /* nur Schutz anwenden, keine Aktion */ });
+
+		assertThat(istGesperrt(sheet, LigaSpielPlanSheet.PUNKTE_A_SPALTE, ersteZeile))
+				.as("Punkte H (Formelspalte) muss im Kiosk-Modus gesperrt sein").isTrue();
+		assertThat(istGesperrt(sheet, LigaSpielPlanSheet.PUNKTE_B_SPALTE, ersteZeile))
+				.as("Punkte G (Formelspalte) muss im Kiosk-Modus gesperrt sein").isTrue();
+		assertThat(istGesperrt(sheet, LigaSpielPlanSheet.SPIELE_A_SPALTE, ersteZeile))
+				.as("Siege H (editierbar) darf im Kiosk-Modus nicht gesperrt sein").isFalse();
+	}
+
+	/**
+	 * Regression (Bug "Punkte H/G – kein Editierfeld-Hintergrund, sondern Zebra"): Der
+	 * Spielplan-Formatierer (Tab-Wechsel) muss eine veraltete Editierbar-CF auf den
+	 * Punkte-Formelspalten entfernen, damit dort nur noch das direkte Zebra sichtbar ist.
+	 */
+	@Test
+	public void formatierer_entferntVeralteteCfAufPunkteSpalten() throws Exception {
+		LigaSpielPlanSheet spielPlan = new LigaSpielPlanSheet(wkingSpreadsheet);
+		spielPlan.run();
+		XSpreadsheet sheet = spielPlan.getXSpreadSheet();
+		int ersteZeile = LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE;
+		int letzteZeile = ersteZeile + ANZ_DATEN_ZEILEN - 1;
+
+		// Bestandsdokument simulieren: veraltete Editierbar-CF auf den Punkte-Spalten setzen
+		RangePosition punkteRange = RangePosition.from(LigaSpielPlanSheet.PUNKTE_A_SPALTE, ersteZeile,
+				LigaSpielPlanSheet.PUNKTE_B_SPALTE, letzteZeile);
+		EditierbaresZelleFormatHelper.anwenden(spielPlan, punkteRange);
+		assertThat(hatConditionalFormat(sheet, LigaSpielPlanSheet.PUNKTE_A_SPALTE, ersteZeile))
+				.as("Vorbedingung: Punkte-Spalte hat eine (simulierte) Editierbar-CF").isTrue();
+
+		// Formatierer-Lauf (wie beim Tab-Wechsel) muss die CF wieder entfernen
+		RangePosition datenRange = RangePosition.from(LigaSpielPlanSheet.SPIEL_NR_SPALTE, ersteZeile,
+				LigaSpielPlanSheet.SPIELPNKT_B_SPALTE, letzteZeile);
+		var konfig = new SpielplanFormatiererKonfig(datenRange, java.util.List.of(),
+				java.util.List.of(punkteRange), 0xFFFFFF, 0xEEEEEE, null);
+		new SpielplanFormatiererSheetRunner(wkingSpreadsheet, sheet, iSheet -> konfig).run();
+
+		assertThat(hatConditionalFormat(sheet, LigaSpielPlanSheet.PUNKTE_A_SPALTE, ersteZeile))
+				.as("Punkte H darf nach Formatierer-Lauf keine CF mehr haben").isFalse();
+		assertThat(hatConditionalFormat(sheet, LigaSpielPlanSheet.PUNKTE_B_SPALTE, ersteZeile))
+				.as("Punkte G darf nach Formatierer-Lauf keine CF mehr haben").isFalse();
+	}
+
+	private boolean hatConditionalFormat(XSpreadsheet sheet, int spalte, int zeile) throws Exception {
+		var cell = sheet.getCellByPosition(spalte, zeile);
+		XPropertySet props = Lo.qi(XPropertySet.class, cell);
+		XSheetConditionalEntries cf = Lo.qi(XSheetConditionalEntries.class,
+				props.getPropertyValue("ConditionalFormat"));
+		return cf != null && cf.getCount() > 0;
+	}
+
+	private boolean istGesperrt(XSpreadsheet sheet, int spalte, int zeile) throws Exception {
+		var cell = sheet.getCellByPosition(spalte, zeile);
+		XPropertySet props = Lo.qi(XPropertySet.class, cell);
+		return ((CellProtection) props.getPropertyValue("CellProtection")).IsLocked;
+	}
+
+	private void setzeIsLocked(XSpreadsheet sheet, int startSpalte, int startZeile,
+			int endeSpalte, int endeZeile, boolean locked) throws Exception {
+		var range = sheet.getCellRangeByPosition(startSpalte, startZeile, endeSpalte, endeZeile);
+		XPropertySet props = Lo.qi(XPropertySet.class, range);
+		var cp = new CellProtection();
+		cp.IsLocked = locked;
+		props.setPropertyValue("CellProtection", cp);
 	}
 }
