@@ -84,25 +84,22 @@ public final class SpielplanFormatiererSheetRunner extends SheetRunner implement
             // SheetRunner.run() ruft endCommandScope() immer im finally – kein manuelles close nötig.
         }
 
-        var ws = getWorkingSpreadsheet();
-        var docHelper = new de.petanqueturniermanager.helper.DocumentPropertiesHelper(ws);
-
-        // GenerateException kann nicht direkt durch Runnable propagiert werden →
-        // zwischenspeichern und nach dem ohneModifiedFlag-Block weiterwerfen.
-        GenerateException[] aufgefangen = {null};
-        docHelper.ohneModifiedFlag(() -> {
-            try {
-                formatiereZebra(konfig);
-                if (cfFehlt(konfig)) {
-                    setzeEditierbarCF(konfig);
-                }
-            } catch (GenerateException e) {
-                aufgefangen[0] = e;
-            }
-        });
-        if (aufgefangen[0] != null) {
-            throw aufgefangen[0];
+        // Kein ohneModifiedFlag nötig: Dies ist ein transparenter Lauf (siehe
+        // istModifiedFlagTransparent()) – SheetRunner.run() stellt den Vor-Lauf-Modified-Zustand
+        // nach dem Freigeben des ControllerLocks wieder her und unterdrückt das autoSave.
+        formatiereZebra(konfig);
+        if (cfFehlt(konfig)) {
+            setzeEditierbarCF(konfig);
         }
+    }
+
+    /**
+     * Reiner Formatierer-Lauf beim Tab-Wechsel: er darf den Speicher-/Modified-Zustand des
+     * Dokuments nicht verändern. Siehe {@link SheetRunner#istModifiedFlagTransparent()}.
+     */
+    @Override
+    protected boolean istModifiedFlagTransparent() {
+        return true;
     }
 
     private void formatiereZebra(SpielplanFormatiererKonfig konfig) throws GenerateException {

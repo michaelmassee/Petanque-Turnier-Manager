@@ -184,6 +184,11 @@ public abstract class SheetRunner extends Thread {
 			koordinator.benachrichtigeListener(); // Menü deaktivieren
 			boolean isFehler = false;
 
+			// Vor-Lauf-Modified-Zustand erfassen, BEVOR der ControllerLock (Paint-Lock) und
+			// irgendwelche Schreibvorgänge laufen. Für transparente Läufe wird er unten – nach
+			// dem unlockControllers() – wiederhergestellt (siehe istModifiedFlagTransparent()).
+			final boolean docModifiedVorRun = istModifiedFlagTransparent() && istDokumentModified();
+
 			// Renderpfad des Calc-Dokuments für die Dauer des Laufs sperren: LO
 			// unterdrückt das Repaint zwischen den (potentiell hunderten) UNO-
 			// Property-Writes. Auf Windows mit D3D-Backend ist das die Schutzklammer
@@ -281,6 +286,14 @@ public abstract class SheetRunner extends Thread {
 				}
 			}
 			unregisterDisposingListener();
+
+			if (istModifiedFlagTransparent() && isDocumentAlive()) {
+				// Der ControllerLock ist hier bereits freigegeben → das beim unlockControllers()
+				// nachgeholte, Paint-Lock-aufgeschobene SetDocumentModified() wurde angewandt.
+				// Erst JETZT lässt sich der Vor-Lauf-Zustand verlässlich wiederherstellen, damit
+				// ein reiner Formatier-/Tab-Wechsel-Lauf das Dokument nicht als geändert markiert.
+				setzeDokumentModified(docModifiedVorRun);
+			}
 
 			// Hinweis: ehemals folgte hier ein fokussiereArbeitsDokument()-Aufruf,
 			// der via XFrame.activate() + XTopWindow.toFront() aus dem Worker-Thread
@@ -444,6 +457,11 @@ public abstract class SheetRunner extends Thread {
 	}
 
 	private void autoSave() {
+		if (istModifiedFlagTransparent()) {
+			// Transparente Läufe (reiner Spielplan-Formatierer beim Tab-Wechsel) dürfen das
+			// Dokument niemals speichern – sie verändern den Speicher-Zustand nicht.
+			return;
+		}
 		if (!GlobalProperties.get().isAutoSave()) {
 			return;
 		}
@@ -451,11 +469,50 @@ public abstract class SheetRunner extends Thread {
 		// reine Infrastruktur-Läufe (z.B. der Spielplan-Formatierer oder ein Sheet-Sync-Verify
 		// beim Tab-Wechsel) lassen das Modified-Flag über ohneModifiedFlag() auf false – dann gibt
 		// es nichts zu sichern und eine Phantom-Speicherung bei jedem Tab-Wechsel unterbleibt.
-		XModifiable xModifiable = Lo.qi(XModifiable.class, workingSpreadsheet.getWorkingSpreadsheetDocument());
-		if (xModifiable != null && !xModifiable.isModified()) {
+		if (!istDokumentModified()) {
 			return;
 		}
 		BackUp.from(workingSpreadsheet).doSave();
+	}
+
+	/**
+	 * Hook für „transparente" Läufe, die den Modified-/Speicher-Zustand des Dokuments NICHT
+	 * verändern dürfen – z.B. der {@code SpielplanFormatiererSheetRunner}, der bei jedem
+	 * Tab-Wechsel rein formatierend (Zebra + editierbare-Felder-CF) läuft. Für solche Läufe
+	 * wird (a) {@link #autoSave()} unterdrückt und (b) der Modified-Flag-Zustand von vor dem
+	 * Lauf in {@link #run()} <em>nach</em> dem Freigeben des {@link ControllerLock}
+	 * wiederhergestellt.
+	 * <p>
+	 * <b>Warum erst nach dem Unlock?</b> Unter aktivem {@link ControllerLock} hält LibreOffice
+	 * einen Paint-Lock ({@code ScModelObj::lockControllers()} → {@code LockPaint()}). Solange
+	 * der greift, schiebt {@code ScDocShell::SetDocumentModified()} jede Markierung nur in
+	 * {@code m_pPaintLockData} auf und kehrt sofort zurück; erst {@code UnlockPaint} ruft beim
+	 * Entsperren erneut {@code SetDocumentModified()}. Ein {@code setModified(false)}
+	 * <em>innerhalb</em> des Locks (wie {@code DocumentPropertiesHelper.ohneModifiedFlag()})
+	 * wird dadurch beim Unlock wieder überschrieben. Deshalb muss der Vor-Lauf-Zustand erst
+	 * nach dem Unlock zurückgesetzt werden.
+	 *
+	 * @return {@code false} (Standard); transparente Runner überschreiben mit {@code true}
+	 */
+	protected boolean istModifiedFlagTransparent() {
+		return false;
+	}
+
+	private boolean istDokumentModified() {
+		XModifiable xModifiable = Lo.qi(XModifiable.class, workingSpreadsheet.getWorkingSpreadsheetDocument());
+		return xModifiable != null && xModifiable.isModified();
+	}
+
+	private void setzeDokumentModified(boolean modified) {
+		XModifiable xModifiable = Lo.qi(XModifiable.class, workingSpreadsheet.getWorkingSpreadsheetDocument());
+		if (xModifiable == null || xModifiable.isModified() == modified) {
+			return;
+		}
+		try {
+			xModifiable.setModified(modified);
+		} catch (com.sun.star.beans.PropertyVetoException e) {
+			logger.warn("Modified-Flag konnte nicht auf {} gesetzt werden", modified, e);
+		}
 	}
 
 	protected void handleGenerateException(GenerateException e) {
