@@ -10,10 +10,13 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.sun.star.beans.XPropertySet;
 import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.util.CellProtection;
 
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.random.RandomSource;
@@ -105,6 +108,45 @@ public class MaastrichterTurnierTestDatenUITest extends BaseCalcUITest {
 		validiereFinaleGruppePerJson("B", "maastrichter-57-finale-b.json");
 		validiereFinaleGruppePerJson("C", "maastrichter-57-finale-c.json");
 		validiereFinaleGruppePerJson("D", "maastrichter-57-finale-d.json");
+	}
+
+	/**
+	 * Regression (In-Place-Heilung): Nicht-editierbare Spalten (Bahn-Nr, Teamnamen) einer
+	 * Vorrunde müssen im Kiosk-Modus gesperrt sein – auch wenn sie wie in einem
+	 * Bestandsdokument zuvor fälschlich entsperrt waren. Die editierbaren Ergebnis-Spalten
+	 * bleiben entsperrt. (Die Finalrunde ist ein KO-Bracket und nicht Teil dieser Heilung.)
+	 */
+	@Test
+	public void kioskModus_vorrundeNichtEditierbareSpaltenWerdenGesperrt() throws Exception {
+		new MaastrichterTurnierTestDaten(wkingSpreadsheet).generate();
+		XSpreadsheet vorrunde = sheetHlp.findByName(SheetNamen.maastrichterVorrunde(1));
+		int zeile = SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE;
+
+		// Bestandsdokument simulieren: Bahn-Nr-Spalte vorab fälschlich entsperren
+		setzeIsLocked(vorrunde, SchweizerAbstractSpielrundeSheet.BAHN_NR_SPALTE, zeile,
+				SchweizerAbstractSpielrundeSheet.BAHN_NR_SPALTE, zeile, false);
+
+		mitKioskModus(TurnierSystem.MAASTRICHTER, () -> { /* nur Schutz anwenden, keine Aktion */ });
+
+		assertThat(istGesperrt(vorrunde, SchweizerAbstractSpielrundeSheet.BAHN_NR_SPALTE, zeile))
+				.as("Bahn-Nr (nicht editierbar) muss im Kiosk-Modus gesperrt sein").isTrue();
+		assertThat(istGesperrt(vorrunde, SchweizerAbstractSpielrundeSheet.ERG_TEAM_A_SPALTE, zeile))
+				.as("Ergebnis A (editierbar) darf im Kiosk-Modus nicht gesperrt sein").isFalse();
+	}
+
+	private boolean istGesperrt(XSpreadsheet sheet, int spalte, int zeile) throws Exception {
+		var cell = sheet.getCellByPosition(spalte, zeile);
+		XPropertySet props = Lo.qi(XPropertySet.class, cell);
+		return ((CellProtection) props.getPropertyValue("CellProtection")).IsLocked;
+	}
+
+	private void setzeIsLocked(XSpreadsheet sheet, int startSpalte, int startZeile,
+			int endeSpalte, int endeZeile, boolean locked) throws Exception {
+		var range = sheet.getCellRangeByPosition(startSpalte, startZeile, endeSpalte, endeZeile);
+		XPropertySet props = Lo.qi(XPropertySet.class, range);
+		var cp = new CellProtection();
+		cp.IsLocked = locked;
+		props.setPropertyValue("CellProtection", cp);
 	}
 
 	/**

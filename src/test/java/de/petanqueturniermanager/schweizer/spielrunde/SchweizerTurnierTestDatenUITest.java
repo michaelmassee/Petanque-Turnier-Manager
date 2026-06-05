@@ -8,10 +8,13 @@ import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.sun.star.beans.XPropertySet;
 import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.util.CellProtection;
 
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
@@ -159,5 +162,45 @@ public class SchweizerTurnierTestDatenUITest extends BaseCalcUITest {
 		assertThat(ranglisteData)
 				.as("Rangliste muss nach Kiosk-Update " + ANZ_TEAMS + " Einträge haben")
 				.hasSize(ANZ_TEAMS);
+	}
+
+	/**
+	 * Regression (In-Place-Heilung): Nicht-editierbare Spalten (Bahn-Nr, Teamnamen) einer
+	 * Spielrunde müssen im Kiosk-Modus gesperrt sein – auch wenn sie wie in einem
+	 * Bestandsdokument zuvor fälschlich entsperrt waren. Die editierbaren Ergebnis-Spalten
+	 * bleiben entsperrt.
+	 */
+	@Test
+	public void kioskModus_nichtEditierbareSpaltenWerdenGesperrt() throws Exception {
+		testDaten.generate();
+		XSpreadsheet spielrunde = sheetHlp.findByName(SheetNamen.spielrunde(1));
+		int ersteZeile = SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE;
+		int letzteZeile = ersteZeile + SPIELE_PRO_RUNDE - 1;
+
+		// Bestandsdokument simulieren: Bahn-Nr-Spalte vorab fälschlich entsperren
+		setzeIsLocked(spielrunde, SchweizerAbstractSpielrundeSheet.BAHN_NR_SPALTE, ersteZeile,
+				SchweizerAbstractSpielrundeSheet.BAHN_NR_SPALTE, letzteZeile, false);
+
+		mitKioskModus(TurnierSystem.SCHWEIZER, () -> { /* nur Schutz anwenden, keine Aktion */ });
+
+		assertThat(istGesperrt(spielrunde, SchweizerAbstractSpielrundeSheet.BAHN_NR_SPALTE, ersteZeile))
+				.as("Bahn-Nr (nicht editierbar) muss im Kiosk-Modus gesperrt sein").isTrue();
+		assertThat(istGesperrt(spielrunde, SchweizerAbstractSpielrundeSheet.ERG_TEAM_A_SPALTE, ersteZeile))
+				.as("Ergebnis A (editierbar) darf im Kiosk-Modus nicht gesperrt sein").isFalse();
+	}
+
+	private boolean istGesperrt(XSpreadsheet sheet, int spalte, int zeile) throws Exception {
+		var cell = sheet.getCellByPosition(spalte, zeile);
+		XPropertySet props = Lo.qi(XPropertySet.class, cell);
+		return ((CellProtection) props.getPropertyValue("CellProtection")).IsLocked;
+	}
+
+	private void setzeIsLocked(XSpreadsheet sheet, int startSpalte, int startZeile,
+			int endeSpalte, int endeZeile, boolean locked) throws Exception {
+		var range = sheet.getCellRangeByPosition(startSpalte, startZeile, endeSpalte, endeZeile);
+		XPropertySet props = Lo.qi(XPropertySet.class, range);
+		var cp = new CellProtection();
+		cp.IsLocked = locked;
+		props.setPropertyValue("CellProtection", cp);
 	}
 }

@@ -106,8 +106,11 @@ public class MaastrichterBlattschutzKonfiguration implements IBlattschutzKonfigu
                     // Vorrunden-Rangliste: kein Schlüssel-Suffix → vollständig gesperrt
                     infos.add(SheetSchutzInfo.vollGesperrt(sheet));
                 } else {
-                    // Vorrunde: Ergebnis-Spalten editierbar
-                    infos.add(SheetSchutzInfo.mitEditierbarenBereichen(sheet,
+                    // Vorrunde: Ergebnis-Spalten editierbar; Gesamtbereich (Bahn-Nr + Teamnamen
+                    // + Ergebnisse) zuerst sperren, damit nicht-editierbare Spalten auch in
+                    // Bestandsdokumenten zuverlässig gesperrt sind.
+                    infos.add(SheetSchutzInfo.mitGesperrtemGesamtbereich(sheet,
+                            berechneVorrundeGesamtbereich(sheet),
                             List.of(berechneVorrundeErgebnisBereich(sheet))));
                 }
             });
@@ -140,6 +143,19 @@ public class MaastrichterBlattschutzKonfiguration implements IBlattschutzKonfigu
     private RangePosition berechneVorrundeErgebnisBereich(XSpreadsheet sheet) {
         return RangePosition.from(
                 SchweizerAbstractSpielrundeSheet.ERG_TEAM_A_SPALTE,
+                SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE,
+                SchweizerAbstractSpielrundeSheet.ERG_TEAM_B_SPALTE,
+                ermittleLetzteVorrundeZeile(sheet));
+    }
+
+    /**
+     * Gesamter sichtbarer Datenbereich einer Vorrunde (Bahn-Nr + Teamnamen + Ergebnisse).
+     * Wird beim Schützen zuerst komplett gesperrt, damit die nicht-editierbaren Spalten
+     * auch in Bestandsdokumenten zuverlässig gesperrt sind.
+     */
+    private RangePosition berechneVorrundeGesamtbereich(XSpreadsheet sheet) {
+        return RangePosition.from(
+                SchweizerAbstractSpielrundeSheet.BAHN_NR_SPALTE,
                 SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE,
                 SchweizerAbstractSpielrundeSheet.ERG_TEAM_B_SPALTE,
                 ermittleLetzteVorrundeZeile(sheet));
