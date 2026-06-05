@@ -438,9 +438,10 @@ public class PetanqueTurnierMngrSingleton {
 							.searchLastNotEmptyInSpalte().getZeile();
 					if (letzteZeile < TripTeteSpielPlanSheet.ERSTE_DATEN_ZEILE) return null;
 					var konfig = new TripTeteKonfigurationSheet(ws);
+					// Datenbereich inkl. Formel-Wertspalten (Punkte/Siege/SpPunkte) → Zebra deckt sie ab.
 					var datenRange = RangePosition.from(TripTeteSpielPlanSheet.SPIEL_NR_SPALTE,
 							TripTeteSpielPlanSheet.ERSTE_DATEN_ZEILE,
-							TripTeteSpielPlanSheet.TETE_B_SPALTE, letzteZeile);
+							TripTeteSpielPlanSheet.SP_PUNKTE_B, letzteZeile);
 					var editierbar = java.util.List.of(
 							RangePosition.from(TripTeteSpielPlanSheet.BAHN_TRI_SPALTE,
 									TripTeteSpielPlanSheet.ERSTE_DATEN_ZEILE,
@@ -448,7 +449,13 @@ public class PetanqueTurnierMngrSingleton {
 							RangePosition.from(TripTeteSpielPlanSheet.TRI_A_SPALTE,
 									TripTeteSpielPlanSheet.ERSTE_DATEN_ZEILE,
 									TripTeteSpielPlanSheet.TETE_B_SPALTE, letzteZeile));
-					return new SpielplanFormatiererKonfig(datenRange, editierbar,
+					// Formel-Wertspalten sind nicht editierbar → veraltete Editierbar-CF entfernen,
+					// damit dort nur normales Zebra (kein Editierfeld-Hintergrund) sichtbar ist.
+					var cfLoeschen = java.util.List.of(
+							RangePosition.from(TripTeteSpielPlanSheet.PUNKTE_A,
+									TripTeteSpielPlanSheet.ERSTE_DATEN_ZEILE,
+									TripTeteSpielPlanSheet.SP_PUNKTE_B, letzteZeile));
+					return new SpielplanFormatiererKonfig(datenRange, editierbar, cfLoeschen,
 							konfig.getSpielPlanHintergrundFarbeGerade(),
 							konfig.getSpielPlanHintergrundFarbeUnGerade(),
 							TripTeteBlattschutzKonfiguration.get());

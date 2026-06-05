@@ -85,12 +85,18 @@ public final class TripTeteBlattschutzKonfiguration implements IBlattschutzKonfi
 		SheetMetadataHelper.findeSheet(xDoc, SheetMetadataHelper.SCHLUESSEL_TRIPTETE_SPIELPLAN).ifPresent(sheet -> {
 			int ersteDatenZeile = TripTeteSpielPlanSheet.ERSTE_DATEN_ZEILE;
 			int letzteZeile = ermittleLetzteSpielplanZeile(sheet);
+			// Editierbar: Bahnen + Ergebnisse der drei Partien. Spiel-Nr, Teamnamen und die
+			// Wert-Formelspalten (Punkte/Siege/SpPunkte) bleiben gesperrt.
 			var bereiche = List.of(
 					RangePosition.from(TripTeteSpielPlanSheet.BAHN_TRI_SPALTE, ersteDatenZeile,
 							TripTeteSpielPlanSheet.BAHN_TETE_SPALTE, letzteZeile),
 					RangePosition.from(TripTeteSpielPlanSheet.TRI_A_SPALTE, ersteDatenZeile,
 							TripTeteSpielPlanSheet.TETE_B_SPALTE, letzteZeile));
-			infos.add(SheetSchutzInfo.mitEditierbarenBereichen(sheet, bereiche));
+			// Gesamten sichtbaren Datenbereich (inkl. Formel-Wertspalten) zuerst sperren, damit
+			// nicht-editierbare Spalten auch in Bestandsdokumenten zuverlässig gesperrt sind.
+			var gesamtBereich = RangePosition.from(TripTeteSpielPlanSheet.SPIEL_NR_SPALTE, ersteDatenZeile,
+					TripTeteSpielPlanSheet.SP_PUNKTE_B, letzteZeile);
+			infos.add(SheetSchutzInfo.mitGesperrtemGesamtbereich(sheet, gesamtBereich, bereiche));
 		});
 	}
 

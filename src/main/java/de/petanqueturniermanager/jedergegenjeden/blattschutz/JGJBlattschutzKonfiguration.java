@@ -84,10 +84,16 @@ public class JGJBlattschutzKonfiguration implements IBlattschutzKonfiguration, M
         SheetMetadataHelper.findeSheet(xDoc, SheetMetadataHelper.SCHLUESSEL_JGJ_SPIELPLAN).ifPresent(sheet -> {
             int ersteDatenZeile = JGJSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE;
             int letzteZeile = ermittleLetzteSpielplanZeile(sheet);
+            // Editierbar nur SpPunkte (SPIELPNKT_A..SPIELPNKT_B). Spiel-Nr und Teamnamen
+            // (Formelspalten) bleiben gesperrt.
             var bereiche = List.of(
                     RangePosition.from(JGJSpielPlanSheet.SPIELPNKT_A_SPALTE, ersteDatenZeile,
                             JGJSpielPlanSheet.SPIELPNKT_B_SPALTE, letzteZeile));
-            infos.add(SheetSchutzInfo.mitEditierbarenBereichen(sheet, bereiche));
+            // Gesamten sichtbaren Datenbereich zuerst sperren, damit nicht-editierbare Spalten
+            // (Spiel-Nr, Teamnamen) auch in Bestandsdokumenten zuverlässig gesperrt sind.
+            var gesamtBereich = RangePosition.from(JGJSpielPlanSheet.SPIEL_NR_SPALTE, ersteDatenZeile,
+                    JGJSpielPlanSheet.SPIELPNKT_B_SPALTE, letzteZeile);
+            infos.add(SheetSchutzInfo.mitGesperrtemGesamtbereich(sheet, gesamtBereich, bereiche));
         });
     }
 
