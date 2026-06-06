@@ -368,12 +368,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_PLUGIN_KONFIGURATION  = "pluginKonfiguration";
 	public static final String CMD_PROCESSBOX_ANZEIGEN   = "processboxAnzeigen";
 	public static final String CMD_PROJEKT_SEITE_OEFFNEN = "projekt_seite_oeffnen";
-	public static final String CMD_FEEDBACK              = "feedback";
 
 	private static final String PROJEKT_SEITE_URL =
 			"https://michaelmassee.github.io/Petanque-Turnier-Manager/";
-	private static final String FEEDBACK_MAILTO_URL =
-			"mailto:michael@massee.de?subject=Feedback%3A%20P%C3%A9tanque%20Turnier-Manager";
 	// Symbolleiste
 	public static final String CMD_TOOLBAR_START                 = "toolbar_start";
 	public static final String CMD_TOOLBAR_WEITER                = "toolbar_weiter";
@@ -1116,9 +1113,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_PROJEKT_SEITE_OEFFNEN:
 				oeffneBrowserUrl(PROJEKT_SEITE_URL);
 				break;
-			case CMD_FEEDBACK:
-				oeffneMailtoUrl(FEEDBACK_MAILTO_URL);
-				break;
 			case CMD_ABBRUCH:
 				SheetRunner.cancelRunner();
 				break;
@@ -1386,25 +1380,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		} else {
 			ProcessBox.from().info(I18n.get("webserver.prozessbox.slot.nicht.aktiv", slot + 1));
 			logger.warn("Dispatch auf URL-Slot {} ohne aktive Instanz", slot);
-		}
-	}
-
-	/**
-	 * Öffnet die übergebene URL im Standard-Browser.
-	 * Nutzt {@link java.awt.Desktop#browse} als Primärweg, {@link Runtime#exec} als Fallback.
-	 */
-	private void oeffneMailtoUrl(String url) {
-		ProcessBox.from().info(I18n.get("webserver.prozessbox.browser.oeffnen", url));
-		try {
-			if (java.awt.Desktop.isDesktopSupported()
-					&& java.awt.Desktop.getDesktop().isSupported(java.awt.Desktop.Action.MAIL)) {
-				java.awt.Desktop.getDesktop().mail(new java.net.URI(url));
-			} else {
-				oeffneBrowserUrlFallback(url);
-			}
-		} catch (Exception e) {
-			logger.warn("Desktop.mail fehlgeschlagen, Fallback aktiv: {}", e.getMessage());
-			oeffneBrowserUrlFallback(url);
 		}
 	}
 
@@ -1909,8 +1884,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_LOGFILE_ANZEIGEN,
 				 CMD_PLUGIN_KONFIGURATION,
 				 CMD_PROCESSBOX_ANZEIGEN,
-				 CMD_PROJEKT_SEITE_OEFFNEN,
-				 CMD_FEEDBACK                               -> true;
+				 CMD_PROJEKT_SEITE_OEFFNEN                  -> true;
 			case CMD_ABBRUCH                                -> false;
 			case CMD_TOOLBAR_START                          -> ts == TurnierSystem.KEIN;
 			case CMD_TOOLBAR_WEITER                         -> ts != TurnierSystem.KEIN;
