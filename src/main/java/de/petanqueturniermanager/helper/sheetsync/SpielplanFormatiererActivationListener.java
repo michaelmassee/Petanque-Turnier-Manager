@@ -13,6 +13,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.sun.star.frame.XModel;
 import com.sun.star.lang.EventObject;
+import com.sun.star.container.XNamed;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.sheet.XSpreadsheetView;
@@ -50,6 +51,12 @@ public final class SpielplanFormatiererActivationListener implements IGlobalEven
     private final BiPredicate<XSpreadsheetDocument, XSpreadsheet> zielSheetMatch;
     private final BiFunction<WorkingSpreadsheet, XSpreadsheet, SheetRunner> formatiererFactory;
     private final String debounceSchluessel;
+    /**
+     * LibreOffice feuert OnFocus teils mehrfach für dasselbe Dokument/Sheet, ohne dass
+     * wirklich ein neuer Aktivierungswechsel stattgefunden hat. Der Token verhindert,
+     * dass dadurch derselbe leichte Formatierer unnötig erneut läuft.
+     */
+    private volatile String letztesFokusToken;
 
     /** Bereits registrierte Dokumente – verhindert Doppelregistrierung. */
     private final Set<XSpreadsheetDocument> registriert =
@@ -138,8 +145,9 @@ public final class SpielplanFormatiererActivationListener implements IGlobalEven
         XSelectionSupplier selSupplier = Lo.qi(XSelectionSupplier.class, controller);
         if (selSupplier == null) return;
 
+        String initialesSheetToken = aktivesSheetToken(xModel, xDoc);
         selSupplier.addSelectionChangeListener(new XSelectionChangeListener() {
-            private XSpreadsheet letztesSheet = null;
+            private String letztesSheetToken = initialesSheetToken;
 
             @Override
             public void selectionChanged(EventObject e) {
@@ -150,10 +158,12 @@ public final class SpielplanFormatiererActivationListener implements IGlobalEven
                     XSpreadsheet aktuellesSheet = view.getActiveSheet();
                     if (aktuellesSheet == null) return;
 
-                    XSpreadsheet vorherigesSheet = letztesSheet;
-                    letztesSheet = aktuellesSheet;
+                    String aktuellesSheetToken = fokusToken(xDoc, aktuellesSheet);
+                    if (aktuellesSheetToken.equals(letztesSheetToken)) {
+                        return;
+                    }
+                    letztesSheetToken = aktuellesSheetToken;
 
-                    if (aktuellesSheet == vorherigesSheet) return;
                     if (!zielSheetMatch.test(xDoc, aktuellesSheet)) return;
                     if (SheetRunner.isRunning()) return;
 
@@ -169,6 +179,14 @@ public final class SpielplanFormatiererActivationListener implements IGlobalEven
                 // nichts zu tun
             }
         });
+    }
+
+    private static String aktivesSheetToken(XModel xModel, XSpreadsheetDocument xDoc) {
+        XSpreadsheetView view = Lo.qi(XSpreadsheetView.class, xModel.getCurrentController());
+        if (view == null) return null;
+        XSpreadsheet sheet = view.getActiveSheet();
+        if (sheet == null) return null;
+        return fokusToken(xDoc, sheet);
     }
 
     @Override
@@ -187,12 +205,55 @@ public final class SpielplanFormatiererActivationListener implements IGlobalEven
             if (aktuellesSheet == null) return;
             if (!zielSheetMatch.test(xDoc, aktuellesSheet)) return;
             if (SheetRunner.isRunning()) return;
+            if (!merkeNeuenFokus(xDoc, aktuellesSheet)) {
+                logger.trace("Formatierer-onFocus übersprungen: identischer Fokus erneut gemeldet");
+                return;
+            }
 
             planeFormatierer(xDoc, aktuellesSheet);
 
         } catch (RuntimeException e) {
             logger.error("Fehler beim Formatierer-onFocus", e);
         }
+    }
+
+    @Override
+    public void onUnfocus(Object source) {
+        letztesFokusToken = null;
+    }
+
+    @Override
+    public void onUnload(Object source) {
+        letztesFokusToken = null;
+    }
+
+    @Override
+    public void onViewClosed(Object source) {
+        letztesFokusToken = null;
+    }
+
+    boolean merkeNeuenFokus(XSpreadsheetDocument xDoc, XSpreadsheet xSheet) {
+        String neuesToken = fokusToken(xDoc, xSheet);
+        String altesToken = letztesFokusToken;
+        if (neuesToken != null && neuesToken.equals(altesToken)) {
+            return false;
+        }
+        letztesFokusToken = neuesToken;
+        return true;
+    }
+
+    static String fokusToken(XSpreadsheetDocument xDoc, XSpreadsheet xSheet) {
+        if (xDoc == null || xSheet == null) return null;
+        String sheetName = "<unbekannt>";
+        try {
+            XNamed xNamed = Lo.qi(XNamed.class, xSheet);
+            if (xNamed != null && xNamed.getName() != null) {
+                sheetName = xNamed.getName();
+            }
+        } catch (RuntimeException e) {
+            logger.trace("Sheet-Name für Fokus-Token nicht ermittelbar", e);
+        }
+        return System.identityHashCode(xDoc) + ":" + sheetName;
     }
 
     private void planeFormatierer(XSpreadsheetDocument xDoc, XSpreadsheet xSheet) {
