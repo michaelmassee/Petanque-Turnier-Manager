@@ -133,7 +133,7 @@ public class LigaTurnierTestDatenUITest extends BaseCalcUITest {
 		// Rangliste hat 2 Header-Zeilen plus anzTeams Datenzeilen; +1 Puffer am Ende.
 		RangePosition ranglisteRange = RangePosition.from(0, 0, 6, 2 + anzTeams);
 
-		writeToJson(referenzDatei, ranglisteRange, rangliste, wkingSpreadsheet.getWorkingSpreadsheetDocument());
+		// writeToJson(referenzDatei, ranglisteRange, rangliste, wkingSpreadsheet.getWorkingSpreadsheetDocument());
 
 		RangeData rangeData = rangeDateFromRangePosition(ranglisteRange, rangliste,
 				wkingSpreadsheet.getWorkingSpreadsheetDocument());

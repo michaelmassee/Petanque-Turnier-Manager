@@ -1,36 +1,13 @@
 [
   [
     {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": "Platz"
-    },
-    {
-      "data": "Runde 1"
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    }
-  ],
-  [
-    {
       "data": "Nr"
     },
     {
       "data": "Name"
     },
     {
-      "data": ""
+      "data": "Platz"
     },
     {
       "data": "Punkte"
@@ -70,71 +47,25 @@
   ],
   [
     {
-      "data": 3.0
-    },
-    {
-      "data": "Boule-Freunde Fernwald"
-    },
-    {
-      "data": 3.0
-    },
-    {
-      "data": 0.0
-    },
-    {
-      "data": 1.0
-    },
-    {
-      "data": 2.0
-    },
-    {
-      "data": 3.0
-    }
-  ],
-  [
-    {
-      "data": 6.0
-    },
-    {
-      "data": "DFG Wettenberg 1"
-    },
-    {
-      "data": 6.0
-    },
-    {
-      "data": 1.0
-    },
-    {
-      "data": 0.0
-    },
-    {
-      "data": 3.0
-    },
-    {
-      "data": 2.0
-    }
-  ],
-  [
-    {
       "data": 2.0
     },
     {
       "data": "Boule Biebertal"
     },
     {
-      "data": 2.0
-    },
-    {
       "data": 1.0
     },
     {
-      "data": 0.0
+      "data": 9.0
     },
     {
-      "data": 3.0
+      "data": 5.0
     },
     {
-      "data": 2.0
+      "data": 35.0
+    },
+    {
+      "data": 27.0
     }
   ],
   [
@@ -145,19 +76,65 @@
       "data": "Boulefreunde Marburg"
     },
     {
+      "data": 2.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 5.0
+    },
+    {
+      "data": 33.0
+    },
+    {
+      "data": 30.0
+    }
+  ],
+  [
+    {
+      "data": 3.0
+    },
+    {
+      "data": "Boule-Freunde Fernwald"
+    },
+    {
+      "data": 3.0
+    },
+    {
+      "data": 8.0
+    },
+    {
+      "data": 6.0
+    },
+    {
+      "data": 37.0
+    },
+    {
+      "data": 28.0
+    }
+  ],
+  [
+    {
+      "data": 6.0
+    },
+    {
+      "data": "DFG Wettenberg 1"
+    },
+    {
       "data": 4.0
     },
     {
-      "data": 1.0
+      "data": 8.0
     },
     {
-      "data": 0.0
+      "data": 6.0
     },
     {
-      "data": 4.0
+      "data": 35.0
     },
     {
-      "data": 1.0
+      "data": 31.0
     }
   ],
   [
@@ -171,39 +148,16 @@
       "data": 5.0
     },
     {
-      "data": 0.0
+      "data": 8.0
     },
     {
-      "data": 1.0
+      "data": 6.0
     },
     {
-      "data": 1.0
+      "data": 33.0
     },
     {
-      "data": 4.0
-    }
-  ],
-  [
-    {
-      "data": 1.0
-    },
-    {
-      "data": "BC-Linden 1"
-    },
-    {
-      "data": 1.0
-    },
-    {
-      "data": 0.0
-    },
-    {
-      "data": 1.0
-    },
-    {
-      "data": 0.0
-    },
-    {
-      "data": 5.0
+      "data": 31.0
     }
   ],
   [
@@ -214,19 +168,65 @@
       "data": "PC Petterweil"
     },
     {
+      "data": 6.0
+    },
+    {
       "data": 7.0
     },
     {
-      "data": 0.0
+      "data": 7.0
     },
+    {
+      "data": 33.0
+    },
+    {
+      "data": 30.0
+    }
+  ],
+  [
     {
       "data": 1.0
     },
     {
-      "data": 2.0
+      "data": "BC-Linden 1"
     },
     {
-      "data": 3.0
+      "data": 7.0
+    },
+    {
+      "data": 7.0
+    },
+    {
+      "data": 7.0
+    },
+    {
+      "data": 31.0
+    },
+    {
+      "data": 33.0
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
     }
   ]
 ]
