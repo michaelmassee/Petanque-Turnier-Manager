@@ -22,6 +22,7 @@ import com.sun.star.beans.XPropertySet;
 import com.sun.star.container.NoSuchElementException;
 import com.sun.star.container.XIndexAccess;
 import com.sun.star.container.XNamed;
+import com.sun.star.lang.DisposedException;
 import com.sun.star.lang.IllegalArgumentException;
 import com.sun.star.lang.IndexOutOfBoundsException;
 import com.sun.star.lang.WrappedTargetException;
@@ -825,6 +826,12 @@ public class SheetHelper {
 			sheetIdx = Lo.qi(XCellRangeAddressable.class, fullRange).getRangeAddress().Sheet;
 		} catch (IndexOutOfBoundsException | IllegalArgumentException e) {
 			logger.error(e.getMessage(), e);
+			return;
+		} catch (DisposedException e) {
+			logger.debug("Zebra-Formatierung übersprungen: Dokument bereits geschlossen", e);
+			return;
+		} catch (RuntimeException e) {
+			logger.warn("Zebra-Formatierung übersprungen: Zielbereich nicht nutzbar", e);
 			return;
 		}
 

@@ -483,8 +483,10 @@ public class LigaSpielPlanSheet extends SheetRunner implements ISheet {
 	 * (z.B. im Formatierer-Runner oder in {@link de.petanqueturniermanager.liga.blattschutz.LigaBlattschutzKonfiguration}).
 	 */
 	public static int letzteSpielZeile(ISheet iSheet) throws GenerateException {
-		return RangeSearchHelper.from(iSheet, RangePosition.from(SPIEL_NR_SPALTE, 0, SPIEL_NR_SPALTE, 999))
-				.searchLastNotEmptyInSpalte().getZeile();
+		Position letzte = RangeSearchHelper.from(iSheet, RangePosition.from(SPIEL_NR_SPALTE, 0, SPIEL_NR_SPALTE, 999))
+				.searchLastNotEmptyInSpalte();
+		// Leere Liga-Spielpläne sind im asynchronen Formatierer zulässig; der Sentinel greift in bestehende <-Guards.
+		return letzte != null ? letzte.getZeile() : ERSTE_SPIELTAG_DATEN_ZEILE - 1;
 	}
 
 	/**

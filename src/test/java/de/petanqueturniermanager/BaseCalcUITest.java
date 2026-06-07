@@ -83,6 +83,7 @@ public abstract class BaseCalcUITest {
 	@BeforeAll
 	public static void startup() {
 		try {
+			AsyncLogErrorCollector.install();
 			installExtension();
 			BaseCalcUITest.loader = starter.loadOffice().getComponentLoader();
 		} catch (RuntimeException e) {
@@ -173,6 +174,7 @@ public abstract class BaseCalcUITest {
 
 	@BeforeEach
 	public void beforeTest() {
+		AsyncLogErrorCollector.clear();
 		// Sicherstellen, dass der statische Koordinator vor jedem Test im Ausgangszustand ist.
 		// Verhindert, dass ein gestörter Zustand aus einem vorherigen Test (z.B. durch einen
 		// LibreOffice-Event der async zwischen finally-Block und dem nächsten @BeforeEach feuert)
@@ -207,10 +209,43 @@ public abstract class BaseCalcUITest {
 	}
 
 	@AfterEach
-	public void afterTest() {
-		ProcessBox.dispose();
-		if (doc != null) {
-			OfficeDocumentHelper.closeDoc(doc);
+	public void afterTest() throws Throwable {
+		Throwable cleanupFehler = null;
+		try {
+			ProcessBox.dispose();
+			if (doc != null) {
+				OfficeDocumentHelper.closeDoc(doc);
+			}
+			warteAufVerzoegerteHintergrundlogs();
+		} catch (Throwable e) {
+			cleanupFehler = e;
+		}
+
+		AssertionError logFehler = null;
+		try {
+			assertThat(AsyncLogErrorCollector.drainMessages())
+					.as("Unerwartete ERROR-Logs aus asynchronen UI-Test-Hintergrundpfaden")
+					.isEmpty();
+		} catch (AssertionError e) {
+			logFehler = e;
+		}
+
+		if (cleanupFehler != null) {
+			if (logFehler != null) {
+				cleanupFehler.addSuppressed(logFehler);
+			}
+			throw cleanupFehler;
+		}
+		if (logFehler != null) {
+			throw logFehler;
+		}
+	}
+
+	private void warteAufVerzoegerteHintergrundlogs() {
+		try {
+			Thread.sleep(500);
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
 		}
 	}
 

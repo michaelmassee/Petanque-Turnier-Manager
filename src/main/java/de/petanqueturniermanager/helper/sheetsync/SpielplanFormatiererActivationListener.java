@@ -12,6 +12,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.sun.star.frame.XModel;
+import com.sun.star.lang.DisposedException;
 import com.sun.star.lang.EventObject;
 import com.sun.star.container.XNamed;
 import com.sun.star.sheet.XSpreadsheet;
@@ -260,11 +261,28 @@ public final class SpielplanFormatiererActivationListener implements IGlobalEven
         SheetSyncDebouncer.get().schedule(xDoc, debounceSchluessel, () -> {
             try {
                 if (SheetRunner.isRunning()) return;
+                if (!istDokumentLebendig(xDoc)) return;
                 var ws = new WorkingSpreadsheet(xContext, xDoc);
                 formatiererFactory.apply(ws, xSheet).startSilent();
+            } catch (DisposedException e) {
+                logger.debug("Formatierer übersprungen: Dokument bereits geschlossen", e);
             } catch (RuntimeException e) {
                 logger.error("Formatierer konnte nicht gestartet werden", e);
             }
         });
+    }
+
+    private static boolean istDokumentLebendig(XSpreadsheetDocument xDoc) {
+        if (xDoc == null) return false;
+        try {
+            xDoc.getSheets();
+            return true;
+        } catch (DisposedException e) {
+            logger.debug("Formatierer übersprungen: Dokument bereits geschlossen", e);
+            return false;
+        } catch (RuntimeException e) {
+            logger.debug("Formatierer übersprungen: Dokument nicht nutzbar", e);
+            return false;
+        }
     }
 }

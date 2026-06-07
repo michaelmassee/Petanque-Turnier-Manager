@@ -449,7 +449,9 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet {
 	}
 
 	private int letzteSpielZeile() throws GenerateException {
-		return RangeSearchHelper.from(this, RangePosition.from(SPIEL_NR_SPALTE, 0, SPIEL_NR_SPALTE, 999))
-				.searchLastNotEmptyInSpalte().getZeile();
+		Position letzte = RangeSearchHelper.from(this, RangePosition.from(SPIEL_NR_SPALTE, 0, SPIEL_NR_SPALTE, 999))
+				.searchLastNotEmptyInSpalte();
+		// TripTete-Formatierung darf auf leerem Sheet als No-Op enden; Sentinel ergibt einen leeren Datenbereich.
+		return letzte != null ? letzte.getZeile() : ERSTE_DATEN_ZEILE - 1;
 	}
 }

@@ -529,12 +529,13 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 	}
 
 	private int letzteSpielZeile() throws GenerateException {
-		int zeile = RangeSearchHelper.from(this, RangePosition.from(SPIEL_NR_SPALTE, 0, SPIEL_NR_SPALTE, 999))
-				.searchLastNotEmptyInSpalte().getZeile();
-		if (zeile == 0) {
+		Position letzte = RangeSearchHelper.from(this, RangePosition.from(SPIEL_NR_SPALTE, 0, SPIEL_NR_SPALTE, 999))
+				.searchLastNotEmptyInSpalte();
+		// JGJ erzeugt hier aktiv Formeln; eine leere Spiel-Nr-Spalte bleibt ein Generierungsfehler.
+		if (letzte == null || letzte.getZeile() == 0) {
 			throw new GenerateException(I18n.get("error.spielernummer.spalte.fehlt"));
 		}
-		return zeile;
+		return letzte.getZeile();
 	}
 
 	private void formatieren(List<List<TeamPaarung>> spielPlanHRunde,
