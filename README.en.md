@@ -70,6 +70,8 @@ The extension already offers a wide selection of proven tournament modes suitabl
   Extends the classic ABCD knockout system with any number of additional levels (E, F, G, H …). Instead of early elimination, losing teams cascade step by step into lower consolation brackets. After a configurable minimum number of rounds, each level switches to pure knockout format – with its own cadrage if needed. Suitable for medium to large tournaments (16+ teams).
 * **Formule X:**
   A modern points-based round system from French pétanque – ideal for large fields and time-limited tournaments. All teams play the same number of rounds; no one is eliminated. The ranking is determined by a clear cumulative score (win bonus + own points + point difference) – no Buchholz needed. Round 1 is drawn randomly; from Round 2 onwards, pairings follow the ranking: Rank 1 vs. 2, Rank 3 vs. 4, etc.
+* **Trip-Tête / Trio System:**
+  Team format for three-player teams where each encounter consists of Triplette, Doublette, and Tête-à-tête. After the shared Triplette, the team splits tactically: two players play the Doublette, one player plays the Tête-à-tête. Suitable for compact team tournaments with varied play and clear encounter scoring.
 
 ---
 
@@ -104,7 +106,7 @@ While the tournament is running, all sheets can be viewed in a browser on **TVs,
 * React frontend with **Server-Sent Events (SSE)** – instant updates without page reload
 * Up to **10 URLs simultaneously** configurable
 * Zoom, centering and headers/footers configurable per port
-* All tournament systems supported: Supermêlée, Swiss System, Round Robin, Knockout, Maastricht System, Formule X
+* All tournament systems supported: Supermêlée, Swiss System, Round Robin, Knockout, Maastricht System, Formule X, Trip-Tête
 
 ---
 
