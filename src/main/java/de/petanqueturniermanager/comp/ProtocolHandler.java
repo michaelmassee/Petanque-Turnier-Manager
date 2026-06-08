@@ -399,6 +399,19 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			Map.entry(CMD_KASKADE_WIKI, "Kaskaden-KO"),
 			Map.entry(CMD_FORMULEX_WIKI, "Formule-X"),
 			Map.entry(CMD_TRIPTETE_WIKI, "Trip-Tete"));
+
+	/** Ordnet jedem Wiki-Kommando das zugehörige Turniersystem zu. */
+	private static final Map<String, TurnierSystem> WIKI_TURNIERSYSTEM = Map.ofEntries(
+			Map.entry(CMD_SUPERMELEE_WIKI,   TurnierSystem.SUPERMELEE),
+			Map.entry(CMD_LIGA_WIKI,         TurnierSystem.LIGA),
+			Map.entry(CMD_JGJ_WIKI,          TurnierSystem.JGJ),
+			Map.entry(CMD_SCHWEIZER_WIKI,    TurnierSystem.SCHWEIZER),
+			Map.entry(CMD_KO_WIKI,           TurnierSystem.KO),
+			Map.entry(CMD_MAASTRICHTER_WIKI, TurnierSystem.MAASTRICHTER),
+			Map.entry(CMD_POULE_WIKI,        TurnierSystem.POULE),
+			Map.entry(CMD_KASKADE_WIKI,      TurnierSystem.KASKADE),
+			Map.entry(CMD_FORMULEX_WIKI,     TurnierSystem.FORMULEX),
+			Map.entry(CMD_TRIPTETE_WIKI,     TurnierSystem.TRIPTETE));
 	// Symbolleiste
 	public static final String CMD_TOOLBAR_START                 = "toolbar_start";
 	public static final String CMD_TOOLBAR_WEITER                = "toolbar_weiter";
@@ -1961,6 +1974,17 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_TIMER_PLUS_MINUTE,
 				 CMD_TIMER_MINUS_MINUTE                     -> timerLaeuftOderPausiert();
 			case CMD_TIMER_SNOOZE                           -> timerBeendetUndNichtSnoozed();
+			// Wiki-Links: immer aktiv bei KEIN, sonst nur für das aktive System
+			case CMD_SUPERMELEE_WIKI,
+				 CMD_LIGA_WIKI,
+				 CMD_JGJ_WIKI,
+				 CMD_SCHWEIZER_WIKI,
+				 CMD_KO_WIKI,
+				 CMD_MAASTRICHTER_WIKI,
+				 CMD_POULE_WIKI,
+				 CMD_KASKADE_WIKI,
+				 CMD_FORMULEX_WIKI,
+				 CMD_TRIPTETE_WIKI -> ts == TurnierSystem.KEIN || WIKI_TURNIERSYSTEM.get(command) == ts;
 			default -> false;
 			};
 		} catch (Exception e) {
