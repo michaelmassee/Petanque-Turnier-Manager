@@ -371,6 +371,34 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 
 	private static final String PROJEKT_SEITE_URL =
 			"https://michaelmassee.github.io/Petanque-Turnier-Manager/";
+
+	// Wiki-Beschreibung je Turniersystem ("Spielsystem-Beschreibung")
+	public static final String CMD_SUPERMELEE_WIKI    = "supermelee_wiki";
+	public static final String CMD_LIGA_WIKI          = "liga_wiki";
+	public static final String CMD_JGJ_WIKI           = "jgj_wiki";
+	public static final String CMD_SCHWEIZER_WIKI     = "schweizer_wiki";
+	public static final String CMD_KO_WIKI            = "ko_wiki";
+	public static final String CMD_MAASTRICHTER_WIKI  = "maastrichter_wiki";
+	public static final String CMD_POULE_WIKI         = "poule_wiki";
+	public static final String CMD_KASKADE_WIKI       = "kaskade_wiki";
+	public static final String CMD_FORMULEX_WIKI      = "formulex_wiki";
+	public static final String CMD_TRIPTETE_WIKI      = "triptete_wiki";
+
+	private static final String WIKI_BASIS_URL =
+			"https://github.com/michaelmassee/Petanque-Turnier-Manager/wiki/";
+
+	/** Ordnet jedem Wiki-Kommando die zugehörige Wiki-Seite (Slug) zu. */
+	private static final Map<String, String> WIKI_SLUGS = Map.ofEntries(
+			Map.entry(CMD_SUPERMELEE_WIKI, "Supermelee"),
+			Map.entry(CMD_LIGA_WIKI, "Liga"),
+			Map.entry(CMD_JGJ_WIKI, "Jeder-gegen-Jeden"),
+			Map.entry(CMD_SCHWEIZER_WIKI, "Schweizer-System"),
+			Map.entry(CMD_KO_WIKI, "KO-System"),
+			Map.entry(CMD_MAASTRICHTER_WIKI, "Maastrichter-System"),
+			Map.entry(CMD_POULE_WIKI, "Poule-AB"),
+			Map.entry(CMD_KASKADE_WIKI, "Kaskaden-KO"),
+			Map.entry(CMD_FORMULEX_WIKI, "Formule-X"),
+			Map.entry(CMD_TRIPTETE_WIKI, "Trip-Tete"));
 	// Symbolleiste
 	public static final String CMD_TOOLBAR_START                 = "toolbar_start";
 	public static final String CMD_TOOLBAR_WEITER                = "toolbar_weiter";
@@ -1112,6 +1140,18 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				break;
 			case CMD_PROJEKT_SEITE_OEFFNEN:
 				oeffneBrowserUrl(PROJEKT_SEITE_URL);
+				break;
+			case CMD_SUPERMELEE_WIKI:
+			case CMD_LIGA_WIKI:
+			case CMD_JGJ_WIKI:
+			case CMD_SCHWEIZER_WIKI:
+			case CMD_KO_WIKI:
+			case CMD_MAASTRICHTER_WIKI:
+			case CMD_POULE_WIKI:
+			case CMD_KASKADE_WIKI:
+			case CMD_FORMULEX_WIKI:
+			case CMD_TRIPTETE_WIKI:
+				oeffneBrowserUrl(WIKI_BASIS_URL + WIKI_SLUGS.get(command));
 				break;
 			case CMD_ABBRUCH:
 				SheetRunner.cancelRunner();

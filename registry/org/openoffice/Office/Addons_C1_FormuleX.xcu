@@ -54,12 +54,28 @@
 							</node>
 
 							<node oor:name="C1A2" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Spielsystem-Beschreibung</value>
+									<value xml:lang="en">Game System Description</value>
+									<value xml:lang="es">Descripción del sistema de juego</value>
+									<value xml:lang="fr">Description du système de jeu</value>
+									<value xml:lang="nl">Beschrijving speelsysteem</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:formulex_wiki</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+							<node oor:name="C1A3" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
 
-							<node oor:name="C1A3" oor:op="replace">
+							<node oor:name="C1A4" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Update Entrylist</value>
 									<value xml:lang="de">Meldeliste Aktualisieren</value>
@@ -75,7 +91,7 @@
 								</prop>
 							</node>
 
-							<node oor:name="C1A4" oor:op="replace">
+							<node oor:name="C1A5" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Participants</value>
 									<value xml:lang="de">Teilnehmer</value>
@@ -91,7 +107,7 @@
 								</prop>
 							</node>
 
-							<node oor:name="C1A5" oor:op="replace">
+							<node oor:name="C1A6" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Check-in List</value>
 									<value xml:lang="de">Checkin Liste</value>
@@ -107,13 +123,13 @@
 								</prop>
 							</node>
 
-							<node oor:name="C1A6" oor:op="replace">
+							<node oor:name="C1A7" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
 
-							<node oor:name="C1A7" oor:op="replace">
+							<node oor:name="C1A8" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Next Round</value>
 									<value xml:lang="de">Nächste Spielrunde</value>
@@ -129,7 +145,7 @@
 								</prop>
 							</node>
 
-							<node oor:name="C1A8" oor:op="replace">
+							<node oor:name="C1A9" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Rebuild Current Round</value>
 									<value xml:lang="de">Aktuelle Spielrunde aktualisieren</value>
@@ -145,13 +161,13 @@
 								</prop>
 							</node>
 
-							<node oor:name="C1A9" oor:op="replace">
+							<node oor:name="C1A10" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
 
-							<node oor:name="C1A10" oor:op="replace">
+							<node oor:name="C1A11" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Ranking</value>
 									<value xml:lang="de">Rangliste</value>
