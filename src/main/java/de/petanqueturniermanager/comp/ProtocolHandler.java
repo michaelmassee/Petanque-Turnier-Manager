@@ -143,6 +143,8 @@ import de.petanqueturniermanager.schweizer.spielrunde.SchweizerSpielrundeSheetNa
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerTurnierTestDaten;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerSpielrundeSheetUpdate;
 import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
+import de.petanqueturniermanager.supermelee.export.SupermeleeExportInVerzeichnis;
+import de.petanqueturniermanager.supermelee.export.SupermeleeFtpUpload;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet_Sort;
 import de.petanqueturniermanager.supermelee.meldeliste.AnmeldungenSheet;
@@ -209,6 +211,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_SUPERMELEE_TEAMPAARUNGEN = "supermelee_teampaarungen";
 	public static final String CMD_SUPERMELEE_SPIELTAGRANGLISTE_VALIDATE = "supermelee_spieltagrangliste_validate";
 	public static final String CMD_SUPERMELEE_VALIDATE = "supermelee_validate";
+	public static final String CMD_SUPERMELEE_EXPORT_VERZEICHNIS = "supermelee_export_verzeichnis";
+	public static final String CMD_SUPERMELEE_FTP_UPLOAD          = "supermelee_ftp_upload";
 	public static final String CMD_MELDELISTE_TESTDATEN = "meldeliste_testdaten";
 	public static final String CMD_SPIELRUNDEN_TESTDATEN = "spielrunden_testdaten";
 	public static final String CMD_SPIELTAGRANGLISTE_TESTDATEN = "SpieltagRanglisteSheet_TestDaten";
@@ -831,6 +835,16 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				break;
 			case CMD_SUPERMELEE_SPIELTAGRANGLISTE_VALIDATE:
 				new SpieltagRangliste_Validator(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).start();
+				break;
+			case CMD_SUPERMELEE_EXPORT_VERZEICHNIS: {
+				var pfadOpt = ExportPfadHelper.waehlePfad(xContext, ws);
+				if (pfadOpt.isPresent()) {
+					new SupermeleeExportInVerzeichnis(ws, pfadOpt.get()).testTurnierSystem(TurnierSystem.SUPERMELEE).start();
+				}
+				break;
+			}
+			case CMD_SUPERMELEE_FTP_UPLOAD:
+				new SupermeleeFtpUpload(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).start();
 				break;
 			// ------------------------------
 			// Liga
@@ -1838,7 +1852,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_SPIELTAG_RANGLISTE, CMD_SPIELTAG_RANGLISTE_SORT,
 				 CMD_SUPERMELEE_ENDRANGLISTE, CMD_SUPERMELEE_ENDRANGLISTE_SORT,
 				 CMD_SUPERMELEE_TEAMPAARUNGEN,
-				 CMD_SUPERMELEE_VALIDATE, CMD_SUPERMELEE_SPIELTAGRANGLISTE_VALIDATE -> ts == TurnierSystem.SUPERMELEE;
+				 CMD_SUPERMELEE_VALIDATE, CMD_SUPERMELEE_SPIELTAGRANGLISTE_VALIDATE,
+				 CMD_SUPERMELEE_EXPORT_VERZEICHNIS, CMD_SUPERMELEE_FTP_UPLOAD -> ts == TurnierSystem.SUPERMELEE;
 			case CMD_AKTUELLE_SPIELRUNDE                    -> ts == TurnierSystem.SUPERMELEE && hatSupermeleeSpielrunde(ws);
 			case CMD_MELDELISTE_TESTDATEN, CMD_SPIELRUNDEN_TESTDATEN,
 				 CMD_SPIELTAGRANGLISTE_TESTDATEN        -> ts == TurnierSystem.KEIN || ts == TurnierSystem.SUPERMELEE;

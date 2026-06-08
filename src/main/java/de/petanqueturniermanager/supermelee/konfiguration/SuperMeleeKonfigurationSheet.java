@@ -13,13 +13,15 @@ import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeGera
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
+import de.petanqueturniermanager.helper.upload.IUploadKonfigurierbar;
+import de.petanqueturniermanager.helper.upload.UploadProtokoll;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet
-		implements ISuperMeleePropertiesSpalte, IKonfigurationSheet {
+		implements ISuperMeleePropertiesSpalte, IKonfigurationSheet, IUploadKonfigurierbar {
 
 	public static final int MAX_SPIELTAG = 10;
 	public static final int SUPER_MELEE_MELDUNG_NAME_WIDTH = 4000;
@@ -226,6 +228,36 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet
 	@Override
 	public int getSupermeleeTeamPaarungenTabFarbe() {
 		return propertiesSpalte.getSupermeleeTeamPaarungenTabFarbe();
+	}
+
+	@Override
+	public String getDownloadUrl() {
+		return propertiesSpalte.getDownloadUrl();
+	}
+
+	@Override
+	public UploadProtokoll getUploadProtokoll() {
+		return propertiesSpalte.getUploadProtokoll();
+	}
+
+	@Override
+	public String getUploadHost() {
+		return propertiesSpalte.getUploadHost();
+	}
+
+	@Override
+	public int getUploadPort() {
+		return propertiesSpalte.getUploadPort();
+	}
+
+	@Override
+	public String getUploadBenutzer() {
+		return propertiesSpalte.getUploadBenutzer();
+	}
+
+	@Override
+	public String getUploadVerzeichnis() {
+		return propertiesSpalte.getUploadVerzeichnis();
 	}
 
 }

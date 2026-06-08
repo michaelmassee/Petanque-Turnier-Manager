@@ -14,6 +14,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeUnGeradeStyle;
+import de.petanqueturniermanager.helper.upload.UploadProtokoll;
 import de.petanqueturniermanager.konfigdialog.AuswahlConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
@@ -70,6 +71,13 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	public static final String KONFIG_PROP_ENDRANGLISTE_SORT_MODE = "Endrangliste Sortiermodus"; //
 	private static final String KONFIG_PROP_TAB_COLOR_SUPERMELEE_TEAM_PAARUNGEN = "Tab-Farbe Team-Paarungen";
 	private static final String KONFIG_PROP_SPIELTAGRANGLISTE_RUNDENSUMMEN = "Spieltagrangliste Rundensummen anzeigen";
+
+	public static final String KONFIG_PROP_DOWNLOAD_URL       = "Download Url";
+	private static final String KONFIG_PROP_UPLOAD_PROTOKOLL   = "Upload Protokoll";
+	private static final String KONFIG_PROP_UPLOAD_HOST        = "Upload Host";
+	private static final String KONFIG_PROP_UPLOAD_PORT        = "Upload Port";
+	private static final String KONFIG_PROP_UPLOAD_BENUTZER    = "Upload Benutzer";
+	private static final String KONFIG_PROP_UPLOAD_VERZEICHNIS = "Upload Verzeichnis";
 
 	static {
 
@@ -174,6 +182,19 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 			KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(PROP_SPIELTAG_KOPFZEILE(spieltagcntr))
 					.setDefaultVal(spieltagcntr + ". Spieltag").setDescription("config.desc.supermelee.spieltag.kopfzeile", spieltagcntr));
 		}
+
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_DOWNLOAD_URL)
+				.setDefaultVal("").setDescription("config.desc.download.url"));
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_PROTOKOLL)
+				.setDefaultVal("FTP").setDescription("config.desc.upload.protokoll"));
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_HOST)
+				.setDefaultVal("").setDescription("config.desc.upload.host"));
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_UPLOAD_PORT)
+				.setDefaultVal(21).setDescription("config.desc.upload.port"));
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_BENUTZER)
+				.setDefaultVal("").setDescription("config.desc.upload.benutzer"));
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_VERZEICHNIS)
+				.setDefaultVal("").setDescription("config.desc.upload.verzeichnis"));
 	}
 
 	public static final String PROP_SPIELTAG_KOPFZEILE(int spielTagNr) {
@@ -380,6 +401,37 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	@Override
 	public SpielrundeHintergrundFarbeUnGeradeStyle getSpielRundeHintergrundFarbeUnGeradeStyle() {
 		return new SpielrundeHintergrundFarbeUnGeradeStyle(getSpielRundeHintergrundFarbeUnGerade());
+	}
+
+	@Override
+	public String getDownloadUrl() {
+		return readStringProperty(KONFIG_PROP_DOWNLOAD_URL);
+	}
+
+	@Override
+	public UploadProtokoll getUploadProtokoll() {
+		return UploadProtokoll.vonString(readStringProperty(KONFIG_PROP_UPLOAD_PROTOKOLL));
+	}
+
+	@Override
+	public String getUploadHost() {
+		return readStringProperty(KONFIG_PROP_UPLOAD_HOST);
+	}
+
+	@Override
+	public int getUploadPort() {
+		Integer port = readIntProperty(KONFIG_PROP_UPLOAD_PORT);
+		return port != null ? port : 21;
+	}
+
+	@Override
+	public String getUploadBenutzer() {
+		return readStringProperty(KONFIG_PROP_UPLOAD_BENUTZER);
+	}
+
+	@Override
+	public String getUploadVerzeichnis() {
+		return readStringProperty(KONFIG_PROP_UPLOAD_VERZEICHNIS);
 	}
 
 }

@@ -8,10 +8,13 @@ import de.petanqueturniermanager.basesheet.konfiguration.IPropertiesSpalte;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeUnGeradeStyle;
+import de.petanqueturniermanager.helper.upload.IUploadKonfigurierbar;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 
-public interface ISuperMeleePropertiesSpalte extends IPropertiesSpalte {
+public interface ISuperMeleePropertiesSpalte extends IPropertiesSpalte, IUploadKonfigurierbar {
+
+	String getDownloadUrl();
 
 	SpielTagNr getAktiveSpieltag();
 
