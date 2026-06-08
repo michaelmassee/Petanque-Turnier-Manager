@@ -63,7 +63,6 @@ The extension already offers a wide selection of proven tournament modes suitabl
   For classic final rounds and pure knockout tournaments. A win means advancing, a loss means immediate elimination. The pairings follow the cross-system (1st vs. Last, 2nd vs. Second to Last...), so top teams meet later on. For participant numbers that are not a power of two, a cadrage (preliminary round) is automatically calculated.
 * **Maastricht System:**
   Combines the Swiss System with knockout final rounds. Teams are paired using the Swiss algorithm over several preliminary rounds (2–5). Afterwards, teams are divided into performance groups (A, B, C, D) based on their number of wins – each group then plays its own knockout final. Result: four tournament winners, fair group allocation, and exciting finals.
-
 * **Poule A/B System:**
   Classic mode with a group phase (Poules) using a Double-Elimination-Light format, followed by division into the A-tournament (main bracket) and B-tournament (consolation bracket).
 * **Cascading Knockout System (Extended ABCD System):**
