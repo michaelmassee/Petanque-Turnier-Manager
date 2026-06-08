@@ -13,6 +13,8 @@ import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeUnGeradeStyle;
+import de.petanqueturniermanager.helper.upload.IUploadKonfigurierbar;
+import de.petanqueturniermanager.helper.upload.UploadProtokoll;
 import de.petanqueturniermanager.konfigdialog.AuswahlConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
@@ -22,7 +24,7 @@ import de.petanqueturniermanager.supermelee.SpielRundeNr;
 /**
  * Konfigurationseigenschaften für das Formule X Turniersystem.
  */
-public class FormuleXPropertiesSpalte extends BasePropertiesSpalte implements IFreispielPropertiesSpalte {
+public class FormuleXPropertiesSpalte extends BasePropertiesSpalte implements IFreispielPropertiesSpalte, IUploadKonfigurierbar {
 
     public static final List<ConfigProperty<?>> KONFIG_PROPERTIES = new ArrayList<>();
 
@@ -50,6 +52,13 @@ public class FormuleXPropertiesSpalte extends BasePropertiesSpalte implements IF
 
     private static final String KONFIG_PROP_FREISPIEL_PUNKTE_PLUS  = "Freispiel Punkte +";
     private static final String KONFIG_PROP_FREISPIEL_PUNKTE_MINUS = "Freispiel Punkte -";
+
+    public static final String KONFIG_PROP_DOWNLOAD_URL       = "Download Url";
+    private static final String KONFIG_PROP_UPLOAD_PROTOKOLL   = "Upload Protokoll";
+    private static final String KONFIG_PROP_UPLOAD_HOST        = "Upload Host";
+    private static final String KONFIG_PROP_UPLOAD_PORT        = "Upload Port";
+    private static final String KONFIG_PROP_UPLOAD_BENUTZER    = "Upload Benutzer";
+    private static final String KONFIG_PROP_UPLOAD_VERZEICHNIS = "Upload Verzeichnis";
 
     static {
         KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_LINKS)
@@ -100,6 +109,21 @@ public class FormuleXPropertiesSpalte extends BasePropertiesSpalte implements IF
                 .setDefaultVal(13).setDescription("config.desc.freispiel.punkte.plus"));
         KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_FREISPIEL_PUNKTE_MINUS)
                 .setDefaultVal(0).setDescription("config.desc.freispiel.punkte.minus"));
+
+        KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_DOWNLOAD_URL)
+                .setDescription("config.desc.download.url"));
+        KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_PROTOKOLL)
+                .setDefaultVal(UploadProtokoll.FTP.name())
+                .setDescription("config.desc.upload.protokoll"));
+        KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_HOST)
+                .setDescription("config.desc.upload.host"));
+        KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_UPLOAD_PORT)
+                .setDefaultVal("21")
+                .setDescription("config.desc.upload.port"));
+        KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_BENUTZER)
+                .setDescription("config.desc.upload.benutzer"));
+        KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_VERZEICHNIS)
+                .setDescription("config.desc.upload.verzeichnis"));
     }
 
     FormuleXPropertiesSpalte(ISheet sheet) {
@@ -204,5 +228,35 @@ public class FormuleXPropertiesSpalte extends BasePropertiesSpalte implements IF
     @Override
     public Integer getFreispielPunkteMinus() {
         return readIntProperty(KONFIG_PROP_FREISPIEL_PUNKTE_MINUS);
+    }
+
+    public String getDownloadUrl() {
+        return readStringProperty(KONFIG_PROP_DOWNLOAD_URL);
+    }
+
+    @Override
+    public UploadProtokoll getUploadProtokoll() {
+        return UploadProtokoll.vonString(readStringProperty(KONFIG_PROP_UPLOAD_PROTOKOLL));
+    }
+
+    @Override
+    public String getUploadHost() {
+        return readStringProperty(KONFIG_PROP_UPLOAD_HOST);
+    }
+
+    @Override
+    public int getUploadPort() {
+        Integer port = readIntProperty(KONFIG_PROP_UPLOAD_PORT);
+        return port != null ? port : 21;
+    }
+
+    @Override
+    public String getUploadBenutzer() {
+        return readStringProperty(KONFIG_PROP_UPLOAD_BENUTZER);
+    }
+
+    @Override
+    public String getUploadVerzeichnis() {
+        return readStringProperty(KONFIG_PROP_UPLOAD_VERZEICHNIS);
     }
 }

@@ -6,6 +6,7 @@ import java.util.List;
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.helper.upload.UploadProtokoll;
 import de.petanqueturniermanager.konfigdialog.AuswahlConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
@@ -37,6 +38,13 @@ public class JGJPropertiesSpalte extends BasePropertiesSpalte implements IJGJPro
 	private static final String KONFIG_PROP_MELDELISTE_TEAMNAME = "Meldeliste Teamname";
 	private static final String KONFIG_PROP_MELDELISTE_VEREINSNAME = "Meldeliste Vereinsname";
 	private static final String KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE = "Spielplan Team Anzeige";
+
+	public static final String KONFIG_PROP_DOWNLOAD_URL       = "Download Url";
+	private static final String KONFIG_PROP_UPLOAD_PROTOKOLL   = "Upload Protokoll";
+	private static final String KONFIG_PROP_UPLOAD_HOST        = "Upload Host";
+	private static final String KONFIG_PROP_UPLOAD_PORT        = "Upload Port";
+	private static final String KONFIG_PROP_UPLOAD_BENUTZER    = "Upload Benutzer";
+	private static final String KONFIG_PROP_UPLOAD_VERZEICHNIS = "Upload Verzeichnis";
 
 	static {
 		ADDBaseProp(KONFIG_PROPERTIES);
@@ -89,6 +97,21 @@ public class JGJPropertiesSpalte extends BasePropertiesSpalte implements IJGJPro
 				.setDefaultVal(0).setDescription("config.desc.jgj.gruppengroesse"));
 		KONFIG_PROPERTIES.add(ConfigProperty.<Boolean>from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_RUECKRUNDE)
 				.setDefaultVal(Boolean.FALSE).setDescription("config.desc.jgj.rueckrunde"));
+
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_DOWNLOAD_URL)
+				.setDescription("config.desc.download.url"));
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_PROTOKOLL)
+				.setDefaultVal(UploadProtokoll.FTP.name())
+				.setDescription("config.desc.upload.protokoll"));
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_HOST)
+				.setDescription("config.desc.upload.host"));
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_UPLOAD_PORT)
+				.setDefaultVal("21")
+				.setDescription("config.desc.upload.port"));
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_BENUTZER)
+				.setDescription("config.desc.upload.benutzer"));
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_VERZEICHNIS)
+				.setDescription("config.desc.upload.verzeichnis"));
 	}
 
 	/**
@@ -208,6 +231,37 @@ public class JGJPropertiesSpalte extends BasePropertiesSpalte implements IJGJPro
 	@Override
 	public void setRueckrunde(boolean mitRueckrunde) {
 		setStringProperty(KONFIG_PROP_RUECKRUNDE, de.petanqueturniermanager.helper.StringTools.booleanToString(mitRueckrunde));
+	}
+
+	@Override
+	public String getDownloadUrl() {
+		return readStringProperty(KONFIG_PROP_DOWNLOAD_URL);
+	}
+
+	@Override
+	public UploadProtokoll getUploadProtokoll() {
+		return UploadProtokoll.vonString(readStringProperty(KONFIG_PROP_UPLOAD_PROTOKOLL));
+	}
+
+	@Override
+	public String getUploadHost() {
+		return readStringProperty(KONFIG_PROP_UPLOAD_HOST);
+	}
+
+	@Override
+	public int getUploadPort() {
+		Integer port = readIntProperty(KONFIG_PROP_UPLOAD_PORT);
+		return port != null ? port : 21;
+	}
+
+	@Override
+	public String getUploadBenutzer() {
+		return readStringProperty(KONFIG_PROP_UPLOAD_BENUTZER);
+	}
+
+	@Override
+	public String getUploadVerzeichnis() {
+		return readStringProperty(KONFIG_PROP_UPLOAD_VERZEICHNIS);
 	}
 
 }

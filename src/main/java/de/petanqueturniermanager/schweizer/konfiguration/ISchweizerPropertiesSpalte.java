@@ -7,13 +7,14 @@ import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeUnGeradeStyle;
+import de.petanqueturniermanager.helper.upload.IUploadKonfigurierbar;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 
 /**
  * @author Michael Massee
  *
  */
-public interface ISchweizerPropertiesSpalte extends de.petanqueturniermanager.basesheet.konfiguration.IFreispielPropertiesSpalte {
+public interface ISchweizerPropertiesSpalte extends de.petanqueturniermanager.basesheet.konfiguration.IFreispielPropertiesSpalte, IUploadKonfigurierbar {
 
 	String getKopfZeileLinks();
 
@@ -58,5 +59,7 @@ public interface ISchweizerPropertiesSpalte extends de.petanqueturniermanager.ba
 	SchweizerRankingModus getRankingModus();
 
 	void setRankingModus(SchweizerRankingModus modus);
+
+	String getDownloadUrl();
 
 }

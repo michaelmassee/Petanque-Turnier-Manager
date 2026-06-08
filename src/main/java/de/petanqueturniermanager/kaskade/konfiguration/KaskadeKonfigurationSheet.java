@@ -13,11 +13,13 @@ import de.petanqueturniermanager.helper.pagestyle.PageStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.helper.upload.IUploadKonfigurierbar;
+import de.petanqueturniermanager.helper.upload.UploadProtokoll;
 
 /**
  * Konfigurationssheet für das Kaskaden-KO-Turniersystem.
  */
-public class KaskadeKonfigurationSheet extends BaseKonfigurationSheet {
+public class KaskadeKonfigurationSheet extends BaseKonfigurationSheet implements IUploadKonfigurierbar {
 
     private final KaskadePropertiesSpalte propertiesSpalte;
 
@@ -137,4 +139,29 @@ public class KaskadeKonfigurationSheet extends BaseKonfigurationSheet {
     public int getTurnierbaumSiegerFarbe()      { return propertiesSpalte.getTurnierbaumSiegerFarbe(); }
     public int getTurnierbaumBahnFarbe()        { return propertiesSpalte.getTurnierbaumBahnFarbe(); }
     public int getTurnierbaumDrittePlatzFarbe() { return propertiesSpalte.getTurnierbaumDrittePlatzFarbe(); }
+
+
+	public String getDownloadUrl() {
+		return propertiesSpalte.getDownloadUrl();
+	}
+
+	public UploadProtokoll getUploadProtokoll() {
+		return propertiesSpalte.getUploadProtokoll();
+	}
+
+	public String getUploadHost() {
+		return propertiesSpalte.getUploadHost();
+	}
+
+	public int getUploadPort() {
+		return propertiesSpalte.getUploadPort();
+	}
+
+	public String getUploadBenutzer() {
+		return propertiesSpalte.getUploadBenutzer();
+	}
+
+	public String getUploadVerzeichnis() {
+		return propertiesSpalte.getUploadVerzeichnis();
+	}
 }

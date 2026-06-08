@@ -8,6 +8,7 @@ import de.petanqueturniermanager.basesheet.konfiguration.IFreispielPropertiesSpa
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeGeradeStyle;
@@ -15,13 +16,14 @@ import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeUnGe
 import de.petanqueturniermanager.helper.pagestyle.PageStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
+import de.petanqueturniermanager.helper.upload.IUploadKonfigurierbar;
+import de.petanqueturniermanager.helper.upload.UploadProtokoll;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
-import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
  * Konfigurationssheet für das Formule X Turniersystem.
  */
-public class FormuleXKonfigurationSheet extends BaseKonfigurationSheet implements IFreispielPropertiesSpalte {
+public class FormuleXKonfigurationSheet extends BaseKonfigurationSheet implements IFreispielPropertiesSpalte, IUploadKonfigurierbar {
 
     private final FormuleXPropertiesSpalte propertiesSpalte;
 
@@ -146,5 +148,34 @@ public class FormuleXKonfigurationSheet extends BaseKonfigurationSheet implement
     @Override
     public Integer getFreispielPunkteMinus() {
         return propertiesSpalte.getFreispielPunkteMinus();
+    }
+
+    public String getDownloadUrl() {
+        return propertiesSpalte.getDownloadUrl();
+    }
+
+    @Override
+    public UploadProtokoll getUploadProtokoll() {
+        return propertiesSpalte.getUploadProtokoll();
+    }
+
+    @Override
+    public String getUploadHost() {
+        return propertiesSpalte.getUploadHost();
+    }
+
+    @Override
+    public int getUploadPort() {
+        return propertiesSpalte.getUploadPort();
+    }
+
+    @Override
+    public String getUploadBenutzer() {
+        return propertiesSpalte.getUploadBenutzer();
+    }
+
+    @Override
+    public String getUploadVerzeichnis() {
+        return propertiesSpalte.getUploadVerzeichnis();
     }
 }

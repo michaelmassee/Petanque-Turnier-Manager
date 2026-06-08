@@ -4,12 +4,13 @@ import de.petanqueturniermanager.basesheet.konfiguration.BaseKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.konfiguration.IPropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.pagestyle.PageStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
+import de.petanqueturniermanager.helper.upload.UploadProtokoll;
 import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
-import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
  * Erstellung 01.08.2022 / Michael Massee
@@ -153,6 +154,36 @@ public class JGJKonfigurationSheet extends BaseKonfigurationSheet implements IJG
 	@Override
 	public void setRueckrunde(boolean mitRueckrunde) {
 		propertiesSpalte.setRueckrunde(mitRueckrunde);
+	}
+
+	@Override
+	public String getDownloadUrl() {
+		return propertiesSpalte.getDownloadUrl();
+	}
+
+	@Override
+	public UploadProtokoll getUploadProtokoll() {
+		return propertiesSpalte.getUploadProtokoll();
+	}
+
+	@Override
+	public String getUploadHost() {
+		return propertiesSpalte.getUploadHost();
+	}
+
+	@Override
+	public int getUploadPort() {
+		return propertiesSpalte.getUploadPort();
+	}
+
+	@Override
+	public String getUploadBenutzer() {
+		return propertiesSpalte.getUploadBenutzer();
+	}
+
+	@Override
+	public String getUploadVerzeichnis() {
+		return propertiesSpalte.getUploadVerzeichnis();
 	}
 
 }

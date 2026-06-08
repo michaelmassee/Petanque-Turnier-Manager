@@ -5,6 +5,7 @@ package de.petanqueturniermanager.kaskade.konfiguration;
 
 import java.util.ArrayList;
 import java.util.List;
+import de.petanqueturniermanager.helper.upload.UploadProtokoll;
 
 import de.petanqueturniermanager.basesheet.SheetTabFarben;
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
@@ -23,11 +24,13 @@ public class KaskadePropertiesSpalte extends BasePropertiesSpalte {
 
     public static final List<ConfigProperty<?>> KONFIG_PROPERTIES = new ArrayList<>();
 
-    static {
-        ADDBaseProp(KONFIG_PROPERTIES);
-        addCheckinSortProp(KONFIG_PROPERTIES);
-        addTeilnehmerListeSortProp(KONFIG_PROPERTIES);
-    }
+    // Konstanten müssen VOR der static-Initialisierer deklariert werden
+    public static final String KONFIG_PROP_DOWNLOAD_URL       = "Download Url";
+    private static final String KONFIG_PROP_UPLOAD_PROTOKOLL   = "Upload Protokoll";
+    private static final String KONFIG_PROP_UPLOAD_HOST        = "Upload Host";
+    private static final String KONFIG_PROP_UPLOAD_PORT        = "Upload Port";
+    private static final String KONFIG_PROP_UPLOAD_BENUTZER    = "Upload Benutzer";
+    private static final String KONFIG_PROP_UPLOAD_VERZEICHNIS = "Upload Verzeichnis";
 
     private static final String KONFIG_PROP_KOPF_ZEILE_LINKS      = "Kopfzeile Links";
     private static final String KONFIG_PROP_KOPF_ZEILE_MITTE      = "Kopfzeile Mitte";
@@ -41,6 +44,27 @@ public class KaskadePropertiesSpalte extends BasePropertiesSpalte {
     public static final String KONFIG_PROP_FREISPIEL_PUNKTE_MINUS  = "Freispiel Punkte -";
     public static final String KONFIG_PROP_AKTIVE_KASKADENRUNDE    = "Aktive Kaskadenrunde";
     public static final String KONFIG_PROP_KO_FELDER_ERSTELLT      = "KO-Felder erstellt";
+
+    static {
+
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_DOWNLOAD_URL)
+				.setDescription("config.desc.download.url"));
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_PROTOKOLL)
+				.setDefaultVal(UploadProtokoll.FTP.name())
+				.setDescription("config.desc.upload.protokoll"));
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_HOST)
+				.setDescription("config.desc.upload.host"));
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_UPLOAD_PORT)
+				.setDefaultVal("21")
+				.setDescription("config.desc.upload.port"));
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_BENUTZER)
+				.setDescription("config.desc.upload.benutzer"));
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_VERZEICHNIS)
+				.setDescription("config.desc.upload.verzeichnis"));
+        ADDBaseProp(KONFIG_PROPERTIES);
+        addCheckinSortProp(KONFIG_PROPERTIES);
+        addTeilnehmerListeSortProp(KONFIG_PROPERTIES);
+    }
 
     static {
         KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_LINKS)
@@ -201,4 +225,30 @@ public class KaskadePropertiesSpalte extends BasePropertiesSpalte {
     public int getTurnierbaumSiegerFarbe()      { return readIntProperty(KoPropertiesSpalte.KONFIG_PROP_TURNIERBAUM_COLOR_SIEGER); }
     public int getTurnierbaumBahnFarbe()        { return readIntProperty(KoPropertiesSpalte.KONFIG_PROP_TURNIERBAUM_COLOR_BAHN); }
     public int getTurnierbaumDrittePlatzFarbe() { return readIntProperty(KoPropertiesSpalte.KONFIG_PROP_TURNIERBAUM_COLOR_DRITTE_PLATZ); }
+
+
+	public String getDownloadUrl() {
+		return readStringProperty(KONFIG_PROP_DOWNLOAD_URL);
+	}
+
+	public UploadProtokoll getUploadProtokoll() {
+		return UploadProtokoll.vonString(readStringProperty(KONFIG_PROP_UPLOAD_PROTOKOLL));
+	}
+
+	public String getUploadHost() {
+		return readStringProperty(KONFIG_PROP_UPLOAD_HOST);
+	}
+
+	public int getUploadPort() {
+		Integer port = readIntProperty(KONFIG_PROP_UPLOAD_PORT);
+		return port != null ? port : 21;
+	}
+
+	public String getUploadBenutzer() {
+		return readStringProperty(KONFIG_PROP_UPLOAD_BENUTZER);
+	}
+
+	public String getUploadVerzeichnis() {
+		return readStringProperty(KONFIG_PROP_UPLOAD_VERZEICHNIS);
+	}
 }
