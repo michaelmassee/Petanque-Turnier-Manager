@@ -693,6 +693,32 @@ public class GlobalProperties {
 		speichernDatei();
 	}
 
+	// ---------------------------------------------------------------
+	// Upload-Passwort (pro Host, nicht im ODS-Dokument gespeichert)
+	// ---------------------------------------------------------------
+
+	private static final String UPLOAD_PASSWORT_PRAEFIX = "upload.passwort.";
+
+	public String getUploadPasswort(String host) {
+		if (host == null || host.isBlank()) {
+			return "";
+		}
+		return propMap.getOrDefault(UPLOAD_PASSWORT_PRAEFIX + host.trim().toLowerCase(), "");
+	}
+
+	public void setUploadPasswort(String host, String passwort) {
+		if (host == null || host.isBlank()) {
+			return;
+		}
+		String schluessel = UPLOAD_PASSWORT_PRAEFIX + host.trim().toLowerCase();
+		if (passwort == null || passwort.isEmpty()) {
+			propMap.remove(schluessel);
+		} else {
+			propMap.put(schluessel, passwort);
+		}
+		speichernDatei();
+	}
+
 	// nur für Tests
 	static void resetForTest() {
 		instance = null;

@@ -97,6 +97,9 @@ import de.petanqueturniermanager.konfigdialog.properties.FarbenDialog;
 import de.petanqueturniermanager.konfigdialog.properties.KopfFusszeilenDialog;
 import de.petanqueturniermanager.konfigdialog.properties.TurnierDialog;
 import de.petanqueturniermanager.konfigdialog.properties.TurnierStartseiteDialog;
+import de.petanqueturniermanager.helper.upload.ExportPfadHelper;
+import de.petanqueturniermanager.liga.meldeliste.LigaExportInVerzeichnis;
+import de.petanqueturniermanager.liga.meldeliste.LigaFtpUpload;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheetExport;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheetNew;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheetTestDaten;
@@ -217,8 +220,10 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_LIGA_SPIELPLAN = "liga_spielplan";
 	public static final String CMD_LIGA_RANGLISTE_SORTIEREN = "liga_rangliste_sortieren";
 	public static final String CMD_LIGA_RANGLISTE = "liga_rangliste";
-	public static final String CMD_LIGA_DIREKTVERGLEICH = "liga_direktvergleich";
-	public static final String CMD_LIGA_EXPORT = "liga_export";
+	public static final String CMD_LIGA_DIREKTVERGLEICH        = "liga_direktvergleich";
+	public static final String CMD_LIGA_EXPORT                 = "liga_export";
+	public static final String CMD_LIGA_EXPORT_VERZEICHNIS     = "liga_export_verzeichnis";
+	public static final String CMD_LIGA_FTP_UPLOAD             = "liga_ftp_upload";
 	public static final String CMD_LIGA_TESTDATEN_MELDELISTE = "liga_testdaten_meldeliste";
 
 	// Trip-Tête
@@ -858,6 +863,16 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				break;
 			case CMD_LIGA_EXPORT:
 				new LigaMeldeListeSheetExport(ws).testTurnierSystem(TurnierSystem.LIGA).start();
+				break;
+			case CMD_LIGA_EXPORT_VERZEICHNIS: {
+				var pfadOpt = ExportPfadHelper.waehlePfad(xContext, ws);
+				if (pfadOpt.isPresent()) {
+					new LigaExportInVerzeichnis(ws, pfadOpt.get()).testTurnierSystem(TurnierSystem.LIGA).start();
+				}
+				break;
+			}
+			case CMD_LIGA_FTP_UPLOAD:
+				new LigaFtpUpload(ws).testTurnierSystem(TurnierSystem.LIGA).start();
 				break;
 			// ------------------------------
 			// Trip-Tête
@@ -1830,7 +1845,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_LIGA_NEUE_MELDELISTE                   -> ts == TurnierSystem.KEIN;
 			case CMD_LIGA_UPDATE_MELDELISTE, CMD_LIGA_SPIELPLAN,
 				 CMD_LIGA_RANGLISTE, CMD_LIGA_RANGLISTE_SORTIEREN,
-				 CMD_LIGA_DIREKTVERGLEICH, CMD_LIGA_EXPORT    -> ts == TurnierSystem.LIGA;
+				 CMD_LIGA_DIREKTVERGLEICH, CMD_LIGA_EXPORT,
+		 CMD_LIGA_EXPORT_VERZEICHNIS, CMD_LIGA_FTP_UPLOAD -> ts == TurnierSystem.LIGA;
 			case CMD_LIGA_TESTDATEN_MELDELISTE,
 				 CMD_LIGA_SPIELPLAN_TESTDATEN,
 				 CMD_LIGA_SPIELPLAN_TESTDATEN_MIT_FREISPIEL -> ts == TurnierSystem.KEIN || ts == TurnierSystem.LIGA;

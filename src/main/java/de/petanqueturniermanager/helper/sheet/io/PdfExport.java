@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -63,6 +64,7 @@ public class PdfExport extends AbstractStore<PdfExport> {
 
 	private String sheetName = null;
 	private RangePosition rangePosition = null;
+	private Path zielVerzeichnis = null;
 
 	private PdfExport(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet);
@@ -79,6 +81,11 @@ public class PdfExport extends AbstractStore<PdfExport> {
 
 	public PdfExport range(RangePosition rangePosition) throws GenerateException {
 		this.rangePosition = rangePosition;
+		return this;
+	}
+
+	public PdfExport zielVerzeichnis(Path dir) {
+		this.zielVerzeichnis = dir;
 		return this;
 	}
 
@@ -111,7 +118,9 @@ public class PdfExport extends AbstractStore<PdfExport> {
 		try {
 			String newFileName = newFileName(null);
 			newFileName = FilenameUtils.removeExtension(newFileName);
-			pdfFile = newLocationInSameDir(newFileName + ".pdf");
+			pdfFile = zielVerzeichnis != null
+					? zielVerzeichnis.resolve(newFileName + ".pdf").toUri()
+					: newLocationInSameDir(newFileName + ".pdf");
 
 			logger.info("Erstelle PDF :" + pdfFile);
 			Map<String, Object> filterData = new HashMap<>();

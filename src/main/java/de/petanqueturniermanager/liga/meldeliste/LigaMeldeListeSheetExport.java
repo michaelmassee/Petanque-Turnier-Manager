@@ -4,7 +4,6 @@
 
 package de.petanqueturniermanager.liga.meldeliste;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -33,6 +32,7 @@ import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.io.PdfExport;
+import de.petanqueturniermanager.helper.upload.ExportErgebnis;
 import de.petanqueturniermanager.liga.konfiguration.LigaKonfigurationSheet;
 import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheet;
 import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet;
@@ -153,33 +153,44 @@ public class LigaMeldeListeSheetExport extends SheetRunner implements IMeldelist
 
 	@Override
 	protected void doRun() throws GenerateException {
-
 		if (getTurnierSystem() != TurnierSystem.LIGA) {
 			throw new GenerateException(I18n.get("error.turniersystem.falsch", getTurnierSystem()));
 		}
-
-		delegate.upDateSheet();
-		processBox().info("Exportiere nach PDF");
-
-		LigaSpielPlanSheet ligaSpielPlanSheet = new LigaSpielPlanSheet(getWorkingSpreadsheet());
-		String fileNamePdfSpielplan = PdfExport.from(getWorkingSpreadsheet()).sheetName(LigaSpielPlanSheet.sheetName())
-				.range(ligaSpielPlanSheet.printBereichRangePosition()).prefix1(LigaSpielPlanSheet.sheetName())
-				.doExport().toString();
-		processBox().info(fileNamePdfSpielplan);
-
-		LigaRanglisteSheet ligaRanglisteSheet = new LigaRanglisteSheet(getWorkingSpreadsheet());
-		String fileNamePdfRangliste = PdfExport.from(getWorkingSpreadsheet()).sheetName(SheetNamen.rangliste())
-				.range(ligaRanglisteSheet.printBereichRangePosition()).prefix1(SheetNamen.rangliste()).doExport()
-				.toString();
-		processBox().info(fileNamePdfRangliste);
-
-		processBox().info("Exportiere nach HTML");
-		erstelleUndSchreibeHtml(fileNamePdfSpielplan, fileNamePdfRangliste);
+		exportiere(elternVerzeichnis());
 	}
 
-	private void erstelleUndSchreibeHtml(String fileNamePdfSpielplan, String fileNamePdfRangliste)
-			throws GenerateException {
+	public ExportErgebnis exportiere(Path zielVerzeichnis) throws GenerateException {
+		delegate.upDateSheet();
+		processBox().info(I18n.get("export.info.pdf"));
 
+		var ws = getWorkingSpreadsheet();
+		var ligaSpielPlanSheet = new LigaSpielPlanSheet(ws);
+		var ligaRanglisteSheet = new LigaRanglisteSheet(ws);
+
+		Path pdfSpielplan = Path.of(PdfExport.from(ws)
+				.sheetName(LigaSpielPlanSheet.sheetName())
+				.range(ligaSpielPlanSheet.printBereichRangePosition())
+				.prefix1(LigaSpielPlanSheet.sheetName())
+				.zielVerzeichnis(zielVerzeichnis)
+				.doExport());
+		processBox().info(pdfSpielplan.toString());
+
+		Path pdfRangliste = Path.of(PdfExport.from(ws)
+				.sheetName(SheetNamen.rangliste())
+				.range(ligaRanglisteSheet.printBereichRangePosition())
+				.prefix1(SheetNamen.rangliste())
+				.zielVerzeichnis(zielVerzeichnis)
+				.doExport());
+		processBox().info(pdfRangliste.toString());
+
+		processBox().info(I18n.get("export.info.html"));
+		Path htmlDatei = exportiereHtml(zielVerzeichnis, pdfSpielplan, pdfRangliste);
+
+		return new ExportErgebnis(List.of(pdfSpielplan, pdfRangliste, htmlDatei));
+	}
+
+	private Path exportiereHtml(Path zielVerzeichnis, Path pdfSpielplan, Path pdfRangliste)
+			throws GenerateException {
 		try {
 			LigaKonfigurationSheet konfiguration = delegate.getKonfigurationSheet();
 			String baseDownloadUrl = StringUtils.strip(konfiguration.getBaseDownloadUrl());
@@ -187,7 +198,7 @@ public class LigaMeldeListeSheetExport extends SheetRunner implements IMeldelist
 			String gruppenname = StringUtils.strip(konfiguration.getGruppenname());
 
 			if (StringUtils.isNotEmpty(baseDownloadUrl)) {
-				processBox().info("Download URL Verzeichnis: " + baseDownloadUrl);
+				processBox().info(I18n.get("export.info.download.url", baseDownloadUrl));
 			}
 			if (StringUtils.isEmpty(turnierlogoUrl)) {
 				processBox().info(I18n.get("export.warnung.turnierlogo.fehlt"));
@@ -195,29 +206,29 @@ public class LigaMeldeListeSheetExport extends SheetRunner implements IMeldelist
 				processBox().info(I18n.get("export.info.turnierlogo", turnierlogoUrl));
 			}
 
-			String spielplanPdfUrl = buildPdfUrl(baseDownloadUrl, fileNamePdfSpielplan);
-			String ranglistePdfUrl = buildPdfUrl(baseDownloadUrl, fileNamePdfRangliste);
-
-			var ws = getWorkingSpreadsheet();
-			String html = LigaHtmlExportSeite.from(ws)
+			Path spielplanDateiName = pdfSpielplan.getFileName();
+			Path ranglisteDateiName = pdfRangliste.getFileName();
+			if (spielplanDateiName == null || ranglisteDateiName == null) {
+				throw new GenerateException(I18n.get("export.fehler.dateipfad"));
+			}
+			String html = LigaHtmlExportSeite.from(getWorkingSpreadsheet())
 					.logoUrl(turnierlogoUrl)
 					.gruppenname(gruppenname)
-					.spielplanPdfUrl(spielplanPdfUrl)
-					.ranglistePdfUrl(ranglistePdfUrl)
+					.spielplanPdfUrl(buildPdfUrl(baseDownloadUrl, spielplanDateiName.toString()))
+					.ranglistePdfUrl(buildPdfUrl(baseDownloadUrl, ranglisteDateiName.toString()))
 					.erstelle();
 
-			File zieldatei = htmlZieldatei();
-			Files.writeString(zieldatei.toPath(), html, StandardCharsets.UTF_8);
-			processBox().info(zieldatei.toString());
-
+			Path htmlDatei = htmlZieldatei(zielVerzeichnis);
+			Files.writeString(htmlDatei, html, StandardCharsets.UTF_8);
+			processBox().info(htmlDatei.toString());
+			return htmlDatei;
 		} catch (IOException e) {
 			logger.error(e.getMessage(), e);
 			throw new GenerateException(e.getMessage());
 		}
 	}
 
-	private String buildPdfUrl(String baseDownloadUrl, String fullPdfPath) {
-		String dateiname = FilenameUtils.getName(fullPdfPath);
+	private String buildPdfUrl(String baseDownloadUrl, String dateiname) {
 		if (StringUtils.isNotBlank(baseDownloadUrl)) {
 			String base = baseDownloadUrl.endsWith("/") ? baseDownloadUrl : baseDownloadUrl + "/";
 			return base + dateiname;
@@ -225,21 +236,36 @@ public class LigaMeldeListeSheetExport extends SheetRunner implements IMeldelist
 		return StringUtils.isNotBlank(dateiname) ? dateiname : null;
 	}
 
-	private File htmlZieldatei() throws GenerateException {
+	private Path htmlZieldatei(Path verzeichnis) throws GenerateException {
 		XStorable xStorable = getWorkingSpreadsheet().getXStorable();
 		String location = xStorable != null ? xStorable.getLocation() : null;
 		if (StringUtils.isBlank(location)) {
 			throw new GenerateException(I18n.get("error.dokument.nicht.gespeichert"));
 		}
 		try {
-			Path path = Path.of(URI.create(location).toURL().toURI());
-			Path eltern = path.getParent();
-			Path dateiname = path.getFileName();
-			if (eltern == null || dateiname == null) {
+			Path dateiname = Path.of(URI.create(location).toURL().toURI()).getFileName();
+			if (dateiname == null) {
 				throw new GenerateException(I18n.get("error.dokument.nicht.gespeichert"));
 			}
 			String basisName = FilenameUtils.removeExtension(dateiname.toString());
-			return eltern.resolve(basisName + ".html").toFile();
+			return verzeichnis.resolve(basisName + ".html");
+		} catch (MalformedURLException | URISyntaxException e) {
+			throw new GenerateException(e.getMessage());
+		}
+	}
+
+	private Path elternVerzeichnis() throws GenerateException {
+		XStorable xStorable = getWorkingSpreadsheet().getXStorable();
+		String location = xStorable != null ? xStorable.getLocation() : null;
+		if (StringUtils.isBlank(location)) {
+			throw new GenerateException(I18n.get("error.dokument.nicht.gespeichert"));
+		}
+		try {
+			Path eltern = Path.of(URI.create(location).toURL().toURI()).getParent();
+			if (eltern == null) {
+				throw new GenerateException(I18n.get("error.dokument.nicht.gespeichert"));
+			}
+			return eltern;
 		} catch (MalformedURLException | URISyntaxException e) {
 			throw new GenerateException(e.getMessage());
 		}

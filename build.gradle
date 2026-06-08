@@ -154,6 +154,9 @@ dependencies {
     // (POSIX-/Win32-Filelocks) und kollidiert nicht mit LO's eigenen Java-Libs
     // — daher kein Shading nötig.
     implementation 'org.xerial:sqlite-jdbc:3.53.1.0'
+    // FTP/SFTP-Upload. LO bündelt weder commons-net noch jsch → kein Shading nötig.
+    implementation 'commons-net:commons-net:3.11.1'
+    implementation 'com.github.mwiede:jsch:0.2.20'
 
     // LibreOffice SDK dependencies - using local installation.
     // hsqldb.jar bleibt ausgeschlossen: LO bringt eine 1.8.0-Variante mit, die

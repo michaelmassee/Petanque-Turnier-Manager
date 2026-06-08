@@ -8,6 +8,8 @@ import java.util.List;
 
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.helper.upload.IUploadKonfigurierbar;
+import de.petanqueturniermanager.helper.upload.UploadProtokoll;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
 import de.petanqueturniermanager.konfigdialog.HeaderFooterConfigProperty;
@@ -16,12 +18,18 @@ import de.petanqueturniermanager.konfigdialog.HeaderFooterConfigProperty;
  * @author Michael Massee
  *
  */
-public class LigaPropertiesSpalte extends BasePropertiesSpalte implements ILigaPropertiesSpalte {
+public class LigaPropertiesSpalte extends BasePropertiesSpalte implements ILigaPropertiesSpalte, IUploadKonfigurierbar {
 
 	public static final List<ConfigProperty<?>> KONFIG_PROPERTIES = new ArrayList<>();
 
 	public static final String KONFIG_PROP_FREISPIEL_PUNKTE_PLUS  = "Freispiel Punkte +";
 	public static final String KONFIG_PROP_FREISPIEL_PUNKTE_MINUS = "Freispiel Punkte -";
+
+	private static final String KONFIG_PROP_UPLOAD_PROTOKOLL   = "Upload Protokoll";
+	private static final String KONFIG_PROP_UPLOAD_HOST        = "Upload Host";
+	private static final String KONFIG_PROP_UPLOAD_PORT        = "Upload Port";
+	private static final String KONFIG_PROP_UPLOAD_BENUTZER    = "Upload Benutzer";
+	private static final String KONFIG_PROP_UPLOAD_VERZEICHNIS = "Upload Verzeichnis";
 
 	private static final String KONFIG_PROP_SPIELPLAN_COLOR_BACK_GERADE = "Spielplan Hintergrund Gerade";
 	private static final String KONFIG_PROP_SPIELPLAN_COLOR_BACK_UNGERADE = "Spielplan Hintergrund Ungerade";
@@ -65,6 +73,17 @@ public class LigaPropertiesSpalte extends BasePropertiesSpalte implements ILigaP
 				.setDefaultVal(13).setDescription("config.desc.freispiel.punkte.plus"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_FREISPIEL_PUNKTE_MINUS)
 				.setDefaultVal(7).setDescription("config.desc.freispiel.punkte.minus"));
+
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_PROTOKOLL)
+				.setDefaultVal("FTP").setDescription("config.desc.upload.protokoll"));
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_HOST)
+				.setDefaultVal("").setDescription("config.desc.upload.host"));
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_UPLOAD_PORT)
+				.setDefaultVal(21).setDescription("config.desc.upload.port"));
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_BENUTZER)
+				.setDefaultVal("").setDescription("config.desc.upload.benutzer"));
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_VERZEICHNIS)
+				.setDefaultVal("").setDescription("config.desc.upload.verzeichnis"));
 	}
 
 	/**
@@ -138,6 +157,32 @@ public class LigaPropertiesSpalte extends BasePropertiesSpalte implements ILigaP
 	@Override
 	public Integer getFreispielPunkteMinus() {
 		return readIntProperty(KONFIG_PROP_FREISPIEL_PUNKTE_MINUS);
+	}
+
+	@Override
+	public UploadProtokoll getUploadProtokoll() {
+		return UploadProtokoll.vonString(readStringProperty(KONFIG_PROP_UPLOAD_PROTOKOLL));
+	}
+
+	@Override
+	public String getUploadHost() {
+		return readStringProperty(KONFIG_PROP_UPLOAD_HOST);
+	}
+
+	@Override
+	public int getUploadPort() {
+		Integer port = readIntProperty(KONFIG_PROP_UPLOAD_PORT);
+		return port != null ? port : 21;
+	}
+
+	@Override
+	public String getUploadBenutzer() {
+		return readStringProperty(KONFIG_PROP_UPLOAD_BENUTZER);
+	}
+
+	@Override
+	public String getUploadVerzeichnis() {
+		return readStringProperty(KONFIG_PROP_UPLOAD_VERZEICHNIS);
 	}
 
 }
