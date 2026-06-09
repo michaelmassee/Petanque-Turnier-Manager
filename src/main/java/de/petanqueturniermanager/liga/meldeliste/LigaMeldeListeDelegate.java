@@ -146,12 +146,14 @@ class LigaMeldeListeDelegate implements MeldeListeKonstanten {
 	}
 
 	private void printBereichDefinieren() throws GenerateException {
-		int letzteDatenZeile = meldungenSpalte.letzteZeileMitSpielerName();
+		int letzteDatenZeile = meldungenSpalte.getLetzteDatenZeileUseMin();
 		if (letzteDatenZeile < ERSTE_DATEN_ZEILE) {
 			return;
 		}
-		var bereich = RangePosition.from(SPIELER_NR_SPALTE, ZWEITE_HEADER_ZEILE, LETZTE_INFO_SPALTE, letzteDatenZeile);
-		PrintArea.from(sheet.getXSpreadSheet(), sheet.getWorkingSpreadsheet()).setPrintArea(bereich);
+		var bereich = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_HEADER_ZEILE, LETZTE_INFO_SPALTE, letzteDatenZeile);
+		PrintArea.from(sheet.getXSpreadSheet(), sheet.getWorkingSpreadsheet())
+				.setPrintArea(bereich)
+				.setTitelZeilen(ERSTE_HEADER_ZEILE, ZWEITE_HEADER_ZEILE, LETZTE_INFO_SPALTE);
 	}
 
 	void formatDaten(MeldungenHintergrundFarbeGeradeStyle geradeStyle,

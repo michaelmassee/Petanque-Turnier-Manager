@@ -7,6 +7,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
 
@@ -39,7 +41,14 @@ class LigaExportHtmlTest {
                         "<table><tbody><tr><td>Rangliste</td></tr></tbody></table>",
                         "<table><tbody><tr><td>Direktvergleich</td></tr></tbody></table>"));
 
+        // writeToReferenz(html); // auskommentieren nach Erfassung
         assertThat(normalisiere(html)).isEqualTo(normalisiere(ladeReferenz()));
+    }
+
+    @SuppressWarnings("unused")
+    private void writeToReferenz(String html) throws IOException {
+        Files.writeString(Path.of(System.getProperty("user.home"), "LigaExportHtml_ref.html"),
+                normalisiere(html), StandardCharsets.UTF_8);
     }
 
     private String ladeReferenz() throws IOException {

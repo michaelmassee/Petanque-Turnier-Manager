@@ -30,6 +30,7 @@ import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
@@ -145,6 +146,19 @@ class JGJMeldeListeDelegate implements MeldeListeKonstanten {
 		formatZeilenfarben();
 
 		SheetFreeze.from(xSheet, sheet.getWorkingSpreadsheet()).anzZeilen(3).doFreeze();
+		printBereichDefinieren();
+	}
+
+	private void printBereichDefinieren() throws GenerateException {
+		int letzteDatenZeile = getLetzteDatenZeileUseMin();
+		if (letzteDatenZeile < ERSTE_DATEN_ZEILE) {
+			return;
+		}
+		int letzteSpalte = getAktivSpalte();
+		var bereich = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_HEADER_ZEILE, letzteSpalte, letzteDatenZeile);
+		PrintArea.from(sheet.getXSpreadSheet(), sheet.getWorkingSpreadsheet())
+				.setPrintArea(bereich)
+				.setTitelZeilen(ERSTE_HEADER_ZEILE, DRITTE_HEADER_ZEILE, letzteSpalte);
 	}
 
 	void insertHeaderInSheet(int headerColor) throws GenerateException {

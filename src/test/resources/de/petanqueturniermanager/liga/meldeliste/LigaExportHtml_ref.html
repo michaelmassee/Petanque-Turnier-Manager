@@ -48,12 +48,6 @@ body {
   color: var(--muted);
   font-size: 0.9rem;
 }
-.ptm-export-logo {
-  flex: 0 0 auto;
-  width: 72px;
-  height: 70px;
-  object-fit: contain;
-}
 .turnier-logo {
   width: auto;
   max-width: 30vw;
@@ -163,13 +157,19 @@ td, th {
   outline: none;
 }
 footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin: 0 auto;
   width: min(100%, 1440px);
-  padding: 0 2rem 1.5rem;
+  padding: 0.75rem 2rem 1.5rem;
   color: var(--muted);
   font-size: 0.85rem;
 }
 footer a { color: var(--muted); }
+.ptm-footer-logo { width: 40px; height: 39px; object-fit: contain; opacity: 0.7; }
+.ptm-footer-logo-link:hover .ptm-footer-logo,
+.ptm-footer-logo-link:focus-visible .ptm-footer-logo { opacity: 1; }
 @media (max-width: 640px) {
   .page-header {
     align-items: flex-start;
@@ -177,7 +177,6 @@ footer a { color: var(--muted); }
   }
   .page-header h1 { font-size: 1.35rem; }
   .ptm-subline { font-size: 0.85rem; }
-  .ptm-export-logo { width: 48px; height: 47px; }
   .turnier-logo { max-width: 92px; max-height: 56px; }
   .section-nav { padding: 0.65rem 1rem; }
   main { padding: 0.75rem 0.65rem 1.5rem; }
@@ -199,7 +198,7 @@ footer a { color: var(--muted); }
 </head>
 <body>
 <header class="page-header">
-<img class="ptm-export-logo" src="data:image/png;base64,..." alt="Pétanque Turnier Manager"><div class="header-text"><h1>Liga Test</h1><div class="ptm-subline">Pétanque Turnier Manager</div></div><img class="turnier-logo" src="https://example.org/logo.png?a=1&amp;b=2" alt="Logo">
+<div class="header-text"><h1>Liga Test</h1><div class="ptm-subline">Pétanque Turnier Manager</div></div><img class="turnier-logo" src="https://example.org/logo.png?a=1&amp;b=2" alt="Logo">
 </header>
 <nav class="section-nav" aria-label="Abschnitte">
 <a href="#meldeliste">Meldeliste</a>
@@ -246,6 +245,7 @@ footer a { color: var(--muted); }
 </main>
 <footer>
 <a href="https://michaelmassee.github.io/Petanque-Turnier-Manager/" target="_blank">Erstellt mit P&eacute;tanque Turnier Manager</a>
+<a class="ptm-footer-logo-link" href="https://michaelmassee.github.io/Petanque-Turnier-Manager/" target="_blank"><img class="ptm-footer-logo" src="data:image/png;base64,..." alt="Pétanque Turnier Manager"></a>
 </footer>
 </body>
 </html>

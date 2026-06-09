@@ -51,7 +51,7 @@ class ExportHtmlSeiteTest {
     @Test
     void ptmLogoWirdAlsDataUriEingebettet() {
         var html = seite().erstelleAusRendertHtml(tabellenHtml());
-        assertThat(html).contains("<img class=\"ptm-export-logo\" src=\"data:image/png;base64,");
+        assertThat(html).contains("<img class=\"ptm-footer-logo\" src=\"data:image/png;base64,");
     }
 
     @Test
@@ -59,7 +59,7 @@ class ExportHtmlSeiteTest {
         var html = seite()
                 .logoUrl("https://example.com/logo.png")
                 .erstelleAusRendertHtml(tabellenHtml());
-        assertThat(html).contains("<img class=\"ptm-export-logo\" src=\"data:image/png;base64,");
+        assertThat(html).contains("<img class=\"ptm-footer-logo\" src=\"data:image/png;base64,");
         assertThat(html).contains("<img class=\"turnier-logo\" src=\"https://example.com/logo.png\"");
     }
 

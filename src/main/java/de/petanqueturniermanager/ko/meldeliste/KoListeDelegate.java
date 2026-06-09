@@ -31,6 +31,7 @@ import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeGerad
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
@@ -163,6 +164,19 @@ class KoListeDelegate implements MeldeListeKonstanten {
 		if (xKonfigSheet != null) {
 			renderKonfigurationsZuZellen(xKonfigSheet);
 		}
+		printBereichDefinieren();
+	}
+
+	private void printBereichDefinieren() throws GenerateException {
+		int letzteDatenZeile = getLetzteDatenZeileUseMin();
+		if (letzteDatenZeile < ERSTE_DATEN_ZEILE) {
+			return;
+		}
+		int letzteSpalte = getAktivSpalte();
+		var bereich = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_HEADER_ZEILE, letzteSpalte, letzteDatenZeile);
+		PrintArea.from(sheet.getXSpreadSheet(), sheet.getWorkingSpreadsheet())
+				.setPrintArea(bereich)
+				.setTitelZeilen(ERSTE_HEADER_ZEILE, DRITTE_HEADER_ZEILE, letzteSpalte);
 	}
 
 	/**

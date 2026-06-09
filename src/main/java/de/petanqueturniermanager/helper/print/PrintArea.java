@@ -45,4 +45,20 @@ public class PrintArea {
 		printArea.setPrintAreas(new CellRangeAddress[] { aRangeAddress });
 		return this;
 	}
+
+	/** Markiert Zeilen als Wiederholungszeilen (Drucktitel), so dass TabellenMapper sie als &lt;thead&gt; erkennt. */
+	public PrintArea setTitelZeilen(int startZeile, int endZeile, int letzteSpalte) {
+		XPrintAreas printAreas = turnierSheet.queryInterfaceXSpreadsheet(XPrintAreas.class);
+		if (printAreas == null) {
+			return this;
+		}
+		var titelZeilen = new CellRangeAddress();
+		titelZeilen.StartColumn = 0;
+		titelZeilen.EndColumn = letzteSpalte;
+		titelZeilen.StartRow = startZeile;
+		titelZeilen.EndRow = endZeile;
+		printAreas.setTitleRows(titelZeilen);
+		printAreas.setPrintTitleRows(true);
+		return this;
+	}
 }
