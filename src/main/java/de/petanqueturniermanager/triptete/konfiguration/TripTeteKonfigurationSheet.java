@@ -9,6 +9,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.pagestyle.PageStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
+import de.petanqueturniermanager.helper.upload.UploadProtokoll;
 
 /**
  * Konfigurations-Sheet für das Trip-Tête-Turniersystem.
@@ -90,5 +91,30 @@ public class TripTeteKonfigurationSheet extends BaseKonfigurationSheet
 	@Override
 	public boolean isMeldeListeVereinsnameAnzeigen() {
 		return propertiesSpalte.isMeldeListeVereinsnameAnzeigen();
+	}
+
+	@Override
+	public UploadProtokoll getUploadProtokoll() {
+		return propertiesSpalte.getUploadProtokoll();
+	}
+
+	@Override
+	public String getUploadHost() {
+		return propertiesSpalte.getUploadHost();
+	}
+
+	@Override
+	public int getUploadPort() {
+		return propertiesSpalte.getUploadPort();
+	}
+
+	@Override
+	public String getUploadBenutzer() {
+		return propertiesSpalte.getUploadBenutzer();
+	}
+
+	@Override
+	public String getUploadVerzeichnis() {
+		return propertiesSpalte.getUploadVerzeichnis();
 	}
 }

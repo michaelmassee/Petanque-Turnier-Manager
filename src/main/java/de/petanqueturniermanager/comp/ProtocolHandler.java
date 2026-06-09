@@ -110,6 +110,7 @@ import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet;
 import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheetTestDaten;
 import de.petanqueturniermanager.triptete.konfiguration.TripTeteKonfigurationSheetStarter;
 import de.petanqueturniermanager.triptete.export.TripTeteExportInVerzeichnis;
+import de.petanqueturniermanager.triptete.export.TripTeteFtpUpload;
 import de.petanqueturniermanager.triptete.meldeliste.TripTeteMeldeListeSheetNew;
 import de.petanqueturniermanager.triptete.meldeliste.TripTeteMeldeListeSheetUpdate;
 import de.petanqueturniermanager.triptete.rangliste.TripTeteRanglisteSheet;
@@ -1357,6 +1358,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case FORMULEX -> new FormuleXFtpUpload(ws).testTurnierSystem(TurnierSystem.FORMULEX).start();
 			case KASKADE -> new KaskadeFtpUpload(ws).testTurnierSystem(TurnierSystem.KASKADE).start();
 			case POULE -> new PouleFtpUpload(ws).testTurnierSystem(TurnierSystem.POULE).start();
+			case TRIPTETE -> new TripTeteFtpUpload(ws).testTurnierSystem(TurnierSystem.TRIPTETE).start();
 			default -> { }
 		}
 	}

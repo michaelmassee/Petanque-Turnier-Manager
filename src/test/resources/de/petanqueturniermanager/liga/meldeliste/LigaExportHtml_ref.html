@@ -48,7 +48,13 @@ body {
   color: var(--muted);
   font-size: 0.9rem;
 }
-.page-header img.logo {
+.ptm-export-logo {
+  flex: 0 0 auto;
+  width: 72px;
+  height: 70px;
+  object-fit: contain;
+}
+.turnier-logo {
   width: auto;
   max-width: 30vw;
   max-height: 78px;
@@ -171,7 +177,8 @@ footer a { color: var(--muted); }
   }
   .page-header h1 { font-size: 1.35rem; }
   .ptm-subline { font-size: 0.85rem; }
-  .page-header img.logo { max-width: 92px; max-height: 56px; }
+  .ptm-export-logo { width: 48px; height: 47px; }
+  .turnier-logo { max-width: 92px; max-height: 56px; }
   .section-nav { padding: 0.65rem 1rem; }
   main { padding: 0.75rem 0.65rem 1.5rem; }
   .export-section {
@@ -192,7 +199,7 @@ footer a { color: var(--muted); }
 </head>
 <body>
 <header class="page-header">
-<div class="header-text"><h1>Liga Test</h1><div class="ptm-subline">Pétanque Turnier Manager</div></div><img class="logo" src="https://example.org/logo.png?a=1&amp;b=2" alt="Logo">
+<img class="ptm-export-logo" src="data:image/png;base64,..." alt="Pétanque Turnier Manager"><div class="header-text"><h1>Liga Test</h1><div class="ptm-subline">Pétanque Turnier Manager</div></div><img class="turnier-logo" src="https://example.org/logo.png?a=1&amp;b=2" alt="Logo">
 </header>
 <nav class="section-nav" aria-label="Abschnitte">
 <a href="#meldeliste">Meldeliste</a>

@@ -143,7 +143,7 @@ public abstract class AbstractExportInVerzeichnis extends SheetRunner {
             }
             String basisName = FilenameUtils.removeExtension(dateiname.toString());
             return verzeichnis.resolve(basisName + ".html");
-        } catch (MalformedURLException | URISyntaxException e) {
+        } catch (IllegalArgumentException | MalformedURLException | URISyntaxException e) {
             throw new GenerateException(e.getMessage());
         }
     }

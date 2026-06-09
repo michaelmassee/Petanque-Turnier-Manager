@@ -53,7 +53,8 @@ class FtpUploadService implements IUploadService {
                         anzahl++;
                         logger.info("FTP hochgeladen: {}", ziel);
                     } else {
-                        logger.warn("FTP Upload nicht bestätigt: {}", ziel);
+                        throw new IOException("FTP Upload nicht bestätigt: " + ziel
+                                + " (Antwortcode: " + client.getReplyCode() + ")");
                     }
                 }
             }

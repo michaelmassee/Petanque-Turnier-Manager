@@ -25,6 +25,8 @@ import de.petanqueturniermanager.webserver.TabellenMapper;
 public class ExportHtmlSeite {
 
     private static final String PTM_URL = "https://michaelmassee.github.io/Petanque-Turnier-Manager/";
+    private static final String PTM_EXPORT_LOGO_DATA_URI = "data:image/png;base64,"
+            + "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";
 
     private final WorkingSpreadsheet workingSpreadsheet;
     private final SheetHelper sheetHelper;
@@ -106,12 +108,14 @@ public class ExportHtmlSeite {
         sb.append("</head>\n<body>\n");
 
         sb.append("<header class=\"page-header\">\n");
+        sb.append("<img class=\"ptm-export-logo\" src=\"").append(PTM_EXPORT_LOGO_DATA_URI)
+                .append("\" alt=\"Pétanque Turnier Manager\">");
         sb.append("<div class=\"header-text\">");
         sb.append("<h1>").append(StringEscapeUtils.escapeHtml4(seitentitel)).append("</h1>");
         sb.append("<div class=\"ptm-subline\">Pétanque Turnier Manager</div>");
         sb.append("</div>");
         if (StringUtils.isNotBlank(logoUrl)) {
-            sb.append("<img class=\"logo\" src=\"").append(StringEscapeUtils.escapeHtml4(logoUrl))
+            sb.append("<img class=\"turnier-logo\" src=\"").append(StringEscapeUtils.escapeHtml4(logoUrl))
                     .append("\" alt=\"Logo\">");
         }
         sb.append("\n</header>\n");
@@ -203,7 +207,13 @@ public class ExportHtmlSeite {
                   color: var(--muted);
                   font-size: 0.9rem;
                 }
-                .page-header img.logo {
+                .ptm-export-logo {
+                  flex: 0 0 auto;
+                  width: 72px;
+                  height: 70px;
+                  object-fit: contain;
+                }
+                .turnier-logo {
                   width: auto;
                   max-width: 30vw;
                   max-height: 78px;
@@ -326,7 +336,8 @@ public class ExportHtmlSeite {
                   }
                   .page-header h1 { font-size: 1.35rem; }
                   .ptm-subline { font-size: 0.85rem; }
-                  .page-header img.logo { max-width: 92px; max-height: 56px; }
+                  .ptm-export-logo { width: 48px; height: 47px; }
+                  .turnier-logo { max-width: 92px; max-height: 56px; }
                   .section-nav { padding: 0.65rem 1rem; }
                   main { padding: 0.75rem 0.65rem 1.5rem; }
                   .export-section {

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Properties;
 
@@ -32,10 +33,11 @@ class SftpUploadService implements IUploadService {
         ChannelSftp kanal = null;
         try {
             var jsch = new JSch();
+            ladeKnownHosts(jsch);
             session = jsch.getSession(konfiguration.benutzer(), konfiguration.host(), konfiguration.port());
             session.setPassword(passwort);
             var config = new Properties();
-            config.put("StrictHostKeyChecking", "no");
+            config.put("StrictHostKeyChecking", "yes");
             session.setConfig(config);
             session.connect();
 
@@ -58,7 +60,7 @@ class SftpUploadService implements IUploadService {
                     anzahl++;
                     logger.info("SFTP hochgeladen: {}/{}", remotePfad, dateiName);
                 } catch (SftpException e) {
-                    logger.warn("SFTP Upload fehlgeschlagen: {}", dateiName, e);
+                    throw new IOException("SFTP Upload fehlgeschlagen: " + dateiName, e);
                 }
             }
             return anzahl;
@@ -81,6 +83,18 @@ class SftpUploadService implements IUploadService {
             kanal.mkdir(remotePfad);
         } catch (SftpException e) {
             logger.debug("SFTP mkdir ignoriert (Verzeichnis existiert möglicherweise): {}", remotePfad);
+        }
+    }
+
+    private void ladeKnownHosts(JSch jsch) throws IOException {
+        Path knownHosts = Paths.get(System.getProperty("user.home"), ".ssh", "known_hosts");
+        if (!Files.isRegularFile(knownHosts)) {
+            throw new IOException("SFTP known_hosts nicht gefunden: " + knownHosts);
+        }
+        try {
+            jsch.setKnownHosts(knownHosts.toString());
+        } catch (JSchException e) {
+            throw new IOException("SFTP known_hosts kann nicht geladen werden: " + knownHosts, e);
         }
     }
 }

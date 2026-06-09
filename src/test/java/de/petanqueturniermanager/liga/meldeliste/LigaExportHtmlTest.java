@@ -50,6 +50,8 @@ class LigaExportHtmlTest {
     }
 
     private String normalisiere(String html) {
-        return html.replace("\r\n", "\n").trim();
+        return html.replace("\r\n", "\n")
+                .replaceAll("src=\"data:image/png;base64,[^\"]+\"", "src=\"data:image/png;base64,...\"")
+                .trim();
     }
 }

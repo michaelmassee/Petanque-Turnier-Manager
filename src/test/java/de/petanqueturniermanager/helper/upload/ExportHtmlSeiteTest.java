@@ -49,6 +49,21 @@ class ExportHtmlSeiteTest {
     }
 
     @Test
+    void ptmLogoWirdAlsDataUriEingebettet() {
+        var html = seite().erstelleAusRendertHtml(tabellenHtml());
+        assertThat(html).contains("<img class=\"ptm-export-logo\" src=\"data:image/png;base64,");
+    }
+
+    @Test
+    void turnierLogoBleibtZusaetzlichZumPtmLogoErhalten() {
+        var html = seite()
+                .logoUrl("https://example.com/logo.png")
+                .erstelleAusRendertHtml(tabellenHtml());
+        assertThat(html).contains("<img class=\"ptm-export-logo\" src=\"data:image/png;base64,");
+        assertThat(html).contains("<img class=\"turnier-logo\" src=\"https://example.com/logo.png\"");
+    }
+
+    @Test
     void titelWirdEscaped() {
         var html = seite()
                 .titel("<Gruppe A>")
