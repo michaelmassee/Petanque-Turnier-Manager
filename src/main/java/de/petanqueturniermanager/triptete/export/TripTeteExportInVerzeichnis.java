@@ -1,7 +1,7 @@
 /*
  * Erstellung 2026 / Michael Massee
  */
-package de.petanqueturniermanager.jedergegenjeden.export;
+package de.petanqueturniermanager.triptete.export;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -14,16 +14,17 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
+import de.petanqueturniermanager.helper.sheet.io.PdfExport;
 import de.petanqueturniermanager.helper.upload.AbstractExportInVerzeichnis;
 import de.petanqueturniermanager.helper.upload.ExportErgebnis;
 import de.petanqueturniermanager.helper.upload.ExportHtmlSeite;
-import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationSheet;
-import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJSpielPlanSheet;
+import de.petanqueturniermanager.triptete.konfiguration.TripTeteKonfigurationSheet;
+import de.petanqueturniermanager.triptete.spielplan.TripTeteSpielPlanSheet;
 
-public class JGJExportInVerzeichnis extends AbstractExportInVerzeichnis {
+public class TripTeteExportInVerzeichnis extends AbstractExportInVerzeichnis {
 
-    public JGJExportInVerzeichnis(WorkingSpreadsheet ws, Path zielVerzeichnis) {
-        super(ws, TurnierSystem.JGJ, "JGJ Export Verzeichnis", zielVerzeichnis);
+    public TripTeteExportInVerzeichnis(WorkingSpreadsheet ws, Path zielVerzeichnis) {
+        super(ws, TurnierSystem.TRIPTETE, "TripTete Export Verzeichnis", zielVerzeichnis);
     }
 
     @Override
@@ -31,15 +32,22 @@ public class JGJExportInVerzeichnis extends AbstractExportInVerzeichnis {
         processBox().info(I18n.get("export.info.pdf"));
 
         var ws = getWorkingSpreadsheet();
-        var konfiguration = new JGJKonfigurationSheet(ws);
-
-        String baseDownloadUrl = StringUtils.strip(konfiguration.getDownloadUrl());
-
-        if (StringUtils.isNotEmpty(baseDownloadUrl)) {
-            processBox().info(I18n.get("export.info.download.url", baseDownloadUrl));
-        }
+        var konfiguration = new TripTeteKonfigurationSheet(ws);
+        var spielplan = new TripTeteSpielPlanSheet(ws);
 
         List<Path> exportierteDateien = new ArrayList<>();
+
+        String spielplanSheetName = TripTeteSpielPlanSheet.sheetName();
+        Path pdfSpielplan = exportierePdfWennTabelleVorhanden(spielplanSheetName,
+                () -> PdfExport.from(ws)
+                        .sheetName(spielplanSheetName)
+                        .range(spielplan.printBereichRangePosition())
+                        .prefix1(spielplanSheetName)
+                        .zielVerzeichnis(zielVerzeichnis)
+                        .doExport());
+        if (pdfSpielplan != null) {
+            exportierteDateien.add(pdfSpielplan);
+        }
 
         String ranglisteSheetName = SheetNamen.rangliste();
         Path pdfRangliste = exportierePdfWennTabelleVorhanden(ranglisteSheetName, zielVerzeichnis);
@@ -47,23 +55,16 @@ public class JGJExportInVerzeichnis extends AbstractExportInVerzeichnis {
             exportierteDateien.add(pdfRangliste);
         }
 
-        String direktvergleichSheetName = SheetNamen.direktvergleich();
-        Path pdfDirektvergleich = exportierePdfWennTabelleVorhanden(direktvergleichSheetName, zielVerzeichnis);
-        if (pdfDirektvergleich != null) {
-            exportierteDateien.add(pdfDirektvergleich);
-        }
-
         processBox().info(I18n.get("export.info.html"));
         List<ExportHtmlSeite.Section> sections = List.of(
                 new ExportHtmlSeite.Section("meldeliste", SheetNamen.meldeliste(), SheetNamen.meldeliste(), null),
-                new ExportHtmlSeite.Section("spielplan", SheetNamen.spielplan(), JGJSpielPlanSheet.sheetName(), null),
+                new ExportHtmlSeite.Section("spielplan", SheetNamen.spielplan(), spielplanSheetName,
+                        buildPdfUrl(null, pdfSpielplan)),
                 new ExportHtmlSeite.Section("rangliste", ranglisteSheetName, ranglisteSheetName,
-                        buildPdfUrl(baseDownloadUrl, pdfRangliste)),
-                new ExportHtmlSeite.Section("direktvergleich", direktvergleichSheetName, direktvergleichSheetName,
-                        buildPdfUrl(baseDownloadUrl, pdfDirektvergleich)));
-        exportierteDateien.add(exportiereHtml(zielVerzeichnis, "JederGegenJeden.html",
+                        buildPdfUrl(null, pdfRangliste)));
+        exportierteDateien.add(exportiereHtml(zielVerzeichnis, "TripTete.html",
                 StringUtils.defaultIfBlank(StringUtils.strip(konfiguration.getKopfZeileMitte()),
-                        TurnierSystem.JGJ.getBezeichnung()),
+                        TurnierSystem.TRIPTETE.getBezeichnung()),
                 StringUtils.strip(konfiguration.getTurnierlogoUrl()), sections));
 
         return new ExportErgebnis(exportierteDateien);

@@ -63,9 +63,13 @@ public abstract class AbstractStore<T> {
 	}
 
 	protected final String newFileName(String prefix) throws MalformedURLException, URISyntaxException {
+		return newFileName(prefix, orgFileName().toString());
+	}
+
+	protected final String newFileName(String prefix, String basisDateiname) {
 		return (StringUtils.isEmpty(prefix) ? "" : prefix + "_")
 				+ (StringUtils.isEmpty(filePrefix1) ? "" : filePrefix1 + "_")
-				+ (StringUtils.isEmpty(filePrefix2) ? "" : filePrefix2 + "_") + orgFileName().toString();
+				+ (StringUtils.isEmpty(filePrefix2) ? "" : filePrefix2 + "_") + basisDateiname;
 	}
 
 	protected final URI newLocationInSameDir(String FileName) throws MalformedURLException, URISyntaxException {

@@ -17,7 +17,7 @@
 					<!-- ****************************************************************** -->
 					<!-- Timer -->
 					<!-- ****************************************************************** -->
-					<node oor:name="X3" oor:op="replace">
+					<node oor:name="X4" oor:op="replace">
 						<prop oor:name="Title">
 							<value xml:lang="de">Timer</value>
 							<value xml:lang="en">Timer</value>
@@ -30,7 +30,7 @@
 						</prop>
 						<node oor:name="Submenu">
 							<!-- ****************************************************************** -->
-							<node oor:name="X3A" oor:op="replace">
+							<node oor:name="X4A" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Timer starten...</value>
 									<value xml:lang="en">Start Timer...</value>
@@ -46,7 +46,7 @@
 								</prop>
 							</node>
 							<!-- ****************************************************************** -->
-							<node oor:name="X3B" oor:op="replace">
+							<node oor:name="X4B" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Pause / Fortsetzen</value>
 									<value xml:lang="en">Pause / Resume</value>
@@ -62,7 +62,7 @@
 								</prop>
 							</node>
 							<!-- ****************************************************************** -->
-							<node oor:name="X3C" oor:op="replace">
+							<node oor:name="X4C" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Timer stoppen</value>
 									<value xml:lang="en">Stop Timer</value>
@@ -78,13 +78,13 @@
 								</prop>
 							</node>
 							<!-- ****************************************************************** -->
-							<node oor:name="X3D" oor:op="replace">
+							<node oor:name="X4D" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
 							<!-- ****************************************************************** -->
-							<node oor:name="X3E" oor:op="replace">
+							<node oor:name="X4E" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">+1 Minute</value>
 									<value xml:lang="en">+1 Minute</value>
@@ -100,7 +100,7 @@
 								</prop>
 							</node>
 							<!-- ****************************************************************** -->
-							<node oor:name="X3F" oor:op="replace">
+							<node oor:name="X4F" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">-1 Minute</value>
 									<value xml:lang="en">-1 Minute</value>

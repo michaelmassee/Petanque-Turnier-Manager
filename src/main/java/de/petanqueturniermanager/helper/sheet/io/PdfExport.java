@@ -17,8 +17,10 @@ import com.sun.star.io.IOException;
 import com.sun.star.table.XCellRange;
 import com.sun.star.view.XSelectionSupplier;
 
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.PropertyValueHelper;
 import de.petanqueturniermanager.helper.position.RangePosition;
@@ -109,14 +111,16 @@ public class PdfExport extends AbstractStore<PdfExport> {
 	public URI doExport() throws GenerateException {
 		URI pdfFile = null;
 
-		if (!istGespeichert()) {
+		if (!istGespeichert() && zielVerzeichnis == null) {
 			String errMsg = I18n.get("error.dokument.nicht.gespeichert");
 			logger.warn(errMsg);
 			throw new GenerateException(errMsg);
 		}
 
 		try {
-			String newFileName = newFileName(null);
+			String newFileName = istGespeichert()
+					? newFileName(null)
+					: newFileName(null, ungespeicherterBasisDateiname());
 			newFileName = FilenameUtils.removeExtension(newFileName);
 			pdfFile = zielVerzeichnis != null
 					? zielVerzeichnis.resolve(newFileName + ".pdf").toUri()
@@ -140,6 +144,8 @@ public class PdfExport extends AbstractStore<PdfExport> {
 				if (sheetPosition > -1) {
 					// export only this sheet
 					filterData.put(SAVE_PROP_FILTER_PAGERANGE, "" + sheetPosition);
+				} else {
+					throw new GenerateException(I18n.get("error.tabelle.nicht.vorhanden", sheetName));
 				}
 			}
 
@@ -155,6 +161,30 @@ public class PdfExport extends AbstractStore<PdfExport> {
 		}
 
 		return pdfFile;
+	}
+
+	private String ungespeicherterBasisDateiname() {
+		return ungespeicherterBasisDateiname(
+				new DocumentPropertiesHelper(getWorkingSpreadsheet()).getTurnierSystemAusDocument());
+	}
+
+	static String ungespeicherterBasisDateiname(TurnierSystem turnierSystem) {
+		if (turnierSystem == null) {
+			return "Export";
+		}
+		return switch (turnierSystem) {
+			case LIGA -> "Liga";
+			case SUPERMELEE -> "SuperMelee";
+			case JGJ -> "JederGegenJeden";
+			case SCHWEIZER -> "Schweizer";
+			case MAASTRICHTER -> "Maastrichter";
+			case KO -> "KO";
+			case FORMULEX -> "FormuleX";
+			case KASKADE -> "KaskadenKO";
+			case POULE -> "Poule";
+			case TRIPTETE -> "TripTete";
+			default -> "Export";
+		};
 	}
 
 }

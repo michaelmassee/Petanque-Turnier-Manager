@@ -194,49 +194,9 @@
 								<prop oor:name="Target" oor:type="xs:string"><value>_self</value></prop>
 							</node>
 
-							<node oor:name="C8A13" oor:op="replace">
-								<prop oor:name="URL" oor:type="xs:string">
-									<value>private:separator</value>
-								</prop>
-							</node>
 
-							<node oor:name="C8A14" oor:op="replace">
-								<prop oor:name="Title">
-									<value xml:lang="en">Export to Directory…</value>
-									<value xml:lang="de">Export in Verzeichnis…</value>
-									<value xml:lang="es">Exportar a directorio…</value>
-									<value xml:lang="fr">Exporter dans un répertoire…</value>
-									<value xml:lang="nl">Exporteren naar map…</value>
-								</prop>
-								<prop oor:name="URL">
-									<value>ptm:schweizer_export_verzeichnis</value>
-								</prop>
-								<prop oor:name="Target" oor:type="xs:string">
-									<value>_self</value>
-								</prop>
-							</node>
 
-							<node oor:name="C8A15" oor:op="replace">
-								<prop oor:name="URL" oor:type="xs:string">
-									<value>private:separator</value>
-								</prop>
-							</node>
 
-							<node oor:name="C8A16" oor:op="replace">
-								<prop oor:name="Title">
-									<value xml:lang="en">FTP/SFTP Upload</value>
-									<value xml:lang="de">FTP/SFTP hochladen</value>
-									<value xml:lang="es">Subir FTP/SFTP</value>
-									<value xml:lang="fr">Téléverser FTP/SFTP</value>
-									<value xml:lang="nl">FTP/SFTP uploaden</value>
-								</prop>
-								<prop oor:name="URL">
-									<value>ptm:schweizer_ftp_upload</value>
-								</prop>
-								<prop oor:name="Target" oor:type="xs:string">
-									<value>_self</value>
-								</prop>
-							</node>
 
 						</node>
 					</node>

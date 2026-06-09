@@ -14,9 +14,9 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
-import de.petanqueturniermanager.helper.sheet.io.PdfExport;
 import de.petanqueturniermanager.helper.upload.AbstractExportInVerzeichnis;
 import de.petanqueturniermanager.helper.upload.ExportErgebnis;
+import de.petanqueturniermanager.helper.upload.ExportHtmlSeite;
 import de.petanqueturniermanager.ko.konfiguration.KoKonfigurationSheet;
 
 public class KoExportInVerzeichnis extends AbstractExportInVerzeichnis {
@@ -39,15 +39,34 @@ public class KoExportInVerzeichnis extends AbstractExportInVerzeichnis {
         }
 
         List<Path> exportierteDateien = new ArrayList<>();
+        List<ExportHtmlSeite.Section> sections = new ArrayList<>();
+        sections.add(new ExportHtmlSeite.Section("meldeliste", SheetNamen.meldeliste(), SheetNamen.meldeliste(), null));
 
-        String ranglisteSheetName = SheetNamen.koTurnierbaumEinzel();
-        Path pdfRangliste = Path.of(PdfExport.from(ws)
-                .sheetName(ranglisteSheetName)
-                .prefix1(ranglisteSheetName)
-                .zielVerzeichnis(zielVerzeichnis)
-                .doExport());
-        processBox().info(pdfRangliste.toString());
-        exportierteDateien.add(pdfRangliste);
+        List<String> baumSheets = new ArrayList<>();
+        String einzelBaum = SheetNamen.koTurnierbaumEinzel();
+        if (getSheetHelper().findByName(einzelBaum) != null) {
+            baumSheets.add(einzelBaum);
+        }
+        baumSheets.addAll(vorhandeneBuchstabenSheets(SheetNamen::koTurnierbaumGruppe));
+
+        for (String sheetName : baumSheets) {
+            Path pdf = exportierePdfWennTabelleVorhanden(sheetName, zielVerzeichnis);
+            if (pdf != null) {
+                exportierteDateien.add(pdf);
+            }
+            sections.add(new ExportHtmlSeite.Section("ko-" + sheetName, sheetName, sheetName,
+                    buildPdfUrl(baseDownloadUrl, pdf)));
+        }
+
+        if (baumSheets.isEmpty()) {
+            sections.add(new ExportHtmlSeite.Section("ko-turnierbaum", einzelBaum, einzelBaum, null));
+        }
+
+        processBox().info(I18n.get("export.info.html"));
+        exportierteDateien.add(exportiereHtml(zielVerzeichnis, "KO.html",
+                StringUtils.defaultIfBlank(StringUtils.strip(konfiguration.getKopfZeileMitte()),
+                        TurnierSystem.KO.getBezeichnung()),
+                StringUtils.strip(konfiguration.getTurnierlogoUrl()), sections));
 
         return new ExportErgebnis(exportierteDateien);
     }

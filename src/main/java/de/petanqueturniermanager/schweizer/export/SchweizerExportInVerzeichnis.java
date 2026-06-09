@@ -14,9 +14,9 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
-import de.petanqueturniermanager.helper.sheet.io.PdfExport;
 import de.petanqueturniermanager.helper.upload.AbstractExportInVerzeichnis;
 import de.petanqueturniermanager.helper.upload.ExportErgebnis;
+import de.petanqueturniermanager.helper.upload.ExportHtmlSeite;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 
 public class SchweizerExportInVerzeichnis extends AbstractExportInVerzeichnis {
@@ -41,13 +41,20 @@ public class SchweizerExportInVerzeichnis extends AbstractExportInVerzeichnis {
         List<Path> exportierteDateien = new ArrayList<>();
 
         String ranglisteSheetName = SheetNamen.rangliste();
-        Path pdfRangliste = Path.of(PdfExport.from(ws)
-                .sheetName(ranglisteSheetName)
-                .prefix1(ranglisteSheetName)
-                .zielVerzeichnis(zielVerzeichnis)
-                .doExport());
-        processBox().info(pdfRangliste.toString());
-        exportierteDateien.add(pdfRangliste);
+        Path pdfRangliste = exportierePdfWennTabelleVorhanden(ranglisteSheetName, zielVerzeichnis);
+        if (pdfRangliste != null) {
+            exportierteDateien.add(pdfRangliste);
+        }
+
+        processBox().info(I18n.get("export.info.html"));
+        List<ExportHtmlSeite.Section> sections = List.of(
+                new ExportHtmlSeite.Section("meldeliste", SheetNamen.meldeliste(), SheetNamen.meldeliste(), null),
+                new ExportHtmlSeite.Section("rangliste", ranglisteSheetName, ranglisteSheetName,
+                        buildPdfUrl(baseDownloadUrl, pdfRangliste)));
+        exportierteDateien.add(exportiereHtml(zielVerzeichnis, "Schweizer.html",
+                StringUtils.defaultIfBlank(StringUtils.strip(konfiguration.getKopfZeileMitte()),
+                        TurnierSystem.SCHWEIZER.getBezeichnung()),
+                StringUtils.strip(konfiguration.getTurnierlogoUrl()), sections));
 
         return new ExportErgebnis(exportierteDateien);
     }

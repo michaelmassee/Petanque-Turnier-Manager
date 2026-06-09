@@ -100,7 +100,6 @@ import de.petanqueturniermanager.konfigdialog.properties.TurnierStartseiteDialog
 import de.petanqueturniermanager.helper.upload.ExportPfadHelper;
 import de.petanqueturniermanager.liga.meldeliste.LigaExportInVerzeichnis;
 import de.petanqueturniermanager.liga.meldeliste.LigaFtpUpload;
-import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheetExport;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheetNew;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheetTestDaten;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheetUpdate;
@@ -110,6 +109,7 @@ import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheetSortOnly;
 import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet;
 import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheetTestDaten;
 import de.petanqueturniermanager.triptete.konfiguration.TripTeteKonfigurationSheetStarter;
+import de.petanqueturniermanager.triptete.export.TripTeteExportInVerzeichnis;
 import de.petanqueturniermanager.triptete.meldeliste.TripTeteMeldeListeSheetNew;
 import de.petanqueturniermanager.triptete.meldeliste.TripTeteMeldeListeSheetUpdate;
 import de.petanqueturniermanager.triptete.rangliste.TripTeteRanglisteSheet;
@@ -209,6 +209,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	private static final AtomicBoolean REGISTERED = new AtomicBoolean(false);
 
 	// Command-Konstanten
+	// Export
+	public static final String CMD_EXPORT_VERZEICHNIS = "export_verzeichnis";
+	public static final String CMD_EXPORT_FTP_UPLOAD  = "export_ftp_upload";
 	// SuperMelee
 	public static final String CMD_NEUE_MELDELISTE = "neue_meldeliste";
 	public static final String CMD_UPDATE_MELDELISTE = "update_meldeliste";
@@ -225,8 +228,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_SUPERMELEE_TEAMPAARUNGEN = "supermelee_teampaarungen";
 	public static final String CMD_SUPERMELEE_SPIELTAGRANGLISTE_VALIDATE = "supermelee_spieltagrangliste_validate";
 	public static final String CMD_SUPERMELEE_VALIDATE = "supermelee_validate";
-	public static final String CMD_SUPERMELEE_EXPORT_VERZEICHNIS = "supermelee_export_verzeichnis";
-	public static final String CMD_SUPERMELEE_FTP_UPLOAD          = "supermelee_ftp_upload";
 	public static final String CMD_MELDELISTE_TESTDATEN = "meldeliste_testdaten";
 	public static final String CMD_SPIELRUNDEN_TESTDATEN = "spielrunden_testdaten";
 	public static final String CMD_SPIELTAGRANGLISTE_TESTDATEN = "SpieltagRanglisteSheet_TestDaten";
@@ -239,9 +240,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_LIGA_RANGLISTE_SORTIEREN = "liga_rangliste_sortieren";
 	public static final String CMD_LIGA_RANGLISTE = "liga_rangliste";
 	public static final String CMD_LIGA_DIREKTVERGLEICH        = "liga_direktvergleich";
-	public static final String CMD_LIGA_EXPORT                 = "liga_export";
-	public static final String CMD_LIGA_EXPORT_VERZEICHNIS     = "liga_export_verzeichnis";
-	public static final String CMD_LIGA_FTP_UPLOAD             = "liga_ftp_upload";
 	public static final String CMD_LIGA_TESTDATEN_MELDELISTE = "liga_testdaten_meldeliste";
 
 	// Trip-Tête
@@ -262,8 +260,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_JGJ_DIREKTVERGLEICH = "jgj_direktvergleich";
 	public static final String CMD_JGJ_TESTDATEN_TURNIER = "jgj_testdaten_turnier";
 	public static final String CMD_JGJ_TESTDATEN_TURNIER_DOUBLETTE_17 = "jgj_testdaten_turnier_doublette_17";
-	public static final String CMD_JGJ_EXPORT_VERZEICHNIS = "jgj_export_verzeichnis";
-	public static final String CMD_JGJ_FTP_UPLOAD          = "jgj_ftp_upload";
 	// Schweizer
 	public static final String CMD_SCHWEIZER_START = "schweizer_start";
 	public static final String CMD_SCHWEIZER_UPDATE_MELDELISTE = "schweizer_update_meldeliste";
@@ -273,8 +269,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_SCHWEIZER_RANGLISTE_SORTIEREN = "schweizer_rangliste_sortieren";
 	public static final String CMD_SCHWEIZER_TESTDATEN_MELDELISTE = "schweizer_testdaten_meldeliste";
 	public static final String CMD_SCHWEIZER_TESTDATEN_TURNIER = "schweizer_testdaten_turnier";
-	public static final String CMD_SCHWEIZER_EXPORT_VERZEICHNIS = "schweizer_export_verzeichnis";
-	public static final String CMD_SCHWEIZER_FTP_UPLOAD          = "schweizer_ftp_upload";
 	public static final String CMD_SCHWEIZER_TESTDATEN_TURNIER_19 = "schweizer_testdaten_turnier_19";
 	// Maastrichter
 	public static final String CMD_MAASTRICHTER_START = "maastrichter_start";
@@ -287,8 +281,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_MAASTRICHTER_TESTDATEN_TURNIER = "maastrichter_testdaten_turnier";
 	public static final String CMD_MAASTRICHTER_TESTDATEN_TURNIER_57 = "maastrichter_testdaten_turnier_57";
 	public static final String CMD_MAASTRICHTER_TESTDATEN_TURNIER_35 = "maastrichter_testdaten_turnier_35";
-	public static final String CMD_MAASTRICHTER_EXPORT_VERZEICHNIS = "maastrichter_export_verzeichnis";
-	public static final String CMD_MAASTRICHTER_FTP_UPLOAD          = "maastrichter_ftp_upload";
 	// K.-O.
 	public static final String CMD_KO_START = "ko_start";
 	public static final String CMD_KO_UPDATE_MELDELISTE = "ko_update_meldeliste";
@@ -298,8 +290,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_KO_TESTDATEN_8_TEAMS = "ko_testdaten_8_teams";
 	public static final String CMD_KO_TESTDATEN_16_TEAMS = "ko_testdaten_16_teams";
 	public static final String CMD_KO_TESTDATEN_CADRAGE = "ko_testdaten_cadrage";
-	public static final String CMD_KO_EXPORT_VERZEICHNIS = "ko_export_verzeichnis";
-	public static final String CMD_KO_FTP_UPLOAD          = "ko_ftp_upload";
 	// Formule X
 	public static final String CMD_FORMULEX_START                   = "formulex_start";
 	public static final String CMD_FORMULEX_UPDATE_MELDELISTE        = "formulex_update_meldeliste";
@@ -309,8 +299,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_FORMULEX_RANGLISTE                = "formulex_rangliste";
 	public static final String CMD_FORMULEX_TESTDATEN_MELDELISTE     = "formulex_testdaten_meldeliste";
 	public static final String CMD_FORMULEX_TESTDATEN_TURNIER        = "formulex_testdaten_turnier";
-	public static final String CMD_FORMULEX_EXPORT_VERZEICHNIS = "formulex_export_verzeichnis";
-	public static final String CMD_FORMULEX_FTP_UPLOAD         = "formulex_ftp_upload";
 	// Kaskaden-KO
 	public static final String CMD_KASKADE_START              = "kaskade_start";
 	public static final String CMD_KASKADE_UPDATE_MELDELISTE  = "kaskade_update_meldeliste";
@@ -320,8 +308,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_KASKADE_NAECHSTE_RUNDE      = "kaskade_naechste_runde";
 	public static final String CMD_KASKADE_AKTUELLE_RUNDE      = "kaskade_aktuelle_runde";
 	public static final String CMD_KASKADE_KO_FELDER           = "kaskade_ko_felder";
-	public static final String CMD_KASKADE_EXPORT_VERZEICHNIS = "kaskade_export_verzeichnis";
-	public static final String CMD_KASKADE_FTP_UPLOAD         = "kaskade_ftp_upload";
 	// Teilnehmer
 	public static final String CMD_SCHWEIZER_TEILNEHMER = "schweizer_teilnehmer";
 	public static final String CMD_JGJ_TEILNEHMER       = "jgj_teilnehmer";
@@ -344,8 +330,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_POULE_KO                    = "poule_ko";
 	public static final String CMD_POULE_TESTDATEN_TURNIER     = "poule_testdaten_turnier";
 	public static final String CMD_POULE_TESTDATEN_TURNIER_37  = "poule_testdaten_turnier_37";
-	public static final String CMD_POULE_EXPORT_VERZEICHNIS = "poule_export_verzeichnis";
-	public static final String CMD_POULE_FTP_UPLOAD         = "poule_ftp_upload";
 	// Webserver
 	public static final String CMD_WEBSERVER_KONFIGURATION = "webserver_konfiguration";
 	public static final String CMD_WEBSERVER_STARTEN = "webserver_starten";
@@ -809,6 +793,11 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			ProcessBox.from().visibleWennAutomatisch().clearWennNotRunning().info("Start " + command);
 			switch (command) {
 			// ------------------------------
+			// Export
+			case CMD_EXPORT_FTP_UPLOAD:
+				ladeAktuellenTurnierExportHoch(ws);
+				break;
+			// ------------------------------
 			// SuperMelee
 			case CMD_NEUE_MELDELISTE:
 				new MeldeListeSheet_New(ws).testKeinAnderesTurnierVorhanden().start();
@@ -864,16 +853,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_SUPERMELEE_SPIELTAGRANGLISTE_VALIDATE:
 				new SpieltagRangliste_Validator(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).start();
 				break;
-			case CMD_SUPERMELEE_EXPORT_VERZEICHNIS: {
-				var pfadOpt = ExportPfadHelper.waehlePfad(xContext, ws);
-				if (pfadOpt.isPresent()) {
-					new SupermeleeExportInVerzeichnis(ws, pfadOpt.get()).testTurnierSystem(TurnierSystem.SUPERMELEE).start();
-				}
-				break;
-			}
-			case CMD_SUPERMELEE_FTP_UPLOAD:
-				new SupermeleeFtpUpload(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).start();
-				break;
 			// ------------------------------
 			// Liga
 			case CMD_LIGA_NEUE_MELDELISTE:
@@ -902,19 +881,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				break;
 			case CMD_LIGA_SPIELPLAN_TESTDATEN_MIT_FREISPIEL:
 				new LigaSpielPlanSheetTestDaten(ws, true).testKeinAnderesTurnierVorhanden().start();
-				break;
-			case CMD_LIGA_EXPORT:
-				new LigaMeldeListeSheetExport(ws).testTurnierSystem(TurnierSystem.LIGA).start();
-				break;
-			case CMD_LIGA_EXPORT_VERZEICHNIS: {
-				var pfadOpt = ExportPfadHelper.waehlePfad(xContext, ws);
-				if (pfadOpt.isPresent()) {
-					new LigaExportInVerzeichnis(ws, pfadOpt.get()).testTurnierSystem(TurnierSystem.LIGA).start();
-				}
-				break;
-			}
-			case CMD_LIGA_FTP_UPLOAD:
-				new LigaFtpUpload(ws).testTurnierSystem(TurnierSystem.LIGA).start();
 				break;
 			// ------------------------------
 			// Trip-Tête
@@ -974,16 +940,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_JGJ_TESTDATEN_TURNIER_DOUBLETTE_17:
 				new JGJDoublette17TurnierTestDaten(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
-			case CMD_JGJ_EXPORT_VERZEICHNIS: {
-				var pfadOpt = ExportPfadHelper.waehlePfad(xContext, ws);
-				if (pfadOpt.isPresent()) {
-					new JGJExportInVerzeichnis(ws, pfadOpt.get()).testTurnierSystem(TurnierSystem.JGJ).start();
-				}
-				break;
-			}
-			case CMD_JGJ_FTP_UPLOAD:
-				new JGJFtpUpload(ws).testTurnierSystem(TurnierSystem.JGJ).start();
-				break;
 			// ------------------------------
 			// Schweizer System
 			case CMD_SCHWEIZER_START:
@@ -1019,16 +975,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_SCHWEIZER_TESTDATEN_TURNIER_19:
 				// 19 Teams: ungerade → 1 Freilos pro Runde, Teamname in Spielrunde, Bahn Random
 				new SchweizerTurnierTestDaten(ws, 19, SpielplanTeamAnzeige.NAME).testKeinAnderesTurnierVorhanden().start();
-				break;
-			case CMD_SCHWEIZER_EXPORT_VERZEICHNIS: {
-				var pfadOpt = ExportPfadHelper.waehlePfad(xContext, ws);
-				if (pfadOpt.isPresent()) {
-					new SchweizerExportInVerzeichnis(ws, pfadOpt.get()).testTurnierSystem(TurnierSystem.SCHWEIZER).start();
-				}
-				break;
-			}
-			case CMD_SCHWEIZER_FTP_UPLOAD:
-				new SchweizerFtpUpload(ws).testTurnierSystem(TurnierSystem.SCHWEIZER).start();
 				break;
 			// ------------------------------
 			// Maastrichter System
@@ -1072,16 +1018,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				// → 35 Teams ungerade → automatisch Freilos pro Vorrunde
 				new MaastrichterTurnierTestDaten(ws, 35, 3, 16).testKeinAnderesTurnierVorhanden().start();
 				break;
-			case CMD_MAASTRICHTER_EXPORT_VERZEICHNIS: {
-				var pfadOpt = ExportPfadHelper.waehlePfad(xContext, ws);
-				if (pfadOpt.isPresent()) {
-					new MaastrichterExportInVerzeichnis(ws, pfadOpt.get()).testTurnierSystem(TurnierSystem.MAASTRICHTER).start();
-				}
-				break;
-			}
-			case CMD_MAASTRICHTER_FTP_UPLOAD:
-				new MaastrichterFtpUpload(ws).testTurnierSystem(TurnierSystem.MAASTRICHTER).start();
-				break;
 			// ------------------------------
 			// K.-O.
 			case CMD_KO_START:
@@ -1111,16 +1047,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_KO_TESTDATEN_CADRAGE:
 				new KoTurnierTestDaten(ws, 10).testKeinAnderesTurnierVorhanden().start();
 				break;
-			case CMD_KO_EXPORT_VERZEICHNIS: {
-				var pfadOpt = ExportPfadHelper.waehlePfad(xContext, ws);
-				if (pfadOpt.isPresent()) {
-					new KoExportInVerzeichnis(ws, pfadOpt.get()).testTurnierSystem(TurnierSystem.KO).start();
-				}
-				break;
-			}
-			case CMD_KO_FTP_UPLOAD:
-				new KoFtpUpload(ws).testTurnierSystem(TurnierSystem.KO).start();
-				break;
 			// ------------------------------
 			// Formule X
 			case CMD_FORMULEX_START:
@@ -1149,16 +1075,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				break;
 			case CMD_FORMULEX_TESTDATEN_TURNIER:
 				new FormuleXTurnierTestDaten(ws).testKeinAnderesTurnierVorhanden().start();
-				break;
-			case CMD_FORMULEX_EXPORT_VERZEICHNIS: {
-				var pfadOpt = ExportPfadHelper.waehlePfad(xContext, ws);
-				if (pfadOpt.isPresent()) {
-					new FormuleXExportInVerzeichnis(ws, pfadOpt.get()).testTurnierSystem(TurnierSystem.FORMULEX).start();
-				}
-				break;
-			}
-			case CMD_FORMULEX_FTP_UPLOAD:
-				new FormuleXFtpUpload(ws).testTurnierSystem(TurnierSystem.FORMULEX).start();
 				break;
 			// ------------------------------
 			// Kaskaden-KO
@@ -1192,16 +1108,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				koFelder.testTurnierSystem(TurnierSystem.KASKADE).backUpDocument().backupDocumentAfterRun().start();
 				break;
 			}
-			case CMD_KASKADE_EXPORT_VERZEICHNIS: {
-				var pfadOpt = ExportPfadHelper.waehlePfad(xContext, ws);
-				if (pfadOpt.isPresent()) {
-					new KaskadeExportInVerzeichnis(ws, pfadOpt.get()).testTurnierSystem(TurnierSystem.KASKADE).start();
-				}
-				break;
-			}
-			case CMD_KASKADE_FTP_UPLOAD:
-				new KaskadeFtpUpload(ws).testTurnierSystem(TurnierSystem.KASKADE).start();
-				break;
 			// ------------------------------
 			// Poule A/B
 			case CMD_POULE_START:
@@ -1236,16 +1142,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				break;
 			case CMD_POULE_TESTDATEN_TURNIER_37:
 				new Poule37TeamsTurnierTestDaten(ws).testKeinAnderesTurnierVorhanden().start();
-				break;
-			case CMD_POULE_EXPORT_VERZEICHNIS: {
-				var pfadOpt = ExportPfadHelper.waehlePfad(xContext, ws);
-				if (pfadOpt.isPresent()) {
-					new PouleExportInVerzeichnis(ws, pfadOpt.get()).testTurnierSystem(TurnierSystem.POULE).start();
-				}
-				break;
-			}
-			case CMD_POULE_FTP_UPLOAD:
-				new PouleFtpUpload(ws).testTurnierSystem(TurnierSystem.POULE).start();
 				break;
 			// ------------------------------
 			// Konfiguration
@@ -1355,11 +1251,12 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	 * Dadurch öffnet sich der jeweilige Dialog im Vordergrund und wird nicht
 	 * von der ProcessBox überdeckt.
 	 */
-	private boolean behandleDialogBefehl(String command) throws com.sun.star.uno.Exception {
+	private boolean behandleDialogBefehl(String command) throws Exception {
 		switch (command) {
 			case CMD_PLUGIN_KONFIGURATION -> new GlobalPropertiesDialog(xContext).zeigen();
 			case CMD_KONFIGURATION_TURNIER_STARTSEITE ->
 					new TurnierStartseiteDialog(erzeugeWorkingSpreadsheetFuerDispatch()).zeigen();
+			case CMD_EXPORT_VERZEICHNIS   -> exportiereAktuellesTurnierInVerzeichnis(erzeugeWorkingSpreadsheetFuerDispatch());
 			case CMD_DOWNLOAD_EXTENSION   -> starteDownloadExtension();
 			case CMD_TOOLBAR_START        -> oeffneTurnierStartDialog();
 			case CMD_TOOLBAR_NEU_IN_NEUER_DATEI ->
@@ -1414,6 +1311,53 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			new TurnierSystemNeueDateiAuswahlDialog(ws).zeige();
 		} else {
 			new TurnierSystemAuswahlDialog(ws).zeige();
+		}
+	}
+
+	private void exportiereAktuellesTurnierInVerzeichnis(WorkingSpreadsheet ws) throws Exception {
+		var pfadOpt = ExportPfadHelper.waehlePfad(xContext, ws);
+		if (pfadOpt.isEmpty()) {
+			return;
+		}
+		var zielVerzeichnis = pfadOpt.get();
+		ProcessBox.from().visibleWennAutomatisch().clearWennNotRunning().info("Start " + CMD_EXPORT_VERZEICHNIS);
+		switch (new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument()) {
+			case SUPERMELEE -> new SupermeleeExportInVerzeichnis(ws, zielVerzeichnis)
+					.testTurnierSystem(TurnierSystem.SUPERMELEE).start();
+			case LIGA -> new LigaExportInVerzeichnis(ws, zielVerzeichnis)
+					.testTurnierSystem(TurnierSystem.LIGA).start();
+			case JGJ -> new JGJExportInVerzeichnis(ws, zielVerzeichnis)
+					.testTurnierSystem(TurnierSystem.JGJ).start();
+			case SCHWEIZER -> new SchweizerExportInVerzeichnis(ws, zielVerzeichnis)
+					.testTurnierSystem(TurnierSystem.SCHWEIZER).start();
+			case MAASTRICHTER -> new MaastrichterExportInVerzeichnis(ws, zielVerzeichnis)
+					.testTurnierSystem(TurnierSystem.MAASTRICHTER).start();
+			case KO -> new KoExportInVerzeichnis(ws, zielVerzeichnis)
+					.testTurnierSystem(TurnierSystem.KO).start();
+			case FORMULEX -> new FormuleXExportInVerzeichnis(ws, zielVerzeichnis)
+					.testTurnierSystem(TurnierSystem.FORMULEX).start();
+			case KASKADE -> new KaskadeExportInVerzeichnis(ws, zielVerzeichnis)
+					.testTurnierSystem(TurnierSystem.KASKADE).start();
+			case POULE -> new PouleExportInVerzeichnis(ws, zielVerzeichnis)
+					.testTurnierSystem(TurnierSystem.POULE).start();
+			case TRIPTETE -> new TripTeteExportInVerzeichnis(ws, zielVerzeichnis)
+					.testTurnierSystem(TurnierSystem.TRIPTETE).start();
+			default -> { }
+		}
+	}
+
+	private void ladeAktuellenTurnierExportHoch(WorkingSpreadsheet ws) throws Exception {
+		switch (new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument()) {
+			case SUPERMELEE -> new SupermeleeFtpUpload(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).start();
+			case LIGA -> new LigaFtpUpload(ws).testTurnierSystem(TurnierSystem.LIGA).start();
+			case JGJ -> new JGJFtpUpload(ws).testTurnierSystem(TurnierSystem.JGJ).start();
+			case SCHWEIZER -> new SchweizerFtpUpload(ws).testTurnierSystem(TurnierSystem.SCHWEIZER).start();
+			case MAASTRICHTER -> new MaastrichterFtpUpload(ws).testTurnierSystem(TurnierSystem.MAASTRICHTER).start();
+			case KO -> new KoFtpUpload(ws).testTurnierSystem(TurnierSystem.KO).start();
+			case FORMULEX -> new FormuleXFtpUpload(ws).testTurnierSystem(TurnierSystem.FORMULEX).start();
+			case KASKADE -> new KaskadeFtpUpload(ws).testTurnierSystem(TurnierSystem.KASKADE).start();
+			case POULE -> new PouleFtpUpload(ws).testTurnierSystem(TurnierSystem.POULE).start();
+			default -> { }
 		}
 	}
 
@@ -1940,6 +1884,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 						beschreibeDokument(ws.getWorkingSpreadsheetDocument()), ts);
 			}
 			return switch (command) {
+			case CMD_EXPORT_VERZEICHNIS,
+				 CMD_EXPORT_FTP_UPLOAD                     -> istExportfaehigesTurnier(ts);
 			// SuperMelee: neues Turnier nur wenn keins aktiv
 			case CMD_NEUE_MELDELISTE                        -> ts == TurnierSystem.KEIN;
 			// SuperMelee-Aktionen: nur wenn SuperMelee aktiv
@@ -1950,24 +1896,21 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_SPIELTAG_RANGLISTE, CMD_SPIELTAG_RANGLISTE_SORT,
 				 CMD_SUPERMELEE_ENDRANGLISTE, CMD_SUPERMELEE_ENDRANGLISTE_SORT,
 				 CMD_SUPERMELEE_TEAMPAARUNGEN,
-				 CMD_SUPERMELEE_VALIDATE, CMD_SUPERMELEE_SPIELTAGRANGLISTE_VALIDATE,
-				 CMD_SUPERMELEE_EXPORT_VERZEICHNIS, CMD_SUPERMELEE_FTP_UPLOAD -> ts == TurnierSystem.SUPERMELEE;
+				 CMD_SUPERMELEE_VALIDATE, CMD_SUPERMELEE_SPIELTAGRANGLISTE_VALIDATE -> ts == TurnierSystem.SUPERMELEE;
 			case CMD_AKTUELLE_SPIELRUNDE                    -> ts == TurnierSystem.SUPERMELEE && hatSupermeleeSpielrunde(ws);
 			case CMD_MELDELISTE_TESTDATEN, CMD_SPIELRUNDEN_TESTDATEN,
 				 CMD_SPIELTAGRANGLISTE_TESTDATEN        -> ts == TurnierSystem.KEIN || ts == TurnierSystem.SUPERMELEE;
 			case CMD_LIGA_NEUE_MELDELISTE                   -> ts == TurnierSystem.KEIN;
 			case CMD_LIGA_UPDATE_MELDELISTE, CMD_LIGA_SPIELPLAN,
 				 CMD_LIGA_RANGLISTE, CMD_LIGA_RANGLISTE_SORTIEREN,
-				 CMD_LIGA_DIREKTVERGLEICH, CMD_LIGA_EXPORT,
-		 CMD_LIGA_EXPORT_VERZEICHNIS, CMD_LIGA_FTP_UPLOAD -> ts == TurnierSystem.LIGA;
+				 CMD_LIGA_DIREKTVERGLEICH -> ts == TurnierSystem.LIGA;
 			case CMD_LIGA_TESTDATEN_MELDELISTE,
 				 CMD_LIGA_SPIELPLAN_TESTDATEN,
 				 CMD_LIGA_SPIELPLAN_TESTDATEN_MIT_FREISPIEL -> ts == TurnierSystem.KEIN || ts == TurnierSystem.LIGA;
 			case CMD_JGJ_NEUE_MELDELISTE                    -> ts == TurnierSystem.KEIN;
 			case CMD_JGJ_UPDATE_MELDELISTE, CMD_JGJ_SPIELPLAN,
 				 CMD_JGJ_RANGLISTE, CMD_JGJ_RANGLISTE_SORTIEREN,
-				 CMD_JGJ_DIREKTVERGLEICH, CMD_JGJ_TEILNEHMER, CMD_JGJ_CHECKIN,
-				 CMD_JGJ_EXPORT_VERZEICHNIS, CMD_JGJ_FTP_UPLOAD -> ts == TurnierSystem.JGJ;
+				 CMD_JGJ_DIREKTVERGLEICH, CMD_JGJ_TEILNEHMER, CMD_JGJ_CHECKIN -> ts == TurnierSystem.JGJ;
 			case CMD_JGJ_TESTDATEN_TURNIER,
 				 CMD_JGJ_TESTDATEN_TURNIER_DOUBLETTE_17     -> ts == TurnierSystem.KEIN || ts == TurnierSystem.JGJ;
 			// Trip-Tête
@@ -1985,29 +1928,25 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_MAASTRICHTER_NAECHSTE_VORRUNDE,
 				 CMD_MAASTRICHTER_VORRUNDEN_RANGLISTE,
 				 CMD_MAASTRICHTER_FINALRUNDEN,
-				 CMD_MAASTRICHTER_TEILNEHMER, CMD_MAASTRICHTER_CHECKIN,
-				 CMD_MAASTRICHTER_EXPORT_VERZEICHNIS, CMD_MAASTRICHTER_FTP_UPLOAD -> ts == TurnierSystem.MAASTRICHTER;
+				 CMD_MAASTRICHTER_TEILNEHMER, CMD_MAASTRICHTER_CHECKIN -> ts == TurnierSystem.MAASTRICHTER;
 			case CMD_MAASTRICHTER_AKTUELLE_VORRUNDE         -> ts == TurnierSystem.MAASTRICHTER && hatMaastrichterVorrunde(ws);
 			case CMD_MAASTRICHTER_TESTDATEN_TURNIER,
 				 CMD_MAASTRICHTER_TESTDATEN_TURNIER_57,
 				 CMD_MAASTRICHTER_TESTDATEN_TURNIER_35      -> ts == TurnierSystem.KEIN || ts == TurnierSystem.MAASTRICHTER;
 			case CMD_KO_START                               -> ts == TurnierSystem.KEIN;
 			case CMD_KO_UPDATE_MELDELISTE,
-				 CMD_KO_TURNIERBAUM, CMD_KO_TEILNEHMER, CMD_KO_CHECKIN,
-				 CMD_KO_EXPORT_VERZEICHNIS, CMD_KO_FTP_UPLOAD -> ts == TurnierSystem.KO;
+				 CMD_KO_TURNIERBAUM, CMD_KO_TEILNEHMER, CMD_KO_CHECKIN -> ts == TurnierSystem.KO;
 			case CMD_FORMULEX_START                         -> ts == TurnierSystem.KEIN;
 			case CMD_FORMULEX_UPDATE_MELDELISTE,
 				 CMD_FORMULEX_TEILNEHMER, CMD_FORMULEX_CHECKIN,
 				 CMD_FORMULEX_NAECHSTE_SPIELRUNDE,
-				 CMD_FORMULEX_RANGLISTE,
-				 CMD_FORMULEX_EXPORT_VERZEICHNIS, CMD_FORMULEX_FTP_UPLOAD -> ts == TurnierSystem.FORMULEX;
+				 CMD_FORMULEX_RANGLISTE -> ts == TurnierSystem.FORMULEX;
 			case CMD_FORMULEX_AKTUELLE_SPIELRUNDE           -> ts == TurnierSystem.FORMULEX && hatFormuleXSpielrunde(ws);
 			case CMD_FORMULEX_TESTDATEN_MELDELISTE,
 				 CMD_FORMULEX_TESTDATEN_TURNIER             -> ts == TurnierSystem.KEIN || ts == TurnierSystem.FORMULEX;
 			case CMD_KASKADE_START                          -> ts == TurnierSystem.KEIN;
 			case CMD_KASKADE_UPDATE_MELDELISTE,
-				 CMD_KASKADE_TEILNEHMER, CMD_KASKADE_CHECKIN,
-				 CMD_KASKADE_EXPORT_VERZEICHNIS, CMD_KASKADE_FTP_UPLOAD -> ts == TurnierSystem.KASKADE;
+				 CMD_KASKADE_TEILNEHMER, CMD_KASKADE_CHECKIN -> ts == TurnierSystem.KASKADE;
 			case CMD_KASKADE_TESTDATEN_MELDELISTE,
 				 CMD_KASKADE_TESTDATEN_TURNIER             -> ts == TurnierSystem.KEIN || ts == TurnierSystem.KASKADE;
 			case CMD_KASKADE_NAECHSTE_RUNDE,
@@ -2020,8 +1959,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_POULE_VORRUNDE,
 				 CMD_POULE_SPIELPLAENE,
 				 CMD_POULE_VORRUNDEN_RANGLISTE,
-				 CMD_POULE_KO,
-				 CMD_POULE_EXPORT_VERZEICHNIS, CMD_POULE_FTP_UPLOAD -> ts == TurnierSystem.POULE;
+				 CMD_POULE_KO -> ts == TurnierSystem.POULE;
 			case CMD_POULE_TESTDATEN_TURNIER,
 				 CMD_POULE_TESTDATEN_TURNIER_37             -> ts == TurnierSystem.KEIN || ts == TurnierSystem.POULE;
 			case CMD_KO_TESTDATEN_NUR_MELDELISTE,
@@ -2032,8 +1970,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_SCHWEIZER_TEILNEHMER, CMD_SCHWEIZER_CHECKIN,
 				 CMD_SCHWEIZER_NAECHSTE_SPIELRUNDE,
 				 CMD_SCHWEIZER_RANGLISTE,
-				 CMD_SCHWEIZER_RANGLISTE_SORTIEREN,
-				 CMD_SCHWEIZER_EXPORT_VERZEICHNIS, CMD_SCHWEIZER_FTP_UPLOAD -> ts == TurnierSystem.SCHWEIZER;
+				 CMD_SCHWEIZER_RANGLISTE_SORTIEREN -> ts == TurnierSystem.SCHWEIZER;
 			case CMD_SCHWEIZER_AKTUELLE_SPIELRUNDE          -> ts == TurnierSystem.SCHWEIZER && hatSchweizerSpielrunde(ws);
 			case CMD_SCHWEIZER_TESTDATEN_MELDELISTE,
 				 CMD_SCHWEIZER_TESTDATEN_TURNIER,
@@ -2126,6 +2063,10 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		} catch (Exception e) {
 			return false;
 		}
+	}
+
+	private static boolean istExportfaehigesTurnier(TurnierSystem ts) {
+		return ts != TurnierSystem.KEIN;
 	}
 
 	private static boolean hatSupermeleeSpielrunde(WorkingSpreadsheet ws) {
