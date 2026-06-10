@@ -117,11 +117,11 @@
 							<!-- ****************************************************************** -->
 							<node oor:name="X1X6" oor:op="replace">
 								<prop oor:name="Title">
-									<value xml:lang="de">Export / Upload Einstellungen…</value>
-									<value xml:lang="en">Export / Upload Settings…</value>
-									<value xml:lang="es">Ajustes de exportación / carga…</value>
-									<value xml:lang="fr">Paramètres export / téléversement…</value>
-									<value xml:lang="nl">Export / upload-instellingen…</value>
+									<value xml:lang="de">Export / Upload Einstellungen</value>
+									<value xml:lang="en">Export / Upload Settings</value>
+									<value xml:lang="es">Ajustes de exportación / carga</value>
+									<value xml:lang="fr">Paramètres export / téléversement</value>
+									<value xml:lang="nl">Export / upload-instellingen</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:export_upload_konfiguration</value>
