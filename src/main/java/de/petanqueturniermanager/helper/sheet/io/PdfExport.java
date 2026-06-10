@@ -14,6 +14,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.sun.star.io.IOException;
+import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.XCellRange;
 import com.sun.star.view.XSelectionSupplier;
 
@@ -95,7 +96,6 @@ public class PdfExport extends AbstractStore<PdfExport> {
 		checkNotNull(sheetName);
 		checkNotNull(rangePosition);
 
-		Object retSel = null;
 		XSelectionSupplier xSelectionSupplier = Lo.qi(XSelectionSupplier.class,
 				getWorkingSpreadsheet().getWorkingSpreadsheetView());
 
@@ -103,9 +103,15 @@ public class PdfExport extends AbstractStore<PdfExport> {
 				.getCellRangeByPosition(rangePosition);
 
 		xSelectionSupplier.select(cell);
-		retSel = xSelectionSupplier.getSelection();
+		return xSelectionSupplier.getSelection();
+	}
 
-		return retSel;
+	private Object sheetSelektion(XSpreadsheet xSheet) {
+		getWorkingSpreadsheet().getWorkingSpreadsheetView().setActiveSheet(xSheet);
+		var xSelectionSupplier = Lo.qi(XSelectionSupplier.class,
+				getWorkingSpreadsheet().getWorkingSpreadsheetView());
+		xSelectionSupplier.select(xSheet);
+		return xSelectionSupplier.getSelection();
 	}
 
 	public URI doExport() throws GenerateException {
@@ -137,13 +143,11 @@ public class PdfExport extends AbstractStore<PdfExport> {
 			filterData.put(SAVE_PROP_FILTER_EXPORTNOTES, Boolean.FALSE);
 
 			if (rangePosition != null) {
-				// selected range from activ sheet
 				filterData.put(SAVE_PROP_FILTER_SELECTION, selectRangetoExport());
 			} else if (sheetName != null) {
-				int sheetPosition = this.getSheetHelper().getIdxByName(sheetName);
-				if (sheetPosition > -1) {
-					// export only this sheet
-					filterData.put(SAVE_PROP_FILTER_PAGERANGE, "" + sheetPosition);
+				var xSheet = this.getSheetHelper().findByName(sheetName);
+				if (xSheet != null) {
+					filterData.put(SAVE_PROP_FILTER_SELECTION, sheetSelektion(xSheet));
 				} else {
 					throw new GenerateException(I18n.get("error.tabelle.nicht.vorhanden", sheetName));
 				}
