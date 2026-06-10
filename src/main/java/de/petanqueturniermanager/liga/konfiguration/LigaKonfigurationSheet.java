@@ -100,10 +100,6 @@ public class LigaKonfigurationSheet extends BaseKonfigurationSheet
 		propertiesSpalte.setGruppenname(name);
 	}
 
-	@Override
-	public String getBaseDownloadUrl() {
-		return propertiesSpalte.getBaseDownloadUrl();
-	}
 
 	@Override
 	public Integer getFreispielPunktePlus() {

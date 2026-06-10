@@ -33,12 +33,6 @@ public class MaastrichterExportInVerzeichnis extends AbstractExportInVerzeichnis
         var ws = getWorkingSpreadsheet();
         var konfiguration = new MaastrichterKonfigurationSheet(ws);
 
-        String baseDownloadUrl = StringUtils.strip(konfiguration.getDownloadUrl());
-
-        if (StringUtils.isNotEmpty(baseDownloadUrl)) {
-            processBox().info(I18n.get("export.info.download.url", baseDownloadUrl));
-        }
-
         List<Path> exportierteDateien = new ArrayList<>();
         List<ExportHtmlSeite.Section> sections = new ArrayList<>();
 
@@ -52,7 +46,7 @@ public class MaastrichterExportInVerzeichnis extends AbstractExportInVerzeichnis
         }
         sections.add(new ExportHtmlSeite.Section("vorrunden-rangliste",
                 I18n.get("export.maastrichter.nav.vorrunden.rangliste"), ranglisteSheetName,
-                buildPdfUrl(baseDownloadUrl, pdfRangliste)));
+                buildPdfUrl(pdfRangliste)));
 
         for (var eintrag : buchstabenSheetEintraegePerSchluessel(
                 SheetMetadataHelper::schluesselMaastrichterFinalrunde, SheetNamen::koFinaleGruppe)) {
@@ -62,7 +56,7 @@ public class MaastrichterExportInVerzeichnis extends AbstractExportInVerzeichnis
             }
             sections.add(new ExportHtmlSeite.Section("finalrunde-" + eintrag.buchstabe(),
                     I18n.get("export.maastrichter.nav.finalrunde", eintrag.buchstabe()),
-                    eintrag.sheetName(), buildPdfUrl(baseDownloadUrl, pdf)));
+                    eintrag.sheetName(), buildPdfUrl(pdf)));
         }
 
         processBox().info(I18n.get("export.info.html"));

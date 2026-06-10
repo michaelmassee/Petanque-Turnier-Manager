@@ -126,10 +126,6 @@ public class LigaPropertiesSpalte extends BasePropertiesSpalte implements ILigaP
 		setStringProperty(KONFIG_PROP_NAME_GRUPPE, name);
 	}
 
-	@Override
-	public String getBaseDownloadUrl() {
-		return readStringProperty(KONFIG_PROP_DOWNLOAD_URL);
-	}
 
 	@Override
 	public Integer getFreispielPunktePlus() {

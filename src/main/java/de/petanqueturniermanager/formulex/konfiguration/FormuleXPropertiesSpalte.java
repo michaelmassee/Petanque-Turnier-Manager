@@ -211,10 +211,6 @@ public class FormuleXPropertiesSpalte extends BasePropertiesSpalte implements IF
         return readIntProperty(KONFIG_PROP_FREISPIEL_PUNKTE_MINUS);
     }
 
-    public String getDownloadUrl() {
-        return readStringProperty(KONFIG_PROP_DOWNLOAD_URL);
-    }
-
     @Override
     public UploadProtokoll getUploadProtokoll() {
         return UploadProtokoll.vonString(readStringProperty(KONFIG_PROP_UPLOAD_PROTOKOLL));

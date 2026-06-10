@@ -189,10 +189,6 @@ public class SchweizerKonfigurationSheet extends BaseKonfigurationSheet
 		return getPropertiesSpalte().getFreispielPunkteMinus();
 	}
 
-	@Override
-	public String getDownloadUrl() {
-		return propertiesSpalte.getDownloadUrl();
-	}
 
 	@Override
 	public UploadProtokoll getUploadProtokoll() {

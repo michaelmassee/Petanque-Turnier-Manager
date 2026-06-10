@@ -141,9 +141,6 @@ public class KaskadeKonfigurationSheet extends BaseKonfigurationSheet implements
     public int getTurnierbaumDrittePlatzFarbe() { return propertiesSpalte.getTurnierbaumDrittePlatzFarbe(); }
 
 
-	public String getDownloadUrl() {
-		return propertiesSpalte.getDownloadUrl();
-	}
 
 	public UploadProtokoll getUploadProtokoll() {
 		return propertiesSpalte.getUploadProtokoll();

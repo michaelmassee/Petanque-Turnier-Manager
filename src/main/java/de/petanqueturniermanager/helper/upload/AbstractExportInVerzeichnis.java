@@ -127,16 +127,8 @@ public abstract class AbstractExportInVerzeichnis extends SheetRunner {
 
     public record SheetEintrag(String buchstabe, String schluessel, String sheetName) {}
 
-    protected String buildPdfUrl(String baseDownloadUrl, Path pdf) {
-        String dateiname = dateiName(pdf);
-        if (StringUtils.isBlank(dateiname)) {
-            return null;
-        }
-        if (StringUtils.isNotBlank(baseDownloadUrl)) {
-            String base = baseDownloadUrl.endsWith("/") ? baseDownloadUrl : baseDownloadUrl + "/";
-            return base + dateiname;
-        }
-        return dateiname;
+    protected String buildPdfUrl(Path pdf) {
+        return dateiName(pdf);
     }
 
     protected String dateiName(Path pdf) {

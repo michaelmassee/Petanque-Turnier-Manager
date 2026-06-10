@@ -147,9 +147,6 @@ public class KoKonfigurationSheet extends BaseKonfigurationSheet implements IKoB
 	@Override public int getTurnierbaumDrittePlatzFarbe() { return propertiesSpalte.getTurnierbaumDrittePlatzFarbe(); }
 
 
-	public String getDownloadUrl() {
-		return propertiesSpalte.getDownloadUrl();
-	}
 
 	public UploadProtokoll getUploadProtokoll() {
 		return propertiesSpalte.getUploadProtokoll();

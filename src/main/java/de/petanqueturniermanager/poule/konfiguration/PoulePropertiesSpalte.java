@@ -165,9 +165,6 @@ public class PoulePropertiesSpalte extends BasePropertiesSpalte implements IPoul
 
 
 
-	public String getDownloadUrl() {
-		return readStringProperty(KONFIG_PROP_DOWNLOAD_URL);
-	}
 
 	public UploadProtokoll getUploadProtokoll() {
 		return UploadProtokoll.vonString(readStringProperty(KONFIG_PROP_UPLOAD_PROTOKOLL));

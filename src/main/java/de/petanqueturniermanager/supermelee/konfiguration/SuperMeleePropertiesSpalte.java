@@ -385,10 +385,6 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 		return new SpielrundeHintergrundFarbeUnGeradeStyle(getSpielRundeHintergrundFarbeUnGerade());
 	}
 
-	@Override
-	public String getDownloadUrl() {
-		return readStringProperty(KONFIG_PROP_DOWNLOAD_URL);
-	}
 
 	@Override
 	public UploadProtokoll getUploadProtokoll() {

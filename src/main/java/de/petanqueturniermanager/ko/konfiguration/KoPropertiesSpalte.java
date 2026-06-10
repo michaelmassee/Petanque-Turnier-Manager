@@ -400,9 +400,6 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 	public int getTurnierbaumDrittePlatzFarbe() { return readIntProperty(KONFIG_PROP_TURNIERBAUM_COLOR_DRITTE_PLATZ); }
 
 
-	public String getDownloadUrl() {
-		return readStringProperty(KONFIG_PROP_DOWNLOAD_URL);
-	}
 
 	public UploadProtokoll getUploadProtokoll() {
 		return UploadProtokoll.vonString(readStringProperty(KONFIG_PROP_UPLOAD_PROTOKOLL));

@@ -41,13 +41,9 @@ public class SupermeleeExportInVerzeichnis extends AbstractExportInVerzeichnis {
         var spieltagRanglisteSheet = new SpieltagRanglisteSheet(ws, SpielTagNr.from(1));
         int anzahlSpieltage = spieltagRanglisteSheet.countNumberOfRanglisten();
 
-        String baseDownloadUrl = StringUtils.strip(konfiguration.getDownloadUrl());
         String turnierlogoUrl = StringUtils.strip(konfiguration.getTurnierlogoUrl());
         String turniername = StringUtils.strip(konfiguration.getKopfZeileMitte());
 
-        if (StringUtils.isNotEmpty(baseDownloadUrl)) {
-            processBox().info(I18n.get("export.info.download.url", baseDownloadUrl));
-        }
         if (StringUtils.isEmpty(turnierlogoUrl)) {
             processBox().info(I18n.get("export.warnung.turnierlogo.fehlt"));
         } else {
@@ -75,7 +71,7 @@ public class SupermeleeExportInVerzeichnis extends AbstractExportInVerzeichnis {
             spieltagSheetNamen.add(sheetName);
             spieltagSchluessel.add(schluessel);
             spieltagTitel.add(titel);
-            spieltagPdfUrls.add(buildPdfUrl(baseDownloadUrl, pdf));
+            spieltagPdfUrls.add(buildPdfUrl(pdf));
         }
 
         var endranglisteSchluessel = SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_ENDRANGLISTE;
@@ -90,7 +86,7 @@ public class SupermeleeExportInVerzeichnis extends AbstractExportInVerzeichnis {
         }
 
         processBox().info(I18n.get("export.info.html"));
-        Path htmlDatei = exportiereHtml(zielVerzeichnis, turniername, turnierlogoUrl, baseDownloadUrl,
+        Path htmlDatei = exportiereHtml(zielVerzeichnis, turniername, turnierlogoUrl,
                 endranglisteSheetName, pdfEndrangliste, spieltagSheetNamen, spieltagSchluessel,
                 spieltagTitel, spieltagPdfUrls);
         exportierteDateien.add(htmlDatei);
@@ -98,7 +94,7 @@ public class SupermeleeExportInVerzeichnis extends AbstractExportInVerzeichnis {
         return new ExportErgebnis(exportierteDateien);
     }
 
-    private Path exportiereHtml(Path zielVerzeichnis, String turniername, String logoUrl, String baseDownloadUrl,
+    private Path exportiereHtml(Path zielVerzeichnis, String turniername, String logoUrl,
             String endranglisteSheetName, Path pdfEndrangliste,
             List<String> sheetNamen, List<String> schluessel, List<String> titel, List<String> pdfUrls)
             throws GenerateException {
@@ -106,7 +102,7 @@ public class SupermeleeExportInVerzeichnis extends AbstractExportInVerzeichnis {
         String endranglisteNavSheetName = endranglisteSheetName != null ? endranglisteSheetName : SheetNamen.endrangliste();
         sections.add(new ExportHtmlSeite.Section(SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_ENDRANGLISTE,
                 I18n.get("export.supermelee.nav.endrangliste"),
-                endranglisteNavSheetName, buildPdfUrl(baseDownloadUrl, pdfEndrangliste)));
+                endranglisteNavSheetName, buildPdfUrl(pdfEndrangliste)));
 
         for (int i = 0; i < sheetNamen.size(); i++) {
             sections.add(new ExportHtmlSeite.Section(schluessel.get(i), titel.get(i),

@@ -73,7 +73,6 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	public static final String KONFIG_PROP_UPLOAD_PORT        = "Upload Port";
 	public static final String KONFIG_PROP_UPLOAD_BENUTZER    = "Upload Benutzer";
 	public static final String KONFIG_PROP_UPLOAD_VERZEICHNIS = "Upload Verzeichnis";
-	public static final String KONFIG_PROP_DOWNLOAD_URL       = "Download Url";
 
 	// Tab-Farben (Document Properties Schlüssel)
 	public static final String KONFIG_PROP_TAB_COLOR_MELDELISTE      = "Tab-Farbe Meldeliste";
@@ -194,13 +193,11 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	}
 
 	/**
-	 * Fügt die gemeinsamen Upload- und Download-Properties hinzu, markiert mit
+	 * Fügt die gemeinsamen Upload-Properties hinzu, markiert mit
 	 * {@link de.petanqueturniermanager.konfigdialog.ConfigProperty#exportKonfig()}.
 	 * Aufzurufen von jedem System, das {@code IUploadKonfigurierbar} implementiert.
 	 */
 	protected static void ADDUploadProp(List<ConfigProperty<?>> KONFIG_PROPERTIES) {
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_DOWNLOAD_URL)
-				.setDefaultVal("").setDescription("config.desc.download.url").exportKonfig());
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_PROTOKOLL)
 				.setDefaultVal("FTP").setDescription("config.desc.upload.protokoll").exportKonfig());
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_HOST)

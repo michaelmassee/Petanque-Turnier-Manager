@@ -23,8 +23,6 @@ public interface ILigaPropertiesSpalte extends de.petanqueturniermanager.baseshe
 
 	String getGruppenname();
 
-	String getBaseDownloadUrl();
-
 	void setGruppenname(String name);
 
 }

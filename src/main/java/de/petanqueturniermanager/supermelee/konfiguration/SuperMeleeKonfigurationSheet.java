@@ -230,10 +230,6 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet
 		return propertiesSpalte.getSupermeleeTeamPaarungenTabFarbe();
 	}
 
-	@Override
-	public String getDownloadUrl() {
-		return propertiesSpalte.getDownloadUrl();
-	}
 
 	@Override
 	public UploadProtokoll getUploadProtokoll() {

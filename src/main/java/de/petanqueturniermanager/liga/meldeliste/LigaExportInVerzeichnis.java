@@ -36,13 +36,9 @@ public class LigaExportInVerzeichnis extends AbstractExportInVerzeichnis {
         var ligaRanglisteSheet = new LigaRanglisteSheet(ws);
         var konfiguration = new LigaKonfigurationSheet(ws);
 
-        String baseDownloadUrl = StringUtils.strip(konfiguration.getBaseDownloadUrl());
         String turnierlogoUrl = StringUtils.strip(konfiguration.getTurnierlogoUrl());
         String gruppenname = StringUtils.strip(konfiguration.getGruppenname());
 
-        if (StringUtils.isNotEmpty(baseDownloadUrl)) {
-            processBox().info(I18n.get("export.info.download.url", baseDownloadUrl));
-        }
         if (StringUtils.isEmpty(turnierlogoUrl)) {
             processBox().info(I18n.get("export.warnung.turnierlogo.fehlt"));
         } else {
@@ -72,8 +68,8 @@ public class LigaExportInVerzeichnis extends AbstractExportInVerzeichnis {
 
         processBox().info(I18n.get("export.info.html"));
         List<ExportHtmlSeite.Section> sections = htmlSections(
-                meldelisteSheetName, spielplanSheetName, buildPdfUrl(baseDownloadUrl, pdfSpielplan),
-                ranglisteSheetName, buildPdfUrl(baseDownloadUrl, pdfRangliste), direktvergleichSheetName);
+                meldelisteSheetName, spielplanSheetName, buildPdfUrl(pdfSpielplan),
+                ranglisteSheetName, buildPdfUrl(pdfRangliste), direktvergleichSheetName);
         Path htmlDatei = exportiereHtml(zielVerzeichnis, "Liga.html",
                 StringUtils.defaultIfBlank(gruppenname, TurnierSystem.LIGA.getBezeichnung()),
                 turnierlogoUrl, sections);

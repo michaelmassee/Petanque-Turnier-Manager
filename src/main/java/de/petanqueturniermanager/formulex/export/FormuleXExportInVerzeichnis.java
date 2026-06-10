@@ -33,12 +33,6 @@ public class FormuleXExportInVerzeichnis extends AbstractExportInVerzeichnis {
         var ws = getWorkingSpreadsheet();
         var konfiguration = new FormuleXKonfigurationSheet(ws);
 
-        String baseDownloadUrl = StringUtils.strip(konfiguration.getDownloadUrl());
-
-        if (StringUtils.isNotEmpty(baseDownloadUrl)) {
-            processBox().info(I18n.get("export.info.download.url", baseDownloadUrl));
-        }
-
         List<Path> exportierteDateien = new ArrayList<>();
 
         String meldelisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_FORMULEX_MELDELISTE, SheetNamen.meldeliste());
@@ -53,7 +47,7 @@ public class FormuleXExportInVerzeichnis extends AbstractExportInVerzeichnis {
         List<ExportHtmlSeite.Section> sections = List.of(
                 new ExportHtmlSeite.Section("meldeliste", I18n.get("export.nav.meldeliste"), meldelisteSheetName, null),
                 new ExportHtmlSeite.Section("rangliste", I18n.get("export.nav.formulex.rangliste"), ranglisteSheetName,
-                        buildPdfUrl(baseDownloadUrl, pdfRangliste)));
+                        buildPdfUrl(pdfRangliste)));
         exportierteDateien.add(exportiereHtml(zielVerzeichnis, "FormuleX.html",
                 StringUtils.defaultIfBlank(StringUtils.strip(konfiguration.getKopfZeileMitte()),
                         TurnierSystem.FORMULEX.getBezeichnung()),

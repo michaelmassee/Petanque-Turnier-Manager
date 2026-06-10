@@ -156,10 +156,6 @@ public class JGJKonfigurationSheet extends BaseKonfigurationSheet implements IJG
 		propertiesSpalte.setRueckrunde(mitRueckrunde);
 	}
 
-	@Override
-	public String getDownloadUrl() {
-		return propertiesSpalte.getDownloadUrl();
-	}
 
 	@Override
 	public UploadProtokoll getUploadProtokoll() {

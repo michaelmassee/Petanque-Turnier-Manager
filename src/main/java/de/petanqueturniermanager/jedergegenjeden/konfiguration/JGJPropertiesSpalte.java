@@ -215,11 +215,6 @@ public class JGJPropertiesSpalte extends BasePropertiesSpalte implements IJGJPro
 	}
 
 	@Override
-	public String getDownloadUrl() {
-		return readStringProperty(KONFIG_PROP_DOWNLOAD_URL);
-	}
-
-	@Override
 	public UploadProtokoll getUploadProtokoll() {
 		return UploadProtokoll.vonString(readStringProperty(KONFIG_PROP_UPLOAD_PROTOKOLL));
 	}

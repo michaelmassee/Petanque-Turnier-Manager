@@ -60,6 +60,4 @@ public interface ISchweizerPropertiesSpalte extends de.petanqueturniermanager.ba
 
 	void setRankingModus(SchweizerRankingModus modus);
 
-	String getDownloadUrl();
-
 }

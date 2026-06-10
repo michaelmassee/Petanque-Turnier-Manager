@@ -150,9 +150,6 @@ public class FormuleXKonfigurationSheet extends BaseKonfigurationSheet implement
         return propertiesSpalte.getFreispielPunkteMinus();
     }
 
-    public String getDownloadUrl() {
-        return propertiesSpalte.getDownloadUrl();
-    }
 
     @Override
     public UploadProtokoll getUploadProtokoll() {

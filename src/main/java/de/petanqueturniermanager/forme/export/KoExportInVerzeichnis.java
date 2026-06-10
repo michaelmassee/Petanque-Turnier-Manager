@@ -36,12 +36,6 @@ public class KoExportInVerzeichnis extends AbstractExportInVerzeichnis {
         var ws = getWorkingSpreadsheet();
         var konfiguration = new KoKonfigurationSheet(ws);
 
-        String baseDownloadUrl = StringUtils.strip(konfiguration.getDownloadUrl());
-
-        if (StringUtils.isNotEmpty(baseDownloadUrl)) {
-            processBox().info(I18n.get("export.info.download.url", baseDownloadUrl));
-        }
-
         var xDoc = ws.getWorkingSpreadsheetDocument();
         List<Path> exportierteDateien = new ArrayList<>();
         List<ExportHtmlSeite.Section> sections = new ArrayList<>();
@@ -61,7 +55,7 @@ public class KoExportInVerzeichnis extends AbstractExportInVerzeichnis {
                 exportierteDateien.add(pdf);
             }
             sections.add(new ExportHtmlSeite.Section("ko-turnierbaum",
-                    I18n.get("export.ko.nav.turnierbaum"), einzelName, buildPdfUrl(baseDownloadUrl, pdf)));
+                    I18n.get("export.ko.nav.turnierbaum"), einzelName, buildPdfUrl(pdf)));
         }
 
         for (var eintrag : gruppenSheets) {
@@ -71,7 +65,7 @@ public class KoExportInVerzeichnis extends AbstractExportInVerzeichnis {
             }
             sections.add(new ExportHtmlSeite.Section("ko-" + eintrag.buchstabe(),
                     I18n.get("export.ko.nav.turnierbaum.gruppe", eintrag.buchstabe()),
-                    eintrag.sheetName(), buildPdfUrl(baseDownloadUrl, pdf)));
+                    eintrag.sheetName(), buildPdfUrl(pdf)));
         }
 
         if (einzelBaumSheet == null && gruppenSheets.isEmpty()) {

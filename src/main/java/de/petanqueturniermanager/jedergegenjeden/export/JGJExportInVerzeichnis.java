@@ -34,12 +34,6 @@ public class JGJExportInVerzeichnis extends AbstractExportInVerzeichnis {
         var ws = getWorkingSpreadsheet();
         var konfiguration = new JGJKonfigurationSheet(ws);
 
-        String baseDownloadUrl = StringUtils.strip(konfiguration.getDownloadUrl());
-
-        if (StringUtils.isNotEmpty(baseDownloadUrl)) {
-            processBox().info(I18n.get("export.info.download.url", baseDownloadUrl));
-        }
-
         List<Path> exportierteDateien = new ArrayList<>();
 
         String meldelisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_JGJ_MELDELISTE, SheetNamen.meldeliste());
@@ -62,9 +56,9 @@ public class JGJExportInVerzeichnis extends AbstractExportInVerzeichnis {
                 new ExportHtmlSeite.Section("meldeliste", I18n.get("export.nav.meldeliste"), meldelisteSheetName, null),
                 new ExportHtmlSeite.Section("spielplan", I18n.get("export.nav.spielplan"), spielplanSheetName, null),
                 new ExportHtmlSeite.Section("rangliste", I18n.get("export.nav.rangliste"), ranglisteSheetName,
-                        buildPdfUrl(baseDownloadUrl, pdfRangliste)),
+                        buildPdfUrl(pdfRangliste)),
                 new ExportHtmlSeite.Section("direktvergleich", I18n.get("export.nav.direktvergleich"), direktvergleichSheetName,
-                        buildPdfUrl(baseDownloadUrl, pdfDirektvergleich)));
+                        buildPdfUrl(pdfDirektvergleich)));
         exportierteDateien.add(exportiereHtml(zielVerzeichnis, "JederGegenJeden.html",
                 StringUtils.defaultIfBlank(StringUtils.strip(konfiguration.getKopfZeileMitte()),
                         TurnierSystem.JGJ.getBezeichnung()),

@@ -256,10 +256,6 @@ public class SchweizerPropertiesSpalte extends BasePropertiesSpalte implements I
 		return readIntProperty(KONFIG_PROP_FREISPIEL_PUNKTE_MINUS);
 	}
 
-	@Override
-	public String getDownloadUrl() {
-		return readStringProperty(KONFIG_PROP_DOWNLOAD_URL);
-	}
 
 	@Override
 	public UploadProtokoll getUploadProtokoll() {

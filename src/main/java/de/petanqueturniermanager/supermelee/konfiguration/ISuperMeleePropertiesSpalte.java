@@ -14,8 +14,6 @@ import de.petanqueturniermanager.supermelee.SpielTagNr;
 
 public interface ISuperMeleePropertiesSpalte extends IPropertiesSpalte, IUploadKonfigurierbar {
 
-	String getDownloadUrl();
-
 	SpielTagNr getAktiveSpieltag();
 
 	void setAktiveSpieltag(SpielTagNr spieltag);

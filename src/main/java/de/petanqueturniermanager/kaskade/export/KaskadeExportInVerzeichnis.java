@@ -33,12 +33,6 @@ public class KaskadeExportInVerzeichnis extends AbstractExportInVerzeichnis {
         var ws = getWorkingSpreadsheet();
         var konfiguration = new KaskadeKonfigurationSheet(ws);
 
-        String baseDownloadUrl = StringUtils.strip(konfiguration.getDownloadUrl());
-
-        if (StringUtils.isNotEmpty(baseDownloadUrl)) {
-            processBox().info(I18n.get("export.info.download.url", baseDownloadUrl));
-        }
-
         List<Path> exportierteDateien = new ArrayList<>();
         List<ExportHtmlSeite.Section> sections = new ArrayList<>();
 
@@ -52,7 +46,7 @@ public class KaskadeExportInVerzeichnis extends AbstractExportInVerzeichnis {
         }
         sections.add(new ExportHtmlSeite.Section("gruppenrangliste",
                 I18n.get("export.kaskade.nav.gruppenrangliste"), ranglisteSheetName,
-                buildPdfUrl(baseDownloadUrl, pdfRangliste)));
+                buildPdfUrl(pdfRangliste)));
 
         for (var eintrag : buchstabenSheetEintraegePerSchluessel(
                 SheetMetadataHelper::schluesselKaskadenFeld, SheetNamen::kaskadenFeld)) {
@@ -62,7 +56,7 @@ public class KaskadeExportInVerzeichnis extends AbstractExportInVerzeichnis {
             }
             sections.add(new ExportHtmlSeite.Section("feld-" + eintrag.buchstabe(),
                     I18n.get("export.kaskade.nav.feld", eintrag.buchstabe()),
-                    eintrag.sheetName(), buildPdfUrl(baseDownloadUrl, pdf)));
+                    eintrag.sheetName(), buildPdfUrl(pdf)));
         }
 
         processBox().info(I18n.get("export.info.html"));

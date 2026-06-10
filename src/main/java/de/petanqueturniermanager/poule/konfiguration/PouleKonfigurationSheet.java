@@ -111,9 +111,6 @@ public class PouleKonfigurationSheet extends BaseKonfigurationSheet implements I
 
 
 
-	public String getDownloadUrl() {
-		return propertiesSpalte.getDownloadUrl();
-	}
 
 	public UploadProtokoll getUploadProtokoll() {
 		return propertiesSpalte.getUploadProtokoll();
