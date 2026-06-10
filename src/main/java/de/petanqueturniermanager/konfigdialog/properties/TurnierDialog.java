@@ -30,7 +30,8 @@ public class TurnierDialog extends BasePropertiesDialog {
 		// alles außer Color, Kopf/Fußzeilen und internen Zustandsfeldern
 		return konfigprop -> konfigprop.getType() != ConfigPropertyType.COLOR
 				&& !(konfigprop instanceof HeaderFooterConfigProperty)
-				&& !konfigprop.isIntern();
+				&& !konfigprop.isIntern()
+				&& !konfigprop.isExportKonfig();
 	}
 
 	@Override

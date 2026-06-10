@@ -53,12 +53,6 @@ public class FormuleXPropertiesSpalte extends BasePropertiesSpalte implements IF
     private static final String KONFIG_PROP_FREISPIEL_PUNKTE_PLUS  = "Freispiel Punkte +";
     private static final String KONFIG_PROP_FREISPIEL_PUNKTE_MINUS = "Freispiel Punkte -";
 
-    public static final String KONFIG_PROP_DOWNLOAD_URL       = "Download Url";
-    private static final String KONFIG_PROP_UPLOAD_PROTOKOLL   = "Upload Protokoll";
-    private static final String KONFIG_PROP_UPLOAD_HOST        = "Upload Host";
-    private static final String KONFIG_PROP_UPLOAD_PORT        = "Upload Port";
-    private static final String KONFIG_PROP_UPLOAD_BENUTZER    = "Upload Benutzer";
-    private static final String KONFIG_PROP_UPLOAD_VERZEICHNIS = "Upload Verzeichnis";
 
     static {
         KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_LINKS)
@@ -110,20 +104,7 @@ public class FormuleXPropertiesSpalte extends BasePropertiesSpalte implements IF
         KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_FREISPIEL_PUNKTE_MINUS)
                 .setDefaultVal(0).setDescription("config.desc.freispiel.punkte.minus"));
 
-        KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_DOWNLOAD_URL)
-                .setDescription("config.desc.download.url"));
-        KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_PROTOKOLL)
-                .setDefaultVal(UploadProtokoll.FTP.name())
-                .setDescription("config.desc.upload.protokoll"));
-        KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_HOST)
-                .setDescription("config.desc.upload.host"));
-        KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_UPLOAD_PORT)
-                .setDefaultVal("21")
-                .setDescription("config.desc.upload.port"));
-        KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_BENUTZER)
-                .setDescription("config.desc.upload.benutzer"));
-        KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_VERZEICHNIS)
-                .setDescription("config.desc.upload.verzeichnis"));
+        ADDUploadProp(KONFIG_PROPERTIES);
     }
 
     FormuleXPropertiesSpalte(ISheet sheet) {

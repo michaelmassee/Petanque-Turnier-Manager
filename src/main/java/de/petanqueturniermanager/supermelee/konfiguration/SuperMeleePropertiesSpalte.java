@@ -72,13 +72,6 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	private static final String KONFIG_PROP_TAB_COLOR_SUPERMELEE_TEAM_PAARUNGEN = "Tab-Farbe Team-Paarungen";
 	private static final String KONFIG_PROP_SPIELTAGRANGLISTE_RUNDENSUMMEN = "Spieltagrangliste Rundensummen anzeigen";
 
-	public static final String KONFIG_PROP_DOWNLOAD_URL       = "Download Url";
-	private static final String KONFIG_PROP_UPLOAD_PROTOKOLL   = "Upload Protokoll";
-	private static final String KONFIG_PROP_UPLOAD_HOST        = "Upload Host";
-	private static final String KONFIG_PROP_UPLOAD_PORT        = "Upload Port";
-	private static final String KONFIG_PROP_UPLOAD_BENUTZER    = "Upload Benutzer";
-	private static final String KONFIG_PROP_UPLOAD_VERZEICHNIS = "Upload Verzeichnis";
-
 	static {
 
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_LINKS)
@@ -183,18 +176,7 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 					.setDefaultVal(spieltagcntr + ". Spieltag").setDescription("config.desc.supermelee.spieltag.kopfzeile", spieltagcntr));
 		}
 
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_DOWNLOAD_URL)
-				.setDefaultVal("").setDescription("config.desc.download.url"));
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_PROTOKOLL)
-				.setDefaultVal("FTP").setDescription("config.desc.upload.protokoll"));
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_HOST)
-				.setDefaultVal("").setDescription("config.desc.upload.host"));
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_UPLOAD_PORT)
-				.setDefaultVal(21).setDescription("config.desc.upload.port"));
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_BENUTZER)
-				.setDefaultVal("").setDescription("config.desc.upload.benutzer"));
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_VERZEICHNIS)
-				.setDefaultVal("").setDescription("config.desc.upload.verzeichnis"));
+		ADDUploadProp(KONFIG_PROPERTIES);
 	}
 
 	public static final String PROP_SPIELTAG_KOPFZEILE(int spielTagNr) {

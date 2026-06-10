@@ -67,6 +67,14 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 
 	public static final String KONFIG_PROP_TEILNEHMER_LISTE_SORT_MODUS = "Teilnehmerliste Sortierung";
 
+	// Upload / Export (für alle Systeme mit IUploadKonfigurierbar)
+	public static final String KONFIG_PROP_UPLOAD_PROTOKOLL   = "Upload Protokoll";
+	public static final String KONFIG_PROP_UPLOAD_HOST        = "Upload Host";
+	public static final String KONFIG_PROP_UPLOAD_PORT        = "Upload Port";
+	public static final String KONFIG_PROP_UPLOAD_BENUTZER    = "Upload Benutzer";
+	public static final String KONFIG_PROP_UPLOAD_VERZEICHNIS = "Upload Verzeichnis";
+	public static final String KONFIG_PROP_DOWNLOAD_URL       = "Download Url";
+
 	// Tab-Farben (Document Properties Schlüssel)
 	public static final String KONFIG_PROP_TAB_COLOR_MELDELISTE      = "Tab-Farbe Meldeliste";
 	public static final String KONFIG_PROP_TAB_COLOR_TEILNEHMER      = "Tab-Farbe Teilnehmer";
@@ -183,6 +191,26 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 				.addAuswahl(TeilnehmerListeSortModus.NUMMER.getKey(), I18n.get("config.teilnehmer.sort.nummer"))
 				.addAuswahl(TeilnehmerListeSortModus.NAME.getKey(), I18n.get("config.teilnehmer.sort.name"))
 				.addAuswahl(TeilnehmerListeSortModus.TEAMNAME.getKey(), I18n.get("config.teilnehmer.sort.teamname")));
+	}
+
+	/**
+	 * Fügt die gemeinsamen Upload- und Download-Properties hinzu, markiert mit
+	 * {@link de.petanqueturniermanager.konfigdialog.ConfigProperty#exportKonfig()}.
+	 * Aufzurufen von jedem System, das {@code IUploadKonfigurierbar} implementiert.
+	 */
+	protected static void ADDUploadProp(List<ConfigProperty<?>> KONFIG_PROPERTIES) {
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_DOWNLOAD_URL)
+				.setDefaultVal("").setDescription("config.desc.download.url").exportKonfig());
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_PROTOKOLL)
+				.setDefaultVal("FTP").setDescription("config.desc.upload.protokoll").exportKonfig());
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_HOST)
+				.setDefaultVal("").setDescription("config.desc.upload.host").exportKonfig());
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_UPLOAD_PORT)
+				.setDefaultVal(21).setDescription("config.desc.upload.port").exportKonfig());
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_BENUTZER)
+				.setDefaultVal("").setDescription("config.desc.upload.benutzer").exportKonfig());
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_VERZEICHNIS)
+				.setDefaultVal("").setDescription("config.desc.upload.verzeichnis").exportKonfig());
 	}
 
 	protected BasePropertiesSpalte(ISheet sheet) {

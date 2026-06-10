@@ -52,12 +52,6 @@ public class SchweizerPropertiesSpalte extends BasePropertiesSpalte implements I
 	private static final String KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE = "Spielplan Team Anzeige";
 	private static final String KONFIG_PROP_RANKING_MODUS = "Schweizer Ranking Modus";
 
-	public static final String KONFIG_PROP_DOWNLOAD_URL       = "Download Url";
-	private static final String KONFIG_PROP_UPLOAD_PROTOKOLL   = "Upload Protokoll";
-	private static final String KONFIG_PROP_UPLOAD_HOST        = "Upload Host";
-	private static final String KONFIG_PROP_UPLOAD_PORT        = "Upload Port";
-	private static final String KONFIG_PROP_UPLOAD_BENUTZER    = "Upload Benutzer";
-	private static final String KONFIG_PROP_UPLOAD_VERZEICHNIS = "Upload Verzeichnis";
 
 	static {
 
@@ -119,20 +113,7 @@ public class SchweizerPropertiesSpalte extends BasePropertiesSpalte implements I
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_FREISPIEL_PUNKTE_MINUS)
 				.setDefaultVal(7).setDescription("config.desc.freispiel.punkte.minus"));
 
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_DOWNLOAD_URL)
-				.setDescription("config.desc.download.url"));
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_PROTOKOLL)
-				.setDefaultVal(UploadProtokoll.FTP.name())
-				.setDescription("config.desc.upload.protokoll"));
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_HOST)
-				.setDescription("config.desc.upload.host"));
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_UPLOAD_PORT)
-				.setDefaultVal("21")
-				.setDescription("config.desc.upload.port"));
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_BENUTZER)
-				.setDescription("config.desc.upload.benutzer"));
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_VERZEICHNIS)
-				.setDescription("config.desc.upload.verzeichnis"));
+		ADDUploadProp(KONFIG_PROPERTIES);
 
 	}
 

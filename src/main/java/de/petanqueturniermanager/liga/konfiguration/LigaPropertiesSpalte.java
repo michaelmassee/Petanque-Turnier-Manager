@@ -25,11 +25,6 @@ public class LigaPropertiesSpalte extends BasePropertiesSpalte implements ILigaP
 	public static final String KONFIG_PROP_FREISPIEL_PUNKTE_PLUS  = "Freispiel Punkte +";
 	public static final String KONFIG_PROP_FREISPIEL_PUNKTE_MINUS = "Freispiel Punkte -";
 
-	private static final String KONFIG_PROP_UPLOAD_PROTOKOLL   = "Upload Protokoll";
-	private static final String KONFIG_PROP_UPLOAD_HOST        = "Upload Host";
-	private static final String KONFIG_PROP_UPLOAD_PORT        = "Upload Port";
-	private static final String KONFIG_PROP_UPLOAD_BENUTZER    = "Upload Benutzer";
-	private static final String KONFIG_PROP_UPLOAD_VERZEICHNIS = "Upload Verzeichnis";
 
 	private static final String KONFIG_PROP_SPIELPLAN_COLOR_BACK_GERADE = "Spielplan Hintergrund Gerade";
 	private static final String KONFIG_PROP_SPIELPLAN_COLOR_BACK_UNGERADE = "Spielplan Hintergrund Ungerade";
@@ -41,7 +36,6 @@ public class LigaPropertiesSpalte extends BasePropertiesSpalte implements ILigaP
 
 	// html export
 	public static final String KONFIG_PROP_NAME_GRUPPE = "Gruppenname";
-	public static final String KONFIG_PROP_DOWNLOAD_URL = "Download Url"; // fuer den Download von Spielpläne";
 
 	static {
 		ADDBaseProp(KONFIG_PROPERTIES);
@@ -66,24 +60,12 @@ public class LigaPropertiesSpalte extends BasePropertiesSpalte implements ILigaP
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_NAME_GRUPPE).setDefaultVal("")
 				.setDescription("config.desc.liga.gruppenname"));
 
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_DOWNLOAD_URL).setDefaultVal("")
-				.setDescription("config.desc.liga.download.url"));
-
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_FREISPIEL_PUNKTE_PLUS)
 				.setDefaultVal(13).setDescription("config.desc.freispiel.punkte.plus"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_FREISPIEL_PUNKTE_MINUS)
 				.setDefaultVal(7).setDescription("config.desc.freispiel.punkte.minus"));
 
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_PROTOKOLL)
-				.setDefaultVal("FTP").setDescription("config.desc.upload.protokoll"));
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_HOST)
-				.setDefaultVal("").setDescription("config.desc.upload.host"));
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_UPLOAD_PORT)
-				.setDefaultVal(21).setDescription("config.desc.upload.port"));
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_BENUTZER)
-				.setDefaultVal("").setDescription("config.desc.upload.benutzer"));
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_VERZEICHNIS)
-				.setDefaultVal("").setDescription("config.desc.upload.verzeichnis"));
+		ADDUploadProp(KONFIG_PROPERTIES);
 	}
 
 	/**

@@ -39,12 +39,6 @@ public class JGJPropertiesSpalte extends BasePropertiesSpalte implements IJGJPro
 	private static final String KONFIG_PROP_MELDELISTE_VEREINSNAME = "Meldeliste Vereinsname";
 	private static final String KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE = "Spielplan Team Anzeige";
 
-	public static final String KONFIG_PROP_DOWNLOAD_URL       = "Download Url";
-	private static final String KONFIG_PROP_UPLOAD_PROTOKOLL   = "Upload Protokoll";
-	private static final String KONFIG_PROP_UPLOAD_HOST        = "Upload Host";
-	private static final String KONFIG_PROP_UPLOAD_PORT        = "Upload Port";
-	private static final String KONFIG_PROP_UPLOAD_BENUTZER    = "Upload Benutzer";
-	private static final String KONFIG_PROP_UPLOAD_VERZEICHNIS = "Upload Verzeichnis";
 
 	static {
 		ADDBaseProp(KONFIG_PROPERTIES);
@@ -98,20 +92,7 @@ public class JGJPropertiesSpalte extends BasePropertiesSpalte implements IJGJPro
 		KONFIG_PROPERTIES.add(ConfigProperty.<Boolean>from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_RUECKRUNDE)
 				.setDefaultVal(Boolean.FALSE).setDescription("config.desc.jgj.rueckrunde"));
 
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_DOWNLOAD_URL)
-				.setDescription("config.desc.download.url"));
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_PROTOKOLL)
-				.setDefaultVal(UploadProtokoll.FTP.name())
-				.setDescription("config.desc.upload.protokoll"));
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_HOST)
-				.setDescription("config.desc.upload.host"));
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_UPLOAD_PORT)
-				.setDefaultVal("21")
-				.setDescription("config.desc.upload.port"));
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_BENUTZER)
-				.setDescription("config.desc.upload.benutzer"));
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_VERZEICHNIS)
-				.setDescription("config.desc.upload.verzeichnis"));
+		ADDUploadProp(KONFIG_PROPERTIES);
 	}
 
 	/**

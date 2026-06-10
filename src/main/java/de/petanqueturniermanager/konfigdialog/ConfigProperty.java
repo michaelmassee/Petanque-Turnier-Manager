@@ -18,8 +18,9 @@ public class ConfigProperty<V> {
 	private V defaultVal;
 	private String description;
 	private Object[] descriptionArgs;
-	private boolean tabFarbe; // Tab-Farben-Dialog
-	private boolean intern; // interner Zustand – nicht in Dialogen anzeigen
+	private boolean tabFarbe;    // Tab-Farben-Dialog
+	private boolean intern;      // interner Zustand – nicht in Dialogen anzeigen
+	private boolean exportKonfig; // Export/Upload-Konfigurationsdialog
 	private Consumer<WorkingSpreadsheet> nachSpeichernAktion;
 
 	protected ConfigProperty(ConfigPropertyType type, String key) {
@@ -27,6 +28,7 @@ public class ConfigProperty<V> {
 		this.key = checkNotNull(key);
 		tabFarbe = false;
 		intern = false;
+		exportKonfig = false;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -91,6 +93,15 @@ public class ConfigProperty<V> {
 
 	public final boolean isIntern() {
 		return intern;
+	}
+
+	public ConfigProperty<V> exportKonfig() {
+		this.exportKonfig = true;
+		return this;
+	}
+
+	public final boolean isExportKonfig() {
+		return exportKonfig;
 	}
 
 	public ConfigProperty<V> mitNachSpeichernAktion(Consumer<WorkingSpreadsheet> aktion) {

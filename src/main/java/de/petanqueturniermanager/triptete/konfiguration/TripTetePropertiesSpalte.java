@@ -31,12 +31,6 @@ public class TripTetePropertiesSpalte extends BasePropertiesSpalte implements IT
 	private static final String KONFIG_PROP_KOPF_ZEILE_MITTE = "Kopfzeile Mitte";
 	private static final String KONFIG_PROP_KOPF_ZEILE_RECHTS = "Kopfzeile Rechts";
 
-	private static final String KONFIG_PROP_UPLOAD_PROTOKOLL   = "Upload Protokoll";
-	private static final String KONFIG_PROP_UPLOAD_HOST        = "Upload Host";
-	private static final String KONFIG_PROP_UPLOAD_PORT        = "Upload Port";
-	private static final String KONFIG_PROP_UPLOAD_BENUTZER    = "Upload Benutzer";
-	private static final String KONFIG_PROP_UPLOAD_VERZEICHNIS = "Upload Verzeichnis";
-
 	static {
 		ADDBaseProp(KONFIG_PROPERTIES);
 
@@ -66,16 +60,7 @@ public class TripTetePropertiesSpalte extends BasePropertiesSpalte implements IT
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_SPIELZIEL)
 				.setDefaultVal(13).setDescription("config.desc.triptete.spielziel"));
 
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_PROTOKOLL)
-				.setDefaultVal(UploadProtokoll.FTP.name()).setDescription("config.desc.upload.protokoll"));
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_HOST)
-				.setDefaultVal("").setDescription("config.desc.upload.host"));
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_UPLOAD_PORT)
-				.setDefaultVal(21).setDescription("config.desc.upload.port"));
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_BENUTZER)
-				.setDefaultVal("").setDescription("config.desc.upload.benutzer"));
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_VERZEICHNIS)
-				.setDefaultVal("").setDescription("config.desc.upload.verzeichnis"));
+		ADDUploadProp(KONFIG_PROPERTIES);
 	}
 
 	TripTetePropertiesSpalte(ISheet sheet) {
