@@ -52,13 +52,15 @@ public class JGJExportInVerzeichnis extends AbstractExportInVerzeichnis {
         }
 
         processBox().info(I18n.get("export.info.html"));
-        List<ExportHtmlSeite.Section> sections = List.of(
-                new ExportHtmlSeite.Section("meldeliste", I18n.get("export.nav.meldeliste"), meldelisteSheetName, null),
-                new ExportHtmlSeite.Section("spielplan", I18n.get("export.nav.spielplan"), spielplanSheetName, null),
-                new ExportHtmlSeite.Section("rangliste", I18n.get("export.nav.rangliste"), ranglisteSheetName,
-                        buildPdfUrl(pdfRangliste)),
-                new ExportHtmlSeite.Section("direktvergleich", I18n.get("export.nav.direktvergleich"), direktvergleichSheetName,
-                        buildPdfUrl(pdfDirektvergleich)));
+        List<ExportHtmlSeite.Section> sections = new ArrayList<>();
+        if (konfiguration.isMeldelisteExportieren()) {
+            sections.add(new ExportHtmlSeite.Section("meldeliste", I18n.get("export.nav.meldeliste"), meldelisteSheetName, null));
+        }
+        sections.add(new ExportHtmlSeite.Section("spielplan", I18n.get("export.nav.spielplan"), spielplanSheetName, null));
+        sections.add(new ExportHtmlSeite.Section("rangliste", I18n.get("export.nav.rangliste"), ranglisteSheetName,
+                buildPdfUrl(pdfRangliste)));
+        sections.add(new ExportHtmlSeite.Section("direktvergleich", I18n.get("export.nav.direktvergleich"), direktvergleichSheetName,
+                buildPdfUrl(pdfDirektvergleich)));
         exportierteDateien.add(exportiereHtml(zielVerzeichnis, "JederGegenJeden.html",
                 StringUtils.defaultIfBlank(StringUtils.strip(konfiguration.getKopfZeileMitte()),
                         TurnierSystem.JGJ.getBezeichnung()),

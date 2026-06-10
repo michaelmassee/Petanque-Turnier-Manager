@@ -41,7 +41,9 @@ public class KoExportInVerzeichnis extends AbstractExportInVerzeichnis {
         List<ExportHtmlSeite.Section> sections = new ArrayList<>();
 
         String meldelisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_KO_MELDELISTE, SheetNamen.meldeliste());
-        sections.add(new ExportHtmlSeite.Section("meldeliste", I18n.get("export.nav.meldeliste"), meldelisteSheetName, null));
+        if (konfiguration.isMeldelisteExportieren()) {
+            sections.add(new ExportHtmlSeite.Section("meldeliste", I18n.get("export.nav.meldeliste"), meldelisteSheetName, null));
+        }
 
         var einzelBaumSheet = SheetMetadataHelper.findeSheetUndHeile(xDoc,
                 SheetMetadataHelper.schluesselKoTurnierbaum(""), SheetNamen.koTurnierbaumEinzel());

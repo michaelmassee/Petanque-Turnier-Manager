@@ -68,11 +68,12 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	public static final String KONFIG_PROP_TEILNEHMER_LISTE_SORT_MODUS = "Teilnehmerliste Sortierung";
 
 	// Upload / Export (für alle Systeme mit IUploadKonfigurierbar)
-	public static final String KONFIG_PROP_UPLOAD_PROTOKOLL   = "Upload Protokoll";
-	public static final String KONFIG_PROP_UPLOAD_HOST        = "Upload Host";
-	public static final String KONFIG_PROP_UPLOAD_PORT        = "Upload Port";
-	public static final String KONFIG_PROP_UPLOAD_BENUTZER    = "Upload Benutzer";
-	public static final String KONFIG_PROP_UPLOAD_VERZEICHNIS = "Upload Verzeichnis";
+	public static final String KONFIG_PROP_UPLOAD_PROTOKOLL      = "Upload Protokoll";
+	public static final String KONFIG_PROP_UPLOAD_HOST           = "Upload Host";
+	public static final String KONFIG_PROP_UPLOAD_PORT           = "Upload Port";
+	public static final String KONFIG_PROP_UPLOAD_BENUTZER       = "Upload Benutzer";
+	public static final String KONFIG_PROP_UPLOAD_VERZEICHNIS    = "Upload Verzeichnis";
+	public static final String KONFIG_PROP_MELDELISTE_EXPORTIEREN = "Meldeliste exportieren";
 
 	// Tab-Farben (Document Properties Schlüssel)
 	public static final String KONFIG_PROP_TAB_COLOR_MELDELISTE      = "Tab-Farbe Meldeliste";
@@ -208,6 +209,8 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 				.setDefaultVal("").setDescription("config.desc.upload.benutzer").exportKonfig());
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_VERZEICHNIS)
 				.setDefaultVal("").setDescription("config.desc.upload.verzeichnis").exportKonfig());
+		KONFIG_PROPERTIES.add(ConfigProperty.<Boolean>from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_MELDELISTE_EXPORTIEREN)
+				.setDefaultVal(false).setDescription("config.desc.meldeliste.exportieren").exportKonfig());
 	}
 
 	protected BasePropertiesSpalte(ISheet sheet) {
@@ -290,6 +293,11 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 
 	public Boolean readBooleanProperty(String key) {
 		return StringTools.stringToBoolean(readStringProperty(key));
+	}
+
+	@Override
+	public boolean isMeldelisteExportieren() {
+		return readBooleanProperty(KONFIG_PROP_MELDELISTE_EXPORTIEREN);
 	}
 
 	/**

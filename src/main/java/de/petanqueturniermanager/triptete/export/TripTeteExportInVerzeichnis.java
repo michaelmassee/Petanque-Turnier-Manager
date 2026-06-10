@@ -59,12 +59,14 @@ public class TripTeteExportInVerzeichnis extends AbstractExportInVerzeichnis {
         }
 
         processBox().info(I18n.get("export.info.html"));
-        List<ExportHtmlSeite.Section> sections = List.of(
-                new ExportHtmlSeite.Section("meldeliste", I18n.get("export.nav.meldeliste"), meldelisteSheetName, null),
-                new ExportHtmlSeite.Section("spielplan", I18n.get("export.nav.spielplan"), spielplanSheetName,
-                        buildPdfUrl(pdfSpielplan)),
-                new ExportHtmlSeite.Section("rangliste", I18n.get("export.nav.rangliste"), ranglisteSheetName,
-                        buildPdfUrl(pdfRangliste)));
+        List<ExportHtmlSeite.Section> sections = new ArrayList<>();
+        if (konfiguration.isMeldelisteExportieren()) {
+            sections.add(new ExportHtmlSeite.Section("meldeliste", I18n.get("export.nav.meldeliste"), meldelisteSheetName, null));
+        }
+        sections.add(new ExportHtmlSeite.Section("spielplan", I18n.get("export.nav.spielplan"), spielplanSheetName,
+                buildPdfUrl(pdfSpielplan)));
+        sections.add(new ExportHtmlSeite.Section("rangliste", I18n.get("export.nav.rangliste"), ranglisteSheetName,
+                buildPdfUrl(pdfRangliste)));
         exportierteDateien.add(exportiereHtml(zielVerzeichnis, "TripTete.html",
                 StringUtils.defaultIfBlank(StringUtils.strip(konfiguration.getKopfZeileMitte()),
                         TurnierSystem.TRIPTETE.getBezeichnung()),

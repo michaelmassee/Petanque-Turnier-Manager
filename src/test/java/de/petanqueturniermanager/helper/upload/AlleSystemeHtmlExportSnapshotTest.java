@@ -39,7 +39,7 @@ class AlleSystemeHtmlExportSnapshotTest {
                 seite(TurnierSystem.SUPERMELEE, sectionsSupermelee()),
                 seite(TurnierSystem.LIGA, LigaExportInVerzeichnis.htmlSections(
                         SheetNamen.meldeliste(), LigaSpielPlanSheet.sheetName(), "pdf/Spielplan.pdf",
-                        SheetNamen.rangliste(), "pdf/Rangliste.pdf", SheetNamen.direktvergleich())),
+                        SheetNamen.rangliste(), "pdf/Rangliste.pdf", SheetNamen.direktvergleich(), true)),
                 seite(TurnierSystem.MAASTRICHTER, sectionsMaastrichter()),
                 seite(TurnierSystem.SCHWEIZER, sectionsSchweizer()),
                 seite(TurnierSystem.JGJ, sectionsJgj()),

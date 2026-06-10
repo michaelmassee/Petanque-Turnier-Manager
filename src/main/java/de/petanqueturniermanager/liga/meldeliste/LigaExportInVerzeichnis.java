@@ -69,7 +69,8 @@ public class LigaExportInVerzeichnis extends AbstractExportInVerzeichnis {
         processBox().info(I18n.get("export.info.html"));
         List<ExportHtmlSeite.Section> sections = htmlSections(
                 meldelisteSheetName, spielplanSheetName, buildPdfUrl(pdfSpielplan),
-                ranglisteSheetName, buildPdfUrl(pdfRangliste), direktvergleichSheetName);
+                ranglisteSheetName, buildPdfUrl(pdfRangliste), direktvergleichSheetName,
+                konfiguration.isMeldelisteExportieren());
         Path htmlDatei = exportiereHtml(zielVerzeichnis, "Liga.html",
                 StringUtils.defaultIfBlank(gruppenname, TurnierSystem.LIGA.getBezeichnung()),
                 turnierlogoUrl, sections);
@@ -87,15 +88,19 @@ public class LigaExportInVerzeichnis extends AbstractExportInVerzeichnis {
 
     public static List<ExportHtmlSeite.Section> htmlSections(
             String meldelisteSheetName, String spielplanSheetName, String spielplanPdfUrl,
-            String ranglisteSheetName, String ranglistePdfUrl, String direktvergleichSheetName) {
-        return List.of(
-                new ExportHtmlSeite.Section("meldeliste", I18n.get("export.liga.nav.meldeliste"),
-                        meldelisteSheetName, null),
-                new ExportHtmlSeite.Section("spielplan", I18n.get("export.liga.nav.spielplan"),
-                        spielplanSheetName, spielplanPdfUrl),
-                new ExportHtmlSeite.Section("rangliste", I18n.get("export.liga.nav.rangliste"),
-                        ranglisteSheetName, ranglistePdfUrl),
-                new ExportHtmlSeite.Section("direktvergleich", I18n.get("export.liga.nav.direktvergleich"),
-                        direktvergleichSheetName, null));
+            String ranglisteSheetName, String ranglistePdfUrl, String direktvergleichSheetName,
+            boolean meldelisteExportieren) {
+        List<ExportHtmlSeite.Section> sections = new ArrayList<>();
+        if (meldelisteExportieren) {
+            sections.add(new ExportHtmlSeite.Section("meldeliste", I18n.get("export.liga.nav.meldeliste"),
+                    meldelisteSheetName, null));
+        }
+        sections.add(new ExportHtmlSeite.Section("spielplan", I18n.get("export.liga.nav.spielplan"),
+                spielplanSheetName, spielplanPdfUrl));
+        sections.add(new ExportHtmlSeite.Section("rangliste", I18n.get("export.liga.nav.rangliste"),
+                ranglisteSheetName, ranglistePdfUrl));
+        sections.add(new ExportHtmlSeite.Section("direktvergleich", I18n.get("export.liga.nav.direktvergleich"),
+                direktvergleichSheetName, null));
+        return sections;
     }
 }

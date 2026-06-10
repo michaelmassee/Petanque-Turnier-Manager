@@ -38,7 +38,7 @@ class LigaExportHtmlTest {
                         SheetNamen.meldeliste(), LigaSpielPlanSheet.sheetName(),
                         "https://download.example/Spielplan.pdf",
                         SheetNamen.rangliste(), "https://download.example/Rangliste.pdf",
-                        SheetNamen.direktvergleich()))
+                        SheetNamen.direktvergleich(), true))
                 .erstelleAusRendertHtml(List.of(
                         "<table><tbody><tr><td>Meldeliste</td></tr></tbody></table>",
                         "<table><tbody><tr><td>Spielplan</td></tr></tbody></table>",

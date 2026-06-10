@@ -70,6 +70,10 @@ public interface IPropertiesSpalte {
 		return true;
 	}
 
+	default boolean isMeldelisteExportieren() {
+		return false;
+	}
+
 	/**
 	 * Sortierreihenfolge der Checkin-Liste. Default {@link TeilnehmerListeSortModus#NAME}.
 	 * Verwendet dieselbe Modi-Enum wie die Teilnehmerliste.

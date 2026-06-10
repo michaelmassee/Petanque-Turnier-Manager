@@ -214,6 +214,11 @@ public abstract class BaseKonfigurationSheet extends SheetRunner implements IPro
 	}
 
 	@Override
+	public final boolean isMeldelisteExportieren() {
+		return getPropertiesSpalte().isMeldelisteExportieren();
+	}
+
+	@Override
 	public final int getMeldelisteTabFarbe() {
 		return getPropertiesSpalte().getMeldelisteTabFarbe();
 	}
