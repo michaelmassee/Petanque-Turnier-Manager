@@ -13,12 +13,28 @@
 module de { module petanqueturniermanager { module addin {
 
   interface XGlobal {
-    string ptmstringproperty([in] string propname); // return string value of property
-    long ptmintproperty([in] string propname); // return int value of property
-    string ptmturniersystem ();
-    // 2D sequence which can be assigned to a cell range in the spreadsheet.
+    // Index 0 – callerZelle: automatisch von LO injiziert (nicht vom Nutzer angegeben)
+    string ptmstringproperty(
+        [in] sequence<com::sun::star::table::XCellRange> callerZelle,
+        [in] string propname);
+    // Index 1
+    long ptmintproperty(
+        [in] sequence<com::sun::star::table::XCellRange> callerZelle,
+        [in] string propname);
+    // Index 2
+    string ptmturniersystem(
+        [in] sequence<com::sun::star::table::XCellRange> callerZelle);
+    // Index 3 – 2D sequence which can be assigned to a cell range in the spreadsheet.
     long ptmdirektvergleich ([in] long teamA,[in] long teamB, [in]sequence< sequence< long > > begegnungen, [in]sequence< sequence< long > > siege ,[in] sequence< sequence< long > > spielpunkte );
-    // Supermêlée Team-Berechnung (PTM.SUPERMELEE.*)
+    // Index 4
+    long ptmaktuellerunde(
+        [in] sequence<com::sun::star::table::XCellRange> callerZelle);
+    // Index 5
+    long ptmaktuellerspieltag(
+        [in] sequence<com::sun::star::table::XCellRange> callerZelle);
+    // Index 6
+    long ptmoperationaktiv();
+    // Supermêlée Team-Berechnung (PTM.SUPERMELEE.*) – Indizes 7-19
     long ptmsmtriplanzdoublette ([in] long anzSpieler);
     long ptmsmtriplanztriplette ([in] long anzSpieler);
     long ptmsmnurdoublette      ([in] long anzSpieler);
@@ -32,19 +48,24 @@ module de { module petanqueturniermanager { module addin {
     long ptmsmvalide                    ([in] long anzSpieler);
     long ptmsmanztriplwennnurtriplette  ([in] long anzSpieler);
     long ptmsmanzdoublwennnurdoublette  ([in] long anzSpieler);
-    // Cadrage-Berechnung (PTM.CADRAGE.*)
+    // Cadrage-Berechnung (PTM.CADRAGE.*) – Indizes 20-22
     long ptmcadrageanzteams    ([in] long anzTeams);
     long ptmcadragezielanz     ([in] long anzTeams);
     long ptmcadrageanzfreilose ([in] long anzTeams);
-    // Poule-Gruppenberechnung (PTM.POULE.*)
+    // Poule-Gruppenberechnung (PTM.POULE.*) – Indizes 23-25
     long ptmpouleanzgruppen       ([in] long anzTeams);
     long ptmpouleanzvierergruppen ([in] long anzTeams);
     long ptmpouleanzdreiergruppen ([in] long anzTeams);
-    // Boolean-Property (PTM.ALG.BOOLEANPROPERTY)
-    long ptmbooleanproperty ([in] string propname); // return 0 (false) or 1 (true)
-    // Spieler-DB-Lookup (PTM.DB.SPIELER.*)
+    // Index 26
+    long ptmbooleanproperty(
+        [in] sequence<com::sun::star::table::XCellRange> callerZelle,
+        [in] string propname);
+    // Spieler-DB-Lookup (PTM.DB.SPIELER.*) – Indizes 27-28
     long ptmdbspieleranzahl ();
     sequence< sequence< string > > ptmdbspielersuche ([in] string suche, [in] boolean wildcard);
+    // Index 29 – TEMPORÄRE DIAGNOSEMETHODE (Preflight-Verifikation, wird nach Test entfernt)
+    string ptmcallercontext(
+        [in] sequence<com::sun::star::table::XCellRange> callerZelle);
   };
 
 }; }; };

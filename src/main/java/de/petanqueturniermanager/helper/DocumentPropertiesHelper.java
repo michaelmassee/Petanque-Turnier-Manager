@@ -6,9 +6,9 @@ package de.petanqueturniermanager.helper;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.util.Hashtable;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.logging.log4j.LogManager;
@@ -28,6 +28,8 @@ import com.sun.star.frame.XModel;
 import com.sun.star.lang.IllegalArgumentException;
 import com.sun.star.lang.WrappedTargetException;
 import com.sun.star.sheet.XSpreadsheetDocument;
+import com.sun.star.uno.UnoRuntime;
+import com.sun.star.uno.XInterface;
 import com.sun.star.uno.Any;
 import com.sun.star.uno.Type;
 import com.sun.star.util.XModifiable;
@@ -50,14 +52,14 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 public class DocumentPropertiesHelper {
 	private static final Logger logger = LogManager.getLogger(DocumentPropertiesHelper.class);
 
-	// TODO ist das noch notwendig ?
-	// Wegen core dumps die ich nicht nachvolziehen kann, eigene Properties liste in speicher.
-	// Hashtable is synchronized
-	// key search ignore case
-	private static final Hashtable<Integer, Hashtable<String, String>> PROPLISTE = new Hashtable<>();
+	// Cache für Dokument-Properties im Speicher, um wiederholte UNO-Aufrufe zu vermeiden.
+	// Schlüssel: UNO-OID (via UnoRuntime.generateOid), stabile Identität unabhängig von
+	// Java-Proxy-Instanzen. ConcurrentHashMap statt Hashtable für bessere Nebenläufigkeit.
+	private static final ConcurrentHashMap<String, ConcurrentHashMap<String, String>> PROPLISTE =
+	        new ConcurrentHashMap<>();
 
 	private final XSpreadsheetDocument xSpreadsheetDocument;
-	private final Hashtable<String, String> currentPropListe;
+	private final ConcurrentHashMap<String, String> currentPropListe;
 	private boolean firstLoad = false;
 
 	public DocumentPropertiesHelper(WorkingSpreadsheet currentSpreadsheet) {
@@ -66,26 +68,32 @@ public class DocumentPropertiesHelper {
 
 	public DocumentPropertiesHelper(XSpreadsheetDocument xSpreadsheetDocument) {
 		this.xSpreadsheetDocument = checkNotNull(xSpreadsheetDocument);
-		Integer xSpreadsheetDocumentHash = xSpreadsheetDocument.hashCode();
-		if (PROPLISTE.containsKey((xSpreadsheetDocumentHash))) {
-			currentPropListe = PROPLISTE.get(xSpreadsheetDocumentHash);
+		var oid = dokumentOid(xSpreadsheetDocument);
+		var cachedListe = PROPLISTE.get(oid);
+		if (cachedListe != null) {
+			currentPropListe = cachedListe;
 		} else {
 			// einmal laden
-			currentPropListe = new Hashtable<>();
-			// properties aus dokument laden
+			var neueListe = new ConcurrentHashMap<String, String>();
 			XMultiPropertySet xMultiPropertySet = getXMultiPropertySet();
 			XPropertySet xPropertySet = getXPropertySet();
 			Property[] properties = xMultiPropertySet.getPropertySetInfo().getProperties();
 			for (Property userProp : properties) {
 				try {
 					Object propVal = xPropertySet.getPropertyValue(userProp.Name);
-					currentPropListe.put(userProp.Name, propVal.toString());
+					neueListe.put(userProp.Name, propVal.toString());
 				} catch (UnknownPropertyException | WrappedTargetException e) {
+					// Property nicht lesbar – überspringen
 				}
 			}
-			PROPLISTE.put(xSpreadsheetDocumentHash, currentPropListe);
-			firstLoad = true;
+			var vorhandene = PROPLISTE.putIfAbsent(oid, neueListe);
+			currentPropListe = vorhandene != null ? vorhandene : neueListe;
+			firstLoad = vorhandene == null;
 		}
+	}
+
+	private static String dokumentOid(XSpreadsheetDocument doc) {
+		return UnoRuntime.generateOid(Lo.qi(XInterface.class, doc));
 	}
 
 	public boolean isEmpty() {
@@ -93,16 +101,21 @@ public class DocumentPropertiesHelper {
 	}
 
 	/**
-	 * Document close
+	 * Document close – entfernt den Cache-Eintrag für das geschlossene Dokument.
 	 */
-	public static synchronized void removeDocument(Object source) {
+	public static void removeDocument(Object source) {
 		try {
 			if (source != null) {
 				XModel xModel = Lo.qi(XModel.class, source);
 				XSpreadsheetDocument xSpreadsheetDocument = Lo.qi(XSpreadsheetDocument.class, xModel);
 				// null dann wenn kein XSpreadsheetDocument
 				if (xSpreadsheetDocument != null) {
-					PROPLISTE.remove(xSpreadsheetDocument.hashCode());
+					var oid = dokumentOid(xSpreadsheetDocument);
+					var removed = PROPLISTE.remove(oid);
+					if (removed == null) {
+						logger.warn("removeDocument: Kein Cache-Eintrag für OID={}, Class={}",
+								oid, source.getClass().getName());
+					}
 				}
 			}
 		} catch (Exception e) {

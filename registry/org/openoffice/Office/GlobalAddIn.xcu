@@ -839,6 +839,25 @@
 					<prop oor:name="Category"><value>Add-In</value></prop>
 				</node>
 
+				<!-- TEMPORÄRE DIAGNOSEMETHODE – Preflight-Verifikation, wird nach Test entfernt -->
+				<node oor:name="ptmcallercontext" oor:op="replace">
+					<prop oor:name="DisplayName">
+						<value xml:lang="en">PTM.TEST.CALLERCONTEXT</value>
+						<value xml:lang="de">PTM.TEST.CALLERCONTEXT</value>
+						<value xml:lang="es">PTM.TEST.CALLERCONTEXT</value>
+						<value xml:lang="fr">PTM.TEST.CALLERCONTEXT</value>
+						<value xml:lang="nl">PTM.TEST.CALLERCONTEXT</value>
+					</prop>
+					<prop oor:name="Description">
+						<value xml:lang="en">Petanque Turniermanager: TEMPORARY diagnostic – returns URL, Gruppenname and current document URL to verify correct document context injection.</value>
+						<value xml:lang="de">Petanque Turniermanager: TEMPORÄRE Diagnose – liefert URL, Gruppenname und aktuelle Dokument-URL zur Verifikation der Dokumentkontext-Injektion.</value>
+						<value xml:lang="es">Petanque Turniermanager: TEMPORAL diagnóstico – devuelve URL, Gruppenname y URL del documento actual.</value>
+						<value xml:lang="fr">Petanque Turniermanager : TEMPORAIRE diagnostic – renvoie l'URL, Gruppenname et l'URL du document courant.</value>
+						<value xml:lang="nl">Petanque Turniermanager: TIJDELIJKE diagnose – geeft URL, Gruppenname en huidige document-URL terug.</value>
+					</prop>
+					<prop oor:name="Category"><value>Add-In</value></prop>
+				</node>
+
 			</node>
 		</node>
 	</node>
