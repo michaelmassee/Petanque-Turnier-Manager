@@ -14,6 +14,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.upload.AbstractExportInVerzeichnis;
 import de.petanqueturniermanager.helper.upload.ExportErgebnis;
 import de.petanqueturniermanager.helper.upload.ExportHtmlSeite;
@@ -41,13 +42,16 @@ public class JGJExportInVerzeichnis extends AbstractExportInVerzeichnis {
 
         List<Path> exportierteDateien = new ArrayList<>();
 
-        String ranglisteSheetName = SheetNamen.rangliste();
+        String meldelisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_JGJ_MELDELISTE, SheetNamen.meldeliste());
+        String spielplanSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_JGJ_SPIELPLAN, JGJSpielPlanSheet.sheetName());
+        String ranglisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_JGJ_RANGLISTE, SheetNamen.rangliste());
+        String direktvergleichSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_JGJ_DIREKTVERGLEICH, SheetNamen.direktvergleich());
+
         Path pdfRangliste = exportierePdfWennTabelleVorhanden(ranglisteSheetName, zielVerzeichnis);
         if (pdfRangliste != null) {
             exportierteDateien.add(pdfRangliste);
         }
 
-        String direktvergleichSheetName = SheetNamen.direktvergleich();
         Path pdfDirektvergleich = exportierePdfWennTabelleVorhanden(direktvergleichSheetName, zielVerzeichnis);
         if (pdfDirektvergleich != null) {
             exportierteDateien.add(pdfDirektvergleich);
@@ -55,11 +59,11 @@ public class JGJExportInVerzeichnis extends AbstractExportInVerzeichnis {
 
         processBox().info(I18n.get("export.info.html"));
         List<ExportHtmlSeite.Section> sections = List.of(
-                new ExportHtmlSeite.Section("meldeliste", SheetNamen.meldeliste(), SheetNamen.meldeliste(), null),
-                new ExportHtmlSeite.Section("spielplan", SheetNamen.spielplan(), JGJSpielPlanSheet.sheetName(), null),
-                new ExportHtmlSeite.Section("rangliste", ranglisteSheetName, ranglisteSheetName,
+                new ExportHtmlSeite.Section("meldeliste", I18n.get("export.nav.meldeliste"), meldelisteSheetName, null),
+                new ExportHtmlSeite.Section("spielplan", I18n.get("export.nav.spielplan"), spielplanSheetName, null),
+                new ExportHtmlSeite.Section("rangliste", I18n.get("export.nav.rangliste"), ranglisteSheetName,
                         buildPdfUrl(baseDownloadUrl, pdfRangliste)),
-                new ExportHtmlSeite.Section("direktvergleich", direktvergleichSheetName, direktvergleichSheetName,
+                new ExportHtmlSeite.Section("direktvergleich", I18n.get("export.nav.direktvergleich"), direktvergleichSheetName,
                         buildPdfUrl(baseDownloadUrl, pdfDirektvergleich)));
         exportierteDateien.add(exportiereHtml(zielVerzeichnis, "JederGegenJeden.html",
                 StringUtils.defaultIfBlank(StringUtils.strip(konfiguration.getKopfZeileMitte()),

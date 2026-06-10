@@ -14,6 +14,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.upload.AbstractExportInVerzeichnis;
 import de.petanqueturniermanager.helper.upload.ExportErgebnis;
 import de.petanqueturniermanager.helper.upload.ExportHtmlSeite;
@@ -40,23 +41,28 @@ public class MaastrichterExportInVerzeichnis extends AbstractExportInVerzeichnis
 
         List<Path> exportierteDateien = new ArrayList<>();
         List<ExportHtmlSeite.Section> sections = new ArrayList<>();
-        sections.add(new ExportHtmlSeite.Section("meldeliste", SheetNamen.meldeliste(), SheetNamen.meldeliste(), null));
 
-        String ranglisteSheetName = SheetNamen.maastrichterVorrundenRangliste();
+        String meldelisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_MELDELISTE, SheetNamen.meldeliste());
+        sections.add(new ExportHtmlSeite.Section("meldeliste", I18n.get("export.nav.meldeliste"), meldelisteSheetName, null));
+
+        String ranglisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX, SheetNamen.maastrichterVorrundenRangliste());
         Path pdfRangliste = exportierePdfWennTabelleVorhanden(ranglisteSheetName, zielVerzeichnis);
         if (pdfRangliste != null) {
             exportierteDateien.add(pdfRangliste);
         }
-        sections.add(new ExportHtmlSeite.Section("vorrunden-rangliste", ranglisteSheetName, ranglisteSheetName,
+        sections.add(new ExportHtmlSeite.Section("vorrunden-rangliste",
+                I18n.get("export.maastrichter.nav.vorrunden.rangliste"), ranglisteSheetName,
                 buildPdfUrl(baseDownloadUrl, pdfRangliste)));
 
-        for (String sheetName : vorhandeneBuchstabenSheets(SheetNamen::koFinaleGruppe)) {
-            Path pdf = exportierePdfWennTabelleVorhanden(sheetName, zielVerzeichnis);
+        for (var eintrag : buchstabenSheetEintraegePerSchluessel(
+                SheetMetadataHelper::schluesselMaastrichterFinalrunde, SheetNamen::koFinaleGruppe)) {
+            Path pdf = exportierePdfWennTabelleVorhanden(eintrag.sheetName(), zielVerzeichnis);
             if (pdf != null) {
                 exportierteDateien.add(pdf);
             }
-            sections.add(new ExportHtmlSeite.Section("ko-" + sheetName, sheetName, sheetName,
-                    buildPdfUrl(baseDownloadUrl, pdf)));
+            sections.add(new ExportHtmlSeite.Section("finalrunde-" + eintrag.buchstabe(),
+                    I18n.get("export.maastrichter.nav.finalrunde", eintrag.buchstabe()),
+                    eintrag.sheetName(), buildPdfUrl(baseDownloadUrl, pdf)));
         }
 
         processBox().info(I18n.get("export.info.html"));

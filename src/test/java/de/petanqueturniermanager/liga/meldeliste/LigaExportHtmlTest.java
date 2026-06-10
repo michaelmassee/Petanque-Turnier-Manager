@@ -16,7 +16,9 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.upload.ExportHtmlSeite;
+import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet;
 
 class LigaExportHtmlTest {
 
@@ -33,8 +35,10 @@ class LigaExportHtmlTest {
                 .titel("Liga Test")
                 .logoUrl("https://example.org/logo.png?a=1&b=2")
                 .sections(LigaExportInVerzeichnis.htmlSections(
+                        SheetNamen.meldeliste(), LigaSpielPlanSheet.sheetName(),
                         "https://download.example/Spielplan.pdf",
-                        "https://download.example/Rangliste.pdf"))
+                        SheetNamen.rangliste(), "https://download.example/Rangliste.pdf",
+                        SheetNamen.direktvergleich()))
                 .erstelleAusRendertHtml(List.of(
                         "<table><tbody><tr><td>Meldeliste</td></tr></tbody></table>",
                         "<table><tbody><tr><td>Spielplan</td></tr></tbody></table>",

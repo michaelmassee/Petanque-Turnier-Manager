@@ -16,12 +16,16 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.sun.star.container.XNamed;
+
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.io.PdfExport;
 
 public abstract class AbstractExportInVerzeichnis extends SheetRunner {
@@ -93,17 +97,35 @@ public abstract class AbstractExportInVerzeichnis extends SheetRunner {
         }
     }
 
-    protected List<String> vorhandeneBuchstabenSheets(Function<String, String> sheetNameFunktion)
-            throws GenerateException {
-        List<String> sheetNamen = new ArrayList<>();
+    /**
+     * Löst den aktuellen Sheet-Namen über den Metadaten-Schlüssel auf.
+     * Gibt den Fallback-Namen zurück, wenn kein Sheet gefunden wird.
+     */
+    protected String sheetNamePerSchluessel(String schluessel, String fallbackName) {
+        var xSheet = SheetMetadataHelper.findeSheetUndHeile(
+                getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), schluessel, fallbackName);
+        return xSheet != null ? Lo.qi(XNamed.class, xSheet).getName() : fallbackName;
+    }
+
+    /**
+     * Iteriert A–Z und liefert alle Sheets zurück, die über Metadaten-Schlüssel oder Fallback-Name gefunden werden.
+     */
+    protected List<SheetEintrag> buchstabenSheetEintraegePerSchluessel(
+            Function<String, String> schluesselFunktion, Function<String, String> fallbackFunktion) {
+        var xDoc = getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
+        var result = new ArrayList<SheetEintrag>();
         for (char c = 'A'; c <= 'Z'; c++) {
-            String sheetName = sheetNameFunktion.apply(String.valueOf(c));
-            if (getSheetHelper().findByName(sheetName) != null) {
-                sheetNamen.add(sheetName);
+            var buchstabe = String.valueOf(c);
+            var schluessel = schluesselFunktion.apply(buchstabe);
+            var xSheet = SheetMetadataHelper.findeSheetUndHeile(xDoc, schluessel, fallbackFunktion.apply(buchstabe));
+            if (xSheet != null) {
+                result.add(new SheetEintrag(buchstabe, schluessel, Lo.qi(XNamed.class, xSheet).getName()));
             }
         }
-        return sheetNamen;
+        return result;
     }
+
+    public record SheetEintrag(String buchstabe, String schluessel, String sheetName) {}
 
     protected String buildPdfUrl(String baseDownloadUrl, Path pdf) {
         String dateiname = dateiName(pdf);

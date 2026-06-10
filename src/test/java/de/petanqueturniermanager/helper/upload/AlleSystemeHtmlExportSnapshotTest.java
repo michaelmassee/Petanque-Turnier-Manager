@@ -17,6 +17,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.liga.meldeliste.LigaExportInVerzeichnis;
+import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet;
 
 class AlleSystemeHtmlExportSnapshotTest {
 
@@ -37,7 +38,8 @@ class AlleSystemeHtmlExportSnapshotTest {
         return String.join("\n\n", List.of(
                 seite(TurnierSystem.SUPERMELEE, sectionsSupermelee()),
                 seite(TurnierSystem.LIGA, LigaExportInVerzeichnis.htmlSections(
-                        "pdf/Spielplan.pdf", "pdf/Rangliste.pdf")),
+                        SheetNamen.meldeliste(), LigaSpielPlanSheet.sheetName(), "pdf/Spielplan.pdf",
+                        SheetNamen.rangliste(), "pdf/Rangliste.pdf", SheetNamen.direktvergleich())),
                 seite(TurnierSystem.MAASTRICHTER, sectionsMaastrichter()),
                 seite(TurnierSystem.SCHWEIZER, sectionsSchweizer()),
                 seite(TurnierSystem.JGJ, sectionsJgj()),
