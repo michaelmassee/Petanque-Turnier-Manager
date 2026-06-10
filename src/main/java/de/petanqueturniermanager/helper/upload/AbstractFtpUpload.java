@@ -42,7 +42,11 @@ public abstract class AbstractFtpUpload extends SheetRunner {
 
         String passwort = GlobalProperties.get().getUploadPasswort(konfig.host());
         if (passwort.isEmpty()) {
-            throw new GenerateException(I18n.get("ftp.upload.fehler.passwort.fehlt", konfig.host()));
+            var eingabe = PasswortEingabeDialog.zeigen(getWorkingSpreadsheet(), konfig.host());
+            if (eingabe.isEmpty()) {
+                throw new GenerateException(I18n.get("upload.passwort.abgebrochen"));
+            }
+            passwort = eingabe.get();
         }
 
         try {
