@@ -47,21 +47,19 @@ public class UpdatePropertieFunctionsSheetRecalcOnLoad implements IGlobalEventLi
 			SheetMetadataHelper.bereinigeVerwaisteMetadaten(xSpreadsheetDocument);
 		}
 
-		// propertie funktions failed on load Document?
-		if (GlobalImpl.getAndSetDirty(false)) {
-			if (istPtmDokument) {
-				// just do a global recalc
-				XCalculatable xCal = Lo.qi(XCalculatable.class, xSpreadsheetDocument);
-				if (xCal != null) {
-					logger.debug("onload calculateAll weil IsDirty Propertie-Funktions");
-					// nachteil das wird beim laden doppelt gemacht
-					xCal.calculateAll();
-					GlobalImpl.getAndSetDirty(false); // weil es sein kann das wir ein leeres document laden mit propertie funktionen
-				}
-			} else {
-				logger.debug("set dirty false");
-				GlobalImpl.getAndSetDirty(false); // weil es sein kann das wir ein leeres document laden mit propertie funktionen
+		boolean warDirty = GlobalImpl.getAndSetDirty(false);
+		if (istPtmDokument) {
+			// Beim Laden kann Calc AddIn-Formeln auswerten, während noch ein anderes
+			// Dokument fokussiert ist. Der dokumentgebundene Recalc überschreibt diese
+			// Werte mit dem tatsächlichen Ladedokument als Kontext.
+			XCalculatable xCal = Lo.qi(XCalculatable.class, xSpreadsheetDocument);
+			if (xCal != null) {
+				logger.debug("onload calculateAll mit Dokument-Kontext (dirty={})", warDirty);
+				GlobalImpl.mitDokumentKontext(xSpreadsheetDocument, xCal::calculateAll);
+				GlobalImpl.getAndSetDirty(false);
 			}
+		} else if (warDirty) {
+			logger.debug("set dirty false");
 		}
 	}
 

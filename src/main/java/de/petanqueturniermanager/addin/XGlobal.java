@@ -2,7 +2,6 @@ package de.petanqueturniermanager.addin;
 
 import com.sun.star.lib.uno.typeinfo.MethodTypeInfo;
 import com.sun.star.lib.uno.typeinfo.TypeInfo;
-import com.sun.star.table.XCellRange;
 import com.sun.star.uno.XInterface;
 
 /**
@@ -11,9 +10,6 @@ import com.sun.star.uno.XInterface;
  *
  * UNOTYPEINFO is required so the UNO bridge can resolve method signatures
  * without a compiled .rdb type library.
- *
- * callerZelle: Erster Parameter in LO CalcAddIn-Methoden, der automatisch von LO injiziert wird.
- * Enthält die aufrufende Zelle als XCellRange-Array. Nicht vom Nutzer anzugeben.
  */
 public interface XGlobal extends XInterface {
 
@@ -48,21 +44,19 @@ public interface XGlobal extends XInterface {
         new MethodTypeInfo("ptmbooleanproperty",                26, 0),
         new MethodTypeInfo("ptmdbspieleranzahl",                27, 0),
         new MethodTypeInfo("ptmdbspielersuche",                 28, 0),
-        // Index 29: TEMPORÄRE DIAGNOSEMETHODE (Preflight, wird nach Verifikation entfernt)
-        new MethodTypeInfo("ptmcallercontext",                  29, 0),
     };
 
-    String ptmstringproperty(XCellRange[] callerZelle, String propname);
+    String ptmstringproperty(String propname);
 
-    int ptmintproperty(XCellRange[] callerZelle, String propname);
+    int ptmintproperty(String propname);
 
-    String ptmturniersystem(XCellRange[] callerZelle);
+    String ptmturniersystem();
 
     int ptmdirektvergleich(int teamA, int teamB, int[][] begegnungen, int[][] siege, int[][] spielpunkte);
 
-    int ptmaktuellerunde(XCellRange[] callerZelle);
+    int ptmaktuellerunde();
 
-    int ptmaktuellerspieltag(XCellRange[] callerZelle);
+    int ptmaktuellerspieltag();
 
     int ptmoperationaktiv();
 
@@ -104,12 +98,10 @@ public interface XGlobal extends XInterface {
 
     int ptmpouleanzdreiergruppen(int anzTeams);
 
-    int ptmbooleanproperty(XCellRange[] callerZelle, String propname);
+    int ptmbooleanproperty(String propname);
 
     int ptmdbspieleranzahl();
 
     String[][] ptmdbspielersuche(String suche, boolean wildcard);
 
-    // TEMPORÄRE DIAGNOSEMETHODE – Preflight-Verifikation, wird nach Test entfernt
-    String ptmcallercontext(XCellRange[] callerZelle);
 }

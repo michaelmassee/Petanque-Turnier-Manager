@@ -8,14 +8,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.sun.star.container.XChild;
-import com.sun.star.frame.XModel;
-import com.sun.star.lang.XServiceInfo;
 import com.sun.star.lang.XSingleComponentFactory;
 import com.sun.star.lib.uno.helper.Factory;
 import com.sun.star.registry.XRegistryKey;
 import com.sun.star.sheet.XSpreadsheetDocument;
-import com.sun.star.table.XCellRange;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
@@ -49,6 +45,7 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	};
 
 	private static final AtomicBoolean isDirty = new AtomicBoolean(false);
+	private static final ThreadLocal<XSpreadsheetDocument> dokumentKontext = new ThreadLocal<>();
 
 	// DisplayNames aus GlobalAddIn.xcu - diese werden für Formeln in Calc verwendet
 	// =PTM.ALG.INTPROPERTY("propertyname")
@@ -120,44 +117,35 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	// ------------------- XGlobal function(s) -----------------
 
 	/**
-	 * Extrahiert den {@link XSpreadsheetDocument} aus dem LO-injizierten {@code callerZelle}-Parameter.
-	 * Traversiert die XChild-Kette aufwärts (max. 10 Ebenen) bis ein XSpreadsheetDocument gefunden wird.
-	 * Greift als letzter Fallback auf {@code getCurrentComponent()} zurück (fokussiertes Dokument).
+	 * bei jeden call das aktive Dokument ermitteln
+	 * 
+	 * @return
 	 */
-	private XSpreadsheetDocument dokumentAusZelle(XCellRange[] callerZelle) {
-		if (callerZelle != null && callerZelle.length > 0 && callerZelle[0] != null) {
-			Object current = callerZelle[0];
-			for (int tiefe = 0; tiefe < 10; tiefe++) {
-				var model = Lo.qi(XModel.class, current);
-				if (model != null) {
-					var doc = Lo.qi(XSpreadsheetDocument.class, model);
-					if (doc != null) {
-						return doc;
-					}
-				}
-				var child = Lo.qi(XChild.class, current);
-				if (child == null) {
-					break;
-				}
-				var parent = child.getParent();
-				if (parent == null || parent == current) {
-					break;
-				}
-				current = parent;
-			}
-			var info = Lo.qi(XServiceInfo.class, callerZelle[0]);
-			logger.warn("dokumentAusZelle: XCellRange-Extraktion gescheitert, Fallback auf getCurrentComponent(). Impl={}",
-					info != null ? info.getImplementationName() : "unbekannt");
+
+	public static void mitDokumentKontext(XSpreadsheetDocument doc, Runnable aktion) {
+		XSpreadsheetDocument vorher = dokumentKontext.get();
+		if (doc != null) {
+			dokumentKontext.set(doc);
+		} else {
+			dokumentKontext.remove();
 		}
-		return DocumentHelper.getCurrentSpreadsheetDocument(xContext);
+		try {
+			aktion.run();
+		} finally {
+			if (vorher != null) {
+				dokumentKontext.set(vorher);
+			} else {
+				dokumentKontext.remove();
+			}
+		}
 	}
 
-	/**
-	 * Liefert den {@link DocumentPropertiesHelper} für das Dokument, in dem die aufrufende Formelzelle liegt.
-	 */
-	private DocumentPropertiesHelper getDocumentPropertiesHelper(XCellRange[] callerZelle) {
+	private DocumentPropertiesHelper getDocumentPropertiesHelper() {
 		try {
-			XSpreadsheetDocument doc = dokumentAusZelle(callerZelle);
+			XSpreadsheetDocument doc = dokumentKontext.get();
+			if (doc == null) {
+				doc = DocumentHelper.getCurrentSpreadsheetDocument(xContext);
+			}
 			if (doc != null) {
 				DocumentPropertiesHelper hlpr = new DocumentPropertiesHelper(doc);
 				if (hlpr.isEmpty() && hlpr.isFirstLoad()) {
@@ -184,8 +172,8 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	}
 
 	@Override
-	public int ptmintproperty(XCellRange[] callerZelle, String propname) {
-		DocumentPropertiesHelper hlpr = getDocumentPropertiesHelper(callerZelle);
+	public int ptmintproperty(String propname) {
+		DocumentPropertiesHelper hlpr = getDocumentPropertiesHelper();
 		if (hlpr != null) {
 			TurnierSystem turnierSystemAusDocument = hlpr.getTurnierSystemAusDocument();
 
@@ -199,8 +187,8 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	}
 
 	@Override
-	public String ptmstringproperty(XCellRange[] callerZelle, String propname) {
-		DocumentPropertiesHelper hlpr = getDocumentPropertiesHelper(callerZelle);
+	public String ptmstringproperty(String propname) {
+		DocumentPropertiesHelper hlpr = getDocumentPropertiesHelper();
 		if (hlpr != null) {
 			TurnierSystem turnierSystemAusDocument = hlpr.getTurnierSystemAusDocument();
 
@@ -214,8 +202,8 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	}
 
 	@Override
-	public int ptmbooleanproperty(XCellRange[] callerZelle, String propname) {
-		DocumentPropertiesHelper hlpr = getDocumentPropertiesHelper(callerZelle);
+	public int ptmbooleanproperty(String propname) {
+		DocumentPropertiesHelper hlpr = getDocumentPropertiesHelper();
 		if (hlpr != null) {
 			TurnierSystem turnierSystemAusDocument = hlpr.getTurnierSystemAusDocument();
 
@@ -230,8 +218,8 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	}
 
 	@Override
-	public String ptmturniersystem(XCellRange[] callerZelle) {
-		DocumentPropertiesHelper hlpr = getDocumentPropertiesHelper(callerZelle);
+	public String ptmturniersystem() {
+		DocumentPropertiesHelper hlpr = getDocumentPropertiesHelper();
 		if (hlpr != null) {
 			TurnierSystem turnierSystemAusDocument = hlpr.getTurnierSystemAusDocument();
 			return turnierSystemAusDocument.getBezeichnung();
@@ -250,8 +238,8 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	}
 
 	@Override
-	public int ptmaktuellerunde(XCellRange[] callerZelle) {
-		DocumentPropertiesHelper hlpr = getDocumentPropertiesHelper(callerZelle);
+	public int ptmaktuellerunde() {
+		DocumentPropertiesHelper hlpr = getDocumentPropertiesHelper();
 		if (hlpr != null) {
 			return hlpr.getIntProperty("Spielrunde", 0);
 		}
@@ -259,37 +247,12 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	}
 
 	@Override
-	public int ptmaktuellerspieltag(XCellRange[] callerZelle) {
-		DocumentPropertiesHelper hlpr = getDocumentPropertiesHelper(callerZelle);
+	public int ptmaktuellerspieltag() {
+		DocumentPropertiesHelper hlpr = getDocumentPropertiesHelper();
 		if (hlpr != null) {
 			return hlpr.getIntProperty("Spieltag", 0);
 		}
 		return 0;
-	}
-
-	@Override
-	public String ptmcallercontext(XCellRange[] callerZelle) {
-		var doc = dokumentAusZelle(callerZelle);
-		var currentDoc = DocumentHelper.getCurrentSpreadsheetDocument(xContext);
-
-		String docUrl = "(null)";
-		String gruppenname = "(null)";
-		if (doc != null) {
-			var model = Lo.qi(com.sun.star.frame.XModel.class, doc);
-			if (model != null) {
-				docUrl = model.getURL();
-			}
-			var hlpr = new DocumentPropertiesHelper(doc);
-			gruppenname = hlpr.getStringProperty("Gruppenname", "(nicht gesetzt)");
-		}
-		String currentUrl = "(null)";
-		if (currentDoc != null) {
-			var model = Lo.qi(com.sun.star.frame.XModel.class, currentDoc);
-			if (model != null) {
-				currentUrl = model.getURL();
-			}
-		}
-		return "URL=" + docUrl + "|Gruppenname=" + gruppenname + "|current=" + currentUrl;
 	}
 
 	@Override

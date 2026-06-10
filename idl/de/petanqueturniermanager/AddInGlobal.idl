@@ -3,7 +3,6 @@
 
 
 #include <com/sun/star/uno/XInterface.idl>
-#include <com/sun/star/table/XCellRange.idl>
 #include <com/sun/star/sheet/XVolatileResult.idl>
 
 // https://api.libreoffice.org/docs/idl/ref/servicecom_1_1sun_1_1star_1_1sheet_1_1AddIn.html
@@ -13,26 +12,13 @@
 module de { module petanqueturniermanager { module addin {
 
   interface XGlobal {
-    // Index 0 – callerZelle: automatisch von LO injiziert (nicht vom Nutzer angegeben)
-    string ptmstringproperty(
-        [in] sequence<com::sun::star::table::XCellRange> callerZelle,
-        [in] string propname);
-    // Index 1
-    long ptmintproperty(
-        [in] sequence<com::sun::star::table::XCellRange> callerZelle,
-        [in] string propname);
-    // Index 2
-    string ptmturniersystem(
-        [in] sequence<com::sun::star::table::XCellRange> callerZelle);
+    string ptmstringproperty([in] string propname); // return string value of property
+    long ptmintproperty([in] string propname); // return int value of property
+    string ptmturniersystem ();
     // Index 3 – 2D sequence which can be assigned to a cell range in the spreadsheet.
     long ptmdirektvergleich ([in] long teamA,[in] long teamB, [in]sequence< sequence< long > > begegnungen, [in]sequence< sequence< long > > siege ,[in] sequence< sequence< long > > spielpunkte );
-    // Index 4
-    long ptmaktuellerunde(
-        [in] sequence<com::sun::star::table::XCellRange> callerZelle);
-    // Index 5
-    long ptmaktuellerspieltag(
-        [in] sequence<com::sun::star::table::XCellRange> callerZelle);
-    // Index 6
+    long ptmaktuellerunde();
+    long ptmaktuellerspieltag();
     long ptmoperationaktiv();
     // Supermêlée Team-Berechnung (PTM.SUPERMELEE.*) – Indizes 7-19
     long ptmsmtriplanzdoublette ([in] long anzSpieler);
@@ -56,16 +42,11 @@ module de { module petanqueturniermanager { module addin {
     long ptmpouleanzgruppen       ([in] long anzTeams);
     long ptmpouleanzvierergruppen ([in] long anzTeams);
     long ptmpouleanzdreiergruppen ([in] long anzTeams);
-    // Index 26
-    long ptmbooleanproperty(
-        [in] sequence<com::sun::star::table::XCellRange> callerZelle,
-        [in] string propname);
+    // Boolean-Property (PTM.ALG.BOOLEANPROPERTY)
+    long ptmbooleanproperty ([in] string propname); // return 0 (false) or 1 (true)
     // Spieler-DB-Lookup (PTM.DB.SPIELER.*) – Indizes 27-28
     long ptmdbspieleranzahl ();
     sequence< sequence< string > > ptmdbspielersuche ([in] string suche, [in] boolean wildcard);
-    // Index 29 – TEMPORÄRE DIAGNOSEMETHODE (Preflight-Verifikation, wird nach Test entfernt)
-    string ptmcallercontext(
-        [in] sequence<com::sun::star::table::XCellRange> callerZelle);
   };
 
 }; }; };
