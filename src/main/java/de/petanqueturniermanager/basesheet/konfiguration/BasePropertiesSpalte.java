@@ -199,8 +199,10 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	 * Aufzurufen von jedem System, das {@code IUploadKonfigurierbar} implementiert.
 	 */
 	protected static void ADDUploadProp(List<ConfigProperty<?>> KONFIG_PROPERTIES) {
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_PROTOKOLL)
-				.setDefaultVal("FTP").setDescription("config.desc.upload.protokoll").exportKonfig());
+		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_UPLOAD_PROTOKOLL)
+				.setDefaultVal("SFTP").setDescription("config.desc.upload.protokoll").exportKonfig())
+				.addAuswahl("SFTP", "SFTP")
+				.addAuswahl("FTP", "FTP"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_HOST)
 				.setDefaultVal("").setDescription("config.desc.upload.host").exportKonfig());
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_UPLOAD_PORT)
