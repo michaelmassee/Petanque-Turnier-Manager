@@ -44,13 +44,15 @@ public class PouleExportInVerzeichnis extends AbstractExportInVerzeichnis {
         }
 
         processBox().info(I18n.get("export.info.html"));
+        boolean meldelisteExportieren = konfiguration.isMeldelisteExportieren();
         List<ExportHtmlSeite.Section> sections = new ArrayList<>();
-        if (konfiguration.isMeldelisteExportieren()) {
+        if (meldelisteExportieren) {
             sections.add(new ExportHtmlSeite.Section("meldeliste", I18n.get("export.nav.meldeliste"), meldelisteSheetName, null));
         }
         sections.add(new ExportHtmlSeite.Section("rangliste", I18n.get("export.nav.poule.vorrunden.rangliste"), ranglisteSheetName,
                 buildPdfUrl(pdfRangliste)));
-        exportierteDateien.add(exportiereHtml(zielVerzeichnis, "Poule.html",
+        exportierteDateien.add(exportiereHtmlMitMeldelisteDruckbereich(meldelisteExportieren, meldelisteSheetName,
+                zielVerzeichnis, "Poule.html",
                 StringUtils.defaultIfBlank(StringUtils.strip(konfiguration.getKopfZeileMitte()),
                         TurnierSystem.POULE.getBezeichnung()),
                 StringUtils.strip(konfiguration.getTurnierlogoUrl()), sections));

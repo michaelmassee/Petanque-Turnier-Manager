@@ -37,7 +37,8 @@ public class KaskadeExportInVerzeichnis extends AbstractExportInVerzeichnis {
         List<ExportHtmlSeite.Section> sections = new ArrayList<>();
 
         String meldelisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_KASKADE_MELDELISTE, SheetNamen.meldeliste());
-        if (konfiguration.isMeldelisteExportieren()) {
+        boolean meldelisteExportieren = konfiguration.isMeldelisteExportieren();
+        if (meldelisteExportieren) {
             sections.add(new ExportHtmlSeite.Section("meldeliste", I18n.get("export.nav.meldeliste"), meldelisteSheetName, null));
         }
 
@@ -62,7 +63,8 @@ public class KaskadeExportInVerzeichnis extends AbstractExportInVerzeichnis {
         }
 
         processBox().info(I18n.get("export.info.html"));
-        exportierteDateien.add(exportiereHtml(zielVerzeichnis, "KaskadenKO.html",
+        exportierteDateien.add(exportiereHtmlMitMeldelisteDruckbereich(meldelisteExportieren, meldelisteSheetName,
+                zielVerzeichnis, "KaskadenKO.html",
                 StringUtils.defaultIfBlank(StringUtils.strip(konfiguration.getKopfZeileMitte()),
                         TurnierSystem.KASKADE.getBezeichnung()),
                 StringUtils.strip(konfiguration.getTurnierlogoUrl()), sections));

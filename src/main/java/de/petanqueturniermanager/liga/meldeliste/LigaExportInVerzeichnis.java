@@ -67,11 +67,13 @@ public class LigaExportInVerzeichnis extends AbstractExportInVerzeichnis {
                         .doExport());
 
         processBox().info(I18n.get("export.info.html"));
+        boolean meldelisteExportieren = konfiguration.isMeldelisteExportieren();
         List<ExportHtmlSeite.Section> sections = htmlSections(
                 meldelisteSheetName, spielplanSheetName, buildPdfUrl(pdfSpielplan),
                 ranglisteSheetName, buildPdfUrl(pdfRangliste), direktvergleichSheetName,
-                konfiguration.isMeldelisteExportieren());
-        Path htmlDatei = exportiereHtml(zielVerzeichnis, "Liga.html",
+                meldelisteExportieren);
+        Path htmlDatei = exportiereHtmlMitMeldelisteDruckbereich(meldelisteExportieren, meldelisteSheetName,
+                zielVerzeichnis, "Liga.html",
                 StringUtils.defaultIfBlank(gruppenname, TurnierSystem.LIGA.getBezeichnung()),
                 turnierlogoUrl, sections);
 

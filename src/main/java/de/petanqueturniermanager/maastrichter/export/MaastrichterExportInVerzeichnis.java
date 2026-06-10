@@ -37,7 +37,8 @@ public class MaastrichterExportInVerzeichnis extends AbstractExportInVerzeichnis
         List<ExportHtmlSeite.Section> sections = new ArrayList<>();
 
         String meldelisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_MELDELISTE, SheetNamen.meldeliste());
-        if (konfiguration.isMeldelisteExportieren()) {
+        boolean meldelisteExportieren = konfiguration.isMeldelisteExportieren();
+        if (meldelisteExportieren) {
             sections.add(new ExportHtmlSeite.Section("meldeliste", I18n.get("export.nav.meldeliste"), meldelisteSheetName, null));
         }
 
@@ -62,7 +63,8 @@ public class MaastrichterExportInVerzeichnis extends AbstractExportInVerzeichnis
         }
 
         processBox().info(I18n.get("export.info.html"));
-        exportierteDateien.add(exportiereHtml(zielVerzeichnis, "Maastrichter.html",
+        exportierteDateien.add(exportiereHtmlMitMeldelisteDruckbereich(meldelisteExportieren, meldelisteSheetName,
+                zielVerzeichnis, "Maastrichter.html",
                 StringUtils.defaultIfBlank(StringUtils.strip(konfiguration.getKopfZeileMitte()),
                         TurnierSystem.MAASTRICHTER.getBezeichnung()),
                 StringUtils.strip(konfiguration.getTurnierlogoUrl()), sections));

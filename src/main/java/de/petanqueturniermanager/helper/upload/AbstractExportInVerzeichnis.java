@@ -17,9 +17,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.sun.star.container.XNamed;
+import com.sun.star.sheet.XPrintAreas;
+import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.table.CellContentType;
+import com.sun.star.table.CellRangeAddress;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -137,6 +142,62 @@ public abstract class AbstractExportInVerzeichnis extends SheetRunner {
         }
         Path name = pdf.getFileName();
         return name != null ? name.toString() : null;
+    }
+
+    /**
+     * Exportiert die HTML-Seite mit temporär angepasstem Druckbereich der Meldeliste.
+     * Überspringt Zeile 0 (Überschrift) und schneidet leere Zeilen am Ende ab.
+     * Der originale Druckbereich wird nach dem Export wiederhergestellt.
+     */
+    protected Path exportiereHtmlMitMeldelisteDruckbereich(
+            boolean meldelisteExportieren, String meldelisteSheetName,
+            Path zielVerzeichnis, String fallbackDateiname, String titel, String logoUrl,
+            List<ExportHtmlSeite.Section> sections) throws GenerateException {
+
+        if (!meldelisteExportieren || StringUtils.isBlank(meldelisteSheetName)) {
+            return exportiereHtml(zielVerzeichnis, fallbackDateiname, titel, logoUrl, sections);
+        }
+
+        var sheet = getSheetHelper().findByName(meldelisteSheetName);
+        if (sheet == null) {
+            return exportiereHtml(zielVerzeichnis, fallbackDateiname, titel, logoUrl, sections);
+        }
+        var printAreas = Lo.qi(XPrintAreas.class, sheet);
+        if (printAreas == null) {
+            return exportiereHtml(zielVerzeichnis, fallbackDateiname, titel, logoUrl, sections);
+        }
+        var originalBereiche = printAreas.getPrintAreas();
+        if (originalBereiche == null || originalBereiche.length == 0) {
+            return exportiereHtml(zielVerzeichnis, fallbackDateiname, titel, logoUrl, sections);
+        }
+
+        var original = originalBereiche[0];
+        var neuerBereich = new CellRangeAddress();
+        neuerBereich.Sheet = original.Sheet;
+        neuerBereich.StartRow = MeldeListeKonstanten.ZWEITE_HEADER_ZEILE;
+        neuerBereich.StartColumn = original.StartColumn;
+        neuerBereich.EndRow = letzteZeileMitDaten(sheet, original.EndRow);
+        neuerBereich.EndColumn = original.EndColumn;
+        printAreas.setPrintAreas(new CellRangeAddress[] { neuerBereich });
+        try {
+            return exportiereHtml(zielVerzeichnis, fallbackDateiname, titel, logoUrl, sections);
+        } finally {
+            printAreas.setPrintAreas(originalBereiche);
+        }
+    }
+
+    private int letzteZeileMitDaten(XSpreadsheet sheet, int maxZeile) {
+        for (int zeile = maxZeile; zeile >= MeldeListeKonstanten.ERSTE_DATEN_ZEILE; zeile--) {
+            try {
+                var zelle = sheet.getCellByPosition(MeldeListeKonstanten.SPIELER_NR_SPALTE, zeile);
+                if (zelle.getType() == CellContentType.VALUE && zelle.getValue() > 0) {
+                    return zeile;
+                }
+            } catch (Exception e) {
+                logger.debug("Fehler beim Prüfen von Zeile {}", zeile, e);
+            }
+        }
+        return MeldeListeKonstanten.ZWEITE_HEADER_ZEILE;
     }
 
     protected Path htmlZieldatei(Path verzeichnis, String fallbackDateiname) throws GenerateException {

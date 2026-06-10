@@ -44,13 +44,15 @@ public class SchweizerExportInVerzeichnis extends AbstractExportInVerzeichnis {
         }
 
         processBox().info(I18n.get("export.info.html"));
+        boolean meldelisteExportieren = konfiguration.isMeldelisteExportieren();
         List<ExportHtmlSeite.Section> sections = new ArrayList<>();
-        if (konfiguration.isMeldelisteExportieren()) {
+        if (meldelisteExportieren) {
             sections.add(new ExportHtmlSeite.Section("meldeliste", I18n.get("export.nav.meldeliste"), meldelisteSheetName, null));
         }
         sections.add(new ExportHtmlSeite.Section("rangliste", I18n.get("export.nav.rangliste"), ranglisteSheetName,
                 buildPdfUrl(pdfRangliste)));
-        exportierteDateien.add(exportiereHtml(zielVerzeichnis, "Schweizer.html",
+        exportierteDateien.add(exportiereHtmlMitMeldelisteDruckbereich(meldelisteExportieren, meldelisteSheetName,
+                zielVerzeichnis, "Schweizer.html",
                 StringUtils.defaultIfBlank(StringUtils.strip(konfiguration.getKopfZeileMitte()),
                         TurnierSystem.SCHWEIZER.getBezeichnung()),
                 StringUtils.strip(konfiguration.getTurnierlogoUrl()), sections));
