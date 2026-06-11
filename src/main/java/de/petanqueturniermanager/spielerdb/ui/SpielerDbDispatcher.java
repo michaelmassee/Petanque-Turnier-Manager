@@ -39,8 +39,8 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.spielerdb.vorlage.SpielerDbVorlageSheet;
 import de.petanqueturniermanager.spielerdb.webview.SpielerDbWebViewServer;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.BrowserOeffner;
 
-import java.awt.Desktop;
 import java.io.IOException;
 import java.net.URI;
 
@@ -297,17 +297,9 @@ public final class SpielerDbDispatcher {
     }
 
     private static void oeffneImBrowser(XComponentContext ctx, URI url) {
-        if (!Desktop.isDesktopSupported()
-                || !Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
-            MessageBox.from(ctx, MessageBoxTypeEnum.INFO_OK)
-                    .caption(I18n.get("spielerdb.menu.toplevel"))
-                    .message(I18n.get("spielerdb.webview.url_kopieren", url.toString()))
-                    .show();
-            return;
-        }
         try {
-            Desktop.getDesktop().browse(url);
-        } catch (IOException | UnsupportedOperationException e) {
+            BrowserOeffner.oeffne(url);
+        } catch (IOException e) {
             logger.warn("Browser konnte nicht geöffnet werden", e);
             MessageBox.from(ctx, MessageBoxTypeEnum.INFO_OK)
                     .caption(I18n.get("spielerdb.menu.toplevel"))

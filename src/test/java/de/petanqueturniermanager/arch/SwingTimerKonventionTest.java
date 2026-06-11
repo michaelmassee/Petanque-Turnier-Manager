@@ -42,6 +42,29 @@ public class SwingTimerKonventionTest {
                 .isEmpty();
     }
 
+    @Test
+    void produktivcodeVerwendetKeinenAwtDesktopBrowserpfad() throws IOException {
+        List<String> verstoesse = new ArrayList<>();
+        Path quellWurzel = Paths.get("src/main/java");
+
+        try (Stream<Path> dateien = Files.walk(quellWurzel)) {
+            dateien.filter(p -> p.toString().endsWith(".java")).forEach(datei -> {
+                String inhalt = liesDatei(datei);
+                if (inhalt.contains("import java.awt.Desktop")
+                        || inhalt.contains("java.awt.Desktop")
+                        || inhalt.contains("Desktop.getDesktop")
+                        || inhalt.contains("Desktop.isDesktopSupported")) {
+                    verstoesse.add(quellWurzel.relativize(datei).toString());
+                }
+            });
+        }
+
+        assertThat(verstoesse)
+                .as("Produktivcode darf Browser nicht per java.awt.Desktop öffnen; "
+                        + "BrowserOeffner nutzt AWT-freie OS-Kommandos.")
+                .isEmpty();
+    }
+
     private static String liesDatei(Path datei) {
         try {
             return Files.readString(datei);

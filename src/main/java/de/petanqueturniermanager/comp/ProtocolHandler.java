@@ -57,6 +57,7 @@ import de.petanqueturniermanager.comp.newrelease.ReleaseInfosAnzeigen;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEventListener;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
+import de.petanqueturniermanager.helper.BrowserOeffner;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.LoMainThread;
 import de.petanqueturniermanager.helper.perflog.PerfLog;
@@ -1517,33 +1518,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	private void oeffneBrowserUrl(String url) {
 		ProcessBox.from().info(I18n.get("webserver.prozessbox.browser.oeffnen", url));
 		try {
-			if (java.awt.Desktop.isDesktopSupported()
-					&& java.awt.Desktop.getDesktop().isSupported(java.awt.Desktop.Action.BROWSE)) {
-				java.awt.Desktop.getDesktop().browse(new java.net.URI(url));
-			} else {
-				oeffneBrowserUrlFallback(url);
-			}
-		} catch (Exception e) {
-			logger.warn("Desktop.browse fehlgeschlagen, Fallback aktiv: {}", e.getMessage());
-			oeffneBrowserUrlFallback(url);
-		}
-	}
-
-	/**
-	 * Fallback: Browser über OS-spezifischen Prozessaufruf öffnen.
-	 */
-	private void oeffneBrowserUrlFallback(String url) {
-		try {
-			String osName = System.getProperty("os.name");
-			String[] cmd;
-			if (osName != null && osName.toLowerCase().contains("win")) {
-				cmd = new String[]{ "rundll32", "url.dll,FileProtocolHandler", url };
-			} else if (osName != null && osName.toLowerCase().contains("mac")) {
-				cmd = new String[]{ "open", url };
-			} else {
-				cmd = new String[]{ "xdg-open", url };
-			}
-			new ProcessBuilder(cmd).start();
+			BrowserOeffner.oeffne(url);
 		} catch (java.io.IOException e) {
 			logger.error("Browser öffnen fehlgeschlagen: {}", url, e);
 			ProcessBox.from().fehler(I18n.get("webserver.prozessbox.browser.fehler", url));

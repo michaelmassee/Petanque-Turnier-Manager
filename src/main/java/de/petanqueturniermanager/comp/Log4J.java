@@ -58,7 +58,7 @@ public class Log4J {
 			try {
 				ProcessBox.from().prefix("Log4J").info("Open:" + logFile.getCanonicalPath());
 				String[] cmd = null;
-				// java.awt.Desktop => coredump, not working
+				// AWT Desktop => coredump, not working
 				// https://stackoverflow.com/questions/526037/how-to-open-user-system-preferred-editor-for-given-file
 				String osName = System.getProperty("os.name");
 				String filePath = logFile.getCanonicalPath();

@@ -8,7 +8,7 @@ import java.util.Locale;
 /**
  * Verhindert den AWT/AppKit-Deadlock der Extension im LibreOffice-Prozess auf macOS.<br>
  * <br>
- * Jede AWT-/Swing-Berührung (z.B. {@code UIManager.setLookAndFeel} oder {@code java.awt.Desktop})
+ * Jede AWT-/Swing-Berührung (z.B. {@code UIManager.setLookAndFeel} oder Browser-Oeffnen per AWT)
  * initialisiert das AWT-Toolkit. Auf macOS wartet dessen
  * {@code LWCToolkit.initAppkit} ({@code +[AWTStarter start:]}) darauf, dass der AppKit-Main-Thread den
  * Init-Block ausführt — diesen Thread besitzt aber LibreOffice selbst ({@code NSApplication run}). Der
