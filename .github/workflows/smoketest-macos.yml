@@ -135,6 +135,59 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Headless-Diagnose (LO-Core vs. Extension)
+        # Isoliert den Hänger aus den UITests: --convert-to lädt ein Dokument und
+        # aktiviert dabei auch installierte Extensions – einmal ohne (frisches Profil),
+        # einmal mit installierter PTM-Extension (Default-Profil). Hängt erst Test 2,
+        # liegt der Blocker in der Extension-Aktivierung; hängt schon Test 1, in LO
+        # selbst. Bei Hänger: Java-Thread-Dump (jcmd, eingebettete soffice-JVM) +
+        # nativer Stack (sample), dann hartes Fail.
+        timeout-minutes: 12
+        run: |
+          printf 'Smoke' > /tmp/probe.txt
+
+          beende_soffice() { pkill -f soffice 2>/dev/null || true; sleep 3; }
+
+          dump_und_fail() {
+            echo "::error::$1"
+            SOFFICE_PID=$(pgrep -f soffice | head -1 || true)
+            if [ -n "$SOFFICE_PID" ]; then
+              echo "=== jcmd Thread.print (soffice PID $SOFFICE_PID) ==="
+              "$JAVA_HOME/bin/jcmd" "$SOFFICE_PID" Thread.print 2>&1 | head -300 || true
+              echo "=== sample (nativer Stack) ==="
+              sample "$SOFFICE_PID" 5 -file /tmp/soffice-sample.txt 2>/dev/null || true
+              head -120 /tmp/soffice-sample.txt 2>/dev/null || true
+            fi
+            beende_soffice
+            exit 1
+          }
+
+          konvertiere() { # $1: zusätzliche soffice-Args, $2: Timeout in Sekunden
+            rm -f /tmp/probe.pdf
+            # shellcheck disable=SC2086
+            soffice --headless $1 --convert-to pdf /tmp/probe.txt --outdir /tmp &
+            SPID=$!
+            n=0
+            while kill -0 "$SPID" 2>/dev/null; do
+              sleep 5; n=$((n+5))
+              if [ "$n" -ge "$2" ]; then return 1; fi
+            done
+            [ -f /tmp/probe.pdf ]
+          }
+
+          echo "== Test 1: frisches Profil OHNE Extension =="
+          konvertiere "-env:UserInstallation=file:///tmp/lo-frisch" 180 \
+            || dump_und_fail "LO headless hängt bereits OHNE Extension (LO-Core-Problem)"
+          beende_soffice
+          echo "Test 1 OK"
+
+          echo "== Test 2: Default-Profil MIT PTM-Extension =="
+          unopkg add -f build/distributions/*.oxt
+          konvertiere "" 180 \
+            || dump_und_fail "LO headless hängt MIT Extension (Blocker in der Extension-Aktivierung)"
+          beende_soffice
+          echo "Test 2 OK – LO headless funktioniert mit installierter Extension"
+
       - name: Run MeldeListeSheetUITest (Supermelee-Meldeliste)
         # -x reinstallExtension: OXT kommt fertig aus dem Artifact, die Installation macht
         #   BaseCalcUITest.installExtension() selbst (unopkg remove/add aus dem PATH);
@@ -144,9 +197,10 @@ jobs:
         # -Puitest.requireOffice=true: nicht startbares LibreOffice = harter Fehler,
         #   sonst würden die Tests nur geskippt und der Lauf wäre fälschlich grün.
         # -Puitest.timeout: macOS-Runner sind deutlich langsamer als lokale Rechner.
-        # timeout-minutes: ein hängender soffice darf nicht das Job-Timeout reißen,
-        #   sonst entfallen die Artifact-Uploads (Diagnose unmöglich).
-        timeout-minutes: 20
+        # Watchdog statt nur Step-Timeout: hängt der Lauf nach 12 min noch, werden
+        #   Thread-Dumps ALLER Java-Prozesse (Test-JVM + eingebettete soffice-JVM)
+        #   und ein nativer sample-Stack gezogen, dann wird hart abgebrochen.
+        timeout-minutes: 18
         run: |
           ./gradlew uiTests \
             --tests "de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheetUITest" \
@@ -154,7 +208,31 @@ jobs:
             -Puitest.requireOffice=true \
             -Puitest.timeout="5 m" \
             -Puitest.verbose=true \
-            -Dorg.gradle.java.home="$JAVA_HOME" --no-daemon --stacktrace
+            -Dorg.gradle.java.home="$JAVA_HOME" --no-daemon --stacktrace &
+          GRADLE_PID=$!
+          n=0
+          while kill -0 "$GRADLE_PID" 2>/dev/null; do
+            sleep 10; n=$((n+10))
+            if [ "$n" -ge 720 ]; then
+              echo "::error::Testlauf hängt nach 12 min – Thread-Dumps aller JVMs"
+              "$JAVA_HOME/bin/jcmd" -l || true
+              for pid in $("$JAVA_HOME/bin/jcmd" -l 2>/dev/null | awk '{print $1}'); do
+                echo "=== Thread-Dump PID $pid ==="
+                "$JAVA_HOME/bin/jcmd" "$pid" VM.command_line 2>/dev/null | head -3 || true
+                "$JAVA_HOME/bin/jcmd" "$pid" Thread.print 2>&1 | head -400 || true
+              done
+              SOFFICE_PID=$(pgrep -f soffice | head -1 || true)
+              if [ -n "$SOFFICE_PID" ]; then
+                echo "=== sample soffice (nativer Stack) ==="
+                sample "$SOFFICE_PID" 5 -file /tmp/soffice-sample.txt 2>/dev/null || true
+                head -120 /tmp/soffice-sample.txt 2>/dev/null || true
+              fi
+              pkill -f soffice 2>/dev/null || true
+              kill "$GRADLE_PID" 2>/dev/null || true
+              exit 1
+            fi
+          done
+          wait "$GRADLE_PID"
 
       - name: Upload test report
         if: always()
