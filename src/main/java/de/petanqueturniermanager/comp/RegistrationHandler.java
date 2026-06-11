@@ -24,6 +24,12 @@ import com.sun.star.registry.XRegistryKey;
 public class RegistrationHandler {
 	private static final Logger logger = LogManager.getLogger(RegistrationHandler.class);
 
+	static {
+		// Frühestmöglicher Punkt im LO-Prozess: AWT-Headless-Schutz für macOS,
+		// bevor irgendeine Extension-Klasse AWT/Swing initialisieren kann.
+		MacAwtHeadlessSchutz.aktiviereFallsMacOS();
+	}
+
 	/**
 	 * First<br>
 	 * Writes the services implementation informations to the UNO registry.

@@ -491,6 +491,9 @@ tasks.register('uiTests', Test) {
     outputs.upToDateWhen { false }
     maxParallelForks = 1
     systemProperty 'uitest.headless', 'true'
+    // AWT im Test-JVM headless halten (javax.swing.Timer im SeitenstileDebouncer u.ä.):
+    // auf macOS-CI-Runnern kann die AWT/AppKit-Initialisierung sonst blockieren.
+    systemProperty 'java.awt.headless', 'true'
     // CI-Schutz: mit -Puitest.requireOffice=true wird ein nicht startbares LibreOffice zum
     // harten Testfehler statt zu einem Skip (Assumptions.abort), der den Lauf grün ließe.
     systemProperty 'uitest.requireOffice', providers.gradleProperty('uitest.requireOffice').getOrElse('false')

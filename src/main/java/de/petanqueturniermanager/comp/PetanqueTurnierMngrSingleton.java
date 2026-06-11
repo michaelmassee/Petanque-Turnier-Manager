@@ -137,6 +137,10 @@ public class PetanqueTurnierMngrSingleton {
 		if (didRun.getAndSet(true)) {
 			return;
 		}
+		// Vor jeder AWT-/Swing-Berührung (UIManager unten, javax.swing.Timer im
+		// SeitenstileDebouncer): auf macOS würde die AWT-Initialisierung auf den
+		// AppKit-Main-Thread warten, den LibreOffice selbst besitzt → Deadlock.
+		MacAwtHeadlessSchutz.aktiviereFallsMacOS();
 		sharedContext = context;
 		StartupInfoLogger.logStartupInfo(context);
 		GlobalProperties.get(); // just do an init, read properties if not already there
@@ -146,11 +150,15 @@ public class PetanqueTurnierMngrSingleton {
 				StartupClock.uptimeMs());
 		long initStartNs = System.nanoTime();
 		long t = initStartNs;
-		try {
-			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-		} catch (Exception e) {
-			// only log
-			logger.error(e.getMessage(), e);
+		// Swing-LookAndFeel nur dort setzen, wo AWT nicht headless läuft (siehe
+		// MacAwtHeadlessSchutz): auf macOS gibt es keine Swing-Dialoge im LO-Prozess.
+		if (!java.awt.GraphicsEnvironment.isHeadless()) {
+			try {
+				UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+			} catch (Exception e) {
+				// only log
+				logger.error(e.getMessage(), e);
+			}
 		}
 		t = logTimingAndReset("UIManager.setSystemLookAndFeel", t);
 
