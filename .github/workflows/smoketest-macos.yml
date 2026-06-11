@@ -143,11 +143,16 @@ jobs:
         #   npm-Builds; die statischen Frontend-Ressourcen braucht dieser Test nicht.
         # -Puitest.requireOffice=true: nicht startbares LibreOffice = harter Fehler,
         #   sonst würden die Tests nur geskippt und der Lauf wäre fälschlich grün.
+        # -Puitest.timeout: macOS-Runner sind deutlich langsamer als lokale Rechner.
+        # timeout-minutes: ein hängender soffice darf nicht das Job-Timeout reißen,
+        #   sonst entfallen die Artifact-Uploads (Diagnose unmöglich).
+        timeout-minutes: 20
         run: |
           ./gradlew uiTests \
             --tests "de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheetUITest" \
             -x reinstallExtension -x buildFrontend -x buildSpielerDbFrontend \
             -Puitest.requireOffice=true \
+            -Puitest.timeout="10 m" \
             -Dorg.gradle.java.home="$JAVA_HOME" --no-daemon --stacktrace
 
       - name: Upload test report
@@ -155,7 +160,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: smoketest-report-macos
-          path: build/reports/tests/
+          path: |
+            build/reports/tests/
+            build/test-results/
           if-no-files-found: ignore
           retention-days: 7
 

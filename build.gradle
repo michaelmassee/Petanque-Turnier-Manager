@@ -494,7 +494,9 @@ tasks.register('uiTests', Test) {
     // CI-Schutz: mit -Puitest.requireOffice=true wird ein nicht startbares LibreOffice zum
     // harten Testfehler statt zu einem Skip (Assumptions.abort), der den Lauf grün ließe.
     systemProperty 'uitest.requireOffice', providers.gradleProperty('uitest.requireOffice').getOrElse('false')
-    systemProperty 'junit.jupiter.execution.timeout.default', '3 m'
+    // Timeout pro Test überschreibbar (-Puitest.timeout='10 m'): CI-Runner (v.a. macOS)
+    // sind deutlich langsamer als der lokale Rechner.
+    systemProperty 'junit.jupiter.execution.timeout.default', providers.gradleProperty('uitest.timeout').getOrElse('3 m')
     useJUnitPlatform()
     include '**/*UITest*'
     exclude 'de/petanqueturniermanager/beispielturnier/**'
