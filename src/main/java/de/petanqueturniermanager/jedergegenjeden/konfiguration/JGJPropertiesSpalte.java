@@ -226,8 +226,7 @@ public class JGJPropertiesSpalte extends BasePropertiesSpalte implements IJGJPro
 
 	@Override
 	public int getUploadPort() {
-		Integer port = readIntProperty(KONFIG_PROP_UPLOAD_PORT);
-		return port != null ? port : 21;
+		return getUploadPortOderStandard();
 	}
 
 	@Override

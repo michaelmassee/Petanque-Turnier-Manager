@@ -13,7 +13,8 @@ import de.petanqueturniermanager.triptete.konfiguration.TripTeteKonfigurationShe
 public class TripTeteFtpUpload extends AbstractFtpUpload {
 
     public TripTeteFtpUpload(WorkingSpreadsheet ws) {
-        super(ws, TurnierSystem.TRIPTETE, "TripTete FTP Upload");
+        super(ws, TurnierSystem.TRIPTETE, "TripTete FTP Upload",
+                zielVerzeichnis -> new TripTeteExportInVerzeichnis(ws, zielVerzeichnis));
     }
 
     @Override

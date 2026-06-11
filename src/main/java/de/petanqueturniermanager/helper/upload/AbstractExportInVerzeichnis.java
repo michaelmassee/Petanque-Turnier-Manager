@@ -51,8 +51,12 @@ public abstract class AbstractExportInVerzeichnis extends SheetRunner {
 
     @Override
     protected final void doRun() throws GenerateException {
-        var ergebnis = exportiereInVerzeichnis(zielVerzeichnis);
+        var ergebnis = exportiere();
         ergebnis.speichern(getWorkingSpreadsheet());
+    }
+
+    public final ExportErgebnis exportiere() throws GenerateException {
+        return exportiereInVerzeichnis(zielVerzeichnis);
     }
 
     @Override

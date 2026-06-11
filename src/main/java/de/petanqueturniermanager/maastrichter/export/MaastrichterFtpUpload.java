@@ -13,7 +13,8 @@ import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigur
 public class MaastrichterFtpUpload extends AbstractFtpUpload {
 
     public MaastrichterFtpUpload(WorkingSpreadsheet ws) {
-        super(ws, TurnierSystem.MAASTRICHTER, "Maastrichter FTP Upload");
+        super(ws, TurnierSystem.MAASTRICHTER, "Maastrichter FTP Upload",
+                zielVerzeichnis -> new MaastrichterExportInVerzeichnis(ws, zielVerzeichnis));
     }
 
     @Override

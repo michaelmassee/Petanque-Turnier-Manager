@@ -13,7 +13,8 @@ import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationS
 public class JGJFtpUpload extends AbstractFtpUpload {
 
     public JGJFtpUpload(WorkingSpreadsheet ws) {
-        super(ws, TurnierSystem.JGJ, "JGJ FTP Upload");
+        super(ws, TurnierSystem.JGJ, "JGJ FTP Upload",
+                zielVerzeichnis -> new JGJExportInVerzeichnis(ws, zielVerzeichnis));
     }
 
     @Override

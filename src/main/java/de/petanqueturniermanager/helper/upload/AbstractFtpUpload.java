@@ -1,7 +1,11 @@
 package de.petanqueturniermanager.helper.upload;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.function.Function;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -17,17 +21,16 @@ public abstract class AbstractFtpUpload extends SheetRunner {
 
     private static final Logger logger = LogManager.getLogger(AbstractFtpUpload.class);
 
-    protected AbstractFtpUpload(WorkingSpreadsheet ws, TurnierSystem ts, String name) {
+    private final Function<Path, AbstractExportInVerzeichnis> exportFactory;
+
+    protected AbstractFtpUpload(WorkingSpreadsheet ws, TurnierSystem ts, String name,
+            Function<Path, AbstractExportInVerzeichnis> exportFactory) {
         super(ws, ts, name);
+        this.exportFactory = exportFactory;
     }
 
     @Override
     protected final void doRun() throws GenerateException {
-        var ergebnisOpt = ExportErgebnis.laden(getWorkingSpreadsheet());
-        if (ergebnisOpt.isEmpty()) {
-            throw new GenerateException(I18n.get("ftp.upload.fehler.kein.export"));
-        }
-
         var konfigurierbar = getUploadKonfigurierbar();
         var konfig = new UploadKonfiguration(
                 konfigurierbar.getUploadProtokoll(),
@@ -40,28 +43,47 @@ public abstract class AbstractFtpUpload extends SheetRunner {
             throw new GenerateException(I18n.get("ftp.upload.fehler.konfiguration"));
         }
 
-        String passwort = GlobalProperties.get().getUploadPasswort(konfig.host());
-        if (passwort.isEmpty()) {
-            passwort = fragePasswort(konfig);
-        }
-
+        Path tempVerzeichnis = erstelleTempVerzeichnis();
         try {
-            int anzahl = ladeHoch(konfig, passwort, ergebnisOpt.get());
-            processBox().info(I18n.get("ftp.upload.erfolg", anzahl));
-        } catch (IOException e) {
-            if (istAnmeldefehler(e)) {
-                try {
-                    GlobalProperties.get().setUploadPasswort(konfig.host(), "");
-                    String neuesPasswort = fragePasswort(konfig);
-                    int anzahl = ladeHoch(konfig, neuesPasswort, ergebnisOpt.get());
-                    processBox().info(I18n.get("ftp.upload.erfolg", anzahl));
-                    return;
-                } catch (IOException retryFehler) {
-                    logger.error("FTP/SFTP-Upload nach erneuter Passwort-Eingabe fehlgeschlagen", retryFehler);
-                    throw new GenerateException(retryFehler.getMessage());
-                }
+            var ergebnis = exportFactory.apply(tempVerzeichnis).exportiere();
+            String passwort = GlobalProperties.get().getUploadPasswort(konfig.host());
+            if (passwort.isEmpty()) {
+                passwort = fragePasswort(konfig);
             }
-            logger.error("FTP/SFTP-Upload fehlgeschlagen", e);
+
+            try {
+                int anzahl = ladeHoch(konfig, passwort, ergebnis);
+                processBox().info(I18n.get("ftp.upload.erfolg", anzahl));
+            } catch (IOException e) {
+                if (istAnmeldefehler(e)) {
+                    try {
+                        GlobalProperties.get().setUploadPasswort(konfig.host(), "");
+                        String neuesPasswort = fragePasswort(konfig);
+                        int anzahl = ladeHoch(konfig, neuesPasswort, ergebnis);
+                        processBox().info(I18n.get("ftp.upload.erfolg", anzahl));
+                        return;
+                    } catch (IOException retryFehler) {
+                        logger.error("FTP/SFTP-Upload nach erneuter Passwort-Eingabe fehlgeschlagen", retryFehler);
+                        throw new GenerateException(retryFehler.getMessage());
+                    }
+                }
+                logger.error("FTP/SFTP-Upload fehlgeschlagen", e);
+                throw new GenerateException(e.getMessage());
+            }
+        } finally {
+            try {
+                FileUtils.deleteDirectory(tempVerzeichnis.toFile());
+            } catch (IOException e) {
+                logger.warn("Temporäres Exportverzeichnis konnte nicht gelöscht werden: {}", tempVerzeichnis, e);
+            }
+        }
+    }
+
+    private Path erstelleTempVerzeichnis() throws GenerateException {
+        try {
+            return Files.createTempDirectory("ptm-upload-export-");
+        } catch (IOException e) {
+            logger.error("Temporäres Exportverzeichnis für FTP/SFTP-Upload konnte nicht erstellt werden", e);
             throw new GenerateException(e.getMessage());
         }
     }

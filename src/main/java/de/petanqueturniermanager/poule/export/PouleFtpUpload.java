@@ -13,7 +13,8 @@ import de.petanqueturniermanager.poule.konfiguration.PouleKonfigurationSheet;
 public class PouleFtpUpload extends AbstractFtpUpload {
 
     public PouleFtpUpload(WorkingSpreadsheet ws) {
-        super(ws, TurnierSystem.POULE, "Poule FTP Upload");
+        super(ws, TurnierSystem.POULE, "Poule FTP Upload",
+                zielVerzeichnis -> new PouleExportInVerzeichnis(ws, zielVerzeichnis));
     }
 
     @Override

@@ -10,7 +10,8 @@ import de.petanqueturniermanager.liga.konfiguration.LigaKonfigurationSheet;
 public class LigaFtpUpload extends AbstractFtpUpload {
 
     public LigaFtpUpload(WorkingSpreadsheet ws) {
-        super(ws, TurnierSystem.LIGA, "Liga FTP Upload");
+        super(ws, TurnierSystem.LIGA, "Liga FTP Upload",
+                zielVerzeichnis -> new LigaExportInVerzeichnis(ws, zielVerzeichnis));
     }
 
     @Override

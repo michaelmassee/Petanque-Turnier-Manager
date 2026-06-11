@@ -13,7 +13,8 @@ import de.petanqueturniermanager.ko.konfiguration.KoKonfigurationSheet;
 public class KoFtpUpload extends AbstractFtpUpload {
 
     public KoFtpUpload(WorkingSpreadsheet ws) {
-        super(ws, TurnierSystem.KO, "Ko FTP Upload");
+        super(ws, TurnierSystem.KO, "Ko FTP Upload",
+                zielVerzeichnis -> new KoExportInVerzeichnis(ws, zielVerzeichnis));
     }
 
     @Override

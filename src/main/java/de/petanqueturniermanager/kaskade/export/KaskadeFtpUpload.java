@@ -13,7 +13,8 @@ import de.petanqueturniermanager.kaskade.konfiguration.KaskadeKonfigurationSheet
 public class KaskadeFtpUpload extends AbstractFtpUpload {
 
     public KaskadeFtpUpload(WorkingSpreadsheet ws) {
-        super(ws, TurnierSystem.KASKADE, "Kaskade FTP Upload");
+        super(ws, TurnierSystem.KASKADE, "Kaskade FTP Upload",
+                zielVerzeichnis -> new KaskadeExportInVerzeichnis(ws, zielVerzeichnis));
     }
 
     @Override

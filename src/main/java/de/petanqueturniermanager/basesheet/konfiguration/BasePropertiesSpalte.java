@@ -22,6 +22,8 @@ import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeGerad
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.basesheet.meldeliste.TeilnehmerListeSortModus;
 import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
+import de.petanqueturniermanager.helper.upload.UploadKonfiguration;
+import de.petanqueturniermanager.helper.upload.UploadProtokoll;
 import de.petanqueturniermanager.konfigdialog.AuswahlConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
@@ -205,8 +207,8 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 				.addAuswahl("FTP", "FTP"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_HOST)
 				.setDefaultVal("").setDescription("config.desc.upload.host").exportKonfig());
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_UPLOAD_PORT)
-				.setDefaultVal(21).setDescription("config.desc.upload.port").exportKonfig());
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_PORT)
+				.setDefaultVal("").setDescription("config.desc.upload.port").exportKonfig());
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_BENUTZER)
 				.setDefaultVal("").setDescription("config.desc.upload.benutzer").exportKonfig());
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_VERZEICHNIS)
@@ -295,6 +297,12 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 
 	public Boolean readBooleanProperty(String key) {
 		return StringTools.stringToBoolean(readStringProperty(key));
+	}
+
+	protected int getUploadPortOderStandard() {
+		return UploadKonfiguration.portOderStandard(
+				readStringProperty(KONFIG_PROP_UPLOAD_PORT),
+				UploadProtokoll.vonString(readStringProperty(KONFIG_PROP_UPLOAD_PROTOKOLL)));
 	}
 
 	@Override

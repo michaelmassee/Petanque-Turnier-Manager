@@ -175,8 +175,7 @@ public class PoulePropertiesSpalte extends BasePropertiesSpalte implements IPoul
 	}
 
 	public int getUploadPort() {
-		Integer port = readIntProperty(KONFIG_PROP_UPLOAD_PORT);
-		return port != null ? port : 21;
+		return getUploadPortOderStandard();
 	}
 
 	public String getUploadBenutzer() {

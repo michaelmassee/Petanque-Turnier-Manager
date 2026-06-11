@@ -13,7 +13,8 @@ import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfiguratio
 public class SupermeleeFtpUpload extends AbstractFtpUpload {
 
     public SupermeleeFtpUpload(WorkingSpreadsheet ws) {
-        super(ws, TurnierSystem.SUPERMELEE, "Supermelee FTP Upload");
+        super(ws, TurnierSystem.SUPERMELEE, "Supermelee FTP Upload",
+                zielVerzeichnis -> new SupermeleeExportInVerzeichnis(ws, zielVerzeichnis));
     }
 
     @Override

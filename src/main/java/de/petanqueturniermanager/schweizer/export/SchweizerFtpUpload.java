@@ -13,7 +13,8 @@ import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationS
 public class SchweizerFtpUpload extends AbstractFtpUpload {
 
     public SchweizerFtpUpload(WorkingSpreadsheet ws) {
-        super(ws, TurnierSystem.SCHWEIZER, "Schweizer FTP Upload");
+        super(ws, TurnierSystem.SCHWEIZER, "Schweizer FTP Upload",
+                zielVerzeichnis -> new SchweizerExportInVerzeichnis(ws, zielVerzeichnis));
     }
 
     @Override

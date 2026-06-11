@@ -13,7 +13,8 @@ import de.petanqueturniermanager.formulex.konfiguration.FormuleXKonfigurationShe
 public class FormuleXFtpUpload extends AbstractFtpUpload {
 
     public FormuleXFtpUpload(WorkingSpreadsheet ws) {
-        super(ws, TurnierSystem.FORMULEX, "FormuleX FTP Upload");
+        super(ws, TurnierSystem.FORMULEX, "FormuleX FTP Upload",
+                zielVerzeichnis -> new FormuleXExportInVerzeichnis(ws, zielVerzeichnis));
     }
 
     @Override
