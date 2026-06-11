@@ -137,9 +137,9 @@ public class PetanqueTurnierMngrSingleton {
 		if (didRun.getAndSet(true)) {
 			return;
 		}
-		// Vor jeder AWT-/Swing-Berührung (UIManager unten, javax.swing.Timer im
-		// SeitenstileDebouncer): auf macOS würde die AWT-Initialisierung auf den
-		// AppKit-Main-Thread warten, den LibreOffice selbst besitzt → Deadlock.
+		// Vor jeder AWT-/Swing-Berührung (UIManager unten): auf macOS würde die
+		// AWT-Initialisierung auf den AppKit-Main-Thread warten, den LibreOffice
+		// selbst besitzt → Deadlock.
 		MacAwtHeadlessSchutz.aktiviereFallsMacOS();
 		sharedContext = context;
 		StartupInfoLogger.logStartupInfo(context);

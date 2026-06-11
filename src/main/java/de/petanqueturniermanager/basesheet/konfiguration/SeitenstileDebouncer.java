@@ -6,8 +6,11 @@ package de.petanqueturniermanager.basesheet.konfiguration;
 import java.util.Collections;
 import java.util.Map;
 import java.util.WeakHashMap;
-
-import javax.swing.Timer;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,6 +21,7 @@ import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.uno.UnoRuntime;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.helper.LoMainThread;
 
 /**
  * Debounced-Aktualisierung der PageStyles eines PTM-Turnier-Dokuments.
@@ -28,16 +32,14 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
  * den PageStyle im Dokument-Stilkatalog aktualisiert. Schnelles Tippen erzeugt
  * dadurch nur eine PageStyle-Update-Operation pro Tipp-Burst.
  *
- * <p><b>Threading:</b> Der Timer ist ein {@link javax.swing.Timer}; sein
- * {@code actionPerformed} läuft auf dem EDT — nicht auf einem fremden
- * Hintergrund-Thread. UNO-Calls aus dem EDT verhalten sich konsistent mit der
- * übrigen Sidebar-/Dialog-Infrastruktur.
+ * <p><b>Threading:</b> Der Scheduler verzögert nur. Die eigentliche UNO-Arbeit
+ * wird per {@link LoMainThread#post} auf den LO-Main-Thread geschoben.
  *
  * <p><b>Mehrere Dokumente:</b> Pro {@link XSpreadsheetDocument} läuft ein eigener
  * Timer ({@link WeakHashMap}). Edits in zwei offenen PTM-Dokumenten beeinflussen
  * sich nicht gegenseitig.
  *
- * <p><b>Self-cleanup:</b> Nach Ausführung entfernt sich der Timer aus der Map.
+ * <p><b>Self-cleanup:</b> Nach Ausführung entfernt sich der geplante Auftrag aus der Map.
  * Geschlossene Dokumente werden zusätzlich vom GC freigegeben.
  *
  * <p><b>Disposed-Guard:</b> Zwischen Timer-Start und Ablauf (200 ms) kann das
@@ -50,7 +52,13 @@ public final class SeitenstileDebouncer {
 
     private static final int DEBOUNCE_MS = 200;
 
-    private static final Map<XSpreadsheetDocument, Timer> TIMER_PRO_DOKUMENT
+    private static final ScheduledExecutorService SCHEDULER = Executors.newSingleThreadScheduledExecutor(r -> {
+        Thread thread = new Thread(r, "PTM-SeitenstileDebouncer");
+        thread.setDaemon(true);
+        return thread;
+    });
+
+    private static final Map<XSpreadsheetDocument, ScheduledFuture<?>> FUTURE_PRO_DOKUMENT
             = Collections.synchronizedMap(new WeakHashMap<>());
 
     /** Lock für die eigentliche PageStyle-Aktualisierung – verhindert parallele Style-Library-Writes. */
@@ -73,26 +81,36 @@ public final class SeitenstileDebouncer {
             return;
         }
 
-        synchronized (TIMER_PRO_DOKUMENT) {
-            Timer alt = TIMER_PRO_DOKUMENT.remove(doc);
+        synchronized (FUTURE_PRO_DOKUMENT) {
+            ScheduledFuture<?> alt = FUTURE_PRO_DOKUMENT.remove(doc);
             if (alt != null) {
-                alt.stop();
+                alt.cancel(false);
             }
 
-            Timer neu = new Timer(DEBOUNCE_MS, e -> {
-                synchronized (TIMER_PRO_DOKUMENT) {
-                    TIMER_PRO_DOKUMENT.remove(doc);
-                }
-                if (istDisposed(doc)) {
-                    logger.debug("PageStyle-Update übersprungen – Dokument bereits disposed");
-                    return;
-                }
-                aktualisiereSeitenstileJetzt(ws);
-            });
-            neu.setRepeats(false);
-            TIMER_PRO_DOKUMENT.put(doc, neu);
-            neu.start();
+            AtomicReference<ScheduledFuture<?>> futureRef = new AtomicReference<>();
+            ScheduledFuture<?> neu = SCHEDULER.schedule(
+                    () -> posteSeitenstilAktualisierung(ws, doc, futureRef.get()),
+                    DEBOUNCE_MS,
+                    TimeUnit.MILLISECONDS);
+            futureRef.set(neu);
+            FUTURE_PRO_DOKUMENT.put(doc, neu);
         }
+    }
+
+    private static void posteSeitenstilAktualisierung(WorkingSpreadsheet ws, XSpreadsheetDocument doc,
+            ScheduledFuture<?> future) {
+        synchronized (FUTURE_PRO_DOKUMENT) {
+            if (FUTURE_PRO_DOKUMENT.get(doc) == future) {
+                FUTURE_PRO_DOKUMENT.remove(doc);
+            }
+        }
+        LoMainThread.post(ws.getxContext(), () -> {
+            if (istDisposed(doc)) {
+                logger.debug("PageStyle-Update übersprungen – Dokument bereits disposed");
+                return;
+            }
+            aktualisiereSeitenstileJetzt(ws);
+        });
     }
 
     /**
