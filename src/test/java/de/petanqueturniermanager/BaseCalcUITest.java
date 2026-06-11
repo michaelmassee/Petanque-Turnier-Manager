@@ -110,6 +110,11 @@ public abstract class BaseCalcUITest {
 			installExtension();
 			BaseCalcUITest.loader = starter.loadOffice().getComponentLoader();
 		} catch (RuntimeException e) {
+			// Im CI (uitest.requireOffice=true) ist ein nicht startbares LibreOffice ein harter
+			// Fehler – ein Skip via Assumptions.abort würde den Lauf fälschlich grün machen.
+			if (Boolean.parseBoolean(System.getProperty("uitest.requireOffice", "false"))) {
+				throw e;
+			}
 			Assumptions.abort(
 					"LibreOffice nicht verfügbar oder Extension nicht installierbar – UITest wird übersprungen. "
 							+ "Bitte sicherstellen dass LibreOffice installiert ist und './gradlew buildOXT' ausgeführt wurde.");

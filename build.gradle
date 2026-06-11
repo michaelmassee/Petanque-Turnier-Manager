@@ -165,6 +165,8 @@ dependencies {
     // FTP/SFTP-Upload. LO bündelt weder commons-net noch jsch → kein Shading nötig.
     implementation 'commons-net:commons-net:3.11.1'
     implementation 'com.github.mwiede:jsch:0.2.20'
+    // HTML→PDF-Export. LO bündelt kein Apache PDFBox als Java-Lib (LO's PDF-Engine ist C++) → kein Shading nötig.
+    implementation 'com.openhtmltopdf:openhtmltopdf-pdfbox:1.0.10'
 
     // LibreOffice SDK dependencies - using local installation.
     // hsqldb.jar bleibt ausgeschlossen: LO bringt eine 1.8.0-Variante mit, die
@@ -489,6 +491,9 @@ tasks.register('uiTests', Test) {
     outputs.upToDateWhen { false }
     maxParallelForks = 1
     systemProperty 'uitest.headless', 'true'
+    // CI-Schutz: mit -Puitest.requireOffice=true wird ein nicht startbares LibreOffice zum
+    // harten Testfehler statt zu einem Skip (Assumptions.abort), der den Lauf grün ließe.
+    systemProperty 'uitest.requireOffice', providers.gradleProperty('uitest.requireOffice').getOrElse('false')
     systemProperty 'junit.jupiter.execution.timeout.default', '3 m'
     useJUnitPlatform()
     include '**/*UITest*'

@@ -141,10 +141,13 @@ jobs:
         #   kappt zugleich buildOXT/compileIdl, die auf macOS nicht laufen können.
         # -x buildFrontend/-x buildSpielerDbFrontend: processResources hängt an den
         #   npm-Builds; die statischen Frontend-Ressourcen braucht dieser Test nicht.
+        # -Puitest.requireOffice=true: nicht startbares LibreOffice = harter Fehler,
+        #   sonst würden die Tests nur geskippt und der Lauf wäre fälschlich grün.
         run: |
           ./gradlew uiTests \
             --tests "de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheetUITest" \
             -x reinstallExtension -x buildFrontend -x buildSpielerDbFrontend \
+            -Puitest.requireOffice=true \
             -Dorg.gradle.java.home="$JAVA_HOME" --no-daemon --stacktrace
 
       - name: Upload test report

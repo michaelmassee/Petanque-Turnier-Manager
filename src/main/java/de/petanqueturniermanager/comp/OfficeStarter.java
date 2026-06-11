@@ -37,6 +37,13 @@ public class OfficeStarter {
 	private static final int SOCKET_PORT = 8100;
 	// https://help.libreoffice.org/6.2/he/text/shared/guide/start_parameters.html
 	private static final String SOFFICE_BIN = "soffice";
+	// soffice braucht je nach Umgebung unterschiedlich lange bis der Socket lauscht
+	// (Erststart mit Profil-Anlage und Extension-Registrierung auf CI-Runnern deutlich
+	// länger als ein Warmstart) – daher Verbindungsversuche bis zu diesem Gesamt-Timeout
+	// wiederholen statt einmalig nach fixer Wartezeit zu verbinden.
+	private static final int CONNECT_TIMEOUT_SEKUNDEN = 90;
+	private static final long CONNECT_RETRY_PAUSE_MILLIS = 1000;
+	private static final long CONNECT_VERSUCH_TIMEOUT_SEKUNDEN = 5;
 
 	private volatile boolean usingPipes = false;
 	private XComponentContext xComponentContext = null;
@@ -149,9 +156,6 @@ public class OfficeStarter {
 			if (sofficeProcess != null) {
 				logger.info("Office process created");
 			}
-			// Wait longer for office to start in test environments
-			Thread.sleep(8000);
-			// Wait 8 seconds, until office is in listening mode
 
 			// Create a local Component Context
 			XComponentContext localContext = Bootstrap.createInitialComponentContext(null);
@@ -163,22 +167,7 @@ public class OfficeStarter {
 			XConnector connector = Lo.qi(XConnector.class,
 					localFactory.createInstanceWithContext("com.sun.star.connection.Connector", localContext));
 
-			// connector.connect() blockiert unbegrenzt wenn soffice nicht lauscht –
-			// daher mit Timeout von 30 Sekunden absichern
-			final XConnector connectorFinal = connector;
-			ExecutorService connectExec = Executors.newSingleThreadExecutor();
-			Future<com.sun.star.connection.XConnection> connectFuture = connectExec
-					.submit(() -> connectorFinal.connect("socket,host=localhost,port=" + SOCKET_PORT));
-			com.sun.star.connection.XConnection connection;
-			try {
-				connection = connectFuture.get(30, TimeUnit.SECONDS);
-			} catch (TimeoutException | ExecutionException e) {
-				connectFuture.cancel(true);
-				connectExec.shutdownNow();
-				throw new RuntimeException("Timeout/Fehler beim Verbinden mit LibreOffice auf Port " + SOCKET_PORT, e);
-			} finally {
-				connectExec.shutdown();
-			}
+			com.sun.star.connection.XConnection connection = verbindeMitRetry(connector);
 
 			// create a bridge to Office via the socket
 			XBridgeFactory bridgeFactory = Lo.qi(XBridgeFactory.class,
@@ -201,6 +190,40 @@ public class OfficeStarter {
 			xComponentContext = Lo.qi(XComponentContext.class, defaultContext);
 		} catch (java.lang.Exception e) {
 			logger.error("Unable to socket connect to Office", e);
+		}
+	}
+
+	/**
+	 * Verbindet sich mit dem soffice-Socket und wiederholt abgelehnte Versuche, bis soffice lauscht oder
+	 * {@link #CONNECT_TIMEOUT_SEKUNDEN} überschritten ist.<br>
+	 * Jeder Einzelversuch läuft mit eigenem Timeout in einem Executor, weil connector.connect() unbegrenzt blockieren
+	 * kann, wenn soffice nicht lauscht.
+	 */
+	private com.sun.star.connection.XConnection verbindeMitRetry(XConnector connector) throws InterruptedException {
+		long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(CONNECT_TIMEOUT_SEKUNDEN);
+		ExecutorService connectExec = Executors.newSingleThreadExecutor();
+		try {
+			java.lang.Exception letzterFehler = null;
+			while (true) {
+				Future<com.sun.star.connection.XConnection> versuch = connectExec
+						.submit(() -> connector.connect("socket,host=localhost,port=" + SOCKET_PORT));
+				try {
+					return versuch.get(CONNECT_VERSUCH_TIMEOUT_SEKUNDEN, TimeUnit.SECONDS);
+				} catch (ExecutionException e) {
+					// soffice lauscht noch nicht (Connection refused) – warten und erneut versuchen
+					letzterFehler = e;
+				} catch (TimeoutException e) {
+					versuch.cancel(true);
+					letzterFehler = e;
+				}
+				if (System.nanoTime() >= deadline) {
+					throw new RuntimeException(
+							"Timeout/Fehler beim Verbinden mit LibreOffice auf Port " + SOCKET_PORT, letzterFehler);
+				}
+				Thread.sleep(CONNECT_RETRY_PAUSE_MILLIS);
+			}
+		} finally {
+			connectExec.shutdownNow();
 		}
 	}
 
