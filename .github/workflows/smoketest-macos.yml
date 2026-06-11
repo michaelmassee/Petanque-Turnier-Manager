@@ -103,8 +103,13 @@ jobs:
           brew install --cask temurin@25
           echo "JAVA_HOME=$(/usr/libexec/java_home -v 25)" >> "$GITHUB_ENV"
 
-      - name: Install LibreOffice (Cask, ohne Gatekeeper-Quarantäne)
-        run: brew install --cask libreoffice --no-quarantine
+      - name: Install LibreOffice (Cask)
+        # Homebrew hat den --no-quarantine-Switch entfernt; stattdessen das
+        # Gatekeeper-Quarantäne-Attribut nach der Installation löschen, sonst
+        # kann der erste soffice-Start im CI blockieren.
+        run: |
+          brew install --cask libreoffice
+          sudo xattr -dr com.apple.quarantine /Applications/LibreOffice.app || true
 
       - name: Diagnose macOS-Bundle-Layout
         # Verifiziert die Layout-Annahmen aus build.gradle (MacOS/, Resources/java/)
