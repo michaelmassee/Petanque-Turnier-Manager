@@ -13,18 +13,6 @@
 <FindBugsFilter>
 
     <!--
-        MainKonfigDialog hat einen package-private Konstruktor MainKonfigDialog(DialogTools)
-        speziell für MainKonfigDialogTest, der den Dialog direkt instanziiert. Der echte
-        Singleton-Zugriff läuft über init()/from() (volatile + synchronized). Der zweite
-        Konstruktor wird im Produktivcode nie aufgerufen — bewusst kein private.
-        → False Positive für den Test-Konstruktor.
-    -->
-    <Match>
-        <Class name="de.petanqueturniermanager.konfigdialog.dialog.mainkonfig.MainKonfigDialog"/>
-        <Bug pattern="SING_SINGLETON_HAS_NONPRIVATE_CONSTRUCTOR"/>
-    </Match>
-
-    <!--
         WebServerInstanz/CompositeViewInstanz: getCachedInitJson() und
         getKonfiguration() sind nicht synchronized, die zugehörigen Setter schon.
         Die gelesenen Felder (cachedInitJson, konfiguration) sind aber bereits
@@ -182,7 +170,7 @@
         SpielerDbConnection.close() resettet das statische INSTANCE-Feld auf null,
         damit ein erneutes getInstance() eine frische Connection aufbaut. Der
         Schreibzugriff von einer Instanzmethode aus ist beabsichtigter Singleton-
-        Lifecycle (analog zu MainKonfigDialog-Reset im Tests-Hook).
+        Lifecycle (Reset im Tests-Hook).
         → False Positive.
     -->
     <Match>
@@ -209,7 +197,6 @@
         ReleaseUpdateService nutzt ein Singleton-Pattern mit init()/get()/dispose(),
         hat aber einen package-private Konstruktor für Tests (Injection von Fake-Cache
         und Fake-Client). Der echte Produktivpfad geht ausschliesslich über init().
-        Analog zu MainKonfigDialog (siehe oben).
         → False Positive.
     -->
     <Match>
