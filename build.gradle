@@ -129,8 +129,16 @@ repositories {
 }
 
 // Configuration properties
-def libreOfficePath = findProperty('libreoffice.path') ?: '/usr/lib/libreoffice'
-def libreOfficeClassesPath = "${libreOfficePath}/program/classes"
+// OS-bewusste LibreOffice-Pfadauflösung: macOS-App-Bundle hat ein anderes Layout
+// (Binaries unter Contents/MacOS, UNO-JARs unter Contents/Resources/java) als die
+// Linux-Installation (program/ bzw. program/classes). Override via -Plibreoffice.path
+// bleibt möglich und muss dann zum jeweiligen OS-Layout passen.
+def isMacOS = System.getProperty('os.name').toLowerCase().contains('mac')
+def libreOfficePath = findProperty('libreoffice.path')
+        ?: (isMacOS ? '/Applications/LibreOffice.app/Contents' : '/usr/lib/libreoffice')
+def libreOfficeProgramPath = isMacOS ? "${libreOfficePath}/MacOS" : "${libreOfficePath}/program"
+def libreOfficeClassesPath = isMacOS ? "${libreOfficePath}/Resources/java" : "${libreOfficePath}/program/classes"
+def sofficeProzessName = isMacOS ? 'soffice' : 'soffice.bin'
 def extensionId = descriptionXml.identifier.@value.text()
 
 configurations {
@@ -237,9 +245,12 @@ tasks.register('buildPluginJar', Jar) {
 
 // Task zum Erstellen der OXT-Datei (LibreOffice Extension)
 // IDL zu RDB kompilieren (UNO Type Registry für AddIn-Funktionen)
+// Benötigt Linux + libreoffice-dev (SDK mit unoidl-write). Auf macOS gibt es kein SDK
+// im App-Bundle – dort schlägt der Task bewusst laut fehl, statt still eine OXT ohne
+// RDB zu produzieren. Die OXT ist plattformunabhängig und wird auf Linux gebaut.
 tasks.register('compileIdl', Exec) {
     group = 'LibreOffice'
-    description = 'Kompiliert IDL-Dateien zu einer RDB Type-Registry'
+    description = 'Kompiliert IDL-Dateien zu einer RDB Type-Registry (nur Linux mit SDK)'
     def unoidlWrite = "${libreOfficePath}/sdk/bin/unoidl-write"
     def typesRdb = "${libreOfficePath}/program/types.rdb"
     def offapiRdb = "${libreOfficePath}/program/types/offapi.rdb"
@@ -352,7 +363,7 @@ tasks.register('installExtension', Exec) {
     dependsOn 'buildOXT'
     mustRunAfter 'uninstallExtension'
     def oxtFile = layout.buildDirectory.file("distributions/${project.name}-${version}.oxt").get().asFile
-    commandLine "${libreOfficePath}/program/unopkg", 'add', '-f', oxtFile
+    commandLine "${libreOfficeProgramPath}/unopkg", 'add', '-f', oxtFile
 
     doFirst {
         println "Installiere Extension: ${oxtFile}"
@@ -363,7 +374,8 @@ tasks.register('installExtension', Exec) {
 tasks.register('stopLibreOffice', Exec) {
     group = 'LibreOffice'
     description = 'Beendet alle laufenden LibreOffice-Instanzen'
-    commandLine 'pkill', '-x', 'soffice.bin'
+    // Linux-Prozess heißt soffice.bin, der macOS-Prozess soffice
+    commandLine 'pkill', '-x', sofficeProzessName
     ignoreExitValue = true
 
     doLast {
@@ -379,7 +391,7 @@ tasks.register('uninstallExtension', Exec) {
     group = 'LibreOffice'
     description = 'Deinstalliert die Extension aus LibreOffice'
     dependsOn 'stopLibreOffice'
-    commandLine "${libreOfficePath}/program/unopkg", 'remove', extensionId
+    commandLine "${libreOfficeProgramPath}/unopkg", 'remove', extensionId
     ignoreExitValue = true
     errorOutput = new ByteArrayOutputStream()
     standardOutput = new ByteArrayOutputStream()
@@ -409,7 +421,7 @@ tasks.register('debugLibreOffice', Exec) {
 
     environment 'JAVA_TOOL_OPTIONS', '-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005'
 
-    commandLine "${libreOfficePath}/program/soffice", '--calc'
+    commandLine "${libreOfficeProgramPath}/soffice", '--calc'
 
     doFirst {
         println "LibreOffice wird im Debug-Modus gestartet..."
@@ -423,7 +435,7 @@ tasks.register('runLibreoffice', Exec) {
     description = 'Startet LibreOffice Calc nach Neuinstallation der Extension'
     dependsOn 'reinstallExtension'
 
-    commandLine "${libreOfficePath}/program/soffice", '--calc'
+    commandLine "${libreOfficeProgramPath}/soffice", '--calc'
 
     doFirst {
         println "Starte LibreOffice Calc..."
@@ -556,7 +568,7 @@ tasks.register('loDebugLog', Exec) {
     // LO starten; stderr in Datei + Terminal gleichzeitig
     commandLine 'bash', '-c', """
         mkdir -p '${loLogDir}'
-        '${libreOfficePath}/program/soffice' --calc 2>&1 | tee '${salLogFile}'
+        '${libreOfficeProgramPath}/soffice' --calc 2>&1 | tee '${salLogFile}'
     """
 
     doFirst {
@@ -582,7 +594,7 @@ tasks.register('loX11', Exec) {
 
     commandLine 'bash', '-c', """
         mkdir -p '${loLogDir}'
-        '${libreOfficePath}/program/soffice' --calc 2>&1 | tee '${salLogFile}'
+        '${libreOfficeProgramPath}/soffice' --calc 2>&1 | tee '${salLogFile}'
     """
 
     doFirst {
@@ -613,7 +625,7 @@ tasks.register('loGdb', Exec) {
         gdb -ex 'handle SIGSEGV stop' \\
             -ex 'handle SIGABRT stop' \\
             -ex 'run --calc' \\
-            '${libreOfficePath}/program/soffice.bin'
+            '${libreOfficeProgramPath}/soffice.bin'
     """
 
     doFirst {
@@ -643,7 +655,7 @@ tasks.register('startCalc', Exec) {
     description = 'Baut OXT frisch (clean), installiert Extension und startet LibreOffice Calc (non-blocking)'
     dependsOn 'clean','reinstallExtension'
 
-    commandLine "${libreOfficePath}/program/soffice", '--calc'
+    commandLine "${libreOfficeProgramPath}/soffice", '--calc'
 
     doFirst {
         println "Starte LibreOffice Calc..."
@@ -657,7 +669,7 @@ tasks.register('startCalcNaked', Exec) {
     description = 'Deinstalliert Extension, startet Calc ohne Plugin (non-blocking)'
     dependsOn 'uninstallExtension'
 
-    commandLine "${libreOfficePath}/program/soffice", '--calc'
+    commandLine "${libreOfficeProgramPath}/soffice", '--calc'
 
     doFirst {
         println "Starte LibreOffice Calc (ohne Extension)..."

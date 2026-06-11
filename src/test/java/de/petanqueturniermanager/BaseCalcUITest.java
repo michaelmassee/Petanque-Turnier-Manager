@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import com.sun.star.beans.XPropertySet;
@@ -68,11 +69,33 @@ public abstract class BaseCalcUITest {
 
 	private static final Logger logger = LogManager.getLogger(BaseCalcUITest.class);
 
-	// Verwende die UserInstallation ~/.config/libreoffice/4, wo das Plugin installiert ist
-	// (via: ./gradlew reinstallExtension)
+	/**
+	 * Default-LibreOffice-Userprofil relativ zu user.home, OS-abhängig.<br>
+	 * unopkg (ohne -env:UserInstallation) installiert die Extension in dieses Profil — soffice muss daher mit
+	 * demselben Profil gestartet werden, sonst findet es die Extension nicht.
+	 */
+	private static String standardProfilVerzeichnis() {
+		String osName = System.getProperty("os.name").toLowerCase(Locale.ROOT);
+		if (osName.contains("mac")) {
+			return "Library/Application Support/LibreOffice/4";
+		}
+		return ".config/libreoffice/4";
+	}
+
+	/**
+	 * file://-URL des Default-Userprofils für -env:UserInstallation.<br>
+	 * Leerzeichen (macOS: "Application Support") müssen in der URL percent-encodiert sein.
+	 */
+	private static String standardProfilUrl() {
+		String pfad = System.getProperty("user.home") + "/" + standardProfilVerzeichnis();
+		return "file://" + pfad.replace(" ", "%20");
+	}
+
+	// Verwende das OS-abhängige Default-Userprofil, wo das Plugin installiert ist
+	// (via: ./gradlew reinstallExtension bzw. installExtension() weiter unten)
 	final protected static OfficeStarter starter = OfficeStarter.from()
 			.headless(Boolean.parseBoolean(System.getProperty("uitest.headless", "false")))
-			.userInstallation("file://" + System.getProperty("user.home") + "/.config/libreoffice/4");
+			.userInstallation(standardProfilUrl());
 	protected static XComponentLoader loader;
 
 	protected XSpreadsheetDocument doc;
@@ -100,7 +123,7 @@ public abstract class BaseCalcUITest {
 	 */
 	private static synchronized void installExtension() {
 		// Veraltete Lock-Datei entfernen, falls vorhanden
-		File lockFile = new File(System.getProperty("user.home") + "/.config/libreoffice/4/.lock");
+		File lockFile = new File(new File(System.getProperty("user.home")), standardProfilVerzeichnis() + "/.lock");
 		if (lockFile.exists()) {
 			logger.warn("Veraltete Lock-Datei gefunden, wird entfernt: " + lockFile.getAbsolutePath());
 			lockFile.delete();

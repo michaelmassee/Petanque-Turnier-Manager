@@ -1,0 +1,161 @@
+name: Smoketest macOS
+
+# Manueller Smoketest: baut die OXT auf Linux (macOS-Bundle hat kein SDK/unoidl-write),
+# installiert LibreOffice auf einem macOS-Runner und führt den MeldeListeSheetUITest
+# headless aus (erstellt eine Supermelee-Meldeliste und validiert sie).
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-oxt:
+    name: Build OXT (Linux, mit SDK)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 25 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: |
+            frontend/package-lock.json
+            frontend-spielerdb/package-lock.json
+
+      - name: Install LibreOffice inkl. SDK (unoidl-write für compileIdl)
+        # Wie ci.yml, zusätzlich libreoffice-dev für /usr/lib/libreoffice/sdk/bin/unoidl-write.
+        # 5 Versuche mit exponentiellem Backoff (15/30/60/120 s) gegen Mirror-Flakyness.
+        run: |
+          set -e
+          backoffs=(15 30 60 120)
+          for attempt in 1 2 3 4 5; do
+            echo "::group::apt update + install (Versuch $attempt)"
+            if timeout 240 sudo apt-get update && \
+               timeout 240 sudo apt-get install -y --no-install-recommends \
+                 libreoffice-core \
+                 libreoffice-java-common \
+                 libreoffice-dev; then
+              echo "::endgroup::"
+              ls /usr/lib/libreoffice/sdk/bin/unoidl-write
+              exit 0
+            fi
+            echo "::endgroup::"
+            if [ "$attempt" -lt 5 ]; then
+              wait="${backoffs[$((attempt-1))]}"
+              echo "Versuch $attempt fehlgeschlagen, neuer Versuch in ${wait} s …"
+              sleep "$wait"
+            fi
+          done
+          echo "Alle 5 apt-Versuche fehlgeschlagen."
+          exit 1
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Install frontend-spielerdb dependencies
+        working-directory: frontend-spielerdb
+        run: npm ci
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build OXT
+        # gradle.properties enthält einen lokalen org.gradle.java.home (SDKMAN-Pfad),
+        # den wir per -D auf den vom setup-java bereitgestellten JAVA_HOME überschreiben.
+        run: ./gradlew buildOXT -Dorg.gradle.java.home="$JAVA_HOME" --no-daemon --stacktrace
+
+      - name: Upload OXT artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxt
+          path: build/distributions/*.oxt
+          if-no-files-found: error
+          retention-days: 1
+
+  smoketest-macos:
+    name: Smoketest (macOS)
+    runs-on: macos-latest
+    timeout-minutes: 30
+    needs: build-oxt
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Temurin JDK 25 (Cask)
+        # Cask landet in /Library/Java/JavaVirtualMachines — nur dort findet LOs jvmfwk
+        # die JVM für die Java-Extension (setup-java/hostedtoolcache wird NICHT gefunden).
+        # Dieselbe JVM wird auch für Gradle verwendet.
+        run: |
+          brew install --cask temurin@25
+          echo "JAVA_HOME=$(/usr/libexec/java_home -v 25)" >> "$GITHUB_ENV"
+
+      - name: Install LibreOffice (Cask, ohne Gatekeeper-Quarantäne)
+        run: brew install --cask libreoffice --no-quarantine
+
+      - name: Diagnose macOS-Bundle-Layout
+        # Verifiziert die Layout-Annahmen aus build.gradle (MacOS/, Resources/java/)
+        run: |
+          echo "::group::Contents/MacOS"
+          ls /Applications/LibreOffice.app/Contents/MacOS/ | head -30
+          echo "::endgroup::"
+          echo "::group::Contents/Resources/java"
+          ls /Applications/LibreOffice.app/Contents/Resources/java/ | head -30
+          echo "::endgroup::"
+          "$JAVA_HOME/bin/java" -version
+
+      - name: LibreOffice-Binaries in PATH aufnehmen
+        # OfficeStarter (soffice) und BaseCalcUITest (unopkg) rufen beide aus dem PATH auf.
+        run: echo "/Applications/LibreOffice.app/Contents/MacOS" >> "$GITHUB_PATH"
+
+      - name: Download OXT artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: oxt
+          path: build/distributions
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Run MeldeListeSheetUITest (Supermelee-Meldeliste)
+        # -x reinstallExtension: OXT kommt fertig aus dem Artifact, die Installation macht
+        #   BaseCalcUITest.installExtension() selbst (unopkg remove/add aus dem PATH);
+        #   kappt zugleich buildOXT/compileIdl, die auf macOS nicht laufen können.
+        # -x buildFrontend/-x buildSpielerDbFrontend: processResources hängt an den
+        #   npm-Builds; die statischen Frontend-Ressourcen braucht dieser Test nicht.
+        run: |
+          ./gradlew uiTests \
+            --tests "de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheetUITest" \
+            -x reinstallExtension -x buildFrontend -x buildSpielerDbFrontend \
+            -Dorg.gradle.java.home="$JAVA_HOME" --no-daemon --stacktrace
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoketest-report-macos
+          path: build/reports/tests/
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload LibreOffice-Profil (Fehlerdiagnose)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lo-profil-macos
+          path: ~/Library/Application Support/LibreOffice/4/
+          if-no-files-found: ignore
+          retention-days: 7
