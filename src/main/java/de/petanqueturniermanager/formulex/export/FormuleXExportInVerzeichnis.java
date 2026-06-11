@@ -38,7 +38,7 @@ public class FormuleXExportInVerzeichnis extends AbstractExportInVerzeichnis {
         String meldelisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_FORMULEX_MELDELISTE, SheetNamen.meldeliste());
         String ranglisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_FORMULEX_RANGLISTE, SheetNamen.formulexRangliste());
 
-        Path pdfRangliste = exportierePdfWennTabelleVorhanden(ranglisteSheetName, zielVerzeichnis);
+        Path pdfRangliste = exportierePdfAusHtml(ranglisteSheetName, I18n.get("export.nav.formulex.rangliste"), zielVerzeichnis);
         if (pdfRangliste != null) {
             exportierteDateien.add(pdfRangliste);
         }

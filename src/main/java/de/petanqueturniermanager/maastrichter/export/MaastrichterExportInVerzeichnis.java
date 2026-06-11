@@ -43,7 +43,7 @@ public class MaastrichterExportInVerzeichnis extends AbstractExportInVerzeichnis
         }
 
         String ranglisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX, SheetNamen.maastrichterVorrundenRangliste());
-        Path pdfRangliste = exportierePdfWennTabelleVorhanden(ranglisteSheetName, zielVerzeichnis);
+        Path pdfRangliste = exportierePdfAusHtml(ranglisteSheetName, I18n.get("export.maastrichter.nav.vorrunden.rangliste"), zielVerzeichnis);
         if (pdfRangliste != null) {
             exportierteDateien.add(pdfRangliste);
         }
@@ -53,13 +53,13 @@ public class MaastrichterExportInVerzeichnis extends AbstractExportInVerzeichnis
 
         for (var eintrag : buchstabenSheetEintraegePerSchluessel(
                 SheetMetadataHelper::schluesselMaastrichterFinalrunde, SheetNamen::koFinaleGruppe)) {
-            Path pdf = exportierePdfWennTabelleVorhanden(eintrag.sheetName(), zielVerzeichnis);
+            var finalTitel = I18n.get("export.maastrichter.nav.finalrunde", eintrag.buchstabe());
+            Path pdf = exportierePdfAusHtml(eintrag.sheetName(), finalTitel, zielVerzeichnis);
             if (pdf != null) {
                 exportierteDateien.add(pdf);
             }
             sections.add(new ExportHtmlSeite.Section("finalrunde-" + eintrag.buchstabe(),
-                    I18n.get("export.maastrichter.nav.finalrunde", eintrag.buchstabe()),
-                    eintrag.sheetName(), buildPdfUrl(pdf)));
+                    finalTitel, eintrag.sheetName(), buildPdfUrl(pdf)));
         }
 
         processBox().info(I18n.get("export.info.html"));

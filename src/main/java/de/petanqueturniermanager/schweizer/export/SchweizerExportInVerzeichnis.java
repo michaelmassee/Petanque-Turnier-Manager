@@ -38,7 +38,7 @@ public class SchweizerExportInVerzeichnis extends AbstractExportInVerzeichnis {
         String meldelisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_MELDELISTE, SheetNamen.meldeliste());
         String ranglisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_RANGLISTE, SheetNamen.rangliste());
 
-        Path pdfRangliste = exportierePdfWennTabelleVorhanden(ranglisteSheetName, zielVerzeichnis);
+        Path pdfRangliste = exportierePdfAusHtml(ranglisteSheetName, I18n.get("export.nav.rangliste"), zielVerzeichnis);
         if (pdfRangliste != null) {
             exportierteDateien.add(pdfRangliste);
         }

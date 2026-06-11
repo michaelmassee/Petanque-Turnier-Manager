@@ -32,12 +32,16 @@ import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.io.PdfExport;
+import de.petanqueturniermanager.webserver.TabelleHtmlRenderer;
+import de.petanqueturniermanager.webserver.TabellenMapper;
 
 public abstract class AbstractExportInVerzeichnis extends SheetRunner {
 
     private static final Logger logger = LogManager.getLogger(AbstractExportInVerzeichnis.class);
 
     private final Path zielVerzeichnis;
+    private final TabellenMapper tabellenMapper = new TabellenMapper();
+    private final TabelleHtmlRenderer tabelleHtmlRenderer = new TabelleHtmlRenderer();
 
     protected AbstractExportInVerzeichnis(WorkingSpreadsheet ws, TurnierSystem ts, String name,
             Path zielVerzeichnis) {
@@ -82,6 +86,47 @@ public abstract class AbstractExportInVerzeichnis extends SheetRunner {
     @FunctionalInterface
     protected interface PdfExportAktion {
         URI exportiere() throws GenerateException;
+    }
+
+    protected Path exportierePdfAusHtml(String sheetName, String abschnittTitel, Path zielVerzeichnis)
+            throws GenerateException {
+        var sheet = getSheetHelper().findByName(sheetName);
+        if (sheet == null) {
+            processBox().info(I18n.get("error.tabelle.nicht.vorhanden", sheetName));
+            logger.warn("PDF-Export für Sheet '{}' übersprungen: Tabelle nicht vorhanden", sheetName);
+            return null;
+        }
+        var doc = getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
+        var model = tabellenMapper.map(sheet, doc);
+        var tabelleFragment = tabelleHtmlRenderer.render(model);
+        var html = PdfHtmlDokument.erstelle(abschnittTitel, tabelleFragment);
+        var zieldatei = pdfZieldatei(sheetName, zielVerzeichnis);
+        var pdf = HtmlZuPdfKonvertierer.konvertiere(html, zieldatei);
+        processBox().info(pdf.toString());
+        return pdf;
+    }
+
+    protected Path pdfZieldatei(String sheetName, Path zielVerzeichnis) throws GenerateException {
+        var xStorable = getWorkingSpreadsheet().getXStorable();
+        String location = xStorable != null ? xStorable.getLocation() : null;
+        return pdfZieldatei(sheetName, zielVerzeichnis, location);
+    }
+
+    static Path pdfZieldatei(String sheetName, Path zielVerzeichnis, String location) throws GenerateException {
+        String fallback = sheetName + ".pdf";
+        if (StringUtils.isBlank(location)) {
+            return zielVerzeichnis.resolve(fallback);
+        }
+        try {
+            Path dateiname = Path.of(URI.create(location).toURL().toURI()).getFileName();
+            if (dateiname == null) {
+                return zielVerzeichnis.resolve(fallback);
+            }
+            String basisName = FilenameUtils.removeExtension(dateiname.toString());
+            return zielVerzeichnis.resolve(sheetName + "_" + basisName + ".pdf");
+        } catch (IllegalArgumentException | MalformedURLException | URISyntaxException e) {
+            throw new GenerateException(e.getMessage());
+        }
     }
 
     protected Path exportiereHtml(Path zielVerzeichnis, String fallbackDateiname, String titel, String logoUrl,

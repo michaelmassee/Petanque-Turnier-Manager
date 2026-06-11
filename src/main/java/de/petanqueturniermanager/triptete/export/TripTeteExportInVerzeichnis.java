@@ -15,7 +15,6 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
-import de.petanqueturniermanager.helper.sheet.io.PdfExport;
 import de.petanqueturniermanager.helper.upload.AbstractExportInVerzeichnis;
 import de.petanqueturniermanager.helper.upload.ExportErgebnis;
 import de.petanqueturniermanager.helper.upload.ExportHtmlSeite;
@@ -34,7 +33,6 @@ public class TripTeteExportInVerzeichnis extends AbstractExportInVerzeichnis {
 
         var ws = getWorkingSpreadsheet();
         var konfiguration = new TripTeteKonfigurationSheet(ws);
-        var spielplan = new TripTeteSpielPlanSheet(ws);
 
         List<Path> exportierteDateien = new ArrayList<>();
 
@@ -42,18 +40,12 @@ public class TripTeteExportInVerzeichnis extends AbstractExportInVerzeichnis {
         String spielplanSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_TRIPTETE_SPIELPLAN, TripTeteSpielPlanSheet.sheetName());
         String ranglisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_TRIPTETE_RANGLISTE, SheetNamen.rangliste());
 
-        Path pdfSpielplan = exportierePdfWennTabelleVorhanden(spielplanSheetName,
-                () -> PdfExport.from(ws)
-                        .sheetName(spielplanSheetName)
-                        .range(spielplan.printBereichRangePosition())
-                        .prefix1(spielplanSheetName)
-                        .zielVerzeichnis(zielVerzeichnis)
-                        .doExport());
+        Path pdfSpielplan = exportierePdfAusHtml(spielplanSheetName, I18n.get("export.nav.spielplan"), zielVerzeichnis);
         if (pdfSpielplan != null) {
             exportierteDateien.add(pdfSpielplan);
         }
 
-        Path pdfRangliste = exportierePdfWennTabelleVorhanden(ranglisteSheetName, zielVerzeichnis);
+        Path pdfRangliste = exportierePdfAusHtml(ranglisteSheetName, I18n.get("export.nav.rangliste"), zielVerzeichnis);
         if (pdfRangliste != null) {
             exportierteDateien.add(pdfRangliste);
         }

@@ -43,7 +43,7 @@ public class KaskadeExportInVerzeichnis extends AbstractExportInVerzeichnis {
         }
 
         String ranglisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_KASKADE_GRUPPENRANGLISTE, SheetNamen.kaskadeGruppenrangliste());
-        Path pdfRangliste = exportierePdfWennTabelleVorhanden(ranglisteSheetName, zielVerzeichnis);
+        Path pdfRangliste = exportierePdfAusHtml(ranglisteSheetName, I18n.get("export.kaskade.nav.gruppenrangliste"), zielVerzeichnis);
         if (pdfRangliste != null) {
             exportierteDateien.add(pdfRangliste);
         }
@@ -53,13 +53,13 @@ public class KaskadeExportInVerzeichnis extends AbstractExportInVerzeichnis {
 
         for (var eintrag : buchstabenSheetEintraegePerSchluessel(
                 SheetMetadataHelper::schluesselKaskadenFeld, SheetNamen::kaskadenFeld)) {
-            Path pdf = exportierePdfWennTabelleVorhanden(eintrag.sheetName(), zielVerzeichnis);
+            var feldTitel = I18n.get("export.kaskade.nav.feld", eintrag.buchstabe());
+            Path pdf = exportierePdfAusHtml(eintrag.sheetName(), feldTitel, zielVerzeichnis);
             if (pdf != null) {
                 exportierteDateien.add(pdf);
             }
             sections.add(new ExportHtmlSeite.Section("feld-" + eintrag.buchstabe(),
-                    I18n.get("export.kaskade.nav.feld", eintrag.buchstabe()),
-                    eintrag.sheetName(), buildPdfUrl(pdf)));
+                    feldTitel, eintrag.sheetName(), buildPdfUrl(pdf)));
         }
 
         processBox().info(I18n.get("export.info.html"));

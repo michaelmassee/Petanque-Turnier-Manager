@@ -53,7 +53,7 @@ public class KoExportInVerzeichnis extends AbstractExportInVerzeichnis {
 
         if (einzelBaumSheet != null) {
             String einzelName = Lo.qi(XNamed.class, einzelBaumSheet).getName();
-            Path pdf = exportierePdfWennTabelleVorhanden(einzelName, zielVerzeichnis);
+            Path pdf = exportierePdfAusHtml(einzelName, I18n.get("export.ko.nav.turnierbaum"), zielVerzeichnis);
             if (pdf != null) {
                 exportierteDateien.add(pdf);
             }
@@ -62,7 +62,7 @@ public class KoExportInVerzeichnis extends AbstractExportInVerzeichnis {
         }
 
         for (var eintrag : gruppenSheets) {
-            Path pdf = exportierePdfWennTabelleVorhanden(eintrag.sheetName(), zielVerzeichnis);
+            Path pdf = exportierePdfAusHtml(eintrag.sheetName(), I18n.get("export.ko.nav.turnierbaum.gruppe", eintrag.buchstabe()), zielVerzeichnis);
             if (pdf != null) {
                 exportierteDateien.add(pdf);
             }

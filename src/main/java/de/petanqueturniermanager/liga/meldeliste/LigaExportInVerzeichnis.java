@@ -12,13 +12,11 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
-import de.petanqueturniermanager.helper.sheet.io.PdfExport;
 import de.petanqueturniermanager.helper.upload.AbstractExportInVerzeichnis;
+import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet;
 import de.petanqueturniermanager.helper.upload.ExportErgebnis;
 import de.petanqueturniermanager.helper.upload.ExportHtmlSeite;
 import de.petanqueturniermanager.liga.konfiguration.LigaKonfigurationSheet;
-import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheet;
-import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet;
 
 public class LigaExportInVerzeichnis extends AbstractExportInVerzeichnis {
 
@@ -32,8 +30,6 @@ public class LigaExportInVerzeichnis extends AbstractExportInVerzeichnis {
         new LigaMeldeListeSheetUpdate(ws).upDateSheet();
         processBox().info(I18n.get("export.info.pdf"));
 
-        var ligaSpielPlanSheet = new LigaSpielPlanSheet(ws);
-        var ligaRanglisteSheet = new LigaRanglisteSheet(ws);
         var konfiguration = new LigaKonfigurationSheet(ws);
 
         String turnierlogoUrl = StringUtils.strip(konfiguration.getTurnierlogoUrl());
@@ -50,21 +46,9 @@ public class LigaExportInVerzeichnis extends AbstractExportInVerzeichnis {
         String ranglisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_LIGA_RANGLISTE, SheetNamen.rangliste());
         String direktvergleichSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_LIGA_DIREKTVERGLEICH, SheetNamen.direktvergleich());
 
-        Path pdfSpielplan = exportierePdfWennTabelleVorhanden(spielplanSheetName,
-                () -> PdfExport.from(ws)
-                        .sheetName(spielplanSheetName)
-                        .range(ligaSpielPlanSheet.printBereichRangePosition())
-                        .prefix1(spielplanSheetName)
-                        .zielVerzeichnis(zielVerzeichnis)
-                        .doExport());
+        Path pdfSpielplan = exportierePdfAusHtml(spielplanSheetName, I18n.get("export.liga.nav.spielplan"), zielVerzeichnis);
 
-        Path pdfRangliste = exportierePdfWennTabelleVorhanden(ranglisteSheetName,
-                () -> PdfExport.from(ws)
-                        .sheetName(ranglisteSheetName)
-                        .range(ligaRanglisteSheet.printBereichRangePosition())
-                        .prefix1(ranglisteSheetName)
-                        .zielVerzeichnis(zielVerzeichnis)
-                        .doExport());
+        Path pdfRangliste = exportierePdfAusHtml(ranglisteSheetName, I18n.get("export.liga.nav.rangliste"), zielVerzeichnis);
 
         processBox().info(I18n.get("export.info.html"));
         boolean meldelisteExportieren = konfiguration.isMeldelisteExportieren();

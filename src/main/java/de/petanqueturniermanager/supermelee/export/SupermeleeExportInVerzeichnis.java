@@ -64,7 +64,7 @@ public class SupermeleeExportInVerzeichnis extends AbstractExportInVerzeichnis {
             }
             var sheetName = Lo.qi(XNamed.class, xSheet).getName();
             var titel = I18n.get("export.supermelee.spieltag", nr);
-            var pdf = exportierePdfWennTabelleVorhanden(sheetName, zielVerzeichnis);
+            var pdf = exportierePdfAusHtml(sheetName, titel, zielVerzeichnis);
             if (pdf != null) {
                 exportierteDateien.add(pdf);
             }
@@ -79,7 +79,7 @@ public class SupermeleeExportInVerzeichnis extends AbstractExportInVerzeichnis {
                 SheetNamen.endrangliste());
         String endranglisteSheetName = xEndrangliste != null ? Lo.qi(XNamed.class, xEndrangliste).getName() : null;
         Path pdfEndrangliste = endranglisteSheetName != null
-                ? exportierePdfWennTabelleVorhanden(endranglisteSheetName, zielVerzeichnis)
+                ? exportierePdfAusHtml(endranglisteSheetName, I18n.get("export.supermelee.nav.endrangliste"), zielVerzeichnis)
                 : null;
         if (pdfEndrangliste != null) {
             exportierteDateien.add(pdfEndrangliste);

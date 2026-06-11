@@ -41,12 +41,12 @@ public class JGJExportInVerzeichnis extends AbstractExportInVerzeichnis {
         String ranglisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_JGJ_RANGLISTE, SheetNamen.rangliste());
         String direktvergleichSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_JGJ_DIREKTVERGLEICH, SheetNamen.direktvergleich());
 
-        Path pdfRangliste = exportierePdfWennTabelleVorhanden(ranglisteSheetName, zielVerzeichnis);
+        Path pdfRangliste = exportierePdfAusHtml(ranglisteSheetName, I18n.get("export.nav.rangliste"), zielVerzeichnis);
         if (pdfRangliste != null) {
             exportierteDateien.add(pdfRangliste);
         }
 
-        Path pdfDirektvergleich = exportierePdfWennTabelleVorhanden(direktvergleichSheetName, zielVerzeichnis);
+        Path pdfDirektvergleich = exportierePdfAusHtml(direktvergleichSheetName, I18n.get("export.nav.direktvergleich"), zielVerzeichnis);
         if (pdfDirektvergleich != null) {
             exportierteDateien.add(pdfDirektvergleich);
         }

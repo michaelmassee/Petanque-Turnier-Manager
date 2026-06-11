@@ -217,4 +217,18 @@
         <Bug pattern="SING_SINGLETON_HAS_NONPRIVATE_CONSTRUCTOR"/>
     </Match>
 
+    <!--
+        PdfHtmlDokument.erstelle(): VA_FORMAT_STRING_USES_NEWLINE
+        Die Methode verwendet ein Java-Textblock mit .formatted(), das LF-Zeichen (\n)
+        enthaelt. SpotBugs empfiehlt %n fuer plattformunabhaengige Zeilenenden — das ist
+        fuer Console-/Datei-Text korrekt. Hier wird jedoch HTML erzeugt, wo LF (\n)
+        der einzig richtige Zeilenumbruch ist; %n wuerde auf Windows CRLF generieren,
+        was valid ist, aber unnoetige Diff-Noise produziert.
+        → False Positive: HTML-Erzeugung, kein Plattform-Zeilenende-Problem.
+    -->
+    <Match>
+        <Class name="de.petanqueturniermanager.helper.upload.PdfHtmlDokument"/>
+        <Bug pattern="VA_FORMAT_STRING_USES_NEWLINE"/>
+    </Match>
+
 </FindBugsFilter>
