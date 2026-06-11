@@ -42,21 +42,46 @@ public abstract class AbstractFtpUpload extends SheetRunner {
 
         String passwort = GlobalProperties.get().getUploadPasswort(konfig.host());
         if (passwort.isEmpty()) {
-            var eingabe = PasswortEingabeDialog.zeigen(getWorkingSpreadsheet(), konfig.host());
-            if (eingabe.isEmpty()) {
-                throw new GenerateException(I18n.get("upload.passwort.abgebrochen"));
-            }
-            passwort = eingabe.get();
+            passwort = fragePasswort(konfig);
         }
 
         try {
-            int anzahl = UploadServiceFactory.erstelle(konfig)
-                    .hochladen(ergebnisOpt.get().exportierteDateien(), passwort);
+            int anzahl = ladeHoch(konfig, passwort, ergebnisOpt.get());
             processBox().info(I18n.get("ftp.upload.erfolg", anzahl));
         } catch (IOException e) {
+            if (istAnmeldefehler(e)) {
+                try {
+                    GlobalProperties.get().setUploadPasswort(konfig.host(), "");
+                    String neuesPasswort = fragePasswort(konfig);
+                    int anzahl = ladeHoch(konfig, neuesPasswort, ergebnisOpt.get());
+                    processBox().info(I18n.get("ftp.upload.erfolg", anzahl));
+                    return;
+                } catch (IOException retryFehler) {
+                    logger.error("FTP/SFTP-Upload nach erneuter Passwort-Eingabe fehlgeschlagen", retryFehler);
+                    throw new GenerateException(retryFehler.getMessage());
+                }
+            }
             logger.error("FTP/SFTP-Upload fehlgeschlagen", e);
             throw new GenerateException(e.getMessage());
         }
+    }
+
+    private String fragePasswort(UploadKonfiguration konfig) throws GenerateException {
+        var eingabe = PasswortEingabeDialog.zeigen(getWorkingSpreadsheet(), konfig.host());
+        if (eingabe.isEmpty()) {
+            throw new GenerateException(I18n.get("upload.passwort.abgebrochen"));
+        }
+        return eingabe.get();
+    }
+
+    private int ladeHoch(UploadKonfiguration konfig, String passwort, ExportErgebnis ergebnis) throws IOException {
+        return UploadServiceFactory.erstelle(konfig, getWorkingSpreadsheet())
+                .hochladen(ergebnis.exportierteDateien(), passwort);
+    }
+
+    private boolean istAnmeldefehler(IOException e) {
+        String meldung = e.getMessage();
+        return meldung != null && (meldung.contains("Auth fail") || meldung.contains("Auth cancel"));
     }
 
     @Override

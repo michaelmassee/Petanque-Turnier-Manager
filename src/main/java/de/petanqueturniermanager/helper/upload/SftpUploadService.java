@@ -16,15 +16,22 @@ import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import com.jcraft.jsch.SftpException;
+import com.jcraft.jsch.UserInfo;
 
 class SftpUploadService implements IUploadService {
 
     private static final Logger logger = LogManager.getLogger(SftpUploadService.class);
 
     private final UploadKonfiguration konfiguration;
+    private final UserInfo userInfo;
 
     SftpUploadService(UploadKonfiguration konfiguration) {
+        this(konfiguration, null);
+    }
+
+    SftpUploadService(UploadKonfiguration konfiguration, UserInfo userInfo) {
         this.konfiguration = konfiguration;
+        this.userInfo = userInfo;
     }
 
     @Override
@@ -36,8 +43,15 @@ class SftpUploadService implements IUploadService {
             ladeKnownHosts(jsch);
             session = jsch.getSession(konfiguration.benutzer(), konfiguration.host(), konfiguration.port());
             session.setPassword(passwort);
+            if (userInfo != null) {
+                if (userInfo instanceof SftpHostKeyUserInfo hostKeyUserInfo) {
+                    hostKeyUserInfo.setPasswort(passwort);
+                }
+                session.setUserInfo(userInfo);
+            }
             var config = new Properties();
-            config.put("StrictHostKeyChecking", "yes");
+            config.put("StrictHostKeyChecking", userInfo != null ? "ask" : "yes");
+            config.put("PreferredAuthentications", "password");
             session.setConfig(config);
             session.connect();
 
@@ -65,7 +79,7 @@ class SftpUploadService implements IUploadService {
             }
             return anzahl;
         } catch (JSchException e) {
-            throw new IOException("SFTP-Verbindungsfehler: " + e.getMessage(), e);
+            throw new IOException(formatiereVerbindungsfehler(e.getMessage(), konfiguration), e);
         } catch (SftpException e) {
             throw new IOException("SFTP-Verzeichniswechsel fehlgeschlagen: " + e.getMessage(), e);
         } finally {
@@ -88,13 +102,53 @@ class SftpUploadService implements IUploadService {
 
     private void ladeKnownHosts(JSch jsch) throws IOException {
         Path knownHosts = Paths.get(System.getProperty("user.home"), ".ssh", "known_hosts");
-        if (!Files.isRegularFile(knownHosts)) {
+        if (userInfo == null && !Files.isRegularFile(knownHosts)) {
             throw new IOException("SFTP known_hosts nicht gefunden: " + knownHosts);
+        }
+        if (userInfo != null) {
+            bereiteKnownHostsDateiVor(knownHosts);
         }
         try {
             jsch.setKnownHosts(knownHosts.toString());
         } catch (JSchException e) {
             throw new IOException("SFTP known_hosts kann nicht geladen werden: " + knownHosts, e);
         }
+    }
+
+    private void bereiteKnownHostsDateiVor(Path knownHosts) throws IOException {
+        Path parent = knownHosts.getParent();
+        if (parent != null) {
+            Files.createDirectories(parent);
+        }
+        if (!Files.exists(knownHosts)) {
+            Files.createFile(knownHosts);
+        }
+    }
+
+    static String formatiereVerbindungsfehler(String meldung, UploadKonfiguration konfiguration) {
+        String basis = "SFTP-Verbindungsfehler: " + meldung;
+        if (meldung != null && meldung.contains("Auth fail")) {
+            return basis + ". Anmeldung fehlgeschlagen. Bitte Benutzername, Passwort und SFTP-Zugang prüfen.";
+        }
+        if (meldung != null && meldung.contains("Auth cancel")) {
+            return basis + ". Anmeldung wurde abgebrochen. Bitte Passwort erneut eingeben.";
+        }
+        if (meldung == null || !meldung.contains("HostKey")) {
+            return basis;
+        }
+
+        String host = konfiguration.host();
+        int port = konfiguration.port();
+        String entfernen = port == 22
+                ? "ssh-keygen -R " + host
+                : "ssh-keygen -R \"[" + host + "]:" + port + "\"";
+        String neuLaden = port == 22
+                ? "ssh-keyscan -H " + host + " >> ~/.ssh/known_hosts"
+                : "ssh-keyscan -H -p " + port + " " + host + " >> ~/.ssh/known_hosts";
+
+        return basis
+                + ". Der gespeicherte SFTP-Host-Key passt nicht zum Server. "
+                + "Bitte den Fingerprint beim Anbieter prüfen und den known_hosts-Eintrag erneuern: "
+                + entfernen + " && " + neuLaden;
     }
 }

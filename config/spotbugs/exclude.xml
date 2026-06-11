@@ -214,8 +214,26 @@
         → False Positive: HTML-Erzeugung, kein Plattform-Zeilenende-Problem.
     -->
     <Match>
-        <Class name="de.petanqueturniermanager.helper.upload.PdfHtmlDokument"/>
+        <Or>
+            <Class name="de.petanqueturniermanager.helper.upload.PdfHtmlDokument"/>
+            <Class name="de.petanqueturniermanager.helper.upload.ExportFooterHtml"/>
+        </Or>
         <Bug pattern="VA_FORMAT_STRING_USES_NEWLINE"/>
+    </Match>
+
+    <!--
+        ExportHtmlSeite.PTM_EXPORT_LOGO_DATA_URI: HSC_HUGE_SHARED_STRING_CONSTANT.
+        Das Feld ist ein eingebettetes PNG-Logo als base64-Data-URI (data:image/png;
+        base64,...). Es absichtlich als String-Konstante zu halten, ist genau der
+        Zweck: das Logo wird ohne externe Datei direkt in den HTML-/PDF-Export
+        eingebettet. SpotBugs warnt nur vor der reinen Groesse — hier bewusst
+        akzeptiert, kein Bug.
+        → False Positive: bewusst eingebettetes Asset.
+    -->
+    <Match>
+        <Class name="de.petanqueturniermanager.helper.upload.ExportHtmlSeite"/>
+        <Field name="PTM_EXPORT_LOGO_DATA_URI"/>
+        <Bug pattern="HSC_HUGE_SHARED_STRING_CONSTANT"/>
     </Match>
 
 </FindBugsFilter>
