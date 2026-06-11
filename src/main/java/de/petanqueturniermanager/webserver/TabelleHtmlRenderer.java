@@ -36,10 +36,10 @@ public class TabelleHtmlRenderer {
         for (int c = 0; c < model.getSpalten(); c++) {
             Integer breite = spaltenBreiten.get(c);
             if (istVersteckt(breite)) {
-                sb.append("<col style=\"display:none\">");
+                sb.append("<col style=\"display:none\" />");
             } else {
                 int px = zuPx(breite != null ? breite : SPALTENBREITE_FALLBACK);
-                sb.append("<col style=\"width:").append(px).append("px\">");
+                sb.append("<col style=\"width:").append(px).append("px\" />");
             }
         }
         sb.append("</colgroup>");

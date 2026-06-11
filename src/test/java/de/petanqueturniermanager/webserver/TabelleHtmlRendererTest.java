@@ -59,7 +59,7 @@ class TabelleHtmlRendererTest {
                 Map.of(0, 600),
                 0, 0, 0, "", "", "", "", "", "");
         var html = renderer.render(model);
-        assertThat(html).contains("<col style=\"display:none\">");
+        assertThat(html).contains("<col style=\"display:none\" />");
         assertThat(html).contains(">X<");
         assertThat(html).doesNotContain(">Y<"); // Y in versteckter Spalte
     }
