@@ -497,6 +497,13 @@ tasks.register('uiTests', Test) {
     // Timeout pro Test überschreibbar (-Puitest.timeout='10 m'): CI-Runner (v.a. macOS)
     // sind deutlich langsamer als der lokale Rechner.
     systemProperty 'junit.jupiter.execution.timeout.default', providers.gradleProperty('uitest.timeout').getOrElse('3 m')
+    testLogging {
+        // 'full' zeigt bei JUnit-Timeouts den kompletten Stack des hängenden Threads
+        // in der Konsole – essenziell für CI-Diagnose ohne Report-Artifact.
+        exceptionFormat = 'full'
+        // -Puitest.verbose=true: Test-System-Out live in der Konsole (CI-Diagnose)
+        showStandardStreams = providers.gradleProperty('uitest.verbose').map { it == 'true' }.getOrElse(false)
+    }
     useJUnitPlatform()
     include '**/*UITest*'
     exclude 'de/petanqueturniermanager/beispielturnier/**'

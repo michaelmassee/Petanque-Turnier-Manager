@@ -152,7 +152,8 @@ jobs:
             --tests "de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheetUITest" \
             -x reinstallExtension -x buildFrontend -x buildSpielerDbFrontend \
             -Puitest.requireOffice=true \
-            -Puitest.timeout="10 m" \
+            -Puitest.timeout="5 m" \
+            -Puitest.verbose=true \
             -Dorg.gradle.java.home="$JAVA_HOME" --no-daemon --stacktrace
 
       - name: Upload test report
