@@ -62,11 +62,12 @@ public class JGJExportInVerzeichnis extends AbstractExportInVerzeichnis {
                 buildPdfUrl(pdfRangliste)));
         sections.add(new ExportHtmlSeite.Section("direktvergleich", I18n.get("export.nav.direktvergleich"), direktvergleichSheetName,
                 buildPdfUrl(pdfDirektvergleich)));
-        exportierteDateien.add(exportiereHtmlMitMeldelisteDruckbereich(meldelisteExportieren, meldelisteSheetName,
+        exportiereHtmlMitMeldelisteDruckbereich(meldelisteExportieren, meldelisteSheetName,
                 zielVerzeichnis, "JederGegenJeden.html",
                 StringUtils.defaultIfBlank(StringUtils.strip(konfiguration.getKopfZeileMitte()),
                         TurnierSystem.JGJ.getBezeichnung()),
-                StringUtils.strip(konfiguration.getTurnierlogoUrl()), sections));
+                StringUtils.strip(konfiguration.getTurnierlogoUrl()), sections)
+                .addTo(exportierteDateien);
 
         return new ExportErgebnis(exportierteDateien);
     }

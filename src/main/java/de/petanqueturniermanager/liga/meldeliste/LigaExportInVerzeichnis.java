@@ -56,7 +56,7 @@ public class LigaExportInVerzeichnis extends AbstractExportInVerzeichnis {
                 meldelisteSheetName, spielplanSheetName, buildPdfUrl(pdfSpielplan),
                 ranglisteSheetName, buildPdfUrl(pdfRangliste), direktvergleichSheetName,
                 meldelisteExportieren);
-        Path htmlDatei = exportiereHtmlMitMeldelisteDruckbereich(meldelisteExportieren, meldelisteSheetName,
+        var htmlExport = exportiereHtmlMitMeldelisteDruckbereich(meldelisteExportieren, meldelisteSheetName,
                 zielVerzeichnis, "Liga.html",
                 StringUtils.defaultIfBlank(gruppenname, TurnierSystem.LIGA.getBezeichnung()),
                 turnierlogoUrl, sections);
@@ -68,7 +68,7 @@ public class LigaExportInVerzeichnis extends AbstractExportInVerzeichnis {
         if (pdfRangliste != null) {
             exportierteDateien.add(pdfRangliste);
         }
-        exportierteDateien.add(htmlDatei);
+        htmlExport.addTo(exportierteDateien);
         return new ExportErgebnis(exportierteDateien);
     }
 

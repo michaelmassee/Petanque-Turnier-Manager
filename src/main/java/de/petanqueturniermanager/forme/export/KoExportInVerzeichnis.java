@@ -77,11 +77,12 @@ public class KoExportInVerzeichnis extends AbstractExportInVerzeichnis {
         }
 
         processBox().info(I18n.get("export.info.html"));
-        exportierteDateien.add(exportiereHtmlMitMeldelisteDruckbereich(meldelisteExportieren, meldelisteSheetName,
+        exportiereHtmlMitMeldelisteDruckbereich(meldelisteExportieren, meldelisteSheetName,
                 zielVerzeichnis, "KO.html",
                 StringUtils.defaultIfBlank(StringUtils.strip(konfiguration.getKopfZeileMitte()),
                         TurnierSystem.KO.getBezeichnung()),
-                StringUtils.strip(konfiguration.getTurnierlogoUrl()), sections));
+                StringUtils.strip(konfiguration.getTurnierlogoUrl()), sections)
+                .addTo(exportierteDateien);
 
         return new ExportErgebnis(exportierteDateien);
     }

@@ -7,8 +7,11 @@ import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
 import java.util.function.Function;
 
 import org.apache.commons.io.FilenameUtils;
@@ -133,22 +136,74 @@ public abstract class AbstractExportInVerzeichnis extends SheetRunner {
         }
     }
 
-    protected Path exportiereHtml(Path zielVerzeichnis, String fallbackDateiname, String titel, String logoUrl,
+    protected HtmlExportErgebnis exportiereHtml(Path zielVerzeichnis, String fallbackDateiname, String titel, String logoUrl,
             List<ExportHtmlSeite.Section> sections) throws GenerateException {
         try {
+            var logo = bereiteTurnierlogoVor(zielVerzeichnis, logoUrl);
+            logo.kopierteDatei().ifPresent(datei -> processBox().info(datei.toString()));
             String html = ExportHtmlSeite.from(getWorkingSpreadsheet())
                     .titel(titel)
-                    .logoUrl(logoUrl)
+                    .logoUrl(logo.logoUrl())
                     .sections(sections)
                     .erstelle();
             Path htmlDatei = htmlZieldatei(zielVerzeichnis, fallbackDateiname);
             Files.writeString(htmlDatei, html, StandardCharsets.UTF_8);
             processBox().info(htmlDatei.toString());
-            return htmlDatei;
+            return new HtmlExportErgebnis(htmlDatei, logo.kopierteDatei());
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
             throw new GenerateException(e.getMessage());
         }
+    }
+
+    protected record HtmlExportErgebnis(Path htmlDatei, Optional<Path> logoDatei) {
+        public void addTo(List<Path> exportierteDateien) {
+            exportierteDateien.add(htmlDatei);
+            logoDatei.ifPresent(exportierteDateien::add);
+        }
+    }
+
+    record TurnierlogoExport(String logoUrl, Optional<Path> kopierteDatei) {
+    }
+
+    static TurnierlogoExport bereiteTurnierlogoVor(Path zielVerzeichnis, String logoUrl)
+            throws IOException, GenerateException {
+        String quelle = StringUtils.stripToEmpty(logoUrl);
+        if (StringUtils.isBlank(quelle) || istUnveraenderteLogoQuelle(quelle)) {
+            return new TurnierlogoExport(quelle, Optional.empty());
+        }
+
+        Path logoDatei = lokalerLogoPfad(quelle);
+        if (!Files.isRegularFile(logoDatei) || !Files.isReadable(logoDatei)) {
+            throw new GenerateException(I18n.get("export.fehler.turnierlogo.nicht.lesbar", logoDatei));
+        }
+
+        Path zielDatei = zielVerzeichnis.resolve("turnier-logo" + logoEndung(logoDatei));
+        Files.copy(logoDatei, zielDatei, StandardCopyOption.REPLACE_EXISTING);
+        return new TurnierlogoExport(zielDatei.getFileName().toString(), Optional.of(zielDatei));
+    }
+
+    private static boolean istUnveraenderteLogoQuelle(String quelle) {
+        String lower = quelle.toLowerCase(Locale.ROOT);
+        return lower.startsWith("http://") || lower.startsWith("https://") || lower.startsWith("data:");
+    }
+
+    private static Path lokalerLogoPfad(String quelle) throws GenerateException {
+        try {
+            URI uri = URI.create(quelle);
+            if ("file".equalsIgnoreCase(uri.getScheme())) {
+                return Path.of(uri);
+            }
+        } catch (IllegalArgumentException e) {
+            // Kein URI, sondern normaler lokaler Pfad.
+        }
+        return Path.of(quelle);
+    }
+
+    private static String logoEndung(Path logoDatei) {
+        String dateiname = logoDatei.getFileName() != null ? logoDatei.getFileName().toString() : "";
+        String extension = FilenameUtils.getExtension(dateiname);
+        return StringUtils.isBlank(extension) ? "" : "." + extension;
     }
 
     /**
@@ -198,7 +253,7 @@ public abstract class AbstractExportInVerzeichnis extends SheetRunner {
      * Überspringt Zeile 0 (Überschrift) und schneidet leere Zeilen am Ende ab.
      * Der originale Druckbereich wird nach dem Export wiederhergestellt.
      */
-    protected Path exportiereHtmlMitMeldelisteDruckbereich(
+    protected HtmlExportErgebnis exportiereHtmlMitMeldelisteDruckbereich(
             boolean meldelisteExportieren, String meldelisteSheetName,
             Path zielVerzeichnis, String fallbackDateiname, String titel, String logoUrl,
             List<ExportHtmlSeite.Section> sections) throws GenerateException {

@@ -86,15 +86,15 @@ public class SupermeleeExportInVerzeichnis extends AbstractExportInVerzeichnis {
         }
 
         processBox().info(I18n.get("export.info.html"));
-        Path htmlDatei = exportiereHtml(zielVerzeichnis, turniername, turnierlogoUrl,
+        var htmlExport = exportiereHtml(zielVerzeichnis, turniername, turnierlogoUrl,
                 endranglisteSheetName, pdfEndrangliste, spieltagSheetNamen, spieltagSchluessel,
                 spieltagTitel, spieltagPdfUrls);
-        exportierteDateien.add(htmlDatei);
+        htmlExport.addTo(exportierteDateien);
 
         return new ExportErgebnis(exportierteDateien);
     }
 
-    private Path exportiereHtml(Path zielVerzeichnis, String turniername, String logoUrl,
+    private HtmlExportErgebnis exportiereHtml(Path zielVerzeichnis, String turniername, String logoUrl,
             String endranglisteSheetName, Path pdfEndrangliste,
             List<String> sheetNamen, List<String> schluessel, List<String> titel, List<String> pdfUrls)
             throws GenerateException {
