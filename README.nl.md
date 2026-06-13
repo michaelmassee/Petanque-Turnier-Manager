@@ -121,16 +121,28 @@ Naast de gegevenstabellen biedt de ingebouwde webserver een eigen **toernooi-sta
 
 ## ⚙️ Installatie & Instellingen
 
-### Stap 1: Java installeren
+### Aanbevolen: installeren met de installer
+
+Download het juiste installatiepakket via de [GitHub Releases](https://github.com/michaelmassee/Petanque-Turnier-Manager/releases):
+
+* **Linux:** [`PetanqueTurnierManager-Installer-<version>-linux.AppImage`](https://github.com/michaelmassee/Petanque-Turnier-Manager/releases)
+* **Windows:** [`PetanqueTurnierManager-Installer-<version>-windows.exe`](https://github.com/michaelmassee/Petanque-Turnier-Manager/releases)
+* **macOS:** [`PetanqueTurnierManager-Installer-<version>.dmg`](https://github.com/michaelmassee/Petanque-Turnier-Manager/releases)
+
+Start de installer en volg de instructies. De installer richt de extensie voor LibreOffice in.
+
+### Alternatief: handmatige installatie
+
+#### Stap 1: Java installeren
 * **Temurin Adoptium JDK (LTS):** [Gratis download hier](https://adoptium.net/)
 * **Oracle Java:** [Officiële download hier](https://www.oracle.com/java/technologies/downloads/)
 
-### Stap 2: Java activeren in LibreOffice
+#### Stap 2: Java activeren in LibreOffice
 1. Open **LibreOffice**. Ga naar `Extra` ▸ `Opties` ▸ `LibreOffice` ▸ `Geavanceerd`. *(Op macOS: `LibreOffice` ▸ `Voorkeuren...`)*
 2. Vink het vakje **"Een Java-runtime-omgeving gebruiken"** aan.
 3. Selecteer de geïnstalleerde JRE in de lijst. Bevestig met `OK` en herstart LibreOffice.
 
-### Stap 3: De extensie installeren
+#### Stap 3: De extensie installeren
 1. Download de nieuwste versie van de extensie (`PetanqueTurnierManager-vx.xx.oxt`) onder het kopje [Releases](https://github.com/michaelmassee/Petanque-Turnier-Manager/releases).
 2. Dubbelklik op het `.oxt` bestand. LibreOffice opent automatisch **Extensiebeheer**.
 3. Bevestig de installatie.
