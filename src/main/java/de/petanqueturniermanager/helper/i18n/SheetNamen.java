@@ -27,6 +27,7 @@ public final class SheetNamen {
     public static final String KEY_RANGLISTE                        = "sheet.name.rangliste";
     public static final String KEY_DIREKTVERGLEICH                  = "sheet.name.direktvergleich";
     public static final String KEY_SPIELPLAN                        = "sheet.name.spielplan";
+    public static final String KEY_LIGA_TERMINE_PRO_TEILNEHMER      = "sheet.name.liga.termine.pro.teilnehmer";
     public static final String KEY_ENDRANGLISTE                     = "sheet.name.endrangliste";
     public static final String KEY_SUPERMELEE_TEAMS                 = "sheet.name.supermelee.teams";
     public static final String KEY_KO_KONFIGURATION                 = "sheet.name.ko.konfiguration";
@@ -93,6 +94,7 @@ public final class SheetNamen {
     public static final String LEGACY_RANGLISTE                     = "Rangliste";
     public static final String LEGACY_DIREKTVERGLEICH               = "Direktvergleich";
     public static final String LEGACY_SPIELPLAN                     = "Spielplan";
+    public static final String LEGACY_LIGA_TERMINE_PRO_TEILNEHMER   = "Termine pro Teilnehmer";
     public static final String LEGACY_ENDRANGLISTE                  = "Endrangliste";
     public static final String LEGACY_SUPERMELEE_TEAMS              = "Superm\u00e9l\u00e9e Teams";
     public static final String LEGACY_KO_KONFIGURATION              = "KO Konfiguration";
@@ -143,6 +145,14 @@ public final class SheetNamen {
 
     public static String spielplan() {
         return getOderFallback(KEY_SPIELPLAN, LEGACY_SPIELPLAN);
+    }
+
+    public static String ligaTermineProTeilnehmer() {
+        return getOderFallback(KEY_LIGA_TERMINE_PRO_TEILNEHMER, LEGACY_LIGA_TERMINE_PRO_TEILNEHMER);
+    }
+
+    public static String ligaTermineProTeilnehmer(int teamNr) {
+        return ligaTermineProTeilnehmer() + " " + teamNr;
     }
 
     public static String endrangliste() {

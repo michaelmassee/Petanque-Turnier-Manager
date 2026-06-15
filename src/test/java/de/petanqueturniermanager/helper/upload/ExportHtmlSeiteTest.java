@@ -99,11 +99,6 @@ class ExportHtmlSeiteTest {
         assertThat(html).contains("href=\"https://example.com/datei?name=a&amp;b=c\"");
     }
 
-    @Test
-    void fehlendeTabelleHtmlNutztI18nHinweis() {
-        assertThat(ExportHtmlSeite.fehlendeTabelleHtml("Spielplan")).contains("<p><em>");
-    }
-
     private ExportHtmlSeite seite() {
         return ExportHtmlSeite.nurFuerTests()
                 .titel("Liga")

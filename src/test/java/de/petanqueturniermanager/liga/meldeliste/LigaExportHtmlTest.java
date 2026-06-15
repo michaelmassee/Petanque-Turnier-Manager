@@ -37,11 +37,14 @@ class LigaExportHtmlTest {
                 .sections(LigaExportInVerzeichnis.htmlSections(
                         SheetNamen.meldeliste(), LigaSpielPlanSheet.sheetName(),
                         "https://download.example/Spielplan.pdf",
+                        List.of("Boule Biebertal", "Boule-Freunde Fernwald"),
                         SheetNamen.rangliste(), "https://download.example/Rangliste.pdf",
                         SheetNamen.direktvergleich(), true))
                 .erstelleAusRendertHtml(List.of(
                         "<table><tbody><tr><td>Meldeliste</td></tr></tbody></table>",
                         "<table><tbody><tr><td>Spielplan</td></tr></tbody></table>",
+                        "<table><tbody><tr><td>Boule Biebertal</td></tr></tbody></table>",
+                        "<table><tbody><tr><td>Boule-Freunde Fernwald</td></tr></tbody></table>",
                         "<table><tbody><tr><td>Rangliste</td></tr></tbody></table>",
                         "<table><tbody><tr><td>Direktvergleich</td></tr></tbody></table>"));
 

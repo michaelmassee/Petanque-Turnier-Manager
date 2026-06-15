@@ -118,6 +118,22 @@
 
 							<node oor:name="C5A7" oor:op="replace">
 								<prop oor:name="Title">
+									<value xml:lang="en">Dates by Participant</value>
+									<value xml:lang="de">Terminliste nach Teilnehmer</value>
+									<value xml:lang="es">Fechas por participante</value>
+									<value xml:lang="fr">Dates par participant</value>
+									<value xml:lang="nl">Termijnen per deelnemer</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:liga_termine_pro_teilnehmer</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+							<node oor:name="C5A8" oor:op="replace">
+								<prop oor:name="Title">
 									<value xml:lang="en">Ranking</value>
 									<value xml:lang="de">Rangliste</value>
 									<value xml:lang="es">Clasificación</value>
@@ -132,7 +148,7 @@
 								</prop>
 							</node>
 
-							<node oor:name="C5A8" oor:op="replace">
+							<node oor:name="C5A9" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Sort Ranking</value>
 									<value xml:lang="de">Rangliste sortieren</value>
@@ -148,7 +164,7 @@
 								</prop>
 							</node>
 
-							<node oor:name="C5A9" oor:op="replace">
+							<node oor:name="C5A10" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Directcomparison</value>
 									<value xml:lang="de">Direktvergleich</value>

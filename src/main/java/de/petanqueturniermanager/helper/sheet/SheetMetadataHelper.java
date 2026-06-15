@@ -87,6 +87,9 @@ public class SheetMetadataHelper {
     public static final String SCHLUESSEL_LIGA_SPIELPLAN = "__PTM_LIGA_SPIELPLAN__";
     public static final String SCHLUESSEL_LIGA_RANGLISTE = "__PTM_LIGA_RANGLISTE__";
     public static final String SCHLUESSEL_LIGA_DIREKTVERGLEICH = "__PTM_LIGA_DIREKTVERGLEICH__";
+    public static final String SCHLUESSEL_LIGA_TERMINE_PRO_TEILNEHMER = "__PTM_LIGA_TERMINE_PRO_TEILNEHMER__";
+    public static final String SCHLUESSEL_LIGA_TERMINE_PRO_TEILNEHMER_PREFIX =
+            "__PTM_LIGA_TERMINE_PRO_TEILNEHMER_";
 
     // ── Konstanten: TripTete ─────────────────────────────────────────────────
 
@@ -210,6 +213,10 @@ public class SheetMetadataHelper {
 
     public static String schluesselKoTurnierbaum(String gruppenSuffix) {
         return SCHLUESSEL_KO_TURNIERBAUM_PREFIX + gruppenSuffix + SCHLUESSEL_SUFFIX;
+    }
+
+    public static String schluesselLigaTermineProTeilnehmer(int teamNr) {
+        return SCHLUESSEL_LIGA_TERMINE_PRO_TEILNEHMER_PREFIX + teamNr + SCHLUESSEL_SUFFIX;
     }
 
     /**

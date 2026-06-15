@@ -155,6 +155,8 @@ public final class BeispielturnierRegistrierung {
                         List.of(
                                 SheetMetadataHelper.SCHLUESSEL_LIGA_MELDELISTE,
                                 SheetMetadataHelper.SCHLUESSEL_LIGA_SPIELPLAN,
+                                SheetMetadataHelper.schluesselLigaTermineProTeilnehmer(1),
+                                SheetMetadataHelper.schluesselLigaTermineProTeilnehmer(6),
                                 SheetMetadataHelper.SCHLUESSEL_LIGA_RANGLISTE),
                         "LigaTurnierTestDaten.java"),
 
@@ -164,6 +166,8 @@ public final class BeispielturnierRegistrierung {
                         List.of(
                                 SheetMetadataHelper.SCHLUESSEL_LIGA_MELDELISTE,
                                 SheetMetadataHelper.SCHLUESSEL_LIGA_SPIELPLAN,
+                                SheetMetadataHelper.schluesselLigaTermineProTeilnehmer(1),
+                                SheetMetadataHelper.schluesselLigaTermineProTeilnehmer(7),
                                 SheetMetadataHelper.SCHLUESSEL_LIGA_RANGLISTE),
                         "LigaMitFreispielTurnierTestDaten.java"),
 

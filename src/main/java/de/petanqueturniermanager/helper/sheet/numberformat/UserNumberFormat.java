@@ -10,7 +10,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  */
 public enum UserNumberFormat {
-	WOCHEN_TAG("TTT");
+	WOCHEN_TAG("TTT"),
+	DATE("TT.MM.JJJJ"),
+	DATE_SHORT("TT.MM.JJ"),
+	TIME("HH:MM");
 
 	private final String pattern;
 

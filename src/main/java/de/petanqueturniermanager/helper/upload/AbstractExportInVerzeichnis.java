@@ -144,7 +144,7 @@ public abstract class AbstractExportInVerzeichnis extends SheetRunner {
             String html = ExportHtmlSeite.from(getWorkingSpreadsheet())
                     .titel(titel)
                     .logoUrl(logo.logoUrl())
-                    .sections(sections)
+                    .sections(nurVorhandeneSections(sections))
                     .erstelle();
             Path htmlDatei = htmlZieldatei(zielVerzeichnis, fallbackDateiname);
             Files.writeString(htmlDatei, html, StandardCharsets.UTF_8);
@@ -154,6 +154,24 @@ public abstract class AbstractExportInVerzeichnis extends SheetRunner {
             logger.error(e.getMessage(), e);
             throw new GenerateException(e.getMessage());
         }
+    }
+
+    /**
+     * Filtert Abschnitte, deren Sheet nicht vorhanden ist. Für jedes fehlende Sheet wird ein Hinweis
+     * in die ProcessBox und eine Warnung ins Log geschrieben; der Abschnitt entfällt komplett im HTML.
+     */
+    private List<ExportHtmlSeite.Section> nurVorhandeneSections(List<ExportHtmlSeite.Section> sections)
+            throws GenerateException {
+        var vorhandene = new ArrayList<ExportHtmlSeite.Section>();
+        for (var section : sections) {
+            if (getSheetHelper().findByName(section.sheetName()) == null) {
+                processBox().info(I18n.get("error.tabelle.nicht.vorhanden", section.sheetName()));
+                logger.warn("HTML-Export: Sheet '{}' übersprungen, Tabelle nicht vorhanden", section.sheetName());
+                continue;
+            }
+            vorhandene.add(section);
+        }
+        return vorhandene;
     }
 
     protected record HtmlExportErgebnis(Path htmlDatei, Optional<Path> logoDatei) {

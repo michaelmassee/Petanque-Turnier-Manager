@@ -69,10 +69,10 @@ public class LigaSpielPlanSheet extends SheetRunner implements ISheet {
 	private static final int KW_SPALTE = SPIEL_NR_SPALTE + 1;
 	private static final int WOCHENTAG_SPALTE = KW_SPALTE + 1;
 	public static final int DATUM_SPALTE = WOCHENTAG_SPALTE + 1;
-	private static final int UHRZEIT_SPALTE = DATUM_SPALTE + 1;
+	public static final int UHRZEIT_SPALTE = DATUM_SPALTE + 1;
 	public static final int ORT_SPALTE = UHRZEIT_SPALTE + 1;
-	private static final int NAME_A_SPALTE = ORT_SPALTE + 1;
-	private static final int NAME_B_SPALTE = NAME_A_SPALTE + 1;
+	public static final int NAME_A_SPALTE = ORT_SPALTE + 1;
+	public static final int NAME_B_SPALTE = NAME_A_SPALTE + 1;
 	public static final int PUNKTE_A_SPALTE = NAME_B_SPALTE + 1;
 	public static final int PUNKTE_B_SPALTE = PUNKTE_A_SPALTE + 1;
 	public static final int SPIELE_A_SPALTE = PUNKTE_B_SPALTE + 1;
@@ -163,6 +163,8 @@ public class LigaSpielPlanSheet extends SheetRunner implements ISheet {
 		} finally {
 			getxCalculatable().enableAutomaticCalculation(true);
 		}
+
+		new LigaTermineProTeilnehmerSheet(getWorkingSpreadsheet()).generate(meldungen);
 	}
 
 	private void printBereichDefinieren() throws GenerateException {

@@ -45,6 +45,16 @@ class SheetGruppeTest {
         assertThat(SheetGruppe.fuerSchluessel("__PTM_TEILNEHMER__")).contains(SheetGruppe.ALLGEMEIN);
     }
 
+    @Test
+    void ligaTermineProTeilnehmerBleibenAufLigaEbene() {
+        String termine = "__PTM_LIGA_TERMINE_PRO_TEILNEHMER_1__";
+
+        assertThat(SheetGruppe.fuerSchluessel(termine)).contains(SheetGruppe.LIGA);
+        assertThat(SheetGruppe.LIGA.reihenfolgeDesSchluessels(termine))
+                .as("Liga-Terminlisten direkt hinter Spielplan einsortieren")
+                .isEqualTo(SheetGruppe.LIGA.reihenfolgeDesSchluessels("__PTM_LIGA_SPIELPLAN__") + 1);
+    }
+
     private static void assertCheckinDirektHinterMeldeliste(SheetGruppe gruppe,
             String meldelisteSchluessel, String checkinSchluessel) {
         assertThat(gruppe.reihenfolgeDesSchluessels(checkinSchluessel))

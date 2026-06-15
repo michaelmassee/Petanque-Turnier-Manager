@@ -8,6 +8,8 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.sun.star.sheet.XSpreadsheetDocument;
 
@@ -23,6 +25,8 @@ import de.petanqueturniermanager.webserver.TabellenMapper;
  * Einheitliche HTML-Exportseite für Turniersystem-Exports.
  */
 public class ExportHtmlSeite {
+
+    private static final Logger logger = LogManager.getLogger(ExportHtmlSeite.class);
 
     static final String PTM_URL = "https://michaelmassee.github.io/Petanque-Turnier-Manager/";
     static final String PTM_EXPORT_LOGO_DATA_URI = "data:image/png;base64,"
@@ -67,36 +71,30 @@ public class ExportHtmlSeite {
 
     public String erstelle() throws GenerateException {
         XSpreadsheetDocument doc = workingSpreadsheet.getWorkingSpreadsheetDocument();
+        var vorhandeneSections = new ArrayList<Section>();
         var tabellenHtml = new ArrayList<String>();
         for (var section : sections) {
-            tabellenHtml.add(renderSheet(section.sheetName(), doc));
+            var sheet = sheetHelper.findByName(section.sheetName());
+            if (sheet == null) {
+                logger.warn("HTML-Export: Sheet '{}' übersprungen, Tabelle nicht vorhanden", section.sheetName());
+                continue;
+            }
+            TabelleModel model = tabellenMapper.map(sheet, doc);
+            vorhandeneSections.add(section);
+            tabellenHtml.add(tabelleHtmlRenderer.render(model));
         }
-        return assembliere(tabellenHtml);
+        return assembliere(vorhandeneSections, tabellenHtml);
     }
 
     public String erstelleAusRendertHtml(List<String> tabellenHtml) {
-        return assembliere(tabellenHtml);
+        return assembliere(sections, tabellenHtml);
     }
 
     public static ExportHtmlSeite nurFuerTests() {
         return new ExportHtmlSeite(null);
     }
 
-    private String renderSheet(String sheetName, XSpreadsheetDocument doc) throws GenerateException {
-        var sheet = sheetHelper.findByName(sheetName);
-        if (sheet == null) {
-            return fehlendeTabelleHtml(sheetName);
-        }
-        TabelleModel model = tabellenMapper.map(sheet, doc);
-        return tabelleHtmlRenderer.render(model);
-    }
-
-    public static String fehlendeTabelleHtml(String sheetName) {
-        return "<p><em>" + StringEscapeUtils.escapeHtml4(I18n.get("export.html.tabelle.fehlt", sheetName))
-                + "</em></p>";
-    }
-
-    private String assembliere(List<String> tabellenHtml) {
+    private String assembliere(List<Section> sections, List<String> tabellenHtml) {
         var sb = new StringBuilder(16384);
         String seitentitel = StringUtils.defaultIfBlank(titel, "Export");
 

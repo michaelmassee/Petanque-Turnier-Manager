@@ -110,6 +110,7 @@ import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheet;
 import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheetSortOnly;
 import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet;
 import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheetTestDaten;
+import de.petanqueturniermanager.liga.spielplan.LigaTermineProTeilnehmerSheet;
 import de.petanqueturniermanager.triptete.konfiguration.TripTeteKonfigurationSheetStarter;
 import de.petanqueturniermanager.triptete.export.TripTeteExportInVerzeichnis;
 import de.petanqueturniermanager.triptete.export.TripTeteFtpUpload;
@@ -240,6 +241,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_LIGA_SPIELPLAN_TESTDATEN_MIT_FREISPIEL = "liga_spielplan_testdaten_mit_freispiel";
 	public static final String CMD_LIGA_SPIELPLAN_TESTDATEN = "liga_spielplan_testdaten";
 	public static final String CMD_LIGA_SPIELPLAN = "liga_spielplan";
+	public static final String CMD_LIGA_TERMINE_PRO_TEILNEHMER = "liga_termine_pro_teilnehmer";
 	public static final String CMD_LIGA_RANGLISTE_SORTIEREN = "liga_rangliste_sortieren";
 	public static final String CMD_LIGA_RANGLISTE = "liga_rangliste";
 	public static final String CMD_LIGA_DIREKTVERGLEICH        = "liga_direktvergleich";
@@ -870,6 +872,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				break;
 			case CMD_LIGA_SPIELPLAN:
 				new LigaSpielPlanSheet(ws).testTurnierSystem(TurnierSystem.LIGA).backUpDocument().backupDocumentAfterRun().start();
+				break;
+			case CMD_LIGA_TERMINE_PRO_TEILNEHMER:
+				new LigaTermineProTeilnehmerSheet(ws).testTurnierSystem(TurnierSystem.LIGA).backUpDocument().start();
 				break;
 			case CMD_LIGA_RANGLISTE:
 				new LigaRanglisteSheet(ws).testTurnierSystem(TurnierSystem.LIGA).backUpDocument().start();
@@ -1886,7 +1891,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_MELDELISTE_TESTDATEN, CMD_SPIELRUNDEN_TESTDATEN,
 				 CMD_SPIELTAGRANGLISTE_TESTDATEN        -> ts == TurnierSystem.KEIN || ts == TurnierSystem.SUPERMELEE;
 			case CMD_LIGA_NEUE_MELDELISTE                   -> ts == TurnierSystem.KEIN;
-			case CMD_LIGA_UPDATE_MELDELISTE, CMD_LIGA_SPIELPLAN,
+			case CMD_LIGA_UPDATE_MELDELISTE, CMD_LIGA_SPIELPLAN, CMD_LIGA_TERMINE_PRO_TEILNEHMER,
 				 CMD_LIGA_RANGLISTE, CMD_LIGA_RANGLISTE_SORTIEREN,
 				 CMD_LIGA_DIREKTVERGLEICH -> ts == TurnierSystem.LIGA;
 			case CMD_LIGA_TESTDATEN_MELDELISTE,

@@ -38,6 +38,23 @@ public class LigaTurnierTestDatenUITest extends BaseCalcUITest {
 
 	private static final long SEED_FUER_TESTS = 42L;
 	private static final int MELDELISTE_ERSTE_DATEN_ZEILE = 2;
+	private static final String[] TEAMNAMEN_6 = {
+			"Boule Biebertal",
+			"Boule-Freunde Fernwald",
+			"Boulefreunde Marburg",
+			"Boulodromedare Fulda 2",
+			"DFG Wettenberg 1",
+			"PC Petterweil"
+	};
+	private static final String[] TEAMNAMEN_7 = {
+			"BC-Linden 1",
+			"Boule Biebertal",
+			"Boule-Freunde Fernwald",
+			"Boulefreunde Marburg",
+			"Boulodromedare Fulda 2",
+			"DFG Wettenberg 1",
+			"PC Petterweil"
+	};
 
 	@BeforeEach
 	@Override
@@ -56,9 +73,10 @@ public class LigaTurnierTestDatenUITest extends BaseCalcUITest {
 		final int anzTeams = 6;
 		new LigaTurnierTestDaten(wkingSpreadsheet).erzeugeBeispielturnier();
 
-		validiereGrundstruktur();
+		validiereGrundstruktur(TEAMNAMEN_6[0]);
 		validiereMeldelistePerJson(anzTeams, "liga-meldeliste.json");
 		validiereSpielplanPerJson("liga-spielplan.json");
+		validiereTermineProTeilnehmer(TEAMNAMEN_6, 10);
 		validiereRanglistePerJson(anzTeams, "liga-rangliste.json");
 	}
 
@@ -67,14 +85,15 @@ public class LigaTurnierTestDatenUITest extends BaseCalcUITest {
 		final int anzTeams = 7;
 		new LigaMitFreispielTurnierTestDaten(wkingSpreadsheet).erzeugeBeispielturnier();
 
-		validiereGrundstruktur();
+		validiereGrundstruktur(TEAMNAMEN_7[0]);
 		validiereMeldelistePerJson(anzTeams, "liga-freispiel-meldeliste.json");
 		validiereSpielplanPerJson("liga-freispiel-spielplan.json");
+		validiereTermineProTeilnehmer(TEAMNAMEN_7, 14);
 		validiereRanglistePerJson(anzTeams, "liga-freispiel-rangliste.json");
 	}
 
 	/**
-	 * Korrektheit der PTM-Metadaten (6 Teams): Meldeliste, Spielplan und Rangliste müssen je
+	 * Korrektheit der PTM-Metadaten (6 Teams): Meldeliste, Spielplan, Termine und Rangliste müssen je
 	 * exakt ihren Identitäts-Schlüssel tragen – kein weiteres Blatt einen unerwarteten.
 	 * (Liga erzeugt kein Direktvergleich-Blatt im Beispielturnier.)
 	 */
@@ -85,16 +104,22 @@ public class LigaTurnierTestDatenUITest extends BaseCalcUITest {
 		Map<String, String> erwartung = new LinkedHashMap<>();
 		erwartung.put(SheetNamen.meldeliste(), SheetMetadataHelper.SCHLUESSEL_LIGA_MELDELISTE);
 		erwartung.put(SheetNamen.spielplan(), SheetMetadataHelper.SCHLUESSEL_LIGA_SPIELPLAN);
+		for (int teamNr = 1; teamNr <= TEAMNAMEN_6.length; teamNr++) {
+			erwartung.put(TEAMNAMEN_6[teamNr - 1],
+					SheetMetadataHelper.schluesselLigaTermineProTeilnehmer(teamNr));
+		}
 		erwartung.put(SheetNamen.rangliste(), SheetMetadataHelper.SCHLUESSEL_LIGA_RANGLISTE);
 
 		pruefeJedesBlattTraegtKorrektenSchluessel(erwartung);
 	}
 
-	private void validiereGrundstruktur() {
+	private void validiereGrundstruktur(String ersterTerminSheetName) {
 		assertThat(sheetHlp.findByName(SheetNamen.meldeliste()))
 				.as("Meldeliste-Sheet muss existieren").isNotNull();
 		assertThat(sheetHlp.findByName(SheetNamen.spielplan()))
 				.as("Spielplan-Sheet muss existieren").isNotNull();
+		assertThat(sheetHlp.findByName(ersterTerminSheetName))
+				.as("Termine-pro-Teilnehmer-Sheet für Team 1 muss existieren").isNotNull();
 		assertThat(sheetHlp.findByName(SheetNamen.rangliste()))
 				.as("Rangliste-Sheet muss existieren").isNotNull();
 	}
@@ -112,6 +137,36 @@ public class LigaTurnierTestDatenUITest extends BaseCalcUITest {
 
 		InputStream jsonFile = LigaTurnierTestDatenUITest.class.getResourceAsStream(referenzDatei);
 		validateWithJson(rangeData, jsonFile);
+	}
+
+	private void validiereTermineProTeilnehmer(String[] teamNamen, int erwarteteTermineProTeam) {
+		for (int teamIndex = 0; teamIndex < teamNamen.length; teamIndex++) {
+			int teamNr = teamIndex + 1;
+			XSpreadsheet termine = sheetHlp.findByName(teamNamen[teamIndex]);
+			assertThat(termine)
+					.as("Termine-Sheet für Team %d muss den Teilnehmernamen tragen", teamNr)
+					.isNotNull();
+			RangeData rangeData = rangeDateFromRangePosition(
+					RangePosition.from(0, 0, 5, 1 + erwarteteTermineProTeam + 5),
+					termine, wkingSpreadsheet.getWorkingSpreadsheetDocument());
+
+			assertThat(rangeData.get(0).get(0).getStringVal()).isEqualTo("Spiel");
+			assertThat(rangeData.get(0).get(1).getStringVal()).isEqualTo("Datum");
+			assertThat(rangeData.get(0).get(5).getStringVal()).isEqualTo("Gegner");
+
+			int anzahlTermine = 0;
+			for (int zeile = 1; zeile < rangeData.size(); zeile++) {
+				String spielNr = rangeData.get(zeile).get(0).getStringVal();
+				if (spielNr == null || spielNr.isBlank()) {
+					break;
+				}
+				anzahlTermine++;
+			}
+
+			assertThat(anzahlTermine)
+					.as("Team %d muss die erwartete Anzahl Termine haben", teamNr)
+					.isEqualTo(erwarteteTermineProTeam);
+		}
 	}
 
 	private void validiereSpielplanPerJson(String referenzDatei) throws GenerateException {

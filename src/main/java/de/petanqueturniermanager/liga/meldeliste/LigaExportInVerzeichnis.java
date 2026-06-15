@@ -2,6 +2,7 @@ package de.petanqueturniermanager.liga.meldeliste;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -14,6 +15,7 @@ import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.upload.AbstractExportInVerzeichnis;
 import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet;
+import de.petanqueturniermanager.liga.spielplan.LigaTermineProTeilnehmerSheet;
 import de.petanqueturniermanager.helper.upload.ExportErgebnis;
 import de.petanqueturniermanager.helper.upload.ExportHtmlSeite;
 import de.petanqueturniermanager.liga.konfiguration.LigaKonfigurationSheet;
@@ -43,6 +45,7 @@ public class LigaExportInVerzeichnis extends AbstractExportInVerzeichnis {
 
         String meldelisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_LIGA_MELDELISTE, SheetNamen.meldeliste());
         String spielplanSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_LIGA_SPIELPLAN, LigaSpielPlanSheet.sheetName());
+        List<String> termineSheetNames = termineSheetNames();
         String ranglisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_LIGA_RANGLISTE, SheetNamen.rangliste());
         String direktvergleichSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_LIGA_DIREKTVERGLEICH, SheetNamen.direktvergleich());
 
@@ -53,7 +56,7 @@ public class LigaExportInVerzeichnis extends AbstractExportInVerzeichnis {
         processBox().info(I18n.get("export.info.html"));
         boolean meldelisteExportieren = konfiguration.isMeldelisteExportieren();
         List<ExportHtmlSeite.Section> sections = htmlSections(
-                meldelisteSheetName, spielplanSheetName, buildPdfUrl(pdfSpielplan),
+                meldelisteSheetName, spielplanSheetName, buildPdfUrl(pdfSpielplan), termineSheetNames,
                 ranglisteSheetName, buildPdfUrl(pdfRangliste), direktvergleichSheetName,
                 meldelisteExportieren);
         var htmlExport = exportiereHtmlMitMeldelisteDruckbereich(meldelisteExportieren, meldelisteSheetName,
@@ -74,7 +77,7 @@ public class LigaExportInVerzeichnis extends AbstractExportInVerzeichnis {
 
     public static List<ExportHtmlSeite.Section> htmlSections(
             String meldelisteSheetName, String spielplanSheetName, String spielplanPdfUrl,
-            String ranglisteSheetName, String ranglistePdfUrl, String direktvergleichSheetName,
+            List<String> termineSheetNames, String ranglisteSheetName, String ranglistePdfUrl, String direktvergleichSheetName,
             boolean meldelisteExportieren) {
         List<ExportHtmlSeite.Section> sections = new ArrayList<>();
         if (meldelisteExportieren) {
@@ -83,10 +86,55 @@ public class LigaExportInVerzeichnis extends AbstractExportInVerzeichnis {
         }
         sections.add(new ExportHtmlSeite.Section("spielplan", I18n.get("export.liga.nav.spielplan"),
                 spielplanSheetName, spielplanPdfUrl));
+        for (int i = 0; i < termineSheetNames.size(); i++) {
+            String sheetName = termineSheetNames.get(i);
+            sections.add(new ExportHtmlSeite.Section("termine-" + (i + 1), sheetName, sheetName, null));
+        }
         sections.add(new ExportHtmlSeite.Section("rangliste", I18n.get("export.liga.nav.rangliste"),
                 ranglisteSheetName, ranglistePdfUrl));
         sections.add(new ExportHtmlSeite.Section("direktvergleich", I18n.get("export.liga.nav.direktvergleich"),
                 direktvergleichSheetName, null));
         return sections;
+    }
+
+    private List<String> termineSheetNames() throws GenerateException {
+        var doc = getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
+        List<TerminSheetEintrag> eintraege = new ArrayList<>();
+        for (String schluessel : SheetMetadataHelper.getSchluesselMitPrefix(doc,
+                SheetMetadataHelper.SCHLUESSEL_LIGA_TERMINE_PRO_TEILNEHMER_PREFIX)) {
+            if (!schluessel.endsWith(SheetMetadataHelper.SCHLUESSEL_SUFFIX)) {
+                continue;
+            }
+            int teamNr = teamNrAusSchluessel(schluessel);
+            if (teamNr <= 0) {
+                continue;
+            }
+            String sheetName = sheetNamePerSchluessel(schluessel, LigaTermineProTeilnehmerSheet.sheetName(teamNr));
+            eintraege.add(new TerminSheetEintrag(teamNr, sheetName));
+        }
+        if (eintraege.isEmpty()) {
+            String legacyName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_LIGA_TERMINE_PRO_TEILNEHMER,
+                    LigaTermineProTeilnehmerSheet.sheetName());
+            if (getSheetHelper().findByName(legacyName) != null) {
+                return List.of(legacyName);
+            }
+        }
+        return eintraege.stream()
+                .sorted(Comparator.comparingInt(TerminSheetEintrag::teamNr))
+                .map(TerminSheetEintrag::sheetName)
+                .toList();
+    }
+
+    private static int teamNrAusSchluessel(String schluessel) {
+        String prefix = SheetMetadataHelper.SCHLUESSEL_LIGA_TERMINE_PRO_TEILNEHMER_PREFIX;
+        String nummer = schluessel.substring(prefix.length(), schluessel.length() - SheetMetadataHelper.SCHLUESSEL_SUFFIX.length());
+        try {
+            return Integer.parseInt(nummer);
+        } catch (NumberFormatException e) {
+            return -1;
+        }
+    }
+
+    private record TerminSheetEintrag(int teamNr, String sheetName) {
     }
 }
