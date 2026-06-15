@@ -31,6 +31,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.cellvalue.properties.ICommonProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.i18n.I18n;
@@ -156,6 +157,7 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 			// calculate() reicht für die Footer-/CF-Formeln.
 			rangListeSorter.doSort();
 			rangListeSpalte.upDateRanglisteSpalte();
+			streichspieltagBloeckeDirektFaerben();
 			getxCalculatable().calculate();
 			Position footerPos = endRanglisteFormatter.addFooter().getPos();
 			printBereichDefinieren(footerPos);
@@ -200,6 +202,40 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 				.streichSpieltagFormulaGerade(getFormulastreichSpieltag(true), streichGeradeColor)
 				.streichSpieltagFormulaUnGerade(getFormulastreichSpieltag(false), streichUnGeradeColor)
 				.apply();
+	}
+
+	private void streichspieltagBloeckeDirektFaerben() throws GenerateException {
+		int ersteDatenZeile = spielerSpalte.getErsteDatenZiele();
+		int letzteDatenZeile = spielerSpalte.getLetzteMitDatenZeileInSpielerNrSpalte();
+		if (letzteDatenZeile < ersteDatenZeile) {
+			return;
+		}
+
+		int anzahlSpieltage = getAnzahlSpieltage();
+		int streichSpalte = getSchlechtesteSpielTageSpalte();
+		List<RangePosition> geradeRanges = new ArrayList<>();
+		List<RangePosition> ungeradeRanges = new ArrayList<>();
+
+		for (int zeile = ersteDatenZeile; zeile <= letzteDatenZeile; zeile++) {
+			Integer streichSpieltag = getSheetHelper().getIntFromCell(getXSpreadSheet(),
+					Position.from(streichSpalte, zeile));
+			if (streichSpieltag == null || streichSpieltag < 1 || streichSpieltag > anzahlSpieltage) {
+				continue;
+			}
+			int startSpalte = ERSTE_SPIELTAG_SPALTE + ((streichSpieltag - 1) * getAnzSpaltenInSpieltag());
+			RangePosition spieltagBlock = RangePosition.from(startSpalte, zeile,
+					startSpalte + getAnzSpaltenInSpieltag() - 1, zeile);
+			if ((zeile & 1) == 1) {
+				geradeRanges.add(spieltagBlock);
+			} else {
+				ungeradeRanges.add(spieltagBlock);
+			}
+		}
+
+		getSheetHelper().setPropertyInMultipleRanges(this, geradeRanges, ICommonProperties.CELL_BACK_COLOR,
+				getKonfigurationSheet().getRanglisteHintergrundFarbeStreichSpieltagGerade());
+		getSheetHelper().setPropertyInMultipleRanges(this, ungeradeRanges, ICommonProperties.CELL_BACK_COLOR,
+				getKonfigurationSheet().getRanglisteHintergrundFarbeStreichSpieltagUnGerade());
 	}
 
 	private String getFormulastreichSpieltag(boolean iseven) throws GenerateException {

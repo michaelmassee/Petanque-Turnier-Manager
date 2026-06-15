@@ -14,6 +14,7 @@ import java.util.Locale;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.api.io.TempDir;
@@ -41,6 +42,7 @@ import de.petanqueturniermanager.poule.Poule37TeamsTurnierTestDaten;
 import de.petanqueturniermanager.poule.export.PouleExportInVerzeichnis;
 import de.petanqueturniermanager.schweizer.export.SchweizerExportInVerzeichnis;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerTurnierTestDaten;
+import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet;
 import de.petanqueturniermanager.supermelee.export.SupermeleeExportInVerzeichnis;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SupermeleeTurnierTestDaten;
 import de.petanqueturniermanager.triptete.export.TripTeteExportInVerzeichnis;
@@ -58,7 +60,10 @@ class ExportInVerzeichnisSmokeUITest extends BaseCalcUITest {
     static Stream<ExportFall> exportFaelle() {
         return Stream.of(
                 fall(TurnierSystem.SUPERMELEE,
-                        ws -> new SupermeleeTurnierTestDaten(ws).generate(),
+                        ws -> {
+                            new SupermeleeTurnierTestDaten(ws).generate();
+                            new EndranglisteSheet(ws).run();
+                        },
                         (test, ziel) -> new SupermeleeExportInVerzeichnis(test.wkingSpreadsheet, ziel)),
                 fall(TurnierSystem.LIGA,
                         ws -> new LigaTurnierTestDaten(ws).erzeugeBeispielturnier(),
@@ -143,6 +148,31 @@ class ExportInVerzeichnisSmokeUITest extends BaseCalcUITest {
         }
     }
 
+    @Test
+    void supermeleeExport_endranglisteEnthaeltStreichspieltagFarbe(@TempDir Path zielVerzeichnis)
+            throws Exception {
+        RandomSource.setSeed(SEED_FUER_TESTS);
+
+        new SupermeleeTurnierTestDaten(wkingSpreadsheet).generate();
+        new EndranglisteSheet(wkingSpreadsheet).run();
+        new DocumentPropertiesHelper(wkingSpreadsheet)
+                .setIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM, TurnierSystem.SUPERMELEE.getId());
+
+        new SupermeleeExportInVerzeichnis(wkingSpreadsheet, zielVerzeichnis)
+                .testTurnierSystem(TurnierSystem.SUPERMELEE)
+                .run();
+
+        var htmlDatei = ExportErgebnis.laden(wkingSpreadsheet)
+                .orElseThrow()
+                .exportierteDateien()
+                .stream()
+                .filter(datei -> datei.getFileName().toString().equals("SuperMelee.html"))
+                .findFirst()
+                .orElseThrow();
+
+        pruefeHtml(TurnierSystem.SUPERMELEE, htmlDatei);
+    }
+
     private void pruefeHtml(TurnierSystem system, Path htmlDatei) throws IOException {
         String html = Files.readString(htmlDatei, StandardCharsets.UTF_8);
         assertThat(html)
@@ -151,6 +181,11 @@ class ExportInVerzeichnisSmokeUITest extends BaseCalcUITest {
                 .contains("<html")
                 .contains("export-section")
                 .contains(".pdf");
+        if (system == TurnierSystem.SUPERMELEE) {
+            assertThat(html)
+                    .as("Supermelee HTML muss die direkt gesetzte Streich-Spieltag-Farbe exportieren")
+                    .contains("background-color:#DDDDDD");
+        }
     }
 
     private void pruefePdf(TurnierSystem system, Path pdfDatei) throws IOException {

@@ -13,6 +13,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.sun.star.beans.XPropertySet;
 import com.sun.star.container.XNamed;
 import com.sun.star.sheet.XNamedRange;
 import com.sun.star.sheet.XNamedRanges;
@@ -26,10 +27,14 @@ import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
+import de.petanqueturniermanager.helper.cellvalue.properties.ICommonProperties;
+import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.random.RandomSource;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
+import de.petanqueturniermanager.supermelee.SuperMeleeSummenSpalten;
+import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
@@ -85,6 +90,41 @@ public class SupermeleeTurnierTestDatenUITest extends BaseCalcUITest {
 		for (int spieltagNr = 1; spieltagNr <= ANZ_SPIELTAGE; spieltagNr++) {
 			analyseAssert.pruefe(spieltagNr, ANZ_SPIELRUNDEN_PRO_SPIELTAG);
 		}
+	}
+
+	@Test
+	public void endranglisteFaerbtStreichspieltagDirektFuerHtmlUndPdfExport() throws Exception {
+		new SupermeleeTurnierTestDaten(wkingSpreadsheet).generate();
+		new EndranglisteSheet(wkingSpreadsheet).run();
+
+		EndranglisteSheet endrangliste = new EndranglisteSheet(wkingSpreadsheet);
+		XSpreadsheet sheet = endrangliste.getXSpreadSheet();
+		int streichSpalte = EndranglisteSheet.ERSTE_SPIELTAG_SPALTE
+				+ (ANZ_SPIELTAGE * SuperMeleeSummenSpalten.ANZAHL_SPALTEN_IN_SUMME)
+				+ SuperMeleeSummenSpalten.ANZAHL_SPALTEN_IN_SUMME + 1;
+
+		for (int zeile = EndranglisteSheet.ERSTE_DATEN_ZEILE;
+				zeile < EndranglisteSheet.ERSTE_DATEN_ZEILE + ANZ_SPIELER; zeile++) {
+			Integer streichSpieltag = sheetHlp.getIntFromCell(sheet, Position.from(streichSpalte, zeile));
+			if (streichSpieltag == null || streichSpieltag < 1 || streichSpieltag > ANZ_SPIELTAGE) {
+				continue;
+			}
+
+			int startSpalte = EndranglisteSheet.ERSTE_SPIELTAG_SPALTE
+					+ ((streichSpieltag - 1) * SuperMeleeSummenSpalten.ANZAHL_SPALTEN_IN_SUMME);
+			int erwarteteFarbe = (zeile & 1) == 1
+					? endrangliste.getKonfigurationSheet().getRanglisteHintergrundFarbeStreichSpieltagGerade()
+					: endrangliste.getKonfigurationSheet().getRanglisteHintergrundFarbeStreichSpieltagUnGerade();
+
+			XPropertySet props = Lo.qi(XPropertySet.class, sheet.getCellRangeByPosition(startSpalte, zeile,
+					startSpalte + SuperMeleeSummenSpalten.ANZAHL_SPALTEN_IN_SUMME - 1, zeile));
+			assertThat(props.getPropertyValue(ICommonProperties.CELL_BACK_COLOR))
+					.as("Streich-Spieltag-Block in Zeile %d muss direkt gefaerbt sein", zeile)
+					.isEqualTo(erwarteteFarbe);
+			return;
+		}
+
+		throw new AssertionError("Testdaten muessen mindestens einen Streich-Spieltag erzeugen");
 	}
 
 	/**

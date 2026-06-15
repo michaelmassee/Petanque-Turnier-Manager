@@ -5,6 +5,7 @@ export default defineConfig({
   plugins: [react()],
   base: '/',
   build: {
+    target: 'es2020',
     outDir: '../src/main/resources/de/petanqueturniermanager/spielerdb/webview/static',
     emptyOutDir: true,
   },
