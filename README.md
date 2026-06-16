@@ -130,7 +130,7 @@ Um den Turnier-Manager reibungslos nutzen zu können, müssen folgende Vorausset
 
 * **LibreOffice:** ab Version 25.x (oder neuer)
 * **Java (JRE/JDK):** ab Version 25
-* **Betriebssystem:** Linux, macOS oder Windows
+* **Betriebssystem:** Linux, Windows oder macOS 11 (Big Sur) oder neuer
 
 ---
 
@@ -142,7 +142,10 @@ Lade das passende Installer-Paket aus den [GitHub Releases](https://github.com/m
 
 * **Linux:** [`PetanqueTurnierManager-Installer-<version>-linux.AppImage`](https://github.com/michaelmassee/Petanque-Turnier-Manager/releases)
 * **Windows:** [`PetanqueTurnierManager-Installer-<version>-windows.exe`](https://github.com/michaelmassee/Petanque-Turnier-Manager/releases)
-* **macOS:** [`PetanqueTurnierManager-Installer-<version>.dmg`](https://github.com/michaelmassee/Petanque-Turnier-Manager/releases)
+* **macOS (Apple Silicon, M1/M2/M3/…):** [`PetanqueTurnierManager-Installer-<version>-macos-arm64.dmg`](https://github.com/michaelmassee/Petanque-Turnier-Manager/releases)
+* **macOS (Intel):** [`PetanqueTurnierManager-Installer-<version>-macos-intel.dmg`](https://github.com/michaelmassee/Petanque-Turnier-Manager/releases)
+
+> **Hinweis (macOS):** Erfordert macOS 11 (Big Sur) oder neuer. macOS 10.15 (Catalina) und älter werden nicht unterstützt (Java-25-Laufzeit).
 
 Starte den Installer und folge den Anweisungen. Der Installer richtet die Erweiterung für LibreOffice ein.
 

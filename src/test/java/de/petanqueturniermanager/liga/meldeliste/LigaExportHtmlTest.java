@@ -34,19 +34,23 @@ class LigaExportHtmlTest {
         String html = ExportHtmlSeite.nurFuerTests()
                 .titel("Liga Test")
                 .logoUrl("https://example.org/logo.png?a=1&b=2")
-                .sections(LigaExportInVerzeichnis.htmlSections(
+                .sections(LigaExportInVerzeichnis.htmlSectionsMitTerminPdf(
                         SheetNamen.meldeliste(), LigaSpielPlanSheet.sheetName(),
                         "https://download.example/Spielplan.pdf",
-                        List.of("Boule Biebertal", "Boule-Freunde Fernwald"),
+                        List.of(
+                                new LigaExportInVerzeichnis.TerminExportEintrag("Boule Biebertal",
+                                        "https://download.example/Boule-Biebertal.pdf", null),
+                                new LigaExportInVerzeichnis.TerminExportEintrag("Boule-Freunde Fernwald",
+                                        "https://download.example/Boule-Freunde-Fernwald.pdf", null)),
                         SheetNamen.rangliste(), "https://download.example/Rangliste.pdf",
                         SheetNamen.direktvergleich(), true))
                 .erstelleAusRendertHtml(List.of(
                         "<table><tbody><tr><td>Meldeliste</td></tr></tbody></table>",
                         "<table><tbody><tr><td>Spielplan</td></tr></tbody></table>",
-                        "<table><tbody><tr><td>Boule Biebertal</td></tr></tbody></table>",
-                        "<table><tbody><tr><td>Boule-Freunde Fernwald</td></tr></tbody></table>",
                         "<table><tbody><tr><td>Rangliste</td></tr></tbody></table>",
-                        "<table><tbody><tr><td>Direktvergleich</td></tr></tbody></table>"));
+                        "<table><tbody><tr><td>Direktvergleich</td></tr></tbody></table>",
+                        "<table><tbody><tr><td>Boule Biebertal</td></tr></tbody></table>",
+                        "<table><tbody><tr><td>Boule-Freunde Fernwald</td></tr></tbody></table>"));
 
         // writeToReferenz(html); // auskommentieren nach Erfassung
         assertThat(normalisiere(html)).isEqualTo(normalisiere(ladeReferenz()));

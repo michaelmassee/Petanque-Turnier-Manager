@@ -52,11 +52,12 @@ public class LigaExportInVerzeichnis extends AbstractExportInVerzeichnis {
         Path pdfSpielplan = exportierePdfAusHtml(spielplanSheetName, I18n.get("export.liga.nav.spielplan"), zielVerzeichnis);
 
         Path pdfRangliste = exportierePdfAusHtml(ranglisteSheetName, I18n.get("export.liga.nav.rangliste"), zielVerzeichnis);
+        List<TerminExportEintrag> termine = exportiereTerminlistenPdf(termineSheetNames, zielVerzeichnis);
 
         processBox().info(I18n.get("export.info.html"));
         boolean meldelisteExportieren = konfiguration.isMeldelisteExportieren();
-        List<ExportHtmlSeite.Section> sections = htmlSections(
-                meldelisteSheetName, spielplanSheetName, buildPdfUrl(pdfSpielplan), termineSheetNames,
+        List<ExportHtmlSeite.Section> sections = htmlSectionsMitTerminPdf(
+                meldelisteSheetName, spielplanSheetName, buildPdfUrl(pdfSpielplan), termine,
                 ranglisteSheetName, buildPdfUrl(pdfRangliste), direktvergleichSheetName,
                 meldelisteExportieren);
         var htmlExport = exportiereHtmlMitMeldelisteDruckbereich(meldelisteExportieren, meldelisteSheetName,
@@ -71,14 +72,39 @@ public class LigaExportInVerzeichnis extends AbstractExportInVerzeichnis {
         if (pdfRangliste != null) {
             exportierteDateien.add(pdfRangliste);
         }
+        termine.stream()
+                .map(TerminExportEintrag::pdf)
+                .filter(pdf -> pdf != null)
+                .forEach(exportierteDateien::add);
         htmlExport.addTo(exportierteDateien);
         return new ExportErgebnis(exportierteDateien);
+    }
+
+    private List<TerminExportEintrag> exportiereTerminlistenPdf(List<String> termineSheetNames, Path zielVerzeichnis)
+            throws GenerateException {
+        List<TerminExportEintrag> termine = new ArrayList<>();
+        for (String sheetName : termineSheetNames) {
+            Path pdf = exportierePdfAusHtml(sheetName, sheetName, zielVerzeichnis);
+            termine.add(new TerminExportEintrag(sheetName, buildPdfUrl(pdf), pdf));
+        }
+        return termine;
     }
 
     public static List<ExportHtmlSeite.Section> htmlSections(
             String meldelisteSheetName, String spielplanSheetName, String spielplanPdfUrl,
             List<String> termineSheetNames, String ranglisteSheetName, String ranglistePdfUrl, String direktvergleichSheetName,
             boolean meldelisteExportieren) {
+        return htmlSectionsMitTerminPdf(meldelisteSheetName, spielplanSheetName, spielplanPdfUrl,
+                termineSheetNames.stream()
+                        .map(sheetName -> new TerminExportEintrag(sheetName, null, null))
+                        .toList(),
+                ranglisteSheetName, ranglistePdfUrl, direktvergleichSheetName, meldelisteExportieren);
+    }
+
+    public static List<ExportHtmlSeite.Section> htmlSectionsMitTerminPdf(
+            String meldelisteSheetName, String spielplanSheetName, String spielplanPdfUrl,
+            List<TerminExportEintrag> termine, String ranglisteSheetName, String ranglistePdfUrl,
+            String direktvergleichSheetName, boolean meldelisteExportieren) {
         List<ExportHtmlSeite.Section> sections = new ArrayList<>();
         if (meldelisteExportieren) {
             sections.add(new ExportHtmlSeite.Section("meldeliste", I18n.get("export.liga.nav.meldeliste"),
@@ -86,14 +112,15 @@ public class LigaExportInVerzeichnis extends AbstractExportInVerzeichnis {
         }
         sections.add(new ExportHtmlSeite.Section("spielplan", I18n.get("export.liga.nav.spielplan"),
                 spielplanSheetName, spielplanPdfUrl));
-        for (int i = 0; i < termineSheetNames.size(); i++) {
-            String sheetName = termineSheetNames.get(i);
-            sections.add(new ExportHtmlSeite.Section("termine-" + (i + 1), sheetName, sheetName, null));
-        }
         sections.add(new ExportHtmlSeite.Section("rangliste", I18n.get("export.liga.nav.rangliste"),
                 ranglisteSheetName, ranglistePdfUrl));
         sections.add(new ExportHtmlSeite.Section("direktvergleich", I18n.get("export.liga.nav.direktvergleich"),
                 direktvergleichSheetName, null));
+        for (int i = 0; i < termine.size(); i++) {
+            TerminExportEintrag termin = termine.get(i);
+            sections.add(new ExportHtmlSeite.Section("termine-" + (i + 1), termin.sheetName(),
+                    termin.sheetName(), termin.pdfUrl()));
+        }
         return sections;
     }
 
@@ -136,5 +163,8 @@ public class LigaExportInVerzeichnis extends AbstractExportInVerzeichnis {
     }
 
     private record TerminSheetEintrag(int teamNr, String sheetName) {
+    }
+
+    public record TerminExportEintrag(String sheetName, String pdfUrl, Path pdf) {
     }
 }

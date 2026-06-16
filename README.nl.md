@@ -115,7 +115,7 @@ Naast de gegevenstabellen biedt de ingebouwde webserver een eigen **toernooi-sta
 
 * **LibreOffice:** vanaf versie 25.x (of nieuwer)
 * **Java (JRE/JDK):** vanaf versie 25
-* **Besturingssysteem:** Linux, macOS of Windows
+* **Besturingssysteem:** Linux, Windows of macOS 11 (Big Sur) of nieuwer
 
 ---
 
@@ -127,7 +127,10 @@ Download het juiste installatiepakket via de [GitHub Releases](https://github.co
 
 * **Linux:** [`PetanqueTurnierManager-Installer-<version>-linux.AppImage`](https://github.com/michaelmassee/Petanque-Turnier-Manager/releases)
 * **Windows:** [`PetanqueTurnierManager-Installer-<version>-windows.exe`](https://github.com/michaelmassee/Petanque-Turnier-Manager/releases)
-* **macOS:** [`PetanqueTurnierManager-Installer-<version>.dmg`](https://github.com/michaelmassee/Petanque-Turnier-Manager/releases)
+* **macOS (Apple Silicon, M1/M2/M3/…):** [`PetanqueTurnierManager-Installer-<version>-macos-arm64.dmg`](https://github.com/michaelmassee/Petanque-Turnier-Manager/releases)
+* **macOS (Intel):** [`PetanqueTurnierManager-Installer-<version>-macos-intel.dmg`](https://github.com/michaelmassee/Petanque-Turnier-Manager/releases)
+
+> **Opmerking (macOS):** Vereist macOS 11 (Big Sur) of nieuwer. macOS 10.15 (Catalina) en ouder worden niet ondersteund (Java 25-runtime).
 
 Start de installer en volg de instructies. De installer richt de extensie voor LibreOffice in.
 

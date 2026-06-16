@@ -92,6 +92,30 @@ class TabelleHtmlRendererTest {
     }
 
     @Test
+    void pdfRotation90Grad_RendertTransformStattWritingMode() {
+        var stil = new StyleModel(false, false, null, null, null, null,
+                1, 1, 90, false, null, 0, null, null, null, null);
+        var model = einspaltigesModell("cell-0-0", "Kopf", stil);
+        var html = TabelleHtmlRenderer.fuerPdf().render(model);
+        assertThat(html)
+                .doesNotContain("writing-mode")
+                .contains("<span style=\"display:inline-block;white-space:nowrap;transform:rotate(90deg);")
+                .contains(">Kopf</span>");
+    }
+
+    @Test
+    void pdfRotation270Grad_RendertTransformStattWritingMode() {
+        var stil = new StyleModel(false, false, null, null, null, null,
+                1, 1, 270, false, null, 0, null, null, null, null);
+        var model = einspaltigesModell("cell-0-0", "Kopf", stil);
+        var html = TabelleHtmlRenderer.fuerPdf().render(model);
+        assertThat(html)
+                .doesNotContain("writing-mode")
+                .contains("<span style=\"display:inline-block;white-space:nowrap;transform:rotate(270deg);")
+                .contains(">Kopf</span>");
+    }
+
+    @Test
     void rotation45Grad_RendertTransformRotate() {
         var stil = new StyleModel(false, false, null, null, null, null,
                 1, 1, 45, false, null, 0, null, null, null, null);

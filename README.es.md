@@ -114,7 +114,7 @@ Además de las tablas de datos, el servidor web integrado incluye su propia **p�
 
 * **LibreOffice:** versión 25.x (o superior)
 * **Java (JRE/JDK):** versión 25 o superior
-* **Sistema operativo:** Linux, macOS o Windows
+* **Sistema operativo:** Linux, Windows o macOS 11 (Big Sur) o superior
 
 ---
 
@@ -126,7 +126,10 @@ Descarga el paquete de instalación correspondiente desde las [GitHub Releases](
 
 * **Linux:** [`PetanqueTurnierManager-Installer-<version>-linux.AppImage`](https://github.com/michaelmassee/Petanque-Turnier-Manager/releases)
 * **Windows:** [`PetanqueTurnierManager-Installer-<version>-windows.exe`](https://github.com/michaelmassee/Petanque-Turnier-Manager/releases)
-* **macOS:** [`PetanqueTurnierManager-Installer-<version>.dmg`](https://github.com/michaelmassee/Petanque-Turnier-Manager/releases)
+* **macOS (Apple Silicon, M1/M2/M3/…):** [`PetanqueTurnierManager-Installer-<version>-macos-arm64.dmg`](https://github.com/michaelmassee/Petanque-Turnier-Manager/releases)
+* **macOS (Intel):** [`PetanqueTurnierManager-Installer-<version>-macos-intel.dmg`](https://github.com/michaelmassee/Petanque-Turnier-Manager/releases)
+
+> **Nota (macOS):** Requiere macOS 11 (Big Sur) o superior. macOS 10.15 (Catalina) y anteriores no son compatibles (entorno de ejecución Java 25).
 
 Inicia el instalador y sigue las instrucciones. El instalador configura la extensión para LibreOffice.
 

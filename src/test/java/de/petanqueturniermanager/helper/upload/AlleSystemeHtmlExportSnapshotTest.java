@@ -38,10 +38,15 @@ class AlleSystemeHtmlExportSnapshotTest {
     private String snapshot() {
         return String.join("\n\n", List.of(
                 seite(TurnierSystem.SUPERMELEE, sectionsSupermelee()),
-                seite(TurnierSystem.LIGA, LigaExportInVerzeichnis.htmlSections(
+                seite(TurnierSystem.LIGA, LigaExportInVerzeichnis.htmlSectionsMitTerminPdf(
                         SheetNamen.meldeliste(), LigaSpielPlanSheet.sheetName(), "pdf/Spielplan.pdf",
-                        List.of(LigaTermineProTeilnehmerSheet.sheetName(1),
-                                LigaTermineProTeilnehmerSheet.sheetName(2)),
+                        List.of(
+                                new LigaExportInVerzeichnis.TerminExportEintrag(
+                                        LigaTermineProTeilnehmerSheet.sheetName(1),
+                                        "pdf/Termine-pro-Teilnehmer-1.pdf", null),
+                                new LigaExportInVerzeichnis.TerminExportEintrag(
+                                        LigaTermineProTeilnehmerSheet.sheetName(2),
+                                        "pdf/Termine-pro-Teilnehmer-2.pdf", null)),
                         SheetNamen.rangliste(),
                         "pdf/Rangliste.pdf", SheetNamen.direktvergleich(), true)),
                 seite(TurnierSystem.MAASTRICHTER, sectionsMaastrichter()),

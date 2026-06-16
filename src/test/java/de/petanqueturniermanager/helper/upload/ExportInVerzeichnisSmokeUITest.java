@@ -141,6 +141,11 @@ class ExportInVerzeichnisSmokeUITest extends BaseCalcUITest {
         assertThat(pdfDateien)
                 .as("%s muss mindestens eine PDF-Datei erzeugen", fall.system())
                 .isNotEmpty();
+        if (fall.system() == TurnierSystem.LIGA) {
+            assertThat(pdfDateien)
+                    .as("Liga muss Spielplan/Rangliste plus Terminlisten-PDFs exportieren")
+                    .hasSizeGreaterThan(2);
+        }
 
         pruefeHtml(fall.system(), htmlDateien.getFirst());
         for (Path pdf : pdfDateien) {
@@ -185,6 +190,12 @@ class ExportInVerzeichnisSmokeUITest extends BaseCalcUITest {
             assertThat(html)
                     .as("Supermelee HTML muss die direkt gesetzte Streich-Spieltag-Farbe exportieren")
                     .contains("background-color:#DDDDDD");
+        }
+        if (system == TurnierSystem.LIGA) {
+            assertThat(html)
+                    .as("Liga HTML muss Terminlisten am Ende enthalten")
+                    .contains("id=\"termine-1\"")
+                    .contains("id=\"termine-2\"");
         }
     }
 

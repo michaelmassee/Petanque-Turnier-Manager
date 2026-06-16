@@ -44,7 +44,7 @@ public abstract class AbstractExportInVerzeichnis extends SheetRunner {
 
     private final Path zielVerzeichnis;
     private final TabellenMapper tabellenMapper = new TabellenMapper();
-    private final TabelleHtmlRenderer tabelleHtmlRenderer = new TabelleHtmlRenderer();
+    private final TabelleHtmlRenderer pdfTabelleHtmlRenderer = TabelleHtmlRenderer.fuerPdf();
 
     protected AbstractExportInVerzeichnis(WorkingSpreadsheet ws, TurnierSystem ts, String name,
             Path zielVerzeichnis) {
@@ -105,7 +105,7 @@ public abstract class AbstractExportInVerzeichnis extends SheetRunner {
         }
         var doc = getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
         var model = tabellenMapper.map(sheet, doc);
-        var tabelleFragment = tabelleHtmlRenderer.render(model);
+        var tabelleFragment = pdfTabelleHtmlRenderer.render(model);
         var html = PdfHtmlDokument.erstelle(abschnittTitel, tabelleFragment);
         var zieldatei = pdfZieldatei(sheetName, zielVerzeichnis);
         var pdf = HtmlZuPdfKonvertierer.konvertiere(html, zieldatei);

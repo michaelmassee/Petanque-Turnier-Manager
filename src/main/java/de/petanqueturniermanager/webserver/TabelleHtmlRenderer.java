@@ -20,6 +20,19 @@ public class TabelleHtmlRenderer {
     private static final float UNO_ZU_PX = 37.795f;
     private static final int SPALTENBREITE_FALLBACK = 2000;
     private static final int ZEILENHOEHE_FALLBACK = 600;
+    private final boolean pdfKompatibel;
+
+    public TabelleHtmlRenderer() {
+        this(false);
+    }
+
+    private TabelleHtmlRenderer(boolean pdfKompatibel) {
+        this.pdfKompatibel = pdfKompatibel;
+    }
+
+    public static TabelleHtmlRenderer fuerPdf() {
+        return new TabelleHtmlRenderer(true);
+    }
 
     public String render(TabelleModel model) {
         var sb = new StringBuilder();
@@ -100,7 +113,14 @@ public class TabelleHtmlRenderer {
         }
         sb.append(" style=\"").append(buildCss(s)).append("\"");
         sb.append(">");
-        sb.append(StringEscapeUtils.escapeHtml4(zelle.wert() != null ? zelle.wert() : ""));
+        String wert = StringEscapeUtils.escapeHtml4(zelle.wert() != null ? zelle.wert() : "");
+        if (pdfKompatibel && istRechtwinkligGedreht(s.rotationGrad())) {
+            sb.append("<span style=\"").append(buildPdfRotationCss(s.rotationGrad())).append("\">")
+                    .append(wert)
+                    .append("</span>");
+        } else {
+            sb.append(wert);
+        }
         sb.append("</td>");
     }
 
@@ -134,9 +154,9 @@ public class TabelleHtmlRenderer {
         css.append(s.zeilenumbruch() ? "white-space:normal;" : "white-space:nowrap;");
 
         int rot = s.rotationGrad();
-        if (rot == 90 || rot == 270) {
+        if (!pdfKompatibel && istRechtwinkligGedreht(rot)) {
             css.append("writing-mode:vertical-rl;");
-        } else if (rot != 0) {
+        } else if (!(pdfKompatibel && istRechtwinkligGedreht(rot)) && rot != 0) {
             css.append("transform:rotate(").append(rot).append("deg);");
         }
 
@@ -154,6 +174,15 @@ public class TabelleHtmlRenderer {
         }
 
         return css.toString();
+    }
+
+    private boolean istRechtwinkligGedreht(int rotationGrad) {
+        return rotationGrad == 90 || rotationGrad == 270;
+    }
+
+    private String buildPdfRotationCss(int rotationGrad) {
+        return "display:inline-block;white-space:nowrap;transform:rotate(" + rotationGrad
+                + "deg);transform-origin:center center;";
     }
 
     private String bereinigeFontFamily(String fontFamily) {
