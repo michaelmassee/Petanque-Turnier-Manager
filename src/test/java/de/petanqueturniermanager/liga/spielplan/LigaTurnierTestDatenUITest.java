@@ -15,11 +15,13 @@ import com.sun.star.sheet.XSpreadsheet;
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
+import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.random.RandomSource;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
+import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheetUpdate;
 import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
@@ -114,6 +116,36 @@ public class LigaTurnierTestDatenUITest extends BaseCalcUITest {
 		pruefeJedesBlattTraegtKorrektenSchluessel(erwartung);
 	}
 
+	@Test
+	public void terminlistenLassenPunkteLeerWennSiegeLeerSindUndBehaltenNullen() throws GenerateException {
+		new LigaTurnierTestDaten(wkingSpreadsheet).erzeugeBeispielturnier();
+
+		XSpreadsheet spielplan = sheetHlp.findByName(SheetNamen.spielplan());
+		int spielplanZeile = LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE;
+		RowData spielplanRow = rangeDateFromRangePosition(
+				RangePosition.from(0, spielplanZeile, LigaSpielPlanSheet.TEAM_B_NR_SPALTE, spielplanZeile),
+				spielplan, wkingSpreadsheet.getWorkingSpreadsheetDocument()).get(0);
+		String spielNr = spielplanRow.get(LigaSpielPlanSheet.SPIEL_NR_SPALTE).getStringVal();
+
+		sheetHlp.clearValInCell(spielplan, Position.from(LigaSpielPlanSheet.SPIELE_A_SPALTE, spielplanZeile));
+		sheetHlp.clearValInCell(spielplan, Position.from(LigaSpielPlanSheet.SPIELE_B_SPALTE, spielplanZeile));
+		sheetHlp.clearValInCell(spielplan, Position.from(LigaSpielPlanSheet.SPIELPNKT_A_SPALTE, spielplanZeile));
+		sheetHlp.setValInCell(spielplan, Position.from(LigaSpielPlanSheet.SPIELPNKT_B_SPALTE, spielplanZeile), 0);
+		recalcAll();
+
+		new LigaTermineProTeilnehmerSheet(wkingSpreadsheet)
+				.generate(new LigaMeldeListeSheetUpdate(wkingSpreadsheet).getAlleMeldungen());
+		recalcAll();
+
+		RowData terminRow = terminZeile(spielNr);
+		assertThat(terminRow.get(6).getStringVal()).as("Punkte H leer").isEmpty();
+		assertThat(terminRow.get(7).getStringVal()).as("Punkte G leer").isEmpty();
+		assertThat(terminRow.get(8).getStringVal()).as("Siege H leer").isEmpty();
+		assertThat(terminRow.get(9).getStringVal()).as("Siege G leer").isEmpty();
+		assertThat(terminRow.get(10).getStringVal()).as("SpPunkte H leer").isEmpty();
+		assertThat(terminRow.get(11).getIntVal()).as("SpPunkte G echte 0").isZero();
+	}
+
 	private void validiereGrundstruktur(String ersterTerminSheetName) {
 		assertThat(sheetHlp.findByName(SheetNamen.meldeliste()))
 				.as("Meldeliste-Sheet muss existieren").isNotNull();
@@ -203,6 +235,21 @@ public class LigaTurnierTestDatenUITest extends BaseCalcUITest {
 			}
 		}
 		throw new AssertionError("Spielplan-Zeile nicht gefunden: " + spielNr);
+	}
+
+	private RowData terminZeile(String spielNr) {
+		for (String teamName : TEAMNAMEN_6) {
+			XSpreadsheet termine = sheetHlp.findByName(teamName);
+			RangeData termineDaten = rangeDateFromRangePosition(
+					RangePosition.from(0, 0, 11, 80),
+					termine, wkingSpreadsheet.getWorkingSpreadsheetDocument());
+			for (RowData row : termineDaten) {
+				if (spielNr.equals(row.get(0).getStringVal())) {
+					return row;
+				}
+			}
+		}
+		throw new AssertionError("Termin-Zeile nicht gefunden: " + spielNr);
 	}
 
 	private void validiereSpielplanPerJson(String referenzDatei) throws GenerateException {

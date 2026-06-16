@@ -130,8 +130,8 @@ public class LigaSpielPlanSheetUITest extends BaseCalcUITest {
 	}
 
 	/**
-	 * Prueft, dass die Punkte-Formeln korrekt berechnen: 1 fuer den Gewinner, 0 fuer den Verlierer.<br>
-	 * Formel: WENN(SiegeA > SiegeB; 1; 0)
+	 * Prueft, dass die Punkte-Formeln korrekt berechnen: 1 fuer den Gewinner, 0 fuer den Verlierer
+	 * und leer wenn beide Siege-Zellen leer sind.
 	 */
 	@Test
 	public void testSpielplanPunkteFormeln() throws GenerateException {
@@ -139,16 +139,18 @@ public class LigaSpielPlanSheetUITest extends BaseCalcUITest {
 		LigaSpielPlanSheet spielPlan = new LigaSpielPlanSheet(wkingSpreadsheet);
 		spielPlan.run();
 
-		// Siege in die ersten zwei Zeilen schreiben
+		// Siege in die ersten drei Zeilen schreiben
 		// Zeile 1: Team A gewinnt (SiegeA=1, SiegeB=0)
 		// Zeile 2: Team B gewinnt (SiegeA=0, SiegeB=1)
-		RangeData siege = new RangeData(new Object[][] { { 1, 0 }, { 0, 1 } });
+		// Zeile 3: noch kein Ergebnis (SiegeA/SiegeB leer)
+		RangeData siege = new RangeData(new Object[][] { { 1, 0 }, { 0, 1 }, { "", "" } });
 		RangeHelper.from(spielPlan.getXSpreadSheet(), wkingSpreadsheet.getWorkingSpreadsheetDocument(),
 				RangePosition.from(LigaSpielPlanSheet.SPIELE_A_SPALTE,
 						LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE,
 						LigaSpielPlanSheet.SPIELE_B_SPALTE,
-						LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE + 1))
+						LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE + 2))
 				.setDataInRange(siege);
+		Lo.qi(XCalculatable.class, doc).calculateAll();
 
 		// Punkte-Formeln lesen
 		RangeData punkte = RangeHelper.from(spielPlan.getXSpreadSheet(),
@@ -156,16 +158,19 @@ public class LigaSpielPlanSheetUITest extends BaseCalcUITest {
 				RangePosition.from(LigaSpielPlanSheet.PUNKTE_A_SPALTE,
 						LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE,
 						LigaSpielPlanSheet.PUNKTE_B_SPALTE,
-						LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE + 1))
+						LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE + 2))
 				.getDataFromRange();
 
-		assertThat(punkte).as("Zwei Ergebniszeilen erwartet").hasSize(2);
+		assertThat(punkte).as("Drei Ergebniszeilen erwartet").hasSize(3);
 		// Zeile 1: Team A gewinnt
 		assertThat(punkte.get(0).get(0).getIntVal()).as("Zeile 1: Punkte A (Gewinner)").isEqualTo(1);
 		assertThat(punkte.get(0).get(1).getIntVal()).as("Zeile 1: Punkte B (Verlierer)").isEqualTo(0);
 		// Zeile 2: Team B gewinnt
 		assertThat(punkte.get(1).get(0).getIntVal()).as("Zeile 2: Punkte A (Verlierer)").isEqualTo(0);
 		assertThat(punkte.get(1).get(1).getIntVal()).as("Zeile 2: Punkte B (Gewinner)").isEqualTo(1);
+		// Zeile 3: noch kein Ergebnis
+		assertThat(punkte.get(2).get(0).getStringVal()).as("Zeile 3: Punkte A leer").isEmpty();
+		assertThat(punkte.get(2).get(1).getStringVal()).as("Zeile 3: Punkte B leer").isEmpty();
 	}
 
 	@Test

@@ -224,17 +224,17 @@ public class LigaTermineProTeilnehmerSheet extends SheetRunner implements ISheet
                 ref(spielplanName, heim ? LigaSpielPlanSheet.NAME_B_SPALTE : LigaSpielPlanSheet.NAME_A_SPALTE,
                         spielplanZeile)));
         getSheetHelper().setFormulaInCell(formel(sheet, PUNKTE_H_SPALTE, zeile,
-                ref(spielplanName, LigaSpielPlanSheet.PUNKTE_A_SPALTE, spielplanZeile)));
+                ergebnisRef(spielplanName, LigaSpielPlanSheet.PUNKTE_A_SPALTE, spielplanZeile)));
         getSheetHelper().setFormulaInCell(formel(sheet, PUNKTE_G_SPALTE, zeile,
-                ref(spielplanName, LigaSpielPlanSheet.PUNKTE_B_SPALTE, spielplanZeile)));
+                ergebnisRef(spielplanName, LigaSpielPlanSheet.PUNKTE_B_SPALTE, spielplanZeile)));
         getSheetHelper().setFormulaInCell(formel(sheet, SPIELE_H_SPALTE, zeile,
-                ref(spielplanName, LigaSpielPlanSheet.SPIELE_A_SPALTE, spielplanZeile)));
+                ergebnisRef(spielplanName, LigaSpielPlanSheet.SPIELE_A_SPALTE, spielplanZeile)));
         getSheetHelper().setFormulaInCell(formel(sheet, SPIELE_G_SPALTE, zeile,
-                ref(spielplanName, LigaSpielPlanSheet.SPIELE_B_SPALTE, spielplanZeile)));
+                ergebnisRef(spielplanName, LigaSpielPlanSheet.SPIELE_B_SPALTE, spielplanZeile)));
         getSheetHelper().setFormulaInCell(formel(sheet, SPIELPUNKTE_H_SPALTE, zeile,
-                ref(spielplanName, LigaSpielPlanSheet.SPIELPNKT_A_SPALTE, spielplanZeile)));
+                ergebnisRef(spielplanName, LigaSpielPlanSheet.SPIELPNKT_A_SPALTE, spielplanZeile)));
         getSheetHelper().setFormulaInCell(formel(sheet, SPIELPUNKTE_G_SPALTE, zeile,
-                ref(spielplanName, LigaSpielPlanSheet.SPIELPNKT_B_SPALTE, spielplanZeile)));
+                ergebnisRef(spielplanName, LigaSpielPlanSheet.SPIELPNKT_B_SPALTE, spielplanZeile)));
     }
 
     private void formatieren(int letzteDatenZeile) throws GenerateException {
@@ -329,6 +329,10 @@ public class LigaTermineProTeilnehmerSheet extends SheetRunner implements ISheet
 
     private static String leerWennLeer(String ref) {
         return "IF(ISBLANK(" + ref + ");\"\";" + ref + ")";
+    }
+
+    private static String ergebnisRef(String sheetName, int spalte, int zeile) {
+        return leerWennLeer(ref(sheetName, spalte, zeile));
     }
 
     private void entferneBestehendeTerminSheets() throws GenerateException {

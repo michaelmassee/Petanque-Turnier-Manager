@@ -437,9 +437,10 @@ public class LigaSpielPlanSheet extends SheetRunner implements ISheet {
 		// http://www.ooowiki.de/DeutschEnglischCalcFunktionen.html
 		// erste nr reicht, weil beim filldown zeilenr automatisch hoch
 		{
-			String formulaHeimPunkteStr = "WENN("
-					+ Position.from(SPIELE_A_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE).getAddress() + ">"
-					+ Position.from(SPIELE_B_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE).getAddress() + ";1;0";
+			String spieleA = Position.from(SPIELE_A_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE).getAddress();
+			String spieleB = Position.from(SPIELE_B_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE).getAddress();
+			String formulaHeimPunkteStr = "IF(AND(ISBLANK(" + spieleA + ");ISBLANK(" + spieleB + "));\"\";IF("
+					+ spieleA + ">" + spieleB + ";1;0))";
 
 			StringCellValue formulaHeimPunkte = StringCellValue.from(getXSpreadSheet()).setValue(formulaHeimPunkteStr)
 					.setPos(Position.from(PUNKTE_A_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE))
@@ -449,9 +450,10 @@ public class LigaSpielPlanSheet extends SheetRunner implements ISheet {
 
 		// ------------------------------------------------------------------------------------
 		{
-			String formulaGastPunkteStr = "WENN("
-					+ Position.from(SPIELE_B_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE).getAddress() + ">"
-					+ Position.from(SPIELE_A_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE).getAddress() + ";1;0";
+			String spieleA = Position.from(SPIELE_A_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE).getAddress();
+			String spieleB = Position.from(SPIELE_B_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE).getAddress();
+			String formulaGastPunkteStr = "IF(AND(ISBLANK(" + spieleA + ");ISBLANK(" + spieleB + "));\"\";IF("
+					+ spieleB + ">" + spieleA + ";1;0))";
 
 			StringCellValue formulaGastPunkte = StringCellValue.from(getXSpreadSheet()).setValue(formulaGastPunkteStr)
 					.setPos(Position.from(PUNKTE_B_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE))
