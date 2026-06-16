@@ -1,7 +1,5 @@
 package de.petanqueturniermanager.sidebar.sheets;
 
-import com.sun.star.sheet.XSpreadsheet;
-
 import de.petanqueturniermanager.helper.i18n.I18n;
 
 /**
@@ -44,7 +42,7 @@ public sealed interface BlattBaumEintrag
     }
 
     /** Einzelnes Tabellenblatt, eingerückt dargestellt. */
-    record BlattKnoten(XSpreadsheet sheet, String anzeigeText, String metadatenSchluessel)
+    record BlattKnoten(String anzeigeText, String metadatenSchluessel)
             implements BlattBaumEintrag {
     }
 }

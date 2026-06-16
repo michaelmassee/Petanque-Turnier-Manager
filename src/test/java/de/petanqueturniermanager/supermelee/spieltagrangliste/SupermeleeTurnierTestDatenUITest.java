@@ -273,7 +273,7 @@ public class SupermeleeTurnierTestDatenUITest extends BaseCalcUITest {
 		long anzEintraege = baum.stream()
 				.filter(e -> e instanceof de.petanqueturniermanager.sidebar.sheets.BlattBaumEintrag.BlattKnoten)
 				.map(e -> (de.petanqueturniermanager.sidebar.sheets.BlattBaumEintrag.BlattKnoten) e)
-				.filter(k -> meldelisteName.equals(Lo.qi(XNamed.class, k.sheet()).getName()))
+				.filter(k -> meldelisteName.equals(k.anzeigeText()))
 				.count();
 		assertThat(anzEintraege).as("Meldeliste darf trotz Doppel-Schlüssel nur einmal erscheinen").isEqualTo(1);
 	}

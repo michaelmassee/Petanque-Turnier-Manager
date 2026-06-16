@@ -19,7 +19,6 @@ import com.sun.star.awt.XListBox;
 import com.sun.star.awt.XRequestCallback;
 import com.sun.star.awt.XWindow;
 import com.sun.star.beans.XPropertySet;
-import com.sun.star.container.XNamed;
 import com.sun.star.frame.XController;
 import com.sun.star.frame.XModel;
 import com.sun.star.lang.DisposedException;
@@ -76,7 +75,7 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
     private Set<Integer> kollabierteSpielTage;
     private Set<String> kollabierteUnterGruppen;
     private SheetBaumOrganisierer organisierer;
-    private String gespeichertesSheet = null;
+    private String gespeicherterSchluessel = null;
     /**
      * Signatur der zuletzt <em>tatsächlich angezeigten</em> Blattstruktur (Reihenfolge,
      * Namen, Kollaps-Zustand). Dient dazu, den teuren Vollaufbau
@@ -264,13 +263,12 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
     }
 
     private void auswahlWiederherstellen() {
-        if (gespeichertesSheet == null || sheetListBox == null) {
+        if (gespeicherterSchluessel == null || sheetListBox == null) {
             return;
         }
         for (int i = 0; i < baumEintraege.size(); i++) {
             if (baumEintraege.get(i) instanceof BlattKnoten knoten) {
-                var named = Lo.qi(XNamed.class, knoten.sheet());
-                if (named != null && gespeichertesSheet.equals(named.getName())) {
+                if (gespeicherterSchluessel.equals(knoten.metadatenSchluessel())) {
                     // uiZustand ist AUFBAU → itemStateChanged ignoriert selectItemPos automatisch
                     sheetListBox.selectItemPos((short) i, true);
                     return;
@@ -333,7 +331,7 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
     }
 
     private void auswahlMerken() {
-        gespeichertesSheet = null;
+        gespeicherterSchluessel = null;
         var lb = sheetListBox;
         if (lb == null) {
             return;
@@ -341,10 +339,7 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
         short sel = lb.getSelectedItemPos();
         if (sel >= 0 && sel < baumEintraege.size()) {
             if (baumEintraege.get(sel) instanceof BlattKnoten knoten) {
-                var named = Lo.qi(XNamed.class, knoten.sheet());
-                if (named != null) {
-                    gespeichertesSheet = named.getName();
-                }
+                gespeicherterSchluessel = knoten.metadatenSchluessel();
             }
         }
     }
@@ -362,7 +357,8 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
                 logger.debug("itemStateChanged: idx={} außerhalb [0,{})", idx, baumEintraege.size());
                 return;
             }
-            logger.debug("itemStateChanged: idx={}, eintrag={}", idx, baumEintraege.get(idx).getClass().getSimpleName());
+            var eintrag = baumEintraege.get(idx);
+            logger.debug("itemStateChanged: idx={}, eintrag={}", idx, eintrag.getClass().getSimpleName());
             // Alle Item-Aktionen werden via PostUserEvent auf den VCL-Hauptthread nach
             // Abschluss des aktuellen Events verschoben. Direktaufrufe aus itemStateChanged
             // (innerhalb von pBox->Select()) verursachen VCL-Re-Entranz und SIGSEGV, weil
@@ -374,10 +370,10 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
                         return;
                     }
                     logger.debug("itemDispatcher: verarbeiteItemAuswahl({})", idx);
-                    verarbeiteItemAuswahl(idx);
+                    verarbeiteItemAuswahl(eintrag);
                 }, null);
             } else {
-                verarbeiteItemAuswahl(idx);
+                verarbeiteItemAuswahl(eintrag);
             }
         }
 
@@ -391,7 +387,11 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
         if (idx < 0 || idx >= baumEintraege.size()) {
             return;
         }
-        switch (baumEintraege.get(idx)) {
+        verarbeiteItemAuswahl(baumEintraege.get(idx));
+    }
+
+    private void verarbeiteItemAuswahl(BlattBaumEintrag eintrag) {
+        switch (eintrag) {
             case GruppenKopf kopf -> gruppeToggle(kopf.gruppe());
             case SpieltagKopf kopf -> spieltagToggle(kopf.spieltagNr());
             case UnterGruppenKopf kopf -> unterGruppeToggle(kopf.id());
@@ -458,7 +458,8 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
                     ? null
                     : SheetMetadataHelper.findeSheet(xDoc, knoten.metadatenSchluessel()).orElse(null);
             if (sheet == null) {
-                sheet = knoten.sheet();
+                logger.warn("sheetAktivieren: kein Sheet für Schlüssel '{}' gefunden", knoten.metadatenSchluessel());
+                return;
             }
             TurnierSheet.from(sheet, getCurrentSpreadsheet()).setActiv();
             logger.debug("sheetAktivieren: Sheet '{}' aktiviert", knoten.metadatenSchluessel());
@@ -524,15 +525,13 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
         if (aktuellesSheet == null) {
             return;
         }
-        var named = Lo.qi(XNamed.class, aktuellesSheet);
-        if (named == null) {
+        var xDoc = dokumentOderNull();
+        if (xDoc == null) {
             return;
         }
-        var sheetName = named.getName();
         for (int i = 0; i < baumEintraege.size(); i++) {
             if (baumEintraege.get(i) instanceof BlattKnoten knoten) {
-                var knotenNamed = Lo.qi(XNamed.class, knoten.sheet());
-                if (knotenNamed != null && sheetName.equals(knotenNamed.getName())) {
+                if (SheetMetadataHelper.istRegistriertesSheet(xDoc, aktuellesSheet, knoten.metadatenSchluessel())) {
                     selectItemPosProgrammatisch((short) i, true);
                     return;
                 }
@@ -566,7 +565,7 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
         if (baumEintraege != null) {
             baumEintraege.clear();
         }
-        gespeichertesSheet = null;
+        gespeicherterSchluessel = null;
         aktuelleStrukturSignatur = null;
     }
 
