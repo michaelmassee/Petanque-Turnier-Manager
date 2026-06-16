@@ -4,12 +4,15 @@
 package de.petanqueturniermanager.liga.spielplan;
 
 import de.petanqueturniermanager.helper.random.RandomSource;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
 import de.petanqueturniermanager.algorithmen.liga.JederGegenJeden;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.NewTestDatenValidator;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheetTestDaten;
 import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheet;
@@ -65,7 +68,34 @@ public class LigaSpielPlanSheetTestDaten extends LigaSpielPlanSheet {
 
 		JederGegenJeden jederGegenJeden = new JederGegenJeden(alleMeldungen);
 		// anzahl runden x 2, weil hin und rückrunde
-		super.spielErgebnisseEinlesen(getTestDaten(jederGegenJeden.anzRunden() * 2, jederGegenJeden.anzPaarungen(), 5));
+		int anzRunden = jederGegenJeden.anzRunden() * 2;
+		int anzPaarungen = jederGegenJeden.anzPaarungen();
+		testTermineEintragen(anzRunden, anzPaarungen);
+		super.spielErgebnisseEinlesen(getTestDaten(anzRunden, anzPaarungen, 5));
+	}
+
+	private void testTermineEintragen(int anzRunden, int anzPaarungen) throws GenerateException {
+		LocalDate startDatum = LocalDate.of(2026, 6, 20);
+		LocalTime startZeit = LocalTime.of(10, 0);
+		for (int runde = 0; runde < anzRunden; runde++) {
+			double datum = calcDatum(startDatum.plusWeeks(runde));
+			double uhrzeit = calcUhrzeit(startZeit.plusMinutes((long) runde * 30));
+			for (int paarung = 0; paarung < anzPaarungen; paarung++) {
+				int zeile = ERSTE_SPIELTAG_DATEN_ZEILE + (runde * anzPaarungen) + paarung;
+				getSheetHelper().setNumberValueInCell(
+						NumberCellValue.from(getXSpreadSheet(), DATUM_SPALTE, zeile, datum));
+				getSheetHelper().setNumberValueInCell(
+						NumberCellValue.from(getXSpreadSheet(), UHRZEIT_SPALTE, zeile, uhrzeit));
+			}
+		}
+	}
+
+	private static double calcDatum(LocalDate datum) {
+		return datum.toEpochDay() - LocalDate.of(1899, 12, 30).toEpochDay();
+	}
+
+	private static double calcUhrzeit(LocalTime zeit) {
+		return zeit.toSecondOfDay() / 86400.0;
 	}
 
 	private List<List<List<SpielErgebnis>>> getTestDaten(int anzRunden, int anzPaarungen, int anzSpielInBegnung) {

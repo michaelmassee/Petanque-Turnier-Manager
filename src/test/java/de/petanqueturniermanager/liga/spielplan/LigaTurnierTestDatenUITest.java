@@ -19,6 +19,7 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.random.RandomSource;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
+import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
@@ -128,7 +129,7 @@ public class LigaTurnierTestDatenUITest extends BaseCalcUITest {
 		XSpreadsheet meldeliste = sheetHlp.findByName(SheetNamen.meldeliste());
 		RangePosition meldelisteRange = RangePosition.from(
 				0, MELDELISTE_ERSTE_DATEN_ZEILE,
-				2, MELDELISTE_ERSTE_DATEN_ZEILE + anzTeams - 1);
+				6, MELDELISTE_ERSTE_DATEN_ZEILE + anzTeams - 1);
 
 		// writeToJson(referenzDatei, meldelisteRange, meldeliste, wkingSpreadsheet.getWorkingSpreadsheetDocument());
 
@@ -140,6 +141,10 @@ public class LigaTurnierTestDatenUITest extends BaseCalcUITest {
 	}
 
 	private void validiereTermineProTeilnehmer(String[] teamNamen, int erwarteteTermineProTeam) {
+		XSpreadsheet spielplan = sheetHlp.findByName(SheetNamen.spielplan());
+		RangeData spielplanDaten = rangeDateFromRangePosition(
+				RangePosition.from(0, 0, LigaSpielPlanSheet.SPIELPNKT_B_SPALTE, 110),
+				spielplan, wkingSpreadsheet.getWorkingSpreadsheetDocument());
 		for (int teamIndex = 0; teamIndex < teamNamen.length; teamIndex++) {
 			int teamNr = teamIndex + 1;
 			XSpreadsheet termine = sheetHlp.findByName(teamNamen[teamIndex]);
@@ -147,19 +152,29 @@ public class LigaTurnierTestDatenUITest extends BaseCalcUITest {
 					.as("Termine-Sheet für Team %d muss den Teilnehmernamen tragen", teamNr)
 					.isNotNull();
 			RangeData rangeData = rangeDateFromRangePosition(
-					RangePosition.from(0, 0, 5, 1 + erwarteteTermineProTeam + 5),
+					RangePosition.from(0, 0, 11, 2 + erwarteteTermineProTeam + 5),
 					termine, wkingSpreadsheet.getWorkingSpreadsheetDocument());
 
 			assertThat(rangeData.get(0).get(0).getStringVal()).isEqualTo("Spiel");
 			assertThat(rangeData.get(0).get(1).getStringVal()).isEqualTo("Datum");
 			assertThat(rangeData.get(0).get(5).getStringVal()).isEqualTo("Gegner");
+			assertThat(rangeData.get(0).get(6).getStringVal()).isEqualTo("Punkte");
+			assertThat(rangeData.get(0).get(8).getStringVal()).isEqualTo("Siege");
+			assertThat(rangeData.get(0).get(10).getStringVal()).isEqualTo("SpPunkte");
+			assertThat(rangeData.get(1).get(6).getStringVal()).isEqualTo("H");
+			assertThat(rangeData.get(1).get(7).getStringVal()).isEqualTo("G");
+			assertThat(rangeData.get(1).get(8).getStringVal()).isEqualTo("H");
+			assertThat(rangeData.get(1).get(9).getStringVal()).isEqualTo("G");
+			assertThat(rangeData.get(1).get(10).getStringVal()).isEqualTo("H");
+			assertThat(rangeData.get(1).get(11).getStringVal()).isEqualTo("G");
 
 			int anzahlTermine = 0;
-			for (int zeile = 1; zeile < rangeData.size(); zeile++) {
+			for (int zeile = 2; zeile < rangeData.size(); zeile++) {
 				String spielNr = rangeData.get(zeile).get(0).getStringVal();
 				if (spielNr == null || spielNr.isBlank()) {
 					break;
 				}
+				pruefeTerminErgebnis(rangeData, zeile, spielplanDaten);
 				anzahlTermine++;
 			}
 
@@ -167,6 +182,27 @@ public class LigaTurnierTestDatenUITest extends BaseCalcUITest {
 					.as("Team %d muss die erwartete Anzahl Termine haben", teamNr)
 					.isEqualTo(erwarteteTermineProTeam);
 		}
+	}
+
+	private void pruefeTerminErgebnis(RangeData termine, int terminZeile, RangeData spielplanDaten) {
+		String spielNr = termine.get(terminZeile).get(0).getStringVal();
+		RowData spielplanZeile = spielplanZeile(spielplanDaten, spielNr);
+
+		for (int spalte = LigaSpielPlanSheet.PUNKTE_A_SPALTE; spalte <= LigaSpielPlanSheet.SPIELPNKT_B_SPALTE; spalte++) {
+			int terminSpalte = spalte - LigaSpielPlanSheet.PUNKTE_A_SPALTE + 6;
+			assertThat(termine.get(terminZeile).get(terminSpalte).getIntVal())
+					.as("%s: Ergebnisspalte %d muss aus dem Spielplan übernommen sein", spielNr, terminSpalte)
+					.isEqualTo(spielplanZeile.get(spalte).getIntVal());
+		}
+	}
+
+	private RowData spielplanZeile(RangeData spielplanDaten, String spielNr) {
+		for (RowData row : spielplanDaten) {
+			if (spielNr.equals(row.get(0).getStringVal())) {
+				return row;
+			}
+		}
+		throw new AssertionError("Spielplan-Zeile nicht gefunden: " + spielNr);
 	}
 
 	private void validiereSpielplanPerJson(String referenzDatei) throws GenerateException {

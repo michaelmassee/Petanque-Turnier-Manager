@@ -87,6 +87,12 @@ public class LigaMeldeListeSheetTestDaten extends SheetRunner implements ISheet 
 			RowData newTeam = data.addNewRow();
 			newTeam.newEmpty();
 			newTeam.newString(name);
+			TeamInfo info = testInfo(name);
+			newTeam.newString(info.mannschaftsfuehrung());
+			newTeam.newString(info.email());
+			newTeam.newString(info.telefon());
+			newTeam.newString(info.startspielzeit());
+			newTeam.newString(info.adresse());
 			if (cntr++ > anzTeams) {
 				break;
 			}
@@ -95,6 +101,27 @@ public class LigaMeldeListeSheetTestDaten extends SheetRunner implements ISheet 
 				MeldeListeKonstanten.ERSTE_DATEN_ZEILE - 1);
 		RangeHelper.from(this, data.getRangePosition(posSpielerNr)).setDataInRange(data);
 		meldeListe.upDateSheet();
+	}
+
+	private TeamInfo testInfo(String teamName) {
+		String slug = teamName.toLowerCase()
+				.replace("ä", "ae")
+				.replace("ö", "oe")
+				.replace("ü", "ue")
+				.replace("ß", "ss")
+				.replaceAll("[^a-z0-9]+", ".")
+				.replaceAll("^\\.|\\.$", "");
+		String kurz = teamName.replaceAll("\\s+\\d+$", "");
+		return new TeamInfo(
+				"MF " + kurz,
+				slug + "@example.test",
+				"06400 123456",
+				"10:00",
+				"Sportplatz " + kurz);
+	}
+
+	private record TeamInfo(String mannschaftsfuehrung, String email, String telefon, String startspielzeit,
+			String adresse) {
 	}
 
 	// Testdaten Generator

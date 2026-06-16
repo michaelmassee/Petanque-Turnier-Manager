@@ -13,8 +13,13 @@ import com.sun.star.sheet.XSpreadsheet;
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.cellvalue.properties.ICommonProperties;
+import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.sheet.XPropertyHelper;
+import de.petanqueturniermanager.helper.sheet.numberformat.NumberFormatHelper;
+import de.petanqueturniermanager.helper.sheet.numberformat.UserNumberFormat;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.liga.rangliste.LigaTestMeldeListeErstellen;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
@@ -161,6 +166,25 @@ public class LigaSpielPlanSheetUITest extends BaseCalcUITest {
 		// Zeile 2: Team B gewinnt
 		assertThat(punkte.get(1).get(0).getIntVal()).as("Zeile 2: Punkte A (Verlierer)").isEqualTo(0);
 		assertThat(punkte.get(1).get(1).getIntVal()).as("Zeile 2: Punkte B (Gewinner)").isEqualTo(1);
+	}
+
+	@Test
+	public void testUhrzeitSpalteIstAlsStundeMinuteFormatiert() throws GenerateException {
+		logger.info("testUhrzeitSpalteIstAlsStundeMinuteFormatiert");
+		LigaSpielPlanSheet spielPlan = new LigaSpielPlanSheet(wkingSpreadsheet);
+		spielPlan.run();
+
+		int erwartetesFormat = NumberFormatHelper.from(wkingSpreadsheet.getWorkingSpreadsheetDocument())
+				.getIdx(UserNumberFormat.TIME);
+		Object gesetztesFormat = XPropertyHelper.from(
+				sheetHlp.getCell(spielPlan.getXSpreadSheet(),
+						Position.from(LigaSpielPlanSheet.UHRZEIT_SPALTE,
+								LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE)),
+				wkingSpreadsheet.getWorkingSpreadsheetDocument())
+				.getProperty(ICommonProperties.NUMBERFORMAT);
+
+		assertThat(gesetztesFormat).as("Uhrzeit-Spalte muss als HH:mm formatiert sein")
+				.isEqualTo(erwartetesFormat);
 	}
 
 	/**

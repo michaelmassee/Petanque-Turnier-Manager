@@ -1,79 +1,65 @@
 [
   [
-    {
-      "data": 1.0
-    },
-    {
-      "data": "BC-Linden 1"
-    },
-    {
-      "data": ""
-    }
+    { "data": 1.0 },
+    { "data": "BC-Linden 1" },
+    { "data": "MF BC-Linden" },
+    { "data": "bc.linden.1@example.test" },
+    { "data": "06400 123456" },
+    { "data": "10:00" },
+    { "data": "Sportplatz BC-Linden" }
   ],
   [
-    {
-      "data": 2.0
-    },
-    {
-      "data": "Boule Biebertal"
-    },
-    {
-      "data": ""
-    }
+    { "data": 2.0 },
+    { "data": "Boule Biebertal" },
+    { "data": "MF Boule Biebertal" },
+    { "data": "boule.biebertal@example.test" },
+    { "data": "06400 123456" },
+    { "data": "10:00" },
+    { "data": "Sportplatz Boule Biebertal" }
   ],
   [
-    {
-      "data": 3.0
-    },
-    {
-      "data": "Boule-Freunde Fernwald"
-    },
-    {
-      "data": ""
-    }
+    { "data": 3.0 },
+    { "data": "Boule-Freunde Fernwald" },
+    { "data": "MF Boule-Freunde Fernwald" },
+    { "data": "boule.freunde.fernwald@example.test" },
+    { "data": "06400 123456" },
+    { "data": "10:00" },
+    { "data": "Sportplatz Boule-Freunde Fernwald" }
   ],
   [
-    {
-      "data": 4.0
-    },
-    {
-      "data": "Boulefreunde Marburg"
-    },
-    {
-      "data": ""
-    }
+    { "data": 4.0 },
+    { "data": "Boulefreunde Marburg" },
+    { "data": "MF Boulefreunde Marburg" },
+    { "data": "boulefreunde.marburg@example.test" },
+    { "data": "06400 123456" },
+    { "data": "10:00" },
+    { "data": "Sportplatz Boulefreunde Marburg" }
   ],
   [
-    {
-      "data": 5.0
-    },
-    {
-      "data": "Boulodromedare Fulda 2"
-    },
-    {
-      "data": ""
-    }
+    { "data": 5.0 },
+    { "data": "Boulodromedare Fulda 2" },
+    { "data": "MF Boulodromedare Fulda" },
+    { "data": "boulodromedare.fulda.2@example.test" },
+    { "data": "06400 123456" },
+    { "data": "10:00" },
+    { "data": "Sportplatz Boulodromedare Fulda" }
   ],
   [
-    {
-      "data": 6.0
-    },
-    {
-      "data": "DFG Wettenberg 1"
-    },
-    {
-      "data": ""
-    }
+    { "data": 6.0 },
+    { "data": "DFG Wettenberg 1" },
+    { "data": "MF DFG Wettenberg" },
+    { "data": "dfg.wettenberg.1@example.test" },
+    { "data": "06400 123456" },
+    { "data": "10:00" },
+    { "data": "Sportplatz DFG Wettenberg" }
   ],
   [
-    {
-      "data": 7.0
-    },
-    {
-      "data": "PC Petterweil"
-    },
-    {
-      "data": ""
-    }
+    { "data": 7.0 },
+    { "data": "PC Petterweil" },
+    { "data": "MF PC Petterweil" },
+    { "data": "pc.petterweil@example.test" },
+    { "data": "06400 123456" },
+    { "data": "10:00" },
+    { "data": "Sportplatz PC Petterweil" }
   ]
 ]

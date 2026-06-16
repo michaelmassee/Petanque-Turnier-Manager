@@ -216,6 +216,13 @@ public class LigaSpielPlanSheet extends SheetRunner implements ISheet {
 			RangeHelper.from(this, wochenTagRange)
 					.setRangeProperties(RangeProperties.from().numberFormat(UserNumberFormat.WOCHEN_TAG));
 		}
+
+		{
+			Position posUhrzeit = Position.from(UHRZEIT_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE);
+			RangePosition uhrzeitRange = RangePosition.from(posUhrzeit, UHRZEIT_SPALTE, letzteSpielZeile);
+			RangeHelper.from(this, uhrzeitRange)
+					.setRangeProperties(RangeProperties.from().numberFormat(UserNumberFormat.TIME));
+		}
 	}
 
 	private void formatieren(List<List<TeamPaarung>> spielPlanHRunde) throws GenerateException {
