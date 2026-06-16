@@ -26,6 +26,7 @@ import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.perflog.PerfLog;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 
 /**
@@ -152,26 +153,69 @@ public final class SpielplanFormatiererActivationListener implements IGlobalEven
 
             @Override
             public void selectionChanged(EventObject e) {
+                boolean tabTimingAktiv = PerfLog.isEnabled();
+                long startNs = System.nanoTime();
+                String traceId = traceId(xDoc, startNs);
+                String sheetName = "<unbekannt>";
+                String ergebnis = "start";
+                long viewNs = 0;
+                long activeSheetNs = 0;
+                long tokenNs = 0;
+                long matchNs = 0;
+                long planNs = 0;
                 try {
+                    long abschnittNs = System.nanoTime();
                     XSpreadsheetView view = Lo.qi(XSpreadsheetView.class, e.Source);
-                    if (view == null) return;
+                    viewNs = elapsedNs(abschnittNs);
+                    if (view == null) {
+                        ergebnis = "keineSpreadsheetView";
+                        return;
+                    }
 
+                    abschnittNs = System.nanoTime();
                     XSpreadsheet aktuellesSheet = view.getActiveSheet();
-                    if (aktuellesSheet == null) return;
+                    activeSheetNs = elapsedNs(abschnittNs);
+                    if (aktuellesSheet == null) {
+                        ergebnis = "keinAktivesSheet";
+                        return;
+                    }
+                    if (tabTimingAktiv) {
+                        sheetName = sheetName(aktuellesSheet);
+                    }
 
+                    abschnittNs = System.nanoTime();
                     String aktuellesSheetToken = fokusToken(xDoc, aktuellesSheet);
+                    tokenNs = elapsedNs(abschnittNs);
                     if (aktuellesSheetToken.equals(letztesSheetToken)) {
+                        ergebnis = "gleichesSheet";
                         return;
                     }
                     letztesSheetToken = aktuellesSheetToken;
 
-                    if (!zielSheetMatch.test(xDoc, aktuellesSheet)) return;
-                    if (SheetRunner.isRunning()) return;
+                    abschnittNs = System.nanoTime();
+                    boolean istAufZielSheet = zielSheetMatch.test(xDoc, aktuellesSheet);
+                    matchNs = elapsedNs(abschnittNs);
+                    if (!istAufZielSheet) {
+                        ergebnis = "keinZielSheet";
+                        return;
+                    }
+                    if (SheetRunner.isRunning()) {
+                        ergebnis = "sheetRunnerLaeuft";
+                        return;
+                    }
 
-                    planeFormatierer(xDoc, aktuellesSheet);
+                    abschnittNs = System.nanoTime();
+                    planeFormatierer(xDoc, aktuellesSheet, "selectionChanged", traceId);
+                    planNs = elapsedNs(abschnittNs);
+                    ergebnis = "geplant";
 
                 } catch (RuntimeException ex) {
+                    ergebnis = "fehler";
                     logger.error("Fehler im Formatierer-SelectionChangeListener", ex);
+                } finally {
+                    logTabTiming("Formatierer.selectionChanged", traceId, "selectionChanged",
+                            sheetName, ergebnis, startNs, viewNs, activeSheetNs, tokenNs,
+                            matchNs, planNs);
                 }
             }
 
@@ -192,29 +236,80 @@ public final class SpielplanFormatiererActivationListener implements IGlobalEven
 
     @Override
     public void onFocus(Object source) {
+        boolean tabTimingAktiv = PerfLog.isEnabled();
+        long startNs = System.nanoTime();
+        String traceId = traceId(null, startNs);
+        String sheetName = "<unbekannt>";
+        String ergebnis = "start";
+        long viewNs = 0;
+        long activeSheetNs = 0;
+        long tokenNs = 0;
+        long matchNs = 0;
+        long planNs = 0;
         try {
             XModel xModel = Lo.qi(XModel.class, source);
-            if (xModel == null) return;
+            if (xModel == null) {
+                ergebnis = "keinModel";
+                return;
+            }
             XSpreadsheetDocument xDoc = Lo.qi(XSpreadsheetDocument.class, xModel);
-            if (xDoc == null) return;
-
-            var controller = xModel.getCurrentController();
-            XSpreadsheetView view = Lo.qi(XSpreadsheetView.class, controller);
-            if (view == null) return;
-
-            XSpreadsheet aktuellesSheet = view.getActiveSheet();
-            if (aktuellesSheet == null) return;
-            if (!zielSheetMatch.test(xDoc, aktuellesSheet)) return;
-            if (SheetRunner.isRunning()) return;
-            if (!merkeNeuenFokus(xDoc, aktuellesSheet)) {
-                logger.trace("Formatierer-onFocus übersprungen: identischer Fokus erneut gemeldet");
+            traceId = traceId(xDoc, startNs);
+            if (xDoc == null) {
+                ergebnis = "keinSpreadsheetDocument";
                 return;
             }
 
-            planeFormatierer(xDoc, aktuellesSheet);
+            var controller = xModel.getCurrentController();
+            long abschnittNs = System.nanoTime();
+            XSpreadsheetView view = Lo.qi(XSpreadsheetView.class, controller);
+            viewNs = elapsedNs(abschnittNs);
+            if (view == null) {
+                ergebnis = "keineSpreadsheetView";
+                return;
+            }
+
+            abschnittNs = System.nanoTime();
+            XSpreadsheet aktuellesSheet = view.getActiveSheet();
+            activeSheetNs = elapsedNs(abschnittNs);
+            if (aktuellesSheet == null) {
+                ergebnis = "keinAktivesSheet";
+                return;
+            }
+            if (tabTimingAktiv) {
+                sheetName = sheetName(aktuellesSheet);
+            }
+
+            abschnittNs = System.nanoTime();
+            boolean istAufZielSheet = zielSheetMatch.test(xDoc, aktuellesSheet);
+            matchNs = elapsedNs(abschnittNs);
+            if (!istAufZielSheet) {
+                ergebnis = "keinZielSheet";
+                return;
+            }
+            if (SheetRunner.isRunning()) {
+                ergebnis = "sheetRunnerLaeuft";
+                return;
+            }
+            abschnittNs = System.nanoTime();
+            if (!merkeNeuenFokus(xDoc, aktuellesSheet)) {
+                tokenNs = elapsedNs(abschnittNs);
+                logger.trace("Formatierer-onFocus übersprungen: identischer Fokus erneut gemeldet");
+                ergebnis = "gleicherFokus";
+                return;
+            }
+            tokenNs = elapsedNs(abschnittNs);
+
+            abschnittNs = System.nanoTime();
+            planeFormatierer(xDoc, aktuellesSheet, "onFocus", traceId);
+            planNs = elapsedNs(abschnittNs);
+            ergebnis = "geplant";
 
         } catch (RuntimeException e) {
+            ergebnis = "fehler";
             logger.error("Fehler beim Formatierer-onFocus", e);
+        } finally {
+            logTabTiming("Formatierer.onFocus", traceId, "onFocus", sheetName, ergebnis,
+                    startNs, viewNs, activeSheetNs, tokenNs, matchNs, planNs);
         }
     }
 
@@ -257,17 +352,40 @@ public final class SpielplanFormatiererActivationListener implements IGlobalEven
         return System.identityHashCode(xDoc) + ":" + sheetName;
     }
 
-    private void planeFormatierer(XSpreadsheetDocument xDoc, XSpreadsheet xSheet) {
+    private void planeFormatierer(XSpreadsheetDocument xDoc, XSpreadsheet xSheet,
+            String trigger, String traceId) {
+        if (PerfLog.isEnabled()) {
+            PerfLog.log(logger, "[TAB-TIMING] Formatierer.schedule trace={} trigger={} key={} sheet={} thread={}",
+                    traceId, trigger, debounceSchluessel, sheetName(xSheet), Thread.currentThread().getName());
+        }
         SheetSyncDebouncer.get().schedule(xDoc, debounceSchluessel, () -> {
+            long startNs = System.nanoTime();
+            String ergebnis = "start";
             try {
-                if (SheetRunner.isRunning()) return;
-                if (!istDokumentLebendig(xDoc)) return;
+                if (SheetRunner.isRunning()) {
+                    ergebnis = "sheetRunnerLaeuft";
+                    return;
+                }
+                if (!istDokumentLebendig(xDoc)) {
+                    ergebnis = "dokumentNichtLebendig";
+                    return;
+                }
                 var ws = new WorkingSpreadsheet(xContext, xDoc);
                 formatiererFactory.apply(ws, xSheet).startSilent();
+                ergebnis = "runnerGestartet";
             } catch (DisposedException e) {
+                ergebnis = "disposed";
                 logger.debug("Formatierer übersprungen: Dokument bereits geschlossen", e);
             } catch (RuntimeException e) {
+                ergebnis = "fehler";
                 logger.error("Formatierer konnte nicht gestartet werden", e);
+            } finally {
+                if (PerfLog.isEnabled()) {
+                    PerfLog.log(logger, "[TAB-TIMING] Formatierer.worker trace={} trigger={} key={} sheet={} "
+                            + "ergebnis={} gesamt={} ms thread={}",
+                            traceId, trigger, debounceSchluessel, sheetName(xSheet), ergebnis,
+                            nsToMs(elapsedNs(startNs)), Thread.currentThread().getName());
+                }
             }
         });
     }
@@ -284,5 +402,42 @@ public final class SpielplanFormatiererActivationListener implements IGlobalEven
             logger.debug("Formatierer übersprungen: Dokument nicht nutzbar", e);
             return false;
         }
+    }
+
+    private static long elapsedNs(long startNs) {
+        return System.nanoTime() - startNs;
+    }
+
+    private static long nsToMs(long ns) {
+        return ns / 1_000_000L;
+    }
+
+    private static String traceId(XSpreadsheetDocument xDoc, long startNs) {
+        return (xDoc == null ? "keinDoc" : Integer.toString(System.identityHashCode(xDoc)))
+                + ":" + Long.toUnsignedString(startNs);
+    }
+
+    private static String sheetName(XSpreadsheet sheet) {
+        if (sheet == null) return "<keinSheet>";
+        try {
+            XNamed xNamed = Lo.qi(XNamed.class, sheet);
+            if (xNamed != null && xNamed.getName() != null) {
+                return xNamed.getName();
+            }
+        } catch (RuntimeException e) {
+            logger.trace("Sheet-Name für Tab-Timing nicht ermittelbar", e);
+        }
+        return "<unbekannt>";
+    }
+
+    private void logTabTiming(String abschnitt, String traceId, String trigger,
+            String sheetName, String ergebnis, long startNs, long viewNs,
+            long activeSheetNs, long tokenNs, long matchNs, long planNs) {
+        if (!PerfLog.isEnabled()) return;
+        PerfLog.log(logger, "[TAB-TIMING] {} trace={} trigger={} key={} sheet={} ergebnis={} "
+                + "gesamt={} ms view={} ms activeSheet={} ms token={} ms match={} ms plan={} ms thread={}",
+                abschnitt, traceId, trigger, debounceSchluessel, sheetName, ergebnis,
+                nsToMs(elapsedNs(startNs)), nsToMs(viewNs), nsToMs(activeSheetNs),
+                nsToMs(tokenNs), nsToMs(matchNs), nsToMs(planNs), Thread.currentThread().getName());
     }
 }
