@@ -1587,7 +1587,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				listener == null ? "null" : listener.getClass().getName(),
 				Thread.currentThread().getName(),
 				PetanqueTurnierMngrSingleton.isDruckvorschauAktiv());
-		if (PetanqueTurnierMngrSingleton.isDruckvorschauAktiv()) {
+		if (PetanqueTurnierMngrSingleton.isDruckvorschauAktiv()
+				&& !darfStatusInDruckvorschauSenden(command)) {
 			// C++-Toolbar-Controller werden während FillToolbar (Druckvorschau-Exit) angelegt.
 			// postStatus() → statusChanged() als Re-Entrant-Callback in LO C++ korrumpiert
 			// den Frame-Zustand → SIGSEGV nach OnCopyToDone. Guard: erst nach OnViewCreated
@@ -1611,6 +1612,12 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			postSortDropdownListe(listener, url, TEILNEHMER_SORT_I18N_PREFIX,
 					BasePropertiesSpalte.KONFIG_PROP_TEILNEHMER_LISTE_SORT_MODUS);
 		}
+	}
+
+	private static boolean darfStatusInDruckvorschauSenden(String command) {
+		// Der Druck-Button soll auch in der LibreOffice-Druckvorschau bedienbar bleiben.
+		// Andere Toolbar-Controller laufen weiter über den Re-Entrant-Schutz oben.
+		return CMD_TOOLBAR_DRUCKEN.equals(command);
 	}
 
 	// -------------------------------------------------------------------------
