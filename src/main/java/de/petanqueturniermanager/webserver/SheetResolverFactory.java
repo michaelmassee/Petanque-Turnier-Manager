@@ -224,9 +224,7 @@ public final class SheetResolverFactory {
         m.put(POULE, new MetadatenSheetResolver(SheetMetadataHelper.SCHLUESSEL_POULE_VORRUNDEN_RANGLISTE, name));
         m.put(KO, new MetadatenSheetResolver(SheetMetadataHelper.SCHLUESSEL_FORME_VORRUNDEN, name));
         m.put(TRIPTETE, new MetadatenSheetResolver(SheetMetadataHelper.SCHLUESSEL_TRIPTETE_RANGLISTE, name));
-        m.put(SUPERMELEE, new MetadatenPrefixSheetResolver(
-                SheetMetadataHelper.SCHLUESSEL_SPIELTAG_RANGLISTE_PREFIX,
-                SheetMetadataHelper.SCHLUESSEL_SPIELTAG_RANGLISTE_SUFFIX, name));
+        m.put(SUPERMELEE, new SupermeleeAktiveSpieltagRanglisteSheetResolver());
         // MAASTRICHTER: kein Single-Ranking-Blatt → bewusst nicht hinterlegt.
         return m;
     }

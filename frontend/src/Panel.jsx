@@ -45,7 +45,7 @@ export default function Panel({ table, sheetnamenAnzeigen, headerFooterUnterdrue
       ? `timer-zustand-${zustand}`
       : 'timer-zustand-inaktiv';
     const hintergrundStyle = table.timerHintergrundFarbe
-      ? { backgroundColor: table.timerHintergrundFarbe }
+      ? { backgroundColor: `${table.timerHintergrundFarbe}cc` }
       : {};
     const tonStatusAnzeigen = timerAudio?.vorhanden && !timerAudio?.aktiv;
     const tonAktivieren = () => {
@@ -81,8 +81,8 @@ export default function Panel({ table, sheetnamenAnzeigen, headerFooterUnterdrue
               onClick={tonAktivieren}
               onKeyDown={tonKeyDown}
             >
-              <div className="timer-tonstatus-titel">Kein Ton aktiv</div>
-              <div className="timer-tonstatus-hinweis">OK drücken / antippen für Ton</div>
+              <div className="timer-tonstatus-titel">{timerAudio?.titel || 'Kein Ton aktiv'}</div>
+              <div className="timer-tonstatus-hinweis">{timerAudio?.hinweis || 'OK drücken / antippen für Ton'}</div>
             </div>
           )}
         </div>

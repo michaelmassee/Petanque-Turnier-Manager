@@ -37,6 +37,15 @@ class SheetResolverFactoryTest {
     }
 
     @Test
+    void supermeleeRanglisteZeigtAktiveTagesrangliste() {
+        var resolver = (AktivesSystemSheetResolver) SheetResolverFactory.erstellen("RANGLISTE");
+
+        assertThat(resolver.delegateFuerTest(TurnierSystem.SUPERMELEE))
+                .as("Supermelee-RANGLISTE darf nicht die hoechste alte Tagesrangliste anzeigen")
+                .isInstanceOf(SupermeleeAktiveSpieltagRanglisteSheetResolver.class);
+    }
+
+    @Test
     void alteSystemspezifischeSchluesselWerdenAufGenerischeRolleMigriert() {
         assertThat(SheetResolverFactory.erstellen("SCHWEIZER_RANGLISTE"))
                 .as("Legacy-Alias → generische RANGLISTE")

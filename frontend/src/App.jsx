@@ -542,18 +542,21 @@ export default function App() {
         aktiv: timerAudioAktiv,
         fehler: timerAudioFehler,
         aktivieren: timerAudioAktivieren,
+        titel: i18n?.tonNichtAktivTitel || 'Kein Ton aktiv',
+        hinweis: i18n?.tonNichtAktivHinweis || 'OK drücken / antippen für Ton',
       }} /> : <LeereAnsicht />}
-      {syncRolle === 'master' && <SlaveStatus anzahl={slaveAnzahl} />}
+      {syncRolle === 'master' && <SlaveStatus anzahl={slaveAnzahl} i18n={i18n} />}
       {mitSignatur && <Signatur links={viewKey === 'composite'} />}
       <VerbindungsStatus verbunden={verbunden} i18n={i18n} />
     </>
   );
 }
 
-function SlaveStatus({ anzahl }) {
+function SlaveStatus({ anzahl, i18n }) {
+  const label = i18n?.slaves || 'Slaves';
   return (
     <div id="slave-status" role="status" aria-live="polite">
-      Slaves: {anzahl}
+      {label}: {anzahl}
     </div>
   );
 }

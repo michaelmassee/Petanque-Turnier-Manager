@@ -34,6 +34,10 @@ public class AktivesSystemSheetResolver implements SheetResolver {
         this.anzeigeName = anzeigeName;
     }
 
+    SheetResolver delegateFuerTest(TurnierSystem system) {
+        return delegatePerSystem.get(system);
+    }
+
     @Override
     public Optional<XSpreadsheet> resolve(WorkingSpreadsheet ws) {
         var doc = ws.getWorkingSpreadsheetDocument();
