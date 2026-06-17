@@ -768,8 +768,10 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		// Guard: In der Druckvorschau bleibt die Add-on-Toolbar (LO-Bug) fälschlich aktiviert.
 		// Ein Klick würde über erzeugeWorkingSpreadsheetFuerDispatch() ein WorkingSpreadsheet
 		// ohne XSpreadsheetView aufbauen → nachfolgende Sheet-/Dialog-Operationen crashen.
-		// Daher alle Befehle in der Vorschau blocken und den Nutzer informieren.
-		if (PetanqueTurnierMngrSingleton.isDruckvorschauAktiv()) {
+		// Daher Befehle in der Vorschau blocken und den Nutzer informieren.
+		// Ausnahme: Drucken ist eine LibreOffice-eigene Aktion und in der Druckvorschau gültig.
+		if (PetanqueTurnierMngrSingleton.isDruckvorschauAktiv()
+				&& !darfDispatchInDruckvorschauAusfuehren(command)) {
 			logger.warn("dispatch: cmd='{}' in Druckvorschau ignoriert", command);
 			MessageBox.from(xContext, MessageBoxTypeEnum.INFO_OK)
 					.caption(I18n.get("druckvorschau.aktion.nicht.verfuegbar.titel"))
@@ -1614,10 +1616,14 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		}
 	}
 
-	private static boolean darfStatusInDruckvorschauSenden(String command) {
+	static boolean darfDispatchInDruckvorschauAusfuehren(String command) {
 		// Der Druck-Button soll auch in der LibreOffice-Druckvorschau bedienbar bleiben.
-		// Andere Toolbar-Controller laufen weiter über den Re-Entrant-Schutz oben.
 		return CMD_TOOLBAR_DRUCKEN.equals(command);
+	}
+
+	private static boolean darfStatusInDruckvorschauSenden(String command) {
+		// Andere Toolbar-Controller laufen weiter über den Re-Entrant-Schutz oben.
+		return darfDispatchInDruckvorschauAusfuehren(command);
 	}
 
 	// -------------------------------------------------------------------------

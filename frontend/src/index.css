@@ -199,6 +199,42 @@ td {
   margin-bottom: 0.5em;
 }
 
+.timer-tonstatus {
+  margin-top: 1.2rem;
+  padding: 0.75rem 1.3rem;
+  border: 3px solid #ffcc00;
+  background: #201600;
+  color: #ffdd44;
+  text-align: center;
+  cursor: pointer;
+  outline: none;
+  box-shadow: 0 0 22px rgba(255, 204, 0, 0.35);
+}
+
+.timer-tonstatus:focus {
+  box-shadow: 0 0 0 4px #fff, 0 0 28px rgba(255, 204, 0, 0.6);
+}
+
+.timer-tonstatus-fehler {
+  border-color: #ff4444;
+  background: #260000;
+  color: #ff7777;
+}
+
+.timer-tonstatus-titel {
+  font-size: clamp(1.2rem, 3.5vw, 3rem);
+  font-weight: bold;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.timer-tonstatus-hinweis {
+  margin-top: 0.35rem;
+  font-size: clamp(0.85rem, 2vw, 1.6rem);
+  line-height: 1.2;
+  color: #fff4b8;
+}
+
 @keyframes timer-blink {
   0%, 100% { opacity: 1; }
   50%       { opacity: 0.4; }

@@ -88,4 +88,15 @@ public class ProtocolHandlerCommandsTest {
 				.as("CMD_-Konstanten ohne ptm:-Eintrag in XCU-Dateien")
 				.isEmpty();
 	}
+
+	@Test
+	void toolbarDruckenIstInDruckvorschauErlaubt() {
+		assertThat(ProtocolHandler.darfDispatchInDruckvorschauAusfuehren(ProtocolHandler.CMD_TOOLBAR_DRUCKEN))
+				.as("Drucken aus der PTM-Toolbar muss auch in der LibreOffice-Druckvorschau ausführbar bleiben")
+				.isTrue();
+
+		assertThat(ProtocolHandler.darfDispatchInDruckvorschauAusfuehren(ProtocolHandler.CMD_TOOLBAR_WEITER))
+				.as("PTM-Sheet-Aktionen bleiben in der Druckvorschau blockiert")
+				.isFalse();
+	}
 }

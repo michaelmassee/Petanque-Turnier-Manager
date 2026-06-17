@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import SplitPaneComposite from './SplitPaneComposite';
 
 /**
@@ -5,10 +6,29 @@ import SplitPaneComposite from './SplitPaneComposite';
  * Header/Footer werden global gerendert (aus dem ersten Panel mit nicht-leeren
  * Feldern), wenn `mitHeaderFooter` aktiv ist.
  */
-export default function CompositeApp({ composite, splitSteuerung, syncRolle }) {
+export default function CompositeApp({ composite, splitSteuerung, syncRolle, timerAudio }) {
+  const rootRef = useRef(null);
+
+  useEffect(() => {
+    if (timerAudio?.vorhanden && !timerAudio?.aktiv) {
+      rootRef.current?.focus();
+    }
+  }, [timerAudio?.vorhanden, timerAudio?.aktiv]);
+
   if (!composite || !composite.layout) {
     return null;
   }
+  const tonAktivieren = () => {
+    if (timerAudio?.vorhanden && !timerAudio?.aktiv) {
+      timerAudio.aktivieren?.();
+    }
+  };
+  const keyDown = (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      tonAktivieren();
+    }
+  };
   const compositeMitHeaderFooter = composite.mitHeaderFooter !== false;
   // Globalen Header/Footer aus dem ERSTEN Panel mit nicht-leeren Kopf-/Fußzeilen wählen.
   // Panel 0 darf ein Timer/URL/fehlend-Panel sein – dort sind die Felder null und würden
@@ -29,7 +49,13 @@ export default function CompositeApp({ composite, splitSteuerung, syncRolle }) {
   );
 
   return (
-    <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+    <div
+      ref={rootRef}
+      tabIndex={0}
+      onPointerDown={tonAktivieren}
+      onKeyDown={keyDown}
+      style={{ position: 'fixed', inset: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', outline: 'none' }}
+    >
       {kopfzeilenPanel && (
         <div className="seitenzeile">
           <span className="links">{kopfzeilenPanel.kopfzeileLinks}</span>
@@ -43,6 +69,7 @@ export default function CompositeApp({ composite, splitSteuerung, syncRolle }) {
           panels={composite.panels}
           splitGroessen={splitSteuerung}
           syncRolle={syncRolle}
+          timerAudio={timerAudio}
           headerFooterUnterdruecken
         />
       </div>

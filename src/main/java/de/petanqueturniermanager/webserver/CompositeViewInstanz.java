@@ -45,6 +45,7 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot {
     private static final String CONTENT_TYPE_HTML = "text/html; charset=UTF-8";
     private static final String CONTENT_TYPE_SSE = "text/event-stream; charset=UTF-8";
     private static final String STATIC_RESOURCE_PREFIX = "/de/petanqueturniermanager/webserver/static";
+    private static final String GONG_RESOURCE = "de/petanqueturniermanager/timer/gong.wav";
     private static final Gson GSON = new Gson();
 
     private volatile CompositeViewKonfiguration konfiguration;
@@ -201,6 +202,8 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot {
         } else if (path.startsWith("/images/")) {
             String dateiname = path.substring("/images/".length());
             serviereRessource(exchange, "/images/" + dateiname, ermittleContentType(dateiname));
+        } else if ("/gong.wav".equals(path)) {
+            serviereClasspathRessource(exchange, GONG_RESOURCE, "audio/wav", "public, max-age=3600");
         } else {
             exchange.sendResponseHeaders(404, -1);
         }
@@ -283,6 +286,11 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot {
     private void serviereRessource(HttpExchange exchange, String relativerPfad, String contentType)
             throws IOException {
         String ressourcePfad = (STATIC_RESOURCE_PREFIX + relativerPfad).replaceFirst("^/", "");
+        serviereClasspathRessource(exchange, ressourcePfad, contentType, "no-cache");
+    }
+
+    private void serviereClasspathRessource(HttpExchange exchange, String ressourcePfad, String contentType,
+            String cacheControl) throws IOException {
         InputStream gefunden = getClass().getClassLoader().getResourceAsStream(ressourcePfad);
         if (gefunden == null) {
             gefunden = getClass().getResourceAsStream("/" + ressourcePfad);
@@ -296,7 +304,7 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot {
             byte[] body = in.readAllBytes();
             var headers = exchange.getResponseHeaders();
             headers.set("Content-Type", contentType);
-            headers.set("Cache-Control", "no-cache");
+            headers.set("Cache-Control", cacheControl);
             headers.set("Access-Control-Allow-Origin", "*");
             exchange.sendResponseHeaders(200, body.length);
             try (OutputStream os = exchange.getResponseBody()) {
@@ -396,6 +404,7 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot {
         if (dateiname.endsWith(".svg")) return "image/svg+xml";
         if (dateiname.endsWith(".png")) return "image/png";
         if (dateiname.endsWith(".ico")) return "image/x-icon";
+        if (dateiname.endsWith(".wav")) return "audio/wav";
         return "application/octet-stream";
     }
 }

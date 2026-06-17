@@ -61,6 +61,44 @@
 
     body.zustand-beendet #status { color: #ff4444; font-size: clamp(1rem, 3vw, 2.5rem); }
 
+    #tonstatus {
+      margin-top: 1.2rem;
+      padding: 0.75rem 1.3rem;
+      border: 3px solid #ffcc00;
+      background: #201600;
+      color: #ffdd44;
+      text-align: center;
+      cursor: pointer;
+      outline: none;
+      box-shadow: 0 0 22px rgba(255, 204, 0, 0.35);
+    }
+
+    #tonstatus:focus {
+      box-shadow: 0 0 0 4px #fff, 0 0 28px rgba(255, 204, 0, 0.6);
+    }
+
+    #tonstatus.fehler {
+      border-color: #ff4444;
+      background: #260000;
+      color: #ff7777;
+    }
+
+    #tonstatus .titel {
+      font-size: clamp(1.2rem, 3.5vw, 3rem);
+      font-weight: bold;
+      line-height: 1.1;
+      text-transform: uppercase;
+    }
+
+    #tonstatus .hinweis {
+      margin-top: 0.35rem;
+      font-size: clamp(0.85rem, 2vw, 1.6rem);
+      line-height: 1.2;
+      color: #fff4b8;
+    }
+
+    body.ton-aktiv #tonstatus { display: none; }
+
     #verbindung {
       position: fixed;
       bottom: 0.5em;
@@ -94,6 +132,10 @@
   <div id="bezeichnung"></div>
   <div id="timer">--:--</div>
   <div id="status">Bereit</div>
+  <div id="tonstatus" role="button" tabindex="0">
+    <div class="titel">Kein Ton aktiv</div>
+    <div class="hinweis">OK drücken / antippen für Ton</div>
+  </div>
   <button id="snooze" type="button">Snooze</button>
   <div id="verbindung">⬤</div>
 
@@ -103,10 +145,15 @@
     const bezeichnungEl = document.getElementById('bezeichnung');
     const verbindungEl  = document.getElementById('verbindung');
     const snoozeEl      = document.getElementById('snooze');
+    const tonstatusEl   = document.getElementById('tonstatus');
 
     const GONG_INTERVAL_MS = 5000;
     let gongTimer = null;
     let esQuelle = null;
+    let audioAktiv = false;
+    let aktuellerZustand = 'inaktiv';
+    let aktuellSnoozed = false;
+    let letzterGongStart = 0;
 
     function verbinde() {
       if (esQuelle) {
@@ -144,11 +191,14 @@
       }
 
       const zustand = (d.zustand || 'INAKTIV').toLowerCase();
+      aktuellerZustand = zustand;
+      aktuellSnoozed = !!d.snoozed;
       const klassen = ['zustand-' + zustand];
       if (d.snoozed) klassen.push('snoozed');
+      if (audioAktiv) klassen.push('ton-aktiv');
       document.body.className = klassen.join(' ');
 
-      if (zustand === 'beendet' && !d.snoozed) {
+      if (zustand === 'beendet' && !d.snoozed && audioAktiv) {
         startGongLoop();
       } else {
         stopGongLoop();
@@ -156,16 +206,38 @@
     }
 
     const gong = new Audio('gong.wav');
+    gong.preload = 'auto';
 
-    function spieleBeep() {
+    async function spieleBeep() {
       gong.currentTime = 0;
-      gong.play().catch(e => console.log('Audio nicht verfügbar:', e));
+      await gong.play();
+      letzterGongStart = Date.now();
+    }
+
+    async function aktiviereTon() {
+      try {
+        await spieleBeep();
+        audioAktiv = true;
+        tonstatusEl.classList.remove('fehler');
+        document.body.classList.add('ton-aktiv');
+        if (aktuellerZustand === 'beendet' && !aktuellSnoozed) {
+          startGongLoop();
+        }
+      } catch (e) {
+        audioAktiv = false;
+        tonstatusEl.classList.add('fehler');
+        console.log('Audio nicht verfügbar:', e);
+      }
     }
 
     function startGongLoop() {
       if (gongTimer !== null) return;
-      spieleBeep();
-      gongTimer = setInterval(spieleBeep, GONG_INTERVAL_MS);
+      if (Date.now() - letzterGongStart > 1000) {
+        spieleBeep().catch(e => console.log('Audio nicht verfügbar:', e));
+      }
+      gongTimer = setInterval(() => {
+        spieleBeep().catch(e => console.log('Audio nicht verfügbar:', e));
+      }, GONG_INTERVAL_MS);
     }
 
     function stopGongLoop() {
@@ -178,6 +250,14 @@
     snoozeEl.addEventListener('click', () => {
       stopGongLoop();
       fetch('/snooze', { method: 'POST' }).catch(e => console.log('Snooze-Request fehlgeschlagen:', e));
+    });
+
+    tonstatusEl.addEventListener('click', aktiviereTon);
+    tonstatusEl.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        aktiviereTon();
+      }
     });
 
     verbinde();

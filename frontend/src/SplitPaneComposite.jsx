@@ -51,6 +51,7 @@ export default function SplitPaneComposite({
   headerFooterUnterdruecken,
   splitGroessen = {},
   syncRolle = '',
+  timerAudio,
   pfad = 'R',
 }) {
   const groupRef = useRef(null);
@@ -74,6 +75,7 @@ export default function SplitPaneComposite({
           table={table}
           sheetnamenAnzeigen={table?.blattnameAnzeigen ?? false}
           headerFooterUnterdruecken={headerFooterUnterdruecken}
+          timerAudio={timerAudio}
         />
       </div>
     );
@@ -100,6 +102,7 @@ export default function SplitPaneComposite({
           panels={panels}
           splitGroessen={splitGroessen}
           syncRolle={syncRolle}
+          timerAudio={timerAudio}
           pfad={`${pfad}/L`}
           headerFooterUnterdruecken={headerFooterUnterdruecken}
         />
@@ -116,6 +119,7 @@ export default function SplitPaneComposite({
           panels={panels}
           splitGroessen={splitGroessen}
           syncRolle={syncRolle}
+          timerAudio={timerAudio}
           pfad={`${pfad}/R`}
           headerFooterUnterdruecken={headerFooterUnterdruecken}
         />

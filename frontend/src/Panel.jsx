@@ -13,7 +13,7 @@ const toPx = (v) => Math.round((v || 0) / 37.795) + 'px';
  * @param {boolean} [props.headerFooterUnterdruecken] - blendet die Panel-eigenen Kopf-/Fußzeilen aus
  *        (verwendet von SplitPaneComposite, wenn ein globaler Header/Footer gerendert wird)
  */
-export default function Panel({ table, sheetnamenAnzeigen, headerFooterUnterdruecken }) {
+export default function Panel({ table, sheetnamenAnzeigen, headerFooterUnterdruecken, timerAudio }) {
   const [iframeFehler, setIframeFehler] = useState(false);
 
   if (!table) {
@@ -47,6 +47,20 @@ export default function Panel({ table, sheetnamenAnzeigen, headerFooterUnterdrue
     const hintergrundStyle = table.timerHintergrundFarbe
       ? { backgroundColor: table.timerHintergrundFarbe }
       : {};
+    const tonStatusAnzeigen = timerAudio?.vorhanden && !timerAudio?.aktiv;
+    const tonAktivieren = () => {
+      timerAudio?.aktivieren?.();
+    };
+    const tonPointerDown = (event) => {
+      event.stopPropagation();
+    };
+    const tonKeyDown = (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        event.stopPropagation();
+        tonAktivieren();
+      }
+    };
     return (
       <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
         <div className={`timer-panel ${cls}`} style={{
@@ -58,6 +72,19 @@ export default function Panel({ table, sheetnamenAnzeigen, headerFooterUnterdrue
             <div className="timer-bezeichnung">{table.timerBezeichnung}</div>
           )}
           <div className="timer-anzeige">{table.timerAnzeige ?? '--:--'}</div>
+          {tonStatusAnzeigen && (
+            <div
+              className={`timer-tonstatus${timerAudio?.fehler ? ' timer-tonstatus-fehler' : ''}`}
+              role="button"
+              tabIndex={0}
+              onPointerDown={tonPointerDown}
+              onClick={tonAktivieren}
+              onKeyDown={tonKeyDown}
+            >
+              <div className="timer-tonstatus-titel">Kein Ton aktiv</div>
+              <div className="timer-tonstatus-hinweis">OK drücken / antippen für Ton</div>
+            </div>
+          )}
         </div>
       </div>
     );

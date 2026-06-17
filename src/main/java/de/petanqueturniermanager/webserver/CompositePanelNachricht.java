@@ -39,6 +39,7 @@ public record CompositePanelNachricht(
         String timerZustand,
         String timerBezeichnung,
         String timerHintergrundFarbe,
+        Boolean timerSnoozed,
         String hinweisTitel,
         String hinweisText) {
 
@@ -56,7 +57,7 @@ public record CompositePanelNachricht(
                 modell.getKopfzeileLinks(), modell.getKopfzeileMitte(), modell.getKopfzeileRechts(),
                 modell.getFusszeileLinks(), modell.getFusszeileMitte(), modell.getFusszeileRechts(),
                 modell.getKopfZeilenAnzahl(),
-                null, null, null, null, null, null, null);
+                null, null, null, null, null, null, null, null);
     }
 
     /**
@@ -73,7 +74,7 @@ public record CompositePanelNachricht(
                 diffModell.getKopfzeileLinks(), diffModell.getKopfzeileMitte(), diffModell.getKopfzeileRechts(),
                 diffModell.getFusszeileLinks(), diffModell.getFusszeileMitte(), diffModell.getFusszeileRechts(),
                 diffModell.getKopfZeilenAnzahl(),
-                null, null, null, null, null, null, null);
+                null, null, null, null, null, null, null, null);
     }
 
     /**
@@ -90,7 +91,7 @@ public record CompositePanelNachricht(
                 panelId, 100, null, null, false, "",
                 null, null, null, null, null, null,
                 null, null, null, null, null, null, 0,
-                externeUrl, null, null, null, null, null, null);
+                externeUrl, null, null, null, null, null, null, null);
     }
 
     /**
@@ -107,7 +108,7 @@ public record CompositePanelNachricht(
                 null, null, null, null, null, null,
                 null, null, null, null, null, null, 0,
                 null, null, null, null, null,
-                titel, text);
+                null, titel, text);
     }
 
     /**
@@ -127,6 +128,6 @@ public record CompositePanelNachricht(
                 null, null, null, null, null, null, 0,
                 null,
                 state.anzeige(), state.zustand().name(), state.bezeichnung(), state.hintergrundFarbe(),
-                null, null);
+                state.snoozed(), null, null);
     }
 }

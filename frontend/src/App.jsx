@@ -1,4 +1,4 @@
-import { useReducer, useEffect, useRef } from 'react';
+import { useReducer, useEffect, useRef, useState } from 'react';
 import CompositeApp from './CompositeApp';
 import EinzelApp from './EinzelApp';
 import StartseiteApp from './StartseiteApp';
@@ -7,10 +7,11 @@ import { viewKeyFromState } from './viewResolver';
 // Renderer-Map: hier neue Top-Level-Views ergänzen, App.jsx bleibt sonst unverändert.
 const VIEW_RENDERERS = {
   einzel:     ({ state }) => <EinzelApp     table={state.table} />,
-  composite:  ({ state }) => <CompositeApp
+  composite:  ({ state, timerAudio }) => <CompositeApp
     composite={state.composite}
     splitSteuerung={state.splitSteuerung}
     syncRolle={state.syncRolle}
+    timerAudio={timerAudio}
   />,
   startseite: ({ state }) => <StartseiteApp startseite={state.startseite} />,
 };
@@ -51,6 +52,8 @@ const leererZustand = {
   kopfZeilenAnzahl: 0,
 };
 
+const GONG_INTERVAL_MS = 5000;
+
 function panelAusNachricht(msg) {
   const zellen = {};
   if (msg.zellen) {
@@ -63,6 +66,7 @@ function panelAusNachricht(msg) {
     timerZustand: msg.timerZustand ?? null,
     timerBezeichnung: msg.timerBezeichnung ?? null,
     timerHintergrundFarbe: msg.timerHintergrundFarbe ?? null,
+    timerSnoozed: msg.timerSnoozed ?? false,
     hinweisTitel: msg.hinweisTitel ?? null,
     hinweisText: msg.hinweisText ?? null,
     zoom: msg.zoom ?? 100,
@@ -98,6 +102,7 @@ function panelDiffAusNachricht(msg, vorher) {
     timerZustand: msg.timerZustand ?? vorher?.timerZustand ?? null,
     timerBezeichnung: msg.timerBezeichnung ?? vorher?.timerBezeichnung ?? null,
     timerHintergrundFarbe: msg.timerHintergrundFarbe ?? vorher?.timerHintergrundFarbe ?? null,
+    timerSnoozed: msg.timerSnoozed ?? vorher?.timerSnoozed ?? false,
     // Hinweis-Status NICHT mit vorher mergen: wenn das Backend eine reguläre Nachricht
     // (init/diff/url/timer) sendet, soll ein vorheriger "fehlend"-Zustand verschwinden.
     hinweisTitel: msg.hinweisTitel ?? null,
@@ -299,6 +304,20 @@ function reducer(state, action) {
   }
 }
 
+function timerPanelsAusState(state) {
+  if (!state.composite?.panels) {
+    return state.table?.timerAnzeige != null ? [state.table] : [];
+  }
+  return Object.values(state.composite.panels)
+    .filter((panel) => panel?.timerAnzeige != null);
+}
+
+function timerAlarmAktiv(panels) {
+  return panels.some((panel) =>
+    (panel.timerZustand ?? '').toUpperCase() === 'BEENDET' && !panel.timerSnoozed
+  );
+}
+
 export default function App() {
   const [state, dispatch] = useReducer(reducer, {
     table: leererZustand,
@@ -315,6 +334,40 @@ export default function App() {
 
   const versionRef = useRef(0);
   const clientIdRef = useRef(clientId());
+  const gongRef = useRef(null);
+  const gongTimerRef = useRef(null);
+  const letzterGongStartRef = useRef(0);
+  const [timerAudioAktiv, setTimerAudioAktiv] = useState(false);
+  const [timerAudioFehler, setTimerAudioFehler] = useState(false);
+
+  const stopGongLoop = () => {
+    if (gongTimerRef.current !== null) {
+      window.clearInterval(gongTimerRef.current);
+      gongTimerRef.current = null;
+    }
+  };
+
+  const spieleGong = async () => {
+    if (!gongRef.current) {
+      gongRef.current = new Audio('/gong.wav');
+      gongRef.current.preload = 'auto';
+    }
+    gongRef.current.currentTime = 0;
+    await gongRef.current.play();
+    letzterGongStartRef.current = Date.now();
+  };
+
+  const timerAudioAktivieren = async () => {
+    try {
+      await spieleGong();
+      setTimerAudioAktiv(true);
+      setTimerAudioFehler(false);
+    } catch (e) {
+      setTimerAudioAktiv(false);
+      setTimerAudioFehler(true);
+      console.log('Timer-Audio nicht verfügbar:', e);
+    }
+  };
 
   useEffect(() => {
     let src = null;
@@ -413,6 +466,36 @@ export default function App() {
   }, [state.syncRolle]);
 
   const { table, hinweis, composite, startseite, verbunden, i18n, syncRolle, slaveAnzahl } = state;
+  const timerPanels = timerPanelsAusState(state);
+  const hatTimerPanel = timerPanels.length > 0;
+  const alarmAktiv = timerAlarmAktiv(timerPanels);
+
+  useEffect(() => {
+    if (!alarmAktiv || !timerAudioAktiv) {
+      stopGongLoop();
+      return;
+    }
+    if (gongTimerRef.current !== null) {
+      return;
+    }
+    if (Date.now() - letzterGongStartRef.current > 1000) {
+      spieleGong().catch((e) => {
+        setTimerAudioAktiv(false);
+        setTimerAudioFehler(true);
+        console.log('Timer-Gong konnte nicht gestartet werden:', e);
+      });
+    }
+    gongTimerRef.current = window.setInterval(() => {
+      spieleGong().catch((e) => {
+        setTimerAudioAktiv(false);
+        setTimerAudioFehler(true);
+        stopGongLoop();
+        console.log('Timer-Gong konnte nicht wiederholt werden:', e);
+      });
+    }, GONG_INTERVAL_MS);
+  }, [alarmAktiv, timerAudioAktiv]);
+
+  useEffect(() => () => stopGongLoop(), []);
 
   useEffect(() => {
     if (startseite) {
@@ -454,7 +537,12 @@ export default function App() {
 
   return (
     <>
-      {ViewComponent ? <ViewComponent state={state} /> : <LeereAnsicht />}
+      {ViewComponent ? <ViewComponent state={state} timerAudio={{
+        vorhanden: hatTimerPanel,
+        aktiv: timerAudioAktiv,
+        fehler: timerAudioFehler,
+        aktivieren: timerAudioAktivieren,
+      }} /> : <LeereAnsicht />}
       {syncRolle === 'master' && <SlaveStatus anzahl={slaveAnzahl} />}
       {mitSignatur && <Signatur links={viewKey === 'composite'} />}
       <VerbindungsStatus verbunden={verbunden} i18n={i18n} />
