@@ -1,5 +1,34 @@
+import { useEffect, useRef } from 'react';
 import { PanelGroup, Panel as ResizablePanel, PanelResizeHandle } from 'react-resizable-panels';
 import Panel from './Panel';
+
+const SEND_DELAY_MS = 100;
+let bekannteGruppen = {};
+let sendTimer = null;
+
+function rundeGroessen(sizes) {
+  return sizes.map((size) => Math.round(size * 100) / 100);
+}
+
+function meldeSplit(pfad, sizes) {
+  bekannteGruppen = {
+    ...bekannteGruppen,
+    [pfad]: rundeGroessen(sizes),
+  };
+  if (sendTimer) {
+    return;
+  }
+  sendTimer = window.setTimeout(() => {
+    sendTimer = null;
+    fetch('/steuerung/split', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ gruppen: bekannteGruppen }),
+    }).catch(() => {
+      // Netzwerkfehler sind für die Anzeige nicht fatal; der nächste Drag sendet erneut.
+    });
+  }, SEND_DELAY_MS);
+}
 
 /**
  * Rendert einen Composite View rekursiv als verschachtelten Split-Baum.
@@ -16,7 +45,24 @@ import Panel from './Panel';
  * @param {boolean} [props.headerFooterUnterdruecken] - wenn true, blendet alle Panel-eigenen
  *        Kopf-/Fußzeilen aus (globaler Header/Footer wird in App.jsx gerendert)
  */
-export default function SplitPaneComposite({ knoten, panels, headerFooterUnterdruecken }) {
+export default function SplitPaneComposite({
+  knoten,
+  panels,
+  headerFooterUnterdruecken,
+  splitGroessen = {},
+  syncRolle = '',
+  pfad = 'R',
+}) {
+  const groupRef = useRef(null);
+  const slaveGroessen = splitGroessen?.[pfad];
+
+  useEffect(() => {
+    if (syncRolle !== 'slave' || !Array.isArray(slaveGroessen) || slaveGroessen.length !== 2) {
+      return;
+    }
+    groupRef.current?.setLayout(slaveGroessen);
+  }, [syncRolle, slaveGroessen]);
+
   if (!knoten) return null;
 
   // Blattknoten
@@ -41,11 +87,20 @@ export default function SplitPaneComposite({ knoten, panels, headerFooterUnterdr
   const rechtsGroesse = 100 - linksGroesse;
 
   return (
-    <PanelGroup direction={direction} style={{ height: '100%' }}>
-      <ResizablePanel defaultSize={linksGroesse}>
+    <PanelGroup
+      ref={groupRef}
+      id={pfad}
+      direction={direction}
+      onLayout={syncRolle === 'master' ? (sizes) => meldeSplit(pfad, sizes) : undefined}
+      style={{ height: '100%' }}
+    >
+      <ResizablePanel id={`${pfad}/L-panel`} order={1} defaultSize={linksGroesse}>
         <SplitPaneComposite
           knoten={knoten.links}
           panels={panels}
+          splitGroessen={splitGroessen}
+          syncRolle={syncRolle}
+          pfad={`${pfad}/L`}
           headerFooterUnterdruecken={headerFooterUnterdruecken}
         />
       </ResizablePanel>
@@ -55,10 +110,13 @@ export default function SplitPaneComposite({ knoten, panels, headerFooterUnterdr
         height: direction === 'vertical' ? '4px' : undefined,
         cursor: direction === 'horizontal' ? 'col-resize' : 'row-resize',
       }} />
-      <ResizablePanel defaultSize={rechtsGroesse}>
+      <ResizablePanel id={`${pfad}/R-panel`} order={2} defaultSize={rechtsGroesse}>
         <SplitPaneComposite
           knoten={knoten.rechts}
           panels={panels}
+          splitGroessen={splitGroessen}
+          syncRolle={syncRolle}
+          pfad={`${pfad}/R`}
           headerFooterUnterdruecken={headerFooterUnterdruecken}
         />
       </ResizablePanel>

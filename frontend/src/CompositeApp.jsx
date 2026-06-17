@@ -5,7 +5,7 @@ import SplitPaneComposite from './SplitPaneComposite';
  * Header/Footer werden global gerendert (aus dem ersten Panel mit nicht-leeren
  * Feldern), wenn `mitHeaderFooter` aktiv ist.
  */
-export default function CompositeApp({ composite }) {
+export default function CompositeApp({ composite, splitSteuerung, syncRolle }) {
   if (!composite || !composite.layout) {
     return null;
   }
@@ -41,6 +41,8 @@ export default function CompositeApp({ composite }) {
         <SplitPaneComposite
           knoten={composite.layout}
           panels={composite.panels}
+          splitGroessen={splitSteuerung}
+          syncRolle={syncRolle}
           headerFooterUnterdruecken
         />
       </div>

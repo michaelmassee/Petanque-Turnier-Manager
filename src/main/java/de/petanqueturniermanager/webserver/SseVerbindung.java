@@ -21,10 +21,26 @@ public class SseVerbindung {
 
     private final OutputStream outputStream;
     private final SseElternInstanz elternInstanz;
+    private final String rolle;
+    private final String clientId;
 
     public SseVerbindung(OutputStream outputStream, SseElternInstanz elternInstanz) {
+        this(outputStream, elternInstanz, "", "");
+    }
+
+    public SseVerbindung(OutputStream outputStream, SseElternInstanz elternInstanz, String rolle, String clientId) {
         this.outputStream = outputStream;
         this.elternInstanz = elternInstanz;
+        this.rolle = rolle == null ? "" : rolle;
+        this.clientId = clientId == null ? "" : clientId;
+    }
+
+    public String getRolle() {
+        return rolle;
+    }
+
+    public String getClientId() {
+        return clientId;
     }
 
     /**
@@ -36,6 +52,11 @@ public class SseVerbindung {
         String initJson = elternInstanz.getCachedInitJson();
         if (initJson != null) {
             senden(initJson);
+        }
+        for (String zusatzJson : elternInstanz.getInitZusatzJsons()) {
+            if (zusatzJson != null) {
+                senden(zusatzJson);
+            }
         }
     }
 

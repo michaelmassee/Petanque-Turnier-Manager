@@ -7,9 +7,28 @@ import { viewKeyFromState } from './viewResolver';
 // Renderer-Map: hier neue Top-Level-Views ergänzen, App.jsx bleibt sonst unverändert.
 const VIEW_RENDERERS = {
   einzel:     ({ state }) => <EinzelApp     table={state.table} />,
-  composite:  ({ state }) => <CompositeApp  composite={state.composite} />,
+  composite:  ({ state }) => <CompositeApp
+    composite={state.composite}
+    splitSteuerung={state.splitSteuerung}
+    syncRolle={state.syncRolle}
+  />,
   startseite: ({ state }) => <StartseiteApp startseite={state.startseite} />,
 };
+
+function leseSyncRolle() {
+  const rolle = new URLSearchParams(window.location.search).get('rolle');
+  return rolle === 'master' || rolle === 'slave' ? rolle : '';
+}
+
+function clientId() {
+  const key = 'ptm-live-client-id';
+  let id = window.sessionStorage.getItem(key);
+  if (!id) {
+    id = (window.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`);
+    window.sessionStorage.setItem(key, id);
+  }
+  return id;
+}
 
 const leererZustand = {
   zeilen: 0,
@@ -271,6 +290,10 @@ function reducer(state, action) {
       return { ...state, verbunden: action.payload.verbunden };
     case 'I18N':
       return { ...state, i18n: { ...state.i18n, ...action.payload } };
+    case 'SPLIT_STEUERUNG':
+      return { ...state, splitSteuerung: action.payload.gruppen || {} };
+    case 'SLAVE_STATUS':
+      return { ...state, slaveAnzahl: action.payload.anzahl ?? 0 };
     default:
       return state;
   }
@@ -285,9 +308,13 @@ export default function App() {
     startseite: null,
     verbunden: true,
     i18n: {},
+    splitSteuerung: {},
+    slaveAnzahl: 0,
+    syncRolle: leseSyncRolle(),
   });
 
   const versionRef = useRef(0);
+  const clientIdRef = useRef(clientId());
 
   useEffect(() => {
     let src = null;
@@ -295,7 +322,12 @@ export default function App() {
     let abgebrochen = false;
 
     const verbinden = () => {
-      src = new EventSource('/events');
+      const params = new URLSearchParams();
+      if (state.syncRolle) {
+        params.set('rolle', state.syncRolle);
+      }
+      params.set('clientId', clientIdRef.current);
+      src = new EventSource(`/events?${params.toString()}`);
 
       src.onopen = () => {
         dispatch({ type: 'VERBINDUNG_STATUS', payload: { verbunden: true } });
@@ -312,6 +344,14 @@ export default function App() {
 
         if (msg.typ === 'hinweis') {
           dispatch({ type: 'HINWEIS', payload: msg });
+          return;
+        }
+        if (msg.typ === 'split_steuerung') {
+          dispatch({ type: 'SPLIT_STEUERUNG', payload: msg });
+          return;
+        }
+        if (msg.typ === 'slave_status') {
+          dispatch({ type: 'SLAVE_STATUS', payload: msg });
           return;
         }
 
@@ -370,9 +410,9 @@ export default function App() {
       if (reconnectTimer) clearTimeout(reconnectTimer);
       if (src) src.close();
     };
-  }, []);
+  }, [state.syncRolle]);
 
-  const { table, hinweis, composite, startseite, verbunden, i18n } = state;
+  const { table, hinweis, composite, startseite, verbunden, i18n, syncRolle, slaveAnzahl } = state;
 
   useEffect(() => {
     if (startseite) {
@@ -415,9 +455,18 @@ export default function App() {
   return (
     <>
       {ViewComponent ? <ViewComponent state={state} /> : <LeereAnsicht />}
+      {syncRolle === 'master' && <SlaveStatus anzahl={slaveAnzahl} />}
       {mitSignatur && <Signatur links={viewKey === 'composite'} />}
       <VerbindungsStatus verbunden={verbunden} i18n={i18n} />
     </>
+  );
+}
+
+function SlaveStatus({ anzahl }) {
+  return (
+    <div id="slave-status" role="status" aria-live="polite">
+      Slaves: {anzahl}
+    </div>
   );
 }
 
