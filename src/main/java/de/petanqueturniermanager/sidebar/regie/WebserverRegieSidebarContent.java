@@ -284,6 +284,14 @@ public class WebserverRegieSidebarContent extends BaseSidebarContent {
     }
 
     private void speichernSofortUndNeuAufbauen(List<RegieZielRoh> ziele) {
+        // Ausstehenden Debounce verwerfen, sonst überschreibt das verzögerte speichereZiele()
+        // ~500 ms später den veralteten pendingZiele-Snapshot und verwirft das gerade
+        // hinzugefügte/gelöschte Ziel.
+        var alt = speichernFuture;
+        if (alt != null) {
+            alt.cancel(false);
+        }
+        speicherungAusstehend = false;
         GlobalProperties.get().speichernWebserverRegie(
                 GlobalProperties.get().isWebserverRegieAktiv(),
                 GlobalProperties.get().getWebserverRegiePort(),
