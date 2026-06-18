@@ -66,6 +66,7 @@
             <Class name="de.petanqueturniermanager.webserver.CompositeViewInstanz"/>
             <Class name="de.petanqueturniermanager.webserver.WebServerInstanz"/>
             <Class name="de.petanqueturniermanager.webserver.TurnierStartseiteWebServerInstanz"/>
+            <Class name="de.petanqueturniermanager.webserver.WebserverRegieServerInstanz"/>
             <Class name="de.petanqueturniermanager.helper.msgbox.ProcessBox"/>
         </Or>
         <Bug pattern="CT_CONSTRUCTOR_THROW"/>
@@ -217,6 +218,7 @@
         <Or>
             <Class name="de.petanqueturniermanager.helper.upload.PdfHtmlDokument"/>
             <Class name="de.petanqueturniermanager.helper.upload.ExportFooterHtml"/>
+            <Class name="de.petanqueturniermanager.webserver.WebserverRegieServerInstanz"/>
         </Or>
         <Bug pattern="VA_FORMAT_STRING_USES_NEWLINE"/>
     </Match>

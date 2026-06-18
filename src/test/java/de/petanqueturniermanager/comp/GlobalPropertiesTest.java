@@ -7,6 +7,10 @@ import java.io.File;
 import java.nio.file.Path;
 import java.util.List;
 
+import de.petanqueturniermanager.comp.GlobalProperties.CompositeViewEintragRoh;
+import de.petanqueturniermanager.comp.GlobalProperties.PanelEintragRoh;
+import de.petanqueturniermanager.webserver.PanelTyp;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class GlobalPropertiesTest {
@@ -135,6 +139,60 @@ class GlobalPropertiesTest {
 
         assertTrue(gp2.isWebserverAktiv());
         assertTrue(gp2.getCompositeViewEintraege().isEmpty());
+    }
+
+    @Test
+    void testCompositeRoundtripOhneLayout() throws Exception {
+        var gp = GlobalProperties.get();
+        var panel = new PanelEintragRoh(
+                PanelTyp.BLATT, "RANGLISTE", GlobalProperties.DEFAULT_ZOOM, "kein", "kein", false, "");
+        var eintrag = new CompositeViewEintragRoh(
+                5001, "Anzeige", true, GlobalProperties.DEFAULT_ZOOM, true, "", List.of(panel));
+
+        gp.speichernCompositeViews(true, List.of(eintrag));
+
+        // Es darf keine Split-Layout-Property mehr geschrieben werden.
+        var file = tempDir.resolve("PetanqueTurnierManager.properties");
+        assertFalse(java.nio.file.Files.readString(file).contains("_layout"),
+                "Composite-Speicherung darf keine Layout-Property mehr schreiben");
+
+        // Roundtrip: Eintrag inkl. Panel bleibt ohne Layout erhalten.
+        GlobalProperties.resetForTest();
+        var gp2 = GlobalProperties.get();
+        var gelesen = gp2.getCompositeViewEintraege();
+        assertEquals(1, gelesen.size());
+        assertEquals(1, gelesen.get(0).panels().size());
+        assertEquals("RANGLISTE", gelesen.get(0).panels().get(0).sheetConfig());
+        assertFalse(gp2.getCompositeViewKonfigurationen().isEmpty());
+    }
+
+    @Test
+    void testGespeichertesLayoutMitGroessenBleibtErhalten() throws Exception {
+        var file = tempDir.resolve("PetanqueTurnierManager.properties");
+        java.nio.file.Files.writeString(file,
+                "webserver_composite_ports=5001\n"
+                        + "webserver_composite_5001_aktiv=true\n"
+                        + "webserver_composite_5001_layout={\"richtung\":\"H\",\"groesse\":35,\"links\":{\"panel\":0},\"rechts\":{\"panel\":1}}\n"
+                        + "webserver_composite_5001_panel_count=2\n"
+                        + "webserver_composite_5001_panel_0_typ=BLATT\n"
+                        + "webserver_composite_5001_panel_0_sheet=RANGLISTE\n");
+        java.nio.file.Files.writeString(file,
+                java.nio.file.Files.readString(file)
+                        + "webserver_composite_5001_panel_1_typ=BLATT\n"
+                        + "webserver_composite_5001_panel_1_sheet=MELDELISTE\n");
+
+        var gp = GlobalProperties.get();
+        var eintraege = gp.getCompositeViewEintraege();
+        assertEquals(1, eintraege.size(),
+                "Eintrag darf trotz vorhandener Layout-Property nicht verworfen werden");
+        assertEquals(2, eintraege.get(0).panels().size());
+        assertTrue(eintraege.get(0).layoutJson().contains("\"groesse\":35"));
+        assertFalse(gp.getCompositeViewKonfigurationen().isEmpty());
+
+        gp.speichernCompositeViews(true, eintraege);
+        String gespeichert = java.nio.file.Files.readString(file);
+        assertTrue(gespeichert.contains("webserver_composite_5001_layout"));
+        assertTrue(gespeichert.contains("groesse"));
     }
 
     @Test

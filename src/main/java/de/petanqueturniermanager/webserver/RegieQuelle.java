@@ -19,12 +19,4 @@ public interface RegieQuelle extends SseElternInstanz {
     void regieVerbindungHinzufuegen(SseVerbindung verbindung);
 
     void regieVerbindungEntfernen(SseVerbindung verbindung);
-
-    default boolean unterstuetztSplitSteuerung() {
-        return false;
-    }
-
-    default String splitSteuerungAnwenden(String requestJson) {
-        throw new UnsupportedOperationException("Split-Steuerung nicht unterstützt");
-    }
 }

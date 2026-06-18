@@ -1,12 +1,14 @@
 import { useEffect, useRef } from 'react';
-import SplitPaneComposite from './SplitPaneComposite';
+import SplitLayoutComposite from './SplitLayoutComposite';
 
 /**
- * Composite-View mit Split-Layout-Baum aus mehreren Panels (BLATT/URL/TIMER).
- * Header/Footer werden global gerendert (aus dem ersten Panel mit nicht-leeren
- * Feldern), wenn `mitHeaderFooter` aktiv ist.
+ * Composite-View mit mehreren Panels (BLATT/URL/TIMER) in einem FESTEN, zentral
+ * konfigurierten Split-Layout (keine ziehbaren Split-Panes im Browser). Die Anordnung
+ * kommt aus dem Split-Baum (`composite.layout`); jedes Panel skaliert seinen Inhalt per
+ * Auto-Fit und aktualisiert ihn live über SSE-Diffs. Header/Footer werden global gerendert
+ * (aus dem ersten Panel mit nicht-leeren Feldern), wenn `mitHeaderFooter` aktiv ist.
  */
-export default function CompositeApp({ composite, splitSteuerung, syncRolle, timerAudio }) {
+export default function CompositeApp({ composite, timerAudio }) {
   const rootRef = useRef(null);
 
   useEffect(() => {
@@ -64,13 +66,10 @@ export default function CompositeApp({ composite, splitSteuerung, syncRolle, tim
         </div>
       )}
       <div style={{ flex: 1, minHeight: 0 }}>
-        <SplitPaneComposite
+        <SplitLayoutComposite
           knoten={composite.layout}
           panels={composite.panels}
-          splitGroessen={splitSteuerung}
-          syncRolle={syncRolle}
           timerAudio={timerAudio}
-          headerFooterUnterdruecken
         />
       </div>
       {fusszeilenPanel && (

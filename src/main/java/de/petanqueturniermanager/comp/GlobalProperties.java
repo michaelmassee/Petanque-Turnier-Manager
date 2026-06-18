@@ -4,9 +4,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
@@ -29,8 +27,10 @@ import de.petanqueturniermanager.webserver.PanelKonfiguration;
 import de.petanqueturniermanager.webserver.PanelTyp;
 import de.petanqueturniermanager.webserver.RegieSlug;
 import de.petanqueturniermanager.webserver.SheetResolverFactory;
+import de.petanqueturniermanager.webserver.SplitBlatt;
 import de.petanqueturniermanager.webserver.SplitKnoten;
 import de.petanqueturniermanager.webserver.SplitKnotenAdapter;
+import de.petanqueturniermanager.webserver.SplitTeilung;
 
 public class GlobalProperties {
 
@@ -138,8 +138,8 @@ public class GlobalProperties {
 	 * @param aktiv           ob dieser View aktiv ist
 	 * @param zoom            globaler Zoom-Faktor in % (10–500)
 	 * @param mitHeaderFooter ob Header/Footer (aus Panel 0) global einmal gerendert werden sollen
-	 * @param layoutJson      JSON-serialisierter {@link SplitKnoten}-Baum
-	 * @param panels          Liste der Panel-Konfigurationen (Reihenfolge = panelIndex)
+	 * @param layoutJson      JSON-serialisierter {@link SplitKnoten}-Baum (kann leer sein → Default-Layout)
+	 * @param panels          geordnete Liste der Panel-Konfigurationen (Reihenfolge = panelIndex)
 	 */
 	public record CompositeViewEintragRoh(
 			int port, String name, boolean aktiv, int zoom, boolean mitHeaderFooter,
@@ -160,31 +160,13 @@ public class GlobalProperties {
 			String name,
 			String slug,
 			boolean aktiv,
-			String viewId,
-			Map<String, String> splitSteuerungProView) {
+			String viewId) {
 		public RegieZielRoh {
 			id = (id == null || id.isBlank()) ? UUID.randomUUID().toString() : id.trim();
 			name = name == null ? "" : name.trim();
 			String berechneterSlug = (slug == null || slug.isBlank()) ? RegieSlug.ausName(name) : slug.trim();
 			slug = berechneterSlug;
 			viewId = viewId == null ? "" : viewId.trim();
-			splitSteuerungProView = splitSteuerungProView == null
-					? new LinkedHashMap<>()
-					: new LinkedHashMap<>(splitSteuerungProView);
-		}
-
-		public String splitSteuerungFuerView() {
-			return splitSteuerungProView.get(viewId);
-		}
-
-		public RegieZielRoh mitSplitSteuerung(String neueViewId, String splitJson) {
-			var map = new LinkedHashMap<>(splitSteuerungProView);
-			if (splitJson == null || splitJson.isBlank()) {
-				map.remove(neueViewId);
-			} else {
-				map.put(neueViewId, splitJson);
-			}
-			return new RegieZielRoh(id, name, slug, aktiv, viewId, map);
 		}
 	}
 
@@ -393,25 +375,6 @@ public class GlobalProperties {
 		}
 	}
 
-	public void speichernWebserverRegieSplitSteuerung(String zielId, String viewId, String splitJson) {
-		if (zielId == null || zielId.isBlank() || viewId == null || viewId.isBlank()) {
-			return;
-		}
-		var ziele = new ArrayList<RegieZielRoh>();
-		boolean geaendert = false;
-		for (var ziel : getWebserverRegieZiele()) {
-			if (ziel.id().equals(zielId)) {
-				ziele.add(ziel.mitSplitSteuerung(viewId, splitJson));
-				geaendert = true;
-			} else {
-				ziele.add(ziel);
-			}
-		}
-		if (geaendert) {
-			speichernWebserverRegie(isWebserverRegieAktiv(), getWebserverRegiePort(), ziele);
-		}
-	}
-
 	public int getStartseitePort() {
 		var val = propMap.get(STARTSEITE_PORT_PROP);
 		if (val == null || val.isBlank()) return STARTSEITE_DEFAULT_PORT;
@@ -444,7 +407,7 @@ public class GlobalProperties {
 			}
 			var normalisiert = new RegieZielRoh(
 					ziel.id(), ziel.name(), RegieSlug.ausName(ziel.name()),
-					ziel.aktiv(), ziel.viewId(), ziel.splitSteuerungProView());
+					ziel.aktiv(), ziel.viewId());
 			RegieSlug.validiere(normalisiert.slug());
 			if (!slugs.add(normalisiert.slug())) {
 				throw new IllegalArgumentException("Doppelter Webserver-Regie-Slug: " + normalisiert.slug());
@@ -490,8 +453,10 @@ public class GlobalProperties {
 					int zoom = parseZoom(propMap.get(WEBSERVER_COMPOSITE_PREFIX + port + WEBSERVER_COMPOSITE_ZOOM_SUFFIX));
 					boolean mitHeaderFooter = getBooleanMitDefault(
 							WEBSERVER_COMPOSITE_PREFIX + port + WEBSERVER_COMPOSITE_MIT_HEADER_FOOTER_SUFFIX, true);
-					String layoutJson = propMap.getOrDefault(WEBSERVER_COMPOSITE_PREFIX + port + WEBSERVER_COMPOSITE_LAYOUT_SUFFIX, "").trim();
-					if (layoutJson.isEmpty()) continue;
+					// Layout (Split-Baum) ist optional: fehlt es (z.B. ältere Zwischenstände), wird
+					// beim Konfig-Aufbau ein Default-Layout erzeugt – der Eintrag bleibt erhalten.
+					String layoutJson = propMap.getOrDefault(
+							WEBSERVER_COMPOSITE_PREFIX + port + WEBSERVER_COMPOSITE_LAYOUT_SUFFIX, "").trim();
 
 					int panelCount = 0;
 					try {
@@ -540,14 +505,16 @@ public class GlobalProperties {
 		var gson = new GsonBuilder()
 				.registerTypeAdapter(SplitKnoten.class, new SplitKnotenAdapter())
 				.create();
-
 		for (var eintrag : getCompositeViewEintraege()) {
 			if (!eintrag.aktiv()) continue;
 			try {
-				SplitKnoten wurzel = gson.fromJson(eintrag.layoutJson(), SplitKnoten.class);
-				if (wurzel == null) {
-					logger.warn("Ungültiger Layout-JSON für Port {}", eintrag.port());
-					continue;
+				SplitKnoten wurzel = null;
+				if (!eintrag.layoutJson().isBlank()) {
+					try {
+						wurzel = gson.fromJson(eintrag.layoutJson(), SplitKnoten.class);
+					} catch (RuntimeException e) {
+						logger.warn("Ungültiger Layout-JSON für Port {}, verwende Default-Layout", eintrag.port());
+					}
 				}
 				List<PanelKonfiguration> panels = new ArrayList<>();
 				for (var p : eintrag.panels()) {
@@ -570,6 +537,9 @@ public class GlobalProperties {
 							p.horizontalAusrichtung(), p.vertikalAusrichtung(), p.blattnameAnzeigen(), ""));
 				}
 				if (!panels.isEmpty()) {
+					if (wurzel == null) {
+						wurzel = defaultSplitLayout(panels.size());
+					}
 					konfigs.add(new CompositeViewKonfiguration(eintrag.port(), eintrag.name(), eintrag.zoom(), wurzel, panels, eintrag.mitHeaderFooter()));
 				}
 			} catch (Exception e) {
@@ -577,6 +547,18 @@ public class GlobalProperties {
 			}
 		}
 		return konfigs;
+	}
+
+	/**
+	 * Erzeugt ein Default-Split-Layout für {@code panelCount} Panels (links-lehnende
+	 * Horizontal-Teilung), falls kein gespeichertes Layout vorliegt.
+	 */
+	private static SplitKnoten defaultSplitLayout(int panelCount) {
+		SplitKnoten wurzel = new SplitBlatt(0);
+		for (int i = 1; i < panelCount; i++) {
+			wurzel = SplitTeilung.horizontal(wurzel, new SplitBlatt(i));
+		}
+		return wurzel;
 	}
 
 	/**
@@ -624,7 +606,8 @@ public class GlobalProperties {
 					// Default = true → nur explizit "false" persistieren (migrationssicher).
 					if (!eintrag.mitHeaderFooter())
 						propMap.put(prefix + WEBSERVER_COMPOSITE_MIT_HEADER_FOOTER_SUFFIX, "false");
-					propMap.put(prefix + WEBSERVER_COMPOSITE_LAYOUT_SUFFIX, eintrag.layoutJson());
+					if (eintrag.layoutJson() != null && !eintrag.layoutJson().isBlank())
+						propMap.put(prefix + WEBSERVER_COMPOSITE_LAYOUT_SUFFIX, eintrag.layoutJson());
 					propMap.put(prefix + WEBSERVER_COMPOSITE_PANEL_COUNT_SUFFIX, String.valueOf(eintrag.panels().size()));
 					for (int i = 0; i < eintrag.panels().size(); i++) {
 						var panel = eintrag.panels().get(i);

@@ -10,17 +10,10 @@ const VIEW_RENDERERS = {
   einzel:     ({ state }) => <EinzelApp     table={state.table} />,
   composite:  ({ state, timerAudio }) => <CompositeApp
     composite={state.composite}
-    splitSteuerung={state.splitSteuerung}
-    syncRolle={state.syncRolle}
     timerAudio={timerAudio}
   />,
   startseite: ({ state }) => <StartseiteApp startseite={state.startseite} />,
 };
-
-function leseSyncRolle() {
-  const rolle = new URLSearchParams(window.location.search).get('rolle');
-  return rolle === 'master' || rolle === 'slave' ? rolle : '';
-}
 
 function clientId() {
   const key = 'ptm-live-client-id';
@@ -296,10 +289,6 @@ function reducer(state, action) {
       return { ...state, verbunden: action.payload.verbunden };
     case 'I18N':
       return { ...state, i18n: { ...state.i18n, ...action.payload } };
-    case 'SPLIT_STEUERUNG':
-      return { ...state, splitSteuerung: action.payload.gruppen || {} };
-    case 'SLAVE_STATUS':
-      return { ...state, slaveAnzahl: action.payload.anzahl ?? 0 };
     default:
       return state;
   }
@@ -328,9 +317,6 @@ export default function App() {
     startseite: null,
     verbunden: true,
     i18n: {},
-    splitSteuerung: {},
-    slaveAnzahl: 0,
-    syncRolle: leseSyncRolle(),
   });
 
   const versionRef = useRef(0);
@@ -377,9 +363,6 @@ export default function App() {
 
     const verbinden = () => {
       const params = new URLSearchParams();
-      if (state.syncRolle) {
-        params.set('rolle', state.syncRolle);
-      }
       params.set('clientId', clientIdRef.current);
       src = new EventSource(liveUrl(`events?${params.toString()}`));
 
@@ -398,14 +381,6 @@ export default function App() {
 
         if (msg.typ === 'hinweis') {
           dispatch({ type: 'HINWEIS', payload: msg });
-          return;
-        }
-        if (msg.typ === 'split_steuerung') {
-          dispatch({ type: 'SPLIT_STEUERUNG', payload: msg });
-          return;
-        }
-        if (msg.typ === 'slave_status') {
-          dispatch({ type: 'SLAVE_STATUS', payload: msg });
           return;
         }
 
@@ -464,9 +439,9 @@ export default function App() {
       if (reconnectTimer) clearTimeout(reconnectTimer);
       if (src) src.close();
     };
-  }, [state.syncRolle]);
+  }, []);
 
-  const { table, hinweis, composite, startseite, verbunden, i18n, syncRolle, slaveAnzahl } = state;
+  const { table, hinweis, composite, startseite, verbunden, i18n } = state;
   const timerPanels = timerPanelsAusState(state);
   const hatTimerPanel = timerPanels.length > 0;
   const alarmAktiv = timerAlarmAktiv(timerPanels);
@@ -546,19 +521,9 @@ export default function App() {
         titel: i18n?.tonNichtAktivTitel || 'Kein Ton aktiv',
         hinweis: i18n?.tonNichtAktivHinweis || 'OK drücken / antippen für Ton',
       }} /> : <LeereAnsicht />}
-      {syncRolle === 'master' && <SlaveStatus anzahl={slaveAnzahl} i18n={i18n} />}
       {mitSignatur && <Signatur links={viewKey === 'composite'} />}
       <VerbindungsStatus verbunden={verbunden} i18n={i18n} />
     </>
-  );
-}
-
-function SlaveStatus({ anzahl, i18n }) {
-  const label = i18n?.slaves || 'Slaves';
-  return (
-    <div id="slave-status" role="status" aria-live="polite">
-      {label}: {anzahl}
-    </div>
   );
 }
 

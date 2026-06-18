@@ -5,14 +5,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
@@ -28,7 +24,6 @@ import de.petanqueturniermanager.helper.i18n.I18n;
 public class WebserverRegieServerInstanz {
 
     private static final Logger logger = LogManager.getLogger(WebserverRegieServerInstanz.class);
-    private static final int MAX_STEUERUNG_BODY_BYTES = 16 * 1024;
     private static final String CONTENT_TYPE_HTML = "text/html; charset=UTF-8";
     private static final String CONTENT_TYPE_SSE = "text/event-stream; charset=UTF-8";
     private static final String STATIC_RESOURCE_PREFIX = "/de/petanqueturniermanager/webserver/static";
@@ -39,8 +34,6 @@ public class WebserverRegieServerInstanz {
     private final WebServerManager manager;
     private final HttpServer httpServer;
     private final Map<String, CopyOnWriteArrayList<ZielVerbindung>> verbindungenNachSlug = new ConcurrentHashMap<>();
-    private final ScheduledExecutorService splitPersistenzExecutor;
-    private final Map<String, PendingSplit> pendingSplits = new ConcurrentHashMap<>();
     private volatile boolean laeuft = false;
 
     public WebserverRegieServerInstanz(int port, WebServerManager manager) throws IOException {
@@ -49,11 +42,6 @@ public class WebserverRegieServerInstanz {
         httpServer = HttpServer.create(new InetSocketAddress(port), 10);
         httpServer.setExecutor(Executors.newCachedThreadPool());
         httpServer.createContext("/", this::handleRequest);
-        splitPersistenzExecutor = Executors.newSingleThreadScheduledExecutor(r -> {
-            var t = new Thread(r, "PTM-Webserver-Regie-SplitPersistenz");
-            t.setDaemon(true);
-            return t;
-        });
     }
 
     public int getPort() {
@@ -67,15 +55,11 @@ public class WebserverRegieServerInstanz {
     public void starten() {
         httpServer.start();
         laeuft = true;
-        splitPersistenzExecutor.scheduleWithFixedDelay(this::persistierePendingSplits,
-                600, 600, TimeUnit.MILLISECONDS);
         logger.info("Webserver-Regie gestartet auf Port {}", port);
     }
 
     public void stoppen() {
         laeuft = false;
-        splitPersistenzExecutor.shutdownNow();
-        persistierePendingSplits();
         for (var liste : verbindungenNachSlug.values()) {
             for (var verbindung : liste) {
                 verbindung.entfernenUndSchliessen();
@@ -113,8 +97,6 @@ public class WebserverRegieServerInstanz {
         var quelle = manager.laufendeRegieQuelleFuerId(ziel.viewId()).orElse(null);
         if ("/events".equals(rest)) {
             handleEvents(exchange, ziel, quelle);
-        } else if ("/steuerung/split".equals(rest)) {
-            handleSplitSteuerung(exchange, ziel, quelle);
         } else if ("/".equals(rest)) {
             if (quelle == null) {
                 sendeHinweisSeite(exchange, 503, I18n.get("webserver.regie.hinweis.quelle.inaktiv.titel"),
@@ -160,7 +142,7 @@ public class WebserverRegieServerInstanz {
             return;
         }
 
-        var parent = new RegieSseEltern(quelle, ziel.splitSteuerungFuerView(), v -> entferneVerbindung(ziel.slug(), quelle, v));
+        var parent = new RegieSseEltern(quelle, v -> entferneVerbindung(ziel.slug(), quelle, v));
         var verbindung = new SseVerbindung(os, parent, RegieQuelle.REGIE_ROLLE, "");
         quelle.regieVerbindungHinzufuegen(verbindung);
         verbindungenNachSlug.computeIfAbsent(ziel.slug(), s -> new CopyOnWriteArrayList<>())
@@ -175,33 +157,6 @@ public class WebserverRegieServerInstanz {
         verbindung.sendeInitNachricht();
     }
 
-    private void handleSplitSteuerung(HttpExchange exchange, RegieZielRoh ziel, RegieQuelle quelle) throws IOException {
-        if (quelle == null || !quelle.unterstuetztSplitSteuerung()) {
-            exchange.sendResponseHeaders(404, -1);
-            return;
-        }
-        if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
-            exchange.sendResponseHeaders(405, -1);
-            return;
-        }
-        try {
-            byte[] body = exchange.getRequestBody().readNBytes(MAX_STEUERUNG_BODY_BYTES + 1);
-            if (body.length > MAX_STEUERUNG_BODY_BYTES) {
-                exchange.sendResponseHeaders(413, -1);
-                return;
-            }
-            String splitJson = quelle.splitSteuerungAnwenden(new String(body, StandardCharsets.UTF_8));
-            pendingSplits.put(ziel.id() + "\n" + ziel.viewId(), new PendingSplit(ziel.id(), ziel.viewId(), splitJson));
-            verbindungenNachSlug.getOrDefault(ziel.slug(), new CopyOnWriteArrayList<>()).forEach(v -> v.verbindung().senden(splitJson));
-            exchange.sendResponseHeaders(204, -1);
-        } catch (IllegalArgumentException e) {
-            logger.debug("Ungültige Regie-Split-Steuerung für Ziel {}: {}", ziel.slug(), e.getMessage());
-            exchange.sendResponseHeaders(400, -1);
-        } finally {
-            exchange.close();
-        }
-    }
-
     private void entferneVerbindung(String slug, RegieQuelle quelle, SseVerbindung verbindung) {
         quelle.regieVerbindungEntfernen(verbindung);
         var liste = verbindungenNachSlug.get(slug);
@@ -210,18 +165,6 @@ public class WebserverRegieServerInstanz {
             if (liste.isEmpty()) {
                 verbindungenNachSlug.remove(slug);
             }
-        }
-    }
-
-    private void persistierePendingSplits() {
-        var pending = new ArrayList<>(pendingSplits.values());
-        if (pending.isEmpty()) {
-            return;
-        }
-        pendingSplits.clear();
-        for (var split : pending) {
-            GlobalProperties.get().speichernWebserverRegieSplitSteuerung(
-                    split.zielId(), split.viewId(), split.splitJson());
         }
     }
 
@@ -324,9 +267,6 @@ public class WebserverRegieServerInstanz {
     private record PfadTeile(String slug, String rest) {
     }
 
-    private record PendingSplit(String zielId, String viewId, String splitJson) {
-    }
-
     private record ZielVerbindung(String slug, RegieQuelle quelle, SseVerbindung verbindung) {
         void entfernenUndSchliessen() {
             quelle.regieVerbindungEntfernen(verbindung);
@@ -336,12 +276,10 @@ public class WebserverRegieServerInstanz {
 
     private static final class RegieSseEltern implements SseElternInstanz {
         private final RegieQuelle quelle;
-        private final String splitSteuerung;
         private final VerbindungEntferner entferner;
 
-        RegieSseEltern(RegieQuelle quelle, String splitSteuerung, VerbindungEntferner entferner) {
+        RegieSseEltern(RegieQuelle quelle, VerbindungEntferner entferner) {
             this.quelle = quelle;
-            this.splitSteuerung = splitSteuerung;
             this.entferner = entferner;
         }
 
@@ -352,16 +290,7 @@ public class WebserverRegieServerInstanz {
 
         @Override
         public String[] getInitZusatzJsons() {
-            List<String> result = new ArrayList<>();
-            for (String json : quelle.getInitZusatzJsons()) {
-                if (!CompositeViewInstanz.istSplitSteuerung(json)) {
-                    result.add(json);
-                }
-            }
-            if (splitSteuerung != null && !splitSteuerung.isBlank()) {
-                result.add(splitSteuerung);
-            }
-            return result.toArray(String[]::new);
+            return quelle.getInitZusatzJsons();
         }
 
         @Override

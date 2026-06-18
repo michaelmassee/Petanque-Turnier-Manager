@@ -24,7 +24,6 @@ public final class UiTexte {
         texte.put("verbindungGetrennt", I18n.get("frontend.verbindung.getrennt"));
         texte.put("tonNichtAktivTitel", I18n.get("frontend.ton.nicht.aktiv.titel"));
         texte.put("tonNichtAktivHinweis", I18n.get("frontend.ton.nicht.aktiv.hinweis"));
-        texte.put("slaves", I18n.get("frontend.slaves.label"));
         return texte;
     }
 }

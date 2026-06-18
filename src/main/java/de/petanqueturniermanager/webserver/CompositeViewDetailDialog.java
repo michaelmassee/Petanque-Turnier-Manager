@@ -281,7 +281,18 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
 
         // Panel-Konfiguration für das ausgewählte Panel
         int konfY = aktionY + AKTIONS_BTN_Y_OFFSET;
-        fuegeFixedTextEinDyn("lblPanelKonfig", I18n.get("webserver.composite.konfig.bereich.panel"), 5, konfY, 200, ZEILE_H);
+        fuegeFixedTextEinDyn("lblPanelKonfig", I18n.get("webserver.composite.konfig.bereich.panel"), 5, konfY, 150, ZEILE_H);
+
+        int splitBreite = panelShareInSplit(wurzel, ausgewaehlterPanelIndex, "H");
+        if (splitBreite >= 0) {
+            fuegeFixedTextEinDyn("lblSplitBreite", I18n.get("webserver.composite.konfig.panel.splitbreite"), 170, konfY, 45, ZEILE_H);
+            fuegeEditEinDyn("txtSplitBreite", String.valueOf(splitBreite), 217, konfY, 30, ZEILE_H);
+        }
+        int splitHoehe = panelShareInSplit(wurzel, ausgewaehlterPanelIndex, "V");
+        if (splitHoehe >= 0) {
+            fuegeFixedTextEinDyn("lblSplitHoehe", I18n.get("webserver.composite.konfig.panel.splithoehe"), 260, konfY, 45, ZEILE_H);
+            fuegeEditEinDyn("txtSplitHoehe", String.valueOf(splitHoehe), 307, konfY, 30, ZEILE_H);
+        }
 
         // ---- Modus-Auswahl: Blatt / URL / Timer ----
         int modusY = konfY + ZEILE_H;
@@ -442,6 +453,9 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
     private void speicherePanelKonfiguration() {
         if (ausgewaehlterPanelIndex < 0) return;
 
+        wurzel = speichereSplitAnteil("txtSplitBreite", "H", wurzel);
+        wurzel = speichereSplitAnteil("txtSplitHoehe", "V", wurzel);
+
         // Modus aus RadioButtons lesen und speichern (Priorität: Timer > URL > Blatt)
         if (ausgewaehlterPanelIndex < panelTypen.size()) {
             XControl rbTimerCtrl = xcc.getControl("rbTimer");
@@ -493,6 +507,20 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
             panelTypen.set(ausgewaehlterPanelIndex, neuerTyp);
         }
         aktualisiereUndFange();
+    }
+
+    private SplitKnoten speichereSplitAnteil(String controlName, String richtung, SplitKnoten aktuellerBaum) {
+        XControl splitCtrl = xcc.getControl(controlName);
+        if (splitCtrl == null) {
+            return aktuellerBaum;
+        }
+        try {
+            int share = Integer.parseInt(Lo.qi(XTextComponent.class, splitCtrl).getText().trim());
+            if (share >= 1 && share <= 99) {
+                return aktualisierePanelShareInSplit(aktuellerBaum, ausgewaehlterPanelIndex, richtung, share);
+            }
+        } catch (NumberFormatException ignored) {}
+        return aktuellerBaum;
     }
 
     private CompositeViewEintragRoh validiereUndBaue() throws UngueltigeEingabeException {
@@ -630,6 +658,84 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
                     renumeriereNachLoeschen(teilung.links(), geloeschtIndex),
                     renumeriereNachLoeschen(teilung.rechts(), geloeschtIndex));
         };
+    }
+
+    static int panelShareInSplit(SplitKnoten knoten, int panelIndex, String richtung) {
+        return switch (knoten) {
+            case SplitBlatt ignored -> -1;
+            case SplitTeilung teilung -> {
+                boolean linksEnthaelt = enthaeltPanel(teilung.links(), panelIndex);
+                boolean rechtsEnthaelt = enthaeltPanel(teilung.rechts(), panelIndex);
+                if (linksEnthaelt) {
+                    int tiefer = panelShareInSplit(teilung.links(), panelIndex, richtung);
+                    if (tiefer >= 0) yield tiefer;
+                    yield teilung.richtung().equalsIgnoreCase(richtung) ? teilung.groesse() : -1;
+                }
+                if (rechtsEnthaelt) {
+                    int tiefer = panelShareInSplit(teilung.rechts(), panelIndex, richtung);
+                    if (tiefer >= 0) yield tiefer;
+                    yield teilung.richtung().equalsIgnoreCase(richtung) ? 100 - teilung.groesse() : -1;
+                }
+                yield -1;
+            }
+        };
+    }
+
+    static SplitKnoten aktualisierePanelShareInSplit(SplitKnoten knoten, int panelIndex, String richtung, int panelShare) {
+        return aktualisierePanelShareInSplitIntern(knoten, panelIndex, richtung, panelShare).knoten();
+    }
+
+    private static AktualisierteSplitTeilung aktualisierePanelShareInSplitIntern(SplitKnoten knoten, int panelIndex, String richtung, int panelShare) {
+        if (panelShare < 1 || panelShare > 99) {
+            throw new IllegalArgumentException("Panel-Anteil muss zwischen 1 und 99 liegen");
+        }
+        return switch (knoten) {
+            case SplitBlatt blatt -> new AktualisierteSplitTeilung(blatt, false);
+            case SplitTeilung teilung -> {
+                boolean linksEnthaelt = enthaeltPanel(teilung.links(), panelIndex);
+                boolean rechtsEnthaelt = enthaeltPanel(teilung.rechts(), panelIndex);
+                if (linksEnthaelt) {
+                    var linksAktualisiert = aktualisierePanelShareInSplitIntern(
+                            teilung.links(), panelIndex, richtung, panelShare);
+                    if (linksAktualisiert.aktualisiert()) {
+                        yield new AktualisierteSplitTeilung(
+                                new SplitTeilung(teilung.richtung(), teilung.groesse(), linksAktualisiert.knoten(), teilung.rechts()),
+                                true);
+                    }
+                    if (teilung.richtung().equalsIgnoreCase(richtung)) {
+                        yield new AktualisierteSplitTeilung(
+                                new SplitTeilung(teilung.richtung(), panelShare, teilung.links(), teilung.rechts()),
+                                true);
+                    }
+                }
+                if (rechtsEnthaelt) {
+                    var rechtsAktualisiert = aktualisierePanelShareInSplitIntern(
+                            teilung.rechts(), panelIndex, richtung, panelShare);
+                    if (rechtsAktualisiert.aktualisiert()) {
+                        yield new AktualisierteSplitTeilung(
+                                new SplitTeilung(teilung.richtung(), teilung.groesse(), teilung.links(), rechtsAktualisiert.knoten()),
+                                true);
+                    }
+                    if (teilung.richtung().equalsIgnoreCase(richtung)) {
+                        yield new AktualisierteSplitTeilung(
+                                new SplitTeilung(teilung.richtung(), 100 - panelShare, teilung.links(), teilung.rechts()),
+                                true);
+                    }
+                }
+                yield new AktualisierteSplitTeilung(teilung, false);
+            }
+        };
+    }
+
+    private static boolean enthaeltPanel(SplitKnoten knoten, int panelIndex) {
+        return switch (knoten) {
+            case SplitBlatt blatt -> blatt.panel() == panelIndex;
+            case SplitTeilung teilung -> enthaeltPanel(teilung.links(), panelIndex)
+                    || enthaeltPanel(teilung.rechts(), panelIndex);
+        };
+    }
+
+    private record AktualisierteSplitTeilung(SplitKnoten knoten, boolean aktualisiert) {
     }
 
     /**

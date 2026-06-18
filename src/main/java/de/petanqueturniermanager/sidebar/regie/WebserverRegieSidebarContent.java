@@ -219,7 +219,7 @@ public class WebserverRegieSidebarContent extends BaseSidebarContent {
             name = basisName + " " + nr;
         }
         String viewId = quellen.isEmpty() ? "" : quellen.get(0).viewId();
-        ziele.add(new RegieZielRoh(null, name, "", false, viewId, null));
+        ziele.add(new RegieZielRoh(null, name, "", false, viewId));
         speichernSofortUndNeuAufbauen(ziele);
     }
 
@@ -247,7 +247,7 @@ public class WebserverRegieSidebarContent extends BaseSidebarContent {
                     ? quellen.get(selected).viewId()
                     : row.ziel().viewId();
             result.add(new RegieZielRoh(row.ziel().id(), name, "", row.aktiv().getState() == 1,
-                    viewId, row.ziel().splitSteuerungProView()));
+                    viewId));
         }
         return result;
     }

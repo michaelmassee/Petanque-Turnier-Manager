@@ -7,7 +7,6 @@ import java.net.InetSocketAddress;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
@@ -18,9 +17,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParseException;
-import com.google.gson.JsonParser;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 
@@ -41,7 +37,6 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot, Re
     private static final Logger logger = LogManager.getLogger(CompositeViewInstanz.class);
 
     private static final int KEEPALIVE_INTERVALL_SEKUNDEN = 15;
-    private static final int MAX_STEUERUNG_BODY_BYTES = 16 * 1024;
     private static final String CONTENT_TYPE_HTML = "text/html; charset=UTF-8";
     private static final String CONTENT_TYPE_SSE = "text/event-stream; charset=UTF-8";
     private static final String STATIC_RESOURCE_PREFIX = "/de/petanqueturniermanager/webserver/static";
@@ -58,7 +53,6 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot, Re
      * Wird bei jeder neuen SSE-Verbindung sofort gesendet.
      */
     private volatile String cachedInitJson;
-    private volatile String aktuelleSplitSteuerungJson;
     private volatile boolean laeuft = false;
 
     public CompositeViewInstanz(CompositeViewKonfiguration konfiguration) throws IOException {
@@ -67,7 +61,6 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot, Re
         httpServer.setExecutor(Executors.newCachedThreadPool());
         httpServer.createContext("/events", this::handleEvents);
         httpServer.createContext("/debug/sse", this::handleDebugSse);
-        httpServer.createContext("/steuerung", this::handleSteuerung);
         httpServer.createContext("/", this::handleStatischOderRoot);
         keepAliveExecutor = Executors.newSingleThreadScheduledExecutor(r -> {
             var t = new Thread(r, "PTM-CompositeView-KeepAlive-" + konfiguration.port());
@@ -94,7 +87,6 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot, Re
         keepAliveExecutor.shutdownNow();
         sseVerbindungen.forEach(SseVerbindung::schliessen);
         sseVerbindungen.clear();
-        aktuelleSplitSteuerungJson = null;
         httpServer.stop(0);
         logger.info("CompositeView-Server gestoppt auf Port {}", konfiguration.port());
     }
@@ -113,32 +105,17 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot, Re
 
     @Override
     public String[] getInitZusatzJsons() {
-        String splitJson = aktuelleSplitSteuerungJson;
-        String slaveStatusJson = slaveStatusJson();
-        if (splitJson == null) {
-            return new String[] { slaveStatusJson };
-        }
-        return new String[] { splitJson, slaveStatusJson };
+        return new String[0];
     }
 
     public void sseNachrichtPushen(String json) {
-        boolean splitSteuerung = istSplitSteuerung(json);
-        sseVerbindungen.forEach(v -> {
-            if (splitSteuerung && RegieQuelle.REGIE_ROLLE.equals(v.getRolle())) {
-                return;
-            }
-            v.senden(json);
-        });
+        sseVerbindungen.forEach(v -> v.senden(json));
     }
 
     public void verbindungEntfernen(SseVerbindung verbindung) {
-        boolean warSlave = istSlave(verbindung);
         sseVerbindungen.remove(verbindung);
         logger.debug("SSE-Verbindung auf Port {} entfernt, aktiv: {}",
                 konfiguration.port(), sseVerbindungen.size());
-        if (warSlave) {
-            slaveStatusPushen();
-        }
     }
 
     /** @return {@code true} wenn mindestens ein Browser-Client per SSE verbunden ist. */
@@ -181,19 +158,6 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot, Re
         sseVerbindungen.remove(verbindung);
         logger.debug("Regie-SSE-Verbindung auf CompositeView-Port {} entfernt, aktiv: {}",
                 konfiguration.port(), sseVerbindungen.size());
-    }
-
-    @Override
-    public boolean unterstuetztSplitSteuerung() {
-        return true;
-    }
-
-    @Override
-    public String splitSteuerungAnwenden(String requestJson) {
-        String json = splitSteuerungJsonAusRequest(requestJson);
-        aktuelleSplitSteuerungJson = json;
-        sseNachrichtPushen(json);
-        return json;
     }
 
     /** Gibt {@code true} zurück, wenn diese Instanz mindestens ein TIMER-Panel enthält. */
@@ -274,34 +238,6 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot, Re
             return;
         }
         verbindung.sendeInitNachricht();
-        if (istSlave(verbindung)) {
-            slaveStatusPushen();
-        }
-    }
-
-    private void handleSteuerung(HttpExchange exchange) throws IOException {
-        if (!"/steuerung/split".equals(exchange.getRequestURI().getPath())) {
-            exchange.sendResponseHeaders(404, -1);
-            return;
-        }
-        if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
-            exchange.sendResponseHeaders(405, -1);
-            return;
-        }
-        try {
-            byte[] body = exchange.getRequestBody().readNBytes(MAX_STEUERUNG_BODY_BYTES + 1);
-            if (body.length > MAX_STEUERUNG_BODY_BYTES) {
-                exchange.sendResponseHeaders(413, -1);
-                return;
-            }
-            splitSteuerungAnwenden(new String(body, StandardCharsets.UTF_8));
-            exchange.sendResponseHeaders(204, -1);
-        } catch (IllegalArgumentException e) {
-            logger.debug("Ungültige Split-Steuerung auf Port {}: {}", konfiguration.port(), e.getMessage());
-            exchange.sendResponseHeaders(400, -1);
-        } finally {
-            exchange.close();
-        }
     }
 
     private void handleDebugSse(HttpExchange exchange) throws IOException {
@@ -349,69 +285,6 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot, Re
         }
     }
 
-    static String splitSteuerungJsonAusRequest(String requestJson) {
-        JsonElement root;
-        try {
-            root = JsonParser.parseString(requestJson);
-        } catch (JsonParseException e) {
-            throw new IllegalArgumentException("JSON kann nicht gelesen werden", e);
-        }
-        if (!root.isJsonObject()) {
-            throw new IllegalArgumentException("Root muss ein Objekt sein");
-        }
-        JsonElement gruppenElement = root.getAsJsonObject().get("gruppen");
-        if (gruppenElement == null || !gruppenElement.isJsonObject()) {
-            throw new IllegalArgumentException("gruppen fehlt");
-        }
-        Map<String, List<Double>> gruppen = new LinkedHashMap<>();
-        for (Map.Entry<String, JsonElement> eintrag : gruppenElement.getAsJsonObject().entrySet()) {
-            String pfad = eintrag.getKey();
-            if (!pfad.matches("R(?:/[LR])*")) {
-                throw new IllegalArgumentException("ungültiger Gruppenpfad");
-            }
-            JsonElement werteElement = eintrag.getValue();
-            if (!werteElement.isJsonArray() || werteElement.getAsJsonArray().size() != 2) {
-                throw new IllegalArgumentException("Gruppe muss genau zwei Werte haben");
-            }
-            double a = wertAlsProzent(werteElement.getAsJsonArray().get(0));
-            double b = wertAlsProzent(werteElement.getAsJsonArray().get(1));
-            double summe = a + b;
-            if (Math.abs(summe - 100.0) > 0.5) {
-                throw new IllegalArgumentException("Split-Werte müssen zusammen 100 ergeben");
-            }
-            gruppen.put(pfad, List.of(a, b));
-        }
-        return GSON.toJson(new SplitSteuerungNachricht("split_steuerung", gruppen));
-    }
-
-    private static double wertAlsProzent(JsonElement wert) {
-        if (!wert.isJsonPrimitive() || !wert.getAsJsonPrimitive().isNumber()) {
-            throw new IllegalArgumentException("Split-Wert muss numerisch sein");
-        }
-        double zahl = wert.getAsDouble();
-        if (!Double.isFinite(zahl) || zahl < 0 || zahl > 100) {
-            throw new IllegalArgumentException("Split-Wert außerhalb 0..100");
-        }
-        return Math.round(zahl * 100.0) / 100.0;
-    }
-
-    private void slaveStatusPushen() {
-        sseNachrichtPushen(slaveStatusJson());
-    }
-
-    private String slaveStatusJson() {
-        long anzahl = sseVerbindungen.stream().filter(CompositeViewInstanz::istSlave).count();
-        return GSON.toJson(new SlaveStatusNachricht("slave_status", anzahl));
-    }
-
-    private static boolean istSlave(SseVerbindung verbindung) {
-        return "slave".equals(verbindung.getRolle());
-    }
-
-    static boolean istSplitSteuerung(String json) {
-        return json != null && json.contains("\"typ\":\"split_steuerung\"");
-    }
-
     private static Map<String, String> queryParameter(HttpExchange exchange) {
         String query = exchange.getRequestURI().getRawQuery();
         Map<String, String> result = new LinkedHashMap<>();
@@ -429,12 +302,6 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot, Re
 
     private static String urlDecode(String wert) {
         return URLDecoder.decode(wert, StandardCharsets.UTF_8);
-    }
-
-    record SplitSteuerungNachricht(String typ, Map<String, List<Double>> gruppen) {
-    }
-
-    record SlaveStatusNachricht(String typ, long anzahl) {
     }
 
     private static String ermittleContentType(String dateiname) {

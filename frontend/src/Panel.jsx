@@ -1,9 +1,14 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Cell from './Cell';
-import { horizontalAlignItems, vertikalJustifyContent, transformOrigin } from './alignment';
+import { transformOrigin } from './alignment';
+import { useAutoFitScale } from './useAutoFit';
 
 // 1/100 mm → Pixel (gerundet, verhindert Sub-Pixel-Layout-Drift)
 const toPx = (v) => Math.round((v || 0) / 37.795) + 'px';
+
+// Obergrenze für das automatische Hochskalieren eines Sheet-Panels, damit kleine Tabellen
+// einen großen Bildschirm (Beamer/TV) ausfüllen, ohne ins Absurde zu wachsen.
+const AUTO_FIT_MAX_SCALE = 8;
 
 /**
  * Rendert eine einzelne Tabellen-Ansicht (Sheet).
@@ -11,10 +16,18 @@ const toPx = (v) => Math.round((v || 0) / 37.795) + 'px';
  * @param {Object} props.table - Tabellenzustand (entspricht state.table in App.jsx)
  * @param {boolean} props.sheetnamenAnzeigen - ob Blattnamen in der Kopfzeile angezeigt werden
  * @param {boolean} [props.headerFooterUnterdruecken] - blendet die Panel-eigenen Kopf-/Fußzeilen aus
- *        (verwendet von SplitPaneComposite, wenn ein globaler Header/Footer gerendert wird)
+ *        (verwendet vom Composite-Raster, wenn ein globaler Header/Footer gerendert wird)
  */
 export default function Panel({ table, sheetnamenAnzeigen, headerFooterUnterdruecken, timerAudio }) {
   const [iframeFehler, setIframeFehler] = useState(false);
+  const containerRef = useRef(null);
+  const contentRef = useRef(null);
+  const zoomFaktor = (table?.zoom ?? 100) / 100;
+  const autoFitScale = useAutoFitScale(
+    containerRef, contentRef,
+    { maxScale: AUTO_FIT_MAX_SCALE, zoom: zoomFaktor },
+    [table?.zeilen, table?.spalten, table?.zoom, table?.gitter],
+  );
 
   if (!table) {
     return null;
@@ -131,17 +144,15 @@ export default function Panel({ table, sheetnamenAnzeigen, headerFooterUnterdrue
   );
 
   return (
-    <div style={{
-      paddingBottom: '8px', overflow: 'auto', height: '100%', boxSizing: 'border-box',
-      display: 'flex', flexDirection: 'column',
-      alignItems: horizontalAlignItems(table.hAlign),
-      justifyContent: vertikalJustifyContent(table.vAlign),
+    <div ref={containerRef} style={{
+      position: 'relative', width: '100%', height: '100%', overflow: 'hidden', boxSizing: 'border-box',
     }}>
-      <div style={{ width: 'fit-content' }}>
-        <div style={{
-          transform: table.zoom !== 100 ? `scale(${table.zoom / 100})` : undefined,
-          transformOrigin: transformOrigin(table.hAlign, table.vAlign),
-        }}>
+      <div ref={contentRef} style={{
+        position: 'absolute', left: '50%', top: '50%', width: 'fit-content',
+        transform: `translate(-50%, -50%) scale(${autoFitScale})`,
+        transformOrigin: 'center center',
+      }}>
+        <div>
           {sheetnamenAnzeigen && table.seitenTitel && (
             <div className="seiten-titel">{table.seitenTitel}</div>
           )}
