@@ -10,6 +10,30 @@ const toPx = (v) => Math.round((v || 0) / 37.795) + 'px';
 // einen großen Bildschirm (Beamer/TV) ausfüllen, ohne ins Absurde zu wachsen.
 const AUTO_FIT_MAX_SCALE = 8;
 
+function alignPosition(h, v) {
+  let left = '0%';
+  let translateX = '0%';
+  if (h === 'mitte') {
+    left = '50%';
+    translateX = '-50%';
+  } else if (h === 'rechts') {
+    left = '100%';
+    translateX = '-100%';
+  }
+
+  let top = '0%';
+  let translateY = '0%';
+  if (v === 'mitte') {
+    top = '50%';
+    translateY = '-50%';
+  } else if (v === 'unten') {
+    top = '100%';
+    translateY = '-100%';
+  }
+
+  return { left, top, translateX, translateY };
+}
+
 /**
  * Rendert eine einzelne Tabellen-Ansicht (Sheet).
  *
@@ -142,15 +166,16 @@ export default function Panel({ table, sheetnamenAnzeigen, headerFooterUnterdrue
     || table.fusszeileMitte?.trim()
     || table.fusszeileRechts?.trim()
   );
+  const position = alignPosition(table.hAlign, table.vAlign);
 
   return (
     <div ref={containerRef} style={{
       position: 'relative', width: '100%', height: '100%', overflow: 'hidden', boxSizing: 'border-box',
     }}>
       <div ref={contentRef} style={{
-        position: 'absolute', left: '50%', top: '50%', width: 'fit-content',
-        transform: `translate(-50%, -50%) scale(${autoFitScale})`,
-        transformOrigin: 'center center',
+        position: 'absolute', left: position.left, top: position.top, width: 'fit-content',
+        transform: `translate(${position.translateX}, ${position.translateY}) scale(${autoFitScale})`,
+        transformOrigin: transformOrigin(table.hAlign, table.vAlign),
       }}>
         <div>
           {sheetnamenAnzeigen && table.seitenTitel && (

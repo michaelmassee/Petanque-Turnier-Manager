@@ -49,6 +49,15 @@ export default function CompositeApp({ composite, timerAudio }) {
   const fusszeilenPanel = panelsSortiert.find((p) =>
     p && (p.fusszeileLinks?.trim() || p.fusszeileMitte?.trim() || p.fusszeileRechts?.trim())
   );
+  const zoomFaktor = (composite.zoom ?? 100) / 100;
+  const seitenStyle = {
+    width: '100%',
+    height: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    transform: zoomFaktor !== 1 ? `scale(${zoomFaktor})` : undefined,
+    transformOrigin: 'top left',
+  };
 
   return (
     <div
@@ -58,27 +67,29 @@ export default function CompositeApp({ composite, timerAudio }) {
       onKeyDown={keyDown}
       style={{ position: 'fixed', inset: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', outline: 'none' }}
     >
-      {kopfzeilenPanel && (
-        <div className="seitenzeile">
-          <span className="links">{kopfzeilenPanel.kopfzeileLinks}</span>
-          <span className="mitte">{kopfzeilenPanel.kopfzeileMitte}</span>
-          <span className="rechts">{kopfzeilenPanel.kopfzeileRechts}</span>
+      <div style={seitenStyle}>
+        {kopfzeilenPanel && (
+          <div className="seitenzeile">
+            <span className="links">{kopfzeilenPanel.kopfzeileLinks}</span>
+            <span className="mitte">{kopfzeilenPanel.kopfzeileMitte}</span>
+            <span className="rechts">{kopfzeilenPanel.kopfzeileRechts}</span>
+          </div>
+        )}
+        <div style={{ flex: 1, minHeight: 0 }}>
+          <SplitLayoutComposite
+            knoten={composite.layout}
+            panels={composite.panels}
+            timerAudio={timerAudio}
+          />
         </div>
-      )}
-      <div style={{ flex: 1, minHeight: 0 }}>
-        <SplitLayoutComposite
-          knoten={composite.layout}
-          panels={composite.panels}
-          timerAudio={timerAudio}
-        />
+        {fusszeilenPanel && (
+          <div className="seitenzeile">
+            <span className="links">{fusszeilenPanel.fusszeileLinks}</span>
+            <span className="mitte">{fusszeilenPanel.fusszeileMitte}</span>
+            <span className="rechts">{fusszeilenPanel.fusszeileRechts}</span>
+          </div>
+        )}
       </div>
-      {fusszeilenPanel && (
-        <div className="seitenzeile">
-          <span className="links">{fusszeilenPanel.fusszeileLinks}</span>
-          <span className="mitte">{fusszeilenPanel.fusszeileMitte}</span>
-          <span className="rechts">{fusszeilenPanel.fusszeileRechts}</span>
-        </div>
-      )}
     </div>
   );
 }
