@@ -110,14 +110,14 @@ public class GlobalProperties {
 	/**
 	 * Rohdaten eines einzelnen Panels in einem Composite View (vor Resolver-Erstellung).
 	 *
-	 * @param typ                   Anzeigemodus: {@link PanelTyp#BLATT} oder {@link PanelTyp#URL}
+	 * @param typ                   Anzeigemodus des Panels
 	 * @param sheetConfig           Sheet-Konfigurations-String (nur relevant wenn typ == BLATT)
 	 * @param zoom                  Zoom-Faktor in %
 	 * @param sichtbarerTabellenAnteil sichtbarer Anteil der Gesamttabelle in % (10–100)
 	 * @param horizontalAusrichtung horizontale Ausrichtung: {@code "kein"} / {@code "links"} / {@code "mitte"} / {@code "rechts"}
 	 * @param vertikalAusrichtung   vertikale Ausrichtung:   {@code "kein"} / {@code "oben"} / {@code "mitte"} / {@code "unten"}
 	 * @param blattnameAnzeigen     ob der Blattname als Kopfzeile angezeigt wird
-	 * @param externeUrl            externe URL (nur relevant wenn typ == URL)
+	 * @param externeUrl            externe URL oder lokaler Dateipfad (nur relevant wenn typ == URL oder STATISCHE_DATEI)
 	 */
 	public record PanelEintragRoh(
 			PanelTyp typ,
@@ -489,7 +489,8 @@ public class GlobalProperties {
 						String sheetConfig = propMap.getOrDefault(panelPrefix + WEBSERVER_COMPOSITE_PANEL_SHEET_SUFFIX, "").trim();
 						String externeUrl = propMap.getOrDefault(panelPrefix + WEBSERVER_COMPOSITE_PANEL_URL_SUFFIX, "").trim();
 						if (panelTyp == PanelTyp.BLATT && sheetConfig.isEmpty()) continue;
-						if (panelTyp == PanelTyp.URL && externeUrl.isEmpty()) continue;
+						if ((panelTyp == PanelTyp.URL || panelTyp == PanelTyp.STATISCHE_DATEI)
+								&& externeUrl.isEmpty()) continue;
 						int panelZoom = parseZoom(propMap.get(panelPrefix + WEBSERVER_COMPOSITE_PANEL_ZOOM_SUFFIX));
 						int sichtbarerTabellenAnteil = parseSichtbarerTabellenAnteil(
 								propMap.get(panelPrefix + WEBSERVER_COMPOSITE_PANEL_SICHTBARER_TABELLENANTEIL_SUFFIX));
@@ -546,6 +547,11 @@ public class GlobalProperties {
 					if (p.typ() == PanelTyp.URL) {
 						panels.add(new PanelKonfiguration(PanelTyp.URL, "", null, p.zoom(),
 								p.sichtbarerTabellenAnteil(), p.horizontalAusrichtung(), p.vertikalAusrichtung(), p.blattnameAnzeigen(), p.externeUrl()));
+						continue;
+					}
+					if (p.typ() == PanelTyp.STATISCHE_DATEI) {
+						panels.add(new PanelKonfiguration(PanelTyp.STATISCHE_DATEI, "", null, p.zoom(),
+								p.sichtbarerTabellenAnteil(), p.horizontalAusrichtung(), p.vertikalAusrichtung(), false, p.externeUrl()));
 						continue;
 					}
 					var resolver = SheetResolverFactory.erstellen(p.sheetConfig());
@@ -634,7 +640,7 @@ public class GlobalProperties {
 						var panel = eintrag.panels().get(i);
 						String panelPrefix = prefix + WEBSERVER_COMPOSITE_PANEL_INFIX + i;
 						propMap.put(panelPrefix + WEBSERVER_COMPOSITE_PANEL_TYP_SUFFIX, panel.typ().name());
-						if (panel.typ() == PanelTyp.URL) {
+						if (panel.typ() == PanelTyp.URL || panel.typ() == PanelTyp.STATISCHE_DATEI) {
 							propMap.put(panelPrefix + WEBSERVER_COMPOSITE_PANEL_URL_SUFFIX, panel.externeUrl());
 						} else {
 							propMap.put(panelPrefix + WEBSERVER_COMPOSITE_PANEL_SHEET_SUFFIX, panel.sheetConfig());

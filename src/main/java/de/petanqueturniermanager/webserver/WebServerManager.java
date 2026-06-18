@@ -84,7 +84,7 @@ public final class WebServerManager implements TimerListener {
     private final Map<Integer, Map<Integer, String>> letzteCompositeTitel = new ConcurrentHashMap<>();
     /** Monoton steigende Version pro Composite-Port (port → AtomicInteger). */
     private final Map<Integer, AtomicInteger> compositeVersionen = new ConcurrentHashMap<>();
-    /** Letzte URL pro Composite-Port und Panel-ID (port → panelId → url). Diff-Cache für URL-Panels. */
+    /** Letzte iframe-Quelle pro Composite-Port und Panel-ID (port → panelId → URL oder lokaler Dateipfad). */
     private final Map<Integer, Map<Integer, String>> letzteCompositeUrls = new ConcurrentHashMap<>();
     /** Initialisierte TIMER-Panels pro Composite-Port (port → Set<panelId>). ConcurrentHashMap erlaubt keine null-Werte,
      * daher können TIMER-Panels nicht in letzteCompositeModelle als null-Marker gespeichert werden. */
@@ -516,6 +516,16 @@ public final class WebServerManager implements TimerListener {
                                 alleInitPanels.add(CompositePanelNachricht.url(i, neuerPanelEintrag.externeUrl()));
                                 continue;
                             }
+                            if (neuerPanelEintrag.typ() == PanelTyp.STATISCHE_DATEI) {
+                                neuePanelKonfigs.add(new PanelKonfiguration(
+                                        PanelTyp.STATISCHE_DATEI, "", null,
+                                        neuerPanelEintrag.zoom(), neuerPanelEintrag.sichtbarerTabellenAnteil(),
+                                        neuerPanelEintrag.horizontalAusrichtung(), neuerPanelEintrag.vertikalAusrichtung(), false,
+                                        neuerPanelEintrag.externeUrl()));
+                                neueUrlCache.put(i, neuerPanelEintrag.externeUrl());
+                                alleInitPanels.add(CompositePanelNachricht.statischeDatei(i, neuerPanelEintrag.externeUrl()));
+                                continue;
+                            }
                             var altIndex = altSheetConfigZuIndex.get(neuerPanelEintrag.sheetConfig());
                             SheetResolver resolver = altIndex != null
                                     ? konfig.panels().get(altIndex).resolver()
@@ -742,7 +752,7 @@ public final class WebServerManager implements TimerListener {
     /**
      * Setzt den initialen SSE-Cache für eine neu gestartete Composite-Instanz.
      * <p>
-     * Panels ohne Sheet-Zugriff (TIMER, URL) können sofort initialisiert werden.
+     * Panels ohne Sheet-Zugriff (TIMER, URL, STATISCHE_DATEI) können sofort initialisiert werden.
      * BLATT-Panels ohne gecachtes Modell werden erst beim nächsten Rendering befüllt;
      * bis dahin bleibt der Hinweis-Cache für diese Instanz erhalten.
      */
@@ -759,6 +769,9 @@ public final class WebServerManager implements TimerListener {
                         i, panelKonfig.zoom(), panelKonfig.horizontalAusrichtung(), panelKonfig.vertikalAusrichtung(), letzterTimerZustand));
             } else if (panelKonfig.typ() == PanelTyp.URL) {
                 alleInitPanels.add(CompositePanelNachricht.url(i, panelKonfig.externeUrl()));
+                letzteCompositeUrls.get(konfig.port()).put(i, panelKonfig.externeUrl());
+            } else if (panelKonfig.typ() == PanelTyp.STATISCHE_DATEI) {
+                alleInitPanels.add(CompositePanelNachricht.statischeDatei(i, panelKonfig.externeUrl()));
                 letzteCompositeUrls.get(konfig.port()).put(i, panelKonfig.externeUrl());
             } else {
                 // BLATT-Panel ohne ws-Zugriff: vorläufig als "kein Dokument" rendern.
@@ -958,14 +971,16 @@ public final class WebServerManager implements TimerListener {
                     continue;
                 }
 
-                // URL-Panel: kein Sheet-Lookup, nur Diff auf URL-Änderung
-                if (panelKonfig.typ() == PanelTyp.URL) {
-                    String letzteUrl = urlCache.get(i);
-                    if (!java.util.Objects.equals(letzteUrl, panelKonfig.externeUrl())) {
-                        panelNachrichten.add(CompositePanelNachricht.url(i, panelKonfig.externeUrl()));
+                // URL-/Datei-Panel: kein Sheet-Lookup, nur Diff auf Quellen-Änderung
+                if (panelKonfig.typ() == PanelTyp.URL || panelKonfig.typ() == PanelTyp.STATISCHE_DATEI) {
+                    String letzteQuelle = urlCache.get(i);
+                    if (!java.util.Objects.equals(letzteQuelle, panelKonfig.externeUrl())) {
+                        panelNachrichten.add(panelKonfig.typ() == PanelTyp.URL
+                                ? CompositePanelNachricht.url(i, panelKonfig.externeUrl())
+                                : CompositePanelNachricht.statischeDatei(i, panelKonfig.externeUrl()));
                         urlCache.put(i, panelKonfig.externeUrl());
                         irgendeineAenderung = true;
-                        erstesRendering = erstesRendering || letzteUrl == null;
+                        erstesRendering = erstesRendering || letzteQuelle == null;
                     }
                     continue;
                 }
@@ -1038,10 +1053,12 @@ public final class WebServerManager implements TimerListener {
                     alleInitPanels.add(CompositePanelNachricht.timer(i, panelKonfig.zoom(), panelKonfig.horizontalAusrichtung(), panelKonfig.vertikalAusrichtung(), letzterTimerZustand));
                     continue;
                 }
-                if (panelKonfig.typ() == PanelTyp.URL) {
-                    String cachedUrl = urlCache.get(i);
-                    if (cachedUrl != null) {
-                        alleInitPanels.add(CompositePanelNachricht.url(i, cachedUrl));
+                if (panelKonfig.typ() == PanelTyp.URL || panelKonfig.typ() == PanelTyp.STATISCHE_DATEI) {
+                    String cachedQuelle = urlCache.get(i);
+                    if (cachedQuelle != null) {
+                        alleInitPanels.add(panelKonfig.typ() == PanelTyp.URL
+                                ? CompositePanelNachricht.url(i, cachedQuelle)
+                                : CompositePanelNachricht.statischeDatei(i, cachedQuelle));
                     }
                     continue;
                 }

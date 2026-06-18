@@ -2,6 +2,9 @@ package de.petanqueturniermanager.webserver;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -111,10 +114,10 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
     private final List<String> panelVAlign = new ArrayList<>();
     /** Blattname-Anzeigen-Flag pro Panel (Index = Panel-ID). */
     private final List<Boolean> panelBlattnameAnzeigen = new ArrayList<>();
-    /** Anzeigemodus pro Panel (Index = Panel-ID): BLATT oder URL. */
+    /** Anzeigemodus pro Panel (Index = Panel-ID). */
     private final List<PanelTyp> panelTypen = new ArrayList<>();
     /**
-     * Externe URL pro Panel (Index = Panel-ID).
+     * Externe URL oder lokale Datei pro Panel (Index = Panel-ID).
      * Wert bleibt erhalten, auch wenn der Modus auf BLATT umgestellt wird (UX: kein Datenverlust).
      */
     private final List<String> panelUrls = new ArrayList<>();
@@ -299,17 +302,20 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
             fuegeEditEinDyn("txtSplitHoehe", String.valueOf(splitHoehe), 307, konfY, 30, ZEILE_H);
         }
 
-        // ---- Modus-Auswahl: Blatt / URL / Timer ----
+        // ---- Modus-Auswahl: Blatt / URL / Timer / lokale Datei ----
         int modusY = konfY + ZEILE_H;
         PanelTyp aktuellerTyp = ausgewaehlterPanelIndex < panelTypen.size() ? panelTypen.get(ausgewaehlterPanelIndex) : PanelTyp.BLATT;
         boolean istUrlModus   = aktuellerTyp == PanelTyp.URL;
         boolean istTimerModus = aktuellerTyp == PanelTyp.TIMER;
-        fuegeRadioButtonEinDyn("rbBlatt", I18n.get("webserver.composite.konfig.panel.modus.blatt"), 5,   modusY, 70, ZEILE_H, !istUrlModus && !istTimerModus);
-        fuegeRadioButtonEinDyn("rbUrl",   I18n.get("webserver.composite.konfig.panel.modus.url"),   80,  modusY, 90, ZEILE_H, istUrlModus);
-        fuegeRadioButtonEinDyn("rbTimer", I18n.get("webserver.composite.konfig.panel.modus.timer"), 175, modusY, 60, ZEILE_H, istTimerModus);
+        boolean istDateiModus = aktuellerTyp == PanelTyp.STATISCHE_DATEI;
+        fuegeRadioButtonEinDyn("rbBlatt", I18n.get("webserver.composite.konfig.panel.modus.blatt"), 5,   modusY, 55, ZEILE_H, !istUrlModus && !istTimerModus && !istDateiModus);
+        fuegeRadioButtonEinDyn("rbUrl",   I18n.get("webserver.composite.konfig.panel.modus.url"),   65,  modusY, 85, ZEILE_H, istUrlModus);
+        fuegeRadioButtonEinDyn("rbTimer", I18n.get("webserver.composite.konfig.panel.modus.timer"), 155, modusY, 55, ZEILE_H, istTimerModus);
+        fuegeRadioButtonEinDyn("rbDatei", I18n.get("webserver.composite.konfig.panel.modus.datei"), 215, modusY, 140, ZEILE_H, istDateiModus);
         registriereActionListenerDyn("rbBlatt", () -> wechslePanelModus(PanelTyp.BLATT));
         registriereActionListenerDyn("rbUrl",   () -> wechslePanelModus(PanelTyp.URL));
         registriereActionListenerDyn("rbTimer", () -> wechslePanelModus(PanelTyp.TIMER));
+        registriereActionListenerDyn("rbDatei", () -> wechslePanelModus(PanelTyp.STATISCHE_DATEI));
 
         int konfFelderY = modusY + ZEILE_H;
         int konfFelderY2 = konfFelderY + ZEILE_H;
@@ -327,6 +333,12 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
             fuegeFixedTextEinDyn("lblPanelUrl", I18n.get("webserver.composite.konfig.panel.url.label"), 5, konfFelderY, 20, ZEILE_H);
             fuegeEditEinDyn("tfUrl", aktuelleUrl, 28, konfFelderY, 380, ZEILE_H);
             fuegeFixedTextEinDyn("lblUrlHinweis", I18n.get("webserver.composite.konfig.panel.url.hinweis"), 5, konfFelderY2, 400, ZEILE_H);
+        } else if (istDateiModus) {
+            // ---- Lokale statische Datei ----
+            String aktuelleDatei = ausgewaehlterPanelIndex < panelUrls.size() ? panelUrls.get(ausgewaehlterPanelIndex) : "";
+            fuegeFixedTextEinDyn("lblPanelDatei", I18n.get("webserver.composite.konfig.panel.datei.label"), 5, konfFelderY, 25, ZEILE_H);
+            fuegeEditEinDyn("tfUrl", aktuelleDatei, 33, konfFelderY, 375, ZEILE_H);
+            fuegeFixedTextEinDyn("lblDateiHinweis", I18n.get("webserver.composite.konfig.panel.datei.hinweis"), 5, konfFelderY2, 400, ZEILE_H);
         } else {
             // ---- Blatt-Modus ----
             String aktuellesSheet = ausgewaehlterPanelIndex < panelSheets.size() ? panelSheets.get(ausgewaehlterPanelIndex) : "";
@@ -469,13 +481,16 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         wurzel = speichereSplitAnteil("txtSplitBreite", "H", wurzel);
         wurzel = speichereSplitAnteil("txtSplitHoehe", "V", wurzel);
 
-        // Modus aus RadioButtons lesen und speichern (Priorität: Timer > URL > Blatt)
+        // Modus aus RadioButtons lesen und speichern (Priorität: Datei > Timer > URL > Blatt)
         if (ausgewaehlterPanelIndex < panelTypen.size()) {
+            XControl rbDateiCtrl = xcc.getControl("rbDatei");
             XControl rbTimerCtrl = xcc.getControl("rbTimer");
             XControl rbUrlCtrl   = xcc.getControl("rbUrl");
-            boolean istTimer = rbTimerCtrl != null && Lo.qi(XRadioButton.class, rbTimerCtrl).getState();
-            boolean istUrl   = !istTimer && rbUrlCtrl != null && Lo.qi(XRadioButton.class, rbUrlCtrl).getState();
-            panelTypen.set(ausgewaehlterPanelIndex, istTimer ? PanelTyp.TIMER : istUrl ? PanelTyp.URL : PanelTyp.BLATT);
+            boolean istDatei = rbDateiCtrl != null && Lo.qi(XRadioButton.class, rbDateiCtrl).getState();
+            boolean istTimer = !istDatei && rbTimerCtrl != null && Lo.qi(XRadioButton.class, rbTimerCtrl).getState();
+            boolean istUrl   = !istDatei && !istTimer && rbUrlCtrl != null && Lo.qi(XRadioButton.class, rbUrlCtrl).getState();
+            panelTypen.set(ausgewaehlterPanelIndex,
+                    istDatei ? PanelTyp.STATISCHE_DATEI : istTimer ? PanelTyp.TIMER : istUrl ? PanelTyp.URL : PanelTyp.BLATT);
         }
 
         // URL-Feld lesen und speichern (unabhängig vom Modus – Wert bleibt beim Moduswechsel erhalten)
@@ -607,6 +622,15 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
                 panels.add(new PanelEintragRoh(PanelTyp.URL, "", GlobalProperties.DEFAULT_ZOOM,
                         GlobalProperties.DEFAULT_SICHTBARER_TABELLENANTEIL,
                         PanelAusrichtung.KEIN, PanelAusrichtung.KEIN, false, url));
+            } else if (panelTyp == PanelTyp.STATISCHE_DATEI) {
+                String datei = i < panelUrls.size() ? panelUrls.get(i) : "";
+                String dateiFehler = validiereLokaleDatei(datei);
+                if (dateiFehler != null) {
+                    throw new UngueltigeEingabeException(dateiFehler);
+                }
+                panels.add(new PanelEintragRoh(PanelTyp.STATISCHE_DATEI, "", GlobalProperties.DEFAULT_ZOOM,
+                        GlobalProperties.DEFAULT_SICHTBARER_TABELLENANTEIL,
+                        PanelAusrichtung.KEIN, PanelAusrichtung.KEIN, false, datei));
             } else {
                 int pZoom = i < panelZooms.size() ? panelZooms.get(i) : GlobalProperties.DEFAULT_ZOOM;
                 int pSichtbarerTabellenAnteil = i < panelSichtbareTabellenanteile.size()
@@ -784,6 +808,26 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
             }
         } catch (URISyntaxException e) {
             return I18n.get("webserver.composite.konfig.panel.url.fehler.ungueltig");
+        }
+        return null;
+    }
+
+    /**
+     * Prüft lokale statische Dateien: nicht leer, gültiger Pfad/file-URI, lesbare reguläre Datei.
+     */
+    private static String validiereLokaleDatei(String datei) {
+        if (datei == null || datei.isBlank()) {
+            return I18n.get("webserver.composite.konfig.panel.datei.fehler.leer");
+        }
+        try {
+            Path pfad = datei.trim().startsWith("file:")
+                    ? Paths.get(URI.create(datei.trim()))
+                    : Path.of(datei.trim());
+            if (!Files.isRegularFile(pfad) || !Files.isReadable(pfad)) {
+                return I18n.get("webserver.composite.konfig.panel.datei.fehler.nicht_lesbar");
+            }
+        } catch (IllegalArgumentException e) {
+            return I18n.get("webserver.composite.konfig.panel.datei.fehler.ungueltig");
         }
         return null;
     }
@@ -1071,7 +1115,12 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
                     String url = blatt.panel() < panelUrls.size() ? panelUrls.get(blatt.panel()) : "";
                     tooltip = url;
                     kurzName = url != null && url.length() > 22 ? url.substring(0, 20) + "…" : url;
-                    suffix = " [URL]";
+                    suffix = " " + I18n.get("webserver.composite.konfig.panel.vorschau.marker.url");
+                } else if (panelTyp == PanelTyp.STATISCHE_DATEI) {
+                    String datei = blatt.panel() < panelUrls.size() ? panelUrls.get(blatt.panel()) : "";
+                    tooltip = datei;
+                    kurzName = datei != null && datei.length() > 22 ? datei.substring(0, 20) + "…" : datei;
+                    suffix = " " + I18n.get("webserver.composite.konfig.panel.vorschau.marker.datei");
                 } else if (panelTyp == PanelTyp.TIMER) {
                     kurzName = I18n.get("webserver.composite.konfig.panel.modus.timer");
                     tooltip = kurzName;

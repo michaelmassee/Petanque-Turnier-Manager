@@ -10,7 +10,7 @@ import de.petanqueturniermanager.timer.TimerState;
  * SSE-Daten für ein einzelnes Panel in einem Composite View.
  * <p>
  * Enthält den vollständigen oder differenziellen Tabellenzustand eines Panels,
- * oder – bei URL-Panels – die externe URL für die iframe-Anzeige,
+ * oder – bei URL-/Datei-Panels – die iframe-URL für die Anzeige,
  * oder – bei TIMER-Panels – den aktuellen Timer-Zustand.
  * Null-Felder werden von Gson nicht serialisiert.
  */
@@ -95,6 +95,20 @@ public record CompositePanelNachricht(
                 null, null, null, null, null, null,
                 null, null, null, null, null, null, 0,
                 externeUrl, null, null, null, null, null, null, null);
+    }
+
+    /**
+     * Erstellt eine Panel-Nachricht für eine lokale statische Datei. Der Browser erhält
+     * nur den lokalen Composite-Endpunkt, nicht den Dateipfad auf dem Rechner.
+     */
+    static CompositePanelNachricht statischeDatei(int panelId, String dateiPfad) {
+        String cacheKey = dateiPfad == null ? "" : Integer.toHexString(dateiPfad.hashCode());
+        String url = "/local-panel/" + panelId + "?v=" + cacheKey;
+        return new CompositePanelNachricht(
+                panelId, 100, 100, null, null, false, "",
+                null, null, null, null, null, null,
+                null, null, null, null, null, null, 0,
+                url, null, null, null, null, null, null, null);
     }
 
     /**

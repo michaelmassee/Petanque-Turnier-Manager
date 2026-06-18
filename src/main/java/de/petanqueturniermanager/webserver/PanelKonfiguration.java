@@ -3,7 +3,8 @@ package de.petanqueturniermanager.webserver;
 /**
  * Konfiguration eines einzelnen Panels in einem Composite View.
  *
- * @param typ                   Anzeigemodus: {@link PanelTyp#BLATT} oder {@link PanelTyp#URL}
+ * @param typ                   Anzeigemodus: {@link PanelTyp#BLATT}, {@link PanelTyp#URL},
+ *                              {@link PanelTyp#TIMER} oder {@link PanelTyp#STATISCHE_DATEI}
  * @param sheetConfig           Konfigurations-String (nur relevant wenn typ == BLATT)
  * @param resolver              Sheet-Resolver (nur relevant wenn typ == BLATT, sonst {@code null})
  * @param zoom                  Zoom-Faktor in Prozent (10–500, Standard 100)
@@ -13,7 +14,7 @@ package de.petanqueturniermanager.webserver;
  * @param vertikalAusrichtung   vertikale Ausrichtung des Panel-Inhalts:
  *                              {@code "kein"}, {@code "oben"}, {@code "mitte"} oder {@code "unten"}
  * @param blattnameAnzeigen     ob der Blattname als Kopfzeile im Panel angezeigt wird
- * @param externeUrl            externe URL (nur relevant wenn typ == URL)
+ * @param externeUrl            externe URL oder lokaler Dateipfad (nur relevant wenn typ == URL oder STATISCHE_DATEI)
  */
 public record PanelKonfiguration(
         PanelTyp typ,

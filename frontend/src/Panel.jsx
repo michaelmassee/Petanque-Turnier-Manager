@@ -72,6 +72,10 @@ export default function Panel({ table, sheetnamenAnzeigen, headerFooterUnterdrue
     : position;
 
   useEffect(() => {
+    setIframeFehler(false);
+  }, [table?.externeUrl]);
+
+  useEffect(() => {
     const container = containerRef.current;
     const content = contentRef.current;
     if (!container || !content) return undefined;

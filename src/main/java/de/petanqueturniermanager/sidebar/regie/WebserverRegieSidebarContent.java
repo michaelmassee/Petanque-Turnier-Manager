@@ -41,6 +41,7 @@ import de.petanqueturniermanager.sidebar.GuiFactory;
 import de.petanqueturniermanager.sidebar.layout.ControlLayout;
 import de.petanqueturniermanager.sidebar.layout.HorizontalLayout;
 import de.petanqueturniermanager.webserver.RegieQuelleInfo;
+import de.petanqueturniermanager.webserver.RegieSlug;
 import de.petanqueturniermanager.webserver.WebServerManager;
 
 public class WebserverRegieSidebarContent extends BaseSidebarContent {
@@ -59,6 +60,8 @@ public class WebserverRegieSidebarContent extends BaseSidebarContent {
     private XRequestCallback itemDispatcher;
     private volatile ScheduledFuture<?> speichernFuture;
     private volatile List<RegieZielRoh> pendingZiele = List.of();
+    private volatile boolean speicherungAusstehend;
+    private volatile boolean uiAufbauAktiv;
 
     public WebserverRegieSidebarContent(WorkingSpreadsheet workingSpreadsheet, XWindow parentWindow,
             XSidebar xSidebar) {
@@ -67,23 +70,28 @@ public class WebserverRegieSidebarContent extends BaseSidebarContent {
 
     @Override
     protected void felderHinzufuegen() {
-        rows.clear();
-        quellen.clear();
-        quellen.addAll(WebServerManager.get().verfuegbareRegieQuellen());
-        itemDispatcherInitialisieren();
+        uiAufbauAktiv = true;
+        try {
+            rows.clear();
+            quellen.clear();
+            quellen.addAll(WebServerManager.get().verfuegbareRegieQuellen());
+            itemDispatcherInitialisieren();
 
-        var header = new HorizontalLayout();
-        header.addLayout(new ControlLayout(label("webserver.regie.sidebar.name", 90)), 4);
-        header.addLayout(new ControlLayout(label("webserver.regie.sidebar.view", 80)), 4);
-        header.addLayout(new ControlLayout(label("webserver.regie.sidebar.aktiv", 35), 35), 0);
-        header.addLayout(new ControlLayout(label("", 22), 22), 0);
-        getLayout().addLayout(header, 1);
+            var header = new HorizontalLayout();
+            header.addLayout(new ControlLayout(label("webserver.regie.sidebar.name", 90)), 4);
+            header.addLayout(new ControlLayout(label("webserver.regie.sidebar.view", 80)), 4);
+            header.addLayout(new ControlLayout(label("webserver.regie.sidebar.aktiv", 35), 35), 0);
+            header.addLayout(new ControlLayout(label("", 22), 22), 0);
+            getLayout().addLayout(header, 1);
 
-        var ziele = GlobalProperties.get().getWebserverRegieZiele();
-        for (int i = 0; i < ziele.size(); i++) {
-            fuegeZielZeileHinzu(i, ziele.get(i));
+            var ziele = GlobalProperties.get().getWebserverRegieZiele();
+            for (int i = 0; i < ziele.size(); i++) {
+                fuegeZielZeileHinzu(i, ziele.get(i));
+            }
+            fuegePlusZeileHinzu();
+        } finally {
+            uiAufbauAktiv = false;
         }
-        fuegePlusZeileHinzu();
     }
 
     private XControl label(String key, int width) {
@@ -182,6 +190,9 @@ public class WebserverRegieSidebarContent extends BaseSidebarContent {
     private final XItemListener itemListener = new XItemListener() {
         @Override
         public void itemStateChanged(ItemEvent event) {
+            if (uiAufbauAktiv) {
+                return;
+            }
             speichernDebounced();
         }
 
@@ -193,6 +204,9 @@ public class WebserverRegieSidebarContent extends BaseSidebarContent {
     private final XTextListener textListener = new XTextListener() {
         @Override
         public void textChanged(TextEvent event) {
+            if (uiAufbauAktiv) {
+                return;
+            }
             speichernDebounced();
         }
 
@@ -239,7 +253,10 @@ public class WebserverRegieSidebarContent extends BaseSidebarContent {
         var result = new ArrayList<RegieZielRoh>();
         for (var row : rows) {
             String name = row.nameText().getText().trim();
-            if (name.isBlank()) {
+            // Namen, die zu keinem gültigen Slug führen (leer oder nur Sonderzeichen), wie
+            // Leerzeilen überspringen. Sonst würde validierteRegieZiele() eine Exception werfen
+            // und speichernWebserverRegie() den GESAMTEN Batch (inkl. gültiger Zeilen) verwerfen.
+            if (name.isBlank() || RegieSlug.ausName(name).isBlank()) {
                 continue;
             }
             short selected = row.viewList().getSelectedItemPos();
@@ -254,20 +271,15 @@ public class WebserverRegieSidebarContent extends BaseSidebarContent {
 
     private void speichernDebounced() {
         pendingZiele = aktuelleZiele();
+        speicherungAusstehend = true;
         var alt = speichernFuture;
         if (alt != null) {
             alt.cancel(false);
         }
         speichernFuture = speichernExecutor.schedule(() -> {
             var ziele = List.copyOf(pendingZiele);
-            GlobalProperties.get().speichernWebserverRegie(
-                    GlobalProperties.get().isWebserverRegieAktiv(),
-                    GlobalProperties.get().getWebserverRegiePort(),
-                    ziele);
-            var ws = getCurrentSpreadsheet();
-            if (ws != null) {
-                LoMainThread.post(ws.getxContext(), WebServerManager.get()::konfigurationGeaendert);
-            }
+            speichereZiele(ziele);
+            speicherungAusstehend = false;
         }, 500, TimeUnit.MILLISECONDS);
     }
 
@@ -282,7 +294,7 @@ public class WebserverRegieSidebarContent extends BaseSidebarContent {
 
     @Override
     protected void felderAktualisieren(ITurnierEvent eventObj) {
-        // Kein externer Statuslistener: Regie zieht die Quellenliste nur beim Aufbau.
+        quellenGeaendert();
     }
 
     @Override
@@ -291,8 +303,54 @@ public class WebserverRegieSidebarContent extends BaseSidebarContent {
         if (future != null) {
             future.cancel(false);
         }
+        if (speicherungAusstehend) {
+            speichereZiele(List.copyOf(pendingZiele));
+            speicherungAusstehend = false;
+        }
         speichernExecutor.shutdownNow();
         rows.clear();
+    }
+
+    private void quellenGeaendert() {
+        if (uiAufbauAktiv) {
+            return;
+        }
+        if (speicherungAusstehend) {
+            return;
+        }
+        var aktuelleQuellen = WebServerManager.get().verfuegbareRegieQuellen();
+        if (gleicheQuellen(aktuelleQuellen)) {
+            return;
+        }
+        allesFelderEntfernenUndNeuFenster();
+    }
+
+    private boolean gleicheQuellen(List<RegieQuelleInfo> aktuelleQuellen) {
+        if (quellen.size() != aktuelleQuellen.size()) {
+            return false;
+        }
+        for (int i = 0; i < quellen.size(); i++) {
+            var alt = quellen.get(i);
+            var neu = aktuelleQuellen.get(i);
+            if (!alt.viewId().equals(neu.viewId())
+                    || !alt.anzeigename().equals(neu.anzeigename())
+                    || alt.port() != neu.port()
+                    || alt.laeuft() != neu.laeuft()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void speichereZiele(List<RegieZielRoh> ziele) {
+        GlobalProperties.get().speichernWebserverRegie(
+                GlobalProperties.get().isWebserverRegieAktiv(),
+                GlobalProperties.get().getWebserverRegiePort(),
+                ziele);
+        var ws = getCurrentSpreadsheet();
+        if (ws != null) {
+            LoMainThread.post(ws.getxContext(), WebServerManager.get()::konfigurationGeaendert);
+        }
     }
 
     @Override

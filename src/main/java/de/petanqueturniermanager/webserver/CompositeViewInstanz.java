@@ -4,8 +4,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -204,6 +208,8 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot, Re
         } else if (path.startsWith("/images/")) {
             String dateiname = path.substring("/images/".length());
             serviereRessource(exchange, "/images/" + dateiname, ermittleContentType(dateiname));
+        } else if (path.startsWith("/local-panel/")) {
+            serviereLokalePanelDatei(exchange, path.substring("/local-panel/".length()));
         } else if ("/gong.wav".equals(path)) {
             serviereClasspathRessource(exchange, GONG_RESOURCE, "audio/wav", "public, max-age=3600");
         } else {
@@ -261,6 +267,53 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot, Re
         serviereClasspathRessource(exchange, ressourcePfad, contentType, "no-cache");
     }
 
+    private void serviereLokalePanelDatei(HttpExchange exchange, String panelIdText) throws IOException {
+        int panelId;
+        try {
+            panelId = Integer.parseInt(panelIdText);
+        } catch (NumberFormatException e) {
+            exchange.sendResponseHeaders(404, -1);
+            return;
+        }
+        var panels = konfiguration.panels();
+        if (panelId < 0 || panelId >= panels.size()) {
+            exchange.sendResponseHeaders(404, -1);
+            return;
+        }
+        var panel = panels.get(panelId);
+        if (panel.typ() != PanelTyp.STATISCHE_DATEI) {
+            exchange.sendResponseHeaders(404, -1);
+            return;
+        }
+        Path datei;
+        try {
+            String quelle = panel.externeUrl() == null ? "" : panel.externeUrl().trim();
+            datei = quelle.startsWith("file:")
+                    ? Paths.get(URI.create(quelle))
+                    : Paths.get(quelle);
+        } catch (IllegalArgumentException e) {
+            logger.warn("Ungültige lokale Panel-Datei für Port {}, Panel {}: {}",
+                    konfiguration.port(), panelId, panel.externeUrl(), e);
+            exchange.sendResponseHeaders(404, -1);
+            return;
+        }
+        if (!Files.isRegularFile(datei) || !Files.isReadable(datei)) {
+            logger.warn("Lokale Panel-Datei nicht lesbar für Port {}, Panel {}: {}",
+                    konfiguration.port(), panelId, datei);
+            exchange.sendResponseHeaders(404, -1);
+            return;
+        }
+        byte[] body = Files.readAllBytes(datei);
+        var headers = exchange.getResponseHeaders();
+        headers.set("Content-Type", ermittleContentType(datei.getFileName().toString()));
+        headers.set("Cache-Control", "no-cache");
+        headers.set("Access-Control-Allow-Origin", "*");
+        exchange.sendResponseHeaders(200, body.length);
+        try (OutputStream os = exchange.getResponseBody()) {
+            os.write(body);
+        }
+    }
+
     private void serviereClasspathRessource(HttpExchange exchange, String ressourcePfad, String contentType,
             String cacheControl) throws IOException {
         InputStream gefunden = getClass().getClassLoader().getResourceAsStream(ressourcePfad);
@@ -310,8 +363,13 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot, Re
         if (dateiname.endsWith(".html")) return CONTENT_TYPE_HTML;
         if (dateiname.endsWith(".svg")) return "image/svg+xml";
         if (dateiname.endsWith(".png")) return "image/png";
+        if (dateiname.endsWith(".jpg") || dateiname.endsWith(".jpeg")) return "image/jpeg";
+        if (dateiname.endsWith(".gif")) return "image/gif";
+        if (dateiname.endsWith(".webp")) return "image/webp";
         if (dateiname.endsWith(".ico")) return "image/x-icon";
         if (dateiname.endsWith(".wav")) return "audio/wav";
+        if (dateiname.endsWith(".pdf")) return "application/pdf";
+        if (dateiname.endsWith(".txt")) return "text/plain; charset=UTF-8";
         return "application/octet-stream";
     }
 }

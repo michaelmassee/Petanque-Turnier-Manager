@@ -116,7 +116,7 @@ Neben den Datentabellen bringt der eingebaute Webserver eine eigene **Turnier-St
 
 * 🖼️ **Logo & Hintergrund:** Vereinslogo, eigenes Hintergrund- und Footer-Bild, frei wählbare Hintergrund- und Textfarbe (nativer LibreOffice-Color-Picker).
 * ✍️ **Mehrzeilige Turnierbeschreibung:** Turniername plus Tagline plus Beschreibungstext mit Fade-, Slide- oder Typewriter-Animation als Endlosschleife.
-* 🔢 **Live-Counter:** „Angemeldet" und „Aktiv" werden in animierten Karten hochgezählt – direkt aus der Meldeliste.
+* 🔢 **Live-Counter:** „Angemeldet" und „Checkin" werden in animierten Karten hochgezählt – direkt aus der Meldeliste.
 * 🧭 **Statuszeile:** Aktuelles Turniersystem, Fortschritt und rotierende Sprüche.
 * 🔍 **Zoom 10–500 %:** Layout an jede Bildschirmgröße anpassbar, das Hintergrundbild bleibt dabei unskaliert.
 

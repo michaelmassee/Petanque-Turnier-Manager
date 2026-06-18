@@ -32,7 +32,10 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.GlobalProperties;
 import de.petanqueturniermanager.comp.GlobalProperties.CompositeViewEintragRoh;
 import de.petanqueturniermanager.comp.GlobalProperties.PanelEintragRoh;
+import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.comp.turnierevent.OnProperiesChangedEvent;
+import de.petanqueturniermanager.comp.turnierevent.TurnierEventType;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
@@ -89,6 +92,7 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
     private String[] komboBoxItems;
     private XCheckBox cbAktiv;
     private XCheckBox cbRegieAktiv;
+    private final WorkingSpreadsheet ws;
 
     /** Aktives Turniersystem des Dokuments – steuert die ComboBox-Filterung; {@code null} = alle. */
     private final TurnierSystem aktivesSystem;
@@ -103,6 +107,7 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
 
     public CompositeViewListeDialog(WorkingSpreadsheet ws) {
         super(ws.getxContext());
+        this.ws = ws;
         var doc = ws.getWorkingSpreadsheetDocument();
         this.aktivesSystem = doc == null
                 ? null
@@ -302,6 +307,7 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
         try {
             speichereAlleKonfigurationen();
             WebServerManager.get().konfigurationGeaendert();
+            benachrichtigeCompositeViewKonfigurationGeaendert();
         } catch (UngueltigeEingabeException e) {
             zeigeValidierungsFehler(e);
         }
@@ -322,6 +328,7 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
         try {
             speichereAlleKonfigurationen();
             WebServerManager.get().konfigurationGeaendert();
+            benachrichtigeCompositeViewKonfigurationGeaendert();
             logger.info("Webserver-Konfiguration gespeichert: {} Composite-Views", eintraege.size());
             xDialog.endExecute();
         } catch (UngueltigeEingabeException e) {
@@ -339,6 +346,16 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
                 regieAktiv,
                 regiePort,
                 GlobalProperties.get().getWebserverRegieZiele());
+    }
+
+    private void benachrichtigeCompositeViewKonfigurationGeaendert() {
+        var doc = ws.getWorkingSpreadsheetDocument();
+        if (doc == null) {
+            return;
+        }
+        PetanqueTurnierMngrSingleton.triggerTurnierEventListener(TurnierEventType.PropertiesChanged,
+                new OnProperiesChangedEvent(doc)
+                        .addChanged("webserver_composite_views", "", ""));
     }
 
     private void leseZeilenDatenAusControls() {
