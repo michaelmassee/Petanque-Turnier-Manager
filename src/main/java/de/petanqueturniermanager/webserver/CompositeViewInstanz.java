@@ -36,7 +36,7 @@ import de.petanqueturniermanager.helper.i18n.I18n;
  *   <li>{@code GET /events} – SSE-Stream mit {@link CompositeSseNachricht}s</li>
  * </ul>
  */
-public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot {
+public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot, RegieQuelle {
 
     private static final Logger logger = LogManager.getLogger(CompositeViewInstanz.class);
 
@@ -122,7 +122,13 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot {
     }
 
     public void sseNachrichtPushen(String json) {
-        sseVerbindungen.forEach(v -> v.senden(json));
+        boolean splitSteuerung = istSplitSteuerung(json);
+        sseVerbindungen.forEach(v -> {
+            if (splitSteuerung && RegieQuelle.REGIE_ROLLE.equals(v.getRolle())) {
+                return;
+            }
+            v.senden(json);
+        });
     }
 
     public void verbindungEntfernen(SseVerbindung verbindung) {
@@ -146,6 +152,11 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot {
     }
 
     @Override
+    public String getViewId() {
+        return WebServerManager.compositeViewId(konfiguration.port());
+    }
+
+    @Override
     public String getAnzeigeName() {
         var name = konfiguration.name();
         if (name != null && !name.isBlank()) {
@@ -156,6 +167,33 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot {
 
     public CompositeViewKonfiguration getKonfiguration() {
         return konfiguration;
+    }
+
+    @Override
+    public void regieVerbindungHinzufuegen(SseVerbindung verbindung) {
+        sseVerbindungen.add(verbindung);
+        logger.debug("Regie-SSE-Verbindung auf CompositeView-Port {} hinzugefügt, aktiv: {}",
+                konfiguration.port(), sseVerbindungen.size());
+    }
+
+    @Override
+    public void regieVerbindungEntfernen(SseVerbindung verbindung) {
+        sseVerbindungen.remove(verbindung);
+        logger.debug("Regie-SSE-Verbindung auf CompositeView-Port {} entfernt, aktiv: {}",
+                konfiguration.port(), sseVerbindungen.size());
+    }
+
+    @Override
+    public boolean unterstuetztSplitSteuerung() {
+        return true;
+    }
+
+    @Override
+    public String splitSteuerungAnwenden(String requestJson) {
+        String json = splitSteuerungJsonAusRequest(requestJson);
+        aktuelleSplitSteuerungJson = json;
+        sseNachrichtPushen(json);
+        return json;
     }
 
     /** Gibt {@code true} zurück, wenn diese Instanz mindestens ein TIMER-Panel enthält. */
@@ -256,9 +294,7 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot {
                 exchange.sendResponseHeaders(413, -1);
                 return;
             }
-            String json = splitSteuerungJsonAusRequest(new String(body, StandardCharsets.UTF_8));
-            aktuelleSplitSteuerungJson = json;
-            sseNachrichtPushen(json);
+            splitSteuerungAnwenden(new String(body, StandardCharsets.UTF_8));
             exchange.sendResponseHeaders(204, -1);
         } catch (IllegalArgumentException e) {
             logger.debug("Ungültige Split-Steuerung auf Port {}: {}", konfiguration.port(), e.getMessage());
@@ -370,6 +406,10 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot {
 
     private static boolean istSlave(SseVerbindung verbindung) {
         return "slave".equals(verbindung.getRolle());
+    }
+
+    static boolean istSplitSteuerung(String json) {
+        return json != null && json.contains("\"typ\":\"split_steuerung\"");
     }
 
     private static Map<String, String> queryParameter(HttpExchange exchange) {

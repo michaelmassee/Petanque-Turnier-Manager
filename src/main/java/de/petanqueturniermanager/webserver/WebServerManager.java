@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -66,6 +67,7 @@ public final class WebServerManager implements TimerListener {
 
     /** Maximale Anzahl URL-Slots im Menü. */
     private static final int MAX_URL_SLOTS = 10;
+    public static final String STARTSEITE_VIEW_ID = "startseite";
 
     /** Alle laufenden Composite-View-Instanzen. */
     private final List<CompositeViewInstanz> compositeInstanzen = new ArrayList<>();
@@ -105,6 +107,7 @@ public final class WebServerManager implements TimerListener {
      *  {@code volatile}, weil aus dem nicht-synchronisierten Push-Pfad
      *  {@link #pushStartseiteFallsAktiv(WorkingSpreadsheet)} gelesen wird. */
     private volatile TurnierStartseiteWebServerInstanz startseiteInstanz;
+    private volatile WebserverRegieServerInstanz regieInstanz;
     /** Monoton steigende Version für Startseite-SSE-Nachrichten. */
     private final AtomicInteger startseiteVersion = new AtomicInteger(0);
     /** Zuletzt gepushter Teilnehmer-Status (Diff-Cache, vermeidet unnötige Pushes). */
@@ -154,6 +157,10 @@ public final class WebServerManager implements TimerListener {
         return INSTANCE;
     }
 
+    public static String compositeViewId(int port) {
+        return "composite:" + port;
+    }
+
     /**
      * Startet alle konfigurierten Webserver-Instanzen.
      * Führt nach dem Start direkt ein initiales Rendering durch.
@@ -167,7 +174,8 @@ public final class WebServerManager implements TimerListener {
         }
         var compositeKonfigs = new ArrayList<>(GlobalProperties.get().getCompositeViewKonfigurationen());
         boolean startseiteAktiv = GlobalProperties.get().isStartseiteAktiv();
-        if (compositeKonfigs.isEmpty() && !startseiteAktiv) {
+        boolean regieAktiv = GlobalProperties.get().isWebserverRegieAktiv();
+        if (compositeKonfigs.isEmpty() && !startseiteAktiv && !regieAktiv) {
             logger.info("Keine Webserver-Ports konfiguriert, kein Start");
             return;
         }
@@ -199,6 +207,7 @@ public final class WebServerManager implements TimerListener {
         }
 
         startseiteAusKonfigurationStarten();
+        regieAusKonfigurationStarten();
 
         var alleSlots = new ArrayList<WebServerSlot>(compositeInstanzen.size() + 1);
         alleSlots.addAll(compositeInstanzen);
@@ -211,7 +220,7 @@ public final class WebServerManager implements TimerListener {
                 .limit(MAX_URL_SLOTS)
                 .forEach(slots::add);
 
-        if (!compositeInstanzen.isEmpty() || startseiteInstanz != null) {
+        if (!compositeInstanzen.isEmpty() || startseiteInstanz != null || regieInstanz != null) {
             laeuft = true;
             gespeicherterCtx = ctx;
             ownerDocument = new WorkingSpreadsheet(ctx).getWorkingSpreadsheetDocument();
@@ -392,6 +401,10 @@ public final class WebServerManager implements TimerListener {
             startseiteInstanz.stoppen();
             startseiteInstanz = null;
         }
+        if (regieInstanz != null) {
+            regieInstanz.stoppen();
+            regieInstanz = null;
+        }
         startseiteDiffCacheZuruecksetzen();
         slots.clear();
         compositeInstanzen.clear();
@@ -552,6 +565,7 @@ public final class WebServerManager implements TimerListener {
 
         reconciliereCompositeInstanzen(compositeEintraege);
         reconciliereStartseiteInstanz();
+        reconciliereRegieInstanz();
         // Logo/Beschreibung sind nicht Teil des Diff-Cache (letzterStartseiteStatus enthält nur
         // angemeldet/aktiv). Deshalb Diff-Cache zurücksetzen und sofort pushen, damit Änderungen
         // ohne Spielerzahl-Wechsel die Live-Clients erreichen.
@@ -605,6 +619,44 @@ public final class WebServerManager implements TimerListener {
                 .sorted(Comparator.comparingInt(WebServerSlot::getPort))
                 .limit(MAX_URL_SLOTS)
                 .forEach(slots::add);
+    }
+
+    private void regieAusKonfigurationStarten() {
+        if (!GlobalProperties.get().isWebserverRegieAktiv()) {
+            return;
+        }
+        int port = GlobalProperties.get().getWebserverRegiePort();
+        try {
+            regieInstanz = new WebserverRegieServerInstanz(port, this);
+            regieInstanz.starten();
+            logger.info("Webserver-Regie gestartet auf Port {}", port);
+            safeProcessBoxInfo(I18n.get("webserver.prozessbox.gestartet.url", buildUrl(port)));
+        } catch (IOException e) {
+            logger.error("Fehler beim Starten der Webserver-Regie auf Port {}: {}", port, e.getMessage(), e);
+            safeProcessBoxFehler(I18n.get("webserver.prozessbox.fehler.port", port, e.getMessage()));
+            regieInstanz = null;
+        }
+    }
+
+    private void reconciliereRegieInstanz() {
+        boolean sollAktiv = GlobalProperties.get().isWebserverRegieAktiv();
+        int sollPort = GlobalProperties.get().getWebserverRegiePort();
+        boolean laeuftSchon = regieInstanz != null && regieInstanz.laeuft();
+        boolean portStimmt = laeuftSchon && regieInstanz.getPort() == sollPort;
+
+        if (!sollAktiv) {
+            if (laeuftSchon) {
+                regieInstanz.stoppen();
+                regieInstanz = null;
+                logger.info("Webserver-Regie gestoppt (deaktiviert)");
+            }
+        } else if (!portStimmt) {
+            if (laeuftSchon) {
+                regieInstanz.stoppen();
+                regieInstanz = null;
+            }
+            regieAusKonfigurationStarten();
+        }
     }
 
     /**
@@ -1088,6 +1140,41 @@ public final class WebServerManager implements TimerListener {
         var url = buildUrl(instanz.getPort());
         var name = instanz.getAnzeigeName();
         return name + " – " + url;
+    }
+
+    public synchronized List<RegieQuelleInfo> verfuegbareRegieQuellen() {
+        var result = new ArrayList<RegieQuelleInfo>();
+        for (var eintrag : GlobalProperties.get().getCompositeViewEintraege()) {
+            String id = compositeViewId(eintrag.port());
+            boolean laeuft = compositeInstanzen.stream()
+                    .anyMatch(i -> i.getKonfiguration().port() == eintrag.port() && i.laeuft());
+            String name = eintrag.name() == null || eintrag.name().isBlank()
+                    ? I18n.get("webserver.compositeview.anzeigename") + " " + eintrag.port()
+                    : eintrag.name().trim();
+            result.add(new RegieQuelleInfo(id, name, eintrag.port(), laeuft));
+        }
+        int startseitePort = GlobalProperties.get().getStartseitePort();
+        boolean startseiteLaeuft = startseiteInstanz != null && startseiteInstanz.laeuft();
+        result.add(new RegieQuelleInfo(STARTSEITE_VIEW_ID, I18n.get("startseite.anzeigename"),
+                startseitePort, startseiteLaeuft));
+        return result;
+    }
+
+    public synchronized Optional<RegieQuelle> laufendeRegieQuelleFuerId(String viewId) {
+        if (viewId == null || viewId.isBlank()) {
+            return Optional.empty();
+        }
+        if (STARTSEITE_VIEW_ID.equals(viewId)) {
+            return startseiteInstanz != null && startseiteInstanz.laeuft()
+                    ? Optional.of(startseiteInstanz)
+                    : Optional.empty();
+        }
+        for (var instanz : compositeInstanzen) {
+            if (instanz.laeuft() && viewId.equals(instanz.getViewId())) {
+                return Optional.of(instanz);
+            }
+        }
+        return Optional.empty();
     }
 
     /**

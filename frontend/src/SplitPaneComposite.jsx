@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { PanelGroup, Panel as ResizablePanel, PanelResizeHandle } from 'react-resizable-panels';
 import Panel from './Panel';
+import { liveUrl } from './liveUrls';
 
 const SEND_DELAY_MS = 100;
 let bekannteGruppen = {};
@@ -20,7 +21,7 @@ function meldeSplit(pfad, sizes) {
   }
   sendTimer = window.setTimeout(() => {
     sendTimer = null;
-    fetch('/steuerung/split', {
+    fetch(liveUrl('steuerung/split'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ gruppen: bekannteGruppen }),

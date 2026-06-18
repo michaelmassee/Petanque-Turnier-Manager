@@ -28,7 +28,7 @@ import de.petanqueturniermanager.helper.i18n.I18n;
  * über SSE. Architektur-Vorbild: {@link CompositeViewInstanz} (statische Ressourcen) bzw.
  * {@link de.petanqueturniermanager.timer.TimerWebServerInstanz} (Single-Port).
  */
-public class TurnierStartseiteWebServerInstanz implements SseElternInstanz, WebServerSlot {
+public class TurnierStartseiteWebServerInstanz implements SseElternInstanz, WebServerSlot, RegieQuelle {
 
     private static final Logger logger = LogManager.getLogger(TurnierStartseiteWebServerInstanz.class);
 
@@ -92,6 +92,11 @@ public class TurnierStartseiteWebServerInstanz implements SseElternInstanz, WebS
     }
 
     @Override
+    public String getViewId() {
+        return WebServerManager.STARTSEITE_VIEW_ID;
+    }
+
+    @Override
     public String getAnzeigeName() {
         return I18n.get("startseite.anzeigename");
     }
@@ -112,6 +117,16 @@ public class TurnierStartseiteWebServerInstanz implements SseElternInstanz, WebS
 
     public void sseNachrichtPushen(String json) {
         sseVerbindungen.forEach(v -> v.senden(json));
+    }
+
+    @Override
+    public void regieVerbindungHinzufuegen(SseVerbindung verbindung) {
+        sseVerbindungen.add(verbindung);
+    }
+
+    @Override
+    public void regieVerbindungEntfernen(SseVerbindung verbindung) {
+        sseVerbindungen.remove(verbindung);
     }
 
     @Override

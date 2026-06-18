@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { liveUrl } from './liveUrls';
 import './Startseite.css';
 
 /**
@@ -66,7 +67,7 @@ export default function StartseiteApp({ startseite }) {
       <img
         ref={footerRef}
         className="startseite-footer-bild"
-        src="/images/start-background-footer.png"
+        src={liveUrl('images/start-background-footer.png')}
         alt=""
       />
     </div>

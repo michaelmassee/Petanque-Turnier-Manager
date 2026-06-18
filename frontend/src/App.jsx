@@ -2,6 +2,7 @@ import { useReducer, useEffect, useRef, useState } from 'react';
 import CompositeApp from './CompositeApp';
 import EinzelApp from './EinzelApp';
 import StartseiteApp from './StartseiteApp';
+import { liveUrl } from './liveUrls';
 import { viewKeyFromState } from './viewResolver';
 
 // Renderer-Map: hier neue Top-Level-Views ergänzen, App.jsx bleibt sonst unverändert.
@@ -349,7 +350,7 @@ export default function App() {
 
   const spieleGong = async () => {
     if (!gongRef.current) {
-      gongRef.current = new Audio('/gong.wav');
+      gongRef.current = new Audio(liveUrl('gong.wav'));
       gongRef.current.preload = 'auto';
     }
     gongRef.current.currentTime = 0;
@@ -380,7 +381,7 @@ export default function App() {
         params.set('rolle', state.syncRolle);
       }
       params.set('clientId', clientIdRef.current);
-      src = new EventSource(`/events?${params.toString()}`);
+      src = new EventSource(liveUrl(`events?${params.toString()}`));
 
       src.onopen = () => {
         dispatch({ type: 'VERBINDUNG_STATUS', payload: { verbunden: true } });
@@ -586,7 +587,7 @@ function Signatur({ links = false }) {
         rel="noreferrer"
       >
         <img
-          src="/images/petanqueturniermanager-logo-256px.png"
+          src={liveUrl('images/petanqueturniermanager-logo-256px.png')}
           alt="Pétanque-Turnier-Manager"
         />
       </a>

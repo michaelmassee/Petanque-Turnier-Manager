@@ -25,6 +25,7 @@ import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.sidebar.info.InfoSidebarPanel;
+import de.petanqueturniermanager.sidebar.regie.WebserverRegieSidebarPanel;
 import de.petanqueturniermanager.sidebar.sheets.SheetListeSidebarPanel;
 
 /**
@@ -97,6 +98,8 @@ public class PetanqueTurnierManagerPanelFactory implements XUIElementFactory, XS
 						new InfoSidebarPanel(currentSpreadsheet, xParentWindow, sResourceURL, xSidebar);
 					case "SheetListePanel" ->
 						new SheetListeSidebarPanel(currentSpreadsheet, xParentWindow, sResourceURL, xSidebar);
+					case "WebserverRegiePanel" ->
+						new WebserverRegieSidebarPanel(currentSpreadsheet, xParentWindow, sResourceURL, xSidebar);
 					default -> {
 						logger.error("createUIElement: Unbekannte panelId '{}'", panelId);
 						throw new NoSuchElementException(sResourceURL, this);

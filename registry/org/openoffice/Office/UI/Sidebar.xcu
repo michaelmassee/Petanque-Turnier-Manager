@@ -87,6 +87,36 @@
                 </prop>
             </node>
 
+            <node oor:name="PetanqueTurnierManagerWebserverRegiePanel" oor:op="replace">
+                <prop oor:name="Title" oor:type="xs:string">
+                    <value xml:lang="de">Webserver Regie</value>
+                    <value xml:lang="en">Web Server Control</value>
+                    <value xml:lang="es">Control del servidor web</value>
+                    <value xml:lang="fr">Régie serveur web</value>
+                    <value xml:lang="nl">Webserver regie</value>
+                </prop>
+                <prop oor:name="Id" oor:type="xs:string">
+                    <value>PetanqueTurnierManagerWebserverRegiePanel</value>
+                </prop>
+                <prop oor:name="DeckId" oor:type="xs:string">
+                    <value>PetanqueTurnierManagerDeck</value>
+                </prop>
+                <prop oor:name="ImplementationURL" oor:type="xs:string">
+                    <value>private:resource/toolpanel/PetanqueTurnierManagerPanelFactory/WebserverRegiePanel</value>
+                </prop>
+                <prop oor:name="ContextList">
+                    <value oor:separator=";">
+                        Calc, any, visible
+                    </value>
+                </prop>
+                <prop oor:name="OrderIndex" oor:type="xs:int">
+                    <value>300</value>
+                </prop>
+                <prop oor:name="WantsAWT" oor:type="xs:boolean">
+                    <value>true</value>
+                </prop>
+            </node>
+
         </node>
 
     </node>

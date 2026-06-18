@@ -3,12 +3,19 @@ package de.petanqueturniermanager.comp;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
+import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -20,6 +27,7 @@ import de.petanqueturniermanager.webserver.CompositeViewKonfiguration;
 import de.petanqueturniermanager.webserver.PanelAusrichtung;
 import de.petanqueturniermanager.webserver.PanelKonfiguration;
 import de.petanqueturniermanager.webserver.PanelTyp;
+import de.petanqueturniermanager.webserver.RegieSlug;
 import de.petanqueturniermanager.webserver.SheetResolverFactory;
 import de.petanqueturniermanager.webserver.SplitKnoten;
 import de.petanqueturniermanager.webserver.SplitKnotenAdapter;
@@ -39,6 +47,11 @@ public class GlobalProperties {
 	private static final String PERFORMANCE_LOGGING_PROP = "performance.logging";
 
 	private static final String WEBSERVER_AKTIV_PROP = "webserver_aktiv";
+
+	private static final String WEBSERVER_REGIE_AKTIV_PROP = "webserver_regie_aktiv";
+	private static final String WEBSERVER_REGIE_PORT_PROP = "webserver_regie_port";
+	private static final String WEBSERVER_REGIE_ZIELE_PROP = "webserver_regie_ziele";
+	public static final int WEBSERVER_REGIE_DEFAULT_PORT = 9090;
 
 	/** Legacy-Property-Präfix der entfernten Einzel-Port-Konfiguration (nur für Cleanup beim Start). */
 	private static final String LEGACY_WEBSERVER_PORTS_PROP = "webserver_ports";
@@ -90,6 +103,7 @@ public class GlobalProperties {
 	private static final ReentrantLock fileLock = new ReentrantLock();
 
 	private static final String TABFARBE_PRAEFIX = "tabfarbe.";
+	private static final Gson GSON = new GsonBuilder().create();
 
 	/**
 	 * Rohdaten eines einzelnen Panels in einem Composite View (vor Resolver-Erstellung).
@@ -138,6 +152,39 @@ public class GlobalProperties {
 		@Override
 		public String toString() {
 			return port + " [composite, panels=" + panels.size() + "]";
+		}
+	}
+
+	public record RegieZielRoh(
+			String id,
+			String name,
+			String slug,
+			boolean aktiv,
+			String viewId,
+			Map<String, String> splitSteuerungProView) {
+		public RegieZielRoh {
+			id = (id == null || id.isBlank()) ? UUID.randomUUID().toString() : id.trim();
+			name = name == null ? "" : name.trim();
+			String berechneterSlug = (slug == null || slug.isBlank()) ? RegieSlug.ausName(name) : slug.trim();
+			slug = berechneterSlug;
+			viewId = viewId == null ? "" : viewId.trim();
+			splitSteuerungProView = splitSteuerungProView == null
+					? new LinkedHashMap<>()
+					: new LinkedHashMap<>(splitSteuerungProView);
+		}
+
+		public String splitSteuerungFuerView() {
+			return splitSteuerungProView.get(viewId);
+		}
+
+		public RegieZielRoh mitSplitSteuerung(String neueViewId, String splitJson) {
+			var map = new LinkedHashMap<>(splitSteuerungProView);
+			if (splitJson == null || splitJson.isBlank()) {
+				map.remove(neueViewId);
+			} else {
+				map.put(neueViewId, splitJson);
+			}
+			return new RegieZielRoh(id, name, slug, aktiv, viewId, map);
 		}
 	}
 
@@ -296,6 +343,75 @@ public class GlobalProperties {
 		return getBoolean(STARTSEITE_AKTIV_PROP);
 	}
 
+	public boolean isWebserverRegieAktiv() {
+		return getBooleanMitDefault(WEBSERVER_REGIE_AKTIV_PROP, true);
+	}
+
+	public int getWebserverRegiePort() {
+		var val = propMap.get(WEBSERVER_REGIE_PORT_PROP);
+		if (val == null || val.isBlank()) return WEBSERVER_REGIE_DEFAULT_PORT;
+		try {
+			int port = Integer.parseInt(val.trim());
+			if (port >= 1 && port <= 65535) return port;
+		} catch (NumberFormatException e) {
+			logger.warn("Ungültiger Webserver-Regie-Port '{}', verwende Default {}", val, WEBSERVER_REGIE_DEFAULT_PORT);
+		}
+		return WEBSERVER_REGIE_DEFAULT_PORT;
+	}
+
+	public List<RegieZielRoh> getWebserverRegieZiele() {
+		try {
+			var json = propMap.getOrDefault(WEBSERVER_REGIE_ZIELE_PROP, "").trim();
+			if (json.isEmpty()) {
+				return new ArrayList<>();
+			}
+			var typ = new TypeToken<List<RegieZielRoh>>() { }.getType();
+			List<RegieZielRoh> gelesen = GSON.fromJson(json, typ);
+			if (gelesen == null) {
+				return new ArrayList<>();
+			}
+			return validierteRegieZiele(gelesen);
+		} catch (RuntimeException e) {
+			logger.warn("Fehler beim Lesen der Webserver-Regie-Ziele", e);
+			return new ArrayList<>();
+		}
+	}
+
+	public void speichernWebserverRegie(boolean aktiv, int port, List<RegieZielRoh> ziele) {
+		try {
+			setBooleanProp(WEBSERVER_REGIE_AKTIV_PROP, aktiv);
+			propMap.put(WEBSERVER_REGIE_PORT_PROP, String.valueOf(port));
+			var validiert = validierteRegieZiele(ziele == null ? List.of() : ziele);
+			if (validiert.isEmpty()) {
+				propMap.remove(WEBSERVER_REGIE_ZIELE_PROP);
+			} else {
+				propMap.put(WEBSERVER_REGIE_ZIELE_PROP, GSON.toJson(validiert));
+			}
+			speichernDatei();
+		} catch (RuntimeException e) {
+			logger.error("Fehler beim Speichern der Webserver-Regie", e);
+		}
+	}
+
+	public void speichernWebserverRegieSplitSteuerung(String zielId, String viewId, String splitJson) {
+		if (zielId == null || zielId.isBlank() || viewId == null || viewId.isBlank()) {
+			return;
+		}
+		var ziele = new ArrayList<RegieZielRoh>();
+		boolean geaendert = false;
+		for (var ziel : getWebserverRegieZiele()) {
+			if (ziel.id().equals(zielId)) {
+				ziele.add(ziel.mitSplitSteuerung(viewId, splitJson));
+				geaendert = true;
+			} else {
+				ziele.add(ziel);
+			}
+		}
+		if (geaendert) {
+			speichernWebserverRegie(isWebserverRegieAktiv(), getWebserverRegiePort(), ziele);
+		}
+	}
+
 	public int getStartseitePort() {
 		var val = propMap.get(STARTSEITE_PORT_PROP);
 		if (val == null || val.isBlank()) return STARTSEITE_DEFAULT_PORT;
@@ -317,6 +433,25 @@ public class GlobalProperties {
 		setBooleanProp(STARTSEITE_AKTIV_PROP, aktiv);
 		propMap.put(STARTSEITE_ZOOM_PROP, String.valueOf(zoom));
 		speichernDatei();
+	}
+
+	private static List<RegieZielRoh> validierteRegieZiele(List<RegieZielRoh> ziele) {
+		var result = new ArrayList<RegieZielRoh>();
+		Set<String> slugs = new HashSet<>();
+		for (var ziel : ziele) {
+			if (ziel == null || ziel.name().isBlank()) {
+				continue;
+			}
+			var normalisiert = new RegieZielRoh(
+					ziel.id(), ziel.name(), RegieSlug.ausName(ziel.name()),
+					ziel.aktiv(), ziel.viewId(), ziel.splitSteuerungProView());
+			RegieSlug.validiere(normalisiert.slug());
+			if (!slugs.add(normalisiert.slug())) {
+				throw new IllegalArgumentException("Doppelter Webserver-Regie-Slug: " + normalisiert.slug());
+			}
+			result.add(normalisiert);
+		}
+		return result;
 	}
 
 	public boolean isStartupTurnierModus() {
