@@ -327,13 +327,21 @@ public class WebserverRegieSidebarContent extends BaseSidebarContent {
             return;
         }
         var aktuelleQuellen = WebServerManager.get().verfuegbareRegieQuellen();
-        if (gleicheQuellen(aktuelleQuellen)) {
+        if (gleicheSichtbareQuellenStruktur(aktuelleQuellen)) {
             return;
         }
         allesFelderEntfernenUndNeuFenster();
     }
 
-    private boolean gleicheQuellen(List<RegieQuelleInfo> aktuelleQuellen) {
+    /**
+     * Vergleicht nur die in der Sidebar tatsächlich sichtbaren Felder der Quellen
+     * (Dropdown-Eintrag {@code anzeigename:port} sowie die für die Auswahl-Zuordnung
+     * relevante {@code viewId}). Das {@code laeuft}-Flag wird bewusst ignoriert: der
+     * Lauf-Status wird hier nicht angezeigt, und reine Start/Stop-Flaps einer
+     * Composite-View würden sonst einen überflüssigen {@code window.dispose()}-Rebuild
+     * auslösen (Flackern).
+     */
+    private boolean gleicheSichtbareQuellenStruktur(List<RegieQuelleInfo> aktuelleQuellen) {
         if (quellen.size() != aktuelleQuellen.size()) {
             return false;
         }
@@ -342,8 +350,7 @@ public class WebserverRegieSidebarContent extends BaseSidebarContent {
             var neu = aktuelleQuellen.get(i);
             if (!alt.viewId().equals(neu.viewId())
                     || !alt.anzeigename().equals(neu.anzeigename())
-                    || alt.port() != neu.port()
-                    || alt.laeuft() != neu.laeuft()) {
+                    || alt.port() != neu.port()) {
                 return false;
             }
         }
