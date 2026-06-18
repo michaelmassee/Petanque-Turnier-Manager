@@ -70,11 +70,42 @@ public class WebserverRegieServerInstanz {
         logger.info("Webserver-Regie gestoppt auf Port {}", port);
     }
 
+    /**
+     * Prüft offene Regie-SSE-Verbindungen nach einer Konfigurationsänderung.
+     * <p>
+     * Bestehende Browserfenster bleiben auf der stabilen Ziel-URL
+     * {@code /<slug>/}. Wenn die Sidebar-Kombobox dieses Ziel auf eine andere
+     * View umstellt, muss die alte SSE-Verbindung getrennt werden, damit der
+     * Browser automatisch reconnectet und beim neuen {@code /events}-Request
+     * die aktuelle Quelle gebunden wird.
+     */
+    public void konfigurationGeaendert() {
+        for (var eintrag : verbindungenNachSlug.entrySet()) {
+            String slug = eintrag.getKey();
+            RegieZielRoh ziel = zielFuerSlug(slug);
+            for (var verbindung : eintrag.getValue()) {
+                if (ziel == null || !ziel.aktiv()) {
+                    verbindung.entfernenUndSchliessen();
+                    eintrag.getValue().remove(verbindung);
+                    continue;
+                }
+                boolean quelleNochAktuell = ziel.viewId().equals(verbindung.quelle().getViewId())
+                        && verbindung.quelle().laeuft();
+                if (!quelleNochAktuell) {
+                    verbindung.entfernenUndSchliessen();
+                    eintrag.getValue().remove(verbindung);
+                }
+            }
+            if (eintrag.getValue().isEmpty()) {
+                verbindungenNachSlug.remove(slug);
+            }
+        }
+    }
+
     private void handleRequest(HttpExchange exchange) throws IOException {
         String path = exchange.getRequestURI().getPath();
         if ("/".equals(path) || path.isBlank()) {
-            sendeHinweisSeite(exchange, 404, I18n.get("webserver.regie.hinweis.kein.ziel.titel"),
-                    I18n.get("webserver.regie.hinweis.kein.ziel.text"));
+            sendeZielListe(exchange);
             return;
         }
         var teile = zerlegePfad(path);
@@ -209,6 +240,95 @@ public class WebserverRegieServerInstanz {
         try (OutputStream os = exchange.getResponseBody()) {
             os.write(body);
         }
+    }
+
+    private void sendeZielListe(HttpExchange exchange) throws IOException {
+        if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
+            exchange.sendResponseHeaders(405, -1);
+            return;
+        }
+        var quellenNachId = manager.verfuegbareRegieQuellen().stream()
+                .collect(java.util.stream.Collectors.toMap(RegieQuelleInfo::viewId, q -> q, (a, b) -> a));
+        StringBuilder liste = new StringBuilder();
+        var ziele = GlobalProperties.get().getWebserverRegieZiele();
+        if (ziele.isEmpty()) {
+            liste.append("<p class=\"leer\">")
+                    .append(escapeHtml(I18n.get("webserver.regie.uebersicht.keine.ziele")))
+                    .append("</p>");
+        } else {
+            liste.append("<ul>");
+            for (var ziel : ziele) {
+                var quelle = quellenNachId.get(ziel.viewId());
+                String name = ziel.name().isBlank() ? ziel.slug() : ziel.name();
+                liste.append("<li>");
+                if (ziel.aktiv()) {
+                    liste.append("<a href=\"/")
+                            .append(escapeHtml(ziel.slug()))
+                            .append("/\">")
+                            .append(escapeHtml(name))
+                            .append("</a>");
+                } else {
+                    liste.append("<span class=\"inaktiv\">")
+                            .append(escapeHtml(name))
+                            .append("</span>");
+                }
+                liste.append("<span class=\"pfad\">/")
+                        .append(escapeHtml(ziel.slug()))
+                        .append("/</span>");
+                liste.append("<span class=\"status\">")
+                        .append(escapeHtml(zielStatus(ziel, quelle)))
+                        .append("</span>");
+                liste.append("</li>");
+            }
+            liste.append("</ul>");
+        }
+        String titel = I18n.get("webserver.regie.uebersicht.titel");
+        String html = """
+                <!doctype html>
+                <html lang="de">
+                <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1">
+                <title>%s</title>
+                <style>
+                body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;margin:2rem;line-height:1.4;background:#f7f7f5;color:#1f2933}
+                main{max-width:48rem}
+                h1{font-size:1.8rem;margin:0 0 1rem}
+                ul{list-style:none;margin:0;padding:0;border:1px solid #d7d7d2;background:white}
+                li{display:grid;grid-template-columns:minmax(10rem,1fr) auto auto;gap:.75rem;align-items:center;padding:.85rem 1rem;border-top:1px solid #e6e6e1}
+                li:first-child{border-top:0}
+                a{font-weight:650;color:#0b5cad;text-decoration:none}
+                a:hover{text-decoration:underline}
+                .inaktiv{font-weight:650;color:#6b7280}
+                .pfad{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:#4b5563}
+                .status{font-size:.92rem;color:#4b5563}
+                .leer{padding:1rem;border:1px solid #d7d7d2;background:white}
+                @media (max-width: 42rem){body{margin:1rem}li{grid-template-columns:1fr}.pfad,.status{font-size:.9rem}}
+                </style>
+                </head>
+                <body><main><h1>%s</h1>%s</main></body>
+                </html>
+                """.formatted(escapeHtml(titel), escapeHtml(titel), liste);
+        byte[] body = html.getBytes(StandardCharsets.UTF_8);
+        exchange.getResponseHeaders().set("Content-Type", CONTENT_TYPE_HTML);
+        exchange.getResponseHeaders().set("Cache-Control", "no-cache");
+        exchange.sendResponseHeaders(200, body.length);
+        try (OutputStream os = exchange.getResponseBody()) {
+            os.write(body);
+        }
+    }
+
+    private static String zielStatus(RegieZielRoh ziel, RegieQuelleInfo quelle) {
+        if (!ziel.aktiv()) {
+            return I18n.get("webserver.regie.uebersicht.status.inaktiv");
+        }
+        if (quelle == null) {
+            return I18n.get("webserver.regie.uebersicht.status.quelle.fehlend");
+        }
+        if (!quelle.laeuft()) {
+            return I18n.get("webserver.regie.uebersicht.status.quelle.inaktiv", quelle.anzeigename());
+        }
+        return I18n.get("webserver.regie.uebersicht.status.aktiv", quelle.anzeigename());
     }
 
     private void serviereRessource(HttpExchange exchange, String relativerPfad, String contentType)

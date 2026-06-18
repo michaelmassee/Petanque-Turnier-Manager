@@ -16,6 +16,7 @@ import com.sun.star.awt.XCheckBox;
 import com.sun.star.awt.XControl;
 import com.sun.star.awt.XControlContainer;
 import com.sun.star.awt.XDialog;
+import com.sun.star.awt.XTextComponent;
 import com.sun.star.awt.XToolkit;
 import com.sun.star.awt.XWindow;
 import com.sun.star.awt.XWindowPeer;
@@ -40,18 +41,18 @@ import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.konfigdialog.AbstractUnoDialog;
 
 /**
- * Modaler Dialog zur Verwaltung der Composite Views.
+ * Modaler Dialog zur Verwaltung der Webserver-Konfiguration.
  * <p>
- * Listet alle vorhandenen Composite Views auf und erlaubt Hinzufügen, Bearbeiten und Löschen.
- * Über [Bearbeiten] bzw. [+ Hinzufügen] wird der {@link CompositeViewDetailDialog} geöffnet.
+ * Verwaltet die allgemeinen Webserver-Flags, den Regie-Port und alle Composite Views.
+ * Über [Bearbeiten] bzw. [+ Hinzufügen] wird für Composite Views der {@link CompositeViewDetailDialog} geöffnet.
  */
 public class CompositeViewListeDialog extends AbstractUnoDialog {
 
     private static final Logger logger = LogManager.getLogger(CompositeViewListeDialog.class);
 
     // ---- Layout-Konstanten ----
-    private static final int DIALOG_BREITE = 370;
-    private static final int DIALOG_HOEHE = 250;
+    private static final int DIALOG_BREITE = 400;
+    private static final int DIALOG_HOEHE = 285;
     private static final int MAX_ZEILEN = 8;
     private static final int ZEILE_H = 14;
     private static final int PORT_X = 5;
@@ -66,13 +67,13 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
     private static final int EDIT_W = 60;
     private static final int DEL_X = 265;
     private static final int DEL_W = 18;
-    private static final int KOPFZEILE_Y = 22;
-    private static final int ZEILE_Y_START = 35;
+    private static final int KOPFZEILE_Y = 58;
+    private static final int ZEILE_Y_START = 71;
     private static final int ZEILE_ABSTAND = 16;
-    private static final int FOOTER_Y = 230;
-    private static final int OK_X = 215;
+    private static final int FOOTER_Y = 265;
+    private static final int OK_X = 245;
     private static final int OK_W = 50;
-    private static final int ABBRECHEN_X = 270;
+    private static final int ABBRECHEN_X = 300;
     private static final int ABBRECHEN_W = 95;
 
     // ---- UNO-Referenzen ----
@@ -87,6 +88,7 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
     private final List<String> dynamischeControlNamen = new ArrayList<>();
     private String[] komboBoxItems;
     private XCheckBox cbAktiv;
+    private XCheckBox cbRegieAktiv;
 
     /** Aktives Turniersystem des Dokuments – steuert die ComboBox-Filterung; {@code null} = alle. */
     private final TurnierSystem aktivesSystem;
@@ -113,7 +115,7 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
 
     @Override
     protected String getTitel() {
-        return I18n.get("webserver.composite.dialog.liste.titel");
+        return I18n.get("webserver.dialog.konfiguration.titel");
     }
 
     @Override
@@ -151,6 +153,24 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
                 I18n.get("webserver.konfig.cb.aktiv"),
                 5, 5, 200, 12, GlobalProperties.get().isWebserverAktiv());
         cbAktiv = leseCheckBox("cbAktiv");
+
+        fuegeFixedTextEin("lblRegieBereich",
+                I18n.get("webserver.regie.konfig.bereich"),
+                5, 23, 120, 10);
+        fuegeCheckBoxEin("cbRegieAktiv",
+                I18n.get("webserver.regie.konfig.aktiv"),
+                130, 21, 60, ZEILE_H, GlobalProperties.get().isWebserverRegieAktiv());
+        cbRegieAktiv = leseCheckBox("cbRegieAktiv");
+        fuegeFixedTextEin("lblRegiePort",
+                I18n.get("webserver.regie.konfig.port"),
+                205, 23, 25, 10);
+        fuegeEditEin("txtRegiePort",
+                String.valueOf(GlobalProperties.get().getWebserverRegiePort()),
+                235, 21, 40, ZEILE_H);
+
+        fuegeFixedTextEin("lblCompositeBereich",
+                I18n.get("webserver.composite.konfig.bereich.views"),
+                5, 42, 200, 10);
 
         fuegeFixedTextEin("lblKopfPort",
                 I18n.get("webserver.konfig.tabelle.kopf.port"),
@@ -279,9 +299,12 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
     }
 
     private void speichernUndAktualisieren() {
-        boolean aktiv = cbAktiv != null && cbAktiv.getState() == 1;
-        GlobalProperties.get().speichernCompositeViews(aktiv, eintraege);
-        WebServerManager.get().konfigurationGeaendert();
+        try {
+            speichereAlleKonfigurationen();
+            WebServerManager.get().konfigurationGeaendert();
+        } catch (UngueltigeEingabeException e) {
+            zeigeValidierungsFehler(e);
+        }
     }
 
     private void loescheZeile(int idx) {
@@ -297,18 +320,25 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
     private void beimOkKlick() {
         leseZeilenDatenAusControls();
         try {
-            validiereEintraege();
-            boolean aktiv = cbAktiv != null && cbAktiv.getState() == 1;
-            GlobalProperties.get().speichernCompositeViews(aktiv, eintraege);
+            speichereAlleKonfigurationen();
             WebServerManager.get().konfigurationGeaendert();
-            logger.info("Composite Views gespeichert: {} Einträge", eintraege.size());
+            logger.info("Webserver-Konfiguration gespeichert: {} Composite-Views", eintraege.size());
             xDialog.endExecute();
         } catch (UngueltigeEingabeException e) {
-            MessageBox.from(xContext, MessageBoxTypeEnum.ERROR_OK)
-                    .caption(I18n.get("webserver.composite.konfig.fehler.titel"))
-                    .message(e.getMessage())
-                    .show();
+            zeigeValidierungsFehler(e);
         }
+    }
+
+    private void speichereAlleKonfigurationen() throws UngueltigeEingabeException {
+        validiereEintraege();
+        boolean aktiv = cbAktiv != null && cbAktiv.getState() == 1;
+        boolean regieAktiv = cbRegieAktiv != null && cbRegieAktiv.getState() == 1;
+        int regiePort = leseRegiePort();
+        GlobalProperties.get().speichernCompositeViews(aktiv, eintraege);
+        GlobalProperties.get().speichernWebserverRegie(
+                regieAktiv,
+                regiePort,
+                GlobalProperties.get().getWebserverRegieZiele());
     }
 
     private void leseZeilenDatenAusControls() {
@@ -343,6 +373,14 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
                         I18n.get("webserver.composite.konfig.fehler.kein.panel"));
             }
         }
+        boolean regieAktiv = cbRegieAktiv != null && cbRegieAktiv.getState() == 1;
+        if (regieAktiv) {
+            int regiePort = leseRegiePort();
+            if (bekannte.contains(regiePort)) {
+                throw new UngueltigeEingabeException(
+                        I18n.get("webserver.regie.konfig.fehler.port.duplikat", regiePort));
+            }
+        }
     }
 
     // ---- Hilfsmethoden ----
@@ -357,6 +395,30 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
             kandidat++;
         }
         return kandidat;
+    }
+
+    private int leseRegiePort() throws UngueltigeEingabeException {
+        XControl portCtrl = xcc.getControl("txtRegiePort");
+        String portStr = portCtrl != null ? Lo.qi(XTextComponent.class, portCtrl).getText().trim() : "";
+        int port;
+        try {
+            port = Integer.parseInt(portStr);
+        } catch (NumberFormatException e) {
+            throw new UngueltigeEingabeException(
+                    I18n.get("webserver.regie.konfig.fehler.port.ungueltig", portStr));
+        }
+        if (port < 1 || port > 65535) {
+            throw new UngueltigeEingabeException(
+                    I18n.get("webserver.regie.konfig.fehler.port.ungueltig", portStr));
+        }
+        return port;
+    }
+
+    private void zeigeValidierungsFehler(UngueltigeEingabeException e) {
+        MessageBox.from(xContext, MessageBoxTypeEnum.ERROR_OK)
+                .caption(I18n.get("webserver.composite.konfig.fehler.titel"))
+                .message(e.getMessage())
+                .show();
     }
 
     // ---- Control-Hilfsmethoden ----
@@ -377,6 +439,18 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
             throws com.sun.star.uno.Exception {
         fuegeFixedTextEin(name, label, x, y, w, h);
         dynamischeControlNamen.add(name);
+    }
+
+    private void fuegeEditEin(String name, String text, int x, int y, int w, int h)
+            throws com.sun.star.uno.Exception {
+        var model = xMSF.createInstance("com.sun.star.awt.UnoControlEditModel");
+        var props = Lo.qi(XPropertySet.class, model);
+        props.setPropertyValue("Text",      text);
+        props.setPropertyValue("PositionX", x);
+        props.setPropertyValue("PositionY", y);
+        props.setPropertyValue("Width",     w);
+        props.setPropertyValue("Height",    h);
+        cont.insertByName(name, model);
     }
 
     private void fuegeCheckBoxEinDyn(String name, String label, int x, int y, int w, int h, boolean checked)

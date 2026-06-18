@@ -17,6 +17,7 @@ import de.petanqueturniermanager.timer.TimerState;
 public record CompositePanelNachricht(
         int panelId,
         int zoom,
+        int sichtbarerTabellenAnteil,
         String horizontalAusrichtung,
         String vertikalAusrichtung,
         boolean blattnameAnzeigen,
@@ -47,9 +48,10 @@ public record CompositePanelNachricht(
      * Erstellt eine vollständige Panel-Nachricht (init) aus einem TabelleModel.
      */
     static CompositePanelNachricht init(int panelId, TabelleModel modell, String seitenTitel, int zoom,
-            String horizontalAusrichtung, String vertikalAusrichtung, boolean blattnameAnzeigen) {
+            int sichtbarerTabellenAnteil, String horizontalAusrichtung, String vertikalAusrichtung,
+            boolean blattnameAnzeigen) {
         return new CompositePanelNachricht(
-                panelId, zoom, horizontalAusrichtung, vertikalAusrichtung, blattnameAnzeigen, seitenTitel,
+                panelId, zoom, sichtbarerTabellenAnteil, horizontalAusrichtung, vertikalAusrichtung, blattnameAnzeigen, seitenTitel,
                 modell.getZeilen(), modell.getSpalten(),
                 modell.getGitter(),
                 new ArrayList<>(modell.getZellen().values()),
@@ -64,9 +66,10 @@ public record CompositePanelNachricht(
      * Erstellt eine differenzielle Panel-Nachricht (diff) aus einem DiffModel.
      */
     static CompositePanelNachricht diff(int panelId, TabelleModel diffModell, String seitenTitel, int zoom,
-            String horizontalAusrichtung, String vertikalAusrichtung, boolean blattnameAnzeigen) {
+            int sichtbarerTabellenAnteil, String horizontalAusrichtung, String vertikalAusrichtung,
+            boolean blattnameAnzeigen) {
         return new CompositePanelNachricht(
-                panelId, zoom, horizontalAusrichtung, vertikalAusrichtung, blattnameAnzeigen, seitenTitel,
+                panelId, zoom, sichtbarerTabellenAnteil, horizontalAusrichtung, vertikalAusrichtung, blattnameAnzeigen, seitenTitel,
                 diffModell.getZeilen(), diffModell.getSpalten(),
                 diffModell.getGitter(),
                 new ArrayList<>(diffModell.getZellen().values()),
@@ -88,7 +91,7 @@ public record CompositePanelNachricht(
      */
     static CompositePanelNachricht url(int panelId, String externeUrl) {
         return new CompositePanelNachricht(
-                panelId, 100, null, null, false, "",
+                panelId, 100, 100, null, null, false, "",
                 null, null, null, null, null, null,
                 null, null, null, null, null, null, 0,
                 externeUrl, null, null, null, null, null, null, null);
@@ -104,7 +107,7 @@ public record CompositePanelNachricht(
      */
     static CompositePanelNachricht fehlend(int panelId, String titel, String text) {
         return new CompositePanelNachricht(
-                panelId, 100, null, null, false, "",
+                panelId, 100, 100, null, null, false, "",
                 null, null, null, null, null, null,
                 null, null, null, null, null, null, 0,
                 null, null, null, null, null,
@@ -123,7 +126,7 @@ public record CompositePanelNachricht(
     static CompositePanelNachricht timer(int panelId, int zoom, String horizontalAusrichtung,
             String vertikalAusrichtung, TimerState state) {
         return new CompositePanelNachricht(
-                panelId, zoom, horizontalAusrichtung, vertikalAusrichtung, false, "",
+                panelId, zoom, 100, horizontalAusrichtung, vertikalAusrichtung, false, "",
                 null, null, null, null, null, null,
                 null, null, null, null, null, null, 0,
                 null,

@@ -7,6 +7,7 @@ package de.petanqueturniermanager.webserver;
  * @param sheetConfig           Konfigurations-String (nur relevant wenn typ == BLATT)
  * @param resolver              Sheet-Resolver (nur relevant wenn typ == BLATT, sonst {@code null})
  * @param zoom                  Zoom-Faktor in Prozent (10–500, Standard 100)
+ * @param sichtbarerTabellenAnteil sichtbarer Anteil der Gesamttabelle in Prozent (10–100, Standard 100)
  * @param horizontalAusrichtung horizontale Ausrichtung des Panel-Inhalts:
  *                              {@code "kein"}, {@code "links"}, {@code "mitte"} oder {@code "rechts"}
  * @param vertikalAusrichtung   vertikale Ausrichtung des Panel-Inhalts:
@@ -19,6 +20,7 @@ public record PanelKonfiguration(
         String sheetConfig,
         SheetResolver resolver,
         int zoom,
+        int sichtbarerTabellenAnteil,
         String horizontalAusrichtung,
         String vertikalAusrichtung,
         boolean blattnameAnzeigen,
@@ -27,5 +29,21 @@ public record PanelKonfiguration(
     public PanelKonfiguration {
         horizontalAusrichtung = PanelAusrichtung.normiereHorizontal(horizontalAusrichtung);
         vertikalAusrichtung   = PanelAusrichtung.normiereVertikal(vertikalAusrichtung);
+        if (sichtbarerTabellenAnteil < 10 || sichtbarerTabellenAnteil > 100) {
+            sichtbarerTabellenAnteil = 100;
+        }
+    }
+
+    public PanelKonfiguration(
+            PanelTyp typ,
+            String sheetConfig,
+            SheetResolver resolver,
+            int zoom,
+            String horizontalAusrichtung,
+            String vertikalAusrichtung,
+            boolean blattnameAnzeigen,
+            String externeUrl) {
+        this(typ, sheetConfig, resolver, zoom, 100,
+                horizontalAusrichtung, vertikalAusrichtung, blattnameAnzeigen, externeUrl);
     }
 }

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Cell from './Cell';
 import { transformOrigin } from './alignment';
 import { useAutoFitScale } from './useAutoFit';
@@ -9,6 +9,8 @@ const toPx = (v) => Math.round((v || 0) / 37.795) + 'px';
 // Obergrenze für das automatische Hochskalieren eines Sheet-Panels, damit kleine Tabellen
 // einen großen Bildschirm (Beamer/TV) ausfüllen, ohne ins Absurde zu wachsen.
 const AUTO_FIT_MAX_SCALE = 8;
+const PANEL_SCROLL_PX_PRO_SEKUNDE = 24;
+const PANEL_SCROLL_PAUSE_MS = 1800;
 
 function alignPosition(h, v) {
   let left = '0%';
@@ -47,11 +49,82 @@ export default function Panel({ table, sheetnamenAnzeigen, headerFooterUnterdrue
   const containerRef = useRef(null);
   const contentRef = useRef(null);
   const zoomFaktor = (table?.zoom ?? 100) / 100;
+  const sichtbarerTabellenAnteil = Math.min(100, Math.max(10, table?.sichtbarerTabellenAnteil ?? 100));
+  const scrollAktiv = sichtbarerTabellenAnteil < 100;
+  const verfuegbarePanelFlaeche = useCallback((container) => ({
+    breite: container.clientWidth,
+    hoehe: scrollAktiv
+      ? container.clientHeight / (sichtbarerTabellenAnteil / 100)
+      : container.clientHeight,
+  }), [scrollAktiv, sichtbarerTabellenAnteil]);
   const autoFitScale = useAutoFitScale(
     containerRef, contentRef,
-    { maxScale: AUTO_FIT_MAX_SCALE, zoom: zoomFaktor },
-    [table?.zeilen, table?.spalten, table?.zoom, table?.gitter],
+    {
+      maxScale: AUTO_FIT_MAX_SCALE,
+      zoom: zoomFaktor,
+      verfuegbar: verfuegbarePanelFlaeche,
+    },
+    [table?.zeilen, table?.spalten, table?.zoom, table?.gitter, sichtbarerTabellenAnteil],
   );
+  const position = alignPosition(table?.hAlign, table?.vAlign);
+  const contentPosition = scrollAktiv
+    ? { ...position, top: '0%', translateY: '0px' }
+    : position;
+
+  useEffect(() => {
+    const container = containerRef.current;
+    const content = contentRef.current;
+    if (!container || !content) return undefined;
+
+    const setTransform = (yPx) => {
+      content.style.transform = `translate(${contentPosition.translateX}, ${yPx}px) scale(${autoFitScale})`;
+    };
+
+    if (!scrollAktiv || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+      setTransform(contentPosition.translateY);
+      return undefined;
+    }
+
+    const scrollStrecke = Math.max(0, (content.offsetHeight * autoFitScale) - container.clientHeight);
+    if (scrollStrecke < 1) {
+      setTransform(0);
+      return undefined;
+    }
+
+    let rafId = null;
+    const start = performance.now();
+    const bewegungMs = Math.max(6000, (scrollStrecke / PANEL_SCROLL_PX_PRO_SEKUNDE) * 1000);
+    const zyklusMs = (PANEL_SCROLL_PAUSE_MS * 2) + (bewegungMs * 2);
+
+    const tick = (zeit) => {
+      const t = (zeit - start) % zyklusMs;
+      let y = 0;
+      if (t < PANEL_SCROLL_PAUSE_MS) {
+        y = 0;
+      } else if (t < PANEL_SCROLL_PAUSE_MS + bewegungMs) {
+        y = -scrollStrecke * ((t - PANEL_SCROLL_PAUSE_MS) / bewegungMs);
+      } else if (t < (PANEL_SCROLL_PAUSE_MS * 2) + bewegungMs) {
+        y = -scrollStrecke;
+      } else {
+        y = -scrollStrecke * (1 - ((t - (PANEL_SCROLL_PAUSE_MS * 2) - bewegungMs) / bewegungMs));
+      }
+      setTransform(y);
+      rafId = requestAnimationFrame(tick);
+    };
+
+    rafId = requestAnimationFrame(tick);
+    return () => {
+      if (rafId !== null) cancelAnimationFrame(rafId);
+    };
+  }, [
+    autoFitScale,
+    contentPosition.translateX,
+    contentPosition.translateY,
+    scrollAktiv,
+    table?.zeilen,
+    table?.spalten,
+    table?.gitter,
+  ]);
 
   if (!table) {
     return null;
@@ -166,15 +239,14 @@ export default function Panel({ table, sheetnamenAnzeigen, headerFooterUnterdrue
     || table.fusszeileMitte?.trim()
     || table.fusszeileRechts?.trim()
   );
-  const position = alignPosition(table.hAlign, table.vAlign);
 
   return (
     <div ref={containerRef} style={{
       position: 'relative', width: '100%', height: '100%', overflow: 'hidden', boxSizing: 'border-box',
     }}>
       <div ref={contentRef} style={{
-        position: 'absolute', left: position.left, top: position.top, width: 'fit-content',
-        transform: `translate(${position.translateX}, ${position.translateY}) scale(${autoFitScale})`,
+        position: 'absolute', left: contentPosition.left, top: contentPosition.top, width: 'fit-content',
+        transform: `translate(${contentPosition.translateX}, ${contentPosition.translateY}) scale(${autoFitScale})`,
         transformOrigin: transformOrigin(table.hAlign, table.vAlign),
       }}>
         <div>

@@ -103,6 +103,8 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
     private final List<String> panelSheets = new ArrayList<>();
     /** Zoom pro Panel (Index = Panel-ID). */
     private final List<Integer> panelZooms = new ArrayList<>();
+    /** Sichtbarer Anteil der Gesamttabelle pro Blatt-Panel in Prozent (Index = Panel-ID). */
+    private final List<Integer> panelSichtbareTabellenanteile = new ArrayList<>();
     /** Horizontale Ausrichtung pro Panel (Index = Panel-ID); siehe {@link PanelAusrichtung}. */
     private final List<String> panelHAlign = new ArrayList<>();
     /** Vertikale Ausrichtung pro Panel (Index = Panel-ID); siehe {@link PanelAusrichtung}. */
@@ -186,6 +188,7 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
     private void initialisiereZustand() {
         panelSheets.clear();
         panelZooms.clear();
+        panelSichtbareTabellenanteile.clear();
         panelHAlign.clear();
         panelVAlign.clear();
         panelBlattnameAnzeigen.clear();
@@ -209,6 +212,7 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
             for (var p : initialerEintrag.panels()) {
                 panelSheets.add(p.sheetConfig());
                 panelZooms.add(p.zoom());
+                panelSichtbareTabellenanteile.add(p.sichtbarerTabellenAnteil());
                 panelHAlign.add(p.horizontalAusrichtung());
                 panelVAlign.add(p.vertikalAusrichtung());
                 panelBlattnameAnzeigen.add(p.blattnameAnzeigen());
@@ -220,6 +224,7 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
             wurzel = new SplitBlatt(0);
             panelSheets.add(SheetResolverFactory.DEFAULT_SHEET_TYP);
             panelZooms.add(GlobalProperties.DEFAULT_ZOOM);
+            panelSichtbareTabellenanteile.add(GlobalProperties.DEFAULT_SICHTBARER_TABELLENANTEIL);
             panelHAlign.add(PanelAusrichtung.KEIN);
             panelVAlign.add(PanelAusrichtung.KEIN);
             panelBlattnameAnzeigen.add(Boolean.FALSE);
@@ -336,6 +341,11 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
 
             boolean aktuellBlattnameAnzeigen = ausgewaehlterPanelIndex < panelBlattnameAnzeigen.size() && panelBlattnameAnzeigen.get(ausgewaehlterPanelIndex);
             fuegeCheckBoxEinDyn("cbPanelBlattnameAnzeigen", I18n.get("webserver.composite.konfig.panel.blattname.label"), 5, konfFelderY2, 150, ZEILE_H, aktuellBlattnameAnzeigen);
+            int aktuellerSichtbarerAnteil = ausgewaehlterPanelIndex < panelSichtbareTabellenanteile.size()
+                    ? panelSichtbareTabellenanteile.get(ausgewaehlterPanelIndex)
+                    : GlobalProperties.DEFAULT_SICHTBARER_TABELLENANTEIL;
+            fuegeFixedTextEinDyn("lblPanelSichtbar", I18n.get("webserver.composite.konfig.panel.sichtbar.label"), 170, konfFelderY2, 35, ZEILE_H);
+            fuegeEditEinDyn("txtPanelSichtbar", String.valueOf(aktuellerSichtbarerAnteil), 208, konfFelderY2, 25, ZEILE_H);
         }
 
         // ---- Layout-Vorschau ----
@@ -363,6 +373,7 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         int neuerPanelIndex = panelSheets.size();
         panelSheets.add(SheetResolverFactory.DEFAULT_SHEET_TYP);
         panelZooms.add(GlobalProperties.DEFAULT_ZOOM);
+        panelSichtbareTabellenanteile.add(GlobalProperties.DEFAULT_SICHTBARER_TABELLENANTEIL);
         panelHAlign.add(PanelAusrichtung.KEIN);
         panelVAlign.add(PanelAusrichtung.KEIN);
         panelBlattnameAnzeigen.add(Boolean.FALSE);
@@ -379,6 +390,7 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         int neuerPanelIndex = panelSheets.size();
         panelSheets.add(SheetResolverFactory.DEFAULT_SHEET_TYP);
         panelZooms.add(GlobalProperties.DEFAULT_ZOOM);
+        panelSichtbareTabellenanteile.add(GlobalProperties.DEFAULT_SICHTBARER_TABELLENANTEIL);
         panelHAlign.add(PanelAusrichtung.KEIN);
         panelVAlign.add(PanelAusrichtung.KEIN);
         panelBlattnameAnzeigen.add(Boolean.FALSE);
@@ -398,6 +410,7 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         // Panel-Config entfernen und Indizes im Baum anpassen
         panelSheets.remove(zuLoeschenderIndex);
         panelZooms.remove(zuLoeschenderIndex);
+        panelSichtbareTabellenanteile.remove(zuLoeschenderIndex);
         panelHAlign.remove(zuLoeschenderIndex);
         panelVAlign.remove(zuLoeschenderIndex);
         panelBlattnameAnzeigen.remove(zuLoeschenderIndex);
@@ -474,6 +487,7 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         // Blatt-Felder lesen und speichern
         XControl sheetCtrl = xcc.getControl("cbPanelSheet");
         XControl zoomCtrl = xcc.getControl("txtPanelZoom");
+        XControl sichtbarCtrl = xcc.getControl("txtPanelSichtbar");
         XControl hAlignCtrl = xcc.getControl("cbPanelHAlign");
         XControl vAlignCtrl = xcc.getControl("cbPanelVAlign");
         XControl blattnameCtrl = xcc.getControl("cbPanelBlattnameAnzeigen");
@@ -485,6 +499,12 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
             try {
                 int z = Integer.parseInt(Lo.qi(XTextComponent.class, zoomCtrl).getText().trim());
                 panelZooms.set(ausgewaehlterPanelIndex, z);
+            } catch (NumberFormatException ignored) {}
+        }
+        if (sichtbarCtrl != null && ausgewaehlterPanelIndex < panelSichtbareTabellenanteile.size()) {
+            try {
+                int sichtbar = Integer.parseInt(Lo.qi(XTextComponent.class, sichtbarCtrl).getText().trim());
+                panelSichtbareTabellenanteile.set(ausgewaehlterPanelIndex, sichtbar);
             } catch (NumberFormatException ignored) {}
         }
         if (hAlignCtrl != null && ausgewaehlterPanelIndex < panelHAlign.size()) {
@@ -576,7 +596,8 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
             String pVAlign = i < panelVAlign.size() ? panelVAlign.get(i) : PanelAusrichtung.KEIN;
             if (panelTyp == PanelTyp.TIMER) {
                 int pZoom = i < panelZooms.size() ? panelZooms.get(i) : GlobalProperties.DEFAULT_ZOOM;
-                panels.add(new PanelEintragRoh(PanelTyp.TIMER, "", pZoom, pHAlign, pVAlign, false, ""));
+                panels.add(new PanelEintragRoh(PanelTyp.TIMER, "", pZoom,
+                        GlobalProperties.DEFAULT_SICHTBARER_TABELLENANTEIL, pHAlign, pVAlign, false, ""));
             } else if (panelTyp == PanelTyp.URL) {
                 String url = i < panelUrls.size() ? panelUrls.get(i) : "";
                 String urlFehler = validiereUrl(url);
@@ -584,11 +605,19 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
                     throw new UngueltigeEingabeException(urlFehler);
                 }
                 panels.add(new PanelEintragRoh(PanelTyp.URL, "", GlobalProperties.DEFAULT_ZOOM,
+                        GlobalProperties.DEFAULT_SICHTBARER_TABELLENANTEIL,
                         PanelAusrichtung.KEIN, PanelAusrichtung.KEIN, false, url));
             } else {
                 int pZoom = i < panelZooms.size() ? panelZooms.get(i) : GlobalProperties.DEFAULT_ZOOM;
+                int pSichtbarerTabellenAnteil = i < panelSichtbareTabellenanteile.size()
+                        ? panelSichtbareTabellenanteile.get(i)
+                        : GlobalProperties.DEFAULT_SICHTBARER_TABELLENANTEIL;
+                if (pSichtbarerTabellenAnteil < 10 || pSichtbarerTabellenAnteil > 100) {
+                    throw new UngueltigeEingabeException(I18n.get("webserver.composite.konfig.fehler.sichtbar.ungueltig"));
+                }
                 boolean pBlattnameAnzeigen = i < panelBlattnameAnzeigen.size() && panelBlattnameAnzeigen.get(i);
-                panels.add(new PanelEintragRoh(PanelTyp.BLATT, panelSheets.get(i), pZoom, pHAlign, pVAlign, pBlattnameAnzeigen, ""));
+                panels.add(new PanelEintragRoh(PanelTyp.BLATT, panelSheets.get(i), pZoom,
+                        pSichtbarerTabellenAnteil, pHAlign, pVAlign, pBlattnameAnzeigen, ""));
             }
         }
 

@@ -71,6 +71,7 @@ public class GlobalProperties {
 	private static final String WEBSERVER_COMPOSITE_PANEL_INFIX = "_panel_";
 	private static final String WEBSERVER_COMPOSITE_PANEL_SHEET_SUFFIX = "_sheet";
 	private static final String WEBSERVER_COMPOSITE_PANEL_ZOOM_SUFFIX = "_zoom";
+	private static final String WEBSERVER_COMPOSITE_PANEL_SICHTBARER_TABELLENANTEIL_SUFFIX = "_sichtbarer_tabellenanteil";
 	/** Legacy-Suffix der entfernten boolean-Property „zentriert" (nur für Migration / Cleanup). */
 	private static final String LEGACY_WEBSERVER_COMPOSITE_PANEL_ZENTRIERT_SUFFIX = "_zentriert";
 	private static final String WEBSERVER_COMPOSITE_PANEL_HALIGN_SUFFIX = "_halign";
@@ -94,6 +95,7 @@ public class GlobalProperties {
 	private static final String TIMER_HINTERGRUNDFARBE_PROP = "timer_hintergrundfarbe";
 
 	public static final int DEFAULT_ZOOM = 100;
+	public static final int DEFAULT_SICHTBARER_TABELLENANTEIL = 100;
 
 	// zentrale Runtime-Map
 	private static final ConcurrentHashMap<String, String> propMap = new ConcurrentHashMap<>();
@@ -111,6 +113,7 @@ public class GlobalProperties {
 	 * @param typ                   Anzeigemodus: {@link PanelTyp#BLATT} oder {@link PanelTyp#URL}
 	 * @param sheetConfig           Sheet-Konfigurations-String (nur relevant wenn typ == BLATT)
 	 * @param zoom                  Zoom-Faktor in %
+	 * @param sichtbarerTabellenAnteil sichtbarer Anteil der Gesamttabelle in % (10–100)
 	 * @param horizontalAusrichtung horizontale Ausrichtung: {@code "kein"} / {@code "links"} / {@code "mitte"} / {@code "rechts"}
 	 * @param vertikalAusrichtung   vertikale Ausrichtung:   {@code "kein"} / {@code "oben"} / {@code "mitte"} / {@code "unten"}
 	 * @param blattnameAnzeigen     ob der Blattname als Kopfzeile angezeigt wird
@@ -120,6 +123,7 @@ public class GlobalProperties {
 			PanelTyp typ,
 			String sheetConfig,
 			int zoom,
+			int sichtbarerTabellenAnteil,
 			String horizontalAusrichtung,
 			String vertikalAusrichtung,
 			boolean blattnameAnzeigen,
@@ -127,6 +131,19 @@ public class GlobalProperties {
 		public PanelEintragRoh {
 			horizontalAusrichtung = PanelAusrichtung.normiereHorizontal(horizontalAusrichtung);
 			vertikalAusrichtung   = PanelAusrichtung.normiereVertikal(vertikalAusrichtung);
+			sichtbarerTabellenAnteil = normiereSichtbarerTabellenAnteil(sichtbarerTabellenAnteil);
+		}
+
+		public PanelEintragRoh(
+				PanelTyp typ,
+				String sheetConfig,
+				int zoom,
+				String horizontalAusrichtung,
+				String vertikalAusrichtung,
+				boolean blattnameAnzeigen,
+				String externeUrl) {
+			this(typ, sheetConfig, zoom, DEFAULT_SICHTBARER_TABELLENANTEIL,
+					horizontalAusrichtung, vertikalAusrichtung, blattnameAnzeigen, externeUrl);
 		}
 	}
 
@@ -474,6 +491,8 @@ public class GlobalProperties {
 						if (panelTyp == PanelTyp.BLATT && sheetConfig.isEmpty()) continue;
 						if (panelTyp == PanelTyp.URL && externeUrl.isEmpty()) continue;
 						int panelZoom = parseZoom(propMap.get(panelPrefix + WEBSERVER_COMPOSITE_PANEL_ZOOM_SUFFIX));
+						int sichtbarerTabellenAnteil = parseSichtbarerTabellenAnteil(
+								propMap.get(panelPrefix + WEBSERVER_COMPOSITE_PANEL_SICHTBARER_TABELLENANTEIL_SUFFIX));
 						String panelHAlign = propMap.get(panelPrefix + WEBSERVER_COMPOSITE_PANEL_HALIGN_SUFFIX);
 						String panelVAlign = propMap.get(panelPrefix + WEBSERVER_COMPOSITE_PANEL_VALIGN_SUFFIX);
 						if (panelHAlign == null && panelVAlign == null
@@ -482,7 +501,8 @@ public class GlobalProperties {
 							panelHAlign = PanelAusrichtung.H_MITTE;
 						}
 						boolean panelBlattnameAnzeigen = getBoolean(panelPrefix + WEBSERVER_COMPOSITE_PANEL_BLATTNAME_SUFFIX);
-						panels.add(new PanelEintragRoh(panelTyp, sheetConfig, panelZoom, panelHAlign, panelVAlign, panelBlattnameAnzeigen, externeUrl));
+						panels.add(new PanelEintragRoh(panelTyp, sheetConfig, panelZoom, sichtbarerTabellenAnteil,
+								panelHAlign, panelVAlign, panelBlattnameAnzeigen, externeUrl));
 					}
 					if (!panels.isEmpty()) {
 						eintraege.add(new CompositeViewEintragRoh(port, name, aktiv, zoom, mitHeaderFooter, layoutJson, panels));
@@ -520,12 +540,12 @@ public class GlobalProperties {
 				for (var p : eintrag.panels()) {
 					if (p.typ() == PanelTyp.TIMER) {
 						panels.add(new PanelKonfiguration(PanelTyp.TIMER, "", null, p.zoom(),
-								p.horizontalAusrichtung(), p.vertikalAusrichtung(), false, ""));
+								p.sichtbarerTabellenAnteil(), p.horizontalAusrichtung(), p.vertikalAusrichtung(), false, ""));
 						continue;
 					}
 					if (p.typ() == PanelTyp.URL) {
 						panels.add(new PanelKonfiguration(PanelTyp.URL, "", null, p.zoom(),
-								p.horizontalAusrichtung(), p.vertikalAusrichtung(), p.blattnameAnzeigen(), p.externeUrl()));
+								p.sichtbarerTabellenAnteil(), p.horizontalAusrichtung(), p.vertikalAusrichtung(), p.blattnameAnzeigen(), p.externeUrl()));
 						continue;
 					}
 					var resolver = SheetResolverFactory.erstellen(p.sheetConfig());
@@ -534,7 +554,7 @@ public class GlobalProperties {
 						continue;
 					}
 					panels.add(new PanelKonfiguration(PanelTyp.BLATT, p.sheetConfig(), resolver, p.zoom(),
-							p.horizontalAusrichtung(), p.vertikalAusrichtung(), p.blattnameAnzeigen(), ""));
+							p.sichtbarerTabellenAnteil(), p.horizontalAusrichtung(), p.vertikalAusrichtung(), p.blattnameAnzeigen(), ""));
 				}
 				if (!panels.isEmpty()) {
 					if (wurzel == null) {
@@ -581,6 +601,7 @@ public class GlobalProperties {
 					String panelPrefix = prefix + WEBSERVER_COMPOSITE_PANEL_INFIX + i;
 					propMap.remove(panelPrefix + WEBSERVER_COMPOSITE_PANEL_SHEET_SUFFIX);
 					propMap.remove(panelPrefix + WEBSERVER_COMPOSITE_PANEL_ZOOM_SUFFIX);
+					propMap.remove(panelPrefix + WEBSERVER_COMPOSITE_PANEL_SICHTBARER_TABELLENANTEIL_SUFFIX);
 					propMap.remove(panelPrefix + LEGACY_WEBSERVER_COMPOSITE_PANEL_ZENTRIERT_SUFFIX);
 					propMap.remove(panelPrefix + WEBSERVER_COMPOSITE_PANEL_HALIGN_SUFFIX);
 					propMap.remove(panelPrefix + WEBSERVER_COMPOSITE_PANEL_VALIGN_SUFFIX);
@@ -620,6 +641,9 @@ public class GlobalProperties {
 						}
 						if (panel.zoom() != DEFAULT_ZOOM)
 							propMap.put(panelPrefix + WEBSERVER_COMPOSITE_PANEL_ZOOM_SUFFIX, String.valueOf(panel.zoom()));
+						if (panel.sichtbarerTabellenAnteil() != DEFAULT_SICHTBARER_TABELLENANTEIL)
+							propMap.put(panelPrefix + WEBSERVER_COMPOSITE_PANEL_SICHTBARER_TABELLENANTEIL_SUFFIX,
+									String.valueOf(panel.sichtbarerTabellenAnteil()));
 						if (!PanelAusrichtung.KEIN.equals(panel.horizontalAusrichtung()))
 							propMap.put(panelPrefix + WEBSERVER_COMPOSITE_PANEL_HALIGN_SUFFIX, panel.horizontalAusrichtung());
 						if (!PanelAusrichtung.KEIN.equals(panel.vertikalAusrichtung()))
@@ -718,6 +742,24 @@ public class GlobalProperties {
 			logger.warn("Ungültiger Zoom-Wert '{}', verwende Standard {}", value.trim(), DEFAULT_ZOOM);
 			return DEFAULT_ZOOM;
 		}
+	}
+
+	private static int parseSichtbarerTabellenAnteil(String value) {
+		if (value == null || value.isBlank()) return DEFAULT_SICHTBARER_TABELLENANTEIL;
+		try {
+			return normiereSichtbarerTabellenAnteil(Integer.parseInt(value.trim()));
+		} catch (NumberFormatException e) {
+			logger.warn("Ungültiger sichtbarer Tabellenanteil '{}', verwende Standard {}",
+					value.trim(), DEFAULT_SICHTBARER_TABELLENANTEIL);
+			return DEFAULT_SICHTBARER_TABELLENANTEIL;
+		}
+	}
+
+	private static int normiereSichtbarerTabellenAnteil(int wert) {
+		if (wert >= 10 && wert <= 100) return wert;
+		logger.warn("Sichtbarer Tabellenanteil außerhalb des erlaubten Bereichs (10-100): {}, verwende Standard {}",
+				wert, DEFAULT_SICHTBARER_TABELLENANTEIL);
+		return DEFAULT_SICHTBARER_TABELLENANTEIL;
 	}
 
 	private void safeSetLogLevel() {
