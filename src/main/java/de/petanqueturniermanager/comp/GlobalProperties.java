@@ -554,6 +554,11 @@ public class GlobalProperties {
 								p.sichtbarerTabellenAnteil(), p.horizontalAusrichtung(), p.vertikalAusrichtung(), false, p.externeUrl()));
 						continue;
 					}
+					if (p.typ() == PanelTyp.TURNIERSTARTSEITE) {
+						panels.add(new PanelKonfiguration(PanelTyp.TURNIERSTARTSEITE, "", null, p.zoom(),
+								p.sichtbarerTabellenAnteil(), p.horizontalAusrichtung(), p.vertikalAusrichtung(), false, ""));
+						continue;
+					}
 					var resolver = SheetResolverFactory.erstellen(p.sheetConfig());
 					if (resolver == null) {
 						logger.warn("Resolver null für Panel-Config '{}'", p.sheetConfig());
@@ -642,6 +647,8 @@ public class GlobalProperties {
 						propMap.put(panelPrefix + WEBSERVER_COMPOSITE_PANEL_TYP_SUFFIX, panel.typ().name());
 						if (panel.typ() == PanelTyp.URL || panel.typ() == PanelTyp.STATISCHE_DATEI) {
 							propMap.put(panelPrefix + WEBSERVER_COMPOSITE_PANEL_URL_SUFFIX, panel.externeUrl());
+						} else if (panel.typ() == PanelTyp.TURNIERSTARTSEITE) {
+							// Keine zusätzliche Quelle: das Panel nutzt die bestehende Startseiten-Konfiguration.
 						} else {
 							propMap.put(panelPrefix + WEBSERVER_COMPOSITE_PANEL_SHEET_SUFFIX, panel.sheetConfig());
 						}

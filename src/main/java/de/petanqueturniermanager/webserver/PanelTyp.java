@@ -6,11 +6,13 @@ package de.petanqueturniermanager.webserver;
  *   <li>{@link #BLATT} – zeigt ein LibreOffice-Sheet als Tabelle an</li>
  *   <li>{@link #URL} – bettet eine externe URL als {@code <iframe>} ein</li>
  *   <li>{@link #STATISCHE_DATEI} – bettet eine lokale statische Datei ein</li>
+ *   <li>{@link #TURNIERSTARTSEITE} – zeigt die Turnier-Startseite im Panel</li>
  * </ul>
  */
 public enum PanelTyp {
     BLATT,
     URL,
     TIMER,
-    STATISCHE_DATEI
+    STATISCHE_DATEI,
+    TURNIERSTARTSEITE
 }

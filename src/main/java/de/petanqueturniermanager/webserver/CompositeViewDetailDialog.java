@@ -306,20 +306,23 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
             fuegeEditEinDyn("txtSplitHoehe", String.valueOf(splitHoehe), 307, konfY, 30, ZEILE_H);
         }
 
-        // ---- Modus-Auswahl: Blatt / URL / Timer / lokale Datei ----
+        // ---- Modus-Auswahl: Blatt / URL / Timer / lokale Datei / Turnierstartseite ----
         int modusY = konfY + ZEILE_H;
         PanelTyp aktuellerTyp = ausgewaehlterPanelIndex < panelTypen.size() ? panelTypen.get(ausgewaehlterPanelIndex) : PanelTyp.BLATT;
         boolean istUrlModus   = aktuellerTyp == PanelTyp.URL;
         boolean istTimerModus = aktuellerTyp == PanelTyp.TIMER;
         boolean istDateiModus = aktuellerTyp == PanelTyp.STATISCHE_DATEI;
-        fuegeRadioButtonEinDyn("rbBlatt", I18n.get("webserver.composite.konfig.panel.modus.blatt"), 5,   modusY, 55, ZEILE_H, !istUrlModus && !istTimerModus && !istDateiModus);
-        fuegeRadioButtonEinDyn("rbUrl",   I18n.get("webserver.composite.konfig.panel.modus.url"),   65,  modusY, 85, ZEILE_H, istUrlModus);
-        fuegeRadioButtonEinDyn("rbTimer", I18n.get("webserver.composite.konfig.panel.modus.timer"), 155, modusY, 55, ZEILE_H, istTimerModus);
-        fuegeRadioButtonEinDyn("rbDatei", I18n.get("webserver.composite.konfig.panel.modus.datei"), 215, modusY, 140, ZEILE_H, istDateiModus);
+        boolean istStartseitenModus = aktuellerTyp == PanelTyp.TURNIERSTARTSEITE;
+        fuegeRadioButtonEinDyn("rbBlatt", I18n.get("webserver.composite.konfig.panel.modus.blatt"), 5,   modusY, 45, ZEILE_H, !istUrlModus && !istTimerModus && !istDateiModus && !istStartseitenModus);
+        fuegeRadioButtonEinDyn("rbUrl",   I18n.get("webserver.composite.konfig.panel.modus.url"),   55,  modusY, 80, ZEILE_H, istUrlModus);
+        fuegeRadioButtonEinDyn("rbTimer", I18n.get("webserver.composite.konfig.panel.modus.timer"), 140, modusY, 45, ZEILE_H, istTimerModus);
+        fuegeRadioButtonEinDyn("rbDatei", I18n.get("webserver.composite.konfig.panel.modus.datei"), 190, modusY, 90, ZEILE_H, istDateiModus);
+        fuegeRadioButtonEinDyn("rbStartseite", I18n.get("webserver.composite.konfig.panel.modus.startseite"), 285, modusY, 125, ZEILE_H, istStartseitenModus);
         registriereActionListenerDyn("rbBlatt", () -> wechslePanelModus(PanelTyp.BLATT));
         registriereActionListenerDyn("rbUrl",   () -> wechslePanelModus(PanelTyp.URL));
         registriereActionListenerDyn("rbTimer", () -> wechslePanelModus(PanelTyp.TIMER));
         registriereActionListenerDyn("rbDatei", () -> wechslePanelModus(PanelTyp.STATISCHE_DATEI));
+        registriereActionListenerDyn("rbStartseite", () -> wechslePanelModus(PanelTyp.TURNIERSTARTSEITE));
 
         int konfFelderY = modusY + ZEILE_H;
         int konfFelderY2 = konfFelderY + ZEILE_H;
@@ -331,6 +334,8 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
             fuegeEditEinDyn("txtPanelZoom", String.valueOf(aktuellerZoom), 33, konfFelderY, 35, ZEILE_H);
             fuegeAusrichtungsComboBoxen(75, konfFelderY);
             fuegeFixedTextEinDyn("lblTimerHinweis", I18n.get("webserver.composite.konfig.panel.timer.hinweis"), 5, konfFelderY2, 400, ZEILE_H);
+        } else if (istStartseitenModus) {
+            fuegeFixedTextEinDyn("lblStartseiteHinweis", I18n.get("webserver.composite.konfig.panel.startseite.hinweis"), 5, konfFelderY, 400, ZEILE_H);
         } else if (istUrlModus) {
             // ---- URL-Modus ----
             String aktuelleUrl = ausgewaehlterPanelIndex < panelUrls.size() ? panelUrls.get(ausgewaehlterPanelIndex) : "";
@@ -487,16 +492,18 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         wurzel = speichereSplitAnteil("txtSplitBreite", "H", wurzel);
         wurzel = speichereSplitAnteil("txtSplitHoehe", "V", wurzel);
 
-        // Modus aus RadioButtons lesen und speichern (Priorität: Datei > Timer > URL > Blatt)
+        // Modus aus RadioButtons lesen und speichern (Priorität: Startseite > Datei > Timer > URL > Blatt)
         if (ausgewaehlterPanelIndex < panelTypen.size()) {
+            XControl rbStartseiteCtrl = xcc.getControl("rbStartseite");
             XControl rbDateiCtrl = xcc.getControl("rbDatei");
             XControl rbTimerCtrl = xcc.getControl("rbTimer");
             XControl rbUrlCtrl   = xcc.getControl("rbUrl");
-            boolean istDatei = rbDateiCtrl != null && Lo.qi(XRadioButton.class, rbDateiCtrl).getState();
-            boolean istTimer = !istDatei && rbTimerCtrl != null && Lo.qi(XRadioButton.class, rbTimerCtrl).getState();
-            boolean istUrl   = !istDatei && !istTimer && rbUrlCtrl != null && Lo.qi(XRadioButton.class, rbUrlCtrl).getState();
+            boolean istStartseite = rbStartseiteCtrl != null && Lo.qi(XRadioButton.class, rbStartseiteCtrl).getState();
+            boolean istDatei = !istStartseite && rbDateiCtrl != null && Lo.qi(XRadioButton.class, rbDateiCtrl).getState();
+            boolean istTimer = !istStartseite && !istDatei && rbTimerCtrl != null && Lo.qi(XRadioButton.class, rbTimerCtrl).getState();
+            boolean istUrl   = !istStartseite && !istDatei && !istTimer && rbUrlCtrl != null && Lo.qi(XRadioButton.class, rbUrlCtrl).getState();
             panelTypen.set(ausgewaehlterPanelIndex,
-                    istDatei ? PanelTyp.STATISCHE_DATEI : istTimer ? PanelTyp.TIMER : istUrl ? PanelTyp.URL : PanelTyp.BLATT);
+                    istStartseite ? PanelTyp.TURNIERSTARTSEITE : istDatei ? PanelTyp.STATISCHE_DATEI : istTimer ? PanelTyp.TIMER : istUrl ? PanelTyp.URL : PanelTyp.BLATT);
         }
 
         // URL-Feld lesen und speichern (unabhängig vom Modus – Wert bleibt beim Moduswechsel erhalten)
@@ -689,6 +696,10 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
                 panels.add(new PanelEintragRoh(PanelTyp.STATISCHE_DATEI, "", GlobalProperties.DEFAULT_ZOOM,
                         GlobalProperties.DEFAULT_SICHTBARER_TABELLENANTEIL,
                         PanelAusrichtung.KEIN, PanelAusrichtung.KEIN, false, datei));
+            } else if (panelTyp == PanelTyp.TURNIERSTARTSEITE) {
+                panels.add(new PanelEintragRoh(PanelTyp.TURNIERSTARTSEITE, "", GlobalProperties.DEFAULT_ZOOM,
+                        GlobalProperties.DEFAULT_SICHTBARER_TABELLENANTEIL,
+                        PanelAusrichtung.KEIN, PanelAusrichtung.KEIN, false, ""));
             } else {
                 int pZoom = i < panelZooms.size() ? panelZooms.get(i) : GlobalProperties.DEFAULT_ZOOM;
                 int pSichtbarerTabellenAnteil = i < panelSichtbareTabellenanteile.size()
@@ -1254,6 +1265,10 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
                     tooltip = kurzName;
                     int pZoom = blatt.panel() < panelZooms.size() ? panelZooms.get(blatt.panel()) : GlobalProperties.DEFAULT_ZOOM;
                     suffix = " [" + pZoom + "%" + ausrichtungsSuffix(blatt.panel()) + "]";
+                } else if (panelTyp == PanelTyp.TURNIERSTARTSEITE) {
+                    kurzName = I18n.get("webserver.composite.konfig.panel.modus.startseite");
+                    tooltip = kurzName;
+                    suffix = " " + I18n.get("webserver.composite.konfig.panel.vorschau.marker.startseite");
                 } else {
                     String sheetName = blatt.panel() < panelSheets.size() ? panelSheets.get(blatt.panel()) : "?";
                     tooltip = sheetName;

@@ -120,7 +120,7 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
 
     @Override
     protected String getTitel() {
-        return I18n.get("webserver.dialog.konfiguration.titel");
+        return I18n.get("webserver.composite.dialog.liste.titel");
     }
 
     @Override

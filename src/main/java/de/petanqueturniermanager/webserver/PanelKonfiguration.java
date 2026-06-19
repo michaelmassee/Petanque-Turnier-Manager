@@ -4,7 +4,8 @@ package de.petanqueturniermanager.webserver;
  * Konfiguration eines einzelnen Panels in einem Composite View.
  *
  * @param typ                   Anzeigemodus: {@link PanelTyp#BLATT}, {@link PanelTyp#URL},
- *                              {@link PanelTyp#TIMER} oder {@link PanelTyp#STATISCHE_DATEI}
+ *                              {@link PanelTyp#TIMER}, {@link PanelTyp#STATISCHE_DATEI}
+ *                              oder {@link PanelTyp#TURNIERSTARTSEITE}
  * @param sheetConfig           Konfigurations-String (nur relevant wenn typ == BLATT)
  * @param resolver              Sheet-Resolver (nur relevant wenn typ == BLATT, sonst {@code null})
  * @param zoom                  Zoom-Faktor in Prozent (10–500, Standard 100)

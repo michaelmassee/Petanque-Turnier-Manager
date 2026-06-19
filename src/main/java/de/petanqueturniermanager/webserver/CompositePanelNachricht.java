@@ -41,6 +41,7 @@ public record CompositePanelNachricht(
         String timerBezeichnung,
         String timerHintergrundFarbe,
         Boolean timerSnoozed,
+        StartseiteSseNachricht startseite,
         String hinweisTitel,
         String hinweisText) {
 
@@ -59,7 +60,7 @@ public record CompositePanelNachricht(
                 modell.getKopfzeileLinks(), modell.getKopfzeileMitte(), modell.getKopfzeileRechts(),
                 modell.getFusszeileLinks(), modell.getFusszeileMitte(), modell.getFusszeileRechts(),
                 modell.getKopfZeilenAnzahl(),
-                null, null, null, null, null, null, null, null);
+                null, null, null, null, null, null, null, null, null);
     }
 
     /**
@@ -77,7 +78,7 @@ public record CompositePanelNachricht(
                 diffModell.getKopfzeileLinks(), diffModell.getKopfzeileMitte(), diffModell.getKopfzeileRechts(),
                 diffModell.getFusszeileLinks(), diffModell.getFusszeileMitte(), diffModell.getFusszeileRechts(),
                 diffModell.getKopfZeilenAnzahl(),
-                null, null, null, null, null, null, null, null);
+                null, null, null, null, null, null, null, null, null);
     }
 
     /**
@@ -94,7 +95,7 @@ public record CompositePanelNachricht(
                 panelId, 100, 100, null, null, false, "",
                 null, null, null, null, null, null,
                 null, null, null, null, null, null, 0,
-                externeUrl, null, null, null, null, null, null, null);
+                externeUrl, null, null, null, null, null, null, null, null);
     }
 
     /**
@@ -108,7 +109,19 @@ public record CompositePanelNachricht(
                 panelId, 100, 100, null, null, false, "",
                 null, null, null, null, null, null,
                 null, null, null, null, null, null, 0,
-                url, null, null, null, null, null, null, null);
+                url, null, null, null, null, null, null, null, null);
+    }
+
+    /**
+     * Erstellt eine Panel-Nachricht für die Turnier-Startseite im Composite View.
+     */
+    static CompositePanelNachricht startseite(int panelId, StartseiteSseNachricht startseite) {
+        return new CompositePanelNachricht(
+                panelId, 100, 100, null, null, false, "",
+                null, null, null, null, null, null,
+                null, null, null, null, null, null, 0,
+                null, null, null, null, null, null,
+                startseite, null, null);
     }
 
     /**
@@ -125,6 +138,7 @@ public record CompositePanelNachricht(
                 null, null, null, null, null, null,
                 null, null, null, null, null, null, 0,
                 null, null, null, null, null,
+                null,
                 null, titel, text);
     }
 
@@ -145,6 +159,6 @@ public record CompositePanelNachricht(
                 null, null, null, null, null, null, 0,
                 null,
                 state.anzeige(), state.zustand().name(), state.bezeichnung(), state.hintergrundFarbe(),
-                state.snoozed(), null, null);
+                state.snoozed(), null, null, null);
     }
 }

@@ -137,6 +137,9 @@ public final class WebServerManager implements TimerListener {
     private volatile String letzteStartseiteTextfarbe = "";
     private volatile TimerState letzterTimerZustand = TimerState.inaktiv();
 
+    private record StartseitePanelDaten(StartseiteSseNachricht nachricht, String logoQuelle) {
+    }
+
     private final List<Runnable> statusListener = new CopyOnWriteArrayList<>();
 
     /** Serialisiert alle Render-/Push-Wellen. Niemals zwei parallele {@code renderUndPushenComposite}-Läufe. */
@@ -595,6 +598,14 @@ public final class WebServerManager implements TimerListener {
                                 alleInitPanels.add(CompositePanelNachricht.statischeDatei(i, neuerPanelEintrag.externeUrl()));
                                 continue;
                             }
+                            if (neuerPanelEintrag.typ() == PanelTyp.TURNIERSTARTSEITE) {
+                                neuePanelKonfigs.add(new PanelKonfiguration(
+                                        PanelTyp.TURNIERSTARTSEITE, "", null,
+                                        neuerPanelEintrag.zoom(), neuerPanelEintrag.sichtbarerTabellenAnteil(),
+                                        neuerPanelEintrag.horizontalAusrichtung(), neuerPanelEintrag.vertikalAusrichtung(), false, ""));
+                                alleInitPanels.add(CompositePanelNachricht.startseite(i, leereStartseiteNachricht(0)));
+                                continue;
+                            }
                             var altIndex = altSheetConfigZuIndex.get(neuerPanelEintrag.sheetConfig());
                             SheetResolver resolver = altIndex != null
                                     ? konfig.panels().get(altIndex).resolver()
@@ -682,6 +693,45 @@ public final class WebServerManager implements TimerListener {
                 logger.warn("Live-Push der Startseite nach Konfig-Änderung fehlgeschlagen: {}", e.getMessage(), e);
             }
         });
+    }
+
+    private static StartseiteSseNachricht leereStartseiteNachricht(int version) {
+        return StartseiteSseNachricht.init(
+                version, "", "", "keine", "", 0, 0,
+                I18n.get("startseite.label.angemeldet"),
+                I18n.get("startseite.label.aktiv"),
+                I18n.get("startseite.tagline"),
+                "", "", StartseiteSprueche.alle(),
+                GlobalProperties.get().getStartseiteZoom());
+    }
+
+    private StartseitePanelDaten startseitePanelDaten(WorkingSpreadsheet ws, int version) {
+        var status = TeilnehmerStatusService.ermitteln(ws);
+        String turniersystem = TurnierStatusErmittler.turniersystemBezeichnung(ws);
+        String turnierStatus = TurnierStatusErmittler.ermitteln(ws);
+        var docProps = new DocumentPropertiesHelper(ws);
+        String logoQuelle = turnierlogoQuelle(ws, docProps);
+        String beschreibung = docProps.getStringProperty("Turnierbeschreibung", "");
+        String beschreibungAnimation = docProps.getStringProperty(
+                de.petanqueturniermanager.konfigdialog.properties.TurnierStartseiteDialog
+                        .DOC_PROP_BESCHREIBUNG_ANIMATION,
+                de.petanqueturniermanager.konfigdialog.properties.TurnierStartseiteDialog.ANIMATION_DEFAULT);
+        int textfarbeInt = docProps.getIntProperty(
+                de.petanqueturniermanager.konfigdialog.properties.TurnierStartseiteDialog
+                        .DOC_PROP_BESCHREIBUNG_TEXTFARBE,
+                de.petanqueturniermanager.konfigdialog.properties.TurnierStartseiteDialog
+                        .DEFAULT_BESCHREIBUNG_TEXTFARBE);
+        String textfarbe = String.format("#%06x", textfarbeInt & 0xFFFFFF);
+        String logoUrl = startseiteLogoUrl(logoQuelle, version);
+        var nachricht = StartseiteSseNachricht.init(
+                version, logoUrl, beschreibung, beschreibungAnimation, textfarbe,
+                status.angemeldet(), status.aktiv(),
+                I18n.get("startseite.label.angemeldet"),
+                I18n.get("startseite.label.aktiv"),
+                I18n.get("startseite.tagline"),
+                turniersystem, turnierStatus, StartseiteSprueche.alle(),
+                GlobalProperties.get().getStartseiteZoom());
+        return new StartseitePanelDaten(nachricht, logoQuelle);
     }
 
     /**
@@ -866,6 +916,8 @@ public final class WebServerManager implements TimerListener {
             } else if (panelKonfig.typ() == PanelTyp.STATISCHE_DATEI) {
                 alleInitPanels.add(CompositePanelNachricht.statischeDatei(i, panelKonfig.externeUrl()));
                 letzteCompositeUrls.get(konfig.port()).put(i, panelKonfig.externeUrl());
+            } else if (panelKonfig.typ() == PanelTyp.TURNIERSTARTSEITE) {
+                alleInitPanels.add(CompositePanelNachricht.startseite(i, leereStartseiteNachricht(0)));
             } else {
                 // BLATT-Panel ohne ws-Zugriff: vorläufig als "kein Dokument" rendern.
                 // Beim ersten echten Refresh wird der Status auf "echtes Sheet" oder
@@ -1128,6 +1180,17 @@ public final class WebServerManager implements TimerListener {
                     continue;
                 }
 
+                if (panelKonfig.typ() == PanelTyp.TURNIERSTARTSEITE) {
+                    int naechsteVersion = compositeVersionen
+                            .computeIfAbsent(port, p -> new AtomicInteger(0))
+                            .get() + 1;
+                    var startseite = startseitePanelDaten(ws, naechsteVersion);
+                    instanz.setLogoQuelle(startseite.logoQuelle());
+                    panelNachrichten.add(CompositePanelNachricht.startseite(i, startseite.nachricht()));
+                    irgendeineAenderung = true;
+                    continue;
+                }
+
                 var sheetOpt = panelKonfig.resolver().resolve(ws);
                 if (sheetOpt.isEmpty()) {
                     // Nicht aufgelöstes Sheet: nur dieses Panel zeigt einen Hinweis,
@@ -1203,6 +1266,12 @@ public final class WebServerManager implements TimerListener {
                                 ? CompositePanelNachricht.url(i, cachedQuelle)
                                 : CompositePanelNachricht.statischeDatei(i, cachedQuelle));
                     }
+                    continue;
+                }
+                if (panelKonfig.typ() == PanelTyp.TURNIERSTARTSEITE) {
+                    var startseite = startseitePanelDaten(ws, version);
+                    instanz.setLogoQuelle(startseite.logoQuelle());
+                    alleInitPanels.add(CompositePanelNachricht.startseite(i, startseite.nachricht()));
                     continue;
                 }
                 var vollModell = panelModelle.get(i);

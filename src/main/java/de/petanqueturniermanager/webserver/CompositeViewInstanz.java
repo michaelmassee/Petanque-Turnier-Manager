@@ -58,6 +58,7 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot, Re
      */
     private volatile String cachedInitJson;
     private volatile boolean laeuft = false;
+    private volatile String logoQuelle = "";
 
     public CompositeViewInstanz(CompositeViewKonfiguration konfiguration) throws IOException {
         this.konfiguration = konfiguration;
@@ -65,6 +66,7 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot, Re
         httpServer.setExecutor(Executors.newCachedThreadPool());
         httpServer.createContext("/events", this::handleEvents);
         httpServer.createContext("/debug/sse", this::handleDebugSse);
+        httpServer.createContext("/turnierlogo", this::handleTurnierlogo);
         httpServer.createContext("/", this::handleStatischOderRoot);
         keepAliveExecutor = Executors.newSingleThreadScheduledExecutor(r -> {
             var t = new Thread(r, "PTM-CompositeView-KeepAlive-" + konfiguration.port());
@@ -101,6 +103,11 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot, Re
 
     public synchronized void setCachedInitJson(String json) {
         this.cachedInitJson = json;
+    }
+
+    /** Aktualisiert die Quelle für das im Composite-Startseitenpanel verwendete Turnierlogo. */
+    public void setLogoQuelle(String quelle) {
+        this.logoQuelle = quelle == null ? "" : quelle.trim();
     }
 
     public String getCachedInitJson() {
@@ -241,6 +248,47 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot, Re
         byte[] body = json.getBytes(StandardCharsets.UTF_8);
         exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
         exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
+        exchange.sendResponseHeaders(200, body.length);
+        try (OutputStream os = exchange.getResponseBody()) {
+            os.write(body);
+        }
+    }
+
+    void handleTurnierlogo(HttpExchange exchange) throws IOException {
+        if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
+            exchange.sendResponseHeaders(405, -1);
+            return;
+        }
+        String quelle = logoQuelle;
+        if (quelle.isEmpty()) {
+            exchange.sendResponseHeaders(404, -1);
+            return;
+        }
+        if (quelle.startsWith("http://") || quelle.startsWith("https://")) {
+            exchange.getResponseHeaders().set("Location", quelle);
+            exchange.sendResponseHeaders(302, -1);
+            return;
+        }
+        Path datei;
+        try {
+            datei = quelle.startsWith("file:")
+                    ? Paths.get(URI.create(quelle))
+                    : Paths.get(quelle);
+        } catch (IllegalArgumentException e) {
+            logger.warn("Ungültige Logo-Quelle für Composite-Port {}: {}", konfiguration.port(), quelle, e);
+            exchange.sendResponseHeaders(404, -1);
+            return;
+        }
+        if (!Files.isRegularFile(datei) || !Files.isReadable(datei)) {
+            logger.warn("Turnierlogo-Datei nicht lesbar für Composite-Port {}: {}", konfiguration.port(), datei);
+            exchange.sendResponseHeaders(404, -1);
+            return;
+        }
+        byte[] body = Files.readAllBytes(datei);
+        var headers = exchange.getResponseHeaders();
+        headers.set("Content-Type", ermittleContentType(datei.getFileName().toString()));
+        headers.set("Cache-Control", "no-cache");
+        headers.set("Access-Control-Allow-Origin", "*");
         exchange.sendResponseHeaders(200, body.length);
         try (OutputStream os = exchange.getResponseBody()) {
             os.write(body);

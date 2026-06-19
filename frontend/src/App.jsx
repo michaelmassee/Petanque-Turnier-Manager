@@ -61,6 +61,7 @@ function panelAusNachricht(msg) {
     timerBezeichnung: msg.timerBezeichnung ?? null,
     timerHintergrundFarbe: msg.timerHintergrundFarbe ?? null,
     timerSnoozed: msg.timerSnoozed ?? false,
+    startseite: msg.startseite ?? null,
     hinweisTitel: msg.hinweisTitel ?? null,
     hinweisText: msg.hinweisText ?? null,
     zoom: msg.zoom ?? 100,
@@ -98,6 +99,7 @@ function panelDiffAusNachricht(msg, vorher) {
     timerBezeichnung: msg.timerBezeichnung ?? vorher?.timerBezeichnung ?? null,
     timerHintergrundFarbe: msg.timerHintergrundFarbe ?? vorher?.timerHintergrundFarbe ?? null,
     timerSnoozed: msg.timerSnoozed ?? vorher?.timerSnoozed ?? false,
+    startseite: msg.startseite ?? null,
     // Hinweis-Status NICHT mit vorher mergen: wenn das Backend eine reguläre Nachricht
     // (init/diff/url/timer) sendet, soll ein vorheriger "fehlend"-Zustand verschwinden.
     hinweisTitel: msg.hinweisTitel ?? null,

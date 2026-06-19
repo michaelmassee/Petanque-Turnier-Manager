@@ -189,6 +189,29 @@ class GlobalPropertiesTest {
     }
 
     @Test
+    void testCompositeRoundtripMitTurnierstartseite() throws Exception {
+        var gp = GlobalProperties.get();
+        var panel = new PanelEintragRoh(
+                PanelTyp.TURNIERSTARTSEITE, "", GlobalProperties.DEFAULT_ZOOM, "kein", "kein", false, "");
+        var eintrag = new CompositeViewEintragRoh(
+                5001, "Anzeige", true, GlobalProperties.DEFAULT_ZOOM, true, "", List.of(panel));
+
+        gp.speichernCompositeViews(true, List.of(eintrag));
+
+        GlobalProperties.resetForTest();
+        var gp2 = GlobalProperties.get();
+        var gelesenesPanel = gp2.getCompositeViewEintraege().get(0).panels().get(0);
+        assertEquals(PanelTyp.TURNIERSTARTSEITE, gelesenesPanel.typ());
+        assertEquals("", gelesenesPanel.sheetConfig());
+        assertEquals("", gelesenesPanel.externeUrl());
+
+        var konfigPanel = gp2.getCompositeViewKonfigurationen().get(0).panels().get(0);
+        assertEquals(PanelTyp.TURNIERSTARTSEITE, konfigPanel.typ());
+        assertEquals("", konfigPanel.sheetConfig());
+        assertEquals("", konfigPanel.externeUrl());
+    }
+
+    @Test
     void testGespeichertesLayoutMitGroessenBleibtErhalten() throws Exception {
         var file = tempDir.resolve("PetanqueTurnierManager.properties");
         java.nio.file.Files.writeString(file,

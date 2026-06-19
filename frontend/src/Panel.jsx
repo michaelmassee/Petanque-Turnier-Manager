@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Cell from './Cell';
+import StartseiteApp from './StartseiteApp';
 import { transformOrigin } from './alignment';
 import { useAutoFitScale } from './useAutoFit';
 
@@ -202,6 +203,10 @@ export default function Panel({ table, sheetnamenAnzeigen, headerFooterUnterdrue
         </div>
       </div>
     );
+  }
+
+  if (table.startseite) {
+    return <StartseiteApp startseite={table.startseite} />;
   }
 
   if (table.externeUrl) {
