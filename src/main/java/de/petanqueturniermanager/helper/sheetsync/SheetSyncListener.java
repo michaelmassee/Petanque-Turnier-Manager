@@ -559,12 +559,20 @@ public final class SheetSyncListener implements IGlobalEventListener, ITurnierEv
                     fehlt.stabileId());
             return;
         }
+        if (istDisposed(xDoc)) {
+            logger.debug("Sheet-Sync-Recovery übersprungen – Dokument bereits geschlossen (key={})", key);
+            return;
+        }
         if (SheetRunner.isRunning()) {
             return;
         }
         logger.warn("Sheet-Sync-Quelle '{}' fehlt erwartet (key={}) – Recovery-Rebuild",
                 fehlt.stabileId(), key);
         SheetSyncSignaturStore.markiereRecoveryVersucht(xDoc, key);
+        if (istDisposed(xDoc)) {
+            logger.debug("Sheet-Sync-Recovery-Runner übersprungen – Dokument bereits geschlossen (key={})", key);
+            return;
+        }
         runnerFactory.apply(new WorkingSpreadsheet(xContext, xDoc), sheet).startSilent();
     }
 
