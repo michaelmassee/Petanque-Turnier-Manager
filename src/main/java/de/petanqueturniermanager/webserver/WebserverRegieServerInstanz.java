@@ -141,6 +141,18 @@ public class WebserverRegieServerInstanz {
             serviereRessource(exchange, rest, ermittleContentType(rest));
         } else if ("/gong.wav".equals(rest)) {
             serviereClasspathRessource(exchange, GONG_RESOURCE, "audio/wav", "public, max-age=3600");
+        } else if ("/turnierlogo".equals(rest)) {
+            if (quelle instanceof TurnierStartseiteWebServerInstanz startseite) {
+                startseite.handleTurnierlogo(exchange);
+            } else {
+                exchange.sendResponseHeaders(404, -1);
+            }
+        } else if (rest.startsWith("/local-panel/")) {
+            if (quelle instanceof CompositeViewInstanz compositeView) {
+                compositeView.serviereLokalePanelDatei(exchange, rest.substring("/local-panel/".length()));
+            } else {
+                exchange.sendResponseHeaders(404, -1);
+            }
         } else {
             exchange.sendResponseHeaders(404, -1);
         }

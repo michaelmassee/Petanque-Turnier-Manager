@@ -180,7 +180,7 @@ public class TurnierStartseiteWebServerInstanz implements SseElternInstanz, WebS
         verbindung.sendeInitNachricht();
     }
 
-    private void handleTurnierlogo(HttpExchange exchange) throws IOException {
+    void handleTurnierlogo(HttpExchange exchange) throws IOException {
         if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
             exchange.sendResponseHeaders(405, -1);
             return;
@@ -249,12 +249,16 @@ public class TurnierStartseiteWebServerInstanz implements SseElternInstanz, WebS
     }
 
     private static String ermittleContentType(String dateiname) {
-        if (dateiname.endsWith(".js")) return "text/javascript; charset=UTF-8";
-        if (dateiname.endsWith(".css")) return "text/css; charset=UTF-8";
-        if (dateiname.endsWith(".html")) return CONTENT_TYPE_HTML;
-        if (dateiname.endsWith(".svg")) return "image/svg+xml";
-        if (dateiname.endsWith(".png")) return "image/png";
-        if (dateiname.endsWith(".ico")) return "image/x-icon";
+        String name = dateiname.toLowerCase(java.util.Locale.ROOT);
+        if (name.endsWith(".js")) return "text/javascript; charset=UTF-8";
+        if (name.endsWith(".css")) return "text/css; charset=UTF-8";
+        if (name.endsWith(".html")) return CONTENT_TYPE_HTML;
+        if (name.endsWith(".svg")) return "image/svg+xml";
+        if (name.endsWith(".png")) return "image/png";
+        if (name.endsWith(".jpg") || name.endsWith(".jpeg")) return "image/jpeg";
+        if (name.endsWith(".gif")) return "image/gif";
+        if (name.endsWith(".webp")) return "image/webp";
+        if (name.endsWith(".ico")) return "image/x-icon";
         return "application/octet-stream";
     }
 }

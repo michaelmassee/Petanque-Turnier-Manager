@@ -362,10 +362,7 @@ public class WebserverRegieSidebarContent extends BaseSidebarContent {
                 GlobalProperties.get().isWebserverRegieAktiv(),
                 GlobalProperties.get().getWebserverRegiePort(),
                 ziele);
-        var ws = getCurrentSpreadsheet();
-        if (ws != null) {
-            LoMainThread.post(ws.getxContext(), WebServerManager.get()::konfigurationGeaendert);
-        }
+        WebServerManager.get().konfigurationGeaendert();
     }
 
     @Override

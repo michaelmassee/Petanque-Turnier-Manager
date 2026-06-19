@@ -169,27 +169,13 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot, Re
         return konfiguration.panels().stream().anyMatch(p -> p.typ() == PanelTyp.TIMER);
     }
 
-    /**
-     * Aktualisiert die Konfiguration, speichert das gecachte Init-JSON und pusht separat.
-     *
-     * @param neueKonfiguration neue Panel-Konfiguration
-     * @param neuesCachedJson   wird als cachedInitJson gespeichert (für reconnectende Clients); {@code null} = unveränderter Cache
-     * @param pushJson          wird sofort an alle offenen SSE-Verbindungen gesendet; {@code null} = kein Push
-     */
-    public synchronized void setKonfiguration(CompositeViewKonfiguration neueKonfiguration,
+    synchronized String aktualisiereKonfiguration(CompositeViewKonfiguration neueKonfiguration,
             String neuesCachedJson, String pushJson) {
         this.konfiguration = neueKonfiguration;
         if (neuesCachedJson != null) {
             setCachedInitJson(neuesCachedJson);
         }
-        if (pushJson != null) {
-            sseNachrichtPushen(pushJson);
-        }
-    }
-
-    /** Aktualisiert die Konfiguration und pusht sofort denselben Zustand als Cache und Live-Push. */
-    public synchronized void setKonfiguration(CompositeViewKonfiguration neueKonfiguration, String neuesInitJson) {
-        setKonfiguration(neueKonfiguration, neuesInitJson, neuesInitJson);
+        return pushJson;
     }
 
     // ── HTTP-Handler ────────────────────────────────────────────────────────────
@@ -267,7 +253,7 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot, Re
         serviereClasspathRessource(exchange, ressourcePfad, contentType, "no-cache");
     }
 
-    private void serviereLokalePanelDatei(HttpExchange exchange, String panelIdText) throws IOException {
+    void serviereLokalePanelDatei(HttpExchange exchange, String panelIdText) throws IOException {
         int panelId;
         try {
             panelId = Integer.parseInt(panelIdText);

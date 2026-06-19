@@ -14,6 +14,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -34,12 +35,24 @@ import com.sun.star.util.XModifyBroadcaster;
 import de.petanqueturniermanager.comp.GlobalProperties;
 import de.petanqueturniermanager.comp.GlobalProperties.CompositeViewEintragRoh;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.formulex.konfiguration.FormuleXKonfigurationSheet;
+import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.LoMainThread;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
+import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationSheet;
+import de.petanqueturniermanager.kaskade.konfiguration.KaskadeKonfigurationSheet;
+import de.petanqueturniermanager.ko.konfiguration.KoKonfigurationSheet;
+import de.petanqueturniermanager.liga.konfiguration.LigaKonfigurationSheet;
+import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
+import de.petanqueturniermanager.poule.konfiguration.PouleKonfigurationSheet;
+import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
+import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
 import de.petanqueturniermanager.timer.TimerListener;
 import de.petanqueturniermanager.timer.TimerState;
 import de.petanqueturniermanager.timer.TimerWebServerInstanz;
+import de.petanqueturniermanager.triptete.konfiguration.TripTeteKonfigurationSheet;
 
 /**
  * Singleton-Verwaltung aller Webserver-Instanzen.
@@ -77,6 +90,8 @@ public final class WebServerManager implements TimerListener {
     private final TabellenMapper mapper = new TabellenMapper();
     private final DiffEngine diffEngine = new DiffEngine();
     private final WebserverModifyListener modifyListener = new WebserverModifyListener();
+    private final Object konfigExecutorLock = new Object();
+    private ExecutorService konfigExecutor = neuerKonfigExecutor();
 
     /** Letzte Panel-Modelle pro Composite-Port und Panel-ID (port → panelId → TabelleModel). */
     private final Map<Integer, Map<Integer, TabelleModel>> letzteCompositeModelle = new ConcurrentHashMap<>();
@@ -116,6 +131,10 @@ public final class WebServerManager implements TimerListener {
     private volatile String letztesStartseiteTurniersystem = "";
     /** Zuletzt gepushter Turnier-Status-Text (Diff-Cache). */
     private volatile String letzterStartseiteTurnierStatus = "";
+    private volatile String letztesStartseiteLogo = "";
+    private volatile String letzteStartseiteBeschreibung = "";
+    private volatile String letzteStartseiteAnimation = "";
+    private volatile String letzteStartseiteTextfarbe = "";
     private volatile TimerState letzterTimerZustand = TimerState.inaktiv();
 
     private final List<Runnable> statusListener = new CopyOnWriteArrayList<>();
@@ -134,6 +153,23 @@ public final class WebServerManager implements TimerListener {
     private ScheduledExecutorService watchdog;
 
     private WebServerManager() {
+    }
+
+    private static ExecutorService neuerKonfigExecutor() {
+        return Executors.newSingleThreadExecutor(r -> {
+            var t = new Thread(r, "PTM-WebServer-Konfiguration");
+            t.setDaemon(true);
+            return t;
+        });
+    }
+
+    private void fuehreKonfigTaskAus(Runnable task) {
+        synchronized (konfigExecutorLock) {
+            if (konfigExecutor.isShutdown() || konfigExecutor.isTerminated()) {
+                konfigExecutor = neuerKonfigExecutor();
+            }
+            konfigExecutor.execute(task);
+        }
     }
 
     /** Zugriff auf den Listener für externe Mark-Trigger (z.B. SheetRunner-Ende). */
@@ -348,12 +384,18 @@ public final class WebServerManager implements TimerListener {
      * Registriert einmalig in {@code PetanqueTurnierMngrSingleton.init()}.
      */
     @Override
-    public synchronized void onChange(TimerState state) {
-        letzterTimerZustand = state;
-        if (timerInstanz != null && timerInstanz.laeuft()) {
-            timerInstanz.onChange(state);
+    public void onChange(TimerState state) {
+        TimerWebServerInstanz timerSnapshot;
+        List<CompositeViewInstanz> compositeSnapshots;
+        synchronized (this) {
+            letzterTimerZustand = state;
+            timerSnapshot = timerInstanz != null && timerInstanz.laeuft() ? timerInstanz : null;
+            compositeSnapshots = new ArrayList<>(compositeInstanzen);
         }
-        for (var instanz : compositeInstanzen) {
+        if (timerSnapshot != null) {
+            timerSnapshot.onChange(state);
+        }
+        for (var instanz : compositeSnapshots) {
             if (!instanz.hatTimerPanels()) {
                 continue;
             }
@@ -384,41 +426,52 @@ public final class WebServerManager implements TimerListener {
     /**
      * Stoppt alle laufenden Webserver-Instanzen und schließt alle SSE-Verbindungen.
      */
-    public synchronized void stoppen() {
-        if (timerInstanz != null) {
-            timerInstanz.stoppen();
-            timerInstanz = null;
+    public void stoppen() {
+        List<Runnable> stopAktionen = new ArrayList<>();
+        synchronized (this) {
+            if (timerInstanz != null) {
+                var aktuelleTimerInstanz = timerInstanz;
+                stopAktionen.add(aktuelleTimerInstanz::stoppen);
+                timerInstanz = null;
+            }
+            synchronized (konfigExecutorLock) {
+                konfigExecutor.shutdownNow();
+            }
+            // Nur der Timer-Webserver kann unabhängig vom Haupt-Webserver laufen.
+            // Gesammelte Stop-Aktionen müssen nach Freigabe des Manager-Locks trotzdem laufen.
+            if (laeuft) {
+                stoppeWatchdog();
+                deregistriereModifyListener();
+                for (var instanz : compositeInstanzen) {
+                    stopAktionen.add(instanz::stoppen);
+                }
+                if (startseiteInstanz != null) {
+                    var aktuelleStartseiteInstanz = startseiteInstanz;
+                    stopAktionen.add(aktuelleStartseiteInstanz::stoppen);
+                    startseiteInstanz = null;
+                }
+                if (regieInstanz != null) {
+                    var aktuelleRegieInstanz = regieInstanz;
+                    stopAktionen.add(aktuelleRegieInstanz::stoppen);
+                    regieInstanz = null;
+                }
+                startseiteDiffCacheZuruecksetzen();
+                slots.clear();
+                compositeInstanzen.clear();
+                letzteCompositeModelle.clear();
+                letzteCompositeTitel.clear();
+                compositeVersionen.clear();
+                letzteCompositeUrls.clear();
+                initialisiertePanels.clear();
+                fehlendePanels.clear();
+                laeuft = false;
+                ownerDocument = null;
+                statusListenerBenachrichtigen();
+                logger.info("Webserver gestoppt");
+                safeProcessBoxInfo(I18n.get("webserver.prozessbox.gestoppt"));
+            }
         }
-        if (!laeuft) {
-            return;
-        }
-        stoppeWatchdog();
-        deregistriereModifyListener();
-        for (var instanz : compositeInstanzen) {
-            instanz.stoppen();
-        }
-        if (startseiteInstanz != null) {
-            startseiteInstanz.stoppen();
-            startseiteInstanz = null;
-        }
-        if (regieInstanz != null) {
-            regieInstanz.stoppen();
-            regieInstanz = null;
-        }
-        startseiteDiffCacheZuruecksetzen();
-        slots.clear();
-        compositeInstanzen.clear();
-        letzteCompositeModelle.clear();
-        letzteCompositeTitel.clear();
-        compositeVersionen.clear();
-        letzteCompositeUrls.clear();
-        initialisiertePanels.clear();
-        fehlendePanels.clear();
-        laeuft = false;
-        ownerDocument = null;
-        statusListenerBenachrichtigen();
-        logger.info("Webserver gestoppt");
-        safeProcessBoxInfo(I18n.get("webserver.prozessbox.gestoppt"));
+        stopAktionen.forEach(Runnable::run);
     }
 
     /**
@@ -448,11 +501,27 @@ public final class WebServerManager implements TimerListener {
      * und pusht den neuen Zustand sofort an alle verbundenen Browser-Clients.
      * <p>
      * Muss nach {@link GlobalProperties#speichernCompositeViews(boolean, java.util.List)} aufgerufen werden.
-     * Kein UNO-Zugriff erforderlich – verwendet ausschließlich gecachte Modelle.
+     * Der Server-Abgleich läuft auf einem Webserver-Worker; ein ggf. nötiger Startseiten-Live-Push
+     * mit UNO-Zugriff wird anschließend auf den LO-Main-Thread gepostet.
      */
-    public synchronized void konfigurationGeaendert() {
+    public void konfigurationGeaendert() {
+        fuehreKonfigTaskAus(() -> {
+            try {
+                var ergebnis = konfigurationGeaendertIntern();
+                ergebnis.sseIoAktionen().forEach(Runnable::run);
+                if (ergebnis.startseitePushNoetig()) {
+                    pushStartseiteNachKonfigurationsaenderung();
+                }
+            } catch (RuntimeException e) {
+                logger.warn("Webserver-Konfigurationsabgleich fehlgeschlagen: {}", e.getMessage(), e);
+            }
+        });
+    }
+
+    private synchronized KonfigAbgleichErgebnis konfigurationGeaendertIntern() {
+        var sseIoAktionen = new ArrayList<Runnable>();
         if (!laeuft) {
-            return;
+            return new KonfigAbgleichErgebnis(List.of(), false);
         }
         var compositeEintraege = GlobalProperties.get().getCompositeViewEintraege();
         for (var instanz : compositeInstanzen) {
@@ -571,29 +640,48 @@ public final class WebServerManager implements TimerListener {
                                     ? GSON.toJson(CompositeSseNachricht.diff(version, alleInitPanels, neueWurzel, e.zoom(), e.mitHeaderFooter()))
                                     : cachedJson;
                         }
-                        instanz.setKonfiguration(
+                        String ausstehenderPush = instanz.aktualisiereKonfiguration(
                                 new CompositeViewKonfiguration(port, e.name(), e.zoom(), neueWurzel, neuePanelKonfigs, e.mitHeaderFooter()),
                                 cachedJson, pushJson);
+                        if (ausstehenderPush != null) {
+                            sseIoAktionen.add(() -> instanz.sseNachrichtPushen(ausstehenderPush));
+                        }
                     });
         }
 
-        reconciliereCompositeInstanzen(compositeEintraege);
-        reconciliereStartseiteInstanz();
-        reconciliereRegieInstanz();
+        reconciliereCompositeInstanzen(compositeEintraege, sseIoAktionen);
+        reconciliereStartseiteInstanz(sseIoAktionen);
+        reconciliereRegieInstanz(sseIoAktionen);
         if (regieInstanz != null && regieInstanz.laeuft()) {
-            regieInstanz.konfigurationGeaendert();
+            var aktuelleRegieInstanz = regieInstanz;
+            sseIoAktionen.add(aktuelleRegieInstanz::konfigurationGeaendert);
         }
         // Logo/Beschreibung sind nicht Teil des Diff-Cache (letzterStartseiteStatus enthält nur
         // angemeldet/aktiv). Deshalb Diff-Cache zurücksetzen und sofort pushen, damit Änderungen
         // ohne Spielerzahl-Wechsel die Live-Clients erreichen.
         startseiteDiffCacheZuruecksetzen();
-        if (startseiteInstanz != null && startseiteInstanz.laeuft() && gespeicherterCtx != null) {
+        boolean startseitePushNoetig = startseiteInstanz != null && startseiteInstanz.laeuft() && gespeicherterCtx != null;
+        return new KonfigAbgleichErgebnis(List.copyOf(sseIoAktionen), startseitePushNoetig);
+    }
+
+    private record KonfigAbgleichErgebnis(List<Runnable> sseIoAktionen, boolean startseitePushNoetig) {
+    }
+
+    private void pushStartseiteNachKonfigurationsaenderung() {
+        XComponentContext ctx = gespeicherterCtx;
+        if (ctx == null) {
+            return;
+        }
+        LoMainThread.post(ctx, () -> {
+            if (startseiteInstanz == null || !startseiteInstanz.laeuft()) {
+                return;
+            }
             try {
-                pushStartseiteFallsAktiv(new WorkingSpreadsheet(gespeicherterCtx));
+                pushStartseiteFallsAktiv(new WorkingSpreadsheet(ctx));
             } catch (RuntimeException e) {
                 logger.warn("Live-Push der Startseite nach Konfig-Änderung fehlgeschlagen: {}", e.getMessage(), e);
             }
-        }
+        });
     }
 
     /**
@@ -602,7 +690,7 @@ public final class WebServerManager implements TimerListener {
      * - aktiviert: laufend auf anderem Port → stoppen + neu starten
      * - deaktiviert: laufend → stoppen
      */
-    private void reconciliereStartseiteInstanz() {
+    private void reconciliereStartseiteInstanz(List<Runnable> sseIoAktionen) {
         boolean sollAktiv = GlobalProperties.get().isStartseiteAktiv();
         int sollPort = GlobalProperties.get().getStartseitePort();
         boolean laeuftSchon = startseiteInstanz != null && startseiteInstanz.laeuft();
@@ -610,14 +698,16 @@ public final class WebServerManager implements TimerListener {
 
         if (!sollAktiv) {
             if (laeuftSchon) {
-                startseiteInstanz.stoppen();
+                var aktuelleStartseiteInstanz = startseiteInstanz;
+                sseIoAktionen.add(aktuelleStartseiteInstanz::stoppen);
                 startseiteInstanz = null;
                 startseiteDiffCacheZuruecksetzen();
                 logger.info("Turnier-Startseite gestoppt (deaktiviert)");
             }
         } else if (!portStimmt) {
             if (laeuftSchon) {
-                startseiteInstanz.stoppen();
+                var aktuelleStartseiteInstanz = startseiteInstanz;
+                sseIoAktionen.add(aktuelleStartseiteInstanz::stoppen);
                 startseiteInstanz = null;
                 startseiteDiffCacheZuruecksetzen();
             }
@@ -655,7 +745,7 @@ public final class WebServerManager implements TimerListener {
         }
     }
 
-    private void reconciliereRegieInstanz() {
+    private void reconciliereRegieInstanz(List<Runnable> sseIoAktionen) {
         boolean sollAktiv = GlobalProperties.get().isWebserverRegieAktiv();
         int sollPort = GlobalProperties.get().getWebserverRegiePort();
         boolean laeuftSchon = regieInstanz != null && regieInstanz.laeuft();
@@ -663,13 +753,15 @@ public final class WebServerManager implements TimerListener {
 
         if (!sollAktiv) {
             if (laeuftSchon) {
-                regieInstanz.stoppen();
+                var aktuelleRegieInstanz = regieInstanz;
+                sseIoAktionen.add(aktuelleRegieInstanz::stoppen);
                 regieInstanz = null;
                 logger.info("Webserver-Regie gestoppt (deaktiviert)");
             }
         } else if (!portStimmt) {
             if (laeuftSchon) {
-                regieInstanz.stoppen();
+                var aktuelleRegieInstanz = regieInstanz;
+                sseIoAktionen.add(aktuelleRegieInstanz::stoppen);
                 regieInstanz = null;
             }
             regieAusKonfigurationStarten();
@@ -681,7 +773,8 @@ public final class WebServerManager implements TimerListener {
      * stoppt Instanzen für entfernte/deaktivierte Einträge und startet neue für hinzugekommene/
      * reaktivierte Einträge. Aktualisiert danach die Slots-Liste.
      */
-    private void reconciliereCompositeInstanzen(List<CompositeViewEintragRoh> compositeEintraege) {
+    private void reconciliereCompositeInstanzen(List<CompositeViewEintragRoh> compositeEintraege,
+            List<Runnable> sseIoAktionen) {
         Set<Integer> aktivePorte = new HashSet<>();
         for (var e : compositeEintraege) {
             if (e.aktiv()) {
@@ -702,7 +795,7 @@ public final class WebServerManager implements TimerListener {
         }
         for (var instanz : zuStoppen) {
             int port = instanz.getKonfiguration().port();
-            instanz.stoppen();
+            sseIoAktionen.add(instanz::stoppen);
             compositeInstanzen.remove(instanz);
             letzteCompositeModelle.remove(port);
             letzteCompositeTitel.remove(port);
@@ -851,11 +944,8 @@ public final class WebServerManager implements TimerListener {
             var status = TeilnehmerStatusService.ermitteln(ws);
             String turniersystem = TurnierStatusErmittler.turniersystemBezeichnung(ws);
             String turnierStatus = TurnierStatusErmittler.ermitteln(ws);
-            boolean unverändert = status.equals(letzterStartseiteStatus)
-                    && turniersystem.equals(letztesStartseiteTurniersystem)
-                    && turnierStatus.equals(letzterStartseiteTurnierStatus);
-            var docProps = new de.petanqueturniermanager.helper.DocumentPropertiesHelper(ws);
-            String logoQuelle = docProps.getStringProperty("Turnierlogo Url", "");
+            var docProps = new DocumentPropertiesHelper(ws);
+            String logoQuelle = turnierlogoQuelle(ws, docProps);
             String beschreibung = docProps.getStringProperty("Turnierbeschreibung", "");
             String beschreibungAnimation = docProps.getStringProperty(
                     de.petanqueturniermanager.konfigdialog.properties.TurnierStartseiteDialog
@@ -867,13 +957,21 @@ public final class WebServerManager implements TimerListener {
                     de.petanqueturniermanager.konfigdialog.properties.TurnierStartseiteDialog
                             .DEFAULT_BESCHREIBUNG_TEXTFARBE);
             String textfarbe = String.format("#%06x", textfarbeInt & 0xFFFFFF);
+            boolean unverändert = status.equals(letzterStartseiteStatus)
+                    && turniersystem.equals(letztesStartseiteTurniersystem)
+                    && turnierStatus.equals(letzterStartseiteTurnierStatus)
+                    && logoQuelle.equals(letztesStartseiteLogo)
+                    && beschreibung.equals(letzteStartseiteBeschreibung)
+                    && beschreibungAnimation.equals(letzteStartseiteAnimation)
+                    && textfarbe.equals(letzteStartseiteTextfarbe);
             int zoom = GlobalProperties.get().getStartseiteZoom();
             startseiteInstanz.setLogoQuelle(logoQuelle);
 
             int version = startseiteVersion.incrementAndGet();
-            // Frontend referenziert immer den lokalen Endpunkt /turnierlogo (Browser darf
-            // file:// nicht direkt laden). Version als Cache-Buster bei Logo-Wechsel.
-            String logoUrl = logoQuelle.isBlank() ? "" : "/turnierlogo?v=" + version;
+            // Frontend referenziert immer den lokalen Endpunkt turnierlogo (Browser darf
+            // file:// nicht direkt laden). Relativ halten, damit Regie-URLs wie /ziel/
+            // korrekt bei /ziel/turnierlogo bleiben.
+            String logoUrl = startseiteLogoUrl(logoQuelle, version);
             var sprueche = StartseiteSprueche.alle();
             // Init-Cache immer mit voller Nachricht (für neue Verbindungen).
             startseiteInstanz.setCachedInitJson(GSON.toJson(StartseiteSseNachricht.init(
@@ -895,9 +993,50 @@ public final class WebServerManager implements TimerListener {
                 letzterStartseiteStatus = status;
                 letztesStartseiteTurniersystem = turniersystem;
                 letzterStartseiteTurnierStatus = turnierStatus;
+                letztesStartseiteLogo = logoQuelle;
+                letzteStartseiteBeschreibung = beschreibung;
+                letzteStartseiteAnimation = beschreibungAnimation;
+                letzteStartseiteTextfarbe = textfarbe;
             }
         } catch (RuntimeException e) {
             logger.warn("Push der Turnier-Startseite fehlgeschlagen: {}", e.getMessage(), e);
+        }
+    }
+
+    static String startseiteLogoUrl(String logoQuelle, int version) {
+        return logoQuelle == null || logoQuelle.isBlank() ? "" : "turnierlogo?v=" + version;
+    }
+
+    static String turnierlogoQuelle(WorkingSpreadsheet ws, DocumentPropertiesHelper docProps) {
+        String startseiteLogo = docProps.getStringProperty(
+                de.petanqueturniermanager.konfigdialog.properties.TurnierStartseiteDialog
+                        .DOC_PROP_TURNIERLOGO_URL,
+                "");
+        if (!startseiteLogo.isBlank()) {
+            return startseiteLogo.trim();
+        }
+        try {
+            var system = docProps.getTurnierSystemAusDocument();
+            if (system == null) {
+                return "";
+            }
+            String logo = switch (system) {
+                case SUPERMELEE -> new SuperMeleeKonfigurationSheet(ws).getTurnierlogoUrl();
+                case SCHWEIZER -> new SchweizerKonfigurationSheet(ws).getTurnierlogoUrl();
+                case TRIPTETE -> new TripTeteKonfigurationSheet(ws).getTurnierlogoUrl();
+                case JGJ -> new JGJKonfigurationSheet(ws).getTurnierlogoUrl();
+                case FORMULEX -> new FormuleXKonfigurationSheet(ws).getTurnierlogoUrl();
+                case MAASTRICHTER -> new MaastrichterKonfigurationSheet(ws).getTurnierlogoUrl();
+                case KO -> new KoKonfigurationSheet(ws).getTurnierlogoUrl();
+                case KASKADE -> new KaskadeKonfigurationSheet(ws).getTurnierlogoUrl();
+                case POULE -> new PouleKonfigurationSheet(ws).getTurnierlogoUrl();
+                case LIGA -> new LigaKonfigurationSheet(ws).getTurnierlogoUrl();
+                case KEIN -> "";
+            };
+            return logo == null ? "" : logo.trim();
+        } catch (RuntimeException e) {
+            logger.debug("Turnierlogo aus Konfigurationssheet konnte nicht gelesen werden: {}", e.getMessage());
+            return "";
         }
     }
 
@@ -906,6 +1045,10 @@ public final class WebServerManager implements TimerListener {
         letzterStartseiteStatus = null;
         letztesStartseiteTurniersystem = "";
         letzterStartseiteTurnierStatus = "";
+        letztesStartseiteLogo = "";
+        letzteStartseiteBeschreibung = "";
+        letzteStartseiteAnimation = "";
+        letzteStartseiteTextfarbe = "";
     }
 
     private void registriereModifyListenerFallsNoetig(WorkingSpreadsheet ws) {

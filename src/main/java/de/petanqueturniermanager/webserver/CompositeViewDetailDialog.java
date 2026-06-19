@@ -37,6 +37,10 @@ import com.sun.star.lang.WrappedTargetException;
 import com.sun.star.lang.XMultiComponentFactory;
 import com.sun.star.lang.XMultiServiceFactory;
 import com.sun.star.sheet.XSpreadsheetDocument;
+import com.sun.star.ui.dialogs.ExecutableDialogResults;
+import com.sun.star.ui.dialogs.FilePicker;
+import com.sun.star.ui.dialogs.TemplateDescription;
+import com.sun.star.ui.dialogs.XFilePicker3;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.comp.DocumentHelper;
@@ -337,7 +341,9 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
             // ---- Lokale statische Datei ----
             String aktuelleDatei = ausgewaehlterPanelIndex < panelUrls.size() ? panelUrls.get(ausgewaehlterPanelIndex) : "";
             fuegeFixedTextEinDyn("lblPanelDatei", I18n.get("webserver.composite.konfig.panel.datei.label"), 5, konfFelderY, 25, ZEILE_H);
-            fuegeEditEinDyn("tfUrl", aktuelleDatei, 33, konfFelderY, 375, ZEILE_H);
+            fuegeEditEinDyn("tfUrl", aktuelleDatei, 33, konfFelderY, 332, ZEILE_H);
+            fuegeButtonEinDyn("btnPanelDateiAuswaehlen", "...", 370, konfFelderY, 38, ZEILE_H);
+            registriereActionListenerDyn("btnPanelDateiAuswaehlen", this::waehleLokaleDatei);
             fuegeFixedTextEinDyn("lblDateiHinweis", I18n.get("webserver.composite.konfig.panel.datei.hinweis"), 5, konfFelderY2, 400, ZEILE_H);
         } else {
             // ---- Blatt-Modus ----
@@ -544,13 +550,65 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         aktualisiereUndFange();
     }
 
+    private void waehleLokaleDatei() {
+        XControl tfUrlCtrl = xcc.getControl("tfUrl");
+        String aktuellerPfad = tfUrlCtrl != null ? Lo.qi(XTextComponent.class, tfUrlCtrl).getText().trim() : "";
+        try {
+            String pfad = oeffneLokaleDateiPicker(aktuellerPfad);
+            if (pfad == null) {
+                return;
+            }
+            if (tfUrlCtrl != null) {
+                Lo.qi(XTextComponent.class, tfUrlCtrl).setText(pfad);
+            }
+            if (ausgewaehlterPanelIndex >= 0 && ausgewaehlterPanelIndex < panelUrls.size()) {
+                panelUrls.set(ausgewaehlterPanelIndex, pfad);
+            }
+        } catch (com.sun.star.uno.Exception e) {
+            logger.warn("Datei-Picker konnte nicht geöffnet werden: {}", e.getMessage(), e);
+            MessageBox.from(xContext, MessageBoxTypeEnum.ERROR_OK)
+                    .caption(I18n.get("webserver.composite.konfig.fehler.titel"))
+                    .message(I18n.get("webserver.composite.konfig.panel.datei.fehler.ungueltig"))
+                    .show();
+        }
+    }
+
+    private String oeffneLokaleDateiPicker(String aktuellerPfad) throws com.sun.star.uno.Exception {
+        XFilePicker3 picker = FilePicker.createWithMode(xContext, TemplateDescription.FILEOPEN_SIMPLE);
+        picker.setTitle(I18n.get("webserver.composite.konfig.panel.datei.label"));
+        if (aktuellerPfad != null && !aktuellerPfad.isBlank()) {
+            Path pfad = pfadAusDateiText(aktuellerPfad);
+            Path ordner = Files.isDirectory(pfad) ? pfad : pfad.getParent();
+            if (ordner != null) {
+                picker.setDisplayDirectory(ordner.toUri().toString());
+            }
+        }
+        if (picker.execute() != ExecutableDialogResults.OK) {
+            return null;
+        }
+        String[] dateien = picker.getFiles();
+        if (dateien.length == 0) {
+            return null;
+        }
+        return pfadAusDateiText(dateien[0]).toString();
+    }
+
+    private static Path pfadAusDateiText(String datei) {
+        return datei.trim().startsWith("file:")
+                ? Paths.get(URI.create(datei.trim()))
+                : Path.of(datei.trim());
+    }
+
     private SplitKnoten speichereSplitAnteil(String controlName, String richtung, SplitKnoten aktuellerBaum) {
         XControl splitCtrl = xcc.getControl(controlName);
         if (splitCtrl == null) {
             return aktuellerBaum;
         }
         try {
-            int share = Integer.parseInt(Lo.qi(XTextComponent.class, splitCtrl).getText().trim());
+            String text = Lo.qi(XTextComponent.class, splitCtrl).getText().trim();
+            int share = text.isEmpty()
+                    ? restShareInSplit(aktuellerBaum, ausgewaehlterPanelIndex, richtung)
+                    : Integer.parseInt(text);
             if (share >= 1 && share <= 99) {
                 return aktualisierePanelShareInSplit(aktuellerBaum, ausgewaehlterPanelIndex, richtung, share);
             }
@@ -714,31 +772,50 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
     }
 
     static int panelShareInSplit(SplitKnoten knoten, int panelIndex, String richtung) {
+        return panelShareInSplit(knoten, panelIndex, richtung, 100.0, false);
+    }
+
+    private static int panelShareInSplit(SplitKnoten knoten, int panelIndex, String richtung,
+            double anteil, boolean richtungGefunden) {
         return switch (knoten) {
-            case SplitBlatt ignored -> -1;
+            case SplitBlatt blatt -> blatt.panel() == panelIndex && richtungGefunden
+                    ? (int) Math.round(anteil)
+                    : -1;
             case SplitTeilung teilung -> {
                 boolean linksEnthaelt = enthaeltPanel(teilung.links(), panelIndex);
                 boolean rechtsEnthaelt = enthaeltPanel(teilung.rechts(), panelIndex);
                 if (linksEnthaelt) {
-                    int tiefer = panelShareInSplit(teilung.links(), panelIndex, richtung);
-                    if (tiefer >= 0) yield tiefer;
-                    yield teilung.richtung().equalsIgnoreCase(richtung) ? teilung.groesse() : -1;
+                    boolean gleicheRichtung = teilung.richtung().equalsIgnoreCase(richtung);
+                    yield panelShareInSplit(teilung.links(), panelIndex, richtung,
+                            gleicheRichtung ? anteil * teilung.groesse() / 100.0 : anteil,
+                            richtungGefunden || gleicheRichtung);
                 }
                 if (rechtsEnthaelt) {
-                    int tiefer = panelShareInSplit(teilung.rechts(), panelIndex, richtung);
-                    if (tiefer >= 0) yield tiefer;
-                    yield teilung.richtung().equalsIgnoreCase(richtung) ? 100 - teilung.groesse() : -1;
+                    boolean gleicheRichtung = teilung.richtung().equalsIgnoreCase(richtung);
+                    yield panelShareInSplit(teilung.rechts(), panelIndex, richtung,
+                            gleicheRichtung ? anteil * (100 - teilung.groesse()) / 100.0 : anteil,
+                            richtungGefunden || gleicheRichtung);
                 }
                 yield -1;
             }
         };
     }
 
-    static SplitKnoten aktualisierePanelShareInSplit(SplitKnoten knoten, int panelIndex, String richtung, int panelShare) {
-        return aktualisierePanelShareInSplitIntern(knoten, panelIndex, richtung, panelShare).knoten();
+    static int restShareInSplit(SplitKnoten knoten, int panelIndex, String richtung) {
+        SplitKnoten richtungsWurzel = richtungsWurzel(knoten, panelIndex, richtung, null);
+        if (richtungsWurzel == null) {
+            return -1;
+        }
+        int rest = 100 - summiereAnderePanelShares(richtungsWurzel, panelIndex, richtung, 100.0, false);
+        return Math.max(0, Math.min(100, rest));
     }
 
-    private static AktualisierteSplitTeilung aktualisierePanelShareInSplitIntern(SplitKnoten knoten, int panelIndex, String richtung, int panelShare) {
+    static SplitKnoten aktualisierePanelShareInSplit(SplitKnoten knoten, int panelIndex, String richtung, int panelShare) {
+        return aktualisierePanelShareInSplitIntern(knoten, panelIndex, richtung, panelShare, 100.0).knoten();
+    }
+
+    private static AktualisierteSplitTeilung aktualisierePanelShareInSplitIntern(SplitKnoten knoten,
+            int panelIndex, String richtung, int panelShare, double verfuegbarerAnteil) {
         if (panelShare < 1 || panelShare > 99) {
             throw new IllegalArgumentException("Panel-Anteil muss zwischen 1 und 99 liegen");
         }
@@ -748,34 +825,87 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
                 boolean linksEnthaelt = enthaeltPanel(teilung.links(), panelIndex);
                 boolean rechtsEnthaelt = enthaeltPanel(teilung.rechts(), panelIndex);
                 if (linksEnthaelt) {
+                    boolean gleicheRichtung = teilung.richtung().equalsIgnoreCase(richtung);
                     var linksAktualisiert = aktualisierePanelShareInSplitIntern(
-                            teilung.links(), panelIndex, richtung, panelShare);
+                            teilung.links(), panelIndex, richtung, panelShare,
+                            gleicheRichtung ? verfuegbarerAnteil * teilung.groesse() / 100.0 : verfuegbarerAnteil);
                     if (linksAktualisiert.aktualisiert()) {
                         yield new AktualisierteSplitTeilung(
                                 new SplitTeilung(teilung.richtung(), teilung.groesse(), linksAktualisiert.knoten(), teilung.rechts()),
                                 true);
                     }
-                    if (teilung.richtung().equalsIgnoreCase(richtung)) {
+                    if (gleicheRichtung) {
+                        int lokalerAnteil = lokalerSplitAnteil(panelShare, verfuegbarerAnteil);
                         yield new AktualisierteSplitTeilung(
-                                new SplitTeilung(teilung.richtung(), panelShare, teilung.links(), teilung.rechts()),
+                                new SplitTeilung(teilung.richtung(), lokalerAnteil, teilung.links(), teilung.rechts()),
                                 true);
                     }
                 }
                 if (rechtsEnthaelt) {
+                    boolean gleicheRichtung = teilung.richtung().equalsIgnoreCase(richtung);
                     var rechtsAktualisiert = aktualisierePanelShareInSplitIntern(
-                            teilung.rechts(), panelIndex, richtung, panelShare);
+                            teilung.rechts(), panelIndex, richtung, panelShare,
+                            gleicheRichtung ? verfuegbarerAnteil * (100 - teilung.groesse()) / 100.0 : verfuegbarerAnteil);
                     if (rechtsAktualisiert.aktualisiert()) {
                         yield new AktualisierteSplitTeilung(
                                 new SplitTeilung(teilung.richtung(), teilung.groesse(), teilung.links(), rechtsAktualisiert.knoten()),
                                 true);
                     }
-                    if (teilung.richtung().equalsIgnoreCase(richtung)) {
+                    if (gleicheRichtung) {
+                        int lokalerAnteil = lokalerSplitAnteil(panelShare, verfuegbarerAnteil);
                         yield new AktualisierteSplitTeilung(
-                                new SplitTeilung(teilung.richtung(), 100 - panelShare, teilung.links(), teilung.rechts()),
+                                new SplitTeilung(teilung.richtung(), 100 - lokalerAnteil, teilung.links(), teilung.rechts()),
                                 true);
                     }
                 }
                 yield new AktualisierteSplitTeilung(teilung, false);
+            }
+        };
+    }
+
+    private static int lokalerSplitAnteil(int panelShare, double verfuegbarerAnteil) {
+        int lokalerAnteil = (int) Math.round(panelShare * 100.0 / verfuegbarerAnteil);
+        if (lokalerAnteil < 1 || lokalerAnteil > 99) {
+            throw new IllegalArgumentException("Panel-Anteil passt nicht in den vorhandenen Split");
+        }
+        return lokalerAnteil;
+    }
+
+    private static SplitKnoten richtungsWurzel(SplitKnoten knoten, int panelIndex, String richtung,
+            SplitKnoten aktuelleRichtungsWurzel) {
+        return switch (knoten) {
+            case SplitBlatt blatt -> blatt.panel() == panelIndex ? aktuelleRichtungsWurzel : null;
+            case SplitTeilung teilung -> {
+                boolean gleicheRichtung = teilung.richtung().equalsIgnoreCase(richtung);
+                SplitKnoten naechsteRichtungsWurzel = gleicheRichtung && aktuelleRichtungsWurzel == null
+                        ? teilung
+                        : aktuelleRichtungsWurzel;
+                if (enthaeltPanel(teilung.links(), panelIndex)) {
+                    yield richtungsWurzel(teilung.links(), panelIndex, richtung, naechsteRichtungsWurzel);
+                }
+                if (enthaeltPanel(teilung.rechts(), panelIndex)) {
+                    yield richtungsWurzel(teilung.rechts(), panelIndex, richtung, naechsteRichtungsWurzel);
+                }
+                yield null;
+            }
+        };
+    }
+
+    private static int summiereAnderePanelShares(SplitKnoten knoten, int panelIndex, String richtung,
+            double anteil, boolean richtungGefunden) {
+        return switch (knoten) {
+            case SplitBlatt blatt -> blatt.panel() != panelIndex && richtungGefunden
+                    ? (int) Math.round(anteil)
+                    : 0;
+            case SplitTeilung teilung -> {
+                boolean gleicheRichtung = teilung.richtung().equalsIgnoreCase(richtung);
+                int links = summiereAnderePanelShares(teilung.links(), panelIndex, richtung,
+                        gleicheRichtung ? anteil * teilung.groesse() / 100.0 : anteil,
+                        richtungGefunden || gleicheRichtung);
+                int rechts = summiereAnderePanelShares(teilung.rechts(), panelIndex, richtung,
+                        gleicheRichtung ? anteil * (100 - teilung.groesse()) / 100.0 : anteil,
+                        richtungGefunden || gleicheRichtung);
+                yield links + rechts;
             }
         };
     }
@@ -820,9 +950,7 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
             return I18n.get("webserver.composite.konfig.panel.datei.fehler.leer");
         }
         try {
-            Path pfad = datei.trim().startsWith("file:")
-                    ? Paths.get(URI.create(datei.trim()))
-                    : Path.of(datei.trim());
+            Path pfad = pfadAusDateiText(datei);
             if (!Files.isRegularFile(pfad) || !Files.isReadable(pfad)) {
                 return I18n.get("webserver.composite.konfig.panel.datei.fehler.nicht_lesbar");
             }

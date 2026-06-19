@@ -31,6 +31,28 @@ class CompositeViewDetailDialogTest {
     }
 
     @Test
+    void panelShareInSplitLiestSichtbareBreiteVonDreiHorizontalenPanels() {
+        SplitKnoten layout = new SplitTeilung("H", 50,
+                new SplitBlatt(0),
+                new SplitTeilung("H", 50, new SplitBlatt(1), new SplitBlatt(2)));
+
+        assertThat(CompositeViewDetailDialog.panelShareInSplit(layout, 0, "H")).isEqualTo(50);
+        assertThat(CompositeViewDetailDialog.panelShareInSplit(layout, 1, "H")).isEqualTo(25);
+        assertThat(CompositeViewDetailDialog.panelShareInSplit(layout, 2, "H")).isEqualTo(25);
+    }
+
+    @Test
+    void panelShareInSplitLiestSichtbareHoeheVonDreiVertikalenPanels() {
+        SplitKnoten layout = new SplitTeilung("V", 40,
+                new SplitBlatt(0),
+                new SplitTeilung("V", 50, new SplitBlatt(1), new SplitBlatt(2)));
+
+        assertThat(CompositeViewDetailDialog.panelShareInSplit(layout, 0, "V")).isEqualTo(40);
+        assertThat(CompositeViewDetailDialog.panelShareInSplit(layout, 1, "V")).isEqualTo(30);
+        assertThat(CompositeViewDetailDialog.panelShareInSplit(layout, 2, "V")).isEqualTo(30);
+    }
+
+    @Test
     void aktualisierePanelShareInSplitSetztLinkenAnteilDirekt() {
         SplitKnoten aktualisiert = CompositeViewDetailDialog.aktualisierePanelShareInSplit(
                 new SplitTeilung("H", 50, new SplitBlatt(0), new SplitBlatt(1)), 0, "H", 30);
@@ -63,6 +85,58 @@ class CompositeViewDetailDialogTest {
                 .isInstanceOfSatisfying(SplitTeilung.class, root ->
                         assertThat(root.links()).isInstanceOfSatisfying(SplitTeilung.class,
                                 links -> assertThat(links.groesse()).isEqualTo(65)));
+    }
+
+    @Test
+    void aktualisierePanelShareInSplitRechnetSichtbareBreiteInLokalenSplitUm() {
+        SplitKnoten layout = new SplitTeilung("H", 50,
+                new SplitBlatt(0),
+                new SplitTeilung("H", 50, new SplitBlatt(1), new SplitBlatt(2)));
+
+        SplitKnoten aktualisiert = CompositeViewDetailDialog.aktualisierePanelShareInSplit(layout, 1, "H", 30);
+
+        assertThat(CompositeViewDetailDialog.panelShareInSplit(aktualisiert, 0, "H")).isEqualTo(50);
+        assertThat(CompositeViewDetailDialog.panelShareInSplit(aktualisiert, 1, "H")).isEqualTo(30);
+        assertThat(CompositeViewDetailDialog.panelShareInSplit(aktualisiert, 2, "H")).isEqualTo(20);
+        assertThat(aktualisiert)
+                .isInstanceOfSatisfying(SplitTeilung.class, root ->
+                        assertThat(root.rechts()).isInstanceOfSatisfying(SplitTeilung.class,
+                                rechts -> assertThat(rechts.groesse()).isEqualTo(60)));
+    }
+
+    @Test
+    void aktualisierePanelShareInSplitRechnetSichtbareHoeheInLokalenSplitUm() {
+        SplitKnoten layout = new SplitTeilung("V", 40,
+                new SplitBlatt(0),
+                new SplitTeilung("V", 50, new SplitBlatt(1), new SplitBlatt(2)));
+
+        SplitKnoten aktualisiert = CompositeViewDetailDialog.aktualisierePanelShareInSplit(layout, 1, "V", 36);
+
+        assertThat(CompositeViewDetailDialog.panelShareInSplit(aktualisiert, 0, "V")).isEqualTo(40);
+        assertThat(CompositeViewDetailDialog.panelShareInSplit(aktualisiert, 1, "V")).isEqualTo(36);
+        assertThat(CompositeViewDetailDialog.panelShareInSplit(aktualisiert, 2, "V")).isEqualTo(24);
+        assertThat(aktualisiert)
+                .isInstanceOfSatisfying(SplitTeilung.class, root ->
+                        assertThat(root.rechts()).isInstanceOfSatisfying(SplitTeilung.class,
+                                rechts -> assertThat(rechts.groesse()).isEqualTo(60)));
+    }
+
+    @Test
+    void restShareInSplitNimmtRestAusDreiHorizontalenPanels() {
+        SplitKnoten layout = new SplitTeilung("H", 50,
+                new SplitBlatt(0),
+                new SplitTeilung("H", 60, new SplitBlatt(1), new SplitBlatt(2)));
+
+        assertThat(CompositeViewDetailDialog.restShareInSplit(layout, 2, "H")).isEqualTo(20);
+    }
+
+    @Test
+    void restShareInSplitNimmtRestAusDreiVertikalenPanels() {
+        SplitKnoten layout = new SplitTeilung("V", 40,
+                new SplitBlatt(0),
+                new SplitTeilung("V", 60, new SplitBlatt(1), new SplitBlatt(2)));
+
+        assertThat(CompositeViewDetailDialog.restShareInSplit(layout, 2, "V")).isEqualTo(24);
     }
 
     @Test

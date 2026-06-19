@@ -12,6 +12,8 @@ export default function StartseiteApp({ startseite }) {
           anzahlAngemeldet, anzahlAktiv,
           labelAngemeldet, labelAktiv,
           turniersystem, turnierStatus, sprueche, zoom } = startseite;
+  const [logoFehler, setLogoFehler] = useState(false);
+  const [layoutVersion, setLayoutVersion] = useState(0);
   const animation = beschreibungAnimation || 'keine';
   const beschreibungStil = beschreibungTextfarbe ? { color: beschreibungTextfarbe } : undefined;
   const angezeigtAngemeldet = useZahlAnimation(anzahlAngemeldet);
@@ -21,19 +23,24 @@ export default function StartseiteApp({ startseite }) {
   const wurzelRef = useRef(null);
   const inhaltRef = useRef(null);
   const footerRef = useRef(null);
-  useAutoFit(wurzelRef, inhaltRef, footerRef, benutzerZoom);
+  useAutoFit(wurzelRef, inhaltRef, footerRef, benutzerZoom, layoutVersion);
+  useEffect(() => {
+    setLogoFehler(false);
+  }, [turnierlogo]);
+  const logoSrc = turnierlogo ? liveUrl(turnierlogo) : '';
   return (
     <>
     <div className="startseite-hintergrund" aria-hidden="true" />
     <div className="startseite" ref={wurzelRef}>
       <div className="startseite-inhalt" ref={inhaltRef}>
         <div className="startseite-kopf">
-          {turnierlogo && (
+          {logoSrc && !logoFehler && (
             <img
               className="startseite-turnierlogo"
-              src={turnierlogo}
+              src={logoSrc}
               alt=""
-              onError={(e) => { e.currentTarget.style.display = 'none'; }}
+              onLoad={() => { setLayoutVersion((v) => v + 1); }}
+              onError={() => { setLogoFehler(true); }}
             />
           )}
           {turnierbeschreibung && (
@@ -80,7 +87,7 @@ export default function StartseiteApp({ startseite }) {
  * auf die verfügbare Fläche zwischen oberem Rand und Footer-Bild herunter,
  * sodass nichts überlappt. Skaliert nur nach unten (max 1 × Benutzer-Zoom).
  */
-function useAutoFit(wurzelRef, inhaltRef, footerRef, benutzerZoom) {
+function useAutoFit(wurzelRef, inhaltRef, footerRef, benutzerZoom, layoutVersion) {
   useLayoutEffect(() => {
     const wurzel = wurzelRef.current;
     const inhalt = inhaltRef.current;
@@ -132,7 +139,7 @@ function useAutoFit(wurzelRef, inhaltRef, footerRef, benutzerZoom) {
       ro.disconnect();
       window.removeEventListener('resize', planen);
     };
-  }, [wurzelRef, inhaltRef, footerRef, benutzerZoom]);
+  }, [wurzelRef, inhaltRef, footerRef, benutzerZoom, layoutVersion]);
 }
 
 function StatusLeiste({ turniersystem, turnierStatus, sprueche }) {
