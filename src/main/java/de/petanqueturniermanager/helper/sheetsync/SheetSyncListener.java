@@ -17,10 +17,13 @@ import org.apache.logging.log4j.Logger;
 
 import com.sun.star.frame.XModel;
 import com.sun.star.container.XNamed;
+import com.sun.star.lang.DisposedException;
 import com.sun.star.lang.EventObject;
+import com.sun.star.lang.XComponent;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.sheet.XSpreadsheetView;
+import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XComponentContext;
 import com.sun.star.view.XSelectionChangeListener;
 import com.sun.star.view.XSelectionSupplier;
@@ -442,6 +445,26 @@ public final class SheetSyncListener implements IGlobalEventListener, ITurnierEv
         }
     }
 
+    /**
+     * Prüft per Probe-Call, ob das Dokument bereits disposed ist. Bei einem geschlossenen
+     * Dokument wirft jede UNO-Methode eine {@link DisposedException}.
+     */
+    private static boolean istDisposed(XSpreadsheetDocument xDoc) {
+        XComponent comp = UnoRuntime.queryInterface(XComponent.class, xDoc);
+        if (comp == null) {
+            return true;
+        }
+        try {
+            xDoc.getSheets();
+            return false;
+        } catch (DisposedException ignored) {
+            return true;
+        } catch (RuntimeException e) {
+            logger.debug("Dokument-Lebendigkeit nicht prüfbar, behandle als disposed", e);
+            return true;
+        }
+    }
+
     private static XSpreadsheet aktivesSheet(XSpreadsheetDocument xDoc) {
         XModel xModel = Lo.qi(XModel.class, xDoc);
         if (xModel == null) return null;
@@ -474,6 +497,14 @@ public final class SheetSyncListener implements IGlobalEventListener, ITurnierEv
 
     private void pruefeUndStarte(XSpreadsheetDocument xDoc, XSpreadsheet sheet,
             EingabeSignatur signatur, String key, String grund, int versuch) {
+        // Race-Schutz: Das Dokument kann zwischen dem Einplanen und dem Feuern dieses
+        // debounced Tasks geschlossen worden sein – cancelAlle() im disposing-Handler greift
+        // für einen bereits laufenden Task nicht mehr. Jeder UNO-Call würde dann eine
+        // DisposedException werfen (Store-Zugriff, WorkingSpreadsheet-Aufbau). Lautlos abbrechen.
+        if (istDisposed(xDoc)) {
+            logger.debug("Sheet-Sync übersprungen – Dokument bereits geschlossen (key={})", key);
+            return;
+        }
         long startNs = System.nanoTime();
         long hashStartNs = startNs;
         SignaturErgebnis ergebnis = signatur.berechne(xDoc, versuch);

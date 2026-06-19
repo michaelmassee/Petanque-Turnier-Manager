@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.sun.star.lang.DisposedException;
 import com.sun.star.sheet.XSpreadsheetDocument;
 
 /**
@@ -95,6 +96,9 @@ public final class SheetSyncDebouncer {
         ausstehend.remove(key);
         try {
             check.run();
+        } catch (DisposedException e) {
+            // Erwartet: Dokument wurde parallel zum debounced Check geschlossen – kein Fehler.
+            logger.debug("Sheet-Sync-Check übersprungen – Dokument geschlossen (key={})", key);
         } catch (RuntimeException e) {
             logger.warn("Sheet-Sync-Check warf Exception (key={})", key, e);
         }

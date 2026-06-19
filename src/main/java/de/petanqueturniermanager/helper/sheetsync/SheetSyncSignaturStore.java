@@ -9,6 +9,7 @@ import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.sun.star.lang.DisposedException;
 import com.sun.star.sheet.XSpreadsheetDocument;
 
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
@@ -53,6 +54,20 @@ public final class SheetSyncSignaturStore {
         return PREFIX + schluessel + suffix;
     }
 
+    /**
+     * Loggt einen fehlgeschlagenen Property-Zugriff. Eine {@link DisposedException} ist
+     * dabei kein Fehler, sondern das erwartete Resultat eines parallel geschlossenen
+     * Dokuments (Race mit dem debounced Sheet-Sync) – daher nur {@code debug} statt
+     * {@code warn} mit Stacktrace.
+     */
+    private static void logZugriffsfehler(String meldung, String schluessel, RuntimeException e) {
+        if (e instanceof DisposedException) {
+            logger.debug("{} für '{}' – Dokument bereits geschlossen", meldung, schluessel);
+        } else {
+            logger.warn("{} für '{}'", meldung, schluessel, e);
+        }
+    }
+
     public static Optional<String> ladeHash(XSpreadsheetDocument xDoc, String schluessel) {
         checkNotNull(xDoc);
         checkNotNull(schluessel);
@@ -61,7 +76,7 @@ public final class SheetSyncSignaturStore {
                     .getStringProperty(propName(schluessel, SUFFIX_HASH), "");
             return wert.isEmpty() ? Optional.empty() : Optional.of(wert);
         } catch (RuntimeException e) {
-            logger.warn("Hash lesen fehlgeschlagen für '{}'", schluessel, e);
+            logZugriffsfehler("Hash lesen fehlgeschlagen", schluessel, e);
             return Optional.empty();
         }
     }
@@ -88,7 +103,7 @@ public final class SheetSyncSignaturStore {
                 props.setBooleanPropertyOhneEvent(propName(schluessel, SUFFIX_RECOVERY), false);
             });
         } catch (RuntimeException e) {
-            logger.warn("Hash speichern fehlgeschlagen für '{}'", schluessel, e);
+            logZugriffsfehler("Hash speichern fehlgeschlagen", schluessel, e);
         }
     }
 
@@ -105,7 +120,7 @@ public final class SheetSyncSignaturStore {
             props.ohneModifiedFlag(() -> props.setStringPropertyOhneEvent(
                     propName(schluessel, SUFFIX_VERIFY_TS), Instant.now().toString()));
         } catch (RuntimeException e) {
-            logger.warn("Verify-Zeit aktualisieren fehlgeschlagen für '{}'", schluessel, e);
+            logZugriffsfehler("Verify-Zeit aktualisieren fehlgeschlagen", schluessel, e);
         }
     }
 
@@ -124,7 +139,7 @@ public final class SheetSyncSignaturStore {
             }
             return Optional.of(Instant.parse(wert));
         } catch (RuntimeException e) {
-            logger.warn("Verify-Zeit lesen fehlgeschlagen für '{}'", schluessel, e);
+            logZugriffsfehler("Verify-Zeit lesen fehlgeschlagen", schluessel, e);
             return Optional.empty();
         }
     }
@@ -146,7 +161,7 @@ public final class SheetSyncSignaturStore {
             return new DocumentPropertiesHelper(xDoc)
                     .getBooleanProperty(propName(schluessel, SUFFIX_RECOVERY), false);
         } catch (RuntimeException e) {
-            logger.warn("Recovery-Flag lesen fehlgeschlagen für '{}'", schluessel, e);
+            logZugriffsfehler("Recovery-Flag lesen fehlgeschlagen", schluessel, e);
             return false;
         }
     }
@@ -183,7 +198,7 @@ public final class SheetSyncSignaturStore {
             props.ohneModifiedFlag(() -> props.setBooleanPropertyOhneEvent(
                     propName(schluessel, SUFFIX_RECOVERY), true));
         } catch (RuntimeException e) {
-            logger.warn("Recovery-Flag setzen fehlgeschlagen für '{}'", schluessel, e);
+            logZugriffsfehler("Recovery-Flag setzen fehlgeschlagen", schluessel, e);
         }
     }
 }
