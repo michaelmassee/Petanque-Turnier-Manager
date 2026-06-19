@@ -24,7 +24,6 @@ import de.petanqueturniermanager.helper.i18n.I18n;
 public class WebserverRegieServerInstanz {
 
     private static final Logger logger = LogManager.getLogger(WebserverRegieServerInstanz.class);
-    private static final String CONTENT_TYPE_HTML = "text/html; charset=UTF-8";
     private static final String CONTENT_TYPE_SSE = "text/event-stream; charset=UTF-8";
     private static final String STATIC_RESOURCE_PREFIX = "/de/petanqueturniermanager/webserver/static";
     private static final String GONG_RESOURCE = "de/petanqueturniermanager/timer/gong.wav";
@@ -158,12 +157,12 @@ public class WebserverRegieServerInstanz {
                 sendeHinweisSeite(exchange, 503, I18n.get("webserver.regie.hinweis.quelle.inaktiv.titel"),
                         I18n.get("webserver.regie.hinweis.quelle.inaktiv.text"));
             } else {
-                serviereRessource(exchange, "/index.html", CONTENT_TYPE_HTML);
+                serviereRessource(exchange, "/index.html", WebContentType.HTML);
             }
         } else if (rest.startsWith("/assets/")) {
-            serviereRessource(exchange, rest, ermittleContentType(rest));
+            serviereRessource(exchange, rest, WebContentType.fuerDateiname(rest));
         } else if (rest.startsWith("/images/")) {
-            serviereRessource(exchange, rest, ermittleContentType(rest));
+            serviereRessource(exchange, rest, WebContentType.fuerDateiname(rest));
         } else if ("/gong.wav".equals(rest)) {
             serviereClasspathRessource(exchange, GONG_RESOURCE, "audio/wav", "public, max-age=3600");
         } else if ("/turnierlogo".equals(rest)) {
@@ -272,7 +271,7 @@ public class WebserverRegieServerInstanz {
                 </body></html>
                 """.formatted(escapeHtml(titel), escapeHtml(titel), escapeHtml(text));
         byte[] body = html.getBytes(StandardCharsets.UTF_8);
-        exchange.getResponseHeaders().set("Content-Type", CONTENT_TYPE_HTML);
+        exchange.getResponseHeaders().set("Content-Type", WebContentType.HTML);
         exchange.sendResponseHeaders(status, body.length);
         try (OutputStream os = exchange.getResponseBody()) {
             os.write(body);
@@ -347,7 +346,7 @@ public class WebserverRegieServerInstanz {
                 </html>
                 """.formatted(escapeHtml(titel), escapeHtml(titel), liste);
         byte[] body = html.getBytes(StandardCharsets.UTF_8);
-        exchange.getResponseHeaders().set("Content-Type", CONTENT_TYPE_HTML);
+        exchange.getResponseHeaders().set("Content-Type", WebContentType.HTML);
         exchange.getResponseHeaders().set("Cache-Control", "no-cache");
         exchange.sendResponseHeaders(200, body.length);
         try (OutputStream os = exchange.getResponseBody()) {
@@ -408,17 +407,6 @@ public class WebserverRegieServerInstanz {
                 .replace("<", "&lt;")
                 .replace(">", "&gt;")
                 .replace("\"", "&quot;");
-    }
-
-    private static String ermittleContentType(String dateiname) {
-        if (dateiname.endsWith(".js")) return "text/javascript; charset=UTF-8";
-        if (dateiname.endsWith(".css")) return "text/css; charset=UTF-8";
-        if (dateiname.endsWith(".html")) return CONTENT_TYPE_HTML;
-        if (dateiname.endsWith(".svg")) return "image/svg+xml";
-        if (dateiname.endsWith(".png")) return "image/png";
-        if (dateiname.endsWith(".ico")) return "image/x-icon";
-        if (dateiname.endsWith(".wav")) return "audio/wav";
-        return "application/octet-stream";
     }
 
     private record PfadTeile(String slug, String rest) {

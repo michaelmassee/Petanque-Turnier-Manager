@@ -41,7 +41,6 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot, Re
     private static final Logger logger = LogManager.getLogger(CompositeViewInstanz.class);
 
     private static final int KEEPALIVE_INTERVALL_SEKUNDEN = 15;
-    private static final String CONTENT_TYPE_HTML = "text/html; charset=UTF-8";
     private static final String CONTENT_TYPE_SSE = "text/event-stream; charset=UTF-8";
     private static final String STATIC_RESOURCE_PREFIX = "/de/petanqueturniermanager/webserver/static";
     private static final String GONG_RESOURCE = "de/petanqueturniermanager/timer/gong.wav";
@@ -194,13 +193,13 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot, Re
         }
         String path = exchange.getRequestURI().getPath();
         if ("/".equals(path) || path.isEmpty()) {
-            serviereRessource(exchange, "/index.html", CONTENT_TYPE_HTML);
+            serviereRessource(exchange, "/index.html", WebContentType.HTML);
         } else if (path.startsWith("/assets/")) {
             String dateiname = path.substring("/assets/".length());
-            serviereRessource(exchange, "/assets/" + dateiname, ermittleContentType(dateiname));
+            serviereRessource(exchange, "/assets/" + dateiname, WebContentType.fuerDateiname(dateiname));
         } else if (path.startsWith("/images/")) {
             String dateiname = path.substring("/images/".length());
-            serviereRessource(exchange, "/images/" + dateiname, ermittleContentType(dateiname));
+            serviereRessource(exchange, "/images/" + dateiname, WebContentType.fuerDateiname(dateiname));
         } else if (path.startsWith("/local-panel/")) {
             serviereLokalePanelDatei(exchange, path.substring("/local-panel/".length()));
         } else if ("/gong.wav".equals(path)) {
@@ -287,7 +286,7 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot, Re
         byte[] body = Files.readAllBytes(datei);
         Path dateiname = datei.getFileName();
         var headers = exchange.getResponseHeaders();
-        headers.set("Content-Type", ermittleContentType(dateiname != null ? dateiname.toString() : ""));
+        headers.set("Content-Type", WebContentType.fuerDateiname(dateiname != null ? dateiname.toString() : ""));
         headers.set("Cache-Control", "no-cache");
         headers.set("Access-Control-Allow-Origin", "*");
         exchange.sendResponseHeaders(200, body.length);
@@ -341,7 +340,7 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot, Re
         byte[] body = Files.readAllBytes(datei);
         Path dateiname = datei.getFileName();
         var headers = exchange.getResponseHeaders();
-        headers.set("Content-Type", ermittleContentType(dateiname != null ? dateiname.toString() : ""));
+        headers.set("Content-Type", WebContentType.fuerDateiname(dateiname != null ? dateiname.toString() : ""));
         headers.set("Cache-Control", "no-cache");
         headers.set("Access-Control-Allow-Origin", "*");
         exchange.sendResponseHeaders(200, body.length);
@@ -391,21 +390,5 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot, Re
 
     private static String urlDecode(String wert) {
         return URLDecoder.decode(wert, StandardCharsets.UTF_8);
-    }
-
-    private static String ermittleContentType(String dateiname) {
-        if (dateiname.endsWith(".js")) return "text/javascript; charset=UTF-8";
-        if (dateiname.endsWith(".css")) return "text/css; charset=UTF-8";
-        if (dateiname.endsWith(".html")) return CONTENT_TYPE_HTML;
-        if (dateiname.endsWith(".svg")) return "image/svg+xml";
-        if (dateiname.endsWith(".png")) return "image/png";
-        if (dateiname.endsWith(".jpg") || dateiname.endsWith(".jpeg")) return "image/jpeg";
-        if (dateiname.endsWith(".gif")) return "image/gif";
-        if (dateiname.endsWith(".webp")) return "image/webp";
-        if (dateiname.endsWith(".ico")) return "image/x-icon";
-        if (dateiname.endsWith(".wav")) return "audio/wav";
-        if (dateiname.endsWith(".pdf")) return "application/pdf";
-        if (dateiname.endsWith(".txt")) return "text/plain; charset=UTF-8";
-        return "application/octet-stream";
     }
 }

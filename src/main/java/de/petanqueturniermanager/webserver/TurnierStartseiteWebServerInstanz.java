@@ -33,7 +33,6 @@ public class TurnierStartseiteWebServerInstanz implements SseElternInstanz, WebS
     private static final Logger logger = LogManager.getLogger(TurnierStartseiteWebServerInstanz.class);
 
     private static final int KEEPALIVE_INTERVALL_SEKUNDEN = 15;
-    private static final String CONTENT_TYPE_HTML = "text/html; charset=UTF-8";
     private static final String CONTENT_TYPE_SSE = "text/event-stream; charset=UTF-8";
     private static final String STATIC_RESOURCE_PREFIX = "/de/petanqueturniermanager/webserver/static";
 
@@ -143,13 +142,13 @@ public class TurnierStartseiteWebServerInstanz implements SseElternInstanz, WebS
         }
         String path = exchange.getRequestURI().getPath();
         if ("/".equals(path) || path.isEmpty()) {
-            serviereRessource(exchange, "/index.html", CONTENT_TYPE_HTML);
+            serviereRessource(exchange, "/index.html", WebContentType.HTML);
         } else if (path.startsWith("/assets/")) {
             serviereRessource(exchange, "/assets/" + path.substring("/assets/".length()),
-                    ermittleContentType(path));
+                    WebContentType.fuerDateiname(path));
         } else if (path.startsWith("/images/")) {
             serviereRessource(exchange, "/images/" + path.substring("/images/".length()),
-                    ermittleContentType(path));
+                    WebContentType.fuerDateiname(path));
         } else {
             exchange.sendResponseHeaders(404, -1);
         }
@@ -215,7 +214,7 @@ public class TurnierStartseiteWebServerInstanz implements SseElternInstanz, WebS
         byte[] body = Files.readAllBytes(datei);
         Path dateiname = datei.getFileName();
         var headers = exchange.getResponseHeaders();
-        headers.set("Content-Type", ermittleContentType(dateiname != null ? dateiname.toString() : ""));
+        headers.set("Content-Type", WebContentType.fuerDateiname(dateiname != null ? dateiname.toString() : ""));
         headers.set("Cache-Control", "no-cache");
         headers.set("Access-Control-Allow-Origin", "*");
         exchange.sendResponseHeaders(200, body.length);
@@ -247,19 +246,5 @@ public class TurnierStartseiteWebServerInstanz implements SseElternInstanz, WebS
                 os.write(body);
             }
         }
-    }
-
-    private static String ermittleContentType(String dateiname) {
-        String name = dateiname.toLowerCase(java.util.Locale.ROOT);
-        if (name.endsWith(".js")) return "text/javascript; charset=UTF-8";
-        if (name.endsWith(".css")) return "text/css; charset=UTF-8";
-        if (name.endsWith(".html")) return CONTENT_TYPE_HTML;
-        if (name.endsWith(".svg")) return "image/svg+xml";
-        if (name.endsWith(".png")) return "image/png";
-        if (name.endsWith(".jpg") || name.endsWith(".jpeg")) return "image/jpeg";
-        if (name.endsWith(".gif")) return "image/gif";
-        if (name.endsWith(".webp")) return "image/webp";
-        if (name.endsWith(".ico")) return "image/x-icon";
-        return "application/octet-stream";
     }
 }
