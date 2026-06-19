@@ -23,9 +23,15 @@ function renderKnoten(knoten, panels, timerAudio) {
   }
   // Blatt: hat eine panelId, keine Richtung.
   if (knoten.panel !== undefined && knoten.richtung === undefined) {
+    const blatt = panels[knoten.panel];
     return (
       <div style={{ width: '100%', height: '100%', minWidth: 0, minHeight: 0, overflow: 'hidden' }}>
-        <Panel table={panels[knoten.panel]} headerFooterUnterdruecken timerAudio={timerAudio} />
+        <Panel
+          table={blatt}
+          sheetnamenAnzeigen={blatt?.blattnameAnzeigen ?? false}
+          headerFooterUnterdruecken
+          timerAudio={timerAudio}
+        />
       </div>
     );
   }
