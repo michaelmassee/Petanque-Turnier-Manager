@@ -118,10 +118,13 @@ git push origin master vX.Y.Z   # Tag-Push triggert build-installers.yml
 Der Workflow erstellt automatisch das Installer-Release und lädt AppImage/exe/msi/dmg
 zusätzlich ins Hauptprojekt-Release.
 
-> Hinweis: Das **Installer**-Release nutzt aktuell `generate_release_notes: true`
-> (auto-generiert, einsprachig). Die kuratierten DE/EN-Notes leben im **Hauptprojekt**-Release
-> (Schritt 5/6). Sollen beide Releases dieselben DE/EN-Notes tragen, müsste der `release`-Job in
-> `build-installers.yml` angepasst werden – separater Schritt.
+> Hinweis: Das **Installer**-Release übernimmt die kuratierten **DE/EN-Notes aus dem
+> Hauptprojekt-Release** (Single Source of Truth) und hängt die trilingualen
+> Systemvoraussetzungen an. Der `release`-Job in `build-installers.yml` liest dazu
+> `gh release view <TAG> --repo michaelmassee/Petanque-Turnier-Manager --json body`.
+> Deshalb ist die Reihenfolge bindend: Hauptprojekt-Release (Schritt 6) **vor** dem
+> Installer-Tag. Fehlt das Hauptprojekt-Release, fällt das Installer-Release auf reine
+> Systemvoraussetzungen zurück (Workflow-Warnung).
 
 ## 8. Verifikation nach dem Release
 
