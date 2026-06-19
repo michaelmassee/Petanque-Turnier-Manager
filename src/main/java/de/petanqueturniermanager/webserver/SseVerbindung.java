@@ -20,7 +20,7 @@ public class SseVerbindung {
     private static final Logger logger = LogManager.getLogger(SseVerbindung.class);
 
     private final OutputStream outputStream;
-    private final SseElternInstanz elternInstanz;
+    private SseElternInstanz elternInstanz;
     private final String rolle;
     private final String clientId;
 
@@ -41,6 +41,22 @@ public class SseVerbindung {
 
     public String getClientId() {
         return clientId;
+    }
+
+    /**
+     * Bindet diese Verbindung an eine neue Eltern-Instanz (Quelle) um, ohne den
+     * zugrunde liegenden {@link OutputStream} zu schließen.
+     * <p>
+     * Wird beim Wechsel der zugeordneten Regie-Quelle (Umschalten der View in der
+     * Sidebar-Kombobox) benötigt: Der offene Browser-Stream bleibt bestehen, künftige
+     * Updates und Entfern-Callbacks gehen an die neue Quelle. Direkt im Anschluss sollte
+     * {@link #sendeInitNachricht()} aufgerufen werden, damit der Browser den vollständigen
+     * Zustand der neuen Quelle erhält und die View ohne Reconnect austauscht.
+     *
+     * @param neueEltern die neue Eltern-Instanz, an die diese Verbindung künftig gebunden ist
+     */
+    void neuBinden(SseElternInstanz neueEltern) {
+        this.elternInstanz = neueEltern;
     }
 
     /**

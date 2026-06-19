@@ -71,35 +71,60 @@ public class WebserverRegieServerInstanz {
     }
 
     /**
-     * Prüft offene Regie-SSE-Verbindungen nach einer Konfigurationsänderung.
+     * Gleicht offene Regie-SSE-Verbindungen nach einer Konfigurationsänderung ab.
      * <p>
-     * Bestehende Browserfenster bleiben auf der stabilen Ziel-URL
-     * {@code /<slug>/}. Wenn die Sidebar-Kombobox dieses Ziel auf eine andere
-     * View umstellt, muss die alte SSE-Verbindung getrennt werden, damit der
-     * Browser automatisch reconnectet und beim neuen {@code /events}-Request
-     * die aktuelle Quelle gebunden wird.
+     * Bestehende Browserfenster bleiben auf der stabilen Ziel-URL {@code /<slug>/}.
+     * Stellt die Sidebar-Kombobox dieses Ziel auf eine andere View um, wird die
+     * weiterhin offene Verbindung <strong>live an die neue Quelle umgebunden</strong>
+     * und deren Init-Zustand sofort gepusht – der Browser tauscht die View ohne
+     * Reconnect aus ({@code composite_init} setzt den Versionszähler hart neu).
+     * <p>
+     * Nur wenn das Ziel inaktiv wurde oder keine laufende neue Quelle existiert, wird
+     * die Verbindung geschlossen; der Browser reconnectet dann und sieht ggf. den
+     * „Quelle inaktiv"-Hinweis.
      */
     public void konfigurationGeaendert() {
         for (var eintrag : verbindungenNachSlug.entrySet()) {
             String slug = eintrag.getKey();
+            CopyOnWriteArrayList<ZielVerbindung> liste = eintrag.getValue();
             RegieZielRoh ziel = zielFuerSlug(slug);
-            for (var verbindung : eintrag.getValue()) {
+            for (var zielVerbindung : liste) {
                 if (ziel == null || !ziel.aktiv()) {
-                    verbindung.entfernenUndSchliessen();
-                    eintrag.getValue().remove(verbindung);
+                    zielVerbindung.entfernenUndSchliessen();
+                    liste.remove(zielVerbindung);
                     continue;
                 }
-                boolean quelleNochAktuell = ziel.viewId().equals(verbindung.quelle().getViewId())
-                        && verbindung.quelle().laeuft();
-                if (!quelleNochAktuell) {
-                    verbindung.entfernenUndSchliessen();
-                    eintrag.getValue().remove(verbindung);
+                boolean quelleNochAktuell = ziel.viewId().equals(zielVerbindung.quelle().getViewId())
+                        && zielVerbindung.quelle().laeuft();
+                if (quelleNochAktuell) {
+                    continue;
+                }
+                RegieQuelle neueQuelle = manager.laufendeRegieQuelleFuerId(ziel.viewId()).orElse(null);
+                if (neueQuelle == null) {
+                    zielVerbindung.entfernenUndSchliessen();
+                    liste.remove(zielVerbindung);
+                } else {
+                    bindeVerbindungUm(slug, liste, zielVerbindung, neueQuelle);
                 }
             }
-            if (eintrag.getValue().isEmpty()) {
+            if (liste.isEmpty()) {
                 verbindungenNachSlug.remove(slug);
             }
         }
+    }
+
+    /**
+     * Bindet eine offene SSE-Verbindung ohne Reconnect an eine neue Quelle und pusht
+     * deren Init-Zustand. Der zugrunde liegende Browser-Stream bleibt erhalten.
+     */
+    private void bindeVerbindungUm(String slug, CopyOnWriteArrayList<ZielVerbindung> liste,
+            ZielVerbindung zielVerbindung, RegieQuelle neueQuelle) {
+        SseVerbindung verbindung = zielVerbindung.verbindung();
+        zielVerbindung.quelle().regieVerbindungEntfernen(verbindung);
+        verbindung.neuBinden(new RegieSseEltern(neueQuelle, v -> entferneVerbindung(slug, neueQuelle, v)));
+        neueQuelle.regieVerbindungHinzufuegen(verbindung);
+        liste.replaceAll(v -> v == zielVerbindung ? new ZielVerbindung(slug, neueQuelle, verbindung) : v);
+        verbindung.sendeInitNachricht();
     }
 
     private void handleRequest(HttpExchange exchange) throws IOException {
@@ -176,7 +201,7 @@ public class WebserverRegieServerInstanz {
                     I18n.get("webserver.regie.hinweis.quelle.inaktiv.titel"),
                     I18n.get("webserver.regie.hinweis.quelle.inaktiv.text")));
             try {
-                os.write("retry: 3000\n\n".getBytes(StandardCharsets.UTF_8));
+                os.write("retry: 1000\n\n".getBytes(StandardCharsets.UTF_8));
                 os.write(("data: " + hinweis + "\n\n").getBytes(StandardCharsets.UTF_8));
                 os.flush();
             } finally {

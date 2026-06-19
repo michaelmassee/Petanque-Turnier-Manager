@@ -362,6 +362,12 @@ export default function App() {
     let src = null;
     let reconnectTimer = null;
     let abgebrochen = false;
+    // Reconnect greift nur noch bei echten Abbrüchen (Netzwerk, Server-Neustart,
+    // gestoppte Quelle) — ein gewollter View-Wechsel wird serverseitig live umgebunden
+    // und trennt nicht mehr. Schneller Erstversuch, danach exponentieller Backoff.
+    const RECONNECT_BASIS_MS = 300;
+    const RECONNECT_MAX_MS = 5000;
+    let reconnectDelay = RECONNECT_BASIS_MS;
 
     const verbinden = () => {
       const params = new URLSearchParams();
@@ -369,6 +375,7 @@ export default function App() {
       src = new EventSource(liveUrl(`events?${params.toString()}`));
 
       src.onopen = () => {
+        reconnectDelay = RECONNECT_BASIS_MS;
         dispatch({ type: 'VERBINDUNG_STATUS', payload: { verbunden: true } });
       };
 
@@ -429,7 +436,8 @@ export default function App() {
         if (src && src.readyState === EventSource.CLOSED && !abgebrochen) {
           src.close();
           src = null;
-          reconnectTimer = setTimeout(verbinden, 3000);
+          reconnectTimer = setTimeout(verbinden, reconnectDelay);
+          reconnectDelay = Math.min(reconnectDelay * 2, RECONNECT_MAX_MS);
         }
       };
     };
