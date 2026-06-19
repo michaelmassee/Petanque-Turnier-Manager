@@ -285,8 +285,9 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot, Re
             return;
         }
         byte[] body = Files.readAllBytes(datei);
+        Path dateiname = datei.getFileName();
         var headers = exchange.getResponseHeaders();
-        headers.set("Content-Type", ermittleContentType(datei.getFileName().toString()));
+        headers.set("Content-Type", ermittleContentType(dateiname != null ? dateiname.toString() : ""));
         headers.set("Cache-Control", "no-cache");
         headers.set("Access-Control-Allow-Origin", "*");
         exchange.sendResponseHeaders(200, body.length);
@@ -338,8 +339,9 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot, Re
             return;
         }
         byte[] body = Files.readAllBytes(datei);
+        Path dateiname = datei.getFileName();
         var headers = exchange.getResponseHeaders();
-        headers.set("Content-Type", ermittleContentType(datei.getFileName().toString()));
+        headers.set("Content-Type", ermittleContentType(dateiname != null ? dateiname.toString() : ""));
         headers.set("Cache-Control", "no-cache");
         headers.set("Access-Control-Allow-Origin", "*");
         exchange.sendResponseHeaders(200, body.length);

@@ -383,13 +383,6 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
         }
     };
 
-    private void verarbeiteItemAuswahl(int idx) {
-        if (idx < 0 || idx >= baumEintraege.size()) {
-            return;
-        }
-        verarbeiteItemAuswahl(baumEintraege.get(idx));
-    }
-
     private void verarbeiteItemAuswahl(BlattBaumEintrag eintrag) {
         switch (eintrag) {
             case GruppenKopf kopf -> gruppeToggle(kopf.gruppe());

@@ -198,7 +198,8 @@ public abstract class AbstractExportInVerzeichnis extends SheetRunner {
 
         Path zielDatei = zielVerzeichnis.resolve("turnier-logo" + logoEndung(logoDatei));
         Files.copy(logoDatei, zielDatei, StandardCopyOption.REPLACE_EXISTING);
-        return new TurnierlogoExport(zielDatei.getFileName().toString(), Optional.of(zielDatei));
+        Path zielDateiname = zielDatei.getFileName();
+        return new TurnierlogoExport(zielDateiname != null ? zielDateiname.toString() : "", Optional.of(zielDatei));
     }
 
     private static boolean istUnveraenderteLogoQuelle(String quelle) {
@@ -219,7 +220,8 @@ public abstract class AbstractExportInVerzeichnis extends SheetRunner {
     }
 
     private static String logoEndung(Path logoDatei) {
-        String dateiname = logoDatei.getFileName() != null ? logoDatei.getFileName().toString() : "";
+        Path dateinamePfad = logoDatei.getFileName();
+        String dateiname = dateinamePfad != null ? dateinamePfad.toString() : "";
         String extension = FilenameUtils.getExtension(dateiname);
         return StringUtils.isBlank(extension) ? "" : "." + extension;
     }
