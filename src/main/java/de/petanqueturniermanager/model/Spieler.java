@@ -24,10 +24,11 @@ public class Spieler extends NrComparable implements IMeldung<Spieler> {
 	private WeakReference<Team> wkRefteam;
 	private boolean istInTeam;
 	private boolean hatteFreilos; // Spieler hatte bereits ein freilos
-	// Zähler, wie oft der Spieler in einem Team mit Ausnahmegröße (kleiner als die
-	// Default-Modus-Größe) spielte. Wird vom Supermêlée-Paarungsalgorithmus verwendet,
-	// um Doublette-Slots fair über die Runden zu verteilen.
-	private int anzMalKleinesTeam;
+	// Zähler, wie oft der Spieler in einem Team mit Ausnahmegröße (abweichend von der
+	// Default-Modus-Größe) spielte. Im Triplette-Modus ist die Ausnahme das kleinere
+	// Doublette, im Doublette-Modus das größere Triplette. Wird vom Supermêlée-
+	// Paarungsalgorithmus verwendet, um die Ausnahme-Slots fair über die Runden zu verteilen.
+	private int anzMalAusnahmeTeam;
 
 	private Spieler(int nr) {
 		super(nr);
@@ -211,17 +212,17 @@ public class Spieler extends NrComparable implements IMeldung<Spieler> {
 		return this;
 	}
 
-	public int getAnzMalKleinesTeam() {
-		return anzMalKleinesTeam;
+	public int getAnzMalAusnahmeTeam() {
+		return anzMalAusnahmeTeam;
 	}
 
-	public Spieler incAnzMalKleinesTeam() {
-		anzMalKleinesTeam++;
+	public Spieler incAnzMalAusnahmeTeam() {
+		anzMalAusnahmeTeam++;
 		return this;
 	}
 
-	public Spieler resetAnzMalKleinesTeam() {
-		anzMalKleinesTeam = 0;
+	public Spieler resetAnzMalAusnahmeTeam() {
+		anzMalAusnahmeTeam = 0;
 		return this;
 	}
 
@@ -235,7 +236,7 @@ public class Spieler extends NrComparable implements IMeldung<Spieler> {
 		warImTeamMit.clear();
 		gegner.clear();
 		warImSpielMit.clear();
-		anzMalKleinesTeam = 0;
+		anzMalAusnahmeTeam = 0;
 		return this;
 	}
 

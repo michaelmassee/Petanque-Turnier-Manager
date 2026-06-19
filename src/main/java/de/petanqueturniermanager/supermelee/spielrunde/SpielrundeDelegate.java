@@ -393,13 +393,14 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 						sA.addGegner(sB);
 					}
 				}
-				// Pendant zur Doublette-/Triplette-Buchhaltung im Algorithmus: Spieler in einem
-				// Team kleiner als die Default-Modus-Größe zählen, damit der nächste
+				// Pendant zur Ausnahme-Team-Buchhaltung im Algorithmus: Spieler in einem Team
+				// mit von der Default-Modus-Größe abweichender Größe zählen (Triplette-Modus:
+				// kleineres Doublette; Doublette-Modus: größeres Triplette), damit der nächste
 				// Paarungslauf die Ausnahme-Slots fair über die Runden verteilen kann.
 				for (Team team : new Team[] { team1, team2 }) {
-					if (team.size() > 0 && team.size() < defaultTeamGroesse) {
+					if (team.size() > 0 && team.size() != defaultTeamGroesse) {
 						for (Spieler s : team.spieler()) {
-							s.incAnzMalKleinesTeam();
+							s.incAnzMalAusnahmeTeam();
 						}
 					}
 				}

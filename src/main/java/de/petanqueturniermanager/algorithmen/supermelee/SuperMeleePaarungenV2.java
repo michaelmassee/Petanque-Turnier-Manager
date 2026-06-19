@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -207,8 +208,9 @@ public class SuperMeleePaarungenV2 {
         }
 
         // Doublette-Hauptmodus: das Dummy-Team wird nach Cleanup zum Doublette = Default-Größe.
-        // Die "Ausnahme" sind hier die dummylosen Triplettes. Spieler im Dummy-Team auf
-        // anzMalKleinesTeam zu sperren wäre kontraproduktiv → Fairness-Constraint deaktiviert.
+        // Die Ausnahme sind hier die dummylosen Triplettes (größer als der Default). Der
+        // Fairness-Constraint zwingt die am wenigsten belasteten Spieler in diese Ausnahme-
+        // Teams (dummyTeamIstAusnahme = false steuert die invertierte Logik im Algorithmus).
         MeleeSpielRunde spielRunde = nurTriplette
                 ? generiereRundeMitFesteTeamGroese(rndNr, 3, meldungen)
                 : generiereRundeMitDummies(rndNr, 3, teamRechner.getAnzDoublette(), meldungen, false);
@@ -715,15 +717,19 @@ public class SuperMeleePaarungenV2 {
                     spieler.deleteWarImTeam(dummy);
                 }
             }
-            if (dummyTeamIstAusnahme) {
-                // Buchhaltung: jeder reale Spieler in einem Team kleiner als teamSize hat in
-                // dieser Runde im Ausnahme-Team (Doublette) gespielt. Konsistent zum Eintrag
-                // beim Wieder-Einlesen der Sheets ({@code SpielrundeDelegate.gespieltenRundenEinlesen}).
-                for (Team team : spielRunde.teams()) {
-                    if (team.size() > 0 && team.size() < teamSize) {
-                        for (Spieler s : team.spieler()) {
-                            s.incAnzMalKleinesTeam();
-                        }
+            // Buchhaltung: jeder reale Spieler im Ausnahme-Team bekommt den Zähler erhöht.
+            // Triplette-Modus (dummyTeamIstAusnahme): Ausnahme = kleineres Team (Doublette,
+            // size < teamSize). Doublette-Modus: Ausnahme = volles Team (Triplette,
+            // size == teamSize), die Dummy-Teams sind hier das kleinere Default-Doublette.
+            // Konsistent zum Eintrag beim Wieder-Einlesen der Sheets
+            // ({@code SpielrundeDelegate.gespieltenRundenEinlesen}).
+            for (Team team : spielRunde.teams()) {
+                boolean istAusnahmeTeam = dummyTeamIstAusnahme
+                        ? team.size() > 0 && team.size() < teamSize
+                        : team.size() == teamSize;
+                if (istAusnahmeTeam) {
+                    for (Spieler s : team.spieler()) {
+                        s.incAnzMalAusnahmeTeam();
                     }
                 }
             }
@@ -737,66 +743,154 @@ public class SuperMeleePaarungenV2 {
     }
 
     /**
-     * Generiert eine Runde mit fest definierter Teamgröße und sorgt — falls
-     * {@code dummyTeamIstAusnahme} gesetzt ist — dafür, dass Spieler, die in
-     * früheren Runden bereits am häufigsten im Ausnahme-Team waren, möglichst
-     * nicht erneut in einem Dummy-Team landen. Realisiert via Hard-Constraint
-     * zwischen Dummy und "Vielspielern", die schrittweise relaxiert wird, wenn
-     * die Backtracking-Suche kein gültiges Layout findet.
+     * Generiert eine Runde mit fest definierter Teamgröße und verteilt die Ausnahme-Teams
+     * (von der Default-Modus-Größe abweichende Teams) fair über die Runden — Spieler, die
+     * bereits am häufigsten im Ausnahme-Team waren, sollen es möglichst meiden.<br>
+     * <br>
+     * Die beiden Modi sind strukturell gespiegelt und werden daher getrennt behandelt:
+     * <ul>
+     *   <li><b>Triplette-Modus</b> ({@code dummyTeamIstAusnahme == true}): die Ausnahme ist
+     *       das <i>kleinere</i> Dummy-Team (Doublette). Vielspieler werden per Hard-Constraint
+     *       <i>aus</i> dem Dummy-Team gesperrt — siehe {@link #erzwingeFaireKleineAusnahmeTeams}.</li>
+     *   <li><b>Doublette-Modus</b> ({@code dummyTeamIstAusnahme == false}): die Ausnahme ist
+     *       das <i>größere</i> dummylose Team (Triplette). Da ein Schwellwert hier die wenigen
+     *       Ausnahme-Plätze überlaufen ließe, wird eine feste Anzahl der am wenigsten
+     *       belasteten Spieler <i>in</i> die Ausnahme gezwungen — siehe
+     *       {@link #erzwingeFaireGrosseAusnahmeTeams}.</li>
+     * </ul>
+     * Findet keine Fairness-Stufe ein gültiges Layout, greift ein uneingeschränkter Fallback.
      */
     private MeleeSpielRunde generiereRundeMitFairnessConstraint(int rndNr, int teamSize,
             SpielerMeldungen meldungen, Spieler[] dummies, List<Spieler> realeSpieler,
             boolean dummyTeamIstAusnahme) throws AlgorithmenException {
-        if (!dummyTeamIstAusnahme || dummies.length == 0 || realeSpieler.isEmpty()) {
+        if (dummies.length == 0 || realeSpieler.isEmpty()) {
             return generiereRundeMitFesteTeamGroese(rndNr, teamSize, meldungen);
         }
-
-        int maxKlein = realeSpieler.stream().mapToInt(Spieler::getAnzMalKleinesTeam).max().orElse(0);
-        int minKlein = realeSpieler.stream().mapToInt(Spieler::getAnzMalKleinesTeam).min().orElse(0);
         // Reduziertes Budget fuer Fairness-Versuche: loesbare Faelle werden in <<1000 Knoten gefunden,
         // unloesbare Faelle (dichte Teamhistorie + Fairness-Constraints) werden damit schnell erkannt.
         // Das volle Budget wird nur fuer den uneingeschraenkten Fallback-Call danach verwendet.
         int fairnessMaxKnoten = maxKnotenFairnessVersuch(meldungen.spieler().size());
+        try {
+            return dummyTeamIstAusnahme
+                    ? erzwingeFaireKleineAusnahmeTeams(rndNr, teamSize, meldungen, dummies, realeSpieler, fairnessMaxKnoten)
+                    : erzwingeFaireGrosseAusnahmeTeams(rndNr, teamSize, meldungen, dummies, realeSpieler, fairnessMaxKnoten);
+        } catch (AlgorithmenException fairnessEx) {
+            // Alle Fairness-Stufen erschöpft → uneingeschränkter Fallback ohne Dummy-Constraints.
+            try {
+                return generiereRundeMitFesteTeamGroese(rndNr, teamSize, meldungen);
+            } catch (AlgorithmenException fallbackEx) {
+                // Die Fairness-Exception ist informativer als der reine Größen-Fehler.
+                throw fairnessEx;
+            }
+        }
+    }
+
+    /**
+     * Triplette-Modus: die Ausnahme ist das kleinere Dummy-Team (Doublette). Spieler mit dem
+     * höchsten Ausnahme-Zähler werden per Hard-Constraint aus den Dummy-Teams gesperrt; übrig
+     * bleiben die am wenigsten belasteten Spieler für die wenigen Doublette-Slots. Die Schwelle
+     * startet strikt ({@code min + 1}) und wird schrittweise angehoben, bis das Backtracking
+     * eine Lösung findet.
+     *
+     * @return gültige Runde
+     * @throws AlgorithmenException wenn keine Fairness-Schwelle lösbar war
+     */
+    private MeleeSpielRunde erzwingeFaireKleineAusnahmeTeams(int rndNr, int teamSize,
+            SpielerMeldungen meldungen, Spieler[] dummies, List<Spieler> realeSpieler,
+            int fairnessMaxKnoten) throws AlgorithmenException {
+        int maxAusnahme = realeSpieler.stream().mapToInt(Spieler::getAnzMalAusnahmeTeam).max().orElse(0);
+        int minAusnahme = realeSpieler.stream().mapToInt(Spieler::getAnzMalAusnahmeTeam).min().orElse(0);
+        if (minAusnahme == maxAusnahme) {
+            // Keine Fairness-Präferenz (z. B. erste Runde) → uneingeschränkt.
+            return generiereRundeMitFesteTeamGroese(rndNr, teamSize, meldungen);
+        }
 
         AlgorithmenException letzteException = null;
-        // Von strikt nach locker, in Richtung „minimaler Counter bevorzugt":
-        // Schwelle = minKlein + 1 sperrt alle Spieler, die mehr als minKlein mal im
-        // Ausnahme-Team waren — übrig bleiben nur die Spieler mit dem niedrigsten Zähler.
-        // Findet das Backtracking keine Lösung, wird die Schwelle schrittweise angehoben
-        // (mehr Spieler werden zugelassen). So landen Doublette-Slots immer zuerst bei
-        // den am wenigsten belasteten Spielern.
-        for (int schwelle = minKlein + 1; schwelle <= maxKlein; schwelle++) {
+        for (int schwelle = minAusnahme + 1; schwelle <= maxAusnahme; schwelle++) {
+            int schwelleFinal = schwelle;
+            List<Spieler> zuSperren = realeSpieler.stream()
+                    .filter(s -> s.getAnzMalAusnahmeTeam() >= schwelleFinal)
+                    .toList();
             try {
-                for (Spieler dummy : dummies) {
-                    for (Spieler s : realeSpieler) {
-                        if (s.getAnzMalKleinesTeam() >= schwelle) {
-                            dummy.addWarImTeamMitWennNichtVorhanden(s);
-                        }
-                    }
-                }
-                return generiereRunde(rndNr, teamSize, meldungen, fairnessMaxKnoten, "Fairness-Schwelle " + schwelle);
+                return versucheRundeMitGesperrtenDummyPartnern(rndNr, teamSize, meldungen, dummies,
+                        zuSperren, fairnessMaxKnoten, "Fairness-Schwelle " + schwelle);
             } catch (AlgorithmenException ex) {
                 letzteException = ex;
                 logger.debug("Spielrunde {}: Fairness-Schwelle {} nicht lösbar — lockere.", rndNr, schwelle);
-                // Dummy-Konflikte vor nächstem Versuch zurücksetzen — beide Seiten, weil
-                // addWarImTeamMitWennNichtVorhanden symmetrisch ist, deleteWarImTeam aber nicht.
-                for (Spieler dummy : dummies) {
-                    for (Spieler s : realeSpieler) {
-                        dummy.deleteWarImTeam(s);
-                        s.deleteWarImTeam(dummy);
-                    }
-                }
             }
         }
-        // Schwelle vollständig zurückgenommen → identisches Verhalten zum Algorithmus
-        // vor der Fairness-Erweiterung. Vorhandene Dummies haben hier keine zusätzlichen
-        // Constraints mehr.
-        try {
+        // Schleife lief garantiert ≥1× (minAusnahme < maxAusnahme) → letzteException ist gesetzt.
+        throw Objects.requireNonNull(letzteException, "Fairness-Schleife ohne Versuch");
+    }
+
+    /**
+     * Doublette-Modus: die Ausnahme ist das größere dummylose Team (Triplette), eine Minderheit
+     * mit nur {@code 3 * anzTriplette} Plätzen. Statt eines Schwellwerts (der alle gleich-niedrig
+     * belasteten Spieler sperren und die wenigen Plätze überlaufen ließe) werden die
+     * {@code n} am wenigsten belasteten Spieler aus allen Dummy-Teams gesperrt und damit in die
+     * dummylosen Ausnahme-Teams gezwungen. Start: alle Ausnahme-Plätze mit den niedrigsten
+     * Zählern füllen; schlägt das fehl, wird {@code n} schrittweise reduziert (die restlichen
+     * Plätze füllt das Backtracking frei).
+     *
+     * @return gültige Runde
+     * @throws AlgorithmenException wenn keine Fairness-Stufe lösbar war
+     */
+    private MeleeSpielRunde erzwingeFaireGrosseAusnahmeTeams(int rndNr, int teamSize,
+            SpielerMeldungen meldungen, Spieler[] dummies, List<Spieler> realeSpieler,
+            int fairnessMaxKnoten) throws AlgorithmenException {
+        // Reale Sitze in den dummylosen Ausnahme-Teams: reale Spieler minus die je
+        // (teamSize - 1) realen Sitze pro Dummy-(Default-)Team.
+        int ausnahmeSitze = realeSpieler.size() - (teamSize - 1) * dummies.length;
+        if (ausnahmeSitze <= 0) {
             return generiereRundeMitFesteTeamGroese(rndNr, teamSize, meldungen);
+        }
+        // Niedrigste Zähler zuerst; Gleichstände zufällig streuen, damit die Ausnahme-Last
+        // über die Runden rotiert, statt immer dieselben Spieler zu treffen.
+        List<Spieler> aufsteigendNachZaehler = new ArrayList<>(realeSpieler);
+        Collections.shuffle(aufsteigendNachZaehler, RandomSource.asJavaRandom());
+        aufsteigendNachZaehler.sort(Comparator.comparingInt(Spieler::getAnzMalAusnahmeTeam));
+
+        AlgorithmenException letzteException = null;
+        for (int anzGezwungen = ausnahmeSitze; anzGezwungen >= 1; anzGezwungen--) {
+            List<Spieler> gezwungen = List.copyOf(aufsteigendNachZaehler.subList(0, anzGezwungen));
+            try {
+                return versucheRundeMitGesperrtenDummyPartnern(rndNr, teamSize, meldungen, dummies,
+                        gezwungen, fairnessMaxKnoten, "Doublette-Ausnahme erzwungen=" + anzGezwungen);
+            } catch (AlgorithmenException ex) {
+                letzteException = ex;
+                logger.debug("Spielrunde {}: Doublette-Ausnahme mit {} erzwungenen Spielern nicht lösbar — lockere.",
+                        rndNr, anzGezwungen);
+            }
+        }
+        // Schleife lief garantiert ≥1× (ausnahmeSitze >= 1) → letzteException ist gesetzt.
+        throw Objects.requireNonNull(letzteException, "Doublette-Ausnahme-Schleife ohne Versuch");
+    }
+
+    /**
+     * Sperrt die übergebenen realen Spieler in allen Dummy-Teams (Hard-Constraint über
+     * {@code warImTeamMit}) und versucht, eine Runde zu generieren. Schlägt die Generierung
+     * fehl, werden die temporären Dummy-Constraints wieder entfernt, bevor die Exception
+     * weitergereicht wird — so startet der nächste Fairness-Versuch konfliktfrei. Auf dem
+     * Erfolgspfad übernimmt {@link #generiereRundeMitDummies} das Aufräumen.
+     */
+    private MeleeSpielRunde versucheRundeMitGesperrtenDummyPartnern(int rndNr, int teamSize,
+            SpielerMeldungen meldungen, Spieler[] dummies, List<Spieler> gesperrteSpieler,
+            int fairnessMaxKnoten, String beschreibung) throws AlgorithmenException {
+        for (Spieler dummy : dummies) {
+            for (Spieler s : gesperrteSpieler) {
+                dummy.addWarImTeamMitWennNichtVorhanden(s);
+            }
+        }
+        try {
+            return generiereRunde(rndNr, teamSize, meldungen, fairnessMaxKnoten, beschreibung);
         } catch (AlgorithmenException ex) {
-            // Wenn auch das nicht klappt: die ursprüngliche Exception ist informativer.
-            if (letzteException != null) {
-                throw letzteException;
+            // Dummy-Konflikte vor dem nächsten Versuch zurücksetzen — beide Seiten, weil
+            // addWarImTeamMitWennNichtVorhanden symmetrisch ist, deleteWarImTeam aber nicht.
+            for (Spieler dummy : dummies) {
+                for (Spieler s : gesperrteSpieler) {
+                    dummy.deleteWarImTeam(s);
+                    s.deleteWarImTeam(dummy);
+                }
             }
             throw ex;
         }

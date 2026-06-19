@@ -52,65 +52,78 @@ Bei `effMaxSpieltage=0` enthält die Constraint-Matrix nur die Runden des laufen
 
 ---
 
-## 2. Ausnahme-Team-Fairness — und die Doublette-Modus-Lücke
+## 2. Ausnahme-Team-Fairness (beide Modi)
 
 Wenn die Spieleranzahl nicht durch die Default-Teamgröße teilbar ist, entsteht pro
 Runde mindestens ein **Ausnahme-Team** abweichender Größe. Über mehrere Runden soll
-niemand wiederholt im Ausnahme-Team landen. Dafür gibt es einen Fairness-Mechanismus —
-**aber nur im Triplette-Modus.** Im Doublette-Modus existiert er strukturell nicht.
+niemand wiederholt im Ausnahme-Team landen. Der Fairness-Mechanismus greift in
+**beiden Modi** — Triplette- und Doublette-Modus sind aber strukturell gespiegelt und
+werden daher getrennt behandelt.
 
-### Triplette-Modus (Standard = 3er, Ausnahme = Doublette) → Fairness AKTIV
+### Gemeinsame Grundlage
 
-`neueSpielrundeTripletteMode(...)` ruft `generiereRundeMitDummies(..., dummyTeamIstAusnahme = true)`.
+- **Zähler** `Spieler.anzMalAusnahmeTeam` (früher `anzMalKleinesTeam`): wie oft ein
+  Spieler im Ausnahme-Team war. Inkrementiert beim Generieren (`generiereRundeMitDummies`)
+  UND beim Wieder-Einlesen der Sheets (`SpielrundeDelegate.gespieltenRundenEinlesen`),
+  überlebt damit Session-Neustarts.
+- **Ausnahme-Erkennung** ist mode-abhängig:
+  - Triplette-Modus (`dummyTeamIstAusnahme = true`): Ausnahme = `size < teamSize` (Doublette).
+  - Doublette-Modus (`dummyTeamIstAusnahme = false`): Ausnahme = `size == teamSize` (Triplette).
+  - Beim Einlesen einheitlich: `size != defaultTeamGroesse` (deckt beide ab).
+- **Dummy-Teams sind in BEIDEN Modi die Doublettes.** Nur die Bedeutung kippt:
+  Triplette-Modus → Doublette ist die Ausnahme; Doublette-Modus → Doublette ist der
+  Default und das dummylose Triplette die Ausnahme.
 
-1. **Tracking** (`Spieler.anzMalKleinesTeam`): jeder reale Spieler in einem Team
-   kleiner als `teamSize` (= Doublette) bekommt `incAnzMalKleinesTeam()`
-   — beim Generieren (`generiereRundeMitDummies`) UND beim Wieder-Einlesen der Sheets
-   (`SpielrundeDelegate.gespieltenRundenEinlesen`, `defaultTeamGroesse = 3`).
-   Der Zähler überlebt damit Session-Neustarts.
-2. **Constraint** (`generiereRundeMitFairnessConstraint`): Spieler mit hohem Zähler
-   werden per Hard-Constraint gegen die Dummy-Plätze gesperrt. Schwelle startet bei
-   `minKlein + 1` (nur die am wenigsten belasteten Spieler dürfen in die Doublette)
-   und wird schrittweise bis `maxKlein` gelockert, wenn das Backtracking keine Lösung
-   findet. Danach `generiereRundeMitFesteTeamGroese` **ganz ohne** Fairness-Constraint.
+### Triplette-Modus (Standard = 3er, Ausnahme = Doublette = Dummy-Team)
 
-→ Garantie ist **weich**: „möglichst nicht wiederholt in der Doublette", aber bei
-Constraint-Erschöpfung bewusst aufgegeben, statt die Auslosung scheitern zu lassen.
+`erzwingeFaireKleineAusnahmeTeams`: Die Ausnahme ist das *kleinere* Dummy-Team. Spieler
+mit dem höchsten Zähler werden per Hard-Constraint **aus** den Dummy-Teams gesperrt
+(`dummy.addWarImTeamMit(spieler)`). Schwelle startet strikt bei `minAusnahme + 1`
+(nur die am wenigsten Belasteten dürfen in die Doublette) und wird bis `maxAusnahme`
+schrittweise gelockert. Funktioniert, weil das *Default*-Team (Triplette) die Mehrheit
+ist und beliebig viele gesperrte Spieler aufnehmen kann.
 
-### Doublette-Modus (Standard = 2er, Ausnahme = Triplette) → Fairness FEHLT
+### Doublette-Modus (Standard = 2er, Ausnahme = Triplette = dummyloses Team)
 
-`neueSpielrundeDoubletteMode(...)` ruft `generiereRundeMitDummies(..., dummyTeamIstAusnahme = false)`.
-Begründung im Code: die Dummy-Teams werden nach Cleanup zu **Doublettes** (= Default-Größe),
-die „Ausnahme" sind die dummylosen **Triplettes** (das *größere* Team).
+`erzwingeFaireGrosseAusnahmeTeams`: Die Ausnahme ist das *größere* dummylose Team —
+eine **Minderheit** mit nur `3 · anzTriplette` Plätzen. Ein Schwellwert wie im
+Triplette-Modus funktioniert hier **nicht**: er würde alle gleich-niedrig belasteten
+Spieler gleichzeitig sperren und die wenigen Ausnahme-Plätze überlaufen lassen.
 
-Konsequenz — die im `false`-Flag steckende, nicht ausgesprochene Lücke:
+Stattdessen wird eine **feste Anzahl** der am wenigsten belasteten Spieler aus allen
+Dummy-(Doublette-)Teams gesperrt und damit **in** die dummylosen Triplettes gezwungen:
 
-- **Kein Constraint**: `generiereRundeMitFairnessConstraint` fällt sofort auf den
-  unbeschränkten Pfad zurück (`dummyTeamIstAusnahme == false`).
-- **Kein Tracking**: `incAnzMalKleinesTeam()` feuert nur bei `team.size() < teamSize`.
-  Die Triplette-Ausnahme hat `size == 3`, was nie kleiner als die Default-Größe 2 ist —
-  also wird der Counter im Doublette-Modus **nie erhöht**, weder beim Generieren
-  (`teamSize == 3`, aber `dummyTeamIstAusnahme == false`) noch beim Einlesen
-  (`defaultTeamGroesse == 2`, Bedingung `size < 2` greift nie).
+- `ausnahmeSitze = realeSpieler − (teamSize − 1) · anzDummies` (= reale Triplette-Plätze).
+- Spieler nach Zähler aufsteigend sortiert (Gleichstände via `RandomSource` gestreut,
+  damit die Last rotiert).
+- Start: die `ausnahmeSitze` niedrigsten Spieler erzwingen (Ausnahme komplett mit den
+  am wenigsten Belasteten füllen). Schlägt das fehl, schrittweise `n` reduzieren — der
+  Rest der Plätze wird dann vom Backtracking frei gefüllt.
 
-→ Im Doublette-Modus kann ein Spieler **wiederholt im Triplette landen**; es gibt
-weder Vermeidung noch Fallback dagegen, weil das Problem nicht erfasst wird.
+Asymmetrie-Begründung: Exklusions-Constraints (`warImTeamMit`) können einen Spieler nur
+aus einem Team *heraushalten*, nicht in eines *hineinzwingen*. Im Triplette-Modus reicht
+„hohe Zähler aus dem kleinen Dummy-Team heraushalten". Im Doublette-Modus ist die Ausnahme
+dummylos — sie lässt sich nur indirekt füllen, indem man die niedrigsten Zähler aus den
+Dummy-Teams sperrt.
 
-### Kern der Asymmetrie
+### Gemeinsamer Fallback
+
+Findet keine Fairness-Stufe ein gültiges Layout, fällt `generiereRundeMitFairnessConstraint`
+auf `generiereRundeMitFesteTeamGroese` **ohne** Dummy-Constraints zurück (gemeinsamer
+`catch`). Darüber liegen weiterhin die effMaxSpieltage-Lockerung und `erzeugeZufallsRunde()`
+(Abschnitt 1). Die Garantie bleibt damit **weich**: möglichst faire Ausnahme-Verteilung,
+aber bei Constraint-Erschöpfung bewusst aufgegeben, statt die Auslosung scheitern zu lassen.
+
+### Übersicht
 
 | | Triplette-Modus | Doublette-Modus |
 |---|---|---|
-| Ausnahme-Team | Doublette (**kleiner**) | Triplette (**größer**) |
+| Ausnahme-Team | Doublette (**kleiner**, = Dummy-Team) | Triplette (**größer**, dummylos) |
 | `dummyTeamIstAusnahme` | `true` | `false` |
-| Counter `anzMalKleinesTeam` | gepflegt (Gen + Einlesen) | **nie inkrementiert** |
-| Fairness-Constraint | aktiv, gestuft lockerbar | deaktiviert |
-| Fallback bei Erschöpfung | Schwelle → unbeschränkt → Zufall | n/a (kein Constraint) |
-
-Das `dummyTeamIstAusnahme`-Flag und die `size() < teamSize`-Bedingung kodieren beide die
-Annahme „Ausnahme = **kleineres** Team". Im Doublette-Modus ist die Ausnahme aber das
-*größere* Team → die gesamte Fairness-Logik greift dort nicht. Bewusste (bzw. übersehene)
-Asymmetrie, kein Bug im engeren Sinn — eine korrekte Behandlung bräuchte einen eigenen
-„war-im-größeren-Ausnahme-Team"-Zähler mit Bedingung `size() > teamSize`.
+| Zähler `anzMalAusnahmeTeam` | gepflegt (Gen + Einlesen) | gepflegt (Gen + Einlesen) |
+| Fairness-Strategie | hohe Zähler aus Dummy-Team **sperren** (Schwelle `min+1…max`) | niedrigste Zähler ins dummylose Team **zwingen** (feste Anzahl, absteigend) |
+| Methode | `erzwingeFaireKleineAusnahmeTeams` | `erzwingeFaireGrosseAusnahmeTeams` |
+| Fallback bei Erschöpfung | uneingeschränkt → effMaxSpieltage → Zufall | identisch |
 
 ---
 
@@ -239,13 +252,16 @@ generiereRundeMitFesteTeamGroese():
 | `SuperMeleePaarungenV2` | `berechneLayoutGegnerScore()` | bewertet vollständige Team-Layouts nach erwarteter Gegnerqualität |
 | `SuperMeleePaarungenV2` | `erzeugeZufallsRunde()` | Letzter Ausweg: keinerlei Constraints |
 | `SuperMeleePaarungenV2` | `protokolliereWarImSpielMit()` | softMatrix-Einträge nach jeder Runde |
-| `SuperMeleePaarungenV2` | `generiereRundeMitDummies(...)` | Dummy-Auffüllung; setzt `dummyTeamIstAusnahme` + Counter (nur Triplette) |
-| `SuperMeleePaarungenV2` | `generiereRundeMitFairnessConstraint(...)` | Ausnahme-Team-Fairness mit gestufter Schwelle (nur Triplette aktiv) |
-| `SpielrundeDelegate` | `gespieltenRundenEinlesen()` | pflegt `anzMalKleinesTeam` (`size < defaultTeamGroesse`) |
+| `SuperMeleePaarungenV2` | `generiereRundeMitDummies(...)` | Dummy-Auffüllung; pflegt Ausnahme-Zähler in **beiden** Modi |
+| `SuperMeleePaarungenV2` | `generiereRundeMitFairnessConstraint(...)` | Mode-Dispatch + gemeinsamer Fallback |
+| `SuperMeleePaarungenV2` | `erzwingeFaireKleineAusnahmeTeams(...)` | Triplette: hohe Zähler aus Dummy-Team sperren (Schwelle) |
+| `SuperMeleePaarungenV2` | `erzwingeFaireGrosseAusnahmeTeams(...)` | Doublette: niedrigste Zähler ins dummylose Team zwingen (feste Anzahl) |
+| `SuperMeleePaarungenV2` | `versucheRundeMitGesperrtenDummyPartnern(...)` | gemeinsamer Sperr-/Reset-Helfer beider Fairness-Zweige |
+| `SpielrundeDelegate` | `gespieltenRundenEinlesen()` | pflegt `anzMalAusnahmeTeam` (`size != defaultTeamGroesse`) |
 | `Team` | `addSpielerWennNichtVorhanden()` | warImTeamMit-Einträge beim Generieren |
 | `Spieler` | `warImTeamMit(other)` | Hard-Constraint-Abfrage (+ SetzPos) |
 | `Spieler` | `warImSpielMit(other)` | Soft-Constraint-Abfrage |
-| `Spieler` | `incAnzMalKleinesTeam()` / `getAnzMalKleinesTeam()` | Ausnahme-Team-Zähler (greift nur bei kleineren Teams) |
+| `Spieler` | `incAnzMalAusnahmeTeam()` / `getAnzMalAusnahmeTeam()` | Ausnahme-Team-Zähler (Team mit abweichender Größe) |
 
 ---
 

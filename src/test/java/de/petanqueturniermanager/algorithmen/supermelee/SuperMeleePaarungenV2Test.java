@@ -1224,7 +1224,7 @@ public class SuperMeleePaarungenV2Test {
     }
 
     /**
-     * Regression: Über mehrere Spieltage hinweg darf der {@code anzMalKleinesTeam}-Counter
+     * Regression: Über mehrere Spieltage hinweg darf der {@code anzMalAusnahmeTeam}-Counter
      * nicht ignoriert werden, wenn ein Teil der Spieler bereits oft im Ausnahme-Team
      * (Doublette) war. Reproduziert die Situation aus dem 6.-Spieltag-Datensatz
      * {@code ~/tmp/locrash-2/supermelee_6_spieltag_fehlerhaft.ods}, in dem dieselben
@@ -1243,7 +1243,7 @@ public class SuperMeleePaarungenV2Test {
         for (Spieler s : meldungen.spieler()) {
             if (belastet.contains(s.getNr())) {
                 for (int i = 0; i < 5; i++) {
-                    s.incAnzMalKleinesTeam();
+                    s.incAnzMalAusnahmeTeam();
                 }
             }
         }
@@ -1264,6 +1264,48 @@ public class SuperMeleePaarungenV2Test {
             assertThat(doubletteCount.getOrDefault(nr, 0))
                     .as("Spieler %d war bereits 5× im Doublette — darf in den nächsten 3 Runden "
                             + "nicht erneut. Verteilung pro Spieler-Nr: %s", nr, doubletteCount)
+                    .isZero();
+        }
+    }
+
+    /**
+     * Spiegel-Regression zum Triplette-Fall, im <b>Doublette-Modus</b>: hier ist die Ausnahme
+     * das größere Triplette. Bei 21 Spielern entsteht pro Runde genau 1 Triplette (3 Plätze)
+     * neben 9 Doublettes. Spieler 1..4 waren bereits 5× im Triplette (Ausnahme), die übrigen 17
+     * noch nie. Der Fairness-Mechanismus muss die belasteten Spieler in den nächsten 3 Runden
+     * aus der Triplette heraushalten — 17 unbelastete Spieler für 9 Triplette-Plätze
+     * (3 Runden × 3) ist strukturell trivial lösbar.
+     */
+    @Test
+    public void paarung_21Spieler_3Runden_doublette_belasteteSpielerMeidenTriplette()
+            throws AlgorithmenException {
+        RandomSource.setSeed(42L);
+        SpielerMeldungen meldungen = newTestMeldungen(21);
+        Set<Integer> belastet = Set.of(1, 2, 3, 4);
+        for (Spieler s : meldungen.spieler()) {
+            if (belastet.contains(s.getNr())) {
+                for (int i = 0; i < 5; i++) {
+                    s.incAnzMalAusnahmeTeam();
+                }
+            }
+        }
+
+        Map<Integer, Integer> tripletteCount = new HashMap<>();
+        for (int rnd = 1; rnd <= 3; rnd++) {
+            MeleeSpielRunde runde = paarungen.neueSpielrundeDoubletteMode(rnd, meldungen, false);
+            for (Team team : runde.teams()) {
+                if (team.size() == 3) {
+                    for (Spieler s : team.spieler()) {
+                        tripletteCount.merge(s.getNr(), 1, Integer::sum);
+                    }
+                }
+            }
+        }
+
+        for (int nr : belastet) {
+            assertThat(tripletteCount.getOrDefault(nr, 0))
+                    .as("Spieler %d war bereits 5× im Triplette — darf in den nächsten 3 Runden "
+                            + "nicht erneut. Verteilung pro Spieler-Nr: %s", nr, tripletteCount)
                     .isZero();
         }
     }
