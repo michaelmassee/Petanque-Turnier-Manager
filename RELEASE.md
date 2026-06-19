@@ -71,8 +71,12 @@ git log "$(git describe --tags --abbrev=0)"..HEAD --oneline
 git add description.xml
 git commit -m "Release: Version X.Y.Z"
 git tag -a vX.Y.Z -m "Release vX.Y.Z"
-git push origin master vX.Y.Z
+git push github_michael_massee_privat master vX.Y.Z
 ```
+
+> Remote-Name im Hauptprojekt ist `github_michael_massee_privat` (nicht `origin`) – mit
+> `git remote -v` prüfen. Branch ist `master` und per Branch-Protection PR-pflichtig; der
+> direkte Push gelingt nur als Owner (Bypass).
 
 ## 5. Release-Notes vorbereiten (zweisprachig: DE-Block + EN-Block)
 
@@ -112,8 +116,11 @@ cd ../Petanque-Turnier-Manager-Installer
 git add gradle.properties
 git commit -m "Release: Version X.Y.Z"
 git tag -a vX.Y.Z -m "Release vX.Y.Z"
-git push origin master vX.Y.Z   # Tag-Push triggert build-installers.yml
+git push origin main vX.Y.Z   # Tag-Push triggert build-installers.yml
 ```
+
+> Aktiver Branch im Installer-Repo ist `main` (Remote `origin`). Ein veralteter `master`
+> existiert daneben – **nicht** dorthin pushen.
 
 Der Workflow erstellt automatisch das Installer-Release und lädt AppImage/exe/msi/dmg
 zusätzlich ins Hauptprojekt-Release.
