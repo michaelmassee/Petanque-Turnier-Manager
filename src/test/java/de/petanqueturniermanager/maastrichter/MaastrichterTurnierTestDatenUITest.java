@@ -10,9 +10,13 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.sun.star.beans.XPropertySet;
 import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.text.XText;
+import com.sun.star.uno.UnoRuntime;
 
 import de.petanqueturniermanager.BaseCalcUITest;
+import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.RangePosition;
@@ -20,6 +24,7 @@ import de.petanqueturniermanager.helper.random.RandomSource;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.maastrichter.korunde.KoGruppeABSheet;
+import de.petanqueturniermanager.maastrichter.finalrunde.MaastrichterFinalrundeSheet;
 import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterVorrundenRanglisteSheetUpdate;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrundeSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
@@ -102,7 +107,10 @@ public class MaastrichterTurnierTestDatenUITest extends BaseCalcUITest {
 		validiereVorrundenRanglistePerJson(anzTeams, "maastrichter-57-vorrundenrangliste.json");
 		validiereTeilnehmerPerJson(anzTeams, "maastrichter-57-teilnehmer.json");
 		validiereFinaleGruppePerJson("A", "maastrichter-57-finale-a.json");
+		validiereFinalrundeLeerflaechenSindWeiss("A");
+		validiereUnveraenderteFinalrundeWirdNichtNeuAufgebaut("A");
 		validiereFinaleGruppePerJson("B", "maastrichter-57-finale-b.json");
+		validiereFinalrundenBleibenNachTabWechselUnveraendert("A", "B");
 		validiereFinaleGruppePerJson("C", "maastrichter-57-finale-c.json");
 		validiereFinaleGruppePerJson("D", "maastrichter-57-finale-d.json");
 	}
@@ -249,6 +257,84 @@ public class MaastrichterTurnierTestDatenUITest extends BaseCalcUITest {
 
 		InputStream jsonFile = MaastrichterTurnierTestDatenUITest.class.getResourceAsStream(referenzDatei);
 		validateWithJson(rangeData, jsonFile);
+	}
+
+	private void validiereFinalrundeLeerflaechenSindWeiss(String gruppenBuchstabe) {
+		XSpreadsheet sheet = sheetHlp.findByName(SheetNamen.koFinaleGruppe(gruppenBuchstabe));
+		assertThat(sheet).as("Finalgruppe-Sheet '%s' muss existieren", gruppenBuchstabe).isNotNull();
+
+		assertThat(cellBackColor(sheet, 0, 5)).as("1/8-Finale Leerflaeche A6").isEqualTo(0xFFFFFF);
+		assertThat(cellBackColor(sheet, 2, 5)).as("1/8-Finale Verbinder-Leerflaeche C6").isEqualTo(0xFFFFFF);
+		assertThat(cellBackColor(sheet, 3, 3)).as("1/4-Finale Leerflaeche D4").isEqualTo(0xFFFFFF);
+		assertThat(cellBackColor(sheet, 5, 3)).as("1/4-Finale Verbinder-Leerflaeche F4").isEqualTo(0xFFFFFF);
+	}
+
+	private void validiereFinalrundenBleibenNachTabWechselUnveraendert(String... gruppenBuchstaben) {
+		for (String gruppenBuchstabe : gruppenBuchstaben) {
+			XSpreadsheet sheet = sheetHlp.findByName(SheetNamen.koFinaleGruppe(gruppenBuchstabe));
+			assertThat(sheet).as("Finalgruppe-Sheet '%s' muss existieren", gruppenBuchstabe).isNotNull();
+			sheetHlp.setActiveSheet(sheet);
+			wartenAufRunnerFertig(30_000);
+			validiereFinalrundeLeerflaechenSindWeiss(gruppenBuchstabe);
+		}
+	}
+
+	private void validiereUnveraenderteFinalrundeWirdNichtNeuAufgebaut(String gruppenBuchstabe)
+			throws GenerateException {
+		XSpreadsheet sheet = sheetHlp.findByName(SheetNamen.koFinaleGruppe(gruppenBuchstabe));
+		assertThat(sheet).as("Finalgruppe-Sheet '%s' muss existieren", gruppenBuchstabe).isNotNull();
+
+		setCellText(sheet, 30, 30, "PTM_REFRESH_MARKER");
+		new MaastrichterFinalrundeSheet(wkingSpreadsheet).doRun();
+
+		XSpreadsheet sheetNachUpdate = sheetHlp.findByName(SheetNamen.koFinaleGruppe(gruppenBuchstabe));
+		assertThat(cellText(sheetNachUpdate, 30, 30))
+				.as("Unveraenderte KO-Finalrunde darf nicht geloescht und neu aufgebaut werden")
+				.isEqualTo("PTM_REFRESH_MARKER");
+		validiereFinalrundeLeerflaechenSindWeiss(gruppenBuchstabe);
+	}
+
+	private void wartenAufRunnerFertig(long timeoutMs) {
+		long deadline = System.currentTimeMillis() + timeoutMs;
+		try {
+			Thread.sleep(50);
+			while (SheetRunner.isRunning() && System.currentTimeMillis() < deadline) {
+				Thread.sleep(50);
+			}
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			throw new AssertionError("Warten auf SheetRunner wurde unterbrochen", e);
+		}
+		assertThat(SheetRunner.isRunning())
+				.as("SheetRunner muss innerhalb von %d ms fertig werden", timeoutMs)
+				.isFalse();
+	}
+
+	private int cellBackColor(XSpreadsheet sheet, int spalte, int zeile) {
+		try {
+			XPropertySet props = UnoRuntime.queryInterface(XPropertySet.class, sheet.getCellByPosition(spalte, zeile));
+			return (Integer) props.getPropertyValue("CellBackColor");
+		} catch (Exception e) {
+			throw new AssertionError("CellBackColor konnte nicht gelesen werden", e);
+		}
+	}
+
+	private void setCellText(XSpreadsheet sheet, int spalte, int zeile, String text) {
+		try {
+			XText xText = UnoRuntime.queryInterface(XText.class, sheet.getCellByPosition(spalte, zeile));
+			xText.setString(text);
+		} catch (Exception e) {
+			throw new AssertionError("Zelltext konnte nicht geschrieben werden", e);
+		}
+	}
+
+	private String cellText(XSpreadsheet sheet, int spalte, int zeile) {
+		try {
+			XText xText = UnoRuntime.queryInterface(XText.class, sheet.getCellByPosition(spalte, zeile));
+			return xText.getString();
+		} catch (Exception e) {
+			throw new AssertionError("Zelltext konnte nicht gelesen werden", e);
+		}
 	}
 
 	/**

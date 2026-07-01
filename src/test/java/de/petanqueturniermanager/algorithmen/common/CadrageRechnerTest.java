@@ -104,6 +104,16 @@ public class CadrageRechnerTest {
 	}
 
 	@Test
+	public void testVierzehnTeams_ergebenAchterHauptfeldMitSechsCadrageSpielen() {
+		var rechner = new CadrageRechner(14);
+
+		assertThat(rechner.zielAnzahlTeams()).as("Hauptfeld").isEqualTo(8);
+		assertThat(rechner.anzTeams()).as("Teams in Cadrage").isEqualTo(12);
+		assertThat(rechner.anzTeams() / 2).as("Cadrage-Spiele").isEqualTo(6);
+		assertThat(rechner.anzOhneCadrage()).as("Teams direkt im Hauptfeld").isEqualTo(2);
+	}
+
+	@Test
 	public void testAnzTeams_grosseWerte_ueber128() {
 		// 200 Teams: (200-128)*2 = 144
 		assertThat(new CadrageRechner(200).anzTeams()).isEqualTo(144);

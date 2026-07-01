@@ -34,6 +34,7 @@ import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
@@ -150,9 +151,8 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	private volatile int gesanzTeamsIntern = 0;
 	// Zeilenabstand zwischen zwei aufeinanderfolgenden Runde-1-Matches.
 	private volatile int runde1MatchZeilenAbstand = 3;
-	// Zeilenabstand zwischen Team A und Team B innerhalb eines Runde-1-Matches. Ohne Cadrage
-	// stehen beide direkt untereinander (1). Mit Cadrage werden die Slots gespreizt (3), damit
-	// jede Cadrage-Partie auf Höhe ihres Ziel-Slots fluchtet (siehe {@link #cadrageTeamAZeile(int)}).
+	// Zeilenabstand zwischen Team A und Team B innerhalb eines Runde-1-Matches. Die Slots werden
+	// nur gespreizt, wenn eine Cadrage-Partie am oberen Slot sonst in die untere Team-Zeile läuft.
 	private volatile int runde1SlotAbstand = 1;
 
 	// Spalten-Offsets (dynamisch je nach spielbahn)
@@ -314,24 +314,37 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	/**
 	 * Zeilenabstand zwischen Team A und Team B innerhalb eines Runde-1-Matches.
 	 *
-	 * <p>Ohne Cadrage stehen die beiden Teams direkt untereinander (Abstand 1). Mit Cadrage
-	 * werden die Slots auf Abstand 3 gespreizt, damit unter jedem Slot eine zweizeilige
-	 * Cadrage-Partie fluchtend Platz findet (Slot A: Zeilen {@code rowA..rowA+1}, Slot B:
-	 * Zeilen {@code rowB..rowB+1}), ohne dass sich die beiden Feeder überlappen.
+	 * <p>Ohne überlappende Cadrage stehen die beiden Teams direkt untereinander (Abstand 1). Eine
+	 * Spreizung ist nur nötig, wenn der obere Runde-1-Slot selbst aus einer zweizeiligen
+	 * Cadrage-Partie kommt; sonst würde diese Partie die untere Team-Zeile des Matches belegen.
 	 */
 	static int berechneRunde1SlotAbstand(int teamCount, int bracketGroesse) {
-		return teamCount > bracketGroesse ? 3 : 1;
+		return brauchtGespreizteCadrageSlots(teamCount, bracketGroesse) ? 3 : 1;
 	}
 
 	/**
 	 * Zeilenabstand zwischen zwei aufeinanderfolgenden Runde-1-Matches.
 	 *
 	 * <p>Muss so groß sein, dass die (ggf. gespreizten) Slots samt Cadrage-Feeder eines Matches
-	 * nicht in das nächste Match hineinragen. Ohne Cadrage: 3 (Slot A, Slot B, Leerzeile).
-	 * Mit Cadrage: 6 (Slot A + Feeder, Leerzeile, Slot B + Feeder, Leerzeile).
+	 * nicht in das nächste Match hineinragen. Kompakt: 3 (Slot A, Slot B, Leerzeile). Gespreizt:
+	 * 6 (Slot A + Feeder, Leerzeile, Slot B + Feeder, Leerzeile).
 	 */
 	static int berechneRunde1MatchZeilenAbstand(int teamCount, int bracketGroesse) {
-		return teamCount > bracketGroesse ? 6 : 3;
+		return brauchtGespreizteCadrageSlots(teamCount, bracketGroesse) ? 6 : 3;
+	}
+
+	static boolean brauchtGespreizteCadrageSlots(int teamCount, int bracketGroesse) {
+		if (teamCount <= bracketGroesse) {
+			return false;
+		}
+		int anzOhneCadrage = new CadrageRechner(teamCount).anzOhneCadrage();
+		int[] setzliste = berechneSetzliste(bracketGroesse);
+		for (int m = 0; m < setzliste.length / 2; m++) {
+			if (setzliste[2 * m] > anzOhneCadrage) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -339,7 +352,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	 * Für n=8: [1,8,4,5,2,7,3,6] → Matches [1v8, 4v5, 2v7, 3v6]<br>
 	 * Garantiert: Seed 1 und Seed 2 treffen sich erst im Finale.
 	 */
-	int[] berechneSetzliste(int n) {
+	static int[] berechneSetzliste(int n) {
 		if (n == 1) {
 			return new int[] { 1 };
 		}
@@ -774,15 +787,20 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		}
 
 		int[] setzliste = berechneSetzliste(bracketGroesse);
+		int anzMatchesR1 = bracketGroesse / 2;
+		int letzteZeile = berechneLetzteZeile(anzMatchesR1);
+		int letzteSpalte = (teamAnzeige == KoSpielbaumTeamAnzeige.NAME)
+				? siegerSpalte(numRunden)
+				: siegerNameSpalte(numRunden);
 
 		// Spaltenbreiten setzen
 		formatiereKolumnen(xSheet, numRunden);
+		setzeBracketLeerflaecheZurueck(xSheet, letzteZeile, letzteSpalte);
 
 		// Header (2 Zeilen: Titel + Spaltenbeschriftung)
 		schreibeHeader(xSheet, numRunden);
 
 		// Runde 1: direkte Einträge aus Setzliste; Cadrage-Slots via Vorrundenformel
-		int anzMatchesR1 = bracketGroesse / 2;
 		int[] bahnR1 = berechneBahnNummern(anzMatchesR1);
 		for (int m = 0; m < anzMatchesR1; m++) {
 			int seedA = setzliste[2 * m];
@@ -842,21 +860,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		}
 
 		// Optimale Spaltenbreite und Zeilenhöhe setzen
-		int letzteZeile;
-		if (spielUmPlatz3 && numRunden >= 2) {
-			// platz3TeamBZeile = letzteZeileHauptbaum + 3 (Header) + 2 (TeamB-Zeile)
-			letzteZeile = teamBZeile(1, anzMatchesR1 - 1) + 5;
-		} else {
-			letzteZeile = teamBZeile(1, anzMatchesR1 - 1);
-		}
-		if (mitCadrage) {
-			letzteZeile = Math.max(letzteZeile, cadrageLetzteZeile());
-		}
-
 		// Im NAME-Modus ist siegerNameSpalte versteckt (Breite 0) – nicht anfassen
-		int letzteSpalte = (teamAnzeige == KoSpielbaumTeamAnzeige.NAME)
-				? siegerSpalte(numRunden)
-				: siegerNameSpalte(numRunden);
 		getSheetHelper().setOptimaleBreiteUndHoeheAlles(xSheet, 0, letzteZeile, 0, letzteSpalte);
 		formatieresSiegerSpalten(xSheet, numRunden);
 
@@ -875,6 +879,25 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		aktuelleScorePositionen = null;
 		gruppenHeaderLabel = null;
 		gruppenZeileOffset = 0;
+	}
+
+	private int berechneLetzteZeile(int anzMatchesR1) {
+		int letzteZeile = teamBZeile(1, anzMatchesR1 - 1);
+		if (spielUmPlatz3 && aktuelleBracketGroesse >= 4) {
+			// platz3TeamBZeile = letzteZeileHauptbaum + 3 (Header) + 2 (TeamB-Zeile)
+			letzteZeile += 5;
+		}
+		if (mitCadrage) {
+			letzteZeile = Math.max(letzteZeile, cadrageLetzteZeile());
+		}
+		return letzteZeile;
+	}
+
+	private void setzeBracketLeerflaecheZurueck(XSpreadsheet xSheet, int letzteZeile, int letzteSpalte)
+			throws GenerateException {
+		getSheetHelper().setPropertiesInRange(xSheet,
+				RangePosition.from(0, ersteZeile(), letzteSpalte, letzteZeile),
+				CellProperties.from().setCellBackColor(0xFFFFFF).setCellbackgroundTransparent(false));
 	}
 
 	/**
@@ -932,7 +955,8 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 
 			String addrA = posA.getAddressWith$();
 			String addrB = posB.getAddressWith$();
-			String gleichstandFormel = "AND(ISNUMBER(" + addrA + ");ISNUMBER(" + addrB + ");" + addrA + "=" + addrB + ")";
+			String gleichstandFormel = "AND(ISNUMBER(" + addrA + ");" + addrA + "<>\"\";"
+					+ "ISNUMBER(" + addrB + ");" + addrB + "<>\"\";" + addrA + "=" + addrB + ")";
 
 			var rangeA = RangePosition.from(posA);
 			var rangeB = RangePosition.from(posB);
@@ -1295,8 +1319,8 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		String teamAAddr = Position.from(teamSpalte(feederRunde), rowFeederA).getAddressWith$();
 		String teamBAddr = Position.from(teamSpalte(feederRunde), rowFeederB).getAddressWith$();
 
-		// ISTZAHL: Score muss eine Zahl sein (nicht leer) damit Gewinner berechnet wird
-		String formel = "WENN(ISTZAHL(" + scoreAAddr + ")*ISTZAHL(" + scoreBAddr + ");"
+		// Scores müssen Zahlen und explizit nicht leer sein, damit Calc leere Zellen nicht als 0 wertet.
+		String formel = "WENN(" + beideScoresVorhandenFormel(scoreAAddr, scoreBAddr) + ";"
 				+ "WENN(" + scoreAAddr + ">" + scoreBAddr + ";" + teamAAddr + ";"
 				+ "WENN(" + scoreAAddr + "<" + scoreBAddr + ";" + teamBAddr + ";\"?\"));"
 				+ "\"\")";
@@ -1352,7 +1376,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		String teamAAddr = Position.from(teamSpalte(numRunden), rowFinaleA).getAddressWith$();
 		String teamBAddr = Position.from(teamSpalte(numRunden), rowFinaleB).getAddressWith$();
 
-		String siegerFormel = "WENN(ISTZAHL(" + scoreAAddr + ")*ISTZAHL(" + scoreBAddr + ");"
+		String siegerFormel = "WENN(" + beideScoresVorhandenFormel(scoreAAddr, scoreBAddr) + ";"
 				+ "WENN(" + scoreAAddr + ">" + scoreBAddr + ";" + teamAAddr + ";"
 				+ "WENN(" + scoreAAddr + "<" + scoreBAddr + ";" + teamBAddr + ";\"?\"));"
 				+ "\"\")";
@@ -1371,8 +1395,8 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		// Im NR-Modus: zusätzlich Teamname via SVERWEIS in der Nebenspalte
 		if (teamAnzeige == KoSpielbaumTeamAnzeige.NR) {
 			String siegerNrAddr = Position.from(siegerSp, siegerZeile).getAddressWith$();
-			String siegerNameFormel = "WENN(ISTZAHL(" + siegerNrAddr + ")*(" + siegerNrAddr
-					+ ">0);" + MeldeListeHelper.teamNameFormel(siegerNrAddr,
+			String siegerNameFormel = "WENN(UND(ISTZAHL(" + siegerNrAddr + ");" + siegerNrAddr
+					+ "<>\"\";" + siegerNrAddr + ">0);" + MeldeListeHelper.teamNameFormel(siegerNrAddr,
 							meldeListeTeamnameAnzeigen, meldeListeFormation, meldeListeVereinsnameAnzeigen) + ";\"\")";
 
 			getSheetHelper().setFormulaInCell(
@@ -1521,7 +1545,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		String teamAAddr = Position.from(cadrageTeamSpalte(), rowA).getAddressWith$();
 		String teamBAddr = Position.from(cadrageTeamSpalte(), rowB).getAddressWith$();
 
-		String formel = "WENN(ISTZAHL(" + scoreAAddr + ")*ISTZAHL(" + scoreBAddr + ");"
+		String formel = "WENN(" + beideScoresVorhandenFormel(scoreAAddr, scoreBAddr) + ";"
 				+ "WENN(" + scoreAAddr + ">" + scoreBAddr + ";" + teamAAddr + ";"
 				+ "WENN(" + scoreAAddr + "<" + scoreBAddr + ";" + teamBAddr + ";\"?\"));"
 				+ "\"\")";
@@ -1652,7 +1676,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		String teamBAddr = Position.from(teamSpalte(feederRunde), rowFeederB).getAddressWith$();
 
 		// Verlierer = Team mit niedrigere Punktzahl (umgekehrt zur Gewinner-Formel)
-		String formel = "WENN(ISTZAHL(" + scoreAAddr + ")*ISTZAHL(" + scoreBAddr + ");"
+		String formel = "WENN(" + beideScoresVorhandenFormel(scoreAAddr, scoreBAddr) + ";"
 				+ "WENN(" + scoreAAddr + "<" + scoreBAddr + ";" + teamAAddr + ";"
 				+ "WENN(" + scoreAAddr + ">" + scoreBAddr + ";" + teamBAddr + ";\"?\"));"
 				+ "\"\")";
@@ -1680,7 +1704,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		String teamAAddr = Position.from(teamSpalte(numRunden), teamAZeile).getAddressWith$();
 		String teamBAddr = Position.from(teamSpalte(numRunden), teamBZeile).getAddressWith$();
 
-		String drittePlatzFormel = "WENN(ISTZAHL(" + scoreAAddr + ")*ISTZAHL(" + scoreBAddr + ");"
+		String drittePlatzFormel = "WENN(" + beideScoresVorhandenFormel(scoreAAddr, scoreBAddr) + ";"
 				+ "WENN(" + scoreAAddr + ">" + scoreBAddr + ";" + teamAAddr + ";"
 				+ "WENN(" + scoreAAddr + "<" + scoreBAddr + ";" + teamBAddr + ";\"?\"));"
 				+ "\"\")";
@@ -1699,8 +1723,8 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		// Im NR-Modus: Teamname via SVERWEIS in der Nebenspalte
 		if (teamAnzeige == KoSpielbaumTeamAnzeige.NR) {
 			String drittePlatzNrAddr = Position.from(siegerSp, siegerZeile).getAddressWith$();
-			String drittePlatzNameFormel = "WENN(ISTZAHL(" + drittePlatzNrAddr + ")*(" + drittePlatzNrAddr
-					+ ">0);" + MeldeListeHelper.teamNameFormel(drittePlatzNrAddr,
+			String drittePlatzNameFormel = "WENN(UND(ISTZAHL(" + drittePlatzNrAddr + ");" + drittePlatzNrAddr
+					+ "<>\"\";" + drittePlatzNrAddr + ">0);" + MeldeListeHelper.teamNameFormel(drittePlatzNrAddr,
 						meldeListeTeamnameAnzeigen, meldeListeFormation, meldeListeVereinsnameAnzeigen) + ";\"\")";
 
 			getSheetHelper().setFormulaInCell(
@@ -1712,6 +1736,11 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 							.setShrinkToFit(true)
 							.setHoriJustify(CellHoriJustify.LEFT));
 		}
+	}
+
+	private String beideScoresVorhandenFormel(String scoreAAddr, String scoreBAddr) {
+		return "UND(ISTZAHL(" + scoreAAddr + ");" + scoreAAddr + "<>\"\";"
+				+ "ISTZAHL(" + scoreBAddr + ");" + scoreBAddr + "<>\"\")";
 	}
 
 }
