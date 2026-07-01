@@ -16,6 +16,7 @@ import com.sun.star.text.XText;
 import com.sun.star.uno.UnoRuntime;
 
 import de.petanqueturniermanager.BaseCalcUITest;
+import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.RangePosition;
@@ -109,6 +110,7 @@ public class MaastrichterTurnierTestDatenUITest extends BaseCalcUITest {
 		validiereFinalrundeLeerflaechenSindWeiss("A");
 		validiereUnveraenderteFinalrundeWirdNichtNeuAufgebaut("A");
 		validiereFinaleGruppePerJson("B", "maastrichter-57-finale-b.json");
+		validiereFinalrundenBleibenNachTabWechselUnveraendert("A", "B");
 		validiereFinaleGruppePerJson("C", "maastrichter-57-finale-c.json");
 		validiereFinaleGruppePerJson("D", "maastrichter-57-finale-d.json");
 	}
@@ -267,6 +269,16 @@ public class MaastrichterTurnierTestDatenUITest extends BaseCalcUITest {
 		assertThat(cellBackColor(sheet, 5, 3)).as("1/4-Finale Verbinder-Leerflaeche F4").isEqualTo(0xFFFFFF);
 	}
 
+	private void validiereFinalrundenBleibenNachTabWechselUnveraendert(String... gruppenBuchstaben) {
+		for (String gruppenBuchstabe : gruppenBuchstaben) {
+			XSpreadsheet sheet = sheetHlp.findByName(SheetNamen.koFinaleGruppe(gruppenBuchstabe));
+			assertThat(sheet).as("Finalgruppe-Sheet '%s' muss existieren", gruppenBuchstabe).isNotNull();
+			sheetHlp.setActiveSheet(sheet);
+			wartenAufRunnerFertig(30_000);
+			validiereFinalrundeLeerflaechenSindWeiss(gruppenBuchstabe);
+		}
+	}
+
 	private void validiereUnveraenderteFinalrundeWirdNichtNeuAufgebaut(String gruppenBuchstabe)
 			throws GenerateException {
 		XSpreadsheet sheet = sheetHlp.findByName(SheetNamen.koFinaleGruppe(gruppenBuchstabe));
@@ -280,6 +292,22 @@ public class MaastrichterTurnierTestDatenUITest extends BaseCalcUITest {
 				.as("Unveraenderte KO-Finalrunde darf nicht geloescht und neu aufgebaut werden")
 				.isEqualTo("PTM_REFRESH_MARKER");
 		validiereFinalrundeLeerflaechenSindWeiss(gruppenBuchstabe);
+	}
+
+	private void wartenAufRunnerFertig(long timeoutMs) {
+		long deadline = System.currentTimeMillis() + timeoutMs;
+		try {
+			Thread.sleep(50);
+			while (SheetRunner.isRunning() && System.currentTimeMillis() < deadline) {
+				Thread.sleep(50);
+			}
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			throw new AssertionError("Warten auf SheetRunner wurde unterbrochen", e);
+		}
+		assertThat(SheetRunner.isRunning())
+				.as("SheetRunner muss innerhalb von %d ms fertig werden", timeoutMs)
+				.isFalse();
 	}
 
 	private int cellBackColor(XSpreadsheet sheet, int spalte, int zeile) {

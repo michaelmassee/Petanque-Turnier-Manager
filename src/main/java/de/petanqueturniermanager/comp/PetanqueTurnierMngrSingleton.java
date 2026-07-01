@@ -558,30 +558,6 @@ public class PetanqueTurnierMngrSingleton {
 							MaastrichterBlattschutzKonfiguration.get());
 				})));
 
-		addGlobalEventListener(SpielplanFormatiererActivationListener.fuerPraefix(context,
-				SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_FINALRUNDE_PREFIX,
-				(ws, xSheet) -> new SpielplanFormatiererSheetRunner(ws, xSheet, iSheet -> {
-					Position letzte = RangeSearchHelper.from(iSheet, RangePosition.from(
-							SchweizerAbstractSpielrundeSheet.BAHN_NR_SPALTE, 0,
-							SchweizerAbstractSpielrundeSheet.BAHN_NR_SPALTE, 999))
-							.searchLastNotEmptyInSpalte();
-					if (letzte == null) return null;
-					int letzteZeile = letzte.getZeile();
-					if (letzteZeile < SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE) return null;
-					var konfig = new MaastrichterKonfigurationSheet(ws);
-					var datenRange = RangePosition.from(SchweizerAbstractSpielrundeSheet.BAHN_NR_SPALTE,
-							SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE,
-							SchweizerAbstractSpielrundeSheet.ERG_TEAM_B_SPALTE, letzteZeile);
-					var editierbar = java.util.List.of(RangePosition.from(
-							SchweizerAbstractSpielrundeSheet.ERG_TEAM_A_SPALTE,
-							SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE,
-							SchweizerAbstractSpielrundeSheet.ERG_TEAM_B_SPALTE, letzteZeile));
-					return new SpielplanFormatiererKonfig(datenRange, editierbar,
-							konfig.getSpielRundeHintergrundFarbeGerade(),
-							konfig.getSpielRundeHintergrundFarbeUnGerade(),
-							MaastrichterBlattschutzKonfiguration.get());
-				})));
-
 		long initGesamtMs = (System.nanoTime() - initStartNs) / 1_000_000L;
 		PerfLog.log(logger, "[STARTUP-TIMING] PetanqueTurnierMngrSingleton.init GESAMT={} ms (jvm-uptime={} ms)",
 				initGesamtMs, StartupClock.uptimeMs());
