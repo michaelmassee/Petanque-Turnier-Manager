@@ -103,6 +103,25 @@ public class KoTurnierTestDatenUITest extends BaseCalcUITest {
 		validiereTurnierbaumPerJson(SheetNamen.koTurnierbaumEinzel(), "ko-turnierbaum-14-cadrage.json");
 	}
 
+	@Test
+	public void testKoTurnier15TeamsMaximaleCadrage() throws GenerateException {
+		// 15 Teams = Maximalfall fuer ein 8er-Hauptfeld: nur 1 Freilos (Seed 1), 7 Cadrage-Partien.
+		new KoTurnierTestDaten(wkingSpreadsheet, 15).generate();
+		validiereGrundstruktur(15);
+
+		XSpreadsheet turnierbaum = sheetHlp.findByName(SheetNamen.koTurnierbaumEinzel());
+		assertThat(turnierbaum).as("Turnierbaum-Sheet muss existieren").isNotNull();
+		assertThat(sheetHlp.getTextFromCell(turnierbaum, Position.from(0, 0)))
+				.as("15 Teams brauchen eine Cadrage-Spalte")
+				.isEqualTo(I18n.get("column.header.cadrage"));
+		assertThat(sheetHlp.getTextFromCell(turnierbaum, Position.from(4, 0)))
+				.as("Hauptfeld muss mit 8 Teams als Viertelfinale starten, nicht als 16er-Achtelfinale")
+				.isEqualTo(I18n.get("ko.runde.titel.ntel.finale", 4));
+
+		// Vollstaendiges Layout: alle 7 Cadrage-Partien muessen auf Hoehe ihres Runde-1-Slots fluchten.
+		validiereTurnierbaumPerJson(SheetNamen.koTurnierbaumEinzel(), "ko-turnierbaum-15-cadrage.json");
+	}
+
 	/**
 	 * Korrektheit der PTM-Metadaten (8 Teams, Einzel-Bracket): Meldeliste und das einzelne
 	 * Turnierbaum-Blatt müssen je exakt ihren Identitäts-Schlüssel tragen.
