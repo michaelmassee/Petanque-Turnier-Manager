@@ -196,6 +196,22 @@
 								</prop>
 							</node>
 
+							<node oor:name="C2A12" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Overall Ranking</value>
+									<value xml:lang="de">Gesamtrangliste</value>
+									<value xml:lang="es">Clasificación general</value>
+									<value xml:lang="fr">Classement général</value>
+									<value xml:lang="nl">Totaalranglijst</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:jgj_gesamtrangliste</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
 
 
 

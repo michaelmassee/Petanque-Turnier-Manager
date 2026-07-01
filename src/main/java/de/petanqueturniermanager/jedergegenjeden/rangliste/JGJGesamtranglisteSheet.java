@@ -218,7 +218,7 @@ public class JGJGesamtranglisteSheet extends SheetRunner implements ISheet {
 		if (modus == JGJGesamtranglisteSortModus.ABSOLUT) {
 			TeamMeldungen alle = new TeamMeldungen();
 			for (TeamMeldungen gruppe : gruppen) {
-				gruppe.teams().forEach(alle::addTeam);
+				gruppe.teams().forEach(alle::addTeamWennNichtVorhanden);
 			}
 			return rangListeRechner.berechneUndSortiere(alle);
 		}
@@ -238,7 +238,7 @@ public class JGJGesamtranglisteSheet extends SheetRunner implements ISheet {
 		return map;
 	}
 
-	private void insertHeader(XSpreadsheet sheet) throws GenerateException {
+	protected void insertHeader(XSpreadsheet sheet) throws GenerateException {
 		Integer headerFarbe = konfigurationSheet.getRanglisteHeaderFarbe();
 
 		int[][] spaltenBreiten = {
