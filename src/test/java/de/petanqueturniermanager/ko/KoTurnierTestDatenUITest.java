@@ -98,6 +98,9 @@ public class KoTurnierTestDatenUITest extends BaseCalcUITest {
 		assertThat(sheetHlp.getTextFromCell(turnierbaum, Position.from(4, 0)))
 				.as("Hauptfeld muss mit 8 Teams als Viertelfinale starten, nicht als 16er-Achtelfinale")
 				.isEqualTo(I18n.get("ko.runde.titel.ntel.finale", 4));
+
+		// Vollstaendiges Layout: jede der 6 Cadrage-Partien muss auf Hoehe ihres Runde-1-Slots fluchten.
+		validiereTurnierbaumPerJson(SheetNamen.koTurnierbaumEinzel(), "ko-turnierbaum-14-cadrage.json");
 	}
 
 	/**
