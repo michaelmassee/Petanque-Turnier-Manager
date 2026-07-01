@@ -11,8 +11,7 @@ import de.petanqueturniermanager.toolbar.ITurnierSystemToolbarStrategie;
 
 /**
  * Toolbar-Strategie für das K.-O.-Turniersystem.
- * Weiter und Vorrunden-Rangliste sind für K.-O. nicht über die Toolbar verfügbar,
- * da dieses System einen Turnierbaum statt Vorrunden verwendet.
+ * Weiter erstellt beim K.-O.-System den Turnierbaum; Vorrunden-Rangliste ist nicht verfügbar.
  */
 public class KoToolbarStrategie implements ITurnierSystemToolbarStrategie {
 
@@ -20,7 +19,7 @@ public class KoToolbarStrategie implements ITurnierSystemToolbarStrategie {
 
     @Override
     public void weiter(WorkingSpreadsheet ws) throws Exception {
-        fallback.weiter(ws);
+        new KoTurnierbaumSheet(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
     }
 
     @Override

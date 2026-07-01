@@ -157,6 +157,15 @@ public class KoMeldeListeSheetUpdate extends SheetRunner implements ISheet, Meld
 
 	@Override
 	protected void doRun() throws GenerateException {
+		aktualisiereMeldeliste();
+	}
+
+	/**
+	 * Aktualisiert die KO-Meldeliste synchron. Wird auch vom Turnierbaum-Erstellen genutzt,
+	 * damit frisch eingetragene Teams ohne vorherigen separaten Update-Klick eine Nr und
+	 * Aktiv-Defaults bekommen.
+	 */
+	public void aktualisiereMeldeliste() throws GenerateException {
 		XSpreadsheet xSheet = getXSpreadSheet();
 		if (xSheet == null) {
 			logger.warn("K.-O. Meldeliste nicht gefunden");

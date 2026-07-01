@@ -12,14 +12,23 @@ import org.junit.jupiter.api.Test;
 
 import com.sun.star.sheet.XSpreadsheet;
 
+import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.BaseCalcUITest;
+import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
+import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
+import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.random.RandomSource;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
+import de.petanqueturniermanager.ko.meldeliste.KoMeldeListeSheetNew;
+import de.petanqueturniermanager.ko.meldeliste.KoMeldeListeSheetUpdate;
+import de.petanqueturniermanager.toolbar.ToolbarAktionDispatcher;
 
 /**
  * UITest für das vollständige K.-O.-Testturnier in drei Varianten:
@@ -195,5 +204,70 @@ public class KoTurnierTestDatenUITest extends BaseCalcUITest {
 		assertThat(sheetHlp.findByName(SheetNamen.koTurnierbaumEinzel()))
 				.as("Turnierbaum-Sheet muss nach Kiosk-Rebuild weiterhin existieren")
 				.isNotNull();
+	}
+
+	@Test
+	public void turnierbaumAktualisiertMeldelisteMitFehlendenStartnummern() throws GenerateException {
+		new KoMeldeListeSheetNew(wkingSpreadsheet).createMeldelisteWithParams();
+		KoMeldeListeSheetUpdate meldeliste = new KoMeldeListeSheetUpdate(wkingSpreadsheet);
+		XSpreadsheet meldelisteSheet = sheetHlp.findByName(SheetNamen.meldeliste());
+
+		int vornameSpalte = meldeliste.getVornameSpalte(0);
+		int rangSpalte = meldeliste.getRanglisteSpalte();
+		for (int i = 0; i < 4; i++) {
+			int zeile = ERSTE_DATEN_ZEILE + i;
+			sheetHlp.setStringValueInCell(StringCellValue.from(
+					meldelisteSheet, Position.from(vornameSpalte, zeile), "Team " + (i + 1)));
+			sheetHlp.setNumberValueInCell(NumberCellValue.from(
+					meldelisteSheet, Position.from(rangSpalte, zeile)).setValue(i + 1));
+		}
+
+		new KoTurnierbaumSheet(wkingSpreadsheet).run();
+
+		assertThat(sheetHlp.findByName(SheetNamen.koTurnierbaumEinzel()))
+				.as("Turnierbaum-Sheet muss auch ohne vorherigen Meldeliste-Update-Klick entstehen")
+				.isNotNull();
+		for (int i = 0; i < 4; i++) {
+			assertThat(sheetHlp.getIntFromCell(meldelisteSheet, Position.from(MELDELISTE_NR_SPALTE, ERSTE_DATEN_ZEILE + i)))
+					.as("fehlende Startnummer in Datenzeile %s", i + 1)
+					.isEqualTo(i + 1);
+		}
+	}
+
+	@Test
+	public void toolbarWeiterErstelltKoTurnierbaum() throws Exception {
+		new KoMeldeListeSheetNew(wkingSpreadsheet).createMeldelisteWithParams();
+		new DocumentPropertiesHelper(wkingSpreadsheet)
+				.setIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM, TurnierSystem.KO.getId());
+		KoMeldeListeSheetUpdate meldeliste = new KoMeldeListeSheetUpdate(wkingSpreadsheet);
+		XSpreadsheet meldelisteSheet = sheetHlp.findByName(SheetNamen.meldeliste());
+
+		int vornameSpalte = meldeliste.getVornameSpalte(0);
+		int rangSpalte = meldeliste.getRanglisteSpalte();
+		for (int i = 0; i < 4; i++) {
+			int zeile = ERSTE_DATEN_ZEILE + i;
+			sheetHlp.setStringValueInCell(StringCellValue.from(
+					meldelisteSheet, Position.from(vornameSpalte, zeile), "Team " + (i + 1)));
+			sheetHlp.setNumberValueInCell(NumberCellValue.from(
+					meldelisteSheet, Position.from(rangSpalte, zeile)).setValue(i + 1));
+		}
+
+		ToolbarAktionDispatcher.weiter(wkingSpreadsheet);
+		wartenAufRunnerFertig(30_000);
+
+		assertThat(sheetHlp.findByName(SheetNamen.koTurnierbaumEinzel()))
+				.as("Toolbar Weiter muss im KO-System den Turnierbaum erstellen")
+				.isNotNull();
+	}
+
+	private void wartenAufRunnerFertig(long timeoutMs) throws InterruptedException {
+		long deadline = System.currentTimeMillis() + timeoutMs;
+		Thread.sleep(50);
+		while (SheetRunner.isRunning() && System.currentTimeMillis() < deadline) {
+			Thread.sleep(50);
+		}
+		assertThat(SheetRunner.isRunning())
+				.as("SheetRunner muss innerhalb von %d ms fertig werden", timeoutMs)
+				.isFalse();
 	}
 }

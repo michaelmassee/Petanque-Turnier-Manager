@@ -553,6 +553,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 			return;
 		}
 
+		meldeliste.aktualisiereMeldeliste();
 		pruefeUndFragObAlleAktivieren();
 
 		String rangFehler = meldeliste.validiereRangSpalte();
