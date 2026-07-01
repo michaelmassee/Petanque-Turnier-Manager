@@ -77,6 +77,7 @@ public class SheetMetadataHelper {
     public static final String SCHLUESSEL_JGJ_MELDELISTE = "__PTM_JGJ_MELDELISTE__";
     public static final String SCHLUESSEL_JGJ_SPIELPLAN = "__PTM_JGJ_SPIELPLAN__";
     public static final String SCHLUESSEL_JGJ_RANGLISTE = "__PTM_JGJ_RANGLISTE__";
+    public static final String SCHLUESSEL_JGJ_GESAMTRANGLISTE = "__PTM_JGJ_GESAMTRANGLISTE__";
     public static final String SCHLUESSEL_JGJ_DIREKTVERGLEICH = "__PTM_JGJ_DIREKTVERGLEICH__";
     /** Prefix für nummerierte JGJ-Gruppen-Spielplan-Aushang-Sheets (1 pro Gruppe). */
     public static final String SCHLUESSEL_JGJ_GRUPPE_SPIELPLAN_PREFIX = "__PTM_JGJ_GRUPPE_SPIELPLAN_";

@@ -29,6 +29,7 @@ public class DefaultSheetPos {
 	public static final short JGJ_WORK = 2; // Jeder gegen Jeden Spielplan
 	public static final short JGJ_ENDRANGLISTE = 3;
 	public static final short JGJ_DIREKTEVERGLEICH = 4;
+	public static final short JGJ_GESAMTRANGLISTE = 6;
 
 	public static final short SCHWEIZER_WORK = 2; // Schweizer Spielrunden
 	public static final short SCHWEIZER_ENDRANGLISTE = 3;

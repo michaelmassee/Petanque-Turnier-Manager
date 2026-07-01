@@ -25,6 +25,7 @@ public class JGJPropertiesSpalte extends BasePropertiesSpalte implements IJGJPro
 	public static final String KONFIG_PROP_FREISPIEL_PUNKTE_MINUS = "Freispiel Punkte -";
 	public static final String KONFIG_PROP_GRUPPENGROESSE = "Gruppengroesse";
 	public static final String KONFIG_PROP_RUECKRUNDE = "Rueckrunde";
+	public static final String KONFIG_PROP_GESAMTRANGLISTE_SORT_MODUS = "Gesamtrangliste Sortierung";
 
 	private static final String KONFIG_PROP_SPIELPLAN_COLOR_BACK_GERADE = "Spielplan Hintergrund Gerade";
 	private static final String KONFIG_PROP_SPIELPLAN_COLOR_BACK_UNGERADE = "Spielplan Hintergrund Ungerade";
@@ -91,6 +92,12 @@ public class JGJPropertiesSpalte extends BasePropertiesSpalte implements IJGJPro
 				.setDefaultVal(0).setDescription("config.desc.jgj.gruppengroesse"));
 		KONFIG_PROPERTIES.add(ConfigProperty.<Boolean>from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_RUECKRUNDE)
 				.setDefaultVal(Boolean.FALSE).setDescription("config.desc.jgj.rueckrunde"));
+
+		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_GESAMTRANGLISTE_SORT_MODUS)
+				.setDefaultVal(JGJGesamtranglisteSortModus.GRUPPENPLATZ.name())
+				.setDescription("config.desc.jgj.gesamtrangliste.sort.modus"))
+				.addAuswahl(JGJGesamtranglisteSortModus.GRUPPENPLATZ.name(), "Nach Gruppenplatz (Snake)")
+				.addAuswahl(JGJGesamtranglisteSortModus.ABSOLUT.name(), "Absolute Werte"));
 
 		ADDUploadProp(KONFIG_PROPERTIES);
 	}
@@ -207,6 +214,12 @@ public class JGJPropertiesSpalte extends BasePropertiesSpalte implements IJGJPro
 	public boolean isRueckrunde() {
 		Boolean val = readBooleanProperty(KONFIG_PROP_RUECKRUNDE);
 		return val != null && val;
+	}
+
+	@Override
+	public JGJGesamtranglisteSortModus getGesamtranglisteSortModus() {
+		return readEnumProperty(KONFIG_PROP_GESAMTRANGLISTE_SORT_MODUS,
+				JGJGesamtranglisteSortModus.class, JGJGesamtranglisteSortModus.GRUPPENPLATZ);
 	}
 
 	@Override

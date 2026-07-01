@@ -86,12 +86,15 @@ public final class SheetNamen {
     public static final String KEY_FORMULEX_SPIELRUNDE_MUSTER       = "sheet.name.formulex.spielrunde.muster";
     /** JGJ Gruppen-Spielplan-Aushang: {0} = Gruppenbuchstabe. Beispiel: "Gruppe A Spielplan" */
     public static final String KEY_JGJ_GRUPPE_SPIELPLAN_MUSTER      = "sheet.name.jgj.gruppe.spielplan.muster";
+    /** JGJ Gesamtrangliste: gruppenübergreifende Rangliste über alle Gruppen. */
+    public static final String KEY_JGJ_GESAMTRANGLISTE             = "sheet.name.jgj.gesamtrangliste";
 
     // ── Legacy-Werte: unveränderliche deutsche Originalnamen ─────────────────
     // Werden ausschließlich als Fallback in findeSheetUndHeile() für alte Dokumente verwendet.
 
     public static final String LEGACY_MELDELISTE                    = "Meldeliste";
     public static final String LEGACY_RANGLISTE                     = "Rangliste";
+    public static final String LEGACY_JGJ_GESAMTRANGLISTE           = "Gesamtrangliste";
     public static final String LEGACY_DIREKTVERGLEICH               = "Direktvergleich";
     public static final String LEGACY_SPIELPLAN                     = "Spielplan";
     public static final String LEGACY_LIGA_TERMINE_PRO_TEILNEHMER   = "Termine pro Teilnehmer";
@@ -133,6 +136,10 @@ public final class SheetNamen {
 
     public static String meldeliste() {
         return getOderFallback(KEY_MELDELISTE, LEGACY_MELDELISTE);
+    }
+
+    public static String jgjGesamtrangliste() {
+        return getOderFallback(KEY_JGJ_GESAMTRANGLISTE, LEGACY_JGJ_GESAMTRANGLISTE);
     }
 
     public static String rangliste() {

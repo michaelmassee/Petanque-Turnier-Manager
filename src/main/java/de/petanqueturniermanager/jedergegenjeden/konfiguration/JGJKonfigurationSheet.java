@@ -156,6 +156,11 @@ public class JGJKonfigurationSheet extends BaseKonfigurationSheet implements IJG
 		propertiesSpalte.setRueckrunde(mitRueckrunde);
 	}
 
+	@Override
+	public JGJGesamtranglisteSortModus getGesamtranglisteSortModus() {
+		return propertiesSpalte.getGesamtranglisteSortModus();
+	}
+
 
 	@Override
 	public UploadProtokoll getUploadProtokoll() {

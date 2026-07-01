@@ -45,4 +45,6 @@ public interface IJGJProperiesSpalte extends de.petanqueturniermanager.basesheet
 	boolean isRueckrunde();
 
 	void setRueckrunde(boolean mitRueckrunde);
+
+	JGJGesamtranglisteSortModus getGesamtranglisteSortModus();
 }

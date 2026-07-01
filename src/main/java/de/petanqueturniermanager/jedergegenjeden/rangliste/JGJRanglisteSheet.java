@@ -1,7 +1,5 @@
 package de.petanqueturniermanager.jedergegenjeden.rangliste;
 
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,8 +45,6 @@ import de.petanqueturniermanager.helper.sheet.search.RangeSearchHelper;
 import de.petanqueturniermanager.jedergegenjeden.JGJGruppenAufteiler;
 import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationSheet;
 import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSheet_Update;
-import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJSpielPlanSheet;
-import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
@@ -86,29 +82,18 @@ public class JGJRanglisteSheet extends SheetRunner implements ISheet, IRangliste
     private static final int COL_WIDTH_NR = 800;
     private static final int COL_WIDTH_NAME = 7000;
     private static final int COL_WIDTH_DATA = 1400;
-    private static final int MAX_SPIELPLAN_ZEILEN = 500;
 
     private static final String METADATA_SCHLUESSEL = SheetMetadataHelper.SCHLUESSEL_JGJ_RANGLISTE;
 
-    private record TeamStats(int teamNr, int spielePlus, int spieleMinus,
-            int spielPunktePlus, int spielPunkteMinus) {
-
-        int spielDiff() {
-            return spielePlus - spieleMinus;
-        }
-
-        int spielPunkteDiff() {
-            return spielPunktePlus - spielPunkteMinus;
-        }
-    }
-
     private final JGJKonfigurationSheet konfigurationSheet;
     private final RangListeSorter rangListeSorter;
+    private final JGJRanglisteRechner rangListeRechner;
 
     public JGJRanglisteSheet(WorkingSpreadsheet workingSpreadsheet) {
         super(workingSpreadsheet, TurnierSystem.JGJ, "JGJ-RanglisteSheet");
         konfigurationSheet = new JGJKonfigurationSheet(workingSpreadsheet);
         rangListeSorter = new RangListeSorter(this);
+        rangListeRechner = new JGJRanglisteRechner(workingSpreadsheet);
     }
 
     @Override
@@ -189,7 +174,7 @@ public class JGJRanglisteSheet extends SheetRunner implements ISheet, IRangliste
 
     private void berechnungUndSchreibenEinzel(XSpreadsheet sheet, JGJMeldeListeSheet_Update meldeListe,
             TeamMeldungen aktiveMeldungen) throws GenerateException {
-        List<TeamStats> sortiert = berechneUndSortiere(aktiveMeldungen);
+        List<JGJRanglisteRechner.TeamStats> sortiert = rangListeRechner.berechneUndSortiere(aktiveMeldungen);
         Map<Integer, String> teamNamen = leseTeamNamen(meldeListe);
 
         insertDatenAlsWerte(sheet, sortiert, teamNamen, ERSTE_DATEN_ZEILE, false);
@@ -221,7 +206,7 @@ public class JGJRanglisteSheet extends SheetRunner implements ISheet, IRangliste
             schreibeGruppenHeaderRangliste(sheet, aktuelleZeile, buchstabe);
             aktuelleZeile++;
 
-            List<TeamStats> sortiert = berechneUndSortiere(gruppe);
+            List<JGJRanglisteRechner.TeamStats> sortiert = rangListeRechner.berechneUndSortiere(gruppe);
             insertDatenAlsWerte(sheet, sortiert, teamNamen, aktuelleZeile, true);
             if (!sortiert.isEmpty()) {
                 formatiereZahlenSpalten(sheet, aktuelleZeile, sortiert.size());
@@ -246,87 +231,6 @@ public class JGJRanglisteSheet extends SheetRunner implements ISheet, IRangliste
                 .setBorder(BorderFactory.from().allThin().boldLn().forBottom().toBorder())
                 .setHoriJustify(CellHoriJustify.CENTER)
                 .setEndPosMergeSpalte(SPIELPUNKTE_DIFF_SPALTE));
-    }
-
-    private List<TeamStats> berechneUndSortiere(TeamMeldungen aktiveMeldungen) throws GenerateException {
-        Map<Integer, int[]> statsRaw = leseSpielplanStats(aktiveMeldungen);
-        List<TeamStats> daten = new ArrayList<>();
-        for (Team team : aktiveMeldungen.teams()) {
-            int[] s = statsRaw.getOrDefault(team.getNr(), new int[4]);
-            daten.add(new TeamStats(team.getNr(), s[0], s[1], s[2], s[3]));
-        }
-        daten.sort(Comparator.comparingInt(TeamStats::spielePlus).reversed()
-                .thenComparing(Comparator.comparingInt(TeamStats::spielPunkteDiff).reversed())
-                .thenComparing(Comparator.comparingInt(TeamStats::spielPunktePlus).reversed()));
-        return daten;
-    }
-
-    private Map<Integer, int[]> leseSpielplanStats(TeamMeldungen aktiveMeldungen) throws GenerateException {
-        Map<Integer, int[]> statsMap = new HashMap<>();
-        for (Team team : aktiveMeldungen.teams()) {
-            statsMap.put(team.getNr(), new int[4]);
-        }
-
-        var xDoc = getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
-        XSpreadsheet spielplanSheet = SheetMetadataHelper.findeSheetUndHeile(
-                xDoc, SheetMetadataHelper.SCHLUESSEL_JGJ_SPIELPLAN, JGJSpielPlanSheet.sheetName());
-        if (spielplanSheet == null) {
-            return statsMap;
-        }
-
-        int startZeile = JGJSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE;
-        RangeData teamNrData = RangeHelper.from(spielplanSheet, xDoc,
-                RangePosition.from(JGJSpielPlanSheet.TEAM_A_NR_SPALTE, startZeile,
-                        JGJSpielPlanSheet.TEAM_B_NR_SPALTE, startZeile + MAX_SPIELPLAN_ZEILEN))
-                .getDataFromRange();
-
-        RangeData spielpunkteData = RangeHelper.from(spielplanSheet, xDoc,
-                RangePosition.from(JGJSpielPlanSheet.SPIELPNKT_A_SPALTE, startZeile,
-                        JGJSpielPlanSheet.SPIELPNKT_B_SPALTE, startZeile + MAX_SPIELPLAN_ZEILEN))
-                .getDataFromRange();
-
-        for (int i = 0; i < teamNrData.size(); i++) {
-            RowData teamNrZeile = teamNrData.get(i);
-            if (teamNrZeile.size() < 2) {
-                break;
-            }
-            int nrA = teamNrZeile.get(0).getIntVal(0);
-            if (nrA <= 0) {
-                continue; // Gruppen-Header-Zeile oder Ende
-            }
-            int nrB = teamNrZeile.get(1).getIntVal(0);
-
-            if (nrB <= 0) {
-                var freispielStats = statsMap.computeIfAbsent(nrA, k -> new int[4]);
-                freispielStats[0]++;
-                RowData freispielPunkte = spielpunkteData.get(i);
-                freispielStats[2] += freispielPunkte.size() > 0 ? freispielPunkte.get(0).getIntVal(0) : 0;
-                freispielStats[3] += freispielPunkte.size() > 1 ? freispielPunkte.get(1).getIntVal(0) : 0;
-                continue;
-            }
-
-            RowData punkteZeile = spielpunkteData.get(i);
-            int pktA = punkteZeile.size() > 0 ? punkteZeile.get(0).getIntVal(0) : 0;
-            int pktB = punkteZeile.size() > 1 ? punkteZeile.get(1).getIntVal(0) : 0;
-
-            if (pktA <= 0 && pktB <= 0) {
-                continue;
-            }
-
-            statsMap.computeIfAbsent(nrA, k -> new int[4])[2] += pktA;
-            statsMap.computeIfAbsent(nrA, k -> new int[4])[3] += pktB;
-            statsMap.computeIfAbsent(nrB, k -> new int[4])[2] += pktB;
-            statsMap.computeIfAbsent(nrB, k -> new int[4])[3] += pktA;
-
-            if (pktA > pktB) {
-                statsMap.computeIfAbsent(nrA, k -> new int[4])[0]++;
-                statsMap.computeIfAbsent(nrB, k -> new int[4])[1]++;
-            } else if (pktB > pktA) {
-                statsMap.computeIfAbsent(nrB, k -> new int[4])[0]++;
-                statsMap.computeIfAbsent(nrA, k -> new int[4])[1]++;
-            }
-        }
-        return statsMap;
     }
 
     private Map<Integer, String> leseTeamNamen(JGJMeldeListeSheet_Update meldeListe) throws GenerateException {
@@ -422,7 +326,7 @@ public class JGJRanglisteSheet extends SheetRunner implements ISheet, IRangliste
         }
     }
 
-    private void insertDatenAlsWerte(XSpreadsheet sheet, List<TeamStats> sortiert,
+    private void insertDatenAlsWerte(XSpreadsheet sheet, List<JGJRanglisteRechner.TeamStats> sortiert,
             Map<Integer, String> teamNamen, int startZeile, boolean mitPlatz) throws GenerateException {
         if (sortiert.isEmpty()) {
             return;
@@ -433,7 +337,7 @@ public class JGJRanglisteSheet extends SheetRunner implements ISheet, IRangliste
         // Block 1: Nr, Name (+ optional Platz)
         RangeData block1 = new RangeData();
         for (int i = 0; i < sortiert.size(); i++) {
-            TeamStats stats = sortiert.get(i);
+            JGJRanglisteRechner.TeamStats stats = sortiert.get(i);
             RowData row = block1.addNewRow();
             row.newInt(stats.teamNr());
             row.newString(teamNamen.getOrDefault(stats.teamNr(), ""));
@@ -447,7 +351,7 @@ public class JGJRanglisteSheet extends SheetRunner implements ISheet, IRangliste
 
         // Block 2: Spiele+, Spiele-, SpieleΔ, SpPunkte+, SpPunkte-, SpPunkteΔ
         RangeData block2 = new RangeData();
-        for (TeamStats stats : sortiert) {
+        for (JGJRanglisteRechner.TeamStats stats : sortiert) {
             RowData row = block2.addNewRow();
             row.newInt(stats.spielePlus());
             row.newInt(stats.spieleMinus());
