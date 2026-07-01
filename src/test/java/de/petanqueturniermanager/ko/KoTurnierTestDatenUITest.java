@@ -235,6 +235,32 @@ public class KoTurnierTestDatenUITest extends BaseCalcUITest {
 	}
 
 	@Test
+	public void turnierbaumFragtUndDurchnummeriertFehlendeRangSpalte() throws GenerateException {
+		new KoMeldeListeSheetNew(wkingSpreadsheet).createMeldelisteWithParams();
+		KoMeldeListeSheetUpdate meldeliste = new KoMeldeListeSheetUpdate(wkingSpreadsheet);
+		XSpreadsheet meldelisteSheet = sheetHlp.findByName(SheetNamen.meldeliste());
+
+		int vornameSpalte = meldeliste.getVornameSpalte(0);
+		int rangSpalte = meldeliste.getRanglisteSpalte();
+		for (int i = 0; i < 4; i++) {
+			int zeile = ERSTE_DATEN_ZEILE + i;
+			sheetHlp.setStringValueInCell(StringCellValue.from(
+					meldelisteSheet, Position.from(vornameSpalte, zeile), "Team " + (i + 1)));
+		}
+
+		new KoTurnierbaumSheet(wkingSpreadsheet).run();
+
+		assertThat(sheetHlp.findByName(SheetNamen.koTurnierbaumEinzel()))
+				.as("Turnierbaum-Sheet muss nach bestätigter Rang-Durchnummerierung entstehen")
+				.isNotNull();
+		for (int i = 0; i < 4; i++) {
+			assertThat(sheetHlp.getIntFromCell(meldelisteSheet, Position.from(rangSpalte, ERSTE_DATEN_ZEILE + i)))
+					.as("Rang in Datenzeile %s", i + 1)
+					.isEqualTo(i + 1);
+		}
+	}
+
+	@Test
 	public void toolbarWeiterErstelltKoTurnierbaum() throws Exception {
 		new KoMeldeListeSheetNew(wkingSpreadsheet).createMeldelisteWithParams();
 		new DocumentPropertiesHelper(wkingSpreadsheet)

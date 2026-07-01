@@ -143,6 +143,10 @@ public class KoMeldeListeSheetUpdate extends SheetRunner implements ISheet, Meld
 		return delegate.validiereRangSpalte();
 	}
 
+	public void rangSpalteDurchnummerieren() throws GenerateException {
+		delegate.rangSpalteDurchnummerieren();
+	}
+
 	private void stringsBesinigen(XSpreadsheet xSheet) throws GenerateException {
 		delegate.stringsBesinigen(xSheet);
 	}

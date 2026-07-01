@@ -632,6 +632,28 @@ class KoListeDelegate implements MeldeListeKonstanten {
 		return null;
 	}
 
+	void rangSpalteDurchnummerieren() throws GenerateException {
+		XSpreadsheet xSheet = sheet.getXSpreadSheet();
+		int vornameSpalte = getVornameSpalte(0);
+		int rngSpalte = getRanglisteSpalte();
+		int aktivSpalte = getAktivSpalte();
+		int letzteZeile = letzteZeileMitDaten(xSheet);
+
+		int rang = 1;
+		for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
+			String vorname = sheet.getSheetHelper().getTextFromCell(xSheet, Position.from(vornameSpalte, zeile));
+			if (vorname == null || vorname.isEmpty()) {
+				continue;
+			}
+			int aktiv = sheet.getSheetHelper().getIntFromCell(xSheet, Position.from(aktivSpalte, zeile));
+			if (aktiv != AKTIV_WERT_NIMMT_TEIL) {
+				continue;
+			}
+			sheet.getSheetHelper().setNumberValueInCell(
+					NumberCellValue.from(xSheet, Position.from(rngSpalte, zeile)).setValue(rang++));
+		}
+	}
+
 	/**
 	 * Letzte Zeile mit einem nicht-leeren Vorname (Spieler 1) ab ERSTE_DATEN_ZEILE.
 	 * Gibt ERSTE_DATEN_ZEILE - 1 zurück wenn keine Daten vorhanden.

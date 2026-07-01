@@ -558,11 +558,14 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 
 		String rangFehler = meldeliste.validiereRangSpalte();
 		if (rangFehler != null) {
-			MessageBox.from(getWorkingSpreadsheet(), MessageBoxTypeEnum.ERROR_OK)
+			MessageBoxResult result = MessageBox.from(getWorkingSpreadsheet(), MessageBoxTypeEnum.WARN_YES_NO)
 					.caption(I18n.get("msg.caption.ko.rang.fehler"))
-					.message(rangFehler)
+					.message(I18n.get("msg.text.ko.rang.durchnummerieren", rangFehler))
 					.show();
-			return;
+			if (result != MessageBoxResult.YES) {
+				return;
+			}
+			meldeliste.rangSpalteDurchnummerieren();
 		}
 
 		TeamMeldungen alleMeldungen = meldeliste.getMeldungenSortiertNachRangliste();
