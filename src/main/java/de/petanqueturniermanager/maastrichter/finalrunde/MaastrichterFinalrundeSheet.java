@@ -19,6 +19,7 @@ import de.petanqueturniermanager.algorithmen.schweizer.SchweizerSystem;
 import de.petanqueturniermanager.algorithmen.schweizer.SchweizerTeamErgebnis;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
@@ -67,6 +68,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet {
 
 	private static final Logger logger = LogManager.getLogger(MaastrichterFinalrundeSheet.class);
+	private static final String FINALRUNDEN_SIGNATURE_PROPERTY = "PTM_MAASTRICHTER_FINALRUNDEN_SIGNATURE";
 
 	public MaastrichterFinalrundeSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, TurnierSystem.MAASTRICHTER, "Maastrichter-Finalrunde");
@@ -134,30 +136,44 @@ public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet {
 					konfigSheet.getMinLetzteGruppeGroesse());
 		};
 
-		// Alte Finale-Blätter löschen
-		alleFinaleSheetNamenLoeschen();
-
-		// KO-Bracket für jede Gruppe erstellen
 		// Buchstabe wird nur für Gruppen mit ≥2 Teams vergeben, damit 'A' immer belegt ist
-		KoTurnierbaumSheet koSheet = new KoTurnierbaumSheet(getWorkingSpreadsheet());
-		short sheetPos = DefaultSheetPos.MAASTRICHTER_FINALE;
-		char naechsterBuchstabe = 'A';
 		Map<Integer, String> teamNrZuGruppe = new HashMap<>();
+		List<Finalgruppe> finalgruppen = new ArrayList<>();
+		char naechsterBuchstabe = 'A';
 
 		for (List<SchweizerTeamErgebnis> gruppeErg : gruppen) {
 			SheetRunner.testDoCancelTask();
 			TeamMeldungen gruppeTeams = erstelleGruppeTeams(gruppeErg, aktiveMeldungen);
 			if (gruppeTeams.size() >= 2) {
 				String gruppenBuchstabe = String.valueOf(naechsterBuchstabe++);
-				String sheetName = SheetNamen.koFinaleGruppe(gruppenBuchstabe);
-				processBoxinfo("processbox.erstelle.sheet.teams", sheetName, gruppeErg.size());
-				koSheet.erstelleGruppeBracket(gruppeTeams, sheetName, sheetPos, konfigSheet,
-						SheetMetadataHelper.schluesselMaastrichterFinalrunde(gruppenBuchstabe), gruppenBuchstabe);
-				sheetPos++;
+				finalgruppen.add(new Finalgruppe(gruppenBuchstabe, gruppeTeams));
 				for (SchweizerTeamErgebnis erg : gruppeErg) {
 					teamNrZuGruppe.put(erg.teamNr(), gruppenBuchstabe);
 				}
 			}
+		}
+
+		String neueSignature = berechneFinalrundenSignature(finalgruppen, konfigSheet, anzVorrunden, modus, gruppenModus);
+		var docProps = new DocumentPropertiesHelper(getWorkingSpreadsheet());
+		String alteSignature = docProps.getStringProperty(FINALRUNDEN_SIGNATURE_PROPERTY, "");
+		if (neueSignature.equals(alteSignature) && finaleSheetsVorhanden(finalgruppen)) {
+			logger.debug("Maastrichter-Finalrunden unverändert – KO-Sheets werden nicht neu aufgebaut.");
+			return;
+		}
+
+		// Alte Finale-Blätter löschen
+		alleFinaleSheetNamenLoeschen();
+
+		// KO-Bracket für jede Gruppe erstellen
+		KoTurnierbaumSheet koSheet = new KoTurnierbaumSheet(getWorkingSpreadsheet());
+		short sheetPos = DefaultSheetPos.MAASTRICHTER_FINALE;
+
+		for (Finalgruppe finalgruppe : finalgruppen) {
+			String sheetName = SheetNamen.koFinaleGruppe(finalgruppe.buchstabe());
+			processBoxinfo("processbox.erstelle.sheet.teams", sheetName, finalgruppe.teams().size());
+			koSheet.erstelleGruppeBracket(finalgruppe.teams(), sheetName, sheetPos, konfigSheet,
+					SheetMetadataHelper.schluesselMaastrichterFinalrunde(finalgruppe.buchstabe()), finalgruppe.buchstabe());
+			sheetPos++;
 		}
 
 		// Gruppen-Buchstaben einmalig in die Vorrunden-Rangliste schreiben
@@ -166,6 +182,46 @@ public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet {
 			new MaastrichterVorrundenRanglisteSheetUpdate(getWorkingSpreadsheet())
 					.schreibeGruppenZuweisungen(teamNrZuGruppe);
 		}
+		docProps.setStringPropertyOhneEvent(FINALRUNDEN_SIGNATURE_PROPERTY, neueSignature);
+	}
+
+	private record Finalgruppe(String buchstabe, TeamMeldungen teams) {}
+
+	private String berechneFinalrundenSignature(List<Finalgruppe> finalgruppen, MaastrichterKonfigurationSheet konfig,
+			int anzVorrunden, SchweizerRankingModus rankingModus, MaastrichterGruppenModus gruppenModus) {
+		StringBuilder sb = new StringBuilder("v1");
+		sb.append("|vorrunden=").append(anzVorrunden);
+		sb.append("|ranking=").append(rankingModus);
+		sb.append("|gruppenModus=").append(gruppenModus);
+		sb.append("|gruppenGroesse=").append(konfig.getGruppenGroesse());
+		sb.append("|minLetzte=").append(konfig.getMinLetzteGruppeGroesse());
+		sb.append("|teamAnzeige=").append(konfig.getSpielbaumTeamAnzeige());
+		sb.append("|spielbahn=").append(konfig.getSpielbaumSpielbahn());
+		sb.append("|platz3=").append(konfig.isSpielbaumSpielUmPlatz3());
+		sb.append("|farben=")
+				.append(konfig.getTurnierbaumHeaderFarbe()).append(',')
+				.append(konfig.getTurnierbaumTeamAFarbe()).append(',')
+				.append(konfig.getTurnierbaumTeamBFarbe()).append(',')
+				.append(konfig.getTurnierbaumSiegerFarbe()).append(',')
+				.append(konfig.getTurnierbaumBahnFarbe()).append(',')
+				.append(konfig.getTurnierbaumDrittePlatzFarbe());
+		for (Finalgruppe finalgruppe : finalgruppen) {
+			sb.append("|").append(finalgruppe.buchstabe()).append('=');
+			sb.append(finalgruppe.teams().teams().stream()
+					.map(team -> Integer.toString(team.getNr()))
+					.reduce((a, b) -> a + "," + b)
+					.orElse(""));
+		}
+		return sb.toString();
+	}
+
+	private boolean finaleSheetsVorhanden(List<Finalgruppe> finalgruppen) throws GenerateException {
+		for (Finalgruppe finalgruppe : finalgruppen) {
+			if (getSheetHelper().findByName(SheetNamen.koFinaleGruppe(finalgruppe.buchstabe())) == null) {
+				return false;
+			}
+		}
+		return !finalgruppen.isEmpty();
 	}
 
 	/**

@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.text.XText;
 import com.sun.star.uno.UnoRuntime;
 
 import de.petanqueturniermanager.BaseCalcUITest;
@@ -22,6 +23,7 @@ import de.petanqueturniermanager.helper.random.RandomSource;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.maastrichter.korunde.KoGruppeABSheet;
+import de.petanqueturniermanager.maastrichter.finalrunde.MaastrichterFinalrundeSheet;
 import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterVorrundenRanglisteSheetUpdate;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrundeSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
@@ -105,6 +107,7 @@ public class MaastrichterTurnierTestDatenUITest extends BaseCalcUITest {
 		validiereTeilnehmerPerJson(anzTeams, "maastrichter-57-teilnehmer.json");
 		validiereFinaleGruppePerJson("A", "maastrichter-57-finale-a.json");
 		validiereFinalrundeLeerflaechenSindWeiss("A");
+		validiereUnveraenderteFinalrundeWirdNichtNeuAufgebaut("A");
 		validiereFinaleGruppePerJson("B", "maastrichter-57-finale-b.json");
 		validiereFinaleGruppePerJson("C", "maastrichter-57-finale-c.json");
 		validiereFinaleGruppePerJson("D", "maastrichter-57-finale-d.json");
@@ -264,12 +267,45 @@ public class MaastrichterTurnierTestDatenUITest extends BaseCalcUITest {
 		assertThat(cellBackColor(sheet, 5, 3)).as("1/4-Finale Verbinder-Leerflaeche F4").isEqualTo(0xFFFFFF);
 	}
 
+	private void validiereUnveraenderteFinalrundeWirdNichtNeuAufgebaut(String gruppenBuchstabe)
+			throws GenerateException {
+		XSpreadsheet sheet = sheetHlp.findByName(SheetNamen.koFinaleGruppe(gruppenBuchstabe));
+		assertThat(sheet).as("Finalgruppe-Sheet '%s' muss existieren", gruppenBuchstabe).isNotNull();
+
+		setCellText(sheet, 30, 30, "PTM_REFRESH_MARKER");
+		new MaastrichterFinalrundeSheet(wkingSpreadsheet).doRun();
+
+		XSpreadsheet sheetNachUpdate = sheetHlp.findByName(SheetNamen.koFinaleGruppe(gruppenBuchstabe));
+		assertThat(cellText(sheetNachUpdate, 30, 30))
+				.as("Unveraenderte KO-Finalrunde darf nicht geloescht und neu aufgebaut werden")
+				.isEqualTo("PTM_REFRESH_MARKER");
+		validiereFinalrundeLeerflaechenSindWeiss(gruppenBuchstabe);
+	}
+
 	private int cellBackColor(XSpreadsheet sheet, int spalte, int zeile) {
 		try {
 			XPropertySet props = UnoRuntime.queryInterface(XPropertySet.class, sheet.getCellByPosition(spalte, zeile));
 			return (Integer) props.getPropertyValue("CellBackColor");
 		} catch (Exception e) {
 			throw new AssertionError("CellBackColor konnte nicht gelesen werden", e);
+		}
+	}
+
+	private void setCellText(XSpreadsheet sheet, int spalte, int zeile, String text) {
+		try {
+			XText xText = UnoRuntime.queryInterface(XText.class, sheet.getCellByPosition(spalte, zeile));
+			xText.setString(text);
+		} catch (Exception e) {
+			throw new AssertionError("Zelltext konnte nicht geschrieben werden", e);
+		}
+	}
+
+	private String cellText(XSpreadsheet sheet, int spalte, int zeile) {
+		try {
+			XText xText = UnoRuntime.queryInterface(XText.class, sheet.getCellByPosition(spalte, zeile));
+			return xText.getString();
+		} catch (Exception e) {
+			throw new AssertionError("Zelltext konnte nicht gelesen werden", e);
 		}
 	}
 
