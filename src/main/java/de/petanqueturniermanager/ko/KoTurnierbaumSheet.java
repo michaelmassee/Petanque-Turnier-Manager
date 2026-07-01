@@ -146,7 +146,12 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	private volatile int cadrageSpaltOffset = 0; // = colGroupSize wenn Cadrage vorhanden, sonst 0
 	private volatile int anzFreilose = 0;
 	private volatile int gesanzTeamsIntern = 0;
+	// Zeilenabstand zwischen zwei aufeinanderfolgenden Runde-1-Matches.
 	private volatile int runde1MatchZeilenAbstand = 3;
+	// Zeilenabstand zwischen Team A und Team B innerhalb eines Runde-1-Matches. Ohne Cadrage
+	// stehen beide direkt untereinander (1). Mit Cadrage werden die Slots gespreizt (3), damit
+	// jede Cadrage-Partie auf Höhe ihres Ziel-Slots fluchtet (siehe {@link #cadrageTeamAZeile(int)}).
+	private volatile int runde1SlotAbstand = 1;
 
 	// Spalten-Offsets (dynamisch je nach spielbahn)
 	// Mit Bahn:    Bahn(0) | Team(1) | Score(2) | Connector(3)  → colGroupSize = 4
@@ -232,7 +237,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	 */
 	int teamBZeile(int runde, int match) {
 		if (runde == 1) {
-			return match * runde1MatchZeilenAbstand + ersteZeile() + 1;
+			return match * runde1MatchZeilenAbstand + ersteZeile() + runde1SlotAbstand;
 		}
 		return teamAZeile(runde - 1, 2 * match + 1);
 	}
@@ -304,14 +309,27 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		return Integer.highestOneBit(teamCount);
 	}
 
+	/**
+	 * Zeilenabstand zwischen Team A und Team B innerhalb eines Runde-1-Matches.
+	 *
+	 * <p>Ohne Cadrage stehen die beiden Teams direkt untereinander (Abstand 1). Mit Cadrage
+	 * werden die Slots auf Abstand 3 gespreizt, damit unter jedem Slot eine zweizeilige
+	 * Cadrage-Partie fluchtend Platz findet (Slot A: Zeilen {@code rowA..rowA+1}, Slot B:
+	 * Zeilen {@code rowB..rowB+1}), ohne dass sich die beiden Feeder überlappen.
+	 */
+	static int berechneRunde1SlotAbstand(int teamCount, int bracketGroesse) {
+		return teamCount > bracketGroesse ? 3 : 1;
+	}
+
+	/**
+	 * Zeilenabstand zwischen zwei aufeinanderfolgenden Runde-1-Matches.
+	 *
+	 * <p>Muss so groß sein, dass die (ggf. gespreizten) Slots samt Cadrage-Feeder eines Matches
+	 * nicht in das nächste Match hineinragen. Ohne Cadrage: 3 (Slot A, Slot B, Leerzeile).
+	 * Mit Cadrage: 6 (Slot A + Feeder, Leerzeile, Slot B + Feeder, Leerzeile).
+	 */
 	static int berechneRunde1MatchZeilenAbstand(int teamCount, int bracketGroesse) {
-		if (teamCount <= bracketGroesse) {
-			return 3;
-		}
-		int cadrageSpiele = teamCount - bracketGroesse;
-		int hauptfeldSpiele = Math.max(1, bracketGroesse / 2);
-		int cadrageSpieleProHauptfeldSpiel = (cadrageSpiele + hauptfeldSpiele - 1) / hauptfeldSpiele;
-		return Math.max(3, cadrageSpieleProHauptfeldSpiel * 3);
+		return teamCount > bracketGroesse ? 6 : 3;
 	}
 
 	/**
@@ -723,6 +741,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 
 		this.aktuelleBracketGroesse = bracketGroesse;
 		this.runde1MatchZeilenAbstand = berechneRunde1MatchZeilenAbstand(meldungen.size(), bracketGroesse);
+		this.runde1SlotAbstand = berechneRunde1SlotAbstand(meldungen.size(), bracketGroesse);
 
 		// Spalten-Offsets je nach Bahn-Einstellung:
 		// Mit Bahn:    Bahn(0) | Team(1) | Score(2) | Connector(3)  → colGroupSize = 4
@@ -1511,17 +1530,44 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 						.setHoriJustify(justify));
 	}
 
+	/**
+	 * Zeile der oberen Team-Zelle der Cadrage-Partie für einen Bracket-Slot.
+	 *
+	 * <p>Die Cadrage-Partie fluchtet mit ihrem Ziel-Slot in Runde 1: sie belegt die beiden Zeilen
+	 * {@code [zielZeile, zielZeile+1]}, wobei {@code zielZeile} genau die Runde-1-Zeile ist, in der
+	 * die Sieger-Formel dieses Slots steht. Dadurch fließt jede Cadrage direkt horizontal in ihren
+	 * Runde-1-Slot, statt weit entfernt gestapelt zu werden.
+	 */
 	private int cadrageTeamAZeile(int slotSeed) {
-		return ersteZeile() + (slotSeed - anzFreilose - 1) * 3;
+		return runde1ZeileFuerSeed(slotSeed);
 	}
 
 	private int cadrageTeamBZeile(int slotSeed) {
 		return cadrageTeamAZeile(slotSeed) + 1;
 	}
 
+	/**
+	 * Liefert die Runde-1-Zeile, in der der Bracket-Slot mit dem gegebenen Seed sitzt (Team-A-Zeile
+	 * bei ungerader, Team-B-Zeile bei gerader Setzlisten-Position).
+	 */
+	private int runde1ZeileFuerSeed(int slotSeed) {
+		int[] setzliste = berechneSetzliste(aktuelleBracketGroesse);
+		for (int m = 0; m < setzliste.length / 2; m++) {
+			if (setzliste[2 * m] == slotSeed) {
+				return teamAZeile(1, m);
+			}
+			if (setzliste[2 * m + 1] == slotSeed) {
+				return teamBZeile(1, m);
+			}
+		}
+		// Sollte nie auftreten: Setzliste ist eine Permutation von 1..bracketGroesse
+		throw new IllegalStateException("Seed " + slotSeed + " nicht in Setzliste gefunden");
+	}
+
 	private int cadrageLetzteZeile() {
-		int anzCadrageSpiele = new CadrageRechner(gesanzTeamsIntern).anzTeams() / 2;
-		return anzCadrageSpiele > 0 ? ersteZeile() + (anzCadrageSpiele - 1) * 3 + 1 : ersteZeile();
+		int letzterMatch = aktuelleBracketGroesse / 2 - 1;
+		// Slot B des letzten Matches samt zweizeiligem Cadrage-Feeder darunter.
+		return teamBZeile(1, letzterMatch) + 1;
 	}
 
 	// ---------------------------------------------------------------
