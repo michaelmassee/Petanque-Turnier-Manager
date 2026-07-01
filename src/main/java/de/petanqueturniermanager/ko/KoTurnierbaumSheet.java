@@ -52,6 +52,7 @@ import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
+import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.ko.konfiguration.IKoBracketKonfiguration;
 import de.petanqueturniermanager.ko.konfiguration.KoKonfigurationSheet;
 import de.petanqueturniermanager.ko.konfiguration.KoSpielbaumTeamAnzeige;
@@ -145,6 +146,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	private volatile int cadrageSpaltOffset = 0; // = colGroupSize wenn Cadrage vorhanden, sonst 0
 	private volatile int anzFreilose = 0;
 	private volatile int gesanzTeamsIntern = 0;
+	private volatile int runde1MatchZeilenAbstand = 3;
 
 	// Spalten-Offsets (dynamisch je nach spielbahn)
 	// Mit Bahn:    Bahn(0) | Team(1) | Score(2) | Connector(3)  → colGroupSize = 4
@@ -220,7 +222,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	 */
 	int teamAZeile(int runde, int match) {
 		if (runde == 1) {
-			return match * 3 + ersteZeile();
+			return match * runde1MatchZeilenAbstand + ersteZeile();
 		}
 		return teamBZeile(runde - 1, 2 * match);
 	}
@@ -230,7 +232,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	 */
 	int teamBZeile(int runde, int match) {
 		if (runde == 1) {
-			return match * 3 + ersteZeile() + 1;
+			return match * runde1MatchZeilenAbstand + ersteZeile() + 1;
 		}
 		return teamAZeile(runde - 1, 2 * match + 1);
 	}
@@ -294,19 +296,22 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	 * Berechnet die Bracket-Größe (Teilnehmer in Runde 1) für eine Gruppe mit
 	 * {@code teamCount} Teams.
 	 *
-	 * <p>Default: kleinste Zweierpotenz ≤ teamCount, der Rest spielt Cadrage in
-	 * eigener Spalte. Schaltet automatisch auf die <i>nächstgrößere</i>
-	 * Zweierpotenz um (Bye statt Cadrage), sobald mehr Cadrage-Matches als
-	 * Halbfinale-Slots benötigt würden — sonst kollidieren zwei Cadrages an den
-	 * gleichen Layout-Zellen.
-	 *
-	 * <p>Bedingung für Aufstockung: {@code teamCount - kleinerePow2 > kleinerePow2/2},
-	 * d.h. {@code teamCount > 1.5 × kleinerePow2}. Tritt z.B. ein bei
-	 * 7, 13–15, 25–31 Teams.
+	 * Liefert die Größe des Hauptfelds nach einer ggf. nötigen Cadrage. Nicht-Zweierpotenzen
+	 * werden auf die nächstkleinere Zweierpotenz reduziert; die überzähligen Teams spielen
+	 * vorher Cadrage.
 	 */
 	static int berechneBracketGroesse(int teamCount) {
-		int klein = Integer.highestOneBit(teamCount);
-		return (teamCount - klein) > (klein / 2) ? klein * 2 : klein;
+		return Integer.highestOneBit(teamCount);
+	}
+
+	static int berechneRunde1MatchZeilenAbstand(int teamCount, int bracketGroesse) {
+		if (teamCount <= bracketGroesse) {
+			return 3;
+		}
+		int cadrageSpiele = teamCount - bracketGroesse;
+		int hauptfeldSpiele = Math.max(1, bracketGroesse / 2);
+		int cadrageSpieleProHauptfeldSpiel = (cadrageSpiele + hauptfeldSpiele - 1) / hauptfeldSpiele;
+		return Math.max(3, cadrageSpieleProHauptfeldSpiel * 3);
 	}
 
 	/**
@@ -468,26 +473,12 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		for (int m = 0; m < anzMatchesR1; m++) {
 			int seedA = setzliste[2 * m];
 			int seedB = setzliste[2 * m + 1];
-			boolean cadrageMatch = mitCadrage && (seedA > anzFreilose || seedB > anzFreilose);
-
 			if (scoresCadrage != null) {
-				if (cadrageMatch) {
-					int siegerSeite = RandomSource.nextInt(2);
-					int verliererPunkte = RandomSource.nextInt(13);
-					scoresCadrage.addNewRow().newInt(siegerSeite == 0 ? 13 : verliererPunkte);
-					scoresCadrage.addNewRow().newInt(siegerSeite == 0 ? verliererPunkte : 13);
-				} else {
-					scoresCadrage.addNewRow().newEmpty();
-					scoresCadrage.addNewRow().newEmpty();
-				}
-				scoresCadrage.addNewRow().newEmpty();
+				fuegeCadrageTestergebnisHinzu(scoresCadrage, seedA);
+				fuegeCadrageTestergebnisHinzu(scoresCadrage, seedB);
 			}
 
-			int siegerR1 = RandomSource.nextInt(2);
-			int verliererR1 = RandomSource.nextInt(13);
-			scoresR1.addNewRow().newInt(siegerR1 == 0 ? 13 : verliererR1);
-			scoresR1.addNewRow().newInt(siegerR1 == 0 ? verliererR1 : 13);
-			scoresR1.addNewRow().newEmpty();
+			setzeTestergebnis(scoresR1, teamAZeile(1, m), teamBZeile(1, m));
 		}
 
 		var xDoc = getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
@@ -498,6 +489,25 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 			Position startCad = Position.from(cadrageScoreSpalte(), ersteZeile());
 			RangeHelper.from(xSheet, xDoc, scoresCadrage.getRangePosition(startCad)).setDataInRange(scoresCadrage);
 		}
+	}
+
+	private void fuegeCadrageTestergebnisHinzu(RangeData scoresCadrage, int seed) {
+		if (seed <= anzFreilose) {
+			return;
+		}
+		setzeTestergebnis(scoresCadrage, cadrageTeamAZeile(seed), cadrageTeamBZeile(seed));
+	}
+
+	private void setzeTestergebnis(RangeData scores, int rowA, int rowB) {
+		int relA = rowA - ersteZeile();
+		int relB = rowB - ersteZeile();
+		int siegerSeite = RandomSource.nextInt(2);
+		int verliererPunkte = RandomSource.nextInt(13);
+		while (scores.size() <= relB) {
+			scores.addNewRow().newEmpty();
+		}
+		scores.set(relA, new RowData(siegerSeite == 0 ? 13 : verliererPunkte));
+		scores.set(relB, new RowData(siegerSeite == 0 ? verliererPunkte : 13));
 	}
 
 	/**
@@ -712,6 +722,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		this.meldeListeFormation           = konfig.getMeldeListeFormation();
 
 		this.aktuelleBracketGroesse = bracketGroesse;
+		this.runde1MatchZeilenAbstand = berechneRunde1MatchZeilenAbstand(meldungen.size(), bracketGroesse);
 
 		// Spalten-Offsets je nach Bahn-Einstellung:
 		// Mit Bahn:    Bahn(0) | Team(1) | Score(2) | Connector(3)  → colGroupSize = 4
@@ -764,15 +775,15 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 			}
 
 			if (mitCadrage && seedA > anzFreilose) {
-				schreibeCadrageMatch(xSheet, meldungen, seedA, rowA, rowB);
-				schreibeCadrageGewinnerFormel(xSheet, rowA, rowB, true);
+				schreibeCadrageMatch(xSheet, meldungen, seedA);
+				schreibeCadrageGewinnerFormel(xSheet, seedA, rowA, true);
 			} else {
 				schreibeTeamZelleR1(xSheet, rowA, getTeamNrBySeedPosition(meldungen, seedA), true);
 			}
 
 			if (mitCadrage && seedB > anzFreilose) {
-				schreibeCadrageMatch(xSheet, meldungen, seedB, rowA, rowB);
-				schreibeCadrageGewinnerFormel(xSheet, rowA, rowB, false);
+				schreibeCadrageMatch(xSheet, meldungen, seedB);
+				schreibeCadrageGewinnerFormel(xSheet, seedB, rowB, false);
 			} else {
 				schreibeTeamZelleR1(xSheet, rowB, getTeamNrBySeedPosition(meldungen, seedB), false);
 			}
@@ -816,6 +827,9 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 			letzteZeile = teamBZeile(1, anzMatchesR1 - 1) + 5;
 		} else {
 			letzteZeile = teamBZeile(1, anzMatchesR1 - 1);
+		}
+		if (mitCadrage) {
+			letzteZeile = Math.max(letzteZeile, cadrageLetzteZeile());
 		}
 
 		// Im NAME-Modus ist siegerNameSpalte versteckt (Breite 0) – nicht anfassen
@@ -1377,17 +1391,17 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	/**
 	 * Schreibt ein Cadrage-Match in die Cadrage-Spalte.<br>
 	 * Der Bracket-Slot {@code slotSeed} (z.B. 7 oder 8) spielt gegen das gespiegelte Seed
-	 * {@code gesanzTeamsIntern - cadrageIdx}. Beide Teams werden direkt in die Cadrage-Spalte
-	 * an denselben Zeilen wie das zugehörige Runde-1-Match eingetragen.
+	 * {@code gesanzTeamsIntern - cadrageIdx}. Jede Cadrage-Partie bekommt eigene Zeilen in
+	 * der Cadrage-Spalte, damit auch 13-15 Teams ohne künstliches 16er-Feld darstellbar sind.
 	 *
 	 * @param slotSeed Bracket-Slot-Seed &gt; {@link #anzFreilose} (z.B. 7 oder 8)
-	 * @param rowA     Zeile Team A des zugehörigen Runde-1-Matches
-	 * @param rowB     Zeile Team B des zugehörigen Runde-1-Matches
 	 */
-	private void schreibeCadrageMatch(XSpreadsheet xSheet, TeamMeldungen meldungen, int slotSeed,
-			int rowA, int rowB) throws GenerateException {
+	private void schreibeCadrageMatch(XSpreadsheet xSheet, TeamMeldungen meldungen, int slotSeed)
+			throws GenerateException {
 		int cadrageIdx = slotSeed - anzFreilose - 1;
 		int opponentSeed = gesanzTeamsIntern - cadrageIdx;
+		int rowA = cadrageTeamAZeile(slotSeed);
+		int rowB = cadrageTeamBZeile(slotSeed);
 
 		int nrA = getTeamNrBySeedPosition(meldungen, slotSeed);
 		int nrB = getTeamNrBySeedPosition(meldungen, opponentSeed);
@@ -1468,12 +1482,14 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	 * Schreibt die Gewinner-Formel für einen Cadrage-Slot in die Runde-1-Teamzelle.<br>
 	 * Referenziert die Score-Zellen der Cadrage-Spalte.
 	 *
-	 * @param rowA      Zeile des Runde-1 Team-A (= Cadrage Match Team-A-Zeile)
-	 * @param rowB      Zeile des Runde-1 Team-B (= Cadrage Match Team-B-Zeile)
+	 * @param slotSeed  Bracket-Slot-Seed der Cadrage-Partie
+	 * @param targetRow Zielzeile im Runde-1-Hauptfeld
 	 * @param istSlotA  true wenn der Cadrage-Slot in der Team-A-Position von Runde 1 sitzt
 	 */
-	private void schreibeCadrageGewinnerFormel(XSpreadsheet xSheet, int rowA, int rowB,
+	private void schreibeCadrageGewinnerFormel(XSpreadsheet xSheet, int slotSeed, int targetRow,
 			boolean istSlotA) throws GenerateException {
+		int rowA = cadrageTeamAZeile(slotSeed);
+		int rowB = cadrageTeamBZeile(slotSeed);
 		String scoreAAddr = Position.from(cadrageScoreSpalte(), rowA).getAddressWith$();
 		String scoreBAddr = Position.from(cadrageScoreSpalte(), rowB).getAddressWith$();
 		String teamAAddr = Position.from(cadrageTeamSpalte(), rowA).getAddressWith$();
@@ -1484,7 +1500,6 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 				+ "WENN(" + scoreAAddr + "<" + scoreBAddr + ";" + teamBAddr + ";\"?\"));"
 				+ "\"\")";
 
-		int targetRow = istSlotA ? rowA : rowB;
 		int farbe = istSlotA ? teamBFarbe : teamAFarbe;
 		CellHoriJustify justify = (teamAnzeige == KoSpielbaumTeamAnzeige.NAME)
 				? CellHoriJustify.LEFT : CellHoriJustify.CENTER;
@@ -1494,6 +1509,19 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 						.setCellBackColor(farbe)
 						.setBorder(BorderFactory.from().allThin().toBorder())
 						.setHoriJustify(justify));
+	}
+
+	private int cadrageTeamAZeile(int slotSeed) {
+		return ersteZeile() + (slotSeed - anzFreilose - 1) * 3;
+	}
+
+	private int cadrageTeamBZeile(int slotSeed) {
+		return cadrageTeamAZeile(slotSeed) + 1;
+	}
+
+	private int cadrageLetzteZeile() {
+		int anzCadrageSpiele = new CadrageRechner(gesanzTeamsIntern).anzTeams() / 2;
+		return anzCadrageSpiele > 0 ? ersteZeile() + (anzCadrageSpiele - 1) * 3 + 1 : ersteZeile();
 	}
 
 	// ---------------------------------------------------------------

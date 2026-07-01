@@ -1,5 +1,8 @@
 package de.petanqueturniermanager.webserver;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -23,9 +26,9 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
  * Meldeliste-Klassen — damit der Live-Push der Turnier-Startseite vom Heavy-Refresh-Pfad
  * der Composite-Views entkoppelt bleibt.
  *
- * <p><b>Angemeldet</b>: Zeilen, in denen Vorname (Spalte&nbsp;B) ODER Nachname (Spalte&nbsp;C)
- * nicht leer ist — die Spieler-Nr-Spalte (A) ist bei Supermelee oft erst nach dem
- * ersten Sortieren befüllt und kann daher nicht als Trigger genommen werden.
+ * <p><b>Angemeldet</b>: Zeilen, in denen eine echte Namensspalte nicht leer ist.
+ * Die Spalten werden über die Header gesucht, weil Teamname/Verein/Formation je nach
+ * Turniersystem die festen Spalten B/C verschieben können.
  *
  * <p><b>Aktiv</b>: Wert {@code 1} in der „Aktiv"-Spalte. Spalte wird über den Header in
  * Zeile&nbsp;2 (zweite Header-Zeile) lokalisiert:
@@ -51,12 +54,14 @@ public final class TeilnehmerStatusService {
     /** Wert in der Aktiv-Spalte, der „nimmt teil" bedeutet (SpielrundeGespielt.JA / AKTIV_WERT_NIMMT_TEIL). */
     private static final int WERT_AKTIV = 1;
 
-    /** Vorname-Spalte (B) — direkt nach der Spieler-Nr-Spalte. */
-    private static final int VORNAME_SPALTE  = MeldeListeKonstanten.SPIELER_NR_SPALTE + 1;
-    /** Nachname-Spalte (C). */
-    private static final int NACHNAME_SPALTE = MeldeListeKonstanten.SPIELER_NR_SPALTE + 2;
-
     public record TeilnehmerStatus(int angemeldet, int aktiv) {}
+
+    record Zaehlschema(int ersteDatenZeile, List<Integer> namensSpalten) {}
+
+    @FunctionalInterface
+    interface ZellTextLeser {
+        String text(int spalte, int zeile);
+    }
 
     private TeilnehmerStatusService() {}
 
@@ -80,7 +85,9 @@ public final class TeilnehmerStatusService {
                 return new TeilnehmerStatus(0, 0);
             }
             int aktivSpalte = ermittleAktivSpalte(sh, sheet, ts, ws);
-            return zaehlen(sh, sheet, aktivSpalte);
+            Zaehlschema schema = zaehlschema((spalte, zeile) ->
+                    sh.getTextFromCell(sheet, Position.from(spalte, zeile)));
+            return zaehlen(sh, sheet, aktivSpalte, schema);
         } catch (RuntimeException e) {
             logger.warn("Teilnehmerzahl konnte nicht ermittelt werden", e);
             return new TeilnehmerStatus(0, 0);
@@ -123,12 +130,59 @@ public final class TeilnehmerStatusService {
         return I18n.get("column.header.aktiv");
     }
 
-    private static TeilnehmerStatus zaehlen(SheetHelper sh, XSpreadsheet sheet, int aktivSpalte) {
+    static Zaehlschema zaehlschema(ZellTextLeser zellen) {
+        String vorname = I18n.get("column.header.vorname");
+        String nachname = I18n.get("column.header.nachname");
+        String name = I18n.get("column.header.name");
+
+        Zaehlschema dreizeilig = zaehlschemaAusHeaderZeile(zellen, MeldeListeKonstanten.ERSTE_DATEN_ZEILE,
+                vorname, nachname, name);
+        if (!dreizeilig.namensSpalten().isEmpty()) {
+            return dreizeilig;
+        }
+
+        Zaehlschema zweizeilig = zaehlschemaAusHeaderZeile(zellen, MeldeListeKonstanten.ZWEITE_HEADER_ZEILE,
+                vorname, nachname, name);
+        if (!zweizeilig.namensSpalten().isEmpty()) {
+            return zweizeilig;
+        }
+
+        return new Zaehlschema(MeldeListeKonstanten.ERSTE_DATEN_ZEILE,
+                List.of(MeldeListeKonstanten.SPIELER_NR_SPALTE + 1,
+                        MeldeListeKonstanten.SPIELER_NR_SPALTE + 2));
+    }
+
+    private static Zaehlschema zaehlschemaAusHeaderZeile(ZellTextLeser zellen, int headerZeile,
+            String... namensHeader) {
+        List<Integer> spalten = new ArrayList<>();
+        for (int spalte = 0; spalte < MAX_HEADER_SPALTEN; spalte++) {
+            String headerText = zellen.text(spalte, headerZeile);
+            if (istNamensHeader(headerText, namensHeader)) {
+                spalten.add(spalte);
+            }
+        }
+        return new Zaehlschema(headerZeile + 1, List.copyOf(spalten));
+    }
+
+    private static boolean istNamensHeader(String headerText, String... namensHeader) {
+        if (headerText == null || headerText.isBlank()) {
+            return false;
+        }
+        for (String header : namensHeader) {
+            if (headerText.equals(header)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static TeilnehmerStatus zaehlen(SheetHelper sh, XSpreadsheet sheet, int aktivSpalte,
+            Zaehlschema schema) {
         int angemeldet = 0;
         int aktiv = 0;
         int leereZeilenInFolge = 0;
-        for (int zeile = MeldeListeKonstanten.ERSTE_DATEN_ZEILE; zeile < MAX_ZEILEN; zeile++) {
-            if (zeileHatNamen(sh, sheet, zeile)) {
+        for (int zeile = schema.ersteDatenZeile(); zeile < MAX_ZEILEN; zeile++) {
+            if (zeileHatNamen(sh, sheet, schema.namensSpalten(), zeile)) {
                 leereZeilenInFolge = 0;
                 angemeldet++;
                 if (aktivSpalte >= 0
@@ -144,9 +198,14 @@ public final class TeilnehmerStatusService {
         return new TeilnehmerStatus(angemeldet, aktivSpalte >= 0 ? aktiv : angemeldet);
     }
 
-    private static boolean zeileHatNamen(SheetHelper sh, XSpreadsheet sheet, int zeile) {
-        return !istLeer(sh.getTextFromCell(sheet, Position.from(VORNAME_SPALTE,  zeile)))
-                || !istLeer(sh.getTextFromCell(sheet, Position.from(NACHNAME_SPALTE, zeile)));
+    private static boolean zeileHatNamen(SheetHelper sh, XSpreadsheet sheet, List<Integer> namensSpalten,
+            int zeile) {
+        for (int spalte : namensSpalten) {
+            if (!istLeer(sh.getTextFromCell(sheet, Position.from(spalte, zeile)))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static boolean istLeer(String text) {
