@@ -144,7 +144,9 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	// Cadrage-State
 	private volatile boolean mitCadrage = false;
 	private volatile int cadrageSpaltOffset = 0; // = colGroupSize wenn Cadrage vorhanden, sonst 0
-	private volatile int anzFreilose = 0;
+	// Anzahl der bestgesetzten Teams, die keine Cadrage spielen und direkt ins Hauptfeld starten
+	// (kein Freilos – sie spielen die Hauptrunde ganz normal, nur ohne Cadrage-Vorrunde).
+	private volatile int anzOhneCadrage = 0;
 	private volatile int gesanzTeamsIntern = 0;
 	// Zeilenabstand zwischen zwei aufeinanderfolgenden Runde-1-Matches.
 	private volatile int runde1MatchZeilenAbstand = 3;
@@ -473,7 +475,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	 * des Verlierers. Die {@code WENN}-Sieger-Formeln in Runden 2+ lösen die Folgerunden danach
 	 * automatisch auf, sobald LO neu rechnet.
 	 *
-	 * <p>Voraussetzung: Der Layout-State (bracketGroesse, mitCadrage, anzFreilose, Offsets) muss
+	 * <p>Voraussetzung: Der Layout-State (bracketGroesse, mitCadrage, anzOhneCadrage, Offsets) muss
 	 * zur Übergabe-Sheet passen — typischer Aufruf direkt nach {@link #erstelleTurnierbaumOhneDialog()},
 	 * Iteration über alle erzeugten Gruppen-Sheets bei gleicher Gruppengröße.
 	 */
@@ -510,7 +512,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	}
 
 	private void fuegeCadrageTestergebnisHinzu(RangeData scoresCadrage, int seed) {
-		if (seed <= anzFreilose) {
+		if (seed <= anzOhneCadrage) {
 			return;
 		}
 		setzeTestergebnis(scoresCadrage, cadrageTeamAZeile(seed), cadrageTeamBZeile(seed));
@@ -763,11 +765,11 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		if (gesanzTeamsIntern > bracketGroesse) {
 			var rechner = new CadrageRechner(gesanzTeamsIntern);
 			this.mitCadrage = true;
-			this.anzFreilose = rechner.anzFreilose();
+			this.anzOhneCadrage = rechner.anzOhneCadrage();
 			this.cadrageSpaltOffset = colGroupSize;
 		} else {
 			this.mitCadrage = false;
-			this.anzFreilose = bracketGroesse;
+			this.anzOhneCadrage = bracketGroesse;
 			this.cadrageSpaltOffset = 0;
 		}
 
@@ -793,14 +795,14 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 				schreibeBahnZelle(xSheet, 1, rowA, rowB, bahnR1[m]);
 			}
 
-			if (mitCadrage && seedA > anzFreilose) {
+			if (mitCadrage && seedA > anzOhneCadrage) {
 				schreibeCadrageMatch(xSheet, meldungen, seedA);
 				schreibeCadrageGewinnerFormel(xSheet, seedA, rowA, true);
 			} else {
 				schreibeTeamZelleR1(xSheet, rowA, getTeamNrBySeedPosition(meldungen, seedA), true);
 			}
 
-			if (mitCadrage && seedB > anzFreilose) {
+			if (mitCadrage && seedB > anzOhneCadrage) {
 				schreibeCadrageMatch(xSheet, meldungen, seedB);
 				schreibeCadrageGewinnerFormel(xSheet, seedB, rowB, false);
 			} else {
@@ -1198,9 +1200,11 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 			throws GenerateException {
 		int farbe = istTeamA ? teamBFarbe : teamAFarbe;
 		if (nr <= 0) {
-			// Freilos – immer als Text
+			// Defensiver Fallback: im Cadrage-Modell ist jeder Hauptfeld-Slot mit einem echten
+			// Team belegt (kein Freilos), daher sollte dieser Zweig nicht erreicht werden. Falls
+			// doch, bleibt die Zelle leer statt einen erfundenen Platzhalter anzuzeigen.
 			getSheetHelper().setStringValueInCell(
-					StringCellValue.from(xSheet, Position.from(teamSpalte(1), zeile), "Freilos")
+					StringCellValue.from(xSheet, Position.from(teamSpalte(1), zeile), "")
 							.setCellBackColor(farbe)
 							.setBorder(BorderFactory.from().allThin().toBorder())
 							.setHoriJustify(CellHoriJustify.CENTER));
@@ -1389,12 +1393,13 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 
 	/**
 	 * Liefert die Team-Nr des Teams an Setzposition {@code seedPos} (1-basiert).
-	 * Gibt 0 zurück wenn kein Team an dieser Position vorhanden ist (Freilos).
+	 * Gibt 0 zurück wenn an dieser Position kein Team vorhanden ist (im Cadrage-Modell
+	 * regulär nicht der Fall – jeder Slot ist belegt).
 	 */
 	private int getTeamNrBySeedPosition(TeamMeldungen meldungen, int seedPos) {
 		var teams = meldungen.teams();
 		if (seedPos < 1 || seedPos > teams.size()) {
-			return 0; // Freilos
+			return 0; // kein Team an dieser Setzposition
 		}
 		return teams.get(seedPos - 1).getNr();
 	}
@@ -1413,11 +1418,11 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	 * {@code gesanzTeamsIntern - cadrageIdx}. Jede Cadrage-Partie bekommt eigene Zeilen in
 	 * der Cadrage-Spalte, damit auch 13-15 Teams ohne künstliches 16er-Feld darstellbar sind.
 	 *
-	 * @param slotSeed Bracket-Slot-Seed &gt; {@link #anzFreilose} (z.B. 7 oder 8)
+	 * @param slotSeed Bracket-Slot-Seed &gt; {@link #anzOhneCadrage} (z.B. 7 oder 8)
 	 */
 	private void schreibeCadrageMatch(XSpreadsheet xSheet, TeamMeldungen meldungen, int slotSeed)
 			throws GenerateException {
-		int cadrageIdx = slotSeed - anzFreilose - 1;
+		int cadrageIdx = slotSeed - anzOhneCadrage - 1;
 		int opponentSeed = gesanzTeamsIntern - cadrageIdx;
 		int rowA = cadrageTeamAZeile(slotSeed);
 		int rowB = cadrageTeamBZeile(slotSeed);
@@ -1472,8 +1477,10 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 			boolean istTeamA) throws GenerateException {
 		int farbe = istTeamA ? teamBFarbe : teamAFarbe;
 		if (nr <= 0) {
+			// Defensiver Fallback: jede Cadrage-Paarung besteht aus zwei echten Teams, dieser
+			// Zweig sollte nicht erreicht werden. Falls doch, Zelle leer statt Platzhalter.
 			getSheetHelper().setStringValueInCell(
-					StringCellValue.from(xSheet, Position.from(spalte, zeile), "Freilos")
+					StringCellValue.from(xSheet, Position.from(spalte, zeile), "")
 							.setCellBackColor(farbe)
 							.setBorder(BorderFactory.from().allThin().toBorder())
 							.setHoriJustify(CellHoriJustify.CENTER));

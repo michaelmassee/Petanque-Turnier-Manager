@@ -670,20 +670,20 @@
 					<prop oor:name="Category"><value>Add-In</value></prop>
 				</node>
 
-				<node oor:name="ptmcadrageanzfreilose" oor:op="replace">
+				<node oor:name="ptmcadrageanzohnecadrage" oor:op="replace">
 					<prop oor:name="DisplayName">
-						<value xml:lang="en">PTM.CADRAGE.ANZ_FREILOSE</value>
-						<value xml:lang="de">PTM.CADRAGE.ANZ_FREILOSE</value>
-						<value xml:lang="es">PTM.CADRAGE.ANZ_FREILOSE</value>
-						<value xml:lang="fr">PTM.CADRAGE.ANZ_FREILOSE</value>
-						<value xml:lang="nl">PTM.CADRAGE.ANZ_FREILOSE</value>
+						<value xml:lang="en">PTM.CADRAGE.ANZ_OHNE_CADRAGE</value>
+						<value xml:lang="de">PTM.CADRAGE.ANZ_OHNE_CADRAGE</value>
+						<value xml:lang="es">PTM.CADRAGE.ANZ_OHNE_CADRAGE</value>
+						<value xml:lang="fr">PTM.CADRAGE.ANZ_OHNE_CADRAGE</value>
+						<value xml:lang="nl">PTM.CADRAGE.ANZ_OHNE_CADRAGE</value>
 					</prop>
 					<prop oor:name="Description">
-						<value xml:lang="de">Cadrage: Anzahl der Teams mit Freilos (direkt in die Hauptrunde).</value>
-						<value xml:lang="en">Cadrage: Anzahl der Teams mit Freilos (direkt in die Hauptrunde).</value>
-						<value xml:lang="es">Cadrage: Anzahl der Teams mit Freilos (direkt in die Hauptrunde).</value>
-						<value xml:lang="fr">Cadrage: Anzahl der Teams mit Freilos (direkt in die Hauptrunde).</value>
-						<value xml:lang="nl">Cadrage: Anzahl der Teams mit Freilos (direkt in die Hauptrunde).</value>
+						<value xml:lang="de">Cadrage: Anzahl der Teams ohne Cadrage (starten direkt in der Hauptrunde).</value>
+						<value xml:lang="en">Cadrage: Anzahl der Teams ohne Cadrage (starten direkt in der Hauptrunde).</value>
+						<value xml:lang="es">Cadrage: Anzahl der Teams ohne Cadrage (starten direkt in der Hauptrunde).</value>
+						<value xml:lang="fr">Cadrage: Anzahl der Teams ohne Cadrage (starten direkt in der Hauptrunde).</value>
+						<value xml:lang="nl">Cadrage: Anzahl der Teams ohne Cadrage (starten direkt in der Hauptrunde).</value>
 					</prop>
 					<node oor:name="Parameters">
 						<node oor:name="anzTeams" oor:op="replace">

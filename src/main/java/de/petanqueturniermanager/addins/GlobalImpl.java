@@ -375,8 +375,8 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	}
 
 	@Override
-	public int ptmcadrageanzfreilose(int anzTeams) {
-		return berechneCadrage(anzTeams, CadrageRechner::anzFreilose);
+	public int ptmcadrageanzohnecadrage(int anzTeams) {
+		return berechneCadrage(anzTeams, CadrageRechner::anzOhneCadrage);
 	}
 
 	// ------------------- PTM.POULE.* Formeln -----------------

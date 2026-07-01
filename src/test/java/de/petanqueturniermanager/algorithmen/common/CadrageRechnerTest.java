@@ -19,7 +19,7 @@ public class CadrageRechnerTest {
 		var rechner = new CadrageRechner(2);
 		assertThat(rechner.zielAnzahlTeams()).isEqualTo(2);
 		assertThat(rechner.anzTeams()).isEqualTo(0);
-		assertThat(rechner.anzFreilose()).isEqualTo(2);
+		assertThat(rechner.anzOhneCadrage()).isEqualTo(2);
 	}
 
 	// ---------------------------------------------------------------
@@ -114,29 +114,29 @@ public class CadrageRechnerTest {
 	}
 
 	// ---------------------------------------------------------------
-	// anzFreilose
+	// anzOhneCadrage
 	// ---------------------------------------------------------------
 
 	@Test
-	public void testAnzFreilose() {
-		// exakte Zweierpotenz: alle haben Freilos (keine Cadrage)
-		assertThat(new CadrageRechner(8).anzFreilose()).isEqualTo(8);
-		assertThat(new CadrageRechner(16).anzFreilose()).isEqualTo(16);
-		// 5 Teams: ziel=4, cadrage=2 → freilose=4-1=3
-		assertThat(new CadrageRechner(5).anzFreilose()).isEqualTo(3);
-		// 10 Teams: ziel=8, cadrage=4 → freilose=8-2=6
-		assertThat(new CadrageRechner(10).anzFreilose()).isEqualTo(6);
-		// 17 Teams: ziel=16, cadrage=2 → freilose=16-1=15
-		assertThat(new CadrageRechner(17).anzFreilose()).isEqualTo(15);
+	public void testAnzOhneCadrage() {
+		// exakte Zweierpotenz: alle Teams starten ohne Cadrage direkt in der Hauptrunde
+		assertThat(new CadrageRechner(8).anzOhneCadrage()).isEqualTo(8);
+		assertThat(new CadrageRechner(16).anzOhneCadrage()).isEqualTo(16);
+		// 5 Teams: ziel=4, cadrage=2 → ohneCadrage=4-1=3
+		assertThat(new CadrageRechner(5).anzOhneCadrage()).isEqualTo(3);
+		// 10 Teams: ziel=8, cadrage=4 → ohneCadrage=8-2=6
+		assertThat(new CadrageRechner(10).anzOhneCadrage()).isEqualTo(6);
+		// 17 Teams: ziel=16, cadrage=2 → ohneCadrage=16-1=15
+		assertThat(new CadrageRechner(17).anzOhneCadrage()).isEqualTo(15);
 	}
 
 	@Test
-	public void testAnzFreilose_plusCadrageGewinnerGleichZielAnzahl() {
+	public void testAnzOhneCadrage_plusCadrageGewinnerGleichZielAnzahl() {
 		for (int anzTeams = 2; anzTeams <= 130; anzTeams++) {
 			var rechner = new CadrageRechner(anzTeams);
 			int cadrageGewinner = rechner.anzTeams() / 2;
-			assertThat(rechner.anzFreilose() + cadrageGewinner)
-					.as("freilose + cadrageGewinner muss zielAnzahlTeams ergeben fuer %d Teams", anzTeams)
+			assertThat(rechner.anzOhneCadrage() + cadrageGewinner)
+					.as("ohneCadrage + cadrageGewinner muss zielAnzahlTeams ergeben fuer %d Teams", anzTeams)
 					.isEqualTo(rechner.zielAnzahlTeams());
 		}
 	}

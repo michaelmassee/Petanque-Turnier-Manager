@@ -37,7 +37,7 @@ module de { module petanqueturniermanager { module addin {
     // Cadrage-Berechnung (PTM.CADRAGE.*) – Indizes 20-22
     long ptmcadrageanzteams    ([in] long anzTeams);
     long ptmcadragezielanz     ([in] long anzTeams);
-    long ptmcadrageanzfreilose ([in] long anzTeams);
+    long ptmcadrageanzohnecadrage ([in] long anzTeams);
     // Poule-Gruppenberechnung (PTM.POULE.*) – Indizes 23-25
     long ptmpouleanzgruppen       ([in] long anzTeams);
     long ptmpouleanzvierergruppen ([in] long anzTeams);

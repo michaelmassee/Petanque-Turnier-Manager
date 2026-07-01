@@ -196,9 +196,9 @@ public class GlobalImplUITest extends BaseCalcUITest {
 		// Zweierpotenz → keine Cadrage nötig
 		assertThat(impl.ptmcadrageanzteams(8)).as("8 Teams: keine Cadrage").isEqualTo(0);
 		assertThat(impl.ptmcadragezielanz(8)).as("8 Teams: Ziel = 8").isEqualTo(8);
-		assertThat(impl.ptmcadrageanzfreilose(8)).as("8 Teams: 8 Freilose").isEqualTo(8);
+		assertThat(impl.ptmcadrageanzohnecadrage(8)).as("8 Teams: 8 Teams ohne Cadrage").isEqualTo(8);
 
-		// 10 Teams: Ziel 8, 4 Cadrage-Teams (auf 2 reduziert), 6 Freilose
+		// 10 Teams: Ziel 8, 4 Cadrage-Teams (auf 2 reduziert), 6 Teams ohne Cadrage
 		assertThat(impl.ptmcadragezielanz(10)).as("10 Teams: Ziel = 8").isEqualTo(8);
 		assertThat(impl.ptmcadrageanzteams(10)).as("10 Teams: 4 Cadrage-Teams").isEqualTo(4);
 

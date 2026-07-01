@@ -37,7 +37,7 @@ public interface XGlobal extends XInterface {
         new MethodTypeInfo("ptmsmanzdoublwennnurdoublette",     19, 0),
         new MethodTypeInfo("ptmcadrageanzteams",                20, 0),
         new MethodTypeInfo("ptmcadragezielanz",                 21, 0),
-        new MethodTypeInfo("ptmcadrageanzfreilose",             22, 0),
+        new MethodTypeInfo("ptmcadrageanzohnecadrage",          22, 0),
         new MethodTypeInfo("ptmpouleanzgruppen",                23, 0),
         new MethodTypeInfo("ptmpouleanzvierergruppen",          24, 0),
         new MethodTypeInfo("ptmpouleanzdreiergruppen",          25, 0),
@@ -90,7 +90,7 @@ public interface XGlobal extends XInterface {
 
     int ptmcadragezielanz(int anzTeams);
 
-    int ptmcadrageanzfreilose(int anzTeams);
+    int ptmcadrageanzohnecadrage(int anzTeams);
 
     int ptmpouleanzgruppen(int anzTeams);
 

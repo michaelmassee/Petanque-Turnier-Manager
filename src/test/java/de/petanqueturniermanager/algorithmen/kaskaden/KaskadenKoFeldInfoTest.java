@@ -27,7 +27,7 @@ public class KaskadenKoFeldInfoTest {
 
         assertThat(leer.isCadrageNoetig()).isFalse();
         assertThat(leer.anzCadrageSpiele()).isZero();
-        assertThat(leer.anzFreilose()).isZero();
+        assertThat(leer.anzOhneCadrage()).isZero();
         assertThat(leer.zielTeams()).isEqualTo(0);  // Fallback: gesamtTeams
     }
 
@@ -44,12 +44,12 @@ public class KaskadenKoFeldInfoTest {
     @Test
     public void siebenTeams_cadrageNoetigZielVierTeams() {
         // 7 Teams → Ziel = 4 (nächste kleinere Zweierpotenz);
-        // 6 Teams spielen Cadrage (= 3 Spiele), 1 Team erhält Freilos.
+        // 6 Teams spielen Cadrage (= 3 Spiele), 1 Team spielt keine Cadrage (direkt Hauptrunde).
         var feld = new KaskadenKoFeldInfo("A", "S", 7, KaskadenKoFeldInfo.cadrageRechnerFuer(7));
 
         assertThat(feld.isCadrageNoetig()).isTrue();
         assertThat(feld.anzCadrageSpiele()).isEqualTo(3);
-        assertThat(feld.anzFreilose()).isEqualTo(1);
+        assertThat(feld.anzOhneCadrage()).isEqualTo(1);
         assertThat(feld.zielTeams()).isEqualTo(4);
     }
 }

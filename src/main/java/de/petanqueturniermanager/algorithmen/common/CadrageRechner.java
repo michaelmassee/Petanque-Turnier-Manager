@@ -13,7 +13,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  * um das Feld auf die naechste kleinere Zweierpotenz zu reduzieren.<br>
  * <br>
  * Beispiel: 10 Teams → Zielfeld 8 → 4 Teams spielen Cadrage (2 Spiele),
- * 6 Teams erhalten ein Freilos und starten direkt in der Hauptrunde.
+ * 6 Teams spielen keine Cadrage und starten direkt in der Hauptrunde.
  *
  * @author Michael Massee
  */
@@ -38,12 +38,14 @@ public class CadrageRechner {
 	}
 
 	/**
-	 * Anzahl Teams mit Freilos (kein Cadrage-Spiel, direkt in die Hauptrunde).<br>
+	 * Anzahl Teams, die keine Cadrage spielen und direkt in der Hauptrunde starten.<br>
+	 * (Es gibt kein Freilos – niemand rückt kampflos vor; diese Teams spielen die Hauptrunde
+	 * ganz normal, nur eben ohne Cadrage-Vorrunde.)<br>
 	 * Formel: zielAnzahlTeams - anzTeams/2
 	 *
-	 * @return Anzahl Freilos-Teams
+	 * @return Anzahl Teams ohne Cadrage
 	 */
-	public int anzFreilose() {
+	public int anzOhneCadrage() {
 		return zielAnzahlTeams() - anzTeams() / 2;
 	}
 

@@ -58,10 +58,11 @@ public record KaskadenKoFeldInfo(
     }
 
     /**
-     * @return Anzahl Teams mit Freilos in der Cadrage-Vorrunde (0 wenn Feld leer)
+     * @return Anzahl Teams, die keine Cadrage spielen und direkt in der Hauptrunde
+     *         starten (0 wenn Feld leer)
      */
-    public int anzFreilose() {
-        return cadrageRechner.map(CadrageRechner::anzFreilose).orElse(0);
+    public int anzOhneCadrage() {
+        return cadrageRechner.map(CadrageRechner::anzOhneCadrage).orElse(0);
     }
 
     /**
