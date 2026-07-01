@@ -10,7 +10,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.sun.star.beans.XPropertySet;
 import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.uno.UnoRuntime;
 
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -102,6 +104,7 @@ public class MaastrichterTurnierTestDatenUITest extends BaseCalcUITest {
 		validiereVorrundenRanglistePerJson(anzTeams, "maastrichter-57-vorrundenrangliste.json");
 		validiereTeilnehmerPerJson(anzTeams, "maastrichter-57-teilnehmer.json");
 		validiereFinaleGruppePerJson("A", "maastrichter-57-finale-a.json");
+		validiereFinalrundeLeerflaechenSindWeiss("A");
 		validiereFinaleGruppePerJson("B", "maastrichter-57-finale-b.json");
 		validiereFinaleGruppePerJson("C", "maastrichter-57-finale-c.json");
 		validiereFinaleGruppePerJson("D", "maastrichter-57-finale-d.json");
@@ -249,6 +252,25 @@ public class MaastrichterTurnierTestDatenUITest extends BaseCalcUITest {
 
 		InputStream jsonFile = MaastrichterTurnierTestDatenUITest.class.getResourceAsStream(referenzDatei);
 		validateWithJson(rangeData, jsonFile);
+	}
+
+	private void validiereFinalrundeLeerflaechenSindWeiss(String gruppenBuchstabe) {
+		XSpreadsheet sheet = sheetHlp.findByName(SheetNamen.koFinaleGruppe(gruppenBuchstabe));
+		assertThat(sheet).as("Finalgruppe-Sheet '%s' muss existieren", gruppenBuchstabe).isNotNull();
+
+		assertThat(cellBackColor(sheet, 0, 5)).as("1/8-Finale Leerflaeche A6").isEqualTo(0xFFFFFF);
+		assertThat(cellBackColor(sheet, 2, 5)).as("1/8-Finale Verbinder-Leerflaeche C6").isEqualTo(0xFFFFFF);
+		assertThat(cellBackColor(sheet, 3, 3)).as("1/4-Finale Leerflaeche D4").isEqualTo(0xFFFFFF);
+		assertThat(cellBackColor(sheet, 5, 3)).as("1/4-Finale Verbinder-Leerflaeche F4").isEqualTo(0xFFFFFF);
+	}
+
+	private int cellBackColor(XSpreadsheet sheet, int spalte, int zeile) {
+		try {
+			XPropertySet props = UnoRuntime.queryInterface(XPropertySet.class, sheet.getCellByPosition(spalte, zeile));
+			return (Integer) props.getPropertyValue("CellBackColor");
+		} catch (Exception e) {
+			throw new AssertionError("CellBackColor konnte nicht gelesen werden", e);
+		}
 	}
 
 	/**

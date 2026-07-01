@@ -34,6 +34,7 @@ import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
@@ -786,15 +787,20 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		}
 
 		int[] setzliste = berechneSetzliste(bracketGroesse);
+		int anzMatchesR1 = bracketGroesse / 2;
+		int letzteZeile = berechneLetzteZeile(anzMatchesR1);
+		int letzteSpalte = (teamAnzeige == KoSpielbaumTeamAnzeige.NAME)
+				? siegerSpalte(numRunden)
+				: siegerNameSpalte(numRunden);
 
 		// Spaltenbreiten setzen
 		formatiereKolumnen(xSheet, numRunden);
+		setzeBracketLeerflaecheZurueck(xSheet, letzteZeile, letzteSpalte);
 
 		// Header (2 Zeilen: Titel + Spaltenbeschriftung)
 		schreibeHeader(xSheet, numRunden);
 
 		// Runde 1: direkte Einträge aus Setzliste; Cadrage-Slots via Vorrundenformel
-		int anzMatchesR1 = bracketGroesse / 2;
 		int[] bahnR1 = berechneBahnNummern(anzMatchesR1);
 		for (int m = 0; m < anzMatchesR1; m++) {
 			int seedA = setzliste[2 * m];
@@ -854,21 +860,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		}
 
 		// Optimale Spaltenbreite und Zeilenhöhe setzen
-		int letzteZeile;
-		if (spielUmPlatz3 && numRunden >= 2) {
-			// platz3TeamBZeile = letzteZeileHauptbaum + 3 (Header) + 2 (TeamB-Zeile)
-			letzteZeile = teamBZeile(1, anzMatchesR1 - 1) + 5;
-		} else {
-			letzteZeile = teamBZeile(1, anzMatchesR1 - 1);
-		}
-		if (mitCadrage) {
-			letzteZeile = Math.max(letzteZeile, cadrageLetzteZeile());
-		}
-
 		// Im NAME-Modus ist siegerNameSpalte versteckt (Breite 0) – nicht anfassen
-		int letzteSpalte = (teamAnzeige == KoSpielbaumTeamAnzeige.NAME)
-				? siegerSpalte(numRunden)
-				: siegerNameSpalte(numRunden);
 		getSheetHelper().setOptimaleBreiteUndHoeheAlles(xSheet, 0, letzteZeile, 0, letzteSpalte);
 		formatieresSiegerSpalten(xSheet, numRunden);
 
@@ -887,6 +879,25 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		aktuelleScorePositionen = null;
 		gruppenHeaderLabel = null;
 		gruppenZeileOffset = 0;
+	}
+
+	private int berechneLetzteZeile(int anzMatchesR1) {
+		int letzteZeile = teamBZeile(1, anzMatchesR1 - 1);
+		if (spielUmPlatz3 && aktuelleBracketGroesse >= 4) {
+			// platz3TeamBZeile = letzteZeileHauptbaum + 3 (Header) + 2 (TeamB-Zeile)
+			letzteZeile += 5;
+		}
+		if (mitCadrage) {
+			letzteZeile = Math.max(letzteZeile, cadrageLetzteZeile());
+		}
+		return letzteZeile;
+	}
+
+	private void setzeBracketLeerflaecheZurueck(XSpreadsheet xSheet, int letzteZeile, int letzteSpalte)
+			throws GenerateException {
+		getSheetHelper().setPropertiesInRange(xSheet,
+				RangePosition.from(0, ersteZeile(), letzteSpalte, letzteZeile),
+				CellProperties.from().setCellBackColor(0xFFFFFF).setCellbackgroundTransparent(false));
 	}
 
 	/**
