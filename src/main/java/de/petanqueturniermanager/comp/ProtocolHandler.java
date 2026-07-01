@@ -94,6 +94,7 @@ import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteSheet;
 import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteSheetSortOnly;
 import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJSpielPlanSheet;
 import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJDoublette17TurnierTestDaten;
+import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJTriplette2Gruppen4TurnierTestDaten;
 import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJTurnierTestDaten;
 import de.petanqueturniermanager.konfigdialog.properties.ExportUploadKonfigDialog;
 import de.petanqueturniermanager.konfigdialog.properties.FarbenDialog;
@@ -267,6 +268,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_JGJ_GESAMTRANGLISTE = "jgj_gesamtrangliste";
 	public static final String CMD_JGJ_TESTDATEN_TURNIER = "jgj_testdaten_turnier";
 	public static final String CMD_JGJ_TESTDATEN_TURNIER_DOUBLETTE_17 = "jgj_testdaten_turnier_doublette_17";
+	public static final String CMD_JGJ_TESTDATEN_TURNIER_TRIPLETTE_2GRUPPEN = "jgj_testdaten_turnier_triplette_2gruppen";
 	// Schweizer
 	public static final String CMD_SCHWEIZER_START = "schweizer_start";
 	public static final String CMD_SCHWEIZER_UPDATE_MELDELISTE = "schweizer_update_meldeliste";
@@ -955,6 +957,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				break;
 			case CMD_JGJ_TESTDATEN_TURNIER_DOUBLETTE_17:
 				new JGJDoublette17TurnierTestDaten(ws).testKeinAnderesTurnierVorhanden().start();
+				break;
+			case CMD_JGJ_TESTDATEN_TURNIER_TRIPLETTE_2GRUPPEN:
+				new JGJTriplette2Gruppen4TurnierTestDaten(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
 			// ------------------------------
 			// Schweizer System
@@ -1921,7 +1926,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_JGJ_DIREKTVERGLEICH, CMD_JGJ_GESAMTRANGLISTE,
 				 CMD_JGJ_TEILNEHMER, CMD_JGJ_CHECKIN -> ts == TurnierSystem.JGJ;
 			case CMD_JGJ_TESTDATEN_TURNIER,
-				 CMD_JGJ_TESTDATEN_TURNIER_DOUBLETTE_17     -> ts == TurnierSystem.KEIN || ts == TurnierSystem.JGJ;
+				 CMD_JGJ_TESTDATEN_TURNIER_DOUBLETTE_17,
+				 CMD_JGJ_TESTDATEN_TURNIER_TRIPLETTE_2GRUPPEN -> ts == TurnierSystem.KEIN || ts == TurnierSystem.JGJ;
 			// Trip-Tête
 			case CMD_TRIPTETE_NEUE_MELDELISTE               -> ts == TurnierSystem.KEIN;
 			case CMD_TRIPTETE_UPDATE_MELDELISTE,

@@ -24,10 +24,12 @@ import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
- * UITest für die JGJ-Beispielturniere in zwei Konstellationen:
+ * UITest für die JGJ-Beispielturniere in mehreren Konstellationen:
  * <ul>
  *   <li>10 Teams Tête (Standardvariante).</li>
  *   <li>17 Teams Doublette mit Gruppengrösse 6 – deckt den Mehrgruppen-Pfad ab.</li>
+ *   <li>8 Teams Triplette in 2 Gruppen à 4 – erzeugt zusätzlich die gruppenübergreifende
+ *       Gesamtrangliste.</li>
  * </ul>
  * Jeder Test validiert Meldeliste, Spielplan, Rangliste und das separat erzeugte
  * Direktvergleich-Sheet gegen JSON-Referenzdateien.
@@ -78,6 +80,21 @@ public class JGJTurnierTestDatenUITest extends BaseCalcUITest {
 
 		new JGJRanglisteDirektvergleichSheet(wkingSpreadsheet).run();
 		validiereDirektvergleichPerJson(anzTeams, "jgj-direktvergleich-17.json");
+	}
+
+	@Test
+	public void testJGJTurnier8TeamsTriplette2Gruppen() throws GenerateException {
+		final int anzTeams = 8;
+		new JGJTriplette2Gruppen4TurnierTestDaten(wkingSpreadsheet).generate();
+
+		validiereGrundstruktur();
+		validiereMeldelistePerJson(anzTeams, "jgj-meldeliste-2g4t.json");
+		validiereSpielplanPerJson("jgj-spielplan-2g4t.json");
+		validiereRanglistePerJson(anzTeams, "jgj-rangliste-2g4t.json");
+		validiereGesamtranglistePerJson(anzTeams, "jgj-gesamtrangliste-2g4t.json");
+
+		new JGJRanglisteDirektvergleichSheet(wkingSpreadsheet).run();
+		validiereDirektvergleichPerJson(anzTeams, "jgj-direktvergleich-2g4t.json");
 	}
 
 	/**
@@ -184,6 +201,22 @@ public class JGJTurnierTestDatenUITest extends BaseCalcUITest {
 		// writeToJson(referenzDatei, direktRange, sheet, wkingSpreadsheet.getWorkingSpreadsheetDocument());
 
 		RangeData rangeData = rangeDateFromRangePosition(direktRange, sheet,
+				wkingSpreadsheet.getWorkingSpreadsheetDocument());
+
+		InputStream jsonFile = JGJTurnierTestDatenUITest.class.getResourceAsStream(referenzDatei);
+		validateWithJson(rangeData, jsonFile);
+	}
+
+	private void validiereGesamtranglistePerJson(int anzTeams, String referenzDatei) throws GenerateException {
+		XSpreadsheet sheet = sheetHlp.findByName(SheetNamen.jgjGesamtrangliste());
+		assertThat(sheet).as("Gesamtrangliste-Sheet muss existieren").isNotNull();
+
+		// Gesamtrangliste: 10 Spalten (Nr..Spielpunkte-Diff), eine Datenzeile je Team (keine Gruppen-Header).
+		RangePosition gesamtRange = RangePosition.from(0, 2, 9, 2 + anzTeams - 1);
+
+		// writeToJson(referenzDatei, gesamtRange, sheet, wkingSpreadsheet.getWorkingSpreadsheetDocument());
+
+		RangeData rangeData = rangeDateFromRangePosition(gesamtRange, sheet,
 				wkingSpreadsheet.getWorkingSpreadsheetDocument());
 
 		InputStream jsonFile = JGJTurnierTestDatenUITest.class.getResourceAsStream(referenzDatei);

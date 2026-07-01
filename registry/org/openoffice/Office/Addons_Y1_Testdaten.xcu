@@ -141,6 +141,22 @@
 											<value>_self</value>
 										</prop>
 									</node>
+
+									<node oor:name="A2A3" oor:op="replace">
+										<prop oor:name="Title">
+											<value xml:lang="de">Beispielturnier (2 Gruppen à 4 Triplette)</value>
+											<value xml:lang="en">Example Tournament (2 groups of 4 Triplette)</value>
+											<value xml:lang="es">Torneo de ejemplo (2 grupos de 4 Triplette)</value>
+											<value xml:lang="fr">Tournoi exemple (2 groupes de 4 Triplette)</value>
+											<value xml:lang="nl">Voorbeeldtoernooi (2 groepen van 4 Triplette)</value>
+										</prop>
+										<prop oor:name="URL">
+											<value>ptm:jgj_testdaten_turnier_triplette_2gruppen</value>
+										</prop>
+										<prop oor:name="Target" oor:type="xs:string">
+											<value>_self</value>
+										</prop>
+									</node>
 								</node>
 							</node>
 
