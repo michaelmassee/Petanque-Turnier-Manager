@@ -150,9 +150,8 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	private volatile int gesanzTeamsIntern = 0;
 	// Zeilenabstand zwischen zwei aufeinanderfolgenden Runde-1-Matches.
 	private volatile int runde1MatchZeilenAbstand = 3;
-	// Zeilenabstand zwischen Team A und Team B innerhalb eines Runde-1-Matches. Ohne Cadrage
-	// stehen beide direkt untereinander (1). Mit Cadrage werden die Slots gespreizt (3), damit
-	// jede Cadrage-Partie auf Höhe ihres Ziel-Slots fluchtet (siehe {@link #cadrageTeamAZeile(int)}).
+	// Zeilenabstand zwischen Team A und Team B innerhalb eines Runde-1-Matches. Die Slots werden
+	// nur gespreizt, wenn eine Cadrage-Partie am oberen Slot sonst in die untere Team-Zeile läuft.
 	private volatile int runde1SlotAbstand = 1;
 
 	// Spalten-Offsets (dynamisch je nach spielbahn)
@@ -314,24 +313,37 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	/**
 	 * Zeilenabstand zwischen Team A und Team B innerhalb eines Runde-1-Matches.
 	 *
-	 * <p>Ohne Cadrage stehen die beiden Teams direkt untereinander (Abstand 1). Mit Cadrage
-	 * werden die Slots auf Abstand 3 gespreizt, damit unter jedem Slot eine zweizeilige
-	 * Cadrage-Partie fluchtend Platz findet (Slot A: Zeilen {@code rowA..rowA+1}, Slot B:
-	 * Zeilen {@code rowB..rowB+1}), ohne dass sich die beiden Feeder überlappen.
+	 * <p>Ohne überlappende Cadrage stehen die beiden Teams direkt untereinander (Abstand 1). Eine
+	 * Spreizung ist nur nötig, wenn der obere Runde-1-Slot selbst aus einer zweizeiligen
+	 * Cadrage-Partie kommt; sonst würde diese Partie die untere Team-Zeile des Matches belegen.
 	 */
 	static int berechneRunde1SlotAbstand(int teamCount, int bracketGroesse) {
-		return teamCount > bracketGroesse ? 3 : 1;
+		return brauchtGespreizteCadrageSlots(teamCount, bracketGroesse) ? 3 : 1;
 	}
 
 	/**
 	 * Zeilenabstand zwischen zwei aufeinanderfolgenden Runde-1-Matches.
 	 *
 	 * <p>Muss so groß sein, dass die (ggf. gespreizten) Slots samt Cadrage-Feeder eines Matches
-	 * nicht in das nächste Match hineinragen. Ohne Cadrage: 3 (Slot A, Slot B, Leerzeile).
-	 * Mit Cadrage: 6 (Slot A + Feeder, Leerzeile, Slot B + Feeder, Leerzeile).
+	 * nicht in das nächste Match hineinragen. Kompakt: 3 (Slot A, Slot B, Leerzeile). Gespreizt:
+	 * 6 (Slot A + Feeder, Leerzeile, Slot B + Feeder, Leerzeile).
 	 */
 	static int berechneRunde1MatchZeilenAbstand(int teamCount, int bracketGroesse) {
-		return teamCount > bracketGroesse ? 6 : 3;
+		return brauchtGespreizteCadrageSlots(teamCount, bracketGroesse) ? 6 : 3;
+	}
+
+	static boolean brauchtGespreizteCadrageSlots(int teamCount, int bracketGroesse) {
+		if (teamCount <= bracketGroesse) {
+			return false;
+		}
+		int anzOhneCadrage = new CadrageRechner(teamCount).anzOhneCadrage();
+		int[] setzliste = berechneSetzliste(bracketGroesse);
+		for (int m = 0; m < setzliste.length / 2; m++) {
+			if (setzliste[2 * m] > anzOhneCadrage) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -339,7 +351,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	 * Für n=8: [1,8,4,5,2,7,3,6] → Matches [1v8, 4v5, 2v7, 3v6]<br>
 	 * Garantiert: Seed 1 und Seed 2 treffen sich erst im Finale.
 	 */
-	int[] berechneSetzliste(int n) {
+	static int[] berechneSetzliste(int n) {
 		if (n == 1) {
 			return new int[] { 1 };
 		}

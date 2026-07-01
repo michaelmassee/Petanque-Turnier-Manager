@@ -18,15 +18,47 @@ class KoTurnierbaumSheetLayoutTest {
 	}
 
 	@Test
-	void zehnTeamsSpreizenCadrageSlotsEbenfalls() {
+	void siebenTeamsSpreizenViererHauptfeldWegenOberemCadrageSlot() {
+		int bracketGroesse = KoTurnierbaumSheet.berechneBracketGroesse(7);
+
+		assertThat(bracketGroesse).isEqualTo(4);
+		assertThat(KoTurnierbaumSheet.berechneRunde1MatchZeilenAbstand(7, bracketGroesse))
+				.isEqualTo(6);
+		assertThat(KoTurnierbaumSheet.berechneRunde1SlotAbstand(7, bracketGroesse))
+				.isEqualTo(3);
+	}
+
+	@Test
+	void zwoelfTeamsBleibenKompaktWennCadrageNurAmUnterenSlotHaengt() {
+		int bracketGroesse = KoTurnierbaumSheet.berechneBracketGroesse(12);
+
+		assertThat(bracketGroesse).isEqualTo(8);
+		assertThat(KoTurnierbaumSheet.berechneRunde1MatchZeilenAbstand(12, bracketGroesse))
+				.isEqualTo(3);
+		assertThat(KoTurnierbaumSheet.berechneRunde1SlotAbstand(12, bracketGroesse))
+				.isEqualTo(1);
+	}
+
+	@Test
+	void zehnTeamsBleibenKompaktWennCadrageNurAmUnterenSlotHaengt() {
 		int bracketGroesse = KoTurnierbaumSheet.berechneBracketGroesse(10);
 
 		assertThat(bracketGroesse).isEqualTo(8);
-		// Mit Cadrage werden die Runde-1-Slots gespreizt, damit die Cadrage-Partie fluchtet.
 		assertThat(KoTurnierbaumSheet.berechneRunde1MatchZeilenAbstand(10, bracketGroesse))
-				.isEqualTo(6);
-		assertThat(KoTurnierbaumSheet.berechneRunde1SlotAbstand(10, bracketGroesse))
 				.isEqualTo(3);
+		assertThat(KoTurnierbaumSheet.berechneRunde1SlotAbstand(10, bracketGroesse))
+				.isEqualTo(1);
+	}
+
+	@Test
+	void neunTeamsBleibenKompaktWennCadrageNurAmUnterenSlotHaengt() {
+		int bracketGroesse = KoTurnierbaumSheet.berechneBracketGroesse(9);
+
+		assertThat(bracketGroesse).isEqualTo(8);
+		assertThat(KoTurnierbaumSheet.berechneRunde1MatchZeilenAbstand(9, bracketGroesse))
+				.isEqualTo(3);
+		assertThat(KoTurnierbaumSheet.berechneRunde1SlotAbstand(9, bracketGroesse))
+				.isEqualTo(1);
 	}
 
 	@Test
