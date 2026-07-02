@@ -15,7 +15,6 @@ import com.sun.star.awt.FontSlant;
 import com.sun.star.awt.FontWeight;
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.container.XNameAccess;
-import com.sun.star.lang.XMultiServiceFactory;
 import com.sun.star.sheet.XCellRangeAddressable;
 import com.sun.star.sheet.XHeaderFooterContent;
 import com.sun.star.sheet.XPrintAreas;
@@ -33,8 +32,6 @@ import com.sun.star.table.XColumnRowRange;
 import com.sun.star.table.XTableColumns;
 import com.sun.star.table.XTableRows;
 import com.sun.star.text.XText;
-import com.sun.star.util.XNumberFormatter;
-import com.sun.star.util.XNumberFormatsSupplier;
 
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.cellvalue.properties.ICommonProperties;
@@ -100,8 +97,6 @@ public class TabellenMapper {
 
         Map<String, ZelleModel> zellenMap = new LinkedHashMap<>();
         Map<Long, CellRangeAddress> mergeCache = new HashMap<>();
-        ZahlFormatierer zahlenFormatierer = ZahlFormatierer.erstelleAus(doc);
-
         for (int r = 0; r < numZeilen; r++) {
             for (int c = 0; c < numSpalten; c++) {
                 if (gitterRaw[r][c] == null) {
@@ -147,7 +142,7 @@ public class TabellenMapper {
                     String id = TabelleModel.zelleId(r, c);
                     gitterRaw[r][c] = id;
 
-                    String wert = extrahiereZellwert(cell, props, zahlenFormatierer);
+                    String wert = extrahiereZellwert(cell);
 
                     zellenMap.put(id, new ZelleModel(id, wert, extrahiereStil(props, colspan, rowspan)));
 
@@ -277,57 +272,13 @@ public class TabellenMapper {
     }
 
     /**
-     * Formatiert numerische Zellwerte universell gemäß dem LO-Zahlenformat der Zelle.
-     * Deckt alle Formate ab: Datum, Uhrzeit, Wochentag, Prozent, Währung, benutzerdefiniert, …
-     * Wird einmal pro Sheet in {@link #mapBereich} erstellt und wiederverwendet.
-     */
-    private record ZahlFormatierer(XNumberFormatter formatter) {
-
-        static ZahlFormatierer erstelleAus(XSpreadsheetDocument doc) {
-            if (doc == null) {
-                return null;
-            }
-            try {
-                XMultiServiceFactory msf = Lo.qi(XMultiServiceFactory.class, doc);
-                Object service = msf.createInstance("com.sun.star.util.NumberFormatter");
-                XNumberFormatter xFormatter = Lo.qi(XNumberFormatter.class, service);
-                XNumberFormatsSupplier nfs = Lo.qi(XNumberFormatsSupplier.class, doc);
-                xFormatter.attachNumberFormatsSupplier(nfs);
-                return new ZahlFormatierer(xFormatter);
-            } catch (Exception e) {
-                logger.debug("ZahlFormatierer nicht erstellbar", e);
-                return null;
-            }
-        }
-
-        /**
-         * Formatiert {@code wert} gemäß dem Zahlenformat der Zelle.
-         *
-         * @return formatierter Anzeigestring, oder {@code null} bei Fehler / leerem Ergebnis
-         */
-        String formatiere(XPropertySet props, double wert) {
-            try {
-                Object keyObj = props.getPropertyValue("NumberFormat");
-                if (!(keyObj instanceof Integer formatKey)) {
-                    return null;
-                }
-                String ergebnis = formatter.convertNumberToString(formatKey, wert);
-                return (ergebnis != null && !ergebnis.isBlank()) ? ergebnis : null;
-            } catch (Exception e) {
-                logger.debug("Zahlenformatierung fehlgeschlagen", e);
-                return null;
-            }
-        }
-    }
-
-    /**
      * Extrahiert den anzuzeigenden Wert einer Zelle.
      * <p>
      * Textinhalt wird direkt übernommen. Für VALUE- und FORMULA-Zellen liefert
      * {@code getString()} den formatierten Anzeigewert universell (Datum, Uhrzeit,
-     * Prozent, Währung, Text-Formelergebnis). Der {@link ZahlFormatierer} dient als Fallback.
+     * Prozent, Währung, Text-Formelergebnis); nur als Rückfall wird die rohe Zahl übernommen.
      */
-    private String extrahiereZellwert(XCell cell, XPropertySet props, ZahlFormatierer formatierer) {
+    private String extrahiereZellwert(XCell cell) {
         try {
             CellContentType type = cell.getType();
 
@@ -352,12 +303,6 @@ public class TabellenMapper {
                 if (Double.isNaN(wert) || Double.isInfinite(wert)) {
                     return null;
                 }
-                if (formatierer != null) {
-                    String formatiert = formatierer.formatiere(props, wert);
-                    if (formatiert != null) {
-                        return formatiert;
-                    }
-                }
                 if (wert == Math.rint(wert)) {
                     return String.valueOf((long) wert);
                 }
@@ -381,12 +326,6 @@ public class TabellenMapper {
                 }
                 if (wert == 0.0) {
                     return null;
-                }
-                if (formatierer != null) {
-                    String formatiert = formatierer.formatiere(props, wert);
-                    if (formatiert != null) {
-                        return formatiert;
-                    }
                 }
                 if (wert == Math.rint(wert)) {
                     return String.valueOf((long) wert);
