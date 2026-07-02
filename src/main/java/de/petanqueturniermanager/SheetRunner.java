@@ -227,10 +227,20 @@ public abstract class SheetRunner extends Thread {
 				} catch (GenerateException e) {
 					handleGenerateException(e);
 				} catch (Exception e) {
-					isFehler = true;
-					processBox().fehler(I18n.get("processbox.interner.fehler", e.getClass().getName())).fehler(e.getMessage())
-							.fehler(I18n.get("processbox.log.hinweis"));
-					getLogger().error(e.getMessage(), e);
+					if (!isDocumentAlive()) {
+						// Dokument wurde während des Laufs geschlossen: die UNO-Bridge wirft dann
+						// teils eine generische com.sun.star.uno.RuntimeException (keine
+						// DisposedException). Kein echter Fehler → sauberer Abbruch wie bei
+						// DisposedException, damit kein ERROR-Log entsteht (z.B. async
+						// SpielplanFormatiererSheetRunner beim Test-/Fenster-Teardown).
+						documentDisposed = true;
+						logger.debug("Dokument disposed während SheetRunner (generische UNO-Exception) – sauberer Abbruch", e);
+					} else {
+						isFehler = true;
+						processBox().fehler(I18n.get("processbox.interner.fehler", e.getClass().getName())).fehler(e.getMessage())
+								.fehler(I18n.get("processbox.log.hinweis"));
+						getLogger().error(e.getMessage(), e);
+					}
 				} finally {
 					koordinator.setLaeuft(false); // Immer an erste stelle diesen flag zurück
 					// Lazy-Unprotect-Scope schließen: wenn unterwegs entsperrt wurde, jetzt einmal schützen.
@@ -424,7 +434,11 @@ public abstract class SheetRunner extends Thread {
 			}
 			doc.getSheets();
 			return true;
-		} catch (DisposedException e) {
+		} catch (com.sun.star.uno.RuntimeException e) {
+			// Beim Schließen des Dokuments wirft die UNO-Bridge statt einer DisposedException
+			// teils eine generische com.sun.star.uno.RuntimeException (leere Message). Beides
+			// bedeutet: Dokument nicht mehr nutzbar. Als disposed behandeln – die Probe darf
+			// niemals propagieren.
 			documentDisposed = true;
 			return false;
 		}
