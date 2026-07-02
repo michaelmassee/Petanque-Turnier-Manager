@@ -10,6 +10,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.withSettings;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -81,7 +85,19 @@ class SheetAktivierungsDispatcherTest {
         dispatcher.registriere(vorher).registriere(boese).registriere(nachher);
         var fix = registriere(dispatcher);
 
-        wechsleAuf(fix, "A");
+        // Der Dispatcher loggt die hier absichtlich provozierte Handler-Exception als ERROR.
+        // Diese Test-interne "boom"-Zeile darf das gemeinsame LO-Log nicht verschmutzen –
+        // UI-Tests prüfen auf ERROR-freie Logs. Daher den Dispatcher-Logger für die Dauer
+        // des Aufrufs stummschalten und danach die vorherige Stufe wiederherstellen.
+        String loggerName = SheetAktivierungsDispatcher.class.getName();
+        Level vorherigeStufe = ((LoggerContext) LogManager.getContext(false))
+                .getConfiguration().getLoggerConfig(loggerName).getLevel();
+        Configurator.setLevel(loggerName, Level.OFF);
+        try {
+            wechsleAuf(fix, "A");
+        } finally {
+            Configurator.setLevel(loggerName, vorherigeStufe);
+        }
 
         verify(vorher, times(1)).aufSheetAktiviert(any(), any(), any(), any());
         verify(nachher, times(1)).aufSheetAktiviert(any(), any(), any(), any());
@@ -119,6 +135,52 @@ class SheetAktivierungsDispatcherTest {
 
         verify(handler, times(2)).aufFokusVerloren();
         verify(handler, never()).aufSheetAktiviert(any(), any(), any(), any());
+    }
+
+    @Test
+    void suppression_wirdVonSameSheetEventNichtVerbraucht() {
+        // P1-Regression: LO feuert selectionChanged auch bei Zell-Fokus auf demselben Sheet.
+        // Ein solches Same-Sheet-Event darf das One-Shot-Flag NICHT verbrauchen, sonst liefe
+        // der eigentliche setActiveSheet()-Wechsel ununterdrückt.
+        var handler = mock(SheetAktivierungsHandler.class);
+        var dispatcher = new SheetAktivierungsDispatcher();
+        dispatcher.registriere(handler);
+        var fix = registriere(dispatcher); // initialer Token = "Start"
+
+        SheetRunner.unterdrückeNaechstesSelectionChange();
+
+        wechsleAuf(fix, "Start"); // Same-Sheet-Event → darf Flag NICHT verbrauchen
+        wechsleAuf(fix, "R");     // echter Wechsel → durch Flag geschluckt
+        wechsleAuf(fix, "S");     // Flag verbraucht → echter dispatch
+
+        verify(handler, times(1)).aufSheetAktiviert(any(), any(),
+                eq(SheetAktivierungsHandler.TRIGGER_SELECTION), any());
+    }
+
+    @Test
+    void ersterNichtSpreadsheetController_blockiertSpaetereRegistrierungNicht() {
+        // P2-Regression: kommt das erste Lifecycle-Event von einem Nicht-Spreadsheet-Controller
+        // (Druckvorschau), darf das Dokument nicht als „registriert" markiert werden – sonst
+        // bekäme ein späteres echtes View-Event keinen Selection-Listener mehr.
+        var handler = mock(SheetAktivierungsHandler.class);
+        var dispatcher = new SheetAktivierungsDispatcher();
+        dispatcher.registriere(handler);
+
+        var xModel = mock(XModel.class, withSettings().extraInterfaces(XSpreadsheetDocument.class));
+
+        var druckvorschau = mock(XController.class); // KEIN XSpreadsheetView
+        when(xModel.getCurrentController()).thenReturn(druckvorschau);
+        dispatcher.onViewCreated(xModel);
+
+        var view = mock(XController.class, withSettings()
+                .extraInterfaces(XSpreadsheetView.class, XSelectionSupplier.class));
+        var startSheet = sheet("Start");
+        when(xModel.getCurrentController()).thenReturn(view);
+        when(((XSpreadsheetView) view).getActiveSheet()).thenReturn(startSheet);
+        dispatcher.onViewCreated(xModel);
+
+        verify((XSelectionSupplier) view, times(1))
+                .addSelectionChangeListener(any(XSelectionChangeListener.class));
     }
 
     // ── Test-Infrastruktur ──────────────────────────────────────────────────

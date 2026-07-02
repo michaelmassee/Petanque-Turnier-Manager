@@ -156,29 +156,37 @@ public final class SheetAktivierungsDispatcher implements IGlobalEventListener {
                 if (registriert.contains(xDoc)) {
                     return;
                 }
-                registriert.add(xDoc);
+                // Erst als registriert markieren, wenn wirklich ein Listener angehängt wurde.
+                // Kommt das erste Lifecycle-Event von einem Nicht-Spreadsheet-Controller
+                // (z.B. Druckvorschau), bliebe das Dokument sonst dauerhaft „registriert" ohne
+                // Listener und ein späteres echtes View-Event würde vorzeitig zurückkehren –
+                // das Dokument bekäme nie einen Tab-Wechsel-Sync.
+                if (registriereSelectionListener(xModel, xDoc)) {
+                    registriert.add(xDoc);
+                }
             }
-            registriereSelectionListener(xModel, xDoc);
         } catch (RuntimeException e) {
             logger.error("Fehler beim Registrieren des Sheet-Aktivierungs-Dispatchers", e);
         }
     }
 
-    private void registriereSelectionListener(XModel xModel, XSpreadsheetDocument xDoc) {
+    /** @return {@code true}, wenn ein Selection-Listener angehängt wurde. */
+    private boolean registriereSelectionListener(XModel xModel, XSpreadsheetDocument xDoc) {
         var controller = xModel.getCurrentController();
         if (controller == null) {
-            return;
+            return false;
         }
         if (Lo.qi(XSpreadsheetView.class, controller) == null) {
-            return; // Druckvorschau/Sonstige – kein Tab-Wechsel-Kontext
+            return false; // Druckvorschau/Sonstige – kein Tab-Wechsel-Kontext
         }
         XSelectionSupplier selSupplier = Lo.qi(XSelectionSupplier.class, controller);
         if (selSupplier == null) {
-            return;
+            return false;
         }
         selSupplier.addSelectionChangeListener(
                 new ZentralerSelectionListener(xDoc, aktivesSheetToken(xModel, xDoc)));
         logger.debug("Zentraler XSelectionChangeListener registriert");
+        return true;
     }
 
     private static String aktivesSheetToken(XModel xModel, XSpreadsheetDocument xDoc) {
@@ -236,17 +244,21 @@ public final class SheetAktivierungsDispatcher implements IGlobalEventListener {
                 if (sheet == null) {
                     return;
                 }
-                // One-Shot immer zuerst: genau ein durch setActiveSheet() ausgelöstes Event
-                // schlucken – und den Token nachziehen, damit der nächste echte Wechsel feuert.
-                if (SheetRunner.consumeSelectionChangeSuppression()) {
-                    letztesToken = SheetFokusToken.von(xDoc, sheet);
-                    return;
-                }
                 String token = SheetFokusToken.von(xDoc, sheet);
                 if (token != null && token.equals(letztesToken)) {
-                    return; // gleiches Sheet – kein echter Wechsel
+                    // Gleiches Sheet – kein echter Wechsel. Wichtig: hier NICHT die
+                    // SelectionChangeSuppression konsumieren. LO feuert selectionChanged auch
+                    // bei bloßem Zell-Fokuswechsel; würde ein solches Same-Sheet-Event das
+                    // One-Shot-Flag verbrauchen, bliebe der eigentliche setActiveSheet()-Wechsel
+                    // ununterdrückt und triggerte einen unnötigen Rebuild/Format-Lauf.
+                    return;
                 }
                 letztesToken = token;
+                // One-Shot erst nach erkanntem Sheet-Wechsel konsumieren: genau ein durch
+                // setActiveSheet() ausgelöster Wechsel wird geschluckt.
+                if (SheetRunner.consumeSelectionChangeSuppression()) {
+                    return;
+                }
                 if (SheetRunner.isRunning()) {
                     return;
                 }
