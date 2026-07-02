@@ -3,10 +3,7 @@ package de.petanqueturniermanager.helper.sheetsync;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.time.Duration;
-import java.util.Collections;
 import java.util.Optional;
-import java.util.Set;
-import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
@@ -16,22 +13,17 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.sun.star.frame.XModel;
-import com.sun.star.container.XNamed;
 import com.sun.star.lang.DisposedException;
-import com.sun.star.lang.EventObject;
 import com.sun.star.lang.XComponent;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.sheet.XSpreadsheetView;
 import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XComponentContext;
-import com.sun.star.view.XSelectionChangeListener;
-import com.sun.star.view.XSelectionSupplier;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
-import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEventListener;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
@@ -41,9 +33,13 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 
 /**
- * Lauscht auf Sheet-Tab-Wechsel und OS-Fokusereignisse und löst einen Sheet-Sync
+ * Reagiert auf Sheet-Aktivierungen (Tab-Wechsel, Fenster-Fokus) und löst einen Sheet-Sync
  * <b>nur dann</b> aus, wenn sich die semantisch relevanten Eingangsdaten seit dem letzten
  * Rebuild geändert haben.
+ * <p>
+ * Die Aktivierungs-Events kommen vom zentralen {@link SheetAktivierungsDispatcher}
+ * (dieser Listener ist ein {@link SheetAktivierungsHandler} und registriert selbst
+ * <b>keinen</b> UNO-Selection-Listener mehr).
  * <p>
  * Erkennung über kanonische SHA-256-Signatur ({@link EingabeSignatur}), Vergleich
  * mit persistiertem Hash im Dokument ({@link SheetSyncSignaturStore}). Trigger werden vor
@@ -57,11 +53,11 @@ import de.petanqueturniermanager.supermelee.SpielTagNr;
  * <p>
  * Zusätzlich {@link ITurnierEventListener}: Ein {@code PropertiesChanged}-Event (z.B.
  * Wechsel des Sortiermodus im Konfig-Dialog) ist nicht aus Sheet-Zellen ableitbar und
- * löst daher keinen Tab-Wechsel/Fokus-Trigger aus. Reagiert der Listener auf das Event,
+ * löst daher keine Sheet-Aktivierung aus. Reagiert der Listener auf das Event,
  * wird – sofern das Ziel-Sheet gerade aktiv ist – sofort ein Hash-Check geplant; bei
  * geänderter Signatur (Sortier-Zusatzkontext) folgt der Re-Sync live.
  */
-public final class SheetSyncListener implements IGlobalEventListener, ITurnierEventListener {
+public final class SheetSyncListener implements SheetAktivierungsHandler, ITurnierEventListener {
 
     private static final Logger logger = LogManager.getLogger(SheetSyncListener.class);
 
@@ -76,10 +72,6 @@ public final class SheetSyncListener implements IGlobalEventListener, ITurnierEv
     private final BiFunction<XSpreadsheetDocument, XSpreadsheet, EingabeSignatur> signaturLieferant;
     /** Persistenz-Schlüssel pro (Doc, Ziel-Sheet). Spieltag-Variante: inkl. Nr. */
     private final BiFunction<XSpreadsheetDocument, XSpreadsheet, String> schluesselLieferant;
-
-    /** Bereits registrierte Dokumente – verhindert Doppelregistrierung. */
-    private final Set<XSpreadsheetDocument> registriert =
-            Collections.newSetFromMap(new WeakHashMap<>());
 
     /**
      * forceNextCheck pro (Doc-IdentityHash + Schlüssel): gesetzt nach erschöpften
@@ -183,238 +175,49 @@ public final class SheetSyncListener implements IGlobalEventListener, ITurnierEv
         return new DocumentPropertiesHelper(xDoc).getTurnierSystemAusDocument() == erwartesTurnierSystem;
     }
 
-    // ── Dokument-Laden ──────────────────────────────────────────────────────
+    // ── Sheet-Aktivierung (vom Dispatcher) ──────────────────────────────────
 
+    /**
+     * Ein Sheet wurde aktiviert. Betrifft es dieses Ziel-Sheet im passenden Turniersystem,
+     * wird ein entprellter Hash-Check geplant. Bei {@link #TRIGGER_FOCUS} zusätzlich die
+     * periodische Safety-Revalidation prüfen.
+     * <p>
+     * {@code isRunning}/Suppression/Token-Dedup übernimmt bereits der Dispatcher.
+     */
     @Override
-    public void onLoadFinished(Object source) {
-        registriereListener(source);
-    }
-
-    @Override
-    public void onNew(Object source) {
-        registriereListener(source);
-    }
-
-    @Override
-    public void onViewCreated(Object source) {
-        registriereListener(source);
-    }
-
-    private void registriereListener(Object source) {
-        try {
-            XModel xModel = Lo.qi(XModel.class, source);
-            if (xModel == null) return;
-            XSpreadsheetDocument xDoc = Lo.qi(XSpreadsheetDocument.class, xModel);
-            if (xDoc == null) return;
-
-            synchronized (registriert) {
-                if (registriert.contains(xDoc)) return;
-                registriert.add(xDoc);
-            }
-
-            registriereSelectionChangeListener(xModel, xDoc);
-
-        } catch (RuntimeException t) {
-            logger.error("Fehler beim Registrieren der Listener", t);
-        }
-    }
-
-    private void registriereSelectionChangeListener(XModel xModel, XSpreadsheetDocument xDoc) {
-        var controller = xModel.getCurrentController();
-        if (controller == null) return;
-        boolean istSpreadsheetView = Lo.qi(XSpreadsheetView.class, controller) != null;
-        logger.debug("registriereSelectionChangeListener: controller-typ={}",
-                istSpreadsheetView ? "ScTabViewShell" : "Druckvorschau/Sonstige");
-        if (!istSpreadsheetView) return;
-        XSelectionSupplier selSupplier = Lo.qi(XSelectionSupplier.class, controller);
-        if (selSupplier == null) return;
-
-        selSupplier.addSelectionChangeListener(new XSelectionChangeListener() {
-            private XSpreadsheet letztesSheet = null;
-
-            @Override
-            public void selectionChanged(EventObject e) {
-                boolean tabTimingAktiv = PerfLog.isEnabled();
-                long startNs = System.nanoTime();
-                String traceId = traceId(xDoc, startNs);
-                String sheetName = "<unbekannt>";
-                String key = null;
-                String ergebnis = "start";
-                long viewNs = 0;
-                long activeSheetNs = 0;
-                long matchNs = 0;
-                long systemNs = 0;
-                long planNs = 0;
-                try {
-                    long abschnittNs = System.nanoTime();
-                    XSpreadsheetView view = Lo.qi(XSpreadsheetView.class, e.Source);
-                    viewNs = elapsedNs(abschnittNs);
-                    if (view == null) {
-                        ergebnis = "keineSpreadsheetView";
-                        return;
-                    }
-
-                    abschnittNs = System.nanoTime();
-                    XSpreadsheet aktuellesSheet = view.getActiveSheet();
-                    activeSheetNs = elapsedNs(abschnittNs);
-                    if (aktuellesSheet == null) {
-                        ergebnis = "keinAktivesSheet";
-                        return;
-                    }
-                    if (tabTimingAktiv) {
-                        sheetName = sheetName(aktuellesSheet);
-                    }
-
-                    XSpreadsheet vorherigesSheet = letztesSheet;
-                    letztesSheet = aktuellesSheet;
-
-                    if (aktuellesSheet == vorherigesSheet) {
-                        ergebnis = "gleichesSheet";
-                        return;
-                    }
-
-                    abschnittNs = System.nanoTime();
-                    boolean istAufZielSheet = zielSheetMatch.test(xDoc, aktuellesSheet);
-                    boolean warAufZielSheet = vorherigesSheet != null
-                            && zielSheetMatch.test(xDoc, vorherigesSheet);
-                    matchNs = elapsedNs(abschnittNs);
-
-                    if (!istAufZielSheet) {
-                        ergebnis = "keinZielSheet";
-                        return;
-                    }
-                    if (warAufZielSheet) {
-                        ergebnis = "zielSheetZuZielSheet";
-                        return;
-                    }
-                    if (SheetRunner.isRunning()) {
-                        ergebnis = "sheetRunnerLaeuft";
-                        return;
-                    }
-                    abschnittNs = System.nanoTime();
-                    boolean passendesDokument = istPassendesDokument(xDoc);
-                    systemNs = elapsedNs(abschnittNs);
-                    if (!passendesDokument) {
-                        ergebnis = "falschesTurniersystem";
-                        return;
-                    }
-                    if (SheetRunner.consumeSelectionChangeSuppression()) {
-                        logger.trace("selectionChanged: Unterdrückt – ausgelöst durch setActiveSheet()");
-                        ergebnis = "unterdrueckt";
-                        return;
-                    }
-                    key = schluesselLieferant.apply(xDoc, aktuellesSheet);
-                    abschnittNs = System.nanoTime();
-                    plane(xDoc, aktuellesSheet, "selectionChanged", traceId, key);
-                    planNs = elapsedNs(abschnittNs);
-                    ergebnis = "geplant";
-                } catch (RuntimeException t) {
-                    ergebnis = "fehler";
-                    logger.error("Fehler im SelectionChangeListener", t);
-                } finally {
-                    logTabTiming("SheetSync.selectionChanged", traceId, "selectionChanged",
-                            sheetName, key, ergebnis, startNs, viewNs, activeSheetNs, matchNs,
-                            systemNs, planNs);
-                }
-            }
-
-            @Override
-            public void disposing(EventObject e) {
-                SheetSyncDebouncer.get().cancelAlle(xDoc);
-            }
-        });
-
-        logger.debug("XSelectionChangeListener für Sheet-Sync registriert");
-    }
-
-    // ── OnFocus ─────────────────────────────────────────────────────────────
-
-    @Override
-    public void onFocus(Object source) {
-        boolean tabTimingAktiv = PerfLog.isEnabled();
+    public void aufSheetAktiviert(XSpreadsheetDocument xDoc, XSpreadsheet sheet, String trigger,
+            String traceId) {
+        boolean perf = PerfLog.isEnabled();
         long startNs = System.nanoTime();
-        String traceId = traceId(null, startNs);
-        String sheetName = "<unbekannt>";
         String key = null;
         String ergebnis = "start";
-        long viewNs = 0;
-        long activeSheetNs = 0;
-        long matchNs = 0;
-        long systemNs = 0;
-        long planNs = 0;
         try {
-            XModel xModel = Lo.qi(XModel.class, source);
-            if (xModel == null) {
-                ergebnis = "keinModel";
-                return;
-            }
-
-            XSpreadsheetDocument xDoc = Lo.qi(XSpreadsheetDocument.class, xModel);
-            traceId = traceId(xDoc, startNs);
-            if (xDoc == null) {
-                ergebnis = "keinSpreadsheetDocument";
-                return;
-            }
-
-            var aktuellerController = xModel.getCurrentController();
-            long abschnittNs = System.nanoTime();
-            XSpreadsheetView view = Lo.qi(XSpreadsheetView.class, aktuellerController);
-            viewNs = elapsedNs(abschnittNs);
-            if (view == null) {
-                ergebnis = "keineSpreadsheetView";
-                return;
-            }
-
-            abschnittNs = System.nanoTime();
-            XSpreadsheet aktuellesSheet = view.getActiveSheet();
-            activeSheetNs = elapsedNs(abschnittNs);
-            if (aktuellesSheet == null) {
-                ergebnis = "keinAktivesSheet";
-                return;
-            }
-            if (tabTimingAktiv) {
-                sheetName = sheetName(aktuellesSheet);
-            }
-
-            abschnittNs = System.nanoTime();
-            boolean istAufZielSheet = zielSheetMatch.test(xDoc, aktuellesSheet);
-            matchNs = elapsedNs(abschnittNs);
-            if (!istAufZielSheet) {
+            if (!zielSheetMatch.test(xDoc, sheet)) {
                 ergebnis = "keinZielSheet";
                 return;
             }
-            if (SheetRunner.isRunning()) {
-                ergebnis = "sheetRunnerLaeuft";
-                return;
-            }
-            abschnittNs = System.nanoTime();
-            boolean passendesDokument = istPassendesDokument(xDoc);
-            systemNs = elapsedNs(abschnittNs);
-            if (!passendesDokument) {
+            if (!istPassendesDokument(xDoc)) {
                 ergebnis = "falschesTurniersystem";
                 return;
             }
-            if (SheetRunner.consumeSelectionChangeSuppression()) {
-                logger.debug("onFocus: Unterdrückt – ausgelöst durch setActiveSheet()");
-                ergebnis = "unterdrueckt";
-                return;
-            }
-
-            key = schluesselLieferant.apply(xDoc, aktuellesSheet);
-            if (key != null && SheetSyncSignaturStore.verifyVeraltet(xDoc, key, VERIFY_INTERVAL)) {
+            key = schluesselLieferant.apply(xDoc, sheet);
+            if (TRIGGER_FOCUS.equals(trigger) && key != null
+                    && SheetSyncSignaturStore.verifyVeraltet(xDoc, key, VERIFY_INTERVAL)) {
                 markiereForce(xDoc, key);
             }
-            abschnittNs = System.nanoTime();
-            plane(xDoc, aktuellesSheet, "onFocus", traceId, key);
-            planNs = elapsedNs(abschnittNs);
+            plane(xDoc, sheet, trigger, traceId, key);
             ergebnis = "geplant";
-
         } catch (RuntimeException t) {
             ergebnis = "fehler";
-            logger.error("Fehler beim OnFocus-Sheet-Sync", t);
+            logger.error("Fehler beim Sheet-Sync (trigger={})", trigger, t);
         } finally {
-            logTabTiming("SheetSync.onFocus", traceId, "onFocus", sheetName, key, ergebnis,
-                    startNs, viewNs, activeSheetNs, matchNs, systemNs, planNs);
+            if (perf) {
+                PerfLog.log(logger,
+                        "[TAB-TIMING] SheetSync.aufSheetAktiviert trace={} trigger={} system={} sheet={} key={} ergebnis={} gesamt={} ms thread={}",
+                        traceId, trigger, erwartesTurnierSystem, SheetFokusToken.sheetName(sheet),
+                        key, ergebnis, (System.nanoTime() - startNs) / 1_000_000L,
+                        Thread.currentThread().getName());
+            }
         }
     }
 
@@ -489,7 +292,7 @@ public final class SheetSyncListener implements IGlobalEventListener, ITurnierEv
         }
         if (PerfLog.isEnabled()) {
             PerfLog.log(logger, "[TAB-TIMING] SheetSync.schedule trace={} trigger={} key={} system={} sheet={} thread={}",
-                    traceId, grund, key, erwartesTurnierSystem, sheetName(sheet), Thread.currentThread().getName());
+                    traceId, grund, key, erwartesTurnierSystem, SheetFokusToken.sheetName(sheet), Thread.currentThread().getName());
         }
         SheetSyncDebouncer.get().schedule(xDoc, key,
                 () -> pruefeUndStarte(xDoc, sheet, sig, key, grund, 1));
@@ -602,43 +405,5 @@ public final class SheetSyncListener implements IGlobalEventListener, ITurnierEv
 
     private static String forceKey(XSpreadsheetDocument xDoc, String key) {
         return System.identityHashCode(xDoc) + ":" + key;
-    }
-
-    private static long elapsedNs(long startNs) {
-        return System.nanoTime() - startNs;
-    }
-
-    private static long nsToMs(long ns) {
-        return ns / 1_000_000L;
-    }
-
-    private static String traceId(XSpreadsheetDocument xDoc, long startNs) {
-        return (xDoc == null ? "keinDoc" : Integer.toString(System.identityHashCode(xDoc)))
-                + ":" + Long.toUnsignedString(startNs);
-    }
-
-    private static String sheetName(XSpreadsheet sheet) {
-        if (sheet == null) return "<keinSheet>";
-        try {
-            XNamed xNamed = Lo.qi(XNamed.class, sheet);
-            if (xNamed != null && xNamed.getName() != null) {
-                return xNamed.getName();
-            }
-        } catch (RuntimeException e) {
-            logger.trace("Sheet-Name für Tab-Timing nicht ermittelbar", e);
-        }
-        return "<unbekannt>";
-    }
-
-    private void logTabTiming(String abschnitt, String traceId, String trigger,
-            String sheetName, String key, String ergebnis, long startNs, long viewNs,
-            long activeSheetNs, long matchNs, long systemNs, long planNs) {
-        if (!PerfLog.isEnabled()) return;
-        long gesamtMs = nsToMs(elapsedNs(startNs));
-        PerfLog.log(logger, "[TAB-TIMING] {} trace={} trigger={} system={} sheet={} key={} ergebnis={} "
-                + "gesamt={} ms view={} ms activeSheet={} ms match={} ms system={} ms plan={} ms thread={}",
-                abschnitt, traceId, trigger, erwartesTurnierSystem, sheetName, key, ergebnis,
-                gesamtMs, nsToMs(viewNs), nsToMs(activeSheetNs), nsToMs(matchNs),
-                nsToMs(systemNs), nsToMs(planNs), Thread.currentThread().getName());
     }
 }

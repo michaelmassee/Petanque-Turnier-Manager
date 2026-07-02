@@ -15,6 +15,7 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.addins.UpdatePropertieFunctionsSheetRecalcOnLoad;
 import de.petanqueturniermanager.helper.sheetsync.EingabeSignatur;
+import de.petanqueturniermanager.helper.sheetsync.SheetAktivierungsDispatcher;
 import de.petanqueturniermanager.helper.sheetsync.SheetSyncListener;
 import de.petanqueturniermanager.helper.rangliste.SignaturQuellen;
 import de.petanqueturniermanager.helper.perflog.PerfLog;
@@ -101,6 +102,8 @@ public class PetanqueTurnierMngrSingleton {
 	private static final Logger logger = LogManager.getLogger(PetanqueTurnierMngrSingleton.class);
 
 	private static GlobalEventListener globalEventListener;
+	/** Zentraler Verteiler für Sheet-Aktivierungen – hält genau einen UNO-Selection-Listener pro Controller. */
+	private static SheetAktivierungsDispatcher sheetAktivierungsDispatcher;
 	private static final TurnierEventHandler turnierEventHandler = new TurnierEventHandler();
 	private static XComponentContext sharedContext;
 
@@ -191,61 +194,64 @@ public class PetanqueTurnierMngrSingleton {
 		t = logTimingAndReset("addGlobalEventListener SidebarPanelDelegator", t);
 		addGlobalEventListener(new UpdatePropertieFunctionsSheetRecalcOnLoad());
 		t = logTimingAndReset("addGlobalEventListener UpdatePropertieFunctionsSheetRecalcOnLoad", t);
-		addGlobalEventListener(SheetSyncListener.fuerSchluessel(context,
+		sheetAktivierungsDispatcher = new SheetAktivierungsDispatcher();
+		addGlobalEventListener(sheetAktivierungsDispatcher);
+		t = logTimingAndReset("addGlobalEventListener SheetAktivierungsDispatcher", t);
+		sheetAktivierungsDispatcher.registriere(SheetSyncListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_RANGLISTE,
 				TurnierSystem.SCHWEIZER,
 				new EingabeSignatur(SignaturQuellen::fuerSchweizer),
 				(ws, ignored) -> new SchweizerRanglisteSheetUpdate(ws)));
 		t = logTimingAndReset("SheetSyncListener SCHWEIZER", t);
-		addGlobalEventListener(SheetSyncListener.fuerSchluessel(context,
+		sheetAktivierungsDispatcher.registriere(SheetSyncListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX,
 				TurnierSystem.MAASTRICHTER,
 				new EingabeSignatur(SignaturQuellen::fuerMaastrichter),
 				(ws, ignored) -> new MaastrichterVorrundenRanglisteSheetUpdate(ws)));
 		t = logTimingAndReset("SheetSyncListener MAASTRICHTER", t);
-		addGlobalEventListener(SheetSyncListener.fuerSchluessel(context,
+		sheetAktivierungsDispatcher.registriere(SheetSyncListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_POULE_VORRUNDEN_RANGLISTE,
 				TurnierSystem.POULE,
 				new EingabeSignatur(SignaturQuellen::fuerPoule),
 				(ws, ignored) -> new PouleVorrundenRanglisteSheetUpdate(ws)));
 		t = logTimingAndReset("SheetSyncListener POULE", t);
-		addGlobalEventListener(SheetSyncListener.fuerSchluessel(context,
+		sheetAktivierungsDispatcher.registriere(SheetSyncListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_FORMULEX_RANGLISTE,
 				TurnierSystem.FORMULEX,
 				new EingabeSignatur(SignaturQuellen::fuerFormuleX),
 				(ws, ignored) -> new FormuleXRanglisteSheetUpdate(ws)));
 		t = logTimingAndReset("SheetSyncListener FORMULEX", t);
-		addGlobalEventListener(SheetSyncListener.fuerSchluessel(context,
+		sheetAktivierungsDispatcher.registriere(SheetSyncListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_JGJ_RANGLISTE,
 				TurnierSystem.JGJ,
 				new EingabeSignatur(SignaturQuellen::fuerJGJ),
 				(ws, ignored) -> new JGJRanglisteSheetUpdate(ws)));
 		t = logTimingAndReset("SheetSyncListener JGJ", t);
-		addGlobalEventListener(SheetSyncListener.fuerSchluessel(context,
+		sheetAktivierungsDispatcher.registriere(SheetSyncListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_JGJ_GESAMTRANGLISTE,
 				TurnierSystem.JGJ,
 				new EingabeSignatur(SignaturQuellen::fuerJGJ),
 				(ws, ignored) -> new JGJGesamtranglisteSheetUpdate(ws)));
 		t = logTimingAndReset("SheetSyncListener JGJ-GESAMT", t);
-		addGlobalEventListener(SheetSyncListener.fuerSchluessel(context,
+		sheetAktivierungsDispatcher.registriere(SheetSyncListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_LIGA_RANGLISTE,
 				TurnierSystem.LIGA,
 				new EingabeSignatur(SignaturQuellen::fuerLiga),
 				(ws, ignored) -> new LigaRanglisteSheetUpdate(ws)));
 		t = logTimingAndReset("SheetSyncListener LIGA", t);
-		addGlobalEventListener(SheetSyncListener.fuerSchluessel(context,
+		sheetAktivierungsDispatcher.registriere(SheetSyncListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_KASKADE_GRUPPENRANGLISTE,
 				TurnierSystem.KASKADE,
 				new EingabeSignatur(SignaturQuellen::fuerKaskade),
 				(ws, ignored) -> new KaskadeGruppenRanglisteSheetUpdate(ws)));
 		t = logTimingAndReset("SheetSyncListener TRIPTETE", t);
-		addGlobalEventListener(SheetSyncListener.fuerSchluessel(context,
+		sheetAktivierungsDispatcher.registriere(SheetSyncListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_TRIPTETE_RANGLISTE,
 				TurnierSystem.TRIPTETE,
 				new EingabeSignatur(SignaturQuellen::fuerTripTete),
 				(ws, ignored) -> new TripTeteRanglisteSheetUpdate(ws)));
 		t = logTimingAndReset("SheetSyncListener KASKADE", t);
-		addGlobalEventListener(SheetSyncListener.fuerSpieltagRangliste(context,
+		sheetAktivierungsDispatcher.registriere(SheetSyncListener.fuerSpieltagRangliste(context,
 				TurnierSystem.SUPERMELEE,
 				spieltagNr -> new EingabeSignatur(
 						xDoc -> SignaturQuellen.fuerSupermeleeSpieltag(xDoc, spieltagNr)),
@@ -256,7 +262,7 @@ public class PetanqueTurnierMngrSingleton {
 					return new SpieltagRanglisteSheetUpdate(ws, nr);
 				}));
 		t = logTimingAndReset("SheetSyncListener SUPERMELEE-SPIELTAG", t);
-		addGlobalEventListener(SheetSyncListener.fuerSchluessel(context,
+		sheetAktivierungsDispatcher.registriere(SheetSyncListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_ENDRANGLISTE,
 				TurnierSystem.SUPERMELEE,
 				new EingabeSignatur(SignaturQuellen::fuerSupermeleeEnd),
@@ -398,7 +404,7 @@ public class PetanqueTurnierMngrSingleton {
 		logTimingAndReset("SheetSyncListener CHECKIN-LISTEN", t);
 
 		// Spielplan-Formatierer: reparieren Zebra und editierbare-Felder-CF beim Tab-Aktivieren
-		addGlobalEventListener(SpielplanFormatiererActivationListener.fuerSchluessel(context,
+		sheetAktivierungsDispatcher.registriere(SpielplanFormatiererActivationListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_LIGA_SPIELPLAN,
 				(ws, xSheet) -> new SpielplanFormatiererSheetRunner(ws, xSheet, iSheet -> {
 					int letzteZeile = LigaSpielPlanSheet.letzteSpielZeile(iSheet);
@@ -420,7 +426,7 @@ public class PetanqueTurnierMngrSingleton {
 							LigaBlattschutzKonfiguration.get());
 				})));
 
-		addGlobalEventListener(SpielplanFormatiererActivationListener.fuerSchluessel(context,
+		sheetAktivierungsDispatcher.registriere(SpielplanFormatiererActivationListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_JGJ_SPIELPLAN,
 				(ws, xSheet) -> new SpielplanFormatiererSheetRunner(ws, xSheet, iSheet -> {
 					Position letzte = RangeSearchHelper.from(iSheet, RangePosition.from(
@@ -442,7 +448,7 @@ public class PetanqueTurnierMngrSingleton {
 							JGJBlattschutzKonfiguration.get());
 				})));
 
-		addGlobalEventListener(SpielplanFormatiererActivationListener.fuerSchluessel(context,
+		sheetAktivierungsDispatcher.registriere(SpielplanFormatiererActivationListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_TRIPTETE_SPIELPLAN,
 				(ws, xSheet) -> new SpielplanFormatiererSheetRunner(ws, xSheet, iSheet -> {
 					Position letzte = RangeSearchHelper.from(iSheet, RangePosition.from(
@@ -468,7 +474,7 @@ public class PetanqueTurnierMngrSingleton {
 							TripTeteBlattschutzKonfiguration.get());
 				})));
 
-		addGlobalEventListener(SpielplanFormatiererActivationListener.fuerPraefix(context,
+		sheetAktivierungsDispatcher.registriere(SpielplanFormatiererActivationListener.fuerPraefix(context,
 				SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_SPIELRUNDE_PREFIX,
 				(ws, xSheet) -> new SpielplanFormatiererSheetRunner(ws, xSheet, iSheet -> {
 					Position letzte = RangeSearchHelper.from(iSheet, RangePosition.from(
@@ -492,7 +498,7 @@ public class PetanqueTurnierMngrSingleton {
 							SchweizerBlattschutzKonfiguration.get());
 				})));
 
-		addGlobalEventListener(SpielplanFormatiererActivationListener.fuerPraefix(context,
+		sheetAktivierungsDispatcher.registriere(SpielplanFormatiererActivationListener.fuerPraefix(context,
 				SheetMetadataHelper.SCHLUESSEL_FORMULEX_SPIELRUNDE_PREFIX,
 				(ws, xSheet) -> new SpielplanFormatiererSheetRunner(ws, xSheet, iSheet -> {
 					Position letzte = RangeSearchHelper.from(iSheet, RangePosition.from(
@@ -517,7 +523,7 @@ public class PetanqueTurnierMngrSingleton {
 							FormuleXBlattschutzKonfiguration.get());
 				})));
 
-		addGlobalEventListener(SpielplanFormatiererActivationListener.fuerPraefix(context,
+		sheetAktivierungsDispatcher.registriere(SpielplanFormatiererActivationListener.fuerPraefix(context,
 				SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_SPIELRUNDE_PREFIX,
 				(ws, xSheet) -> new SpielplanFormatiererSheetRunner(ws, xSheet, iSheet -> {
 					Position letzte = RangeSearchHelper.from(iSheet, RangePosition.from(
@@ -541,7 +547,7 @@ public class PetanqueTurnierMngrSingleton {
 							SupermeleeBlattschutzKonfiguration.get());
 				})));
 
-		addGlobalEventListener(SpielplanFormatiererActivationListener.fuerPraefix(context,
+		sheetAktivierungsDispatcher.registriere(SpielplanFormatiererActivationListener.fuerPraefix(context,
 				SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX,
 				(ws, xSheet) -> new SpielplanFormatiererSheetRunner(ws, xSheet, iSheet -> {
 					Position letzte = RangeSearchHelper.from(iSheet, RangePosition.from(
@@ -608,7 +614,7 @@ public class PetanqueTurnierMngrSingleton {
 	 * beim nächsten Tab-Wechsel neu sortiert.
 	 */
 	private static void addSheetSyncMitPropertyTrigger(SheetSyncListener listner) {
-		addGlobalEventListener(listner);
+		sheetAktivierungsDispatcher.registriere(listner);
 		addTurnierEventListener(listner);
 	}
 

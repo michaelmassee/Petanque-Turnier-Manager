@@ -27,7 +27,7 @@ class SpielplanFormatiererActivationListenerTest {
         assertThat(listener.merkeNeuenFokus(xDoc, xSheet)).isTrue();
         assertThat(listener.merkeNeuenFokus(xDoc, xSheet)).isFalse();
 
-        listener.onUnfocus(null);
+        listener.aufFokusVerloren();
 
         assertThat(listener.merkeNeuenFokus(xDoc, xSheet)).isTrue();
     }
@@ -39,8 +39,8 @@ class SpielplanFormatiererActivationListenerTest {
         var proxy2 = sheetProxy("Spielplan");
 
         assertThat(proxy1).isNotSameAs(proxy2);
-        assertThat(SpielplanFormatiererActivationListener.fokusToken(xDoc, proxy1))
-                .isEqualTo(SpielplanFormatiererActivationListener.fokusToken(xDoc, proxy2));
+        assertThat(SheetFokusToken.von(xDoc, proxy1))
+                .isEqualTo(SheetFokusToken.von(xDoc, proxy2));
     }
 
     private static XSpreadsheet sheetProxy(String name) {
