@@ -340,15 +340,21 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
             // ---- URL-Modus ----
             String aktuelleUrl = ausgewaehlterPanelIndex < panelUrls.size() ? panelUrls.get(ausgewaehlterPanelIndex) : "";
             fuegeFixedTextEinDyn("lblPanelUrl", I18n.get("webserver.composite.konfig.panel.url.label"), 5, konfFelderY, 20, ZEILE_H);
-            fuegeEditEinDyn("tfUrl", aktuelleUrl, 28, konfFelderY, 380, ZEILE_H);
+            fuegeEditEinDyn("tfUrl", aktuelleUrl, 28, konfFelderY, 300, ZEILE_H);
+            int aktuellerZoom = ausgewaehlterPanelIndex < panelZooms.size() ? panelZooms.get(ausgewaehlterPanelIndex) : GlobalProperties.DEFAULT_ZOOM;
+            fuegeFixedTextEinDyn("lblPanelZoom", I18n.get("webserver.composite.konfig.panel.zoom.label"), 333, konfFelderY, 25, ZEILE_H);
+            fuegeEditEinDyn("txtPanelZoom", String.valueOf(aktuellerZoom), 361, konfFelderY, 35, ZEILE_H);
             fuegeFixedTextEinDyn("lblUrlHinweis", I18n.get("webserver.composite.konfig.panel.url.hinweis"), 5, konfFelderY2, 400, ZEILE_H);
         } else if (istDateiModus) {
             // ---- Lokale statische Datei ----
             String aktuelleDatei = ausgewaehlterPanelIndex < panelUrls.size() ? panelUrls.get(ausgewaehlterPanelIndex) : "";
             fuegeFixedTextEinDyn("lblPanelDatei", I18n.get("webserver.composite.konfig.panel.datei.label"), 5, konfFelderY, 25, ZEILE_H);
-            fuegeEditEinDyn("tfUrl", aktuelleDatei, 33, konfFelderY, 332, ZEILE_H);
-            fuegeButtonEinDyn("btnPanelDateiAuswaehlen", "...", 370, konfFelderY, 38, ZEILE_H);
+            fuegeEditEinDyn("tfUrl", aktuelleDatei, 33, konfFelderY, 230, ZEILE_H);
+            fuegeButtonEinDyn("btnPanelDateiAuswaehlen", "...", 266, konfFelderY, 30, ZEILE_H);
             registriereActionListenerDyn("btnPanelDateiAuswaehlen", this::waehleLokaleDatei);
+            int aktuellerZoom = ausgewaehlterPanelIndex < panelZooms.size() ? panelZooms.get(ausgewaehlterPanelIndex) : GlobalProperties.DEFAULT_ZOOM;
+            fuegeFixedTextEinDyn("lblPanelZoom", I18n.get("webserver.composite.konfig.panel.zoom.label"), 300, konfFelderY, 25, ZEILE_H);
+            fuegeEditEinDyn("txtPanelZoom", String.valueOf(aktuellerZoom), 328, konfFelderY, 35, ZEILE_H);
             fuegeFixedTextEinDyn("lblDateiHinweis", I18n.get("webserver.composite.konfig.panel.datei.hinweis"), 5, konfFelderY2, 400, ZEILE_H);
         } else {
             // ---- Blatt-Modus ----
@@ -684,7 +690,8 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
                 if (urlFehler != null) {
                     throw new UngueltigeEingabeException(urlFehler);
                 }
-                panels.add(new PanelEintragRoh(PanelTyp.URL, "", GlobalProperties.DEFAULT_ZOOM,
+                int pZoom = i < panelZooms.size() ? panelZooms.get(i) : GlobalProperties.DEFAULT_ZOOM;
+                panels.add(new PanelEintragRoh(PanelTyp.URL, "", pZoom,
                         GlobalProperties.DEFAULT_SICHTBARER_TABELLENANTEIL,
                         PanelAusrichtung.KEIN, PanelAusrichtung.KEIN, false, url));
             } else if (panelTyp == PanelTyp.STATISCHE_DATEI) {
@@ -693,7 +700,8 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
                 if (dateiFehler != null) {
                     throw new UngueltigeEingabeException(dateiFehler);
                 }
-                panels.add(new PanelEintragRoh(PanelTyp.STATISCHE_DATEI, "", GlobalProperties.DEFAULT_ZOOM,
+                int pZoom = i < panelZooms.size() ? panelZooms.get(i) : GlobalProperties.DEFAULT_ZOOM;
+                panels.add(new PanelEintragRoh(PanelTyp.STATISCHE_DATEI, "", pZoom,
                         GlobalProperties.DEFAULT_SICHTBARER_TABELLENANTEIL,
                         PanelAusrichtung.KEIN, PanelAusrichtung.KEIN, false, datei));
             } else if (panelTyp == PanelTyp.TURNIERSTARTSEITE) {

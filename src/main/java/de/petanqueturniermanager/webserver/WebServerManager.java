@@ -585,7 +585,7 @@ public final class WebServerManager implements TimerListener {
                                         neuerPanelEintrag.horizontalAusrichtung(), neuerPanelEintrag.vertikalAusrichtung(), neuerPanelEintrag.blattnameAnzeigen(),
                                         neuerPanelEintrag.externeUrl()));
                                 neueUrlCache.put(i, neuerPanelEintrag.externeUrl());
-                                alleInitPanels.add(CompositePanelNachricht.url(i, neuerPanelEintrag.externeUrl()));
+                                alleInitPanels.add(CompositePanelNachricht.url(i, neuerPanelEintrag.zoom(), neuerPanelEintrag.externeUrl()));
                                 continue;
                             }
                             if (neuerPanelEintrag.typ() == PanelTyp.STATISCHE_DATEI) {
@@ -595,7 +595,7 @@ public final class WebServerManager implements TimerListener {
                                         neuerPanelEintrag.horizontalAusrichtung(), neuerPanelEintrag.vertikalAusrichtung(), false,
                                         neuerPanelEintrag.externeUrl()));
                                 neueUrlCache.put(i, neuerPanelEintrag.externeUrl());
-                                alleInitPanels.add(CompositePanelNachricht.statischeDatei(i, neuerPanelEintrag.externeUrl()));
+                                alleInitPanels.add(CompositePanelNachricht.statischeDatei(i, neuerPanelEintrag.zoom(), neuerPanelEintrag.externeUrl()));
                                 continue;
                             }
                             if (neuerPanelEintrag.typ() == PanelTyp.TURNIERSTARTSEITE) {
@@ -911,10 +911,10 @@ public final class WebServerManager implements TimerListener {
                 alleInitPanels.add(CompositePanelNachricht.timer(
                         i, panelKonfig.zoom(), panelKonfig.horizontalAusrichtung(), panelKonfig.vertikalAusrichtung(), letzterTimerZustand));
             } else if (panelKonfig.typ() == PanelTyp.URL) {
-                alleInitPanels.add(CompositePanelNachricht.url(i, panelKonfig.externeUrl()));
+                alleInitPanels.add(CompositePanelNachricht.url(i, panelKonfig.zoom(), panelKonfig.externeUrl()));
                 letzteCompositeUrls.get(konfig.port()).put(i, panelKonfig.externeUrl());
             } else if (panelKonfig.typ() == PanelTyp.STATISCHE_DATEI) {
-                alleInitPanels.add(CompositePanelNachricht.statischeDatei(i, panelKonfig.externeUrl()));
+                alleInitPanels.add(CompositePanelNachricht.statischeDatei(i, panelKonfig.zoom(), panelKonfig.externeUrl()));
                 letzteCompositeUrls.get(konfig.port()).put(i, panelKonfig.externeUrl());
             } else if (panelKonfig.typ() == PanelTyp.TURNIERSTARTSEITE) {
                 alleInitPanels.add(CompositePanelNachricht.startseite(i, leereStartseiteNachricht(0)));
@@ -1171,8 +1171,8 @@ public final class WebServerManager implements TimerListener {
                     String letzteQuelle = urlCache.get(i);
                     if (!java.util.Objects.equals(letzteQuelle, panelKonfig.externeUrl())) {
                         panelNachrichten.add(panelKonfig.typ() == PanelTyp.URL
-                                ? CompositePanelNachricht.url(i, panelKonfig.externeUrl())
-                                : CompositePanelNachricht.statischeDatei(i, panelKonfig.externeUrl()));
+                                ? CompositePanelNachricht.url(i, panelKonfig.zoom(), panelKonfig.externeUrl())
+                                : CompositePanelNachricht.statischeDatei(i, panelKonfig.zoom(), panelKonfig.externeUrl()));
                         urlCache.put(i, panelKonfig.externeUrl());
                         irgendeineAenderung = true;
                         erstesRendering = erstesRendering || letzteQuelle == null;
@@ -1263,8 +1263,8 @@ public final class WebServerManager implements TimerListener {
                     String cachedQuelle = urlCache.get(i);
                     if (cachedQuelle != null) {
                         alleInitPanels.add(panelKonfig.typ() == PanelTyp.URL
-                                ? CompositePanelNachricht.url(i, cachedQuelle)
-                                : CompositePanelNachricht.statischeDatei(i, cachedQuelle));
+                                ? CompositePanelNachricht.url(i, panelKonfig.zoom(), cachedQuelle)
+                                : CompositePanelNachricht.statischeDatei(i, panelKonfig.zoom(), cachedQuelle));
                     }
                     continue;
                 }

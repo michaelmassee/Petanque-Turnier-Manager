@@ -88,11 +88,12 @@ public record CompositePanelNachricht(
      * das Frontend behält den vorigen Wert (Reducer-Fallback).
      *
      * @param panelId    Panel-Index
+     * @param zoom       Zoom-Faktor in %
      * @param externeUrl die anzuzeigende URL (validiert: nur http/https)
      */
-    static CompositePanelNachricht url(int panelId, String externeUrl) {
+    static CompositePanelNachricht url(int panelId, int zoom, String externeUrl) {
         return new CompositePanelNachricht(
-                panelId, 100, 100, null, null, false, "",
+                panelId, zoom, 100, null, null, false, "",
                 null, null, null, null, null, null,
                 null, null, null, null, null, null, 0,
                 externeUrl, null, null, null, null, null, null, null, null);
@@ -101,12 +102,16 @@ public record CompositePanelNachricht(
     /**
      * Erstellt eine Panel-Nachricht für eine lokale statische Datei. Der Browser erhält
      * nur den lokalen Composite-Endpunkt, nicht den Dateipfad auf dem Rechner.
+     *
+     * @param panelId   Panel-Index
+     * @param zoom      Zoom-Faktor in %
+     * @param dateiPfad lokaler Dateipfad (nur zur Cache-Key-Bildung, nicht an den Browser gesendet)
      */
-    static CompositePanelNachricht statischeDatei(int panelId, String dateiPfad) {
+    static CompositePanelNachricht statischeDatei(int panelId, int zoom, String dateiPfad) {
         String cacheKey = dateiPfad == null ? "" : Integer.toHexString(dateiPfad.hashCode());
         String url = "local-panel/" + panelId + "?v=" + cacheKey;
         return new CompositePanelNachricht(
-                panelId, 100, 100, null, null, false, "",
+                panelId, zoom, 100, null, null, false, "",
                 null, null, null, null, null, null,
                 null, null, null, null, null, null, 0,
                 url, null, null, null, null, null, null, null, null);

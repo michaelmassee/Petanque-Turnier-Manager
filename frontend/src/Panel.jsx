@@ -223,13 +223,21 @@ export default function Panel({ table, sheetnamenAnzeigen, headerFooterUnterdrue
       );
     }
     return (
-      <iframe
-        src={table.externeUrl}
-        style={{ width: '100%', height: '100%', border: 'none' }}
-        sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
-        title={table.externeUrl}
-        onError={() => setIframeFehler(true)}
-      />
+      <div style={{ width: '100%', height: '100%', overflow: 'hidden' }}>
+        <iframe
+          src={table.externeUrl}
+          style={{
+            width: `${100 / zoomFaktor}%`,
+            height: `${100 / zoomFaktor}%`,
+            border: 'none',
+            transform: zoomFaktor !== 1 ? `scale(${zoomFaktor})` : undefined,
+            transformOrigin: 'top left',
+          }}
+          sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+          title={table.externeUrl}
+          onError={() => setIframeFehler(true)}
+        />
+      </div>
     );
   }
 
