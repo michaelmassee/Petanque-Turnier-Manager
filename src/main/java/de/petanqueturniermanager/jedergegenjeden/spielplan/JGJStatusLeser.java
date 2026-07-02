@@ -78,8 +78,15 @@ public class JGJStatusLeser {
                     continue;
                 }
 
-                boolean gespielt = sheet.getCellByPosition(JGJSpielPlanSheet.SPIELE_A_SPALTE, zeile)
-                        .getType() != CellContentType.EMPTY;
+                // "gespielt" an den Ergebnis-Eingabespalten erkennen, NICHT an der Arbeitsspalte
+                // SPIELE_A_SPALTE: die enthält die Formel WENN(PkA>PkB;1;0) und ist daher auch bei
+                // leerem Ergebnis nie leer (immer 0) → würde jedes Spiel als gespielt zählen.
+                // Ein Ergebnis liegt vor, sobald eine der Punkte-Eingaben gefüllt ist (analog
+                // JGJRanglisteRechner: pktA>0 || pktB>0; Freispiele sind vorbelegt).
+                boolean gespielt = sheet.getCellByPosition(JGJSpielPlanSheet.SPIELPNKT_A_SPALTE, zeile)
+                        .getType() != CellContentType.EMPTY
+                        || sheet.getCellByPosition(JGJSpielPlanSheet.SPIELPNKT_B_SPALTE, zeile)
+                                .getType() != CellContentType.EMPTY;
 
                 if (istHinrunde) {
                     hrGesamt++;

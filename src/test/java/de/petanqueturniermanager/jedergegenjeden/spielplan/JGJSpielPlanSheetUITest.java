@@ -54,6 +54,29 @@ public class JGJSpielPlanSheetUITest extends BaseCalcUITest {
 	}
 
 	/**
+	 * Regression: Ein frisch erstellter Spielplan ohne eingetragene Ergebnisse darf NICHT als
+	 * "beendet" gemeldet werden. Frueher wurde "gespielt" an der Formel-Arbeitsspalte
+	 * (WENN(PkA&gt;PkB;1;0), immer 0) erkannt statt an den Ergebnis-Eingabespalten – dadurch
+	 * galten alle Spiele als gespielt und der Status sprang sofort auf "beendet".
+	 */
+	@Test
+	public void testStatusNichtBeendetOhneErgebnisse() throws GenerateException {
+		logger.info("testStatusNichtBeendetOhneErgebnisse");
+		new JGJKonfigurationSheet(wkingSpreadsheet).setRueckrunde(true);
+		new JGJSpielPlanSheet(wkingSpreadsheet).run();
+
+		JGJTurnierSchritt status = JGJStatusLeser.von(wkingSpreadsheet).liesStatus();
+		assertThat(status.spielplanVorhanden()).as("Spielplan muss erkannt werden").isTrue();
+		assertThat(status.hrGesamt()).as("Hinrunde muss Spiele enthalten").isGreaterThan(0);
+		assertThat(status.hrGespielt())
+				.as("Ohne eingetragene Ergebnisse duerfen nicht alle Hinrunden-Spiele gespielt sein")
+				.isLessThan(status.hrGesamt());
+		assertThat(status.alleGespielt())
+				.as("Frischer Spielplan ohne Ergebnisse darf nicht 'beendet' sein")
+				.isFalse();
+	}
+
+	/**
 	 * Prueft die Spielnummern-Spalte: HR-1 bis HR-15 (Hinrunde), dann RR-1 bis RR-15 (Rueckrunde).<br>
 	 * 5 Teams ergeben 5 Runden x 3 Zeilen = 15 Zeilen pro Halbzeit.
 	 */
