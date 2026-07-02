@@ -16,6 +16,9 @@
 # DAUER-Modus (ANZAHL=0): vorher starten und laufen lassen. Jeder Dump bekommt einen
 # Zeitstempel; beim Freeze nur die Uhrzeit merken und die Datei schicken.
 #
+# Die soffice.bin-PID wird automatisch ermittelt (echter Prozessname). Bei mehreren
+# LO-Instanzen die richtige per PTM_SOFFICE_PID=<pid> erzwingen.
+#
 # --native braucht ptrace-Rechte auf einen Fremd-Prozess. Standardmäßig elevatet das
 # Skript NUR gdb via sudo (ptrace_scope bleibt unangetastet, Ausgabedatei bleibt in
 # deinem Home). Daher --native interaktiv per `! ...` starten, damit sudo nach dem
@@ -58,13 +61,42 @@ else
 fi
 
 # ── soffice.bin finden (Dauer-Modus wartet auf Start) ─────────────────────────
-PID="$(pgrep -f 'soffice.bin' | head -n1 || true)"
+# Robust: primär der echte Prozessname (comm == soffice.bin). Ein reines
+# `pgrep -f 'soffice.bin'` würde auch Fremdprozesse treffen, die den String nur in
+# ihrer Kommandozeile führen (Editor, grep, dieses Skript, eine Shell-Zeile) – und
+# so die falsche PID nehmen. Fallback: Pfad-Match auf die Binary ohne die eigene PID.
+# Manuelle Vorgabe via Umgebungsvariable PTM_SOFFICE_PID=<pid> möglich.
+sofficePids() {
+    if [[ -n "${PTM_SOFFICE_PID:-}" ]]; then
+        echo "${PTM_SOFFICE_PID}"
+        return
+    fi
+    local pids
+    pids="$(pgrep -x 'soffice.bin' 2>/dev/null || true)"
+    if [[ -z "${pids}" ]]; then
+        # Pfad-Match (führender Slash) statt beliebigem Substring; eigene PID ausschließen.
+        pids="$(pgrep -f '[/]soffice\.bin' 2>/dev/null | grep -vx "$$" || true)"
+    fi
+    echo "${pids}"
+}
+
+waehlePid() {
+    local pids anzahl
+    pids="$(sofficePids)"
+    anzahl="$(printf '%s\n' ${pids} | grep -c . || true)"
+    if [[ "${anzahl}" -gt 1 ]]; then
+        echo "Hinweis: mehrere soffice.bin-Prozesse ($(printf '%s ' ${pids}))– nehme den ersten. Override: PTM_SOFFICE_PID=<pid>" >&2
+    fi
+    printf '%s\n' ${pids} | head -n1
+}
+
+PID="$(waehlePid)"
 if [[ -z "${PID}" ]]; then
     if [[ "${ANZAHL}" -eq 0 ]]; then
         echo "Warte auf soffice.bin … (Ctrl+C zum Abbrechen)"
         while [[ -z "${PID}" ]]; do
             sleep 1
-            PID="$(pgrep -f 'soffice.bin' | head -n1 || true)"
+            PID="$(waehlePid)"
         done
     else
         echo "FEHLER: kein laufender soffice.bin-Prozess gefunden." >&2
