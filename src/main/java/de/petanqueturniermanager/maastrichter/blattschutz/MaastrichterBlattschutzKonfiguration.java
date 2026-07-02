@@ -73,8 +73,14 @@ public class MaastrichterBlattschutzKonfiguration implements IBlattschutzKonfigu
         sammleMeldelisteSchutzInfo(xDoc, ws, infos);
         sammleVorrundenUndRanglisteSchutzInfos(xDoc, infos);
         sammleFinalrundenSchutzInfos(xDoc, infos);
+        sammleCheckinListeSchutzInfo(xDoc, infos);
 
         return infos;
+    }
+
+    private void sammleCheckinListeSchutzInfo(XSpreadsheetDocument xDoc, List<SheetSchutzInfo> infos) {
+        SheetMetadataHelper.findeSheet(xDoc, SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_CHECKIN_LISTE)
+                .ifPresent(sheet -> infos.add(SheetSchutzInfo.vollGesperrt(sheet)));
     }
 
     private void sammleMeldelisteSchutzInfo(XSpreadsheetDocument xDoc, WorkingSpreadsheet ws,

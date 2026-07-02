@@ -35,7 +35,7 @@ import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet;
  * <ul>
  *   <li><b>Meldeliste:</b> Name-Spalte (B)</li>
  *   <li><b>Spielplan:</b> Datum/Uhrzeit/Ort und Ergebnis-Spalten</li>
- *   <li><b>Rangliste, Direktvergleich:</b> vollständig gesperrt</li>
+ *   <li><b>Rangliste, Direktvergleich, Termine pro Teilnehmer:</b> vollständig gesperrt</li>
  * </ul>
  */
 public class LigaBlattschutzKonfiguration implements IBlattschutzKonfiguration, MeldeListeKonstanten {
@@ -117,5 +117,20 @@ public class LigaBlattschutzKonfiguration implements IBlattschutzKonfiguration, 
                 .ifPresent(sheet -> infos.add(SheetSchutzInfo.vollGesperrt(sheet)));
         SheetMetadataHelper.findeSheet(xDoc, SheetMetadataHelper.SCHLUESSEL_LIGA_DIREKTVERGLEICH)
                 .ifPresent(sheet -> infos.add(SheetSchutzInfo.vollGesperrt(sheet)));
+        sammleTermineProTeilnehmerSchutzInfos(xDoc, infos);
+    }
+
+    /**
+     * Sperrt die „Termine pro Teilnehmer"-Aushänge (je ein Blatt pro Team). Reine Anzeige-Blätter
+     * ohne Eingabezellen. Der Legacy-Einzelschlüssel wird für Alt-Dokumente defensiv mitbehandelt.
+     */
+    private void sammleTermineProTeilnehmerSchutzInfos(XSpreadsheetDocument xDoc, List<SheetSchutzInfo> infos) {
+        SheetMetadataHelper.findeSheet(xDoc, SheetMetadataHelper.SCHLUESSEL_LIGA_TERMINE_PRO_TEILNEHMER)
+                .ifPresent(sheet -> infos.add(SheetSchutzInfo.vollGesperrt(sheet)));
+        for (var key : SheetMetadataHelper.getSchluesselMitPrefix(xDoc,
+                SheetMetadataHelper.SCHLUESSEL_LIGA_TERMINE_PRO_TEILNEHMER_PREFIX)) {
+            SheetMetadataHelper.findeSheet(xDoc, key)
+                    .ifPresent(sheet -> infos.add(SheetSchutzInfo.vollGesperrt(sheet)));
+        }
     }
 }

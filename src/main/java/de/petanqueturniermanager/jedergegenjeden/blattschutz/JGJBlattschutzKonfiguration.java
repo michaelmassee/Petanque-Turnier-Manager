@@ -36,7 +36,7 @@ import de.petanqueturniermanager.ko.KoTurnierbaumSheet;
  * <ul>
  *   <li><b>Meldeliste:</b> Name-Spalte (B)</li>
  *   <li><b>Spielplan:</b> Spielpunkte A und B (nur bis zur letzten Datenzeile)</li>
- *   <li><b>Rangliste, Gesamtrangliste, Direktvergleich, Gruppen-Aushänge:</b> vollständig gesperrt</li>
+ *   <li><b>Rangliste, Gesamtrangliste, Direktvergleich, Checkin-Liste, Gruppen-Aushänge:</b> vollständig gesperrt</li>
  * </ul>
  */
 public class JGJBlattschutzKonfiguration implements IBlattschutzKonfiguration, MeldeListeKonstanten {
@@ -115,6 +115,8 @@ public class JGJBlattschutzKonfiguration implements IBlattschutzKonfiguration, M
         SheetMetadataHelper.findeSheet(xDoc, SheetMetadataHelper.SCHLUESSEL_JGJ_GESAMTRANGLISTE)
                 .ifPresent(sheet -> infos.add(SheetSchutzInfo.vollGesperrt(sheet)));
         SheetMetadataHelper.findeSheet(xDoc, SheetMetadataHelper.SCHLUESSEL_JGJ_DIREKTVERGLEICH)
+                .ifPresent(sheet -> infos.add(SheetSchutzInfo.vollGesperrt(sheet)));
+        SheetMetadataHelper.findeSheet(xDoc, SheetMetadataHelper.SCHLUESSEL_JGJ_CHECKIN_LISTE)
                 .ifPresent(sheet -> infos.add(SheetSchutzInfo.vollGesperrt(sheet)));
         fuegeVollgesperrteAusPrefix(xDoc, SheetMetadataHelper.SCHLUESSEL_JGJ_GRUPPE_SPIELPLAN_PREFIX, infos);
         sammleFinalrundenSchutzInfos(xDoc, infos);

@@ -110,6 +110,8 @@ public class FormuleXBlattschutzKonfiguration implements IBlattschutzKonfigurati
     private void sammleVollGesperrteSheets(XSpreadsheetDocument xDoc, List<SheetSchutzInfo> infos) {
         SheetMetadataHelper.findeSheet(xDoc, SheetMetadataHelper.SCHLUESSEL_FORMULEX_RANGLISTE)
                 .ifPresent(sheet -> infos.add(SheetSchutzInfo.vollGesperrt(sheet)));
+        SheetMetadataHelper.findeSheet(xDoc, SheetMetadataHelper.SCHLUESSEL_FORMULEX_CHECKIN_LISTE)
+                .ifPresent(sheet -> infos.add(SheetSchutzInfo.vollGesperrt(sheet)));
     }
 
     private int ermittleLetzteSpielrundeZeile(com.sun.star.sheet.XSpreadsheet sheet) {

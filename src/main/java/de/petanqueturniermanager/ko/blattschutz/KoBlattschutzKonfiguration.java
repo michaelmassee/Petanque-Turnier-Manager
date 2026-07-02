@@ -69,8 +69,14 @@ public class KoBlattschutzKonfiguration implements IBlattschutzKonfiguration {
 
         sammleMeldelisteSchutzInfo(xDoc, konfigSheet, infos);
         sammleTurnierbaumSchutzInfos(xDoc, infos);
+        sammleCheckinListeSchutzInfo(xDoc, infos);
 
         return infos;
+    }
+
+    private void sammleCheckinListeSchutzInfo(XSpreadsheetDocument xDoc, List<SheetSchutzInfo> infos) {
+        SheetMetadataHelper.findeSheet(xDoc, SheetMetadataHelper.SCHLUESSEL_KO_CHECKIN_LISTE)
+                .ifPresent(sheet -> infos.add(SheetSchutzInfo.vollGesperrt(sheet)));
     }
 
     private void sammleMeldelisteSchutzInfo(XSpreadsheetDocument xDoc, KoKonfigurationSheet konfigSheet,

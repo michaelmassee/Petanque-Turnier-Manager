@@ -75,8 +75,14 @@ public class KaskadeBlattschutzKonfiguration implements IBlattschutzKonfiguratio
         sammleKaskadenRundenSchutzInfos(xDoc, infos);
         sammleKaskadenFelderSchutzInfos(xDoc, infos);
         sammleGruppenRanglisteSchutzInfo(xDoc, infos);
+        sammleCheckinListeSchutzInfo(xDoc, infos);
 
         return infos;
+    }
+
+    private void sammleCheckinListeSchutzInfo(XSpreadsheetDocument xDoc, List<SheetSchutzInfo> infos) {
+        SheetMetadataHelper.findeSheet(xDoc, SheetMetadataHelper.SCHLUESSEL_KASKADE_CHECKIN_LISTE)
+                .ifPresent(sheet -> infos.add(SheetSchutzInfo.vollGesperrt(sheet)));
     }
 
     private void sammleMeldelisteSchutzInfo(XSpreadsheetDocument xDoc, WorkingSpreadsheet ws,

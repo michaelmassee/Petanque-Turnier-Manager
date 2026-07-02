@@ -114,5 +114,7 @@ public final class TripTeteBlattschutzKonfiguration implements IBlattschutzKonfi
 	private void sammleVollGesperrteSheets(XSpreadsheetDocument xDoc, List<SheetSchutzInfo> infos) {
 		SheetMetadataHelper.findeSheet(xDoc, SheetMetadataHelper.SCHLUESSEL_TRIPTETE_RANGLISTE)
 				.ifPresent(sheet -> infos.add(SheetSchutzInfo.vollGesperrt(sheet)));
+		SheetMetadataHelper.findeSheet(xDoc, SheetMetadataHelper.SCHLUESSEL_TRIPTETE_CHECKIN_LISTE)
+				.ifPresent(sheet -> infos.add(SheetSchutzInfo.vollGesperrt(sheet)));
 	}
 }
