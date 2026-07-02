@@ -212,6 +212,28 @@
 								</prop>
 							</node>
 
+							<node oor:name="C2A13" oor:op="replace">
+								<prop oor:name="URL" oor:type="xs:string">
+									<value>private:separator</value>
+								</prop>
+							</node>
+
+							<node oor:name="C2A14" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Finalrunde erstellen</value>
+									<value xml:lang="en">Create Final Round</value>
+									<value xml:lang="es">Crear ronda final</value>
+									<value xml:lang="fr">Créer le tour final</value>
+									<value xml:lang="nl">Finalronde aanmaken</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:jgj_finalrunde</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
 
 
 
