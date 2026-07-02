@@ -19,7 +19,6 @@ import de.petanqueturniermanager.algorithmen.schweizer.SchweizerSystem;
 import de.petanqueturniermanager.algorithmen.schweizer.SchweizerTeamErgebnis;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
@@ -68,7 +67,6 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet {
 
 	private static final Logger logger = LogManager.getLogger(MaastrichterFinalrundeSheet.class);
-	private static final String FINALRUNDEN_SIGNATURE_PROPERTY = "PTM_MAASTRICHTER_FINALRUNDEN_SIGNATURE";
 
 	public MaastrichterFinalrundeSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, TurnierSystem.MAASTRICHTER, "Maastrichter-Finalrunde");
@@ -153,12 +151,15 @@ public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet {
 			}
 		}
 
-		String neueSignature = berechneFinalrundenSignature(finalgruppen, konfigSheet, anzVorrunden, modus, gruppenModus);
-		var docProps = new DocumentPropertiesHelper(getWorkingSpreadsheet());
-		String alteSignature = docProps.getStringProperty(FINALRUNDEN_SIGNATURE_PROPERTY, "");
-		if (neueSignature.equals(alteSignature) && finaleSheetsVorhanden(finalgruppen)) {
-			logger.debug("Maastrichter-Finalrunden unverändert – KO-Sheets werden nicht neu aufgebaut.");
-			return;
+		if (irgendeinFinaleSheetVorhanden()) {
+			MessageBoxResult result = MessageBox.from(getxContext(), MessageBoxTypeEnum.WARN_YES_NO)
+					.caption(I18n.get("maastrichter.finalrunde.caption"))
+					.message(I18n.get("maastrichter.finalrunde.bereits.vorhanden.text"))
+					.show();
+			if (result != MessageBoxResult.YES) {
+				logger.debug("Maastrichter-Finalrunden bereits vorhanden – Neuaufbau vom Benutzer abgelehnt.");
+				return;
+			}
 		}
 
 		// Alte Finale-Blätter löschen
@@ -182,46 +183,17 @@ public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet {
 			new MaastrichterVorrundenRanglisteSheetUpdate(getWorkingSpreadsheet())
 					.schreibeGruppenZuweisungen(teamNrZuGruppe);
 		}
-		docProps.setStringPropertyOhneEvent(FINALRUNDEN_SIGNATURE_PROPERTY, neueSignature);
 	}
 
 	private record Finalgruppe(String buchstabe, TeamMeldungen teams) {}
 
-	private String berechneFinalrundenSignature(List<Finalgruppe> finalgruppen, MaastrichterKonfigurationSheet konfig,
-			int anzVorrunden, SchweizerRankingModus rankingModus, MaastrichterGruppenModus gruppenModus) {
-		StringBuilder sb = new StringBuilder("v1");
-		sb.append("|vorrunden=").append(anzVorrunden);
-		sb.append("|ranking=").append(rankingModus);
-		sb.append("|gruppenModus=").append(gruppenModus);
-		sb.append("|gruppenGroesse=").append(konfig.getGruppenGroesse());
-		sb.append("|minLetzte=").append(konfig.getMinLetzteGruppeGroesse());
-		sb.append("|teamAnzeige=").append(konfig.getSpielbaumTeamAnzeige());
-		sb.append("|spielbahn=").append(konfig.getSpielbaumSpielbahn());
-		sb.append("|platz3=").append(konfig.isSpielbaumSpielUmPlatz3());
-		sb.append("|farben=")
-				.append(konfig.getTurnierbaumHeaderFarbe()).append(',')
-				.append(konfig.getTurnierbaumTeamAFarbe()).append(',')
-				.append(konfig.getTurnierbaumTeamBFarbe()).append(',')
-				.append(konfig.getTurnierbaumSiegerFarbe()).append(',')
-				.append(konfig.getTurnierbaumBahnFarbe()).append(',')
-				.append(konfig.getTurnierbaumDrittePlatzFarbe());
-		for (Finalgruppe finalgruppe : finalgruppen) {
-			sb.append("|").append(finalgruppe.buchstabe()).append('=');
-			sb.append(finalgruppe.teams().teams().stream()
-					.map(team -> Integer.toString(team.getNr()))
-					.reduce((a, b) -> a + "," + b)
-					.orElse(""));
-		}
-		return sb.toString();
-	}
-
-	private boolean finaleSheetsVorhanden(List<Finalgruppe> finalgruppen) throws GenerateException {
-		for (Finalgruppe finalgruppe : finalgruppen) {
-			if (getSheetHelper().findByName(SheetNamen.koFinaleGruppe(finalgruppe.buchstabe())) == null) {
-				return false;
+	private boolean irgendeinFinaleSheetVorhanden() throws GenerateException {
+		for (char c = 'A'; c <= 'Z'; c++) {
+			if (getSheetHelper().findByName(SheetNamen.koFinaleGruppe(String.valueOf(c))) != null) {
+				return true;
 			}
 		}
-		return !finalgruppen.isEmpty();
+		return false;
 	}
 
 	/**

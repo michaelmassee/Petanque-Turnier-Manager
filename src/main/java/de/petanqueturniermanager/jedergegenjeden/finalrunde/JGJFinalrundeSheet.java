@@ -5,7 +5,6 @@ package de.petanqueturniermanager.jedergegenjeden.finalrunde;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,7 +16,6 @@ import de.petanqueturniermanager.algorithmen.common.GruppenAufteilungRechner;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
@@ -41,7 +39,6 @@ import de.petanqueturniermanager.model.TeamMeldungen;
 public class JGJFinalrundeSheet extends SheetRunner implements ISheet {
 
 	private static final Logger logger = LogManager.getLogger(JGJFinalrundeSheet.class);
-	private static final String FINALRUNDEN_SIGNATURE_PROPERTY = "PTM_JGJ_FINALRUNDEN_SIGNATURE";
 
 	public JGJFinalrundeSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, TurnierSystem.JGJ, "JGJ-Finalrunde");
@@ -92,12 +89,16 @@ public class JGJFinalrundeSheet extends SheetRunner implements ISheet {
 
 		JGJKonfigurationSheet konfig = getKonfigurationSheet();
 		List<Finalgruppe> finalgruppen = bildeFinalgruppen(rangfolge, aktiveMeldungen, konfig);
-		String neueSignature = berechneFinalrundenSignature(finalgruppen, konfig);
-		var docProps = new DocumentPropertiesHelper(getWorkingSpreadsheet());
-		String alteSignature = docProps.getStringProperty(FINALRUNDEN_SIGNATURE_PROPERTY, "");
-		if (neueSignature.equals(alteSignature) && finaleSheetsVorhanden(finalgruppen)) {
-			logger.debug("JGJ-Finalrunden unverändert - KO-Sheets werden nicht neu aufgebaut.");
-			return;
+
+		if (irgendeinFinaleSheetVorhanden()) {
+			MessageBoxResult result = MessageBox.from(getxContext(), MessageBoxTypeEnum.WARN_YES_NO)
+					.caption(I18n.get("jgj.finalrunde.caption"))
+					.message(I18n.get("jgj.finalrunde.bereits.vorhanden.text"))
+					.show();
+			if (result != MessageBoxResult.YES) {
+				logger.debug("JGJ-Finalrunden bereits vorhanden - Neuaufbau vom Benutzer abgelehnt.");
+				return;
+			}
 		}
 
 		alleFinaleSheetNamenLoeschen();
@@ -111,7 +112,6 @@ public class JGJFinalrundeSheet extends SheetRunner implements ISheet {
 					SheetMetadataHelper.schluesselJgjFinalrunde(finalgruppe.buchstabe()), finalgruppe.buchstabe());
 			sheetPos++;
 		}
-		docProps.setStringPropertyOhneEvent(FINALRUNDEN_SIGNATURE_PROPERTY, neueSignature);
 	}
 
 	private record Finalgruppe(String buchstabe, TeamMeldungen teams) {}
@@ -162,37 +162,13 @@ public class JGJFinalrundeSheet extends SheetRunner implements ISheet {
 		return finalgruppen;
 	}
 
-	private String berechneFinalrundenSignature(List<Finalgruppe> finalgruppen, JGJKonfigurationSheet konfig) {
-		StringBuilder sb = new StringBuilder("v1");
-		sb.append("|gesamtSort=").append(konfig.getGesamtranglisteSortModus());
-		sb.append("|gruppenGroesse=").append(konfig.getGruppenGroesse());
-		sb.append("|minLetzte=").append(konfig.getMinLetzteGruppeGroesse());
-		sb.append("|teamAnzeige=").append(konfig.getSpielbaumTeamAnzeige());
-		sb.append("|spielbahn=").append(konfig.getSpielbaumSpielbahn());
-		sb.append("|platz3=").append(konfig.isSpielbaumSpielUmPlatz3());
-		sb.append("|farben=")
-				.append(konfig.getTurnierbaumHeaderFarbe()).append(',')
-				.append(konfig.getTurnierbaumTeamAFarbe()).append(',')
-				.append(konfig.getTurnierbaumTeamBFarbe()).append(',')
-				.append(konfig.getTurnierbaumSiegerFarbe()).append(',')
-				.append(konfig.getTurnierbaumBahnFarbe()).append(',')
-				.append(konfig.getTurnierbaumDrittePlatzFarbe());
-		for (Finalgruppe finalgruppe : finalgruppen) {
-			sb.append("|").append(finalgruppe.buchstabe()).append('=');
-			sb.append(finalgruppe.teams().teams().stream()
-					.map(team -> Integer.toString(team.getNr()))
-					.collect(Collectors.joining(",")));
-		}
-		return sb.toString();
-	}
-
-	private boolean finaleSheetsVorhanden(List<Finalgruppe> finalgruppen) throws GenerateException {
-		for (Finalgruppe finalgruppe : finalgruppen) {
-			if (getSheetHelper().findByName(SheetNamen.koFinaleGruppe(finalgruppe.buchstabe())) == null) {
-				return false;
+	private boolean irgendeinFinaleSheetVorhanden() throws GenerateException {
+		for (char c = 'A'; c <= 'Z'; c++) {
+			if (getSheetHelper().findByName(SheetNamen.koFinaleGruppe(String.valueOf(c))) != null) {
+				return true;
 			}
 		}
-		return !finalgruppen.isEmpty();
+		return false;
 	}
 
 	private void alleFinaleSheetNamenLoeschen() throws GenerateException {
