@@ -130,8 +130,8 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	private static final String CHAR_MITTE = "│";
 
 	// Konfigurations-State für die aktuelle Turnierbaum-Erstellung
-	private SpielrundeSpielbahn spielbahn = SpielrundeSpielbahn.X;
-	private KoSpielbaumTeamAnzeige teamAnzeige = KoSpielbaumTeamAnzeige.NR;
+	private volatile SpielrundeSpielbahn spielbahn = SpielrundeSpielbahn.X;
+	private volatile KoSpielbaumTeamAnzeige teamAnzeige = KoSpielbaumTeamAnzeige.NR;
 	private volatile boolean spielUmPlatz3 = false;
 
 	// Meldeliste-Struktur (für die VLOOKUP-Formeln auf Team-/Sieger-Zellen)
@@ -140,7 +140,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	private volatile Formation meldeListeFormation = Formation.DOUBLETTE;
 
 	// Aktuell in Erstellung befindlicher Gruppen-Sheet-Name (für getXSpreadSheet())
-	private String aktuellerGruppenSheetName = null;
+	private volatile String aktuellerGruppenSheetName = null;
 
 	// Cadrage-State
 	private volatile boolean mitCadrage = false;
@@ -163,8 +163,10 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	private volatile int connectorOffset = 2;
 	private volatile int colGroupSize = 3;
 
-	/** Sammelt Score-Zell-Positionen während einer Bracket-Erstellung für den Blattschutz. */
-	private List<Position> aktuelleScorePositionen = null;
+	/** Sammelt Score-Zell-Positionen während einer Bracket-Erstellung für den Blattschutz.
+	 *  Nur die Referenz ist {@code volatile} (Sichtbarkeit von Neuanlage/Nullen je Lauf);
+	 *  die Liste selbst wird ausschließlich vom laufenden Worker-Thread befüllt. */
+	private volatile List<Position> aktuelleScorePositionen = null;
 
 	/** Bracketgröße der zuletzt erzeugten Gruppe – wird von Testhilfen wie
 	 *  {@link #schreibeRunde1TestErgebnisse(String)} ausgelesen. */
