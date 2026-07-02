@@ -277,6 +277,8 @@ public class JGJGesamtranglisteSheet extends SheetRunner implements ISheet {
 					.setShrinkToFit(true);
 			if (col == PLATZ_SPALTE) {
 				cv.setRotate90().setCharWeight(FontWeight.BOLD);
+			} else if (col == GRUPPE_SPALTE) {
+				cv.setRotate90();
 			}
 			getSheetHelper().setStringValueInCell(cv);
 		}
@@ -367,7 +369,7 @@ public class JGJGesamtranglisteSheet extends SheetRunner implements ISheet {
 		getSheetHelper().setPropertiesInRange(sheet,
 				RangePosition.from(TEAM_NAME_SPALTE, ERSTE_DATEN_ZEILE, TEAM_NAME_SPALTE, letzteZeile),
 				CellProperties.from().margin(MeldeListeKonstanten.CELL_MARGIN).setAllThinBorder()
-						.setHoriJustify(CellHoriJustify.LEFT));
+						.setHoriJustify(CellHoriJustify.LEFT).setShrinkToFit(true));
 
 		// Gruppe-Spalte: zentriert
 		getSheetHelper().setPropertiesInRange(sheet,

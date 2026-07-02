@@ -375,7 +375,8 @@ public class JGJRanglisteSheet extends SheetRunner implements ISheet, IRangliste
         // Name-Spalte: linksbündig
         getSheetHelper().setPropertiesInRange(sheet,
                 RangePosition.from(TEAM_NAME_SPALTE, startZeile, TEAM_NAME_SPALTE, letzteZeile),
-                CellProperties.from().margin(MeldeListeKonstanten.CELL_MARGIN).setAllThinBorder().setHoriJustify(CellHoriJustify.LEFT));
+                CellProperties.from().margin(MeldeListeKonstanten.CELL_MARGIN).setAllThinBorder().setHoriJustify(CellHoriJustify.LEFT)
+                        .setShrinkToFit(true));
     }
 
     private void formatiereZahlenSpalten(XSpreadsheet sheet, int startZeile, int anzTeams)
