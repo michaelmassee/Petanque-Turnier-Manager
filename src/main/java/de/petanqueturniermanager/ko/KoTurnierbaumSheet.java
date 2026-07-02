@@ -132,7 +132,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	// Konfigurations-State für die aktuelle Turnierbaum-Erstellung
 	private SpielrundeSpielbahn spielbahn = SpielrundeSpielbahn.X;
 	private KoSpielbaumTeamAnzeige teamAnzeige = KoSpielbaumTeamAnzeige.NR;
-	private boolean spielUmPlatz3 = false;
+	private volatile boolean spielUmPlatz3 = false;
 
 	// Meldeliste-Struktur (für die VLOOKUP-Formeln auf Team-/Sieger-Zellen)
 	private volatile boolean meldeListeTeamnameAnzeigen = true;
