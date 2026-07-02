@@ -27,6 +27,7 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.blattschutz.IBlattschutzKonfiguration;
 import de.petanqueturniermanager.helper.sheet.blattschutz.SheetSchutzInfo;
 import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJSpielPlanSheet;
+import de.petanqueturniermanager.ko.KoTurnierbaumSheet;
 
 /**
  * Blattschutz-Konfiguration für das Jeder-gegen-Jeden-Turniersystem.
@@ -114,6 +115,7 @@ public class JGJBlattschutzKonfiguration implements IBlattschutzKonfiguration, M
         SheetMetadataHelper.findeSheet(xDoc, SheetMetadataHelper.SCHLUESSEL_JGJ_DIREKTVERGLEICH)
                 .ifPresent(sheet -> infos.add(SheetSchutzInfo.vollGesperrt(sheet)));
         fuegeVollgesperrteAusPrefix(xDoc, SheetMetadataHelper.SCHLUESSEL_JGJ_GRUPPE_SPIELPLAN_PREFIX, infos);
+        sammleFinalrundenSchutzInfos(xDoc, infos);
     }
 
     private void fuegeVollgesperrteAusPrefix(XSpreadsheetDocument xDoc, String prefix,
@@ -121,6 +123,25 @@ public class JGJBlattschutzKonfiguration implements IBlattschutzKonfiguration, M
         for (var key : SheetMetadataHelper.getSchluesselMitPrefix(xDoc, prefix)) {
             SheetMetadataHelper.findeSheet(xDoc, key)
                     .ifPresent(sheet -> infos.add(SheetSchutzInfo.vollGesperrt(sheet)));
+        }
+    }
+
+    private void sammleFinalrundenSchutzInfos(XSpreadsheetDocument xDoc, List<SheetSchutzInfo> infos) {
+        var schluessel = SheetMetadataHelper.getSchluesselMitPrefix(xDoc,
+                SheetMetadataHelper.SCHLUESSEL_JGJ_FINALRUNDE_PREFIX);
+        for (var finalrundeKey : schluessel) {
+            SheetMetadataHelper.findeSheet(xDoc, finalrundeKey).ifPresent(sheet -> {
+                var scoreKey = SheetMetadataHelper.scoreSchluessel(finalrundeKey);
+                var encoded = SheetMetadataHelper.leseScoreText(xDoc, scoreKey);
+                var editierbareBereiche = (encoded != null)
+                        ? KoTurnierbaumSheet.decodeScoreBereiche(encoded)
+                        : List.<RangePosition>of();
+                if (editierbareBereiche.isEmpty()) {
+                    infos.add(SheetSchutzInfo.vollGesperrt(sheet));
+                } else {
+                    infos.add(SheetSchutzInfo.mitEditierbarenBereichen(sheet, editierbareBereiche));
+                }
+            });
         }
     }
 }

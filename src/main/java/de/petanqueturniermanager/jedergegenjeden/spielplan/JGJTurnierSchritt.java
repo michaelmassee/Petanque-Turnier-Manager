@@ -5,9 +5,18 @@ package de.petanqueturniermanager.jedergegenjeden.spielplan;
  */
 public record JGJTurnierSchritt(boolean spielplanVorhanden,
                                 int hrGespielt, int hrGesamt,
-                                int rrGespielt, int rrGesamt) {
+                                int rrGespielt, int rrGesamt,
+                                boolean finalrundeVorhanden,
+                                boolean finalrundeBeendet) {
+
+    public JGJTurnierSchritt(boolean spielplanVorhanden,
+                             int hrGespielt, int hrGesamt,
+                             int rrGespielt, int rrGesamt) {
+        this(spielplanVorhanden, hrGespielt, hrGesamt, rrGespielt, rrGesamt, false, false);
+    }
 
     public boolean alleGespielt() {
-        return hrGesamt > 0 && hrGespielt >= hrGesamt && rrGespielt >= rrGesamt;
+        boolean spielplanBeendet = hrGesamt > 0 && hrGespielt >= hrGesamt && rrGespielt >= rrGesamt;
+        return spielplanBeendet && (!finalrundeVorhanden || finalrundeBeendet);
     }
 }

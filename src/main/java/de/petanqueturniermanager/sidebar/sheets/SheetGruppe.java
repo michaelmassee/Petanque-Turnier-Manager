@@ -34,7 +34,8 @@ public enum SheetGruppe {
             "__PTM_JGJ_CHECKIN_LISTE__",
             "__PTM_JGJ_SPIELPLAN__",
             "__PTM_JGJ_RANGLISTE__",
-            "__PTM_JGJ_DIREKTVERGLEICH__"
+            "__PTM_JGJ_DIREKTVERGLEICH__",
+            "__PTM_JGJ_FINALRUNDE_"
     )),
 
     LIGA("enum.turniersystem.liga", List.of(

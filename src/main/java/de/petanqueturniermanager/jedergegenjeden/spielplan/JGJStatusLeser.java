@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.sun.star.lang.IndexOutOfBoundsException;
 import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.table.CellContentType;
 import com.sun.star.table.XCell;
 import com.sun.star.text.XText;
@@ -21,6 +22,9 @@ public class JGJStatusLeser {
 
     private static final Logger logger = LogManager.getLogger(JGJStatusLeser.class);
     private static final int MAX_ZEILEN = 1000;
+    private static final String SCORE_PRAEFIX = "PTM_EDIT:";
+    private static final String POSITIONS_TRENNZEICHEN = "\\|";
+    private static final String KOORDINATEN_TRENNZEICHEN = ",";
 
     private final WorkingSpreadsheet workingSpreadsheet;
 
@@ -41,7 +45,17 @@ public class JGJStatusLeser {
         if (sheet == null) {
             return new JGJTurnierSchritt(false, 0, 0, 0, 0);
         }
-        return zaehleSpiele(sheet);
+        JGJTurnierSchritt spielplanStatus = zaehleSpiele(sheet);
+        var finalrundenKeys = SheetMetadataHelper.getSchluesselMitPrefix(
+                xDoc, SheetMetadataHelper.SCHLUESSEL_JGJ_FINALRUNDE_PREFIX);
+        if (finalrundenKeys.length == 0) {
+            return spielplanStatus;
+        }
+        boolean beendet = pruefeAlleFinalrundenBeendet(xDoc, finalrundenKeys);
+        return new JGJTurnierSchritt(true,
+                spielplanStatus.hrGespielt(), spielplanStatus.hrGesamt(),
+                spielplanStatus.rrGespielt(), spielplanStatus.rrGesamt(),
+                true, beendet);
     }
 
     private JGJTurnierSchritt zaehleSpiele(XSpreadsheet sheet) {
@@ -79,5 +93,46 @@ public class JGJStatusLeser {
             logger.error("Fehler beim Lesen des JGJ-Spielplans", e);
         }
         return new JGJTurnierSchritt(true, hrGespielt, hrGesamt, rrGespielt, rrGesamt);
+    }
+
+    private boolean pruefeAlleFinalrundenBeendet(XSpreadsheetDocument xDoc, String[] finalrundenKeys) {
+        for (var finalrundeKey : finalrundenKeys) {
+            var finalrundeSheet = SheetMetadataHelper.findeSheet(xDoc, finalrundeKey);
+            if (finalrundeSheet.isEmpty() || !pruefeFinalrundeBeendet(xDoc, finalrundeSheet.get(), finalrundeKey)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean pruefeFinalrundeBeendet(XSpreadsheetDocument xDoc, XSpreadsheet sheet, String finalrundeKey) {
+        var scoreKey = SheetMetadataHelper.scoreSchluessel(finalrundeKey);
+        var scoreText = SheetMetadataHelper.leseScoreText(xDoc, scoreKey);
+        if (scoreText == null || !scoreText.startsWith(SCORE_PRAEFIX)) {
+            return false;
+        }
+        var positionenStr = scoreText.substring(SCORE_PRAEFIX.length());
+        var positionen = positionenStr.split(POSITIONS_TRENNZEICHEN);
+        try {
+            for (var pos : positionen) {
+                if (pos.isBlank()) {
+                    continue;
+                }
+                var teile = pos.split(KOORDINATEN_TRENNZEICHEN);
+                if (teile.length < 2) {
+                    continue;
+                }
+                int spalte = Integer.parseInt(teile[0].trim());
+                int zeile = Integer.parseInt(teile[1].trim());
+                var zelle = sheet.getCellByPosition(spalte, zeile);
+                if (zelle.getType() != CellContentType.VALUE) {
+                    return false;
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Fehler beim Prüfen der JGJ-Finalrunden-Scores", e);
+            return false;
+        }
+        return positionen.length > 0;
     }
 }

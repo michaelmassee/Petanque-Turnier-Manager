@@ -947,7 +947,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				new JGJRanglisteSheetSortOnly(ws).testTurnierSystem(TurnierSystem.JGJ).start();
 				break;
 			case CMD_JGJ_DIREKTVERGLEICH:
-				new JGJRanglisteDirektvergleichSheet(ws).testTurnierSystem(TurnierSystem.JGJ).start();
+				new JGJRanglisteDirektvergleichSheet(ws).testTurnierSystem(TurnierSystem.JGJ).backUpDocument().start();
 				break;
 			case CMD_JGJ_GESAMTRANGLISTE:
 				new JGJGesamtranglisteSheet(ws).testTurnierSystem(TurnierSystem.JGJ).backUpDocument().start();

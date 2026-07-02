@@ -72,6 +72,9 @@ public final class TurnierStatusErmittler {
                 if (status.alleGespielt()) {
                     yield I18n.get("sidebar.info.turnier.beendet");
                 }
+                if (status.finalrundeVorhanden()) {
+                    yield I18n.get("sidebar.jgj.finalrunde");
+                }
                 yield I18n.get("sidebar.info.jgj.schritt",
                         status.hrGespielt(), status.hrGesamt(),
                         status.rrGespielt(), status.rrGesamt());

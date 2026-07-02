@@ -63,6 +63,31 @@ public class JGJRanglisteRechner {
 	/** Statistik der übergebenen Teams berechnen und nach {@link #vergleicher()} sortieren. */
 	public List<TeamStats> berechneUndSortiere(TeamMeldungen aktiveMeldungen) throws GenerateException {
 		Map<Integer, int[]> statsRaw = leseSpielplanStats(aktiveMeldungen);
+		return sortiereMitStats(aktiveMeldungen, statsRaw);
+	}
+
+	/**
+	 * Statistik einmal für alle Gruppen lesen und anschließend jede Gruppe separat
+	 * sortieren.
+	 */
+	public List<List<TeamStats>> berechneUndSortiereGruppen(List<TeamMeldungen> gruppen) throws GenerateException {
+		TeamMeldungen alle = new TeamMeldungen();
+		for (TeamMeldungen gruppe : gruppen) {
+			gruppe.teams().forEach(alle::addTeamWennNichtVorhanden);
+		}
+		Map<Integer, int[]> statsRaw = leseSpielplanStats(alle);
+		return sortiereGruppenMitStats(gruppen, statsRaw);
+	}
+
+	static List<List<TeamStats>> sortiereGruppenMitStats(List<TeamMeldungen> gruppen, Map<Integer, int[]> statsRaw) {
+		List<List<TeamStats>> sortierteGruppen = new ArrayList<>();
+		for (TeamMeldungen gruppe : gruppen) {
+			sortierteGruppen.add(sortiereMitStats(gruppe, statsRaw));
+		}
+		return sortierteGruppen;
+	}
+
+	static List<TeamStats> sortiereMitStats(TeamMeldungen aktiveMeldungen, Map<Integer, int[]> statsRaw) {
 		List<TeamStats> daten = new ArrayList<>();
 		for (Team team : aktiveMeldungen.teams()) {
 			int[] s = statsRaw.getOrDefault(team.getNr(), new int[4]);

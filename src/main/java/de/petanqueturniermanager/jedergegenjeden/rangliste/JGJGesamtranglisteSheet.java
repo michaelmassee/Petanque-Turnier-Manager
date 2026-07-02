@@ -1,6 +1,5 @@
 package de.petanqueturniermanager.jedergegenjeden.rangliste;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -178,7 +177,7 @@ public class JGJGesamtranglisteSheet extends SheetRunner implements ISheet {
 				new EingabeSignatur(SignaturQuellen::fuerJGJ));
 	}
 
-	protected List<TeamMeldungen> ermittleGruppen(TeamMeldungen aktiveMeldungen) throws GenerateException {
+	public List<TeamMeldungen> ermittleGruppen(TeamMeldungen aktiveMeldungen) throws GenerateException {
 		int gruppengroesse = konfigurationSheet.getGruppengroesse();
 		if (gruppengroesse <= 0 || aktiveMeldungen.size() <= gruppengroesse) {
 			return List.of(aktiveMeldungen);
@@ -213,7 +212,7 @@ public class JGJGesamtranglisteSheet extends SheetRunner implements ISheet {
 	}
 
 	/** Kombiniert die Teams gemäß konfiguriertem Sortmodus zu einer Gesamtreihenfolge. */
-	private List<TeamStats> berechneReihenfolge(List<TeamMeldungen> gruppen) throws GenerateException {
+	public List<TeamStats> berechneReihenfolge(List<TeamMeldungen> gruppen) throws GenerateException {
 		JGJGesamtranglisteSortModus modus = konfigurationSheet.getGesamtranglisteSortModus();
 		if (modus == JGJGesamtranglisteSortModus.ABSOLUT) {
 			TeamMeldungen alle = new TeamMeldungen();
@@ -222,10 +221,7 @@ public class JGJGesamtranglisteSheet extends SheetRunner implements ISheet {
 			}
 			return rangListeRechner.berechneUndSortiere(alle);
 		}
-		List<List<TeamStats>> sortierteGruppen = new ArrayList<>();
-		for (TeamMeldungen gruppe : gruppen) {
-			sortierteGruppen.add(rangListeRechner.berechneUndSortiere(gruppe));
-		}
+		List<List<TeamStats>> sortierteGruppen = rangListeRechner.berechneUndSortiereGruppen(gruppen);
 		return JGJRanglisteRechner.snakeKombination(sortierteGruppen);
 	}
 

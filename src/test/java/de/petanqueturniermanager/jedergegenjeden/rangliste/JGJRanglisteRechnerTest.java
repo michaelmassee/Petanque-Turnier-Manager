@@ -4,10 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
 import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteRechner.TeamStats;
+import de.petanqueturniermanager.model.Team;
+import de.petanqueturniermanager.model.TeamMeldungen;
 
 /**
  * Unit-Tests der reinen (LibreOffice-freien) Kombinations- und Sortierlogik des
@@ -62,6 +65,26 @@ class JGJRanglisteRechnerTest {
 	@Test
 	void snakeKombinationOhneGruppenLiefertLeereListe() {
 		assertThat(JGJRanglisteRechner.snakeKombination(List.of())).isEmpty();
+	}
+
+	@Test
+	void sortiereGruppenMitStatsSortiertJedeGruppeUndNutztNullwerteFuerFehlendeTeams() {
+		TeamMeldungen gruppeA = new TeamMeldungen()
+				.addTeamWennNichtVorhanden(Team.from(1))
+				.addTeamWennNichtVorhanden(Team.from(2));
+		TeamMeldungen gruppeB = new TeamMeldungen()
+				.addTeamWennNichtVorhanden(Team.from(3));
+		Map<Integer, int[]> statsRaw = Map.of(
+				1, new int[] { 1, 2, 20, 30 },
+				2, new int[] { 3, 0, 30, 10 });
+
+		List<List<TeamStats>> sortierteGruppen = JGJRanglisteRechner.sortiereGruppenMitStats(
+				List.of(gruppeA, gruppeB), statsRaw);
+
+		assertThat(sortierteGruppen).hasSize(2);
+		assertThat(sortierteGruppen.get(0)).extracting(TeamStats::teamNr)
+				.containsExactly(2, 1);
+		assertThat(sortierteGruppen.get(1)).containsExactly(stats(3, 0, 0, 0, 0));
 	}
 
 	@Test

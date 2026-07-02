@@ -4,6 +4,7 @@
 package de.petanqueturniermanager.toolbar.strategie;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.jedergegenjeden.finalrunde.JGJFinalrundeSheet;
 import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteSheet;
 import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJSpielPlanSheet;
 import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJTeilnehmerSheet;
@@ -46,6 +47,11 @@ public class JGJToolbarStrategie implements ITurnierSystemToolbarStrategie {
 
     @Override
     public void abschluss(WorkingSpreadsheet ws) throws Exception {
-        fallback.abschluss(ws);
+        new JGJFinalrundeSheet(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+    }
+
+    @Override
+    public boolean hatAbschlussphase() {
+        return true;
     }
 }

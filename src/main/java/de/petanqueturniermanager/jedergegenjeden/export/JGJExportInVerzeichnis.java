@@ -62,6 +62,16 @@ public class JGJExportInVerzeichnis extends AbstractExportInVerzeichnis {
                 buildPdfUrl(pdfRangliste)));
         sections.add(new ExportHtmlSeite.Section("direktvergleich", I18n.get("export.nav.direktvergleich"), direktvergleichSheetName,
                 buildPdfUrl(pdfDirektvergleich)));
+        for (var eintrag : buchstabenSheetEintraegePerSchluessel(
+                SheetMetadataHelper::schluesselJgjFinalrunde, SheetNamen::koFinaleGruppe)) {
+            var finalTitel = I18n.get("export.jgj.nav.finalrunde", eintrag.buchstabe());
+            Path pdf = exportierePdfAusHtml(eintrag.sheetName(), finalTitel, zielVerzeichnis);
+            if (pdf != null) {
+                exportierteDateien.add(pdf);
+            }
+            sections.add(new ExportHtmlSeite.Section("finalrunde-" + eintrag.buchstabe(),
+                    finalTitel, eintrag.sheetName(), buildPdfUrl(pdf)));
+        }
         exportiereHtmlMitMeldelisteDruckbereich(meldelisteExportieren, meldelisteSheetName,
                 zielVerzeichnis, "JederGegenJeden.html",
                 StringUtils.defaultIfBlank(StringUtils.strip(konfiguration.getKopfZeileMitte()),

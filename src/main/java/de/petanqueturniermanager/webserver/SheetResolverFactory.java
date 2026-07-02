@@ -127,6 +127,22 @@ public final class SheetResolverFactory {
                 new MetadatenSheetResolver(
                         SheetMetadataHelper.schluesselMaastrichterFinalrunde("D"),
                         I18n.get("webserver.resolver.maastrichter.finalrunde.d")), MAASTRICHTER));
+        RESOLVER_MAP.put("JGJ_FINALRUNDE_A", fuer(() ->
+                new MetadatenSheetResolver(
+                        SheetMetadataHelper.schluesselJgjFinalrunde("A"),
+                        I18n.get("webserver.resolver.jgj.finalrunde.a")), JGJ));
+        RESOLVER_MAP.put("JGJ_FINALRUNDE_B", fuer(() ->
+                new MetadatenSheetResolver(
+                        SheetMetadataHelper.schluesselJgjFinalrunde("B"),
+                        I18n.get("webserver.resolver.jgj.finalrunde.b")), JGJ));
+        RESOLVER_MAP.put("JGJ_FINALRUNDE_C", fuer(() ->
+                new MetadatenSheetResolver(
+                        SheetMetadataHelper.schluesselJgjFinalrunde("C"),
+                        I18n.get("webserver.resolver.jgj.finalrunde.c")), JGJ));
+        RESOLVER_MAP.put("JGJ_FINALRUNDE_D", fuer(() ->
+                new MetadatenSheetResolver(
+                        SheetMetadataHelper.schluesselJgjFinalrunde("D"),
+                        I18n.get("webserver.resolver.jgj.finalrunde.d")), JGJ));
         RESOLVER_MAP.put("FORME_CADRAGE", fuer(() ->
                 new MetadatenSheetResolver(
                         SheetMetadataHelper.SCHLUESSEL_FORME_CADRAGE,

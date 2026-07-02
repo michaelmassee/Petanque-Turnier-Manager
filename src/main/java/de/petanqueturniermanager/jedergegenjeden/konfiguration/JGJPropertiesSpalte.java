@@ -5,12 +5,15 @@ import java.util.List;
 
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.upload.UploadProtokoll;
 import de.petanqueturniermanager.konfigdialog.AuswahlConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
 import de.petanqueturniermanager.konfigdialog.HeaderFooterConfigProperty;
+import de.petanqueturniermanager.ko.konfiguration.KoPropertiesSpalte;
+import de.petanqueturniermanager.ko.konfiguration.KoSpielbaumTeamAnzeige;
 import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 
 /**
@@ -98,6 +101,9 @@ public class JGJPropertiesSpalte extends BasePropertiesSpalte implements IJGJPro
 				.setDescription("config.desc.jgj.gesamtrangliste.sort.modus"))
 				.addAuswahl(JGJGesamtranglisteSortModus.GRUPPENPLATZ.name(), "Nach Gruppenplatz (Snake)")
 				.addAuswahl(JGJGesamtranglisteSortModus.ABSOLUT.name(), "Absolute Werte"));
+
+		KoPropertiesSpalte.addKoBracketProperties(KONFIG_PROPERTIES);
+		KoPropertiesSpalte.addKoBracketColorProperties(KONFIG_PROPERTIES);
 
 		ADDUploadProp(KONFIG_PROPERTIES);
 	}
@@ -221,6 +227,60 @@ public class JGJPropertiesSpalte extends BasePropertiesSpalte implements IJGJPro
 		return readEnumProperty(KONFIG_PROP_GESAMTRANGLISTE_SORT_MODUS,
 				JGJGesamtranglisteSortModus.class, JGJGesamtranglisteSortModus.GRUPPENPLATZ);
 	}
+
+	public KoSpielbaumTeamAnzeige getSpielbaumTeamAnzeige() {
+		return readEnumProperty(KoPropertiesSpalte.KONFIG_PROP_SPIELBAUM_TEAM_ANZEIGE,
+				KoSpielbaumTeamAnzeige.class, KoSpielbaumTeamAnzeige.NR);
+	}
+
+	public void setSpielbaumTeamAnzeige(KoSpielbaumTeamAnzeige anzeige) {
+		setStringProperty(KoPropertiesSpalte.KONFIG_PROP_SPIELBAUM_TEAM_ANZEIGE, anzeige.name());
+	}
+
+	public SpielrundeSpielbahn getSpielbaumSpielbahn() {
+		return readEnumProperty(KoPropertiesSpalte.KONFIG_PROP_SPIELBAUM_SPIELBAHN,
+				SpielrundeSpielbahn.class, SpielrundeSpielbahn.X);
+	}
+
+	public void setSpielbaumSpielbahn(SpielrundeSpielbahn spielbahn) {
+		setStringProperty(KoPropertiesSpalte.KONFIG_PROP_SPIELBAUM_SPIELBAHN, spielbahn.name());
+	}
+
+	public boolean isSpielbaumSpielUmPlatz3() {
+		return "J".equalsIgnoreCase(readStringProperty(KoPropertiesSpalte.KONFIG_PROP_SPIELBAUM_PLATZ3));
+	}
+
+	public void setSpielbaumSpielUmPlatz3(boolean anzeigen) {
+		setStringProperty(KoPropertiesSpalte.KONFIG_PROP_SPIELBAUM_PLATZ3, anzeigen ? "J" : "N");
+	}
+
+	public int getGruppenGroesse() {
+		return KoPropertiesSpalte.normalisiereGruppenGroesse(
+				readStringProperty(KoPropertiesSpalte.KONFIG_PROP_GRUPPEN_GROESSE));
+	}
+
+	public void setGruppenGroesse(int gruppenGroesse) {
+		setStringProperty(KoPropertiesSpalte.KONFIG_PROP_GRUPPEN_GROESSE,
+				Integer.toString(KoPropertiesSpalte.normalisiereGruppenGroesse(gruppenGroesse)));
+	}
+
+	public int getMinLetzteGruppeGroesse() {
+		return KoPropertiesSpalte.normalisiereMinLetzteGruppeGroesse(
+				readStringProperty(KoPropertiesSpalte.KONFIG_PROP_MIN_LETZTE_GRUPPE_GROESSE));
+	}
+
+	public void setMinLetzteGruppeGroesse(int wert) {
+		setStringProperty(KoPropertiesSpalte.KONFIG_PROP_MIN_LETZTE_GRUPPE_GROESSE,
+				Integer.toString(KoPropertiesSpalte.normalisiereMinLetzteGruppeGroesse(wert)));
+	}
+
+	public int getKoTurnierbaumTabFarbe()       { return readIntProperty(KoPropertiesSpalte.KONFIG_PROP_TAB_COLOR_KO_TURNIERBAUM); }
+	public int getTurnierbaumHeaderFarbe()      { return readIntProperty(KoPropertiesSpalte.KONFIG_PROP_TURNIERBAUM_COLOR_HEADER); }
+	public int getTurnierbaumTeamAFarbe()       { return readIntProperty(KoPropertiesSpalte.KONFIG_PROP_TURNIERBAUM_COLOR_TEAM_A); }
+	public int getTurnierbaumTeamBFarbe()       { return readIntProperty(KoPropertiesSpalte.KONFIG_PROP_TURNIERBAUM_COLOR_TEAM_B); }
+	public int getTurnierbaumSiegerFarbe()      { return readIntProperty(KoPropertiesSpalte.KONFIG_PROP_TURNIERBAUM_COLOR_SIEGER); }
+	public int getTurnierbaumBahnFarbe()        { return readIntProperty(KoPropertiesSpalte.KONFIG_PROP_TURNIERBAUM_COLOR_BAHN); }
+	public int getTurnierbaumDrittePlatzFarbe() { return readIntProperty(KoPropertiesSpalte.KONFIG_PROP_TURNIERBAUM_COLOR_DRITTE_PLATZ); }
 
 	@Override
 	public void setRueckrunde(boolean mitRueckrunde) {

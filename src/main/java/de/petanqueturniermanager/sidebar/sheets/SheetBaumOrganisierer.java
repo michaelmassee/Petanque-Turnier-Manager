@@ -37,6 +37,7 @@ public class SheetBaumOrganisierer {
 
     static final String POULE_VORRUNDE_GRUPPE_ID = "POULE_VORRUNDE";
     static final String POULE_KO_GRUPPE_ID = "POULE_KO";
+    static final String JGJ_FINALRUNDE_GRUPPE_ID = "JGJ_FINALRUNDE";
     static final String MAASTRICHTER_VORRUNDE_GRUPPE_ID = "MAASTRICHTER_VORRUNDE";
     static final String MAASTRICHTER_FINALRUNDE_GRUPPE_ID = "MAASTRICHTER_FINALRUNDE";
     static final String KASKADE_RUNDEN_GRUPPE_ID = "KASKADE_RUNDEN";
@@ -164,7 +165,7 @@ public class SheetBaumOrganisierer {
                 verbrauchteGruppen.add(SheetGruppe.ALLGEMEIN);
             } else if (gruppe == SheetGruppe.JGJ) {
                 var allgemeinKnoten = gruppenMap.getOrDefault(SheetGruppe.ALLGEMEIN, List.of());
-                ergebnis.addAll(jgjEintraege(knoten, allgemeinKnoten));
+                ergebnis.addAll(jgjEintraege(knoten, allgemeinKnoten, kollabierteUnterGruppen));
                 verbrauchteGruppen.add(SheetGruppe.ALLGEMEIN);
             } else {
                 var expandiert = !kollabiert.contains(gruppe);
@@ -334,7 +335,8 @@ public class SheetBaumOrganisierer {
      * Baut die flache Eintrags-Liste für JGJ-Blätter auf (ohne Gruppen-Header):
      * Meldeliste → Teilnehmer → Spielplan → Rangliste → Direktvergleich.
      */
-    private List<BlattBaumEintrag> jgjEintraege(List<BlattKnoten> knoten, List<BlattKnoten> allgemeinKnoten) {
+    private List<BlattBaumEintrag> jgjEintraege(List<BlattKnoten> knoten, List<BlattKnoten> allgemeinKnoten,
+            Set<String> kollabierteUnterGruppen) {
         var ergebnis = new ArrayList<BlattBaumEintrag>();
 
         knoten.stream()
@@ -365,6 +367,22 @@ public class SheetBaumOrganisierer {
                 .filter(k -> SheetMetadataHelper.SCHLUESSEL_JGJ_DIREKTVERGLEICH.equals(k.metadatenSchluessel()))
                 .map(k -> new BlattKnoten(blattName(k), k.metadatenSchluessel()))
                 .forEach(ergebnis::add);
+
+        var finalrundeKnoten = knoten.stream()
+                .filter(k -> k.metadatenSchluessel().startsWith(SheetMetadataHelper.SCHLUESSEL_JGJ_FINALRUNDE_PREFIX))
+                .map(k -> new BlattKnoten("  " + blattName(k), k.metadatenSchluessel()))
+                .toList();
+
+        if (!finalrundeKnoten.isEmpty()) {
+            var finalrundeExpandiert = !kollabierteUnterGruppen.contains(JGJ_FINALRUNDE_GRUPPE_ID);
+            ergebnis.add(new UnterGruppenKopf(
+                    JGJ_FINALRUNDE_GRUPPE_ID,
+                    I18n.get("sidebar.jgj.finalrunde"),
+                    finalrundeExpandiert));
+            if (finalrundeExpandiert) {
+                ergebnis.addAll(finalrundeKnoten);
+            }
+        }
 
         return ergebnis;
     }

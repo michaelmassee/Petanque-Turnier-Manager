@@ -4,19 +4,23 @@ import de.petanqueturniermanager.basesheet.konfiguration.BaseKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.konfiguration.IPropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.pagestyle.PageStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.helper.upload.UploadProtokoll;
+import de.petanqueturniermanager.ko.konfiguration.IKoBracketKonfiguration;
+import de.petanqueturniermanager.ko.konfiguration.KoSpielbaumTeamAnzeige;
 import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 
 /**
  * Erstellung 01.08.2022 / Michael Massee
  */
 
-public class JGJKonfigurationSheet extends BaseKonfigurationSheet implements IJGJProperiesSpalte, IKonfigurationSheet {
+public class JGJKonfigurationSheet extends BaseKonfigurationSheet
+		implements IJGJProperiesSpalte, IKonfigurationSheet, IKoBracketKonfiguration {
 
 	public static final int MELDUNG_NAME_WIDTH = 8000;
 
@@ -160,6 +164,59 @@ public class JGJKonfigurationSheet extends BaseKonfigurationSheet implements IJG
 	public JGJGesamtranglisteSortModus getGesamtranglisteSortModus() {
 		return propertiesSpalte.getGesamtranglisteSortModus();
 	}
+
+	@Override
+	public int getGruppenGroesse() {
+		return propertiesSpalte.getGruppenGroesse();
+	}
+
+	public void setGruppenGroesse(int gruppenGroesse) {
+		propertiesSpalte.setGruppenGroesse(gruppenGroesse);
+	}
+
+	@Override
+	public int getMinLetzteGruppeGroesse() {
+		return propertiesSpalte.getMinLetzteGruppeGroesse();
+	}
+
+	public void setMinLetzteGruppeGroesse(int wert) {
+		propertiesSpalte.setMinLetzteGruppeGroesse(wert);
+	}
+
+	@Override
+	public KoSpielbaumTeamAnzeige getSpielbaumTeamAnzeige() {
+		return propertiesSpalte.getSpielbaumTeamAnzeige();
+	}
+
+	public void setSpielbaumTeamAnzeige(KoSpielbaumTeamAnzeige anzeige) {
+		propertiesSpalte.setSpielbaumTeamAnzeige(anzeige);
+	}
+
+	@Override
+	public SpielrundeSpielbahn getSpielbaumSpielbahn() {
+		return propertiesSpalte.getSpielbaumSpielbahn();
+	}
+
+	public void setSpielbaumSpielbahn(SpielrundeSpielbahn spielbahn) {
+		propertiesSpalte.setSpielbaumSpielbahn(spielbahn);
+	}
+
+	@Override
+	public boolean isSpielbaumSpielUmPlatz3() {
+		return propertiesSpalte.isSpielbaumSpielUmPlatz3();
+	}
+
+	public void setSpielbaumSpielUmPlatz3(boolean anzeigen) {
+		propertiesSpalte.setSpielbaumSpielUmPlatz3(anzeigen);
+	}
+
+	@Override public int getKoTurnierbaumTabFarbe()       { return propertiesSpalte.getKoTurnierbaumTabFarbe(); }
+	@Override public int getTurnierbaumHeaderFarbe()      { return propertiesSpalte.getTurnierbaumHeaderFarbe(); }
+	@Override public int getTurnierbaumTeamAFarbe()       { return propertiesSpalte.getTurnierbaumTeamAFarbe(); }
+	@Override public int getTurnierbaumTeamBFarbe()       { return propertiesSpalte.getTurnierbaumTeamBFarbe(); }
+	@Override public int getTurnierbaumSiegerFarbe()      { return propertiesSpalte.getTurnierbaumSiegerFarbe(); }
+	@Override public int getTurnierbaumBahnFarbe()        { return propertiesSpalte.getTurnierbaumBahnFarbe(); }
+	@Override public int getTurnierbaumDrittePlatzFarbe() { return propertiesSpalte.getTurnierbaumDrittePlatzFarbe(); }
 
 
 	@Override

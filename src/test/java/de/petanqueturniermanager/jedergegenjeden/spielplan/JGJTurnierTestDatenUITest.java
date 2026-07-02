@@ -19,6 +19,8 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.random.RandomSource;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
+import de.petanqueturniermanager.jedergegenjeden.finalrunde.JGJFinalrundeSheet;
+import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationSheet;
 import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteDirektvergleichSheet;
 import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
@@ -92,9 +94,40 @@ public class JGJTurnierTestDatenUITest extends BaseCalcUITest {
 		validiereSpielplanPerJson("jgj-spielplan-2g4t.json");
 		validiereRanglistePerJson(anzTeams, "jgj-rangliste-2g4t.json");
 		validiereGesamtranglistePerJson(anzTeams, "jgj-gesamtrangliste-2g4t.json");
+		assertThat(sheetHlp.findByName(SheetNamen.koFinaleGruppe("A")))
+				.as("A-Finale-Sheet muss existieren").isNotNull();
+		assertThat(sheetHlp.findByName(SheetNamen.koFinaleGruppe("B")))
+				.as("B-Finale-Sheet muss existieren").isNotNull();
+		assertThat(JGJStatusLeser.von(wkingSpreadsheet).liesStatus().finalrundeBeendet())
+				.as("JGJ-Beispiel-Finalrunden muessen komplett mit Testdaten gefuellt sein")
+				.isTrue();
 
 		new JGJRanglisteDirektvergleichSheet(wkingSpreadsheet).run();
 		validiereDirektvergleichPerJson(anzTeams, "jgj-direktvergleich-2g4t.json");
+	}
+
+	@Test
+	public void jgjFinalrundeAusGesamtranglisteErstelltABFinale() throws GenerateException {
+		new JGJTriplette2Gruppen4TurnierTestDaten(wkingSpreadsheet).generate();
+		new JGJFinalrundeSheet(wkingSpreadsheet).run();
+
+		assertThat(sheetHlp.findByName(SheetNamen.koFinaleGruppe("A")))
+				.as("A-Finale-Sheet muss existieren").isNotNull();
+		assertThat(sheetHlp.findByName(SheetNamen.koFinaleGruppe("B")))
+				.as("B-Finale-Sheet muss existieren").isNotNull();
+
+		Map<String, String> erwartung = new LinkedHashMap<>();
+		erwartung.put(SheetNamen.meldeliste(), SheetMetadataHelper.SCHLUESSEL_JGJ_MELDELISTE);
+		erwartung.put(SheetNamen.spielplan(), SheetMetadataHelper.SCHLUESSEL_JGJ_SPIELPLAN);
+		erwartung.put(SheetNamen.rangliste(), SheetMetadataHelper.SCHLUESSEL_JGJ_RANGLISTE);
+		for (String gruppe : new String[]{"A", "B"}) {
+			erwartung.put(SheetNamen.jgjGruppeSpielplan(gruppe),
+					SheetMetadataHelper.schluesselJgjGruppeSpielplan(gruppe));
+		}
+		erwartung.put(SheetNamen.jgjGesamtrangliste(), SheetMetadataHelper.SCHLUESSEL_JGJ_GESAMTRANGLISTE);
+		erwartung.put(SheetNamen.koFinaleGruppe("A"), SheetMetadataHelper.schluesselJgjFinalrunde("A"));
+		erwartung.put(SheetNamen.koFinaleGruppe("B"), SheetMetadataHelper.schluesselJgjFinalrunde("B"));
+		pruefeJedesBlattTraegtKorrektenSchluessel(erwartung);
 	}
 
 	/**

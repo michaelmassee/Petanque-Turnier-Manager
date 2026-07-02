@@ -142,13 +142,15 @@ public final class BeispielturnierRegistrierung {
                         "JGJDoublette17TurnierTestDaten.java"),
 
                 new Eintrag(
-                        "Jeder gegen Jeden (8 Teams, Triplette, 2 Gruppen à 4, Gesamtrangliste)",
+                        "Jeder gegen Jeden (8 Teams, Triplette, 2 Gruppen à 4, Gesamtrangliste + 2 KO-Runden)",
                         ws -> new JGJTriplette2Gruppen4TurnierTestDaten(ws).generate(),
                         List.of(
                                 SheetMetadataHelper.SCHLUESSEL_JGJ_MELDELISTE,
                                 SheetMetadataHelper.SCHLUESSEL_JGJ_SPIELPLAN,
                                 SheetMetadataHelper.SCHLUESSEL_JGJ_RANGLISTE,
-                                SheetMetadataHelper.SCHLUESSEL_JGJ_GESAMTRANGLISTE),
+                                SheetMetadataHelper.SCHLUESSEL_JGJ_GESAMTRANGLISTE,
+                                SheetMetadataHelper.schluesselJgjFinalrunde("A"),
+                                SheetMetadataHelper.schluesselJgjFinalrunde("B")),
                         "JGJTriplette2Gruppen4TurnierTestDaten.java"),
 
                 new Eintrag(
