@@ -48,6 +48,8 @@ public class MaastrichterTurnierTestDatenUITest extends BaseCalcUITest {
 	private static final long SEED_FUER_TESTS = 42L;
 	private static final int MELDELISTE_ERSTE_DATEN_ZEILE = 3;
 	private static final int MELDELISTE_NACHNAME_SPALTE = 2;
+	/** CellBackColor-Wert für „keine Farbe" (transparent) – so setzt der Bracket-Aufbau Leerflächen zurück. */
+	private static final int TRANSPARENT = -1;
 
 	@BeforeEach
 	@Override
@@ -107,12 +109,14 @@ public class MaastrichterTurnierTestDatenUITest extends BaseCalcUITest {
 		validiereVorrundenRanglistePerJson(anzTeams, "maastrichter-57-vorrundenrangliste.json");
 		validiereTeilnehmerPerJson(anzTeams, "maastrichter-57-teilnehmer.json");
 		validiereFinaleGruppePerJson("A", "maastrichter-57-finale-a.json");
-		validiereFinalrundeLeerflaechenSindWeiss("A");
-		validiereUnveraenderteFinalrundeWirdNichtNeuAufgebaut("A");
+		validiereFinalrundeLeerflaechenSindTransparent("A");
 		validiereFinaleGruppePerJson("B", "maastrichter-57-finale-b.json");
 		validiereFinalrundenBleibenNachTabWechselUnveraendert("A", "B");
 		validiereFinaleGruppePerJson("C", "maastrichter-57-finale-c.json");
 		validiereFinaleGruppePerJson("D", "maastrichter-57-finale-d.json");
+		// Zuletzt, weil der bestätigte Neuaufbau die Bahn-Auslosung (RandomSource) neu würfelt
+		// und damit die JSON-Referenzvergleiche oben nicht mehr reproduzierbar wären.
+		validiereFinalrundeNeuAufbauNachBestaetigung("A");
 	}
 
 	/**
@@ -259,14 +263,19 @@ public class MaastrichterTurnierTestDatenUITest extends BaseCalcUITest {
 		validateWithJson(rangeData, jsonFile);
 	}
 
-	private void validiereFinalrundeLeerflaechenSindWeiss(String gruppenBuchstabe) {
+	/**
+	 * Leere Bracket-Flächen werden bewusst transparent ({@code CellBackColor == -1}) zurückgesetzt
+	 * (siehe {@code KoTurnierbaumSheet#setzeBracketLeerflaecheZurueck}), damit der HTML-Web-Export
+	 * sie nicht als {@code background-color:#FFFFFF} rendert. Deckendes Weiß wäre also ein Fehler.
+	 */
+	private void validiereFinalrundeLeerflaechenSindTransparent(String gruppenBuchstabe) {
 		XSpreadsheet sheet = sheetHlp.findByName(SheetNamen.koFinaleGruppe(gruppenBuchstabe));
 		assertThat(sheet).as("Finalgruppe-Sheet '%s' muss existieren", gruppenBuchstabe).isNotNull();
 
-		assertThat(cellBackColor(sheet, 0, 5)).as("1/8-Finale Leerflaeche A6").isEqualTo(0xFFFFFF);
-		assertThat(cellBackColor(sheet, 2, 5)).as("1/8-Finale Verbinder-Leerflaeche C6").isEqualTo(0xFFFFFF);
-		assertThat(cellBackColor(sheet, 3, 3)).as("1/4-Finale Leerflaeche D4").isEqualTo(0xFFFFFF);
-		assertThat(cellBackColor(sheet, 5, 3)).as("1/4-Finale Verbinder-Leerflaeche F4").isEqualTo(0xFFFFFF);
+		assertThat(cellBackColor(sheet, 0, 5)).as("1/8-Finale Leerflaeche A6").isEqualTo(TRANSPARENT);
+		assertThat(cellBackColor(sheet, 2, 5)).as("1/8-Finale Verbinder-Leerflaeche C6").isEqualTo(TRANSPARENT);
+		assertThat(cellBackColor(sheet, 3, 3)).as("1/4-Finale Leerflaeche D4").isEqualTo(TRANSPARENT);
+		assertThat(cellBackColor(sheet, 5, 3)).as("1/4-Finale Verbinder-Leerflaeche F4").isEqualTo(TRANSPARENT);
 	}
 
 	private void validiereFinalrundenBleibenNachTabWechselUnveraendert(String... gruppenBuchstaben) {
@@ -275,11 +284,19 @@ public class MaastrichterTurnierTestDatenUITest extends BaseCalcUITest {
 			assertThat(sheet).as("Finalgruppe-Sheet '%s' muss existieren", gruppenBuchstabe).isNotNull();
 			sheetHlp.setActiveSheet(sheet);
 			wartenAufRunnerFertig(30_000);
-			validiereFinalrundeLeerflaechenSindWeiss(gruppenBuchstabe);
+			validiereFinalrundeLeerflaechenSindTransparent(gruppenBuchstabe);
 		}
 	}
 
-	private void validiereUnveraenderteFinalrundeWirdNichtNeuAufgebaut(String gruppenBuchstabe)
+	/**
+	 * Neues Verhalten (ersetzt den früheren Signatur-Skip): Sind bereits KO-Finalrunden
+	 * vorhanden, fragt {@link MaastrichterFinalrundeSheet} per WARN_YES_NO nach, ob alle
+	 * bestehenden Finalrunden gelöscht und neu erstellt werden sollen. Im Headless-Test
+	 * liefert die MessageBox automatisch YES ({@code MessageBox.setDialogeUeberspringen}),
+	 * d.h. die vorhandenen Finale-Sheets werden gelöscht und neu aufgebaut. Ein zuvor in
+	 * eine Zelle geschriebener Marker darf danach nicht mehr vorhanden sein.
+	 */
+	private void validiereFinalrundeNeuAufbauNachBestaetigung(String gruppenBuchstabe)
 			throws GenerateException {
 		XSpreadsheet sheet = sheetHlp.findByName(SheetNamen.koFinaleGruppe(gruppenBuchstabe));
 		assertThat(sheet).as("Finalgruppe-Sheet '%s' muss existieren", gruppenBuchstabe).isNotNull();
@@ -288,10 +305,13 @@ public class MaastrichterTurnierTestDatenUITest extends BaseCalcUITest {
 		new MaastrichterFinalrundeSheet(wkingSpreadsheet).doRun();
 
 		XSpreadsheet sheetNachUpdate = sheetHlp.findByName(SheetNamen.koFinaleGruppe(gruppenBuchstabe));
+		assertThat(sheetNachUpdate)
+				.as("KO-Finalrunde muss nach bestätigtem Neuaufbau weiterhin existieren")
+				.isNotNull();
 		assertThat(cellText(sheetNachUpdate, 30, 30))
-				.as("Unveraenderte KO-Finalrunde darf nicht geloescht und neu aufgebaut werden")
-				.isEqualTo("PTM_REFRESH_MARKER");
-		validiereFinalrundeLeerflaechenSindWeiss(gruppenBuchstabe);
+				.as("Bestätigter Neuaufbau muss das alte Finale-Sheet löschen und neu erstellen")
+				.isEmpty();
+		validiereFinalrundeLeerflaechenSindTransparent(gruppenBuchstabe);
 	}
 
 	private void wartenAufRunnerFertig(long timeoutMs) {
