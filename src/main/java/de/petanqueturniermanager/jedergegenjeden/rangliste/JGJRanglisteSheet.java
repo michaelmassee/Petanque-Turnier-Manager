@@ -269,9 +269,13 @@ public class JGJRanglisteSheet extends SheetRunner implements ISheet, IRangliste
         };
         for (int i = 0; i < einzelSpalten.length; i++) {
             int col = einzelSpalten[i][0];
-            var border = einzelSpalten[i][1] == 1
-                    ? BorderFactory.from().allThin().boldLn().forBottom().forRight().toBorder()
-                    : BorderFactory.from().allThin().boldLn().forBottom().toBorder();
+            var borderFact = BorderFactory.from().allThin().boldLn().forBottom();
+            if (einzelSpalten[i][1] == 1) {
+                borderFact.boldLn().forRight();
+            } else if (col == TEAM_NR_SPALTE) {
+                borderFact.doubleLn().forRight(); // Nr: doppelte rechte Linie wie Datenzellen
+            }
+            var border = borderFact.toBorder();
             var cv = StringCellValue
                     .from(sheet, Position.from(col, HEADER_ZEILE), einzelTexte[i])
                     .setCellBackColor(headerFarbe)
