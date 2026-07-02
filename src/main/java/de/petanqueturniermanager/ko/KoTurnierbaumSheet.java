@@ -895,11 +895,19 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		return letzteZeile;
 	}
 
+	/**
+	 * Setzt die gesamte Bracket-Fläche vor dem Neuaufbau auf „keine Hintergrundfarbe" zurück, damit
+	 * Altfarben eines vorherigen Aufbaus verschwinden. Bewusst wird {@code -1} (transparent) aktiv
+	 * geschrieben statt die Property nur zu entfernen: Nur so werden bestehende Füllungen tatsächlich
+	 * überschrieben. Zugleich vermeidet {@code -1} deckendes Weiß, das der HTML-Web-Export sonst als
+	 * {@code background-color:#FFFFFF} rendern würde ({@code CellBackColor == -1} gilt dort als „keine
+	 * Farbe").
+	 */
 	private void setzeBracketLeerflaecheZurueck(XSpreadsheet xSheet, int letzteZeile, int letzteSpalte)
 			throws GenerateException {
 		getSheetHelper().setPropertiesInRange(xSheet,
 				RangePosition.from(0, ersteZeile(), letzteSpalte, letzteZeile),
-				CellProperties.from().setCellBackColor(0xFFFFFF).setCellbackgroundTransparent(false));
+				CellProperties.from().setCellBackColor(-1));
 	}
 
 	/**
