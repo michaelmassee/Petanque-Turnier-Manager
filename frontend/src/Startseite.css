@@ -111,6 +111,65 @@
   50%, 100% { opacity: 0.3; }
 }
 
+.anim-zoom {
+  animation: ptm-zoom 3.2s ease-in-out infinite;
+  transform-origin: center;
+}
+@keyframes ptm-zoom {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.08); }
+}
+
+.anim-wave {
+  animation: ptm-wave 3.6s ease-in-out infinite;
+  transform-origin: center;
+}
+@keyframes ptm-wave {
+  0%, 100% { transform: translateY(0) skewX(0deg); }
+  25%      { transform: translateY(-0.08em) skewX(-2deg); }
+  50%      { transform: translateY(0.04em) skewX(2deg); }
+  75%      { transform: translateY(-0.04em) skewX(-1deg); }
+}
+
+.anim-glow {
+  animation: ptm-glow 2.8s ease-in-out infinite;
+}
+@keyframes ptm-glow {
+  0%, 100% { text-shadow: 0 0 0 rgba(42, 93, 168, 0); }
+  50%      { text-shadow: 0 0 0.45em rgba(42, 93, 168, 0.55); }
+}
+
+.anim-flip {
+  animation: ptm-flip 5s ease-in-out infinite;
+  backface-visibility: hidden;
+  transform-origin: center;
+}
+@keyframes ptm-flip {
+  0%, 12%   { transform: rotateX(90deg); opacity: 0; }
+  22%, 82%  { transform: rotateX(0deg); opacity: 1; }
+  92%, 100% { transform: rotateX(-90deg); opacity: 0; }
+}
+
+.anim-bounce {
+  animation: ptm-bounce 2.8s cubic-bezier(0.2, 0.75, 0.35, 1) infinite;
+}
+@keyframes ptm-bounce {
+  0%, 100% { transform: translateY(0); }
+  35%      { transform: translateY(-0.35em); }
+  55%      { transform: translateY(0.08em); }
+  70%      { transform: translateY(-0.12em); }
+}
+
+.anim-rotate {
+  animation: ptm-rotate 4s ease-in-out infinite;
+  transform-origin: center;
+}
+@keyframes ptm-rotate {
+  0%, 100% { transform: rotate(0deg); }
+  25%      { transform: rotate(-2deg); }
+  75%      { transform: rotate(2deg); }
+}
+
 .anim-marquee {
   display: block;
   -webkit-line-clamp: unset;

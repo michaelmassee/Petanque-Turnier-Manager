@@ -37,6 +37,12 @@ function alignPosition(h, v) {
   return { left, top, translateX, translateY };
 }
 
+function timerAusrichtung(h, v) {
+  const alignItems = h === 'links' ? 'flex-start' : h === 'rechts' ? 'flex-end' : 'center';
+  const justifyContent = v === 'oben' ? 'flex-start' : v === 'unten' ? 'flex-end' : 'center';
+  return { alignItems, justifyContent };
+}
+
 /**
  * Rendert eine einzelne Tabellen-Ansicht (Sheet).
  *
@@ -162,6 +168,7 @@ export default function Panel({ table, sheetnamenAnzeigen, headerFooterUnterdrue
     const hintergrundStyle = table.timerHintergrundFarbe
       ? { backgroundColor: `${table.timerHintergrundFarbe}cc` }
       : {};
+    const timerZoom = (table.zoom ?? 100) / 100;
     const tonStatusAnzeigen = timerAudio?.vorhanden && !timerAudio?.aktiv;
     const tonAktivieren = () => {
       timerAudio?.aktivieren?.();
@@ -177,12 +184,20 @@ export default function Panel({ table, sheetnamenAnzeigen, headerFooterUnterdrue
       }
     };
     return (
-      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-        <div className={`timer-panel ${cls}`} style={{
+      <div
+        className={`timer-panel ${cls}`}
+        style={{
           ...hintergrundStyle,
-          transform: table.zoom !== 100 ? `scale(${table.zoom / 100})` : undefined,
-          transformOrigin: transformOrigin(table.hAlign, table.vAlign),
-        }}>
+          ...timerAusrichtung(table.hAlign, table.vAlign),
+        }}
+      >
+        <div
+          className="timer-panel-content"
+          style={{
+            transform: timerZoom !== 1 ? `scale(${timerZoom})` : undefined,
+            transformOrigin: transformOrigin(table.hAlign, table.vAlign),
+          }}
+        >
           {table.timerBezeichnung && (
             <div className="timer-bezeichnung">{table.timerBezeichnung}</div>
           )}

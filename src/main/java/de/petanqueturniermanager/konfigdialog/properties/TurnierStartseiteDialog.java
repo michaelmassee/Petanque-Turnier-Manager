@@ -54,7 +54,8 @@ public class TurnierStartseiteDialog extends AbstractUnoDialog {
     public static final String ANIMATION_DEFAULT                 = "keine";
     /** Reihenfolge der Animations-Optionen in der ListBox (auch Frontend-CSS-Klassen-Suffix). */
     public static final String[] ANIMATION_KEYS = {
-            "keine", "fade", "slide", "typewriter", "marquee", "pulse", "blink"
+            "keine", "fade", "slide", "typewriter", "marquee", "pulse", "blink",
+            "zoom", "wave", "glow", "flip", "bounce", "rotate"
     };
 
     private static final int DIALOG_BREITE = 360;
@@ -369,7 +370,13 @@ public class TurnierStartseiteDialog extends AbstractUnoDialog {
                 I18n.get("konfiguration.startseite.beschreibung.animation.option.typewriter"),
                 I18n.get("konfiguration.startseite.beschreibung.animation.option.marquee"),
                 I18n.get("konfiguration.startseite.beschreibung.animation.option.pulse"),
-                I18n.get("konfiguration.startseite.beschreibung.animation.option.blink")
+                I18n.get("konfiguration.startseite.beschreibung.animation.option.blink"),
+                I18n.get("konfiguration.startseite.beschreibung.animation.option.zoom"),
+                I18n.get("konfiguration.startseite.beschreibung.animation.option.wave"),
+                I18n.get("konfiguration.startseite.beschreibung.animation.option.glow"),
+                I18n.get("konfiguration.startseite.beschreibung.animation.option.flip"),
+                I18n.get("konfiguration.startseite.beschreibung.animation.option.bounce"),
+                I18n.get("konfiguration.startseite.beschreibung.animation.option.rotate")
         };
     }
 

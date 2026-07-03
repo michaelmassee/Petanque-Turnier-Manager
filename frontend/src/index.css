@@ -171,12 +171,24 @@ td {
   height: 100%;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
   background: #000;
   transition: color 0.3s ease, background 0.5s ease;
   font-family: 'Courier New', Courier, monospace;
   user-select: none;
+  overflow: hidden;
+  container-type: size;
+}
+
+.timer-panel-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  padding: min(4cqw, 4cqh);
+  text-align: center;
 }
 
 .timer-zustand-laeuft   { color: #00ff44; }
@@ -185,14 +197,14 @@ td {
 .timer-zustand-inaktiv  { color: #555; }
 
 .timer-anzeige {
-  font-size: clamp(3rem, 15vw, 12rem);
+  font-size: clamp(2rem, min(18cqw, 42cqh), 12rem);
   font-weight: bold;
   line-height: 1;
   letter-spacing: 0.05em;
 }
 
 .timer-bezeichnung {
-  font-size: clamp(1.4rem, 4vw, 4rem);
+  font-size: clamp(1rem, min(5cqw, 12cqh), 4rem);
   color: #fff;
   font-weight: bold;
   letter-spacing: 0.08em;
@@ -225,7 +237,7 @@ td {
 }
 
 .timer-tonstatus-titel {
-  font-size: clamp(1.2rem, 3.5vw, 3rem);
+  font-size: clamp(1rem, min(4cqw, 8cqh), 3rem);
   font-weight: bold;
   line-height: 1.1;
   text-transform: uppercase;
@@ -233,7 +245,7 @@ td {
 
 .timer-tonstatus-hinweis {
   margin-top: 0.35rem;
-  font-size: clamp(0.85rem, 2vw, 1.6rem);
+  font-size: clamp(0.8rem, min(2.2cqw, 4.5cqh), 1.6rem);
   line-height: 1.2;
   color: #fff4b8;
 }
