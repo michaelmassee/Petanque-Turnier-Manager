@@ -26,6 +26,7 @@ import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.pagestyle.PageStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleDef;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
+import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 
 public class NewSheet extends BaseHelper {
@@ -183,6 +184,7 @@ public class NewSheet extends BaseHelper {
 					return this;
 				}
 				// removeSheet() bereinigt intern bereits verwaiste Named-Range-Einträge
+				BlattschutzManager.get().ensureUnprotectedInScope();
 				sheetHelper.removeSheet(sheetName);
 				sheet = null;
 				turnierSheet = null;
@@ -231,6 +233,10 @@ public class NewSheet extends BaseHelper {
 			if (didCreate || !SheetMetadataHelper.istRegistriertesSheet(xDoc, sheet, metadatenSchluessel)) {
 				SheetMetadataHelper.schreibeSheetMetadaten(xDoc, sheet, metadatenSchluessel);
 			}
+		}
+
+		if (didCreate) {
+			sheetHelper.entferneLeeresDefaultSheetWennMoeglich(sheetName);
 		}
 
 		return this;

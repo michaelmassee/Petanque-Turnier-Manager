@@ -28,9 +28,11 @@ import com.sun.star.lang.IndexOutOfBoundsException;
 import com.sun.star.lang.WrappedTargetException;
 import com.sun.star.lang.XMultiServiceFactory;
 import com.sun.star.sheet.FillDirection;
+import com.sun.star.sheet.CellFlags;
 import com.sun.star.sheet.XCellAddressable;
 import com.sun.star.sheet.XCellRangeAddressable;
 import com.sun.star.sheet.XCellSeries;
+import com.sun.star.sheet.XCellRangesQuery;
 import com.sun.star.sheet.XFunctionAccess;
 import com.sun.star.sheet.XSheetCellRangeContainer;
 import com.sun.star.sheet.XSheetCellRanges;
@@ -207,6 +209,43 @@ public class SheetHelper {
 			// ignore
 		}
 		SheetMetadataHelper.bereinigeVerwaisteMetadaten(currentSpreadsheet.getWorkingSpreadsheetDocument());
+	}
+
+	public void entferneLeeresDefaultSheetWennMoeglich(String neuErstelltesSheetName) {
+		checkNotNull(neuErstelltesSheetName);
+		XSpreadsheets sheets = getSheets();
+		String[] sheetNamen = sheets.getElementNames();
+		if (sheetNamen.length != 2) {
+			return;
+		}
+
+		for (String sheetName : sheetNamen) {
+			if (neuErstelltesSheetName.equals(sheetName)) {
+				continue;
+			}
+			XSpreadsheet kandidat = findByName(sheetName);
+			if (kandidat == null || !istSheetInhaltlichLeer(kandidat)) {
+				continue;
+			}
+			try {
+				removeSheet(sheetName);
+				logger.debug("Leeres Default-Sheet '{}' entfernt", sheetName);
+			} catch (java.lang.RuntimeException e) {
+				logger.warn("Leeres Default-Sheet '{}' konnte nicht entfernt werden: {}", sheetName,
+						e.getMessage());
+			}
+		}
+	}
+
+	private boolean istSheetInhaltlichLeer(XSpreadsheet sheet) {
+		XCellRangesQuery query = Lo.qi(XCellRangesQuery.class, sheet);
+		if (query == null) {
+			return false;
+		}
+		short inhaltsFlags = (short) (CellFlags.VALUE | CellFlags.DATETIME | CellFlags.STRING
+				| CellFlags.ANNOTATION | CellFlags.FORMULA | CellFlags.OBJECTS);
+		XSheetCellRanges ranges = query.queryContentCells(inhaltsFlags);
+		return ranges == null || ranges.getRangeAddresses().length == 0;
 	}
 
 	public XSpreadsheet newIfNotExist(String sheetName, int pos) {
