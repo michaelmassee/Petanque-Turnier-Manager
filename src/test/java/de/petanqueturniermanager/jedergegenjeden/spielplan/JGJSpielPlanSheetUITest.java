@@ -11,12 +11,16 @@ import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
+import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationSheet;
 import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJTestMeldeListeErstellen;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 
 /**
  * UITest fuer den JGJ-Spielplan (Jeder-gegen-Jeden).<br>
@@ -29,6 +33,9 @@ public class JGJSpielPlanSheetUITest extends BaseCalcUITest {
 
 	// private Konstanten aus JGJSpielPlanSheet nachgebaut
 	private static final int SPIEL_NR_SPALTE = 0; // Spalte A
+	private static final int NAME_A_SPALTE = 1;
+	private static final int NAME_B_SPALTE = 2;
+	private static final int GRUPPEN_ERSTE_DATEN_ZEILE = 3;
 
 	// 5 Teams (ungerade): 5 Runden x 3 Zeilen (inkl. Freispiel) = 15 pro Halbzeit
 	private static final int ANZ_HR_ZEILEN = 15;
@@ -109,6 +116,44 @@ public class JGJSpielPlanSheetUITest extends BaseCalcUITest {
 					.as("Rueckrunde Zeile " + (i + 1))
 					.isEqualTo("RR-" + (i + 1));
 		}
+	}
+
+	@Test
+	public void spielplanTeamnamenVerwendenPtmTeamAnzeigeFormel() throws GenerateException {
+		JGJKonfigurationSheet konfiguration = new JGJKonfigurationSheet(wkingSpreadsheet);
+		konfiguration.setSpielplanTeamAnzeige(SpielplanTeamAnzeige.NAME);
+
+		JGJSpielPlanSheet spielPlan = new JGJSpielPlanSheet(wkingSpreadsheet);
+		spielPlan.run();
+		XSpreadsheet sheet = spielPlan.getXSpreadSheet();
+
+		String formulaA = sheetHlp.getFormulaFromCell(sheet,
+				Position.from(NAME_A_SPALTE, JGJSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE));
+		String formulaB = sheetHlp.getFormulaFromCell(sheet,
+				Position.from(NAME_B_SPALTE, JGJSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE));
+
+		assertThat(formulaA).contains("PTMTEAMANZEIGE");
+		assertThat(formulaB).contains("PTMTEAMANZEIGE");
+	}
+
+	@Test
+	public void gruppenSpielplanTeamnamenVerwendenPtmTeamAnzeigeFormel() throws GenerateException {
+		JGJKonfigurationSheet konfiguration = new JGJKonfigurationSheet(wkingSpreadsheet);
+		konfiguration.setSpielplanTeamAnzeige(SpielplanTeamAnzeige.NAME);
+		konfiguration.setGruppengroesse(2);
+
+		new JGJSpielPlanSheet(wkingSpreadsheet).run();
+		XSpreadsheet gruppeA = sheetHlp.findByName(SheetNamen.jgjGruppeSpielplan("A"));
+
+		String formulaA = sheetHlp.getFormulaFromCell(gruppeA,
+				Position.from(NAME_A_SPALTE, GRUPPEN_ERSTE_DATEN_ZEILE));
+		String formulaB = sheetHlp.getFormulaFromCell(gruppeA,
+				Position.from(NAME_B_SPALTE, GRUPPEN_ERSTE_DATEN_ZEILE));
+
+		assertThat(formulaA).contains("PTMTEAMANZEIGE");
+		assertThat(formulaB)
+				.contains("PTMTEAMANZEIGE")
+				.contains(I18n.get("spielplan.freispiel.name"));
 	}
 
 	/**

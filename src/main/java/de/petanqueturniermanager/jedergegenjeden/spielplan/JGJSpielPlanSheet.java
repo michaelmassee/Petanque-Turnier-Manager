@@ -2,7 +2,6 @@ package de.petanqueturniermanager.jedergegenjeden.spielplan;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.sun.star.awt.FontWeight;
@@ -260,7 +259,6 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 			List<List<List<TeamPaarung>>> gruppenSpielplaeneR) throws GenerateException {
 
 		boolean zeigeNr = konfigurationSheet.getSpielplanTeamAnzeige() == SpielplanTeamAnzeige.NR;
-		Map<Integer, String> teamNamen = zeigeNr ? Map.of() : meldeListe.leseTeamNamen();
 		String freispielText = I18n.get("spielplan.freispiel.name");
 
 		JGJGruppenSpielplaeneSheet aushang = new JGJGruppenSpielplaeneSheet(this, konfigurationSheet);
@@ -268,7 +266,7 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 			SheetRunner.testDoCancelTask();
 			aushang.erstelle(gruppenBuchstabe(g), gruppenStartZeilen.get(g),
 					gruppenSpielplaeneH.get(g), gruppenSpielplaeneR.get(g),
-					zeigeNr, teamNamen, freispielText);
+					zeigeNr, meldeListe::formulaSpielplanTeamName, freispielText);
 		}
 
 		// Nach dem Erstellen der Aushänge wieder den zentralen Spielplan aktivieren,
@@ -473,7 +471,6 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 	private void insertFormulaTeamNamen() throws GenerateException {
 		int letzteSpielZeile = letzteSpielZeile();
 		boolean zeigeNr = konfigurationSheet.getSpielplanTeamAnzeige() == SpielplanTeamAnzeige.NR;
-		Map<Integer, String> teamNamen = zeigeNr ? Map.of() : meldeListe.leseTeamNamen();
 		String freispielText = I18n.get("spielplan.freispiel.name");
 
 		RangeData nrData = RangeHelper.from(this, RangePosition.from(
@@ -488,14 +485,29 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 				nameRow.newString("");
 				nameRow.newString("");
 			} else {
-				String nameA = zeigeNr ? String.valueOf(nrA) : teamNamen.getOrDefault(nrA, "");
-				String nameB = nrB <= 0 ? freispielText : (zeigeNr ? String.valueOf(nrB) : teamNamen.getOrDefault(nrB, ""));
-				nameRow.newString(nameA);
-				nameRow.newString(nameB);
+				nameRow.newString(zeigeNr ? String.valueOf(nrA) : "");
+				nameRow.newString(nrB <= 0 ? freispielText : (zeigeNr ? String.valueOf(nrB) : ""));
 			}
 		}
 		RangeHelper.from(this, nameData.getRangePosition(Position.from(NAME_A_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE)))
 				.setDataInRange(nameData);
+
+		if (!zeigeNr) {
+			for (int zeile = ERSTE_SPIELTAG_DATEN_ZEILE; zeile <= letzteSpielZeile; zeile++) {
+				String nrAAdresse = Position.from(TEAM_A_NR_SPALTE, zeile).getAddress();
+				String nrBAdresse = Position.from(TEAM_B_NR_SPALTE, zeile).getAddress();
+
+				getSheetHelper().setFormulaInCell(getXSpreadSheet(), Position.from(NAME_A_SPALTE, zeile),
+						"IF(" + nrAAdresse + "<=0;\"\";" + meldeListe.formulaSpielplanTeamName(nrAAdresse) + ")");
+				getSheetHelper().setFormulaInCell(getXSpreadSheet(), Position.from(NAME_B_SPALTE, zeile),
+						"IF(" + nrBAdresse + "<=0;" + calcStringLiteral(freispielText) + ";"
+								+ meldeListe.formulaSpielplanTeamName(nrBAdresse) + ")");
+			}
+		}
+	}
+
+	private static String calcStringLiteral(String value) {
+		return "\"" + value.replace("\"", "\"\"") + "\"";
 	}
 
 	private void insertFormulaValidierung() throws GenerateException {

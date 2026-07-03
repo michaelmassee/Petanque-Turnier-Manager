@@ -2,7 +2,6 @@ package de.petanqueturniermanager.jedergegenjeden.spielplan;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -59,6 +58,8 @@ public class JGJGruppenSpielplaeneSheet implements ISheet {
 	private static final int SPALTE_TEAM_B = 2;
 	private static final int SPALTE_ERGEBNIS_A = 3;
 	private static final int SPALTE_ERGEBNIS_B = 4;
+	private static final int SPALTE_TEAM_A_NR = 5;
+	private static final int SPALTE_TEAM_B_NR = 6;
 	private static final int LETZTE_SPALTE = SPALTE_ERGEBNIS_B;
 
 	private static final int SPALTE_BREITE_NR = 1000;        // 1 cm
@@ -119,12 +120,12 @@ public class JGJGruppenSpielplaeneSheet implements ISheet {
 	 * @param hRunde                 Hinrunde (Reihenfolge wie im zentralen Spielplan).
 	 * @param rRunde                 Rückrunde oder leere Liste.
 	 * @param zeigeNr                {@code true}: Team-Nr statt Name anzeigen.
-	 * @param teamNamen              Mapping Team-Nr → Name (wenn {@code !zeigeNr}).
+	 * @param teamNameFormel         Formel-Generator für Teamnamen (wenn {@code !zeigeNr}).
 	 * @param freispielText          Anzeigetext für Freispiel-Paarungen.
 	 */
 	public void erstelle(String buchstabe, int zentraleStartZeile,
 			List<List<TeamPaarung>> hRunde, List<List<TeamPaarung>> rRunde,
-			boolean zeigeNr, Map<Integer, String> teamNamen, String freispielText) throws GenerateException {
+			boolean zeigeNr, TeamNameFormel teamNameFormel, String freispielText) throws GenerateException {
 
 		String sheetName = SheetNamen.jgjGruppeSpielplan(buchstabe);
 		String metaKey = SheetMetadataHelper.schluesselJgjGruppeSpielplan(buchstabe);
@@ -141,7 +142,7 @@ public class JGJGruppenSpielplaeneSheet implements ISheet {
 			schreibeTitelZeile(buchstabe);
 			schreibeSpaltenHeader();
 
-			int letzteDatenZeile = schreibeSpieleDaten(hRunde, rRunde, zeigeNr, teamNamen, freispielText);
+			int letzteDatenZeile = schreibeSpieleDaten(hRunde, rRunde, zeigeNr, teamNameFormel, freispielText);
 			schreibeErgebnisFormeln(letzteDatenZeile, zentraleStartZeile);
 
 			formatiereSheet(letzteDatenZeile, hRunde, rRunde);
@@ -168,6 +169,10 @@ public class JGJGruppenSpielplaeneSheet implements ISheet {
 				ColumnProperties.from().setWidth(SPALTE_BREITE_ERGEBNIS).centerJustify());
 		getSheetHelper().setColumnProperties(aktuellesSheet, SPALTE_ERGEBNIS_B,
 				ColumnProperties.from().setWidth(SPALTE_BREITE_ERGEBNIS).centerJustify());
+		getSheetHelper().setColumnProperties(aktuellesSheet, SPALTE_TEAM_A_NR,
+				ColumnProperties.from().isVisible(false));
+		getSheetHelper().setColumnProperties(aktuellesSheet, SPALTE_TEAM_B_NR,
+				ColumnProperties.from().isVisible(false));
 	}
 
 	private void schreibeTitelZeile(String buchstabe) throws GenerateException {
@@ -215,7 +220,7 @@ public class JGJGruppenSpielplaeneSheet implements ISheet {
 	}
 
 	private int schreibeSpieleDaten(List<List<TeamPaarung>> hRunde, List<List<TeamPaarung>> rRunde,
-			boolean zeigeNr, Map<Integer, String> teamNamen, String freispielText) throws GenerateException {
+			boolean zeigeNr, TeamNameFormel teamNameFormel, String freispielText) throws GenerateException {
 
 		List<List<TeamPaarung>> alleSpieltage = new ArrayList<>();
 		alleSpieltage.addAll(hRunde);
@@ -240,10 +245,12 @@ public class JGJGruppenSpielplaeneSheet implements ISheet {
 				boolean hatB = paarung.getOptionalB().isPresent();
 				int nrB = hatB ? paarung.getB().getNr() : 0;
 
-				row.newString(zeigeNr ? String.valueOf(nrA) : teamNamen.getOrDefault(nrA, ""));
-				row.newString(hatB
-						? (zeigeNr ? String.valueOf(nrB) : teamNamen.getOrDefault(nrB, ""))
-						: freispielText);
+				row.newString(zeigeNr ? String.valueOf(nrA) : "");
+				row.newString(hatB ? (zeigeNr ? String.valueOf(nrB) : "") : freispielText);
+				row.newString("");
+				row.newString("");
+				row.newInt(nrA);
+				row.newInt(nrB);
 			}
 			if (inHinrunde && hIndex > hAnzahl) {
 				inHinrunde = false;
@@ -255,6 +262,10 @@ public class JGJGruppenSpielplaeneSheet implements ISheet {
 
 		RangeHelper.from(this, daten.getRangePosition(startPos)).setDataInRange(daten);
 
+		if (!zeigeNr) {
+			schreibeTeamnameFormeln(letzteDatenZeile, teamNameFormel, freispielText);
+		}
+
 		// Border/Formatierung über die komplette Datenzeile (inkl. der per Formel
 		// befüllten Ergebnis-Spalten) anwenden.
 		RangeHelper.from(this,
@@ -265,6 +276,29 @@ public class JGJGruppenSpielplaeneSheet implements ISheet {
 						.topMargin(110).bottomMargin(110).setCharHeight(12));
 
 		return letzteDatenZeile;
+	}
+
+	private void schreibeTeamnameFormeln(int letzteDatenZeile, TeamNameFormel teamNameFormel,
+			String freispielText) throws GenerateException {
+		for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteDatenZeile; zeile++) {
+			String nrAAdresse = Position.from(SPALTE_TEAM_A_NR, zeile).getAddress();
+			String nrBAdresse = Position.from(SPALTE_TEAM_B_NR, zeile).getAddress();
+
+			getSheetHelper().setFormulaInCell(aktuellesSheet, Position.from(SPALTE_TEAM_A, zeile),
+					"IF(" + nrAAdresse + "<=0;\"\";" + teamNameFormel.formula(nrAAdresse) + ")");
+			getSheetHelper().setFormulaInCell(aktuellesSheet, Position.from(SPALTE_TEAM_B, zeile),
+					"IF(" + nrBAdresse + "<=0;" + calcStringLiteral(freispielText) + ";"
+							+ teamNameFormel.formula(nrBAdresse) + ")");
+		}
+	}
+
+	private static String calcStringLiteral(String value) {
+		return "\"" + value.replace("\"", "\"\"") + "\"";
+	}
+
+	@FunctionalInterface
+	public interface TeamNameFormel {
+		String formula(String nrAdresse) throws GenerateException;
 	}
 
 	/**
