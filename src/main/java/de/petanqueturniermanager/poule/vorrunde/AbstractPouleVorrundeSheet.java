@@ -9,6 +9,7 @@ import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeHelper;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -431,15 +432,17 @@ public abstract class AbstractPouleVorrundeSheet extends SheetRunner implements 
      * Direkte VLOOKUP-Formel (R1: Team-Nr ist garantiert eine Zahl).
      */
     private String vlookupDirekt(String nrAdresse) {
-        return "VLOOKUP(" + nrAdresse + ";$'" + SheetNamen.meldeliste() + "'.$A$4:$B$999;2;0)";
+        return MeldeListeHelper.teamNameFormel(nrAdresse,
+                konfigurationSheet.isMeldeListeTeamnameAnzeigen(),
+                konfigurationSheet.getMeldeListeFormation(),
+                konfigurationSheet.isMeldeListeVereinsnameAnzeigen());
     }
 
     /**
      * VLOOKUP mit ISNUMBER-Guard (R2/R3: Team-Nr ist eine Formel, die "" liefern kann).
      */
     private String vlookupMitGuard(String nrAdresse) {
-        return "IF(ISNUMBER(" + nrAdresse + ");VLOOKUP(" + nrAdresse
-                + ";$'" + SheetNamen.meldeliste() + "'.$A$4:$B$999;2;0);\"\")";
+        return "IF(ISNUMBER(" + nrAdresse + ");" + vlookupDirekt(nrAdresse) + ";\"\")";
     }
 
     /**

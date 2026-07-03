@@ -839,6 +839,42 @@
 					<prop oor:name="Category"><value>Add-In</value></prop>
 				</node>
 
+				<node oor:name="ptmteamanzeige" oor:op="replace">
+					<prop oor:name="DisplayName">
+						<value xml:lang="en">PTM.ALG.TEAMANZEIGE</value>
+						<value xml:lang="de">PTM.ALG.TEAMANZEIGE</value>
+						<value xml:lang="es">PTM.ALG.TEAMANZEIGE</value>
+						<value xml:lang="fr">PTM.ALG.TEAMANZEIGE</value>
+						<value xml:lang="nl">PTM.ALG.TEAMANZEIGE</value>
+					</prop>
+					<prop oor:name="Description">
+						<value xml:lang="en">Petanque Turniermanager: formats a Meldeliste row as team display text.</value>
+						<value xml:lang="de">Petanque Turniermanager: formatiert eine Meldelisten-Zeile als Team-Anzeigetext.</value>
+						<value xml:lang="es">Petanque Turniermanager: formatiert eine Meldelisten-Zeile als Team-Anzeigetext.</value>
+						<value xml:lang="fr">Petanque Turniermanager : formate une ligne de Meldeliste comme texte d'équipe.</value>
+						<value xml:lang="nl">Petanque Turniermanager: formatteert een Meldeliste-regel als teamtekst.</value>
+					</prop>
+					<node oor:name="Parameters">
+						<node oor:name="teamnameAnzeigen" oor:op="replace">
+							<prop oor:name="DisplayName"><value xml:lang="de">Teamname anzeigen</value></prop>
+							<prop oor:name="Description"><value xml:lang="de">1, wenn die Meldeliste eine Teamname-Spalte verwendet, sonst 0.</value></prop>
+						</node>
+						<node oor:name="anzSpieler" oor:op="replace">
+							<prop oor:name="DisplayName"><value xml:lang="de">Anzahl Spieler</value></prop>
+							<prop oor:name="Description"><value xml:lang="de">Anzahl Spieler je Team laut Formation.</value></prop>
+						</node>
+						<node oor:name="vereinsnameAnzeigen" oor:op="replace">
+							<prop oor:name="DisplayName"><value xml:lang="de">Vereinsname anzeigen</value></prop>
+							<prop oor:name="Description"><value xml:lang="de">1, wenn Vereinsnamen pro Spieler angezeigt werden, sonst 0.</value></prop>
+						</node>
+						<node oor:name="meldelistenZeile" oor:op="replace">
+							<prop oor:name="DisplayName"><value xml:lang="de">Meldelisten-Zeile</value></prop>
+							<prop oor:name="Description"><value xml:lang="de">Eine komplette Meldelisten-Zeile, z.B. per INDEX/VERGLEICH.</value></prop>
+						</node>
+					</node>
+					<prop oor:name="Category"><value>Add-In</value></prop>
+				</node>
+
 				</node>
 		</node>
 	</node>

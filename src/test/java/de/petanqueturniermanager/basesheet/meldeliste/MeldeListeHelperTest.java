@@ -60,6 +60,16 @@ public class MeldeListeHelperTest {
 	}
 
 	@Test
+	public void teamNameFormelVerwendetZentralePtmTeamAnzeige() {
+		String formel = MeldeListeHelper.teamNameFormel("$G$6", false, Formation.TRIPLETTE, true);
+
+		assertThat(formel)
+				.contains("PTM.ALG.TEAMANZEIGE(0;3;1;")
+				.contains("INDEX($'" + I18n.get("sheet.name.meldeliste") + "'.$A$1:$Z$999;")
+				.contains("MATCH($G$6;$'" + I18n.get("sheet.name.meldeliste") + "'.$A$1:$A$999;0);0)");
+	}
+
+	@Test
 	public void testTestDoppelteNamenMitUmlauten() throws Exception {
 
 		SpielerNrName[] spielerNrNameList = new SpielerNrName[] { new SpielerNrName(32, "Müller"),

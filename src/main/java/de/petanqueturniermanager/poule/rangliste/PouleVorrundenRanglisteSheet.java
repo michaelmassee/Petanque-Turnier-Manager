@@ -48,6 +48,7 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.poule.konfiguration.PouleKonfigurationSheet;
 import de.petanqueturniermanager.poule.vorrunde.AbstractPouleVorrundeSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
@@ -356,12 +357,14 @@ public class PouleVorrundenRanglisteSheet extends SheetRunner implements ISheet 
         RangeHelper.from(xSheet, doc, block2.getRangePosition(Position.from(SPALTE_SIEGE, HEADER_ZEILEN)))
                 .setDataInRange(block2);
 
-        // VLOOKUP-Formel für Name-Spalte (referenziert Nr-Zelle in gleicher Zeile)
+        // Zentrale PTM-Formel für Name-Spalte (referenziert Nr-Zelle in gleicher Zeile)
         for (int z = HEADER_ZEILEN; z < aktuelleZeile; z++) {
-            String vlookup = "VLOOKUP(" + Position.from(SPALTE_NR, z).getAddress()
-                    + ";$'" + SheetNamen.meldeliste() + "'.$A$4:$B$999;2;0)";
+            String teamAnzeige = MeldeListeHelper.teamNameFormel(Position.from(SPALTE_NR, z).getAddress(),
+                    konfigurationSheet.isMeldeListeTeamnameAnzeigen(),
+                    konfigurationSheet.getMeldeListeFormation(),
+                    konfigurationSheet.isMeldeListeVereinsnameAnzeigen());
             getSheetHelper().setFormulaInCell(
-                    StringCellValue.from(xSheet, Position.from(SPALTE_NAME, z), vlookup));
+                    StringCellValue.from(xSheet, Position.from(SPALTE_NAME, z), teamAnzeige));
         }
 
         // Formatierung: Rahmen + Zentrierung für alle Datenzellen

@@ -47,6 +47,9 @@ module de { module petanqueturniermanager { module addin {
     // Spieler-DB-Lookup (PTM.DB.SPIELER.*) – Indizes 27-28
     long ptmdbspieleranzahl ();
     sequence< sequence< string > > ptmdbspielersuche ([in] string suche, [in] boolean wildcard);
+    // Meldelisten-Teamanzeige für Turnierbaum-/Listen-Formeln – Index 29
+    string ptmteamanzeige ([in] long teamnameAnzeigen, [in] long anzSpieler,
+      [in] long vereinsnameAnzeigen, [in] sequence< sequence< string > > meldelistenZeile);
   };
 
 }; }; };

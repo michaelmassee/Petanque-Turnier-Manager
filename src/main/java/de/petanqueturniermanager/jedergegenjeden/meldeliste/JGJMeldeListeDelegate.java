@@ -17,6 +17,7 @@ import com.sun.star.table.CellVertJustify2;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -27,7 +28,6 @@ import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.i18n.I18n;
-import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.print.PrintArea;
@@ -385,10 +385,10 @@ class JGJMeldeListeDelegate implements MeldeListeKonstanten {
 	// ---------------------------------------------------------------
 
 	String formulaSverweisSpielernamen(String spielrNrAdresse) {
-		String ersteZelleAddress = Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE).getAddressWith$();
-		String letzteZelleAddress = Position.from(getErsterSpielerOffset(), 999).getAddressWith$();
-		return "VLOOKUP(" + spielrNrAdresse + ";$'" + SheetNamen.meldeliste() + "'." + ersteZelleAddress + ":"
-				+ letzteZelleAddress + ";2;0)";
+		return MeldeListeHelper.teamNameFormel(spielrNrAdresse,
+				konfigurationSheet.isMeldeListeTeamnameAnzeigen(),
+				konfigurationSheet.getMeldeListeFormation(),
+				konfigurationSheet.isMeldeListeVereinsnameAnzeigen());
 	}
 
 	String formulaSpielplanTeamName(String nrAdresse) {

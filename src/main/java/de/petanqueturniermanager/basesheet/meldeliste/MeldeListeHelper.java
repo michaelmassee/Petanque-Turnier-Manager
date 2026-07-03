@@ -18,6 +18,7 @@ import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
 
+import de.petanqueturniermanager.addins.GlobalImpl;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.ISheet;
@@ -302,27 +303,10 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	public static String teamNameFormel(String nrAdresse, boolean teamnameAnzeigen,
 			Formation formation, boolean vereinsnameAnzeigen) {
 		String range = "$'" + SheetNamen.meldeliste() + "'.$A$1:$Z$999";
-		if (teamnameAnzeigen) {
-			return "VLOOKUP(" + nrAdresse + ";" + range + ";2;0)";
-		}
-		int spaltenProSpieler = vereinsnameAnzeigen ? 3 : 2;
-		// Erste Spieler-Spalte ohne Teamname: Spalte B (1-basiert für VLOOKUP = 2)
-		int ersterSpielerVlookupIdx = 2;
-		int anzSpieler = formation.getAnzSpieler();
-		StringBuilder sb = new StringBuilder();
-		for (int s = 0; s < anzSpieler; s++) {
-			int vornameIdx = ersterSpielerVlookupIdx + s * spaltenProSpieler;
-			int nachnameIdx = vornameIdx + 1;
-			if (s > 0) {
-				sb.append(" & \" / \" & ");
-			}
-			sb.append("VLOOKUP(").append(nrAdresse).append(";").append(range)
-					.append(";").append(vornameIdx).append(";0)")
-					.append(" & \" \" & ")
-					.append("VLOOKUP(").append(nrAdresse).append(";").append(range)
-					.append(";").append(nachnameIdx).append(";0)");
-		}
-		return sb.toString();
+		String nrRange = "$'" + SheetNamen.meldeliste() + "'.$A$1:$A$999";
+		String zeile = "INDEX(" + range + ";MATCH(" + nrAdresse + ";" + nrRange + ";0);0)";
+		return GlobalImpl.FORMAT_PTM_TEAM_ANZEIGE(teamnameAnzeigen, formation.getAnzSpieler(),
+				vereinsnameAnzeigen, zeile);
 	}
 
 	public String formulaSverweisSpielernamen(String spielrNrAdresse) {

@@ -44,6 +44,7 @@ public interface XGlobal extends XInterface {
         new MethodTypeInfo("ptmbooleanproperty",                26, 0),
         new MethodTypeInfo("ptmdbspieleranzahl",                27, 0),
         new MethodTypeInfo("ptmdbspielersuche",                 28, 0),
+        new MethodTypeInfo("ptmteamanzeige",                    29, 0),
     };
 
     String ptmstringproperty(String propname);
@@ -103,5 +104,8 @@ public interface XGlobal extends XInterface {
     int ptmdbspieleranzahl();
 
     String[][] ptmdbspielersuche(String suche, boolean wildcard);
+
+    String ptmteamanzeige(int teamnameAnzeigen, int anzSpieler, int vereinsnameAnzeigen,
+            String[][] meldelistenZeile);
 
 }

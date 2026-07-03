@@ -266,6 +266,32 @@ public class GlobalImplUITest extends BaseCalcUITest {
 	}
 
 	@Test
+	public void testPTMTeamAnzeigeFormatierung() {
+		GlobalImpl impl = new GlobalImpl(starter.getxComponentContext());
+
+		String[][] tripletteMitVerein = {{
+				"7", "Anna", "Albatros", "BC A",
+				"Berta", "Boules", "BC B",
+				"Carl", "Carreau", "BC C"
+		}};
+
+		assertThat(impl.ptmteamanzeige(0, 3, 1, tripletteMitVerein))
+				.as("Spieler und Vereine muessen wie Teilnehmer-/Checkin-Liste formatiert werden")
+				.isEqualTo("Anna Albatros (BC A) / Berta Boules (BC B) / Carl Carreau (BC C)");
+	}
+
+	@Test
+	public void testPTMTeamAnzeigeTeamnameUndLeerwerte() {
+		GlobalImpl impl = new GlobalImpl(starter.getxComponentContext());
+
+		assertThat(impl.ptmteamanzeige(1, 2, 0, new String[][] {{"4", " Les Tireurs ", "Anna", "Albatros"}}))
+				.isEqualTo("Les Tireurs");
+		assertThat(impl.ptmteamanzeige(0, 2, 0, new String[][] {{"5", "Anna", "", "", "Boules"}}))
+				.isEqualTo("Anna / Boules");
+		assertThat(impl.ptmteamanzeige(0, 2, 0, new String[0][0])).isEmpty();
+	}
+
+	@Test
 	public void testPropertyUpdate() {
 		// Testet Property-Round-Trip (setIntProperty / getIntProperty) sowie
 		// dass die INTPROPERTY-Formel korrekt in die Zelle eingetragen wird.
