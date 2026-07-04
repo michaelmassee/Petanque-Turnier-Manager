@@ -483,7 +483,7 @@ test {
 // UITests (ohne Beispielturnier): führt alle *UITest*-Klassen durch, außer dem Beispielturnier-Package.
 // Entspricht ./gradlew test -PuitTests=true, aber als eigenständiger Task ohne Property-Pflicht.
 tasks.register('uiTests', Test) {
-    group = 'LibreOffice'
+    group = 'verification'
     description = 'Führt alle normalen UI-Tests durch (ohne Beispielturnier-Tests). Benötigt reinstallExtension.'
     dependsOn 'reinstallExtension'
     testClassesDirs = sourceSets.test.output.classesDirs

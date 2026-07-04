@@ -6,6 +6,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import com.sun.star.lang.DisposedException;
+
 import org.junit.jupiter.api.Test;
 
 class WebServerManagerTest {
@@ -20,6 +22,15 @@ class WebServerManagerTest {
     void startseiteLogoUrlIstLeerOhneLogoQuelle() {
         assertThat(WebServerManager.startseiteLogoUrl("", 7)).isEmpty();
         assertThat(WebServerManager.startseiteLogoUrl(null, 7)).isEmpty();
+    }
+
+    @Test
+    void erkenntGeschlossenesUnoDokumentAuchAlsUrsache() {
+        var exception = new RuntimeException("Refresh fehlgeschlagen",
+                new DisposedException("Dokument geschlossen", null));
+
+        assertThat(WebServerManager.istDokumentGeschlossen(exception)).isTrue();
+        assertThat(WebServerManager.istDokumentGeschlossen(new RuntimeException("anderer Fehler"))).isFalse();
     }
 
     @Test

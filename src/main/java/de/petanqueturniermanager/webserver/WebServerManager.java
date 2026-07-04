@@ -26,6 +26,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.sun.star.lang.DisposedException;
 import com.sun.star.sheet.XCalculatable;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
@@ -1051,6 +1052,10 @@ public final class WebServerManager implements TimerListener {
                 letzteStartseiteTextfarbe = textfarbe;
             }
         } catch (RuntimeException e) {
+            if (istDokumentGeschlossen(e)) {
+                logger.debug("Push der Turnier-Startseite übersprungen: Dokument ist bereits geschlossen");
+                return;
+            }
             logger.warn("Push der Turnier-Startseite fehlgeschlagen: {}", e.getMessage(), e);
         }
     }
@@ -1296,9 +1301,22 @@ public final class WebServerManager implements TimerListener {
             instanz.sseNachrichtPushen(GSON.toJson(push));
 
         } catch (Exception e) {
+            if (istDokumentGeschlossen(e)) {
+                logger.debug("Composite-Refresh für Port {} übersprungen: Dokument ist bereits geschlossen", port);
+                return;
+            }
             logger.error("Fehler beim Rendern des Composite Views für Port {}: {}", port, e.getMessage(), e);
             safeProcessBoxFehler(I18n.get("webserver.prozessbox.render.fehler", port, e.getMessage()));
         }
+    }
+
+    static boolean istDokumentGeschlossen(Throwable e) {
+        for (Throwable aktuelle = e; aktuelle != null; aktuelle = aktuelle.getCause()) {
+            if (aktuelle instanceof DisposedException) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void sendeCompositeHinweis(CompositeViewInstanz instanz, String titel, String text) {
