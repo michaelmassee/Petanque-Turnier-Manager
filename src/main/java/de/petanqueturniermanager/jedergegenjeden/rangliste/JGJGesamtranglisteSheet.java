@@ -428,10 +428,16 @@ public class JGJGesamtranglisteSheet extends SheetRunner implements ISheet {
 	private void addFooter(XSpreadsheet sheet, int fusszeile) throws GenerateException {
 		processBoxinfo("processbox.fusszeile.einfuegen");
 		getSheetHelper().setStringValueInCell(StringCellValue
-				.from(sheet, Position.from(TEAM_NR_SPALTE, fusszeile), I18n.get("jgj.rangliste.fusszeile"))
+				.from(sheet, Position.from(TEAM_NR_SPALTE, fusszeile), I18n.get(fusszeilenKey(konfigurationSheet.getGesamtranglisteSortModus())))
 				.setHoriJustify(CellHoriJustify.LEFT)
 				.setCharHeight(8)
 				.setEndPosMergeSpalte(SPIELPUNKTE_DIFF_SPALTE));
+	}
+
+	static String fusszeilenKey(JGJGesamtranglisteSortModus modus) {
+		return modus == JGJGesamtranglisteSortModus.GRUPPENPLATZ
+				? "jgj.gesamtrangliste.fusszeile.gruppenplatz"
+				: "jgj.rangliste.fusszeile";
 	}
 
 	private void setzeDruckbereich(XSpreadsheet sheet, int letzteZeile) throws GenerateException {
