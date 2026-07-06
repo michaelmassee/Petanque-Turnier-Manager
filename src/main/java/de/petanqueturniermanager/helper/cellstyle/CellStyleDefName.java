@@ -28,6 +28,9 @@ public enum CellStyleDefName {
 	NichtGespieltHintergrundFarbeGerade,
 	NichtGespieltHintergrundFarbeUnGerade,
 	//---------------------------------------
+	LigaTerminStatusGewonnen,
+	LigaTerminStatusVerloren,
+	//---------------------------------------
 	EditierbareZelleHintergrundFarbeGerade,
 	EditierbareZelleHintergrundFarbeUnGerade
 	// @formatter:on

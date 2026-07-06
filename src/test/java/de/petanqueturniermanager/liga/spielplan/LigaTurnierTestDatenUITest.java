@@ -14,12 +14,16 @@ import com.sun.star.beans.XPropertySet;
 import com.sun.star.container.XNamed;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
+import com.sun.star.table.CellHoriJustify;
+import com.sun.star.util.XMergeable;
 
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.ICommonProperties;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
@@ -54,6 +58,8 @@ public class LigaTurnierTestDatenUITest extends BaseCalcUITest {
 
 	private static final long SEED_FUER_TESTS = 42L;
 	private static final int MELDELISTE_ERSTE_DATEN_ZEILE = 2;
+	private static final String STATUS_BULLET = "\u25cf";
+	private static final String SUMMEN_LABEL_ABSTAND_RECHTS = "\u00a0\u00a0";
 	private static final String[] TEAMNAMEN_6 = {
 			"Boule Biebertal",
 			"Boule-Freunde Fernwald",
@@ -154,12 +160,13 @@ public class LigaTurnierTestDatenUITest extends BaseCalcUITest {
 		recalcAll();
 
 		RowData terminRow = terminZeile(spielNr);
-		assertThat(terminRow.get(6).getStringVal()).as("Punkte H leer").isEmpty();
-		assertThat(terminRow.get(7).getStringVal()).as("Punkte G leer").isEmpty();
-		assertThat(terminRow.get(8).getStringVal()).as("Siege H leer").isEmpty();
-		assertThat(terminRow.get(9).getStringVal()).as("Siege G leer").isEmpty();
-		assertThat(terminRow.get(10).getStringVal()).as("SpPunkte H leer").isEmpty();
-		assertThat(terminRow.get(11).getIntVal()).as("SpPunkte G echte 0").isZero();
+		assertThat(terminRow.get(6).getStringVal()).as("Status ohne Ergebnis leer").isEmpty();
+		assertThat(terminRow.get(7).getStringVal()).as("Punkte Eigene leer").isEmpty();
+		assertThat(terminRow.get(8).getStringVal()).as("Punkte Gegner leer").isEmpty();
+		assertThat(terminRow.get(9).getStringVal()).as("Siege Eigene leer").isEmpty();
+		assertThat(terminRow.get(10).getStringVal()).as("Siege Gegner leer").isEmpty();
+		assertThat(terminRow.get(11).getStringVal()).as("SpPunkte Eigene leer").isEmpty();
+		assertThat(terminRow.get(12).getIntVal()).as("SpPunkte Gegner echte 0").isZero();
 	}
 
 	@Test
@@ -228,34 +235,45 @@ public class LigaTurnierTestDatenUITest extends BaseCalcUITest {
 					.as("Termine-Sheet für Team %d muss den Teilnehmernamen tragen", teamNr)
 					.isNotNull();
 			RangeData rangeData = rangeDateFromRangePosition(
-					RangePosition.from(0, 0, 11, 2 + erwarteteTermineProTeam + 5),
+					RangePosition.from(0, 0, 12, 2 + erwarteteTermineProTeam + 5),
 					termine, wkingSpreadsheet.getWorkingSpreadsheetDocument());
 
 			assertThat(rangeData.get(0).get(0).getStringVal()).isEqualTo("Spiel");
 			assertThat(rangeData.get(0).get(1).getStringVal()).isEqualTo("Datum");
 			assertThat(rangeData.get(0).get(5).getStringVal()).isEqualTo("Gegner");
-			assertThat(rangeData.get(0).get(6).getStringVal()).isEqualTo("Punkte");
-			assertThat(rangeData.get(0).get(8).getStringVal()).isEqualTo("Siege");
-			assertThat(rangeData.get(0).get(10).getStringVal()).isEqualTo("SpPunkte");
-			assertThat(rangeData.get(1).get(6).getStringVal()).isEqualTo("H");
-			assertThat(rangeData.get(1).get(7).getStringVal()).isEqualTo("G");
-			assertThat(rangeData.get(1).get(8).getStringVal()).isEqualTo("H");
-			assertThat(rangeData.get(1).get(9).getStringVal()).isEqualTo("G");
-			assertThat(rangeData.get(1).get(10).getStringVal()).isEqualTo("H");
-			assertThat(rangeData.get(1).get(11).getStringVal()).isEqualTo("G");
+			assertThat(rangeData.get(0).get(6).getStringVal()).isEqualTo(I18n.get("liga.termine.header.status"));
+			assertThat(zellProperty(termine, 6, 0, ICommonProperties.ROTATEANGLE))
+					.as("Status-Header muss um 90 Grad gedreht sein")
+					.isEqualTo(StringCellValue.ROTATEANGLE_PLUS_90);
+			assertThat(rangeData.get(0).get(7).getStringVal()).isEqualTo("Punkte");
+			assertThat(rangeData.get(0).get(9).getStringVal()).isEqualTo("Siege");
+			assertThat(rangeData.get(0).get(11).getStringVal()).isEqualTo(I18n.get("liga.termine.header.sp.punkte"));
+			assertThat(rangeData.get(1).get(7).getStringVal()).isEqualTo(I18n.get("liga.termine.header.eigene.kurz"));
+			assertThat(rangeData.get(1).get(8).getStringVal()).isEqualTo(I18n.get("liga.termine.header.gegner.kurz"));
+			assertThat(rangeData.get(1).get(9).getStringVal()).isEqualTo(I18n.get("liga.termine.header.eigene.kurz"));
+			assertThat(rangeData.get(1).get(10).getStringVal()).isEqualTo(I18n.get("liga.termine.header.gegner.kurz"));
+			assertThat(rangeData.get(1).get(11).getStringVal()).isEqualTo(I18n.get("liga.termine.header.eigene.kurz"));
+			assertThat(rangeData.get(1).get(12).getStringVal()).isEqualTo(I18n.get("liga.termine.header.gegner.kurz"));
 
 			int anzahlTermine = 0;
+			int summenZeile = -1;
 			for (int zeile = 2; zeile < rangeData.size(); zeile++) {
 				String spielNr = rangeData.get(zeile).get(0).getStringVal();
 				if (spielNr == null || spielNr.isBlank()) {
+					break;
+				}
+				if ((I18n.get("column.header.summen") + SUMMEN_LABEL_ABSTAND_RECHTS).equals(spielNr)) {
+					summenZeile = zeile;
 					break;
 				}
 				assertThat(rangeData.get(zeile).get(5).getStringVal())
 						.as("Team %d Termin %s darf kein Freispiel enthalten", teamNr, spielNr)
 						.isNotEqualTo("Freispiel");
 				pruefeTerminErgebnis(rangeData, zeile, spielplanDaten);
+				pruefeTerminStatus(termine, rangeData, zeile);
 				anzahlTermine++;
 			}
+			pruefeTerminSummen(termine, rangeData, summenZeile, anzahlTermine);
 
 			assertThat(anzahlTermine)
 					.as("Team %d muss die erwartete Anzahl Termine haben", teamNr)
@@ -339,6 +357,15 @@ public class LigaTurnierTestDatenUITest extends BaseCalcUITest {
 		}
 	}
 
+	private Object zellProperty(XSpreadsheet sheet, int spalte, int zeile, String propertyName) {
+		try {
+			XPropertySet props = Lo.qi(XPropertySet.class, sheet.getCellByPosition(spalte, zeile));
+			return props.getPropertyValue(propertyName);
+		} catch (Exception e) {
+			throw new AssertionError(propertyName + " konnte nicht gelesen werden", e);
+		}
+	}
+
 	private void validiereFreispielNichtEditierbar(XSpreadsheet spielplan, int freispielZeile,
 			int echteBegegnungZeile) {
 		assertThat(freispielZeile).as("Freispiel-Zeile fuer Schutzpruefung").isGreaterThanOrEqualTo(0);
@@ -378,12 +405,76 @@ public class LigaTurnierTestDatenUITest extends BaseCalcUITest {
 	private void pruefeTerminErgebnis(RangeData termine, int terminZeile, RangeData spielplanDaten) {
 		String spielNr = termine.get(terminZeile).get(0).getStringVal();
 		RowData spielplanZeile = spielplanZeile(spielplanDaten, spielNr);
+		boolean heim = I18n.get("liga.termine.heim").equals(termine.get(terminZeile).get(4).getStringVal());
 
-		for (int spalte = LigaSpielPlanSheet.PUNKTE_A_SPALTE; spalte <= LigaSpielPlanSheet.SPIELPNKT_B_SPALTE; spalte++) {
-			int terminSpalte = spalte - LigaSpielPlanSheet.PUNKTE_A_SPALTE + 6;
-			assertThat(termine.get(terminZeile).get(terminSpalte).getIntVal())
-					.as("%s: Ergebnisspalte %d muss aus dem Spielplan übernommen sein", spielNr, terminSpalte)
-					.isEqualTo(spielplanZeile.get(spalte).getIntVal());
+		int[] eigeneSpalten = heim
+				? new int[] {LigaSpielPlanSheet.PUNKTE_A_SPALTE, LigaSpielPlanSheet.SPIELE_A_SPALTE,
+						LigaSpielPlanSheet.SPIELPNKT_A_SPALTE}
+				: new int[] {LigaSpielPlanSheet.PUNKTE_B_SPALTE, LigaSpielPlanSheet.SPIELE_B_SPALTE,
+						LigaSpielPlanSheet.SPIELPNKT_B_SPALTE};
+		int[] gegnerSpalten = heim
+				? new int[] {LigaSpielPlanSheet.PUNKTE_B_SPALTE, LigaSpielPlanSheet.SPIELE_B_SPALTE,
+						LigaSpielPlanSheet.SPIELPNKT_B_SPALTE}
+				: new int[] {LigaSpielPlanSheet.PUNKTE_A_SPALTE, LigaSpielPlanSheet.SPIELE_A_SPALTE,
+						LigaSpielPlanSheet.SPIELPNKT_A_SPALTE};
+		int[] eigeneTerminSpalten = {7, 9, 11};
+		int[] gegnerTerminSpalten = {8, 10, 12};
+
+		for (int i = 0; i < eigeneSpalten.length; i++) {
+			assertThat(termine.get(terminZeile).get(eigeneTerminSpalten[i]).getIntVal())
+					.as("%s: eigene Ergebnisspalte %d muss teambezogen aus dem Spielplan übernommen sein",
+							spielNr, eigeneTerminSpalten[i])
+					.isEqualTo(spielplanZeile.get(eigeneSpalten[i]).getIntVal());
+			assertThat(termine.get(terminZeile).get(gegnerTerminSpalten[i]).getIntVal())
+					.as("%s: Gegner-Ergebnisspalte %d muss teambezogen aus dem Spielplan übernommen sein",
+							spielNr, gegnerTerminSpalten[i])
+					.isEqualTo(spielplanZeile.get(gegnerSpalten[i]).getIntVal());
+		}
+	}
+
+	private void pruefeTerminStatus(XSpreadsheet termineSheet, RangeData termine, int terminZeile) {
+		assertThat(termine.get(terminZeile).get(6).getStringVal())
+				.as("Status-Bullet muss bei gespielten Begegnungen sichtbar sein")
+				.isEqualTo(STATUS_BULLET);
+		int eigenePunkte = termine.get(terminZeile).get(7).getIntVal();
+		int gegnerPunkte = termine.get(terminZeile).get(8).getIntVal();
+		int erwarteteFarbe = eigenePunkte > gegnerPunkte
+				? ColorHelper.CHAR_COLOR_GREEN
+				: ColorHelper.CHAR_COLOR_RED;
+		assertThat(zellProperty(termineSheet, 6, terminZeile, ICommonProperties.CHAR_COLOR))
+				.as("Status-Bullet darf nicht schwarz bleiben")
+				.isEqualTo(erwarteteFarbe);
+	}
+
+	private void pruefeTerminSummen(XSpreadsheet termineSheet, RangeData termine, int summenZeile, int anzahlTermine) {
+		assertThat(summenZeile).as("Unter den Team-Terminen muss eine Summenzeile stehen").isGreaterThanOrEqualTo(2);
+		assertThat(termine.get(summenZeile).get(0).getStringVal())
+				.isEqualTo(I18n.get("column.header.summen") + SUMMEN_LABEL_ABSTAND_RECHTS);
+		assertThat(zellProperty(termineSheet, 0, summenZeile, ICommonProperties.HORI_JUSTIFY))
+				.as("Summe-Label muss rechtsbündig sein")
+				.isEqualTo(CellHoriJustify.RIGHT);
+		assertThat(istBereichGemerged(termineSheet, 0, summenZeile, 6, summenZeile))
+				.as("Summe-Label muss bis einschließlich Status-Spalte gemergt sein")
+				.isTrue();
+		assertThat(termine.get(summenZeile).get(6).getStringVal()).as("Status hat keine Summe").isEmpty();
+		for (int spalte = 7; spalte <= 12; spalte++) {
+			int erwarteteSumme = 0;
+			for (int zeile = 2; zeile < 2 + anzahlTermine; zeile++) {
+				erwarteteSumme += termine.get(zeile).get(spalte).getIntVal(0);
+			}
+			assertThat(termine.get(summenZeile).get(spalte).getIntVal())
+					.as("Summenzeile Spalte %d muss die Team-Terminwerte summieren", spalte)
+					.isEqualTo(erwarteteSumme);
+		}
+	}
+
+	private boolean istBereichGemerged(XSpreadsheet sheet, int startSpalte, int startZeile, int endeSpalte, int endeZeile) {
+		try {
+			XMergeable mergeable = Lo.qi(XMergeable.class,
+					sheet.getCellRangeByPosition(startSpalte, startZeile, endeSpalte, endeZeile));
+			return mergeable.getIsMerged();
+		} catch (Exception e) {
+			throw new AssertionError("Merge-Status konnte nicht gelesen werden", e);
 		}
 	}
 
@@ -400,7 +491,7 @@ public class LigaTurnierTestDatenUITest extends BaseCalcUITest {
 		for (String teamName : TEAMNAMEN_6) {
 			XSpreadsheet termine = sheetHlp.findByName(teamName);
 			RangeData termineDaten = rangeDateFromRangePosition(
-					RangePosition.from(0, 0, 11, 80),
+					RangePosition.from(0, 0, 12, 80),
 					termine, wkingSpreadsheet.getWorkingSpreadsheetDocument());
 			for (RowData row : termineDaten) {
 				if (spielNr.equals(row.get(0).getStringVal())) {

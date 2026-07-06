@@ -8,15 +8,21 @@ import java.util.Set;
 import com.sun.star.container.XNamed;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
+import com.sun.star.table.CellHoriJustify;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.border.BorderFactory;
+import de.petanqueturniermanager.helper.cellstyle.AbstractCellStyleDef;
+import de.petanqueturniermanager.helper.cellstyle.CellStyleDefName;
+import de.petanqueturniermanager.helper.cellstyle.CellStyleHelper;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.RangeProperties;
 import de.petanqueturniermanager.helper.i18n.I18n;
@@ -53,13 +59,16 @@ public class LigaTermineProTeilnehmerSheet extends SheetRunner implements ISheet
     private static final int ORT_SPALTE = 3;
     private static final int HEIM_GAST_SPALTE = 4;
     private static final int GEGNER_SPALTE = 5;
-    private static final int PUNKTE_H_SPALTE = 6;
-    private static final int PUNKTE_G_SPALTE = 7;
-    private static final int SPIELE_H_SPALTE = 8;
-    private static final int SPIELE_G_SPALTE = 9;
-    private static final int SPIELPUNKTE_H_SPALTE = 10;
-    private static final int SPIELPUNKTE_G_SPALTE = 11;
+    private static final int STATUS_SPALTE = 6;
+    private static final int PUNKTE_H_SPALTE = 7;
+    private static final int PUNKTE_G_SPALTE = 8;
+    private static final int SPIELE_H_SPALTE = 9;
+    private static final int SPIELE_G_SPALTE = 10;
+    private static final int SPIELPUNKTE_H_SPALTE = 11;
+    private static final int SPIELPUNKTE_G_SPALTE = 12;
     private static final int LETZTE_SPALTE = SPIELPUNKTE_G_SPALTE;
+    private static final String STATUS_BULLET = "\u25cf";
+    private static final String SUMMEN_LABEL_ABSTAND_RECHTS = "\u00a0\u00a0";
 
     private final LigaKonfigurationSheet konfigurationSheet;
     private final LigaMeldeListeSheetUpdate meldeListe;
@@ -122,6 +131,7 @@ public class LigaTermineProTeilnehmerSheet extends SheetRunner implements ISheet
                     .forceCreate().hideGrid().create();
 
             insertHeaderUndSpalten();
+            bereiteStatusStylesVor();
             int letzteDatenZeile = insertTermine(teamNr, spielplanName, spielplanDaten);
             formatieren(letzteDatenZeile);
         }
@@ -144,20 +154,34 @@ public class LigaTermineProTeilnehmerSheet extends SheetRunner implements ISheet
                 header.spalte(HEIM_GAST_SPALTE).setValue(I18n.get("liga.termine.header.heim.gast")).setEndPosMergeZeilePlus(1));
         getSheetHelper().setStringValueInCell(
                 header.spalte(GEGNER_SPALTE).setValue(I18n.get("liga.termine.header.gegner")).setEndPosMergeZeilePlus(1));
+        StringCellValue statusHeader = StringCellValue.from(sheet, Position.from(STATUS_SPALTE, HEADER_ZEILE))
+                .setValue(I18n.get("liga.termine.header.status"))
+                .setEndPosMergeZeilePlus(1)
+                .setCharWeight(com.sun.star.awt.FontWeight.BOLD)
+                .centerJustify()
+                .setShrinkToFit(true)
+                .setRotateAngle(StringCellValue.ROTATEANGLE_PLUS_90);
+        getSheetHelper().setStringValueInCell(statusHeader);
         getSheetHelper().setStringValueInCell(header.setEndPosMerge(null).spalte(PUNKTE_H_SPALTE)
                 .setValue(I18n.get("column.header.punkte")).setEndPosMergeSpaltePlus(1));
-        getSheetHelper().setStringValueInCell(header.spalte(SPIELE_H_SPALTE).setValue("Siege")
+        getSheetHelper().setStringValueInCell(header.spalte(SPIELE_H_SPALTE).setValue(I18n.get("column.header.siege"))
                 .setEndPosMergeSpaltePlus(1));
-        getSheetHelper().setStringValueInCell(header.spalte(SPIELPUNKTE_H_SPALTE).setValue("SpPunkte")
-                .setEndPosMergeSpaltePlus(1));
+        getSheetHelper().setStringValueInCell(header.spalte(SPIELPUNKTE_H_SPALTE)
+                .setValue(I18n.get("liga.termine.header.sp.punkte")).setEndPosMergeSpaltePlus(1));
 
         header.setEndPosMerge(null).zeile(HEADER_ZEILE + 1);
-        getSheetHelper().setStringValueInCell(header.setValue("H").spalte(PUNKTE_H_SPALTE));
-        getSheetHelper().setStringValueInCell(header.setValue("G").spalte(PUNKTE_G_SPALTE));
-        getSheetHelper().setStringValueInCell(header.setValue("H").spalte(SPIELE_H_SPALTE));
-        getSheetHelper().setStringValueInCell(header.setValue("G").spalte(SPIELE_G_SPALTE));
-        getSheetHelper().setStringValueInCell(header.setValue("H").spalte(SPIELPUNKTE_H_SPALTE));
-        getSheetHelper().setStringValueInCell(header.setValue("G").spalte(SPIELPUNKTE_G_SPALTE));
+        getSheetHelper().setStringValueInCell(
+                header.setValue(I18n.get("liga.termine.header.eigene.kurz")).spalte(PUNKTE_H_SPALTE));
+        getSheetHelper().setStringValueInCell(
+                header.setValue(I18n.get("liga.termine.header.gegner.kurz")).spalte(PUNKTE_G_SPALTE));
+        getSheetHelper().setStringValueInCell(
+                header.setValue(I18n.get("liga.termine.header.eigene.kurz")).spalte(SPIELE_H_SPALTE));
+        getSheetHelper().setStringValueInCell(
+                header.setValue(I18n.get("liga.termine.header.gegner.kurz")).spalte(SPIELE_G_SPALTE));
+        getSheetHelper().setStringValueInCell(
+                header.setValue(I18n.get("liga.termine.header.eigene.kurz")).spalte(SPIELPUNKTE_H_SPALTE));
+        getSheetHelper().setStringValueInCell(
+                header.setValue(I18n.get("liga.termine.header.gegner.kurz")).spalte(SPIELPUNKTE_G_SPALTE));
 
         getSheetHelper().setColumnProperties(sheet, SPIEL_NR_SPALTE, ColumnProperties.from().setWidth(1400).centerJustify());
         getSheetHelper().setColumnProperties(sheet, DATUM_SPALTE, ColumnProperties.from().setWidth(2000).centerJustify());
@@ -165,6 +189,7 @@ public class LigaTermineProTeilnehmerSheet extends SheetRunner implements ISheet
         getSheetHelper().setColumnProperties(sheet, ORT_SPALTE, ColumnProperties.from().setWidth(4200));
         getSheetHelper().setColumnProperties(sheet, HEIM_GAST_SPALTE, ColumnProperties.from().setWidth(1300).centerJustify());
         getSheetHelper().setColumnProperties(sheet, GEGNER_SPALTE, ColumnProperties.from().setWidth(5200));
+        getSheetHelper().setColumnProperties(sheet, STATUS_SPALTE, ColumnProperties.from().setWidth(1000).centerJustify());
         getSheetHelper().setColumnProperties(sheet, PUNKTE_H_SPALTE, ColumnProperties.from().setWidth(900).centerJustify());
         getSheetHelper().setColumnProperties(sheet, PUNKTE_G_SPALTE, ColumnProperties.from().setWidth(900).centerJustify());
         getSheetHelper().setColumnProperties(sheet, SPIELE_H_SPALTE, ColumnProperties.from().setWidth(900).centerJustify());
@@ -190,6 +215,10 @@ public class LigaTermineProTeilnehmerSheet extends SheetRunner implements ISheet
                 insertTerminZeile(zeile++, spielplanName,
                         LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE + i, teamA == teamNr);
             }
+        }
+        if (zeile > ERSTE_DATEN_ZEILE) {
+            insertSummenZeile(zeile, ERSTE_DATEN_ZEILE, zeile - 1);
+            return zeile;
         }
         return zeile - 1;
     }
@@ -226,18 +255,48 @@ public class LigaTermineProTeilnehmerSheet extends SheetRunner implements ISheet
         getSheetHelper().setFormulaInCell(formel(sheet, GEGNER_SPALTE, zeile,
                 ref(spielplanName, heim ? LigaSpielPlanSheet.NAME_B_SPALTE : LigaSpielPlanSheet.NAME_A_SPALTE,
                         spielplanZeile)));
+        getSheetHelper().setFormulaInCell(formel(sheet, STATUS_SPALTE, zeile, statusFormel(spielplanName,
+                heim ? LigaSpielPlanSheet.PUNKTE_A_SPALTE : LigaSpielPlanSheet.PUNKTE_B_SPALTE,
+                heim ? LigaSpielPlanSheet.PUNKTE_B_SPALTE : LigaSpielPlanSheet.PUNKTE_A_SPALTE, spielplanZeile)));
         getSheetHelper().setFormulaInCell(formel(sheet, PUNKTE_H_SPALTE, zeile,
-                ergebnisRef(spielplanName, LigaSpielPlanSheet.PUNKTE_A_SPALTE, spielplanZeile)));
+                ergebnisRef(spielplanName,
+                        heim ? LigaSpielPlanSheet.PUNKTE_A_SPALTE : LigaSpielPlanSheet.PUNKTE_B_SPALTE,
+                        spielplanZeile)));
         getSheetHelper().setFormulaInCell(formel(sheet, PUNKTE_G_SPALTE, zeile,
-                ergebnisRef(spielplanName, LigaSpielPlanSheet.PUNKTE_B_SPALTE, spielplanZeile)));
+                ergebnisRef(spielplanName,
+                        heim ? LigaSpielPlanSheet.PUNKTE_B_SPALTE : LigaSpielPlanSheet.PUNKTE_A_SPALTE,
+                        spielplanZeile)));
         getSheetHelper().setFormulaInCell(formel(sheet, SPIELE_H_SPALTE, zeile,
-                ergebnisRef(spielplanName, LigaSpielPlanSheet.SPIELE_A_SPALTE, spielplanZeile)));
+                ergebnisRef(spielplanName,
+                        heim ? LigaSpielPlanSheet.SPIELE_A_SPALTE : LigaSpielPlanSheet.SPIELE_B_SPALTE,
+                        spielplanZeile)));
         getSheetHelper().setFormulaInCell(formel(sheet, SPIELE_G_SPALTE, zeile,
-                ergebnisRef(spielplanName, LigaSpielPlanSheet.SPIELE_B_SPALTE, spielplanZeile)));
+                ergebnisRef(spielplanName,
+                        heim ? LigaSpielPlanSheet.SPIELE_B_SPALTE : LigaSpielPlanSheet.SPIELE_A_SPALTE,
+                        spielplanZeile)));
         getSheetHelper().setFormulaInCell(formel(sheet, SPIELPUNKTE_H_SPALTE, zeile,
-                ergebnisRef(spielplanName, LigaSpielPlanSheet.SPIELPNKT_A_SPALTE, spielplanZeile)));
+                ergebnisRef(spielplanName,
+                        heim ? LigaSpielPlanSheet.SPIELPNKT_A_SPALTE : LigaSpielPlanSheet.SPIELPNKT_B_SPALTE,
+                        spielplanZeile)));
         getSheetHelper().setFormulaInCell(formel(sheet, SPIELPUNKTE_G_SPALTE, zeile,
-                ergebnisRef(spielplanName, LigaSpielPlanSheet.SPIELPNKT_B_SPALTE, spielplanZeile)));
+                ergebnisRef(spielplanName,
+                        heim ? LigaSpielPlanSheet.SPIELPNKT_B_SPALTE : LigaSpielPlanSheet.SPIELPNKT_A_SPALTE,
+                        spielplanZeile)));
+    }
+
+    private void insertSummenZeile(int summenZeile, int ersteDatenZeile, int letzteDatenZeile) throws GenerateException {
+        XSpreadsheet sheet = getXSpreadSheet();
+        StringCellValue summe = StringCellValue.from(sheet, Position.from(SPIEL_NR_SPALTE, summenZeile))
+                .setCharWeight(com.sun.star.awt.FontWeight.BOLD).centerVertJustify()
+                .setHoriJustify(CellHoriJustify.RIGHT).setShrinkToFit(true);
+        getSheetHelper().setStringValueInCell(summe.setValue(I18n.get("column.header.summen")
+                + SUMMEN_LABEL_ABSTAND_RECHTS)
+                .setEndPosMergeSpaltePlus(STATUS_SPALTE));
+        for (int spalte = PUNKTE_H_SPALTE; spalte <= SPIELPUNKTE_G_SPALTE; spalte++) {
+            getSheetHelper().setFormulaInCell(formel(sheet, spalte, summenZeile,
+                    "SUM(" + Position.from(spalte, ersteDatenZeile).getAddress()
+                            + ":" + Position.from(spalte, letzteDatenZeile).getAddress() + ")"));
+        }
     }
 
     private void formatieren(int letzteDatenZeile) throws GenerateException {
@@ -267,6 +326,15 @@ public class LigaTermineProTeilnehmerSheet extends SheetRunner implements ISheet
         }
         PrintArea.from(getXSpreadSheet(), getWorkingSpreadsheet()).setPrintArea(gesamt);
         SheetFreeze.from(getTurnierSheet()).anzZeilen(2).doFreeze();
+    }
+
+    private void bereiteStatusStylesVor() {
+        CellStyleHelper.from(this,
+                new StatusBulletStyle(CellStyleDefName.LigaTerminStatusGewonnen, ColorHelper.CHAR_COLOR_GREEN))
+                .apply();
+        CellStyleHelper.from(this,
+                new StatusBulletStyle(CellStyleDefName.LigaTerminStatusVerloren, ColorHelper.CHAR_COLOR_RED))
+                .apply();
     }
 
     private static String sheetName(int teamNr, RangeData spielplanDaten, Set<String> verwendeteSheetNamen) {
@@ -339,6 +407,26 @@ public class LigaTermineProTeilnehmerSheet extends SheetRunner implements ISheet
 
     private static String ergebnisRef(String sheetName, int spalte, int zeile) {
         return leerWennLeer(ref(sheetName, spalte, zeile));
+    }
+
+    private static String statusFormel(String sheetName, int eigenePunkteSpalte, int gegnerPunkteSpalte, int zeile) {
+        String eigene = ref(sheetName, eigenePunkteSpalte, zeile);
+        String gegner = ref(sheetName, gegnerPunkteSpalte, zeile);
+        return "IF(OR(ISBLANK(" + eigene + ");ISBLANK(" + gegner + "));\"\";"
+                + "IF(" + eigene + ">" + gegner + ";\"" + STATUS_BULLET + "\"&T(STYLE(\""
+                + CellStyleDefName.LigaTerminStatusGewonnen.name() + "\"));"
+                + "IF(" + eigene + "<" + gegner + ";\"" + STATUS_BULLET + "\"&T(STYLE(\""
+                + CellStyleDefName.LigaTerminStatusVerloren.name() + "\"));\"\")))";
+    }
+
+    private static final class StatusBulletStyle extends AbstractCellStyleDef {
+
+        private StatusBulletStyle(CellStyleDefName name, Integer charColor) {
+            super(name, CellProperties.from()
+                    .setCharColor(charColor)
+                    .setCharWeight(com.sun.star.awt.FontWeight.BOLD)
+                    .setCharHeight(14));
+        }
     }
 
     private void entferneBestehendeTerminSheets() throws GenerateException {
