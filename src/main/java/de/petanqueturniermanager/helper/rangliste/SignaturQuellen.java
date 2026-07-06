@@ -174,13 +174,13 @@ public final class SignaturQuellen {
                         SheetMetadataHelper.SCHLUESSEL_LIGA_SPIELPLAN,
                         LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE,
                         /* maxZeilen */ 5000,
+                        // Nur Eingaben. PUNKTE_A/PUNKTE_B sind Formelspalten (aus SPIELE_A/B abgeleitet)
+                        // → raus, sonst Hash-Flapping/Phantom-Rebuild beim Tabwechsel (analog fuerLiga).
                         Set.of(
                                 LigaSpielPlanSheet.SPIEL_NR_SPALTE,
                                 LigaSpielPlanSheet.DATUM_SPALTE,
                                 LigaSpielPlanSheet.UHRZEIT_SPALTE,
                                 LigaSpielPlanSheet.ORT_SPALTE,
-                                LigaSpielPlanSheet.PUNKTE_A_SPALTE,
-                                LigaSpielPlanSheet.PUNKTE_B_SPALTE,
                                 LigaSpielPlanSheet.SPIELE_A_SPALTE,
                                 LigaSpielPlanSheet.SPIELE_B_SPALTE,
                                 LigaSpielPlanSheet.SPIELPNKT_A_SPALTE,

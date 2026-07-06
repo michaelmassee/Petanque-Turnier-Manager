@@ -106,13 +106,9 @@ public class LigaExportInVerzeichnis extends AbstractExportInVerzeichnis {
         boolean ranglisteOk = ranglisteErgebnis instanceof SignaturErgebnis.Ok;
         boolean termineOk = termineErgebnis instanceof SignaturErgebnis.Ok;
         if (!ausgabenFehlen && !ranglisteDirty && !termineDirty && ranglisteOk && termineOk) {
-            if (ranglisteErgebnis instanceof SignaturErgebnis.Ok) {
-                SheetSyncSignaturStore.aktualisiereVerifyZeit(doc, SheetMetadataHelper.SCHLUESSEL_LIGA_RANGLISTE);
-            }
-            if (termineErgebnis instanceof SignaturErgebnis.Ok) {
-                SheetSyncSignaturStore.aktualisiereVerifyZeit(doc,
-                        SheetMetadataHelper.SCHLUESSEL_LIGA_TERMINE_PRO_TEILNEHMER);
-            }
+            SheetSyncSignaturStore.aktualisiereVerifyZeit(doc, SheetMetadataHelper.SCHLUESSEL_LIGA_RANGLISTE);
+            SheetSyncSignaturStore.aktualisiereVerifyZeit(doc,
+                    SheetMetadataHelper.SCHLUESSEL_LIGA_TERMINE_PRO_TEILNEHMER);
             logger.debug("Liga-Export: abhaengige Sheets unveraendert, Update uebersprungen");
             return;
         }
@@ -139,18 +135,14 @@ public class LigaExportInVerzeichnis extends AbstractExportInVerzeichnis {
         if (ergebnis instanceof SignaturErgebnis.Ok ok) {
             var gespeichert = SheetSyncSignaturStore.ladeHash(getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
                     schluessel);
-            if (gespeichert.isPresent() && gespeichert.get().equals(ok.hash())) {
-                logger.debug("Liga-Export: abhaengige Sheets unveraendert, Update uebersprungen");
-                return false;
-            }
-            return true;
+            return !(gespeichert.isPresent() && gespeichert.get().equals(ok.hash()));
         }
         return false;
     }
 
     private void aktualisiereExportSheets(TeamMeldungen meldungen) throws GenerateException {
         var ws = getWorkingSpreadsheet();
-        processBox().info("Liga Export: Terminlisten, Rangliste und Direktvergleich aktualisieren");
+        processBox().info(I18n.get("export.info.abhaengige.sheets"));
         new LigaTermineProTeilnehmerSheet(ws).generate(meldungen);
         new LigaRanglisteSheetUpdate(ws).doRun();
         new LigaRanglisteDirektvergleichSheet(ws).aktualisieren();
