@@ -82,11 +82,24 @@ public class LigaSpielPlanSheetTestDaten extends LigaSpielPlanSheet {
 			double uhrzeit = calcUhrzeit(startZeit.plusMinutes((long) runde * 30));
 			for (int paarung = 0; paarung < anzPaarungen; paarung++) {
 				int zeile = ERSTE_SPIELTAG_DATEN_ZEILE + (runde * anzPaarungen) + paarung;
+				if (istFreispielZeile(zeile)) {
+					continue;
+				}
 				getSheetHelper().setNumberValueInCell(
 						NumberCellValue.from(getXSpreadSheet(), DATUM_SPALTE, zeile, datum));
 				getSheetHelper().setNumberValueInCell(
 						NumberCellValue.from(getXSpreadSheet(), UHRZEIT_SPALTE, zeile, uhrzeit));
 			}
+		}
+	}
+
+	private boolean istFreispielZeile(int zeile) throws GenerateException {
+		try {
+			int teamA = (int) getXSpreadSheet().getCellByPosition(TEAM_A_NR_SPALTE, zeile).getValue();
+			int teamB = (int) getXSpreadSheet().getCellByPosition(TEAM_B_NR_SPALTE, zeile).getValue();
+			return istFreispiel(teamA, teamB);
+		} catch (Exception e) {
+			throw new GenerateException(e.getMessage());
 		}
 	}
 
@@ -110,9 +123,13 @@ public class LigaSpielPlanSheetTestDaten extends LigaSpielPlanSheet {
 			ArrayList<List<SpielErgebnis>> paarungen = new ArrayList<>();
 			for (int i = 0; i < anzPaarungen; i++) {
 				ArrayList<SpielErgebnis> ergebnisse = new ArrayList<>();
+				boolean freispiel = mitFreispiel && i == 0;
 				for (int sp = 0; sp < anzSpielInBegnung; sp++) {
 					int welchenTeamHatGewonnen = RandomSource.nextInt(0, 2); // 0,1
 					int verliererPunkte = RandomSource.nextInt(0, 13); // 0 - 12
+					if (freispiel) {
+						continue;
+					}
 					SpielErgebnis ergebnis;
 					if (welchenTeamHatGewonnen == 0) {
 						ergebnis = new SpielErgebnis(13, verliererPunkte);

@@ -17,13 +17,17 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
+import de.petanqueturniermanager.helper.rangliste.SignaturQuellen;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
+import de.petanqueturniermanager.helper.sheetsync.EingabeSignatur;
 import de.petanqueturniermanager.helper.upload.AbstractExportInVerzeichnis;
 import de.petanqueturniermanager.helper.upload.ExportErgebnis;
 import de.petanqueturniermanager.helper.upload.ExportHtmlSeite;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheetUpdate;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet;
+import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheetUpdate;
 
 public class SupermeleeExportInVerzeichnis extends AbstractExportInVerzeichnis {
 
@@ -40,6 +44,7 @@ public class SupermeleeExportInVerzeichnis extends AbstractExportInVerzeichnis {
         var konfiguration = new SuperMeleeKonfigurationSheet(ws);
         var spieltagRanglisteSheet = new SpieltagRanglisteSheet(ws, SpielTagNr.from(1));
         int anzahlSpieltage = spieltagRanglisteSheet.countNumberOfRanglisten();
+        aktualisiereExportSheetsWennDirty(ws, anzahlSpieltage);
 
         String turnierlogoUrl = StringUtils.strip(konfiguration.getTurnierlogoUrl());
         String turniername = StringUtils.strip(konfiguration.getKopfZeileMitte());
@@ -92,6 +97,23 @@ public class SupermeleeExportInVerzeichnis extends AbstractExportInVerzeichnis {
         htmlExport.addTo(exportierteDateien);
 
         return new ExportErgebnis(exportierteDateien);
+    }
+
+    private void aktualisiereExportSheetsWennDirty(WorkingSpreadsheet ws, int anzahlSpieltage)
+            throws GenerateException {
+        for (int nr = 1; nr <= anzahlSpieltage; nr++) {
+            int spieltagNr = nr;
+            String persistenzSchluessel = "SUPERMELEE_SPIELTAG_" + spieltagNr;
+            String sheetSchluessel = SheetMetadataHelper.schluesselSpieltagRangliste(spieltagNr);
+            aktualisiereExportSheetWennDirty(persistenzSchluessel,
+                    new EingabeSignatur(xDoc -> SignaturQuellen.fuerSupermeleeSpieltag(xDoc, spieltagNr)),
+                    exportSheetFehlt(sheetSchluessel),
+                    () -> new SpieltagRanglisteSheetUpdate(ws, SpielTagNr.from(spieltagNr)).doRun());
+        }
+
+        aktualisiereExportSheetWennDirty(SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_ENDRANGLISTE,
+                new EingabeSignatur(SignaturQuellen::fuerSupermeleeEnd),
+                () -> new EndranglisteSheetUpdate(ws).doRun());
     }
 
     private HtmlExportErgebnis exportiereHtml(Path zielVerzeichnis, String turniername, String logoUrl,

@@ -53,7 +53,7 @@ public class TripTeteRanglisteSheetUpdate extends SheetRunner implements ISheet 
 	}
 
 	@Override
-	protected void doRun() throws GenerateException {
+	public void doRun() throws GenerateException {
 		XSpreadsheet sheet = getXSpreadSheet();
 		if (sheet == null) {
 			logger.debug("RanglisteUpdate: Trip-Tête-Rangliste nicht vorhanden – übersprungen");

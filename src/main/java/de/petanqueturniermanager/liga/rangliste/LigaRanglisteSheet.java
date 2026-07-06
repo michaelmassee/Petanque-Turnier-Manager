@@ -232,9 +232,6 @@ public class LigaRanglisteSheet extends SheetRunner implements ISheet, IRanglist
 						LigaSpielPlanSheet.SPIELPNKT_B_SPALTE, startZeile + MAX_SPIELPLAN_ZEILEN))
 				.getDataFromRange();
 
-		int freispielSpPktPlus = konfigurationSheet.getFreispielPunktePlus();
-		int freispielSpPktMinus = konfigurationSheet.getFreispielPunkteMinus();
-
 		for (int i = 0; i < teamNrData.size(); i++) {
 			RowData teamNrZeile = teamNrData.get(i);
 			if (teamNrZeile.size() < 2) {
@@ -257,8 +254,7 @@ public class LigaRanglisteSheet extends SheetRunner implements ISheet, IRanglist
 			int spPktB = erg.get(5).getIntVal(0);
 
 			if (nrB <= 0) {
-				// Freispiel: immer ein Sieg für Team A; Spielpunkte aus Konfiguration
-				statsMap.computeIfPresent(nrA, (k, s) -> s.plus(1, 0, spA, 0, freispielSpPktPlus, freispielSpPktMinus));
+				// Freispiel ist nur Spielplan-Info und zählt nicht in die Rangliste.
 				continue;
 			}
 

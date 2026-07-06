@@ -30,7 +30,7 @@ public class JGJRanglisteSheetUpdate extends JGJRanglisteSheet {
     }
 
     @Override
-    protected void doRun() throws GenerateException {
+    public void doRun() throws GenerateException {
         XSpreadsheet sheet = getXSpreadSheet();
         if (sheet == null) {
             logger.debug("RanglisteUpdate: Sheet nicht vorhanden – vollständiger Erstaufbau");

@@ -6,21 +6,33 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.rangliste.SignaturQuellen;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
+import de.petanqueturniermanager.helper.sheetsync.EingabeSignatur;
+import de.petanqueturniermanager.helper.sheetsync.SheetSyncSignaturStore;
+import de.petanqueturniermanager.helper.sheetsync.SignaturErgebnis;
 import de.petanqueturniermanager.helper.upload.AbstractExportInVerzeichnis;
+import de.petanqueturniermanager.liga.rangliste.LigaRanglisteDirektvergleichSheet;
+import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheetUpdate;
 import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet;
 import de.petanqueturniermanager.liga.spielplan.LigaTermineProTeilnehmerSheet;
 import de.petanqueturniermanager.helper.upload.ExportErgebnis;
 import de.petanqueturniermanager.helper.upload.ExportHtmlSeite;
 import de.petanqueturniermanager.liga.konfiguration.LigaKonfigurationSheet;
+import de.petanqueturniermanager.model.TeamMeldungen;
 
 public class LigaExportInVerzeichnis extends AbstractExportInVerzeichnis {
+
+    private static final Logger logger = LogManager.getLogger(LigaExportInVerzeichnis.class);
+    private static final String EXPORT_UPDATE_GRUND = "exportBeforeBuild";
 
     public LigaExportInVerzeichnis(WorkingSpreadsheet ws, Path zielVerzeichnis) {
         super(ws, TurnierSystem.LIGA, "Liga Export Verzeichnis", zielVerzeichnis);
@@ -29,7 +41,9 @@ public class LigaExportInVerzeichnis extends AbstractExportInVerzeichnis {
     @Override
     protected ExportErgebnis exportiereInVerzeichnis(Path zielVerzeichnis) throws GenerateException {
         var ws = getWorkingSpreadsheet();
-        new LigaMeldeListeSheetUpdate(ws).upDateSheet();
+        var meldeliste = new LigaMeldeListeSheetUpdate(ws);
+        meldeliste.upDateSheet();
+        aktualisiereExportSheetsWennDirty(meldeliste.getAlleMeldungen());
         processBox().info(I18n.get("export.info.pdf"));
 
         var konfiguration = new LigaKonfigurationSheet(ws);
@@ -78,6 +92,80 @@ public class LigaExportInVerzeichnis extends AbstractExportInVerzeichnis {
                 .forEach(exportierteDateien::add);
         htmlExport.addTo(exportierteDateien);
         return new ExportErgebnis(exportierteDateien);
+    }
+
+    private void aktualisiereExportSheetsWennDirty(TeamMeldungen meldungen) throws GenerateException {
+        var doc = getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
+        SignaturErgebnis ranglisteErgebnis = new EingabeSignatur(SignaturQuellen::fuerLiga).berechne(doc, 1);
+        SignaturErgebnis termineErgebnis = new EingabeSignatur(SignaturQuellen::fuerLigaTermineProTeilnehmer)
+                .berechne(doc, 1);
+        boolean ausgabenFehlen = exportAusgabenFehlen(meldungen);
+
+        boolean ranglisteDirty = istDirty(SheetMetadataHelper.SCHLUESSEL_LIGA_RANGLISTE, ranglisteErgebnis);
+        boolean termineDirty = istDirty(SheetMetadataHelper.SCHLUESSEL_LIGA_TERMINE_PRO_TEILNEHMER, termineErgebnis);
+        boolean ranglisteOk = ranglisteErgebnis instanceof SignaturErgebnis.Ok;
+        boolean termineOk = termineErgebnis instanceof SignaturErgebnis.Ok;
+        if (!ausgabenFehlen && !ranglisteDirty && !termineDirty && ranglisteOk && termineOk) {
+            if (ranglisteErgebnis instanceof SignaturErgebnis.Ok) {
+                SheetSyncSignaturStore.aktualisiereVerifyZeit(doc, SheetMetadataHelper.SCHLUESSEL_LIGA_RANGLISTE);
+            }
+            if (termineErgebnis instanceof SignaturErgebnis.Ok) {
+                SheetSyncSignaturStore.aktualisiereVerifyZeit(doc,
+                        SheetMetadataHelper.SCHLUESSEL_LIGA_TERMINE_PRO_TEILNEHMER);
+            }
+            logger.debug("Liga-Export: abhaengige Sheets unveraendert, Update uebersprungen");
+            return;
+        }
+
+        if (ausgabenFehlen || ranglisteDirty || termineDirty) {
+            aktualisiereExportSheets(meldungen);
+            String grund = ausgabenFehlen ? "exportMissingOutput" : EXPORT_UPDATE_GRUND;
+            if (ranglisteErgebnis instanceof SignaturErgebnis.Ok ok) {
+                SheetSyncSignaturStore.speichereNachRebuild(doc, SheetMetadataHelper.SCHLUESSEL_LIGA_RANGLISTE,
+                        ok.hash(), grund);
+            }
+            if (termineErgebnis instanceof SignaturErgebnis.Ok ok) {
+                SheetSyncSignaturStore.speichereNachRebuild(doc,
+                        SheetMetadataHelper.SCHLUESSEL_LIGA_TERMINE_PRO_TEILNEHMER, ok.hash(), grund);
+            }
+            return;
+        }
+
+        logger.warn("Liga-Export: Signatur konnte nicht berechnet werden, abhaengige Updates werden uebersprungen: {}, {}",
+                ranglisteErgebnis, termineErgebnis);
+    }
+
+    private boolean istDirty(String schluessel, SignaturErgebnis ergebnis) {
+        if (ergebnis instanceof SignaturErgebnis.Ok ok) {
+            var gespeichert = SheetSyncSignaturStore.ladeHash(getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
+                    schluessel);
+            if (gespeichert.isPresent() && gespeichert.get().equals(ok.hash())) {
+                logger.debug("Liga-Export: abhaengige Sheets unveraendert, Update uebersprungen");
+                return false;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private void aktualisiereExportSheets(TeamMeldungen meldungen) throws GenerateException {
+        var ws = getWorkingSpreadsheet();
+        processBox().info("Liga Export: Terminlisten, Rangliste und Direktvergleich aktualisieren");
+        new LigaTermineProTeilnehmerSheet(ws).generate(meldungen);
+        new LigaRanglisteSheetUpdate(ws).doRun();
+        new LigaRanglisteDirektvergleichSheet(ws).aktualisieren();
+    }
+
+    private boolean exportAusgabenFehlen(TeamMeldungen meldungen) throws GenerateException {
+        if (getSheetHelper().findByName(sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_LIGA_RANGLISTE,
+                SheetNamen.rangliste())) == null) {
+            return true;
+        }
+        if (getSheetHelper().findByName(sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_LIGA_DIREKTVERGLEICH,
+                SheetNamen.direktvergleich())) == null) {
+            return true;
+        }
+        return termineSheetNames().size() < meldungen.teams().size();
     }
 
     private List<TerminExportEintrag> exportiereTerminlistenPdf(List<String> termineSheetNames, Path zielVerzeichnis)

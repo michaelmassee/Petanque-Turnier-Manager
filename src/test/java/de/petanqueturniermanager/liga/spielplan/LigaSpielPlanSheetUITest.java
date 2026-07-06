@@ -192,6 +192,25 @@ public class LigaSpielPlanSheetUITest extends BaseCalcUITest {
 				.isEqualTo(erwartetesFormat);
 	}
 
+	@Test
+	public void testDatumSpalteIstAlsTagMonatJahrKurzFormatiert() throws GenerateException {
+		logger.info("testDatumSpalteIstAlsTagMonatJahrKurzFormatiert");
+		LigaSpielPlanSheet spielPlan = new LigaSpielPlanSheet(wkingSpreadsheet);
+		spielPlan.run();
+
+		int erwartetesFormat = NumberFormatHelper.from(wkingSpreadsheet.getWorkingSpreadsheetDocument())
+				.getIdx(UserNumberFormat.DATE_SHORT);
+		Object gesetztesFormat = XPropertyHelper.from(
+				sheetHlp.getCell(spielPlan.getXSpreadSheet(),
+						Position.from(LigaSpielPlanSheet.DATUM_SPALTE,
+								LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE)),
+				wkingSpreadsheet.getWorkingSpreadsheetDocument())
+				.getProperty(ICommonProperties.NUMBERFORMAT);
+
+		assertThat(gesetztesFormat).as("Datum-Spalte muss als dd.mm.yy formatiert sein")
+				.isEqualTo(erwartetesFormat);
+	}
+
 	/**
 	 * Regression im Kiosk-Modus: nach Erstaufbau muss ein erneuter
 	 * {@link LigaSpielPlanSheet#run()} unter aktivem TurnierModus + Liga-Blattschutz

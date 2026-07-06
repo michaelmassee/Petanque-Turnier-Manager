@@ -100,6 +100,10 @@ public class JGJRanglisteDirektvergleichSheet extends SheetRunner implements ISh
 		upDateSheet();
 	}
 
+	public void aktualisieren() throws GenerateException {
+		upDateSheet();
+	}
+
 	/**
 	 * @throws GenerateException
 	 */

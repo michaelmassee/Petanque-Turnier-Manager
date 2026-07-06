@@ -35,6 +35,9 @@ import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.io.PdfExport;
+import de.petanqueturniermanager.helper.sheetsync.EingabeSignatur;
+import de.petanqueturniermanager.helper.sheetsync.SheetSyncSignaturStore;
+import de.petanqueturniermanager.helper.sheetsync.SignaturErgebnis;
 import de.petanqueturniermanager.webserver.TabelleHtmlRenderer;
 import de.petanqueturniermanager.webserver.TabellenMapper;
 
@@ -68,6 +71,50 @@ public abstract class AbstractExportInVerzeichnis extends SheetRunner {
     }
 
     protected abstract ExportErgebnis exportiereInVerzeichnis(Path zielVerzeichnis) throws GenerateException;
+
+    @FunctionalInterface
+    protected interface ExportUpdateAktion {
+        void aktualisieren() throws GenerateException;
+    }
+
+    protected void aktualisiereExportSheetWennDirty(String persistenzSchluessel,
+            EingabeSignatur signatur, ExportUpdateAktion updateAktion) throws GenerateException {
+        aktualisiereExportSheetWennDirty(persistenzSchluessel, signatur,
+                exportSheetFehlt(persistenzSchluessel), updateAktion);
+    }
+
+    protected void aktualisiereExportSheetWennDirty(String persistenzSchluessel,
+            EingabeSignatur signatur, boolean ausgabeFehlt, ExportUpdateAktion updateAktion)
+            throws GenerateException {
+        var doc = getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
+        SignaturErgebnis ergebnis = signatur.berechne(doc, 1);
+
+        if (ergebnis instanceof SignaturErgebnis.Ok ok) {
+            var gespeichert = SheetSyncSignaturStore.ladeHash(doc, persistenzSchluessel);
+            if (!ausgabeFehlt && gespeichert.isPresent() && gespeichert.get().equals(ok.hash())) {
+                SheetSyncSignaturStore.aktualisiereVerifyZeit(doc, persistenzSchluessel);
+                logger.debug("Export-Update übersprungen, Signatur unverändert (key={})", persistenzSchluessel);
+                return;
+            }
+            updateAktion.aktualisieren();
+            String grund = ausgabeFehlt ? "exportMissingOutput" : "exportBeforeBuild";
+            SheetSyncSignaturStore.speichereNachRebuild(doc, persistenzSchluessel, ok.hash(), grund);
+            return;
+        }
+
+        if (ausgabeFehlt) {
+            updateAktion.aktualisieren();
+            return;
+        }
+
+        logger.warn("Export-Update übersprungen, Signatur konnte nicht berechnet werden (key={}): {}",
+                persistenzSchluessel, ergebnis);
+    }
+
+    protected boolean exportSheetFehlt(String schluessel) {
+        return SheetMetadataHelper.findeSheet(getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), schluessel)
+                .isEmpty();
+    }
 
     protected Path exportierePdfWennTabelleVorhanden(String sheetName, Path zielVerzeichnis)
             throws GenerateException {

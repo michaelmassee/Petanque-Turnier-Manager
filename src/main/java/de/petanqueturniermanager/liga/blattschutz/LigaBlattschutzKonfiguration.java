@@ -84,15 +84,45 @@ public class LigaBlattschutzKonfiguration implements IBlattschutzKonfiguration, 
         SheetMetadataHelper.findeSheet(xDoc, SheetMetadataHelper.SCHLUESSEL_LIGA_SPIELPLAN).ifPresent(sheet -> {
             int ersteDatenZeile = LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE;
             int letzteZeile = ermittleLetzteSpielplanZeile(sheet);
+            // Freispiel-Zeilen sind nur Info und bleiben vollständig gesperrt.
             // Punkte H/G (PUNKTE_A/PUNKTE_B) sind Formelspalten → gesperrt, nicht editierbar.
-            // Editierbar nur Siege + SpPunkte (SPIELE_A..SPIELPNKT_B).
-            var bereiche = List.of(
-                    RangePosition.from(LigaSpielPlanSheet.DATUM_SPALTE, ersteDatenZeile,
-                            LigaSpielPlanSheet.ORT_SPALTE, letzteZeile),
-                    RangePosition.from(LigaSpielPlanSheet.SPIELE_A_SPALTE, ersteDatenZeile,
-                            LigaSpielPlanSheet.SPIELPNKT_B_SPALTE, letzteZeile));
+            // Editierbar nur Datum/Uhrzeit/Ort sowie Siege + SpPunkte echter Begegnungen.
+            var bereiche = new ArrayList<RangePosition>();
+            sammleEchteBegegnungsBereiche(sheet, letzteZeile, LigaSpielPlanSheet.DATUM_SPALTE,
+                    LigaSpielPlanSheet.ORT_SPALTE, bereiche);
+            sammleEchteBegegnungsBereiche(sheet, letzteZeile, LigaSpielPlanSheet.SPIELE_A_SPALTE,
+                    LigaSpielPlanSheet.SPIELPNKT_B_SPALTE, bereiche);
             infos.add(SheetSchutzInfo.mitEditierbarenBereichen(sheet, bereiche));
         });
+    }
+
+    private void sammleEchteBegegnungsBereiche(XSpreadsheet sheet, int letzteZeile, int startSpalte, int endeSpalte,
+            List<RangePosition> bereiche) {
+        Integer startZeile = null;
+        for (int zeile = LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
+            if (istEchteBegegnung(sheet, zeile)) {
+                if (startZeile == null) {
+                    startZeile = zeile;
+                }
+            } else if (startZeile != null) {
+                bereiche.add(RangePosition.from(startSpalte, startZeile, endeSpalte, zeile - 1));
+                startZeile = null;
+            }
+        }
+        if (startZeile != null) {
+            bereiche.add(RangePosition.from(startSpalte, startZeile, endeSpalte, letzteZeile));
+        }
+    }
+
+    private boolean istEchteBegegnung(XSpreadsheet sheet, int zeile) {
+        try {
+            int teamA = (int) sheet.getCellByPosition(LigaSpielPlanSheet.TEAM_A_NR_SPALTE, zeile).getValue();
+            int teamB = (int) sheet.getCellByPosition(LigaSpielPlanSheet.TEAM_B_NR_SPALTE, zeile).getValue();
+            return teamA > 0 && teamB > 0;
+        } catch (Exception e) {
+            logger.warn("Liga-Spielplan-Zeile {} konnte für Blattschutz nicht gelesen werden: {}", zeile, e.getMessage());
+            return false;
+        }
     }
 
     private int ermittleLetzteSpielplanZeile(XSpreadsheet sheet) {

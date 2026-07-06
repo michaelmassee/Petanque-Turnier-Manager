@@ -96,6 +96,14 @@ public class LigaRanglisteDirektvergleichSheet extends SheetRunner implements IS
 		upDateSheet();
 	}
 
+	public void aktualisieren() throws GenerateException {
+		try {
+			upDateSheet();
+		} finally {
+			getxCalculatable().enableAutomaticCalculation(true);
+		}
+	}
+
 	/**
 	 * @throws GenerateException
 	 */

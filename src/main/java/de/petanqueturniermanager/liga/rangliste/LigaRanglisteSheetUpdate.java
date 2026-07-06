@@ -29,27 +29,31 @@ public class LigaRanglisteSheetUpdate extends LigaRanglisteSheet {
 	}
 
 	@Override
-	protected void doRun() throws GenerateException {
-		XSpreadsheet sheet = getXSpreadSheet();
-		if (sheet == null) {
-			logger.debug("RanglisteUpdate: Sheet nicht vorhanden – vollständiger Erstaufbau");
-			upDateSheet();
-			return;
+	public void doRun() throws GenerateException {
+		try {
+			XSpreadsheet sheet = getXSpreadSheet();
+			if (sheet == null) {
+				logger.debug("RanglisteUpdate: Sheet nicht vorhanden – vollständiger Erstaufbau");
+				upDateSheet();
+				return;
+			}
+
+			logger.debug("RanglisteUpdate START – Thread='{}'", Thread.currentThread().getName());
+			processBoxinfo("processbox.rangliste.aktualisieren");
+
+			getMeldeListe().upDateSheet();
+			TeamMeldungen aktiveMeldungen = getAlleMeldungen();
+			if (!aktiveMeldungen.isValid()) {
+				processBoxinfo("processbox.abbruch");
+				return;
+			}
+
+			RanglisteUpdateHelper.loescheDatenzeilen(this, sheet, aktiveMeldungen.size());
+			berechnungUndSchreiben(sheet, getMeldeListe(), aktiveMeldungen);
+
+			logger.debug("RanglisteUpdate ENDE – Thread='{}'", Thread.currentThread().getName());
+		} finally {
+			getxCalculatable().enableAutomaticCalculation(true);
 		}
-
-		logger.debug("RanglisteUpdate START – Thread='{}'", Thread.currentThread().getName());
-		processBoxinfo("processbox.rangliste.aktualisieren");
-
-		getMeldeListe().upDateSheet();
-		TeamMeldungen aktiveMeldungen = getAlleMeldungen();
-		if (!aktiveMeldungen.isValid()) {
-			processBoxinfo("processbox.abbruch");
-			return;
-		}
-
-		RanglisteUpdateHelper.loescheDatenzeilen(this, sheet, aktiveMeldungen.size());
-		berechnungUndSchreiben(sheet, getMeldeListe(), aktiveMeldungen);
-
-		logger.debug("RanglisteUpdate ENDE – Thread='{}'", Thread.currentThread().getName());
 	}
 }

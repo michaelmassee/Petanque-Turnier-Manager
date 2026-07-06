@@ -63,6 +63,11 @@ public class LigaStatusLeser {
                 if (!istHinrunde && !istRueckrunde) {
                     continue;
                 }
+                int teamA = (int) sheet.getCellByPosition(LigaSpielPlanSheet.TEAM_A_NR_SPALTE, zeile).getValue();
+                int teamB = (int) sheet.getCellByPosition(LigaSpielPlanSheet.TEAM_B_NR_SPALTE, zeile).getValue();
+                if (LigaSpielPlanSheet.istFreispiel(teamA, teamB)) {
+                    continue;
+                }
 
                 boolean gespielt = sheet.getCellByPosition(LigaSpielPlanSheet.SPIELE_A_SPALTE, zeile)
                         .getType() != CellContentType.EMPTY;

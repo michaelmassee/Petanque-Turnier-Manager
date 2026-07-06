@@ -165,6 +165,31 @@ public final class SignaturQuellen {
                         Set.of(10, 11, 12, 13, 14, 15), true));
     }
 
+    /** Quellen für Liga-Terminlisten: Meldeliste + alle im Aushang sichtbaren Spielplan-Daten. */
+    public static List<SignaturQuelle> fuerLigaTermineProTeilnehmer(XSpreadsheetDocument xDoc) {
+        return List.of(
+                meldelisteSchweizerLike("LIGA-TERMINE-MELDELISTE",
+                        SheetMetadataHelper.SCHLUESSEL_LIGA_MELDELISTE),
+                new SignaturQuelle("LIGA-TERMINE-SPIELPLAN",
+                        SheetMetadataHelper.SCHLUESSEL_LIGA_SPIELPLAN,
+                        LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE,
+                        /* maxZeilen */ 5000,
+                        Set.of(
+                                LigaSpielPlanSheet.SPIEL_NR_SPALTE,
+                                LigaSpielPlanSheet.DATUM_SPALTE,
+                                LigaSpielPlanSheet.UHRZEIT_SPALTE,
+                                LigaSpielPlanSheet.ORT_SPALTE,
+                                LigaSpielPlanSheet.PUNKTE_A_SPALTE,
+                                LigaSpielPlanSheet.PUNKTE_B_SPALTE,
+                                LigaSpielPlanSheet.SPIELE_A_SPALTE,
+                                LigaSpielPlanSheet.SPIELE_B_SPALTE,
+                                LigaSpielPlanSheet.SPIELPNKT_A_SPALTE,
+                                LigaSpielPlanSheet.SPIELPNKT_B_SPALTE,
+                                LigaSpielPlanSheet.TEAM_A_NR_SPALTE,
+                                LigaSpielPlanSheet.TEAM_B_NR_SPALTE),
+                        true));
+    }
+
     /** Quellen für JGJ-Rangliste. */
     public static List<SignaturQuelle> fuerJGJ(XSpreadsheetDocument xDoc) {
         List<SignaturQuelle> quellen = new ArrayList<>();

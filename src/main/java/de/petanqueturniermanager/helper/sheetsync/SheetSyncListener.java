@@ -100,6 +100,27 @@ public final class SheetSyncListener implements SheetAktivierungsHandler, ITurni
     }
 
     /**
+     * Erzeugt einen Listener für dynamisch nummerierte Sheets mit gemeinsamem
+     * Persistenz-Schlüssel. Alle passenden Sheets teilen sich denselben Hash, weil ein
+     * Rebuild die komplette Sheet-Gruppe aktualisiert.
+     */
+    public static SheetSyncListener fuerSchluesselPraefix(
+            XComponentContext xContext,
+            String namedRangeKey,
+            String namedRangePrefix,
+            TurnierSystem erwartesTurnierSystem,
+            EingabeSignatur signatur,
+            BiFunction<WorkingSpreadsheet, XSpreadsheet, SheetRunner> runnerFactory) {
+        return new SheetSyncListener(xContext,
+                (xDoc, sheet) -> SheetMetadataHelper.istRegistriertesSheet(xDoc, sheet, namedRangeKey)
+                        || SheetMetadataHelper.hatPraefixSchluessel(xDoc, sheet, namedRangePrefix),
+                erwartesTurnierSystem,
+                (xDoc, sheet) -> signatur,
+                (xDoc, sheet) -> namedRangeKey,
+                runnerFactory);
+    }
+
+    /**
      * Erzeugt einen Listener für Supermelee-Spieltag-Ranglisten (dynamische Schlüssel).
      * Pro Spieltag-Nr gibt es eine eigene Signatur und einen eigenen Persistenz-Schlüssel.
      *

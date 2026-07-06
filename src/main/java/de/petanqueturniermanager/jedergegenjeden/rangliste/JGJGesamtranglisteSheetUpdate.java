@@ -34,7 +34,7 @@ public class JGJGesamtranglisteSheetUpdate extends JGJGesamtranglisteSheet {
 	}
 
 	@Override
-	protected void doRun() throws GenerateException {
+	public void doRun() throws GenerateException {
 		XSpreadsheet sheet = getXSpreadSheet();
 		if (sheet == null) {
 			logger.debug("GesamtranglisteUpdate: Sheet nicht vorhanden – vollständiger Erstaufbau");

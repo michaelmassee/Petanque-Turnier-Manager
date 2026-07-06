@@ -183,6 +183,9 @@ public class LigaTermineProTeilnehmerSheet extends SheetRunner implements ISheet
             }
             int teamA = row.get(LigaSpielPlanSheet.TEAM_A_NR_SPALTE).getIntVal(0);
             int teamB = row.get(LigaSpielPlanSheet.TEAM_B_NR_SPALTE).getIntVal(0);
+            if (LigaSpielPlanSheet.istFreispiel(teamA, teamB)) {
+                continue;
+            }
             if (teamA == teamNr || teamB == teamNr) {
                 insertTerminZeile(zeile++, spielplanName,
                         LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE + i, teamA == teamNr);
@@ -284,6 +287,9 @@ public class LigaTermineProTeilnehmerSheet extends SheetRunner implements ISheet
             }
             int teamA = row.get(LigaSpielPlanSheet.TEAM_A_NR_SPALTE).getIntVal(0);
             int teamB = row.get(LigaSpielPlanSheet.TEAM_B_NR_SPALTE).getIntVal(0);
+            if (LigaSpielPlanSheet.istFreispiel(teamA, teamB)) {
+                continue;
+            }
             if (teamA == teamNr) {
                 return row.get(LigaSpielPlanSheet.NAME_A_SPALTE).getStringVal();
             }

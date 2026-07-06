@@ -14,11 +14,14 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
+import de.petanqueturniermanager.helper.rangliste.SignaturQuellen;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
+import de.petanqueturniermanager.helper.sheetsync.EingabeSignatur;
 import de.petanqueturniermanager.helper.upload.AbstractExportInVerzeichnis;
 import de.petanqueturniermanager.helper.upload.ExportErgebnis;
 import de.petanqueturniermanager.helper.upload.ExportHtmlSeite;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
+import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheetUpdate;
 
 public class SchweizerExportInVerzeichnis extends AbstractExportInVerzeichnis {
 
@@ -32,6 +35,9 @@ public class SchweizerExportInVerzeichnis extends AbstractExportInVerzeichnis {
 
         var ws = getWorkingSpreadsheet();
         var konfiguration = new SchweizerKonfigurationSheet(ws);
+        aktualisiereExportSheetWennDirty(SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_RANGLISTE,
+                new EingabeSignatur(SignaturQuellen::fuerSchweizer),
+                () -> new SchweizerRanglisteSheetUpdate(ws).doRun());
 
         List<Path> exportierteDateien = new ArrayList<>();
 

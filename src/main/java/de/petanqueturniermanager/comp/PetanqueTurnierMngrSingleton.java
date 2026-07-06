@@ -43,6 +43,7 @@ import de.petanqueturniermanager.liga.blattschutz.LigaBlattschutzKonfiguration;
 import de.petanqueturniermanager.liga.konfiguration.LigaKonfigurationSheet;
 import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheetUpdate;
 import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet;
+import de.petanqueturniermanager.liga.spielplan.LigaTermineProTeilnehmerSheet;
 import de.petanqueturniermanager.maastrichter.blattschutz.MaastrichterBlattschutzKonfiguration;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
 import de.petanqueturniermanager.schweizer.blattschutz.SchweizerBlattschutzKonfiguration;
@@ -239,6 +240,13 @@ public class PetanqueTurnierMngrSingleton {
 				new EingabeSignatur(SignaturQuellen::fuerLiga),
 				(ws, ignored) -> new LigaRanglisteSheetUpdate(ws)));
 		t = logTimingAndReset("SheetSyncListener LIGA", t);
+		sheetAktivierungsDispatcher.registriere(SheetSyncListener.fuerSchluesselPraefix(context,
+				SheetMetadataHelper.SCHLUESSEL_LIGA_TERMINE_PRO_TEILNEHMER,
+				SheetMetadataHelper.SCHLUESSEL_LIGA_TERMINE_PRO_TEILNEHMER_PREFIX,
+				TurnierSystem.LIGA,
+				new EingabeSignatur(SignaturQuellen::fuerLigaTermineProTeilnehmer),
+				(ws, ignored) -> new LigaTermineProTeilnehmerSheet(ws)));
+		t = logTimingAndReset("SheetSyncListener LIGA-TERMINE", t);
 		sheetAktivierungsDispatcher.registriere(SheetSyncListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_KASKADE_GRUPPENRANGLISTE,
 				TurnierSystem.KASKADE,

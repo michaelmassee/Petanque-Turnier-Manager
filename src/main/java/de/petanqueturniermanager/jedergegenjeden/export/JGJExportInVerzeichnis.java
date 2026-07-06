@@ -14,11 +14,16 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
+import de.petanqueturniermanager.helper.rangliste.SignaturQuellen;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
+import de.petanqueturniermanager.helper.sheetsync.EingabeSignatur;
 import de.petanqueturniermanager.helper.upload.AbstractExportInVerzeichnis;
 import de.petanqueturniermanager.helper.upload.ExportErgebnis;
 import de.petanqueturniermanager.helper.upload.ExportHtmlSeite;
 import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationSheet;
+import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJGesamtranglisteSheetUpdate;
+import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteDirektvergleichSheet;
+import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteSheetUpdate;
 import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJSpielPlanSheet;
 
 public class JGJExportInVerzeichnis extends AbstractExportInVerzeichnis {
@@ -33,6 +38,16 @@ public class JGJExportInVerzeichnis extends AbstractExportInVerzeichnis {
 
         var ws = getWorkingSpreadsheet();
         var konfiguration = new JGJKonfigurationSheet(ws);
+        boolean abhaengigeAusgabeFehlt = exportSheetFehlt(SheetMetadataHelper.SCHLUESSEL_JGJ_RANGLISTE)
+                || exportSheetFehlt(SheetMetadataHelper.SCHLUESSEL_JGJ_DIREKTVERGLEICH);
+        aktualisiereExportSheetWennDirty(SheetMetadataHelper.SCHLUESSEL_JGJ_RANGLISTE,
+                new EingabeSignatur(SignaturQuellen::fuerJGJ),
+                abhaengigeAusgabeFehlt,
+                () -> {
+                    new JGJRanglisteSheetUpdate(ws).doRun();
+                    new JGJGesamtranglisteSheetUpdate(ws).doRun();
+                    new JGJRanglisteDirektvergleichSheet(ws).aktualisieren();
+                });
 
         List<Path> exportierteDateien = new ArrayList<>();
 

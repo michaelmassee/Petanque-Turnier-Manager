@@ -10,17 +10,30 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.sun.star.beans.XPropertySet;
+import com.sun.star.container.XNamed;
 import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.sheet.XSpreadsheetDocument;
 
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.cellvalue.properties.ICommonProperties;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.rangliste.SignaturQuellen;
+import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.random.RandomSource;
+import de.petanqueturniermanager.helper.sheet.blattschutz.SheetSchutzInfo;
+import de.petanqueturniermanager.liga.blattschutz.LigaBlattschutzKonfiguration;
+import de.petanqueturniermanager.liga.konfiguration.LigaKonfigurationSheet;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
+import de.petanqueturniermanager.helper.sheetsync.EingabeSignatur;
+import de.petanqueturniermanager.helper.sheetsync.SignaturErgebnis;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheetUpdate;
 import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
@@ -91,8 +104,11 @@ public class LigaTurnierTestDatenUITest extends BaseCalcUITest {
 		validiereGrundstruktur(TEAMNAMEN_7[0]);
 		validiereMeldelistePerJson(anzTeams, "liga-freispiel-meldeliste.json");
 		validiereSpielplanPerJson("liga-freispiel-spielplan.json");
-		validiereTermineProTeilnehmer(TEAMNAMEN_7, 14);
+		validiereFreispielNurInfoImSpielplan();
+		validiereTermineProTeilnehmer(TEAMNAMEN_7, 12);
 		validiereRanglistePerJson(anzTeams, "liga-freispiel-rangliste.json");
+		validiereRanglisteZaehltNurEchteBegegnungen(anzTeams);
+		validiereStatusZaehltNurEchteBegegnungen();
 	}
 
 	/**
@@ -146,6 +162,26 @@ public class LigaTurnierTestDatenUITest extends BaseCalcUITest {
 		assertThat(terminRow.get(11).getIntVal()).as("SpPunkte G echte 0").isZero();
 	}
 
+	@Test
+	public void terminlistenSignaturWirdBeiTerminrelevanterSpielplanaenderungDirty() throws GenerateException {
+		new LigaTurnierTestDaten(wkingSpreadsheet).erzeugeBeispielturnier();
+
+		XSpreadsheetDocument xDoc = wkingSpreadsheet.getWorkingSpreadsheetDocument();
+		EingabeSignatur engine = new EingabeSignatur(SignaturQuellen::fuerLigaTermineProTeilnehmer);
+		String hashVorher = berechneOk(engine, xDoc);
+
+		XSpreadsheet spielplan = sheetHlp.findByName(SheetNamen.spielplan());
+		sheetHlp.setStringValueInCell(StringCellValue.from(spielplan,
+				Position.from(LigaSpielPlanSheet.ORT_SPALTE, LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE))
+				.setValue("Boulodrome Test"));
+		recalcAll();
+
+		String hashNachher = berechneOk(engine, xDoc);
+		assertThat(hashNachher)
+				.as("Terminlisten-Fokus-Sync muss dirty werden, wenn Ort/Termin im Spielplan geändert wurde")
+				.isNotEqualTo(hashVorher);
+	}
+
 	private void validiereGrundstruktur(String ersterTerminSheetName) {
 		assertThat(sheetHlp.findByName(SheetNamen.meldeliste()))
 				.as("Meldeliste-Sheet muss existieren").isNotNull();
@@ -170,6 +206,14 @@ public class LigaTurnierTestDatenUITest extends BaseCalcUITest {
 
 		InputStream jsonFile = LigaTurnierTestDatenUITest.class.getResourceAsStream(referenzDatei);
 		validateWithJson(rangeData, jsonFile);
+	}
+
+	private static String berechneOk(EingabeSignatur engine, XSpreadsheetDocument xDoc) {
+		SignaturErgebnis ergebnis = engine.berechne(xDoc, 1);
+		assertThat(ergebnis)
+				.as("Liga-Terminlisten-Signatur muss für ein vollständiges Liga-Turnier berechenbar sein")
+				.isInstanceOf(SignaturErgebnis.Ok.class);
+		return ((SignaturErgebnis.Ok) ergebnis).hash();
 	}
 
 	private void validiereTermineProTeilnehmer(String[] teamNamen, int erwarteteTermineProTeam) {
@@ -206,6 +250,9 @@ public class LigaTurnierTestDatenUITest extends BaseCalcUITest {
 				if (spielNr == null || spielNr.isBlank()) {
 					break;
 				}
+				assertThat(rangeData.get(zeile).get(5).getStringVal())
+						.as("Team %d Termin %s darf kein Freispiel enthalten", teamNr, spielNr)
+						.isNotEqualTo("Freispiel");
 				pruefeTerminErgebnis(rangeData, zeile, spielplanDaten);
 				anzahlTermine++;
 			}
@@ -214,6 +261,118 @@ public class LigaTurnierTestDatenUITest extends BaseCalcUITest {
 					.as("Team %d muss die erwartete Anzahl Termine haben", teamNr)
 					.isEqualTo(erwarteteTermineProTeam);
 		}
+	}
+
+	private void validiereFreispielNurInfoImSpielplan() {
+		XSpreadsheet spielplan = sheetHlp.findByName(SheetNamen.spielplan());
+		RangeData spielplanDaten = rangeDateFromRangePosition(
+				RangePosition.from(0, 0, LigaSpielPlanSheet.SPIELPNKT_B_SPALTE, 110),
+				spielplan, wkingSpreadsheet.getWorkingSpreadsheetDocument());
+		int freispielZeilen = 0;
+		int ersteFreispielZeile = -1;
+		int ersteEchteBegegnungZeile = -1;
+		for (int zeile = LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE; zeile < spielplanDaten.size(); zeile++) {
+			RowData row = spielplanDaten.get(zeile);
+			String spielNr = row.get(LigaSpielPlanSheet.SPIEL_NR_SPALTE).getStringVal();
+			if (spielNr == null || spielNr.isBlank()) {
+				break;
+			}
+			if (!"Freispiel".equals(row.get(LigaSpielPlanSheet.NAME_B_SPALTE).getStringVal())) {
+				if (ersteEchteBegegnungZeile < 0) {
+					ersteEchteBegegnungZeile = zeile;
+				}
+				continue;
+			}
+			freispielZeilen++;
+			if (ersteFreispielZeile < 0) {
+				ersteFreispielZeile = zeile;
+			}
+			for (int spalte = LigaSpielPlanSheet.KW_SPALTE; spalte <= LigaSpielPlanSheet.SPIELPNKT_B_SPALTE; spalte++) {
+				if (spalte == LigaSpielPlanSheet.NAME_A_SPALTE) {
+					assertThat(row.get(spalte).getStringVal())
+							.as("%s: Freispiel-Heimteam muss gefuellt bleiben", spielNr)
+							.isNotBlank();
+					continue;
+				}
+				if (spalte == LigaSpielPlanSheet.NAME_B_SPALTE) {
+					assertThat(row.get(spalte).getStringVal())
+							.as("%s: Freispiel-Hinweis muss in der Gast-Spalte stehen", spielNr)
+							.isEqualTo("Freispiel");
+					continue;
+				}
+				assertThat(row.get(spalte).getStringVal())
+						.as("%s: Freispiel-Zelle %d muss leer bleiben", spielNr, spalte)
+						.isEmpty();
+			}
+			for (int spalte = LigaSpielPlanSheet.PUNKTE_A_SPALTE; spalte <= LigaSpielPlanSheet.SPIELPNKT_B_SPALTE; spalte++) {
+				assertThat(row.get(spalte).getStringVal())
+						.as("%s: Freispiel-Ergebniszelle %d muss leer bleiben", spielNr, spalte)
+						.isEmpty();
+			}
+		}
+		assertThat(freispielZeilen).as("Freispiel-Zeilen in Hin- und Rueckrunde").isEqualTo(14);
+		validiereFreispielZebraFarbe(spielplan, ersteFreispielZeile);
+		validiereFreispielNichtEditierbar(spielplan, ersteFreispielZeile, ersteEchteBegegnungZeile);
+	}
+
+	private void validiereFreispielZebraFarbe(XSpreadsheet spielplan, int zeile) {
+		assertThat(zeile).as("Freispiel-Zeile fuer Farbpruefung").isGreaterThanOrEqualTo(0);
+		int erwarteteFarbe = zeile % 2 == 0
+				? new LigaKonfigurationSheet(wkingSpreadsheet).getSpielPlanHintergrundFarbeUnGerade()
+				: new LigaKonfigurationSheet(wkingSpreadsheet).getSpielPlanHintergrundFarbeGerade();
+		for (int spalte = LigaSpielPlanSheet.KW_SPALTE; spalte <= LigaSpielPlanSheet.SPIELPNKT_B_SPALTE; spalte++) {
+			int farbe = zellFarbe(spielplan, spalte, zeile);
+			assertThat(farbe)
+					.as("Freispiel-Zelle %d/%d muss normale Zebra-Farbe haben", spalte, zeile)
+					.isEqualTo(erwarteteFarbe)
+					.isNotEqualTo(EditierbaresZelleFormatHelper.EDITIERBAR_GERADE_FARBE)
+					.isNotEqualTo(EditierbaresZelleFormatHelper.EDITIERBAR_UNGERADE_FARBE);
+		}
+	}
+
+	private int zellFarbe(XSpreadsheet sheet, int spalte, int zeile) {
+		try {
+			XPropertySet props = Lo.qi(XPropertySet.class, sheet.getCellByPosition(spalte, zeile));
+			return (Integer) props.getPropertyValue(ICommonProperties.CELL_BACK_COLOR);
+		} catch (Exception e) {
+			throw new AssertionError("CellBackColor konnte nicht gelesen werden", e);
+		}
+	}
+
+	private void validiereFreispielNichtEditierbar(XSpreadsheet spielplan, int freispielZeile,
+			int echteBegegnungZeile) {
+		assertThat(freispielZeile).as("Freispiel-Zeile fuer Schutzpruefung").isGreaterThanOrEqualTo(0);
+		assertThat(echteBegegnungZeile).as("Echte Begegnungszeile fuer Schutzpruefung").isGreaterThanOrEqualTo(0);
+		SheetSchutzInfo spielplanSchutz = LigaBlattschutzKonfiguration.get()
+				.berechneSchutzInfos(wkingSpreadsheet).stream()
+				.filter(info -> SheetNamen.spielplan().equals(Lo.qi(XNamed.class, info.sheet()).getName()))
+				.findFirst()
+				.orElseThrow(() -> new AssertionError("Liga-Spielplan-Schutzinfo nicht gefunden"));
+
+		assertThat(istInEditierbaremBereich(spielplanSchutz, LigaSpielPlanSheet.DATUM_SPALTE, echteBegegnungZeile))
+				.as("Datum echter Begegnungen bleibt editierbar")
+				.isTrue();
+		assertThat(istInEditierbaremBereich(spielplanSchutz, LigaSpielPlanSheet.DATUM_SPALTE, freispielZeile))
+				.as("Datum in Freispiel-Zeilen darf nicht editierbar sein")
+				.isFalse();
+		assertThat(istInEditierbaremBereich(spielplanSchutz, LigaSpielPlanSheet.SPIELE_A_SPALTE, freispielZeile))
+				.as("Ergebnis in Freispiel-Zeilen darf nicht editierbar sein")
+				.isFalse();
+	}
+
+	private boolean istInEditierbaremBereich(SheetSchutzInfo info, int spalte, int zeile) {
+		return info.editierbareBereich().stream().anyMatch(range ->
+				spalte >= range.getStartSpalte() && spalte <= range.getEndeSpalte()
+						&& zeile >= range.getStartZeile() && zeile <= range.getEndeZeile());
+	}
+
+	private void validiereStatusZaehltNurEchteBegegnungen() {
+		LigaTurnierSchritt status = LigaStatusLeser.von(wkingSpreadsheet).liesStatus();
+
+		assertThat(status.hrGesamt()).as("HR echte Begegnungen ohne Freispiel").isEqualTo(21);
+		assertThat(status.rrGesamt()).as("RR echte Begegnungen ohne Freispiel").isEqualTo(21);
+		assertThat(status.hrGespielt()).as("HR gespielt ohne Freispiel").isEqualTo(21);
+		assertThat(status.rrGespielt()).as("RR gespielt ohne Freispiel").isEqualTo(21);
 	}
 
 	private void pruefeTerminErgebnis(RangeData termine, int terminZeile, RangeData spielplanDaten) {
@@ -278,6 +437,19 @@ public class LigaTurnierTestDatenUITest extends BaseCalcUITest {
 
 		InputStream jsonFile = LigaTurnierTestDatenUITest.class.getResourceAsStream(referenzDatei);
 		validateWithJson(rangeData, jsonFile);
+	}
+
+	private void validiereRanglisteZaehltNurEchteBegegnungen(int anzTeams) {
+		XSpreadsheet rangliste = sheetHlp.findByName(SheetNamen.rangliste());
+		RangeData begegnungen = rangeDateFromRangePosition(
+				RangePosition.from(11, 2, 11, 2 + anzTeams - 1),
+				rangliste, wkingSpreadsheet.getWorkingSpreadsheetDocument());
+
+		for (int i = 0; i < begegnungen.size(); i++) {
+			assertThat(begegnungen.get(i).get(0).getIntVal())
+					.as("Ranglisten-Zeile %d muss 12 echte Begegnungen ohne Freispiel zaehlen", i + 1)
+					.isEqualTo(12);
+		}
 	}
 
 	/**
