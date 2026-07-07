@@ -7,11 +7,12 @@ Noch gespeichert in GlobalProperties
 - Webserver-Regie:
     - Primär über LibreOffice-Konfiguration in der Node WebserverRegie.
     - Properties: Active, Port, TargetsJson, LegacyPropertiesImported
-    - Fallback Legacy-Datei nur ohne LO-Kontext oder bei LO-Konfigurationsfehler.
-    - Legacy-Keys werden nach erfolgreichem Import nicht mehr in die Datei geschrieben:
+    - Legacy-Datei ist Quelle nur bis zur erfolgreichen Migration: ohne LO-Kontext, oder bei LO-Fehler, bevor der Import erledigt ist (`LegacyPropertiesImported=false`). Nach erfolgreichem Import ist die LO-Konfiguration alleinige, persistente Quelle.
+    - Legacy-Keys werden nach erfolgreichem Import einmalig aus der Datei entfernt und nicht mehr geschrieben:
         - webserver_regie_aktiv
         - webserver_regie_port
         - webserver_regie_ziele
+    - Schlägt der LO-Read nach erfolgter Migration ausnahmsweise fehl, liefern die Getter für diese Sitzung Defaults (aktiv=true, Port 9090); die Werte bleiben in der LO-Konfiguration erhalten und werden bei der nächsten erfolgreichen Sitzung wieder gelesen. Es gibt bewusst keinen Legacy-Datei-Fallback mehr für die Regie.
     - Aktiv und Port sind in der eigenen LO-Optionsseite "Webserver-Regie" konfiguriert; Ziele bleiben in der Webserver-Regie-Sidebar.
     - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java, src/main/java/de/petanqueturniermanager/comp/LibreOfficeWebserverRegieSpeicher.java
 

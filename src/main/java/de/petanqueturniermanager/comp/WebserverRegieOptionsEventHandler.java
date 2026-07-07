@@ -4,6 +4,7 @@
 package de.petanqueturniermanager.comp;
 
 import java.util.Arrays;
+import java.util.OptionalInt;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -26,6 +27,8 @@ import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.msgbox.MessageBox;
+import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.webserver.WebServerManager;
 
 /**
@@ -50,7 +53,10 @@ public final class WebserverRegieOptionsEventHandler extends WeakBase
 	private static final String CTL_WEBSERVER_REGIE_PORT_LABEL = "WebserverRegiePortLabel";
 	private static final String CTL_WEBSERVER_REGIE_PORT = "WebserverRegiePort";
 
+	private final XComponentContext context;
+
 	public WebserverRegieOptionsEventHandler(XComponentContext context) {
+		this.context = context;
 		GlobalProperties.setLibreOfficeContext(context);
 	}
 
@@ -92,11 +98,35 @@ public final class WebserverRegieOptionsEventHandler extends WeakBase
 		boolean alterRegieAktiv = properties.isWebserverRegieAktiv();
 		int alterRegiePort = properties.getWebserverRegiePort();
 		boolean regieAktiv = checkbox(container, CTL_WEBSERVER_REGIE_ACTIVE);
-		int regiePort = port(container, CTL_WEBSERVER_REGIE_PORT);
+
+		String portText = text(container, CTL_WEBSERVER_REGIE_PORT).trim();
+		OptionalInt regiePortOpt = parsePort(portText);
+		if (regiePortOpt.isEmpty()) {
+			zeigeFehler(I18n.get("konfig.webserver.regie.port.ungueltig", portText));
+			return;
+		}
+		int regiePort = regiePortOpt.getAsInt();
+		if (regieAktiv && istPortDurchCompositeViewBelegt(properties, regiePort)) {
+			zeigeFehler(I18n.get("webserver.regie.konfig.fehler.port.duplikat", regiePort));
+			return;
+		}
+
 		properties.speichernWebserverRegieOptionen(regieAktiv, regiePort);
 		if (alterRegieAktiv != regieAktiv || alterRegiePort != regiePort) {
 			WebServerManager.get().konfigurationGeaendert();
 		}
+	}
+
+	private void zeigeFehler(String meldung) {
+		MessageBox.from(context, MessageBoxTypeEnum.ERROR_OK)
+				.caption(I18n.get("konfig.webserver.regie.bereich"))
+				.message(meldung)
+				.show();
+	}
+
+	private static boolean istPortDurchCompositeViewBelegt(GlobalProperties properties, int port) {
+		return properties.getCompositeViewEintraege().stream()
+				.anyMatch(eintrag -> eintrag.port() == port);
 	}
 
 	private void setzeLabels(XControlContainer container) {
@@ -130,16 +160,16 @@ public final class WebserverRegieOptionsEventHandler extends WeakBase
 		return text == null ? "" : text.getText();
 	}
 
-	private static int port(XControlContainer container, String name) {
-		String portText = text(container, name).trim();
+	private static OptionalInt parsePort(String portText) {
 		try {
 			int port = Integer.parseInt(portText);
 			if (port >= 1 && port <= 65535) {
-				return port;
+				return OptionalInt.of(port);
 			}
 		} catch (NumberFormatException ignored) {
+			// ungueltige Eingabe -> leeres Optional, Meldung erfolgt beim Aufrufer
 		}
-		throw new IllegalArgumentException(I18n.get("konfig.webserver.regie.port.ungueltig", portText));
+		return OptionalInt.empty();
 	}
 
 	private static void setText(XControlContainer container, String name, String wert) {
