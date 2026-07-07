@@ -6,13 +6,13 @@
     dlg:left="0" dlg:top="0" dlg:width="260" dlg:height="120"
     dlg:closeable="false" dlg:moveable="false" dlg:withtitlebar="false">
     <dlg:bulletinboard>
-        <dlg:checkbox dlg:id="Autosave" dlg:tab-index="0" dlg:left="6" dlg:top="8" dlg:width="238" dlg:height="10" dlg:value="Autosave nach jeder Aktion" dlg:checked="false"/>
-        <dlg:checkbox dlg:id="Backup" dlg:tab-index="1" dlg:left="6" dlg:top="22" dlg:width="238" dlg:height="10" dlg:value="Backup vor wichtigen Generierungen" dlg:checked="false"/>
-        <dlg:checkbox dlg:id="NewVersionCheck" dlg:tab-index="2" dlg:left="6" dlg:top="36" dlg:width="248" dlg:height="10" dlg:value="Neue-Version-Prüfung immer aktiv (Entwicklungsmodus)" dlg:checked="false"/>
-        <dlg:checkbox dlg:id="ProcessBoxAutomaticallyShow" dlg:tab-index="3" dlg:left="6" dlg:top="50" dlg:width="238" dlg:height="10" dlg:value="ProzessBox automatisch anzeigen" dlg:checked="true"/>
-        <dlg:checkbox dlg:id="ProcessBoxAutomaticallyClose" dlg:tab-index="4" dlg:left="6" dlg:top="64" dlg:width="238" dlg:height="10" dlg:value="ProzessBox nach Erfolg automatisch schließen" dlg:checked="true"/>
-        <dlg:checkbox dlg:id="PerformanceLogging" dlg:tab-index="5" dlg:left="6" dlg:top="78" dlg:width="238" dlg:height="10" dlg:value="Performance-/Zeitmessungen loggen" dlg:checked="false"/>
-        <dlg:text dlg:id="LogLevelLabel" dlg:tab-index="6" dlg:left="6" dlg:top="95" dlg:width="58" dlg:height="10" dlg:value="Log-Level:"/>
+        <dlg:checkbox dlg:id="Autosave" dlg:tab-index="0" dlg:left="6" dlg:top="8" dlg:width="238" dlg:height="10" dlg:value="" dlg:checked="false"/>
+        <dlg:checkbox dlg:id="Backup" dlg:tab-index="1" dlg:left="6" dlg:top="22" dlg:width="238" dlg:height="10" dlg:value="" dlg:checked="false"/>
+        <dlg:checkbox dlg:id="NewVersionCheck" dlg:tab-index="2" dlg:left="6" dlg:top="36" dlg:width="248" dlg:height="10" dlg:value="" dlg:checked="false"/>
+        <dlg:checkbox dlg:id="ProcessBoxAutomaticallyShow" dlg:tab-index="3" dlg:left="6" dlg:top="50" dlg:width="238" dlg:height="10" dlg:value="" dlg:checked="true"/>
+        <dlg:checkbox dlg:id="ProcessBoxAutomaticallyClose" dlg:tab-index="4" dlg:left="6" dlg:top="64" dlg:width="238" dlg:height="10" dlg:value="" dlg:checked="true"/>
+        <dlg:checkbox dlg:id="PerformanceLogging" dlg:tab-index="5" dlg:left="6" dlg:top="78" dlg:width="238" dlg:height="10" dlg:value="" dlg:checked="false"/>
+        <dlg:text dlg:id="LogLevelLabel" dlg:tab-index="6" dlg:left="6" dlg:top="95" dlg:width="58" dlg:height="10" dlg:value=""/>
         <dlg:combobox dlg:id="LogLevel" dlg:tab-index="7" dlg:left="70" dlg:top="92" dlg:width="70" dlg:height="14" dlg:spin="true">
             <dlg:menupopup>
                 <dlg:menuitem dlg:value=""/>

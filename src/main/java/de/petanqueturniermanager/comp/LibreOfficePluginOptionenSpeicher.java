@@ -3,13 +3,12 @@
  */
 package de.petanqueturniermanager.comp;
 
-import java.util.Map;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.sun.star.beans.PropertyValue;
 import com.sun.star.beans.XPropertySet;
+import com.sun.star.lang.XComponent;
 import com.sun.star.lang.XMultiComponentFactory;
 import com.sun.star.lang.XMultiServiceFactory;
 import com.sun.star.uno.AnyConverter;
@@ -41,8 +40,9 @@ final class LibreOfficePluginOptionenSpeicher {
 	}
 
 	PluginOptionen laden() {
+		XPropertySet props = null;
 		try {
-			XPropertySet props = konfiguration(false);
+			props = konfiguration(false);
 			return new PluginOptionen(
 					booleanWert(props, PROP_AUTOSAVE, false),
 					booleanWert(props, PROP_BACKUP, false),
@@ -53,21 +53,28 @@ final class LibreOfficePluginOptionenSpeicher {
 					stringWert(props, PROP_LOG_LEVEL));
 		} catch (Exception e) {
 			throw new IllegalStateException("LibreOffice Plugin-Optionen konnten nicht gelesen werden", e);
+		} finally {
+			dispose(props);
 		}
 	}
 
 	boolean istLegacyImportErledigt() {
+		XPropertySet props = null;
 		try {
-			return booleanWert(konfiguration(false), PROP_LEGACY_IMPORTED, false);
+			props = konfiguration(false);
+			return booleanWert(props, PROP_LEGACY_IMPORTED, false);
 		} catch (Exception e) {
 			logger.warn("Legacy-Importstatus konnte nicht gelesen werden", e);
 			return false;
+		} finally {
+			dispose(props);
 		}
 	}
 
 	void speichern(PluginOptionen optionen) {
+		XPropertySet props = null;
 		try {
-			XPropertySet props = konfiguration(true);
+			props = konfiguration(true);
 			props.setPropertyValue(PROP_AUTOSAVE, Boolean.valueOf(optionen.autosave()));
 			props.setPropertyValue(PROP_BACKUP, Boolean.valueOf(optionen.backup()));
 			props.setPropertyValue(PROP_NEW_VERSION_CHECK, Boolean.valueOf(optionen.newVersionCheck()));
@@ -79,18 +86,17 @@ final class LibreOfficePluginOptionenSpeicher {
 			commit(props);
 		} catch (Exception e) {
 			throw new IllegalStateException("LibreOffice Plugin-Optionen konnten nicht gespeichert werden", e);
+		} finally {
+			dispose(props);
 		}
 	}
 
-	void importiereLegacy(Map<String, String> legacy, PluginOptionen defaults) {
-		speichern(new PluginOptionen(
-				booleanAusLegacy(legacy, "autosave", defaults.autosave()),
-				booleanAusLegacy(legacy, "backup", defaults.backup()),
-				booleanAusLegacy(legacy, "newversioncheck", defaults.newVersionCheck()),
-				booleanAusLegacy(legacy, "prozessbox.automatisch.anzeigen", defaults.prozessBoxAutomatischAnzeigen()),
-				booleanAusLegacy(legacy, "prozessbox.automatisch.schliessen", defaults.prozessBoxAutomatischSchliessen()),
-				booleanAusLegacy(legacy, "performance.logging", defaults.performanceLogging()),
-				legacy.getOrDefault("loglevel", defaults.logLevel())));
+	/**
+	 * Übernimmt die aus den Legacy-Properties gelesenen Optionen einmalig in die
+	 * LibreOffice-Konfiguration und markiert den Import als erledigt.
+	 */
+	void importiereLegacy(PluginOptionen legacyOptionen) {
+		speichern(legacyOptionen);
 	}
 
 	private XPropertySet konfiguration(boolean schreiben) throws com.sun.star.uno.Exception {
@@ -122,18 +128,25 @@ final class LibreOfficePluginOptionenSpeicher {
 		batch.commitChanges();
 	}
 
-	private static boolean booleanAusLegacy(Map<String, String> legacy, String key, boolean defaultWert) {
-		String wert = legacy.get(key);
-		if (wert == null || wert.isBlank()) {
-			return defaultWert;
+	/**
+	 * Gibt die von {@link #konfiguration(boolean)} erzeugte Konfigurations-View wieder frei.
+	 * Ohne dispose sammelt configmgr die View-Objekte bis zum GC an.
+	 */
+	private static void dispose(XPropertySet props) {
+		if (props == null) {
+			return;
 		}
-		return Boolean.parseBoolean(wert.trim());
+		XComponent component = UnoRuntime.queryInterface(XComponent.class, props);
+		if (component != null) {
+			component.dispose();
+		}
 	}
 
 	private static boolean booleanWert(XPropertySet props, String name, boolean defaultWert) {
 		try {
 			return AnyConverter.toBoolean(props.getPropertyValue(name));
 		} catch (Exception e) {
+			logger.debug("Boolean-Property {} nicht lesbar, verwende Default {}", name, defaultWert, e);
 			return defaultWert;
 		}
 	}
@@ -142,6 +155,7 @@ final class LibreOfficePluginOptionenSpeicher {
 		try {
 			return AnyConverter.toString(props.getPropertyValue(name)).trim().toLowerCase();
 		} catch (Exception e) {
+			logger.debug("String-Property {} nicht lesbar, verwende leeren Wert", name, e);
 			return "";
 		}
 	}

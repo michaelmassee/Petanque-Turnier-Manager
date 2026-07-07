@@ -5,7 +5,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
@@ -318,7 +317,7 @@ public class GlobalProperties {
 		try {
 			var speicher = new LibreOfficePluginOptionenSpeicher(context);
 			if (!speicher.istLegacyImportErledigt()) {
-				speicher.importiereLegacy(Map.copyOf(propMap), pluginOptionenAusMap());
+				speicher.importiereLegacy(pluginOptionenAusMap());
 			}
 			pluginOptionenInMap(speicher.laden());
 		} catch (IllegalStateException e) {
