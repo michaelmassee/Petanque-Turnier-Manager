@@ -59,14 +59,50 @@ export default function CompositeApp({ composite, timerAudio }) {
     transformOrigin: 'top left',
   };
 
+  // Gesamtrahmen um die komplette View: rein clientseitig gezeichnet (CSS border + Keyframe-Animation),
+  // unabhängig von der Live-Aktualisierung der Panels via SSE. "Laufende Ameisen" wird über ein
+  // SVG-Overlay mit stroke-dashoffset-Animation realisiert (echte Wanderbewegung, per CSS-border
+  // nicht möglich); dafür entfällt in dem Fall der statische CSS-Rahmen (sonst Doppel-Linie).
+  const rand = composite.rand;
+  const istAmeisenAnimation = rand?.animation === 'ameisen';
+  const randKlasse = rand?.animation && rand.animation !== 'keine' && !istAmeisenAnimation
+    ? `ptm-rand--${rand.animation}`
+    : undefined;
+  const rootStyle = {
+    position: 'fixed',
+    inset: 0,
+    overflow: 'hidden',
+    display: 'flex',
+    flexDirection: 'column',
+    outline: 'none',
+    ...(rand ? {
+      boxSizing: 'border-box',
+      border: istAmeisenAnimation ? 'none' : `${rand.dicke}px ${rand.art} ${rand.farbe}`,
+      '--rand-farbe': rand.farbe,
+    } : null),
+  };
+
   return (
     <div
       ref={rootRef}
       tabIndex={0}
       onPointerDown={tonAktivieren}
       onKeyDown={keyDown}
-      style={{ position: 'fixed', inset: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', outline: 'none' }}
+      className={randKlasse}
+      style={rootStyle}
     >
+      {istAmeisenAnimation && (
+        <svg className="ptm-rand-ameisen-svg" preserveAspectRatio="none" viewBox="0 0 100 100" aria-hidden="true">
+          <rect
+            x="0.5" y="0.5" width="99" height="99"
+            fill="none"
+            stroke={rand.farbe}
+            strokeWidth={rand.dicke}
+            strokeDasharray="6 4"
+            vectorEffect="non-scaling-stroke"
+          />
+        </svg>
+      )}
       <div style={seitenStyle}>
         {kopfzeilenPanel && (
           <div className="seitenzeile">

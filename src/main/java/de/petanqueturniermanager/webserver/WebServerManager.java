@@ -424,7 +424,7 @@ public final class WebServerManager implements TimerListener {
             return;
         }
         int version = compositeVersionen.getOrDefault(konfig.port(), new AtomicInteger(0)).incrementAndGet();
-        instanz.sseNachrichtPushen(GSON.toJson(CompositeSseNachricht.diff(version, panelNachrichten, konfig.wurzel(), konfig.zoom(), konfig.mitHeaderFooter())));
+        instanz.sseNachrichtPushen(GSON.toJson(CompositeSseNachricht.diff(version, panelNachrichten, konfig.wurzel(), konfig.zoom(), konfig.mitHeaderFooter(), konfig.rand().toDaten())));
     }
 
     /**
@@ -644,16 +644,16 @@ public final class WebServerManager implements TimerListener {
                                     .computeIfAbsent(port, p -> new AtomicInteger(0))
                                     .incrementAndGet();
                             cachedJson = GSON.toJson(CompositeSseNachricht.init(
-                                    version, alleInitPanels, neueWurzel, e.zoom(), e.mitHeaderFooter()));
+                                    version, alleInitPanels, neueWurzel, e.zoom(), e.mitHeaderFooter(), e.rand().toDaten()));
                             // Sind nicht alle Panels im Cache (geänderte sheetConfig), würde ein
                             // composite_init die fehlenden Panels im Browser löschen → diff pushen,
                             // damit bestehende Panel-Zustände erhalten bleiben.
                             pushJson = alleInitPanels.size() < neueAnzahl
-                                    ? GSON.toJson(CompositeSseNachricht.diff(version, alleInitPanels, neueWurzel, e.zoom(), e.mitHeaderFooter()))
+                                    ? GSON.toJson(CompositeSseNachricht.diff(version, alleInitPanels, neueWurzel, e.zoom(), e.mitHeaderFooter(), e.rand().toDaten()))
                                     : cachedJson;
                         }
                         String ausstehenderPush = instanz.aktualisiereKonfiguration(
-                                new CompositeViewKonfiguration(port, e.name(), e.zoom(), neueWurzel, neuePanelKonfigs, e.mitHeaderFooter()),
+                                new CompositeViewKonfiguration(port, e.name(), e.zoom(), neueWurzel, neuePanelKonfigs, e.mitHeaderFooter(), e.rand()),
                                 cachedJson, pushJson);
                         if (ausstehenderPush != null) {
                             sseIoAktionen.add(() -> instanz.sseNachrichtPushen(ausstehenderPush));
@@ -931,7 +931,7 @@ public final class WebServerManager implements TimerListener {
         }
         int version = versionZaehler.incrementAndGet();
         instanz.setCachedInitJson(GSON.toJson(
-                CompositeSseNachricht.init(version, alleInitPanels, konfig.wurzel(), konfig.zoom(), konfig.mitHeaderFooter())));
+                CompositeSseNachricht.init(version, alleInitPanels, konfig.wurzel(), konfig.zoom(), konfig.mitHeaderFooter(), konfig.rand().toDaten())));
     }
 
     private void sseRefreshSendenIntern(WorkingSpreadsheet ws) {
@@ -1291,13 +1291,13 @@ public final class WebServerManager implements TimerListener {
                                     panelKonfig.resolver().getAnzeigeName())));
                 }
             }
-            CompositeSseNachricht initNachricht = CompositeSseNachricht.init(version, alleInitPanels, konfig.wurzel(), konfig.zoom(), konfig.mitHeaderFooter());
+            CompositeSseNachricht initNachricht = CompositeSseNachricht.init(version, alleInitPanels, konfig.wurzel(), konfig.zoom(), konfig.mitHeaderFooter(), konfig.rand().toDaten());
             instanz.setCachedInitJson(GSON.toJson(initNachricht));
 
             // Push: beim ersten Rendering init, sonst diff mit geänderten Panels
             CompositeSseNachricht push = erstesRendering
                     ? initNachricht
-                    : CompositeSseNachricht.diff(version, panelNachrichten, konfig.wurzel(), konfig.zoom(), konfig.mitHeaderFooter());
+                    : CompositeSseNachricht.diff(version, panelNachrichten, konfig.wurzel(), konfig.zoom(), konfig.mitHeaderFooter(), konfig.rand().toDaten());
             instanz.sseNachrichtPushen(GSON.toJson(push));
 
         } catch (Exception e) {

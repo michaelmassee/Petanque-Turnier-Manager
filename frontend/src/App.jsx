@@ -209,6 +209,7 @@ function reducer(state, action) {
           layout: msg.layout,
           zoom: msg.zoom ?? 100,
           mitHeaderFooter: msg.mitHeaderFooter ?? true,
+          rand: msg.rand ?? null,
           panels,
         },
       };
@@ -229,6 +230,7 @@ function reducer(state, action) {
           layout: msg.layout ?? state.composite?.layout,
           zoom: msg.zoom ?? state.composite?.zoom ?? 100,
           mitHeaderFooter: msg.mitHeaderFooter ?? state.composite?.mitHeaderFooter ?? true,
+          rand: msg.rand ?? state.composite?.rand ?? null,
           panels: neuerePanels,
         },
       };

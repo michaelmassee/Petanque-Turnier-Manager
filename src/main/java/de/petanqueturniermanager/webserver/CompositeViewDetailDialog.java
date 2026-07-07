@@ -48,6 +48,7 @@ import de.petanqueturniermanager.comp.GlobalProperties;
 import de.petanqueturniermanager.comp.GlobalProperties.CompositeViewEintragRoh;
 import de.petanqueturniermanager.comp.GlobalProperties.PanelEintragRoh;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.farbe.FarbwahlDialog;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
@@ -70,19 +71,39 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
 
     // ---- Layout-Konstanten ----
     private static final int DIALOG_BREITE = 420;
-    private static final int DIALOG_HOEHE = 330;
+    private static final int DIALOG_HOEHE = 346;
     private static final int ZEILE_H = 14;
     private static final int KOPF_Y = 5;
     private static final int KOPF_Y2 = 21;
-    private static final int TRENN_Y1 = 38;
+    private static final int RAND_Y = 37;
+    private static final int TRENN_Y1 = 54;
     private static final int AKTIONS_BTN_Y_OFFSET = 18;
-    private static final int FOOTER_Y = 312;
+    private static final int FOOTER_Y = 328;
     private static final int UEBERNEHMEN_X = 155;
     private static final int UEBERNEHMEN_W = 75;
     private static final int OK_X = 235;
     private static final int OK_W = 50;
     private static final int ABBRECHEN_X = 290;
     private static final int ABBRECHEN_W = 125;
+
+    // ---- Rand-Zeile: X-Positionen ----
+    private static final int RAND_LBL_X = 5;
+    private static final int RAND_DICKE_X = 32;
+    private static final int RAND_DICKE_W = 22;
+    private static final int RAND_DICKE_EINHEIT_X = 55;
+    private static final int RAND_ART_X = 70;
+    private static final int RAND_ART_W = 65;
+    private static final int RAND_FARBE_LBL_X = 140;
+    private static final int RAND_FARBE_VORSCHAU_X = 172;
+    private static final int RAND_FARBE_VORSCHAU_W = 20;
+    private static final int RAND_FARBE_PICK_X = 194;
+    private static final int RAND_FARBE_PICK_W = 20;
+    private static final int RAND_TRANSP_LBL_X = 219;
+    private static final int RAND_TRANSP_X = 258;
+    private static final int RAND_TRANSP_W = 22;
+    private static final int RAND_TRANSP_EINHEIT_X = 281;
+    private static final int RAND_ANIMATION_X = 296;
+    private static final int RAND_ANIMATION_W = 119;
 
     // ---- Vorschau-Konstanten ----
     private static final int VORSCHAU_X             = 5;
@@ -96,6 +117,7 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
     private XNameContainer cont;
     private XControlContainer xcc;
     private XDialog xDialog;
+    private XWindowPeer dialogPeer;
 
     // ---- Dialog-Zustand ----
     private final CompositeViewEintragRoh initialerEintrag;
@@ -127,6 +149,14 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
     private final List<String> panelUrls = new ArrayList<>();
     /** Index des aktuell ausgewählten Panels (-1 = keines). */
     private volatile int ausgewaehlterPanelIndex = 0;
+
+    // ---- Rand-Zustand (Gesamtrahmen der View) ----
+    private volatile int randDicke;
+    private String randArt;
+    private volatile int randFarbe;
+    private volatile int randTransparenz;
+    private String randAnimation;
+    private XPropertySet randFarbeVorschauProps;
 
     private final List<String> dynamischeControlNamen = new ArrayList<>();
 
@@ -186,6 +216,7 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         this.cont = cont;
         this.xDialog = xDialog;
         this.xcc = Lo.qi(XControlContainer.class, xDialog);
+        this.dialogPeer = peer;
 
         initialisiereZustand();
         erstelleStatischeControls();
@@ -239,6 +270,13 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
             panelUrls.add("");
         }
         ausgewaehlterPanelIndex = 0;
+
+        var rand = initialerEintrag != null ? initialerEintrag.rand() : RandKonfiguration.KEINER;
+        randDicke = rand.dicke();
+        randArt = rand.art();
+        randFarbe = rand.farbe();
+        randTransparenz = rand.transparenz();
+        randAnimation = rand.animation();
     }
 
     private void erstelleStatischeControls() throws com.sun.star.uno.Exception {
@@ -262,6 +300,8 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
                 5, KOPF_Y2, 30, ZEILE_H);
         fuegeEditEin("txtName", name, 36, KOPF_Y2, 374, ZEILE_H);
 
+        erstelleRandZeile();
+
         // Übernehmen / OK / Abbrechen
         fuegeButtonEin("btnUebernehmen", I18n.get("webserver.composite.dialog.detail.uebernehmen"),
                 UEBERNEHMEN_X, FOOTER_Y, UEBERNEHMEN_W, ZEILE_H, (short) PushButtonType.STANDARD_value);
@@ -269,6 +309,98 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         fuegeButtonEin("btnAbbrechen", I18n.get("dialog.abbrechen"), ABBRECHEN_X, FOOTER_Y, ABBRECHEN_W, ZEILE_H, (short) PushButtonType.CANCEL_value);
         registriereActionListenerStatisch("btnUebernehmen", this::beimUebernehmenKlick);
         registriereActionListenerStatisch("btnOk", this::beimOkKlick);
+    }
+
+    /**
+     * Baut die statische Rand-Zeile (Gesamtrahmen der View: Dicke, Art, Farbe,
+     * Transparenz, Animation) zwischen der Name-Zeile und der dynamischen Panel-Area.
+     */
+    private void erstelleRandZeile() throws com.sun.star.uno.Exception {
+        fuegeFixedTextEin("lblRand", I18n.get("webserver.composite.konfig.rand.label"),
+                RAND_LBL_X, RAND_Y, 25, ZEILE_H);
+        fuegeEditEin("txtRandDicke", String.valueOf(randDicke), RAND_DICKE_X, RAND_Y, RAND_DICKE_W, ZEILE_H);
+        fuegeFixedTextEin("lblRandDickeEinheit", "px", RAND_DICKE_EINHEIT_X, RAND_Y, 12, ZEILE_H);
+        fuegeComboBoxEin("cbRandArt", RAND_ART_LABELS, RAND_ART_X, RAND_Y, RAND_ART_W, ZEILE_H, randArtKeyZuLabel(randArt));
+
+        fuegeFixedTextEin("lblRandFarbe", I18n.get("webserver.composite.konfig.rand.farbe.label"),
+                RAND_FARBE_LBL_X, RAND_Y, 32, ZEILE_H);
+        randFarbeVorschauProps = fuegeColorVorschauEin("lblRandFarbeVorschau", randFarbe,
+                RAND_FARBE_VORSCHAU_X, RAND_Y, RAND_FARBE_VORSCHAU_W, ZEILE_H);
+        fuegeButtonEin("btnRandFarbe", "…", RAND_FARBE_PICK_X, RAND_Y - 1, RAND_FARBE_PICK_W, ZEILE_H + 2,
+                (short) 0);
+        registriereActionListenerStatisch("btnRandFarbe", this::oeffneRandFarbwahl);
+
+        fuegeFixedTextEin("lblRandTransp", I18n.get("webserver.composite.konfig.rand.transparenz.label"),
+                RAND_TRANSP_LBL_X, RAND_Y, 38, ZEILE_H);
+        fuegeEditEin("txtRandTransp", String.valueOf(randTransparenz), RAND_TRANSP_X, RAND_Y, RAND_TRANSP_W, ZEILE_H);
+        fuegeFixedTextEin("lblRandTranspEinheit", "%", RAND_TRANSP_EINHEIT_X, RAND_Y, 10, ZEILE_H);
+
+        fuegeComboBoxEin("cbRandAnimation", RAND_ANIMATION_LABELS, RAND_ANIMATION_X, RAND_Y,
+                RAND_ANIMATION_W, ZEILE_H, randAnimationKeyZuLabel(randAnimation));
+    }
+
+    private void oeffneRandFarbwahl() {
+        var ergebnis = FarbwahlDialog.waehle(xContext, dialogPeer, randFarbe);
+        if (ergebnis.isEmpty()) {
+            return;
+        }
+        randFarbe = ergebnis.getAsInt();
+        try {
+            randFarbeVorschauProps.setPropertyValue("BackgroundColor", randFarbe);
+        } catch (com.sun.star.uno.Exception e) {
+            logger.error("Fehler beim Setzen der Randfarb-Vorschau", e);
+        }
+    }
+
+    private final String[] RAND_ART_LABELS = {
+            I18n.get("webserver.composite.konfig.rand.art.kein"),
+            I18n.get("webserver.composite.konfig.rand.art.solid"),
+            I18n.get("webserver.composite.konfig.rand.art.dashed"),
+            I18n.get("webserver.composite.konfig.rand.art.dotted"),
+            I18n.get("webserver.composite.konfig.rand.art.double"),
+    };
+
+    private final String[] RAND_ANIMATION_LABELS = {
+            I18n.get("webserver.composite.konfig.rand.animation.keine"),
+            I18n.get("webserver.composite.konfig.rand.animation.ameisen"),
+            I18n.get("webserver.composite.konfig.rand.animation.pulsieren"),
+            I18n.get("webserver.composite.konfig.rand.animation.farbwechsel"),
+    };
+
+    private String randArtKeyZuLabel(String key) {
+        return switch (RandKonfiguration.normiereArt(key)) {
+            case RandKonfiguration.ART_SOLID  -> RAND_ART_LABELS[1];
+            case RandKonfiguration.ART_DASHED -> RAND_ART_LABELS[2];
+            case RandKonfiguration.ART_DOTTED -> RAND_ART_LABELS[3];
+            case RandKonfiguration.ART_DOUBLE -> RAND_ART_LABELS[4];
+            default -> RAND_ART_LABELS[0];
+        };
+    }
+
+    private String randArtLabelZuKey(String label) {
+        if (label == null) return RandKonfiguration.ART_KEIN;
+        if (label.equals(RAND_ART_LABELS[1])) return RandKonfiguration.ART_SOLID;
+        if (label.equals(RAND_ART_LABELS[2])) return RandKonfiguration.ART_DASHED;
+        if (label.equals(RAND_ART_LABELS[3])) return RandKonfiguration.ART_DOTTED;
+        if (label.equals(RAND_ART_LABELS[4])) return RandKonfiguration.ART_DOUBLE;
+        return RandKonfiguration.ART_KEIN;
+    }
+
+    private String randAnimationKeyZuLabel(String key) {
+        return switch (RandKonfiguration.normiereAnimation(key)) {
+            case RandKonfiguration.ANIMATION_AMEISEN     -> RAND_ANIMATION_LABELS[1];
+            case RandKonfiguration.ANIMATION_PULSIEREN   -> RAND_ANIMATION_LABELS[2];
+            case RandKonfiguration.ANIMATION_FARBWECHSEL -> RAND_ANIMATION_LABELS[3];
+            default -> RAND_ANIMATION_LABELS[0];
+        };
+    }
+
+    private String randAnimationLabelZuKey(String label) {
+        if (label == null) return RandKonfiguration.ANIMATION_KEINE;
+        if (label.equals(RAND_ANIMATION_LABELS[1])) return RandKonfiguration.ANIMATION_AMEISEN;
+        if (label.equals(RAND_ANIMATION_LABELS[2])) return RandKonfiguration.ANIMATION_PULSIEREN;
+        if (label.equals(RAND_ANIMATION_LABELS[3])) return RandKonfiguration.ANIMATION_FARBWECHSEL;
+        return RandKonfiguration.ANIMATION_KEINE;
     }
 
     private void aktualisiereDynamischeArea() throws com.sun.star.uno.Exception {
@@ -671,6 +803,8 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         boolean mitHeaderFooter = mitHeaderFooterCtrl == null
                 || Lo.qi(XCheckBox.class, mitHeaderFooterCtrl).getState() == 1;
 
+        RandKonfiguration rand = leseRandKonfiguration();
+
         // Panels
         if (panelSheets.isEmpty()) {
             throw new UngueltigeEingabeException(I18n.get("webserver.composite.konfig.fehler.kein.panel"));
@@ -728,7 +862,45 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
                 .create();
         String layoutJson = gson.toJson(wurzel, SplitKnoten.class);
 
-        return new CompositeViewEintragRoh(port, name, aktiv, zoom, mitHeaderFooter, layoutJson, panels);
+        return new CompositeViewEintragRoh(port, name, aktiv, zoom, mitHeaderFooter, layoutJson, panels, rand);
+    }
+
+    /** Liest und validiert die Rand-Controls (Dicke 0–{@value RandKonfiguration#MAX_DICKE}, Transparenz 0–100). */
+    private RandKonfiguration leseRandKonfiguration() throws UngueltigeEingabeException {
+        XControl dickeCtrl = xcc.getControl("txtRandDicke");
+        String dickeStr = dickeCtrl != null ? Lo.qi(XTextComponent.class, dickeCtrl).getText().trim() : "";
+        int dicke;
+        try {
+            dicke = dickeStr.isEmpty() ? 0 : Integer.parseInt(dickeStr);
+        } catch (NumberFormatException e) {
+            throw new UngueltigeEingabeException(I18n.get("webserver.composite.konfig.rand.fehler.dicke.ungueltig"));
+        }
+        if (dicke < 0 || dicke > RandKonfiguration.MAX_DICKE) {
+            throw new UngueltigeEingabeException(I18n.get("webserver.composite.konfig.rand.fehler.dicke.ungueltig"));
+        }
+
+        XControl artCtrl = xcc.getControl("cbRandArt");
+        String art = artCtrl != null ? randArtLabelZuKey(Lo.qi(XTextComponent.class, artCtrl).getText().trim())
+                : RandKonfiguration.ART_KEIN;
+
+        XControl transpCtrl = xcc.getControl("txtRandTransp");
+        String transpStr = transpCtrl != null ? Lo.qi(XTextComponent.class, transpCtrl).getText().trim() : "";
+        int transparenz;
+        try {
+            transparenz = transpStr.isEmpty() ? 0 : Integer.parseInt(transpStr);
+        } catch (NumberFormatException e) {
+            throw new UngueltigeEingabeException(I18n.get("webserver.composite.konfig.rand.fehler.transparenz.ungueltig"));
+        }
+        if (transparenz < 0 || transparenz > 100) {
+            throw new UngueltigeEingabeException(I18n.get("webserver.composite.konfig.rand.fehler.transparenz.ungueltig"));
+        }
+
+        XControl animationCtrl = xcc.getControl("cbRandAnimation");
+        String animation = animationCtrl != null
+                ? randAnimationLabelZuKey(Lo.qi(XTextComponent.class, animationCtrl).getText().trim())
+                : RandKonfiguration.ANIMATION_KEINE;
+
+        return new RandKonfiguration(dicke, art, randFarbe, transparenz, animation);
     }
 
     // ---- Baum-Operationen (statisch für Testbarkeit) ----
@@ -1140,6 +1312,38 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         props.setPropertyValue("Height",         h);
         props.setPropertyValue("PushButtonType", pushButtonType);
         cont.insertByName(name, model);
+    }
+
+    private void fuegeComboBoxEin(String name, String[] items, int x, int y, int w, int h, String selected)
+            throws com.sun.star.uno.Exception {
+        var model = xMSF.createInstance("com.sun.star.awt.UnoControlComboBoxModel");
+        var props = Lo.qi(XPropertySet.class, model);
+        props.setPropertyValue("PositionX",      x);
+        props.setPropertyValue("PositionY",      y);
+        props.setPropertyValue("Width",          w);
+        props.setPropertyValue("Height",         h);
+        props.setPropertyValue("StringItemList", items);
+        props.setPropertyValue("Text",           selected != null ? selected : "");
+        props.setPropertyValue("Dropdown",       Boolean.TRUE);
+        props.setPropertyValue("LineCount",      (short) 20);
+        cont.insertByName(name, model);
+    }
+
+    /** Fügt ein farbig hinterlegtes Vorschau-Label ein (z.B. für Rand-/Textfarbe) und liefert dessen Properties. */
+    private XPropertySet fuegeColorVorschauEin(String name, int farbe, int x, int y, int w, int h)
+            throws com.sun.star.uno.Exception {
+        var model = xMSF.createInstance("com.sun.star.awt.UnoControlFixedTextModel");
+        var props = Lo.qi(XPropertySet.class, model);
+        props.setPropertyValue("Label",           "");
+        props.setPropertyValue("PositionX",       x);
+        props.setPropertyValue("PositionY",       y);
+        props.setPropertyValue("Width",           w);
+        props.setPropertyValue("Height",          h);
+        props.setPropertyValue("BackgroundColor", farbe);
+        props.setPropertyValue("Border",          (short) 2);
+        props.setPropertyValue("BorderColor",     0x000000);
+        cont.insertByName(name, model);
+        return props;
     }
 
     private void registriereActionListenerStatisch(String ctlName, Runnable aktion) {

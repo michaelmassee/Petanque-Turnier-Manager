@@ -77,8 +77,11 @@ class LibreOfficeOptionsPackagingTest {
 		assertThat(compositeViewsXdl)
 				.contains("dlg:id=\"CompositeViewsLabel\"")
 				.contains("dlg:id=\"WebserverAktiv\"")
-				.contains("dlg:id=\"CompositeViewsStatus\"")
-				.contains("dlg:id=\"CompositeViewsVerwalten\"");
+				.contains("dlg:id=\"CompositeViewsFilterSystem\"")
+				.contains("dlg:id=\"CompositeViewsListe\"")
+				.contains("dlg:id=\"CompositeViewsHinzufuegen\"")
+				.contains("dlg:id=\"CompositeViewsBearbeiten\"")
+				.contains("dlg:id=\"CompositeViewsLoeschen\"");
 	}
 
 	@Test

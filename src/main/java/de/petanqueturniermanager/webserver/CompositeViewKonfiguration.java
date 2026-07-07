@@ -12,6 +12,7 @@ import java.util.List;
  * @param panels           Liste der Panel-Konfigurationen (Index = Panel-ID im Baum)
  * @param mitHeaderFooter  ob Document-Header/Footer einmal global (aus Panel 0) gerendert werden;
  *                         {@code false} = überhaupt keine Header/Footer anzeigen
+ * @param rand             Konfiguration des Gesamtrahmens (Dicke/Art/Farbe/Transparenz/Animation)
  */
 public record CompositeViewKonfiguration(
         int port,
@@ -19,8 +20,10 @@ public record CompositeViewKonfiguration(
         int zoom,
         SplitKnoten wurzel,
         List<PanelKonfiguration> panels,
-        boolean mitHeaderFooter) {
+        boolean mitHeaderFooter,
+        RandKonfiguration rand) {
     public CompositeViewKonfiguration {
         name = name == null ? "" : name;
+        rand = rand == null ? RandKonfiguration.KEINER : rand;
     }
 }

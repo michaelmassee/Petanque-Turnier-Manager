@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import de.petanqueturniermanager.comp.GlobalProperties;
+import de.petanqueturniermanager.webserver.RandKonfiguration.RandDaten;
 
 /**
  * SSE-Nachricht für Composite Views (mehrere Panels auf einer Seite).
@@ -21,6 +22,7 @@ import de.petanqueturniermanager.comp.GlobalProperties;
  * @param zoom            globaler Zoom-Faktor in % (0 bei hinweis)
  * @param mitHeaderFooter ob das Frontend einen globalen Document-Header/Footer (aus Panel 0)
  *                        rendern soll; {@code null} bei hinweis
+ * @param rand            Gesamtrahmen-Daten (fertiger CSS-Farbwert); {@code null} = kein Rahmen
  * @param hinweisTitel    Titel der Hinweismeldung (null außer bei hinweis)
  * @param hinweisText     Text der Hinweismeldung (null außer bei hinweis)
  */
@@ -31,27 +33,28 @@ public record CompositeSseNachricht(
         Object layout,
         int zoom,
         Boolean mitHeaderFooter,
+        RandDaten rand,
         String hinweisTitel,
         String hinweisText,
         Map<String, String> i18n) {
 
     /** Vollständiger Zustand aller Panels für neue/reconnectende Verbindungen. */
     static CompositeSseNachricht init(int version, List<CompositePanelNachricht> panels,
-            SplitKnoten layout, int zoom, boolean mitHeaderFooter) {
+            SplitKnoten layout, int zoom, boolean mitHeaderFooter, RandDaten rand) {
         return new CompositeSseNachricht("composite_init", version, panels, layout, zoom, mitHeaderFooter,
-                null, null, UiTexte.aktuelle());
+                rand, null, null, UiTexte.aktuelle());
     }
 
     /** Nur geänderte Panels; Layout wird immer mitgesendet (für Reconnects). */
     static CompositeSseNachricht diff(int version, List<CompositePanelNachricht> panels,
-            SplitKnoten layout, int zoom, boolean mitHeaderFooter) {
+            SplitKnoten layout, int zoom, boolean mitHeaderFooter, RandDaten rand) {
         return new CompositeSseNachricht("composite_diff", version, panels, layout, zoom, mitHeaderFooter,
-                null, null, null);
+                rand, null, null, null);
     }
 
     /** Hinweismeldung, wenn ein Sheet nicht verfügbar ist. */
     static CompositeSseNachricht hinweis(String titel, String text) {
         return new CompositeSseNachricht("hinweis", null, null, null,
-                GlobalProperties.DEFAULT_ZOOM, null, titel, text, UiTexte.aktuelle());
+                GlobalProperties.DEFAULT_ZOOM, null, null, titel, text, UiTexte.aktuelle());
     }
 }

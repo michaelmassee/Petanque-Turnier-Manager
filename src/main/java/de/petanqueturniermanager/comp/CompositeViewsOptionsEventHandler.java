@@ -3,7 +3,12 @@
  */
 package de.petanqueturniermanager.comp;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Consumer;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -15,6 +20,7 @@ import com.sun.star.awt.XCheckBox;
 import com.sun.star.awt.XContainerWindowEventHandler;
 import com.sun.star.awt.XControl;
 import com.sun.star.awt.XControlContainer;
+import com.sun.star.awt.XListBox;
 import com.sun.star.awt.XWindow;
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.lang.EventObject;
@@ -28,16 +34,24 @@ import com.sun.star.uno.AnyConverter;
 import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.comp.GlobalProperties.CompositeViewEintragRoh;
+import de.petanqueturniermanager.comp.turnierevent.OnProperiesChangedEvent;
+import de.petanqueturniermanager.comp.turnierevent.TurnierEventType;
 import de.petanqueturniermanager.helper.i18n.I18n;
-import de.petanqueturniermanager.webserver.CompositeViewListeDialog;
+import de.petanqueturniermanager.helper.msgbox.MessageBox;
+import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
+import de.petanqueturniermanager.webserver.CompositeViewDetailDialog;
+import de.petanqueturniermanager.webserver.SheetResolverFactory;
 import de.petanqueturniermanager.webserver.WebServerManager;
 
 /**
  * Event-Handler fuer die Composite-Views-Seite unter Extras -&gt; Optionen.
  * <p>
- * Die Seite verwaltet nur das globale Webserver-Flag und den Einstieg in den
- * Composite-Views-Verwaltungs-Dialog; die eigentliche (dynamische) View-Konfiguration
- * bleibt im modalen {@link CompositeViewListeDialog}.
+ * Verwaltet sowohl das globale Webserver-Flag als auch die Liste der Composite Views direkt auf
+ * der Optionsseite (Turniersystem-Filter, Views-Liste, Hinzufuegen/Bearbeiten/Loeschen). Die
+ * eigentliche Detail-Konfiguration eines einzelnen Views (Split-Baum, Panels) bleibt im modalen
+ * {@link CompositeViewDetailDialog}.
  */
 public final class CompositeViewsOptionsEventHandler extends WeakBase
 		implements XServiceInfo, XContainerWindowEventHandler {
@@ -55,13 +69,29 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 
 	private static final String CTL_COMPOSITE_VIEWS_LABEL = "CompositeViewsLabel";
 	private static final String CTL_WEBSERVER_AKTIV = "WebserverAktiv";
-	private static final String CTL_COMPOSITE_VIEWS_STATUS = "CompositeViewsStatus";
-	private static final String CTL_VERWALTEN = "CompositeViewsVerwalten";
+	private static final String CTL_FILTER_LABEL = "CompositeViewsFilterLabel";
+	private static final String CTL_FILTER_SYSTEM = "CompositeViewsFilterSystem";
+	private static final String CTL_BEREICH = "CompositeViewsBereich";
+	private static final String CTL_LISTE = "CompositeViewsListe";
+	private static final String CTL_HINZUFUEGEN = "CompositeViewsHinzufuegen";
+	private static final String CTL_BEARBEITEN = "CompositeViewsBearbeiten";
+	private static final String CTL_LOESCHEN = "CompositeViewsLoeschen";
+
+	/** Auswaehlbare Turniersysteme des Filters (alle ausser {@link TurnierSystem#KEIN}). */
+	private static final TurnierSystem[] FILTER_SYSTEME = Arrays.stream(TurnierSystem.values())
+			.filter(system -> system != TurnierSystem.KEIN)
+			.toArray(TurnierSystem[]::new);
 
 	private final XComponentContext context;
 
-	/** Container, an dessen „Verwalten"-Button bereits ein Listener haengt (verhindert Doppelregistrierung). */
-	private XControlContainer verwaltenListenerContainer;
+	/** Container, an dessen Buttons bereits Listener haengen (verhindert Doppelregistrierung). */
+	private XControlContainer listenerContainer;
+
+	/** Arbeitskopie der Composite Views; {@code null} solange die Seite noch nicht initialisiert wurde. */
+	private List<CompositeViewEintragRoh> eintraege;
+
+	/** Blatt-Typ-Vorschlaege des Detail-Dialogs, abhaengig vom Turniersystem-Filter. */
+	private String[] komboBoxItems;
 
 	public CompositeViewsOptionsEventHandler(XComponentContext context) {
 		this.context = context;
@@ -96,62 +126,231 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 		XControlContainer container = container(window);
 		setzeLabels(container);
 		setCheckbox(container, CTL_WEBSERVER_AKTIV, GlobalProperties.get().isWebserverAktiv());
-		aktualisiereStatus(container);
-		registriereVerwaltenListener(container);
+		if (eintraege == null) {
+			eintraege = new ArrayList<>(GlobalProperties.get().getCompositeViewEintraege());
+			komboBoxItems = SheetResolverFactory.sheetTypenFuer(null);
+			setListItems(container, CTL_FILTER_SYSTEM, filterEintraege());
+			setSelectedPos(container, CTL_FILTER_SYSTEM, (short) 0);
+		}
+		aktualisiereListe(container);
+		registriereListener(container);
 	}
 
 	private void speichereAusOberflaeche(XWindow window) {
-		XControlContainer container = container(window);
+		persistiereUndBenachrichtige(container(window));
+	}
+
+	/**
+	 * Persistiert die aktuelle Arbeitskopie der Composite Views (und das Webserver-Aktiv-Flag) sofort
+	 * in {@link GlobalProperties} und benachrichtigt bei tatsaechlicher Aenderung den laufenden
+	 * Webserver. Wird sowohl beim finalen „OK" der Optionsseite als auch direkt nach jeder
+	 * Hinzufuegen-/Bearbeiten-/Loeschen-Aktion aufgerufen, damit bereits laufende Composite-View-Ansichten
+	 * live aktualisiert werden.
+	 */
+	private void persistiereUndBenachrichtige(XControlContainer container) {
 		GlobalProperties properties = GlobalProperties.get();
-		boolean alterWert = properties.isWebserverAktiv();
-		boolean neuerWert = checkbox(container, CTL_WEBSERVER_AKTIV);
-		properties.speichernWebserverAktiv(neuerWert);
-		if (alterWert != neuerWert) {
+		boolean alterWebserverAktiv = properties.isWebserverAktiv();
+		boolean neuerWebserverAktiv = checkbox(container, CTL_WEBSERVER_AKTIV);
+		List<CompositeViewEintragRoh> alteEintraege = properties.getCompositeViewEintraege();
+
+		String fehler = validiereEintraege(properties);
+		if (fehler != null) {
+			zeigeFehler(fehler);
+			return;
+		}
+		properties.speichernCompositeViews(neuerWebserverAktiv, eintraege);
+		if (alterWebserverAktiv != neuerWebserverAktiv || !alteEintraege.equals(eintraege)) {
 			WebServerManager.get().konfigurationGeaendert();
+			benachrichtigeCompositeViewKonfigurationGeaendert();
 		}
 	}
 
 	private void setzeLabels(XControlContainer container) {
 		setLabel(container, CTL_COMPOSITE_VIEWS_LABEL, I18n.get("konfig.webserver.views.bereich"));
 		setLabel(container, CTL_WEBSERVER_AKTIV, I18n.get("konfig.webserver.views.aktiv"));
-		setLabel(container, CTL_VERWALTEN, I18n.get("konfig.webserver.views.verwalten"));
+		setLabel(container, CTL_FILTER_LABEL, I18n.get("webserver.composite.konfig.filter.system"));
+		setLabel(container, CTL_BEREICH, I18n.get("webserver.composite.konfig.bereich.views"));
+		setLabel(container, CTL_HINZUFUEGEN, I18n.get("webserver.composite.konfig.btn.hinzufuegen"));
+		setLabel(container, CTL_BEARBEITEN, I18n.get("webserver.composite.konfig.btn.bearbeiten"));
+		setLabel(container, CTL_LOESCHEN, I18n.get("webserver.composite.konfig.btn.loeschen"));
 	}
 
-	private void aktualisiereStatus(XControlContainer container) {
-		int anzahl = GlobalProperties.get().getCompositeViewEintraege().size();
-		setLabel(container, CTL_COMPOSITE_VIEWS_STATUS, I18n.get("konfig.webserver.views.status", anzahl));
-	}
-
-	private void registriereVerwaltenListener(XControlContainer container) {
-		if (verwaltenListenerContainer != null && UnoRuntime.areSame(verwaltenListenerContainer, container)) {
+	private void registriereListener(XControlContainer container) {
+		if (listenerContainer != null && UnoRuntime.areSame(listenerContainer, container)) {
 			return;
 		}
-		XButton button = control(container, CTL_VERWALTEN, XButton.class);
-		if (button == null) {
-			return;
-		}
-		button.addActionListener(new XActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent event) {
-				oeffneVerwaltung(container);
-			}
-
-			@Override
-			public void disposing(EventObject event) {
-				// nichts zu tun
-			}
-		});
-		verwaltenListenerContainer = container;
+		registriereActionListener(container, CTL_HINZUFUEGEN, () -> fuegeZeileHinzu(container));
+		registriereActionListener(container, CTL_BEARBEITEN, () -> bearbeiteZeile(container));
+		registriereActionListener(container, CTL_LOESCHEN, () -> loescheZeile(container));
+		listenerContainer = container;
 	}
 
-	private void oeffneVerwaltung(XControlContainer container) {
+	// ---- Aktionen ----
+
+	private void fuegeZeileHinzu(XControlContainer container) {
 		try {
-			new CompositeViewListeDialog(context).zeigen(null);
-		} catch (Exception e) {
-			logger.error("Composite-Views-Verwaltungsdialog konnte nicht geoeffnet werden", e);
+			aktualisiereKomboBoxItems(container);
+			var tempIdx = new int[] { -1 };
+			Consumer<CompositeViewEintragRoh> callback = e -> {
+				if (tempIdx[0] == -1) {
+					eintraege.add(e);
+					tempIdx[0] = eintraege.size() - 1;
+				} else {
+					eintraege.set(tempIdx[0], e);
+				}
+				aktualisiereListe(container);
+				persistiereUndBenachrichtige(container);
+			};
+			var detailDialog = new CompositeViewDetailDialog(
+					context, null, berechneNaechstenFreienPort(), komboBoxItems, callback);
+			var neuerEintrag = detailDialog.zeigen();
+			if (neuerEintrag != null && tempIdx[0] == -1) {
+				// OK ohne vorheriges Anwenden: normaler Add-Pfad
+				eintraege.add(neuerEintrag);
+			}
+			aktualisiereListe(container);
+		} catch (com.sun.star.uno.Exception e) {
+			logger.error("Fehler beim Hinzufügen eines Composite Views: {}", e.getMessage(), e);
 		}
-		aktualisiereStatus(container);
 	}
+
+	private void bearbeiteZeile(XControlContainer container) {
+		int idx = selectedPos(container, CTL_LISTE);
+		if (idx < 0 || idx >= eintraege.size()) {
+			zeigeFehler(I18n.get("webserver.composite.konfig.fehler.keine.auswahl"));
+			return;
+		}
+		try {
+			aktualisiereKomboBoxItems(container);
+			var eintrag = eintraege.get(idx);
+			Consumer<CompositeViewEintragRoh> callback = geaendert -> {
+				eintraege.set(idx, geaendert);
+				aktualisiereListe(container);
+				persistiereUndBenachrichtige(container);
+			};
+			var detailDialog = new CompositeViewDetailDialog(
+					context, eintrag, eintrag.port(), komboBoxItems, callback);
+			var geaenderterEintrag = detailDialog.zeigen();
+			if (geaenderterEintrag != null) {
+				eintraege.set(idx, geaenderterEintrag); // idempotent falls Callback schon gesetzt hat
+			}
+			aktualisiereListe(container);
+		} catch (com.sun.star.uno.Exception e) {
+			logger.error("Fehler beim Bearbeiten des Composite Views: {}", e.getMessage(), e);
+		}
+	}
+
+	private void loescheZeile(XControlContainer container) {
+		int idx = selectedPos(container, CTL_LISTE);
+		if (idx < 0 || idx >= eintraege.size()) {
+			zeigeFehler(I18n.get("webserver.composite.konfig.fehler.keine.auswahl"));
+			return;
+		}
+		eintraege.remove(idx);
+		aktualisiereListe(container);
+		persistiereUndBenachrichtige(container);
+	}
+
+	private void benachrichtigeCompositeViewKonfigurationGeaendert() {
+		// Best-effort: Nur das aktuell aktive Dokument (falls vorhanden) über die Änderung informieren.
+		var doc = DocumentHelper.getCurrentSpreadsheetDocument(context);
+		if (doc == null) {
+			return;
+		}
+		PetanqueTurnierMngrSingleton.triggerTurnierEventListener(TurnierEventType.PropertiesChanged,
+				new OnProperiesChangedEvent(doc)
+						.addChanged("webserver_composite_views", "", ""));
+	}
+
+	private String validiereEintraege(GlobalProperties properties) {
+		Set<Integer> bekannte = new HashSet<>();
+		for (int i = 0; i < eintraege.size(); i++) {
+			var e = eintraege.get(i);
+			int nr = i + 1;
+			if (e.port() == 0) {
+				return I18n.get("webserver.composite.konfig.fehler.port.leer", nr);
+			}
+			if (e.port() < 1 || e.port() > 65535) {
+				return I18n.get("webserver.composite.konfig.fehler.port.ungueltig", nr, e.port());
+			}
+			if (!bekannte.add(e.port())) {
+				return I18n.get("webserver.composite.konfig.fehler.port.duplikat", e.port());
+			}
+			if (e.panels().isEmpty()) {
+				return I18n.get("webserver.composite.konfig.fehler.kein.panel");
+			}
+		}
+		if (properties.isWebserverRegieAktiv()) {
+			int regiePort = properties.getWebserverRegiePort();
+			if (bekannte.contains(regiePort)) {
+				return I18n.get("webserver.regie.konfig.fehler.port.duplikat", regiePort);
+			}
+		}
+		return null;
+	}
+
+	private void zeigeFehler(String meldung) {
+		MessageBox.from(context, MessageBoxTypeEnum.ERROR_OK)
+				.caption(I18n.get("webserver.composite.konfig.fehler.titel"))
+				.message(meldung)
+				.show();
+	}
+
+	// ---- Hilfsmethoden ----
+
+	private int berechneNaechstenFreienPort() {
+		Set<Integer> belegt = new HashSet<>();
+		for (var e : eintraege) {
+			belegt.add(e.port());
+		}
+		int kandidat = 9100;
+		while (belegt.contains(kandidat)) {
+			kandidat++;
+		}
+		return kandidat;
+	}
+
+	/** Einträge der Filter-Liste: „Alle" plus alle auswählbaren Turniersysteme. */
+	private static String[] filterEintraege() {
+		String[] items = new String[FILTER_SYSTEME.length + 1];
+		items[0] = I18n.get("webserver.composite.konfig.filter.alle");
+		for (int i = 0; i < FILTER_SYSTEME.length; i++) {
+			items[i + 1] = FILTER_SYSTEME[i].getBezeichnung();
+		}
+		return items;
+	}
+
+	/** Aktuell im Filter gewähltes Turniersystem; {@code null} für „Alle". */
+	private TurnierSystem ausgewaehltesFilterSystem(XControlContainer container) {
+		short pos = selectedPos(container, CTL_FILTER_SYSTEM);
+		return (pos <= 0) ? null : FILTER_SYSTEME[pos - 1];
+	}
+
+	/** Berechnet die Blatt-Typ-Vorschläge des Detail-Dialogs anhand der aktuellen Filterauswahl neu. */
+	private void aktualisiereKomboBoxItems(XControlContainer container) {
+		komboBoxItems = SheetResolverFactory.sheetTypenFuer(ausgewaehltesFilterSystem(container));
+	}
+
+	private void aktualisiereListe(XControlContainer container) {
+		String[] items = eintraege.stream().map(CompositeViewsOptionsEventHandler::formatiereZeile)
+				.toArray(String[]::new);
+		setListItems(container, CTL_LISTE, items);
+	}
+
+	private static String formatiereZeile(CompositeViewEintragRoh e) {
+		String anzeigeName;
+		if (!e.name().isBlank()) {
+			anzeigeName = e.name();
+		} else {
+			anzeigeName = e.panels().isEmpty() ? "" : e.panels().get(0).sheetConfig();
+		}
+		String status = e.aktiv()
+				? I18n.get("webserver.konfig.tabelle.kopf.aktiv")
+				: I18n.get("webserver.composite.konfig.liste.status.inaktiv");
+		return I18n.get("webserver.composite.konfig.liste.zeile", e.port(), anzeigeName, e.zoom(), status);
+	}
+
+	// ---- UNO-Control-Hilfsmethoden ----
 
 	private static XControlContainer container(XWindow window) {
 		XControlContainer container = UnoRuntime.queryInterface(XControlContainer.class, window);
@@ -173,6 +372,34 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 		}
 	}
 
+	private static short selectedPos(XControlContainer container, String name) {
+		XListBox listBox = control(container, name, XListBox.class);
+		return listBox == null ? -1 : listBox.getSelectedItemPos();
+	}
+
+	private static void setSelectedPos(XControlContainer container, String name, short pos) {
+		XListBox listBox = control(container, name, XListBox.class);
+		if (listBox != null) {
+			listBox.selectItemPos(pos, true);
+		}
+	}
+
+	private static void setListItems(XControlContainer container, String name, String[] items) {
+		XControl control = container.getControl(name);
+		if (control == null) {
+			return;
+		}
+		XPropertySet props = UnoRuntime.queryInterface(XPropertySet.class, control.getModel());
+		if (props == null) {
+			return;
+		}
+		try {
+			props.setPropertyValue("StringItemList", items);
+		} catch (Exception e) {
+			logger.debug("StringItemList fuer Control {} konnte nicht gesetzt werden", name, e);
+		}
+	}
+
 	private static void setLabel(XControlContainer container, String name, String label) {
 		XControl control = container.getControl(name);
 		if (control == null) {
@@ -187,6 +414,24 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 		} catch (Exception e) {
 			logger.debug("Label fuer Control {} konnte nicht gesetzt werden", name, e);
 		}
+	}
+
+	private static void registriereActionListener(XControlContainer container, String name, Runnable aktion) {
+		XButton button = control(container, name, XButton.class);
+		if (button == null) {
+			return;
+		}
+		button.addActionListener(new XActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent event) {
+				aktion.run();
+			}
+
+			@Override
+			public void disposing(EventObject event) {
+				// nichts zu tun
+			}
+		});
 	}
 
 	private static <T> T control(XControlContainer container, String name, Class<T> type) {

@@ -10,6 +10,7 @@ import java.util.List;
 import de.petanqueturniermanager.comp.GlobalProperties.CompositeViewEintragRoh;
 import de.petanqueturniermanager.comp.GlobalProperties.PanelEintragRoh;
 import de.petanqueturniermanager.webserver.PanelTyp;
+import de.petanqueturniermanager.webserver.RandKonfiguration;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -177,7 +178,7 @@ class GlobalPropertiesTest {
         var panel = new PanelEintragRoh(
                 PanelTyp.BLATT, "RANGLISTE", GlobalProperties.DEFAULT_ZOOM, "kein", "kein", false, "");
         var eintrag = new CompositeViewEintragRoh(
-                5001, "Anzeige", true, GlobalProperties.DEFAULT_ZOOM, true, "", List.of(panel));
+                5001, "Anzeige", true, GlobalProperties.DEFAULT_ZOOM, true, "", List.of(panel), RandKonfiguration.KEINER);
 
         gp.speichernCompositeViews(true, List.of(eintrag));
 
@@ -197,13 +198,47 @@ class GlobalPropertiesTest {
     }
 
     @Test
+    void testCompositeRoundtripOhneRandLiefertKeinerAlsDefault() {
+        var gp = GlobalProperties.get();
+        var panel = new PanelEintragRoh(
+                PanelTyp.BLATT, "RANGLISTE", GlobalProperties.DEFAULT_ZOOM, "kein", "kein", false, "");
+        var eintrag = new CompositeViewEintragRoh(
+                5001, "Anzeige", true, GlobalProperties.DEFAULT_ZOOM, true, "", List.of(panel), RandKonfiguration.KEINER);
+
+        gp.speichernCompositeViews(true, List.of(eintrag));
+
+        GlobalProperties.resetForTest();
+        var gp2 = GlobalProperties.get();
+        assertEquals(RandKonfiguration.KEINER, gp2.getCompositeViewEintraege().get(0).rand());
+    }
+
+    @Test
+    void testCompositeRoundtripMitRandKonfiguration() {
+        var gp = GlobalProperties.get();
+        var panel = new PanelEintragRoh(
+                PanelTyp.BLATT, "RANGLISTE", GlobalProperties.DEFAULT_ZOOM, "kein", "kein", false, "");
+        var rand = new RandKonfiguration(4, RandKonfiguration.ART_DASHED, 0x336699, 25, RandKonfiguration.ANIMATION_PULSIEREN);
+        var eintrag = new CompositeViewEintragRoh(
+                5001, "Anzeige", true, GlobalProperties.DEFAULT_ZOOM, true, "", List.of(panel), rand);
+
+        gp.speichernCompositeViews(true, List.of(eintrag));
+
+        GlobalProperties.resetForTest();
+        var gp2 = GlobalProperties.get();
+        assertEquals(rand, gp2.getCompositeViewEintraege().get(0).rand());
+
+        var konfigRand = gp2.getCompositeViewKonfigurationen().get(0).rand();
+        assertEquals(rand, konfigRand);
+    }
+
+    @Test
     void testCompositeRoundtripMitLokalerStatischerDatei() throws Exception {
         var gp = GlobalProperties.get();
         var panel = new PanelEintragRoh(
                 PanelTyp.STATISCHE_DATEI, "", GlobalProperties.DEFAULT_ZOOM, "kein", "kein", false,
                 "/tmp/anzeige.html");
         var eintrag = new CompositeViewEintragRoh(
-                5001, "Anzeige", true, GlobalProperties.DEFAULT_ZOOM, true, "", List.of(panel));
+                5001, "Anzeige", true, GlobalProperties.DEFAULT_ZOOM, true, "", List.of(panel), RandKonfiguration.KEINER);
 
         gp.speichernCompositeViews(true, List.of(eintrag));
 
@@ -224,7 +259,7 @@ class GlobalPropertiesTest {
         var panel = new PanelEintragRoh(
                 PanelTyp.TURNIERSTARTSEITE, "", GlobalProperties.DEFAULT_ZOOM, "kein", "kein", false, "");
         var eintrag = new CompositeViewEintragRoh(
-                5001, "Anzeige", true, GlobalProperties.DEFAULT_ZOOM, true, "", List.of(panel));
+                5001, "Anzeige", true, GlobalProperties.DEFAULT_ZOOM, true, "", List.of(panel), RandKonfiguration.KEINER);
 
         gp.speichernCompositeViews(true, List.of(eintrag));
 

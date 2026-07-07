@@ -27,6 +27,7 @@ import de.petanqueturniermanager.webserver.CompositeViewKonfiguration;
 import de.petanqueturniermanager.webserver.PanelAusrichtung;
 import de.petanqueturniermanager.webserver.PanelKonfiguration;
 import de.petanqueturniermanager.webserver.PanelTyp;
+import de.petanqueturniermanager.webserver.RandKonfiguration;
 import de.petanqueturniermanager.webserver.RegieSlug;
 import de.petanqueturniermanager.webserver.SheetResolverFactory;
 import de.petanqueturniermanager.webserver.SplitBlatt;
@@ -81,6 +82,11 @@ public class GlobalProperties {
 	private static final String WEBSERVER_COMPOSITE_PANEL_BLATTNAME_SUFFIX = "_blattname";
 	private static final String WEBSERVER_COMPOSITE_PANEL_TYP_SUFFIX = "_typ";
 	private static final String WEBSERVER_COMPOSITE_PANEL_URL_SUFFIX = "_url";
+	private static final String WEBSERVER_COMPOSITE_RAND_DICKE_SUFFIX = "_rand_dicke";
+	private static final String WEBSERVER_COMPOSITE_RAND_ART_SUFFIX = "_rand_art";
+	private static final String WEBSERVER_COMPOSITE_RAND_FARBE_SUFFIX = "_rand_farbe";
+	private static final String WEBSERVER_COMPOSITE_RAND_TRANSPARENZ_SUFFIX = "_rand_transparenz";
+	private static final String WEBSERVER_COMPOSITE_RAND_ANIMATION_SUFFIX = "_rand_animation";
 
 	private static final String STARTUP_TURNIER_MODUS_PROP = "startup.turnier.modus";
 
@@ -161,13 +167,16 @@ public class GlobalProperties {
 	 * @param mitHeaderFooter ob Header/Footer (aus Panel 0) global einmal gerendert werden sollen
 	 * @param layoutJson      JSON-serialisierter {@link SplitKnoten}-Baum (kann leer sein → Default-Layout)
 	 * @param panels          geordnete Liste der Panel-Konfigurationen (Reihenfolge = panelIndex)
+	 * @param rand            Konfiguration des Gesamtrahmens (Dicke/Art/Farbe/Transparenz/Animation)
 	 */
 	public record CompositeViewEintragRoh(
 			int port, String name, boolean aktiv, int zoom, boolean mitHeaderFooter,
 			String layoutJson,
-			List<PanelEintragRoh> panels) {
+			List<PanelEintragRoh> panels,
+			RandKonfiguration rand) {
 		public CompositeViewEintragRoh {
 			name = name == null ? "" : name;
+			rand = rand == null ? RandKonfiguration.KEINER : rand;
 		}
 
 		@Override
@@ -617,6 +626,7 @@ public class GlobalProperties {
 					// beim Konfig-Aufbau ein Default-Layout erzeugt – der Eintrag bleibt erhalten.
 					String layoutJson = propMap.getOrDefault(
 							WEBSERVER_COMPOSITE_PREFIX + port + WEBSERVER_COMPOSITE_LAYOUT_SUFFIX, "").trim();
+					RandKonfiguration rand = parseRand(WEBSERVER_COMPOSITE_PREFIX + port);
 
 					int panelCount = 0;
 					try {
@@ -649,7 +659,7 @@ public class GlobalProperties {
 								panelHAlign, panelVAlign, panelBlattnameAnzeigen, externeUrl));
 					}
 					if (!panels.isEmpty()) {
-						eintraege.add(new CompositeViewEintragRoh(port, name, aktiv, zoom, mitHeaderFooter, layoutJson, panels));
+						eintraege.add(new CompositeViewEintragRoh(port, name, aktiv, zoom, mitHeaderFooter, layoutJson, panels, rand));
 					}
 				} catch (Exception e) {
 					logger.warn("Ungültiger Composite-Port-Eintrag '{}'", portStr, e);
@@ -714,7 +724,8 @@ public class GlobalProperties {
 					if (wurzel == null) {
 						wurzel = defaultSplitLayout(panels.size());
 					}
-					konfigs.add(new CompositeViewKonfiguration(eintrag.port(), eintrag.name(), eintrag.zoom(), wurzel, panels, eintrag.mitHeaderFooter()));
+					konfigs.add(new CompositeViewKonfiguration(eintrag.port(), eintrag.name(), eintrag.zoom(), wurzel, panels,
+							eintrag.mitHeaderFooter(), eintrag.rand()));
 				}
 			} catch (Exception e) {
 				logger.error("Fehler bei Composite-View-Konfiguration {}", eintrag, e);
@@ -751,6 +762,11 @@ public class GlobalProperties {
 				propMap.remove(prefix + WEBSERVER_COMPOSITE_MIT_HEADER_FOOTER_SUFFIX);
 				propMap.remove(prefix + WEBSERVER_COMPOSITE_LAYOUT_SUFFIX);
 				propMap.remove(prefix + WEBSERVER_COMPOSITE_PANEL_COUNT_SUFFIX);
+				propMap.remove(prefix + WEBSERVER_COMPOSITE_RAND_DICKE_SUFFIX);
+				propMap.remove(prefix + WEBSERVER_COMPOSITE_RAND_ART_SUFFIX);
+				propMap.remove(prefix + WEBSERVER_COMPOSITE_RAND_FARBE_SUFFIX);
+				propMap.remove(prefix + WEBSERVER_COMPOSITE_RAND_TRANSPARENZ_SUFFIX);
+				propMap.remove(prefix + WEBSERVER_COMPOSITE_RAND_ANIMATION_SUFFIX);
 				for (int i = 0; i < alt.panels().size(); i++) {
 					String panelPrefix = prefix + WEBSERVER_COMPOSITE_PANEL_INFIX + i;
 					propMap.remove(panelPrefix + WEBSERVER_COMPOSITE_PANEL_SHEET_SUFFIX);
@@ -783,6 +799,18 @@ public class GlobalProperties {
 						propMap.put(prefix + WEBSERVER_COMPOSITE_MIT_HEADER_FOOTER_SUFFIX, "false");
 					if (eintrag.layoutJson() != null && !eintrag.layoutJson().isBlank())
 						propMap.put(prefix + WEBSERVER_COMPOSITE_LAYOUT_SUFFIX, eintrag.layoutJson());
+					// Default = RandKonfiguration.KEINER → nur bei Abweichung persistieren (migrationssicher).
+					var rand = eintrag.rand();
+					if (rand.dicke() != 0)
+						propMap.put(prefix + WEBSERVER_COMPOSITE_RAND_DICKE_SUFFIX, String.valueOf(rand.dicke()));
+					if (!RandKonfiguration.ART_KEIN.equals(rand.art()))
+						propMap.put(prefix + WEBSERVER_COMPOSITE_RAND_ART_SUFFIX, rand.art());
+					if (rand.farbe() != 0x000000)
+						propMap.put(prefix + WEBSERVER_COMPOSITE_RAND_FARBE_SUFFIX, String.format("%06x", rand.farbe()));
+					if (rand.transparenz() != 0)
+						propMap.put(prefix + WEBSERVER_COMPOSITE_RAND_TRANSPARENZ_SUFFIX, String.valueOf(rand.transparenz()));
+					if (!RandKonfiguration.ANIMATION_KEINE.equals(rand.animation()))
+						propMap.put(prefix + WEBSERVER_COMPOSITE_RAND_ANIMATION_SUFFIX, rand.animation());
 					propMap.put(prefix + WEBSERVER_COMPOSITE_PANEL_COUNT_SUFFIX, String.valueOf(eintrag.panels().size()));
 					for (int i = 0; i < eintrag.panels().size(); i++) {
 						var panel = eintrag.panels().get(i);
@@ -924,6 +952,46 @@ public class GlobalProperties {
 		logger.warn("Sichtbarer Tabellenanteil außerhalb des erlaubten Bereichs (10-100): {}, verwende Standard {}",
 				wert, DEFAULT_SICHTBARER_TABELLENANTEIL);
 		return DEFAULT_SICHTBARER_TABELLENANTEIL;
+	}
+
+	/**
+	 * Liest die Rand-Konfiguration (Gesamtrahmen) eines Composite View unter dem gegebenen
+	 * Property-Präfix. Fehlende Keys ergeben {@link RandKonfiguration#KEINER} (kein Rahmen) –
+	 * migrationssicher für Alt-Configs ohne Rand-Properties.
+	 */
+	private static RandKonfiguration parseRand(String prefix) {
+		String dickeStr = propMap.get(prefix + WEBSERVER_COMPOSITE_RAND_DICKE_SUFFIX);
+		String art = propMap.get(prefix + WEBSERVER_COMPOSITE_RAND_ART_SUFFIX);
+		String farbeStr = propMap.get(prefix + WEBSERVER_COMPOSITE_RAND_FARBE_SUFFIX);
+		String transparenzStr = propMap.get(prefix + WEBSERVER_COMPOSITE_RAND_TRANSPARENZ_SUFFIX);
+		String animation = propMap.get(prefix + WEBSERVER_COMPOSITE_RAND_ANIMATION_SUFFIX);
+		if (dickeStr == null && art == null && farbeStr == null && transparenzStr == null && animation == null) {
+			return RandKonfiguration.KEINER;
+		}
+		int dicke = parseIntOderDefault(dickeStr, 0);
+		int farbe = parseHexFarbeOderDefault(farbeStr, 0x000000);
+		int transparenz = parseIntOderDefault(transparenzStr, 0);
+		return new RandKonfiguration(dicke, art, farbe, transparenz, animation);
+	}
+
+	private static int parseIntOderDefault(String value, int defaultWert) {
+		if (value == null || value.isBlank()) return defaultWert;
+		try {
+			return Integer.parseInt(value.trim());
+		} catch (NumberFormatException e) {
+			logger.warn("Ungültiger Ganzzahl-Wert '{}', verwende Standard {}", value.trim(), defaultWert);
+			return defaultWert;
+		}
+	}
+
+	private static int parseHexFarbeOderDefault(String value, int defaultWert) {
+		if (value == null || value.isBlank()) return defaultWert;
+		try {
+			return Integer.parseInt(value.trim(), 16);
+		} catch (NumberFormatException e) {
+			logger.warn("Ungültiger Rand-Farbwert '{}', verwende Standard {}", value.trim(), defaultWert);
+			return defaultWert;
+		}
 	}
 
 	private void safeSetLogLevel() {
