@@ -16,7 +16,6 @@ import com.sun.star.awt.XCheckBox;
 import com.sun.star.awt.XControl;
 import com.sun.star.awt.XControlContainer;
 import com.sun.star.awt.XDialog;
-import com.sun.star.awt.XTextComponent;
 import com.sun.star.awt.XToolkit;
 import com.sun.star.awt.XWindow;
 import com.sun.star.awt.XWindowPeer;
@@ -46,7 +45,7 @@ import de.petanqueturniermanager.konfigdialog.AbstractUnoDialog;
 /**
  * Modaler Dialog zur Verwaltung der Webserver-Konfiguration.
  * <p>
- * Verwaltet die allgemeinen Webserver-Flags, den Regie-Port und alle Composite Views.
+ * Verwaltet das allgemeine Webserver-Flag und alle Composite Views.
  * Über [Bearbeiten] bzw. [+ Hinzufügen] wird für Composite Views der {@link CompositeViewDetailDialog} geöffnet.
  */
 public class CompositeViewListeDialog extends AbstractUnoDialog {
@@ -70,8 +69,8 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
     private static final int EDIT_W = 60;
     private static final int DEL_X = 265;
     private static final int DEL_W = 18;
-    private static final int KOPFZEILE_Y = 58;
-    private static final int ZEILE_Y_START = 71;
+    private static final int KOPFZEILE_Y = 30;
+    private static final int ZEILE_Y_START = 43;
     private static final int ZEILE_ABSTAND = 16;
     private static final int FOOTER_Y = 265;
     private static final int OK_X = 245;
@@ -91,7 +90,6 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
     private final List<String> dynamischeControlNamen = new ArrayList<>();
     private String[] komboBoxItems;
     private XCheckBox cbAktiv;
-    private XCheckBox cbRegieAktiv;
     private final WorkingSpreadsheet ws;
 
     /** Aktives Turniersystem des Dokuments – steuert die ComboBox-Filterung; {@code null} = alle. */
@@ -159,23 +157,9 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
                 5, 5, 200, 12, GlobalProperties.get().isWebserverAktiv());
         cbAktiv = leseCheckBox("cbAktiv");
 
-        fuegeFixedTextEin("lblRegieBereich",
-                I18n.get("webserver.regie.konfig.bereich"),
-                5, 23, 120, 10);
-        fuegeCheckBoxEin("cbRegieAktiv",
-                I18n.get("webserver.regie.konfig.aktiv"),
-                130, 21, 60, ZEILE_H, GlobalProperties.get().isWebserverRegieAktiv());
-        cbRegieAktiv = leseCheckBox("cbRegieAktiv");
-        fuegeFixedTextEin("lblRegiePort",
-                I18n.get("webserver.regie.konfig.port"),
-                205, 23, 25, 10);
-        fuegeEditEin("txtRegiePort",
-                String.valueOf(GlobalProperties.get().getWebserverRegiePort()),
-                235, 21, 40, ZEILE_H);
-
         fuegeFixedTextEin("lblCompositeBereich",
                 I18n.get("webserver.composite.konfig.bereich.views"),
-                5, 42, 200, 10);
+                5, 14, 200, 10);
 
         fuegeFixedTextEin("lblKopfPort",
                 I18n.get("webserver.konfig.tabelle.kopf.port"),
@@ -339,13 +323,7 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
     private void speichereAlleKonfigurationen() throws UngueltigeEingabeException {
         validiereEintraege();
         boolean aktiv = cbAktiv != null && cbAktiv.getState() == 1;
-        boolean regieAktiv = cbRegieAktiv != null && cbRegieAktiv.getState() == 1;
-        int regiePort = leseRegiePort();
         GlobalProperties.get().speichernCompositeViews(aktiv, eintraege);
-        GlobalProperties.get().speichernWebserverRegie(
-                regieAktiv,
-                regiePort,
-                GlobalProperties.get().getWebserverRegieZiele());
     }
 
     private void benachrichtigeCompositeViewKonfigurationGeaendert() {
@@ -390,9 +368,8 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
                         I18n.get("webserver.composite.konfig.fehler.kein.panel"));
             }
         }
-        boolean regieAktiv = cbRegieAktiv != null && cbRegieAktiv.getState() == 1;
-        if (regieAktiv) {
-            int regiePort = leseRegiePort();
+        if (GlobalProperties.get().isWebserverRegieAktiv()) {
+            int regiePort = GlobalProperties.get().getWebserverRegiePort();
             if (bekannte.contains(regiePort)) {
                 throw new UngueltigeEingabeException(
                         I18n.get("webserver.regie.konfig.fehler.port.duplikat", regiePort));
@@ -412,23 +389,6 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
             kandidat++;
         }
         return kandidat;
-    }
-
-    private int leseRegiePort() throws UngueltigeEingabeException {
-        XControl portCtrl = xcc.getControl("txtRegiePort");
-        String portStr = portCtrl != null ? Lo.qi(XTextComponent.class, portCtrl).getText().trim() : "";
-        int port;
-        try {
-            port = Integer.parseInt(portStr);
-        } catch (NumberFormatException e) {
-            throw new UngueltigeEingabeException(
-                    I18n.get("webserver.regie.konfig.fehler.port.ungueltig", portStr));
-        }
-        if (port < 1 || port > 65535) {
-            throw new UngueltigeEingabeException(
-                    I18n.get("webserver.regie.konfig.fehler.port.ungueltig", portStr));
-        }
-        return port;
     }
 
     private void zeigeValidierungsFehler(UngueltigeEingabeException e) {

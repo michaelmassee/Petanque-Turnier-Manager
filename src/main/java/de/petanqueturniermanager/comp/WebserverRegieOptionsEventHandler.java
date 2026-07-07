@@ -25,19 +25,19 @@ import com.sun.star.uno.AnyConverter;
 import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XComponentContext;
 
-import de.petanqueturniermanager.comp.newrelease.ReleaseUpdateService;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.webserver.WebServerManager;
 
 /**
- * Event-Handler fuer die PTM-Seite unter Extras -> Optionen.
+ * Event-Handler fuer die Webserver-Regie-Seite unter Extras -> Optionen.
  */
-public final class PluginOptionsEventHandler extends WeakBase
+public final class WebserverRegieOptionsEventHandler extends WeakBase
 		implements XServiceInfo, XContainerWindowEventHandler {
 
-	private static final Logger logger = LogManager.getLogger(PluginOptionsEventHandler.class);
+	private static final Logger logger = LogManager.getLogger(WebserverRegieOptionsEventHandler.class);
 
-	private static final String IMPLEMENTATION_NAME = PluginOptionsEventHandler.class.getName();
-	private static final String SERVICE_NAME = "de.petanqueturniermanager.PluginOptionsEventHandler";
+	private static final String IMPLEMENTATION_NAME = WebserverRegieOptionsEventHandler.class.getName();
+	private static final String SERVICE_NAME = "de.petanqueturniermanager.WebserverRegieOptionsEventHandler";
 	private static final String[] SERVICE_NAMES = { SERVICE_NAME };
 
 	private static final String METHOD_EXTERNAL_EVENT = "external_event";
@@ -45,16 +45,12 @@ public final class PluginOptionsEventHandler extends WeakBase
 	private static final String EVENT_BACK = "back";
 	private static final String EVENT_OK = "ok";
 
-	private static final String CTL_AUTOSAVE = "Autosave";
-	private static final String CTL_BACKUP = "Backup";
-	private static final String CTL_NEW_VERSION_CHECK = "NewVersionCheck";
-	private static final String CTL_PROCESSBOX_SHOW = "ProcessBoxAutomaticallyShow";
-	private static final String CTL_PROCESSBOX_CLOSE = "ProcessBoxAutomaticallyClose";
-	private static final String CTL_PERFORMANCE_LOGGING = "PerformanceLogging";
-	private static final String CTL_LOG_LEVEL = "LogLevel";
-	private static final String CTL_LOG_LEVEL_LABEL = "LogLevelLabel";
+	private static final String CTL_WEBSERVER_REGIE_LABEL = "WebserverRegieLabel";
+	private static final String CTL_WEBSERVER_REGIE_ACTIVE = "WebserverRegieActive";
+	private static final String CTL_WEBSERVER_REGIE_PORT_LABEL = "WebserverRegiePortLabel";
+	private static final String CTL_WEBSERVER_REGIE_PORT = "WebserverRegiePort";
 
-	public PluginOptionsEventHandler(XComponentContext context) {
+	public WebserverRegieOptionsEventHandler(XComponentContext context) {
 		GlobalProperties.setLibreOfficeContext(context);
 	}
 
@@ -86,41 +82,27 @@ public final class PluginOptionsEventHandler extends WeakBase
 		XControlContainer container = container(window);
 		setzeLabels(container);
 		GlobalProperties properties = GlobalProperties.get();
-		setCheckbox(container, CTL_AUTOSAVE, properties.isAutoSave());
-		setCheckbox(container, CTL_BACKUP, properties.isCreateBackup());
-		setCheckbox(container, CTL_NEW_VERSION_CHECK, properties.isNewVersionCheckImmerTrue());
-		setCheckbox(container, CTL_PROCESSBOX_SHOW, properties.isProzessBoxAutomatischAnzeigen());
-		setCheckbox(container, CTL_PROCESSBOX_CLOSE, properties.isProzessBoxAutomatischSchliessen());
-		setCheckbox(container, CTL_PERFORMANCE_LOGGING, properties.isPerformanceLogging());
-		setText(container, CTL_LOG_LEVEL, properties.getLogLevel());
+		setCheckbox(container, CTL_WEBSERVER_REGIE_ACTIVE, properties.isWebserverRegieAktiv());
+		setText(container, CTL_WEBSERVER_REGIE_PORT, String.valueOf(properties.getWebserverRegiePort()));
 	}
 
 	private void speichereAusOberflaeche(XWindow window) {
 		XControlContainer container = container(window);
 		GlobalProperties properties = GlobalProperties.get();
-		properties.speichern(
-				checkbox(container, CTL_AUTOSAVE),
-				checkbox(container, CTL_BACKUP),
-				checkbox(container, CTL_NEW_VERSION_CHECK),
-				checkbox(container, CTL_PROCESSBOX_SHOW),
-				checkbox(container, CTL_PROCESSBOX_CLOSE),
-				checkbox(container, CTL_PERFORMANCE_LOGGING),
-				text(container, CTL_LOG_LEVEL));
-		try {
-			ReleaseUpdateService.get().loeseListenerAus();
-		} catch (IllegalStateException e) {
-			logger.debug("ReleaseUpdateService nicht initialisiert");
+		boolean alterRegieAktiv = properties.isWebserverRegieAktiv();
+		int alterRegiePort = properties.getWebserverRegiePort();
+		boolean regieAktiv = checkbox(container, CTL_WEBSERVER_REGIE_ACTIVE);
+		int regiePort = port(container, CTL_WEBSERVER_REGIE_PORT);
+		properties.speichernWebserverRegieOptionen(regieAktiv, regiePort);
+		if (alterRegieAktiv != regieAktiv || alterRegiePort != regiePort) {
+			WebServerManager.get().konfigurationGeaendert();
 		}
 	}
 
 	private void setzeLabels(XControlContainer container) {
-		setLabel(container, CTL_AUTOSAVE, I18n.get("konfig.plugin.autosave"));
-		setLabel(container, CTL_BACKUP, I18n.get("konfig.plugin.backup"));
-		setLabel(container, CTL_NEW_VERSION_CHECK, I18n.get("konfig.plugin.new.version.check"));
-		setLabel(container, CTL_PROCESSBOX_SHOW, I18n.get("konfig.prozessbox.automatisch.anzeigen"));
-		setLabel(container, CTL_PROCESSBOX_CLOSE, I18n.get("konfig.prozessbox.automatisch.schliessen"));
-		setLabel(container, CTL_PERFORMANCE_LOGGING, I18n.get("konfig.performance.logging"));
-		setLabel(container, CTL_LOG_LEVEL_LABEL, I18n.get("konfig.plugin.log.level"));
+		setLabel(container, CTL_WEBSERVER_REGIE_LABEL, I18n.get("konfig.webserver.regie.bereich"));
+		setLabel(container, CTL_WEBSERVER_REGIE_ACTIVE, I18n.get("konfig.webserver.regie.aktiv"));
+		setLabel(container, CTL_WEBSERVER_REGIE_PORT_LABEL, I18n.get("konfig.webserver.regie.port"));
 	}
 
 	private static XControlContainer container(XWindow window) {
@@ -146,6 +128,18 @@ public final class PluginOptionsEventHandler extends WeakBase
 	private static String text(XControlContainer container, String name) {
 		XTextComponent text = control(container, name, XTextComponent.class);
 		return text == null ? "" : text.getText();
+	}
+
+	private static int port(XControlContainer container, String name) {
+		String portText = text(container, name).trim();
+		try {
+			int port = Integer.parseInt(portText);
+			if (port >= 1 && port <= 65535) {
+				return port;
+			}
+		} catch (NumberFormatException ignored) {
+		}
+		throw new IllegalArgumentException(I18n.get("konfig.webserver.regie.port.ungueltig", portText));
 	}
 
 	private static void setText(XControlContainer container, String name, String wert) {
@@ -197,7 +191,7 @@ public final class PluginOptionsEventHandler extends WeakBase
 
 	public static XSingleComponentFactory __getComponentFactory(String implementationName) {
 		if (IMPLEMENTATION_NAME.equals(implementationName)) {
-			return Factory.createComponentFactory(PluginOptionsEventHandler.class, SERVICE_NAMES);
+			return Factory.createComponentFactory(WebserverRegieOptionsEventHandler.class, SERVICE_NAMES);
 		}
 		return null;
 	}

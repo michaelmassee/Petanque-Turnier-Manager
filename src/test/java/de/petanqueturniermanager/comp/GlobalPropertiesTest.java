@@ -43,7 +43,37 @@ class GlobalPropertiesTest {
         assertFalse(gp.isAutoSave());
         assertFalse(gp.isCreateBackup());
         assertFalse(gp.isWebserverAktiv());
+        assertTrue(gp.isWebserverRegieAktiv());
+        assertEquals(GlobalProperties.WEBSERVER_REGIE_DEFAULT_PORT, gp.getWebserverRegiePort());
         assertEquals("", gp.getLogLevel());
+    }
+
+    @Test
+    void testWebserverRegieFallbackRoundtripOhneLibreOfficeKontext() throws Exception {
+        var gp = GlobalProperties.get();
+
+        gp.speichernWebserverRegie(false, 9191, List.of());
+
+        GlobalProperties.resetForTest();
+        var gp2 = GlobalProperties.get();
+
+        assertFalse(gp2.isWebserverRegieAktiv());
+        assertEquals(9191, gp2.getWebserverRegiePort());
+
+        var file = tempDir.resolve("PetanqueTurnierManager.properties");
+        var inhalt = java.nio.file.Files.readString(file);
+        assertTrue(inhalt.contains("webserver_regie_aktiv=false"));
+        assertTrue(inhalt.contains("webserver_regie_port=9191"));
+    }
+
+    @Test
+    void testWebserverRegieUngueltigerLegacyPortVerwendetDefault() throws Exception {
+        var file = tempDir.resolve("PetanqueTurnierManager.properties");
+        java.nio.file.Files.writeString(file, "webserver_regie_port=99999\n");
+
+        var gp = GlobalProperties.get();
+
+        assertEquals(GlobalProperties.WEBSERVER_REGIE_DEFAULT_PORT, gp.getWebserverRegiePort());
     }
 
     @Test

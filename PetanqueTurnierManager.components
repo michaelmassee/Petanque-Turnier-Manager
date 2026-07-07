@@ -28,4 +28,9 @@
             <service name="de.petanqueturniermanager.PluginOptionsEventHandler"/>
         </implementation>
     </component>
+    <component loader="com.sun.star.loader.Java2" uri="PetanqueTurnierManager-1.0.0.jar">
+        <implementation name="de.petanqueturniermanager.comp.WebserverRegieOptionsEventHandler">
+            <service name="de.petanqueturniermanager.WebserverRegieOptionsEventHandler"/>
+        </implementation>
+    </component>
 </components>

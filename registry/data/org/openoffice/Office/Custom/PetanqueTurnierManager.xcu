@@ -30,4 +30,18 @@
             <value>false</value>
         </prop>
     </node>
+    <node oor:name="WebserverRegie">
+        <prop oor:name="Active">
+            <value>true</value>
+        </prop>
+        <prop oor:name="Port">
+            <value>9090</value>
+        </prop>
+        <prop oor:name="TargetsJson">
+            <value/>
+        </prop>
+        <prop oor:name="LegacyPropertiesImported">
+            <value>false</value>
+        </prop>
+    </node>
 </oor:component-data>

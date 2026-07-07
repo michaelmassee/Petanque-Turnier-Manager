@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE dlg:window PUBLIC "-//OpenOffice.org//DTD OfficeDocument 1.0//EN" "dialog.dtd">
+<dlg:window xmlns:dlg="http://openoffice.org/2000/dialog"
+    xmlns:script="http://openoffice.org/2000/script"
+    dlg:id="WebserverRegieOptions"
+    dlg:left="0" dlg:top="0" dlg:width="260" dlg:height="70"
+    dlg:closeable="false" dlg:moveable="false" dlg:withtitlebar="false">
+    <dlg:bulletinboard>
+        <dlg:text dlg:id="WebserverRegieLabel" dlg:tab-index="0" dlg:left="6" dlg:top="8" dlg:width="238" dlg:height="10" dlg:value=""/>
+        <dlg:checkbox dlg:id="WebserverRegieActive" dlg:tab-index="1" dlg:left="6" dlg:top="24" dlg:width="238" dlg:height="10" dlg:value="" dlg:checked="true"/>
+        <dlg:text dlg:id="WebserverRegiePortLabel" dlg:tab-index="2" dlg:left="6" dlg:top="43" dlg:width="58" dlg:height="10" dlg:value=""/>
+        <dlg:textfield dlg:id="WebserverRegiePort" dlg:tab-index="3" dlg:left="70" dlg:top="40" dlg:width="50" dlg:height="14" dlg:value=""/>
+    </dlg:bulletinboard>
+</dlg:window>

@@ -48,5 +48,26 @@
                 <value>false</value>
             </prop>
         </group>
+        <group oor:name="WebserverRegie">
+            <info>
+                <desc>Global Webserver-Regie options.</desc>
+            </info>
+            <prop oor:name="Active" oor:type="xs:boolean">
+                <info><desc>Whether the Webserver-Regie is active.</desc></info>
+                <value>true</value>
+            </prop>
+            <prop oor:name="Port" oor:type="xs:int">
+                <info><desc>TCP port for the Webserver-Regie.</desc></info>
+                <value>9090</value>
+            </prop>
+            <prop oor:name="TargetsJson" oor:type="xs:string">
+                <info><desc>Configured Webserver-Regie targets as JSON.</desc></info>
+                <value/>
+            </prop>
+            <prop oor:name="LegacyPropertiesImported" oor:type="xs:boolean">
+                <info><desc>Whether legacy Webserver-Regie properties have already been imported.</desc></info>
+                <value>false</value>
+            </prop>
+        </group>
     </component>
 </oor:component-schema>

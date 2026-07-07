@@ -32,6 +32,24 @@
                         <value>de.petanqueturniermanager.PluginOptionsEventHandler</value>
                     </prop>
                 </node>
+                <node oor:name="de.petanqueturniermanager.options.webserverregie" oor:op="fuse">
+                    <prop oor:name="Id">
+                        <value>de.petanqueturniermanager.webserverregie</value>
+                    </prop>
+                    <prop oor:name="Label">
+                        <value xml:lang="de">Webserver-Regie</value>
+                        <value xml:lang="en">Webserver Regie</value>
+                        <value xml:lang="es">Regie del servidor web</value>
+                        <value xml:lang="fr">Régie du serveur web</value>
+                        <value xml:lang="nl">Webserver-regie</value>
+                    </prop>
+                    <prop oor:name="OptionsPage">
+                        <value>%origin%/dialogs/WebserverRegieOptions.xdl</value>
+                    </prop>
+                    <prop oor:name="EventHandlerService">
+                        <value>de.petanqueturniermanager.WebserverRegieOptionsEventHandler</value>
+                    </prop>
+                </node>
             </node>
         </node>
     </node>

@@ -106,6 +106,7 @@ public class GlobalProperties {
 
 	private static final ReentrantLock fileLock = new ReentrantLock();
 	private static volatile XComponentContext libreOfficeContext;
+	private static volatile boolean webserverRegieInLibreOffice = false;
 
 	private static final String TABFARBE_PRAEFIX = "tabfarbe.";
 	private static final Gson GSON = new GsonBuilder().create();
@@ -209,6 +210,7 @@ public class GlobalProperties {
 	private GlobalProperties() {
 		readProperties();
 		ladePluginOptionenAusLibreOffice();
+		ladeWebserverRegieAusLibreOffice();
 		bereinigeLegacyEinzelPortProperties();
 		safeSetLogLevel();
 	}
@@ -218,6 +220,7 @@ public class GlobalProperties {
 		GlobalProperties lokaleInstanz = instance;
 		if (lokaleInstanz != null) {
 			lokaleInstanz.ladePluginOptionenAusLibreOffice();
+			lokaleInstanz.ladeWebserverRegieAusLibreOffice();
 			lokaleInstanz.safeSetLogLevel();
 		}
 	}
@@ -291,6 +294,9 @@ public class GlobalProperties {
 
 			Properties props = new Properties();
 			for (var e : propMap.entrySet()) {
+				if (webserverRegieInLibreOffice && istWebserverRegieLegacyKey(e.getKey())) {
+					continue;
+				}
 				props.setProperty(e.getKey(), e.getValue());
 			}
 
@@ -325,6 +331,26 @@ public class GlobalProperties {
 		}
 	}
 
+	private void ladeWebserverRegieAusLibreOffice() {
+		XComponentContext context = libreOfficeContext;
+		if (context == null) {
+			return;
+		}
+		try {
+			var speicher = new LibreOfficeWebserverRegieSpeicher(context);
+			if (!speicher.istLegacyImportErledigt()) {
+				speicher.importiereLegacy(webserverRegieOptionenAusMap());
+				webserverRegieInLibreOffice = true;
+				bereinigeLegacyWebserverRegieProperties();
+			}
+			webserverRegieOptionenInMap(speicher.laden());
+			webserverRegieInLibreOffice = true;
+		} catch (IllegalStateException e) {
+			webserverRegieInLibreOffice = false;
+			logger.warn("LibreOffice-Webserver-Regie-Konfiguration nicht verfügbar, verwende Legacy-Properties", e);
+		}
+	}
+
 	private PluginOptionen pluginOptionenAusMap() {
 		return new PluginOptionen(
 				getBoolean(AUTOSAVE_PROP),
@@ -350,6 +376,41 @@ public class GlobalProperties {
 		} else {
 			propMap.put(LOG_LEVEL_PROP, optionen.logLevel());
 		}
+	}
+
+	private WebserverRegieOptionen webserverRegieOptionenAusMap() {
+		return new WebserverRegieOptionen(
+				getBooleanMitDefault(WEBSERVER_REGIE_AKTIV_PROP, true),
+				getWebserverRegiePort(),
+				propMap.getOrDefault(WEBSERVER_REGIE_ZIELE_PROP, "").trim());
+	}
+
+	private static void webserverRegieOptionenInMap(WebserverRegieOptionen optionen) {
+		propMap.put(WEBSERVER_REGIE_AKTIV_PROP, Boolean.toString(optionen.aktiv()));
+		propMap.put(WEBSERVER_REGIE_PORT_PROP,
+				String.valueOf(normierePort(optionen.port(), WEBSERVER_REGIE_DEFAULT_PORT)));
+		if (optionen.zieleJson().isBlank()) {
+			propMap.remove(WEBSERVER_REGIE_ZIELE_PROP);
+		} else {
+			propMap.put(WEBSERVER_REGIE_ZIELE_PROP, optionen.zieleJson());
+		}
+	}
+
+	private static void bereinigeLegacyWebserverRegieProperties() {
+		boolean geaendert = false;
+		geaendert |= propMap.remove(WEBSERVER_REGIE_AKTIV_PROP) != null;
+		geaendert |= propMap.remove(WEBSERVER_REGIE_PORT_PROP) != null;
+		geaendert |= propMap.remove(WEBSERVER_REGIE_ZIELE_PROP) != null;
+		if (geaendert) {
+			logger.info("Legacy-Webserver-Regie-Properties entfernt");
+			speichernDatei();
+		}
+	}
+
+	private static boolean istWebserverRegieLegacyKey(String key) {
+		return WEBSERVER_REGIE_AKTIV_PROP.equals(key)
+				|| WEBSERVER_REGIE_PORT_PROP.equals(key)
+				|| WEBSERVER_REGIE_ZIELE_PROP.equals(key);
 	}
 	// ----------------------------------------------------
 	// Getter
@@ -407,7 +468,7 @@ public class GlobalProperties {
 		if (val == null || val.isBlank()) return WEBSERVER_REGIE_DEFAULT_PORT;
 		try {
 			int port = Integer.parseInt(val.trim());
-			if (port >= 1 && port <= 65535) return port;
+			if (istGueltigerPort(port)) return port;
 		} catch (NumberFormatException e) {
 			logger.warn("Ungültiger Webserver-Regie-Port '{}', verwende Default {}", val, WEBSERVER_REGIE_DEFAULT_PORT);
 		}
@@ -434,18 +495,30 @@ public class GlobalProperties {
 
 	public void speichernWebserverRegie(boolean aktiv, int port, List<RegieZielRoh> ziele) {
 		try {
-			setBooleanProp(WEBSERVER_REGIE_AKTIV_PROP, aktiv);
-			propMap.put(WEBSERVER_REGIE_PORT_PROP, String.valueOf(port));
 			var validiert = validierteRegieZiele(ziele == null ? List.of() : ziele);
-			if (validiert.isEmpty()) {
-				propMap.remove(WEBSERVER_REGIE_ZIELE_PROP);
+			String zieleJson = validiert.isEmpty() ? "" : GSON.toJson(validiert);
+			var optionen = new WebserverRegieOptionen(aktiv, normierePort(port, WEBSERVER_REGIE_DEFAULT_PORT), zieleJson);
+			webserverRegieOptionenInMap(optionen);
+			XComponentContext context = libreOfficeContext;
+			if (context != null) {
+				try {
+					new LibreOfficeWebserverRegieSpeicher(context).speichern(optionen);
+					webserverRegieInLibreOffice = true;
+				} catch (IllegalStateException e) {
+					logger.warn("Speichern der Webserver-Regie in LibreOffice-Konfiguration fehlgeschlagen, verwende Legacy-Datei", e);
+					webserverRegieInLibreOffice = false;
+					speichernDatei();
+				}
 			} else {
-				propMap.put(WEBSERVER_REGIE_ZIELE_PROP, GSON.toJson(validiert));
+				speichernDatei();
 			}
-			speichernDatei();
 		} catch (RuntimeException e) {
 			logger.error("Fehler beim Speichern der Webserver-Regie", e);
 		}
+	}
+
+	public void speichernWebserverRegieOptionen(boolean aktiv, int port) {
+		speichernWebserverRegie(aktiv, port, getWebserverRegieZiele());
 	}
 
 	public int getStartseitePort() {
@@ -813,6 +886,14 @@ public class GlobalProperties {
 		}
 	}
 
+	static int normierePort(int port, int defaultWert) {
+		return istGueltigerPort(port) ? port : defaultWert;
+	}
+
+	private static boolean istGueltigerPort(int port) {
+		return port >= 1 && port <= 65535;
+	}
+
 	private static int parseSichtbarerTabellenAnteil(String value) {
 		if (value == null || value.isBlank()) return DEFAULT_SICHTBARER_TABELLENANTEIL;
 		try {
@@ -953,5 +1034,6 @@ public class GlobalProperties {
 		instance = null;
 		propMap.clear();
 		libreOfficeContext = null;
+		webserverRegieInLibreOffice = false;
 	}
 }
