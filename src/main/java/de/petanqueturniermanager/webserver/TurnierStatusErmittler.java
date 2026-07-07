@@ -26,7 +26,7 @@ public final class TurnierStatusErmittler {
     }
 
     public static String ermitteln(WorkingSpreadsheet ws) {
-        if (ws == null) {
+        if (ws == null || ws.getWorkingSpreadsheetDocument() == null) {
             return "";
         }
         var docPropHelper = new DocumentPropertiesHelper(ws);
@@ -153,7 +153,7 @@ public final class TurnierStatusErmittler {
      * Lokalisierte Bezeichnung des aktiven Turniersystems oder leer, wenn kein System gesetzt ist.
      */
     public static String turniersystemBezeichnung(WorkingSpreadsheet ws) {
-        if (ws == null) {
+        if (ws == null || ws.getWorkingSpreadsheetDocument() == null) {
             return "";
         }
         TurnierSystem system = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();

@@ -993,6 +993,11 @@ public final class WebServerManager implements TimerListener {
         if (startseiteInstanz == null || !startseiteInstanz.laeuft()) {
             return;
         }
+        if (ws == null || ws.getWorkingSpreadsheetDocument() == null) {
+            // Kein aktives Dokument (z.B. initialer Refresh direkt beim Add-in-Start,
+            // bevor LO ein "current document" gesetzt hat) – nichts zu pushen.
+            return;
+        }
         try {
             var status = TeilnehmerStatusService.ermitteln(ws);
             String turniersystem = TurnierStatusErmittler.turniersystemBezeichnung(ws);

@@ -71,7 +71,7 @@ public final class TeilnehmerStatusService {
      * existiert oder beim Lesen ein Fehler auftritt.
      */
     public static TeilnehmerStatus ermitteln(WorkingSpreadsheet ws) {
-        if (ws == null) {
+        if (ws == null || ws.getWorkingSpreadsheetDocument() == null) {
             return new TeilnehmerStatus(0, 0);
         }
         try {
