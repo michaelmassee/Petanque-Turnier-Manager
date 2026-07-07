@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<oor:component-data
+    xmlns:oor="http://openoffice.org/2001/registry"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    oor:name="PetanqueTurnierManager"
+    oor:package="org.openoffice.Office.Custom">
+    <node oor:name="Settings">
+        <prop oor:name="Autosave">
+            <value>false</value>
+        </prop>
+        <prop oor:name="Backup">
+            <value>false</value>
+        </prop>
+        <prop oor:name="NewVersionCheck">
+            <value>false</value>
+        </prop>
+        <prop oor:name="ProcessBoxAutomaticallyShow">
+            <value>true</value>
+        </prop>
+        <prop oor:name="ProcessBoxAutomaticallyClose">
+            <value>true</value>
+        </prop>
+        <prop oor:name="PerformanceLogging">
+            <value>false</value>
+        </prop>
+        <prop oor:name="LogLevel">
+            <value/>
+        </prop>
+        <prop oor:name="LegacyPropertiesImported">
+            <value>false</value>
+        </prop>
+    </node>
+</oor:component-data>

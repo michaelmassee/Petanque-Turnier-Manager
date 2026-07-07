@@ -11,7 +11,7 @@ import java.lang.reflect.Field;
 import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
@@ -285,9 +285,11 @@ class ReleaseUpdateServiceTest {
         @SafeVarargs
         ScriptedClient(Optional<ReleaseInfo>... skript) {
             super("test/test", URI.create("http://localhost"), Duration.ofMillis(1), Duration.ofMillis(1));
-            // Arrays.stream statt List.of: das Varargs-Array nicht an die nächste
-            // Varargs-Methode durchreichen, sonst warnt javac vor Heap Pollution.
-            this.skript = Arrays.stream(skript).toList();
+            var kopie = new ArrayList<Optional<ReleaseInfo>>(skript.length);
+            for (var eintrag : skript) {
+                kopie.add(eintrag);
+            }
+            this.skript = List.copyOf(kopie);
         }
 
         @Override

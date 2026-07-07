@@ -14,6 +14,15 @@
     <manifest:file-entry 
         manifest:media-type="application/vnd.sun.star.configuration-data" 
         manifest:full-path="registry/org/openoffice/Office/GlobalAddIn.xcu"/>
+    <manifest:file-entry
+        manifest:media-type="application/vnd.sun.star.configuration-schema"
+        manifest:full-path="registry/schema/org/openoffice/Office/Custom/PetanqueTurnierManager.xcs"/>
+    <manifest:file-entry
+        manifest:media-type="application/vnd.sun.star.configuration-data"
+        manifest:full-path="registry/data/org/openoffice/Office/Custom/PetanqueTurnierManager.xcu"/>
+    <manifest:file-entry
+        manifest:media-type="application/vnd.sun.star.configuration-data"
+        manifest:full-path="registry/data/org/openoffice/Office/OptionsDialog.xcu"/>
     
     <!-- Addon Menu Configurations -->
     <manifest:file-entry

@@ -43,7 +43,7 @@ class XcuMenuUebersetzungTest {
         Set<String> erwarteteSprachen = erwarteteSprachen();
         SoftAssertions soft = new SoftAssertions();
 
-        for (Path xcu : alleAddonsXcuDateien()) {
+        for (Path xcu : alleMehrsprachigenXcuDateien()) {
             pruefeXcuDatei(xcu, erwarteteSprachen, soft);
         }
 
@@ -52,8 +52,8 @@ class XcuMenuUebersetzungTest {
 
     @Test
     void mindestensEineXcuDateiGefunden() throws Exception {
-        assertThat(alleAddonsXcuDateien())
-                .as("Keine Addons_*.xcu-Dateien im registry-Verzeichnis gefunden")
+        assertThat(alleMehrsprachigenXcuDateien())
+                .as("Keine mehrsprachigen XCU-Dateien im registry-Verzeichnis gefunden")
                 .isNotEmpty();
     }
 
@@ -87,10 +87,11 @@ class XcuMenuUebersetzungTest {
         return sprachen;
     }
 
-    private List<Path> alleAddonsXcuDateien() throws IOException {
+    private List<Path> alleMehrsprachigenXcuDateien() throws IOException {
         try (Stream<Path> files = Files.walk(Paths.get("registry"))) {
-            return files.filter(p -> p.getFileName().toString().startsWith("Addons_")
-                                  && p.toString().endsWith(".xcu"))
+            return files.filter(p -> p.toString().endsWith(".xcu"))
+                        .filter(p -> p.getFileName().toString().startsWith("Addons_")
+                                || p.endsWith(Paths.get("registry/data/org/openoffice/Office/OptionsDialog.xcu")))
                         .sorted()
                         .toList();
         }
@@ -104,7 +105,8 @@ class XcuMenuUebersetzungTest {
         NodeList props = doc.getElementsByTagName("prop");
         for (int i = 0; i < props.getLength(); i++) {
             Element prop = (Element) props.item(i);
-            if (!"Title".equals(prop.getAttributeNS(OOR_NS, "name"))) continue;
+            String propName = prop.getAttributeNS(OOR_NS, "name");
+            if (!"Title".equals(propName) && !"Label".equals(propName)) continue;
 
             Map<String, String> vorhandeneSprachen = sprachwerteAus(prop);
 

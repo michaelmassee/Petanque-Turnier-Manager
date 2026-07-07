@@ -398,7 +398,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_DIREKT_AKTUALISIEREN  = "direktAktualisieren";
 	// Info
 	public static final String CMD_LOGFILE_ANZEIGEN      = "logfileAnzeigen";
-	public static final String CMD_PLUGIN_KONFIGURATION  = "pluginKonfiguration";
 	public static final String CMD_PROCESSBOX_ANZEIGEN   = "processboxAnzeigen";
 	public static final String CMD_PROJEKT_SEITE_OEFFNEN = "projekt_seite_oeffnen";
 
@@ -1282,7 +1281,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	 */
 	private boolean behandleDialogBefehl(String command) throws Exception {
 		switch (command) {
-			case CMD_PLUGIN_KONFIGURATION -> new GlobalPropertiesDialog(xContext).zeigen();
 			case CMD_KONFIGURATION_TURNIER_STARTSEITE ->
 					new TurnierStartseiteDialog(erzeugeWorkingSpreadsheetFuerDispatch()).zeigen();
 			case CMD_EXPORT_VERZEICHNIS   -> exportiereAktuellesTurnierInVerzeichnis(erzeugeWorkingSpreadsheetFuerDispatch());
@@ -2030,7 +2028,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_DOWNLOAD_EXTENSION,
 				 CMD_DIREKT_AKTUALISIEREN,
 				 CMD_LOGFILE_ANZEIGEN,
-				 CMD_PLUGIN_KONFIGURATION,
 				 CMD_PROCESSBOX_ANZEIGEN,
 				 CMD_PROJEKT_SEITE_OEFFNEN                  -> true;
 			case CMD_ABBRUCH                                -> false;

@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
@@ -19,6 +20,8 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
+
+import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.helper.perflog.PerfLog;
 import de.petanqueturniermanager.webserver.CompositeViewKonfiguration;
@@ -103,6 +106,7 @@ public class GlobalProperties {
 	private static volatile GlobalProperties instance = null;
 
 	private static final ReentrantLock fileLock = new ReentrantLock();
+	private static volatile XComponentContext libreOfficeContext;
 
 	private static final String TABFARBE_PRAEFIX = "tabfarbe.";
 	private static final Gson GSON = new GsonBuilder().create();
@@ -205,8 +209,18 @@ public class GlobalProperties {
 
 	private GlobalProperties() {
 		readProperties();
+		ladePluginOptionenAusLibreOffice();
 		bereinigeLegacyEinzelPortProperties();
 		safeSetLogLevel();
+	}
+
+	public static void setLibreOfficeContext(XComponentContext context) {
+		libreOfficeContext = context;
+		GlobalProperties lokaleInstanz = instance;
+		if (lokaleInstanz != null) {
+			lokaleInstanz.ladePluginOptionenAusLibreOffice();
+			lokaleInstanz.safeSetLogLevel();
+		}
 	}
 
 	/**
@@ -293,6 +307,49 @@ public class GlobalProperties {
 			logger.error("Fehler beim Speichern", e);
 		} finally {
 			fileLock.unlock();
+		}
+	}
+
+	private void ladePluginOptionenAusLibreOffice() {
+		XComponentContext context = libreOfficeContext;
+		if (context == null) {
+			return;
+		}
+		try {
+			var speicher = new LibreOfficePluginOptionenSpeicher(context);
+			if (!speicher.istLegacyImportErledigt()) {
+				speicher.importiereLegacy(Map.copyOf(propMap), pluginOptionenAusMap());
+			}
+			pluginOptionenInMap(speicher.laden());
+		} catch (IllegalStateException e) {
+			logger.warn("LibreOffice-Konfiguration nicht verfügbar, verwende Legacy-Properties", e);
+		}
+	}
+
+	private PluginOptionen pluginOptionenAusMap() {
+		return new PluginOptionen(
+				getBoolean(AUTOSAVE_PROP),
+				getBoolean(CREATE_BACKUP_PROP),
+				getBoolean(NEW_VERSION_CHECK_PROP),
+				getBooleanMitDefault(PROZESSBOX_AUTOMATISCH_ANZEIGEN_PROP, true),
+				getBooleanMitDefault(PROZESSBOX_AUTOMATISCH_SCHLIESSEN_PROP, true),
+				getBoolean(PERFORMANCE_LOGGING_PROP),
+				getLogLevel());
+	}
+
+	private static void pluginOptionenInMap(PluginOptionen optionen) {
+		setBooleanProp(AUTOSAVE_PROP, optionen.autosave());
+		setBooleanProp(CREATE_BACKUP_PROP, optionen.backup());
+		setBooleanProp(NEW_VERSION_CHECK_PROP, optionen.newVersionCheck());
+		propMap.put(PROZESSBOX_AUTOMATISCH_ANZEIGEN_PROP,
+				Boolean.toString(optionen.prozessBoxAutomatischAnzeigen()));
+		propMap.put(PROZESSBOX_AUTOMATISCH_SCHLIESSEN_PROP,
+				Boolean.toString(optionen.prozessBoxAutomatischSchliessen()));
+		setBooleanProp(PERFORMANCE_LOGGING_PROP, optionen.performanceLogging());
+		if (optionen.logLevel().isBlank()) {
+			propMap.remove(LOG_LEVEL_PROP);
+		} else {
+			propMap.put(LOG_LEVEL_PROP, optionen.logLevel());
 		}
 	}
 	// ----------------------------------------------------
@@ -681,21 +738,21 @@ public class GlobalProperties {
 			boolean prozessBoxAutomatischAnzeigen, boolean prozessBoxAutomatischSchliessen,
 			boolean performanceLogging, String logLevel) {
 		try {
-			setBooleanProp(AUTOSAVE_PROP, autosave);
-			setBooleanProp(CREATE_BACKUP_PROP, backup);
-			setBooleanProp(NEW_VERSION_CHECK_PROP, newVersionCheck);
-			setBooleanProp(PERFORMANCE_LOGGING_PROP, performanceLogging);
-			// Default-true-Properties: explizit "false" persistieren, sonst greift beim Lesen wieder der Default.
-			propMap.put(PROZESSBOX_AUTOMATISCH_ANZEIGEN_PROP, Boolean.toString(prozessBoxAutomatischAnzeigen));
-			propMap.put(PROZESSBOX_AUTOMATISCH_SCHLIESSEN_PROP, Boolean.toString(prozessBoxAutomatischSchliessen));
-
-			if (logLevel != null && !logLevel.isBlank()) {
-				propMap.put(LOG_LEVEL_PROP, logLevel.trim().toLowerCase());
+			PluginOptionen optionen = new PluginOptionen(autosave, backup, newVersionCheck,
+					prozessBoxAutomatischAnzeigen, prozessBoxAutomatischSchliessen,
+					performanceLogging, logLevel);
+			pluginOptionenInMap(optionen);
+			XComponentContext context = libreOfficeContext;
+			if (context != null) {
+				try {
+					new LibreOfficePluginOptionenSpeicher(context).speichern(optionen);
+				} catch (IllegalStateException e) {
+					logger.warn("Speichern in LibreOffice-Konfiguration fehlgeschlagen, verwende Legacy-Datei", e);
+					speichernDatei();
+				}
 			} else {
-				propMap.remove(LOG_LEVEL_PROP);
+				speichernDatei();
 			}
-
-			speichernDatei();
 			safeSetLogLevel();
 			PerfLog.invalidateCache();
 
@@ -896,5 +953,6 @@ public class GlobalProperties {
 	static void resetForTest() {
 		instance = null;
 		propMap.clear();
+		libreOfficeContext = null;
 	}
 }

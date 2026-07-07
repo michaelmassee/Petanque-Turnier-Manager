@@ -108,21 +108,6 @@
 							</node>
 							<node oor:name="Y6G" oor:op="replace">
 								<prop oor:name="Title">
-									<value xml:lang="de">Plugin Konfiguration</value>
-									<value xml:lang="en">Plugin Configuration</value>
-									<value xml:lang="es">Configuración del plugin</value>
-									<value xml:lang="fr">Configuration du plugin</value>
-									<value xml:lang="nl">Plugin-configuratie</value>
-								</prop>
-								<prop oor:name="URL">
-									<value>ptm:pluginKonfiguration</value>
-								</prop>
-								<prop oor:name="Target" oor:type="xs:string">
-									<value>_self</value>
-								</prop>
-							</node>
-							<node oor:name="Y6H" oor:op="replace">
-								<prop oor:name="Title">
 									<value xml:lang="de">Protokoll-Fenster anzeigen</value>
 									<value xml:lang="en">Show Protocol Window</value>
 									<value xml:lang="es">Mostrar ventana de protocolo</value>
@@ -136,12 +121,12 @@
 									<value>_self</value>
 								</prop>
 							</node>
-							<node oor:name="Y6I" oor:op="replace">
+							<node oor:name="Y6H" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
-							<node oor:name="Y6J" oor:op="replace">
+							<node oor:name="Y6I" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Projektseite im Browser öffnen</value>
 									<value xml:lang="en">Open project page in browser</value>
