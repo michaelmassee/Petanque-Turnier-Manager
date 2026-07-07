@@ -48,7 +48,6 @@ import de.petanqueturniermanager.basesheet.meldeliste.TeilnehmerListeSortModus;
 import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
 import de.petanqueturniermanager.timer.TimerDialog;
 import de.petanqueturniermanager.timer.TimerManager;
-import de.petanqueturniermanager.webserver.CompositeViewListeDialog;
 import de.petanqueturniermanager.webserver.WebServerManager;
 import de.petanqueturniermanager.comp.newrelease.DirectUpdate;
 import de.petanqueturniermanager.comp.newrelease.DownloadExtension;
@@ -342,7 +341,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_POULE_TESTDATEN_TURNIER     = "poule_testdaten_turnier";
 	public static final String CMD_POULE_TESTDATEN_TURNIER_37  = "poule_testdaten_turnier_37";
 	// Webserver
-	public static final String CMD_WEBSERVER_KONFIGURATION = "webserver_konfiguration";
 	public static final String CMD_WEBSERVER_STARTEN = "webserver_starten";
 	public static final String CMD_WEBSERVER_STOPPEN = "webserver_stoppen";
 	public static final String CMD_WEBSERVER_URL_1  = "webserver_url_1";
@@ -1472,15 +1470,12 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	 */
 	private boolean behandleWebserverBefehl(String command) throws com.sun.star.uno.Exception {
 		switch (command) {
-			case CMD_WEBSERVER_KONFIGURATION ->
-					new CompositeViewListeDialog(erzeugeWorkingSpreadsheetFuerDispatch()).zeigen(null);
 			case CMD_WEBSERVER_STARTEN -> {
 				var props = GlobalProperties.get();
 				if (props.getCompositeViewKonfigurationen().isEmpty()) {
 					MessageBox.from(xContext, MessageBoxTypeEnum.INFO_OK)
 							.caption(I18n.get("webserver.starten"))
 							.message(I18n.get("webserver.keine.ports.konfiguriert")).show();
-					new CompositeViewListeDialog(erzeugeWorkingSpreadsheetFuerDispatch()).zeigen(null);
 				} else {
 					ProcessBox.init(xContext).visibleWennAutomatisch().clear().run();
 					try {
@@ -2001,7 +1996,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_KONFIGURATION_TURNIER_STARTSEITE,
 				 CMD_KONFIGURATION_UPDATE_ERSTELLT_MIT_VERSION,
 				 CMD_EXPORT_UPLOAD_KONFIGURATION               -> ts != TurnierSystem.KEIN;
-			case CMD_WEBSERVER_KONFIGURATION                -> true;
 			case CMD_WEBSERVER_STARTEN                      -> !WebServerManager.get().isLaeuft();
 			case CMD_WEBSERVER_STOPPEN                      -> WebServerManager.get().istOwnerDocument(document);
 			case CMD_WEBSERVER_URL_1  -> WebServerManager.get().hatInstanzFuerSlot(0)

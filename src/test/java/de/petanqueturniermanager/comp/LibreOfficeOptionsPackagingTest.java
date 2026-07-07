@@ -33,13 +33,16 @@ class LibreOfficeOptionsPackagingTest {
 				.contains("de.petanqueturniermanager.comp.PluginOptionsEventHandler")
 				.contains("de.petanqueturniermanager.PluginOptionsEventHandler")
 				.contains("de.petanqueturniermanager.comp.WebserverRegieOptionsEventHandler")
-				.contains("de.petanqueturniermanager.WebserverRegieOptionsEventHandler");
+				.contains("de.petanqueturniermanager.WebserverRegieOptionsEventHandler")
+				.contains("de.petanqueturniermanager.comp.CompositeViewsOptionsEventHandler")
+				.contains("de.petanqueturniermanager.CompositeViewsOptionsEventHandler");
 
 		String registration = Files.readString(
 				Path.of("src/main/resources/de/petanqueturniermanager/comp/RegistrationHandler.classes"));
 		assertThat(registration)
 				.contains("de.petanqueturniermanager.comp.PluginOptionsEventHandler")
-				.contains("de.petanqueturniermanager.comp.WebserverRegieOptionsEventHandler");
+				.contains("de.petanqueturniermanager.comp.WebserverRegieOptionsEventHandler")
+				.contains("de.petanqueturniermanager.comp.CompositeViewsOptionsEventHandler");
 	}
 
 	@Test
@@ -47,15 +50,42 @@ class LibreOfficeOptionsPackagingTest {
 		String xcu = Files.readString(Path.of("registry/data/org/openoffice/Office/OptionsDialog.xcu"));
 		Path pluginXdl = Path.of("registry/data/org/openoffice/Office/dialogs/PluginOptions.xdl");
 		Path regieXdl = Path.of("registry/data/org/openoffice/Office/dialogs/WebserverRegieOptions.xdl");
+		Path compositeViewsXdl = Path.of("registry/data/org/openoffice/Office/dialogs/CompositeViewsOptions.xdl");
 
 		assertThat(xcu)
 				.contains("PetanqueTurnierManager")
 				.contains("%origin%/dialogs/PluginOptions.xdl")
 				.contains("de.petanqueturniermanager.PluginOptionsEventHandler")
 				.contains("%origin%/dialogs/WebserverRegieOptions.xdl")
-				.contains("de.petanqueturniermanager.WebserverRegieOptionsEventHandler");
+				.contains("de.petanqueturniermanager.WebserverRegieOptionsEventHandler")
+				.contains("%origin%/dialogs/CompositeViewsOptions.xdl")
+				.contains("de.petanqueturniermanager.CompositeViewsOptionsEventHandler");
 		assertThat(pluginXdl).exists();
 		assertThat(regieXdl).exists();
+		assertThat(compositeViewsXdl).exists();
+	}
+
+	@Test
+	void compositeViewsOptionsSeiteIstPaketiert() throws Exception {
+		String xcu = Files.readString(Path.of("registry/data/org/openoffice/Office/OptionsDialog.xcu"));
+		String compositeViewsXdl = Files.readString(
+				Path.of("registry/data/org/openoffice/Office/dialogs/CompositeViewsOptions.xdl"));
+
+		assertThat(xcu)
+				.contains("de.petanqueturniermanager.options.compositeviews")
+				.contains("de.petanqueturniermanager.compositeviews");
+		assertThat(compositeViewsXdl)
+				.contains("dlg:id=\"CompositeViewsLabel\"")
+				.contains("dlg:id=\"WebserverAktiv\"")
+				.contains("dlg:id=\"CompositeViewsStatus\"")
+				.contains("dlg:id=\"CompositeViewsVerwalten\"");
+	}
+
+	@Test
+	void altesWebserverKonfigurationsKommandoIstAusMenueEntfernt() throws Exception {
+		String addons = Files.readString(Path.of("registry/org/openoffice/Office/Addons_X3_Webserver.xcu"));
+
+		assertThat(addons).doesNotContain("ptm:webserver_konfiguration");
 	}
 
 	@Test

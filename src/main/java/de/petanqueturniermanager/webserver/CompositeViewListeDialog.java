@@ -1,6 +1,7 @@
 package de.petanqueturniermanager.webserver;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -16,8 +17,8 @@ import com.sun.star.awt.XCheckBox;
 import com.sun.star.awt.XControl;
 import com.sun.star.awt.XControlContainer;
 import com.sun.star.awt.XDialog;
+import com.sun.star.awt.XListBox;
 import com.sun.star.awt.XToolkit;
-import com.sun.star.awt.XWindow;
 import com.sun.star.awt.XWindowPeer;
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.container.NoSuchElementException;
@@ -26,16 +27,15 @@ import com.sun.star.lang.EventObject;
 import com.sun.star.lang.WrappedTargetException;
 import com.sun.star.lang.XMultiComponentFactory;
 import com.sun.star.lang.XMultiServiceFactory;
+import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.comp.DocumentHelper;
 import de.petanqueturniermanager.comp.GlobalProperties;
 import de.petanqueturniermanager.comp.GlobalProperties.CompositeViewEintragRoh;
-import de.petanqueturniermanager.comp.GlobalProperties.PanelEintragRoh;
 import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
-import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.comp.turnierevent.OnProperiesChangedEvent;
 import de.petanqueturniermanager.comp.turnierevent.TurnierEventType;
-import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
@@ -43,10 +43,11 @@ import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.konfigdialog.AbstractUnoDialog;
 
 /**
- * Modaler Dialog zur Verwaltung der Webserver-Konfiguration.
+ * Modaler Dialog zur Verwaltung der Composite Views.
  * <p>
- * Verwaltet das allgemeine Webserver-Flag und alle Composite Views.
  * Über [Bearbeiten] bzw. [+ Hinzufügen] wird für Composite Views der {@link CompositeViewDetailDialog} geöffnet.
+ * Das globale Webserver-Flag liegt auf der LibreOffice-Optionsseite „Composite Views" und wird hier nur gelesen.
+ * Die Turniersystem-Filter-ComboBox steuert, welche Blatt-Typ-Vorschläge der Detail-Dialog anbietet.
  */
 public class CompositeViewListeDialog extends AbstractUnoDialog {
 
@@ -69,8 +70,8 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
     private static final int EDIT_W = 60;
     private static final int DEL_X = 265;
     private static final int DEL_W = 18;
-    private static final int KOPFZEILE_Y = 30;
-    private static final int ZEILE_Y_START = 43;
+    private static final int KOPFZEILE_Y = 33;
+    private static final int ZEILE_Y_START = 46;
     private static final int ZEILE_ABSTAND = 16;
     private static final int FOOTER_Y = 265;
     private static final int OK_X = 245;
@@ -85,15 +86,16 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
     private XDialog xDialog;
     private XWindowPeer dialogPeer;
 
+    /** Auswählbare Turniersysteme des Filters (alle außer {@link TurnierSystem#KEIN}). */
+    private static final TurnierSystem[] FILTER_SYSTEME = Arrays.stream(TurnierSystem.values())
+            .filter(system -> system != TurnierSystem.KEIN)
+            .toArray(TurnierSystem[]::new);
+
     // ---- Dialog-Zustand ----
     private List<CompositeViewEintragRoh> eintraege = new ArrayList<>();
     private final List<String> dynamischeControlNamen = new ArrayList<>();
     private String[] komboBoxItems;
-    private XCheckBox cbAktiv;
-    private final WorkingSpreadsheet ws;
-
-    /** Aktives Turniersystem des Dokuments – steuert die ComboBox-Filterung; {@code null} = alle. */
-    private final TurnierSystem aktivesSystem;
+    private XListBox lbSystemFilter;
 
     /** Interne Exception für Validierungsfehler. */
     private static final class UngueltigeEingabeException extends Exception {
@@ -103,13 +105,8 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
         }
     }
 
-    public CompositeViewListeDialog(WorkingSpreadsheet ws) {
-        super(ws.getxContext());
-        this.ws = ws;
-        var doc = ws.getWorkingSpreadsheetDocument();
-        this.aktivesSystem = doc == null
-                ? null
-                : new DocumentPropertiesHelper(doc).getTurnierSystemAusDocument();
+    public CompositeViewListeDialog(XComponentContext xContext) {
+        super(xContext);
     }
 
     public void zeigen(XWindowPeer parentPeer) throws com.sun.star.uno.Exception {
@@ -145,21 +142,22 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
         this.dialogPeer = peer;
 
         eintraege = new ArrayList<>(GlobalProperties.get().getCompositeViewEintraege());
-        komboBoxItems = SheetResolverFactory.sheetTypenFuer(aktivesSystem);
+        komboBoxItems = SheetResolverFactory.sheetTypenFuer(null);
 
         erstelleStatischeControls();
         aktualisiereZeilenArea();
     }
 
     private void erstelleStatischeControls() throws com.sun.star.uno.Exception {
-        fuegeCheckBoxEin("cbAktiv",
-                I18n.get("webserver.konfig.cb.aktiv"),
-                5, 5, 200, 12, GlobalProperties.get().isWebserverAktiv());
-        cbAktiv = leseCheckBox("cbAktiv");
+        fuegeFixedTextEin("lblSystemFilter",
+                I18n.get("webserver.composite.konfig.filter.system"),
+                5, 6, 62, 10);
+        fuegeListBoxEin("lbSystemFilter", filterEintraege(), 70, 4, 110, 14, (short) 0);
+        lbSystemFilter = Lo.qi(XListBox.class, xcc.getControl("lbSystemFilter"));
 
         fuegeFixedTextEin("lblCompositeBereich",
                 I18n.get("webserver.composite.konfig.bereich.views"),
-                5, 14, 200, 10);
+                5, 20, 200, 10);
 
         fuegeFixedTextEin("lblKopfPort",
                 I18n.get("webserver.konfig.tabelle.kopf.port"),
@@ -244,6 +242,7 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
     private void fuegeZeileHinzu() {
         try {
             leseZeilenDatenAusControls();
+            aktualisiereKomboBoxItems();
             var tempIdx = new int[]{-1};
             Consumer<CompositeViewEintragRoh> callback = e -> {
                 if (tempIdx[0] == -1) {
@@ -270,6 +269,7 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
     private void bearbeiteZeile(int idx) {
         try {
             leseZeilenDatenAusControls();
+            aktualisiereKomboBoxItems();
             var eintrag = eintraege.get(idx);
             Consumer<CompositeViewEintragRoh> callback = geaendert -> {
                 eintraege.set(idx, geaendert);
@@ -322,12 +322,14 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
 
     private void speichereAlleKonfigurationen() throws UngueltigeEingabeException {
         validiereEintraege();
-        boolean aktiv = cbAktiv != null && cbAktiv.getState() == 1;
+        // Das globale Webserver-Flag gehört der Optionsseite; hier nur unveränderten Wert durchreichen.
+        boolean aktiv = GlobalProperties.get().isWebserverAktiv();
         GlobalProperties.get().speichernCompositeViews(aktiv, eintraege);
     }
 
     private void benachrichtigeCompositeViewKonfigurationGeaendert() {
-        var doc = ws.getWorkingSpreadsheetDocument();
+        // Best-effort: Nur das aktuell aktive Dokument (falls vorhanden) über die Änderung informieren.
+        var doc = DocumentHelper.getCurrentSpreadsheetDocument(xContext);
         if (doc == null) {
             return;
         }
@@ -391,6 +393,30 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
         return kandidat;
     }
 
+    /** Einträge der Filter-Liste: „Alle" plus alle auswählbaren Turniersysteme. */
+    private static String[] filterEintraege() {
+        String[] items = new String[FILTER_SYSTEME.length + 1];
+        items[0] = I18n.get("webserver.composite.konfig.filter.alle");
+        for (int i = 0; i < FILTER_SYSTEME.length; i++) {
+            items[i + 1] = FILTER_SYSTEME[i].getBezeichnung();
+        }
+        return items;
+    }
+
+    /** Aktuell im Filter gewähltes Turniersystem; {@code null} für „Alle". */
+    private TurnierSystem ausgewaehltesFilterSystem() {
+        if (lbSystemFilter == null) {
+            return null;
+        }
+        short pos = lbSystemFilter.getSelectedItemPos();
+        return (pos <= 0) ? null : FILTER_SYSTEME[pos - 1];
+    }
+
+    /** Berechnet die Blatt-Typ-Vorschläge des Detail-Dialogs anhand der aktuellen Filterauswahl neu. */
+    private void aktualisiereKomboBoxItems() {
+        komboBoxItems = SheetResolverFactory.sheetTypenFuer(ausgewaehltesFilterSystem());
+    }
+
     private void zeigeValidierungsFehler(UngueltigeEingabeException e) {
         MessageBox.from(xContext, MessageBoxTypeEnum.ERROR_OK)
                 .caption(I18n.get("webserver.composite.konfig.fehler.titel"))
@@ -449,9 +475,19 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
         cont.insertByName(name, model);
     }
 
-    private XCheckBox leseCheckBox(String name) {
-        XControl ctrl = xcc.getControl(name);
-        return ctrl != null ? Lo.qi(XCheckBox.class, ctrl) : null;
+    private void fuegeListBoxEin(String name, String[] items, int x, int y, int w, int h, short selectedPos)
+            throws com.sun.star.uno.Exception {
+        var model = xMSF.createInstance("com.sun.star.awt.UnoControlListBoxModel");
+        var props = Lo.qi(XPropertySet.class, model);
+        props.setPropertyValue("PositionX",      x);
+        props.setPropertyValue("PositionY",      y);
+        props.setPropertyValue("Width",          w);
+        props.setPropertyValue("Height",         h);
+        props.setPropertyValue("StringItemList", items);
+        props.setPropertyValue("Dropdown",       Boolean.TRUE);
+        props.setPropertyValue("LineCount",      (short) 12);
+        props.setPropertyValue("SelectedItems",  new short[] { selectedPos });
+        cont.insertByName(name, model);
     }
 
     private void fuegeButtonEinDyn(String name, String label, int x, int y, int w, int h, short pushButtonType)

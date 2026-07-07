@@ -7,6 +7,7 @@ de.petanqueturniermanager.comp.ProtocolHandler
 de.petanqueturniermanager.comp.PtmPublicService
 de.petanqueturniermanager.comp.PluginOptionsEventHandler
 de.petanqueturniermanager.comp.WebserverRegieOptionsEventHandler
+de.petanqueturniermanager.comp.CompositeViewsOptionsEventHandler
 
 # Deactivated components (uncomment if needed)
 #de.petanqueturniermanager.addins.DoublerImpl

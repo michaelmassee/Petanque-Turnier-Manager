@@ -340,13 +340,13 @@ public class GlobalProperties {
 			var speicher = new LibreOfficeWebserverRegieSpeicher(context);
 			if (!speicher.istLegacyImportErledigt()) {
 				speicher.importiereLegacy(webserverRegieOptionenAusMap());
-				webserverRegieInLibreOffice = true;
+				setWebserverRegieInLibreOffice(true);
 				bereinigeLegacyWebserverRegieProperties();
 			}
 			webserverRegieOptionenInMap(speicher.laden());
-			webserverRegieInLibreOffice = true;
+			setWebserverRegieInLibreOffice(true);
 		} catch (IllegalStateException e) {
-			webserverRegieInLibreOffice = false;
+			setWebserverRegieInLibreOffice(false);
 			logger.warn("LibreOffice-Webserver-Regie-Konfiguration nicht verfügbar, verwende Legacy-Properties", e);
 		}
 	}
@@ -412,6 +412,10 @@ public class GlobalProperties {
 				|| WEBSERVER_REGIE_PORT_PROP.equals(key)
 				|| WEBSERVER_REGIE_ZIELE_PROP.equals(key);
 	}
+
+	private static void setWebserverRegieInLibreOffice(boolean wert) {
+		webserverRegieInLibreOffice = wert;
+	}
 	// ----------------------------------------------------
 	// Getter
 	// ----------------------------------------------------
@@ -453,6 +457,16 @@ public class GlobalProperties {
 
 	public boolean isWebserverAktiv() {
 		return getBoolean(WEBSERVER_AKTIV_PROP);
+	}
+
+	/**
+	 * Speichert ausschließlich das globale Webserver-Flag. Wird von der Optionsseite
+	 * „Composite Views" genutzt, damit das Flag gesetzt werden kann, ohne die
+	 * Composite-View-Properties neu zu schreiben.
+	 */
+	public void speichernWebserverAktiv(boolean aktiv) {
+		setBooleanProp(WEBSERVER_AKTIV_PROP, aktiv);
+		speichernDatei();
 	}
 
 	public boolean isStartseiteAktiv() {
@@ -503,10 +517,10 @@ public class GlobalProperties {
 			if (context != null) {
 				try {
 					new LibreOfficeWebserverRegieSpeicher(context).speichern(optionen);
-					webserverRegieInLibreOffice = true;
+					setWebserverRegieInLibreOffice(true);
 				} catch (IllegalStateException e) {
 					logger.warn("Speichern der Webserver-Regie in LibreOffice-Konfiguration fehlgeschlagen, verwende Legacy-Datei", e);
-					webserverRegieInLibreOffice = false;
+					setWebserverRegieInLibreOffice(false);
 					speichernDatei();
 				}
 			} else {
@@ -1034,6 +1048,6 @@ public class GlobalProperties {
 		instance = null;
 		propMap.clear();
 		libreOfficeContext = null;
-		webserverRegieInLibreOffice = false;
+		setWebserverRegieInLibreOffice(false);
 	}
 }

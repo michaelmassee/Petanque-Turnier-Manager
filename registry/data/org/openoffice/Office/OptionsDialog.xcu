@@ -50,6 +50,24 @@
                         <value>de.petanqueturniermanager.WebserverRegieOptionsEventHandler</value>
                     </prop>
                 </node>
+                <node oor:name="de.petanqueturniermanager.options.compositeviews" oor:op="fuse">
+                    <prop oor:name="Id">
+                        <value>de.petanqueturniermanager.compositeviews</value>
+                    </prop>
+                    <prop oor:name="Label">
+                        <value xml:lang="de">Composite Views</value>
+                        <value xml:lang="en">Composite Views</value>
+                        <value xml:lang="es">Vistas compuestas</value>
+                        <value xml:lang="fr">Vues composites</value>
+                        <value xml:lang="nl">Composite views</value>
+                    </prop>
+                    <prop oor:name="OptionsPage">
+                        <value>%origin%/dialogs/CompositeViewsOptions.xdl</value>
+                    </prop>
+                    <prop oor:name="EventHandlerService">
+                        <value>de.petanqueturniermanager.CompositeViewsOptionsEventHandler</value>
+                    </prop>
+                </node>
             </node>
         </node>
     </node>

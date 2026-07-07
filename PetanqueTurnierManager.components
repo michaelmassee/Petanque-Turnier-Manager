@@ -33,4 +33,9 @@
             <service name="de.petanqueturniermanager.WebserverRegieOptionsEventHandler"/>
         </implementation>
     </component>
+    <component loader="com.sun.star.loader.Java2" uri="PetanqueTurnierManager-1.0.0.jar">
+        <implementation name="de.petanqueturniermanager.comp.CompositeViewsOptionsEventHandler">
+            <service name="de.petanqueturniermanager.CompositeViewsOptionsEventHandler"/>
+        </implementation>
+    </component>
 </components>
