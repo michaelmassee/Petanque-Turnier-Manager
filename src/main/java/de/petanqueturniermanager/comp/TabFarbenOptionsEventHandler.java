@@ -42,10 +42,11 @@ import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterProperti
  * Event-Handler fuer die Tab-Farben-Seite unter Extras -> Optionen.
  * <p>
  * Verwaltet die globalen Tab-Farben-Defaults (Sheet-Register-Farben) fuer alle Turniersysteme.
- * Layout identisch zum bestehenden Konfiguration-&gt;Farben-Dialog im Dokument
+ * Layout identisch zum dokumentweiten Konfiguration-&gt;Farben-Dialog
  * ({@code LabelPlusBackgrColorAndColorChooser}): pro Eintrag ein Name-Label, eine Farbflaeche
- * und ein Button mit dem Farbwahl-Icon. Diese Defaults koennen pro Turnier-Dokument weiterhin
- * ueber den Konfigurations-Dialog (FarbenDialog) im jeweiligen Dokument ueberschrieben werden.
+ * und ein Button mit dem Farbwahl-Icon. Tab-Farben sind ausschliesslich hier, ueber
+ * Extras -&gt; Optionen -&gt; PétTurnMngr, konfigurierbar; ein dokumentweiter Override existiert
+ * nicht (der Farben-Dialog im Dokument blendet Tab-Farb-Properties bewusst aus).
  */
 public final class TabFarbenOptionsEventHandler extends WeakBase
 		implements XServiceInfo, XContainerWindowEventHandler {
