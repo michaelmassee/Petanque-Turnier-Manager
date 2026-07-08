@@ -8,14 +8,11 @@ import java.io.IOException;
 import org.jspecify.annotations.Nullable;
 
 import com.sun.star.awt.ActionEvent;
-import com.sun.star.awt.ItemEvent;
 import com.sun.star.awt.PushButtonType;
 import com.sun.star.awt.XActionListener;
 import com.sun.star.awt.XButton;
-import com.sun.star.awt.XCheckBox;
 import com.sun.star.awt.XControlContainer;
 import com.sun.star.awt.XDialog;
-import com.sun.star.awt.XItemListener;
 import com.sun.star.awt.XRadioButton;
 import com.sun.star.awt.XTextComponent;
 import com.sun.star.awt.XToolkit;
@@ -120,8 +117,9 @@ public final class FtpServerDetailDialog extends AbstractUnoDialog {
 		label(xMSF, cont, "lblPasswort", I18n.get("ftp.server.dialog.label.passwort"), LABEL_X, y, LABEL_W, 10);
 		textFeld(xMSF, cont, "txtPasswort", vorhanden == null ? "" : vorhanden.passwort(),
 				FELD_X, y - 2, PASSWORT_FELD_W, 12, true);
-		checkbox(xMSF, cont, "chkPasswortAnzeigen", I18n.get("ftp.server.dialog.label.passwort.anzeigen"),
-				FELD_X + PASSWORT_FELD_W + 4, y - 1, FELD_W - PASSWORT_FELD_W - 4, 10, false);
+		button(xMSF, cont, "btnPasswortAnzeigen", I18n.get("ftp.server.dialog.label.passwort.anzeigen"),
+				FELD_X + PASSWORT_FELD_W + 4, y - 2, FELD_W - PASSWORT_FELD_W - 4, 12,
+				(short) PushButtonType.STANDARD_value);
 
 		y += ZEILE_H;
 		label(xMSF, cont, "lblVerzeichnis", I18n.get("ftp.server.dialog.label.verzeichnis"), LABEL_X, y, LABEL_W, 10);
@@ -139,36 +137,33 @@ public final class FtpServerDetailDialog extends AbstractUnoDialog {
 
 		registriereKlick(xcc, "btnOk", this::beimOkGeklickt);
 		registriereKlick(xcc, "btnTest", this::beimTestGeklickt);
-		registrierePasswortAnzeigenListener(xcc);
+		registriereKlick(xcc, "btnPasswortAnzeigen", () -> beimPasswortAnzeigenGeklickt(xcc));
 	}
 
-	/** Schaltet die Maskierung des Passwortfelds live um, wenn die Checkbox betätigt wird. */
-	private static void registrierePasswortAnzeigenListener(XControlContainer xcc) {
+	/**
+	 * Schaltet bei jedem Klick die Maskierung (EchoChar) des Passwortfelds um und passt das
+	 * Button-Label entsprechend an ("Anzeigen" / "Verbergen").
+	 */
+	private static void beimPasswortAnzeigenGeklickt(XControlContainer xcc) {
 		var passwortCtrl = xcc.getControl("txtPasswort");
-		var checkboxCtrl = xcc.getControl("chkPasswortAnzeigen");
-		if (passwortCtrl == null || checkboxCtrl == null) {
+		var buttonCtrl = xcc.getControl("btnPasswortAnzeigen");
+		if (passwortCtrl == null || buttonCtrl == null) {
 			return;
 		}
 		var passwortProps = Lo.qi(XPropertySet.class, passwortCtrl.getModel());
-		var checkbox = Lo.qi(XCheckBox.class, checkboxCtrl);
-		if (passwortProps == null || checkbox == null) {
+		var buttonProps = Lo.qi(XPropertySet.class, buttonCtrl.getModel());
+		if (passwortProps == null || buttonProps == null) {
 			return;
 		}
-		checkbox.addItemListener(new XItemListener() {
-			@Override
-			public void itemStateChanged(ItemEvent e) {
-				try {
-					passwortProps.setPropertyValue("EchoChar", checkbox.getState() == 1 ? (short) 0 : (short) '*');
-				} catch (Exception ex) {
-					// Anzeige-Umschaltung ist rein kosmetisch, Fehler ignorieren
-				}
-			}
-
-			@Override
-			public void disposing(EventObject e) {
-				// nichts zu tun
-			}
-		});
+		try {
+			short aktuellerEchoChar = (short) passwortProps.getPropertyValue("EchoChar");
+			boolean sichtbar = aktuellerEchoChar == 0;
+			passwortProps.setPropertyValue("EchoChar", sichtbar ? (short) '*' : (short) 0);
+			buttonProps.setPropertyValue("Label", I18n.get(
+					sichtbar ? "ftp.server.dialog.label.passwort.anzeigen" : "ftp.server.dialog.label.passwort.verbergen"));
+		} catch (Exception ex) {
+			// Anzeige-Umschaltung ist rein kosmetisch, Fehler ignorieren
+		}
 	}
 
 	private static void registriereKlick(XControlContainer xcc, String name, Runnable aktion) {
@@ -333,20 +328,6 @@ public final class FtpServerDetailDialog extends AbstractUnoDialog {
 		if (maskiert) {
 			props.setPropertyValue("EchoChar", (short) '*');
 		}
-		cont.insertByName(name, model);
-	}
-
-	private static void checkbox(XMultiServiceFactory xMSF, XNameContainer cont,
-			String name, String label, int x, int y, int w, int h, boolean gewaehlt)
-			throws com.sun.star.uno.Exception {
-		var model = xMSF.createInstance("com.sun.star.awt.UnoControlCheckBoxModel");
-		var props = Lo.qi(XPropertySet.class, model);
-		props.setPropertyValue("Label", label);
-		props.setPropertyValue("PositionX", x);
-		props.setPropertyValue("PositionY", y);
-		props.setPropertyValue("Width", w);
-		props.setPropertyValue("Height", h);
-		props.setPropertyValue("State", (short) (gewaehlt ? 1 : 0));
 		cont.insertByName(name, model);
 	}
 
