@@ -259,8 +259,20 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 		listenerContainer = container;
 	}
 
+	/**
+	 * „Beibehalten" bestaetigt nicht nur den Auto-Revert der laufenden Vorschau, sondern schreibt
+	 * den aktuellen Arbeitsstand wie bei „OK" dauerhaft in die LO-Konfiguration (Teil 4/4) – sonst
+	 * ginge die Aenderung beim Schliessen des Optionen-Dialogs ohne OK bzw. bei LO-Neustart verloren,
+	 * obwohl die Vorschau dem Benutzer bereits als final erschien.
+	 */
 	private void beibehaltenKlick() {
+		XControlContainer container = listenerContainer;
+		if (container == null) {
+			return;
+		}
+		boolean webserverAktiv = checkbox(container, CTL_WEBSERVER_AKTIV);
 		WebServerManager.get().bestaetigeCompositeViewVorschau();
+		GlobalProperties.get().speichernCompositeViews(webserverAktiv, eintraege);
 	}
 
 	// ---- Aktionen ----
