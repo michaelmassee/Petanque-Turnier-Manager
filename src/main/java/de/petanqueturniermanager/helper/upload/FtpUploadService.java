@@ -73,7 +73,8 @@ class FtpUploadService implements IUploadService {
                 throw new IOException("FTP-Verbindung abgelehnt, Antwortcode: " + client.getReplyCode());
             }
             if (!client.login(konfiguration.benutzer(), passwort)) {
-                throw new IOException("FTP-Anmeldung fehlgeschlagen für Benutzer: " + konfiguration.benutzer());
+                throw new AnmeldeFehlgeschlagenException(
+                        "FTP-Anmeldung fehlgeschlagen für Benutzer: " + konfiguration.benutzer());
             }
             return client;
         } catch (IOException e) {

@@ -66,7 +66,7 @@ class SftpUploadService implements IUploadService {
             }
             return anzahl;
         } catch (JSchException e) {
-            throw new IOException(formatiereVerbindungsfehler(e.getMessage(), konfiguration), e);
+            throw wandleJschFehlerUm(e);
         } catch (SftpException e) {
             throw new IOException("SFTP-Verzeichniswechsel fehlgeschlagen: " + e.getMessage(), e);
         } finally {
@@ -80,10 +80,21 @@ class SftpUploadService implements IUploadService {
         try {
             session = verbinde(passwort);
         } catch (JSchException e) {
-            throw new IOException(formatiereVerbindungsfehler(e.getMessage(), konfiguration), e);
+            throw wandleJschFehlerUm(e);
         } finally {
             trenneVerbindung(session, null);
         }
+    }
+
+    private IOException wandleJschFehlerUm(JSchException e) {
+        String meldung = formatiereVerbindungsfehler(e.getMessage(), konfiguration);
+        return istAuthFehler(e.getMessage())
+                ? new AnmeldeFehlgeschlagenException(meldung, e)
+                : new IOException(meldung, e);
+    }
+
+    static boolean istAuthFehler(String meldung) {
+        return meldung != null && (meldung.contains("Auth fail") || meldung.contains("Auth cancel"));
     }
 
     private Session verbinde(String passwort) throws IOException, JSchException {

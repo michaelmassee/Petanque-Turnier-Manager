@@ -89,6 +89,14 @@ class SftpUploadServiceTest {
     }
 
     @Test
+    void istAuthFehlerErkenntAuthFailUndAuthCancel() {
+        assertThat(SftpUploadService.istAuthFehler("Auth fail")).isTrue();
+        assertThat(SftpUploadService.istAuthFehler("Auth cancel")).isTrue();
+        assertThat(SftpUploadService.istAuthFehler("Session.connect: timeout")).isFalse();
+        assertThat(SftpUploadService.istAuthFehler(null)).isFalse();
+    }
+
+    @Test
     void userInfoLiefertGesetztesPasswortFuerJschCallback() {
         var ws = mock(WorkingSpreadsheet.class);
         var userInfo = new SftpHostKeyUserInfo(ws);

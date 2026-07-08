@@ -114,8 +114,7 @@ public abstract class AbstractFtpUpload extends SheetRunner {
     }
 
     private boolean istAnmeldefehler(IOException e) {
-        String meldung = e.getMessage();
-        return meldung != null && (meldung.contains("Auth fail") || meldung.contains("Auth cancel"));
+        return e instanceof AnmeldeFehlgeschlagenException;
     }
 
     @Override
