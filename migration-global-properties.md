@@ -2,7 +2,7 @@ Noch gespeichert in GlobalProperties
 
 - Plugin-/Optionswerte: autosave, backup, newversioncheck, prozessbox.automatisch.anzeigen, prozessbox.automatisch.schliessen, performance.logging, loglevel
     - Primär über LibreOffice-Konfiguration, Fallback Legacy-Datei.
-    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java:851 (speichern), src/main/java/de/petanqueturniermanager/comp/LibreOfficePluginOptionenSpeicher.java:74
+    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java:874 (speichern), src/main/java/de/petanqueturniermanager/comp/LibreOfficePluginOptionenSpeicher.java:74
 
 - Webserver-Regie:
     - Primär über LibreOffice-Konfiguration in der Node WebserverRegie.
@@ -20,11 +20,11 @@ Noch gespeichert in GlobalProperties
     - startseite_port
     - startseite_aktiv
     - startseite_zoom
-    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java:547 (getStartseitePort), :563 (speichernStartseite)
+    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java:570 (getStartseitePort), :586 (speichernStartseite)
 
 - Startup-Modus:
     - startup.turnier.modus
-    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java:589
+    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java:613
 
 - Composite-Webserver-Views:
     - webserver_aktiv
@@ -33,16 +33,16 @@ Noch gespeichert in GlobalProperties
     - pro Panel: _typ, _sheet oder _url, _zoom, _sichtbarer_tabellenanteil, _halign, _valign, _blattname
     - Rand-Properties (Gesamtrahmen: Dicke/Art/Farbe/Transparenz/Animation) werden nur bei Abweichung vom Default (`RandKonfiguration.KEINER`) geschrieben (migrationssicher für Alt-Configs).
     - Verwaltung jetzt direkt auf der eigenen LibreOffice-Optionsseite Extras > Optionen > PétTurnMngr > Composite Views (kein separater `CompositeViewListeDialog` mehr); Detail-Konfiguration je Zeile über `CompositeViewDetailDialog`, "Übernehmen" persistiert sofort und benachrichtigt den laufenden Webserver live.
-    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java:609 (getCompositeViewEintraege), :753 (speichernCompositeViews); src/main/java/de/petanqueturniermanager/webserver/RandKonfiguration.java; src/main/java/de/petanqueturniermanager/comp/CompositeViewsOptionsEventHandler.java
+    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java:632 (getCompositeViewEintraege), :776 (speichernCompositeViews); src/main/java/de/petanqueturniermanager/webserver/RandKonfiguration.java; src/main/java/de/petanqueturniermanager/comp/CompositeViewsOptionsEventHandler.java
 
 - Upload-Passwörter pro Host:
     - upload.passwort.<host>
-    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java:1094
+    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java:1052
 
 - Tab-Farben:
     - tabfarbe.<name>
     - Aktuell gibt es in GlobalProperties nur Lesen, keinen Setter. Existierende Werte bleiben aber in der Datei, weil beim Speichern die ganze propMap geschrieben wird.
-    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java:882
+    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java:905
 
 Nicht mehr regulär gespeichert
 
@@ -50,7 +50,7 @@ Nicht mehr regulär gespeichert
     - webserver_ports
     - webserver_port_*
     - webserver_sheetnamen_anzeigen
-    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java:58
+    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java:60
 
 - Webserver-Regie-Legacy-Keys werden nach erfolgreichem LO-Import entfernt:
     - webserver_regie_aktiv
