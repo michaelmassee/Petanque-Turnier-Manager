@@ -8,6 +8,7 @@ de.petanqueturniermanager.comp.PtmPublicService
 de.petanqueturniermanager.comp.PluginOptionsEventHandler
 de.petanqueturniermanager.comp.WebserverRegieOptionsEventHandler
 de.petanqueturniermanager.comp.CompositeViewsOptionsEventHandler
+de.petanqueturniermanager.comp.FtpServerOptionsEventHandler
 
 # Deactivated components (uncomment if needed)
 #de.petanqueturniermanager.addins.DoublerImpl
