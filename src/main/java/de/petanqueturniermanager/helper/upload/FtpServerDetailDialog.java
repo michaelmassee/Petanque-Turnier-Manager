@@ -11,11 +11,13 @@ import com.sun.star.awt.ActionEvent;
 import com.sun.star.awt.PushButtonType;
 import com.sun.star.awt.XActionListener;
 import com.sun.star.awt.XButton;
+import com.sun.star.awt.XControl;
 import com.sun.star.awt.XControlContainer;
 import com.sun.star.awt.XDialog;
 import com.sun.star.awt.XRadioButton;
 import com.sun.star.awt.XTextComponent;
 import com.sun.star.awt.XToolkit;
+import com.sun.star.awt.XWindow;
 import com.sun.star.awt.XWindowPeer;
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.container.XNameContainer;
@@ -159,11 +161,25 @@ public final class FtpServerDetailDialog extends AbstractUnoDialog {
 			short aktuellerEchoChar = (short) passwortProps.getPropertyValue("EchoChar");
 			boolean sichtbar = aktuellerEchoChar == 0;
 			passwortProps.setPropertyValue("EchoChar", sichtbar ? (short) '*' : (short) 0);
+			erzwingeRepaint(passwortCtrl);
 			buttonProps.setPropertyValue("Label", I18n.get(
 					sichtbar ? "ftp.server.dialog.label.passwort.anzeigen" : "ftp.server.dialog.label.passwort.verbergen"));
 		} catch (Exception ex) {
 			// Anzeige-Umschaltung ist rein kosmetisch, Fehler ignorieren
 		}
+	}
+
+	/**
+	 * vcl {@code Edit::SetEchoChar()} invalidiert das Control nicht (LO-Bug) – ein Sichtbarkeits-Toggle
+	 * des Peers erzwingt das nötige Repaint, sonst bleibt die alte Maskierung optisch sichtbar.
+	 */
+	private static void erzwingeRepaint(XControl ctrl) {
+		var fenster = Lo.qi(XWindow.class, ctrl.getPeer());
+		if (fenster == null) {
+			return;
+		}
+		fenster.setVisible(false);
+		fenster.setVisible(true);
 	}
 
 	private static void registriereKlick(XControlContainer xcc, String name, Runnable aktion) {
