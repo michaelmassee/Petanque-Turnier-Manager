@@ -1468,17 +1468,6 @@ public class GlobalProperties {
 	}
 
 	/**
-	 * Aktualisiert Composite View-Einträge sowie das globale Webserver-Aktiv-Flag ausschließlich
-	 * in-memory ({@link #propMap}) – <b>kein</b> XCU-Commit, keine Legacy-Datei. Für die temporäre
-	 * Live-Vorschau des „Anwenden"-Buttons; die dauerhafte Persistierung übernimmt
-	 * {@link #speichernCompositeViews(boolean, List)}.
-	 */
-	public void wendeCompositeViewsAn(boolean aktiv, List<CompositeViewEintragRoh> eintraege) {
-		var normalisierteEintraege = eintraege == null ? List.<CompositeViewEintragRoh>of() : eintraege;
-		compositeViewsFlatInMap(aktiv, normalisierteEintraege);
-	}
-
-	/**
 	 * Speichert alle Composite View-Einträge sowie das globale Webserver-Aktiv-Flag.
 	 */
 	public void speichernCompositeViews(boolean aktiv, List<CompositeViewEintragRoh> eintraege) {

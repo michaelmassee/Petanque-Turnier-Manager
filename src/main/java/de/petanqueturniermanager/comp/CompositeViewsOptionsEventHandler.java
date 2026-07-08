@@ -26,8 +26,6 @@ import com.sun.star.awt.XWindowPeer;
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.lang.EventObject;
 import com.sun.star.lang.WrappedTargetException;
-import com.sun.star.lang.XComponent;
-import com.sun.star.lang.XEventListener;
 import com.sun.star.lang.XServiceInfo;
 import com.sun.star.lang.XSingleComponentFactory;
 import com.sun.star.lib.uno.helper.Factory;
@@ -41,7 +39,6 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.GlobalProperties.CompositeViewEintragRoh;
 import de.petanqueturniermanager.comp.turnierevent.OnProperiesChangedEvent;
 import de.petanqueturniermanager.comp.turnierevent.TurnierEventType;
-import de.petanqueturniermanager.helper.LoMainThread;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
@@ -80,8 +77,6 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 	private static final String CTL_HINZUFUEGEN = "CompositeViewsHinzufuegen";
 	private static final String CTL_BEARBEITEN = "CompositeViewsBearbeiten";
 	private static final String CTL_LOESCHEN = "CompositeViewsLoeschen";
-	private static final String CTL_VORSCHAU_HINWEIS = "CompositeViewsVorschauHinweis";
-	private static final String CTL_VORSCHAU_BEIBEHALTEN = "CompositeViewsVorschauBeibehalten";
 
 	/** Auswaehlbare Turniersysteme des Filters (alle ausser {@link TurnierSystem#KEIN}). */
 	private static final TurnierSystem[] FILTER_SYSTEME = Arrays.stream(TurnierSystem.values())
@@ -102,16 +97,8 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 	/** Peer der Optionsseite, als Parent fuer modale Detail-Dialoge (siehe {@link #windowPeer}). */
 	private XWindowPeer pagePeer;
 
-	/**
-	 * Benachrichtigung von {@link WebServerManager} bei Anwenden/Beibehalten/Auto-Revert der
-	 * Composite-View-Vorschau (Teil 4). Feuert ggf. auf einem Hintergrund-Thread, daher zwingend
-	 * {@link LoMainThread#post} im Rumpf.
-	 */
-	private final Runnable vorschauStatusListener;
-
 	public CompositeViewsOptionsEventHandler(XComponentContext context) {
 		this.context = context;
-		this.vorschauStatusListener = () -> LoMainThread.post(context, this::aufMainThreadAktualisieren);
 		GlobalProperties.setLibreOfficeContext(context);
 	}
 
@@ -149,37 +136,23 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 			komboBoxItems = SheetResolverFactory.sheetTypenFuer(null);
 			setListItems(container, CTL_FILTER_SYSTEM, filterEintraege());
 			setSelectedPos(container, CTL_FILTER_SYSTEM, (short) 0);
-			registriereVorschauUeberwachung(window);
 		}
 		aktualisiereListe(container);
-		aktualisiereVorschauHinweis(container);
 		registriereListener(container);
 	}
 
 	private void speichereAusOberflaeche(XWindow window) {
-		XControlContainer container = container(window);
-		GlobalProperties properties = GlobalProperties.get();
-		boolean neuerWebserverAktiv = checkbox(container, CTL_WEBSERVER_AKTIV);
-
-		String fehler = validiereEintraege(properties);
-		if (fehler != null) {
-			zeigeFehler(fehler);
-			return;
-		}
-		// OK ist die staerkste Bestaetigung: ein ggf. laufender Auto-Revert der Vorschau wird verworfen,
-		// danach der aktuelle Arbeitsstand dauerhaft in die LO-Konfiguration geschrieben (Teil 2/4).
-		WebServerManager.get().bestaetigeCompositeViewVorschau();
-		properties.speichernCompositeViews(neuerWebserverAktiv, eintraege);
+		persistiereUndBenachrichtige(container(window));
 	}
 
 	/**
-	 * Wendet die aktuelle Arbeitskopie der Composite Views (und das Webserver-Aktiv-Flag) als
-	 * temporaere Vorschau an (siehe {@link WebServerManager#wendeCompositeViewVorschauAn}) – nur
-	 * in-memory, mit automatischem Revert nach Timeout. Wird nach jeder Hinzufuegen-/Bearbeiten-/
-	 * Loeschen-Aktion aufgerufen, damit bereits laufende Composite-View-Ansichten live aktualisiert
-	 * werden, ohne die dauerhafte LO-Konfiguration zu veraendern (das passiert erst bei „OK").
+	 * Persistiert die aktuelle Arbeitskopie der Composite Views (und das Webserver-Aktiv-Flag) sofort
+	 * in {@link GlobalProperties} und benachrichtigt bei tatsaechlicher Aenderung den laufenden
+	 * Webserver. Wird sowohl beim finalen „OK" der Optionsseite als auch direkt nach jeder
+	 * Hinzufuegen-/Bearbeiten-/Loeschen-Aktion aufgerufen, damit bereits laufende Composite-View-Ansichten
+	 * live aktualisiert werden.
 	 */
-	private void wendeVorschauAn(XControlContainer container) {
+	private void persistiereUndBenachrichtige(XControlContainer container) {
 		GlobalProperties properties = GlobalProperties.get();
 		boolean alterWebserverAktiv = properties.isWebserverAktiv();
 		boolean neuerWebserverAktiv = checkbox(container, CTL_WEBSERVER_AKTIV);
@@ -190,51 +163,11 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 			zeigeFehler(fehler);
 			return;
 		}
-		WebServerManager.get().wendeCompositeViewVorschauAn(neuerWebserverAktiv, eintraege);
+		properties.speichernCompositeViews(neuerWebserverAktiv, eintraege);
 		if (alterWebserverAktiv != neuerWebserverAktiv || !alteEintraege.equals(eintraege)) {
+			WebServerManager.get().konfigurationGeaendert();
 			benachrichtigeCompositeViewKonfigurationGeaendert();
 		}
-	}
-
-	/**
-	 * Registriert einmalig (pro Options-Seiten-Sitzung) den Status-Listener bei {@link WebServerManager}
-	 * sowie einen Dispose-Listener auf das Seiten-Fenster: LO liefert fuer
-	 * {@link XContainerWindowEventHandler} selbst keinen Lifecycle-Hook beim Schliessen des
-	 * Optionen-Dialogs (weder OK/Abbrechen noch X-Button) – das Seiten-Fenster wird aber nachweislich
-	 * disposed, sobald die Seite zerstoert wird. Darueber wird der Status-Listener zuverlaessig wieder
-	 * abgemeldet und ein Leak des {@link WebServerManager}-Singletons vermieden.
-	 */
-	private void registriereVorschauUeberwachung(XWindow window) {
-		WebServerManager.get().addStatusListener(vorschauStatusListener);
-		XComponent windowComponent = UnoRuntime.queryInterface(XComponent.class, window);
-		if (windowComponent != null) {
-			windowComponent.addEventListener(new XEventListener() {
-				@Override
-				public void disposing(EventObject event) {
-					WebServerManager.get().removeStatusListener(vorschauStatusListener);
-				}
-			});
-		}
-	}
-
-	/** Läuft auf dem LO-Main-Thread (via {@link #vorschauStatusListener}); aktualisiert Liste + Hinweis. */
-	private void aufMainThreadAktualisieren() {
-		XControlContainer container = listenerContainer;
-		if (container == null) {
-			return;
-		}
-		eintraege = new ArrayList<>(GlobalProperties.get().getCompositeViewEintraege());
-		setCheckbox(container, CTL_WEBSERVER_AKTIV, GlobalProperties.get().isWebserverAktiv());
-		aktualisiereListe(container);
-		aktualisiereVorschauHinweis(container);
-	}
-
-	private void aktualisiereVorschauHinweis(XControlContainer container) {
-		boolean ausstehend = WebServerManager.get().isCompositeViewVorschauAusstehend();
-		setLabel(container, CTL_VORSCHAU_HINWEIS,
-				ausstehend ? I18n.get("webserver.composite.konfig.vorschau.hinweis") : "");
-		setVisible(container, CTL_VORSCHAU_HINWEIS, ausstehend);
-		setVisible(container, CTL_VORSCHAU_BEIBEHALTEN, ausstehend);
 	}
 
 	private void setzeLabels(XControlContainer container) {
@@ -245,7 +178,6 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 		setLabel(container, CTL_HINZUFUEGEN, I18n.get("webserver.composite.konfig.btn.hinzufuegen"));
 		setLabel(container, CTL_BEARBEITEN, I18n.get("webserver.composite.konfig.btn.bearbeiten"));
 		setLabel(container, CTL_LOESCHEN, I18n.get("webserver.composite.konfig.btn.loeschen"));
-		setLabel(container, CTL_VORSCHAU_BEIBEHALTEN, I18n.get("webserver.composite.konfig.vorschau.beibehalten"));
 	}
 
 	private void registriereListener(XControlContainer container) {
@@ -255,12 +187,7 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 		registriereActionListener(container, CTL_HINZUFUEGEN, () -> fuegeZeileHinzu(container));
 		registriereActionListener(container, CTL_BEARBEITEN, () -> bearbeiteZeile(container));
 		registriereActionListener(container, CTL_LOESCHEN, () -> loescheZeile(container));
-		registriereActionListener(container, CTL_VORSCHAU_BEIBEHALTEN, this::beibehaltenKlick);
 		listenerContainer = container;
-	}
-
-	private void beibehaltenKlick() {
-		WebServerManager.get().bestaetigeCompositeViewVorschau();
 	}
 
 	// ---- Aktionen ----
@@ -277,11 +204,16 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 					eintraege.set(tempIdx[0], e);
 				}
 				aktualisiereListe(container);
-				wendeVorschauAn(container);
+				persistiereUndBenachrichtige(container);
 			};
 			var detailDialog = new CompositeViewDetailDialog(
 					context, null, berechneNaechstenFreienPort(), komboBoxItems, callback, pagePeer);
-			detailDialog.zeigen();
+			var neuerEintrag = detailDialog.zeigen();
+			if (neuerEintrag != null && tempIdx[0] == -1) {
+				// OK ohne vorheriges Anwenden: normaler Add-Pfad
+				eintraege.add(neuerEintrag);
+			}
+			aktualisiereListe(container);
 		} catch (com.sun.star.uno.Exception e) {
 			logger.error("Fehler beim Hinzufügen eines Composite Views: {}", e.getMessage(), e);
 		}
@@ -299,11 +231,15 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 			Consumer<CompositeViewEintragRoh> callback = geaendert -> {
 				eintraege.set(idx, geaendert);
 				aktualisiereListe(container);
-				wendeVorschauAn(container);
+				persistiereUndBenachrichtige(container);
 			};
 			var detailDialog = new CompositeViewDetailDialog(
 					context, eintrag, eintrag.port(), komboBoxItems, callback, pagePeer);
-			detailDialog.zeigen();
+			var geaenderterEintrag = detailDialog.zeigen();
+			if (geaenderterEintrag != null) {
+				eintraege.set(idx, geaenderterEintrag); // idempotent falls Callback schon gesetzt hat
+			}
+			aktualisiereListe(container);
 		} catch (com.sun.star.uno.Exception e) {
 			logger.error("Fehler beim Bearbeiten des Composite Views: {}", e.getMessage(), e);
 		}
@@ -317,7 +253,7 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 		}
 		eintraege.remove(idx);
 		aktualisiereListe(container);
-		wendeVorschauAn(container);
+		persistiereUndBenachrichtige(container);
 	}
 
 	private void benachrichtigeCompositeViewKonfigurationGeaendert() {
@@ -446,13 +382,6 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 	private static boolean checkbox(XControlContainer container, String name) {
 		XCheckBox checkBox = control(container, name, XCheckBox.class);
 		return checkBox != null && checkBox.getState() == 1;
-	}
-
-	private static void setVisible(XControlContainer container, String name, boolean sichtbar) {
-		XWindow control = control(container, name, XWindow.class);
-		if (control != null) {
-			control.setVisible(sichtbar);
-		}
 	}
 
 	private static void setCheckbox(XControlContainer container, String name, boolean wert) {

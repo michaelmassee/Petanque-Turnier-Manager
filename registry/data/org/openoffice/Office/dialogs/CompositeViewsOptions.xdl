@@ -3,7 +3,7 @@
 <dlg:window xmlns:dlg="http://openoffice.org/2000/dialog"
     xmlns:script="http://openoffice.org/2000/script"
     dlg:id="CompositeViewsOptions"
-    dlg:left="0" dlg:top="0" dlg:width="260" dlg:height="199"
+    dlg:left="0" dlg:top="0" dlg:width="260" dlg:height="185"
     dlg:closeable="false" dlg:moveable="false" dlg:withtitlebar="false">
     <dlg:bulletinboard>
         <dlg:text dlg:id="CompositeViewsLabel" dlg:tab-index="0" dlg:left="6" dlg:top="6" dlg:width="248" dlg:height="10" dlg:value=""/>
@@ -12,10 +12,8 @@
         <dlg:menulist dlg:id="CompositeViewsFilterSystem" dlg:tab-index="3" dlg:left="60" dlg:top="34" dlg:width="120" dlg:height="14" dlg:spin="true" dlg:linecount="12"/>
         <dlg:text dlg:id="CompositeViewsBereich" dlg:tab-index="4" dlg:left="6" dlg:top="52" dlg:width="248" dlg:height="10" dlg:value=""/>
         <dlg:menulist dlg:id="CompositeViewsListe" dlg:tab-index="5" dlg:left="6" dlg:top="64" dlg:width="248" dlg:height="90" dlg:linecount="7"/>
-        <dlg:text dlg:id="CompositeViewsVorschauHinweis" dlg:tab-index="6" dlg:left="6" dlg:top="157" dlg:width="180" dlg:height="10" dlg:value=""/>
-        <dlg:button dlg:id="CompositeViewsVorschauBeibehalten" dlg:tab-index="7" dlg:left="188" dlg:top="154" dlg:width="66" dlg:height="14" dlg:value=""/>
-        <dlg:button dlg:id="CompositeViewsHinzufuegen" dlg:tab-index="8" dlg:left="6" dlg:top="172" dlg:width="78" dlg:height="14" dlg:value=""/>
-        <dlg:button dlg:id="CompositeViewsBearbeiten" dlg:tab-index="9" dlg:left="88" dlg:top="172" dlg:width="78" dlg:height="14" dlg:value=""/>
-        <dlg:button dlg:id="CompositeViewsLoeschen" dlg:tab-index="10" dlg:left="170" dlg:top="172" dlg:width="78" dlg:height="14" dlg:value=""/>
+        <dlg:button dlg:id="CompositeViewsHinzufuegen" dlg:tab-index="6" dlg:left="6" dlg:top="158" dlg:width="78" dlg:height="14" dlg:value=""/>
+        <dlg:button dlg:id="CompositeViewsBearbeiten" dlg:tab-index="7" dlg:left="88" dlg:top="158" dlg:width="78" dlg:height="14" dlg:value=""/>
+        <dlg:button dlg:id="CompositeViewsLoeschen" dlg:tab-index="8" dlg:left="170" dlg:top="158" dlg:width="78" dlg:height="14" dlg:value=""/>
     </dlg:bulletinboard>
 </dlg:window>

@@ -81,8 +81,10 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
     private static final int FOOTER_Y = 328;
     private static final int UEBERNEHMEN_X = 155;
     private static final int UEBERNEHMEN_W = 75;
-    private static final int SCHLIESSEN_X = 235;
-    private static final int SCHLIESSEN_W = 180;
+    private static final int OK_X = 235;
+    private static final int OK_W = 50;
+    private static final int ABBRECHEN_X = 290;
+    private static final int ABBRECHEN_W = 125;
 
     // ---- Rand-Zeile: X-Positionen ----
     private static final int RAND_LBL_X = 5;
@@ -314,11 +316,13 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
 
         erstelleRandZeile();
 
-        // Übernehmen (temporäre Vorschau, Dialog bleibt offen) / Schließen (reines Fenster-Schließen)
+        // Übernehmen / OK / Abbrechen
         fuegeButtonEin("btnUebernehmen", I18n.get("webserver.composite.dialog.detail.uebernehmen"),
                 UEBERNEHMEN_X, FOOTER_Y, UEBERNEHMEN_W, ZEILE_H, (short) PushButtonType.STANDARD_value);
-        fuegeButtonEin("btnSchliessen", I18n.get("dialog.schliessen"), SCHLIESSEN_X, FOOTER_Y, SCHLIESSEN_W, ZEILE_H, (short) PushButtonType.CANCEL_value);
+        fuegeButtonEin("btnOk", I18n.get("dialog.ok"), OK_X, FOOTER_Y, OK_W, ZEILE_H, (short) PushButtonType.STANDARD_value);
+        fuegeButtonEin("btnAbbrechen", I18n.get("dialog.abbrechen"), ABBRECHEN_X, FOOTER_Y, ABBRECHEN_W, ZEILE_H, (short) PushButtonType.CANCEL_value);
         registriereActionListenerStatisch("btnUebernehmen", this::beimUebernehmenKlick);
+        registriereActionListenerStatisch("btnOk", this::beimOkKlick);
     }
 
     /**
@@ -600,19 +604,12 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         }
     }
 
-    // ---- Übernehmen-Klick ----
+    // ---- Übernehmen / OK-Klick ----
 
-    /**
-     * Validiert, baut den Eintrag und ruft {@link #anwendenCallback} (temporäre Vorschau + Update der
-     * Arbeitskopie der Optionsseite). Der Dialog bleibt offen; „Schließen" (siehe
-     * {@code erstelleStatischeControls}, {@code PushButtonType.CANCEL_value}) beendet ihn ohne eigene
-     * Wirkung – wurde nie „Anwenden" geklickt, bleibt {@link #ergebnis} {@code null}.
-     */
     private void beimUebernehmenKlick() {
         speicherePanelKonfiguration();
         try {
             var eintrag = validiereUndBaue();
-            ergebnis = eintrag;
             if (anwendenCallback != null) {
                 anwendenCallback.accept(eintrag);
             }
@@ -623,6 +620,22 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
                     .show();
         }
         // Dialog bleibt offen
+    }
+
+    private void beimOkKlick() {
+        speicherePanelKonfiguration();
+        try {
+            ergebnis = validiereUndBaue();
+            if (anwendenCallback != null) {
+                anwendenCallback.accept(ergebnis);
+            }
+            xDialog.endExecute();
+        } catch (UngueltigeEingabeException e) {
+            MessageBox.from(xContext, MessageBoxTypeEnum.ERROR_OK)
+                    .caption(I18n.get("webserver.composite.konfig.fehler.titel"))
+                    .message(e.getMessage())
+                    .show();
+        }
     }
 
     private void speicherePanelKonfiguration() {
