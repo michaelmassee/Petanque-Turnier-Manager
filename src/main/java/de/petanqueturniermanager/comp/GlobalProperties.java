@@ -172,6 +172,7 @@ public class GlobalProperties {
 	private static final ReentrantLock fileLock = new ReentrantLock();
 	private static volatile XComponentContext libreOfficeContext;
 	private static volatile boolean webserverRegieInLibreOffice = false;
+	private static volatile boolean pluginOptionenInLibreOffice = false;
 
 	private static final String TABFARBE_PRAEFIX = "tabfarbe.";
 	private static final Gson GSON = new GsonBuilder().create();
@@ -441,7 +442,7 @@ public class GlobalProperties {
 
 			Properties props = new Properties();
 			for (var e : propMap.entrySet()) {
-				if (webserverRegieInLibreOffice && istWebserverRegieLegacyKey(e.getKey())) {
+				if (istBereitsInLibreOfficeGespeichert(e.getKey())) {
 					continue;
 				}
 				props.setProperty(e.getKey(), e.getValue());
@@ -462,8 +463,21 @@ public class GlobalProperties {
 		}
 	}
 
-	// Ruft bewusst noch @Deprecated-Legacy-Import-Methoden auf (Speicher + pluginOptionenAusMap());
-	// kann entfernt werden, sobald der einmalige Import als abgeschlossen gilt.
+	/**
+	 * @deprecated Nur solange relevant, wie {@link #speichernDatei()} bereits nach LibreOffice
+	 *             migrierte Legacy-Schlüssel beim Schreiben der Properties-Datei überspringen muss;
+	 *             kann mit dem restlichen Legacy-Import-Mechanismus entfernt werden.
+	 */
+	@Deprecated(forRemoval = true)
+	@SuppressWarnings({ "deprecation", "removal" })
+	private static boolean istBereitsInLibreOfficeGespeichert(String key) {
+		return (webserverRegieInLibreOffice && istWebserverRegieLegacyKey(key))
+				|| (pluginOptionenInLibreOffice && istPluginOptionenLegacyKey(key));
+	}
+
+	// Ruft bewusst noch @Deprecated-Legacy-Import-Methoden auf (Speicher + pluginOptionenAusMap()
+	// + bereinigeLegacyPluginOptionenProperties()); kann entfernt werden, sobald der einmalige Import
+	// als abgeschlossen gilt.
 	@SuppressWarnings({ "deprecation", "removal" })
 	private void ladePluginOptionenAusLibreOffice() {
 		XComponentContext context = libreOfficeContext;
@@ -474,9 +488,13 @@ public class GlobalProperties {
 			var speicher = new LibreOfficePluginOptionenSpeicher(context);
 			if (!speicher.istLegacyImportErledigt()) {
 				speicher.importiereLegacy(pluginOptionenAusMap());
+				setPluginOptionenInLibreOffice(true);
+				bereinigeLegacyPluginOptionenProperties();
 			}
 			pluginOptionenInMap(speicher.laden());
+			setPluginOptionenInLibreOffice(true);
 		} catch (IllegalStateException e) {
+			setPluginOptionenInLibreOffice(false);
 			logger.warn("LibreOffice-Konfiguration nicht verfügbar, verwende Legacy-Properties", e);
 		}
 	}
@@ -610,6 +628,47 @@ public class GlobalProperties {
 
 	private static void setWebserverRegieInLibreOffice(boolean wert) {
 		webserverRegieInLibreOffice = wert;
+	}
+
+	/**
+	 * @deprecated Cleanup-Code für den einmaligen Import der Plugin-Optionen in die LibreOffice-Konfiguration;
+	 *             kann entfernt werden, sobald davon auszugehen ist, dass keine Alt-Installation diese
+	 *             Schlüssel mehr besitzt.
+	 */
+	@Deprecated(forRemoval = true)
+	private static void bereinigeLegacyPluginOptionenProperties() {
+		boolean geaendert = false;
+		geaendert |= propMap.remove(AUTOSAVE_PROP) != null;
+		geaendert |= propMap.remove(CREATE_BACKUP_PROP) != null;
+		geaendert |= propMap.remove(NEW_VERSION_CHECK_PROP) != null;
+		geaendert |= propMap.remove(PROZESSBOX_AUTOMATISCH_ANZEIGEN_PROP) != null;
+		geaendert |= propMap.remove(PROZESSBOX_AUTOMATISCH_SCHLIESSEN_PROP) != null;
+		geaendert |= propMap.remove(PERFORMANCE_LOGGING_PROP) != null;
+		geaendert |= propMap.remove(LOG_LEVEL_PROP) != null;
+		if (geaendert) {
+			logger.info("Legacy-Plugin-Optionen-Properties entfernt");
+			speichernDatei();
+		}
+	}
+
+	/**
+	 * @deprecated Nur solange relevant, wie {@link #speichernDatei()} Legacy-Plugin-Optionen-Schlüssel
+	 *             beim Schreiben der Properties-Datei überspringen muss; kann mit dem restlichen
+	 *             Legacy-Import-Mechanismus entfernt werden.
+	 */
+	@Deprecated(forRemoval = true)
+	private static boolean istPluginOptionenLegacyKey(String key) {
+		return AUTOSAVE_PROP.equals(key)
+				|| CREATE_BACKUP_PROP.equals(key)
+				|| NEW_VERSION_CHECK_PROP.equals(key)
+				|| PROZESSBOX_AUTOMATISCH_ANZEIGEN_PROP.equals(key)
+				|| PROZESSBOX_AUTOMATISCH_SCHLIESSEN_PROP.equals(key)
+				|| PERFORMANCE_LOGGING_PROP.equals(key)
+				|| LOG_LEVEL_PROP.equals(key);
+	}
+
+	private static void setPluginOptionenInLibreOffice(boolean wert) {
+		pluginOptionenInLibreOffice = wert;
 	}
 	// ----------------------------------------------------
 	// Getter
@@ -1090,8 +1149,10 @@ public class GlobalProperties {
 			if (context != null) {
 				try {
 					new LibreOfficePluginOptionenSpeicher(context).speichern(optionen);
+					setPluginOptionenInLibreOffice(true);
 				} catch (IllegalStateException e) {
 					logger.warn("Speichern in LibreOffice-Konfiguration fehlgeschlagen, verwende Legacy-Datei", e);
+					setPluginOptionenInLibreOffice(false);
 					speichernDatei();
 				}
 			} else {
@@ -1256,5 +1317,6 @@ public class GlobalProperties {
 		propMap.clear();
 		libreOfficeContext = null;
 		setWebserverRegieInLibreOffice(false);
+		setPluginOptionenInLibreOffice(false);
 	}
 }
