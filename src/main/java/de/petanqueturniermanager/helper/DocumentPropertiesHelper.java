@@ -46,7 +46,22 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
  * https://forum.openoffice.org/en/forum/viewtopic.php?t=33455 <br>
  * <br>
  * Setzt und liest Docoment properties<br>
- *
+ * <br>
+ * <b>Sichtbarkeit in Datei → Eigenschaften → Benutzerdefiniert ist zeitpunktabhängig:</b>
+ * {@link #insertStringPropertyIfNotExist} legt neue Properties mit Attribut {@code 0} an (nicht
+ * {@code PropertyAttribute.REMOVABLE}). LO filtert den Custom-Properties-Dialog auf genau dieses Flag
+ * (siehe LO-Quelle {@code sfx2/source/dialog/dinfdlg.cxx}, {@code SfxDocumentPropertiesPage}:
+ * „non-removable user-defined property? => ignore it"). Frisch in der laufenden Session gesetzte
+ * Properties sind daher zunächst unsichtbar. Das ODF-Format ({@code meta.xml}) kennt dieses Attribut
+ * aber gar nicht – es speichert nur Name/Typ/Wert. Beim nächsten Laden des Dokuments (Neu laden oder
+ * Schließen + Öffnen) legt {@code SfxDocumentMetaData} beim Einlesen von {@code meta:user-defined}
+ * <b>jede</b> Property unabhängig von ihrer Herkunft mit {@code PropertyAttribute.REMOVABLE} neu an
+ * (LO-Quelle {@code sfx2/source/doc/SfxDocumentMetaData.cxx}, Methode die {@code meta:user-defined}
+ * parst). Ab diesem Reload sind also auch die vom Plugin geschriebenen Properties sichtbar. Ein
+ * "gemischter" Zustand (manche sichtbar, manche nicht) entsteht dadurch schlicht danach, welche
+ * Properties schon vor dem letzten Laden/Reload in der Datei standen und welche erst in der aktuellen
+ * Session neu hinzukamen. Funktional ist das unabhängig davon immer korrekt – Prüfung im Zweifel über
+ * {@link #getStringProperty} statt über den LO-Eigenschaften-Dialog.
  */
 
 public class DocumentPropertiesHelper {
