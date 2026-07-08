@@ -31,6 +31,11 @@ final class LibreOfficePluginOptionenSpeicher {
 	private static final String PROP_PROCESSBOX_CLOSE = "ProcessBoxAutomaticallyClose";
 	private static final String PROP_PERFORMANCE_LOGGING = "PerformanceLogging";
 	private static final String PROP_LOG_LEVEL = "LogLevel";
+	/**
+	 * @deprecated Nur für den einmaligen Legacy-Import relevant; kann mit {@link #istLegacyImportErledigt()}
+	 *             und {@link #importiereLegacy(PluginOptionen)} entfernt werden.
+	 */
+	@Deprecated(forRemoval = true)
 	private static final String PROP_LEGACY_IMPORTED = "LegacyPropertiesImported";
 
 	private final XComponentContext context;
@@ -58,6 +63,11 @@ final class LibreOfficePluginOptionenSpeicher {
 		}
 	}
 
+	/**
+	 * @deprecated Nur für den einmaligen Legacy-Import relevant; kann entfernt werden, sobald
+	 *             davon auszugehen ist, dass keine Alt-Installation mehr importiert werden muss.
+	 */
+	@Deprecated(forRemoval = true)
 	boolean istLegacyImportErledigt() {
 		XPropertySet props = null;
 		try {
@@ -94,7 +104,11 @@ final class LibreOfficePluginOptionenSpeicher {
 	/**
 	 * Übernimmt die aus den Legacy-Properties gelesenen Optionen einmalig in die
 	 * LibreOffice-Konfiguration und markiert den Import als erledigt.
+	 *
+	 * @deprecated Nur für den einmaligen Legacy-Import relevant; kann entfernt werden, sobald
+	 *             davon auszugehen ist, dass keine Alt-Installation mehr importiert werden muss.
 	 */
+	@Deprecated(forRemoval = true)
 	void importiereLegacy(PluginOptionen legacyOptionen) {
 		speichern(legacyOptionen);
 	}

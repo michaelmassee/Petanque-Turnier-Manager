@@ -27,6 +27,11 @@ final class LibreOfficeWebserverRegieSpeicher {
 	private static final String PROP_ACTIVE = "Active";
 	private static final String PROP_PORT = "Port";
 	private static final String PROP_TARGETS_JSON = "TargetsJson";
+	/**
+	 * @deprecated Nur für den einmaligen Legacy-Import relevant; kann mit {@link #istLegacyImportErledigt()}
+	 *             und {@link #importiereLegacy(WebserverRegieOptionen)} entfernt werden.
+	 */
+	@Deprecated(forRemoval = true)
 	private static final String PROP_LEGACY_IMPORTED = "LegacyPropertiesImported";
 
 	private final XComponentContext context;
@@ -50,6 +55,11 @@ final class LibreOfficeWebserverRegieSpeicher {
 		}
 	}
 
+	/**
+	 * @deprecated Nur für den einmaligen Legacy-Import relevant; kann entfernt werden, sobald
+	 *             davon auszugehen ist, dass keine Alt-Installation mehr importiert werden muss.
+	 */
+	@Deprecated(forRemoval = true)
 	boolean istLegacyImportErledigt() {
 		XPropertySet props = null;
 		try {
@@ -79,6 +89,11 @@ final class LibreOfficeWebserverRegieSpeicher {
 		}
 	}
 
+	/**
+	 * @deprecated Nur für den einmaligen Legacy-Import relevant; kann entfernt werden, sobald
+	 *             davon auszugehen ist, dass keine Alt-Installation mehr importiert werden muss.
+	 */
+	@Deprecated(forRemoval = true)
 	void importiereLegacy(WebserverRegieOptionen legacyOptionen) {
 		speichern(legacyOptionen);
 	}

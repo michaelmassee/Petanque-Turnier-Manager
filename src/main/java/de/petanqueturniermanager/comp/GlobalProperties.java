@@ -57,11 +57,26 @@ public class GlobalProperties {
 	private static final String WEBSERVER_REGIE_ZIELE_PROP = "webserver_regie_ziele";
 	public static final int WEBSERVER_REGIE_DEFAULT_PORT = 9090;
 
-	/** Legacy-Property-Präfix der entfernten Einzel-Port-Konfiguration (nur für Cleanup beim Start). */
+	/**
+	 * Legacy-Property-Präfix der entfernten Einzel-Port-Konfiguration (nur für Cleanup beim Start).
+	 *
+	 * @deprecated Cleanup-Code für eine entfernte Funktion; kann in einer späteren Version entfernt werden.
+	 */
+	@Deprecated(forRemoval = true)
 	private static final String LEGACY_WEBSERVER_PORTS_PROP = "webserver_ports";
-	/** Legacy-Präfix für Einzel-Port-Einträge (nur für Cleanup beim Start). */
+	/**
+	 * Legacy-Präfix für Einzel-Port-Einträge (nur für Cleanup beim Start).
+	 *
+	 * @deprecated Cleanup-Code für eine entfernte Funktion; kann in einer späteren Version entfernt werden.
+	 */
+	@Deprecated(forRemoval = true)
 	private static final String LEGACY_WEBSERVER_PORT_PREFIX = "webserver_port_";
-	/** Legacy-Property der entfernten globalen „Blattnamen anzeigen"-Option (nur für Cleanup beim Start). */
+	/**
+	 * Legacy-Property der entfernten globalen „Blattnamen anzeigen"-Option (nur für Cleanup beim Start).
+	 *
+	 * @deprecated Cleanup-Code für eine entfernte Funktion; kann in einer späteren Version entfernt werden.
+	 */
+	@Deprecated(forRemoval = true)
 	private static final String LEGACY_WEBSERVER_SHEETNAMEN_ANZEIGEN_PROP = "webserver_sheetnamen_anzeigen";
 
 	private static final String WEBSERVER_COMPOSITE_PORTS_PROP = "webserver_composite_ports";
@@ -76,7 +91,12 @@ public class GlobalProperties {
 	private static final String WEBSERVER_COMPOSITE_PANEL_SHEET_SUFFIX = "_sheet";
 	private static final String WEBSERVER_COMPOSITE_PANEL_ZOOM_SUFFIX = "_zoom";
 	private static final String WEBSERVER_COMPOSITE_PANEL_SICHTBARER_TABELLENANTEIL_SUFFIX = "_sichtbarer_tabellenanteil";
-	/** Legacy-Suffix der entfernten boolean-Property „zentriert" (nur für Migration / Cleanup). */
+	/**
+	 * Legacy-Suffix der entfernten boolean-Property „zentriert" (nur für Migration / Cleanup).
+	 *
+	 * @deprecated Migrations-Code für ein entferntes Datenformat; kann in einer späteren Version entfernt werden.
+	 */
+	@Deprecated(forRemoval = true)
 	private static final String LEGACY_WEBSERVER_COMPOSITE_PANEL_ZENTRIERT_SUFFIX = "_zentriert";
 	private static final String WEBSERVER_COMPOSITE_PANEL_HALIGN_SUFFIX = "_halign";
 	private static final String WEBSERVER_COMPOSITE_PANEL_VALIGN_SUFFIX = "_valign";
@@ -94,6 +114,17 @@ public class GlobalProperties {
 	// FTP/SFTP-Server (zentrale Liste, primär über LibreOffice-Konfiguration)
 	private static final String FTP_SERVER_JSON_PROP = "ftp_server_liste";
 
+	/**
+	 * Legacy-Präfix des entfernten host-basierten Upload-Passwort-Caches (nur für Cleanup
+	 * beim Start). Das Passwort ist jetzt Teil von {@link FtpServerEintrag}.
+	 *
+	 * @deprecated Cleanup-Code für eine entfernte Funktion; kann entfernt werden, sobald davon
+	 *             auszugehen ist, dass keine Alt-Installation die Property-Datei mit diesem
+	 *             Präfix mehr besitzt.
+	 */
+	@Deprecated(forRemoval = true)
+	private static final String LEGACY_UPLOAD_PASSWORT_PRAEFIX = "upload.passwort.";
+
 	// Turnier-Startseite (dedizierter Webserver, läuft parallel zu den Composite-Views)
 	private static final String STARTSEITE_PORT_PROP  = "startseite_port";
 	private static final String STARTSEITE_AKTIV_PROP = "startseite_aktiv";
@@ -101,13 +132,33 @@ public class GlobalProperties {
 	public static final int STARTSEITE_DEFAULT_PORT = 9200;
 
 	// Timer (jetzt Document Properties, siehe TimerDialog) – Legacy nur für Cleanup beim Start
-	/** Legacy-Property der entfernten globalen Timer-Dauer (nur für Cleanup beim Start). */
+	/**
+	 * Legacy-Property der entfernten globalen Timer-Dauer (nur für Cleanup beim Start).
+	 *
+	 * @deprecated Cleanup-Code für eine entfernte Funktion; kann in einer späteren Version entfernt werden.
+	 */
+	@Deprecated(forRemoval = true)
 	private static final String LEGACY_TIMER_DAUER_PROP            = "timer_letzte_dauer";
-	/** Legacy-Property des entfernten globalen Timer-Ports (nur für Cleanup beim Start). */
+	/**
+	 * Legacy-Property des entfernten globalen Timer-Ports (nur für Cleanup beim Start).
+	 *
+	 * @deprecated Cleanup-Code für eine entfernte Funktion; kann in einer späteren Version entfernt werden.
+	 */
+	@Deprecated(forRemoval = true)
 	private static final String LEGACY_TIMER_PORT_PROP             = "timer_letzter_port";
-	/** Legacy-Property der entfernten globalen Timer-Bezeichnung (nur für Cleanup beim Start). */
+	/**
+	 * Legacy-Property der entfernten globalen Timer-Bezeichnung (nur für Cleanup beim Start).
+	 *
+	 * @deprecated Cleanup-Code für eine entfernte Funktion; kann in einer späteren Version entfernt werden.
+	 */
+	@Deprecated(forRemoval = true)
 	private static final String LEGACY_TIMER_BEZEICHNUNG_PROP      = "timer_letzte_bezeichnung";
-	/** Legacy-Property der entfernten globalen Timer-Hintergrundfarbe (nur für Cleanup beim Start). */
+	/**
+	 * Legacy-Property der entfernten globalen Timer-Hintergrundfarbe (nur für Cleanup beim Start).
+	 *
+	 * @deprecated Cleanup-Code für eine entfernte Funktion; kann in einer späteren Version entfernt werden.
+	 */
+	@Deprecated(forRemoval = true)
 	private static final String LEGACY_TIMER_HINTERGRUNDFARBE_PROP = "timer_hintergrundfarbe";
 
 	public static final int DEFAULT_ZOOM = 100;
@@ -255,6 +306,7 @@ public class GlobalProperties {
 		ladeFtpServerAusLibreOffice();
 		bereinigeLegacyEinzelPortProperties();
 		bereinigeLegacyTimerProperties();
+		bereinigeLegacyUploadPasswortProperties();
 		safeSetLogLevel();
 	}
 
@@ -273,7 +325,11 @@ public class GlobalProperties {
 	 * Entfernt einmalig alle Legacy-Properties der entfernten Einzel-Port-Webserver-Konfiguration
 	 * ({@code webserver_ports}, {@code webserver_port_*}) aus {@link #propMap} und persistiert,
 	 * falls etwas zu löschen war. Keine Migration – Altdaten werden stillschweigend verworfen.
+	 *
+	 * @deprecated Cleanup-Code für eine entfernte Funktion; kann entfernt werden, sobald davon
+	 *             auszugehen ist, dass keine Alt-Installation diese Schlüssel mehr besitzt.
 	 */
+	@Deprecated(forRemoval = true)
 	private static void bereinigeLegacyEinzelPortProperties() {
 		var zuLoeschen = new ArrayList<String>();
 		for (var key : propMap.keySet()) {
@@ -296,7 +352,11 @@ public class GlobalProperties {
 	 * ({@code timer_letzte_dauer}, {@code timer_letzter_port}, {@code timer_letzte_bezeichnung},
 	 * {@code timer_hintergrundfarbe}) aus {@link #propMap} und persistiert, falls etwas zu löschen
 	 * war. Keine Migration – Timer-Einstellungen liegen jetzt pro Dokument (siehe TimerDialog).
+	 *
+	 * @deprecated Cleanup-Code für eine entfernte Funktion; kann entfernt werden, sobald davon
+	 *             auszugehen ist, dass keine Alt-Installation diese Schlüssel mehr besitzt.
 	 */
+	@Deprecated(forRemoval = true)
 	private static void bereinigeLegacyTimerProperties() {
 		boolean geaendert = false;
 		geaendert |= propMap.remove(LEGACY_TIMER_DAUER_PROP) != null;
@@ -307,6 +367,31 @@ public class GlobalProperties {
 			logger.info("Legacy-Timer-Properties entfernt");
 			speichernDatei();
 		}
+	}
+
+	/**
+	 * Entfernt einmalig alle Legacy-Upload-Passwörter ({@code upload.passwort.<host>}) aus
+	 * {@link #propMap} und persistiert, falls etwas zu löschen war. Keine Migration – das
+	 * Passwort ist jetzt Teil des zentralen {@link FtpServerEintrag} (FTP-Server-Optionsseite).
+	 *
+	 * @deprecated Cleanup-Code für eine entfernte Funktion; kann entfernt werden, sobald davon
+	 *             auszugehen ist, dass keine Alt-Installation die Property-Datei mit diesen
+	 *             Schlüsseln mehr besitzt.
+	 */
+	@Deprecated(forRemoval = true)
+	private static void bereinigeLegacyUploadPasswortProperties() {
+		var zuLoeschen = new ArrayList<String>();
+		for (var key : propMap.keySet()) {
+			if (key.startsWith(LEGACY_UPLOAD_PASSWORT_PRAEFIX)) {
+				zuLoeschen.add(key);
+			}
+		}
+		if (zuLoeschen.isEmpty()) {
+			return;
+		}
+		zuLoeschen.forEach(propMap::remove);
+		logger.info("{} Legacy-Upload-Passwort-Property/-ies entfernt", zuLoeschen.size());
+		speichernDatei();
 	}
 
 	private GlobalProperties(boolean fallback) {
@@ -377,6 +462,9 @@ public class GlobalProperties {
 		}
 	}
 
+	// Ruft bewusst noch @Deprecated-Legacy-Import-Methoden auf (Speicher + pluginOptionenAusMap());
+	// kann entfernt werden, sobald der einmalige Import als abgeschlossen gilt.
+	@SuppressWarnings({ "deprecation", "removal" })
 	private void ladePluginOptionenAusLibreOffice() {
 		XComponentContext context = libreOfficeContext;
 		if (context == null) {
@@ -393,6 +481,10 @@ public class GlobalProperties {
 		}
 	}
 
+	// Ruft bewusst noch @Deprecated-Legacy-Import-Methoden auf (Speicher + webserverRegieOptionenAusMap()
+	// + bereinigeLegacyWebserverRegieProperties()); kann entfernt werden, sobald der einmalige Import
+	// als abgeschlossen gilt.
+	@SuppressWarnings({ "deprecation", "removal" })
 	private void ladeWebserverRegieAusLibreOffice() {
 		XComponentContext context = libreOfficeContext;
 		if (context == null) {
@@ -430,6 +522,12 @@ public class GlobalProperties {
 		}
 	}
 
+	/**
+	 * @deprecated Nur für den einmaligen Legacy-Import in die LibreOffice-Konfiguration
+	 *             ({@link #ladePluginOptionenAusLibreOffice()}); kann entfernt werden, sobald
+	 *             davon auszugehen ist, dass keine Alt-Installation mehr importiert werden muss.
+	 */
+	@Deprecated(forRemoval = true)
 	private PluginOptionen pluginOptionenAusMap() {
 		return new PluginOptionen(
 				getBoolean(AUTOSAVE_PROP),
@@ -457,6 +555,12 @@ public class GlobalProperties {
 		}
 	}
 
+	/**
+	 * @deprecated Nur für den einmaligen Legacy-Import in die LibreOffice-Konfiguration
+	 *             ({@link #ladeWebserverRegieAusLibreOffice()}); kann entfernt werden, sobald
+	 *             davon auszugehen ist, dass keine Alt-Installation mehr importiert werden muss.
+	 */
+	@Deprecated(forRemoval = true)
 	private WebserverRegieOptionen webserverRegieOptionenAusMap() {
 		return new WebserverRegieOptionen(
 				getBooleanMitDefault(WEBSERVER_REGIE_AKTIV_PROP, true),
@@ -475,6 +579,12 @@ public class GlobalProperties {
 		}
 	}
 
+	/**
+	 * @deprecated Cleanup-Code für den einmaligen Import der Webserver-Regie-Einstellungen in die
+	 *             LibreOffice-Konfiguration; kann entfernt werden, sobald davon auszugehen ist,
+	 *             dass keine Alt-Installation diese Schlüssel mehr besitzt.
+	 */
+	@Deprecated(forRemoval = true)
 	private static void bereinigeLegacyWebserverRegieProperties() {
 		boolean geaendert = false;
 		geaendert |= propMap.remove(WEBSERVER_REGIE_AKTIV_PROP) != null;
@@ -486,6 +596,12 @@ public class GlobalProperties {
 		}
 	}
 
+	/**
+	 * @deprecated Nur solange relevant, wie {@link #speichernDatei()} Legacy-Webserver-Regie-Schlüssel
+	 *             beim Schreiben der Properties-Datei überspringen muss; kann mit dem restlichen
+	 *             Legacy-Import-Mechanismus entfernt werden.
+	 */
+	@Deprecated(forRemoval = true)
 	private static boolean istWebserverRegieLegacyKey(String key) {
 		return WEBSERVER_REGIE_AKTIV_PROP.equals(key)
 				|| WEBSERVER_REGIE_PORT_PROP.equals(key)
