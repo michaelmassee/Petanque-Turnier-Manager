@@ -4,7 +4,9 @@
 package de.petanqueturniermanager.comp;
 
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.OptionalInt;
 
 import org.apache.logging.log4j.LogManager;
@@ -60,6 +62,7 @@ public final class TabFarbenOptionsEventHandler extends WeakBase
 	private static final String METHOD_EXTERNAL_EVENT = "external_event";
 	private static final String EVENT_INITIALIZE = "initialize";
 	private static final String EVENT_BACK = "back";
+	private static final String EVENT_OK = "ok";
 
 	private static final String CTL_LABEL = "TabFarbenLabel";
 	private static final String CTL_NAME_PRAEFIX = "TabFarbenName";
@@ -105,6 +108,9 @@ public final class TabFarbenOptionsEventHandler extends WeakBase
 	/** Peer der Optionsseite, als Parent fuer den modalen Farbwahl-Dialog. */
 	private XWindowPeer pagePeer;
 
+	/** Arbeitskopie der Tab-Farben (konfigPropKey -&gt; Farbe); {@code null} bis zum ersten Laden. */
+	private Map<String, Integer> pufferFarben;
+
 	public TabFarbenOptionsEventHandler(XComponentContext context) {
 		this.context = context;
 		GlobalProperties.setLibreOfficeContext(context);
@@ -120,6 +126,8 @@ public final class TabFarbenOptionsEventHandler extends WeakBase
 			String event = AnyConverter.toString(eventObject);
 			if (EVENT_INITIALIZE.equals(event) || EVENT_BACK.equals(event)) {
 				ladeInOberflaeche(window);
+			} else if (EVENT_OK.equals(event)) {
+				speichereAusOberflaeche();
 			}
 			return true;
 		} catch (Exception e) {
@@ -136,6 +144,13 @@ public final class TabFarbenOptionsEventHandler extends WeakBase
 	private void ladeInOberflaeche(XWindow window) {
 		XControlContainer container = container(window);
 		pagePeer = windowPeer(window);
+		if (pufferFarben == null) {
+			pufferFarben = new LinkedHashMap<>();
+			for (var eintrag : EINTRAEGE) {
+				pufferFarben.put(eintrag.konfigPropKey(),
+						GlobalProperties.get().getTabFarbe(eintrag.konfigPropKey(), eintrag.hardcodedDefault()));
+			}
+		}
 		setLabel(container, CTL_LABEL, I18n.get("tab.farben.konfig.bereich"));
 		String iconUrl = ExtensionsHelper.from(context).getImageUrlDir() + FARBWAHL_ICON;
 		for (int i = 0; i < EINTRAEGE.size(); i++) {
@@ -145,6 +160,12 @@ public final class TabFarbenOptionsEventHandler extends WeakBase
 			aktualisiereSwatch(container, i);
 		}
 		registriereListener(container);
+	}
+
+	private void speichereAusOberflaeche() {
+		if (pufferFarben != null) {
+			GlobalProperties.get().setzeTabFarben(pufferFarben);
+		}
 	}
 
 	private void registriereListener(XControlContainer container) {
@@ -162,10 +183,10 @@ public final class TabFarbenOptionsEventHandler extends WeakBase
 
 	private void farbeAendern(XControlContainer container, int index) {
 		var eintrag = EINTRAEGE.get(index);
-		int aktuelleFarbe = GlobalProperties.get().getTabFarbe(eintrag.konfigPropKey(), eintrag.hardcodedDefault());
+		int aktuelleFarbe = pufferFarben.get(eintrag.konfigPropKey());
 		OptionalInt neueFarbe = FarbwahlDialog.waehle(context, pagePeer, aktuelleFarbe);
 		if (neueFarbe.isPresent()) {
-			GlobalProperties.get().setzeTabFarbe(eintrag.konfigPropKey(), neueFarbe.getAsInt());
+			pufferFarben.put(eintrag.konfigPropKey(), neueFarbe.getAsInt());
 			aktualisiereSwatch(container, index);
 		}
 	}
@@ -174,7 +195,7 @@ public final class TabFarbenOptionsEventHandler extends WeakBase
 
 	private void aktualisiereSwatch(XControlContainer container, int index) {
 		var eintrag = EINTRAEGE.get(index);
-		int farbe = GlobalProperties.get().getTabFarbe(eintrag.konfigPropKey(), eintrag.hardcodedDefault());
+		int farbe = pufferFarben.get(eintrag.konfigPropKey());
 		setBackgroundColor(container, CTL_SWATCH_PRAEFIX + (index + 1), farbe);
 	}
 

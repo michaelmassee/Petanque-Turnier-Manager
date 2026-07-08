@@ -1550,31 +1550,31 @@ public class GlobalProperties {
 	}
 
 	/**
-	 * Setzt einen einzelnen globalen Tab-Farben-Default und persistiert ihn in der
-	 * LibreOffice-Konfiguration. Ohne LO-Kontext ist dies ein No-Op (die Options-Seite kann
-	 * ohnehin nur innerhalb von LibreOffice geöffnet werden).
+	 * Setzt mehrere globale Tab-Farben-Defaults in einem Rutsch und persistiert sie mit einem
+	 * einzigen Commit in der LibreOffice-Konfiguration. Ohne LO-Kontext ist dies ein No-Op (die
+	 * Options-Seite kann ohnehin nur innerhalb von LibreOffice geöffnet werden).
 	 *
-	 * @param konfigPropKey Config-Property-Key, z.B. "Tab-Farbe Meldeliste"
-	 * @param farbe         neuer Farbwert (0xRRGGBB)
+	 * @param konfigPropKeyZuFarbe Config-Property-Key (z.B. "Tab-Farbe Meldeliste") auf neuen Farbwert (0xRRGGBB)
 	 */
-	public void setzeTabFarbe(String konfigPropKey, int farbe) {
-		String xcuPropName = TABFARBE_KEY_MAPPING.get(konfigPropKey);
-		if (xcuPropName == null) {
-			return;
-		}
+	public void setzeTabFarben(Map<String, Integer> konfigPropKeyZuFarbe) {
 		XComponentContext context = libreOfficeContext;
 		if (context == null) {
-			logger.warn("Kein LibreOffice-Kontext, Tab-Farbe für {} kann nicht gespeichert werden", konfigPropKey);
+			logger.warn("Kein LibreOffice-Kontext, Tab-Farben können nicht gespeichert werden");
 			return;
 		}
 		try {
 			var neueWerte = new HashMap<>(tabFarbenCache);
-			neueWerte.put(xcuPropName, farbe);
+			for (var eintrag : konfigPropKeyZuFarbe.entrySet()) {
+				String xcuPropName = TABFARBE_KEY_MAPPING.get(eintrag.getKey());
+				if (xcuPropName != null) {
+					neueWerte.put(xcuPropName, eintrag.getValue());
+				}
+			}
 			new LibreOfficeTabFarbenSpeicher(context).speichern(neueWerte);
 			tabFarbenCache = Map.copyOf(neueWerte);
 			tabFarbenInLibreOffice = true;
 		} catch (IllegalStateException e) {
-			logger.warn("Tab-Farbe für {} konnte nicht in LibreOffice-Konfiguration gespeichert werden", konfigPropKey, e);
+			logger.warn("Tab-Farben konnten nicht in LibreOffice-Konfiguration gespeichert werden", e);
 		}
 	}
 

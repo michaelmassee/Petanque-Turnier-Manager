@@ -144,7 +144,6 @@ public final class FtpServerOptionsEventHandler extends WeakBase
 			Consumer<FtpServerEintrag> callback = e -> {
 				eintraege.add(e);
 				aktualisiereListe(container);
-				persistiere();
 			};
 			var detailDialog = new FtpServerDetailDialog(context, null, pagePeer);
 			var neuerEintrag = detailDialog.zeigen();
@@ -169,7 +168,6 @@ public final class FtpServerOptionsEventHandler extends WeakBase
 			if (geaenderterEintrag != null) {
 				eintraege.set(idx, geaenderterEintrag);
 				aktualisiereListe(container);
-				persistiere();
 			}
 		} catch (com.sun.star.uno.Exception e) {
 			logger.error("Fehler beim Bearbeiten des FTP-Servers: {}", e.getMessage(), e);
@@ -184,7 +182,6 @@ public final class FtpServerOptionsEventHandler extends WeakBase
 		}
 		eintraege.remove(idx);
 		aktualisiereListe(container);
-		persistiere();
 	}
 
 	private void zeigeFehler(String meldung) {
