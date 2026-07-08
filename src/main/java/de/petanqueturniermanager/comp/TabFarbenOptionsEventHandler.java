@@ -120,6 +120,7 @@ public final class TabFarbenOptionsEventHandler extends WeakBase
 			}
 			return true;
 		} catch (Exception e) {
+			logger.error("TabFarbenOptionsEventHandler.callHandlerMethod: Fehler bei method={}", method, e);
 			throw new WrappedTargetException(e, method, this, e);
 		}
 	}

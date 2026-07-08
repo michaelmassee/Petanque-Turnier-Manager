@@ -26,23 +26,31 @@ class LibreOfficeOptionsPackagingTest {
 		}
 	}
 
+	/**
+	 * Jede Options-Event-Handler-Klasse MUSS in beiden Registrierungspfaden stehen:
+	 * {@code PetanqueTurnierManager.components} (moderner UNO-Mechanismus) UND
+	 * {@code RegistrationHandler.classes} ({@link RegistrationHandler#findServicesImplementationClasses()},
+	 * von {@code __getComponentFactory} genutzt). Fehlt ein Handler in Letzterer, liefert
+	 * {@code __getComponentFactory} {@code null}; LO erstellt die Optionsseite dann laut
+	 * {@code cui/source/options/treeopt.cxx} ({@code ExtensionsTabPage::CreateDialogWithHandler})
+	 * überhaupt nicht — die Seite bleibt komplett leer, ohne jede Fehlermeldung.
+	 */
 	@Test
 	void optionsEventHandlerSindRegistriert() throws Exception {
 		String components = Files.readString(Path.of("PetanqueTurnierManager.components"));
-		assertThat(components)
-				.contains("de.petanqueturniermanager.comp.PluginOptionsEventHandler")
-				.contains("de.petanqueturniermanager.PluginOptionsEventHandler")
-				.contains("de.petanqueturniermanager.comp.WebserverRegieOptionsEventHandler")
-				.contains("de.petanqueturniermanager.WebserverRegieOptionsEventHandler")
-				.contains("de.petanqueturniermanager.comp.CompositeViewsOptionsEventHandler")
-				.contains("de.petanqueturniermanager.CompositeViewsOptionsEventHandler");
-
 		String registration = Files.readString(
 				Path.of("src/main/resources/de/petanqueturniermanager/comp/RegistrationHandler.classes"));
-		assertThat(registration)
-				.contains("de.petanqueturniermanager.comp.PluginOptionsEventHandler")
-				.contains("de.petanqueturniermanager.comp.WebserverRegieOptionsEventHandler")
-				.contains("de.petanqueturniermanager.comp.CompositeViewsOptionsEventHandler");
+
+		for (String handler : List.of("PluginOptionsEventHandler", "WebserverRegieOptionsEventHandler",
+				"CompositeViewsOptionsEventHandler", "FtpServerOptionsEventHandler", "TabFarbenOptionsEventHandler")) {
+			assertThat(components)
+					.as("EventHandlerService fehlt in components: %s", handler)
+					.contains("de.petanqueturniermanager.comp." + handler)
+					.contains("de.petanqueturniermanager." + handler);
+			assertThat(registration)
+					.as("EventHandlerService fehlt in RegistrationHandler.classes: %s", handler)
+					.contains("de.petanqueturniermanager.comp." + handler);
+		}
 	}
 
 	@Test
