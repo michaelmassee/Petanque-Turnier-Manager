@@ -86,6 +86,24 @@
                         <value>de.petanqueturniermanager.FtpServerOptionsEventHandler</value>
                     </prop>
                 </node>
+                <node oor:name="de.petanqueturniermanager.options.tabfarben" oor:op="fuse">
+                    <prop oor:name="Id">
+                        <value>de.petanqueturniermanager.tabfarben</value>
+                    </prop>
+                    <prop oor:name="Label">
+                        <value xml:lang="de">Tab-Farben</value>
+                        <value xml:lang="en">Tab Colors</value>
+                        <value xml:lang="es">Colores de pestaña</value>
+                        <value xml:lang="fr">Couleurs des onglets</value>
+                        <value xml:lang="nl">Tabkleuren</value>
+                    </prop>
+                    <prop oor:name="OptionsPage">
+                        <value>%origin%/dialogs/TabFarbenOptions.xdl</value>
+                    </prop>
+                    <prop oor:name="EventHandlerService">
+                        <value>de.petanqueturniermanager.TabFarbenOptionsEventHandler</value>
+                    </prop>
+                </node>
             </node>
         </node>
     </node>

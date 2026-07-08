@@ -82,4 +82,39 @@
             <value>false</value>
         </prop>
     </node>
+    <node oor:name="TabFarben">
+        <prop oor:name="Meldeliste">
+            <value>2442461</value>
+        </prop>
+        <prop oor:name="Teilnehmer">
+            <value>10019543</value>
+        </prop>
+        <prop oor:name="Spielrunde">
+            <value>11596866</value>
+        </prop>
+        <prop oor:name="Rangliste">
+            <value>14039016</value>
+        </prop>
+        <prop oor:name="Direktvergleich">
+            <value>4379893</value>
+        </prop>
+        <prop oor:name="KoTurnierbaum">
+            <value>9109504</value>
+        </prop>
+        <prop oor:name="Cadrage">
+            <value>12657721</value>
+        </prop>
+        <prop oor:name="PouleVorrunde">
+            <value>16738591</value>
+        </prop>
+        <prop oor:name="PouleVorrundenRangliste">
+            <value>16436595</value>
+        </prop>
+        <prop oor:name="KaskadenKo">
+            <value>9109504</value>
+        </prop>
+        <prop oor:name="SupermeleeTeamPaarungen">
+            <value>16042566</value>
+        </prop>
+    </node>
 </oor:component-data>

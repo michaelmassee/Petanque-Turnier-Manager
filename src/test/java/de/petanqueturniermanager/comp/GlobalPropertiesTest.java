@@ -306,14 +306,34 @@ class GlobalPropertiesTest {
     }
 
     @Test
-    void testUngueltigeHexFarbe() throws Exception {
-        var file = tempDir.resolve("PetanqueTurnierManager.properties");
-        java.nio.file.Files.writeString(file, "tabfarbe.foo=ZZZZ\n");
-
+    void testTabFarbeOhneLibreOfficeKontextLiefertDefault() {
+        // Ohne LO-Kontext (wie in diesem Unit-Test) liefert getTabFarbe() immer defaultVal,
+        // da die globalen Tab-Farben-Defaults ausschließlich in der LO-Konfiguration liegen.
         var gp = GlobalProperties.get();
-        int farbe = gp.getTabFarbe("Tab-Farbe foo", 0xABCDEF);
+
+        int farbe = gp.getTabFarbe("Tab-Farbe Meldeliste", 0xABCDEF);
 
         assertEquals(0xABCDEF, farbe);
+    }
+
+    @Test
+    void testTabFarbenLegacyKeysWerdenBeimStartEntfernt() throws Exception {
+        var file = tempDir.resolve("PetanqueTurnierManager.properties");
+        java.nio.file.Files.writeString(file,
+                "tabfarbe.meldeliste=2544dd\n"
+                        + "tabfarbe.foo=ZZZZ\n"
+                        + "loglevel=info\n");
+
+        var gp = GlobalProperties.get();
+        assertNotNull(gp);
+        assertEquals("info", gp.getLogLevel());
+
+        // Legacy-Tab-Farben-Keys werden verworfen, nicht übernommen.
+        var inhalt = java.nio.file.Files.readString(file);
+        assertFalse(inhalt.contains("tabfarbe."));
+
+        // Ohne LO-Kontext liefert getTabFarbe() weiterhin nur den übergebenen Default.
+        assertEquals(0xABCDEF, gp.getTabFarbe("Tab-Farbe Meldeliste", 0xABCDEF));
     }
 
     @Test

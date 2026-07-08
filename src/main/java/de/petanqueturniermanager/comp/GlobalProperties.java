@@ -3,8 +3,10 @@ package de.petanqueturniermanager.comp;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
@@ -177,8 +179,32 @@ public class GlobalProperties {
 	private static volatile boolean startseiteInLibreOffice = false;
 	private static volatile boolean startupModusInLibreOffice = false;
 	private static volatile boolean compositeViewsInLibreOffice = false;
+	private static volatile boolean tabFarbenInLibreOffice = false;
+	private static volatile Map<String, Integer> tabFarbenCache = Map.of();
 
+	/**
+	 * Legacy-Präfix der Tab-Farben-Werte aus der Properties-Datei (nur für Cleanup beim Start).
+	 *
+	 * @deprecated Cleanup-Code für eine entfernte Funktion; kann entfernt werden, sobald davon
+	 *             auszugehen ist, dass keine Alt-Installation diese Schlüssel mehr besitzt.
+	 */
+	@Deprecated(forRemoval = true)
 	private static final String TABFARBE_PRAEFIX = "tabfarbe.";
+
+	/** Mapping vom Konfig-Property-Key (z.B. "Tab-Farbe Meldeliste") auf den XCU-Property-Namen. */
+	private static final Map<String, String> TABFARBE_KEY_MAPPING = Map.ofEntries(
+			Map.entry("Tab-Farbe Meldeliste", "Meldeliste"),
+			Map.entry("Tab-Farbe Teilnehmer", "Teilnehmer"),
+			Map.entry("Tab-Farbe Spielrunde", "Spielrunde"),
+			Map.entry("Tab-Farbe Rangliste", "Rangliste"),
+			Map.entry("Tab-Farbe Direktvergleich", "Direktvergleich"),
+			Map.entry("Tab-Farbe KO-Turnierbaum", "KoTurnierbaum"),
+			Map.entry("Tab-Farbe Cadrage", "Cadrage"),
+			Map.entry("Tab-Farbe Poule-Vorrunde", "PouleVorrunde"),
+			Map.entry("Tab-Farbe Poule-Vorrunden-Rangliste", "PouleVorrundenRangliste"),
+			Map.entry("Tab-Farbe Kaskaden-KO", "KaskadenKo"),
+			Map.entry("Tab-Farbe Team-Paarungen", "SupermeleeTeamPaarungen"));
+
 	private static final Gson GSON = new GsonBuilder().create();
 
 	/**
@@ -312,9 +338,11 @@ public class GlobalProperties {
 		ladeStartseiteAusLibreOffice();
 		ladeStartupModusAusLibreOffice();
 		ladeCompositeViewsAusLibreOffice();
+		ladeTabFarbenAusLibreOffice();
 		bereinigeLegacyEinzelPortProperties();
 		bereinigeLegacyTimerProperties();
 		bereinigeLegacyUploadPasswortProperties();
+		bereinigeLegacyTabFarbenProperties();
 		safeSetLogLevel();
 	}
 
@@ -328,6 +356,7 @@ public class GlobalProperties {
 			lokaleInstanz.ladeStartseiteAusLibreOffice();
 			lokaleInstanz.ladeStartupModusAusLibreOffice();
 			lokaleInstanz.ladeCompositeViewsAusLibreOffice();
+			lokaleInstanz.ladeTabFarbenAusLibreOffice();
 			lokaleInstanz.safeSetLogLevel();
 		}
 	}
@@ -378,6 +407,31 @@ public class GlobalProperties {
 			logger.info("Legacy-Timer-Properties entfernt");
 			speichernDatei();
 		}
+	}
+
+	/**
+	 * Entfernt einmalig alle Legacy-Tab-Farben-Properties ({@code tabfarbe.*}) aus {@link #propMap}
+	 * und persistiert, falls etwas zu löschen war. Keine Migration – die globalen Tab-Farben-Defaults
+	 * liegen jetzt in der LibreOffice-Konfiguration (siehe {@link LibreOfficeTabFarbenSpeicher}),
+	 * Alt-Werte werden beim Umstieg bewusst verworfen.
+	 *
+	 * @deprecated Cleanup-Code für eine entfernte Funktion; kann entfernt werden, sobald davon
+	 *             auszugehen ist, dass keine Alt-Installation diese Schlüssel mehr besitzt.
+	 */
+	@Deprecated(forRemoval = true)
+	private static void bereinigeLegacyTabFarbenProperties() {
+		var zuLoeschen = new ArrayList<String>();
+		for (var key : propMap.keySet()) {
+			if (key.startsWith(TABFARBE_PRAEFIX)) {
+				zuLoeschen.add(key);
+			}
+		}
+		if (zuLoeschen.isEmpty()) {
+			return;
+		}
+		zuLoeschen.forEach(propMap::remove);
+		logger.info("{} Legacy-Tab-Farben-Property/-ies entfernt", zuLoeschen.size());
+		speichernDatei();
 	}
 
 	/**
@@ -627,6 +681,27 @@ public class GlobalProperties {
 		} catch (IllegalStateException e) {
 			setCompositeViewsInLibreOffice(false);
 			logger.warn("LibreOffice-Konfiguration für Composite-Views nicht verfügbar, verwende Legacy-Properties", e);
+		}
+	}
+
+	/**
+	 * Lädt die globalen Tab-Farben-Defaults aus der LibreOffice-Konfiguration. Kein Legacy-Import –
+	 * bestehende {@code tabfarbe.*}-Werte aus der Properties-Datei werden nicht übernommen (siehe
+	 * {@link #bereinigeLegacyTabFarbenProperties()}). Ist kein LO-Kontext vorhanden oder schlägt der
+	 * Zugriff fehl, liefert {@link #getTabFarbe(String, int)} für diese Sitzung den übergebenen
+	 * Default-Wert.
+	 */
+	private void ladeTabFarbenAusLibreOffice() {
+		XComponentContext context = libreOfficeContext;
+		if (context == null) {
+			return;
+		}
+		try {
+			tabFarbenCache = new LibreOfficeTabFarbenSpeicher(context).laden();
+			tabFarbenInLibreOffice = true;
+		} catch (IllegalStateException e) {
+			tabFarbenInLibreOffice = false;
+			logger.warn("LibreOffice-Konfiguration für Tab-Farben nicht verfügbar, verwende Hardcoded-Defaults", e);
 		}
 	}
 
@@ -1455,25 +1530,52 @@ public class GlobalProperties {
 	// Extras
 	// ----------------------------------------------------
 
+	/**
+	 * Liest den globalen Tab-Farben-Default aus der LibreOffice-Konfiguration.
+	 *
+	 * @param konfigPropKey Config-Property-Key, z.B. "Tab-Farbe Meldeliste"
+	 * @param defaultVal    Fallback, falls kein LO-Kontext verfügbar oder der Key unbekannt ist
+	 * @return gespeicherter globaler Tab-Farben-Default oder {@code defaultVal}
+	 */
 	public int getTabFarbe(String konfigPropKey, int defaultVal) {
-		try {
-			var key = toTabFarbGlobalKey(konfigPropKey);
-			var val = propMap.get(key);
-
-			if (val == null || val.isBlank()) return defaultVal;
-
-			return Integer.parseInt(val.trim(), 16);
-
-		} catch (Exception e) {
-			logger.warn("Fehler bei TabFarbe {}", konfigPropKey, e);
+		if (!tabFarbenInLibreOffice) {
 			return defaultVal;
 		}
+		String xcuPropName = TABFARBE_KEY_MAPPING.get(konfigPropKey);
+		if (xcuPropName == null) {
+			return defaultVal;
+		}
+		Integer wert = tabFarbenCache.get(xcuPropName);
+		return wert == null ? defaultVal : wert;
 	}
 
-	private static String toTabFarbGlobalKey(String konfigPropKey) {
-		return TABFARBE_PRAEFIX + konfigPropKey.toLowerCase()
-				.replace("tab-farbe ", "")
-				.replace(" ", "_");
+	/**
+	 * Setzt einen einzelnen globalen Tab-Farben-Default und persistiert ihn in der
+	 * LibreOffice-Konfiguration. Ohne LO-Kontext ist dies ein No-Op (die Options-Seite kann
+	 * ohnehin nur innerhalb von LibreOffice geöffnet werden).
+	 *
+	 * @param konfigPropKey Config-Property-Key, z.B. "Tab-Farbe Meldeliste"
+	 * @param farbe         neuer Farbwert (0xRRGGBB)
+	 */
+	public void setzeTabFarbe(String konfigPropKey, int farbe) {
+		String xcuPropName = TABFARBE_KEY_MAPPING.get(konfigPropKey);
+		if (xcuPropName == null) {
+			return;
+		}
+		XComponentContext context = libreOfficeContext;
+		if (context == null) {
+			logger.warn("Kein LibreOffice-Kontext, Tab-Farbe für {} kann nicht gespeichert werden", konfigPropKey);
+			return;
+		}
+		try {
+			var neueWerte = new HashMap<>(tabFarbenCache);
+			neueWerte.put(xcuPropName, farbe);
+			new LibreOfficeTabFarbenSpeicher(context).speichern(neueWerte);
+			tabFarbenCache = Map.copyOf(neueWerte);
+			tabFarbenInLibreOffice = true;
+		} catch (IllegalStateException e) {
+			logger.warn("Tab-Farbe für {} konnte nicht in LibreOffice-Konfiguration gespeichert werden", konfigPropKey, e);
+		}
 	}
 
 	private static void setBooleanProp(String key, boolean value) {
@@ -1607,5 +1709,7 @@ public class GlobalProperties {
 		setStartseiteInLibreOffice(false);
 		setStartupModusInLibreOffice(false);
 		setCompositeViewsInLibreOffice(false);
+		tabFarbenInLibreOffice = false;
+		tabFarbenCache = Map.of();
 	}
 }

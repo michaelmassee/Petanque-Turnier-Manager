@@ -7,19 +7,19 @@
 schrittweise durch die native LibreOffice-Konfiguration (XCU-Nodes unter Extras > Optionen > PétTurnMngr) zu
 ersetzen.
 
-## Stand: fast vollständig migriert
+## Stand: vollständig migriert
 
-Bis auf die Tab-Farben ist jeder Bereich inzwischen auf das Standard-LO-Muster umgestellt:
+Jeder Bereich ist inzwischen auf das Standard-LO-Muster umgestellt:
 
 - **Vollständig auf LO-Konfiguration umgestellt** (Legacy-Keys aktiv aus dem Datei-Schreibpfad ausgefiltert,
   sobald die Migration erfolgreich war): Webserver-Regie, Plugin-/Optionswerte, FTP-Server,
   Turnier-Startseite, Startup-Modus, Composite-Webserver-Views.
-- **Noch ausschließlich Legacy-Datei**, keine LO-Konfiguration vorgesehen: Tab-Farben (reiner Lesepfad,
-  kein Setter vorhanden).
+- **Ohne Legacy-Import auf LO-Konfiguration umgestellt** (Alt-Werte wurden beim Umstieg bewusst
+  verworfen, nicht übernommen): Tab-Farben.
 
-Die Legacy-Datei bleibt also nur noch für Tab-Farben sowie als Fallback (kein LO-Kontext, z.B. in
-Unit-Tests, oder LO-Zugriffsfehler) relevant. Einmal migrierte Alt-Keys werden beim Start einmalig aus der
-Datei entfernt (siehe „Nicht mehr regulär gespeichert" unten).
+Die Legacy-Datei bleibt nur noch als Fallback relevant (kein LO-Kontext, z.B. in Unit-Tests, oder
+LO-Zugriffsfehler). Einmal migrierte bzw. entfernte Alt-Keys werden beim Start einmalig aus der Datei
+entfernt (siehe „Nicht mehr regulär gespeichert" unten).
 
 ### Wichtig: propMap ist ein Vollständig-Mirror, Filterung läuft pro Bereich
 
@@ -41,13 +41,6 @@ Composite-Views werden dabei — wie FTP-Server und Webserver-Regie zuvor — al
 in der LO-Konfiguration abgelegt, nicht als verschachtelte XCU-Sets. Intern bleiben die Flat-Keys in der
 `propMap` (für Legacy-Fallback und den bestehenden `getCompositeViewEintraege()`-Lesepfad) unverändert
 erhalten – `compositeViewsFlatInMap(...)` befüllt sie sowohl beim Speichern als auch beim Laden aus LO.
-
-## Noch (physisch) in PetanqueTurnierManager.properties gespeichert
-
-- Tab-Farben:
-    - tabfarbe.<name>
-    - Keine LO-Konfiguration vorgesehen, ausschließlich Legacy-Datei. Aktuell gibt es in GlobalProperties nur Lesen, keinen Setter. Existierende Werte bleiben aber in der Datei, weil beim Speichern die ganze propMap geschrieben wird.
-    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java:1458 (getTabFarbe)
 
 ## Nicht mehr in der Datei (nur noch LO-Konfiguration)
 
@@ -122,6 +115,23 @@ erhalten – `compositeViewsFlatInMap(...)` befüllt sie sowohl beim Speichern a
       speichernCompositeViews, speichernWebserverAktiv, compositeViewsFlatInMap); src/main/java/de/petanqueturniermanager/comp/LibreOfficeCompositeViewsSpeicher.java;
       src/main/java/de/petanqueturniermanager/webserver/RandKonfiguration.java; src/main/java/de/petanqueturniermanager/comp/CompositeViewsOptionsEventHandler.java
 
+- Tab-Farben (globale Defaults für 11 Sheet-Register-Farben, ein Wert pro Turniersystem-Sheet-Typ):
+    - Node TabFarben, 11 int-Properties (Meldeliste, Teilnehmer, Spielrunde, Rangliste, Direktvergleich,
+      KoTurnierbaum, Cadrage, PouleVorrunde, PouleVorrundenRangliste, KaskadenKo, SupermeleeTeamPaarungen).
+      Kein LegacyPropertiesImported-Flag, da **kein Legacy-Import**: bestehende `tabfarbe.*`-Werte aus der
+      Properties-Datei wurden beim Umstieg bewusst verworfen, nicht übernommen (analog zu den Timer-Legacy-Keys
+      unten). Die neue LO-Konfiguration startet mit den bisherigen `SheetTabFarben`-Konstanten als Default.
+    - Dies ist nur Tier 2 (globaler Fallback) der dreistufigen Tab-Farben-Fallback-Kette: Document Properties
+      (pro Turnier-Dokument, unverändert über `FarbenDialog`) → LO-Konfiguration (hier beschrieben) →
+      `SheetTabFarben`-Konstanten (hardcoded, unverändert).
+    - Verwaltung auf eigener LibreOffice-Optionsseite Extras > Optionen > PétTurnMngr > Tab-Farben;
+      "Farbe ändern" öffnet den bestehenden `FarbwahlDialog` (nativer LO-ColorPicker), "Auf Standard
+      zurücksetzen" setzt die jeweilige `SheetTabFarben`-Konstante.
+    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java (getTabFarbe, setzeTabFarbe,
+      ladeTabFarbenAusLibreOffice, bereinigeLegacyTabFarbenProperties);
+      src/main/java/de/petanqueturniermanager/comp/LibreOfficeTabFarbenSpeicher.java;
+      src/main/java/de/petanqueturniermanager/comp/TabFarbenOptionsEventHandler.java
+
 ## Nicht mehr regulär gespeichert
 
 - Alte Einzel-Port-Webserver-Keys werden beim Start entfernt:
@@ -161,3 +171,8 @@ erhalten – `compositeViewsFlatInMap(...)` befüllt sie sowohl beim Speichern a
     - timer_hintergrundfarbe
     - Neue Werte liegen pro Dokument als UserDefined Document Properties (DocumentPropertiesHelper): Timer Letzte Dauer, Timer Letzter Port, Timer Letzte Bezeichnung, Timer Hintergrundfarbe.
     - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java:371 (bereinigeLegacyTimerProperties), src/main/java/de/petanqueturniermanager/timer/TimerDialog.java
+
+- Tab-Farben-Legacy-Keys werden beim Start entfernt (keine Wertübernahme):
+    - tabfarbe.* (alle Präfix-Keys)
+    - Neue Werte liegen in der LO-Konfiguration, Node TabFarben (siehe oben unter „Nicht mehr in der Datei").
+    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java (bereinigeLegacyTabFarbenProperties)

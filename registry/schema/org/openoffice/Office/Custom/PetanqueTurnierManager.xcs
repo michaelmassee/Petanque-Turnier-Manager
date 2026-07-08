@@ -129,5 +129,54 @@
                 <value>false</value>
             </prop>
         </group>
+        <group oor:name="TabFarben">
+            <info>
+                <desc>Global default tab (sheet register) colors for all tournament systems.</desc>
+            </info>
+            <prop oor:name="Meldeliste" oor:type="xs:int">
+                <info><desc>Tab color for Meldeliste sheets (all systems).</desc></info>
+                <value>2442461</value>
+            </prop>
+            <prop oor:name="Teilnehmer" oor:type="xs:int">
+                <info><desc>Tab color for Teilnehmer sheets (all systems).</desc></info>
+                <value>10019543</value>
+            </prop>
+            <prop oor:name="Spielrunde" oor:type="xs:int">
+                <info><desc>Tab color for Spielrunde/Spielplan sheets (all systems).</desc></info>
+                <value>11596866</value>
+            </prop>
+            <prop oor:name="Rangliste" oor:type="xs:int">
+                <info><desc>Tab color for Rangliste sheets (all systems).</desc></info>
+                <value>14039016</value>
+            </prop>
+            <prop oor:name="Direktvergleich" oor:type="xs:int">
+                <info><desc>Tab color for Direktvergleich sheets (all systems).</desc></info>
+                <value>4379893</value>
+            </prop>
+            <prop oor:name="KoTurnierbaum" oor:type="xs:int">
+                <info><desc>Tab color for the KO-Turnierbaum sheet.</desc></info>
+                <value>9109504</value>
+            </prop>
+            <prop oor:name="Cadrage" oor:type="xs:int">
+                <info><desc>Tab color for the Cadrage sheet (Maastrichter/Forme).</desc></info>
+                <value>12657721</value>
+            </prop>
+            <prop oor:name="PouleVorrunde" oor:type="xs:int">
+                <info><desc>Tab color for Poule-Vorrunde sheets.</desc></info>
+                <value>16738591</value>
+            </prop>
+            <prop oor:name="PouleVorrundenRangliste" oor:type="xs:int">
+                <info><desc>Tab color for the Poule-Vorrunden-Rangliste sheet.</desc></info>
+                <value>16436595</value>
+            </prop>
+            <prop oor:name="KaskadenKo" oor:type="xs:int">
+                <info><desc>Tab color for the Kaskaden-KO sheet.</desc></info>
+                <value>9109504</value>
+            </prop>
+            <prop oor:name="SupermeleeTeamPaarungen" oor:type="xs:int">
+                <info><desc>Tab color for the Supermelee Team-Paarungen sheet.</desc></info>
+                <value>16042566</value>
+            </prop>
+        </group>
     </component>
 </oor:component-schema>
