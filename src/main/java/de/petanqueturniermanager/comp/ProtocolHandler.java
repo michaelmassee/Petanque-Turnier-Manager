@@ -398,9 +398,12 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_LOGFILE_ANZEIGEN      = "logfileAnzeigen";
 	public static final String CMD_PROCESSBOX_ANZEIGEN   = "processboxAnzeigen";
 	public static final String CMD_PROJEKT_SEITE_OEFFNEN = "projekt_seite_oeffnen";
+	public static final String CMD_FEHLER_MELDEN         = "fehler_melden";
 
 	private static final String PROJEKT_SEITE_URL =
 			"https://michaelmassee.github.io/Petanque-Turnier-Manager/";
+	private static final String FEHLER_MELDEN_URL =
+			"https://github.com/michaelmassee/Petanque-Turnier-Manager/issues";
 
 	// Wiki-Beschreibung je Turniersystem ("Spielsystem-Beschreibung")
 	public static final String CMD_SUPERMELEE_WIKI    = "supermelee_wiki";
@@ -1202,6 +1205,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				break;
 			case CMD_PROJEKT_SEITE_OEFFNEN:
 				oeffneBrowserUrl(PROJEKT_SEITE_URL);
+				break;
+			case CMD_FEHLER_MELDEN:
+				oeffneBrowserUrl(FEHLER_MELDEN_URL);
 				break;
 			case CMD_SUPERMELEE_WIKI:
 			case CMD_LIGA_WIKI:
@@ -2023,7 +2029,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_DIREKT_AKTUALISIEREN,
 				 CMD_LOGFILE_ANZEIGEN,
 				 CMD_PROCESSBOX_ANZEIGEN,
-				 CMD_PROJEKT_SEITE_OEFFNEN                  -> true;
+				 CMD_PROJEKT_SEITE_OEFFNEN,
+				 CMD_FEHLER_MELDEN                          -> true;
 			case CMD_ABBRUCH                                -> false;
 			case CMD_TOOLBAR_START                          -> ts == TurnierSystem.KEIN;
 			case CMD_TOOLBAR_WEITER                         -> ts != TurnierSystem.KEIN;

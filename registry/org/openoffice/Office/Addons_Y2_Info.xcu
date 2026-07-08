@@ -141,6 +141,21 @@
 									<value>_self</value>
 								</prop>
 							</node>
+							<node oor:name="Y6J" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Fehler melden</value>
+									<value xml:lang="en">Report an issue</value>
+									<value xml:lang="es">Informar de un error</value>
+									<value xml:lang="fr">Signaler un problème</value>
+									<value xml:lang="nl">Fout melden</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:fehler_melden</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
 
 						</node>
 					</node>
