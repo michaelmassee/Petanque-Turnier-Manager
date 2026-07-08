@@ -3,12 +3,42 @@
 <dlg:window xmlns:dlg="http://openoffice.org/2000/dialog"
     xmlns:script="http://openoffice.org/2000/script"
     dlg:id="TabFarbenOptions"
-    dlg:left="0" dlg:top="0" dlg:width="260" dlg:height="185"
+    dlg:left="0" dlg:top="0" dlg:width="260" dlg:height="195"
     dlg:closeable="false" dlg:moveable="false" dlg:withtitlebar="false">
     <dlg:bulletinboard>
         <dlg:text dlg:id="TabFarbenLabel" dlg:tab-index="0" dlg:left="6" dlg:top="6" dlg:width="248" dlg:height="10" dlg:value=""/>
-        <dlg:menulist dlg:id="TabFarbenListe" dlg:tab-index="1" dlg:left="6" dlg:top="20" dlg:width="248" dlg:height="134" dlg:linecount="9"/>
-        <dlg:button dlg:id="TabFarbenAendern" dlg:tab-index="2" dlg:left="6" dlg:top="158" dlg:width="120" dlg:height="14" dlg:value=""/>
-        <dlg:button dlg:id="TabFarbenStandardisieren" dlg:tab-index="3" dlg:left="134" dlg:top="158" dlg:width="120" dlg:height="14" dlg:value=""/>
+        <dlg:text dlg:id="TabFarbenName1" dlg:tab-index="1" dlg:left="6" dlg:top="22" dlg:width="140" dlg:height="12" dlg:value=""/>
+        <dlg:text dlg:id="TabFarbenSwatch1" dlg:tab-index="2" dlg:left="150" dlg:top="22" dlg:width="60" dlg:height="12" dlg:border="1" dlg:value="" dlg:tabstop="false"/>
+        <dlg:button dlg:id="TabFarbenBtn1" dlg:tab-index="3" dlg:left="214" dlg:top="22" dlg:width="40" dlg:height="12" dlg:value=""/>
+        <dlg:text dlg:id="TabFarbenName2" dlg:tab-index="4" dlg:left="6" dlg:top="37" dlg:width="140" dlg:height="12" dlg:value=""/>
+        <dlg:text dlg:id="TabFarbenSwatch2" dlg:tab-index="5" dlg:left="150" dlg:top="37" dlg:width="60" dlg:height="12" dlg:border="1" dlg:value="" dlg:tabstop="false"/>
+        <dlg:button dlg:id="TabFarbenBtn2" dlg:tab-index="6" dlg:left="214" dlg:top="37" dlg:width="40" dlg:height="12" dlg:value=""/>
+        <dlg:text dlg:id="TabFarbenName3" dlg:tab-index="7" dlg:left="6" dlg:top="52" dlg:width="140" dlg:height="12" dlg:value=""/>
+        <dlg:text dlg:id="TabFarbenSwatch3" dlg:tab-index="8" dlg:left="150" dlg:top="52" dlg:width="60" dlg:height="12" dlg:border="1" dlg:value="" dlg:tabstop="false"/>
+        <dlg:button dlg:id="TabFarbenBtn3" dlg:tab-index="9" dlg:left="214" dlg:top="52" dlg:width="40" dlg:height="12" dlg:value=""/>
+        <dlg:text dlg:id="TabFarbenName4" dlg:tab-index="10" dlg:left="6" dlg:top="67" dlg:width="140" dlg:height="12" dlg:value=""/>
+        <dlg:text dlg:id="TabFarbenSwatch4" dlg:tab-index="11" dlg:left="150" dlg:top="67" dlg:width="60" dlg:height="12" dlg:border="1" dlg:value="" dlg:tabstop="false"/>
+        <dlg:button dlg:id="TabFarbenBtn4" dlg:tab-index="12" dlg:left="214" dlg:top="67" dlg:width="40" dlg:height="12" dlg:value=""/>
+        <dlg:text dlg:id="TabFarbenName5" dlg:tab-index="13" dlg:left="6" dlg:top="82" dlg:width="140" dlg:height="12" dlg:value=""/>
+        <dlg:text dlg:id="TabFarbenSwatch5" dlg:tab-index="14" dlg:left="150" dlg:top="82" dlg:width="60" dlg:height="12" dlg:border="1" dlg:value="" dlg:tabstop="false"/>
+        <dlg:button dlg:id="TabFarbenBtn5" dlg:tab-index="15" dlg:left="214" dlg:top="82" dlg:width="40" dlg:height="12" dlg:value=""/>
+        <dlg:text dlg:id="TabFarbenName6" dlg:tab-index="16" dlg:left="6" dlg:top="97" dlg:width="140" dlg:height="12" dlg:value=""/>
+        <dlg:text dlg:id="TabFarbenSwatch6" dlg:tab-index="17" dlg:left="150" dlg:top="97" dlg:width="60" dlg:height="12" dlg:border="1" dlg:value="" dlg:tabstop="false"/>
+        <dlg:button dlg:id="TabFarbenBtn6" dlg:tab-index="18" dlg:left="214" dlg:top="97" dlg:width="40" dlg:height="12" dlg:value=""/>
+        <dlg:text dlg:id="TabFarbenName7" dlg:tab-index="19" dlg:left="6" dlg:top="112" dlg:width="140" dlg:height="12" dlg:value=""/>
+        <dlg:text dlg:id="TabFarbenSwatch7" dlg:tab-index="20" dlg:left="150" dlg:top="112" dlg:width="60" dlg:height="12" dlg:border="1" dlg:value="" dlg:tabstop="false"/>
+        <dlg:button dlg:id="TabFarbenBtn7" dlg:tab-index="21" dlg:left="214" dlg:top="112" dlg:width="40" dlg:height="12" dlg:value=""/>
+        <dlg:text dlg:id="TabFarbenName8" dlg:tab-index="22" dlg:left="6" dlg:top="127" dlg:width="140" dlg:height="12" dlg:value=""/>
+        <dlg:text dlg:id="TabFarbenSwatch8" dlg:tab-index="23" dlg:left="150" dlg:top="127" dlg:width="60" dlg:height="12" dlg:border="1" dlg:value="" dlg:tabstop="false"/>
+        <dlg:button dlg:id="TabFarbenBtn8" dlg:tab-index="24" dlg:left="214" dlg:top="127" dlg:width="40" dlg:height="12" dlg:value=""/>
+        <dlg:text dlg:id="TabFarbenName9" dlg:tab-index="25" dlg:left="6" dlg:top="142" dlg:width="140" dlg:height="12" dlg:value=""/>
+        <dlg:text dlg:id="TabFarbenSwatch9" dlg:tab-index="26" dlg:left="150" dlg:top="142" dlg:width="60" dlg:height="12" dlg:border="1" dlg:value="" dlg:tabstop="false"/>
+        <dlg:button dlg:id="TabFarbenBtn9" dlg:tab-index="27" dlg:left="214" dlg:top="142" dlg:width="40" dlg:height="12" dlg:value=""/>
+        <dlg:text dlg:id="TabFarbenName10" dlg:tab-index="28" dlg:left="6" dlg:top="157" dlg:width="140" dlg:height="12" dlg:value=""/>
+        <dlg:text dlg:id="TabFarbenSwatch10" dlg:tab-index="29" dlg:left="150" dlg:top="157" dlg:width="60" dlg:height="12" dlg:border="1" dlg:value="" dlg:tabstop="false"/>
+        <dlg:button dlg:id="TabFarbenBtn10" dlg:tab-index="30" dlg:left="214" dlg:top="157" dlg:width="40" dlg:height="12" dlg:value=""/>
+        <dlg:text dlg:id="TabFarbenName11" dlg:tab-index="31" dlg:left="6" dlg:top="172" dlg:width="140" dlg:height="12" dlg:value=""/>
+        <dlg:text dlg:id="TabFarbenSwatch11" dlg:tab-index="32" dlg:left="150" dlg:top="172" dlg:width="60" dlg:height="12" dlg:border="1" dlg:value="" dlg:tabstop="false"/>
+        <dlg:button dlg:id="TabFarbenBtn11" dlg:tab-index="33" dlg:left="214" dlg:top="172" dlg:width="40" dlg:height="12" dlg:value=""/>
     </dlg:bulletinboard>
 </dlg:window>

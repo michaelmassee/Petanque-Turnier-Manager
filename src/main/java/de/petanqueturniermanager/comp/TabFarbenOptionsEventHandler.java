@@ -16,7 +16,6 @@ import com.sun.star.awt.XButton;
 import com.sun.star.awt.XContainerWindowEventHandler;
 import com.sun.star.awt.XControl;
 import com.sun.star.awt.XControlContainer;
-import com.sun.star.awt.XListBox;
 import com.sun.star.awt.XWindow;
 import com.sun.star.awt.XWindowPeer;
 import com.sun.star.beans.XPropertySet;
@@ -33,10 +32,9 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.basesheet.SheetTabFarben;
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
+import de.petanqueturniermanager.comp.newrelease.ExtensionsHelper;
 import de.petanqueturniermanager.helper.farbe.FarbwahlDialog;
 import de.petanqueturniermanager.helper.i18n.I18n;
-import de.petanqueturniermanager.helper.msgbox.MessageBox;
-import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.ko.konfiguration.KoPropertiesSpalte;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterPropertiesSpalte;
 
@@ -44,8 +42,10 @@ import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterProperti
  * Event-Handler fuer die Tab-Farben-Seite unter Extras -> Optionen.
  * <p>
  * Verwaltet die globalen Tab-Farben-Defaults (Sheet-Register-Farben) fuer alle Turniersysteme.
- * Diese Defaults koennen pro Turnier-Dokument weiterhin ueber den Konfigurations-Dialog
- * (FarbenDialog) im jeweiligen Dokument ueberschrieben werden.
+ * Layout identisch zum bestehenden Konfiguration-&gt;Farben-Dialog im Dokument
+ * ({@code LabelPlusBackgrColorAndColorChooser}): pro Eintrag ein Name-Label, eine Farbflaeche
+ * und ein Button mit dem Farbwahl-Icon. Diese Defaults koennen pro Turnier-Dokument weiterhin
+ * ueber den Konfigurations-Dialog (FarbenDialog) im jeweiligen Dokument ueberschrieben werden.
  */
 public final class TabFarbenOptionsEventHandler extends WeakBase
 		implements XServiceInfo, XContainerWindowEventHandler {
@@ -59,12 +59,14 @@ public final class TabFarbenOptionsEventHandler extends WeakBase
 	private static final String METHOD_EXTERNAL_EVENT = "external_event";
 	private static final String EVENT_INITIALIZE = "initialize";
 	private static final String EVENT_BACK = "back";
-	private static final String EVENT_OK = "ok";
 
 	private static final String CTL_LABEL = "TabFarbenLabel";
-	private static final String CTL_LISTE = "TabFarbenListe";
-	private static final String CTL_AENDERN = "TabFarbenAendern";
-	private static final String CTL_STANDARDISIEREN = "TabFarbenStandardisieren";
+	private static final String CTL_NAME_PRAEFIX = "TabFarbenName";
+	private static final String CTL_SWATCH_PRAEFIX = "TabFarbenSwatch";
+	private static final String CTL_BTN_PRAEFIX = "TabFarbenBtn";
+
+	/** Selbes Icon wie im dokumentweiten Konfiguration-&gt;Farben-Dialog (LabelPlusBackgrColorAndColorChooser). */
+	private static final String FARBWAHL_ICON = "konfig/colorpicker.png";
 
 	/** Konfig-Property-Key, Anzeigename-Key, hardcodierter Default. Reihenfolge = Anzeigereihenfolge. */
 	private record TabFarbenEintrag(String konfigPropKey, String nameI18nKey, int hardcodedDefault) {
@@ -134,9 +136,13 @@ public final class TabFarbenOptionsEventHandler extends WeakBase
 		XControlContainer container = container(window);
 		pagePeer = windowPeer(window);
 		setLabel(container, CTL_LABEL, I18n.get("tab.farben.konfig.bereich"));
-		setLabel(container, CTL_AENDERN, I18n.get("tab.farben.konfig.btn.aendern"));
-		setLabel(container, CTL_STANDARDISIEREN, I18n.get("tab.farben.konfig.btn.standardisieren"));
-		aktualisiereListe(container);
+		String iconUrl = ExtensionsHelper.from(context).getImageUrlDir() + FARBWAHL_ICON;
+		for (int i = 0; i < EINTRAEGE.size(); i++) {
+			int zeile = i + 1;
+			setLabel(container, CTL_NAME_PRAEFIX + zeile, I18n.get(EINTRAEGE.get(i).nameI18nKey()) + ":");
+			setImageUrl(container, CTL_BTN_PRAEFIX + zeile, iconUrl);
+			aktualisiereSwatch(container, i);
+		}
 		registriereListener(container);
 	}
 
@@ -144,63 +150,31 @@ public final class TabFarbenOptionsEventHandler extends WeakBase
 		if (listenerContainer != null && UnoRuntime.areSame(listenerContainer, container)) {
 			return;
 		}
-		registriereActionListener(container, CTL_AENDERN, () -> farbeAendern(container));
-		registriereActionListener(container, CTL_STANDARDISIEREN, () -> aufStandardZuruecksetzen(container));
+		for (int i = 0; i < EINTRAEGE.size(); i++) {
+			int index = i;
+			registriereActionListener(container, CTL_BTN_PRAEFIX + (i + 1), () -> farbeAendern(container, index));
+		}
 		listenerContainer = container;
 	}
 
 	// ---- Aktionen ----
 
-	private void farbeAendern(XControlContainer container) {
-		var eintrag = ausgewaehlterEintrag(container);
-		if (eintrag == null) {
-			return;
-		}
+	private void farbeAendern(XControlContainer container, int index) {
+		var eintrag = EINTRAEGE.get(index);
 		int aktuelleFarbe = GlobalProperties.get().getTabFarbe(eintrag.konfigPropKey(), eintrag.hardcodedDefault());
 		OptionalInt neueFarbe = FarbwahlDialog.waehle(context, pagePeer, aktuelleFarbe);
 		if (neueFarbe.isPresent()) {
 			GlobalProperties.get().setzeTabFarbe(eintrag.konfigPropKey(), neueFarbe.getAsInt());
-			aktualisiereListe(container);
+			aktualisiereSwatch(container, index);
 		}
-	}
-
-	private void aufStandardZuruecksetzen(XControlContainer container) {
-		var eintrag = ausgewaehlterEintrag(container);
-		if (eintrag == null) {
-			return;
-		}
-		GlobalProperties.get().setzeTabFarbe(eintrag.konfigPropKey(), eintrag.hardcodedDefault());
-		aktualisiereListe(container);
-	}
-
-	private TabFarbenEintrag ausgewaehlterEintrag(XControlContainer container) {
-		int idx = selectedPos(container, CTL_LISTE);
-		if (idx < 0 || idx >= EINTRAEGE.size()) {
-			zeigeFehler(I18n.get("tab.farben.konfig.fehler.keine.auswahl"));
-			return null;
-		}
-		return EINTRAEGE.get(idx);
-	}
-
-	private void zeigeFehler(String meldung) {
-		MessageBox.from(context, MessageBoxTypeEnum.ERROR_OK)
-				.caption(I18n.get("tab.farben.konfig.fehler.titel"))
-				.message(meldung)
-				.show();
 	}
 
 	// ---- Hilfsmethoden ----
 
-	private void aktualisiereListe(XControlContainer container) {
-		String[] items = EINTRAEGE.stream()
-				.map(e -> formatiereZeile(e, GlobalProperties.get().getTabFarbe(e.konfigPropKey(), e.hardcodedDefault())))
-				.toArray(String[]::new);
-		setListItems(container, CTL_LISTE, items);
-	}
-
-	private static String formatiereZeile(TabFarbenEintrag eintrag, int farbe) {
-		return I18n.get("tab.farben.konfig.liste.zeile", I18n.get(eintrag.nameI18nKey()),
-				String.format("%06X", farbe & 0xFFFFFF));
+	private void aktualisiereSwatch(XControlContainer container, int index) {
+		var eintrag = EINTRAEGE.get(index);
+		int farbe = GlobalProperties.get().getTabFarbe(eintrag.konfigPropKey(), eintrag.hardcodedDefault());
+		setBackgroundColor(container, CTL_SWATCH_PRAEFIX + (index + 1), farbe);
 	}
 
 	// ---- UNO-Control-Hilfsmethoden ----
@@ -224,33 +198,32 @@ public final class TabFarbenOptionsEventHandler extends WeakBase
 		return control == null ? null : control.getPeer();
 	}
 
-	private static short selectedPos(XControlContainer container, String name) {
-		XListBox listBox = control(container, name, XListBox.class);
-		return listBox == null ? -1 : listBox.getSelectedItemPos();
-	}
-
-	private static void setListItems(XControlContainer container, String name, String[] items) {
-		XControl control = container.getControl(name);
-		if (control == null) {
-			return;
-		}
-		XPropertySet props = UnoRuntime.queryInterface(XPropertySet.class, control.getModel());
+	private static void setBackgroundColor(XControlContainer container, String name, int farbe) {
+		XPropertySet props = modelProperties(container, name);
 		if (props == null) {
 			return;
 		}
 		try {
-			props.setPropertyValue("StringItemList", items);
+			props.setPropertyValue("BackgroundColor", farbe & 0xFFFFFF);
 		} catch (Exception e) {
-			logger.debug("StringItemList fuer Control {} konnte nicht gesetzt werden", name, e);
+			logger.debug("BackgroundColor fuer Control {} konnte nicht gesetzt werden", name, e);
+		}
+	}
+
+	private static void setImageUrl(XControlContainer container, String name, String imageUrl) {
+		XPropertySet props = modelProperties(container, name);
+		if (props == null) {
+			return;
+		}
+		try {
+			props.setPropertyValue("ImageURL", imageUrl);
+		} catch (Exception e) {
+			logger.debug("ImageURL fuer Control {} konnte nicht gesetzt werden", name, e);
 		}
 	}
 
 	private static void setLabel(XControlContainer container, String name, String label) {
-		XControl control = container.getControl(name);
-		if (control == null) {
-			return;
-		}
-		XPropertySet props = UnoRuntime.queryInterface(XPropertySet.class, control.getModel());
+		XPropertySet props = modelProperties(container, name);
 		if (props == null) {
 			return;
 		}
@@ -259,6 +232,14 @@ public final class TabFarbenOptionsEventHandler extends WeakBase
 		} catch (Exception e) {
 			logger.debug("Label fuer Control {} konnte nicht gesetzt werden", name, e);
 		}
+	}
+
+	private static XPropertySet modelProperties(XControlContainer container, String name) {
+		XControl control = container.getControl(name);
+		if (control == null) {
+			return null;
+		}
+		return UnoRuntime.queryInterface(XPropertySet.class, control.getModel());
 	}
 
 	private static void registriereActionListener(XControlContainer container, String name, Runnable aktion) {
