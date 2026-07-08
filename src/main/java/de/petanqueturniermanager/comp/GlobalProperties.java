@@ -96,11 +96,15 @@ public class GlobalProperties {
 	private static final String STARTSEITE_ZOOM_PROP  = "startseite_zoom";
 	public static final int STARTSEITE_DEFAULT_PORT = 9200;
 
-	// Timer
-	private static final String TIMER_DAUER_PROP            = "timer_letzte_dauer";
-	private static final String TIMER_PORT_PROP             = "timer_letzter_port";
-	private static final String TIMER_BEZEICHNUNG_PROP      = "timer_letzte_bezeichnung";
-	private static final String TIMER_HINTERGRUNDFARBE_PROP = "timer_hintergrundfarbe";
+	// Timer (jetzt Document Properties, siehe TimerDialog) – Legacy nur für Cleanup beim Start
+	/** Legacy-Property der entfernten globalen Timer-Dauer (nur für Cleanup beim Start). */
+	private static final String LEGACY_TIMER_DAUER_PROP            = "timer_letzte_dauer";
+	/** Legacy-Property des entfernten globalen Timer-Ports (nur für Cleanup beim Start). */
+	private static final String LEGACY_TIMER_PORT_PROP             = "timer_letzter_port";
+	/** Legacy-Property der entfernten globalen Timer-Bezeichnung (nur für Cleanup beim Start). */
+	private static final String LEGACY_TIMER_BEZEICHNUNG_PROP      = "timer_letzte_bezeichnung";
+	/** Legacy-Property der entfernten globalen Timer-Hintergrundfarbe (nur für Cleanup beim Start). */
+	private static final String LEGACY_TIMER_HINTERGRUNDFARBE_PROP = "timer_hintergrundfarbe";
 
 	public static final int DEFAULT_ZOOM = 100;
 	public static final int DEFAULT_SICHTBARER_TABELLENANTEIL = 100;
@@ -221,6 +225,7 @@ public class GlobalProperties {
 		ladePluginOptionenAusLibreOffice();
 		ladeWebserverRegieAusLibreOffice();
 		bereinigeLegacyEinzelPortProperties();
+		bereinigeLegacyTimerProperties();
 		safeSetLogLevel();
 	}
 
@@ -254,6 +259,24 @@ public class GlobalProperties {
 		zuLoeschen.forEach(propMap::remove);
 		logger.info("{} Legacy-Einzel-Port-Property/-ies entfernt", zuLoeschen.size());
 		speichernDatei();
+	}
+
+	/**
+	 * Entfernt einmalig die Legacy-Properties der entfernten globalen Timer-Einstellungen
+	 * ({@code timer_letzte_dauer}, {@code timer_letzter_port}, {@code timer_letzte_bezeichnung},
+	 * {@code timer_hintergrundfarbe}) aus {@link #propMap} und persistiert, falls etwas zu löschen
+	 * war. Keine Migration – Timer-Einstellungen liegen jetzt pro Dokument (siehe TimerDialog).
+	 */
+	private static void bereinigeLegacyTimerProperties() {
+		boolean geaendert = false;
+		geaendert |= propMap.remove(LEGACY_TIMER_DAUER_PROP) != null;
+		geaendert |= propMap.remove(LEGACY_TIMER_PORT_PROP) != null;
+		geaendert |= propMap.remove(LEGACY_TIMER_BEZEICHNUNG_PROP) != null;
+		geaendert |= propMap.remove(LEGACY_TIMER_HINTERGRUNDFARBE_PROP) != null;
+		if (geaendert) {
+			logger.info("Legacy-Timer-Properties entfernt");
+			speichernDatei();
+		}
 	}
 
 	private GlobalProperties(boolean fallback) {
@@ -1019,71 +1042,6 @@ public class GlobalProperties {
 		}
 	}
 
-
-	// ----------------------------------------------------
-	// Timer-Einstellungen
-	// ----------------------------------------------------
-
-	/** Liefert die zuletzt gespeicherte Timer-Dauer als "MM:SS"-String oder {@code defaultWert}. */
-	public String getTimerLetzteDauer(String defaultWert) {
-		var val = propMap.get(TIMER_DAUER_PROP);
-		return (val != null && !val.isBlank()) ? val.trim() : defaultWert;
-	}
-
-	/** Liefert den zuletzt gespeicherten Timer-Webserver-Port oder {@code defaultWert}. */
-	public int getTimerLetzterPort(int defaultWert) {
-		try {
-			var val = propMap.get(TIMER_PORT_PROP);
-			if (val == null || val.isBlank()) return defaultWert;
-			return Integer.parseInt(val.trim());
-		} catch (NumberFormatException e) {
-			return defaultWert;
-		}
-	}
-
-	/** Liefert die zuletzt gespeicherte Timer-Bezeichnung (kann leer sein). */
-	public String getTimerLetzteBezeichnung() {
-		var val = propMap.get(TIMER_BEZEICHNUNG_PROP);
-		return val != null ? val : "";
-	}
-
-	/**
-	 * Liefert die zuletzt gespeicherte Timer-Hintergrundfarbe als RGB-Integer.
-	 *
-	 * @param defaultWert Rückgabewert wenn kein Wert gespeichert ist
-	 * @return Farbe als RGB-Integer (z.B. {@code 0x000000} für Schwarz)
-	 */
-	public int getTimerHintergrundFarbe(int defaultWert) {
-		try {
-			var val = propMap.get(TIMER_HINTERGRUNDFARBE_PROP);
-			if (val == null || val.isBlank()) return defaultWert;
-			return Integer.parseInt(val.trim(), 16);
-		} catch (NumberFormatException e) {
-			return defaultWert;
-		}
-	}
-
-	/**
-	 * Speichert die letzten Timer-Einstellungen dauerhaft.
-	 *
-	 * @param dauer            Dauer als "MM:SS"
-	 * @param port             Webserver-Port
-	 * @param bezeichnung      optionaler Rundenname (darf null sein)
-	 * @param hintergrundFarbe Hintergrundfarbe als RGB-Integer
-	 */
-	public void speichernTimerEinstellungen(String dauer, int port, String bezeichnung, int hintergrundFarbe) {
-		if (dauer != null && !dauer.isBlank()) {
-			propMap.put(TIMER_DAUER_PROP, dauer.trim());
-		}
-		propMap.put(TIMER_PORT_PROP, String.valueOf(port));
-		if (bezeichnung != null && !bezeichnung.isBlank()) {
-			propMap.put(TIMER_BEZEICHNUNG_PROP, bezeichnung.trim());
-		} else {
-			propMap.remove(TIMER_BEZEICHNUNG_PROP);
-		}
-		propMap.put(TIMER_HINTERGRUNDFARBE_PROP, String.format("%06x", hintergrundFarbe & 0xFFFFFF));
-		speichernDatei();
-	}
 
 	// ---------------------------------------------------------------
 	// Upload-Passwort (pro Host, nicht im ODS-Dokument gespeichert)

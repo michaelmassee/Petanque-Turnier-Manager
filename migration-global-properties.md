@@ -2,7 +2,7 @@ Noch gespeichert in GlobalProperties
 
 - Plugin-/Optionswerte: autosave, backup, newversioncheck, prozessbox.automatisch.anzeigen, prozessbox.automatisch.schliessen, performance.logging, loglevel
     - Primär über LibreOffice-Konfiguration, Fallback Legacy-Datei.
-    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java:736, src/main/java/de/petanqueturniermanager/comp/LibreOfficePluginOptionenSpeicher.java:74
+    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java:851 (speichern), src/main/java/de/petanqueturniermanager/comp/LibreOfficePluginOptionenSpeicher.java:74
 
 - Webserver-Regie:
     - Primär über LibreOffice-Konfiguration in der Node WebserverRegie.
@@ -20,34 +20,29 @@ Noch gespeichert in GlobalProperties
     - startseite_port
     - startseite_aktiv
     - startseite_zoom
-    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java:467
+    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java:547 (getStartseitePort), :563 (speichernStartseite)
 
 - Startup-Modus:
     - startup.turnier.modus
-    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java:497
+    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java:589
 
 - Composite-Webserver-Views:
     - webserver_aktiv
     - webserver_composite_ports
-    - pro Port: _aktiv, _name, _zoom, _mit_header_footer, _layout, _panel_count
+    - pro Port: _aktiv, _name, _zoom, _mit_header_footer, _layout, _panel_count, _rand_dicke, _rand_art, _rand_farbe, _rand_transparenz, _rand_animation
     - pro Panel: _typ, _sheet oder _url, _zoom, _sichtbarer_tabellenanteil, _halign, _valign, _blattname
-    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java:655
-
-- Timer-Einstellungen:
-    - timer_letzte_dauer
-    - timer_letzter_port
-    - timer_letzte_bezeichnung
-    - timer_hintergrundfarbe
-    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java:911
+    - Rand-Properties (Gesamtrahmen: Dicke/Art/Farbe/Transparenz/Animation) werden nur bei Abweichung vom Default (`RandKonfiguration.KEINER`) geschrieben (migrationssicher für Alt-Configs).
+    - Verwaltung jetzt direkt auf der eigenen LibreOffice-Optionsseite Extras > Optionen > PétTurnMngr > Composite Views (kein separater `CompositeViewListeDialog` mehr); Detail-Konfiguration je Zeile über `CompositeViewDetailDialog`, "Übernehmen" persistiert sofort und benachrichtigt den laufenden Webserver live.
+    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java:609 (getCompositeViewEintraege), :753 (speichernCompositeViews); src/main/java/de/petanqueturniermanager/webserver/RandKonfiguration.java; src/main/java/de/petanqueturniermanager/comp/CompositeViewsOptionsEventHandler.java
 
 - Upload-Passwörter pro Host:
     - upload.passwort.<host>
-    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java:938
+    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java:1094
 
 - Tab-Farben:
     - tabfarbe.<name>
     - Aktuell gibt es in GlobalProperties nur Lesen, keinen Setter. Existierende Werte bleiben aber in der Datei, weil beim Speichern die ganze propMap geschrieben wird.
-    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java:767
+    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java:882
 
 Nicht mehr regulär gespeichert
 
@@ -62,3 +57,11 @@ Nicht mehr regulär gespeichert
     - webserver_regie_port
     - webserver_regie_ziele
     - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java, src/main/java/de/petanqueturniermanager/comp/LibreOfficeWebserverRegieSpeicher.java
+
+- Timer-Einstellungen-Legacy-Keys werden beim Start entfernt (keine Wertübernahme):
+    - timer_letzte_dauer
+    - timer_letzter_port
+    - timer_letzte_bezeichnung
+    - timer_hintergrundfarbe
+    - Neue Werte liegen pro Dokument als UserDefined Document Properties (DocumentPropertiesHelper): Timer Letzte Dauer, Timer Letzter Port, Timer Letzte Bezeichnung, Timer Hintergrundfarbe.
+    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java, src/main/java/de/petanqueturniermanager/timer/TimerDialog.java

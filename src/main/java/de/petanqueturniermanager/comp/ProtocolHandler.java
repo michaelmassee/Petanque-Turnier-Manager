@@ -1261,7 +1261,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	 */
 	private boolean behandleTimerBefehl(String command) throws com.sun.star.uno.Exception {
 		switch (command) {
-			case CMD_TIMER_STARTEN_DIALOG   -> new TimerDialog(xContext).zeigen();
+			case CMD_TIMER_STARTEN_DIALOG   -> new TimerDialog(erzeugeWorkingSpreadsheetFuerDispatch()).zeigen();
 			case CMD_TIMER_PAUSE_FORTSETZEN -> TimerManager.get().pauseOderFortsetzen();
 			case CMD_TIMER_STOPPEN          -> TimerManager.get().stoppen();
 			case CMD_TIMER_PLUS_MINUTE      -> TimerManager.get().zeitAnpassen(+60);

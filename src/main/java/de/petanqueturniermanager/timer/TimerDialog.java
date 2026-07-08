@@ -17,8 +17,9 @@ import com.sun.star.container.XNameContainer;
 import com.sun.star.lang.EventObject;
 import com.sun.star.lang.XMultiComponentFactory;
 import com.sun.star.lang.XMultiServiceFactory;
-import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.farbe.FarbwahlDialog;
 import de.petanqueturniermanager.helper.i18n.I18n;
@@ -31,12 +32,20 @@ import de.petanqueturniermanager.konfigdialog.AbstractUnoDialog;
  * <p>
  * Felder: Dauer (MM:SS), Bezeichnung (optional), Webserver-Port, Hintergrundfarbe.
  * Buttons: [−1 min] [+1 min] [Starten] [Abbrechen].
- * Letzte Einstellungen werden aus {@link TimerEinstellungen} vorbelegt
- * und nach dem Starten dauerhaft gespeichert.
+ * Letzte Einstellungen werden pro Dokument als UserDefined Document Properties
+ * (siehe {@link DocumentPropertiesHelper}) vorbelegt und nach dem Starten gespeichert.
  */
 public class TimerDialog extends AbstractUnoDialog {
 
     private static final Logger logger = LogManager.getLogger(TimerDialog.class);
+
+    public static final String DOC_PROP_TIMER_DAUER            = "Timer Letzte Dauer";
+    public static final String DOC_PROP_TIMER_PORT              = "Timer Letzter Port";
+    public static final String DOC_PROP_TIMER_BEZEICHNUNG       = "Timer Letzte Bezeichnung";
+    public static final String DOC_PROP_TIMER_HINTERGRUNDFARBE  = "Timer Hintergrundfarbe";
+
+    static final int DEFAULT_PORT             = 8085;
+    static final int DEFAULT_HINTERGRUNDFARBE = 0x000000;
 
     private static final int DIALOG_BREITE = 250;
     private static final int DIALOG_HOEHE  = 150;
@@ -76,11 +85,13 @@ public class TimerDialog extends AbstractUnoDialog {
     private XNameContainer cont;
     private XWindowPeer dialogPeer;
 
+    private final WorkingSpreadsheet currentSpreadsheet;
     private int hintergrundFarbeInt;
     private XPropertySet vorschauProps;
 
-    public TimerDialog(XComponentContext xContext) {
-        super(xContext);
+    public TimerDialog(WorkingSpreadsheet currentSpreadsheet) {
+        super(currentSpreadsheet.getxContext());
+        this.currentSpreadsheet = currentSpreadsheet;
     }
 
     /**
@@ -117,11 +128,14 @@ public class TimerDialog extends AbstractUnoDialog {
         this.cont = cont;
         this.xcc  = Lo.qi(XControlContainer.class, xDialog);
         this.dialogPeer = peer;
-        this.hintergrundFarbeInt = TimerEinstellungen.letzteHintergrundFarbe();
+
+        var docProps = new DocumentPropertiesHelper(currentSpreadsheet);
+        this.hintergrundFarbeInt = docProps.getIntProperty(DOC_PROP_TIMER_HINTERGRUNDFARBE, DEFAULT_HINTERGRUNDFARBE);
 
         // ── Zeile 1: Dauer ──────────────────────────────────────────────────────
         fuegeLabel("lblDauer", I18n.get("timer.dialog.dauer.label"), LBL_X, ZEILE1_Y, LBL_W, CTRL_H);
-        fuegeEdit(CTRL_DAUER, TimerEinstellungen.letzteDauer(), FIELD_X, ZEILE1_Y, DAUER_FIELD_W, CTRL_H);
+        fuegeEdit(CTRL_DAUER, docProps.getStringProperty(DOC_PROP_TIMER_DAUER, I18n.get("timer.dialog.vorbelegung.dauer")),
+                FIELD_X, ZEILE1_Y, DAUER_FIELD_W, CTRL_H);
 
         // +/- Buttons direkt neben dem Dauer-Feld
         fuegeButton("btnMinus", "-1 min", BTN_MINUS_X, BTN_PM_Y, BTN_PM_W, BTN_H, (short) 0);
@@ -132,11 +146,13 @@ public class TimerDialog extends AbstractUnoDialog {
 
         // ── Zeile 2: Bezeichnung ────────────────────────────────────────────────
         fuegeLabel("lblBezeichnung", I18n.get("timer.dialog.bezeichnung.label"), LBL_X, ZEILE2_Y, LBL_W, CTRL_H);
-        fuegeEdit(CTRL_BEZEICHNUNG, TimerEinstellungen.letzteBezeichnung(), FIELD_X, ZEILE2_Y, FIELD_W, CTRL_H);
+        fuegeEdit(CTRL_BEZEICHNUNG, docProps.getStringProperty(DOC_PROP_TIMER_BEZEICHNUNG, ""),
+                FIELD_X, ZEILE2_Y, FIELD_W, CTRL_H);
 
         // ── Zeile 3: Port ───────────────────────────────────────────────────────
         fuegeLabel("lblPort", I18n.get("timer.dialog.port.label"), LBL_X, ZEILE3_Y, LBL_W, CTRL_H);
-        fuegeEdit(CTRL_PORT, String.valueOf(TimerEinstellungen.letzterPort()), FIELD_X, ZEILE3_Y, 40, CTRL_H);
+        fuegeEdit(CTRL_PORT, String.valueOf(docProps.getIntProperty(DOC_PROP_TIMER_PORT, DEFAULT_PORT)),
+                FIELD_X, ZEILE3_Y, 40, CTRL_H);
 
         // ── Zeile 4: Hintergrundfarbe ───────────────────────────────────────────
         fuegeLabel("lblFarbe", I18n.get("timer.dialog.hintergrundfarbe.label"), LBL_X, ZEILE4_Y, LBL_W, CTRL_H);
@@ -178,7 +194,11 @@ public class TimerDialog extends AbstractUnoDialog {
             throw new IllegalArgumentException(I18n.get("timer.fehler.port.ungueltig"), e);
         }
 
-        TimerEinstellungen.speichern(dauerText.trim(), port, bezeichnung, hintergrundFarbeInt);
+        var docProps = new DocumentPropertiesHelper(currentSpreadsheet);
+        docProps.setStringProperty(DOC_PROP_TIMER_DAUER, dauerText.trim());
+        docProps.setIntProperty(DOC_PROP_TIMER_PORT, port);
+        docProps.setStringProperty(DOC_PROP_TIMER_BEZEICHNUNG, bezeichnung != null ? bezeichnung : "");
+        docProps.setIntProperty(DOC_PROP_TIMER_HINTERGRUNDFARBE, hintergrundFarbeInt);
         TimerManager.get().starten(dauerSekunden, bezeichnung, port, hintergrundFarbeInt);
         logger.info("Timer gestartet via Dialog: {} s, Port {}, Farbe #{}", dauerSekunden, port,
                 String.format("%06x", hintergrundFarbeInt & 0xFFFFFF));
