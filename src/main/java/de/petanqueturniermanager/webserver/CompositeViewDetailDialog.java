@@ -143,10 +143,17 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
     /** Anzeigemodus pro Panel (Index = Panel-ID). */
     private final List<PanelTyp> panelTypen = new ArrayList<>();
     /**
-     * Externe URL oder lokale Datei pro Panel (Index = Panel-ID).
-     * Wert bleibt erhalten, auch wenn der Modus auf BLATT umgestellt wird (UX: kein Datenverlust).
+     * Externe URL pro Panel (Index = Panel-ID), nur für Modus {@link PanelTyp#URL}.
+     * Wert bleibt erhalten, auch wenn der Modus gewechselt wird (UX: kein Datenverlust).
      */
     private final List<String> panelUrls = new ArrayList<>();
+    /**
+     * Lokaler Dateipfad pro Panel (Index = Panel-ID), nur für Modus {@link PanelTyp#STATISCHE_DATEI}.
+     * Eigene Liste statt Teilen von {@link #panelUrls}: sonst übernimmt beim Moduswechsel URL↔Datei
+     * der jeweils andere Modus den zuletzt eingegebenen Text unverändert (z.B. eine URL wird als
+     * Dateipfad validiert und liefert die irreführende Fehlermeldung „Datei ist nicht lesbar").
+     */
+    private final List<String> panelDateien = new ArrayList<>();
     /** Index des aktuell ausgewählten Panels (-1 = keines). */
     private volatile int ausgewaehlterPanelIndex = 0;
 
@@ -246,6 +253,7 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         panelBlattnameAnzeigen.clear();
         panelTypen.clear();
         panelUrls.clear();
+        panelDateien.clear();
 
         if (initialerEintrag != null && !initialerEintrag.panels().isEmpty()) {
             // Bestehenden Eintrag laden
@@ -268,8 +276,11 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
                 panelHAlign.add(p.horizontalAusrichtung());
                 panelVAlign.add(p.vertikalAusrichtung());
                 panelBlattnameAnzeigen.add(p.blattnameAnzeigen());
-                panelTypen.add(p.typ() != null ? p.typ() : PanelTyp.BLATT);
-                panelUrls.add(p.externeUrl() != null ? p.externeUrl() : "");
+                PanelTyp typ = p.typ() != null ? p.typ() : PanelTyp.BLATT;
+                panelTypen.add(typ);
+                String externeUrl = p.externeUrl() != null ? p.externeUrl() : "";
+                panelUrls.add(typ == PanelTyp.URL ? externeUrl : "");
+                panelDateien.add(typ == PanelTyp.STATISCHE_DATEI ? externeUrl : "");
             }
         } else {
             // Neuer Eintrag: ein Panel, leerer Baum
@@ -282,6 +293,7 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
             panelBlattnameAnzeigen.add(Boolean.FALSE);
             panelTypen.add(PanelTyp.BLATT);
             panelUrls.add("");
+            panelDateien.add("");
         }
         ausgewaehlterPanelIndex = 0;
 
@@ -493,7 +505,7 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
             fuegeFixedTextEinDyn("lblUrlHinweis", I18n.get("webserver.composite.konfig.panel.url.hinweis"), 5, konfFelderY2, 400, ZEILE_H);
         } else if (istDateiModus) {
             // ---- Lokale statische Datei ----
-            String aktuelleDatei = ausgewaehlterPanelIndex < panelUrls.size() ? panelUrls.get(ausgewaehlterPanelIndex) : "";
+            String aktuelleDatei = ausgewaehlterPanelIndex < panelDateien.size() ? panelDateien.get(ausgewaehlterPanelIndex) : "";
             fuegeFixedTextEinDyn("lblPanelDatei", I18n.get("webserver.composite.konfig.panel.datei.label"), 5, konfFelderY, 25, ZEILE_H);
             fuegeEditEinDyn("tfUrl", aktuelleDatei, 33, konfFelderY, 230, ZEILE_H);
             fuegeButtonEinDyn("btnPanelDateiAuswaehlen", "...", 266, konfFelderY, 30, ZEILE_H);
@@ -554,6 +566,7 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         panelBlattnameAnzeigen.add(Boolean.FALSE);
         panelTypen.add(PanelTyp.BLATT);
         panelUrls.add("");
+        panelDateien.add("");
         wurzel = ersetzeBlatt(wurzel, ausgewaehlterPanelIndex,
                 SplitTeilung.horizontal(new SplitBlatt(ausgewaehlterPanelIndex), new SplitBlatt(neuerPanelIndex)));
         ausgewaehlterPanelIndex = neuerPanelIndex;
@@ -571,6 +584,7 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         panelBlattnameAnzeigen.add(Boolean.FALSE);
         panelTypen.add(PanelTyp.BLATT);
         panelUrls.add("");
+        panelDateien.add("");
         wurzel = ersetzeBlatt(wurzel, ausgewaehlterPanelIndex,
                 SplitTeilung.vertikal(new SplitBlatt(ausgewaehlterPanelIndex), new SplitBlatt(neuerPanelIndex)));
         ausgewaehlterPanelIndex = neuerPanelIndex;
@@ -591,6 +605,7 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         panelBlattnameAnzeigen.remove(zuLoeschenderIndex);
         panelTypen.remove(zuLoeschenderIndex);
         panelUrls.remove(zuLoeschenderIndex);
+        panelDateien.remove(zuLoeschenderIndex);
         wurzel = renumeriereNachLoeschen(wurzel, zuLoeschenderIndex);
         ausgewaehlterPanelIndex = Math.min(ausgewaehlterPanelIndex, panelSheets.size() - 1);
         aktualisiereUndFange();
@@ -645,23 +660,32 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         wurzel = speichereSplitAnteil("txtSplitHoehe", "V", wurzel);
 
         // Modus aus RadioButtons lesen und speichern (Priorität: Startseite > Datei > Timer > URL > Blatt)
+        boolean istDatei = false;
+        boolean istUrl = false;
         if (ausgewaehlterPanelIndex < panelTypen.size()) {
             XControl rbStartseiteCtrl = xcc.getControl("rbStartseite");
             XControl rbDateiCtrl = xcc.getControl("rbDatei");
             XControl rbTimerCtrl = xcc.getControl("rbTimer");
             XControl rbUrlCtrl   = xcc.getControl("rbUrl");
             boolean istStartseite = rbStartseiteCtrl != null && Lo.qi(XRadioButton.class, rbStartseiteCtrl).getState();
-            boolean istDatei = !istStartseite && rbDateiCtrl != null && Lo.qi(XRadioButton.class, rbDateiCtrl).getState();
+            istDatei = !istStartseite && rbDateiCtrl != null && Lo.qi(XRadioButton.class, rbDateiCtrl).getState();
             boolean istTimer = !istStartseite && !istDatei && rbTimerCtrl != null && Lo.qi(XRadioButton.class, rbTimerCtrl).getState();
-            boolean istUrl   = !istStartseite && !istDatei && !istTimer && rbUrlCtrl != null && Lo.qi(XRadioButton.class, rbUrlCtrl).getState();
+            istUrl = !istStartseite && !istDatei && !istTimer && rbUrlCtrl != null && Lo.qi(XRadioButton.class, rbUrlCtrl).getState();
             panelTypen.set(ausgewaehlterPanelIndex,
                     istStartseite ? PanelTyp.TURNIERSTARTSEITE : istDatei ? PanelTyp.STATISCHE_DATEI : istTimer ? PanelTyp.TIMER : istUrl ? PanelTyp.URL : PanelTyp.BLATT);
         }
 
-        // URL-Feld lesen und speichern (unabhängig vom Modus – Wert bleibt beim Moduswechsel erhalten)
+        // URL-/Datei-Feld lesen und speichern (unabhängig vom Modus – Wert bleibt beim Moduswechsel
+        // innerhalb desselben Feldtyps erhalten). Eigene Listen für URL und Datei, damit ein Wechsel
+        // zwischen den beiden Modi nicht den Text des jeweils anderen Modus übernimmt.
         XControl tfUrlCtrl = xcc.getControl("tfUrl");
-        if (tfUrlCtrl != null && ausgewaehlterPanelIndex < panelUrls.size()) {
-            panelUrls.set(ausgewaehlterPanelIndex, Lo.qi(XTextComponent.class, tfUrlCtrl).getText().trim());
+        if (tfUrlCtrl != null) {
+            String text = Lo.qi(XTextComponent.class, tfUrlCtrl).getText().trim();
+            if (istDatei && ausgewaehlterPanelIndex < panelDateien.size()) {
+                panelDateien.set(ausgewaehlterPanelIndex, text);
+            } else if (istUrl && ausgewaehlterPanelIndex < panelUrls.size()) {
+                panelUrls.set(ausgewaehlterPanelIndex, text);
+            }
         }
 
         // Blatt-Felder lesen und speichern
@@ -720,8 +744,8 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
             if (tfUrlCtrl != null) {
                 Lo.qi(XTextComponent.class, tfUrlCtrl).setText(pfad);
             }
-            if (ausgewaehlterPanelIndex >= 0 && ausgewaehlterPanelIndex < panelUrls.size()) {
-                panelUrls.set(ausgewaehlterPanelIndex, pfad);
+            if (ausgewaehlterPanelIndex >= 0 && ausgewaehlterPanelIndex < panelDateien.size()) {
+                panelDateien.set(ausgewaehlterPanelIndex, pfad);
             }
         } catch (com.sun.star.uno.Exception e) {
             logger.warn("Datei-Picker konnte nicht geöffnet werden: {}", e.getMessage(), e);
@@ -843,7 +867,7 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
                         GlobalProperties.DEFAULT_SICHTBARER_TABELLENANTEIL,
                         PanelAusrichtung.KEIN, PanelAusrichtung.KEIN, false, url));
             } else if (panelTyp == PanelTyp.STATISCHE_DATEI) {
-                String datei = i < panelUrls.size() ? panelUrls.get(i) : "";
+                String datei = i < panelDateien.size() ? panelDateien.get(i) : "";
                 String dateiFehler = validiereLokaleDatei(datei);
                 if (dateiFehler != null) {
                     throw new UngueltigeEingabeException(dateiFehler);
@@ -1157,7 +1181,7 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         try {
             Path pfad = pfadAusDateiText(datei);
             if (!Files.isRegularFile(pfad) || !Files.isReadable(pfad)) {
-                return I18n.get("webserver.composite.konfig.panel.datei.fehler.nicht_lesbar");
+                return I18n.get("webserver.composite.konfig.panel.datei.fehler.nicht_lesbar", pfad);
             }
         } catch (IllegalArgumentException e) {
             return I18n.get("webserver.composite.konfig.panel.datei.fehler.ungueltig");
@@ -1482,7 +1506,7 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
                     kurzName = url != null && url.length() > 22 ? url.substring(0, 20) + "…" : url;
                     suffix = " " + I18n.get("webserver.composite.konfig.panel.vorschau.marker.url");
                 } else if (panelTyp == PanelTyp.STATISCHE_DATEI) {
-                    String datei = blatt.panel() < panelUrls.size() ? panelUrls.get(blatt.panel()) : "";
+                    String datei = blatt.panel() < panelDateien.size() ? panelDateien.get(blatt.panel()) : "";
                     tooltip = datei;
                     kurzName = datei != null && datei.length() > 22 ? datei.substring(0, 20) + "…" : datei;
                     suffix = " " + I18n.get("webserver.composite.konfig.panel.vorschau.marker.datei");
