@@ -10,7 +10,6 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.pagestyle.PageStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
-import de.petanqueturniermanager.helper.upload.UploadProtokoll;
 import de.petanqueturniermanager.ko.konfiguration.IKoBracketKonfiguration;
 import de.petanqueturniermanager.ko.konfiguration.KoSpielbaumTeamAnzeige;
 import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
@@ -217,31 +216,5 @@ public class JGJKonfigurationSheet extends BaseKonfigurationSheet
 	@Override public int getTurnierbaumSiegerFarbe()      { return propertiesSpalte.getTurnierbaumSiegerFarbe(); }
 	@Override public int getTurnierbaumBahnFarbe()        { return propertiesSpalte.getTurnierbaumBahnFarbe(); }
 	@Override public int getTurnierbaumDrittePlatzFarbe() { return propertiesSpalte.getTurnierbaumDrittePlatzFarbe(); }
-
-
-	@Override
-	public UploadProtokoll getUploadProtokoll() {
-		return propertiesSpalte.getUploadProtokoll();
-	}
-
-	@Override
-	public String getUploadHost() {
-		return propertiesSpalte.getUploadHost();
-	}
-
-	@Override
-	public int getUploadPort() {
-		return propertiesSpalte.getUploadPort();
-	}
-
-	@Override
-	public String getUploadBenutzer() {
-		return propertiesSpalte.getUploadBenutzer();
-	}
-
-	@Override
-	public String getUploadVerzeichnis() {
-		return propertiesSpalte.getUploadVerzeichnis();
-	}
 
 }

@@ -15,10 +15,4 @@ public record UploadKonfiguration(UploadProtokoll protokoll, String host, int po
         return portNummer > 0 ? portNummer : effektivesProtokoll.standardPort();
     }
 
-    public boolean istVollstaendig() {
-        return protokoll != null
-                && StringUtils.isNotBlank(host)
-                && StringUtils.isNotBlank(benutzer)
-                && StringUtils.isNotBlank(remotePfad);
-    }
 }

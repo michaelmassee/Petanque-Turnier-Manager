@@ -69,5 +69,14 @@
                 <value>false</value>
             </prop>
         </group>
+        <group oor:name="FtpServer">
+            <info>
+                <desc>Central FTP/SFTP server list.</desc>
+            </info>
+            <prop oor:name="ServersJson" oor:type="xs:string">
+                <info><desc>Configured FTP/SFTP servers as JSON.</desc></info>
+                <value/>
+            </prop>
+        </group>
     </component>
 </oor:component-schema>

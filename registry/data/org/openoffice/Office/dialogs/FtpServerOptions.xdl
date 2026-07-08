@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE dlg:window PUBLIC "-//OpenOffice.org//DTD OfficeDocument 1.0//EN" "dialog.dtd">
+<dlg:window xmlns:dlg="http://openoffice.org/2000/dialog"
+    xmlns:script="http://openoffice.org/2000/script"
+    dlg:id="FtpServerOptions"
+    dlg:left="0" dlg:top="0" dlg:width="260" dlg:height="185"
+    dlg:closeable="false" dlg:moveable="false" dlg:withtitlebar="false">
+    <dlg:bulletinboard>
+        <dlg:text dlg:id="FtpServerLabel" dlg:tab-index="0" dlg:left="6" dlg:top="6" dlg:width="248" dlg:height="10" dlg:value=""/>
+        <dlg:menulist dlg:id="FtpServerListe" dlg:tab-index="1" dlg:left="6" dlg:top="20" dlg:width="248" dlg:height="134" dlg:linecount="9"/>
+        <dlg:button dlg:id="FtpServerHinzufuegen" dlg:tab-index="2" dlg:left="6" dlg:top="158" dlg:width="78" dlg:height="14" dlg:value=""/>
+        <dlg:button dlg:id="FtpServerBearbeiten" dlg:tab-index="3" dlg:left="88" dlg:top="158" dlg:width="78" dlg:height="14" dlg:value=""/>
+        <dlg:button dlg:id="FtpServerLoeschen" dlg:tab-index="4" dlg:left="170" dlg:top="158" dlg:width="78" dlg:height="14" dlg:value=""/>
+    </dlg:bulletinboard>
+</dlg:window>

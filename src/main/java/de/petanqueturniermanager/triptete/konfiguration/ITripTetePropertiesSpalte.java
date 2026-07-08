@@ -1,12 +1,11 @@
 package de.petanqueturniermanager.triptete.konfiguration;
 
 import de.petanqueturniermanager.basesheet.konfiguration.IPropertiesSpalte;
-import de.petanqueturniermanager.helper.upload.IUploadKonfigurierbar;
 
 /**
  * Konfigurations-Properties für das Trip-Tête-Turniersystem.
  */
-public interface ITripTetePropertiesSpalte extends IPropertiesSpalte, IUploadKonfigurierbar {
+public interface ITripTetePropertiesSpalte extends IPropertiesSpalte {
 
 	Integer getSpielPlanHeaderFarbe();
 

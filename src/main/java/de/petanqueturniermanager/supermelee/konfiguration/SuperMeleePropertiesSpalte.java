@@ -14,7 +14,6 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeUnGeradeStyle;
-import de.petanqueturniermanager.helper.upload.UploadProtokoll;
 import de.petanqueturniermanager.konfigdialog.AuswahlConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
@@ -169,6 +168,7 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TAB_COLOR_SUPERMELEE_TEAM_PAARUNGEN)
 				.setDefaultVal(SheetTabFarben.SUPERMELEE_TEAM_PAARUNGEN)
 				.setDescription("config.desc.tab.farbe.supermelee.team.paarungen").tabFarbe());
+
 
 		// Spieltag Header
 		for (int spieltagcntr = 1; spieltagcntr <= SuperMeleeKonfigurationSheet.MAX_SPIELTAG; spieltagcntr++) {
@@ -383,32 +383,6 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	@Override
 	public SpielrundeHintergrundFarbeUnGeradeStyle getSpielRundeHintergrundFarbeUnGeradeStyle() {
 		return new SpielrundeHintergrundFarbeUnGeradeStyle(getSpielRundeHintergrundFarbeUnGerade());
-	}
-
-
-	@Override
-	public UploadProtokoll getUploadProtokoll() {
-		return UploadProtokoll.vonString(readStringProperty(KONFIG_PROP_UPLOAD_PROTOKOLL));
-	}
-
-	@Override
-	public String getUploadHost() {
-		return readStringProperty(KONFIG_PROP_UPLOAD_HOST);
-	}
-
-	@Override
-	public int getUploadPort() {
-		return getUploadPortOderStandard();
-	}
-
-	@Override
-	public String getUploadBenutzer() {
-		return readStringProperty(KONFIG_PROP_UPLOAD_BENUTZER);
-	}
-
-	@Override
-	public String getUploadVerzeichnis() {
-		return readStringProperty(KONFIG_PROP_UPLOAD_VERZEICHNIS);
 	}
 
 }

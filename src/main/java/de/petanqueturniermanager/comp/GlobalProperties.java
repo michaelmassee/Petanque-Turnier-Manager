@@ -23,6 +23,7 @@ import org.apache.logging.log4j.core.config.Configurator;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.helper.perflog.PerfLog;
+import de.petanqueturniermanager.helper.upload.UploadProtokoll;
 import de.petanqueturniermanager.webserver.CompositeViewKonfiguration;
 import de.petanqueturniermanager.webserver.PanelAusrichtung;
 import de.petanqueturniermanager.webserver.PanelKonfiguration;
@@ -89,6 +90,9 @@ public class GlobalProperties {
 	private static final String WEBSERVER_COMPOSITE_RAND_ANIMATION_SUFFIX = "_rand_animation";
 
 	private static final String STARTUP_TURNIER_MODUS_PROP = "startup.turnier.modus";
+
+	// FTP/SFTP-Server (zentrale Liste, primär über LibreOffice-Konfiguration)
+	private static final String FTP_SERVER_JSON_PROP = "ftp_server_liste";
 
 	// Turnier-Startseite (dedizierter Webserver, läuft parallel zu den Composite-Views)
 	private static final String STARTSEITE_PORT_PROP  = "startseite_port";
@@ -204,6 +208,30 @@ public class GlobalProperties {
 		}
 	}
 
+	/**
+	 * Rohdaten eines zentral konfigurierten FTP/SFTP-Servers (Name, Zugangsdaten inkl. Passwort,
+	 * Ziel-Verzeichnis) – vollständige Upload-Konfiguration in einem Objekt, verwaltet auf der
+	 * Optionsseite Extras &gt; Optionen &gt; PétTurnMngr &gt; FTP-Server.
+	 */
+	public record FtpServerEintrag(
+			String id, String name, UploadProtokoll protokoll, String host, int port,
+			String benutzer, String passwort, String remotePfad) {
+		public FtpServerEintrag {
+			id = (id == null || id.isBlank()) ? UUID.randomUUID().toString() : id.trim();
+			name = name == null ? "" : name.trim();
+			protokoll = protokoll != null ? protokoll : UploadProtokoll.SFTP;
+			host = host == null ? "" : host.trim();
+			benutzer = benutzer == null ? "" : benutzer.trim();
+			passwort = passwort == null ? "" : passwort;
+			remotePfad = remotePfad == null ? "" : remotePfad.trim();
+		}
+
+		/** Anzeigename für Listen: konfigurierter Name, sonst Host:Port. */
+		public String anzeigeName() {
+			return name.isBlank() ? host + ":" + port : name;
+		}
+	}
+
 	public static GlobalProperties get() {
 		if (instance == null) {
 			synchronized (GlobalProperties.class) {
@@ -224,6 +252,7 @@ public class GlobalProperties {
 		readProperties();
 		ladePluginOptionenAusLibreOffice();
 		ladeWebserverRegieAusLibreOffice();
+		ladeFtpServerAusLibreOffice();
 		bereinigeLegacyEinzelPortProperties();
 		bereinigeLegacyTimerProperties();
 		safeSetLogLevel();
@@ -235,6 +264,7 @@ public class GlobalProperties {
 		if (lokaleInstanz != null) {
 			lokaleInstanz.ladePluginOptionenAusLibreOffice();
 			lokaleInstanz.ladeWebserverRegieAusLibreOffice();
+			lokaleInstanz.ladeFtpServerAusLibreOffice();
 			lokaleInstanz.safeSetLogLevel();
 		}
 	}
@@ -380,6 +410,23 @@ public class GlobalProperties {
 		} catch (IllegalStateException e) {
 			setWebserverRegieInLibreOffice(false);
 			logger.warn("LibreOffice-Webserver-Regie-Konfiguration nicht verfügbar, verwende Legacy-Properties", e);
+		}
+	}
+
+	private void ladeFtpServerAusLibreOffice() {
+		XComponentContext context = libreOfficeContext;
+		if (context == null) {
+			return;
+		}
+		try {
+			String json = new LibreOfficeFtpServerSpeicher(context).laden();
+			if (json.isBlank()) {
+				propMap.remove(FTP_SERVER_JSON_PROP);
+			} else {
+				propMap.put(FTP_SERVER_JSON_PROP, json);
+			}
+		} catch (IllegalStateException e) {
+			logger.warn("LibreOffice-FTP-Server-Konfiguration nicht verfügbar, verwende Legacy-Properties", e);
 		}
 	}
 
@@ -565,6 +612,50 @@ public class GlobalProperties {
 
 	public void speichernWebserverRegieOptionen(boolean aktiv, int port) {
 		speichernWebserverRegie(aktiv, port, getWebserverRegieZiele());
+	}
+
+	// ----------------------------------------------------
+	// FTP/SFTP-Server-Liste
+	// ----------------------------------------------------
+
+	public List<FtpServerEintrag> getFtpServerEintraege() {
+		try {
+			var json = propMap.getOrDefault(FTP_SERVER_JSON_PROP, "").trim();
+			if (json.isEmpty()) {
+				return new ArrayList<>();
+			}
+			var typ = new TypeToken<List<FtpServerEintrag>>() { }.getType();
+			List<FtpServerEintrag> gelesen = GSON.fromJson(json, typ);
+			return gelesen == null ? new ArrayList<>() : gelesen;
+		} catch (RuntimeException e) {
+			logger.warn("Fehler beim Lesen der FTP-Server-Liste", e);
+			return new ArrayList<>();
+		}
+	}
+
+	public void speichernFtpServer(List<FtpServerEintrag> eintraege) {
+		try {
+			var liste = eintraege == null ? List.<FtpServerEintrag>of() : eintraege;
+			String json = liste.isEmpty() ? "" : GSON.toJson(liste);
+			if (json.isBlank()) {
+				propMap.remove(FTP_SERVER_JSON_PROP);
+			} else {
+				propMap.put(FTP_SERVER_JSON_PROP, json);
+			}
+			XComponentContext context = libreOfficeContext;
+			if (context != null) {
+				try {
+					new LibreOfficeFtpServerSpeicher(context).speichern(json);
+				} catch (IllegalStateException e) {
+					logger.warn("Speichern der FTP-Server-Liste in LibreOffice-Konfiguration fehlgeschlagen, verwende Legacy-Datei", e);
+					speichernDatei();
+				}
+			} else {
+				speichernDatei();
+			}
+		} catch (RuntimeException e) {
+			logger.error("Fehler beim Speichern der FTP-Server-Liste", e);
+		}
 	}
 
 	public int getStartseitePort() {
@@ -1042,32 +1133,6 @@ public class GlobalProperties {
 		}
 	}
 
-
-	// ---------------------------------------------------------------
-	// Upload-Passwort (pro Host, nicht im ODS-Dokument gespeichert)
-	// ---------------------------------------------------------------
-
-	private static final String UPLOAD_PASSWORT_PRAEFIX = "upload.passwort.";
-
-	public String getUploadPasswort(String host) {
-		if (host == null || host.isBlank()) {
-			return "";
-		}
-		return propMap.getOrDefault(UPLOAD_PASSWORT_PRAEFIX + host.trim().toLowerCase(), "");
-	}
-
-	public void setUploadPasswort(String host, String passwort) {
-		if (host == null || host.isBlank()) {
-			return;
-		}
-		String schluessel = UPLOAD_PASSWORT_PRAEFIX + host.trim().toLowerCase();
-		if (passwort == null || passwort.isEmpty()) {
-			propMap.remove(schluessel);
-		} else {
-			propMap.put(schluessel, passwort);
-		}
-		speichernDatei();
-	}
 
 	// nur für Tests
 	static void resetForTest() {

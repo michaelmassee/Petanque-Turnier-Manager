@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.petanqueturniermanager.basesheet.SheetTabFarben;
-import de.petanqueturniermanager.helper.upload.UploadProtokoll;
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.helper.ISheet;
@@ -203,26 +202,4 @@ public class KaskadePropertiesSpalte extends BasePropertiesSpalte {
     public int getTurnierbaumSiegerFarbe()      { return readIntProperty(KoPropertiesSpalte.KONFIG_PROP_TURNIERBAUM_COLOR_SIEGER); }
     public int getTurnierbaumBahnFarbe()        { return readIntProperty(KoPropertiesSpalte.KONFIG_PROP_TURNIERBAUM_COLOR_BAHN); }
     public int getTurnierbaumDrittePlatzFarbe() { return readIntProperty(KoPropertiesSpalte.KONFIG_PROP_TURNIERBAUM_COLOR_DRITTE_PLATZ); }
-
-
-
-	public UploadProtokoll getUploadProtokoll() {
-		return UploadProtokoll.vonString(readStringProperty(KONFIG_PROP_UPLOAD_PROTOKOLL));
-	}
-
-	public String getUploadHost() {
-		return readStringProperty(KONFIG_PROP_UPLOAD_HOST);
-	}
-
-	public int getUploadPort() {
-		return getUploadPortOderStandard();
-	}
-
-	public String getUploadBenutzer() {
-		return readStringProperty(KONFIG_PROP_UPLOAD_BENUTZER);
-	}
-
-	public String getUploadVerzeichnis() {
-		return readStringProperty(KONFIG_PROP_UPLOAD_VERZEICHNIS);
-	}
 }

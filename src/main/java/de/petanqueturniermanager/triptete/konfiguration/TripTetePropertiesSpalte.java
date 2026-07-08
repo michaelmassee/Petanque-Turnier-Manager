@@ -5,7 +5,6 @@ import java.util.List;
 
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.helper.ISheet;
-import de.petanqueturniermanager.helper.upload.UploadProtokoll;
 import de.petanqueturniermanager.konfigdialog.AuswahlConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
@@ -115,30 +114,5 @@ public class TripTetePropertiesSpalte extends BasePropertiesSpalte implements IT
 	@Override
 	public boolean isMeldeListeVereinsnameAnzeigen() {
 		return "J".equalsIgnoreCase(readStringProperty(KONFIG_PROP_MELDELISTE_VEREINSNAME));
-	}
-
-	@Override
-	public UploadProtokoll getUploadProtokoll() {
-		return UploadProtokoll.vonString(readStringProperty(KONFIG_PROP_UPLOAD_PROTOKOLL));
-	}
-
-	@Override
-	public String getUploadHost() {
-		return readStringProperty(KONFIG_PROP_UPLOAD_HOST);
-	}
-
-	@Override
-	public int getUploadPort() {
-		return getUploadPortOderStandard();
-	}
-
-	@Override
-	public String getUploadBenutzer() {
-		return readStringProperty(KONFIG_PROP_UPLOAD_BENUTZER);
-	}
-
-	@Override
-	public String getUploadVerzeichnis() {
-		return readStringProperty(KONFIG_PROP_UPLOAD_VERZEICHNIS);
 	}
 }

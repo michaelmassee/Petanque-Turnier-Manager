@@ -12,13 +12,11 @@ import de.petanqueturniermanager.helper.pagestyle.PageStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
-import de.petanqueturniermanager.helper.upload.IUploadKonfigurierbar;
-import de.petanqueturniermanager.helper.upload.UploadProtokoll;
 
 /**
  * Konfigurationsblatt für das Poule-A/B-Turniersystem.
  */
-public class PouleKonfigurationSheet extends BaseKonfigurationSheet implements IPoulePropertiesSpalte, IUploadKonfigurierbar {
+public class PouleKonfigurationSheet extends BaseKonfigurationSheet implements IPoulePropertiesSpalte {
 
     private final PoulePropertiesSpalte propertiesSpalte;
 
@@ -108,27 +106,4 @@ public class PouleKonfigurationSheet extends BaseKonfigurationSheet implements I
     public int getTurnierbaumSiegerFarbe()      { return propertiesSpalte.getTurnierbaumSiegerFarbe(); }
     public int getTurnierbaumBahnFarbe()        { return propertiesSpalte.getTurnierbaumBahnFarbe(); }
     public int getTurnierbaumDrittePlatzFarbe() { return propertiesSpalte.getTurnierbaumDrittePlatzFarbe(); }
-
-
-
-
-	public UploadProtokoll getUploadProtokoll() {
-		return propertiesSpalte.getUploadProtokoll();
-	}
-
-	public String getUploadHost() {
-		return propertiesSpalte.getUploadHost();
-	}
-
-	public int getUploadPort() {
-		return propertiesSpalte.getUploadPort();
-	}
-
-	public String getUploadBenutzer() {
-		return propertiesSpalte.getUploadBenutzer();
-	}
-
-	public String getUploadVerzeichnis() {
-		return propertiesSpalte.getUploadVerzeichnis();
-	}
 }

@@ -68,6 +68,24 @@
                         <value>de.petanqueturniermanager.CompositeViewsOptionsEventHandler</value>
                     </prop>
                 </node>
+                <node oor:name="de.petanqueturniermanager.options.ftpserver" oor:op="fuse">
+                    <prop oor:name="Id">
+                        <value>de.petanqueturniermanager.ftpserver</value>
+                    </prop>
+                    <prop oor:name="Label">
+                        <value xml:lang="de">FTP-Server</value>
+                        <value xml:lang="en">FTP Servers</value>
+                        <value xml:lang="es">Servidores FTP</value>
+                        <value xml:lang="fr">Serveurs FTP</value>
+                        <value xml:lang="nl">FTP-servers</value>
+                    </prop>
+                    <prop oor:name="OptionsPage">
+                        <value>%origin%/dialogs/FtpServerOptions.xdl</value>
+                    </prop>
+                    <prop oor:name="EventHandlerService">
+                        <value>de.petanqueturniermanager.FtpServerOptionsEventHandler</value>
+                    </prop>
+                </node>
             </node>
         </node>
     </node>

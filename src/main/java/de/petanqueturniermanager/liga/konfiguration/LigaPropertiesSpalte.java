@@ -8,8 +8,6 @@ import java.util.List;
 
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.helper.ISheet;
-import de.petanqueturniermanager.helper.upload.IUploadKonfigurierbar;
-import de.petanqueturniermanager.helper.upload.UploadProtokoll;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
 import de.petanqueturniermanager.konfigdialog.HeaderFooterConfigProperty;
@@ -18,7 +16,7 @@ import de.petanqueturniermanager.konfigdialog.HeaderFooterConfigProperty;
  * @author Michael Massee
  *
  */
-public class LigaPropertiesSpalte extends BasePropertiesSpalte implements ILigaPropertiesSpalte, IUploadKonfigurierbar {
+public class LigaPropertiesSpalte extends BasePropertiesSpalte implements ILigaPropertiesSpalte {
 
 	public static final List<ConfigProperty<?>> KONFIG_PROPERTIES = new ArrayList<>();
 
@@ -67,6 +65,7 @@ public class LigaPropertiesSpalte extends BasePropertiesSpalte implements ILigaP
 
 		ADDUploadProp(KONFIG_PROPERTIES);
 	}
+
 
 	/**
 	 * @param propertiesSpalte
@@ -135,31 +134,6 @@ public class LigaPropertiesSpalte extends BasePropertiesSpalte implements ILigaP
 	@Override
 	public Integer getFreispielPunkteMinus() {
 		return readIntProperty(KONFIG_PROP_FREISPIEL_PUNKTE_MINUS);
-	}
-
-	@Override
-	public UploadProtokoll getUploadProtokoll() {
-		return UploadProtokoll.vonString(readStringProperty(KONFIG_PROP_UPLOAD_PROTOKOLL));
-	}
-
-	@Override
-	public String getUploadHost() {
-		return readStringProperty(KONFIG_PROP_UPLOAD_HOST);
-	}
-
-	@Override
-	public int getUploadPort() {
-		return getUploadPortOderStandard();
-	}
-
-	@Override
-	public String getUploadBenutzer() {
-		return readStringProperty(KONFIG_PROP_UPLOAD_BENUTZER);
-	}
-
-	@Override
-	public String getUploadVerzeichnis() {
-		return readStringProperty(KONFIG_PROP_UPLOAD_VERZEICHNIS);
 	}
 
 }

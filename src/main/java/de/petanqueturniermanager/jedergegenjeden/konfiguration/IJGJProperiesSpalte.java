@@ -2,14 +2,13 @@ package de.petanqueturniermanager.jedergegenjeden.konfiguration;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.helper.upload.IUploadKonfigurierbar;
 import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 
 /**
  * Erstellung 01.08.2022 / Michael Massee
  */
 
-public interface IJGJProperiesSpalte extends de.petanqueturniermanager.basesheet.konfiguration.IFreispielPropertiesSpalte, IUploadKonfigurierbar {
+public interface IJGJProperiesSpalte extends de.petanqueturniermanager.basesheet.konfiguration.IFreispielPropertiesSpalte {
 	Integer getSpielPlanHeaderFarbe() throws GenerateException;
 
 	Integer getSpielPlanHintergrundFarbeUnGerade() throws GenerateException;

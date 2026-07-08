@@ -3,6 +3,7 @@ package de.petanqueturniermanager.helper.upload;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.function.Function;
 
 import org.apache.commons.io.FileUtils;
@@ -13,13 +14,18 @@ import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.GlobalProperties;
+import de.petanqueturniermanager.comp.GlobalProperties.FtpServerEintrag;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.i18n.I18n;
 
 public abstract class AbstractFtpUpload extends SheetRunner {
 
     private static final Logger logger = LogManager.getLogger(AbstractFtpUpload.class);
+
+    /** Document Property: id des zuletzt für dieses Dokument verwendeten FTP-Servers. */
+    private static final String PROP_LETZTER_FTP_SERVER = "FTP Letzter Server";
 
     private final Function<Path, AbstractExportInVerzeichnis> exportFactory;
 
@@ -31,22 +37,29 @@ public abstract class AbstractFtpUpload extends SheetRunner {
 
     @Override
     protected final void doRun() throws GenerateException {
-        var konfigurierbar = getUploadKonfigurierbar();
-        var konfig = new UploadKonfiguration(
-                konfigurierbar.getUploadProtokoll(),
-                konfigurierbar.getUploadHost(),
-                konfigurierbar.getUploadPort(),
-                konfigurierbar.getUploadBenutzer(),
-                konfigurierbar.getUploadVerzeichnis());
-
-        if (!konfig.istVollstaendig()) {
-            throw new GenerateException(I18n.get("ftp.upload.fehler.konfiguration"));
+        List<FtpServerEintrag> serverListe = GlobalProperties.get().getFtpServerEintraege();
+        if (serverListe.isEmpty()) {
+            throw new GenerateException(I18n.get("ftp.upload.fehler.keine.server"));
         }
+
+        var docPropHelper = new DocumentPropertiesHelper(getWorkingSpreadsheet());
+        String letzteServerId = docPropHelper.getStringProperty(PROP_LETZTER_FTP_SERVER, "");
+        FtpServerEintrag ausgewaehlt = FtpServerAuswahlDialog
+                .zeigen(getWorkingSpreadsheet(), serverListe, letzteServerId)
+                .orElse(null);
+        if (ausgewaehlt == null) {
+            throw new GenerateException(I18n.get("upload.server.auswahl.abgebrochen"));
+        }
+        docPropHelper.setStringProperty(PROP_LETZTER_FTP_SERVER, ausgewaehlt.id());
+
+        var konfig = new UploadKonfiguration(
+                ausgewaehlt.protokoll(), ausgewaehlt.host(), ausgewaehlt.port(),
+                ausgewaehlt.benutzer(), ausgewaehlt.remotePfad());
 
         Path tempVerzeichnis = erstelleTempVerzeichnis();
         try {
             var ergebnis = exportFactory.apply(tempVerzeichnis).exportiere();
-            String passwort = GlobalProperties.get().getUploadPasswort(konfig.host());
+            String passwort = ausgewaehlt.passwort();
             if (passwort.isEmpty()) {
                 passwort = fragePasswort(konfig);
             }
@@ -57,7 +70,6 @@ public abstract class AbstractFtpUpload extends SheetRunner {
             } catch (IOException e) {
                 if (istAnmeldefehler(e)) {
                     try {
-                        GlobalProperties.get().setUploadPasswort(konfig.host(), "");
                         String neuesPasswort = fragePasswort(konfig);
                         int anzahl = ladeHoch(konfig, neuesPasswort, ergebnis);
                         processBox().info(I18n.get("ftp.upload.erfolg", anzahl));
@@ -110,6 +122,4 @@ public abstract class AbstractFtpUpload extends SheetRunner {
     protected IKonfigurationSheet getKonfigurationSheet() {
         return null;
     }
-
-    protected abstract IUploadKonfigurierbar getUploadKonfigurierbar() throws GenerateException;
 }

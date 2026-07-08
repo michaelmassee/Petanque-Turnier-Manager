@@ -15,7 +15,6 @@ import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeUnGe
 import de.petanqueturniermanager.helper.pagestyle.PageStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
-import de.petanqueturniermanager.helper.upload.UploadProtokoll;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 
 /**
@@ -187,32 +186,6 @@ public class SchweizerKonfigurationSheet extends BaseKonfigurationSheet
 	@Override
 	public Integer getFreispielPunkteMinus() {
 		return getPropertiesSpalte().getFreispielPunkteMinus();
-	}
-
-
-	@Override
-	public UploadProtokoll getUploadProtokoll() {
-		return propertiesSpalte.getUploadProtokoll();
-	}
-
-	@Override
-	public String getUploadHost() {
-		return propertiesSpalte.getUploadHost();
-	}
-
-	@Override
-	public int getUploadPort() {
-		return propertiesSpalte.getUploadPort();
-	}
-
-	@Override
-	public String getUploadBenutzer() {
-		return propertiesSpalte.getUploadBenutzer();
-	}
-
-	@Override
-	public String getUploadVerzeichnis() {
-		return propertiesSpalte.getUploadVerzeichnis();
 	}
 
 }

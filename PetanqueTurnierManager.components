@@ -38,4 +38,9 @@
             <service name="de.petanqueturniermanager.CompositeViewsOptionsEventHandler"/>
         </implementation>
     </component>
+    <component loader="com.sun.star.loader.Java2" uri="PetanqueTurnierManager-1.0.0.jar">
+        <implementation name="de.petanqueturniermanager.comp.FtpServerOptionsEventHandler">
+            <service name="de.petanqueturniermanager.FtpServerOptionsEventHandler"/>
+        </implementation>
+    </component>
 </components>

@@ -14,13 +14,11 @@ import de.petanqueturniermanager.helper.pagestyle.PageStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
-import de.petanqueturniermanager.helper.upload.IUploadKonfigurierbar;
-import de.petanqueturniermanager.helper.upload.UploadProtokoll;
 
 /**
  * Konfigurationssheet für das K.-O.-Turniersystem.
  */
-public class KoKonfigurationSheet extends BaseKonfigurationSheet implements IKoBracketKonfiguration, IUploadKonfigurierbar {
+public class KoKonfigurationSheet extends BaseKonfigurationSheet implements IKoBracketKonfiguration {
 
 	private final KoPropertiesSpalte propertiesSpalte;
 
@@ -145,26 +143,4 @@ public class KoKonfigurationSheet extends BaseKonfigurationSheet implements IKoB
 	@Override public int getTurnierbaumSiegerFarbe()      { return propertiesSpalte.getTurnierbaumSiegerFarbe(); }
 	@Override public int getTurnierbaumBahnFarbe()        { return propertiesSpalte.getTurnierbaumBahnFarbe(); }
 	@Override public int getTurnierbaumDrittePlatzFarbe() { return propertiesSpalte.getTurnierbaumDrittePlatzFarbe(); }
-
-
-
-	public UploadProtokoll getUploadProtokoll() {
-		return propertiesSpalte.getUploadProtokoll();
-	}
-
-	public String getUploadHost() {
-		return propertiesSpalte.getUploadHost();
-	}
-
-	public int getUploadPort() {
-		return propertiesSpalte.getUploadPort();
-	}
-
-	public String getUploadBenutzer() {
-		return propertiesSpalte.getUploadBenutzer();
-	}
-
-	public String getUploadVerzeichnis() {
-		return propertiesSpalte.getUploadVerzeichnis();
-	}
 }

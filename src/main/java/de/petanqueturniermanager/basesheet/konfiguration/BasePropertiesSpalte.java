@@ -22,8 +22,6 @@ import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeGerad
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.basesheet.meldeliste.TeilnehmerListeSortModus;
 import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
-import de.petanqueturniermanager.helper.upload.UploadKonfiguration;
-import de.petanqueturniermanager.helper.upload.UploadProtokoll;
 import de.petanqueturniermanager.konfigdialog.AuswahlConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
@@ -69,12 +67,7 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 
 	public static final String KONFIG_PROP_TEILNEHMER_LISTE_SORT_MODUS = "Teilnehmerliste Sortierung";
 
-	// Upload / Export (für alle Systeme mit IUploadKonfigurierbar)
-	public static final String KONFIG_PROP_UPLOAD_PROTOKOLL      = "Upload Protokoll";
-	public static final String KONFIG_PROP_UPLOAD_HOST           = "Upload Host";
-	public static final String KONFIG_PROP_UPLOAD_PORT           = "Upload Port";
-	public static final String KONFIG_PROP_UPLOAD_BENUTZER       = "Upload Benutzer";
-	public static final String KONFIG_PROP_UPLOAD_VERZEICHNIS    = "Upload Verzeichnis";
+	// Export
 	public static final String KONFIG_PROP_MELDELISTE_EXPORTIEREN = "Meldeliste exportieren";
 
 	// Tab-Farben (Document Properties Schlüssel)
@@ -196,23 +189,12 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	}
 
 	/**
-	 * Fügt die gemeinsamen Upload-Properties hinzu, markiert mit
+	 * Fügt die Export-Property „Meldeliste exportieren" hinzu, markiert mit
 	 * {@link de.petanqueturniermanager.konfigdialog.ConfigProperty#exportKonfig()}.
-	 * Aufzurufen von jedem System, das {@code IUploadKonfigurierbar} implementiert.
+	 * Aufzurufen von jedem System mit FTP/SFTP-Export (Server-Auswahl selbst erfolgt zentral
+	 * über {@link de.petanqueturniermanager.comp.GlobalProperties#getFtpServerEintraege()}).
 	 */
 	protected static void ADDUploadProp(List<ConfigProperty<?>> KONFIG_PROPERTIES) {
-		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_UPLOAD_PROTOKOLL)
-				.setDefaultVal("SFTP").setDescription("config.desc.upload.protokoll").exportKonfig())
-				.addAuswahl("SFTP", "SFTP")
-				.addAuswahl("FTP", "FTP"));
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_HOST)
-				.setDefaultVal("").setDescription("config.desc.upload.host").exportKonfig());
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_PORT)
-				.setDefaultVal("").setDescription("config.desc.upload.port").exportKonfig());
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_BENUTZER)
-				.setDefaultVal("").setDescription("config.desc.upload.benutzer").exportKonfig());
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_UPLOAD_VERZEICHNIS)
-				.setDefaultVal("").setDescription("config.desc.upload.verzeichnis").exportKonfig());
 		KONFIG_PROPERTIES.add(ConfigProperty.<Boolean>from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_MELDELISTE_EXPORTIEREN)
 				.setDefaultVal(false).setDescription("config.desc.meldeliste.exportieren").exportKonfig());
 	}
@@ -297,12 +279,6 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 
 	public Boolean readBooleanProperty(String key) {
 		return StringTools.stringToBoolean(readStringProperty(key));
-	}
-
-	protected int getUploadPortOderStandard() {
-		return UploadKonfiguration.portOderStandard(
-				readStringProperty(KONFIG_PROP_UPLOAD_PORT),
-				UploadProtokoll.vonString(readStringProperty(KONFIG_PROP_UPLOAD_PROTOKOLL)));
 	}
 
 	@Override

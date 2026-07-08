@@ -12,7 +12,6 @@ import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeUnGeradeStyle;
-import de.petanqueturniermanager.helper.upload.UploadProtokoll;
 import de.petanqueturniermanager.konfigdialog.AuswahlConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
@@ -254,32 +253,6 @@ public class SchweizerPropertiesSpalte extends BasePropertiesSpalte implements I
 	@Override
 	public Integer getFreispielPunkteMinus() {
 		return readIntProperty(KONFIG_PROP_FREISPIEL_PUNKTE_MINUS);
-	}
-
-
-	@Override
-	public UploadProtokoll getUploadProtokoll() {
-		return UploadProtokoll.vonString(readStringProperty(KONFIG_PROP_UPLOAD_PROTOKOLL));
-	}
-
-	@Override
-	public String getUploadHost() {
-		return readStringProperty(KONFIG_PROP_UPLOAD_HOST);
-	}
-
-	@Override
-	public int getUploadPort() {
-		return getUploadPortOderStandard();
-	}
-
-	@Override
-	public String getUploadBenutzer() {
-		return readStringProperty(KONFIG_PROP_UPLOAD_BENUTZER);
-	}
-
-	@Override
-	public String getUploadVerzeichnis() {
-		return readStringProperty(KONFIG_PROP_UPLOAD_VERZEICHNIS);
 	}
 
 }

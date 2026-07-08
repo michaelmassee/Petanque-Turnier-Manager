@@ -12,14 +12,12 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.pagestyle.PageStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
-import de.petanqueturniermanager.helper.upload.IUploadKonfigurierbar;
-import de.petanqueturniermanager.helper.upload.UploadProtokoll;
 
 /**
  * @author Michael Massee
  */
 public class LigaKonfigurationSheet extends BaseKonfigurationSheet
-		implements ILigaPropertiesSpalte, IKonfigurationSheet, IUploadKonfigurierbar {
+		implements ILigaPropertiesSpalte, IKonfigurationSheet {
 
 	public static final int LIGA_MELDUNG_NAME_WIDTH = 8000;
 
@@ -109,31 +107,6 @@ public class LigaKonfigurationSheet extends BaseKonfigurationSheet
 	@Override
 	public Integer getFreispielPunkteMinus() {
 		return propertiesSpalte.getFreispielPunkteMinus();
-	}
-
-	@Override
-	public UploadProtokoll getUploadProtokoll() {
-		return propertiesSpalte.getUploadProtokoll();
-	}
-
-	@Override
-	public String getUploadHost() {
-		return propertiesSpalte.getUploadHost();
-	}
-
-	@Override
-	public int getUploadPort() {
-		return propertiesSpalte.getUploadPort();
-	}
-
-	@Override
-	public String getUploadBenutzer() {
-		return propertiesSpalte.getUploadBenutzer();
-	}
-
-	@Override
-	public String getUploadVerzeichnis() {
-		return propertiesSpalte.getUploadVerzeichnis();
 	}
 
 }

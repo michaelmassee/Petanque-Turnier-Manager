@@ -15,7 +15,6 @@ import com.sun.star.awt.ActionEvent;
 import com.sun.star.awt.PushButtonType;
 import com.sun.star.awt.XActionListener;
 import com.sun.star.awt.XButton;
-import com.sun.star.awt.XCheckBox;
 import com.sun.star.awt.XControlContainer;
 import com.sun.star.awt.XDialog;
 import com.sun.star.awt.XTextComponent;
@@ -28,7 +27,6 @@ import com.sun.star.lang.XMultiComponentFactory;
 import com.sun.star.lang.XMultiServiceFactory;
 import com.sun.star.uno.XComponentContext;
 
-import de.petanqueturniermanager.comp.GlobalProperties;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.Lo;
@@ -37,9 +35,10 @@ import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.konfigdialog.AbstractUnoDialog;
 
 /**
- * Modaler Dialog zur Eingabe des FTP/SFTP-Passworts.
- * Zeigt Server-Name, Passwortfeld (Zeichen maskiert) und eine Checkbox
- * zum dauerhaften Speichern in {@link GlobalProperties}.
+ * Modaler Dialog zur einmaligen Eingabe des FTP/SFTP-Passworts für den laufenden Upload
+ * (Server-Name, Passwortfeld mit maskierten Zeichen). Das Passwort wird nur für diesen
+ * Upload-Lauf verwendet, nicht dauerhaft gespeichert — dauerhafte Zugangsdaten werden auf
+ * der Options-Seite „FTP-Server" gepflegt ({@link de.petanqueturniermanager.comp.GlobalProperties.FtpServerEintrag}).
  *
  * <p>Kann aus einem Worker-Thread aufgerufen werden — der Dialog wird via
  * {@link LoMainThread#post} auf den LO-Main-Thread marshalled und blockiert
@@ -55,7 +54,6 @@ final class PasswortEingabeDialog extends AbstractUnoDialog {
     @Nullable private XControlContainer xcc;
     @Nullable private XDialog xDialog;
     @Nullable private String passwort;
-    private boolean speichern;
 
     private PasswortEingabeDialog(XComponentContext xContext, String host, WorkingSpreadsheet ws) {
         super(xContext);
@@ -65,8 +63,6 @@ final class PasswortEingabeDialog extends AbstractUnoDialog {
 
     /**
      * Zeigt den Passwort-Dialog und blockiert bis der Benutzer antwortet.
-     * Speichert das Passwort dauerhaft in {@link GlobalProperties}, wenn der
-     * Benutzer die Checkbox „Passwort speichern" aktiviert hat.
      *
      * @return eingegebenes Passwort, oder {@link Optional#empty()} bei Abbruch
      */
@@ -79,11 +75,6 @@ final class PasswortEingabeDialog extends AbstractUnoDialog {
                 Optional<String> ergebnis = dialog.passwort != null && !dialog.passwort.isBlank()
                         ? Optional.of(dialog.passwort)
                         : Optional.empty();
-                ergebnis.ifPresent(pw -> {
-                    if (dialog.speichern) {
-                        GlobalProperties.get().setUploadPasswort(host, pw);
-                    }
-                });
                 future.complete(ergebnis);
             } catch (Exception e) {
                 logger.error("Fehler im Passwort-Dialog", e);
@@ -113,7 +104,7 @@ final class PasswortEingabeDialog extends AbstractUnoDialog {
 
     @Override
     protected int getHoehe() {
-        return 95;
+        return 80;
     }
 
     @Override
@@ -131,9 +122,8 @@ final class PasswortEingabeDialog extends AbstractUnoDialog {
         label(xMSF, cont, "lblServer",    I18n.get("upload.passwort.dialog.server", host), 8, 8,  224, 10);
         label(xMSF, cont, "lblPasswort",  I18n.get("upload.passwort.dialog.label"),         8, 26,  60, 10);
         passwortFeld(xMSF, cont, "txtPasswort",  75, 24, 155, 12);
-        checkbox(xMSF, cont, "chkSpeichern", I18n.get("upload.passwort.dialog.speichern"),  8, 42, 224, 10);
-        button(xMSF, cont, "btnOk",       I18n.get("upload.passwort.dialog.ok"),            95, 70,  55, 14, (short) PushButtonType.STANDARD_value);
-        button(xMSF, cont, "btnAbbrechen",I18n.get("upload.passwort.dialog.abbrechen"),    155, 70,  80, 14, (short) PushButtonType.CANCEL_value);
+        button(xMSF, cont, "btnOk",       I18n.get("upload.passwort.dialog.ok"),            95, 50,  55, 14, (short) PushButtonType.STANDARD_value);
+        button(xMSF, cont, "btnAbbrechen",I18n.get("upload.passwort.dialog.abbrechen"),    155, 50,  80, 14, (short) PushButtonType.CANCEL_value);
 
         var okCtrl = xcc != null ? xcc.getControl("btnOk") : null;
         if (okCtrl != null) {
@@ -155,11 +145,6 @@ final class PasswortEingabeDialog extends AbstractUnoDialog {
         if (passwortCtrl != null) {
             var tc = Lo.qi(XTextComponent.class, passwortCtrl);
             passwort = tc != null ? tc.getText() : "";
-        }
-        var checkCtrl = xcc.getControl("chkSpeichern");
-        if (checkCtrl != null) {
-            var cb = Lo.qi(XCheckBox.class, checkCtrl);
-            speichern = cb != null && cb.getState() == 1;
         }
         xDialog.endExecute();
     }
@@ -187,19 +172,6 @@ final class PasswortEingabeDialog extends AbstractUnoDialog {
         props.setPropertyValue("Text", "");
         props.setPropertyValue("MultiLine", Boolean.FALSE);
         props.setPropertyValue("EchoChar", (short) '*');
-        cont.insertByName(name, model);
-    }
-
-    private static void checkbox(XMultiServiceFactory xMSF, XNameContainer cont,
-            String name, String labelText, int x, int y, int w, int h) throws com.sun.star.uno.Exception {
-        var model = xMSF.createInstance("com.sun.star.awt.UnoControlCheckBoxModel");
-        var props = Lo.qi(XPropertySet.class, model);
-        props.setPropertyValue("Label", labelText);
-        props.setPropertyValue("PositionX", x);
-        props.setPropertyValue("PositionY", y);
-        props.setPropertyValue("Width", w);
-        props.setPropertyValue("Height", h);
-        props.setPropertyValue("State", (short) 0);
         cont.insertByName(name, model);
     }
 

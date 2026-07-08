@@ -16,14 +16,12 @@ import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeUnGe
 import de.petanqueturniermanager.helper.pagestyle.PageStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
-import de.petanqueturniermanager.helper.upload.IUploadKonfigurierbar;
-import de.petanqueturniermanager.helper.upload.UploadProtokoll;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 
 /**
  * Konfigurationssheet für das Formule X Turniersystem.
  */
-public class FormuleXKonfigurationSheet extends BaseKonfigurationSheet implements IFreispielPropertiesSpalte, IUploadKonfigurierbar {
+public class FormuleXKonfigurationSheet extends BaseKonfigurationSheet implements IFreispielPropertiesSpalte {
 
     private final FormuleXPropertiesSpalte propertiesSpalte;
 
@@ -148,31 +146,5 @@ public class FormuleXKonfigurationSheet extends BaseKonfigurationSheet implement
     @Override
     public Integer getFreispielPunkteMinus() {
         return propertiesSpalte.getFreispielPunkteMinus();
-    }
-
-
-    @Override
-    public UploadProtokoll getUploadProtokoll() {
-        return propertiesSpalte.getUploadProtokoll();
-    }
-
-    @Override
-    public String getUploadHost() {
-        return propertiesSpalte.getUploadHost();
-    }
-
-    @Override
-    public int getUploadPort() {
-        return propertiesSpalte.getUploadPort();
-    }
-
-    @Override
-    public String getUploadBenutzer() {
-        return propertiesSpalte.getUploadBenutzer();
-    }
-
-    @Override
-    public String getUploadVerzeichnis() {
-        return propertiesSpalte.getUploadVerzeichnis();
     }
 }

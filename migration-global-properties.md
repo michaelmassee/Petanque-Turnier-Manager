@@ -35,9 +35,23 @@ Noch gespeichert in GlobalProperties
     - Verwaltung jetzt direkt auf der eigenen LibreOffice-Optionsseite Extras > Optionen > PétTurnMngr > Composite Views (kein separater `CompositeViewListeDialog` mehr); Detail-Konfiguration je Zeile über `CompositeViewDetailDialog`, "Übernehmen" persistiert sofort und benachrichtigt den laufenden Webserver live.
     - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java:632 (getCompositeViewEintraege), :776 (speichernCompositeViews); src/main/java/de/petanqueturniermanager/webserver/RandKonfiguration.java; src/main/java/de/petanqueturniermanager/comp/CompositeViewsOptionsEventHandler.java
 
-- Upload-Passwörter pro Host:
-    - upload.passwort.<host>
-    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java:1052
+- FTP-Server (zentrale Liste, primär über LibreOffice-Konfiguration):
+    - Node FtpServer, Property ServersJson (JSON-Liste von GlobalProperties.FtpServerEintrag,
+      inkl. Name, Protokoll, Host, Port, Benutzer, Passwort, Ziel-Verzeichnis).
+    - Kein Legacy-Import: die bisherigen Upload-Einstellungen lagen pro Dokument
+      (Document Properties je Turniersystem), nicht global — daher kein Migrationspfad,
+      Liste startet leer.
+    - Verwaltung auf eigener LibreOffice-Optionsseite Extras > Optionen > PétTurnMngr > FTP-Server;
+      Detail-Konfiguration je Server über FtpServerDetailDialog.
+    - Beim Upload wählt der Nutzer über FtpServerAuswahlDialog einen Server aus der Liste;
+      die Auswahl wird pro Dokument als Document Property "FTP Letzter Server" (Server-Id)
+      gemerkt und beim nächsten Upload vorselektiert.
+    - Das frühere host-basierte Upload-Passwort (GlobalProperties.getUploadPasswort/
+      setUploadPasswort) ist entfallen — das Passwort ist jetzt Teil des Server-Objekts.
+    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java (getFtpServerEintraege,
+      speichernFtpServer); src/main/java/de/petanqueturniermanager/comp/LibreOfficeFtpServerSpeicher.java;
+      src/main/java/de/petanqueturniermanager/comp/FtpServerOptionsEventHandler.java;
+      src/main/java/de/petanqueturniermanager/helper/upload/{FtpServerDetailDialog,FtpServerAuswahlDialog,AbstractFtpUpload}.java
 
 - Tab-Farben:
     - tabfarbe.<name>
