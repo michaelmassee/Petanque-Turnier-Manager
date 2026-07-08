@@ -21,6 +21,7 @@ import com.jcraft.jsch.UserInfo;
 class SftpUploadService implements IUploadService {
 
     private static final Logger logger = LogManager.getLogger(SftpUploadService.class);
+    private static final int VERBINDUNGS_TIMEOUT_MS = 10_000;
 
     private final UploadKonfiguration konfiguration;
     private final UserInfo userInfo;
@@ -39,21 +40,7 @@ class SftpUploadService implements IUploadService {
         Session session = null;
         ChannelSftp kanal = null;
         try {
-            var jsch = new JSch();
-            ladeKnownHosts(jsch);
-            session = jsch.getSession(konfiguration.benutzer(), konfiguration.host(), konfiguration.port());
-            session.setPassword(passwort);
-            if (userInfo != null) {
-                if (userInfo instanceof SftpHostKeyUserInfo hostKeyUserInfo) {
-                    hostKeyUserInfo.setPasswort(passwort);
-                }
-                session.setUserInfo(userInfo);
-            }
-            var config = new Properties();
-            config.put("StrictHostKeyChecking", userInfo != null ? "ask" : "yes");
-            config.put("PreferredAuthentications", "password");
-            session.setConfig(config);
-            session.connect();
+            session = verbinde(passwort);
 
             kanal = (ChannelSftp) session.openChannel("sftp");
             kanal.connect();
@@ -83,12 +70,47 @@ class SftpUploadService implements IUploadService {
         } catch (SftpException e) {
             throw new IOException("SFTP-Verzeichniswechsel fehlgeschlagen: " + e.getMessage(), e);
         } finally {
-            if (kanal != null && kanal.isConnected()) {
-                kanal.disconnect();
+            trenneVerbindung(session, kanal);
+        }
+    }
+
+    @Override
+    public void testeVerbindung(String passwort) throws IOException {
+        Session session = null;
+        try {
+            session = verbinde(passwort);
+        } catch (JSchException e) {
+            throw new IOException(formatiereVerbindungsfehler(e.getMessage(), konfiguration), e);
+        } finally {
+            trenneVerbindung(session, null);
+        }
+    }
+
+    private Session verbinde(String passwort) throws IOException, JSchException {
+        var jsch = new JSch();
+        ladeKnownHosts(jsch);
+        Session session = jsch.getSession(konfiguration.benutzer(), konfiguration.host(), konfiguration.port());
+        session.setPassword(passwort);
+        if (userInfo != null) {
+            if (userInfo instanceof SftpHostKeyUserInfo hostKeyUserInfo) {
+                hostKeyUserInfo.setPasswort(passwort);
             }
-            if (session != null && session.isConnected()) {
-                session.disconnect();
-            }
+            session.setUserInfo(userInfo);
+        }
+        var config = new Properties();
+        config.put("StrictHostKeyChecking", userInfo != null ? "ask" : "yes");
+        config.put("PreferredAuthentications", "password");
+        session.setConfig(config);
+        session.connect(VERBINDUNGS_TIMEOUT_MS);
+        return session;
+    }
+
+    private void trenneVerbindung(Session session, ChannelSftp kanal) {
+        if (kanal != null && kanal.isConnected()) {
+            kanal.disconnect();
+        }
+        if (session != null && session.isConnected()) {
+            session.disconnect();
         }
     }
 

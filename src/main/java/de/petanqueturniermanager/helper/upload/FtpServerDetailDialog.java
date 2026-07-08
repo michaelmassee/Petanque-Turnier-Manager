@@ -3,14 +3,19 @@
  */
 package de.petanqueturniermanager.helper.upload;
 
+import java.io.IOException;
+
 import org.jspecify.annotations.Nullable;
 
 import com.sun.star.awt.ActionEvent;
+import com.sun.star.awt.ItemEvent;
 import com.sun.star.awt.PushButtonType;
 import com.sun.star.awt.XActionListener;
 import com.sun.star.awt.XButton;
+import com.sun.star.awt.XCheckBox;
 import com.sun.star.awt.XControlContainer;
 import com.sun.star.awt.XDialog;
+import com.sun.star.awt.XItemListener;
 import com.sun.star.awt.XRadioButton;
 import com.sun.star.awt.XTextComponent;
 import com.sun.star.awt.XToolkit;
@@ -36,11 +41,12 @@ import de.petanqueturniermanager.konfigdialog.AbstractUnoDialog;
 public final class FtpServerDetailDialog extends AbstractUnoDialog {
 
 	private static final int DIALOG_BREITE = 260;
-	private static final int DIALOG_HOEHE = 168;
+	private static final int DIALOG_HOEHE = 190;
 	private static final int LABEL_X = 8;
 	private static final int LABEL_W = 70;
 	private static final int FELD_X = 82;
 	private static final int FELD_W = 168;
+	private static final int PASSWORT_FELD_W = 100;
 	private static final int ZEILE_H = 14;
 
 	@Nullable private final FtpServerEintrag initialerEintrag;
@@ -112,7 +118,10 @@ public final class FtpServerDetailDialog extends AbstractUnoDialog {
 
 		y += ZEILE_H;
 		label(xMSF, cont, "lblPasswort", I18n.get("ftp.server.dialog.label.passwort"), LABEL_X, y, LABEL_W, 10);
-		textFeld(xMSF, cont, "txtPasswort", vorhanden == null ? "" : vorhanden.passwort(), FELD_X, y - 2, FELD_W, 12, true);
+		textFeld(xMSF, cont, "txtPasswort", vorhanden == null ? "" : vorhanden.passwort(),
+				FELD_X, y - 2, PASSWORT_FELD_W, 12, true);
+		checkbox(xMSF, cont, "chkPasswortAnzeigen", I18n.get("ftp.server.dialog.label.passwort.anzeigen"),
+				FELD_X + PASSWORT_FELD_W + 4, y - 1, FELD_W - PASSWORT_FELD_W - 4, 10, false);
 
 		y += ZEILE_H;
 		label(xMSF, cont, "lblVerzeichnis", I18n.get("ftp.server.dialog.label.verzeichnis"), LABEL_X, y, LABEL_W, 10);
@@ -120,32 +129,83 @@ public final class FtpServerDetailDialog extends AbstractUnoDialog {
 				FELD_X, y - 2, FELD_W, 12, false);
 
 		y += ZEILE_H + 8;
+		button(xMSF, cont, "btnTest", I18n.get("ftp.server.dialog.btn.test"), LABEL_X, y, 170, ZEILE_H,
+				(short) PushButtonType.STANDARD_value);
+
+		y += ZEILE_H + 8;
 		button(xMSF, cont, "btnOk", I18n.get("dialog.ok"), 90, y, 55, ZEILE_H, (short) PushButtonType.STANDARD_value);
 		button(xMSF, cont, "btnAbbrechen", I18n.get("dialog.abbrechen"), 150, y, 80, ZEILE_H,
 				(short) PushButtonType.CANCEL_value);
 
-		var okCtrl = xcc.getControl("btnOk");
-		if (okCtrl != null) {
-			var btn = Lo.qi(XButton.class, okCtrl);
-			if (btn != null) {
-				btn.addActionListener(new XActionListener() {
-					@Override
-					public void actionPerformed(ActionEvent e) {
-						beimOkGeklickt();
-					}
-
-					@Override
-					public void disposing(EventObject e) {
-						// nichts zu tun
-					}
-				});
-			}
-		}
+		registriereKlick(xcc, "btnOk", this::beimOkGeklickt);
+		registriereKlick(xcc, "btnTest", this::beimTestGeklickt);
+		registrierePasswortAnzeigenListener(xcc);
 	}
 
-	private void beimOkGeklickt() {
-		if (xcc == null || xDialog == null) {
+	/** Schaltet die Maskierung des Passwortfelds live um, wenn die Checkbox betätigt wird. */
+	private static void registrierePasswortAnzeigenListener(XControlContainer xcc) {
+		var passwortCtrl = xcc.getControl("txtPasswort");
+		var checkboxCtrl = xcc.getControl("chkPasswortAnzeigen");
+		if (passwortCtrl == null || checkboxCtrl == null) {
 			return;
+		}
+		var passwortProps = Lo.qi(XPropertySet.class, passwortCtrl.getModel());
+		var checkbox = Lo.qi(XCheckBox.class, checkboxCtrl);
+		if (passwortProps == null || checkbox == null) {
+			return;
+		}
+		checkbox.addItemListener(new XItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				try {
+					passwortProps.setPropertyValue("EchoChar", checkbox.getState() == 1 ? (short) 0 : (short) '*');
+				} catch (Exception ex) {
+					// Anzeige-Umschaltung ist rein kosmetisch, Fehler ignorieren
+				}
+			}
+
+			@Override
+			public void disposing(EventObject e) {
+				// nichts zu tun
+			}
+		});
+	}
+
+	private static void registriereKlick(XControlContainer xcc, String name, Runnable aktion) {
+		var ctrl = xcc.getControl(name);
+		if (ctrl == null) {
+			return;
+		}
+		var btn = Lo.qi(XButton.class, ctrl);
+		if (btn == null) {
+			return;
+		}
+		btn.addActionListener(new XActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				aktion.run();
+			}
+
+			@Override
+			public void disposing(EventObject e) {
+				// nichts zu tun
+			}
+		});
+	}
+
+	/** Aus den Formularfeldern gelesene und validierte Werte. */
+	private record FormularWerte(
+			String name, UploadProtokoll protokoll, String host, int port,
+			String benutzer, String passwort, String remotePfad) {
+	}
+
+	/**
+	 * Liest die aktuellen Formularwerte und validiert sie. Zeigt bei ungültigen Eingaben eine
+	 * Fehlermeldung an und liefert dann {@code null}.
+	 */
+	private @Nullable FormularWerte leseUndValidiere() {
+		if (xcc == null) {
+			return null;
 		}
 		String name = text(xcc, "txtName");
 		String host = text(xcc, "txtHost");
@@ -157,15 +217,15 @@ public final class FtpServerDetailDialog extends AbstractUnoDialog {
 
 		if (host.isBlank()) {
 			zeigeFehler(I18n.get("ftp.server.dialog.fehler.host.leer"));
-			return;
+			return null;
 		}
 		if (benutzer.isBlank()) {
 			zeigeFehler(I18n.get("ftp.server.dialog.fehler.benutzer.leer"));
-			return;
+			return null;
 		}
 		if (remotePfad.isBlank()) {
 			zeigeFehler(I18n.get("ftp.server.dialog.fehler.verzeichnis.leer"));
-			return;
+			return null;
 		}
 		int port = UploadKonfiguration.portOderStandard(portText, protokoll);
 		if (!portText.isBlank()) {
@@ -173,19 +233,51 @@ public final class FtpServerDetailDialog extends AbstractUnoDialog {
 				int eingegeben = Integer.parseInt(portText.trim());
 				if (eingegeben < 1 || eingegeben > 65535) {
 					zeigeFehler(I18n.get("ftp.server.dialog.fehler.port.ungueltig"));
-					return;
+					return null;
 				}
 				port = eingegeben;
 			} catch (NumberFormatException e) {
 				zeigeFehler(I18n.get("ftp.server.dialog.fehler.port.ungueltig"));
-				return;
+				return null;
 			}
 		}
+		return new FormularWerte(name, protokoll, host, port, benutzer, passwort, remotePfad);
+	}
 
+	private void beimOkGeklickt() {
+		if (xDialog == null) {
+			return;
+		}
+		var werte = leseUndValidiere();
+		if (werte == null) {
+			return;
+		}
 		ergebnis = new FtpServerEintrag(
 				initialerEintrag == null ? null : initialerEintrag.id(),
-				name, protokoll, host, port, benutzer, passwort, remotePfad);
+				werte.name(), werte.protokoll(), werte.host(), werte.port(),
+				werte.benutzer(), werte.passwort(), werte.remotePfad());
 		xDialog.endExecute();
+	}
+
+	private void beimTestGeklickt() {
+		var werte = leseUndValidiere();
+		if (werte == null) {
+			return;
+		}
+		var konfig = new UploadKonfiguration(
+				werte.protokoll(), werte.host(), werte.port(), werte.benutzer(), werte.remotePfad());
+		try {
+			UploadServiceFactory.erstelle(konfig).testeVerbindung(werte.passwort());
+			MessageBox.from(xContext, MessageBoxTypeEnum.INFO_OK)
+					.caption(I18n.get("ftp.server.dialog.test.titel"))
+					.message(I18n.get("ftp.server.dialog.test.erfolg"))
+					.show();
+		} catch (IOException e) {
+			MessageBox.from(xContext, MessageBoxTypeEnum.ERROR_OK)
+					.caption(I18n.get("ftp.server.dialog.test.titel"))
+					.message(I18n.get("ftp.server.dialog.test.fehler", e.getMessage()))
+					.show();
+		}
 	}
 
 	private void zeigeFehler(String meldung) {
@@ -241,6 +333,20 @@ public final class FtpServerDetailDialog extends AbstractUnoDialog {
 		if (maskiert) {
 			props.setPropertyValue("EchoChar", (short) '*');
 		}
+		cont.insertByName(name, model);
+	}
+
+	private static void checkbox(XMultiServiceFactory xMSF, XNameContainer cont,
+			String name, String label, int x, int y, int w, int h, boolean gewaehlt)
+			throws com.sun.star.uno.Exception {
+		var model = xMSF.createInstance("com.sun.star.awt.UnoControlCheckBoxModel");
+		var props = Lo.qi(XPropertySet.class, model);
+		props.setPropertyValue("Label", label);
+		props.setPropertyValue("PositionX", x);
+		props.setPropertyValue("PositionY", y);
+		props.setPropertyValue("Width", w);
+		props.setPropertyValue("Height", h);
+		props.setPropertyValue("State", (short) (gewaehlt ? 1 : 0));
 		cont.insertByName(name, model);
 	}
 
