@@ -173,6 +173,10 @@ public class GlobalProperties {
 	private static volatile XComponentContext libreOfficeContext;
 	private static volatile boolean webserverRegieInLibreOffice = false;
 	private static volatile boolean pluginOptionenInLibreOffice = false;
+	private static volatile boolean ftpServerInLibreOffice = false;
+	private static volatile boolean startseiteInLibreOffice = false;
+	private static volatile boolean startupModusInLibreOffice = false;
+	private static volatile boolean compositeViewsInLibreOffice = false;
 
 	private static final String TABFARBE_PRAEFIX = "tabfarbe.";
 	private static final Gson GSON = new GsonBuilder().create();
@@ -305,6 +309,9 @@ public class GlobalProperties {
 		ladePluginOptionenAusLibreOffice();
 		ladeWebserverRegieAusLibreOffice();
 		ladeFtpServerAusLibreOffice();
+		ladeStartseiteAusLibreOffice();
+		ladeStartupModusAusLibreOffice();
+		ladeCompositeViewsAusLibreOffice();
 		bereinigeLegacyEinzelPortProperties();
 		bereinigeLegacyTimerProperties();
 		bereinigeLegacyUploadPasswortProperties();
@@ -318,6 +325,9 @@ public class GlobalProperties {
 			lokaleInstanz.ladePluginOptionenAusLibreOffice();
 			lokaleInstanz.ladeWebserverRegieAusLibreOffice();
 			lokaleInstanz.ladeFtpServerAusLibreOffice();
+			lokaleInstanz.ladeStartseiteAusLibreOffice();
+			lokaleInstanz.ladeStartupModusAusLibreOffice();
+			lokaleInstanz.ladeCompositeViewsAusLibreOffice();
 			lokaleInstanz.safeSetLogLevel();
 		}
 	}
@@ -472,7 +482,11 @@ public class GlobalProperties {
 	@SuppressWarnings({ "deprecation", "removal" })
 	private static boolean istBereitsInLibreOfficeGespeichert(String key) {
 		return (webserverRegieInLibreOffice && istWebserverRegieLegacyKey(key))
-				|| (pluginOptionenInLibreOffice && istPluginOptionenLegacyKey(key));
+				|| (pluginOptionenInLibreOffice && istPluginOptionenLegacyKey(key))
+				|| (ftpServerInLibreOffice && istFtpServerLegacyKey(key))
+				|| (startseiteInLibreOffice && istStartseiteLegacyKey(key))
+				|| (startupModusInLibreOffice && istStartupModusLegacyKey(key))
+				|| (compositeViewsInLibreOffice && istCompositeViewsLegacyKey(key));
 	}
 
 	// Ruft bewusst noch @Deprecated-Legacy-Import-Methoden auf (Speicher + pluginOptionenAusMap()
@@ -535,8 +549,84 @@ public class GlobalProperties {
 			} else {
 				propMap.put(FTP_SERVER_JSON_PROP, json);
 			}
+			setFtpServerInLibreOffice(true);
 		} catch (IllegalStateException e) {
+			setFtpServerInLibreOffice(false);
 			logger.warn("LibreOffice-FTP-Server-Konfiguration nicht verfügbar, verwende Legacy-Properties", e);
+		}
+	}
+
+	// Ruft bewusst noch @Deprecated-Legacy-Import-Methoden auf (Speicher + startseiteOptionenAusMap()
+	// + bereinigeLegacyStartseiteProperties()); kann entfernt werden, sobald der einmalige Import
+	// als abgeschlossen gilt.
+	@SuppressWarnings({ "deprecation", "removal" })
+	private void ladeStartseiteAusLibreOffice() {
+		XComponentContext context = libreOfficeContext;
+		if (context == null) {
+			return;
+		}
+		try {
+			var speicher = new LibreOfficeStartseiteSpeicher(context);
+			if (!speicher.istLegacyImportErledigt()) {
+				speicher.importiereLegacy(startseiteOptionenAusMap());
+				setStartseiteInLibreOffice(true);
+				bereinigeLegacyStartseiteProperties();
+			}
+			startseiteOptionenInMap(speicher.laden());
+			setStartseiteInLibreOffice(true);
+		} catch (IllegalStateException e) {
+			setStartseiteInLibreOffice(false);
+			logger.warn("LibreOffice-Konfiguration für Turnier-Startseite nicht verfügbar, verwende Legacy-Properties", e);
+		}
+	}
+
+	// Ruft bewusst noch @Deprecated-Legacy-Import-Methoden auf (Speicher + istStartupTurnierModus()
+	// + bereinigeLegacyStartupModusProperties()); kann entfernt werden, sobald der einmalige Import
+	// als abgeschlossen gilt.
+	@SuppressWarnings({ "deprecation", "removal" })
+	private void ladeStartupModusAusLibreOffice() {
+		XComponentContext context = libreOfficeContext;
+		if (context == null) {
+			return;
+		}
+		try {
+			var speicher = new LibreOfficeStartupModusSpeicher(context);
+			if (!speicher.istLegacyImportErledigt()) {
+				speicher.importiereLegacy(isStartupTurnierModus());
+				setStartupModusInLibreOffice(true);
+				bereinigeLegacyStartupModusProperties();
+			}
+			startupModusInMap(speicher.laden());
+			setStartupModusInLibreOffice(true);
+		} catch (IllegalStateException e) {
+			setStartupModusInLibreOffice(false);
+			logger.warn("LibreOffice-Konfiguration für Startup-Modus nicht verfügbar, verwende Legacy-Properties", e);
+		}
+	}
+
+	// Ruft bewusst noch @Deprecated-Legacy-Import-Methoden auf (Speicher + getCompositeViewEintraege()
+	// + bereinigeLegacyCompositeViewsProperties()); kann entfernt werden, sobald der einmalige Import
+	// als abgeschlossen gilt.
+	@SuppressWarnings({ "deprecation", "removal" })
+	private void ladeCompositeViewsAusLibreOffice() {
+		XComponentContext context = libreOfficeContext;
+		if (context == null) {
+			return;
+		}
+		try {
+			var speicher = new LibreOfficeCompositeViewsSpeicher(context);
+			if (!speicher.istLegacyImportErledigt()) {
+				var legacyOptionen = compositeViewsOptionenAusEintraegen(isWebserverAktiv(), getCompositeViewEintraege());
+				speicher.importiereLegacy(legacyOptionen);
+				setCompositeViewsInLibreOffice(true);
+				bereinigeLegacyCompositeViewsProperties();
+			}
+			var optionen = speicher.laden();
+			compositeViewsFlatInMap(optionen.aktiv(), compositeViewsEintraegeAusJson(optionen.eintraegeJson()));
+			setCompositeViewsInLibreOffice(true);
+		} catch (IllegalStateException e) {
+			setCompositeViewsInLibreOffice(false);
+			logger.warn("LibreOffice-Konfiguration für Composite-Views nicht verfügbar, verwende Legacy-Properties", e);
 		}
 	}
 
@@ -670,6 +760,156 @@ public class GlobalProperties {
 	private static void setPluginOptionenInLibreOffice(boolean wert) {
 		pluginOptionenInLibreOffice = wert;
 	}
+
+	/**
+	 * @deprecated Nur solange relevant, wie {@link #speichernDatei()} den bereits nach LibreOffice
+	 *             migrierten FTP-Server-Legacy-Schlüssel beim Schreiben der Properties-Datei
+	 *             überspringen muss; kann mit dem restlichen Legacy-Import-Mechanismus entfernt werden.
+	 */
+	@Deprecated(forRemoval = true)
+	private static boolean istFtpServerLegacyKey(String key) {
+		return FTP_SERVER_JSON_PROP.equals(key);
+	}
+
+	private static void setFtpServerInLibreOffice(boolean wert) {
+		ftpServerInLibreOffice = wert;
+	}
+
+	/**
+	 * @deprecated Nur für den einmaligen Legacy-Import in die LibreOffice-Konfiguration
+	 *             ({@link #ladeStartseiteAusLibreOffice()}); kann entfernt werden, sobald davon
+	 *             auszugehen ist, dass keine Alt-Installation mehr importiert werden muss.
+	 */
+	@Deprecated(forRemoval = true)
+	private StartseiteOptionen startseiteOptionenAusMap() {
+		return new StartseiteOptionen(getStartseitePort(), isStartseiteAktiv(), getStartseiteZoom());
+	}
+
+	private static void startseiteOptionenInMap(StartseiteOptionen optionen) {
+		propMap.put(STARTSEITE_PORT_PROP, String.valueOf(optionen.port()));
+		setBooleanProp(STARTSEITE_AKTIV_PROP, optionen.aktiv());
+		propMap.put(STARTSEITE_ZOOM_PROP, String.valueOf(optionen.zoom()));
+	}
+
+	/**
+	 * @deprecated Cleanup-Code für den einmaligen Import der Turnier-Startseite in die
+	 *             LibreOffice-Konfiguration; kann entfernt werden, sobald davon auszugehen ist,
+	 *             dass keine Alt-Installation diese Schlüssel mehr besitzt.
+	 */
+	@Deprecated(forRemoval = true)
+	private static void bereinigeLegacyStartseiteProperties() {
+		boolean geaendert = false;
+		geaendert |= propMap.remove(STARTSEITE_PORT_PROP) != null;
+		geaendert |= propMap.remove(STARTSEITE_AKTIV_PROP) != null;
+		geaendert |= propMap.remove(STARTSEITE_ZOOM_PROP) != null;
+		if (geaendert) {
+			logger.info("Legacy-Turnier-Startseite-Properties entfernt");
+			speichernDatei();
+		}
+	}
+
+	/**
+	 * @deprecated Nur solange relevant, wie {@link #speichernDatei()} Legacy-Turnier-Startseite-Schlüssel
+	 *             beim Schreiben der Properties-Datei überspringen muss; kann mit dem restlichen
+	 *             Legacy-Import-Mechanismus entfernt werden.
+	 */
+	@Deprecated(forRemoval = true)
+	private static boolean istStartseiteLegacyKey(String key) {
+		return STARTSEITE_PORT_PROP.equals(key)
+				|| STARTSEITE_AKTIV_PROP.equals(key)
+				|| STARTSEITE_ZOOM_PROP.equals(key);
+	}
+
+	private static void setStartseiteInLibreOffice(boolean wert) {
+		startseiteInLibreOffice = wert;
+	}
+
+	private static void startupModusInMap(boolean aktiv) {
+		setBooleanProp(STARTUP_TURNIER_MODUS_PROP, aktiv);
+	}
+
+	/**
+	 * @deprecated Cleanup-Code für den einmaligen Import des Startup-Modus in die
+	 *             LibreOffice-Konfiguration; kann entfernt werden, sobald davon auszugehen ist,
+	 *             dass keine Alt-Installation diesen Schlüssel mehr besitzt.
+	 */
+	@Deprecated(forRemoval = true)
+	private static void bereinigeLegacyStartupModusProperties() {
+		if (propMap.remove(STARTUP_TURNIER_MODUS_PROP) != null) {
+			logger.info("Legacy-Startup-Modus-Property entfernt");
+			speichernDatei();
+		}
+	}
+
+	/**
+	 * @deprecated Nur solange relevant, wie {@link #speichernDatei()} den Legacy-Startup-Modus-Schlüssel
+	 *             beim Schreiben der Properties-Datei überspringen muss; kann mit dem restlichen
+	 *             Legacy-Import-Mechanismus entfernt werden.
+	 */
+	@Deprecated(forRemoval = true)
+	private static boolean istStartupModusLegacyKey(String key) {
+		return STARTUP_TURNIER_MODUS_PROP.equals(key);
+	}
+
+	private static void setStartupModusInLibreOffice(boolean wert) {
+		startupModusInLibreOffice = wert;
+	}
+
+	private static CompositeViewsOptionen compositeViewsOptionenAusEintraegen(boolean aktiv, List<CompositeViewEintragRoh> eintraege) {
+		String json = eintraege == null || eintraege.isEmpty() ? "" : GSON.toJson(eintraege);
+		return new CompositeViewsOptionen(aktiv, json);
+	}
+
+	private static List<CompositeViewEintragRoh> compositeViewsEintraegeAusJson(String json) {
+		if (json == null || json.isBlank()) {
+			return new ArrayList<>();
+		}
+		try {
+			var typ = new TypeToken<List<CompositeViewEintragRoh>>() { }.getType();
+			List<CompositeViewEintragRoh> gelesen = GSON.fromJson(json, typ);
+			return gelesen == null ? new ArrayList<>() : gelesen;
+		} catch (RuntimeException e) {
+			logger.warn("Fehler beim Lesen der Composite-View-Einträge aus LibreOffice-Konfiguration", e);
+			return new ArrayList<>();
+		}
+	}
+
+	/**
+	 * @deprecated Cleanup-Code für den einmaligen Import der Composite-Views in die
+	 *             LibreOffice-Konfiguration; kann entfernt werden, sobald davon auszugehen ist,
+	 *             dass keine Alt-Installation diese Schlüssel mehr besitzt.
+	 */
+	@Deprecated(forRemoval = true)
+	private static void bereinigeLegacyCompositeViewsProperties() {
+		var zuLoeschen = new ArrayList<String>();
+		for (var key : propMap.keySet()) {
+			if (istCompositeViewsLegacyKey(key)) {
+				zuLoeschen.add(key);
+			}
+		}
+		if (zuLoeschen.isEmpty()) {
+			return;
+		}
+		zuLoeschen.forEach(propMap::remove);
+		logger.info("{} Legacy-Composite-Views-Property/-ies entfernt", zuLoeschen.size());
+		speichernDatei();
+	}
+
+	/**
+	 * @deprecated Nur solange relevant, wie {@link #speichernDatei()} Legacy-Composite-Views-Schlüssel
+	 *             beim Schreiben der Properties-Datei überspringen muss; kann mit dem restlichen
+	 *             Legacy-Import-Mechanismus entfernt werden.
+	 */
+	@Deprecated(forRemoval = true)
+	private static boolean istCompositeViewsLegacyKey(String key) {
+		return WEBSERVER_AKTIV_PROP.equals(key)
+				|| WEBSERVER_COMPOSITE_PORTS_PROP.equals(key)
+				|| key.startsWith(WEBSERVER_COMPOSITE_PREFIX);
+	}
+
+	private static void setCompositeViewsInLibreOffice(boolean wert) {
+		compositeViewsInLibreOffice = wert;
+	}
 	// ----------------------------------------------------
 	// Getter
 	// ----------------------------------------------------
@@ -720,7 +960,20 @@ public class GlobalProperties {
 	 */
 	public void speichernWebserverAktiv(boolean aktiv) {
 		setBooleanProp(WEBSERVER_AKTIV_PROP, aktiv);
-		speichernDatei();
+		XComponentContext context = libreOfficeContext;
+		if (context != null) {
+			try {
+				var optionen = compositeViewsOptionenAusEintraegen(aktiv, getCompositeViewEintraege());
+				new LibreOfficeCompositeViewsSpeicher(context).speichern(optionen);
+				setCompositeViewsInLibreOffice(true);
+			} catch (IllegalStateException e) {
+				logger.warn("Speichern des Composite-Views-Aktiv-Flags in LibreOffice-Konfiguration fehlgeschlagen, verwende Legacy-Datei", e);
+				setCompositeViewsInLibreOffice(false);
+				speichernDatei();
+			}
+		} else {
+			speichernDatei();
+		}
 	}
 
 	public boolean isStartseiteAktiv() {
@@ -821,8 +1074,10 @@ public class GlobalProperties {
 			if (context != null) {
 				try {
 					new LibreOfficeFtpServerSpeicher(context).speichern(json);
+					setFtpServerInLibreOffice(true);
 				} catch (IllegalStateException e) {
 					logger.warn("Speichern der FTP-Server-Liste in LibreOffice-Konfiguration fehlgeschlagen, verwende Legacy-Datei", e);
+					setFtpServerInLibreOffice(false);
 					speichernDatei();
 				}
 			} else {
@@ -850,10 +1105,25 @@ public class GlobalProperties {
 	}
 
 	public void speichernStartseite(int port, boolean aktiv, int zoom) {
-		propMap.put(STARTSEITE_PORT_PROP, String.valueOf(port));
-		setBooleanProp(STARTSEITE_AKTIV_PROP, aktiv);
-		propMap.put(STARTSEITE_ZOOM_PROP, String.valueOf(zoom));
-		speichernDatei();
+		try {
+			var optionen = new StartseiteOptionen(port, aktiv, zoom);
+			startseiteOptionenInMap(optionen);
+			XComponentContext context = libreOfficeContext;
+			if (context != null) {
+				try {
+					new LibreOfficeStartseiteSpeicher(context).speichern(optionen);
+					setStartseiteInLibreOffice(true);
+				} catch (IllegalStateException e) {
+					logger.warn("Speichern der Turnier-Startseite in LibreOffice-Konfiguration fehlgeschlagen, verwende Legacy-Datei", e);
+					setStartseiteInLibreOffice(false);
+					speichernDatei();
+				}
+			} else {
+				speichernDatei();
+			}
+		} catch (RuntimeException e) {
+			logger.error("Fehler beim Speichern der Turnier-Startseite", e);
+		}
 	}
 
 	private static List<RegieZielRoh> validierteRegieZiele(List<RegieZielRoh> ziele) {
@@ -880,8 +1150,20 @@ public class GlobalProperties {
 	}
 
 	public void setStartupTurnierModus(boolean aktiv) {
-		setBooleanProp(STARTUP_TURNIER_MODUS_PROP, aktiv);
-		speichernDatei();
+		startupModusInMap(aktiv);
+		XComponentContext context = libreOfficeContext;
+		if (context != null) {
+			try {
+				new LibreOfficeStartupModusSpeicher(context).speichern(aktiv);
+				setStartupModusInLibreOffice(true);
+			} catch (IllegalStateException e) {
+				logger.warn("Speichern des Startup-Modus in LibreOffice-Konfiguration fehlgeschlagen, verwende Legacy-Datei", e);
+				setStartupModusInLibreOffice(false);
+				speichernDatei();
+			}
+		} else {
+			speichernDatei();
+		}
 	}
 
 	public String getLogLevel() {
@@ -1036,98 +1318,101 @@ public class GlobalProperties {
 	}
 
 	/**
-	 * Speichert alle Composite View-Einträge sowie das globale Webserver-Aktiv-Flag
-	 * in der Properties-Datei. Löscht zuvor alle alten Composite-Einträge.
+	 * Schreibt das globale Webserver-Aktiv-Flag sowie alle Composite View-Einträge als Flat-Keys
+	 * in die {@link #propMap} (Legacy-Struktur). Löscht zuvor alle alten Composite-Einträge.
+	 * Persistiert nicht selbst – das übernimmt der Aufrufer ({@link #speichernDatei()} oder
+	 * {@link LibreOfficeCompositeViewsSpeicher}).
+	 */
+	private static void compositeViewsFlatInMap(boolean aktiv, List<CompositeViewEintragRoh> eintraege) {
+		setBooleanProp(WEBSERVER_AKTIV_PROP, aktiv);
+		// Alte Einträge löschen
+		for (var key : new ArrayList<>(propMap.keySet())) {
+			if (key.startsWith(WEBSERVER_COMPOSITE_PREFIX)) {
+				propMap.remove(key);
+			}
+		}
+		propMap.remove(WEBSERVER_COMPOSITE_PORTS_PROP);
+
+		if (eintraege.isEmpty()) {
+			return;
+		}
+		var ports = new StringBuilder();
+		for (var eintrag : eintraege) {
+			if (!ports.isEmpty()) ports.append(",");
+			ports.append(eintrag.port());
+			String prefix = WEBSERVER_COMPOSITE_PREFIX + eintrag.port();
+			if (eintrag.aktiv())
+				propMap.put(prefix + WEBSERVER_COMPOSITE_AKTIV_SUFFIX, "true");
+			if (!eintrag.name().isBlank())
+				propMap.put(prefix + WEBSERVER_COMPOSITE_NAME_SUFFIX, eintrag.name().trim());
+			if (eintrag.zoom() != DEFAULT_ZOOM)
+				propMap.put(prefix + WEBSERVER_COMPOSITE_ZOOM_SUFFIX, String.valueOf(eintrag.zoom()));
+			// Default = true → nur explizit "false" persistieren (migrationssicher).
+			if (!eintrag.mitHeaderFooter())
+				propMap.put(prefix + WEBSERVER_COMPOSITE_MIT_HEADER_FOOTER_SUFFIX, "false");
+			if (eintrag.layoutJson() != null && !eintrag.layoutJson().isBlank())
+				propMap.put(prefix + WEBSERVER_COMPOSITE_LAYOUT_SUFFIX, eintrag.layoutJson());
+			// Default = RandKonfiguration.KEINER → nur bei Abweichung persistieren (migrationssicher).
+			var rand = eintrag.rand();
+			if (rand.dicke() != 0)
+				propMap.put(prefix + WEBSERVER_COMPOSITE_RAND_DICKE_SUFFIX, String.valueOf(rand.dicke()));
+			if (!RandKonfiguration.ART_KEIN.equals(rand.art()))
+				propMap.put(prefix + WEBSERVER_COMPOSITE_RAND_ART_SUFFIX, rand.art());
+			if (rand.farbe() != 0x000000)
+				propMap.put(prefix + WEBSERVER_COMPOSITE_RAND_FARBE_SUFFIX, String.format("%06x", rand.farbe()));
+			if (rand.transparenz() != 0)
+				propMap.put(prefix + WEBSERVER_COMPOSITE_RAND_TRANSPARENZ_SUFFIX, String.valueOf(rand.transparenz()));
+			if (!RandKonfiguration.ANIMATION_KEINE.equals(rand.animation()))
+				propMap.put(prefix + WEBSERVER_COMPOSITE_RAND_ANIMATION_SUFFIX, rand.animation());
+			propMap.put(prefix + WEBSERVER_COMPOSITE_PANEL_COUNT_SUFFIX, String.valueOf(eintrag.panels().size()));
+			for (int i = 0; i < eintrag.panels().size(); i++) {
+				var panel = eintrag.panels().get(i);
+				String panelPrefix = prefix + WEBSERVER_COMPOSITE_PANEL_INFIX + i;
+				propMap.put(panelPrefix + WEBSERVER_COMPOSITE_PANEL_TYP_SUFFIX, panel.typ().name());
+				if (panel.typ() == PanelTyp.URL || panel.typ() == PanelTyp.STATISCHE_DATEI) {
+					propMap.put(panelPrefix + WEBSERVER_COMPOSITE_PANEL_URL_SUFFIX, panel.externeUrl());
+				} else if (panel.typ() == PanelTyp.TURNIERSTARTSEITE) {
+					// Keine zusätzliche Quelle: das Panel nutzt die bestehende Startseiten-Konfiguration.
+				} else {
+					propMap.put(panelPrefix + WEBSERVER_COMPOSITE_PANEL_SHEET_SUFFIX, panel.sheetConfig());
+				}
+				if (panel.zoom() != DEFAULT_ZOOM)
+					propMap.put(panelPrefix + WEBSERVER_COMPOSITE_PANEL_ZOOM_SUFFIX, String.valueOf(panel.zoom()));
+				if (panel.sichtbarerTabellenAnteil() != DEFAULT_SICHTBARER_TABELLENANTEIL)
+					propMap.put(panelPrefix + WEBSERVER_COMPOSITE_PANEL_SICHTBARER_TABELLENANTEIL_SUFFIX,
+							String.valueOf(panel.sichtbarerTabellenAnteil()));
+				if (!PanelAusrichtung.KEIN.equals(panel.horizontalAusrichtung()))
+					propMap.put(panelPrefix + WEBSERVER_COMPOSITE_PANEL_HALIGN_SUFFIX, panel.horizontalAusrichtung());
+				if (!PanelAusrichtung.KEIN.equals(panel.vertikalAusrichtung()))
+					propMap.put(panelPrefix + WEBSERVER_COMPOSITE_PANEL_VALIGN_SUFFIX, panel.vertikalAusrichtung());
+				if (panel.blattnameAnzeigen())
+					propMap.put(panelPrefix + WEBSERVER_COMPOSITE_PANEL_BLATTNAME_SUFFIX, "true");
+			}
+		}
+		propMap.put(WEBSERVER_COMPOSITE_PORTS_PROP, ports.toString());
+	}
+
+	/**
+	 * Speichert alle Composite View-Einträge sowie das globale Webserver-Aktiv-Flag.
 	 */
 	public void speichernCompositeViews(boolean aktiv, List<CompositeViewEintragRoh> eintraege) {
 		try {
-			setBooleanProp(WEBSERVER_AKTIV_PROP, aktiv);
-			// Alte Einträge löschen
-			for (var alt : getCompositeViewEintraege()) {
-				String prefix = WEBSERVER_COMPOSITE_PREFIX + alt.port();
-				propMap.remove(prefix + WEBSERVER_COMPOSITE_AKTIV_SUFFIX);
-				propMap.remove(prefix + WEBSERVER_COMPOSITE_NAME_SUFFIX);
-				propMap.remove(prefix + WEBSERVER_COMPOSITE_ZOOM_SUFFIX);
-				propMap.remove(prefix + WEBSERVER_COMPOSITE_MIT_HEADER_FOOTER_SUFFIX);
-				propMap.remove(prefix + WEBSERVER_COMPOSITE_LAYOUT_SUFFIX);
-				propMap.remove(prefix + WEBSERVER_COMPOSITE_PANEL_COUNT_SUFFIX);
-				propMap.remove(prefix + WEBSERVER_COMPOSITE_RAND_DICKE_SUFFIX);
-				propMap.remove(prefix + WEBSERVER_COMPOSITE_RAND_ART_SUFFIX);
-				propMap.remove(prefix + WEBSERVER_COMPOSITE_RAND_FARBE_SUFFIX);
-				propMap.remove(prefix + WEBSERVER_COMPOSITE_RAND_TRANSPARENZ_SUFFIX);
-				propMap.remove(prefix + WEBSERVER_COMPOSITE_RAND_ANIMATION_SUFFIX);
-				for (int i = 0; i < alt.panels().size(); i++) {
-					String panelPrefix = prefix + WEBSERVER_COMPOSITE_PANEL_INFIX + i;
-					propMap.remove(panelPrefix + WEBSERVER_COMPOSITE_PANEL_SHEET_SUFFIX);
-					propMap.remove(panelPrefix + WEBSERVER_COMPOSITE_PANEL_ZOOM_SUFFIX);
-					propMap.remove(panelPrefix + WEBSERVER_COMPOSITE_PANEL_SICHTBARER_TABELLENANTEIL_SUFFIX);
-					propMap.remove(panelPrefix + LEGACY_WEBSERVER_COMPOSITE_PANEL_ZENTRIERT_SUFFIX);
-					propMap.remove(panelPrefix + WEBSERVER_COMPOSITE_PANEL_HALIGN_SUFFIX);
-					propMap.remove(panelPrefix + WEBSERVER_COMPOSITE_PANEL_VALIGN_SUFFIX);
-					propMap.remove(panelPrefix + WEBSERVER_COMPOSITE_PANEL_BLATTNAME_SUFFIX);
-					propMap.remove(panelPrefix + WEBSERVER_COMPOSITE_PANEL_TYP_SUFFIX);
-					propMap.remove(panelPrefix + WEBSERVER_COMPOSITE_PANEL_URL_SUFFIX);
+			var normalisierteEintraege = eintraege == null ? List.<CompositeViewEintragRoh>of() : eintraege;
+			compositeViewsFlatInMap(aktiv, normalisierteEintraege);
+			XComponentContext context = libreOfficeContext;
+			if (context != null) {
+				try {
+					var optionen = compositeViewsOptionenAusEintraegen(aktiv, normalisierteEintraege);
+					new LibreOfficeCompositeViewsSpeicher(context).speichern(optionen);
+					setCompositeViewsInLibreOffice(true);
+				} catch (IllegalStateException e) {
+					logger.warn("Speichern der Composite-Views in LibreOffice-Konfiguration fehlgeschlagen, verwende Legacy-Datei", e);
+					setCompositeViewsInLibreOffice(false);
+					speichernDatei();
 				}
+			} else {
+				speichernDatei();
 			}
-			propMap.remove(WEBSERVER_COMPOSITE_PORTS_PROP);
-
-			if (!eintraege.isEmpty()) {
-				var ports = new StringBuilder();
-				for (var eintrag : eintraege) {
-					if (!ports.isEmpty()) ports.append(",");
-					ports.append(eintrag.port());
-					String prefix = WEBSERVER_COMPOSITE_PREFIX + eintrag.port();
-					if (eintrag.aktiv())
-						propMap.put(prefix + WEBSERVER_COMPOSITE_AKTIV_SUFFIX, "true");
-					if (!eintrag.name().isBlank())
-						propMap.put(prefix + WEBSERVER_COMPOSITE_NAME_SUFFIX, eintrag.name().trim());
-					if (eintrag.zoom() != DEFAULT_ZOOM)
-						propMap.put(prefix + WEBSERVER_COMPOSITE_ZOOM_SUFFIX, String.valueOf(eintrag.zoom()));
-					// Default = true → nur explizit "false" persistieren (migrationssicher).
-					if (!eintrag.mitHeaderFooter())
-						propMap.put(prefix + WEBSERVER_COMPOSITE_MIT_HEADER_FOOTER_SUFFIX, "false");
-					if (eintrag.layoutJson() != null && !eintrag.layoutJson().isBlank())
-						propMap.put(prefix + WEBSERVER_COMPOSITE_LAYOUT_SUFFIX, eintrag.layoutJson());
-					// Default = RandKonfiguration.KEINER → nur bei Abweichung persistieren (migrationssicher).
-					var rand = eintrag.rand();
-					if (rand.dicke() != 0)
-						propMap.put(prefix + WEBSERVER_COMPOSITE_RAND_DICKE_SUFFIX, String.valueOf(rand.dicke()));
-					if (!RandKonfiguration.ART_KEIN.equals(rand.art()))
-						propMap.put(prefix + WEBSERVER_COMPOSITE_RAND_ART_SUFFIX, rand.art());
-					if (rand.farbe() != 0x000000)
-						propMap.put(prefix + WEBSERVER_COMPOSITE_RAND_FARBE_SUFFIX, String.format("%06x", rand.farbe()));
-					if (rand.transparenz() != 0)
-						propMap.put(prefix + WEBSERVER_COMPOSITE_RAND_TRANSPARENZ_SUFFIX, String.valueOf(rand.transparenz()));
-					if (!RandKonfiguration.ANIMATION_KEINE.equals(rand.animation()))
-						propMap.put(prefix + WEBSERVER_COMPOSITE_RAND_ANIMATION_SUFFIX, rand.animation());
-					propMap.put(prefix + WEBSERVER_COMPOSITE_PANEL_COUNT_SUFFIX, String.valueOf(eintrag.panels().size()));
-					for (int i = 0; i < eintrag.panels().size(); i++) {
-						var panel = eintrag.panels().get(i);
-						String panelPrefix = prefix + WEBSERVER_COMPOSITE_PANEL_INFIX + i;
-						propMap.put(panelPrefix + WEBSERVER_COMPOSITE_PANEL_TYP_SUFFIX, panel.typ().name());
-						if (panel.typ() == PanelTyp.URL || panel.typ() == PanelTyp.STATISCHE_DATEI) {
-							propMap.put(panelPrefix + WEBSERVER_COMPOSITE_PANEL_URL_SUFFIX, panel.externeUrl());
-						} else if (panel.typ() == PanelTyp.TURNIERSTARTSEITE) {
-							// Keine zusätzliche Quelle: das Panel nutzt die bestehende Startseiten-Konfiguration.
-						} else {
-							propMap.put(panelPrefix + WEBSERVER_COMPOSITE_PANEL_SHEET_SUFFIX, panel.sheetConfig());
-						}
-						if (panel.zoom() != DEFAULT_ZOOM)
-							propMap.put(panelPrefix + WEBSERVER_COMPOSITE_PANEL_ZOOM_SUFFIX, String.valueOf(panel.zoom()));
-						if (panel.sichtbarerTabellenAnteil() != DEFAULT_SICHTBARER_TABELLENANTEIL)
-							propMap.put(panelPrefix + WEBSERVER_COMPOSITE_PANEL_SICHTBARER_TABELLENANTEIL_SUFFIX,
-									String.valueOf(panel.sichtbarerTabellenAnteil()));
-						if (!PanelAusrichtung.KEIN.equals(panel.horizontalAusrichtung()))
-							propMap.put(panelPrefix + WEBSERVER_COMPOSITE_PANEL_HALIGN_SUFFIX, panel.horizontalAusrichtung());
-						if (!PanelAusrichtung.KEIN.equals(panel.vertikalAusrichtung()))
-							propMap.put(panelPrefix + WEBSERVER_COMPOSITE_PANEL_VALIGN_SUFFIX, panel.vertikalAusrichtung());
-						if (panel.blattnameAnzeigen())
-							propMap.put(panelPrefix + WEBSERVER_COMPOSITE_PANEL_BLATTNAME_SUFFIX, "true");
-					}
-				}
-				propMap.put(WEBSERVER_COMPOSITE_PORTS_PROP, ports.toString());
-			}
-			speichernDatei();
 		} catch (Exception e) {
 			logger.error("Fehler beim Speichern der Composite Views", e);
 		}
@@ -1318,5 +1603,9 @@ public class GlobalProperties {
 		libreOfficeContext = null;
 		setWebserverRegieInLibreOffice(false);
 		setPluginOptionenInLibreOffice(false);
+		setFtpServerInLibreOffice(false);
+		setStartseiteInLibreOffice(false);
+		setStartupModusInLibreOffice(false);
+		setCompositeViewsInLibreOffice(false);
 	}
 }

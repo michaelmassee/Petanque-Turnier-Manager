@@ -49,4 +49,37 @@
             <value/>
         </prop>
     </node>
+    <node oor:name="Startseite">
+        <prop oor:name="Port">
+            <value>9200</value>
+        </prop>
+        <prop oor:name="Active">
+            <value>false</value>
+        </prop>
+        <prop oor:name="Zoom">
+            <value>100</value>
+        </prop>
+        <prop oor:name="LegacyPropertiesImported">
+            <value>false</value>
+        </prop>
+    </node>
+    <node oor:name="Startup">
+        <prop oor:name="TurnierModus">
+            <value>false</value>
+        </prop>
+        <prop oor:name="LegacyPropertiesImported">
+            <value>false</value>
+        </prop>
+    </node>
+    <node oor:name="CompositeViews">
+        <prop oor:name="Active">
+            <value>false</value>
+        </prop>
+        <prop oor:name="EntriesJson">
+            <value/>
+        </prop>
+        <prop oor:name="LegacyPropertiesImported">
+            <value>false</value>
+        </prop>
+    </node>
 </oor:component-data>

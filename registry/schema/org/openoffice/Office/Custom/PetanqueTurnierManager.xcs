@@ -78,5 +78,56 @@
                 <value/>
             </prop>
         </group>
+        <group oor:name="Startseite">
+            <info>
+                <desc>Turnier-Startseite webserver options.</desc>
+            </info>
+            <prop oor:name="Port" oor:type="xs:int">
+                <info><desc>TCP port for the Turnier-Startseite webserver.</desc></info>
+                <value>9200</value>
+            </prop>
+            <prop oor:name="Active" oor:type="xs:boolean">
+                <info><desc>Whether the Turnier-Startseite webserver is active.</desc></info>
+                <value>false</value>
+            </prop>
+            <prop oor:name="Zoom" oor:type="xs:int">
+                <info><desc>Zoom factor in percent for the Turnier-Startseite.</desc></info>
+                <value>100</value>
+            </prop>
+            <prop oor:name="LegacyPropertiesImported" oor:type="xs:boolean">
+                <info><desc>Whether legacy Turnier-Startseite properties have already been imported.</desc></info>
+                <value>false</value>
+            </prop>
+        </group>
+        <group oor:name="Startup">
+            <info>
+                <desc>Startup behaviour options.</desc>
+            </info>
+            <prop oor:name="TurnierModus" oor:type="xs:boolean">
+                <info><desc>Whether the tournament startup mode is active.</desc></info>
+                <value>false</value>
+            </prop>
+            <prop oor:name="LegacyPropertiesImported" oor:type="xs:boolean">
+                <info><desc>Whether legacy startup-mode properties have already been imported.</desc></info>
+                <value>false</value>
+            </prop>
+        </group>
+        <group oor:name="CompositeViews">
+            <info>
+                <desc>Composite webserver views.</desc>
+            </info>
+            <prop oor:name="Active" oor:type="xs:boolean">
+                <info><desc>Global composite-views webserver active flag.</desc></info>
+                <value>false</value>
+            </prop>
+            <prop oor:name="EntriesJson" oor:type="xs:string">
+                <info><desc>Configured composite views (including panels) as JSON.</desc></info>
+                <value/>
+            </prop>
+            <prop oor:name="LegacyPropertiesImported" oor:type="xs:boolean">
+                <info><desc>Whether legacy composite-views properties have already been imported.</desc></info>
+                <value>false</value>
+            </prop>
+        </group>
     </component>
 </oor:component-schema>
