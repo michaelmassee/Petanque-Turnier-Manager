@@ -1,8 +1,30 @@
-Noch gespeichert in GlobalProperties
+# Migration GlobalProperties: Legacy-Datei → LibreOffice-Konfiguration
+
+## Ziel
+
+`GlobalProperties` speichert historisch alle Plugin-Einstellungen in einer einzigen Legacy-Properties-Datei
+`PetanqueTurnierManager.properties` im User-Home (`user.home`). Ziel der laufenden Migration ist es, diese Datei
+schrittweise durch die native LibreOffice-Konfiguration (XCU-Nodes unter Extras > Optionen > PétTurnMngr) zu
+ersetzen.
+
+## Stand: hybrid
+
+`GlobalProperties` speichert aktuell **hybrid** — je Bereich unterschiedlich weit migriert:
+
+- **Vollständig auf LO-Konfiguration umgestellt** (kein Legacy-Fallback mehr): Webserver-Regie.
+- **Primär LO-Konfiguration, mit Legacy-Datei-Fallback** (falls kein LO-Kontext verfügbar, z.B. in reinen
+  Unit-Tests ohne laufendes LibreOffice): Plugin-/Optionswerte, FTP-Server.
+- **Noch ausschließlich Legacy-Datei**, keine LO-Konfiguration vorgesehen: Turnier-Startseite, Startup-Modus,
+  Composite-Webserver-Views, Tab-Farben.
+
+Die Legacy-Datei bleibt also so lange relevant, wie nicht jeder Bereich einzeln migriert wurde. Einmal migrierte
+Alt-Keys werden beim Start einmalig aus der Datei entfernt (siehe „Nicht mehr regulär gespeichert" unten).
+
+## Noch gespeichert in GlobalProperties
 
 - Plugin-/Optionswerte: autosave, backup, newversioncheck, prozessbox.automatisch.anzeigen, prozessbox.automatisch.schliessen, performance.logging, loglevel
     - Primär über LibreOffice-Konfiguration, Fallback Legacy-Datei.
-    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java:874 (speichern), src/main/java/de/petanqueturniermanager/comp/LibreOfficePluginOptionenSpeicher.java:74
+    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java:1081 (speichern), src/main/java/de/petanqueturniermanager/comp/LibreOfficePluginOptionenSpeicher.java:84
 
 - Webserver-Regie:
     - Primär über LibreOffice-Konfiguration in der Node WebserverRegie.
@@ -20,11 +42,11 @@ Noch gespeichert in GlobalProperties
     - startseite_port
     - startseite_aktiv
     - startseite_zoom
-    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java:570 (getStartseitePort), :586 (speichernStartseite)
+    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java:777 (getStartseitePort), :793 (speichernStartseite)
 
 - Startup-Modus:
     - startup.turnier.modus
-    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java:613
+    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java:819 (isStartupTurnierModus), :823 (setStartupTurnierModus)
 
 - Composite-Webserver-Views:
     - webserver_aktiv
@@ -33,7 +55,7 @@ Noch gespeichert in GlobalProperties
     - pro Panel: _typ, _sheet oder _url, _zoom, _sichtbarer_tabellenanteil, _halign, _valign, _blattname
     - Rand-Properties (Gesamtrahmen: Dicke/Art/Farbe/Transparenz/Animation) werden nur bei Abweichung vom Default (`RandKonfiguration.KEINER`) geschrieben (migrationssicher für Alt-Configs).
     - Verwaltung jetzt direkt auf der eigenen LibreOffice-Optionsseite Extras > Optionen > PétTurnMngr > Composite Views (kein separater `CompositeViewListeDialog` mehr); Detail-Konfiguration je Zeile über `CompositeViewDetailDialog`, "Übernehmen" persistiert sofort und benachrichtigt den laufenden Webserver live.
-    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java:632 (getCompositeViewEintraege), :776 (speichernCompositeViews); src/main/java/de/petanqueturniermanager/webserver/RandKonfiguration.java; src/main/java/de/petanqueturniermanager/comp/CompositeViewsOptionsEventHandler.java
+    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java:839 (getCompositeViewEintraege), :983 (speichernCompositeViews); src/main/java/de/petanqueturniermanager/webserver/RandKonfiguration.java; src/main/java/de/petanqueturniermanager/comp/CompositeViewsOptionsEventHandler.java
 
 - FTP-Server (zentrale Liste, primär über LibreOffice-Konfiguration):
     - Node FtpServer, Property ServersJson (JSON-Liste von GlobalProperties.FtpServerEintrag,
@@ -56,21 +78,21 @@ Noch gespeichert in GlobalProperties
 - Tab-Farben:
     - tabfarbe.<name>
     - Aktuell gibt es in GlobalProperties nur Lesen, keinen Setter. Existierende Werte bleiben aber in der Datei, weil beim Speichern die ganze propMap geschrieben wird.
-    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java:905
+    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java:1112 (getTabFarbe)
 
-Nicht mehr regulär gespeichert
+## Nicht mehr regulär gespeichert
 
 - Alte Einzel-Port-Webserver-Keys werden beim Start entfernt:
     - webserver_ports
     - webserver_port_*
     - webserver_sheetnamen_anzeigen
-    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java:60
+    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java:333 (bereinigeLegacyEinzelPortProperties)
 
 - Webserver-Regie-Legacy-Keys werden nach erfolgreichem LO-Import entfernt:
     - webserver_regie_aktiv
     - webserver_regie_port
     - webserver_regie_ziele
-    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java, src/main/java/de/petanqueturniermanager/comp/LibreOfficeWebserverRegieSpeicher.java
+    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java:588 (bereinigeLegacyWebserverRegieProperties), src/main/java/de/petanqueturniermanager/comp/LibreOfficeWebserverRegieSpeicher.java
 
 - Timer-Einstellungen-Legacy-Keys werden beim Start entfernt (keine Wertübernahme):
     - timer_letzte_dauer
@@ -78,4 +100,4 @@ Nicht mehr regulär gespeichert
     - timer_letzte_bezeichnung
     - timer_hintergrundfarbe
     - Neue Werte liegen pro Dokument als UserDefined Document Properties (DocumentPropertiesHelper): Timer Letzte Dauer, Timer Letzter Port, Timer Letzte Bezeichnung, Timer Hintergrundfarbe.
-    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java, src/main/java/de/petanqueturniermanager/timer/TimerDialog.java
+    - Code: src/main/java/de/petanqueturniermanager/comp/GlobalProperties.java:360 (bereinigeLegacyTimerProperties), src/main/java/de/petanqueturniermanager/timer/TimerDialog.java
