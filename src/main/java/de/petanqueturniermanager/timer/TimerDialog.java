@@ -197,7 +197,7 @@ public class TimerDialog extends AbstractUnoDialog {
         var docProps = new DocumentPropertiesHelper(currentSpreadsheet);
         docProps.setStringProperty(DOC_PROP_TIMER_DAUER, dauerText.trim());
         docProps.setIntProperty(DOC_PROP_TIMER_PORT, port);
-        docProps.setStringProperty(DOC_PROP_TIMER_BEZEICHNUNG, bezeichnung != null ? bezeichnung : "");
+        docProps.setStringProperty(DOC_PROP_TIMER_BEZEICHNUNG, bezeichnung);
         docProps.setIntProperty(DOC_PROP_TIMER_HINTERGRUNDFARBE, hintergrundFarbeInt);
         TimerManager.get().starten(dauerSekunden, bezeichnung, port, hintergrundFarbeInt);
         logger.info("Timer gestartet via Dialog: {} s, Port {}, Farbe #{}", dauerSekunden, port,
