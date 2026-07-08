@@ -121,6 +121,17 @@ Separator-Nodes belegen einfach den nächsten freien Slot:
 ```
 Falsch: `B2A`, `A5A2S`, `A5A4S`
 
+### LO-Optionsseiten (Extras > Optionen > PétTurnMngr)
+
+Jede Optionsseite (z.B. Tab-Farben, FTP-Server) braucht **drei** Registrierungsstellen, die alle zusammenpassen müssen:
+1. `registry/data/org/openoffice/Office/OptionsDialog.xcu` — `<node>` unter `Nodes/PetanqueTurnierManager/Leaves` mit `Label`, `OptionsPage` (Pfad zur `.xdl`) und `EventHandlerService` (Service-Name).
+2. `PetanqueTurnierManager.components` — `<implementation>`/`<service>`-Eintrag für den Event-Handler (moderner UNO-Registrierungsmechanismus).
+3. **`src/main/resources/de/petanqueturniermanager/comp/RegistrationHandler.classes`** — reine Text-Liste, eine Klasse pro Zeile, von `RegistrationHandler.__getComponentFactory()` durchsucht (Backward-Compat-Mechanismus, siehe `RegistrationHandler.java`).
+
+**Fehlt der Event-Handler in `RegistrationHandler.classes` (Nr. 3), liefert `__getComponentFactory` `null`.** Laut LO-Quellcode (`cui/source/options/treeopt.cxx`, `ExtensionsTabPage::CreateDialogWithHandler`) wird die Optionsseite dann **überhaupt nicht erstellt** — der Baum-Eintrag erscheint normal und ist klickbar, aber die Seite bleibt komplett leer (kein Label, keine Controls, keine Fehlermeldung, keine Exception irgendwo im Log). Sehr verwirrend, weil `.components`, `OptionsDialog.xcu` und die `.xdl` alle korrekt aussehen und Build/`reinstallExtension` fehlerfrei laufen.
+
+Bei jeder neuen Optionsseite: alle drei Stellen ergänzen. `LibreOfficeOptionsPackagingTest.optionsEventHandlerSindRegistriert()` prüft automatisch, dass jeder bekannte Options-Event-Handler in **beiden** Registrierungspfaden (`.components` UND `RegistrationHandler.classes`) eingetragen ist — bei neuem Handler dort in die Liste aufnehmen.
+
 ### IDL / Add-in Interfaces
 
 IDL files in `idl/` define the XGlobal interface for Calc functions. The `addin/` package contains the generated Java interface from IDL. IDL compilation is not automated in Gradle (see BUILD_ISSUES.md) — interfaces must be generated manually or the project should be migrated to a modern IDL-free approach.
