@@ -17,6 +17,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
@@ -155,6 +156,18 @@ public final class WebServerManager implements TimerListener {
     private static final long WATCHDOG_INTERVAL_MS = 5_000L;
 
     private ScheduledExecutorService watchdog;
+
+    /** Zeitfenster für die Composite-View-„Anwenden"-Vorschau, bevor sie automatisch verworfen wird. */
+    private static final long VORSCHAU_TIMEOUT_SEKUNDEN = 15L;
+
+    /** Bestätigter Composite-View-Zustand vor der laufenden Vorschau; {@code null} = kein Revert ausstehend. */
+    private record CompositeViewVorschauSnapshot(boolean aktiv, List<CompositeViewEintragRoh> eintraege) {
+    }
+
+    /** Eigener, von {@link #laeuft} unabhängiger Daemon-Scheduler für den Vorschau-Revert. */
+    private ScheduledExecutorService vorschauRevertExecutor;
+    private volatile CompositeViewVorschauSnapshot vorschauSnapshot;
+    private volatile ScheduledFuture<?> vorschauRevertTask;
 
     private WebServerManager() {
     }
@@ -520,6 +533,71 @@ public final class WebServerManager implements TimerListener {
                 logger.warn("Webserver-Konfigurationsabgleich fehlgeschlagen: {}", e.getMessage(), e);
             }
         });
+    }
+
+    /**
+     * Wendet eine Composite-View-Konfiguration nur als temporäre, in-memory Vorschau an (siehe
+     * {@link GlobalProperties#wendeCompositeViewsAn}) und plant einen automatischen Revert nach
+     * {@link #VORSCHAU_TIMEOUT_SEKUNDEN}, falls sie nicht per {@link #bestaetigeCompositeViewVorschau()}
+     * bestätigt wird. Der ursprüngliche, bestätigte Zustand wird nur beim ersten Aufruf einer laufenden
+     * Vorschau-Sitzung gesichert, damit mehrfaches „Anwenden" stets auf denselben Ausgangszustand
+     * zurückfällt statt auf eine bereits ungesicherte Zwischenvorschau.
+     */
+    public synchronized void wendeCompositeViewVorschauAn(boolean aktiv, List<CompositeViewEintragRoh> eintraege) {
+        if (vorschauSnapshot == null) {
+            vorschauSnapshot = new CompositeViewVorschauSnapshot(
+                    GlobalProperties.get().isWebserverAktiv(), GlobalProperties.get().getCompositeViewEintraege());
+        }
+        GlobalProperties.get().wendeCompositeViewsAn(aktiv, eintraege);
+        planeVorschauRevert();
+        konfigurationGeaendert();
+        statusListenerBenachrichtigen();
+    }
+
+    /** Bestätigt die aktuell laufende Composite-View-Vorschau endgültig; kein automatischer Revert mehr. */
+    public synchronized void bestaetigeCompositeViewVorschau() {
+        if (vorschauRevertTask != null) {
+            vorschauRevertTask.cancel(false);
+            vorschauRevertTask = null;
+        }
+        vorschauSnapshot = null;
+        statusListenerBenachrichtigen();
+    }
+
+    /** {@code true}, solange eine „Anwenden"-Vorschau auf Bestätigung wartet (Countdown läuft). */
+    public boolean isCompositeViewVorschauAusstehend() {
+        return vorschauSnapshot != null;
+    }
+
+    private synchronized void planeVorschauRevert() {
+        if (vorschauRevertTask != null) {
+            vorschauRevertTask.cancel(false);
+        }
+        vorschauRevertTask = vorschauRevertExecutor()
+                .schedule(this::revertCompositeViewVorschau, VORSCHAU_TIMEOUT_SEKUNDEN, TimeUnit.SECONDS);
+    }
+
+    private synchronized void revertCompositeViewVorschau() {
+        var snapshot = vorschauSnapshot;
+        if (snapshot == null) {
+            return;
+        }
+        GlobalProperties.get().wendeCompositeViewsAn(snapshot.aktiv(), snapshot.eintraege());
+        vorschauSnapshot = null;
+        vorschauRevertTask = null;
+        konfigurationGeaendert();
+        statusListenerBenachrichtigen();
+    }
+
+    private synchronized ScheduledExecutorService vorschauRevertExecutor() {
+        if (vorschauRevertExecutor == null || vorschauRevertExecutor.isShutdown()) {
+            vorschauRevertExecutor = Executors.newSingleThreadScheduledExecutor(r -> {
+                var t = new Thread(r, "PTM-CompositeView-Vorschau");
+                t.setDaemon(true);
+                return t;
+            });
+        }
+        return vorschauRevertExecutor;
     }
 
     private synchronized KonfigAbgleichErgebnis konfigurationGeaendertIntern() {
