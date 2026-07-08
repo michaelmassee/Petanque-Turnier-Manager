@@ -19,6 +19,7 @@ import com.sun.star.awt.XControl;
 import com.sun.star.awt.XControlContainer;
 import com.sun.star.awt.XListBox;
 import com.sun.star.awt.XWindow;
+import com.sun.star.awt.XWindowPeer;
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.lang.EventObject;
 import com.sun.star.lang.WrappedTargetException;
@@ -72,6 +73,9 @@ public final class FtpServerOptionsEventHandler extends WeakBase
 	/** Arbeitskopie der FTP-Server; {@code null} solange die Seite noch nicht initialisiert wurde. */
 	private List<FtpServerEintrag> eintraege;
 
+	/** Peer der Optionsseite, als Parent fuer modale Detail-Dialoge (siehe {@link #windowPeer}). */
+	private XWindowPeer pagePeer;
+
 	public FtpServerOptionsEventHandler(XComponentContext context) {
 		this.context = context;
 		GlobalProperties.setLibreOfficeContext(context);
@@ -103,6 +107,7 @@ public final class FtpServerOptionsEventHandler extends WeakBase
 
 	private void ladeInOberflaeche(XWindow window) {
 		XControlContainer container = container(window);
+		pagePeer = windowPeer(window);
 		setLabel(container, CTL_FTP_SERVER_LABEL, I18n.get("ftp.server.konfig.bereich"));
 		setLabel(container, CTL_HINZUFUEGEN, I18n.get("ftp.server.konfig.btn.hinzufuegen"));
 		setLabel(container, CTL_BEARBEITEN, I18n.get("ftp.server.konfig.btn.bearbeiten"));
@@ -141,7 +146,7 @@ public final class FtpServerOptionsEventHandler extends WeakBase
 				aktualisiereListe(container);
 				persistiere();
 			};
-			var detailDialog = new FtpServerDetailDialog(context, null);
+			var detailDialog = new FtpServerDetailDialog(context, null, pagePeer);
 			var neuerEintrag = detailDialog.zeigen();
 			if (neuerEintrag != null) {
 				callback.accept(neuerEintrag);
@@ -159,7 +164,7 @@ public final class FtpServerOptionsEventHandler extends WeakBase
 		}
 		try {
 			var eintrag = eintraege.get(idx);
-			var detailDialog = new FtpServerDetailDialog(context, eintrag);
+			var detailDialog = new FtpServerDetailDialog(context, eintrag, pagePeer);
 			var geaenderterEintrag = detailDialog.zeigen();
 			if (geaenderterEintrag != null) {
 				eintraege.set(idx, geaenderterEintrag);
@@ -209,6 +214,20 @@ public final class FtpServerOptionsEventHandler extends WeakBase
 			throw new IllegalStateException("Optionsseite hat kein XControlContainer");
 		}
 		return container;
+	}
+
+	/**
+	 * Peer der Optionsseite, als Parent fuer modale Detail-Dialoge. Das an {@code callHandlerMethod}
+	 * uebergebene {@code window} ist selbst kein {@link XWindowPeer} (siehe LO-Quelle
+	 * {@code cui/source/options/treeopt.cxx}, {@code ExtensionsTabPage::CreateDialogWithHandler}) –
+	 * es implementiert {@link XControl}, dessen {@code getPeer()} den echten, in den
+	 * Optionen-Dialog eingehaengten Fenster-Peer liefert. Ohne diesen Peer erkennt der
+	 * Fenster-Manager den Detail-Dialog nicht als Kind des Optionen-Dialogs, wodurch dieser
+	 * bedienbar bleibt, waehrend der Detail-Dialog geoeffnet ist (fehlende Modalitaet).
+	 */
+	private static XWindowPeer windowPeer(XWindow window) {
+		XControl control = UnoRuntime.queryInterface(XControl.class, window);
+		return control == null ? null : control.getPeer();
 	}
 
 	private static short selectedPos(XControlContainer container, String name) {

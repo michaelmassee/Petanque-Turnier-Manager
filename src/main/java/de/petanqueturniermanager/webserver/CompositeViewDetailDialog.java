@@ -163,6 +163,13 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
     /** Das konfigurierte Ergebnis – wird bei OK gesetzt. */
     private CompositeViewEintragRoh ergebnis = null;
 
+    /**
+     * Peer der aufrufenden Optionsseite. Ohne Parent würde der Dialog vom Fenster-Manager als
+     * eigenständiges Top-Level-Fenster behandelt und wäre nicht modal gegenüber dem
+     * Optionen-Dialog.
+     */
+    private final XWindowPeer parentPeer;
+
     /** Interne Validierungsausnahme. */
     private static final class UngueltigeEingabeException extends Exception {
         private static final long serialVersionUID = 1L;
@@ -174,12 +181,19 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
             CompositeViewEintragRoh initialerEintrag,
             int initialerPort,
             String[] komboBoxItems,
-            Consumer<CompositeViewEintragRoh> anwendenCallback) {
+            Consumer<CompositeViewEintragRoh> anwendenCallback,
+            XWindowPeer parentPeer) {
         super(xContext);
         this.initialerEintrag = initialerEintrag;
         this.initialerPort = initialerPort;
         this.komboBoxItems = komboBoxItems;
         this.anwendenCallback = anwendenCallback;
+        this.parentPeer = parentPeer;
+    }
+
+    @Override
+    protected XWindowPeer holeParentPeer() {
+        return parentPeer;
     }
 
     /**

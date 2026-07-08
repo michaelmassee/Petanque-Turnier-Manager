@@ -49,14 +49,27 @@ public final class FtpServerDetailDialog extends AbstractUnoDialog {
 	private static final int ZEILE_H = 14;
 
 	@Nullable private final FtpServerEintrag initialerEintrag;
+	@Nullable private final XWindowPeer parentPeer;
 
 	@Nullable private XControlContainer xcc;
 	@Nullable private XDialog xDialog;
 	@Nullable private FtpServerEintrag ergebnis;
 
-	public FtpServerDetailDialog(XComponentContext xContext, @Nullable FtpServerEintrag initialerEintrag) {
+	/**
+	 * @param parentPeer Peer der aufrufenden Optionsseite. Ohne Parent würde der Dialog vom
+	 *                    Fenster-Manager als eigenständiges Top-Level-Fenster behandelt und wäre
+	 *                    nicht modal gegenüber dem Optionen-Dialog.
+	 */
+	public FtpServerDetailDialog(XComponentContext xContext, @Nullable FtpServerEintrag initialerEintrag,
+			@Nullable XWindowPeer parentPeer) {
 		super(xContext);
 		this.initialerEintrag = initialerEintrag;
+		this.parentPeer = parentPeer;
+	}
+
+	@Override
+	protected XWindowPeer holeParentPeer() {
+		return parentPeer;
 	}
 
 	/**

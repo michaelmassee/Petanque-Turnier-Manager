@@ -22,6 +22,7 @@ import com.sun.star.awt.XControl;
 import com.sun.star.awt.XControlContainer;
 import com.sun.star.awt.XListBox;
 import com.sun.star.awt.XWindow;
+import com.sun.star.awt.XWindowPeer;
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.lang.EventObject;
 import com.sun.star.lang.WrappedTargetException;
@@ -93,6 +94,9 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 	/** Blatt-Typ-Vorschlaege des Detail-Dialogs, abhaengig vom Turniersystem-Filter. */
 	private String[] komboBoxItems;
 
+	/** Peer der Optionsseite, als Parent fuer modale Detail-Dialoge (siehe {@link #windowPeer}). */
+	private XWindowPeer pagePeer;
+
 	public CompositeViewsOptionsEventHandler(XComponentContext context) {
 		this.context = context;
 		GlobalProperties.setLibreOfficeContext(context);
@@ -124,6 +128,7 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 
 	private void ladeInOberflaeche(XWindow window) {
 		XControlContainer container = container(window);
+		pagePeer = windowPeer(window);
 		setzeLabels(container);
 		setCheckbox(container, CTL_WEBSERVER_AKTIV, GlobalProperties.get().isWebserverAktiv());
 		if (eintraege == null) {
@@ -202,7 +207,7 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 				persistiereUndBenachrichtige(container);
 			};
 			var detailDialog = new CompositeViewDetailDialog(
-					context, null, berechneNaechstenFreienPort(), komboBoxItems, callback);
+					context, null, berechneNaechstenFreienPort(), komboBoxItems, callback, pagePeer);
 			var neuerEintrag = detailDialog.zeigen();
 			if (neuerEintrag != null && tempIdx[0] == -1) {
 				// OK ohne vorheriges Anwenden: normaler Add-Pfad
@@ -229,7 +234,7 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 				persistiereUndBenachrichtige(container);
 			};
 			var detailDialog = new CompositeViewDetailDialog(
-					context, eintrag, eintrag.port(), komboBoxItems, callback);
+					context, eintrag, eintrag.port(), komboBoxItems, callback, pagePeer);
 			var geaenderterEintrag = detailDialog.zeigen();
 			if (geaenderterEintrag != null) {
 				eintraege.set(idx, geaenderterEintrag); // idempotent falls Callback schon gesetzt hat
@@ -358,6 +363,20 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 			throw new IllegalStateException("Optionsseite hat kein XControlContainer");
 		}
 		return container;
+	}
+
+	/**
+	 * Peer der Optionsseite, als Parent fuer modale Detail-Dialoge. Das an {@code callHandlerMethod}
+	 * uebergebene {@code window} ist selbst kein {@link XWindowPeer} (siehe LO-Quelle
+	 * {@code cui/source/options/treeopt.cxx}, {@code ExtensionsTabPage::CreateDialogWithHandler}) –
+	 * es implementiert {@link XControl}, dessen {@code getPeer()} den echten, in den
+	 * Optionen-Dialog eingehaengten Fenster-Peer liefert. Ohne diesen Peer erkennt der
+	 * Fenster-Manager den Detail-Dialog nicht als Kind des Optionen-Dialogs, wodurch dieser
+	 * bedienbar bleibt, waehrend der Detail-Dialog geoeffnet ist (fehlende Modalitaet).
+	 */
+	private static XWindowPeer windowPeer(XWindow window) {
+		XControl control = UnoRuntime.queryInterface(XControl.class, window);
+		return control == null ? null : control.getPeer();
 	}
 
 	private static boolean checkbox(XControlContainer container, String name) {
