@@ -101,7 +101,7 @@ public final class HtmlZuWriterKonvertierer {
                 var speicherProps = PropertyValueHelper.from().add("FilterName", filterName).propList();
                 storable.storeToURL(zielUrl, speicherProps);
                 future.complete(zielDatei);
-            } catch (com.sun.star.uno.Exception | IOException | GenerateException e) {
+            } catch (com.sun.star.uno.Exception | IOException | GenerateException | RuntimeException e) {
                 future.completeExceptionally(e);
             } finally {
                 if (doc != null) {
