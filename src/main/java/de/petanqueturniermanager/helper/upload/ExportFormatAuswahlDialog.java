@@ -4,8 +4,6 @@
 package de.petanqueturniermanager.helper.upload;
 
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -37,9 +35,11 @@ import de.petanqueturniermanager.konfigdialog.AbstractUnoDialog;
  * Modaler Dialog zur Auswahl des Export-Formats vor dem Verzeichnis-Export.
  * Vorselektiert das zuletzt für dieses Dokument verwendete Format.
  *
- * <p>Kann aus einem Worker-Thread aufgerufen werden — der Dialog wird via
- * {@link LoMainThread#post} auf den LO-Main-Thread marshalled und blockiert
- * den aufrufenden Thread bis der Benutzer den Dialog schließt.
+ * <p>Darf ausschließlich synchron aus {@code ProtocolHandler.dispatch()} aufgerufen
+ * werden — dieser läuft bereits auf dem LO-Main-Thread. Ein Marshalling via
+ * {@link LoMainThread#post} würde hier zum Deadlock führen: das Posten wartet auf
+ * die Abarbeitung durch genau den Main-Thread, der wegen {@code future.get()}
+ * blockiert ist.
  */
 final class ExportFormatAuswahlDialog extends AbstractUnoDialog {
 
@@ -66,25 +66,13 @@ final class ExportFormatAuswahlDialog extends AbstractUnoDialog {
      * @return gewähltes Format, oder {@link Optional#empty()} bei Abbruch
      */
     static Optional<ExportFormat> zeigen(WorkingSpreadsheet ws, ExportFormat letztesFormat) throws GenerateException {
-        var future = new CompletableFuture<Optional<ExportFormat>>();
-        LoMainThread.post(ws.getxContext(), () -> {
-            try {
-                var dialog = new ExportFormatAuswahlDialog(ws.getxContext(), letztesFormat, ws);
-                dialog.erstelleUndAusfuehren();
-                future.complete(Optional.ofNullable(dialog.ausgewaehlt));
-            } catch (Exception e) {
-                logger.error("Fehler im Export-Format-Auswahl-Dialog", e);
-                future.completeExceptionally(e);
-            }
-        });
         try {
-            return future.get();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            return Optional.empty();
-        } catch (ExecutionException e) {
-            Throwable cause = e.getCause();
-            throw new GenerateException(cause != null ? cause.getMessage() : e.getMessage());
+            var dialog = new ExportFormatAuswahlDialog(ws.getxContext(), letztesFormat, ws);
+            dialog.erstelleUndAusfuehren();
+            return Optional.ofNullable(dialog.ausgewaehlt);
+        } catch (com.sun.star.uno.Exception e) {
+            logger.error("Fehler im Export-Format-Auswahl-Dialog", e);
+            throw new GenerateException(e.getMessage());
         }
     }
 
