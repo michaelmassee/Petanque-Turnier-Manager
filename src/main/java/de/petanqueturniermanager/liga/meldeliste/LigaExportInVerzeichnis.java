@@ -59,22 +59,22 @@ public class LigaExportInVerzeichnis extends AbstractExportInVerzeichnis {
         String direktvergleichSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_LIGA_DIREKTVERGLEICH, SheetNamen.direktvergleich());
         boolean meldelisteExportieren = konfiguration.isMeldelisteExportieren();
 
+        if (StringUtils.isEmpty(turnierlogoUrl)) {
+            processBox().info(I18n.get("export.warnung.turnierlogo.fehlt"));
+        } else {
+            processBox().info(I18n.get("export.info.turnierlogo", turnierlogoUrl));
+        }
+
         if (getFormat().istEinDokument()) {
             List<ExportHtmlSeite.Section> sections = htmlSections(meldelisteSheetName, spielplanSheetName, null,
                     termineSheetNames, ranglisteSheetName, null, direktvergleichSheetName, meldelisteExportieren);
             processBox().info(I18n.get("export.info.ein.dokument", getFormat().anzeigeName()));
-            Path dokument = exportiereEinDokument(zielVerzeichnis, "Liga", titel, getFormat(), sections);
+            Path dokument = exportiereEinDokument(zielVerzeichnis, "Liga", titel, turnierlogoUrl, getFormat(), sections);
             List<Path> exportierteDateien = new ArrayList<>();
             if (dokument != null) {
                 exportierteDateien.add(dokument);
             }
             return new ExportErgebnis(exportierteDateien);
-        }
-
-        if (StringUtils.isEmpty(turnierlogoUrl)) {
-            processBox().info(I18n.get("export.warnung.turnierlogo.fehlt"));
-        } else {
-            processBox().info(I18n.get("export.info.turnierlogo", turnierlogoUrl));
         }
 
         processBox().info(I18n.get("export.info.pdf"));

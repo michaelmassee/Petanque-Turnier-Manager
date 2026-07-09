@@ -381,20 +381,23 @@ public abstract class AbstractExportInVerzeichnis extends SheetRunner {
 
     /**
      * Exportiert alle vorhandenen Sections als ein einziges kombiniertes Dokument
-     * im gewünschten Format (PDF, DOCX, ODT oder Markdown). {@code format} darf nicht
-     * {@link ExportFormat#HTML_UND_PDFS} sein.
+     * im gewünschten Format (PDF, DOCX, ODT oder Markdown), inklusive Turnierlogo
+     * (sofern vorhanden). {@code format} darf nicht {@link ExportFormat#HTML_UND_PDFS} sein.
      */
     protected Path exportiereEinDokument(Path zielVerzeichnis, String fallbackBasisName, String titel,
-            ExportFormat format, List<ExportHtmlSeite.Section> sections) throws GenerateException {
+            String logoUrl, ExportFormat format, List<ExportHtmlSeite.Section> sections) throws GenerateException {
         var vorhandeneSections = nurVorhandeneSections(sections);
         if (vorhandeneSections.isEmpty()) {
             return null;
         }
         Path zieldatei = einDokumentZieldatei(zielVerzeichnis, fallbackBasisName, format.dateiEndung());
         Path ergebnis = switch (format) {
-            case EIN_DOKUMENT_PDF -> exportiereEinDokumentPdf(titel, vorhandeneSections, zieldatei);
-            case EIN_DOKUMENT_DOCX -> exportiereEinDokumentDocx(titel, vorhandeneSections, zieldatei);
-            case EIN_DOKUMENT_ODT -> exportiereEinDokumentOdt(titel, vorhandeneSections, zieldatei);
+            case EIN_DOKUMENT_PDF -> HtmlZuPdfKonvertierer.konvertiere(
+                    baueEinDokumentHtml(zielVerzeichnis, titel, logoUrl, vorhandeneSections), zieldatei);
+            case EIN_DOKUMENT_DOCX -> HtmlZuWriterKonvertierer.konvertiereNachDocx(getWorkingSpreadsheet().getxContext(),
+                    baueEinDokumentHtml(zielVerzeichnis, titel, logoUrl, vorhandeneSections), zieldatei);
+            case EIN_DOKUMENT_ODT -> HtmlZuWriterKonvertierer.konvertiereNachOdt(getWorkingSpreadsheet().getxContext(),
+                    baueEinDokumentHtml(zielVerzeichnis, titel, logoUrl, vorhandeneSections), zieldatei);
             case EIN_DOKUMENT_MD -> exportiereEinDokumentMarkdown(titel, vorhandeneSections, zieldatei);
             case HTML_UND_PDFS -> throw new GenerateException(
                     "exportiereEinDokument darf nicht mit HTML_UND_PDFS aufgerufen werden");
@@ -403,22 +406,36 @@ public abstract class AbstractExportInVerzeichnis extends SheetRunner {
         return ergebnis;
     }
 
-    private Path exportiereEinDokumentPdf(String titel, List<ExportHtmlSeite.Section> sections, Path zieldatei)
-            throws GenerateException {
-        String html = PdfHtmlDokument.erstelle(titel, abschnittTitel(sections), tabellenFragmente(sections));
-        return HtmlZuPdfKonvertierer.konvertiere(html, zieldatei);
+    /**
+     * Baut das gemeinsame Mehrfach-Abschnitt-HTML für PDF/DOCX/ODT (identische Quelle,
+     * nur die nachgelagerte Konvertierung unterscheidet sich).
+     */
+    private String baueEinDokumentHtml(Path zielVerzeichnis, String titel, String logoUrl,
+            List<ExportHtmlSeite.Section> sections) throws GenerateException {
+        String logoUrlFuerDokument = logoUrlFuerEinDokument(zielVerzeichnis, logoUrl);
+        return PdfHtmlDokument.erstelle(titel, logoUrlFuerDokument, abschnittTitel(sections), tabellenFragmente(sections));
     }
 
-    private Path exportiereEinDokumentDocx(String titel, List<ExportHtmlSeite.Section> sections, Path zieldatei)
-            throws GenerateException {
-        String html = PdfHtmlDokument.erstelle(titel, abschnittTitel(sections), tabellenFragmente(sections));
-        return HtmlZuWriterKonvertierer.konvertiereNachDocx(getWorkingSpreadsheet().getxContext(), html, zieldatei);
-    }
-
-    private Path exportiereEinDokumentOdt(String titel, List<ExportHtmlSeite.Section> sections, Path zieldatei)
-            throws GenerateException {
-        String html = PdfHtmlDokument.erstelle(titel, abschnittTitel(sections), tabellenFragmente(sections));
-        return HtmlZuWriterKonvertierer.konvertiereNachOdt(getWorkingSpreadsheet().getxContext(), html, zieldatei);
+    /**
+     * Bereitet die Logo-URL für ein kombiniertes Dokument vor: lokale Dateien werden
+     * (wie beim HTML-Export) ins Zielverzeichnis kopiert, aber als absolute {@code file:}-URI
+     * zurückgegeben, da das Dokument (insb. bei DOCX/ODT) nicht zwingend im Zielverzeichnis liegt.
+     */
+    private String logoUrlFuerEinDokument(Path zielVerzeichnis, String logoUrl) throws GenerateException {
+        if (StringUtils.isBlank(logoUrl)) {
+            return null;
+        }
+        try {
+            var logo = bereiteTurnierlogoVor(zielVerzeichnis, logoUrl);
+            if (logo.kopierteDatei().isPresent()) {
+                processBox().info(logo.kopierteDatei().get().toString());
+                return logo.kopierteDatei().get().toUri().toString();
+            }
+            return logo.logoUrl();
+        } catch (IOException e) {
+            logger.error(e.getMessage(), e);
+            throw new GenerateException(e.getMessage());
+        }
     }
 
     private Path exportiereEinDokumentMarkdown(String titel, List<ExportHtmlSeite.Section> sections, Path zieldatei)
@@ -455,6 +472,21 @@ public abstract class AbstractExportInVerzeichnis extends SheetRunner {
             fragmente.add(pdfTabelleHtmlRenderer.render(model));
         }
         return fragmente;
+    }
+
+    /**
+     * Baut die Standard-Sections für Turniersysteme mit optionaler Meldeliste und
+     * genau einer Rangliste-Section (Schweizer, FormuleX, Poule).
+     */
+    protected static List<ExportHtmlSeite.Section> sectionsMitOptionalerMeldelisteUndRangliste(
+            String meldelisteSheetName, boolean meldelisteExportieren,
+            String ranglisteTitel, String ranglisteSheetName, String ranglistePdfUrl) {
+        List<ExportHtmlSeite.Section> sections = new ArrayList<>();
+        if (meldelisteExportieren) {
+            sections.add(new ExportHtmlSeite.Section("meldeliste", I18n.get("export.nav.meldeliste"), meldelisteSheetName, null));
+        }
+        sections.add(new ExportHtmlSeite.Section("rangliste", ranglisteTitel, ranglisteSheetName, ranglistePdfUrl));
+        return sections;
     }
 
     protected Path einDokumentZieldatei(Path verzeichnis, String fallbackBasisName, String endung)

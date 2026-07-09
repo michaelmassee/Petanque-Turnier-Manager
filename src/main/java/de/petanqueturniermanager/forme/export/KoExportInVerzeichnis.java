@@ -46,6 +46,7 @@ public class KoExportInVerzeichnis extends AbstractExportInVerzeichnis {
         List<SheetEintrag> gruppenSheets = buchstabenSheetEintraegePerSchluessel(
                 SheetMetadataHelper::schluesselKoTurnierbaum, SheetNamen::koTurnierbaumGruppe);
         String einzelName = einzelBaumSheet != null ? Lo.qi(XNamed.class, einzelBaumSheet).getName() : null;
+        String turnierlogoUrl = StringUtils.strip(konfiguration.getTurnierlogoUrl());
 
         if (getFormat().istEinDokument()) {
             List<ExportHtmlSeite.Section> sections = new ArrayList<>();
@@ -65,7 +66,7 @@ public class KoExportInVerzeichnis extends AbstractExportInVerzeichnis {
                         I18n.get("export.ko.nav.turnierbaum"), SheetNamen.koTurnierbaumEinzel(), null));
             }
             processBox().info(I18n.get("export.info.ein.dokument", getFormat().anzeigeName()));
-            Path dokument = exportiereEinDokument(zielVerzeichnis, "KO", titel, getFormat(), sections);
+            Path dokument = exportiereEinDokument(zielVerzeichnis, "KO", titel, turnierlogoUrl, getFormat(), sections);
             List<Path> exportierteDateien = new ArrayList<>();
             if (dokument != null) {
                 exportierteDateien.add(dokument);
@@ -107,8 +108,7 @@ public class KoExportInVerzeichnis extends AbstractExportInVerzeichnis {
 
         processBox().info(I18n.get("export.info.html"));
         exportiereHtmlMitMeldelisteDruckbereich(meldelisteExportieren, meldelisteSheetName,
-                zielVerzeichnis, "KO.html", titel,
-                StringUtils.strip(konfiguration.getTurnierlogoUrl()), sections)
+                zielVerzeichnis, "KO.html", titel, turnierlogoUrl, sections)
                 .addTo(exportierteDateien);
 
         return new ExportErgebnis(exportierteDateien);

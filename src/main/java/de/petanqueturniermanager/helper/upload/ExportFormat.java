@@ -32,6 +32,6 @@ public enum ExportFormat {
     }
 
     public boolean istEinDokument() {
-        return this != HTML_UND_PDFS;
+        return dateiEndung != null;
     }
 }

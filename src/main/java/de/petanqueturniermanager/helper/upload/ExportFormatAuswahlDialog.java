@@ -9,7 +9,6 @@ import java.util.concurrent.ExecutionException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jspecify.annotations.Nullable;
 
 import com.sun.star.awt.ActionEvent;
 import com.sun.star.awt.PushButtonType;
@@ -51,9 +50,9 @@ final class ExportFormatAuswahlDialog extends AbstractUnoDialog {
     private final ExportFormat letztesFormat;
     private final WorkingSpreadsheet ws;
 
-    @Nullable private XControlContainer xcc;
-    @Nullable private XDialog xDialog;
-    @Nullable private ExportFormat ausgewaehlt;
+    private XControlContainer xcc;
+    private XDialog xDialog;
+    private ExportFormat ausgewaehlt;
 
     private ExportFormatAuswahlDialog(XComponentContext xContext, ExportFormat letztesFormat, WorkingSpreadsheet ws) {
         super(xContext);
@@ -116,7 +115,7 @@ final class ExportFormatAuswahlDialog extends AbstractUnoDialog {
         this.xDialog = dialog;
         this.xcc = Lo.qi(XControlContainer.class, dialog);
 
-        label(xMSF, cont, "lblFormat", I18n.get("export.format.dialog.label"), 8, 8, 204, 10);
+        UnoAuswahlDialogControls.label(xMSF, cont, "lblFormat", I18n.get("export.format.dialog.label"), 8, 8, 204, 10);
 
         String[] items = new String[FORMATE.length];
         int vorauswahl = 0;
@@ -126,10 +125,11 @@ final class ExportFormatAuswahlDialog extends AbstractUnoDialog {
                 vorauswahl = i;
             }
         }
-        listBox(xMSF, cont, "lstFormat", items, vorauswahl, 8, 20, 204, 45);
+        UnoAuswahlDialogControls.listBox(xMSF, cont, "lstFormat", items, vorauswahl, 8, 20, 204, 45);
 
-        button(xMSF, cont, "btnOk", I18n.get("dialog.ok"), 40, 70, 55, 14, (short) PushButtonType.STANDARD_value);
-        button(xMSF, cont, "btnAbbrechen", I18n.get("dialog.abbrechen"), 105, 70, 75, 14,
+        UnoAuswahlDialogControls.button(xMSF, cont, "btnOk", I18n.get("dialog.ok"), 40, 70, 55, 14,
+                (short) PushButtonType.STANDARD_value);
+        UnoAuswahlDialogControls.button(xMSF, cont, "btnAbbrechen", I18n.get("dialog.abbrechen"), 105, 70, 75, 14,
                 (short) PushButtonType.CANCEL_value);
 
         var okCtrl = xcc.getControl("btnOk");
@@ -164,48 +164,5 @@ final class ExportFormatAuswahlDialog extends AbstractUnoDialog {
             }
         }
         xDialog.endExecute();
-    }
-
-    private static void label(XMultiServiceFactory xMSF, XNameContainer cont,
-            String name, String text, int x, int y, int w, int h) throws com.sun.star.uno.Exception {
-        var model = xMSF.createInstance("com.sun.star.awt.UnoControlFixedTextModel");
-        var props = Lo.qi(XPropertySet.class, model);
-        props.setPropertyValue("Label", text);
-        props.setPropertyValue("PositionX", x);
-        props.setPropertyValue("PositionY", y);
-        props.setPropertyValue("Width", w);
-        props.setPropertyValue("Height", h);
-        cont.insertByName(name, model);
-    }
-
-    private static void listBox(XMultiServiceFactory xMSF, XNameContainer cont,
-            String name, String[] items, int vorauswahl, int x, int y, int w, int h)
-            throws com.sun.star.uno.Exception {
-        var model = xMSF.createInstance("com.sun.star.awt.UnoControlListBoxModel");
-        var props = Lo.qi(XPropertySet.class, model);
-        props.setPropertyValue("PositionX", x);
-        props.setPropertyValue("PositionY", y);
-        props.setPropertyValue("Width", w);
-        props.setPropertyValue("Height", h);
-        props.setPropertyValue("StringItemList", items);
-        props.setPropertyValue("MultiSelection", Boolean.FALSE);
-        props.setPropertyValue("Dropdown", Boolean.FALSE);
-        if (items.length > 0) {
-            props.setPropertyValue("SelectedItems", new short[] { (short) vorauswahl });
-        }
-        cont.insertByName(name, model);
-    }
-
-    private static void button(XMultiServiceFactory xMSF, XNameContainer cont,
-            String name, String label, int x, int y, int w, int h, short typ) throws com.sun.star.uno.Exception {
-        var model = xMSF.createInstance("com.sun.star.awt.UnoControlButtonModel");
-        var props = Lo.qi(XPropertySet.class, model);
-        props.setPropertyValue("Label", label);
-        props.setPropertyValue("PositionX", x);
-        props.setPropertyValue("PositionY", y);
-        props.setPropertyValue("Width", w);
-        props.setPropertyValue("Height", h);
-        props.setPropertyValue("PushButtonType", typ);
-        cont.insertByName(name, model);
     }
 }

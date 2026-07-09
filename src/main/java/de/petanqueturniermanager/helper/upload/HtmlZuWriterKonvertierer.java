@@ -52,13 +52,13 @@ public final class HtmlZuWriterKonvertierer {
         Path tempHtml;
         try {
             tempHtml = Files.createTempFile("ptm-export-", ".html");
-            Files.writeString(tempHtml, htmlDokument, StandardCharsets.UTF_8);
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
             throw new GenerateException(e.getMessage());
         }
         XComponent doc = null;
         try {
+            Files.writeString(tempHtml, htmlDokument, StandardCharsets.UTF_8);
             XComponentLoader loader = erzeugeLoader(xContext);
             String htmlUrl = tempHtml.toUri().toURL().toExternalForm();
             var ladeProps = PropertyValueHelper.from().add("Hidden", true).propList();

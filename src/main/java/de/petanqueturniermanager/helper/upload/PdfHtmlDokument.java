@@ -5,6 +5,7 @@ package de.petanqueturniermanager.helper.upload;
 
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
 
 /**
@@ -40,11 +41,21 @@ public class PdfHtmlDokument {
     }
 
     /**
-     * Erzeugt ein Dokument mit mehreren Abschnitten (je Titel + Tabellen-HTML-Fragment).
+     * Erzeugt ein Dokument mit mehreren Abschnitten (je Titel + Tabellen-HTML-Fragment),
+     * mit gemeinsamem Dokumentkopf (Titel + optionalem Turnierlogo).
      * Jeder Abschnitt außer dem ersten beginnt auf einer neuen Seite ({@code page-break-before}).
      */
-    public static String erstelle(String dokumentTitel, List<String> abschnittTitel, List<String> tabellenFragmente) {
+    public static String erstelle(String dokumentTitel, String logoUrl, List<String> abschnittTitel,
+            List<String> tabellenFragmente) {
         String sichererDokumentTitel = StringEscapeUtils.escapeHtml4(dokumentTitel);
+        var kopf = new StringBuilder();
+        kopf.append("<header class=\"dokument-kopf\">\n<h1>").append(sichererDokumentTitel).append("</h1>\n");
+        if (StringUtils.isNotBlank(logoUrl)) {
+            kopf.append("<img class=\"dokument-logo\" src=\"").append(StringEscapeUtils.escapeHtml4(logoUrl))
+                    .append("\" alt=\"Logo\" />\n");
+        }
+        kopf.append("</header>\n");
+
         var abschnitte = new StringBuilder();
         for (int i = 0; i < abschnittTitel.size(); i++) {
             String sichererTitel = StringEscapeUtils.escapeHtml4(abschnittTitel.get(i));
@@ -69,9 +80,10 @@ public class PdfHtmlDokument {
                 <body>
                 %s
                 %s
+                %s
                 </body>
                 </html>
-                """.formatted(sichererDokumentTitel, css(), abschnitte, ExportFooterHtml.html(false));
+                """.formatted(sichererDokumentTitel, css(), kopf, abschnitte, ExportFooterHtml.html(false));
     }
 
     private static String css() {
@@ -91,6 +103,22 @@ public class PdfHtmlDokument {
                 }
                 td, th {
                   padding: 2px 4px;
+                }
+                .dokument-kopf {
+                  display: flex;
+                  align-items: center;
+                  justify-content: space-between;
+                  gap: 0.5cm;
+                  margin-bottom: 0.4cm;
+                }
+                .dokument-kopf h1 {
+                  font-size: 14pt;
+                  margin: 0;
+                }
+                .dokument-logo {
+                  max-height: 1.8cm;
+                  max-width: 5cm;
+                  object-fit: contain;
                 }
                 """
                 + ExportFooterHtml.pdfCss();

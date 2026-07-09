@@ -57,6 +57,7 @@ public class JGJExportInVerzeichnis extends AbstractExportInVerzeichnis {
                 TurnierSystem.JGJ.getBezeichnung());
         var finalrunden = buchstabenSheetEintraegePerSchluessel(
                 SheetMetadataHelper::schluesselJgjFinalrunde, SheetNamen::koFinaleGruppe);
+        String turnierlogoUrl = StringUtils.strip(konfiguration.getTurnierlogoUrl());
 
         if (getFormat().istEinDokument()) {
             List<ExportHtmlSeite.Section> sections = grundSections(meldelisteSheetName, spielplanSheetName,
@@ -66,7 +67,8 @@ public class JGJExportInVerzeichnis extends AbstractExportInVerzeichnis {
                         I18n.get("export.jgj.nav.finalrunde", eintrag.buchstabe()), eintrag.sheetName(), null));
             }
             processBox().info(I18n.get("export.info.ein.dokument", getFormat().anzeigeName()));
-            Path dokument = exportiereEinDokument(zielVerzeichnis, "JederGegenJeden", titel, getFormat(), sections);
+            Path dokument = exportiereEinDokument(zielVerzeichnis, "JederGegenJeden", titel, turnierlogoUrl,
+                    getFormat(), sections);
             List<Path> exportierteDateien = new ArrayList<>();
             if (dokument != null) {
                 exportierteDateien.add(dokument);
@@ -101,8 +103,7 @@ public class JGJExportInVerzeichnis extends AbstractExportInVerzeichnis {
                     finalTitel, eintrag.sheetName(), buildPdfUrl(pdf)));
         }
         exportiereHtmlMitMeldelisteDruckbereich(meldelisteExportieren, meldelisteSheetName,
-                zielVerzeichnis, "JederGegenJeden.html", titel,
-                StringUtils.strip(konfiguration.getTurnierlogoUrl()), sections)
+                zielVerzeichnis, "JederGegenJeden.html", titel, turnierlogoUrl, sections)
                 .addTo(exportierteDateien);
 
         return new ExportErgebnis(exportierteDateien);

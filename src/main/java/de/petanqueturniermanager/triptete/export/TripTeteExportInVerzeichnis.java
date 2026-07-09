@@ -54,12 +54,14 @@ public class TripTeteExportInVerzeichnis extends AbstractExportInVerzeichnis {
         boolean meldelisteExportieren = konfiguration.isMeldelisteExportieren();
         String titel = StringUtils.defaultIfBlank(StringUtils.strip(konfiguration.getKopfZeileMitte()),
                 TurnierSystem.TRIPTETE.getBezeichnung());
+        String turnierlogoUrl = StringUtils.strip(konfiguration.getTurnierlogoUrl());
 
         if (getFormat().istEinDokument()) {
             List<ExportHtmlSeite.Section> sections = sections(meldelisteSheetName, spielplanSheetName,
                     ranglisteSheetName, null, null, meldelisteExportieren);
             processBox().info(I18n.get("export.info.ein.dokument", getFormat().anzeigeName()));
-            Path dokument = exportiereEinDokument(zielVerzeichnis, "TripTete", titel, getFormat(), sections);
+            Path dokument = exportiereEinDokument(zielVerzeichnis, "TripTete", titel, turnierlogoUrl,
+                    getFormat(), sections);
             List<Path> exportierteDateien = new ArrayList<>();
             if (dokument != null) {
                 exportierteDateien.add(dokument);
@@ -84,8 +86,7 @@ public class TripTeteExportInVerzeichnis extends AbstractExportInVerzeichnis {
         List<ExportHtmlSeite.Section> sections = sections(meldelisteSheetName, spielplanSheetName, ranglisteSheetName,
                 buildPdfUrl(pdfSpielplan), buildPdfUrl(pdfRangliste), meldelisteExportieren);
         exportiereHtmlMitMeldelisteDruckbereich(meldelisteExportieren, meldelisteSheetName,
-                zielVerzeichnis, "TripTete.html", titel,
-                StringUtils.strip(konfiguration.getTurnierlogoUrl()), sections)
+                zielVerzeichnis, "TripTete.html", titel, turnierlogoUrl, sections)
                 .addTo(exportierteDateien);
 
         return new ExportErgebnis(exportierteDateien);

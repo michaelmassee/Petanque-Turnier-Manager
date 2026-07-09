@@ -68,22 +68,23 @@ public class SupermeleeExportInVerzeichnis extends AbstractExportInVerzeichnis {
                 SheetNamen.endrangliste());
         String endranglisteSheetName = xEndrangliste != null ? Lo.qi(XNamed.class, xEndrangliste).getName() : null;
 
+        if (StringUtils.isEmpty(turnierlogoUrl)) {
+            processBox().info(I18n.get("export.warnung.turnierlogo.fehlt"));
+        } else {
+            processBox().info(I18n.get("export.info.turnierlogo", turnierlogoUrl));
+        }
+
         if (getFormat().istEinDokument()) {
             List<ExportHtmlSeite.Section> sections = sections(endranglisteSchluessel, endranglisteSheetName, null,
                     spieltagSchluessel, spieltagSheetNamen, spieltagTitel, null);
             processBox().info(I18n.get("export.info.ein.dokument", getFormat().anzeigeName()));
-            Path dokument = exportiereEinDokument(zielVerzeichnis, "SuperMelee", turniername, getFormat(), sections);
+            Path dokument = exportiereEinDokument(zielVerzeichnis, "SuperMelee", turniername, turnierlogoUrl,
+                    getFormat(), sections);
             List<Path> exportierteDateien = new ArrayList<>();
             if (dokument != null) {
                 exportierteDateien.add(dokument);
             }
             return new ExportErgebnis(exportierteDateien);
-        }
-
-        if (StringUtils.isEmpty(turnierlogoUrl)) {
-            processBox().info(I18n.get("export.warnung.turnierlogo.fehlt"));
-        } else {
-            processBox().info(I18n.get("export.info.turnierlogo", turnierlogoUrl));
         }
 
         processBox().info(I18n.get("export.info.pdf"));

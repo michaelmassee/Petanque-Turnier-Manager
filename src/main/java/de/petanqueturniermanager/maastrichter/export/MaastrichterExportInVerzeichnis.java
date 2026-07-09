@@ -45,6 +45,7 @@ public class MaastrichterExportInVerzeichnis extends AbstractExportInVerzeichnis
                 TurnierSystem.MAASTRICHTER.getBezeichnung());
         var finalrunden = buchstabenSheetEintraegePerSchluessel(
                 SheetMetadataHelper::schluesselMaastrichterFinalrunde, SheetNamen::koFinaleGruppe);
+        String turnierlogoUrl = StringUtils.strip(konfiguration.getTurnierlogoUrl());
 
         if (getFormat().istEinDokument()) {
             List<ExportHtmlSeite.Section> sections = new ArrayList<>();
@@ -58,7 +59,8 @@ public class MaastrichterExportInVerzeichnis extends AbstractExportInVerzeichnis
                         I18n.get("export.maastrichter.nav.finalrunde", eintrag.buchstabe()), eintrag.sheetName(), null));
             }
             processBox().info(I18n.get("export.info.ein.dokument", getFormat().anzeigeName()));
-            Path dokument = exportiereEinDokument(zielVerzeichnis, "Maastrichter", titel, getFormat(), sections);
+            Path dokument = exportiereEinDokument(zielVerzeichnis, "Maastrichter", titel, turnierlogoUrl,
+                    getFormat(), sections);
             List<Path> exportierteDateien = new ArrayList<>();
             if (dokument != null) {
                 exportierteDateien.add(dokument);
@@ -94,8 +96,7 @@ public class MaastrichterExportInVerzeichnis extends AbstractExportInVerzeichnis
 
         processBox().info(I18n.get("export.info.html"));
         exportiereHtmlMitMeldelisteDruckbereich(meldelisteExportieren, meldelisteSheetName,
-                zielVerzeichnis, "Maastrichter.html", titel,
-                StringUtils.strip(konfiguration.getTurnierlogoUrl()), sections)
+                zielVerzeichnis, "Maastrichter.html", titel, turnierlogoUrl, sections)
                 .addTo(exportierteDateien);
 
         return new ExportErgebnis(exportierteDateien);

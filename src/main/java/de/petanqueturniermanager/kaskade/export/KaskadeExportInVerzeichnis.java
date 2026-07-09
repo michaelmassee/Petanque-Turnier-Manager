@@ -45,6 +45,7 @@ public class KaskadeExportInVerzeichnis extends AbstractExportInVerzeichnis {
                 TurnierSystem.KASKADE.getBezeichnung());
         var felder = buchstabenSheetEintraegePerSchluessel(
                 SheetMetadataHelper::schluesselKaskadenFeld, SheetNamen::kaskadenFeld);
+        String turnierlogoUrl = StringUtils.strip(konfiguration.getTurnierlogoUrl());
 
         if (getFormat().istEinDokument()) {
             List<ExportHtmlSeite.Section> sections = new ArrayList<>();
@@ -58,7 +59,8 @@ public class KaskadeExportInVerzeichnis extends AbstractExportInVerzeichnis {
                         I18n.get("export.kaskade.nav.feld", eintrag.buchstabe()), eintrag.sheetName(), null));
             }
             processBox().info(I18n.get("export.info.ein.dokument", getFormat().anzeigeName()));
-            Path dokument = exportiereEinDokument(zielVerzeichnis, "KaskadenKO", titel, getFormat(), sections);
+            Path dokument = exportiereEinDokument(zielVerzeichnis, "KaskadenKO", titel, turnierlogoUrl,
+                    getFormat(), sections);
             List<Path> exportierteDateien = new ArrayList<>();
             if (dokument != null) {
                 exportierteDateien.add(dokument);
@@ -94,8 +96,7 @@ public class KaskadeExportInVerzeichnis extends AbstractExportInVerzeichnis {
 
         processBox().info(I18n.get("export.info.html"));
         exportiereHtmlMitMeldelisteDruckbereich(meldelisteExportieren, meldelisteSheetName,
-                zielVerzeichnis, "KaskadenKO.html", titel,
-                StringUtils.strip(konfiguration.getTurnierlogoUrl()), sections)
+                zielVerzeichnis, "KaskadenKO.html", titel, turnierlogoUrl, sections)
                 .addTo(exportierteDateien);
 
         return new ExportErgebnis(exportierteDateien);
