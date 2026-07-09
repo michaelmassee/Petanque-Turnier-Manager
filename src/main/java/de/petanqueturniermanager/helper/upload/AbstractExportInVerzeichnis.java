@@ -22,6 +22,7 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.container.XNamed;
 import com.sun.star.sheet.XPrintAreas;
 import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.table.CellContentType;
 import com.sun.star.table.CellRangeAddress;
 
@@ -40,11 +41,13 @@ import de.petanqueturniermanager.helper.sheetsync.SheetSyncSignaturStore;
 import de.petanqueturniermanager.helper.sheetsync.SignaturErgebnis;
 import de.petanqueturniermanager.webserver.TabelleHtmlRenderer;
 import de.petanqueturniermanager.webserver.TabelleMarkdownRenderer;
+import de.petanqueturniermanager.webserver.TabelleModel;
 import de.petanqueturniermanager.webserver.TabellenMapper;
 
 public abstract class AbstractExportInVerzeichnis extends SheetRunner {
 
     private static final Logger logger = LogManager.getLogger(AbstractExportInVerzeichnis.class);
+    private static final String MELDELISTE_SECTION_ID = "meldeliste";
 
     private final Path zielVerzeichnis;
     private final ExportFormat format;
@@ -333,21 +336,35 @@ public abstract class AbstractExportInVerzeichnis extends SheetRunner {
             Path zielVerzeichnis, String fallbackDateiname, String titel, String logoUrl,
             List<ExportHtmlSeite.Section> sections) throws GenerateException {
 
-        if (!meldelisteExportieren || StringUtils.isBlank(meldelisteSheetName)) {
+        if (!meldelisteExportieren) {
             return exportiereHtml(zielVerzeichnis, fallbackDateiname, titel, logoUrl, sections);
         }
+        return mitAngepasstemMeldelisteDruckbereich(meldelisteSheetName,
+                () -> exportiereHtml(zielVerzeichnis, fallbackDateiname, titel, logoUrl, sections));
+    }
 
+    /**
+     * Führt {@code aktion} mit temporär auf den Datenbereich (ohne Überschrift, ohne leere
+     * Endzeilen) verengtem Druckbereich der Meldeliste aus. Greift bei fehlendem Sheet,
+     * fehlenden {@link XPrintAreas} oder leerem Druckbereich unverändert durch. Der originale
+     * Druckbereich wird nach {@code aktion} in jedem Fall wiederhergestellt.
+     */
+    private <T> T mitAngepasstemMeldelisteDruckbereich(String meldelisteSheetName, ExportAktion<T> aktion)
+            throws GenerateException {
+        if (StringUtils.isBlank(meldelisteSheetName)) {
+            return aktion.ausfuehren();
+        }
         var sheet = getSheetHelper().findByName(meldelisteSheetName);
         if (sheet == null) {
-            return exportiereHtml(zielVerzeichnis, fallbackDateiname, titel, logoUrl, sections);
+            return aktion.ausfuehren();
         }
         var printAreas = Lo.qi(XPrintAreas.class, sheet);
         if (printAreas == null) {
-            return exportiereHtml(zielVerzeichnis, fallbackDateiname, titel, logoUrl, sections);
+            return aktion.ausfuehren();
         }
         var originalBereiche = printAreas.getPrintAreas();
         if (originalBereiche == null || originalBereiche.length == 0) {
-            return exportiereHtml(zielVerzeichnis, fallbackDateiname, titel, logoUrl, sections);
+            return aktion.ausfuehren();
         }
 
         var original = originalBereiche[0];
@@ -359,10 +376,15 @@ public abstract class AbstractExportInVerzeichnis extends SheetRunner {
         neuerBereich.EndColumn = original.EndColumn;
         printAreas.setPrintAreas(new CellRangeAddress[] { neuerBereich });
         try {
-            return exportiereHtml(zielVerzeichnis, fallbackDateiname, titel, logoUrl, sections);
+            return aktion.ausfuehren();
         } finally {
             printAreas.setPrintAreas(originalBereiche);
         }
+    }
+
+    @FunctionalInterface
+    private interface ExportAktion<T> {
+        T ausfuehren() throws GenerateException;
     }
 
     private int letzteZeileMitDaten(XSpreadsheet sheet, int maxZeile) {
@@ -444,8 +466,7 @@ public abstract class AbstractExportInVerzeichnis extends SheetRunner {
         var sb = new StringBuilder(4096);
         sb.append("# ").append(titel).append("\n\n");
         for (var section : sections) {
-            var sheet = getSheetHelper().findByName(section.sheetName());
-            var model = tabellenMapper.map(sheet, doc);
+            var model = mappeTabelle(section, doc);
             sb.append("## ").append(section.titel()).append("\n\n");
             sb.append(markdownTabelleRenderer.render(model)).append("\n");
         }
@@ -467,11 +488,18 @@ public abstract class AbstractExportInVerzeichnis extends SheetRunner {
         var doc = getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
         var fragmente = new ArrayList<String>();
         for (var section : sections) {
-            var sheet = getSheetHelper().findByName(section.sheetName());
-            var model = tabellenMapper.map(sheet, doc);
-            fragmente.add(pdfTabelleHtmlRenderer.render(model));
+            fragmente.add(pdfTabelleHtmlRenderer.render(mappeTabelle(section, doc)));
         }
         return fragmente;
+    }
+
+    private TabelleModel mappeTabelle(ExportHtmlSeite.Section section, XSpreadsheetDocument doc)
+            throws GenerateException {
+        if (MELDELISTE_SECTION_ID.equals(section.id())) {
+            return mitAngepasstemMeldelisteDruckbereich(section.sheetName(),
+                    () -> tabellenMapper.map(getSheetHelper().findByName(section.sheetName()), doc));
+        }
+        return tabellenMapper.map(getSheetHelper().findByName(section.sheetName()), doc);
     }
 
     /**
@@ -483,7 +511,7 @@ public abstract class AbstractExportInVerzeichnis extends SheetRunner {
             String ranglisteTitel, String ranglisteSheetName, String ranglistePdfUrl) {
         List<ExportHtmlSeite.Section> sections = new ArrayList<>();
         if (meldelisteExportieren) {
-            sections.add(new ExportHtmlSeite.Section("meldeliste", I18n.get("export.nav.meldeliste"), meldelisteSheetName, null));
+            sections.add(new ExportHtmlSeite.Section(MELDELISTE_SECTION_ID, I18n.get("export.nav.meldeliste"), meldelisteSheetName, null));
         }
         sections.add(new ExportHtmlSeite.Section("rangliste", ranglisteTitel, ranglisteSheetName, ranglistePdfUrl));
         return sections;
