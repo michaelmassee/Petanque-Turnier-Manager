@@ -45,6 +45,10 @@ import de.petanqueturniermanager.spielerdb.matching.SpielerMatchKeyNormalizer;
 public final class SpielerDbImporter {
 
     private static final Logger logger = LogManager.getLogger(SpielerDbImporter.class);
+    private static final String SQL_SPIELER_BY_VEREIN_NULL =
+            "SELECT NR, VORNAME, NACHNAME, VEREIN_NR, LIZENZNR FROM SPIELER WHERE VEREIN_NR IS NULL";
+    private static final String SQL_SPIELER_BY_VEREIN_NR =
+            "SELECT NR, VORNAME, NACHNAME, VEREIN_NR, LIZENZNR FROM SPIELER WHERE VEREIN_NR = ?";
 
     private final SpielerDbConnection dbConn;
 
@@ -276,25 +280,28 @@ public final class SpielerDbImporter {
             String vorname, String nachname, @Nullable Integer vereinNr) throws SQLException {
         // Suche per normalisiertem Schlüssel; SQL-LOWER + Java-Whitespace-Collapse
         // auf Datenbankseite ist nicht trivial — daher load-and-compare.
-        String sql = vereinNr == null
-                ? "SELECT NR, VORNAME, NACHNAME, VEREIN_NR, LIZENZNR FROM SPIELER "
-                        + "WHERE VEREIN_NR IS NULL"
-                : "SELECT NR, VORNAME, NACHNAME, VEREIN_NR, LIZENZNR FROM SPIELER "
-                        + "WHERE VEREIN_NR = ?";
         String suchKey = SpielerMatchKeyNormalizer.spielerSchluesselMitVereinNr(
                 vorname, nachname, vereinNr);
-        try (PreparedStatement ps = con.prepareStatement(sql)) {
-            if (vereinNr != null) {
-                ps.setInt(1, vereinNr);
+        if (vereinNr == null) {
+            try (PreparedStatement ps = con.prepareStatement(SQL_SPIELER_BY_VEREIN_NULL)) {
+                return findeSpielerMitPreparedStatement(ps, suchKey);
             }
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    DbSpieler db = mapDb(rs);
-                    String dbKey = SpielerMatchKeyNormalizer.spielerSchluesselMitVereinNr(
-                            db.vorname(), db.nachname(), db.vereinNr());
-                    if (dbKey.equals(suchKey)) {
-                        return Optional.of(db);
-                    }
+        }
+        try (PreparedStatement ps = con.prepareStatement(SQL_SPIELER_BY_VEREIN_NR)) {
+            ps.setInt(1, vereinNr);
+            return findeSpielerMitPreparedStatement(ps, suchKey);
+        }
+    }
+
+    private static Optional<DbSpieler> findeSpielerMitPreparedStatement(PreparedStatement ps,
+            String suchKey) throws SQLException {
+        try (ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                DbSpieler db = mapDb(rs);
+                String dbKey = SpielerMatchKeyNormalizer.spielerSchluesselMitVereinNr(
+                        db.vorname(), db.nachname(), db.vereinNr());
+                if (dbKey.equals(suchKey)) {
+                    return Optional.of(db);
                 }
             }
         }

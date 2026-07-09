@@ -21,9 +21,9 @@ LO source: **`/home/michael/devel/projects_massee/libreoffice`** — always chec
 
 ## SpotBugs
 
-Lauf: `./gradlew spotbugsMain` — Reports: `build/reports/spotbugs/main.{html,xml}`. Konfiguration in `build.gradle`, Filter in `config/spotbugs/exclude.xml`.
+Lauf: `./gradlew spotbugsMain` — Reports: `build/reports/spotbugs/main.{html,xml}`. Konfiguration in `build.gradle`, Filter in `config/spotbugs/exclude.xml`. Das Gate läuft mit `effort=MAX` und `reportLevel=LOW`.
 
-**Aktueller Stand: 0 Findings.** Alle Kategorien (CORRECTNESS, MT_CORRECTNESS, PERFORMANCE, BAD_PRACTICE, STYLE, I18N, MALICIOUS_CODE) sind triagiert — entweder per Fix oder per dokumentiertem Exclude in `exclude.xml`.
+**Aktueller Stand: 0 Findings bis LOW confidence.** Alle Kategorien (CORRECTNESS, MT_CORRECTNESS, PERFORMANCE, BAD_PRACTICE, STYLE, I18N, MALICIOUS_CODE) sind triagiert — entweder per Fix oder per dokumentiertem Exclude in `exclude.xml`.
 
 **Neue Findings:** Beim Hinzufügen/Ändern von Code MUSS `spotbugsMain` clean bleiben. Echte Bugs werden gefixt; nur bei begründeten False Positives wird ein neuer `<Match>`-Block in `exclude.xml` ergänzt mit klarer Begründung (warum FP, was die Pattern-Annahme verletzt). Niemals stillschweigend per `@SuppressFBWarnings` im Code suppress'en.
 

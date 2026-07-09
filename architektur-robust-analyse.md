@@ -21,7 +21,7 @@ Aktueller Projektstand: ca. 676 Java-Dateien in `src/main/java`, ca. 142 Test-/U
 - **Sehr große Klassen**: `ProtocolHandler` (2141 LOC), `KoTurnierbaumSheet` (1632), `WebServerManager` (1188), `SheetHelper` (1076), `SpielrundeDelegate` (816). Lokale Komplexität und Änderungsrisiko bleiben hoch.
 - **Breites Helper-Paket**: ca. 118 Helper-Java-Dateien; Kohäsion und interne Abhängigkeiten sind schwer überschaubar.
 - **Null-Rückgaben bleiben verbreitet**: ca. 176 `return null`-Treffer in Produktivcode. Nicht alle optionalen APIs sind per JSpecify sichtbar.
-- **SpotBugs ist als Quality Gate aktiv**: `spotbugsMain` erwartet 0 ungefilterte Findings; dokumentierte False Positives liegen in `config/spotbugs/exclude.xml`.
+- **SpotBugs ist als Quality Gate aktiv**: `spotbugsMain` erwartet 0 ungefilterte Findings bis LOW confidence; dokumentierte False Positives liegen in `config/spotbugs/exclude.xml`.
 - **NullAway ist noch Pilot/Teilausbau**: aktiv für `helper.random`, `spielerdb.webview` und `comp.newrelease`, aber noch nicht für breite Helper- oder UI-Flächen.
 
 ---
@@ -78,7 +78,7 @@ Aktuell keine offenen P1-Punkte aus dieser Analyse bekannt.
 - `MainKonfigDialog.configPanelList` ist ein Instanzfeld und akkumuliert nicht mehr über mehrere Dialoginitialisierungen.
 - Produktionscode kompiliert mit `-Xlint:all,-classfile,-this-escape -Werror`; Testcode mit Lints ohne `-Werror`.
 - GitHub Actions CI läuft für Unit-Tests und den SpotBugs-Quality-Gate; Reports werden als Artefakt hochgeladen.
-- SpotBugs ist als hartes Gate integriert; `spotbugsTest` ist bewusst deaktiviert.
+- SpotBugs ist als hartes LOW-confidence-Gate integriert; `spotbugsTest` ist bewusst deaktiviert.
 - NullAway/ErrorProne ist integriert, Standard-ErrorProne-Checks sind deaktiviert, NullAway läuft im JSpecify-Modus.
 - Webserver-HTTP-/SSE-Verhalten ist mit `WebServerInstanzSmokeTest` abgesichert.
 - Algorithmus-/Record-Lücken in FormuleX, Kaskade und Poule wurden durch zusätzliche Tests geschlossen.

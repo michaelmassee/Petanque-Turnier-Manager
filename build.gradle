@@ -59,9 +59,9 @@ tasks.named('compileTestJava').configure {
 // ===================================================
 // SpotBugs (Block B2 aus architektur-robust-analyse.md)
 // ===================================================
-// Hartes Quality Gate: ungefilterte Findings brechen den Build. HTML- und
-// XML-Reports werden erzeugt; bekannte False Positives müssen im Exclude-Filter
-// mit Begründung dokumentiert werden.
+// Hartes Quality Gate: ungefilterte Findings bis LOW confidence brechen den
+// Build. HTML- und XML-Reports werden erzeugt; bekannte False Positives müssen
+// im Exclude-Filter mit Begründung dokumentiert werden.
 //
 // Aufruf:
 //   ./gradlew spotbugsMain   — nur Produktions-Source
@@ -72,7 +72,7 @@ spotbugs {
     toolVersion = '4.9.6'       // Java 25 (class file 69) wird ab 4.9.x unterstützt
     ignoreFailures = false      // Quality Gate: keine ungefilterten Findings
     effort = Effort.valueOf('MAX')
-    reportLevel = Confidence.valueOf('MEDIUM')
+    reportLevel = Confidence.valueOf('LOW')
     excludeFilter = file('config/spotbugs/exclude.xml')
 }
 
