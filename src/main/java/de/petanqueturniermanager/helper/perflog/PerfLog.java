@@ -1,5 +1,6 @@
 package de.petanqueturniermanager.helper.perflog;
 
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import de.petanqueturniermanager.comp.GlobalProperties;
@@ -17,6 +18,8 @@ import de.petanqueturniermanager.comp.GlobalProperties;
  */
 public final class PerfLog {
 
+	private static final Logger logger = LogManager.getLogger(PerfLog.class);
+
 	private static volatile Boolean cached = null;
 
 	private PerfLog() {
@@ -30,8 +33,9 @@ public final class PerfLog {
 		boolean aktuell = false;
 		try {
 			aktuell = GlobalProperties.get().isPerformanceLogging();
-		} catch (Exception ignored) {
+		} catch (Exception e) {
 			// GlobalProperties noch nicht initialisierbar (sehr früher Startup) -> aus
+			logger.debug("Performance-Logging kann noch nicht aus GlobalProperties gelesen werden.", e);
 		}
 		cached = aktuell;
 		return aktuell;

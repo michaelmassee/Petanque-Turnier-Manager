@@ -91,7 +91,7 @@ public class JGJTriplette2Gruppen4TurnierTestDaten extends JGJTurnierTestDaten {
         for (int i = 0; i + 1 < tokens.length; i += 2) {
             int[] posA = parsePosition(tokens[i]);
             int[] posB = parsePosition(tokens[i + 1]);
-            if (posA == null || posB == null) {
+            if (posA.length != 2 || posB.length != 2) {
                 continue;
             }
             XCell zelleA;
@@ -115,7 +115,7 @@ public class JGJTriplette2Gruppen4TurnierTestDaten extends JGJTurnierTestDaten {
     private int[] parsePosition(String token) {
         String[] teile = token.split(",");
         if (teile.length != 2) {
-            return null;
+            return new int[0];
         }
         try {
             return new int[] {
@@ -123,7 +123,7 @@ public class JGJTriplette2Gruppen4TurnierTestDaten extends JGJTurnierTestDaten {
                     Integer.parseInt(teile[1].trim())
             };
         } catch (NumberFormatException e) {
-            return null;
+            return new int[0];
         }
     }
 
