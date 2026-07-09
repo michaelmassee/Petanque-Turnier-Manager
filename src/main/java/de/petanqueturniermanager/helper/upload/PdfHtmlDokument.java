@@ -3,6 +3,8 @@
  */
 package de.petanqueturniermanager.helper.upload;
 
+import java.util.List;
+
 import org.apache.commons.text.StringEscapeUtils;
 
 /**
@@ -35,6 +37,41 @@ public class PdfHtmlDokument {
                 </body>
                 </html>
                 """.formatted(sichereTitel, css(), sichereTitel, tabelleFragment, ExportFooterHtml.html(false));
+    }
+
+    /**
+     * Erzeugt ein Dokument mit mehreren Abschnitten (je Titel + Tabellen-HTML-Fragment).
+     * Jeder Abschnitt außer dem ersten beginnt auf einer neuen Seite ({@code page-break-before}).
+     */
+    public static String erstelle(String dokumentTitel, List<String> abschnittTitel, List<String> tabellenFragmente) {
+        String sichererDokumentTitel = StringEscapeUtils.escapeHtml4(dokumentTitel);
+        var abschnitte = new StringBuilder();
+        for (int i = 0; i < abschnittTitel.size(); i++) {
+            String sichererTitel = StringEscapeUtils.escapeHtml4(abschnittTitel.get(i));
+            String pageBreak = i == 0 ? "" : " style=\"page-break-before: always;\"";
+            abschnitte.append("<section").append(pageBreak).append(">\n")
+                    .append("<h2>").append(sichererTitel).append("</h2>\n")
+                    .append(tabellenFragmente.get(i)).append("\n")
+                    .append("</section>\n");
+        }
+        return """
+                <?xml version="1.0" encoding="UTF-8"?>
+                <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+                    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+                <html xmlns="http://www.w3.org/1999/xhtml" lang="de">
+                <head>
+                <meta charset="UTF-8"/>
+                <title>%s</title>
+                <style>
+                %s
+                </style>
+                </head>
+                <body>
+                %s
+                %s
+                </body>
+                </html>
+                """.formatted(sichererDokumentTitel, css(), abschnitte, ExportFooterHtml.html(false));
     }
 
     private static String css() {

@@ -1346,32 +1346,34 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	}
 
 	private void exportiereAktuellesTurnierInVerzeichnis(WorkingSpreadsheet ws) throws Exception {
-		var pfadOpt = ExportPfadHelper.waehlePfad(xContext, ws);
-		if (pfadOpt.isEmpty()) {
+		var einstellungenOpt = ExportPfadHelper.waehleExportEinstellungen(xContext, ws);
+		if (einstellungenOpt.isEmpty()) {
 			return;
 		}
-		var zielVerzeichnis = pfadOpt.get();
+		var einstellungen = einstellungenOpt.get();
+		var zielVerzeichnis = einstellungen.verzeichnis();
+		var format = einstellungen.format();
 		ProcessBox.from().visibleWennAutomatisch().clearWennNotRunning().info("Start " + CMD_EXPORT_VERZEICHNIS);
 		switch (new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument()) {
-			case SUPERMELEE -> new SupermeleeExportInVerzeichnis(ws, zielVerzeichnis)
+			case SUPERMELEE -> new SupermeleeExportInVerzeichnis(ws, zielVerzeichnis, format)
 					.testTurnierSystem(TurnierSystem.SUPERMELEE).start();
-			case LIGA -> new LigaExportInVerzeichnis(ws, zielVerzeichnis)
+			case LIGA -> new LigaExportInVerzeichnis(ws, zielVerzeichnis, format)
 					.testTurnierSystem(TurnierSystem.LIGA).start();
-			case JGJ -> new JGJExportInVerzeichnis(ws, zielVerzeichnis)
+			case JGJ -> new JGJExportInVerzeichnis(ws, zielVerzeichnis, format)
 					.testTurnierSystem(TurnierSystem.JGJ).start();
-			case SCHWEIZER -> new SchweizerExportInVerzeichnis(ws, zielVerzeichnis)
+			case SCHWEIZER -> new SchweizerExportInVerzeichnis(ws, zielVerzeichnis, format)
 					.testTurnierSystem(TurnierSystem.SCHWEIZER).start();
-			case MAASTRICHTER -> new MaastrichterExportInVerzeichnis(ws, zielVerzeichnis)
+			case MAASTRICHTER -> new MaastrichterExportInVerzeichnis(ws, zielVerzeichnis, format)
 					.testTurnierSystem(TurnierSystem.MAASTRICHTER).start();
-			case KO -> new KoExportInVerzeichnis(ws, zielVerzeichnis)
+			case KO -> new KoExportInVerzeichnis(ws, zielVerzeichnis, format)
 					.testTurnierSystem(TurnierSystem.KO).start();
-			case FORMULEX -> new FormuleXExportInVerzeichnis(ws, zielVerzeichnis)
+			case FORMULEX -> new FormuleXExportInVerzeichnis(ws, zielVerzeichnis, format)
 					.testTurnierSystem(TurnierSystem.FORMULEX).start();
-			case KASKADE -> new KaskadeExportInVerzeichnis(ws, zielVerzeichnis)
+			case KASKADE -> new KaskadeExportInVerzeichnis(ws, zielVerzeichnis, format)
 					.testTurnierSystem(TurnierSystem.KASKADE).start();
-			case POULE -> new PouleExportInVerzeichnis(ws, zielVerzeichnis)
+			case POULE -> new PouleExportInVerzeichnis(ws, zielVerzeichnis, format)
 					.testTurnierSystem(TurnierSystem.POULE).start();
-			case TRIPTETE -> new TripTeteExportInVerzeichnis(ws, zielVerzeichnis)
+			case TRIPTETE -> new TripTeteExportInVerzeichnis(ws, zielVerzeichnis, format)
 					.testTurnierSystem(TurnierSystem.TRIPTETE).start();
 			default -> { }
 		}

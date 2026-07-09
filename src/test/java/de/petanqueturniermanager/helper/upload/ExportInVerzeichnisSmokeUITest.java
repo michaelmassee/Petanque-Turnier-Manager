@@ -64,34 +64,34 @@ class ExportInVerzeichnisSmokeUITest extends BaseCalcUITest {
                             new SupermeleeTurnierTestDaten(ws).generate();
                             new EndranglisteSheet(ws).run();
                         },
-                        (test, ziel) -> new SupermeleeExportInVerzeichnis(test.wkingSpreadsheet, ziel)),
+                        (test, ziel) -> new SupermeleeExportInVerzeichnis(test.wkingSpreadsheet, ziel, ExportFormat.HTML_UND_PDFS)),
                 fall(TurnierSystem.LIGA,
                         ws -> new LigaTurnierTestDaten(ws).erzeugeBeispielturnier(),
-                        (test, ziel) -> new LigaExportInVerzeichnis(test.wkingSpreadsheet, ziel)),
+                        (test, ziel) -> new LigaExportInVerzeichnis(test.wkingSpreadsheet, ziel, ExportFormat.HTML_UND_PDFS)),
                 fall(TurnierSystem.MAASTRICHTER,
                         ws -> new MaastrichterTurnierTestDaten(ws).generate(),
-                        (test, ziel) -> new MaastrichterExportInVerzeichnis(test.wkingSpreadsheet, ziel)),
+                        (test, ziel) -> new MaastrichterExportInVerzeichnis(test.wkingSpreadsheet, ziel, ExportFormat.HTML_UND_PDFS)),
                 fall(TurnierSystem.SCHWEIZER,
                         ws -> new SchweizerTurnierTestDaten(ws).generate(),
-                        (test, ziel) -> new SchweizerExportInVerzeichnis(test.wkingSpreadsheet, ziel)),
+                        (test, ziel) -> new SchweizerExportInVerzeichnis(test.wkingSpreadsheet, ziel, ExportFormat.HTML_UND_PDFS)),
                 fall(TurnierSystem.JGJ,
                         ws -> new JGJTurnierTestDaten(ws).generate(),
-                        (test, ziel) -> new JGJExportInVerzeichnis(test.wkingSpreadsheet, ziel)),
+                        (test, ziel) -> new JGJExportInVerzeichnis(test.wkingSpreadsheet, ziel, ExportFormat.HTML_UND_PDFS)),
                 fall(TurnierSystem.KO,
                         ws -> new KoTurnierTestDaten(ws, 8).generate(),
-                        (test, ziel) -> new KoExportInVerzeichnis(test.wkingSpreadsheet, ziel)),
+                        (test, ziel) -> new KoExportInVerzeichnis(test.wkingSpreadsheet, ziel, ExportFormat.HTML_UND_PDFS)),
                 fall(TurnierSystem.POULE,
                         ws -> new Poule37TeamsTurnierTestDaten(ws).generate(),
-                        (test, ziel) -> new PouleExportInVerzeichnis(test.wkingSpreadsheet, ziel)),
+                        (test, ziel) -> new PouleExportInVerzeichnis(test.wkingSpreadsheet, ziel, ExportFormat.HTML_UND_PDFS)),
                 fall(TurnierSystem.KASKADE,
                         ws -> new KaskadeTurnierTestDaten(ws).generate(),
-                        (test, ziel) -> new KaskadeExportInVerzeichnis(test.wkingSpreadsheet, ziel)),
+                        (test, ziel) -> new KaskadeExportInVerzeichnis(test.wkingSpreadsheet, ziel, ExportFormat.HTML_UND_PDFS)),
                 fall(TurnierSystem.FORMULEX,
                         ws -> new FormuleXTurnierTestDaten(ws).generate(),
-                        (test, ziel) -> new FormuleXExportInVerzeichnis(test.wkingSpreadsheet, ziel)),
+                        (test, ziel) -> new FormuleXExportInVerzeichnis(test.wkingSpreadsheet, ziel, ExportFormat.HTML_UND_PDFS)),
                 fall(TurnierSystem.TRIPTETE,
                         ws -> new TripTeteSpielPlanSheetTestDaten(ws).generate(),
-                        (test, ziel) -> new TripTeteExportInVerzeichnis(test.wkingSpreadsheet, ziel)));
+                        (test, ziel) -> new TripTeteExportInVerzeichnis(test.wkingSpreadsheet, ziel, ExportFormat.HTML_UND_PDFS)));
     }
 
     @ParameterizedTest(name = "{0}")
@@ -163,7 +163,7 @@ class ExportInVerzeichnisSmokeUITest extends BaseCalcUITest {
         new DocumentPropertiesHelper(wkingSpreadsheet)
                 .setIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM, TurnierSystem.SUPERMELEE.getId());
 
-        new SupermeleeExportInVerzeichnis(wkingSpreadsheet, zielVerzeichnis)
+        new SupermeleeExportInVerzeichnis(wkingSpreadsheet, zielVerzeichnis, ExportFormat.HTML_UND_PDFS)
                 .testTurnierSystem(TurnierSystem.SUPERMELEE)
                 .run();
 
@@ -176,6 +176,36 @@ class ExportInVerzeichnisSmokeUITest extends BaseCalcUITest {
                 .orElseThrow();
 
         pruefeHtml(TurnierSystem.SUPERMELEE, htmlDatei);
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("einDokumentFormate")
+    void ligaExport_einDokument_erzeugtGenauEineDateiMitErwarteterEndung(ExportFormat format,
+            @TempDir Path zielVerzeichnis) throws Exception {
+        RandomSource.setSeed(SEED_FUER_TESTS);
+
+        new LigaTurnierTestDaten(wkingSpreadsheet).erzeugeBeispielturnier();
+        new DocumentPropertiesHelper(wkingSpreadsheet)
+                .setIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM, TurnierSystem.LIGA.getId());
+
+        new LigaExportInVerzeichnis(wkingSpreadsheet, zielVerzeichnis, format)
+                .testTurnierSystem(TurnierSystem.LIGA)
+                .run();
+
+        var ergebnis = ExportErgebnis.laden(wkingSpreadsheet).orElseThrow();
+        assertThat(ergebnis.exportierteDateien())
+                .as("Ein-Dokument-Export muss genau eine Datei erzeugen")
+                .hasSize(1);
+
+        Path datei = ergebnis.exportierteDateien().getFirst();
+        assertThat(datei).exists().isRegularFile();
+        assertThat(datei.getFileName().toString())
+                .endsWith("." + format.dateiEndung());
+    }
+
+    static Stream<ExportFormat> einDokumentFormate() {
+        return Stream.of(ExportFormat.EIN_DOKUMENT_PDF, ExportFormat.EIN_DOKUMENT_DOCX,
+                ExportFormat.EIN_DOKUMENT_ODT, ExportFormat.EIN_DOKUMENT_MD);
     }
 
     private void pruefeHtml(TurnierSystem system, Path htmlDatei) throws IOException {

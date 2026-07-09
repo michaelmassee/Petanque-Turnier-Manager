@@ -166,7 +166,9 @@ footer {
   color: var(--muted);
   font-size: 0.85rem;
 }
+.ptm-footer-info { display: flex; flex-direction: column; gap: 0.15rem; }
 footer a { color: var(--muted); }
+.ptm-export-timestamp { font-size: 0.78rem; opacity: 0.85; }
 .ptm-footer-logo { width: 40px; height: 39px; object-fit: contain; opacity: 0.7; }
 .ptm-footer-logo-link:hover .ptm-footer-logo,
 .ptm-footer-logo-link:focus-visible .ptm-footer-logo { opacity: 1; }
@@ -264,7 +266,10 @@ footer a { color: var(--muted); }
 </section>
 </main>
 <footer>
+<div class="ptm-footer-info">
 <a href="https://michaelmassee.github.io/Petanque-Turnier-Manager/" target="_blank">Erstellt mit P&eacute;tanque Turnier Manager</a>
+<span class="ptm-export-timestamp">Erstellt am TIMESTAMP</span>
+</div>
 <a class="ptm-footer-logo-link" href="https://michaelmassee.github.io/Petanque-Turnier-Manager/" target="_blank">
 <img class="ptm-footer-logo" src="data:image/png;base64,..." alt="Pétanque Turnier Manager" />
 </a>

@@ -14,6 +14,7 @@ import com.sun.star.ui.dialogs.XFolderPicker2;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.i18n.I18n;
 
@@ -26,8 +27,41 @@ public final class ExportPfadHelper {
     private static final Logger logger = LogManager.getLogger(ExportPfadHelper.class);
 
     static final String DOC_PROP_LETZTER_PFAD = "Export Verzeichnis";
+    static final String DOC_PROP_LETZTES_FORMAT = "Export Format";
 
     private ExportPfadHelper() {
+    }
+
+    public record ExportEinstellungen(Path verzeichnis, ExportFormat format) {
+    }
+
+    /**
+     * Fragt Zielverzeichnis und Exportformat ab. Bricht der Benutzer einen der
+     * beiden Schritte ab, liefert die Methode {@link Optional#empty()}.
+     */
+    public static Optional<ExportEinstellungen> waehleExportEinstellungen(XComponentContext xContext,
+            WorkingSpreadsheet ws) throws GenerateException {
+        var pfadOpt = waehlePfad(xContext, ws);
+        if (pfadOpt.isEmpty()) {
+            return Optional.empty();
+        }
+        var helper = new DocumentPropertiesHelper(ws);
+        ExportFormat letztesFormat = formatAusProperty(helper.getStringProperty(DOC_PROP_LETZTES_FORMAT, ""));
+
+        var formatOpt = ExportFormatAuswahlDialog.zeigen(ws, letztesFormat);
+        if (formatOpt.isEmpty()) {
+            return Optional.empty();
+        }
+        helper.setStringPropertyOhneEvent(DOC_PROP_LETZTES_FORMAT, formatOpt.get().name());
+        return Optional.of(new ExportEinstellungen(pfadOpt.get(), formatOpt.get()));
+    }
+
+    private static ExportFormat formatAusProperty(String wert) {
+        try {
+            return ExportFormat.valueOf(wert);
+        } catch (IllegalArgumentException e) {
+            return ExportFormat.HTML_UND_PDFS;
+        }
     }
 
     public static Optional<Path> waehlePfad(XComponentContext xContext, WorkingSpreadsheet ws) {

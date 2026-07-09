@@ -39,6 +39,7 @@ import de.petanqueturniermanager.helper.sheetsync.EingabeSignatur;
 import de.petanqueturniermanager.helper.sheetsync.SheetSyncSignaturStore;
 import de.petanqueturniermanager.helper.sheetsync.SignaturErgebnis;
 import de.petanqueturniermanager.webserver.TabelleHtmlRenderer;
+import de.petanqueturniermanager.webserver.TabelleMarkdownRenderer;
 import de.petanqueturniermanager.webserver.TabellenMapper;
 
 public abstract class AbstractExportInVerzeichnis extends SheetRunner {
@@ -46,13 +47,20 @@ public abstract class AbstractExportInVerzeichnis extends SheetRunner {
     private static final Logger logger = LogManager.getLogger(AbstractExportInVerzeichnis.class);
 
     private final Path zielVerzeichnis;
+    private final ExportFormat format;
     private final TabellenMapper tabellenMapper = new TabellenMapper();
     private final TabelleHtmlRenderer pdfTabelleHtmlRenderer = TabelleHtmlRenderer.fuerPdf();
+    private final TabelleMarkdownRenderer markdownTabelleRenderer = new TabelleMarkdownRenderer();
 
     protected AbstractExportInVerzeichnis(WorkingSpreadsheet ws, TurnierSystem ts, String name,
-            Path zielVerzeichnis) {
+            Path zielVerzeichnis, ExportFormat format) {
         super(ws, ts, name);
         this.zielVerzeichnis = zielVerzeichnis;
+        this.format = format;
+    }
+
+    protected final ExportFormat getFormat() {
+        return format;
     }
 
     @Override
@@ -369,6 +377,109 @@ public abstract class AbstractExportInVerzeichnis extends SheetRunner {
             }
         }
         return MeldeListeKonstanten.ZWEITE_HEADER_ZEILE;
+    }
+
+    /**
+     * Exportiert alle vorhandenen Sections als ein einziges kombiniertes Dokument
+     * im gewünschten Format (PDF, DOCX, ODT oder Markdown). {@code format} darf nicht
+     * {@link ExportFormat#HTML_UND_PDFS} sein.
+     */
+    protected Path exportiereEinDokument(Path zielVerzeichnis, String fallbackBasisName, String titel,
+            ExportFormat format, List<ExportHtmlSeite.Section> sections) throws GenerateException {
+        var vorhandeneSections = nurVorhandeneSections(sections);
+        if (vorhandeneSections.isEmpty()) {
+            return null;
+        }
+        Path zieldatei = einDokumentZieldatei(zielVerzeichnis, fallbackBasisName, format.dateiEndung());
+        Path ergebnis = switch (format) {
+            case EIN_DOKUMENT_PDF -> exportiereEinDokumentPdf(titel, vorhandeneSections, zieldatei);
+            case EIN_DOKUMENT_DOCX -> exportiereEinDokumentDocx(titel, vorhandeneSections, zieldatei);
+            case EIN_DOKUMENT_ODT -> exportiereEinDokumentOdt(titel, vorhandeneSections, zieldatei);
+            case EIN_DOKUMENT_MD -> exportiereEinDokumentMarkdown(titel, vorhandeneSections, zieldatei);
+            case HTML_UND_PDFS -> throw new GenerateException(
+                    "exportiereEinDokument darf nicht mit HTML_UND_PDFS aufgerufen werden");
+        };
+        processBox().info(ergebnis.toString());
+        return ergebnis;
+    }
+
+    private Path exportiereEinDokumentPdf(String titel, List<ExportHtmlSeite.Section> sections, Path zieldatei)
+            throws GenerateException {
+        String html = PdfHtmlDokument.erstelle(titel, abschnittTitel(sections), tabellenFragmente(sections));
+        return HtmlZuPdfKonvertierer.konvertiere(html, zieldatei);
+    }
+
+    private Path exportiereEinDokumentDocx(String titel, List<ExportHtmlSeite.Section> sections, Path zieldatei)
+            throws GenerateException {
+        String html = PdfHtmlDokument.erstelle(titel, abschnittTitel(sections), tabellenFragmente(sections));
+        return HtmlZuWriterKonvertierer.konvertiereNachDocx(getWorkingSpreadsheet().getxContext(), html, zieldatei);
+    }
+
+    private Path exportiereEinDokumentOdt(String titel, List<ExportHtmlSeite.Section> sections, Path zieldatei)
+            throws GenerateException {
+        String html = PdfHtmlDokument.erstelle(titel, abschnittTitel(sections), tabellenFragmente(sections));
+        return HtmlZuWriterKonvertierer.konvertiereNachOdt(getWorkingSpreadsheet().getxContext(), html, zieldatei);
+    }
+
+    private Path exportiereEinDokumentMarkdown(String titel, List<ExportHtmlSeite.Section> sections, Path zieldatei)
+            throws GenerateException {
+        var doc = getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
+        var sb = new StringBuilder(4096);
+        sb.append("# ").append(titel).append("\n\n");
+        for (var section : sections) {
+            var sheet = getSheetHelper().findByName(section.sheetName());
+            var model = tabellenMapper.map(sheet, doc);
+            sb.append("## ").append(section.titel()).append("\n\n");
+            sb.append(markdownTabelleRenderer.render(model)).append("\n");
+        }
+        sb.append(ExportFooterHtml.markdownZeitstempel()).append("\n");
+        try {
+            Files.writeString(zieldatei, sb.toString(), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            logger.error(e.getMessage(), e);
+            throw new GenerateException(e.getMessage());
+        }
+        return zieldatei;
+    }
+
+    private List<String> abschnittTitel(List<ExportHtmlSeite.Section> sections) {
+        return sections.stream().map(ExportHtmlSeite.Section::titel).toList();
+    }
+
+    private List<String> tabellenFragmente(List<ExportHtmlSeite.Section> sections) throws GenerateException {
+        var doc = getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
+        var fragmente = new ArrayList<String>();
+        for (var section : sections) {
+            var sheet = getSheetHelper().findByName(section.sheetName());
+            var model = tabellenMapper.map(sheet, doc);
+            fragmente.add(pdfTabelleHtmlRenderer.render(model));
+        }
+        return fragmente;
+    }
+
+    protected Path einDokumentZieldatei(Path verzeichnis, String fallbackBasisName, String endung)
+            throws GenerateException {
+        var xStorable = getWorkingSpreadsheet().getXStorable();
+        String location = xStorable != null ? xStorable.getLocation() : null;
+        return einDokumentZieldatei(verzeichnis, fallbackBasisName, endung, location);
+    }
+
+    static Path einDokumentZieldatei(Path verzeichnis, String fallbackBasisName, String endung, String location)
+            throws GenerateException {
+        String fallback = fallbackBasisName + "." + endung;
+        if (StringUtils.isBlank(location)) {
+            return verzeichnis.resolve(fallback);
+        }
+        try {
+            Path dateiname = Path.of(URI.create(location).toURL().toURI()).getFileName();
+            if (dateiname == null) {
+                return verzeichnis.resolve(fallback);
+            }
+            String basisName = FilenameUtils.removeExtension(dateiname.toString());
+            return verzeichnis.resolve(basisName + "." + endung);
+        } catch (IllegalArgumentException | MalformedURLException | URISyntaxException e) {
+            throw new GenerateException(e.getMessage());
+        }
     }
 
     protected Path htmlZieldatei(Path verzeichnis, String fallbackDateiname) throws GenerateException {

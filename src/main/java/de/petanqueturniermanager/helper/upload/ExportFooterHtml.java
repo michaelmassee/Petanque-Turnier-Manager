@@ -3,6 +3,9 @@
  */
 package de.petanqueturniermanager.helper.upload;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 import org.apache.commons.text.StringEscapeUtils;
 
 import de.petanqueturniermanager.helper.i18n.I18n;
@@ -12,14 +15,24 @@ import de.petanqueturniermanager.helper.i18n.I18n;
  */
 final class ExportFooterHtml {
 
+    private static final DateTimeFormatter ZEITSTEMPEL_FORMAT = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+
     private ExportFooterHtml() {
+    }
+
+    static String markdownZeitstempel() {
+        return I18n.get("export.footer.timestamp", LocalDateTime.now().format(ZEITSTEMPEL_FORMAT));
     }
 
     static String html(boolean targetBlank) {
         String target = targetBlank ? " target=\"_blank\"" : "";
+        String zeitstempel = I18n.get("export.footer.timestamp", LocalDateTime.now().format(ZEITSTEMPEL_FORMAT));
         return """
                 <footer>
+                <div class="ptm-footer-info">
                 <a href="%s"%s>%s</a>
+                <span class="ptm-export-timestamp">%s</span>
+                </div>
                 <a class="ptm-footer-logo-link" href="%s"%s>
                 <img class="ptm-footer-logo" src="%s" alt="Pétanque Turnier Manager" />
                 </a>
@@ -28,6 +41,7 @@ final class ExportFooterHtml {
                 StringEscapeUtils.escapeHtml4(ExportHtmlSeite.PTM_URL),
                 target,
                 StringEscapeUtils.escapeHtml4(I18n.get("export.liga.footer.text")),
+                StringEscapeUtils.escapeHtml4(zeitstempel),
                 StringEscapeUtils.escapeHtml4(ExportHtmlSeite.PTM_URL),
                 target,
                 ExportHtmlSeite.PTM_EXPORT_LOGO_DATA_URI);
@@ -45,7 +59,9 @@ final class ExportFooterHtml {
                   color: var(--muted);
                   font-size: 0.85rem;
                 }
+                .ptm-footer-info { display: flex; flex-direction: column; gap: 0.15rem; }
                 footer a { color: var(--muted); }
+                .ptm-export-timestamp { font-size: 0.78rem; opacity: 0.85; }
                 .ptm-footer-logo { width: 40px; height: 39px; object-fit: contain; opacity: 0.7; }
                 .ptm-footer-logo-link:hover .ptm-footer-logo,
                 .ptm-footer-logo-link:focus-visible .ptm-footer-logo { opacity: 1; }
@@ -61,10 +77,12 @@ final class ExportFooterHtml {
                   color: #667085;
                   font-size: 8pt;
                 }
+                .ptm-footer-info { display: flex; flex-direction: column; gap: 0.05cm; }
                 footer a {
                   color: #667085;
                   text-decoration: none;
                 }
+                .ptm-export-timestamp { font-size: 7pt; opacity: 0.85; }
                 .ptm-footer-logo-link {
                   float: right;
                 }

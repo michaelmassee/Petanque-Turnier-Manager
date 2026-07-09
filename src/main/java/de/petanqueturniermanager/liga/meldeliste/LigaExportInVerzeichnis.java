@@ -20,6 +20,7 @@ import de.petanqueturniermanager.helper.sheetsync.EingabeSignatur;
 import de.petanqueturniermanager.helper.sheetsync.SheetSyncSignaturStore;
 import de.petanqueturniermanager.helper.sheetsync.SignaturErgebnis;
 import de.petanqueturniermanager.helper.upload.AbstractExportInVerzeichnis;
+import de.petanqueturniermanager.helper.upload.ExportFormat;
 import de.petanqueturniermanager.liga.rangliste.LigaRanglisteDirektvergleichSheet;
 import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheetUpdate;
 import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet;
@@ -34,8 +35,8 @@ public class LigaExportInVerzeichnis extends AbstractExportInVerzeichnis {
     private static final Logger logger = LogManager.getLogger(LigaExportInVerzeichnis.class);
     private static final String EXPORT_UPDATE_GRUND = "exportBeforeBuild";
 
-    public LigaExportInVerzeichnis(WorkingSpreadsheet ws, Path zielVerzeichnis) {
-        super(ws, TurnierSystem.LIGA, "Liga Export Verzeichnis", zielVerzeichnis);
+    public LigaExportInVerzeichnis(WorkingSpreadsheet ws, Path zielVerzeichnis, ExportFormat format) {
+        super(ws, TurnierSystem.LIGA, "Liga Export Verzeichnis", zielVerzeichnis, format);
     }
 
     @Override
@@ -44,12 +45,31 @@ public class LigaExportInVerzeichnis extends AbstractExportInVerzeichnis {
         var meldeliste = new LigaMeldeListeSheetUpdate(ws);
         meldeliste.upDateSheet();
         aktualisiereExportSheetsWennDirty(meldeliste.getAlleMeldungen());
-        processBox().info(I18n.get("export.info.pdf"));
 
         var konfiguration = new LigaKonfigurationSheet(ws);
 
         String turnierlogoUrl = StringUtils.strip(konfiguration.getTurnierlogoUrl());
         String gruppenname = StringUtils.strip(konfiguration.getGruppenname());
+        String titel = StringUtils.defaultIfBlank(gruppenname, TurnierSystem.LIGA.getBezeichnung());
+
+        String meldelisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_LIGA_MELDELISTE, SheetNamen.meldeliste());
+        String spielplanSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_LIGA_SPIELPLAN, LigaSpielPlanSheet.sheetName());
+        List<String> termineSheetNames = termineSheetNames();
+        String ranglisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_LIGA_RANGLISTE, SheetNamen.rangliste());
+        String direktvergleichSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_LIGA_DIREKTVERGLEICH, SheetNamen.direktvergleich());
+        boolean meldelisteExportieren = konfiguration.isMeldelisteExportieren();
+
+        if (getFormat().istEinDokument()) {
+            List<ExportHtmlSeite.Section> sections = htmlSections(meldelisteSheetName, spielplanSheetName, null,
+                    termineSheetNames, ranglisteSheetName, null, direktvergleichSheetName, meldelisteExportieren);
+            processBox().info(I18n.get("export.info.ein.dokument", getFormat().anzeigeName()));
+            Path dokument = exportiereEinDokument(zielVerzeichnis, "Liga", titel, getFormat(), sections);
+            List<Path> exportierteDateien = new ArrayList<>();
+            if (dokument != null) {
+                exportierteDateien.add(dokument);
+            }
+            return new ExportErgebnis(exportierteDateien);
+        }
 
         if (StringUtils.isEmpty(turnierlogoUrl)) {
             processBox().info(I18n.get("export.warnung.turnierlogo.fehlt"));
@@ -57,27 +77,19 @@ public class LigaExportInVerzeichnis extends AbstractExportInVerzeichnis {
             processBox().info(I18n.get("export.info.turnierlogo", turnierlogoUrl));
         }
 
-        String meldelisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_LIGA_MELDELISTE, SheetNamen.meldeliste());
-        String spielplanSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_LIGA_SPIELPLAN, LigaSpielPlanSheet.sheetName());
-        List<String> termineSheetNames = termineSheetNames();
-        String ranglisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_LIGA_RANGLISTE, SheetNamen.rangliste());
-        String direktvergleichSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_LIGA_DIREKTVERGLEICH, SheetNamen.direktvergleich());
-
+        processBox().info(I18n.get("export.info.pdf"));
         Path pdfSpielplan = exportierePdfAusHtml(spielplanSheetName, I18n.get("export.liga.nav.spielplan"), zielVerzeichnis);
 
         Path pdfRangliste = exportierePdfAusHtml(ranglisteSheetName, I18n.get("export.liga.nav.rangliste"), zielVerzeichnis);
         List<TerminExportEintrag> termine = exportiereTerminlistenPdf(termineSheetNames, zielVerzeichnis);
 
         processBox().info(I18n.get("export.info.html"));
-        boolean meldelisteExportieren = konfiguration.isMeldelisteExportieren();
         List<ExportHtmlSeite.Section> sections = htmlSectionsMitTerminPdf(
                 meldelisteSheetName, spielplanSheetName, buildPdfUrl(pdfSpielplan), termine,
                 ranglisteSheetName, buildPdfUrl(pdfRangliste), direktvergleichSheetName,
                 meldelisteExportieren);
         var htmlExport = exportiereHtmlMitMeldelisteDruckbereich(meldelisteExportieren, meldelisteSheetName,
-                zielVerzeichnis, "Liga.html",
-                StringUtils.defaultIfBlank(gruppenname, TurnierSystem.LIGA.getBezeichnung()),
-                turnierlogoUrl, sections);
+                zielVerzeichnis, "Liga.html", titel, turnierlogoUrl, sections);
 
         List<Path> exportierteDateien = new ArrayList<>();
         if (pdfSpielplan != null) {

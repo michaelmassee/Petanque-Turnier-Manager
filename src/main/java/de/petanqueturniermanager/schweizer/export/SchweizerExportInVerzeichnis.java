@@ -19,30 +19,45 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheetsync.EingabeSignatur;
 import de.petanqueturniermanager.helper.upload.AbstractExportInVerzeichnis;
 import de.petanqueturniermanager.helper.upload.ExportErgebnis;
+import de.petanqueturniermanager.helper.upload.ExportFormat;
 import de.petanqueturniermanager.helper.upload.ExportHtmlSeite;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheetUpdate;
 
 public class SchweizerExportInVerzeichnis extends AbstractExportInVerzeichnis {
 
-    public SchweizerExportInVerzeichnis(WorkingSpreadsheet ws, Path zielVerzeichnis) {
-        super(ws, TurnierSystem.SCHWEIZER, "Schweizer Export Verzeichnis", zielVerzeichnis);
+    public SchweizerExportInVerzeichnis(WorkingSpreadsheet ws, Path zielVerzeichnis, ExportFormat format) {
+        super(ws, TurnierSystem.SCHWEIZER, "Schweizer Export Verzeichnis", zielVerzeichnis, format);
     }
 
     @Override
     protected ExportErgebnis exportiereInVerzeichnis(Path zielVerzeichnis) throws GenerateException {
-        processBox().info(I18n.get("export.info.pdf"));
-
         var ws = getWorkingSpreadsheet();
         var konfiguration = new SchweizerKonfigurationSheet(ws);
         aktualisiereExportSheetWennDirty(SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_RANGLISTE,
                 new EingabeSignatur(SignaturQuellen::fuerSchweizer),
                 () -> new SchweizerRanglisteSheetUpdate(ws).doRun());
 
-        List<Path> exportierteDateien = new ArrayList<>();
-
         String meldelisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_MELDELISTE, SheetNamen.meldeliste());
         String ranglisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_RANGLISTE, SheetNamen.rangliste());
+        boolean meldelisteExportieren = konfiguration.isMeldelisteExportieren();
+        String titel = StringUtils.defaultIfBlank(StringUtils.strip(konfiguration.getKopfZeileMitte()),
+                TurnierSystem.SCHWEIZER.getBezeichnung());
+
+        if (getFormat().istEinDokument()) {
+            List<ExportHtmlSeite.Section> sections = sections(meldelisteSheetName, ranglisteSheetName, null,
+                    meldelisteExportieren);
+            processBox().info(I18n.get("export.info.ein.dokument", getFormat().anzeigeName()));
+            Path dokument = exportiereEinDokument(zielVerzeichnis, "Schweizer", titel, getFormat(), sections);
+            List<Path> exportierteDateien = new ArrayList<>();
+            if (dokument != null) {
+                exportierteDateien.add(dokument);
+            }
+            return new ExportErgebnis(exportierteDateien);
+        }
+
+        processBox().info(I18n.get("export.info.pdf"));
+        List<Path> exportierteDateien = new ArrayList<>();
 
         Path pdfRangliste = exportierePdfAusHtml(ranglisteSheetName, I18n.get("export.nav.rangliste"), zielVerzeichnis);
         if (pdfRangliste != null) {
@@ -50,20 +65,24 @@ public class SchweizerExportInVerzeichnis extends AbstractExportInVerzeichnis {
         }
 
         processBox().info(I18n.get("export.info.html"));
-        boolean meldelisteExportieren = konfiguration.isMeldelisteExportieren();
+        List<ExportHtmlSeite.Section> sections = sections(meldelisteSheetName, ranglisteSheetName,
+                buildPdfUrl(pdfRangliste), meldelisteExportieren);
+        exportiereHtmlMitMeldelisteDruckbereich(meldelisteExportieren, meldelisteSheetName,
+                zielVerzeichnis, "Schweizer.html", titel,
+                StringUtils.strip(konfiguration.getTurnierlogoUrl()), sections)
+                .addTo(exportierteDateien);
+
+        return new ExportErgebnis(exportierteDateien);
+    }
+
+    private static List<ExportHtmlSeite.Section> sections(String meldelisteSheetName, String ranglisteSheetName,
+            String ranglistePdfUrl, boolean meldelisteExportieren) {
         List<ExportHtmlSeite.Section> sections = new ArrayList<>();
         if (meldelisteExportieren) {
             sections.add(new ExportHtmlSeite.Section("meldeliste", I18n.get("export.nav.meldeliste"), meldelisteSheetName, null));
         }
         sections.add(new ExportHtmlSeite.Section("rangliste", I18n.get("export.nav.rangliste"), ranglisteSheetName,
-                buildPdfUrl(pdfRangliste)));
-        exportiereHtmlMitMeldelisteDruckbereich(meldelisteExportieren, meldelisteSheetName,
-                zielVerzeichnis, "Schweizer.html",
-                StringUtils.defaultIfBlank(StringUtils.strip(konfiguration.getKopfZeileMitte()),
-                        TurnierSystem.SCHWEIZER.getBezeichnung()),
-                StringUtils.strip(konfiguration.getTurnierlogoUrl()), sections)
-                .addTo(exportierteDateien);
-
-        return new ExportErgebnis(exportierteDateien);
+                ranglistePdfUrl));
+        return sections;
     }
 }

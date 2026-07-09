@@ -72,6 +72,7 @@ class LigaExportHtmlTest {
     private String normalisiere(String html) {
         return html.replace("\r\n", "\n")
                 .replaceAll("src=\"data:image/png;base64,[^\"]+\"", "src=\"data:image/png;base64,...\"")
+                .replaceAll("Erstellt am \\d{2}\\.\\d{2}\\.\\d{4} \\d{2}:\\d{2}", "Erstellt am TIMESTAMP")
                 .trim();
     }
 }
