@@ -234,12 +234,11 @@ public final class EingabeSignatur {
         }
         if (rohwert instanceof Number num) {
             double d = num.doubleValue();
-            if (d == 0.0d && !(rohwert instanceof Double)) {
+            if (Double.compare(Math.abs(d), 0.0d) == 0 && !(rohwert instanceof Double)) {
                 // Integer 0 → bleibt "0"
                 return Long.toString(num.longValue());
             }
-            if (Double.isFinite(d) && d == Math.floor(d) && !Double.isInfinite(d)
-                    && Math.abs(d) < 1e15) {
+            if (Double.isFinite(d) && Double.compare(d, Math.floor(d)) == 0 && Math.abs(d) < 1e15) {
                 return Long.toString((long) d);
             }
             return Double.toString(d);

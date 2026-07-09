@@ -190,7 +190,7 @@ public class TabelleHtmlRenderer {
     }
 
     private String formatPt(float pt) {
-        if (pt == Math.floor(pt)) {
+        if (Float.compare(pt, (float) Math.floor(pt)) == 0) {
             return String.valueOf((int) pt);
         }
         return String.valueOf(pt);

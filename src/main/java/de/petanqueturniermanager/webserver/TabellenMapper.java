@@ -303,7 +303,7 @@ public class TabellenMapper {
                 if (Double.isNaN(wert) || Double.isInfinite(wert)) {
                     return null;
                 }
-                if (wert == Math.rint(wert)) {
+                if (Double.compare(wert, Math.rint(wert)) == 0) {
                     return String.valueOf((long) wert);
                 }
                 return String.valueOf(wert);
@@ -324,10 +324,10 @@ public class TabellenMapper {
                 if (Double.isNaN(wert) || Double.isInfinite(wert)) {
                     return null;
                 }
-                if (wert == 0.0) {
+                if (Double.compare(Math.abs(wert), 0.0d) == 0) {
                     return null;
                 }
-                if (wert == Math.rint(wert)) {
+                if (Double.compare(wert, Math.rint(wert)) == 0) {
                     return String.valueOf((long) wert);
                 }
                 return String.valueOf(wert);
