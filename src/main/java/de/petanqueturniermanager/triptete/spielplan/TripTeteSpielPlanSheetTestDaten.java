@@ -55,7 +55,7 @@ public class TripTeteSpielPlanSheetTestDaten extends TripTeteSpielPlanSheet {
 	private void ergebnisseEinlesen(List<List<TeamPaarung>> spielPlan) throws GenerateException {
 		RangeData rangeData = new RangeData();
 		for (List<TeamPaarung> runde : spielPlan) {
-			for (TeamPaarung ignored : runde) {
+			for (int i = 0; i < runde.size(); i++) {
 				RowData row = rangeData.addNewRow();
 				for (int partie = 0; partie < 3; partie++) {
 					int gewinner = RandomSource.nextInt(0, 2);

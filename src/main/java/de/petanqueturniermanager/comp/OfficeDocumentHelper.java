@@ -2,15 +2,11 @@ package de.petanqueturniermanager.comp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.io.File;
-import java.net.MalformedURLException;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.sun.star.awt.XWindow;
 import com.sun.star.beans.PropertyValue;
-import com.sun.star.document.MacroExecMode;
 import com.sun.star.frame.XComponentLoader;
 import com.sun.star.frame.XController;
 import com.sun.star.frame.XDesktop;
@@ -98,12 +94,6 @@ public class OfficeDocumentHelper {
 		return createDoc(docType, PropertyValueHelper.from().add("Hidden", true).propList());
 	}
 
-	private XComponent createMacroDoc(String docType) {
-		// ("MacroExecutionMode", MacroExecMode.ALWAYS_EXECUTE)
-		return createDoc(docType, PropertyValueHelper.from().add("Hidden", true)
-				.add("MacroExecutionMode", MacroExecMode.ALWAYS_EXECUTE_NO_WARN).propList());
-	}
-
 	// create a new document of the specified type
 	private XComponent createDoc(String docType, PropertyValue[] props) {
 		logger.info("Creating Office document " + docType);
@@ -115,27 +105,6 @@ public class OfficeDocumentHelper {
 			// msFactory = Lo.qi(XMultiServiceFactory.class, doc);
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
-		}
-		return doc;
-	}
-
-	// create a new document using the specified template
-	private XComponent createDocFromTemplate(String templatePath, XComponentLoader loader) {
-		File templateFile = new File(templatePath);
-		if (!templateFile.canRead()) {
-			return null;
-		}
-		XComponent doc = null;
-		logger.info("Opening template " + templatePath);
-		try {
-			String templateURL = templateFile.toURI().toURL().toExternalForm();
-
-			PropertyValue[] props = PropertyValueHelper.from().add("Hidden", true).add("AsTemplate", true).propList();
-
-			doc = loader.loadComponentFromURL(templateURL, "_blank", 0, props);
-			//			msFactory = Lo.qi(XMultiServiceFactory.class, doc);
-		} catch (Exception | MalformedURLException e) {
-			logger.error("Could not create document from template: " + e.getMessage(), e);
 		}
 		return doc;
 	}

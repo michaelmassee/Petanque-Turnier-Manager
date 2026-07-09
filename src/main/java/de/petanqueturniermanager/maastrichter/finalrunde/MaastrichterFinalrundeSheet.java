@@ -98,7 +98,7 @@ public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet {
 
 		var meldeliste = new MaastrichterMeldeListeSheetUpdate(getWorkingSpreadsheet());
 		TeamMeldungen aktiveMeldungen = meldeliste.getAktiveMeldungen();
-		if (aktiveMeldungen == null || aktiveMeldungen.size() < 2) {
+		if (aktiveMeldungen.size() < 2) {
 			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK)
 					.caption(I18n.get("maastrichter.finalrunde.caption"))
 					.message(I18n.get("maastrichter.finalrunde.fehler.zu.wenige.teams"))

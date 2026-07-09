@@ -5,6 +5,7 @@ package de.petanqueturniermanager.comp.newrelease;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -48,11 +49,11 @@ public record ReleaseInfo(
     public Optional<AssetInfo> findeAsset(String prefix, String suffix) {
         Objects.requireNonNull(prefix, "prefix");
         Objects.requireNonNull(suffix, "suffix");
-        var prefixLower = prefix.toLowerCase();
-        var suffixLower = suffix.toLowerCase();
+        var prefixLower = prefix.toLowerCase(Locale.ROOT);
+        var suffixLower = suffix.toLowerCase(Locale.ROOT);
         return assets.stream()
                 .filter(asset -> {
-                    var lower = asset.name().toLowerCase();
+                    var lower = asset.name().toLowerCase(Locale.ROOT);
                     return lower.startsWith(prefixLower) && lower.endsWith(suffixLower);
                 })
                 .findFirst();

@@ -7,6 +7,7 @@ package de.petanqueturniermanager.liga.meldeliste;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 import com.sun.star.sheet.XSpreadsheet;
 
@@ -104,7 +105,7 @@ public class LigaMeldeListeSheetTestDaten extends SheetRunner implements ISheet 
 	}
 
 	private TeamInfo testInfo(String teamName) {
-		String slug = teamName.toLowerCase()
+		String slug = teamName.toLowerCase(Locale.ROOT)
 				.replace("ä", "ae")
 				.replace("ö", "oe")
 				.replace("ü", "ue")

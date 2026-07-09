@@ -14,7 +14,7 @@ import de.petanqueturniermanager.helper.sheet.TurnierSheet;
  * Konfigurations-Sheet für das Trip-Tête-Turniersystem.
  */
 public class TripTeteKonfigurationSheet extends BaseKonfigurationSheet
-		implements ITripTetePropertiesSpalte, IKonfigurationSheet {
+		implements ITripTetePropertiesSpalte {
 
 	private final TripTetePropertiesSpalte propertiesSpalte;
 

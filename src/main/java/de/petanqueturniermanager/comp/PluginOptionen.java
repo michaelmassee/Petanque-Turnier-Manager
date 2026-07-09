@@ -3,6 +3,8 @@
  */
 package de.petanqueturniermanager.comp;
 
+import java.util.Locale;
+
 /**
  * Globale Plugin-Optionen, die im LibreOffice-Optionsdialog bearbeitet werden.
  */
@@ -17,6 +19,6 @@ public record PluginOptionen(
 		boolean autoUpdateDialogBeimStart) {
 
 	public PluginOptionen {
-		logLevel = logLevel == null ? "" : logLevel.trim().toLowerCase();
+		logLevel = logLevel == null ? "" : logLevel.trim().toLowerCase(Locale.ROOT);
 	}
 }

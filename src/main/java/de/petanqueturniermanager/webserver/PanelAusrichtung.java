@@ -1,5 +1,7 @@
 package de.petanqueturniermanager.webserver;
 
+import java.util.Locale;
+
 /**
  * Konstanten und Normierung für die Panel-Ausrichtung (horizontal und vertikal)
  * in Composite Views.
@@ -27,8 +29,9 @@ public final class PanelAusrichtung {
      */
     public static String normiereHorizontal(String wert) {
         if (wert == null) return KEIN;
-        return switch (wert.trim().toLowerCase()) {
-            case H_LINKS, H_MITTE, H_RECHTS -> wert.trim().toLowerCase();
+        String normiert = wert.trim().toLowerCase(Locale.ROOT);
+        return switch (normiert) {
+            case H_LINKS, H_MITTE, H_RECHTS -> normiert;
             default -> KEIN;
         };
     }
@@ -39,8 +42,9 @@ public final class PanelAusrichtung {
      */
     public static String normiereVertikal(String wert) {
         if (wert == null) return KEIN;
-        return switch (wert.trim().toLowerCase()) {
-            case V_OBEN, V_MITTE, V_UNTEN -> wert.trim().toLowerCase();
+        String normiert = wert.trim().toLowerCase(Locale.ROOT);
+        return switch (normiert) {
+            case V_OBEN, V_MITTE, V_UNTEN -> normiert;
             default -> KEIN;
         };
     }

@@ -50,22 +50,20 @@ public class RegistrationHandler {
 
 		Class[] classes = findServicesImplementationClasses();
 
-		boolean success = true;
-		int i = 0;
-		while (i < classes.length && success) {
-			Class clazz = classes[i];
+		for (Class clazz : classes) {
 			try {
 				Class[] writeTypes = new Class[] { XRegistryKey.class };
 				Method getFactoryMethod = clazz.getMethod("__writeRegistryServiceInfo", writeTypes);
 				Object o = getFactoryMethod.invoke(null, xRegistryKey);
-				success = success && ((Boolean) o).booleanValue();
+				if (!((Boolean) o).booleanValue()) {
+					return false;
+				}
 			} catch (Exception e) {
-				success = false;
 				logger.error(e.getMessage(), e);
+				return false;
 			}
-			i++;
 		}
-		return success;
+		return true;
 	}
 
 	/**
@@ -132,12 +130,10 @@ public class RegistrationHandler {
 						Class[] writeTypes = new Class[] { XRegistryKey.class };
 						Class[] getTypes = new Class[] { String.class };
 
-						Method writeRegMethod = clazz.getMethod("__writeRegistryServiceInfo", writeTypes);
-						Method getFactoryMethod = clazz.getMethod("__getComponentFactory", getTypes);
+						clazz.getMethod("__writeRegistryServiceInfo", writeTypes);
+						clazz.getMethod("__getComponentFactory", getTypes);
 
-						if (writeRegMethod != null && getFactoryMethod != null) {
-							classes.add(clazz);
-						}
+						classes.add(clazz);
 
 					} catch (Exception e) {
 						logger.error(e.getMessage(), e);

@@ -13,7 +13,6 @@ import com.sun.star.lang.IndexOutOfBoundsException;
 import com.sun.star.sheet.CellFlags;
 import com.sun.star.sheet.XArrayFormulaRange;
 import com.sun.star.sheet.XCellRangeData;
-import com.sun.star.sheet.XCellRangesQuery;
 import com.sun.star.sheet.XSheetOperation;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
@@ -187,25 +186,6 @@ public class RangeHelper {
 		}
 
 		return xCellRange;
-	}
-
-	/**
-	 * not used
-	 *
-	 * @return
-	 */
-	@SuppressWarnings("unused")
-	private XCellRangesQuery getCellRangesQuery() {
-		checkNotNull(rangePos);
-
-		XCellRange xCellRange = null;
-		XCellRangesQuery xCellRangesQuery = null;
-
-		xCellRange = getCellRange();
-		if (xCellRange != null) {
-			xCellRangesQuery = Lo.qi(XCellRangesQuery.class, xCellRange);
-		}
-		return xCellRangesQuery;
 	}
 
 	public RangeHelper setRangeProperties(RangeProperties rangeProp) {

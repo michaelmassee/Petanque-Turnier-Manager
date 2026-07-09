@@ -240,17 +240,16 @@
     <!--
         LOW-confidence-Baseline nach Aktivierung von reportLevel=LOW.
 
-        Diese Pattern liefern im bestehenden Code 139 Rank-19/20-Treffer, die
-        vor allem Architektur-/Namenskonventionen, UNO-Reflection/Lifecycle,
+        Diese Pattern liefern im bestehenden Code Rank-19/20-Treffer, die vor
+        allem Architektur-/Namenskonventionen, UNO-Reflection/Lifecycle,
         bewusst breite Exception-Grenzen, UI-Ressourcen aus final genutzten
         Klassen und etablierte Konfigurations-Casts betreffen. Sie werden nur
         fuer Confidence=3 gefiltert: High-/Medium-Findings derselben Pattern
-        bleiben weiterhin buildbrechend. Das LOW-SECURITY-Finding im
-        SpielerDbImporter wurde im Code behoben und ist nicht Teil dieser
-        Baseline.
+        bleiben weiterhin buildbrechend. Einfache LOW-Smells werden im Code
+        behoben statt hier gefiltert.
     -->
     <Match>
-        <Bug pattern="BC_UNCONFIRMED_CAST_OF_RETURN_VALUE,DB_DUPLICATE_SWITCH_CLAUSES,DE_MIGHT_IGNORE,DLS_DEAD_LOCAL_STORE,DM_CONVERT_CASE,FE_FLOATING_POINT_EQUALITY,NM_CONFUSING,NM_FIELD_NAMING_CONVENTION,PZLA_PREFER_ZERO_LENGTH_ARRAYS,RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE,REC_CATCH_EXCEPTION,RI_REDUNDANT_INTERFACES,SE_NO_SERIALVERSIONID,THROWS_METHOD_THROWS_CLAUSE_BASIC_EXCEPTION,THROWS_METHOD_THROWS_RUNTIMEEXCEPTION,UI_INHERITANCE_UNSAFE_GETRESOURCE,UC_USELESS_CONDITION,UPM_UNCALLED_PRIVATE_METHOD,URF_UNREAD_FIELD,UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR"/>
+        <Bug pattern="BC_UNCONFIRMED_CAST_OF_RETURN_VALUE,DE_MIGHT_IGNORE,FE_FLOATING_POINT_EQUALITY,NM_CONFUSING,NM_FIELD_NAMING_CONVENTION,PZLA_PREFER_ZERO_LENGTH_ARRAYS,REC_CATCH_EXCEPTION,THROWS_METHOD_THROWS_CLAUSE_BASIC_EXCEPTION,THROWS_METHOD_THROWS_RUNTIMEEXCEPTION,UI_INHERITANCE_UNSAFE_GETRESOURCE,URF_UNREAD_FIELD,UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR"/>
         <Confidence value="3"/>
     </Match>
 

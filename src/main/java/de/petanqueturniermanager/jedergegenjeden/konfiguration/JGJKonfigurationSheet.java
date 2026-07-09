@@ -19,7 +19,7 @@ import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
  */
 
 public class JGJKonfigurationSheet extends BaseKonfigurationSheet
-		implements IJGJProperiesSpalte, IKonfigurationSheet, IKoBracketKonfiguration {
+		implements IJGJProperiesSpalte, IKoBracketKonfiguration {
 
 	public static final int MELDUNG_NAME_WIDTH = 8000;
 

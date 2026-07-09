@@ -18,8 +18,8 @@ import de.petanqueturniermanager.helper.position.RangePosition;
  * @author Michael Massee
  *
  */
-@SuppressWarnings("serial")
 public class RangeData extends ArrayList<RowData> {
+	private static final long serialVersionUID = 1L;
 
 	public RangeData() {
 		super();

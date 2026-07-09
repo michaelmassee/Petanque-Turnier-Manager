@@ -33,11 +33,7 @@ public class ConfigProperty<V> {
 
 	@SuppressWarnings("unchecked")
 	public static <V> ConfigProperty<V> from(ConfigPropertyType type, String key) {
-		return switch (type) {
-			case INTEGER, COLOR -> (ConfigProperty<V>) new ConfigProperty<Integer>(type, key);
-			case BOOLEAN -> (ConfigProperty<V>) new ConfigProperty<Boolean>(type, key);
-			default -> (ConfigProperty<V>) new ConfigProperty<String>(type, key);
-		};
+		return (ConfigProperty<V>) new ConfigProperty<>(type, key);
 	}
 
 	public String getKey() {

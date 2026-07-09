@@ -632,7 +632,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			long tNachRegistriert = System.nanoTime();
 			PerfLog.log(logger, "[STARTUP-TIMING] ProtocolHandler-ctor REGISTERED-Block (IGlobalEventListener+ITurnierEventListener+SheetRunner): {} ms",
 					(tNachRegistriert - t) / 1_000_000L);
-			t = tNachRegistriert;
 		}
 		long ctorGesamtMs = (System.nanoTime() - ctorStartNs) / 1_000_000L;
 		PerfLog.log(logger, "[STARTUP-TIMING] ProtocolHandler-ctor GESAMT={} ms", ctorGesamtMs);
@@ -1173,22 +1172,14 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			// Konfiguration
 			case CMD_KONFIGURATION_TURNIER:
 			case CMD_KONFIGURATION_TURNIER_MENU:
-				handleKonfiguration(command, ws);
-				break;
 			case CMD_KONFIGURATION_KOPFFUSSZEILEN:
-				handleKonfiguration(command, ws);
-				break;
 			case CMD_KONFIGURATION_FARBEN:
+			case CMD_KONFIGURATION_UPDATE_ERSTELLT_MIT_VERSION:
+			case CMD_EXPORT_UPLOAD_KONFIGURATION:
 				handleKonfiguration(command, ws);
 				break;
 			// ------------------------------
 			// Spieler-DB-Aktionen und Turnier-Startseite werden in behandleDialogBefehl() ohne ProcessBox abgewickelt.
-			case CMD_KONFIGURATION_UPDATE_ERSTELLT_MIT_VERSION:
-				handleKonfiguration(command, ws);
-				break;
-			case CMD_EXPORT_UPLOAD_KONFIGURATION:
-				handleKonfiguration(command, ws);
-				break;
 			// ------------------------------
 			// Download / Stop / Neue Version
 			case CMD_RELEASE_INFOS_ANZEIGEN:

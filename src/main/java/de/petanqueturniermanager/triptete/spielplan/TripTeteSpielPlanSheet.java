@@ -253,7 +253,7 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet {
 		RangeData rangeData = new RangeData();
 		int nr = 1;
 		for (List<TeamPaarung> runde : spielPlan) {
-			for (TeamPaarung ignored : runde) {
+			for (int i = 0; i < runde.size(); i++) {
 				RowData row = rangeData.addNewRow();
 				row.newInt(nr++);
 			}
@@ -270,7 +270,7 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet {
 		RangeData rangeData = new RangeData();
 		for (List<TeamPaarung> runde : spielPlan) {
 			int bahnInRunde = 1;
-			for (TeamPaarung ignored : runde) {
+			for (int i = 0; i < runde.size(); i++) {
 				int bahnTri = 2 * bahnInRunde - 1;
 				int bahnTete = 2 * bahnInRunde;
 				RowData row = rangeData.addNewRow();

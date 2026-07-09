@@ -1,5 +1,7 @@
 package de.petanqueturniermanager.helper.upload;
 
+import java.util.Locale;
+
 public enum UploadProtokoll {
     FTP(21), SFTP(22);
 
@@ -18,7 +20,7 @@ public enum UploadProtokoll {
             return FTP;
         }
         try {
-            return valueOf(wert.toUpperCase().trim());
+            return valueOf(wert.trim().toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException e) {
             return FTP;
         }

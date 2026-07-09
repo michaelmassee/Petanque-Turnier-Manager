@@ -454,7 +454,7 @@ public class TurnierStartseiteDialog extends AbstractUnoDialog {
                     "*.png;*.jpg;*.jpeg;*.gif;*.svg;*.webp");
 
             String aktuell = leseFeld(CTRL_LOGO);
-            if (aktuell != null && !aktuell.isBlank() && !aktuell.startsWith("http")) {
+            if (!aktuell.isBlank() && !aktuell.startsWith("http")) {
                 try {
                     var pfad = java.nio.file.Path.of(aktuell);
                     var eltern = pfad.getParent();

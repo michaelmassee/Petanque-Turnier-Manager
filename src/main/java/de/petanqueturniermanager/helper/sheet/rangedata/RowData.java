@@ -13,8 +13,8 @@ import java.util.Arrays;
  * @author Michael Massee
  *
  */
-@SuppressWarnings("serial")
 public class RowData extends ArrayList<CellData> {
+	private static final long serialVersionUID = 1L;
 
 	public RowData() {
 		super();

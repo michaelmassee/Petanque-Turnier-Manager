@@ -17,7 +17,7 @@ import de.petanqueturniermanager.helper.sheet.TurnierSheet;
  * @author Michael Massee
  */
 public class LigaKonfigurationSheet extends BaseKonfigurationSheet
-		implements ILigaPropertiesSpalte, IKonfigurationSheet {
+		implements ILigaPropertiesSpalte {
 
 	public static final int LIGA_MELDUNG_NAME_WIDTH = 8000;
 

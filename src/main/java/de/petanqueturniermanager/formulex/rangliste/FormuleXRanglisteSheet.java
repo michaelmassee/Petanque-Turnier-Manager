@@ -133,7 +133,7 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
 
         FormuleXMeldeListeSheetUpdate meldeliste = new FormuleXMeldeListeSheetUpdate(getWorkingSpreadsheet());
         TeamMeldungen aktiveMeldungen = meldeliste.getAktiveMeldungen();
-        if (aktiveMeldungen == null || aktiveMeldungen.size() == 0) {
+        if (aktiveMeldungen.size() == 0) {
             processBoxinfo("processbox.abbruch");
             return;
         }

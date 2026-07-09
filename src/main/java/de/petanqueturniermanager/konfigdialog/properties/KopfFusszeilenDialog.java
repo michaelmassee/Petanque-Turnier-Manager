@@ -4,6 +4,7 @@
 package de.petanqueturniermanager.konfigdialog.properties;
 
 import java.util.Comparator;
+import java.util.Locale;
 import java.util.function.Predicate;
 
 import org.apache.logging.log4j.LogManager;
@@ -42,7 +43,7 @@ public class KopfFusszeilenDialog extends BasePropertiesDialog {
 			if (key == null) {
 				return 1;
 			}
-			String lower = key.toLowerCase();
+			String lower = key.toLowerCase(Locale.ROOT);
 			if (lower.startsWith("kopfzeile") || lower.startsWith("kopf zeile") || lower.startsWith("kopf-zeile")) {
 				return 0;
 			}

@@ -981,7 +981,7 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
     }
 
     private static boolean istBlattMitIndex(SplitKnoten knoten, int index) {
-        return knoten instanceof SplitBlatt(int panel) && panel == index;
+        return knoten instanceof SplitBlatt blatt && blatt.panel() == index;
     }
 
     /**

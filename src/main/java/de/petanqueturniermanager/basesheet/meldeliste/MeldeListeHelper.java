@@ -8,6 +8,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -239,7 +240,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	 */
 	@VisibleForTesting
 	String cleanUpSpielerName(String name) {
-		return name.replaceAll("[^a-zA-Z0-9öäüÄÖÜß]+", "").toLowerCase();
+		return name.replaceAll("[^a-zA-Z0-9öäüÄÖÜß]+", "").toLowerCase(Locale.ROOT);
 	}
 
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {

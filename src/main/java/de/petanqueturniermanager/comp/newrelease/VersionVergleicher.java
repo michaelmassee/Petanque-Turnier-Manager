@@ -3,6 +3,7 @@
  */
 package de.petanqueturniermanager.comp.newrelease;
 
+import java.util.Locale;
 import java.util.Set;
 
 import org.jspecify.annotations.Nullable;
@@ -83,7 +84,7 @@ public final class VersionVergleicher {
      * Prüft, ob die (bereits normalisierte) Version einen Pre-Release-Marker enthält.
      */
     static boolean istPreRelease(String normalisierteVersion) {
-        var lower = normalisierteVersion.toLowerCase();
+        var lower = normalisierteVersion.toLowerCase(Locale.ROOT);
         for (var marker : PRE_RELEASE_MARKER) {
             if (lower.contains(marker)) {
                 return true;

@@ -3,6 +3,8 @@
  */
 package de.petanqueturniermanager.comp;
 
+import java.util.Locale;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -170,7 +172,7 @@ final class LibreOfficePluginOptionenSpeicher {
 
 	private static String stringWert(XPropertySet props, String name) {
 		try {
-			return AnyConverter.toString(props.getPropertyValue(name)).trim().toLowerCase();
+			return AnyConverter.toString(props.getPropertyValue(name)).trim().toLowerCase(Locale.ROOT);
 		} catch (Exception e) {
 			logger.debug("String-Property {} nicht lesbar, verwende leeren Wert", name, e);
 			return "";

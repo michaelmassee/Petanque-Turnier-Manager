@@ -282,27 +282,6 @@ public class DocumentPropertiesHelper {
 
 	/**
 	 * @param propName = name vom property
-	 * @return default when not found
-	 */
-	private String getStringPropertyFromDocument(String propName, boolean ignoreNotFound, String defaultVal) {
-		XPropertySet propSet = getXPropertySet();
-		Object propVal = null;
-		try {
-			propVal = propSet.getPropertyValue(propName);
-		} catch (UnknownPropertyException | WrappedTargetException e) {
-			if (!ignoreNotFound) {
-				logger.error(e.getMessage(), e);
-			}
-		}
-
-		if (propVal instanceof String strval) {
-			return strval;
-		}
-		return defaultVal;
-	}
-
-	/**
-	 * @param propName = name vom property
 	 * @return -1 when not found
 	 */
 	public int getIntProperty(String propName, int defaultVal) {

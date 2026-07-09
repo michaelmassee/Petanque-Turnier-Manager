@@ -153,9 +153,7 @@ public class OfficeStarter {
 			ProcessBuilder pb = new ProcessBuilder(cmd);
 			pb.inheritIO();
 			sofficeProcess = pb.start();
-			if (sofficeProcess != null) {
-				logger.info("Office process created");
-			}
+			logger.info("Office process created");
 
 			// Create a local Component Context
 			XComponentContext localContext = Bootstrap.createInitialComponentContext(null);

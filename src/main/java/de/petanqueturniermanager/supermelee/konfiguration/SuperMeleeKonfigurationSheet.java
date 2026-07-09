@@ -19,7 +19,7 @@ import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet
-		implements ISuperMeleePropertiesSpalte, IKonfigurationSheet {
+		implements ISuperMeleePropertiesSpalte {
 
 	public static final int MAX_SPIELTAG = 10;
 	public static final int SUPER_MELEE_MELDUNG_NAME_WIDTH = 4000;

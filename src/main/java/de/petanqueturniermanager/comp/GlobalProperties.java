@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
@@ -1619,7 +1620,7 @@ public class GlobalProperties {
 	private static PanelTyp parsePanelTyp(String value) {
 		if (value == null || value.isBlank()) return PanelTyp.BLATT;
 		try {
-			return PanelTyp.valueOf(value.trim().toUpperCase());
+			return PanelTyp.valueOf(value.trim().toUpperCase(Locale.ROOT));
 		} catch (IllegalArgumentException e) {
 			logger.warn("Unbekannter PanelTyp '{}', verwende BLATT", value.trim());
 			return PanelTyp.BLATT;

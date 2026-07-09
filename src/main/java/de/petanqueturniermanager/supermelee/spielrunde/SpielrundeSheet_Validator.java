@@ -89,7 +89,7 @@ public class SpielrundeSheet_Validator extends SheetRunner implements ISheet, Sp
 			SpielRundeNr spielRundeNr = SpielRundeNr.from(spielrunde);
 			List<Team> teams = spielrundeEinlesen(spielTagNr, spielRundeNr);
 
-			if (teams != null && teams.size() > 0) {
+			if (!teams.isEmpty()) {
 				spielrunden.add(new Spielrunde(spielTagNr, spielRundeNr, teams));
 			} else {
 				break;

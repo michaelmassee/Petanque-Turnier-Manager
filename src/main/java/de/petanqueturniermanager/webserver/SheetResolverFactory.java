@@ -14,6 +14,7 @@ import static de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem.TRIPT
 
 import java.util.EnumMap;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -209,7 +210,7 @@ public final class SheetResolverFactory {
      * @return passender Resolver
      */
     public static SheetResolver erstellen(String configWert) {
-        var key = configWert.toUpperCase();
+        var key = configWert.toUpperCase(Locale.ROOT);
         var aufgeloesterKey = LEGACY_ALIASE.getOrDefault(key, key);
         var definition = RESOLVER_MAP.get(aufgeloesterKey);
         if (definition != null) {

@@ -11,7 +11,6 @@ import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.algorithmen.poule.PouleGruppenRechner;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
@@ -28,7 +27,7 @@ import de.petanqueturniermanager.helper.sheet.TurnierSheet;
  * Zeigt alle Poule-Gruppen mit ihren Spielen und Ergebnisfeldern in einem einzigen Sheet.
  * Formeln berechnen für Runden 2 und 3 automatisch die Sieger/Verlierer.
  */
-public class PouleVorrundeSheet extends AbstractPouleVorrundeSheet implements ISheet {
+public class PouleVorrundeSheet extends AbstractPouleVorrundeSheet {
 
     public PouleVorrundeSheet(WorkingSpreadsheet workingSpreadsheet) {
         super(workingSpreadsheet, "Poule-Vorrunde");

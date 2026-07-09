@@ -55,7 +55,7 @@ public class SchweizerRanglisteSheetUpdate extends SchweizerRanglisteSheet {
 
 		SchweizerMeldeListeSheetUpdate meldeliste = erstelleMeldeListeSheet();
 		TeamMeldungen aktiveMeldungen = meldeliste.getAktiveMeldungen();
-		if (aktiveMeldungen == null || aktiveMeldungen.size() == 0) {
+		if (aktiveMeldungen.size() == 0) {
 			processBoxinfo("processbox.abbruch");
 			return;
 		}

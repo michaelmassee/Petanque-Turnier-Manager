@@ -3,6 +3,8 @@
  */
 package de.petanqueturniermanager.helper;
 
+import java.util.Locale;
+
 public class StringTools {
 
 	private StringTools() {
@@ -35,7 +37,7 @@ public class StringTools {
 		if (haystack == null || needle == null) {
 			return false;
 		}
-		return haystack.toLowerCase().contains(needle.toLowerCase());
+		return haystack.toLowerCase(Locale.ROOT).contains(needle.toLowerCase(Locale.ROOT));
 	}
 
 	/** Apache-kompatibel: hängt das Suffix nur an, wenn es nicht bereits vorhanden ist. {@code null} bleibt {@code null}. */
