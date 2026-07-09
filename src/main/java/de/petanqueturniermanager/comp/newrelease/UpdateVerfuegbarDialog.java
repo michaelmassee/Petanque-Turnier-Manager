@@ -40,7 +40,7 @@ final class UpdateVerfuegbarDialog extends AbstractUnoDialog {
 
     private static final Logger logger = LogManager.getLogger(UpdateVerfuegbarDialog.class);
 
-    private static final String LOGO_DATEINAME = "petanqueturniermanager-logo-32px.png";
+    private static final String LOGO_DATEINAME = "petanqueturniermanager-logo-256px.png";
 
     enum Aktion {
         UPDATE, ABBRUCH, NICHT_MEHR_FUER_VERSION

@@ -59,7 +59,7 @@ public final class AutoUpdateStartupChecker {
 
     boolean sollDialogGezeigtWerden() {
         var service = releaseUpdateServiceOderNull();
-        if (service == null || !service.isUpdateVerfuegbar()) {
+        if (service == null || !istUpdateVerfuegbarOderErzwungen(service)) {
             return false;
         }
         if (!GlobalProperties.get().isAutoUpdateDialogBeimStartAktiv()) {
@@ -74,6 +74,10 @@ public final class AutoUpdateStartupChecker {
                 .orElse(true);
     }
 
+    private static boolean istUpdateVerfuegbarOderErzwungen(ReleaseUpdateService service) {
+        return service.isUpdateVerfuegbar() || GlobalProperties.get().isNewVersionCheckImmerTrue();
+    }
+
     private static @Nullable ReleaseUpdateService releaseUpdateServiceOderNull() {
         try {
             return ReleaseUpdateService.get();
@@ -84,7 +88,7 @@ public final class AutoUpdateStartupChecker {
 
     private void zeigeDialogAufMainThread() {
         var service = releaseUpdateServiceOderNull();
-        if (service == null || !service.isUpdateVerfuegbar()) {
+        if (service == null || !istUpdateVerfuegbarOderErzwungen(service)) {
             return;
         }
         var release = service.getAktuellesRelease().orElse(null);

@@ -166,6 +166,7 @@ public final class ReleaseUpdateService {
         if (frisch.isPresent()) {
             aktuellesRelease = frisch;
             aktualisiereStatusAusCache(frisch.get());
+            benachrichtigeListener();
             return;
         }
         // älterer Cache als Übergangsanzeige akzeptieren
