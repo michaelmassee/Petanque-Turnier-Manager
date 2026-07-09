@@ -51,4 +51,47 @@ public class TeamPaarungTest {
 		assertThat(paarung.isInPaarung(Team.from(2))).isFalse();
 	}
 
+	@Test
+	public void testEqualsNull() throws Exception {
+		TeamPaarung paarung = new TeamPaarung(Team.from(1), Team.from(2));
+		assertThat(paarung.equals(null)).isFalse();
+	}
+
+	@Test
+	public void testEqualsAndererTyp() throws Exception {
+		TeamPaarung paarung = new TeamPaarung(Team.from(1), Team.from(2));
+		assertThat(paarung.equals("kein TeamPaarung")).isFalse();
+	}
+
+	@Test
+	public void testToString() throws Exception {
+		TeamPaarung paarung = new TeamPaarung(Team.from(1), Team.from(2));
+		assertThat(paarung.toString()).contains("Teams=[").contains("nr=1").contains("nr=2");
+	}
+
+	@Test
+	public void testClone() throws Exception {
+		TeamPaarung paarung = new TeamPaarung(Team.from(1), Team.from(2));
+		TeamPaarung kopie = paarung.clone();
+
+		assertThat(kopie).isEqualTo(paarung).isNotSameAs(paarung);
+		assertThat(kopie.getA()).isNotSameAs(paarung.getA());
+		assertThat(kopie.getB()).isNotSameAs(paarung.getB());
+	}
+
+	@Test
+	public void testRemoveHatGegner() throws Exception {
+		Team teamA = Team.from(1);
+		Team teamB = Team.from(2);
+		TeamPaarung paarung = new TeamPaarung(teamA, teamB).setHatGegner();
+
+		assertThat(teamA.isHatGegner()).isTrue();
+		assertThat(teamB.isHatGegner()).isTrue();
+
+		paarung.removeHatGegner();
+
+		assertThat(teamA.isHatGegner()).isFalse();
+		assertThat(teamB.isHatGegner()).isFalse();
+	}
+
 }

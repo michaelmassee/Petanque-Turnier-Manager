@@ -9,6 +9,7 @@ plugins {
 
 import com.github.spotbugs.snom.Confidence
 import com.github.spotbugs.snom.Effort
+import org.gradle.testing.jacoco.tasks.JacocoCoverageVerification
 
 group = 'de.petanqueturniermanager'
 // Version aus description.xml lesen
@@ -142,8 +143,54 @@ jacocoTestCoverageVerification {
     }
 }
 
+// Zweites Quality Gate: ausgewählte UNO-freie Support-Pakete (model/, spielerdb/,
+// spielerdb/importer/, timer/) sind ebenfalls vollständig unit-testbar. 80%
+// Instruction-Coverage ist der erreichte Zielwert für dieses Gate — bewusst
+// niedriger als bei algorithmen/*, weil hier mehr Fehlerbehandlungscode
+// (SQLException-Pfade, Dateisystem-Edgecases) mit geringerem Testwert steckt.
+// Einzelne UNO-/VCL-gekoppelte Klassen sind ausgeschlossen, weil ihre sinnvolle
+// Abdeckung über UITests statt Unit-Tests läuft (dieselbe Begründung wie beim
+// SpotBugs-MALICIOUS_CODE-Exclude für UNO-Remote-Proxies):
+//   - spielerdb/SheetMeldelisteAdapter, spielerdb/MeldelisteZielFactory: schreiben
+//     direkt über RangeHelper/WorkingSpreadsheet gegen ein Sheet.
+//   - spielerdb/importer/SpielerDbCalcImportReader: liest per UNO aus einer ODS.
+//   - timer/TimerDialog: VCL-Dialog.
+tasks.register('jacocoSupportPackagesCoverageVerification', JacocoCoverageVerification) {
+    dependsOn test
+    executionData.setFrom(tasks.named('jacocoTestReport').get().executionData)
+    sourceDirectories.setFrom(tasks.named('jacocoTestReport').get().sourceDirectories)
+    classDirectories.setFrom(
+            files(tasks.named('jacocoTestReport').get().classDirectories.files.collect {
+                fileTree(dir: it, includes: [
+                        'de/petanqueturniermanager/model/**',
+                        'de/petanqueturniermanager/spielerdb/*.class',
+                        'de/petanqueturniermanager/spielerdb/importer/**',
+                        'de/petanqueturniermanager/timer/**',
+                ], excludes: [
+                        'de/petanqueturniermanager/spielerdb/SheetMeldelisteAdapter.class',
+                        'de/petanqueturniermanager/spielerdb/SheetMeldelisteAdapter$*.class',
+                        'de/petanqueturniermanager/spielerdb/MeldelisteZielFactory.class',
+                        'de/petanqueturniermanager/spielerdb/MeldelisteZielFactory$*.class',
+                        'de/petanqueturniermanager/spielerdb/importer/SpielerDbCalcImportReader.class',
+                        'de/petanqueturniermanager/spielerdb/importer/SpielerDbCalcImportReader$*.class',
+                        'de/petanqueturniermanager/timer/TimerDialog.class',
+                        'de/petanqueturniermanager/timer/TimerDialog$*.class',
+                ])
+            })
+    )
+    violationRules {
+        rule {
+            element = 'BUNDLE'
+            limit {
+                counter = 'INSTRUCTION'
+                minimum = 0.80
+            }
+        }
+    }
+}
+
 tasks.named('check').configure {
-    dependsOn 'jacocoTestReport', 'jacocoTestCoverageVerification'
+    dependsOn 'jacocoTestReport', 'jacocoTestCoverageVerification', 'jacocoSupportPackagesCoverageVerification'
 }
 
 // ===================================================

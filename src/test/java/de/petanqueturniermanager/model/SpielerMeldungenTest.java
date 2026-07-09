@@ -14,6 +14,8 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
+
 public class SpielerMeldungenTest {
 
 	SpielerMeldungen meldungen;
@@ -115,5 +117,58 @@ public class SpielerMeldungenTest {
 		assertThat(meldungen.size()).isEqualTo(1);
 		meldungen.removeSpieler(Spieler.from(2)); // new instance, aber gleiche spieler nummer
 		assertThat(meldungen.size()).isEqualTo(0);
+	}
+
+	@Test
+	public void testAddNewWennNichtVorhanden_mitSetzPos() throws Exception {
+		// Spalten: nr, name(0-Platzhalter), setzpos
+		meldungen.addNewWennNichtVorhanden(new RowData(5, 0, 3));
+
+		assertThat(meldungen.spieler()).hasSize(1);
+		assertThat(meldungen.findSpielerByNr(5).getSetzPos()).isEqualTo(3);
+	}
+
+	@Test
+	public void testAddNewWennNichtVorhanden_ungueltigeNr_wirdIgnoriert() throws Exception {
+		meldungen.addNewWennNichtVorhanden(new RowData(-1, 0, 3));
+		assertThat(meldungen.spieler()).isEmpty();
+	}
+
+	@Test
+	public void testResetAllHistorie() throws Exception {
+		Spieler s1 = Spieler.from(1);
+		Spieler s2 = Spieler.from(2);
+		s1.addWarImTeamMitWennNichtVorhanden(s2);
+		meldungen.addSpielerWennNichtVorhanden(s1);
+		meldungen.addSpielerWennNichtVorhanden(s2);
+
+		meldungen.resetAllHistorie();
+
+		assertThat(s1.warImTeamMit(s2)).isFalse();
+	}
+
+	@Test
+	public void testToString() throws Exception {
+		meldungen.addSpielerWennNichtVorhanden(Spieler.from(1));
+		meldungen.addSpielerWennNichtVorhanden(Spieler.from(2));
+
+		assertThat(meldungen.toString()).contains("Anzahl=2").contains("Spieler=[1,2]");
+	}
+
+	@Test
+	public void testGetMeldungen() throws Exception {
+		meldungen.addSpielerWennNichtVorhanden(Spieler.from(1));
+		assertThat(meldungen.getMeldungen()).hasSize(1);
+	}
+
+	@Test
+	public void testSortNachNummer() throws Exception {
+		meldungen.addSpielerWennNichtVorhanden(Spieler.from(3));
+		meldungen.addSpielerWennNichtVorhanden(Spieler.from(1));
+		meldungen.addSpielerWennNichtVorhanden(Spieler.from(2));
+
+		meldungen.sortNachNummer();
+
+		assertThat(meldungen.spieler()).extracting(Spieler::getNr).containsExactly(1, 2, 3);
 	}
 }

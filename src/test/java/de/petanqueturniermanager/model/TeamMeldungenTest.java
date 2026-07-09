@@ -9,6 +9,8 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
+
 public class TeamMeldungenTest {
 
     private TeamMeldungen meldungen;
@@ -136,6 +138,25 @@ public class TeamMeldungenTest {
         assertThat(meldungen.size()).isEqualTo(1);
         meldungen.addTeamWennNichtVorhanden(Team.from(2));
         assertThat(meldungen.size()).isEqualTo(2);
+    }
+
+    @Test
+    public void testAddNewWennNichtVorhanden() throws Exception {
+        meldungen.addNewWennNichtVorhanden(new RowData(5));
+        assertThat(meldungen.size()).isEqualTo(1);
+        assertThat(meldungen.getTeam(5)).isNotNull();
+    }
+
+    @Test
+    public void testAddNewWennNichtVorhanden_ungueltigeNr_wirdIgnoriert() throws Exception {
+        meldungen.addNewWennNichtVorhanden(new RowData(-1));
+        assertThat(meldungen.size()).isEqualTo(0);
+    }
+
+    @Test
+    public void testGetTeamList() throws Exception {
+        meldungen.addTeamWennNichtVorhanden(Team.from(1));
+        assertThat(meldungen.getTeamList()).hasSize(1);
     }
 
     @Test

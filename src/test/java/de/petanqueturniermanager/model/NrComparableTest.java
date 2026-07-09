@@ -91,6 +91,12 @@ public class NrComparableTest {
     }
 
     @Test
+    public void testEqualsAndererTyp() throws Exception {
+        Team team = Team.from(1);
+        assertThat(team.equals("kein NrComparable")).isFalse();
+    }
+
+    @Test
     public void testEqualsSichSelbst() throws Exception {
         Team team = Team.from(1);
         assertThat(team.equals(team)).isTrue();

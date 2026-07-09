@@ -80,4 +80,10 @@ public class SpielErgebnisTest {
         assertThrows(IllegalArgumentException.class, () -> new SpielErgebnis(5, -1));
     }
 
+    @Test
+    public void testToString() throws Exception {
+        SpielErgebnis ergebnis = new SpielErgebnis(13, 7);
+        assertThat(ergebnis.toString()).contains("A=13").contains("B=7");
+    }
+
 }

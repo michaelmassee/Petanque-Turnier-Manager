@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import de.petanqueturniermanager.spielerdb.SpielerRepository.LizenzDuplikatException;
+import de.petanqueturniermanager.spielerdb.SpielerRepository.NameDuplikatException;
 
 class SpielerRepositoryTest {
 
@@ -189,5 +190,94 @@ class SpielerRepositoryTest {
     void findeMitWildcard_nullSucheBehandeltWieLeer() throws Exception {
         repo.insert(SpielerDatensatz.neu("Max", "Mustermann", null, null, null));
         assertThat(repo.findeMitWildcard(null, false, 10)).hasSize(1);
+    }
+
+    @Test
+    void insert_nameDuplikatMitGleichemVerein_wirft() throws Exception {
+        VereinDatensatz v = vereinRepo.insert("BC Linden");
+        repo.insert(SpielerDatensatz.neu("Max", "Mustermann", v.nr(), null, null));
+
+        assertThatThrownBy(() -> repo.insert(SpielerDatensatz.neu("Max", "Mustermann", v.nr(), null, null)))
+                .isInstanceOf(NameDuplikatException.class);
+    }
+
+    @Test
+    void insert_nameDuplikatOhneVerein_wirft() throws Exception {
+        // UQ_SPIELER_NAME_VEREIN nutzt COALESCE(VEREIN_NR, -1) -> auch ohne Verein
+        // gilt derselbe Name zweimal als Duplikat.
+        repo.insert(SpielerDatensatz.neu("Max", "Mustermann", null, null, null));
+        assertThatThrownBy(() -> repo.insert(SpielerDatensatz.neu("Max", "Mustermann", null, null, null)))
+                .isInstanceOf(NameDuplikatException.class);
+    }
+
+    @Test
+    void update_nrNull_wirft() {
+        assertThatThrownBy(() -> repo.update(SpielerDatensatz.neu("Max", "Mustermann", null, null, null)))
+                .isInstanceOf(SpielerDbException.class);
+    }
+
+    @Test
+    void update_pflichtfelderLeer_wirft() throws Exception {
+        SpielerDatensatz d = repo.insert(SpielerDatensatz.neu("Max", "Mustermann", null, null, null));
+        assertThatThrownBy(() -> repo.update(new SpielerDatensatz(d.nr(), "  ", "Mustermann", null, null, null)))
+                .isInstanceOf(SpielerDbException.class);
+    }
+
+    @Test
+    void update_unbekannteNr_wirft() {
+        assertThatThrownBy(() -> repo.update(new SpielerDatensatz(999, "Max", "Mustermann", null, null, null)))
+                .isInstanceOf(SpielerDbException.class);
+    }
+
+    @Test
+    void update_lizenzDoppelt_wirft() throws Exception {
+        repo.insert(SpielerDatensatz.neu("A", "X", null, null, "L-1"));
+        SpielerDatensatz d = repo.insert(SpielerDatensatz.neu("B", "Y", null, null, null));
+
+        assertThatThrownBy(() -> repo.update(new SpielerDatensatz(d.nr(), "B", "Y", null, null, "L-1")))
+                .isInstanceOf(LizenzDuplikatException.class);
+    }
+
+    @Test
+    void update_ungueltigeVereinReferenz_wirft() throws Exception {
+        SpielerDatensatz d = repo.insert(SpielerDatensatz.neu("Max", "Mustermann", null, null, null));
+        assertThatThrownBy(() -> repo.update(new SpielerDatensatz(d.nr(), "Max", "Mustermann", 99999, null, null)))
+                .isInstanceOf(SpielerDbException.class);
+    }
+
+    @Test
+    void delete_unbekannteNr_wirft() {
+        assertThatThrownBy(() -> repo.delete(999))
+                .isInstanceOf(SpielerDbException.class);
+    }
+
+    @Test
+    void findeDuplikat_findetGleichenNamenUndVerein() throws Exception {
+        VereinDatensatz v = vereinRepo.insert("BC Linden");
+        SpielerDatensatz d = repo.insert(SpielerDatensatz.neu("Max", "Mustermann", v.nr(), null, null));
+
+        assertThat(repo.findeDuplikat("max", "mustermann", v.nr(), null))
+                .isPresent().get().extracting(SpielerMitVerein::nr).isEqualTo(d.nr());
+    }
+
+    @Test
+    void findeDuplikat_ohneVereinMatchtNurOhneVerein() throws Exception {
+        VereinDatensatz v = vereinRepo.insert("BC Linden");
+        repo.insert(SpielerDatensatz.neu("Max", "Mustermann", v.nr(), null, null));
+
+        assertThat(repo.findeDuplikat("Max", "Mustermann", null, null)).isEmpty();
+    }
+
+    @Test
+    void findeDuplikat_ausserNrSchliesstEigenenDatensatzAus() throws Exception {
+        SpielerDatensatz d = repo.insert(SpielerDatensatz.neu("Max", "Mustermann", null, null, null));
+
+        assertThat(repo.findeDuplikat("Max", "Mustermann", null, d.nr())).isEmpty();
+    }
+
+    @Test
+    void findeDuplikat_leererNameLiefertEmpty() throws Exception {
+        assertThat(repo.findeDuplikat("  ", "Mustermann", null, null)).isEmpty();
+        assertThat(repo.findeDuplikat("Max", "", null, null)).isEmpty();
     }
 }

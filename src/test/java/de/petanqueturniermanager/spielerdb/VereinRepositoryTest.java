@@ -101,4 +101,41 @@ class VereinRepositoryTest {
         assertThat(repo.findAll()).extracting(VereinDatensatz::name)
                 .containsExactly("alpha", "Mike", "zeta");
     }
+
+    @Test
+    void findByName_unbekannt_liefertEmpty() throws Exception {
+        assertThat(repo.findByName("Unbekannt")).isEmpty();
+    }
+
+    @Test
+    void findById_unbekannt_liefertEmpty() throws Exception {
+        assertThat(repo.findById(999)).isEmpty();
+    }
+
+    @Test
+    void update_leererName_wirft() throws Exception {
+        VereinDatensatz v = repo.insert("Alt");
+        assertThatThrownBy(() -> repo.update(v.nr(), "   "))
+                .isInstanceOf(SpielerDbException.class);
+    }
+
+    @Test
+    void update_unbekannteNr_wirft() {
+        assertThatThrownBy(() -> repo.update(999, "Neu"))
+                .isInstanceOf(SpielerDbException.class);
+    }
+
+    @Test
+    void update_aufBereitsVorhandenenNamen_wirftDuplikatException() throws Exception {
+        repo.insert("BC Linden");
+        VereinDatensatz zweiter = repo.insert("SC Musterstadt");
+        assertThatThrownBy(() -> repo.update(zweiter.nr(), "BC Linden"))
+                .isInstanceOf(DuplikatException.class);
+    }
+
+    @Test
+    void delete_unbekannteNr_wirft() {
+        assertThatThrownBy(() -> repo.delete(999))
+                .isInstanceOf(SpielerDbException.class);
+    }
 }

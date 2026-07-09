@@ -59,4 +59,35 @@ public class LigaSpielPlanTest {
 		assertThat(tpListFlat).containsAll(tpListFlatExpected);
 	}
 
+	@Test
+	public void testGetSpielPlanClone() throws Exception {
+		TeamMeldungen meldungen = new TeamMeldungen();
+		for (int i = 1; i < 5; i++) {
+			meldungen.addTeamWennNichtVorhanden(Team.from(i));
+		}
+		LigaSpielPlan ligaSpielPlan = new LigaSpielPlan(meldungen);
+
+		List<List<TeamPaarung>> clone = ligaSpielPlan.getSpielPlanClone();
+
+		assertThat(clone).isEqualTo(ligaSpielPlan.getSpielPlan());
+		// echte Kopie: TeamPaarung-Objekte sind nicht identisch (clone(), nicht dieselbe Referenz)
+		assertThat(clone.get(0).get(0)).isNotSameAs(ligaSpielPlan.getSpielPlan().get(0).get(0));
+	}
+
+	@Test
+	public void testSchufflePlan() throws Exception {
+		TeamMeldungen meldungen = new TeamMeldungen();
+		for (int i = 1; i < 7; i++) {
+			meldungen.addTeamWennNichtVorhanden(Team.from(i));
+		}
+		LigaSpielPlan ligaSpielPlan = new LigaSpielPlan(meldungen);
+		List<List<TeamPaarung>> vorherigerInhalt = ligaSpielPlan.getSpielPlanClone();
+
+		LigaSpielPlan result = ligaSpielPlan.schufflePlan();
+
+		assertThat(result).isSameAs(ligaSpielPlan);
+		// Inhalt bleibt gleich, nur die Reihenfolge der Runden darf sich aendern
+		assertThat(ligaSpielPlan.getSpielPlan()).containsExactlyInAnyOrderElementsOf(vorherigerInhalt);
+	}
+
 }
