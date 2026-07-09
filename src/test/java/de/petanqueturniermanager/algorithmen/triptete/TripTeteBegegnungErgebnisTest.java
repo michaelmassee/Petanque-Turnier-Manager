@@ -86,6 +86,16 @@ public class TripTeteBegegnungErgebnisTest {
 	}
 
 	@Test
+	public void toStringEnthaeltTeamnummernUndPunkte() {
+		TripTeteBegegnungErgebnis erg = new TripTeteBegegnungErgebnis(Team.from(1), Team.from(2));
+		erg.setPartieErgebnis(TripTetePartie.TRIPLETTE, new SpielErgebnis(13, 9));
+
+		assertThat(erg.toString())
+				.contains("A=1")
+				.contains("B=2");
+	}
+
+	@Test
 	public void teamAVerliert0zu3() {
 		TripTeteBegegnungErgebnis erg = new TripTeteBegegnungErgebnis(Team.from(1), Team.from(2));
 		erg.setPartieErgebnis(TripTetePartie.TRIPLETTE, new SpielErgebnis(5, 13));

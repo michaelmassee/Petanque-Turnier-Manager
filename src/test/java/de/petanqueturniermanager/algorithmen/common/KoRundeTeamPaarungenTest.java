@@ -41,6 +41,17 @@ public class KoRundeTeamPaarungenTest {
 		});
 	}
 
+	@Test
+	public void testGetTeamRangListe_liefertUebergebeneRangliste() {
+		TeamRangliste rangliste = new TeamRangliste();
+		rangliste.add(Team.from(1));
+		rangliste.add(Team.from(2));
+
+		KoRundeTeamPaarungen koRunde = new KoRundeTeamPaarungen(rangliste);
+
+		assertThat(koRunde.getTeamRangListe()).isEqualTo(rangliste);
+	}
+
 	// ──────────────────────────────────────────────────────────
 	// Normalfall: keine Vorpaarungen
 	// ──────────────────────────────────────────────────────────

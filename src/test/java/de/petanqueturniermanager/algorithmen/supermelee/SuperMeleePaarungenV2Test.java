@@ -1764,4 +1764,132 @@ public class SuperMeleePaarungenV2Test {
             System.out.printf("→ %d Spieler: max. Rundenlaufzeit = %d ms%n%n", anzSpieler, maxRundeMillis);
         }
     }
+
+    // =========================================================================
+    // Coverage-Ergänzungen: interne Backtracking-/Fairness-Randfälle
+    // =========================================================================
+
+    @Test
+    public void setSpieltagNrFuerLog_setztPrivatesFeld() throws Exception {
+        paarungen.setSpieltagNrFuerLog(7);
+
+        assertThat(privatesFeld(paarungen, "spieltagNrFuerLog")).isEqualTo(7);
+    }
+
+    @Test
+    public void erzeugeZufallsRunde_ungueltigeSpielerzahlDoubletteModus_wirftException() {
+        SpielerMeldungen m = newTestMeldungen(7);
+
+        assertThatThrownBy(() -> paarungen.erzeugeZufallsRunde(1, m, true))
+                .isInstanceOf(AlgorithmenException.class)
+                .hasMessageContaining("7");
+    }
+
+    @Test
+    public void erzeugeZufallsRunde_ungueltigeSpielerzahlTriletteModus_wirftException() {
+        SpielerMeldungen m = newTestMeldungen(7);
+
+        assertThatThrownBy(() -> paarungen.erzeugeZufallsRunde(1, m, false))
+                .isInstanceOf(AlgorithmenException.class)
+                .hasMessageContaining("7");
+    }
+
+    /**
+     * Ein Team, das ausschließlich aus Dummy-Spielern besteht, wird bei der
+     * Layout-Bewertung übersprungen ({@code effektivesTeamOhneDummies} liefert eine
+     * leere Liste). In der regulären Auslosung entsteht das nicht (Dummies werden
+     * gleichmäßig über die Teams verteilt) — der Test ruft die Bewertung direkt mit
+     * einem künstlichen Nur-Dummy-Team auf.
+     */
+    @Test
+    public void berechneLayoutGegnerScore_reinesDummyTeamWirdUebersprungen() throws Exception {
+        Spieler dummy = Spieler.from(10_000);
+        List<Spieler> spieler = List.of(dummy, Spieler.from(1), Spieler.from(2));
+        List<List<Integer>> teams = List.of(List.of(0), List.of(1, 2));
+
+        assertThat(berechneLayoutGegnerScore(teams, spieler)).isZero();
+    }
+
+    /**
+     * {@code sucheIndexPaarungenRekursiv} behandelt eine Restliste mit genau einem
+     * verbleibenden Team als Abbruchfall (kein Partner mehr zu paaren). Über den
+     * öffentlichen Aufrufer ({@code berechneBesteGruppenPaarungScore}, der Gruppen
+     * < 2 sofort mit Score 0 abfängt) ist dieser Rekursionszustand nicht erreichbar —
+     * der Test ruft die private Methode direkt mit einer Einer-Liste auf.
+     */
+    @Test
+    public void sucheIndexPaarungenRekursiv_einTeamUebrig_liefertAktuellenScore() throws Exception {
+        Method methode = SuperMeleePaarungenV2.class.getDeclaredMethod("sucheIndexPaarungenRekursiv",
+                List.class, int.class, int[].class, List.class);
+        methode.setAccessible(true);
+
+        int[] bestScore = {Integer.MAX_VALUE};
+        List<List<Integer>> einTeam = List.of(List.of(0));
+        List<Spieler> spieler = List.of(Spieler.from(1));
+
+        methode.invoke(paarungen, einTeam, 0, bestScore, spieler);
+
+        assertThat(bestScore[0]).isZero();
+    }
+
+    /**
+     * Deterministischer Trigger für das Knotenlimit: ein Knotenbudget von 1 lässt das
+     * Backtracking beim allerersten inneren Knoten abbrechen, in jedem der
+     * {@code MAX_SHUFFLE_VERSUCHE} Versuche und in beiden Pässen. Ein realistisches
+     * Erschöpfen des vollen Budgets (50 000 Knoten) wäre für einen Unit-Test zu teuer —
+     * die private Methode wird daher direkt mit einem winzigen Budget aufgerufen.
+     */
+    @Test
+    public void generiereRunde_knotenlimitSofortErreicht_wirftKnotenlimitException() throws Exception {
+        SpielerMeldungen meldungen = newTestMeldungen(6);
+        Method methode = SuperMeleePaarungenV2.class.getDeclaredMethod("generiereRunde",
+                int.class, int.class, SpielerMeldungen.class, int.class, String.class);
+        methode.setAccessible(true);
+
+        assertThatThrownBy(() -> {
+            try {
+                methode.invoke(paarungen, 1, 3, meldungen, 1, "");
+            } catch (InvocationTargetException e) {
+                throw e.getCause();
+            }
+        })
+                .isInstanceOf(AlgorithmenException.class)
+                .hasMessageContaining("Knotenlimit");
+    }
+
+    /**
+     * Erschöpft sowohl alle Fairness-Stufen der "großen Ausnahme" (Doublette-Hauptmodus)
+     * als auch den anschließenden uneingeschränkten Fallback: bei vollständig gesättigter
+     * {@code warImTeamMit}-Historie (jeder mit jedem bereits im Team) kann keine gültige
+     * Runde mehr gebildet werden. Deckt sowohl den Doppel-Catch-Fallback in
+     * {@code generiereRundeMitFairnessConstraint} als auch die Erschöpfung der
+     * Fairness-Schleife in {@code erzwingeFaireGrosseAusnahmeTeams} ab.
+     */
+    @Test
+    public void generiereRundeMitFairnessConstraint_vollstaendigGesaettigt_wirftFairnessException() throws Exception {
+        SpielerMeldungen meldungen = newTestMeldungen(5);
+        Spieler dummy = Spieler.from(10_000).setSetzPos(999);
+        meldungen.addSpielerWennNichtVorhanden(dummy);
+
+        List<Spieler> alle = new ArrayList<>(meldungen.spieler());
+        for (int i = 0; i < alle.size(); i++) {
+            for (int j = i + 1; j < alle.size(); j++) {
+                alle.get(i).addWarImTeamMitWennNichtVorhanden(alle.get(j));
+            }
+        }
+        List<Spieler> realeSpieler = alle.stream().filter(s -> s.getNr() < 10_000).toList();
+        Spieler[] dummies = {dummy};
+
+        Method methode = SuperMeleePaarungenV2.class.getDeclaredMethod("generiereRundeMitFairnessConstraint",
+                int.class, int.class, SpielerMeldungen.class, Spieler[].class, List.class, boolean.class);
+        methode.setAccessible(true);
+
+        assertThatThrownBy(() -> {
+            try {
+                methode.invoke(paarungen, 1, 3, meldungen, dummies, realeSpieler, false);
+            } catch (InvocationTargetException e) {
+                throw e.getCause();
+            }
+        }).isInstanceOf(AlgorithmenException.class);
+    }
 }

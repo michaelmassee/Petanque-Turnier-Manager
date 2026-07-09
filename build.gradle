@@ -113,8 +113,37 @@ jacocoTestReport {
         xml.required = true
     }
 }
+
+// Quality Gate: Kernalgorithmen (algorithmen/*) sind reine, UNO-freie Java-Logik ohne
+// LibreOffice-Abhängigkeit und daher vollständig unit-testbar. 99% Instruction-Coverage
+// ist der erreichte Zielwert; verbleibende Lücken sind dokumentiert nicht-testbarer Code
+// (mathematisch/strukturell unerreichbare Defensiv-Zweige, siehe Commit-Historie).
+// Restliche Pakete (comp/, helper/, basesheet/, ... ) sind bewusst ausgeschlossen: dort
+// dominiert UNO-Integration, deren sinnvolle Abdeckung über UITests statt Unit-Tests läuft.
+jacocoTestCoverageVerification {
+    dependsOn test
+    // Nur algorithmen/* einbeziehen; Gate prüft die AGGREGIERTE Coverage über alle
+    // Unterpakete zusammen (BUNDLE), nicht jedes Unterpaket einzeln — einzelne
+    // schwächere Pakete (z. B. viel Fehlerbehandlungscode) werden so durch stärkere
+    // aufgewogen, solange die Gesamtqualität stimmt.
+    classDirectories.setFrom(
+            files(classDirectories.files.collect {
+                fileTree(dir: it, include: 'de/petanqueturniermanager/algorithmen/**')
+            })
+    )
+    violationRules {
+        rule {
+            element = 'BUNDLE'
+            limit {
+                counter = 'INSTRUCTION'
+                minimum = 0.99
+            }
+        }
+    }
+}
+
 tasks.named('check').configure {
-    dependsOn 'jacocoTestReport'
+    dependsOn 'jacocoTestReport', 'jacocoTestCoverageVerification'
 }
 
 // ===================================================

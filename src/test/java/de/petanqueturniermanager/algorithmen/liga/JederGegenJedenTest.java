@@ -23,6 +23,17 @@ public class JederGegenJedenTest {
 		assertThat(new JederGegenJeden(newMeldungenList(8)).anzRunden()).isEqualTo(7);
 	}
 
+	@Test
+	public void testIsFreiSpielUndGetAnzMeldungen() throws Exception {
+		JederGegenJeden geradeAnzahl = new JederGegenJeden(newMeldungenList(6));
+		assertThat(geradeAnzahl.isFreiSpiel()).isFalse();
+		assertThat(geradeAnzahl.getAnzMeldungen()).isEqualTo(6);
+
+		JederGegenJeden ungeradeAnzahl = new JederGegenJeden(newMeldungenList(7));
+		assertThat(ungeradeAnzahl.isFreiSpiel()).isTrue();
+		assertThat(ungeradeAnzahl.getAnzMeldungen()).isEqualTo(7);
+	}
+
 	private TeamMeldungen newMeldungenList(int anz) {
 		TeamMeldungen teamMeldungen = new TeamMeldungen();
 		for (int i = 0; i < anz; i++) {

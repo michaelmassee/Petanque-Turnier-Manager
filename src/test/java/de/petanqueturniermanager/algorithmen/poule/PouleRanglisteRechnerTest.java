@@ -157,6 +157,25 @@ class PouleRanglisteRechnerTest {
     }
 
     // -----------------------------------------------------------------------
+    // Direktvergleich vertauscht die Basisreihenfolge
+    // -----------------------------------------------------------------------
+
+    @Test
+    void testZweiTeamPoule_direktvergleichVertauschtNiedrigereTeamNr() {
+        // T1 und T2 sind nach Basiskriterien exakt gleich; T2 hat das direkte Duell
+        // gewonnen. Ohne Direktvergleich stünde T1 (niedrigere Teamnummer) an Position 1 –
+        // der Algorithmus muss die Reihenfolge dafür vertauschen.
+        var t1 = ergebnis(1, 1, 0, 5, 13, gegen(2, 5, 13));
+        var t2 = ergebnis(2, 1, 0, 5, 13, gegen(1, 13, 5));
+
+        var sortiert = rechner.sortiere(List.of(t1, t2));
+
+        assertThat(sortiert)
+                .extracting(PouleTeamErgebnis::teamNr)
+                .containsExactly(2, 1);
+    }
+
+    // -----------------------------------------------------------------------
     // Zyklischer Gleichstand – kein Exception
     // -----------------------------------------------------------------------
 

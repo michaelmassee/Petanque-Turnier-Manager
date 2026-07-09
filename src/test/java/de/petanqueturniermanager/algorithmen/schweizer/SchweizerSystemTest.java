@@ -296,6 +296,47 @@ public class SchweizerSystemTest {
 	}
 
 	@Test
+	public void testKannTauschenMit_invalidOhneBTeam_liefertNull() throws Exception {
+		schweizerSystem = new SchweizerSystem();
+
+		TeamPaarung invalidOhneB = new TeamPaarung(Team.from(101));
+
+		TeamPaarung result = schweizerSystem.kannTauschenMit(invalidOhneB, List.of(), List.of(Team.from(101)));
+		assertThat(result).isNull();
+	}
+
+	/**
+	 * Kandidat hat {@code hatGegner=true}, ist aber in keiner der übergebenen Paarungen enthalten
+	 * (inkonsistenter Zwischenzustand) — {@code findGegnerAusTeamPaarungen} liefert dafür {@code null},
+	 * der Kandidat wird also verworfen. Ohne weitere Kandidaten bleibt das Ergebnis {@code null}.
+	 */
+	@Test
+	public void testKannTauschenMit_kandidatOhneGegnerInfo_liefertNull() throws Exception {
+		schweizerSystem = new SchweizerSystem();
+
+		Team teamA = Team.from(201);
+		Team teamB = Team.from(202);
+		TeamPaarung invalid = new TeamPaarung(teamA, teamB);
+
+		Team kandidatOhnePaarung = Team.from(203);
+		kandidatOhnePaarung.setHatGegner(true);
+
+		TeamPaarung result = schweizerSystem.kannTauschenMit(invalid, List.of(), List.of(teamA, teamB, kandidatOhnePaarung));
+		assertThat(result).isNull();
+	}
+
+	@Test
+	public void testTauschenTeamsInPaarung_paarOhneBTeam_liefertFalse() throws Exception {
+		schweizerSystem = new SchweizerSystem();
+
+		TeamPaarung paarOhneB = new TeamPaarung(Team.from(111));
+		TeamPaarung paarMitB = new TeamPaarung(Team.from(112), Team.from(113));
+
+		assertThat(schweizerSystem.tauschenTeamsInPaarung(paarOhneB, paarMitB)).isFalse();
+		assertThat(schweizerSystem.tauschenTeamsInPaarung(paarMitB, paarOhneB)).isFalse();
+	}
+
+	@Test
 	public void testErsteRundeMitSetzPosUnGerade() throws Exception {
 		TeamMeldungen meldungen = new TeamMeldungen();
 
@@ -516,6 +557,27 @@ public class SchweizerSystemTest {
 		List<SchweizerTeamErgebnis> sortiert = schweizerSystem.sortiereNachAuswertungskriterien(ergebnisse);
 		assertThat(sortiert.get(0).teamNr()).isEqualTo(1); // höhere Punktedifferenz gewinnt
 		assertThat(sortiert.get(1).teamNr()).isEqualTo(2);
+	}
+
+	/**
+	 * MIT_BUCHHOLZ delegiert an die 1-Parameter-Überladung (Siege → BHZ → FBHZ).
+	 */
+	@Test
+	public void testSortiereMitBuchholz_delegiertAnEinParameterUeberladung() {
+		schweizerSystem = new SchweizerSystem();
+
+		List<SchweizerTeamErgebnis> ergebnisse = List.of(
+				new SchweizerTeamErgebnis(1, 2, 5, 30, List.of(3, 4)),
+				new SchweizerTeamErgebnis(2, 2, 5, 25, List.of(3, 4)),
+				new SchweizerTeamErgebnis(3, 1, 0, 0, List.of(1, 2)),
+				new SchweizerTeamErgebnis(4, 1, 0, 0, List.of(1, 2))
+		);
+
+		List<SchweizerTeamErgebnis> erwartet = schweizerSystem.sortiereNachAuswertungskriterien(ergebnisse);
+		List<SchweizerTeamErgebnis> tatsaechlich = schweizerSystem.sortiereNachAuswertungskriterien(ergebnisse,
+				SchweizerRankingModus.MIT_BUCHHOLZ);
+
+		assertThat(tatsaechlich).containsExactlyElementsOf(erwartet);
 	}
 
 	@Test

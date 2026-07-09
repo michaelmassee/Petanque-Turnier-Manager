@@ -58,6 +58,15 @@ public class DirektvergleichResultTest {
 	}
 
 	@Test
+	public void testToKomparatorWert_alleEnumWerte() {
+		assertThat(DirektvergleichResult.GEWONNEN.toKomparatorWert()).isEqualTo(-1);
+		assertThat(DirektvergleichResult.VERLOREN.toKomparatorWert()).isEqualTo(1);
+		assertThat(DirektvergleichResult.GLEICH.toKomparatorWert()).isZero();
+		assertThat(DirektvergleichResult.KEINERGEBNIS.toKomparatorWert()).isZero();
+		assertThat(DirektvergleichResult.FEHLER.toKomparatorWert()).isZero();
+	}
+
+	@Test
 	public void testStream_enthaeltAlleEnumWerte() {
 		List<DirektvergleichResult> liste = DirektvergleichResult.stream().collect(Collectors.toList());
 		assertThat(liste)

@@ -35,6 +35,29 @@ public class KaskadenKoRundenPlanerTest {
                 .isInstanceOf(IllegalStateException.class);
     }
 
+    /**
+     * Die 3-Parameter-Überladung (ohne {@code freispielGewonnen}) delegiert mit
+     * {@code freispielGewonnen=false} an die 4-Parameter-Variante — identisch zum
+     * expliziten Aufruf mit {@code false}.
+     */
+    @Test
+    public void testBerechne_dreiParameterUeberladung_delegiertMitFreispielGewonnenFalse() {
+        var ueberDreiParameter = KaskadenKoRundenPlaner.berechne(16, 2, KaskadenKoRundenPlaner.SEQUENZIELL);
+        var ueberVierParameter = KaskadenKoRundenPlaner.berechne(16, 2, KaskadenKoRundenPlaner.SEQUENZIELL, false);
+
+        // CadrageRechner in KaskadenKoFeldInfo hat keine value-equals() → nur die
+        // fachlich relevanten Felder vergleichen, nicht das ganze Record per equals().
+        assertThat(ueberDreiParameter.gesamtTeams()).isEqualTo(ueberVierParameter.gesamtTeams());
+        assertThat(ueberDreiParameter.kaskadenStufen()).isEqualTo(ueberVierParameter.kaskadenStufen());
+        assertThat(ueberDreiParameter.kaskadeRunden()).isEqualTo(ueberVierParameter.kaskadeRunden());
+        assertThat(ueberDreiParameter.felder())
+                .extracting("bezeichner", "pfad", "gesamtTeams")
+                .containsExactlyElementsOf(
+                        ueberVierParameter.felder().stream()
+                                .map(f -> org.assertj.core.groups.Tuple.tuple(f.bezeichner(), f.pfad(), f.gesamtTeams()))
+                                .toList());
+    }
+
     // ---------------------------------------------------------------
     // k=1: 1 Kaskadenrunde, 2 Endfelder
     // ---------------------------------------------------------------
