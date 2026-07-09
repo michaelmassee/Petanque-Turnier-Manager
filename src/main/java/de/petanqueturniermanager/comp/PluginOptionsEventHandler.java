@@ -48,6 +48,7 @@ public final class PluginOptionsEventHandler extends WeakBase
 	private static final String CTL_AUTOSAVE = "Autosave";
 	private static final String CTL_BACKUP = "Backup";
 	private static final String CTL_NEW_VERSION_CHECK = "NewVersionCheck";
+	private static final String CTL_AUTO_UPDATE_DIALOG_STARTUP = "AutoUpdateDialogStartup";
 	private static final String CTL_PROCESSBOX_SHOW = "ProcessBoxAutomaticallyShow";
 	private static final String CTL_PROCESSBOX_CLOSE = "ProcessBoxAutomaticallyClose";
 	private static final String CTL_PERFORMANCE_LOGGING = "PerformanceLogging";
@@ -89,6 +90,7 @@ public final class PluginOptionsEventHandler extends WeakBase
 		setCheckbox(container, CTL_AUTOSAVE, properties.isAutoSave());
 		setCheckbox(container, CTL_BACKUP, properties.isCreateBackup());
 		setCheckbox(container, CTL_NEW_VERSION_CHECK, properties.isNewVersionCheckImmerTrue());
+		setCheckbox(container, CTL_AUTO_UPDATE_DIALOG_STARTUP, properties.isAutoUpdateDialogBeimStartAktiv());
 		setCheckbox(container, CTL_PROCESSBOX_SHOW, properties.isProzessBoxAutomatischAnzeigen());
 		setCheckbox(container, CTL_PROCESSBOX_CLOSE, properties.isProzessBoxAutomatischSchliessen());
 		setCheckbox(container, CTL_PERFORMANCE_LOGGING, properties.isPerformanceLogging());
@@ -105,7 +107,8 @@ public final class PluginOptionsEventHandler extends WeakBase
 				checkbox(container, CTL_PROCESSBOX_SHOW),
 				checkbox(container, CTL_PROCESSBOX_CLOSE),
 				checkbox(container, CTL_PERFORMANCE_LOGGING),
-				text(container, CTL_LOG_LEVEL));
+				text(container, CTL_LOG_LEVEL),
+				checkbox(container, CTL_AUTO_UPDATE_DIALOG_STARTUP));
 		try {
 			ReleaseUpdateService.get().loeseListenerAus();
 		} catch (IllegalStateException e) {
@@ -117,6 +120,7 @@ public final class PluginOptionsEventHandler extends WeakBase
 		setLabel(container, CTL_AUTOSAVE, I18n.get("konfig.plugin.autosave"));
 		setLabel(container, CTL_BACKUP, I18n.get("konfig.plugin.backup"));
 		setLabel(container, CTL_NEW_VERSION_CHECK, I18n.get("konfig.plugin.new.version.check"));
+		setLabel(container, CTL_AUTO_UPDATE_DIALOG_STARTUP, I18n.get("konfig.plugin.auto.update.dialog.startup"));
 		setLabel(container, CTL_PROCESSBOX_SHOW, I18n.get("konfig.prozessbox.automatisch.anzeigen"));
 		setLabel(container, CTL_PROCESSBOX_CLOSE, I18n.get("konfig.prozessbox.automatisch.schliessen"));
 		setLabel(container, CTL_PERFORMANCE_LOGGING, I18n.get("konfig.performance.logging"));

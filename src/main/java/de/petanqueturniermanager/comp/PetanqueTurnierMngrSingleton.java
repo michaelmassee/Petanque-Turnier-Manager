@@ -81,6 +81,7 @@ import de.petanqueturniermanager.timer.TimerManager;
 import de.petanqueturniermanager.webserver.WebServerManager;
 import de.petanqueturniermanager.comp.adapter.GlobalEventListener;
 import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
+import de.petanqueturniermanager.comp.newrelease.AutoUpdateStartupChecker;
 import de.petanqueturniermanager.comp.newrelease.ReleaseUpdateService;
 import de.petanqueturniermanager.sidebar.SidebarAnzeigenListener;
 import de.petanqueturniermanager.sidebar.SidebarPanelDelegator;
@@ -183,7 +184,10 @@ public class PetanqueTurnierMngrSingleton {
 		TerminateListener.addThisListenerOnce(context);
 		t = logTimingAndReset("TerminateListener.addThisListenerOnce", t);
 		ReleaseUpdateService.init(context);
-		t = logTimingAndReset("ReleaseUpdateService.init (async)", t);
+		var autoUpdateStartupChecker = new AutoUpdateStartupChecker(context);
+		ReleaseUpdateService.get().addStatusListener(autoUpdateStartupChecker::pruefeUndZeige);
+		autoUpdateStartupChecker.pruefeUndZeige();
+		t = logTimingAndReset("ReleaseUpdateService.init (async) + AutoUpdateStartupChecker", t);
 		if (GlobalProperties.get().isWebserverAktiv()) {
 			WebServerManager.get().starten(context);
 			t = logTimingAndReset("WebServerManager.starten", t);

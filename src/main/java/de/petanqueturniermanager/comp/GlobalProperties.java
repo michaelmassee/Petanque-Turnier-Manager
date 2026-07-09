@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
@@ -48,6 +49,8 @@ public class GlobalProperties {
 	private static final String CREATE_BACKUP_PROP = "backup";
 	private static final String AUTOSAVE_PROP = "autosave";
 	private static final String NEW_VERSION_CHECK_PROP = "newversioncheck";
+	private static final String AUTO_UPDATE_DIALOG_PROP = "auto.update.dialog.beim.start";
+	private static final String UPDATE_SKIP_VERSION_PROP = "auto.update.skip.version";
 	private static final String PROZESSBOX_AUTOMATISCH_ANZEIGEN_PROP = "prozessbox.automatisch.anzeigen";
 	private static final String PROZESSBOX_AUTOMATISCH_SCHLIESSEN_PROP = "prozessbox.automatisch.schliessen";
 	private static final String PERFORMANCE_LOGGING_PROP = "performance.logging";
@@ -719,7 +722,8 @@ public class GlobalProperties {
 				getBooleanMitDefault(PROZESSBOX_AUTOMATISCH_ANZEIGEN_PROP, true),
 				getBooleanMitDefault(PROZESSBOX_AUTOMATISCH_SCHLIESSEN_PROP, true),
 				getBoolean(PERFORMANCE_LOGGING_PROP),
-				getLogLevel());
+				getLogLevel(),
+				getBooleanMitDefault(AUTO_UPDATE_DIALOG_PROP, true));
 	}
 
 	private static void pluginOptionenInMap(PluginOptionen optionen) {
@@ -736,6 +740,7 @@ public class GlobalProperties {
 		} else {
 			propMap.put(LOG_LEVEL_PROP, optionen.logLevel());
 		}
+		setBooleanProp(AUTO_UPDATE_DIALOG_PROP, optionen.autoUpdateDialogBeimStart());
 	}
 
 	/**
@@ -810,6 +815,7 @@ public class GlobalProperties {
 		geaendert |= propMap.remove(PROZESSBOX_AUTOMATISCH_SCHLIESSEN_PROP) != null;
 		geaendert |= propMap.remove(PERFORMANCE_LOGGING_PROP) != null;
 		geaendert |= propMap.remove(LOG_LEVEL_PROP) != null;
+		geaendert |= propMap.remove(AUTO_UPDATE_DIALOG_PROP) != null;
 		if (geaendert) {
 			logger.info("Legacy-Plugin-Optionen-Properties entfernt");
 			speichernDatei();
@@ -829,7 +835,8 @@ public class GlobalProperties {
 				|| PROZESSBOX_AUTOMATISCH_ANZEIGEN_PROP.equals(key)
 				|| PROZESSBOX_AUTOMATISCH_SCHLIESSEN_PROP.equals(key)
 				|| PERFORMANCE_LOGGING_PROP.equals(key)
-				|| LOG_LEVEL_PROP.equals(key);
+				|| LOG_LEVEL_PROP.equals(key)
+				|| AUTO_UPDATE_DIALOG_PROP.equals(key);
 	}
 
 	private static void setPluginOptionenInLibreOffice(boolean wert) {
@@ -1010,6 +1017,24 @@ public class GlobalProperties {
 
 	public boolean isNewVersionCheckImmerTrue() {
 		return getBoolean(NEW_VERSION_CHECK_PROP);
+	}
+
+	public boolean isAutoUpdateDialogBeimStartAktiv() {
+		return getBooleanMitDefault(AUTO_UPDATE_DIALOG_PROP, true);
+	}
+
+	/**
+	 * Tag-Name der Version, für die der Benutzer "nicht mehr nachfragen" gewählt hat
+	 * (z.B. {@code v1.2.3}), oder {@link Optional#empty()} falls nicht gesetzt.
+	 */
+	public Optional<String> getUpdateSkipVersion() {
+		var wert = propMap.get(UPDATE_SKIP_VERSION_PROP);
+		return (wert == null || wert.isBlank()) ? Optional.empty() : Optional.of(wert);
+	}
+
+	public void setUpdateSkipVersion(String versionTag) {
+		propMap.put(UPDATE_SKIP_VERSION_PROP, versionTag);
+		speichernDatei();
 	}
 
 	public boolean isProzessBoxAutomatischAnzeigen() {
@@ -1499,11 +1524,11 @@ public class GlobalProperties {
 
 	public void speichern(boolean autosave, boolean backup, boolean newVersionCheck,
 			boolean prozessBoxAutomatischAnzeigen, boolean prozessBoxAutomatischSchliessen,
-			boolean performanceLogging, String logLevel) {
+			boolean performanceLogging, String logLevel, boolean autoUpdateDialogBeimStart) {
 		try {
 			PluginOptionen optionen = new PluginOptionen(autosave, backup, newVersionCheck,
 					prozessBoxAutomatischAnzeigen, prozessBoxAutomatischSchliessen,
-					performanceLogging, logLevel);
+					performanceLogging, logLevel, autoUpdateDialogBeimStart);
 			pluginOptionenInMap(optionen);
 			XComponentContext context = libreOfficeContext;
 			if (context != null) {

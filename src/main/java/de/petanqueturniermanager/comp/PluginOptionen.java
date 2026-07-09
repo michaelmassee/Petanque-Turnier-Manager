@@ -13,7 +13,8 @@ public record PluginOptionen(
 		boolean prozessBoxAutomatischAnzeigen,
 		boolean prozessBoxAutomatischSchliessen,
 		boolean performanceLogging,
-		String logLevel) {
+		String logLevel,
+		boolean autoUpdateDialogBeimStart) {
 
 	public PluginOptionen {
 		logLevel = logLevel == null ? "" : logLevel.trim().toLowerCase();

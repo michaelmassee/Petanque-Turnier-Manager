@@ -43,6 +43,10 @@
                 <info><desc>Configured Log4j log level.</desc></info>
                 <value/>
             </prop>
+            <prop oor:name="AutoUpdateDialogStartup" oor:type="xs:boolean">
+                <info><desc>Show the auto-update dialog on LibreOffice startup when a new version is available.</desc></info>
+                <value>true</value>
+            </prop>
             <prop oor:name="LegacyPropertiesImported" oor:type="xs:boolean">
                 <info><desc>Whether legacy properties have already been imported.</desc></info>
                 <value>false</value>
