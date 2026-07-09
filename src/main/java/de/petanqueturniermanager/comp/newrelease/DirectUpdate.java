@@ -45,6 +45,16 @@ public class DirectUpdate extends SheetRunner {
         return null;
     }
 
+    /**
+     * Der Download/Installations-Vorgang braucht kein offenes Calc-Dokument – der
+     * Update-Dialog kann auch dann ausgelöst werden, wenn beim Feuern des
+     * Startup-Checks kein Fenster fokussiert ist (siehe AutoUpdateStartupChecker).
+     */
+    @Override
+    protected boolean benoetigtLebendesDokument() {
+        return false;
+    }
+
     @Override
     protected void doRun() throws GenerateException {
         ExtensionsHelper extensionsHelper = ExtensionsHelper.from(getxContext());

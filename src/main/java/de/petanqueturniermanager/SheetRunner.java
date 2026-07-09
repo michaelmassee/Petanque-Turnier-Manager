@@ -213,13 +213,15 @@ public abstract class SheetRunner extends Thread {
 						BlattschutzRegistry.fuer(turnierSystem)
 								.ifPresent(k -> BlattschutzManager.get().beginCommandScope(k, workingSpreadsheet));
 					}
-					if (isDocumentAlive()) {
+					if (!benoetigtLebendesDokument() || isDocumentAlive()) {
 						doRun();
-						WebServerManager.get().sseRefreshSenden(workingSpreadsheet);
-						// Während des Runners eingetroffene Modify-Events wurden vom Listener
-						// zwar als dirty markiert, aber nicht eingeplant. Hier nachholen,
-						// damit kein Benutzer-Event verloren geht.
-						WebServerManager.get().getModifyListener().markDirtyAndSchedule();
+						if (isDocumentAlive()) {
+							WebServerManager.get().sseRefreshSenden(workingSpreadsheet);
+							// Während des Runners eingetroffene Modify-Events wurden vom Listener
+							// zwar als dirty markiert, aber nicht eingeplant. Hier nachholen,
+							// damit kein Benutzer-Event verloren geht.
+							WebServerManager.get().getModifyListener().markDirtyAndSchedule();
+						}
 					}
 				} catch (DisposedException e) {
 					documentDisposed = true;
@@ -415,6 +417,16 @@ public abstract class SheetRunner extends Thread {
 		if (GlobalProperties.get().isCreateBackup()) {
 			BackUp.from(workingSpreadsheet).prefix1(backupPrefix).prefix2(logPrefix).doBackUp();
 		}
+	}
+
+	/**
+	 * Überschreibbar für Runner, deren {@link #doRun()} nicht auf ein konkretes
+	 * Calc-Dokument angewiesen ist (z.B. {@code DirectUpdate}: lädt/installiert die
+	 * Extension unabhängig vom aktuell fokussierten Fenster). Default {@code true}
+	 * erhält das bisherige Verhalten für alle dokumentgebundenen Runner.
+	 */
+	protected boolean benoetigtLebendesDokument() {
+		return true;
 	}
 
 	/**
