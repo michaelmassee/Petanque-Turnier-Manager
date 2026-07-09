@@ -59,18 +59,18 @@ tasks.named('compileTestJava').configure {
 // ===================================================
 // SpotBugs (Block B2 aus architektur-robust-analyse.md)
 // ===================================================
-// Initialer Lauf zur Bestandsaufnahme: ignoreFailures = true, damit Findings
-// den Build nicht brechen. HTML- und XML-Report werden erzeugt; XML kann
-// später als Baseline-Excludefilter dienen ("keine neuen Findings").
+// Hartes Quality Gate: ungefilterte Findings brechen den Build. HTML- und
+// XML-Reports werden erzeugt; bekannte False Positives müssen im Exclude-Filter
+// mit Begründung dokumentiert werden.
 //
 // Aufruf:
 //   ./gradlew spotbugsMain   — nur Produktions-Source
-//   ./gradlew check          — schließt SpotBugs für Main + Test ein
+//   ./gradlew check          — schließt spotbugsMain ein
 //
 // Reports: build/reports/spotbugs/main.{html,xml}
 spotbugs {
     toolVersion = '4.9.6'       // Java 25 (class file 69) wird ab 4.9.x unterstützt
-    ignoreFailures = true       // Bestandsaufnahme; spätere Verschärfung via excludeFilter
+    ignoreFailures = false      // Quality Gate: keine ungefilterten Findings
     effort = Effort.valueOf('MAX')
     reportLevel = Confidence.valueOf('MEDIUM')
     excludeFilter = file('config/spotbugs/exclude.xml')
@@ -112,7 +112,7 @@ import net.ltgt.gradle.errorprone.CheckSeverity
 tasks.withType(JavaCompile).configureEach {
     options.errorprone.enabled = errorProneAktiviert
     if (errorProneAktiviert) {
-        // Standard-ErrorProne-Checks deaktivieren (Bestandsaufnahme separat),
+        // Standard-ErrorProne-Checks bleiben deaktiviert,
         // nur NullAway scharf schalten.
         options.errorprone.disableAllChecks = true
         options.errorprone.check('NullAway', CheckSeverity.ERROR)

@@ -31,7 +31,7 @@ class FtpUploadService implements IUploadService {
             client.setFileType(FTP.BINARY_FILE_TYPE);
 
             String remotePfad = normalisiereRemotePfad(konfiguration.remotePfad());
-            client.makeDirectory(remotePfad);
+            wechsleInVerzeichnis(client, remotePfad);
 
             int anzahl = 0;
             for (Path datei : dateien) {
@@ -59,7 +59,38 @@ class FtpUploadService implements IUploadService {
 
     @Override
     public void testeVerbindung(String passwort) throws IOException {
-        trenneVerbindung(verbindeUndLogin(passwort));
+        var client = verbindeUndLogin(passwort);
+        try {
+            client.enterLocalPassiveMode();
+            wechsleInVerzeichnis(client, normalisiereRemotePfad(konfiguration.remotePfad()));
+        } finally {
+            trenneVerbindung(client);
+        }
+    }
+
+    private void wechsleInVerzeichnis(FTPClient client, String remotePfad) throws IOException {
+        client.makeDirectory(remotePfad);
+        if (!client.changeWorkingDirectory(remotePfad)) {
+            throw new IOException(formatiereVerzeichnisFehler(client, remotePfad));
+        }
+    }
+
+    private String formatiereVerzeichnisFehler(FTPClient client, String remotePfad) throws IOException {
+        var meldung = new StringBuilder("FTP-Verzeichniswechsel fehlgeschlagen: \"")
+                .append(remotePfad)
+                .append("\" (Antwortcode: ").append(client.getReplyCode())
+                .append(", ").append(client.getReplyString().trim()).append(")");
+        String loginVerzeichnis = client.printWorkingDirectory();
+        if (loginVerzeichnis == null) {
+            return meldung.toString();
+        }
+        meldung.append(". FTP-Login-Verzeichnis ist \"").append(loginVerzeichnis).append("\"");
+        if (remotePfad.startsWith("/") && !"/".equals(loginVerzeichnis)) {
+            meldung.append(". Falls der Server-Zugang auf ein Unterverzeichnis eingeschränkt ist (Chroot), ")
+                    .append("bitte im FTP-Server-Dialog einen Pfad relativ zu diesem Login-Verzeichnis eintragen ")
+                    .append("(ohne das \"").append(loginVerzeichnis).append("\"-Präfix)");
+        }
+        return meldung.toString();
     }
 
     private FTPClient verbindeUndLogin(String passwort) throws IOException {

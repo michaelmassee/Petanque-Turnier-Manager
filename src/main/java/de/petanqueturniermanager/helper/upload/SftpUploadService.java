@@ -46,8 +46,7 @@ class SftpUploadService implements IUploadService {
             kanal.connect();
 
             String remotePfad = konfiguration.remotePfad();
-            erstelleVerzeichnisWennFehlt(kanal, remotePfad);
-            kanal.cd(remotePfad);
+            wechsleInVerzeichnis(kanal, remotePfad);
 
             int anzahl = 0;
             for (Path datei : dateien) {
@@ -67,8 +66,6 @@ class SftpUploadService implements IUploadService {
             return anzahl;
         } catch (JSchException e) {
             throw wandleJschFehlerUm(e);
-        } catch (SftpException e) {
-            throw new IOException("SFTP-Verzeichniswechsel fehlgeschlagen: " + e.getMessage(), e);
         } finally {
             trenneVerbindung(session, kanal);
         }
@@ -77,12 +74,16 @@ class SftpUploadService implements IUploadService {
     @Override
     public void testeVerbindung(String passwort) throws IOException {
         Session session = null;
+        ChannelSftp kanal = null;
         try {
             session = verbinde(passwort);
+            kanal = (ChannelSftp) session.openChannel("sftp");
+            kanal.connect();
+            wechsleInVerzeichnis(kanal, konfiguration.remotePfad());
         } catch (JSchException e) {
             throw wandleJschFehlerUm(e);
         } finally {
-            trenneVerbindung(session, null);
+            trenneVerbindung(session, kanal);
         }
     }
 
@@ -125,11 +126,57 @@ class SftpUploadService implements IUploadService {
         }
     }
 
-    private void erstelleVerzeichnisWennFehlt(ChannelSftp kanal, String remotePfad) {
+    private void wechsleInVerzeichnis(ChannelSftp kanal, String remotePfad) throws IOException {
+        String mkdirFehler = erstelleVerzeichnisWennFehlt(kanal, remotePfad);
+        try {
+            kanal.cd(remotePfad);
+        } catch (SftpException e) {
+            throw new IOException(formatiereVerzeichnisFehler(kanal, remotePfad, mkdirFehler, e), e);
+        }
+    }
+
+    /**
+     * @return Fehlermeldung des mkdir-Versuchs, oder {@code null} falls erfolgreich (Verzeichnis
+     *         existiert dann entweder bereits oder wurde neu angelegt).
+     */
+    private String erstelleVerzeichnisWennFehlt(ChannelSftp kanal, String remotePfad) {
         try {
             kanal.mkdir(remotePfad);
+            return null;
         } catch (SftpException e) {
-            logger.debug("SFTP mkdir ignoriert (Verzeichnis existiert möglicherweise): {}", remotePfad);
+            logger.debug("SFTP mkdir fehlgeschlagen (Verzeichnis existiert möglicherweise bereits): {}", remotePfad,
+                    e);
+            return e.getMessage();
+        }
+    }
+
+    private String formatiereVerzeichnisFehler(ChannelSftp kanal, String remotePfad, String mkdirFehler,
+            SftpException cdFehler) {
+        String loginVerzeichnis = ermittleLoginVerzeichnis(kanal);
+        var meldung = new StringBuilder("SFTP-Verzeichniswechsel fehlgeschlagen: \"")
+                .append(remotePfad)
+                .append("\" (").append(cdFehler.getMessage()).append(")");
+        if (mkdirFehler != null) {
+            meldung.append(". Anlegen des Verzeichnisses ist ebenfalls fehlgeschlagen: ").append(mkdirFehler);
+        }
+        if (loginVerzeichnis == null) {
+            return meldung.toString();
+        }
+        meldung.append(". SFTP-Login-Verzeichnis ist \"").append(loginVerzeichnis).append("\"");
+        if (remotePfad.startsWith("/") && !"/".equals(loginVerzeichnis)) {
+            meldung.append(". Falls der Server-Zugang auf ein Unterverzeichnis eingeschränkt ist (Chroot), ")
+                    .append("bitte im FTP-Server-Dialog einen Pfad relativ zu diesem Login-Verzeichnis eintragen ")
+                    .append("(ohne das \"").append(loginVerzeichnis).append("\"-Präfix)");
+        }
+        return meldung.toString();
+    }
+
+    private String ermittleLoginVerzeichnis(ChannelSftp kanal) {
+        try {
+            return kanal.pwd();
+        } catch (SftpException e) {
+            logger.debug("SFTP pwd() fehlgeschlagen", e);
+            return null;
         }
     }
 

@@ -2,11 +2,10 @@
 <!--
     SpotBugs Exclude-Filter — Block B2 aus architektur-robust-analyse.md.
 
-    Initial leer; ein erster Lauf (./gradlew spotbugsMain) erzeugt
-    build/reports/spotbugs/main.xml. Dieser kann als Baseline-Excludefilter
-    übernommen werden, damit künftig nur NEUE Findings den Build brechen.
-    Solange ignoreFailures = true ist, dient dieser Filter nur als Whitelist
-    bekannter False-Positives.
+    SpotBugs läuft als hartes Quality Gate: ./gradlew spotbugsMain muss ohne
+    ungefilterte BugInstance durchlaufen. Dieser Filter enthält ausschließlich
+    triagierte False Positives oder bewusst akzeptierte projektweite Pattern,
+    jeweils mit Begründung.
 
     Format-Doku: https://spotbugs.readthedocs.io/en/latest/filter.html
 -->

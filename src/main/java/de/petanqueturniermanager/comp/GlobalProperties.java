@@ -700,10 +700,9 @@ public class GlobalProperties {
 			return;
 		}
 		try {
-			tabFarbenCache = new LibreOfficeTabFarbenSpeicher(context).laden();
-			tabFarbenInLibreOffice = true;
+			setTabFarbenInLibreOffice(new LibreOfficeTabFarbenSpeicher(context).laden());
 		} catch (IllegalStateException e) {
-			tabFarbenInLibreOffice = false;
+			setTabFarbenNichtInLibreOffice();
 			logger.warn("LibreOffice-Konfiguration für Tab-Farben nicht verfügbar, verwende Hardcoded-Defaults", e);
 		}
 	}
@@ -1596,11 +1595,20 @@ public class GlobalProperties {
 				}
 			}
 			new LibreOfficeTabFarbenSpeicher(context).speichern(neueWerte);
-			tabFarbenCache = Map.copyOf(neueWerte);
-			tabFarbenInLibreOffice = true;
+			setTabFarbenInLibreOffice(neueWerte);
 		} catch (IllegalStateException e) {
 			logger.warn("Tab-Farben konnten nicht in LibreOffice-Konfiguration gespeichert werden", e);
 		}
+	}
+
+	private static void setTabFarbenInLibreOffice(Map<String, Integer> werte) {
+		tabFarbenCache = Map.copyOf(werte);
+		tabFarbenInLibreOffice = true;
+	}
+
+	private static void setTabFarbenNichtInLibreOffice() {
+		tabFarbenInLibreOffice = false;
+		tabFarbenCache = Map.of();
 	}
 
 	private static void setBooleanProp(String key, boolean value) {
@@ -1734,7 +1742,6 @@ public class GlobalProperties {
 		setStartseiteInLibreOffice(false);
 		setStartupModusInLibreOffice(false);
 		setCompositeViewsInLibreOffice(false);
-		tabFarbenInLibreOffice = false;
-		tabFarbenCache = Map.of();
+		setTabFarbenNichtInLibreOffice();
 	}
 }

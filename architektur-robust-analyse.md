@@ -4,7 +4,7 @@
 
 Dieses Dokument beschreibt den aktuellen Architektur- und Robustheitsstand des Projekts und dient als kompakter Maßnahmenkatalog. Erledigte Arbeiten sind nur zusammengefasst; Detailhistorie früherer Umsetzungsblöcke ist bewusst entfernt.
 
-Aktueller Projektstand: ca. 676 Java-Dateien in `src/main/java`, ca. 142 Test-/UITest-Klassen, Java 25, GitHub Actions CI, strikte Compiler-Lints für Produktivcode, SpotBugs-Bestandsaufnahme und NullAway/JSpecify-Pilot.
+Aktueller Projektstand: ca. 676 Java-Dateien in `src/main/java`, ca. 142 Test-/UITest-Klassen, Java 25, GitHub Actions CI, strikte Compiler-Lints für Produktivcode, SpotBugs-Quality-Gate und NullAway/JSpecify-Pilot.
 
 ---
 
@@ -14,14 +14,14 @@ Aktueller Projektstand: ca. 676 Java-Dateien in `src/main/java`, ca. 142 Test-/U
 - **Saubere Schichtung**: Entry-Points -> SheetRunner -> Turniersystem-Logik -> Helper -> UNO-API.
 - **Vertikale Modularität**: Die Turniersysteme sind weitgehend isoliert; Cross-Imports zwischen Systemen bleiben gering.
 - **Threading-Disziplin**: `SheetRunnerKoordinator` serialisiert Sheet-Operationen und reduziert bekannte Race-Conditions.
-- **Gute Basis-Absicherung**: Algorithmus-Tests, i18n-Vollständigkeitstests, Compiler-Lints, CI und erste statische Analyse sind vorhanden.
+- **Gute Basis-Absicherung**: Algorithmus-Tests, i18n-Vollständigkeitstests, Compiler-Lints, CI und statische Analyse sind vorhanden.
 - **JSpecify als Nullness-Standard**: Neue Nullness-Annotationen sind vereinheitlicht; NullAway läuft bereits auf ausgewählten Paketen.
 
 **Schwächen / Risiko-Quellen**
 - **Sehr große Klassen**: `ProtocolHandler` (2141 LOC), `KoTurnierbaumSheet` (1632), `WebServerManager` (1188), `SheetHelper` (1076), `SpielrundeDelegate` (816). Lokale Komplexität und Änderungsrisiko bleiben hoch.
 - **Breites Helper-Paket**: ca. 118 Helper-Java-Dateien; Kohäsion und interne Abhängigkeiten sind schwer überschaubar.
 - **Null-Rückgaben bleiben verbreitet**: ca. 176 `return null`-Treffer in Produktivcode. Nicht alle optionalen APIs sind per JSpecify sichtbar.
-- **SpotBugs ist noch Bestandsaufnahme**: `ignoreFailures = true`; Findings verhindern aktuell keine neuen Regressionen.
+- **SpotBugs ist als Quality Gate aktiv**: `spotbugsMain` erwartet 0 ungefilterte Findings; dokumentierte False Positives liegen in `config/spotbugs/exclude.xml`.
 - **NullAway ist noch Pilot/Teilausbau**: aktiv für `helper.random`, `spielerdb.webview` und `comp.newrelease`, aber noch nicht für breite Helper- oder UI-Flächen.
 
 ---
@@ -42,9 +42,9 @@ Aktuell keine offenen P1-Punkte aus dieser Analyse bekannt.
    - Problem: 1632 LOC mit Mischung aus Layout, Datenaufbau und Formel-Erzeugung.
    - Ziel: Layout-Renderer, Daten-Builder und Formel-Generator trennen; Tests um die extrahierten Einheiten legen.
 
-3. **SpotBugs verschärfen**
-   - Problem: SpotBugs läuft, aber als Bestandsaufnahme mit `ignoreFailures = true`.
-   - Ziel: CORRECTNESS-Findings zuerst triagieren, Baseline-Excludefilter aufbauen, danach `ignoreFailures = false` für "keine neuen Findings".
+3. **SpotBugs-Excludes klein halten**
+   - Problem: Der harte SpotBugs-Gate ist aktiv, aber Excludes können mit der Zeit zu breit werden.
+   - Ziel: Neue Findings bevorzugt im Code beheben; nur begründete False Positives in `config/spotbugs/exclude.xml` ergänzen.
 
 4. **NullAway/JSpecify ausweiten**
    - Problem: Nullness ist nur in Teilpaketen erzwungen.
@@ -77,8 +77,8 @@ Aktuell keine offenen P1-Punkte aus dieser Analyse bekannt.
 - `SheetMetadataHelper.leseScoreText` wurde intern auf Optional-Helper umgebaut; die öffentliche Signatur blieb kompatibel.
 - `MainKonfigDialog.configPanelList` ist ein Instanzfeld und akkumuliert nicht mehr über mehrere Dialoginitialisierungen.
 - Produktionscode kompiliert mit `-Xlint:all,-classfile,-this-escape -Werror`; Testcode mit Lints ohne `-Werror`.
-- GitHub Actions CI läuft für Unit-Tests und SpotBugs-Report-Upload.
-- SpotBugs ist integriert; `spotbugsTest` ist bewusst deaktiviert.
+- GitHub Actions CI läuft für Unit-Tests und den SpotBugs-Quality-Gate; Reports werden als Artefakt hochgeladen.
+- SpotBugs ist als hartes Gate integriert; `spotbugsTest` ist bewusst deaktiviert.
 - NullAway/ErrorProne ist integriert, Standard-ErrorProne-Checks sind deaktiviert, NullAway läuft im JSpecify-Modus.
 - Webserver-HTTP-/SSE-Verhalten ist mit `WebServerInstanzSmokeTest` abgesichert.
 - Algorithmus-/Record-Lücken in FormuleX, Kaskade und Poule wurden durch zusätzliche Tests geschlossen.
@@ -88,11 +88,11 @@ Aktuell keine offenen P1-Punkte aus dieser Analyse bekannt.
 
 ## 4. Empfohlene Reihenfolge
 
-1. **SpotBugs-CORRECTNESS triagieren** und Baseline-Strategie festlegen.
-2. **NullAway schrittweise ausweiten**, beginnend mit kleinen, gut testbaren Paketen.
-3. **UI-Test-Workflow ergänzen**, getrennt von der schnellen Push-CI.
-4. **`ProtocolHandler` refactoren**, sobald Menü-/Command-Routing ohnehin angefasst wird.
-5. **`KoTurnierbaumSheet` refactoren**, sobald KO-Baum-Layout, Datenfluss oder Formeln geändert werden.
+1. **NullAway schrittweise ausweiten**, beginnend mit kleinen, gut testbaren Paketen.
+2. **UI-Test-Workflow ergänzen**, getrennt von der schnellen Push-CI.
+3. **`ProtocolHandler` refactoren**, sobald Menü-/Command-Routing ohnehin angefasst wird.
+4. **`KoTurnierbaumSheet` refactoren**, sobald KO-Baum-Layout, Datenfluss oder Formeln geändert werden.
+5. **SpotBugs-Excludes regelmäßig prüfen** und bei Touches bevorzugt durch Code-Fixes ersetzen.
 6. **Rest-`Throwable` und TODO/FIXME** per Boy-Scout-Rule bereinigen.
 
 ---
