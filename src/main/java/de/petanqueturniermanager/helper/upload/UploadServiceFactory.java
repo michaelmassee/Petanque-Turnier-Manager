@@ -1,5 +1,7 @@
 package de.petanqueturniermanager.helper.upload;
 
+import java.util.function.BooleanSupplier;
+
 import com.sun.star.uno.XComponentContext;
 
 public final class UploadServiceFactory {
@@ -28,9 +30,23 @@ public final class UploadServiceFactory {
      */
     public static IUploadService erstelle(UploadKonfiguration konfiguration, XComponentContext xContext,
             boolean aufMainThread) {
+        return erstelle(konfiguration, xContext, aufMainThread, () -> false);
+    }
+
+    /**
+     * Wie {@link #erstelle(UploadKonfiguration, XComponentContext, boolean)}, aber mit
+     * Abbruch-Signal für Aufrufer mit eigenem UI-Lebenszyklus (z. B. ein Dialog, den der Nutzer
+     * während eines laufenden Verbindungstests schließen kann).
+     *
+     * @param abgebrochen liefert {@code true}, sobald Host-Key-Rückfragen/-Meldungen unterdrückt
+     *                    werden sollen, weil der aufrufende UI-Kontext nicht mehr existiert.
+     */
+    public static IUploadService erstelle(UploadKonfiguration konfiguration, XComponentContext xContext,
+            boolean aufMainThread, BooleanSupplier abgebrochen) {
         return switch (konfiguration.protokoll()) {
             case FTP -> new FtpUploadService(konfiguration);
-            case SFTP -> new SftpUploadService(konfiguration, new SftpHostKeyUserInfo(xContext, aufMainThread));
+            case SFTP -> new SftpUploadService(konfiguration,
+                    new SftpHostKeyUserInfo(xContext, aufMainThread, abgebrochen));
         };
     }
 }

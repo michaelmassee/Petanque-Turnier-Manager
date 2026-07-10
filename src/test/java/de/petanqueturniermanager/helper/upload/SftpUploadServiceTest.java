@@ -81,7 +81,7 @@ class SftpUploadServiceTest {
         MessageBox.setDialogeUeberspringen(true);
         var xContext = mock(XComponentContext.class);
 
-        var userInfo = new SftpHostKeyUserInfo(xContext, false);
+        var userInfo = new SftpHostKeyUserInfo(xContext, false, () -> false);
 
         assertThat(userInfo.promptYesNo("fingerprint")).isTrue();
     }
@@ -91,9 +91,19 @@ class SftpUploadServiceTest {
         MessageBox.setDialogeUeberspringen(true);
         var xContext = mock(XComponentContext.class);
 
-        var userInfo = new SftpHostKeyUserInfo(xContext, true);
+        var userInfo = new SftpHostKeyUserInfo(xContext, true, () -> false);
 
         assertThat(userInfo.promptYesNo("fingerprint")).isTrue();
+    }
+
+    @Test
+    void hostKeyRueckfrageWirdBeiAbgebrochenemDialogUnterdrueckt() {
+        MessageBox.setDialogeUeberspringen(true);
+        var xContext = mock(XComponentContext.class);
+
+        var userInfo = new SftpHostKeyUserInfo(xContext, true, () -> true);
+
+        assertThat(userInfo.promptYesNo("fingerprint")).isFalse();
     }
 
     @Test
@@ -107,7 +117,7 @@ class SftpUploadServiceTest {
     @Test
     void userInfoLiefertGesetztesPasswortFuerJschCallback() {
         var xContext = mock(XComponentContext.class);
-        var userInfo = new SftpHostKeyUserInfo(xContext, false);
+        var userInfo = new SftpHostKeyUserInfo(xContext, false, () -> false);
 
         assertThat(userInfo.promptPassword("Password")).isFalse();
 

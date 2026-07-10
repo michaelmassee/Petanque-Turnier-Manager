@@ -322,11 +322,13 @@ public final class FtpServerDetailDialog extends AbstractUnoDialog {
 	/**
 	 * Läuft auf einem Worker-Thread, damit das Netzwerk-I/O (Connect/Timeout) den LO-Main-Thread
 	 * nicht blockiert. Deshalb {@code aufMainThread=false} — {@link SftpHostKeyUserInfo} marshallt
-	 * Host-Key-Rückfragen dann selbst per {@link LoMainThread#post} auf den Main-Thread.
+	 * Host-Key-Rückfragen dann selbst per {@link LoMainThread#post} auf den Main-Thread. Das
+	 * {@code geschlossen}-Flag wird als Abbruch-Signal durchgereicht, damit Host-Key-Rückfragen
+	 * unterdrückt werden, falls der Dialog inzwischen geschlossen wurde.
 	 */
 	private void testeVerbindungImHintergrund(UploadKonfiguration konfig, String passwort) {
 		try {
-			UploadServiceFactory.erstelle(konfig, xContext, false).testeVerbindung(passwort);
+			UploadServiceFactory.erstelle(konfig, xContext, false, () -> geschlossen).testeVerbindung(passwort);
 			LoMainThread.post(xContext, () -> {
 				if (geschlossen) {
 					return;

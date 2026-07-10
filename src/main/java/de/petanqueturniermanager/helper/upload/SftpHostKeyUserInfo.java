@@ -1,6 +1,7 @@
 package de.petanqueturniermanager.helper.upload;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.function.BooleanSupplier;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,6 +24,10 @@ import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
  * Auf dem Main-Thread wird der Dialog direkt gezeigt; auf einem Worker-Thread wird per
  * {@link LoMainThread#post} marshallt. Ein Post+{@code future.get()} während der Aufrufer
  * selbst schon auf dem Main-Thread ist, wäre ein garantierter Deadlock.
+ * <p>
+ * {@code abgebrochen} wird sowohl vor dem Marshalling als auch erneut innerhalb des geposteten
+ * Main-Thread-Runnables geprüft, damit keine Rückfrage/Meldung mehr erscheint, wenn der
+ * aufrufende Dialog zwischenzeitlich geschlossen wurde (z. B. {@code FtpServerDetailDialog}).
  */
 final class SftpHostKeyUserInfo implements UserInfo {
 
@@ -30,11 +35,13 @@ final class SftpHostKeyUserInfo implements UserInfo {
 
     private final XComponentContext xContext;
     private final boolean aufMainThread;
+    private final BooleanSupplier abgebrochen;
     private String passwort;
 
-    SftpHostKeyUserInfo(XComponentContext xContext, boolean aufMainThread) {
+    SftpHostKeyUserInfo(XComponentContext xContext, boolean aufMainThread, BooleanSupplier abgebrochen) {
         this.xContext = xContext;
         this.aufMainThread = aufMainThread;
+        this.abgebrochen = abgebrochen;
     }
 
     void setPasswort(String passwort) {
@@ -63,11 +70,15 @@ final class SftpHostKeyUserInfo implements UserInfo {
 
     @Override
     public boolean promptYesNo(String message) {
+        if (abgebrochen.getAsBoolean()) {
+            return false;
+        }
         if (aufMainThread) {
             return zeigeJaNeinDialog(message);
         }
         var future = new CompletableFuture<Boolean>();
-        LoMainThread.post(xContext, () -> future.complete(zeigeJaNeinDialog(message)));
+        LoMainThread.post(xContext,
+                () -> future.complete(!abgebrochen.getAsBoolean() && zeigeJaNeinDialog(message)));
         try {
             return future.get();
         } catch (InterruptedException e) {
@@ -94,10 +105,18 @@ final class SftpHostKeyUserInfo implements UserInfo {
 
     @Override
     public void showMessage(String message) {
-        Runnable zeigen = () -> MessageBox.from(xContext, MessageBoxTypeEnum.WARN_OK)
-                .caption(I18n.get("upload.sftp.hostkey.dialog.titel"))
-                .message(message)
-                .show();
+        Runnable zeigen = () -> {
+            if (abgebrochen.getAsBoolean()) {
+                return;
+            }
+            MessageBox.from(xContext, MessageBoxTypeEnum.WARN_OK)
+                    .caption(I18n.get("upload.sftp.hostkey.dialog.titel"))
+                    .message(message)
+                    .show();
+        };
+        if (abgebrochen.getAsBoolean()) {
+            return;
+        }
         if (aufMainThread) {
             zeigen.run();
         } else {
