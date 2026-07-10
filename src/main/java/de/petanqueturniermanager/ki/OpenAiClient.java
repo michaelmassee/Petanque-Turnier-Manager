@@ -55,7 +55,9 @@ public final class OpenAiClient {
         root.addProperty("store", false);
         root.addProperty("input", prompt);
         JsonObject text = new JsonObject();
-        text.addProperty("format", "text");
+        JsonObject format = new JsonObject();
+        format.addProperty("type", "text");
+        text.add("format", format);
         root.add("text", text);
         return GSON.toJson(root);
     }

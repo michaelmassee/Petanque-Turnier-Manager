@@ -102,6 +102,7 @@ import de.petanqueturniermanager.konfigdialog.properties.KopfFusszeilenDialog;
 import de.petanqueturniermanager.konfigdialog.properties.TurnierDialog;
 import de.petanqueturniermanager.konfigdialog.properties.TurnierStartseiteDialog;
 import de.petanqueturniermanager.ki.KiNeuesTurnierDialog;
+import de.petanqueturniermanager.ki.KiFehlerMeldenService;
 import de.petanqueturniermanager.helper.upload.ExportPfadHelper;
 import de.petanqueturniermanager.liga.meldeliste.LigaExportInVerzeichnis;
 import de.petanqueturniermanager.liga.meldeliste.LigaFtpUpload;
@@ -404,9 +405,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 
 	private static final String PROJEKT_SEITE_URL =
 			"https://michaelmassee.github.io/Petanque-Turnier-Manager/";
-	private static final String FEHLER_MELDEN_URL =
-			"https://github.com/michaelmassee/Petanque-Turnier-Manager/issues";
-
 	// Wiki-Beschreibung je Turniersystem ("Spielsystem-Beschreibung")
 	public static final String CMD_SUPERMELEE_WIKI    = "supermelee_wiki";
 	public static final String CMD_LIGA_WIKI          = "liga_wiki";
@@ -1200,7 +1198,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				oeffneBrowserUrl(PROJEKT_SEITE_URL);
 				break;
 			case CMD_FEHLER_MELDEN:
-				oeffneBrowserUrl(FEHLER_MELDEN_URL);
+				KiFehlerMeldenService.melden(ws);
 				break;
 			case CMD_SUPERMELEE_WIKI:
 			case CMD_LIGA_WIKI:

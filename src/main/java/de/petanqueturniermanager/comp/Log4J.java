@@ -80,4 +80,8 @@ public class Log4J {
 			ProcessBox.from().prefix("Log4J").fehler("Kann Logdatei nicht ermitteln");
 		}
 	}
+
+	public static File getLogFile() {
+		return logFile;
+	}
 }
