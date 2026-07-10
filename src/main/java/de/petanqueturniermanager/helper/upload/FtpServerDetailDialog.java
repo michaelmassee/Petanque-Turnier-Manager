@@ -22,6 +22,8 @@ import com.sun.star.awt.XWindowPeer;
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.container.XNameContainer;
 import com.sun.star.lang.EventObject;
+import com.sun.star.lang.XComponent;
+import com.sun.star.lang.XEventListener;
 import com.sun.star.lang.XMultiComponentFactory;
 import com.sun.star.lang.XMultiServiceFactory;
 import com.sun.star.uno.XComponentContext;
@@ -62,6 +64,13 @@ public final class FtpServerDetailDialog extends AbstractUnoDialog {
 	@Nullable private XControlContainer xcc;
 	@Nullable private XDialog xDialog;
 	@Nullable private FtpServerEintrag ergebnis;
+
+	/**
+	 * Wird beim Dispose des Dialogs (OK, Abbrechen oder X) gesetzt. Verhindert, dass ein noch
+	 * laufender {@link #testeVerbindungImHintergrund} Worker nach dem Schließen auf die bereits
+	 * disposete Control-Hierarchie zugreift oder eine verspätete MessageBox anzeigt.
+	 */
+	private volatile boolean geschlossen;
 
 	/**
 	 * @param parentPeer Peer der aufrufenden Optionsseite. Ohne Parent würde der Dialog vom
@@ -110,6 +119,12 @@ public final class FtpServerDetailDialog extends AbstractUnoDialog {
 			XPropertySet dlgProps, XDialog dialog) throws com.sun.star.uno.Exception {
 		this.xDialog = dialog;
 		this.xcc = Lo.qi(XControlContainer.class, dialog);
+		Lo.qi(XComponent.class, dialog).addEventListener(new XEventListener() {
+			@Override
+			public void disposing(EventObject e) {
+				geschlossen = true;
+			}
+		});
 
 		var vorhanden = initialerEintrag;
 		boolean istSftp = vorhanden == null || vorhanden.protokoll() == UploadProtokoll.SFTP;
@@ -313,6 +328,9 @@ public final class FtpServerDetailDialog extends AbstractUnoDialog {
 		try {
 			UploadServiceFactory.erstelle(konfig, xContext, false).testeVerbindung(passwort);
 			LoMainThread.post(xContext, () -> {
+				if (geschlossen) {
+					return;
+				}
 				setzeTestButtonFarbe(FARBE_TEST_ERFOLG);
 				setzeTestButtonAktiviert(true);
 				MessageBox.from(xContext, MessageBoxTypeEnum.INFO_OK)
@@ -322,6 +340,9 @@ public final class FtpServerDetailDialog extends AbstractUnoDialog {
 			});
 		} catch (IOException e) {
 			LoMainThread.post(xContext, () -> {
+				if (geschlossen) {
+					return;
+				}
 				setzeTestButtonFarbe(FARBE_TEST_FEHLER);
 				setzeTestButtonAktiviert(true);
 				MessageBox.from(xContext, MessageBoxTypeEnum.ERROR_OK)

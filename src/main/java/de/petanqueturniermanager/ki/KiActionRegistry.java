@@ -51,23 +51,24 @@ public final class KiActionRegistry {
 
     public static String beschreibe(KiPlan plan) {
         StringBuilder out = new StringBuilder();
-        out.append(plan.summary().isBlank() ? "KI-Aktionsplan" : plan.summary()).append("\n\n");
+        out.append(plan.summary().isBlank() ? I18n.get("ki.dialog.aktionsplan.default.summary") : plan.summary())
+                .append("\n\n");
         int nr = 1;
         for (KiAktion aktion : plan.actions()) {
             out.append(nr++).append(". ");
             if (ACTION_NEUES_TURNIER.equals(aktion.type())) {
-                out.append("Neues PTM-Turnier: ").append(turnierSystem(aktion).getBezeichnung());
+                out.append(I18n.get("ki.dialog.aktionsplan.neues.turnier", turnierSystem(aktion).getBezeichnung()));
             } else if (ACTION_CUSTOM_SHEET.equals(aktion.type())) {
-                out.append("Zusatz-Sheet: ").append(CustomSheetDaten.from(aktion).name());
+                out.append(I18n.get("ki.dialog.aktionsplan.zusatz.sheet", CustomSheetDaten.from(aktion).name()));
             }
             out.append('\n');
         }
         if (!plan.warnings().isEmpty()) {
-            out.append("\nHinweise:\n");
+            out.append('\n').append(I18n.get("ki.dialog.aktionsplan.hinweise")).append('\n');
             plan.warnings().forEach(w -> out.append("- ").append(w).append('\n'));
         }
         if (!plan.dataPreview().isBlank()) {
-            out.append("\nVorschau:\n").append(plan.dataPreview());
+            out.append('\n').append(I18n.get("ki.dialog.aktionsplan.vorschau")).append('\n').append(plan.dataPreview());
         }
         return out.toString();
     }
