@@ -29,6 +29,7 @@ import com.sun.star.uno.XComponentContext;
 import de.petanqueturniermanager.comp.GlobalProperties.FtpServerEintrag;
 import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.LoMainThread;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
@@ -298,22 +299,36 @@ public final class FtpServerDetailDialog extends AbstractUnoDialog {
 		}
 		var konfig = new UploadKonfiguration(
 				werte.protokoll(), werte.host(), werte.port(), werte.benutzer(), werte.remotePfad());
+		setzeTestButtonAktiviert(false);
+		Thread worker = new Thread(() -> testeVerbindungImHintergrund(konfig, werte.passwort()), "PTM-Sftp-Test");
+		worker.start();
+	}
+
+	/**
+	 * Läuft auf einem Worker-Thread, damit das Netzwerk-I/O (Connect/Timeout) den LO-Main-Thread
+	 * nicht blockiert. Deshalb {@code aufMainThread=false} — {@link SftpHostKeyUserInfo} marshallt
+	 * Host-Key-Rückfragen dann selbst per {@link LoMainThread#post} auf den Main-Thread.
+	 */
+	private void testeVerbindungImHintergrund(UploadKonfiguration konfig, String passwort) {
 		try {
-			// beimTestGeklickt() läuft synchron im UNO-Dialog-Event (btnTest-Klick) auf dem
-			// LO-Main-Thread — aufMainThread=true, sonst würde SftpHostKeyUserInfo per
-			// LoMainThread.post()+future.get() deadlocken.
-			UploadServiceFactory.erstelle(konfig, xContext, true).testeVerbindung(werte.passwort());
-			setzeTestButtonFarbe(FARBE_TEST_ERFOLG);
-			MessageBox.from(xContext, MessageBoxTypeEnum.INFO_OK)
-					.caption(I18n.get("ftp.server.dialog.test.titel"))
-					.message(I18n.get("ftp.server.dialog.test.erfolg"))
-					.show();
+			UploadServiceFactory.erstelle(konfig, xContext, false).testeVerbindung(passwort);
+			LoMainThread.post(xContext, () -> {
+				setzeTestButtonFarbe(FARBE_TEST_ERFOLG);
+				setzeTestButtonAktiviert(true);
+				MessageBox.from(xContext, MessageBoxTypeEnum.INFO_OK)
+						.caption(I18n.get("ftp.server.dialog.test.titel"))
+						.message(I18n.get("ftp.server.dialog.test.erfolg"))
+						.show();
+			});
 		} catch (IOException e) {
-			setzeTestButtonFarbe(FARBE_TEST_FEHLER);
-			MessageBox.from(xContext, MessageBoxTypeEnum.ERROR_OK)
-					.caption(I18n.get("ftp.server.dialog.test.titel"))
-					.message(I18n.get("ftp.server.dialog.test.fehler", e.getMessage()))
-					.show();
+			LoMainThread.post(xContext, () -> {
+				setzeTestButtonFarbe(FARBE_TEST_FEHLER);
+				setzeTestButtonAktiviert(true);
+				MessageBox.from(xContext, MessageBoxTypeEnum.ERROR_OK)
+						.caption(I18n.get("ftp.server.dialog.test.titel"))
+						.message(I18n.get("ftp.server.dialog.test.fehler", e.getMessage()))
+						.show();
+			});
 		}
 	}
 
@@ -333,6 +348,25 @@ public final class FtpServerDetailDialog extends AbstractUnoDialog {
 			props.setPropertyValue("BackgroundColor", farbe);
 		} catch (com.sun.star.uno.Exception e) {
 			// Farbmarkierung ist rein kosmetisch, Fehler ignorieren
+		}
+	}
+
+	private void setzeTestButtonAktiviert(boolean aktiviert) {
+		if (xcc == null) {
+			return;
+		}
+		var ctrl = xcc.getControl("btnTest");
+		if (ctrl == null) {
+			return;
+		}
+		var props = Lo.qi(XPropertySet.class, ctrl.getModel());
+		if (props == null) {
+			return;
+		}
+		try {
+			props.setPropertyValue("Enabled", aktiviert);
+		} catch (com.sun.star.uno.Exception e) {
+			// Deaktivierung ist rein UX-seitig, Fehler ignorieren
 		}
 	}
 

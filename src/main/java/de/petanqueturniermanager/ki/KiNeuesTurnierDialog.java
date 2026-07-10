@@ -5,7 +5,10 @@ package de.petanqueturniermanager.ki;
 
 import java.util.List;
 
+import com.sun.star.awt.ActionEvent;
 import com.sun.star.awt.PushButtonType;
+import com.sun.star.awt.XActionListener;
+import com.sun.star.awt.XButton;
 import com.sun.star.awt.XControl;
 import com.sun.star.awt.XControlContainer;
 import com.sun.star.awt.XDialog;
@@ -14,6 +17,7 @@ import com.sun.star.awt.XToolkit;
 import com.sun.star.awt.XWindowPeer;
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.container.XNameContainer;
+import com.sun.star.lang.EventObject;
 import com.sun.star.lang.XMultiComponentFactory;
 import com.sun.star.lang.XMultiServiceFactory;
 
@@ -31,6 +35,7 @@ public final class KiNeuesTurnierDialog extends AbstractUnoDialog {
     private static final String CTL_WUNSCH = "KiTurnierWunsch";
     private final WorkingSpreadsheet ws;
     private XTextComponent wunschText;
+    private XDialog xDialog;
 
     public KiNeuesTurnierDialog(WorkingSpreadsheet ws) {
         super(ws.getxContext());
@@ -75,17 +80,36 @@ public final class KiNeuesTurnierDialog extends AbstractUnoDialog {
         fuegeFixedTextEin(xMSF, cont, "KiHinweis", I18n.get("ki.dialog.hinweis"), 6, 6, 235, 18);
         fuegeTextAreaEin(xMSF, cont, CTL_WUNSCH, 6, 28, 235, 92);
         fuegeButtonEin(xMSF, cont, "btnOk", I18n.get("ki.dialog.planen"), 105, 132, 60, 14,
-                (short) PushButtonType.OK_value);
+                (short) PushButtonType.STANDARD_value);
         fuegeButtonEin(xMSF, cont, "btnAbbrechen", I18n.get("toolbar.start.dialog.abbrechen"), 172, 132, 68, 14,
                 (short) PushButtonType.CANCEL_value);
 
+        this.xDialog = xDialog;
         XControlContainer xcc = Lo.qi(XControlContainer.class, xDialog);
         XControl ctrl = xcc.getControl(CTL_WUNSCH);
         wunschText = ctrl == null ? null : Lo.qi(XTextComponent.class, ctrl);
+
+        registriereOkListener(xcc);
     }
 
-    @Override
-    protected void beiOkGeklickt() {
+    private void registriereOkListener(XControlContainer xcc) {
+        XControl ctrl = xcc.getControl("btnOk");
+        XButton btn = ctrl == null ? null : Lo.qi(XButton.class, ctrl);
+        if (btn == null) {
+            return;
+        }
+        btn.addActionListener(new XActionListener() {
+            @Override public void actionPerformed(ActionEvent e) { pruefeUndStarte(); }
+            @Override public void disposing(EventObject e) { /* kein Aufräumen nötig */ }
+        });
+    }
+
+    /**
+     * Validiert die Eingabe und schließt den Dialog nur bei Erfolg. So bleibt der Dialog bei
+     * Validierungsfehlern (leerer Wunsch, unvollständige API-Konfiguration) geöffnet und die
+     * Eingabe des Nutzers erhalten, statt wie bei {@code PushButtonType.OK} verloren zu gehen.
+     */
+    private void pruefeUndStarte() {
         String wunsch = wunschText == null ? "" : wunschText.getText();
         if (wunsch.isBlank()) {
             MessageBox.from(ws, MessageBoxTypeEnum.WARN_OK)
@@ -105,6 +129,9 @@ public final class KiNeuesTurnierDialog extends AbstractUnoDialog {
         }
         Thread worker = new Thread(() -> planeUndPoste(optionen, wunsch), "PTM-KI-NeuesTurnier");
         worker.start();
+        if (xDialog != null) {
+            xDialog.endExecute();
+        }
     }
 
     private static String fehlerText(List<KiOptionen.KonfigurationsFehler> fehler) {

@@ -13,6 +13,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.formulex.meldeliste.FormuleXMeldeListeSheetNew;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
@@ -75,14 +76,14 @@ public final class KiActionRegistry {
         validiere(plan);
         if (plan.actions().isEmpty()) {
             MessageBox.from(ws, MessageBoxTypeEnum.INFO_OK)
-                    .caption("KI-Antwort")
+                    .caption(I18n.get("ki.dialog.antwort.titel"))
                     .message(beschreibe(plan))
                     .show();
             return;
         }
         MessageBoxResult result = MessageBox.from(ws, MessageBoxTypeEnum.WARN_YES_NO)
-                .caption("KI-Aktionsplan ausführen?")
-                .message(beschreibe(plan) + "\n\nJetzt ausführen?")
+                .caption(I18n.get("ki.dialog.aktionsplan.titel"))
+                .message(beschreibe(plan) + "\n\n" + I18n.get("ki.dialog.aktionsplan.jetzt.ausfuehren"))
                 .show();
         if (result != MessageBoxResult.YES) {
             return;
@@ -122,7 +123,7 @@ public final class KiActionRegistry {
             runner.start();
         } catch (GenerateException e) {
             MessageBox.from(ws, MessageBoxTypeEnum.WARN_OK)
-                    .caption("KI-Aktion abgebrochen")
+                    .caption(I18n.get("ki.dialog.aktion.abgebrochen.titel"))
                     .message(e.getMessage())
                     .show();
         }
