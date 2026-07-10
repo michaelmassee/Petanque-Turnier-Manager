@@ -6,6 +6,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.function.Function;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -210,58 +211,78 @@ public final class TeilnehmerStatusService {
     }
 
     /**
-     * Liefert Formation/Anzeige-Optionen für die Namensbildung pro Turniersystem. Bei KO, Schweizer,
+     * Fabriken für Formation/Anzeige-Optionen der Namensbildung pro Turniersystem. Bei KO, Schweizer,
      * JGJ, FormuleX, Kaskade, Maastrichter, Poule und TripTete kommen sie aus dem jeweiligen
      * {@code *KonfigurationSheet} (leichte Delegation an bereits instanzierte PropertiesSpalte-Objekte,
      * kein Sheet-Vollaufbau). Liga und SuperMelee kennen keine einstellbare Formation – dort ist die
-     * Meldeliste fest auf Einzelspieler ohne Teamname/Verein-Spalte ausgelegt.
+     * Meldeliste fest auf Einzelspieler ohne Teamname/Verein-Spalte ausgelegt. {@link TurnierSystem#KEIN}
+     * hat bewusst keinen Eintrag, {@link #namenKonfiguration(TurnierSystem, WorkingSpreadsheet)} liefert
+     * dafür {@code null}.
      */
+    private static final Map<TurnierSystem, Function<WorkingSpreadsheet, NamenKonfiguration>>
+            NAMEN_KONFIGURATION_FABRIKEN = Map.ofEntries(
+            Map.entry(TurnierSystem.KO, TeilnehmerStatusService::koNamenKonfiguration),
+            Map.entry(TurnierSystem.SCHWEIZER, TeilnehmerStatusService::schweizerNamenKonfiguration),
+            Map.entry(TurnierSystem.JGJ, TeilnehmerStatusService::jgjNamenKonfiguration),
+            Map.entry(TurnierSystem.FORMULEX, TeilnehmerStatusService::formuleXNamenKonfiguration),
+            Map.entry(TurnierSystem.KASKADE, TeilnehmerStatusService::kaskadeNamenKonfiguration),
+            Map.entry(TurnierSystem.MAASTRICHTER, TeilnehmerStatusService::maastrichterNamenKonfiguration),
+            Map.entry(TurnierSystem.POULE, TeilnehmerStatusService::pouleNamenKonfiguration),
+            Map.entry(TurnierSystem.TRIPTETE, TeilnehmerStatusService::tripTeteNamenKonfiguration),
+            Map.entry(TurnierSystem.LIGA, ws -> new NamenKonfiguration(Formation.TETE, false, false)),
+            Map.entry(TurnierSystem.SUPERMELEE, ws -> new NamenKonfiguration(Formation.MELEE, false, false)));
+
     private static NamenKonfiguration namenKonfiguration(TurnierSystem ts, WorkingSpreadsheet ws) {
-        return switch (ts) {
-            case KO -> {
-                var k = new KoKonfigurationSheet(ws);
-                yield new NamenKonfiguration(k.getMeldeListeFormation(), k.isMeldeListeTeamnameAnzeigen(),
-                        k.isMeldeListeVereinsnameAnzeigen());
-            }
-            case SCHWEIZER -> {
-                var k = new SchweizerKonfigurationSheet(ws);
-                yield new NamenKonfiguration(k.getMeldeListeFormation(), k.isMeldeListeTeamnameAnzeigen(),
-                        k.isMeldeListeVereinsnameAnzeigen());
-            }
-            case JGJ -> {
-                var k = new JGJKonfigurationSheet(ws);
-                yield new NamenKonfiguration(k.getMeldeListeFormation(), k.isMeldeListeTeamnameAnzeigen(),
-                        k.isMeldeListeVereinsnameAnzeigen());
-            }
-            case FORMULEX -> {
-                var k = new FormuleXKonfigurationSheet(ws);
-                yield new NamenKonfiguration(k.getMeldeListeFormation(), k.isMeldeListeTeamnameAnzeigen(),
-                        k.isMeldeListeVereinsnameAnzeigen());
-            }
-            case KASKADE -> {
-                var k = new KaskadeKonfigurationSheet(ws);
-                yield new NamenKonfiguration(k.getMeldeListeFormation(), k.isMeldeListeTeamnameAnzeigen(),
-                        k.isMeldeListeVereinsnameAnzeigen());
-            }
-            case MAASTRICHTER -> {
-                var k = new MaastrichterKonfigurationSheet(ws);
-                yield new NamenKonfiguration(k.getMeldeListeFormation(), k.isMeldeListeTeamnameAnzeigen(),
-                        k.isMeldeListeVereinsnameAnzeigen());
-            }
-            case POULE -> {
-                var k = new PouleKonfigurationSheet(ws);
-                yield new NamenKonfiguration(k.getMeldeListeFormation(), k.isMeldeListeTeamnameAnzeigen(),
-                        k.isMeldeListeVereinsnameAnzeigen());
-            }
-            case TRIPTETE -> {
-                var k = new TripTeteKonfigurationSheet(ws);
-                yield new NamenKonfiguration(Formation.TRIPLETTE, k.isMeldeListeTeamnameAnzeigen(),
-                        k.isMeldeListeVereinsnameAnzeigen());
-            }
-            case LIGA -> new NamenKonfiguration(Formation.TETE, false, false);
-            case SUPERMELEE -> new NamenKonfiguration(Formation.MELEE, false, false);
-            case KEIN -> null;
-        };
+        Function<WorkingSpreadsheet, NamenKonfiguration> fabrik = NAMEN_KONFIGURATION_FABRIKEN.get(ts);
+        return fabrik == null ? null : fabrik.apply(ws);
+    }
+
+    private static NamenKonfiguration koNamenKonfiguration(WorkingSpreadsheet ws) {
+        var k = new KoKonfigurationSheet(ws);
+        return new NamenKonfiguration(k.getMeldeListeFormation(), k.isMeldeListeTeamnameAnzeigen(),
+                k.isMeldeListeVereinsnameAnzeigen());
+    }
+
+    private static NamenKonfiguration schweizerNamenKonfiguration(WorkingSpreadsheet ws) {
+        var k = new SchweizerKonfigurationSheet(ws);
+        return new NamenKonfiguration(k.getMeldeListeFormation(), k.isMeldeListeTeamnameAnzeigen(),
+                k.isMeldeListeVereinsnameAnzeigen());
+    }
+
+    private static NamenKonfiguration jgjNamenKonfiguration(WorkingSpreadsheet ws) {
+        var k = new JGJKonfigurationSheet(ws);
+        return new NamenKonfiguration(k.getMeldeListeFormation(), k.isMeldeListeTeamnameAnzeigen(),
+                k.isMeldeListeVereinsnameAnzeigen());
+    }
+
+    private static NamenKonfiguration formuleXNamenKonfiguration(WorkingSpreadsheet ws) {
+        var k = new FormuleXKonfigurationSheet(ws);
+        return new NamenKonfiguration(k.getMeldeListeFormation(), k.isMeldeListeTeamnameAnzeigen(),
+                k.isMeldeListeVereinsnameAnzeigen());
+    }
+
+    private static NamenKonfiguration kaskadeNamenKonfiguration(WorkingSpreadsheet ws) {
+        var k = new KaskadeKonfigurationSheet(ws);
+        return new NamenKonfiguration(k.getMeldeListeFormation(), k.isMeldeListeTeamnameAnzeigen(),
+                k.isMeldeListeVereinsnameAnzeigen());
+    }
+
+    private static NamenKonfiguration maastrichterNamenKonfiguration(WorkingSpreadsheet ws) {
+        var k = new MaastrichterKonfigurationSheet(ws);
+        return new NamenKonfiguration(k.getMeldeListeFormation(), k.isMeldeListeTeamnameAnzeigen(),
+                k.isMeldeListeVereinsnameAnzeigen());
+    }
+
+    private static NamenKonfiguration pouleNamenKonfiguration(WorkingSpreadsheet ws) {
+        var k = new PouleKonfigurationSheet(ws);
+        return new NamenKonfiguration(k.getMeldeListeFormation(), k.isMeldeListeTeamnameAnzeigen(),
+                k.isMeldeListeVereinsnameAnzeigen());
+    }
+
+    private static NamenKonfiguration tripTeteNamenKonfiguration(WorkingSpreadsheet ws) {
+        var k = new TripTeteKonfigurationSheet(ws);
+        return new NamenKonfiguration(Formation.TRIPLETTE, k.isMeldeListeTeamnameAnzeigen(),
+                k.isMeldeListeVereinsnameAnzeigen());
     }
 
     /**

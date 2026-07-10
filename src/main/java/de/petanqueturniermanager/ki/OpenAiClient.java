@@ -3,71 +3,68 @@
  */
 package de.petanqueturniermanager.ki;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
-public final class OpenAiClient implements KiClient {
-
-    private static final Gson GSON = new Gson();
-
-    private final HttpClient httpClient;
-    private final KiOptionen optionen;
+public final class OpenAiClient extends AbstractHttpKiClient {
 
     public OpenAiClient(KiOptionen optionen) {
-        this(HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(optionen.timeoutSekunden()))
-                .build(), optionen);
+        super(optionen);
     }
 
     OpenAiClient(HttpClient httpClient, KiOptionen optionen) {
-        this.httpClient = httpClient;
-        this.optionen = optionen;
+        super(httpClient, optionen);
     }
 
     @Override
-    public String erstelleAntwort(String prompt) throws IOException, InterruptedException {
-        if (!optionen.istApiVollstaendig()) {
-            throw new IllegalStateException("OpenAI API-Konfiguration ist unvollstaendig");
-        }
-        HttpRequest request = HttpRequest.newBuilder(endpoint())
-                .timeout(Duration.ofSeconds(optionen.timeoutSekunden()))
-                .header("Authorization", "Bearer " + optionen.apiKey())
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(requestJson(prompt)))
-                .build();
-        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        if (response.statusCode() < 200 || response.statusCode() >= 300) {
-            throw new IOException("OpenAI API Fehler " + response.statusCode() + ": " + response.body());
-        }
-        return responseText(response.body());
+    String anbieterName() {
+        return "OpenAI";
     }
 
     @Override
-    public List<String> listeModelle() throws IOException, InterruptedException {
-        if (!optionen.istApiVollstaendig()) {
-            throw new IllegalStateException("OpenAI API-Konfiguration ist unvollstaendig");
-        }
-        HttpRequest request = HttpRequest.newBuilder(URI.create(basisUrl() + "/models"))
-                .timeout(Duration.ofSeconds(optionen.timeoutSekunden()))
-                .header("Authorization", "Bearer " + optionen.apiKey())
-                .GET()
-                .build();
-        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        if (response.statusCode() < 200 || response.statusCode() >= 300) {
-            throw new IOException("OpenAI API Fehler " + response.statusCode() + ": " + response.body());
-        }
-        return modelIds(response.body());
+    URI endpoint() {
+        return URI.create(basisUrl() + "/responses");
+    }
+
+    @Override
+    URI modelleEndpoint() {
+        return URI.create(basisUrl() + "/models");
+    }
+
+    @Override
+    HttpRequest.Builder authHeader(HttpRequest.Builder builder) {
+        return builder.header("Authorization", "Bearer " + optionen.apiKey());
+    }
+
+    @Override
+    String requestJson(String prompt) {
+        JsonObject root = new JsonObject();
+        root.addProperty("model", optionen.model());
+        root.addProperty("store", false);
+        root.addProperty("input", prompt);
+        JsonObject text = new JsonObject();
+        JsonObject format = new JsonObject();
+        format.addProperty("type", "text");
+        text.add("format", format);
+        root.add("text", text);
+        return GSON.toJson(root);
+    }
+
+    @Override
+    String parseResponseText(String body) {
+        return responseText(body);
+    }
+
+    @Override
+    List<String> parseModelIds(String body) {
+        return modelIds(body);
     }
 
     static List<String> modelIds(String body) {
@@ -84,29 +81,6 @@ public final class OpenAiClient implements KiClient {
         }
         Collections.sort(ids);
         return ids;
-    }
-
-    String requestJson(String prompt) {
-        JsonObject root = new JsonObject();
-        root.addProperty("model", optionen.model());
-        root.addProperty("store", false);
-        root.addProperty("input", prompt);
-        JsonObject text = new JsonObject();
-        JsonObject format = new JsonObject();
-        format.addProperty("type", "text");
-        text.add("format", format);
-        root.add("text", text);
-        return GSON.toJson(root);
-    }
-
-    private URI endpoint() {
-        return URI.create(basisUrl() + "/responses");
-    }
-
-    private String basisUrl() {
-        return optionen.baseUrl().endsWith("/")
-                ? optionen.baseUrl().substring(0, optionen.baseUrl().length() - 1)
-                : optionen.baseUrl();
     }
 
     static String responseText(String body) {

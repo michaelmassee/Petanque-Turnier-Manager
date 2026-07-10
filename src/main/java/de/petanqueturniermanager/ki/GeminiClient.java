@@ -3,71 +3,69 @@
  */
 package de.petanqueturniermanager.ki;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
-public final class GeminiClient implements KiClient {
-
-    private static final Gson GSON = new Gson();
-
-    private final HttpClient httpClient;
-    private final KiOptionen optionen;
+public final class GeminiClient extends AbstractHttpKiClient {
 
     public GeminiClient(KiOptionen optionen) {
-        this(HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(optionen.timeoutSekunden()))
-                .build(), optionen);
+        super(optionen);
     }
 
     GeminiClient(HttpClient httpClient, KiOptionen optionen) {
-        this.httpClient = httpClient;
-        this.optionen = optionen;
+        super(httpClient, optionen);
     }
 
     @Override
-    public String erstelleAntwort(String prompt) throws IOException, InterruptedException {
-        if (!optionen.istApiVollstaendig()) {
-            throw new IllegalStateException("Gemini API-Konfiguration ist unvollstaendig");
-        }
-        HttpRequest request = HttpRequest.newBuilder(endpoint())
-                .timeout(Duration.ofSeconds(optionen.timeoutSekunden()))
-                .header("x-goog-api-key", optionen.apiKey())
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(requestJson(prompt)))
-                .build();
-        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        if (response.statusCode() < 200 || response.statusCode() >= 300) {
-            throw new IOException("Gemini API Fehler " + response.statusCode() + ": " + response.body());
-        }
-        return responseText(response.body());
+    String anbieterName() {
+        return "Gemini";
     }
 
     @Override
-    public List<String> listeModelle() throws IOException, InterruptedException {
-        if (!optionen.istApiVollstaendig()) {
-            throw new IllegalStateException("Gemini API-Konfiguration ist unvollstaendig");
-        }
-        HttpRequest request = HttpRequest.newBuilder(URI.create(basisUrl() + "/models"))
-                .timeout(Duration.ofSeconds(optionen.timeoutSekunden()))
-                .header("x-goog-api-key", optionen.apiKey())
-                .GET()
-                .build();
-        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        if (response.statusCode() < 200 || response.statusCode() >= 300) {
-            throw new IOException("Gemini API Fehler " + response.statusCode() + ": " + response.body());
-        }
-        return modelIds(response.body());
+    URI endpoint() {
+        return URI.create(basisUrl() + "/models/" + optionen.model() + ":generateContent");
+    }
+
+    @Override
+    URI modelleEndpoint() {
+        return URI.create(basisUrl() + "/models");
+    }
+
+    @Override
+    HttpRequest.Builder authHeader(HttpRequest.Builder builder) {
+        return builder.header("x-goog-api-key", optionen.apiKey());
+    }
+
+    @Override
+    String requestJson(String prompt) {
+        JsonObject part = new JsonObject();
+        part.addProperty("text", prompt);
+        JsonArray parts = new JsonArray();
+        parts.add(part);
+        JsonObject content = new JsonObject();
+        content.add("parts", parts);
+        JsonArray contents = new JsonArray();
+        contents.add(content);
+        JsonObject root = new JsonObject();
+        root.add("contents", contents);
+        return GSON.toJson(root);
+    }
+
+    @Override
+    String parseResponseText(String body) {
+        return responseText(body);
+    }
+
+    @Override
+    List<String> parseModelIds(String body) {
+        return modelIds(body);
     }
 
     static List<String> modelIds(String body) {
@@ -98,30 +96,6 @@ public final class GeminiClient implements KiClient {
             }
         }
         return false;
-    }
-
-    String requestJson(String prompt) {
-        JsonObject part = new JsonObject();
-        part.addProperty("text", prompt);
-        JsonArray parts = new JsonArray();
-        parts.add(part);
-        JsonObject content = new JsonObject();
-        content.add("parts", parts);
-        JsonArray contents = new JsonArray();
-        contents.add(content);
-        JsonObject root = new JsonObject();
-        root.add("contents", contents);
-        return GSON.toJson(root);
-    }
-
-    private URI endpoint() {
-        return URI.create(basisUrl() + "/models/" + optionen.model() + ":generateContent");
-    }
-
-    private String basisUrl() {
-        return optionen.baseUrl().endsWith("/")
-                ? optionen.baseUrl().substring(0, optionen.baseUrl().length() - 1)
-                : optionen.baseUrl();
     }
 
     static String responseText(String body) {

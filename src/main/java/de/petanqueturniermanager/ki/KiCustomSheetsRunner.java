@@ -8,8 +8,6 @@ import java.util.List;
 import org.apache.logging.log4j.Logger;
 
 import com.sun.star.sheet.XSpreadsheet;
-import com.sun.star.table.XCell;
-import com.sun.star.text.XText;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
@@ -19,7 +17,10 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
+import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
+import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
+import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 
 final class KiCustomSheetsRunner extends SheetRunner implements ISheet {
 
@@ -50,19 +51,19 @@ final class KiCustomSheetsRunner extends SheetRunner implements ISheet {
     }
 
     private void schreibe(CustomSheetDaten sheetDaten) throws GenerateException {
-        int rowIndex = 0;
+        RangeData rangeData = new RangeData();
         for (List<String> row : sheetDaten.rows()) {
-            int colIndex = 0;
+            RowData rowData = new RowData();
             for (String value : row) {
-                XCell cell = getSheetHelper().getCell(aktuellesSheet, Position.from(colIndex, rowIndex));
-                XText text = de.petanqueturniermanager.helper.Lo.qi(XText.class, cell);
-                if (text != null) {
-                    text.setString(value);
-                }
-                colIndex++;
+                rowData.newString(value);
             }
-            rowIndex++;
+            rangeData.add(rowData);
         }
+        if (rangeData.isEmpty()) {
+            return;
+        }
+        Position startPos = Position.from(0, 0);
+        RangeHelper.from(this, rangeData.getRangePosition(startPos)).setDataInRange(rangeData);
     }
 
     @Override

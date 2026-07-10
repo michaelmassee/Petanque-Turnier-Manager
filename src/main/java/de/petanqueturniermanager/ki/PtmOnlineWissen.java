@@ -9,7 +9,11 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
 final class PtmOnlineWissen {
 
@@ -33,27 +37,28 @@ final class PtmOnlineWissen {
     private PtmOnlineWissen() {
     }
 
+    /**
+     * Ruft alle {@link #URLS} parallel ab (unabhängige HTTP-Requests, keine gemeinsame Reihenfolge
+     * noetig) statt sequenziell, damit die Gesamtlaufzeit durch den langsamsten einzelnen Request
+     * begrenzt ist statt durch deren Summe.
+     */
     static String laden(KiOptionen optionen) {
         HttpClient client = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(Math.min(optionen.timeoutSekunden(), 15)))
                 .followRedirects(HttpClient.Redirect.NORMAL)
                 .build();
-        StringBuilder out = new StringBuilder();
+        Map<String, CompletableFuture<String>> abrufe = new LinkedHashMap<>();
         for (String url : URLS) {
+            abrufe.put(url, ladeAsync(client, url, optionen));
+        }
+        CompletableFuture.allOf(abrufe.values().toArray(new CompletableFuture<?>[0])).join();
+
+        StringBuilder out = new StringBuilder();
+        for (CompletableFuture<String> abruf : abrufe.values()) {
             if (out.length() >= MAX_GESAMT_ZEICHEN) {
                 break;
             }
-            try {
-                String body = lade(client, url, optionen);
-                out.append("\nQuelle: ").append(url).append('\n')
-                        .append(body, 0, Math.min(body.length(), MAX_ZEICHEN_PRO_SEITE))
-                        .append('\n');
-            } catch (IOException | InterruptedException | RuntimeException e) {
-                if (e instanceof InterruptedException) {
-                    Thread.currentThread().interrupt();
-                }
-                out.append("\nQuelle nicht erreichbar: ").append(url).append('\n');
-            }
+            out.append(abruf.join());
         }
         if (out.length() > MAX_GESAMT_ZEICHEN) {
             return out.substring(0, MAX_GESAMT_ZEICHEN);
@@ -61,18 +66,22 @@ final class PtmOnlineWissen {
         return out.toString();
     }
 
-    private static String lade(HttpClient client, String url, KiOptionen optionen)
-            throws IOException, InterruptedException {
+    private static CompletableFuture<String> ladeAsync(HttpClient client, String url, KiOptionen optionen) {
         HttpRequest request = HttpRequest.newBuilder(URI.create(url))
                 .timeout(Duration.ofSeconds(Math.min(optionen.timeoutSekunden(), 20)))
                 .header("User-Agent", "PetanqueTurnierManager-KI")
                 .GET()
                 .build();
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        if (response.statusCode() < 200 || response.statusCode() >= 300) {
-            throw new IOException("HTTP " + response.statusCode());
-        }
-        return htmlZuText(response.body());
+        return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .thenApply(response -> {
+                    if (response.statusCode() < 200 || response.statusCode() >= 300) {
+                        throw new CompletionException(new IOException("HTTP " + response.statusCode()));
+                    }
+                    String text = htmlZuText(response.body());
+                    return "\nQuelle: " + url + "\n"
+                            + text.substring(0, Math.min(text.length(), MAX_ZEICHEN_PRO_SEITE)) + "\n";
+                })
+                .exceptionally(e -> "\nQuelle nicht erreichbar: " + url + "\n");
     }
 
     private static String htmlZuText(String html) {
