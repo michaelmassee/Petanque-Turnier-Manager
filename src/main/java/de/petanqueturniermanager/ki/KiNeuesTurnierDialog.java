@@ -3,6 +3,8 @@
  */
 package de.petanqueturniermanager.ki;
 
+import java.util.List;
+
 import com.sun.star.awt.PushButtonType;
 import com.sun.star.awt.XControl;
 import com.sun.star.awt.XControlContainer;
@@ -93,15 +95,32 @@ public final class KiNeuesTurnierDialog extends AbstractUnoDialog {
             return;
         }
         KiOptionen optionen = GlobalProperties.get().getKiOptionen();
-        if (optionen.apiKey().isBlank()) {
+        List<KiOptionen.KonfigurationsFehler> fehler = optionen.apiKonfigurationsFehler();
+        if (!fehler.isEmpty()) {
             MessageBox.from(ws, MessageBoxTypeEnum.WARN_OK)
                     .caption(I18n.get("ki.dialog.titel"))
-                    .message(I18n.get("ki.dialog.api.key.fehlt"))
+                    .message(I18n.get("ki.dialog.api.unvollstaendig", fehlerText(fehler)))
                     .show();
             return;
         }
         Thread worker = new Thread(() -> planeUndPoste(optionen, wunsch), "PTM-KI-NeuesTurnier");
         worker.start();
+    }
+
+    private static String fehlerText(List<KiOptionen.KonfigurationsFehler> fehler) {
+        return fehler.stream()
+                .map(KiNeuesTurnierDialog::fehlerLabel)
+                .reduce((a, b) -> a + ", " + b)
+                .orElse("");
+    }
+
+    private static String fehlerLabel(KiOptionen.KonfigurationsFehler fehler) {
+        return switch (fehler) {
+            case API_KEY -> I18n.get("ki.api.key");
+            case MODELL -> I18n.get("ki.model");
+            case BASE_URL -> I18n.get("ki.base.url");
+            case TIMEOUT -> I18n.get("ki.timeout.seconds");
+        };
     }
 
     private void planeUndPoste(KiOptionen optionen, String wunsch) {

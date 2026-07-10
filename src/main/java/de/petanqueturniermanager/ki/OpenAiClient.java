@@ -33,8 +33,8 @@ public final class OpenAiClient {
     }
 
     public String erstelleAntwort(String prompt) throws IOException, InterruptedException {
-        if (optionen.apiKey().isBlank()) {
-            throw new IllegalStateException("OpenAI API-Key ist nicht konfiguriert");
+        if (!optionen.istApiVollstaendig()) {
+            throw new IllegalStateException("OpenAI API-Konfiguration ist unvollstaendig");
         }
         HttpRequest request = HttpRequest.newBuilder(endpoint())
                 .timeout(Duration.ofSeconds(optionen.timeoutSekunden()))

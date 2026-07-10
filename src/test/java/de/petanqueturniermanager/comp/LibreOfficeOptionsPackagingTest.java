@@ -99,9 +99,15 @@ class LibreOfficeOptionsPackagingTest {
 		assertThat(data).contains("<node oor:name=\"KiAssistent\">");
 		assertThat(addons).contains("ptm:ki_neues_turnier");
 		assertThat(xdl)
+				.contains("dlg:id=\"KiSetupHint\"")
+				.contains("dlg:id=\"KiApiKeyOeffnen\"")
+				.contains("dlg:id=\"KiStandardwerte\"")
+				.contains("dlg:id=\"KiPruefen\"")
 				.contains("dlg:id=\"KiApiKey\"")
+				.contains("dlg:id=\"KiApiKeyHelp\"")
 				.contains("dlg:id=\"KiModel\"")
 				.contains("dlg:id=\"KiBaseUrl\"")
+				.contains("dlg:id=\"KiStatus\"")
 				.contains("dlg:id=\"KiFullContext\"");
 	}
 
