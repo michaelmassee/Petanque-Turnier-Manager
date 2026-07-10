@@ -1,12 +1,16 @@
 package de.petanqueturniermanager.helper.upload;
 
-import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import com.sun.star.uno.XComponentContext;
 
 public final class UploadServiceFactory {
 
     private UploadServiceFactory() {
     }
 
+    /**
+     * Strikter Modus: verlangt einen bereits bekannten Host-Key in {@code known_hosts},
+     * ohne Rückfrage-Möglichkeit. Nur für Kontexte ohne UI-Rückfragemöglichkeit.
+     */
     public static IUploadService erstelle(UploadKonfiguration konfiguration) {
         return switch (konfiguration.protokoll()) {
             case FTP -> new FtpUploadService(konfiguration);
@@ -14,10 +18,19 @@ public final class UploadServiceFactory {
         };
     }
 
-    public static IUploadService erstelle(UploadKonfiguration konfiguration, WorkingSpreadsheet ws) {
+    /**
+     * Interaktiver Modus: fragt bei unbekanntem Host-Key per Dialog nach und legt
+     * {@code known_hosts} bei Bedarf automatisch an.
+     *
+     * @param aufMainThread {@code true}, wenn der Aufrufer selbst bereits synchron auf dem
+     *                      LO-Main-Thread läuft (z. B. Dialog-Button-Klick) — sonst {@code false}
+     *                      (Worker-Thread, z. B. {@code SheetRunner}). Siehe {@link SftpHostKeyUserInfo}.
+     */
+    public static IUploadService erstelle(UploadKonfiguration konfiguration, XComponentContext xContext,
+            boolean aufMainThread) {
         return switch (konfiguration.protokoll()) {
             case FTP -> new FtpUploadService(konfiguration);
-            case SFTP -> new SftpUploadService(konfiguration, new SftpHostKeyUserInfo(ws));
+            case SFTP -> new SftpUploadService(konfiguration, new SftpHostKeyUserInfo(xContext, aufMainThread));
         };
     }
 }

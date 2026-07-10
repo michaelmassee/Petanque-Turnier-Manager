@@ -109,7 +109,7 @@ public abstract class AbstractFtpUpload extends SheetRunner {
     }
 
     private int ladeHoch(UploadKonfiguration konfig, String passwort, ExportErgebnis ergebnis) throws IOException {
-        return UploadServiceFactory.erstelle(konfig, getWorkingSpreadsheet())
+        return UploadServiceFactory.erstelle(konfig, getWorkingSpreadsheet().getxContext(), false)
                 .hochladen(ergebnis.exportierteDateien(), passwort);
     }
 

@@ -79,7 +79,7 @@ class SftpUploadService implements IUploadService {
             session = verbinde(passwort);
             kanal = (ChannelSftp) session.openChannel("sftp");
             kanal.connect();
-            wechsleInVerzeichnis(kanal, konfiguration.remotePfad());
+            pruefeVerzeichnis(kanal, konfiguration.remotePfad());
         } catch (JSchException e) {
             throw wandleJschFehlerUm(e);
         } finally {
@@ -132,6 +132,19 @@ class SftpUploadService implements IUploadService {
             kanal.cd(remotePfad);
         } catch (SftpException e) {
             throw new IOException(formatiereVerzeichnisFehler(kanal, remotePfad, mkdirFehler, e), e);
+        }
+    }
+
+    /**
+     * Wie {@link #wechsleInVerzeichnis(ChannelSftp, String)}, aber ohne automatisches Anlegen
+     * des Verzeichnisses. Für den reinen Verbindungstest ("Test"-Button): ein falscher/fehlender
+     * Pfad soll fehlschlagen statt beim Testen still auf dem Server neu angelegt zu werden.
+     */
+    private void pruefeVerzeichnis(ChannelSftp kanal, String remotePfad) throws IOException {
+        try {
+            kanal.cd(remotePfad);
+        } catch (SftpException e) {
+            throw new IOException(formatiereVerzeichnisFehler(kanal, remotePfad, null, e), e);
         }
     }
 

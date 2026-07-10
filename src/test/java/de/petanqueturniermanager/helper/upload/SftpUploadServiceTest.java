@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 
 import com.sun.star.uno.XComponentContext;
 
-import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 
 class SftpUploadServiceTest {
@@ -78,12 +77,21 @@ class SftpUploadServiceTest {
     }
 
     @Test
-    void hostKeyRueckfrageLiefertJaWennDialogBestaetigtWird() {
+    void hostKeyRueckfrageLiefertJaWennDialogBestaetigtWirdAufWorkerThread() {
         MessageBox.setDialogeUeberspringen(true);
-        var ws = mock(WorkingSpreadsheet.class);
-        when(ws.getxContext()).thenReturn(mock(XComponentContext.class));
+        var xContext = mock(XComponentContext.class);
 
-        var userInfo = new SftpHostKeyUserInfo(ws);
+        var userInfo = new SftpHostKeyUserInfo(xContext, false);
+
+        assertThat(userInfo.promptYesNo("fingerprint")).isTrue();
+    }
+
+    @Test
+    void hostKeyRueckfrageLiefertJaWennDialogBestaetigtWirdAufMainThread() {
+        MessageBox.setDialogeUeberspringen(true);
+        var xContext = mock(XComponentContext.class);
+
+        var userInfo = new SftpHostKeyUserInfo(xContext, true);
 
         assertThat(userInfo.promptYesNo("fingerprint")).isTrue();
     }
@@ -98,8 +106,8 @@ class SftpUploadServiceTest {
 
     @Test
     void userInfoLiefertGesetztesPasswortFuerJschCallback() {
-        var ws = mock(WorkingSpreadsheet.class);
-        var userInfo = new SftpHostKeyUserInfo(ws);
+        var xContext = mock(XComponentContext.class);
+        var userInfo = new SftpHostKeyUserInfo(xContext, false);
 
         assertThat(userInfo.promptPassword("Password")).isFalse();
 
