@@ -10,6 +10,7 @@ de.petanqueturniermanager.comp.WebserverRegieOptionsEventHandler
 de.petanqueturniermanager.comp.CompositeViewsOptionsEventHandler
 de.petanqueturniermanager.comp.FtpServerOptionsEventHandler
 de.petanqueturniermanager.comp.TabFarbenOptionsEventHandler
+de.petanqueturniermanager.comp.KiOptionsEventHandler
 
 # Deactivated components (uncomment if needed)
 #de.petanqueturniermanager.addins.DoublerImpl

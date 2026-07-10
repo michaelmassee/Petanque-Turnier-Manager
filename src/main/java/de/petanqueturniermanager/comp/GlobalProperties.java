@@ -28,6 +28,7 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.helper.perflog.PerfLog;
 import de.petanqueturniermanager.helper.upload.UploadProtokoll;
+import de.petanqueturniermanager.ki.KiOptionen;
 import de.petanqueturniermanager.webserver.CompositeViewKonfiguration;
 import de.petanqueturniermanager.webserver.PanelAusrichtung;
 import de.petanqueturniermanager.webserver.PanelKonfiguration;
@@ -55,6 +56,11 @@ public class GlobalProperties {
 	private static final String PROZESSBOX_AUTOMATISCH_ANZEIGEN_PROP = "prozessbox.automatisch.anzeigen";
 	private static final String PROZESSBOX_AUTOMATISCH_SCHLIESSEN_PROP = "prozessbox.automatisch.schliessen";
 	private static final String PERFORMANCE_LOGGING_PROP = "performance.logging";
+	private static final String KI_API_KEY_PROP = "ki.api.key";
+	private static final String KI_MODEL_PROP = "ki.model";
+	private static final String KI_BASE_URL_PROP = "ki.base.url";
+	private static final String KI_TIMEOUT_SECONDS_PROP = "ki.timeout.seconds";
+	private static final String KI_FULL_CONTEXT_PROP = "ki.full.context";
 
 	private static final String WEBSERVER_AKTIV_PROP = "webserver_aktiv";
 
@@ -184,6 +190,7 @@ public class GlobalProperties {
 	private static volatile boolean startupModusInLibreOffice = false;
 	private static volatile boolean compositeViewsInLibreOffice = false;
 	private static volatile boolean tabFarbenInLibreOffice = false;
+	private static volatile boolean kiOptionenInLibreOffice = false;
 	private static volatile Map<String, Integer> tabFarbenCache = Map.of();
 
 	/**
@@ -343,6 +350,7 @@ public class GlobalProperties {
 		ladeStartupModusAusLibreOffice();
 		ladeCompositeViewsAusLibreOffice();
 		ladeTabFarbenAusLibreOffice();
+		ladeKiOptionenAusLibreOffice();
 		bereinigeLegacyEinzelPortProperties();
 		bereinigeLegacyTimerProperties();
 		bereinigeLegacyUploadPasswortProperties();
@@ -361,6 +369,7 @@ public class GlobalProperties {
 			lokaleInstanz.ladeStartupModusAusLibreOffice();
 			lokaleInstanz.ladeCompositeViewsAusLibreOffice();
 			lokaleInstanz.ladeTabFarbenAusLibreOffice();
+			lokaleInstanz.ladeKiOptionenAusLibreOffice();
 			lokaleInstanz.safeSetLogLevel();
 		}
 	}
@@ -544,7 +553,8 @@ public class GlobalProperties {
 				|| (ftpServerInLibreOffice && istFtpServerLegacyKey(key))
 				|| (startseiteInLibreOffice && istStartseiteLegacyKey(key))
 				|| (startupModusInLibreOffice && istStartupModusLegacyKey(key))
-				|| (compositeViewsInLibreOffice && istCompositeViewsLegacyKey(key));
+				|| (compositeViewsInLibreOffice && istCompositeViewsLegacyKey(key))
+				|| (kiOptionenInLibreOffice && istKiOptionenLegacyKey(key));
 	}
 
 	// Ruft bewusst noch @Deprecated-Legacy-Import-Methoden auf (Speicher + pluginOptionenAusMap()
@@ -611,6 +621,20 @@ public class GlobalProperties {
 		} catch (IllegalStateException e) {
 			setFtpServerInLibreOffice(false);
 			logger.warn("LibreOffice-FTP-Server-Konfiguration nicht verfügbar, verwende Legacy-Properties", e);
+		}
+	}
+
+	private void ladeKiOptionenAusLibreOffice() {
+		XComponentContext context = libreOfficeContext;
+		if (context == null) {
+			return;
+		}
+		try {
+			kiOptionenInMap(new LibreOfficeKiOptionenSpeicher(context).laden());
+			setKiOptionenInLibreOffice(true);
+		} catch (IllegalStateException e) {
+			setKiOptionenInLibreOffice(false);
+			logger.warn("LibreOffice-KI-Konfiguration nicht verfügbar, verwende Legacy-Properties", e);
 		}
 	}
 
@@ -741,6 +765,39 @@ public class GlobalProperties {
 			propMap.put(LOG_LEVEL_PROP, optionen.logLevel());
 		}
 		setBooleanProp(AUTO_UPDATE_DIALOG_PROP, optionen.autoUpdateDialogBeimStart());
+	}
+
+	private KiOptionen kiOptionenAusMap() {
+		return new KiOptionen(
+				propMap.getOrDefault(KI_API_KEY_PROP, ""),
+				propMap.getOrDefault(KI_MODEL_PROP, KiOptionen.DEFAULT_MODEL),
+				propMap.getOrDefault(KI_BASE_URL_PROP, KiOptionen.DEFAULT_BASE_URL),
+				getInt(KI_TIMEOUT_SECONDS_PROP, KiOptionen.DEFAULT_TIMEOUT_SEKUNDEN),
+				getBooleanMitDefault(KI_FULL_CONTEXT_PROP, true));
+	}
+
+	private static void kiOptionenInMap(KiOptionen optionen) {
+		if (optionen.apiKey().isBlank()) {
+			propMap.remove(KI_API_KEY_PROP);
+		} else {
+			propMap.put(KI_API_KEY_PROP, optionen.apiKey());
+		}
+		propMap.put(KI_MODEL_PROP, optionen.model());
+		propMap.put(KI_BASE_URL_PROP, optionen.baseUrl());
+		propMap.put(KI_TIMEOUT_SECONDS_PROP, Integer.toString(optionen.timeoutSekunden()));
+		setBooleanProp(KI_FULL_CONTEXT_PROP, optionen.vollstaendigenKontextSenden());
+	}
+
+	private static boolean istKiOptionenLegacyKey(String key) {
+		return KI_API_KEY_PROP.equals(key)
+				|| KI_MODEL_PROP.equals(key)
+				|| KI_BASE_URL_PROP.equals(key)
+				|| KI_TIMEOUT_SECONDS_PROP.equals(key)
+				|| KI_FULL_CONTEXT_PROP.equals(key);
+	}
+
+	private static void setKiOptionenInLibreOffice(boolean wert) {
+		kiOptionenInLibreOffice = wert;
 	}
 
 	/**
@@ -1005,6 +1062,18 @@ public class GlobalProperties {
 		var val = propMap.get(key);
 		if (val == null || val.isBlank()) return defaultWert;
 		return Boolean.parseBoolean(val.trim());
+	}
+
+	private int getInt(String key, int defaultWert) {
+		var val = propMap.get(key);
+		if (val == null || val.isBlank()) {
+			return defaultWert;
+		}
+		try {
+			return Integer.parseInt(val.trim());
+		} catch (NumberFormatException e) {
+			return defaultWert;
+		}
 	}
 
 	public boolean isAutoSave() {
@@ -1548,6 +1617,31 @@ public class GlobalProperties {
 
 		} catch (Exception e) {
 			logger.error("Fehler beim Speichern", e);
+		}
+	}
+
+	public KiOptionen getKiOptionen() {
+		return kiOptionenAusMap();
+	}
+
+	public void speichernKiOptionen(KiOptionen optionen) {
+		try {
+			kiOptionenInMap(optionen);
+			XComponentContext context = libreOfficeContext;
+			if (context != null) {
+				try {
+					new LibreOfficeKiOptionenSpeicher(context).speichern(optionen);
+					setKiOptionenInLibreOffice(true);
+				} catch (IllegalStateException e) {
+					logger.warn("Speichern der KI-Optionen in LibreOffice-Konfiguration fehlgeschlagen, verwende Legacy-Datei", e);
+					setKiOptionenInLibreOffice(false);
+					speichernDatei();
+				}
+			} else {
+				speichernDatei();
+			}
+		} catch (Exception e) {
+			logger.error("Fehler beim Speichern der KI-Optionen", e);
 		}
 	}
 

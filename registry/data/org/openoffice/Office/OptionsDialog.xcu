@@ -104,6 +104,24 @@
                         <value>de.petanqueturniermanager.TabFarbenOptionsEventHandler</value>
                     </prop>
                 </node>
+                <node oor:name="de.petanqueturniermanager.options.ki" oor:op="fuse">
+                    <prop oor:name="Id">
+                        <value>de.petanqueturniermanager.ki</value>
+                    </prop>
+                    <prop oor:name="Label">
+                        <value xml:lang="de">KI-Assistent</value>
+                        <value xml:lang="en">AI Assistant</value>
+                        <value xml:lang="es">Asistente IA</value>
+                        <value xml:lang="fr">Assistant IA</value>
+                        <value xml:lang="nl">AI-assistent</value>
+                    </prop>
+                    <prop oor:name="OptionsPage">
+                        <value>%origin%/dialogs/KiOptions.xdl</value>
+                    </prop>
+                    <prop oor:name="EventHandlerService">
+                        <value>de.petanqueturniermanager.KiOptionsEventHandler</value>
+                    </prop>
+                </node>
             </node>
         </node>
     </node>

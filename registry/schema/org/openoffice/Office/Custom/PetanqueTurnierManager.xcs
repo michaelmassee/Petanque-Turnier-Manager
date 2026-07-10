@@ -182,5 +182,30 @@
                 <value>16042566</value>
             </prop>
         </group>
+        <group oor:name="KiAssistent">
+            <info>
+                <desc>AI assistant options.</desc>
+            </info>
+            <prop oor:name="ApiKey" oor:type="xs:string">
+                <info><desc>OpenAI API key.</desc></info>
+                <value/>
+            </prop>
+            <prop oor:name="Model" oor:type="xs:string">
+                <info><desc>OpenAI model for PTM AI assistant.</desc></info>
+                <value>gpt-5.6-terra</value>
+            </prop>
+            <prop oor:name="BaseUrl" oor:type="xs:string">
+                <info><desc>OpenAI-compatible API base URL.</desc></info>
+                <value>https://api.openai.com/v1</value>
+            </prop>
+            <prop oor:name="TimeoutSeconds" oor:type="xs:int">
+                <info><desc>Network timeout in seconds.</desc></info>
+                <value>60</value>
+            </prop>
+            <prop oor:name="FullContext" oor:type="xs:boolean">
+                <info><desc>Whether the assistant may send full tournament context.</desc></info>
+                <value>true</value>
+            </prop>
+        </group>
     </component>
 </oor:component-schema>

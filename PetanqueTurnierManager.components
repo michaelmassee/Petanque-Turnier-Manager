@@ -48,4 +48,9 @@
             <service name="de.petanqueturniermanager.TabFarbenOptionsEventHandler"/>
         </implementation>
     </component>
+    <component loader="com.sun.star.loader.Java2" uri="PetanqueTurnierManager-1.0.0.jar">
+        <implementation name="de.petanqueturniermanager.comp.KiOptionsEventHandler">
+            <service name="de.petanqueturniermanager.KiOptionsEventHandler"/>
+        </implementation>
+    </component>
 </components>

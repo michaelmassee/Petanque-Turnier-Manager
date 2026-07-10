@@ -42,7 +42,8 @@ class LibreOfficeOptionsPackagingTest {
 				Path.of("src/main/resources/de/petanqueturniermanager/comp/RegistrationHandler.classes"));
 
 		for (String handler : List.of("PluginOptionsEventHandler", "WebserverRegieOptionsEventHandler",
-				"CompositeViewsOptionsEventHandler", "FtpServerOptionsEventHandler", "TabFarbenOptionsEventHandler")) {
+				"CompositeViewsOptionsEventHandler", "FtpServerOptionsEventHandler", "TabFarbenOptionsEventHandler",
+				"KiOptionsEventHandler")) {
 			assertThat(components)
 					.as("EventHandlerService fehlt in components: %s", handler)
 					.contains("de.petanqueturniermanager.comp." + handler)
@@ -59,6 +60,7 @@ class LibreOfficeOptionsPackagingTest {
 		Path pluginXdl = Path.of("registry/data/org/openoffice/Office/dialogs/PluginOptions.xdl");
 		Path regieXdl = Path.of("registry/data/org/openoffice/Office/dialogs/WebserverRegieOptions.xdl");
 		Path compositeViewsXdl = Path.of("registry/data/org/openoffice/Office/dialogs/CompositeViewsOptions.xdl");
+		Path kiXdl = Path.of("registry/data/org/openoffice/Office/dialogs/KiOptions.xdl");
 
 		assertThat(xcu)
 				.contains("PetanqueTurnierManager")
@@ -67,10 +69,40 @@ class LibreOfficeOptionsPackagingTest {
 				.contains("%origin%/dialogs/WebserverRegieOptions.xdl")
 				.contains("de.petanqueturniermanager.WebserverRegieOptionsEventHandler")
 				.contains("%origin%/dialogs/CompositeViewsOptions.xdl")
-				.contains("de.petanqueturniermanager.CompositeViewsOptionsEventHandler");
+				.contains("de.petanqueturniermanager.CompositeViewsOptionsEventHandler")
+				.contains("%origin%/dialogs/KiOptions.xdl")
+				.contains("de.petanqueturniermanager.KiOptionsEventHandler");
 		assertThat(pluginXdl).exists();
 		assertThat(regieXdl).exists();
 		assertThat(compositeViewsXdl).exists();
+		assertThat(kiXdl).exists();
+	}
+
+	@Test
+	void kiAssistentIstPaketiert() throws Exception {
+		String manifest = Files.readString(Path.of("META-INF/manifest.xml"));
+		String schema = Files.readString(
+				Path.of("registry/schema/org/openoffice/Office/Custom/PetanqueTurnierManager.xcs"));
+		String data = Files.readString(
+				Path.of("registry/data/org/openoffice/Office/Custom/PetanqueTurnierManager.xcu"));
+		String addons = Files.readString(Path.of("registry/org/openoffice/Office/Addons_X5_KI.xcu"));
+		String xdl = Files.readString(Path.of("registry/data/org/openoffice/Office/dialogs/KiOptions.xdl"));
+
+		assertThat(manifest).contains("registry/org/openoffice/Office/Addons_X5_KI.xcu");
+		assertThat(schema)
+				.contains("oor:name=\"KiAssistent\"")
+				.contains("oor:name=\"ApiKey\"")
+				.contains("oor:name=\"Model\"")
+				.contains("oor:name=\"BaseUrl\"")
+				.contains("oor:name=\"TimeoutSeconds\"")
+				.contains("oor:name=\"FullContext\"");
+		assertThat(data).contains("<node oor:name=\"KiAssistent\">");
+		assertThat(addons).contains("ptm:ki_neues_turnier");
+		assertThat(xdl)
+				.contains("dlg:id=\"KiApiKey\"")
+				.contains("dlg:id=\"KiModel\"")
+				.contains("dlg:id=\"KiBaseUrl\"")
+				.contains("dlg:id=\"KiFullContext\"");
 	}
 
 	@Test

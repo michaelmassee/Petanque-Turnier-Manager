@@ -101,6 +101,7 @@ import de.petanqueturniermanager.konfigdialog.properties.FarbenDialog;
 import de.petanqueturniermanager.konfigdialog.properties.KopfFusszeilenDialog;
 import de.petanqueturniermanager.konfigdialog.properties.TurnierDialog;
 import de.petanqueturniermanager.konfigdialog.properties.TurnierStartseiteDialog;
+import de.petanqueturniermanager.ki.KiNeuesTurnierDialog;
 import de.petanqueturniermanager.helper.upload.ExportPfadHelper;
 import de.petanqueturniermanager.liga.meldeliste.LigaExportInVerzeichnis;
 import de.petanqueturniermanager.liga.meldeliste.LigaFtpUpload;
@@ -399,6 +400,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_PROCESSBOX_ANZEIGEN   = "processboxAnzeigen";
 	public static final String CMD_PROJEKT_SEITE_OEFFNEN = "projekt_seite_oeffnen";
 	public static final String CMD_FEHLER_MELDEN         = "fehler_melden";
+	public static final String CMD_KI_NEUES_TURNIER      = "ki_neues_turnier";
 
 	private static final String PROJEKT_SEITE_URL =
 			"https://michaelmassee.github.io/Petanque-Turnier-Manager/";
@@ -1283,6 +1285,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_TOOLBAR_START        -> oeffneTurnierStartDialog();
 			case CMD_TOOLBAR_NEU_IN_NEUER_DATEI ->
 					new TurnierSystemNeueDateiAuswahlDialog(erzeugeWorkingSpreadsheetFuerDispatch()).zeige();
+			case CMD_KI_NEUES_TURNIER ->
+					new KiNeuesTurnierDialog(erzeugeWorkingSpreadsheetFuerDispatch()).zeige();
 			case CMD_TOOLBAR_OEFFNEN            -> erzeugeWorkingSpreadsheetFuerDispatch()
 					.executeDispatch(".uno:Open", "_self", 0, new PropertyValue[0]);
 			case CMD_TOOLBAR_DRUCKEN            -> erzeugeWorkingSpreadsheetFuerDispatch()
@@ -2042,7 +2046,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_TOOLBAR_OEFFNEN,
 				 CMD_TOOLBAR_DRUCKEN,
 				 CMD_TOOLBAR_DRUCKVORSCHAU,
-				 CMD_SIDEBAR_TOGGLE                         -> true;
+				 CMD_SIDEBAR_TOGGLE,
+				 CMD_KI_NEUES_TURNIER                       -> true;
 			case CMD_TURNIER_MODUS                          -> true;
 			case CMD_SPIELERDB_OEFFNEN,
 				 CMD_SPIELERDB_VEREINE,

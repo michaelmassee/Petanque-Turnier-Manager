@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE dlg:window PUBLIC "-//OpenOffice.org//DTD OfficeDocument 1.0//EN" "dialog.dtd">
+<dlg:window xmlns:dlg="http://openoffice.org/2000/dialog"
+    xmlns:script="http://openoffice.org/2000/script"
+    dlg:id="KiOptions"
+    dlg:left="0" dlg:top="0" dlg:width="280" dlg:height="128"
+    dlg:closeable="false" dlg:moveable="false" dlg:withtitlebar="false">
+    <dlg:bulletinboard>
+        <dlg:text dlg:id="KiLabel" dlg:tab-index="0" dlg:left="6" dlg:top="6" dlg:width="260" dlg:height="10" dlg:value=""/>
+        <dlg:text dlg:id="KiApiKeyLabel" dlg:tab-index="1" dlg:left="6" dlg:top="24" dlg:width="64" dlg:height="10" dlg:value=""/>
+        <dlg:textfield dlg:id="KiApiKey" dlg:tab-index="2" dlg:left="76" dlg:top="21" dlg:width="190" dlg:height="14" dlg:value="" dlg:echochar="*"/>
+        <dlg:text dlg:id="KiModelLabel" dlg:tab-index="3" dlg:left="6" dlg:top="43" dlg:width="64" dlg:height="10" dlg:value=""/>
+        <dlg:textfield dlg:id="KiModel" dlg:tab-index="4" dlg:left="76" dlg:top="40" dlg:width="100" dlg:height="14" dlg:value=""/>
+        <dlg:text dlg:id="KiBaseUrlLabel" dlg:tab-index="5" dlg:left="6" dlg:top="62" dlg:width="64" dlg:height="10" dlg:value=""/>
+        <dlg:textfield dlg:id="KiBaseUrl" dlg:tab-index="6" dlg:left="76" dlg:top="59" dlg:width="190" dlg:height="14" dlg:value=""/>
+        <dlg:text dlg:id="KiTimeoutLabel" dlg:tab-index="7" dlg:left="6" dlg:top="81" dlg:width="64" dlg:height="10" dlg:value=""/>
+        <dlg:textfield dlg:id="KiTimeout" dlg:tab-index="8" dlg:left="76" dlg:top="78" dlg:width="32" dlg:height="14" dlg:value=""/>
+        <dlg:checkbox dlg:id="KiFullContext" dlg:tab-index="9" dlg:left="6" dlg:top="99" dlg:width="260" dlg:height="10" dlg:value="" dlg:checked="true"/>
+        <dlg:text dlg:id="KiPrivacyHint" dlg:tab-index="10" dlg:left="6" dlg:top="114" dlg:width="260" dlg:height="10" dlg:value=""/>
+    </dlg:bulletinboard>
+</dlg:window>
