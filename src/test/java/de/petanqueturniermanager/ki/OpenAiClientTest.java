@@ -10,7 +10,8 @@ class OpenAiClientTest {
 
     @Test
     void requestJsonNutztResponsesApiParameterOhneServerStorage() {
-        var optionen = new KiOptionen("sk-test", "gpt-test", "https://api.openai.com/v1", 30, true);
+        var optionen = new KiOptionen(
+                KiAnbieter.OPENAI, "sk-test", "", "", "gpt-test", "https://api.openai.com/v1", 30, true);
         var json = JsonParser.parseString(new OpenAiClient(optionen).requestJson("Hallo")).getAsJsonObject();
 
         assertThat(json.get("model").getAsString()).isEqualTo("gpt-test");
@@ -29,5 +30,19 @@ class OpenAiClientTest {
                 """;
 
         assertThat(OpenAiClient.responseText(body)).isEqualTo("Antwort");
+    }
+
+    @Test
+    void modelIdsLiestUndSortiertDataIds() {
+        String body = """
+                {
+                  "data": [
+                    {"id": "gpt-5.5"},
+                    {"id": "gpt-4o"}
+                  ]
+                }
+                """;
+
+        assertThat(OpenAiClient.modelIds(body)).containsExactly("gpt-4o", "gpt-5.5");
     }
 }

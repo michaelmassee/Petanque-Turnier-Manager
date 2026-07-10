@@ -6,14 +6,19 @@ package de.petanqueturniermanager.comp;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
+import java.util.function.Function;
 
 import com.sun.star.awt.ActionEvent;
+import com.sun.star.awt.ItemEvent;
 import com.sun.star.awt.XCheckBox;
 import com.sun.star.awt.XActionListener;
 import com.sun.star.awt.XButton;
 import com.sun.star.awt.XContainerWindowEventHandler;
 import com.sun.star.awt.XControl;
 import com.sun.star.awt.XControlContainer;
+import com.sun.star.awt.XItemListener;
+import com.sun.star.awt.XListBox;
 import com.sun.star.awt.XTextComponent;
 import com.sun.star.awt.XWindow;
 import com.sun.star.lang.EventObject;
@@ -31,9 +36,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import de.petanqueturniermanager.helper.BrowserOeffner;
+import de.petanqueturniermanager.helper.LoMainThread;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
+import de.petanqueturniermanager.ki.KiAnbieter;
+import de.petanqueturniermanager.ki.KiAssistentService;
 import de.petanqueturniermanager.ki.KiOptionen;
 
 public final class KiOptionsEventHandler extends com.sun.star.lib.uno.helper.WeakBase
@@ -43,13 +51,13 @@ public final class KiOptionsEventHandler extends com.sun.star.lib.uno.helper.Wea
     private static final String SERVICE_NAME = "de.petanqueturniermanager.KiOptionsEventHandler";
     private static final String[] SERVICE_NAMES = { SERVICE_NAME };
     private static final Logger logger = LogManager.getLogger(KiOptionsEventHandler.class);
-    private static final String OPENAI_API_KEYS_URL = "https://platform.openai.com/api-keys";
 
     private static final String METHOD_EXTERNAL_EVENT = "external_event";
     private static final String EVENT_INITIALIZE = "initialize";
     private static final String EVENT_BACK = "back";
     private static final String EVENT_OK = "ok";
 
+    private static final String CTL_ANBIETER = "KiAnbieter";
     private static final String CTL_API_KEY = "KiApiKey";
     private static final String CTL_MODEL = "KiModel";
     private static final String CTL_BASE_URL = "KiBaseUrl";
@@ -62,6 +70,8 @@ public final class KiOptionsEventHandler extends com.sun.star.lib.uno.helper.Wea
 
     private final XComponentContext context;
     private XControlContainer listenerContainer;
+    private KiOptionen aktuelleKiOptionen;
+    private KiAnbieter zuletztAngezeigterAnbieter;
 
     public KiOptionsEventHandler(XComponentContext context) {
         this.context = context;
@@ -96,6 +106,7 @@ public final class KiOptionsEventHandler extends com.sun.star.lib.uno.helper.Wea
         XControlContainer container = container(window);
         setLabel(container, "KiLabel", I18n.get("ki.options.label"));
         setLabel(container, "KiSetupHint", I18n.get("ki.options.setup.hint"));
+        setLabel(container, "KiAnbieterLabel", I18n.get("ki.options.anbieter"));
         setLabel(container, "KiApiKeyLabel", I18n.get("ki.options.api.key"));
         setLabel(container, "KiApiKeyHelp", I18n.get("ki.options.api.key.help"));
         setLabel(container, "KiModelLabel", I18n.get("ki.options.model"));
@@ -108,6 +119,10 @@ public final class KiOptionsEventHandler extends com.sun.star.lib.uno.helper.Wea
         setLabel(container, "KiPrivacyHint", I18n.get("ki.options.privacy.hint"));
 
         KiOptionen optionen = GlobalProperties.get().getKiOptionen();
+        aktuelleKiOptionen = optionen;
+        zuletztAngezeigterAnbieter = optionen.anbieter();
+        setListItems(container, CTL_ANBIETER, anbieterEintraege());
+        setSelectedPos(container, CTL_ANBIETER, (short) optionen.anbieter().ordinal());
         setText(container, CTL_API_KEY, optionen.apiKey());
         setText(container, CTL_MODEL, optionen.model());
         setText(container, CTL_BASE_URL, optionen.baseUrl());
@@ -119,7 +134,7 @@ public final class KiOptionsEventHandler extends com.sun.star.lib.uno.helper.Wea
 
     private void speichereAusOberflaeche(XWindow window) {
         XControlContainer container = container(window);
-        KiOptionen optionen = optionenAusOberflaeche(container);
+        KiOptionen optionen = optionenZumSpeichern(container);
         List<KiOptionen.KonfigurationsFehler> fehler = optionen.apiKonfigurationsFehler();
         if (!fehler.isEmpty()) {
             zeigeWarnung(I18n.get("ki.options.pruefung.fehler", fehlerText(fehler)));
@@ -127,59 +142,182 @@ public final class KiOptionsEventHandler extends com.sun.star.lib.uno.helper.Wea
             return;
         }
         GlobalProperties.get().speichernKiOptionen(optionen);
+        aktuelleKiOptionen = optionen;
     }
 
     private void registriereListener(XControlContainer container) {
         if (listenerContainer != null && UnoRuntime.areSame(listenerContainer, container)) {
             return;
         }
-        registriereActionListener(container, CTL_API_KEY_OEFFNEN, this::oeffneApiKeySeite);
+        registriereActionListener(container, CTL_API_KEY_OEFFNEN, () -> oeffneApiKeySeite(container));
         registriereActionListener(container, CTL_STANDARDWERTE, () -> setzeStandardwerte(container));
         registriereActionListener(container, CTL_PRUEFEN, () -> pruefeKonfiguration(container));
+        registriereAnbieterListener(container);
         listenerContainer = container;
     }
 
-    private void oeffneApiKeySeite() {
+    private void registriereAnbieterListener(XControlContainer container) {
+        XListBox listBox = control(container, CTL_ANBIETER, XListBox.class);
+        if (listBox == null) {
+            return;
+        }
+        listBox.addItemListener(new XItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent event) {
+                anbieterGewechselt(container);
+            }
+
+            @Override
+            public void disposing(EventObject event) {
+                // nichts zu tun
+            }
+        });
+    }
+
+    /**
+     * Beim Wechsel des Anbieters wird der zuvor editierte API-Key dem bisherigen Anbieter zugeordnet
+     * (damit er beim Zurückwechseln erhalten bleibt) und durch den gespeicherten Key des neu gewählten
+     * Anbieters ersetzt – jeder Anbieter hat einen eigenen Key. Modell und API-URL werden live auf die
+     * Standardwerte des neuen Anbieters aktualisiert, aber nur, solange die Felder noch einem der
+     * bekannten Standardwerte entsprechen (oder leer sind), damit ein manuell eingetragenes Modell bzw.
+     * eine individuelle API-URL (z.B. self-hosted Proxy) beim Umschalten erhalten bleibt.
+     */
+    private void anbieterGewechselt(XControlContainer container) {
+        KiAnbieter neuerAnbieter = ausgewaehlterAnbieter(container);
+        if (aktuelleKiOptionen != null && zuletztAngezeigterAnbieter != null) {
+            aktuelleKiOptionen = aktuelleKiOptionen.mitApiKeyFuer(zuletztAngezeigterAnbieter, text(container, CTL_API_KEY));
+        }
+        setText(container, CTL_API_KEY, aktuelleKiOptionen == null ? "" : aktuelleKiOptionen.apiKeyFuer(neuerAnbieter));
+        if (istUnveraendert(text(container, CTL_MODEL), KiAnbieter::defaultModel)) {
+            setText(container, CTL_MODEL, neuerAnbieter.defaultModel());
+        }
+        if (istUnveraendert(text(container, CTL_BASE_URL), KiAnbieter::defaultBaseUrl)) {
+            setText(container, CTL_BASE_URL, neuerAnbieter.defaultBaseUrl());
+        }
+        zuletztAngezeigterAnbieter = neuerAnbieter;
+        aktualisiereStatus(container);
+    }
+
+    private static boolean istUnveraendert(String wert, Function<KiAnbieter, String> standardwert) {
+        return wert.isBlank()
+                || Arrays.stream(KiAnbieter.values()).map(standardwert).anyMatch(wert::equals);
+    }
+
+    private void oeffneApiKeySeite(XControlContainer container) {
+        String url = ausgewaehlterAnbieter(container).apiKeySeite();
         try {
-            BrowserOeffner.oeffne(OPENAI_API_KEYS_URL);
+            BrowserOeffner.oeffne(url);
         } catch (IOException e) {
-            logger.warn("OpenAI API-Key-Seite konnte nicht geoeffnet werden: {}", e.getMessage(), e);
-            zeigeWarnung(I18n.get("ki.options.api.key.oeffnen.fehler", OPENAI_API_KEYS_URL));
+            logger.warn("API-Key-Seite konnte nicht geoeffnet werden: {}", e.getMessage(), e);
+            zeigeWarnung(I18n.get("ki.options.api.key.oeffnen.fehler", url));
         }
     }
 
-    private static void setzeStandardwerte(XControlContainer container) {
-        setText(container, CTL_MODEL, KiOptionen.DEFAULT_MODEL);
-        setText(container, CTL_BASE_URL, KiOptionen.DEFAULT_BASE_URL);
+    private static String[] anbieterEintraege() {
+        KiAnbieter[] werte = KiAnbieter.values();
+        String[] items = new String[werte.length];
+        for (int i = 0; i < werte.length; i++) {
+            items[i] = I18n.get("ki.anbieter." + werte[i].name().toLowerCase(Locale.ROOT));
+        }
+        return items;
+    }
+
+    private static KiAnbieter ausgewaehlterAnbieter(XControlContainer container) {
+        short pos = selectedPos(container, CTL_ANBIETER);
+        KiAnbieter[] werte = KiAnbieter.values();
+        return (pos < 0 || pos >= werte.length) ? KiOptionen.DEFAULT_ANBIETER : werte[pos];
+    }
+
+    private void setzeStandardwerte(XControlContainer container) {
+        KiAnbieter anbieter = ausgewaehlterAnbieter(container);
+        setText(container, CTL_MODEL, anbieter.defaultModel());
+        setText(container, CTL_BASE_URL, anbieter.defaultBaseUrl());
         setText(container, CTL_TIMEOUT, Integer.toString(KiOptionen.DEFAULT_TIMEOUT_SEKUNDEN));
         aktualisiereStatus(container);
     }
 
     private void pruefeKonfiguration(XControlContainer container) {
-        KiOptionen optionen = optionenAusOberflaeche(container);
+        KiOptionen optionen = optionenZumSpeichern(container);
         List<KiOptionen.KonfigurationsFehler> fehler = optionen.apiKonfigurationsFehler();
-        if (fehler.isEmpty()) {
+        if (!fehler.isEmpty()) {
+            zeigeWarnung(I18n.get("ki.options.pruefung.fehler", fehlerText(fehler)));
+            aktualisiereStatus(container);
+            return;
+        }
+        ladeModelleUndPruefe(container, optionen);
+    }
+
+    /**
+     * Ruft die beim Anbieter verfügbaren Modelle in einem Hintergrund-Thread ab (Netzwerk-I/O darf
+     * den LO-Main-Thread nicht blockieren) und marshallt das Ergebnis per {@link LoMainThread#post}
+     * zurück, bevor UI-Controls angefasst werden.
+     */
+    private void ladeModelleUndPruefe(XControlContainer container, KiOptionen optionen) {
+        KiAnbieter angefragterAnbieter = optionen.anbieter();
+        setLabel(container, CTL_STATUS, I18n.get("ki.options.modelle.lade"));
+        Thread worker = new Thread(() -> {
+            try {
+                List<String> modelle = KiAssistentService.ladeVerfuegbareModelle(optionen);
+                LoMainThread.post(context, () -> modelleGeladen(container, angefragterAnbieter, optionen.model(), modelle, null));
+            } catch (IOException | InterruptedException e) {
+                if (e instanceof InterruptedException) {
+                    Thread.currentThread().interrupt();
+                }
+                logger.warn("KI-Modelle konnten nicht geladen werden: {}", e.getMessage(), e);
+                LoMainThread.post(context, () -> modelleGeladen(container, angefragterAnbieter, optionen.model(), List.of(), e));
+            }
+        }, "PTM-KI-Modelle-Laden");
+        worker.start();
+    }
+
+    private void modelleGeladen(XControlContainer container, KiAnbieter angefragterAnbieter,
+            String konfiguriertesModell, List<String> modelle, Exception fehler) {
+        if (ausgewaehlterAnbieter(container) != angefragterAnbieter) {
+            return;
+        }
+        if (fehler != null) {
+            zeigeWarnung(I18n.get("ki.options.modelle.fehler", fehler.getMessage()));
+            aktualisiereStatus(container);
+            return;
+        }
+        if (!modelle.isEmpty()) {
+            setListItems(container, CTL_MODEL, modelle.toArray(new String[0]));
+        }
+        if (modelle.isEmpty() || modelle.contains(konfiguriertesModell)) {
             MessageBox.from(context, MessageBoxTypeEnum.INFO_OK)
                     .caption(I18n.get("ki.options.pruefung.titel"))
                     .message(I18n.get("ki.options.pruefung.ok"))
                     .show();
         } else {
-            zeigeWarnung(I18n.get("ki.options.pruefung.fehler", fehlerText(fehler)));
+            zeigeWarnung(I18n.get("ki.options.modell.unbekannt", konfiguriertesModell));
         }
         aktualisiereStatus(container);
     }
 
-    private static void aktualisiereStatus(XControlContainer container) {
-        KiOptionen optionen = optionenAusOberflaeche(container);
+    private void aktualisiereStatus(XControlContainer container) {
+        KiOptionen optionen = optionenZumSpeichern(container);
         List<KiOptionen.KonfigurationsFehler> fehler = optionen.apiKonfigurationsFehler();
         setLabel(container, CTL_STATUS, fehler.isEmpty()
                 ? I18n.get("ki.options.status.ok")
                 : I18n.get("ki.options.status.fehlt", fehlerText(fehler)));
     }
 
-    private static KiOptionen optionenAusOberflaeche(XControlContainer container) {
+    /**
+     * Baut die zu speichernden KI-Optionen aus der Oberfläche. Die API-Keys der jeweils nicht
+     * angezeigten Anbieter kommen aus {@link #aktuelleKiOptionen} (geladen bzw. beim Anbieterwechsel
+     * mitgeführt), nur der Key des aktuell ausgewählten Anbieters kommt frisch aus dem Textfeld.
+     */
+    private KiOptionen optionenZumSpeichern(XControlContainer container) {
+        KiAnbieter anbieter = ausgewaehlterAnbieter(container);
+        KiOptionen basis = aktuelleKiOptionen != null
+                ? aktuelleKiOptionen
+                : new KiOptionen(anbieter, "", "", "", "", "", KiOptionen.DEFAULT_TIMEOUT_SEKUNDEN, true);
+        KiOptionen mitAktuellemKey = basis.mitApiKeyFuer(anbieter, text(container, CTL_API_KEY));
         return new KiOptionen(
-                text(container, CTL_API_KEY),
+                anbieter,
+                mitAktuellemKey.apiKeyOpenAi(),
+                mitAktuellemKey.apiKeyGemini(),
+                mitAktuellemKey.apiKeyClaude(),
                 text(container, CTL_MODEL),
                 text(container, CTL_BASE_URL),
                 parseInt(text(container, CTL_TIMEOUT), KiOptionen.DEFAULT_TIMEOUT_SEKUNDEN),
@@ -246,6 +384,34 @@ public final class KiOptionsEventHandler extends com.sun.star.lib.uno.helper.Wea
         XTextComponent text = control(container, name, XTextComponent.class);
         if (text != null) {
             text.setText(wert == null ? "" : wert);
+        }
+    }
+
+    private static short selectedPos(XControlContainer container, String name) {
+        XListBox listBox = control(container, name, XListBox.class);
+        return listBox == null ? -1 : listBox.getSelectedItemPos();
+    }
+
+    private static void setSelectedPos(XControlContainer container, String name, short pos) {
+        XListBox listBox = control(container, name, XListBox.class);
+        if (listBox != null) {
+            listBox.selectItemPos(pos, true);
+        }
+    }
+
+    private static void setListItems(XControlContainer container, String name, String[] items) {
+        XControl control = container.getControl(name);
+        if (control == null) {
+            return;
+        }
+        XPropertySet props = UnoRuntime.queryInterface(XPropertySet.class, control.getModel());
+        if (props == null) {
+            return;
+        }
+        try {
+            props.setPropertyValue("StringItemList", items);
+        } catch (Exception e) {
+            logger.debug("StringItemList fuer Control {} konnte nicht gesetzt werden", name, e);
         }
     }
 

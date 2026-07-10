@@ -59,7 +59,7 @@ public class TurnierStartseiteDialog extends AbstractUnoDialog {
     };
 
     private static final int DIALOG_BREITE = 360;
-    private static final int DIALOG_HOEHE  = 260;
+    private static final int DIALOG_HOEHE  = 274;
 
     private static final int LBL_X     = 5;
     private static final int LBL_W     = 80;
@@ -71,14 +71,15 @@ public class TurnierStartseiteDialog extends AbstractUnoDialog {
     private static final int CTRL_H    = 12;
     private static final int BESCHREIBUNG_H = 70;
     private static final int ZEILE1_Y  = 10;
-    private static final int ZEILE2_Y  = 30;
-    private static final int ZEILE3_Y  = 55;
-    private static final int ZEILE4_Y  = 80;
-    private static final int ZEILE5_Y  = 160;
-    private static final int ZEILE6_Y  = 185;
+    private static final int ZEILE1B_Y = 24;
+    private static final int ZEILE2_Y  = 44;
+    private static final int ZEILE3_Y  = 69;
+    private static final int ZEILE4_Y  = 94;
+    private static final int ZEILE5_Y  = 174;
+    private static final int ZEILE6_Y  = 199;
     private static final int COLOR_VORSCHAU_W = 30;
     private static final int FARBE_PICK_GAP   = 5;
-    private static final int FOOTER_Y  = 235;
+    private static final int FOOTER_Y  = 249;
     private static final int BTN_UEBERN_X  = 125;
     private static final int BTN_OK_X      = 200;
     private static final int BTN_ABBRUCH_X = 275;
@@ -86,6 +87,7 @@ public class TurnierStartseiteDialog extends AbstractUnoDialog {
     private static final int BTN_H         = 14;
 
     private static final String CTRL_AKTIV          = "cbAktiv";
+    private static final String CTRL_CHECKIN_LISTEN = "cbCheckinListen";
     private static final String CTRL_PORT           = "editPort";
     private static final String CTRL_ZOOM           = "editZoom";
     private static final String CTRL_LOGO           = "editLogo";
@@ -145,6 +147,9 @@ public class TurnierStartseiteDialog extends AbstractUnoDialog {
 
         fuegeCheckBox(CTRL_AKTIV, I18n.get("konfiguration.startseite.aktiv.label"),
                 LBL_X, ZEILE1_Y, LBL_W + FIELD_W, CTRL_H, gp.isStartseiteAktiv());
+
+        fuegeCheckBox(CTRL_CHECKIN_LISTEN, I18n.get("konfiguration.startseite.checkinlisten.label"),
+                LBL_X, ZEILE1B_Y, LBL_W + FIELD_W, CTRL_H, gp.isStartseiteCheckinListenAnzeigen());
 
         fuegeLabel("lblPort", I18n.get("konfiguration.startseite.port.label"),
                 LBL_X, ZEILE2_Y, LBL_W, CTRL_H);
@@ -211,7 +216,8 @@ public class TurnierStartseiteDialog extends AbstractUnoDialog {
      * gezeigt und {@code false} zurückgegeben.
      */
     private boolean speichernUndAnwenden() {
-        boolean aktiv = leseCheckBox();
+        boolean aktiv = leseCheckBox(CTRL_AKTIV);
+        boolean checkinListenAnzeigen = leseCheckBox(CTRL_CHECKIN_LISTEN);
         String portText = leseFeld(CTRL_PORT);
         String zoomText = leseFeld(CTRL_ZOOM);
         String logo = leseFeld(CTRL_LOGO);
@@ -241,7 +247,7 @@ public class TurnierStartseiteDialog extends AbstractUnoDialog {
 
         String animation = ANIMATION_KEYS[Math.max(0, leseListBoxIndex(CTRL_ANIMATION))];
 
-        GlobalProperties.get().speichernStartseite(port, aktiv, zoom);
+        GlobalProperties.get().speichernStartseite(port, aktiv, zoom, checkinListenAnzeigen);
         var docProps = new DocumentPropertiesHelper(currentSpreadsheet);
         docProps.setStringProperty(DOC_PROP_TURNIERLOGO_URL, logo);
         docProps.setStringProperty(DOC_PROP_TURNIERBESCHREIBUNG, beschreibung);
@@ -400,8 +406,8 @@ public class TurnierStartseiteDialog extends AbstractUnoDialog {
         cont.insertByName(name, model);
     }
 
-    private boolean leseCheckBox() {
-        XControl ctrl = xcc.getControl(CTRL_AKTIV);
+    private boolean leseCheckBox(String name) {
+        XControl ctrl = xcc.getControl(name);
         if (ctrl == null) return false;
         var cb = Lo.qi(XCheckBox.class, ctrl);
         return cb != null && cb.getState() == 1;

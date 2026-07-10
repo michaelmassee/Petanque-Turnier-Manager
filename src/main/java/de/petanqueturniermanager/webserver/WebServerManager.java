@@ -136,6 +136,9 @@ public final class WebServerManager implements TimerListener {
     private volatile String letzteStartseiteBeschreibung = "";
     private volatile String letzteStartseiteAnimation = "";
     private volatile String letzteStartseiteTextfarbe = "";
+    /** Zuletzt gepushte Checkin-Namenslisten (Diff-Cache + Basis für Neu-Erkennung der Animation). */
+    private volatile List<String> letzteStartseiteNichtEingecheckt = List.of();
+    private volatile List<String> letzteStartseiteEingecheckt = List.of();
     private volatile TimerState letzterTimerZustand = TimerState.inaktiv();
 
     private record StartseitePanelDaten(StartseiteSseNachricht nachricht, String logoQuelle) {
@@ -352,7 +355,8 @@ public final class WebServerManager implements TimerListener {
                     I18n.get("startseite.label.aktiv"),
                     I18n.get("startseite.tagline"),
                     "", "", StartseiteSprueche.alle(),
-                    GlobalProperties.get().getStartseiteZoom())));
+                    GlobalProperties.get().getStartseiteZoom(),
+                    false, List.of(), List.of())));
             logger.info("Turnier-Startseite-Server gestartet auf Port {}", port);
             safeProcessBoxInfo(I18n.get("webserver.prozessbox.gestartet.url", buildUrl(port)));
         } catch (IOException e) {
@@ -703,11 +707,16 @@ public final class WebServerManager implements TimerListener {
                 I18n.get("startseite.label.aktiv"),
                 I18n.get("startseite.tagline"),
                 "", "", StartseiteSprueche.alle(),
-                GlobalProperties.get().getStartseiteZoom());
+                GlobalProperties.get().getStartseiteZoom(),
+                false, List.of(), List.of());
     }
 
     private StartseitePanelDaten startseitePanelDaten(WorkingSpreadsheet ws, int version) {
         var status = TeilnehmerStatusService.ermitteln(ws);
+        boolean checkinListenAnzeigen = GlobalProperties.get().isStartseiteCheckinListenAnzeigen();
+        var namenListen = checkinListenAnzeigen
+                ? TeilnehmerStatusService.ermittelnNamen(ws)
+                : new TeilnehmerStatusService.TeilnehmerNamenListen(List.of(), List.of());
         String turniersystem = TurnierStatusErmittler.turniersystemBezeichnung(ws);
         String turnierStatus = TurnierStatusErmittler.ermitteln(ws);
         var docProps = new DocumentPropertiesHelper(ws);
@@ -731,7 +740,8 @@ public final class WebServerManager implements TimerListener {
                 I18n.get("startseite.label.aktiv"),
                 I18n.get("startseite.tagline"),
                 turniersystem, turnierStatus, StartseiteSprueche.alle(),
-                GlobalProperties.get().getStartseiteZoom());
+                GlobalProperties.get().getStartseiteZoom(),
+                checkinListenAnzeigen, namenListen.angemeldetNichtEingecheckt(), namenListen.eingecheckt());
         return new StartseitePanelDaten(nachricht, logoQuelle);
     }
 
@@ -1000,6 +1010,10 @@ public final class WebServerManager implements TimerListener {
         }
         try {
             var status = TeilnehmerStatusService.ermitteln(ws);
+            boolean checkinListenAnzeigen = GlobalProperties.get().isStartseiteCheckinListenAnzeigen();
+            var namenListen = checkinListenAnzeigen
+                    ? TeilnehmerStatusService.ermittelnNamen(ws)
+                    : new TeilnehmerStatusService.TeilnehmerNamenListen(List.of(), List.of());
             String turniersystem = TurnierStatusErmittler.turniersystemBezeichnung(ws);
             String turnierStatus = TurnierStatusErmittler.ermitteln(ws);
             var docProps = new DocumentPropertiesHelper(ws);
@@ -1021,7 +1035,9 @@ public final class WebServerManager implements TimerListener {
                     && logoQuelle.equals(letztesStartseiteLogo)
                     && beschreibung.equals(letzteStartseiteBeschreibung)
                     && beschreibungAnimation.equals(letzteStartseiteAnimation)
-                    && textfarbe.equals(letzteStartseiteTextfarbe);
+                    && textfarbe.equals(letzteStartseiteTextfarbe)
+                    && namenListen.angemeldetNichtEingecheckt().equals(letzteStartseiteNichtEingecheckt)
+                    && namenListen.eingecheckt().equals(letzteStartseiteEingecheckt);
             int zoom = GlobalProperties.get().getStartseiteZoom();
             startseiteInstanz.setLogoQuelle(logoQuelle);
 
@@ -1038,16 +1054,27 @@ public final class WebServerManager implements TimerListener {
                     I18n.get("startseite.label.angemeldet"),
                     I18n.get("startseite.label.aktiv"),
                     I18n.get("startseite.tagline"),
-                    turniersystem, turnierStatus, sprueche, zoom)));
+                    turniersystem, turnierStatus, sprueche, zoom,
+                    checkinListenAnzeigen, namenListen.angemeldetNichtEingecheckt(), namenListen.eingecheckt())));
 
             if (!unverändert) {
+                List<String> neueEintraege = neueEintraege(letzteStartseiteNichtEingecheckt,
+                        namenListen.angemeldetNichtEingecheckt());
+                var neueImEingecheckt = neueEintraege(letzteStartseiteEingecheckt, namenListen.eingecheckt());
+                if (!neueImEingecheckt.isEmpty()) {
+                    var kombiniert = new ArrayList<>(neueEintraege);
+                    kombiniert.addAll(neueImEingecheckt);
+                    neueEintraege = List.copyOf(kombiniert);
+                }
                 startseiteInstanz.sseNachrichtPushen(GSON.toJson(StartseiteSseNachricht.update(
                         version, logoUrl, beschreibung, beschreibungAnimation, textfarbe,
                         status.angemeldet(), status.aktiv(),
                         I18n.get("startseite.label.angemeldet"),
                         I18n.get("startseite.label.aktiv"),
                         I18n.get("startseite.tagline"),
-                        turniersystem, turnierStatus, sprueche, zoom)));
+                        turniersystem, turnierStatus, sprueche, zoom,
+                        checkinListenAnzeigen, namenListen.angemeldetNichtEingecheckt(), namenListen.eingecheckt(),
+                        neueEintraege)));
                 letzterStartseiteStatus = status;
                 letztesStartseiteTurniersystem = turniersystem;
                 letzterStartseiteTurnierStatus = turnierStatus;
@@ -1055,6 +1082,8 @@ public final class WebServerManager implements TimerListener {
                 letzteStartseiteBeschreibung = beschreibung;
                 letzteStartseiteAnimation = beschreibungAnimation;
                 letzteStartseiteTextfarbe = textfarbe;
+                letzteStartseiteNichtEingecheckt = namenListen.angemeldetNichtEingecheckt();
+                letzteStartseiteEingecheckt = namenListen.eingecheckt();
             }
         } catch (RuntimeException e) {
             if (istDokumentGeschlossen(e)) {
@@ -1111,6 +1140,28 @@ public final class WebServerManager implements TimerListener {
         letzteStartseiteBeschreibung = "";
         letzteStartseiteAnimation = "";
         letzteStartseiteTextfarbe = "";
+        letzteStartseiteNichtEingecheckt = List.of();
+        letzteStartseiteEingecheckt = List.of();
+    }
+
+    /**
+     * Namen, die seit dem letzten Push neu in {@code neu} aufgetaucht sind (in {@code alt} noch nicht
+     * enthalten) – Basis für die dezente „neuer Eintrag"-Animation im Frontend. Beim allerersten Push
+     * (leerer Diff-Cache, {@code alt} leer) wird bewusst nichts als „neu" markiert, da sonst beim
+     * Verbindungsaufbau die komplette Liste aufblitzen würde.
+     */
+    private static List<String> neueEintraege(List<String> alt, List<String> neu) {
+        if (alt.isEmpty()) {
+            return List.of();
+        }
+        var bekannt = new HashSet<>(alt);
+        var neue = new ArrayList<String>();
+        for (String name : neu) {
+            if (!bekannt.contains(name)) {
+                neue.add(name);
+            }
+        }
+        return List.copyOf(neue);
     }
 
     private void registriereModifyListenerFallsNoetig(WorkingSpreadsheet ws) {

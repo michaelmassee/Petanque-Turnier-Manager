@@ -27,6 +27,7 @@ final class LibreOfficeStartseiteSpeicher {
 	private static final String PROP_PORT = "Port";
 	private static final String PROP_ACTIVE = "Active";
 	private static final String PROP_ZOOM = "Zoom";
+	private static final String PROP_CHECKIN_LISTEN_ANZEIGEN = "CheckinListenAnzeigen";
 	/**
 	 * @deprecated Nur für den einmaligen Legacy-Import relevant; kann mit {@link #istLegacyImportErledigt()}
 	 *             und {@link #importiereLegacy(StartseiteOptionen)} entfernt werden.
@@ -47,7 +48,8 @@ final class LibreOfficeStartseiteSpeicher {
 			return new StartseiteOptionen(
 					portWert(props, PROP_PORT, GlobalProperties.STARTSEITE_DEFAULT_PORT),
 					booleanWert(props, PROP_ACTIVE, false),
-					zoomWert(props, PROP_ZOOM, GlobalProperties.DEFAULT_ZOOM));
+					zoomWert(props, PROP_ZOOM, GlobalProperties.DEFAULT_ZOOM),
+					booleanWert(props, PROP_CHECKIN_LISTEN_ANZEIGEN, false));
 		} catch (Exception e) {
 			throw new IllegalStateException("LibreOffice Turnier-Startseite-Optionen konnten nicht gelesen werden", e);
 		} finally {
@@ -80,6 +82,7 @@ final class LibreOfficeStartseiteSpeicher {
 			props.setPropertyValue(PROP_PORT, Integer.valueOf(optionen.port()));
 			props.setPropertyValue(PROP_ACTIVE, Boolean.valueOf(optionen.aktiv()));
 			props.setPropertyValue(PROP_ZOOM, Integer.valueOf(optionen.zoom()));
+			props.setPropertyValue(PROP_CHECKIN_LISTEN_ANZEIGEN, Boolean.valueOf(optionen.checkinListenAnzeigen()));
 			props.setPropertyValue(PROP_LEGACY_IMPORTED, Boolean.TRUE);
 			commit(props);
 		} catch (Exception e) {

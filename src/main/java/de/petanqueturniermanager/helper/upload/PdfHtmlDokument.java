@@ -90,7 +90,7 @@ public class PdfHtmlDokument {
         return """
                 @page { size: A4 landscape; margin: 1cm; }
                 body {
-                  font-family: Arial, Helvetica, sans-serif;
+                  font-family: PTMPdfSans, Arial, Helvetica, sans-serif;
                   font-size: 9pt;
                   margin: 0;
                 }

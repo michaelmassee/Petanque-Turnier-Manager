@@ -17,20 +17,20 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
-public final class OpenAiClient implements KiClient {
+public final class GeminiClient implements KiClient {
 
     private static final Gson GSON = new Gson();
 
     private final HttpClient httpClient;
     private final KiOptionen optionen;
 
-    public OpenAiClient(KiOptionen optionen) {
+    public GeminiClient(KiOptionen optionen) {
         this(HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(optionen.timeoutSekunden()))
                 .build(), optionen);
     }
 
-    OpenAiClient(HttpClient httpClient, KiOptionen optionen) {
+    GeminiClient(HttpClient httpClient, KiOptionen optionen) {
         this.httpClient = httpClient;
         this.optionen = optionen;
     }
@@ -38,17 +38,17 @@ public final class OpenAiClient implements KiClient {
     @Override
     public String erstelleAntwort(String prompt) throws IOException, InterruptedException {
         if (!optionen.istApiVollstaendig()) {
-            throw new IllegalStateException("OpenAI API-Konfiguration ist unvollstaendig");
+            throw new IllegalStateException("Gemini API-Konfiguration ist unvollstaendig");
         }
         HttpRequest request = HttpRequest.newBuilder(endpoint())
                 .timeout(Duration.ofSeconds(optionen.timeoutSekunden()))
-                .header("Authorization", "Bearer " + optionen.apiKey())
+                .header("x-goog-api-key", optionen.apiKey())
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(requestJson(prompt)))
                 .build();
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() < 200 || response.statusCode() >= 300) {
-            throw new IOException("OpenAI API Fehler " + response.statusCode() + ": " + response.body());
+            throw new IOException("Gemini API Fehler " + response.statusCode() + ": " + response.body());
         }
         return responseText(response.body());
     }
@@ -56,51 +56,66 @@ public final class OpenAiClient implements KiClient {
     @Override
     public List<String> listeModelle() throws IOException, InterruptedException {
         if (!optionen.istApiVollstaendig()) {
-            throw new IllegalStateException("OpenAI API-Konfiguration ist unvollstaendig");
+            throw new IllegalStateException("Gemini API-Konfiguration ist unvollstaendig");
         }
         HttpRequest request = HttpRequest.newBuilder(URI.create(basisUrl() + "/models"))
                 .timeout(Duration.ofSeconds(optionen.timeoutSekunden()))
-                .header("Authorization", "Bearer " + optionen.apiKey())
+                .header("x-goog-api-key", optionen.apiKey())
                 .GET()
                 .build();
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() < 200 || response.statusCode() >= 300) {
-            throw new IOException("OpenAI API Fehler " + response.statusCode() + ": " + response.body());
+            throw new IOException("Gemini API Fehler " + response.statusCode() + ": " + response.body());
         }
         return modelIds(response.body());
     }
 
     static List<String> modelIds(String body) {
         JsonObject root = GSON.fromJson(body, JsonObject.class);
-        if (root == null || !root.has("data")) {
+        if (root == null || !root.has("models")) {
             return List.of();
         }
         List<String> ids = new ArrayList<>();
-        for (var item : root.getAsJsonArray("data")) {
+        for (var item : root.getAsJsonArray("models")) {
             JsonObject obj = item.getAsJsonObject();
-            if (obj.has("id")) {
-                ids.add(obj.get("id").getAsString());
+            if (!obj.has("name") || !unterstuetztGenerateContent(obj)) {
+                continue;
             }
+            String name = obj.get("name").getAsString();
+            ids.add(name.startsWith("models/") ? name.substring("models/".length()) : name);
         }
         Collections.sort(ids);
         return ids;
     }
 
+    private static boolean unterstuetztGenerateContent(JsonObject modell) {
+        if (!modell.has("supportedGenerationMethods")) {
+            return true;
+        }
+        for (var methode : modell.getAsJsonArray("supportedGenerationMethods")) {
+            if ("generateContent".equals(methode.getAsString())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     String requestJson(String prompt) {
+        JsonObject part = new JsonObject();
+        part.addProperty("text", prompt);
+        JsonArray parts = new JsonArray();
+        parts.add(part);
+        JsonObject content = new JsonObject();
+        content.add("parts", parts);
+        JsonArray contents = new JsonArray();
+        contents.add(content);
         JsonObject root = new JsonObject();
-        root.addProperty("model", optionen.model());
-        root.addProperty("store", false);
-        root.addProperty("input", prompt);
-        JsonObject text = new JsonObject();
-        JsonObject format = new JsonObject();
-        format.addProperty("type", "text");
-        text.add("format", format);
-        root.add("text", text);
+        root.add("contents", contents);
         return GSON.toJson(root);
     }
 
     private URI endpoint() {
-        return URI.create(basisUrl() + "/responses");
+        return URI.create(basisUrl() + "/models/" + optionen.model() + ":generateContent");
     }
 
     private String basisUrl() {
@@ -111,21 +126,21 @@ public final class OpenAiClient implements KiClient {
 
     static String responseText(String body) {
         JsonObject root = GSON.fromJson(body, JsonObject.class);
-        if (root == null) {
+        if (root == null || !root.has("candidates")) {
             return "";
         }
-        if (root.has("output_text")) {
-            return root.get("output_text").getAsString();
-        }
-        JsonArray output = root.has("output") ? root.getAsJsonArray("output") : new JsonArray();
         StringBuilder text = new StringBuilder();
-        for (var item : output) {
-            JsonObject obj = item.getAsJsonObject();
-            JsonArray content = obj.has("content") ? obj.getAsJsonArray("content") : new JsonArray();
-            for (var contentItem : content) {
-                JsonObject contentObj = contentItem.getAsJsonObject();
-                if (contentObj.has("text")) {
-                    text.append(contentObj.get("text").getAsString());
+        for (var candidate : root.getAsJsonArray("candidates")) {
+            JsonObject candidateObj = candidate.getAsJsonObject();
+            if (!candidateObj.has("content")) {
+                continue;
+            }
+            JsonObject content = candidateObj.getAsJsonObject("content");
+            JsonArray parts = content.has("parts") ? content.getAsJsonArray("parts") : new JsonArray();
+            for (var part : parts) {
+                JsonObject partObj = part.getAsJsonObject();
+                if (partObj.has("text")) {
+                    text.append(partObj.get("text").getAsString());
                 }
             }
         }

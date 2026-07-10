@@ -91,7 +91,11 @@ class LibreOfficeOptionsPackagingTest {
 		assertThat(manifest).contains("registry/org/openoffice/Office/Addons_X5_KI.xcu");
 		assertThat(schema)
 				.contains("oor:name=\"KiAssistent\"")
+				.contains("oor:name=\"Provider\"")
 				.contains("oor:name=\"ApiKey\"")
+				.contains("oor:name=\"ApiKeyOpenAi\"")
+				.contains("oor:name=\"ApiKeyGemini\"")
+				.contains("oor:name=\"ApiKeyClaude\"")
 				.contains("oor:name=\"Model\"")
 				.contains("oor:name=\"BaseUrl\"")
 				.contains("oor:name=\"TimeoutSeconds\"")
@@ -100,6 +104,7 @@ class LibreOfficeOptionsPackagingTest {
 		assertThat(addons).contains("ptm:ki_neues_turnier");
 		assertThat(xdl)
 				.contains("dlg:id=\"KiSetupHint\"")
+				.contains("dlg:id=\"KiAnbieter\"")
 				.contains("dlg:id=\"KiApiKeyOeffnen\"")
 				.contains("dlg:id=\"KiStandardwerte\"")
 				.contains("dlg:id=\"KiPruefen\"")

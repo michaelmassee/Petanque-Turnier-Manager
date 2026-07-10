@@ -257,6 +257,10 @@ function reducer(state, action) {
           turnierStatus: msg.turnierStatus ?? '',
           sprueche: Array.isArray(msg.sprueche) ? msg.sprueche : [],
           zoom: msg.zoom ?? 100,
+          checkinListenAnzeigen: msg.checkinListenAnzeigen ?? false,
+          angemeldetNichtEingecheckt: Array.isArray(msg.angemeldetNichtEingecheckt) ? msg.angemeldetNichtEingecheckt : [],
+          eingecheckt: Array.isArray(msg.eingecheckt) ? msg.eingecheckt : [],
+          neueEintraege: [],
         },
       };
     }
@@ -268,6 +272,7 @@ function reducer(state, action) {
       const mergeStr = (n, v) => (n !== undefined && n !== null ? n : v ?? '');
       const mergeNum = (n, v) => (n !== undefined && n !== null ? n : v ?? 0);
       const mergeArr = (n, v) => (Array.isArray(n) ? n : (Array.isArray(v) ? v : []));
+      const mergeBool = (n, v) => (n !== undefined && n !== null ? n : v ?? false);
       return {
         ...state,
         hinweis: null,
@@ -286,6 +291,13 @@ function reducer(state, action) {
           turnierStatus:       mergeStr(msg.turnierStatus,       vorher.turnierStatus),
           sprueche:            mergeArr(msg.sprueche,            vorher.sprueche),
           zoom:                mergeNum(msg.zoom,                vorher.zoom ?? 100),
+          checkinListenAnzeigen: mergeBool(msg.checkinListenAnzeigen, vorher.checkinListenAnzeigen),
+          angemeldetNichtEingecheckt: mergeArr(msg.angemeldetNichtEingecheckt, vorher.angemeldetNichtEingecheckt),
+          eingecheckt:         mergeArr(msg.eingecheckt,         vorher.eingecheckt),
+          // neueEintraege NICHT gemergt (kein Fallback auf vorher) – jede Update-Nachricht
+          // trägt nur die seit dem letzten Push tatsächlich neuen Namen, sonst würde die
+          // Animation bei jedem Folge-Push erneut für dieselben Namen feuern.
+          neueEintraege:       Array.isArray(msg.neueEintraege) ? msg.neueEintraege : [],
         },
       };
     }

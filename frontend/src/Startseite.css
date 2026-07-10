@@ -289,6 +289,103 @@
   border-radius: 2px;
 }
 
+/* ── Checkin-Seitenleisten (optional): dezent, über die volle Seitenhöhe links/rechts ── */
+.startseite-checkin-seite {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: clamp(11rem, 15vw, 18rem);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  box-sizing: border-box;
+  padding: 3vh 1.1rem;
+  background: transparent;
+  z-index: 1;
+}
+
+.startseite-checkin-seite.links {
+  left: 0;
+}
+
+.startseite-checkin-seite.rechts {
+  right: 0;
+}
+
+.checkin-seite-titel {
+  font-size: clamp(0.7rem, 1vw, 1rem);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #333f52;
+  opacity: 0.72;
+  text-align: center;
+  margin-bottom: 0.8em;
+  flex: 0 0 auto;
+}
+
+/* Kein Scrollbalken: Viewport schneidet einfach ab; Inhalt wird bei Bedarf per
+   CSS-Animation (nicht per nativem Scroll) langsam durchgeschoben. */
+.checkin-seite-viewport {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+.checkin-seite-track {
+  width: 100%;
+}
+
+/* align-self: flex-start überschreibt das align-items:center des Viewports gezielt für die
+   laufende Liste — sonst würde eine zu lange Liste (Cross-Axis-Overflow bei display:flex)
+   oben UND unten gleichermaßen abgeschnitten und nur ein zufälliger Mittelteil sichtbar,
+   statt bei Eintrag 1 zu starten und sich nach unten durchzuschieben. */
+.checkin-seite-track-scroll {
+  align-self: flex-start;
+  animation-name: ptm-checkin-scroll;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-duration: var(--ptm-scroll-dauer, 20s);
+}
+@keyframes ptm-checkin-scroll {
+  from { transform: translateY(0); }
+  to   { transform: translateY(calc(-1 * var(--ptm-scroll-distanz, 0px))); }
+}
+
+.checkin-seite-namen {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+.checkin-seite-eintrag {
+  font-size: clamp(0.72rem, 0.95vw, 1rem);
+  line-height: 1.9;
+  color: #333f52;
+  opacity: 0.8;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.checkin-seite-eintrag-neu {
+  animation: ptm-checkin-eintrag-neu 1.5s ease-out;
+}
+@keyframes ptm-checkin-eintrag-neu {
+  0%   { opacity: 0; transform: translateY(-0.3em); background-color: rgba(42, 93, 168, 0.14); }
+  30%  { opacity: 1; transform: translateY(0); background-color: rgba(42, 93, 168, 0.14); }
+  100% { opacity: 0.8; background-color: transparent; }
+}
+
+.checkin-seite-leer {
+  font-size: clamp(0.75rem, 1.3vw, 1rem);
+  color: #4a5568;
+  opacity: 0.3;
+  text-align: center;
+}
+
 .startseite-footer-bild {
   position: absolute;
   bottom: 0;

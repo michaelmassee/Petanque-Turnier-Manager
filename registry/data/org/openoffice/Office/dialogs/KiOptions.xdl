@@ -3,25 +3,27 @@
 <dlg:window xmlns:dlg="http://openoffice.org/2000/dialog"
     xmlns:script="http://openoffice.org/2000/script"
     dlg:id="KiOptions"
-    dlg:left="0" dlg:top="0" dlg:width="280" dlg:height="195"
+    dlg:left="0" dlg:top="0" dlg:width="280" dlg:height="214"
     dlg:closeable="false" dlg:moveable="false" dlg:withtitlebar="false">
     <dlg:bulletinboard>
         <dlg:text dlg:id="KiLabel" dlg:tab-index="0" dlg:left="6" dlg:top="6" dlg:width="260" dlg:height="10" dlg:value=""/>
         <dlg:text dlg:id="KiSetupHint" dlg:tab-index="1" dlg:left="6" dlg:top="21" dlg:width="260" dlg:height="22" dlg:value=""/>
-        <dlg:button dlg:id="KiApiKeyOeffnen" dlg:tab-index="2" dlg:left="6" dlg:top="47" dlg:width="82" dlg:height="14" dlg:value=""/>
-        <dlg:button dlg:id="KiStandardwerte" dlg:tab-index="3" dlg:left="94" dlg:top="47" dlg:width="82" dlg:height="14" dlg:value=""/>
-        <dlg:button dlg:id="KiPruefen" dlg:tab-index="4" dlg:left="182" dlg:top="47" dlg:width="82" dlg:height="14" dlg:value=""/>
-        <dlg:text dlg:id="KiApiKeyLabel" dlg:tab-index="5" dlg:left="6" dlg:top="70" dlg:width="64" dlg:height="10" dlg:value=""/>
-        <dlg:textfield dlg:id="KiApiKey" dlg:tab-index="6" dlg:left="76" dlg:top="67" dlg:width="190" dlg:height="14" dlg:value="" dlg:echochar="*"/>
-        <dlg:text dlg:id="KiApiKeyHelp" dlg:tab-index="7" dlg:left="76" dlg:top="84" dlg:width="190" dlg:height="10" dlg:value=""/>
-        <dlg:text dlg:id="KiModelLabel" dlg:tab-index="8" dlg:left="6" dlg:top="101" dlg:width="64" dlg:height="10" dlg:value=""/>
-        <dlg:textfield dlg:id="KiModel" dlg:tab-index="9" dlg:left="76" dlg:top="98" dlg:width="100" dlg:height="14" dlg:value=""/>
-        <dlg:text dlg:id="KiBaseUrlLabel" dlg:tab-index="10" dlg:left="6" dlg:top="120" dlg:width="64" dlg:height="10" dlg:value=""/>
-        <dlg:textfield dlg:id="KiBaseUrl" dlg:tab-index="11" dlg:left="76" dlg:top="117" dlg:width="190" dlg:height="14" dlg:value=""/>
-        <dlg:text dlg:id="KiTimeoutLabel" dlg:tab-index="12" dlg:left="6" dlg:top="139" dlg:width="64" dlg:height="10" dlg:value=""/>
-        <dlg:textfield dlg:id="KiTimeout" dlg:tab-index="13" dlg:left="76" dlg:top="136" dlg:width="32" dlg:height="14" dlg:value=""/>
-        <dlg:checkbox dlg:id="KiFullContext" dlg:tab-index="14" dlg:left="6" dlg:top="155" dlg:width="260" dlg:height="10" dlg:value="" dlg:checked="true"/>
-        <dlg:text dlg:id="KiStatus" dlg:tab-index="15" dlg:left="6" dlg:top="169" dlg:width="260" dlg:height="10" dlg:value=""/>
-        <dlg:text dlg:id="KiPrivacyHint" dlg:tab-index="16" dlg:left="6" dlg:top="181" dlg:width="260" dlg:height="10" dlg:value=""/>
+        <dlg:text dlg:id="KiAnbieterLabel" dlg:tab-index="2" dlg:left="6" dlg:top="49" dlg:width="64" dlg:height="10" dlg:value=""/>
+        <dlg:menulist dlg:id="KiAnbieter" dlg:tab-index="3" dlg:left="76" dlg:top="47" dlg:width="100" dlg:height="14" dlg:spin="true" dlg:linecount="3"/>
+        <dlg:button dlg:id="KiApiKeyOeffnen" dlg:tab-index="4" dlg:left="6" dlg:top="66" dlg:width="82" dlg:height="14" dlg:value=""/>
+        <dlg:button dlg:id="KiStandardwerte" dlg:tab-index="5" dlg:left="94" dlg:top="66" dlg:width="82" dlg:height="14" dlg:value=""/>
+        <dlg:button dlg:id="KiPruefen" dlg:tab-index="6" dlg:left="182" dlg:top="66" dlg:width="82" dlg:height="14" dlg:value=""/>
+        <dlg:text dlg:id="KiApiKeyLabel" dlg:tab-index="7" dlg:left="6" dlg:top="89" dlg:width="64" dlg:height="10" dlg:value=""/>
+        <dlg:textfield dlg:id="KiApiKey" dlg:tab-index="8" dlg:left="76" dlg:top="86" dlg:width="190" dlg:height="14" dlg:value="" dlg:echochar="*"/>
+        <dlg:text dlg:id="KiApiKeyHelp" dlg:tab-index="9" dlg:left="76" dlg:top="103" dlg:width="190" dlg:height="10" dlg:value=""/>
+        <dlg:text dlg:id="KiModelLabel" dlg:tab-index="10" dlg:left="6" dlg:top="120" dlg:width="64" dlg:height="10" dlg:value=""/>
+        <dlg:combobox dlg:id="KiModel" dlg:tab-index="11" dlg:left="76" dlg:top="117" dlg:width="190" dlg:height="14" dlg:spin="true"/>
+        <dlg:text dlg:id="KiBaseUrlLabel" dlg:tab-index="12" dlg:left="6" dlg:top="139" dlg:width="64" dlg:height="10" dlg:value=""/>
+        <dlg:textfield dlg:id="KiBaseUrl" dlg:tab-index="13" dlg:left="76" dlg:top="136" dlg:width="190" dlg:height="14" dlg:value=""/>
+        <dlg:text dlg:id="KiTimeoutLabel" dlg:tab-index="14" dlg:left="6" dlg:top="158" dlg:width="64" dlg:height="10" dlg:value=""/>
+        <dlg:textfield dlg:id="KiTimeout" dlg:tab-index="15" dlg:left="76" dlg:top="155" dlg:width="32" dlg:height="14" dlg:value=""/>
+        <dlg:checkbox dlg:id="KiFullContext" dlg:tab-index="16" dlg:left="6" dlg:top="174" dlg:width="260" dlg:height="10" dlg:value="" dlg:checked="true"/>
+        <dlg:text dlg:id="KiStatus" dlg:tab-index="17" dlg:left="6" dlg:top="188" dlg:width="260" dlg:height="10" dlg:value=""/>
+        <dlg:text dlg:id="KiPrivacyHint" dlg:tab-index="18" dlg:left="6" dlg:top="200" dlg:width="260" dlg:height="10" dlg:value=""/>
     </dlg:bulletinboard>
 </dlg:window>

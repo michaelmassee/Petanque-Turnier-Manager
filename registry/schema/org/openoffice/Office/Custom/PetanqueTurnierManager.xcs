@@ -98,6 +98,10 @@
                 <info><desc>Zoom factor in percent for the Turnier-Startseite.</desc></info>
                 <value>100</value>
             </prop>
+            <prop oor:name="CheckinListenAnzeigen" oor:type="xs:boolean">
+                <info><desc>Whether the Turnier-Startseite shows the two check-in name lists.</desc></info>
+                <value>false</value>
+            </prop>
             <prop oor:name="LegacyPropertiesImported" oor:type="xs:boolean">
                 <info><desc>Whether legacy Turnier-Startseite properties have already been imported.</desc></info>
                 <value>false</value>
@@ -186,16 +190,32 @@
             <info>
                 <desc>AI assistant options.</desc>
             </info>
+            <prop oor:name="Provider" oor:type="xs:string">
+                <info><desc>AI provider for PTM AI assistant (OPENAI, GEMINI or CLAUDE).</desc></info>
+                <value>OPENAI</value>
+            </prop>
             <prop oor:name="ApiKey" oor:type="xs:string">
+                <info><desc>Deprecated legacy single API key, kept as one-time migration fallback for ApiKeyOpenAi.</desc></info>
+                <value/>
+            </prop>
+            <prop oor:name="ApiKeyOpenAi" oor:type="xs:string">
                 <info><desc>OpenAI API key.</desc></info>
                 <value/>
             </prop>
+            <prop oor:name="ApiKeyGemini" oor:type="xs:string">
+                <info><desc>Gemini API key.</desc></info>
+                <value/>
+            </prop>
+            <prop oor:name="ApiKeyClaude" oor:type="xs:string">
+                <info><desc>Claude API key.</desc></info>
+                <value/>
+            </prop>
             <prop oor:name="Model" oor:type="xs:string">
-                <info><desc>OpenAI model for PTM AI assistant.</desc></info>
-                <value>gpt-5.6-terra</value>
+                <info><desc>Model for PTM AI assistant.</desc></info>
+                <value>gpt-5.5</value>
             </prop>
             <prop oor:name="BaseUrl" oor:type="xs:string">
-                <info><desc>OpenAI-compatible API base URL.</desc></info>
+                <info><desc>API base URL of the configured provider.</desc></info>
                 <value>https://api.openai.com/v1</value>
             </prop>
             <prop oor:name="TimeoutSeconds" oor:type="xs:int">

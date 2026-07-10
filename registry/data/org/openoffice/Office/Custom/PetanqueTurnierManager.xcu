@@ -62,6 +62,9 @@
         <prop oor:name="Zoom">
             <value>100</value>
         </prop>
+        <prop oor:name="CheckinListenAnzeigen">
+            <value>false</value>
+        </prop>
         <prop oor:name="LegacyPropertiesImported">
             <value>false</value>
         </prop>
@@ -121,11 +124,23 @@
         </prop>
     </node>
     <node oor:name="KiAssistent">
+        <prop oor:name="Provider">
+            <value>OPENAI</value>
+        </prop>
         <prop oor:name="ApiKey">
             <value/>
         </prop>
+        <prop oor:name="ApiKeyOpenAi">
+            <value/>
+        </prop>
+        <prop oor:name="ApiKeyGemini">
+            <value/>
+        </prop>
+        <prop oor:name="ApiKeyClaude">
+            <value/>
+        </prop>
         <prop oor:name="Model">
-            <value>gpt-5.6-terra</value>
+            <value>gpt-5.5</value>
         </prop>
         <prop oor:name="BaseUrl">
             <value>https://api.openai.com/v1</value>

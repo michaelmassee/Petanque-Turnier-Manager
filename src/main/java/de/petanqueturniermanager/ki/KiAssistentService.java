@@ -3,18 +3,26 @@
  */
 package de.petanqueturniermanager.ki;
 
+import java.io.IOException;
+import java.util.List;
+
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 
 public final class KiAssistentService {
 
-    private final OpenAiClient client;
+    private final KiClient client;
     private final KiOptionen optionen;
 
     public KiAssistentService(KiOptionen optionen) {
-        this(new OpenAiClient(optionen), optionen);
+        this(KiClientFactory.erzeugeClient(optionen), optionen);
     }
 
-    KiAssistentService(OpenAiClient client, KiOptionen optionen) {
+    /** Ruft die beim konfigurierten Anbieter verfügbaren Modell-IDs ab (z.B. für die Options-Seite). */
+    public static List<String> ladeVerfuegbareModelle(KiOptionen optionen) throws IOException, InterruptedException {
+        return KiClientFactory.erzeugeClient(optionen).listeModelle();
+    }
+
+    KiAssistentService(KiClient client, KiOptionen optionen) {
         this.client = client;
         this.optionen = optionen;
     }

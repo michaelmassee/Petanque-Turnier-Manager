@@ -11,7 +11,8 @@ export default function StartseiteApp({ startseite }) {
   const { turnierlogo, turnierbeschreibung, beschreibungAnimation, beschreibungTextfarbe,
           anzahlAngemeldet, anzahlAktiv,
           labelAngemeldet, labelAktiv,
-          turniersystem, turnierStatus, sprueche, zoom } = startseite;
+          turniersystem, turnierStatus, sprueche, zoom,
+          checkinListenAnzeigen, angemeldetNichtEingecheckt, eingecheckt, neueEintraege } = startseite;
   const [logoFehler, setLogoFehler] = useState(false);
   const [layoutVersion, setLayoutVersion] = useState(0);
   const animation = beschreibungAnimation || 'keine';
@@ -23,7 +24,9 @@ export default function StartseiteApp({ startseite }) {
   const wurzelRef = useRef(null);
   const inhaltRef = useRef(null);
   const footerRef = useRef(null);
-  useAutoFit(wurzelRef, inhaltRef, footerRef, benutzerZoom, layoutVersion);
+  const linksRef = useRef(null);
+  const rechtsRef = useRef(null);
+  useAutoFit(wurzelRef, inhaltRef, footerRef, benutzerZoom, layoutVersion, linksRef, rechtsRef);
   useEffect(() => {
     setLogoFehler(false);
   }, [turnierlogo]);
@@ -32,6 +35,15 @@ export default function StartseiteApp({ startseite }) {
     <>
     <div className="startseite-hintergrund" aria-hidden="true" />
     <div className="startseite" ref={wurzelRef}>
+      {checkinListenAnzeigen && (
+        <CheckinSeite
+          seitenRef={linksRef}
+          position="links"
+          titel={labelAngemeldet}
+          namen={angemeldetNichtEingecheckt}
+          neueEintraege={neueEintraege}
+        />
+      )}
       <div className="startseite-inhalt" ref={inhaltRef}>
         <div className="startseite-kopf">
           {logoSrc && !logoFehler && (
@@ -71,6 +83,15 @@ export default function StartseiteApp({ startseite }) {
           sprueche={sprueche}
         />
       </div>
+      {checkinListenAnzeigen && (
+        <CheckinSeite
+          seitenRef={rechtsRef}
+          position="rechts"
+          titel={labelAktiv}
+          namen={eingecheckt}
+          neueEintraege={neueEintraege}
+        />
+      )}
       <img
         ref={footerRef}
         className="startseite-footer-bild"
@@ -86,8 +107,11 @@ export default function StartseiteApp({ startseite }) {
  * Misst den Inhalts-Wrapper bei scale(1) und rechnet ihn per transform: scale
  * auf die verfügbare Fläche zwischen oberem Rand und Footer-Bild herunter,
  * sodass nichts überlappt. Skaliert nur nach unten (max 1 × Benutzer-Zoom).
+ * `linksRef`/`rechtsRef` (optional) sind die vollflächigen Checkin-Seitenleisten —
+ * ihre gemessene Breite wird von der verfügbaren Breite abgezogen, damit der
+ * zentrierte Inhalt sie nicht überlappt.
  */
-function useAutoFit(wurzelRef, inhaltRef, footerRef, benutzerZoom, layoutVersion) {
+function useAutoFit(wurzelRef, inhaltRef, footerRef, benutzerZoom, layoutVersion, linksRef, rechtsRef) {
   useLayoutEffect(() => {
     const wurzel = wurzelRef.current;
     const inhalt = inhaltRef.current;
@@ -104,10 +128,12 @@ function useAutoFit(wurzelRef, inhaltRef, footerRef, benutzerZoom, layoutVersion
       const wurzelHoehe = wurzel.clientHeight;
       const wurzelBreite = wurzel.clientWidth;
       const footerHoehe = footerRef.current ? footerRef.current.offsetHeight : 0;
+      const linksBreite = linksRef?.current ? linksRef.current.offsetWidth : 0;
+      const rechtsBreite = rechtsRef?.current ? rechtsRef.current.offsetWidth : 0;
       const minTop = 16;
       const sicherheitsabstand = 8;
       const verfuegbareHoehe = Math.max(0, wurzelHoehe - minTop - footerHoehe - sicherheitsabstand);
-      const verfuegbareBreite = Math.max(0, wurzelBreite);
+      const verfuegbareBreite = Math.max(0, wurzelBreite - linksBreite - rechtsBreite);
 
       const fitScale = Math.min(
         verfuegbareBreite / natuerlicheBreite,
@@ -132,6 +158,8 @@ function useAutoFit(wurzelRef, inhaltRef, footerRef, benutzerZoom, layoutVersion
     ro.observe(wurzel);
     ro.observe(inhalt);
     if (footerRef.current) ro.observe(footerRef.current);
+    if (linksRef?.current) ro.observe(linksRef.current);
+    if (rechtsRef?.current) ro.observe(rechtsRef.current);
     window.addEventListener('resize', planen);
 
     return () => {
@@ -139,7 +167,7 @@ function useAutoFit(wurzelRef, inhaltRef, footerRef, benutzerZoom, layoutVersion
       ro.disconnect();
       window.removeEventListener('resize', planen);
     };
-  }, [wurzelRef, inhaltRef, footerRef, benutzerZoom, layoutVersion]);
+  }, [wurzelRef, inhaltRef, footerRef, benutzerZoom, layoutVersion, linksRef, rechtsRef]);
 }
 
 function StatusLeiste({ turniersystem, turnierStatus, sprueche }) {
@@ -176,6 +204,105 @@ function StatusLeiste({ turniersystem, turnierStatus, sprueche }) {
       )}
       {aktuellerSpruch && (
         <span key={spruchIndex} className="status-segment status-spruch">{aktuellerSpruch}</span>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Vollflächige Seitenleiste (links: angemeldet, noch nicht eingecheckt / rechts: eingecheckt) —
+ * nimmt die komplette Höhe der Startseite ein. Animiert nur die seit dem letzten Push tatsächlich
+ * neuen Einträge aus `neueEintraege`, die auch in dieser Liste vorkommen, damit beim
+ * Verbindungsaufbau nicht die komplette Liste aufblitzt und die andere Seite nicht mitanimiert.
+ * Kein Scrollbalken: passt die Liste in den Viewport, wird sie vertikal zentriert dargestellt;
+ * ist sie zu lang, läuft sie stattdessen sehr langsam als endlose Schleife durch (verdoppelte
+ * Kopie ohne sichtbaren Sprung).
+ */
+function CheckinSeite({ seitenRef, position, titel, namen, neueEintraege }) {
+  const liste = Array.isArray(namen) ? namen : [];
+  const [animierteNamen, setAnimierteNamen] = useState(() => new Set());
+  useEffect(() => {
+    if (!Array.isArray(neueEintraege) || neueEintraege.length === 0) {
+      return undefined;
+    }
+    const eigene = neueEintraege.filter((name) => liste.includes(name));
+    if (eigene.length === 0) {
+      return undefined;
+    }
+    setAnimierteNamen(new Set(eigene));
+    const timeoutId = setTimeout(() => setAnimierteNamen(new Set()), 1500);
+    return () => clearTimeout(timeoutId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [neueEintraege]);
+
+  const viewportRef = useRef(null);
+  const kopieRef = useRef(null);
+  const [scrollStil, setScrollStil] = useState(null);
+
+  useLayoutEffect(() => {
+    const viewport = viewportRef.current;
+    const kopie = kopieRef.current;
+    if (!viewport || !kopie) {
+      setScrollStil(null);
+      return undefined;
+    }
+    const PIXEL_PRO_SEKUNDE = 12; // sehr langsam, dezent
+    const MIN_DAUER_SEK = 10;
+    let rafId = null;
+    const pruefen = () => {
+      rafId = null;
+      const distanz = kopie.offsetHeight;
+      if (distanz <= viewport.clientHeight) {
+        setScrollStil(null);
+      } else {
+        setScrollStil({ distanz, dauer: Math.max(distanz / PIXEL_PRO_SEKUNDE, MIN_DAUER_SEK) });
+      }
+    };
+    const planen = () => {
+      if (rafId !== null) return;
+      rafId = requestAnimationFrame(pruefen);
+    };
+    planen();
+    const ro = new ResizeObserver(planen);
+    ro.observe(viewport);
+    ro.observe(kopie);
+    return () => {
+      if (rafId !== null) cancelAnimationFrame(rafId);
+      ro.disconnect();
+    };
+  }, [liste]);
+
+  const brauchtScroll = scrollStil != null;
+  const eintragKlasse = (name) =>
+    animierteNamen.has(name) ? 'checkin-seite-eintrag checkin-seite-eintrag-neu' : 'checkin-seite-eintrag';
+
+  return (
+    <div ref={seitenRef} className={`startseite-checkin-seite ${position}`}>
+      {titel && <div className="checkin-seite-titel">{titel}</div>}
+      {liste.length > 0 ? (
+        <div className="checkin-seite-viewport" ref={viewportRef}>
+          <div
+            className={brauchtScroll ? 'checkin-seite-track checkin-seite-track-scroll' : 'checkin-seite-track'}
+            style={brauchtScroll
+              ? { '--ptm-scroll-distanz': `${scrollStil.distanz}px`, '--ptm-scroll-dauer': `${scrollStil.dauer}s` }
+              : undefined}
+          >
+            <ul className="checkin-seite-namen" ref={kopieRef}>
+              {liste.map((name, index) => (
+                <li key={`a-${name}-${index}`} className={eintragKlasse(name)}>{name}</li>
+              ))}
+            </ul>
+            {brauchtScroll && (
+              <ul className="checkin-seite-namen" aria-hidden="true">
+                {liste.map((name, index) => (
+                  <li key={`b-${name}-${index}`} className={eintragKlasse(name)}>{name}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="checkin-seite-leer">—</div>
       )}
     </div>
   );

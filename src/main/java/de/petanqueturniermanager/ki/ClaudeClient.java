@@ -17,20 +17,22 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
-public final class OpenAiClient implements KiClient {
+public final class ClaudeClient implements KiClient {
 
     private static final Gson GSON = new Gson();
+    private static final String ANTHROPIC_VERSION = "2023-06-01";
+    private static final int MAX_TOKENS = 4096;
 
     private final HttpClient httpClient;
     private final KiOptionen optionen;
 
-    public OpenAiClient(KiOptionen optionen) {
+    public ClaudeClient(KiOptionen optionen) {
         this(HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(optionen.timeoutSekunden()))
                 .build(), optionen);
     }
 
-    OpenAiClient(HttpClient httpClient, KiOptionen optionen) {
+    ClaudeClient(HttpClient httpClient, KiOptionen optionen) {
         this.httpClient = httpClient;
         this.optionen = optionen;
     }
@@ -38,17 +40,18 @@ public final class OpenAiClient implements KiClient {
     @Override
     public String erstelleAntwort(String prompt) throws IOException, InterruptedException {
         if (!optionen.istApiVollstaendig()) {
-            throw new IllegalStateException("OpenAI API-Konfiguration ist unvollstaendig");
+            throw new IllegalStateException("Claude API-Konfiguration ist unvollstaendig");
         }
         HttpRequest request = HttpRequest.newBuilder(endpoint())
                 .timeout(Duration.ofSeconds(optionen.timeoutSekunden()))
-                .header("Authorization", "Bearer " + optionen.apiKey())
+                .header("x-api-key", optionen.apiKey())
+                .header("anthropic-version", ANTHROPIC_VERSION)
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(requestJson(prompt)))
                 .build();
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() < 200 || response.statusCode() >= 300) {
-            throw new IOException("OpenAI API Fehler " + response.statusCode() + ": " + response.body());
+            throw new IOException("Claude API Fehler " + response.statusCode() + ": " + response.body());
         }
         return responseText(response.body());
     }
@@ -56,16 +59,17 @@ public final class OpenAiClient implements KiClient {
     @Override
     public List<String> listeModelle() throws IOException, InterruptedException {
         if (!optionen.istApiVollstaendig()) {
-            throw new IllegalStateException("OpenAI API-Konfiguration ist unvollstaendig");
+            throw new IllegalStateException("Claude API-Konfiguration ist unvollstaendig");
         }
-        HttpRequest request = HttpRequest.newBuilder(URI.create(basisUrl() + "/models"))
+        HttpRequest request = HttpRequest.newBuilder(URI.create(basisUrl() + "/v1/models"))
                 .timeout(Duration.ofSeconds(optionen.timeoutSekunden()))
-                .header("Authorization", "Bearer " + optionen.apiKey())
+                .header("x-api-key", optionen.apiKey())
+                .header("anthropic-version", ANTHROPIC_VERSION)
                 .GET()
                 .build();
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() < 200 || response.statusCode() >= 300) {
-            throw new IOException("OpenAI API Fehler " + response.statusCode() + ": " + response.body());
+            throw new IOException("Claude API Fehler " + response.statusCode() + ": " + response.body());
         }
         return modelIds(response.body());
     }
@@ -87,20 +91,20 @@ public final class OpenAiClient implements KiClient {
     }
 
     String requestJson(String prompt) {
+        JsonObject message = new JsonObject();
+        message.addProperty("role", "user");
+        message.addProperty("content", prompt);
+        JsonArray messages = new JsonArray();
+        messages.add(message);
         JsonObject root = new JsonObject();
         root.addProperty("model", optionen.model());
-        root.addProperty("store", false);
-        root.addProperty("input", prompt);
-        JsonObject text = new JsonObject();
-        JsonObject format = new JsonObject();
-        format.addProperty("type", "text");
-        text.add("format", format);
-        root.add("text", text);
+        root.addProperty("max_tokens", MAX_TOKENS);
+        root.add("messages", messages);
         return GSON.toJson(root);
     }
 
     private URI endpoint() {
-        return URI.create(basisUrl() + "/responses");
+        return URI.create(basisUrl() + "/v1/messages");
     }
 
     private String basisUrl() {
@@ -111,22 +115,14 @@ public final class OpenAiClient implements KiClient {
 
     static String responseText(String body) {
         JsonObject root = GSON.fromJson(body, JsonObject.class);
-        if (root == null) {
+        if (root == null || !root.has("content")) {
             return "";
         }
-        if (root.has("output_text")) {
-            return root.get("output_text").getAsString();
-        }
-        JsonArray output = root.has("output") ? root.getAsJsonArray("output") : new JsonArray();
         StringBuilder text = new StringBuilder();
-        for (var item : output) {
-            JsonObject obj = item.getAsJsonObject();
-            JsonArray content = obj.has("content") ? obj.getAsJsonArray("content") : new JsonArray();
-            for (var contentItem : content) {
-                JsonObject contentObj = contentItem.getAsJsonObject();
-                if (contentObj.has("text")) {
-                    text.append(contentObj.get("text").getAsString());
-                }
+        for (var item : root.getAsJsonArray("content")) {
+            JsonObject itemObj = item.getAsJsonObject();
+            if (itemObj.has("text")) {
+                text.append(itemObj.get("text").getAsString());
             }
         }
         return text.toString();

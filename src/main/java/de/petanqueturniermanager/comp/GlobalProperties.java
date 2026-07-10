@@ -28,6 +28,7 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.helper.perflog.PerfLog;
 import de.petanqueturniermanager.helper.upload.UploadProtokoll;
+import de.petanqueturniermanager.ki.KiAnbieter;
 import de.petanqueturniermanager.ki.KiOptionen;
 import de.petanqueturniermanager.webserver.CompositeViewKonfiguration;
 import de.petanqueturniermanager.webserver.PanelAusrichtung;
@@ -56,7 +57,13 @@ public class GlobalProperties {
 	private static final String PROZESSBOX_AUTOMATISCH_ANZEIGEN_PROP = "prozessbox.automatisch.anzeigen";
 	private static final String PROZESSBOX_AUTOMATISCH_SCHLIESSEN_PROP = "prozessbox.automatisch.schliessen";
 	private static final String PERFORMANCE_LOGGING_PROP = "performance.logging";
+	private static final String KI_PROVIDER_PROP = "ki.provider";
+	/** @deprecated Legacy-Einzelfeld vor der Mehrfach-Anbieter-Unterstuetzung; nur noch als Lese-Fallback. */
+	@Deprecated
 	private static final String KI_API_KEY_PROP = "ki.api.key";
+	private static final String KI_API_KEY_OPENAI_PROP = "ki.api.key.openai";
+	private static final String KI_API_KEY_GEMINI_PROP = "ki.api.key.gemini";
+	private static final String KI_API_KEY_CLAUDE_PROP = "ki.api.key.claude";
 	private static final String KI_MODEL_PROP = "ki.model";
 	private static final String KI_BASE_URL_PROP = "ki.base.url";
 	private static final String KI_TIMEOUT_SECONDS_PROP = "ki.timeout.seconds";
@@ -141,6 +148,7 @@ public class GlobalProperties {
 	private static final String STARTSEITE_PORT_PROP  = "startseite_port";
 	private static final String STARTSEITE_AKTIV_PROP = "startseite_aktiv";
 	private static final String STARTSEITE_ZOOM_PROP  = "startseite_zoom";
+	private static final String STARTSEITE_CHECKIN_LISTEN_ANZEIGEN_PROP = "startseite_checkin_listen_anzeigen";
 	public static final int STARTSEITE_DEFAULT_PORT = 9200;
 
 	// Timer (jetzt Document Properties, siehe TimerDialog) – Legacy nur für Cleanup beim Start
@@ -769,27 +777,62 @@ public class GlobalProperties {
 
 	private KiOptionen kiOptionenAusMap() {
 		return new KiOptionen(
-				propMap.getOrDefault(KI_API_KEY_PROP, ""),
+				parseKiAnbieter(propMap.get(KI_PROVIDER_PROP)),
+				kiApiKeyOpenAiAusMapMitLegacyFallback(),
+				propMap.getOrDefault(KI_API_KEY_GEMINI_PROP, ""),
+				propMap.getOrDefault(KI_API_KEY_CLAUDE_PROP, ""),
 				propMap.getOrDefault(KI_MODEL_PROP, KiOptionen.DEFAULT_MODEL),
 				propMap.getOrDefault(KI_BASE_URL_PROP, KiOptionen.DEFAULT_BASE_URL),
 				getInt(KI_TIMEOUT_SECONDS_PROP, KiOptionen.DEFAULT_TIMEOUT_SEKUNDEN),
 				getBooleanMitDefault(KI_FULL_CONTEXT_PROP, true));
 	}
 
+	/**
+	 * Vor der Mehrfach-Anbieter-Unterstuetzung gab es nur einen gemeinsamen Key (immer für OpenAI, den
+	 * einzigen damaligen Anbieter). Fehlt der neue anbieterspezifische Key, wird dieser Legacy-Wert
+	 * einmalig als Fallback gelesen; {@link #kiOptionenInMap(KiOptionen)} entfernt ihn danach.
+	 */
+	private static String kiApiKeyOpenAiAusMapMitLegacyFallback() {
+		String wert = propMap.get(KI_API_KEY_OPENAI_PROP);
+		return wert != null ? wert : propMap.getOrDefault(KI_API_KEY_PROP, "");
+	}
+
 	private static void kiOptionenInMap(KiOptionen optionen) {
-		if (optionen.apiKey().isBlank()) {
-			propMap.remove(KI_API_KEY_PROP);
-		} else {
-			propMap.put(KI_API_KEY_PROP, optionen.apiKey());
-		}
+		propMap.put(KI_PROVIDER_PROP, optionen.anbieter().name());
+		setKiApiKeyProp(KI_API_KEY_OPENAI_PROP, optionen.apiKeyOpenAi());
+		setKiApiKeyProp(KI_API_KEY_GEMINI_PROP, optionen.apiKeyGemini());
+		setKiApiKeyProp(KI_API_KEY_CLAUDE_PROP, optionen.apiKeyClaude());
+		propMap.remove(KI_API_KEY_PROP);
 		propMap.put(KI_MODEL_PROP, optionen.model());
 		propMap.put(KI_BASE_URL_PROP, optionen.baseUrl());
 		propMap.put(KI_TIMEOUT_SECONDS_PROP, Integer.toString(optionen.timeoutSekunden()));
 		setBooleanProp(KI_FULL_CONTEXT_PROP, optionen.vollstaendigenKontextSenden());
 	}
 
+	private static void setKiApiKeyProp(String key, String wert) {
+		if (wert.isBlank()) {
+			propMap.remove(key);
+		} else {
+			propMap.put(key, wert);
+		}
+	}
+
+	private static KiAnbieter parseKiAnbieter(String value) {
+		if (value == null || value.isBlank()) return KiOptionen.DEFAULT_ANBIETER;
+		try {
+			return KiAnbieter.valueOf(value.trim().toUpperCase(Locale.ROOT));
+		} catch (IllegalArgumentException e) {
+			logger.warn("Unbekannter KI-Anbieter '{}', verwende {}", value.trim(), KiOptionen.DEFAULT_ANBIETER);
+			return KiOptionen.DEFAULT_ANBIETER;
+		}
+	}
+
 	private static boolean istKiOptionenLegacyKey(String key) {
-		return KI_API_KEY_PROP.equals(key)
+		return KI_PROVIDER_PROP.equals(key)
+				|| KI_API_KEY_PROP.equals(key)
+				|| KI_API_KEY_OPENAI_PROP.equals(key)
+				|| KI_API_KEY_GEMINI_PROP.equals(key)
+				|| KI_API_KEY_CLAUDE_PROP.equals(key)
 				|| KI_MODEL_PROP.equals(key)
 				|| KI_BASE_URL_PROP.equals(key)
 				|| KI_TIMEOUT_SECONDS_PROP.equals(key)
@@ -921,13 +964,15 @@ public class GlobalProperties {
 	 */
 	@Deprecated(forRemoval = true)
 	private StartseiteOptionen startseiteOptionenAusMap() {
-		return new StartseiteOptionen(getStartseitePort(), isStartseiteAktiv(), getStartseiteZoom());
+		return new StartseiteOptionen(getStartseitePort(), isStartseiteAktiv(), getStartseiteZoom(),
+				isStartseiteCheckinListenAnzeigen());
 	}
 
 	private static void startseiteOptionenInMap(StartseiteOptionen optionen) {
 		propMap.put(STARTSEITE_PORT_PROP, String.valueOf(optionen.port()));
 		setBooleanProp(STARTSEITE_AKTIV_PROP, optionen.aktiv());
 		propMap.put(STARTSEITE_ZOOM_PROP, String.valueOf(optionen.zoom()));
+		setBooleanProp(STARTSEITE_CHECKIN_LISTEN_ANZEIGEN_PROP, optionen.checkinListenAnzeigen());
 	}
 
 	/**
@@ -1149,6 +1194,10 @@ public class GlobalProperties {
 		return getBoolean(STARTSEITE_AKTIV_PROP);
 	}
 
+	public boolean isStartseiteCheckinListenAnzeigen() {
+		return getBoolean(STARTSEITE_CHECKIN_LISTEN_ANZEIGEN_PROP);
+	}
+
 	public boolean isWebserverRegieAktiv() {
 		return getBooleanMitDefault(WEBSERVER_REGIE_AKTIV_PROP, true);
 	}
@@ -1273,9 +1322,9 @@ public class GlobalProperties {
 		return parseZoom(propMap.get(STARTSEITE_ZOOM_PROP));
 	}
 
-	public void speichernStartseite(int port, boolean aktiv, int zoom) {
+	public void speichernStartseite(int port, boolean aktiv, int zoom, boolean checkinListenAnzeigen) {
 		try {
-			var optionen = new StartseiteOptionen(port, aktiv, zoom);
+			var optionen = new StartseiteOptionen(port, aktiv, zoom, checkinListenAnzeigen);
 			startseiteOptionenInMap(optionen);
 			XComponentContext context = libreOfficeContext;
 			if (context != null) {

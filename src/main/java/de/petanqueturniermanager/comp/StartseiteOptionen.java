@@ -9,7 +9,8 @@ package de.petanqueturniermanager.comp;
 record StartseiteOptionen(
 		int port,
 		boolean aktiv,
-		int zoom) {
+		int zoom,
+		boolean checkinListenAnzeigen) {
 
 	StartseiteOptionen {
 		port = GlobalProperties.normierePort(port, GlobalProperties.STARTSEITE_DEFAULT_PORT);
