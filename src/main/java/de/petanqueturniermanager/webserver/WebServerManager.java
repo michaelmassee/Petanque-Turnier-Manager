@@ -83,8 +83,17 @@ public final class WebServerManager implements TimerListener {
     private static final int MAX_URL_SLOTS = 10;
     public static final String STARTSEITE_VIEW_ID = "startseite";
 
-    /** Alle laufenden Composite-View-Instanzen. */
-    private final List<CompositeViewInstanz> compositeInstanzen = new ArrayList<>();
+    /**
+     * Alle laufenden Composite-View-Instanzen.
+     * <p>
+     * {@code CopyOnWriteArrayList}, weil {@link #sseRefreshSendenIntern} sie aus dem SheetRunner-Thread
+     * unsynchronisiert iteriert (Zeile ~961), waehrend {@link #konfigurationGeaendertIntern} sie aus dem
+     * {@code konfigExecutor}-Thread strukturell veraendert (add/remove/clear) – ohne threadsichere
+     * Collection wuerde das zu einer {@link java.util.ConcurrentModificationException} fuehren, sobald
+     * eine Composite-View-Konfigurationsaenderung zeitlich mit einer laufenden Live-Refresh-Welle
+     * zusammenfaellt.
+     */
+    private final List<CompositeViewInstanz> compositeInstanzen = new CopyOnWriteArrayList<>();
     /** Die ersten MAX_URL_SLOTS Composite-Instanzen (nach Port sortiert) für Menü-URL-Anzeige. */
     private final List<WebServerSlot> slots = new ArrayList<>(MAX_URL_SLOTS);
 

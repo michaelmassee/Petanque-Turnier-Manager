@@ -283,7 +283,15 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot, Re
             exchange.sendResponseHeaders(404, -1);
             return;
         }
-        byte[] body = Files.readAllBytes(datei);
+        byte[] body;
+        try {
+            body = Files.readAllBytes(datei);
+        } catch (IOException e) {
+            logger.warn("Turnierlogo-Datei konnte nicht gelesen werden für Composite-Port {}: {}",
+                    konfiguration.port(), datei, e);
+            exchange.sendResponseHeaders(404, -1);
+            return;
+        }
         Path dateiname = datei.getFileName();
         var headers = exchange.getResponseHeaders();
         headers.set("Content-Type", WebContentType.fuerDateiname(dateiname != null ? dateiname.toString() : ""));
@@ -337,7 +345,15 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot, Re
             exchange.sendResponseHeaders(404, -1);
             return;
         }
-        byte[] body = Files.readAllBytes(datei);
+        byte[] body;
+        try {
+            body = Files.readAllBytes(datei);
+        } catch (IOException e) {
+            logger.warn("Lokale Panel-Datei konnte nicht gelesen werden für Port {}, Panel {}: {}",
+                    konfiguration.port(), panelId, datei, e);
+            exchange.sendResponseHeaders(404, -1);
+            return;
+        }
         Path dateiname = datei.getFileName();
         var headers = exchange.getResponseHeaders();
         headers.set("Content-Type", WebContentType.fuerDateiname(dateiname != null ? dateiname.toString() : ""));
