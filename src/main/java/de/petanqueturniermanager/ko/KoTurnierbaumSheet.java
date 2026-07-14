@@ -727,7 +727,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 
 		var alleTeams = alleMeldungen.teams();
 		int startIndex = 0;
-		List<GruppenTurnierbaumDaten> gruppenDaten = new ArrayList<>();
+		List<GruppenBracketAuftrag> auftraege = new ArrayList<>();
 
 		for (int g = 0; g < anzGruppen; g++) {
 			int groesse = gruppenGroessen.get(g);
@@ -737,43 +737,14 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 			}
 			startIndex += groesse;
 
-			int bracketGroesse = berechneBracketGroesse(gruppenMeldungen.size());
-			int numRunden = Integer.numberOfTrailingZeros(bracketGroesse);
-			gruppenDaten.add(new GruppenTurnierbaumDaten(gruppenMeldungen, bracketGroesse, numRunden));
-		}
-
-		this.spielbahn = getKonfigurationSheet().getSpielbaumSpielbahn();
-		List<GruppenBahnNummern> bahnNummern = berechneGruppenUebergreifendeBahnNummern(gruppenDaten);
-
-		for (int g = 0; g < anzGruppen; g++) {
-			GruppenTurnierbaumDaten gruppenDatum = gruppenDaten.get(g);
 			String sheetName = sheetNameFuerGruppe(g, anzGruppen);
-
-			// aktuellerGruppenSheetName setzen BEVOR NewSheet.create() aufgerufen wird,
-			// damit PageStyleHelper.applytoSheet() via getXSpreadSheet() das richtige Sheet trifft
-			this.aktuellerGruppenSheetName = sheetName;
-			this.vorgegebeneBahnNummernProRunde = bahnNummern.get(g).runden();
-			this.vorgegebeneCadrageBahnNummern = bahnNummern.get(g).cadrage();
-			try {
-				NewSheet.from(this, sheetName, schluesselFuerGruppe(g, anzGruppen))
-						.pos((short) (DefaultSheetPos.KO_TURNIERBAUM + g))
-						.hideGrid()
-						.tabColor(getKonfigurationSheet().getKoTurnierbaumTabFarbe())
-						.setActiv()
-						.create();
-
-				XSpreadsheet xSheet = getSheetHelper().findByName(sheetName);
-				TurnierSheet.from(xSheet, getWorkingSpreadsheet()).setActiv();
-				String gruppenLabel = (anzGruppen > 1) ? String.valueOf((char) ('A' + g)) : null;
-				erstelleTurnierbaum(xSheet, gruppenDatum.meldungen(), gruppenDatum.numRunden(),
-						gruppenDatum.bracketGroesse(),
-						getKonfigurationSheet(), schluesselFuerGruppe(g, anzGruppen), gruppenLabel);
-			} finally {
-				this.aktuellerGruppenSheetName = null;
-				this.vorgegebeneBahnNummernProRunde = List.of();
-				this.vorgegebeneCadrageBahnNummern = null;
-			}
+			String gruppenLabel = (anzGruppen > 1) ? String.valueOf((char) ('A' + g)) : null;
+			auftraege.add(new GruppenBracketAuftrag(gruppenMeldungen, sheetName,
+					(short) (DefaultSheetPos.KO_TURNIERBAUM + g), schluesselFuerGruppe(g, anzGruppen),
+					gruppenLabel));
 		}
+
+		erstelleGruppenBrackets(auftraege, getKonfigurationSheet());
 	}
 
 	private record GruppenTurnierbaumDaten(TeamMeldungen meldungen, int bracketGroesse, int numRunden) {}
@@ -821,7 +792,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 					cadrageJeGruppe.set(g, gruppenBahnNummern);
 				} else {
 					int hauptfeldRunde = hauptfeldRundeFuerKoRunde(daten, koRunde);
-					if (hauptfeldRunde > 0) {
+					if (hauptfeldRunde > 0 && hauptfeldRunde <= daten.numRunden()) {
 						rundenJeGruppe.get(g).set(hauptfeldRunde - 1, gruppenBahnNummern);
 					}
 				}

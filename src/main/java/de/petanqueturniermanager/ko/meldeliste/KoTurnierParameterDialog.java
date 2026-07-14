@@ -155,7 +155,7 @@ public class KoTurnierParameterDialog {
 						"Durchnummerieren (1-n)", "Zufällig vergeben" },
 				spielbahnIndex(defaultSpielbahn), 82, 84, 70, 12);
 
-		addCheckBox(xMSF, cont, "cbBahnNurRunde1", "Bahnnummer nur in Runde 1", 8, 104, 140, 10,
+		addCheckBox(xMSF, cont, "cbBahnNurRunde1", I18n.get("dialog.ko.bahn.nur.runde1"), 8, 104, 140, 10,
 				defaultSpielbaumBahnNurRunde1);
 
 		addFixedLine(xMSF, cont, "sep4", 5, 118, 150, 2);
