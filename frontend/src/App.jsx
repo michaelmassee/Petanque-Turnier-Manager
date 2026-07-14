@@ -578,7 +578,7 @@ function Signatur({ links = false }) {
         rel="noreferrer"
       >
         <img
-          src={liveUrl('images/petanqueturniermanager-logo-256px.png')}
+          src={liveUrl('images/petanqueturniermanager-logo-256px-transp.png')}
           alt="Pétanque-Turnier-Manager"
         />
       </a>
