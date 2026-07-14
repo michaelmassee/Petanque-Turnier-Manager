@@ -154,8 +154,8 @@ public class MaastrichterTurnierTestDatenUITest extends BaseCalcUITest {
 				.as("Cadrage muss eine Bahn-Spalte haben")
 				.isEqualTo("Bn");
 		assertThat(sheetHlp.getTextFromCell(gruppeB, Position.from(4, 2)))
-				.as("Runde 1 muss ebenfalls eine Bahn-Spalte haben")
-				.isEqualTo("Bn");
+				.as("Wenn Cadrage die erste Runde ist, hat Runde 1 keine Bahn-Spalte")
+				.isEqualTo("Nr");
 		assertThat(sheetHlp.getIntFromCell(gruppeB, Position.from(0, 4)))
 				.as("Erste Cadrage-Partie in Gruppe B braucht eine Bahnnummer")
 				.isEqualTo(1);

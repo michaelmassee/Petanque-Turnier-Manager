@@ -146,7 +146,6 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 
 	// Cadrage-State
 	private volatile boolean mitCadrage = false;
-	private volatile int cadrageSpaltOffset = 0; // = colGroupSize wenn Cadrage vorhanden, sonst 0
 	private int[] cadrageBahnNummern = new int[0];
 	private List<int[]> vorgegebeneBahnNummernProRunde = List.of();
 	private int[] vorgegebeneCadrageBahnNummern = null;
@@ -159,14 +158,6 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	// Zeilenabstand zwischen Team A und Team B innerhalb eines Runde-1-Matches. Die Slots werden
 	// nur gespreizt, wenn eine Cadrage-Partie am oberen Slot sonst in die untere Team-Zeile läuft.
 	private volatile int runde1SlotAbstand = 1;
-
-	// Spalten-Offsets (dynamisch je nach spielbahn)
-	// Mit Bahn:    Bahn(0) | Team(1) | Score(2) | Connector(3)  → colGroupSize = 4
-	// Ohne Bahn:   Team(0) | Score(1) | Connector(2)             → colGroupSize = 3
-	private volatile int teamOffset = 0;
-	private volatile int scoreOffset = 1;
-	private volatile int connectorOffset = 2;
-	private volatile int colGroupSize = 3;
 
 	/** Sammelt Score-Zell-Positionen während einer Bracket-Erstellung für den Blattschutz.
 	 *  Nur die Referenz ist {@code volatile} (Sichtbarkeit von Neuanlage/Nullen je Lauf);
@@ -255,30 +246,30 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	// Spaltenberechnung (dynamisch je nach spielbahn)
 	// ---------------------------------------------------------------
 
-	/** Bahn-Spalte für Runde r – nur gültig wenn mitBahn(). */
+	/** Bahn-Spalte für Runde r – nur gültig wenn {@link #mitBahnInRunde(int)}. */
 	int bahnSpalte(int runde) {
-		return (runde - 1) * colGroupSize + cadrageSpaltOffset;
+		return rundenStartSpalte(runde);
 	}
 
 	/** Team-Spalte für Runde r (enthält Nr oder Teamname je nach teamAnzeige). */
 	int teamSpalte(int runde) {
-		return (runde - 1) * colGroupSize + teamOffset + cadrageSpaltOffset;
+		return rundenStartSpalte(runde) + (mitBahnInRunde(runde) ? 1 : 0);
 	}
 
 	int scoreSpalte(int runde) {
-		return (runde - 1) * colGroupSize + scoreOffset + cadrageSpaltOffset;
+		return teamSpalte(runde) + 1;
 	}
 
 	int connectorSpalte(int runde) {
-		return (runde - 1) * colGroupSize + connectorOffset + cadrageSpaltOffset;
+		return teamSpalte(runde) + 2;
 	}
 
 	int siegerSpalte(int numRunden) {
-		return numRunden * colGroupSize + cadrageSpaltOffset;
+		return rundenStartSpalte(numRunden) + hauptRundenSpalten(numRunden);
 	}
 
 	int siegerNameSpalte(int numRunden) {
-		return numRunden * colGroupSize + 1 + cadrageSpaltOffset;
+		return siegerSpalte(numRunden) + 1;
 	}
 
 	private boolean mitBahn() {
@@ -287,19 +278,39 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 
 	// Cadrage-Spalten (immer am linken Rand, kein Offset)
 	int cadrageTeamSpalte() {
-		return teamOffset;
+		return mitBahnInCadrage() ? 1 : 0;
 	}
 
 	int cadrageScoreSpalte() {
-		return scoreOffset;
+		return cadrageTeamSpalte() + 1;
 	}
 
 	int cadrageConnectorSpalte() {
-		return connectorOffset;
+		return cadrageTeamSpalte() + 2;
 	}
 
 	int cadrageBahnSpalte() {
 		return 0;
+	}
+
+	private int rundenStartSpalte(int runde) {
+		int spalte = mitCadrage ? cadrageSpalten() : 0;
+		for (int r = 1; r < runde; r++) {
+			spalte += hauptRundenSpalten(r);
+		}
+		return spalte;
+	}
+
+	private int cadrageSpalten() {
+		return spaltenProRunde(mitBahnInCadrage());
+	}
+
+	private int hauptRundenSpalten(int runde) {
+		return spaltenProRunde(mitBahnInRunde(runde));
+	}
+
+	private static int spaltenProRunde(boolean mitBahnSpalte) {
+		return mitBahnSpalte ? 4 : 3;
 	}
 
 	// ---------------------------------------------------------------
@@ -846,35 +857,18 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		this.runde1MatchZeilenAbstand = berechneRunde1MatchZeilenAbstand(meldungen.size(), bracketGroesse);
 		this.runde1SlotAbstand = berechneRunde1SlotAbstand(meldungen.size(), bracketGroesse);
 
-		// Spalten-Offsets je nach Bahn-Einstellung:
-		// Mit Bahn:    Bahn(0) | Team(1) | Score(2) | Connector(3)  → colGroupSize = 4
-		// Ohne Bahn:   Team(0) | Score(1) | Connector(2)             → colGroupSize = 3
-		if (mitBahn()) {
-			this.teamOffset = 1;
-			this.scoreOffset = 2;
-			this.connectorOffset = 3;
-			this.colGroupSize = 4;
-		} else {
-			this.teamOffset = 0;
-			this.scoreOffset = 1;
-			this.connectorOffset = 2;
-			this.colGroupSize = 3;
-		}
-
 		// Cadrage-State initialisieren
 		this.gesanzTeamsIntern = meldungen.size();
 		if (gesanzTeamsIntern > bracketGroesse) {
 			var rechner = new CadrageRechner(gesanzTeamsIntern);
 			this.mitCadrage = true;
 			this.anzOhneCadrage = rechner.anzOhneCadrage();
-			this.cadrageSpaltOffset = colGroupSize;
 			this.cadrageBahnNummern = vorgegebeneCadrageBahnNummern != null
 					? vorgegebeneCadrageBahnNummern
 					: berechneBahnNummern(rechner.anzTeams() / 2);
 		} else {
 			this.mitCadrage = false;
 			this.anzOhneCadrage = bracketGroesse;
-			this.cadrageSpaltOffset = 0;
 			this.cadrageBahnNummern = new int[0];
 		}
 
@@ -901,7 +895,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 			int rowA = teamAZeile(1, m);
 			int rowB = teamBZeile(1, m);
 
-			if (mitBahn()) {
+			if (mitBahnInRunde(1)) {
 				schreibeBahnZelle(xSheet, 1, rowA, rowB, bahnR1[m]);
 			}
 
@@ -1168,7 +1162,11 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	}
 
 	private boolean mitBahnInRunde(int runde) {
-		return mitBahn() && (!bahnNurRunde1 || runde == 1);
+		return mitBahn() && (!bahnNurRunde1 || (!mitCadrage && runde == 1));
+	}
+
+	private boolean mitBahnInCadrage() {
+		return mitCadrage && mitBahn();
 	}
 
 	// ---------------------------------------------------------------
@@ -1179,7 +1177,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		int teamColWidth = (teamAnzeige == KoSpielbaumTeamAnzeige.NAME) ? NAME_COL_WIDTH : NR_COL_WIDTH;
 
 		if (mitCadrage) {
-			if (mitBahn()) {
+			if (mitBahnInCadrage()) {
 				getSheetHelper().setColumnProperties(xSheet, cadrageBahnSpalte(),
 						ColumnProperties.from().setWidth(BAHN_COL_WIDTH).setHoriJustify(CellHoriJustify.CENTER)
 								.setVertJustify(CellVertJustify2.CENTER));
@@ -1198,7 +1196,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		}
 
 		for (int r = 1; r <= numRunden; r++) {
-			if (mitBahn()) {
+			if (mitBahnInRunde(r)) {
 				getSheetHelper().setColumnProperties(xSheet, bahnSpalte(r),
 						ColumnProperties.from().setWidth(BAHN_COL_WIDTH).setHoriJustify(CellHoriJustify.CENTER)
 								.setVertJustify(CellVertJustify2.CENTER));
@@ -1250,17 +1248,17 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		String teamHeader = (teamAnzeige == KoSpielbaumTeamAnzeige.NAME) ? "Teamname" : "Nr";
 
 		if (mitCadrage) {
-			int titelStartSpalte = mitBahn() ? cadrageBahnSpalte() : cadrageTeamSpalte();
+			int titelStartSpalte = mitBahnInCadrage() ? cadrageBahnSpalte() : cadrageTeamSpalte();
 			getSheetHelper().setStringValueInCell(
 					StringCellValue.from(xSheet, Position.from(titelStartSpalte, headerZeileTitel()), I18n.get("column.header.cadrage"))
-							.setEndPosMergeSpaltePlus(colGroupSize - 1)
+							.setEndPosMergeSpaltePlus(cadrageSpalten() - 1)
 							.setCharWeight(FontWeight.BOLD)
 							.setHoriJustify(CellHoriJustify.CENTER)
 							.setCellBackColor(headerFarbe)
 							.setCharColor("FFFFFF")
 							.setBorder(BorderFactory.from().allThin().toBorder())
 							.setShrinkToFit(true));
-			if (mitBahn()) {
+			if (mitBahnInCadrage()) {
 				schreibeSpaltenHeader(xSheet, cadrageBahnSpalte(), BAHN_HEADER_KURZ);
 			}
 			schreibeSpaltenHeader(xSheet, cadrageTeamSpalte(), teamHeader);
@@ -1271,10 +1269,10 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 			String rundentitel = berechnRundenTitel(r, numRunden);
 
 			// Zeile 0: Rundentitel über alle Spalten der Runde (merged)
-			int titelStartSpalte = mitBahn() ? bahnSpalte(r) : teamSpalte(r);
+			int titelStartSpalte = mitBahnInRunde(r) ? bahnSpalte(r) : teamSpalte(r);
 			getSheetHelper().setStringValueInCell(
 					StringCellValue.from(xSheet, Position.from(titelStartSpalte, headerZeileTitel()), rundentitel)
-							.setEndPosMergeSpaltePlus(colGroupSize - 1)
+							.setEndPosMergeSpaltePlus(hauptRundenSpalten(r) - 1)
 							.setCharWeight(FontWeight.BOLD)
 							.setHoriJustify(CellHoriJustify.CENTER)
 							.setCellBackColor(headerFarbe)
@@ -1283,7 +1281,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 							.setShrinkToFit(true));
 
 			// Zeile 1: Spalten-Überschriften
-			if (mitBahn()) {
+			if (mitBahnInRunde(r)) {
 				schreibeSpaltenHeader(xSheet, bahnSpalte(r), BAHN_HEADER_KURZ);
 			}
 			schreibeSpaltenHeader(xSheet, teamSpalte(r), teamHeader);
@@ -1566,7 +1564,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		int nrA = getTeamNrBySeedPosition(meldungen, slotSeed);
 		int nrB = getTeamNrBySeedPosition(meldungen, opponentSeed);
 
-		if (mitBahn()) {
+		if (mitBahnInCadrage()) {
 			// Eine zusammengeführte Bahn-Zelle für die Cadrage-Paarung
 			int bahnNr = cadrageIdx < cadrageBahnNummern.length ? cadrageBahnNummern[cadrageIdx] : 0;
 			schreibeBahnZelleAnSpalte(xSheet, cadrageBahnSpalte(), rowA, rowB, bahnNr);
@@ -1734,10 +1732,10 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		int platz3TeamBZeile = platz3HeaderZeile + 2;
 
 		// Bereichs-Header "Spiel um Platz 3/4" in den Finale-Spalten
-		int headerStartSpalte = mitBahn() ? bahnSpalte(numRunden) : teamSpalte(numRunden);
+		int headerStartSpalte = mitBahnInRunde(numRunden) ? bahnSpalte(numRunden) : teamSpalte(numRunden);
 		getSheetHelper().setStringValueInCell(
 				StringCellValue.from(xSheet, Position.from(headerStartSpalte, platz3HeaderZeile), "Spiel um Platz 3/4")
-						.setEndPosMergeSpaltePlus(colGroupSize - 1)
+						.setEndPosMergeSpaltePlus(hauptRundenSpalten(numRunden) - 1)
 						.setCharWeight(FontWeight.BOLD)
 						.setHoriJustify(CellHoriJustify.CENTER)
 						.setCellBackColor(headerFarbe)
@@ -1755,7 +1753,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 						.setBorder(BorderFactory.from().allThin().toBorder()));
 
 		// Bahn-Zelle (falls Spielbahn aktiv) – eine zusammengeführte Zelle pro Paarung
-		if (mitBahn()) {
+		if (mitBahnInRunde(numRunden)) {
 			schreibeBahnZelle(xSheet, numRunden, platz3TeamAZeile, platz3TeamBZeile, 0);
 		}
 

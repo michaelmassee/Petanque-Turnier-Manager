@@ -80,12 +80,12 @@ public class KoTurnierTestDatenUITest extends BaseCalcUITest {
 		assertThat(sheetHlp.getIntFromCell(gruppeB, Position.from(0, 3)))
 				.as("Runde 1 muss Bahnnummern gruppenuebergreifend fortsetzen")
 				.isEqualTo(5);
-		assertThat(sheetHlp.getTextFromCell(gruppeB, Position.from(4, 4)))
-				.as("Default: Halbfinale hat keine Bahnnummer")
-				.isEmpty();
-		assertThat(sheetHlp.getTextFromCell(gruppeB, Position.from(8, 6)))
-				.as("Default: Finale hat keine Bahnnummer")
-				.isEmpty();
+		assertThat(sheetHlp.getTextFromCell(gruppeB, Position.from(4, 2)))
+				.as("Default: Halbfinale hat keine Bahn-Spalte")
+				.isEqualTo("Nr");
+		assertThat(sheetHlp.getTextFromCell(gruppeB, Position.from(7, 2)))
+				.as("Default: Finale hat keine Bahn-Spalte")
+				.isEqualTo("Nr");
 	}
 
 	@Test
