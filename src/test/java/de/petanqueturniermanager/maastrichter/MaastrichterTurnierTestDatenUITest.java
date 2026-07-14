@@ -17,10 +17,12 @@ import com.sun.star.table.TableBorder2;
 import com.sun.star.text.XText;
 import com.sun.star.uno.UnoRuntime;
 
+import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
+import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.random.RandomSource;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
@@ -135,6 +137,28 @@ public class MaastrichterTurnierTestDatenUITest extends BaseCalcUITest {
 		// Zuletzt, weil der bestätigte Neuaufbau die Bahn-Auslosung (RandomSource) neu würfelt
 		// und damit die JSON-Referenzvergleiche oben nicht mehr reproduzierbar wären.
 		validiereFinalrundeNeuAufbauNachBestaetigung("A");
+	}
+
+	@Test
+	public void maastrichterZweiFinalgruppenSchreibtBahnnummerInCadrageVonGruppeB() throws GenerateException {
+		new MaastrichterTurnierTestDaten(wkingSpreadsheet, 25, 3, 16).generate();
+
+		var konfig = new de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet(
+				wkingSpreadsheet);
+		konfig.setSpielbaumSpielbahn(SpielrundeSpielbahn.N);
+		new MaastrichterFinalrundeSheet(wkingSpreadsheet).doRun();
+
+		XSpreadsheet gruppeB = sheetHlp.findByName(SheetNamen.koFinaleGruppe("B"));
+		assertThat(gruppeB).as("B-Finale muss bei 25 Teams und Gruppengroesse 16 existieren").isNotNull();
+		assertThat(sheetHlp.getTextFromCell(gruppeB, Position.from(0, 2)))
+				.as("Cadrage muss eine Bahn-Spalte haben")
+				.isEqualTo("Bn");
+		assertThat(sheetHlp.getTextFromCell(gruppeB, Position.from(4, 2)))
+				.as("Runde 1 muss ebenfalls eine Bahn-Spalte haben")
+				.isEqualTo("Bn");
+		assertThat(sheetHlp.getIntFromCell(gruppeB, Position.from(0, 4)))
+				.as("Erste Cadrage-Partie in Gruppe B braucht eine Bahnnummer")
+				.isEqualTo(1);
 	}
 
 	@Test

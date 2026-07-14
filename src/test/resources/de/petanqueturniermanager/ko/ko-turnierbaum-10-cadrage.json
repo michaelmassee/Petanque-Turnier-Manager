@@ -75,7 +75,7 @@
   ],
   [
     {
-      "data": "Bahn"
+      "data": "Bn"
     },
     {
       "data": "Nr"
@@ -87,7 +87,7 @@
       "data": ""
     },
     {
-      "data": "Bahn"
+      "data": "Bn"
     },
     {
       "data": "Nr"
@@ -99,7 +99,7 @@
       "data": ""
     },
     {
-      "data": "Bahn"
+      "data": "Bn"
     },
     {
       "data": "Nr"
@@ -111,7 +111,7 @@
       "data": ""
     },
     {
-      "data": "Bahn"
+      "data": "Bn"
     },
     {
       "data": "Nr"
@@ -223,7 +223,7 @@
   ],
   [
     {
-      "data": ""
+      "data": 2.0
     },
     {
       "data": 8.0
@@ -667,7 +667,7 @@
   ],
   [
     {
-      "data": ""
+      "data": 1.0
     },
     {
       "data": 7.0

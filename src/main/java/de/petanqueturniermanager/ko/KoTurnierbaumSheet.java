@@ -112,6 +112,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	private static final int NAME_COL_WIDTH = 3000;
 	private static final int SCORE_COL_WIDTH = 900;
 	private static final int CONNECTOR_COL_WIDTH = 400;
+	private static final String BAHN_HEADER_KURZ = "Bn";
 
 	/** Breite der Sieger-Name-Spalte (letzte sichtbare Spalte im Turnierbaum). */
 	static final int SIEGER_NAME_COL_WIDTH = 5000;
@@ -145,6 +146,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	// Cadrage-State
 	private volatile boolean mitCadrage = false;
 	private volatile int cadrageSpaltOffset = 0; // = colGroupSize wenn Cadrage vorhanden, sonst 0
+	private int[] cadrageBahnNummern = new int[0];
 	// Anzahl der bestgesetzten Teams, die keine Cadrage spielen und direkt ins Hauptfeld starten
 	// (kein Freilos – sie spielen die Hauptrunde ganz normal, nur ohne Cadrage-Vorrunde).
 	private volatile int anzOhneCadrage = 0;
@@ -782,10 +784,12 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 			this.mitCadrage = true;
 			this.anzOhneCadrage = rechner.anzOhneCadrage();
 			this.cadrageSpaltOffset = colGroupSize;
+			this.cadrageBahnNummern = berechneBahnNummern(rechner.anzTeams() / 2);
 		} else {
 			this.mitCadrage = false;
 			this.anzOhneCadrage = bracketGroesse;
 			this.cadrageSpaltOffset = 0;
+			this.cadrageBahnNummern = new int[0];
 		}
 
 		int[] setzliste = berechneSetzliste(bracketGroesse);
@@ -1159,7 +1163,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 							.setBorder(BorderFactory.from().allThin().toBorder())
 							.setShrinkToFit(true));
 			if (mitBahn()) {
-				schreibeSpaltenHeader(xSheet, cadrageBahnSpalte(), I18n.get("column.header.bahn"));
+				schreibeSpaltenHeader(xSheet, cadrageBahnSpalte(), BAHN_HEADER_KURZ);
 			}
 			schreibeSpaltenHeader(xSheet, cadrageTeamSpalte(), teamHeader);
 			schreibeSpaltenHeader(xSheet, cadrageScoreSpalte(), "Pkt");
@@ -1182,7 +1186,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 
 			// Zeile 1: Spalten-Überschriften
 			if (mitBahn()) {
-				schreibeSpaltenHeader(xSheet, bahnSpalte(r), I18n.get("column.header.bahn"));
+				schreibeSpaltenHeader(xSheet, bahnSpalte(r), BAHN_HEADER_KURZ);
 			}
 			schreibeSpaltenHeader(xSheet, teamSpalte(r), teamHeader);
 			schreibeSpaltenHeader(xSheet, scoreSpalte(r), "Pkt");
@@ -1466,7 +1470,8 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 
 		if (mitBahn()) {
 			// Eine zusammengeführte Bahn-Zelle für die Cadrage-Paarung
-			schreibeBahnZelleAnSpalte(xSheet, cadrageBahnSpalte(), rowA, rowB, 0);
+			int bahnNr = cadrageIdx < cadrageBahnNummern.length ? cadrageBahnNummern[cadrageIdx] : 0;
+			schreibeBahnZelleAnSpalte(xSheet, cadrageBahnSpalte(), rowA, rowB, bahnNr);
 		}
 
 		schreibeTeamZelleInSpalte(xSheet, cadrageTeamSpalte(), rowA, nrA, true);
