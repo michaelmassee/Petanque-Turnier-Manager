@@ -31,8 +31,13 @@ public final class LoMainThread {
 
     public static void post(XComponentContext xContext, Runnable r) {
         try {
-            var asyncCallback = xContext.getServiceManager()
-                    .createInstanceWithContext("com.sun.star.awt.AsyncCallback", xContext);
+            var serviceManager = xContext.getServiceManager();
+            if (serviceManager == null) {
+                logger.debug("ServiceManager nicht verfügbar – führe direkt aus");
+                r.run();
+                return;
+            }
+            var asyncCallback = serviceManager.createInstanceWithContext("com.sun.star.awt.AsyncCallback", xContext);
             var dispatcher = Lo.qi(XRequestCallback.class, asyncCallback);
             if (dispatcher == null) {
                 logger.debug("AsyncCallback nicht verfügbar – führe direkt aus");
