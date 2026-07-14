@@ -120,13 +120,15 @@ public class PouleKoSheet extends SheetRunner implements ISheet {
 
         var konfigAdapter = new PouleKoConfigAdapter(getKonfigurationSheet());
         var koSheet = new KoTurnierbaumSheet(getWorkingSpreadsheet());
+        List<KoTurnierbaumSheet.GruppenBracketAuftrag> bracketAuftraege = new ArrayList<>();
 
         // A-Turnier erstellen
         TeamMeldungen aTeams = erstelleGruppeTeams(aTeamsList, aktiveMeldungen);
         String aSheetName = SheetNamen.koFinaleGruppe("A");
         processBoxinfo("processbox.erstelle.sheet.teams", aSheetName, aTeams.size());
-        koSheet.erstelleGruppeBracket(aTeams, aSheetName, DefaultSheetPos.POULE_KO,
-                konfigAdapter, SheetMetadataHelper.schluesselPouleKo("A"));
+        bracketAuftraege.add(new KoTurnierbaumSheet.GruppenBracketAuftrag(
+                aTeams, aSheetName, DefaultSheetPos.POULE_KO,
+                SheetMetadataHelper.schluesselPouleKo("A"), null));
 
         // B-Turnier erstellen (falls genug Teams)
         if (bTeamsList.size() >= 2) {
@@ -134,10 +136,11 @@ public class PouleKoSheet extends SheetRunner implements ISheet {
             TeamMeldungen bTeams = erstelleGruppeTeams(bTeamsList, aktiveMeldungen);
             String bSheetName = SheetNamen.koFinaleGruppe("B");
             processBoxinfo("processbox.erstelle.sheet.teams", bSheetName, bTeams.size());
-            koSheet.erstelleGruppeBracket(bTeams, bSheetName,
-                    (short) (DefaultSheetPos.POULE_KO + 1),
-                    konfigAdapter, SheetMetadataHelper.schluesselPouleKo("B"));
+            bracketAuftraege.add(new KoTurnierbaumSheet.GruppenBracketAuftrag(
+                    bTeams, bSheetName, (short) (DefaultSheetPos.POULE_KO + 1),
+                    SheetMetadataHelper.schluesselPouleKo("B"), null));
         }
+        koSheet.erstelleGruppenBrackets(bracketAuftraege, konfigAdapter);
     }
 
     /**

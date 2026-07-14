@@ -168,14 +168,18 @@ public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet {
 		// KO-Bracket für jede Gruppe erstellen
 		KoTurnierbaumSheet koSheet = new KoTurnierbaumSheet(getWorkingSpreadsheet());
 		short sheetPos = DefaultSheetPos.MAASTRICHTER_FINALE;
+		List<KoTurnierbaumSheet.GruppenBracketAuftrag> bracketAuftraege = new ArrayList<>();
 
 		for (Finalgruppe finalgruppe : finalgruppen) {
 			String sheetName = SheetNamen.koFinaleGruppe(finalgruppe.buchstabe());
 			processBoxinfo("processbox.erstelle.sheet.teams", sheetName, finalgruppe.teams().size());
-			koSheet.erstelleGruppeBracket(finalgruppe.teams(), sheetName, sheetPos, konfigSheet,
-					SheetMetadataHelper.schluesselMaastrichterFinalrunde(finalgruppe.buchstabe()), finalgruppe.buchstabe());
+			bracketAuftraege.add(new KoTurnierbaumSheet.GruppenBracketAuftrag(
+					finalgruppe.teams(), sheetName, sheetPos,
+					SheetMetadataHelper.schluesselMaastrichterFinalrunde(finalgruppe.buchstabe()),
+					finalgruppe.buchstabe()));
 			sheetPos++;
 		}
+		koSheet.erstelleGruppenBrackets(bracketAuftraege, konfigSheet);
 
 		// Gruppen-Buchstaben einmalig in die Vorrunden-Rangliste schreiben
 		// (Spalte "Gruppe"). Nachfolgende Rangliste-Refreshs erhalten die Werte.

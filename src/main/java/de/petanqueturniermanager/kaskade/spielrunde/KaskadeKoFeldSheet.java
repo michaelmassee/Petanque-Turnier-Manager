@@ -3,6 +3,7 @@
  */
 package de.petanqueturniermanager.kaskade.spielrunde;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
@@ -31,7 +32,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 /**
  * Erstellt für jedes Kaskaden-Endfeld (A, B, C, D …) einen visuellen KO-Turnierbaum.<br>
  * <br>
- * Die Darstellung delegiert vollständig an {@link KoTurnierbaumSheet#erstelleGruppeBracket},
+ * Die Darstellung delegiert vollständig an {@link KoTurnierbaumSheet#erstelleGruppenBrackets},
  * sodass die gleiche Bracket-Ansicht wie beim KO-System, Maastrichter KO und Poule KO entsteht
  * (Rundenköpfe, Cadrage-Spalte, IF-Formeln für automatische Siegerberechnung, Unicode-Konnektoren).
  *
@@ -97,22 +98,31 @@ public class KaskadeKoFeldSheet extends SheetRunner implements ISheet {
         gruppenRangliste.setForceOk(isForceOk());
         gruppenRangliste.doRun();
 
+        var konfig = new KaskadeKoBracketKonfigAdapter(konfigurationSheet);
+        List<KoTurnierbaumSheet.GruppenBracketAuftrag> bracketAuftraege = new ArrayList<>();
+        short sheetPos = DefaultSheetPos.KASKADE_FELDER;
         for (var belegung : belegungen) {
             SheetRunner.testDoCancelTask();
-            feldSheetErstellen(belegung);
+            var auftrag = feldBracketAuftrag(belegung, sheetPos);
+            if (auftrag != null) {
+                bracketAuftraege.add(auftrag);
+                sheetPos++;
+            }
         }
+        new KoTurnierbaumSheet(getWorkingSpreadsheet()).erstelleGruppenBrackets(bracketAuftraege, konfig);
     }
 
     // ---------------------------------------------------------------
     // Feld-Sheet erstellen
     // ---------------------------------------------------------------
 
-    private void feldSheetErstellen(KaskadenFeldBelegung belegung) throws GenerateException {
+    private KoTurnierbaumSheet.GruppenBracketAuftrag feldBracketAuftrag(KaskadenFeldBelegung belegung,
+            short sheetPos) throws GenerateException {
         var feld = belegung.feld();
         if (feld.gesamtTeams() < 2) {
             LOGGER.info("Feld {} hat weniger als 2 Teams ({}), wird übersprungen.",
                     feld.bezeichner(), feld.gesamtTeams());
-            return;
+            return null;
         }
 
         processBoxinfo("processbox.kaskade.ko.plan.erstellen", feld.bezeichner());
@@ -121,10 +131,7 @@ public class KaskadeKoFeldSheet extends SheetRunner implements ISheet {
         var gruppeTeams = feldBelegungZuTeamMeldungen(belegung.teamNrs());
         var sheetName   = SheetNamen.kaskadenFeld(feld.bezeichner());
         var schluessel  = SheetMetadataHelper.schluesselKaskadenFeld(feld.bezeichner());
-        var konfig      = new KaskadeKoBracketKonfigAdapter(konfigurationSheet);
-
-        new KoTurnierbaumSheet(getWorkingSpreadsheet())
-                .erstelleGruppeBracket(gruppeTeams, sheetName, DefaultSheetPos.KASKADE_FELDER, konfig, schluessel);
+        return new KoTurnierbaumSheet.GruppenBracketAuftrag(gruppeTeams, sheetName, sheetPos, schluessel, null);
     }
 
     private static TeamMeldungen feldBelegungZuTeamMeldungen(List<Integer> teamNrs) {

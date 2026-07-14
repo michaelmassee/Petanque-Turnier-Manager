@@ -105,13 +105,17 @@ public class JGJFinalrundeSheet extends SheetRunner implements ISheet {
 
 		KoTurnierbaumSheet koSheet = new KoTurnierbaumSheet(getWorkingSpreadsheet());
 		short sheetPos = DefaultSheetPos.JGJ_GESAMTRANGLISTE;
+		List<KoTurnierbaumSheet.GruppenBracketAuftrag> bracketAuftraege = new ArrayList<>();
 		for (Finalgruppe finalgruppe : finalgruppen) {
 			String sheetName = SheetNamen.koFinaleGruppe(finalgruppe.buchstabe());
 			processBoxinfo("processbox.erstelle.sheet.teams", sheetName, finalgruppe.teams().size());
-			koSheet.erstelleGruppeBracket(finalgruppe.teams(), sheetName, sheetPos, konfig,
-					SheetMetadataHelper.schluesselJgjFinalrunde(finalgruppe.buchstabe()), finalgruppe.buchstabe());
+			bracketAuftraege.add(new KoTurnierbaumSheet.GruppenBracketAuftrag(
+					finalgruppe.teams(), sheetName, sheetPos,
+					SheetMetadataHelper.schluesselJgjFinalrunde(finalgruppe.buchstabe()),
+					finalgruppe.buchstabe()));
 			sheetPos++;
 		}
+		koSheet.erstelleGruppenBrackets(bracketAuftraege, konfig);
 	}
 
 	private record Finalgruppe(String buchstabe, TeamMeldungen teams) {}

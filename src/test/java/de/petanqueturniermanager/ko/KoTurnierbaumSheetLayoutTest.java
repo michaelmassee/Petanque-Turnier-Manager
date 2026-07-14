@@ -7,14 +7,14 @@ import org.junit.jupiter.api.Test;
 class KoTurnierbaumSheetLayoutTest {
 
 	@Test
-	void vierzehnTeamsNutzenAchterHauptfeldMitGespreizterCadrage() {
+	void vierzehnTeamsNutzenAchterHauptfeldMitKompakterCadrage() {
 		int bracketGroesse = KoTurnierbaumSheet.berechneBracketGroesse(14);
 
 		assertThat(bracketGroesse).isEqualTo(8);
 		assertThat(KoTurnierbaumSheet.berechneRunde1MatchZeilenAbstand(14, bracketGroesse))
-				.isEqualTo(6);
+				.isEqualTo(5);
 		assertThat(KoTurnierbaumSheet.berechneRunde1SlotAbstand(14, bracketGroesse))
-				.isEqualTo(3);
+				.isEqualTo(2);
 	}
 
 	@Test
@@ -23,9 +23,9 @@ class KoTurnierbaumSheetLayoutTest {
 
 		assertThat(bracketGroesse).isEqualTo(4);
 		assertThat(KoTurnierbaumSheet.berechneRunde1MatchZeilenAbstand(7, bracketGroesse))
-				.isEqualTo(6);
+				.isEqualTo(5);
 		assertThat(KoTurnierbaumSheet.berechneRunde1SlotAbstand(7, bracketGroesse))
-				.isEqualTo(3);
+				.isEqualTo(2);
 	}
 
 	@Test

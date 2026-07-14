@@ -335,9 +335,11 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	 * <p>Ohne überlappende Cadrage stehen die beiden Teams direkt untereinander (Abstand 1). Eine
 	 * Spreizung ist nur nötig, wenn der obere Runde-1-Slot selbst aus einer zweizeiligen
 	 * Cadrage-Partie kommt; sonst würde diese Partie die untere Team-Zeile des Matches belegen.
+	 * Gespreizt reicht Abstand 2: eine sichtbare Leerzeile im Hauptfeld, darunter die zweite
+	 * Cadrage-Zeile in der Cadrage-Spalte.
 	 */
 	static int berechneRunde1SlotAbstand(int teamCount, int bracketGroesse) {
-		return brauchtGespreizteCadrageSlots(teamCount, bracketGroesse) ? 3 : 1;
+		return brauchtGespreizteCadrageSlots(teamCount, bracketGroesse) ? 2 : 1;
 	}
 
 	/**
@@ -345,10 +347,10 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	 *
 	 * <p>Muss so groß sein, dass die (ggf. gespreizten) Slots samt Cadrage-Feeder eines Matches
 	 * nicht in das nächste Match hineinragen. Kompakt: 3 (Slot A, Slot B, Leerzeile). Gespreizt:
-	 * 6 (Slot A + Feeder, Leerzeile, Slot B + Feeder, Leerzeile).
+	 * 5 (Slot A + Feeder, Slot B + Feeder, Leerzeile).
 	 */
 	static int berechneRunde1MatchZeilenAbstand(int teamCount, int bracketGroesse) {
-		return brauchtGespreizteCadrageSlots(teamCount, bracketGroesse) ? 6 : 3;
+		return brauchtGespreizteCadrageSlots(teamCount, bracketGroesse) ? 5 : 3;
 	}
 
 	static boolean brauchtGespreizteCadrageSlots(int teamCount, int bracketGroesse) {
@@ -458,6 +460,51 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 					gruppenLabel);
 		} finally {
 			this.aktuellerGruppenSheetName = null;
+		}
+	}
+
+	public void erstelleGruppenBrackets(List<GruppenBracketAuftrag> auftraege,
+			IKoBracketKonfiguration konfig) throws GenerateException {
+		List<GruppenBracketAuftrag> aktiveAuftraege = auftraege.stream()
+				.filter(auftrag -> auftrag.teams().size() >= 2)
+				.collect(Collectors.toList());
+		if (aktiveAuftraege.isEmpty()) {
+			return;
+		}
+
+		List<GruppenTurnierbaumDaten> gruppenDaten = new ArrayList<>();
+		for (GruppenBracketAuftrag auftrag : aktiveAuftraege) {
+			int bracketGroesse = berechneBracketGroesse(auftrag.teams().size());
+			int numRunden = Integer.numberOfTrailingZeros(bracketGroesse);
+			gruppenDaten.add(new GruppenTurnierbaumDaten(auftrag.teams(), bracketGroesse, numRunden));
+		}
+
+		this.spielbahn = konfig.getSpielbaumSpielbahn();
+		List<GruppenBahnNummern> bahnNummern = berechneGruppenUebergreifendeBahnNummern(gruppenDaten);
+
+		for (int g = 0; g < aktiveAuftraege.size(); g++) {
+			GruppenBracketAuftrag auftrag = aktiveAuftraege.get(g);
+			GruppenTurnierbaumDaten daten = gruppenDaten.get(g);
+
+			this.aktuellerGruppenSheetName = auftrag.sheetName();
+			this.vorgegebeneBahnNummernProRunde = bahnNummern.get(g).runden();
+			this.vorgegebeneCadrageBahnNummern = bahnNummern.get(g).cadrage();
+			try {
+				NewSheet.from(this, auftrag.sheetName(), auftrag.metadatenSchluessel())
+						.pos(auftrag.sheetPos())
+						.hideGrid()
+						.tabColor(konfig.getKoTurnierbaumTabFarbe())
+						.setActiv()
+						.create();
+				XSpreadsheet xSheet = getSheetHelper().findByName(auftrag.sheetName());
+				TurnierSheet.from(xSheet, getWorkingSpreadsheet()).setActiv();
+				erstelleTurnierbaum(xSheet, daten.meldungen(), daten.numRunden(), daten.bracketGroesse(),
+						konfig, auftrag.metadatenSchluessel(), auftrag.gruppenLabel());
+			} finally {
+				this.aktuellerGruppenSheetName = null;
+				this.vorgegebeneBahnNummernProRunde = List.of();
+				this.vorgegebeneCadrageBahnNummern = null;
+			}
 		}
 	}
 
@@ -733,26 +780,34 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 
 	private record GruppenBahnNummern(List<int[]> runden, int[] cadrage) {}
 
+	public record GruppenBracketAuftrag(TeamMeldungen teams, String sheetName, short sheetPos,
+			String metadatenSchluessel, String gruppenLabel) {}
+
 	private List<GruppenBahnNummern> berechneGruppenUebergreifendeBahnNummern(
 			List<GruppenTurnierbaumDaten> gruppenDaten) {
 		List<List<int[]>> rundenJeGruppe = new ArrayList<>();
 		List<int[]> cadrageJeGruppe = new ArrayList<>();
 		for (int g = 0; g < gruppenDaten.size(); g++) {
-			rundenJeGruppe.add(new ArrayList<>());
+			var runden = new ArrayList<int[]>();
+			for (int r = 0; r < gruppenDaten.get(g).numRunden(); r++) {
+				runden.add(new int[0]);
+			}
+			rundenJeGruppe.add(runden);
 			cadrageJeGruppe.add(new int[0]);
 		}
 
-		int maxRunden = gruppenDaten.stream()
-				.mapToInt(GruppenTurnierbaumDaten::numRunden)
+		int maxKoRunden = gruppenDaten.stream()
+				.mapToInt(this::anzKoRundenMitCadrage)
 				.max()
 				.orElse(0);
-		for (int runde = 1; runde <= maxRunden; runde++) {
+		for (int koRunde = 1; koRunde <= maxKoRunden; koRunde++) {
 			int[] matchesProGruppe = new int[gruppenDaten.size()];
 			int alleMatches = 0;
 			for (int g = 0; g < gruppenDaten.size(); g++) {
 				GruppenTurnierbaumDaten daten = gruppenDaten.get(g);
-				if (runde <= daten.numRunden()) {
-					matchesProGruppe[g] = daten.bracketGroesse() / (1 << runde);
+				int anzMatches = anzMatchesInKoRunde(daten, koRunde);
+				if (anzMatches > 0) {
+					matchesProGruppe[g] = anzMatches;
 					alleMatches += matchesProGruppe[g];
 				}
 			}
@@ -760,26 +815,18 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 			int offset = 0;
 			for (int g = 0; g < gruppenDaten.size(); g++) {
 				int anzMatches = matchesProGruppe[g];
-				rundenJeGruppe.get(g).add(kopiereBahnNummern(alleBahnNummern, offset, anzMatches));
+				GruppenTurnierbaumDaten daten = gruppenDaten.get(g);
+				int[] gruppenBahnNummern = kopiereBahnNummern(alleBahnNummern, offset, anzMatches);
+				if (istCadrageKoRunde(daten, koRunde)) {
+					cadrageJeGruppe.set(g, gruppenBahnNummern);
+				} else {
+					int hauptfeldRunde = hauptfeldRundeFuerKoRunde(daten, koRunde);
+					if (hauptfeldRunde > 0) {
+						rundenJeGruppe.get(g).set(hauptfeldRunde - 1, gruppenBahnNummern);
+					}
+				}
 				offset += anzMatches;
 			}
-		}
-
-		int[] cadrageMatchesProGruppe = new int[gruppenDaten.size()];
-		int alleCadrageMatches = 0;
-		for (int g = 0; g < gruppenDaten.size(); g++) {
-			GruppenTurnierbaumDaten daten = gruppenDaten.get(g);
-			if (daten.meldungen().size() > daten.bracketGroesse()) {
-				cadrageMatchesProGruppe[g] = new CadrageRechner(daten.meldungen().size()).anzTeams() / 2;
-				alleCadrageMatches += cadrageMatchesProGruppe[g];
-			}
-		}
-		int[] alleCadrageBahnNummern = berechneBahnNummern(alleCadrageMatches);
-		int offset = 0;
-		for (int g = 0; g < gruppenDaten.size(); g++) {
-			int anzMatches = cadrageMatchesProGruppe[g];
-			cadrageJeGruppe.set(g, kopiereBahnNummern(alleCadrageBahnNummern, offset, anzMatches));
-			offset += anzMatches;
 		}
 
 		List<GruppenBahnNummern> ergebnis = new ArrayList<>();
@@ -787,6 +834,33 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 			ergebnis.add(new GruppenBahnNummern(List.copyOf(rundenJeGruppe.get(g)), cadrageJeGruppe.get(g)));
 		}
 		return ergebnis;
+	}
+
+	private int anzKoRundenMitCadrage(GruppenTurnierbaumDaten daten) {
+		return daten.numRunden() + (hatCadrage(daten) ? 1 : 0);
+	}
+
+	private int anzMatchesInKoRunde(GruppenTurnierbaumDaten daten, int koRunde) {
+		if (istCadrageKoRunde(daten, koRunde)) {
+			return new CadrageRechner(daten.meldungen().size()).anzTeams() / 2;
+		}
+		int hauptfeldRunde = hauptfeldRundeFuerKoRunde(daten, koRunde);
+		if (hauptfeldRunde < 1 || hauptfeldRunde > daten.numRunden()) {
+			return 0;
+		}
+		return daten.bracketGroesse() / (1 << hauptfeldRunde);
+	}
+
+	private boolean istCadrageKoRunde(GruppenTurnierbaumDaten daten, int koRunde) {
+		return hatCadrage(daten) && koRunde == 1;
+	}
+
+	private int hauptfeldRundeFuerKoRunde(GruppenTurnierbaumDaten daten, int koRunde) {
+		return koRunde - (hatCadrage(daten) ? 1 : 0);
+	}
+
+	private boolean hatCadrage(GruppenTurnierbaumDaten daten) {
+		return daten.meldungen().size() > daten.bracketGroesse();
 	}
 
 	private int[] kopiereBahnNummern(int[] quelle, int offset, int laenge) {

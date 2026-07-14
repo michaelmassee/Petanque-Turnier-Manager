@@ -140,13 +140,19 @@ public class MaastrichterTurnierTestDatenUITest extends BaseCalcUITest {
 	}
 
 	@Test
-	public void maastrichterZweiFinalgruppenSchreibtBahnnummerInCadrageVonGruppeB() throws GenerateException {
+	public void maastrichterZweiFinalgruppenNummeriertErsteKoRundeGruppenuebergreifend() throws GenerateException {
 		new MaastrichterTurnierTestDaten(wkingSpreadsheet, 25, 3, 16).generate();
 
 		var konfig = new de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet(
 				wkingSpreadsheet);
 		konfig.setSpielbaumSpielbahn(SpielrundeSpielbahn.N);
 		new MaastrichterFinalrundeSheet(wkingSpreadsheet).doRun();
+
+		XSpreadsheet gruppeA = sheetHlp.findByName(SheetNamen.koFinaleGruppe("A"));
+		assertThat(gruppeA).as("A-Finale muss bei 25 Teams und Gruppengroesse 16 existieren").isNotNull();
+		assertThat(sheetHlp.getIntFromCell(gruppeA, Position.from(0, 3)))
+				.as("Erste KO-Runde beginnt in Gruppe A mit Bahn 1")
+				.isEqualTo(1);
 
 		XSpreadsheet gruppeB = sheetHlp.findByName(SheetNamen.koFinaleGruppe("B"));
 		assertThat(gruppeB).as("B-Finale muss bei 25 Teams und Gruppengroesse 16 existieren").isNotNull();
@@ -157,8 +163,8 @@ public class MaastrichterTurnierTestDatenUITest extends BaseCalcUITest {
 				.as("Wenn Cadrage die erste Runde ist, hat Runde 1 keine Bahn-Spalte")
 				.isEqualTo("Nr");
 		assertThat(sheetHlp.getIntFromCell(gruppeB, Position.from(0, 4)))
-				.as("Erste Cadrage-Partie in Gruppe B braucht eine Bahnnummer")
-				.isEqualTo(1);
+				.as("Cadrage zaehlt als erste KO-Runde und wird nach Gruppe A weiter nummeriert")
+				.isEqualTo(9);
 	}
 
 	@Test
