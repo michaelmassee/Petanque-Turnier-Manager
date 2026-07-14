@@ -182,6 +182,34 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
         return namen;
     }
 
+    @Override
+    public MeldelisteStatus getMeldelisteStatus() {
+        int checkin = 0;
+        int gesamt = 0;
+        int aktivSpalte = aktivSpalte();
+        for (int zeile = ersteDatenZeile; zeile <= MAX_DATEN_ZEILE; zeile++) {
+            if (!istTeamZeileBelegt(zeile)) {
+                break;
+            }
+            gesamt++;
+            if (!sicherText(sheetHelper, sheet, aktivSpalte, zeile).strip().isEmpty()) {
+                checkin++;
+            }
+        }
+        return new MeldelisteStatus(gesamt - checkin, checkin, gesamt);
+    }
+
+    private boolean istTeamZeileBelegt(int zeile) {
+        for (int s = 0; s < anzSpieler; s++) {
+            String vor = sicherText(sheetHelper, sheet, vornameSpalte(s), zeile).strip();
+            String nach = sicherText(sheetHelper, sheet, nachnameSpalte(s), zeile).strip();
+            if (!vor.isEmpty() || !nach.isEmpty()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /** Spaltenindex der optionalen Vereinsname-Zelle für Spieler-Slot {@code i} (0-basiert). */
     private int vereinSpalte(int slotIndex) {
         return nachnameSpalte(slotIndex) + 1;
@@ -287,13 +315,16 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
             // Aktiv-Spalte (= letzteDatenSpalte + 2) auf „nimmt teil" setzen,
             // sonst kommt „Meldeliste Aktualisieren" mit der Frage „Es sind
             // keine Teams aktiv. Sollen alle aktiviert werden?".
-            int aktivSpalte = letzteSchreibSpalte + 2;
             sheetHelper.setNumberValueInCell(NumberCellValue
-                    .from(sheet, Position.from(aktivSpalte, zeile)).setValue(AKTIV_WERT_NIMMT_TEIL));
+                    .from(sheet, Position.from(aktivSpalte(), zeile)).setValue(AKTIV_WERT_NIMMT_TEIL));
             return spieler.size();
         } catch (Exception e) {
             throw new MeldelisteSchreibException("Schreibvorgang fehlgeschlagen", e);
         }
+    }
+
+    private int aktivSpalte() {
+        return letzteSchreibSpalte + 2;
     }
 
     /** Erste Zeile, in der kein Spieler eingetragen ist (Vorname + Nachname Slot 0 leer). */

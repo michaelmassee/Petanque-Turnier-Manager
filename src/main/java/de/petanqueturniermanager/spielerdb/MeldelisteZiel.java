@@ -21,6 +21,9 @@ public interface MeldelisteZiel extends AbgleichQuelle {
     /** Aktuell in der Meldeliste eingetragene Spielernamen (case-insensitiv getrimmt). */
     List<String> getVorhandeneSpielernamen();
 
+    /** Aktuelle Team-Zahlen der Ziel-Meldeliste für den Übernahme-Dialog. */
+    MeldelisteStatus getMeldelisteStatus();
+
     /**
      * Sucht einen Namen (case-insensitiv getrimmt) in der bestehenden Meldeliste.
      *
@@ -37,6 +40,16 @@ public interface MeldelisteZiel extends AbgleichQuelle {
      * @throws MeldelisteSchreibException bei Sheet-Fehlern oder voller Liste.
      */
     int schreibeBlock(List<SpielerMitVerein> spieler) throws MeldelisteSchreibException;
+
+    /**
+     * Team-Zähler der Meldeliste.
+     *
+     * @param angemeldet belegte Teams ohne Checkin-Haken
+     * @param checkin belegte Teams mit Checkin-Haken
+     * @param gesamt Summe aller belegten Teams
+     */
+    record MeldelisteStatus(int angemeldet, int checkin, int gesamt) {
+    }
 
     /** Fehler beim Block-Schreiben in die Meldeliste. */
     final class MeldelisteSchreibException extends Exception {

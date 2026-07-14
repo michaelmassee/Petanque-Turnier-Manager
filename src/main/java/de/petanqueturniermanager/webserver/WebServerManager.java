@@ -1459,6 +1459,9 @@ public final class WebServerManager implements TimerListener {
     public synchronized List<RegieQuelleInfo> verfuegbareRegieQuellen() {
         var result = new ArrayList<RegieQuelleInfo>();
         for (var eintrag : GlobalProperties.get().getCompositeViewEintraege()) {
+            if (!eintrag.aktiv()) {
+                continue;
+            }
             String id = compositeViewId(eintrag.port());
             boolean laeuft = compositeInstanzen.stream()
                     .anyMatch(i -> i.getKonfiguration().port() == eintrag.port() && i.laeuft());
@@ -1467,10 +1470,12 @@ public final class WebServerManager implements TimerListener {
                     : eintrag.name().trim();
             result.add(new RegieQuelleInfo(id, name, eintrag.port(), laeuft));
         }
-        int startseitePort = GlobalProperties.get().getStartseitePort();
-        boolean startseiteLaeuft = startseiteInstanz != null && startseiteInstanz.laeuft();
-        result.add(new RegieQuelleInfo(STARTSEITE_VIEW_ID, I18n.get("startseite.anzeigename"),
-                startseitePort, startseiteLaeuft));
+        if (GlobalProperties.get().isStartseiteAktiv()) {
+            int startseitePort = GlobalProperties.get().getStartseitePort();
+            boolean startseiteLaeuft = startseiteInstanz != null && startseiteInstanz.laeuft();
+            result.add(new RegieQuelleInfo(STARTSEITE_VIEW_ID, I18n.get("startseite.anzeigename"),
+                    startseitePort, startseiteLaeuft));
+        }
         return result;
     }
 

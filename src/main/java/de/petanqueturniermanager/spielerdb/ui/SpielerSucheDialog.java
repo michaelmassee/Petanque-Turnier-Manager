@@ -72,7 +72,8 @@ public final class SpielerSucheDialog extends AbstractUnoDialog {
     private static final int LBLFILTER_X = 45, LBLFILTER_Y = 44, LBLFILTER_W = 315, LBLFILTER_H = 12;
     private static final int LIST_X = 8, LIST_Y = 60, LIST_W = 350, LIST_H = 200;
     private static final int BTN_X = 365, BTN_W = 165, BTN_H = 14;
-    private static final int TEAM_LIST_H = 92;
+    private static final int MELDELISTE_STATUS_H = 14;
+    private static final int TEAM_LIST_H = 74;
     private static final int FOOTER_Y = 262;
     private static final int LIMIT_TREFFER = 200;
 
@@ -213,6 +214,12 @@ public final class SpielerSucheDialog extends AbstractUnoDialog {
         controls.button("btnLoeschen", I18n.get("spielerdb.suche.btn.loeschen"), BTN_X, by, BTN_W, BTN_H);
         controls.enabled("btnLoeschen", false);
         by += 18;
+
+        if (istUebernahmeModus()) {
+            controls.fixedText("lblMeldelisteStatus", "", BTN_X, by, BTN_W, MELDELISTE_STATUS_H);
+            aktualisiereMeldelisteStatus();
+            by += MELDELISTE_STATUS_H + 4;
+        }
 
         if (istBlockModus()) {
             controls.fixedText("lblTeam", "", BTN_X, by, BTN_W, 10);
@@ -464,6 +471,16 @@ public final class SpielerSucheDialog extends AbstractUnoDialog {
         bereitsGemeldeteNormiert = ziel.getVorhandeneSpielernamen().stream()
                 .map(SpielerSucheDialog::norm)
                 .collect(Collectors.toUnmodifiableSet());
+    }
+
+    private void aktualisiereMeldelisteStatus() {
+        UnoControlsHelper c = this.controls;
+        if (c == null || ziel == null) {
+            return;
+        }
+        var status = ziel.getMeldelisteStatus();
+        c.label("lblMeldelisteStatus", I18n.get("spielerdb.suche.meldeliste_status",
+                status.angemeldet(), status.checkin(), status.gesamt()));
     }
 
     private static String formatZeile(SpielerMitVerein s) {
@@ -724,6 +741,7 @@ public final class SpielerSucheDialog extends AbstractUnoDialog {
             // Frisch übernommene Spieler aus der sichtbaren Trefferliste entfernen,
             // wenn der Filter aktiv ist — sonst tauchen sie weiter auf.
             aktualisiereGemeldeteCache();
+            aktualisiereMeldelisteStatus();
             setzeTreffer(rohTreffer);
         } catch (MeldelisteSchreibException e) {
             logger.error("Block-Schreiben fehlgeschlagen", e);

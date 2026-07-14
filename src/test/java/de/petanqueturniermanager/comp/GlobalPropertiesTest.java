@@ -11,6 +11,7 @@ import de.petanqueturniermanager.comp.GlobalProperties.CompositeViewEintragRoh;
 import de.petanqueturniermanager.comp.GlobalProperties.PanelEintragRoh;
 import de.petanqueturniermanager.webserver.PanelTyp;
 import de.petanqueturniermanager.webserver.RandKonfiguration;
+import de.petanqueturniermanager.webserver.WebServerManager;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -274,6 +275,25 @@ class GlobalPropertiesTest {
         assertEquals(PanelTyp.TURNIERSTARTSEITE, konfigPanel.typ());
         assertEquals("", konfigPanel.sheetConfig());
         assertEquals("", konfigPanel.externeUrl());
+    }
+
+    @Test
+    void testRegieQuellenListenNurAktiveViews() {
+        var gp = GlobalProperties.get();
+        var panel = new PanelEintragRoh(
+                PanelTyp.BLATT, "RANGLISTE", GlobalProperties.DEFAULT_ZOOM, "kein", "kein", false, "");
+        gp.speichernCompositeViews(true, List.of(
+                new CompositeViewEintragRoh(
+                        5001, "Aktive Anzeige", true, GlobalProperties.DEFAULT_ZOOM, true, "", List.of(panel),
+                        RandKonfiguration.KEINER),
+                new CompositeViewEintragRoh(
+                        5002, "Inaktive Anzeige", false, GlobalProperties.DEFAULT_ZOOM, true, "", List.of(panel),
+                        RandKonfiguration.KEINER)));
+        gp.speichernStartseite(9200, false, GlobalProperties.DEFAULT_ZOOM, false);
+
+        var quellen = WebServerManager.get().verfuegbareRegieQuellen();
+
+        assertEquals(List.of("composite:5001"), quellen.stream().map(q -> q.viewId()).toList());
     }
 
     @Test
