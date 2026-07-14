@@ -98,6 +98,10 @@ final class AsyncLogErrorCollector {
 	}
 
 	private static Path logFile() {
+		String logDir = System.getProperty("ptm.log.dir");
+		if (logDir != null && !logDir.isBlank()) {
+			return Path.of(logDir, "info.log");
+		}
 		return Path.of(System.getProperty("user.home"), ".petanqueturniermanager", "info.log");
 	}
 

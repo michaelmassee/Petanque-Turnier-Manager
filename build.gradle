@@ -566,6 +566,7 @@ tasks.withType(Test).configureEach {
     jvmArgs '--enable-native-access=ALL-UNNAMED'
     systemProperty 'user.language', 'de'
     systemProperty 'user.country', 'DE'
+    systemProperty 'ptm.log.dir', layout.buildDirectory.dir("test-logs/${name}/.petanqueturniermanager").get().asFile.absolutePath
 }
 
 test {
