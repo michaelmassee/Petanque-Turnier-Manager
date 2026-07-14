@@ -162,7 +162,7 @@ public class MaastrichterTurnierTestDatenUITest extends BaseCalcUITest {
 		assertThat(sheetHlp.getTextFromCell(gruppeB, Position.from(4, 2)))
 				.as("Wenn Cadrage die erste Runde ist, hat Runde 1 keine Bahn-Spalte")
 				.isEqualTo("Nr");
-		assertThat(sheetHlp.getIntFromCell(gruppeB, Position.from(0, 4)))
+		assertThat(sheetHlp.getIntFromCell(gruppeB, Position.from(0, 5)))
 				.as("Cadrage zaehlt als erste KO-Runde und wird nach Gruppe A weiter nummeriert")
 				.isEqualTo(9);
 	}
