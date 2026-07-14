@@ -44,6 +44,7 @@ import de.petanqueturniermanager.ko.konfiguration.KoSpielbaumTeamAnzeige;
  * <li>Vereinsname anzeigen</li>
  * <li>Anzeige im Spielbaum: Teamnummer / Teamname</li>
  * <li>Bahnnummer im Spielbaum</li>
+ * <li>Bahnnummer nur in Runde 1</li>
  * <li>Spiel um Platz 3/4</li>
  * <li>Turnierbaum Gruppen Größe</li>
  * <li>Turnierbaum Min. Rest-Größe</li>
@@ -58,18 +59,21 @@ public class KoTurnierParameterDialog {
 		public final boolean vereinsnameAnzeigen;
 		public final KoSpielbaumTeamAnzeige spielbaumTeamAnzeige;
 		public final SpielrundeSpielbahn spielbaumSpielbahn;
+		public final boolean spielbaumBahnNurRunde1;
 		public final boolean spielUmPlatz3;
 		public final int gruppenGroesse;
 		public final int minLetzteGruppeGroesse;
 
 		public TurnierParameter(Formation formation, boolean teamnameAnzeigen, boolean vereinsnameAnzeigen,
 				KoSpielbaumTeamAnzeige spielbaumTeamAnzeige, SpielrundeSpielbahn spielbaumSpielbahn,
-				boolean spielUmPlatz3, int gruppenGroesse, int minLetzteGruppeGroesse) {
+				boolean spielbaumBahnNurRunde1, boolean spielUmPlatz3, int gruppenGroesse,
+				int minLetzteGruppeGroesse) {
 			this.formation = formation;
 			this.teamnameAnzeigen = teamnameAnzeigen;
 			this.vereinsnameAnzeigen = vereinsnameAnzeigen;
 			this.spielbaumTeamAnzeige = spielbaumTeamAnzeige;
 			this.spielbaumSpielbahn = spielbaumSpielbahn;
+			this.spielbaumBahnNurRunde1 = spielbaumBahnNurRunde1;
 			this.spielUmPlatz3 = spielUmPlatz3;
 			this.gruppenGroesse = gruppenGroesse;
 			this.minLetzteGruppeGroesse = minLetzteGruppeGroesse;
@@ -95,7 +99,8 @@ public class KoTurnierParameterDialog {
 	public Optional<TurnierParameter> show(Formation defaultFormation, boolean defaultTeamnameAnzeigen,
 			boolean defaultVereinsnameAnzeigen, KoSpielbaumTeamAnzeige defaultSpielbaumTeamAnzeige,
 			SpielrundeSpielbahn defaultSpielbahn, boolean defaultSpielUmPlatz3,
-			int defaultGruppenGroesse, int defaultMinLetzteGruppeGroesse) throws com.sun.star.uno.Exception {
+			boolean defaultSpielbaumBahnNurRunde1, int defaultGruppenGroesse,
+			int defaultMinLetzteGruppeGroesse) throws com.sun.star.uno.Exception {
 
 		ProcessBox.from().hide();
 
@@ -108,7 +113,7 @@ public class KoTurnierParameterDialog {
 		dlgProps.setPropertyValue("PositionX", Integer.valueOf(50));
 		dlgProps.setPropertyValue("PositionY", Integer.valueOf(50));
 		dlgProps.setPropertyValue("Width", Integer.valueOf(160));
-		dlgProps.setPropertyValue("Height", Integer.valueOf(215));
+		dlgProps.setPropertyValue("Height", Integer.valueOf(229));
 		dlgProps.setPropertyValue("Title", "K.-O. Turnier \u2013 Parameter");
 		dlgProps.setPropertyValue("Moveable", Boolean.TRUE);
 
@@ -150,26 +155,29 @@ public class KoTurnierParameterDialog {
 						"Durchnummerieren (1-n)", "Zufällig vergeben" },
 				spielbahnIndex(defaultSpielbahn), 82, 84, 70, 12);
 
-		addFixedLine(xMSF, cont, "sep4", 5, 104, 150, 2);
+		addCheckBox(xMSF, cont, "cbBahnNurRunde1", "Bahnnummer nur in Runde 1", 8, 104, 140, 10,
+				defaultSpielbaumBahnNurRunde1);
 
-		addCheckBox(xMSF, cont, "cbPlatz3", "Spiel um Platz 3/4", 8, 110, 140, 10, defaultSpielUmPlatz3);
+		addFixedLine(xMSF, cont, "sep4", 5, 118, 150, 2);
 
-		addFixedLine(xMSF, cont, "sep5", 5, 124, 150, 2);
+		addCheckBox(xMSF, cont, "cbPlatz3", "Spiel um Platz 3/4", 8, 124, 140, 10, defaultSpielUmPlatz3);
 
-		addLabel(xMSF, cont, "lblGruppenGroesse", "Gruppen Größe:", 8, 130, 80, 10);
+		addFixedLine(xMSF, cont, "sep5", 5, 138, 150, 2);
+
+		addLabel(xMSF, cont, "lblGruppenGroesse", "Gruppen Größe:", 8, 144, 80, 10);
 		addListBox(xMSF, cont, "lstGruppenGroesse", erlaubteGruppenGroessenAlsStrings(),
-				(short) KoPropertiesSpalte.indexAusGruppenGroesse(defaultGruppenGroesse), 92, 142, 60, 12);
+				(short) KoPropertiesSpalte.indexAusGruppenGroesse(defaultGruppenGroesse), 92, 156, 60, 12);
 
-		addFixedLine(xMSF, cont, "sep6", 5, 158, 150, 2);
+		addFixedLine(xMSF, cont, "sep6", 5, 172, 150, 2);
 
-		addLabel(xMSF, cont, "lblMinLetzteGruppe", I18n.get("dialog.ko.min.letzte.gruppe.label"), 8, 164, 80, 10);
+		addLabel(xMSF, cont, "lblMinLetzteGruppe", I18n.get("dialog.ko.min.letzte.gruppe.label"), 8, 178, 80, 10);
 		addListBox(xMSF, cont, "lstMinLetzteGruppe", erlaubteMinLetzteGruppenGroessenAlsStrings(),
-				(short) KoPropertiesSpalte.indexAusMinLetzteGruppenGroesse(defaultMinLetzteGruppeGroesse), 92, 176, 60, 12);
+				(short) KoPropertiesSpalte.indexAusMinLetzteGruppenGroesse(defaultMinLetzteGruppeGroesse), 92, 190, 60, 12);
 
-		addFixedLine(xMSF, cont, "sep7", 5, 192, 150, 2);
+		addFixedLine(xMSF, cont, "sep7", 5, 206, 150, 2);
 
-		addButton(xMSF, cont, "btnOk", "OK", 22, 198, 50, 14);
-		addButton(xMSF, cont, "btnCancel", "Abbrechen", 88, 198, 60, 14);
+		addButton(xMSF, cont, "btnOk", "OK", 22, 212, 50, 14);
+		addButton(xMSF, cont, "btnCancel", "Abbrechen", 88, 212, 60, 14);
 
 		// 4. Button-Listener anhängen
 		XDialog xDialog = Lo.qi(XDialog.class, dialog);
@@ -220,13 +228,15 @@ public class KoTurnierParameterDialog {
 				case 3 -> SpielrundeSpielbahn.R;
 				default -> SpielrundeSpielbahn.X;
 			};
+			boolean spielbaumBahnNurRunde1 = readCheckBoxState(xcc, "cbBahnNurRunde1");
 			boolean spielUmPlatz3 = readCheckBoxState(xcc, "cbPlatz3");
 			int gruppenGroesse = KoPropertiesSpalte.getErlaubteGruppenGroessen()
 					.get(readListBoxSelected(xcc, "lstGruppenGroesse"));
 			int minLetzteGruppeGroesse = KoPropertiesSpalte.getErlaubteMinLetzteGruppenGroessen()
 					.get(readListBoxSelected(xcc, "lstMinLetzteGruppe"));
 			result = Optional.of(new TurnierParameter(formation, teamnameAnzeigen, vereinsnameAnzeigen,
-					spielbaumAnzeige, spielbahn, spielUmPlatz3, gruppenGroesse, minLetzteGruppeGroesse));
+					spielbaumAnzeige, spielbahn, spielbaumBahnNurRunde1, spielUmPlatz3, gruppenGroesse,
+					minLetzteGruppeGroesse));
 		}
 
 		Lo.qi(XComponent.class, dialog).dispose();

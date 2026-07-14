@@ -18,6 +18,7 @@ public interface IKoBracketKonfiguration {
 	KoSpielbaumTeamAnzeige getSpielbaumTeamAnzeige();
 	SpielrundeSpielbahn getSpielbaumSpielbahn();
 	boolean isSpielbaumSpielUmPlatz3();
+	default boolean isSpielbaumBahnNurRunde1() { return true; }
 
 	// Meldeliste-Struktur (für VLOOKUP-Formeln in den Bracket-Zellen)
 	boolean isMeldeListeTeamnameAnzeigen();

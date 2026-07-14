@@ -53,6 +53,7 @@ public class MaastrichterTurnierParameterDialog {
 		public final int anzVorrunden;
 		public final KoSpielbaumTeamAnzeige spielbaumTeamAnzeige;
 		public final SpielrundeSpielbahn spielbaumSpielbahn;
+		public final boolean spielbaumBahnNurRunde1;
 		public final boolean spielUmPlatz3;
 		public final int gruppenGroesse;
 		public final int minLetzteGruppeGroesse;
@@ -61,7 +62,7 @@ public class MaastrichterTurnierParameterDialog {
 		public TurnierParameter(Formation formation, boolean teamnameAnzeigen, boolean vereinsnameAnzeigen,
 				SpielplanTeamAnzeige spielplanTeamAnzeige, SchweizerRankingModus rankingModus, int anzVorrunden,
 				KoSpielbaumTeamAnzeige spielbaumTeamAnzeige, SpielrundeSpielbahn spielbaumSpielbahn,
-				boolean spielUmPlatz3, int gruppenGroesse, int minLetzteGruppeGroesse,
+				boolean spielbaumBahnNurRunde1, boolean spielUmPlatz3, int gruppenGroesse, int minLetzteGruppeGroesse,
 				MaastrichterGruppenModus gruppenModus) {
 			this.formation = formation;
 			this.teamnameAnzeigen = teamnameAnzeigen;
@@ -71,6 +72,7 @@ public class MaastrichterTurnierParameterDialog {
 			this.anzVorrunden = anzVorrunden;
 			this.spielbaumTeamAnzeige = spielbaumTeamAnzeige;
 			this.spielbaumSpielbahn = spielbaumSpielbahn;
+			this.spielbaumBahnNurRunde1 = spielbaumBahnNurRunde1;
 			this.spielUmPlatz3 = spielUmPlatz3;
 			this.gruppenGroesse = gruppenGroesse;
 			this.minLetzteGruppeGroesse = minLetzteGruppeGroesse;
@@ -89,7 +91,8 @@ public class MaastrichterTurnierParameterDialog {
 			boolean defaultVereinsnameAnzeigen, SpielplanTeamAnzeige defaultSpielplanTeamAnzeige,
 			SchweizerRankingModus defaultRankingModus, int defaultAnzVorrunden,
 			KoSpielbaumTeamAnzeige defaultSpielbaumTeamAnzeige, SpielrundeSpielbahn defaultSpielbaumSpielbahn,
-			boolean defaultSpielUmPlatz3, int defaultGruppenGroesse, int defaultMinLetzteGruppeGroesse,
+			boolean defaultSpielbaumBahnNurRunde1, boolean defaultSpielUmPlatz3, int defaultGruppenGroesse,
+			int defaultMinLetzteGruppeGroesse,
 			MaastrichterGruppenModus defaultGruppenModus)
 			throws com.sun.star.uno.Exception {
 
@@ -103,7 +106,7 @@ public class MaastrichterTurnierParameterDialog {
 		dlgProps.setPropertyValue("PositionX", Integer.valueOf(50));
 		dlgProps.setPropertyValue("PositionY", Integer.valueOf(50));
 		dlgProps.setPropertyValue("Width", Integer.valueOf(160));
-		dlgProps.setPropertyValue("Height", Integer.valueOf(235));
+		dlgProps.setPropertyValue("Height", Integer.valueOf(263));
 		dlgProps.setPropertyValue("Title", I18n.get("dialog.maastrichter.titel"));
 		dlgProps.setPropertyValue("Moveable", Boolean.TRUE);
 
@@ -157,29 +160,41 @@ public class MaastrichterTurnierParameterDialog {
 				(short) (defaultSpielbaumTeamAnzeige == KoSpielbaumTeamAnzeige.NAME ? 1 : 0),
 				92, 123, 60, 12);
 
-		addCheckBox(xMSF, cont, "cbSpielUmPlatz3", I18n.get("dialog.maastrichter.spiel.um.platz3"), 8, 141, 140, 10,
+		addLabel(xMSF, cont, "lblSpielbahn", I18n.get("dialog.maastrichter.spielbaum.spielbahn.label"), 8,
+				141, 80, 10);
+		addListBox(xMSF, cont, "lstSpielbahn",
+				new String[] { I18n.get("dialog.maastrichter.spielbahn.keine"),
+						I18n.get("dialog.maastrichter.spielbahn.leer"),
+						I18n.get("dialog.maastrichter.spielbahn.nummeriert"),
+						I18n.get("dialog.maastrichter.spielbahn.zufaellig") },
+				spielbahnIndex(defaultSpielbaumSpielbahn), 92, 139, 60, 12);
+
+		addCheckBox(xMSF, cont, "cbBahnNurRunde1", I18n.get("dialog.maastrichter.bahn.nur.runde1"), 8, 157, 140, 10,
+				defaultSpielbaumBahnNurRunde1);
+
+		addCheckBox(xMSF, cont, "cbSpielUmPlatz3", I18n.get("dialog.maastrichter.spiel.um.platz3"), 8, 171, 140, 10,
 				defaultSpielUmPlatz3);
 
-		addFixedLine(xMSF, cont, "sep6", 5, 155, 150, 2);
-		addLabel(xMSF, cont, "lblGruppenModus", I18n.get("dialog.maastrichter.gruppen.modus.label"), 8, 159, 80, 10);
+		addFixedLine(xMSF, cont, "sep6", 5, 185, 150, 2);
+		addLabel(xMSF, cont, "lblGruppenModus", I18n.get("dialog.maastrichter.gruppen.modus.label"), 8, 189, 80, 10);
 		addListBox(xMSF, cont, "lstGruppenModus",
 				new String[] { I18n.get("dialog.maastrichter.gruppen.modus.nach.siegen"),
 						I18n.get("dialog.maastrichter.gruppen.modus.nach.groesse") },
 				(short) (defaultGruppenModus == MaastrichterGruppenModus.NACH_GROESSE ? 1 : 0),
-				92, 157, 60, 12);
-		addFixedLine(xMSF, cont, "sep7", 5, 173, 150, 2);
-		addLabel(xMSF, cont, "lblGruppenGroesse", I18n.get("dialog.maastrichter.gruppen.groesse.label"), 8, 177, 80,
+				92, 187, 60, 12);
+		addFixedLine(xMSF, cont, "sep7", 5, 203, 150, 2);
+		addLabel(xMSF, cont, "lblGruppenGroesse", I18n.get("dialog.maastrichter.gruppen.groesse.label"), 8, 207, 80,
 				10);
 		addListBox(xMSF, cont, "lstGruppenGroesse", erlaubteGruppenGroessenAlsStrings(),
-				(short) KoPropertiesSpalte.indexAusGruppenGroesse(defaultGruppenGroesse), 92, 175, 60, 12);
+				(short) KoPropertiesSpalte.indexAusGruppenGroesse(defaultGruppenGroesse), 92, 205, 60, 12);
 
-		addFixedLine(xMSF, cont, "sep8", 5, 191, 150, 2);
-		addLabel(xMSF, cont, "lblMinLetzteGruppe", I18n.get("dialog.maastrichter.min.letzte.gruppe.label"), 8, 197, 80, 10);
+		addFixedLine(xMSF, cont, "sep8", 5, 221, 150, 2);
+		addLabel(xMSF, cont, "lblMinLetzteGruppe", I18n.get("dialog.maastrichter.min.letzte.gruppe.label"), 8, 227, 80, 10);
 		addListBox(xMSF, cont, "lstMinLetzteGruppe", erlaubteMinLetzteGruppenGroessenAlsStrings(),
-				(short) KoPropertiesSpalte.indexAusMinLetzteGruppenGroesse(defaultMinLetzteGruppeGroesse), 92, 195, 60, 12);
+				(short) KoPropertiesSpalte.indexAusMinLetzteGruppenGroesse(defaultMinLetzteGruppeGroesse), 92, 225, 60, 12);
 
-		addButton(xMSF, cont, "btnOk", I18n.get("dialog.ok"), 22, 212, 50, 14);
-		addButton(xMSF, cont, "btnCancel", I18n.get("dialog.abbrechen"), 88, 212, 60, 14);
+		addButton(xMSF, cont, "btnOk", I18n.get("dialog.ok"), 22, 242, 50, 14);
+		addButton(xMSF, cont, "btnCancel", I18n.get("dialog.abbrechen"), 88, 242, 60, 14);
 
 		XDialog xDialog = Lo.qi(XDialog.class, dialog);
 		okPressed = false;
@@ -225,6 +240,13 @@ public class MaastrichterTurnierParameterDialog {
 			int anzVorrunden = readNumericField(xcc, "nfAnzVorrunden", defaultAnzVorrunden);
 			KoSpielbaumTeamAnzeige spielbaumTeamAnzeige = readListBoxSelected(xcc, "lstSpielbaum") == 1
 					? KoSpielbaumTeamAnzeige.NAME : KoSpielbaumTeamAnzeige.NR;
+			SpielrundeSpielbahn spielbahn = switch (readListBoxSelected(xcc, "lstSpielbahn")) {
+				case 1 -> SpielrundeSpielbahn.L;
+				case 2 -> SpielrundeSpielbahn.N;
+				case 3 -> SpielrundeSpielbahn.R;
+				default -> SpielrundeSpielbahn.X;
+			};
+			boolean spielbaumBahnNurRunde1 = readCheckBoxState(xcc, "cbBahnNurRunde1");
 			boolean spielUmPlatz3 = readCheckBoxState(xcc, "cbSpielUmPlatz3");
 			MaastrichterGruppenModus gruppenModus = readListBoxSelected(xcc, "lstGruppenModus") == 1
 					? MaastrichterGruppenModus.NACH_GROESSE : MaastrichterGruppenModus.NACH_SIEGEN;
@@ -234,7 +256,8 @@ public class MaastrichterTurnierParameterDialog {
 					.get(readListBoxSelected(xcc, "lstMinLetzteGruppe"));
 			result = Optional.of(new TurnierParameter(formation, teamnameAnzeigen, vereinsnameAnzeigen,
 					spielplanAnzeige, rankingModus, anzVorrunden, spielbaumTeamAnzeige,
-					SpielrundeSpielbahn.X, spielUmPlatz3, gruppenGroesse, minLetzteGruppeGroesse, gruppenModus));
+					spielbahn, spielbaumBahnNurRunde1, spielUmPlatz3, gruppenGroesse, minLetzteGruppeGroesse,
+					gruppenModus));
 		}
 
 		Lo.qi(XComponent.class, dialog).dispose();
@@ -269,6 +292,15 @@ public class MaastrichterTurnierParameterDialog {
 		return switch (formation) {
 			case DOUBLETTE -> 1;
 			case TRIPLETTE -> 2;
+			default -> 0;
+		};
+	}
+
+	private static short spielbahnIndex(SpielrundeSpielbahn spielbahn) {
+		return switch (spielbahn) {
+			case L -> 1;
+			case N -> 2;
+			case R -> 3;
 			default -> 0;
 		};
 	}

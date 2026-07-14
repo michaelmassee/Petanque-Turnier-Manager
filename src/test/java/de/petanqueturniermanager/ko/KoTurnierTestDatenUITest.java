@@ -75,6 +75,17 @@ public class KoTurnierTestDatenUITest extends BaseCalcUITest {
 		validiereMeldelistePerJson(16, "ko-meldeliste-16.json");
 		validiereTurnierbaumPerJson(SheetNamen.koTurnierbaumGruppe("A"), "ko-turnierbaum-16-gruppe-a.json");
 		validiereTurnierbaumPerJson(SheetNamen.koTurnierbaumGruppe("B"), "ko-turnierbaum-16-gruppe-b.json");
+
+		XSpreadsheet gruppeB = sheetHlp.findByName(SheetNamen.koTurnierbaumGruppe("B"));
+		assertThat(sheetHlp.getIntFromCell(gruppeB, Position.from(0, 3)))
+				.as("Runde 1 muss Bahnnummern gruppenuebergreifend fortsetzen")
+				.isEqualTo(5);
+		assertThat(sheetHlp.getTextFromCell(gruppeB, Position.from(4, 4)))
+				.as("Default: Halbfinale hat keine Bahnnummer")
+				.isEmpty();
+		assertThat(sheetHlp.getTextFromCell(gruppeB, Position.from(8, 6)))
+				.as("Default: Finale hat keine Bahnnummer")
+				.isEmpty();
 	}
 
 	@Test

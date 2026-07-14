@@ -119,6 +119,15 @@ public class KoKonfigurationSheet extends BaseKonfigurationSheet implements IKoB
 		propertiesSpalte.setSpielbaumSpielUmPlatz3(anzeigen);
 	}
 
+	@Override
+	public boolean isSpielbaumBahnNurRunde1() {
+		return propertiesSpalte.isSpielbaumBahnNurRunde1();
+	}
+
+	public void setSpielbaumBahnNurRunde1(boolean nurRunde1) {
+		propertiesSpalte.setSpielbaumBahnNurRunde1(nurRunde1);
+	}
+
 	public int getGruppenGroesse() {
 		return propertiesSpalte.getGruppenGroesse();
 	}

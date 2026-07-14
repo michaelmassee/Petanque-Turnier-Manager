@@ -49,6 +49,7 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 	public static final String KONFIG_PROP_SPIELBAUM_TEAM_ANZEIGE = "Spielbaum Team Anzeige";
 	public static final String KONFIG_PROP_SPIELBAUM_SPIELBAHN = "Spielbaum Spielbahn";
 	public static final String KONFIG_PROP_SPIELBAUM_PLATZ3 = "Spielbaum Spiel um Platz 3";
+	public static final String KONFIG_PROP_SPIELBAUM_BAHN_NUR_RUNDE_1 = "Spielbaum Bahn nur Runde 1";
 
 	public static final String KONFIG_PROP_GRUPPEN_GROESSE = "Turnierbaum Gruppen Größe";
 
@@ -140,6 +141,11 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 				.setDescription("config.desc.ko.spielbaum.platz3"))
 				.addAuswahl("J", "Ja").addAuswahl("N", "Nein"));
 
+		KONFIG_PROPERTIES.add(ConfigProperty.<Boolean>from(ConfigPropertyType.BOOLEAN,
+				KONFIG_PROP_SPIELBAUM_BAHN_NUR_RUNDE_1)
+				.setDefaultVal(Boolean.TRUE)
+				.setDescription("config.desc.ko.spielbaum.bahn.nur.runde1"));
+
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TAB_COLOR_KO_TURNIERBAUM)
 				.setDefaultVal(SheetTabFarben.KO_TURNIERBAUM)
 				.setDescription("config.desc.tab.farbe.ko.turnierbaum").tabFarbe());
@@ -209,6 +215,11 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 				.setDefaultVal("N")
 				.setDescription("config.desc.ko.spielbaum.platz3"))
 				.addAuswahl("J", "Ja").addAuswahl("N", "Nein"));
+
+		props.add(ConfigProperty.<Boolean>from(ConfigPropertyType.BOOLEAN,
+				KONFIG_PROP_SPIELBAUM_BAHN_NUR_RUNDE_1)
+				.setDefaultVal(Boolean.TRUE)
+				.setDescription("config.desc.ko.spielbaum.bahn.nur.runde1"));
 
 		props.add(buildGruppenGroesseProperty());
 		props.add(buildMinLetzteGruppeGroesseProperty());
@@ -307,6 +318,14 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 
 	public void setSpielbaumSpielUmPlatz3(boolean anzeigen) {
 		setStringProperty(KONFIG_PROP_SPIELBAUM_PLATZ3, anzeigen ? "J" : "N");
+	}
+
+	public boolean isSpielbaumBahnNurRunde1() {
+		return Boolean.TRUE.equals(readBooleanProperty(KONFIG_PROP_SPIELBAUM_BAHN_NUR_RUNDE_1));
+	}
+
+	public void setSpielbaumBahnNurRunde1(boolean nurRunde1) {
+		setStringProperty(KONFIG_PROP_SPIELBAUM_BAHN_NUR_RUNDE_1, Boolean.toString(nurRunde1));
 	}
 
 	/**

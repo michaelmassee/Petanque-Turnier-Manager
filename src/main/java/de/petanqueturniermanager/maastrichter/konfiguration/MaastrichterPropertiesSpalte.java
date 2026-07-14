@@ -89,6 +89,15 @@ public class MaastrichterPropertiesSpalte extends SchweizerPropertiesSpalte {
 		setStringProperty(KoPropertiesSpalte.KONFIG_PROP_SPIELBAUM_PLATZ3, anzeigen ? "J" : "N");
 	}
 
+	public boolean isSpielbaumBahnNurRunde1() {
+		return Boolean.TRUE.equals(readBooleanProperty(KoPropertiesSpalte.KONFIG_PROP_SPIELBAUM_BAHN_NUR_RUNDE_1));
+	}
+
+	public void setSpielbaumBahnNurRunde1(boolean nurRunde1) {
+		setStringProperty(KoPropertiesSpalte.KONFIG_PROP_SPIELBAUM_BAHN_NUR_RUNDE_1,
+				Boolean.toString(nurRunde1));
+	}
+
 	public int getGruppenGroesse() {
 		return KoPropertiesSpalte.normalisiereGruppenGroesse(
 				readStringProperty(KoPropertiesSpalte.KONFIG_PROP_GRUPPEN_GROESSE));

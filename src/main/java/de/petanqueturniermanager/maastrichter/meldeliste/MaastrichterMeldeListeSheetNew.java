@@ -81,6 +81,7 @@ public class MaastrichterMeldeListeSheetNew extends SheetRunner implements IShee
 					konfigurationSheet.getAnzVorrunden(),
 					konfigurationSheet.getSpielbaumTeamAnzeige(),
 					konfigurationSheet.getSpielbaumSpielbahn(),
+					konfigurationSheet.isSpielbaumBahnNurRunde1(),
 					konfigurationSheet.isSpielbaumSpielUmPlatz3(),
 					konfigurationSheet.getGruppenGroesse(),
 					konfigurationSheet.getMinLetzteGruppeGroesse(),
@@ -104,6 +105,7 @@ public class MaastrichterMeldeListeSheetNew extends SheetRunner implements IShee
 		konfigurationSheet.setAktiveSpielRunde(SpielRundeNr.from(1));
 		konfigurationSheet.setSpielbaumTeamAnzeige(param.get().spielbaumTeamAnzeige);
 		konfigurationSheet.setSpielbaumSpielbahn(param.get().spielbaumSpielbahn);
+		konfigurationSheet.setSpielbaumBahnNurRunde1(param.get().spielbaumBahnNurRunde1);
 		konfigurationSheet.setSpielbaumSpielUmPlatz3(param.get().spielUmPlatz3);
 		konfigurationSheet.setGruppenGroesse(param.get().gruppenGroesse);
 		konfigurationSheet.setMinLetzteGruppeGroesse(param.get().minLetzteGruppeGroesse);

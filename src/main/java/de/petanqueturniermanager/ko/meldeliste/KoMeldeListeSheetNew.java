@@ -146,6 +146,7 @@ public class KoMeldeListeSheetNew extends SheetRunner implements ISheet, MeldeLi
 							konfig.getSpielbaumTeamAnzeige(),
 							konfig.getSpielbaumSpielbahn(),
 							konfig.isSpielbaumSpielUmPlatz3(),
+							konfig.isSpielbaumBahnNurRunde1(),
 							konfig.getGruppenGroesse(),
 							konfig.getMinLetzteGruppeGroesse());
 		} catch (com.sun.star.uno.Exception e) {
@@ -165,6 +166,7 @@ public class KoMeldeListeSheetNew extends SheetRunner implements ISheet, MeldeLi
 		konfig.setMeldeListeVereinsnameAnzeigen(params.vereinsnameAnzeigen);
 		konfig.setSpielbaumTeamAnzeige(params.spielbaumTeamAnzeige);
 		konfig.setSpielbaumSpielbahn(params.spielbaumSpielbahn);
+		konfig.setSpielbaumBahnNurRunde1(params.spielbaumBahnNurRunde1);
 		konfig.setSpielbaumSpielUmPlatz3(params.spielUmPlatz3);
 		konfig.setGruppenGroesse(params.gruppenGroesse);
 		konfig.setMinLetzteGruppeGroesse(params.minLetzteGruppeGroesse);
