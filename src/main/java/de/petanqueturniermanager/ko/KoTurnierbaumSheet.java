@@ -332,39 +332,57 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	/**
 	 * Zeilenabstand zwischen Team A und Team B innerhalb eines Runde-1-Matches.
 	 *
-	 * <p>Ohne überlappende Cadrage stehen die beiden Teams direkt untereinander (Abstand 1). Eine
-	 * Spreizung ist nur nötig, wenn der obere Runde-1-Slot selbst aus einer zweizeiligen
-	 * Cadrage-Partie kommt; sonst würde diese Partie die untere Team-Zeile des Matches belegen.
-	 * Gespreizt reicht Abstand 2: eine sichtbare Leerzeile im Hauptfeld, darunter die zweite
-	 * Cadrage-Zeile in der Cadrage-Spalte.
+	 * <p>Ohne Cadrage stehen die beiden Teams direkt untereinander (Abstand 1). Hat nur einer der
+	 * beiden Slots eine zweizeilige Cadrage-Partie, reicht Abstand 2 (eine Leerzeile im Hauptfeld,
+	 * darunter die zweite Cadrage-Zeile). Haben <b>beide</b> Slots je eine eigene – unterschiedliche –
+	 * Cadrage-Partie, sind das zwei separate Spiele: dazwischen muss zusätzlich die vorgeschriebene
+	 * Leerzeile stehen, also Abstand 3.
 	 */
 	static int berechneRunde1SlotAbstand(int teamCount, int bracketGroesse) {
-		return brauchtGespreizteCadrageSlots(teamCount, bracketGroesse) ? 2 : 1;
+		return switch (cadrageSpreizungsLevel(teamCount, bracketGroesse)) {
+			case 2 -> 3;
+			case 1 -> 2;
+			default -> 1;
+		};
 	}
 
 	/**
 	 * Zeilenabstand zwischen zwei aufeinanderfolgenden Runde-1-Matches.
 	 *
 	 * <p>Muss so groß sein, dass die (ggf. gespreizten) Slots samt Cadrage-Feeder eines Matches
-	 * nicht in das nächste Match hineinragen. Kompakt: 3 (Slot A, Slot B, Leerzeile). Gespreizt:
-	 * 5 (Slot A + Feeder, Slot B + Feeder, Leerzeile).
+	 * inklusive einer trennenden Leerzeile nicht in das nächste Match hineinragen.
 	 */
 	static int berechneRunde1MatchZeilenAbstand(int teamCount, int bracketGroesse) {
-		return brauchtGespreizteCadrageSlots(teamCount, bracketGroesse) ? 5 : 3;
+		return switch (cadrageSpreizungsLevel(teamCount, bracketGroesse)) {
+			case 2 -> 6;
+			case 1 -> 5;
+			default -> 3;
+		};
 	}
 
-	static boolean brauchtGespreizteCadrageSlots(int teamCount, int bracketGroesse) {
+	/**
+	 * Ermittelt, wie stark die Runde-1-Slots gespreizt werden müssen, damit zwischen je zwei Spielen
+	 * (Cadrage- oder Hauptfeld-Match) mindestens eine Leerzeile bleibt.
+	 *
+	 * @return 0 = keine Cadrage; 1 = höchstens ein Slot pro Match hat Cadrage (Standard-Seeding legt
+	 *         sie immer in den unteren Slot); 2 = mindestens ein Match hat in <b>beiden</b> Slots je
+	 *         eine eigene Cadrage-Partie – diese zwei Spiele bräuchten sonst keine Trennzeile.
+	 */
+	static int cadrageSpreizungsLevel(int teamCount, int bracketGroesse) {
 		if (teamCount <= bracketGroesse) {
-			return false;
+			return 0;
 		}
 		int anzOhneCadrage = new CadrageRechner(teamCount).anzOhneCadrage();
 		int[] setzliste = berechneSetzliste(bracketGroesse);
+		int level = 1;
 		for (int m = 0; m < setzliste.length / 2; m++) {
-			if (setzliste[2 * m] > anzOhneCadrage) {
-				return true;
+			boolean oben = setzliste[2 * m] > anzOhneCadrage;
+			boolean unten = setzliste[2 * m + 1] > anzOhneCadrage;
+			if (oben && unten) {
+				return 2;
 			}
 		}
-		return false;
+		return level;
 	}
 
 	/**
