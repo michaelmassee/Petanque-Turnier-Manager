@@ -3,6 +3,7 @@ package de.petanqueturniermanager.helper.rangliste;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 
@@ -29,11 +30,14 @@ public final class RanglisteUpdateHelper {
         int bisherigeLetzte = rangliste.sucheLetzteZeileMitSpielerNummer();
         int neueLetzte = rangliste.getErsteDatenZiele() + neueTeamAnzahl - 1;
         if (bisherigeLetzte > neueLetzte) {
+            RangePosition alteDatenzeilen = RangePosition.from(rangliste.getErsteSpalte(), neueLetzte + 1,
+                    rangliste.validateSpalte(), bisherigeLetzte);
             RangeHelper.from(sheet,
                     rangliste.getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
-                    RangePosition.from(rangliste.getErsteSpalte(), neueLetzte + 1,
-                            rangliste.validateSpalte(), bisherigeLetzte))
+                    alteDatenzeilen)
                     .clearRange();
+            rangliste.getSheetHelper().setPropertiesInRange(sheet, alteDatenzeilen,
+                    CellProperties.from().setCellBackColor(-1));
         }
     }
 }

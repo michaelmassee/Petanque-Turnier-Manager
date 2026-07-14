@@ -12,6 +12,8 @@ import org.junit.jupiter.api.Test;
 
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.table.BorderLineStyle;
+import com.sun.star.table.TableBorder2;
 import com.sun.star.text.XText;
 import com.sun.star.uno.UnoRuntime;
 
@@ -21,11 +23,13 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.random.RandomSource;
+import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.maastrichter.korunde.KoGruppeABSheet;
 import de.petanqueturniermanager.maastrichter.finalrunde.MaastrichterFinalrundeSheet;
 import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterVorrundenRanglisteSheetUpdate;
+import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheet;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrundeSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
@@ -81,11 +85,25 @@ public class MaastrichterTurnierTestDatenUITest extends BaseCalcUITest {
 
 		validiereMeldelistePerJson(anzTeams, "maastrichter-meldeliste.json");
 		for (int runde = 1; runde <= anzVorrunden; runde++) {
+			assertThat(sheetHlp.findByName(SheetNamen.maastrichterVorrunde(runde)))
+					.as("Maastrichter Vorrunde %s muss den Spielrunden-Sheetnamen verwenden", runde)
+					.isNotNull();
 			validiereVorrundenErgebnissePerJson(anzTeams, runde, "maastrichter-vorrunde-" + runde + ".json");
 		}
 		validiereVorrundenRanglistePerJson(anzTeams, "maastrichter-vorrundenrangliste.json");
 		validiereTeilnehmerPerJson(anzTeams, "maastrichter-teilnehmer.json");
 		validiereFinaleGruppePerJson("A", "maastrichter-finale-a.json");
+	}
+
+	@Test
+	public void maastrichterVorrundeHatDoppelteLinieRechtsVonSpalteB() throws Exception {
+		new MaastrichterTurnierTestDaten(wkingSpreadsheet).generate();
+
+		XSpreadsheet spielrundeSheet = sheetHlp.findByName(SheetNamen.maastrichterVorrunde(1));
+		assertThat(spielrundeSheet).as("Maastrichter Vorrunde 1 muss vorhanden sein").isNotNull();
+
+		assertDoppelteRechteLinie(spielrundeSheet, SchweizerAbstractSpielrundeSheet.ZWEITE_HEADER_ZEILE);
+		assertDoppelteRechteLinie(spielrundeSheet, SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE);
 	}
 
 	@Test
@@ -117,6 +135,41 @@ public class MaastrichterTurnierTestDatenUITest extends BaseCalcUITest {
 		// Zuletzt, weil der bestätigte Neuaufbau die Bahn-Auslosung (RandomSource) neu würfelt
 		// und damit die JSON-Referenzvergleiche oben nicht mehr reproduzierbar wären.
 		validiereFinalrundeNeuAufbauNachBestaetigung("A");
+	}
+
+	@Test
+	public void maastrichterRanglisteUpdateEntferntZebraUnterhalbDerTabelle() throws GenerateException {
+		new MaastrichterTurnierTestDaten(wkingSpreadsheet).generate();
+
+		var xDoc = wkingSpreadsheet.getWorkingSpreadsheetDocument();
+		XSpreadsheet rangliste = SheetMetadataHelper.findeSheetUndHeile(xDoc,
+				SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX, null);
+		assertThat(rangliste).as("Maastrichter Vorrunden-Rangliste muss existieren").isNotNull();
+
+		int ersteAlteZeile = SchweizerRanglisteSheet.ERSTE_DATEN_ZEILE + 10;
+		int zweiteAlteZeile = ersteAlteZeile + 1;
+		assertThat(cellBackColor(rangliste, SchweizerRanglisteSheet.TEAM_NR_SPALTE, ersteAlteZeile))
+				.as("Vorbedingung: alte Zeile 11 hat Zebra-Farbe")
+				.isNotEqualTo(TRANSPARENT);
+		assertThat(cellBackColor(rangliste, SchweizerRanglisteSheet.TEAM_NR_SPALTE, zweiteAlteZeile))
+				.as("Vorbedingung: alte Zeile 12 hat Zebra-Farbe")
+				.isNotEqualTo(TRANSPARENT);
+
+		XSpreadsheet meldeliste = SheetMetadataHelper.findeSheetUndHeile(xDoc,
+				SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_MELDELISTE, null);
+		assertThat(meldeliste).as("Maastrichter Meldeliste muss existieren").isNotNull();
+		RangeHelper.from(meldeliste, xDoc, RangePosition.from(0,
+				MELDELISTE_ERSTE_DATEN_ZEILE + 10, 8, MELDELISTE_ERSTE_DATEN_ZEILE + 11))
+				.clearRange();
+
+		new MaastrichterVorrundenRanglisteSheetUpdate(wkingSpreadsheet).doRun();
+
+		assertThat(cellBackColor(rangliste, SchweizerRanglisteSheet.TEAM_NR_SPALTE, ersteAlteZeile))
+				.as("Erste Zeile unterhalb der Tabelle darf keine Zebra-Farbe behalten")
+				.isEqualTo(TRANSPARENT);
+		assertThat(cellBackColor(rangliste, SchweizerRanglisteSheet.TEAM_NR_SPALTE, zweiteAlteZeile))
+				.as("Zweite Zeile unterhalb der Tabelle darf keine Zebra-Farbe behalten")
+				.isEqualTo(TRANSPARENT);
 	}
 
 	/**
@@ -337,6 +390,19 @@ public class MaastrichterTurnierTestDatenUITest extends BaseCalcUITest {
 		} catch (Exception e) {
 			throw new AssertionError("CellBackColor konnte nicht gelesen werden", e);
 		}
+	}
+
+	private void assertDoppelteRechteLinie(XSpreadsheet sheet, int zeile) throws Exception {
+		XPropertySet props = UnoRuntime.queryInterface(XPropertySet.class,
+				sheet.getCellByPosition(SchweizerAbstractSpielrundeSheet.TEAM_B_SPALTE, zeile));
+		TableBorder2 border = (TableBorder2) props.getPropertyValue("TableBorder2");
+
+		assertThat(border.IsRightLineValid)
+				.as("rechte Linie von Spalte B in Zeile %d muss gesetzt sein", zeile)
+				.isTrue();
+		assertThat(border.RightLine.LineStyle)
+				.as("rechte Linie von Spalte B in Zeile %d muss doppelt sein", zeile)
+				.isEqualTo(BorderLineStyle.DOUBLE_THIN);
 	}
 
 	private void setCellText(XSpreadsheet sheet, int spalte, int zeile, String text) {

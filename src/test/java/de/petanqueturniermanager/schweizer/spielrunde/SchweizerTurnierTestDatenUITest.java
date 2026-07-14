@@ -8,7 +8,11 @@ import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.sun.star.beans.XPropertySet;
 import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.table.BorderLineStyle;
+import com.sun.star.table.TableBorder2;
+import com.sun.star.uno.UnoRuntime;
 
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -116,6 +120,17 @@ public class SchweizerTurnierTestDatenUITest extends BaseCalcUITest {
 				.allSatisfy(fbhz -> assertThat(fbhz).isGreaterThanOrEqualTo(0));
 	}
 
+	@Test
+	public void spielrundeHatDoppelteLinieRechtsVonSpalteB() throws Exception {
+		testDaten.generate();
+
+		XSpreadsheet spielrundeSheet = sheetHlp.findByName(SheetNamen.spielrunde(1));
+		assertThat(spielrundeSheet).as("1. Spielrunde muss vorhanden sein").isNotNull();
+
+		assertDoppelteRechteLinie(spielrundeSheet, SchweizerAbstractSpielrundeSheet.ZWEITE_HEADER_ZEILE);
+		assertDoppelteRechteLinie(spielrundeSheet, SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE);
+	}
+
 	/**
 	 * Korrektheit der PTM-Metadaten: nach voller Generierung (Meldeliste, 3 Spielrunden,
 	 * Rangliste) muss jedes Blatt exakt seinen erwarteten Identitäts-Schlüssel tragen –
@@ -159,5 +174,18 @@ public class SchweizerTurnierTestDatenUITest extends BaseCalcUITest {
 		assertThat(ranglisteData)
 				.as("Rangliste muss nach Kiosk-Update " + ANZ_TEAMS + " Einträge haben")
 				.hasSize(ANZ_TEAMS);
+	}
+
+	private void assertDoppelteRechteLinie(XSpreadsheet sheet, int zeile) throws Exception {
+		XPropertySet props = UnoRuntime.queryInterface(XPropertySet.class,
+				sheet.getCellByPosition(SchweizerAbstractSpielrundeSheet.TEAM_B_SPALTE, zeile));
+		TableBorder2 border = (TableBorder2) props.getPropertyValue("TableBorder2");
+
+		assertThat(border.IsRightLineValid)
+				.as("rechte Linie von Spalte B in Zeile %d muss gesetzt sein", zeile)
+				.isTrue();
+		assertThat(border.RightLine.LineStyle)
+				.as("rechte Linie von Spalte B in Zeile %d muss doppelt sein", zeile)
+				.isEqualTo(BorderLineStyle.DOUBLE_THIN);
 	}
 }

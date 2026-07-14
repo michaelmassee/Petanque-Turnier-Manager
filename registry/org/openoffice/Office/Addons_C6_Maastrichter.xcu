@@ -134,11 +134,11 @@
 
 							<node oor:name="C6A8" oor:op="replace">
 								<prop oor:name="Title">
-									<value xml:lang="de">Neue Vorrunde</value>
-									<value xml:lang="en">New Preliminary Round</value>
-									<value xml:lang="es">Nueva ronda preliminar</value>
-									<value xml:lang="fr">Nouveau tour préliminaire</value>
-									<value xml:lang="nl">Nieuwe voorronde</value>
+									<value xml:lang="de">Neue Spielrunde</value>
+									<value xml:lang="en">New Round</value>
+									<value xml:lang="es">Nueva ronda</value>
+									<value xml:lang="fr">Nouveau tour</value>
+									<value xml:lang="nl">Nieuwe ronde</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:maastrichter_naechste_vorrunde</value>
@@ -150,11 +150,11 @@
 
 							<node oor:name="C6A9" oor:op="replace">
 								<prop oor:name="Title">
-									<value xml:lang="de">Vorrunde neu auslosen</value>
-									<value xml:lang="en">Re-draw Preliminary Round</value>
-									<value xml:lang="es">Volver a sortear la ronda preliminar</value>
-									<value xml:lang="fr">Retirer le tour préliminaire</value>
-									<value xml:lang="nl">Voorronde opnieuw loten</value>
+									<value xml:lang="de">Spielrunde neu auslosen</value>
+									<value xml:lang="en">Re-draw Round</value>
+									<value xml:lang="es">Volver a sortear la ronda</value>
+									<value xml:lang="fr">Retirer la manche</value>
+									<value xml:lang="nl">Ronde opnieuw loten</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:maastrichter_aktuelle_vorrunde</value>
@@ -172,11 +172,11 @@
 
 							<node oor:name="C6A11" oor:op="replace">
 								<prop oor:name="Title">
-									<value xml:lang="de">Vorrunden-Rangliste</value>
-									<value xml:lang="en">Preliminary Round Ranking</value>
-									<value xml:lang="es">Clasificación de la ronda preliminar</value>
-									<value xml:lang="fr">Classement des tours préliminaires</value>
-									<value xml:lang="nl">Ranglijst voorronde</value>
+									<value xml:lang="de">Spielrunden-Rangliste</value>
+									<value xml:lang="en">Round Ranking</value>
+									<value xml:lang="es">Clasificación de rondas</value>
+									<value xml:lang="fr">Classement des tours</value>
+									<value xml:lang="nl">Ronde ranglijst</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:maastrichter_vorrunden_rangliste</value>

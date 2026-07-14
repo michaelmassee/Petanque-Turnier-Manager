@@ -476,7 +476,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 	 * Setzt Trennlinien:
 	 * <ul>
 	 *   <li>Doppelte Linie rechts von BAHN_NR_SPALTE (erste Spalte)</li>
-	 *   <li>Dicke Linie links von TEAM_B_SPALTE (Trennlinie A/B)</li>
+	 *   <li>Doppelte Linie rechts von TEAM_B_SPALTE (Trennlinie B/Ergebnis)</li>
 	 * </ul>
 	 * Muss nach allen anderen Formatierungen aufgerufen werden.
 	 */
@@ -494,11 +494,11 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		getSheetHelper().setPropertyInRange(sheet, bahnNrRange, TABLE_BORDER2,
 				BorderFactory.from().allThin().doubleLn().forRight().toBorder());
 
-		// Dicke Trennlinie rechts von TEAM_B_SPALTE (zwischen B und Ergebnis)
+		// Doppelte Trennlinie rechts von TEAM_B_SPALTE (zwischen B und Ergebnis)
 		RangePosition teamBRange = RangePosition.from(TEAM_B_SPALTE, ERSTE_HEADER_ZEILE,
 				TEAM_B_SPALTE, letzteZeile);
 		getSheetHelper().setPropertyInRange(sheet, teamBRange, TABLE_BORDER2,
-				BorderFactory.from().allThin().boldLn().forRight().toBorder());
+				BorderFactory.from().allThin().doubleLn().forRight().toBorder());
 
 		// Dicke untere Linie für die gesamte zweite Header-Zeile (ohne Fehler-Spalte)
 		// Nur BottomLine setzen (IsBottomLineValid=true), andere Borders bleiben erhalten
@@ -595,7 +595,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		processBoxinfo("processbox.anzahl.meldungen", meldungen.size());
 
 		// wenn hier dann neu erstellen
-		if (!NewSheet.from(this, getSheetName(getSpielRundeNr()), getSpielrundeSchluessel(getSpielRundeNr().getNr()))
+		if (!NewSheet.from(this, getSheetName(neueSpielrundeNr), getSpielrundeSchluessel(neueSpielrundeNr.getNr()))
 				.pos(DefaultSheetPos.SCHWEIZER_WORK).setForceCreate(force).setActiv().hideGrid()
 				.tabColor(getKonfigurationSheet().getSpielrundeTabFarbe()).create().isDidCreate()) {
 			ProcessBox.from().info(I18n.get("schweizer.spielrunde.abbruch"));
@@ -603,7 +603,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		}
 
 		// neue Spielrunde speichern, sheet vorhanden
-		getKonfigurationSheet().setAktiveSpielRunde(getSpielRundeNr());
+		getKonfigurationSheet().setAktiveSpielRunde(neueSpielrundeNr);
 
 		SchweizerSystem schweizerSystem = new SchweizerSystem();
 

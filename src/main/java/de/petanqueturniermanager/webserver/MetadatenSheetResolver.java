@@ -21,6 +21,10 @@ public class MetadatenSheetResolver implements SheetResolver {
         this.anzeigeName = anzeigeName;
     }
 
+    String metadatenSchluesselFuerTest() {
+        return metadatenSchluessel;
+    }
+
     @Override
     public Optional<XSpreadsheet> resolve(WorkingSpreadsheet ws) {
         var doc = ws.getWorkingSpreadsheetDocument();

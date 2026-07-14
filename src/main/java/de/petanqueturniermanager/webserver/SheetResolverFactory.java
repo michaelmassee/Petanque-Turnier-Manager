@@ -242,7 +242,8 @@ public final class SheetResolverFactory {
         m.put(KO, new MetadatenSheetResolver(SheetMetadataHelper.SCHLUESSEL_FORME_VORRUNDEN, name));
         m.put(TRIPTETE, new MetadatenSheetResolver(SheetMetadataHelper.SCHLUESSEL_TRIPTETE_RANGLISTE, name));
         m.put(SUPERMELEE, new SupermeleeAktiveSpieltagRanglisteSheetResolver());
-        // MAASTRICHTER: kein Single-Ranking-Blatt → bewusst nicht hinterlegt.
+        m.put(MAASTRICHTER, new MetadatenSheetResolver(
+                SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX, name));
         return m;
     }
 

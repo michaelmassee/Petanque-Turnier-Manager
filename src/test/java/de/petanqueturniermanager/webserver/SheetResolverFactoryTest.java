@@ -10,6 +10,7 @@ import java.util.Arrays;
 import org.junit.jupiter.api.Test;
 
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 
 /**
  * Sichert die generische, system-agnostische Sheet-Typ-Konfiguration der Webserver-Panels ab.
@@ -43,6 +44,17 @@ class SheetResolverFactoryTest {
         assertThat(resolver.delegateFuerTest(TurnierSystem.SUPERMELEE))
                 .as("Supermelee-RANGLISTE darf nicht die hoechste alte Tagesrangliste anzeigen")
                 .isInstanceOf(SupermeleeAktiveSpieltagRanglisteSheetResolver.class);
+    }
+
+    @Test
+    void maastrichterRanglisteZeigtVorrundenRangliste() {
+        var resolver = (AktivesSystemSheetResolver) SheetResolverFactory.erstellen("RANGLISTE");
+
+        assertThat(resolver.delegateFuerTest(TurnierSystem.MAASTRICHTER))
+                .as("Maastrichter-RANGLISTE muss die Vorrunden-Rangliste anzeigen")
+                .isInstanceOfSatisfying(MetadatenSheetResolver.class,
+                        delegate -> assertThat(delegate.metadatenSchluesselFuerTest())
+                                .isEqualTo(SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX));
     }
 
     @Test

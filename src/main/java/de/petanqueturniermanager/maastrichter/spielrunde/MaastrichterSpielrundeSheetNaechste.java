@@ -21,8 +21,8 @@ import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
- * Erstellt die nächste Vorrunde im Maastrichter Turnier (Schweizer Algorithmus,
- * aber Blätter heißen "N. Vorrunde" statt "N. Spielrunde").
+ * Erstellt die nächste Vorrunde im Maastrichter Turnier mit dem Schweizer Algorithmus.
+ * Sichtbar heißen die Runden wie normale Spielrunden, die Maastrichter-Identität steckt in den Sheet-Metadaten.
  */
 public class MaastrichterSpielrundeSheetNaechste extends SchweizerSpielrundeSheetNaechste {
 

@@ -62,7 +62,7 @@ public final class SheetNamen {
     public static final String KEY_KO_TURNIERBAUM_EINZEL            = "sheet.name.ko.turnierbaum.einzel";
     /** KO-Turnierbaum Gruppe: {0} = Gruppenbuchstabe. Beispiel: "KO Turnierbaum A" */
     public static final String KEY_KO_TURNIERBAUM_GRUPPE_MUSTER     = "sheet.name.ko.turnierbaum.gruppe.muster";
-    /** Maastrichter Vorrunde: {0} = Rundennummer. Beispiel: "Vorrunde 2" */
+    /** Maastrichter Vorrunde: {0} = Rundennummer. Sichtbarer Sheetname bleibt "n. Spielrunde". */
     public static final String KEY_MAASTRICHTER_VORRUNDE_MUSTER     = "sheet.name.maastrichter.vorrunde.muster";
     /** Maastrichter Finalrunde: {0} = Gruppenbuchstabe. Beispiel: "Finalrunde A" */
     public static final String KEY_MAASTRICHTER_FINALRUNDE_MUSTER   = "sheet.name.maastrichter.finalrunde.muster";
@@ -333,14 +333,15 @@ public final class SheetNamen {
     }
 
     /**
-     * Maastrichter Vorrunde: z.B. "Vorrunde 2".
+     * Maastrichter Vorrunde: sichtbarer Sheetname wie normale Spielrunden,
+     * z.B. "2. Spielrunde". Die fachliche Maastrichter-Vorrunden-Identität
+     * bleibt über die Sheet-Metadaten erhalten.
      *
      * @param rundeNr Nummer der Vorrunde
      * @return lokalisierter Tabellenname
      */
     public static String maastrichterVorrunde(int rundeNr) {
-        var muster = getOderFallback(KEY_MAASTRICHTER_VORRUNDE_MUSTER,
-                "{0}. " + LEGACY_MAASTRICHTER_VORRUNDE_PRAEFIX);
+        var muster = getOderFallback(KEY_SPIELRUNDE_MUSTER, "{0}. " + LEGACY_SPIELRUNDE_PRAEFIX);
         return new MessageFormat(muster, Locale.ROOT).format(new Object[]{rundeNr});
     }
 

@@ -363,11 +363,46 @@
 
 .checkin-seite-eintrag {
   font-size: clamp(0.72rem, 0.95vw, 1rem);
-  line-height: 1.9;
+  line-height: 1.45;
   color: #333f52;
   opacity: 0.8;
   text-align: center;
   overflow-wrap: anywhere;
+  position: relative;
+  padding: 0.55em 0 0.45em;
+}
+
+.checkin-seite-eintrag + .checkin-seite-eintrag {
+  margin-top: 0.08em;
+}
+
+.checkin-seite-eintrag + .checkin-seite-eintrag::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 14%;
+  right: 14%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    rgba(51, 63, 82, 0),
+    rgba(42, 93, 168, 0.34) 48%,
+    rgba(42, 93, 168, 0.34) 52%,
+    rgba(51, 63, 82, 0)
+  );
+}
+
+.checkin-seite-eintrag + .checkin-seite-eintrag::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 0.28em;
+  height: 0.28em;
+  border-radius: 50%;
+  background: rgba(42, 93, 168, 0.42);
+  box-shadow: 0 0 0 0.18em rgba(255, 255, 255, 0.38);
+  transform: translate(-50%, -50%);
 }
 
 .checkin-seite-eintrag-neu {

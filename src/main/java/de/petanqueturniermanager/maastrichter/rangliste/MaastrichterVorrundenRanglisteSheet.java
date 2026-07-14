@@ -25,7 +25,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
  * Erstellt die Vorrunden-Rangliste für das Maastrichter Turniersystem.
- * Liest "N. Vorrunde"-Blätter statt "N. Spielrunde"-Blätter.
+ * Liest die Maastrichter-Vorrunden über Metadaten; sichtbar heißen sie "N. Spielrunde".
  */
 public class MaastrichterVorrundenRanglisteSheet extends SchweizerRanglisteSheet {
 
