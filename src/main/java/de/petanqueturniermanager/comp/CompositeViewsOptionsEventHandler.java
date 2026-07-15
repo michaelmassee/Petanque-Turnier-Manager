@@ -177,7 +177,7 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 			return;
 		}
 		properties.speichernCompositeViews(neuerWebserverAktiv, eintraege);
-		migriereRegieZieleBeiPortAenderungen(alteEintraege);
+		migriereRegieZieleBeiPortAenderungen(alteEintraege, eintraege);
 		ausstehendeRegieLoeschungen.forEach(Runnable::run);
 		ausstehendeRegieLoeschungen.clear();
 		if (alterWebserverAktiv != neuerWebserverAktiv || !alteEintraege.equals(eintraege)) {
@@ -203,14 +203,18 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 	 * zuvor an der Validierung gescheitertes Hinzufuegen, das erst zusammen mit einer spaeteren
 	 * Bearbeitung erneut gespeichert wird); in diesem Fall wird bewusst nicht migriert, um keine
 	 * falsche Zuordnung ueber verschobene Indizes zu riskieren.
+	 * <p>
+	 * Rein datenbasiert (keine UNO-/Instanzabhaengigkeit) und daher direkt unit-testbar, siehe
+	 * {@code CompositeViewsOptionsEventHandlerTest}.
 	 */
-	private void migriereRegieZieleBeiPortAenderungen(List<CompositeViewEintragRoh> alteEintraege) {
-		if (alteEintraege.size() != eintraege.size()) {
+	static void migriereRegieZieleBeiPortAenderungen(
+			List<CompositeViewEintragRoh> alteEintraege, List<CompositeViewEintragRoh> neueEintraege) {
+		if (alteEintraege.size() != neueEintraege.size()) {
 			return;
 		}
-		for (int i = 0; i < eintraege.size(); i++) {
+		for (int i = 0; i < neueEintraege.size(); i++) {
 			int alterPort = alteEintraege.get(i).port();
-			int neuerPort = eintraege.get(i).port();
+			int neuerPort = neueEintraege.get(i).port();
 			if (alterPort != neuerPort) {
 				GlobalProperties.get().migriereWebserverRegieViewId(
 						WebServerManager.compositeViewId(alterPort), WebServerManager.compositeViewId(neuerPort));
