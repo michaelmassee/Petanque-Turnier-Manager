@@ -1485,6 +1485,11 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 					} finally {
 						ProcessBox.from().ready();
 					}
+					if (!WebServerManager.get().isLaeuft()) {
+						MessageBox.from(xContext, MessageBoxTypeEnum.ERROR_OK)
+								.caption(I18n.get("webserver.starten"))
+								.message(I18n.get("webserver.starten.fehlgeschlagen")).show();
+					}
 				}
 			}
 			case CMD_WEBSERVER_STOPPEN -> {
