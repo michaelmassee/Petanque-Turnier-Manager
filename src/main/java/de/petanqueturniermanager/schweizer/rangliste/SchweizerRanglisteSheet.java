@@ -319,6 +319,13 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 					.ungeradeFarbe(getKonfigurationSheet().getRanglisteHintergrundFarbeUnGerade())
 					.validateSpalte(validateSpalte())
 					.apply();
+
+			// Absicherung: Leerzeile + Fußzeile direkt unterhalb der Daten dürfen keine
+			// Zebra-Hintergrundfarbe tragen (z.B. Rest aus einem früheren Aufbau mit mehr Zeilen).
+			RangePosition leerBereichUnterDaten = RangePosition.from(TEAM_NR_SPALTE, letzteZeile + 1,
+					letzteAnzeigeSpalte(), letzteZeile + 2);
+			getSheetHelper().setPropertiesInRange(sheet, leerBereichUnterDaten,
+					CellProperties.from().setCellBackColor(-1));
 		}
 
 		// Footer und Druckbereich
