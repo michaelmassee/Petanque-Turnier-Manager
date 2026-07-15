@@ -1260,6 +1260,31 @@ public class GlobalProperties {
 		speichernWebserverRegie(aktiv, port, getWebserverRegieZiele());
 	}
 
+	/**
+	 * Ersetzt in allen Webserver-Regie-Zielen, die auf {@code alteViewId} zeigen, die viewId durch
+	 * {@code neueViewId} und persistiert. No-op, falls kein Ziel betroffen ist. Wird benoetigt, wenn
+	 * sich die viewId einer referenzierten Composite-View aendert (z.B. Port-Wechsel), damit Ziele
+	 * nicht verwaisen.
+	 */
+	public void migriereWebserverRegieViewId(String alteViewId, String neueViewId) {
+		var ziele = getWebserverRegieZiele();
+		var migriert = ziele.stream()
+				.map(z -> z.viewId().equals(alteViewId) ? new RegieZielRoh(z.id(), z.name(), z.slug(), z.aktiv(), neueViewId) : z)
+				.toList();
+		if (!migriert.equals(ziele)) {
+			speichernWebserverRegie(isWebserverRegieAktiv(), getWebserverRegiePort(), migriert);
+		}
+	}
+
+	/**
+	 * Setzt bei allen Webserver-Regie-Zielen, die auf {@code viewId} zeigen, die viewId auf "" (kein
+	 * Ziel ausgewaehlt) und persistiert. No-op, falls kein Ziel betroffen ist. Wird beim Loeschen
+	 * einer referenzierten Composite-View benoetigt, damit kein verwaister Verweis stehen bleibt.
+	 */
+	public void entferneWebserverRegieViewId(String viewId) {
+		migriereWebserverRegieViewId(viewId, "");
+	}
+
 	// ----------------------------------------------------
 	// FTP/SFTP-Server-Liste
 	// ----------------------------------------------------

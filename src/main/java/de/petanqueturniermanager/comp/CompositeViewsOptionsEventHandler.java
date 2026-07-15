@@ -229,6 +229,7 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 			aktualisiereKomboBoxItems(container);
 			var eintrag = eintraege.get(idx);
 			Consumer<CompositeViewEintragRoh> callback = geaendert -> {
+				migriereRegieZieleBeiPortWechsel(eintrag, geaendert);
 				eintraege.set(idx, geaendert);
 				aktualisiereListe(container);
 				persistiereUndBenachrichtige(container);
@@ -237,12 +238,30 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 					context, eintrag, eintrag.port(), komboBoxItems, callback, pagePeer);
 			var geaenderterEintrag = detailDialog.zeigen();
 			if (geaenderterEintrag != null) {
-				eintraege.set(idx, geaenderterEintrag); // idempotent falls Callback schon gesetzt hat
+				// idempotent falls Callback schon gesetzt hat (migriereRegieZieleBeiPortWechsel ist
+				// no-op, wenn die alte viewId bereits migriert wurde)
+				migriereRegieZieleBeiPortWechsel(eintrag, geaenderterEintrag);
+				eintraege.set(idx, geaenderterEintrag);
 			}
 			aktualisiereListe(container);
 		} catch (com.sun.star.uno.Exception e) {
 			logger.error("Fehler beim Bearbeiten des Composite Views: {}", e.getMessage(), e);
 		}
+	}
+
+	/**
+	 * Composite-View-Ports sind frei editierbar, wodurch sich die aus dem Port abgeleitete
+	 * {@code viewId} (siehe {@link WebServerManager#compositeViewId(int)}) aendert. Ohne diese
+	 * Migration bleiben Webserver-Regie-Ziele, die auf die alte viewId zeigen, verwaist: Die
+	 * View-Auswahl in der Regie-Sidebar zeigt dann keine Selektion mehr, sichtbar spaetestens nach
+	 * einem Neuaufbau der Sidebar (z.B. nach einem Neustart).
+	 */
+	private static void migriereRegieZieleBeiPortWechsel(CompositeViewEintragRoh alt, CompositeViewEintragRoh neu) {
+		if (alt.port() == neu.port()) {
+			return;
+		}
+		GlobalProperties.get().migriereWebserverRegieViewId(
+				WebServerManager.compositeViewId(alt.port()), WebServerManager.compositeViewId(neu.port()));
 	}
 
 	private void loescheZeile(XControlContainer container) {
@@ -251,7 +270,8 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 			zeigeFehler(I18n.get("webserver.composite.konfig.fehler.keine.auswahl"));
 			return;
 		}
-		eintraege.remove(idx);
+		var entfernt = eintraege.remove(idx);
+		GlobalProperties.get().entferneWebserverRegieViewId(WebServerManager.compositeViewId(entfernt.port()));
 		aktualisiereListe(container);
 		persistiereUndBenachrichtige(container);
 	}

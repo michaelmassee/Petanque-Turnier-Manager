@@ -9,6 +9,7 @@ import java.util.List;
 
 import de.petanqueturniermanager.comp.GlobalProperties.CompositeViewEintragRoh;
 import de.petanqueturniermanager.comp.GlobalProperties.PanelEintragRoh;
+import de.petanqueturniermanager.comp.GlobalProperties.RegieZielRoh;
 import de.petanqueturniermanager.webserver.PanelTyp;
 import de.petanqueturniermanager.webserver.RandKonfiguration;
 import de.petanqueturniermanager.webserver.WebServerManager;
@@ -294,6 +295,44 @@ class GlobalPropertiesTest {
         var quellen = WebServerManager.get().verfuegbareRegieQuellen();
 
         assertEquals(List.of("composite:5001"), quellen.stream().map(q -> q.viewId()).toList());
+    }
+
+    @Test
+    void testMigriereWebserverRegieViewIdAktualisiertTreffer() {
+        var gp = GlobalProperties.get();
+        gp.speichernWebserverRegie(true, GlobalProperties.WEBSERVER_REGIE_DEFAULT_PORT, List.of(
+                new RegieZielRoh(null, "Ziel 1", "", true, "composite:5001"),
+                new RegieZielRoh(null, "Ziel 2", "", true, "composite:9999")));
+
+        gp.migriereWebserverRegieViewId("composite:5001", "composite:5002");
+
+        var viewIds = gp.getWebserverRegieZiele().stream().map(RegieZielRoh::viewId).toList();
+        assertTrue(viewIds.contains("composite:5002"), "migrierte viewId muss uebernommen werden");
+        assertTrue(viewIds.contains("composite:9999"), "nicht betroffenes Ziel bleibt unveraendert");
+        assertFalse(viewIds.contains("composite:5001"), "alte viewId darf nicht mehr vorkommen");
+    }
+
+    @Test
+    void testMigriereWebserverRegieViewIdOhneTrefferBleibtNoOp() {
+        var gp = GlobalProperties.get();
+        gp.speichernWebserverRegie(true, GlobalProperties.WEBSERVER_REGIE_DEFAULT_PORT, List.of(
+                new RegieZielRoh(null, "Ziel 1", "", true, "composite:9999")));
+
+        gp.migriereWebserverRegieViewId("composite:5001", "composite:5002");
+
+        assertEquals(List.of("composite:9999"),
+                gp.getWebserverRegieZiele().stream().map(RegieZielRoh::viewId).toList());
+    }
+
+    @Test
+    void testEntferneWebserverRegieViewIdSetztLeerenWert() {
+        var gp = GlobalProperties.get();
+        gp.speichernWebserverRegie(true, GlobalProperties.WEBSERVER_REGIE_DEFAULT_PORT, List.of(
+                new RegieZielRoh(null, "Ziel 1", "", true, "composite:5001")));
+
+        gp.entferneWebserverRegieViewId("composite:5001");
+
+        assertEquals(List.of(""), gp.getWebserverRegieZiele().stream().map(RegieZielRoh::viewId).toList());
     }
 
     @Test
