@@ -98,12 +98,16 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 	private XWindowPeer pagePeer;
 
 	/**
-	 * Vorgemerkte Webserver-Regie-Migrationen (Portaenderung/Loeschung einer Composite-View), die
-	 * erst in {@link #persistiereUndBenachrichtige} NACH erfolgreicher Validierung/Speicherung
-	 * ausgefuehrt werden. So laeuft ein Regie-Ziel nicht auseinander, wenn der Composite-Save
-	 * (z.B. wegen Port-Duplikat) abbricht.
+	 * Vorgemerkte Webserver-Regie-Bereinigungen fuer geloeschte Composite-Views, die erst in
+	 * {@link #persistiereUndBenachrichtige} NACH erfolgreicher Validierung/Speicherung ausgefuehrt
+	 * werden. Jede Aktion ist an eine fest erfasste, unveraenderliche viewId gebunden (die des
+	 * geloeschten Eintrags) - anders als eine Portaenderung gibt es hier keine Verkettung ueber
+	 * Zwischenzustaende, daher ist ein Queue-basiertes Nachholen bei fehlgeschlagenem Speichern
+	 * gefahrlos. Portaenderungen werden bewusst NICHT hierueber abgewickelt (siehe
+	 * {@link #persistiereUndBenachrichtige}), da ein Queue-Ansatz mit Zwischen-Ports dort fremde,
+	 * unveraenderte Regie-Ziele auf denselben Port faelschlich mitmigrieren wuerde.
 	 */
-	private final List<Runnable> ausstehendeRegieAktionen = new ArrayList<>();
+	private final List<Runnable> ausstehendeRegieLoeschungen = new ArrayList<>();
 
 	public CompositeViewsOptionsEventHandler(XComponentContext context) {
 		this.context = context;
@@ -141,7 +145,7 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 		setCheckbox(container, CTL_WEBSERVER_AKTIV, GlobalProperties.get().isWebserverAktiv());
 		if (eintraege == null) {
 			eintraege = new ArrayList<>(GlobalProperties.get().getCompositeViewEintraege());
-			ausstehendeRegieAktionen.clear();
+			ausstehendeRegieLoeschungen.clear();
 			komboBoxItems = SheetResolverFactory.sheetTypenFuer(null);
 			setListItems(container, CTL_FILTER_SYSTEM, filterEintraege());
 			setSelectedPos(container, CTL_FILTER_SYSTEM, (short) 0);
@@ -173,11 +177,44 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 			return;
 		}
 		properties.speichernCompositeViews(neuerWebserverAktiv, eintraege);
-		ausstehendeRegieAktionen.forEach(Runnable::run);
-		ausstehendeRegieAktionen.clear();
+		migriereRegieZieleBeiPortAenderungen(alteEintraege);
+		ausstehendeRegieLoeschungen.forEach(Runnable::run);
+		ausstehendeRegieLoeschungen.clear();
 		if (alterWebserverAktiv != neuerWebserverAktiv || !alteEintraege.equals(eintraege)) {
 			WebServerManager.get().konfigurationGeaendert();
 			benachrichtigeCompositeViewKonfigurationGeaendert();
+		}
+	}
+
+	/**
+	 * Migriert Webserver-Regie-Ziele auf die neue viewId, wenn sich der Port einer Composite-View
+	 * durch diesen (soeben erfolgreich abgeschlossenen) Speichervorgang geaendert hat. Vergleicht
+	 * dazu bewusst den zuvor TATSAECHLICH persistierten Zustand ({@code alteEintraege}, frisch aus
+	 * {@link GlobalProperties} gelesen) direkt gegen den soeben gespeicherten Zustand - ein
+	 * einzelner Sprung ohne Zwischenschritt. Wuerde man stattdessen ueber Zwischen-Ports verketten
+	 * (z.B. bei mehrfachem "Uebernehmen" im Dialog erst 5001-&gt;5002, dann 5002-&gt;5003), koennte
+	 * die zweite Migration faelschlich auch ein voellig anderes, unveraendertes Regie-Ziel treffen,
+	 * das legitim bereits auf {@code composite:5002} zeigte (z.B. eine andere Composite-View).
+	 * <p>
+	 * Nur anwendbar, wenn die Listengroesse unveraendert ist (reine Portaenderung(en), kein
+	 * gleichzeitiges Hinzufuegen/Loeschen im selben Speichervorgang) - Hinzufuegen/Loeschen
+	 * persistieren ohnehin sofort einzeln (siehe {@link #fuegeZeileHinzu}, {@link #loescheZeile}),
+	 * ein Groessenunterschied an dieser Stelle bedeutet also einen seltenen Sonderfall (z.B. ein
+	 * zuvor an der Validierung gescheitertes Hinzufuegen, das erst zusammen mit einer spaeteren
+	 * Bearbeitung erneut gespeichert wird); in diesem Fall wird bewusst nicht migriert, um keine
+	 * falsche Zuordnung ueber verschobene Indizes zu riskieren.
+	 */
+	private void migriereRegieZieleBeiPortAenderungen(List<CompositeViewEintragRoh> alteEintraege) {
+		if (alteEintraege.size() != eintraege.size()) {
+			return;
+		}
+		for (int i = 0; i < eintraege.size(); i++) {
+			int alterPort = alteEintraege.get(i).port();
+			int neuerPort = eintraege.get(i).port();
+			if (alterPort != neuerPort) {
+				GlobalProperties.get().migriereWebserverRegieViewId(
+						WebServerManager.compositeViewId(alterPort), WebServerManager.compositeViewId(neuerPort));
+			}
 		}
 	}
 
@@ -240,7 +277,6 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 			aktualisiereKomboBoxItems(container);
 			var eintrag = eintraege.get(idx);
 			Consumer<CompositeViewEintragRoh> callback = geaendert -> {
-				merkeRegieMigrationFallsPortGeaendert(idx, geaendert);
 				eintraege.set(idx, geaendert);
 				aktualisiereListe(container);
 				persistiereUndBenachrichtige(container);
@@ -249,40 +285,12 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 					context, eintrag, eintrag.port(), komboBoxItems, callback, pagePeer);
 			var geaenderterEintrag = detailDialog.zeigen();
 			if (geaenderterEintrag != null) {
-				// idempotent falls Callback schon gesetzt hat (merkeRegieMigrationFallsPortGeaendert
-				// vergleicht gegen den aktuellen Listeneintrag, ist also no-op bei unveraendertem Port)
-				merkeRegieMigrationFallsPortGeaendert(idx, geaenderterEintrag);
-				eintraege.set(idx, geaenderterEintrag);
+				eintraege.set(idx, geaenderterEintrag); // idempotent falls Callback schon gesetzt hat
 			}
 			aktualisiereListe(container);
 		} catch (com.sun.star.uno.Exception e) {
 			logger.error("Fehler beim Bearbeiten des Composite Views: {}", e.getMessage(), e);
 		}
-	}
-
-	/**
-	 * Composite-View-Ports sind frei editierbar, wodurch sich die aus dem Port abgeleitete
-	 * {@code viewId} (siehe {@link WebServerManager#compositeViewId(int)}) aendert. Ohne Migration
-	 * bleiben Webserver-Regie-Ziele, die auf die alte viewId zeigen, verwaist: Die View-Auswahl in
-	 * der Regie-Sidebar zeigt dann keine Selektion mehr, sichtbar spaetestens nach einem Neuaufbau
-	 * der Sidebar (z.B. nach einem Neustart).
-	 * <p>
-	 * Vergleicht bewusst gegen den AKTUELL in {@code eintraege} stehenden Port (nicht gegen eine
-	 * beim Dialog-Oeffnen eingefrorene Kopie) und fuehrt die Migration nicht sofort aus, sondern
-	 * merkt sie nur vor: Bei mehrfachem "Uebernehmen" im Dialog (z.B. 5001-&gt;5002, danach
-	 * 5002-&gt;5003) wird so jede Migration korrekt an die vorherige angekettet, statt wiederholt
-	 * gegen den urspruenglichen Ausgangsport zu vergleichen. Die tatsaechliche Ausfuehrung erfolgt
-	 * erst in {@link #persistiereUndBenachrichtige}, NACH erfolgreicher Validierung/Speicherung -
-	 * sonst wuerde ein Regie-Ziel bei einem abgebrochenen Speichervorgang (z.B. Portkonflikt) auf
-	 * eine viewId migriert, die der bearbeitete View nie erreicht hat.
-	 */
-	private void merkeRegieMigrationFallsPortGeaendert(int idx, CompositeViewEintragRoh neu) {
-		int alterPort = eintraege.get(idx).port();
-		if (alterPort == neu.port()) {
-			return;
-		}
-		ausstehendeRegieAktionen.add(() -> GlobalProperties.get().migriereWebserverRegieViewId(
-				WebServerManager.compositeViewId(alterPort), WebServerManager.compositeViewId(neu.port())));
 	}
 
 	private void loescheZeile(XControlContainer container) {
@@ -292,7 +300,7 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 			return;
 		}
 		var entfernt = eintraege.remove(idx);
-		ausstehendeRegieAktionen.add(() ->
+		ausstehendeRegieLoeschungen.add(() ->
 				GlobalProperties.get().entferneWebserverRegieViewId(WebServerManager.compositeViewId(entfernt.port())));
 		aktualisiereListe(container);
 		persistiereUndBenachrichtige(container);
