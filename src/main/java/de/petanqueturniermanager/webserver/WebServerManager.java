@@ -40,6 +40,7 @@ import de.petanqueturniermanager.formulex.konfiguration.FormuleXKonfigurationShe
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.LoMainThread;
+import de.petanqueturniermanager.helper.NativeDialogSperre;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationSheet;
@@ -954,6 +955,15 @@ public final class WebServerManager implements TimerListener {
     }
 
     private void sseRefreshSendenIntern(WorkingSpreadsheet ws) {
+        // Ein natives modales Dialogfenster mit eigener Event-Loop (z.B. FarbwahlDialog) ist offen –
+        // gleichzeitiger UNO-Zugriff aus diesem Hintergrund-Thread kollidiert damit (SIGABRT durch
+        // Stack-Corruption in ColorDialog::Execute(), per CoreDump-Analyse verifiziert). Welle
+        // überspringen, sie wird über markDirty() nachgeholt, sobald der Dialog geschlossen ist.
+        if (NativeDialogSperre.istOffen()) {
+            modifyListener.markDirty();
+            logger.debug("Refresh übersprungen – natives Dialogfenster offen");
+            return;
+        }
         // Serialisiert: niemals zwei parallele Render-/Push-Wellen. Konkurrierende Aufrufer
         // signalisieren stattdessen "nochmal" über den Listener-Dirty-Flag.
         if (!refreshLock.tryLock()) {

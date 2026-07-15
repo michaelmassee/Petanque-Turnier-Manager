@@ -13,6 +13,7 @@ import com.sun.star.ui.dialogs.XExecutableDialog;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.NativeDialogSperre;
 
 /**
  * Zentraler Helper für die Farbwahl. Verwendet den nativen LO-Color-Picker
@@ -42,6 +43,15 @@ import de.petanqueturniermanager.helper.Lo;
  * Gerrit-Patch: https://gerrit.libreoffice.org/c/core/+/205146. Sobald der Fix in einer
  * freigegebenen LO-Version landet, kann dieser Hinweis entfernt werden — am Helper selbst
  * ist nichts zu ändern.
+ *
+ * <p><b>Kritischer LO-Crash (SIGABRT, per CoreDump-Analyse verifiziert):</b> Während
+ * {@code picker.execute()} eine verschachtelte native Event-Loop (GTK/glib) läuft, kann
+ * gleichzeitiger UNO-Zugriff aus einem Fremd-Thread (z. B. Webserver-Hintergrundbetrieb)
+ * zu Stack-Corruption in {@code ColorDialog::Execute()} führen ({@code __stack_chk_fail}
+ * beim Destruieren eines {@code cppu::OWeakObject} im Exception-Unwind-Pfad). Abgesichert
+ * über {@link NativeDialogSperre}, die den Webserver-Hintergrund-Refresh (siehe
+ * {@code WebServerManager#sseRefreshSendenIntern}) für die Dauer von {@code execute()}
+ * pausiert. Nativer LO-Bug, kein Fix im Helper selbst möglich.
  */
 public final class FarbwahlDialog {
 
@@ -92,8 +102,13 @@ public final class FarbwahlDialog {
             pickerProps.setPropertyValues(new PropertyValue[] { pvFarbe });
 
             var picker = Lo.qi(XExecutableDialog.class, pickerInst);
-            if (picker.execute() != 1) {
-                return OptionalInt.empty();
+            NativeDialogSperre.eintreten();
+            try {
+                if (picker.execute() != 1) {
+                    return OptionalInt.empty();
+                }
+            } finally {
+                NativeDialogSperre.verlassen();
             }
 
             for (var pv : pickerProps.getPropertyValues()) {
