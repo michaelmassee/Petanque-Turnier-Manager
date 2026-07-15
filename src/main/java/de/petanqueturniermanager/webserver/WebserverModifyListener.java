@@ -13,6 +13,7 @@ import com.sun.star.util.XModifyListener;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.helper.NativeDialogSperre;
 
 /**
  * Lauscht auf Zelländerungen im Calc-Dokument und löst bei Änderungen einen SSE-Refresh aus.
@@ -138,6 +139,13 @@ public class WebserverModifyListener implements XModifyListener {
                     WebServerManager.get().sseRefreshSenden(current);
                 } catch (RuntimeException e) {
                     logger.debug("SSE-Refresh fehlgeschlagen: {}", e.getMessage());
+                }
+                if (NativeDialogSperre.istOffen()) {
+                    // sseRefreshSenden hat wegen offenem Dialog nur markDirty() gemacht (kein
+                    // echter Refresh) – ohne diesen Break würde die Schleife sofort erneut
+                    // durchlaufen (Busy-Spin ohne Debounce). Stattdessen unten über
+                    // scheduleIfNeeded() mit regulärem DEBOUNCE_MS erneut einplanen.
+                    break;
                 }
                 // Falls während refresh wieder dirty gesetzt wurde, nochmal durch.
             } while (dirty.get());
