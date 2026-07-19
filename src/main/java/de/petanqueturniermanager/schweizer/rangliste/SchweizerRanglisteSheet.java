@@ -407,13 +407,16 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 			Team teamB = aktiveMeldungen.getTeam(nrB);
 			if (teamB == null) continue;
 
-			gegnerMap.computeIfAbsent(nrA, k -> new ArrayList<>()).add(nrB);
-			gegnerMap.computeIfAbsent(nrB, k -> new ArrayList<>()).add(nrA);
-
 			int ergA = (row.size() > 2) ? row.get(2).getIntVal(0) : 0;
 			int ergB = (row.size() > 3) ? row.get(3).getIntVal(0) : 0;
 
 			if (ergA > 0 || ergB > 0) {
+				// Gegner erst bei tatsächlich eingetragenem Ergebnis für BHZ/FBHZ zählen –
+				// eine bereits erzeugte, aber noch ungespielte Paarung darf die Buchholz-Werte
+				// der Vorrunden-Rangliste nicht beeinflussen.
+				gegnerMap.computeIfAbsent(nrA, k -> new ArrayList<>()).add(nrB);
+				gegnerMap.computeIfAbsent(nrB, k -> new ArrayList<>()).add(nrA);
+
 				statsMap.computeIfAbsent(nrA, k -> new int[3])[1] += ergA; // punkte+
 				statsMap.computeIfAbsent(nrA, k -> new int[3])[2] += ergB; // punkte-
 				statsMap.computeIfAbsent(nrB, k -> new int[3])[1] += ergB; // punkte+

@@ -331,6 +331,36 @@ public class SchweizerRanglisteSheetUITest extends BaseCalcUITest {
 				.isLessThan(siegeVorher);
 	}
 
+	/**
+	 * Regressionstest: eine bereits gepaarte, aber noch nicht gespielte Folgerunde
+	 * darf nicht in die BHZ/FBHZ-Berechnung einfließen.
+	 * <p>
+	 * Szenario: Nur Runde 1 wird mit Ergebnissen gefüllt, Runde 2 wird nur gepaart
+	 * (keine Ergebnisse eingetragen). Nach Runde 1 hat jedes Team genau einen
+	 * gespielten Gegner, daher muss BHZ = 1 - Siege gelten: Sieger (Siege=1) trafen
+	 * auf einen Verlierer (Siege=0) → BHZ=0; Verlierer (Siege=0) trafen auf den
+	 * Sieger (Siege=1) → BHZ=1. Vor dem Fix floss der noch ungespielte
+	 * Runde-2-Gegner zusätzlich in die Summe ein.
+	 */
+	@Test
+	public void testBuchholzIgnoriertUngespielteFolgerunde() throws GenerateException {
+		testDaten.generate(1, false);
+		testDaten.naechsteSpielrunde.doRun(); // Runde 2 nur paaren, keine Ergebnisse eintragen
+
+		new SchweizerRanglisteSheet(wkingSpreadsheet).doRun();
+
+		RangeData data = ladeRanglisteDaten();
+		assertThat(data).hasSize(ANZ_TEAMS);
+
+		for (RowData row : data) {
+			int siege = row.get(SchweizerRanglisteSheet.SIEGE_SPALTE).getIntVal(-1);
+			int bhz = row.get(SchweizerRanglisteSheet.BHZ_SPALTE).getIntVal(-1);
+			assertThat(bhz)
+					.as("Nach Runde 1 (Runde 2 nur gepaart, ungespielt) muss BHZ = 1 - Siege(=%d) sein", siege)
+					.isEqualTo(1 - siege);
+		}
+	}
+
 	/** Liefert das aktuell aktive Sheet des Dokuments über die UNO-View-API. */
 	private XSpreadsheet aktivesSheet() {
 		XSpreadsheetView view = Lo.qi(XSpreadsheetView.class,
