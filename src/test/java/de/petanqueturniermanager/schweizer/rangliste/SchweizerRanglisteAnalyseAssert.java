@@ -22,6 +22,7 @@ import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
+import de.petanqueturniermanager.schweizer.konfiguration.SchweizerRankingModus;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrundeSheet;
 
 /**
@@ -77,10 +78,23 @@ public class SchweizerRanglisteAnalyseAssert {
 	 */
 	public void pruefe(String ranglisteSheetName, int anzRunden, int freispielPlus, int freispielMinus)
 			throws GenerateException {
+		pruefe(ranglisteSheetName, anzRunden, freispielPlus, freispielMinus, SchweizerRankingModus.MIT_BUCHHOLZ);
+	}
+
+	/**
+	 * Wie {@link #pruefe(String, int, int, int)}, aber mit explizitem Ranking-Modus: bei
+	 * {@link SchweizerRankingModus#OHNE_BUCHHOLZ} entfallen BHZ/FBHZ im Wertvergleich und im
+	 * Sortierschlüssel (Siege ↓ → Punktedifferenz ↓ → Punkte+ ↓), da
+	 * {@code SchweizerRanglisteSheet} dort 0 in die BHZ/FBHZ-Spalten schreibt und
+	 * {@code SchweizerSystem.sortiereNachAuswertungskriterien} ohne BHZ/FBHZ sortiert.
+	 */
+	public void pruefe(String ranglisteSheetName, int anzRunden, int freispielPlus, int freispielMinus,
+			SchweizerRankingModus modus) throws GenerateException {
 		Map<Integer, TeamStats> statsProTeam = leseSpielrunden(anzRunden, freispielPlus, freispielMinus);
 		Map<Integer, Integer> bhzMap = berechneBuchholz(statsProTeam);
 		Map<Integer, Integer> fbhzMap = berechneFeinbuchholz(statsProTeam, bhzMap);
-		pruefeRanglisteKorrektheit(ranglisteSheetName, statsProTeam, bhzMap, fbhzMap);
+		boolean ohneBuchholz = modus == SchweizerRankingModus.OHNE_BUCHHOLZ;
+		pruefeRanglisteKorrektheit(ranglisteSheetName, statsProTeam, bhzMap, fbhzMap, ohneBuchholz);
 	}
 
 	// ----- Spielrunden lesen -----
@@ -174,7 +188,8 @@ public class SchweizerRanglisteAnalyseAssert {
 	// ----- Rangliste-Korrektheit -----
 
 	private void pruefeRanglisteKorrektheit(String ranglisteSheetName, Map<Integer, TeamStats> statsProTeam,
-			Map<Integer, Integer> bhzMap, Map<Integer, Integer> fbhzMap) throws GenerateException {
+			Map<Integer, Integer> bhzMap, Map<Integer, Integer> fbhzMap, boolean ohneBuchholz)
+			throws GenerateException {
 		XSpreadsheet sheet = sheetHelper.findByName(ranglisteSheetName);
 		assertThat(sheet).as("Rangliste-Sheet '%s' muss existieren", ranglisteSheetName).isNotNull();
 
@@ -208,8 +223,10 @@ public class SchweizerRanglisteAnalyseAssert {
 			int istDiff = row.get(SchweizerRanglisteSheet.PUNKTE_DIFF_SPALTE).getIntVal(Integer.MIN_VALUE);
 
 			softly.assertThat(istSiege).as("Team #%d: Siege", nr).isEqualTo(erwSiege);
-			softly.assertThat(istBhz).as("Team #%d: BHZ", nr).isEqualTo(erwBhz);
-			softly.assertThat(istFbhz).as("Team #%d: FBHZ", nr).isEqualTo(erwFbhz);
+			if (!ohneBuchholz) {
+				softly.assertThat(istBhz).as("Team #%d: BHZ", nr).isEqualTo(erwBhz);
+				softly.assertThat(istFbhz).as("Team #%d: FBHZ", nr).isEqualTo(erwFbhz);
+			}
 			softly.assertThat(istPlus).as("Team #%d: Punkte+", nr).isEqualTo(erwPlus);
 			softly.assertThat(istMinus).as("Team #%d: Punkte-", nr).isEqualTo(erwMinus);
 			softly.assertThat(istDiff).as("Team #%d: Punktedifferenz", nr).isEqualTo(erwDiff);
@@ -218,24 +235,29 @@ public class SchweizerRanglisteAnalyseAssert {
 		}
 
 		softly.assertAll();
-		pruefeRanglisteSortierung(ranglisteSheetName, ranglisteEintraege);
+		pruefeRanglisteSortierung(ranglisteSheetName, ranglisteEintraege, ohneBuchholz);
 	}
 
 	// ----- Rangliste-Sortierung -----
 
-	private void pruefeRanglisteSortierung(String ranglisteSheetName, List<RanglisteEintrag> eintraege) {
-		var erwartet = eintraege.stream()
-				.sorted(Comparator.<RanglisteEintrag>comparingInt(e -> -e.siege())
+	private void pruefeRanglisteSortierung(String ranglisteSheetName, List<RanglisteEintrag> eintraege,
+			boolean ohneBuchholz) {
+		Comparator<RanglisteEintrag> comparator = ohneBuchholz
+				? Comparator.<RanglisteEintrag>comparingInt(e -> -e.siege())
+						.thenComparingInt(e -> -e.diff())
+						.thenComparingInt(e -> -e.punktePlus())
+				: Comparator.<RanglisteEintrag>comparingInt(e -> -e.siege())
 						.thenComparingInt(e -> -e.bhz())
 						.thenComparingInt(e -> -e.fbhz())
 						.thenComparingInt(e -> -e.diff())
-						.thenComparingInt(e -> -e.punktePlus()))
-				.map(RanglisteEintrag::nr)
-				.toList();
+						.thenComparingInt(e -> -e.punktePlus());
+
+		var erwartet = eintraege.stream().sorted(comparator).map(RanglisteEintrag::nr).toList();
 		var aktuell = eintraege.stream().map(RanglisteEintrag::nr).toList();
+		String kriterien = ohneBuchholz ? "Siege↓ → Punktedifferenz↓ → Punkte+↓"
+				: "Siege↓ → BHZ↓ → FBHZ↓ → Punktedifferenz↓ → Punkte+↓";
 		assertThat(aktuell)
-				.as("%s: Rangliste-Sortierung (Siege↓ → BHZ↓ → FBHZ↓ → Punktedifferenz↓ → Punkte+↓)",
-						ranglisteSheetName)
+				.as("%s: Rangliste-Sortierung (%s)", ranglisteSheetName, kriterien)
 				.isEqualTo(erwartet);
 	}
 

@@ -417,7 +417,7 @@ public class MaastrichterTurnierTestDatenUITest extends BaseCalcUITest {
 		var konfig = new MaastrichterKonfigurationSheet(wkingSpreadsheet);
 		SchweizerRanglisteAnalyseAssert.fuer(wkingSpreadsheet)
 				.pruefe(SheetNamen.maastrichterVorrundenRangliste(), anzVorrunden,
-						konfig.getFreispielPunktePlus(), konfig.getFreispielPunkteMinus());
+						konfig.getFreispielPunktePlus(), konfig.getFreispielPunkteMinus(), konfig.getRankingModus());
 	}
 
 	private void validiereFinaleGruppePerJson(String gruppenBuchstabe, String referenzDatei) throws GenerateException {

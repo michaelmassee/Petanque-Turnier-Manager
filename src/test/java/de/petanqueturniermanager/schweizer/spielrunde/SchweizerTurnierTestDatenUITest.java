@@ -126,7 +126,7 @@ public class SchweizerTurnierTestDatenUITest extends BaseCalcUITest {
 		var konfig = new SchweizerKonfigurationSheet(wkingSpreadsheet);
 		SchweizerRanglisteAnalyseAssert.fuer(wkingSpreadsheet)
 				.pruefe(SheetNamen.rangliste(), ANZ_RUNDEN,
-						konfig.getFreispielPunktePlus(), konfig.getFreispielPunkteMinus());
+						konfig.getFreispielPunktePlus(), konfig.getFreispielPunkteMinus(), konfig.getRankingModus());
 	}
 
 	@Test
