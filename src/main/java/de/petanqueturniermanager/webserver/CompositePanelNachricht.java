@@ -109,7 +109,7 @@ public record CompositePanelNachricht(
      */
     static CompositePanelNachricht statischeDatei(int panelId, int zoom, String dateiPfad) {
         String cacheKey = dateiPfad == null ? "" : Integer.toHexString(dateiPfad.hashCode());
-        String url = "local-panel/" + panelId + "?v=" + cacheKey;
+        String url = "local-panel/" + panelId + "/?v=" + cacheKey;
         return new CompositePanelNachricht(
                 panelId, zoom, 100, null, null, false, "",
                 null, null, null, null, null, null,

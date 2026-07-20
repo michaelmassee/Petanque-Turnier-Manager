@@ -309,7 +309,14 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot, Re
         serviereClasspathRessource(exchange, ressourcePfad, contentType, "no-cache");
     }
 
-    void serviereLokalePanelDatei(HttpExchange exchange, String panelIdText) throws IOException {
+    void serviereLokalePanelDatei(HttpExchange exchange, String panelPfad) throws IOException {
+        String panelIdText = panelPfad;
+        String relativerDateiPfad = "";
+        int trenner = panelPfad.indexOf('/');
+        if (trenner >= 0) {
+            panelIdText = panelPfad.substring(0, trenner);
+            relativerDateiPfad = panelPfad.substring(trenner + 1);
+        }
         int panelId;
         try {
             panelId = Integer.parseInt(panelIdText);
@@ -327,10 +334,10 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot, Re
             exchange.sendResponseHeaders(404, -1);
             return;
         }
-        Path datei;
+        Path htmlDatei;
         try {
             String quelle = panel.externeUrl() == null ? "" : panel.externeUrl().trim();
-            datei = quelle.startsWith("file:")
+            htmlDatei = quelle.startsWith("file:")
                     ? Paths.get(URI.create(quelle))
                     : Paths.get(quelle);
         } catch (IllegalArgumentException e) {
@@ -339,9 +346,20 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot, Re
             exchange.sendResponseHeaders(404, -1);
             return;
         }
-        if (!Files.isRegularFile(datei) || !Files.isReadable(datei)) {
+        if (!Files.isRegularFile(htmlDatei) || !Files.isReadable(htmlDatei)) {
             logger.warn("Lokale Panel-Datei nicht lesbar für Port {}, Panel {}: {}",
-                    konfiguration.port(), panelId, datei);
+                    konfiguration.port(), panelId, htmlDatei);
+            exchange.sendResponseHeaders(404, -1);
+            return;
+        }
+        Path datei;
+        try {
+            datei = lokalePanelDateiAufloesen(htmlDatei, relativerDateiPfad);
+        } catch (IOException | IllegalArgumentException e) {
+            exchange.sendResponseHeaders(404, -1);
+            return;
+        }
+        if (!Files.isRegularFile(datei) || !Files.isReadable(datei)) {
             exchange.sendResponseHeaders(404, -1);
             return;
         }
@@ -363,6 +381,22 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot, Re
         try (OutputStream os = exchange.getResponseBody()) {
             os.write(body);
         }
+    }
+
+    private Path lokalePanelDateiAufloesen(Path htmlDatei, String relativerDateiPfad) throws IOException {
+        Path echteHtmlDatei = htmlDatei.toRealPath();
+        Path echteWurzel = echteHtmlDatei.getParent();
+        if (echteWurzel == null) {
+            throw new IOException("Lokale Panel-Datei hat kein Verzeichnis: " + htmlDatei);
+        }
+        if (relativerDateiPfad == null || relativerDateiPfad.isEmpty()) {
+            return echteHtmlDatei;
+        }
+        Path kandidat = echteWurzel.resolve(relativerDateiPfad).normalize().toRealPath();
+        if (!kandidat.startsWith(echteWurzel)) {
+            throw new IOException("Lokale Panel-Ressource liegt außerhalb des HTML-Verzeichnisses: " + kandidat);
+        }
+        return kandidat;
     }
 
     private void serviereClasspathRessource(HttpExchange exchange, String ressourcePfad, String contentType,

@@ -11,7 +11,7 @@ class CompositePanelNachrichtTest {
         CompositePanelNachricht nachricht = CompositePanelNachricht.statischeDatei(2, 150, "/tmp/anzeige.html");
 
         assertThat(nachricht.externeUrl())
-                .startsWith("local-panel/2?v=")
+                .startsWith("local-panel/2/?v=")
                 .doesNotStartWith("/");
         assertThat(nachricht.zoom()).isEqualTo(150);
     }
