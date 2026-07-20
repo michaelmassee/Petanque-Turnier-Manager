@@ -15,7 +15,12 @@ Rangliste-Werte gegen die Spielrunden-Sheets nach:
   3. Feinbuchholz (FBHZ) = Summe der BHZ-Werte aller Gegner.
   4. Rangliste-Sortierung: Siege ↓ → BHZ ↓ → FBHZ ↓ → Punktediff ↓ →
      Punkte+ ↓ (SchweizerSystem.sortiereNachAuswertungskriterien).
-     Im Ranking-Modus OHNE_BUCHHOLZ entfallen BHZ/FBHZ.
+     Der Ranking-Modus wird aus der User-Defined-Property "Schweizer Ranking
+     Modus" in meta.xml gelesen (Default MIT_BUCHHOLZ). Im Modus
+     OHNE_BUCHHOLZ entfallen BHZ/FBHZ sowohl im Wertvergleich als auch im
+     Sortierschlüssel (Siege ↓ → Punktediff ↓ → Punkte+ ↓), da die
+     Produktionslogik dort 0 in die BHZ/FBHZ-Spalten schreibt
+     (SchweizerRanglisteSheet.java).
 
 Funktioniert für beide Systeme, die dieselbe Rangliste-Logik verwenden:
   - Schweizer System: Sheet "Rangliste"
@@ -52,6 +57,9 @@ TXT = '{%s}' % NS['text']
 # Defaults aus SchweizerPropertiesSpalte.java (Stand 2026)
 DEFAULT_FREISPIEL_PUNKTE_PLUS = 13
 DEFAULT_FREISPIEL_PUNKTE_MINUS = 7
+DEFAULT_RANKING_MODUS = 'MIT_BUCHHOLZ'
+RANKING_MODUS_KEY = 'Schweizer Ranking Modus'
+RANKING_MODUS_OHNE_BUCHHOLZ = 'OHNE_BUCHHOLZ'
 
 # Layout-Konstanten (SchweizerAbstractSpielrundeSheet.java / SchweizerRanglisteSheet.java)
 SR_ERSTE_DATEN_ZEILE = 2
@@ -122,6 +130,16 @@ def lese_konfig(meta_xml: str, key: str, default: int) -> int:
         return default
     v = to_int(m.group(1))
     return v if v is not None else default
+
+
+def lese_konfig_str(meta_xml: str, key: str, default: str) -> str:
+    """Liest eine String-User-Defined-Property aus meta.xml; fallback default."""
+    pat = re.compile(r'meta:name="' + re.escape(key) + r'"[^>]*>([^<]*)<')
+    m = pat.search(meta_xml)
+    if not m:
+        return default
+    v = m.group(1).strip()
+    return v if v else default
 
 
 def lade_ods(pfad):
@@ -256,6 +274,8 @@ def main():
 
     freispiel_plus = lese_konfig(meta_xml, 'Freispiel Punkte +', DEFAULT_FREISPIEL_PUNKTE_PLUS)
     freispiel_minus = lese_konfig(meta_xml, 'Freispiel Punkte -', DEFAULT_FREISPIEL_PUNKTE_MINUS)
+    ranking_modus = lese_konfig_str(meta_xml, RANKING_MODUS_KEY, DEFAULT_RANKING_MODUS)
+    ohne_buchholz = ranking_modus == RANKING_MODUS_OHNE_BUCHHOLZ
 
     print('=' * 72)
     print(f'  Schweizer/Maastrichter-Rangliste-Analyse: {args.ods}')
@@ -265,6 +285,8 @@ def main():
     print(f'  Konfig "Freispiel Punkte": + {freispiel_plus}, - {freispiel_minus}')
     if lese_konfig(meta_xml, 'Freispiel Punkte +', None) is None:
         print('       (Default aus SchweizerPropertiesSpalte.java — nicht explizit in der Datei gesetzt)')
+    print(f'  Ranking-Modus: {ranking_modus}' +
+          (' (BHZ/FBHZ werden nicht geprüft)' if ohne_buchholz else ''))
     print()
 
     siege, punkte_plus, punkte_minus, gegner = lese_spielergebnisse(
@@ -302,9 +324,9 @@ def main():
         diffs = []
         if ist['siege'] != soll_siege:
             diffs.append(f"Siege(sheet={ist['siege']},berechnet={soll_siege})")
-        if ist['bhz'] != soll_bhz:
+        if not ohne_buchholz and ist['bhz'] != soll_bhz:
             diffs.append(f"BHZ(sheet={ist['bhz']},berechnet={soll_bhz})")
-        if ist['fbhz'] != soll_fbhz:
+        if not ohne_buchholz and ist['fbhz'] != soll_fbhz:
             diffs.append(f"FBHZ(sheet={ist['fbhz']},berechnet={soll_fbhz})")
         if ist['pp'] != soll_pp:
             diffs.append(f"Punkte+(sheet={ist['pp']},berechnet={soll_pp})")
@@ -323,13 +345,21 @@ def main():
     else:
         print(f'\n  => {abweichungen} Team(s) mit Abweichung(en)')
 
-    # --- Sortierprüfung: Siege ↓ → BHZ ↓ → FBHZ ↓ → Diff ↓ → Punkte+ ↓ ---
+    # --- Sortierprüfung ---
+    # MIT_BUCHHOLZ:  Siege ↓ → BHZ ↓ → FBHZ ↓ → Punktediff ↓ → Punkte+ ↓
+    # OHNE_BUCHHOLZ: Siege ↓ → Punktediff ↓ → Punkte+ ↓ (SchweizerSystem.java)
     print()
-    print('--- RANGLISTE-SORTIERUNG (Siege ↓ → BHZ ↓ → FBHZ ↓ → Punktediff ↓ → Punkte+ ↓) ---')
+    if ohne_buchholz:
+        print('--- RANGLISTE-SORTIERUNG (Siege ↓ → Punktediff ↓ → Punkte+ ↓) ---')
 
-    def key(rl):
-        return (-(rl['siege'] or 0), -(rl['bhz'] or 0), -(rl['fbhz'] or 0),
-                -(rl['diff'] or 0), -(rl['pp'] or 0))
+        def key(rl):
+            return (-(rl['siege'] or 0), -(rl['diff'] or 0), -(rl['pp'] or 0))
+    else:
+        print('--- RANGLISTE-SORTIERUNG (Siege ↓ → BHZ ↓ → FBHZ ↓ → Punktediff ↓ → Punkte+ ↓) ---')
+
+        def key(rl):
+            return (-(rl['siege'] or 0), -(rl['bhz'] or 0), -(rl['fbhz'] or 0),
+                    -(rl['diff'] or 0), -(rl['pp'] or 0))
 
     fehler_sort = 0
     for i in range(1, len(rangliste)):
