@@ -217,6 +217,12 @@ public class SchweizerPropertiesSpalte extends BasePropertiesSpalte implements I
 	@Override
 	public void setMeldeListeTeamnameAnzeigen(boolean anzeigen) {
 		setStringProperty(KONFIG_PROP_MELDELISTE_TEAMNAME, anzeigen ? "J" : "N");
+		// Ohne Meldeliste-Teamname kann SchweizerListeDelegate.getTeamNrByTeamname(...) Team-Namen
+		// aus dem Spielplan nicht mehr auflösen (SchweizerRanglisteSheet.resolveTeamNr bricht die
+		// Rangliste dann still ab) – Spielplan-Anzeige daher auf Teamnummer zurücksetzen.
+		if (!anzeigen && getSpielplanTeamAnzeige() == SpielplanTeamAnzeige.NAME) {
+			setStringProperty(KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE, SpielplanTeamAnzeige.NR.name());
+		}
 	}
 
 	@Override
@@ -226,12 +232,22 @@ public class SchweizerPropertiesSpalte extends BasePropertiesSpalte implements I
 
 	@Override
 	public SpielplanTeamAnzeige getSpielplanTeamAnzeige() {
-		return readEnumProperty(KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE, SpielplanTeamAnzeige.class, SpielplanTeamAnzeige.NR);
+		SpielplanTeamAnzeige anzeige = readEnumProperty(KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE, SpielplanTeamAnzeige.class,
+				SpielplanTeamAnzeige.NR);
+		// Defensive Absicherung (z.B. bei älteren Dateien mit inkonsistent gesetzten Properties):
+		// ohne Meldeliste-Teamname gibt es keine Team-Namen zum Auflösen, siehe setMeldeListeTeamnameAnzeigen.
+		if (anzeige == SpielplanTeamAnzeige.NAME && !isMeldeListeTeamnameAnzeigen()) {
+			return SpielplanTeamAnzeige.NR;
+		}
+		return anzeige;
 	}
 
 	@Override
 	public void setSpielplanTeamAnzeige(SpielplanTeamAnzeige anzeige) {
 		setStringProperty(KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE, anzeige.name());
+		if (anzeige == SpielplanTeamAnzeige.NAME && !isMeldeListeTeamnameAnzeigen()) {
+			setMeldeListeTeamnameAnzeigen(true);
+		}
 	}
 
 	@Override
