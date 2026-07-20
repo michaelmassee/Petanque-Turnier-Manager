@@ -46,6 +46,10 @@ dist/
 # LibreOffice
 .ooo-debug/
 
+# Python
+__pycache__/
+*.pyc
+
 # Node modules
 frontend/node_modules/
 
