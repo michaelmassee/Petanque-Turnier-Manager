@@ -560,6 +560,27 @@ public class SchweizerSystemTest {
 	}
 
 	/**
+	 * Mit Buchholz: Siege, BHZ, FBHZ und Punktedifferenz gleich -> Punkte+ entscheidet.
+	 */
+	@Test
+	public void testSortiereNachAuswertungskriterienPunktePlusEntscheidet() throws Exception {
+		schweizerSystem = new SchweizerSystem();
+
+		// Team 1 und Team 2 haben identische Siege/Gegnerliste (=> gleiches BHZ/FBHZ) und
+		// gleiche Punktedifferenz -> nur Punkte+ unterscheidet die beiden.
+		List<SchweizerTeamErgebnis> ergebnisse = List.of(
+				new SchweizerTeamErgebnis(1, 2, 5, 30, List.of(3, 4)), // Team 1: Punkte+ = 30
+				new SchweizerTeamErgebnis(2, 2, 5, 25, List.of(3, 4)), // Team 2: Punkte+ = 25
+				new SchweizerTeamErgebnis(3, 1, 0, 0, List.of(1, 2)),
+				new SchweizerTeamErgebnis(4, 1, 0, 0, List.of(1, 2))
+		);
+
+		List<SchweizerTeamErgebnis> sortiert = schweizerSystem.sortiereNachAuswertungskriterien(ergebnisse);
+		assertThat(sortiert.get(0).teamNr()).isEqualTo(1); // höheres Punkte+ gewinnt
+		assertThat(sortiert.get(1).teamNr()).isEqualTo(2);
+	}
+
+	/**
 	 * MIT_BUCHHOLZ delegiert an die 1-Parameter-Überladung (Siege → BHZ → FBHZ).
 	 */
 	@Test

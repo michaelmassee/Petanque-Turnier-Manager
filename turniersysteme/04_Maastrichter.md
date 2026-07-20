@@ -51,7 +51,7 @@ Gleiche Regeln wie im Schweizer System (siehe Kapitel 3):
 
 Nach Runde 3 werden alle Teams in eine Rangliste gebracht:
 1. zuerst nach Siegen (3:0, 2:1, 1:2, 0:3)
-2. bei Gleichstand nach Feinwertung (z. B. Buchholz, Punktdifferenz)
+2. bei Gleichstand nach Feinwertung (z. B. Buchholz, Feinbuchholz, Punktdifferenz, Punkte+ – siehe [03_Schweizer.md](03_Schweizer.md))
 
 Diese Rangliste wird von oben nach unten in vier gleich große Gruppen aufgeteilt:
 - oberes Viertel → A-Turnier

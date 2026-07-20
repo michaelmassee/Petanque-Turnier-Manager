@@ -45,8 +45,9 @@ public class SchweizerSystem {
 	 *   <li>Buchholz / BHZ = Summe der Siege aller Gegner (absteigend)</li>
 	 *   <li>Feinbuchholz / FBHZ = Summe der BHZ-Werte aller Gegner (absteigend)</li>
 	 *   <li>Punktedifferenz = erzielte minus kassierte Punkte (absteigend)</li>
+	 *   <li>Punkte+ = erzielte Punkte (absteigend)</li>
 	 * </ol>
-	 * Hinweis: Direktvergleich (Kriterium 5) und Los (Kriterium 6) werden hier nicht berechnet
+	 * Hinweis: Direktvergleich (Kriterium 6) und Los (Kriterium 7) werden hier nicht berechnet
 	 * und müssen bei Bedarf nachgelagert behandelt werden.
 	 *
 	 * @param ergebnisse die Teamergebnisse mit Siegen, Punktedifferenz und Gegnerliste
@@ -65,7 +66,8 @@ public class SchweizerSystem {
 						(SchweizerTeamErgebnis e) -> bhzMap.getOrDefault(e.teamNr(), 0)).reversed())
 				.thenComparing(Comparator.comparingInt(
 						(SchweizerTeamErgebnis e) -> fbhzMap.getOrDefault(e.teamNr(), 0)).reversed())
-				.thenComparing(Comparator.comparingInt(SchweizerTeamErgebnis::punktedifferenz).reversed());
+				.thenComparing(Comparator.comparingInt(SchweizerTeamErgebnis::punktedifferenz).reversed())
+				.thenComparing(Comparator.comparingInt(SchweizerTeamErgebnis::erzieltePunkte).reversed());
 
 		return ergebnisse.stream().sorted(comparator).collect(Collectors.toList());
 	}
@@ -74,7 +76,8 @@ public class SchweizerSystem {
 	 * Sortiert nach Auswertungskriterien mit wählbarem Modus.
 	 * <p>
 	 * Bei {@code OHNE_BUCHHOLZ}: Siege → Punktedifferenz → Punkte+<br>
-	 * Bei {@code MIT_BUCHHOLZ}: delegiert an {@link #sortiereNachAuswertungskriterien(List)}.
+	 * Bei {@code MIT_BUCHHOLZ}: delegiert an {@link #sortiereNachAuswertungskriterien(List)}
+	 * (Siege → BHZ → FBHZ → Punktedifferenz → Punkte+).
 	 *
 	 * @param ergebnisse die Teamergebnisse
 	 * @param modus      gewünschter Ranking-Modus

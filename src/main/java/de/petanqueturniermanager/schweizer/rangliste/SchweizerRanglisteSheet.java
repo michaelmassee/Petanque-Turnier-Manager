@@ -68,6 +68,7 @@ import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrund
  *   <li>BHZ = Summe der Siege aller Gegner (absteigend)</li>
  *   <li>FBHZ = Summe der BHZ-Werte aller Gegner (absteigend)</li>
  *   <li>Punktedifferenz (absteigend)</li>
+ *   <li>Punkte+ (absteigend)</li>
  * </ol>
  */
 public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
@@ -670,7 +671,7 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 		getSheetHelper().setPropertiesInRange(sheet,
 				RangePosition.from(TEAM_NAME_SPALTE, ERSTE_DATEN_ZEILE, TEAM_NAME_SPALTE, letzteZeile),
 				CellProperties.from().margin(MeldeListeKonstanten.CELL_MARGIN).setAllThinBorder()
-						.setHoriJustify(CellHoriJustify.LEFT).centerVertJustify());
+						.setHoriJustify(CellHoriJustify.LEFT).centerVertJustify().setShrinkToFit(true));
 
 		// Zahlen-Spalten: horizontal + vertikal zentriert
 		getSheetHelper().setPropertiesInRange(sheet,

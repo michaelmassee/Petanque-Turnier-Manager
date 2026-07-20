@@ -15,7 +15,7 @@ Typische Eigenschaften:
 - Jede Runde wird so gelost, dass möglichst **gleich starke Teams** aufeinandertreffen.
 - Niemand spielt zweimal gegen denselben Gegner.
 - Nach jeder Runde entsteht eine **aktualisierte Tabelle**.
-- Eine faire Rangliste entsteht durch Tie‑Break‑Wertungen (BHZ, FBHZ, Punktedifferenz).
+- Eine faire Rangliste entsteht durch Tie‑Break‑Wertungen (BHZ, FBHZ, Punktedifferenz, Punkte+).
 
 ---
 # 2. Ablauf einer Schweizer Runde
@@ -28,6 +28,7 @@ Jede Runde folgt der gleichen Struktur:
    - BHZ (Buchholz)
    - FBHZ (Feinbuchholz)
    - Punktedifferenz
+   - Punkte+ (Pluspunkte)
 4. Paarungen von oben nach unten bilden.
 5. Konflikte lösen (kein Rematch erlaubt).
 6. Spiele ausführen.
@@ -49,7 +50,8 @@ Summe der BHZ‑Werte aller Gegner.
 (-) kassierte Punkte
 
 ## 3.5 Pluspunkte
-Ersatz‑Tie‑Break, wenn BHZ/FBHZ nicht genutzt werden.
+Letztes Tie‑Break‑Kriterium nach Punktedifferenz (Modus MIT_BUCHHOLZ) bzw. direkt nach
+Punktedifferenz, wenn BHZ/FBHZ nicht genutzt werden (Modus OHNE_BUCHHOLZ).
 
 ---
 # 4. Paarungsalgorithmus (Schweizer‑Backtracking)
