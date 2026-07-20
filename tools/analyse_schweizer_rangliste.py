@@ -27,6 +27,13 @@ Funktioniert für beide Systeme, die dieselbe Rangliste-Logik verwenden:
   - Maastrichter (Vorrunde): Sheet "Vorrunden-Rangliste"
 Das passende Sheet wird automatisch erkannt.
 
+Team-Spalten in den Spielrunden-Sheets enthalten je nach Property "Spielplan
+Team Anzeige" entweder die Team-Nummer oder den Teamnamen
+(SchweizerAbstractSpielrundeSheet.teamPaarungenEinfuegen). Im Namen-Modus
+werden Team-Namen über das "Meldeliste"-Sheet (Spalte 0 = Nr, Spalte 1 =
+Name, ab Zeile 3) zur Team-Nr aufgelöst — analog
+SchweizerListeDelegate.getTeamNrByTeamname/SchweizerRanglisteSheet.resolveTeamNr.
+
 Konfiguration ("Freispiel Punkte +/-") wird aus den ODS-Document-Properties
 gelesen (meta.xml); fehlt sie, gelten die Defaults 13 / 7.
 
@@ -67,6 +74,11 @@ SR_TEAM_A_SPALTE = 1
 SR_TEAM_B_SPALTE = 2
 SR_ERG_TEAM_A_SPALTE = 3
 SR_ERG_TEAM_B_SPALTE = 4
+
+ML_SHEET_NAME = 'Meldeliste'
+ML_ERSTE_DATEN_ZEILE = 3
+ML_TEAM_NR_SPALTE = 0
+ML_TEAMNAME_SPALTE = 1
 
 RL_ERSTE_DATEN_ZEILE = 2
 RL_TEAM_NR_SPALTE = 0
@@ -173,7 +185,52 @@ def finde_spielrunden(root, bis_runde=None):
     return runden
 
 
-def lese_spielergebnisse(root, spielrunden, freispiel_plus, freispiel_minus):
+def lese_meldeliste_namen(root):
+    """Liest Team-Nr -> Name aus dem Meldeliste-Sheet (Spielplan Team Anzeige = NAME).
+
+    Analog SchweizerListeDelegate.getTeamNrByTeamname: Spalte 0 = Team-Nr,
+    Spalte 1 = Teamname, Daten ab Zeile 3 (0-basiert).
+    """
+    table = find_sheet(root, ML_SHEET_NAME)
+    if table is None:
+        return {}
+    rows = sheet_rows(table)
+    name_zu_nr = {}
+    for z in range(ML_ERSTE_DATEN_ZEILE, len(rows)):
+        r = rows[z]
+        if len(r) <= ML_TEAM_NR_SPALTE:
+            break
+        nr = to_int(r[ML_TEAM_NR_SPALTE])
+        if nr is None or nr <= 0:
+            break
+        name = r[ML_TEAMNAME_SPALTE] if len(r) > ML_TEAMNAME_SPALTE else None
+        if name:
+            name_zu_nr[name.strip()] = nr
+    return name_zu_nr
+
+
+def resolve_team_nr(zelle, name_zu_nr):
+    """Löst eine Team-Spalten-Zelle (Nummer oder Name) zur Team-Nr auf.
+
+    Gibt None nur für eine leere Zelle zurück (echtes Zeilenende). Ein nicht
+    auflösbarer Name (z.B. weil "Meldeliste Teamname" deaktiviert ist, obwohl
+    der Spielplan Namen anzeigt) wird als Warnung ausgegeben statt still als
+    Zeilenende missinterpretiert zu werden.
+    """
+    nr = to_int(zelle)
+    if nr is not None:
+        return nr
+    if not zelle:
+        return None
+    nr = name_zu_nr.get(zelle.strip())
+    if nr is None:
+        print(f'  WARNUNG: Team-Name "{zelle}" nicht in Meldeliste auflösbar '
+              f'(Spielplan Team Anzeige=NAME, aber Meldeliste Teamname evtl. '
+              f'deaktiviert?)', file=sys.stderr)
+    return nr
+
+
+def lese_spielergebnisse(root, spielrunden, freispiel_plus, freispiel_minus, name_zu_nr):
     """Aggregiert je Team: Siege, Punkte+, Punkte-, Gegner-Liste (nur gespielte Paarungen)."""
     siege = defaultdict(int)
     punkte_plus = defaultdict(int)
@@ -187,10 +244,10 @@ def lese_spielergebnisse(root, spielrunden, freispiel_plus, freispiel_minus):
             r = rows[z]
             if len(r) <= SR_TEAM_A_SPALTE:
                 continue
-            nr_a = to_int(r[SR_TEAM_A_SPALTE])
+            nr_a = resolve_team_nr(r[SR_TEAM_A_SPALTE], name_zu_nr)
             if nr_a is None or nr_a <= 0:
                 break  # Ende der Daten
-            nr_b = to_int(r[SR_TEAM_B_SPALTE]) if len(r) > SR_TEAM_B_SPALTE else None
+            nr_b = resolve_team_nr(r[SR_TEAM_B_SPALTE], name_zu_nr) if len(r) > SR_TEAM_B_SPALTE else None
 
             if nr_b is None or nr_b <= 0:
                 # Freilos für Team A
@@ -289,8 +346,9 @@ def main():
           (' (BHZ/FBHZ werden nicht geprüft)' if ohne_buchholz else ''))
     print()
 
+    name_zu_nr = lese_meldeliste_namen(root)
     siege, punkte_plus, punkte_minus, gegner = lese_spielergebnisse(
-        root, spielrunden, freispiel_plus, freispiel_minus)
+        root, spielrunden, freispiel_plus, freispiel_minus, name_zu_nr)
     # Teamuniversum: nicht nur siege.keys() (Team mit 0 Siegen hätte sonst keinen
     # Eintrag) — punkte_plus wird für jedes Team gebucht, das gespielt oder ein
     # Freilos hatte (Sieger UND Verlierer).
