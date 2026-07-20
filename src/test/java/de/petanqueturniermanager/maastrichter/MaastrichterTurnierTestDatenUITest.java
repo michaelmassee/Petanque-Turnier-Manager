@@ -31,7 +31,9 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.maastrichter.korunde.KoGruppeABSheet;
 import de.petanqueturniermanager.maastrichter.finalrunde.MaastrichterFinalrundeSheet;
+import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
 import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterVorrundenRanglisteSheetUpdate;
+import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteAnalyseAssert;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheet;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrundeSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
@@ -96,6 +98,8 @@ public class MaastrichterTurnierTestDatenUITest extends BaseCalcUITest {
 		validiereVorrundenRanglistePerJson(anzTeams, "maastrichter-vorrundenrangliste.json");
 		validiereTeilnehmerPerJson(anzTeams, "maastrichter-teilnehmer.json");
 		validiereFinaleGruppePerJson("A", "maastrichter-finale-a.json");
+
+		pruefeVorrundenRanglisteAnalyse(anzVorrunden);
 	}
 
 	@Test
@@ -128,6 +132,7 @@ public class MaastrichterTurnierTestDatenUITest extends BaseCalcUITest {
 			validiereVorrundenErgebnissePerJson(anzTeams, runde, "maastrichter-57-vorrunde-" + runde + ".json");
 		}
 		validiereVorrundenRanglistePerJson(anzTeams, "maastrichter-57-vorrundenrangliste.json");
+		pruefeVorrundenRanglisteAnalyse(anzVorrunden);
 		validiereTeilnehmerPerJson(anzTeams, "maastrichter-57-teilnehmer.json");
 		validiereFinaleGruppePerJson("A", "maastrichter-57-finale-a.json");
 		validiereFinalrundeLeerflaechenSindTransparent("A");
@@ -401,6 +406,18 @@ public class MaastrichterTurnierTestDatenUITest extends BaseCalcUITest {
 
 		InputStream jsonFile = MaastrichterTurnierTestDatenUITest.class.getResourceAsStream(referenzDatei);
 		validateWithJson(rangeData, jsonFile);
+	}
+
+	/**
+	 * Siege/BHZ/FBHZ/Punkte unabhängig aus den Vorrunden-Sheets nachrechnen und mit der
+	 * Vorrunden-Rangliste vergleichen (inkl. Sortierprüfung). Maastrichter nutzt für die
+	 * Vorrunden-Rangliste dieselbe Berechnungslogik wie das Schweizer System.
+	 */
+	private void pruefeVorrundenRanglisteAnalyse(int anzVorrunden) throws GenerateException {
+		var konfig = new MaastrichterKonfigurationSheet(wkingSpreadsheet);
+		SchweizerRanglisteAnalyseAssert.fuer(wkingSpreadsheet)
+				.pruefe(SheetNamen.maastrichterVorrundenRangliste(), anzVorrunden,
+						konfig.getFreispielPunktePlus(), konfig.getFreispielPunkteMinus());
 	}
 
 	private void validiereFinaleGruppePerJson(String gruppenBuchstabe, String referenzDatei) throws GenerateException {

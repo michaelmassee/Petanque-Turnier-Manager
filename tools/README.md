@@ -61,6 +61,56 @@ Annahmen über das Sheet-Layout sind aus `SpielrundeSheetKonstanten.java`
 übernommen und an einer Stelle im Skript zentralisiert — bei Layout-Änderungen
 in der Extension nachziehen.
 
+## analyse_schweizer_rangliste.py
+
+Konsistenz-Analyse einer Schweizer- oder Maastrichter-Rangliste-ODS.
+
+Liest direkt aus der ODS (`content.xml` + `meta.xml`) und prüft die
+Rangliste-Werte (Siege, BHZ, FBHZ, Punkte+, Punkte-, Punktedifferenz) gegen
+die aus den Spielrunden-Sheets nachgerechneten Werte:
+
+1. **Siege / Punkte+ / Punkte-** — aus allen Spielrunden-Sheets aufsummiert,
+   inkl. Freilos-Buchung mit den konfigurierten Freispiel-Punkten
+   (Property `Freispiel Punkte +` / `Freispiel Punkte -`, Defaults 13 / 7
+   aus `SchweizerPropertiesSpalte.java`).
+2. **Buchholz (BHZ)** = Summe der Siege aller Gegner. Ungespielte
+   Paarungen (Ergebnis 0:0, z.B. bereits ausgeloste aber noch nicht
+   gespielte Folgerunde) zählen dabei **nicht** als Gegner.
+3. **Feinbuchholz (FBHZ)** = Summe der BHZ-Werte aller Gegner.
+4. **Rangliste-Sortierung** gegen `Siege ↓ → BHZ ↓ → FBHZ ↓ → Punktediff ↓
+   → Punkte+ ↓` (`SchweizerSystem.sortiereNachAuswertungskriterien`).
+
+Erkennt automatisch, ob es sich um eine Schweizer-Rangliste (Sheet
+"Rangliste") oder eine Maastrichter-Vorrunden-Rangliste (Sheet
+"Vorrunden-Rangliste") handelt — beide nutzen dieselbe Auswertungslogik.
+
+Aufruf:
+
+```bash
+python3 tools/analyse_schweizer_rangliste.py /pfad/zur/datei.ods
+python3 tools/analyse_schweizer_rangliste.py /pfad/zur/datei.ods --bis-runde 2
+```
+
+Beispiel-Output (gekürzt):
+
+```
+--- RANGLISTE-WERTE (Vorrunden-Rangliste, 27 Teams, 27 Teams mit Spieldaten) ---
+  ✓ Alle 27 Teams stimmen exakt überein (Siege/BHZ/FBHZ/Punkte+/Punkte-/Diff)
+
+--- RANGLISTE-SORTIERUNG (Siege ↓ → BHZ ↓ → FBHZ ↓ → Punktediff ↓ → Punkte+ ↓) ---
+  ✓ Rangliste korrekt sortiert (27 Teams)
+```
+
+`--bis-runde N` schränkt die Nachrechnung auf die ersten N Spielrunden ein
+— nützlich, um einen früheren Turnierstand zu prüfen. Da die Rangliste im
+Sheet aber immer bis zur aktuell aktiven Runde aufgebaut ist (inkl. bereits
+gezogener, aber noch nicht gespielter Freilos-Paarungen), führt ein
+`--bis-runde` kleiner als die aktive Runde erwartungsgemäß zu Abweichungen.
+
+Annahmen über das Sheet-Layout sind aus `SchweizerRanglisteSheet.java` /
+`SchweizerAbstractSpielrundeSheet.java` übernommen und an einer Stelle im
+Skript zentralisiert — bei Layout-Änderungen in der Extension nachziehen.
+
 ## test_analyse_supermelee_sync.py
 
 Sync-Check zwischen `analyse_supermelee_spieltag.py` und

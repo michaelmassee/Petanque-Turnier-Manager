@@ -21,6 +21,8 @@ import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
+import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
+import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteAnalyseAssert;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheet;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheetUpdate;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
@@ -118,6 +120,13 @@ public class SchweizerTurnierTestDatenUITest extends BaseCalcUITest {
 				.as("FBHZ muss >= 0 sein")
 				.extracting(row -> row.get(SchweizerRanglisteSheet.FBHZ_SPALTE).getIntVal(-1))
 				.allSatisfy(fbhz -> assertThat(fbhz).isGreaterThanOrEqualTo(0));
+
+		// 4. Siege/BHZ/FBHZ/Punkte unabhängig aus den Spielrunden nachrechnen und mit der
+		// Rangliste vergleichen (inkl. Sortierprüfung)
+		var konfig = new SchweizerKonfigurationSheet(wkingSpreadsheet);
+		SchweizerRanglisteAnalyseAssert.fuer(wkingSpreadsheet)
+				.pruefe(SheetNamen.rangliste(), ANZ_RUNDEN,
+						konfig.getFreispielPunktePlus(), konfig.getFreispielPunkteMinus());
 	}
 
 	@Test
