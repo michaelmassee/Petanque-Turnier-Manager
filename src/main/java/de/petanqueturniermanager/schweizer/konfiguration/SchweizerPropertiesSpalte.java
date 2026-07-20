@@ -216,13 +216,13 @@ public class SchweizerPropertiesSpalte extends BasePropertiesSpalte implements I
 
 	@Override
 	public void setMeldeListeTeamnameAnzeigen(boolean anzeigen) {
-		setStringProperty(KONFIG_PROP_MELDELISTE_TEAMNAME, anzeigen ? "J" : "N");
-		// Ohne Meldeliste-Teamname kann SchweizerListeDelegate.getTeamNrByTeamname(...) Team-Namen
-		// aus dem Spielplan nicht mehr auflösen (SchweizerRanglisteSheet.resolveTeamNr bricht die
-		// Rangliste dann still ab) – Spielplan-Anzeige daher auf Teamnummer zurücksetzen.
-		if (!anzeigen && getSpielplanTeamAnzeige() == SpielplanTeamAnzeige.NAME) {
+		// Rohen Property-Wert prüfen (nicht getSpielplanTeamAnzeige(): dessen defensiver Fallback
+		// würde nach dem Deaktivieren immer NR liefern und den Reset in Zeile unten verhindern —
+		// der gespeicherte Wert bliebe fälschlich auf NAME stehen).
+		if (!anzeigen && readRawSpielplanTeamAnzeige() == SpielplanTeamAnzeige.NAME) {
 			setStringProperty(KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE, SpielplanTeamAnzeige.NR.name());
 		}
+		setStringProperty(KONFIG_PROP_MELDELISTE_TEAMNAME, anzeigen ? "J" : "N");
 	}
 
 	@Override
@@ -232,14 +232,17 @@ public class SchweizerPropertiesSpalte extends BasePropertiesSpalte implements I
 
 	@Override
 	public SpielplanTeamAnzeige getSpielplanTeamAnzeige() {
-		SpielplanTeamAnzeige anzeige = readEnumProperty(KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE, SpielplanTeamAnzeige.class,
-				SpielplanTeamAnzeige.NR);
+		SpielplanTeamAnzeige anzeige = readRawSpielplanTeamAnzeige();
 		// Defensive Absicherung (z.B. bei älteren Dateien mit inkonsistent gesetzten Properties):
 		// ohne Meldeliste-Teamname gibt es keine Team-Namen zum Auflösen, siehe setMeldeListeTeamnameAnzeigen.
 		if (anzeige == SpielplanTeamAnzeige.NAME && !isMeldeListeTeamnameAnzeigen()) {
 			return SpielplanTeamAnzeige.NR;
 		}
 		return anzeige;
+	}
+
+	private SpielplanTeamAnzeige readRawSpielplanTeamAnzeige() {
+		return readEnumProperty(KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE, SpielplanTeamAnzeige.class, SpielplanTeamAnzeige.NR);
 	}
 
 	@Override
