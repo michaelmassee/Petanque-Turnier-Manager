@@ -400,8 +400,12 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 
 			int nrB = resolveTeamNr(row.get(1), meldeliste);
 			if (nrB <= 0) {
-				// Freilos für Team A
-				statsMap.computeIfAbsent(nrA, k -> new int[3])[0]++;
+				// Freilos für Team A – Sieg zählen und die konfigurierten Freispiel-Punkte
+				// verbuchen (kein echter Gegner, daher kein Eintrag in gegnerMap für BHZ/FBHZ).
+				int[] statsA = statsMap.computeIfAbsent(nrA, k -> new int[3]);
+				statsA[0]++; // siege
+				statsA[1] += getKonfigurationSheet().getFreispielPunktePlus();  // punkte+
+				statsA[2] += getKonfigurationSheet().getFreispielPunkteMinus(); // punkte-
 				continue;
 			}
 			Team teamB = aktiveMeldungen.getTeam(nrB);

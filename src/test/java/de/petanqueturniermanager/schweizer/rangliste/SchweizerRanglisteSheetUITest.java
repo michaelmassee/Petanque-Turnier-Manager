@@ -361,6 +361,79 @@ public class SchweizerRanglisteSheetUITest extends BaseCalcUITest {
 		}
 	}
 
+	/**
+	 * Regressionstest: Ein Freilos-Team (ungerade Teamanzahl) muss die konfigurierten
+	 * Freispiel-Punkte (Default 13:7) in der Rangliste verbucht bekommen – nicht 0:0.
+	 * <p>
+	 * Vor dem Fix wurde bei einem Freilos nur der Sieg gezählt, die in der Spielrunde
+	 * bereits vorbelegten Freispiel-Punkte aber nie in die Rangliste übernommen.
+	 */
+	@Test
+	public void testFreilosBekommtFreispielPunkte() throws GenerateException {
+		int anzTeamsUngerade = ANZ_TEAMS + 1;
+		testDaten = new SchweizerTurnierTestDaten(wkingSpreadsheet, anzTeamsUngerade,
+				de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige.NR);
+		testDaten.generate(1, true);
+
+		int freispielPlus = testDaten.naechsteSpielrunde.getKonfigurationSheet().getFreispielPunktePlus();
+		int freispielMinus = testDaten.naechsteSpielrunde.getKonfigurationSheet().getFreispielPunkteMinus();
+
+		String rundeSheetName = "1. " + SchweizerAbstractSpielrundeSheet.SHEET_NAMEN;
+		XSpreadsheet runde1 = sheetHlp.findByName(rundeSheetName);
+		assertThat(runde1).as("1. Spielrunde muss existieren").isNotNull();
+		int freilosTeamNr = ermittleFreilosTeamNr(runde1, anzTeamsUngerade);
+		assertThat(freilosTeamNr).as("Bei ungerader Teamanzahl muss genau ein Freilos existieren").isGreaterThan(0);
+
+		XSpreadsheet rangliste = sheetHlp.findByName(SheetNamen.rangliste());
+		assertThat(rangliste).as("Rangliste-Sheet muss vorhanden sein").isNotNull();
+		RangePosition ranglisteRange = RangePosition.from(
+				SchweizerRanglisteSheet.TEAM_NR_SPALTE, SchweizerRanglisteSheet.ERSTE_DATEN_ZEILE,
+				SchweizerRanglisteSheet.PUNKTE_DIFF_SPALTE,
+				SchweizerRanglisteSheet.ERSTE_DATEN_ZEILE + anzTeamsUngerade - 1);
+		RangeData data = RangeHelper
+				.from(rangliste, wkingSpreadsheet.getWorkingSpreadsheetDocument(), ranglisteRange)
+				.getDataFromRange();
+
+		RowData freilosZeile = data.stream()
+				.filter(row -> row.get(SchweizerRanglisteSheet.TEAM_NR_SPALTE).getIntVal(-1) == freilosTeamNr)
+				.findFirst()
+				.orElseThrow();
+
+		assertThat(freilosZeile.get(SchweizerRanglisteSheet.SIEGE_SPALTE).getIntVal(-1))
+				.as("Freilos-Team muss als Sieg gezählt werden").isEqualTo(1);
+		assertThat(freilosZeile.get(SchweizerRanglisteSheet.PUNKTE_PLUS_SPALTE).getIntVal(-1))
+				.as("Freilos-Team muss die konfigurierten Freispiel-Punkte+ (%d) verbucht bekommen", freispielPlus)
+				.isEqualTo(freispielPlus);
+		assertThat(freilosZeile.get(SchweizerRanglisteSheet.PUNKTE_MINUS_SPALTE).getIntVal(-1))
+				.as("Freilos-Team muss die konfigurierten Freispiel-Punkte- (%d) verbucht bekommen", freispielMinus)
+				.isEqualTo(freispielMinus);
+		assertThat(freilosZeile.get(SchweizerRanglisteSheet.PUNKTE_DIFF_SPALTE).getIntVal(Integer.MIN_VALUE))
+				.as("Punkte-Differenz des Freilos-Teams muss Freispiel+ - Freispiel- sein")
+				.isEqualTo(freispielPlus - freispielMinus);
+	}
+
+	/**
+	 * Sucht in der Spielrunde die Zeile ohne Gegner-Team (Freilos) und liefert die
+	 * TeamNr von Team A dieser Zeile, oder -1 falls keine gefunden wurde.
+	 */
+	private int ermittleFreilosTeamNr(XSpreadsheet rundeSheet, int anzTeams) throws GenerateException {
+		RangePosition leseRange = RangePosition.from(
+				SchweizerAbstractSpielrundeSheet.TEAM_A_SPALTE, SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE,
+				SchweizerAbstractSpielrundeSheet.TEAM_B_SPALTE,
+				SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE + anzTeams);
+		RangeData data = RangeHelper
+				.from(rundeSheet, wkingSpreadsheet.getWorkingSpreadsheetDocument(), leseRange)
+				.getDataFromRange();
+
+		for (RowData row : data) {
+			int nrA = row.get(0).getIntVal(-1);
+			if (nrA <= 0) break;
+			int nrB = row.get(1).getIntVal(-1);
+			if (nrB <= 0) return nrA;
+		}
+		return -1;
+	}
+
 	/** Liefert das aktuell aktive Sheet des Dokuments über die UNO-View-API. */
 	private XSpreadsheet aktivesSheet() {
 		XSpreadsheetView view = Lo.qi(XSpreadsheetView.class,
