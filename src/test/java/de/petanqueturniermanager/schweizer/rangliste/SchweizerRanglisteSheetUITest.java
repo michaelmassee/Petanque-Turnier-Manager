@@ -22,6 +22,7 @@ import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
+import de.petanqueturniermanager.helper.rangliste.RangListeSpalte;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrundeSheet;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerTurnierTestDaten;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
@@ -158,9 +159,11 @@ public class SchweizerRanglisteSheetUITest extends BaseCalcUITest {
 			int fbhzIp1  = rowIp1.get(SchweizerRanglisteSheet.FBHZ_SPALTE).getIntVal(0);
 			int diffI    = rowI.get(SchweizerRanglisteSheet.PUNKTE_DIFF_SPALTE).getIntVal(0);
 			int diffIp1  = rowIp1.get(SchweizerRanglisteSheet.PUNKTE_DIFF_SPALTE).getIntVal(0);
+			int plusI    = rowI.get(SchweizerRanglisteSheet.PUNKTE_PLUS_SPALTE).getIntVal(0);
+			int plusIp1  = rowIp1.get(SchweizerRanglisteSheet.PUNKTE_PLUS_SPALTE).getIntVal(0);
 
 			boolean alleGleich = siegeI == siegeIp1 && bhzI == bhzIp1
-					&& fbhzI == fbhzIp1 && diffI == diffIp1;
+					&& fbhzI == fbhzIp1 && diffI == diffIp1 && plusI == plusIp1;
 			if (alleGleich) {
 				int platzI   = rowI.get(SchweizerRanglisteSheet.PLATZ_SPALTE).getIntVal(0);
 				int platzIp1 = rowIp1.get(SchweizerRanglisteSheet.PLATZ_SPALTE).getIntVal(0);
@@ -410,6 +413,60 @@ public class SchweizerRanglisteSheetUITest extends BaseCalcUITest {
 		assertThat(freilosZeile.get(SchweizerRanglisteSheet.PUNKTE_DIFF_SPALTE).getIntVal(Integer.MIN_VALUE))
 				.as("Punkte-Differenz des Freilos-Teams muss Freispiel+ - Freispiel- sein")
 				.isEqualTo(freispielPlus - freispielMinus);
+	}
+
+	/**
+	 * Regressionstest für den Punkte+-Tie-Break: Zwei Teams mit identischem Siege/BHZ/FBHZ/
+	 * Punkte-Diff, aber unterschiedlichem Punkte+ dürfen NICHT denselben Platz bekommen.
+	 * <p>
+	 * Vor dem Fix fehlte {@code PUNKTE_PLUS_SPALTE} in {@link SchweizerRanglisteSheet#getRanglisteSpalten()},
+	 * obwohl {@link de.petanqueturniermanager.algorithmen.schweizer.SchweizerSystem} Punkte+ bereits
+	 * als letzten Tie-Break nach der Punktedifferenz einsortiert. Die Platz-Formel in
+	 * {@link RangListeSpalte#upDateRanglisteSpalte()} verglich dadurch nur Siege/BHZ/FBHZ/Diff
+	 * und vergab bei einem reinen Punkte+-Unterschied fälschlich denselben Platz.
+	 */
+	@Test
+	public void testPlatzUnterscheidetSichBeiUnterschiedlichemPunktePlus() throws GenerateException {
+		testDaten.generate();
+
+		XSpreadsheet rangliste = sheetHlp.findByName(SheetNamen.rangliste());
+		assertThat(rangliste).as("Rangliste-Sheet muss vorhanden sein").isNotNull();
+
+		int zeile1 = SchweizerRanglisteSheet.ERSTE_DATEN_ZEILE;
+		int zeile2 = zeile1 + 1;
+
+		// Zwei benachbarte Zeilen künstlich auf identisches Siege/BHZ/FBHZ/Diff setzen,
+		// aber unterschiedliches Punkte+ (Punkte- passend angepasst, damit Diff gleich bleibt).
+		setzeRanglisteZeile(rangliste, zeile1, 2, 3, 4, 20, 10);
+		setzeRanglisteZeile(rangliste, zeile2, 2, 3, 4, 18, 8);
+
+		new RangListeSpalte(SchweizerRanglisteSheet.PLATZ_SPALTE, new SchweizerRanglisteSheet(wkingSpreadsheet))
+				.upDateRanglisteSpalte();
+		wkingSpreadsheet.getxCalculatable().calculateAll();
+
+		RangePosition platzRange = RangePosition.from(
+				SchweizerRanglisteSheet.PLATZ_SPALTE, zeile1, SchweizerRanglisteSheet.PLATZ_SPALTE, zeile2);
+		RangeData platzData = RangeHelper
+				.from(rangliste, wkingSpreadsheet.getWorkingSpreadsheetDocument(), platzRange)
+				.getDataFromRange();
+
+		int platz1 = platzData.get(0).get(0).getIntVal(-1);
+		int platz2 = platzData.get(1).get(0).getIntVal(-1);
+
+		assertThat(platz1)
+				.as("Gleiches Siege/BHZ/FBHZ/Diff, aber unterschiedliches Punkte+ (20 vs 18) muss zu unterschiedlichem Platz führen")
+				.isNotEqualTo(platz2);
+	}
+
+	/** Schreibt Siege/BHZ/FBHZ/Punkte+/Punkte-/Diff einer einzelnen Rangliste-Zeile. */
+	private void setzeRanglisteZeile(XSpreadsheet sheet, int zeile, int siege, int bhz, int fbhz,
+			int punktePlus, int punkteMinus) {
+		sheetHlp.setNumberValueInCell(NumberCellValue.from(sheet, Position.from(SchweizerRanglisteSheet.SIEGE_SPALTE, zeile)).setValue(siege));
+		sheetHlp.setNumberValueInCell(NumberCellValue.from(sheet, Position.from(SchweizerRanglisteSheet.BHZ_SPALTE, zeile)).setValue(bhz));
+		sheetHlp.setNumberValueInCell(NumberCellValue.from(sheet, Position.from(SchweizerRanglisteSheet.FBHZ_SPALTE, zeile)).setValue(fbhz));
+		sheetHlp.setNumberValueInCell(NumberCellValue.from(sheet, Position.from(SchweizerRanglisteSheet.PUNKTE_PLUS_SPALTE, zeile)).setValue(punktePlus));
+		sheetHlp.setNumberValueInCell(NumberCellValue.from(sheet, Position.from(SchweizerRanglisteSheet.PUNKTE_MINUS_SPALTE, zeile)).setValue(punkteMinus));
+		sheetHlp.setNumberValueInCell(NumberCellValue.from(sheet, Position.from(SchweizerRanglisteSheet.PUNKTE_DIFF_SPALTE, zeile)).setValue(punktePlus - punkteMinus));
 	}
 
 	/**

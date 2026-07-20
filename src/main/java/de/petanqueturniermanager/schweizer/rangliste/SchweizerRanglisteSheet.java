@@ -726,6 +726,7 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 			spalten.add(Position.from(FBHZ_SPALTE, ERSTE_DATEN_ZEILE));
 		}
 		spalten.add(Position.from(PUNKTE_DIFF_SPALTE, ERSTE_DATEN_ZEILE));
+		spalten.add(Position.from(PUNKTE_PLUS_SPALTE, ERSTE_DATEN_ZEILE));
 		return spalten;
 	}
 
