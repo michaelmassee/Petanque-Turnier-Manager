@@ -584,6 +584,11 @@ public class SheetBaumOrganisierer {
             }
         }
 
+        kaskadeKnoten.stream()
+                .filter(k -> SheetMetadataHelper.SCHLUESSEL_KASKADE_GRUPPEN_UEBERSICHT.equals(k.metadatenSchluessel()))
+                .map(k -> new BlattKnoten(blattName(k), k.metadatenSchluessel()))
+                .forEach(ergebnis::add);
+
         return ergebnis;
     }
 

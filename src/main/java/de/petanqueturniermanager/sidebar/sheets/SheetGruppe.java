@@ -57,7 +57,8 @@ public enum SheetGruppe {
             "__PTM_KASKADE_CHECKIN_LISTE__",
             "__PTM_KASKADE_RUNDE_",
             "__PTM_KASKADE_FELD_",
-            "__PTM_KASKADE_GRUPPENRANGLISTE__"
+            "__PTM_KASKADE_GRUPPENRANGLISTE__",
+            "__PTM_KASKADE_GRUPPEN_UEBERSICHT__"
     )),
 
     FORMULEX("enum.turniersystem.formulex", List.of(
