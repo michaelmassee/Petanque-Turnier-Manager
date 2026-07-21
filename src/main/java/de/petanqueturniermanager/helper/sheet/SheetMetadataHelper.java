@@ -122,6 +122,7 @@ public class SheetMetadataHelper {
     public static final String SCHLUESSEL_MAASTRICHTER_MELDELISTE = "__PTM_MAASTRICHTER_MELDELISTE__";
     public static final String SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX = "__PTM_MAASTRICHTER_VORRUNDE_";
     public static final String SCHLUESSEL_MAASTRICHTER_FINALRUNDE_PREFIX = "__PTM_MAASTRICHTER_FINALRUNDE_";
+    public static final String SCHLUESSEL_MAASTRICHTER_GRUPPEN_UEBERSICHT = "__PTM_MAASTRICHTER_GRUPPEN_UEBERSICHT__";
 
     // ── Konstanten: Poule ────────────────────────────────────────────────────
 

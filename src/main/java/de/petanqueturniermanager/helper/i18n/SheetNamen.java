@@ -47,6 +47,7 @@ public final class SheetNamen {
     public static final String KEY_POULE_TEILNEHMER                 = "sheet.name.poule.teilnehmer";
     public static final String KEY_POULE_VORRUNDEN_RANGLISTE        = "sheet.name.poule.vorrunden.rangliste";
     public static final String KEY_SPIELERDB_VORLAGE                = "sheet.name.spielerdb.vorlage";
+    public static final String KEY_MAASTRICHTER_GRUPPEN_UEBERSICHT  = "sheet.name.maastrichter.gruppen.uebersicht";
 
     // ── i18n-Schlüssel – Muster mit Platzhaltern ─────────────────────────────
 
@@ -128,6 +129,7 @@ public final class SheetNamen {
     public static final String LEGACY_KASKADE_FELD_PRAEFIX           = "Kaskade";
     public static final String LEGACY_KASKADE_FELD_SUFFIX            = "Feld";
     public static final String LEGACY_KASKADE_GRUPPENRANGLISTE       = "Kaskaden-Gruppenrangliste";
+    public static final String LEGACY_MAASTRICHTER_GRUPPEN_UEBERSICHT = "Gruppen-Übersicht";
 
     private SheetNamen() {
     }
@@ -231,6 +233,10 @@ public final class SheetNamen {
 
     public static String teilnehmer() {
         return getOderFallback(KEY_TEILNEHMER, LEGACY_TEILNEHMER);
+    }
+
+    public static String maastrichterGruppenUebersicht() {
+        return getOderFallback(KEY_MAASTRICHTER_GRUPPEN_UEBERSICHT, LEGACY_MAASTRICHTER_GRUPPEN_UEBERSICHT);
     }
 
     public static String pouleVorrunde() {

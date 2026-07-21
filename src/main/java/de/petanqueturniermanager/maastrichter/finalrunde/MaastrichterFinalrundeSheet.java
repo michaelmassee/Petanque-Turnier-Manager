@@ -186,6 +186,7 @@ public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet {
 		if (!teamNrZuGruppe.isEmpty()) {
 			new MaastrichterVorrundenRanglisteSheetUpdate(getWorkingSpreadsheet())
 					.schreibeGruppenZuweisungen(teamNrZuGruppe);
+			new MaastrichterGruppenUebersichtSheet(getWorkingSpreadsheet()).generate();
 		}
 	}
 

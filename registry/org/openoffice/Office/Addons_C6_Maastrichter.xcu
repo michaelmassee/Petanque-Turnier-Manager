@@ -208,9 +208,21 @@
 								</prop>
 							</node>
 
-
-
-
+							<node oor:name="C6A14" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Gruppen-Übersicht</value>
+									<value xml:lang="en">Group Overview</value>
+									<value xml:lang="es">Resumen de grupos</value>
+									<value xml:lang="fr">Aperçu des groupes</value>
+									<value xml:lang="nl">Groepenoverzicht</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:maastrichter_gruppen_uebersicht</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
 
 						</node>
 					</node>

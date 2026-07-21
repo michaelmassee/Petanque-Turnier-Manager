@@ -125,6 +125,7 @@ import de.petanqueturniermanager.triptete.spielplan.TripTeteSpielPlanSheet;
 import de.petanqueturniermanager.triptete.spielplan.TripTeteSpielPlanSheetTestDaten;
 import de.petanqueturniermanager.maastrichter.MaastrichterTurnierTestDaten;
 import de.petanqueturniermanager.maastrichter.finalrunde.MaastrichterFinalrundeSheet;
+import de.petanqueturniermanager.maastrichter.finalrunde.MaastrichterGruppenUebersichtSheet;
 import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterMeldeListeSheetNew;
 import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterMeldeListeSheetUpdate;
 import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterTeilnehmerSheet;
@@ -290,6 +291,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_MAASTRICHTER_VORRUNDEN_RANGLISTE = "maastrichter_vorrunden_rangliste";
 	public static final String CMD_MAASTRICHTER_FINALRUNDEN = "maastrichter_finalrunden";
 	public static final String CMD_MAASTRICHTER_TEILNEHMER = "maastrichter_teilnehmer";
+	public static final String CMD_MAASTRICHTER_GRUPPEN_UEBERSICHT = "maastrichter_gruppen_uebersicht";
 	public static final String CMD_MAASTRICHTER_TESTDATEN_TURNIER = "maastrichter_testdaten_turnier";
 	public static final String CMD_MAASTRICHTER_TESTDATEN_TURNIER_57 = "maastrichter_testdaten_turnier_57";
 	public static final String CMD_MAASTRICHTER_TESTDATEN_TURNIER_35 = "maastrichter_testdaten_turnier_35";
@@ -1023,6 +1025,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				break;
 			case CMD_MAASTRICHTER_TEILNEHMER:
 				new MaastrichterTeilnehmerSheet(ws).testTurnierSystem(TurnierSystem.MAASTRICHTER).start();
+				break;
+			case CMD_MAASTRICHTER_GRUPPEN_UEBERSICHT:
+				new MaastrichterGruppenUebersichtSheet(ws).testTurnierSystem(TurnierSystem.MAASTRICHTER).start();
 				break;
 			case CMD_MAASTRICHTER_CHECKIN:
 				new de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterCheckinListeSheet(ws).testTurnierSystem(TurnierSystem.MAASTRICHTER).backUpDocument().start();
@@ -1948,7 +1953,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_MAASTRICHTER_NAECHSTE_VORRUNDE,
 				 CMD_MAASTRICHTER_VORRUNDEN_RANGLISTE,
 				 CMD_MAASTRICHTER_FINALRUNDEN,
-				 CMD_MAASTRICHTER_TEILNEHMER, CMD_MAASTRICHTER_CHECKIN -> ts == TurnierSystem.MAASTRICHTER;
+				 CMD_MAASTRICHTER_TEILNEHMER, CMD_MAASTRICHTER_CHECKIN,
+				 CMD_MAASTRICHTER_GRUPPEN_UEBERSICHT -> ts == TurnierSystem.MAASTRICHTER;
 			case CMD_MAASTRICHTER_AKTUELLE_VORRUNDE         -> ts == TurnierSystem.MAASTRICHTER && hatMaastrichterVorrunde(ws);
 			case CMD_MAASTRICHTER_TESTDATEN_TURNIER,
 				 CMD_MAASTRICHTER_TESTDATEN_TURNIER_57,
