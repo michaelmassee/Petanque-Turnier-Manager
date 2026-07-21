@@ -336,6 +336,8 @@ public class MaastrichterTurnierTestDatenUITest extends BaseCalcUITest {
 		erwartung.put(SheetNamen.maastrichterVorrundenRangliste(),
 				SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX);
 		erwartung.put(SheetNamen.teilnehmer(), SheetMetadataHelper.SCHLUESSEL_TEILNEHMER);
+		erwartung.put(SheetNamen.maastrichterGruppenUebersicht(),
+				SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_GRUPPEN_UEBERSICHT);
 		return erwartung;
 	}
 
