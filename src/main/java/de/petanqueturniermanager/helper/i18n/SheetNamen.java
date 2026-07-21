@@ -83,6 +83,8 @@ public final class SheetNamen {
     public static final String KEY_KASKADE_FELD_MUSTER              = "sheet.name.kaskade.feld.muster";
     /** Kaskaden-Gruppenrangliste: Übersicht aller Felder nach Kaskadenrunden */
     public static final String KEY_KASKADE_GRUPPENRANGLISTE         = "sheet.name.kaskade.gruppenrangliste";
+    /** Kaskaden-Gruppen-Übersicht: kompakte Nr/Name/Gr-Liste der Endfeld-Zuordnung */
+    public static final String KEY_KASKADE_GRUPPEN_UEBERSICHT       = "sheet.name.kaskade.gruppen.uebersicht";
     /** Formule X Spielrunde: {0} = Rundennummer. Beispiel: "1. Spielrunde" */
     public static final String KEY_FORMULEX_SPIELRUNDE_MUSTER       = "sheet.name.formulex.spielrunde.muster";
     /** JGJ Gruppen-Spielplan-Aushang: {0} = Gruppenbuchstabe. Beispiel: "Gruppe A Spielplan" */
@@ -130,6 +132,7 @@ public final class SheetNamen {
     public static final String LEGACY_KASKADE_FELD_SUFFIX            = "Feld";
     public static final String LEGACY_KASKADE_GRUPPENRANGLISTE       = "Kaskaden-Gruppenrangliste";
     public static final String LEGACY_MAASTRICHTER_GRUPPEN_UEBERSICHT = "Gruppen-Übersicht";
+    public static final String LEGACY_KASKADE_GRUPPEN_UEBERSICHT     = "Kaskaden-Gruppen-Übersicht";
 
     private SheetNamen() {
     }
@@ -442,6 +445,15 @@ public final class SheetNamen {
      */
     public static String kaskadeGruppenrangliste() {
         return getOderFallback(KEY_KASKADE_GRUPPENRANGLISTE, LEGACY_KASKADE_GRUPPENRANGLISTE);
+    }
+
+    /**
+     * Kaskaden-Gruppen-Übersicht: kompakte Nr/Name/Gr-Liste der Endfeld-Zuordnung.
+     *
+     * @return lokalisierter Tabellenname
+     */
+    public static String kaskadeGruppenUebersicht() {
+        return getOderFallback(KEY_KASKADE_GRUPPEN_UEBERSICHT, LEGACY_KASKADE_GRUPPEN_UEBERSICHT);
     }
 
     /**

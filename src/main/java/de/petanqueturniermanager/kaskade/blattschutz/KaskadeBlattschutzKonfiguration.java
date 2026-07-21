@@ -75,6 +75,7 @@ public class KaskadeBlattschutzKonfiguration implements IBlattschutzKonfiguratio
         sammleKaskadenRundenSchutzInfos(xDoc, infos);
         sammleKaskadenFelderSchutzInfos(xDoc, infos);
         sammleGruppenRanglisteSchutzInfo(xDoc, infos);
+        sammleGruppenUebersichtSchutzInfo(xDoc, infos);
         sammleCheckinListeSchutzInfo(xDoc, infos);
 
         return infos;
@@ -156,6 +157,11 @@ public class KaskadeBlattschutzKonfiguration implements IBlattschutzKonfiguratio
 
     private void sammleGruppenRanglisteSchutzInfo(XSpreadsheetDocument xDoc, List<SheetSchutzInfo> infos) {
         SheetMetadataHelper.findeSheet(xDoc, SheetMetadataHelper.SCHLUESSEL_KASKADE_GRUPPENRANGLISTE)
+                .ifPresent(sheet -> infos.add(SheetSchutzInfo.vollGesperrt(sheet)));
+    }
+
+    private void sammleGruppenUebersichtSchutzInfo(XSpreadsheetDocument xDoc, List<SheetSchutzInfo> infos) {
+        SheetMetadataHelper.findeSheet(xDoc, SheetMetadataHelper.SCHLUESSEL_KASKADE_GRUPPEN_UEBERSICHT)
                 .ifPresent(sheet -> infos.add(SheetSchutzInfo.vollGesperrt(sheet)));
     }
 

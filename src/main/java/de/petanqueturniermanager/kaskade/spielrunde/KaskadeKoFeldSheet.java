@@ -98,6 +98,8 @@ public class KaskadeKoFeldSheet extends SheetRunner implements ISheet {
         gruppenRangliste.setForceOk(isForceOk());
         gruppenRangliste.doRun();
 
+        new KaskadeGruppenUebersichtSheet(getWorkingSpreadsheet()).generate();
+
         var konfig = new KaskadeKoBracketKonfigAdapter(konfigurationSheet);
         List<KoTurnierbaumSheet.GruppenBracketAuftrag> bracketAuftraege = new ArrayList<>();
         short sheetPos = DefaultSheetPos.KASKADE_FELDER;

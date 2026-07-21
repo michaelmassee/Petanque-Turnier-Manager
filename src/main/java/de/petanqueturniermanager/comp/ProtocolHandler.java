@@ -85,6 +85,7 @@ import de.petanqueturniermanager.kaskade.meldeliste.KaskadeMeldeListeSheetTestDa
 import de.petanqueturniermanager.kaskade.meldeliste.KaskadeMeldeListeSheetUpdate;
 import de.petanqueturniermanager.kaskade.meldeliste.KaskadeTeilnehmerSheet;
 import de.petanqueturniermanager.kaskade.spielrunde.KaskadeAktuelleRundeSheet;
+import de.petanqueturniermanager.kaskade.spielrunde.KaskadeGruppenUebersichtSheet;
 import de.petanqueturniermanager.kaskade.spielrunde.KaskadeKoFeldSheet;
 import de.petanqueturniermanager.kaskade.spielrunde.KaskadeSpielrundeSheet;
 import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSheet_Update;
@@ -322,6 +323,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_KASKADE_NAECHSTE_RUNDE      = "kaskade_naechste_runde";
 	public static final String CMD_KASKADE_AKTUELLE_RUNDE      = "kaskade_aktuelle_runde";
 	public static final String CMD_KASKADE_KO_FELDER           = "kaskade_ko_felder";
+	public static final String CMD_KASKADE_GRUPPEN_UEBERSICHT  = "kaskade_gruppen_uebersicht";
 	// Teilnehmer
 	public static final String CMD_SCHWEIZER_TEILNEHMER = "schweizer_teilnehmer";
 	public static final String CMD_JGJ_TEILNEHMER       = "jgj_teilnehmer";
@@ -1138,6 +1140,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				koFelder.testTurnierSystem(TurnierSystem.KASKADE).backUpDocument().backupDocumentAfterRun().start();
 				break;
 			}
+			case CMD_KASKADE_GRUPPEN_UEBERSICHT:
+				new KaskadeGruppenUebersichtSheet(ws).testTurnierSystem(TurnierSystem.KASKADE).start();
+				break;
 			// ------------------------------
 			// Poule A/B
 			case CMD_POULE_START:
@@ -1977,7 +1982,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_KASKADE_TESTDATEN_TURNIER             -> ts == TurnierSystem.KEIN || ts == TurnierSystem.KASKADE;
 			case CMD_KASKADE_NAECHSTE_RUNDE,
 				 CMD_KASKADE_AKTUELLE_RUNDE,
-				 CMD_KASKADE_KO_FELDER                     -> ts == TurnierSystem.KASKADE;
+				 CMD_KASKADE_KO_FELDER,
+				 CMD_KASKADE_GRUPPEN_UEBERSICHT            -> ts == TurnierSystem.KASKADE;
 			case CMD_POULE_START                            -> ts == TurnierSystem.KEIN;
 			case CMD_POULE_UPDATE_MELDELISTE,
 				 CMD_POULE_TEILNEHMER, CMD_POULE_CHECKIN   -> ts == TurnierSystem.POULE;
