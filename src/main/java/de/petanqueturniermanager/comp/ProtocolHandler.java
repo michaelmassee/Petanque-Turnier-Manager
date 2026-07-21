@@ -152,6 +152,7 @@ import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerSpielrundeSheetNaechste;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerTurnierTestDaten;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerSpielrundeSheetUpdate;
+import de.petanqueturniermanager.siegergeld.SiegergeldSheet;
 import de.petanqueturniermanager.formulex.export.FormuleXExportInVerzeichnis;
 import de.petanqueturniermanager.formulex.export.FormuleXFtpUpload;
 import de.petanqueturniermanager.jedergegenjeden.export.JGJExportInVerzeichnis;
@@ -222,6 +223,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	// Export
 	public static final String CMD_EXPORT_VERZEICHNIS = "export_verzeichnis";
 	public static final String CMD_EXPORT_FTP_UPLOAD  = "export_ftp_upload";
+	public static final String CMD_SIEGERGELD_BERECHNEN = "siegergeld_berechnen";
 	// SuperMelee
 	public static final String CMD_NEUE_MELDELISTE = "neue_meldeliste";
 	public static final String CMD_UPDATE_MELDELISTE = "update_meldeliste";
@@ -813,6 +815,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			// Export
 			case CMD_EXPORT_FTP_UPLOAD:
 				ladeAktuellenTurnierExportHoch(ws);
+				break;
+			case CMD_SIEGERGELD_BERECHNEN:
+				new SiegergeldSheet(ws).testTurnierVorhanden().backUpDocument().start();
 				break;
 			// ------------------------------
 			// SuperMelee
@@ -1912,7 +1917,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			}
 			return switch (command) {
 			case CMD_EXPORT_VERZEICHNIS,
-				 CMD_EXPORT_FTP_UPLOAD                     -> istExportfaehigesTurnier(ts);
+				 CMD_EXPORT_FTP_UPLOAD,
+				 CMD_SIEGERGELD_BERECHNEN                 -> istExportfaehigesTurnier(ts);
 			// SuperMelee: neues Turnier nur wenn keins aktiv
 			case CMD_NEUE_MELDELISTE                        -> ts == TurnierSystem.KEIN;
 			// SuperMelee-Aktionen: nur wenn SuperMelee aktiv

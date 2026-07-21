@@ -99,4 +99,16 @@ public class ProtocolHandlerCommandsTest {
 				.as("PTM-Sheet-Aktionen bleiben in der Druckvorschau blockiert")
 				.isFalse();
 	}
+
+	@Test
+	void siegergeldCommandIstInEnableLogikRegistriert() throws Exception {
+		String source = Files.readString(Paths.get(
+				"src/main/java/de/petanqueturniermanager/comp/ProtocolHandler.java"));
+
+		assertThat(source)
+				.as("Siegergeld darf im Menü bei aktivem Turnier nicht grau bleiben")
+				.containsPattern("case\\s+CMD_EXPORT_VERZEICHNIS,[\\s\\S]*"
+						+ "CMD_SIEGERGELD_BERECHNEN[\\s\\S]*"
+						+ "->\\s*istExportfaehigesTurnier\\(ts\\)");
+	}
 }
