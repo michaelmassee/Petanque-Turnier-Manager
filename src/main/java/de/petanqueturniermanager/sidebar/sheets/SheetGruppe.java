@@ -71,7 +71,8 @@ public enum SheetGruppe {
             "__PTM_MAASTRICHTER_MELDELISTE__",
             "__PTM_MAASTRICHTER_CHECKIN_LISTE__",
             "__PTM_MAASTRICHTER_VORRUNDE_",
-            "__PTM_MAASTRICHTER_FINALRUNDE_"
+            "__PTM_MAASTRICHTER_FINALRUNDE_",
+            "__PTM_MAASTRICHTER_GRUPPEN_UEBERSICHT__"
     )),
 
     POULE("enum.turniersystem.poule", List.of(

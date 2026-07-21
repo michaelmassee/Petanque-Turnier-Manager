@@ -82,4 +82,34 @@ class KoTurnierbaumSheetLayoutTest {
 		assertThat(KoTurnierbaumSheet.berechneRunde1SlotAbstand(8, bracketGroesse))
 				.isEqualTo(1);
 	}
+
+	/**
+	 * Regressionstest für die kleinstmögliche Gruppengröße (2), die seit Freigabe beliebiger
+	 * Gruppengrößen (vorher kleinster erlaubter Konfigurationswert: 4) neu erreichbar ist.
+	 */
+	@Test
+	void zweiTeamsBildenNurEinFinaleOhneCadrage() {
+		int bracketGroesse = KoTurnierbaumSheet.berechneBracketGroesse(2);
+
+		assertThat(bracketGroesse).isEqualTo(2);
+		assertThat(KoTurnierbaumSheet.berechneRunde1MatchZeilenAbstand(2, bracketGroesse))
+				.isEqualTo(3);
+		assertThat(KoTurnierbaumSheet.berechneRunde1SlotAbstand(2, bracketGroesse))
+				.isEqualTo(1);
+	}
+
+	/**
+	 * Regressionstest: 3 Teams (neu erreichbar als konfigurierte Gruppengröße) reduzieren sich
+	 * per Cadrage auf ein 2er-Hauptfeld – ein Team spielt Cadrage-frei, zwei spielen Cadrage.
+	 */
+	@Test
+	void dreiTeamsSpielenCadrageAufZweierHauptfeld() {
+		int bracketGroesse = KoTurnierbaumSheet.berechneBracketGroesse(3);
+
+		assertThat(bracketGroesse).isEqualTo(2);
+		assertThat(KoTurnierbaumSheet.berechneRunde1MatchZeilenAbstand(3, bracketGroesse))
+				.isEqualTo(5);
+		assertThat(KoTurnierbaumSheet.berechneRunde1SlotAbstand(3, bracketGroesse))
+				.isEqualTo(2);
+	}
 }

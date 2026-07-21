@@ -14,6 +14,7 @@ import com.sun.star.awt.XControlContainer;
 import com.sun.star.awt.XControlModel;
 import com.sun.star.awt.XDialog;
 import com.sun.star.awt.XListBox;
+import com.sun.star.awt.XNumericField;
 import com.sun.star.awt.XToolkit;
 import com.sun.star.awt.XWindow;
 import com.sun.star.beans.XPropertySet;
@@ -165,14 +166,12 @@ public class KoTurnierParameterDialog {
 		addFixedLine(xMSF, cont, "sep5", 5, 138, 150, 2);
 
 		addLabel(xMSF, cont, "lblGruppenGroesse", "Gruppen Größe:", 8, 144, 80, 10);
-		addListBox(xMSF, cont, "lstGruppenGroesse", erlaubteGruppenGroessenAlsStrings(),
-				(short) KoPropertiesSpalte.indexAusGruppenGroesse(defaultGruppenGroesse), 92, 156, 60, 12);
+		addNumericField(xMSF, cont, "nfGruppenGroesse", defaultGruppenGroesse, 2, 256, 92, 156, 60, 12);
 
 		addFixedLine(xMSF, cont, "sep6", 5, 172, 150, 2);
 
 		addLabel(xMSF, cont, "lblMinLetzteGruppe", I18n.get("dialog.ko.min.letzte.gruppe.label"), 8, 178, 80, 10);
-		addListBox(xMSF, cont, "lstMinLetzteGruppe", erlaubteMinLetzteGruppenGroessenAlsStrings(),
-				(short) KoPropertiesSpalte.indexAusMinLetzteGruppenGroesse(defaultMinLetzteGruppeGroesse), 92, 190, 60, 12);
+		addNumericField(xMSF, cont, "nfMinLetzteGruppe", defaultMinLetzteGruppeGroesse, 2, 256, 92, 190, 60, 12);
 
 		addFixedLine(xMSF, cont, "sep7", 5, 206, 150, 2);
 
@@ -230,10 +229,10 @@ public class KoTurnierParameterDialog {
 			};
 			boolean spielbaumBahnNurRunde1 = readCheckBoxState(xcc, "cbBahnNurRunde1");
 			boolean spielUmPlatz3 = readCheckBoxState(xcc, "cbPlatz3");
-			int gruppenGroesse = KoPropertiesSpalte.getErlaubteGruppenGroessen()
-					.get(readListBoxSelected(xcc, "lstGruppenGroesse"));
-			int minLetzteGruppeGroesse = KoPropertiesSpalte.getErlaubteMinLetzteGruppenGroessen()
-					.get(readListBoxSelected(xcc, "lstMinLetzteGruppe"));
+			int gruppenGroesse = KoPropertiesSpalte.normalisiereGruppenGroesse(
+					readNumericField(xcc, "nfGruppenGroesse", defaultGruppenGroesse));
+			int minLetzteGruppeGroesse = KoPropertiesSpalte.normalisiereMinLetzteGruppeGroesse(
+					readNumericField(xcc, "nfMinLetzteGruppe", defaultMinLetzteGruppeGroesse));
 			result = Optional.of(new TurnierParameter(formation, teamnameAnzeigen, vereinsnameAnzeigen,
 					spielbaumAnzeige, spielbahn, spielbaumBahnNurRunde1, spielUmPlatz3, gruppenGroesse,
 					minLetzteGruppeGroesse));
@@ -292,14 +291,13 @@ public class KoTurnierParameterDialog {
 		return cb != null && cb.getState() == 1;
 	}
 
-	private static String[] erlaubteGruppenGroessenAlsStrings() {
-		return KoPropertiesSpalte.getErlaubteGruppenGroessen().stream()
-				.map(String::valueOf).toArray(String[]::new);
-	}
-
-	private static String[] erlaubteMinLetzteGruppenGroessenAlsStrings() {
-		return KoPropertiesSpalte.getErlaubteMinLetzteGruppenGroessen().stream()
-				.map(String::valueOf).toArray(String[]::new);
+	private int readNumericField(XControlContainer xcc, String name, int defaultVal) {
+		XControl ctrl = xcc.getControl(name);
+		if (ctrl == null) {
+			return defaultVal;
+		}
+		XNumericField nf = Lo.qi(XNumericField.class, ctrl);
+		return nf != null ? (int) nf.getValue() : defaultVal;
 	}
 
 	private void attachButtonListener(XControlContainer xcc, String name, XActionListener listener) {
@@ -336,6 +334,22 @@ public class KoTurnierParameterDialog {
 		props.setPropertyValue("Dropdown", Boolean.TRUE);
 		props.setPropertyValue("StringItemList", items);
 		props.setPropertyValue("SelectedItems", new short[] { selectedIndex });
+		props.setPropertyValue("PositionX", Integer.valueOf(x));
+		props.setPropertyValue("PositionY", Integer.valueOf(y));
+		props.setPropertyValue("Width", Integer.valueOf(w));
+		props.setPropertyValue("Height", Integer.valueOf(h));
+		cont.insertByName(name, model);
+	}
+
+	private void addNumericField(XMultiServiceFactory xMSF, XNameContainer cont,
+			String name, int defaultVal, int minVal, int maxVal, int x, int y, int w, int h)
+			throws com.sun.star.uno.Exception {
+		Object model = xMSF.createInstance("com.sun.star.awt.UnoControlNumericFieldModel");
+		XPropertySet props = Lo.qi(XPropertySet.class, model);
+		props.setPropertyValue("Value", (double) defaultVal);
+		props.setPropertyValue("ValueMin", (double) minVal);
+		props.setPropertyValue("ValueMax", (double) maxVal);
+		props.setPropertyValue("DecimalAccuracy", (short) 0);
 		props.setPropertyValue("PositionX", Integer.valueOf(x));
 		props.setPropertyValue("PositionY", Integer.valueOf(y));
 		props.setPropertyValue("Width", Integer.valueOf(w));

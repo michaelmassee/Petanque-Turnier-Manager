@@ -54,49 +54,19 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 	public static final String KONFIG_PROP_GRUPPEN_GROESSE = "Turnierbaum Gruppen Größe";
 
 	/**
-	 * Erlaubte Werte für {@link #KONFIG_PROP_GRUPPEN_GROESSE}.
-	 * Ausschließlich Zweierpotenzen — nur dann benötigen volle Gruppen kein Cadrage.
+	 * Gültiger Wertebereich für {@link #KONFIG_PROP_GRUPPEN_GROESSE} und
+	 * {@link #KONFIG_PROP_MIN_LETZTE_GRUPPE_GROESSE}. Beliebige Werte sind erlaubt (keine
+	 * Beschränkung auf Zweierpotenzen) — ist eine Gruppe keine Zweierpotenz, gleicht Cadrage
+	 * automatisch auf die nächstkleinere Zweierpotenz aus.
 	 */
-	private static final List<Integer> ERLAUBTE_GRUPPEN_GROESSEN = List.of(4, 8, 16, 32, 64, 128, 256);
+	private static final int MIN_GRUPPEN_GROESSE = 2;
+	private static final int MAX_GRUPPEN_GROESSE = 256;
 
 	private static final int DEFAULT_GRUPPEN_GROESSE = 16;
 
 	public static final String KONFIG_PROP_MIN_LETZTE_GRUPPE_GROESSE = "Turnierbaum Min. letzte Gruppe";
 
-	/**
-	 * Erlaubte Werte für {@link #KONFIG_PROP_MIN_LETZTE_GRUPPE_GROESSE}.
-	 * Ist die letzte Gruppe kleiner, wird sie in die vorherige gefaltet.
-	 */
-	private static final List<Integer> ERLAUBTE_MIN_LETZTE_GRUPPEN_GROESSEN = List.of(2, 3, 4, 5, 6, 8, 10, 12);
-
 	public static final int DEFAULT_MIN_LETZTE_GRUPPE_GROESSE = 4;
-
-	/**
-	 * Liste der für {@link #KONFIG_PROP_GRUPPEN_GROESSE} erlaubten Werte (Zweierpotenzen).
-	 * Wird von Dialog-Komponenten benötigt, die eine ListBox mit denselben Werten füllen.
-	 */
-	public static List<Integer> getErlaubteGruppenGroessen() {
-		return ERLAUBTE_GRUPPEN_GROESSEN;
-	}
-
-	/**
-	 * Liefert den Index in {@link #getErlaubteGruppenGroessen()}, der dem gegebenen Wert
-	 * (nach Normalisierung) entspricht. Für ListBox-Vorauswahl.
-	 */
-	public static int indexAusGruppenGroesse(int wert) {
-		int snapped = normalisiereGruppenGroesse(wert);
-		return ERLAUBTE_GRUPPEN_GROESSEN.indexOf(snapped);
-	}
-
-	public static List<Integer> getErlaubteMinLetzteGruppenGroessen() {
-		return ERLAUBTE_MIN_LETZTE_GRUPPEN_GROESSEN;
-	}
-
-	public static int indexAusMinLetzteGruppenGroesse(int wert) {
-		int snapped = normalisiereMinLetzteGruppeGroesse(wert);
-		int idx = ERLAUBTE_MIN_LETZTE_GRUPPEN_GROESSEN.indexOf(snapped);
-		return idx >= 0 ? idx : 0;
-	}
 
 	static {
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_LINKS)
@@ -167,27 +137,16 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 		KONFIG_PROPERTIES.add(buildMinLetzteGruppeGroesseProperty());
 	}
 
-	private static AuswahlConfigProperty buildGruppenGroesseProperty() {
-		AuswahlConfigProperty prop = (AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_GRUPPEN_GROESSE)
-				.setDefaultVal(Integer.toString(DEFAULT_GRUPPEN_GROESSE))
+	private static ConfigProperty<Integer> buildGruppenGroesseProperty() {
+		return ConfigProperty.<Integer>from(ConfigPropertyType.INTEGER, KONFIG_PROP_GRUPPEN_GROESSE)
+				.setDefaultVal(DEFAULT_GRUPPEN_GROESSE)
 				.setDescription("config.desc.ko.gruppen.groesse");
-		for (Integer val : ERLAUBTE_GRUPPEN_GROESSEN) {
-			String s = val.toString();
-			prop.addAuswahl(s, s);
-		}
-		return prop;
 	}
 
-	private static AuswahlConfigProperty buildMinLetzteGruppeGroesseProperty() {
-		AuswahlConfigProperty prop = (AuswahlConfigProperty) AuswahlConfigProperty
-				.from(KONFIG_PROP_MIN_LETZTE_GRUPPE_GROESSE)
-				.setDefaultVal(Integer.toString(DEFAULT_MIN_LETZTE_GRUPPE_GROESSE))
+	private static ConfigProperty<Integer> buildMinLetzteGruppeGroesseProperty() {
+		return ConfigProperty.<Integer>from(ConfigPropertyType.INTEGER, KONFIG_PROP_MIN_LETZTE_GRUPPE_GROESSE)
+				.setDefaultVal(DEFAULT_MIN_LETZTE_GRUPPE_GROESSE)
 				.setDescription("config.desc.ko.min.letzte.gruppe.groesse");
-		for (Integer val : ERLAUBTE_MIN_LETZTE_GRUPPEN_GROESSEN) {
-			String s = val.toString();
-			prop.addAuswahl(s, s);
-		}
-		return prop;
 	}
 
 	/**
@@ -329,9 +288,10 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 	}
 
 	/**
-	 * Maximale Teamanzahl pro Gruppe (Default 16). Erlaubte Werte sind ausschließlich
-	 * Zweierpotenzen aus {@link #ERLAUBTE_GRUPPEN_GROESSEN}; nur dann benötigen volle
-	 * Gruppen kein Cadrage. Die letzte Gruppe kann kleiner sein.
+	 * Maximale Teamanzahl pro Gruppe (Default 16). Beliebiger Wert im Bereich
+	 * [{@link #MIN_GRUPPEN_GROESSE}, {@link #MAX_GRUPPEN_GROESSE}] — ist der Wert keine
+	 * Zweierpotenz, gleicht Cadrage automatisch auf die nächstkleinere Zweierpotenz aus.
+	 * Die letzte Gruppe kann kleiner sein.
 	 */
 	public int getGruppenGroesse() {
 		return normalisiereGruppenGroesse(readStringProperty(KONFIG_PROP_GRUPPEN_GROESSE));
@@ -355,12 +315,7 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 		if (wert <= 0) {
 			return DEFAULT_MIN_LETZTE_GRUPPE_GROESSE;
 		}
-		for (Integer erlaubt : ERLAUBTE_MIN_LETZTE_GRUPPEN_GROESSEN) {
-			if (wert <= erlaubt) {
-				return erlaubt;
-			}
-		}
-		return ERLAUBTE_MIN_LETZTE_GRUPPEN_GROESSEN.getLast();
+		return Math.clamp(wert, MIN_GRUPPEN_GROESSE, MAX_GRUPPEN_GROESSE);
 	}
 
 	public static int normalisiereMinLetzteGruppeGroesse(String wert) {
@@ -375,25 +330,21 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 	}
 
 	/**
-	 * Snapped einen beliebigen Integer auf die nächst-höhere erlaubte Gruppengröße
-	 * aus {@link #ERLAUBTE_GRUPPEN_GROESSEN}. Werte ≤ 0 ergeben den Default 16,
-	 * Werte über 256 werden auf 256 gekappt.
+	 * Kappt einen beliebigen Integer auf den gültigen Bereich
+	 * [{@link #MIN_GRUPPEN_GROESSE}, {@link #MAX_GRUPPEN_GROESSE}]. Werte ≤ 0 ergeben den
+	 * Default 16. Beliebige Werte innerhalb des Bereichs sind gültig — die Beschränkung auf
+	 * Zweierpotenzen entfällt, Cadrage gleicht den Ausgleich automatisch aus.
 	 */
 	public static int normalisiereGruppenGroesse(int wert) {
 		if (wert <= 0) {
 			return DEFAULT_GRUPPEN_GROESSE;
 		}
-		for (Integer erlaubt : ERLAUBTE_GRUPPEN_GROESSEN) {
-			if (wert <= erlaubt) {
-				return erlaubt;
-			}
-		}
-		return ERLAUBTE_GRUPPEN_GROESSEN.get(ERLAUBTE_GRUPPEN_GROESSEN.size() - 1);
+		return Math.clamp(wert, MIN_GRUPPEN_GROESSE, MAX_GRUPPEN_GROESSE);
 	}
 
 	/**
 	 * Robust gegen Alt-Werte: parst auch Float-Strings ("16.0"), tolerant gegenüber
-	 * leeren/ungültigen Eingaben (→ Default 16). Snapped anschließend auf erlaubte Werte.
+	 * leeren/ungültigen Eingaben (→ Default 16). Kappt anschließend auf den gültigen Bereich.
 	 */
 	public static int normalisiereGruppenGroesse(String wert) {
 		if (wert == null || wert.isBlank()) {

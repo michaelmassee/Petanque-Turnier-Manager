@@ -17,7 +17,6 @@ import de.petanqueturniermanager.basesheet.meldeliste.TeilnehmerNamenLeser.Teiln
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
@@ -34,6 +33,7 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
+import de.petanqueturniermanager.maastrichter.MaastrichterGruppenFarbeHelper;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
 import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterMeldeListeSheetUpdate;
 import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterGruppenSpalteHelper;
@@ -57,13 +57,6 @@ public class MaastrichterGruppenUebersichtSheet extends SheetRunner implements I
 
     /** Feste Breite der Gruppe-Spalte (1/100 mm) – Inhalt ist nur ein einzelner Buchstabe. */
     private static final int SPALTE_GRUPPE_BREITE = 700;
-
-    /** Zyklische Schriftfarben-Palette für den Gruppenbuchstaben, nach Gruppenbuchstabe-Index vergeben (A=Grün, B=Rot, …). */
-    private static final Integer[] GRUPPEN_FARBEN = {
-            ColorHelper.CHAR_COLOR_GREEN, ColorHelper.CHAR_COLOR_RED, Integer.valueOf("0066cc", 16),
-            ColorHelper.CHAR_COLOR_ORANGE, Integer.valueOf("7030a0", 16), Integer.valueOf("008080", 16),
-            Integer.valueOf("8b4513", 16), Integer.valueOf("696969", 16)
-    };
 
     private final MaastrichterKonfigurationSheet konfigurationSheet;
     private final MaastrichterMeldeListeSheetUpdate meldeliste;
@@ -200,17 +193,13 @@ public class MaastrichterGruppenUebersichtSheet extends SheetRunner implements I
                     getSheetHelper().setPropertiesInRange(sheet,
                             RangePosition.from(SPALTE_GRUPPE, ERSTE_DATEN_ZEILE + blockStart,
                                     SPALTE_GRUPPE, ERSTE_DATEN_ZEILE + i - 1),
-                            CellProperties.from().setCharColor(gruppenBuchstabeFarbe(gruppe)).centerJustify()
+                            CellProperties.from()
+                                    .setCharColor(MaastrichterGruppenFarbeHelper.gruppenBuchstabeFarbe(gruppe))
+                                    .centerJustify()
                                     .setCharWeight(FontWeight.BOLD));
                 }
                 blockStart = i;
             }
         }
-    }
-
-    /** Ermittelt die feste Palettenfarbe für einen Gruppenbuchstaben (A=Grün, B=Rot, C=Blau, …). */
-    private Integer gruppenBuchstabeFarbe(String gruppe) {
-        int index = Character.toUpperCase(gruppe.charAt(0)) - 'A';
-        return GRUPPEN_FARBEN[Math.floorMod(index, GRUPPEN_FARBEN.length)];
     }
 }

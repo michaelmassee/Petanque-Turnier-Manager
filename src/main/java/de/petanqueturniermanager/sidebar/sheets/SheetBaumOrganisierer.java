@@ -504,7 +504,8 @@ public class SheetBaumOrganisierer {
         }
 
         var finalrundeKnoten = maastrichterKnoten.stream()
-                .filter(k -> k.metadatenSchluessel().startsWith(SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_FINALRUNDE_PREFIX))
+                .filter(k -> k.metadatenSchluessel().startsWith(SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_FINALRUNDE_PREFIX)
+                        || SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_GRUPPEN_UEBERSICHT.equals(k.metadatenSchluessel()))
                 .map(k -> new BlattKnoten("  " + blattName(k), k.metadatenSchluessel()))
                 .toList();
 

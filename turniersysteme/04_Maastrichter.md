@@ -89,6 +89,11 @@ Beispiele:
 - 10 Teams → Cadrage auf 8
 - 14 Teams → Cadrage auf 8
 
+> **Konfiguration „Turnierbaum Gruppen Größe" (Modus „Nach Größe"):** Die maximale Teamanzahl
+> pro Finalgruppe ist ein frei wählbarer Wert (2–256), nicht mehr auf Zweierpotenzen beschränkt.
+> Ist die tatsächliche Gruppengröße keine Zweierpotenz, gleicht Cadrage automatisch aus (siehe
+> Kapitel 5) – das gilt unverändert auch für die ohnehin oft ungleich große letzte Gruppe.
+
 ---
 # 5. Cadrage – Berechnung
 

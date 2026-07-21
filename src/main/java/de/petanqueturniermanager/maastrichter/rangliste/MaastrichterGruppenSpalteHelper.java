@@ -3,6 +3,7 @@
  */
 package de.petanqueturniermanager.maastrichter.rangliste;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +28,7 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
+import de.petanqueturniermanager.maastrichter.MaastrichterGruppenFarbeHelper;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheet;
 
 /**
@@ -96,13 +98,12 @@ public final class MaastrichterGruppenSpalteHelper {
 
 		StringCellValue cv = StringCellValue
 				.from(sheet, Position.from(GRUPPE_SPALTE, SchweizerRanglisteSheet.HEADER_ZEILE),
-						I18n.get("column.header.gruppe"))
+						I18n.get("column.header.gruppe.kurz"))
 				.setCellBackColor(headerColor)
 				.setBorder(BorderFactory.from().allThin().boldLn().forBottom().toBorder())
 				.setHoriJustify(CellHoriJustify.CENTER)
 				.setVertJustify(CellVertJustify2.CENTER)
 				.setEndPosMergeZeilePlus(1) // vertikal Row 0 + Row 1
-				.setRotate90()
 				.setCharWeight(FontWeight.BOLD)
 				.setShrinkToFit(true);
 		rangliste.getSheetHelper().setStringValueInCell(cv);
@@ -123,6 +124,7 @@ public final class MaastrichterGruppenSpalteHelper {
 				.getDataFromRange();
 
 		RangeData schreibBlock = new RangeData();
+		List<String> gruppenSpalte = new ArrayList<>();
 		int anzZeilen = 0;
 		for (RowData row : rowsData) {
 			if (row.size() < 1) {
@@ -132,8 +134,10 @@ public final class MaastrichterGruppenSpalteHelper {
 			if (teamNr <= 0) {
 				break;
 			}
+			String gruppe = teamNrZuGruppe.getOrDefault(teamNr, "");
 			RowData neueRow = schreibBlock.addNewRow();
-			neueRow.newString(teamNrZuGruppe.getOrDefault(teamNr, ""));
+			neueRow.newString(gruppe);
+			gruppenSpalte.add(gruppe);
 			anzZeilen++;
 		}
 		if (anzZeilen == 0) {
@@ -142,6 +146,7 @@ public final class MaastrichterGruppenSpalteHelper {
 		RangeHelper.from(rangliste,
 				schreibBlock.getRangePosition(Position.from(GRUPPE_SPALTE, SchweizerRanglisteSheet.ERSTE_DATEN_ZEILE)))
 				.setDataInRange(schreibBlock);
+		faerbeGruppenBuchstaben(rangliste, sheet, gruppenSpalte);
 	}
 
 	/**
@@ -155,9 +160,12 @@ public final class MaastrichterGruppenSpalteHelper {
 			return;
 		}
 		RangeData block = new RangeData();
+		List<String> gruppenSpalte = new ArrayList<>();
 		for (SchweizerTeamErgebnis erg : sortiert) {
+			String gruppe = teamNrZuGruppe.getOrDefault(erg.teamNr(), "");
 			RowData row = block.addNewRow();
-			row.newString(teamNrZuGruppe.getOrDefault(erg.teamNr(), ""));
+			row.newString(gruppe);
+			gruppenSpalte.add(gruppe);
 		}
 		RangeHelper.from(rangliste,
 				block.getRangePosition(Position.from(GRUPPE_SPALTE, SchweizerRanglisteSheet.ERSTE_DATEN_ZEILE)))
@@ -170,5 +178,31 @@ public final class MaastrichterGruppenSpalteHelper {
 						.setAllThinBorder()
 						.centerJustify()
 						.setCharWeight(FontWeight.BOLD));
+		faerbeGruppenBuchstaben(rangliste, sheet, gruppenSpalte);
+	}
+
+	/**
+	 * Färbt die Schrift jedes Gruppenbuchstabens passend zur Buchstabe→Farbe-Zuordnung aus
+	 * {@link MaastrichterGruppenFarbeHelper}, analog zur Maastrichter-Gruppen-Übersicht.
+	 * Zusammenhängende Zeilen derselben Gruppe werden in einem Aufruf eingefärbt.
+	 */
+	private static void faerbeGruppenBuchstaben(SchweizerRanglisteSheet rangliste, XSpreadsheet sheet,
+			List<String> gruppenSpalte) throws GenerateException {
+		int blockStart = 0;
+		for (int i = 1; i <= gruppenSpalte.size(); i++) {
+			boolean blockEndeErreicht = i == gruppenSpalte.size()
+					|| !gruppenSpalte.get(i).equals(gruppenSpalte.get(blockStart));
+			if (blockEndeErreicht) {
+				String gruppe = gruppenSpalte.get(blockStart);
+				if (!gruppe.isEmpty()) {
+					rangliste.getSheetHelper().setPropertiesInRange(sheet,
+							RangePosition.from(GRUPPE_SPALTE, SchweizerRanglisteSheet.ERSTE_DATEN_ZEILE + blockStart,
+									GRUPPE_SPALTE, SchweizerRanglisteSheet.ERSTE_DATEN_ZEILE + i - 1),
+							CellProperties.from()
+									.setCharColor(MaastrichterGruppenFarbeHelper.gruppenBuchstabeFarbe(gruppe)));
+				}
+				blockStart = i;
+			}
+		}
 	}
 }

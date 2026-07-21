@@ -153,4 +153,20 @@ public class GruppenAufteilungRechnerTest {
         assertThatThrownBy(() -> GruppenAufteilungRechner.berechne(16, 1))
                 .isInstanceOf(IllegalArgumentException.class);
     }
+
+    // ---------------------------------------------------------------
+    // Kleinstmögliche Gruppengröße 2 (seit Freigabe beliebiger Gruppengrößen neu erreichbar
+    // über KoPropertiesSpalte.KONFIG_PROP_GRUPPEN_GROESSE, vorher kleinster Listenwert war 4)
+    // ---------------------------------------------------------------
+
+    @Test
+    public void testMaxGruppenGroesse2_mitFold() {
+        // 5 Teams, max 2 → [2, 2, 1] → 1 < minLetzte(2) → Fold → [2, 3]
+        assertThat(GruppenAufteilungRechner.berechne(5, 2)).containsExactly(2, 3);
+    }
+
+    @Test
+    public void testMaxGruppenGroesse2_exakt() {
+        assertThat(GruppenAufteilungRechner.berechne(6, 2)).containsExactly(2, 2, 2);
+    }
 }

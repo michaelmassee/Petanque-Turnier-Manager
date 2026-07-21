@@ -185,13 +185,11 @@ public class MaastrichterTurnierParameterDialog {
 		addFixedLine(xMSF, cont, "sep7", 5, 203, 150, 2);
 		addLabel(xMSF, cont, "lblGruppenGroesse", I18n.get("dialog.maastrichter.gruppen.groesse.label"), 8, 207, 80,
 				10);
-		addListBox(xMSF, cont, "lstGruppenGroesse", erlaubteGruppenGroessenAlsStrings(),
-				(short) KoPropertiesSpalte.indexAusGruppenGroesse(defaultGruppenGroesse), 92, 205, 60, 12);
+		addNumericField(xMSF, cont, "nfGruppenGroesse", defaultGruppenGroesse, 2, 256, 92, 205, 60, 12);
 
 		addFixedLine(xMSF, cont, "sep8", 5, 221, 150, 2);
 		addLabel(xMSF, cont, "lblMinLetzteGruppe", I18n.get("dialog.maastrichter.min.letzte.gruppe.label"), 8, 227, 80, 10);
-		addListBox(xMSF, cont, "lstMinLetzteGruppe", erlaubteMinLetzteGruppenGroessenAlsStrings(),
-				(short) KoPropertiesSpalte.indexAusMinLetzteGruppenGroesse(defaultMinLetzteGruppeGroesse), 92, 225, 60, 12);
+		addNumericField(xMSF, cont, "nfMinLetzteGruppe", defaultMinLetzteGruppeGroesse, 2, 256, 92, 225, 60, 12);
 
 		addButton(xMSF, cont, "btnOk", I18n.get("dialog.ok"), 22, 242, 50, 14);
 		addButton(xMSF, cont, "btnCancel", I18n.get("dialog.abbrechen"), 88, 242, 60, 14);
@@ -250,10 +248,10 @@ public class MaastrichterTurnierParameterDialog {
 			boolean spielUmPlatz3 = readCheckBoxState(xcc, "cbSpielUmPlatz3");
 			MaastrichterGruppenModus gruppenModus = readListBoxSelected(xcc, "lstGruppenModus") == 1
 					? MaastrichterGruppenModus.NACH_GROESSE : MaastrichterGruppenModus.NACH_SIEGEN;
-			int gruppenGroesse = KoPropertiesSpalte.getErlaubteGruppenGroessen()
-					.get(readListBoxSelected(xcc, "lstGruppenGroesse"));
-			int minLetzteGruppeGroesse = KoPropertiesSpalte.getErlaubteMinLetzteGruppenGroessen()
-					.get(readListBoxSelected(xcc, "lstMinLetzteGruppe"));
+			int gruppenGroesse = KoPropertiesSpalte.normalisiereGruppenGroesse(
+					readNumericField(xcc, "nfGruppenGroesse", defaultGruppenGroesse));
+			int minLetzteGruppeGroesse = KoPropertiesSpalte.normalisiereMinLetzteGruppeGroesse(
+					readNumericField(xcc, "nfMinLetzteGruppe", defaultMinLetzteGruppeGroesse));
 			result = Optional.of(new TurnierParameter(formation, teamnameAnzeigen, vereinsnameAnzeigen,
 					spielplanAnzeige, rankingModus, anzVorrunden, spielbaumTeamAnzeige,
 					spielbahn, spielbaumBahnNurRunde1, spielUmPlatz3, gruppenGroesse, minLetzteGruppeGroesse,
@@ -269,16 +267,6 @@ public class MaastrichterTurnierParameterDialog {
 	// ---------------------------------------------------------------
 	// Hilfsmethoden – Zustand auslesen
 	// ---------------------------------------------------------------
-
-	private static String[] erlaubteGruppenGroessenAlsStrings() {
-		return KoPropertiesSpalte.getErlaubteGruppenGroessen().stream()
-				.map(String::valueOf).toArray(String[]::new);
-	}
-
-	private static String[] erlaubteMinLetzteGruppenGroessenAlsStrings() {
-		return KoPropertiesSpalte.getErlaubteMinLetzteGruppenGroessen().stream()
-				.map(String::valueOf).toArray(String[]::new);
-	}
 
 	private Formation readFormation(XControlContainer xcc) {
 		return switch (readListBoxSelected(xcc, "lstFormation")) {
