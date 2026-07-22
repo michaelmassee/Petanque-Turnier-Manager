@@ -253,7 +253,8 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot, Re
         }
     }
 
-    void handleTurnierlogo(HttpExchange exchange) throws IOException {
+    @Override
+    public void handleTurnierlogo(HttpExchange exchange) throws IOException {
         if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
             exchange.sendResponseHeaders(405, -1);
             return;
@@ -309,94 +310,9 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot, Re
         serviereClasspathRessource(exchange, ressourcePfad, contentType, "no-cache");
     }
 
-    void serviereLokalePanelDatei(HttpExchange exchange, String panelPfad) throws IOException {
-        String panelIdText = panelPfad;
-        String relativerDateiPfad = "";
-        int trenner = panelPfad.indexOf('/');
-        if (trenner >= 0) {
-            panelIdText = panelPfad.substring(0, trenner);
-            relativerDateiPfad = panelPfad.substring(trenner + 1);
-        }
-        int panelId;
-        try {
-            panelId = Integer.parseInt(panelIdText);
-        } catch (NumberFormatException e) {
-            exchange.sendResponseHeaders(404, -1);
-            return;
-        }
-        var panels = konfiguration.panels();
-        if (panelId < 0 || panelId >= panels.size()) {
-            exchange.sendResponseHeaders(404, -1);
-            return;
-        }
-        var panel = panels.get(panelId);
-        if (panel.typ() != PanelTyp.STATISCHE_DATEI) {
-            exchange.sendResponseHeaders(404, -1);
-            return;
-        }
-        Path htmlDatei;
-        try {
-            String quelle = panel.externeUrl() == null ? "" : panel.externeUrl().trim();
-            htmlDatei = quelle.startsWith("file:")
-                    ? Paths.get(URI.create(quelle))
-                    : Paths.get(quelle);
-        } catch (IllegalArgumentException e) {
-            logger.warn("Ungültige lokale Panel-Datei für Port {}, Panel {}: {}",
-                    konfiguration.port(), panelId, panel.externeUrl(), e);
-            exchange.sendResponseHeaders(404, -1);
-            return;
-        }
-        if (!Files.isRegularFile(htmlDatei) || !Files.isReadable(htmlDatei)) {
-            logger.warn("Lokale Panel-Datei nicht lesbar für Port {}, Panel {}: {}",
-                    konfiguration.port(), panelId, htmlDatei);
-            exchange.sendResponseHeaders(404, -1);
-            return;
-        }
-        Path datei;
-        try {
-            datei = lokalePanelDateiAufloesen(htmlDatei, relativerDateiPfad);
-        } catch (IOException | IllegalArgumentException e) {
-            exchange.sendResponseHeaders(404, -1);
-            return;
-        }
-        if (!Files.isRegularFile(datei) || !Files.isReadable(datei)) {
-            exchange.sendResponseHeaders(404, -1);
-            return;
-        }
-        byte[] body;
-        try {
-            body = Files.readAllBytes(datei);
-        } catch (IOException e) {
-            logger.warn("Lokale Panel-Datei konnte nicht gelesen werden für Port {}, Panel {}: {}",
-                    konfiguration.port(), panelId, datei, e);
-            exchange.sendResponseHeaders(404, -1);
-            return;
-        }
-        Path dateiname = datei.getFileName();
-        var headers = exchange.getResponseHeaders();
-        headers.set("Content-Type", WebContentType.fuerDateiname(dateiname != null ? dateiname.toString() : ""));
-        headers.set("Cache-Control", "no-cache");
-        headers.set("Access-Control-Allow-Origin", "*");
-        exchange.sendResponseHeaders(200, body.length);
-        try (OutputStream os = exchange.getResponseBody()) {
-            os.write(body);
-        }
-    }
-
-    private Path lokalePanelDateiAufloesen(Path htmlDatei, String relativerDateiPfad) throws IOException {
-        Path echteHtmlDatei = htmlDatei.toRealPath();
-        Path echteWurzel = echteHtmlDatei.getParent();
-        if (echteWurzel == null) {
-            throw new IOException("Lokale Panel-Datei hat kein Verzeichnis: " + htmlDatei);
-        }
-        if (relativerDateiPfad == null || relativerDateiPfad.isEmpty()) {
-            return echteHtmlDatei;
-        }
-        Path kandidat = echteWurzel.resolve(relativerDateiPfad).normalize().toRealPath();
-        if (!kandidat.startsWith(echteWurzel)) {
-            throw new IOException("Lokale Panel-Ressource liegt außerhalb des HTML-Verzeichnisses: " + kandidat);
-        }
-        return kandidat;
+    @Override
+    public void serviereLokalePanelDatei(HttpExchange exchange, String panelPfad) throws IOException {
+        LokalePanelDateien.servieren(exchange, konfiguration, panelPfad);
     }
 
     private void serviereClasspathRessource(HttpExchange exchange, String ressourcePfad, String contentType,

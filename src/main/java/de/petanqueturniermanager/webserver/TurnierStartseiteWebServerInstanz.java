@@ -179,7 +179,8 @@ public class TurnierStartseiteWebServerInstanz implements SseElternInstanz, WebS
         verbindung.sendeInitNachricht();
     }
 
-    void handleTurnierlogo(HttpExchange exchange) throws IOException {
+    @Override
+    public void handleTurnierlogo(HttpExchange exchange) throws IOException {
         if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
             exchange.sendResponseHeaders(405, -1);
             return;

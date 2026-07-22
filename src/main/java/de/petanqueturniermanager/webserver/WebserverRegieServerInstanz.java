@@ -166,14 +166,14 @@ public class WebserverRegieServerInstanz {
         } else if ("/gong.wav".equals(rest)) {
             serviereClasspathRessource(exchange, GONG_RESOURCE, "audio/wav", "public, max-age=3600");
         } else if ("/turnierlogo".equals(rest)) {
-            if (quelle instanceof TurnierStartseiteWebServerInstanz startseite) {
-                startseite.handleTurnierlogo(exchange);
+            if (quelle != null) {
+                quelle.handleTurnierlogo(exchange);
             } else {
                 exchange.sendResponseHeaders(404, -1);
             }
         } else if (rest.startsWith("/local-panel/")) {
-            if (quelle instanceof CompositeViewInstanz compositeView) {
-                compositeView.serviereLokalePanelDatei(exchange, rest.substring("/local-panel/".length()));
+            if (quelle != null) {
+                quelle.serviereLokalePanelDatei(exchange, rest.substring("/local-panel/".length()));
             } else {
                 exchange.sendResponseHeaders(404, -1);
             }

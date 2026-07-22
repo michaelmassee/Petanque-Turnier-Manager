@@ -196,6 +196,8 @@ public class PetanqueTurnierMngrSingleton {
 		t = logTimingAndReset("addGlobalEventListener ToolbarAnzeigenListener", t);
 		addGlobalEventListener(new SidebarAnzeigenListener());
 		t = logTimingAndReset("addGlobalEventListener SidebarAnzeigenListener", t);
+		addGlobalEventListener(WebServerManager.get());
+		t = logTimingAndReset("addGlobalEventListener WebServerManager", t);
 		addGlobalEventListener(SidebarPanelDelegator.get());
 		t = logTimingAndReset("addGlobalEventListener SidebarPanelDelegator", t);
 		addGlobalEventListener(new UpdatePropertieFunctionsSheetRecalcOnLoad());

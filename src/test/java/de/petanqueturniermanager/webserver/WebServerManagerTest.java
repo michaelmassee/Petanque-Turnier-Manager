@@ -34,6 +34,30 @@ class WebServerManagerTest {
     }
 
     @Test
+    void dokumentViewIdKodiertDokumentIdUndErhaeltBasisViewId() {
+        String dokumentId = "url:file:///tmp/Turnier A.ods";
+        String viewId = WebServerManager.dokumentViewId(dokumentId, WebServerManager.compositeViewId(8081));
+
+        assertThat(viewId).startsWith("doc:");
+        assertThat(viewId).endsWith(":composite:8081");
+        assertThat(WebServerManager.dokumentIdAusViewId(viewId)).contains(dokumentId);
+    }
+
+    @Test
+    void dokumentIdAusViewIdIgnoriertLegacyUndUngueltigeIds() {
+        assertThat(WebServerManager.dokumentIdAusViewId(WebServerManager.compositeViewId(8081))).isEmpty();
+        assertThat(WebServerManager.dokumentIdAusViewId("doc:@@@:composite:8081")).isEmpty();
+    }
+
+    @Test
+    void regieQuelleInfoBleibtRueckwaertskompatibelFuerMasterQuellen() {
+        var quelle = new RegieQuelleInfo("composite:8081", "Rangliste", 8081, true);
+
+        assertThat(quelle.dokumentName()).isEmpty();
+        assertThat(quelle.master()).isTrue();
+    }
+
+    @Test
     void konfigurationGeaendertWartetNichtAufManagerMonitor() throws Exception {
         var manager = WebServerManager.get();
         var lockGehalten = new CountDownLatch(1);

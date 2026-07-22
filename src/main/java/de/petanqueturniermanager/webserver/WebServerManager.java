@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -20,6 +22,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Consumer;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,15 +30,25 @@ import org.apache.logging.log4j.Logger;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sun.star.lang.DisposedException;
+import com.sun.star.frame.XController;
+import com.sun.star.frame.XFrame;
+import com.sun.star.frame.XFramesSupplier;
+import com.sun.star.frame.XModel;
+import com.sun.star.frame.XStorable;
 import com.sun.star.sheet.XCalculatable;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.uno.XComponentContext;
+import com.sun.star.uno.UnoRuntime;
+import com.sun.star.uno.XInterface;
 import com.sun.star.util.XModifyBroadcaster;
 
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.comp.DocumentHelper;
 import de.petanqueturniermanager.comp.GlobalProperties;
 import de.petanqueturniermanager.comp.GlobalProperties.CompositeViewEintragRoh;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
 import de.petanqueturniermanager.formulex.konfiguration.FormuleXKonfigurationSheet;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
@@ -72,7 +85,7 @@ import de.petanqueturniermanager.triptete.konfiguration.TripTeteKonfigurationShe
  *   <li>{@code typ="hinweis"} – Hinweismeldung, wenn das Sheet noch nicht verfügbar ist</li>
  * </ul>
  */
-public final class WebServerManager implements TimerListener {
+public final class WebServerManager implements TimerListener, IGlobalEventListener {
 
     private static final Logger logger = LogManager.getLogger(WebServerManager.class);
     private static final Gson GSON = new GsonBuilder()
@@ -101,23 +114,26 @@ public final class WebServerManager implements TimerListener {
     private final TabellenMapper mapper = new TabellenMapper();
     private final DiffEngine diffEngine = new DiffEngine();
     private final WebserverModifyListener modifyListener = new WebserverModifyListener();
+    private final Map<String, WebserverModifyListener> modifyListenerNachDokument = new ConcurrentHashMap<>();
     private final Object konfigExecutorLock = new Object();
     private ExecutorService konfigExecutor = neuerKonfigExecutor();
 
-    /** Letzte Panel-Modelle pro Composite-Port und Panel-ID (port → panelId → TabelleModel). */
-    private final Map<Integer, Map<Integer, TabelleModel>> letzteCompositeModelle = new ConcurrentHashMap<>();
-    /** Letzte Panel-Titel pro Composite-Port und Panel-ID (port → panelId → Titel). */
-    private final Map<Integer, Map<Integer, String>> letzteCompositeTitel = new ConcurrentHashMap<>();
-    /** Monoton steigende Version pro Composite-Port (port → AtomicInteger). */
-    private final Map<Integer, AtomicInteger> compositeVersionen = new ConcurrentHashMap<>();
-    /** Letzte iframe-Quelle pro Composite-Port und Panel-ID (port → panelId → URL oder lokaler Dateipfad). */
-    private final Map<Integer, Map<Integer, String>> letzteCompositeUrls = new ConcurrentHashMap<>();
-    /** Initialisierte TIMER-Panels pro Composite-Port (port → Set<panelId>). ConcurrentHashMap erlaubt keine null-Werte,
+    /** Letzte Panel-Modelle pro Quelle und Panel-ID (viewId → panelId → TabelleModel). */
+    private final Map<String, Map<Integer, TabelleModel>> letzteCompositeModelle = new ConcurrentHashMap<>();
+    /** Letzte Panel-Titel pro Quelle und Panel-ID (viewId → panelId → Titel). */
+    private final Map<String, Map<Integer, String>> letzteCompositeTitel = new ConcurrentHashMap<>();
+    /** Monoton steigende Version pro Quelle (viewId → AtomicInteger). */
+    private final Map<String, AtomicInteger> compositeVersionen = new ConcurrentHashMap<>();
+    /** Letzte iframe-Quelle pro Quelle und Panel-ID (viewId → panelId → URL oder lokaler Dateipfad). */
+    private final Map<String, Map<Integer, String>> letzteCompositeUrls = new ConcurrentHashMap<>();
+    /** Initialisierte TIMER-Panels pro Quelle (viewId → Set<panelId>). ConcurrentHashMap erlaubt keine null-Werte,
      * daher können TIMER-Panels nicht in letzteCompositeModelle als null-Marker gespeichert werden. */
-    private final Map<Integer, Set<Integer>> initialisiertePanels = new ConcurrentHashMap<>();
-    /** BLATT-Panels pro Composite-Port, die zuletzt als "fehlend" gerendert wurden (port → Set<panelId>).
+    private final Map<String, Set<Integer>> initialisiertePanels = new ConcurrentHashMap<>();
+    /** BLATT-Panels pro Quelle, die zuletzt als "fehlend" gerendert wurden (viewId → Set<panelId>).
      * Wird für Diff-Erkennung verwendet, damit der fehlend-Hinweis nicht in jedem Render erneut gesendet wird. */
-    private final Map<Integer, Set<Integer>> fehlendePanels = new ConcurrentHashMap<>();
+    private final Map<String, Set<Integer>> fehlendePanels = new ConcurrentHashMap<>();
+    private final Map<String, DokumentQuelle> dokumente = new ConcurrentHashMap<>();
+    private final Map<String, DokumentRegieQuelle> dokumentRegieQuellen = new ConcurrentHashMap<>();
 
     /** Dokument, das den WebServer gestartet hat – nur dieses darf ihn wieder stoppen. */
     private XSpreadsheetDocument ownerDocument = null;
@@ -152,6 +168,15 @@ public final class WebServerManager implements TimerListener {
     private volatile TimerState letzterTimerZustand = TimerState.inaktiv();
 
     private record StartseitePanelDaten(StartseiteSseNachricht nachricht, String logoQuelle) {
+    }
+
+    private record DokumentQuelle(
+            String dokumentId,
+            String anzeigename,
+            XSpreadsheetDocument document,
+            WorkingSpreadsheet ws,
+            TurnierSystem turnierSystem,
+            boolean master) {
     }
 
     private final List<Runnable> statusListener = new CopyOnWriteArrayList<>();
@@ -210,8 +235,188 @@ public final class WebServerManager implements TimerListener {
         return INSTANCE;
     }
 
+    private Optional<DokumentQuelle> registriereDokumentFallsTurnier(WorkingSpreadsheet ws) {
+        if (ws == null || ws.getWorkingSpreadsheetDocument() == null) {
+            return Optional.empty();
+        }
+        XSpreadsheetDocument doc = ws.getWorkingSpreadsheetDocument();
+        try {
+            var docProps = new DocumentPropertiesHelper(ws);
+            TurnierSystem system = docProps.getTurnierSystemAusDocument();
+            if (system == null || system == TurnierSystem.KEIN) {
+                return Optional.empty();
+            }
+            String dokumentId = dokumentId(doc);
+            boolean master = istOwnerDocument(doc);
+            String anzeigename = dokumentAnzeigename(doc, system, master);
+            var quelle = new DokumentQuelle(dokumentId, anzeigename, doc, ws, system, master);
+            dokumente.put(dokumentId, quelle);
+            registriereModifyListenerFallsNoetig(quelle);
+            if (!master) {
+                aktualisiereDokumentRegieQuellen(quelle);
+            }
+            return Optional.of(quelle);
+        } catch (RuntimeException e) {
+            if (istDokumentGeschlossen(e)) {
+                return Optional.empty();
+            }
+            logger.debug("Turnierdokument konnte nicht registriert werden: {}", e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    private void registriereAlleOffenenTurnierdokumente(XComponentContext ctx) {
+        try {
+            var desktop = DocumentHelper.getCurrentDesktop(ctx);
+            var framesSupplier = Lo.qi(XFramesSupplier.class, desktop);
+            if (framesSupplier == null || framesSupplier.getFrames() == null) {
+                return;
+            }
+            var frames = framesSupplier.getFrames();
+            for (int i = 0; i < frames.getCount(); i++) {
+                Object frameObj = frames.getByIndex(i);
+                XFrame frame = Lo.qi(XFrame.class, frameObj);
+                if (frame == null) {
+                    continue;
+                }
+                XController controller = frame.getController();
+                if (controller == null) {
+                    continue;
+                }
+                var doc = Lo.qi(XSpreadsheetDocument.class, controller.getModel());
+                if (doc != null) {
+                    registriereDokumentFallsTurnier(new WorkingSpreadsheet(ctx, doc));
+                }
+            }
+        } catch (Exception e) {
+            logger.debug("Offene Turnierdokumente konnten nicht vollständig registriert werden: {}", e.getMessage());
+        }
+    }
+
+    private void aktualisiereDokumentRegieQuellen(DokumentQuelle dokument) {
+        for (var konfig : GlobalProperties.get().getCompositeViewKonfigurationen()) {
+            aktualisiereDokumentRegieQuellen(dokument, konfig);
+        }
+        if (GlobalProperties.get().isStartseiteAktiv()) {
+            aktualisiereDokumentStartseiteQuelle(dokument);
+        }
+    }
+
+    private void aktualisiereDokumentRegieQuellen(DokumentQuelle dokument, CompositeViewKonfiguration konfig) {
+        String viewId = dokumentViewId(dokument.dokumentId(), compositeViewId(konfig.port()));
+        dokumentRegieQuellen.computeIfAbsent(viewId, id -> {
+            var quelle = new DokumentRegieQuelle(
+                    id,
+                    anzeigeMitDokument(dokument.anzeigename(), anzeigeName(konfig)),
+                    konfig.port(),
+                    konfig);
+            quelle.setCachedInitJson(GSON.toJson(CompositeSseNachricht.hinweis(
+                    I18n.get("webserver.hinweis.kein.dokument.titel"),
+                    I18n.get("webserver.hinweis.kein.dokument.text"))));
+            return quelle;
+        });
+        cachesFuerQuelleInitialisieren(viewId);
+    }
+
+    private void aktualisiereDokumentStartseiteQuelle(DokumentQuelle dokument) {
+        String viewId = dokumentViewId(dokument.dokumentId(), STARTSEITE_VIEW_ID);
+        dokumentRegieQuellen.computeIfAbsent(viewId, id -> {
+            var quelle = new DokumentRegieQuelle(
+                    id,
+                    anzeigeMitDokument(dokument.anzeigename(), I18n.get("startseite.anzeigename")),
+                    GlobalProperties.get().getStartseitePort(),
+                    null);
+            quelle.setCachedInitJson(GSON.toJson(leereStartseiteNachricht(0)));
+            return quelle;
+        });
+    }
+
+    private void cachesFuerQuelleInitialisieren(String viewId) {
+        compositeVersionen.computeIfAbsent(viewId, k -> new AtomicInteger(0));
+        letzteCompositeModelle.computeIfAbsent(viewId, k -> new ConcurrentHashMap<>());
+        letzteCompositeTitel.computeIfAbsent(viewId, k -> new ConcurrentHashMap<>());
+        letzteCompositeUrls.computeIfAbsent(viewId, k -> new ConcurrentHashMap<>());
+        initialisiertePanels.computeIfAbsent(viewId, k -> ConcurrentHashMap.newKeySet());
+        fehlendePanels.computeIfAbsent(viewId, k -> ConcurrentHashMap.newKeySet());
+    }
+
+    private void entferneCachesFuerQuelle(String viewId) {
+        letzteCompositeModelle.remove(viewId);
+        letzteCompositeTitel.remove(viewId);
+        compositeVersionen.remove(viewId);
+        letzteCompositeUrls.remove(viewId);
+        initialisiertePanels.remove(viewId);
+        fehlendePanels.remove(viewId);
+    }
+
+    private static String anzeigeName(CompositeViewKonfiguration konfig) {
+        return konfig.name() == null || konfig.name().isBlank()
+                ? I18n.get("webserver.compositeview.anzeigename") + " " + konfig.port()
+                : konfig.name().trim();
+    }
+
+    private static String anzeigeMitDokument(String dokument, String quelle) {
+        return dokument + " / " + quelle;
+    }
+
+    private static String dokumentId(XSpreadsheetDocument doc) {
+        var storable = Lo.qi(XStorable.class, doc);
+        if (storable != null) {
+            try {
+                String location = storable.getLocation();
+                if (location != null && !location.isBlank()) {
+                    return "url:" + location;
+                }
+            } catch (RuntimeException e) {
+                // Fallback auf UNO-OID.
+            }
+        }
+        return "oid:" + UnoRuntime.generateOid(Lo.qi(XInterface.class, doc));
+    }
+
+    private static String dokumentAnzeigename(XSpreadsheetDocument doc, TurnierSystem system, boolean master) {
+        String prefix = master ? I18n.get("webserver.regie.dokument.master") : system.getBezeichnung();
+        var model = Lo.qi(XModel.class, doc);
+        if (model == null || model.getURL() == null || model.getURL().isBlank()) {
+            return prefix;
+        }
+        String url = model.getURL();
+        int slash = Math.max(url.lastIndexOf('/'), url.lastIndexOf('\\'));
+        String dateiname = slash >= 0 ? url.substring(slash + 1) : url;
+        if (dateiname.isBlank()) {
+            return prefix;
+        }
+        return prefix + " " + dateiname;
+    }
+
     public static String compositeViewId(int port) {
         return "composite:" + port;
+    }
+
+    static String dokumentViewId(String dokumentId, String basisViewId) {
+        return "doc:" + encodeViewIdTeil(dokumentId) + ":" + basisViewId;
+    }
+
+    private static String encodeViewIdTeil(String wert) {
+        return Base64.getUrlEncoder().withoutPadding()
+                .encodeToString(wert.getBytes(StandardCharsets.UTF_8));
+    }
+
+    static Optional<String> dokumentIdAusViewId(String viewId) {
+        if (viewId == null || !viewId.startsWith("doc:")) {
+            return Optional.empty();
+        }
+        int trenner = viewId.indexOf(':', "doc:".length());
+        if (trenner < 0) {
+            return Optional.empty();
+        }
+        try {
+            return Optional.of(new String(
+                    Base64.getUrlDecoder().decode(viewId.substring("doc:".length(), trenner)),
+                    StandardCharsets.UTF_8));
+        } catch (IllegalArgumentException e) {
+            return Optional.empty();
+        }
     }
 
     /**
@@ -234,6 +439,9 @@ public final class WebServerManager implements TimerListener {
         }
         slots.clear();
         compositeInstanzen.clear();
+        gespeicherterCtx = ctx;
+        ownerDocument = new WorkingSpreadsheet(ctx).getWorkingSpreadsheetDocument();
+        logger.info("Webserver Master-Dokument gesetzt: {}", ownerDocument != null ? "ja" : "null");
         safeProcessBoxInfo(I18n.get("webserver.prozessbox.starten"));
 
         for (var konfig : compositeKonfigs) {
@@ -244,12 +452,7 @@ public final class WebServerManager implements TimerListener {
                         I18n.get("webserver.hinweis.kein.dokument.titel"),
                         I18n.get("webserver.hinweis.kein.dokument.text"))));
                 compositeInstanzen.add(instanz);
-                compositeVersionen.put(konfig.port(), new AtomicInteger(0));
-                letzteCompositeModelle.put(konfig.port(), new ConcurrentHashMap<>());
-                letzteCompositeTitel.put(konfig.port(), new ConcurrentHashMap<>());
-                letzteCompositeUrls.put(konfig.port(), new ConcurrentHashMap<>());
-                initialisiertePanels.put(konfig.port(), ConcurrentHashMap.newKeySet());
-                fehlendePanels.put(konfig.port(), ConcurrentHashMap.newKeySet());
+                cachesFuerQuelleInitialisieren(instanz.getViewId());
                 logger.info("Composite-View-Server gestartet auf Port {}", konfig.port());
                 safeProcessBoxInfo(I18n.get("webserver.prozessbox.gestartet.url", buildUrl(konfig.port())));
             } catch (IOException e) {
@@ -275,12 +478,17 @@ public final class WebServerManager implements TimerListener {
 
         if (!compositeInstanzen.isEmpty() || startseiteInstanz != null || regieInstanz != null) {
             laeuft = true;
-            gespeicherterCtx = ctx;
-            ownerDocument = new WorkingSpreadsheet(ctx).getWorkingSpreadsheetDocument();
-            logger.info("Webserver Owner-Dokument gesetzt: {}", ownerDocument != null ? "ja" : "null");
             statusListenerBenachrichtigen();
             try {
-                sseRefreshSendenIntern(new WorkingSpreadsheet(ctx));
+                var masterWs = new WorkingSpreadsheet(ctx);
+                registriereDokumentFallsTurnier(masterWs);
+                registriereAlleOffenenTurnierdokumente(ctx);
+                sseRefreshSendenIntern(masterWs);
+                for (var dokument : new ArrayList<>(dokumente.values())) {
+                    if (!dokument.master()) {
+                        sseRefreshSendenIntern(dokument.ws());
+                    }
+                }
             } catch (Exception e) {
                 logger.debug("Initiales Rendering fehlgeschlagen: {}", e.getMessage());
                 sendeHinweisAnAlle(
@@ -405,10 +613,12 @@ public final class WebServerManager implements TimerListener {
     public void onChange(TimerState state) {
         TimerWebServerInstanz timerSnapshot;
         List<CompositeViewInstanz> compositeSnapshots;
+        List<DokumentRegieQuelle> dokumentQuellenSnapshots;
         synchronized (this) {
             letzterTimerZustand = state;
             timerSnapshot = timerInstanz != null && timerInstanz.laeuft() ? timerInstanz : null;
             compositeSnapshots = new ArrayList<>(compositeInstanzen);
+            dokumentQuellenSnapshots = new ArrayList<>(dokumentRegieQuellen.values());
         }
         if (timerSnapshot != null) {
             timerSnapshot.onChange(state);
@@ -419,6 +629,12 @@ public final class WebServerManager implements TimerListener {
             }
             sendeTimerUpdateAnComposite(instanz, state);
         }
+        for (var quelle : dokumentQuellenSnapshots) {
+            if (!quelle.hatTimerPanels()) {
+                continue;
+            }
+            sendeTimerUpdateAnRegieQuelle(quelle, state);
+        }
     }
 
     /**
@@ -426,8 +642,16 @@ public final class WebServerManager implements TimerListener {
      * der gegebenen Composite-Instanz.
      */
     private void sendeTimerUpdateAnComposite(CompositeViewInstanz instanz, TimerState state) {
+        sendeTimerUpdate(instanz.getKonfiguration(), instanz.getViewId(), instanz::sseNachrichtPushen, state);
+    }
+
+    private void sendeTimerUpdateAnRegieQuelle(DokumentRegieQuelle quelle, TimerState state) {
+        sendeTimerUpdate(quelle.getKonfiguration(), quelle.getViewId(), quelle::sseNachrichtPushen, state);
+    }
+
+    private void sendeTimerUpdate(CompositeViewKonfiguration konfig, String viewId,
+            Consumer<String> ssePushen, TimerState state) {
         var panelNachrichten = new ArrayList<CompositePanelNachricht>();
-        var konfig = instanz.getKonfiguration();
         for (int i = 0; i < konfig.panels().size(); i++) {
             if (konfig.panels().get(i).typ() == PanelTyp.TIMER) {
                 var panelKonfig = konfig.panels().get(i);
@@ -437,8 +661,8 @@ public final class WebServerManager implements TimerListener {
         if (panelNachrichten.isEmpty()) {
             return;
         }
-        int version = compositeVersionen.getOrDefault(konfig.port(), new AtomicInteger(0)).incrementAndGet();
-        instanz.sseNachrichtPushen(GSON.toJson(CompositeSseNachricht.diff(version, panelNachrichten, konfig.wurzel(), konfig.zoom(), konfig.mitHeaderFooter(), konfig.rand().toDaten())));
+        int version = compositeVersionen.computeIfAbsent(viewId, k -> new AtomicInteger(0)).incrementAndGet();
+        ssePushen.accept(GSON.toJson(CompositeSseNachricht.diff(version, panelNachrichten, konfig.wurzel(), konfig.zoom(), konfig.mitHeaderFooter(), konfig.rand().toDaten())));
     }
 
     /**
@@ -473,9 +697,13 @@ public final class WebServerManager implements TimerListener {
                     stopAktionen.add(aktuelleRegieInstanz::stoppen);
                     regieInstanz = null;
                 }
+                for (var quelle : dokumentRegieQuellen.values()) {
+                    stopAktionen.add(quelle::stoppen);
+                }
                 startseiteDiffCacheZuruecksetzen();
                 slots.clear();
                 compositeInstanzen.clear();
+                dokumentRegieQuellen.clear();
                 letzteCompositeModelle.clear();
                 letzteCompositeTitel.clear();
                 compositeVersionen.clear();
@@ -484,6 +712,8 @@ public final class WebServerManager implements TimerListener {
                 fehlendePanels.clear();
                 laeuft = false;
                 ownerDocument = null;
+                entferneAlleModifyListener();
+                dokumente.clear();
                 statusListenerBenachrichtigen();
                 logger.info("Webserver gestoppt");
                 safeProcessBoxInfo(I18n.get("webserver.prozessbox.gestoppt"));
@@ -507,8 +737,9 @@ public final class WebServerManager implements TimerListener {
         if (!laeuft) {
             return;
         }
-        if (!istOwnerDocument(ws.getWorkingSpreadsheetDocument())) {
-            logger.debug("sseRefreshSenden ignoriert – ws gehört nicht zum Owner-Dokument");
+        var dokument = registriereDokumentFallsTurnier(ws);
+        if (dokument.isEmpty()) {
+            logger.debug("sseRefreshSenden ignoriert – ws ist kein registrierbares Turnierdokument");
             return;
         }
         sseRefreshSendenIntern(ws);
@@ -544,12 +775,13 @@ public final class WebServerManager implements TimerListener {
         var compositeEintraege = GlobalProperties.get().getCompositeViewEintraege();
         for (var instanz : compositeInstanzen) {
             int port = instanz.getKonfiguration().port();
+            String viewId = instanz.getViewId();
             compositeEintraege.stream()
                     .filter(e -> e.port() == port && e.aktiv())
                     .findFirst()
                     .ifPresent(e -> {
-                        var panelModelle = letzteCompositeModelle.get(port);
-                        var panelTitel = letzteCompositeTitel.get(port);
+                        var panelModelle = letzteCompositeModelle.get(viewId);
+                        var panelTitel = letzteCompositeTitel.get(viewId);
                         if (panelModelle == null) {
                             return;
                         }
@@ -582,7 +814,7 @@ public final class WebServerManager implements TimerListener {
                         var neuePanelKonfigs = new ArrayList<PanelKonfiguration>();
                         var neuePanelModelle = new ConcurrentHashMap<Integer, TabelleModel>();
                         var neuePanelTitel = new ConcurrentHashMap<Integer, String>();
-                        var neueUrlCache = letzteCompositeUrls.computeIfAbsent(port, p -> new ConcurrentHashMap<>());
+                        var neueUrlCache = letzteCompositeUrls.computeIfAbsent(viewId, p -> new ConcurrentHashMap<>());
                         for (int i = 0; i < neueAnzahl; i++) {
                             var neuerPanelEintrag = e.panels().get(i);
                             if (neuerPanelEintrag.typ() == PanelTyp.TIMER) {
@@ -645,7 +877,7 @@ public final class WebServerManager implements TimerListener {
                         // Cache durch korrekt re-indizierte Maps ersetzen
                         panelModelle.clear();
                         panelModelle.putAll(neuePanelModelle);
-                        initialisiertePanels.computeIfPresent(port, (p, s) -> { s.clear(); return s; });
+                        initialisiertePanels.computeIfPresent(viewId, (p, s) -> { s.clear(); return s; });
                         if (panelTitel != null) {
                             panelTitel.clear();
                             panelTitel.putAll(neuePanelTitel);
@@ -655,7 +887,7 @@ public final class WebServerManager implements TimerListener {
                         String pushJson = null;
                         if (!alleInitPanels.isEmpty()) {
                             int version = compositeVersionen
-                                    .computeIfAbsent(port, p -> new AtomicInteger(0))
+                                    .computeIfAbsent(viewId, p -> new AtomicInteger(0))
                                     .incrementAndGet();
                             cachedJson = GSON.toJson(CompositeSseNachricht.init(
                                     version, alleInitPanels, neueWurzel, e.zoom(), e.mitHeaderFooter(), e.rand().toDaten()));
@@ -677,6 +909,7 @@ public final class WebServerManager implements TimerListener {
 
         reconciliereCompositeInstanzen(compositeEintraege, sseIoAktionen);
         reconciliereStartseiteInstanz(sseIoAktionen);
+        reconciliereDokumentRegieQuellen(sseIoAktionen);
         reconciliereRegieInstanz(sseIoAktionen);
         if (regieInstanz != null && regieInstanz.laeuft()) {
             var aktuelleRegieInstanz = regieInstanz;
@@ -688,6 +921,50 @@ public final class WebServerManager implements TimerListener {
         startseiteDiffCacheZuruecksetzen();
         boolean startseitePushNoetig = startseiteInstanz != null && startseiteInstanz.laeuft() && gespeicherterCtx != null;
         return new KonfigAbgleichErgebnis(List.copyOf(sseIoAktionen), startseitePushNoetig);
+    }
+
+    private void reconciliereDokumentRegieQuellen(List<Runnable> sseIoAktionen) {
+        var sollIds = new HashSet<String>();
+        var refreshDokumente = new HashSet<String>();
+        for (var dokument : dokumente.values()) {
+            if (dokument.master()) {
+                continue;
+            }
+            refreshDokumente.add(dokument.dokumentId());
+            for (var konfig : GlobalProperties.get().getCompositeViewKonfigurationen()) {
+                String viewId = dokumentViewId(dokument.dokumentId(), compositeViewId(konfig.port()));
+                sollIds.add(viewId);
+                var vorhanden = dokumentRegieQuellen.get(viewId);
+                if (vorhanden == null || !konfig.equals(vorhanden.getKonfiguration())) {
+                    if (vorhanden != null) {
+                        dokumentRegieQuellen.remove(viewId);
+                        entferneCachesFuerQuelle(viewId);
+                        sseIoAktionen.add(vorhanden::stoppen);
+                    }
+                    aktualisiereDokumentRegieQuellen(dokument, konfig);
+                    refreshDokumente.add(dokument.dokumentId());
+                }
+            }
+            if (GlobalProperties.get().isStartseiteAktiv()) {
+                String viewId = dokumentViewId(dokument.dokumentId(), STARTSEITE_VIEW_ID);
+                sollIds.add(viewId);
+                if (!dokumentRegieQuellen.containsKey(viewId)) {
+                    aktualisiereDokumentStartseiteQuelle(dokument);
+                    refreshDokumente.add(dokument.dokumentId());
+                }
+            }
+        }
+        for (var eintrag : new ArrayList<>(dokumentRegieQuellen.entrySet())) {
+            if (!sollIds.contains(eintrag.getKey())) {
+                dokumentRegieQuellen.remove(eintrag.getKey());
+                entferneCachesFuerQuelle(eintrag.getKey());
+                sseIoAktionen.add(eintrag.getValue()::stoppen);
+            }
+        }
+        refreshDokumente.stream()
+                .map(dokumente::get)
+                .filter(java.util.Objects::nonNull)
+                .forEach(this::initialenDokumentRefreshPlanen);
     }
 
     private record KonfigAbgleichErgebnis(List<Runnable> sseIoAktionen, boolean startseitePushNoetig) {
@@ -866,14 +1143,10 @@ public final class WebServerManager implements TimerListener {
         }
         for (var instanz : zuStoppen) {
             int port = instanz.getKonfiguration().port();
+            String viewId = instanz.getViewId();
             sseIoAktionen.add(instanz::stoppen);
             compositeInstanzen.remove(instanz);
-            letzteCompositeModelle.remove(port);
-            letzteCompositeTitel.remove(port);
-            compositeVersionen.remove(port);
-            letzteCompositeUrls.remove(port);
-            initialisiertePanels.remove(port);
-            fehlendePanels.remove(port);
+            entferneCachesFuerQuelle(viewId);
             logger.info("Composite-View-Server auf Port {} gestoppt (konfigurationGeaendert)", port);
             safeProcessBoxInfo(I18n.get("webserver.prozessbox.gestoppt.port", port));
         }
@@ -885,12 +1158,12 @@ public final class WebServerManager implements TimerListener {
                     var instanz = new CompositeViewInstanz(konfig);
                     instanz.starten();
                     var versionZaehler = new AtomicInteger(0);
-                    compositeVersionen.put(konfig.port(), versionZaehler);
-                    letzteCompositeModelle.put(konfig.port(), new ConcurrentHashMap<>());
-                    letzteCompositeTitel.put(konfig.port(), new ConcurrentHashMap<>());
-                    letzteCompositeUrls.put(konfig.port(), new ConcurrentHashMap<>());
-                    initialisiertePanels.put(konfig.port(), ConcurrentHashMap.newKeySet());
-                    fehlendePanels.put(konfig.port(), ConcurrentHashMap.newKeySet());
+                    compositeVersionen.put(instanz.getViewId(), versionZaehler);
+                    letzteCompositeModelle.put(instanz.getViewId(), new ConcurrentHashMap<>());
+                    letzteCompositeTitel.put(instanz.getViewId(), new ConcurrentHashMap<>());
+                    letzteCompositeUrls.put(instanz.getViewId(), new ConcurrentHashMap<>());
+                    initialisiertePanels.put(instanz.getViewId(), ConcurrentHashMap.newKeySet());
+                    fehlendePanels.put(instanz.getViewId(), ConcurrentHashMap.newKeySet());
                     initialisiereNeueCompositeInstanz(instanz, konfig, versionZaehler);
                     compositeInstanzen.add(instanz);
                     logger.info("Composite-View-Server auf Port {} gestartet (konfigurationGeaendert)", konfig.port());
@@ -925,7 +1198,8 @@ public final class WebServerManager implements TimerListener {
             CompositeViewKonfiguration konfig,
             AtomicInteger versionZaehler) {
         var alleInitPanels = new ArrayList<CompositePanelNachricht>();
-        var fehlendCache = fehlendePanels.computeIfAbsent(konfig.port(), p -> ConcurrentHashMap.newKeySet());
+        var viewId = instanz.getViewId();
+        var fehlendCache = fehlendePanels.computeIfAbsent(viewId, p -> ConcurrentHashMap.newKeySet());
         for (int i = 0; i < konfig.panels().size(); i++) {
             var panelKonfig = konfig.panels().get(i);
             if (panelKonfig.typ() == PanelTyp.TIMER) {
@@ -933,10 +1207,10 @@ public final class WebServerManager implements TimerListener {
                         i, panelKonfig.zoom(), panelKonfig.horizontalAusrichtung(), panelKonfig.vertikalAusrichtung(), letzterTimerZustand));
             } else if (panelKonfig.typ() == PanelTyp.URL) {
                 alleInitPanels.add(CompositePanelNachricht.url(i, panelKonfig.zoom(), panelKonfig.externeUrl()));
-                letzteCompositeUrls.get(konfig.port()).put(i, panelKonfig.externeUrl());
+                letzteCompositeUrls.get(viewId).put(i, panelKonfig.externeUrl());
             } else if (panelKonfig.typ() == PanelTyp.STATISCHE_DATEI) {
                 alleInitPanels.add(CompositePanelNachricht.statischeDatei(i, panelKonfig.zoom(), panelKonfig.externeUrl()));
-                letzteCompositeUrls.get(konfig.port()).put(i, panelKonfig.externeUrl());
+                letzteCompositeUrls.get(viewId).put(i, panelKonfig.externeUrl());
             } else if (panelKonfig.typ() == PanelTyp.TURNIERSTARTSEITE) {
                 alleInitPanels.add(CompositePanelNachricht.startseite(i, leereStartseiteNachricht(0)));
             } else {
@@ -972,17 +1246,34 @@ public final class WebServerManager implements TimerListener {
             return;
         }
         try {
-            registriereModifyListenerFallsNoetig(ws);
+            var dokument = registriereDokumentFallsTurnier(ws).orElse(null);
+            if (dokument == null) {
+                return;
+            }
             // Genau ein calculate() pro Refresh-Welle, vor der Composite-Schleife –
             // spart bei N Compositen N-1 Recalc-Durchläufe und stellt sicher, dass
             // abhängige Formelzellen (z.B. Rangliste) den aktuellen Stand spiegeln.
             forceRecalc(ws);
-            for (var instanz : compositeInstanzen) {
-                renderUndPushenComposite(instanz, ws);
+            if (dokument.master()) {
+                for (var instanz : compositeInstanzen) {
+                    renderUndPushenComposite(instanz.getKonfiguration(), instanz.getViewId(), instanz::setCachedInitJson,
+                            instanz::sseNachrichtPushen, instanz::setLogoQuelle, ws);
+                }
+                // Entkoppelter Mini-Push-Pfad für die Startseite — kein Tabellen-Mapping,
+                // keine Diff-Engine, nur zwei Integer + Diff-Cache.
+                pushStartseiteFallsAktiv(ws);
+            } else {
+                aktualisiereDokumentRegieQuellen(dokument);
+                for (var konfig : GlobalProperties.get().getCompositeViewKonfigurationen()) {
+                    String viewId = dokumentViewId(dokument.dokumentId(), compositeViewId(konfig.port()));
+                    var quelle = dokumentRegieQuellen.get(viewId);
+                    if (quelle != null && quelle.laeuft()) {
+                        renderUndPushenComposite(konfig, viewId, quelle::setCachedInitJson,
+                                quelle::sseNachrichtPushen, quelle::setLogoQuelle, ws);
+                    }
+                }
+                pushStartseiteFuerDokument(dokument, ws);
             }
-            // Entkoppelter Mini-Push-Pfad für die Startseite — kein Tabellen-Mapping,
-            // keine Diff-Engine, nur zwei Integer + Diff-Cache.
-            pushStartseiteFallsAktiv(ws);
             lastSuccessfulRefreshAt = System.currentTimeMillis();
         } finally {
             refreshLock.unlock();
@@ -1113,6 +1404,31 @@ public final class WebServerManager implements TimerListener {
         }
     }
 
+    private void pushStartseiteFuerDokument(DokumentQuelle dokument, WorkingSpreadsheet ws) {
+        if (!GlobalProperties.get().isStartseiteAktiv()) {
+            return;
+        }
+        String viewId = dokumentViewId(dokument.dokumentId(), STARTSEITE_VIEW_ID);
+        var quelle = dokumentRegieQuellen.get(viewId);
+        if (quelle == null || !quelle.laeuft()) {
+            return;
+        }
+        try {
+            int version = compositeVersionen.computeIfAbsent(viewId, k -> new AtomicInteger(0)).incrementAndGet();
+            var daten = startseitePanelDaten(ws, version);
+            quelle.setLogoQuelle(daten.logoQuelle());
+            String json = GSON.toJson(daten.nachricht());
+            quelle.setCachedInitJson(json);
+            quelle.sseNachrichtPushen(json);
+        } catch (RuntimeException e) {
+            if (istDokumentGeschlossen(e)) {
+                logger.debug("Startseiten-Refresh für Quelle {} übersprungen: Dokument ist bereits geschlossen", viewId);
+                return;
+            }
+            logger.warn("Push der dokumentbezogenen Turnier-Startseite fehlgeschlagen: {}", e.getMessage(), e);
+        }
+    }
+
     static String startseiteLogoUrl(String logoQuelle, int version) {
         return logoQuelle == null || logoQuelle.isBlank() ? "" : "turnierlogo?v=" + version;
     }
@@ -1183,7 +1499,35 @@ public final class WebServerManager implements TimerListener {
         return List.copyOf(neue);
     }
 
-    private void registriereModifyListenerFallsNoetig(WorkingSpreadsheet ws) {
+    private void registriereModifyListenerFallsNoetig(DokumentQuelle dokument) {
+        var xDoc = dokument.document();
+        if (xDoc == null) {
+            return;
+        }
+        if (dokument.master()) {
+            registriereMasterModifyListenerFallsNoetig(dokument.ws());
+            return;
+        }
+        if (modifyListenerNachDokument.containsKey(dokument.dokumentId())) {
+            return;
+        }
+        try {
+            var broadcaster = Lo.qi(XModifyBroadcaster.class, xDoc);
+            if (broadcaster == null) {
+                return;
+            }
+            var listener = new WebserverModifyListener();
+            listener.setWs(dokument.ws());
+            broadcaster.addModifyListener(listener);
+            modifyListenerNachDokument.put(dokument.dokumentId(), listener);
+            logger.debug("WebserverModifyListener am Dokument {} registriert", dokument.dokumentId());
+        } catch (Exception e) {
+            logger.debug("XModifyBroadcaster nicht verfügbar – Live-Updates deaktiviert: {}",
+                    e.getMessage());
+        }
+    }
+
+    private void registriereMasterModifyListenerFallsNoetig(WorkingSpreadsheet ws) {
         var xDoc = ws.getWorkingSpreadsheetDocument();
         if (xDoc == null || xDoc.equals(registriertesDocument)) {
             return;
@@ -1194,7 +1538,7 @@ public final class WebServerManager implements TimerListener {
             modifyListener.setWs(ws);
             broadcaster.addModifyListener(modifyListener);
             registriertesDocument = xDoc;
-            logger.debug("WebserverModifyListener am Dokument registriert");
+            logger.debug("WebserverModifyListener am Master-Dokument registriert");
         } catch (Exception e) {
             logger.debug("XModifyBroadcaster nicht verfügbar – Live-Updates deaktiviert: {}",
                     e.getMessage());
@@ -1218,18 +1562,49 @@ public final class WebServerManager implements TimerListener {
         logger.debug("WebserverModifyListener deregistriert");
     }
 
-    private void renderUndPushenComposite(CompositeViewInstanz instanz, WorkingSpreadsheet ws) {
-        int port = instanz.getKonfiguration().port();
-        var konfig = instanz.getKonfiguration();
-        var panelModelle = letzteCompositeModelle.computeIfAbsent(port, p -> new ConcurrentHashMap<>());
-        var panelTitel = letzteCompositeTitel.computeIfAbsent(port, p -> new ConcurrentHashMap<>());
-        var fehlendCache = fehlendePanels.computeIfAbsent(port, p -> ConcurrentHashMap.newKeySet());
+    private void deregistriereModifyListener(DokumentQuelle dokument) {
+        var listener = modifyListenerNachDokument.remove(dokument.dokumentId());
+        if (listener == null) {
+            return;
+        }
+        try {
+            var broadcaster = Lo.qi(XModifyBroadcaster.class, dokument.document());
+            if (broadcaster != null) {
+                broadcaster.removeModifyListener(listener);
+            }
+        } catch (Exception e) {
+            logger.debug("Fehler beim Entfernen des ModifyListeners für {}: {}",
+                    dokument.dokumentId(), e.getMessage());
+        }
+        listener.setWs(null);
+    }
+
+    private void entferneAlleModifyListener() {
+        for (var dokument : new ArrayList<>(dokumente.values())) {
+            if (!dokument.master()) {
+                deregistriereModifyListener(dokument);
+            }
+        }
+        modifyListenerNachDokument.clear();
+    }
+
+    private void renderUndPushenComposite(
+            CompositeViewKonfiguration konfig,
+            String viewId,
+            Consumer<String> cachedInitSetzen,
+            Consumer<String> ssePushen,
+            Consumer<String> logoQuelleSetzen,
+            WorkingSpreadsheet ws) {
+        int port = konfig.port();
+        var panelModelle = letzteCompositeModelle.computeIfAbsent(viewId, p -> new ConcurrentHashMap<>());
+        var panelTitel = letzteCompositeTitel.computeIfAbsent(viewId, p -> new ConcurrentHashMap<>());
+        var fehlendCache = fehlendePanels.computeIfAbsent(viewId, p -> ConcurrentHashMap.newKeySet());
         try {
             var panelNachrichten = new ArrayList<CompositePanelNachricht>();
             boolean irgendeineAenderung = false;
             boolean erstesRendering = false;
 
-            var urlCache = letzteCompositeUrls.computeIfAbsent(port, p -> new ConcurrentHashMap<>());
+            var urlCache = letzteCompositeUrls.computeIfAbsent(viewId, p -> new ConcurrentHashMap<>());
             for (int i = 0; i < konfig.panels().size(); i++) {
                 var panelKonfig = konfig.panels().get(i);
 
@@ -1238,7 +1613,7 @@ public final class WebServerManager implements TimerListener {
                     panelNachrichten.add(CompositePanelNachricht.timer(i, panelKonfig.zoom(), panelKonfig.horizontalAusrichtung(), panelKonfig.vertikalAusrichtung(), letzterTimerZustand));
                     // irgendeineAenderung nur beim ersten Rendering setzen – laufende Timer-Updates
                     // kommen über onChange() direkt als diff-Push ohne Sheet-Refresh
-                    var timerPanels = initialisiertePanels.computeIfAbsent(port, p -> ConcurrentHashMap.newKeySet());
+                    var timerPanels = initialisiertePanels.computeIfAbsent(viewId, p -> ConcurrentHashMap.newKeySet());
                     if (timerPanels.add(i)) {
                         irgendeineAenderung = true;
                         erstesRendering = true;
@@ -1262,10 +1637,10 @@ public final class WebServerManager implements TimerListener {
 
                 if (panelKonfig.typ() == PanelTyp.TURNIERSTARTSEITE) {
                     int naechsteVersion = compositeVersionen
-                            .computeIfAbsent(port, p -> new AtomicInteger(0))
+                            .computeIfAbsent(viewId, p -> new AtomicInteger(0))
                             .get() + 1;
                     var startseite = startseitePanelDaten(ws, naechsteVersion);
-                    instanz.setLogoQuelle(startseite.logoQuelle());
+                    logoQuelleSetzen.accept(startseite.logoQuelle());
                     panelNachrichten.add(CompositePanelNachricht.startseite(i, startseite.nachricht()));
                     irgendeineAenderung = true;
                     continue;
@@ -1328,7 +1703,7 @@ public final class WebServerManager implements TimerListener {
             }
 
             int version = compositeVersionen
-                    .computeIfAbsent(port, p -> new AtomicInteger(0))
+                    .computeIfAbsent(viewId, p -> new AtomicInteger(0))
                     .incrementAndGet();
 
             // Init-Cache mit vollem State aller Panels befüllen
@@ -1350,7 +1725,7 @@ public final class WebServerManager implements TimerListener {
                 }
                 if (panelKonfig.typ() == PanelTyp.TURNIERSTARTSEITE) {
                     var startseite = startseitePanelDaten(ws, version);
-                    instanz.setLogoQuelle(startseite.logoQuelle());
+                    logoQuelleSetzen.accept(startseite.logoQuelle());
                     alleInitPanels.add(CompositePanelNachricht.startseite(i, startseite.nachricht()));
                     continue;
                 }
@@ -1367,20 +1742,20 @@ public final class WebServerManager implements TimerListener {
                 }
             }
             CompositeSseNachricht initNachricht = CompositeSseNachricht.init(version, alleInitPanels, konfig.wurzel(), konfig.zoom(), konfig.mitHeaderFooter(), konfig.rand().toDaten());
-            instanz.setCachedInitJson(GSON.toJson(initNachricht));
+            cachedInitSetzen.accept(GSON.toJson(initNachricht));
 
             // Push: beim ersten Rendering init, sonst diff mit geänderten Panels
             CompositeSseNachricht push = erstesRendering
                     ? initNachricht
                     : CompositeSseNachricht.diff(version, panelNachrichten, konfig.wurzel(), konfig.zoom(), konfig.mitHeaderFooter(), konfig.rand().toDaten());
-            instanz.sseNachrichtPushen(GSON.toJson(push));
+            ssePushen.accept(GSON.toJson(push));
 
         } catch (Exception e) {
             if (istDokumentGeschlossen(e)) {
-                logger.debug("Composite-Refresh für Port {} übersprungen: Dokument ist bereits geschlossen", port);
+                logger.debug("Composite-Refresh für Quelle {} übersprungen: Dokument ist bereits geschlossen", viewId);
                 return;
             }
-            logger.error("Fehler beim Rendern des Composite Views für Port {}: {}", port, e.getMessage(), e);
+            logger.error("Fehler beim Rendern des Composite Views für Quelle {}: {}", viewId, e.getMessage(), e);
             safeProcessBoxFehler(I18n.get("webserver.prozessbox.render.fehler", port, e.getMessage()));
         }
     }
@@ -1415,6 +1790,91 @@ public final class WebServerManager implements TimerListener {
         for (var instanz : compositeInstanzen) {
             sendeCompositeHinweis(instanz, titel, text);
         }
+    }
+
+    @Override
+    public void onLoad(Object source) {
+        registriereDokumentAusEvent(source);
+    }
+
+    @Override
+    public void onLoadFinished(Object source) {
+        registriereDokumentAusEvent(source);
+    }
+
+    @Override
+    public void onViewCreated(Object source) {
+        registriereDokumentAusEvent(source);
+    }
+
+    @Override
+    public void onFocus(Object source) {
+        registriereDokumentAusEvent(source);
+    }
+
+    @Override
+    public void onUnload(Object source) {
+        if (!laeuft) {
+            return;
+        }
+        var doc = DocumentHelper.getCurrentSpreadsheetDocumentFrom(source);
+        if (doc == null) {
+            return;
+        }
+        if (istOwnerDocument(doc)) {
+            logger.info("Master-Dokument geschlossen – WebServer wird gestoppt");
+            stoppen();
+            return;
+        }
+        entferneDokument(doc);
+    }
+
+    private void registriereDokumentAusEvent(Object source) {
+        if (!laeuft || gespeicherterCtx == null) {
+            return;
+        }
+        var doc = DocumentHelper.getCurrentSpreadsheetDocumentFrom(source);
+        if (doc == null) {
+            return;
+        }
+        registriereDokumentFallsTurnier(new WorkingSpreadsheet(gespeicherterCtx, doc))
+                .ifPresent(this::initialenDokumentRefreshPlanen);
+        if (regieInstanz != null && regieInstanz.laeuft()) {
+            regieInstanz.konfigurationGeaendert();
+        }
+    }
+
+    private void initialenDokumentRefreshPlanen(DokumentQuelle dokument) {
+        if (dokument.master()) {
+            modifyListener.markDirtyAndSchedule();
+            return;
+        }
+        var listener = modifyListenerNachDokument.get(dokument.dokumentId());
+        if (listener != null) {
+            listener.markDirtyAndSchedule();
+        }
+    }
+
+    private void entferneDokument(XSpreadsheetDocument doc) {
+        String dokumentId = dokumentId(doc);
+        var dokument = dokumente.remove(dokumentId);
+        if (dokument == null || dokument.master()) {
+            return;
+        }
+        deregistriereModifyListener(dokument);
+        var prefix = "doc:" + encodeViewIdTeil(dokumentId) + ":";
+        for (var eintrag : new ArrayList<>(dokumentRegieQuellen.entrySet())) {
+            if (eintrag.getKey().startsWith(prefix)) {
+                var quelle = eintrag.getValue();
+                dokumentRegieQuellen.remove(eintrag.getKey());
+                entferneCachesFuerQuelle(eintrag.getKey());
+                quelle.stoppen();
+            }
+        }
+        if (regieInstanz != null && regieInstanz.laeuft()) {
+            regieInstanz.konfigurationGeaendert();
+        }
+        statusListenerBenachrichtigen();
     }
 
     public boolean isLaeuft() {
@@ -1487,14 +1947,25 @@ public final class WebServerManager implements TimerListener {
             String name = eintrag.name() == null || eintrag.name().isBlank()
                     ? I18n.get("webserver.compositeview.anzeigename") + " " + eintrag.port()
                     : eintrag.name().trim();
-            result.add(new RegieQuelleInfo(id, name, eintrag.port(), laeuft));
+            result.add(new RegieQuelleInfo(id, name, eintrag.port(), laeuft,
+                    I18n.get("webserver.regie.dokument.master"), true));
         }
         if (GlobalProperties.get().isStartseiteAktiv()) {
             int startseitePort = GlobalProperties.get().getStartseitePort();
             boolean startseiteLaeuft = startseiteInstanz != null && startseiteInstanz.laeuft();
             result.add(new RegieQuelleInfo(STARTSEITE_VIEW_ID, I18n.get("startseite.anzeigename"),
-                    startseitePort, startseiteLaeuft));
+                    startseitePort, startseiteLaeuft, I18n.get("webserver.regie.dokument.master"), true));
         }
+        dokumentRegieQuellen.values().stream()
+                .filter(DokumentRegieQuelle::laeuft)
+                .sorted(Comparator.comparing(DokumentRegieQuelle::getAnzeigeName))
+                .map(q -> new RegieQuelleInfo(q.getViewId(), q.getAnzeigeName(), q.getPort(), q.laeuft(),
+                        dokumentIdAusViewId(q.getViewId())
+                                .flatMap(id -> Optional.ofNullable(dokumente.get(id)))
+                                .map(DokumentQuelle::anzeigename)
+                                .orElse(""),
+                        false))
+                .forEach(result::add);
         return result;
     }
 
@@ -1506,6 +1977,10 @@ public final class WebServerManager implements TimerListener {
             return startseiteInstanz != null && startseiteInstanz.laeuft()
                     ? Optional.of(startseiteInstanz)
                     : Optional.empty();
+        }
+        var dokumentQuelle = dokumentRegieQuellen.get(viewId);
+        if (dokumentQuelle != null && dokumentQuelle.laeuft()) {
+            return Optional.of(dokumentQuelle);
         }
         for (var instanz : compositeInstanzen) {
             if (instanz.laeuft() && viewId.equals(instanz.getViewId())) {
