@@ -2,6 +2,7 @@ package de.petanqueturniermanager.webserver;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -58,6 +59,21 @@ class WebServerManagerTest {
     }
 
     @Test
+    void dokumentRegieQuelleBehaeltCacheBeiCompositeKonfigurationswechsel() {
+        var alt = compositeKonfiguration(8081, "Alt", 100);
+        var neu = compositeKonfiguration(8081, "Neu", 125);
+        var quelle = new DokumentRegieQuelle("doc:abc:composite:8081", "Doc - Alt", 8081, alt);
+        quelle.setCachedInitJson("{\"state\":\"gerendert\"}");
+
+        quelle.aktualisiereKonfiguration("Doc - Neu", neu);
+
+        assertThat(quelle.getAnzeigeName()).isEqualTo("Doc - Neu");
+        assertThat(quelle.getKonfiguration()).isEqualTo(neu);
+        assertThat(quelle.getCachedInitJson()).isEqualTo("{\"state\":\"gerendert\"}");
+        assertThat(quelle.laeuft()).isTrue();
+    }
+
+    @Test
     void konfigurationGeaendertWartetNichtAufManagerMonitor() throws Exception {
         var manager = WebServerManager.get();
         var lockGehalten = new CountDownLatch(1);
@@ -84,5 +100,12 @@ class WebServerManagerTest {
             lockThread.join(1_000);
             aufrufer.shutdownNow();
         }
+    }
+
+    private static CompositeViewKonfiguration compositeKonfiguration(int port, String name, int zoom) {
+        var panel = new PanelKonfiguration(PanelTyp.STATISCHE_DATEI, "", null, 100,
+                "kein", "kein", false, "https://example.invalid/panel.html");
+        return new CompositeViewKonfiguration(port, name, zoom, new SplitBlatt(0), List.of(panel),
+                false, RandKonfiguration.KEINER);
     }
 }

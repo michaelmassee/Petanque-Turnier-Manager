@@ -935,13 +935,13 @@ public final class WebServerManager implements TimerListener, IGlobalEventListen
                 String viewId = dokumentViewId(dokument.dokumentId(), compositeViewId(konfig.port()));
                 sollIds.add(viewId);
                 var vorhanden = dokumentRegieQuellen.get(viewId);
-                if (vorhanden == null || !konfig.equals(vorhanden.getKonfiguration())) {
-                    if (vorhanden != null) {
-                        dokumentRegieQuellen.remove(viewId);
-                        entferneCachesFuerQuelle(viewId);
-                        sseIoAktionen.add(vorhanden::stoppen);
-                    }
+                if (vorhanden == null) {
                     aktualisiereDokumentRegieQuellen(dokument, konfig);
+                    refreshDokumente.add(dokument.dokumentId());
+                } else if (!konfig.equals(vorhanden.getKonfiguration())) {
+                    vorhanden.aktualisiereKonfiguration(
+                            anzeigeMitDokument(dokument.anzeigename(), anzeigeName(konfig)),
+                            konfig);
                     refreshDokumente.add(dokument.dokumentId());
                 }
             }

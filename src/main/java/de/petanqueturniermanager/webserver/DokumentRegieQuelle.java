@@ -24,11 +24,11 @@ final class DokumentRegieQuelle implements RegieQuelle {
     private static final Logger logger = LogManager.getLogger(DokumentRegieQuelle.class);
 
     private final String viewId;
-    private final String anzeigename;
     private final int port;
-    private final CompositeViewKonfiguration compositeKonfiguration;
     private final CopyOnWriteArrayList<SseVerbindung> sseVerbindungen = new CopyOnWriteArrayList<>();
 
+    private volatile String anzeigename;
+    private volatile CompositeViewKonfiguration compositeKonfiguration;
     private volatile String cachedInitJson;
     private volatile boolean laeuft = true;
     private volatile String logoQuelle = "";
@@ -65,6 +65,12 @@ final class DokumentRegieQuelle implements RegieQuelle {
         laeuft = false;
         sseVerbindungen.forEach(SseVerbindung::schliessen);
         sseVerbindungen.clear();
+    }
+
+    void aktualisiereKonfiguration(String neuerAnzeigename,
+            CompositeViewKonfiguration neueCompositeKonfiguration) {
+        anzeigename = neuerAnzeigename == null ? "" : neuerAnzeigename;
+        compositeKonfiguration = neueCompositeKonfiguration;
     }
 
     void setCachedInitJson(String json) {
