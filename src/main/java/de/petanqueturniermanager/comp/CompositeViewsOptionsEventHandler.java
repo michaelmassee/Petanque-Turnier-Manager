@@ -39,7 +39,6 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.GlobalProperties.CompositeViewEintragRoh;
 import de.petanqueturniermanager.comp.turnierevent.OnProperiesChangedEvent;
 import de.petanqueturniermanager.comp.turnierevent.TurnierEventType;
-import de.petanqueturniermanager.helper.NativeDialogSperre;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
@@ -110,14 +109,6 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 	 */
 	private final List<Runnable> ausstehendeRegieLoeschungen = new ArrayList<>();
 
-	/**
-	 * Merkt sich, ob eine Webserver-Live-Benachrichtigung waehrend eines offenen
-	 * {@link CompositeViewDetailDialog} zurueckgestellt wurde (siehe
-	 * {@link #benachrichtigeWebserverFallsMoeglich()}), um sie nach dessen Schliessen
-	 * nachzuholen (siehe {@link #holeWebserverBenachrichtigungNach()}).
-	 */
-	private boolean webserverBenachrichtigungAusstehend = false;
-
 	public CompositeViewsOptionsEventHandler(XComponentContext context) {
 		this.context = context;
 		GlobalProperties.setLibreOfficeContext(context);
@@ -169,15 +160,19 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 
 	/**
 	 * Persistiert die aktuelle Arbeitskopie der Composite Views (und das Webserver-Aktiv-Flag) sofort
-	 * in {@link GlobalProperties}. Wird sowohl beim finalen „OK" der Optionsseite als auch direkt nach
-	 * jeder Hinzufuegen-/Bearbeiten-/Loeschen-Aktion aufgerufen, damit die Konfiguration nie verloren
-	 * geht.
+	 * in {@link GlobalProperties} und benachrichtigt bei tatsaechlicher Aenderung den laufenden
+	 * Webserver. Wird sowohl beim finalen „OK" der Optionsseite als auch direkt nach jeder
+	 * Hinzufuegen-/Bearbeiten-/Loeschen-Aktion aufgerufen, damit bereits laufende Composite-View-Ansichten
+	 * live aktualisiert werden.
 	 * <p>
-	 * Die Benachrichtigung des laufenden Webservers (Live-Refresh der Browser-Ansicht) erfolgt bei
-	 * tatsaechlicher Aenderung ueber {@link #benachrichtigeWebserverFallsMoeglich()} — sie wird
-	 * zurueckgestellt, solange ein {@link CompositeViewDetailDialog} offen ist (siehe dort und
-	 * {@link de.petanqueturniermanager.helper.NativeDialogSperre}), und nach dessen Schliessen ueber
-	 * {@link #holeWebserverBenachrichtigungNach()} nachgeholt.
+	 * Der Webserver-Konfigurationsabgleich ({@link WebServerManager#konfigurationGeaendert()}) postet
+	 * nur auf einen eigenen Executor und fasst dabei keine rohen UNO-Sheet-Daten an (nur gecachte
+	 * Modelle/JSON; der einzige echte UNO-Zugriff laeuft bereits ueber {@code LoMainThread.post()}) —
+	 * er darf daher auch waehrend einer offenen {@link CompositeViewDetailDialog}-Event-Loop sofort
+	 * ausgeloest werden. Die eigentliche Absturzursache (siehe
+	 * {@link de.petanqueturniermanager.helper.NativeDialogSperre}) betraf ausschliesslich den
+	 * unabhaengigen, Zell-Aenderungs-getriebenen Refresh-Pfad, der bereits selbst
+	 * {@code NativeDialogSperre.istOffen()} prueft.
 	 */
 	private void persistiereUndBenachrichtige(XControlContainer container) {
 		GlobalProperties properties = GlobalProperties.get();
@@ -195,32 +190,8 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 		ausstehendeRegieLoeschungen.forEach(Runnable::run);
 		ausstehendeRegieLoeschungen.clear();
 		if (alterWebserverAktiv != neuerWebserverAktiv || !alteEintraege.equals(eintraege)) {
-			benachrichtigeWebserverFallsMoeglich();
-		}
-	}
-
-	/**
-	 * Loest den Webserver-Konfigurationsabgleich aus, sofern gerade kein modaler
-	 * {@link CompositeViewDetailDialog} eine verschachtelte Event-Loop offen haelt — andernfalls wird
-	 * die Benachrichtigung vorgemerkt und erst nach dessen Schliessen nachgeholt (siehe
-	 * {@link #holeWebserverBenachrichtigungNach()}). Verhindert die Kollision aus
-	 * {@link de.petanqueturniermanager.helper.NativeDialogSperre} zwischen der Dialog-Event-Loop und
-	 * gleichzeitigem Sheet-lesendem Webserver-Refresh aus einem Fremd-Thread.
-	 */
-	private void benachrichtigeWebserverFallsMoeglich() {
-		if (NativeDialogSperre.istOffen()) {
-			webserverBenachrichtigungAusstehend = true;
-			return;
-		}
-		WebServerManager.get().konfigurationGeaendert();
-		benachrichtigeCompositeViewKonfigurationGeaendert();
-	}
-
-	/** Holt eine waehrend offenem Detail-Dialog zurueckgestellte Webserver-Benachrichtigung nach. */
-	private void holeWebserverBenachrichtigungNach() {
-		if (webserverBenachrichtigungAusstehend) {
-			webserverBenachrichtigungAusstehend = false;
-			benachrichtigeWebserverFallsMoeglich();
+			WebServerManager.get().konfigurationGeaendert();
+			benachrichtigeCompositeViewKonfigurationGeaendert();
 		}
 	}
 
@@ -304,7 +275,6 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 				eintraege.add(neuerEintrag);
 			}
 			aktualisiereListe(container);
-			holeWebserverBenachrichtigungNach();
 		} catch (com.sun.star.uno.Exception e) {
 			logger.error("Fehler beim Hinzufügen eines Composite Views: {}", e.getMessage(), e);
 		}
@@ -331,7 +301,6 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 				eintraege.set(idx, geaenderterEintrag); // idempotent falls Callback schon gesetzt hat
 			}
 			aktualisiereListe(container);
-			holeWebserverBenachrichtigungNach();
 		} catch (com.sun.star.uno.Exception e) {
 			logger.error("Fehler beim Bearbeiten des Composite Views: {}", e.getMessage(), e);
 		}
