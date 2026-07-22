@@ -481,12 +481,12 @@ public final class WebServerManager implements TimerListener, IGlobalEventListen
             statusListenerBenachrichtigen();
             try {
                 var masterWs = new WorkingSpreadsheet(ctx);
-                registriereDokumentFallsTurnier(masterWs);
+                var masterDokument = registriereDokumentFallsTurnier(masterWs);
                 registriereAlleOffenenTurnierdokumente(ctx);
-                sseRefreshSendenIntern(masterWs);
+                masterDokument.ifPresent(dokument -> sseRefreshSendenIntern(masterWs, dokument));
                 for (var dokument : new ArrayList<>(dokumente.values())) {
                     if (!dokument.master()) {
-                        sseRefreshSendenIntern(dokument.ws());
+                        sseRefreshSendenIntern(dokument.ws(), dokument);
                     }
                 }
             } catch (Exception e) {
@@ -742,7 +742,7 @@ public final class WebServerManager implements TimerListener, IGlobalEventListen
             logger.debug("sseRefreshSenden ignoriert – ws ist kein registrierbares Turnierdokument");
             return;
         }
-        sseRefreshSendenIntern(ws);
+        sseRefreshSendenIntern(ws, dokument.get());
     }
 
     /**
@@ -942,6 +942,9 @@ public final class WebServerManager implements TimerListener, IGlobalEventListen
                     vorhanden.aktualisiereKonfiguration(
                             anzeigeMitDokument(dokument.anzeigename(), anzeigeName(konfig)),
                             konfig);
+                    sseIoAktionen.add(() -> pushCompositeInitAusCache(konfig, viewId,
+                            vorhanden.getCachedInitJson(), vorhanden::setCachedInitJson,
+                            vorhanden::sseNachrichtPushen));
                     refreshDokumente.add(dokument.dokumentId());
                 }
             }
@@ -965,6 +968,85 @@ public final class WebServerManager implements TimerListener, IGlobalEventListen
                 .map(dokumente::get)
                 .filter(java.util.Objects::nonNull)
                 .forEach(this::initialenDokumentRefreshPlanen);
+    }
+
+    private void pushCompositeInitAusCache(
+            CompositeViewKonfiguration konfig,
+            String viewId,
+            String bisherigesInitJson,
+            Consumer<String> cachedInitSetzen,
+            Consumer<String> ssePushen) {
+        var panelNachrichten = new ArrayList<CompositePanelNachricht>();
+        var panelModelle = letzteCompositeModelle.computeIfAbsent(viewId, p -> new ConcurrentHashMap<>());
+        var panelTitel = letzteCompositeTitel.computeIfAbsent(viewId, p -> new ConcurrentHashMap<>());
+        var urlCache = letzteCompositeUrls.computeIfAbsent(viewId, p -> new ConcurrentHashMap<>());
+        var fehlendCache = fehlendePanels.computeIfAbsent(viewId, p -> ConcurrentHashMap.newKeySet());
+        var bisherigePanels = panelsAusCachedInit(bisherigesInitJson);
+
+        for (int i = 0; i < konfig.panels().size(); i++) {
+            var panelKonfig = konfig.panels().get(i);
+            if (panelKonfig.typ() == PanelTyp.TIMER) {
+                panelNachrichten.add(CompositePanelNachricht.timer(i, panelKonfig.zoom(),
+                        panelKonfig.horizontalAusrichtung(), panelKonfig.vertikalAusrichtung(), letzterTimerZustand));
+                continue;
+            }
+            if (panelKonfig.typ() == PanelTyp.URL || panelKonfig.typ() == PanelTyp.STATISCHE_DATEI) {
+                String quelle = panelKonfig.externeUrl();
+                urlCache.put(i, quelle);
+                panelNachrichten.add(panelKonfig.typ() == PanelTyp.URL
+                        ? CompositePanelNachricht.url(i, panelKonfig.zoom(), quelle)
+                        : CompositePanelNachricht.statischeDatei(i, panelKonfig.zoom(), quelle));
+                continue;
+            }
+            if (panelKonfig.typ() == PanelTyp.TURNIERSTARTSEITE) {
+                var bisherigesPanel = bisherigePanels.get(i);
+                panelNachrichten.add(CompositePanelNachricht.startseite(i,
+                        bisherigesPanel != null && bisherigesPanel.startseite() != null
+                                ? bisherigesPanel.startseite()
+                                : leereStartseiteNachricht(0)));
+                continue;
+            }
+            var modell = panelModelle.get(i);
+            if (modell != null) {
+                panelNachrichten.add(CompositePanelNachricht.init(i, modell, panelTitel.getOrDefault(i, ""),
+                        panelKonfig.zoom(), panelKonfig.sichtbarerTabellenAnteil(),
+                        panelKonfig.horizontalAusrichtung(), panelKonfig.vertikalAusrichtung(),
+                        panelKonfig.blattnameAnzeigen()));
+            } else {
+                fehlendCache.add(i);
+                panelNachrichten.add(CompositePanelNachricht.fehlend(i,
+                        I18n.get("webserver.hinweis.kein.dokument.titel"),
+                        I18n.get("webserver.hinweis.kein.dokument.text")));
+            }
+        }
+
+        int version = compositeVersionen
+                .computeIfAbsent(viewId, p -> new AtomicInteger(0))
+                .incrementAndGet();
+        String json = GSON.toJson(CompositeSseNachricht.init(version, panelNachrichten,
+                konfig.wurzel(), konfig.zoom(), konfig.mitHeaderFooter(), konfig.rand().toDaten()));
+        cachedInitSetzen.accept(json);
+        ssePushen.accept(json);
+    }
+
+    private Map<Integer, CompositePanelNachricht> panelsAusCachedInit(String cachedInitJson) {
+        if (cachedInitJson == null || cachedInitJson.isBlank()) {
+            return Map.of();
+        }
+        try {
+            var nachricht = GSON.fromJson(cachedInitJson, CompositeSseNachricht.class);
+            if (nachricht == null || nachricht.panels() == null) {
+                return Map.of();
+            }
+            return nachricht.panels().stream()
+                    .collect(java.util.stream.Collectors.toMap(
+                            CompositePanelNachricht::panelId,
+                            p -> p,
+                            (a, b) -> a));
+        } catch (RuntimeException e) {
+            logger.debug("Composite-Init-Cache für Konfigurationspush nicht lesbar: {}", e.getMessage());
+            return Map.of();
+        }
     }
 
     private record KonfigAbgleichErgebnis(List<Runnable> sseIoAktionen, boolean startseitePushNoetig) {
@@ -1228,25 +1310,25 @@ public final class WebServerManager implements TimerListener, IGlobalEventListen
                 CompositeSseNachricht.init(version, alleInitPanels, konfig.wurzel(), konfig.zoom(), konfig.mitHeaderFooter(), konfig.rand().toDaten())));
     }
 
-    private void sseRefreshSendenIntern(WorkingSpreadsheet ws) {
+    private void sseRefreshSendenIntern(WorkingSpreadsheet ws, DokumentQuelle dokument) {
         // Ein natives modales Dialogfenster mit eigener Event-Loop (z.B. FarbwahlDialog) ist offen –
         // gleichzeitiger UNO-Zugriff aus diesem Hintergrund-Thread kollidiert damit (SIGABRT durch
         // Stack-Corruption in ColorDialog::Execute(), per CoreDump-Analyse verifiziert). Welle
         // überspringen, sie wird über markDirty() nachgeholt, sobald der Dialog geschlossen ist.
         if (NativeDialogSperre.istOffen()) {
-            modifyListener.markDirty();
+            markDirtyUndPlanenFuerDokument(dokument);
             logger.debug("Refresh übersprungen – natives Dialogfenster offen");
             return;
         }
         // Serialisiert: niemals zwei parallele Render-/Push-Wellen. Konkurrierende Aufrufer
         // signalisieren stattdessen "nochmal" über den Listener-Dirty-Flag.
         if (!refreshLock.tryLock()) {
-            modifyListener.markDirty();
+            markDirtyUndPlanenFuerDokument(dokument);
             logger.debug("Refresh läuft bereits – markDirty()");
             return;
         }
         try {
-            var dokument = registriereDokumentFallsTurnier(ws).orElse(null);
+            dokument = registriereDokumentFallsTurnier(ws).orElse(null);
             if (dokument == null) {
                 return;
             }
@@ -1284,6 +1366,17 @@ public final class WebServerManager implements TimerListener, IGlobalEventListen
                 modifyListener.scheduleIfNeededExternal();
             }
         }
+    }
+
+    private void markDirtyUndPlanenFuerDokument(DokumentQuelle dokument) {
+        if (dokument != null && !dokument.master()) {
+            var listener = modifyListenerNachDokument.get(dokument.dokumentId());
+            if (listener != null) {
+                listener.markDirtyAndSchedule();
+                return;
+            }
+        }
+        modifyListener.markDirtyAndSchedule();
     }
 
     private void forceRecalc(WorkingSpreadsheet ws) {
