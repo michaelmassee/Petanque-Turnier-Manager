@@ -736,4 +736,56 @@ public class SchweizerSystemTest {
 		assertThat(gruppen.get(1).getFirst()).isEqualByComparingTo(Team.from(3));
 	}
 
+	/**
+	 * Deadlock-Fall in {@code paareGruppen()}: Team 1 hat innerhalb seiner Sieggruppe
+	 * bereits gegen alle anderen Teams gespielt (3, 4, 5), sodass {@code findeGegner()}
+	 * keinen rematch-freien Gegner mehr findet. Zu diesem Zeitpunkt ist noch keine
+	 * Paarung dieser Runde eingetragen, daher findet auch {@code kannTauschenMit()}
+	 * keinen Tauschpartner. Der Algorithmus paart Team 1 trotzdem zwangsweise mit dem
+	 * ersten verbliebenen Team (2) – ein erzwungenes Rematch.
+	 * <p>
+	 * Team 3 und Team 4 haben dagegen noch nicht gegeneinander gespielt und werden
+	 * korrekt neu gepaart.
+	 */
+	@Test
+	public void testWeitereRundeDeadlock_erzwingtRematchWennKeinGegnerFrei() {
+		TeamMeldungen meldungen = new TeamMeldungen();
+		for (int i = 1; i <= 4; i++) {
+			meldungen.addTeamWennNichtVorhanden(Team.from(i));
+		}
+
+		Team team1 = meldungen.getTeam(1);
+		Team team2 = meldungen.getTeam(2);
+		Team team3 = meldungen.getTeam(3);
+		Team team4 = meldungen.getTeam(4);
+
+		// Team 1 hat bereits gegen alle anderen Teams der Gruppe gespielt
+		team1.addGegner(team2);
+		team1.addGegner(team3);
+		team1.addGegner(team4);
+
+		// alle 4 Teams mit gleicher Siegzahl -> eine einzige Sieggruppe
+		List<SchweizerTeamErgebnis> ergebnisse = List.of(
+				new SchweizerTeamErgebnis(1, 1, 0, 0, List.of(2, 3, 4)),
+				new SchweizerTeamErgebnis(2, 1, 0, 0, List.of(1)),
+				new SchweizerTeamErgebnis(3, 1, 0, 0, List.of(1)),
+				new SchweizerTeamErgebnis(4, 1, 0, 0, List.of(1)));
+
+		schweizerSystem = new SchweizerSystem();
+		List<TeamPaarung> paarungen = schweizerSystem.weitereRunde(
+				List.of(team1, team2, team3, team4), ergebnisse);
+
+		assertThat(paarungen).hasSize(2);
+
+		TeamPaarung erzwungenesRematch = paarungen.get(0);
+		assertThat(erzwungenesRematch.getA()).isEqualByComparingTo(team1);
+		assertThat(erzwungenesRematch.getB()).isEqualByComparingTo(team2);
+		// Team 1 und Team 2 waren bereits vor dieser Runde Gegner -> echtes Rematch
+		assertThat(team1.hatAlsGegner(team2)).isTrue();
+
+		TeamPaarung neuePaarung = paarungen.get(1);
+		assertThat(neuePaarung.getA()).isEqualByComparingTo(team3);
+		assertThat(neuePaarung.getB()).isEqualByComparingTo(team4);
+	}
+
 }
