@@ -568,8 +568,8 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 				.ungeradeFarbe(spielPlanHintergrundFarbeUnGerade).apply();
 
 		RangePosition ergRange = RangePosition.from(SPIELPNKT_A_SPALTE, startZeile, SPIELPNKT_B_SPALTE, letzteSpielZeile);
-		EditierbaresZelleFormatHelper.anwenden(this, ergRange);
 		formatiereErgebnisZellen(ergRange);
+		EditierbaresZelleFormatHelper.anwenden(this, ergRange);
 
 		RangeProperties horTrennerDouble = RangeProperties.from()
 				.setBorder(BorderFactory.from().doubleLn().forBottom().toBorder());
