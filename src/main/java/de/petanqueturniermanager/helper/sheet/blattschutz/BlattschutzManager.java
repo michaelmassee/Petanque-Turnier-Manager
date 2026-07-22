@@ -275,7 +275,7 @@ public class BlattschutzManager {
         // Schritt 3: Pro Sheet entsperren → Zellschutz → sperren
         for (var info : infos) {
             try {
-                entsperreSheetFallsNoetig(info.sheet());
+                entsperreSheet(info.sheet());
                 for (var range : info.editierbareBereich()) {
                     setzeZellSchutzFreigegeben(info.sheet(), range);
                 }
@@ -314,13 +314,6 @@ public class BlattschutzManager {
         return alle;
     }
 
-    private void entsperreSheetFallsNoetig(XSpreadsheet sheet) {
-        var xProt = Lo.qi(XProtectable.class, sheet);
-        if (xProt.isProtected()) {
-            xProt.unprotect("");
-        }
-    }
-
     private void schuetzeSheet(XSpreadsheet sheet) {
         Lo.qi(XProtectable.class, sheet).protect("");
     }
@@ -329,6 +322,43 @@ public class BlattschutzManager {
         var xProt = Lo.qi(XProtectable.class, sheet);
         if (xProt.isProtected()) {
             xProt.unprotect("");
+        }
+    }
+
+    /**
+     * Fallback-Absicherung direkt am Schreibpunkt (z.B. {@code RangeHelper.setDataInRange}):
+     * führt {@code schreibvorgang} garantiert auf einem physisch entsperrten Sheet aus.
+     * <p>
+     * Hintergrund: {@code TurnierModus.istAktiv()} ist ein <b>globaler</b> Singleton-Flag, der
+     * pro Prozess (nicht pro Dokument) geführt wird. Bei mehreren gleichzeitig geöffneten
+     * Dokumenten mit unterschiedlichem Kiosk-Zustand – oder wenn eine frühere Entsperr-Operation
+     * fehlgeschlagen ist (siehe {@code doSchuetzen}/{@code doEntsperren}, die Fehler pro Sheet nur
+     * loggen statt zu werfen) – kann der physische Blattschutz eines konkreten Sheets vom globalen
+     * Flag abweichen. In diesem Fall würde {@link #ensureUnprotectedInScope()} No-Op bleiben und
+     * der nachfolgende {@code setDataArray()}-Aufruf mit einer {@code RuntimeException} scheitern.
+     * <p>
+     * Läuft bereits ein {@linkplain #beginCommandScope Command-Scope}, überlässt diese Methode
+     * dem Scope die Kontrolle (kein zusätzliches Toggle) – {@code endCommandScope} schützt am
+     * Ende ohnehin wieder. Außerhalb eines Scopes wird der physische Zustand vor dem
+     * Schreibvorgang gemerkt und danach exakt wiederhergestellt, statt das Sheet dauerhaft
+     * entsperrt zu belassen.
+     */
+    public void mitFallbackEntsperrt(XSpreadsheet sheet, Runnable schreibvorgang) {
+        if (SCOPE.get() != null) {
+            schreibvorgang.run();
+            return;
+        }
+        var xProt = Lo.qi(XProtectable.class, sheet);
+        boolean warGeschuetzt = xProt.isProtected();
+        if (warGeschuetzt) {
+            xProt.unprotect("");
+        }
+        try {
+            schreibvorgang.run();
+        } finally {
+            if (warGeschuetzt) {
+                xProt.protect("");
+            }
         }
     }
 

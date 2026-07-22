@@ -4,13 +4,22 @@
 
 package de.petanqueturniermanager.helper.sheet.blattschutz;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.Test;
 
+import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.util.XProtectable;
+
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.toolbar.TurnierModus;
 
 /**
@@ -92,5 +101,18 @@ public class BlattschutzScopeRegressionUITest extends BaseCalcUITest {
         } finally {
             TurnierModus.get().setAktivForTest(false);
         }
+    }
+
+    @Test
+    void setDataInRange_ausserhalbScope_stelltPhysischenBlattschutzWiederHer() throws GenerateException {
+        XSpreadsheet sheet = sheetHlp.getSheetByIdx(0);
+        XProtectable protectable = Lo.qi(XProtectable.class, sheet);
+        protectable.protect("");
+        assertThat(protectable.isProtected()).isTrue();
+
+        RangeHelper.from(sheet, doc, RangePosition.from(0, 0))
+                .setDataInRange(new RangeData(new Object[][] { { "Fallback" } }));
+
+        assertThat(protectable.isProtected()).isTrue();
     }
 }

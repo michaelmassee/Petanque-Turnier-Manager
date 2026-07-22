@@ -167,7 +167,10 @@ public class RangeHelper {
 			// setDataArray() wirft RuntimeException auf voll gesperrten Sheets (z.B. Rangliste-Sheets im
 			// Turnier-Modus). Lazy-Entsperren im aktiven Scope; außerhalb eines Scopes No-Op.
 			BlattschutzManager.get().ensureUnprotectedInScope();
-			xCellRangeData.setDataArray(dataArray);
+			// Fallback: der Scope-Zustand basiert auf dem globalen TurnierModus-Singleton und kann vom
+			// physischen Blattschutz dieses konkreten Sheets abweichen (siehe mitFallbackEntsperrt).
+			// Ohne diese Absicherung crasht setDataArray() auf einem noch gesperrten Sheet.
+			BlattschutzManager.get().mitFallbackEntsperrt(xSpreadsheet, () -> xCellRangeData.setDataArray(dataArray));
 		}
 		return this;
 	}
