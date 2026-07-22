@@ -11,6 +11,11 @@ import java.util.concurrent.atomic.AtomicInteger;
  * (GTK/glib) des Dialogs kollidiert sonst mit gleichzeitigem UNO-Zugriff aus einem Fremd-Thread –
  * beobachtet als SIGABRT durch Stack-Corruption in {@code ColorDialog::Execute()}
  * (per CoreDump-Analyse verifiziert, korreliert mit aktivem Webserver-Hintergrundbetrieb).
+ *
+ * <p>Dieselbe Kollisionsklasse gilt fuer die verschachtelte VCL-Event-Loop von
+ * {@code XDialog#execute()} gewoehnlicher UNO-Dialoge – daher wird die Sperre auch um
+ * {@link de.petanqueturniermanager.webserver.CompositeViewDetailDialog#zeigen()} gelegt,
+ * nicht nur um native Picker-Dialoge.
  */
 public final class NativeDialogSperre {
 

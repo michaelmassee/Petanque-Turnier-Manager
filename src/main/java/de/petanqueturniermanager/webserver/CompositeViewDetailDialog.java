@@ -48,6 +48,7 @@ import de.petanqueturniermanager.comp.GlobalProperties;
 import de.petanqueturniermanager.comp.GlobalProperties.CompositeViewEintragRoh;
 import de.petanqueturniermanager.comp.GlobalProperties.PanelEintragRoh;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.NativeDialogSperre;
 import de.petanqueturniermanager.helper.farbe.FarbwahlDialog;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
@@ -205,9 +206,17 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
 
     /**
      * Öffnet den Dialog und gibt den konfigurierten Eintrag zurück, oder {@code null} bei Abbruch.
+     * <p>
+     * Läuft während der verschachtelten Dialog-Event-Loop unter {@link NativeDialogSperre} — siehe
+     * dortige Klassendokumentation zur Kollision mit Fremd-Thread-UNO-Zugriffen (Webserver-Refresh).
      */
     public CompositeViewEintragRoh zeigen() throws com.sun.star.uno.Exception {
-        erstelleUndAusfuehren();
+        NativeDialogSperre.eintreten();
+        try {
+            erstelleUndAusfuehren();
+        } finally {
+            NativeDialogSperre.verlassen();
+        }
         return ergebnis;
     }
 
