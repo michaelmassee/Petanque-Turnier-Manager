@@ -33,10 +33,13 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
+import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
+import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
+import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 
 public class SiegergeldSheet extends SheetRunner implements ISheet {
 
@@ -168,10 +171,13 @@ public class SiegergeldSheet extends SheetRunner implements ISheet {
 		input(sheet, Position.from(1, ZEILE_AUSZAHLUNGSANTEIL));
 
 		label(sheet, ZEILE_STARTGELDTOPF, I18n.get("siegergeld.label.startgeldtopf"));
-		getSheetHelper().setFormulaInCell(sheet, Position.from(1, ZEILE_STARTGELDTOPF), "=B2*B3");
+		getSheetHelper().setFormulaInCell(sheet, Position.from(1, ZEILE_STARTGELDTOPF), "="
+				+ Position.from(1, ZEILE_TEILNEHMER).getAddress() + "*" + Position.from(1, ZEILE_STARTGELD).getAddress());
 
 		label(sheet, ZEILE_AUSZAHLUNGSTOPF, I18n.get("siegergeld.label.auszahlungstopf"));
-		getSheetHelper().setFormulaInCell(sheet, Position.from(1, ZEILE_AUSZAHLUNGSTOPF), "=B5*B4/100");
+		getSheetHelper().setFormulaInCell(sheet, Position.from(1, ZEILE_AUSZAHLUNGSTOPF), "="
+				+ Position.from(1, ZEILE_STARTGELDTOPF).getAddress() + "*"
+				+ Position.from(1, ZEILE_AUSZAHLUNGSANTEIL).getAddress() + "/100");
 	}
 
 	private void schreibeTabellenHeader(XSpreadsheet sheet) throws GenerateException {
@@ -192,34 +198,64 @@ public class SiegergeldSheet extends SheetRunner implements ISheet {
 	}
 
 	private int schreibeEintraege(XSpreadsheet sheet, List<SiegergeldEintrag> eintraege) throws GenerateException {
-		String ersteGruppenName = eintraege.get(0).gruppe();
 		Map<String, Integer> gruppenStartZeilen = gruppenStartZeilen(eintraege);
-		int zeile = ERSTE_DATEN_ZEILE;
-		for (SiegergeldEintrag eintrag : eintraege) {
-			getSheetHelper().setValInCell(sheet, Position.from(SPALTE_PLATZ, zeile), eintrag.platz());
-			getSheetHelper().setValInCell(sheet, Position.from(SPALTE_BETRAG_MANUELL, zeile), 0);
-			input(sheet, Position.from(SPALTE_BETRAG_MANUELL, zeile));
-			if (gruppenStartZeilen.get(eintrag.gruppe()) == zeile) {
-				schreibeGruppenZelle(sheet, eintrag.gruppe(), zeile, gruppenStartZeilen, eintraege);
-				getSheetHelper().setValInCell(sheet, Position.from(SPALTE_GRUPPENANTEIL, zeile),
-						SiegergeldVerteilung.gruppenAnteil(ersteGruppenName, eintrag.gruppe()));
-				input(sheet, Position.from(SPALTE_GRUPPENANTEIL, zeile));
-			}
-			getSheetHelper().setValInCell(sheet, Position.from(SPALTE_PLATZANTEIL, zeile),
-					SiegergeldVerteilung.platzAnteil(eintrag.platz()));
-			input(sheet, Position.from(SPALTE_PLATZANTEIL, zeile));
+		int letzteZeile = ERSTE_DATEN_ZEILE + eintraege.size() - 1;
+
+		schreibeWerteBlock(sheet, eintraege, gruppenStartZeilen, letzteZeile);
+
+		for (Map.Entry<String, Integer> gruppenStart : gruppenStartZeilen.entrySet()) {
+			schreibeGruppenZelle(sheet, gruppenStart.getKey(), gruppenStart.getValue(), gruppenStartZeilen, eintraege);
+			input(sheet, Position.from(SPALTE_GRUPPENANTEIL, gruppenStart.getValue()));
+		}
+
+		for (int i = 0; i < eintraege.size(); i++) {
+			int zeile = ERSTE_DATEN_ZEILE + i;
 			getSheetHelper().setFormulaInCell(sheet, Position.from(SPALTE_BETRAG, zeile),
 					betragFormel(zeile, gruppenStartZeilen, eintraege));
 			getSheetHelper().setFormulaInCell(sheet, Position.from(SPALTE_BETRAG_AUFGERUNDET, zeile),
 					betragAufgerundetFormel(zeile));
-			zeile++;
 		}
-		int letzteZeile = Math.max(ERSTE_DATEN_ZEILE, zeile - 1);
+
 		getSheetHelper().setPropertyInRange(sheet, RangePosition.from(SPALTE_GRUPPE, ERSTE_DATEN_ZEILE,
 				SPALTE_BETRAG_AUFGERUNDET, letzteZeile),
 				CellProperties.TABLE_BORDER2, BorderFactory.from().allThin().toBorder());
 		int summenZeile = letzteZeile + 1;
 		return schreibeSummenZeilen(sheet, summenZeile, letzteZeile, gruppenStartZeilen, eintraege);
+	}
+
+	/**
+	 * Platz-, Betrag-manuell-, Gruppenanteil- und Platzanteil-Spalte als ein Block schreiben
+	 * (RangeHelper/RangeData/RowData) statt zellenweise in der Schleife.
+	 */
+	private void schreibeWerteBlock(XSpreadsheet sheet, List<SiegergeldEintrag> eintraege,
+			Map<String, Integer> gruppenStartZeilen, int letzteZeile) throws GenerateException {
+		String ersteGruppenName = eintraege.get(0).gruppe();
+		RangeData werteBlock = new RangeData();
+		for (int i = 0; i < eintraege.size(); i++) {
+			SiegergeldEintrag eintrag = eintraege.get(i);
+			int zeile = ERSTE_DATEN_ZEILE + i;
+			RowData zeileData = werteBlock.addNewRow();
+			zeileData.newInt(eintrag.platz());
+			zeileData.newInt(0);
+			if (gruppenStartZeilen.get(eintrag.gruppe()) == zeile) {
+				zeileData.newInt(SiegergeldVerteilung.gruppenAnteil(ersteGruppenName, eintrag.gruppe()));
+			} else {
+				zeileData.newEmpty();
+			}
+			zeileData.newInt(SiegergeldVerteilung.platzAnteil(eintrag.platz()));
+		}
+		RangeHelper.from(sheet, getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
+				RangePosition.from(SPALTE_PLATZ, ERSTE_DATEN_ZEILE, SPALTE_PLATZANTEIL, letzteZeile))
+				.setDataInRange(werteBlock);
+
+		CellProperties inputProperties = CellProperties.from().setCellBackColor(INPUT_COLOR)
+				.setHoriJustify(CellHoriJustify.RIGHT);
+		getSheetHelper().setPropertiesInRange(sheet,
+				RangePosition.from(SPALTE_BETRAG_MANUELL, ERSTE_DATEN_ZEILE, SPALTE_BETRAG_MANUELL, letzteZeile),
+				inputProperties);
+		getSheetHelper().setPropertiesInRange(sheet,
+				RangePosition.from(SPALTE_PLATZANTEIL, ERSTE_DATEN_ZEILE, SPALTE_PLATZANTEIL, letzteZeile),
+				inputProperties);
 	}
 
 	private int schreibeSummenZeilen(XSpreadsheet sheet, int summenStartZeile, int letzteEintragZeile,
@@ -280,9 +316,10 @@ public class SiegergeldSheet extends SheetRunner implements ISheet {
 	static String betragFormel(int zeile, Map<String, Integer> gruppenStartZeilen,
 			List<SiegergeldEintrag> eintraege) {
 		String gruppe = eintraege.get(zeile - ERSTE_DATEN_ZEILE).gruppe();
+		String auszahlungstopf = Position.from(1, ZEILE_AUSZAHLUNGSTOPF).getAddressWith$();
 		String gruppenanteil = Position.from(SPALTE_GRUPPENANTEIL, gruppenStartZeilen.get(gruppe)).getAddress();
 		String platzanteil = Position.from(SPALTE_PLATZANTEIL, zeile).getAddress();
-		return "=$B$6*" + gruppenanteil + "/100*" + platzanteil + "/100";
+		return "=" + auszahlungstopf + "*" + gruppenanteil + "/100*" + platzanteil + "/100";
 	}
 
 	static String betragAufgerundetFormel(int zeile) {

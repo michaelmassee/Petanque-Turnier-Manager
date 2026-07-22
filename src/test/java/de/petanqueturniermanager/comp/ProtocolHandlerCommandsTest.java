@@ -105,10 +105,16 @@ public class ProtocolHandlerCommandsTest {
 		String source = Files.readString(Paths.get(
 				"src/main/java/de/petanqueturniermanager/comp/ProtocolHandler.java"));
 
+		// isEnabled(...) ist private und benoetigt einen echten XSpreadsheetDocument-Kontext,
+		// daher hier nur ein Quelltext-Check statt eines echten Verhaltenstests. Die
+		// negativen Lookaheads verhindern, dass die Pattern ueber ein anderes "case" hinweg
+		// (und damit ueber den eigentlichen Switch-Block hinaus) matched.
 		assertThat(source)
 				.as("Siegergeld darf im Menü bei aktivem Turnier nicht grau bleiben")
-				.containsPattern("case\\s+CMD_EXPORT_VERZEICHNIS,[\\s\\S]*"
-						+ "CMD_SIEGERGELD_BERECHNEN[\\s\\S]*"
+				.containsPattern("case\\s+CMD_EXPORT_VERZEICHNIS,\\s*"
+						+ "(?:(?!case\\s)[\\s\\S])*?"
+						+ "CMD_SIEGERGELD_BERECHNEN\\s*"
+						+ "(?:(?!case\\s)[\\s\\S])*?"
 						+ "->\\s*istExportfaehigesTurnier\\(ts\\)");
 	}
 }
