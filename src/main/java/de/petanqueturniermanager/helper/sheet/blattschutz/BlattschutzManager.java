@@ -337,17 +337,16 @@ public class BlattschutzManager {
      * Flag abweichen. In diesem Fall würde {@link #ensureUnprotectedInScope()} No-Op bleiben und
      * der nachfolgende {@code setDataArray()}-Aufruf mit einer {@code RuntimeException} scheitern.
      * <p>
-     * Läuft bereits ein {@linkplain #beginCommandScope Command-Scope}, überlässt diese Methode
-     * dem Scope die Kontrolle (kein zusätzliches Toggle) – {@code endCommandScope} schützt am
-     * Ende ohnehin wieder. Außerhalb eines Scopes wird der physische Zustand vor dem
-     * Schreibvorgang gemerkt und danach exakt wiederhergestellt, statt das Sheet dauerhaft
-     * entsperrt zu belassen.
+     * Prüft den physischen Zustand <em>immer</em> direkt am übergebenen Sheet – auch innerhalb
+     * eines {@linkplain #beginCommandScope Command-Scopes}. Ist das Sheet dort bereits (via
+     * {@code ensureUnprotectedInScope}) entsperrt, ist {@code warGeschuetzt} false und es
+     * passiert kein zusätzliches Toggle. Ist dieses konkrete Sheet abweichend vom Scope-Zustand
+     * dennoch noch gesperrt (z.B. weil es nicht Teil der {@code berechneSchutzInfos()} der
+     * aktiven Konfiguration ist), wird es für die Dauer des Schreibvorgangs entsperrt und
+     * danach exakt wiederhergestellt – {@code endCommandScope} schützt es ohnehin nicht, da es
+     * außerhalb der Konfiguration liegt.
      */
     public void mitFallbackEntsperrt(XSpreadsheet sheet, Runnable schreibvorgang) {
-        if (SCOPE.get() != null) {
-            schreibvorgang.run();
-            return;
-        }
         var xProt = Lo.qi(XProtectable.class, sheet);
         boolean warGeschuetzt = xProt.isProtected();
         if (warGeschuetzt) {

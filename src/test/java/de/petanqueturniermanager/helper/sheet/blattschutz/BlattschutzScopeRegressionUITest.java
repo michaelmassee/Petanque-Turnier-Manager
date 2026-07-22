@@ -115,4 +115,28 @@ public class BlattschutzScopeRegressionUITest extends BaseCalcUITest {
 
         assertThat(protectable.isProtected()).isTrue();
     }
+
+    /**
+     * Regression für die in {@code mitFallbackEntsperrt} beschriebene Lücke: innerhalb eines
+     * aktiven Command-Scopes wird ein Sheet, das nicht Teil der {@code berechneSchutzInfos()}
+     * der aktiven Konfiguration ist (hier simuliert durch manuelles Protect NACH Scope-Start),
+     * physisch trotzdem noch gesperrt sein. Der Schreibvorgang muss trotzdem gelingen.
+     */
+    @Test
+    void setDataInRange_innerhalbScopeAberSheetPhysischGesperrt_schreibtTrotzdem() throws GenerateException {
+        TurnierModus.get().setAktivForTest(true);
+        try (var _ = BlattschutzManager.get().scopeFuer(TurnierSystem.SCHWEIZER, wkingSpreadsheet)) {
+            XSpreadsheet sheet = sheetHlp.getSheetByIdx(0);
+            XProtectable protectable = Lo.qi(XProtectable.class, sheet);
+            protectable.protect("");
+            assertThat(protectable.isProtected()).isTrue();
+
+            RangeHelper.from(sheet, doc, RangePosition.from(0, 0))
+                    .setDataInRange(new RangeData(new Object[][] { { "FallbackImScope" } }));
+
+            assertThat(protectable.isProtected()).isTrue();
+        } finally {
+            TurnierModus.get().setAktivForTest(false);
+        }
+    }
 }
