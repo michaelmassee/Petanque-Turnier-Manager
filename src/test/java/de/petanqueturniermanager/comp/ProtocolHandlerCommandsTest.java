@@ -106,15 +106,13 @@ public class ProtocolHandlerCommandsTest {
 				"src/main/java/de/petanqueturniermanager/comp/ProtocolHandler.java"));
 
 		// isEnabled(...) ist private und benoetigt einen echten XSpreadsheetDocument-Kontext,
-		// daher hier nur ein Quelltext-Check statt eines echten Verhaltenstests. Die
-		// negativen Lookaheads verhindern, dass die Pattern ueber ein anderes "case" hinweg
-		// (und damit ueber den eigentlichen Switch-Block hinaus) matched.
+		// daher hier nur ein Quelltext-Check statt eines echten Verhaltenstests. Siegergeld
+		// wird nur fuer die von SiegergeldQuellen tatsaechlich unterstuetzten Turniersysteme
+		// aktiviert (nicht fuer alle exportfaehigen Systeme wie KO/POULE/KASKADE).
 		assertThat(source)
-				.as("Siegergeld darf im Menü bei aktivem Turnier nicht grau bleiben")
-				.containsPattern("case\\s+CMD_EXPORT_VERZEICHNIS,\\s*"
+				.as("Siegergeld darf im Menü nur für von SiegergeldQuellen unterstützte Turniersysteme aktiv sein")
+				.containsPattern("case\\s+CMD_SIEGERGELD_BERECHNEN\\s*"
 						+ "(?:(?!case\\s)[\\s\\S])*?"
-						+ "CMD_SIEGERGELD_BERECHNEN\\s*"
-						+ "(?:(?!case\\s)[\\s\\S])*?"
-						+ "->\\s*istExportfaehigesTurnier\\(ts\\)");
+						+ "->\\s*SiegergeldQuellen\\.istUnterstuetzt\\(ts\\)");
 	}
 }

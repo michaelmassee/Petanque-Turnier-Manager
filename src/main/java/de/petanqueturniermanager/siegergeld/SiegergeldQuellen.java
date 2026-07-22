@@ -20,9 +20,16 @@ import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
 import de.petanqueturniermanager.triptete.meldeliste.TripTeteMeldeListeSheetUpdate;
 import de.petanqueturniermanager.triptete.rangliste.TripTeteRanglisteSheet;
 
-final class SiegergeldQuellen {
+public final class SiegergeldQuellen {
 
 	private SiegergeldQuellen() {
+	}
+
+	public static boolean istUnterstuetzt(TurnierSystem turnierSystem) {
+		return switch (turnierSystem) {
+		case SUPERMELEE, LIGA, SCHWEIZER, FORMULEX, TRIPTETE, JGJ, MAASTRICHTER -> true;
+		default -> false;
+		};
 	}
 
 	static Optional<SiegergeldQuelle> fuer(WorkingSpreadsheet ws, TurnierSystem turnierSystem) {

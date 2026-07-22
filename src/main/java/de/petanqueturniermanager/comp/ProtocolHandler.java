@@ -152,6 +152,7 @@ import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerSpielrundeSheetNaechste;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerTurnierTestDaten;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerSpielrundeSheetUpdate;
+import de.petanqueturniermanager.siegergeld.SiegergeldQuellen;
 import de.petanqueturniermanager.siegergeld.SiegergeldSheet;
 import de.petanqueturniermanager.formulex.export.FormuleXExportInVerzeichnis;
 import de.petanqueturniermanager.formulex.export.FormuleXFtpUpload;
@@ -1917,8 +1918,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			}
 			return switch (command) {
 			case CMD_EXPORT_VERZEICHNIS,
-				 CMD_EXPORT_FTP_UPLOAD,
-				 CMD_SIEGERGELD_BERECHNEN                 -> istExportfaehigesTurnier(ts);
+				 CMD_EXPORT_FTP_UPLOAD                    -> istExportfaehigesTurnier(ts);
+			case CMD_SIEGERGELD_BERECHNEN                 -> SiegergeldQuellen.istUnterstuetzt(ts);
 			// SuperMelee: neues Turnier nur wenn keins aktiv
 			case CMD_NEUE_MELDELISTE                        -> ts == TurnierSystem.KEIN;
 			// SuperMelee-Aktionen: nur wenn SuperMelee aktiv
