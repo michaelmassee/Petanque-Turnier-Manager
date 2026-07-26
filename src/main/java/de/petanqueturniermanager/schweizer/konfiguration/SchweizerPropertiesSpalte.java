@@ -113,6 +113,7 @@ public class SchweizerPropertiesSpalte extends BasePropertiesSpalte implements I
 				.setDefaultVal(7).setDescription("config.desc.freispiel.punkte.minus"));
 
 		ADDUploadProp(KONFIG_PROPERTIES);
+		ADDSpielrundenExportProp(KONFIG_PROPERTIES);
 
 	}
 

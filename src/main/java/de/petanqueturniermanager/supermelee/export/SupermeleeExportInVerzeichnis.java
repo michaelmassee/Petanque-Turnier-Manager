@@ -5,6 +5,7 @@ package de.petanqueturniermanager.supermelee.export;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -49,9 +50,11 @@ public class SupermeleeExportInVerzeichnis extends AbstractExportInVerzeichnis {
         String turniername = StringUtils.defaultIfBlank(StringUtils.strip(konfiguration.getKopfZeileMitte()),
                 TurnierSystem.SUPERMELEE.getBezeichnung());
 
+        boolean spielrundenExportieren = konfiguration.isSpielrundenExportieren();
         List<String> spieltagSheetNamen = new ArrayList<>();
         List<String> spieltagSchluessel = new ArrayList<>();
         List<String> spieltagTitel = new ArrayList<>();
+        List<SpielrundePlanEintrag> spielrundenPlaene = new ArrayList<>();
         for (int nr = 1; nr <= anzahlSpieltage; nr++) {
             var schluessel = SheetMetadataHelper.schluesselSpieltagRangliste(nr);
             var xSheet = SheetMetadataHelper.findeSheetUndHeile(xDoc, schluessel, SheetNamen.spieltagRangliste(nr));
@@ -61,6 +64,9 @@ public class SupermeleeExportInVerzeichnis extends AbstractExportInVerzeichnis {
             spieltagSheetNamen.add(Lo.qi(XNamed.class, xSheet).getName());
             spieltagSchluessel.add(schluessel);
             spieltagTitel.add(I18n.get("export.supermelee.spieltag", nr));
+            if (spielrundenExportieren) {
+                spielrundenPlaene.addAll(spielrundenPlaeneFuerSpieltag(nr));
+            }
         }
 
         var endranglisteSchluessel = SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_ENDRANGLISTE;
@@ -77,6 +83,9 @@ public class SupermeleeExportInVerzeichnis extends AbstractExportInVerzeichnis {
         if (getFormat().istEinDokument()) {
             List<ExportHtmlSeite.Section> sections = sections(endranglisteSchluessel, endranglisteSheetName, null,
                     spieltagSchluessel, spieltagSheetNamen, spieltagTitel, null);
+            for (var plan : spielrundenPlaene) {
+                sections.add(new ExportHtmlSeite.Section(plan.schluessel(), plan.sheetName(), plan.sheetName(), null));
+            }
             processBox().info(I18n.get("export.info.ein.dokument", getFormat().anzeigeName()));
             Path dokument = exportiereEinDokument(zielVerzeichnis, "SuperMelee", turniername, turnierlogoUrl,
                     getFormat(), sections);
@@ -108,11 +117,43 @@ public class SupermeleeExportInVerzeichnis extends AbstractExportInVerzeichnis {
         processBox().info(I18n.get("export.info.html"));
         List<ExportHtmlSeite.Section> sections = sections(endranglisteSchluessel, endranglisteSheetName,
                 buildPdfUrl(pdfEndrangliste), spieltagSchluessel, spieltagSheetNamen, spieltagTitel, spieltagPdfUrls);
+        for (var plan : spielrundenPlaene) {
+            Path pdf = exportierePdfAusHtml(plan.sheetName(), plan.sheetName(), zielVerzeichnis);
+            if (pdf != null) {
+                exportierteDateien.add(pdf);
+            }
+            sections.add(new ExportHtmlSeite.Section(plan.schluessel(), plan.sheetName(), plan.sheetName(), buildPdfUrl(pdf)));
+        }
         exportiereHtml(zielVerzeichnis, "SuperMelee.html", turniername, turnierlogoUrl, sections)
                 .addTo(exportierteDateien);
 
         return new ExportErgebnis(exportierteDateien);
     }
+
+    /** Findet alle Spielrunden-Plan-Sheets (Paarungen) eines Spieltags, sortiert nach Rundennummer. */
+    private List<SpielrundePlanEintrag> spielrundenPlaeneFuerSpieltag(int spieltagNr) {
+        var doc = getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
+        String prefix = SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_SPIELRUNDE_PLAN_PREFIX + spieltagNr + "_";
+        var result = new ArrayList<SpielrundePlanEintrag>();
+        for (String schluessel : SheetMetadataHelper.getSchluesselMitPrefix(doc, prefix)) {
+            String rest = schluessel.substring(prefix.length());
+            if (rest.endsWith(SheetMetadataHelper.SCHLUESSEL_SUFFIX)) {
+                rest = rest.substring(0, rest.length() - SheetMetadataHelper.SCHLUESSEL_SUFFIX.length());
+            }
+            int rundeNr;
+            try {
+                rundeNr = Integer.parseInt(rest);
+            } catch (NumberFormatException e) {
+                continue;
+            }
+            String sheetName = sheetNamePerSchluessel(schluessel, SheetNamen.spielrundePlan(spieltagNr, rundeNr));
+            result.add(new SpielrundePlanEintrag(schluessel, rundeNr, sheetName));
+        }
+        result.sort(Comparator.comparingInt(SpielrundePlanEintrag::rundeNr));
+        return result;
+    }
+
+    private record SpielrundePlanEintrag(String schluessel, int rundeNr, String sheetName) {}
 
     private static List<ExportHtmlSeite.Section> sections(String endranglisteSchluessel, String endranglisteSheetName,
             String endranglistePdfUrl, List<String> spieltagSchluessel, List<String> spieltagSheetNamen,

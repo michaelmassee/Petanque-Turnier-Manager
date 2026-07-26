@@ -41,6 +41,13 @@ public class PouleExportInVerzeichnis extends AbstractExportInVerzeichnis {
         String meldelisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_POULE_MELDELISTE, SheetNamen.meldeliste());
         String ranglisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_POULE_VORRUNDEN_RANGLISTE, SheetNamen.pouleVorrundenRangliste());
         boolean meldelisteExportieren = konfiguration.isMeldelisteExportieren();
+        boolean spielrundenExportieren = konfiguration.isSpielrundenExportieren();
+        var spielplaene = spielrundenExportieren
+                ? rundenSheetEintraegePerSchluessel(SheetMetadataHelper.SCHLUESSEL_POULE_SPIELPLAN_PREFIX, SheetNamen::pouleSpielplan)
+                : List.<RundenSheetEintrag>of();
+        var koSheets = spielrundenExportieren
+                ? buchstabenSheetEintraegePerSchluessel(SheetMetadataHelper::schluesselPouleKo, SheetNamen::koFinaleGruppe)
+                : List.<SheetEintrag>of();
         String titel = StringUtils.defaultIfBlank(StringUtils.strip(konfiguration.getKopfZeileMitte()),
                 TurnierSystem.POULE.getBezeichnung());
         String turnierlogoUrl = StringUtils.strip(konfiguration.getTurnierlogoUrl());
@@ -49,6 +56,14 @@ public class PouleExportInVerzeichnis extends AbstractExportInVerzeichnis {
             List<ExportHtmlSeite.Section> sections = sectionsMitOptionalerMeldelisteUndRangliste(
                     meldelisteSheetName, meldelisteExportieren, I18n.get("export.nav.poule.vorrunden.rangliste"),
                     ranglisteSheetName, null);
+            for (var plan : spielplaene) {
+                sections.add(new ExportHtmlSeite.Section("spielplan-" + plan.rundeNr(), plan.sheetName(),
+                        plan.sheetName(), null));
+            }
+            for (var ko : koSheets) {
+                sections.add(new ExportHtmlSeite.Section("ko-" + ko.buchstabe(),
+                        I18n.get("export.ko.nav.turnierbaum.gruppe", ko.buchstabe()), ko.sheetName(), null));
+            }
             processBox().info(I18n.get("export.info.ein.dokument", getFormat().anzeigeName()));
             Path dokument = exportiereEinDokument(zielVerzeichnis, "Poule", titel, turnierlogoUrl, getFormat(), sections);
             List<Path> exportierteDateien = new ArrayList<>();
@@ -70,6 +85,22 @@ public class PouleExportInVerzeichnis extends AbstractExportInVerzeichnis {
         List<ExportHtmlSeite.Section> sections = sectionsMitOptionalerMeldelisteUndRangliste(
                 meldelisteSheetName, meldelisteExportieren, I18n.get("export.nav.poule.vorrunden.rangliste"),
                 ranglisteSheetName, buildPdfUrl(pdfRangliste));
+        for (var plan : spielplaene) {
+            Path pdf = exportierePdfAusHtml(plan.sheetName(), plan.sheetName(), zielVerzeichnis);
+            if (pdf != null) {
+                exportierteDateien.add(pdf);
+            }
+            sections.add(new ExportHtmlSeite.Section("spielplan-" + plan.rundeNr(), plan.sheetName(),
+                    plan.sheetName(), buildPdfUrl(pdf)));
+        }
+        for (var ko : koSheets) {
+            var koTitel = I18n.get("export.ko.nav.turnierbaum.gruppe", ko.buchstabe());
+            Path pdf = exportierePdfAusHtml(ko.sheetName(), koTitel, zielVerzeichnis);
+            if (pdf != null) {
+                exportierteDateien.add(pdf);
+            }
+            sections.add(new ExportHtmlSeite.Section("ko-" + ko.buchstabe(), koTitel, ko.sheetName(), buildPdfUrl(pdf)));
+        }
         exportiereHtmlMitMeldelisteDruckbereich(meldelisteExportieren, meldelisteSheetName,
                 zielVerzeichnis, "Poule.html", titel, turnierlogoUrl, sections)
                 .addTo(exportierteDateien);

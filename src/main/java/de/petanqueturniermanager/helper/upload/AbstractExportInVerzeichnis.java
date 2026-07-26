@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -313,6 +314,35 @@ public abstract class AbstractExportInVerzeichnis extends SheetRunner {
     }
 
     public record SheetEintrag(String buchstabe, String schluessel, String sheetName) {}
+
+    /**
+     * Iteriert alle Sheets, deren Metadaten-Schlüssel mit {@code prefix} beginnt und mit einer
+     * Rundennummer endet (optional gefolgt von {@link SheetMetadataHelper#SCHLUESSEL_SUFFIX}),
+     * und liefert sie aufsteigend nach Rundennummer sortiert. Für Systeme mit numerierten
+     * Spielrunden-Sheets (Schweizer, FormuleX, Poule-Spielpläne).
+     */
+    protected List<RundenSheetEintrag> rundenSheetEintraegePerSchluessel(String prefix, Function<Integer, String> fallbackFunktion) {
+        var doc = getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
+        var result = new ArrayList<RundenSheetEintrag>();
+        for (String schluessel : SheetMetadataHelper.getSchluesselMitPrefix(doc, prefix)) {
+            String rest = schluessel.substring(prefix.length());
+            if (rest.endsWith(SheetMetadataHelper.SCHLUESSEL_SUFFIX)) {
+                rest = rest.substring(0, rest.length() - SheetMetadataHelper.SCHLUESSEL_SUFFIX.length());
+            }
+            int rundeNr;
+            try {
+                rundeNr = Integer.parseInt(rest);
+            } catch (NumberFormatException e) {
+                continue;
+            }
+            String sheetName = sheetNamePerSchluessel(schluessel, fallbackFunktion.apply(rundeNr));
+            result.add(new RundenSheetEintrag(rundeNr, schluessel, sheetName));
+        }
+        result.sort(Comparator.comparingInt(RundenSheetEintrag::rundeNr));
+        return result;
+    }
+
+    public record RundenSheetEintrag(int rundeNr, String schluessel, String sheetName) {}
 
     protected String buildPdfUrl(Path pdf) {
         return dateiName(pdf);

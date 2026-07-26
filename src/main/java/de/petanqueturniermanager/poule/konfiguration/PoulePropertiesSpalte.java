@@ -31,6 +31,7 @@ public class PoulePropertiesSpalte extends BasePropertiesSpalte implements IPoul
     static {
 
 		ADDUploadProp(KONFIG_PROPERTIES);
+		ADDSpielrundenExportProp(KONFIG_PROPERTIES);
         ADDBaseProp(KONFIG_PROPERTIES, false); // Rangliste-Farben noch nicht benötigt
         addCheckinSortProp(KONFIG_PROPERTIES);
         addTeilnehmerListeSortProp(KONFIG_PROPERTIES);

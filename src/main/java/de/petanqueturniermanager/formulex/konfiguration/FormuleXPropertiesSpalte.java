@@ -103,6 +103,7 @@ public class FormuleXPropertiesSpalte extends BasePropertiesSpalte implements IF
                 .setDefaultVal(0).setDescription("config.desc.freispiel.punkte.minus"));
 
         ADDUploadProp(KONFIG_PROPERTIES);
+        ADDSpielrundenExportProp(KONFIG_PROPERTIES);
     }
 
     FormuleXPropertiesSpalte(ISheet sheet) {

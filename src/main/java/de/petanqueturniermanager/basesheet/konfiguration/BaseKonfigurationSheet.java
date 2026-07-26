@@ -219,6 +219,11 @@ public abstract class BaseKonfigurationSheet extends SheetRunner implements IPro
 	}
 
 	@Override
+	public final boolean isSpielrundenExportieren() {
+		return getPropertiesSpalte().isSpielrundenExportieren();
+	}
+
+	@Override
 	public final int getMeldelisteTabFarbe() {
 		return getPropertiesSpalte().getMeldelisteTabFarbe();
 	}

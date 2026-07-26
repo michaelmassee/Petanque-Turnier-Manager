@@ -177,6 +177,7 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 		}
 
 		ADDUploadProp(KONFIG_PROPERTIES);
+		ADDSpielrundenExportProp(KONFIG_PROPERTIES);
 	}
 
 	public static final String PROP_SPIELTAG_KOPFZEILE(int spielTagNr) {

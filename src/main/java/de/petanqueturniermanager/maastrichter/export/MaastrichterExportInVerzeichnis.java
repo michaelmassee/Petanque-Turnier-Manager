@@ -41,6 +41,9 @@ public class MaastrichterExportInVerzeichnis extends AbstractExportInVerzeichnis
         String meldelisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_MELDELISTE, SheetNamen.meldeliste());
         boolean meldelisteExportieren = konfiguration.isMeldelisteExportieren();
         String ranglisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX, SheetNamen.maastrichterVorrundenRangliste());
+        var vorrunden = konfiguration.isSpielrundenExportieren()
+                ? rundenSheetEintraegePerSchluessel(SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX, SheetNamen::maastrichterVorrunde)
+                : List.<RundenSheetEintrag>of();
         String titel = StringUtils.defaultIfBlank(StringUtils.strip(konfiguration.getKopfZeileMitte()),
                 TurnierSystem.MAASTRICHTER.getBezeichnung());
         var finalrunden = buchstabenSheetEintraegePerSchluessel(
@@ -51,6 +54,10 @@ public class MaastrichterExportInVerzeichnis extends AbstractExportInVerzeichnis
             List<ExportHtmlSeite.Section> sections = new ArrayList<>();
             if (meldelisteExportieren) {
                 sections.add(new ExportHtmlSeite.Section("meldeliste", I18n.get("export.nav.meldeliste"), meldelisteSheetName, null));
+            }
+            for (var vorrunde : vorrunden) {
+                sections.add(new ExportHtmlSeite.Section("vorrunde-" + vorrunde.rundeNr(), vorrunde.sheetName(),
+                        vorrunde.sheetName(), null));
             }
             sections.add(new ExportHtmlSeite.Section("vorrunden-rangliste",
                     I18n.get("export.maastrichter.nav.vorrunden.rangliste"), ranglisteSheetName, null));
@@ -74,6 +81,15 @@ public class MaastrichterExportInVerzeichnis extends AbstractExportInVerzeichnis
 
         if (meldelisteExportieren) {
             sections.add(new ExportHtmlSeite.Section("meldeliste", I18n.get("export.nav.meldeliste"), meldelisteSheetName, null));
+        }
+
+        for (var vorrunde : vorrunden) {
+            Path pdf = exportierePdfAusHtml(vorrunde.sheetName(), vorrunde.sheetName(), zielVerzeichnis);
+            if (pdf != null) {
+                exportierteDateien.add(pdf);
+            }
+            sections.add(new ExportHtmlSeite.Section("vorrunde-" + vorrunde.rundeNr(), vorrunde.sheetName(),
+                    vorrunde.sheetName(), buildPdfUrl(pdf)));
         }
 
         Path pdfRangliste = exportierePdfAusHtml(ranglisteSheetName, I18n.get("export.maastrichter.nav.vorrunden.rangliste"), zielVerzeichnis);

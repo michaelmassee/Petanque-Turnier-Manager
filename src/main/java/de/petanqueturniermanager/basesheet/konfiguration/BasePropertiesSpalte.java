@@ -69,6 +69,7 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 
 	// Export
 	public static final String KONFIG_PROP_MELDELISTE_EXPORTIEREN = "Meldeliste exportieren";
+	public static final String KONFIG_PROP_SPIELRUNDEN_EXPORTIEREN = "Spielrunden exportieren";
 
 	// Tab-Farben (Document Properties Schlüssel)
 	public static final String KONFIG_PROP_TAB_COLOR_MELDELISTE      = "Tab-Farbe Meldeliste";
@@ -199,6 +200,17 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 				.setDefaultVal(false).setDescription("config.desc.meldeliste.exportieren").exportKonfig());
 	}
 
+	/**
+	 * Fügt die Export-Property „Spielrunden exportieren" hinzu, markiert mit
+	 * {@link de.petanqueturniermanager.konfigdialog.ConfigProperty#exportKonfig()}.
+	 * Aufzurufen von jedem System, dessen Export standardmäßig keine Spielrunden-/Paarungs-Sheets
+	 * enthält (Schweizer, FormuleX, Poule, Supermelee).
+	 */
+	protected static void ADDSpielrundenExportProp(List<ConfigProperty<?>> KONFIG_PROPERTIES) {
+		KONFIG_PROPERTIES.add(ConfigProperty.<Boolean>from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_SPIELRUNDEN_EXPORTIEREN)
+				.setDefaultVal(false).setDescription("config.desc.spielrunden.exportieren").exportKonfig());
+	}
+
 	protected BasePropertiesSpalte(ISheet sheet) {
 		this.iSheet = checkNotNull(sheet);
 		docPropHelper = newDocumentPropertiesHelper(sheet.getWorkingSpreadsheet());
@@ -284,6 +296,11 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	@Override
 	public boolean isMeldelisteExportieren() {
 		return readBooleanProperty(KONFIG_PROP_MELDELISTE_EXPORTIEREN);
+	}
+
+	@Override
+	public boolean isSpielrundenExportieren() {
+		return readBooleanProperty(KONFIG_PROP_SPIELRUNDEN_EXPORTIEREN);
 	}
 
 	/**
