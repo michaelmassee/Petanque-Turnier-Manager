@@ -12,11 +12,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.sun.star.awt.ActionEvent;
+import com.sun.star.awt.ItemEvent;
 import com.sun.star.awt.XActionListener;
 import com.sun.star.awt.XButton;
 import com.sun.star.awt.XContainerWindowEventHandler;
 import com.sun.star.awt.XControl;
 import com.sun.star.awt.XControlContainer;
+import com.sun.star.awt.XItemListener;
 import com.sun.star.awt.XListBox;
 import com.sun.star.awt.XWindow;
 import com.sun.star.awt.XWindowPeer;
@@ -63,6 +65,7 @@ public final class FtpServerOptionsEventHandler extends WeakBase
 	private static final String CTL_LISTE = "FtpServerListe";
 	private static final String CTL_HINZUFUEGEN = "FtpServerHinzufuegen";
 	private static final String CTL_BEARBEITEN = "FtpServerBearbeiten";
+	private static final String CTL_KLONEN = "FtpServerKlonen";
 	private static final String CTL_LOESCHEN = "FtpServerLoeschen";
 
 	private final XComponentContext context;
@@ -111,6 +114,7 @@ public final class FtpServerOptionsEventHandler extends WeakBase
 		setLabel(container, CTL_FTP_SERVER_LABEL, I18n.get("ftp.server.konfig.bereich"));
 		setLabel(container, CTL_HINZUFUEGEN, I18n.get("ftp.server.konfig.btn.hinzufuegen"));
 		setLabel(container, CTL_BEARBEITEN, I18n.get("ftp.server.konfig.btn.bearbeiten"));
+		setLabel(container, CTL_KLONEN, I18n.get("ftp.server.konfig.btn.klonen"));
 		setLabel(container, CTL_LOESCHEN, I18n.get("ftp.server.konfig.btn.loeschen"));
 		if (eintraege == null) {
 			eintraege = new ArrayList<>(GlobalProperties.get().getFtpServerEintraege());
@@ -133,7 +137,9 @@ public final class FtpServerOptionsEventHandler extends WeakBase
 		}
 		registriereActionListener(container, CTL_HINZUFUEGEN, () -> fuegeZeileHinzu(container));
 		registriereActionListener(container, CTL_BEARBEITEN, () -> bearbeiteZeile(container));
+		registriereActionListener(container, CTL_KLONEN, () -> kloneZeile(container));
 		registriereActionListener(container, CTL_LOESCHEN, () -> loescheZeile(container));
+		registriereAuswahlListener(container, () -> aktualisiereAuswahlAbhaengigeButtons(container));
 		listenerContainer = container;
 	}
 
@@ -174,6 +180,33 @@ public final class FtpServerOptionsEventHandler extends WeakBase
 		}
 	}
 
+	private void kloneZeile(XControlContainer container) {
+		int idx = selectedPos(container, CTL_LISTE);
+		if (idx < 0 || idx >= eintraege.size()) {
+			zeigeFehler(I18n.get("ftp.server.konfig.fehler.keine.auswahl"));
+			return;
+		}
+		FtpServerEintrag original = eintraege.get(idx);
+		FtpServerEintrag klon = new FtpServerEintrag(null, eindeutigerKlonName(original.anzeigeName()),
+				original.protokoll(), original.host(), original.port(), original.benutzer(), original.passwort(),
+				original.remotePfad());
+		eintraege.add(klon);
+		aktualisiereListe(container);
+	}
+
+	/** Haengt an {@code basisName} einen Kopie-Suffix an, der noch nicht in {@link #eintraege} vorkommt. */
+	private String eindeutigerKlonName(String basisName) {
+		String kandidat = I18n.get("ftp.server.konfig.klon.name", basisName);
+		for (int zaehler = 2; existiertName(kandidat); zaehler++) {
+			kandidat = I18n.get("ftp.server.konfig.klon.name.nummeriert", basisName, zaehler);
+		}
+		return kandidat;
+	}
+
+	private boolean existiertName(String name) {
+		return eintraege.stream().anyMatch(e -> e.anzeigeName().equals(name));
+	}
+
 	private void loescheZeile(XControlContainer container) {
 		int idx = selectedPos(container, CTL_LISTE);
 		if (idx < 0 || idx >= eintraege.size()) {
@@ -197,6 +230,14 @@ public final class FtpServerOptionsEventHandler extends WeakBase
 		String[] items = eintraege.stream().map(FtpServerOptionsEventHandler::formatiereZeile)
 				.toArray(String[]::new);
 		setListItems(container, CTL_LISTE, items);
+		aktualisiereAuswahlAbhaengigeButtons(container);
+	}
+
+	/** Klonen/Loeschen sind nur sinnvoll, solange in der Liste ein Eintrag ausgewaehlt ist. */
+	private void aktualisiereAuswahlAbhaengigeButtons(XControlContainer container) {
+		boolean auswahlVorhanden = selectedPos(container, CTL_LISTE) >= 0;
+		setEnabled(container, CTL_KLONEN, auswahlVorhanden);
+		setEnabled(container, CTL_LOESCHEN, auswahlVorhanden);
 	}
 
 	private static String formatiereZeile(FtpServerEintrag e) {
@@ -248,6 +289,22 @@ public final class FtpServerOptionsEventHandler extends WeakBase
 		}
 	}
 
+	private static void setEnabled(XControlContainer container, String name, boolean enabled) {
+		XControl control = container.getControl(name);
+		if (control == null) {
+			return;
+		}
+		XPropertySet props = UnoRuntime.queryInterface(XPropertySet.class, control.getModel());
+		if (props == null) {
+			return;
+		}
+		try {
+			props.setPropertyValue("Enabled", enabled);
+		} catch (Exception e) {
+			logger.debug("Enabled fuer Control {} konnte nicht gesetzt werden", name, e);
+		}
+	}
+
 	private static void setLabel(XControlContainer container, String name, String label) {
 		XControl control = container.getControl(name);
 		if (control == null) {
@@ -272,6 +329,24 @@ public final class FtpServerOptionsEventHandler extends WeakBase
 		button.addActionListener(new XActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent event) {
+				aktion.run();
+			}
+
+			@Override
+			public void disposing(EventObject event) {
+				// nichts zu tun
+			}
+		});
+	}
+
+	private static void registriereAuswahlListener(XControlContainer container, Runnable aktion) {
+		XListBox listBox = control(container, CTL_LISTE, XListBox.class);
+		if (listBox == null) {
+			return;
+		}
+		listBox.addItemListener(new XItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent event) {
 				aktion.run();
 			}
 

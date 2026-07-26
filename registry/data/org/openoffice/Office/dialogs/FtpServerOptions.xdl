@@ -8,8 +8,9 @@
     <dlg:bulletinboard>
         <dlg:text dlg:id="FtpServerLabel" dlg:tab-index="0" dlg:left="6" dlg:top="6" dlg:width="248" dlg:height="10" dlg:value=""/>
         <dlg:menulist dlg:id="FtpServerListe" dlg:tab-index="1" dlg:left="6" dlg:top="20" dlg:width="248" dlg:height="134" dlg:linecount="9"/>
-        <dlg:button dlg:id="FtpServerHinzufuegen" dlg:tab-index="2" dlg:left="6" dlg:top="158" dlg:width="78" dlg:height="14" dlg:value=""/>
-        <dlg:button dlg:id="FtpServerBearbeiten" dlg:tab-index="3" dlg:left="88" dlg:top="158" dlg:width="78" dlg:height="14" dlg:value=""/>
-        <dlg:button dlg:id="FtpServerLoeschen" dlg:tab-index="4" dlg:left="170" dlg:top="158" dlg:width="78" dlg:height="14" dlg:value=""/>
+        <dlg:button dlg:id="FtpServerHinzufuegen" dlg:tab-index="2" dlg:left="6" dlg:top="158" dlg:width="59" dlg:height="14" dlg:value=""/>
+        <dlg:button dlg:id="FtpServerBearbeiten" dlg:tab-index="3" dlg:left="69" dlg:top="158" dlg:width="59" dlg:height="14" dlg:value=""/>
+        <dlg:button dlg:id="FtpServerKlonen" dlg:tab-index="4" dlg:left="132" dlg:top="158" dlg:width="59" dlg:height="14" dlg:value=""/>
+        <dlg:button dlg:id="FtpServerLoeschen" dlg:tab-index="5" dlg:left="195" dlg:top="158" dlg:width="59" dlg:height="14" dlg:value=""/>
     </dlg:bulletinboard>
 </dlg:window>
