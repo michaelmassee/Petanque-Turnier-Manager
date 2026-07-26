@@ -27,7 +27,7 @@ import de.petanqueturniermanager.helper.i18n.I18n;
 public final class NotebookLmExporter {
 
     private static final Logger logger = LogManager.getLogger(NotebookLmExporter.class);
-    private static final DateTimeFormatter ORDNER_ZEITSTEMPEL = DateTimeFormatter.ofPattern("yyyy-MM-dd_HHmm");
+    private static final DateTimeFormatter ORDNER_ZEITSTEMPEL = DateTimeFormatter.ofPattern("yyyy-MM-dd_HHmmss");
 
     static final String DOKU_CLASSPATH_BASIS = "de/petanqueturniermanager/doku/";
     static final String DOKU_INDEX_RESOURCE = DOKU_CLASSPATH_BASIS + "index.txt";
@@ -61,7 +61,13 @@ public final class NotebookLmExporter {
      * Export-Ordner (inkl. Dokumentation-Unterordner) an und gibt dessen Pfad zurück.
      */
     public static Path bereiteExportOrdnerVor(Path basisVerzeichnis) throws GenerateException {
-        Path ordner = basisVerzeichnis.resolve("NotebookLM-Export-" + LocalDateTime.now().format(ORDNER_ZEITSTEMPEL));
+        String zeitstempel = LocalDateTime.now().format(ORDNER_ZEITSTEMPEL);
+        Path ordner = basisVerzeichnis.resolve("NotebookLM-Export-" + zeitstempel);
+        for (int suffix = 2; Files.exists(ordner); suffix++) {
+            // Zwei Exporte innerhalb derselben Sekunde: eindeutigen Ordner statt stillem
+            // Überschreiben von Quellen.md/Dokumentation/Turnierdaten des ersten Laufs.
+            ordner = basisVerzeichnis.resolve("NotebookLM-Export-" + zeitstempel + "-" + suffix);
+        }
         try {
             Files.createDirectories(ordner.resolve(DOKUMENTATION_UNTERORDNER));
         } catch (IOException e) {

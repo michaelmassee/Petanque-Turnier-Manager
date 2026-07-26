@@ -1436,6 +1436,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				Thread.currentThread().interrupt();
 				throw new GenerateException("Export für Gemini Notebook unterbrochen: " + e.getMessage());
 			}
+			if (runner.isLetzterLaufFehlgeschlagen()) {
+				throw new GenerateException(I18n.get("notebooklm.export.turnierdaten.fehlgeschlagen"));
+			}
 		}
 
 		NotebookLmExporter.oeffneExportOrdner(zielVerzeichnis);

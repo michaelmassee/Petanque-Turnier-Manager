@@ -84,6 +84,15 @@ public abstract class SheetRunner extends Thread {
 	 */
 	private volatile boolean documentDisposed = false;
 
+	/**
+	 * Gesetzt am Ende von {@link #run()}, wenn {@code doRun()} mit einer nicht als
+	 * Abbruch gewerteten Exception fehlgeschlagen ist. Erlaubt Aufrufern, die per
+	 * {@code start()}+{@code join()} synchron auf den Runner warten (z.B. der
+	 * NotebookLM-Export in {@code ProtocolHandler}), den Erfolg zu prüfen, statt
+	 * anschließend blind einen Erfolgsdialog zu zeigen.
+	 */
+	private volatile boolean istFehlgeschlagen = false;
+
 	private final XEventListener disposingListener = new XEventListener() {
 		@Override
 		public void disposing(EventObject event) {
@@ -227,6 +236,7 @@ public abstract class SheetRunner extends Thread {
 					documentDisposed = true;
 					logger.debug("Dokument disposed während SheetRunner – sauberer Abbruch", e);
 				} catch (GenerateException e) {
+					istFehlgeschlagen = true;
 					handleGenerateException(e);
 				} catch (Exception e) {
 					if (!isDocumentAlive()) {
@@ -244,6 +254,7 @@ public abstract class SheetRunner extends Thread {
 						getLogger().error(e.getMessage(), e);
 					}
 				} finally {
+					istFehlgeschlagen = istFehlgeschlagen || isFehler;
 					koordinator.setLaeuft(false); // Immer an erste stelle diesen flag zurück
 					// Lazy-Unprotect-Scope schließen: wenn unterwegs entsperrt wurde, jetzt einmal schützen.
 					// Idempotent (No-Op falls kein Scope offen war), eigene try/finally-Robustheit im Manager.
@@ -598,6 +609,14 @@ public abstract class SheetRunner extends Thread {
 
 	public static boolean isRunning() {
 		return koordinator.isRunning();
+	}
+
+	/**
+	 * @return {@code true}, wenn der (bereits abgeschlossene) Lauf mit einer Exception
+	 *         fehlgeschlagen ist. Nur nach {@code start()}+{@code join()} aussagekräftig.
+	 */
+	public boolean isLetzterLaufFehlgeschlagen() {
+		return istFehlgeschlagen;
 	}
 
 	/**
