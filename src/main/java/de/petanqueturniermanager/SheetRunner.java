@@ -234,6 +234,10 @@ public abstract class SheetRunner extends Thread {
 					}
 				} catch (DisposedException e) {
 					documentDisposed = true;
+					// Aus UI-Sicht ein sauberer Abbruch (kein ERROR-Log), aber die eigentliche
+					// Arbeit wurde nicht abgeschlossen – für start()+join()-Aufrufer wie den
+					// NotebookLM-Export zählt das als Fehlschlag (isLetzterLaufFehlgeschlagen()).
+					istFehlgeschlagen = true;
 					logger.debug("Dokument disposed während SheetRunner – sauberer Abbruch", e);
 				} catch (GenerateException e) {
 					istFehlgeschlagen = true;
@@ -246,6 +250,7 @@ public abstract class SheetRunner extends Thread {
 						// DisposedException, damit kein ERROR-Log entsteht (z.B. async
 						// SpielplanFormatiererSheetRunner beim Test-/Fenster-Teardown).
 						documentDisposed = true;
+						istFehlgeschlagen = true;
 						logger.debug("Dokument disposed während SheetRunner (generische UNO-Exception) – sauberer Abbruch", e);
 					} else {
 						isFehler = true;
