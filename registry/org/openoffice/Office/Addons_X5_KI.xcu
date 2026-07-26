@@ -41,6 +41,22 @@
 									<value>_self</value>
 								</prop>
 							</node>
+
+							<node oor:name="X5X2" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Für Gemini Notebook exportieren</value>
+									<value xml:lang="en">Export for Gemini Notebook</value>
+									<value xml:lang="es">Exportar para Gemini Notebook</value>
+									<value xml:lang="fr">Exporter pour Gemini Notebook</value>
+									<value xml:lang="nl">Exporteren voor Gemini Notebook</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:export_notebooklm</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
 						</node>
 					</node>
 				</node>

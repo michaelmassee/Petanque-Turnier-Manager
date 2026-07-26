@@ -201,6 +201,14 @@ class ExportInVerzeichnisSmokeUITest extends BaseCalcUITest {
         assertThat(datei).exists().isRegularFile();
         assertThat(datei.getFileName().toString())
                 .endsWith("." + format.dateiEndung());
+
+        if (format == ExportFormat.EIN_DOKUMENT_MD) {
+            String inhalt = Files.readString(datei, StandardCharsets.UTF_8);
+            assertThat(inhalt)
+                    .as("Markdown-Export muss die Tabellendaten enthalten, nicht nur Überschriften")
+                    .contains("Boule")
+                    .contains("| --- |");
+        }
     }
 
     static Stream<ExportFormat> einDokumentFormate() {

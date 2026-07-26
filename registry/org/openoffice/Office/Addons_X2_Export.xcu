@@ -35,11 +35,11 @@
 						<node oor:name="Submenu">
 							<node oor:name="X2A1" oor:op="replace">
 								<prop oor:name="Title">
-									<value xml:lang="de">Export in Verzeichnis…</value>
-									<value xml:lang="en">Export to Directory…</value>
-									<value xml:lang="es">Exportar a directorio…</value>
-									<value xml:lang="fr">Exporter dans un répertoire…</value>
-									<value xml:lang="nl">Exporteren naar map…</value>
+									<value xml:lang="de">Export in Verzeichnis</value>
+									<value xml:lang="en">Export to Directory</value>
+									<value xml:lang="es">Exportar a directorio</value>
+									<value xml:lang="fr">Exporter dans un répertoire</value>
+									<value xml:lang="nl">Exporteren naar map</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:export_verzeichnis</value>

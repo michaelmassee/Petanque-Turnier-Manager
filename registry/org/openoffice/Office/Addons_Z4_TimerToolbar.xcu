@@ -35,11 +35,11 @@
                         <value>ptm:timer_starten_dialog</value>
                     </prop>
                     <prop oor:name="Title">
-                        <value xml:lang="de">Timer starten...</value>
-                        <value xml:lang="en">Start Timer...</value>
-                        <value xml:lang="es">Iniciar temporizador...</value>
-                        <value xml:lang="fr">Démarrer la minuterie...</value>
-                        <value xml:lang="nl">Timer starten...</value>
+                        <value xml:lang="de">Timer starten</value>
+                        <value xml:lang="en">Start Timer</value>
+                        <value xml:lang="es">Iniciar temporizador</value>
+                        <value xml:lang="fr">Démarrer la minuterie</value>
+                        <value xml:lang="nl">Timer starten</value>
                     </prop>
                     <prop oor:name="Target" oor:type="xs:string">
                         <value>_self</value>

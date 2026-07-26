@@ -843,6 +843,44 @@ tasks.register('buildSpielerDbFrontend', Exec) {
 processResources.dependsOn 'buildFrontend'
 processResources.dependsOn 'buildSpielerDbFrontend'
 
+// ===================================================
+// Dokumentation fuer NotebookLM-Export
+// ===================================================
+
+tasks.register('bundleDokumentation', Copy) {
+    group = 'build'
+    description = 'Kopiert Projekt-Dokumentation als Classpath-Ressourcen fuer den NotebookLM-Export'
+
+    from('turniersysteme') {
+        include '*.md'
+        into 'de/petanqueturniermanager/doku/turniersysteme'
+    }
+    from('.') {
+        include 'CLAUDE.md', 'BUILD_ISSUES.md'
+        into 'de/petanqueturniermanager/doku'
+    }
+    from('tools') {
+        include 'README.md'
+        into 'de/petanqueturniermanager/doku'
+        rename 'README.md', 'tools-README.md'
+    }
+    into layout.buildDirectory.dir('generated/resources/dokumentation')
+
+    doLast {
+        def dokuRoot = destinationDir.toPath().resolve('de/petanqueturniermanager/doku')
+        def relPaths = []
+        dokuRoot.toFile().eachFileRecurse { f ->
+            if (f.isFile()) {
+                relPaths << dokuRoot.relativize(f.toPath()).toString().replace('\\', '/')
+            }
+        }
+        dokuRoot.resolve('index.txt').text = relPaths.sort().join('\n') + '\n'
+    }
+}
+
+sourceSets.main.resources.srcDir(tasks.named('bundleDokumentation'))
+processResources.dependsOn 'bundleDokumentation'
+
 // Build-Task
 def pluginOxtDatei = layout.buildDirectory.file("distributions/${project.name}-${version}.oxt")
 

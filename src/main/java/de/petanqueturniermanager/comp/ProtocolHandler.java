@@ -3,6 +3,7 @@
  */
 package de.petanqueturniermanager.comp;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -46,6 +47,7 @@ import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.TeilnehmerListeSortModus;
 import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
+import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.timer.TimerDialog;
 import de.petanqueturniermanager.timer.TimerManager;
 import de.petanqueturniermanager.webserver.WebServerManager;
@@ -104,6 +106,8 @@ import de.petanqueturniermanager.konfigdialog.properties.TurnierDialog;
 import de.petanqueturniermanager.konfigdialog.properties.TurnierStartseiteDialog;
 import de.petanqueturniermanager.ki.KiNeuesTurnierDialog;
 import de.petanqueturniermanager.ki.KiFehlerMeldenService;
+import de.petanqueturniermanager.helper.notebooklm.NotebookLmExporter;
+import de.petanqueturniermanager.helper.upload.ExportFormat;
 import de.petanqueturniermanager.helper.upload.ExportPfadHelper;
 import de.petanqueturniermanager.liga.meldeliste.LigaExportInVerzeichnis;
 import de.petanqueturniermanager.liga.meldeliste.LigaFtpUpload;
@@ -224,6 +228,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	// Export
 	public static final String CMD_EXPORT_VERZEICHNIS = "export_verzeichnis";
 	public static final String CMD_EXPORT_FTP_UPLOAD  = "export_ftp_upload";
+	public static final String CMD_EXPORT_NOTEBOOKLM  = "export_notebooklm";
 	public static final String CMD_SIEGERGELD_BERECHNEN = "siegergeld_berechnen";
 	// SuperMelee
 	public static final String CMD_NEUE_MELDELISTE = "neue_meldeliste";
@@ -1295,6 +1300,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_KONFIGURATION_TURNIER_STARTSEITE ->
 					new TurnierStartseiteDialog(erzeugeWorkingSpreadsheetFuerDispatch()).zeigen();
 			case CMD_EXPORT_VERZEICHNIS   -> exportiereAktuellesTurnierInVerzeichnis(erzeugeWorkingSpreadsheetFuerDispatch());
+			case CMD_EXPORT_NOTEBOOKLM   -> exportiereFuerNotebookLm(erzeugeWorkingSpreadsheetFuerDispatch());
 			case CMD_DOWNLOAD_EXTENSION   -> starteDownloadExtension();
 			case CMD_TOOLBAR_START        -> oeffneTurnierStartDialog();
 			case CMD_TOOLBAR_NEU_IN_NEUER_DATEI ->
@@ -1386,6 +1392,58 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 					.testTurnierSystem(TurnierSystem.TRIPTETE).start();
 			default -> { }
 		}
+	}
+
+	private void exportiereFuerNotebookLm(WorkingSpreadsheet ws) throws Exception {
+		var pfadOpt = ExportPfadHelper.waehlePfad(xContext, ws);
+		if (pfadOpt.isEmpty()) {
+			return;
+		}
+		ProcessBox.from().visibleWennAutomatisch().clearWennNotRunning().info("Start " + CMD_EXPORT_NOTEBOOKLM);
+		Path zielVerzeichnis = NotebookLmExporter.bereiteExportOrdnerVor(pfadOpt.get());
+		NotebookLmExporter.exportiereDokumentationUndQuellen(zielVerzeichnis);
+		SheetRunner runner = switch (new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument()) {
+			case SUPERMELEE -> new SupermeleeExportInVerzeichnis(ws, zielVerzeichnis, ExportFormat.EIN_DOKUMENT_MD)
+					.testTurnierSystem(TurnierSystem.SUPERMELEE);
+			case LIGA -> new LigaExportInVerzeichnis(ws, zielVerzeichnis, ExportFormat.EIN_DOKUMENT_MD)
+					.testTurnierSystem(TurnierSystem.LIGA);
+			case JGJ -> new JGJExportInVerzeichnis(ws, zielVerzeichnis, ExportFormat.EIN_DOKUMENT_MD)
+					.testTurnierSystem(TurnierSystem.JGJ);
+			case SCHWEIZER -> new SchweizerExportInVerzeichnis(ws, zielVerzeichnis, ExportFormat.EIN_DOKUMENT_MD)
+					.testTurnierSystem(TurnierSystem.SCHWEIZER);
+			case MAASTRICHTER -> new MaastrichterExportInVerzeichnis(ws, zielVerzeichnis, ExportFormat.EIN_DOKUMENT_MD)
+					.testTurnierSystem(TurnierSystem.MAASTRICHTER);
+			case KO -> new KoExportInVerzeichnis(ws, zielVerzeichnis, ExportFormat.EIN_DOKUMENT_MD)
+					.testTurnierSystem(TurnierSystem.KO);
+			case FORMULEX -> new FormuleXExportInVerzeichnis(ws, zielVerzeichnis, ExportFormat.EIN_DOKUMENT_MD)
+					.testTurnierSystem(TurnierSystem.FORMULEX);
+			case KASKADE -> new KaskadeExportInVerzeichnis(ws, zielVerzeichnis, ExportFormat.EIN_DOKUMENT_MD)
+					.testTurnierSystem(TurnierSystem.KASKADE);
+			case POULE -> new PouleExportInVerzeichnis(ws, zielVerzeichnis, ExportFormat.EIN_DOKUMENT_MD)
+					.testTurnierSystem(TurnierSystem.POULE);
+			case TRIPTETE -> new TripTeteExportInVerzeichnis(ws, zielVerzeichnis, ExportFormat.EIN_DOKUMENT_MD)
+					.testTurnierSystem(TurnierSystem.TRIPTETE);
+			default -> null;
+		};
+		if (runner != null) {
+			// .start() + .join(): Turnierdaten-Export muss abgeschlossen sein, BEVOR der
+			// Export-Ordner geöffnet wird — sonst sieht der Anwender den Ordner/die
+			// Turnierdaten-Datei, bevor der Hintergrund-Export sie geschrieben hat.
+			runner.start();
+			try {
+				runner.join();
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+				throw new GenerateException("Export für Gemini Notebook unterbrochen: " + e.getMessage());
+			}
+		}
+
+		NotebookLmExporter.oeffneExportOrdner(zielVerzeichnis);
+		NotebookLmExporter.oeffneGeminiNotebookImBrowser();
+		MessageBox.from(xContext, MessageBoxTypeEnum.INFO_OK)
+				.caption(I18n.get("notebooklm.export.dialog.titel"))
+				.message(I18n.get("notebooklm.export.dialog.text", zielVerzeichnis.toString()))
+				.show();
 	}
 
 	private void ladeAktuellenTurnierExportHoch(WorkingSpreadsheet ws) throws Exception {
@@ -1918,7 +1976,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			}
 			return switch (command) {
 			case CMD_EXPORT_VERZEICHNIS,
-				 CMD_EXPORT_FTP_UPLOAD                    -> istExportfaehigesTurnier(ts);
+				 CMD_EXPORT_FTP_UPLOAD,
+				 CMD_EXPORT_NOTEBOOKLM                    -> istExportfaehigesTurnier(ts);
 			case CMD_SIEGERGELD_BERECHNEN                 -> SiegergeldQuellen.istUnterstuetzt(ts);
 			// SuperMelee: neues Turnier nur wenn keins aktiv
 			case CMD_NEUE_MELDELISTE                        -> ts == TurnierSystem.KEIN;
