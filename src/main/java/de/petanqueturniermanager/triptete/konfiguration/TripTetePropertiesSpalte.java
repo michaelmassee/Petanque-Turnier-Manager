@@ -60,6 +60,7 @@ public class TripTetePropertiesSpalte extends BasePropertiesSpalte implements IT
 				.setDefaultVal(13).setDescription("config.desc.triptete.spielziel"));
 
 		ADDUploadProp(KONFIG_PROPERTIES);
+		ADDTeilnehmerlisteExportProp(KONFIG_PROPERTIES);
 	}
 
 	TripTetePropertiesSpalte(ISheet sheet) {

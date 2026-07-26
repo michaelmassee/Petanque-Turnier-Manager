@@ -104,6 +104,7 @@ public class FormuleXPropertiesSpalte extends BasePropertiesSpalte implements IF
 
         ADDUploadProp(KONFIG_PROPERTIES);
         ADDSpielrundenExportProp(KONFIG_PROPERTIES);
+        ADDTeilnehmerlisteExportProp(KONFIG_PROPERTIES);
     }
 
     FormuleXPropertiesSpalte(ISheet sheet) {

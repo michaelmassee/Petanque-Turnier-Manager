@@ -39,8 +39,10 @@ public class PouleExportInVerzeichnis extends AbstractExportInVerzeichnis {
                 () -> new PouleVorrundenRanglisteSheetUpdate(ws).doRun());
 
         String meldelisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_POULE_MELDELISTE, SheetNamen.meldeliste());
+        String teilnehmerlisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_TEILNEHMER, SheetNamen.pouleTeilnehmer());
         String ranglisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_POULE_VORRUNDEN_RANGLISTE, SheetNamen.pouleVorrundenRangliste());
         boolean meldelisteExportieren = konfiguration.isMeldelisteExportieren();
+        boolean teilnehmerlisteExportieren = konfiguration.isTeilnehmerlisteExportieren();
         boolean spielrundenExportieren = konfiguration.isSpielrundenExportieren();
         var spielplaene = spielrundenExportieren
                 ? rundenSheetEintraegePerSchluessel(SheetMetadataHelper.SCHLUESSEL_POULE_SPIELPLAN_PREFIX, SheetNamen::pouleSpielplan)
@@ -54,8 +56,8 @@ public class PouleExportInVerzeichnis extends AbstractExportInVerzeichnis {
 
         if (getFormat().istEinDokument()) {
             List<ExportHtmlSeite.Section> sections = sectionsMitOptionalerMeldelisteUndRangliste(
-                    meldelisteSheetName, meldelisteExportieren, I18n.get("export.nav.poule.vorrunden.rangliste"),
-                    ranglisteSheetName, null);
+                    meldelisteSheetName, meldelisteExportieren, teilnehmerlisteSheetName, teilnehmerlisteExportieren,
+                    I18n.get("export.nav.poule.vorrunden.rangliste"), ranglisteSheetName, null);
             for (var plan : spielplaene) {
                 sections.add(new ExportHtmlSeite.Section("spielplan-" + plan.rundeNr(), plan.sheetName(),
                         plan.sheetName(), null));
@@ -83,8 +85,8 @@ public class PouleExportInVerzeichnis extends AbstractExportInVerzeichnis {
 
         processBox().info(I18n.get("export.info.html"));
         List<ExportHtmlSeite.Section> sections = sectionsMitOptionalerMeldelisteUndRangliste(
-                meldelisteSheetName, meldelisteExportieren, I18n.get("export.nav.poule.vorrunden.rangliste"),
-                ranglisteSheetName, buildPdfUrl(pdfRangliste));
+                meldelisteSheetName, meldelisteExportieren, teilnehmerlisteSheetName, teilnehmerlisteExportieren,
+                I18n.get("export.nav.poule.vorrunden.rangliste"), ranglisteSheetName, buildPdfUrl(pdfRangliste));
         for (var plan : spielplaene) {
             Path pdf = exportierePdfAusHtml(plan.sheetName(), plan.sheetName(), zielVerzeichnis);
             if (pdf != null) {

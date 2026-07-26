@@ -114,6 +114,7 @@ public class SchweizerPropertiesSpalte extends BasePropertiesSpalte implements I
 
 		ADDUploadProp(KONFIG_PROPERTIES);
 		ADDSpielrundenExportProp(KONFIG_PROPERTIES);
+		ADDTeilnehmerlisteExportProp(KONFIG_PROPERTIES);
 
 	}
 

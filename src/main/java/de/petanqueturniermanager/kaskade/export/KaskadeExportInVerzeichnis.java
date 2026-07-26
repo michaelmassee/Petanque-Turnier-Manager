@@ -39,7 +39,9 @@ public class KaskadeExportInVerzeichnis extends AbstractExportInVerzeichnis {
                 () -> new KaskadeGruppenRanglisteSheetUpdate(ws).doRun());
 
         String meldelisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_KASKADE_MELDELISTE, SheetNamen.meldeliste());
+        String teilnehmerlisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_TEILNEHMER, SheetNamen.teilnehmer());
         boolean meldelisteExportieren = konfiguration.isMeldelisteExportieren();
+        boolean teilnehmerlisteExportieren = konfiguration.isTeilnehmerlisteExportieren();
         String ranglisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_KASKADE_GRUPPENRANGLISTE, SheetNamen.kaskadeGruppenrangliste());
         String titel = StringUtils.defaultIfBlank(StringUtils.strip(konfiguration.getKopfZeileMitte()),
                 TurnierSystem.KASKADE.getBezeichnung());
@@ -51,6 +53,9 @@ public class KaskadeExportInVerzeichnis extends AbstractExportInVerzeichnis {
             List<ExportHtmlSeite.Section> sections = new ArrayList<>();
             if (meldelisteExportieren) {
                 sections.add(new ExportHtmlSeite.Section("meldeliste", I18n.get("export.nav.meldeliste"), meldelisteSheetName, null));
+            }
+            if (teilnehmerlisteExportieren) {
+                sections.add(new ExportHtmlSeite.Section("teilnehmerliste", I18n.get("export.nav.teilnehmerliste"), teilnehmerlisteSheetName, null));
             }
             sections.add(new ExportHtmlSeite.Section("gruppenrangliste",
                     I18n.get("export.kaskade.nav.gruppenrangliste"), ranglisteSheetName, null));
@@ -74,6 +79,9 @@ public class KaskadeExportInVerzeichnis extends AbstractExportInVerzeichnis {
 
         if (meldelisteExportieren) {
             sections.add(new ExportHtmlSeite.Section("meldeliste", I18n.get("export.nav.meldeliste"), meldelisteSheetName, null));
+        }
+        if (teilnehmerlisteExportieren) {
+            sections.add(new ExportHtmlSeite.Section("teilnehmerliste", I18n.get("export.nav.teilnehmerliste"), teilnehmerlisteSheetName, null));
         }
 
         Path pdfRangliste = exportierePdfAusHtml(ranglisteSheetName, I18n.get("export.kaskade.nav.gruppenrangliste"), zielVerzeichnis);

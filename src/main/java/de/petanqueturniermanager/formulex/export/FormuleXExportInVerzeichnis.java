@@ -39,8 +39,10 @@ public class FormuleXExportInVerzeichnis extends AbstractExportInVerzeichnis {
                 () -> new FormuleXRanglisteSheetUpdate(ws).doRun());
 
         String meldelisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_FORMULEX_MELDELISTE, SheetNamen.meldeliste());
+        String teilnehmerlisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_TEILNEHMER, SheetNamen.teilnehmer());
         String ranglisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_FORMULEX_RANGLISTE, SheetNamen.formulexRangliste());
         boolean meldelisteExportieren = konfiguration.isMeldelisteExportieren();
+        boolean teilnehmerlisteExportieren = konfiguration.isTeilnehmerlisteExportieren();
         var spielrunden = konfiguration.isSpielrundenExportieren()
                 ? rundenSheetEintraegePerSchluessel(SheetMetadataHelper.SCHLUESSEL_FORMULEX_SPIELRUNDE_PREFIX, SheetNamen::formulexSpielrunde)
                 : List.<RundenSheetEintrag>of();
@@ -50,8 +52,8 @@ public class FormuleXExportInVerzeichnis extends AbstractExportInVerzeichnis {
 
         if (getFormat().istEinDokument()) {
             List<ExportHtmlSeite.Section> sections = sectionsMitOptionalerMeldelisteUndRangliste(
-                    meldelisteSheetName, meldelisteExportieren, I18n.get("export.nav.formulex.rangliste"),
-                    ranglisteSheetName, null);
+                    meldelisteSheetName, meldelisteExportieren, teilnehmerlisteSheetName, teilnehmerlisteExportieren,
+                    I18n.get("export.nav.formulex.rangliste"), ranglisteSheetName, null);
             for (var runde : spielrunden) {
                 sections.add(new ExportHtmlSeite.Section("spielrunde-" + runde.rundeNr(), runde.sheetName(),
                         runde.sheetName(), null));
@@ -75,8 +77,8 @@ public class FormuleXExportInVerzeichnis extends AbstractExportInVerzeichnis {
 
         processBox().info(I18n.get("export.info.html"));
         List<ExportHtmlSeite.Section> sections = sectionsMitOptionalerMeldelisteUndRangliste(
-                meldelisteSheetName, meldelisteExportieren, I18n.get("export.nav.formulex.rangliste"),
-                ranglisteSheetName, buildPdfUrl(pdfRangliste));
+                meldelisteSheetName, meldelisteExportieren, teilnehmerlisteSheetName, teilnehmerlisteExportieren,
+                I18n.get("export.nav.formulex.rangliste"), ranglisteSheetName, buildPdfUrl(pdfRangliste));
         for (var runde : spielrunden) {
             Path pdf = exportierePdfAusHtml(runde.sheetName(), runde.sheetName(), zielVerzeichnis);
             if (pdf != null) {

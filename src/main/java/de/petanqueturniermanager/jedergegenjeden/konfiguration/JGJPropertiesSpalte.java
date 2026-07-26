@@ -105,6 +105,7 @@ public class JGJPropertiesSpalte extends BasePropertiesSpalte implements IJGJPro
 		KoPropertiesSpalte.addKoBracketColorProperties(KONFIG_PROPERTIES);
 
 		ADDUploadProp(KONFIG_PROPERTIES);
+		ADDTeilnehmerlisteExportProp(KONFIG_PROPERTIES);
 	}
 
 	/**

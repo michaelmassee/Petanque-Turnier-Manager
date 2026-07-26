@@ -49,10 +49,12 @@ public class JGJExportInVerzeichnis extends AbstractExportInVerzeichnis {
                 });
 
         String meldelisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_JGJ_MELDELISTE, SheetNamen.meldeliste());
+        String teilnehmerlisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_TEILNEHMER, SheetNamen.teilnehmer());
         String spielplanSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_JGJ_SPIELPLAN, JGJSpielPlanSheet.sheetName());
         String ranglisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_JGJ_RANGLISTE, SheetNamen.rangliste());
         String direktvergleichSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_JGJ_DIREKTVERGLEICH, SheetNamen.direktvergleich());
         boolean meldelisteExportieren = konfiguration.isMeldelisteExportieren();
+        boolean teilnehmerlisteExportieren = konfiguration.isTeilnehmerlisteExportieren();
         String titel = StringUtils.defaultIfBlank(StringUtils.strip(konfiguration.getKopfZeileMitte()),
                 TurnierSystem.JGJ.getBezeichnung());
         var finalrunden = buchstabenSheetEintraegePerSchluessel(
@@ -60,8 +62,8 @@ public class JGJExportInVerzeichnis extends AbstractExportInVerzeichnis {
         String turnierlogoUrl = StringUtils.strip(konfiguration.getTurnierlogoUrl());
 
         if (getFormat().istEinDokument()) {
-            List<ExportHtmlSeite.Section> sections = grundSections(meldelisteSheetName, spielplanSheetName,
-                    ranglisteSheetName, direktvergleichSheetName, meldelisteExportieren, null, null);
+            List<ExportHtmlSeite.Section> sections = grundSections(meldelisteSheetName, teilnehmerlisteSheetName, spielplanSheetName,
+                    ranglisteSheetName, direktvergleichSheetName, meldelisteExportieren, teilnehmerlisteExportieren, null, null);
             for (var eintrag : finalrunden) {
                 sections.add(new ExportHtmlSeite.Section("finalrunde-" + eintrag.buchstabe(),
                         I18n.get("export.jgj.nav.finalrunde", eintrag.buchstabe()), eintrag.sheetName(), null));
@@ -90,8 +92,8 @@ public class JGJExportInVerzeichnis extends AbstractExportInVerzeichnis {
         }
 
         processBox().info(I18n.get("export.info.html"));
-        List<ExportHtmlSeite.Section> sections = grundSections(meldelisteSheetName, spielplanSheetName,
-                ranglisteSheetName, direktvergleichSheetName, meldelisteExportieren,
+        List<ExportHtmlSeite.Section> sections = grundSections(meldelisteSheetName, teilnehmerlisteSheetName, spielplanSheetName,
+                ranglisteSheetName, direktvergleichSheetName, meldelisteExportieren, teilnehmerlisteExportieren,
                 buildPdfUrl(pdfRangliste), buildPdfUrl(pdfDirektvergleich));
         for (var eintrag : finalrunden) {
             var finalTitel = I18n.get("export.jgj.nav.finalrunde", eintrag.buchstabe());
@@ -109,12 +111,16 @@ public class JGJExportInVerzeichnis extends AbstractExportInVerzeichnis {
         return new ExportErgebnis(exportierteDateien);
     }
 
-    private static List<ExportHtmlSeite.Section> grundSections(String meldelisteSheetName, String spielplanSheetName,
-            String ranglisteSheetName, String direktvergleichSheetName, boolean meldelisteExportieren,
+    private static List<ExportHtmlSeite.Section> grundSections(String meldelisteSheetName, String teilnehmerlisteSheetName,
+            String spielplanSheetName, String ranglisteSheetName, String direktvergleichSheetName,
+            boolean meldelisteExportieren, boolean teilnehmerlisteExportieren,
             String ranglistePdfUrl, String direktvergleichPdfUrl) {
         List<ExportHtmlSeite.Section> sections = new ArrayList<>();
         if (meldelisteExportieren) {
             sections.add(new ExportHtmlSeite.Section("meldeliste", I18n.get("export.nav.meldeliste"), meldelisteSheetName, null));
+        }
+        if (teilnehmerlisteExportieren) {
+            sections.add(new ExportHtmlSeite.Section("teilnehmerliste", I18n.get("export.nav.teilnehmerliste"), teilnehmerlisteSheetName, null));
         }
         sections.add(new ExportHtmlSeite.Section("spielplan", I18n.get("export.nav.spielplan"), spielplanSheetName, null));
         sections.add(new ExportHtmlSeite.Section("rangliste", I18n.get("export.nav.rangliste"), ranglisteSheetName,

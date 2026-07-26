@@ -49,6 +49,7 @@ public abstract class AbstractExportInVerzeichnis extends SheetRunner {
 
     private static final Logger logger = LogManager.getLogger(AbstractExportInVerzeichnis.class);
     private static final String MELDELISTE_SECTION_ID = "meldeliste";
+    private static final String TEILNEHMERLISTE_SECTION_ID = "teilnehmerliste";
 
     private final Path zielVerzeichnis;
     private final ExportFormat format;
@@ -533,15 +534,19 @@ public abstract class AbstractExportInVerzeichnis extends SheetRunner {
     }
 
     /**
-     * Baut die Standard-Sections für Turniersysteme mit optionaler Meldeliste und
-     * genau einer Rangliste-Section (Schweizer, FormuleX, Poule).
+     * Baut die Standard-Sections für Turniersysteme mit optionaler Meldeliste, optionaler
+     * Teilnehmerliste und genau einer Rangliste-Section (Schweizer, FormuleX, Poule).
      */
     protected static List<ExportHtmlSeite.Section> sectionsMitOptionalerMeldelisteUndRangliste(
             String meldelisteSheetName, boolean meldelisteExportieren,
+            String teilnehmerlisteSheetName, boolean teilnehmerlisteExportieren,
             String ranglisteTitel, String ranglisteSheetName, String ranglistePdfUrl) {
         List<ExportHtmlSeite.Section> sections = new ArrayList<>();
         if (meldelisteExportieren) {
             sections.add(new ExportHtmlSeite.Section(MELDELISTE_SECTION_ID, I18n.get("export.nav.meldeliste"), meldelisteSheetName, null));
+        }
+        if (teilnehmerlisteExportieren) {
+            sections.add(new ExportHtmlSeite.Section(TEILNEHMERLISTE_SECTION_ID, I18n.get("export.nav.teilnehmerliste"), teilnehmerlisteSheetName, null));
         }
         sections.add(new ExportHtmlSeite.Section("rangliste", ranglisteTitel, ranglisteSheetName, ranglistePdfUrl));
         return sections;

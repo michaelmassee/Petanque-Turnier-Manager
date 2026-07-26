@@ -39,7 +39,9 @@ public class MaastrichterExportInVerzeichnis extends AbstractExportInVerzeichnis
                 () -> new MaastrichterVorrundenRanglisteSheetUpdate(ws).doRun());
 
         String meldelisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_MELDELISTE, SheetNamen.meldeliste());
+        String teilnehmerlisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_TEILNEHMER, SheetNamen.teilnehmer());
         boolean meldelisteExportieren = konfiguration.isMeldelisteExportieren();
+        boolean teilnehmerlisteExportieren = konfiguration.isTeilnehmerlisteExportieren();
         String ranglisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX, SheetNamen.maastrichterVorrundenRangliste());
         var vorrunden = konfiguration.isSpielrundenExportieren()
                 ? rundenSheetEintraegePerSchluessel(SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX, SheetNamen::maastrichterVorrunde)
@@ -54,6 +56,9 @@ public class MaastrichterExportInVerzeichnis extends AbstractExportInVerzeichnis
             List<ExportHtmlSeite.Section> sections = new ArrayList<>();
             if (meldelisteExportieren) {
                 sections.add(new ExportHtmlSeite.Section("meldeliste", I18n.get("export.nav.meldeliste"), meldelisteSheetName, null));
+            }
+            if (teilnehmerlisteExportieren) {
+                sections.add(new ExportHtmlSeite.Section("teilnehmerliste", I18n.get("export.nav.teilnehmerliste"), teilnehmerlisteSheetName, null));
             }
             for (var vorrunde : vorrunden) {
                 sections.add(new ExportHtmlSeite.Section("vorrunde-" + vorrunde.rundeNr(), vorrunde.sheetName(),
@@ -81,6 +86,9 @@ public class MaastrichterExportInVerzeichnis extends AbstractExportInVerzeichnis
 
         if (meldelisteExportieren) {
             sections.add(new ExportHtmlSeite.Section("meldeliste", I18n.get("export.nav.meldeliste"), meldelisteSheetName, null));
+        }
+        if (teilnehmerlisteExportieren) {
+            sections.add(new ExportHtmlSeite.Section("teilnehmerliste", I18n.get("export.nav.teilnehmerliste"), teilnehmerlisteSheetName, null));
         }
 
         for (var vorrunde : vorrunden) {

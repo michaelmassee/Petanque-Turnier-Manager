@@ -70,6 +70,7 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	// Export
 	public static final String KONFIG_PROP_MELDELISTE_EXPORTIEREN = "Meldeliste exportieren";
 	public static final String KONFIG_PROP_SPIELRUNDEN_EXPORTIEREN = "Spielrunden exportieren";
+	public static final String KONFIG_PROP_TEILNEHMERLISTE_EXPORTIEREN = "Teilnehmerliste exportieren";
 
 	// Tab-Farben (Document Properties Schlüssel)
 	public static final String KONFIG_PROP_TAB_COLOR_MELDELISTE      = "Tab-Farbe Meldeliste";
@@ -211,6 +212,17 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 				.setDefaultVal(false).setDescription("config.desc.spielrunden.exportieren").exportKonfig());
 	}
 
+	/**
+	 * Fügt die Export-Property „Teilnehmerliste exportieren" hinzu, markiert mit
+	 * {@link de.petanqueturniermanager.konfigdialog.ConfigProperty#exportKonfig()}.
+	 * Aufzurufen von jedem System mit eigenständigem Teilnehmerliste-Sheet
+	 * (Schweizer/Maastrichter, FormuleX, JGJ, Kaskade, Ko, Poule, Trip-Tête).
+	 */
+	protected static void ADDTeilnehmerlisteExportProp(List<ConfigProperty<?>> KONFIG_PROPERTIES) {
+		KONFIG_PROPERTIES.add(ConfigProperty.<Boolean>from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_TEILNEHMERLISTE_EXPORTIEREN)
+				.setDefaultVal(false).setDescription("config.desc.teilnehmerliste.exportieren").exportKonfig());
+	}
+
 	protected BasePropertiesSpalte(ISheet sheet) {
 		this.iSheet = checkNotNull(sheet);
 		docPropHelper = newDocumentPropertiesHelper(sheet.getWorkingSpreadsheet());
@@ -301,6 +313,11 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	@Override
 	public boolean isSpielrundenExportieren() {
 		return readBooleanProperty(KONFIG_PROP_SPIELRUNDEN_EXPORTIEREN);
+	}
+
+	@Override
+	public boolean isTeilnehmerlisteExportieren() {
+		return readBooleanProperty(KONFIG_PROP_TEILNEHMERLISTE_EXPORTIEREN);
 	}
 
 	/**

@@ -39,8 +39,10 @@ public class SchweizerExportInVerzeichnis extends AbstractExportInVerzeichnis {
                 () -> new SchweizerRanglisteSheetUpdate(ws).doRun());
 
         String meldelisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_MELDELISTE, SheetNamen.meldeliste());
+        String teilnehmerlisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_TEILNEHMER, SheetNamen.teilnehmer());
         String ranglisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_RANGLISTE, SheetNamen.rangliste());
         boolean meldelisteExportieren = konfiguration.isMeldelisteExportieren();
+        boolean teilnehmerlisteExportieren = konfiguration.isTeilnehmerlisteExportieren();
         boolean spielrundenExportieren = konfiguration.isSpielrundenExportieren();
         var spielrunden = spielrundenExportieren
                 ? rundenSheetEintraegePerSchluessel(SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_SPIELRUNDE_PREFIX, SheetNamen::spielrunde)
@@ -51,7 +53,8 @@ public class SchweizerExportInVerzeichnis extends AbstractExportInVerzeichnis {
 
         if (getFormat().istEinDokument()) {
             List<ExportHtmlSeite.Section> sections = sectionsMitOptionalerMeldelisteUndRangliste(
-                    meldelisteSheetName, meldelisteExportieren, I18n.get("export.nav.rangliste"), ranglisteSheetName, null);
+                    meldelisteSheetName, meldelisteExportieren, teilnehmerlisteSheetName, teilnehmerlisteExportieren,
+                    I18n.get("export.nav.rangliste"), ranglisteSheetName, null);
             for (var runde : spielrunden) {
                 sections.add(new ExportHtmlSeite.Section("spielrunde-" + runde.rundeNr(), runde.sheetName(),
                         runde.sheetName(), null));
@@ -75,8 +78,8 @@ public class SchweizerExportInVerzeichnis extends AbstractExportInVerzeichnis {
 
         processBox().info(I18n.get("export.info.html"));
         List<ExportHtmlSeite.Section> sections = sectionsMitOptionalerMeldelisteUndRangliste(
-                meldelisteSheetName, meldelisteExportieren, I18n.get("export.nav.rangliste"), ranglisteSheetName,
-                buildPdfUrl(pdfRangliste));
+                meldelisteSheetName, meldelisteExportieren, teilnehmerlisteSheetName, teilnehmerlisteExportieren,
+                I18n.get("export.nav.rangliste"), ranglisteSheetName, buildPdfUrl(pdfRangliste));
         for (var runde : spielrunden) {
             Path pdf = exportierePdfAusHtml(runde.sheetName(), runde.sheetName(), zielVerzeichnis);
             if (pdf != null) {

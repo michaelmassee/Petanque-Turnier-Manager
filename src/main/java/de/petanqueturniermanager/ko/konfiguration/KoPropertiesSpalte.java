@@ -42,6 +42,7 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 	static {
 
 		ADDUploadProp(KONFIG_PROPERTIES);
+		ADDTeilnehmerlisteExportProp(KONFIG_PROPERTIES);
 		ADDBaseProp(KONFIG_PROPERTIES, false);
 		addCheckinSortProp(KONFIG_PROPERTIES);
 		addTeilnehmerListeSortProp(KONFIG_PROPERTIES);

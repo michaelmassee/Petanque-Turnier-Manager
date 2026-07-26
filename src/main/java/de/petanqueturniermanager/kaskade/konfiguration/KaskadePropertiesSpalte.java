@@ -38,6 +38,7 @@ public class KaskadePropertiesSpalte extends BasePropertiesSpalte {
 
     static {
         ADDUploadProp(KONFIG_PROPERTIES);
+        ADDTeilnehmerlisteExportProp(KONFIG_PROPERTIES);
         ADDBaseProp(KONFIG_PROPERTIES);
         addCheckinSortProp(KONFIG_PROPERTIES);
         addTeilnehmerListeSortProp(KONFIG_PROPERTIES);

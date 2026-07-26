@@ -37,7 +37,9 @@ public class KoExportInVerzeichnis extends AbstractExportInVerzeichnis {
 
         var xDoc = ws.getWorkingSpreadsheetDocument();
         String meldelisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_KO_MELDELISTE, SheetNamen.meldeliste());
+        String teilnehmerlisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_TEILNEHMER, SheetNamen.teilnehmer());
         boolean meldelisteExportieren = konfiguration.isMeldelisteExportieren();
+        boolean teilnehmerlisteExportieren = konfiguration.isTeilnehmerlisteExportieren();
         String titel = StringUtils.defaultIfBlank(StringUtils.strip(konfiguration.getKopfZeileMitte()),
                 TurnierSystem.KO.getBezeichnung());
 
@@ -52,6 +54,9 @@ public class KoExportInVerzeichnis extends AbstractExportInVerzeichnis {
             List<ExportHtmlSeite.Section> sections = new ArrayList<>();
             if (meldelisteExportieren) {
                 sections.add(new ExportHtmlSeite.Section("meldeliste", I18n.get("export.nav.meldeliste"), meldelisteSheetName, null));
+            }
+            if (teilnehmerlisteExportieren) {
+                sections.add(new ExportHtmlSeite.Section("teilnehmerliste", I18n.get("export.nav.teilnehmerliste"), teilnehmerlisteSheetName, null));
             }
             if (einzelName != null) {
                 sections.add(new ExportHtmlSeite.Section("ko-turnierbaum",
@@ -80,6 +85,9 @@ public class KoExportInVerzeichnis extends AbstractExportInVerzeichnis {
 
         if (meldelisteExportieren) {
             sections.add(new ExportHtmlSeite.Section("meldeliste", I18n.get("export.nav.meldeliste"), meldelisteSheetName, null));
+        }
+        if (teilnehmerlisteExportieren) {
+            sections.add(new ExportHtmlSeite.Section("teilnehmerliste", I18n.get("export.nav.teilnehmerliste"), teilnehmerlisteSheetName, null));
         }
 
         if (einzelName != null) {
