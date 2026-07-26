@@ -58,6 +58,8 @@ public class LigaExportInVerzeichnis extends AbstractExportInVerzeichnis {
         String ranglisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_LIGA_RANGLISTE, SheetNamen.rangliste());
         String direktvergleichSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_LIGA_DIREKTVERGLEICH, SheetNamen.direktvergleich());
         boolean meldelisteExportieren = konfiguration.isMeldelisteExportieren();
+        boolean abschlussSheetExportieren = konfiguration.isAbschlussSheetExportieren();
+        String abschlussSheetName = StringUtils.strip(konfiguration.getAbschlussSheetName());
 
         if (StringUtils.isEmpty(turnierlogoUrl)) {
             processBox().info(I18n.get("export.warnung.turnierlogo.fehlt"));
@@ -68,6 +70,13 @@ public class LigaExportInVerzeichnis extends AbstractExportInVerzeichnis {
         if (getFormat().istEinDokument()) {
             List<ExportHtmlSeite.Section> sections = htmlSections(meldelisteSheetName, spielplanSheetName, null,
                     termineSheetNames, ranglisteSheetName, null, direktvergleichSheetName, meldelisteExportieren);
+            if (abschlussSheetExportieren && StringUtils.isNotBlank(abschlussSheetName)) {
+                var abschluss = renderiereAbschlussSheetAlsBild(abschlussSheetName, zielVerzeichnis);
+                if (abschluss != null) {
+                    sections.add(new ExportHtmlSeite.Section("abschluss-sheet", I18n.get("export.nav.abschluss.sheet"),
+                            null, null, abschluss.png()));
+                }
+            }
             processBox().info(I18n.get("export.info.ein.dokument", getFormat().anzeigeName()));
             Path dokument = exportiereEinDokument(zielVerzeichnis, "Liga", titel, turnierlogoUrl, getFormat(), sections);
             List<Path> exportierteDateien = new ArrayList<>();
@@ -88,6 +97,16 @@ public class LigaExportInVerzeichnis extends AbstractExportInVerzeichnis {
                 meldelisteSheetName, spielplanSheetName, buildPdfUrl(pdfSpielplan), termine,
                 ranglisteSheetName, buildPdfUrl(pdfRangliste), direktvergleichSheetName,
                 meldelisteExportieren);
+
+        AbschlussSheetErgebnis abschluss = null;
+        if (abschlussSheetExportieren && StringUtils.isNotBlank(abschlussSheetName)) {
+            abschluss = renderiereAbschlussSheetAlsBild(abschlussSheetName, zielVerzeichnis);
+            if (abschluss != null) {
+                sections.add(new ExportHtmlSeite.Section("abschluss-sheet", I18n.get("export.nav.abschluss.sheet"),
+                        null, buildPdfUrl(abschluss.pdf()), abschluss.png()));
+            }
+        }
+
         var htmlExport = exportiereHtmlMitMeldelisteDruckbereich(meldelisteExportieren, meldelisteSheetName,
                 zielVerzeichnis, "Liga.html", titel, turnierlogoUrl, sections);
 
@@ -102,6 +121,10 @@ public class LigaExportInVerzeichnis extends AbstractExportInVerzeichnis {
                 .map(TerminExportEintrag::pdf)
                 .filter(pdf -> pdf != null)
                 .forEach(exportierteDateien::add);
+        if (abschluss != null) {
+            exportierteDateien.add(abschluss.png());
+            exportierteDateien.add(abschluss.pdf());
+        }
         htmlExport.addTo(exportierteDateien);
         return new ExportErgebnis(exportierteDateien);
     }

@@ -26,6 +26,7 @@ import de.petanqueturniermanager.konfigdialog.AuswahlConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
 import de.petanqueturniermanager.konfigdialog.HeaderFooterConfigProperty;
+import de.petanqueturniermanager.konfigdialog.SheetAuswahlConfigProperty;
 import de.petanqueturniermanager.helper.i18n.I18n;
 
 /**
@@ -71,6 +72,8 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	public static final String KONFIG_PROP_MELDELISTE_EXPORTIEREN = "Meldeliste exportieren";
 	public static final String KONFIG_PROP_SPIELRUNDEN_EXPORTIEREN = "Spielrunden exportieren";
 	public static final String KONFIG_PROP_TEILNEHMERLISTE_EXPORTIEREN = "Teilnehmerliste exportieren";
+	public static final String KONFIG_PROP_ABSCHLUSS_SHEET_EXPORTIEREN = "Abschluss-Sheet exportieren";
+	public static final String KONFIG_PROP_ABSCHLUSS_SHEET_NAME = "Abschluss-Sheet Name";
 
 	// Tab-Farben (Document Properties Schlüssel)
 	public static final String KONFIG_PROP_TAB_COLOR_MELDELISTE      = "Tab-Farbe Meldeliste";
@@ -223,6 +226,20 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 				.setDefaultVal(false).setDescription("config.desc.teilnehmerliste.exportieren").exportKonfig());
 	}
 
+	/**
+	 * Fügt die Export-Properties „Abschluss-Sheet exportieren" (Boolean) und
+	 * „Abschluss-Sheet Name" (Freitext) hinzu, beide markiert mit
+	 * {@link de.petanqueturniermanager.konfigdialog.ConfigProperty#exportKonfig()}. Damit kann ein
+	 * beliebiges, vom Nutzer frei gestaltetes Tabellenblatt (inkl. eingebetteter Bilder/Shapes) als
+	 * letzter Abschnitt in den Export übernommen werden. Aufzurufen von jedem System mit Export.
+	 */
+	protected static void ADDAbschlussSheetExportProp(List<ConfigProperty<?>> KONFIG_PROPERTIES) {
+		KONFIG_PROPERTIES.add(ConfigProperty.<Boolean>from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_ABSCHLUSS_SHEET_EXPORTIEREN)
+				.setDefaultVal(false).setDescription("config.desc.abschluss.sheet.exportieren").exportKonfig());
+		KONFIG_PROPERTIES.add(SheetAuswahlConfigProperty.from(KONFIG_PROP_ABSCHLUSS_SHEET_NAME)
+				.setDefaultVal("").setDescription("config.desc.abschluss.sheet.name").exportKonfig());
+	}
+
 	protected BasePropertiesSpalte(ISheet sheet) {
 		this.iSheet = checkNotNull(sheet);
 		docPropHelper = newDocumentPropertiesHelper(sheet.getWorkingSpreadsheet());
@@ -318,6 +335,16 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	@Override
 	public boolean isTeilnehmerlisteExportieren() {
 		return readBooleanProperty(KONFIG_PROP_TEILNEHMERLISTE_EXPORTIEREN);
+	}
+
+	@Override
+	public boolean isAbschlussSheetExportieren() {
+		return readBooleanProperty(KONFIG_PROP_ABSCHLUSS_SHEET_EXPORTIEREN);
+	}
+
+	@Override
+	public String getAbschlussSheetName() {
+		return readStringProperty(KONFIG_PROP_ABSCHLUSS_SHEET_NAME);
 	}
 
 	/**

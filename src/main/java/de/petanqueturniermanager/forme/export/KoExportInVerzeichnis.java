@@ -49,6 +49,8 @@ public class KoExportInVerzeichnis extends AbstractExportInVerzeichnis {
                 SheetMetadataHelper::schluesselKoTurnierbaum, SheetNamen::koTurnierbaumGruppe);
         String einzelName = einzelBaumSheet != null ? Lo.qi(XNamed.class, einzelBaumSheet).getName() : null;
         String turnierlogoUrl = StringUtils.strip(konfiguration.getTurnierlogoUrl());
+        boolean abschlussSheetExportieren = konfiguration.isAbschlussSheetExportieren();
+        String abschlussSheetName = StringUtils.strip(konfiguration.getAbschlussSheetName());
 
         if (getFormat().istEinDokument()) {
             List<ExportHtmlSeite.Section> sections = new ArrayList<>();
@@ -69,6 +71,13 @@ public class KoExportInVerzeichnis extends AbstractExportInVerzeichnis {
             if (einzelName == null && gruppenSheets.isEmpty()) {
                 sections.add(new ExportHtmlSeite.Section("ko-turnierbaum",
                         I18n.get("export.ko.nav.turnierbaum"), SheetNamen.koTurnierbaumEinzel(), null));
+            }
+            if (abschlussSheetExportieren && StringUtils.isNotBlank(abschlussSheetName)) {
+                var abschluss = renderiereAbschlussSheetAlsBild(abschlussSheetName, zielVerzeichnis);
+                if (abschluss != null) {
+                    sections.add(new ExportHtmlSeite.Section("abschluss-sheet", I18n.get("export.nav.abschluss.sheet"),
+                            null, null, abschluss.png()));
+                }
             }
             processBox().info(I18n.get("export.info.ein.dokument", getFormat().anzeigeName()));
             Path dokument = exportiereEinDokument(zielVerzeichnis, "KO", titel, turnierlogoUrl, getFormat(), sections);
@@ -112,6 +121,16 @@ public class KoExportInVerzeichnis extends AbstractExportInVerzeichnis {
         if (einzelName == null && gruppenSheets.isEmpty()) {
             sections.add(new ExportHtmlSeite.Section("ko-turnierbaum",
                     I18n.get("export.ko.nav.turnierbaum"), SheetNamen.koTurnierbaumEinzel(), null));
+        }
+
+        if (abschlussSheetExportieren && StringUtils.isNotBlank(abschlussSheetName)) {
+            var abschluss = renderiereAbschlussSheetAlsBild(abschlussSheetName, zielVerzeichnis);
+            if (abschluss != null) {
+                sections.add(new ExportHtmlSeite.Section("abschluss-sheet", I18n.get("export.nav.abschluss.sheet"),
+                        null, buildPdfUrl(abschluss.pdf()), abschluss.png()));
+                exportierteDateien.add(abschluss.png());
+                exportierteDateien.add(abschluss.pdf());
+            }
         }
 
         processBox().info(I18n.get("export.info.html"));

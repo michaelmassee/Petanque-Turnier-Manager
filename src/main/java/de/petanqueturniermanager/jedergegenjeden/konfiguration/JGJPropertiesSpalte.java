@@ -106,6 +106,7 @@ public class JGJPropertiesSpalte extends BasePropertiesSpalte implements IJGJPro
 
 		ADDUploadProp(KONFIG_PROPERTIES);
 		ADDTeilnehmerlisteExportProp(KONFIG_PROPERTIES);
+		ADDAbschlussSheetExportProp(KONFIG_PROPERTIES);
 	}
 
 	/**

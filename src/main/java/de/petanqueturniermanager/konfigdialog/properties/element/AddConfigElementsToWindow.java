@@ -8,6 +8,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.konfigdialog.AuswahlConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
+import de.petanqueturniermanager.konfigdialog.SheetAuswahlConfigProperty;
 import de.petanqueturniermanager.sidebar.GuiFactoryCreateParam;
 import de.petanqueturniermanager.konfigdialog.properties.element.color.BackgrnColorConfigElement;
 import de.petanqueturniermanager.sidebar.layout.Layout;
@@ -34,7 +35,12 @@ public class AddConfigElementsToWindow {
 		switch (configProperty.getType()) {
 		case STRING:
 
-			if (configProperty instanceof AuswahlConfigProperty) {
+			if (configProperty instanceof SheetAuswahlConfigProperty) {
+				// ComboBox mit den Tabellenblatt-Namen des aktuellen Dokuments
+				SheetAuswahlConfigElement sheetAuswahlConfigElement = new SheetAuswahlConfigElement(
+						guiFactoryCreateParam, (SheetAuswahlConfigProperty) configProperty, currentSpreadsheet);
+				layout.addLayout(sheetAuswahlConfigElement.getLayout(), 1);
+			} else if (configProperty instanceof AuswahlConfigProperty) {
 				// ComboBox
 				AuswahlConfigElement auswahlConfigElement = new AuswahlConfigElement(
 						guiFactoryCreateParam, (AuswahlConfigProperty) configProperty, currentSpreadsheet);

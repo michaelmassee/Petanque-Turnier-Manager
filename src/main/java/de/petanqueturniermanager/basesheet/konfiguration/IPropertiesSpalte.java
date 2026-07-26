@@ -82,6 +82,14 @@ public interface IPropertiesSpalte {
 		return false;
 	}
 
+	default boolean isAbschlussSheetExportieren() {
+		return false;
+	}
+
+	default String getAbschlussSheetName() {
+		return "";
+	}
+
 	/**
 	 * Sortierreihenfolge der Checkin-Liste. Default {@link TeilnehmerListeSortModus#NAME}.
 	 * Verwendet dieselbe Modi-Enum wie die Teilnehmerliste.

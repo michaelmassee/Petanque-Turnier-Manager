@@ -60,6 +60,8 @@ public class JGJExportInVerzeichnis extends AbstractExportInVerzeichnis {
         var finalrunden = buchstabenSheetEintraegePerSchluessel(
                 SheetMetadataHelper::schluesselJgjFinalrunde, SheetNamen::koFinaleGruppe);
         String turnierlogoUrl = StringUtils.strip(konfiguration.getTurnierlogoUrl());
+        boolean abschlussSheetExportieren = konfiguration.isAbschlussSheetExportieren();
+        String abschlussSheetName = StringUtils.strip(konfiguration.getAbschlussSheetName());
 
         if (getFormat().istEinDokument()) {
             List<ExportHtmlSeite.Section> sections = grundSections(meldelisteSheetName, teilnehmerlisteSheetName, spielplanSheetName,
@@ -67,6 +69,13 @@ public class JGJExportInVerzeichnis extends AbstractExportInVerzeichnis {
             for (var eintrag : finalrunden) {
                 sections.add(new ExportHtmlSeite.Section("finalrunde-" + eintrag.buchstabe(),
                         I18n.get("export.jgj.nav.finalrunde", eintrag.buchstabe()), eintrag.sheetName(), null));
+            }
+            if (abschlussSheetExportieren && StringUtils.isNotBlank(abschlussSheetName)) {
+                var abschluss = renderiereAbschlussSheetAlsBild(abschlussSheetName, zielVerzeichnis);
+                if (abschluss != null) {
+                    sections.add(new ExportHtmlSeite.Section("abschluss-sheet", I18n.get("export.nav.abschluss.sheet"),
+                            null, null, abschluss.png()));
+                }
             }
             processBox().info(I18n.get("export.info.ein.dokument", getFormat().anzeigeName()));
             Path dokument = exportiereEinDokument(zielVerzeichnis, "JederGegenJeden", titel, turnierlogoUrl,
@@ -103,6 +112,15 @@ public class JGJExportInVerzeichnis extends AbstractExportInVerzeichnis {
             }
             sections.add(new ExportHtmlSeite.Section("finalrunde-" + eintrag.buchstabe(),
                     finalTitel, eintrag.sheetName(), buildPdfUrl(pdf)));
+        }
+        if (abschlussSheetExportieren && StringUtils.isNotBlank(abschlussSheetName)) {
+            var abschluss = renderiereAbschlussSheetAlsBild(abschlussSheetName, zielVerzeichnis);
+            if (abschluss != null) {
+                sections.add(new ExportHtmlSeite.Section("abschluss-sheet", I18n.get("export.nav.abschluss.sheet"),
+                        null, buildPdfUrl(abschluss.pdf()), abschluss.png()));
+                exportierteDateien.add(abschluss.png());
+                exportierteDateien.add(abschluss.pdf());
+            }
         }
         exportiereHtmlMitMeldelisteDruckbereich(meldelisteExportieren, meldelisteSheetName,
                 zielVerzeichnis, "JederGegenJeden.html", titel, turnierlogoUrl, sections)

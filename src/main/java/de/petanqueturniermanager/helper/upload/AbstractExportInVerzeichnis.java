@@ -15,10 +15,14 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.function.Function;
 
+import javax.imageio.ImageIO;
+
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.rendering.PDFRenderer;
 
 import com.sun.star.container.XNamed;
 import com.sun.star.sheet.XPrintAreas;
@@ -35,6 +39,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.io.PdfExport;
 import de.petanqueturniermanager.helper.sheetsync.EingabeSignatur;
@@ -131,11 +136,40 @@ public abstract class AbstractExportInVerzeichnis extends SheetRunner {
 
     protected Path exportierePdfWennTabelleVorhanden(String sheetName, Path zielVerzeichnis)
             throws GenerateException {
-        return exportierePdfWennTabelleVorhanden(sheetName, () -> PdfExport.from(getWorkingSpreadsheet())
-                .sheetName(sheetName)
-                .prefix1(sheetName)
-                .zielVerzeichnis(zielVerzeichnis)
-                .doExport());
+        return exportierePdfWennTabelleVorhanden(sheetName, () -> {
+            var pdfExport = PdfExport.from(getWorkingSpreadsheet())
+                    .sheetName(sheetName)
+                    .prefix1(sheetName)
+                    .zielVerzeichnis(zielVerzeichnis);
+            var druckbereich = druckbereichVon(sheetName);
+            if (druckbereich != null) {
+                pdfExport.range(druckbereich);
+            }
+            return pdfExport.doExport();
+        });
+    }
+
+    /**
+     * Liest den ersten definierten Druckbereich des Sheets (Format &gt; Druckbereiche).
+     *
+     * @return {@code null}, wenn das Sheet fehlt, keine {@link XPrintAreas} unterstützt oder kein
+     *         Druckbereich gesetzt ist – dann wird beim PDF-Export das ganze Sheet exportiert.
+     */
+    private RangePosition druckbereichVon(String sheetName) throws GenerateException {
+        var sheet = getSheetHelper().findByName(sheetName);
+        if (sheet == null) {
+            return null;
+        }
+        var printAreas = Lo.qi(XPrintAreas.class, sheet);
+        if (printAreas == null) {
+            return null;
+        }
+        var bereiche = printAreas.getPrintAreas();
+        if (bereiche == null || bereiche.length == 0) {
+            return null;
+        }
+        var bereich = bereiche[0];
+        return RangePosition.from(bereich.StartColumn, bereich.StartRow, bereich.EndColumn, bereich.EndRow);
     }
 
     protected Path exportierePdfWennTabelleVorhanden(String sheetName, PdfExportAktion aktion)
@@ -145,7 +179,7 @@ public abstract class AbstractExportInVerzeichnis extends SheetRunner {
             logger.warn("PDF-Export für Sheet '{}' übersprungen: Tabelle nicht vorhanden", sheetName);
             return null;
         }
-        Path pdf = Path.of(aktion.exportiere().toString());
+        Path pdf = Path.of(aktion.exportiere());
         processBox().info(pdf.toString());
         return pdf;
     }
@@ -153,6 +187,35 @@ public abstract class AbstractExportInVerzeichnis extends SheetRunner {
     @FunctionalInterface
     protected interface PdfExportAktion {
         URI exportiere() throws GenerateException;
+    }
+
+    /** Ergebnis von {@link #renderiereAbschlussSheetAlsBild(String, Path)}: PNG-Rasterung + zugrundeliegendes natives PDF. */
+    protected record AbschlussSheetErgebnis(Path png, Path pdf) {}
+
+    /**
+     * Rendert ein beliebiges Sheet (inkl. eingebetteter Bilder/Shapes) als PNG, indem zunächst über den
+     * nativen LO-PDF-Filter ({@link #exportierePdfWennTabelleVorhanden(String, Path)}) ein PDF erzeugt
+     * und dessen erste Seite anschließend per PDFBox gerastert wird. Der zellbasierte {@code TabellenMapper}
+     * erfasst keine Shapes/Grafiken, die native LO-PDF-Engine dagegen schon.
+     *
+     * @return {@code null}, wenn das Sheet nicht existiert (bereits per ProcessBox-Hinweis geloggt)
+     */
+    protected AbschlussSheetErgebnis renderiereAbschlussSheetAlsBild(String sheetName, Path zielVerzeichnis)
+            throws GenerateException {
+        Path pdf = exportierePdfWennTabelleVorhanden(sheetName, zielVerzeichnis);
+        if (pdf == null) {
+            return null;
+        }
+        Path png = zielVerzeichnis.resolve(sheetName + ".png");
+        try (var document = PDDocument.load(pdf.toFile())) {
+            var renderer = new PDFRenderer(document);
+            var bild = renderer.renderImageWithDPI(0, 150);
+            ImageIO.write(bild, "png", png.toFile());
+        } catch (IOException e) {
+            logger.error("Abschluss-Sheet '{}' konnte nicht zu PNG gerastert werden: {}", sheetName, e.getMessage(), e);
+            throw new GenerateException(e.getMessage());
+        }
+        return new AbschlussSheetErgebnis(png, pdf);
     }
 
     protected Path exportierePdfAusHtml(String sheetName, String abschnittTitel, Path zielVerzeichnis)
@@ -224,6 +287,10 @@ public abstract class AbstractExportInVerzeichnis extends SheetRunner {
             throws GenerateException {
         var vorhandene = new ArrayList<ExportHtmlSeite.Section>();
         for (var section : sections) {
+            if (section.bildDatei() != null) {
+                vorhandene.add(section);
+                continue;
+            }
             if (getSheetHelper().findByName(section.sheetName()) == null) {
                 processBox().info(I18n.get("error.tabelle.nicht.vorhanden", section.sheetName()));
                 logger.warn("HTML-Export: Sheet '{}' übersprungen, Tabelle nicht vorhanden", section.sheetName());
@@ -497,8 +564,13 @@ public abstract class AbstractExportInVerzeichnis extends SheetRunner {
         var sb = new StringBuilder(4096);
         sb.append("# ").append(titel).append("\n\n");
         for (var section : sections) {
-            var model = mappeTabelle(section, doc);
             sb.append("## ").append(section.titel()).append("\n\n");
+            if (section.bildDatei() != null) {
+                sb.append("![").append(section.titel()).append("](")
+                        .append(section.bildDatei().getFileName()).append(")\n\n");
+                continue;
+            }
+            var model = mappeTabelle(section, doc);
             sb.append(markdownTabelleRenderer.render(model)).append("\n");
         }
         sb.append(ExportFooterHtml.markdownZeitstempel()).append("\n");
@@ -519,9 +591,15 @@ public abstract class AbstractExportInVerzeichnis extends SheetRunner {
         var doc = getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
         var fragmente = new ArrayList<String>();
         for (var section : sections) {
-            fragmente.add(pdfTabelleHtmlRenderer.render(mappeTabelle(section, doc)));
+            fragmente.add(section.bildDatei() != null
+                    ? bildFragmentAbsolut(section.bildDatei())
+                    : pdfTabelleHtmlRenderer.render(mappeTabelle(section, doc)));
         }
         return fragmente;
+    }
+
+    private static String bildFragmentAbsolut(Path bildDatei) {
+        return "<img src=\"" + bildDatei.toUri() + "\" style=\"max-width:100%;height:auto;display:block;margin:0 auto;\">";
     }
 
     private TabelleModel mappeTabelle(ExportHtmlSeite.Section section, XSpreadsheetDocument doc)

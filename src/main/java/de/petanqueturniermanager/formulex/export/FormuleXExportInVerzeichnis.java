@@ -46,6 +46,8 @@ public class FormuleXExportInVerzeichnis extends AbstractExportInVerzeichnis {
         var spielrunden = konfiguration.isSpielrundenExportieren()
                 ? rundenSheetEintraegePerSchluessel(SheetMetadataHelper.SCHLUESSEL_FORMULEX_SPIELRUNDE_PREFIX, SheetNamen::formulexSpielrunde)
                 : List.<RundenSheetEintrag>of();
+        boolean abschlussSheetExportieren = konfiguration.isAbschlussSheetExportieren();
+        String abschlussSheetName = StringUtils.strip(konfiguration.getAbschlussSheetName());
         String titel = StringUtils.defaultIfBlank(StringUtils.strip(konfiguration.getKopfZeileMitte()),
                 TurnierSystem.FORMULEX.getBezeichnung());
         String turnierlogoUrl = StringUtils.strip(konfiguration.getTurnierlogoUrl());
@@ -57,6 +59,13 @@ public class FormuleXExportInVerzeichnis extends AbstractExportInVerzeichnis {
             for (var runde : spielrunden) {
                 sections.add(new ExportHtmlSeite.Section("spielrunde-" + runde.rundeNr(), runde.sheetName(),
                         runde.sheetName(), null));
+            }
+            if (abschlussSheetExportieren && StringUtils.isNotBlank(abschlussSheetName)) {
+                var abschluss = renderiereAbschlussSheetAlsBild(abschlussSheetName, zielVerzeichnis);
+                if (abschluss != null) {
+                    sections.add(new ExportHtmlSeite.Section("abschluss-sheet", I18n.get("export.nav.abschluss.sheet"),
+                            null, null, abschluss.png()));
+                }
             }
             processBox().info(I18n.get("export.info.ein.dokument", getFormat().anzeigeName()));
             Path dokument = exportiereEinDokument(zielVerzeichnis, "FormuleX", titel, turnierlogoUrl, getFormat(), sections);
@@ -86,6 +95,15 @@ public class FormuleXExportInVerzeichnis extends AbstractExportInVerzeichnis {
             }
             sections.add(new ExportHtmlSeite.Section("spielrunde-" + runde.rundeNr(), runde.sheetName(),
                     runde.sheetName(), buildPdfUrl(pdf)));
+        }
+        if (abschlussSheetExportieren && StringUtils.isNotBlank(abschlussSheetName)) {
+            var abschluss = renderiereAbschlussSheetAlsBild(abschlussSheetName, zielVerzeichnis);
+            if (abschluss != null) {
+                sections.add(new ExportHtmlSeite.Section("abschluss-sheet", I18n.get("export.nav.abschluss.sheet"),
+                        null, buildPdfUrl(abschluss.pdf()), abschluss.png()));
+                exportierteDateien.add(abschluss.png());
+                exportierteDateien.add(abschluss.pdf());
+            }
         }
         exportiereHtmlMitMeldelisteDruckbereich(meldelisteExportieren, meldelisteSheetName,
                 zielVerzeichnis, "FormuleX.html", titel, turnierlogoUrl, sections)

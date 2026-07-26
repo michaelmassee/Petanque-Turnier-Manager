@@ -50,6 +50,8 @@ public class PouleExportInVerzeichnis extends AbstractExportInVerzeichnis {
         var koSheets = spielrundenExportieren
                 ? buchstabenSheetEintraegePerSchluessel(SheetMetadataHelper::schluesselPouleKo, SheetNamen::koFinaleGruppe)
                 : List.<SheetEintrag>of();
+        boolean abschlussSheetExportieren = konfiguration.isAbschlussSheetExportieren();
+        String abschlussSheetName = StringUtils.strip(konfiguration.getAbschlussSheetName());
         String titel = StringUtils.defaultIfBlank(StringUtils.strip(konfiguration.getKopfZeileMitte()),
                 TurnierSystem.POULE.getBezeichnung());
         String turnierlogoUrl = StringUtils.strip(konfiguration.getTurnierlogoUrl());
@@ -65,6 +67,13 @@ public class PouleExportInVerzeichnis extends AbstractExportInVerzeichnis {
             for (var ko : koSheets) {
                 sections.add(new ExportHtmlSeite.Section("ko-" + ko.buchstabe(),
                         I18n.get("export.ko.nav.turnierbaum.gruppe", ko.buchstabe()), ko.sheetName(), null));
+            }
+            if (abschlussSheetExportieren && StringUtils.isNotBlank(abschlussSheetName)) {
+                var abschluss = renderiereAbschlussSheetAlsBild(abschlussSheetName, zielVerzeichnis);
+                if (abschluss != null) {
+                    sections.add(new ExportHtmlSeite.Section("abschluss-sheet", I18n.get("export.nav.abschluss.sheet"),
+                            null, null, abschluss.png()));
+                }
             }
             processBox().info(I18n.get("export.info.ein.dokument", getFormat().anzeigeName()));
             Path dokument = exportiereEinDokument(zielVerzeichnis, "Poule", titel, turnierlogoUrl, getFormat(), sections);
@@ -102,6 +111,15 @@ public class PouleExportInVerzeichnis extends AbstractExportInVerzeichnis {
                 exportierteDateien.add(pdf);
             }
             sections.add(new ExportHtmlSeite.Section("ko-" + ko.buchstabe(), koTitel, ko.sheetName(), buildPdfUrl(pdf)));
+        }
+        if (abschlussSheetExportieren && StringUtils.isNotBlank(abschlussSheetName)) {
+            var abschluss = renderiereAbschlussSheetAlsBild(abschlussSheetName, zielVerzeichnis);
+            if (abschluss != null) {
+                sections.add(new ExportHtmlSeite.Section("abschluss-sheet", I18n.get("export.nav.abschluss.sheet"),
+                        null, buildPdfUrl(abschluss.pdf()), abschluss.png()));
+                exportierteDateien.add(abschluss.png());
+                exportierteDateien.add(abschluss.pdf());
+            }
         }
         exportiereHtmlMitMeldelisteDruckbereich(meldelisteExportieren, meldelisteSheetName,
                 zielVerzeichnis, "Poule.html", titel, turnierlogoUrl, sections)

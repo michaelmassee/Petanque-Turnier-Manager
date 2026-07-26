@@ -224,6 +224,21 @@ public abstract class BaseKonfigurationSheet extends SheetRunner implements IPro
 	}
 
 	@Override
+	public final boolean isTeilnehmerlisteExportieren() {
+		return getPropertiesSpalte().isTeilnehmerlisteExportieren();
+	}
+
+	@Override
+	public final boolean isAbschlussSheetExportieren() {
+		return getPropertiesSpalte().isAbschlussSheetExportieren();
+	}
+
+	@Override
+	public final String getAbschlussSheetName() {
+		return getPropertiesSpalte().getAbschlussSheetName();
+	}
+
+	@Override
 	public final int getMeldelisteTabFarbe() {
 		return getPropertiesSpalte().getMeldelisteTabFarbe();
 	}

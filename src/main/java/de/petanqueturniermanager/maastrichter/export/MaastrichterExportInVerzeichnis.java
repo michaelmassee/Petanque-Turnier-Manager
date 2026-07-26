@@ -51,6 +51,8 @@ public class MaastrichterExportInVerzeichnis extends AbstractExportInVerzeichnis
         var finalrunden = buchstabenSheetEintraegePerSchluessel(
                 SheetMetadataHelper::schluesselMaastrichterFinalrunde, SheetNamen::koFinaleGruppe);
         String turnierlogoUrl = StringUtils.strip(konfiguration.getTurnierlogoUrl());
+        boolean abschlussSheetExportieren = konfiguration.isAbschlussSheetExportieren();
+        String abschlussSheetName = StringUtils.strip(konfiguration.getAbschlussSheetName());
 
         if (getFormat().istEinDokument()) {
             List<ExportHtmlSeite.Section> sections = new ArrayList<>();
@@ -69,6 +71,13 @@ public class MaastrichterExportInVerzeichnis extends AbstractExportInVerzeichnis
             for (var eintrag : finalrunden) {
                 sections.add(new ExportHtmlSeite.Section("finalrunde-" + eintrag.buchstabe(),
                         I18n.get("export.maastrichter.nav.finalrunde", eintrag.buchstabe()), eintrag.sheetName(), null));
+            }
+            if (abschlussSheetExportieren && StringUtils.isNotBlank(abschlussSheetName)) {
+                var abschluss = renderiereAbschlussSheetAlsBild(abschlussSheetName, zielVerzeichnis);
+                if (abschluss != null) {
+                    sections.add(new ExportHtmlSeite.Section("abschluss-sheet", I18n.get("export.nav.abschluss.sheet"),
+                            null, null, abschluss.png()));
+                }
             }
             processBox().info(I18n.get("export.info.ein.dokument", getFormat().anzeigeName()));
             Path dokument = exportiereEinDokument(zielVerzeichnis, "Maastrichter", titel, turnierlogoUrl,
@@ -116,6 +125,16 @@ public class MaastrichterExportInVerzeichnis extends AbstractExportInVerzeichnis
             }
             sections.add(new ExportHtmlSeite.Section("finalrunde-" + eintrag.buchstabe(),
                     finalTitel, eintrag.sheetName(), buildPdfUrl(pdf)));
+        }
+
+        if (abschlussSheetExportieren && StringUtils.isNotBlank(abschlussSheetName)) {
+            var abschluss = renderiereAbschlussSheetAlsBild(abschlussSheetName, zielVerzeichnis);
+            if (abschluss != null) {
+                sections.add(new ExportHtmlSeite.Section("abschluss-sheet", I18n.get("export.nav.abschluss.sheet"),
+                        null, buildPdfUrl(abschluss.pdf()), abschluss.png()));
+                exportierteDateien.add(abschluss.png());
+                exportierteDateien.add(abschluss.pdf());
+            }
         }
 
         processBox().info(I18n.get("export.info.html"));

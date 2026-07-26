@@ -64,6 +64,7 @@ public class LigaPropertiesSpalte extends BasePropertiesSpalte implements ILigaP
 				.setDefaultVal(7).setDescription("config.desc.freispiel.punkte.minus"));
 
 		ADDUploadProp(KONFIG_PROPERTIES);
+		ADDAbschlussSheetExportProp(KONFIG_PROPERTIES);
 	}
 
 

@@ -3,6 +3,7 @@
  */
 package de.petanqueturniermanager.helper.upload;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,7 +42,10 @@ public class ExportHtmlSeite {
     private String logoUrl;
     private final List<Section> sections = new ArrayList<>();
 
-    public record Section(String id, String titel, String sheetName, String pdfUrl) {
+    public record Section(String id, String titel, String sheetName, String pdfUrl, Path bildDatei) {
+        public Section(String id, String titel, String sheetName, String pdfUrl) {
+            this(id, titel, sheetName, pdfUrl, null);
+        }
     }
 
     private ExportHtmlSeite(WorkingSpreadsheet workingSpreadsheet) {
@@ -74,6 +78,11 @@ public class ExportHtmlSeite {
         var vorhandeneSections = new ArrayList<Section>();
         var tabellenHtml = new ArrayList<String>();
         for (var section : sections) {
+            if (section.bildDatei() != null) {
+                vorhandeneSections.add(section);
+                tabellenHtml.add(bildFragment(section.bildDatei(), section.titel()));
+                continue;
+            }
             var sheet = sheetHelper.findByName(section.sheetName());
             if (sheet == null) {
                 logger.warn("HTML-Export: Sheet '{}' übersprungen, Tabelle nicht vorhanden", section.sheetName());
@@ -148,6 +157,13 @@ public class ExportHtmlSeite {
         sb.append("</div>\n");
         sb.append("<div class=\"tbl-scroll\">\n").append(tabelleHtml).append("\n</div>\n");
         sb.append("</section>\n");
+    }
+
+    private static String bildFragment(Path bildDatei, String alt) {
+        Path dateiname = bildDatei.getFileName();
+        String relativerDateiname = dateiname != null ? dateiname.toString() : bildDatei.toString();
+        return "<img class=\"abschluss-bild\" src=\"" + StringEscapeUtils.escapeHtml4(relativerDateiname)
+                + "\" alt=\"" + StringEscapeUtils.escapeHtml4(alt) + "\">";
     }
 
     private String navLink(String id, String label) {
@@ -280,6 +296,12 @@ public class ExportHtmlSeite {
                   border-collapse: collapse;
                   min-width: max-content;
                   font-size: 0.92rem;
+                }
+                .abschluss-bild {
+                  display: block;
+                  max-width: 100%;
+                  height: auto;
+                  margin: 0 auto;
                 }
                 thead tr { background: var(--surface-soft); }
                 td, th {

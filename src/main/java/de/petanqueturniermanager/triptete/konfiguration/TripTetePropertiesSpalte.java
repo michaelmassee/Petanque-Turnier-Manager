@@ -61,6 +61,7 @@ public class TripTetePropertiesSpalte extends BasePropertiesSpalte implements IT
 
 		ADDUploadProp(KONFIG_PROPERTIES);
 		ADDTeilnehmerlisteExportProp(KONFIG_PROPERTIES);
+		ADDAbschlussSheetExportProp(KONFIG_PROPERTIES);
 	}
 
 	TripTetePropertiesSpalte(ISheet sheet) {

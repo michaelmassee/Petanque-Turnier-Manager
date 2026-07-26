@@ -57,10 +57,19 @@ public class TripTeteExportInVerzeichnis extends AbstractExportInVerzeichnis {
         String titel = StringUtils.defaultIfBlank(StringUtils.strip(konfiguration.getKopfZeileMitte()),
                 TurnierSystem.TRIPTETE.getBezeichnung());
         String turnierlogoUrl = StringUtils.strip(konfiguration.getTurnierlogoUrl());
+        boolean abschlussSheetExportieren = konfiguration.isAbschlussSheetExportieren();
+        String abschlussSheetName = StringUtils.strip(konfiguration.getAbschlussSheetName());
 
         if (getFormat().istEinDokument()) {
             List<ExportHtmlSeite.Section> sections = sections(meldelisteSheetName, teilnehmerlisteSheetName, spielplanSheetName,
                     ranglisteSheetName, null, null, meldelisteExportieren, teilnehmerlisteExportieren);
+            if (abschlussSheetExportieren && StringUtils.isNotBlank(abschlussSheetName)) {
+                var abschluss = renderiereAbschlussSheetAlsBild(abschlussSheetName, zielVerzeichnis);
+                if (abschluss != null) {
+                    sections.add(new ExportHtmlSeite.Section("abschluss-sheet", I18n.get("export.nav.abschluss.sheet"),
+                            null, null, abschluss.png()));
+                }
+            }
             processBox().info(I18n.get("export.info.ein.dokument", getFormat().anzeigeName()));
             Path dokument = exportiereEinDokument(zielVerzeichnis, "TripTete", titel, turnierlogoUrl,
                     getFormat(), sections);
@@ -88,6 +97,15 @@ public class TripTeteExportInVerzeichnis extends AbstractExportInVerzeichnis {
         List<ExportHtmlSeite.Section> sections = sections(meldelisteSheetName, teilnehmerlisteSheetName, spielplanSheetName,
                 ranglisteSheetName, buildPdfUrl(pdfSpielplan), buildPdfUrl(pdfRangliste), meldelisteExportieren,
                 teilnehmerlisteExportieren);
+        if (abschlussSheetExportieren && StringUtils.isNotBlank(abschlussSheetName)) {
+            var abschluss = renderiereAbschlussSheetAlsBild(abschlussSheetName, zielVerzeichnis);
+            if (abschluss != null) {
+                sections.add(new ExportHtmlSeite.Section("abschluss-sheet", I18n.get("export.nav.abschluss.sheet"),
+                        null, buildPdfUrl(abschluss.pdf()), abschluss.png()));
+                exportierteDateien.add(abschluss.png());
+                exportierteDateien.add(abschluss.pdf());
+            }
+        }
         exportiereHtmlMitMeldelisteDruckbereich(meldelisteExportieren, meldelisteSheetName,
                 zielVerzeichnis, "TripTete.html", titel, turnierlogoUrl, sections)
                 .addTo(exportierteDateien);
