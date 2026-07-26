@@ -4,13 +4,18 @@
 package de.petanqueturniermanager.webserver;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
+import java.io.StringReader;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import javax.xml.parsers.DocumentBuilderFactory;
+
 import org.junit.jupiter.api.Test;
+import org.xml.sax.InputSource;
 
 class TabelleHtmlRendererTest {
 
@@ -131,6 +136,26 @@ class TabelleHtmlRendererTest {
         var html = renderer.render(model);
         assertThat(html).doesNotContain("<script>");
         assertThat(html).contains("&lt;script&gt;");
+    }
+
+    @Test
+    void zeilenumbruchImZellwert_wirdAlsSelbstschliessendesBrGerendert() {
+        var model = einspaltigesModell("cell-0-0", "Zeile 1\nZeile 2", standardStil());
+        var html = renderer.render(model);
+        assertThat(html).contains("Zeile 1<br/>Zeile 2");
+        assertThat(html).doesNotContain("\n");
+    }
+
+    @Test
+    void zeilenumbruchImZellwert_ErzeugtWohlgeformtesXml() throws Exception {
+        // Reproduziert den Bugfix für "org.xml.sax.SAXParseException [...] Elementtyp 'br' muss
+        // mit dem entsprechenden Endtag '</br>' beendet werden" beim DOCX/ODT-Export (TRaX-Transformer
+        // verlangt wohlgeformtes XML, kein HTML5-Void-Element).
+        var model = einspaltigesModell("cell-0-0", "Zeile 1\r\nZeile 2\nZeile 3\rZeile 4", standardStil());
+        var html = renderer.render(model);
+        var builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+        assertThatCode(() -> builder.parse(new InputSource(new StringReader(html))))
+                .doesNotThrowAnyException();
     }
 
     @Test

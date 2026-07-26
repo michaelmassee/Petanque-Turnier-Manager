@@ -113,7 +113,8 @@ public class TabelleHtmlRenderer {
         }
         sb.append(" style=\"").append(buildCss(s)).append("\"");
         sb.append(">");
-        String wert = StringEscapeUtils.escapeHtml4(zelle.wert() != null ? zelle.wert() : "");
+        String wert = StringEscapeUtils.escapeHtml4(zelle.wert() != null ? zelle.wert() : "")
+                .replace("\r\n", "<br/>").replace("\n", "<br/>").replace("\r", "<br/>");
         if (pdfKompatibel && istRechtwinkligGedreht(s.rotationGrad())) {
             sb.append("<span style=\"").append(buildPdfRotationCss(s.rotationGrad())).append("\">")
                     .append(wert)
