@@ -557,6 +557,7 @@ class PouleListeDelegate implements MeldeListeKonstanten {
                 .sheet(sheet)
                 .minAnzZeilen(MIN_ANZAHL_MELDUNGEN_ZEILEN)
                 .formation(konfigurationSheet.getMeldeListeFormation())
+                .anzNamenSpalten(konfigurationSheet.getMeldeListeFormation().getAnzSpieler() * getSpaltenProSpieler())
                 .build();
     }
 

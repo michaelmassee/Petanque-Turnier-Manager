@@ -513,6 +513,7 @@ class TripTeteMeldeListeDelegate implements MeldeListeKonstanten {
                 .sheet(sheet)
                 .minAnzZeilen(MIN_ANZAHL_MELDUNGEN_ZEILEN)
                 .formation(Formation.TRIPLETTE)
+                .anzNamenSpalten(Formation.TRIPLETTE.getAnzSpieler() * getSpaltenProSpieler())
                 .build();
     }
 }
