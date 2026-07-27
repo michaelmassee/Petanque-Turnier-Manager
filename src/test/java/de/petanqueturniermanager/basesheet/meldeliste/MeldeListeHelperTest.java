@@ -146,6 +146,22 @@ public class MeldeListeHelperTest {
 	}
 
 	@Test
+	public void testDoppelteMeldungen_EinzelneMeldungMitUngueltigerNr_wirdBereinigt() throws Exception {
+		// Regression: einzelne Meldung (letzteSpielZeile == ErsteDatenZiele) darf nicht als
+		// "keine Daten" behandelt werden - eine ungueltige Nr in der einzigen Zeile muss
+		// weiterhin geloescht werden (derselbe Off-by-One wie bei updateMeldungenNr()).
+		Mockito.when(iMeldelisteMock.getErsteDatenZiele()).thenReturn(MeldeListeKonstanten.ERSTE_DATEN_ZEILE);
+
+		SpielerNrName[] spielerNrNameList = new SpielerNrName[] { new SpielerNrName(0, "Anna") };
+		initReturnSpielerDaten(spielerNrNameList);
+
+		meldeListeHelper.testDoppelteMeldungen();
+
+		verify(sheetHelperMock, times(1)).clearValInCell(any(XSpreadsheet.class),
+				eq(Position.from(MeldeListeKonstanten.SPIELER_NR_SPALTE, MeldeListeKonstanten.ERSTE_DATEN_ZEILE)));
+	}
+
+	@Test
 	public void testZeileOhneSpielerNamenEntfernen() throws Exception {
 
 		// Achtung: die liste wird Sortiert mit leeren namen nach unten

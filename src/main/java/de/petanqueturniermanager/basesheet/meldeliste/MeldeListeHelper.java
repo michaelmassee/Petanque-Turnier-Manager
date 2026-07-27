@@ -168,7 +168,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 		XSpreadsheet xSheet = getXSpreadSheet();
 
 		int letzteSpielZeile = meldeListe.getMeldungenSpalte().letzteZeileMitSpielerName();
-		if (letzteSpielZeile <= meldeListe.getErsteDatenZiele()) { // daten vorhanden ?
+		if (letzteSpielZeile < meldeListe.getErsteDatenZiele()) { // daten vorhanden ?
 			return; // keine Daten
 		}
 
