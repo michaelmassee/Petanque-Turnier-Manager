@@ -15,25 +15,19 @@ class NotebookLmExporterTest {
 	Path basisVerzeichnis;
 
 	@Test
-	void bereiteExportOrdnerVorLegtZeitgestempeltenOrdnerMitDokumentationUnterordnerAn() throws Exception {
+	void bereiteExportOrdnerVorLegtZeitgestempeltenOrdnerAn() throws Exception {
 		Path ordner = NotebookLmExporter.bereiteExportOrdnerVor(basisVerzeichnis);
 
 		assertThat(ordner.getParent()).isEqualTo(basisVerzeichnis);
 		assertThat(ordner.getFileName().toString()).startsWith("NotebookLM-Export-");
-		assertThat(ordner.resolve(NotebookLmExporter.DOKUMENTATION_UNTERORDNER)).isDirectory();
+		assertThat(ordner).isDirectory();
 	}
 
 	@Test
-	void exportiereDokumentationUndQuellenKopiertGebuendelteDokusUndSchreibtQuellenMd() throws Exception {
+	void exportiereQuellenSchreibtQuellenMdMitProjektUndWikipediaLinks() throws Exception {
 		Path ordner = NotebookLmExporter.bereiteExportOrdnerVor(basisVerzeichnis);
 
-		NotebookLmExporter.exportiereDokumentationUndQuellen(ordner);
-
-		Path dokuOrdner = ordner.resolve(NotebookLmExporter.DOKUMENTATION_UNTERORDNER);
-		assertThat(dokuOrdner.resolve("CLAUDE.md")).isRegularFile();
-		assertThat(dokuOrdner.resolve("BUILD_ISSUES.md")).isRegularFile();
-		assertThat(dokuOrdner.resolve("tools-README.md")).isRegularFile();
-		assertThat(dokuOrdner.resolve("03_Schweizer.md")).isRegularFile();
+		NotebookLmExporter.exportiereQuellen(ordner);
 
 		Path quellenDatei = ordner.resolve(NotebookLmExporter.QUELLEN_DATEINAME);
 		assertThat(quellenDatei).isRegularFile();
@@ -41,6 +35,8 @@ class NotebookLmExporterTest {
 		assertThat(inhalt).contains(NotebookLmExporter.GITHUB_REPO_URL);
 		assertThat(inhalt).contains(NotebookLmExporter.GITHUB_WIKI_URL);
 		assertThat(inhalt).contains("en.wikipedia.org/wiki/Swiss-system_tournament");
+		assertThat(inhalt).contains("help.libreoffice.org");
+		assertThat(inhalt).contains("api.libreoffice.org");
 	}
 
 	private static String liesDatei(Path datei) throws IOException {

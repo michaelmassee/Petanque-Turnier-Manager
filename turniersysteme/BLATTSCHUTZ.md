@@ -1,13 +1,19 @@
 # Blattschutz im Turnier-Modus – Architektur
 
-Beim Aktivieren der Turnieransicht (`TurnierModus`) werden die Sheets des aktiven Turniersystems
-tab-geschützt; editierbare Zellen (Name, SP, Spieltage, Ergebnisse) bleiben über
-`CellProtection.IsLocked = false` bedienbar. Beim Deaktivieren werden die Sheets entsperrt.
+Der Turnier-Modus (Kiosk-Modus, `TurnierModus`) ist **nicht für die Darstellung** gedacht, sondern
+für die vereinfachte **Ergebnis-Erfassung durch Laien**. Beim Aktivieren werden alle nicht dafür
+benötigten Calc-Bedienelemente ausgeblendet – Menüleiste, Symbolleisten, Statusleiste und
+Rechenleiste (`TurnierModus.STANDARD_ELEMENTE` / `setzeRechnerleiste`); nur die PTM-Toolbar bleibt
+sichtbar. Zusätzlich werden die Sheets des aktiven Turniersystems tab-geschützt; ausschließlich die
+für die Erfassung nötigen editierbaren Zellen (Name, SP, Spieltage, Ergebnisse) bleiben über
+`CellProtection.IsLocked = false` bedienbar. Beim Deaktivieren werden UI-Elemente und Sheets wieder
+freigegeben.
 
 ## Zentrale Klassen
 
 | Klasse | Paket | Zweck |
 |---|---|---|
+| `TurnierModus` | `toolbar/` | Orchestriert das Aus-/Einblenden der UI-Elemente (Kiosk-Modus) und stößt den Blattschutz an |
 | `IBlattschutzKonfiguration` | `helper/sheet/blattschutz/` | Interface – eine Impl. pro Turniersystem |
 | `SheetSchutzInfo` | `helper/sheet/blattschutz/` | Record: Sheet + editierbare Bereiche |
 | `BlattschutzManager` | `helper/sheet/blattschutz/` | Singleton-Orchestrator |
@@ -20,7 +26,7 @@ kein `if (SUPERMELEE)` nötig, neue Systeme nur per `BlattschutzRegistry.registe
 ## Pflicht-Reihenfolge beim Sperren (kritisch!)
 
 1. `zelleStylesAktualisieren(ws)` – **vor** jedem `protect()`, sonst LO-RuntimeException
-2. Sheet ggf. entsperren (`entsperreSheetFallsNoetig`) – Idempotenz
+2. Sheet ggf. entsperren (`BlattschutzManager.entsperreSheet`, idempotent via `XProtectable.isProtected()`)
 3. Editierbare Bereiche mit `CellProtection.IsLocked = false` freigeben
 4. `XProtectable.protect("")`
 
@@ -30,6 +36,25 @@ kein `if (SUPERMELEE)` nötig, neue Systeme nur per `BlattschutzRegistry.registe
 - Editierbar-Flag: **`IsLocked`** (nicht `IsProtected`)
 - Immer **alten Wert lesen**, neues Objekt schreiben, alle Flags (`IsHidden`, `IsFormulaHidden`, `IsPrintHidden`) übernehmen
 
+## Command-Scope (Lazy-Unprotect)
+
+`BlattschutzManager` bündelt die Pflicht-Reihenfolge pro `SheetRunner`-Kommando in einem
+thread-lokalen, referenzgezählten Scope, damit ein Kommando höchstens **ein** physisches Entsperren
+und garantiert **ein** abschließendes Schützen auslöst:
+
+| Methode | Zweck |
+|---|---|
+| `beginCommandScope(konfig, ws)` | Öffnet den Scope; entsperrt noch **nicht** |
+| `ensureUnprotectedInScope()` | Entsperrt lazy beim ersten Bedarf (z. B. aus `ConditionalFormatHelper`, `RangeHelper.clearRange`/`setDataInRange`); weitere Aufrufe im selben Scope sind No-Ops |
+| `endCommandScope()` | Schließt den äußersten Scope; führt **immer** ein abschließendes `doSchuetzen()` aus – auch wenn `ensureUnprotectedInScope()` nie gefeuert hat (deckt Doc-Struktur-Mutationen wie `NewSheet.forceCreate()` ab) |
+| `scopeFuer(TurnierSystem, WorkingSpreadsheet)` | Convenience-`AutoCloseable` für Aufrufer außerhalb eines `SheetRunner` (z. B. modale Dialoge im `ProtocolHandler`-Pfad); No-Op wenn Turnier-Modus inaktiv oder kein Mapping registriert |
+| `mitFallbackEntsperrt(sheet, Runnable)` | Physische Absicherung direkt am Schreibpunkt, falls der globale `TurnierModus.istAktiv()`-Flag (pro Prozess, nicht pro Dokument) vom tatsächlichen Sheet-Zustand abweicht |
+
+Innerhalb eines aktiven Scopes sind die öffentlichen `schuetzen()`/`entsperren()`-Aufrufe No-Ops.
+Außerhalb eines Scopes wirft `ensureUnprotectedInScope()` eine `IllegalStateException`, wenn der
+Turnier-Modus aktiv ist – Style-/CF-Mutationen **müssen** also innerhalb eines `SheetRunner.run()`
+bzw. eines `scopeFuer(...)`-Blocks laufen.
+
 ## Neues Turniersystem anschließen
 
 1. `FooBlattschutzKonfiguration implements IBlattschutzKonfiguration` in `foo/blattschutz/` anlegen
@@ -37,6 +62,8 @@ kein `if (SUPERMELEE)` nötig, neue Systeme nur per `BlattschutzRegistry.registe
 2. In `BlattschutzRegistry` static-Block: `REGISTRY.put(TurnierSystem.FOO, FooBlattschutzKonfiguration.get())`
 3. Editierbare Bereiche per `SheetMetadataHelper.findeSheet()` + `getSchluesselMitPrefix()` ermitteln
 4. Zeilengrenzen: `MeldungenSpalte.MAX_ANZ_MELDUNGEN = 999` – keine Magic Numbers
+5. Das Teilnehmer-Sheet muss **nicht** separat behandelt werden: `BlattschutzManager.mitGlobalenSchutzInfos()`
+   sperrt es systemübergreifend automatisch vollständig, unabhängig von der eigenen `IBlattschutzKonfiguration`.
 
 ## Named Ranges – Pflichtregeln für Schlüssel
 
@@ -71,17 +98,19 @@ Regressions-Tests: `SupermeleeTurnierTestDatenUITest` – `kopiertesBlattErzeugt
 | `CellStyleHelper.apply()` (Styles) | Wirft `RuntimeException` → von `applyAufDokument` gefangen → WARN |
 | `setPropertyValue("ConditionalFormat", ...)` | `return;` ohne Exception → lautlos, kein Log-Eintrag |
 
-**Konsequenz für alle `doRun()`-Methoden die `formatDaten()` aufrufen:**
-Ist TurnierModus aktiv (Sheets sind geschützt), MUSS vor jedem `upDateSheet()`-Aufruf der Blattschutz entfernt werden. `formatDaten()` ruft am Ende `schuetzen()` und stellt den Schutz selbst wieder her.
+**Konsequenz für alle Methoden, die `ConditionalFormat` setzen (`ConditionalFormatHelper`, `RangeHelper.clearRange`/`setDataInRange`):**
+Ist TurnierModus aktiv (Sheets sind geschützt), MUSS vor der Mutation der Blattschutz entfernt werden.
+In der Praxis passiert das nicht mehr durch direktes `entsperren()`/`schuetzen()`, sondern über den
+[Command-Scope](#command-scope-lazy-unprotect): Ein `SheetRunner`-Lauf öffnet den Scope einmalig,
+die einzelnen Style-/CF-Operationen lösen darin nur noch das lazy `ensureUnprotectedInScope()` aus,
+das abschließende Schützen passiert automatisch bei `endCommandScope()`.
 
 ```java
-// Pflichtmuster in doRun() / naechsteSpieltag() etc. wenn TurnierModus aktiv sein kann:
-if (TurnierModus.get().istAktiv()) {
-    BlattschutzRegistry.fuer(TurnierSystem.SUPERMELEE)
-            .ifPresent(k -> BlattschutzManager.get().entsperren(k, getWorkingSpreadsheet()));
-}
-// ... clearRange(), upDateSheet() etc.
-// formatDaten() → schuetzen() stellt Schutz am Ende wieder her
+// Aktuelles Muster – z. B. ConditionalFormatHelper.setzeConditionalFormat() / RangeHelper.clearRange():
+BlattschutzManager.get().ensureUnprotectedInScope();
+// ... Style-/ConditionalFormat-Mutation ...
+// Schützen NICHT hier – passiert automatisch am Ende des umschließenden
+// BlattschutzManager.endCommandScope() (bzw. scopeFuer(...)-try-with-resources)
 ```
 
 ## `CellStyleHelper` – Überladung ohne ISheet

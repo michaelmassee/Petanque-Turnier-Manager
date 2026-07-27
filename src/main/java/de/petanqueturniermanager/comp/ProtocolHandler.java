@@ -1401,7 +1401,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		}
 		ProcessBox.from().visibleWennAutomatisch().clearWennNotRunning().info("Start " + CMD_EXPORT_NOTEBOOKLM);
 		Path zielVerzeichnis = NotebookLmExporter.bereiteExportOrdnerVor(pfadOpt.get());
-		NotebookLmExporter.exportiereDokumentationUndQuellen(zielVerzeichnis);
+		NotebookLmExporter.exportiereQuellen(zielVerzeichnis);
+		NotebookLmExporter.exportiereSystemInfo(zielVerzeichnis, ws);
 		SheetRunner runner = switch (new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument()) {
 			case SUPERMELEE -> new SupermeleeExportInVerzeichnis(ws, zielVerzeichnis, ExportFormat.EIN_DOKUMENT_MD)
 					.testTurnierSystem(TurnierSystem.SUPERMELEE);

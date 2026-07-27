@@ -71,7 +71,7 @@ public class PouleExportInVerzeichnis extends AbstractExportInVerzeichnis {
             if (abschlussSheetExportieren && StringUtils.isNotBlank(abschlussSheetName)) {
                 var abschluss = renderiereAbschlussSheetAlsBild(abschlussSheetName, zielVerzeichnis);
                 if (abschluss != null) {
-                    sections.add(new ExportHtmlSeite.Section("abschluss-sheet", I18n.get("export.nav.abschluss.sheet"),
+                    sections.add(new ExportHtmlSeite.Section("abschluss-sheet", abschlussSheetName,
                             null, null, abschluss.png()));
                 }
             }
@@ -115,7 +115,7 @@ public class PouleExportInVerzeichnis extends AbstractExportInVerzeichnis {
         if (abschlussSheetExportieren && StringUtils.isNotBlank(abschlussSheetName)) {
             var abschluss = renderiereAbschlussSheetAlsBild(abschlussSheetName, zielVerzeichnis);
             if (abschluss != null) {
-                sections.add(new ExportHtmlSeite.Section("abschluss-sheet", I18n.get("export.nav.abschluss.sheet"),
+                sections.add(new ExportHtmlSeite.Section("abschluss-sheet", abschlussSheetName,
                         null, buildPdfUrl(abschluss.pdf()), abschluss.png()));
                 exportierteDateien.add(abschluss.png());
                 exportierteDateien.add(abschluss.pdf());
