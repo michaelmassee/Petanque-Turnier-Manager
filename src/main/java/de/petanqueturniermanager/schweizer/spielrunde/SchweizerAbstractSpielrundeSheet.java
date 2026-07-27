@@ -27,6 +27,8 @@ import com.sun.star.table.TableBorder2;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.algorithmen.schweizer.SchweizerSystem;
 import de.petanqueturniermanager.algorithmen.schweizer.SchweizerTeamErgebnis;
+import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeHelper;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -650,8 +652,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 				// Freilos – Team A ohne Gegner eintragen, ERG mit Freispiel-Werten vorbelegen
 				RowData freilosRow = rangeData.addNewRow();
 				if (useTeamname) {
-					String nameA = getMeldeListe().getTeamNameByNr(teamPaarung.getA().getNr());
-					freilosRow.add(new CellData(nameA != null ? nameA : String.valueOf(teamPaarung.getA().getNr())));
+					freilosRow.add(new CellData("")); // Name folgt per Formel (teamNamenFormelnSchreiben)
 				} else {
 					freilosRow.add(new CellData(teamPaarung.getA().getNr()));
 				}
@@ -661,11 +662,9 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 				continue;
 			}
 			if (useTeamname) {
-				String nameA = getMeldeListe().getTeamNameByNr(teamPaarung.getA().getNr());
-				String nameB = getMeldeListe().getTeamNameByNr(teamPaarung.getB().getNr());
 				RowData row = rangeData.addNewRow();
-				row.add(new CellData(nameA != null ? nameA : String.valueOf(teamPaarung.getA().getNr())));
-				row.add(new CellData(nameB != null ? nameB : String.valueOf(teamPaarung.getB().getNr())));
+				row.add(new CellData("")); // Name folgt per Formel (teamNamenFormelnSchreiben)
+				row.add(new CellData(""));
 			} else {
 				rangeData.addNewRow(teamPaarung.getA().getNr(), teamPaarung.getB().getNr());
 			}
@@ -673,6 +672,44 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 
 		Position startPos = Position.from(TEAM_A_SPALTE, ERSTE_DATEN_ZEILE);
 		RangeHelper.from(this, rangeData.getRangePosition(startPos)).setDataInRange(rangeData);
+
+		if (useTeamname) {
+			teamNamenFormelnSchreiben(paarungen);
+		}
+	}
+
+	/**
+	 * Schreibt die Team-Namen im Anzeigemodus {@link SpielplanTeamAnzeige#NAME} als
+	 * SVERWEIS-Formel (statt statischem Text), damit eine spätere Umbenennung in der
+	 * Meldeliste im Spielplan sofort sichtbar bleibt (siehe auch {@link #resolveTeamNr}).
+	 */
+	private void teamNamenFormelnSchreiben(List<TeamPaarung> paarungen) throws GenerateException {
+		XSpreadsheet xSheet = getXSpreadSheet();
+		boolean teamnameAnzeigen = getKonfigurationSheet().isMeldeListeTeamnameAnzeigen();
+		boolean vereinsnameAnzeigen = getKonfigurationSheet().isMeldeListeVereinsnameAnzeigen();
+		Formation formation = getKonfigurationSheet().getMeldeListeFormation();
+
+		int zeile = ERSTE_DATEN_ZEILE;
+		for (TeamPaarung teamPaarung : paarungen) {
+			schreibeTeamNameFormel(xSheet, TEAM_A_SPALTE, zeile, teamPaarung.getA().getNr(), teamnameAnzeigen,
+					formation, vereinsnameAnzeigen);
+			if (teamPaarung.hasB()) {
+				schreibeTeamNameFormel(xSheet, TEAM_B_SPALTE, zeile, teamPaarung.getB().getNr(), teamnameAnzeigen,
+						formation, vereinsnameAnzeigen);
+			}
+			zeile++;
+		}
+		// Die Runden-Erzeugung läuft mit deaktivierter Automatikberechnung (Performance);
+		// ohne expliziten Rechenlauf blieben die neuen Formelzellen bis zum nächsten
+		// Nutzer-Trigger auf 0 stehen.
+		getxCalculatable().calculateAll();
+	}
+
+	private void schreibeTeamNameFormel(XSpreadsheet xSheet, int spalte, int zeile, int nr, boolean teamnameAnzeigen,
+			Formation formation, boolean vereinsnameAnzeigen) throws GenerateException {
+		String formel = MeldeListeHelper.teamNameFormel(String.valueOf(nr), teamnameAnzeigen, formation,
+				vereinsnameAnzeigen);
+		getSheetHelper().setFormulaInCell(StringCellValue.from(xSheet, Position.from(spalte, zeile), formel));
 	}
 
 	/**
