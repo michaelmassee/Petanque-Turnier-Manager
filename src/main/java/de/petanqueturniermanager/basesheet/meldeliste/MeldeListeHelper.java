@@ -389,8 +389,8 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 		meldeListe.processBoxinfo("processbox.meldeliste.nummern.aktualisieren");
 
 		int letzteSpielZeile = meldeListe.getMeldungenSpalte().letzteZeileMitSpielerName();
-		if (letzteSpielZeile <= meldeListe.getErsteDatenZiele()) { // daten vorhanden ?
-			return; // nur 1 Meldung
+		if (letzteSpielZeile < meldeListe.getErsteDatenZiele()) { // daten vorhanden ?
+			return; // keine Daten
 		}
 		XSpreadsheet xSheet = getXSpreadSheet();
 		doSort(SPIELER_NR_SPALTE, false); // hoechste nummer oben, ohne nummer nach unten

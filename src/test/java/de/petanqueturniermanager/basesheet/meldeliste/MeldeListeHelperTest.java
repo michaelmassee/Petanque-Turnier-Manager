@@ -167,6 +167,24 @@ public class MeldeListeHelperTest {
 		verify(sheetHelperMock, times(1)).clearValInCell(any(XSpreadsheet.class), any(Position.class));
 	}
 
+	@Test
+	public void testUpdateMeldungenNr_EinzelneMeldungOhneNummer_bekommtNummer() throws Exception {
+		// Regression: einzelne Meldung (letzteSpielZeile == ErsteDatenZiele) darf beim
+		// Nummerieren nicht als "keine Daten" behandelt werden (siehe Trip-Tête-Bug).
+		Mockito.when(iMeldelisteMock.getErsteDatenZiele()).thenReturn(MeldeListeKonstanten.ERSTE_DATEN_ZEILE);
+		Mockito.when(meldungenSpalteMock.letzteZeileMitSpielerName())
+				.thenReturn(MeldeListeKonstanten.ERSTE_DATEN_ZEILE);
+		Mockito.when(iMeldelisteMock.naechsteFreieDatenZeileInSpielerNrSpalte())
+				.thenReturn(MeldeListeKonstanten.ERSTE_DATEN_ZEILE);
+		Mockito.when(sheetHelperMock.getIntFromCell(any(XSpreadsheet.class), eq(Position
+				.from(MeldeListeKonstanten.SPIELER_NR_SPALTE, MeldeListeKonstanten.ERSTE_DATEN_ZEILE))))
+				.thenReturn(-1);
+
+		meldeListeHelper.updateMeldungenNr();
+
+		verify(sheetHelperMock, times(1)).setNumberValueInCell(any());
+	}
+
 	private void initReturnSpielerDaten(SpielerNrName[] spielerNrnameList) throws GenerateException {
 
 		Position spielerNrPos = Position.from(MeldeListeKonstanten.SPIELER_NR_SPALTE,
