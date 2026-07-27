@@ -35,8 +35,8 @@ public class KoMeldeListeSheetTestDaten extends SheetRunner implements ISheet, M
 	public KoMeldeListeSheetTestDaten(WorkingSpreadsheet workingSpreadsheet, int anzTeams) {
 		super(workingSpreadsheet, TurnierSystem.KO, "KO-Meldeliste-Testdaten");
 		this.anzTeams = anzTeams;
-		delegate = new KoListeDelegate(this);
 		meldeListeNew = new KoMeldeListeSheetNew(workingSpreadsheet);
+		delegate = new KoListeDelegate(meldeListeNew);
 		testnamenLoader = new TestnamenLoader();
 	}
 

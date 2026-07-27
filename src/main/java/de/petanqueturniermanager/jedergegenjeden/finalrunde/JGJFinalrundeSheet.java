@@ -70,7 +70,7 @@ public class JGJFinalrundeSheet extends SheetRunner implements ISheet {
 		var meldeliste = new JGJMeldeListeSheet_Update(getWorkingSpreadsheet());
 		meldeliste.upDateSheet();
 		TeamMeldungen aktiveMeldungen = meldeliste.getAktiveMeldungen();
-		if (aktiveMeldungen == null || aktiveMeldungen.size() < 2) {
+		if (aktiveMeldungen.size() < 2) {
 			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK)
 					.caption(I18n.get("jgj.finalrunde.caption"))
 					.message(I18n.get("jgj.finalrunde.fehler.zu.wenige.teams"))

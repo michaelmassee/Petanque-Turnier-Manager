@@ -12,14 +12,14 @@ import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.meldeliste.IMeldeliste;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.border.BorderFactory;
-import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.RangeProperties;
@@ -35,7 +35,6 @@ import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
-import de.petanqueturniermanager.helper.sheet.SortHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
@@ -62,12 +61,14 @@ class TripTeteMeldeListeDelegate implements MeldeListeKonstanten {
     private static final int VEREINSNAME_SPALTE_WIDTH = 2500;
     private static final int AKTIV_SPALTE_WIDTH = 700;
 
-    private final ISheet sheet;
+    private final IMeldeliste<TeamMeldungen, Team> sheet;
     private final TripTeteKonfigurationSheet konfigurationSheet;
+    private final MeldeListeHelper<TeamMeldungen, Team> meldeListeHelper;
 
-    TripTeteMeldeListeDelegate(ISheet sheet, WorkingSpreadsheet ws) {
+    TripTeteMeldeListeDelegate(IMeldeliste<TeamMeldungen, Team> sheet, WorkingSpreadsheet ws) {
         this.sheet = sheet;
         konfigurationSheet = new TripTeteKonfigurationSheet(ws);
+        meldeListeHelper = new MeldeListeHelper<>(sheet, SheetMetadataHelper.SCHLUESSEL_TRIPTETE_MELDELISTE);
     }
 
     TripTeteKonfigurationSheet getKonfigurationSheet() {
@@ -121,7 +122,10 @@ class TripTeteMeldeListeDelegate implements MeldeListeKonstanten {
         sheet.processBoxinfo("processbox.meldeliste.sortieren");
         TurnierSheet.from(sheet.getXSpreadSheet(), sheet.getWorkingSpreadsheet()).setActiv();
 
-        sortiereUndNummeriere();
+        meldeListeHelper.testDoppelteMeldungen();
+        meldeListeHelper.zeileOhneSpielerNamenEntfernen();
+        meldeListeHelper.updateMeldungenNr();
+
         insertHeaderInSheet(konfigurationSheet.getMeldeListeHeaderFarbe());
         formatDatenSpalten();
 
@@ -139,45 +143,6 @@ class TripTeteMeldeListeDelegate implements MeldeListeKonstanten {
         PrintArea.from(sheet.getXSpreadSheet(), sheet.getWorkingSpreadsheet())
                 .setPrintArea(bereich)
                 .setTitelZeilen(ERSTE_HEADER_ZEILE, DRITTE_HEADER_ZEILE, letzteSpalte);
-    }
-
-    private void sortiereUndNummeriere() throws GenerateException {
-        XSpreadsheet xSheet = sheet.getXSpreadSheet();
-        SheetHelper sh = sheet.getSheetHelper();
-        int letzte = letzteZeileMitDaten(xSheet) + MIN_ANZAHL_MELDUNGEN_ZEILEN;
-
-        int naechsteNr = berechneNaechsteFreieNr(sh, xSheet, letzte);
-
-        for (int z = ERSTE_DATEN_ZEILE_OVERRIDE; z <= letzte; z++) {
-            String vorname = sh.getTextFromCell(xSheet, Position.from(getVornameSpalte(0), z));
-            if (vorname == null || vorname.isBlank()) {
-                sh.clearValInCell(xSheet, Position.from(getTeamNrSpalte(), z));
-            } else {
-                int vorhandeneNr = sh.getIntFromCell(xSheet, Position.from(getTeamNrSpalte(), z));
-                if (vorhandeneNr <= 0) {
-                    sh.setNumberValueInCell(NumberCellValue.from(xSheet, Position.from(getTeamNrSpalte(), z))
-                            .setValue(naechsteNr++));
-                }
-            }
-        }
-
-        int letzteNachNummern = letzteZeileMitDaten(xSheet);
-        if (letzteNachNummern >= ERSTE_DATEN_ZEILE_OVERRIDE) {
-            RangePosition sortRange = RangePosition.from(getTeamNrSpalte(), ERSTE_DATEN_ZEILE_OVERRIDE,
-                    getAktivSpalte(), letzteNachNummern);
-            SortHelper.from(sheet, sortRange).spalteToSort(getTeamNrSpalte()).aufSteigendSortieren(true).doSort();
-        }
-    }
-
-    private int berechneNaechsteFreieNr(SheetHelper sh, XSpreadsheet xSheet, int letzte) throws GenerateException {
-        int max = 0;
-        for (int z = ERSTE_DATEN_ZEILE_OVERRIDE; z <= letzte; z++) {
-            int nr = sh.getIntFromCell(xSheet, Position.from(getTeamNrSpalte(), z));
-            if (nr > max) {
-                max = nr;
-            }
-        }
-        return max + 1;
     }
 
     private void insertHeaderInSheet(int headerColor) throws GenerateException {
@@ -537,5 +502,17 @@ class TripTeteMeldeListeDelegate implements MeldeListeKonstanten {
             zeile++;
         }
         return letzte;
+    }
+
+    MeldungenSpalte<TeamMeldungen, Team> getMeldungenSpalte() {
+        return MeldungenSpalte.<TeamMeldungen, Team>builder()
+                .spalteMeldungNameWidth(NAME_SPALTE_WIDTH)
+                .ersteDatenZiele(ERSTE_DATEN_ZEILE_OVERRIDE)
+                .spielerNrSpalte(SPIELER_NR_SPALTE)
+                .ersteMeldungNameSpalteOffset(getErsterSpielerOffset())
+                .sheet(sheet)
+                .minAnzZeilen(MIN_ANZAHL_MELDUNGEN_ZEILEN)
+                .formation(Formation.TRIPLETTE)
+                .build();
     }
 }

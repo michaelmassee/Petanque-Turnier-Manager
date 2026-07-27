@@ -118,7 +118,7 @@ public class JGJRanglisteSheet extends SheetRunner implements ISheet, IRangliste
         meldeListe.upDateSheet();
 
         TeamMeldungen aktiveMeldungen = meldeListe.getAktiveMeldungen();
-        if (aktiveMeldungen == null || aktiveMeldungen.size() == 0) {
+        if (aktiveMeldungen.size() == 0) {
             processBoxinfo("processbox.abbruch");
             MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK)
                     .caption(I18n.get("msg.caption.jgj.spielplan"))

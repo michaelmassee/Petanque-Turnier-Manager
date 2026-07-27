@@ -16,12 +16,13 @@ import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.meldeliste.IMeldeliste;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
@@ -60,14 +61,16 @@ class JGJMeldeListeDelegate implements MeldeListeKonstanten {
 
 	static final int AKTIV_WERT_NIMMT_TEIL = 1;
 
-	private final ISheet sheet;
+	private final IMeldeliste<TeamMeldungen, Team> sheet;
 	private final JGJKonfigurationSheet konfigurationSheet;
 	private final TurnierSystem turnierSystem;
+	private final MeldeListeHelper<TeamMeldungen, Team> meldeListeHelper;
 
-	JGJMeldeListeDelegate(ISheet sheet, WorkingSpreadsheet ws, TurnierSystem turnierSystem) {
+	JGJMeldeListeDelegate(IMeldeliste<TeamMeldungen, Team> sheet, WorkingSpreadsheet ws, TurnierSystem turnierSystem) {
 		this.sheet = sheet;
 		this.turnierSystem = turnierSystem;
 		konfigurationSheet = new JGJKonfigurationSheet(ws);
+		meldeListeHelper = new MeldeListeHelper<>(sheet, SheetMetadataHelper.SCHLUESSEL_JGJ_MELDELISTE);
 	}
 
 	JGJKonfigurationSheet getKonfigurationSheet() {
@@ -140,6 +143,10 @@ class JGJMeldeListeDelegate implements MeldeListeKonstanten {
 
 		XSpreadsheet xSheet = sheet.getXSpreadSheet();
 		TurnierSheet.from(xSheet, sheet.getWorkingSpreadsheet()).setActiv();
+
+		meldeListeHelper.testDoppelteMeldungen();
+		meldeListeHelper.zeileOhneSpielerNamenEntfernen();
+		meldeListeHelper.updateMeldungenNr();
 
 		insertHeaderInSheet(konfigurationSheet.getMeldeListeHeaderFarbe());
 		formatDatenSpalten();

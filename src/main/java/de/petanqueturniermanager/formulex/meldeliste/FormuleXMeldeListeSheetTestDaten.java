@@ -36,8 +36,8 @@ public class FormuleXMeldeListeSheetTestDaten extends SheetRunner implements ISh
     public FormuleXMeldeListeSheetTestDaten(WorkingSpreadsheet workingSpreadsheet, int anzTeams) {
         super(workingSpreadsheet, TurnierSystem.FORMULEX, "Formule X Meldeliste Testdaten");
         this.anzTeams = anzTeams;
-        delegate = new FormuleXListeDelegate(this);
         meldeListeNew = new FormuleXMeldeListeSheetNew(workingSpreadsheet);
+        delegate = new FormuleXListeDelegate(meldeListeNew);
         testnamenLoader = new TestnamenLoader();
     }
 

@@ -42,9 +42,9 @@ public class SchweizerMeldeListeSheetTestDaten extends SheetRunner implements IS
 
 	public SchweizerMeldeListeSheetTestDaten(WorkingSpreadsheet workingSpreadsheet, int anzTeams) {
 		super(workingSpreadsheet, TurnierSystem.SCHWEIZER, "Schweizer-Meldeliste");
-		delegate = new SchweizerListeDelegate(this);
 		this.anzTeams = anzTeams;
 		meldeListe = new SchweizerMeldeListeSheetNew(workingSpreadsheet);
+		delegate = new SchweizerListeDelegate(meldeListe);
 		testnamenLoader = new TestnamenLoader();
 	}
 

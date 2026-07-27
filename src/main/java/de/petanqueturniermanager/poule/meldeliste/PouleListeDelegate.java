@@ -18,10 +18,12 @@ import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.meldeliste.IMeldeliste;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
@@ -59,12 +61,14 @@ class PouleListeDelegate implements MeldeListeKonstanten {
     static final int AKTIV_WERT_NIMMT_TEIL = 1;
     static final int AKTIV_WERT_AUSGESTIEGEN = 2;
 
-    private final ISheet sheet;
+    private final IMeldeliste<TeamMeldungen, Team> sheet;
     private final PouleKonfigurationSheet konfigurationSheet;
+    private final MeldeListeHelper<TeamMeldungen, Team> meldeListeHelper;
 
-    PouleListeDelegate(ISheet sheet) {
+    PouleListeDelegate(IMeldeliste<TeamMeldungen, Team> sheet) {
         this.sheet = checkNotNull(sheet);
         konfigurationSheet = new PouleKonfigurationSheet(sheet.getWorkingSpreadsheet());
+        meldeListeHelper = new MeldeListeHelper<>(sheet, SheetMetadataHelper.SCHLUESSEL_POULE_MELDELISTE);
     }
 
     PouleKonfigurationSheet getKonfigurationSheet() {
@@ -143,6 +147,10 @@ class PouleListeDelegate implements MeldeListeKonstanten {
 
         XSpreadsheet xSheet = sheet.getXSpreadSheet();
         TurnierSheet.from(xSheet, sheet.getWorkingSpreadsheet()).setActiv();
+
+        meldeListeHelper.testDoppelteMeldungen();
+        meldeListeHelper.zeileOhneSpielerNamenEntfernen();
+        meldeListeHelper.updateMeldungenNr();
 
         insertHeaderInSheet(konfigurationSheet.getMeldeListeHeaderFarbe());
         formatDatenSpalten();
@@ -514,6 +522,116 @@ class PouleListeDelegate implements MeldeListeKonstanten {
             }
         }
         throw new GenerateException(sb.toString());
+    }
+
+    // ---------------------------------------------------------------
+    // IMeldeliste / IMitSpielerSpalte (fuer MeldeListeHelper)
+    // ---------------------------------------------------------------
+
+    /** Liest alle Team-Meldungen aus dem Sheet, unabhängig vom Aktiv-Status. */
+    TeamMeldungen getAlleMeldungen() throws GenerateException {
+        var xSheet = sheet.getXSpreadSheet();
+        var letzteZeile = letzteZeileMitDaten(xSheet);
+        var meldungen = new TeamMeldungen();
+        for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
+            var vorname = sheet.getSheetHelper().getTextFromCell(xSheet, Position.from(getVornameSpalte(0), zeile));
+            if (vorname == null || vorname.isEmpty()) {
+                continue;
+            }
+            var nr = sheet.getSheetHelper().getIntFromCell(xSheet, Position.from(getTeamNrSpalte(), zeile));
+            if (nr <= 0) {
+                continue;
+            }
+            var setzPos = sheet.getSheetHelper().getIntFromCell(xSheet, Position.from(getSetzPositionSpalte(), zeile));
+            meldungen.addTeamWennNichtVorhanden(Team.from(nr).setSetzPos(setzPos));
+        }
+        return meldungen;
+    }
+
+    MeldungenSpalte<TeamMeldungen, Team> getMeldungenSpalte() throws GenerateException {
+        return MeldungenSpalte.<TeamMeldungen, Team>builder()
+                .spalteMeldungNameWidth(NAME_SPALTE_WIDTH)
+                .ersteDatenZiele(ERSTE_DATEN_ZEILE)
+                .spielerNrSpalte(SPIELER_NR_SPALTE)
+                .ersteMeldungNameSpalteOffset(getErsterSpielerOffset())
+                .sheet(sheet)
+                .minAnzZeilen(MIN_ANZAHL_MELDUNGEN_ZEILEN)
+                .formation(konfigurationSheet.getMeldeListeFormation())
+                .build();
+    }
+
+    String formulaSverweisSpielernamen(String spielrNrAdresse) throws GenerateException {
+        return MeldeListeHelper.teamNameFormel(spielrNrAdresse,
+                konfigurationSheet.isMeldeListeTeamnameAnzeigen(),
+                konfigurationSheet.getMeldeListeFormation(),
+                konfigurationSheet.isMeldeListeVereinsnameAnzeigen());
+    }
+
+    int letzteZeileMitSpielerName() throws GenerateException {
+        return letzteZeileMitDaten(sheet.getXSpreadSheet());
+    }
+
+    int getSpielerZeileNr(int spielerNr) throws GenerateException {
+        var xSheet = sheet.getXSpreadSheet();
+        var letzteZeile = letzteZeileMitDaten(xSheet);
+        for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
+            var nr = sheet.getSheetHelper().getIntFromCell(xSheet, Position.from(getTeamNrSpalte(), zeile));
+            if (nr == spielerNr) {
+                return zeile;
+            }
+        }
+        return -1;
+    }
+
+    int naechsteFreieDatenZeileInSpielerNrSpalte() throws GenerateException {
+        var xSheet = sheet.getXSpreadSheet();
+        var maxZeile = ERSTE_DATEN_ZEILE + 500;
+        for (int zeile = ERSTE_DATEN_ZEILE; zeile <= maxZeile; zeile++) {
+            var nr = sheet.getSheetHelper().getIntFromCell(xSheet, Position.from(getTeamNrSpalte(), zeile));
+            if (nr <= 0) {
+                return zeile;
+            }
+        }
+        return maxZeile + 1;
+    }
+
+    int getLetzteMitDatenZeileInSpielerNrSpalte() throws GenerateException {
+        var xSheet = sheet.getXSpreadSheet();
+        var letzte = ERSTE_DATEN_ZEILE - 1;
+        var maxZeile = ERSTE_DATEN_ZEILE + 500;
+        for (int zeile = ERSTE_DATEN_ZEILE; zeile <= maxZeile; zeile++) {
+            var nr = sheet.getSheetHelper().getIntFromCell(xSheet, Position.from(getTeamNrSpalte(), zeile));
+            if (nr > 0) {
+                letzte = zeile;
+            }
+        }
+        return letzte;
+    }
+
+    List<String> getSpielerNamenList() throws GenerateException {
+        var xSheet = sheet.getXSpreadSheet();
+        var letzteZeile = letzteZeileMitDaten(xSheet);
+        List<String> namen = new ArrayList<>();
+        for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
+            var vorname = sheet.getSheetHelper().getTextFromCell(xSheet, Position.from(getVornameSpalte(0), zeile));
+            if (vorname != null && !vorname.isEmpty()) {
+                namen.add(vorname);
+            }
+        }
+        return namen;
+    }
+
+    List<Integer> getSpielerNrList() throws GenerateException {
+        var xSheet = sheet.getXSpreadSheet();
+        var letzteZeile = letzteZeileMitDaten(xSheet);
+        List<Integer> nrList = new ArrayList<>();
+        for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
+            var nr = sheet.getSheetHelper().getIntFromCell(xSheet, Position.from(getTeamNrSpalte(), zeile));
+            if (nr > 0) {
+                nrList.add(nr);
+            }
+        }
+        return nrList;
     }
 
 }

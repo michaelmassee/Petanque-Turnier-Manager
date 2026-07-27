@@ -44,9 +44,9 @@ public class PouleMeldeListeSheetTestDaten extends SheetRunner implements ISheet
 
     public PouleMeldeListeSheetTestDaten(WorkingSpreadsheet workingSpreadsheet, int anzTeams) {
         super(workingSpreadsheet, TurnierSystem.POULE, "Poule-Meldeliste");
-        delegate = new PouleListeDelegate(this);
         this.anzTeams = anzTeams;
         meldeListe = new PouleMeldeListeSheetNew(workingSpreadsheet);
+        delegate = new PouleListeDelegate(meldeListe);
         testnamenLoader = new TestnamenLoader();
     }
 

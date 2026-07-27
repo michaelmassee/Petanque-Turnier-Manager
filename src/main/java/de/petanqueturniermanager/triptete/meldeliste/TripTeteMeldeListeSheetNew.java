@@ -6,6 +6,7 @@ import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.meldeliste.IMeldeliste;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -74,6 +75,11 @@ public class TripTeteMeldeListeSheetNew extends SheetRunner implements IMeldelis
     @Override
     public TeamMeldungen getAlleMeldungen() throws GenerateException {
         return delegate.getAlleMeldungen();
+    }
+
+    @Override
+    public MeldungenSpalte<TeamMeldungen, Team> getMeldungenSpalte() {
+        return delegate.getMeldungenSpalte();
     }
 
     @Override

@@ -39,8 +39,8 @@ public class JGJMeldeListeSheetTestDaten extends SheetRunner implements ISheet {
         this.formation = formation;
         this.anzTeams = anzTeams;
         this.gruppengroesse = gruppengroesse;
-        delegate = new JGJMeldeListeDelegate(this, ws, TurnierSystem.JGJ);
         meldeListe = new JGJMeldeListeSheet_New(ws);
+        delegate = new JGJMeldeListeDelegate(meldeListe, ws, TurnierSystem.JGJ);
         testnamenLoader = new TestnamenLoader();
     }
 

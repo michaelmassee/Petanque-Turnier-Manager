@@ -113,6 +113,10 @@ public class TripTetePropertiesSpalte extends BasePropertiesSpalte implements IT
 		return "J".equalsIgnoreCase(readStringProperty(KONFIG_PROP_MELDELISTE_TEAMNAME));
 	}
 
+	public void setMeldeListeTeamnameAnzeigen(boolean anzeigen) {
+		setStringProperty(KONFIG_PROP_MELDELISTE_TEAMNAME, anzeigen ? "J" : "N");
+	}
+
 	@Override
 	public boolean isMeldeListeVereinsnameAnzeigen() {
 		return "J".equalsIgnoreCase(readStringProperty(KONFIG_PROP_MELDELISTE_VEREINSNAME));

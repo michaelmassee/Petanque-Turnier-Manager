@@ -150,8 +150,8 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 
 	public void doSort(int spalteNr, boolean isAscending) throws GenerateException {
 		int letzteSpielZeile = meldeListe.getMeldungenSpalte().letzteZeileMitSpielerName();
-		if (letzteSpielZeile > ERSTE_DATEN_ZEILE) { // daten vorhanden
-			RangePosition rangeToSort = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE,
+		if (letzteSpielZeile > meldeListe.getErsteDatenZiele()) { // daten vorhanden
+			RangePosition rangeToSort = RangePosition.from(SPIELER_NR_SPALTE, meldeListe.getErsteDatenZiele(),
 					meldeListe.letzteSpielTagSpalte(), letzteSpielZeile);
 			SortHelper.from(meldeListe, rangeToSort).spalteToSort(spalteNr).aufSteigendSortieren(isAscending).doSort();
 		}
@@ -168,7 +168,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 		XSpreadsheet xSheet = getXSpreadSheet();
 
 		int letzteSpielZeile = meldeListe.getMeldungenSpalte().letzteZeileMitSpielerName();
-		if (letzteSpielZeile <= ERSTE_DATEN_ZEILE) { // daten vorhanden ?
+		if (letzteSpielZeile <= meldeListe.getErsteDatenZiele()) { // daten vorhanden ?
 			return; // keine Daten
 		}
 
@@ -180,17 +180,18 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 
 		int spielrNr;
 		String spielerName;
-		NumberCellValue errCelVal = NumberCellValue.from(xSheet, Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE))
+		NumberCellValue errCelVal = NumberCellValue
+				.from(xSheet, Position.from(SPIELER_NR_SPALTE, meldeListe.getErsteDatenZiele()))
 				.setCharColor(ColorHelper.CHAR_COLOR_RED);
 
 		StringCellValue errStrCelVal = StringCellValue
-				.from(xSheet,
-						Position.from(meldeListe.getMeldungenSpalte().getErsteMeldungNameSpalte(), ERSTE_DATEN_ZEILE))
+				.from(xSheet, Position.from(meldeListe.getMeldungenSpalte().getErsteMeldungNameSpalte(),
+						meldeListe.getErsteDatenZiele()))
 				.setCharColor(ColorHelper.CHAR_COLOR_RED);
 
 		int letzteNamensSpalte = meldeListe.getMeldungenSpalte().getLetzteMeldungNameSpalte();
 
-		for (int spielerZeilecntr = ERSTE_DATEN_ZEILE; spielerZeilecntr <= letzteSpielZeile; spielerZeilecntr++) {
+		for (int spielerZeilecntr = meldeListe.getErsteDatenZiele(); spielerZeilecntr <= letzteSpielZeile; spielerZeilecntr++) {
 			// -------------------
 			// Spieler nr testen
 			// -------------------
@@ -263,7 +264,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 
 		doSort(meldeListe.getMeldungenSpalte().getErsteMeldungNameSpalte(), true); // alle zeilen ohne namen nach unten sortieren, egal ob daten oder nicht
 		int letzteNrZeile = meldeListe.naechsteFreieDatenZeileInSpielerNrSpalte();
-		if (letzteNrZeile < ERSTE_DATEN_ZEILE) { // daten vorhanden ?
+		if (letzteNrZeile < meldeListe.getErsteDatenZiele()) { // daten vorhanden ?
 			return; // keine Daten
 		}
 		XSpreadsheet xSheet = getXSpreadSheet();
@@ -388,7 +389,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 		meldeListe.processBoxinfo("processbox.meldeliste.nummern.aktualisieren");
 
 		int letzteSpielZeile = meldeListe.getMeldungenSpalte().letzteZeileMitSpielerName();
-		if (letzteSpielZeile <= ERSTE_DATEN_ZEILE) { // daten vorhanden ?
+		if (letzteSpielZeile <= meldeListe.getErsteDatenZiele()) { // daten vorhanden ?
 			return; // nur 1 Meldung
 		}
 		XSpreadsheet xSheet = getXSpreadSheet();
@@ -396,7 +397,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 
 		int letzteSpielerNr = 0;
 		int spielrNr = meldeListe.getSheetHelper().getIntFromCell(xSheet,
-				Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE));
+				Position.from(SPIELER_NR_SPALTE, meldeListe.getErsteDatenZiele()));
 		if (spielrNr > -1) {
 			letzteSpielerNr = spielrNr;
 		}
@@ -405,7 +406,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 		int ersteZeileOhneNummer = meldeListe.naechsteFreieDatenZeileInSpielerNrSpalte(); // letzte Zeile ohne Spieler Nr
 
 		// lücken füllen
-		NumberCellValue celVal = NumberCellValue.from(xSheet, Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE));
+		NumberCellValue celVal = NumberCellValue.from(xSheet, Position.from(SPIELER_NR_SPALTE, meldeListe.getErsteDatenZiele()));
 		for (int spielerZeilecntr = ersteZeileOhneNummer; spielerZeilecntr <= letzteSpielZeile; spielerZeilecntr++) {
 			spielrNr = meldeListe.getSheetHelper().getIntFromCell(xSheet,
 					Position.from(SPIELER_NR_SPALTE, spielerZeilecntr));

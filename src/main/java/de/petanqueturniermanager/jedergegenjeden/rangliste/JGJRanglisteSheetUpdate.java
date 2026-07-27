@@ -43,7 +43,7 @@ public class JGJRanglisteSheetUpdate extends JGJRanglisteSheet {
 
         var meldeListe = new JGJMeldeListeSheet_Update(getWorkingSpreadsheet());
         TeamMeldungen aktiveMeldungen = meldeListe.getAktiveMeldungen();
-        if (aktiveMeldungen == null || aktiveMeldungen.size() == 0) {
+        if (aktiveMeldungen.size() == 0) {
             processBoxinfo("processbox.abbruch");
             return;
         }

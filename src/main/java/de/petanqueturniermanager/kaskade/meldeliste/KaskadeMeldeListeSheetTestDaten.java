@@ -36,8 +36,8 @@ public class KaskadeMeldeListeSheetTestDaten extends SheetRunner implements IShe
     public KaskadeMeldeListeSheetTestDaten(WorkingSpreadsheet workingSpreadsheet, int anzTeams) {
         super(workingSpreadsheet, TurnierSystem.KASKADE, "Kaskaden-Meldeliste-Testdaten");
         this.anzTeams = anzTeams;
-        delegate = new KaskadeListeDelegate(this);
         meldeListeNew = new KaskadeMeldeListeSheetNew(workingSpreadsheet);
+        delegate = new KaskadeListeDelegate(meldeListeNew);
         testnamenLoader = new TestnamenLoader();
     }
 

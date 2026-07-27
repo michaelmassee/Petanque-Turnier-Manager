@@ -87,6 +87,10 @@ public class TripTeteKonfigurationSheet extends BaseKonfigurationSheet
 		return propertiesSpalte.isMeldeListeTeamnameAnzeigen();
 	}
 
+	public void setMeldeListeTeamnameAnzeigen(boolean anzeigen) {
+		propertiesSpalte.setMeldeListeTeamnameAnzeigen(anzeigen);
+	}
+
 	@Override
 	public boolean isMeldeListeVereinsnameAnzeigen() {
 		return propertiesSpalte.isMeldeListeVereinsnameAnzeigen();

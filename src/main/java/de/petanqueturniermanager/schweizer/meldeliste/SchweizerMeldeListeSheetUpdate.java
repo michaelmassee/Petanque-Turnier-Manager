@@ -9,12 +9,15 @@ import org.apache.logging.log4j.Logger;
 
 import com.sun.star.sheet.XSpreadsheet;
 
+import java.util.List;
+
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.meldeliste.IMeldeliste;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
@@ -23,12 +26,14 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.SortHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
+import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
-public class SchweizerMeldeListeSheetUpdate extends SheetRunner implements ISheet, MeldeListeKonstanten {
+public class SchweizerMeldeListeSheetUpdate extends SheetRunner
+		implements IMeldeliste<TeamMeldungen, Team>, MeldeListeKonstanten {
 
 	private static final Logger logger = LogManager.getLogger(SchweizerMeldeListeSheetUpdate.class);
 
@@ -92,8 +97,13 @@ public class SchweizerMeldeListeSheetUpdate extends SheetRunner implements IShee
 		return delegate.getTeamnameSpalte();
 	}
 
-	public int getSpielerNameErsteSpalte() throws GenerateException {
-		return delegate.getSpielerNameErsteSpalte();
+	@Override
+	public int getSpielerNameErsteSpalte() {
+		try {
+			return delegate.getSpielerNameErsteSpalte();
+		} catch (GenerateException e) {
+			throw new IllegalStateException(e);
+		}
 	}
 
 	public int getVornameSpalte(int spielerIdx) throws GenerateException {
@@ -116,16 +126,87 @@ public class SchweizerMeldeListeSheetUpdate extends SheetRunner implements IShee
 		return delegate.getAktivSpalte();
 	}
 
+	@Override
 	public int getErsteDatenZiele() {
 		return delegate.getErsteDatenZiele();
 	}
 
+	@Override
 	public TeamMeldungen getAktiveMeldungen() throws GenerateException {
 		return delegate.getAktiveMeldungen();
 	}
 
+	@Override
 	public TeamMeldungen getAlleMeldungen() throws GenerateException {
 		return delegate.getAlleMeldungen();
+	}
+
+	@Override
+	public TeamMeldungen getAktiveUndAusgesetztMeldungen() throws GenerateException {
+		return getAlleMeldungen();
+	}
+
+	@Override
+	public TeamMeldungen getInAktiveMeldungen() throws GenerateException {
+		return new TeamMeldungen();
+	}
+
+	@Override
+	public MeldungenSpalte<TeamMeldungen, Team> getMeldungenSpalte() {
+		try {
+			return delegate.getMeldungenSpalte();
+		} catch (GenerateException e) {
+			throw new IllegalStateException(e);
+		}
+	}
+
+	@Override
+	public String formulaSverweisSpielernamen(String spielrNrAdresse) {
+		try {
+			return delegate.formulaSverweisSpielernamen(spielrNrAdresse);
+		} catch (GenerateException e) {
+			throw new IllegalStateException(e);
+		}
+	}
+
+	@Override
+	public int letzteSpielTagSpalte() throws GenerateException {
+		return delegate.getAktivSpalte();
+	}
+
+	@Override
+	public int getLetzteDatenZeileUseMin() throws GenerateException {
+		return delegate.getLetzteDatenZeileUseMin();
+	}
+
+	@Override
+	public int getLetzteMitDatenZeileInSpielerNrSpalte() throws GenerateException {
+		return delegate.getLetzteMitDatenZeileInSpielerNrSpalte();
+	}
+
+	@Override
+	public int naechsteFreieDatenZeileInSpielerNrSpalte() throws GenerateException {
+		return delegate.naechsteFreieDatenZeileInSpielerNrSpalte();
+	}
+
+	@Override
+	public int letzteZeileMitSpielerName() throws GenerateException {
+		return delegate.letzteZeileMitSpielerName();
+	}
+
+	@Override
+	public int getSpielerZeileNr(int spielerNr) throws GenerateException {
+		return delegate.getSpielerZeileNr(spielerNr);
+	}
+
+	@Override
+	public List<String> getSpielerNamenList() throws GenerateException {
+		return delegate.getSpielerNamenList();
+	}
+
+	@Override
+	public List<Integer> getSpielerNrList() throws GenerateException {
+		return delegate.getSpielerNrList();
 	}
 
 	public void alleTeamsAktivieren() throws GenerateException {
