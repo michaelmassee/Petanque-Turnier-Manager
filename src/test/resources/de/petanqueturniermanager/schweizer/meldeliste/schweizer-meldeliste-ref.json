@@ -32,46 +32,18 @@
       "data": 1.0
     },
     {
-      "data": "Team 1"
+      "data": "Team 10"
     },
     {
-      "data": "Otbert"
+      "data": "Annkatrin"
     },
     {
-      "data": "Dold"
+      "data": "Eisenhardt"
     }
   ],
   [
     {
       "data": 2.0
-    },
-    {
-      "data": "Team 2"
-    },
-    {
-      "data": "Muthild"
-    },
-    {
-      "data": "Döll"
-    }
-  ],
-  [
-    {
-      "data": 3.0
-    },
-    {
-      "data": "Team 3"
-    },
-    {
-      "data": "Selma"
-    },
-    {
-      "data": "Burmeister"
-    }
-  ],
-  [
-    {
-      "data": 4.0
     },
     {
       "data": "Team 4"
@@ -85,16 +57,44 @@
   ],
   [
     {
+      "data": 3.0
+    },
+    {
+      "data": "Team 9"
+    },
+    {
+      "data": "Isedore"
+    },
+    {
+      "data": "Husmann"
+    }
+  ],
+  [
+    {
+      "data": 4.0
+    },
+    {
+      "data": "Team 8"
+    },
+    {
+      "data": "Joana"
+    },
+    {
+      "data": "Nuber"
+    }
+  ],
+  [
+    {
       "data": 5.0
     },
     {
-      "data": "Team 5"
+      "data": "Team 7"
     },
     {
-      "data": "Rosa"
+      "data": "Kornelia"
     },
     {
-      "data": "Tafel"
+      "data": "Molz"
     }
   ],
   [
@@ -116,13 +116,13 @@
       "data": 7.0
     },
     {
-      "data": "Team 7"
+      "data": "Team 2"
     },
     {
-      "data": "Kornelia"
+      "data": "Muthild"
     },
     {
-      "data": "Molz"
+      "data": "Döll"
     }
   ],
   [
@@ -130,13 +130,13 @@
       "data": 8.0
     },
     {
-      "data": "Team 8"
+      "data": "Team 1"
     },
     {
-      "data": "Joana"
+      "data": "Otbert"
     },
     {
-      "data": "Nuber"
+      "data": "Dold"
     }
   ],
   [
@@ -144,13 +144,13 @@
       "data": 9.0
     },
     {
-      "data": "Team 9"
+      "data": "Team 5"
     },
     {
-      "data": "Isedore"
+      "data": "Rosa"
     },
     {
-      "data": "Husmann"
+      "data": "Tafel"
     }
   ],
   [
@@ -158,13 +158,13 @@
       "data": 10.0
     },
     {
-      "data": "Team 10"
+      "data": "Team 3"
     },
     {
-      "data": "Annkatrin"
+      "data": "Selma"
     },
     {
-      "data": "Eisenhardt"
+      "data": "Burmeister"
     }
   ],
   [
