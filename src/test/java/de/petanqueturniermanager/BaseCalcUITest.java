@@ -139,8 +139,9 @@ public abstract class BaseCalcUITest {
 		File distDir = new File(projectDir, "build/distributions");
 		File oxtFile = resolveOxtFile(projectDir, distDir);
 
-		// Alte Version entfernen (Fehler werden ignoriert, z.B. wenn noch nicht installiert)
-		runUnokg(true, "remove", "de.petanqueturniermanager");
+		// Alte Versionen entfernen. LibreOffice kann nach mehreren lokalen Reinstalls mehrere aktive
+		// Eintraege derselben Extension-ID behalten; unopkg remove entfernt dann nur einen davon.
+		removeAlleInstalliertenPtmExtensions();
 
 		// Neue Version installieren
 		logger.info("Installiere Extension: " + oxtFile.getAbsolutePath());
@@ -149,6 +150,22 @@ public abstract class BaseCalcUITest {
 			throw new RuntimeException("unopkg add fehlgeschlagen mit Exit-Code: " + exitCode);
 		}
 		logger.info("Extension erfolgreich installiert");
+	}
+
+	private static void removeAlleInstalliertenPtmExtensions() {
+		boolean entfernt = false;
+		for (int i = 1; i <= 10; i++) {
+			int exitCode = runUnokg(true, "remove", "de.petanqueturniermanager");
+			if (exitCode != 0) {
+				if (!entfernt) {
+					logger.info("Extension war nicht installiert, ueberspringe Deinstallation");
+				}
+				return;
+			}
+			entfernt = true;
+			logger.info("PTM-Extension entfernt (Durchlauf " + i + ")");
+		}
+		throw new RuntimeException("PTM-Extension konnte nach 10 Durchlaeufen nicht vollstaendig entfernt werden");
 	}
 
 	private static File resolveOxtFile(File projectDir, File distDir) {

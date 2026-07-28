@@ -500,18 +500,27 @@ tasks.register('uninstallExtension', Exec) {
     group = 'LibreOffice'
     description = 'Deinstalliert die Extension aus LibreOffice'
     dependsOn 'stopLibreOffice'
-    commandLine "${libreOfficeProgramPath}/unopkg", 'remove', extensionId
-    ignoreExitValue = true
-    errorOutput = new ByteArrayOutputStream()
-    standardOutput = new ByteArrayOutputStream()
+    commandLine 'sh', '-c', """
+        set +e
+        removed=0
+        for i in 1 2 3 4 5 6 7 8 9 10; do
+            "${libreOfficeProgramPath}/unopkg" remove "${extensionId}" >/tmp/ptm-unopkg-remove.out 2>&1
+            code=\$?
+            if [ \$code -ne 0 ]; then
+                if [ \$removed -eq 0 ]; then
+                    echo "Hinweis: Extension war nicht installiert, überspringe Deinstallation."
+                fi
+                exit 0
+            fi
+            removed=1
+            echo "PTM-Extension entfernt (Durchlauf \$i)."
+        done
+        echo "PTM-Extension konnte nach 10 Durchläufen nicht vollständig entfernt werden." >&2
+        exit 1
+    """
 
     doFirst {
         println "Deinstalliere Extension: ${extensionId}"
-    }
-    doLast {
-        if (executionResult.get().exitValue != 0) {
-            println "Hinweis: Extension war nicht installiert, überspringe Deinstallation."
-        }
     }
 }
 

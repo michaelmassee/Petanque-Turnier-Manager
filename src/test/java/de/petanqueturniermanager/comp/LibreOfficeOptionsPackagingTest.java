@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.junit.jupiter.api.Test;
 
@@ -24,6 +25,47 @@ class LibreOfficeOptionsPackagingTest {
 					.as("Manifest-Eintrag fehlt: %s", eintrag)
 					.contains("manifest:full-path=\"" + eintrag + "\"");
 		}
+	}
+
+	@Test
+	void toolbarUndSidebarIconsSindPaketiert() throws Exception {
+		for (String xcuPfad : List.of("registry/org/openoffice/Office/Addons_Z2_Toolbar.xcu",
+				"registry/org/openoffice/Office/Addons_Z3_SpieltagToolbar.xcu",
+				"registry/org/openoffice/Office/Addons_Z4_TimerToolbar.xcu")) {
+			assertAlleOriginBilderExistieren(xcuPfad, "registry/org/openoffice/Office");
+		}
+		assertAlleOriginBilderExistieren("registry/org/openoffice/Office/UI/Sidebar.xcu",
+				"registry/org/openoffice/Office/UI");
+	}
+
+	private static void assertAlleOriginBilderExistieren(String xcuPfad, String originPfad) throws Exception {
+		String xcu = Files.readString(Path.of(xcuPfad));
+		var matcher = Pattern.compile("%origin%/([^<]+\\.png)").matcher(xcu);
+		assertThat(matcher.find())
+				.as("Keine %origin%-PNG-Referenz in %s gefunden", xcuPfad)
+				.isTrue();
+		do {
+			Path bild = quellPfadFuerOriginBild(originPfad, matcher.group(1));
+			assertThat(bild)
+					.as("Icon aus %s fehlt im paketierten OXT-Pfad: %s", xcuPfad, bild)
+					.exists();
+		} while (matcher.find());
+	}
+
+	private static Path quellPfadFuerOriginBild(String originPfad, String relativerBildPfad) {
+		if ("registry/org/openoffice/Office".equals(originPfad)
+				&& relativerBildPfad.startsWith("images/16/toolbar-")) {
+			return Path.of("images/icons/png/16", relativerBildPfad.substring("images/16/".length()));
+		}
+		if ("registry/org/openoffice/Office".equals(originPfad)
+				&& relativerBildPfad.startsWith("images/24/toolbar-")) {
+			return Path.of("images/icons/png/24", relativerBildPfad.substring("images/24/".length()));
+		}
+		if ("registry/org/openoffice/Office/UI".equals(originPfad)
+				&& relativerBildPfad.startsWith("images/")) {
+			return Path.of("images", relativerBildPfad.substring("images/".length()));
+		}
+		return Path.of(originPfad, relativerBildPfad);
 	}
 
 	/**
