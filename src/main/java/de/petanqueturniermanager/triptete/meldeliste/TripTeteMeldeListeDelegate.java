@@ -403,7 +403,16 @@ class TripTeteMeldeListeDelegate implements MeldeListeKonstanten {
     }
 
     int naechsteFreieDatenZeileInSpielerNrSpalte() throws GenerateException {
-        return letzteZeileMitDaten(sheet.getXSpreadSheet()) + 1;
+        XSpreadsheet xSheet = sheet.getXSpreadSheet();
+        SheetHelper sh = sheet.getSheetHelper();
+        int maxZeile = ERSTE_DATEN_ZEILE_OVERRIDE + MeldungenSpalte.MAX_ANZ_MELDUNGEN;
+        for (int zeile = ERSTE_DATEN_ZEILE_OVERRIDE; zeile <= maxZeile; zeile++) {
+            int nr = sh.getIntFromCell(xSheet, Position.from(getTeamNrSpalte(), zeile));
+            if (nr <= 0) {
+                return zeile;
+            }
+        }
+        return maxZeile + 1;
     }
 
     int letzteZeileMitSpielerName() throws GenerateException {
