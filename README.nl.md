@@ -34,6 +34,12 @@ Available in Languages: 🇩🇪 DE | 🇬🇧 EN | 🇫🇷 FR | 🇪🇸 ES | 
 
 ---
 
+## 🎥 Video-introductie
+
+[![Pétanque-Turnier-Manager – Video-introductie](https://img.youtube.com/vi/LqUxUOsfXQQ/maxresdefault.jpg)](https://www.youtube.com/watch?v=LqUxUOsfXQQ)
+
+---
+
 ## 🛠️ Grenzeloze aanpasbaarheid: Maak er *jouw* toernooi van!
 
 Het grootste unieke verkoopargument van deze toernooimanager is waarschijnlijk de basis: **LibreOffice Calc**. Omdat alle gegevens, tabellen en ranglijsten direct in reguliere Calc-werkbladen worden geschreven, zit je niet vast in een rigide programmastructuur.

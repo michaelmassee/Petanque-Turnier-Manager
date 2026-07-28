@@ -33,6 +33,12 @@ Available in Languages: 🇩🇪 DE | 🇬🇧 EN | 🇫🇷 FR | 🇪🇸 ES | 
 
 ---
 
+## 🎥 Vídeo de presentación
+
+[![Pétanque-Turnier-Manager – Vídeo de presentación](https://img.youtube.com/vi/LqUxUOsfXQQ/maxresdefault.jpg)](https://www.youtube.com/watch?v=LqUxUOsfXQQ)
+
+---
+
 ## 🛠️ Personalización sin límites: ¡Haz que sea *tu* torneo!
 
 El mayor punto de venta único de este gestor de torneos es su base: **LibreOffice Calc**. Debido a que todos los datos, tablas y clasificaciones se escriben directamente en hojas de cálculo regulares de Calc, no estás atrapado en una estructura de programa rígida.

@@ -33,6 +33,12 @@ Available in Languages: 🇩🇪 DE | 🇬🇧 EN | 🇫🇷 FR | 🇪🇸 ES | 
 
 ---
 
+## 🎥 Video Introduction
+
+[![Pétanque-Turnier-Manager – Video Introduction](https://img.youtube.com/vi/LqUxUOsfXQQ/maxresdefault.jpg)](https://www.youtube.com/watch?v=LqUxUOsfXQQ)
+
+---
+
 ## 🛠️ Limitless Customization: Make it *your* tournament!
 
 Arguably the biggest unique selling point of this tournament manager is its foundation: **LibreOffice Calc**. Because all data, tables, and rankings are written directly into regular Calc spreadsheets, you are not trapped in a rigid program structure.

@@ -33,6 +33,12 @@ Available in Languages: 🇩🇪 DE | 🇬🇧 EN | 🇫🇷 FR | 🇪🇸 ES | 
 
 ---
 
+## 🎥 Présentation vidéo
+
+[![Pétanque-Turnier-Manager – Présentation vidéo](https://img.youtube.com/vi/LqUxUOsfXQQ/maxresdefault.jpg)](https://www.youtube.com/watch?v=LqUxUOsfXQQ)
+
+---
+
 ## 🛠️ Personnalisation sans limites : Faites-en *votre* tournoi !
 
 Le plus grand atout de ce gestionnaire de tournoi est sans doute sa base : **LibreOffice Calc**. Comme toutes les données, tableaux et classements sont écrits directement dans des feuilles de calcul Calc ordinaires, vous n'êtes pas enfermé dans une structure de programme rigide.
