@@ -19,10 +19,12 @@ import org.apache.logging.log4j.Logger;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.sun.star.awt.FontWeight;
+import com.sun.star.sheet.XCellRangeFormula;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
 import com.sun.star.table.TableBorder2;
+import com.sun.star.table.XCellRange;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.algorithmen.schweizer.SchweizerSystem;
@@ -35,6 +37,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
@@ -684,32 +687,39 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 	 * Meldeliste im Spielplan sofort sichtbar bleibt (siehe auch {@link #resolveTeamNr}).
 	 */
 	private void teamNamenFormelnSchreiben(List<TeamPaarung> paarungen) throws GenerateException {
-		XSpreadsheet xSheet = getXSpreadSheet();
+		if (paarungen.isEmpty()) {
+			return;
+		}
 		boolean teamnameAnzeigen = getKonfigurationSheet().isMeldeListeTeamnameAnzeigen();
 		boolean vereinsnameAnzeigen = getKonfigurationSheet().isMeldeListeVereinsnameAnzeigen();
 		Formation formation = getKonfigurationSheet().getMeldeListeFormation();
 
-		int zeile = ERSTE_DATEN_ZEILE;
-		for (TeamPaarung teamPaarung : paarungen) {
-			schreibeTeamNameFormel(xSheet, TEAM_A_SPALTE, zeile, teamPaarung.getA().getNr(), teamnameAnzeigen,
-					formation, vereinsnameAnzeigen);
-			if (teamPaarung.hasB()) {
-				schreibeTeamNameFormel(xSheet, TEAM_B_SPALTE, zeile, teamPaarung.getB().getNr(), teamnameAnzeigen,
-						formation, vereinsnameAnzeigen);
-			}
-			zeile++;
+		String[][] formulas = new String[paarungen.size()][2];
+		for (int i = 0; i < paarungen.size(); i++) {
+			TeamPaarung teamPaarung = paarungen.get(i);
+			formulas[i][0] = MeldeListeHelper.teamNameFormel(String.valueOf(teamPaarung.getA().getNr()),
+					teamnameAnzeigen, formation, vereinsnameAnzeigen);
+			formulas[i][1] = teamPaarung.hasB()
+					? MeldeListeHelper.teamNameFormel(String.valueOf(teamPaarung.getB().getNr()), teamnameAnzeigen,
+							formation, vereinsnameAnzeigen)
+					: "";
 		}
+
+		RangePosition teamRange = RangePosition.from(TEAM_A_SPALTE, ERSTE_DATEN_ZEILE, TEAM_B_SPALTE,
+				ERSTE_DATEN_ZEILE + paarungen.size() - 1);
+		try {
+			XCellRange xCellRange = getXSpreadSheet().getCellRangeByPosition(teamRange.getStartSpalte(),
+					teamRange.getStartZeile(), teamRange.getEndeSpalte(), teamRange.getEndeZeile());
+			XCellRangeFormula xRangeFormula = Lo.qi(XCellRangeFormula.class, xCellRange);
+			xRangeFormula.setFormulaArray(formulas);
+		} catch (com.sun.star.lang.IndexOutOfBoundsException e) {
+			throw new GenerateException("Team-Namen-Formeln konnten nicht geschrieben werden: " + e.getMessage());
+		}
+
 		// Die Runden-Erzeugung läuft mit deaktivierter Automatikberechnung (Performance);
 		// ohne expliziten Rechenlauf blieben die neuen Formelzellen bis zum nächsten
 		// Nutzer-Trigger auf 0 stehen.
 		getxCalculatable().calculateAll();
-	}
-
-	private void schreibeTeamNameFormel(XSpreadsheet xSheet, int spalte, int zeile, int nr, boolean teamnameAnzeigen,
-			Formation formation, boolean vereinsnameAnzeigen) throws GenerateException {
-		String formel = MeldeListeHelper.teamNameFormel(String.valueOf(nr), teamnameAnzeigen, formation,
-				vereinsnameAnzeigen);
-		getSheetHelper().setFormulaInCell(StringCellValue.from(xSheet, Position.from(spalte, zeile), formel));
 	}
 
 	/**
