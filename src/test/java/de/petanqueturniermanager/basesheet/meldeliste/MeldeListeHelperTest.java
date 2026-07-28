@@ -9,11 +9,14 @@ import static org.mockito.Mockito.verify;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
 import com.sun.star.sheet.XSpreadsheet;
 
+import de.petanqueturniermanager.exception.DoppelteStartnummerException;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
@@ -28,6 +31,9 @@ public class MeldeListeHelperTest {
 	private MeldungenSpalte<SpielerMeldungen, Spieler> meldungenSpalteMock;
 	XSpreadsheet xSpreadsheetMock;
 
+	/** steuert die Test-Antwort von {@link MeldeListeHelper#sollAutomatischNeuNummeriertWerden(int)}. */
+	private boolean automatischNeuNummerierenAntwortJa;
+
 	@SuppressWarnings("unchecked")
 	@BeforeEach
 	public void init() throws GenerateException {
@@ -36,6 +42,7 @@ public class MeldeListeHelperTest {
 		sheetHelperMock = Mockito.mock(SheetHelper.class);
 		meldungenSpalteMock = Mockito.mock(MeldungenSpalte.class);
 		xSpreadsheetMock = Mockito.mock(XSpreadsheet.class);
+		automatischNeuNummerierenAntwortJa = true;
 
 		Mockito.when(iMeldelisteMock.getMeldungenSpalte()).thenReturn(meldungenSpalteMock);
 		Mockito.when(iMeldelisteMock.getSheetHelper()).thenReturn(sheetHelperMock);
@@ -49,6 +56,11 @@ public class MeldeListeHelperTest {
 			@Override
 			public XSpreadsheet getXSpreadSheet() {
 				return xSpreadsheetMock;
+			}
+
+			@Override
+			boolean sollAutomatischNeuNummeriertWerden(int doppelteNr) {
+				return automatischNeuNummerierenAntwortJa;
 			}
 		};
 	}
@@ -124,10 +136,64 @@ public class MeldeListeHelperTest {
 
 		try {
 			meldeListeHelper.testDoppelteMeldungen();
-			fail("Erwarte GenerateException");
-		} catch (GenerateException exc) {
+			fail("Erwarte DoppelteStartnummerException");
+		} catch (DoppelteStartnummerException exc) {
+			assertThat(exc.getStartnummer()).isEqualTo(12);
 			assertThat(exc.getMessage()).containsOnlyOnce("Spieler Nr. 12 ist doppelt");
 		}
+	}
+
+	@Test
+	public void testKorrigiereDoppelteStartnummer_NurBetroffeneZeilenNeuNummeriert() throws Exception {
+
+		SpielerNrName[] spielerNrNameList = new SpielerNrName[] { new SpielerNrName(32, "Anna"),
+				new SpielerNrName(12, "Petra"), new SpielerNrName(4, "Klaus"), new SpielerNrName(12, "Heinz") };
+		initReturnSpielerDaten(spielerNrNameList);
+
+		meldeListeHelper.korrigiereDoppelteStartnummer(12);
+
+		ArgumentCaptor<NumberCellValue> captor = ArgumentCaptor.forClass(NumberCellValue.class);
+		verify(sheetHelperMock, times(1)).setNumberValueInCell(captor.capture());
+		NumberCellValue neuerWert = captor.getValue();
+		// nur die zweite Fundstelle (Zeile mit "Heinz") wird neu nummeriert, mit naechster freier Nr (32+1)
+		assertThat(neuerWert.getValue()).isEqualTo(33.0);
+		assertThat(neuerWert.getPos().getZeile())
+				.isEqualTo(MeldeListeKonstanten.ERSTE_DATEN_ZEILE + 3);
+	}
+
+	@Test
+	public void testPruefeUndKorrigiereDoppelteStartnummern_UserSagtJa_korrigiertUndPrueftErneut() throws Exception {
+		// testDoppelteMeldungen() findet nur beim ersten Aufruf die doppelte Startnummer;
+		// beim zweiten (nach der Korrektur) sind die Mock-Daten "bereinigt" simuliert.
+		MeldeListeHelper<SpielerMeldungen, Spieler> spyHelper = Mockito.spy(meldeListeHelper);
+		Mockito.doThrow(new DoppelteStartnummerException(12, "doppelt"))
+				.doNothing()
+				.when(spyHelper).testDoppelteMeldungen();
+		Mockito.doNothing().when(spyHelper).korrigiereDoppelteStartnummer(12);
+
+		spyHelper.pruefeUndKorrigiereDoppelteStartnummern();
+
+		verify(spyHelper, times(1)).korrigiereDoppelteStartnummer(12);
+		verify(spyHelper, times(2)).testDoppelteMeldungen();
+	}
+
+	@Test
+	public void testPruefeUndKorrigiereDoppelteStartnummern_UserSagtNein_wirftExceptionOhneKorrektur() throws Exception {
+
+		SpielerNrName[] spielerNrNameList = new SpielerNrName[] { new SpielerNrName(32, "Anna"),
+				new SpielerNrName(12, "Petra"), new SpielerNrName(4, "Klaus"), new SpielerNrName(12, "Heinz") };
+		initReturnSpielerDaten(spielerNrNameList);
+		automatischNeuNummerierenAntwortJa = false;
+
+		try {
+			meldeListeHelper.pruefeUndKorrigiereDoppelteStartnummern();
+			fail("Erwarte DoppelteStartnummerException");
+		} catch (DoppelteStartnummerException exc) {
+			assertThat(exc.getStartnummer()).isEqualTo(12);
+			assertThat(exc.getMessage()).containsOnlyOnce("Spieler Nr. 12 ist doppelt");
+		}
+		// nur die Rot-Markierung durch testDoppelteMeldungen() selbst, keine zusaetzliche Korrektur
+		verify(sheetHelperMock, times(1)).setNumberValueInCell(any(NumberCellValue.class));
 	}
 
 	@Test

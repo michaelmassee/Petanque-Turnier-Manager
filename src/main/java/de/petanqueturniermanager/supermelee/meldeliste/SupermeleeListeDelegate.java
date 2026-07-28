@@ -138,7 +138,8 @@ class SupermeleeListeDelegate implements MeldeListeKonstanten {
 		PageStyleHelper.from(sheet, PageStyle.PETTURNMNGR).initDefaultFooter().create().applytoSheet();
 		sheet.processBoxinfo("processbox.supermelee.meldeliste.aktualisieren");
 
-		meldeListeHelper.testDoppelteMeldungen();
+		meldeListeHelper.zeileOhneSpielerNamenEntfernen();
+		meldeListeHelper.pruefeUndKorrigiereDoppelteStartnummern();
 		sheet.getTurnierSheet().setActiv();
 
 		// ------
@@ -167,8 +168,6 @@ class SupermeleeListeDelegate implements MeldeListeKonstanten {
 
 		formatSpielTagSpalte(getSpielTag());
 
-		// eventuelle luecken in spiele namen nach unten sortieren
-		meldeListeHelper.zeileOhneSpielerNamenEntfernen();
 		meldeListeHelper.updateMeldungenNr();
 
 		doSort(meldungenSpalte.getLetzteMeldungNameSpalte(), true); // nach Nachname sortieren

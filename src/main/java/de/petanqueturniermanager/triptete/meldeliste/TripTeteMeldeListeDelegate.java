@@ -122,8 +122,8 @@ class TripTeteMeldeListeDelegate implements MeldeListeKonstanten {
         sheet.processBoxinfo("processbox.meldeliste.sortieren");
         TurnierSheet.from(sheet.getXSpreadSheet(), sheet.getWorkingSpreadsheet()).setActiv();
 
-        meldeListeHelper.testDoppelteMeldungen();
         meldeListeHelper.zeileOhneSpielerNamenEntfernen();
+        meldeListeHelper.pruefeUndKorrigiereDoppelteStartnummern();
         meldeListeHelper.updateMeldungenNr();
 
         insertHeaderInSheet(konfigurationSheet.getMeldeListeHeaderFarbe());

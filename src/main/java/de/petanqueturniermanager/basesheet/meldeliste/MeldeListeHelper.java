@@ -20,6 +20,7 @@ import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
 
 import de.petanqueturniermanager.addins.GlobalImpl;
+import de.petanqueturniermanager.exception.DoppelteStartnummerException;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.ISheet;
@@ -27,6 +28,9 @@ import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeGerad
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.msgbox.MessageBox;
+import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
+import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
@@ -202,7 +206,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 					// RED Color
 					meldeListe.getSheetHelper()
 							.setNumberValueInCell(errCelVal.setValue((double) spielrNr).zeile(spielerZeilecntr));
-					throw new GenerateException(I18n.get("error.meldeliste.spieler.nr", spielrNr));
+					throw new DoppelteStartnummerException(spielrNr, I18n.get("error.meldeliste.spieler.nr", spielrNr));
 				}
 				spielrNrInSheet.add(spielrNr);
 			} else {
@@ -230,6 +234,87 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 				}
 				spielrNamenInSheet.add(cleanUpSpielerName(spielerName));
 			}
+		}
+	}
+
+	/**
+	 * wie {@link #testDoppelteMeldungen()}, fragt aber bei doppelter Startnummer den
+	 * Anwender, ob nur die betroffenen Meldungen automatisch neu nummeriert werden sollen.
+	 * Doppelte Spieler-Namen werden weiterhin sofort als Fehler gemeldet.
+	 *
+	 * @throws GenerateException wenn doppelte Namen gefunden wurden, oder der Anwender die
+	 *                           automatische Neu-Nummerierung ablehnt
+	 */
+	public void pruefeUndKorrigiereDoppelteStartnummern() throws GenerateException {
+		while (true) {
+			try {
+				testDoppelteMeldungen();
+				return;
+			} catch (DoppelteStartnummerException doppelteStartnummerExc) {
+				if (!sollAutomatischNeuNummeriertWerden(doppelteStartnummerExc.getStartnummer())) {
+					throw doppelteStartnummerExc;
+				}
+				korrigiereDoppelteStartnummer(doppelteStartnummerExc.getStartnummer());
+			}
+		}
+	}
+
+	/**
+	 * fragt den Anwender, ob die Meldungen mit der übergebenen doppelten Startnummer
+	 * automatisch neu nummeriert werden sollen.
+	 *
+	 * @param doppelteNr die doppelt vergebene Startnummer
+	 * @return {@code true} wenn der Anwender die automatische Neu-Nummerierung bestätigt hat
+	 */
+	@VisibleForTesting
+	boolean sollAutomatischNeuNummeriertWerden(int doppelteNr) {
+		MessageBoxResult antwort = MessageBox.from(meldeListe.getxContext(), MessageBoxTypeEnum.WARN_YES_NO)
+				.caption(I18n.get("msg.caption.doppelte.startnummer"))
+				.message(I18n.get("msg.text.doppelte.startnummer.neu.nummerieren", doppelteNr))
+				.show();
+		return antwort == MessageBoxResult.YES;
+	}
+
+	/**
+	 * nummeriert nur die Meldungen mit der übergebenen (doppelten) Startnummer neu. Die
+	 * erste gefundene Meldung behält ihre Nummer, alle weiteren erhalten neue, bisher
+	 * unbenutzte Startnummern.
+	 *
+	 * @param doppelteNr die doppelt vergebene Startnummer
+	 * @throws GenerateException
+	 */
+	@VisibleForTesting
+	void korrigiereDoppelteStartnummer(int doppelteNr) throws GenerateException {
+		int letzteSpielZeile = meldeListe.getMeldungenSpalte().letzteZeileMitSpielerName();
+		if (letzteSpielZeile < meldeListe.getErsteDatenZiele()) { // daten vorhanden ?
+			return; // keine Daten
+		}
+		XSpreadsheet xSheet = getXSpreadSheet();
+
+		int maxNr = 0;
+		for (int zeile = meldeListe.getErsteDatenZiele(); zeile <= letzteSpielZeile; zeile++) {
+			int spielrNr = meldeListe.getSheetHelper().getIntFromCell(xSheet, Position.from(SPIELER_NR_SPALTE, zeile));
+			if (spielrNr > maxNr) {
+				maxNr = spielrNr;
+			}
+		}
+
+		NumberCellValue neueNrCelVal = NumberCellValue
+				.from(xSheet, Position.from(SPIELER_NR_SPALTE, meldeListe.getErsteDatenZiele()))
+				.setCharColor(ColorHelper.CHAR_COLOR_BLACK);
+
+		boolean ersteFundstelleBehalten = true;
+		for (int zeile = meldeListe.getErsteDatenZiele(); zeile <= letzteSpielZeile; zeile++) {
+			int spielrNr = meldeListe.getSheetHelper().getIntFromCell(xSheet, Position.from(SPIELER_NR_SPALTE, zeile));
+			if (spielrNr != doppelteNr) {
+				continue;
+			}
+			if (ersteFundstelleBehalten) {
+				ersteFundstelleBehalten = false;
+				continue; // erste Fundstelle behält ihre Nummer
+			}
+			meldeListe.getSheetHelper()
+					.setNumberValueInCell(neueNrCelVal.setValue((double) ++maxNr).zeile(zeile));
 		}
 	}
 

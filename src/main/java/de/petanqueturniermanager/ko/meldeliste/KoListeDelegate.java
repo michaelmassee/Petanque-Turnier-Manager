@@ -158,8 +158,8 @@ class KoListeDelegate implements MeldeListeKonstanten {
 		XSpreadsheet xSheet = sheet.getXSpreadSheet();
 		TurnierSheet.from(xSheet, sheet.getWorkingSpreadsheet()).setActiv();
 
-		meldeListeHelper.testDoppelteMeldungen();
 		meldeListeHelper.zeileOhneSpielerNamenEntfernen();
+		meldeListeHelper.pruefeUndKorrigiereDoppelteStartnummern();
 		meldeListeHelper.updateMeldungenNr();
 
 		insertHeaderInSheet(konfigurationSheet.getMeldeListeHeaderFarbe());

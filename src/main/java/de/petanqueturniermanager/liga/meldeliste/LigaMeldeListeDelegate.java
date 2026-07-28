@@ -126,13 +126,13 @@ class LigaMeldeListeDelegate implements MeldeListeKonstanten {
 		renameSpielPlanSheet();
 
 		TurnierSheet.from(sheet.getXSpreadSheet(), sheet.getWorkingSpreadsheet()).setActiv();
-		meldeListeHelper.testDoppelteMeldungen();
+		meldeListeHelper.zeileOhneSpielerNamenEntfernen();
+		meldeListeHelper.pruefeUndKorrigiereDoppelteStartnummern();
 
 		int headerBackColor = konfigurationSheet.getMeldeListeHeaderFarbe();
 		var geradeStyle = konfigurationSheet.getMeldeListeHintergrundFarbeGeradeStyle();
 		var ungeradeStyle = konfigurationSheet.getMeldeListeHintergrundFarbeUnGeradeStyle();
 		meldungenSpalte.insertHeaderInSheet(headerBackColor);
-		meldeListeHelper.zeileOhneSpielerNamenEntfernen();
 		meldeListeHelper.updateMeldungenNr();
 		meldeListeHelper.doSort(meldungenSpalte.getSpielerNrSpalte(), true);
 		meldungenSpalte.formatSpielrNrUndNamenspalten();
