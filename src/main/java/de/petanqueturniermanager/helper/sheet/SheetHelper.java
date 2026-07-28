@@ -31,6 +31,7 @@ import com.sun.star.sheet.FillDirection;
 import com.sun.star.sheet.CellFlags;
 import com.sun.star.sheet.XCellAddressable;
 import com.sun.star.sheet.XCellRangeAddressable;
+import com.sun.star.sheet.XCellRangeFormula;
 import com.sun.star.sheet.XCellSeries;
 import com.sun.star.sheet.XCellRangesQuery;
 import com.sun.star.sheet.XFunctionAccess;
@@ -349,6 +350,43 @@ public class SheetHelper {
 			logger.error(e.getMessage(), e);
 		}
 		return xCell;
+	}
+
+	/**
+	 * Schreibt ein Formel-Array in einem einzigen UNO-Call in den angegebenen Bereich
+	 * (statt zellenweise per {@link #setFormulaInCell}). Wie dort wird ein fehlendes
+	 * führendes {@code =} automatisch ergänzt – {@link XCellRangeFormula#setFormulaArray}
+	 * schreibt einen String ohne {@code =} sonst als reinen Text statt als Formel.
+	 * Leere Strings bleiben leer (keine Formel für diese Zelle).
+	 *
+	 * @param sheet    Tabellenblatt
+	 * @param rangePos Zielbereich, Dimension muss zu {@code formulas} passen
+	 * @param formulas Formel-Strings je Zeile/Spalte, mit oder ohne führendes {@code =}
+	 */
+	public void setFormulaArrayInRange(XSpreadsheet sheet, RangePosition rangePos, String[][] formulas) {
+		checkNotNull(sheet);
+		checkNotNull(rangePos);
+		checkNotNull(formulas);
+
+		String[][] formelnMit = new String[formulas.length][];
+		for (int zeile = 0; zeile < formulas.length; zeile++) {
+			String[] quellZeile = formulas[zeile];
+			String[] zielZeile = new String[quellZeile.length];
+			for (int spalte = 0; spalte < quellZeile.length; spalte++) {
+				String formel = quellZeile[spalte];
+				zielZeile[spalte] = StringUtils.isBlank(formel) || formel.startsWith("=") ? formel : "=" + formel;
+			}
+			formelnMit[zeile] = zielZeile;
+		}
+
+		try {
+			XCellRange xCellRange = sheet.getCellRangeByPosition(rangePos.getStartSpalte(), rangePos.getStartZeile(),
+					rangePos.getEndeSpalte(), rangePos.getEndeZeile());
+			XCellRangeFormula xRangeFormula = Lo.qi(XCellRangeFormula.class, xCellRange);
+			xRangeFormula.setFormulaArray(formelnMit);
+		} catch (IndexOutOfBoundsException e) {
+			logger.error(e.getMessage(), e);
+		}
 	}
 
 	public String getFormulaFromCell(XSpreadsheet sheet, Position pos) {

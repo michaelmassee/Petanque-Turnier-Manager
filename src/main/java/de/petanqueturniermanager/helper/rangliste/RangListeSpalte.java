@@ -8,15 +8,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.sun.star.awt.FontWeight;
-import com.sun.star.sheet.XCellRangeFormula;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
-import com.sun.star.table.XCellRange;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
@@ -90,7 +87,7 @@ public class RangListeSpalte {
 
 		List<Position> ranglisteSpalten = iRanglisteSheet.getRanglisteSpalten();
 
-		String formula = "=IF(ROW()=" + (ersteZeile + 1) + ";1;IF(AND("
+		String formula = "IF(ROW()=" + (ersteZeile + 1) + ";1;IF(AND("
 				+ ranglisteSpalten.stream().map(this::indirectFormula).collect(Collectors.joining(";"))
 				+ ");" + ranglisteAdressPlusEinPlatzIndiekt + ";ROW()-" + ersteZeile + "))";
 
@@ -104,14 +101,7 @@ public class RangListeSpalte {
 			SheetRunner.testDoCancelTask();
 			formulas[i][0] = formula;
 		}
-		try {
-			XCellRange xCellRange = getSheet().getCellRangeByPosition(platzRange.getStartSpalte(),
-					platzRange.getStartZeile(), platzRange.getEndeSpalte(), platzRange.getEndeZeile());
-			XCellRangeFormula xRangeFormula = Lo.qi(XCellRangeFormula.class, xCellRange);
-			xRangeFormula.setFormulaArray(formulas);
-		} catch (com.sun.star.lang.IndexOutOfBoundsException e) {
-			throw new GenerateException("Platz-Spalte konnte nicht beschrieben werden: " + e.getMessage());
-		}
+		getSheetHelper().setFormulaArrayInRange(getSheet(), platzRange, formulas);
 
 		// Platz-Spalte: fett + dicke rechte Linie
 		getSheetHelper().setPropertiesInRange(getSheet(), platzRange,

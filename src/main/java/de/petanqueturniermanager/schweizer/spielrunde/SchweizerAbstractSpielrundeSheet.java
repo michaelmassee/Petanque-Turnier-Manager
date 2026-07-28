@@ -19,12 +19,10 @@ import org.apache.logging.log4j.Logger;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.sun.star.awt.FontWeight;
-import com.sun.star.sheet.XCellRangeFormula;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
 import com.sun.star.table.TableBorder2;
-import com.sun.star.table.XCellRange;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.algorithmen.schweizer.SchweizerSystem;
@@ -37,7 +35,6 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.ISheet;
-import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
@@ -707,14 +704,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 
 		RangePosition teamRange = RangePosition.from(TEAM_A_SPALTE, ERSTE_DATEN_ZEILE, TEAM_B_SPALTE,
 				ERSTE_DATEN_ZEILE + paarungen.size() - 1);
-		try {
-			XCellRange xCellRange = getXSpreadSheet().getCellRangeByPosition(teamRange.getStartSpalte(),
-					teamRange.getStartZeile(), teamRange.getEndeSpalte(), teamRange.getEndeZeile());
-			XCellRangeFormula xRangeFormula = Lo.qi(XCellRangeFormula.class, xCellRange);
-			xRangeFormula.setFormulaArray(formulas);
-		} catch (com.sun.star.lang.IndexOutOfBoundsException e) {
-			throw new GenerateException("Team-Namen-Formeln konnten nicht geschrieben werden: " + e.getMessage());
-		}
+		getSheetHelper().setFormulaArrayInRange(getXSpreadSheet(), teamRange, formulas);
 
 		// Die Runden-Erzeugung läuft mit deaktivierter Automatikberechnung (Performance);
 		// ohne expliziten Rechenlauf blieben die neuen Formelzellen bis zum nächsten
