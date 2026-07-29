@@ -291,11 +291,13 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 		}
 		XSpreadsheet xSheet = getXSpreadSheet();
 
-		int maxNr = 0;
+		// Alle bereits vergebenen Nummern sammeln, damit die Neuvergabe zuerst freie Lücken
+		// nutzt (z.B. durch gelöschte Meldungen entstanden), statt immer nur hochzuzählen.
+		HashSet<Integer> belegteNummern = new HashSet<>();
 		for (int zeile = meldeListe.getErsteDatenZiele(); zeile <= letzteSpielZeile; zeile++) {
 			int spielrNr = meldeListe.getSheetHelper().getIntFromCell(xSheet, Position.from(SPIELER_NR_SPALTE, zeile));
-			if (spielrNr > maxNr) {
-				maxNr = spielrNr;
+			if (spielrNr > 0) {
+				belegteNummern.add(spielrNr);
 			}
 		}
 
@@ -303,6 +305,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 				.from(xSheet, Position.from(SPIELER_NR_SPALTE, meldeListe.getErsteDatenZiele()))
 				.setCharColor(ColorHelper.CHAR_COLOR_BLACK);
 
+		int naechsteFreieNr = 1;
 		boolean ersteFundstelleBehalten = true;
 		for (int zeile = meldeListe.getErsteDatenZiele(); zeile <= letzteSpielZeile; zeile++) {
 			int spielrNr = meldeListe.getSheetHelper().getIntFromCell(xSheet, Position.from(SPIELER_NR_SPALTE, zeile));
@@ -313,8 +316,12 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 				ersteFundstelleBehalten = false;
 				continue; // erste Fundstelle behält ihre Nummer
 			}
+			while (belegteNummern.contains(naechsteFreieNr)) {
+				naechsteFreieNr++;
+			}
+			belegteNummern.add(naechsteFreieNr);
 			meldeListe.getSheetHelper()
-					.setNumberValueInCell(neueNrCelVal.setValue((double) ++maxNr).zeile(zeile));
+					.setNumberValueInCell(neueNrCelVal.setValue((double) naechsteFreieNr).zeile(zeile));
 		}
 	}
 

@@ -164,10 +164,35 @@ public class MeldeListeHelperTest {
 		ArgumentCaptor<NumberCellValue> captor = ArgumentCaptor.forClass(NumberCellValue.class);
 		verify(sheetHelperMock, times(1)).setNumberValueInCell(captor.capture());
 		NumberCellValue neuerWert = captor.getValue();
-		// nur die zweite Fundstelle (Zeile mit "Heinz") wird neu nummeriert, mit naechster freier Nr (32+1)
-		assertThat(neuerWert.getValue()).isEqualTo(33.0);
+		// nur die zweite Fundstelle (Zeile mit "Heinz") wird neu nummeriert, mit der kleinsten
+		// freien Lücke (1 ist frei, da nur 32/12/4 belegt sind) statt max+1.
+		assertThat(neuerWert.getValue()).isEqualTo(1.0);
 		assertThat(neuerWert.getPos().getZeile())
 				.isEqualTo(MeldeListeKonstanten.ERSTE_DATEN_ZEILE + 3);
+	}
+
+	@Test
+	public void testKorrigiereDoppelteStartnummer_MehrfacheDuplikate_bekommenVerschiedeneLuecken() throws Exception {
+		// Regression: bei mehr als zwei gleichen Startnummern (Mehrfach-Duplikat) muss jede
+		// weitere Fundstelle eine eigene freie Lücke bekommen, nicht dieselbe.
+		SpielerNrName[] spielerNrNameList = new SpielerNrName[] { new SpielerNrName(12, "Anna"),
+				new SpielerNrName(3, "Petra"), new SpielerNrName(12, "Klaus"), new SpielerNrName(12, "Heinz") };
+		initReturnSpielerDaten(spielerNrNameList);
+
+		// NumberCellValue ist ein mutabler Builder (setValue()/zeile() ändern dieselbe Instanz),
+		// daher hier Werte beim Aufruf sofort abgreifen statt per ArgumentCaptor am Ende zu lesen
+		// (sonst zeigen alle erfassten Werte fälschlich den letzten, final gesetzten Wert).
+		java.util.List<Double> erfassteWerte = new java.util.ArrayList<>();
+		Mockito.doAnswer(invocation -> {
+			erfassteWerte.add(invocation.<NumberCellValue>getArgument(0).getValue());
+			return null;
+		}).when(sheetHelperMock).setNumberValueInCell(any());
+
+		meldeListeHelper.korrigiereDoppelteStartnummer(12);
+
+		// Erste Fundstelle (Anna) behält 12; Klaus und Heinz bekommen je eine eigene freie Nr.
+		// Belegt sind 12 und 3, also sind 1 und 2 frei.
+		assertThat(erfassteWerte).containsExactly(1.0, 2.0);
 	}
 
 	@Test
