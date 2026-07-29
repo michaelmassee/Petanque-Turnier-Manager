@@ -232,10 +232,6 @@ public class KaskadeMeldeListeSheetUpdate extends SheetRunner
         delegate.stringsBesinigen(xSheet);
     }
 
-    protected void pruefeAufDoppelteTeamNr(XSpreadsheet xSheet) throws GenerateException {
-        delegate.pruefeAufDoppelteTeamNr(xSheet);
-    }
-
     // ---------------------------------------------------------------
     // Eigene Methoden
     // ---------------------------------------------------------------
@@ -246,8 +242,8 @@ public class KaskadeMeldeListeSheetUpdate extends SheetRunner
     }
 
     /**
-     * Bereinigt, vergibt Nummern, setzt Aktiv-Standard, prüft auf Duplikate,
-     * sortiert und aktualisiert das Sheet vollständig.
+     * Bereinigt, vergibt Nummern, setzt Aktiv-Standard, sortiert und aktualisiert das Sheet
+     * vollständig.
      * Wird von {@link #doRun()} und von Spielrunde-Sheets vor dem Erstellen der ersten Runde aufgerufen.
      *
      * @return {@code true} wenn das Sheet gefunden und aktualisiert wurde, {@code false} wenn kein Sheet vorhanden
@@ -261,7 +257,6 @@ public class KaskadeMeldeListeSheetUpdate extends SheetRunner
         stringsBesinigen(xSheet);
         teamnummernVergeben(xSheet);
         aktivDefaultSetzen(xSheet);
-        pruefeAufDoppelteTeamNr(xSheet);
         nachNrSortieren(xSheet);
         upDateSheet();
         return true;

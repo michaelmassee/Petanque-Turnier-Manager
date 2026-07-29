@@ -616,47 +616,6 @@ class FormuleXListeDelegate implements MeldeListeKonstanten {
         }
     }
 
-    void pruefeAufDoppelteTeamNr(XSpreadsheet xSheet) throws GenerateException {
-        int letzteZeile = letzteZeileMitDaten(xSheet);
-        if (letzteZeile < ERSTE_DATEN_ZEILE) {
-            return;
-        }
-        int vornameSpalte = getVornameSpalte(0);
-        Map<Integer, List<Integer>> alleNrn = new LinkedHashMap<>();
-        for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
-            String vorname = sheet.getSheetHelper().getTextFromCell(xSheet, Position.from(vornameSpalte, zeile));
-            if (vorname == null || vorname.isEmpty()) {
-                continue;
-            }
-            int nr = sheet.getSheetHelper().getIntFromCell(xSheet, Position.from(getTeamNrSpalte(), zeile));
-            if (nr <= 0) {
-                continue;
-            }
-            alleNrn.computeIfAbsent(nr, k -> new ArrayList<>()).add(zeile);
-        }
-        Map<Integer, List<Integer>> duplikate = new LinkedHashMap<>();
-        for (Map.Entry<Integer, List<Integer>> entry : alleNrn.entrySet()) {
-            if (entry.getValue().size() > 1) {
-                duplikate.put(entry.getKey(), entry.getValue());
-            }
-        }
-        if (duplikate.isEmpty()) {
-            return;
-        }
-        var sb = new StringBuilder("Meldeliste wurde nicht aktualisiert.\nDoppelte Startnummern:");
-        for (Map.Entry<Integer, List<Integer>> entry : duplikate.entrySet()) {
-            sb.append("\nNr. ").append(entry.getKey()).append(": Zeilen ");
-            List<Integer> zeilen = entry.getValue();
-            for (int i = 0; i < zeilen.size(); i++) {
-                if (i > 0) {
-                    sb.append(", ");
-                }
-                sb.append(zeilen.get(i) + 1);
-            }
-        }
-        throw new GenerateException(sb.toString());
-    }
-
     /** Liest alle Team-Meldungen aus dem Sheet, unabhängig vom Aktiv-Status. */
     TeamMeldungen getAlleMeldungen() throws GenerateException {
         XSpreadsheet xSheet = sheet.getXSpreadSheet();

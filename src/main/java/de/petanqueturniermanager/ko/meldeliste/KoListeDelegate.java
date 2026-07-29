@@ -7,9 +7,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.sun.star.awt.FontWeight;
 import com.sun.star.sheet.ConditionOperator;
@@ -718,51 +716,6 @@ class KoListeDelegate implements MeldeListeKonstanten {
 		if (!bereinigt.equals(original)) {
 			sheet.getSheetHelper().setStringValueInCell(StringCellValue.from(xSheet, Position.from(spalte, zeile), bereinigt));
 		}
-	}
-
-	/**
-	 * Prüft auf doppelte Team-Nummern.
-	 * Wirft {@link GenerateException} mit Fehlermeldung wenn Duplikate gefunden werden.
-	 */
-	void pruefeAufDoppelteTeamNr(XSpreadsheet xSheet) throws GenerateException {
-		int letzteZeile = letzteZeileMitDaten(xSheet);
-		if (letzteZeile < ERSTE_DATEN_ZEILE) {
-			return;
-		}
-		int vornameSpalte = getVornameSpalte(0);
-		Map<Integer, List<Integer>> alleNrn = new LinkedHashMap<>();
-		for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
-			String vorname = sheet.getSheetHelper().getTextFromCell(xSheet, Position.from(vornameSpalte, zeile));
-			if (vorname == null || vorname.isEmpty()) {
-				continue;
-			}
-			int nr = sheet.getSheetHelper().getIntFromCell(xSheet, Position.from(getTeamNrSpalte(), zeile));
-			if (nr <= 0) {
-				continue;
-			}
-			alleNrn.computeIfAbsent(nr, k -> new ArrayList<>()).add(zeile);
-		}
-		Map<Integer, List<Integer>> duplikate = new LinkedHashMap<>();
-		for (Map.Entry<Integer, List<Integer>> entry : alleNrn.entrySet()) {
-			if (entry.getValue().size() > 1) {
-				duplikate.put(entry.getKey(), entry.getValue());
-			}
-		}
-		if (duplikate.isEmpty()) {
-			return;
-		}
-		StringBuilder sb = new StringBuilder("Meldeliste wurde nicht aktualisiert.\nDoppelte Startnummern:");
-		for (Map.Entry<Integer, List<Integer>> entry : duplikate.entrySet()) {
-			sb.append("\nNr. ").append(entry.getKey()).append(": Zeilen ");
-			List<Integer> zeilen = entry.getValue();
-			for (int i = 0; i < zeilen.size(); i++) {
-				if (i > 0) {
-					sb.append(", ");
-				}
-				sb.append(zeilen.get(i) + 1); // 0-basiert → 1-basiert für Benutzer
-			}
-		}
-		throw new GenerateException(sb.toString());
 	}
 
 	// ---------------------------------------------------------------

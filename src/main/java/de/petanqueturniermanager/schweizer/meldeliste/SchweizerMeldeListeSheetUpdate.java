@@ -229,10 +229,6 @@ public class SchweizerMeldeListeSheetUpdate extends SheetRunner
 		return delegate.letzteZeileMitDaten(xSheet);
 	}
 
-	protected void pruefeAufDoppelteTeamNr(XSpreadsheet xSheet) throws GenerateException {
-		delegate.pruefeAufDoppelteTeamNr(xSheet);
-	}
-
 	/**
 	 * Sortiert die Meldeliste nach der angegebenen Spalte.
 	 * Wird von SchweizerTeilnehmerSheet aufgerufen, um vor der Ausgabe nach Name zu sortieren.
@@ -272,7 +268,6 @@ public class SchweizerMeldeListeSheetUpdate extends SheetRunner
 		stringsBesinigen(xSheet);
 		teamnummernVergeben(xSheet);
 		nachTeamNrSortieren(xSheet);
-		pruefeAufDoppelteTeamNr(xSheet);
 		upDateSheet();
 		return true;
 	}

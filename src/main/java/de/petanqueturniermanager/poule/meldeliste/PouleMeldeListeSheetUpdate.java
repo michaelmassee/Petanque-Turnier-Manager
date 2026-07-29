@@ -218,10 +218,6 @@ public class PouleMeldeListeSheetUpdate extends SheetRunner
         return delegate.letzteZeileMitDaten(xSheet);
     }
 
-    protected void pruefeAufDoppelteTeamNr(XSpreadsheet xSheet) throws GenerateException {
-        delegate.pruefeAufDoppelteTeamNr(xSheet);
-    }
-
     // ---------------------------------------------------------------
     // Eigene Methoden
     // ---------------------------------------------------------------
@@ -236,7 +232,6 @@ public class PouleMeldeListeSheetUpdate extends SheetRunner
         stringsBesinigen(xSheet);
         teamnummernVergeben(xSheet);
         nachTeamNrSortieren(xSheet);
-        pruefeAufDoppelteTeamNr(xSheet);
         upDateSheet();
     }
 

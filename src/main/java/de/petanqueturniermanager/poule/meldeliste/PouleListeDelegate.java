@@ -6,9 +6,7 @@ package de.petanqueturniermanager.poule.meldeliste;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.sun.star.awt.FontWeight;
 import com.sun.star.util.CellProtection;
@@ -478,50 +476,6 @@ class PouleListeDelegate implements MeldeListeKonstanten {
             }
         }
         return letzte;
-    }
-
-    /**
-     * Prüft auf doppelte Team-Nummern nach der aufsteigenden Sortierung.
-     */
-    void pruefeAufDoppelteTeamNr(XSpreadsheet xSheet) throws GenerateException {
-        var letzteZeile = letzteZeileMitDaten(xSheet);
-        if (letzteZeile < ERSTE_DATEN_ZEILE) {
-            return;
-        }
-        var vornameSpalte = getVornameSpalte(0);
-        Map<Integer, List<Integer>> alleNrn = new LinkedHashMap<>();
-        for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
-            var vorname = sheet.getSheetHelper().getTextFromCell(xSheet, Position.from(vornameSpalte, zeile));
-            if (vorname == null || vorname.isEmpty()) {
-                continue;
-            }
-            var nr = sheet.getSheetHelper().getIntFromCell(xSheet, Position.from(getTeamNrSpalte(), zeile));
-            if (nr <= 0) {
-                continue;
-            }
-            alleNrn.computeIfAbsent(nr, k -> new ArrayList<>()).add(zeile);
-        }
-        Map<Integer, List<Integer>> duplikate = new LinkedHashMap<>();
-        for (var entry : alleNrn.entrySet()) {
-            if (entry.getValue().size() > 1) {
-                duplikate.put(entry.getKey(), entry.getValue());
-            }
-        }
-        if (duplikate.isEmpty()) {
-            return;
-        }
-        var sb = new StringBuilder(I18n.get("error.meldeliste.doppelte.startnummern"));
-        for (var entry : duplikate.entrySet()) {
-            sb.append("\nNr. ").append(entry.getKey()).append(": Zeilen ");
-            var zeilen = entry.getValue();
-            for (int i = 0; i < zeilen.size(); i++) {
-                if (i > 0) {
-                    sb.append(", ");
-                }
-                sb.append(zeilen.get(i) + 1);
-            }
-        }
-        throw new GenerateException(sb.toString());
     }
 
     // ---------------------------------------------------------------

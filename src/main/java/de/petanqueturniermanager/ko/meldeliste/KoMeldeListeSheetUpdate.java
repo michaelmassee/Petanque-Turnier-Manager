@@ -240,10 +240,6 @@ public class KoMeldeListeSheetUpdate extends SheetRunner
 		delegate.stringsBesinigen(xSheet);
 	}
 
-	protected void pruefeAufDoppelteTeamNr(XSpreadsheet xSheet) throws GenerateException {
-		delegate.pruefeAufDoppelteTeamNr(xSheet);
-	}
-
 	// ---------------------------------------------------------------
 	// Eigene Methoden
 	// ---------------------------------------------------------------
@@ -267,7 +263,6 @@ public class KoMeldeListeSheetUpdate extends SheetRunner
 		stringsBesinigen(xSheet);
 		teamnummernVergeben(xSheet);
 		aktivDefaultSetzen(xSheet);
-		pruefeAufDoppelteTeamNr(xSheet);
 		nachRangSortieren(xSheet);
 		upDateSheet();
 	}
