@@ -361,8 +361,6 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 		// Trimmen) noch "nicht leer" und kann daher oberhalb einer echten Meldung gelandet sein
 		doSort(meldeListe.getMeldungenSpalte().getErsteMeldungNameSpalte(), true);
 
-		Position posEmptyVal = Position.from(SPIELER_NR_SPALTE, 0);
-
 		int letzteZeileMitSpielerName = meldeListe.letzteZeileMitSpielerName(); // erst ab zeilen ohne namen anfangen
 
 		if (letzteZeileMitSpielerName > 0) {
@@ -371,8 +369,10 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 				// sonst wird eine Zeile mit leerem Vorname aber gefülltem Nachname fälschlich entfernt
 				String spielerNamen = meldeListe.getMeldungenSpalte().leseSpielerNameZeile(xSheet, spielerNrZeilecntr);
 				if (StringUtils.isBlank(spielerNamen)) { // null oder leer oder leerzeichen
-					// nr ohne spieler namen entfernen
-					meldeListe.getSheetHelper().clearValInCell(xSheet, posEmptyVal.zeile(spielerNrZeilecntr));
+					// Ganze Zeile leeren (Nr, Setzposition, Aktiv, Spieltag-Status), nicht nur die
+					// Nr-Zelle – sonst bleiben verwaiste Werte (z.B. Aktiv-Flag) in der Leerzeile stehen.
+					RangeHelper.from(meldeListe, RangePosition.from(SPIELER_NR_SPALTE, spielerNrZeilecntr,
+							meldeListe.letzteSpielTagSpalte(), spielerNrZeilecntr)).clearRange();
 				}
 			}
 		}

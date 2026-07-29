@@ -13,7 +13,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
 import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.sheet.XSpreadsheetDocument;
 
+import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.DoppelteStartnummerException;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
@@ -46,6 +48,13 @@ public class MeldeListeHelperTest {
 
 		Mockito.when(iMeldelisteMock.getMeldungenSpalte()).thenReturn(meldungenSpalteMock);
 		Mockito.when(iMeldelisteMock.getSheetHelper()).thenReturn(sheetHelperMock);
+
+		// für RangeHelper.from(ISheet, ...) in zeileOhneSpielerNamenEntfernen() benötigt
+		WorkingSpreadsheet workingSpreadsheetMock = Mockito.mock(WorkingSpreadsheet.class);
+		Mockito.when(workingSpreadsheetMock.getWorkingSpreadsheetDocument())
+				.thenReturn(Mockito.mock(XSpreadsheetDocument.class));
+		Mockito.when(iMeldelisteMock.getWorkingSpreadsheet()).thenReturn(workingSpreadsheetMock);
+		Mockito.when(iMeldelisteMock.getXSpreadSheet()).thenReturn(xSpreadsheetMock);
 
 		meldeListeHelper = new MeldeListeHelper<SpielerMeldungen, Spieler>(iMeldelisteMock, "TEST_SCHLUESSEL") {
 			@Override
@@ -244,9 +253,17 @@ public class MeldeListeHelperTest {
 				.thenReturn(MeldeListeKonstanten.ERSTE_DATEN_ZEILE + spielerNrNameList.length - 2);
 		Mockito.when(meldungenSpalteMock.letzteZeileMitSpielerName())
 				.thenReturn(MeldeListeKonstanten.ERSTE_DATEN_ZEILE + spielerNrNameList.length - 2);
+		// Aktiv-Spalte/Spieltag-Ende der Meldeliste - muss beim Leeren der Zeile mitgenommen werden
+		int letzteSpielTagSpalte = 6;
+		Mockito.when(iMeldelisteMock.letzteSpielTagSpalte()).thenReturn(letzteSpielTagSpalte);
 
 		meldeListeHelper.zeileOhneSpielerNamenEntfernen();
-		verify(sheetHelperMock, times(1)).clearValInCell(any(XSpreadsheet.class), any(Position.class));
+
+		int leereZeile = MeldeListeKonstanten.ERSTE_DATEN_ZEILE + spielerNrNameList.length - 1;
+		// Ganze Zeile (Nr bis Spieltag-Ende) muss geleert werden, nicht nur die Nr-Zelle -
+		// sonst bleiben verwaiste Werte (z.B. Aktiv-Flag) in der Leerzeile stehen.
+		verify(xSpreadsheetMock, times(1)).getCellRangeByPosition(MeldeListeKonstanten.SPIELER_NR_SPALTE, leereZeile,
+				letzteSpielTagSpalte, leereZeile);
 	}
 
 	@Test
