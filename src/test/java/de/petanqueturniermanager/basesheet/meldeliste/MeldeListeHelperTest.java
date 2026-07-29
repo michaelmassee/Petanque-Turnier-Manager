@@ -284,6 +284,34 @@ public class MeldeListeHelperTest {
 		verify(sheetHelperMock, times(1)).setNumberValueInCell(any());
 	}
 
+	@Test
+	public void testUpdateMeldungenNr_LueckeVorhanden_wirdZuerstGefuellt() throws Exception {
+		// Regression: eine neue Meldung ohne Nummer muss zuerst eine freie Lücke (hier Nr. 2,
+		// z.B. durch eine gelöschte Meldung entstanden) bekommen, nicht einfach die höchste
+		// vorhandene Nummer + 1.
+		int zeileMitNr3 = MeldeListeKonstanten.ERSTE_DATEN_ZEILE;
+		int zeileMitNr1 = zeileMitNr3 + 1;
+		int zeileOhneNr = zeileMitNr3 + 2;
+
+		Mockito.when(iMeldelisteMock.getErsteDatenZiele()).thenReturn(MeldeListeKonstanten.ERSTE_DATEN_ZEILE);
+		Mockito.when(meldungenSpalteMock.letzteZeileMitSpielerName()).thenReturn(zeileOhneNr);
+		Mockito.when(iMeldelisteMock.naechsteFreieDatenZeileInSpielerNrSpalte()).thenReturn(zeileOhneNr);
+
+		Mockito.when(sheetHelperMock.getIntFromCell(any(XSpreadsheet.class),
+				eq(Position.from(MeldeListeKonstanten.SPIELER_NR_SPALTE, zeileMitNr3)))).thenReturn(3);
+		Mockito.when(sheetHelperMock.getIntFromCell(any(XSpreadsheet.class),
+				eq(Position.from(MeldeListeKonstanten.SPIELER_NR_SPALTE, zeileMitNr1)))).thenReturn(1);
+		Mockito.when(sheetHelperMock.getIntFromCell(any(XSpreadsheet.class),
+				eq(Position.from(MeldeListeKonstanten.SPIELER_NR_SPALTE, zeileOhneNr)))).thenReturn(-1);
+
+		ArgumentCaptor<NumberCellValue> captor = ArgumentCaptor.forClass(NumberCellValue.class);
+
+		meldeListeHelper.updateMeldungenNr(TeilnehmerListeSortModus.NUMMER);
+
+		verify(sheetHelperMock, times(1)).setNumberValueInCell(captor.capture());
+		assertThat(captor.getValue().getValue()).isEqualTo(2.0);
+	}
+
 	private void initReturnSpielerDaten(SpielerNrName[] spielerNrnameList) throws GenerateException {
 
 		Position spielerNrPos = Position.from(MeldeListeKonstanten.SPIELER_NR_SPALTE,

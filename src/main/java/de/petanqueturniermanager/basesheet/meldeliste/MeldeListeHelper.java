@@ -485,24 +485,32 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 		XSpreadsheet xSheet = getXSpreadSheet();
 		doSort(SPIELER_NR_SPALTE, false); // hoechste nummer oben, ohne nummer nach unten
 
-		int letzteSpielerNr = 0;
-		int spielrNr = meldeListe.getSheetHelper().getIntFromCell(xSheet,
-				Position.from(SPIELER_NR_SPALTE, meldeListe.getErsteDatenZiele()));
-		if (spielrNr > -1) {
-			letzteSpielerNr = spielrNr;
-		}
-
 		// Zeile erste Meldung ohne Nummer, weil ohne nummer nach unten sortiert
 		int ersteZeileOhneNummer = meldeListe.naechsteFreieDatenZeileInSpielerNrSpalte(); // letzte Zeile ohne Spieler Nr
 
+		// Bereits vergebene Nummern sammeln, damit freie Lücken (z.B. durch gelöschte
+		// Meldungen) zuerst wiederverwendet werden, statt immer nur hochzuzählen.
+		HashSet<Integer> belegteNummern = new HashSet<>();
+		for (int zeile = meldeListe.getErsteDatenZiele(); zeile < ersteZeileOhneNummer; zeile++) {
+			int nr = meldeListe.getSheetHelper().getIntFromCell(xSheet, Position.from(SPIELER_NR_SPALTE, zeile));
+			if (nr > 0) {
+				belegteNummern.add(nr);
+			}
+		}
+
 		// lücken füllen
+		int naechsteFreieNr = 1;
 		NumberCellValue celVal = NumberCellValue.from(xSheet, Position.from(SPIELER_NR_SPALTE, meldeListe.getErsteDatenZiele()));
 		for (int spielerZeilecntr = ersteZeileOhneNummer; spielerZeilecntr <= letzteSpielZeile; spielerZeilecntr++) {
-			spielrNr = meldeListe.getSheetHelper().getIntFromCell(xSheet,
+			int spielrNr = meldeListe.getSheetHelper().getIntFromCell(xSheet,
 					Position.from(SPIELER_NR_SPALTE, spielerZeilecntr));
 			if (spielrNr == -1) {
+				while (belegteNummern.contains(naechsteFreieNr)) {
+					naechsteFreieNr++;
+				}
+				belegteNummern.add(naechsteFreieNr);
 				meldeListe.getSheetHelper()
-						.setNumberValueInCell(celVal.setValue((double) ++letzteSpielerNr).zeile(spielerZeilecntr));
+						.setNumberValueInCell(celVal.setValue((double) naechsteFreieNr).zeile(spielerZeilecntr));
 			}
 		}
 		// Meldeliste nach konfiguriertem Modus sortieren; der Sortierbereich nimmt alle
