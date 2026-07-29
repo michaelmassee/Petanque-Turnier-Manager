@@ -318,7 +318,7 @@ private void stringsBesinigen(XSpreadsheet xSheet) throws GenerateException {
 		int vornameSpalte = getVornameSpalte(0);
 		// Nr-Spalte absteigend sortieren (höchste Nr zuerst, leere ans Ende)
 		RangePosition range = RangePosition.from(getTeamNrSpalte(), ERSTE_DATEN_ZEILE,
-				getSetzPositionSpalte(), letzteZeile);
+				getAktivSpalte(), letzteZeile);
 		SortHelper.from(this, range).spalteToSort(getTeamNrSpalte()).abSteigendSortieren().doSort();
 
 		// Höchste vorhandene Nr lesen
@@ -346,7 +346,7 @@ private void stringsBesinigen(XSpreadsheet xSheet) throws GenerateException {
 			return;
 		}
 		RangePosition range = RangePosition.from(getTeamNrSpalte(), ERSTE_DATEN_ZEILE,
-				getSetzPositionSpalte(), letzteZeile);
+				getAktivSpalte(), letzteZeile);
 		SortHelper.from(this, range).spalteToSort(getTeamNrSpalte()).aufSteigendSortieren(true).doSort();
 	}
 

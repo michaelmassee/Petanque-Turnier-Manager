@@ -280,7 +280,7 @@ public class PouleMeldeListeSheetUpdate extends SheetRunner
         }
         int vornameSpalte = getVornameSpalte(0);
         RangePosition range = RangePosition.from(getTeamNrSpalte(), ERSTE_DATEN_ZEILE,
-                getSetzPositionSpalte(), letzteZeile);
+                getAktivSpalte(), letzteZeile);
         SortHelper.from(this, range).spalteToSort(getTeamNrSpalte()).abSteigendSortieren().doSort();
 
         int letztNr = Math.max(0,
@@ -306,7 +306,7 @@ public class PouleMeldeListeSheetUpdate extends SheetRunner
             return;
         }
         RangePosition range = RangePosition.from(getTeamNrSpalte(), ERSTE_DATEN_ZEILE,
-                getSetzPositionSpalte(), letzteZeile);
+                getAktivSpalte(), letzteZeile);
         SortHelper.from(this, range).spalteToSort(getTeamNrSpalte()).aufSteigendSortieren(true).doSort();
     }
 }

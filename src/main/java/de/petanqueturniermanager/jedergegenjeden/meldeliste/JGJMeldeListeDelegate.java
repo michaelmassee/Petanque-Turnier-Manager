@@ -632,7 +632,7 @@ class JGJMeldeListeDelegate implements MeldeListeKonstanten {
 		}
 		int vornameSpalte = getVornameSpalte(0);
 		RangePosition range = RangePosition.from(getTeamNrSpalte(), ERSTE_DATEN_ZEILE,
-				getSetzPositionSpalte(), letzteZeile);
+				getAktivSpalte(), letzteZeile);
 		SortHelper.from(sheet, range).spalteToSort(getTeamNrSpalte()).abSteigendSortieren().doSort();
 		int letztNr = Math.max(0,
 				sheet.getSheetHelper().getIntFromCell(xSheet, Position.from(getTeamNrSpalte(), ERSTE_DATEN_ZEILE)));
@@ -656,7 +656,7 @@ class JGJMeldeListeDelegate implements MeldeListeKonstanten {
 			return;
 		}
 		RangePosition range = RangePosition.from(getTeamNrSpalte(), ERSTE_DATEN_ZEILE,
-				getSetzPositionSpalte(), letzteZeile);
+				getAktivSpalte(), letzteZeile);
 		SortHelper.from(sheet, range).spalteToSort(getTeamNrSpalte()).aufSteigendSortieren(true).doSort();
 	}
 

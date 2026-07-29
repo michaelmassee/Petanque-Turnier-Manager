@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.List;
 import java.util.stream.Stream;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -110,6 +111,59 @@ class JGJMeldeListeKompaktierenUITest extends BaseCalcUITest {
             String vorname = zeile.get(vornameSpalte).getStringVal();
             assertThat(vorname).as("Vorname in Zeile %d (muss leer sein)", i).isNullOrEmpty();
         }
+    }
+
+    @Test
+    void sortierenNachNrNimmtAktivSpalteMit() throws Exception {
+        JGJMeldeListeSheet_New meldeListeNew = new JGJMeldeListeSheet_New(wkingSpreadsheet);
+        meldeListeNew.createMeldelisteWithParams(Formation.TETE, false, false, SpielplanTeamAnzeige.NR);
+
+        int vornameSpalte = 1;
+        int nachnameSpalte = 2;
+        int aktivSpalte = 4;
+
+        RangeData data = new RangeData();
+        RowData team3 = data.addNewRow();
+        team3.newInt(3);
+        team3.newString("Team");
+        team3.newString("Drei");
+        team3.newEmpty();
+        team3.newInt(1);
+
+        RowData team1 = data.addNewRow();
+        team1.newInt(1);
+        team1.newString("Team");
+        team1.newString("Eins");
+        team1.newEmpty();
+        team1.newInt(2);
+
+        RowData team2 = data.addNewRow();
+        team2.newInt(2);
+        team2.newString("Team");
+        team2.newString("Zwei");
+        team2.newEmpty();
+        team2.newInt(3);
+
+        XSpreadsheet xSheet = meldeListeNew.getXSpreadSheet();
+        RangeHelper.from(xSheet, doc, data.getRangePosition(Position.from(0, ERSTE_DATEN_ZEILE))).setDataInRange(data);
+
+        new JGJMeldeListeSheet_Update(wkingSpreadsheet).doRun();
+
+        RangeData nachAktualisieren = RangeHelper
+                .from(xSheet, doc, RangePosition.from(0, ERSTE_DATEN_ZEILE, aktivSpalte, ERSTE_DATEN_ZEILE + 2))
+                .getDataFromRange();
+
+        assertThat(nachAktualisieren.get(0).get(0).getIntVal(-1)).isEqualTo(1);
+        assertThat(nachAktualisieren.get(0).get(nachnameSpalte).getStringVal()).isEqualTo("Eins");
+        assertThat(nachAktualisieren.get(0).get(aktivSpalte).getIntVal(-1)).isEqualTo(2);
+
+        assertThat(nachAktualisieren.get(1).get(0).getIntVal(-1)).isEqualTo(2);
+        assertThat(nachAktualisieren.get(1).get(nachnameSpalte).getStringVal()).isEqualTo("Zwei");
+        assertThat(nachAktualisieren.get(1).get(aktivSpalte).getIntVal(-1)).isEqualTo(3);
+
+        assertThat(nachAktualisieren.get(2).get(0).getIntVal(-1)).isEqualTo(3);
+        assertThat(nachAktualisieren.get(2).get(nachnameSpalte).getStringVal()).isEqualTo("Drei");
+        assertThat(nachAktualisieren.get(2).get(aktivSpalte).getIntVal(-1)).isEqualTo(1);
     }
 
 }
