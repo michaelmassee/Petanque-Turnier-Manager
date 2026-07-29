@@ -139,8 +139,10 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 				.setDescription("config.desc.teilnehmer.anzahl.spalte"));
 
 		// Jedes System hat eine Meldeliste (anders als Checkin-/Teilnehmerliste), daher hier statt
-		// als eigene addXProp()-Methode direkt in ADDBaseProp. Default NUMMER (unverändertes
-		// Verhalten vor Einführung dieser Option).
+		// als eigene addXProp()-Methode direkt in ADDBaseProp. Default NUMMER. Achtung: vor
+		// Einführung dieser Option endete updateMeldungenNr() für alle Systeme außer Liga
+		// unbedingt mit einer Sortierung nach Name – der Default NUMMER ist somit eine bewusste
+		// Verhaltensänderung, kein unverändertes Altverhalten.
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty
 				.from(KONFIG_PROP_MELDELISTE_SORT_MODUS)
 				.setDefaultVal(TeilnehmerListeSortModus.NUMMER.getKey())

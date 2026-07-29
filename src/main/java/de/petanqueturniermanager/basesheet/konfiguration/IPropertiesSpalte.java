@@ -106,8 +106,9 @@ public interface IPropertiesSpalte {
 	}
 
 	/**
-	 * Sortierreihenfolge der Meldeliste. Default {@link TeilnehmerListeSortModus#NUMMER}
-	 * (unverändertes Verhalten vor Einführung dieser Option).
+	 * Sortierreihenfolge der Meldeliste. Default {@link TeilnehmerListeSortModus#NUMMER} – vor
+	 * Einführung dieser Option wurde die Meldeliste beim Aktualisieren stets nach Name sortiert,
+	 * der Default NUMMER ist somit eine bewusste Verhaltensänderung.
 	 */
 	default TeilnehmerListeSortModus getMeldelisteSortModus() {
 		return TeilnehmerListeSortModus.NUMMER;
