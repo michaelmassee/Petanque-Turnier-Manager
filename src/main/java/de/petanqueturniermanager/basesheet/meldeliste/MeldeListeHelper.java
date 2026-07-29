@@ -474,7 +474,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 		return ersteSpieltagSpalte() + spieltag.getNr() - 1;
 	}
 
-	public void updateMeldungenNr() throws GenerateException {
+	public void updateMeldungenNr(TeilnehmerListeSortModus sortModus) throws GenerateException {
 
 		meldeListe.processBoxinfo("processbox.meldeliste.nummern.aktualisieren");
 
@@ -505,8 +505,40 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 						.setNumberValueInCell(celVal.setValue((double) ++letzteSpielerNr).zeile(spielerZeilecntr));
 			}
 		}
-		// spieler nach Alphabet sortieren
-		doSort(meldeListe.getMeldungenSpalte().getErsteMeldungNameSpalte(), true);
+		// Meldeliste nach konfiguriertem Modus sortieren; der Sortierbereich nimmt alle
+		// Daten-/Statusspalten mit.
+		doSort(sortSpalteFuer(sortModus), true);
+	}
+
+	/**
+	 * Liefert die Spalte, nach der die Meldeliste gemäß dem übergebenen Sortier-Modus final
+	 * sortiert werden soll.
+	 * <p>
+	 * {@code NAME} sortiert nach dem Nachnamen von Spieler 1 (wie bei Checkin-/Teilnehmerliste),
+	 * nicht nach der ersten Namensspalte (= Vorname). {@code TEAMNAME} fällt auf {@code NAME}
+	 * zurück, wenn das System keine Teamname-Spalte führt.
+	 */
+	private int sortSpalteFuer(TeilnehmerListeSortModus sortModus) {
+		return switch (sortModus) {
+			case NUMMER -> SPIELER_NR_SPALTE;
+			case NAME -> nachnameSpieler1Spalte();
+			case TEAMNAME -> {
+				int teamnameSpalte = meldeListe.getMeldungenSpalte().getTeamnameSpalte();
+				yield teamnameSpalte >= 0 ? teamnameSpalte : nachnameSpieler1Spalte();
+			}
+		};
+	}
+
+	/**
+	 * Nachname-Spalte von Spieler 1: die erste Namensspalte ({@link MeldungenSpalte#getErsteMeldungNameSpalte()},
+	 * über alle Systeme hinweg immer die Vorname-Spieler-1-Spalte) plus 1 – analog zu
+	 * {@code TeilnehmerNamenLeser#leseSortNachname()}. Hat das System nur eine einzige
+	 * Namensspalte, wird diese verwendet.
+	 */
+	private int nachnameSpieler1Spalte() {
+		int ersteNamenSpalte = meldeListe.getMeldungenSpalte().getErsteMeldungNameSpalte();
+		int letzteNamenSpalte = meldeListe.getMeldungenSpalte().getLetzteMeldungNameSpalte();
+		return ersteNamenSpalte < letzteNamenSpalte ? ersteNamenSpalte + 1 : ersteNamenSpalte;
 	}
 
 	/**

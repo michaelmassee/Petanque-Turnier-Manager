@@ -105,4 +105,12 @@ public interface IPropertiesSpalte {
 		return TeilnehmerListeSortModus.NAME;
 	}
 
+	/**
+	 * Sortierreihenfolge der Meldeliste. Default {@link TeilnehmerListeSortModus#NUMMER}
+	 * (unverändertes Verhalten vor Einführung dieser Option).
+	 */
+	default TeilnehmerListeSortModus getMeldelisteSortModus() {
+		return TeilnehmerListeSortModus.NUMMER;
+	}
+
 }

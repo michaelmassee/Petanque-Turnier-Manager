@@ -68,6 +68,8 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 
 	public static final String KONFIG_PROP_TEILNEHMER_LISTE_SORT_MODUS = "Teilnehmerliste Sortierung";
 
+	public static final String KONFIG_PROP_MELDELISTE_SORT_MODUS = "Meldeliste Sortierung";
+
 	// Export
 	public static final String KONFIG_PROP_MELDELISTE_EXPORTIEREN = "Meldeliste exportieren";
 	public static final String KONFIG_PROP_SPIELRUNDEN_EXPORTIEREN = "Spielrunden exportieren";
@@ -135,6 +137,17 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_ANZ_TEILNEHMER_IN_SPALTE)
 				.setDefaultVal(DEFAULT_ANZ_TEILNEHMER_IN_SPALTE)
 				.setDescription("config.desc.teilnehmer.anzahl.spalte"));
+
+		// Jedes System hat eine Meldeliste (anders als Checkin-/Teilnehmerliste), daher hier statt
+		// als eigene addXProp()-Methode direkt in ADDBaseProp. Default NUMMER (unverändertes
+		// Verhalten vor Einführung dieser Option).
+		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty
+				.from(KONFIG_PROP_MELDELISTE_SORT_MODUS)
+				.setDefaultVal(TeilnehmerListeSortModus.NUMMER.getKey())
+				.setDescription("config.desc.meldeliste.sort.modus"))
+				.addAuswahl(TeilnehmerListeSortModus.NUMMER.getKey(), I18n.get("config.teilnehmer.sort.nummer"))
+				.addAuswahl(TeilnehmerListeSortModus.NAME.getKey(), I18n.get("config.teilnehmer.sort.name"))
+				.addAuswahl(TeilnehmerListeSortModus.TEAMNAME.getKey(), I18n.get("config.teilnehmer.sort.teamname")));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TAB_COLOR_MELDELISTE)
 				.setDefaultVal(SheetTabFarben.MELDELISTE)
@@ -478,6 +491,11 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	public TeilnehmerListeSortModus getTeilnehmerListeSortModus() {
 		return readEnumProperty(KONFIG_PROP_TEILNEHMER_LISTE_SORT_MODUS, TeilnehmerListeSortModus.class,
 				TeilnehmerListeSortModus.NAME);
+	}
+
+	public TeilnehmerListeSortModus getMeldelisteSortModus() {
+		return readEnumProperty(KONFIG_PROP_MELDELISTE_SORT_MODUS, TeilnehmerListeSortModus.class,
+				TeilnehmerListeSortModus.NUMMER);
 	}
 
 	@Override

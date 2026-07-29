@@ -167,7 +167,7 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 
 		meldeListeHelper.zeileOhneSpielerNamenEntfernen();
 		meldeListeHelper.pruefeUndKorrigiereDoppelteStartnummern();
-		meldeListeHelper.updateMeldungenNr();
+		meldeListeHelper.updateMeldungenNr(konfigurationSheet.getMeldelisteSortModus());
 
 		insertHeaderInSheet(konfigurationSheet.getMeldeListeHeaderFarbe());
 		formatDatenSpalten();

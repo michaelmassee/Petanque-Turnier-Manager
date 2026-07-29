@@ -262,7 +262,7 @@ public class MeldeListeHelperTest {
 				.from(MeldeListeKonstanten.SPIELER_NR_SPALTE, MeldeListeKonstanten.ERSTE_DATEN_ZEILE))))
 				.thenReturn(-1);
 
-		meldeListeHelper.updateMeldungenNr();
+		meldeListeHelper.updateMeldungenNr(TeilnehmerListeSortModus.NUMMER);
 
 		verify(sheetHelperMock, times(1)).setNumberValueInCell(any());
 	}

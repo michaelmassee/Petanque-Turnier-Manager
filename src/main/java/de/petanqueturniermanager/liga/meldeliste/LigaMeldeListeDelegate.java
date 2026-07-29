@@ -133,7 +133,7 @@ class LigaMeldeListeDelegate implements MeldeListeKonstanten {
 		var geradeStyle = konfigurationSheet.getMeldeListeHintergrundFarbeGeradeStyle();
 		var ungeradeStyle = konfigurationSheet.getMeldeListeHintergrundFarbeUnGeradeStyle();
 		meldungenSpalte.insertHeaderInSheet(headerBackColor);
-		meldeListeHelper.updateMeldungenNr();
+		meldeListeHelper.updateMeldungenNr(konfigurationSheet.getMeldelisteSortModus());
 		meldeListeHelper.doSort(meldungenSpalte.getSpielerNrSpalte(), true);
 		meldungenSpalte.formatSpielrNrUndNamenspalten();
 		formatDaten(geradeStyle, ungeradeStyle);

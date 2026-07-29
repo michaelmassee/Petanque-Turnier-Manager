@@ -273,6 +273,11 @@ public abstract class BaseKonfigurationSheet extends SheetRunner implements IPro
 		return getPropertiesSpalte().getTeilnehmerListeSortModus();
 	}
 
+	@Override
+	public final de.petanqueturniermanager.basesheet.meldeliste.TeilnehmerListeSortModus getMeldelisteSortModus() {
+		return getPropertiesSpalte().getMeldelisteSortModus();
+	}
+
 	/**
 	 * @return the propertiesSpalte
 	 */
