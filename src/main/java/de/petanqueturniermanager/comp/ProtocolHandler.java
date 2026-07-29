@@ -461,6 +461,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_TOOLBAR_START                 = "toolbar_start";
 	public static final String CMD_TOOLBAR_WEITER                = "toolbar_weiter";
 	public static final String CMD_TOOLBAR_VORRUNDEN_RANGLISTE   = "toolbar_vorrunden_rangliste";
+	public static final String CMD_TOOLBAR_MELDELISTE_AKTUALISIEREN = "toolbar_meldeliste_aktualisieren";
 	public static final String CMD_TOOLBAR_TEILNEHMER            = "toolbar_teilnehmer";
 	public static final String CMD_TOOLBAR_CHECKIN               = "toolbar_checkin";
 	public static final String CMD_TOOLBAR_NEU_IN_NEUER_DATEI    = "toolbar_neu_in_neuer_datei";
@@ -1251,6 +1252,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_TOOLBAR_VORRUNDEN_RANGLISTE:
 				ToolbarAktionDispatcher.vorrundenRangliste(ws);
 				break;
+			case CMD_TOOLBAR_MELDELISTE_AKTUALISIEREN:
+				behandleMeldelisteAktualisierenDispatch(ws, args);
+				break;
 			case CMD_TOOLBAR_TEILNEHMER:
 				behandleTeilnehmerDispatch(ws, args);
 				break;
@@ -1696,10 +1700,13 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		// im Menü wirksam). Für übrige Befehle echte isEnabled-Bewertung.
 		boolean enabled = TOOLBAR_ONLY_CMDS.contains(command) || isEnabled(command, holeAktivesDokument());
 		postStatus(listener, url, enabled);
-		// Checkin- und Teilnehmer-Button sind ToggleDropdownButtons (siehe
+		// Meldeliste-, Checkin- und Teilnehmer-Button sind ToggleDropdownButtons (siehe
 		// Addons_Z2_Toolbar.xcu). Ihre Dropdown-Einträge (Sortierung nach Nr/Name/Team)
 		// werden hier per ControlCommand "SetList" an den Controller gemeldet.
-		if (CMD_TOOLBAR_CHECKIN.equals(command)) {
+		if (CMD_TOOLBAR_MELDELISTE_AKTUALISIEREN.equals(command)) {
+			postSortDropdownListe(listener, url, MELDELISTE_SORT_I18N_PREFIX,
+					BasePropertiesSpalte.KONFIG_PROP_MELDELISTE_SORT_MODUS);
+		} else if (CMD_TOOLBAR_CHECKIN.equals(command)) {
 			postSortDropdownListe(listener, url, CHECKIN_SORT_I18N_PREFIX,
 					BasePropertiesSpalte.KONFIG_PROP_CHECKIN_LISTE_SORT_MODUS);
 		} else if (CMD_TOOLBAR_TEILNEHMER.equals(command)) {
@@ -1725,6 +1732,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	// Sortierung nach Nr/Name/Team an. Der Mechanismus ist identisch und nur über
 	// den i18n-Label-Präfix und die Ziel-Dokument-Property parametrisiert.
 
+	/** i18n-Schlüssel-Präfix der Meldeliste-Sortier-Labels ({@code <prefix>nummer|name|teamname}). */
+	private static final String MELDELISTE_SORT_I18N_PREFIX = "toolbar.meldeliste.sort.";
 	/** i18n-Schlüssel-Präfix der Checkin-Sortier-Labels ({@code <prefix>nummer|name|teamname}). */
 	private static final String CHECKIN_SORT_I18N_PREFIX = "toolbar.checkin.sort.";
 	/** i18n-Schlüssel-Präfix der Teilnehmer-Sortier-Labels. */
@@ -1803,6 +1812,17 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		} catch (Exception e) {
 			return TeilnehmerListeSortModus.NAME;
 		}
+	}
+
+	/**
+	 * Behandelt einen Klick auf den Meldeliste-aktualisieren-Toolbar-Button. Analog zu
+	 * {@link #behandleCheckinDispatch(WorkingSpreadsheet, PropertyValue[])}, nur für die
+	 * Meldeliste und deren Sortier-Property.
+	 */
+	private void behandleMeldelisteAktualisierenDispatch(WorkingSpreadsheet ws, PropertyValue[] args) throws Exception {
+		persistiereSortModus(ws, args, MELDELISTE_SORT_I18N_PREFIX,
+				BasePropertiesSpalte.KONFIG_PROP_MELDELISTE_SORT_MODUS);
+		ToolbarAktionDispatcher.meldelisteAktualisieren(ws);
 	}
 
 	/**
@@ -1937,6 +1957,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			CMD_TOOLBAR_NEU_AUSLOSEN,
 			CMD_TOOLBAR_ABSCHLUSS,
 			CMD_TOOLBAR_VORRUNDEN_RANGLISTE,
+			CMD_TOOLBAR_MELDELISTE_AKTUALISIEREN,
 			CMD_TOOLBAR_TEILNEHMER,
 			CMD_TOOLBAR_CHECKIN,
 			CMD_TOOLBAR_NEU_IN_NEUER_DATEI,
@@ -2118,6 +2139,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_TOOLBAR_WEITER                         -> ts != TurnierSystem.KEIN;
 			case CMD_TOOLBAR_VORRUNDEN_RANGLISTE,
 				 CMD_TOOLBAR_TEILNEHMER                     -> ts != TurnierSystem.KEIN && ts != TurnierSystem.LIGA;
+			// Meldeliste aktualisieren gibt es für alle Turniersysteme (anders als Checkin/Teilnehmer).
+			case CMD_TOOLBAR_MELDELISTE_AKTUALISIEREN       -> ts != TurnierSystem.KEIN;
 			// Checkin bewusst NICHT systemabhängig deaktivieren (LO-Toolbar-Bug bei enable/disable):
 			// immer klickbar, Systeme ohne Checkin zeigen beim Klick eine Hinweis-Meldung (Fallback-Strategie).
 			case CMD_TOOLBAR_CHECKIN                        -> ts != TurnierSystem.KEIN;

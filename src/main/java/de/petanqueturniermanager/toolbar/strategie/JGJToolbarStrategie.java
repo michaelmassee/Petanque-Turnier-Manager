@@ -7,6 +7,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.jedergegenjeden.finalrunde.JGJFinalrundeSheet;
 import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteSheet;
 import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJSpielPlanSheet;
+import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSheet_Update;
 import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJTeilnehmerSheet;
 import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJCheckinListeSheet;
 import de.petanqueturniermanager.toolbar.ITurnierSystemToolbarStrategie;
@@ -28,6 +29,11 @@ public class JGJToolbarStrategie implements ITurnierSystemToolbarStrategie {
     @Override
     public void vorrundenRangliste(WorkingSpreadsheet ws) throws Exception {
         new JGJRanglisteSheet(ws).testTurnierVorhanden().backUpDocument().start();
+    }
+
+    @Override
+    public void meldelisteAktualisieren(WorkingSpreadsheet ws) throws Exception {
+        new JGJMeldeListeSheet_Update(ws).testTurnierVorhanden().backUpDocument().start();
     }
 
     @Override

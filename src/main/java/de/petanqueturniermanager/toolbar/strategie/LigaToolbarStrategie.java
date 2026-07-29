@@ -4,6 +4,7 @@
 package de.petanqueturniermanager.toolbar.strategie;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheetUpdate;
 import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheet;
 import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet;
 import de.petanqueturniermanager.toolbar.ITurnierSystemToolbarStrategie;
@@ -24,6 +25,11 @@ public class LigaToolbarStrategie implements ITurnierSystemToolbarStrategie {
     @Override
     public void vorrundenRangliste(WorkingSpreadsheet ws) throws Exception {
         new LigaRanglisteSheet(ws).testTurnierVorhanden().backUpDocument().start();
+    }
+
+    @Override
+    public void meldelisteAktualisieren(WorkingSpreadsheet ws) throws Exception {
+        new LigaMeldeListeSheetUpdate(ws).testTurnierVorhanden().backUpDocument().start();
     }
 
     @Override

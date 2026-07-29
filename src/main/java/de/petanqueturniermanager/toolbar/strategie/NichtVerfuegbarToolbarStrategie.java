@@ -31,6 +31,11 @@ public class NichtVerfuegbarToolbarStrategie implements ITurnierSystemToolbarStr
     }
 
     @Override
+    public void meldelisteAktualisieren(WorkingSpreadsheet ws) throws Exception {
+        zeigeNichtVerfuegbar(ws, I18n.get("toolbar.meldeliste.aktualisieren.nicht.verfuegbar"));
+    }
+
+    @Override
     public void teilnehmer(WorkingSpreadsheet ws) throws Exception {
         zeigeNichtVerfuegbar(ws, I18n.get("toolbar.teilnehmer.nicht.verfuegbar"));
     }

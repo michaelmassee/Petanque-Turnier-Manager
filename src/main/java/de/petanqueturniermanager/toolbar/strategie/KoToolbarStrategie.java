@@ -5,6 +5,7 @@ package de.petanqueturniermanager.toolbar.strategie;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.ko.KoTurnierbaumSheet;
+import de.petanqueturniermanager.ko.meldeliste.KoMeldeListeSheetUpdate;
 import de.petanqueturniermanager.ko.meldeliste.KoTeilnehmerSheet;
 import de.petanqueturniermanager.ko.meldeliste.KoCheckinListeSheet;
 import de.petanqueturniermanager.toolbar.ITurnierSystemToolbarStrategie;
@@ -25,6 +26,11 @@ public class KoToolbarStrategie implements ITurnierSystemToolbarStrategie {
     @Override
     public void vorrundenRangliste(WorkingSpreadsheet ws) throws Exception {
         fallback.vorrundenRangliste(ws);
+    }
+
+    @Override
+    public void meldelisteAktualisieren(WorkingSpreadsheet ws) throws Exception {
+        new KoMeldeListeSheetUpdate(ws).testTurnierVorhanden().backUpDocument().start();
     }
 
     @Override

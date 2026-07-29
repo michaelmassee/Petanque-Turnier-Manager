@@ -7,6 +7,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.AnmeldungenSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_NeuerSpieltag;
+import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
 import de.petanqueturniermanager.supermelee.meldeliste.SupermeleeTeilnehmerSheet;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Naechste;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Update;
@@ -28,6 +29,11 @@ public class SupermeleeToolbarStrategie implements ITurnierSystemToolbarStrategi
     @Override
     public void vorrundenRangliste(WorkingSpreadsheet ws) throws Exception {
         new SpieltagRanglisteSheet(ws).testTurnierVorhanden().backUpDocument().start();
+    }
+
+    @Override
+    public void meldelisteAktualisieren(WorkingSpreadsheet ws) throws Exception {
+        new MeldeListeSheet_Update(ws).testTurnierVorhanden().start();
     }
 
     @Override

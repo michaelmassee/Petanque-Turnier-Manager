@@ -34,6 +34,14 @@ public final class ToolbarAktionDispatcher {
     }
 
     /**
+     * Aktualisiert die Meldeliste des aktiven Turniersystems.
+     */
+    public static void meldelisteAktualisieren(WorkingSpreadsheet ws) throws Exception {
+        TurnierSystem system = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();
+        TurnierSystemToolbarStrategieRegistry.get(system).meldelisteAktualisieren(ws);
+    }
+
+    /**
      * Erstellt das Teilnehmer-Sheet des aktiven Turniersystems.
      */
     public static void teilnehmer(WorkingSpreadsheet ws) throws Exception {

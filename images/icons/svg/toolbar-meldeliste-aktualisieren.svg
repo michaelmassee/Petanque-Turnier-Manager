@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+
+  <!-- Meldeliste: Blatt mit Zeilen -->
+  <rect x="12" y="8" width="34" height="46" rx="3" fill="#FFFFFF" stroke="#1F2937" stroke-width="1.5"/>
+  <rect x="20" y="4" width="18" height="8" rx="2" fill="#9CA3AF" stroke="#1F2937" stroke-width="1.5"/>
+  <circle cx="18" cy="20" r="1.8" fill="#1F2937"/>
+  <line x1="23" y1="20" x2="40" y2="20" stroke="#D1D5DB" stroke-width="1.5" stroke-linecap="round"/>
+  <circle cx="18" cy="29" r="1.8" fill="#1F2937"/>
+  <line x1="23" y1="29" x2="40" y2="29" stroke="#D1D5DB" stroke-width="1.5" stroke-linecap="round"/>
+  <circle cx="18" cy="38" r="1.8" fill="#1F2937"/>
+  <line x1="23" y1="38" x2="40" y2="38" stroke="#D1D5DB" stroke-width="1.5" stroke-linecap="round"/>
+  <circle cx="18" cy="47" r="1.8" fill="#1F2937"/>
+  <line x1="23" y1="47" x2="40" y2="47" stroke="#D1D5DB" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- Refresh-Badge unten rechts -->
+  <circle cx="48" cy="48" r="13" fill="#2563EB" stroke="#1F2937" stroke-width="1.5"/>
+  <path d="M 42 41 A 9 9 0 1 1 40 55" fill="none" stroke="#FFFFFF" stroke-width="2.7" stroke-linecap="round"/>
+  <path d="M 44 51 L 40 55 L 36 51" fill="none" stroke="#FFFFFF" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/>
+
+</svg>

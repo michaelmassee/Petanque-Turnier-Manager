@@ -7,6 +7,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheet;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerSpielrundeSheetNaechste;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerSpielrundeSheetUpdate;
+import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetUpdate;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerTeilnehmerSheet;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerCheckinListeSheet;
 import de.petanqueturniermanager.toolbar.ITurnierSystemToolbarStrategie;
@@ -26,6 +27,11 @@ public class SchweizerToolbarStrategie implements ITurnierSystemToolbarStrategie
     @Override
     public void vorrundenRangliste(WorkingSpreadsheet ws) throws Exception {
         new SchweizerRanglisteSheet(ws).testTurnierVorhanden().backUpDocument().start();
+    }
+
+    @Override
+    public void meldelisteAktualisieren(WorkingSpreadsheet ws) throws Exception {
+        new SchweizerMeldeListeSheetUpdate(ws).testTurnierVorhanden().start();
     }
 
     @Override

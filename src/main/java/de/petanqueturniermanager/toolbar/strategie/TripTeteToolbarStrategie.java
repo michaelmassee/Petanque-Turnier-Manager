@@ -6,6 +6,7 @@ package de.petanqueturniermanager.toolbar.strategie;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.toolbar.ITurnierSystemToolbarStrategie;
 import de.petanqueturniermanager.triptete.meldeliste.TripTeteCheckinListeSheet;
+import de.petanqueturniermanager.triptete.meldeliste.TripTeteMeldeListeSheetUpdate;
 import de.petanqueturniermanager.triptete.meldeliste.TripTeteTeilnehmerSheet;
 import de.petanqueturniermanager.triptete.spielplan.TripTeteSpielPlanSheet;
 
@@ -29,6 +30,11 @@ public class TripTeteToolbarStrategie implements ITurnierSystemToolbarStrategie 
     @Override
     public void vorrundenRangliste(WorkingSpreadsheet ws) throws Exception {
         fallback.vorrundenRangliste(ws);
+    }
+
+    @Override
+    public void meldelisteAktualisieren(WorkingSpreadsheet ws) throws Exception {
+        new TripTeteMeldeListeSheetUpdate(ws).testTurnierVorhanden().backUpDocument().start();
     }
 
     @Override

@@ -153,6 +153,27 @@ ICONS["toolbar-checkin"] = svg(f'''
 ''')
 
 # ============================================================
+# 5c. MELDELISTE AKTUALISIEREN — Liste mit Refresh-Pfeil-Badge
+# ============================================================
+ICONS["toolbar-meldeliste-aktualisieren"] = svg(f'''
+  <!-- Meldeliste: Blatt mit Zeilen -->
+  <rect x="12" y="8" width="34" height="46" rx="3" fill="{C['paper']}" stroke="{C['ink']}" stroke-width="{S}"/>
+  <rect x="20" y="4" width="18" height="8" rx="2" fill="{C['silver']}" stroke="{C['ink']}" stroke-width="{S}"/>
+  <circle cx="18" cy="20" r="1.8" fill="{C['ink']}"/>
+  <line x1="23" y1="20" x2="40" y2="20" stroke="{C['line']}" stroke-width="{S}" stroke-linecap="round"/>
+  <circle cx="18" cy="29" r="1.8" fill="{C['ink']}"/>
+  <line x1="23" y1="29" x2="40" y2="29" stroke="{C['line']}" stroke-width="{S}" stroke-linecap="round"/>
+  <circle cx="18" cy="38" r="1.8" fill="{C['ink']}"/>
+  <line x1="23" y1="38" x2="40" y2="38" stroke="{C['line']}" stroke-width="{S}" stroke-linecap="round"/>
+  <circle cx="18" cy="47" r="1.8" fill="{C['ink']}"/>
+  <line x1="23" y1="47" x2="40" y2="47" stroke="{C['line']}" stroke-width="{S}" stroke-linecap="round"/>
+  <!-- Refresh-Badge unten rechts -->
+  <circle cx="48" cy="48" r="13" fill="{C['info']}" stroke="{C['ink']}" stroke-width="{S}"/>
+  <path d="M 42 41 A 9 9 0 1 1 40 55" fill="none" stroke="{C['paper']}" stroke-width="{S*1.8}" stroke-linecap="round"/>
+  <path d="M 44 51 L 40 55 L 36 51" fill="none" stroke="{C['paper']}" stroke-width="{S*1.8}" stroke-linecap="round" stroke-linejoin="round"/>
+''')
+
+# ============================================================
 # 6. TURNIER-MODUS — KIOSK / Vollbild-Monitor (THEMATISCH KORREKT)
 # ============================================================
 ICONS["toolbar-turnier-modus"] = svg(f'''
@@ -425,7 +446,7 @@ ICONS["toolbar-timer-snooze"] = svg(f'''
 # ============================================================
 # SCHREIBEN
 # ============================================================
-OUT = "/home/claude/icons_v2/svg"
+OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "svg")
 os.makedirs(OUT, exist_ok=True)
 for name, content in ICONS.items():
     with open(f"{OUT}/{name}.svg", "w") as f:

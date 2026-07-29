@@ -28,6 +28,12 @@ public interface ITurnierSystemToolbarStrategie {
     void teilnehmer(WorkingSpreadsheet ws) throws Exception;
 
     /**
+     * Aktualisiert die Meldeliste des Turniersystems (Nummern vergeben, doppelte Startnummern
+     * korrigieren, Zeilen ohne Namen entfernen, sortieren). Für alle Turniersysteme implementiert.
+     */
+    void meldelisteAktualisieren(WorkingSpreadsheet ws) throws Exception;
+
+    /**
      * Erstellt oder aktualisiert die Checkin-Liste des Turniersystems.
      * Nur für Systeme mit Checkin-Liste implementiert; alle anderen Systeme
      * delegieren an {@link de.petanqueturniermanager.toolbar.strategie.NichtVerfuegbarToolbarStrategie},
