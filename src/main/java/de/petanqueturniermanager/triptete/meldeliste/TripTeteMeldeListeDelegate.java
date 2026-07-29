@@ -406,13 +406,16 @@ class TripTeteMeldeListeDelegate implements MeldeListeKonstanten {
         XSpreadsheet xSheet = sheet.getXSpreadSheet();
         SheetHelper sh = sheet.getSheetHelper();
         int maxZeile = ERSTE_DATEN_ZEILE_OVERRIDE + MeldungenSpalte.MAX_ANZ_MELDUNGEN;
+        // ueber den gesamten Bereich scannen (nicht beim ersten Luecken-Gap abbrechen), sonst
+        // werden Nummern die HINTER einer Luecke stehen (z.B. Zeile mit Nr aber ohne Namen) ignoriert
+        int letzteZeileMitNr = ERSTE_DATEN_ZEILE_OVERRIDE - 1;
         for (int zeile = ERSTE_DATEN_ZEILE_OVERRIDE; zeile <= maxZeile; zeile++) {
             int nr = sh.getIntFromCell(xSheet, Position.from(getTeamNrSpalte(), zeile));
-            if (nr <= 0) {
-                return zeile;
+            if (nr > 0) {
+                letzteZeileMitNr = zeile;
             }
         }
-        return maxZeile + 1;
+        return letzteZeileMitNr + 1;
     }
 
     int letzteZeileMitSpielerName() throws GenerateException {

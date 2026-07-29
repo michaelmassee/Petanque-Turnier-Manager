@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.List;
 import java.util.stream.Stream;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -17,6 +18,7 @@ import com.sun.star.sheet.XSpreadsheet;
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.helper.TestnamenLoader;
+import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
@@ -105,6 +107,58 @@ class SchweizerMeldeListeKompaktierenUITest extends BaseCalcUITest {
             RowData zeile = nachAktualisieren.get(i);
             String vorname = zeile.get(vornameSpalte).getStringVal();
             assertThat(vorname).as("Vorname in Zeile %d (muss leer sein)", i).isNullOrEmpty();
+        }
+    }
+
+    /**
+     * Regression: eine Team-Nr OHNE Namen, die hinter mehreren Lücken-Zeilen steht, wurde von
+     * "Meldeliste aktualisieren" bisher übersehen. Ursache: {@code naechsteFreieDatenZeileInSpielerNrSpalte()}
+     * brach beim ERSTEN Lücken-Gap ab, statt den gesamten Bereich zu scannen – Nummern, die
+     * hinter einer weiteren Lücke standen, wurden dadurch nie geprüft/entfernt.
+     */
+    @Test
+    void teamNrHinterMehrerenLueckenWirdEntfernt() throws Exception {
+        SchweizerMeldeListeSheetNew meldeListeNew = new SchweizerMeldeListeSheetNew(wkingSpreadsheet);
+        meldeListeNew.createMeldelisteWithParams(Formation.TETE, false, false);
+
+        int ersteDatenZeile = SchweizerListeDelegate.ERSTE_DATEN_ZEILE;
+        int vornameSpalte = meldeListeNew.getVornameSpalte(0);
+        int aktivSpalte = meldeListeNew.getAktivSpalte();
+
+        RangeData data = new RangeData();
+        RowData zeile1 = data.addNewRow();
+        zeile1.newInt(1);
+        zeile1.newString("Max");
+        zeile1.newString("Muster");
+        zeile1.newEmpty(); // Setzposition
+        zeile1.newInt(SchweizerListeDelegate.AKTIV_WERT_NIMMT_TEIL);
+
+        XSpreadsheet xSheet = meldeListeNew.getXSpreadSheet();
+        RangeHelper.from(xSheet, doc, data.getRangePosition(Position.from(0, ersteDatenZeile))).setDataInRange(data);
+
+        // Lücken + zwei "Nr ohne Namen"-Zeilen dahinter schreiben (spiegelt den real gemeldeten
+        // Fall: mehrere Leerzeilen, danach eine Zeile nur mit Startnummer, wieder Leerzeilen,
+        // danach nochmal eine Zeile nur mit Startnummer)
+        int nrOhneNamen1 = ersteDatenZeile + 3;
+        int nrOhneNamen2 = ersteDatenZeile + 6;
+        NumberCellValue nrCelVal = NumberCellValue.from(xSheet, Position.from(0, nrOhneNamen1));
+        meldeListeNew.getSheetHelper().setNumberValueInCell(nrCelVal.setValue(87));
+        meldeListeNew.getSheetHelper().setNumberValueInCell(nrCelVal.zeile(nrOhneNamen2).setValue(90));
+
+        new SchweizerMeldeListeSheetUpdate(wkingSpreadsheet).doRun();
+
+        RangePosition pruefRange = RangePosition.from(0, ersteDatenZeile, aktivSpalte, nrOhneNamen2 + 1);
+        RangeData nachAktualisieren = RangeHelper.from(xSheet, doc, pruefRange).getDataFromRange();
+
+        assertThat(nachAktualisieren.get(0).get(0).getIntVal(-1)).as("Nr der einzigen echten Meldung").isEqualTo(1);
+        assertThat(nachAktualisieren.get(0).get(vornameSpalte).getStringVal())
+                .as("Name der echten Meldung bleibt erhalten").isNotBlank();
+
+        for (int i = 1; i < nachAktualisieren.size(); i++) {
+            RowData zeile = nachAktualisieren.get(i);
+            assertThat(zeile.get(0).getIntVal(-1))
+                    .as("Zeile %d darf keine Nr mehr ohne Namen enthalten (Nr 87/90 aus der Lücke)", i)
+                    .isEqualTo(-1);
         }
     }
 

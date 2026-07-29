@@ -354,20 +354,25 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 		}
 		XSpreadsheet xSheet = getXSpreadSheet();
 
-		// StringCellValue emptyVal = StringCellValue.from(xSheet, Position.from(SPIELER_NR_SPALTE, 0)).setValue("");
+		// Vorname/Nachname/Teamname trimmen, bevor auf leere Zeilen geprüft wird – sonst
+		// zählen Zellen mit nur Leerzeichen fälschlich als "hat einen Namen".
+		meldeListe.getMeldungenSpalte().trimNamenUndTeamnameSpalten(letzteNrZeile - 1);
+		// erneut sortieren: eine Zeile mit nur Leerzeichen war beim ersten Sortieren (vor dem
+		// Trimmen) noch "nicht leer" und kann daher oberhalb einer echten Meldung gelandet sein
+		doSort(meldeListe.getMeldungenSpalte().getErsteMeldungNameSpalte(), true);
+
 		Position posEmptyVal = Position.from(SPIELER_NR_SPALTE, 0);
 
 		int letzteZeileMitSpielerName = meldeListe.letzteZeileMitSpielerName(); // erst ab zeilen ohne namen anfangen
 
 		if (letzteZeileMitSpielerName > 0) {
 			for (int spielerNrZeilecntr = letzteZeileMitSpielerName; spielerNrZeilecntr < letzteNrZeile; spielerNrZeilecntr++) {
-				Position posSpielerName = Position.from(meldeListe.getMeldungenSpalte().getErsteMeldungNameSpalte(),
-						spielerNrZeilecntr);
-				String spielerNamen = meldeListe.getSheetHelper().getTextFromCell(xSheet, posSpielerName);
+				// alle Namens-Spalten kombiniert prüfen (z.B. Supermelee Vorname+Nachname),
+				// sonst wird eine Zeile mit leerem Vorname aber gefülltem Nachname fälschlich entfernt
+				String spielerNamen = meldeListe.getMeldungenSpalte().leseSpielerNameZeile(xSheet, spielerNrZeilecntr);
 				if (StringUtils.isBlank(spielerNamen)) { // null oder leer oder leerzeichen
 					// nr ohne spieler namen entfernen
 					meldeListe.getSheetHelper().clearValInCell(xSheet, posEmptyVal.zeile(spielerNrZeilecntr));
-					// meldeListe.getSheetHelper().setStringValueInCell(emptyVal.zeile(spielerNrZeilecntr));
 				}
 			}
 		}

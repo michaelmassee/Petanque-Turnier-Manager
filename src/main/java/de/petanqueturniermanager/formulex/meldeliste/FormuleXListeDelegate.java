@@ -759,13 +759,16 @@ class FormuleXListeDelegate implements MeldeListeKonstanten {
     int naechsteFreieDatenZeileInSpielerNrSpalte() throws GenerateException {
         XSpreadsheet xSheet = sheet.getXSpreadSheet();
         int maxZeile = ERSTE_DATEN_ZEILE + 500;
+        // ueber den gesamten Bereich scannen (nicht beim ersten Luecken-Gap abbrechen), sonst
+        // werden Nummern die HINTER einer Luecke stehen (z.B. Zeile mit Nr aber ohne Namen) ignoriert
+        int letzteZeileMitNr = ERSTE_DATEN_ZEILE - 1;
         for (int zeile = ERSTE_DATEN_ZEILE; zeile <= maxZeile; zeile++) {
             int nr = sheet.getSheetHelper().getIntFromCell(xSheet, Position.from(getTeamNrSpalte(), zeile));
-            if (nr <= 0) {
-                return zeile;
+            if (nr > 0) {
+                letzteZeileMitNr = zeile;
             }
         }
-        return maxZeile + 1;
+        return letzteZeileMitNr + 1;
     }
 
     int getLetzteMitDatenZeileInSpielerNrSpalte() throws GenerateException {

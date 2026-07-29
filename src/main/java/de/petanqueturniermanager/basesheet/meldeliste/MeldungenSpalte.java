@@ -398,6 +398,51 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 	}
 
 	/**
+	 * Spalte des freien Teamnamens (direkt nach der Spieler-Nr-Spalte), oder -1 wenn keine
+	 * Teamname-Spalte konfiguriert ist. Erkennung anhand der Lücke zwischen Nr- und erster
+	 * Namens-Spalte, die alle Turniersysteme einheitlich für den optionalen Teamnamen reservieren.
+	 */
+	public int getTeamnameSpalte() {
+		return (ersteMeldungNameSpalte - meldungNrSpalte) > 1 ? meldungNrSpalte + 1 : -1;
+	}
+
+	/**
+	 * Trimmt alle Namens-Zellen (und die Teamname-Zelle, falls vorhanden) je Zeile blockweise:
+	 * führende/nachfolgende Leerzeichen werden entfernt. Verhindert, dass Whitespace-Reste eine
+	 * nachfolgende Leer-Prüfung (z.B. {@link MeldeListeHelper#zeileOhneSpielerNamenEntfernen()})
+	 * verfälschen.
+	 *
+	 * @param letzteZeile letzte zu prüfende Zeile (inklusive)
+	 */
+	public void trimNamenUndTeamnameSpalten(int letzteZeile) throws GenerateException {
+		if (letzteZeile < ersteDatenZiele) {
+			return;
+		}
+		int teamnameSpalte = getTeamnameSpalte();
+		int startSpalte = teamnameSpalte >= 0 ? teamnameSpalte : ersteMeldungNameSpalte;
+		RangePosition bereich = RangePosition.from(startSpalte, ersteDatenZiele, letzteMeldungNameSpalte, letzteZeile);
+		RangeHelper rangeHelper = RangeHelper.from(getISheet(), bereich);
+		RangeData daten = rangeHelper.getDataFromRange();
+
+		boolean geaendert = false;
+		for (RowData zeile : daten) {
+			for (int i = 0; i < zeile.size(); i++) {
+				String wert = zeile.get(i).getStringVal();
+				if (wert != null) {
+					String getrimmt = wert.strip();
+					if (!getrimmt.equals(wert)) {
+						zeile.get(i).setStringVal(getrimmt);
+						geaendert = true;
+					}
+				}
+			}
+		}
+		if (geaendert) {
+			rangeHelper.setDataInRange(daten);
+		}
+	}
+
+	/**
 	 * Liest den Spielernamen einer Zeile zusammengesetzt aus allen Namens-Spalten.
 	 * 1 Spalte: unverändert. 2 Spalten: {@code "Nachname, Vorname"}. >2 Spalten: durch Leerzeichen verbunden.
 	 */
