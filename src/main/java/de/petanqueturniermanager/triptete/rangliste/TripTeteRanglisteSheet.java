@@ -233,7 +233,7 @@ public class TripTeteRanglisteSheet extends SheetRunner implements ISheet {
 						.setComment(I18n.get("comment.begegnungen")));
 	}
 
-	private void insertFooter(int anzTeams) throws GenerateException {
+	protected void insertFooter(int anzTeams) throws GenerateException {
 		int footerZeile = ERSTE_DATEN_ZEILE + anzTeams + 1;
 		StringCellValue stVal = StringCellValue.from(this, Position.from(TEAM_NR_SPALTE, footerZeile))
 				.setHoriJustify(CellHoriJustify.LEFT).setCharHeight(8)
@@ -242,7 +242,7 @@ public class TripTeteRanglisteSheet extends SheetRunner implements ISheet {
 				stVal.setValue(I18n.get("triptete.rangliste.reihenfolge.platzierung")));
 	}
 
-	private void formatieren(int anzTeams) throws GenerateException {
+	protected void formatieren(int anzTeams) throws GenerateException {
 		int letzteDatenZeile = ERSTE_DATEN_ZEILE + anzTeams - 1;
 		RangePosition daten = RangePosition.from(TEAM_NR_SPALTE, ERSTE_DATEN_ZEILE, LETZTE_SPALTE, letzteDatenZeile);
 		RangeHelper.from(this, daten).setRangeProperties(
@@ -276,7 +276,7 @@ public class TripTeteRanglisteSheet extends SheetRunner implements ISheet {
 				.ungeradeFarbe(farbeUngerade).apply();
 	}
 
-	private void printBereichDefinieren(int anzTeams) throws GenerateException {
+	protected void printBereichDefinieren(int anzTeams) throws GenerateException {
 		PrintArea.from(getXSpreadSheet(), getWorkingSpreadsheet()).setPrintArea(
 				RangePosition.from(0, 0, LETZTE_SPALTE, ERSTE_DATEN_ZEILE + anzTeams + 1));
 	}

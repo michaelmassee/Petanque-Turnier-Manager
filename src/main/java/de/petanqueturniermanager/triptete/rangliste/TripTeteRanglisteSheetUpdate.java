@@ -1,66 +1,54 @@
 package de.petanqueturniermanager.triptete.rangliste;
 
-import com.sun.star.sheet.XSpreadsheet;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import de.petanqueturniermanager.SheetRunner;
-import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+import com.sun.star.sheet.XSpreadsheet;
+
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.helper.ISheet;
-import de.petanqueturniermanager.helper.i18n.SheetNamen;
-import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
-import de.petanqueturniermanager.helper.sheet.TurnierSheet;
-import de.petanqueturniermanager.triptete.konfiguration.TripTeteKonfigurationSheet;
-import de.petanqueturniermanager.triptete.meldeliste.TripTeteMeldeListeSheetUpdate;
+import de.petanqueturniermanager.model.TeamMeldungen;
 
 /**
  * Listener-sicheres Rangliste-Update: Aktualisiert nur den Datenbereich der
  * bereits existierenden Trip-Tête-Rangliste, ohne {@code forceCreate} und damit
  * ohne Race-Condition gegen einen parallelen Vollaufbau.
+ * <p>
+ * Formatierung (Zebra-Färbung, Rahmen, Fußzeile, Druckbereich) wird trotzdem auf
+ * den vollständigen aktuellen Datenbereich angewendet – sonst bleiben nachträglich
+ * über die Meldeliste hinzugekommene Teams unformatiert (Bug bei wachsender
+ * Teilnehmerzahl, z.B. 15 Teams).
  */
-public class TripTeteRanglisteSheetUpdate extends SheetRunner implements ISheet {
+public class TripTeteRanglisteSheetUpdate extends TripTeteRanglisteSheet {
 
 	private static final Logger logger = LogManager.getLogger(TripTeteRanglisteSheetUpdate.class);
-	private static final String METADATA_SCHLUESSEL = SheetMetadataHelper.SCHLUESSEL_TRIPTETE_RANGLISTE;
-
-	private final TripTeteKonfigurationSheet konfigurationSheet;
-	private final TripTeteMeldeListeSheetUpdate meldeListe;
 
 	public TripTeteRanglisteSheetUpdate(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet, TurnierSystem.TRIPTETE, "Trip-Tête-RanglisteUpdate");
-		konfigurationSheet = new TripTeteKonfigurationSheet(workingSpreadsheet);
-		meldeListe = new TripTeteMeldeListeSheetUpdate(workingSpreadsheet);
-	}
-
-	@Override
-	protected TripTeteKonfigurationSheet getKonfigurationSheet() {
-		return konfigurationSheet;
-	}
-
-	@Override
-	public XSpreadsheet getXSpreadSheet() throws GenerateException {
-		return SheetMetadataHelper.findeSheetUndHeile(
-				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), METADATA_SCHLUESSEL,
-				SheetNamen.LEGACY_RANGLISTE);
-	}
-
-	@Override
-	public TurnierSheet getTurnierSheet() throws GenerateException {
-		return TurnierSheet.from(getXSpreadSheet(), getWorkingSpreadsheet());
+		super(workingSpreadsheet);
 	}
 
 	@Override
 	public void doRun() throws GenerateException {
 		XSpreadsheet sheet = getXSpreadSheet();
 		if (sheet == null) {
-			logger.debug("RanglisteUpdate: Trip-Tête-Rangliste nicht vorhanden – übersprungen");
+			logger.debug("RanglisteUpdate: Trip-Tête-Rangliste nicht vorhanden – vollständiger Erstaufbau");
+			upDateSheet();
 			return;
 		}
+
 		logger.debug("RanglisteUpdate START – Thread='{}'", Thread.currentThread().getName());
-		TripTeteRanglisteDatenSchreiber.from(this, meldeListe, getWorkingSpreadsheet()).schreibeDaten();
+
+		TeamMeldungen meldungen = getMeldeListe().getAlleMeldungen();
+		if (!meldungen.isValid()) {
+			logger.debug("RanglisteUpdate: ungültige Anzahl Meldungen – übersprungen");
+			return;
+		}
+
+		TripTeteRanglisteDatenSchreiber.from(this, getMeldeListe(), getWorkingSpreadsheet()).schreibeDaten();
+		insertFooter(meldungen.size());
+		formatieren(meldungen.size());
+		printBereichDefinieren(meldungen.size());
+
 		logger.debug("RanglisteUpdate ENDE");
 	}
 }

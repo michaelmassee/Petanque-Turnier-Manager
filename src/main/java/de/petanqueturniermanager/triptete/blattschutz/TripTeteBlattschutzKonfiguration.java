@@ -30,7 +30,7 @@ import de.petanqueturniermanager.triptete.spielplan.TripTeteSpielPlanSheet;
  * Editierbare Bereiche:
  * <ul>
  *   <li><b>Meldeliste:</b> Spieler-Name-Spalte (B)</li>
- *   <li><b>Spielplan:</b> Bahnen + Triplette-/Doublette-/Tête-Ergebnis-Spalten</li>
+ *   <li><b>Spielplan:</b> Triplette-/Doublette-/Tête-Ergebnis-Spalten (Bahnen sind systemvergeben und gesperrt)</li>
  *   <li><b>Rangliste:</b> vollständig gesperrt</li>
  * </ul>
  */
@@ -86,8 +86,6 @@ public final class TripTeteBlattschutzKonfiguration implements IBlattschutzKonfi
 			int ersteDatenZeile = TripTeteSpielPlanSheet.ERSTE_DATEN_ZEILE;
 			int letzteZeile = ermittleLetzteSpielplanZeile(sheet);
 			var bereiche = List.of(
-					RangePosition.from(TripTeteSpielPlanSheet.BAHN_TRI_SPALTE, ersteDatenZeile,
-							TripTeteSpielPlanSheet.BAHN_TETE_SPALTE, letzteZeile),
 					RangePosition.from(TripTeteSpielPlanSheet.TRI_A_SPALTE, ersteDatenZeile,
 							TripTeteSpielPlanSheet.TETE_B_SPALTE, letzteZeile));
 			infos.add(SheetSchutzInfo.mitEditierbarenBereichen(sheet, bereiche));
