@@ -170,7 +170,6 @@ class SupermeleeListeDelegate implements MeldeListeKonstanten {
 
 		meldeListeHelper.updateMeldungenNr(konfigurationSheet.getMeldelisteSortModus());
 
-		doSort(meldungenSpalte.getLetzteMeldungNameSpalte(), true); // nach Nachname sortieren
 		updateSpieltageSummenSpalten();
 		insertInfoBlock();
 		formatDaten();

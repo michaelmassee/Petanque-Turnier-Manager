@@ -1705,13 +1705,13 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		// werden hier per ControlCommand "SetList" an den Controller gemeldet.
 		if (CMD_TOOLBAR_MELDELISTE_AKTUALISIEREN.equals(command)) {
 			postSortDropdownListe(listener, url, MELDELISTE_SORT_I18N_PREFIX,
-					BasePropertiesSpalte.KONFIG_PROP_MELDELISTE_SORT_MODUS);
+					BasePropertiesSpalte.KONFIG_PROP_MELDELISTE_SORT_MODUS, TeilnehmerListeSortModus.NUMMER);
 		} else if (CMD_TOOLBAR_CHECKIN.equals(command)) {
 			postSortDropdownListe(listener, url, CHECKIN_SORT_I18N_PREFIX,
-					BasePropertiesSpalte.KONFIG_PROP_CHECKIN_LISTE_SORT_MODUS);
+					BasePropertiesSpalte.KONFIG_PROP_CHECKIN_LISTE_SORT_MODUS, TeilnehmerListeSortModus.NAME);
 		} else if (CMD_TOOLBAR_TEILNEHMER.equals(command)) {
 			postSortDropdownListe(listener, url, TEILNEHMER_SORT_I18N_PREFIX,
-					BasePropertiesSpalte.KONFIG_PROP_TEILNEHMER_LISTE_SORT_MODUS);
+					BasePropertiesSpalte.KONFIG_PROP_TEILNEHMER_LISTE_SORT_MODUS, TeilnehmerListeSortModus.NAME);
 		}
 	}
 
@@ -1760,7 +1760,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	 * per "CheckItemPos" den aktuell konfigurierten Sortier-Modus (Haken im Dropdown).
 	 */
 	private static void postSortDropdownListe(XStatusListener listener, URL url, String i18nPrefix,
-			String propertyKey) {
+			String propertyKey, TeilnehmerListeSortModus defaultModus) {
 		try {
 			String[] labels = SORT_DROPDOWN_REIHENFOLGE.stream()
 					.map(modus -> sortLabel(i18nPrefix, modus))
@@ -1773,7 +1773,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 
 			// SetList löscht im Controller die aktuelle Auswahl → ohne CheckItemPos bliebe
 			// der Haken weg. Index des konfigurierten Modus nachreichen.
-			int checkPos = SORT_DROPDOWN_REIHENFOLGE.indexOf(aktuellerSortModus(propertyKey));
+			int checkPos = SORT_DROPDOWN_REIHENFOLGE.indexOf(aktuellerSortModus(propertyKey, defaultModus));
 			if (checkPos >= 0) {
 				com.sun.star.frame.ControlCommand checkPosCmd = new com.sun.star.frame.ControlCommand();
 				checkPosCmd.Command = "CheckItemPos";
@@ -1799,18 +1799,18 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		listener.statusChanged(event);
 	}
 
-	/** Liest den aktuell konfigurierten Sortier-Modus aus der Dokument-Property (Default {@link TeilnehmerListeSortModus#NAME}). */
-	private static TeilnehmerListeSortModus aktuellerSortModus(String propertyKey) {
+	/** Liest den aktuell konfigurierten Sortier-Modus aus der Dokument-Property (Fallback {@code defaultModus}). */
+	private static TeilnehmerListeSortModus aktuellerSortModus(String propertyKey,
+			TeilnehmerListeSortModus defaultModus) {
 		try {
 			XSpreadsheetDocument doc = holeAktivesDokument();
 			if (doc == null) {
-				return TeilnehmerListeSortModus.NAME;
+				return defaultModus;
 			}
-			String key = new DocumentPropertiesHelper(doc).getStringProperty(propertyKey,
-					TeilnehmerListeSortModus.NAME.getKey());
+			String key = new DocumentPropertiesHelper(doc).getStringProperty(propertyKey, defaultModus.getKey());
 			return TeilnehmerListeSortModus.valueOf(key);
 		} catch (Exception e) {
-			return TeilnehmerListeSortModus.NAME;
+			return defaultModus;
 		}
 	}
 
