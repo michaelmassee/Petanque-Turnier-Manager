@@ -7,6 +7,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.formulex.meldeliste.FormuleXMeldeListeSheetUpdate;
 import de.petanqueturniermanager.formulex.meldeliste.FormuleXTeilnehmerSheet;
 import de.petanqueturniermanager.formulex.meldeliste.FormuleXCheckinListeSheet;
+import de.petanqueturniermanager.formulex.rangliste.FormuleXRanglisteSheet;
 import de.petanqueturniermanager.formulex.spielrunde.FormuleXSpielrundeSheetNaechste;
 import de.petanqueturniermanager.formulex.spielrunde.FormuleXSpielrundeSheetUpdate;
 import de.petanqueturniermanager.toolbar.ITurnierSystemToolbarStrategie;
@@ -15,7 +16,7 @@ import de.petanqueturniermanager.toolbar.ITurnierSystemToolbarStrategie;
  * Toolbar-Strategie für das Formule X Turniersystem.
  * <ul>
  *   <li>{@link #weiter} → nächste Spielrunde erstellen</li>
- *   <li>{@link #vorrundenRangliste} → nicht verfügbar</li>
+ *   <li>{@link #vorrundenRangliste} → Rangliste erstellen / aktualisieren</li>
  *   <li>{@link #teilnehmer} → Teilnehmerliste</li>
  * </ul>
  */
@@ -30,7 +31,7 @@ public class FormuleXToolbarStrategie implements ITurnierSystemToolbarStrategie 
 
     @Override
     public void vorrundenRangliste(WorkingSpreadsheet ws) throws Exception {
-        fallback.vorrundenRangliste(ws);
+        new FormuleXRanglisteSheet(ws).testTurnierVorhanden().backUpDocument().start();
     }
 
     @Override

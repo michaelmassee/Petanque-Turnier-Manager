@@ -218,17 +218,17 @@
                 </node>
 
                 <!-- ****************************************************************** -->
-                <!-- Schaltfläche 10: Vorrunden Rangliste -->
+                <!-- Schaltfläche 10: Rangliste -->
                 <node oor:name="m10" oor:op="replace">
                     <prop oor:name="URL" oor:type="xs:string">
                         <value>ptm:toolbar_vorrunden_rangliste</value>
                     </prop>
                     <prop oor:name="Title">
-                        <value xml:lang="de">Vorrunden Rangliste</value>
-                        <value xml:lang="en">Preliminary Ranking</value>
-                        <value xml:lang="es">Clasificación preliminar</value>
-                        <value xml:lang="fr">Classement préliminaire</value>
-                        <value xml:lang="nl">Voorronde klassement</value>
+                        <value xml:lang="de">Rangliste</value>
+                        <value xml:lang="en">Ranking</value>
+                        <value xml:lang="es">Clasificación</value>
+                        <value xml:lang="fr">Classement</value>
+                        <value xml:lang="nl">Klassement</value>
                     </prop>
                     <prop oor:name="Target" oor:type="xs:string">
                         <value>_self</value>
