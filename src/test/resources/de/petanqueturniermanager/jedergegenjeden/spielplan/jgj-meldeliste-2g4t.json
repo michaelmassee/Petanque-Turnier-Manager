@@ -1,46 +1,13 @@
 [
   [
     {
-      "data": 4.0
+      "data": 1.0
     },
     {
-      "data": "Franka"
+      "data": "Otbert"
     },
     {
-      "data": "Grau"
-    }
-  ],
-  [
-    {
-      "data": 8.0
-    },
-    {
-      "data": "Joana"
-    },
-    {
-      "data": "Nuber"
-    }
-  ],
-  [
-    {
-      "data": 7.0
-    },
-    {
-      "data": "Kornelia"
-    },
-    {
-      "data": "Molz"
-    }
-  ],
-  [
-    {
-      "data": 6.0
-    },
-    {
-      "data": "Maria"
-    },
-    {
-      "data": "Bieder"
+      "data": "Dold"
     }
   ],
   [
@@ -56,13 +23,24 @@
   ],
   [
     {
-      "data": 1.0
+      "data": 3.0
     },
     {
-      "data": "Otbert"
+      "data": "Selma"
     },
     {
-      "data": "Dold"
+      "data": "Burmeister"
+    }
+  ],
+  [
+    {
+      "data": 4.0
+    },
+    {
+      "data": "Franka"
+    },
+    {
+      "data": "Grau"
     }
   ],
   [
@@ -78,13 +56,35 @@
   ],
   [
     {
-      "data": 3.0
+      "data": 6.0
     },
     {
-      "data": "Selma"
+      "data": "Maria"
     },
     {
-      "data": "Burmeister"
+      "data": "Bieder"
+    }
+  ],
+  [
+    {
+      "data": 7.0
+    },
+    {
+      "data": "Kornelia"
+    },
+    {
+      "data": "Molz"
+    }
+  ],
+  [
+    {
+      "data": 8.0
+    },
+    {
+      "data": "Joana"
+    },
+    {
+      "data": "Nuber"
     }
   ]
 ]

@@ -88,10 +88,10 @@
   ],
   [
     {
-      "data": 109.0
+      "data": 77.0
     },
     {
-      "data": "Reuß, Birk"
+      "data": "Lott, Milan"
     },
     {
       "data": 1.0
@@ -117,10 +117,10 @@
   ],
   [
     {
-      "data": 119.0
+      "data": 68.0
     },
     {
-      "data": "Pfefferle, Eik"
+      "data": "Wonneberger, Anneke"
     },
     {
       "data": 2.0
@@ -145,252 +145,107 @@
     }
   ],
   [
-    {
-      "data": 116.0
-    },
-    {
-      "data": "Ciftci, Detmar"
-    },
-    {
-      "data": 3.0
-    },
-    {
-      "data": 13.0
-    },
-    {
-      "data": 8.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 5.0
-    },
-    {
-      "data": 0.0
-    },
-    {
-      "data": 13.0
-    }
-  ],
-  [
-    {
-      "data": 75.0
-    },
-    {
-      "data": "Gehrig, Marina"
-    },
-    {
-      "data": 4.0
-    },
-    {
-      "data": 10.0
-    },
-    {
-      "data": 4.0
-    },
-    {
-      "data": 0.0
-    },
-    {
-      "data": 13.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 2.0
-    }
-  ],
-  [
-    {
-      "data": 29.0
-    },
-    {
-      "data": "Siegrist, Helfrid"
-    },
-    {
-      "data": 5.0
-    },
-    {
-      "data": 2.0
-    },
-    {
-      "data": 13.0
-    },
     {
       "data": 11.0
     },
     {
-      "data": 6.0
+      "data": "Reuß, Birk"
+    },
+    {
+      "data": 3.0
+    },
+    {
+      "data": 13.0
+    },
+    {
+      "data": 8.0
     },
     {
       "data": 12.0
+    },
+    {
+      "data": 5.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 13.0
+    }
+  ],
+  [
+    {
+      "data": 24.0
+    },
+    {
+      "data": "Pokorny, Elfgard"
     },
     {
       "data": 4.0
-    }
-  ],
-  [
-    {
-      "data": 117.0
-    },
-    {
-      "data": "Steinbrink, Diethelm"
-    },
-    {
-      "data": 6.0
-    },
-    {
-      "data": 12.0
     },
     {
       "data": 10.0
     },
     {
-      "data": 12.0
-    },
-    {
-      "data": 5.0
+      "data": 4.0
     },
     {
       "data": 0.0
     },
     {
       "data": 13.0
-    }
-  ],
-  [
-    {
-      "data": 156.0
-    },
-    {
-      "data": "Asmus, Rigobert"
-    },
-    {
-      "data": 7.0
-    },
-    {
-      "data": 9.0
-    },
-    {
-      "data": 6.0
-    },
-    {
-      "data": 11.0
-    },
-    {
-      "data": 8.0
     },
     {
       "data": 12.0
     },
     {
-      "data": 3.0
+      "data": 2.0
     }
   ],
   [
     {
-      "data": 160.0
-    },
-    {
-      "data": "Gentsch, Rotraut"
-    },
-    {
-      "data": 8.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 10.0
-    },
-    {
-      "data": 10.0
-    },
-    {
-      "data": 7.0
-    },
-    {
-      "data": 0.0
-    },
-    {
-      "data": 13.0
-    }
-  ],
-  [
-    {
-      "data": 165.0
-    },
-    {
-      "data": "Erl, Siska"
-    },
-    {
-      "data": 9.0
-    },
-    {
-      "data": 6.0
-    },
-    {
-      "data": 9.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 5.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 3.0
-    }
-  ],
-  [
-    {
-      "data": 155.0
+      "data": 84.0
     },
     {
       "data": "Daum, Petra"
     },
     {
-      "data": 10.0
-    },
-    {
-      "data": 6.0
-    },
-    {
-      "data": 9.0
-    },
-    {
-      "data": 12.0
-    },
-    {
       "data": 5.0
+    },
+    {
+      "data": 2.0
     },
     {
       "data": 13.0
     },
     {
-      "data": 2.0
+      "data": 11.0
+    },
+    {
+      "data": 6.0
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 4.0
     }
   ],
   [
     {
-      "data": 102.0
+      "data": 89.0
     },
     {
-      "data": "Elsen, Angelika"
+      "data": "Zoll, Rosmarie"
     },
     {
-      "data": 11.0
-    },
-    {
-      "data": 7.0
+      "data": 6.0
     },
     {
       "data": 12.0
+    },
+    {
+      "data": 10.0
     },
     {
       "data": 12.0
@@ -399,24 +254,21 @@
       "data": 5.0
     },
     {
-      "data": 3.0
+      "data": 0.0
     },
     {
-      "data": 12.0
+      "data": 13.0
     }
   ],
   [
     {
-      "data": 123.0
+      "data": 1.0
     },
     {
-      "data": "Geisen, Evchen"
+      "data": "Jakobs, Anett"
     },
     {
-      "data": 12.0
-    },
-    {
-      "data": 2.0
+      "data": 7.0
     },
     {
       "data": 9.0
@@ -428,6 +280,9 @@
       "data": 11.0
     },
     {
+      "data": 8.0
+    },
+    {
       "data": 12.0
     },
     {
@@ -436,12 +291,157 @@
   ],
   [
     {
-      "data": 122.0
+      "data": 26.0
     },
     {
       "data": "Goetze, Eustachius"
     },
     {
+      "data": 8.0
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": 7.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 13.0
+    }
+  ],
+  [
+    {
+      "data": 22.0
+    },
+    {
+      "data": "Nuber, Joana"
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 6.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 5.0
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 3.0
+    }
+  ],
+  [
+    {
+      "data": 12.0
+    },
+    {
+      "data": "Knuth, Brandolf"
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": 6.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 5.0
+    },
+    {
+      "data": 13.0
+    },
+    {
+      "data": 2.0
+    }
+  ],
+  [
+    {
+      "data": 19.0
+    },
+    {
+      "data": "Molz, Kornelia"
+    },
+    {
+      "data": 11.0
+    },
+    {
+      "data": 7.0
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 5.0
+    },
+    {
+      "data": 3.0
+    },
+    {
+      "data": 12.0
+    }
+  ],
+  [
+    {
+      "data": 25.0
+    },
+    {
+      "data": "Radde, Engelbert"
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 2.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 6.0
+    },
+    {
+      "data": 11.0
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 3.0
+    }
+  ],
+  [
+    {
+      "data": 28.0
+    },
+    {
+      "data": "Eisenhardt, Annkatrin"
+    },
+    {
       "data": 13.0
     },
     {
@@ -465,10 +465,10 @@
   ],
   [
     {
-      "data": 85.0
+      "data": 51.0
     },
     {
-      "data": "Linder, Roger"
+      "data": "Scheld, Wernhard"
     },
     {
       "data": 14.0
@@ -494,10 +494,10 @@
   ],
   [
     {
-      "data": 121.0
+      "data": 75.0
     },
     {
-      "data": "Radde, Engelbert"
+      "data": "Gehrig, Marina"
     },
     {
       "data": 15.0
@@ -523,10 +523,10 @@
   ],
   [
     {
-      "data": 126.0
+      "data": 41.0
     },
     {
-      "data": "Kamps, Felix"
+      "data": "Riederer, Goswin"
     },
     {
       "data": 16.0
@@ -552,10 +552,10 @@
   ],
   [
     {
-      "data": 22.0
+      "data": 64.0
     },
     {
-      "data": "Nuber, Joana"
+      "data": "Steuermann, Wiegand"
     },
     {
       "data": 17.0
@@ -581,10 +581,10 @@
   ],
   [
     {
-      "data": 131.0
+      "data": 78.0
     },
     {
-      "data": "Riederer, Goswin"
+      "data": "Heering, Marielene"
     },
     {
       "data": 18.0
@@ -610,10 +610,10 @@
   ],
   [
     {
-      "data": 101.0
+      "data": 39.0
     },
     {
-      "data": "Jakobs, Anett"
+      "data": "Runkel, Annika"
     },
     {
       "data": 19.0
@@ -639,10 +639,10 @@
   ],
   [
     {
-      "data": 50.0
+      "data": 79.0
     },
     {
-      "data": "Romero, Imke"
+      "data": "Döll, Muthild"
     },
     {
       "data": 20.0
@@ -668,10 +668,10 @@
   ],
   [
     {
-      "data": 51.0
+      "data": 81.0
     },
     {
-      "data": "Scheld, Wernhard"
+      "data": "Gerhard, Niko"
     },
     {
       "data": 21.0
@@ -697,10 +697,10 @@
   ],
   [
     {
-      "data": 159.0
+      "data": 100.0
     },
     {
-      "data": "Zoll, Rosmarie"
+      "data": "Matthiessen, Annehilde"
     },
     {
       "data": 22.0
@@ -726,10 +726,10 @@
   ],
   [
     {
-      "data": 135.0
+      "data": 96.0
     },
     {
-      "data": "Wetzig, Ilsetraud"
+      "data": "Erl, Siska"
     },
     {
       "data": 23.0
@@ -755,10 +755,10 @@
   ],
   [
     {
-      "data": 104.0
+      "data": 31.0
     },
     {
-      "data": "Härle, Annika"
+      "data": "Karch, Erhardt"
     },
     {
       "data": 24.0
@@ -784,10 +784,10 @@
   ],
   [
     {
-      "data": 124.0
+      "data": 83.0
     },
     {
-      "data": "Schneeweiß, Eveline"
+      "data": "Dold, Otbert"
     },
     {
       "data": 25.0
@@ -813,10 +813,10 @@
   ],
   [
     {
-      "data": 130.0
+      "data": 20.0
     },
     {
-      "data": "Enzmann, Gesine"
+      "data": "Steinbrink, Diethelm"
     },
     {
       "data": 26.0
@@ -842,10 +842,10 @@
   ],
   [
     {
-      "data": 158.0
+      "data": 67.0
     },
     {
-      "data": "Petter, Roseliese"
+      "data": "Bieder, Maria"
     },
     {
       "data": 27.0
@@ -871,10 +871,10 @@
   ],
   [
     {
-      "data": 103.0
+      "data": 16.0
     },
     {
-      "data": "Drees, Anika"
+      "data": "Steck, Conrad"
     },
     {
       "data": 28.0
@@ -900,10 +900,10 @@
   ],
   [
     {
-      "data": 149.0
+      "data": 93.0
     },
     {
-      "data": "Thielemann, Michaela"
+      "data": "Burmeister, Selma"
     },
     {
       "data": 29.0
@@ -929,10 +929,10 @@
   ],
   [
     {
-      "data": 129.0
+      "data": 71.0
     },
     {
-      "data": "Puls, Gaby"
+      "data": "Prüfer, Irmgardt"
     },
     {
       "data": 30.0
@@ -958,10 +958,10 @@
   ],
   [
     {
-      "data": 112.0
+      "data": 7.0
     },
     {
-      "data": "Bohnet, Collin"
+      "data": "Meinzer, Berndt"
     },
     {
       "data": 31.0
@@ -987,10 +987,10 @@
   ],
   [
     {
-      "data": 134.0
+      "data": 47.0
     },
     {
-      "data": "Köhnen, Hasko"
+      "data": "Panitz, Sibylla"
     },
     {
       "data": 32.0
@@ -1016,10 +1016,10 @@
   ],
   [
     {
-      "data": 168.0
+      "data": 33.0
     },
     {
-      "data": "Hempel, Willhart"
+      "data": "Moog, Falk"
     },
     {
       "data": 33.0
@@ -1045,10 +1045,10 @@
   ],
   [
     {
-      "data": 100.0
+      "data": 54.0
     },
     {
-      "data": "Matthiessen, Annehilde"
+      "data": "Doege, Evi"
     },
     {
       "data": 34.0
@@ -1074,10 +1074,10 @@
   ],
   [
     {
-      "data": 118.0
+      "data": 50.0
     },
     {
-      "data": "Kühnle, Dietmar"
+      "data": "Romero, Imke"
     },
     {
       "data": 35.0
@@ -1103,10 +1103,10 @@
   ],
   [
     {
-      "data": 128.0
+      "data": 52.0
     },
     {
-      "data": "Linner, Friedhilde"
+      "data": "Quadt, Ingelotte"
     },
     {
       "data": 36.0
@@ -1132,10 +1132,10 @@
   ],
   [
     {
-      "data": 71.0
+      "data": 70.0
     },
     {
-      "data": "Prüfer, Irmgardt"
+      "data": "Drewitz, Mark"
     },
     {
       "data": 36.0
@@ -1161,10 +1161,10 @@
   ],
   [
     {
-      "data": 164.0
+      "data": 48.0
     },
     {
-      "data": "Krauss, Siegulf"
+      "data": "Wetzig, Ilsetraud"
     },
     {
       "data": 38.0
@@ -1190,10 +1190,10 @@
   ],
   [
     {
-      "data": 157.0
+      "data": 92.0
     },
     {
-      "data": "Tafel, Rosa"
+      "data": "Hupp, Rupertus"
     },
     {
       "data": 39.0
@@ -1219,10 +1219,10 @@
   ],
   [
     {
-      "data": 58.0
+      "data": 8.0
     },
     {
-      "data": "Bremen, Ehrentraut"
+      "data": "Böhme, Berndt"
     },
     {
       "data": 40.0
@@ -1248,10 +1248,10 @@
   ],
   [
     {
-      "data": 110.0
+      "data": 46.0
     },
     {
-      "data": "Knuth, Brandolf"
+      "data": "Köhnen, Hasko"
     },
     {
       "data": 41.0
@@ -1277,10 +1277,10 @@
   ],
   [
     {
-      "data": 139.0
+      "data": 74.0
     },
     {
-      "data": "Rackow, Jil"
+      "data": "Mühlmann, Arne"
     },
     {
       "data": 42.0
@@ -1306,10 +1306,10 @@
   ],
   [
     {
-      "data": 108.0
+      "data": 95.0
     },
     {
-      "data": "Wels, Bianka"
+      "data": "Krauss, Siegulf"
     },
     {
       "data": 43.0
@@ -1335,10 +1335,10 @@
   ],
   [
     {
-      "data": 113.0
+      "data": 45.0
     },
     {
-      "data": "Knöpfle, Collin"
+      "data": "Ney, Hartwig"
     },
     {
       "data": 44.0
@@ -1364,10 +1364,10 @@
   ],
   [
     {
-      "data": 115.0
+      "data": 97.0
     },
     {
-      "data": "Witschel, Danny"
+      "data": "Stabel, Sophie"
     },
     {
       "data": 45.0
@@ -1393,10 +1393,10 @@
   ],
   [
     {
-      "data": 73.0
+      "data": 40.0
     },
     {
-      "data": "Käding, Arabella"
+      "data": "Enzmann, Gesine"
     },
     {
       "data": 46.0
@@ -1422,10 +1422,10 @@
   ],
   [
     {
-      "data": 137.0
+      "data": 86.0
     },
     {
-      "data": "Staub, Irmintraud"
+      "data": "Asmus, Rigobert"
     },
     {
       "data": 47.0
@@ -1451,10 +1451,10 @@
   ],
   [
     {
-      "data": 166.0
+      "data": 85.0
     },
     {
-      "data": "Stabel, Sophie"
+      "data": "Linder, Roger"
     },
     {
       "data": 48.0
@@ -1480,10 +1480,10 @@
   ],
   [
     {
-      "data": 28.0
+      "data": 18.0
     },
     {
-      "data": "Eisenhardt, Annkatrin"
+      "data": "Ciftci, Detmar"
     },
     {
       "data": 49.0
@@ -1509,10 +1509,10 @@
   ],
   [
     {
-      "data": 57.0
+      "data": 43.0
     },
     {
-      "data": "Kieslich, Zoé"
+      "data": "Hüttel, Gretchen"
     },
     {
       "data": 50.0
@@ -1538,10 +1538,10 @@
   ],
   [
     {
-      "data": 38.0
+      "data": 55.0
     },
     {
-      "data": "Meiners, Borwin"
+      "data": "Husmann, Isedore"
     },
     {
       "data": 51.0
@@ -1567,10 +1567,10 @@
   ],
   [
     {
-      "data": 133.0
+      "data": 62.0
     },
     {
-      "data": "Ney, Hartwig"
+      "data": "Zipfel, Kurth"
     },
     {
       "data": 52.0
@@ -1596,10 +1596,10 @@
   ],
   [
     {
-      "data": 154.0
+      "data": 14.0
     },
     {
-      "data": "Dold, Otbert"
+      "data": "Bohnet, Collin"
     },
     {
       "data": 53.0
@@ -1625,10 +1625,10 @@
   ],
   [
     {
-      "data": 167.0
+      "data": 2.0
     },
     {
-      "data": "Baake, Theodore"
+      "data": "Elsen, Angelika"
     },
     {
       "data": 54.0
@@ -1654,10 +1654,10 @@
   ],
   [
     {
-      "data": 162.0
+      "data": 10.0
     },
     {
-      "data": "Burmeister, Selma"
+      "data": "Wels, Bianka"
     },
     {
       "data": 55.0

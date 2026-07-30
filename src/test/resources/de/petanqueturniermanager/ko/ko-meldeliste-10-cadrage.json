@@ -1,50 +1,6 @@
 [
   [
     {
-      "data": 6.0
-    },
-    {
-      "data": "Team 6"
-    },
-    {
-      "data": "Hartwig"
-    }
-  ],
-  [
-    {
-      "data": 10.0
-    },
-    {
-      "data": "Team 10"
-    },
-    {
-      "data": "Kornelia"
-    }
-  ],
-  [
-    {
-      "data": 5.0
-    },
-    {
-      "data": "Team 5"
-    },
-    {
-      "data": "Kreszenzia"
-    }
-  ],
-  [
-    {
-      "data": 3.0
-    },
-    {
-      "data": "Team 3"
-    },
-    {
-      "data": "Niko"
-    }
-  ],
-  [
-    {
       "data": 1.0
     },
     {
@@ -52,17 +8,6 @@
     },
     {
       "data": "Otbert"
-    }
-  ],
-  [
-    {
-      "data": 7.0
-    },
-    {
-      "data": "Team 7"
-    },
-    {
-      "data": "Rosa"
     }
   ],
   [
@@ -78,13 +23,13 @@
   ],
   [
     {
-      "data": 8.0
+      "data": 3.0
     },
     {
-      "data": "Team 8"
+      "data": "Team 3"
     },
     {
-      "data": "Rotraut"
+      "data": "Niko"
     }
   ],
   [
@@ -100,6 +45,50 @@
   ],
   [
     {
+      "data": 5.0
+    },
+    {
+      "data": "Team 5"
+    },
+    {
+      "data": "Kreszenzia"
+    }
+  ],
+  [
+    {
+      "data": 6.0
+    },
+    {
+      "data": "Team 6"
+    },
+    {
+      "data": "Hartwig"
+    }
+  ],
+  [
+    {
+      "data": 7.0
+    },
+    {
+      "data": "Team 7"
+    },
+    {
+      "data": "Rosa"
+    }
+  ],
+  [
+    {
+      "data": 8.0
+    },
+    {
+      "data": "Team 8"
+    },
+    {
+      "data": "Rotraut"
+    }
+  ],
+  [
+    {
       "data": 9.0
     },
     {
@@ -107,6 +96,17 @@
     },
     {
       "data": "Siska"
+    }
+  ],
+  [
+    {
+      "data": 10.0
+    },
+    {
+      "data": "Team 10"
+    },
+    {
+      "data": "Kornelia"
     }
   ]
 ]
