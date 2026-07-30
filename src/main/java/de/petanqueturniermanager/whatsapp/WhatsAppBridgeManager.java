@@ -15,6 +15,7 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -89,14 +90,15 @@ public final class WhatsAppBridgeManager {
 		if (process != null && process.isAlive()) {
 			return;
 		}
-		Path script = bridgeScript();
+		Path node = WhatsAppBridgeSetup.nodePfadOderSetupNoetig();
+		Path script = WhatsAppBridgeSetup.bridgeScriptBereitstellen(node, null);
 		if (!Files.isRegularFile(script)) {
 			throw new WhatsAppBridgeException("WhatsApp-Bridge-Skript nicht gefunden: " + script);
 		}
 		try {
 			Path sessionDir = userConfigDir().resolve("whatsapp").resolve("session");
 			Files.createDirectories(sessionDir);
-			ProcessBuilder builder = new ProcessBuilder("node", script.toString());
+			ProcessBuilder builder = new ProcessBuilder(node.toString(), script.toString());
 			builder.environment().put("PTM_WA_PORT", String.valueOf(PORT));
 			builder.environment().put("PTM_WA_SESSION_DIR", sessionDir.toString());
 			Path scriptDir = script.getParent();
@@ -109,11 +111,19 @@ public final class WhatsAppBridgeManager {
 				letzteAusgabe.clear();
 			}
 			leseAusgabeImHintergrund(process);
-			logger.info("WhatsApp-Bridge gestartet: {}", script);
+			logger.info("WhatsApp-Bridge gestartet: {} mit {}", script, node);
 		} catch (IOException e) {
-			throw new WhatsAppBridgeException("WhatsApp-Bridge konnte nicht gestartet werden. Bitte Node.js und die Bridge-Abhängigkeiten installieren: "
+			throw new WhatsAppBridgeException("WhatsApp-Bridge konnte nicht gestartet werden: "
 					+ e.getMessage(), e);
 		}
+	}
+
+	public static void vorbereiten(Consumer<WhatsAppBridgeSetup.Schritt> fortschritt) throws WhatsAppBridgeException {
+		WhatsAppBridgeSetup.vorbereitenWennMoeglich(fortschritt);
+	}
+
+	public static void installieren(Consumer<WhatsAppBridgeSetup.Schritt> fortschritt) throws WhatsAppBridgeException {
+		WhatsAppBridgeSetup.installieren(fortschritt);
 	}
 
 	/**
@@ -144,16 +154,18 @@ public final class WhatsAppBridgeManager {
 		thread.start();
 	}
 
-	private static Path bridgeScript() {
+	static Path bridgeSourceDir() {
 		String override = System.getProperty("ptm.whatsapp.bridge.script", "");
 		if (!override.isBlank()) {
-			return Path.of(override);
+			Path overridePfad = Path.of(override).toAbsolutePath().normalize();
+			Path parent = overridePfad.getParent();
+			return parent == null ? Path.of(".").toAbsolutePath().normalize() : parent;
 		}
-		Path projektPfad = Path.of("tools", "whatsapp-bridge", "server.js").toAbsolutePath().normalize();
-		if (Files.isRegularFile(projektPfad)) {
+		Path projektPfad = Path.of("tools", "whatsapp-bridge").toAbsolutePath().normalize();
+		if (Files.isRegularFile(projektPfad.resolve("server.js"))) {
 			return projektPfad;
 		}
-		Path installPfad = installationsVerzeichnis().resolve("tools").resolve("whatsapp-bridge").resolve("server.js");
+		Path installPfad = installationsVerzeichnis().resolve("tools").resolve("whatsapp-bridge");
 		return installPfad.toAbsolutePath().normalize();
 	}
 
@@ -172,7 +184,7 @@ public final class WhatsAppBridgeManager {
 		}
 	}
 
-	private static Path userConfigDir() {
+	static Path userConfigDir() {
 		String home = System.getProperty("user.home", ".");
 		String os = System.getProperty("os.name", "").toLowerCase(Locale.ROOT);
 		if (os.contains("win")) {

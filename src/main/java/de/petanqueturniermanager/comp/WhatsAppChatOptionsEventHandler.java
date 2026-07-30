@@ -7,7 +7,9 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,6 +18,7 @@ import com.sun.star.awt.ActionEvent;
 import com.sun.star.awt.ItemEvent;
 import com.sun.star.awt.XActionListener;
 import com.sun.star.awt.XButton;
+import com.sun.star.awt.XCheckBox;
 import com.sun.star.awt.XContainerWindowEventHandler;
 import com.sun.star.awt.XControl;
 import com.sun.star.awt.XControlContainer;
@@ -39,11 +42,14 @@ import de.petanqueturniermanager.helper.BrowserOeffner;
 import de.petanqueturniermanager.helper.LoMainThread;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
+import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.whatsapp.WhatsAppBridgeChat;
 import de.petanqueturniermanager.whatsapp.WhatsAppBridgeClient;
 import de.petanqueturniermanager.whatsapp.WhatsAppBridgeException;
 import de.petanqueturniermanager.whatsapp.WhatsAppBridgeManager;
+import de.petanqueturniermanager.whatsapp.WhatsAppBridgeSetup;
+import de.petanqueturniermanager.whatsapp.WhatsAppBridgeSetupRequiredException;
 import de.petanqueturniermanager.whatsapp.WhatsAppBridgeStatus;
 
 /**
@@ -69,6 +75,7 @@ public final class WhatsAppChatOptionsEventHandler extends WeakBase
 	private static final String CTL_BEARBEITEN = "WhatsAppChatBearbeiten";
 	private static final String CTL_KLONEN = "WhatsAppChatKlonen";
 	private static final String CTL_LOESCHEN = "WhatsAppChatLoeschen";
+	private static final String CTL_FAVORIT = "WhatsAppChatFavorit";
 	private static final String CTL_LOGIN = "WhatsAppChatLogin";
 	private static final String CTL_AKTUALISIEREN = "WhatsAppChatAktualisieren";
 	private static final String CTL_STATUS = "WhatsAppChatStatus";
@@ -113,6 +120,7 @@ public final class WhatsAppChatOptionsEventHandler extends WeakBase
 		setLabel(container, CTL_BEARBEITEN, I18n.get("whatsapp.chat.konfig.btn.bearbeiten"));
 		setLabel(container, CTL_KLONEN, I18n.get("whatsapp.chat.konfig.btn.klonen"));
 		setLabel(container, CTL_LOESCHEN, I18n.get("whatsapp.chat.konfig.btn.loeschen"));
+		setLabel(container, CTL_FAVORIT, I18n.get("whatsapp.chat.konfig.favorit"));
 		setLabel(container, CTL_LOGIN, I18n.get("whatsapp.chat.konfig.btn.login"));
 		setLabel(container, CTL_AKTUALISIEREN, I18n.get("whatsapp.chat.konfig.btn.aktualisieren"));
 		if (eintraege == null) {
@@ -137,6 +145,7 @@ public final class WhatsAppChatOptionsEventHandler extends WeakBase
 		registriereActionListener(container, CTL_LOESCHEN, () -> loescheZeile(container));
 		registriereActionListener(container, CTL_LOGIN, () -> loginAnzeigen(container));
 		registriereActionListener(container, CTL_AKTUALISIEREN, () -> aktualisiereAusBridge(container));
+		registriereFavoritListener(container);
 		registriereAuswahlListener(container, () -> aktualisiereAuswahlAbhaengigeButtons(container));
 		listenerContainer = container;
 	}
@@ -147,9 +156,9 @@ public final class WhatsAppChatOptionsEventHandler extends WeakBase
 	private void loginAnzeigen(XControlContainer container) {
 		setStatus(container, I18n.get("whatsapp.chat.konfig.status.bridge.startet"));
 		new Thread(() -> {
-			try {
-				var client = WhatsAppBridgeManager.starteOderVerbinde();
-				var status = warteAufQrOderVerbindung(client);
+				try {
+					var client = starteBridgeMitOptionalemSetup(container);
+					var status = warteAufQrOderVerbindung(client);
 				if (status.brauchtQrCode()) {
 					BrowserOeffner.oeffne(client.qrCodeUri());
 					LoMainThread.post(context, () ->
@@ -194,9 +203,9 @@ public final class WhatsAppChatOptionsEventHandler extends WeakBase
 	private void aktualisiereAusBridge(XControlContainer container) {
 		setStatus(container, I18n.get("whatsapp.chat.konfig.status.aktualisiere"));
 		new Thread(() -> {
-			try {
-				var client = WhatsAppBridgeManager.starteOderVerbinde();
-				List<WhatsAppBridgeChat> chats = client.chats();
+				try {
+					var client = starteBridgeMitOptionalemSetup(container);
+					List<WhatsAppBridgeChat> chats = client.chats();
 				LoMainThread.post(context, () -> {
 					int geaendert = mergeChats(chats);
 					aktualisiereListe(container);
@@ -210,7 +219,52 @@ public final class WhatsAppChatOptionsEventHandler extends WeakBase
 					setStatus(container, I18n.get("whatsapp.chat.konfig.status.fehler", e.getMessage()));
 				});
 			}
-		}, "PTM-WhatsApp-Chats").start();
+			}, "PTM-WhatsApp-Chats").start();
+	}
+
+	private WhatsAppBridgeClient starteBridgeMitOptionalemSetup(XControlContainer container)
+			throws WhatsAppBridgeException {
+		try {
+			WhatsAppBridgeManager.vorbereiten(schritt -> zeigeSetupStatus(container, schritt));
+		} catch (WhatsAppBridgeSetupRequiredException e) {
+			if (!frageWhatsAppSetup()) {
+				throw new WhatsAppBridgeException(I18n.get("whatsapp.chat.konfig.setup.abgebrochen"), e);
+			}
+			WhatsAppBridgeManager.installieren(schritt -> zeigeSetupStatus(container, schritt));
+		}
+		return WhatsAppBridgeManager.starteOderVerbinde();
+	}
+
+	private boolean frageWhatsAppSetup() throws WhatsAppBridgeException {
+		CountDownLatch latch = new CountDownLatch(1);
+		AtomicReference<MessageBoxResult> result = new AtomicReference<>(MessageBoxResult.NO);
+		LoMainThread.post(context, () -> {
+			try {
+				result.set(MessageBox.from(context, MessageBoxTypeEnum.QUESTION_YES_NO)
+						.caption(I18n.get("whatsapp.chat.konfig.setup.titel"))
+						.message(I18n.get("whatsapp.chat.konfig.setup.text"))
+						.show());
+			} finally {
+				latch.countDown();
+			}
+		});
+		try {
+			latch.await();
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			throw new WhatsAppBridgeException("WhatsApp-Setup-Dialog wurde unterbrochen", e);
+		}
+		return result.get() == MessageBoxResult.YES;
+	}
+
+	private void zeigeSetupStatus(XControlContainer container, WhatsAppBridgeSetup.Schritt schritt) {
+		String key = switch (schritt) {
+		case NODE_DOWNLOAD -> "whatsapp.chat.konfig.status.setup.node.download";
+		case NODE_INSTALL -> "whatsapp.chat.konfig.status.setup.node.install";
+		case BRIDGE_INSTALL -> "whatsapp.chat.konfig.status.setup.bridge.install";
+		case FERTIG -> "whatsapp.chat.konfig.status.setup.fertig";
+		};
+		LoMainThread.post(context, () -> setStatus(container, I18n.get(key)));
 	}
 
 	private int mergeChats(List<WhatsAppBridgeChat> chats) {
@@ -219,7 +273,7 @@ public final class WhatsAppChatOptionsEventHandler extends WeakBase
 		for (WhatsAppBridgeChat chat : chats) {
 			int idx = indexVonChatId(chat.id());
 			var eintrag = new WhatsAppChatEintrag(idx >= 0 ? eintraege.get(idx).id() : null,
-					chat.name(), chat.id(), chat.type(), zeit, "");
+					chat.name(), chat.id(), chat.type(), zeit, "", idx >= 0 && eintraege.get(idx).favorit());
 			if (idx >= 0) {
 				eintraege.set(idx, eintrag);
 			} else {
@@ -248,8 +302,53 @@ public final class WhatsAppChatOptionsEventHandler extends WeakBase
 		var original = eintraege.get(idx);
 		eintraege.add(new WhatsAppChatEintrag(null,
 				I18n.get("whatsapp.chat.konfig.klon.name", original.anzeigeName()),
-				original.chatId(), original.chatTyp(), original.zuletztGeprueftAm(), original.hinweis()));
+				original.chatId(), original.chatTyp(), original.zuletztGeprueftAm(), original.hinweis(),
+				original.favorit()));
 		aktualisiereListe(container);
+	}
+
+	private void registriereFavoritListener(XControlContainer container) {
+		XCheckBox checkBox = control(container, CTL_FAVORIT, XCheckBox.class);
+		if (checkBox == null) {
+			return;
+		}
+		checkBox.addItemListener(new XItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent event) {
+				favoritUmschalten(container, checkBox.getState() == 1);
+			}
+
+			@Override
+			public void disposing(EventObject event) {
+				// nichts zu tun
+			}
+		});
+	}
+
+	private void favoritUmschalten(XControlContainer container, boolean favorit) {
+		int idx = selectedPos(container, CTL_LISTE);
+		if (idx < 0 || idx >= eintraege.size()) {
+			return;
+		}
+		var alt = eintraege.get(idx);
+		eintraege.set(idx, new WhatsAppChatEintrag(alt.id(), alt.name(), alt.chatId(), alt.chatTyp(),
+				alt.zuletztGeprueftAm(), alt.hinweis(), favorit));
+		String ausgewaehlterChatId = alt.chatId();
+		aktualisiereListe(container);
+		selektiereChatId(container, ausgewaehlterChatId);
+	}
+
+	private void selektiereChatId(XControlContainer container, String chatId) {
+		for (int i = 0; i < eintraege.size(); i++) {
+			if (eintraege.get(i).chatId().equals(chatId)) {
+				XListBox listBox = control(container, CTL_LISTE, XListBox.class);
+				if (listBox != null) {
+					listBox.selectItemPos((short) i, true);
+				}
+				aktualisiereAuswahlAbhaengigeButtons(container);
+				return;
+			}
+		}
 	}
 
 	private void loescheZeile(XControlContainer container) {
@@ -271,9 +370,19 @@ public final class WhatsAppChatOptionsEventHandler extends WeakBase
 	}
 
 	private void aktualisiereAuswahlAbhaengigeButtons(XControlContainer container) {
-		boolean auswahlVorhanden = selectedPos(container, CTL_LISTE) >= 0;
+		int idx = selectedPos(container, CTL_LISTE);
+		boolean auswahlVorhanden = idx >= 0 && idx < eintraege.size();
 		setEnabled(container, CTL_KLONEN, auswahlVorhanden);
 		setEnabled(container, CTL_LOESCHEN, auswahlVorhanden);
+		setEnabled(container, CTL_FAVORIT, auswahlVorhanden);
+		setCheckbox(container, CTL_FAVORIT, auswahlVorhanden && eintraege.get(idx).favorit());
+	}
+
+	private static void setCheckbox(XControlContainer container, String name, boolean wert) {
+		XCheckBox checkBox = control(container, name, XCheckBox.class);
+		if (checkBox != null) {
+			checkBox.setState((short) (wert ? 1 : 0));
+		}
 	}
 
 	private void zeigeFehler(String meldung) {
@@ -285,7 +394,8 @@ public final class WhatsAppChatOptionsEventHandler extends WeakBase
 
 	private static String formatiereZeile(WhatsAppChatEintrag e) {
 		String typ = e.chatTyp().isBlank() ? "Chat" : e.chatTyp();
-		return I18n.get("whatsapp.chat.konfig.liste.zeile", e.anzeigeName(), typ, e.chatId());
+		String zeile = I18n.get("whatsapp.chat.konfig.liste.zeile", e.anzeigeName(), typ, e.chatId());
+		return e.favorit() ? "★ " + zeile : zeile;
 	}
 
 	private static XControlContainer container(XWindow window) {

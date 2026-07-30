@@ -377,7 +377,7 @@ tasks.register('compileIdl', Exec) {
 
 tasks.register('npmInstallWhatsAppBridge', Exec) {
     group = 'LibreOffice'
-    description = 'Installiert die WhatsApp-Bridge-Abhängigkeiten (node_modules), damit sie ins OXT gepackt werden können'
+    description = 'Installiert die WhatsApp-Bridge-Abhängigkeiten für lokale Entwicklung'
     workingDir 'tools/whatsapp-bridge'
     def npmCmd = findProperty('npm.path') ?: 'npm'
     def nodeDir = npmCmd != 'npm' ? new File(npmCmd).parentFile.absolutePath : null
@@ -393,7 +393,7 @@ tasks.register('npmInstallWhatsAppBridge', Exec) {
 tasks.register('buildOXT', Zip) {
     group = 'LibreOffice'
     description = 'Erstellt die OXT-Datei (LibreOffice Extension)'
-    dependsOn 'buildPluginJar', 'copyRuntimeLibs', 'compileIdl', 'buildFrontend', 'npmInstallWhatsAppBridge'
+    dependsOn 'buildPluginJar', 'copyRuntimeLibs', 'compileIdl', 'buildFrontend'
     archiveFileName.set("${project.name}-${version}.oxt")
     destinationDirectory.set(layout.buildDirectory.dir('distributions'))
 
@@ -422,13 +422,11 @@ tasks.register('buildOXT', Zip) {
         into 'registry'
     }
 
-    // node_modules wird mitgepackt (kein "npm install" beim Anwender nötig): seit dem
-    // Wechsel von whatsapp-web.js/Puppeteer auf @whiskeysockets/baileys rein-JS/WASM,
-    // ohne native Binaries – daher klein genug (~37 MB) zum Bundlen.
+    // WhatsApp bleibt ein optionales Zusatzmodul: die OXT enthält nur den dünnen Bridge-Stub.
+    // Node.js und node_modules werden bei Bedarf lokal im Benutzerprofil eingerichtet.
     from('tools/whatsapp-bridge') {
         include 'package.json'
         include 'server.js'
-        include 'node_modules/**'
         into 'tools/whatsapp-bridge'
     }
 

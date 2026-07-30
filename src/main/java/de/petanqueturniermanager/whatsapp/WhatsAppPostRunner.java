@@ -41,10 +41,12 @@ public class WhatsAppPostRunner extends SheetRunner {
 
 	@Override
 	protected void doRun() throws GenerateException {
-		List<WhatsAppChatEintrag> chats = GlobalProperties.get().getWhatsAppChatEintraege();
-		if (chats.isEmpty()) {
+		List<WhatsAppChatEintrag> alle = GlobalProperties.get().getWhatsAppChatEintraege();
+		if (alle.isEmpty()) {
 			throw new GenerateException(I18n.get("whatsapp.post.fehler.keine.chats"));
 		}
+		List<WhatsAppChatEintrag> favoriten = alle.stream().filter(WhatsAppChatEintrag::favorit).toList();
+		List<WhatsAppChatEintrag> chats = favoriten.isEmpty() ? alle : favoriten;
 
 		var docPropHelper = new DocumentPropertiesHelper(getWorkingSpreadsheet());
 		String letzterChatId = docPropHelper.getStringProperty(PROP_LETZTER_WHATSAPP_CHAT, "");

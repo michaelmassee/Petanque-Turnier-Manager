@@ -338,7 +338,8 @@ public class GlobalProperties {
 	}
 
 	public record WhatsAppChatEintrag(
-			String id, String name, String chatId, String chatTyp, String zuletztGeprueftAm, String hinweis) {
+			String id, String name, String chatId, String chatTyp, String zuletztGeprueftAm, String hinweis,
+			boolean favorit) {
 		public WhatsAppChatEintrag {
 			id = (id == null || id.isBlank()) ? UUID.randomUUID().toString() : id.trim();
 			name = name == null ? "" : name.trim();
@@ -1406,7 +1407,8 @@ public class GlobalProperties {
 	static Comparator<WhatsAppChatEintrag> whatsAppChatComparator() {
 		Collator collator = Collator.getInstance(Locale.GERMAN);
 		collator.setStrength(Collator.SECONDARY);
-		return Comparator.comparing(WhatsAppChatEintrag::anzeigeName, collator);
+		return Comparator.comparing(WhatsAppChatEintrag::favorit).reversed()
+				.thenComparing(WhatsAppChatEintrag::anzeigeName, collator);
 	}
 
 	public void speichernWhatsAppChats(List<WhatsAppChatEintrag> eintraege) {

@@ -123,7 +123,8 @@ class GlobalPropertiesTest {
     @Test
     void testWhatsAppChatsRoundtripOhneLibreOfficeKontext() {
         var gp = GlobalProperties.get();
-        var chat = new WhatsAppChatEintrag(null, "Turnierchat", "12345@g.us", "Gruppe", "2026-07-30T12:00:00Z", "");
+        var chat = new WhatsAppChatEintrag(null, "Turnierchat", "12345@g.us", "Gruppe", "2026-07-30T12:00:00Z", "",
+                false);
 
         gp.speichernWhatsAppChats(List.of(chat));
 
@@ -140,15 +141,29 @@ class GlobalPropertiesTest {
     void testWhatsAppChatsWerdenLocaleKorrektSortiertGeliefert() {
         var gp = GlobalProperties.get();
         gp.speichernWhatsAppChats(List.of(
-                new WhatsAppChatEintrag(null, "Zebra Turnier", "1@g.us", "Gruppe", "", ""),
-                new WhatsAppChatEintrag(null, "Äpfel-Club", "2@g.us", "Gruppe", "", ""),
-                new WhatsAppChatEintrag(null, "boule freunde", "3@g.us", "Gruppe", "", ""),
-                new WhatsAppChatEintrag(null, "Anton Petanque", "4@g.us", "Gruppe", "", "")));
+                new WhatsAppChatEintrag(null, "Zebra Turnier", "1@g.us", "Gruppe", "", "", false),
+                new WhatsAppChatEintrag(null, "Äpfel-Club", "2@g.us", "Gruppe", "", "", false),
+                new WhatsAppChatEintrag(null, "boule freunde", "3@g.us", "Gruppe", "", "", false),
+                new WhatsAppChatEintrag(null, "Anton Petanque", "4@g.us", "Gruppe", "", "", false)));
 
         GlobalProperties.resetForTest();
         var gelesen = GlobalProperties.get().getWhatsAppChatEintraege();
 
         assertEquals(List.of("Anton Petanque", "Äpfel-Club", "boule freunde", "Zebra Turnier"),
+                gelesen.stream().map(WhatsAppChatEintrag::anzeigeName).toList());
+    }
+
+    @Test
+    void testWhatsAppChatsFavoritenWerdenZuerstGeliefert() {
+        var gp = GlobalProperties.get();
+        gp.speichernWhatsAppChats(List.of(
+                new WhatsAppChatEintrag(null, "Zebra Turnier", "1@g.us", "Gruppe", "", "", false),
+                new WhatsAppChatEintrag(null, "Anton Petanque", "2@g.us", "Gruppe", "", "", true)));
+
+        GlobalProperties.resetForTest();
+        var gelesen = GlobalProperties.get().getWhatsAppChatEintraege();
+
+        assertEquals(List.of("Anton Petanque", "Zebra Turnier"),
                 gelesen.stream().map(WhatsAppChatEintrag::anzeigeName).toList());
     }
 
