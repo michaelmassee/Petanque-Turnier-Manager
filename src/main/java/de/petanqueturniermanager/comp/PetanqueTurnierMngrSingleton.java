@@ -475,9 +475,6 @@ public class PetanqueTurnierMngrSingleton {
 							TripTeteSpielPlanSheet.ERSTE_DATEN_ZEILE,
 							TripTeteSpielPlanSheet.TETE_B_SPALTE, letzteZeile);
 					var editierbar = java.util.List.of(
-							RangePosition.from(TripTeteSpielPlanSheet.BAHN_TRI_SPALTE,
-									TripTeteSpielPlanSheet.ERSTE_DATEN_ZEILE,
-									TripTeteSpielPlanSheet.BAHN_TETE_SPALTE, letzteZeile),
 							RangePosition.from(TripTeteSpielPlanSheet.TRI_A_SPALTE,
 									TripTeteSpielPlanSheet.ERSTE_DATEN_ZEILE,
 									TripTeteSpielPlanSheet.TETE_B_SPALTE, letzteZeile));

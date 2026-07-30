@@ -409,9 +409,7 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet {
 		RanglisteGeradeUngeradeFormatHelper.from(this, runden).geradeFarbe(farbeGerade)
 				.ungeradeFarbe(farbeUngerade).apply();
 
-		// Editierbare Zellen: Bahnen + Ergebnisse aller drei Partien
-		EditierbaresZelleFormatHelper.anwenden(this, RangePosition.from(
-				BAHN_TRI_SPALTE, ERSTE_DATEN_ZEILE, BAHN_TETE_SPALTE, letzteSpielZeile));
+		// Editierbare Zellen: Ergebnisse aller drei Partien (Bahnen sind systemvergeben und gesperrt)
 		EditierbaresZelleFormatHelper.anwenden(this, RangePosition.from(
 				TRI_A_SPALTE, ERSTE_DATEN_ZEILE, TETE_B_SPALTE, letzteSpielZeile));
 
