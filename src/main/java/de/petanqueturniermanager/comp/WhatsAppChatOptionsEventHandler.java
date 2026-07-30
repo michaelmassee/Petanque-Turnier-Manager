@@ -7,6 +7,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -40,8 +41,10 @@ import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.whatsapp.WhatsAppBridgeChat;
+import de.petanqueturniermanager.whatsapp.WhatsAppBridgeClient;
 import de.petanqueturniermanager.whatsapp.WhatsAppBridgeException;
 import de.petanqueturniermanager.whatsapp.WhatsAppBridgeManager;
+import de.petanqueturniermanager.whatsapp.WhatsAppBridgeStatus;
 
 /**
  * Event-Handler fuer die WhatsApp-Chat-Seite unter Extras -&gt; Optionen.
@@ -138,12 +141,15 @@ public final class WhatsAppChatOptionsEventHandler extends WeakBase
 		listenerContainer = container;
 	}
 
+	private static final long QR_POLL_TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(15);
+	private static final long QR_POLL_INTERVAL_MILLIS = 300;
+
 	private void loginAnzeigen(XControlContainer container) {
 		setStatus(container, I18n.get("whatsapp.chat.konfig.status.bridge.startet"));
 		new Thread(() -> {
 			try {
 				var client = WhatsAppBridgeManager.starteOderVerbinde();
-				var status = client.status();
+				var status = warteAufQrOderVerbindung(client);
 				if (status.brauchtQrCode()) {
 					BrowserOeffner.oeffne(client.qrCodeUri());
 					LoMainThread.post(context, () ->
@@ -162,6 +168,27 @@ public final class WhatsAppChatOptionsEventHandler extends WeakBase
 				});
 			}
 		}, "PTM-WhatsApp-Login").start();
+	}
+
+	/**
+	 * {@link WhatsAppBridgeManager#starteOderVerbinde()} liefert schon zurück, sobald der HTTP-Server
+	 * antwortet – der Baileys-Client braucht danach aber noch etwas Zeit, bis er entweder einen QR-Code
+	 * erzeugt oder sich mit einer bestehenden Session verbindet. Ohne dieses Polling zeigt der erste
+	 * Login-Klick oft nur "starting" statt der QR-Seite.
+	 */
+	private WhatsAppBridgeStatus warteAufQrOderVerbindung(WhatsAppBridgeClient client) throws WhatsAppBridgeException {
+		WhatsAppBridgeStatus status = client.status();
+		long ende = System.nanoTime() + QR_POLL_TIMEOUT_NANOS;
+		while (!status.brauchtQrCode() && !status.verbunden() && System.nanoTime() < ende) {
+			try {
+				Thread.sleep(QR_POLL_INTERVAL_MILLIS);
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+				throw new WhatsAppBridgeException("WhatsApp-Login-Polling wurde unterbrochen", e);
+			}
+			status = client.status();
+		}
+		return status;
 	}
 
 	private void aktualisiereAusBridge(XControlContainer container) {

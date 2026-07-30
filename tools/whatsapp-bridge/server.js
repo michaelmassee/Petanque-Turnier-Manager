@@ -66,10 +66,14 @@ app.get('/groups', async (_req, res) => {
     res.status(409).json({ error: 'WhatsApp is not ready', status });
     return;
   }
-  const gruppen = await sock.groupFetchAllParticipating();
-  res.json({
-    chats: Object.entries(gruppen).map(([id, meta]) => ({ id, name: meta.subject || id, type: 'Gruppe' }))
-  });
+  try {
+    const gruppen = await sock.groupFetchAllParticipating();
+    res.json({
+      chats: Object.entries(gruppen).map(([id, meta]) => ({ id, name: meta.subject || id, type: 'Gruppe' }))
+    });
+  } catch (error) {
+    res.status(502).json({ error: error.message });
+  }
 });
 
 app.post('/send-image', async (req, res) => {
@@ -82,8 +86,12 @@ app.post('/send-image', async (req, res) => {
     res.status(400).json({ error: 'chatId and imageBase64 are required' });
     return;
   }
-  await sock.sendMessage(chatId, { image: Buffer.from(imageBase64, 'base64'), caption: caption || '' });
-  res.json({ ok: true });
+  try {
+    await sock.sendMessage(chatId, { image: Buffer.from(imageBase64, 'base64'), caption: caption || '' });
+    res.json({ ok: true });
+  } catch (error) {
+    res.status(502).json({ error: error.message });
+  }
 });
 
 app.listen(port, '127.0.0.1', () => {
