@@ -19,9 +19,11 @@ import com.sun.star.sheet.XPrintAreas;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellRangeAddress;
 
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.io.PdfExport;
 import de.petanqueturniermanager.webserver.SheetResolverFactory;
@@ -36,10 +38,14 @@ public class WhatsAppBildExportService {
 		this.ws = ws;
 	}
 
-	public ExportiertesBild exportiere(WhatsAppAktion aktion, Path zielVerzeichnis) throws GenerateException {
+	public ExportiertesBild exportiere(WhatsAppAktion aktion, TurnierSystem ts, Path zielVerzeichnis)
+			throws GenerateException {
+		if (aktion == WhatsAppAktion.RANGLISTE) {
+			WhatsAppRanglisteAktualisierer.aktualisiereWennNoetig(ws, ts);
+		}
 		XSpreadsheet sheet = SheetResolverFactory.erstellen(aktion.resolverKey()).resolve(ws)
-				.orElseThrow(() -> new GenerateException("Kein passendes Blatt für WhatsApp-Aktion gefunden: "
-						+ aktion.resolverKey()));
+				.orElseThrow(() -> new GenerateException(I18n.get("whatsapp.post.fehler.kein.blatt",
+						aktion.titel(ts))));
 		String sheetName = sheetName(sheet);
 		PdfExport export = PdfExport.from(ws)
 				.sheetName(sheetName)

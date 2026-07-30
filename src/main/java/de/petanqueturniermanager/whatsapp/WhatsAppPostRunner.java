@@ -58,7 +58,8 @@ public class WhatsAppPostRunner extends SheetRunner {
 
 		Path tempVerzeichnis = tempVerzeichnis();
 		try {
-			var bild = new WhatsAppBildExportService(getWorkingSpreadsheet()).exportiere(aktion, tempVerzeichnis);
+			var bild = new WhatsAppBildExportService(getWorkingSpreadsheet())
+					.exportiere(aktion, getTurnierSystem(), tempVerzeichnis);
 			String caption = I18n.get("whatsapp.post.caption", aktion.titel(getTurnierSystem()), bild.sheetName());
 			WhatsAppBridgeManager.starteOderVerbinde().sendeBild(chat.chatId(), caption, bild.bytes());
 			processBox().info(I18n.get("whatsapp.post.erfolg", chat.anzeigeName()));
