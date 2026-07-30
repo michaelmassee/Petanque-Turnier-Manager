@@ -29,9 +29,12 @@ class LibreOfficeOptionsPackagingTest {
 
 	@Test
 	void toolbarUndSidebarIconsSindPaketiert() throws Exception {
+		String manifest = Files.readString(Path.of("META-INF/manifest.xml"));
+		assertThat(manifest).contains("registry/org/openoffice/Office/Addons_Z5_WhatsAppToolbar.xcu");
 		for (String xcuPfad : List.of("registry/org/openoffice/Office/Addons_Z2_Toolbar.xcu",
 				"registry/org/openoffice/Office/Addons_Z3_SpieltagToolbar.xcu",
-				"registry/org/openoffice/Office/Addons_Z4_TimerToolbar.xcu")) {
+				"registry/org/openoffice/Office/Addons_Z4_TimerToolbar.xcu",
+				"registry/org/openoffice/Office/Addons_Z5_WhatsAppToolbar.xcu")) {
 			assertAlleOriginBilderExistieren(xcuPfad, "registry/org/openoffice/Office");
 		}
 		assertAlleOriginBilderExistieren("registry/org/openoffice/Office/UI/Sidebar.xcu",
@@ -84,8 +87,8 @@ class LibreOfficeOptionsPackagingTest {
 				Path.of("src/main/resources/de/petanqueturniermanager/comp/RegistrationHandler.classes"));
 
 		for (String handler : List.of("PluginOptionsEventHandler", "WebserverRegieOptionsEventHandler",
-				"CompositeViewsOptionsEventHandler", "FtpServerOptionsEventHandler", "TabFarbenOptionsEventHandler",
-				"KiOptionsEventHandler")) {
+				"CompositeViewsOptionsEventHandler", "FtpServerOptionsEventHandler",
+				"WhatsAppChatOptionsEventHandler", "TabFarbenOptionsEventHandler", "KiOptionsEventHandler")) {
 			assertThat(components)
 					.as("EventHandlerService fehlt in components: %s", handler)
 					.contains("de.petanqueturniermanager.comp." + handler)
@@ -102,6 +105,7 @@ class LibreOfficeOptionsPackagingTest {
 		Path pluginXdl = Path.of("registry/data/org/openoffice/Office/dialogs/PluginOptions.xdl");
 		Path regieXdl = Path.of("registry/data/org/openoffice/Office/dialogs/WebserverRegieOptions.xdl");
 		Path compositeViewsXdl = Path.of("registry/data/org/openoffice/Office/dialogs/CompositeViewsOptions.xdl");
+		Path whatsAppXdl = Path.of("registry/data/org/openoffice/Office/dialogs/WhatsAppChatOptions.xdl");
 		Path kiXdl = Path.of("registry/data/org/openoffice/Office/dialogs/KiOptions.xdl");
 
 		assertThat(xcu)
@@ -112,11 +116,14 @@ class LibreOfficeOptionsPackagingTest {
 				.contains("de.petanqueturniermanager.WebserverRegieOptionsEventHandler")
 				.contains("%origin%/dialogs/CompositeViewsOptions.xdl")
 				.contains("de.petanqueturniermanager.CompositeViewsOptionsEventHandler")
+				.contains("%origin%/dialogs/WhatsAppChatOptions.xdl")
+				.contains("de.petanqueturniermanager.WhatsAppChatOptionsEventHandler")
 				.contains("%origin%/dialogs/KiOptions.xdl")
 				.contains("de.petanqueturniermanager.KiOptionsEventHandler");
 		assertThat(pluginXdl).exists();
 		assertThat(regieXdl).exists();
 		assertThat(compositeViewsXdl).exists();
+		assertThat(whatsAppXdl).exists();
 		assertThat(kiXdl).exists();
 	}
 

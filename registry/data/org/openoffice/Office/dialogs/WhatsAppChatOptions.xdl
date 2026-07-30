@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE dlg:window PUBLIC "-//OpenOffice.org//DTD OfficeDocument 1.0//EN" "dialog.dtd">
+<dlg:window xmlns:dlg="http://openoffice.org/2000/dialog"
+    dlg:id="WhatsAppChatOptions"
+    dlg:left="0" dlg:top="0" dlg:width="260" dlg:height="205"
+    dlg:closeable="false" dlg:moveable="false" dlg:withtitlebar="false">
+    <dlg:bulletinboard>
+        <dlg:text dlg:id="WhatsAppChatLabel" dlg:tab-index="0" dlg:left="6" dlg:top="6" dlg:width="248" dlg:height="10" dlg:value=""/>
+        <dlg:menulist dlg:id="WhatsAppChatListe" dlg:tab-index="1" dlg:left="6" dlg:top="20" dlg:width="248" dlg:height="112" dlg:linecount="8"/>
+        <dlg:button dlg:id="WhatsAppChatHinzufuegen" dlg:tab-index="2" dlg:left="6" dlg:top="136" dlg:width="59" dlg:height="14" dlg:value=""/>
+        <dlg:button dlg:id="WhatsAppChatBearbeiten" dlg:tab-index="3" dlg:left="69" dlg:top="136" dlg:width="59" dlg:height="14" dlg:value=""/>
+        <dlg:button dlg:id="WhatsAppChatKlonen" dlg:tab-index="4" dlg:left="132" dlg:top="136" dlg:width="59" dlg:height="14" dlg:value=""/>
+        <dlg:button dlg:id="WhatsAppChatLoeschen" dlg:tab-index="5" dlg:left="195" dlg:top="136" dlg:width="59" dlg:height="14" dlg:value=""/>
+        <dlg:button dlg:id="WhatsAppChatLogin" dlg:tab-index="6" dlg:left="6" dlg:top="158" dlg:width="122" dlg:height="14" dlg:value=""/>
+        <dlg:button dlg:id="WhatsAppChatAktualisieren" dlg:tab-index="7" dlg:left="132" dlg:top="158" dlg:width="122" dlg:height="14" dlg:value=""/>
+        <dlg:text dlg:id="WhatsAppChatStatus" dlg:tab-index="8" dlg:left="6" dlg:top="179" dlg:width="248" dlg:height="18" dlg:value=""/>
+    </dlg:bulletinboard>
+</dlg:window>

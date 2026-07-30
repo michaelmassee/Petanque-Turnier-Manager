@@ -82,6 +82,15 @@
                 <value/>
             </prop>
         </group>
+        <group oor:name="WhatsApp">
+            <info>
+                <desc>Central WhatsApp chat list.</desc>
+            </info>
+            <prop oor:name="ChatsJson" oor:type="xs:string">
+                <info><desc>Configured WhatsApp chats as JSON.</desc></info>
+                <value/>
+            </prop>
+        </group>
         <group oor:name="Startseite">
             <info>
                 <desc>Turnier-Startseite webserver options.</desc>

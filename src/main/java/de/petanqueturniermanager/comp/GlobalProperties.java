@@ -2,7 +2,9 @@ package de.petanqueturniermanager.comp;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.Collator;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -132,6 +134,7 @@ public class GlobalProperties {
 
 	// FTP/SFTP-Server (zentrale Liste, primär über LibreOffice-Konfiguration)
 	private static final String FTP_SERVER_JSON_PROP = "ftp_server_liste";
+	private static final String WHATSAPP_CHAT_JSON_PROP = "whatsapp_chat_liste";
 
 	/**
 	 * Legacy-Präfix des entfernten host-basierten Upload-Passwort-Caches (nur für Cleanup
@@ -194,6 +197,7 @@ public class GlobalProperties {
 	private static volatile boolean webserverRegieInLibreOffice = false;
 	private static volatile boolean pluginOptionenInLibreOffice = false;
 	private static volatile boolean ftpServerInLibreOffice = false;
+	private static volatile boolean whatsAppChatsInLibreOffice = false;
 	private static volatile boolean startseiteInLibreOffice = false;
 	private static volatile boolean startupModusInLibreOffice = false;
 	private static volatile boolean compositeViewsInLibreOffice = false;
@@ -333,6 +337,22 @@ public class GlobalProperties {
 		}
 	}
 
+	public record WhatsAppChatEintrag(
+			String id, String name, String chatId, String chatTyp, String zuletztGeprueftAm, String hinweis) {
+		public WhatsAppChatEintrag {
+			id = (id == null || id.isBlank()) ? UUID.randomUUID().toString() : id.trim();
+			name = name == null ? "" : name.trim();
+			chatId = chatId == null ? "" : chatId.trim();
+			chatTyp = chatTyp == null ? "" : chatTyp.trim();
+			zuletztGeprueftAm = zuletztGeprueftAm == null ? "" : zuletztGeprueftAm.trim();
+			hinweis = hinweis == null ? "" : hinweis.trim();
+		}
+
+		public String anzeigeName() {
+			return name.isBlank() ? chatId : name;
+		}
+	}
+
 	public static GlobalProperties get() {
 		if (instance == null) {
 			synchronized (GlobalProperties.class) {
@@ -354,6 +374,7 @@ public class GlobalProperties {
 		ladePluginOptionenAusLibreOffice();
 		ladeWebserverRegieAusLibreOffice();
 		ladeFtpServerAusLibreOffice();
+		ladeWhatsAppChatsAusLibreOffice();
 		ladeStartseiteAusLibreOffice();
 		ladeStartupModusAusLibreOffice();
 		ladeCompositeViewsAusLibreOffice();
@@ -373,6 +394,7 @@ public class GlobalProperties {
 			lokaleInstanz.ladePluginOptionenAusLibreOffice();
 			lokaleInstanz.ladeWebserverRegieAusLibreOffice();
 			lokaleInstanz.ladeFtpServerAusLibreOffice();
+			lokaleInstanz.ladeWhatsAppChatsAusLibreOffice();
 			lokaleInstanz.ladeStartseiteAusLibreOffice();
 			lokaleInstanz.ladeStartupModusAusLibreOffice();
 			lokaleInstanz.ladeCompositeViewsAusLibreOffice();
@@ -559,6 +581,7 @@ public class GlobalProperties {
 		return (webserverRegieInLibreOffice && istWebserverRegieLegacyKey(key))
 				|| (pluginOptionenInLibreOffice && istPluginOptionenLegacyKey(key))
 				|| (ftpServerInLibreOffice && istFtpServerLegacyKey(key))
+				|| (whatsAppChatsInLibreOffice && istWhatsAppChatLegacyKey(key))
 				|| (startseiteInLibreOffice && istStartseiteLegacyKey(key))
 				|| (startupModusInLibreOffice && istStartupModusLegacyKey(key))
 				|| (compositeViewsInLibreOffice && istCompositeViewsLegacyKey(key))
@@ -629,6 +652,25 @@ public class GlobalProperties {
 		} catch (IllegalStateException e) {
 			setFtpServerInLibreOffice(false);
 			logger.warn("LibreOffice-FTP-Server-Konfiguration nicht verfügbar, verwende Legacy-Properties", e);
+		}
+	}
+
+	private void ladeWhatsAppChatsAusLibreOffice() {
+		XComponentContext context = libreOfficeContext;
+		if (context == null) {
+			return;
+		}
+		try {
+			String json = new LibreOfficeWhatsAppChatSpeicher(context).laden();
+			if (json.isBlank()) {
+				propMap.remove(WHATSAPP_CHAT_JSON_PROP);
+			} else {
+				propMap.put(WHATSAPP_CHAT_JSON_PROP, json);
+			}
+			setWhatsAppChatsInLibreOffice(true);
+		} catch (IllegalStateException e) {
+			setWhatsAppChatsInLibreOffice(false);
+			logger.warn("LibreOffice-WhatsApp-Chat-Konfiguration nicht verfügbar, verwende Legacy-Properties", e);
 		}
 	}
 
@@ -955,6 +997,15 @@ public class GlobalProperties {
 
 	private static void setFtpServerInLibreOffice(boolean wert) {
 		ftpServerInLibreOffice = wert;
+	}
+
+	@Deprecated(forRemoval = true)
+	private static boolean istWhatsAppChatLegacyKey(String key) {
+		return WHATSAPP_CHAT_JSON_PROP.equals(key);
+	}
+
+	private static void setWhatsAppChatsInLibreOffice(boolean wert) {
+		whatsAppChatsInLibreOffice = wert;
 	}
 
 	/**
@@ -1328,6 +1379,60 @@ public class GlobalProperties {
 			}
 		} catch (RuntimeException e) {
 			logger.error("Fehler beim Speichern der FTP-Server-Liste", e);
+		}
+	}
+
+	public List<WhatsAppChatEintrag> getWhatsAppChatEintraege() {
+		try {
+			var json = propMap.getOrDefault(WHATSAPP_CHAT_JSON_PROP, "").trim();
+			if (json.isEmpty()) {
+				return new ArrayList<>();
+			}
+			var typ = new TypeToken<List<WhatsAppChatEintrag>>() { }.getType();
+			List<WhatsAppChatEintrag> gelesen = GSON.fromJson(json, typ);
+			List<WhatsAppChatEintrag> ergebnis = gelesen == null ? new ArrayList<>() : gelesen;
+			ergebnis.sort(whatsAppChatComparator());
+			return ergebnis;
+		} catch (RuntimeException e) {
+			logger.warn("Fehler beim Lesen der WhatsApp-Chat-Liste", e);
+			return new ArrayList<>();
+		}
+	}
+
+	/**
+	 * Locale-korrekter Vergleich (Deutsch, Umlaute, case-insensitiv) für die Anzeige der
+	 * WhatsApp-Chat-Liste, analog zu {@code TeilnehmerListeSortModus}.
+	 */
+	static Comparator<WhatsAppChatEintrag> whatsAppChatComparator() {
+		Collator collator = Collator.getInstance(Locale.GERMAN);
+		collator.setStrength(Collator.SECONDARY);
+		return Comparator.comparing(WhatsAppChatEintrag::anzeigeName, collator);
+	}
+
+	public void speichernWhatsAppChats(List<WhatsAppChatEintrag> eintraege) {
+		try {
+			var liste = eintraege == null ? List.<WhatsAppChatEintrag>of() : eintraege;
+			String json = liste.isEmpty() ? "" : GSON.toJson(liste);
+			if (json.isBlank()) {
+				propMap.remove(WHATSAPP_CHAT_JSON_PROP);
+			} else {
+				propMap.put(WHATSAPP_CHAT_JSON_PROP, json);
+			}
+			XComponentContext context = libreOfficeContext;
+			if (context != null) {
+				try {
+					new LibreOfficeWhatsAppChatSpeicher(context).speichern(json);
+					setWhatsAppChatsInLibreOffice(true);
+				} catch (IllegalStateException e) {
+					logger.warn("Speichern der WhatsApp-Chat-Liste in LibreOffice-Konfiguration fehlgeschlagen, verwende Legacy-Datei", e);
+					setWhatsAppChatsInLibreOffice(false);
+					speichernDatei();
+				}
+			} else {
+				speichernDatei();
+			}
+		} catch (RuntimeException e) {
+			logger.error("Fehler beim Speichern der WhatsApp-Chat-Liste", e);
 		}
 	}
 
@@ -1908,6 +2013,7 @@ public class GlobalProperties {
 		setWebserverRegieInLibreOffice(false);
 		setPluginOptionenInLibreOffice(false);
 		setFtpServerInLibreOffice(false);
+		setWhatsAppChatsInLibreOffice(false);
 		setStartseiteInLibreOffice(false);
 		setStartupModusInLibreOffice(false);
 		setCompositeViewsInLibreOffice(false);

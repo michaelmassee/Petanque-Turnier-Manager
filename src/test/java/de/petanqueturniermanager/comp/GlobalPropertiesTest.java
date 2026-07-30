@@ -10,6 +10,7 @@ import java.util.List;
 import de.petanqueturniermanager.comp.GlobalProperties.CompositeViewEintragRoh;
 import de.petanqueturniermanager.comp.GlobalProperties.PanelEintragRoh;
 import de.petanqueturniermanager.comp.GlobalProperties.RegieZielRoh;
+import de.petanqueturniermanager.comp.GlobalProperties.WhatsAppChatEintrag;
 import de.petanqueturniermanager.webserver.PanelTyp;
 import de.petanqueturniermanager.webserver.RandKonfiguration;
 import de.petanqueturniermanager.webserver.WebServerManager;
@@ -117,6 +118,38 @@ class GlobalPropertiesTest {
 
         assertNotNull(eintraege);
         assertTrue(eintraege.isEmpty());
+    }
+
+    @Test
+    void testWhatsAppChatsRoundtripOhneLibreOfficeKontext() {
+        var gp = GlobalProperties.get();
+        var chat = new WhatsAppChatEintrag(null, "Turnierchat", "12345@g.us", "Gruppe", "2026-07-30T12:00:00Z", "");
+
+        gp.speichernWhatsAppChats(List.of(chat));
+
+        GlobalProperties.resetForTest();
+        var gelesen = GlobalProperties.get().getWhatsAppChatEintraege();
+
+        assertEquals(1, gelesen.size());
+        assertEquals("Turnierchat", gelesen.get(0).name());
+        assertEquals("12345@g.us", gelesen.get(0).chatId());
+        assertEquals("Gruppe", gelesen.get(0).chatTyp());
+    }
+
+    @Test
+    void testWhatsAppChatsWerdenLocaleKorrektSortiertGeliefert() {
+        var gp = GlobalProperties.get();
+        gp.speichernWhatsAppChats(List.of(
+                new WhatsAppChatEintrag(null, "Zebra Turnier", "1@g.us", "Gruppe", "", ""),
+                new WhatsAppChatEintrag(null, "Äpfel-Club", "2@g.us", "Gruppe", "", ""),
+                new WhatsAppChatEintrag(null, "boule freunde", "3@g.us", "Gruppe", "", ""),
+                new WhatsAppChatEintrag(null, "Anton Petanque", "4@g.us", "Gruppe", "", "")));
+
+        GlobalProperties.resetForTest();
+        var gelesen = GlobalProperties.get().getWhatsAppChatEintraege();
+
+        assertEquals(List.of("Anton Petanque", "Äpfel-Club", "boule freunde", "Zebra Turnier"),
+                gelesen.stream().map(WhatsAppChatEintrag::anzeigeName).toList());
     }
 
     @Test

@@ -52,6 +52,11 @@
             <value/>
         </prop>
     </node>
+    <node oor:name="WhatsApp">
+        <prop oor:name="ChatsJson">
+            <value/>
+        </prop>
+    </node>
     <node oor:name="Startseite">
         <prop oor:name="Port">
             <value>9200</value>

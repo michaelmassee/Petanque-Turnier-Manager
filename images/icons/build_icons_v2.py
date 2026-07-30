@@ -443,6 +443,60 @@ ICONS["toolbar-timer-snooze"] = svg(f'''
 ''')
 
 
+def whatsapp_bubble():
+    """Gemeinsame Chat-Bubble-Basis für alle WhatsApp-Icons (Sprechblase mit Tippen-Punkten)."""
+    return f'''
+  <path d="M 12 10 Q 8 10 8 14 L 8 38 Q 8 42 12 42 L 18 42 L 18 50 L 26 42 L 52 42 Q 56 42 56 38 L 56 14 Q 56 10 52 10 Z"
+        fill="{C['go']}" stroke="{C['ink']}" stroke-width="{S}" stroke-linejoin="round"/>
+  <circle cx="22" cy="26" r="3" fill="{C['paper']}"/>
+  <circle cx="32" cy="26" r="3" fill="{C['paper']}"/>
+  <circle cx="42" cy="26" r="3" fill="{C['paper']}"/>'''
+
+
+def whatsapp_badge(farbe, glyph):
+    """Action-Badge rechts unten (r=11) auf der Chat-Bubble, analog zu den Timer-Badges."""
+    return f'''
+  <circle cx="50" cy="50" r="11" fill="{farbe}" stroke="{C['ink']}" stroke-width="{S}"/>
+  {glyph}'''
+
+
+# ============================================================
+# 25. WHATSAPP TEILNEHMER — Chat-Bubble + Personen-Badge (posten der Teilnehmerliste)
+# ============================================================
+ICONS["toolbar-whatsapp-teilnehmer"] = svg(f'''
+  {whatsapp_bubble()}
+  {whatsapp_badge(C['info'], f"""
+  <circle cx="46" cy="46" r="2.6" fill="{C['paper']}"/>
+  <circle cx="54" cy="46" r="2.6" fill="{C['paper']}"/>
+  <path d="M 41 55 Q 41 49 46 49 Q 51 49 51 55" fill="{C['paper']}"/>
+  <path d="M 49 55 Q 49 49 54 49 Q 59 55 59 55" fill="{C['paper']}"/>
+  """)}
+''')
+
+# ============================================================
+# 26. WHATSAPP SPIELRUNDE — Chat-Bubble + Pfeil-Badge (posten der aktuellen Spielrunde)
+# ============================================================
+ICONS["toolbar-whatsapp-spielrunde"] = svg(f'''
+  {whatsapp_bubble()}
+  {whatsapp_badge(C['cochon'], f"""
+  <path d="M 45 44 L 54 50 L 45 56 Z" fill="{C['paper']}" stroke-linejoin="round"/>
+  """)}
+''')
+
+# ============================================================
+# 27. WHATSAPP RANGLISTE — Chat-Bubble + Pokal-Badge (posten der Rangliste)
+# ============================================================
+ICONS["toolbar-whatsapp-rangliste"] = svg(f'''
+  {whatsapp_bubble()}
+  {whatsapp_badge(C['gold'], f"""
+  <path d="M 46 45 L 54 45 L 53.3 50 Q 53 53 50 53 Q 47 53 46.7 50 Z"
+        fill="{C['paper']}" stroke-linejoin="round"/>
+  <rect x="48.3" y="53" width="3.4" height="2" fill="{C['paper']}"/>
+  <rect x="47" y="55" width="6" height="1.6" rx="0.8" fill="{C['paper']}"/>
+  """)}
+''')
+
+
 # ============================================================
 # SCHREIBEN
 # ============================================================

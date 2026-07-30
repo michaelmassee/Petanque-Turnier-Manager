@@ -52,6 +52,7 @@ __pycache__/
 
 # Node modules
 frontend/node_modules/
+tools/whatsapp-bridge/node_modules/
 
 # Build output
 frontend/build/

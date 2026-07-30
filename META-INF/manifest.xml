@@ -108,6 +108,9 @@
         manifest:full-path="registry/org/openoffice/Office/Addons_Z4_TimerToolbar.xcu"/>
     <manifest:file-entry
         manifest:media-type="application/vnd.sun.star.configuration-data"
+        manifest:full-path="registry/org/openoffice/Office/Addons_Z5_WhatsAppToolbar.xcu"/>
+    <manifest:file-entry
+        manifest:media-type="application/vnd.sun.star.configuration-data"
         manifest:full-path="registry/org/openoffice/Office/UI/CalcWindowState.xcu"/>
     <!-- Sidebar: Deck-Definition und Panel-Factory-Registrierung -->
     <manifest:file-entry

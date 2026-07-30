@@ -1,0 +1,116 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<oor:component-data oor:package="org.openoffice.Office" oor:name="Addons"
+                    xmlns:oor="http://openoffice.org/2001/registry" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <node oor:name="AddonUI">
+        <node oor:name="OfficeToolBar">
+            <node oor:name="de.petanqueturniermanager.toolbar.whatsapp" oor:op="replace">
+                <prop oor:name="Title" oor:type="xs:string" oor:localized="true">
+                    <value>PétTurnMngr WhatsApp</value>
+                    <value xml:lang="de">PétTurnMngr WhatsApp</value>
+                    <value xml:lang="en">PétTurnMngr WhatsApp</value>
+                    <value xml:lang="es">PétTurnMngr WhatsApp</value>
+                    <value xml:lang="fr">PétTurnMngr WhatsApp</value>
+                    <value xml:lang="nl">PétTurnMngr WhatsApp</value>
+                </prop>
+                <prop oor:name="Label" oor:type="xs:string" oor:localized="true">
+                    <value>PétTurnMngr WhatsApp</value>
+                    <value xml:lang="de">PétTurnMngr WhatsApp</value>
+                    <value xml:lang="en">PétTurnMngr WhatsApp</value>
+                    <value xml:lang="es">PétTurnMngr WhatsApp</value>
+                    <value xml:lang="fr">PétTurnMngr WhatsApp</value>
+                    <value xml:lang="nl">PétTurnMngr WhatsApp</value>
+                </prop>
+                <prop oor:name="Context" oor:type="xs:string">
+                    <value>com.sun.star.sheet.SpreadsheetDocument</value>
+                </prop>
+
+                <node oor:name="m1" oor:op="replace">
+                    <prop oor:name="URL" oor:type="xs:string">
+                        <value>ptm:toolbar_whatsapp_teilnehmer_posten</value>
+                    </prop>
+                    <prop oor:name="Title">
+                        <value xml:lang="de">Teilnehmerliste posten</value>
+                        <value xml:lang="en">Post participant list</value>
+                        <value xml:lang="es">Publicar lista de participantes</value>
+                        <value xml:lang="fr">Publier la liste des participants</value>
+                        <value xml:lang="nl">Deelnemerslijst plaatsen</value>
+                    </prop>
+                    <prop oor:name="Target" oor:type="xs:string"><value>_self</value></prop>
+                    <prop oor:name="Context" oor:type="xs:string"><value>com.sun.star.sheet.SpreadsheetDocument</value></prop>
+                </node>
+
+                <node oor:name="m2" oor:op="replace">
+                    <prop oor:name="URL" oor:type="xs:string">
+                        <value>ptm:toolbar_whatsapp_spielrunde_posten</value>
+                    </prop>
+                    <prop oor:name="Title">
+                        <value xml:lang="de">Aktuelle Spielrunde posten</value>
+                        <value xml:lang="en">Post current round</value>
+                        <value xml:lang="es">Publicar ronda actual</value>
+                        <value xml:lang="fr">Publier la ronde actuelle</value>
+                        <value xml:lang="nl">Actuele speelronde plaatsen</value>
+                    </prop>
+                    <prop oor:name="Target" oor:type="xs:string"><value>_self</value></prop>
+                    <prop oor:name="Context" oor:type="xs:string"><value>com.sun.star.sheet.SpreadsheetDocument</value></prop>
+                </node>
+
+                <node oor:name="m3" oor:op="replace">
+                    <prop oor:name="URL" oor:type="xs:string">
+                        <value>ptm:toolbar_whatsapp_rangliste_posten</value>
+                    </prop>
+                    <prop oor:name="Title">
+                        <value xml:lang="de">Rangliste posten</value>
+                        <value xml:lang="en">Post ranking</value>
+                        <value xml:lang="es">Publicar clasificación</value>
+                        <value xml:lang="fr">Publier le classement</value>
+                        <value xml:lang="nl">Ranglijst plaatsen</value>
+                    </prop>
+                    <prop oor:name="Target" oor:type="xs:string"><value>_self</value></prop>
+                    <prop oor:name="Context" oor:type="xs:string"><value>com.sun.star.sheet.SpreadsheetDocument</value></prop>
+                </node>
+            </node>
+        </node>
+
+        <node oor:name="Images">
+            <node oor:name="de.petanqueturniermanager.toolbar.whatsapp.teilnehmer" oor:op="replace">
+                <prop oor:name="URL" oor:type="xs:string">
+                    <value>ptm:toolbar_whatsapp_teilnehmer_posten</value>
+                </prop>
+                <node oor:name="UserDefinedImages">
+                    <prop oor:name="ImageSmallURL" oor:type="xs:string">
+                        <value>%origin%/images/16/toolbar-whatsapp-teilnehmer.png</value>
+                    </prop>
+                    <prop oor:name="ImageBigURL" oor:type="xs:string">
+                        <value>%origin%/images/24/toolbar-whatsapp-teilnehmer.png</value>
+                    </prop>
+                </node>
+            </node>
+            <node oor:name="de.petanqueturniermanager.toolbar.whatsapp.spielrunde" oor:op="replace">
+                <prop oor:name="URL" oor:type="xs:string">
+                    <value>ptm:toolbar_whatsapp_spielrunde_posten</value>
+                </prop>
+                <node oor:name="UserDefinedImages">
+                    <prop oor:name="ImageSmallURL" oor:type="xs:string">
+                        <value>%origin%/images/16/toolbar-whatsapp-spielrunde.png</value>
+                    </prop>
+                    <prop oor:name="ImageBigURL" oor:type="xs:string">
+                        <value>%origin%/images/24/toolbar-whatsapp-spielrunde.png</value>
+                    </prop>
+                </node>
+            </node>
+            <node oor:name="de.petanqueturniermanager.toolbar.whatsapp.rangliste" oor:op="replace">
+                <prop oor:name="URL" oor:type="xs:string">
+                    <value>ptm:toolbar_whatsapp_rangliste_posten</value>
+                </prop>
+                <node oor:name="UserDefinedImages">
+                    <prop oor:name="ImageSmallURL" oor:type="xs:string">
+                        <value>%origin%/images/16/toolbar-whatsapp-rangliste.png</value>
+                    </prop>
+                    <prop oor:name="ImageBigURL" oor:type="xs:string">
+                        <value>%origin%/images/24/toolbar-whatsapp-rangliste.png</value>
+                    </prop>
+                </node>
+            </node>
+        </node>
+    </node>
+</oor:component-data>

@@ -61,6 +61,24 @@
                     <value>false</value>
                 </prop>
             </node>
+            <node oor:name="private:resource/toolbar/addon_de.petanqueturniermanager.toolbar.whatsapp" oor:op="replace">
+                <prop oor:name="UIName" oor:type="xs:string">
+                    <value xml:lang="en-US">PétTurnMngr WhatsApp</value>
+                    <value xml:lang="de">PétTurnMngr WhatsApp</value>
+                    <value xml:lang="es">PétTurnMngr WhatsApp</value>
+                    <value xml:lang="fr">PétTurnMngr WhatsApp</value>
+                    <value xml:lang="nl">PétTurnMngr WhatsApp</value>
+                </prop>
+                <prop oor:name="Visible" oor:type="xs:boolean">
+                    <value>false</value>
+                </prop>
+                <prop oor:name="Docked" oor:type="xs:boolean">
+                    <value>true</value>
+                </prop>
+                <prop oor:name="ContextSensitive" oor:type="xs:boolean">
+                    <value>false</value>
+                </prop>
+            </node>
         </node>
     </node>
 

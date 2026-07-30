@@ -38,8 +38,11 @@ TIMER = [
     "toolbar-timer-start", "toolbar-timer-pause", "toolbar-timer-stop",
     "toolbar-timer-plus1", "toolbar-timer-minus1", "toolbar-timer-snooze",
 ]
+WHATSAPP = [
+    "toolbar-whatsapp-teilnehmer", "toolbar-whatsapp-spielrunde", "toolbar-whatsapp-rangliste",
+]
 
-ALL = HAUPT + SPIELTAG + TIMER
+ALL = HAUPT + SPIELTAG + TIMER + WHATSAPP
 
 LABELS = {
     "toolbar-start":              ("Turnier starten",     "ptm:toolbar_start"),
@@ -69,6 +72,9 @@ LABELS = {
     "toolbar-timer-plus1":        ("+1 Minute",           "ptm:timer_plus_minute"),
     "toolbar-timer-minus1":       ("-1 Minute",           "ptm:timer_minus_minute"),
     "toolbar-timer-snooze":       ("Timer Snooze",        "ptm:timer_snooze"),
+    "toolbar-whatsapp-teilnehmer": ("WA Teilnehmerliste",  "ptm:toolbar_whatsapp_teilnehmer_posten"),
+    "toolbar-whatsapp-spielrunde": ("WA Spielrunde",       "ptm:toolbar_whatsapp_spielrunde_posten"),
+    "toolbar-whatsapp-rangliste": ("WA Rangliste",        "ptm:toolbar_whatsapp_rangliste_posten"),
 }
 
 
@@ -177,7 +183,7 @@ def section_h(n):
 TITLE_H = 60
 W = COLS * CELL_W + (COLS + 1) * PAD
 H = (TITLE_H + section_h(len(sichtbar(HAUPT))) + section_h(len(sichtbar(SPIELTAG)))
-     + section_h(len(sichtbar(TIMER))) + 30)
+     + section_h(len(sichtbar(TIMER))) + section_h(len(sichtbar(WHATSAPP))) + 30)
 
 img = Image.new("RGB", (W, H), (250, 250, 252))
 draw = ImageDraw.Draw(img)
@@ -191,6 +197,7 @@ y = TITLE_H
 y = build_section(HAUPT, "Haupt-Toolbar  (Addons_Z2_Toolbar.xcu)", PAD, y) + 6
 y = build_section(SPIELTAG, "Spieltag-Toolbar  (Addons_Z3_SpieltagToolbar.xcu)", PAD, y) + 6
 y = build_section(TIMER, "Timer-Toolbar  (Addons_Z4_TimerToolbar.xcu)", PAD, y) + 6
+y = build_section(WHATSAPP, "WhatsApp-Toolbar  (Addons_Z5_WhatsAppToolbar.xcu)", PAD, y) + 6
 
 uebersicht = os.path.join(SCRIPT_DIR, "preview-overview-v2.png")
 img.save(uebersicht, optimize=True)

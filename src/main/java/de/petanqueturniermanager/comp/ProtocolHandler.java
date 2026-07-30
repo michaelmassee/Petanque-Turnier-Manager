@@ -200,6 +200,9 @@ import de.petanqueturniermanager.toolbar.TurnierModus;
 import de.petanqueturniermanager.toolbar.TurnierSystemAuswahlDialog;
 import de.petanqueturniermanager.toolbar.TurnierSystemNeueDateiAuswahlDialog;
 import de.petanqueturniermanager.toolbar.TurnierSystemToolbarStrategieRegistry;
+import de.petanqueturniermanager.toolbar.WhatsAppToolbarSteuerung;
+import de.petanqueturniermanager.whatsapp.WhatsAppAktion;
+import de.petanqueturniermanager.whatsapp.WhatsAppPostRunner;
 
 /**
  * UNO ProtocolHandler für das benutzerdefinierte Protokoll "ptm:".
@@ -472,6 +475,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_TOOLBAR_GESAMTRANGLISTE       = "toolbar_gesamtrangliste";
 	public static final String CMD_TOOLBAR_DRUCKEN               = "toolbar_drucken";
 	public static final String CMD_TOOLBAR_DRUCKVORSCHAU         = "toolbar_druckvorschau";
+	public static final String CMD_TOOLBAR_WHATSAPP_TEILNEHMER_POSTEN = "toolbar_whatsapp_teilnehmer_posten";
+	public static final String CMD_TOOLBAR_WHATSAPP_SPIELRUNDE_POSTEN = "toolbar_whatsapp_spielrunde_posten";
+	public static final String CMD_TOOLBAR_WHATSAPP_RANGLISTE_POSTEN = "toolbar_whatsapp_rangliste_posten";
 	public static final String CMD_SIDEBAR_TOGGLE               = "sidebar_toggle";
 	/** Deck-ID der PétTurnMngr-Seitenleiste, siehe registry/.../UI/Sidebar.xcu. */
 	private static final String SIDEBAR_DECK_ID = "PetanqueTurnierManagerDeck";
@@ -523,6 +529,11 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			PerfLog.log(logger, "[STARTUP-TIMING] ProtocolHandler-ctor Spieltag-Toolbar (verzögert gepostet): {} ms",
 					(tNachSpieltag - t) / 1_000_000L);
 			t = tNachSpieltag;
+			LoMainThread.post(xContext, () -> WhatsAppToolbarSteuerung.anzeigenInAllenFrames(xContext));
+			long tNachWhatsApp = System.nanoTime();
+			PerfLog.log(logger, "[STARTUP-TIMING] ProtocolHandler-ctor WhatsApp-Toolbar (verzögert gepostet): {} ms",
+					(tNachWhatsApp - t) / 1_000_000L);
+			t = tNachWhatsApp;
 		} else {
 			logger.debug("ProtocolHandler Konstruktor: Druckvorschau aktiv – Toolbar-Initialisierung übersprungen");
 		}
@@ -1267,6 +1278,15 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_TOOLBAR_GESAMTRANGLISTE:
 				ToolbarAktionDispatcher.gesamtrangliste(ws);
 				break;
+			case CMD_TOOLBAR_WHATSAPP_TEILNEHMER_POSTEN:
+				starteWhatsAppPost(ws, WhatsAppAktion.TEILNEHMER);
+				break;
+			case CMD_TOOLBAR_WHATSAPP_SPIELRUNDE_POSTEN:
+				starteWhatsAppPost(ws, WhatsAppAktion.SPIELRUNDE);
+				break;
+			case CMD_TOOLBAR_WHATSAPP_RANGLISTE_POSTEN:
+				starteWhatsAppPost(ws, WhatsAppAktion.RANGLISTE);
+				break;
 			default:
 				ProcessBox.from().fehler("ungueltige Aktion " + command);
 				logger.warn("Unbekannter Befehl: {}", command);
@@ -1468,6 +1488,14 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case TRIPTETE -> new TripTeteFtpUpload(ws).testTurnierSystem(TurnierSystem.TRIPTETE).start();
 			default -> { }
 		}
+	}
+
+	private void starteWhatsAppPost(WorkingSpreadsheet ws, WhatsAppAktion aktion) throws GenerateException {
+		TurnierSystem ts = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();
+		if (ts == TurnierSystem.KEIN) {
+			return;
+		}
+		new WhatsAppPostRunner(ws, ts, aktion).testTurnierVorhanden().start();
 	}
 
 	/**
@@ -1979,7 +2007,11 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			CMD_TIMER_STOPPEN,
 			CMD_TIMER_PLUS_MINUTE,
 			CMD_TIMER_MINUS_MINUTE,
-			CMD_TIMER_SNOOZE);
+			CMD_TIMER_SNOOZE,
+			// Z5 WhatsAppToolbar
+			CMD_TOOLBAR_WHATSAPP_TEILNEHMER_POSTEN,
+			CMD_TOOLBAR_WHATSAPP_SPIELRUNDE_POSTEN,
+			CMD_TOOLBAR_WHATSAPP_RANGLISTE_POSTEN);
 
 	private static boolean isEnabled(String command, XSpreadsheetDocument document) {
 		if (SheetRunner.isRunning()) {
@@ -2156,6 +2188,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_TOOLBAR_DRUCKVORSCHAU,
 				 CMD_SIDEBAR_TOGGLE,
 				 CMD_KI_NEUES_TURNIER                       -> true;
+			case CMD_TOOLBAR_WHATSAPP_TEILNEHMER_POSTEN,
+				 CMD_TOOLBAR_WHATSAPP_SPIELRUNDE_POSTEN,
+				 CMD_TOOLBAR_WHATSAPP_RANGLISTE_POSTEN       -> ts != TurnierSystem.KEIN;
 			case CMD_TURNIER_MODUS                          -> true;
 			case CMD_SPIELERDB_OEFFNEN,
 				 CMD_SPIELERDB_VEREINE,
