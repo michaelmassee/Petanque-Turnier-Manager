@@ -66,10 +66,17 @@ public final class SpielrundeFooterHelper {
 		String[] zeilen = footerText.split("\n");
 		int footerStartZeile = bereich.EndRow + ZEILEN_ABSTAND;
 		for (int i = 0; i < zeilen.length; i++) {
+			BorderFactory borderFactory = BorderFactory.from().thinLn().forLeft().forRight();
+			if (i == 0) {
+				borderFactory.forTop();
+			}
+			if (i == zeilen.length - 1) {
+				borderFactory.forBottom();
+			}
 			StringCellValue footerZelle = StringCellValue
 					.from(xsheet, Position.from(bereich.StartColumn, footerStartZeile + i))
 					.setEndPosMergeSpalte(bereich.EndColumn)
-					.setBorder(BorderFactory.from().allThin().toBorder());
+					.setBorder(borderFactory.toBorder());
 			iSheet.getSheetHelper().setStringValueInCell(footerZelle.setValue(zeilen[i]));
 		}
 
