@@ -345,6 +345,7 @@ tasks.register('buildPluginJar', Jar) {
     manifest {
         attributes(
             'RegistrationClassName': 'de.petanqueturniermanager.comp.RegistrationHandler',
+            'Implementation-Version': project.version,
             'Class-Path': configurations.runtimeClasspath.collect {
                 "libs/${it.name}"
             }.join(' ')

@@ -26,10 +26,10 @@ class PdfHtmlDokumentTest {
         var html = PdfHtmlDokument.erstelle("Rangliste", "<table><tbody><tr><td>1</td></tr></tbody></table>");
 
         assertThat(html)
-                .contains(StringEscapeUtils.escapeHtml4(I18n.get("export.liga.footer.text")))
+                .contains(StringEscapeUtils.escapeXml11(I18n.get("export.liga.footer.text")))
                 .contains("href=\"https://michaelmassee.github.io/Petanque-Turnier-Manager/\"")
                 .contains("<img class=\"ptm-footer-logo\" src=\"data:image/png;base64,")
-                .containsPattern("Erstellt am \\d{2}\\.\\d{2}\\.\\d{4} \\d{2}:\\d{2}");
+                .containsPattern("\\d{2}\\.\\d{2}\\.\\d{4} \\d{2}:\\d{2}");
     }
 
     @Test

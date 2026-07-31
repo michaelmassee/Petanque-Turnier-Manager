@@ -26,7 +26,7 @@ final class ExportFooterHtml {
 
     static String html(boolean targetBlank) {
         String target = targetBlank ? " target=\"_blank\"" : "";
-        String zeitstempel = I18n.get("export.footer.timestamp", LocalDateTime.now().format(ZEITSTEMPEL_FORMAT));
+        String zeitstempel = LocalDateTime.now().format(ZEITSTEMPEL_FORMAT);
         return """
                 <footer>
                 <div class="ptm-footer-info">
@@ -38,13 +38,18 @@ final class ExportFooterHtml {
                 </a>
                 </footer>
                 """.formatted(
-                StringEscapeUtils.escapeHtml4(ExportHtmlSeite.PTM_URL),
+                StringEscapeUtils.escapeXml11(ExportHtmlSeite.PTM_URL),
                 target,
-                StringEscapeUtils.escapeHtml4(I18n.get("export.liga.footer.text")),
-                StringEscapeUtils.escapeHtml4(zeitstempel),
-                StringEscapeUtils.escapeHtml4(ExportHtmlSeite.PTM_URL),
+                StringEscapeUtils.escapeXml11(I18n.get("export.liga.footer.text") + versionSuffix()),
+                StringEscapeUtils.escapeXml11(zeitstempel),
+                StringEscapeUtils.escapeXml11(ExportHtmlSeite.PTM_URL),
                 target,
                 ExportHtmlSeite.PTM_EXPORT_LOGO_DATA_URI);
+    }
+
+    private static String versionSuffix() {
+        String version = ExportFooterHtml.class.getPackage().getImplementationVersion();
+        return version != null ? " v" + version : "";
     }
 
     static String webCss() {
