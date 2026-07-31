@@ -70,6 +70,17 @@ public class TextAreaDialog {
 	 * @param xContext
 	 */
 	public void createDialog() throws com.sun.star.uno.Exception {
+		DialogAufbau aufbau = baueDialog();
+		aufbau.xDialog().execute();
+		Lo.qi(XComponent.class, aufbau.dialog()).dispose();
+	}
+
+	/**
+	 * Baut den Dialog samt aller Controls auf, ohne ihn auszuführen (kein blockierender
+	 * {@code execute()}-Aufruf). Trennung von Aufbau und Ausführung, damit die reale
+	 * Control-Geometrie in Tests überprüfbar ist (siehe {@code TextAreaDialogLayoutUITest}).
+	 */
+	DialogAufbau baueDialog() throws com.sun.star.uno.Exception {
 
 		int btnWidth = 50;
 		int btnHeight = 14;
@@ -173,12 +184,13 @@ public class TextAreaDialog {
 		xWindow.setVisible(false);
 		xControl.createPeer(xToolkit, null);
 
-		// execute the dialog
-		xDialog.execute();
+		return new DialogAufbau(dialog, xDialog, xControlCont);
+	}
 
-		// dispose the dialog
-		XComponent xComponent = Lo.qi(XComponent.class, dialog);
-		xComponent.dispose();
+	/**
+	 * Fertig aufgebauter, aber noch nicht ausgeführter Dialog.
+	 */
+	record DialogAufbau(Object dialog, XDialog xDialog, XControlContainer xControlCont) {
 	}
 
 	/**
