@@ -109,7 +109,7 @@ public class SupermeleeExportInVerzeichnis extends AbstractExportInVerzeichnis {
         List<Path> exportierteDateien = new ArrayList<>();
         List<String> spieltagPdfUrls = new ArrayList<>();
         for (int i = 0; i < spieltagSheetNamen.size(); i++) {
-            var pdf = exportierePdfAusHtml(spieltagSheetNamen.get(i), spieltagTitel.get(i), zielVerzeichnis);
+            var pdf = exportierePdfAusHtml(spieltagSheetNamen.get(i), spieltagTitel.get(i), turniername, turnierlogoUrl, zielVerzeichnis);
             if (pdf != null) {
                 exportierteDateien.add(pdf);
             }
@@ -117,7 +117,8 @@ public class SupermeleeExportInVerzeichnis extends AbstractExportInVerzeichnis {
         }
 
         Path pdfEndrangliste = endranglisteSheetName != null
-                ? exportierePdfAusHtml(endranglisteSheetName, I18n.get("export.supermelee.nav.endrangliste"), zielVerzeichnis)
+                ? exportierePdfAusHtml(endranglisteSheetName, I18n.get("export.supermelee.nav.endrangliste"),
+                        turniername, turnierlogoUrl, zielVerzeichnis)
                 : null;
         if (pdfEndrangliste != null) {
             exportierteDateien.add(pdfEndrangliste);
@@ -127,7 +128,7 @@ public class SupermeleeExportInVerzeichnis extends AbstractExportInVerzeichnis {
         List<ExportHtmlSeite.Section> sections = sections(endranglisteSchluessel, endranglisteSheetName,
                 buildPdfUrl(pdfEndrangliste), spieltagSchluessel, spieltagSheetNamen, spieltagTitel, spieltagPdfUrls);
         for (var plan : spielrundenPlaene) {
-            Path pdf = exportierePdfAusHtml(plan.sheetName(), plan.sheetName(), zielVerzeichnis);
+            Path pdf = exportierePdfAusHtml(plan.sheetName(), plan.sheetName(), turniername, turnierlogoUrl, zielVerzeichnis);
             if (pdf != null) {
                 exportierteDateien.add(pdf);
             }

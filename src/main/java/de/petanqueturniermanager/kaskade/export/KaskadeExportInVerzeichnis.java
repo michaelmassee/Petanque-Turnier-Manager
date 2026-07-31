@@ -93,7 +93,8 @@ public class KaskadeExportInVerzeichnis extends AbstractExportInVerzeichnis {
             sections.add(new ExportHtmlSeite.Section("teilnehmerliste", I18n.get("export.nav.teilnehmerliste"), teilnehmerlisteSheetName, null));
         }
 
-        Path pdfRangliste = exportierePdfAusHtml(ranglisteSheetName, I18n.get("export.kaskade.nav.gruppenrangliste"), zielVerzeichnis);
+        Path pdfRangliste = exportierePdfAusHtml(ranglisteSheetName, I18n.get("export.kaskade.nav.gruppenrangliste"),
+                titel, turnierlogoUrl, zielVerzeichnis);
         if (pdfRangliste != null) {
             exportierteDateien.add(pdfRangliste);
         }
@@ -103,7 +104,7 @@ public class KaskadeExportInVerzeichnis extends AbstractExportInVerzeichnis {
 
         for (var eintrag : felder) {
             var feldTitel = I18n.get("export.kaskade.nav.feld", eintrag.buchstabe());
-            Path pdf = exportierePdfAusHtml(eintrag.sheetName(), feldTitel, zielVerzeichnis);
+            Path pdf = exportierePdfAusHtml(eintrag.sheetName(), feldTitel, titel, turnierlogoUrl, zielVerzeichnis);
             if (pdf != null) {
                 exportierteDateien.add(pdf);
             }

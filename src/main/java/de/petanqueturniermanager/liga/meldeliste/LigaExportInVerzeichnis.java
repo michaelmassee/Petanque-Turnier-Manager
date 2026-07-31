@@ -87,10 +87,12 @@ public class LigaExportInVerzeichnis extends AbstractExportInVerzeichnis {
         }
 
         processBox().info(I18n.get("export.info.pdf"));
-        Path pdfSpielplan = exportierePdfAusHtml(spielplanSheetName, I18n.get("export.liga.nav.spielplan"), zielVerzeichnis);
+        Path pdfSpielplan = exportierePdfAusHtml(spielplanSheetName, I18n.get("export.liga.nav.spielplan"),
+                titel, turnierlogoUrl, zielVerzeichnis);
 
-        Path pdfRangliste = exportierePdfAusHtml(ranglisteSheetName, I18n.get("export.liga.nav.rangliste"), zielVerzeichnis);
-        List<TerminExportEintrag> termine = exportiereTerminlistenPdf(termineSheetNames, zielVerzeichnis);
+        Path pdfRangliste = exportierePdfAusHtml(ranglisteSheetName, I18n.get("export.liga.nav.rangliste"),
+                titel, turnierlogoUrl, zielVerzeichnis);
+        List<TerminExportEintrag> termine = exportiereTerminlistenPdf(termineSheetNames, titel, turnierlogoUrl, zielVerzeichnis);
 
         processBox().info(I18n.get("export.info.html"));
         List<ExportHtmlSeite.Section> sections = htmlSectionsMitTerminPdf(
@@ -195,11 +197,11 @@ public class LigaExportInVerzeichnis extends AbstractExportInVerzeichnis {
         return termineSheetNames().size() < meldungen.teams().size();
     }
 
-    private List<TerminExportEintrag> exportiereTerminlistenPdf(List<String> termineSheetNames, Path zielVerzeichnis)
-            throws GenerateException {
+    private List<TerminExportEintrag> exportiereTerminlistenPdf(List<String> termineSheetNames, String titel,
+            String turnierlogoUrl, Path zielVerzeichnis) throws GenerateException {
         List<TerminExportEintrag> termine = new ArrayList<>();
         for (String sheetName : termineSheetNames) {
-            Path pdf = exportierePdfAusHtml(sheetName, sheetName, zielVerzeichnis);
+            Path pdf = exportierePdfAusHtml(sheetName, sheetName, titel, turnierlogoUrl, zielVerzeichnis);
             termine.add(new TerminExportEintrag(sheetName, buildPdfUrl(pdf), pdf));
         }
         return termine;

@@ -87,7 +87,8 @@ public class PouleExportInVerzeichnis extends AbstractExportInVerzeichnis {
         processBox().info(I18n.get("export.info.pdf"));
         List<Path> exportierteDateien = new ArrayList<>();
 
-        Path pdfRangliste = exportierePdfAusHtml(ranglisteSheetName, I18n.get("export.nav.poule.vorrunden.rangliste"), zielVerzeichnis);
+        Path pdfRangliste = exportierePdfAusHtml(ranglisteSheetName, I18n.get("export.nav.poule.vorrunden.rangliste"),
+                titel, turnierlogoUrl, zielVerzeichnis);
         if (pdfRangliste != null) {
             exportierteDateien.add(pdfRangliste);
         }
@@ -97,7 +98,7 @@ public class PouleExportInVerzeichnis extends AbstractExportInVerzeichnis {
                 meldelisteSheetName, meldelisteExportieren, teilnehmerlisteSheetName, teilnehmerlisteExportieren,
                 I18n.get("export.nav.poule.vorrunden.rangliste"), ranglisteSheetName, buildPdfUrl(pdfRangliste));
         for (var plan : spielplaene) {
-            Path pdf = exportierePdfAusHtml(plan.sheetName(), plan.sheetName(), zielVerzeichnis);
+            Path pdf = exportierePdfAusHtml(plan.sheetName(), plan.sheetName(), titel, turnierlogoUrl, zielVerzeichnis);
             if (pdf != null) {
                 exportierteDateien.add(pdf);
             }
@@ -106,7 +107,7 @@ public class PouleExportInVerzeichnis extends AbstractExportInVerzeichnis {
         }
         for (var ko : koSheets) {
             var koTitel = I18n.get("export.ko.nav.turnierbaum.gruppe", ko.buchstabe());
-            Path pdf = exportierePdfAusHtml(ko.sheetName(), koTitel, zielVerzeichnis);
+            Path pdf = exportierePdfAusHtml(ko.sheetName(), koTitel, titel, turnierlogoUrl, zielVerzeichnis);
             if (pdf != null) {
                 exportierteDateien.add(pdf);
             }

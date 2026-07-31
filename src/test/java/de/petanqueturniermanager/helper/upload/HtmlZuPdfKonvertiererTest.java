@@ -28,7 +28,7 @@ class HtmlZuPdfKonvertiererTest {
                 </tr></tbody></table>
                 """;
         Path pdf = HtmlZuPdfKonvertierer.konvertiere(
-                PdfHtmlDokument.erstelle("Rotation", tabelle),
+                PdfHtmlDokument.erstelle("Test", null, "Rotation", tabelle),
                 tempDir.resolve("rotation.pdf"));
 
         assertThat(pdf).isRegularFile();
@@ -44,7 +44,7 @@ class HtmlZuPdfKonvertiererTest {
                 </tr></tbody></table>
                 """;
         Path pdf = HtmlZuPdfKonvertierer.konvertiere(
-                PdfHtmlDokument.erstelle("Umlaute", tabelle),
+                PdfHtmlDokument.erstelle("Test", null, "Umlaute", tabelle),
                 tempDir.resolve("umlaute.pdf"));
 
         try (var dokument = PDDocument.load(pdf.toFile())) {
