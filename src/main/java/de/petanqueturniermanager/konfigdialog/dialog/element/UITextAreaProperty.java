@@ -87,6 +87,13 @@ public class UITextAreaProperty implements UIProperty {
 		documentPropertiesHelper.setStringProperty(getPropName(), uITextArea.getText());
 	}
 
+	/**
+	 * Zugriff auf das Textfeld für Platzhalter-Einfüge-Buttons (siehe {@code TextAreaDialog}).
+	 */
+	public XTextComponent getTextComponent() {
+		return uITextArea;
+	}
+
 	public String getPropName() {
 		return propName;
 	}

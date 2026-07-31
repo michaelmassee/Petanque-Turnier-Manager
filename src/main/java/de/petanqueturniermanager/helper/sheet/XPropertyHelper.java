@@ -69,6 +69,10 @@ public class XPropertyHelper implements ICommonProperties {
 		return this;
 	}
 
+	public XSpreadsheetDocument getXSpreadsheetDocument() {
+		return xSpreadsheetDocument;
+	}
+
 	public Object getProperty(String key) {
 		checkArgument(StringUtils.isNotEmpty(key), "key darf nicht null oder leer sein");
 		Object value = null;

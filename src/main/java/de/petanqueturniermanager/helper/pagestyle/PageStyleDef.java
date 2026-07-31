@@ -2,16 +2,26 @@ package de.petanqueturniermanager.helper.pagestyle;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.List;
 import java.util.Objects;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import com.sun.star.lang.XMultiServiceFactory;
 import com.sun.star.sheet.XHeaderFooterContent;
+import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.text.XText;
+import com.sun.star.text.XTextContent;
+import com.sun.star.text.XTextCursor;
 
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.sheet.XPropertyHelper;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 
 public class PageStyleDef {
+
+	private static final Logger logger = LogManager.getLogger(PageStyleDef.class);
 
 	private final String pageStyleName;
 	private final PageProperties pageProperties;
@@ -43,15 +53,17 @@ public class PageStyleDef {
 
 	public void formatHeaderFooter(XPropertyHelper xPropSet) {
 		checkNotNull(xPropSet);
+		XSpreadsheetDocument xSpreadsheetDocument = xPropSet.getXSpreadsheetDocument();
+
 		if (pageProperties.getHeaderLeft() != null || pageProperties.getHeaderCenter() != null
 				|| pageProperties.getHeaderRight() != null) {
 			// header
 			Object headerProp = xPropSet.getProperty(PageProperties.RIGHTPAGE_HEADER_CONTENT);
 			if (headerProp != null) {
 				XHeaderFooterContent headerFooterContent = Lo.qi(XHeaderFooterContent.class, headerProp);
-				setStringIfChanged(headerFooterContent.getLeftText(),   pageProperties.getHeaderLeft());
-				setStringIfChanged(headerFooterContent.getCenterText(), pageProperties.getHeaderCenter());
-				setStringIfChanged(headerFooterContent.getRightText(),  pageProperties.getHeaderRight());
+				schreibeText(headerFooterContent.getLeftText(),   pageProperties.getHeaderLeft(),   xSpreadsheetDocument);
+				schreibeText(headerFooterContent.getCenterText(), pageProperties.getHeaderCenter(), xSpreadsheetDocument);
+				schreibeText(headerFooterContent.getRightText(),  pageProperties.getHeaderRight(),  xSpreadsheetDocument);
 				pageProperties.setHeaderContent(headerFooterContent);
 			}
 		}
@@ -62,26 +74,77 @@ public class PageStyleDef {
 			Object footerProp = xPropSet.getProperty(PageProperties.RIGHTPAGE_FOOTER_CONTENT);
 			if (footerProp != null) {
 				XHeaderFooterContent headerFooterContent = Lo.qi(XHeaderFooterContent.class, footerProp);
-				setStringIfChanged(headerFooterContent.getLeftText(),   pageProperties.getFooterLeft());
-				setStringIfChanged(headerFooterContent.getCenterText(), pageProperties.getFooterCenter());
-				setStringIfChanged(headerFooterContent.getRightText(),  pageProperties.getFooterRight());
+				schreibeText(headerFooterContent.getLeftText(),   pageProperties.getFooterLeft(),   xSpreadsheetDocument);
+				schreibeText(headerFooterContent.getCenterText(), pageProperties.getFooterCenter(), xSpreadsheetDocument);
+				schreibeText(headerFooterContent.getRightText(),  pageProperties.getFooterRight(),  xSpreadsheetDocument);
 				pageProperties.setFooterContent(headerFooterContent);
 			}
 		}
 	}
 
 	/**
-	 * Schreibt {@code neu} nur, wenn sich der bestehende Text vom neuen unterscheidet.
-	 * Reduziert UNO-Events und Drucklayout-Reflow auf Aufrufer-Ebene.
+	 * Schreibt {@code neu} in {@code text}. Enthält der Wert keine Platzhalter-Tokens
+	 * (siehe {@link HeaderFooterPlatzhalter}), wird nur bei tatsächlicher Änderung
+	 * geschrieben (reduziert UNO-Events und Drucklayout-Reflow). Enthält der Wert
+	 * Tokens, wird der Text neu aufgebaut und Tokens durch echte UNO-Textfelder
+	 * ersetzt – ein Vergleich mit {@code text.getString()} ist hier nicht möglich,
+	 * da dieser bei Feldern nur LO-interne Dummy-Werte liefert (siehe
+	 * {@code ScHeaderFooterTextObj::FillDummyFieldData}).
 	 * {@code null} als neuer Wert bedeutet „nicht anfassen".
 	 */
-	private static void setStringIfChanged(XText text, String neu) {
+	private static void schreibeText(XText text, String neu, XSpreadsheetDocument xSpreadsheetDocument) {
 		if (text == null || neu == null) {
 			return;
 		}
-		String alt = text.getString();
-		if (!Objects.equals(alt, neu)) {
+
+		if (!HeaderFooterPlatzhalter.enthaeltPlatzhalter(neu)) {
+			String alt = text.getString();
+			if (!Objects.equals(alt, neu)) {
+				text.setString(neu);
+			}
+			return;
+		}
+
+		schreibeMitPlatzhaltern(text, neu, xSpreadsheetDocument);
+	}
+
+	private static void schreibeMitPlatzhaltern(XText text, String neu, XSpreadsheetDocument xSpreadsheetDocument) {
+		if (xSpreadsheetDocument == null) {
+			logger.warn("Platzhalter in Kopf-/Fußzeile ohne Dokument-Kontext nicht auflösbar, schreibe Rohtext: {}", neu);
 			text.setString(neu);
+			return;
+		}
+
+		XMultiServiceFactory xMultiServiceFactory = Lo.qi(XMultiServiceFactory.class, xSpreadsheetDocument);
+		if (xMultiServiceFactory == null) {
+			logger.warn("XMultiServiceFactory nicht verfügbar, schreibe Rohtext: {}", neu);
+			text.setString(neu);
+			return;
+		}
+
+		text.setString("");
+		XTextCursor cursor = text.createTextCursor();
+		List<HeaderFooterTextSegment> segmente = HeaderFooterTokenParser.parse(neu);
+		for (HeaderFooterTextSegment segment : segmente) {
+			switch (segment) {
+			case HeaderFooterTextSegment.Literal literal -> text.insertString(cursor, literal.text(), false);
+			case HeaderFooterTextSegment.Platzhalter platzhalterSegment -> {
+				XTextContent feld = erzeugeTextFeld(xMultiServiceFactory, platzhalterSegment.platzhalter());
+				if (feld != null) {
+					text.insertTextContent(cursor, feld, false);
+				}
+			}
+			}
+		}
+	}
+
+	private static XTextContent erzeugeTextFeld(XMultiServiceFactory xMultiServiceFactory, HeaderFooterPlatzhalter platzhalter) {
+		try {
+			Object feldInstanz = xMultiServiceFactory.createInstance(platzhalter.getUnoServiceName());
+			return Lo.qi(XTextContent.class, feldInstanz);
+		} catch (com.sun.star.uno.Exception e) {
+			logger.error("Platzhalter-Textfeld konnte nicht erzeugt werden: " + platzhalter, e);
+			return null;
 		}
 	}
 
