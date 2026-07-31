@@ -27,8 +27,8 @@ import com.sun.star.util.CellProtection;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.algorithmen.supermelee.SuperMeleePaarungenV2;
-import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
+import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeFooterHelper;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeHelper;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.exception.AlgorithmenException;
@@ -287,7 +287,6 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 		vertikaleErgbnisseFormulaEinfuegen(meleeSpielRunde);
 		datenErsteSpalte();
 		datenformatieren(sheet.getXSpreadSheet());
-		spielrundeProperties(sheet.getXSpreadSheet());
 		wennNurDoubletteRundeDannSpaltenAusblenden(sheet.getXSpreadSheet(), doubletteRunde);
 		printBereichDefinieren(sheet.getXSpreadSheet());
 		if (konfigurationSheet.getSpielrundePlan()) {
@@ -726,6 +725,7 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 		Position letzteZeile = letztePositionRechtsUnten();
 		PrintArea.from(xsheet, sheet.getWorkingSpreadsheet())
 				.setPrintArea(RangePosition.from(NUMMER_SPALTE_RUNDESPIELPLAN, ERSTE_HEADER_ZEILE, letzteZeile));
+		SpielrundeFooterHelper.schreibeFooterUndErweitereDruckbereich(sheet, xsheet, sheet.getWorkingSpreadsheet());
 	}
 
 	private void wennNurDoubletteRundeDannSpaltenAusblenden(XSpreadsheet xsheet, boolean doubletteRunde)
@@ -735,40 +735,6 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 			sheet.getSheetHelper().setColumnProperty(xsheet, ERSTE_SPALTE_RUNDESPIELPLAN + 2, "IsVisible", false);
 			sheet.getSheetHelper().setColumnProperty(xsheet, ERSTE_SPALTE_RUNDESPIELPLAN + 5, "IsVisible", false);
 		}
-	}
-
-	private void spielrundeProperties(XSpreadsheet xsheet) throws GenerateException {
-		sheet.processBoxinfo("processbox.spielrunde.validieren");
-
-		Position datenEnd = letztePositionRechtsUnten();
-
-		CellProperties cellPropBez = CellProperties.from().margin(MeldeListeKonstanten.CELL_MARGIN).setHoriJustify(CellHoriJustify.RIGHT)
-				.setVertJustify(CellVertJustify2.CENTER).setBorder(BorderFactory.from().allThin().toBorder());
-
-		StringCellValue propName = StringCellValue
-				.from(xsheet, Position.from(NUMMER_SPALTE_RUNDESPIELPLAN + 1, datenEnd.getZeile() + 1))
-				.setCellProperties(cellPropBez);
-		propName.zeilePlus(2);
-
-		NumberCellValue propVal = NumberCellValue.from(propName).spaltePlusEins().setHoriJustify(CellHoriJustify.LEFT)
-				.setBorder(BorderFactory.from().allThin().toBorder());
-
-		int anzAktiv = meldeListe.getAnzahlAktiveSpieler(sheet.getSpielTag());
-		sheet.getSheetHelper()
-				.setStringValueInCell(propName.setValue("Aktiv :").setComment(I18n.get("supermelee.spielrunde.comment.anzahl.spieler")));
-		sheet.getSheetHelper().setNumberValueInCell(propVal.setValue((double) anzAktiv));
-
-		int anzAusg = meldeListe.getAusgestiegenSpieler(sheet.getSpielTag());
-		sheet.getSheetHelper().setStringValueInCell(propName.zeilePlusEins()
-				.setValue(I18n.get("column.header.ausgestiegen") + " :")
-				.setComment(I18n.get("supermelee.spielrunde.comment.anzahl.ausgestiegen")));
-		sheet.getSheetHelper().setNumberValueInCell(propVal.zeilePlusEins().setValue((double) anzAusg));
-
-		SuperMeleeMode superMeleeMode = konfigurationSheet.getSuperMeleeMode();
-		sheet.getSheetHelper()
-				.setStringValueInCell(propName.zeilePlusEins().setValue("Modus :").setComment(I18n.get("supermelee.spielrunde.comment.modus")));
-		sheet.getSheetHelper()
-				.setStringValueInCell(StringCellValue.from(propVal).zeilePlusEins().setValue(superMeleeMode.name()));
 	}
 
 	private void datenformatieren(XSpreadsheet xsheet) throws GenerateException {

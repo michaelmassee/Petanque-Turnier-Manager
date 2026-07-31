@@ -29,6 +29,7 @@ import de.petanqueturniermanager.algorithmen.schweizer.SchweizerSystem;
 import de.petanqueturniermanager.algorithmen.schweizer.SchweizerTeamErgebnis;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
+import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeFooterHelper;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeHelper;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -472,6 +473,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		RangePosition druckBereich = RangePosition.from(BAHN_NR_SPALTE, ERSTE_HEADER_ZEILE,
 				Position.from(ERG_TEAM_B_SPALTE, letztePos.getZeile()));
 		PrintArea.from(getXSpreadSheet(), getWorkingSpreadsheet()).setPrintArea(druckBereich);
+		SpielrundeFooterHelper.schreibeFooterUndErweitereDruckbereich(this, getXSpreadSheet(), getWorkingSpreadsheet());
 	}
 
 	/**

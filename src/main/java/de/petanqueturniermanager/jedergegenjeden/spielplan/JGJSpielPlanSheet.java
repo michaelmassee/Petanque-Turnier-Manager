@@ -28,6 +28,7 @@ import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeFooterHelper;
 import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
@@ -320,6 +321,7 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 		RangePosition bereich = RangePosition.from(
 				Position.from(0, 0), Position.from(SPIELPNKT_B_SPALTE, letzteZeile));
 		PrintArea.from(xSheet, getWorkingSpreadsheet()).setPrintArea(bereich);
+		SpielrundeFooterHelper.schreibeFooterUndErweitereDruckbereich(this, xSheet, getWorkingSpreadsheet());
 	}
 
 	public RangePosition printBereichRangePosition() throws GenerateException {

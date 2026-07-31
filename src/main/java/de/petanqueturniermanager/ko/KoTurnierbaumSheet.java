@@ -43,6 +43,7 @@ import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeFooterHelper;
 import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.random.RandomSource;
 
@@ -1023,6 +1024,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		// damit sie weder gedruckt noch im Web-Renderer (Used-Area-Fallback) auftaucht.
 		PrintArea.from(xSheet, getWorkingSpreadsheet())
 				.setPrintArea(RangePosition.from(0, 0, letzteSpalte, letzteZeile));
+		SpielrundeFooterHelper.schreibeFooterUndErweitereDruckbereich(this, xSheet, getWorkingSpreadsheet());
 
 		speichereScoreBereiche(xSheet, numRunden, metadatenSchluessel, aktuelleScorePositionen);
 		aktuelleScorePositionen = null;

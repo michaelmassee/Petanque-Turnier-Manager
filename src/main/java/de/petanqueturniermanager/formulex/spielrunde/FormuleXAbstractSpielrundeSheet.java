@@ -33,6 +33,7 @@ import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.algorithmen.formulex.FormuleX;
 import de.petanqueturniermanager.algorithmen.formulex.FormuleXErgebnis;
 import de.petanqueturniermanager.basesheet.SheetTabFarben;
+import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeFooterHelper;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeHelper;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -565,6 +566,7 @@ public abstract class FormuleXAbstractSpielrundeSheet extends SheetRunner implem
         RangePosition druckBereich = RangePosition.from(BAHN_NR_SPALTE, ERSTE_HEADER_ZEILE,
                 Position.from(ERG_TEAM_B_SPALTE, letztePos.getZeile()));
         PrintArea.from(getXSpreadSheet(), getWorkingSpreadsheet()).setPrintArea(druckBereich);
+        SpielrundeFooterHelper.schreibeFooterUndErweitereDruckbereich(this, getXSpreadSheet(), getWorkingSpreadsheet());
     }
 
     public Position letztePositionRechtsUnten() throws GenerateException {

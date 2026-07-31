@@ -26,6 +26,7 @@ import de.petanqueturniermanager.konfigdialog.AuswahlConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
 import de.petanqueturniermanager.konfigdialog.HeaderFooterConfigProperty;
+import de.petanqueturniermanager.konfigdialog.SpielrundeFooterConfigProperty;
 import de.petanqueturniermanager.konfigdialog.SheetAuswahlConfigProperty;
 import de.petanqueturniermanager.helper.i18n.I18n;
 
@@ -57,6 +58,8 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 
 	public static final String KONFIG_PROP_FUSSZEILE_LINKS = "Fußzeile links";
 	public static final String KONFIG_PROP_FUSSZEILE_MITTE = "Fußzeile mitte";
+
+	public static final String KONFIG_PROP_SPIELRUNDE_FOOTER = "Spielrunde Footer";
 
 	public static final String KONFIG_PROP_TURNIERLOGO_URL = "Turnierlogo Url";
 	public static final String KONFIG_PROP_EDITIERBARE_FELDER_HERVORHEBEN = EditierbaresZelleFormatHelper.PROPERTY_KEY;
@@ -98,6 +101,9 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 				.setDescription("config.desc.footer.links"));
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_FUSSZEILE_MITTE)
 				.setDescription("config.desc.footer.mitte"));
+
+		KONFIG_PROPERTIES.add(SpielrundeFooterConfigProperty.from(KONFIG_PROP_SPIELRUNDE_FOOTER)
+				.setDescription("config.desc.spielrunde.footer"));
 
 		// Hinweis: KONFIG_PROP_TURNIERLOGO_URL wird nicht mehr als Sidebar/Konfig-Sheet-Property
 		// gepflegt. Der Wert wird nun direkt im Dialog „Turnier Startseite" als

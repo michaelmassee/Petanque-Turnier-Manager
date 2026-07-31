@@ -130,6 +130,22 @@
 									<value>_self</value>
 								</prop>
 							</node>
+							<!-- ****************************************************************** -->
+							<node oor:name="X1X7" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Spielrunde Footer</value>
+									<value xml:lang="en">Round footer</value>
+									<value xml:lang="es">Pie de ronda</value>
+									<value xml:lang="fr">Pied de page de la ronde</value>
+									<value xml:lang="nl">Speelronde voettekst</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:konfiguration_spielrunde_footer</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
 
 
 						</node>
