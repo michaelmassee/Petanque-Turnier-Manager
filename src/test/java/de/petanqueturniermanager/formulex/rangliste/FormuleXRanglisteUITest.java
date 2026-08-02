@@ -109,19 +109,42 @@ class FormuleXRanglisteUITest extends BaseCalcUITest {
                 SheetMetadataHelper.SCHLUESSEL_FORMULEX_RANGLISTE, null);
         assertThat(ranglisteSheet).isNotNull();
 
-        for (int spalte = FormuleXRanglisteSheet.TEAM_NR_SPALTE; spalte <= FormuleXRanglisteSheet.PUNKTE_PLUS_SPALTE; spalte++) {
-            XPropertySet props = UnoRuntime.queryInterface(XPropertySet.class,
-                    ranglisteSheet.getCellByPosition(spalte, FormuleXRanglisteSheet.HEADER_ZEILE));
-            Object cellBackColor;
-            try {
-                cellBackColor = props.getPropertyValue("CellBackColor");
-            } catch (Exception e) {
-                throw new AssertionError("CellBackColor konnte nicht gelesen werden", e);
-            }
-            assertThat(cellBackColor)
-                    .as("Header-Hintergrundfarbe in Spalte %d muss der Konfiguration entsprechen", spalte)
-                    .isEqualTo(konfigFarbe);
+        // Zeile 1 (HEADER_ZEILE): Einzel-Spalten (vertikal gemergt) + Anker der horizontal
+        // gemergten "Punkte"-Gruppe. Die von der Gruppe überdeckten Spalten (Minus/Diff) tragen
+        // in Zeile 1 bewusst keine eigene Farbe (LO rendert den gesamten Merge-Bereich über die
+        // Anker-Zelle) und werden hier nicht geprüft.
+        int[] zeile1AnkerSpalten = {
+                FormuleXRanglisteSheet.TEAM_NR_SPALTE, FormuleXRanglisteSheet.TEAM_NAME_SPALTE,
+                FormuleXRanglisteSheet.PLATZ_SPALTE, FormuleXRanglisteSheet.SIEGE_SPALTE,
+                FormuleXRanglisteSheet.WERTUNG_SPALTE, FormuleXRanglisteSheet.PUNKTE_PLUS_SPALTE,
+        };
+        for (int spalte : zeile1AnkerSpalten) {
+            pruefeCellBackColor(ranglisteSheet, spalte, FormuleXRanglisteSheet.HEADER_ZEILE, konfigFarbe);
         }
+
+        // Zeile 2 (ZWEITE_HEADER_ZEILE): die drei Punkte-Sub-Header (+/-/Δ) sind einzeln gefärbt.
+        int[] zeile2Spalten = {
+                FormuleXRanglisteSheet.PUNKTE_PLUS_SPALTE, FormuleXRanglisteSheet.PUNKTE_MINUS_SPALTE,
+                FormuleXRanglisteSheet.PUNKTE_DIFF_SPALTE,
+        };
+        for (int spalte : zeile2Spalten) {
+            pruefeCellBackColor(ranglisteSheet, spalte, FormuleXRanglisteSheet.ZWEITE_HEADER_ZEILE, konfigFarbe);
+        }
+    }
+
+    private void pruefeCellBackColor(XSpreadsheet sheet, int spalte, int zeile, Integer erwarteteFarbe)
+            throws com.sun.star.lang.IndexOutOfBoundsException {
+        XPropertySet props = UnoRuntime.queryInterface(XPropertySet.class,
+                sheet.getCellByPosition(spalte, zeile));
+        Object cellBackColor;
+        try {
+            cellBackColor = props.getPropertyValue("CellBackColor");
+        } catch (Exception e) {
+            throw new AssertionError("CellBackColor konnte nicht gelesen werden", e);
+        }
+        assertThat(cellBackColor)
+                .as("Header-Hintergrundfarbe in Spalte %d, Zeile %d muss der Konfiguration entsprechen", spalte, zeile)
+                .isEqualTo(erwarteteFarbe);
     }
 
     @Test

@@ -74,14 +74,15 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
     public static final int ZWEITE_HEADER_ZEILE = 1;
     public static final int ERSTE_DATEN_ZEILE = 2;
 
-    public static final int TEAM_NR_SPALTE     = 0; // A
-    public static final int TEAM_NAME_SPALTE   = 1; // B
-    public static final int PLATZ_SPALTE       = 2; // C
-    public static final int SIEGE_SPALTE       = 3; // D
-    public static final int WERTUNG_SPALTE     = 4; // E
-    public static final int PUNKTE_DIFF_SPALTE = 5; // F
-    public static final int PUNKTE_PLUS_SPALTE = 6; // G
-    public static final int VALIDATE_SPALTE    = PUNKTE_PLUS_SPALTE + 1; // H (versteckt)
+    public static final int TEAM_NR_SPALTE      = 0; // A
+    public static final int TEAM_NAME_SPALTE    = 1; // B
+    public static final int PLATZ_SPALTE        = 2; // C
+    public static final int SIEGE_SPALTE        = 3; // D
+    public static final int WERTUNG_SPALTE      = 4; // E
+    public static final int PUNKTE_PLUS_SPALTE  = 5; // F
+    public static final int PUNKTE_MINUS_SPALTE = 6; // G
+    public static final int PUNKTE_DIFF_SPALTE  = 7; // H
+    public static final int VALIDATE_SPALTE     = PUNKTE_DIFF_SPALTE + 1; // I (versteckt)
 
     private static final int COL_WIDTH_NR   = 800;
     private static final int COL_WIDTH_NAME = 7000;
@@ -189,7 +190,7 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
         if (!sortiert.isEmpty()) {
             int letzteZeile = ERSTE_DATEN_ZEILE + sortiert.size() - 1;
             RangePosition datenRange = RangePosition.from(TEAM_NR_SPALTE, ERSTE_DATEN_ZEILE,
-                    PUNKTE_PLUS_SPALTE, letzteZeile);
+                    PUNKTE_DIFF_SPALTE, letzteZeile);
             RanglisteGeradeUngeradeFormatHelper.from(this, datenRange)
                     .geradeFarbe(konfigurationSheet.getRanglisteHintergrundFarbeGerade())
                     .ungeradeFarbe(konfigurationSheet.getRanglisteHintergrundFarbeUnGerade())
@@ -406,16 +407,22 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
         return vn + " " + nn;
     }
 
+    /**
+     * Zweizeiliger Header analog zum Schweizer System: Nr/Team/Platz/Siege/Wertung
+     * überspannen beide Header-Zeilen vertikal, die drei Punkte-Spalten (+/-/Δ) bilden
+     * eine horizontal zusammengeführte Gruppe "Punkte" in Zeile 1 mit Sub-Headern in Zeile 2.
+     */
     private void insertHeader(XSpreadsheet sheet) throws GenerateException {
         Integer headerColor = konfigurationSheet.getRanglisteHeaderFarbe();
 
         int[][] spaltenBreiten = {
-                { TEAM_NAME_SPALTE,   COL_WIDTH_NAME  },
-                { PLATZ_SPALTE,       COL_WIDTH_NR   },
-                { SIEGE_SPALTE,       COL_WIDTH_DATA  },
-                { WERTUNG_SPALTE,     COL_WIDTH_DATA  },
-                { PUNKTE_DIFF_SPALTE, COL_WIDTH_DATA  },
-                { PUNKTE_PLUS_SPALTE, COL_WIDTH_DATA  },
+                { TEAM_NAME_SPALTE,    COL_WIDTH_NAME  },
+                { PLATZ_SPALTE,        COL_WIDTH_NR   },
+                { SIEGE_SPALTE,        COL_WIDTH_DATA  },
+                { WERTUNG_SPALTE,      COL_WIDTH_DATA  },
+                { PUNKTE_PLUS_SPALTE,  COL_WIDTH_DATA  },
+                { PUNKTE_MINUS_SPALTE, COL_WIDTH_DATA  },
+                { PUNKTE_DIFF_SPALTE,  COL_WIDTH_DATA  },
         };
         for (int[] sw : spaltenBreiten) {
             getSheetHelper().setColumnProperties(sheet, sw[0],
@@ -423,18 +430,16 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
                             .setHoriJustify(CellHoriJustify.CENTER).setVertJustify(CellVertJustify2.CENTER));
         }
 
+        // ── Zeile 1+2: Einzel-Spalten, vertikal zusammengeführt ─────────────────
         String[] texte = {
                 I18n.get("column.header.nr"),
                 I18n.get("formulex.rangliste.spalte.team"),
                 I18n.get("column.header.platz"),
                 I18n.get("column.header.siege"),
                 I18n.get("formulex.rangliste.spalte.wertung"),
-                I18n.get("formulex.rangliste.spalte.punkte.differenz"),
-                I18n.get("formulex.rangliste.spalte.punkte.plus"),
         };
         int[] spalten = {
-                TEAM_NR_SPALTE, TEAM_NAME_SPALTE, PLATZ_SPALTE,
-                SIEGE_SPALTE, WERTUNG_SPALTE, PUNKTE_DIFF_SPALTE, PUNKTE_PLUS_SPALTE,
+                TEAM_NR_SPALTE, TEAM_NAME_SPALTE, PLATZ_SPALTE, SIEGE_SPALTE, WERTUNG_SPALTE,
         };
 
         var headerCellProps = CellProperties.from()
@@ -454,6 +459,32 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
                 cv.setRotate90().setCharWeight(com.sun.star.awt.FontWeight.BOLD);
             }
             getSheetHelper().setStringValueInCell(cv);
+        }
+
+        // ── Zeile 1: "Punkte" horizontal über 3 Spalten zusammengeführt ─────────
+        getSheetHelper().setStringValueInCell(StringCellValue
+                .from(sheet, Position.from(PUNKTE_PLUS_SPALTE, HEADER_ZEILE), I18n.get("column.header.punkte"))
+                .setCellBackColor(headerColor)
+                .setBorder(BorderFactory.from().allThin().toBorder())
+                .setHoriJustify(CellHoriJustify.CENTER)
+                .setEndPosMergeSpalte(PUNKTE_DIFF_SPALTE)
+                .setShrinkToFit(true));
+
+        // ── Zeile 2: Sub-Header für die Punkte-Spalten ──────────────────────────
+        String[] subTexte = {
+                I18n.get("schweizer.rangliste.spalte.punkte.plus"),
+                I18n.get("schweizer.rangliste.spalte.punkte.minus"),
+                I18n.get("schweizer.rangliste.spalte.punkte.differenz"),
+        };
+        int[] subCols = { PUNKTE_PLUS_SPALTE, PUNKTE_MINUS_SPALTE, PUNKTE_DIFF_SPALTE };
+        for (int i = 0; i < subCols.length; i++) {
+            getSheetHelper().setStringValueInCell(StringCellValue
+                    .from(sheet, Position.from(subCols[i], ZWEITE_HEADER_ZEILE), subTexte[i])
+                    .setCellBackColor(headerColor)
+                    .setBorder(BorderFactory.from().allThin().boldLn().forBottom().toBorder())
+                    .setHoriJustify(CellHoriJustify.CENTER)
+                    .setVertJustify(CellVertJustify2.CENTER)
+                    .setShrinkToFit(true));
         }
     }
 
@@ -480,8 +511,9 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
             RowData row = block2.addNewRow();
             row.newInt(erg.siege());
             row.newInt(erg.wertung());
-            row.newInt(erg.punktedifferenz());
             row.newInt(erg.eigenePunkte());
+            row.newInt(erg.eigenePunkte() - erg.punktedifferenz()); // kassierte Punkte
+            row.newInt(erg.punktedifferenz());
         }
         RangeHelper.from(this,
                 block2.getRangePosition(Position.from(SIEGE_SPALTE, ERSTE_DATEN_ZEILE)))
@@ -500,7 +532,7 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
                 CellProperties.from().margin(MeldeListeKonstanten.CELL_MARGIN).setAllThinBorder().setHoriJustify(CellHoriJustify.LEFT));
 
         getSheetHelper().setPropertiesInRange(sheet,
-                RangePosition.from(SIEGE_SPALTE, ERSTE_DATEN_ZEILE, PUNKTE_PLUS_SPALTE, letzteZeile),
+                RangePosition.from(SIEGE_SPALTE, ERSTE_DATEN_ZEILE, PUNKTE_DIFF_SPALTE, letzteZeile),
                 CellProperties.from().margin(MeldeListeKonstanten.CELL_MARGIN).setAllThinBorder().setHoriJustify(CellHoriJustify.CENTER));
 
         // Nr-Spalte: durchgängig doppelte rechte Linie (Header + Daten)
@@ -524,14 +556,14 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
                         I18n.get("formulex.rangliste.reihenfolge.platzierung"))
                 .setHoriJustify(CellHoriJustify.LEFT)
                 .setCharHeight(8)
-                .setEndPosMergeSpalte(PUNKTE_PLUS_SPALTE));
+                .setEndPosMergeSpalte(PUNKTE_DIFF_SPALTE));
     }
 
     private void setzeDruckbereich(XSpreadsheet sheet, int letzteZeile) throws GenerateException {
         PrintArea.from(sheet, getWorkingSpreadsheet())
                 .setPrintArea(RangePosition.from(
                         Position.from(TEAM_NR_SPALTE, HEADER_ZEILE),
-                        Position.from(PUNKTE_PLUS_SPALTE, letzteZeile)));
+                        Position.from(PUNKTE_DIFF_SPALTE, letzteZeile)));
     }
 
     // ── IRangliste ──────────────────────────────────────────────────────────────
@@ -548,7 +580,7 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
 
     @Override
     public int getLetzteSpalte() throws GenerateException {
-        return PUNKTE_PLUS_SPALTE;
+        return PUNKTE_DIFF_SPALTE;
     }
 
     @Override
