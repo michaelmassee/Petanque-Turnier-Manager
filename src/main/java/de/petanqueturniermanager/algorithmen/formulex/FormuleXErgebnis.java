@@ -5,9 +5,9 @@ import java.util.List;
 /**
  * Hält die Auswertungsdaten eines Teams für das Formule X Turniersystem.
  * <p>
- * Wird als Eingabe für die Sortierung nach Wertungspunkten verwendet.
- * Der eigentliche Wertungsscore wird funktional berechnet ({@code berechneWertung()})
- * und ist bewusst NICHT Teil dieses Records.
+ * Wird für die Rematch-Vermeidung (Gegnerliste) und die BYE-Vergabe bei der Paarung
+ * der nächsten Runde verwendet. Der eigentliche Wertungsscore wird funktional berechnet
+ * ({@code berechneWertung()}) und ist bewusst NICHT Teil dieses Records.
  * <p>
  * <b>Achtung — zwei Nutzungsmodi:</b>
  * <ul>
@@ -20,10 +20,10 @@ import java.util.List;
  *       {@link #istSieger()} <b>keine</b> sinnvolle Aussage über die Sieg-Bilanz, weil
  *       knappe Siege durch eine hohe Niederlage in der Summe „verloren“ aussehen
  *       können. {@link FormuleX#berechneWertung(FormuleXErgebnis, int)} darf hier
- *       <b>nicht</b> verwendet werden — stattdessen muss die Wertungssumme
- *       spielweise extern aufsummiert und an
- *       {@link FormuleX#sortiereNachWertung(java.util.List, java.util.function.ToIntFunction)}
- *       übergeben werden.</li>
+ *       <b>nicht</b> verwendet werden — stattdessen muss die Wertungssumme spielweise
+ *       extern aufsummiert werden (siehe {@link FormuleXTeamErgebnis} und
+ *       {@link FormuleXRanglisteRechner}, die für die eigentliche Ranglisten-/
+ *       Paarungsreihenfolge zuständig sind).</li>
  * </ul>
  *
  * @param teamNr          Nummer des Teams
