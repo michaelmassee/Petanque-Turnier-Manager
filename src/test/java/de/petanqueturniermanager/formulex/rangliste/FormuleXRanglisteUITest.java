@@ -9,11 +9,14 @@ import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+import com.sun.star.beans.XPropertySet;
 import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.uno.UnoRuntime;
 
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.formulex.konfiguration.FormuleXKonfigurationSheet;
 import de.petanqueturniermanager.formulex.spielrunde.FormuleXTurnierTestDaten;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
@@ -86,6 +89,39 @@ class FormuleXRanglisteUITest extends BaseCalcUITest {
                 .as("Gesamtanzahl Siege muss %d betragen (%d reguläre Spiele + %d Freilos × %d Runden)",
                         erwarteteSiege, regulaereSpieleProRunde, freilosProRunde, anzRunden)
                 .isEqualTo(erwarteteSiege);
+    }
+
+    /**
+     * Regression: {@code insertHeader()} rief zuerst {@code setCellBackColor(headerColor)} und
+     * danach {@code setCellProperties(headerCellProps)} auf derselben {@link StringCellValue} auf.
+     * {@code setCellProperties()} ersetzt das interne Property-Objekt komplett (keine Merge-Semantik),
+     * wodurch die zuvor gesetzte Hintergrundfarbe verworfen wurde und der Header ungefärbt blieb.
+     */
+    @Test
+    void headerZeigtKonfigurierteHintergrundfarbe() throws GenerateException, com.sun.star.lang.IndexOutOfBoundsException {
+        new FormuleXTurnierTestDaten(wkingSpreadsheet).generate();
+
+        var konfig = new FormuleXKonfigurationSheet(wkingSpreadsheet);
+        Integer konfigFarbe = konfig.getRanglisteHeaderFarbe();
+
+        XSpreadsheet ranglisteSheet = SheetMetadataHelper.findeSheetUndHeile(
+                wkingSpreadsheet.getWorkingSpreadsheetDocument(),
+                SheetMetadataHelper.SCHLUESSEL_FORMULEX_RANGLISTE, null);
+        assertThat(ranglisteSheet).isNotNull();
+
+        for (int spalte = FormuleXRanglisteSheet.TEAM_NR_SPALTE; spalte <= FormuleXRanglisteSheet.PUNKTE_PLUS_SPALTE; spalte++) {
+            XPropertySet props = UnoRuntime.queryInterface(XPropertySet.class,
+                    ranglisteSheet.getCellByPosition(spalte, FormuleXRanglisteSheet.HEADER_ZEILE));
+            Object cellBackColor;
+            try {
+                cellBackColor = props.getPropertyValue("CellBackColor");
+            } catch (Exception e) {
+                throw new AssertionError("CellBackColor konnte nicht gelesen werden", e);
+            }
+            assertThat(cellBackColor)
+                    .as("Header-Hintergrundfarbe in Spalte %d muss der Konfiguration entsprechen", spalte)
+                    .isEqualTo(konfigFarbe);
+        }
     }
 
     @Test

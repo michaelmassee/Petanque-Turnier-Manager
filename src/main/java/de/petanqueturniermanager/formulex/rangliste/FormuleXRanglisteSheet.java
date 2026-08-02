@@ -439,12 +439,12 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
 
         var headerCellProps = CellProperties.from()
                 .setBorder(BorderFactory.from().allThin().boldLn().forBottom().toBorder())
+                .setCellBackColor(headerColor)
                 .margin(MeldeListeKonstanten.CELL_MARGIN);
         for (int i = 0; i < spalten.length; i++) {
             int col = spalten[i];
             var cv = StringCellValue
                     .from(sheet, Position.from(col, HEADER_ZEILE), texte[i])
-                    .setCellBackColor(headerColor)
                     .setCellProperties(headerCellProps)
                     .setHoriJustify(CellHoriJustify.CENTER)
                     .setVertJustify(CellVertJustify2.CENTER)
