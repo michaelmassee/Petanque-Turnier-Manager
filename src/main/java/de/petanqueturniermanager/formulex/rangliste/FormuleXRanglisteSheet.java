@@ -46,6 +46,7 @@ import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.RanglisteGeradeUngeradeFormatHelper;
+import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
@@ -146,6 +147,7 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
         if (SheetRunner.isRunning()) {
             getSheetHelper().setActiveSheet(sheet);
             SheetRunner.unterdrückeNaechstesSelectionChange();
+            SheetFreeze.from(getTurnierSheet()).anzZeilen(ERSTE_DATEN_ZEILE).anzSpalten(3).doFreeze();
         }
         SheetSyncSignaturStore.commitVollaufbau(
                 getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
@@ -405,7 +407,7 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
     }
 
     private void insertHeader(XSpreadsheet sheet) throws GenerateException {
-        Integer headerColor = konfigurationSheet.getMeldeListeHeaderFarbe();
+        Integer headerColor = konfigurationSheet.getRanglisteHeaderFarbe();
 
         int[][] spaltenBreiten = {
                 { TEAM_NAME_SPALTE,   COL_WIDTH_NAME  },
