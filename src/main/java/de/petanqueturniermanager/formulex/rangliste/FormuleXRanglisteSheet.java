@@ -76,11 +76,11 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
     public static final int TEAM_NR_SPALTE     = 0; // A
     public static final int TEAM_NAME_SPALTE   = 1; // B
     public static final int PLATZ_SPALTE       = 2; // C
-    public static final int WERTUNG_SPALTE     = 3; // D
-    public static final int SIEGE_SPALTE       = 4; // E
-    public static final int PUNKTE_PLUS_SPALTE = 5; // F
-    public static final int PUNKTE_DIFF_SPALTE = 6; // G
-    public static final int VALIDATE_SPALTE    = PUNKTE_DIFF_SPALTE + 1; // H (versteckt)
+    public static final int SIEGE_SPALTE       = 3; // D
+    public static final int WERTUNG_SPALTE     = 4; // E
+    public static final int PUNKTE_DIFF_SPALTE = 5; // F
+    public static final int PUNKTE_PLUS_SPALTE = 6; // G
+    public static final int VALIDATE_SPALTE    = PUNKTE_PLUS_SPALTE + 1; // H (versteckt)
 
     private static final int COL_WIDTH_NR   = 800;
     private static final int COL_WIDTH_NAME = 7000;
@@ -187,7 +187,7 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
         if (!sortiert.isEmpty()) {
             int letzteZeile = ERSTE_DATEN_ZEILE + sortiert.size() - 1;
             RangePosition datenRange = RangePosition.from(TEAM_NR_SPALTE, ERSTE_DATEN_ZEILE,
-                    PUNKTE_DIFF_SPALTE, letzteZeile);
+                    PUNKTE_PLUS_SPALTE, letzteZeile);
             RanglisteGeradeUngeradeFormatHelper.from(this, datenRange)
                     .geradeFarbe(konfigurationSheet.getRanglisteHintergrundFarbeGerade())
                     .ungeradeFarbe(konfigurationSheet.getRanglisteHintergrundFarbeUnGerade())
@@ -410,10 +410,10 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
         int[][] spaltenBreiten = {
                 { TEAM_NAME_SPALTE,   COL_WIDTH_NAME  },
                 { PLATZ_SPALTE,       COL_WIDTH_NR   },
-                { WERTUNG_SPALTE,     COL_WIDTH_DATA  },
                 { SIEGE_SPALTE,       COL_WIDTH_DATA  },
-                { PUNKTE_PLUS_SPALTE, COL_WIDTH_DATA  },
+                { WERTUNG_SPALTE,     COL_WIDTH_DATA  },
                 { PUNKTE_DIFF_SPALTE, COL_WIDTH_DATA  },
+                { PUNKTE_PLUS_SPALTE, COL_WIDTH_DATA  },
         };
         for (int[] sw : spaltenBreiten) {
             getSheetHelper().setColumnProperties(sheet, sw[0],
@@ -425,14 +425,14 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
                 I18n.get("column.header.nr"),
                 I18n.get("formulex.rangliste.spalte.team"),
                 I18n.get("column.header.platz"),
-                I18n.get("formulex.rangliste.spalte.wertung"),
                 I18n.get("column.header.siege"),
-                I18n.get("formulex.rangliste.spalte.punkte.plus"),
+                I18n.get("formulex.rangliste.spalte.wertung"),
                 I18n.get("formulex.rangliste.spalte.punkte.differenz"),
+                I18n.get("formulex.rangliste.spalte.punkte.plus"),
         };
         int[] spalten = {
                 TEAM_NR_SPALTE, TEAM_NAME_SPALTE, PLATZ_SPALTE,
-                WERTUNG_SPALTE, SIEGE_SPALTE, PUNKTE_PLUS_SPALTE, PUNKTE_DIFF_SPALTE,
+                SIEGE_SPALTE, WERTUNG_SPALTE, PUNKTE_DIFF_SPALTE, PUNKTE_PLUS_SPALTE,
         };
 
         var headerCellProps = CellProperties.from()
@@ -476,13 +476,13 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
         RangeData block2 = new RangeData();
         for (FormuleXTeamErgebnis erg : sortiert) {
             RowData row = block2.addNewRow();
-            row.newInt(erg.wertung());
             row.newInt(erg.siege());
-            row.newInt(erg.eigenePunkte());
+            row.newInt(erg.wertung());
             row.newInt(erg.punktedifferenz());
+            row.newInt(erg.eigenePunkte());
         }
         RangeHelper.from(this,
-                block2.getRangePosition(Position.from(WERTUNG_SPALTE, ERSTE_DATEN_ZEILE)))
+                block2.getRangePosition(Position.from(SIEGE_SPALTE, ERSTE_DATEN_ZEILE)))
                 .setDataInRange(block2);
 
         getSheetHelper().setPropertiesInRange(sheet,
@@ -498,7 +498,7 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
                 CellProperties.from().margin(MeldeListeKonstanten.CELL_MARGIN).setAllThinBorder().setHoriJustify(CellHoriJustify.LEFT));
 
         getSheetHelper().setPropertiesInRange(sheet,
-                RangePosition.from(WERTUNG_SPALTE, ERSTE_DATEN_ZEILE, PUNKTE_DIFF_SPALTE, letzteZeile),
+                RangePosition.from(SIEGE_SPALTE, ERSTE_DATEN_ZEILE, PUNKTE_PLUS_SPALTE, letzteZeile),
                 CellProperties.from().margin(MeldeListeKonstanten.CELL_MARGIN).setAllThinBorder().setHoriJustify(CellHoriJustify.CENTER));
 
         // Nr-Spalte: durchgängig doppelte rechte Linie (Header + Daten)
@@ -522,14 +522,14 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
                         I18n.get("formulex.rangliste.reihenfolge.platzierung"))
                 .setHoriJustify(CellHoriJustify.LEFT)
                 .setCharHeight(8)
-                .setEndPosMergeSpalte(PUNKTE_DIFF_SPALTE));
+                .setEndPosMergeSpalte(PUNKTE_PLUS_SPALTE));
     }
 
     private void setzeDruckbereich(XSpreadsheet sheet, int letzteZeile) throws GenerateException {
         PrintArea.from(sheet, getWorkingSpreadsheet())
                 .setPrintArea(RangePosition.from(
                         Position.from(TEAM_NR_SPALTE, HEADER_ZEILE),
-                        Position.from(PUNKTE_DIFF_SPALTE, letzteZeile)));
+                        Position.from(PUNKTE_PLUS_SPALTE, letzteZeile)));
     }
 
     // ── IRangliste ──────────────────────────────────────────────────────────────
@@ -546,12 +546,12 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
 
     @Override
     public int getLetzteSpalte() throws GenerateException {
-        return PUNKTE_DIFF_SPALTE;
+        return PUNKTE_PLUS_SPALTE;
     }
 
     @Override
     public int getErsteSummeSpalte() throws GenerateException {
-        return WERTUNG_SPALTE;
+        return SIEGE_SPALTE;
     }
 
     @Override
@@ -572,8 +572,10 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
     @Override
     public List<Position> getRanglisteSpalten() throws GenerateException {
         return List.of(
+                Position.from(SIEGE_SPALTE, ERSTE_DATEN_ZEILE),
                 Position.from(WERTUNG_SPALTE, ERSTE_DATEN_ZEILE),
-                Position.from(PUNKTE_DIFF_SPALTE, ERSTE_DATEN_ZEILE));
+                Position.from(PUNKTE_DIFF_SPALTE, ERSTE_DATEN_ZEILE),
+                Position.from(PUNKTE_PLUS_SPALTE, ERSTE_DATEN_ZEILE));
     }
 
     @Override
