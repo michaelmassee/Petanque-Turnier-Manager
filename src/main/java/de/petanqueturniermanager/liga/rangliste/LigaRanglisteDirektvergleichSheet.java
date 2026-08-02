@@ -32,6 +32,7 @@ import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.RanglisteGeradeUngeradeFormatHelper;
+import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.SheetRunner;
@@ -135,6 +136,7 @@ public class LigaRanglisteDirektvergleichSheet extends SheetRunner implements IS
 		addConditionalFormuleForDirektVergleichReturnCode();
 		StringCellValue lastPos = addFooter();
 		printBereichDefinieren(lastPos.getPos());
+		SheetFreeze.from(getTurnierSheet()).anzZeilen(ERSTE_DATEN_ZEILE).anzSpalten(ERSTE_SPALTE_DIREKTVERGLEICH).doFreeze();
 	}
 
 	private int anzTeams() throws GenerateException {
