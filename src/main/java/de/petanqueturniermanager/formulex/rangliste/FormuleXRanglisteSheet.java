@@ -431,15 +431,18 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
         }
 
         // ── Zeile 1+2: Einzel-Spalten, vertikal zusammengeführt ─────────────────
+        // headerCellProps wird von allen Spalten geteilt (setCellProperties() weist die
+        // Referenz zu, mutiert also dasselbe Objekt) – Sonderformatierungen wie Rotate90
+        // dürfen deshalb NIE direkt darauf gesetzt werden, sonst "brennen" sie in alle
+        // nachfolgend verarbeiteten Spalten ein (siehe Platz-Spalte weiter unten).
         String[] texte = {
                 I18n.get("column.header.nr"),
                 I18n.get("formulex.rangliste.spalte.team"),
-                I18n.get("column.header.platz"),
                 I18n.get("column.header.siege"),
                 I18n.get("formulex.rangliste.spalte.wertung"),
         };
         int[] spalten = {
-                TEAM_NR_SPALTE, TEAM_NAME_SPALTE, PLATZ_SPALTE, SIEGE_SPALTE, WERTUNG_SPALTE,
+                TEAM_NR_SPALTE, TEAM_NAME_SPALTE, SIEGE_SPALTE, WERTUNG_SPALTE,
         };
 
         var headerCellProps = CellProperties.from()
@@ -447,19 +450,28 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
                 .setCellBackColor(headerColor)
                 .margin(MeldeListeKonstanten.CELL_MARGIN);
         for (int i = 0; i < spalten.length; i++) {
-            int col = spalten[i];
-            var cv = StringCellValue
-                    .from(sheet, Position.from(col, HEADER_ZEILE), texte[i])
+            getSheetHelper().setStringValueInCell(StringCellValue
+                    .from(sheet, Position.from(spalten[i], HEADER_ZEILE), texte[i])
                     .setCellProperties(headerCellProps)
                     .setHoriJustify(CellHoriJustify.CENTER)
                     .setVertJustify(CellVertJustify2.CENTER)
                     .setEndPosMergeZeilePlus(1)
-                    .setShrinkToFit(true);
-            if (col == PLATZ_SPALTE) {
-                cv.setRotate90().setCharWeight(com.sun.star.awt.FontWeight.BOLD);
-            }
-            getSheetHelper().setStringValueInCell(cv);
+                    .setShrinkToFit(true));
         }
+
+        // Platz-Spalte: eigenes CellProperties-Objekt (siehe Kommentar oben), hochkant + fett.
+        getSheetHelper().setStringValueInCell(StringCellValue
+                .from(sheet, Position.from(PLATZ_SPALTE, HEADER_ZEILE), I18n.get("column.header.platz"))
+                .setCellProperties(CellProperties.from()
+                        .setBorder(BorderFactory.from().allThin().boldLn().forBottom().toBorder())
+                        .setCellBackColor(headerColor)
+                        .margin(MeldeListeKonstanten.CELL_MARGIN))
+                .setHoriJustify(CellHoriJustify.CENTER)
+                .setVertJustify(CellVertJustify2.CENTER)
+                .setEndPosMergeZeilePlus(1)
+                .setShrinkToFit(true)
+                .setRotate90()
+                .setCharWeight(com.sun.star.awt.FontWeight.BOLD));
 
         // ── Zeile 1: "Punkte" horizontal über 3 Spalten zusammengeführt ─────────
         getSheetHelper().setStringValueInCell(StringCellValue

@@ -147,6 +147,43 @@ class FormuleXRanglisteUITest extends BaseCalcUITest {
                 .isEqualTo(erwarteteFarbe);
     }
 
+    /**
+     * Regression: {@code headerCellProps} wird von Nr/Team/Siege/Wertung geteilt (setCellProperties()
+     * weist nur die Referenz zu). Ein direktes {@code setRotate90()} auf diesem gemeinsamen Objekt
+     * für die Platz-Spalte hätte sich in-place in alle danach verarbeiteten Spalten (Siege, Wertung)
+     * "eingebrannt". Nur Platz darf hochkant stehen.
+     */
+    @Test
+    void nurPlatzSpalteIstHochkantGedreht() throws GenerateException, com.sun.star.lang.IndexOutOfBoundsException {
+        new FormuleXTurnierTestDaten(wkingSpreadsheet).generate();
+
+        XSpreadsheet ranglisteSheet = SheetMetadataHelper.findeSheetUndHeile(
+                wkingSpreadsheet.getWorkingSpreadsheetDocument(),
+                SheetMetadataHelper.SCHLUESSEL_FORMULEX_RANGLISTE, null);
+        assertThat(ranglisteSheet).isNotNull();
+
+        pruefeRotateAngle(ranglisteSheet, FormuleXRanglisteSheet.TEAM_NR_SPALTE, 0);
+        pruefeRotateAngle(ranglisteSheet, FormuleXRanglisteSheet.TEAM_NAME_SPALTE, 0);
+        pruefeRotateAngle(ranglisteSheet, FormuleXRanglisteSheet.PLATZ_SPALTE, 27000);
+        pruefeRotateAngle(ranglisteSheet, FormuleXRanglisteSheet.SIEGE_SPALTE, 0);
+        pruefeRotateAngle(ranglisteSheet, FormuleXRanglisteSheet.WERTUNG_SPALTE, 0);
+    }
+
+    private void pruefeRotateAngle(XSpreadsheet sheet, int spalte, int erwarteterWinkel)
+            throws com.sun.star.lang.IndexOutOfBoundsException {
+        XPropertySet props = UnoRuntime.queryInterface(XPropertySet.class,
+                sheet.getCellByPosition(spalte, FormuleXRanglisteSheet.HEADER_ZEILE));
+        Object rotateAngle;
+        try {
+            rotateAngle = props.getPropertyValue("RotateAngle");
+        } catch (Exception e) {
+            throw new AssertionError("RotateAngle konnte nicht gelesen werden", e);
+        }
+        assertThat(rotateAngle)
+                .as("RotateAngle in Spalte %d muss %d sein", spalte, erwarteterWinkel)
+                .isEqualTo(erwarteterWinkel);
+    }
+
     @Test
     void jederTeamHatEinenRanglistenEintrag() throws GenerateException {
         new FormuleXTurnierTestDaten(wkingSpreadsheet).generate();
