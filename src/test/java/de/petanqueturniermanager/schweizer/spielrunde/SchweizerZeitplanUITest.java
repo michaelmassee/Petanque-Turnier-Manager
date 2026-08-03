@@ -9,11 +9,13 @@ import com.sun.star.sheet.XSpreadsheet;
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
+import de.petanqueturniermanager.schweizer.konfiguration.SchweizerPropertiesSpalte;
 import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetTestDaten;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheet;
@@ -30,12 +32,26 @@ public class SchweizerZeitplanUITest extends BaseCalcUITest {
 
 	private SchweizerTurnierTestDaten testDaten;
 
-	private RangeData ladeDurchgangSpalten(XSpreadsheet sheet, int anzZeilen) throws GenerateException {
+	private RangeData ladeZeitSpalte(XSpreadsheet sheet, int anzZeilen) throws GenerateException {
 		RangePosition range = RangePosition.from(
-				SchweizerAbstractSpielrundeSheet.DURCHGANG_LABEL_SPALTE, SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE,
-				SchweizerAbstractSpielrundeSheet.DURCHGANG_STARTZEIT_SPALTE,
+				SchweizerAbstractSpielrundeSheet.ZEIT_SPALTE, SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE,
+				SchweizerAbstractSpielrundeSheet.ZEIT_SPALTE,
 				SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE + anzZeilen - 1);
 		return RangeHelper.from(sheet, wkingSpreadsheet.getWorkingSpreadsheetDocument(), range).getDataFromRange();
+	}
+
+	/** Liest {@code TableBorder2} der Zeile ab {@code BAHN_NR_SPALTE} (fuer die Durchgang-Trennlinien-Pruefung). */
+	private com.sun.star.table.TableBorder2 ladeZeilenOberrand(XSpreadsheet sheet, int zeile) throws GenerateException {
+		try {
+			RangePosition zeilenRange = RangePosition.from(SchweizerAbstractSpielrundeSheet.BAHN_NR_SPALTE, zeile,
+					SchweizerAbstractSpielrundeSheet.FEHLER_SPALTE, zeile);
+			com.sun.star.table.XCellRange xRange = sheet.getCellRangeByPosition(zeilenRange.getStartSpalte(),
+					zeilenRange.getStartZeile(), zeilenRange.getEndeSpalte(), zeilenRange.getEndeZeile());
+			com.sun.star.beans.XPropertySet xPropSet = de.petanqueturniermanager.helper.Lo.qi(com.sun.star.beans.XPropertySet.class, xRange);
+			return (com.sun.star.table.TableBorder2) xPropSet.getPropertyValue("TableBorder2");
+		} catch (Exception e) {
+			throw new GenerateException(e.getMessage());
+		}
 	}
 
 	private RangeData ladeBahnNummern(XSpreadsheet sheet, int anzZeilen) throws GenerateException {
@@ -73,11 +89,9 @@ public class SchweizerZeitplanUITest extends BaseCalcUITest {
 		XSpreadsheet runde1 = sheetHlp.findByName("1. " + SchweizerAbstractSpielrundeSheet.SHEET_NAMEN);
 		assertThat(runde1).isNotNull();
 
-		RangeData durchgangSpalten = ladeDurchgangSpalten(runde1, ANZ_TEAMS / 2);
-		assertThat(durchgangSpalten).allSatisfy(row -> {
-			assertThat(row.get(0).getStringVal()).as("Durchgang-Label muss leer sein").isNullOrEmpty();
-			assertThat(row.get(1).getStringVal()).as("Durchgang-Startzeit muss leer sein").isNullOrEmpty();
-		});
+		RangeData zeitSpalte = ladeZeitSpalte(runde1, ANZ_TEAMS / 2);
+		assertThat(zeitSpalte).allSatisfy(row ->
+				assertThat(row.get(0).getStringVal()).as("ZEIT_SPALTE muss leer sein").isNullOrEmpty());
 
 		String startzeitLabel = sheetHlp.getTextFromCell(runde1,
 				Position.from(SchweizerAbstractSpielrundeSheet.FEHLER_SPALTE, SchweizerAbstractSpielrundeSheet.ERSTE_HEADER_ZEILE));
@@ -115,41 +129,78 @@ public class SchweizerZeitplanUITest extends BaseCalcUITest {
 				Position.from(SchweizerAbstractSpielrundeSheet.FEHLER_SPALTE, SchweizerAbstractSpielrundeSheet.ZWEITE_HEADER_ZEILE));
 		assertThat(rundenStartzeit).as("Rundenstartzeit Runde 1 muss der Turnier-Startzeit entsprechen").isEqualTo("09:00");
 
-		// 8 Paarungen / 3 Bahnen -> Bloecke [3, 3, 2] -> Durchgang-Label auf Zeile 0, 3, 6 (relativ)
-		RangeData durchgangSpalten = ladeDurchgangSpalten(runde1, ANZ_TEAMS / 2);
-		assertThat(durchgangSpalten.get(0).get(0).getStringVal()).contains("1");
-		assertThat(durchgangSpalten.get(3).get(0).getStringVal()).contains("2");
-		assertThat(durchgangSpalten.get(6).get(0).getStringVal()).contains("3");
-		// alle anderen Zeilen: kein Label
-		for (int i : new int[] { 1, 2, 4, 5, 7 }) {
-			assertThat(durchgangSpalten.get(i).get(0).getStringVal())
-					.as("Zeile %d ist keine Durchgang-Startzeile", i).isNullOrEmpty();
+		// 8 Paarungen / 3 Bahnen -> Bloecke [3, 3, 2] (relative Zeilen 0-2 | 3-5 | 6-7).
+		// ZEIT_SPALTE: Start in der ersten, Ende in der letzten Zeile jedes Blocks.
+		RangeData zeitSpalte = ladeZeitSpalte(runde1, ANZ_TEAMS / 2);
+		for (int i : new int[] { 0, 2, 3, 5, 6, 7 }) {
+			assertThat(zeitSpalte.get(i).get(0).getStringVal())
+					.as("Zeile %d ist Start oder Ende eines Durchgangs", i).isNotBlank();
+		}
+		// mittlere Zeilen der Bloecke 1 und 2: weder Start noch Ende
+		for (int i : new int[] { 1, 4 }) {
+			assertThat(zeitSpalte.get(i).get(0).getStringVal())
+					.as("Zeile %d ist weder Start noch Ende eines Durchgangs", i).isNullOrEmpty();
 		}
 
-		// Durchgang 1: reine Zellbezug-Formel auf die Rundenstartzeit, kein Add-in-Aufruf noetig ->
+		// Optische Trennung statt Text-Label: doppelte Linie am oberen Rand der Durchgang-2/3-Startzeilen,
+		// keine Trennlinie vor dem ersten Durchgang (Zeile 0, direkt unter dem Header).
+		assertThat(ladeZeilenOberrand(runde1, SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE).TopLine.LineStyle)
+				.as("Keine Trennlinie vor dem ersten Durchgang").isNotEqualTo(com.sun.star.table.BorderLineStyle.DOUBLE);
+		for (int relZeile : new int[] { 3, 6 }) {
+			com.sun.star.table.TableBorder2 oberrand = ladeZeilenOberrand(runde1,
+					SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE + relZeile);
+			assertThat(oberrand.IsTopLineValid).as("Trennlinie Durchgang-Beginn Zeile %d muss gesetzt sein", relZeile).isTrue();
+			assertThat(oberrand.TopLine.LineStyle)
+					.as("Trennlinie Durchgang-Beginn Zeile %d muss doppelt sein", relZeile)
+					.isEqualTo(com.sun.star.table.BorderLineStyle.DOUBLE_THIN);
+		}
+
+		// Start Durchgang 1: reine Zellbezug-Formel auf die Rundenstartzeit, kein Add-in-Aufruf noetig ->
 		// Wert direkt pruefbar (formatierten Anzeigetext lesen, nicht CellData.getStringVal(), die
 		// Number-Werte auf Int rundet, siehe getIntVal()).
 		assertThat(sheetHlp.getTextFromCell(runde1,
-				Position.from(SchweizerAbstractSpielrundeSheet.DURCHGANG_STARTZEIT_SPALTE, SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE)))
+				Position.from(SchweizerAbstractSpielrundeSheet.ZEIT_SPALTE, SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE)))
 				.isEqualTo("09:00");
 
-		// Durchgang 2/3: Formel referenziert PTM.ALG.INTPROPERTY (live Konfig-Wert). Die
-		// berechnete Anzeige haengt von der LO-"aktuelles Dokument"-Erkennung des Add-ins ab, die
-		// im automatisierten, nicht-interaktiven UITest-Kontext nicht zuverlaessig auf das
-        // Testdokument zeigt (siehe Recherche zu Review-Nachbesserung) — deshalb wird hier
-		// die Formel-STRUKTUR geprueft (korrekte Zellreferenz, korrekter struktureller Faktor
-		// N-1, korrekte Property-Keys), nicht der kalkulierte Anzeigewert. Die zugrunde liegende
-		// PTM.ALG.INTPROPERTY-Mechanik ist bereits produktiv im Einsatz (siehe
-		// ConditionalFormatHelper/LigaSpielPlanSheet) und wird hier nicht erneut verifiziert.
-		String formelDurchgang2 = sheetHlp.getFormulaFromCell(runde1,
-				Position.from(SchweizerAbstractSpielrundeSheet.DURCHGANG_STARTZEIT_SPALTE, SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE + 3));
-		assertThat(formelDurchgang2).contains("$F$2").contains("(1)").contains("Durchgang Zeitlimit (Minuten)")
-				.contains("Durchgang Pause (Minuten)");
+		// Alle Folgezellen (Ende/Start ab Durchgang 1-Ende) referenzieren PTM.ALG.INTPROPERTY (live
+		// Konfig-Wert). Die berechnete Anzeige haengt von der LO-"aktuelles Dokument"-Erkennung des
+		// Add-ins ab, die im automatisierten, nicht-interaktiven UITest-Kontext nicht zuverlaessig auf
+		// das Testdokument zeigt (siehe Recherche zu Review-Nachbesserung) — deshalb wird hier die
+		// Formel-STRUKTUR geprueft (korrekte Zellreferenz auf die jeweils vorherige Zeit-Zelle,
+		// korrekte Property-Keys), nicht der kalkulierte Anzeigewert.
+		Position startDurchgang1 = Position.from(SchweizerAbstractSpielrundeSheet.ZEIT_SPALTE, SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE);
+		Position endeDurchgang1 = Position.from(SchweizerAbstractSpielrundeSheet.ZEIT_SPALTE, SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE + 2);
+		Position startDurchgang2 = Position.from(SchweizerAbstractSpielrundeSheet.ZEIT_SPALTE, SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE + 3);
+		Position endeDurchgang2 = Position.from(SchweizerAbstractSpielrundeSheet.ZEIT_SPALTE, SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE + 5);
+		Position startDurchgang3 = Position.from(SchweizerAbstractSpielrundeSheet.ZEIT_SPALTE, SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE + 6);
+		Position endeDurchgang3 = Position.from(SchweizerAbstractSpielrundeSheet.ZEIT_SPALTE, SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE + 7);
 
-		String formelDurchgang3 = sheetHlp.getFormulaFromCell(runde1,
-				Position.from(SchweizerAbstractSpielrundeSheet.DURCHGANG_STARTZEIT_SPALTE, SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE + 6));
-		assertThat(formelDurchgang3).contains("$F$2").contains("(2)").contains("Durchgang Zeitlimit (Minuten)")
-				.contains("Durchgang Pause (Minuten)");
+		// Ende = Start desselben Durchgangs + Zeitlimit
+		assertThat(sheetHlp.getFormulaFromCell(runde1, endeDurchgang1))
+				.as("Ende Durchgang 1 muss auf dessen eigenen Start verweisen")
+				.contains(startDurchgang1.getAddress()).contains("Durchgang Zeitlimit (Minuten)");
+		assertThat(sheetHlp.getFormulaFromCell(runde1, endeDurchgang2))
+				.as("Ende Durchgang 2 muss auf dessen eigenen Start verweisen")
+				.contains(startDurchgang2.getAddress()).contains("Durchgang Zeitlimit (Minuten)");
+		assertThat(sheetHlp.getFormulaFromCell(runde1, endeDurchgang3))
+				.as("Ende Durchgang 3 muss auf dessen eigenen Start verweisen")
+				.contains(startDurchgang3.getAddress()).contains("Durchgang Zeitlimit (Minuten)");
+
+		// Start eines Folge-Durchgangs = Ende des vorherigen Durchgangs + Durchgang-Pause (Fix:
+		// direkte Verkettung an die tatsaechliche Vorgaenger-Endzeit statt rekonstruiertem Faktor N-1).
+		assertThat(sheetHlp.getFormulaFromCell(runde1, startDurchgang2))
+				.as("Start Durchgang 2 muss auf das Ende von Durchgang 1 verweisen")
+				.contains(endeDurchgang1.getAddress()).contains("Durchgang Pause (Minuten)");
+		assertThat(sheetHlp.getFormulaFromCell(runde1, startDurchgang3))
+				.as("Start Durchgang 3 muss auf das Ende von Durchgang 2 verweisen")
+				.contains(endeDurchgang2.getAddress()).contains("Durchgang Pause (Minuten)");
+
+		// alle anderen Zeilen: keine Zeit-Formel
+		for (int i : new int[] { 1, 4 }) {
+			assertThat(sheetHlp.getTextFromCell(runde1,
+					Position.from(SchweizerAbstractSpielrundeSheet.ZEIT_SPALTE, SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE + i)))
+					.as("Zeile %d ist weder Start noch Ende eines Durchgangs", i).isNullOrEmpty();
+		}
 
 		// Bahn-Nr beginnt in jedem Durchgang neu bei 1
 		RangeData bahnNrn = ladeBahnNummern(runde1, ANZ_TEAMS / 2);
@@ -189,6 +240,54 @@ public class SchweizerZeitplanUITest extends BaseCalcUITest {
 		} catch (Exception e) {
 			throw new GenerateException(e.getMessage());
 		}
+	}
+
+	/**
+	 * Regressionstest: einzeiliger letzter Durchgang-Block (Start- und Endzeile identisch). Die
+	 * Endzeit-Formel muss die zuvor geschriebene Startzeit-Formel in derselben Zelle ueberschreiben
+	 * ("Nix mischen" — die Zelle enthaelt am Ende ausschliesslich die numerische Ende-Formel, kein
+	 * kombinierter Text), damit die Zelle als Verkettungs-Anker fuer Folge-Durchgang/-Runde nutzbar
+	 * bleibt (siehe {@link SchweizerAbstractSpielrundeSheet#ermittleLetzteZeitZeile}).
+	 */
+	@Test
+	public void featureAn_EinzeiligerLetzterDurchgang_EndzeitUeberschreibtStartzeitInDerselbenZelle() throws GenerateException {
+		int anzTeams = 14; // 7 Paarungen, 3 Bahnen -> Bloecke [3, 3, 1]
+		new SchweizerMeldeListeSheetTestDaten(wkingSpreadsheet, anzTeams).doRun();
+		SchweizerSpielrundeSheetNaechste spielrundeNaechste = new SchweizerSpielrundeSheetNaechste(wkingSpreadsheet);
+		var konfig = spielrundeNaechste.getKonfigurationSheet();
+		konfig.setSpielplanTeamAnzeige(SpielplanTeamAnzeige.NR);
+		konfig.setSpielrundeSpielbahn(SpielrundeSpielbahn.N);
+		konfig.setZeitplanAktiv(true);
+		konfig.setZeitplanAnzahlBahnen(BAHNEN);
+		konfig.setZeitplanTurnierStartzeit("09:00");
+		spielrundeNaechste.doRun();
+
+		XSpreadsheet runde1 = spielrundeNaechste.getXSpreadSheet();
+		assertThat(runde1).isNotNull();
+
+		// Bugfix-Regression: Zeitlimit/Pause wurden hier NIE explizit gesetzt (nur setZeitplanAktiv
+		// und setZeitplanAnzahlBahnen) — readIntProperty() muss deren Konfig-Default trotzdem in die
+		// UserDefinedProperties des Dokuments persistieren, sonst liefert das live referenzierte
+		// PTM.ALG.INTPROPERTY(...) in den Formeln 0 statt 15/5/10 (sichtbarer Bug: Endzeit == Startzeit).
+		String sentinel = "SENTINEL_NICHT_PERSISTIERT";
+		DocumentPropertiesHelper docProps = new DocumentPropertiesHelper(wkingSpreadsheet);
+		assertThat(docProps.getStringProperty(SchweizerPropertiesSpalte.KONFIG_PROP_ZEITPLAN_ZEITLIMIT_MINUTEN, sentinel))
+				.as("Zeitlimit-Default muss ohne expliziten Setter-Aufruf im Dokument persistiert sein").isNotEqualTo(sentinel);
+		assertThat(docProps.getStringProperty(SchweizerPropertiesSpalte.KONFIG_PROP_ZEITPLAN_DURCHGANG_PAUSE_MINUTEN, sentinel))
+				.as("Durchgang-Pause-Default muss ohne expliziten Setter-Aufruf im Dokument persistiert sein").isNotEqualTo(sentinel);
+		assertThat(docProps.getStringProperty(SchweizerPropertiesSpalte.KONFIG_PROP_ZEITPLAN_RUNDEN_PAUSE_MINUTEN, sentinel))
+				.as("Runden-Pause-Default muss ohne expliziten Setter-Aufruf im Dokument persistiert sein").isNotEqualTo(sentinel);
+
+		// letzter Block [6] (relative Zeile 6, 0-indiziert): Start- und Endzeile identisch.
+		Position letzteZeile = Position.from(SchweizerAbstractSpielrundeSheet.ZEIT_SPALTE,
+				SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE + 6);
+		Position endeVorherigerBlock = Position.from(SchweizerAbstractSpielrundeSheet.ZEIT_SPALTE,
+				SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE + 5);
+		String formel = sheetHlp.getFormulaFromCell(runde1, letzteZeile);
+		assertThat(formel).as("Einzeiliger Block: Zelle muss die Ende-Formel enthalten (verweist auf sich selbst + Zeitlimit)")
+				.contains(letzteZeile.getAddress()).contains("Durchgang Zeitlimit (Minuten)");
+		assertThat(formel).as("darf NICHT die urspruengliche Start-Formel (Verweis auf Ende des Vorgaenger-Blocks) sein")
+				.doesNotContain(endeVorherigerBlock.getAddress());
 	}
 
 	/**
@@ -274,13 +373,13 @@ public class SchweizerZeitplanUITest extends BaseCalcUITest {
 		}
 		assertThat(freilosGefunden).as("Bei ungerader Teamanzahl muss genau ein Freilos existieren").isTrue();
 
-		// Durchgang-Spalten trotz NAME-Modus korrekt befuellt (mind. ein Label vorhanden)
-		RangeData durchgangSpalten = ladeDurchgangSpalten(runde1, anzPaarungszeilen);
-		boolean mindEinLabel = durchgangSpalten.stream().anyMatch(row -> {
-			String label = row.get(0).getStringVal();
-			return label != null && !label.isBlank();
+		// ZEIT_SPALTE trotz NAME-Modus korrekt befuellt (mind. ein Wert vorhanden)
+		RangeData zeitSpalte = ladeZeitSpalte(runde1, anzPaarungszeilen);
+		boolean mindEineZeit = zeitSpalte.stream().anyMatch(row -> {
+			String wert = row.get(0).getStringVal();
+			return wert != null && !wert.isBlank();
 		});
-		assertThat(mindEinLabel).as("Bei mehr Paarungen als Bahnen muss mind. ein Durchgang-Label geschrieben werden").isTrue();
+		assertThat(mindEineZeit).as("Bei mehr Paarungen als Bahnen muss mind. eine Zeit-Zelle geschrieben werden").isTrue();
 	}
 
 	/**

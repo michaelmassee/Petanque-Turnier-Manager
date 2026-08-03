@@ -102,11 +102,17 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 	public static final int TEAM_B_SPALTE = TEAM_A_SPALTE + 1;
 	public static final int ERG_TEAM_A_SPALTE = TEAM_B_SPALTE + 1;
 	public static final int ERG_TEAM_B_SPALTE = ERG_TEAM_A_SPALTE + 1;
-	public static final int FEHLER_SPALTE = ERG_TEAM_B_SPALTE + 1;
-	/** Nur befuellt bei aktiver Rundenzeitplanung (isDurchgangAufteilungWirksam), sonst leer. */
-	public static final int DURCHGANG_LABEL_SPALTE = FEHLER_SPALTE + 1;
-	/** Nur befuellt bei aktiver Rundenzeitplanung (isDurchgangAufteilungWirksam), sonst leer. */
-	public static final int DURCHGANG_STARTZEIT_SPALTE = FEHLER_SPALTE + 2;
+	/**
+	 * Nur befuellt bei aktiver Rundenzeitplanung (isDurchgangAufteilungWirksam), sonst leer.
+	 * Zeigt die Startzeit eines Durchgangs in dessen erster Datenzeile und die Endzeit in dessen
+	 * letzter Datenzeile (bei einzeiligen Durchgaengen ueberschreibt die Endzeit die Startzeit in
+	 * derselben Zelle — die Endzeit ist die fuer die Weiterverkettung massgebliche Zelle, siehe
+	 * {@link #durchgangInfoSpaltenSchreiben}). Durchgaenge werden NICHT per Text-Label markiert,
+	 * sondern durch eine doppelte horizontale Linie am oberen Rand der ersten Zeile getrennt,
+	 * siehe {@link #durchgangTrennlinienSetzen}.
+	 */
+	public static final int ZEIT_SPALTE = ERG_TEAM_B_SPALTE + 1;
+	public static final int FEHLER_SPALTE = ZEIT_SPALTE + 1;
 
 	private final SchweizerKonfigurationSheet konfigurationSheet;
 	private final SchweizerMeldeListeSheetUpdate meldeListe;
@@ -428,6 +434,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		if (!getKonfigurationSheet().isZeitplanAktiv()) {
 			return;
 		}
+		zeitplanPropertiesPersistieren();
 		Integer headerColor = getKonfigurationSheet().getSpielRundeHeaderFarbe();
 
 		StringCellValue labelValue = StringCellValue.from(getXSpreadSheet(), Position.from(FEHLER_SPALTE, ERSTE_HEADER_ZEILE))
@@ -462,6 +469,20 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		EditierbaresZelleFormatHelper.anwenden(this, startzeitRange);
 	}
 
+	/**
+	 * Ruft die Getter der Zeitplan-Zeitwerte einmal auf, damit deren Konfig-Default via
+	 * {@code readIntProperty} in die UserDefinedProperties des Dokuments persistiert wird, falls
+	 * dort noch kein Wert existiert (z.B. weil der Zeitplan-Dialog noch nie geoeffnet wurde). Ohne
+	 * das liefert das weiter unten live referenzierte {@code PTM.ALG.INTPROPERTY(...)} in den
+	 * gebauten Formeln 0 statt des echten Defaults — sichtbarer Bug: Endzeit == Startzeit.
+	 */
+	private void zeitplanPropertiesPersistieren() {
+		var konfig = getKonfigurationSheet();
+		konfig.getZeitplanZeitlimitMinuten();
+		konfig.getZeitplanDurchgangPauseMinuten();
+		konfig.getZeitplanRundenPauseMinuten();
+	}
+
 	/** "09:00" -&gt; 0.375 (Bruchteil des Tages, Calc-interne Zeit-Repraesentation). Ungueltige Eingabe -&gt; 0.0 (Mitternacht). */
 	private static double zeitStringZuTagesBruchteil(String hhMm) {
 		try {
@@ -475,10 +496,12 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 	}
 
 	/**
-	 * Nur fuer Runde N&gt;1: Cross-Sheet-Bezug auf die Rundenstartzeit-Zelle der Vorrunde plus deren
-	 * Gesamtdauer (Anzahl Durchgaenge der Vorrunde ist ein struktureller Wert, ausgelesen aus der
-	 * bereits geschriebenen Vorrunden-Struktur, siehe {@link #ermittleAnzahlDurchgaengeVorrunde}),
-	 * plus Rundenpause.
+	 * Nur fuer Runde N&gt;1: Cross-Sheet-Bezug auf das tatsaechliche Ende des letzten Durchgangs der
+	 * Vorrunde (siehe {@link #ermittleLetzteZeitZeile}) plus Rundenpause — dieselbe
+	 * Verkettungslogik wie zwischen zwei Durchgaengen innerhalb einer Runde, nur rundenuebergreifend.
+	 * War die Vorrunde nicht aufgeteilt (kein Eintrag in {@link #ZEIT_SPALTE}), wird ersatzweise die
+	 * Rundenstartzeit der Vorrunde plus ein Zeitlimit (Dauer der einzigen, ungeteilten Runde) plus
+	 * Rundenpause verwendet.
 	 * <p>
 	 * Der Sheet-Name im Formel-Bezug wird ueber {@link SheetMetadataHelper#findeSheetUndHeile}
 	 * aufgeloest (Metadaten-first, ueberlebt Umbenennung), nicht ueber den lokalisierten
@@ -494,40 +517,35 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		// Vorrunde muesste eigentlich existieren (Runde N>1 setzt Runde N-1 voraus); defensiv
 		// trotzdem auf den Default-Namen zurueckfallen statt eine NPE zu riskieren.
 		String vorSheetName = vorSheet != null ? Lo.qi(XNamed.class, vorSheet).getName() : getSheetName(vorherigeRunde);
-		int anzDurchgaengeVorrunde = ermittleAnzahlDurchgaengeVorrunde(vorSheet, xDoc);
+		String rundenPause = GlobalImpl.FORMAT_PTM_INT_PROPERTY(SchweizerPropertiesSpalte.KONFIG_PROP_ZEITPLAN_RUNDEN_PAUSE_MINUTEN);
+
+		int letzteZeitZeile = vorSheet != null ? ermittleLetzteZeitZeile(vorSheet, xDoc) : -1;
+		if (letzteZeitZeile >= 0) {
+			String letzteEndeZelle = "$'" + vorSheetName + "'." + Position.from(ZEIT_SPALTE, letzteZeitZeile).getAddressWith$();
+			return letzteEndeZelle + "+TIME(0;" + rundenPause + ";0)";
+		}
 
 		String vorZelle = "$'" + vorSheetName + "'." + Position.from(FEHLER_SPALTE, ZWEITE_HEADER_ZEILE).getAddressWith$();
 		String zeitlimit = GlobalImpl.FORMAT_PTM_INT_PROPERTY(SchweizerPropertiesSpalte.KONFIG_PROP_ZEITPLAN_ZEITLIMIT_MINUTEN);
-		String durchgangPause = GlobalImpl
-				.FORMAT_PTM_INT_PROPERTY(SchweizerPropertiesSpalte.KONFIG_PROP_ZEITPLAN_DURCHGANG_PAUSE_MINUTEN);
-		String rundenPause = GlobalImpl.FORMAT_PTM_INT_PROPERTY(SchweizerPropertiesSpalte.KONFIG_PROP_ZEITPLAN_RUNDEN_PAUSE_MINUTEN);
-
-		String dauerMinuten = anzDurchgaengeVorrunde + "*" + zeitlimit + "+" + (anzDurchgaengeVorrunde - 1) + "*"
-				+ durchgangPause + "+" + rundenPause;
-		return vorZelle + "+TIME(0;" + dauerMinuten + ";0)";
+		return vorZelle + "+TIME(0;" + zeitlimit + "+" + rundenPause + ";0)";
 	}
 
 	/**
-	 * Liest die Anzahl der Durchgaenge der Vorrunde aus deren bereits geschriebener
-	 * {@link #DURCHGANG_LABEL_SPALTE} aus (struktureller Wert zum Zeitpunkt der Vorrunden-Erzeugung,
-	 * nicht aus der aktuellen Konfiguration neu hergeleitet — vermeidet Drift bei zwischenzeitlich
-	 * geaenderter Bahnenzahl). 1, wenn die Vorrunde nicht existiert oder nicht aufgeteilt war.
+	 * Liest die Zeile der letzten befuellten {@link #ZEIT_SPALTE}-Zelle der Vorrunde aus (= Ende des
+	 * letzten Durchgangs, da Durchgang-Bloecke lueckenlos aufeinanderfolgen und der letzte Block
+	 * immer bei der letzten Datenzeile endet). -1, wenn die Vorrunde nicht aufgeteilt war.
 	 */
-	private int ermittleAnzahlDurchgaengeVorrunde(XSpreadsheet vorSheet, XSpreadsheetDocument xDoc) throws GenerateException {
-		if (vorSheet == null) {
-			return 1;
-		}
-		RangePosition labelRange = RangePosition.from(DURCHGANG_LABEL_SPALTE, ERSTE_DATEN_ZEILE, DURCHGANG_LABEL_SPALTE,
-				ERSTE_DATEN_ZEILE + 999);
-		RangeData labelDaten = RangeHelper.from(vorSheet, xDoc, labelRange).getDataFromRange();
-		int anzahl = 0;
-		for (RowData row : labelDaten) {
-			String val = row.get(0).getStringVal();
+	private int ermittleLetzteZeitZeile(XSpreadsheet vorSheet, XSpreadsheetDocument xDoc) throws GenerateException {
+		RangePosition zeitRange = RangePosition.from(ZEIT_SPALTE, ERSTE_DATEN_ZEILE, ZEIT_SPALTE, ERSTE_DATEN_ZEILE + 999);
+		RangeData zeitDaten = RangeHelper.from(vorSheet, xDoc, zeitRange).getDataFromRange();
+		int letzteNichtLeere = -1;
+		for (int i = 0; i < zeitDaten.size(); i++) {
+			String val = zeitDaten.get(i).get(0).getStringVal();
 			if (val != null && !val.isEmpty()) {
-				anzahl++;
+				letzteNichtLeere = i;
 			}
 		}
-		return anzahl > 0 ? anzahl : 1;
+		return letzteNichtLeere >= 0 ? ERSTE_DATEN_ZEILE + letzteNichtLeere : -1;
 	}
 
 	/**
@@ -603,10 +621,8 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		if (letztePos == null) {
 			return;
 		}
-		// Bei aktiver Zeitplanung wird der Druckbereich bis DURCHGANG_STARTZEIT_SPALTE erweitert
-		// (schliesst dann bewusst auch FEHLER_SPALTE mit ein — akzeptabler Trade-off, siehe Plan;
-		// TabellenMapper bildet nur die Bounding-Box mehrerer Druckbereiche, eine Luecke waere wirkungslos).
-		int letzteDruckSpalte = getKonfigurationSheet().isZeitplanAktiv() ? DURCHGANG_STARTZEIT_SPALTE : ERG_TEAM_B_SPALTE;
+		// Bei aktiver Zeitplanung wird der Druckbereich bis FEHLER_SPALTE (letzte Spalte) erweitert.
+		int letzteDruckSpalte = getKonfigurationSheet().isZeitplanAktiv() ? FEHLER_SPALTE : ERG_TEAM_B_SPALTE;
 		RangePosition druckBereich = RangePosition.from(BAHN_NR_SPALTE, ERSTE_HEADER_ZEILE,
 				Position.from(letzteDruckSpalte, letztePos.getZeile()));
 		PrintArea.from(getXSpreadSheet(), getWorkingSpreadsheet()).setPrintArea(druckBereich);
@@ -763,6 +779,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		fehlerSpalteFormatieren();
 		header();
 		trennlinienSetzen();
+		durchgangTrennlinienSetzen(paarungen.size());
 		druckBereichSetzen();
 		SheetFreeze.from(getTurnierSheet()).anzZeilen(ERSTE_DATEN_ZEILE).doFreeze();
 
@@ -823,10 +840,15 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 
 	/**
 	 * Schreibt (nur wenn {@code isDurchgangAufteilungWirksam()} und tatsaechlich mehr als ein
-	 * Durchgang noetig ist) Label und live berechnete Startzeit je Durchgang in
-	 * {@link #DURCHGANG_LABEL_SPALTE}/{@link #DURCHGANG_STARTZEIT_SPALTE} — jeweils nur auf der
-	 * ersten Datenzeile eines neuen Durchgang-Blocks. Der Team-A/B/Erg-A/Erg-B-Datenstrom bleibt
-	 * dadurch vollstaendig unangetastet (siehe {@code leseRundeEin()}).
+	 * Durchgang noetig ist) fuer jeden Durchgang-Block dessen Startzeit in die erste und dessen
+	 * Endzeit in die letzte Datenzeile von {@link #ZEIT_SPALTE} (bei einzeiligen Bloecken ist das
+	 * dieselbe Zelle — die zuletzt geschriebene Endzeit gewinnt dort). Jeder Durchgang ab dem
+	 * zweiten verkettet sich direkt an die tatsaechliche Endzeit-Zelle des vorherigen Durchgangs
+	 * plus Durchgang-Pause (kein rekonstruierter Faktor N-1 mehr — vermeidet Drift, falls Zeitlimit
+	 * oder Pause sich waehrend der laufenden Runde aendern). Kein Text-Label ("Durchgang N") — die
+	 * Durchgaenge werden stattdessen rein optisch per doppelter Trennlinie unterschieden, siehe
+	 * {@link #durchgangTrennlinienSetzen}. Der Team-A/B/Erg-A/Erg-B-Datenstrom bleibt dadurch
+	 * vollstaendig unangetastet (siehe {@code leseRundeEin()}).
 	 */
 	private void durchgangInfoSpaltenSchreiben(int anzahlPaarungen) throws GenerateException {
 		if (!getKonfigurationSheet().isDurchgangAufteilungWirksam() || anzahlPaarungen <= 0) {
@@ -838,35 +860,79 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 			return; // Paarungen passen in einen Durchgang, keine Aufteilung noetig
 		}
 
+		getSheetHelper().setColumnWidth(getXSpreadSheet(), Position.from(ZEIT_SPALTE, ERSTE_HEADER_ZEILE), 1800);
+
 		String rundenStartzeitAdresse = Position.from(FEHLER_SPALTE, ZWEITE_HEADER_ZEILE).getAddressWith$();
 		String zeitlimit = GlobalImpl.FORMAT_PTM_INT_PROPERTY(SchweizerPropertiesSpalte.KONFIG_PROP_ZEITPLAN_ZEITLIMIT_MINUTEN);
 		String pause = GlobalImpl.FORMAT_PTM_INT_PROPERTY(SchweizerPropertiesSpalte.KONFIG_PROP_ZEITPLAN_DURCHGANG_PAUSE_MINUTEN);
-		var oberrand = BorderFactory.from().allThin().boldLn().forTop().toBorder();
 
 		int zeile = ERSTE_DATEN_ZEILE;
-		int durchgangNr = 1;
+		String vorherigeEndeAdresse = null;
 		for (int groesse : bloecke) {
 			SheetRunner.testDoCancelTask();
 
-			StringCellValue labelValue = StringCellValue.from(getXSpreadSheet(), Position.from(DURCHGANG_LABEL_SPALTE, zeile))
-					.setHoriJustify(CellHoriJustify.CENTER).setVertJustify(CellVertJustify2.CENTER)
-					.setCharWeight(FontWeight.BOLD).setCharHeight(12).setBorder(oberrand)
-					.setValue(I18n.get("schweizer.spielrunde.durchgang.label", durchgangNr));
-			getSheetHelper().setStringValueInCell(labelValue);
+			int letzteZeileDesBlocks = zeile + groesse - 1;
+			String startFormel = vorherigeEndeAdresse == null ? rundenStartzeitAdresse
+					: vorherigeEndeAdresse + "+TIME(0;" + pause + ";0)";
+			Position startPos = Position.from(ZEIT_SPALTE, zeile);
+			zeitZelleSchreiben(startPos, startFormel);
 
-			String formel = durchgangNr == 1 ? rundenStartzeitAdresse
-					: rundenStartzeitAdresse + "+TIME(0;(" + (durchgangNr - 1) + ")*(" + zeitlimit + "+" + pause + ");0)";
-			Position startzeitPos = Position.from(DURCHGANG_STARTZEIT_SPALTE, zeile);
-			StringCellValue startzeitValue = StringCellValue.from(getXSpreadSheet(), startzeitPos, formel)
-					.setHoriJustify(CellHoriJustify.CENTER).setVertJustify(CellVertJustify2.CENTER)
-					.setCharHeight(12).setBorder(oberrand);
-			getSheetHelper().setFormulaInCell(startzeitValue);
-
-			RangePosition startzeitRange = RangePosition.from(startzeitPos, startzeitPos);
-			RangeHelper.from(this, startzeitRange).setRangeProperties(RangeProperties.from().numberFormat(UserNumberFormat.TIME));
+			String endeAdresse;
+			if (letzteZeileDesBlocks == zeile) {
+				// einzeiliger Block: Endzeit ueberschreibt die soeben geschriebene Startzeit in derselben Zelle
+				String endeFormel = startPos.getAddress() + "+TIME(0;" + zeitlimit + ";0)";
+				zeitZelleSchreiben(startPos, endeFormel);
+				endeAdresse = startPos.getAddress();
+			} else {
+				Position endePos = Position.from(ZEIT_SPALTE, letzteZeileDesBlocks);
+				String endeFormel = startPos.getAddress() + "+TIME(0;" + zeitlimit + ";0)";
+				zeitZelleSchreiben(endePos, endeFormel);
+				endeAdresse = endePos.getAddress();
+			}
+			vorherigeEndeAdresse = endeAdresse;
 
 			zeile += groesse;
-			durchgangNr++;
+		}
+	}
+
+	/** Schreibt eine Zeit-Formel (Zellformat Zeit HH:MM) in {@link #ZEIT_SPALTE}. */
+	private void zeitZelleSchreiben(Position pos, String formel) throws GenerateException {
+		StringCellValue zeitValue = StringCellValue.from(getXSpreadSheet(), pos, formel)
+				.setHoriJustify(CellHoriJustify.CENTER).setVertJustify(CellVertJustify2.CENTER)
+				.setCharHeight(12);
+		getSheetHelper().setFormulaInCell(zeitValue);
+		RangePosition zeitRange = RangePosition.from(pos, pos);
+		RangeHelper.from(this, zeitRange).setRangeProperties(RangeProperties.from().numberFormat(UserNumberFormat.TIME));
+	}
+
+	/**
+	 * Trennt die Durchgaenge optisch durch eine doppelte horizontale Linie am oberen Rand der
+	 * jeweils ersten Zeile eines neuen Durchgangs (kein Trennstrich vor dem ersten Durchgang,
+	 * der liegt direkt unter dem bereits abgegrenzten Header). Muss NACH {@link #datenformatieren()}
+	 * aufgerufen werden, da dessen {@code allThin()}-Rahmen sonst die Trennlinie ueberschreiben
+	 * wuerde; nur die obere Linie wird gesetzt (IsTopLineValid=true), alle anderen Seiten bleiben
+	 * unveraendert (analog {@link #trennlinienSetzen()}).
+	 */
+	private void durchgangTrennlinienSetzen(int anzahlPaarungen) throws GenerateException {
+		if (!getKonfigurationSheet().isDurchgangAufteilungWirksam() || anzahlPaarungen <= 0) {
+			return;
+		}
+		List<Integer> bloecke = DurchgangAufteilungRechner.berechne(anzahlPaarungen,
+				getKonfigurationSheet().getZeitplanAnzahlBahnen());
+		if (bloecke.size() <= 1) {
+			return;
+		}
+
+		XSpreadsheet sheet = getXSpreadSheet();
+		TableBorder2 doppelteLinieOben = BorderFactory.from().doubleLn().forTop().toBorder();
+
+		int zeile = ERSTE_DATEN_ZEILE;
+		for (int i = 0; i < bloecke.size(); i++) {
+			if (i > 0) {
+				RangePosition trennzeile = RangePosition.from(BAHN_NR_SPALTE, zeile, FEHLER_SPALTE, zeile);
+				getSheetHelper().setPropertyInRange(sheet, trennzeile, TABLE_BORDER2, doppelteLinieOben);
+			}
+			zeile += bloecke.get(i);
 		}
 	}
 

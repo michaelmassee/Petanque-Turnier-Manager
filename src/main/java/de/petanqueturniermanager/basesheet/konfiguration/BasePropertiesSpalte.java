@@ -289,6 +289,11 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 		int effectiveDefault = istTabFarbProp(key)
 				? GlobalProperties.get().getTabFarbe(key, hardcodedDefault)
 				: hardcodedDefault;
+		// Fehlende Property einmalig mit dem Konfig-Default in die UserDefinedProperties
+		// schreiben — sonst bleibt der Default nur Code-seitig sichtbar, und externe Leser
+		// (z.B. PTM.ALG.INTPROPERTY in Calc-Formeln) bekaemen weiter 0 statt des echten
+		// Defaults. Analog zu readStringProperty/initStringPropertyIfAbsent.
+		docPropHelper.initStringPropertyIfAbsent(key, "" + effectiveDefault);
 		return docPropHelper.getIntProperty(key, effectiveDefault);
 	}
 
