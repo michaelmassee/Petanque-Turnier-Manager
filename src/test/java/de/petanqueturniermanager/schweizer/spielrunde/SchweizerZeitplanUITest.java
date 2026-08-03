@@ -9,6 +9,7 @@ import com.sun.star.sheet.XSpreadsheet;
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
@@ -43,6 +44,17 @@ public class SchweizerZeitplanUITest extends BaseCalcUITest {
 				SchweizerAbstractSpielrundeSheet.BAHN_NR_SPALTE,
 				SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE + anzZeilen - 1);
 		return RangeHelper.from(sheet, wkingSpreadsheet.getWorkingSpreadsheetDocument(), range).getDataFromRange();
+	}
+
+	/** Traegt fuer die ersten {@code anzPaarungen} Datenzeilen ein eindeutiges 13:5-Ergebnis ein. */
+	private void ergebnisseEintragen(XSpreadsheet sheet, int anzPaarungen) {
+		for (int i = 0; i < anzPaarungen; i++) {
+			int zeile = SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE + i;
+			sheetHlp.setNumberValueInCell(
+					NumberCellValue.from(sheet, Position.from(SchweizerAbstractSpielrundeSheet.ERG_TEAM_A_SPALTE, zeile)).setValue(13));
+			sheetHlp.setNumberValueInCell(
+					NumberCellValue.from(sheet, Position.from(SchweizerAbstractSpielrundeSheet.ERG_TEAM_B_SPALTE, zeile)).setValue(5));
+		}
 	}
 
 	/**
@@ -238,5 +250,50 @@ public class SchweizerZeitplanUITest extends BaseCalcUITest {
 			return label != null && !label.isBlank();
 		});
 		assertThat(mindEinLabel).as("Bei mehr Paarungen als Bahnen muss mind. ein Durchgang-Label geschrieben werden").isTrue();
+	}
+
+	/**
+	 * Regressionstest (Review-Nachbesserung): Wird die Vorrunde umbenannt, bevor die Folgerunde
+	 * erzeugt wird, muss die Rundenstartzeit-Formel der Folgerunde trotzdem auf die (umbenannte)
+	 * Vorrunde zeigen — kein {@code #REF!}. Der Sheet-Name im Formel-Bezug muss ueber die
+	 * Metadaten-Suche ({@link de.petanqueturniermanager.helper.sheet.SheetMetadataHelper#findeSheetUndHeile})
+	 * aufgeloest werden, nicht ueber den lokalisierten Default-Namen.
+	 */
+	@Test
+	public void featureAn_VorrundeUmbenannt_RundenstartzeitFolgerundeZeigtAufUmbenannteVorrunde() throws GenerateException {
+		new SchweizerMeldeListeSheetTestDaten(wkingSpreadsheet, ANZ_TEAMS).doRun();
+		SchweizerSpielrundeSheetNaechste spielrundeNaechste = new SchweizerSpielrundeSheetNaechste(wkingSpreadsheet);
+		var konfig = spielrundeNaechste.getKonfigurationSheet();
+		konfig.setSpielplanTeamAnzeige(SpielplanTeamAnzeige.NR);
+		konfig.setZeitplanAktiv(true);
+		konfig.setZeitplanAnzahlBahnen(BAHNEN);
+		konfig.setZeitplanTurnierStartzeit("09:00");
+		konfig.setZeitplanRundenPauseMinuten(10);
+
+		spielrundeNaechste.doRun(); // Runde 1
+
+		XSpreadsheet runde1 = sheetHlp.findByName("1. " + SchweizerAbstractSpielrundeSheet.SHEET_NAMEN);
+		assertThat(runde1).isNotNull();
+		ergebnisseEintragen(runde1, ANZ_TEAMS / 2); // Vorbedingung fuer naechsteSpielrundeEinfuegen()
+
+		String umbenannterName = "Custom Runde 1";
+		assertThat(sheetHlp.reNameSheet(runde1, umbenannterName)).as("Umbenennung muss gelingen").isTrue();
+
+		spielrundeNaechste.doRun(); // Runde 2 — muss trotz Umbenennung die richtige Vorrunde finden
+
+		XSpreadsheet runde2 = sheetHlp.findByName("2. " + SchweizerAbstractSpielrundeSheet.SHEET_NAMEN);
+		assertThat(runde2).isNotNull();
+		spielrundeNaechste.getxCalculatable().calculateAll();
+
+		String formelRunde2 = sheetHlp.getFormulaFromCell(runde2,
+				Position.from(SchweizerAbstractSpielrundeSheet.FEHLER_SPALTE, SchweizerAbstractSpielrundeSheet.ZWEITE_HEADER_ZEILE));
+		assertThat(formelRunde2)
+				.as("Formel muss auf den tatsaechlichen (umbenannten) Sheet-Namen zeigen, nicht auf den Default-Namen")
+				.contains("'" + umbenannterName + "'")
+				.doesNotContain("'1. " + SchweizerAbstractSpielrundeSheet.SHEET_NAMEN + "'");
+
+		String angezeigterWert = sheetHlp.getTextFromCell(runde2,
+				Position.from(SchweizerAbstractSpielrundeSheet.FEHLER_SPALTE, SchweizerAbstractSpielrundeSheet.ZWEITE_HEADER_ZEILE));
+		assertThat(angezeigterWert).as("Kein #REF! nach Umbenennung der Vorrunde").doesNotContain("REF").doesNotContain("Fehler");
 	}
 }

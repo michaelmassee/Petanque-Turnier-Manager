@@ -19,7 +19,9 @@ import org.apache.logging.log4j.Logger;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.sun.star.awt.FontWeight;
+import com.sun.star.container.XNamed;
 import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
 import com.sun.star.table.TableBorder2;
@@ -38,6 +40,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
@@ -472,12 +475,22 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 	 * Gesamtdauer (Anzahl Durchgaenge der Vorrunde ist ein struktureller Wert, ausgelesen aus der
 	 * bereits geschriebenen Vorrunden-Struktur, siehe {@link #ermittleAnzahlDurchgaengeVorrunde}),
 	 * plus Rundenpause.
+	 * <p>
+	 * Der Sheet-Name im Formel-Bezug wird ueber {@link SheetMetadataHelper#findeSheetUndHeile}
+	 * aufgeloest (Metadaten-first, ueberlebt Umbenennung), nicht ueber den lokalisierten
+	 * Default-Namen {@link #getSheetName} — sonst entsteht ein {@code #REF!}, sobald die Vorrunde
+	 * umbenannt wurde, obwohl die Metadaten-Suche das richtige Sheet findet.
 	 */
 	private String rundenStartzeitFormel() throws GenerateException {
 		SpielRundeNr aktuelleRunde = getSpielRundeNr();
 		SpielRundeNr vorherigeRunde = SpielRundeNr.from(aktuelleRunde.getNr() - 1);
-		String vorSheetName = getSheetName(vorherigeRunde);
-		int anzDurchgaengeVorrunde = ermittleAnzahlDurchgaengeVorrunde(vorherigeRunde);
+		var xDoc = getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
+		XSpreadsheet vorSheet = SheetMetadataHelper.findeSheetUndHeile(xDoc,
+				getSpielrundeSchluessel(vorherigeRunde.getNr()), getSheetName(vorherigeRunde));
+		// Vorrunde muesste eigentlich existieren (Runde N>1 setzt Runde N-1 voraus); defensiv
+		// trotzdem auf den Default-Namen zurueckfallen statt eine NPE zu riskieren.
+		String vorSheetName = vorSheet != null ? Lo.qi(XNamed.class, vorSheet).getName() : getSheetName(vorherigeRunde);
+		int anzDurchgaengeVorrunde = ermittleAnzahlDurchgaengeVorrunde(vorSheet, xDoc);
 
 		String vorZelle = "$'" + vorSheetName + "'." + Position.from(FEHLER_SPALTE, ZWEITE_HEADER_ZEILE).getAddressWith$();
 		String zeitlimit = GlobalImpl.FORMAT_PTM_INT_PROPERTY(SchweizerPropertiesSpalte.KONFIG_PROP_ZEITPLAN_ZEITLIMIT_MINUTEN);
@@ -496,10 +509,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 	 * nicht aus der aktuellen Konfiguration neu hergeleitet — vermeidet Drift bei zwischenzeitlich
 	 * geaenderter Bahnenzahl). 1, wenn die Vorrunde nicht existiert oder nicht aufgeteilt war.
 	 */
-	private int ermittleAnzahlDurchgaengeVorrunde(SpielRundeNr vorherigeRunde) throws GenerateException {
-		var xDoc = getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
-		XSpreadsheet vorSheet = SheetMetadataHelper.findeSheetUndHeile(xDoc,
-				getSpielrundeSchluessel(vorherigeRunde.getNr()), getSheetName(vorherigeRunde));
+	private int ermittleAnzahlDurchgaengeVorrunde(XSpreadsheet vorSheet, XSpreadsheetDocument xDoc) throws GenerateException {
 		if (vorSheet == null) {
 			return 1;
 		}
