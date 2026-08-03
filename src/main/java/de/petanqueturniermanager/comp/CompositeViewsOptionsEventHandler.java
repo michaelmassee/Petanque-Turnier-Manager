@@ -35,7 +35,6 @@ import com.sun.star.uno.AnyConverter;
 import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XComponentContext;
 
-import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.GlobalProperties.CompositeViewEintragRoh;
 import de.petanqueturniermanager.comp.turnierevent.OnProperiesChangedEvent;
 import de.petanqueturniermanager.comp.turnierevent.TurnierEventType;
@@ -43,16 +42,15 @@ import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.webserver.CompositeViewDetailDialog;
-import de.petanqueturniermanager.webserver.SheetResolverFactory;
 import de.petanqueturniermanager.webserver.WebServerManager;
 
 /**
  * Event-Handler fuer die Composite-Views-Seite unter Extras -&gt; Optionen.
  * <p>
  * Verwaltet sowohl das globale Webserver-Flag als auch die Liste der Composite Views direkt auf
- * der Optionsseite (Turniersystem-Filter, Views-Liste, Hinzufuegen/Bearbeiten/Loeschen). Die
- * eigentliche Detail-Konfiguration eines einzelnen Views (Split-Baum, Panels) bleibt im modalen
- * {@link CompositeViewDetailDialog}.
+ * der Optionsseite (Views-Liste, Hinzufuegen/Bearbeiten/Loeschen). Die eigentliche
+ * Detail-Konfiguration eines einzelnen Views (Split-Baum, Panels, Turniersystem-Filter fuer die
+ * Blatt-Typ-Vorschlaege) bleibt im modalen {@link CompositeViewDetailDialog}.
  */
 public final class CompositeViewsOptionsEventHandler extends WeakBase
 		implements XServiceInfo, XContainerWindowEventHandler {
@@ -70,18 +68,11 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 
 	private static final String CTL_COMPOSITE_VIEWS_LABEL = "CompositeViewsLabel";
 	private static final String CTL_WEBSERVER_AKTIV = "WebserverAktiv";
-	private static final String CTL_FILTER_LABEL = "CompositeViewsFilterLabel";
-	private static final String CTL_FILTER_SYSTEM = "CompositeViewsFilterSystem";
 	private static final String CTL_BEREICH = "CompositeViewsBereich";
 	private static final String CTL_LISTE = "CompositeViewsListe";
 	private static final String CTL_HINZUFUEGEN = "CompositeViewsHinzufuegen";
 	private static final String CTL_BEARBEITEN = "CompositeViewsBearbeiten";
 	private static final String CTL_LOESCHEN = "CompositeViewsLoeschen";
-
-	/** Auswaehlbare Turniersysteme des Filters (alle ausser {@link TurnierSystem#KEIN}). */
-	private static final TurnierSystem[] FILTER_SYSTEME = Arrays.stream(TurnierSystem.values())
-			.filter(system -> system != TurnierSystem.KEIN)
-			.toArray(TurnierSystem[]::new);
 
 	private final XComponentContext context;
 
@@ -90,9 +81,6 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 
 	/** Arbeitskopie der Composite Views; {@code null} solange die Seite noch nicht initialisiert wurde. */
 	private List<CompositeViewEintragRoh> eintraege;
-
-	/** Blatt-Typ-Vorschlaege des Detail-Dialogs, abhaengig vom Turniersystem-Filter. */
-	private String[] komboBoxItems;
 
 	/** Peer der Optionsseite, als Parent fuer modale Detail-Dialoge (siehe {@link #windowPeer}). */
 	private XWindowPeer pagePeer;
@@ -146,9 +134,6 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 		if (eintraege == null) {
 			eintraege = new ArrayList<>(GlobalProperties.get().getCompositeViewEintraege());
 			ausstehendeRegieLoeschungen.clear();
-			komboBoxItems = SheetResolverFactory.sheetTypenFuer(null);
-			setListItems(container, CTL_FILTER_SYSTEM, filterEintraege());
-			setSelectedPos(container, CTL_FILTER_SYSTEM, (short) 0);
 		}
 		aktualisiereListe(container);
 		registriereListener(container);
@@ -234,7 +219,6 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 	private void setzeLabels(XControlContainer container) {
 		setLabel(container, CTL_COMPOSITE_VIEWS_LABEL, I18n.get("konfig.webserver.views.bereich"));
 		setLabel(container, CTL_WEBSERVER_AKTIV, I18n.get("konfig.webserver.views.aktiv"));
-		setLabel(container, CTL_FILTER_LABEL, I18n.get("webserver.composite.konfig.filter.system"));
 		setLabel(container, CTL_BEREICH, I18n.get("webserver.composite.konfig.bereich.views"));
 		setLabel(container, CTL_HINZUFUEGEN, I18n.get("webserver.composite.konfig.btn.hinzufuegen"));
 		setLabel(container, CTL_BEARBEITEN, I18n.get("webserver.composite.konfig.btn.bearbeiten"));
@@ -255,7 +239,6 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 
 	private void fuegeZeileHinzu(XControlContainer container) {
 		try {
-			aktualisiereKomboBoxItems(container);
 			var tempIdx = new int[] { -1 };
 			Consumer<CompositeViewEintragRoh> callback = e -> {
 				if (tempIdx[0] == -1) {
@@ -268,7 +251,7 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 				persistiereUndBenachrichtige(container);
 			};
 			var detailDialog = new CompositeViewDetailDialog(
-					context, null, berechneNaechstenFreienPort(), komboBoxItems, callback, pagePeer);
+					context, null, berechneNaechstenFreienPort(), callback, pagePeer);
 			var neuerEintrag = detailDialog.zeigen();
 			if (neuerEintrag != null && tempIdx[0] == -1) {
 				// OK ohne vorheriges Anwenden: normaler Add-Pfad
@@ -287,7 +270,6 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 			return;
 		}
 		try {
-			aktualisiereKomboBoxItems(container);
 			var eintrag = eintraege.get(idx);
 			Consumer<CompositeViewEintragRoh> callback = geaendert -> {
 				eintraege.set(idx, geaendert);
@@ -295,7 +277,7 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 				persistiereUndBenachrichtige(container);
 			};
 			var detailDialog = new CompositeViewDetailDialog(
-					context, eintrag, eintrag.port(), komboBoxItems, callback, pagePeer);
+					context, eintrag, eintrag.port(), callback, pagePeer);
 			var geaenderterEintrag = detailDialog.zeigen();
 			if (geaenderterEintrag != null) {
 				eintraege.set(idx, geaenderterEintrag); // idempotent falls Callback schon gesetzt hat
@@ -378,27 +360,6 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 		return kandidat;
 	}
 
-	/** Einträge der Filter-Liste: „Alle" plus alle auswählbaren Turniersysteme. */
-	private static String[] filterEintraege() {
-		String[] items = new String[FILTER_SYSTEME.length + 1];
-		items[0] = I18n.get("webserver.composite.konfig.filter.alle");
-		for (int i = 0; i < FILTER_SYSTEME.length; i++) {
-			items[i + 1] = FILTER_SYSTEME[i].getBezeichnung();
-		}
-		return items;
-	}
-
-	/** Aktuell im Filter gewähltes Turniersystem; {@code null} für „Alle". */
-	private TurnierSystem ausgewaehltesFilterSystem(XControlContainer container) {
-		short pos = selectedPos(container, CTL_FILTER_SYSTEM);
-		return (pos <= 0) ? null : FILTER_SYSTEME[pos - 1];
-	}
-
-	/** Berechnet die Blatt-Typ-Vorschläge des Detail-Dialogs anhand der aktuellen Filterauswahl neu. */
-	private void aktualisiereKomboBoxItems(XControlContainer container) {
-		komboBoxItems = SheetResolverFactory.sheetTypenFuer(ausgewaehltesFilterSystem(container));
-	}
-
 	private void aktualisiereListe(XControlContainer container) {
 		String[] items = eintraege.stream().map(CompositeViewsOptionsEventHandler::formatiereZeile)
 				.toArray(String[]::new);
@@ -457,13 +418,6 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 	private static short selectedPos(XControlContainer container, String name) {
 		XListBox listBox = control(container, name, XListBox.class);
 		return listBox == null ? -1 : listBox.getSelectedItemPos();
-	}
-
-	private static void setSelectedPos(XControlContainer container, String name, short pos) {
-		XListBox listBox = control(container, name, XListBox.class);
-		if (listBox != null) {
-			listBox.selectItemPos(pos, true);
-		}
 	}
 
 	private static void setListItems(XControlContainer container, String name, String[] items) {
