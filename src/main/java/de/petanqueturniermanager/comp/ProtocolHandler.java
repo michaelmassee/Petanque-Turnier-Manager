@@ -103,6 +103,7 @@ import de.petanqueturniermanager.konfigdialog.properties.ExportUploadKonfigDialo
 import de.petanqueturniermanager.konfigdialog.properties.FarbenDialog;
 import de.petanqueturniermanager.konfigdialog.properties.KopfFusszeilenDialog;
 import de.petanqueturniermanager.konfigdialog.properties.SpielrundeFooterDialog;
+import de.petanqueturniermanager.konfigdialog.properties.ZeitplanDialog;
 import de.petanqueturniermanager.konfigdialog.properties.TurnierDialog;
 import de.petanqueturniermanager.konfigdialog.properties.TurnierStartseiteDialog;
 import de.petanqueturniermanager.ki.KiNeuesTurnierDialog;
@@ -400,6 +401,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_KONFIGURATION_TURNIER_MENU = "konfiguration_turnier_menu";
 	public static final String CMD_KONFIGURATION_KOPFFUSSZEILEN = "konfiguration_kopffusszeilen";
 	public static final String CMD_KONFIGURATION_SPIELRUNDE_FOOTER = "konfiguration_spielrunde_footer";
+	public static final String CMD_KONFIGURATION_ZEITPLAN = "konfiguration_zeitplan";
 	public static final String CMD_KONFIGURATION_FARBEN = "konfiguration_farben";
 	public static final String CMD_KONFIGURATION_TURNIER_STARTSEITE = "konfiguration_turnier_startseite";
 	public static final String CMD_KONFIGURATION_UPDATE_ERSTELLT_MIT_VERSION = "konfiguration_update_erstellt_mit_version";
@@ -1198,6 +1200,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_KONFIGURATION_TURNIER_MENU:
 			case CMD_KONFIGURATION_KOPFFUSSZEILEN:
 			case CMD_KONFIGURATION_SPIELRUNDE_FOOTER:
+			case CMD_KONFIGURATION_ZEITPLAN:
 			case CMD_KONFIGURATION_FARBEN:
 			case CMD_KONFIGURATION_UPDATE_ERSTELLT_MIT_VERSION:
 			case CMD_EXPORT_UPLOAD_KONFIGURATION:
@@ -1661,6 +1664,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_KONFIGURATION_SPIELRUNDE_FOOTER:
 				new SpielrundeFooterDialog(ws).createDialog();
 				break;
+			case CMD_KONFIGURATION_ZEITPLAN:
+				new ZeitplanDialog(ws).createDialog();
+				break;
 			case CMD_KONFIGURATION_FARBEN:
 				new FarbenDialog(ws).createDialog();
 				break;
@@ -2112,6 +2118,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_KONFIGURATION_TURNIER_STARTSEITE,
 				 CMD_KONFIGURATION_UPDATE_ERSTELLT_MIT_VERSION,
 				 CMD_EXPORT_UPLOAD_KONFIGURATION               -> ts != TurnierSystem.KEIN;
+			case CMD_KONFIGURATION_ZEITPLAN                 -> ts == TurnierSystem.SCHWEIZER || ts == TurnierSystem.MAASTRICHTER;
 			case CMD_WEBSERVER_STARTEN                      -> !WebServerManager.get().isLaeuft();
 			case CMD_WEBSERVER_STOPPEN                      -> WebServerManager.get().istOwnerDocument(document);
 			case CMD_WEBSERVER_URL_1  -> WebServerManager.get().hatInstanzFuerSlot(0)

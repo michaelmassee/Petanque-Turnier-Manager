@@ -59,4 +59,31 @@ public interface ISchweizerPropertiesSpalte extends de.petanqueturniermanager.ba
 
 	void setRankingModus(SchweizerRankingModus modus);
 
+	boolean isZeitplanAktiv();
+
+	void setZeitplanAktiv(boolean aktiv);
+
+	int getZeitplanAnzahlBahnen();
+
+	void setZeitplanAnzahlBahnen(int bahnen);
+
+	/** {@code isZeitplanAktiv() && getZeitplanAnzahlBahnen() > 0} — steuert die Durchgang-Aufteilung innerhalb einer Runde. */
+	boolean isDurchgangAufteilungWirksam();
+
+	int getZeitplanZeitlimitMinuten();
+
+	void setZeitplanZeitlimitMinuten(int minuten);
+
+	int getZeitplanDurchgangPauseMinuten();
+
+	void setZeitplanDurchgangPauseMinuten(int minuten);
+
+	int getZeitplanRundenPauseMinuten();
+
+	void setZeitplanRundenPauseMinuten(int minuten);
+
+	String getZeitplanTurnierStartzeit();
+
+	void setZeitplanTurnierStartzeit(String hhMm);
+
 }

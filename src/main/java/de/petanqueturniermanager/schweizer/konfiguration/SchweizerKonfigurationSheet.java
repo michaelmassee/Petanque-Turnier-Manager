@@ -188,4 +188,69 @@ public class SchweizerKonfigurationSheet extends BaseKonfigurationSheet
 		return getPropertiesSpalte().getFreispielPunkteMinus();
 	}
 
+	@Override
+	public boolean isZeitplanAktiv() {
+		return propertiesSpalte.isZeitplanAktiv();
+	}
+
+	@Override
+	public void setZeitplanAktiv(boolean aktiv) {
+		propertiesSpalte.setZeitplanAktiv(aktiv);
+	}
+
+	@Override
+	public int getZeitplanAnzahlBahnen() {
+		return propertiesSpalte.getZeitplanAnzahlBahnen();
+	}
+
+	@Override
+	public void setZeitplanAnzahlBahnen(int bahnen) {
+		propertiesSpalte.setZeitplanAnzahlBahnen(bahnen);
+	}
+
+	@Override
+	public boolean isDurchgangAufteilungWirksam() {
+		return propertiesSpalte.isDurchgangAufteilungWirksam();
+	}
+
+	@Override
+	public int getZeitplanZeitlimitMinuten() {
+		return propertiesSpalte.getZeitplanZeitlimitMinuten();
+	}
+
+	@Override
+	public void setZeitplanZeitlimitMinuten(int minuten) {
+		propertiesSpalte.setZeitplanZeitlimitMinuten(minuten);
+	}
+
+	@Override
+	public int getZeitplanDurchgangPauseMinuten() {
+		return propertiesSpalte.getZeitplanDurchgangPauseMinuten();
+	}
+
+	@Override
+	public void setZeitplanDurchgangPauseMinuten(int minuten) {
+		propertiesSpalte.setZeitplanDurchgangPauseMinuten(minuten);
+	}
+
+	@Override
+	public int getZeitplanRundenPauseMinuten() {
+		return propertiesSpalte.getZeitplanRundenPauseMinuten();
+	}
+
+	@Override
+	public void setZeitplanRundenPauseMinuten(int minuten) {
+		propertiesSpalte.setZeitplanRundenPauseMinuten(minuten);
+	}
+
+	@Override
+	public String getZeitplanTurnierStartzeit() {
+		return propertiesSpalte.getZeitplanTurnierStartzeit();
+	}
+
+	@Override
+	public void setZeitplanTurnierStartzeit(String hhMm) {
+		propertiesSpalte.setZeitplanTurnierStartzeit(hhMm);
+	}
+
 }

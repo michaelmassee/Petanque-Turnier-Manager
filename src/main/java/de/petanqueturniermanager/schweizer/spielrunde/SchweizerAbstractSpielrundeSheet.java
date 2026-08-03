@@ -25,6 +25,8 @@ import com.sun.star.table.CellVertJustify2;
 import com.sun.star.table.TableBorder2;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.addins.GlobalImpl;
+import de.petanqueturniermanager.algorithmen.common.DurchgangAufteilungRechner;
 import de.petanqueturniermanager.algorithmen.schweizer.SchweizerSystem;
 import de.petanqueturniermanager.algorithmen.schweizer.SchweizerTeamErgebnis;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
@@ -41,7 +43,10 @@ import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeUnGeradeStyle;
+import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.cellvalue.properties.RangeProperties;
+import de.petanqueturniermanager.helper.sheet.numberformat.UserNumberFormat;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
@@ -62,6 +67,7 @@ import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 import de.petanqueturniermanager.model.TeamPaarung;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
+import de.petanqueturniermanager.schweizer.konfiguration.SchweizerPropertiesSpalte;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerRankingModus;
 import de.petanqueturniermanager.basesheet.SheetTabFarben;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
@@ -90,6 +96,10 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 	public static final int ERG_TEAM_A_SPALTE = TEAM_B_SPALTE + 1;
 	public static final int ERG_TEAM_B_SPALTE = ERG_TEAM_A_SPALTE + 1;
 	public static final int FEHLER_SPALTE = ERG_TEAM_B_SPALTE + 1;
+	/** Nur befuellt bei aktiver Rundenzeitplanung (isDurchgangAufteilungWirksam), sonst leer. */
+	public static final int DURCHGANG_LABEL_SPALTE = FEHLER_SPALTE + 1;
+	/** Nur befuellt bei aktiver Rundenzeitplanung (isDurchgangAufteilungWirksam), sonst leer. */
+	public static final int DURCHGANG_STARTZEIT_SPALTE = FEHLER_SPALTE + 2;
 
 	private final SchweizerKonfigurationSheet konfigurationSheet;
 	private final SchweizerMeldeListeSheetUpdate meldeListe;
@@ -395,6 +405,115 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		headerValueZeile2.setValue(I18n.get("schweizer.spielrunde.spalte.ergebnis")).spaltePlus(1).setEndPosMergeSpaltePlus(1);
 		getSheetHelper().setStringValueInCell(headerValueZeile2);
 
+		rundenStartzeitFeld();
+	}
+
+	/**
+	 * Schreibt (nur wenn {@code isZeitplanAktiv()}) das einzige haendisch editierbare
+	 * Zeit-Eingabefeld dieses Features in die freien Header-Zellen von {@link #FEHLER_SPALTE}
+	 * (dort steht sonst nichts, siehe {@link #fehlerSpalteFormatieren()}). Runde 1 nutzt die
+	 * zentrale Turnier-Startzeit als Default, alle Folgerunden verketten sich per
+	 * Cross-Sheet-Zellbezug auf die Startzeit der Vorrunde plus deren Gesamtdauer plus
+	 * Rundenpause. Alle Werte werden live per {@code PTM.ALG.INTPROPERTY}/{@code STRINGPROPERTY}
+	 * referenziert, damit Aenderungen an der Konfiguration ohne Sheet-Neuaufbau wirken.
+	 */
+	private void rundenStartzeitFeld() throws GenerateException {
+		if (!getKonfigurationSheet().isZeitplanAktiv()) {
+			return;
+		}
+		Integer headerColor = getKonfigurationSheet().getSpielRundeHeaderFarbe();
+
+		StringCellValue labelValue = StringCellValue.from(getXSpreadSheet(), Position.from(FEHLER_SPALTE, ERSTE_HEADER_ZEILE))
+				.setVertJustify(CellVertJustify2.BOTTOM).setHoriJustify(CellHoriJustify.CENTER)
+				.setCellBackColor(headerColor).setCharHeight(NR_CHARHEIGHT).setShrinkToFit(true)
+				.setBorder(BorderFactory.from().allThin().boldLn().forBottom().toBorder())
+				.setValue(I18n.get("schweizer.spielrunde.start.label"));
+		getSheetHelper().setStringValueInCell(labelValue);
+
+		Position startzeitPos = Position.from(FEHLER_SPALTE, ZWEITE_HEADER_ZEILE);
+		if (getSpielRundeNr().getNr() <= 1) {
+			// Runde 1: einmaliger literaler Default aus der Turnier-Startzeit (kein Formelbezug) —
+			// konsistent mit der Persistenz-Regel (das Sheet-Feld selbst ist die fuehrende Quelle,
+			// keine retroaktive Verschiebung wenn die zentrale Turnier-Startzeit spaeter geaendert wird).
+			double bruchteilDesTages = zeitStringZuTagesBruchteil(getKonfigurationSheet().getZeitplanTurnierStartzeit());
+			NumberCellValue startzeitValue = NumberCellValue.from(getXSpreadSheet(), startzeitPos)
+					.setVertJustify(CellVertJustify2.CENTER).setHoriJustify(CellHoriJustify.CENTER)
+					.setCharHeight(NR_CHARHEIGHT).setShrinkToFit(true)
+					.setBorder(BorderFactory.from().allThin().boldLn().forBottom().toBorder())
+					.setValue(bruchteilDesTages);
+			getSheetHelper().setNumberValueInCell(startzeitValue);
+		} else {
+			StringCellValue startzeitValue = StringCellValue.from(getXSpreadSheet(), startzeitPos, rundenStartzeitFormel())
+					.setVertJustify(CellVertJustify2.CENTER).setHoriJustify(CellHoriJustify.CENTER)
+					.setCharHeight(NR_CHARHEIGHT).setShrinkToFit(true)
+					.setBorder(BorderFactory.from().allThin().boldLn().forBottom().toBorder());
+			getSheetHelper().setFormulaInCell(startzeitValue);
+		}
+
+		RangePosition startzeitRange = RangePosition.from(startzeitPos, startzeitPos);
+		RangeHelper.from(this, startzeitRange).setRangeProperties(RangeProperties.from().numberFormat(UserNumberFormat.TIME));
+		EditierbaresZelleFormatHelper.anwenden(this, startzeitRange);
+	}
+
+	/** "09:00" -&gt; 0.375 (Bruchteil des Tages, Calc-interne Zeit-Repraesentation). Ungueltige Eingabe -&gt; 0.0 (Mitternacht). */
+	private static double zeitStringZuTagesBruchteil(String hhMm) {
+		try {
+			String[] teile = hhMm.split(":");
+			int stunden = Integer.parseInt(teile[0].trim());
+			int minuten = teile.length > 1 ? Integer.parseInt(teile[1].trim()) : 0;
+			return (stunden * 60 + minuten) / 1440.0;
+		} catch (RuntimeException e) {
+			return 0.0;
+		}
+	}
+
+	/**
+	 * Nur fuer Runde N&gt;1: Cross-Sheet-Bezug auf die Rundenstartzeit-Zelle der Vorrunde plus deren
+	 * Gesamtdauer (Anzahl Durchgaenge der Vorrunde ist ein struktureller Wert, ausgelesen aus der
+	 * bereits geschriebenen Vorrunden-Struktur, siehe {@link #ermittleAnzahlDurchgaengeVorrunde}),
+	 * plus Rundenpause.
+	 */
+	private String rundenStartzeitFormel() throws GenerateException {
+		SpielRundeNr aktuelleRunde = getSpielRundeNr();
+		SpielRundeNr vorherigeRunde = SpielRundeNr.from(aktuelleRunde.getNr() - 1);
+		String vorSheetName = getSheetName(vorherigeRunde);
+		int anzDurchgaengeVorrunde = ermittleAnzahlDurchgaengeVorrunde(vorherigeRunde);
+
+		String vorZelle = "$'" + vorSheetName + "'." + Position.from(FEHLER_SPALTE, ZWEITE_HEADER_ZEILE).getAddressWith$();
+		String zeitlimit = GlobalImpl.FORMAT_PTM_INT_PROPERTY(SchweizerPropertiesSpalte.KONFIG_PROP_ZEITPLAN_ZEITLIMIT_MINUTEN);
+		String durchgangPause = GlobalImpl
+				.FORMAT_PTM_INT_PROPERTY(SchweizerPropertiesSpalte.KONFIG_PROP_ZEITPLAN_DURCHGANG_PAUSE_MINUTEN);
+		String rundenPause = GlobalImpl.FORMAT_PTM_INT_PROPERTY(SchweizerPropertiesSpalte.KONFIG_PROP_ZEITPLAN_RUNDEN_PAUSE_MINUTEN);
+
+		String dauerMinuten = anzDurchgaengeVorrunde + "*" + zeitlimit + "+" + (anzDurchgaengeVorrunde - 1) + "*"
+				+ durchgangPause + "+" + rundenPause;
+		return vorZelle + "+TIME(0;" + dauerMinuten + ";0)";
+	}
+
+	/**
+	 * Liest die Anzahl der Durchgaenge der Vorrunde aus deren bereits geschriebener
+	 * {@link #DURCHGANG_LABEL_SPALTE} aus (struktureller Wert zum Zeitpunkt der Vorrunden-Erzeugung,
+	 * nicht aus der aktuellen Konfiguration neu hergeleitet — vermeidet Drift bei zwischenzeitlich
+	 * geaenderter Bahnenzahl). 1, wenn die Vorrunde nicht existiert oder nicht aufgeteilt war.
+	 */
+	private int ermittleAnzahlDurchgaengeVorrunde(SpielRundeNr vorherigeRunde) throws GenerateException {
+		var xDoc = getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
+		XSpreadsheet vorSheet = SheetMetadataHelper.findeSheetUndHeile(xDoc,
+				getSpielrundeSchluessel(vorherigeRunde.getNr()), getSheetName(vorherigeRunde));
+		if (vorSheet == null) {
+			return 1;
+		}
+		RangePosition labelRange = RangePosition.from(DURCHGANG_LABEL_SPALTE, ERSTE_DATEN_ZEILE, DURCHGANG_LABEL_SPALTE,
+				ERSTE_DATEN_ZEILE + 999);
+		RangeData labelDaten = RangeHelper.from(vorSheet, xDoc, labelRange).getDataFromRange();
+		int anzahl = 0;
+		for (RowData row : labelDaten) {
+			String val = row.get(0).getStringVal();
+			if (val != null && !val.isEmpty()) {
+				anzahl++;
+			}
+		}
+		return anzahl > 0 ? anzahl : 1;
 	}
 
 	/**
@@ -470,8 +589,12 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		if (letztePos == null) {
 			return;
 		}
+		// Bei aktiver Zeitplanung wird der Druckbereich bis DURCHGANG_STARTZEIT_SPALTE erweitert
+		// (schliesst dann bewusst auch FEHLER_SPALTE mit ein — akzeptabler Trade-off, siehe Plan;
+		// TabellenMapper bildet nur die Bounding-Box mehrerer Druckbereiche, eine Luecke waere wirkungslos).
+		int letzteDruckSpalte = getKonfigurationSheet().isZeitplanAktiv() ? DURCHGANG_STARTZEIT_SPALTE : ERG_TEAM_B_SPALTE;
 		RangePosition druckBereich = RangePosition.from(BAHN_NR_SPALTE, ERSTE_HEADER_ZEILE,
-				Position.from(ERG_TEAM_B_SPALTE, letztePos.getZeile()));
+				Position.from(letzteDruckSpalte, letztePos.getZeile()));
 		PrintArea.from(getXSpreadSheet(), getWorkingSpreadsheet()).setPrintArea(druckBereich);
 		SpielrundeFooterHelper.schreibeFooterUndErweitereDruckbereich(this, getXSpreadSheet(), getWorkingSpreadsheet());
 	}
@@ -621,6 +744,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 
 		teamPaarungenEinfuegen(paarungen);
 		datenErsteSpalte(); // BahnNr
+		bahnNummerierungProDurchgangFallsAktiv(paarungen.size()); // ueberschreibt BahnNr pro Durchgang neu ab 1
 		datenformatieren();
 		fehlerSpalteFormatieren();
 		header();
@@ -678,6 +802,97 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		if (useTeamname) {
 			teamNamenFormelnSchreiben(paarungen);
 		}
+
+		durchgangInfoSpaltenSchreiben(paarungen.size());
+	}
+
+	/**
+	 * Schreibt (nur wenn {@code isDurchgangAufteilungWirksam()} und tatsaechlich mehr als ein
+	 * Durchgang noetig ist) Label und live berechnete Startzeit je Durchgang in
+	 * {@link #DURCHGANG_LABEL_SPALTE}/{@link #DURCHGANG_STARTZEIT_SPALTE} — jeweils nur auf der
+	 * ersten Datenzeile eines neuen Durchgang-Blocks. Der Team-A/B/Erg-A/Erg-B-Datenstrom bleibt
+	 * dadurch vollstaendig unangetastet (siehe {@code leseRundeEin()}).
+	 */
+	private void durchgangInfoSpaltenSchreiben(int anzahlPaarungen) throws GenerateException {
+		if (!getKonfigurationSheet().isDurchgangAufteilungWirksam() || anzahlPaarungen <= 0) {
+			return;
+		}
+		int bahnen = getKonfigurationSheet().getZeitplanAnzahlBahnen();
+		List<Integer> bloecke = DurchgangAufteilungRechner.berechne(anzahlPaarungen, bahnen);
+		if (bloecke.size() <= 1) {
+			return; // Paarungen passen in einen Durchgang, keine Aufteilung noetig
+		}
+
+		String rundenStartzeitAdresse = Position.from(FEHLER_SPALTE, ZWEITE_HEADER_ZEILE).getAddressWith$();
+		String zeitlimit = GlobalImpl.FORMAT_PTM_INT_PROPERTY(SchweizerPropertiesSpalte.KONFIG_PROP_ZEITPLAN_ZEITLIMIT_MINUTEN);
+		String pause = GlobalImpl.FORMAT_PTM_INT_PROPERTY(SchweizerPropertiesSpalte.KONFIG_PROP_ZEITPLAN_DURCHGANG_PAUSE_MINUTEN);
+		var oberrand = BorderFactory.from().allThin().boldLn().forTop().toBorder();
+
+		int zeile = ERSTE_DATEN_ZEILE;
+		int durchgangNr = 1;
+		for (int groesse : bloecke) {
+			SheetRunner.testDoCancelTask();
+
+			StringCellValue labelValue = StringCellValue.from(getXSpreadSheet(), Position.from(DURCHGANG_LABEL_SPALTE, zeile))
+					.setHoriJustify(CellHoriJustify.CENTER).setVertJustify(CellVertJustify2.CENTER)
+					.setCharWeight(FontWeight.BOLD).setCharHeight(12).setBorder(oberrand)
+					.setValue(I18n.get("schweizer.spielrunde.durchgang.label", durchgangNr));
+			getSheetHelper().setStringValueInCell(labelValue);
+
+			String formel = durchgangNr == 1 ? rundenStartzeitAdresse
+					: rundenStartzeitAdresse + "+TIME(0;(" + (durchgangNr - 1) + ")*(" + zeitlimit + "+" + pause + ");0)";
+			Position startzeitPos = Position.from(DURCHGANG_STARTZEIT_SPALTE, zeile);
+			StringCellValue startzeitValue = StringCellValue.from(getXSpreadSheet(), startzeitPos, formel)
+					.setHoriJustify(CellHoriJustify.CENTER).setVertJustify(CellVertJustify2.CENTER)
+					.setCharHeight(12).setBorder(oberrand);
+			getSheetHelper().setFormulaInCell(startzeitValue);
+
+			RangePosition startzeitRange = RangePosition.from(startzeitPos, startzeitPos);
+			RangeHelper.from(this, startzeitRange).setRangeProperties(RangeProperties.from().numberFormat(UserNumberFormat.TIME));
+
+			zeile += groesse;
+			durchgangNr++;
+		}
+	}
+
+	/**
+	 * Muss NACH {@link #datenErsteSpalte()} aufgerufen werden, da {@link #bahnNummerierungProDurchgang}
+	 * dessen fortlaufende 1..Anzahl-Paarungen-Nummerierung gezielt ueberschreibt.
+	 */
+	private void bahnNummerierungProDurchgangFallsAktiv(int anzahlPaarungen) throws GenerateException {
+		if (!getKonfigurationSheet().isDurchgangAufteilungWirksam() || anzahlPaarungen <= 0) {
+			return;
+		}
+		List<Integer> bloecke = DurchgangAufteilungRechner.berechne(anzahlPaarungen,
+				getKonfigurationSheet().getZeitplanAnzahlBahnen());
+		if (bloecke.size() <= 1) {
+			return;
+		}
+		bahnNummerierungProDurchgang(bloecke);
+	}
+
+	/**
+	 * Bei aktiver Durchgang-Aufteilung beginnt die Bahn-Nummer in {@link #BAHN_NR_SPALTE} pro
+	 * Durchgang-Block neu bei 1 (physische Bahnen werden zwischen Durchgaengen wiederverwendet).
+	 * Ueberschreibt gezielt nur die Datenzeilen, die {@link #datenErsteSpalte()} zuvor im
+	 * Standard-Modus (fortlaufend 1..Anzahl Paarungen) geschrieben hat. Nur fuer die
+	 * "nummerierten" {@link SpielrundeSpielbahn}-Modi X/N sinnvoll — L (haendisch) und
+	 * R (zufaellig) bleiben unveraendert, siehe Review-Punkt 2: diese Property ist unabhaengig
+	 * von {@link SpielrundeSpielbahn} und veraendert dessen bestehende Semantik nicht.
+	 */
+	private void bahnNummerierungProDurchgang(List<Integer> bloecke) throws GenerateException {
+		SpielrundeSpielbahn modus = getKonfigurationSheet().getSpielrundeSpielbahn();
+		if (modus != SpielrundeSpielbahn.X && modus != SpielrundeSpielbahn.N) {
+			return;
+		}
+		RangeData rangeData = new RangeData();
+		for (int groesse : bloecke) {
+			for (int n = 1; n <= groesse; n++) {
+				rangeData.addNewRow(n);
+			}
+		}
+		Position startPos = Position.from(BAHN_NR_SPALTE, ERSTE_DATEN_ZEILE);
+		RangeHelper.from(this, rangeData.getRangePosition(startPos)).setDataInRange(rangeData);
 	}
 
 	/**

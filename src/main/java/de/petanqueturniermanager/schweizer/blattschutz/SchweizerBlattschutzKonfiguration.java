@@ -71,7 +71,7 @@ public class SchweizerBlattschutzKonfiguration implements IBlattschutzKonfigurat
         var infos = new ArrayList<SheetSchutzInfo>();
 
         sammleMeldelisteSchutzInfo(xDoc, ws, infos);
-        sammleSpielrundenSchutzInfos(xDoc, infos);
+        sammleSpielrundenSchutzInfos(xDoc, ws, infos);
         sammleVollGesperrteSheets(xDoc, infos);
 
         return infos;
@@ -92,13 +92,26 @@ public class SchweizerBlattschutzKonfiguration implements IBlattschutzKonfigurat
         });
     }
 
-    private void sammleSpielrundenSchutzInfos(XSpreadsheetDocument xDoc, List<SheetSchutzInfo> infos) {
+    private void sammleSpielrundenSchutzInfos(XSpreadsheetDocument xDoc, WorkingSpreadsheet ws,
+            List<SheetSchutzInfo> infos) {
         var schluessel = SheetMetadataHelper.getSchluesselMitPrefix(xDoc,
                 SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_SPIELRUNDE_PREFIX);
+        boolean zeitplanAktiv = new SchweizerKonfigurationSheet(ws).isZeitplanAktiv();
         for (var key : schluessel) {
-            SheetMetadataHelper.findeSheet(xDoc, key).ifPresent(sheet ->
-                    infos.add(SheetSchutzInfo.mitEditierbarenBereichen(sheet,
-                            List.of(berechneSpielrundeErgebnisBereich(sheet)))));
+            SheetMetadataHelper.findeSheet(xDoc, key).ifPresent(sheet -> {
+                var bereiche = new ArrayList<RangePosition>();
+                bereiche.add(berechneSpielrundeErgebnisBereich(sheet));
+                if (zeitplanAktiv) {
+                    // Rundenstartzeit-Zelle (einziges haendisches Zeit-Eingabefeld, siehe
+                    // SchweizerAbstractSpielrundeSheet.rundenStartzeitFeld)
+                    bereiche.add(RangePosition.from(
+                            SchweizerAbstractSpielrundeSheet.FEHLER_SPALTE,
+                            SchweizerAbstractSpielrundeSheet.ZWEITE_HEADER_ZEILE,
+                            SchweizerAbstractSpielrundeSheet.FEHLER_SPALTE,
+                            SchweizerAbstractSpielrundeSheet.ZWEITE_HEADER_ZEILE));
+                }
+                infos.add(SheetSchutzInfo.mitEditierbarenBereichen(sheet, bereiche));
+            });
         }
     }
 
