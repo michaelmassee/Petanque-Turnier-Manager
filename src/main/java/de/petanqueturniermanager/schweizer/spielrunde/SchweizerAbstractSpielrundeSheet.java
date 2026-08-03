@@ -871,16 +871,19 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 			String startAusdruck = vorherigeEndeAdresse == null ? "TIMEVALUE(" + rundenStartzeitAdresse + ")"
 					: "TIMEVALUE(" + vorherigeEndeAdresse + ")+" + minutenAlsTagesbruchteil(pause);
 			Position startPos = Position.from(ZEIT_SPALTE, zeile);
-			zeitZelleSchreiben(startPos, startAusdruck);
 
 			String endeAdresse;
-			String endeAusdruck = "TIMEVALUE(" + startPos.getAddress() + ")+" + minutenAlsTagesbruchteil(zeitlimit);
 			if (letzteZeileDesBlocks == zeile) {
-				// einzeiliger Block: Endzeit ueberschreibt die soeben geschriebene Startzeit in derselben Zelle
+				// einzeiliger Block: nur die Endzeit wird angezeigt; Endausdruck direkt aus startAusdruck
+				// ableiten (keine Zellreferenz auf startPos, da dort nur die Endzeit geschrieben wird -
+				// eine Referenz auf startPos.getAddress() waere ein Zirkelbezug)
+				String endeAusdruck = startAusdruck + "+" + minutenAlsTagesbruchteil(zeitlimit);
 				zeitZelleSchreiben(startPos, endeAusdruck);
 				endeAdresse = startPos.getAddress();
 			} else {
+				zeitZelleSchreiben(startPos, startAusdruck);
 				Position endePos = Position.from(ZEIT_SPALTE, letzteZeileDesBlocks);
+				String endeAusdruck = "TIMEVALUE(" + startPos.getAddress() + ")+" + minutenAlsTagesbruchteil(zeitlimit);
 				zeitZelleSchreiben(endePos, endeAusdruck);
 				endeAdresse = endePos.getAddress();
 			}

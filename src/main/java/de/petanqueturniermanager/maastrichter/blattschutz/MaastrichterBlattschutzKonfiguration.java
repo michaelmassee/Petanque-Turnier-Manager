@@ -71,7 +71,7 @@ public class MaastrichterBlattschutzKonfiguration implements IBlattschutzKonfigu
         var infos = new ArrayList<SheetSchutzInfo>();
 
         sammleMeldelisteSchutzInfo(xDoc, ws, infos);
-        sammleVorrundenUndRanglisteSchutzInfos(xDoc, infos);
+        sammleVorrundenUndRanglisteSchutzInfos(xDoc, ws, infos);
         sammleFinalrundenSchutzInfos(xDoc, infos);
         sammleCheckinListeSchutzInfo(xDoc, infos);
         sammleGruppenUebersichtSchutzInfo(xDoc, infos);
@@ -109,9 +109,11 @@ public class MaastrichterBlattschutzKonfiguration implements IBlattschutzKonfigu
      * Der Schlüssel der Rangliste ist der Prefix selbst (endet nicht mit "__"),
      * Vorrunden haben numerische Suffixe (enden mit "__").
      */
-    private void sammleVorrundenUndRanglisteSchutzInfos(XSpreadsheetDocument xDoc, List<SheetSchutzInfo> infos) {
+    private void sammleVorrundenUndRanglisteSchutzInfos(XSpreadsheetDocument xDoc, WorkingSpreadsheet ws,
+            List<SheetSchutzInfo> infos) {
         var schluessel = SheetMetadataHelper.getSchluesselMitPrefix(xDoc,
                 SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX);
+        boolean zeitplanAktiv = new MaastrichterKonfigurationSheet(ws).isZeitplanAktiv();
         for (var key : schluessel) {
             SheetMetadataHelper.findeSheet(xDoc, key).ifPresent(sheet -> {
                 if (key.equals(SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX)) {
@@ -119,8 +121,18 @@ public class MaastrichterBlattschutzKonfiguration implements IBlattschutzKonfigu
                     infos.add(SheetSchutzInfo.vollGesperrt(sheet));
                 } else {
                     // Vorrunde: Ergebnis-Spalten editierbar
-                    infos.add(SheetSchutzInfo.mitEditierbarenBereichen(sheet,
-                            List.of(berechneVorrundeErgebnisBereich(sheet))));
+                    var bereiche = new ArrayList<RangePosition>();
+                    bereiche.add(berechneVorrundeErgebnisBereich(sheet));
+                    if (zeitplanAktiv) {
+                        // Rundenstartzeit-Zelle (einziges haendisches Zeit-Eingabefeld, analog
+                        // SchweizerBlattschutzKonfiguration.sammleSpielrundenSchutzInfos)
+                        bereiche.add(RangePosition.from(
+                                SchweizerAbstractSpielrundeSheet.ZEIT_SPALTE,
+                                SchweizerAbstractSpielrundeSheet.ZWEITE_HEADER_ZEILE,
+                                SchweizerAbstractSpielrundeSheet.ZEIT_SPALTE,
+                                SchweizerAbstractSpielrundeSheet.ZWEITE_HEADER_ZEILE));
+                    }
+                    infos.add(SheetSchutzInfo.mitEditierbarenBereichen(sheet, bereiche));
                 }
             });
         }
