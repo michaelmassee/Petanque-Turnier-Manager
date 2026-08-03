@@ -105,9 +105,9 @@ public class SchweizerBlattschutzKonfiguration implements IBlattschutzKonfigurat
                     // Rundenstartzeit-Zelle (einziges haendisches Zeit-Eingabefeld, siehe
                     // SchweizerAbstractSpielrundeSheet.rundenStartzeitFeld)
                     bereiche.add(RangePosition.from(
-                            SchweizerAbstractSpielrundeSheet.FEHLER_SPALTE,
+                            SchweizerAbstractSpielrundeSheet.ZEIT_SPALTE,
                             SchweizerAbstractSpielrundeSheet.ZWEITE_HEADER_ZEILE,
-                            SchweizerAbstractSpielrundeSheet.FEHLER_SPALTE,
+                            SchweizerAbstractSpielrundeSheet.ZEIT_SPALTE,
                             SchweizerAbstractSpielrundeSheet.ZWEITE_HEADER_ZEILE));
                 }
                 infos.add(SheetSchutzInfo.mitEditierbarenBereichen(sheet, bereiche));

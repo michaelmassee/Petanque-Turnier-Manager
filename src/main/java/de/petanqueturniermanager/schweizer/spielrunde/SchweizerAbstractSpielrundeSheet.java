@@ -49,10 +49,7 @@ import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeUnGeradeStyle;
-import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
-import de.petanqueturniermanager.helper.cellvalue.properties.RangeProperties;
-import de.petanqueturniermanager.helper.sheet.numberformat.UserNumberFormat;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
@@ -423,41 +420,37 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 
 	/**
 	 * Schreibt (nur wenn {@code isZeitplanAktiv()}) das einzige haendisch editierbare
-	 * Zeit-Eingabefeld dieses Features in die freien Header-Zellen von {@link #FEHLER_SPALTE}
-	 * (dort steht sonst nichts, siehe {@link #fehlerSpalteFormatieren()}). Runde 1 nutzt die
+	 * Zeit-Eingabefeld dieses Features in die Header-Zellen von {@link #ZEIT_SPALTE} (steht damit
+	 * direkt ueber den darunter befuellten Durchgang-Zeiten derselben Spalte). Runde 1 nutzt die
 	 * zentrale Turnier-Startzeit als Default, alle Folgerunden verketten sich per
 	 * Cross-Sheet-Zellbezug auf die Startzeit der Vorrunde plus deren Gesamtdauer plus
 	 * Rundenpause. Alle Werte werden live per {@code PTM.ALG.INTPROPERTY}/{@code STRINGPROPERTY}
 	 * referenziert, damit Aenderungen an der Konfiguration ohne Sheet-Neuaufbau wirken.
+	 * <p>
+	 * Zelle ist bewusst TEXT (Runde 1: literaler String, Runde N&gt;1: {@code TEXT(...;"HH:MM")}),
+	 * kein numerisch formatierter Zeitwert — siehe {@link #zeitZelleSchreiben} fuer die Begruendung.
 	 */
 	private void rundenStartzeitFeld() throws GenerateException {
 		if (!getKonfigurationSheet().isZeitplanAktiv()) {
 			return;
 		}
 		zeitplanPropertiesPersistieren();
-		Integer headerColor = getKonfigurationSheet().getSpielRundeHeaderFarbe();
+		getSheetHelper().setColumnWidth(getXSpreadSheet(), Position.from(ZEIT_SPALTE, ERSTE_HEADER_ZEILE), 1800);
 
-		StringCellValue labelValue = StringCellValue.from(getXSpreadSheet(), Position.from(FEHLER_SPALTE, ERSTE_HEADER_ZEILE))
-				.setVertJustify(CellVertJustify2.BOTTOM).setHoriJustify(CellHoriJustify.CENTER)
-				.setCellBackColor(headerColor).setCharHeight(NR_CHARHEIGHT).setShrinkToFit(true)
-				.setBorder(BorderFactory.from().allThin().boldLn().forBottom().toBorder())
-				.setValue(I18n.get("schweizer.spielrunde.start.label"));
-		getSheetHelper().setStringValueInCell(labelValue);
-
-		Position startzeitPos = Position.from(FEHLER_SPALTE, ZWEITE_HEADER_ZEILE);
+		Position startzeitPos = Position.from(ZEIT_SPALTE, ZWEITE_HEADER_ZEILE);
 		if (getSpielRundeNr().getNr() <= 1) {
 			// Runde 1: einmaliger literaler Default aus der Turnier-Startzeit (kein Formelbezug) —
 			// konsistent mit der Persistenz-Regel (das Sheet-Feld selbst ist die fuehrende Quelle,
 			// keine retroaktive Verschiebung wenn die zentrale Turnier-Startzeit spaeter geaendert wird).
-			double bruchteilDesTages = zeitStringZuTagesBruchteil(getKonfigurationSheet().getZeitplanTurnierStartzeit());
-			NumberCellValue startzeitValue = NumberCellValue.from(getXSpreadSheet(), startzeitPos)
+			StringCellValue startzeitValue = StringCellValue.from(getXSpreadSheet(), startzeitPos)
 					.setVertJustify(CellVertJustify2.CENTER).setHoriJustify(CellHoriJustify.CENTER)
 					.setCharHeight(NR_CHARHEIGHT).setShrinkToFit(true)
 					.setBorder(BorderFactory.from().allThin().boldLn().forBottom().toBorder())
-					.setValue(bruchteilDesTages);
-			getSheetHelper().setNumberValueInCell(startzeitValue);
+					.setValue(getKonfigurationSheet().getZeitplanTurnierStartzeit());
+			getSheetHelper().setStringValueInCell(startzeitValue);
 		} else {
-			StringCellValue startzeitValue = StringCellValue.from(getXSpreadSheet(), startzeitPos, rundenStartzeitFormel())
+			String formel = "TEXT(" + rundenStartzeitFormel() + ";\"HH:MM\")";
+			StringCellValue startzeitValue = StringCellValue.from(getXSpreadSheet(), startzeitPos, formel)
 					.setVertJustify(CellVertJustify2.CENTER).setHoriJustify(CellHoriJustify.CENTER)
 					.setCharHeight(NR_CHARHEIGHT).setShrinkToFit(true)
 					.setBorder(BorderFactory.from().allThin().boldLn().forBottom().toBorder());
@@ -465,7 +458,6 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		}
 
 		RangePosition startzeitRange = RangePosition.from(startzeitPos, startzeitPos);
-		RangeHelper.from(this, startzeitRange).setRangeProperties(RangeProperties.from().numberFormat(UserNumberFormat.TIME));
 		EditierbaresZelleFormatHelper.anwenden(this, startzeitRange);
 	}
 
@@ -483,25 +475,15 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		konfig.getZeitplanRundenPauseMinuten();
 	}
 
-	/** "09:00" -&gt; 0.375 (Bruchteil des Tages, Calc-interne Zeit-Repraesentation). Ungueltige Eingabe -&gt; 0.0 (Mitternacht). */
-	private static double zeitStringZuTagesBruchteil(String hhMm) {
-		try {
-			String[] teile = hhMm.split(":");
-			int stunden = Integer.parseInt(teile[0].trim());
-			int minuten = teile.length > 1 ? Integer.parseInt(teile[1].trim()) : 0;
-			return (stunden * 60 + minuten) / 1440.0;
-		} catch (RuntimeException e) {
-			return 0.0;
-		}
-	}
-
 	/**
-	 * Nur fuer Runde N&gt;1: Cross-Sheet-Bezug auf das tatsaechliche Ende des letzten Durchgangs der
-	 * Vorrunde (siehe {@link #ermittleLetzteZeitZeile}) plus Rundenpause — dieselbe
-	 * Verkettungslogik wie zwischen zwei Durchgaengen innerhalb einer Runde, nur rundenuebergreifend.
-	 * War die Vorrunde nicht aufgeteilt (kein Eintrag in {@link #ZEIT_SPALTE}), wird ersatzweise die
-	 * Rundenstartzeit der Vorrunde plus ein Zeitlimit (Dauer der einzigen, ungeteilten Runde) plus
-	 * Rundenpause verwendet.
+	 * Nur fuer Runde N&gt;1: numerischer Tagesbruchteil-Ausdruck (kein fertig formatiertes {@code TEXT(...)}
+	 * — das uebernimmt der Aufrufer, siehe {@link #zeitZelleSchreiben}) fuer das tatsaechliche Ende des
+	 * letzten Durchgangs der Vorrunde (siehe {@link #ermittleLetzteZeitZeile}) plus Rundenpause —
+	 * dieselbe Verkettungslogik wie zwischen zwei Durchgaengen innerhalb einer Runde, nur
+	 * rundenuebergreifend. War die Vorrunde nicht aufgeteilt (kein Eintrag in {@link #ZEIT_SPALTE}),
+	 * wird ersatzweise die Rundenstartzeit der Vorrunde plus ein Zeitlimit (Dauer der einzigen,
+	 * ungeteilten Runde) plus Rundenpause verwendet. Die referenzierte Vorrunden-Zelle ist immer TEXT
+	 * (siehe {@link #zeitZelleSchreiben}), daher {@code TIMEVALUE(...)} vor der Addition.
 	 * <p>
 	 * Der Sheet-Name im Formel-Bezug wird ueber {@link SheetMetadataHelper#findeSheetUndHeile}
 	 * aufgeloest (Metadaten-first, ueberlebt Umbenennung), nicht ueber den lokalisierten
@@ -522,12 +504,17 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		int letzteZeitZeile = vorSheet != null ? ermittleLetzteZeitZeile(vorSheet, xDoc) : -1;
 		if (letzteZeitZeile >= 0) {
 			String letzteEndeZelle = "$'" + vorSheetName + "'." + Position.from(ZEIT_SPALTE, letzteZeitZeile).getAddressWith$();
-			return letzteEndeZelle + "+TIME(0;" + rundenPause + ";0)";
+			return "TIMEVALUE(" + letzteEndeZelle + ")+" + minutenAlsTagesbruchteil(rundenPause);
 		}
 
-		String vorZelle = "$'" + vorSheetName + "'." + Position.from(FEHLER_SPALTE, ZWEITE_HEADER_ZEILE).getAddressWith$();
+		String vorZelle = "$'" + vorSheetName + "'." + Position.from(ZEIT_SPALTE, ZWEITE_HEADER_ZEILE).getAddressWith$();
 		String zeitlimit = GlobalImpl.FORMAT_PTM_INT_PROPERTY(SchweizerPropertiesSpalte.KONFIG_PROP_ZEITPLAN_ZEITLIMIT_MINUTEN);
-		return vorZelle + "+TIME(0;" + zeitlimit + "+" + rundenPause + ";0)";
+		return "TIMEVALUE(" + vorZelle + ")+" + minutenAlsTagesbruchteil(zeitlimit + "+" + rundenPause);
+	}
+
+	/** Minuten-Ausdruck als Tagesbruchteil-Formel ({@code (Ausdruck)/1440}). */
+	private static String minutenAlsTagesbruchteil(String minutenAusdruck) {
+		return "(" + minutenAusdruck + ")/1440";
 	}
 
 	/**
@@ -621,8 +608,8 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		if (letztePos == null) {
 			return;
 		}
-		// Bei aktiver Zeitplanung wird der Druckbereich bis FEHLER_SPALTE (letzte Spalte) erweitert.
-		int letzteDruckSpalte = getKonfigurationSheet().isZeitplanAktiv() ? FEHLER_SPALTE : ERG_TEAM_B_SPALTE;
+		// Bei aktiver Zeitplanung wird der Druckbereich bis ZEIT_SPALTE erweitert (ohne FEHLER_SPALTE).
+		int letzteDruckSpalte = getKonfigurationSheet().isZeitplanAktiv() ? ZEIT_SPALTE : ERG_TEAM_B_SPALTE;
 		RangePosition druckBereich = RangePosition.from(BAHN_NR_SPALTE, ERSTE_HEADER_ZEILE,
 				Position.from(letzteDruckSpalte, letztePos.getZeile()));
 		PrintArea.from(getXSpreadSheet(), getWorkingSpreadsheet()).setPrintArea(druckBereich);
@@ -662,6 +649,16 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		RangePosition headerUntenRange = RangePosition.from(BAHN_NR_SPALTE, ZWEITE_HEADER_ZEILE,
 				ERG_TEAM_B_SPALTE, ZWEITE_HEADER_ZEILE);
 		getSheetHelper().setPropertyInRange(sheet, headerUntenRange, TABLE_BORDER2,
+				BorderFactory.from().boldLn().forBottom().toBorder());
+
+		// BAHN_NR_SPALTE ist vertikal über ERSTE_HEADER_ZEILE+ZWEITE_HEADER_ZEILE gemerged
+		// (rotierte "Bahn/Nr"-Beschriftung, siehe SpielrundeHelper.datenErsteSpalte). Fuer
+		// gemergte Zellen wird die untere Rand-Linie beim Rendern von der ANKER-Zelle (erste
+		// Zeile des Merge) bestimmt, nicht von der oben gesetzten zweiten Zeile — sonst fehlt die
+		// dicke Linie unter "Nr" visuell, obwohl das Property-Objekt korrekt gesetzt ist.
+		RangePosition bahnNrHeaderAnker = RangePosition.from(BAHN_NR_SPALTE, ERSTE_HEADER_ZEILE,
+				BAHN_NR_SPALTE, ERSTE_HEADER_ZEILE);
+		getSheetHelper().setPropertyInRange(sheet, bahnNrHeaderAnker, TABLE_BORDER2,
 				BorderFactory.from().boldLn().forBottom().toBorder());
 	}
 
@@ -860,9 +857,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 			return; // Paarungen passen in einen Durchgang, keine Aufteilung noetig
 		}
 
-		getSheetHelper().setColumnWidth(getXSpreadSheet(), Position.from(ZEIT_SPALTE, ERSTE_HEADER_ZEILE), 1800);
-
-		String rundenStartzeitAdresse = Position.from(FEHLER_SPALTE, ZWEITE_HEADER_ZEILE).getAddressWith$();
+		String rundenStartzeitAdresse = Position.from(ZEIT_SPALTE, ZWEITE_HEADER_ZEILE).getAddressWith$();
 		String zeitlimit = GlobalImpl.FORMAT_PTM_INT_PROPERTY(SchweizerPropertiesSpalte.KONFIG_PROP_ZEITPLAN_ZEITLIMIT_MINUTEN);
 		String pause = GlobalImpl.FORMAT_PTM_INT_PROPERTY(SchweizerPropertiesSpalte.KONFIG_PROP_ZEITPLAN_DURCHGANG_PAUSE_MINUTEN);
 
@@ -872,21 +867,21 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 			SheetRunner.testDoCancelTask();
 
 			int letzteZeileDesBlocks = zeile + groesse - 1;
-			String startFormel = vorherigeEndeAdresse == null ? rundenStartzeitAdresse
-					: vorherigeEndeAdresse + "+TIME(0;" + pause + ";0)";
+			// vorherigeEndeAdresse/rundenStartzeitAdresse sind TEXT-Zellen (siehe zeitZelleSchreiben) -> TIMEVALUE() vor der Addition
+			String startAusdruck = vorherigeEndeAdresse == null ? "TIMEVALUE(" + rundenStartzeitAdresse + ")"
+					: "TIMEVALUE(" + vorherigeEndeAdresse + ")+" + minutenAlsTagesbruchteil(pause);
 			Position startPos = Position.from(ZEIT_SPALTE, zeile);
-			zeitZelleSchreiben(startPos, startFormel);
+			zeitZelleSchreiben(startPos, startAusdruck);
 
 			String endeAdresse;
+			String endeAusdruck = "TIMEVALUE(" + startPos.getAddress() + ")+" + minutenAlsTagesbruchteil(zeitlimit);
 			if (letzteZeileDesBlocks == zeile) {
 				// einzeiliger Block: Endzeit ueberschreibt die soeben geschriebene Startzeit in derselben Zelle
-				String endeFormel = startPos.getAddress() + "+TIME(0;" + zeitlimit + ";0)";
-				zeitZelleSchreiben(startPos, endeFormel);
+				zeitZelleSchreiben(startPos, endeAusdruck);
 				endeAdresse = startPos.getAddress();
 			} else {
 				Position endePos = Position.from(ZEIT_SPALTE, letzteZeileDesBlocks);
-				String endeFormel = startPos.getAddress() + "+TIME(0;" + zeitlimit + ";0)";
-				zeitZelleSchreiben(endePos, endeFormel);
+				zeitZelleSchreiben(endePos, endeAusdruck);
 				endeAdresse = endePos.getAddress();
 			}
 			vorherigeEndeAdresse = endeAdresse;
@@ -895,14 +890,20 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		}
 	}
 
-	/** Schreibt eine Zeit-Formel (Zellformat Zeit HH:MM) in {@link #ZEIT_SPALTE}. */
-	private void zeitZelleSchreiben(Position pos, String formel) throws GenerateException {
+	/**
+	 * Schreibt einen numerischen Tagesbruchteil-Ausdruck als {@code TEXT(...;"HH:MM")}-Formel in
+	 * {@link #ZEIT_SPALTE} — bewusst TEXT statt numerischer Zeitwert mit {@code NumberFormat}-Property:
+	 * LibreOffice Calc kann Formelzellen bei Neuberechnung (z.B. nach Aenderung eines
+	 * Zeitplan-Konfigwerts) intern ein eigenes Anzeigeformat zuweisen und dabei das per API gesetzte
+	 * HH:MM lautlos auf HH:MM:SS erweitern — nicht deterministisch reproduzierbar, aber im echten
+	 * Dokument beobachtet. Text-Zellen sind von dieser Auto-Formatierung nicht betroffen.
+	 */
+	private void zeitZelleSchreiben(Position pos, String numerischerAusdruck) throws GenerateException {
+		String formel = "TEXT(" + numerischerAusdruck + ";\"HH:MM\")";
 		StringCellValue zeitValue = StringCellValue.from(getXSpreadSheet(), pos, formel)
 				.setHoriJustify(CellHoriJustify.CENTER).setVertJustify(CellVertJustify2.CENTER)
 				.setCharHeight(12);
 		getSheetHelper().setFormulaInCell(zeitValue);
-		RangePosition zeitRange = RangePosition.from(pos, pos);
-		RangeHelper.from(this, zeitRange).setRangeProperties(RangeProperties.from().numberFormat(UserNumberFormat.TIME));
 	}
 
 	/**
@@ -929,7 +930,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		int zeile = ERSTE_DATEN_ZEILE;
 		for (int i = 0; i < bloecke.size(); i++) {
 			if (i > 0) {
-				RangePosition trennzeile = RangePosition.from(BAHN_NR_SPALTE, zeile, FEHLER_SPALTE, zeile);
+				RangePosition trennzeile = RangePosition.from(BAHN_NR_SPALTE, zeile, ZEIT_SPALTE, zeile);
 				getSheetHelper().setPropertyInRange(sheet, trennzeile, TABLE_BORDER2, doppelteLinieOben);
 			}
 			zeile += bloecke.get(i);
@@ -986,8 +987,21 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 	 * diese Pruefung faelschlich jede Zeile als „doppelt" rot einfaerben. Ersetzt die Pruefung
 	 * durch eine pro Durchgang-Block skalierte Variante, die Duplikate nur innerhalb desselben
 	 * Durchgangs erkennt.
+	 * <p>
+	 * Loescht VOR dem Anwenden der Block-Regeln die bedingte Formatierung ueber die GESAMTE
+	 * Bahn-Nr-Datenspalte in einem Rutsch (nicht nur die jeweilige Block-Range) — sonst bleiben bei
+	 * wiederholtem "Neu auslosen" mit unterschiedlicher Bahnen-Anzahl (unterschiedliche
+	 * Block-Grenzen je Lauf) Fragmente frueherer Regeln auf Zeilen liegen, die in der aktuellen
+	 * Blockstruktur nicht mehr durch eine neue Regel exakt ueberschrieben werden — LO haeuft dann
+	 * mehrere ueberlappende Regeln je Zelle an, die unabhaengig voneinander auswerten (beobachteter
+	 * Bug: Zellen mit legitim wiederkehrenden Werten wurden faelschlich rot markiert).
 	 */
 	private void bahnNrDuplikatPruefungProDurchgang(List<Integer> bloecke) throws GenerateException {
+		int gesamtAnzahlZeilen = bloecke.stream().mapToInt(Integer::intValue).sum();
+		RangePosition gesamteSpalte = RangePosition.from(BAHN_NR_SPALTE, ERSTE_DATEN_ZEILE,
+				BAHN_NR_SPALTE, ERSTE_DATEN_ZEILE + gesamtAnzahlZeilen - 1);
+		ConditionalFormatHelper.clearOnly(this, gesamteSpalte);
+
 		FehlerStyle fehlerStyle = new FehlerStyle();
 		int zeile = ERSTE_DATEN_ZEILE;
 		for (int groesse : bloecke) {
