@@ -22,6 +22,7 @@ import com.sun.star.awt.ActionEvent;
 import com.sun.star.awt.PushButtonType;
 import com.sun.star.awt.XButton;
 import com.sun.star.awt.XCheckBox;
+import com.sun.star.awt.XComboBox;
 import com.sun.star.awt.XControl;
 import com.sun.star.awt.XControlContainer;
 import com.sun.star.awt.XDialog;
@@ -43,6 +44,7 @@ import com.sun.star.ui.dialogs.TemplateDescription;
 import com.sun.star.ui.dialogs.XFilePicker3;
 import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.DocumentHelper;
 import de.petanqueturniermanager.comp.GlobalProperties;
 import de.petanqueturniermanager.comp.GlobalProperties.CompositeViewEintragRoh;
@@ -123,9 +125,16 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
     // ---- Dialog-Zustand ----
     private final CompositeViewEintragRoh initialerEintrag;
     private final int initialerPort;
-    private final String[] komboBoxItems;
     /** Wird bei „Übernehmen" und „OK" mit dem validierten Eintrag aufgerufen. */
     private final Consumer<CompositeViewEintragRoh> anwendenCallback;
+
+    /** Auswaehlbare Turniersysteme des Sheet-Typ-Filters (alle ausser {@link TurnierSystem#KEIN}). */
+    private static final TurnierSystem[] FILTER_SYSTEME = Arrays.stream(TurnierSystem.values())
+            .filter(system -> system != TurnierSystem.KEIN)
+            .toArray(TurnierSystem[]::new);
+
+    /** Aktuell gewaehltes Turniersystem des Sheet-Typ-Filters; {@code null} = „Alle" (Default). */
+    private TurnierSystem filterSystem;
 
     /** Wurzelknoten des aktuellen Split-Baums. */
     private SplitKnoten wurzel;
@@ -188,13 +197,11 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
             XComponentContext xContext,
             CompositeViewEintragRoh initialerEintrag,
             int initialerPort,
-            String[] komboBoxItems,
             Consumer<CompositeViewEintragRoh> anwendenCallback,
             XWindowPeer parentPeer) {
         super(xContext);
         this.initialerEintrag = initialerEintrag;
         this.initialerPort = initialerPort;
-        this.komboBoxItems = komboBoxItems;
         this.anwendenCallback = anwendenCallback;
         this.parentPeer = parentPeer;
     }
@@ -254,6 +261,7 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
     }
 
     private void initialisiereZustand() {
+        filterSystem = null;
         panelSheets.clear();
         panelZooms.clear();
         panelSichtbareTabellenanteile.clear();
@@ -542,6 +550,10 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
                     : GlobalProperties.DEFAULT_SICHTBARER_TABELLENANTEIL;
             fuegeFixedTextEinDyn("lblPanelSichtbar", I18n.get("webserver.composite.konfig.panel.sichtbar.label"), 170, konfFelderY2, 35, ZEILE_H);
             fuegeEditEinDyn("txtPanelSichtbar", String.valueOf(aktuellerSichtbarerAnteil), 208, konfFelderY2, 25, ZEILE_H);
+
+            fuegeFixedTextEinDyn("lblFilterSystem", I18n.get("webserver.composite.konfig.filter.system"), 245, konfFelderY2, 40, ZEILE_H);
+            fuegeComboBoxEinDyn("cbFilterSystem", filterSystemEintraege(), 287, konfFelderY2, 128, ZEILE_H, filterSystemLabel(filterSystem));
+            registriereComboBoxActionListenerDyn("cbFilterSystem", this::beimFilterSystemWechsel);
         }
 
         // ---- Layout-Vorschau ----
@@ -1299,13 +1311,54 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
             geoeffnet.sort(null);
         }
         Set<String> geoeffnetSet = new HashSet<>(geoeffnet);
-        List<String> festeIds = Arrays.stream(komboBoxItems)
+        List<String> festeIds = Arrays.stream(SheetResolverFactory.sheetTypenFuer(filterSystem))
                 .filter(t -> !geoeffnetSet.contains(t))
                 .sorted()
                 .collect(Collectors.toList());
         var result = new ArrayList<>(geoeffnet);
         result.addAll(festeIds);
         return result.toArray(String[]::new);
+    }
+
+    /** Einträge des Sheet-Typ-Filters: „Alle" plus alle auswählbaren Turniersysteme. */
+    private static String[] filterSystemEintraege() {
+        String[] items = new String[FILTER_SYSTEME.length + 1];
+        items[0] = I18n.get("webserver.composite.konfig.filter.alle");
+        for (int i = 0; i < FILTER_SYSTEME.length; i++) {
+            items[i + 1] = FILTER_SYSTEME[i].getBezeichnung();
+        }
+        return items;
+    }
+
+    private static String filterSystemLabel(TurnierSystem system) {
+        return system == null ? I18n.get("webserver.composite.konfig.filter.alle") : system.getBezeichnung();
+    }
+
+    private static TurnierSystem filterSystemVonLabel(String label) {
+        for (TurnierSystem system : FILTER_SYSTEME) {
+            if (system.getBezeichnung().equals(label)) {
+                return system;
+            }
+        }
+        return null;
+    }
+
+    /** Liest die aktuelle Filterauswahl und baut die Panel-Konfiguration neu auf (aktualisiert die Sheet-Vorschläge). */
+    private void beimFilterSystemWechsel() {
+        XControl ctrl = xcc.getControl("cbFilterSystem");
+        if (ctrl == null) return;
+        String label = Lo.qi(XTextComponent.class, ctrl).getText().trim();
+        filterSystem = filterSystemVonLabel(label);
+        aktualisiereUndFange();
+    }
+
+    private void registriereComboBoxActionListenerDyn(String ctlName, Runnable aktion) {
+        XControl ctrl = xcc.getControl(ctlName);
+        if (ctrl == null) return;
+        Lo.qi(XComboBox.class, ctrl).addActionListener(new com.sun.star.awt.XActionListener() {
+            @Override public void actionPerformed(ActionEvent e) { aktion.run(); }
+            @Override public void disposing(EventObject e) {}
+        });
     }
 
     // ---- Control-Hilfsmethoden: statische Controls (kein Tracking) ----
