@@ -20,6 +20,7 @@ import org.apache.logging.log4j.Logger;
 import com.google.common.annotations.VisibleForTesting;
 import com.sun.star.awt.FontWeight;
 import com.sun.star.container.XNamed;
+import com.sun.star.sheet.ConditionOperator;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.table.CellHoriJustify;
@@ -42,6 +43,8 @@ import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.border.BorderFactory;
+import de.petanqueturniermanager.helper.cellstyle.FehlerStyle;
+import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeGeradeStyle;
@@ -905,6 +908,32 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		}
 		Position startPos = Position.from(BAHN_NR_SPALTE, ERSTE_DATEN_ZEILE);
 		RangeHelper.from(this, rangeData.getRangePosition(startPos)).setDataInRange(rangeData);
+
+		bahnNrDuplikatPruefungProDurchgang(bloecke);
+	}
+
+	/**
+	 * {@code SpielrundeHelper.datenErsteSpalte()} markiert doppelte Bahn-Nummern per bedingter
+	 * Formatierung rot — die COUNTIF-Formel prueft dabei ueber die GESAMTE Spalte (siehe
+	 * {@code Position.getSpalteAddressWith$()}). Da die Bahn-Nummern bei aktiver
+	 * Durchgang-Aufteilung pro Durchgang bewusst neu ab 1 beginnen (z.B. 1,2,3,1,2,3,1,2), wuerde
+	 * diese Pruefung faelschlich jede Zeile als „doppelt" rot einfaerben. Ersetzt die Pruefung
+	 * durch eine pro Durchgang-Block skalierte Variante, die Duplikate nur innerhalb desselben
+	 * Durchgangs erkennt.
+	 */
+	private void bahnNrDuplikatPruefungProDurchgang(List<Integer> bloecke) throws GenerateException {
+		FehlerStyle fehlerStyle = new FehlerStyle();
+		int zeile = ERSTE_DATEN_ZEILE;
+		for (int groesse : bloecke) {
+			RangePosition blockRange = RangePosition.from(BAHN_NR_SPALTE, zeile, BAHN_NR_SPALTE, zeile + groesse - 1);
+			String conditionFindDoppelt = "COUNTIF(" + blockRange.getAddressWith$() + ";"
+					+ ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")>1";
+			String conditionNotEmpty = ConditionalFormatHelper.FORMULA_CURRENT_CELL + "<>\"\"";
+			String formulaFindDoppelteBahnNr = "AND(" + conditionFindDoppelt + ";" + conditionNotEmpty + ")";
+			ConditionalFormatHelper.from(this, blockRange).clear().formula1(formulaFindDoppelteBahnNr)
+					.operator(ConditionOperator.FORMULA).style(fehlerStyle).applyAndDoReset();
+			zeile += groesse;
+		}
 	}
 
 	/**

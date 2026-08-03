@@ -158,6 +158,37 @@ public class SchweizerZeitplanUITest extends BaseCalcUITest {
 			assertThat(bahnNrn.get(i).get(0).getIntVal(-1))
 					.as("Bahn-Nr Zeile %d", i).isEqualTo(erwarteteBahnNr[i]);
 		}
+
+		// Regressionstest: Duplikat-Pruefung (bedingte Formatierung, rot bei doppelter Bahn-Nr)
+		// darf nur INNERHALB eines Durchgangs pruefen, nicht ueber die gesamte Spalte — sonst
+		// waeren die legitim wiederkehrenden Nummern 1/2/3 der Folge-Durchgaenge faelschlich rot.
+		String cfFormelDurchgang1 = ladeErsteConditionalFormatFormel(runde1,
+				Position.from(SchweizerAbstractSpielrundeSheet.BAHN_NR_SPALTE, SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE));
+		assertThat(cfFormelDurchgang1)
+				.as("Duplikat-Pruefung Durchgang 1 muss auf die Bloecke skaliert sein (Zeilen 3-5), nicht auf die ganze Spalte")
+				.contains("$A$3:$A$5");
+
+		String cfFormelDurchgang2 = ladeErsteConditionalFormatFormel(runde1,
+				Position.from(SchweizerAbstractSpielrundeSheet.BAHN_NR_SPALTE, SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE + 3));
+		assertThat(cfFormelDurchgang2)
+				.as("Duplikat-Pruefung Durchgang 2 muss auf dessen eigenen Block skaliert sein (Zeilen 6-8)")
+				.contains("$A$6:$A$8");
+	}
+
+	/** Liest die Formula1 der ersten bedingten Formatierung einer Zelle (fuer COUNTIF-Duplikat-Pruefungen). */
+	private String ladeErsteConditionalFormatFormel(XSpreadsheet sheet, Position pos) throws GenerateException {
+		try {
+			com.sun.star.table.XCell xCell = sheet.getCellByPosition(pos.getSpalte(), pos.getZeile());
+			com.sun.star.beans.XPropertySet xPropSet = de.petanqueturniermanager.helper.Lo.qi(com.sun.star.beans.XPropertySet.class, xCell);
+			com.sun.star.sheet.XSheetConditionalEntries xEntries = de.petanqueturniermanager.helper.Lo.qi(
+					com.sun.star.sheet.XSheetConditionalEntries.class, xPropSet.getPropertyValue("ConditionalFormat"));
+			assertThat(xEntries.getCount()).as("Zelle %s muss eine bedingte Formatierung haben", pos.getAddress()).isGreaterThan(0);
+			com.sun.star.sheet.XSheetCondition xCondition = de.petanqueturniermanager.helper.Lo.qi(
+					com.sun.star.sheet.XSheetCondition.class, xEntries.getByIndex(0));
+			return xCondition.getFormula1();
+		} catch (Exception e) {
+			throw new GenerateException(e.getMessage());
+		}
 	}
 
 	/**
