@@ -21,6 +21,7 @@ public class ConfigProperty<V> {
 	private boolean tabFarbe;    // Tab-Farben-Dialog
 	private boolean intern;      // interner Zustand – nicht in Dialogen anzeigen
 	private boolean exportKonfig; // Export/Upload-Konfigurationsdialog
+	private boolean kompaktesTextfeld; // STRING: schmales Textfeld ohne Textarea-Edit-Button (z.B. Uhrzeit)
 	private Consumer<WorkingSpreadsheet> nachSpeichernAktion;
 
 	protected ConfigProperty(ConfigPropertyType type, String key) {
@@ -98,6 +99,19 @@ public class ConfigProperty<V> {
 
 	public final boolean isExportKonfig() {
 		return exportKonfig;
+	}
+
+	/**
+	 * Markiert eine {@link ConfigPropertyType#STRING}-Property für die Darstellung als schmales
+	 * einzeiliges Textfeld ohne Textarea-Edit-Button (statt der Standard-Darstellung mit Button).
+	 */
+	public ConfigProperty<V> kompaktesTextfeld() {
+		this.kompaktesTextfeld = true;
+		return this;
+	}
+
+	public final boolean isKompaktesTextfeld() {
+		return kompaktesTextfeld;
 	}
 
 	public ConfigProperty<V> mitNachSpeichernAktion(Consumer<WorkingSpreadsheet> aktion) {

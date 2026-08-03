@@ -132,7 +132,7 @@ public class SchweizerPropertiesSpalte extends BasePropertiesSpalte implements I
 		KONFIG_PROPERTIES.add(ZeitplanConfigProperty.<Integer>from(ConfigPropertyType.INTEGER, KONFIG_PROP_ZEITPLAN_RUNDEN_PAUSE_MINUTEN)
 				.setDefaultVal(10).setDescription("config.desc.zeitplan.runden.pause"));
 		KONFIG_PROPERTIES.add(ZeitplanConfigProperty.<String>from(ConfigPropertyType.STRING, KONFIG_PROP_ZEITPLAN_TURNIER_STARTZEIT)
-				.setDefaultVal("09:00").setDescription("config.desc.zeitplan.turnier.startzeit"));
+				.setDefaultVal("09:00").setDescription("config.desc.zeitplan.turnier.startzeit").kompaktesTextfeld());
 
 		ADDUploadProp(KONFIG_PROPERTIES);
 		ADDSpielrundenExportProp(KONFIG_PROPERTIES);
