@@ -45,6 +45,12 @@ public class AddConfigElementsToWindow {
 				AuswahlConfigElement auswahlConfigElement = new AuswahlConfigElement(
 						guiFactoryCreateParam, (AuswahlConfigProperty) configProperty, currentSpreadsheet);
 				layout.addLayout(auswahlConfigElement.getLayout(), 1);
+			} else if (configProperty.isKompaktesTextfeld()) {
+				// schmales Textfeld ohne Textarea-Edit-Button
+				@SuppressWarnings("unchecked")
+				SimpleTextConfigElement simpleTextConfigElement = new SimpleTextConfigElement(
+						guiFactoryCreateParam, (ConfigProperty<String>) configProperty, currentSpreadsheet);
+				layout.addLayout(simpleTextConfigElement.getLayout(), 1);
 			} else {
 				// create textfield mit btn
 				@SuppressWarnings("unchecked")
