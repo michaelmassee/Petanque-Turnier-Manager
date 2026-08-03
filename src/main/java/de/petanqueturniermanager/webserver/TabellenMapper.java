@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -33,8 +34,11 @@ import com.sun.star.table.XTableColumns;
 import com.sun.star.table.XTableRows;
 import com.sun.star.text.XText;
 
+import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
+import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.cellvalue.properties.ICommonProperties;
+import de.petanqueturniermanager.helper.pagestyle.HeaderFooterTokenResolver;
 import de.petanqueturniermanager.helper.pagestyle.PageProperties;
 
 /**
@@ -62,6 +66,15 @@ public class TabellenMapper {
      * oder einen falsch dimensionierten Druckbereich hat (Used-Area-Fallback).
      */
     private static final String INTERN_METADATEN_PRAEFIX = "PTM_EDIT:";
+
+    /**
+     * Property-Schlüssel der Kopfzeilen-Konfiguration. Identisch (aber jeweils privat dupliziert)
+     * in allen {@code *PropertiesSpalte}-Klassen der Turniersysteme (z.B. {@code TripTetePropertiesSpalte}),
+     * da alle Turniersysteme denselben PageStyle ({@code PageStyle.PETTURNMNGR}) verwenden.
+     */
+    private static final String KONFIG_PROP_KOPF_ZEILE_LINKS = "Kopfzeile Links";
+    private static final String KONFIG_PROP_KOPF_ZEILE_MITTE = "Kopfzeile Mitte";
+    private static final String KONFIG_PROP_KOPF_ZEILE_RECHTS = "Kopfzeile Rechts";
 
     /**
      * Mappt das übergebene Sheet vollständig in ein {@link TabelleModel}.
@@ -210,6 +223,16 @@ public class TabellenMapper {
      * den geleerten Wert übernimmt statt am alten Wert hängen zu bleiben
      * (Gson serialisiert {@code null}-Felder nicht, das Frontend würde den fehlenden Schlüssel
      * als „unverändert" interpretieren).
+     * <p>
+     * Kopfzeile und Fußzeile links/mitte werden aus der rohen Konfigurations-Property
+     * (dem {@code {TOKEN}}-Text, wie ihn {@code HeaderFooterConfigProperty} speichert) gelesen
+     * und über {@link HeaderFooterTokenResolver} mit echten Live-Werten aufgelöst –
+     * <strong>nicht</strong> über {@code XHeaderFooterContent.getString()}: Dieser liefert bei
+     * enthaltenen UNO-Textfeldern (Datum, Seite, Tabellenname, ...) nur LO-interne Dummy-Werte
+     * ("???"/"1"/"99"), solange kein echter Druckvorgang läuft (siehe
+     * {@code ScHeaderFooterTextObj::FillDummyFieldData}). Fußzeile rechts ist kein
+     * Konfigurations-Wert (fest codierter PTM-Branding-Text ohne Platzhalter) und wird daher
+     * weiterhin direkt aus dem PageStyle gelesen.
      */
     private String[] ermittleKopfUndFusszeile(XSpreadsheet sheet, XSpreadsheetDocument doc) {
         var ergebnis = new String[6];
@@ -237,23 +260,25 @@ public class TabellenMapper {
             if (styleProps == null) {
                 return ergebnis;
             }
+
+            String tabellenName = ermittleTabellenName(sheet);
+            String dateiname = ermittleDateiname(doc);
+            DocumentPropertiesHelper docPropHelper = new DocumentPropertiesHelper(doc);
+
             var headerIsOnObj = styleProps.getPropertyValue(PageProperties.HEADER_IS_ON);
             if (Boolean.TRUE.equals(headerIsOnObj)) {
-                var headerProp = styleProps.getPropertyValue(PageProperties.RIGHTPAGE_HEADER_CONTENT);
-                var headerContent = Lo.qi(XHeaderFooterContent.class, headerProp);
-                if (headerContent != null) {
-                    ergebnis[0] = leseText(headerContent.getLeftText());
-                    ergebnis[1] = leseText(headerContent.getCenterText());
-                    ergebnis[2] = leseText(headerContent.getRightText());
-                }
+                ergebnis[0] = leseUndAufloesen(docPropHelper, KONFIG_PROP_KOPF_ZEILE_LINKS, tabellenName, dateiname);
+                ergebnis[1] = leseUndAufloesen(docPropHelper, KONFIG_PROP_KOPF_ZEILE_MITTE, tabellenName, dateiname);
+                ergebnis[2] = leseUndAufloesen(docPropHelper, KONFIG_PROP_KOPF_ZEILE_RECHTS, tabellenName, dateiname);
             }
             var footerIsOnObj = styleProps.getPropertyValue(PageProperties.FOOTER_IS_ON);
             if (Boolean.TRUE.equals(footerIsOnObj)) {
+                ergebnis[3] = leseUndAufloesen(docPropHelper, BasePropertiesSpalte.KONFIG_PROP_FUSSZEILE_LINKS, tabellenName, dateiname);
+                ergebnis[4] = leseUndAufloesen(docPropHelper, BasePropertiesSpalte.KONFIG_PROP_FUSSZEILE_MITTE, tabellenName, dateiname);
+
                 var footerProp = styleProps.getPropertyValue(PageProperties.RIGHTPAGE_FOOTER_CONTENT);
                 var footerContent = Lo.qi(XHeaderFooterContent.class, footerProp);
                 if (footerContent != null) {
-                    ergebnis[3] = leseText(footerContent.getLeftText());
-                    ergebnis[4] = leseText(footerContent.getCenterText());
                     ergebnis[5] = leseText(footerContent.getRightText());
                 }
             }
@@ -261,6 +286,23 @@ public class TabellenMapper {
             logger.debug("Kopf-/Fußzeile nicht ermittelbar", e);
         }
         return ergebnis;
+    }
+
+    private String leseUndAufloesen(DocumentPropertiesHelper docPropHelper, String propName, String tabellenName, String dateiname) {
+        String rohtext = docPropHelper.getStringProperty(propName, "");
+        String aufgeloest = HeaderFooterTokenResolver.resolve(rohtext, tabellenName, dateiname);
+        return (aufgeloest == null || aufgeloest.isBlank()) ? "" : aufgeloest;
+    }
+
+    private String ermittleTabellenName(XSpreadsheet sheet) {
+        var named = Lo.qi(com.sun.star.container.XNamed.class, sheet);
+        return named != null ? named.getName() : "";
+    }
+
+    private String ermittleDateiname(XSpreadsheetDocument doc) {
+        var model = Lo.qi(com.sun.star.frame.XModel.class, doc);
+        String url = model != null ? model.getURL() : null;
+        return (url == null || url.isBlank()) ? "" : FilenameUtils.getName(url);
     }
 
     private String leseText(com.sun.star.text.XText text) {

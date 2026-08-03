@@ -56,6 +56,22 @@ Laut petanque-turnier.de:
 
 Damit bleibt die Rangliste auch bei vielen Runden eindeutig.
 
+## 2.4 Kriterien zur Ermittlung der Platzierung
+
+Die Software (PTM) wendet folgende Reihenfolge an:
+
+1. **Sieganzahl** (absteigend) – Hauptkriterium
+2. **Formule-X-Wertungspunkte** (absteigend) – Feinwertung
+
+Ab hier greifen die Tie-Breaker (nur bei Gleichstand in 1+2):
+
+3. **Punktedifferenz** (Spielpunkte+ minus Spielpunkte-, absteigend)
+4. **Eigene Spielpunkte** (absteigend)
+5. **Direktvergleich** – sofern die betroffenen Teams in derselben Runde gegeneinander gespielt haben
+6. **Losentscheid** – deterministisch anhand der Teamnummer, falls auch der Direktvergleich kein Ergebnis liefert (z. B. bei zyklischem Dreier-Gleichstand)
+
+Implementierung: `algorithmen/formulex/FormuleXRanglisteRechner.java`.
+
 ---
 # 3. Zeitlimit & flexible Ergebnisse
 

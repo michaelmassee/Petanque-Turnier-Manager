@@ -83,12 +83,14 @@ public class TripTeteExportInVerzeichnis extends AbstractExportInVerzeichnis {
         processBox().info(I18n.get("export.info.pdf"));
         List<Path> exportierteDateien = new ArrayList<>();
 
-        Path pdfSpielplan = exportierePdfAusHtml(spielplanSheetName, I18n.get("export.nav.spielplan"), zielVerzeichnis);
+        Path pdfSpielplan = exportierePdfAusHtml(spielplanSheetName, I18n.get("export.nav.spielplan"),
+                titel, turnierlogoUrl, zielVerzeichnis);
         if (pdfSpielplan != null) {
             exportierteDateien.add(pdfSpielplan);
         }
 
-        Path pdfRangliste = exportierePdfAusHtml(ranglisteSheetName, I18n.get("export.nav.rangliste"), zielVerzeichnis);
+        Path pdfRangliste = exportierePdfAusHtml(ranglisteSheetName, I18n.get("export.nav.rangliste"),
+                titel, turnierlogoUrl, zielVerzeichnis);
         if (pdfRangliste != null) {
             exportierteDateien.add(pdfRangliste);
         }

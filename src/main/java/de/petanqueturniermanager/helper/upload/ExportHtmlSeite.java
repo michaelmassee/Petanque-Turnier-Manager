@@ -110,17 +110,17 @@ public class ExportHtmlSeite {
         sb.append("<!DOCTYPE html>\n<html lang=\"de\">\n<head>\n");
         sb.append("<meta charset=\"UTF-8\">\n");
         sb.append("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n");
-        sb.append("<title>").append(StringEscapeUtils.escapeHtml4(seitentitel)).append("</title>\n");
+        sb.append("<title>").append(StringEscapeUtils.escapeXml11(seitentitel)).append("</title>\n");
         sb.append("<style>\n").append(css()).append("</style>\n");
         sb.append("</head>\n<body>\n");
 
         sb.append("<header class=\"page-header\">\n");
         sb.append("<div class=\"header-text\">");
-        sb.append("<h1>").append(StringEscapeUtils.escapeHtml4(seitentitel)).append("</h1>");
+        sb.append("<h1>").append(StringEscapeUtils.escapeXml11(seitentitel)).append("</h1>");
         sb.append("<div class=\"ptm-subline\">Pétanque Turnier Manager</div>");
         sb.append("</div>");
         if (StringUtils.isNotBlank(logoUrl)) {
-            sb.append("<img class=\"turnier-logo\" src=\"").append(StringEscapeUtils.escapeHtml4(logoUrl))
+            sb.append("<img class=\"turnier-logo\" src=\"").append(StringEscapeUtils.escapeXml11(logoUrl))
                     .append("\" alt=\"Logo\">");
         }
         sb.append("\n</header>\n");
@@ -145,13 +145,13 @@ public class ExportHtmlSeite {
     }
 
     private void appendSection(StringBuilder sb, String id, String titel, String pdfUrl, String tabelleHtml) {
-        sb.append("<section class=\"export-section\" id=\"").append(StringEscapeUtils.escapeHtml4(id)).append("\">\n");
+        sb.append("<section class=\"export-section\" id=\"").append(StringEscapeUtils.escapeXml11(id)).append("\">\n");
         sb.append("<div class=\"section-heading\">\n");
-        sb.append("<h2>").append(StringEscapeUtils.escapeHtml4(titel)).append("</h2>\n");
+        sb.append("<h2>").append(StringEscapeUtils.escapeXml11(titel)).append("</h2>\n");
         if (StringUtils.isNotBlank(pdfUrl)) {
-            sb.append("<a class=\"pdf-btn\" href=\"").append(StringEscapeUtils.escapeHtml4(pdfUrl))
+            sb.append("<a class=\"pdf-btn\" href=\"").append(StringEscapeUtils.escapeXml11(pdfUrl))
                     .append("\" download>&#128462; ")
-                    .append(StringEscapeUtils.escapeHtml4(I18n.get("export.liga.pdf.herunterladen")))
+                    .append(StringEscapeUtils.escapeXml11(I18n.get("export.liga.pdf.herunterladen")))
                     .append("</a>\n");
         }
         sb.append("</div>\n");
@@ -162,13 +162,13 @@ public class ExportHtmlSeite {
     private static String bildFragment(Path bildDatei, String alt) {
         Path dateiname = bildDatei.getFileName();
         String relativerDateiname = dateiname != null ? dateiname.toString() : bildDatei.toString();
-        return "<img class=\"abschluss-bild\" src=\"" + StringEscapeUtils.escapeHtml4(relativerDateiname)
-                + "\" alt=\"" + StringEscapeUtils.escapeHtml4(alt) + "\">";
+        return "<img class=\"abschluss-bild\" src=\"" + StringEscapeUtils.escapeXml11(relativerDateiname)
+                + "\" alt=\"" + StringEscapeUtils.escapeXml11(alt) + "\">";
     }
 
     private String navLink(String id, String label) {
-        return "<a href=\"#" + StringEscapeUtils.escapeHtml4(id) + "\">"
-                + StringEscapeUtils.escapeHtml4(label) + "</a>\n";
+        return "<a href=\"#" + StringEscapeUtils.escapeXml11(id) + "\">"
+                + StringEscapeUtils.escapeXml11(label) + "</a>\n";
     }
 
     private String css() {

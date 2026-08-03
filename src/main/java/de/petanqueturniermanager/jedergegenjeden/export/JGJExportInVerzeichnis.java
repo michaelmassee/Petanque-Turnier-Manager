@@ -90,12 +90,14 @@ public class JGJExportInVerzeichnis extends AbstractExportInVerzeichnis {
         processBox().info(I18n.get("export.info.pdf"));
         List<Path> exportierteDateien = new ArrayList<>();
 
-        Path pdfRangliste = exportierePdfAusHtml(ranglisteSheetName, I18n.get("export.nav.rangliste"), zielVerzeichnis);
+        Path pdfRangliste = exportierePdfAusHtml(ranglisteSheetName, I18n.get("export.nav.rangliste"),
+                titel, turnierlogoUrl, zielVerzeichnis);
         if (pdfRangliste != null) {
             exportierteDateien.add(pdfRangliste);
         }
 
-        Path pdfDirektvergleich = exportierePdfAusHtml(direktvergleichSheetName, I18n.get("export.nav.direktvergleich"), zielVerzeichnis);
+        Path pdfDirektvergleich = exportierePdfAusHtml(direktvergleichSheetName, I18n.get("export.nav.direktvergleich"),
+                titel, turnierlogoUrl, zielVerzeichnis);
         if (pdfDirektvergleich != null) {
             exportierteDateien.add(pdfDirektvergleich);
         }
@@ -106,7 +108,7 @@ public class JGJExportInVerzeichnis extends AbstractExportInVerzeichnis {
                 buildPdfUrl(pdfRangliste), buildPdfUrl(pdfDirektvergleich));
         for (var eintrag : finalrunden) {
             var finalTitel = I18n.get("export.jgj.nav.finalrunde", eintrag.buchstabe());
-            Path pdf = exportierePdfAusHtml(eintrag.sheetName(), finalTitel, zielVerzeichnis);
+            Path pdf = exportierePdfAusHtml(eintrag.sheetName(), finalTitel, titel, turnierlogoUrl, zielVerzeichnis);
             if (pdf != null) {
                 exportierteDateien.add(pdf);
             }

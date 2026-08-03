@@ -23,22 +23,47 @@ class PdfHtmlDokumentTest {
 
     @Test
     void enthaeltGemeinsamenFooterMitTextLinkUndLogo() {
-        var html = PdfHtmlDokument.erstelle("Rangliste", "<table><tbody><tr><td>1</td></tr></tbody></table>");
+        var html = PdfHtmlDokument.erstelle("Turnier", null, "Rangliste",
+                "<table><tbody><tr><td>1</td></tr></tbody></table>");
 
         assertThat(html)
-                .contains(StringEscapeUtils.escapeHtml4(I18n.get("export.liga.footer.text")))
+                .contains(StringEscapeUtils.escapeXml11(I18n.get("export.liga.footer.text")))
                 .contains("href=\"https://michaelmassee.github.io/Petanque-Turnier-Manager/\"")
                 .contains("<img class=\"ptm-footer-logo\" src=\"data:image/png;base64,")
-                .containsPattern("Erstellt am \\d{2}\\.\\d{2}\\.\\d{4} \\d{2}:\\d{2}");
+                .containsPattern("\\d{2}\\.\\d{2}\\.\\d{4} \\d{2}:\\d{2}");
     }
 
     @Test
     void footerLogoIstXhtmlKompatibel() {
-        var html = PdfHtmlDokument.erstelle("Rangliste", "<table><tbody><tr><td>1</td></tr></tbody></table>");
+        var html = PdfHtmlDokument.erstelle("Turnier", null, "Rangliste",
+                "<table><tbody><tr><td>1</td></tr></tbody></table>");
 
         assertThat(html)
                 .contains("alt=\"Pétanque Turnier Manager\" />")
                 .doesNotContain("target=\"_blank\"");
+    }
+
+    @Test
+    void einzelAbschnitt_EnthaeltDokumentKopfMitTitelUndLogo() {
+        var html = PdfHtmlDokument.erstelle("Liga Test", "https://example.org/logo.png", "Rangliste",
+                "<table><tbody><tr><td>1</td></tr></tbody></table>");
+
+        assertThat(html)
+                .contains("<header class=\"dokument-kopf\">")
+                .contains("<h1>Liga Test</h1>")
+                .contains("<img class=\"dokument-logo\" src=\"https://example.org/logo.png\" alt=\"Logo\" />")
+                .contains("<h2>Rangliste</h2>")
+                .contains("<title>Liga Test</title>");
+    }
+
+    @Test
+    void einzelAbschnitt_OhneLogo_KeinImgImKopf() {
+        var html = PdfHtmlDokument.erstelle("Liga Test", null, "Rangliste",
+                "<table><tbody><tr><td>1</td></tr></tbody></table>");
+
+        assertThat(html)
+                .contains("<h1>Liga Test</h1>")
+                .doesNotContain("<img class=\"dokument-logo\"");
     }
 
     @Test

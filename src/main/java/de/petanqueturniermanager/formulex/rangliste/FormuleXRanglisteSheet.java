@@ -18,7 +18,8 @@ import com.sun.star.table.CellVertJustify2;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.algorithmen.formulex.FormuleX;
-import de.petanqueturniermanager.algorithmen.formulex.FormuleXErgebnis;
+import de.petanqueturniermanager.algorithmen.formulex.FormuleXRanglisteRechner;
+import de.petanqueturniermanager.algorithmen.formulex.FormuleXTeamErgebnis;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.formulex.konfiguration.FormuleXKonfigurationSheet;
@@ -45,6 +46,7 @@ import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.RanglisteGeradeUngeradeFormatHelper;
+import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
@@ -61,7 +63,8 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
  * Erstellt die Rangliste für das Formule X Turniersystem.
  * <p>
  * Liest alle vorhandenen Spielrunden-Sheets ein und berechnet Wertung,
- * Siege, Punkte und Differenz. Sortierreihenfolge: Wertung → Differenz → Punkte+.
+ * Siege, Punkte und Differenz. Sortierreihenfolge siehe
+ * {@link de.petanqueturniermanager.algorithmen.formulex.FormuleXRanglisteRechner}.
  */
 public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, ISheet {
 
@@ -71,14 +74,15 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
     public static final int ZWEITE_HEADER_ZEILE = 1;
     public static final int ERSTE_DATEN_ZEILE = 2;
 
-    public static final int TEAM_NR_SPALTE     = 0; // A
-    public static final int TEAM_NAME_SPALTE   = 1; // B
-    public static final int PLATZ_SPALTE       = 2; // C
-    public static final int WERTUNG_SPALTE     = 3; // D
-    public static final int SIEGE_SPALTE       = 4; // E
-    public static final int PUNKTE_PLUS_SPALTE = 5; // F
-    public static final int PUNKTE_DIFF_SPALTE = 6; // G
-    public static final int VALIDATE_SPALTE    = PUNKTE_DIFF_SPALTE + 1; // H (versteckt)
+    public static final int TEAM_NR_SPALTE      = 0; // A
+    public static final int TEAM_NAME_SPALTE    = 1; // B
+    public static final int PLATZ_SPALTE        = 2; // C
+    public static final int SIEGE_SPALTE        = 3; // D
+    public static final int WERTUNG_SPALTE      = 4; // E
+    public static final int PUNKTE_PLUS_SPALTE  = 5; // F
+    public static final int PUNKTE_MINUS_SPALTE = 6; // G
+    public static final int PUNKTE_DIFF_SPALTE  = 7; // H
+    public static final int VALIDATE_SPALTE     = PUNKTE_DIFF_SPALTE + 1; // I (versteckt)
 
     private static final int COL_WIDTH_NR   = 800;
     private static final int COL_WIDTH_NAME = 7000;
@@ -144,6 +148,7 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
         if (SheetRunner.isRunning()) {
             getSheetHelper().setActiveSheet(sheet);
             SheetRunner.unterdrückeNaechstesSelectionChange();
+            SheetFreeze.from(getTurnierSheet()).anzZeilen(ERSTE_DATEN_ZEILE).anzSpalten(3).doFreeze();
         }
         SheetSyncSignaturStore.commitVollaufbau(
                 getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
@@ -162,13 +167,11 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
         LOGGER.debug("berechnungUndSchreiben – {} Spielrunden, Thread='{}'",
                 bisSpielrunde, Thread.currentThread().getName());
 
-        var akkumulierung = leseAlleRunden(aktiveMeldungen, bisSpielrunde);
-        Map<Integer, Integer> wertungMap = akkumulierung.wertungMap();
-        List<FormuleXErgebnis> sortiert = new FormuleX().sortiereNachWertung(akkumulierung.ergebnisse(),
-                e -> wertungMap.getOrDefault(e.teamNr(), 0));
+        List<FormuleXTeamErgebnis> teamErgebnisse = leseAlleRunden(aktiveMeldungen, bisSpielrunde);
+        List<FormuleXTeamErgebnis> sortiert = new FormuleXRanglisteRechner().sortiere(teamErgebnisse);
 
         Map<Integer, String> teamNrZuName = leseTeamnamen(meldeliste);
-        insertDatenAlsWerte(sheet, sortiert, wertungMap, teamNrZuName, akkumulierung.siegeMap());
+        insertDatenAlsWerte(sheet, sortiert, teamNrZuName);
         getSheetHelper().setOptimaleBreitePlusMarge(sheet, TEAM_NR_SPALTE, SheetHelper.OPTIMALE_BREITE_MARGE);
 
         if (!sortiert.isEmpty()) {
@@ -206,9 +209,6 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
         getxCalculatable().calculateAll();
     }
 
-    private record RanglisteAccumulation(List<FormuleXErgebnis> ergebnisse,
-            Map<Integer, Integer> siegeMap, Map<Integer, Integer> wertungMap) {}
-
     /**
      * Indizes in das per-Team Statistik-Array {@code stats}:
      * <ul>
@@ -224,14 +224,14 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
     private static final int STATS_WERTUNG = 3;
     private static final int STATS_LEN = 4;
 
-    private RanglisteAccumulation leseAlleRunden(TeamMeldungen aktiveMeldungen, int bisSpielrunde)
+    private List<FormuleXTeamErgebnis> leseAlleRunden(TeamMeldungen aktiveMeldungen, int bisSpielrunde)
             throws GenerateException {
         Map<Integer, int[]> statsMap = new HashMap<>();
-        Map<Integer, Boolean> freilosMap = new HashMap<>();
+        Map<Integer, List<FormuleXTeamErgebnis.SpielErgebnisGegen>> spielErgebnisseMap = new HashMap<>();
 
         for (Team team : aktiveMeldungen.teams()) {
             statsMap.put(team.getNr(), new int[STATS_LEN]);
-            freilosMap.put(team.getNr(), false);
+            spielErgebnisseMap.put(team.getNr(), new ArrayList<>());
         }
 
         int siegaufschlag = new FormuleX().getSiegaufschlag(bisSpielrunde);
@@ -245,26 +245,23 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
                 LOGGER.debug("leseAlleRunden: Runde {} – Sheet nicht gefunden, übersprungen", runde);
                 continue;
             }
-            leseRundeEin(rundeSheet, aktiveMeldungen, statsMap, freilosMap, siegaufschlag);
+            leseRundeEin(rundeSheet, aktiveMeldungen, statsMap, spielErgebnisseMap, siegaufschlag);
         }
 
-        List<FormuleXErgebnis> ergebnisse = new ArrayList<>();
-        Map<Integer, Integer> siegeMap = new HashMap<>();
-        Map<Integer, Integer> wertungMap = new HashMap<>();
+        List<FormuleXTeamErgebnis> ergebnisse = new ArrayList<>();
         for (Team team : aktiveMeldungen.teams()) {
             int[] stats = statsMap.getOrDefault(team.getNr(), new int[STATS_LEN]);
-            boolean hatteFreilos = freilosMap.getOrDefault(team.getNr(), false);
-            ergebnisse.add(new FormuleXErgebnis(team.getNr(),
-                    stats[STATS_EIGENE], stats[STATS_KASSIERT], List.of(), hatteFreilos));
-            siegeMap.put(team.getNr(), stats[STATS_SIEGE]);
-            wertungMap.put(team.getNr(), stats[STATS_WERTUNG]);
+            List<FormuleXTeamErgebnis.SpielErgebnisGegen> spielErgebnisse =
+                    spielErgebnisseMap.getOrDefault(team.getNr(), List.of());
+            ergebnisse.add(new FormuleXTeamErgebnis(team.getNr(), stats[STATS_SIEGE], stats[STATS_WERTUNG],
+                    stats[STATS_EIGENE] - stats[STATS_KASSIERT], stats[STATS_EIGENE], spielErgebnisse));
         }
-        return new RanglisteAccumulation(ergebnisse, siegeMap, wertungMap);
+        return ergebnisse;
     }
 
     private void leseRundeEin(XSpreadsheet rundeSheet, TeamMeldungen aktiveMeldungen,
-            Map<Integer, int[]> statsMap, Map<Integer, Boolean> freilosMap, int siegaufschlag)
-            throws GenerateException {
+            Map<Integer, int[]> statsMap, Map<Integer, List<FormuleXTeamErgebnis.SpielErgebnisGegen>> spielErgebnisseMap,
+            int siegaufschlag) throws GenerateException {
         var readRange = RangePosition.from(
                 FormuleXAbstractSpielrundeSheet.TEAM_A_SPALTE,
                 FormuleXAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE,
@@ -288,7 +285,6 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
 
             int nrB = row.get(1).getIntVal(0);
             if (nrB <= 0) {
-                freilosMap.put(nrA, true);
                 int[] s = statsMap.computeIfAbsent(nrA, k -> new int[STATS_LEN]);
                 s[STATS_SIEGE]++; // Freilos zählt als Sieg (Doku 4.2)
                 s[STATS_WERTUNG] += 126;
@@ -308,6 +304,10 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
                 sA[STATS_KASSIERT] += ergB;
                 sB[STATS_EIGENE] += ergB;
                 sB[STATS_KASSIERT] += ergA;
+                spielErgebnisseMap.computeIfAbsent(nrA, k -> new ArrayList<>())
+                        .add(new FormuleXTeamErgebnis.SpielErgebnisGegen(nrB, ergA, ergB));
+                spielErgebnisseMap.computeIfAbsent(nrB, k -> new ArrayList<>())
+                        .add(new FormuleXTeamErgebnis.SpielErgebnisGegen(nrA, ergB, ergA));
                 if (ergA > ergB) {
                     sA[STATS_SIEGE]++;
                     sA[STATS_WERTUNG] += siegaufschlag + ergA + (ergA - ergB);
@@ -407,16 +407,22 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
         return vn + " " + nn;
     }
 
+    /**
+     * Zweizeiliger Header analog zum Schweizer System: Nr/Team/Platz/Siege/Wertung
+     * überspannen beide Header-Zeilen vertikal, die drei Punkte-Spalten (+/-/Δ) bilden
+     * eine horizontal zusammengeführte Gruppe "Punkte" in Zeile 1 mit Sub-Headern in Zeile 2.
+     */
     private void insertHeader(XSpreadsheet sheet) throws GenerateException {
-        Integer headerColor = konfigurationSheet.getMeldeListeHeaderFarbe();
+        Integer headerColor = konfigurationSheet.getRanglisteHeaderFarbe();
 
         int[][] spaltenBreiten = {
-                { TEAM_NAME_SPALTE,   COL_WIDTH_NAME  },
-                { PLATZ_SPALTE,       COL_WIDTH_NR   },
-                { WERTUNG_SPALTE,     COL_WIDTH_DATA  },
-                { SIEGE_SPALTE,       COL_WIDTH_DATA  },
-                { PUNKTE_PLUS_SPALTE, COL_WIDTH_DATA  },
-                { PUNKTE_DIFF_SPALTE, COL_WIDTH_DATA  },
+                { TEAM_NAME_SPALTE,    COL_WIDTH_NAME  },
+                { PLATZ_SPALTE,        COL_WIDTH_NR   },
+                { SIEGE_SPALTE,        COL_WIDTH_DATA  },
+                { WERTUNG_SPALTE,      COL_WIDTH_DATA  },
+                { PUNKTE_PLUS_SPALTE,  COL_WIDTH_DATA  },
+                { PUNKTE_MINUS_SPALTE, COL_WIDTH_DATA  },
+                { PUNKTE_DIFF_SPALTE,  COL_WIDTH_DATA  },
         };
         for (int[] sw : spaltenBreiten) {
             getSheetHelper().setColumnProperties(sheet, sw[0],
@@ -424,43 +430,78 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
                             .setHoriJustify(CellHoriJustify.CENTER).setVertJustify(CellVertJustify2.CENTER));
         }
 
+        // ── Zeile 1+2: Einzel-Spalten, vertikal zusammengeführt ─────────────────
+        // headerCellProps wird von allen Spalten geteilt (setCellProperties() weist die
+        // Referenz zu, mutiert also dasselbe Objekt) – Sonderformatierungen wie Rotate90
+        // dürfen deshalb NIE direkt darauf gesetzt werden, sonst "brennen" sie in alle
+        // nachfolgend verarbeiteten Spalten ein (siehe Platz-Spalte weiter unten).
         String[] texte = {
                 I18n.get("column.header.nr"),
                 I18n.get("formulex.rangliste.spalte.team"),
-                I18n.get("column.header.platz"),
-                I18n.get("formulex.rangliste.spalte.wertung"),
                 I18n.get("column.header.siege"),
-                I18n.get("formulex.rangliste.spalte.punkte.plus"),
-                I18n.get("formulex.rangliste.spalte.punkte.differenz"),
+                I18n.get("formulex.rangliste.spalte.wertung"),
         };
         int[] spalten = {
-                TEAM_NR_SPALTE, TEAM_NAME_SPALTE, PLATZ_SPALTE,
-                WERTUNG_SPALTE, SIEGE_SPALTE, PUNKTE_PLUS_SPALTE, PUNKTE_DIFF_SPALTE,
+                TEAM_NR_SPALTE, TEAM_NAME_SPALTE, SIEGE_SPALTE, WERTUNG_SPALTE,
         };
 
         var headerCellProps = CellProperties.from()
                 .setBorder(BorderFactory.from().allThin().boldLn().forBottom().toBorder())
+                .setCellBackColor(headerColor)
                 .margin(MeldeListeKonstanten.CELL_MARGIN);
         for (int i = 0; i < spalten.length; i++) {
-            int col = spalten[i];
-            var cv = StringCellValue
-                    .from(sheet, Position.from(col, HEADER_ZEILE), texte[i])
-                    .setCellBackColor(headerColor)
+            getSheetHelper().setStringValueInCell(StringCellValue
+                    .from(sheet, Position.from(spalten[i], HEADER_ZEILE), texte[i])
                     .setCellProperties(headerCellProps)
                     .setHoriJustify(CellHoriJustify.CENTER)
                     .setVertJustify(CellVertJustify2.CENTER)
                     .setEndPosMergeZeilePlus(1)
-                    .setShrinkToFit(true);
-            if (col == PLATZ_SPALTE) {
-                cv.setRotate90().setCharWeight(com.sun.star.awt.FontWeight.BOLD);
-            }
-            getSheetHelper().setStringValueInCell(cv);
+                    .setShrinkToFit(true));
+        }
+
+        // Platz-Spalte: eigenes CellProperties-Objekt (siehe Kommentar oben), hochkant + fett.
+        getSheetHelper().setStringValueInCell(StringCellValue
+                .from(sheet, Position.from(PLATZ_SPALTE, HEADER_ZEILE), I18n.get("column.header.platz"))
+                .setCellProperties(CellProperties.from()
+                        .setBorder(BorderFactory.from().allThin().boldLn().forBottom().toBorder())
+                        .setCellBackColor(headerColor)
+                        .margin(MeldeListeKonstanten.CELL_MARGIN))
+                .setHoriJustify(CellHoriJustify.CENTER)
+                .setVertJustify(CellVertJustify2.CENTER)
+                .setEndPosMergeZeilePlus(1)
+                .setShrinkToFit(true)
+                .setRotate90()
+                .setCharWeight(com.sun.star.awt.FontWeight.BOLD));
+
+        // ── Zeile 1: "Punkte" horizontal über 3 Spalten zusammengeführt ─────────
+        getSheetHelper().setStringValueInCell(StringCellValue
+                .from(sheet, Position.from(PUNKTE_PLUS_SPALTE, HEADER_ZEILE), I18n.get("column.header.punkte"))
+                .setCellBackColor(headerColor)
+                .setBorder(BorderFactory.from().allThin().toBorder())
+                .setHoriJustify(CellHoriJustify.CENTER)
+                .setEndPosMergeSpalte(PUNKTE_DIFF_SPALTE)
+                .setShrinkToFit(true));
+
+        // ── Zeile 2: Sub-Header für die Punkte-Spalten ──────────────────────────
+        String[] subTexte = {
+                I18n.get("schweizer.rangliste.spalte.punkte.plus"),
+                I18n.get("schweizer.rangliste.spalte.punkte.minus"),
+                I18n.get("schweizer.rangliste.spalte.punkte.differenz"),
+        };
+        int[] subCols = { PUNKTE_PLUS_SPALTE, PUNKTE_MINUS_SPALTE, PUNKTE_DIFF_SPALTE };
+        for (int i = 0; i < subCols.length; i++) {
+            getSheetHelper().setStringValueInCell(StringCellValue
+                    .from(sheet, Position.from(subCols[i], ZWEITE_HEADER_ZEILE), subTexte[i])
+                    .setCellBackColor(headerColor)
+                    .setBorder(BorderFactory.from().allThin().boldLn().forBottom().toBorder())
+                    .setHoriJustify(CellHoriJustify.CENTER)
+                    .setVertJustify(CellVertJustify2.CENTER)
+                    .setShrinkToFit(true));
         }
     }
 
-    private void insertDatenAlsWerte(XSpreadsheet sheet, List<FormuleXErgebnis> sortiert,
-            Map<Integer, Integer> wertungMap, Map<Integer, String> teamNrZuName,
-            Map<Integer, Integer> siegeMap) throws GenerateException {
+    private void insertDatenAlsWerte(XSpreadsheet sheet, List<FormuleXTeamErgebnis> sortiert,
+            Map<Integer, String> teamNrZuName) throws GenerateException {
         if (sortiert.isEmpty()) {
             return;
         }
@@ -468,7 +509,7 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
         int letzteZeile = ERSTE_DATEN_ZEILE + sortiert.size() - 1;
 
         RangeData block1 = new RangeData();
-        for (FormuleXErgebnis erg : sortiert) {
+        for (FormuleXTeamErgebnis erg : sortiert) {
             RowData row = block1.addNewRow();
             row.newInt(erg.teamNr());
             row.newString(teamNrZuName.getOrDefault(erg.teamNr(), ""));
@@ -478,15 +519,16 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
                 .setDataInRange(block1);
 
         RangeData block2 = new RangeData();
-        for (FormuleXErgebnis erg : sortiert) {
+        for (FormuleXTeamErgebnis erg : sortiert) {
             RowData row = block2.addNewRow();
-            row.newInt(wertungMap.getOrDefault(erg.teamNr(), 0));
-            row.newInt(siegeMap.getOrDefault(erg.teamNr(), 0));
+            row.newInt(erg.siege());
+            row.newInt(erg.wertung());
             row.newInt(erg.eigenePunkte());
+            row.newInt(erg.eigenePunkte() - erg.punktedifferenz()); // kassierte Punkte
             row.newInt(erg.punktedifferenz());
         }
         RangeHelper.from(this,
-                block2.getRangePosition(Position.from(WERTUNG_SPALTE, ERSTE_DATEN_ZEILE)))
+                block2.getRangePosition(Position.from(SIEGE_SPALTE, ERSTE_DATEN_ZEILE)))
                 .setDataInRange(block2);
 
         getSheetHelper().setPropertiesInRange(sheet,
@@ -502,7 +544,7 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
                 CellProperties.from().margin(MeldeListeKonstanten.CELL_MARGIN).setAllThinBorder().setHoriJustify(CellHoriJustify.LEFT));
 
         getSheetHelper().setPropertiesInRange(sheet,
-                RangePosition.from(WERTUNG_SPALTE, ERSTE_DATEN_ZEILE, PUNKTE_DIFF_SPALTE, letzteZeile),
+                RangePosition.from(SIEGE_SPALTE, ERSTE_DATEN_ZEILE, PUNKTE_DIFF_SPALTE, letzteZeile),
                 CellProperties.from().margin(MeldeListeKonstanten.CELL_MARGIN).setAllThinBorder().setHoriJustify(CellHoriJustify.CENTER));
 
         // Nr-Spalte: durchgängig doppelte rechte Linie (Header + Daten)
@@ -555,7 +597,7 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
 
     @Override
     public int getErsteSummeSpalte() throws GenerateException {
-        return WERTUNG_SPALTE;
+        return SIEGE_SPALTE;
     }
 
     @Override
@@ -576,8 +618,10 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
     @Override
     public List<Position> getRanglisteSpalten() throws GenerateException {
         return List.of(
+                Position.from(SIEGE_SPALTE, ERSTE_DATEN_ZEILE),
                 Position.from(WERTUNG_SPALTE, ERSTE_DATEN_ZEILE),
-                Position.from(PUNKTE_DIFF_SPALTE, ERSTE_DATEN_ZEILE));
+                Position.from(PUNKTE_DIFF_SPALTE, ERSTE_DATEN_ZEILE),
+                Position.from(PUNKTE_PLUS_SPALTE, ERSTE_DATEN_ZEILE));
     }
 
     @Override

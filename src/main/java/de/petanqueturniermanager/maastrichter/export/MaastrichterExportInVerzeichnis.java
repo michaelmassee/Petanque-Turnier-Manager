@@ -101,7 +101,7 @@ public class MaastrichterExportInVerzeichnis extends AbstractExportInVerzeichnis
         }
 
         for (var vorrunde : vorrunden) {
-            Path pdf = exportierePdfAusHtml(vorrunde.sheetName(), vorrunde.sheetName(), zielVerzeichnis);
+            Path pdf = exportierePdfAusHtml(vorrunde.sheetName(), vorrunde.sheetName(), titel, turnierlogoUrl, zielVerzeichnis);
             if (pdf != null) {
                 exportierteDateien.add(pdf);
             }
@@ -109,7 +109,8 @@ public class MaastrichterExportInVerzeichnis extends AbstractExportInVerzeichnis
                     vorrunde.sheetName(), buildPdfUrl(pdf)));
         }
 
-        Path pdfRangliste = exportierePdfAusHtml(ranglisteSheetName, I18n.get("export.maastrichter.nav.vorrunden.rangliste"), zielVerzeichnis);
+        Path pdfRangliste = exportierePdfAusHtml(ranglisteSheetName, I18n.get("export.maastrichter.nav.vorrunden.rangliste"),
+                titel, turnierlogoUrl, zielVerzeichnis);
         if (pdfRangliste != null) {
             exportierteDateien.add(pdfRangliste);
         }
@@ -119,7 +120,7 @@ public class MaastrichterExportInVerzeichnis extends AbstractExportInVerzeichnis
 
         for (var eintrag : finalrunden) {
             var finalTitel = I18n.get("export.maastrichter.nav.finalrunde", eintrag.buchstabe());
-            Path pdf = exportierePdfAusHtml(eintrag.sheetName(), finalTitel, zielVerzeichnis);
+            Path pdf = exportierePdfAusHtml(eintrag.sheetName(), finalTitel, titel, turnierlogoUrl, zielVerzeichnis);
             if (pdf != null) {
                 exportierteDateien.add(pdf);
             }

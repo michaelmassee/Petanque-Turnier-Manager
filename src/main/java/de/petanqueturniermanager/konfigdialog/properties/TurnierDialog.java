@@ -13,6 +13,8 @@ import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
 import de.petanqueturniermanager.konfigdialog.HeaderFooterConfigProperty;
+import de.petanqueturniermanager.konfigdialog.SpielrundeFooterConfigProperty;
+import de.petanqueturniermanager.konfigdialog.ZeitplanConfigProperty;
 
 /**
  * @author Michael Massee
@@ -27,9 +29,11 @@ public class TurnierDialog extends BasePropertiesDialog {
 
 	@Override
 	protected Predicate<ConfigProperty<?>> getKonfigFieldFilter() {
-		// alles außer Color, Kopf/Fußzeilen und internen Zustandsfeldern
+		// alles außer Color, Kopf/Fußzeilen, Felder mit eigenem Dialog und internen Zustandsfeldern
 		return konfigprop -> konfigprop.getType() != ConfigPropertyType.COLOR
 				&& !(konfigprop instanceof HeaderFooterConfigProperty)
+				&& !(konfigprop instanceof SpielrundeFooterConfigProperty)
+				&& !(konfigprop instanceof ZeitplanConfigProperty)
 				&& !konfigprop.isIntern()
 				&& !konfigprop.isExportKonfig();
 	}

@@ -27,6 +27,7 @@ import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeFooterHelper;
 import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
@@ -517,5 +518,6 @@ public abstract class AbstractPouleVorrundeSheet extends SheetRunner implements 
                 .setPrintArea(RangePosition.from(
                         Position.from(SPALTE_BAHN, 0),
                         Position.from(letzeSpalte(), letzteDatenZeile)));
+        SpielrundeFooterHelper.schreibeFooterUndErweitereDruckbereich(this, xSheet, getWorkingSpreadsheet());
     }
 }

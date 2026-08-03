@@ -64,7 +64,7 @@ public class UITextAreaProperty implements UIProperty {
 		UILabel.from(dialogModel)
 				.name(labelName)
 				.label(label + " :")
-				.posX(3).posY(posY).width(40).height(200) // 14
+				.posX(3).posY(posY).width(40).height(14)
 				.align(2) // Right
 				.multiLine()
 				.doInsert(xControlCont);
@@ -85,6 +85,13 @@ public class UITextAreaProperty implements UIProperty {
 	@Override
 	public void save() {
 		documentPropertiesHelper.setStringProperty(getPropName(), uITextArea.getText());
+	}
+
+	/**
+	 * Zugriff auf das Textfeld für Platzhalter-Einfüge-Buttons (siehe {@code TextAreaDialog}).
+	 */
+	public XTextComponent getTextComponent() {
+		return uITextArea;
 	}
 
 	public String getPropName() {

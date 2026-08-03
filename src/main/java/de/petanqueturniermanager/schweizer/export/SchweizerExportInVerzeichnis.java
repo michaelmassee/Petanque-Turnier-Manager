@@ -80,7 +80,8 @@ public class SchweizerExportInVerzeichnis extends AbstractExportInVerzeichnis {
         processBox().info(I18n.get("export.info.pdf"));
         List<Path> exportierteDateien = new ArrayList<>();
 
-        Path pdfRangliste = exportierePdfAusHtml(ranglisteSheetName, I18n.get("export.nav.rangliste"), zielVerzeichnis);
+        Path pdfRangliste = exportierePdfAusHtml(ranglisteSheetName, I18n.get("export.nav.rangliste"),
+                titel, turnierlogoUrl, zielVerzeichnis);
         if (pdfRangliste != null) {
             exportierteDateien.add(pdfRangliste);
         }
@@ -90,7 +91,7 @@ public class SchweizerExportInVerzeichnis extends AbstractExportInVerzeichnis {
                 meldelisteSheetName, meldelisteExportieren, teilnehmerlisteSheetName, teilnehmerlisteExportieren,
                 I18n.get("export.nav.rangliste"), ranglisteSheetName, buildPdfUrl(pdfRangliste));
         for (var runde : spielrunden) {
-            Path pdf = exportierePdfAusHtml(runde.sheetName(), runde.sheetName(), zielVerzeichnis);
+            Path pdf = exportierePdfAusHtml(runde.sheetName(), runde.sheetName(), titel, turnierlogoUrl, zielVerzeichnis);
             if (pdf != null) {
                 exportierteDateien.add(pdf);
             }

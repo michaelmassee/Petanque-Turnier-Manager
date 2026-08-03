@@ -26,6 +26,7 @@ import de.petanqueturniermanager.algorithmen.kaskaden.KaskadenKoRunde;
 import de.petanqueturniermanager.algorithmen.kaskaden.KaskadenKoRundenPlan;
 import de.petanqueturniermanager.algorithmen.kaskaden.KaskadenKoRundenPlaner;
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
+import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeFooterHelper;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeHelper;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -492,6 +493,7 @@ public class KaskadeSpielrundeSheet extends SheetRunner implements ISheet {
         }
         var druckBereich = RangePosition.from(GRUPPE_SPALTE, HEADER_ZEILE, ERG_TEAM_B_SPALTE, letzteZeile);
         PrintArea.from(xSheet, getWorkingSpreadsheet()).setPrintArea(druckBereich);
+        SpielrundeFooterHelper.schreibeFooterUndErweitereDruckbereich(this, xSheet, getWorkingSpreadsheet());
     }
 
     // ---------------------------------------------------------------

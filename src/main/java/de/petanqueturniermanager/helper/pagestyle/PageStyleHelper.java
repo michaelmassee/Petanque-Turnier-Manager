@@ -69,7 +69,7 @@ public class PageStyleHelper extends BaseHelper {
 	 * @return
 	 */
 	public PageStyleHelper initDefaultFooter() {
-		pageStyleDef.setFooterRight("* Pétanque-Turnier-Manager *\r\nmichael@massee.de");
+		pageStyleDef.setFooterRight("* Pétanque-Turnier-Manager *");
 		return this;
 	}
 

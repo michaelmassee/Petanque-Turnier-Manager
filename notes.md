@@ -1,19 +1,27 @@
 ## 🇩🇪 Deutsch
-- Neu: Export als ein einziges Dokument (PDF/DOCX/ODT/Markdown) statt mehrerer Einzeldateien
-- Neu: Automatischer Update-Dialog beim Programmstart, informiert über verfügbare neue Versionen
-- Neu: Menüeintrag „Fehler melden" öffnet direkt die GitHub-Issues-Seite im Browser
-- Plugin-Konfiguration (Tab-Farben, FTP-Server, Composite Views, Webserver-Regie, Timer) läuft jetzt vollständig über die nativen LibreOffice-Optionsseiten (Extras > Optionen > PétTurnMngr) statt eigener Dialoge
-- FTP-Server-Verwaltung zentralisiert: eine gemeinsame Server-Liste, Verbindungstest-Button, Passwort-Klartext-Anzeige, erneute Passwortabfrage bei Loginfehler
-- Diverse Deadlock-/Freeze-Fixes: Export-Format-Dialog, HTML-Export-Callback, Update-Dialog ohne offenes Dokument
-- Diverse Stabilitäts-Fixes rund um Composite Views (Vorschau, OK/Abbrechen-Verhalten, geteilte Werte beim Moduswechsel)
-- Interne Qualitätssicherung verschärft: SpotBugs-Gate deckt jetzt auch Findings mit niedriger Konfidenz ab
+- Neu: Turnier-Konfiguration „Spielrunde Footer" — mehrzeiliger, konfigurierbarer Footer für Spielrunden-Ausdrucke, verfügbar in allen Turniersystemen
+- Neu: Native LibreOffice-Platzhalter (Datum, Uhrzeit, Seite, Seiten, Tabelle, Dateiname) in Kopf-/Fußzeilen nutzbar
+- Neu: Einzel-PDFs zeigen jetzt Turniertitel und Logo als rechtsbündigen Header
+- Fix: Dialog-Label für den Spielrunde-Footer korrigiert und gekürzt
+- Fix: Mehrzeiliger Spielrunde-Footer zeigt nur noch den äußeren Rahmen statt Rahmen um jede Zeile
+- Fix: Datum-Platzhalter-Button im Dialog war wegen überdimensioniertem Label wirkungslos
+- Fix: E-Mail-Adresse aus der nativen Seiten-Fußzeile entfernt
+- Fix: Umlaute fehlten im PDF-Export; Footer zeigt jetzt zusätzlich die Versionsnummer
+- Fix: Formule-X-Rangliste und Rundenpaarung sortieren jetzt korrekt nach Siege, Wertung, Punktedifferenz, Punkte+, Direktvergleich und Los
+- Neu: Formule-X-Rangliste zeigt jetzt auch die Spalte „Punkte-" und nutzt einen zweizeiligen Spaltenkopf wie das Schweizer System
+- Fix: Formule-X-Rangliste — Kopfzeilen-Hintergrundfarbe und Fixierung beim Scrollen korrigiert
+- Fix: Kopfzeilen bleiben jetzt in allen Ranglisten (Schweizer, Maastrichter, Kaskade, Jeder-gegen-Jeden, Liga) sowie in der Formule-X-Spielrunde beim Scrollen sichtbar
 
 ## 🇬🇧 English
-- New: Export as a single document (PDF/DOCX/ODT/Markdown) instead of multiple separate files
-- New: Automatic update dialog on startup, informs about available new versions
-- New: "Report a bug" menu entry opens the GitHub issues page directly in the browser
-- Plugin configuration (tab colors, FTP server, composite views, web server control, timer) now fully runs through native LibreOffice options pages (Tools > Options > PétTurnMngr) instead of custom dialogs
-- Centralized FTP server management: one shared server list, connection test button, plaintext password display, re-prompt for password on login failure
-- Several deadlock/freeze fixes: export format dialog, HTML export callback, update dialog without an open document
-- Several stability fixes around composite views (preview, OK/Cancel behavior, shared values on mode switch)
-- Internal QA hardened: SpotBugs gate now also covers low-confidence findings
+- New: Tournament configuration "Game round footer" — multi-line, configurable footer for game round printouts, available in all tournament systems
+- New: Native LibreOffice placeholders (date, time, page, pages, sheet, filename) usable in headers/footers
+- New: Single PDFs now show tournament title and logo as a right-aligned header
+- Fix: Game round footer dialog label corrected and shortened
+- Fix: Multi-line game round footer now shows only the outer border instead of a border around every line
+- Fix: Date placeholder button in the dialog had no effect due to an oversized label
+- Fix: Email address removed from the native page footer
+- Fix: Umlauts were missing in PDF export; footer now also shows the version number
+- Fix: Formule-X ranking and round pairing now sort correctly by wins, score, point difference, points+, head-to-head and draw
+- New: Formule-X ranking now also shows the "points-" column and uses a two-row column header like the Swiss system
+- Fix: Formule-X ranking — header background color and freeze-on-scroll corrected
+- Fix: Headers now stay visible while scrolling in all rankings (Swiss, Maastricht, Cascade, Round-Robin, League) and in the Formule-X game round

@@ -125,8 +125,8 @@ public class FormuleXTurnierTestDatenUITest extends BaseCalcUITest {
 
 	private void validiereRanglistePerJson() throws GenerateException {
 		XSpreadsheet rangliste = sheetHlp.findByName(SheetNamen.formulexRangliste());
-		// Rangliste: Platz/Nr/Team/Punkte – Spalten 0..6 für 39 Teams.
-		RangePosition ranglisteRange = RangePosition.from(0, 2, 6, 2 + ANZ_TEAMS - 1);
+		// Rangliste: Nr/Team/Platz/Siege/Wertung/Punkte+/Punkte-/Punkte-Diff – Spalten 0..7 für 39 Teams.
+		RangePosition ranglisteRange = RangePosition.from(0, 2, 7, 2 + ANZ_TEAMS - 1);
 
 		// writeToJson("formulex-rangliste.json", ranglisteRange, rangliste, wkingSpreadsheet.getWorkingSpreadsheetDocument());
 

@@ -21,6 +21,7 @@ import com.sun.star.uno.Exception;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
+import de.petanqueturniermanager.konfigdialog.HeaderFooterConfigProperty;
 import de.petanqueturniermanager.konfigdialog.gui.LabelPlusTextPlusTextareaBox;
 import de.petanqueturniermanager.sidebar.GuiFactoryCreateParam;
 import de.petanqueturniermanager.sidebar.layout.HorizontalLayout;
@@ -98,7 +99,9 @@ public class StringConfigElement implements ConfigElement, XTextListener {
 			try {
 				if (ObjectUtils.allNotNull(textAreaDialog, labelPlusTextPlusTextareaBox)) {
 					String alterWert = getPropertyValue();
-					textAreaDialog.initTextArea(configProperty.getKey(), configProperty.getKey(), labelPlusTextPlusTextareaBox.getFieldText());
+					boolean istKopfFusszeile = configProperty instanceof HeaderFooterConfigProperty;
+					textAreaDialog.initTextArea(configProperty.getKey(), configProperty.getKey(),
+							labelPlusTextPlusTextareaBox.getFieldText(), istKopfFusszeile);
 					textAreaDialog.createDialog();
 					String neuerWert = getPropertyValue();
 					labelPlusTextPlusTextareaBox.fieldText(neuerWert);

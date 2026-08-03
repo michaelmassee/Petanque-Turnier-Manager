@@ -195,8 +195,8 @@ public abstract class AbstractExportInVerzeichnis extends SheetRunner {
         return new AbschlussSheetErgebnis(png, pdf);
     }
 
-    protected Path exportierePdfAusHtml(String sheetName, String abschnittTitel, Path zielVerzeichnis)
-            throws GenerateException {
+    protected Path exportierePdfAusHtml(String sheetName, String abschnittTitel, String dokumentTitel,
+            String logoUrl, Path zielVerzeichnis) throws GenerateException {
         var sheet = getSheetHelper().findByName(sheetName);
         if (sheet == null) {
             processBox().info(I18n.get("error.tabelle.nicht.vorhanden", sheetName));
@@ -206,7 +206,8 @@ public abstract class AbstractExportInVerzeichnis extends SheetRunner {
         var doc = getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
         var model = tabellenMapper.map(sheet, doc);
         var tabelleFragment = pdfTabelleHtmlRenderer.render(model);
-        var html = PdfHtmlDokument.erstelle(abschnittTitel, tabelleFragment);
+        String logoUrlFuerPdf = logoUrlFuerEinDokument(zielVerzeichnis, logoUrl);
+        var html = PdfHtmlDokument.erstelle(dokumentTitel, logoUrlFuerPdf, abschnittTitel, tabelleFragment);
         var zieldatei = pdfZieldatei(sheetName, zielVerzeichnis);
         var pdf = HtmlZuPdfKonvertierer.konvertiere(html, zieldatei);
         processBox().info(pdf.toString());

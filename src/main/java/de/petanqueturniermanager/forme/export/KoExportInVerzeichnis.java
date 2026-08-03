@@ -100,7 +100,8 @@ public class KoExportInVerzeichnis extends AbstractExportInVerzeichnis {
         }
 
         if (einzelName != null) {
-            Path pdf = exportierePdfAusHtml(einzelName, I18n.get("export.ko.nav.turnierbaum"), zielVerzeichnis);
+            Path pdf = exportierePdfAusHtml(einzelName, I18n.get("export.ko.nav.turnierbaum"),
+                    titel, turnierlogoUrl, zielVerzeichnis);
             if (pdf != null) {
                 exportierteDateien.add(pdf);
             }
@@ -109,7 +110,8 @@ public class KoExportInVerzeichnis extends AbstractExportInVerzeichnis {
         }
 
         for (var eintrag : gruppenSheets) {
-            Path pdf = exportierePdfAusHtml(eintrag.sheetName(), I18n.get("export.ko.nav.turnierbaum.gruppe", eintrag.buchstabe()), zielVerzeichnis);
+            Path pdf = exportierePdfAusHtml(eintrag.sheetName(), I18n.get("export.ko.nav.turnierbaum.gruppe", eintrag.buchstabe()),
+                    titel, turnierlogoUrl, zielVerzeichnis);
             if (pdf != null) {
                 exportierteDateien.add(pdf);
             }
