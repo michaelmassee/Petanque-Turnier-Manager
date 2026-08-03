@@ -320,6 +320,57 @@ tasks.register('cleanCache', Delete) {
     delete "dist/.ooo-debug/user/uno_packages/cache"
 }
 
+def defaultLibreOfficeUserPackagesCacheDir() {
+    new File(System.getProperty('user.home'), '.config/libreoffice/4/user/uno_packages/cache')
+}
+
+def fileContainsAnyMarker(File file, List<String> markers) {
+    if (!file.isFile()) {
+        return false
+    }
+    String content = new String(file.bytes, java.nio.charset.StandardCharsets.ISO_8859_1)
+    markers.any { marker -> content.contains(marker) }
+}
+
+def extensionCacheMetadataContainsAnyMarker(File directory, List<String> markers) {
+    if (!directory.exists()) {
+        return false
+    }
+    boolean found = false
+    directory.eachFileRecurse { file ->
+        if (found || !file.isFile()) {
+            return
+        }
+        String fileName = file.name
+        boolean isLibreOfficeExtensionMetadata = fileName == 'uno_packages.pmap'
+                || fileName == 'log.txt'
+                || fileName == 'backenddb.xml'
+                || fileName.endsWith('properties')
+        if (isLibreOfficeExtensionMetadata && fileContainsAnyMarker(file, markers)) {
+            found = true
+        }
+    }
+    found
+}
+
+tasks.register('purgeBrokenLibreOfficePtmExtensionCache') {
+    group = 'LibreOffice'
+    description = 'Bereinigt kaputte PTM-Einträge im LibreOffice-Extension-Cache'
+    dependsOn 'uninstallExtension'
+    mustRunAfter 'uninstallExtension'
+
+    doLast {
+        File cacheDir = defaultLibreOfficeUserPackagesCacheDir()
+        List<String> markers = [extensionId, project.name]
+        if (!extensionCacheMetadataContainsAnyMarker(cacheDir, markers)) {
+            return
+        }
+
+        println "Bereinige LibreOffice-Extension-Cache mit PTM-Altlasten: ${cacheDir}"
+        delete cacheDir
+    }
+}
+
 tasks.register('copyRuntimeLibs', Sync) {
     group = 'LibreOffice'
     description = 'Kopiert Runtime-Dependencies für die OXT'
@@ -470,8 +521,8 @@ tasks.register('buildOXT', Zip) {
 tasks.register('installExtension', Exec) {
     group = 'LibreOffice'
     description = 'Installiert die erstellte Extension in LibreOffice'
-    dependsOn 'buildOXT'
-    mustRunAfter 'uninstallExtension'
+    dependsOn 'buildOXT', 'purgeBrokenLibreOfficePtmExtensionCache'
+    mustRunAfter 'purgeBrokenLibreOfficePtmExtensionCache'
     def oxtFile = layout.buildDirectory.file("distributions/${project.name}-${version}.oxt").get().asFile
     commandLine "${libreOfficeProgramPath}/unopkg", 'add', '-f', oxtFile
 
