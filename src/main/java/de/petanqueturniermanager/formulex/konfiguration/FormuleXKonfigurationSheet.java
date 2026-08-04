@@ -147,4 +147,56 @@ public class FormuleXKonfigurationSheet extends BaseKonfigurationSheet implement
     public Integer getFreispielPunkteMinus() {
         return propertiesSpalte.getFreispielPunkteMinus();
     }
+
+    public boolean isZeitplanAktiv() {
+        return propertiesSpalte.isZeitplanAktiv();
+    }
+
+    public void setZeitplanAktiv(boolean aktiv) {
+        propertiesSpalte.setZeitplanAktiv(aktiv);
+    }
+
+    public int getZeitplanAnzahlBahnen() {
+        return propertiesSpalte.getZeitplanAnzahlBahnen();
+    }
+
+    public void setZeitplanAnzahlBahnen(int bahnen) {
+        propertiesSpalte.setZeitplanAnzahlBahnen(bahnen);
+    }
+
+    public boolean isDurchgangAufteilungWirksam() {
+        return propertiesSpalte.isDurchgangAufteilungWirksam();
+    }
+
+    public int getZeitplanZeitlimitMinuten() {
+        return propertiesSpalte.getZeitplanZeitlimitMinuten();
+    }
+
+    public void setZeitplanZeitlimitMinuten(int minuten) {
+        propertiesSpalte.setZeitplanZeitlimitMinuten(minuten);
+    }
+
+    public int getZeitplanDurchgangPauseMinuten() {
+        return propertiesSpalte.getZeitplanDurchgangPauseMinuten();
+    }
+
+    public void setZeitplanDurchgangPauseMinuten(int minuten) {
+        propertiesSpalte.setZeitplanDurchgangPauseMinuten(minuten);
+    }
+
+    public int getZeitplanRundenPauseMinuten() {
+        return propertiesSpalte.getZeitplanRundenPauseMinuten();
+    }
+
+    public void setZeitplanRundenPauseMinuten(int minuten) {
+        propertiesSpalte.setZeitplanRundenPauseMinuten(minuten);
+    }
+
+    public String getZeitplanTurnierStartzeit() {
+        return propertiesSpalte.getZeitplanTurnierStartzeit();
+    }
+
+    public void setZeitplanTurnierStartzeit(String hhMm) {
+        propertiesSpalte.setZeitplanTurnierStartzeit(hhMm);
+    }
 }

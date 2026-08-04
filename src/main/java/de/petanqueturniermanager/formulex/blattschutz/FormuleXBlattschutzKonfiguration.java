@@ -68,7 +68,7 @@ public class FormuleXBlattschutzKonfiguration implements IBlattschutzKonfigurati
         var infos = new ArrayList<SheetSchutzInfo>();
 
         sammleMeldelisteSchutzInfo(xDoc, ws, infos);
-        sammleSpielrundenSchutzInfos(xDoc, infos);
+        sammleSpielrundenSchutzInfos(xDoc, ws, infos);
         sammleVollGesperrteSheets(xDoc, infos);
 
         return infos;
@@ -89,15 +89,26 @@ public class FormuleXBlattschutzKonfiguration implements IBlattschutzKonfigurati
         });
     }
 
-    private void sammleSpielrundenSchutzInfos(XSpreadsheetDocument xDoc, List<SheetSchutzInfo> infos) {
+    private void sammleSpielrundenSchutzInfos(XSpreadsheetDocument xDoc, WorkingSpreadsheet ws,
+            List<SheetSchutzInfo> infos) {
         var schluessel = SheetMetadataHelper.getSchluesselMitPrefix(xDoc,
                 SheetMetadataHelper.SCHLUESSEL_FORMULEX_SPIELRUNDE_PREFIX);
+        boolean zeitplanAktiv = new FormuleXKonfigurationSheet(ws).isZeitplanAktiv();
         for (var key : schluessel) {
             SheetMetadataHelper.findeSheet(xDoc, key).ifPresent(sheet -> {
                 try {
                     int letzteZeile = ermittleLetzteSpielrundeZeile(sheet);
-                    List<RangePosition> editierbar = FormuleXAbstractSpielrundeSheet
-                            .ermittleEditierbareErgebnisRanges(sheet, xDoc, letzteZeile);
+                    List<RangePosition> editierbar = new ArrayList<>(FormuleXAbstractSpielrundeSheet
+                            .ermittleEditierbareErgebnisRanges(sheet, xDoc, letzteZeile));
+                    if (zeitplanAktiv) {
+                        // Rundenstartzeit-Zelle (einziges haendisches Zeit-Eingabefeld, siehe
+                        // FormuleXAbstractSpielrundeSheet.rundenStartzeitFeld)
+                        editierbar.add(RangePosition.from(
+                                FormuleXAbstractSpielrundeSheet.ZEIT_SPALTE,
+                                FormuleXAbstractSpielrundeSheet.ZWEITE_HEADER_ZEILE,
+                                FormuleXAbstractSpielrundeSheet.ZEIT_SPALTE,
+                                FormuleXAbstractSpielrundeSheet.ZWEITE_HEADER_ZEILE));
+                    }
                     infos.add(SheetSchutzInfo.mitEditierbarenBereichen(sheet, editierbar));
                 } catch (GenerateException e) {
                     LOGGER.warn("Editierbare Spielrunde-Bereiche konnten nicht berechnet werden: {}",
