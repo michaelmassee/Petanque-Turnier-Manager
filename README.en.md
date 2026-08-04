@@ -141,42 +141,9 @@ To use the Tournament Manager smoothly, the following requirements must be met:
 
 ## ⚙️ Installation & Setup
 
-### Recommended: Install with the Installer
+The fastest way is the **installer** from the [GitHub Releases](https://github.com/michaelmassee/Petanque-Turnier-Manager/releases) (Linux/Windows/macOS) – it sets up the extension for LibreOffice automatically.
 
-Download the matching installer package from the [GitHub Releases](https://github.com/michaelmassee/Petanque-Turnier-Manager/releases):
-
-* **Linux:** [`PetanqueTurnierManager-Installer-<version>-linux.AppImage`](https://github.com/michaelmassee/Petanque-Turnier-Manager/releases)
-* **Windows:** [`PetanqueTurnierManager-Installer-<version>-windows.exe`](https://github.com/michaelmassee/Petanque-Turnier-Manager/releases)
-* **macOS (Apple Silicon, M1/M2/M3/…):** [`PetanqueTurnierManager-Installer-<version>-macos-arm64.dmg`](https://github.com/michaelmassee/Petanque-Turnier-Manager/releases)
-* **macOS (Intel):** [`PetanqueTurnierManager-Installer-<version>-macos-intel.dmg`](https://github.com/michaelmassee/Petanque-Turnier-Manager/releases)
-
-> **Note (macOS):** Requires macOS 11 (Big Sur) or newer. macOS 10.15 (Catalina) and earlier are not supported (Java 25 runtime).
-
-Start the installer and follow the instructions. The installer sets up the extension for LibreOffice.
-
-### Alternative: Manual Installation
-
-Manual setup is done in three steps. Please make sure that the architecture of your Java version (32-bit or 64-bit) absolutely matches your LibreOffice installation.
-
-#### Step 1: Install Java
-If Java is not yet installed, download and install a current version. We recommend:
-* **Temurin Adoptium JDK (LTS):** [Free download here](https://adoptium.net/)
-* **Oracle Java:** [Official download here](https://www.oracle.com/java/technologies/downloads/)
-
-#### Step 2: Enable Java in LibreOffice
-For LibreOffice to run the extension, the Java Runtime Environment must be linked:
-1. Open **LibreOffice**.
-2. Navigate in the menu bar to: `Tools` ▸ `Options` ▸ `LibreOffice` ▸ `Advanced`. *(On macOS: `LibreOffice` ▸ `Preferences...`)*
-3. Under the heading **"Java Options"**, check the box for **"Use a Java runtime environment"**.
-4. Select the installed JRE from the list that appears.
-   *(If the list is empty, click "Add" and manually select your Java installation folder.)*
-5. Confirm the settings with `OK` and restart LibreOffice just to be safe.
-
-#### Step 3: Install the Extension
-1. Download the latest version of the extension (filename: `PetanqueTurnierManager-vx.xx.oxt`) from the [Releases](https://github.com/michaelmassee/Petanque-Turnier-Manager/releases) section.
-2. Double-click the `.oxt` file. LibreOffice will automatically open the **Extension Manager** and ask about the installation.
-3. Confirm the installation and accept the license terms (if necessary).
-4. Close the Extension Manager. The installation is now complete!
+For the full step-by-step guide (including manual `.oxt` installation, Java setup, and OS-specific notes), see the **[Installation Wiki](https://github.com/michaelmassee/Petanque-Turnier-Manager/wiki/Installation)** (German).
 
 ---
 
