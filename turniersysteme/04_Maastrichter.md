@@ -237,6 +237,14 @@ C: 19 Teams → Ziel = 16 → Diff = 3 → Cadrage = 6 Teams → 3 Spiele
 - aufwendige Software nötig (Schweizer)
 
 ---
+# 9.1 Optionales Zeitplan-Feature: Rundenzeitplanung mit Durchgang-Aufteilung
+
+Die Schweizer Vorrunde des Maastrichter Systems übernimmt vollständig das Zeitplan-Feature des
+Schweizer Systems (Aufteilung einer Runde in mehrere zeitlich versetzte Durchgänge bei
+Bahnknappheit, inkl. Start-/Endzeiten und Bahn-Neu-Nummerierung je Durchgang). Ausführlich
+dokumentiert in [`ZEITPLAN.md`](ZEITPLAN.md).
+
+---
 # 10. Zusammenfassung
 Das Maastrichter System bietet:
 - Schweizer Fairness

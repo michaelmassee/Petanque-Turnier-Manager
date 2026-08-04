@@ -210,6 +210,14 @@ Finale Tabelle
 - Spiel auf Zeit + Zusatzaufnahme nutzen
 
 ---
+# 8.4 Optionales Zeitplan-Feature: Rundenzeitplanung mit Durchgang-Aufteilung
+
+Reichen die verfügbaren Bahnen nicht für alle Paarungen einer Runde, kann PTM die Runde
+automatisch in mehrere zeitlich versetzte Durchgänge aufteilen und dafür Start-/Endzeiten je
+Durchgang sowie eine pro Durchgang neu beginnende Bahn-Nummerierung berechnen. Ausführlich
+dokumentiert in [`ZEITPLAN.md`](ZEITPLAN.md).
+
+---
 # 9. Zusammenfassung
 Das Schweizer System ist:
 - eines der fairsten Rundensysteme
