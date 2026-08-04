@@ -5,11 +5,13 @@ import org.apache.logging.log4j.Logger;
 
 import com.sun.star.awt.ActionEvent;
 import com.sun.star.awt.PushButtonType;
+import com.sun.star.awt.TextEvent;
 import com.sun.star.awt.XButton;
 import com.sun.star.awt.XControl;
 import com.sun.star.awt.XControlContainer;
 import com.sun.star.awt.XDialog;
 import com.sun.star.awt.XTextComponent;
+import com.sun.star.awt.XTextListener;
 import com.sun.star.awt.XToolkit;
 import com.sun.star.awt.XWindowPeer;
 import com.sun.star.beans.XPropertySet;
@@ -19,6 +21,7 @@ import com.sun.star.lang.XMultiComponentFactory;
 import com.sun.star.lang.XMultiServiceFactory;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.farbe.FarbwahlDialog;
@@ -88,6 +91,8 @@ public class TimerDialog extends AbstractUnoDialog {
     private final WorkingSpreadsheet currentSpreadsheet;
     private int hintergrundFarbeInt;
     private XPropertySet vorschauProps;
+    private XPropertySet dauerFeldProps;
+    private Object dauerFeldNormalFarbe;
 
     public TimerDialog(WorkingSpreadsheet currentSpreadsheet) {
         super(currentSpreadsheet.getxContext());
@@ -134,8 +139,13 @@ public class TimerDialog extends AbstractUnoDialog {
 
         // ── Zeile 1: Dauer ──────────────────────────────────────────────────────
         fuegeLabel("lblDauer", I18n.get("timer.dialog.dauer.label"), LBL_X, ZEILE1_Y, LBL_W, CTRL_H);
-        fuegeEdit(CTRL_DAUER, docProps.getStringProperty(DOC_PROP_TIMER_DAUER, I18n.get("timer.dialog.vorbelegung.dauer")),
+        dauerFeldProps = fuegeEdit(CTRL_DAUER,
+                docProps.getStringProperty(DOC_PROP_TIMER_DAUER, I18n.get("timer.dialog.vorbelegung.dauer")),
                 FIELD_X, ZEILE1_Y, DAUER_FIELD_W, CTRL_H);
+        // Ausgangsfarbe sichern, BEVOR das Feld jemals rot eingefaerbt wird (theme-sicher statt
+        // eine feste Farbe zu raten), siehe pruefeDauerFeldFarbe().
+        dauerFeldNormalFarbe = dauerFeldProps.getPropertyValue("BackgroundColor");
+        registriereTextAenderung(CTRL_DAUER, this::pruefeDauerFeldFarbe);
 
         // +/- Buttons direkt neben dem Dauer-Feld
         fuegeButton("btnMinus", "-1 min", BTN_MINUS_X, BTN_PM_Y, BTN_PM_W, BTN_H, (short) 0);
@@ -204,6 +214,32 @@ public class TimerDialog extends AbstractUnoDialog {
                 String.format("%06x", hintergrundFarbeInt & 0xFFFFFF));
     }
 
+    // ── Dauer-Feld: live Validierungs-Feedback ──────────────────────────────────
+
+    /**
+     * Faerbt {@link #CTRL_DAUER} rot, solange der Inhalt kein gueltiges {@code MM:SS} ist
+     * (dieselbe Pruefung wie {@link #beiOkGeklickt()}, siehe {@link TimerManager#parseDauer}),
+     * und setzt live zurueck, sobald der Wert wieder gueltig ist. Bewusst nur eine
+     * Hintergrundfarben-Property-Aenderung — keine MessageBox aus dem Text-Listener heraus (waere
+     * ein Freeze/Crash-Risiko bei synchronen modalen Dialogen aus UNO-Event-Callbacks, siehe
+     * CLAUDE.md Abschnitt Threading). Die eigentliche Fehlermeldung bleibt beim Klick auf
+     * "Starten" (siehe {@link #beiOkGeklickt()}).
+     */
+    private void pruefeDauerFeldFarbe() {
+        boolean gueltig;
+        try {
+            TimerManager.parseDauer(leseFeld(CTRL_DAUER));
+            gueltig = true;
+        } catch (IllegalArgumentException e) {
+            gueltig = false;
+        }
+        try {
+            dauerFeldProps.setPropertyValue("BackgroundColor", gueltig ? dauerFeldNormalFarbe : ColorHelper.CHAR_COLOR_RED);
+        } catch (com.sun.star.uno.Exception e) {
+            logger.error("Fehler beim Setzen der Dauer-Feld-Farbe", e);
+        }
+    }
+
     // ── Dauer-Anpassung per ±-Button ──────────────────────────────────────────
 
     private void passeZeitAn(long deltaSekunden) {
@@ -268,7 +304,10 @@ public class TimerDialog extends AbstractUnoDialog {
         return props;
     }
 
-    private void fuegeEdit(String name, String text, int x, int y, int w, int h)
+    /**
+     * @return XPropertySet des Edit-Modells (für spätere Property-Änderungen, z.B. Validierungs-Hintergrundfarbe)
+     */
+    private XPropertySet fuegeEdit(String name, String text, int x, int y, int w, int h)
             throws com.sun.star.uno.Exception {
         var model = xMSF.createInstance("com.sun.star.awt.UnoControlEditModel");
         var props = Lo.qi(XPropertySet.class, model);
@@ -279,6 +318,24 @@ public class TimerDialog extends AbstractUnoDialog {
         props.setPropertyValue("Height",    h);
         props.setPropertyValue("MultiLine", Boolean.FALSE);
         cont.insertByName(name, model);
+        return props;
+    }
+
+    private void registriereTextAenderung(String name, Runnable aktion) {
+        XControl ctrl = xcc.getControl(name);
+        if (ctrl == null) return;
+        var tc = Lo.qi(XTextComponent.class, ctrl);
+        if (tc == null) return;
+        tc.addTextListener(new XTextListener() {
+            @Override
+            public void textChanged(TextEvent e) {
+                aktion.run();
+            }
+            @Override
+            public void disposing(EventObject e) {
+                // kein Aufräumen nötig
+            }
+        });
     }
 
     private void fuegeButton(String name, String label, int x, int y, int w, int h, short typ)

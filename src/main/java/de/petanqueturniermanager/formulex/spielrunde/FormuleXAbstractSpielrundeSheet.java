@@ -24,8 +24,6 @@ import org.apache.logging.log4j.Logger;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.sun.star.awt.FontWeight;
-import com.sun.star.container.XNamed;
-import com.sun.star.sheet.ConditionOperator;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.table.CellHoriJustify;
@@ -33,26 +31,22 @@ import com.sun.star.table.CellVertJustify2;
 import com.sun.star.table.TableBorder2;
 
 import de.petanqueturniermanager.SheetRunner;
-import de.petanqueturniermanager.addins.GlobalImpl;
-import de.petanqueturniermanager.algorithmen.common.DurchgangAufteilungRechner;
 import de.petanqueturniermanager.algorithmen.formulex.FormuleX;
 import de.petanqueturniermanager.algorithmen.formulex.FormuleXErgebnis;
 import de.petanqueturniermanager.algorithmen.formulex.FormuleXRanglisteRechner;
 import de.petanqueturniermanager.algorithmen.formulex.FormuleXTeamErgebnis;
 import de.petanqueturniermanager.basesheet.SheetTabFarben;
+import de.petanqueturniermanager.basesheet.konfiguration.IZeitplanPropertiesSpalte;
+import de.petanqueturniermanager.basesheet.spielrunde.IZeitplanSpielrundeSheet;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeFooterHelper;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeHelper;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.formulex.konfiguration.FormuleXKonfigurationSheet;
-import de.petanqueturniermanager.formulex.konfiguration.FormuleXPropertiesSpalte;
 import de.petanqueturniermanager.formulex.meldeliste.FormuleXMeldeListeSheetUpdate;
 import de.petanqueturniermanager.helper.ColorHelper;
-import de.petanqueturniermanager.helper.ISheet;
-import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.border.BorderFactory;
-import de.petanqueturniermanager.helper.cellstyle.FehlerStyle;
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
@@ -64,7 +58,6 @@ import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.print.PrintArea;
-import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
@@ -87,7 +80,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
  * Verwaltet Spaltenstruktur, Sheet-Formatierung und das Einlesen gespielter Runden.
  * Subklassen implementieren die konkrete Spielrunden-Logik (Nächste / Aktualisieren).
  */
-public abstract class FormuleXAbstractSpielrundeSheet extends SheetRunner implements ISheet {
+public abstract class FormuleXAbstractSpielrundeSheet extends SheetRunner implements IZeitplanSpielrundeSheet {
 
     private static final Logger LOGGER = LogManager.getLogger(FormuleXAbstractSpielrundeSheet.class);
 
@@ -142,11 +135,13 @@ public abstract class FormuleXAbstractSpielrundeSheet extends SheetRunner implem
                 getSpielrundeSchluessel(rundeNr.getNr()), getLegacySheetName(rundeNr));
     }
 
-    protected String getSpielrundeSchluessel(int rundeNr) {
+    @Override
+    public String getSpielrundeSchluessel(int rundeNr) {
         return SheetMetadataHelper.SCHLUESSEL_FORMULEX_SPIELRUNDE_PREFIX + rundeNr;
     }
 
-    protected String getSheetName(SpielRundeNr nr) {
+    @Override
+    public String getSheetName(SpielRundeNr nr) {
         return SheetNamen.formulexSpielrunde(nr.getNr());
     }
 
@@ -159,8 +154,39 @@ public abstract class FormuleXAbstractSpielrundeSheet extends SheetRunner implem
         return TurnierSheet.from(getXSpreadSheet(), getWorkingSpreadsheet());
     }
 
+    @Override
     public final SpielRundeNr getSpielRundeNr() throws GenerateException {
         return getKonfigurationSheet().getAktiveSpielRunde();
+    }
+
+    @Override
+    public int getErsteHeaderZeile() {
+        return ERSTE_HEADER_ZEILE;
+    }
+
+    @Override
+    public int getZweiteHeaderZeile() {
+        return ZWEITE_HEADER_ZEILE;
+    }
+
+    @Override
+    public int getErsteDatenZeile() {
+        return ERSTE_DATEN_ZEILE;
+    }
+
+    @Override
+    public int getBahnNrSpalte() {
+        return BAHN_NR_SPALTE;
+    }
+
+    @Override
+    public int getZeitSpalte() {
+        return ZEIT_SPALTE;
+    }
+
+    @Override
+    public int getNrCharHeight() {
+        return NR_CHARHEIGHT;
     }
 
     public SpielRundeNr getSpielRundeNrInSheet() {
@@ -564,243 +590,6 @@ public abstract class FormuleXAbstractSpielrundeSheet extends SheetRunner implem
         getSheetHelper().setStringValueInCell(headerValueZeile2);
 
         rundenStartzeitFeld();
-    }
-
-    /**
-     * Schreibt (nur wenn {@code isZeitplanAktiv()}) das einzige haendisch editierbare
-     * Zeit-Eingabefeld dieses Features in die Header-Zellen von {@link #ZEIT_SPALTE}. Portiert 1:1
-     * aus {@code SchweizerAbstractSpielrundeSheet.rundenStartzeitFeld()} — identische Verkettungslogik
-     * (Runde 1: literaler Default, Runde N&gt;1: Formelbezug auf die Vorrunde).
-     */
-    private void rundenStartzeitFeld() throws GenerateException {
-        if (!getKonfigurationSheet().isZeitplanAktiv()) {
-            return;
-        }
-        zeitplanPropertiesPersistieren();
-        getSheetHelper().setColumnWidth(getXSpreadSheet(), Position.from(ZEIT_SPALTE, ERSTE_HEADER_ZEILE), 1800);
-
-        Position startzeitPos = Position.from(ZEIT_SPALTE, ZWEITE_HEADER_ZEILE);
-        if (getSpielRundeNr().getNr() <= 1) {
-            StringCellValue startzeitValue = StringCellValue.from(getXSpreadSheet(), startzeitPos)
-                    .setVertJustify(CellVertJustify2.CENTER).setHoriJustify(CellHoriJustify.CENTER)
-                    .setCharHeight(NR_CHARHEIGHT).setShrinkToFit(true)
-                    .setBorder(BorderFactory.from().allThin().boldLn().forBottom().toBorder())
-                    .setValue(getKonfigurationSheet().getZeitplanTurnierStartzeit());
-            getSheetHelper().setStringValueInCell(startzeitValue);
-        } else {
-            String formel = "TEXT(" + rundenStartzeitFormel() + ";\"HH:MM\")";
-            StringCellValue startzeitValue = StringCellValue.from(getXSpreadSheet(), startzeitPos, formel)
-                    .setVertJustify(CellVertJustify2.CENTER).setHoriJustify(CellHoriJustify.CENTER)
-                    .setCharHeight(NR_CHARHEIGHT).setShrinkToFit(true)
-                    .setBorder(BorderFactory.from().allThin().boldLn().forBottom().toBorder());
-            getSheetHelper().setFormulaInCell(startzeitValue);
-        }
-
-        RangePosition startzeitRange = RangePosition.from(startzeitPos, startzeitPos);
-        EditierbaresZelleFormatHelper.anwenden(this, startzeitRange);
-    }
-
-    /**
-     * Ruft die Getter der Zeitplan-Zeitwerte einmal auf, damit deren Konfig-Default via
-     * {@code readIntProperty} in die UserDefinedProperties des Dokuments persistiert wird, siehe
-     * {@code SchweizerAbstractSpielrundeSheet.zeitplanPropertiesPersistieren()}.
-     */
-    private void zeitplanPropertiesPersistieren() {
-        var konfig = getKonfigurationSheet();
-        konfig.getZeitplanZeitlimitMinuten();
-        konfig.getZeitplanDurchgangPauseMinuten();
-        konfig.getZeitplanRundenPauseMinuten();
-    }
-
-    /**
-     * Nur fuer Runde N&gt;1, identische Verkettungslogik wie
-     * {@code SchweizerAbstractSpielrundeSheet.rundenStartzeitFormel()}.
-     */
-    private String rundenStartzeitFormel() throws GenerateException {
-        SpielRundeNr aktuelleRunde = getSpielRundeNr();
-        SpielRundeNr vorherigeRunde = SpielRundeNr.from(aktuelleRunde.getNr() - 1);
-        var xDoc = getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
-        XSpreadsheet vorSheet = SheetMetadataHelper.findeSheetUndHeile(xDoc,
-                getSpielrundeSchluessel(vorherigeRunde.getNr()), getSheetName(vorherigeRunde));
-        String vorSheetName = vorSheet != null ? Lo.qi(XNamed.class, vorSheet).getName() : getSheetName(vorherigeRunde);
-        String rundenPause = GlobalImpl.FORMAT_PTM_INT_PROPERTY(FormuleXPropertiesSpalte.KONFIG_PROP_ZEITPLAN_RUNDEN_PAUSE_MINUTEN);
-
-        int letzteZeitZeile = vorSheet != null ? ermittleLetzteZeitZeile(vorSheet, xDoc) : -1;
-        if (letzteZeitZeile >= 0) {
-            String letzteEndeZelle = "$'" + vorSheetName + "'." + Position.from(ZEIT_SPALTE, letzteZeitZeile).getAddressWith$();
-            return "TIMEVALUE(" + letzteEndeZelle + ")+" + minutenAlsTagesbruchteil(rundenPause);
-        }
-
-        String vorZelle = "$'" + vorSheetName + "'." + Position.from(ZEIT_SPALTE, ZWEITE_HEADER_ZEILE).getAddressWith$();
-        String zeitlimit = GlobalImpl.FORMAT_PTM_INT_PROPERTY(FormuleXPropertiesSpalte.KONFIG_PROP_ZEITPLAN_ZEITLIMIT_MINUTEN);
-        return "TIMEVALUE(" + vorZelle + ")+" + minutenAlsTagesbruchteil(zeitlimit + "+" + rundenPause);
-    }
-
-    /** Minuten-Ausdruck als Tagesbruchteil-Formel ({@code (Ausdruck)/1440}). */
-    private static String minutenAlsTagesbruchteil(String minutenAusdruck) {
-        return "(" + minutenAusdruck + ")/1440";
-    }
-
-    /**
-     * Liest die Zeile der letzten befuellten {@link #ZEIT_SPALTE}-Zelle der Vorrunde aus, identisch
-     * zu {@code SchweizerAbstractSpielrundeSheet.ermittleLetzteZeitZeile()}.
-     */
-    private int ermittleLetzteZeitZeile(XSpreadsheet vorSheet, XSpreadsheetDocument xDoc) throws GenerateException {
-        RangePosition zeitRange = RangePosition.from(ZEIT_SPALTE, ERSTE_DATEN_ZEILE, ZEIT_SPALTE, ERSTE_DATEN_ZEILE + 999);
-        RangeData zeitDaten = RangeHelper.from(vorSheet, xDoc, zeitRange).getDataFromRange();
-        int letzteNichtLeere = -1;
-        for (int i = 0; i < zeitDaten.size(); i++) {
-            String val = zeitDaten.get(i).get(0).getStringVal();
-            if (val != null && !val.isEmpty()) {
-                letzteNichtLeere = i;
-            }
-        }
-        return letzteNichtLeere >= 0 ? ERSTE_DATEN_ZEILE + letzteNichtLeere : -1;
-    }
-
-    /**
-     * Schreibt (nur wenn {@code isDurchgangAufteilungWirksam()} und tatsaechlich mehr als ein
-     * Durchgang noetig ist) fuer jeden Durchgang-Block dessen Start-/Endzeit in {@link #ZEIT_SPALTE},
-     * identisch zu {@code SchweizerAbstractSpielrundeSheet.durchgangInfoSpaltenSchreiben()}.
-     */
-    private void durchgangInfoSpaltenSchreiben(int anzahlPaarungen) throws GenerateException {
-        if (!getKonfigurationSheet().isDurchgangAufteilungWirksam() || anzahlPaarungen <= 0) {
-            return;
-        }
-        int bahnen = getKonfigurationSheet().getZeitplanAnzahlBahnen();
-        List<Integer> bloecke = DurchgangAufteilungRechner.berechne(anzahlPaarungen, bahnen);
-        if (bloecke.size() <= 1) {
-            return;
-        }
-
-        String rundenStartzeitAdresse = Position.from(ZEIT_SPALTE, ZWEITE_HEADER_ZEILE).getAddressWith$();
-        String zeitlimit = GlobalImpl.FORMAT_PTM_INT_PROPERTY(FormuleXPropertiesSpalte.KONFIG_PROP_ZEITPLAN_ZEITLIMIT_MINUTEN);
-        String pause = GlobalImpl.FORMAT_PTM_INT_PROPERTY(FormuleXPropertiesSpalte.KONFIG_PROP_ZEITPLAN_DURCHGANG_PAUSE_MINUTEN);
-
-        int zeile = ERSTE_DATEN_ZEILE;
-        String vorherigeEndeAdresse = null;
-        for (int groesse : bloecke) {
-            SheetRunner.testDoCancelTask();
-
-            int letzteZeileDesBlocks = zeile + groesse - 1;
-            String startAusdruck = vorherigeEndeAdresse == null ? "TIMEVALUE(" + rundenStartzeitAdresse + ")"
-                    : "TIMEVALUE(" + vorherigeEndeAdresse + ")+" + minutenAlsTagesbruchteil(pause);
-            Position startPos = Position.from(ZEIT_SPALTE, zeile);
-
-            String endeAdresse;
-            if (letzteZeileDesBlocks == zeile) {
-                String endeAusdruck = startAusdruck + "+" + minutenAlsTagesbruchteil(zeitlimit);
-                zeitZelleSchreiben(startPos, endeAusdruck);
-                endeAdresse = startPos.getAddress();
-            } else {
-                zeitZelleSchreiben(startPos, startAusdruck);
-                Position endePos = Position.from(ZEIT_SPALTE, letzteZeileDesBlocks);
-                String endeAusdruck = "TIMEVALUE(" + startPos.getAddress() + ")+" + minutenAlsTagesbruchteil(zeitlimit);
-                zeitZelleSchreiben(endePos, endeAusdruck);
-                endeAdresse = endePos.getAddress();
-            }
-            vorherigeEndeAdresse = endeAdresse;
-
-            zeile += groesse;
-        }
-    }
-
-    /** Siehe {@code SchweizerAbstractSpielrundeSheet.zeitZelleSchreiben()} fuer die TEXT-statt-Zeitwert-Begruendung. */
-    private void zeitZelleSchreiben(Position pos, String numerischerAusdruck) throws GenerateException {
-        String formel = "TEXT(" + numerischerAusdruck + ";\"HH:MM\")";
-        StringCellValue zeitValue = StringCellValue.from(getXSpreadSheet(), pos, formel)
-                .setHoriJustify(CellHoriJustify.CENTER).setVertJustify(CellVertJustify2.CENTER)
-                .setCharHeight(12);
-        getSheetHelper().setFormulaInCell(zeitValue);
-    }
-
-    /**
-     * Trennt die Durchgaenge optisch, identisch zu
-     * {@code SchweizerAbstractSpielrundeSheet.durchgangTrennlinienSetzen()}. Muss NACH
-     * {@link #datenformatieren()} aufgerufen werden.
-     */
-    private void durchgangTrennlinienSetzen(int anzahlPaarungen) throws GenerateException {
-        if (!getKonfigurationSheet().isDurchgangAufteilungWirksam() || anzahlPaarungen <= 0) {
-            return;
-        }
-        List<Integer> bloecke = DurchgangAufteilungRechner.berechne(anzahlPaarungen,
-                getKonfigurationSheet().getZeitplanAnzahlBahnen());
-        if (bloecke.size() <= 1) {
-            return;
-        }
-
-        XSpreadsheet sheet = getXSpreadSheet();
-        TableBorder2 doppelteLinieOben = BorderFactory.from().doubleLn().forTop().toBorder();
-
-        int zeile = ERSTE_DATEN_ZEILE;
-        for (int i = 0; i < bloecke.size(); i++) {
-            if (i > 0) {
-                RangePosition trennzeile = RangePosition.from(BAHN_NR_SPALTE, zeile, ZEIT_SPALTE, zeile);
-                getSheetHelper().setPropertyInRange(sheet, trennzeile, TABLE_BORDER2, doppelteLinieOben);
-            }
-            zeile += bloecke.get(i);
-        }
-    }
-
-    /**
-     * Muss NACH {@link #datenErsteSpalte()} aufgerufen werden, identisch zu
-     * {@code SchweizerAbstractSpielrundeSheet.bahnNummerierungProDurchgangFallsAktiv()}.
-     */
-    private void bahnNummerierungProDurchgangFallsAktiv(int anzahlPaarungen) throws GenerateException {
-        if (!getKonfigurationSheet().isDurchgangAufteilungWirksam() || anzahlPaarungen <= 0) {
-            return;
-        }
-        List<Integer> bloecke = DurchgangAufteilungRechner.berechne(anzahlPaarungen,
-                getKonfigurationSheet().getZeitplanAnzahlBahnen());
-        if (bloecke.size() <= 1) {
-            return;
-        }
-        bahnNummerierungProDurchgang(bloecke);
-    }
-
-    /**
-     * Bei aktiver Durchgang-Aufteilung beginnt die Bahn-Nummer pro Durchgang-Block neu bei 1,
-     * identisch zu {@code SchweizerAbstractSpielrundeSheet.bahnNummerierungProDurchgang()}.
-     */
-    private void bahnNummerierungProDurchgang(List<Integer> bloecke) throws GenerateException {
-        SpielrundeSpielbahn modus = getKonfigurationSheet().getSpielrundeSpielbahn();
-        if (modus != SpielrundeSpielbahn.X && modus != SpielrundeSpielbahn.N) {
-            return;
-        }
-        RangeData rangeData = new RangeData();
-        for (int groesse : bloecke) {
-            for (int n = 1; n <= groesse; n++) {
-                rangeData.addNewRow(n);
-            }
-        }
-        Position startPos = Position.from(BAHN_NR_SPALTE, ERSTE_DATEN_ZEILE);
-        RangeHelper.from(this, rangeData.getRangePosition(startPos)).setDataInRange(rangeData);
-
-        bahnNrDuplikatPruefungProDurchgang(bloecke);
-    }
-
-    /**
-     * Ersetzt die spaltenweite COUNTIF-Duplikatpruefung durch eine pro Durchgang-Block skalierte
-     * Variante, identisch zu {@code SchweizerAbstractSpielrundeSheet.bahnNrDuplikatPruefungProDurchgang()}.
-     */
-    private void bahnNrDuplikatPruefungProDurchgang(List<Integer> bloecke) throws GenerateException {
-        int gesamtAnzahlZeilen = bloecke.stream().mapToInt(Integer::intValue).sum();
-        RangePosition gesamteSpalte = RangePosition.from(BAHN_NR_SPALTE, ERSTE_DATEN_ZEILE,
-                BAHN_NR_SPALTE, ERSTE_DATEN_ZEILE + gesamtAnzahlZeilen - 1);
-        ConditionalFormatHelper.clearOnly(this, gesamteSpalte);
-
-        FehlerStyle fehlerStyle = new FehlerStyle();
-        int zeile = ERSTE_DATEN_ZEILE;
-        for (int groesse : bloecke) {
-            RangePosition blockRange = RangePosition.from(BAHN_NR_SPALTE, zeile, BAHN_NR_SPALTE, zeile + groesse - 1);
-            String conditionFindDoppelt = "COUNTIF(" + blockRange.getAddressWith$() + ";"
-                    + ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")>1";
-            String conditionNotEmpty = ConditionalFormatHelper.FORMULA_CURRENT_CELL + "<>\"\"";
-            String formulaFindDoppelteBahnNr = "AND(" + conditionFindDoppelt + ";" + conditionNotEmpty + ")";
-            ConditionalFormatHelper.from(this, blockRange).clear().formula1(formulaFindDoppelteBahnNr)
-                    .operator(ConditionOperator.FORMULA).style(fehlerStyle).applyAndDoReset();
-            zeile += groesse;
-        }
     }
 
     private void fehlerSpalteFormatieren() throws GenerateException {

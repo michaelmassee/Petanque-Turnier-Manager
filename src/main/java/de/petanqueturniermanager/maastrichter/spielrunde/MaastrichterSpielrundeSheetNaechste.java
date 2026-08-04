@@ -38,12 +38,12 @@ public class MaastrichterSpielrundeSheetNaechste extends SchweizerSpielrundeShee
 	}
 
 	@Override
-	protected String getSpielrundeSchluessel(int rundeNr) {
+	public String getSpielrundeSchluessel(int rundeNr) {
 		return SheetMetadataHelper.schluesselMaastrichterVorrunde(rundeNr);
 	}
 
 	@Override
-	protected String getSheetName(SpielRundeNr nr) {
+	public String getSheetName(SpielRundeNr nr) {
 		return SheetNamen.maastrichterVorrunde(nr.getNr());
 	}
 

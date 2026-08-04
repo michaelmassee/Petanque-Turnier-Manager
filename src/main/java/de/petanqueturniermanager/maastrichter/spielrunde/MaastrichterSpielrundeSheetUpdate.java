@@ -27,7 +27,7 @@ public class MaastrichterSpielrundeSheetUpdate extends SchweizerSpielrundeSheetU
 	}
 
 	@Override
-	protected String getSpielrundeSchluessel(int rundeNr) {
+	public String getSpielrundeSchluessel(int rundeNr) {
 		return SheetMetadataHelper.schluesselMaastrichterVorrunde(rundeNr);
 	}
 

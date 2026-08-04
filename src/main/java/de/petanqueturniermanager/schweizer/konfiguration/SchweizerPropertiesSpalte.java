@@ -53,14 +53,6 @@ public class SchweizerPropertiesSpalte extends BasePropertiesSpalte implements I
 	private static final String KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE = "Spielplan Team Anzeige";
 	private static final String KONFIG_PROP_RANKING_MODUS = "Schweizer Ranking Modus";
 
-	public static final String KONFIG_PROP_ZEITPLAN_AKTIV = "Zeitplan aktiv";
-	public static final String KONFIG_PROP_ZEITPLAN_ANZAHL_BAHNEN = "Zeitplan Anzahl Bahnen";
-	public static final String KONFIG_PROP_ZEITPLAN_ZEITLIMIT_MINUTEN = "Durchgang Zeitlimit (Minuten)";
-	public static final String KONFIG_PROP_ZEITPLAN_DURCHGANG_PAUSE_MINUTEN = "Durchgang Pause (Minuten)";
-	public static final String KONFIG_PROP_ZEITPLAN_RUNDEN_PAUSE_MINUTEN = "Runden Pause (Minuten)";
-	public static final String KONFIG_PROP_ZEITPLAN_TURNIER_STARTZEIT = "Turnier Startzeit";
-
-
 	static {
 
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_LINKS)
@@ -132,7 +124,8 @@ public class SchweizerPropertiesSpalte extends BasePropertiesSpalte implements I
 		KONFIG_PROPERTIES.add(ZeitplanConfigProperty.<Integer>from(ConfigPropertyType.INTEGER, KONFIG_PROP_ZEITPLAN_RUNDEN_PAUSE_MINUTEN)
 				.setDefaultVal(10).setDescription("config.desc.zeitplan.runden.pause"));
 		KONFIG_PROPERTIES.add(ZeitplanConfigProperty.<String>from(ConfigPropertyType.STRING, KONFIG_PROP_ZEITPLAN_TURNIER_STARTZEIT)
-				.setDefaultVal("09:00").setDescription("config.desc.zeitplan.turnier.startzeit").kompaktesTextfeld());
+				.setDefaultVal("09:00").setDescription("config.desc.zeitplan.turnier.startzeit").kompaktesTextfeld()
+				.validierung(StringTools::isValidUhrzeitHhMm));
 
 		ADDUploadProp(KONFIG_PROPERTIES);
 		ADDSpielrundenExportProp(KONFIG_PROPERTIES);

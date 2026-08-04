@@ -69,4 +69,21 @@ public class StringToolsTest {
         assertThat(StringTools.stringToBoolean(s)).isFalse();
     }
 
+    @Test
+    public void testIsValidUhrzeitHhMmGueltig() throws Exception {
+        assertThat(StringTools.isValidUhrzeitHhMm("00:00")).isTrue();
+        assertThat(StringTools.isValidUhrzeitHhMm("09:05")).isTrue();
+        assertThat(StringTools.isValidUhrzeitHhMm("23:59")).isTrue();
+    }
+
+    @Test
+    public void testIsValidUhrzeitHhMmUngueltigesFormat() throws Exception {
+        assertThat(StringTools.isValidUhrzeitHhMm("9:05")).isFalse(); // fehlende fuehrende Null
+        assertThat(StringTools.isValidUhrzeitHhMm("24:00")).isFalse(); // Stunde ausserhalb 0-23
+        assertThat(StringTools.isValidUhrzeitHhMm("12:60")).isFalse(); // Minute ausserhalb 0-59
+        assertThat(StringTools.isValidUhrzeitHhMm("abc")).isFalse();
+        assertThat(StringTools.isValidUhrzeitHhMm("")).isFalse();
+        assertThat(StringTools.isValidUhrzeitHhMm(null)).isFalse();
+    }
+
 }

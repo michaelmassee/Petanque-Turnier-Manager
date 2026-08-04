@@ -116,6 +116,18 @@ public abstract class BaseField<T> {
 		return setProperty(properties, key, newVal);
 	}
 
+	/**
+	 * Liest den aktuellen Wert einer Control-Property (z.B. um vor einer temporären Änderung,
+	 * etwa einer Validierungs-Hintergrundfarbe, den Ausgangswert zu sichern und später
+	 * zurückzusetzen).
+	 */
+	protected final Object getProperty(String key) {
+		if (properties == null || key == null) {
+			return null;
+		}
+		return properties.getPropertyValues(new String[] { key })[0];
+	}
+
 	@SuppressWarnings("unchecked")
 	public final T setProperty(XMultiPropertySet xMultiPropertySet, String key, Object newVal) {
 		if (ObjectUtils.allNotNull(properties, key, newVal)) {
