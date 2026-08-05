@@ -22,6 +22,7 @@ import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
+import de.petanqueturniermanager.planungsrechner.PlanungsrechnerSheet;
 import de.petanqueturniermanager.toolbar.TurnierModus;
 
 /**
@@ -301,16 +302,19 @@ public class BlattschutzManager {
     // -------------------------------------------------------------------------
 
     /**
-     * Ergänzt die system-spezifischen Schutz-Infos um Sheets, die in jedem
-     * Turniersystem im Turnier-Modus vollständig gesperrt sein müssen
-     * (z.B. das Teilnehmer-Sheet). So muss diese Regel nicht in jeder
-     * {@link IBlattschutzKonfiguration} dupliziert werden.
+     * Ergänzt die system-spezifischen Schutz-Infos um Sheets, die unabhängig vom aktiven
+     * Turniersystem im Turnier-Modus geschützt sein müssen (z.B. das Teilnehmer-Sheet, vollständig
+     * gesperrt; der Planungsrechner, mit editierbaren Eingabezellen). So muss diese Regel nicht in
+     * jeder {@link IBlattschutzKonfiguration} dupliziert werden.
      */
     private List<SheetSchutzInfo> mitGlobalenSchutzInfos(List<SheetSchutzInfo> systemInfos, WorkingSpreadsheet ws) {
         var alle = new ArrayList<>(systemInfos);
         var xDoc = ws.getWorkingSpreadsheetDocument();
         SheetMetadataHelper.findeSheet(xDoc, SheetMetadataHelper.SCHLUESSEL_TEILNEHMER)
                 .ifPresent(sheet -> alle.add(SheetSchutzInfo.vollGesperrt(sheet)));
+        SheetMetadataHelper.findeSheet(xDoc, SheetMetadataHelper.SCHLUESSEL_PLANUNGSRECHNER)
+                .ifPresent(sheet -> alle.add(SheetSchutzInfo.mitEditierbarenBereichen(sheet,
+                        PlanungsrechnerSheet.editierbareEingabeBereiche())));
         return alle;
     }
 

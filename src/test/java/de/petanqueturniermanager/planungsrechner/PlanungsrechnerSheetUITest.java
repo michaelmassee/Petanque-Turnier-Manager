@@ -2,15 +2,25 @@ package de.petanqueturniermanager.planungsrechner;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.assertj.core.data.Offset;
 import org.junit.jupiter.api.Test;
 
+import com.sun.star.beans.XPropertySet;
 import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.util.CellProtection;
+import com.sun.star.util.XProtectable;
 
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
+import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
+import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzRegistry;
+import de.petanqueturniermanager.helper.sheet.numberformat.NumberFormatHelper;
+import de.petanqueturniermanager.helper.sheet.numberformat.UserNumberFormat;
+import de.petanqueturniermanager.toolbar.TurnierModus;
 
 /**
  * UI-Tests für den eigenständigen, vom Turniersystem unabhängigen Planungsrechner.
@@ -31,6 +41,8 @@ public class PlanungsrechnerSheetUITest extends BaseCalcUITest {
     private static final int SPALTE_B_LABEL = 5;
     private static final int SPALTE_B_WERT = 6;
 
+    private static final int ZEILE_START = 3;
+    private static final int ZEILE_A_ENDE = 4;
     private static final int ZEILE_A_TEAMS = 5;
     private static final int ZEILE_A_BAHNEN = 6;
     private static final int ZEILE_B_ZEITLIMIT = 9;
@@ -50,6 +62,36 @@ public class PlanungsrechnerSheetUITest extends BaseCalcUITest {
         assertThat(sheetHlp.getIntFromCell(sheet, Position.from(SPALTE_A_WERT, ZEILE_A_BAHNEN))).isEqualTo(3);
         // Block B Default: Zeitlimit 15
         assertThat(sheetHlp.getTextFromCell(sheet, Position.from(SPALTE_B_WERT, ZEILE_B_ZEITLIMIT))).isEqualTo("15");
+    }
+
+    /**
+     * Regression: die Uhrzeit-Eingabezellen (Start/Ende) müssen echte, mit HH:MM formatierte
+     * Calc-Zeitwerte sein (Bruchteil des Tages), nicht bloß Text — sonst greift weder das
+     * NumberFormat noch kann der Nutzer per Zeit-Eingabe/-Spinner bequem editieren.
+     */
+    @Test
+    public void testUhrzeitEingabezellen_sindAlsZeitWerteFormatiert() throws Exception {
+        new PlanungsrechnerSheet(wkingSpreadsheet).doRun();
+        XSpreadsheet sheet = new PlanungsrechnerSheet(wkingSpreadsheet).getXSpreadSheet();
+
+        int zeitFormatIdx = NumberFormatHelper.from(wkingSpreadsheet.getWorkingSpreadsheetDocument())
+                .getIdx(UserNumberFormat.TIME);
+
+        // Block A: Start 09:00, Ende 17:00 als Bruchteil des 24h-Tages
+        assertThat(sheet.getCellByPosition(SPALTE_A_WERT, ZEILE_START).getValue())
+                .as("Block A Start = 09:00").isEqualTo(9.0 / 24.0, Offset.offset(1e-9));
+        assertThat(sheet.getCellByPosition(SPALTE_A_WERT, ZEILE_A_ENDE).getValue())
+                .as("Block A Ende = 17:00").isEqualTo(17.0 / 24.0, Offset.offset(1e-9));
+        // Block B: Start 09:00
+        assertThat(sheet.getCellByPosition(SPALTE_B_WERT, ZEILE_START).getValue())
+                .as("Block B Start = 09:00").isEqualTo(9.0 / 24.0, Offset.offset(1e-9));
+
+        for (Position pos : new Position[] { Position.from(SPALTE_A_WERT, ZEILE_START),
+                Position.from(SPALTE_A_WERT, ZEILE_A_ENDE), Position.from(SPALTE_B_WERT, ZEILE_START) }) {
+            XPropertySet propSet = Lo.qi(XPropertySet.class, sheet.getCellByPosition(pos.getSpalte(), pos.getZeile()));
+            assertThat(propSet.getPropertyValue("NumberFormat")).as("NumberFormat HH:MM fuer " + pos)
+                    .isEqualTo(zeitFormatIdx);
+        }
     }
 
     @Test
@@ -101,8 +143,16 @@ public class PlanungsrechnerSheetUITest extends BaseCalcUITest {
                 .containsIgnoringCase("ZEITPLAN");
     }
 
+    /**
+     * Zweiter Menüklick auf ein bereits bestehendes Sheet fragt „Neu erstellen?" (Standard-
+     * Verhalten von {@code NewSheet.create()} ohne {@code .useIfExist()}). Im (headless) Test
+     * beantwortet {@code MessageBox.setDialogeUeberspringen()} einen {@code WARN_YES_NO}-Dialog
+     * automatisch mit Ja (siehe {@code MessageBox.show()}), das Sheet wird also neu aufgebaut —
+     * das ist hier zugleich der Beleg, dass der Dialog tatsächlich verdrahtet ist: eine manuelle
+     * Eingabe wird beim zweiten Aufruf auf den Default zurückgesetzt statt erhalten zu bleiben.
+     */
     @Test
-    public void testWiederholterMenueaufruf_erzeugtSheetNichtErneut() throws Exception {
+    public void testWiederholterMenueaufruf_bestehendesSheet_fragtNeuErstellenUndBautNeuAuf() throws Exception {
         new PlanungsrechnerSheet(wkingSpreadsheet).doRun();
         XSpreadsheet ersterAufruf = new PlanungsrechnerSheet(wkingSpreadsheet).getXSpreadSheet();
 
@@ -112,8 +162,9 @@ public class PlanungsrechnerSheetUITest extends BaseCalcUITest {
         new PlanungsrechnerSheet(wkingSpreadsheet).doRun();
         XSpreadsheet zweiterAufruf = new PlanungsrechnerSheet(wkingSpreadsheet).getXSpreadSheet();
 
-        // dasselbe Sheet, keine Neuerstellung, manuelle Eingabe bleibt unangetastet
-        assertThat(sheetHlp.getIntFromCell(zweiterAufruf, Position.from(SPALTE_A_WERT, ZEILE_A_TEAMS))).isEqualTo(24);
+        assertThat(sheetHlp.getIntFromCell(zweiterAufruf, Position.from(SPALTE_A_WERT, ZEILE_A_TEAMS)))
+                .as("Neu erstellen (Ja) setzt die manuelle Eingabe auf den Default zurueck")
+                .isEqualTo(16);
         assertThat(sheetHlp.getFormulaFromCell(zweiterAufruf, Position.from(SPALTE_A_WERT, ZEILE_ERGEBNIS_HAUPT)))
                 .containsIgnoringCase("ZEITLIMIT");
     }
@@ -134,5 +185,76 @@ public class PlanungsrechnerSheetUITest extends BaseCalcUITest {
         assertThat(sheetHlp.findByName("Fremdes-Sheet")).isNotNull();
         assertThat(sheetHlp.getTextFromCell(sheetHlp.findByName("Fremdes-Sheet"), Position.from(0, 0)))
                 .isEqualTo("Marker-Wert");
+    }
+
+    /**
+     * Deckt den ursprünglich gemeldeten Bug ab: Sheet existiert bereits, Turnier-Modus wird
+     * danach aktiviert (der reguläre Weg über {@code TurnierModus.aktivierenIntern()} ->
+     * {@code BlattschutzManager.schuetzen()}, hier direkt nachgebaut statt über den UI-Toggle).
+     */
+    @Test
+    public void testTurniermodus_planungsrechnerWirdGeschuetzt_eingabezellenBleibenOffen() throws Exception {
+        docPropHelper.setIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM, TurnierSystem.SCHWEIZER.getId());
+        new PlanungsrechnerSheet(wkingSpreadsheet).doRun();
+        XSpreadsheet sheet = new PlanungsrechnerSheet(wkingSpreadsheet).getXSpreadSheet();
+        assertThat(sheet).isNotNull();
+
+        var konfig = BlattschutzRegistry.fuer(TurnierSystem.SCHWEIZER).orElseThrow();
+        TurnierModus.get().setAktivForTest(true);
+        try {
+            BlattschutzManager.get().schuetzen(konfig, wkingSpreadsheet);
+
+            assertThat(Lo.qi(XProtectable.class, sheet).isProtected())
+                    .as("Planungsrechner muss beim Aktivieren des Turniermodus mitgeschuetzt werden")
+                    .isTrue();
+            assertThat(istZelleEditierbar(sheet, SPALTE_A_WERT, ZEILE_A_TEAMS))
+                    .as("Block A Eingabezelle bleibt trotz Schutz editierbar").isTrue();
+            assertThat(istZelleEditierbar(sheet, SPALTE_B_WERT, ZEILE_B_ZEITLIMIT))
+                    .as("Block B Eingabezelle bleibt trotz Schutz editierbar").isTrue();
+            assertThat(istZelleEditierbar(sheet, SPALTE_A_WERT, ZEILE_ERGEBNIS_HAUPT))
+                    .as("Ausgabezelle (Formel) bleibt gesperrt").isFalse();
+        } finally {
+            BlattschutzManager.get().entsperren(konfig, wkingSpreadsheet);
+            TurnierModus.get().setAktivForTest(false);
+        }
+    }
+
+    /**
+     * Deckt den Fall ab, in dem der Turnier-Modus bereits aktiv ist, BEVOR das
+     * Planungsrechner-Sheet je erzeugt wurde: {@link PlanungsrechnerSheet} deklariert
+     * {@code TurnierSystem.KEIN}, daher öffnet {@code SheetRunner.run()} für seinen eigenen Lauf
+     * nie den Blattschutz-Command-Scope — ohne den expliziten Nachzieh-Schritt in
+     * {@code PlanungsrechnerSheet.doRun()} bliebe das frisch erzeugte Sheet bis zum nächsten
+     * Kiosk-Toggle ungeschützt.
+     */
+    @Test
+    public void testTurniermodus_bereitsAktivVorErstellung_planungsrechnerWirdTrotzdemGeschuetzt() throws Exception {
+        docPropHelper.setIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM, TurnierSystem.SCHWEIZER.getId());
+        var konfig = BlattschutzRegistry.fuer(TurnierSystem.SCHWEIZER).orElseThrow();
+
+        TurnierModus.get().setAktivForTest(true);
+        try {
+            new PlanungsrechnerSheet(wkingSpreadsheet).doRun();
+
+            XSpreadsheet sheet = new PlanungsrechnerSheet(wkingSpreadsheet).getXSpreadSheet();
+            assertThat(sheet).isNotNull();
+            assertThat(Lo.qi(XProtectable.class, sheet).isProtected())
+                    .as("Planungsrechner muss auch bei bereits aktivem Turniermodus sofort geschuetzt werden")
+                    .isTrue();
+        } finally {
+            BlattschutzManager.get().entsperren(konfig, wkingSpreadsheet);
+            TurnierModus.get().setAktivForTest(false);
+        }
+    }
+
+    private boolean istZelleEditierbar(XSpreadsheet sheet, int spalte, int zeile) {
+        try {
+            var cell = sheet.getCellByPosition(spalte, zeile);
+            XPropertySet props = Lo.qi(XPropertySet.class, cell);
+            CellProtection cp = (CellProtection) props.getPropertyValue("CellProtection");
+            return !cp.IsLocked;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

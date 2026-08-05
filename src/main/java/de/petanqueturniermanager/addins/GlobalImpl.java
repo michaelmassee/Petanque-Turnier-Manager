@@ -2,7 +2,6 @@ package de.petanqueturniermanager.addins;
 
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -27,7 +26,6 @@ import de.petanqueturniermanager.comp.DocumentHelper;
 import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
-import de.petanqueturniermanager.helper.StringTools;
 import de.petanqueturniermanager.planungsrechner.PlanungsrechnerRechner;
 import de.petanqueturniermanager.planungsrechner.PlanungsrechnerRechner.ZeitplanEintrag;
 import de.petanqueturniermanager.spielerdb.SpielerAddInCache;
@@ -577,10 +575,10 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 
 	// ------------------- PTM.PLANUNG.* Formeln -----------------
 	// Eigenständiger, vom Turniersystem unabhängiger Planungsrechner (siehe PlanungsrechnerSheet).
-	// Uhrzeiten kommen als "HH:MM"-String direkt aus der Eingabezelle (kein TIMEVALUE() in der
-	// Formel nötig). Wie alle PTM-Add-In-Funktionen: bei ungültigen Eingaben nie eine Exception
-	// werfen, sondern einen neutralen Fallback liefern (0 / "" / leere Tabelle) statt die Zelle
-	// mit #WERT! abzureißen.
+	// Uhrzeiten kommen als echte Calc-Zeitwerte (Bruchteil des Tages, 09:00 = 0,375) direkt aus der
+	// mit UserNumberFormat.TIME formatierten Eingabezelle, nicht als String. Wie alle PTM-Add-In-
+	// Funktionen: bei ungültigen Eingaben nie eine Exception werfen, sondern einen neutralen
+	// Fallback liefern (0 / "" / leere Tabelle) statt die Zelle mit #WERT! abzureißen.
 
 	@Override
 	public int ptmplanungdurchgaengeprorunde(int anzTeams, int anzBahnen) {
@@ -592,31 +590,31 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	}
 
 	@Override
-	public int ptmplanungzeitlimit(String start, String ende, int anzTeams, int anzBahnen, int anzRunden,
+	public int ptmplanungzeitlimit(double start, double ende, int anzTeams, int anzBahnen, int anzRunden,
 			int durchgangPauseMin, int rundenPauseMin) {
 		try {
 			var ergebnis = PlanungsrechnerRechner.berechneZeitlimit(planungZeit(start), planungZeit(ende),
 					anzTeams, anzBahnen, anzRunden, durchgangPauseMin, rundenPauseMin);
 			return ergebnis.zeitlimitProDurchgangMinuten();
-		} catch (IllegalArgumentException | DateTimeParseException e) {
+		} catch (IllegalArgumentException e) {
 			return 0;
 		}
 	}
 
 	@Override
-	public String ptmplanungturnierende(String start, int anzTeams, int anzBahnen, int anzRunden,
+	public String ptmplanungturnierende(double start, int anzTeams, int anzBahnen, int anzRunden,
 			int durchgangPauseMin, int rundenPauseMin, int zeitlimitMin) {
 		try {
 			var ergebnis = PlanungsrechnerRechner.berechneZeitplan(planungZeit(start), anzTeams, anzBahnen,
 					anzRunden, durchgangPauseMin, rundenPauseMin, zeitlimitMin);
 			return ergebnis.turnierEnde().format(PLANUNG_HH_MM);
-		} catch (IllegalArgumentException | DateTimeParseException e) {
+		} catch (IllegalArgumentException e) {
 			return "";
 		}
 	}
 
 	@Override
-	public String[][] ptmplanungzeitplan(String start, int anzTeams, int anzBahnen, int anzRunden,
+	public String[][] ptmplanungzeitplan(double start, int anzTeams, int anzBahnen, int anzRunden,
 			int durchgangPauseMin, int rundenPauseMin, int zeitlimitMin) {
 		String[][] tabelle = leeresPlanungZeitplanErgebnis();
 		try {
@@ -631,17 +629,22 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 				tabelle[i][2] = eintrag.start().format(PLANUNG_HH_MM);
 				tabelle[i][3] = eintrag.ende().format(PLANUNG_HH_MM);
 			}
-		} catch (IllegalArgumentException | DateTimeParseException e) {
+		} catch (IllegalArgumentException e) {
 			logger.debug("PTM.PLANUNG.ZEITPLAN: ungueltige Eingabe, leere Tabelle geliefert", e);
 		}
 		return tabelle;
 	}
 
-	private static LocalTime planungZeit(String wert) {
-		if (!StringTools.isValidUhrzeitHhMm(wert)) {
-			throw new IllegalArgumentException("Ungueltige Uhrzeit (Format HH:MM): " + wert);
+	/**
+	 * Wandelt einen Calc-Zeitwert (Bruchteil eines 24h-Tages, wie ihn eine mit
+	 * {@code UserNumberFormat.TIME} formatierte Zelle liefert) in eine {@link LocalTime} um.
+	 */
+	private static LocalTime planungZeit(double bruchteilDesTages) {
+		if (Double.isNaN(bruchteilDesTages) || Double.isInfinite(bruchteilDesTages) || bruchteilDesTages < 0) {
+			throw new IllegalArgumentException("Ungueltiger Zeitwert: " + bruchteilDesTages);
 		}
-		return LocalTime.parse(wert, PLANUNG_HH_MM);
+		long sekundenDesTages = Math.round(bruchteilDesTages * 86400.0) % 86400;
+		return LocalTime.ofSecondOfDay(sekundenDesTages);
 	}
 
 	private static String[][] leeresPlanungZeitplanErgebnis() {

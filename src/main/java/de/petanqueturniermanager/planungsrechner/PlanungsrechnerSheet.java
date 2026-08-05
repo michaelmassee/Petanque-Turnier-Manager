@@ -3,6 +3,9 @@
  */
 package de.petanqueturniermanager.planungsrechner;
 
+import java.time.LocalTime;
+import java.util.List;
+
 import com.sun.star.awt.FontWeight;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
@@ -13,6 +16,7 @@ import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
@@ -26,6 +30,8 @@ import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
+import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
+import de.petanqueturniermanager.helper.sheet.numberformat.UserNumberFormat;
 
 /**
  * Eigenständiger, vom Turniersystem unabhängiger Planungsrechner (Sheet „Planungsrechner").
@@ -36,9 +42,14 @@ import de.petanqueturniermanager.helper.sheet.TurnierSheet;
  * kompletten Zeitplan über alle Runden (Block A mit dem selbst errechneten Zeitlimit, Block B mit
  * dem eingegebenen). Siehe {@link PlanungsrechnerRechner} für die reine Rechenlogik.
  * <p>
- * Rührt ausschließlich das eigene Sheet an — keine Turniersystem-Property, keine fremden Sheets,
- * kein fremder Blattschutz. Der Menüpunkt ist deshalb unabhängig vom aktiven Turniersystem immer
- * aufrufbar (siehe {@code ProtocolHandler}).
+ * Rührt ausschließlich das eigene Sheet an — keine Turniersystem-Property, keine fremden Sheets.
+ * Der Menüpunkt ist deshalb unabhängig vom aktiven Turniersystem immer aufrufbar (siehe
+ * {@code ProtocolHandler}). Im Turnier-Modus (Kiosk-Modus) wird das Sheet trotzdem geschützt —
+ * analog zum Teilnehmer-Sheet ist es unabhängig vom aktiven {@code TurnierSystem} in
+ * {@link de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager} als „globales"
+ * Sheet verankert (nicht in {@code BlattschutzRegistry}, die dokumentweit an genau ein aktives
+ * Turniersystem gebunden ist), mit den Eingabezellen aus {@link #editierbareEingabeBereiche()}
+ * als einzige weiterhin editierbare Bereiche.
  */
 public class PlanungsrechnerSheet extends SheetRunner implements ISheet {
 
@@ -84,6 +95,19 @@ public class PlanungsrechnerSheet extends SheetRunner implements ISheet {
         super(workingSpreadsheet, TurnierSystem.KEIN, "PlanungsrechnerSheet");
     }
 
+    /**
+     * Bereiche der Eingabezellen (gelb markiert, siehe {@link #markiereEingabe}), die im
+     * Turnier-Modus trotz Sheet-Schutz editierbar bleiben müssen — je einer pro Block, da beide
+     * Eingabespalten unterbrechungsfrei die Zeilen {@code ZEILE_START}..letzte Eingabezeile
+     * belegen. Wird von {@code BlattschutzManager.mitGlobalenSchutzInfos()} verwendet, damit die
+     * Layout-Konstanten (einzige Quelle der Wahrheit) nicht dupliziert werden müssen.
+     */
+    public static List<RangePosition> editierbareEingabeBereiche() {
+        return List.of(
+                RangePosition.from(SPALTE_A_WERT, ZEILE_START, SPALTE_A_WERT, ZEILE_A_RUNDEN_PAUSE),
+                RangePosition.from(SPALTE_B_WERT, ZEILE_START, SPALTE_B_WERT, ZEILE_B_ZEITLIMIT));
+    }
+
     @Override
     public XSpreadsheet getXSpreadSheet() throws GenerateException {
         return SheetMetadataHelper.findeSheetUndHeile(getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
@@ -101,35 +125,49 @@ public class PlanungsrechnerSheet extends SheetRunner implements ISheet {
     }
 
     @Override
+    @SuppressWarnings("try") // scopeFuer()-Ergebnis wird bewusst nur für seinen close()-Seiteneffekt gehalten
     public void doRun() throws GenerateException {
         processBoxinfo("processbox.erstelle.sheet", SheetNamen.planungsrechner());
 
-        NewSheet neuesSheet = NewSheet.from(this, SheetNamen.planungsrechner(),
-                SheetMetadataHelper.SCHLUESSEL_PLANUNGSRECHNER)
-                .pos(DefaultSheetPos.PLANUNGSRECHNER).useIfExist().hideGrid()
-                .tabColor(0xD9EAF7).setActiv().create();
+        // Dieser Runner deklariert TurnierSystem.KEIN, daher öffnet SheetRunner.run() für ihn nie
+        // den Blattschutz-Command-Scope (dessen Guard prüft turnierSystem != TurnierSystem.KEIN).
+        // NewSheet.create() kann unten bei "Neu erstellen?" -> Ja das Sheet per removeSheet()
+        // entfernen, was ensureUnprotectedInScope() voraussetzt — ohne eigenen Scope würfe das im
+        // Turnier-Modus eine IllegalStateException. scopeFuer() ist genau für Aufrufer außerhalb
+        // des normalen SheetRunner-Scopes gedacht und bei inaktivem Turnier-Modus bzw.
+        // TurnierSystem.KEIN ein No-Op; beim Schließen wird u.a. dieses Sheet automatisch wieder
+        // geschützt (siehe BlattschutzManager.mitGlobalenSchutzInfos).
+        TurnierSystem aktivesSystem = new DocumentPropertiesHelper(getWorkingSpreadsheet()).getTurnierSystemAusDocument();
+        try (var ignored = BlattschutzManager.get().scopeFuer(aktivesSystem, getWorkingSpreadsheet())) {
+            // Ohne .useIfExist(): existiert das Sheet bereits, fragt NewSheet.create() den Nutzer
+            // per Ja/Nein-Dialog, ob es neu erstellt werden soll — bei „Nein" bleibt es unverändert
+            // stehen und wird nur aktiviert.
+            NewSheet neuesSheet = NewSheet.from(this, SheetNamen.planungsrechner(),
+                    SheetMetadataHelper.SCHLUESSEL_PLANUNGSRECHNER)
+                    .pos(DefaultSheetPos.PLANUNGSRECHNER).hideGrid()
+                    .tabColor(0xD9EAF7).setActiv().create();
 
-        XSpreadsheet sheet = getXSpreadSheet();
-        if (sheet == null) {
-            return;
-        }
-
-        // Alle Ausgaben sind PTM.PLANUNG.*-Formeln (siehe schreibeBlockA/B) und rechnen live neu,
-        // sobald der Nutzer eine Eingabezelle ändert. Bei erneutem Menüklick auf ein bereits
-        // bestehendes Sheet ist daher nichts mehr nachzuberechnen — nur bei Neuerstellung wird
-        // das Gerüst inkl. Formeln einmalig geschrieben.
-        if (neuesSheet.isDidCreate()) {
-            titel(sheet);
-            schreibeBlockA(sheet);
-            schreibeBlockB(sheet);
-            for (int spalte : new int[] { SPALTE_A_LABEL, SPALTE_A_WERT, SPALTE_B_LABEL, SPALTE_B_WERT }) {
-                getSheetHelper().setOptimaleBreitePlusMarge(sheet, spalte, SheetHelper.OPTIMALE_BREITE_MARGE);
+            XSpreadsheet sheet = getXSpreadSheet();
+            if (sheet == null) {
+                return;
             }
-        }
 
-        if (SheetRunner.isRunning()) {
-            getSheetHelper().setActiveSheet(sheet);
-            SheetRunner.unterdrückeNaechstesSelectionChange();
+            // Alle Ausgaben sind PTM.PLANUNG.*-Formeln (siehe schreibeBlockA/B) und rechnen live
+            // neu, sobald der Nutzer eine Eingabezelle ändert — nur bei Neuerstellung wird das
+            // Gerüst inkl. Formeln (neu) geschrieben.
+            if (neuesSheet.isDidCreate()) {
+                titel(sheet);
+                schreibeBlockA(sheet);
+                schreibeBlockB(sheet);
+                for (int spalte : new int[] { SPALTE_A_LABEL, SPALTE_A_WERT, SPALTE_B_LABEL, SPALTE_B_WERT }) {
+                    getSheetHelper().setOptimaleBreitePlusMarge(sheet, spalte, SheetHelper.OPTIMALE_BREITE_MARGE);
+                }
+            }
+
+            if (SheetRunner.isRunning()) {
+                getSheetHelper().setActiveSheet(sheet);
+                SheetRunner.unterdrückeNaechstesSelectionChange();
+            }
         }
     }
 
@@ -137,8 +175,10 @@ public class PlanungsrechnerSheet extends SheetRunner implements ISheet {
 
     private void schreibeBlockA(XSpreadsheet sheet) throws GenerateException {
         sectionHeader(sheet, SPALTE_A_LABEL, SPALTE_A_TAB_ENDE, I18n.get("planungsrechner.block.a.header"));
-        eingabeZeit(sheet, SPALTE_A_LABEL, SPALTE_A_WERT, ZEILE_START, "planungsrechner.label.turnier.start", "09:00");
-        eingabeZeit(sheet, SPALTE_A_LABEL, SPALTE_A_WERT, ZEILE_A_ENDE, "planungsrechner.label.turnier.ende", "17:00");
+        eingabeZeit(sheet, SPALTE_A_LABEL, SPALTE_A_WERT, ZEILE_START, "planungsrechner.label.turnier.start",
+                LocalTime.of(9, 0));
+        eingabeZeit(sheet, SPALTE_A_LABEL, SPALTE_A_WERT, ZEILE_A_ENDE, "planungsrechner.label.turnier.ende",
+                LocalTime.of(17, 0));
         eingabeInt(sheet, SPALTE_A_LABEL, SPALTE_A_WERT, ZEILE_A_TEAMS, "planungsrechner.label.anzahl.teams", 16);
         eingabeInt(sheet, SPALTE_A_LABEL, SPALTE_A_WERT, ZEILE_A_BAHNEN, "planungsrechner.label.anzahl.bahnen", 3);
         eingabeInt(sheet, SPALTE_A_LABEL, SPALTE_A_WERT, ZEILE_A_RUNDEN, "planungsrechner.label.anzahl.runden", 5);
@@ -178,7 +218,8 @@ public class PlanungsrechnerSheet extends SheetRunner implements ISheet {
 
     private void schreibeBlockB(XSpreadsheet sheet) throws GenerateException {
         sectionHeader(sheet, SPALTE_B_LABEL, SPALTE_B_TAB_ENDE, I18n.get("planungsrechner.block.b.header"));
-        eingabeZeit(sheet, SPALTE_B_LABEL, SPALTE_B_WERT, ZEILE_START, "planungsrechner.label.turnier.start", "09:00");
+        eingabeZeit(sheet, SPALTE_B_LABEL, SPALTE_B_WERT, ZEILE_START, "planungsrechner.label.turnier.start",
+                LocalTime.of(9, 0));
         eingabeInt(sheet, SPALTE_B_LABEL, SPALTE_B_WERT, ZEILE_B_TEAMS, "planungsrechner.label.anzahl.teams", 16);
         eingabeInt(sheet, SPALTE_B_LABEL, SPALTE_B_WERT, ZEILE_B_BAHNEN, "planungsrechner.label.anzahl.bahnen", 3);
         eingabeInt(sheet, SPALTE_B_LABEL, SPALTE_B_WERT, ZEILE_B_RUNDEN, "planungsrechner.label.anzahl.runden", 5);
@@ -240,20 +281,30 @@ public class PlanungsrechnerSheet extends SheetRunner implements ISheet {
             int defaultWert) throws GenerateException {
         label(sheet, labelSpalte, zeile, I18n.get(labelKey));
         getSheetHelper().setValInCell(sheet, Position.from(wertSpalte, zeile), defaultWert);
-        markiereEingabe(sheet, Position.from(wertSpalte, zeile));
+        markiereEingabe(sheet, Position.from(wertSpalte, zeile), null);
     }
 
+    /**
+     * Schreibt einen echten Calc-Zeitwert (Bruchteil des 24h-Tages) statt eines Text-Strings, damit
+     * die Zelle als Zeit-formatierbar gilt und {@code UserNumberFormat.TIME} (HH:MM) greift. Wird
+     * von {@code PTM.PLANUNG.*} (siehe {@link GlobalImpl#ptmplanungzeitlimit}) ebenfalls als
+     * Bruchteil des Tages gelesen.
+     */
     private void eingabeZeit(XSpreadsheet sheet, int labelSpalte, int wertSpalte, int zeile, String labelKey,
-            String defaultWert) throws GenerateException {
+            LocalTime defaultWert) throws GenerateException {
         label(sheet, labelSpalte, zeile, I18n.get(labelKey));
-        getSheetHelper().setStringValueInCell(StringCellValue.from(sheet, Position.from(wertSpalte, zeile), defaultWert));
-        markiereEingabe(sheet, Position.from(wertSpalte, zeile));
+        getSheetHelper().setValInCell(sheet, Position.from(wertSpalte, zeile), defaultWert.toSecondOfDay() / 86400.0);
+        markiereEingabe(sheet, Position.from(wertSpalte, zeile), UserNumberFormat.TIME);
     }
 
-    private void markiereEingabe(XSpreadsheet sheet, Position pos) throws GenerateException {
-        getSheetHelper().setFormatInCell(StringCellValue.from(sheet, pos)
-                .setCellProperties(CellProperties.from().setCellBackColor(INPUT_COLOR)
-                        .setHoriJustify(CellHoriJustify.RIGHT)));
+    private void markiereEingabe(XSpreadsheet sheet, Position pos, UserNumberFormat zahlenFormat)
+            throws GenerateException {
+        CellProperties eigenschaften = CellProperties.from().setCellBackColor(INPUT_COLOR)
+                .setHoriJustify(CellHoriJustify.RIGHT);
+        if (zahlenFormat != null) {
+            eigenschaften.numberFormat(zahlenFormat);
+        }
+        getSheetHelper().setFormatInCell(StringCellValue.from(sheet, pos).setCellProperties(eigenschaften));
     }
 
     private void schreibeTabellenHeader(XSpreadsheet sheet, int startSpalte) throws GenerateException {

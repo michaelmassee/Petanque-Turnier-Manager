@@ -2,6 +2,8 @@ package de.petanqueturniermanager.addins;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.LocalTime;
+
 import org.junit.jupiter.api.Test;
 
 import com.sun.star.sheet.XSpreadsheet;
@@ -345,18 +347,23 @@ public class GlobalImplUITest extends BaseCalcUITest {
 		assertThat(impl.ptmplanungdurchgaengeprorunde(16, 0)).as("0 Bahnen: 0").isZero();
 	}
 
+	/** Calc-Zeitwert (Bruchteil des 24h-Tages) fuer eine Uhrzeit, wie ihn eine mit UserNumberFormat.TIME formatierte Zelle liefert. */
+	private static double zeitwert(int stunde, int minute) {
+		return LocalTime.of(stunde, minute).toSecondOfDay() / 86400.0;
+	}
+
 	@Test
 	public void testPTMPlanungZeitlimit() {
 		GlobalImpl impl = new GlobalImpl(starter.getxComponentContext());
 
 		// ZEITPLAN.md-Beispiel: 09:00-09:55, 16 Teams, 3 Bahnen, 1 Runde, Pausen 5/10 -> 15 Min/Durchgang
-		assertThat(impl.ptmplanungzeitlimit("09:00", "09:55", 16, 3, 1, 5, 10))
+		assertThat(impl.ptmplanungzeitlimit(zeitwert(9, 0), zeitwert(9, 55), 16, 3, 1, 5, 10))
 				.as("Zeitlimit pro Durchgang").isEqualTo(15);
 
-		// Ungueltige Uhrzeit -> neutraler Fallback statt Exception/#WERT!
-		assertThat(impl.ptmplanungzeitlimit("nicht-uhrzeit", "09:55", 16, 3, 1, 5, 10)).isZero();
+		// Ungueltiger Zeitwert (negativ) -> neutraler Fallback statt Exception/#WERT!
+		assertThat(impl.ptmplanungzeitlimit(-1, zeitwert(9, 55), 16, 3, 1, 5, 10)).isZero();
 		// Ende vor Start -> Fallback
-		assertThat(impl.ptmplanungzeitlimit("10:00", "09:00", 16, 3, 1, 5, 10)).isZero();
+		assertThat(impl.ptmplanungzeitlimit(zeitwert(10, 0), zeitwert(9, 0), 16, 3, 1, 5, 10)).isZero();
 	}
 
 	@Test
@@ -364,18 +371,18 @@ public class GlobalImplUITest extends BaseCalcUITest {
 		GlobalImpl impl = new GlobalImpl(starter.getxComponentContext());
 
 		// Gegenprobe zu testPTMPlanungZeitlimit: 15 Min/Durchgang -> Ende wieder 09:55
-		assertThat(impl.ptmplanungturnierende("09:00", 16, 3, 1, 5, 10, 15))
+		assertThat(impl.ptmplanungturnierende(zeitwert(9, 0), 16, 3, 1, 5, 10, 15))
 				.as("Turnier-Ende").isEqualTo("09:55");
 
-		assertThat(impl.ptmplanungturnierende("nicht-uhrzeit", 16, 3, 1, 5, 10, 15))
-				.as("ungueltige Uhrzeit -> leerer Fallback").isEmpty();
+		assertThat(impl.ptmplanungturnierende(-1, 16, 3, 1, 5, 10, 15))
+				.as("ungueltiger Zeitwert -> leerer Fallback").isEmpty();
 	}
 
 	@Test
 	public void testPTMPlanungZeitplan() {
 		GlobalImpl impl = new GlobalImpl(starter.getxComponentContext());
 
-		String[][] tabelle = impl.ptmplanungzeitplan("09:00", 16, 3, 1, 5, 10, 15);
+		String[][] tabelle = impl.ptmplanungzeitplan(zeitwert(9, 0), 16, 3, 1, 5, 10, 15);
 
 		assertThat(tabelle.length).as("feste Zeilenzahl").isEqualTo(PlanungsrechnerRechner.MAX_ZEITPLAN_ZEILEN);
 		assertThat(tabelle[0]).as("Runde 1, Durchgang 1").containsExactly("1", "1", "09:00", "09:15");
@@ -391,7 +398,7 @@ public class GlobalImplUITest extends BaseCalcUITest {
 	public void testPTMPlanungZeitplan_ungueltigeEingabeLiefertLeereTabelle() {
 		GlobalImpl impl = new GlobalImpl(starter.getxComponentContext());
 
-		String[][] tabelle = impl.ptmplanungzeitplan("nicht-uhrzeit", 16, 3, 1, 5, 10, 15);
+		String[][] tabelle = impl.ptmplanungzeitplan(-1, 16, 3, 1, 5, 10, 15);
 
 		assertThat(tabelle.length).as("feste Zeilenzahl auch im Fehlerfall").isEqualTo(PlanungsrechnerRechner.MAX_ZEITPLAN_ZEILEN);
 		assertThat(tabelle[0]).containsExactly("", "", "", "");

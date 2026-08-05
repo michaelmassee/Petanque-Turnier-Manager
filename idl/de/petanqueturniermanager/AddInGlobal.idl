@@ -53,12 +53,12 @@ module de { module petanqueturniermanager { module addin {
     // Planungsrechner (PTM.PLANUNG.*), eigenständiger Zeitplan-Rechner – Indizes 30-33.
     // Uhrzeiten als "HH:MM"-String (kein Zeitwert), Dauern/Zaehler als long (Minuten bzw. Anzahl).
     long ptmplanungdurchgaengeprorunde ([in] long anzTeams, [in] long anzBahnen);
-    long ptmplanungzeitlimit ([in] string start, [in] string ende, [in] long anzTeams,
+    long ptmplanungzeitlimit ([in] double start, [in] double ende, [in] long anzTeams,
       [in] long anzBahnen, [in] long anzRunden, [in] long durchgangPauseMin, [in] long rundenPauseMin);
-    string ptmplanungturnierende ([in] string start, [in] long anzTeams, [in] long anzBahnen,
+    string ptmplanungturnierende ([in] double start, [in] long anzTeams, [in] long anzBahnen,
       [in] long anzRunden, [in] long durchgangPauseMin, [in] long rundenPauseMin, [in] long zeitlimitMin);
     // Index 33 – 2D-Rueckgabe (Runde, Durchgang, Start, Ende) als Array-Formel, fest MAX_ZEITPLAN_ZEILEN Zeilen.
-    sequence< sequence< string > > ptmplanungzeitplan ([in] string start, [in] long anzTeams,
+    sequence< sequence< string > > ptmplanungzeitplan ([in] double start, [in] long anzTeams,
       [in] long anzBahnen, [in] long anzRunden, [in] long durchgangPauseMin, [in] long rundenPauseMin,
       [in] long zeitlimitMin);
   };

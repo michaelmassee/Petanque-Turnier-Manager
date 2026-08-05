@@ -114,13 +114,13 @@ public interface XGlobal extends XInterface {
 
     int ptmplanungdurchgaengeprorunde(int anzTeams, int anzBahnen);
 
-    int ptmplanungzeitlimit(String start, String ende, int anzTeams, int anzBahnen, int anzRunden,
+    int ptmplanungzeitlimit(double start, double ende, int anzTeams, int anzBahnen, int anzRunden,
             int durchgangPauseMin, int rundenPauseMin);
 
-    String ptmplanungturnierende(String start, int anzTeams, int anzBahnen, int anzRunden,
+    String ptmplanungturnierende(double start, int anzTeams, int anzBahnen, int anzRunden,
             int durchgangPauseMin, int rundenPauseMin, int zeitlimitMin);
 
-    String[][] ptmplanungzeitplan(String start, int anzTeams, int anzBahnen, int anzRunden,
+    String[][] ptmplanungzeitplan(double start, int anzTeams, int anzBahnen, int anzRunden,
             int durchgangPauseMin, int rundenPauseMin, int zeitlimitMin);
 
 }
