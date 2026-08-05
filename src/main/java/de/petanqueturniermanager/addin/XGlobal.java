@@ -45,6 +45,10 @@ public interface XGlobal extends XInterface {
         new MethodTypeInfo("ptmdbspieleranzahl",                27, 0),
         new MethodTypeInfo("ptmdbspielersuche",                 28, 0),
         new MethodTypeInfo("ptmteamanzeige",                    29, 0),
+        new MethodTypeInfo("ptmplanungdurchgaengeprorunde",     30, 0),
+        new MethodTypeInfo("ptmplanungzeitlimit",               31, 0),
+        new MethodTypeInfo("ptmplanungturnierende",             32, 0),
+        new MethodTypeInfo("ptmplanungzeitplan",                33, 0),
     };
 
     String ptmstringproperty(String propname);
@@ -107,5 +111,16 @@ public interface XGlobal extends XInterface {
 
     String ptmteamanzeige(int teamnameAnzeigen, int anzSpieler, int vereinsnameAnzeigen,
             String[][] meldelistenZeile);
+
+    int ptmplanungdurchgaengeprorunde(int anzTeams, int anzBahnen);
+
+    int ptmplanungzeitlimit(String start, String ende, int anzTeams, int anzBahnen, int anzRunden,
+            int durchgangPauseMin, int rundenPauseMin);
+
+    String ptmplanungturnierende(String start, int anzTeams, int anzBahnen, int anzRunden,
+            int durchgangPauseMin, int rundenPauseMin, int zeitlimitMin);
+
+    String[][] ptmplanungzeitplan(String start, int anzTeams, int anzBahnen, int anzRunden,
+            int durchgangPauseMin, int rundenPauseMin, int zeitlimitMin);
 
 }
