@@ -168,7 +168,8 @@ public final class SpielerDbDispatcher {
             new SpielerDbAbgleichDialog(ctx,
                     new SpielerRepository(conn.get()),
                     new VereinRepository(conn.get()),
-                    ziel.get()).zeigen();
+                    ziel.get(),
+                    new LabelRepository(conn.get())).zeigen();
         } catch (com.sun.star.uno.Exception | RuntimeException e) {
             logger.error("Spieler-DB-Abgleich-Dialog fehlgeschlagen", e);
         } finally {
@@ -220,7 +221,8 @@ public final class SpielerDbDispatcher {
             new SpielerDbAbgleichDialog(ctx,
                     new SpielerRepository(conn.get()),
                     new VereinRepository(conn.get()),
-                    quelle, quelle).zeigen();
+                    quelle, quelle,
+                    new LabelRepository(conn.get())).zeigen();
         } catch (com.sun.star.uno.Exception | RuntimeException e) {
             logger.error("Spieler-DB-Abgleich-Dialog (Vorlage) fehlgeschlagen", e);
         } finally {
