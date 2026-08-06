@@ -96,6 +96,19 @@ class GlobalPropertiesTest {
     }
 
     @Test
+    void testNewVersionCheckImmerTrueWirdDurchSystemPropertyErzwungen() {
+        var gp = GlobalProperties.get();
+        assertFalse(gp.isNewVersionCheckImmerTrue());
+
+        System.setProperty("de.petanqueturniermanager.newVersionCheck", "true");
+        try {
+            assertTrue(gp.isNewVersionCheckImmerTrue());
+        } finally {
+            System.clearProperty("de.petanqueturniermanager.newVersionCheck");
+        }
+    }
+
+    @Test
     void testPerformanceLoggingDefaultUndRoundtrip() {
         var gp = GlobalProperties.get();
         assertFalse(gp.isPerformanceLogging(), "Default muss false sein");

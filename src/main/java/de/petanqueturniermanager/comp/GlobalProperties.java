@@ -53,6 +53,8 @@ public class GlobalProperties {
 	private static final String CREATE_BACKUP_PROP = "backup";
 	private static final String AUTOSAVE_PROP = "autosave";
 	private static final String NEW_VERSION_CHECK_PROP = "newversioncheck";
+	/** System-Property zum Erzwingen von {@link #isNewVersionCheckImmerTrue()} ohne UI-Checkbox. */
+	private static final String NEW_VERSION_CHECK_SYSTEM_PROPERTY = "de.petanqueturniermanager.newVersionCheck";
 	private static final String AUTO_UPDATE_DIALOG_PROP = "auto.update.dialog.beim.start";
 	private static final String UPDATE_SKIP_VERSION_PROP = "auto.update.skip.version";
 	private static final String PROZESSBOX_AUTOMATISCH_ANZEIGEN_PROP = "prozessbox.automatisch.anzeigen";
@@ -1164,7 +1166,26 @@ public class GlobalProperties {
 		return getBoolean(CREATE_BACKUP_PROP);
 	}
 
+	/**
+	 * Dev-Option „Neue-Version-Prüfung immer aktiv". Seit Entfernung der zugehörigen Checkbox aus
+	 * Extras -&gt; Optionen -&gt; PétTurnMngr (nur UI-Entfernung, die Option selbst bleibt bestehen)
+	 * nur noch per System-Property {@code -D}{@value #NEW_VERSION_CHECK_SYSTEM_PROPERTY}{@code =true}
+	 * aktivierbar. {@link #isNewVersionCheckGespeichert()} liefert weiterhin den zuletzt in der
+	 * LibreOffice-Konfiguration/Properties-Datei gespeicherten Wert (z. B. aus einer alten
+	 * Installation, als die Checkbox noch existierte) – wird hier zusätzlich (mit ODER) berücksichtigt,
+	 * damit ein zuvor per UI aktivierter Zustand nicht stillschweigend verloren geht.
+	 */
 	public boolean isNewVersionCheckImmerTrue() {
+		return isNewVersionCheckGespeichert() || Boolean.getBoolean(NEW_VERSION_CHECK_SYSTEM_PROPERTY);
+	}
+
+	/**
+	 * Zuletzt gespeicherter Wert der Dev-Option „Neue-Version-Prüfung immer aktiv", ohne die
+	 * System-Property-Überlagerung aus {@link #isNewVersionCheckImmerTrue()}. Wird von
+	 * {@link PluginOptionsEventHandler} beim Speichern anderer Plugin-Optionen unverändert
+	 * durchgereicht, da es dafür seit der UI-Entfernung keine Checkbox mehr gibt.
+	 */
+	public boolean isNewVersionCheckGespeichert() {
 		return getBoolean(NEW_VERSION_CHECK_PROP);
 	}
 
