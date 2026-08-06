@@ -17,6 +17,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 
 import org.apache.logging.log4j.Level;
@@ -270,7 +271,8 @@ public class GlobalProperties {
 	 * Rohdaten eines Composite View (vor Resolver-Erstellung).
 	 *
 	 * @param port            TCP-Port
-	 * @param name            optionaler Anzeigename des Views (leer = ohne Name)
+	 * @param name            Anzeigename des Views (Pflichtfeld, eindeutig, wird getrimmt;
+	 *                        Validierung dazu erfolgt in {@code CompositeViewsOptionsEventHandler})
 	 * @param aktiv           ob dieser View aktiv ist
 	 * @param zoom            globaler Zoom-Faktor in % (10–500)
 	 * @param mitHeaderFooter ob Header/Footer (aus Panel 0) global einmal gerendert werden sollen
@@ -284,7 +286,7 @@ public class GlobalProperties {
 			List<PanelEintragRoh> panels,
 			RandKonfiguration rand) {
 		public CompositeViewEintragRoh {
-			name = name == null ? "" : name;
+			name = name == null ? "" : name.strip();
 			rand = rand == null ? RandKonfiguration.KEINER : rand;
 		}
 
@@ -1055,6 +1057,39 @@ public class GlobalProperties {
 		} catch (RuntimeException e) {
 			logger.warn("Fehler beim Lesen der Composite-View-Einträge aus LibreOffice-Konfiguration", e);
 			return new ArrayList<>();
+		}
+	}
+
+	/**
+	 * Serialisiert Composite-View-Einträge als JSON für den Nutzer-Export in eine Datei. Nutzt
+	 * dasselbe {@link #GSON} und Format wie die interne Speicherung in der LibreOffice-Konfiguration
+	 * ({@link #compositeViewsOptionenAusEintraegen}), damit exportierte Dateien 1:1 wieder importiert
+	 * werden können.
+	 */
+	public static String exportiereCompositeViewsJson(List<CompositeViewEintragRoh> eintraege) {
+		return GSON.toJson(eintraege == null ? List.of() : eintraege);
+	}
+
+	/**
+	 * Liest Composite-View-Einträge aus einer vom Nutzer importierten JSON-Datei. Im Gegensatz zu
+	 * {@link #compositeViewsEintraegeAusJson} (interner Lesepfad aus der LibreOffice-Konfiguration,
+	 * der bei kaputtem JSON defensiv still eine leere Liste liefert) muss ein Fehler beim
+	 * Nutzer-Import sichtbar werden – daher hier eine geworfene Exception statt Logging.
+	 */
+	public static List<CompositeViewEintragRoh> importiereCompositeViewsJson(String json)
+			throws CompositeViewImportException {
+		if (json == null || json.isBlank()) {
+			throw new CompositeViewImportException("Datei ist leer");
+		}
+		try {
+			var typ = new TypeToken<List<CompositeViewEintragRoh>>() { }.getType();
+			List<CompositeViewEintragRoh> gelesen = GSON.fromJson(json, typ);
+			if (gelesen == null) {
+				throw new CompositeViewImportException("Ungültiges JSON-Format");
+			}
+			return gelesen;
+		} catch (JsonSyntaxException e) {
+			throw new CompositeViewImportException("Ungültiges JSON-Format", e);
 		}
 	}
 

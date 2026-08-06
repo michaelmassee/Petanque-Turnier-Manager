@@ -838,9 +838,13 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         XControl aktivCtrl = xcc.getControl("cbAktiv");
         boolean aktiv = aktivCtrl != null && Lo.qi(XCheckBox.class, aktivCtrl).getState() == 1;
 
-        // Name (optional, leer erlaubt)
+        // Name (Pflichtfeld, muss unter allen Composite Views eindeutig sein – siehe
+        // CompositeViewsOptionsEventHandler.validiereEintraege)
         XControl nameCtrl = xcc.getControl("txtName");
         String name = nameCtrl != null ? Lo.qi(XTextComponent.class, nameCtrl).getText().trim() : "";
+        if (name.isEmpty()) {
+            throw new UngueltigeEingabeException(I18n.get("webserver.composite.konfig.fehler.name.leer", 1));
+        }
 
         // Header/Footer global rendern – Default true (auch bei fehlendem Control)
         XControl mitHeaderFooterCtrl = xcc.getControl("cbMitHeaderFooter");
