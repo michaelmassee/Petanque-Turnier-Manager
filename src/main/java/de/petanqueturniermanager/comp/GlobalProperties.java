@@ -1089,9 +1089,35 @@ public class GlobalProperties {
 			if (gelesen == null) {
 				throw new CompositeViewImportException("Ungültiges JSON-Format");
 			}
+			pruefeStrukturVollstaendig(gelesen);
 			return gelesen;
 		} catch (JsonSyntaxException e) {
 			throw new CompositeViewImportException("Ungültiges JSON-Format", e);
+		}
+	}
+
+	/**
+	 * Prüft die von Gson strukturell akzeptierte, aber fachlich unvollständige JSON-Form ab (z. B.
+	 * {@code "panels": null} oder ein {@code null}-Eintrag in der Liste) – solche Lücken würden erst
+	 * später (z. B. bei {@code CompositeViewEintragRoh.panels().isEmpty()}) zu einer
+	 * NullPointerException statt einer sauberen Import-Fehlermeldung führen.
+	 */
+	private static void pruefeStrukturVollstaendig(List<CompositeViewEintragRoh> eintraege)
+			throws CompositeViewImportException {
+		for (var eintrag : eintraege) {
+			if (eintrag == null) {
+				throw new CompositeViewImportException("Ungültiges JSON-Format: leerer Eintrag");
+			}
+			if (eintrag.panels() == null || eintrag.panels().contains(null)) {
+				throw new CompositeViewImportException(
+						"Ungültiges JSON-Format: Eintrag ohne Panels (Port " + eintrag.port() + ")");
+			}
+			for (var panel : eintrag.panels()) {
+				if (panel.typ() == null) {
+					throw new CompositeViewImportException(
+							"Ungültiges JSON-Format: Panel ohne Typ (Port " + eintrag.port() + ")");
+				}
+			}
 		}
 	}
 

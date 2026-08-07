@@ -238,6 +238,34 @@ class GlobalPropertiesTest {
     }
 
     @Test
+    void testImportCompositeViewsJsonWirftBeiNullPanels() {
+        String json = "[{\"port\":5001,\"name\":\"Anzeige\",\"panels\":null}]";
+        assertThrows(CompositeViewImportException.class,
+                () -> GlobalProperties.importiereCompositeViewsJson(json));
+    }
+
+    @Test
+    void testImportCompositeViewsJsonWirftBeiNullEintragInListe() {
+        String json = "[null]";
+        assertThrows(CompositeViewImportException.class,
+                () -> GlobalProperties.importiereCompositeViewsJson(json));
+    }
+
+    @Test
+    void testImportCompositeViewsJsonWirftBeiNullPanelInListe() {
+        String json = "[{\"port\":5001,\"name\":\"Anzeige\",\"panels\":[null]}]";
+        assertThrows(CompositeViewImportException.class,
+                () -> GlobalProperties.importiereCompositeViewsJson(json));
+    }
+
+    @Test
+    void testImportCompositeViewsJsonWirftBeiPanelOhneTyp() {
+        String json = "[{\"port\":5001,\"name\":\"Anzeige\",\"panels\":[{\"sheetConfig\":\"RANGLISTE\"}]}]";
+        assertThrows(CompositeViewImportException.class,
+                () -> GlobalProperties.importiereCompositeViewsJson(json));
+    }
+
+    @Test
     void testCompositeRoundtripOhneRandLiefertKeinerAlsDefault() {
         var gp = GlobalProperties.get();
         var panel = new PanelEintragRoh(
