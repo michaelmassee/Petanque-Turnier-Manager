@@ -274,6 +274,8 @@ dependencies {
     implementation 'com.github.mwiede:jsch:0.2.20'
     // HTML→PDF-Export. LO bündelt kein Apache PDFBox als Java-Lib (LO's PDF-Engine ist C++) → kein Shading nötig.
     implementation 'com.openhtmltopdf:openhtmltopdf-pdfbox:1.0.10'
+    // HTML→Bild-Export (WhatsApp), direkt zu BufferedImage ohne PDF-Umweg. Gleiche Lib-Familie/Version wie oben.
+    implementation 'com.openhtmltopdf:openhtmltopdf-java2d:1.0.10'
 
     // LibreOffice SDK dependencies - using local installation.
     // hsqldb.jar bleibt ausgeschlossen: LO bringt eine 1.8.0-Variante mit, die

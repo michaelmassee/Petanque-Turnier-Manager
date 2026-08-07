@@ -218,6 +218,7 @@
             <Class name="de.petanqueturniermanager.helper.upload.PdfHtmlDokument"/>
             <Class name="de.petanqueturniermanager.helper.upload.ExportFooterHtml"/>
             <Class name="de.petanqueturniermanager.webserver.WebserverRegieServerInstanz"/>
+            <Class name="de.petanqueturniermanager.helper.upload.HtmlZuBildKonvertierer"/>
         </Or>
         <Bug pattern="VA_FORMAT_STRING_USES_NEWLINE"/>
     </Match>

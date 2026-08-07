@@ -13,6 +13,7 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.openhtmltopdf.outputdevice.helper.BaseRendererBuilder;
 import com.openhtmltopdf.outputdevice.helper.BaseRendererBuilder.FontStyle;
 import com.openhtmltopdf.outputdevice.helper.BaseRendererBuilder.FSFontUseCase;
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
@@ -26,7 +27,7 @@ public class HtmlZuPdfKonvertierer {
 
     private static final Logger logger = LogManager.getLogger(HtmlZuPdfKonvertierer.class);
     static final String PDF_FONT_FAMILY = "PTMPdfSans";
-    private static final List<FontKandidat> FONT_KANDIDATEN = List.of(
+    static final List<FontKandidat> FONT_KANDIDATEN = List.of(
             fallback("C:/Windows/Fonts/arial.ttf", 400),
             fallback("C:/Windows/Fonts/arialbd.ttf", 700),
             fallback("C:/Windows/Fonts/arialuni.ttf", 400),
@@ -94,7 +95,12 @@ public class HtmlZuPdfKonvertierer {
         return zielDatei;
     }
 
-    private static void registriereUnicodeFonts(PdfRendererBuilder builder) {
+    /**
+     * Registriert dieselben Font-Kandidaten wie {@link #konvertiere(String, Path)}, aber für einen
+     * beliebigen {@code BaseRendererBuilder} (z.B. {@code Java2DRendererBuilder} in
+     * {@link HtmlZuBildKonvertierer}) – {@code useFont(...)} liegt auf der gemeinsamen Basisklasse.
+     */
+    static void registriereUnicodeFonts(BaseRendererBuilder<?, ?> builder) {
         for (FontKandidat kandidat : FONT_KANDIDATEN) {
             File font = new File(kandidat.pfad());
             if (font.isFile()) {
@@ -103,7 +109,7 @@ public class HtmlZuPdfKonvertierer {
                     builder.useFont(font, PDF_FONT_FAMILY + "Fallback", kandidat.gewicht(), FontStyle.NORMAL, true,
                             EnumSet.of(FSFontUseCase.FALLBACK_FINAL));
                 }
-                logger.debug("PDF-Font registriert: {}", font);
+                logger.debug("Font registriert: {}", font);
             }
         }
     }
@@ -116,6 +122,6 @@ public class HtmlZuPdfKonvertierer {
         return new FontKandidat(pfad, gewicht, false);
     }
 
-    private record FontKandidat(String pfad, int gewicht, boolean finalerFallback) {
+    record FontKandidat(String pfad, int gewicht, boolean finalerFallback) {
     }
 }
