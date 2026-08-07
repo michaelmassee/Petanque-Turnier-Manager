@@ -1,5 +1,8 @@
 package de.petanqueturniermanager.addins;
 
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -23,6 +26,8 @@ import de.petanqueturniermanager.comp.DocumentHelper;
 import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.planungsrechner.PlanungsrechnerRechner;
+import de.petanqueturniermanager.planungsrechner.PlanungsrechnerRechner.ZeitplanEintrag;
 import de.petanqueturniermanager.spielerdb.SpielerAddInCache;
 import de.petanqueturniermanager.spielerdb.SpielerDbConnection;
 import de.petanqueturniermanager.spielerdb.SpielerDbException;
@@ -78,9 +83,15 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	public static final String PTM_DB_SPIELER_ANZAHL = "PTM.DB.SPIELER.ANZAHL";
 	public static final String PTM_DB_SPIELER_SUCHE  = "PTM.DB.SPIELER.SUCHE";
 
+	public static final String PTM_PLANUNG_DURCHGAENGE_PRO_RUNDE = "PTM.PLANUNG.DURCHGAENGE_PRO_RUNDE";
+	public static final String PTM_PLANUNG_ZEITLIMIT             = "PTM.PLANUNG.ZEITLIMIT";
+	public static final String PTM_PLANUNG_TURNIER_ENDE          = "PTM.PLANUNG.TURNIER_ENDE";
+	public static final String PTM_PLANUNG_ZEITPLAN              = "PTM.PLANUNG.ZEITPLAN";
+
 	private static final int SUCHE_LIMIT = 200;
 	private static final int SUCHE_MAX_LEN = 100;
 	private static final String[][] LEERES_SUCH_ERGEBNIS = new String[0][0];
+	private static final DateTimeFormatter PLANUNG_HH_MM = DateTimeFormatter.ofPattern("HH:mm");
 
 	private final SpielerAddInCache spielerCache = new SpielerAddInCache();
 
@@ -100,6 +111,31 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 			boolean vereinsnameAnzeigen, String meldelistenZeileFormel) {
 		return PTM_TEAM_ANZEIGE + "(" + (teamnameAnzeigen ? "1" : "0") + ";" + anzSpieler
 				+ ";" + (vereinsnameAnzeigen ? "1" : "0") + ";" + meldelistenZeileFormel + ")";
+	}
+
+	public static String FORMAT_PTM_PLANUNG_DURCHGAENGE_PRO_RUNDE(String teamsAdresse, String bahnenAdresse) {
+		return PTM_PLANUNG_DURCHGAENGE_PRO_RUNDE + "(" + teamsAdresse + ";" + bahnenAdresse + ")";
+	}
+
+	public static String FORMAT_PTM_PLANUNG_ZEITLIMIT(String startAdresse, String endeAdresse, String teamsAdresse,
+			String bahnenAdresse, String rundenAdresse, String durchgangPauseAdresse, String rundenPauseAdresse) {
+		return PTM_PLANUNG_ZEITLIMIT + "(" + startAdresse + ";" + endeAdresse + ";" + teamsAdresse + ";"
+				+ bahnenAdresse + ";" + rundenAdresse + ";" + durchgangPauseAdresse + ";" + rundenPauseAdresse + ")";
+	}
+
+	public static String FORMAT_PTM_PLANUNG_TURNIER_ENDE(String startAdresse, String teamsAdresse,
+			String bahnenAdresse, String rundenAdresse, String durchgangPauseAdresse, String rundenPauseAdresse,
+			String zeitlimitAdresse) {
+		return PTM_PLANUNG_TURNIER_ENDE + "(" + startAdresse + ";" + teamsAdresse + ";" + bahnenAdresse + ";"
+				+ rundenAdresse + ";" + durchgangPauseAdresse + ";" + rundenPauseAdresse + ";" + zeitlimitAdresse
+				+ ")";
+	}
+
+	public static String FORMAT_PTM_PLANUNG_ZEITPLAN(String startAdresse, String teamsAdresse, String bahnenAdresse,
+			String rundenAdresse, String durchgangPauseAdresse, String rundenPauseAdresse, String zeitlimitAdresse) {
+		return PTM_PLANUNG_ZEITPLAN + "(" + startAdresse + ";" + teamsAdresse + ";" + bahnenAdresse + ";"
+				+ rundenAdresse + ";" + durchgangPauseAdresse + ";" + rundenPauseAdresse + ";" + zeitlimitAdresse
+				+ ")";
 	}
 
 	// wird nur einmal aufgerufen für alle sheets
@@ -535,6 +571,88 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 		} catch (SpielerDbException e) {
 			throw new IllegalStateException("Spieler-DB nicht erreichbar", e);
 		}
+	}
+
+	// ------------------- PTM.PLANUNG.* Formeln -----------------
+	// Eigenständiger, vom Turniersystem unabhängiger Planungsrechner (siehe PlanungsrechnerSheet).
+	// Uhrzeiten kommen als echte Calc-Zeitwerte (Bruchteil des Tages, 09:00 = 0,375) direkt aus der
+	// mit UserNumberFormat.TIME formatierten Eingabezelle, nicht als String. Wie alle PTM-Add-In-
+	// Funktionen: bei ungültigen Eingaben nie eine Exception werfen, sondern einen neutralen
+	// Fallback liefern (0 / "" / leere Tabelle) statt die Zelle mit #WERT! abzureißen.
+
+	@Override
+	public int ptmplanungdurchgaengeprorunde(int anzTeams, int anzBahnen) {
+		try {
+			return PlanungsrechnerRechner.durchgaengeProRunde(anzTeams, anzBahnen);
+		} catch (IllegalArgumentException e) {
+			return 0;
+		}
+	}
+
+	@Override
+	public int ptmplanungzeitlimit(double start, double ende, int anzTeams, int anzBahnen, int anzRunden,
+			int durchgangPauseMin, int rundenPauseMin) {
+		try {
+			var ergebnis = PlanungsrechnerRechner.berechneZeitlimit(planungZeit(start), planungZeit(ende),
+					anzTeams, anzBahnen, anzRunden, durchgangPauseMin, rundenPauseMin);
+			return ergebnis.zeitlimitProDurchgangMinuten();
+		} catch (IllegalArgumentException e) {
+			return 0;
+		}
+	}
+
+	@Override
+	public String ptmplanungturnierende(double start, int anzTeams, int anzBahnen, int anzRunden,
+			int durchgangPauseMin, int rundenPauseMin, int zeitlimitMin) {
+		try {
+			var ergebnis = PlanungsrechnerRechner.berechneZeitplan(planungZeit(start), anzTeams, anzBahnen,
+					anzRunden, durchgangPauseMin, rundenPauseMin, zeitlimitMin);
+			return ergebnis.turnierEnde().format(PLANUNG_HH_MM);
+		} catch (IllegalArgumentException e) {
+			return "";
+		}
+	}
+
+	@Override
+	public String[][] ptmplanungzeitplan(double start, int anzTeams, int anzBahnen, int anzRunden,
+			int durchgangPauseMin, int rundenPauseMin, int zeitlimitMin) {
+		String[][] tabelle = leeresPlanungZeitplanErgebnis();
+		try {
+			var ergebnis = PlanungsrechnerRechner.berechneZeitplan(planungZeit(start), anzTeams, anzBahnen,
+					anzRunden, durchgangPauseMin, rundenPauseMin, zeitlimitMin);
+			List<ZeitplanEintrag> eintraege = ergebnis.eintraege();
+			int anzZeilen = Math.min(eintraege.size(), PlanungsrechnerRechner.MAX_ZEITPLAN_ZEILEN);
+			for (int i = 0; i < anzZeilen; i++) {
+				ZeitplanEintrag eintrag = eintraege.get(i);
+				tabelle[i][0] = String.valueOf(eintrag.rundeNr());
+				tabelle[i][1] = String.valueOf(eintrag.durchgangNr());
+				tabelle[i][2] = eintrag.start().format(PLANUNG_HH_MM);
+				tabelle[i][3] = eintrag.ende().format(PLANUNG_HH_MM);
+			}
+		} catch (IllegalArgumentException e) {
+			logger.debug("PTM.PLANUNG.ZEITPLAN: ungueltige Eingabe, leere Tabelle geliefert", e);
+		}
+		return tabelle;
+	}
+
+	/**
+	 * Wandelt einen Calc-Zeitwert (Bruchteil eines 24h-Tages, wie ihn eine mit
+	 * {@code UserNumberFormat.TIME} formatierte Zelle liefert) in eine {@link LocalTime} um.
+	 */
+	private static LocalTime planungZeit(double bruchteilDesTages) {
+		if (Double.isNaN(bruchteilDesTages) || Double.isInfinite(bruchteilDesTages) || bruchteilDesTages < 0) {
+			throw new IllegalArgumentException("Ungueltiger Zeitwert: " + bruchteilDesTages);
+		}
+		long sekundenDesTages = Math.round(bruchteilDesTages * 86400.0) % 86400;
+		return LocalTime.ofSecondOfDay(sekundenDesTages);
+	}
+
+	private static String[][] leeresPlanungZeitplanErgebnis() {
+		String[][] tabelle = new String[PlanungsrechnerRechner.MAX_ZEITPLAN_ZEILEN][4];
+		for (String[] zeile : tabelle) {
+			Arrays.fill(zeile, "");
+		}
+		return tabelle;
 	}
 
 }

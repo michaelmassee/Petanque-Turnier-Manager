@@ -2,6 +2,8 @@ package de.petanqueturniermanager.addins;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.LocalTime;
+
 import org.junit.jupiter.api.Test;
 
 import com.sun.star.sheet.XSpreadsheet;
@@ -9,6 +11,7 @@ import com.sun.star.sheet.XSpreadsheet;
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.helper.position.Position;
+import de.petanqueturniermanager.planungsrechner.PlanungsrechnerRechner;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
@@ -329,6 +332,76 @@ public class GlobalImplUITest extends BaseCalcUITest {
 		// funktioniert dies korrekt (Auswertung via OnLoad/calculateAll auf dem Main-Thread).
 		// assertThat(sheetHlp.getIntFromCell(sheet, testPos1)).as("Spieltag").isEqualTo(1);
 		// assertThat(sheetHlp.getIntFromCell(sheet, testPos2)).as("Spielrunde").isEqualTo(7);
+	}
+
+	@Test
+	public void testPTMPlanungDurchgaengeProRunde() {
+		GlobalImpl impl = new GlobalImpl(starter.getxComponentContext());
+
+		// 16 Teams (8 Paarungen), 3 Bahnen -> Bloecke [3,3,2] -> 3 Durchgaenge (ZEITPLAN.md-Beispiel)
+		assertThat(impl.ptmplanungdurchgaengeprorunde(16, 3)).as("16 Teams/3 Bahnen: 3 Durchgaenge").isEqualTo(3);
+		// 6 Teams (3 Paarungen), 5 Bahnen -> alles passt in einen Durchgang
+		assertThat(impl.ptmplanungdurchgaengeprorunde(6, 5)).as("6 Teams/5 Bahnen: 1 Durchgang").isEqualTo(1);
+		// Ungueltige Eingabe -> neutraler Fallback statt Exception
+		assertThat(impl.ptmplanungdurchgaengeprorunde(1, 3)).as("zu wenig Teams: 0").isZero();
+		assertThat(impl.ptmplanungdurchgaengeprorunde(16, 0)).as("0 Bahnen: 0").isZero();
+	}
+
+	/** Calc-Zeitwert (Bruchteil des 24h-Tages) fuer eine Uhrzeit, wie ihn eine mit UserNumberFormat.TIME formatierte Zelle liefert. */
+	private static double zeitwert(int stunde, int minute) {
+		return LocalTime.of(stunde, minute).toSecondOfDay() / 86400.0;
+	}
+
+	@Test
+	public void testPTMPlanungZeitlimit() {
+		GlobalImpl impl = new GlobalImpl(starter.getxComponentContext());
+
+		// ZEITPLAN.md-Beispiel: 09:00-09:55, 16 Teams, 3 Bahnen, 1 Runde, Pausen 5/10 -> 15 Min/Durchgang
+		assertThat(impl.ptmplanungzeitlimit(zeitwert(9, 0), zeitwert(9, 55), 16, 3, 1, 5, 10))
+				.as("Zeitlimit pro Durchgang").isEqualTo(15);
+
+		// Ungueltiger Zeitwert (negativ) -> neutraler Fallback statt Exception/#WERT!
+		assertThat(impl.ptmplanungzeitlimit(-1, zeitwert(9, 55), 16, 3, 1, 5, 10)).isZero();
+		// Ende vor Start -> Fallback
+		assertThat(impl.ptmplanungzeitlimit(zeitwert(10, 0), zeitwert(9, 0), 16, 3, 1, 5, 10)).isZero();
+	}
+
+	@Test
+	public void testPTMPlanungTurnierEnde() {
+		GlobalImpl impl = new GlobalImpl(starter.getxComponentContext());
+
+		// Gegenprobe zu testPTMPlanungZeitlimit: 15 Min/Durchgang -> Ende wieder 09:55
+		assertThat(impl.ptmplanungturnierende(zeitwert(9, 0), 16, 3, 1, 5, 10, 15))
+				.as("Turnier-Ende").isEqualTo("09:55");
+
+		assertThat(impl.ptmplanungturnierende(-1, 16, 3, 1, 5, 10, 15))
+				.as("ungueltiger Zeitwert -> leerer Fallback").isEmpty();
+	}
+
+	@Test
+	public void testPTMPlanungZeitplan() {
+		GlobalImpl impl = new GlobalImpl(starter.getxComponentContext());
+
+		String[][] tabelle = impl.ptmplanungzeitplan(zeitwert(9, 0), 16, 3, 1, 5, 10, 15);
+
+		assertThat(tabelle.length).as("feste Zeilenzahl").isEqualTo(PlanungsrechnerRechner.MAX_ZEITPLAN_ZEILEN);
+		assertThat(tabelle[0]).as("Runde 1, Durchgang 1").containsExactly("1", "1", "09:00", "09:15");
+		assertThat(tabelle[1]).as("Durchgang 2, nach 5 Min Pause").containsExactly("1", "2", "09:20", "09:35");
+		assertThat(tabelle[2]).as("Durchgang 3 (letzter, 1 Runde)").containsExactly("1", "3", "09:40", "09:55");
+		// ueberzaehlige Zeilen bleiben leer (kein #NV, kein Absturz)
+		assertThat(tabelle[3]).as("keine weiteren Eintraege bei nur 1 Runde").containsExactly("", "", "", "");
+		assertThat(tabelle[PlanungsrechnerRechner.MAX_ZEITPLAN_ZEILEN - 1])
+				.as("letzte Zeile der festen Obergrenze bleibt leer").containsExactly("", "", "", "");
+	}
+
+	@Test
+	public void testPTMPlanungZeitplan_ungueltigeEingabeLiefertLeereTabelle() {
+		GlobalImpl impl = new GlobalImpl(starter.getxComponentContext());
+
+		String[][] tabelle = impl.ptmplanungzeitplan(-1, 16, 3, 1, 5, 10, 15);
+
+		assertThat(tabelle.length).as("feste Zeilenzahl auch im Fehlerfall").isEqualTo(PlanungsrechnerRechner.MAX_ZEITPLAN_ZEILEN);
+		assertThat(tabelle[0]).containsExactly("", "", "", "");
 	}
 
 	/**

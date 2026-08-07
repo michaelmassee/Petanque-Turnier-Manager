@@ -158,6 +158,7 @@ import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerSpielrundeSheetNaechste;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerTurnierTestDaten;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerSpielrundeSheetUpdate;
+import de.petanqueturniermanager.planungsrechner.PlanungsrechnerSheet;
 import de.petanqueturniermanager.siegergeld.SiegergeldQuellen;
 import de.petanqueturniermanager.siegergeld.SiegergeldSheet;
 import de.petanqueturniermanager.formulex.export.FormuleXExportInVerzeichnis;
@@ -235,6 +236,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_EXPORT_FTP_UPLOAD  = "export_ftp_upload";
 	public static final String CMD_EXPORT_NOTEBOOKLM  = "export_notebooklm";
 	public static final String CMD_SIEGERGELD_BERECHNEN = "siegergeld_berechnen";
+	public static final String CMD_PLANUNGSRECHNER_BERECHNEN = "planungsrechner_berechnen";
 	// SuperMelee
 	public static final String CMD_NEUE_MELDELISTE = "neue_meldeliste";
 	public static final String CMD_UPDATE_MELDELISTE = "update_meldeliste";
@@ -840,6 +842,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				break;
 			case CMD_SIEGERGELD_BERECHNEN:
 				new SiegergeldSheet(ws).testTurnierVorhanden().backUpDocument().start();
+				break;
+			case CMD_PLANUNGSRECHNER_BERECHNEN:
+				new PlanungsrechnerSheet(ws).backUpDocument().start();
 				break;
 			// ------------------------------
 			// SuperMelee
@@ -2048,6 +2053,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_EXPORT_FTP_UPLOAD,
 				 CMD_EXPORT_NOTEBOOKLM                    -> istExportfaehigesTurnier(ts);
 			case CMD_SIEGERGELD_BERECHNEN                 -> SiegergeldQuellen.istUnterstuetzt(ts);
+			// Planungsrechner: eigenständig, unabhängig vom aktiven Turniersystem immer aktiv
+			case CMD_PLANUNGSRECHNER_BERECHNEN              -> true;
 			// SuperMelee: neues Turnier nur wenn keins aktiv
 			case CMD_NEUE_MELDELISTE                        -> ts == TurnierSystem.KEIN;
 			// SuperMelee-Aktionen: nur wenn SuperMelee aktiv

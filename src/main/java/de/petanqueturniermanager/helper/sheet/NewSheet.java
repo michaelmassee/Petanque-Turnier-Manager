@@ -185,6 +185,7 @@ public class NewSheet extends BaseHelper {
 				}
 				// removeSheet() bereinigt intern bereits verwaiste Named-Range-Einträge
 				BlattschutzManager.get().ensureUnprotectedInScope();
+				sicherstellenDassNichtLetztesSheetEntferntWird();
 				sheetHelper.removeSheet(sheetName);
 				sheet = null;
 				turnierSheet = null;
@@ -240,6 +241,20 @@ public class NewSheet extends BaseHelper {
 		}
 
 		return this;
+	}
+
+	/**
+	 * LO verweigert das Entfernen des letzten verbleibenden Sheets im Dokument. Bei „Neu erstellen?" -&gt; Ja auf einem
+	 * Dokument, in dem dieses Sheet das einzige ist (z.B. Planungsrechner in einem sonst leeren Dokument), legt diese
+	 * Methode vorab ein Platzhalter-Sheet "leer" an, damit removeSheet() nicht das letzte Sheet entfernt.<br>
+	 * Der Platzhalter wird danach von {@link SheetHelper#entferneLeeresDefaultSheetWennMoeglich(String)} automatisch
+	 * wieder entfernt, sobald das Zielsheet neu erstellt wurde.
+	 */
+	private void sicherstellenDassNichtLetztesSheetEntferntWird() {
+		XSpreadsheetDocument xDoc = getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
+		if (xDoc.getSheets().getElementNames().length <= 1) {
+			sheetHelper.newIfNotExist("leer", (short) 0);
+		}
 	}
 
 	public boolean isDidCreate() {

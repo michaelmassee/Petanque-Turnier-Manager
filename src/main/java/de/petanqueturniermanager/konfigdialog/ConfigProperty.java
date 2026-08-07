@@ -7,6 +7,7 @@ package de.petanqueturniermanager.konfigdialog;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.i18n.I18n;
@@ -22,6 +23,7 @@ public class ConfigProperty<V> {
 	private boolean intern;      // interner Zustand – nicht in Dialogen anzeigen
 	private boolean exportKonfig; // Export/Upload-Konfigurationsdialog
 	private boolean kompaktesTextfeld; // STRING: schmales Textfeld ohne Textarea-Edit-Button (z.B. Uhrzeit)
+	private Predicate<String> validator; // STRING: optionale Format-Validierung (z.B. HH:MM)
 	private Consumer<WorkingSpreadsheet> nachSpeichernAktion;
 
 	protected ConfigProperty(ConfigPropertyType type, String key) {
@@ -112,6 +114,22 @@ public class ConfigProperty<V> {
 
 	public final boolean isKompaktesTextfeld() {
 		return kompaktesTextfeld;
+	}
+
+	/**
+	 * Registriert eine Format-Validierung für {@link ConfigPropertyType#STRING}-Properties
+	 * (z.B. {@code HH:MM}-Uhrzeitformat). Ungültige Eingaben werden vom Dialog beim Tippen
+	 * stillschweigend verworfen (nicht persistiert) statt gemeldet — siehe
+	 * {@code SimpleTextConfigElement} für die Begründung (kein Fokus-Listener/MessageBox wegen
+	 * Freeze-Risiko bei synchronen modalen Dialogen aus UNO-Event-Callbacks).
+	 */
+	public ConfigProperty<V> validierung(Predicate<String> validator) {
+		this.validator = checkNotNull(validator);
+		return this;
+	}
+
+	public final Predicate<String> getValidator() {
+		return validator;
 	}
 
 	public ConfigProperty<V> mitNachSpeichernAktion(Consumer<WorkingSpreadsheet> aktion) {

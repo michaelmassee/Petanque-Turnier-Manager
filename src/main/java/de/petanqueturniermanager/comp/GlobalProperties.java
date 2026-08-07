@@ -19,6 +19,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 
 import org.apache.logging.log4j.Level;
@@ -54,6 +55,8 @@ public class GlobalProperties {
 	private static final String CREATE_BACKUP_PROP = "backup";
 	private static final String AUTOSAVE_PROP = "autosave";
 	private static final String NEW_VERSION_CHECK_PROP = "newversioncheck";
+	/** System-Property zum Erzwingen von {@link #isNewVersionCheckImmerTrue()} ohne UI-Checkbox. */
+	private static final String NEW_VERSION_CHECK_SYSTEM_PROPERTY = "de.petanqueturniermanager.newVersionCheck";
 	private static final String AUTO_UPDATE_DIALOG_PROP = "auto.update.dialog.beim.start";
 	private static final String UPDATE_SKIP_VERSION_PROP = "auto.update.skip.version";
 	private static final String PROZESSBOX_AUTOMATISCH_ANZEIGEN_PROP = "prozessbox.automatisch.anzeigen";
@@ -274,7 +277,8 @@ public class GlobalProperties {
 	 * Rohdaten eines Composite View (vor Resolver-Erstellung).
 	 *
 	 * @param port            TCP-Port
-	 * @param name            optionaler Anzeigename des Views (leer = ohne Name)
+	 * @param name            Anzeigename des Views (Pflichtfeld, eindeutig, wird getrimmt;
+	 *                        Validierung dazu erfolgt in {@code CompositeViewsOptionsEventHandler})
 	 * @param aktiv           ob dieser View aktiv ist
 	 * @param zoom            globaler Zoom-Faktor in % (10–500)
 	 * @param mitHeaderFooter ob Header/Footer (aus Panel 0) global einmal gerendert werden sollen
@@ -288,7 +292,7 @@ public class GlobalProperties {
 			List<PanelEintragRoh> panels,
 			RandKonfiguration rand) {
 		public CompositeViewEintragRoh {
-			name = name == null ? "" : name;
+			name = name == null ? "" : name.strip();
 			rand = rand == null ? RandKonfiguration.KEINER : rand;
 		}
 
@@ -1111,6 +1115,65 @@ public class GlobalProperties {
 	}
 
 	/**
+	 * Serialisiert Composite-View-Einträge als JSON für den Nutzer-Export in eine Datei. Nutzt
+	 * dasselbe {@link #GSON} und Format wie die interne Speicherung in der LibreOffice-Konfiguration
+	 * ({@link #compositeViewsOptionenAusEintraegen}), damit exportierte Dateien 1:1 wieder importiert
+	 * werden können.
+	 */
+	public static String exportiereCompositeViewsJson(List<CompositeViewEintragRoh> eintraege) {
+		return GSON.toJson(eintraege == null ? List.of() : eintraege);
+	}
+
+	/**
+	 * Liest Composite-View-Einträge aus einer vom Nutzer importierten JSON-Datei. Im Gegensatz zu
+	 * {@link #compositeViewsEintraegeAusJson} (interner Lesepfad aus der LibreOffice-Konfiguration,
+	 * der bei kaputtem JSON defensiv still eine leere Liste liefert) muss ein Fehler beim
+	 * Nutzer-Import sichtbar werden – daher hier eine geworfene Exception statt Logging.
+	 */
+	public static List<CompositeViewEintragRoh> importiereCompositeViewsJson(String json)
+			throws CompositeViewImportException {
+		if (json == null || json.isBlank()) {
+			throw new CompositeViewImportException("Datei ist leer");
+		}
+		try {
+			var typ = new TypeToken<List<CompositeViewEintragRoh>>() { }.getType();
+			List<CompositeViewEintragRoh> gelesen = GSON.fromJson(json, typ);
+			if (gelesen == null) {
+				throw new CompositeViewImportException("Ungültiges JSON-Format");
+			}
+			pruefeStrukturVollstaendig(gelesen);
+			return gelesen;
+		} catch (JsonSyntaxException e) {
+			throw new CompositeViewImportException("Ungültiges JSON-Format", e);
+		}
+	}
+
+	/**
+	 * Prüft die von Gson strukturell akzeptierte, aber fachlich unvollständige JSON-Form ab (z. B.
+	 * {@code "panels": null} oder ein {@code null}-Eintrag in der Liste) – solche Lücken würden erst
+	 * später (z. B. bei {@code CompositeViewEintragRoh.panels().isEmpty()}) zu einer
+	 * NullPointerException statt einer sauberen Import-Fehlermeldung führen.
+	 */
+	private static void pruefeStrukturVollstaendig(List<CompositeViewEintragRoh> eintraege)
+			throws CompositeViewImportException {
+		for (var eintrag : eintraege) {
+			if (eintrag == null) {
+				throw new CompositeViewImportException("Ungültiges JSON-Format: leerer Eintrag");
+			}
+			if (eintrag.panels() == null || eintrag.panels().contains(null)) {
+				throw new CompositeViewImportException(
+						"Ungültiges JSON-Format: Eintrag ohne Panels (Port " + eintrag.port() + ")");
+			}
+			for (var panel : eintrag.panels()) {
+				if (panel.typ() == null) {
+					throw new CompositeViewImportException(
+							"Ungültiges JSON-Format: Panel ohne Typ (Port " + eintrag.port() + ")");
+				}
+			}
+		}
+	}
+
+	/**
 	 * @deprecated Cleanup-Code für den einmaligen Import der Composite-Views in die
 	 *             LibreOffice-Konfiguration; kann entfernt werden, sobald davon auszugehen ist,
 	 *             dass keine Alt-Installation diese Schlüssel mehr besitzt.
@@ -1181,7 +1244,26 @@ public class GlobalProperties {
 		return getBoolean(CREATE_BACKUP_PROP);
 	}
 
+	/**
+	 * Dev-Option „Neue-Version-Prüfung immer aktiv". Seit Entfernung der zugehörigen Checkbox aus
+	 * Extras -&gt; Optionen -&gt; PétTurnMngr (nur UI-Entfernung, die Option selbst bleibt bestehen)
+	 * nur noch per System-Property {@code -D}{@value #NEW_VERSION_CHECK_SYSTEM_PROPERTY}{@code =true}
+	 * aktivierbar. {@link #isNewVersionCheckGespeichert()} liefert weiterhin den zuletzt in der
+	 * LibreOffice-Konfiguration/Properties-Datei gespeicherten Wert (z. B. aus einer alten
+	 * Installation, als die Checkbox noch existierte) – wird hier zusätzlich (mit ODER) berücksichtigt,
+	 * damit ein zuvor per UI aktivierter Zustand nicht stillschweigend verloren geht.
+	 */
 	public boolean isNewVersionCheckImmerTrue() {
+		return isNewVersionCheckGespeichert() || Boolean.getBoolean(NEW_VERSION_CHECK_SYSTEM_PROPERTY);
+	}
+
+	/**
+	 * Zuletzt gespeicherter Wert der Dev-Option „Neue-Version-Prüfung immer aktiv", ohne die
+	 * System-Property-Überlagerung aus {@link #isNewVersionCheckImmerTrue()}. Wird von
+	 * {@link PluginOptionsEventHandler} beim Speichern anderer Plugin-Optionen unverändert
+	 * durchgereicht, da es dafür seit der UI-Entfernung keine Checkbox mehr gibt.
+	 */
+	public boolean isNewVersionCheckGespeichert() {
 		return getBoolean(NEW_VERSION_CHECK_PROP);
 	}
 

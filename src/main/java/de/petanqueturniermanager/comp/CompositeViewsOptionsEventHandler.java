@@ -3,6 +3,11 @@
  */
 package de.petanqueturniermanager.comp;
 
+import java.io.IOException;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -31,6 +36,10 @@ import com.sun.star.lang.XSingleComponentFactory;
 import com.sun.star.lib.uno.helper.Factory;
 import com.sun.star.lib.uno.helper.WeakBase;
 import com.sun.star.registry.XRegistryKey;
+import com.sun.star.ui.dialogs.ExecutableDialogResults;
+import com.sun.star.ui.dialogs.FilePicker;
+import com.sun.star.ui.dialogs.TemplateDescription;
+import com.sun.star.ui.dialogs.XFilePicker3;
 import com.sun.star.uno.AnyConverter;
 import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XComponentContext;
@@ -73,6 +82,11 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 	private static final String CTL_HINZUFUEGEN = "CompositeViewsHinzufuegen";
 	private static final String CTL_BEARBEITEN = "CompositeViewsBearbeiten";
 	private static final String CTL_LOESCHEN = "CompositeViewsLoeschen";
+	private static final String CTL_EXPORT = "CompositeViewsExport";
+	private static final String CTL_IMPORT = "CompositeViewsImport";
+
+	private static final String JSON_DATEIENDUNG = "*.json";
+	private static final String STANDARD_EXPORT_DATEINAME = "composite-views.json";
 
 	private final XComponentContext context;
 
@@ -165,7 +179,7 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 		boolean neuerWebserverAktiv = checkbox(container, CTL_WEBSERVER_AKTIV);
 		List<CompositeViewEintragRoh> alteEintraege = properties.getCompositeViewEintraege();
 
-		String fehler = validiereEintraege(properties);
+		String fehler = validiereEintraege(eintraege, properties);
 		if (fehler != null) {
 			zeigeFehler(fehler);
 			return;
@@ -223,6 +237,8 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 		setLabel(container, CTL_HINZUFUEGEN, I18n.get("webserver.composite.konfig.btn.hinzufuegen"));
 		setLabel(container, CTL_BEARBEITEN, I18n.get("webserver.composite.konfig.btn.bearbeiten"));
 		setLabel(container, CTL_LOESCHEN, I18n.get("webserver.composite.konfig.btn.loeschen"));
+		setLabel(container, CTL_EXPORT, I18n.get("webserver.composite.konfig.btn.export"));
+		setLabel(container, CTL_IMPORT, I18n.get("webserver.composite.konfig.btn.import"));
 	}
 
 	private void registriereListener(XControlContainer container) {
@@ -232,6 +248,8 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 		registriereActionListener(container, CTL_HINZUFUEGEN, () -> fuegeZeileHinzu(container));
 		registriereActionListener(container, CTL_BEARBEITEN, () -> bearbeiteZeile(container));
 		registriereActionListener(container, CTL_LOESCHEN, () -> loescheZeile(container));
+		registriereActionListener(container, CTL_EXPORT, this::exportiereEintraege);
+		registriereActionListener(container, CTL_IMPORT, () -> importiereEintraege(container));
 		listenerContainer = container;
 	}
 
@@ -301,6 +319,175 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 		persistiereUndBenachrichtige(container);
 	}
 
+	private void exportiereEintraege() {
+		try {
+			String ziel = oeffneJsonDateiPicker(TemplateDescription.FILESAVE_AUTOEXTENSION, STANDARD_EXPORT_DATEINAME);
+			if (ziel == null) {
+				return;
+			}
+			String json = GlobalProperties.exportiereCompositeViewsJson(eintraege);
+			Files.writeString(Path.of(ziel), json, StandardCharsets.UTF_8);
+			MessageBox.from(context, MessageBoxTypeEnum.INFO_OK)
+					.caption(I18n.get("webserver.composite.konfig.export.dialog.titel"))
+					.message(I18n.get("webserver.composite.konfig.export.erfolg", eintraege.size(), ziel))
+					.show();
+		} catch (com.sun.star.uno.Exception e) {
+			logger.error("Datei-Picker für Composite-View-Export konnte nicht geöffnet werden: {}", e.getMessage(), e);
+			zeigeFehler(I18n.get("webserver.composite.konfig.export.fehler"));
+		} catch (IOException e) {
+			logger.error("Composite-View-Export konnte nicht geschrieben werden: {}", e.getMessage(), e);
+			zeigeFehler(I18n.get("webserver.composite.konfig.export.fehler"));
+		}
+	}
+
+	private void importiereEintraege(XControlContainer container) {
+		List<CompositeViewEintragRoh> gesicherteEintraege = new ArrayList<>(eintraege);
+		try {
+			String quelle = oeffneJsonDateiPicker(TemplateDescription.FILEOPEN_SIMPLE, null);
+			if (quelle == null) {
+				return;
+			}
+			String json = Files.readString(Path.of(quelle), StandardCharsets.UTF_8);
+			List<CompositeViewEintragRoh> importiert;
+			try {
+				importiert = GlobalProperties.importiereCompositeViewsJson(json);
+			} catch (CompositeViewImportException e) {
+				logger.error("Composite-View-Import: ungültiges JSON in {}: {}", quelle, e.getMessage(), e);
+				zeigeFehler(I18n.get("webserver.composite.konfig.import.fehler.json"));
+				return;
+			}
+			List<CompositeViewEintragRoh> mitPortsAufgeloest = loeseImportPortKonflikteAuf(eintraege, importiert);
+			List<CompositeViewEintragRoh> mitNamenAufgeloest = loeseImportNamenKonflikteAuf(eintraege, mitPortsAufgeloest);
+			eintraege.addAll(mitNamenAufgeloest);
+
+			String fehler = validiereEintraege(eintraege, GlobalProperties.get());
+			if (fehler != null) {
+				eintraege.clear();
+				eintraege.addAll(gesicherteEintraege);
+				zeigeFehler(fehler);
+				return;
+			}
+			aktualisiereListe(container);
+			persistiereUndBenachrichtige(container);
+			MessageBox.from(context, MessageBoxTypeEnum.INFO_OK)
+					.caption(I18n.get("webserver.composite.konfig.import.dialog.titel"))
+					.message(I18n.get("webserver.composite.konfig.import.erfolg", mitNamenAufgeloest.size()))
+					.show();
+		} catch (com.sun.star.uno.Exception e) {
+			logger.error("Datei-Picker für Composite-View-Import konnte nicht geöffnet werden: {}", e.getMessage(), e);
+			zeigeFehler(I18n.get("webserver.composite.konfig.import.fehler.allgemein"));
+		} catch (IOException e) {
+			logger.error("Composite-View-Import konnte nicht gelesen werden: {}", e.getMessage(), e);
+			zeigeFehler(I18n.get("webserver.composite.konfig.import.fehler.allgemein"));
+		}
+	}
+
+	/**
+	 * Vergibt für jeden importierten Eintrag, dessen Port bereits in {@code bestehende} (oder unter
+	 * bereits verarbeiteten importierten Einträgen desselben Laufs) belegt ist, automatisch einen
+	 * neuen freien Port. Reine Datenoperation ohne UNO-Abhängigkeit, siehe
+	 * {@code CompositeViewsOptionsEventHandlerTest}.
+	 */
+	static List<CompositeViewEintragRoh> loeseImportPortKonflikteAuf(
+			List<CompositeViewEintragRoh> bestehende, List<CompositeViewEintragRoh> importiert) {
+		Set<Integer> belegt = new HashSet<>();
+		for (var e : bestehende) {
+			belegt.add(e.port());
+		}
+		List<CompositeViewEintragRoh> ergebnis = new ArrayList<>();
+		for (var e : importiert) {
+			int port = belegt.contains(e.port()) ? naechsterFreierPort(belegt) : e.port();
+			belegt.add(port);
+			ergebnis.add(port == e.port() ? e : mitPort(e, port));
+		}
+		return ergebnis;
+	}
+
+	/**
+	 * Normalisiert Namen importierter Einträge: ein leerer Name (nach dem Import generell nicht
+	 * erlaubt, siehe {@link #validiereEintraege}) wird durch einen Platzhalter auf Basis des
+	 * (bereits port-konfliktbereinigten) Ports ersetzt; jeder Name, der bereits in {@code bestehende}
+	 * oder unter bereits verarbeiteten importierten Einträgen desselben Laufs vorkommt, bekommt ein
+	 * fortlaufendes Suffix " (2)", " (3)", … angehängt. Vergleich ist bewusst case-sensitiv (wie
+	 * Linux-Dateinamen). Reine Datenoperation ohne UNO-Abhängigkeit, siehe
+	 * {@code CompositeViewsOptionsEventHandlerTest}.
+	 */
+	static List<CompositeViewEintragRoh> loeseImportNamenKonflikteAuf(
+			List<CompositeViewEintragRoh> bestehende, List<CompositeViewEintragRoh> importiert) {
+		Set<String> bekannteNamen = new HashSet<>();
+		for (var e : bestehende) {
+			bekannteNamen.add(e.name());
+		}
+		List<CompositeViewEintragRoh> ergebnis = new ArrayList<>();
+		for (var e : importiert) {
+			String basisName = e.name().isBlank() ? "View " + e.port() : e.name();
+			String eindeutigerName = eindeutigenNamenErmitteln(basisName, bekannteNamen);
+			bekannteNamen.add(eindeutigerName);
+			ergebnis.add(eindeutigerName.equals(e.name()) ? e : mitName(e, eindeutigerName));
+		}
+		return ergebnis;
+	}
+
+	private static String eindeutigenNamenErmitteln(String basisName, Set<String> bekannteNamen) {
+		if (!bekannteNamen.contains(basisName)) {
+			return basisName;
+		}
+		int zaehler = 2;
+		String kandidat;
+		do {
+			kandidat = basisName + " (" + zaehler + ")";
+			zaehler++;
+		} while (bekannteNamen.contains(kandidat));
+		return kandidat;
+	}
+
+	private static int naechsterFreierPort(Set<Integer> belegt) {
+		int kandidat = 9100;
+		while (belegt.contains(kandidat)) {
+			kandidat++;
+		}
+		return kandidat;
+	}
+
+	private static CompositeViewEintragRoh mitPort(CompositeViewEintragRoh e, int port) {
+		return new CompositeViewEintragRoh(port, e.name(), e.aktiv(), e.zoom(), e.mitHeaderFooter(),
+				e.layoutJson(), e.panels(), e.rand());
+	}
+
+	private static CompositeViewEintragRoh mitName(CompositeViewEintragRoh e, String name) {
+		return new CompositeViewEintragRoh(e.port(), name, e.aktiv(), e.zoom(), e.mitHeaderFooter(),
+				e.layoutJson(), e.panels(), e.rand());
+	}
+
+	/**
+	 * Öffnet einen JSON-Datei-Picker. {@code defaultName != null} waehlt den Speichern-Modus
+	 * (mit AutoExtension und vorbelegtem Dateinamen), {@code null} den Öffnen-Modus.
+	 */
+	private String oeffneJsonDateiPicker(short template, String defaultName) throws com.sun.star.uno.Exception {
+		XFilePicker3 picker = FilePicker.createWithMode(context, template);
+		picker.setTitle(I18n.get(defaultName == null
+				? "webserver.composite.konfig.import.dialog.titel"
+				: "webserver.composite.konfig.export.dialog.titel"));
+		picker.appendFilter("JSON", JSON_DATEIENDUNG);
+		if (defaultName != null) {
+			picker.setDefaultName(defaultName);
+		}
+		if (picker.execute() != ExecutableDialogResults.OK) {
+			return null;
+		}
+		String[] dateien = picker.getFiles();
+		if (dateien.length == 0) {
+			return null;
+		}
+		return pfadAusDateiText(dateien[0]).toString();
+	}
+
+	private static Path pfadAusDateiText(String datei) {
+		return datei.trim().startsWith("file:")
+				? Path.of(URI.create(datei.trim()))
+				: Path.of(datei.trim());
+	}
+
 	private void benachrichtigeCompositeViewKonfigurationGeaendert() {
 		// Best-effort: Nur das aktuell aktive Dokument (falls vorhanden) über die Änderung informieren.
 		var doc = DocumentHelper.getCurrentSpreadsheetDocument(context);
@@ -312,8 +499,14 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 						.addChanged("webserver_composite_views", "", ""));
 	}
 
-	private String validiereEintraege(GlobalProperties properties) {
+	/**
+	 * Validiert die uebergebene Composite-View-Liste (Ports und Namen eindeutig, Namen nicht leer,
+	 * mindestens ein Panel pro View, kein Port-Konflikt mit der Webserver-Regie). Statisch und
+	 * UNO-frei fuer direkte Testbarkeit, siehe {@code CompositeViewsOptionsEventHandlerTest}.
+	 */
+	static String validiereEintraege(List<CompositeViewEintragRoh> eintraege, GlobalProperties properties) {
 		Set<Integer> bekannte = new HashSet<>();
+		Set<String> bekannteNamen = new HashSet<>();
 		for (int i = 0; i < eintraege.size(); i++) {
 			var e = eintraege.get(i);
 			int nr = i + 1;
@@ -325,6 +518,12 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 			}
 			if (!bekannte.add(e.port())) {
 				return I18n.get("webserver.composite.konfig.fehler.port.duplikat", e.port());
+			}
+			if (e.name().isBlank()) {
+				return I18n.get("webserver.composite.konfig.fehler.name.leer", nr);
+			}
+			if (!bekannteNamen.add(e.name())) {
+				return I18n.get("webserver.composite.konfig.fehler.name.duplikat", nr, e.name());
 			}
 			if (e.panels().isEmpty()) {
 				return I18n.get("webserver.composite.konfig.fehler.kein.panel");
@@ -353,11 +552,7 @@ public final class CompositeViewsOptionsEventHandler extends WeakBase
 		for (var e : eintraege) {
 			belegt.add(e.port());
 		}
-		int kandidat = 9100;
-		while (belegt.contains(kandidat)) {
-			kandidat++;
-		}
-		return kandidat;
+		return naechsterFreierPort(belegt);
 	}
 
 	private void aktualisiereListe(XControlContainer container) {

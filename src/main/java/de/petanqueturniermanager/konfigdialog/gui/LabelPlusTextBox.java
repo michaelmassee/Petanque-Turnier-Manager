@@ -95,6 +95,14 @@ public class LabelPlusTextBox extends BaseField<LabelPlusTextBox> implements XTe
 		return this;
 	}
 
+	/**
+	 * Aktuelle Hintergrundfarbe des Textfeldes (für Validierungs-Feedback: Ausgangswert vor einer
+	 * temporären Rot-Einfärbung sichern, siehe {@code SimpleTextConfigElement}).
+	 */
+	public Object getFieldBackgroundColor() {
+		return getProperty(GuiFactory.BACKGROUND_COLOR);
+	}
+
 	@Override
 	public void disposing(EventObject arg0) {
 		super.disposing();

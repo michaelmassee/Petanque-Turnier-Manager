@@ -8,21 +8,25 @@ import java.util.List;
 
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.konfiguration.IFreispielPropertiesSpalte;
+import de.petanqueturniermanager.basesheet.konfiguration.IZeitplanPropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.helper.StringTools;
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.konfigdialog.AuswahlConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
 import de.petanqueturniermanager.konfigdialog.HeaderFooterConfigProperty;
+import de.petanqueturniermanager.konfigdialog.ZeitplanConfigProperty;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 
 /**
  * Konfigurationseigenschaften für das Formule X Turniersystem.
  */
-public class FormuleXPropertiesSpalte extends BasePropertiesSpalte implements IFreispielPropertiesSpalte {
+public class FormuleXPropertiesSpalte extends BasePropertiesSpalte
+        implements IFreispielPropertiesSpalte, IZeitplanPropertiesSpalte {
 
     public static final List<ConfigProperty<?>> KONFIG_PROPERTIES = new ArrayList<>();
 
@@ -50,7 +54,6 @@ public class FormuleXPropertiesSpalte extends BasePropertiesSpalte implements IF
 
     private static final String KONFIG_PROP_FREISPIEL_PUNKTE_PLUS  = "Freispiel Punkte +";
     private static final String KONFIG_PROP_FREISPIEL_PUNKTE_MINUS = "Freispiel Punkte -";
-
 
     static {
         KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_LINKS)
@@ -102,6 +105,20 @@ public class FormuleXPropertiesSpalte extends BasePropertiesSpalte implements IF
         KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_FREISPIEL_PUNKTE_MINUS)
                 .setDefaultVal(0).setDescription("config.desc.freispiel.punkte.minus"));
 
+        KONFIG_PROPERTIES.add(ZeitplanConfigProperty.<Boolean>from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_ZEITPLAN_AKTIV)
+                .setDefaultVal(false).setDescription("config.desc.zeitplan.aktiv"));
+        KONFIG_PROPERTIES.add(ZeitplanConfigProperty.<Integer>from(ConfigPropertyType.INTEGER, KONFIG_PROP_ZEITPLAN_ANZAHL_BAHNEN)
+                .setDefaultVal(0).setDescription("config.desc.zeitplan.anzahl.bahnen"));
+        KONFIG_PROPERTIES.add(ZeitplanConfigProperty.<Integer>from(ConfigPropertyType.INTEGER, KONFIG_PROP_ZEITPLAN_ZEITLIMIT_MINUTEN)
+                .setDefaultVal(15).setDescription("config.desc.zeitplan.zeitlimit"));
+        KONFIG_PROPERTIES.add(ZeitplanConfigProperty.<Integer>from(ConfigPropertyType.INTEGER, KONFIG_PROP_ZEITPLAN_DURCHGANG_PAUSE_MINUTEN)
+                .setDefaultVal(5).setDescription("config.desc.zeitplan.durchgang.pause"));
+        KONFIG_PROPERTIES.add(ZeitplanConfigProperty.<Integer>from(ConfigPropertyType.INTEGER, KONFIG_PROP_ZEITPLAN_RUNDEN_PAUSE_MINUTEN)
+                .setDefaultVal(10).setDescription("config.desc.zeitplan.runden.pause"));
+        KONFIG_PROPERTIES.add(ZeitplanConfigProperty.<String>from(ConfigPropertyType.STRING, KONFIG_PROP_ZEITPLAN_TURNIER_STARTZEIT)
+                .setDefaultVal("09:00").setDescription("config.desc.zeitplan.turnier.startzeit").kompaktesTextfeld()
+                .validierung(StringTools::isValidUhrzeitHhMm));
+
         ADDUploadProp(KONFIG_PROPERTIES);
         ADDSpielrundenExportProp(KONFIG_PROPERTIES);
         ADDTeilnehmerlisteExportProp(KONFIG_PROPERTIES);
@@ -150,6 +167,7 @@ public class FormuleXPropertiesSpalte extends BasePropertiesSpalte implements IF
         writeIntProperty(KONFIG_PROP_ANZAHL_RUNDEN, Math.max(1, anzahl));
     }
 
+    @Override
     public SpielrundeSpielbahn getSpielrundeSpielbahn() {
         return SpielrundeSpielbahn.valueOf(readStringProperty(KONFIG_PROP_SPIELRUNDE_SPIELBAHN));
     }
@@ -210,5 +228,70 @@ public class FormuleXPropertiesSpalte extends BasePropertiesSpalte implements IF
     @Override
     public Integer getFreispielPunkteMinus() {
         return readIntProperty(KONFIG_PROP_FREISPIEL_PUNKTE_MINUS);
+    }
+
+    @Override
+    public boolean isZeitplanAktiv() {
+        return Boolean.TRUE.equals(readBooleanProperty(KONFIG_PROP_ZEITPLAN_AKTIV));
+    }
+
+    @Override
+    public void setZeitplanAktiv(boolean aktiv) {
+        setStringProperty(KONFIG_PROP_ZEITPLAN_AKTIV, StringTools.booleanToString(aktiv));
+    }
+
+    @Override
+    public int getZeitplanAnzahlBahnen() {
+        return readIntProperty(KONFIG_PROP_ZEITPLAN_ANZAHL_BAHNEN);
+    }
+
+    @Override
+    public void setZeitplanAnzahlBahnen(int bahnen) {
+        writeIntProperty(KONFIG_PROP_ZEITPLAN_ANZAHL_BAHNEN, bahnen);
+    }
+
+    @Override
+    public boolean isDurchgangAufteilungWirksam() {
+        return isZeitplanAktiv() && getZeitplanAnzahlBahnen() > 0;
+    }
+
+    @Override
+    public int getZeitplanZeitlimitMinuten() {
+        return readIntProperty(KONFIG_PROP_ZEITPLAN_ZEITLIMIT_MINUTEN);
+    }
+
+    @Override
+    public void setZeitplanZeitlimitMinuten(int minuten) {
+        writeIntProperty(KONFIG_PROP_ZEITPLAN_ZEITLIMIT_MINUTEN, minuten);
+    }
+
+    @Override
+    public int getZeitplanDurchgangPauseMinuten() {
+        return readIntProperty(KONFIG_PROP_ZEITPLAN_DURCHGANG_PAUSE_MINUTEN);
+    }
+
+    @Override
+    public void setZeitplanDurchgangPauseMinuten(int minuten) {
+        writeIntProperty(KONFIG_PROP_ZEITPLAN_DURCHGANG_PAUSE_MINUTEN, minuten);
+    }
+
+    @Override
+    public int getZeitplanRundenPauseMinuten() {
+        return readIntProperty(KONFIG_PROP_ZEITPLAN_RUNDEN_PAUSE_MINUTEN);
+    }
+
+    @Override
+    public void setZeitplanRundenPauseMinuten(int minuten) {
+        writeIntProperty(KONFIG_PROP_ZEITPLAN_RUNDEN_PAUSE_MINUTEN, minuten);
+    }
+
+    @Override
+    public String getZeitplanTurnierStartzeit() {
+        return readStringProperty(KONFIG_PROP_ZEITPLAN_TURNIER_STARTZEIT);
+    }
+
+    @Override
+    public void setZeitplanTurnierStartzeit(String hhMm) {
+        setStringProperty(KONFIG_PROP_ZEITPLAN_TURNIER_STARTZEIT, hhMm);
     }
 }

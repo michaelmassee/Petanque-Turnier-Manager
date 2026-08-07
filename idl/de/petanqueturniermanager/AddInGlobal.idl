@@ -50,6 +50,17 @@ module de { module petanqueturniermanager { module addin {
     // Meldelisten-Teamanzeige für Turnierbaum-/Listen-Formeln – Index 29
     string ptmteamanzeige ([in] long teamnameAnzeigen, [in] long anzSpieler,
       [in] long vereinsnameAnzeigen, [in] sequence< sequence< string > > meldelistenZeile);
+    // Planungsrechner (PTM.PLANUNG.*), eigenständiger Zeitplan-Rechner – Indizes 30-33.
+    // Uhrzeiten als "HH:MM"-String (kein Zeitwert), Dauern/Zaehler als long (Minuten bzw. Anzahl).
+    long ptmplanungdurchgaengeprorunde ([in] long anzTeams, [in] long anzBahnen);
+    long ptmplanungzeitlimit ([in] double start, [in] double ende, [in] long anzTeams,
+      [in] long anzBahnen, [in] long anzRunden, [in] long durchgangPauseMin, [in] long rundenPauseMin);
+    string ptmplanungturnierende ([in] double start, [in] long anzTeams, [in] long anzBahnen,
+      [in] long anzRunden, [in] long durchgangPauseMin, [in] long rundenPauseMin, [in] long zeitlimitMin);
+    // Index 33 – 2D-Rueckgabe (Runde, Durchgang, Start, Ende) als Array-Formel, fest MAX_ZEITPLAN_ZEILEN Zeilen.
+    sequence< sequence< string > > ptmplanungzeitplan ([in] double start, [in] long anzTeams,
+      [in] long anzBahnen, [in] long anzRunden, [in] long durchgangPauseMin, [in] long rundenPauseMin,
+      [in] long zeitlimitMin);
   };
 
 }; }; };

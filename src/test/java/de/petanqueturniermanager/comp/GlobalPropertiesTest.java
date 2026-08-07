@@ -97,6 +97,19 @@ class GlobalPropertiesTest {
     }
 
     @Test
+    void testNewVersionCheckImmerTrueWirdDurchSystemPropertyErzwungen() {
+        var gp = GlobalProperties.get();
+        assertFalse(gp.isNewVersionCheckImmerTrue());
+
+        System.setProperty("de.petanqueturniermanager.newVersionCheck", "true");
+        try {
+            assertTrue(gp.isNewVersionCheckImmerTrue());
+        } finally {
+            System.clearProperty("de.petanqueturniermanager.newVersionCheck");
+        }
+    }
+
+    @Test
     void testPerformanceLoggingDefaultUndRoundtrip() {
         var gp = GlobalProperties.get();
         assertFalse(gp.isPerformanceLogging(), "Default muss false sein");
@@ -245,6 +258,59 @@ class GlobalPropertiesTest {
         assertEquals(1, gelesen.get(0).panels().size());
         assertEquals("RANGLISTE", gelesen.get(0).panels().get(0).sheetConfig());
         assertFalse(gp2.getCompositeViewKonfigurationen().isEmpty());
+    }
+
+    @Test
+    void testExportImportCompositeViewsJsonRoundtrip() throws Exception {
+        var panel = new PanelEintragRoh(
+                PanelTyp.BLATT, "RANGLISTE", GlobalProperties.DEFAULT_ZOOM, "kein", "kein", false, "");
+        var eintrag = new CompositeViewEintragRoh(
+                5001, "Anzeige", true, GlobalProperties.DEFAULT_ZOOM, true, "", List.of(panel), RandKonfiguration.KEINER);
+
+        String json = GlobalProperties.exportiereCompositeViewsJson(List.of(eintrag));
+        var gelesen = GlobalProperties.importiereCompositeViewsJson(json);
+
+        assertEquals(List.of(eintrag), gelesen);
+    }
+
+    @Test
+    void testImportCompositeViewsJsonWirftBeiLeeremJson() {
+        assertThrows(CompositeViewImportException.class,
+                () -> GlobalProperties.importiereCompositeViewsJson(""));
+    }
+
+    @Test
+    void testImportCompositeViewsJsonWirftBeiUngueltigemJson() {
+        assertThrows(CompositeViewImportException.class,
+                () -> GlobalProperties.importiereCompositeViewsJson("{kaputtes json"));
+    }
+
+    @Test
+    void testImportCompositeViewsJsonWirftBeiNullPanels() {
+        String json = "[{\"port\":5001,\"name\":\"Anzeige\",\"panels\":null}]";
+        assertThrows(CompositeViewImportException.class,
+                () -> GlobalProperties.importiereCompositeViewsJson(json));
+    }
+
+    @Test
+    void testImportCompositeViewsJsonWirftBeiNullEintragInListe() {
+        String json = "[null]";
+        assertThrows(CompositeViewImportException.class,
+                () -> GlobalProperties.importiereCompositeViewsJson(json));
+    }
+
+    @Test
+    void testImportCompositeViewsJsonWirftBeiNullPanelInListe() {
+        String json = "[{\"port\":5001,\"name\":\"Anzeige\",\"panels\":[null]}]";
+        assertThrows(CompositeViewImportException.class,
+                () -> GlobalProperties.importiereCompositeViewsJson(json));
+    }
+
+    @Test
+    void testImportCompositeViewsJsonWirftBeiPanelOhneTyp() {
+        String json = "[{\"port\":5001,\"name\":\"Anzeige\",\"panels\":[{\"sheetConfig\":\"RANGLISTE\"}]}]";
+        assertThrows(CompositeViewImportException.class,
+                () -> GlobalProperties.importiereCompositeViewsJson(json));
     }
 
     @Test

@@ -303,12 +303,17 @@ public class SchweizerZeitplanUITest extends BaseCalcUITest {
 		konfig.setZeitplanAnzahlBahnen(4); // 7 Paarungen / 4 Bahnen -> Bloecke [4, 3]
 		spielrundeNaechste.doRun();
 
-		// Neu auslosen mit anderer Bahnen-Anzahl -> andere Block-Grenzen als beim ersten Lauf
+		// Neu auslosen mit anderer Bahnen-Anzahl -> andere Block-Grenzen als beim ersten Lauf.
+		// Echtes "Neu auslosen" (Toolbar) laeuft ueber SchweizerSpielrundeSheetUpdate, das die
+		// AKTUELLE Runde in-place ueberschreibt — spielrundeNaechste.doRun() wuerde hier nur die
+		// naechste Runde anlegen (blockiert zudem durch die "Ergebnisse fehlen"-Sperre, da Runde 1
+		// noch keine Ergebnisse hat) und waere damit ein No-Op.
 		konfig.setZeitplanAnzahlBahnen(3); // 7 Paarungen / 3 Bahnen -> Bloecke [3, 3, 1]
-		spielrundeNaechste.setForceOk(true);
-		spielrundeNaechste.doRun();
+		SchweizerSpielrundeSheetUpdate spielrundeUpdate = new SchweizerSpielrundeSheetUpdate(wkingSpreadsheet);
+		spielrundeUpdate.setForceOk(true);
+		spielrundeUpdate.doRun();
 
-		XSpreadsheet runde1 = spielrundeNaechste.getXSpreadSheet();
+		XSpreadsheet runde1 = spielrundeUpdate.getXSpreadSheet();
 		assertThat(runde1).isNotNull();
 
 		// Zeile 3 (0-indiziert) lag beim ersten Lauf noch in Block 1 (Bloecke [4,3]), beim zweiten
@@ -327,10 +332,11 @@ public class SchweizerZeitplanUITest extends BaseCalcUITest {
 
 	/**
 	 * Regressionstest: einzeiliger letzter Durchgang-Block (Start- und Endzeile identisch). Die
-	 * Endzeit-Formel muss die zuvor geschriebene Startzeit-Formel in derselben Zelle ueberschreiben
-	 * ("Nix mischen" — die Zelle enthaelt am Ende ausschliesslich die numerische Ende-Formel, kein
-	 * kombinierter Text), damit die Zelle als Verkettungs-Anker fuer Folge-Durchgang/-Runde nutzbar
-	 * bleibt (siehe {@link SchweizerAbstractSpielrundeSheet#ermittleLetzteZeitZeile}).
+	 * Zelle enthaelt am Ende ausschliesslich die numerische Ende-Formel (kein kombinierter Text),
+	 * damit die Zelle als Verkettungs-Anker fuer Folge-Durchgang/-Runde nutzbar bleibt (siehe
+	 * {@link SchweizerAbstractSpielrundeSheet#ermittleLetzteZeitZeile}). Die Ende-Formel referenziert
+	 * dabei die Endzeit-Zelle des VORHERIGEN Blocks + Zeitlimit — NICHT sich selbst, das waere ein
+	 * Calc-Zirkelbezug (Bugfix-Regression).
 	 */
 	@Test
 	public void featureAn_EinzeiligerLetzterDurchgang_EndzeitUeberschreibtStartzeitInDerselbenZelle() throws GenerateException {
@@ -367,10 +373,10 @@ public class SchweizerZeitplanUITest extends BaseCalcUITest {
 		Position endeVorherigerBlock = Position.from(SchweizerAbstractSpielrundeSheet.ZEIT_SPALTE,
 				SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE + 5);
 		String formel = sheetHlp.getFormulaFromCell(runde1, letzteZeile);
-		assertThat(formel).as("Einzeiliger Block: Zelle muss die Ende-Formel enthalten (verweist auf sich selbst + Zeitlimit)")
-				.contains(letzteZeile.getAddress()).contains("Durchgang Zeitlimit (Minuten)");
-		assertThat(formel).as("darf NICHT die urspruengliche Start-Formel (Verweis auf Ende des Vorgaenger-Blocks) sein")
-				.doesNotContain(endeVorherigerBlock.getAddress());
+		assertThat(formel).as("Einzeiliger Block: Ende-Formel muss auf die Endzeit-Zelle des Vorgaenger-Blocks + Zeitlimit verweisen")
+				.contains(endeVorherigerBlock.getAddress()).contains("Durchgang Zeitlimit (Minuten)");
+		assertThat(formel).as("darf NICHT sich selbst referenzieren (Calc-Zirkelbezug)")
+				.doesNotContain(letzteZeile.getAddress());
 	}
 
 	/**

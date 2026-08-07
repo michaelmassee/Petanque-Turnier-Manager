@@ -875,6 +875,182 @@
 					<prop oor:name="Category"><value>Add-In</value></prop>
 				</node>
 
+				<!-- ============================================================ -->
+				<!-- PTM.PLANUNG.* — eigenständiger Planungsrechner (Sheet "Planungsrechner"), -->
+				<!-- Uhrzeiten als "HH:MM"-String, Dauern/Zaehler als Zahl.        -->
+				<!-- ============================================================ -->
+				<node oor:name="ptmplanungdurchgaengeprorunde" oor:op="replace">
+					<prop oor:name="DisplayName">
+						<value xml:lang="en">PTM.PLANUNG.DURCHGAENGE_PRO_RUNDE</value>
+						<value xml:lang="de">PTM.PLANUNG.DURCHGAENGE_PRO_RUNDE</value>
+						<value xml:lang="es">PTM.PLANUNG.DURCHGAENGE_PRO_RUNDE</value>
+						<value xml:lang="fr">PTM.PLANUNG.DURCHGAENGE_PRO_RUNDE</value>
+						<value xml:lang="nl">PTM.PLANUNG.DURCHGAENGE_PRO_RUNDE</value>
+					</prop>
+					<prop oor:name="Description">
+						<value xml:lang="en">Planning calculator: number of heats a round is split into (teams / 2 &gt; courts).</value>
+						<value xml:lang="de">Planungsrechner: Anzahl Durchgänge, in die eine Runde aufgeteilt wird (Teams / 2 &gt; Bahnen).</value>
+						<value xml:lang="es">Calculadora de planificación: número de mangas en que se divide una ronda (equipos / 2 &gt; pistas).</value>
+						<value xml:lang="fr">Calculateur de planification : nombre de manches par tour (équipes / 2 &gt; terrains).</value>
+						<value xml:lang="nl">Planningsrekenmachine: aantal reeksen waarin een ronde wordt opgesplitst (teams / 2 &gt; banen).</value>
+					</prop>
+					<node oor:name="Parameters">
+						<node oor:name="anzTeams" oor:op="replace">
+							<prop oor:name="DisplayName"><value xml:lang="de">Anzahl Teams</value></prop>
+							<prop oor:name="Description"><value xml:lang="de">Gesamtanzahl der Teams (mindestens 2)</value></prop>
+						</node>
+						<node oor:name="anzBahnen" oor:op="replace">
+							<prop oor:name="DisplayName"><value xml:lang="de">Anzahl Bahnen</value></prop>
+							<prop oor:name="Description"><value xml:lang="de">Gleichzeitig bespielbare Bahnen (mindestens 1)</value></prop>
+						</node>
+					</node>
+					<prop oor:name="Category"><value>Add-In</value></prop>
+				</node>
+
+				<node oor:name="ptmplanungzeitlimit" oor:op="replace">
+					<prop oor:name="DisplayName">
+						<value xml:lang="en">PTM.PLANUNG.ZEITLIMIT</value>
+						<value xml:lang="de">PTM.PLANUNG.ZEITLIMIT</value>
+						<value xml:lang="es">PTM.PLANUNG.ZEITLIMIT</value>
+						<value xml:lang="fr">PTM.PLANUNG.ZEITLIMIT</value>
+						<value xml:lang="nl">PTM.PLANUNG.ZEITLIMIT</value>
+					</prop>
+					<prop oor:name="Description">
+						<value xml:lang="en">Planning calculator: time limit per heat (minutes) derived from tournament start/end.</value>
+						<value xml:lang="de">Planungsrechner: Zeitlimit pro Durchgang (Minuten), abgeleitet aus Turnier-Start/-Ende.</value>
+						<value xml:lang="es">Calculadora de planificación: límite de tiempo por manga (minutos) a partir de inicio/fin del torneo.</value>
+						<value xml:lang="fr">Calculateur de planification : limite de temps par manche (minutes) déduite du début/fin du tournoi.</value>
+						<value xml:lang="nl">Planningsrekenmachine: tijdslimiet per reeks (minuten), afgeleid van start/einde toernooi.</value>
+					</prop>
+					<node oor:name="Parameters">
+						<node oor:name="start" oor:op="replace">
+							<prop oor:name="DisplayName"><value xml:lang="de">Start</value></prop>
+							<prop oor:name="Description"><value xml:lang="de">Turnier-Startzeit, Format HH:MM</value></prop>
+						</node>
+						<node oor:name="ende" oor:op="replace">
+							<prop oor:name="DisplayName"><value xml:lang="de">Ende</value></prop>
+							<prop oor:name="Description"><value xml:lang="de">Turnier-Endzeit, Format HH:MM</value></prop>
+						</node>
+						<node oor:name="anzTeams" oor:op="replace">
+							<prop oor:name="DisplayName"><value xml:lang="de">Anzahl Teams</value></prop>
+							<prop oor:name="Description"><value xml:lang="de">Gesamtanzahl der Teams (mindestens 2)</value></prop>
+						</node>
+						<node oor:name="anzBahnen" oor:op="replace">
+							<prop oor:name="DisplayName"><value xml:lang="de">Anzahl Bahnen</value></prop>
+							<prop oor:name="Description"><value xml:lang="de">Gleichzeitig bespielbare Bahnen (mindestens 1)</value></prop>
+						</node>
+						<node oor:name="anzRunden" oor:op="replace">
+							<prop oor:name="DisplayName"><value xml:lang="de">Anzahl Runden</value></prop>
+							<prop oor:name="Description"><value xml:lang="de">Gesamtanzahl der Turnierrunden (mindestens 1)</value></prop>
+						</node>
+						<node oor:name="durchgangPauseMin" oor:op="replace">
+							<prop oor:name="DisplayName"><value xml:lang="de">Durchgang-Pause</value></prop>
+							<prop oor:name="Description"><value xml:lang="de">Pause zwischen zwei Durchgängen derselben Runde, in Minuten</value></prop>
+						</node>
+						<node oor:name="rundenPauseMin" oor:op="replace">
+							<prop oor:name="DisplayName"><value xml:lang="de">Runden-Pause</value></prop>
+							<prop oor:name="Description"><value xml:lang="de">Pause zwischen zwei Runden, in Minuten</value></prop>
+						</node>
+					</node>
+					<prop oor:name="Category"><value>Add-In</value></prop>
+				</node>
+
+				<node oor:name="ptmplanungturnierende" oor:op="replace">
+					<prop oor:name="DisplayName">
+						<value xml:lang="en">PTM.PLANUNG.TURNIER_ENDE</value>
+						<value xml:lang="de">PTM.PLANUNG.TURNIER_ENDE</value>
+						<value xml:lang="es">PTM.PLANUNG.TURNIER_ENDE</value>
+						<value xml:lang="fr">PTM.PLANUNG.TURNIER_ENDE</value>
+						<value xml:lang="nl">PTM.PLANUNG.TURNIER_ENDE</value>
+					</prop>
+					<prop oor:name="Description">
+						<value xml:lang="en">Planning calculator: tournament end time (HH:MM) derived from a given time limit per heat.</value>
+						<value xml:lang="de">Planungsrechner: Turnier-Ende (HH:MM), abgeleitet aus einem vorgegebenen Zeitlimit pro Durchgang.</value>
+						<value xml:lang="es">Calculadora de planificación: fin del torneo (HH:MM) a partir de un límite de tiempo dado.</value>
+						<value xml:lang="fr">Calculateur de planification : fin du tournoi (HH:MM) déduite d'une limite de temps donnée.</value>
+						<value xml:lang="nl">Planningsrekenmachine: einde toernooi (HH:MM), afgeleid van een gegeven tijdslimiet per reeks.</value>
+					</prop>
+					<node oor:name="Parameters">
+						<node oor:name="start" oor:op="replace">
+							<prop oor:name="DisplayName"><value xml:lang="de">Start</value></prop>
+							<prop oor:name="Description"><value xml:lang="de">Turnier-Startzeit, Format HH:MM</value></prop>
+						</node>
+						<node oor:name="anzTeams" oor:op="replace">
+							<prop oor:name="DisplayName"><value xml:lang="de">Anzahl Teams</value></prop>
+							<prop oor:name="Description"><value xml:lang="de">Gesamtanzahl der Teams (mindestens 2)</value></prop>
+						</node>
+						<node oor:name="anzBahnen" oor:op="replace">
+							<prop oor:name="DisplayName"><value xml:lang="de">Anzahl Bahnen</value></prop>
+							<prop oor:name="Description"><value xml:lang="de">Gleichzeitig bespielbare Bahnen (mindestens 1)</value></prop>
+						</node>
+						<node oor:name="anzRunden" oor:op="replace">
+							<prop oor:name="DisplayName"><value xml:lang="de">Anzahl Runden</value></prop>
+							<prop oor:name="Description"><value xml:lang="de">Gesamtanzahl der Turnierrunden (mindestens 1)</value></prop>
+						</node>
+						<node oor:name="durchgangPauseMin" oor:op="replace">
+							<prop oor:name="DisplayName"><value xml:lang="de">Durchgang-Pause</value></prop>
+							<prop oor:name="Description"><value xml:lang="de">Pause zwischen zwei Durchgängen derselben Runde, in Minuten</value></prop>
+						</node>
+						<node oor:name="rundenPauseMin" oor:op="replace">
+							<prop oor:name="DisplayName"><value xml:lang="de">Runden-Pause</value></prop>
+							<prop oor:name="Description"><value xml:lang="de">Pause zwischen zwei Runden, in Minuten</value></prop>
+						</node>
+						<node oor:name="zeitlimitMin" oor:op="replace">
+							<prop oor:name="DisplayName"><value xml:lang="de">Zeitlimit</value></prop>
+							<prop oor:name="Description"><value xml:lang="de">Zeitlimit pro Durchgang, in Minuten</value></prop>
+						</node>
+					</node>
+					<prop oor:name="Category"><value>Add-In</value></prop>
+				</node>
+
+				<node oor:name="ptmplanungzeitplan" oor:op="replace">
+					<prop oor:name="DisplayName">
+						<value xml:lang="en">PTM.PLANUNG.ZEITPLAN</value>
+						<value xml:lang="de">PTM.PLANUNG.ZEITPLAN</value>
+						<value xml:lang="es">PTM.PLANUNG.ZEITPLAN</value>
+						<value xml:lang="fr">PTM.PLANUNG.ZEITPLAN</value>
+						<value xml:lang="nl">PTM.PLANUNG.ZEITPLAN</value>
+					</prop>
+					<prop oor:name="Description">
+						<value xml:lang="en">Planning calculator: full schedule as a 2D array (round, heat, start, end), fixed row count, unused rows blank.</value>
+						<value xml:lang="de">Planungsrechner: kompletter Zeitplan als 2D-Bereich (Runde, Durchgang, Start, Ende), feste Zeilenzahl, überzählige Zeilen leer.</value>
+						<value xml:lang="es">Calculadora de planificación: planificación completa como rango 2D (ronda, manga, inicio, fin), filas sobrantes vacías.</value>
+						<value xml:lang="fr">Calculateur de planification : planning complet en plage 2D (tour, manche, début, fin), lignes excédentaires vides.</value>
+						<value xml:lang="nl">Planningsrekenmachine: compleet schema als 2D-bereik (ronde, reeks, start, einde), overtollige rijen leeg.</value>
+					</prop>
+					<node oor:name="Parameters">
+						<node oor:name="start" oor:op="replace">
+							<prop oor:name="DisplayName"><value xml:lang="de">Start</value></prop>
+							<prop oor:name="Description"><value xml:lang="de">Turnier-Startzeit, Format HH:MM</value></prop>
+						</node>
+						<node oor:name="anzTeams" oor:op="replace">
+							<prop oor:name="DisplayName"><value xml:lang="de">Anzahl Teams</value></prop>
+							<prop oor:name="Description"><value xml:lang="de">Gesamtanzahl der Teams (mindestens 2)</value></prop>
+						</node>
+						<node oor:name="anzBahnen" oor:op="replace">
+							<prop oor:name="DisplayName"><value xml:lang="de">Anzahl Bahnen</value></prop>
+							<prop oor:name="Description"><value xml:lang="de">Gleichzeitig bespielbare Bahnen (mindestens 1)</value></prop>
+						</node>
+						<node oor:name="anzRunden" oor:op="replace">
+							<prop oor:name="DisplayName"><value xml:lang="de">Anzahl Runden</value></prop>
+							<prop oor:name="Description"><value xml:lang="de">Gesamtanzahl der Turnierrunden (mindestens 1)</value></prop>
+						</node>
+						<node oor:name="durchgangPauseMin" oor:op="replace">
+							<prop oor:name="DisplayName"><value xml:lang="de">Durchgang-Pause</value></prop>
+							<prop oor:name="Description"><value xml:lang="de">Pause zwischen zwei Durchgängen derselben Runde, in Minuten</value></prop>
+						</node>
+						<node oor:name="rundenPauseMin" oor:op="replace">
+							<prop oor:name="DisplayName"><value xml:lang="de">Runden-Pause</value></prop>
+							<prop oor:name="Description"><value xml:lang="de">Pause zwischen zwei Runden, in Minuten</value></prop>
+						</node>
+						<node oor:name="zeitlimitMin" oor:op="replace">
+							<prop oor:name="DisplayName"><value xml:lang="de">Zeitlimit</value></prop>
+							<prop oor:name="Description"><value xml:lang="de">Zeitlimit pro Durchgang, in Minuten</value></prop>
+						</node>
+					</node>
+					<prop oor:name="Category"><value>Add-In</value></prop>
+				</node>
+
 				</node>
 		</node>
 	</node>

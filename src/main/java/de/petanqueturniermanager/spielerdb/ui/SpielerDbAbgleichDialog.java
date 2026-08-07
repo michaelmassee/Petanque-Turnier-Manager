@@ -32,6 +32,8 @@ import de.petanqueturniermanager.spielerdb.AbgleichQuelle;
 import de.petanqueturniermanager.spielerdb.AbgleichStatusSenke;
 import de.petanqueturniermanager.spielerdb.AbgleichStatusSenke.AbgleichStatus;
 import de.petanqueturniermanager.spielerdb.AbgleichStatusSenke.ZeilenStatus;
+import de.petanqueturniermanager.spielerdb.LabelDatensatz;
+import de.petanqueturniermanager.spielerdb.LabelRepository;
 import de.petanqueturniermanager.spielerdb.MeldelisteSpielerDaten;
 import de.petanqueturniermanager.spielerdb.SpielerDatensatz;
 import de.petanqueturniermanager.spielerdb.SpielerDbException;
@@ -66,8 +68,12 @@ public final class SpielerDbAbgleichDialog extends AbstractUnoDialog {
     private final VereinRepository vereinRepo;
     private final AbgleichQuelle quelle;
     @Nullable private final AbgleichStatusSenke senke;
+    @Nullable private final LabelRepository labelRepo;
 
     @Nullable private UnoControlsHelper controls;
+
+    /** Reihenfolge entspricht den Items im Label-Dropdown (ab Index 1); Index-1 → Label. */
+    private List<LabelDatensatz> alleLabels = List.of();
 
     /** Fehlend-Liste in Anzeige-Reihenfolge (1:1 zu den Listbox-Einträgen). */
     private List<FehlendeSpielerDaten> fehlend = List.of();
@@ -82,17 +88,19 @@ public final class SpielerDbAbgleichDialog extends AbstractUnoDialog {
     private final Map<String, String> importFehlerKeys = new HashMap<>();
 
     public SpielerDbAbgleichDialog(XComponentContext xContext, SpielerRepository spielerRepo,
-            VereinRepository vereinRepo, AbgleichQuelle quelle) {
-        this(xContext, spielerRepo, vereinRepo, quelle, null);
+            VereinRepository vereinRepo, AbgleichQuelle quelle, @Nullable LabelRepository labelRepo) {
+        this(xContext, spielerRepo, vereinRepo, quelle, null, labelRepo);
     }
 
     public SpielerDbAbgleichDialog(XComponentContext xContext, SpielerRepository spielerRepo,
-            VereinRepository vereinRepo, AbgleichQuelle quelle, @Nullable AbgleichStatusSenke senke) {
+            VereinRepository vereinRepo, AbgleichQuelle quelle, @Nullable AbgleichStatusSenke senke,
+            @Nullable LabelRepository labelRepo) {
         super(xContext);
         this.spielerRepo = spielerRepo;
         this.vereinRepo = vereinRepo;
         this.quelle = quelle;
         this.senke = senke;
+        this.labelRepo = labelRepo;
     }
 
     public void zeigen() throws com.sun.star.uno.Exception {
@@ -127,6 +135,12 @@ public final class SpielerDbAbgleichDialog extends AbstractUnoDialog {
         by += 22;
         c.button("btnImport", I18n.get("spielerdb.abgleich.btn.importieren"),
                 BTN_X, by, BTN_W, BTN_H);
+        by += 32;
+        c.fixedText("lblLabel", I18n.get("spielerdb.abgleich.label.hinweis"),
+                BTN_X, by, BTN_W, KOPF_H);
+        by += 14;
+        ladeAlleLabels();
+        c.dropdownListBox("cmbLabel", labelDropdownItems(), BTN_X, by, BTN_W, BTN_H);
 
         c.button("btnSchliessen", I18n.get("spielerdb.suche.btn.schliessen"),
                 BTN_X, H - 22, BTN_W, BTN_H, (short) PushButtonType.OK_value);
@@ -136,6 +150,43 @@ public final class SpielerDbAbgleichDialog extends AbstractUnoDialog {
         c.registriereActionListener("btnImport", this::beimImport);
 
         ladeFehlende();
+    }
+
+    // ---- Label-Zuordnung ----
+
+    private void ladeAlleLabels() {
+        if (labelRepo == null) {
+            alleLabels = List.of();
+            return;
+        }
+        try {
+            alleLabels = labelRepo.findAll();
+        } catch (SpielerDbException e) {
+            logger.warn("Labels für Abgleich-Dialog laden fehlgeschlagen", e);
+            alleLabels = List.of();
+        }
+    }
+
+    private String[] labelDropdownItems() {
+        String[] items = new String[alleLabels.size() + 1];
+        items[0] = I18n.get("spielerdb.abgleich.label.keins");
+        for (int i = 0; i < alleLabels.size(); i++) {
+            items[i + 1] = alleLabels.get(i).name();
+        }
+        return items;
+    }
+
+    @Nullable
+    private Integer ausgewaehlteLabelNr() {
+        UnoControlsHelper c = this.controls;
+        if (c == null) {
+            return null;
+        }
+        short idx = c.ausgewaehlterIndex("cmbLabel");
+        if (idx <= 0 || idx > alleLabels.size()) {
+            return null;
+        }
+        return alleLabels.get(idx - 1).nr();
     }
 
     // ---- Match-Logik ----
@@ -283,6 +334,8 @@ public final class SpielerDbAbgleichDialog extends AbstractUnoDialog {
         // Cache: Vereinsname (normiert) -> Verein-Nr; vermeidet wiederholte
         // findByName-Lookups innerhalb desselben Import-Vorgangs.
         Map<String, Integer> vereinNrCache = new HashMap<>();
+        Integer labelNr = ausgewaehlteLabelNr();
+        List<Integer> labelNrs = labelNr == null ? List.of() : List.of(labelNr);
         ImportErgebnis erg = new ImportErgebnis();
         for (short idx : indizes) {
             if (idx < 0 || idx >= fehlend.size()) {
@@ -293,7 +346,7 @@ public final class SpielerDbAbgleichDialog extends AbstractUnoDialog {
             try {
                 Integer vereinNr = vereinNrFuer(d.vereinName(), vereinNrCache, erg);
                 spielerRepo.insert(SpielerDatensatz.neu(
-                        d.vorname(), d.nachname(), vereinNr, List.of(), null));
+                        d.vorname(), d.nachname(), vereinNr, labelNrs, null));
                 erg.importiert++;
                 importErfolgKeys.add(key);
                 importFehlerKeys.remove(key);

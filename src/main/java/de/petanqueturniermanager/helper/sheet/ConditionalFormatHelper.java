@@ -59,13 +59,31 @@ public class ConditionalFormatHelper extends BaseHelper {
 
 	/**
 	 * Löscht alle bedingten Formatierungen auf dem angegebenen Bereich, ohne neue hinzuzufügen.
+	 * <p>
+	 * Iteriert zellenweise statt den Bereich als Ganzes zu behandeln: LO liest die Property
+	 * {@code "ConditionalFormat"} für einen Range ueber {@code GetCurrentAttrsDeep()}, das nur dann ein
+	 * auswertbares Ergebnis liefert, wenn die Zell-Attribute (inkl. Conditional-Format-Index) ueber den
+	 * gesamten Range homogen sind. Ueberdeckt der Range mehrere zuvor mit unterschiedlichen Regeln
+	 * belegte Sub-Ranges (z.B. mehrere Bahnnummer-Bloecke), bleibt die zurueckgegebene
+	 * {@code XSheetConditionalEntries} sonst leer und alte Regeln werden faelschlich nicht geloescht.
 	 */
 	public static void clearOnly(ISheet sheet, RangePosition rangePos) {
+		for (int spalte = rangePos.getStartSpalte(); spalte <= rangePos.getEndeSpalte(); spalte++) {
+			for (int zeile = rangePos.getStartZeile(); zeile <= rangePos.getEndeZeile(); zeile++) {
+				clearOnlyEinzelzelle(sheet, RangePosition.from(spalte, zeile, spalte, zeile));
+			}
+		}
+	}
+
+	private static void clearOnlyEinzelzelle(ISheet sheet, RangePosition zelle) {
 		try {
-			XPropertySet xPropSet = RangeHelper.from(sheet, rangePos).getPropertySet();
+			XPropertySet xPropSet = RangeHelper.from(sheet, zelle).getPropertySet();
 			com.sun.star.sheet.XSheetConditionalEntries xEntries = Lo.qi(
 					com.sun.star.sheet.XSheetConditionalEntries.class,
 					xPropSet.getPropertyValue("ConditionalFormat"));
+			if (xEntries == null) {
+				return;
+			}
 			xEntries.clear();
 			// LO verwirft setPropertyValue("ConditionalFormat") lautlos bei tab-geschütztem Sheet
 			BlattschutzManager.get().ensureUnprotectedInScope();

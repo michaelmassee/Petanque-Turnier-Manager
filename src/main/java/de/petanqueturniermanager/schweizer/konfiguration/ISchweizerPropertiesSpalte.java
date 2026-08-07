@@ -3,6 +3,7 @@
  */
 package de.petanqueturniermanager.schweizer.konfiguration;
 
+import de.petanqueturniermanager.basesheet.konfiguration.IZeitplanPropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeGeradeStyle;
@@ -13,7 +14,8 @@ import de.petanqueturniermanager.supermelee.SpielRundeNr;
  * @author Michael Massee
  *
  */
-public interface ISchweizerPropertiesSpalte extends de.petanqueturniermanager.basesheet.konfiguration.IFreispielPropertiesSpalte {
+public interface ISchweizerPropertiesSpalte extends de.petanqueturniermanager.basesheet.konfiguration.IFreispielPropertiesSpalte,
+		IZeitplanPropertiesSpalte {
 
 	String getKopfZeileLinks();
 
@@ -34,8 +36,6 @@ public interface ISchweizerPropertiesSpalte extends de.petanqueturniermanager.ba
 	SpielrundeHintergrundFarbeUnGeradeStyle getSpielRundeHintergrundFarbeUnGeradeStyle();
 
 	Integer getSpielRundeHeaderFarbe();
-
-	SpielrundeSpielbahn getSpielrundeSpielbahn();
 
 	void setSpielrundeSpielbahn(SpielrundeSpielbahn option);
 
@@ -58,32 +58,5 @@ public interface ISchweizerPropertiesSpalte extends de.petanqueturniermanager.ba
 	SchweizerRankingModus getRankingModus();
 
 	void setRankingModus(SchweizerRankingModus modus);
-
-	boolean isZeitplanAktiv();
-
-	void setZeitplanAktiv(boolean aktiv);
-
-	int getZeitplanAnzahlBahnen();
-
-	void setZeitplanAnzahlBahnen(int bahnen);
-
-	/** {@code isZeitplanAktiv() && getZeitplanAnzahlBahnen() > 0} — steuert die Durchgang-Aufteilung innerhalb einer Runde. */
-	boolean isDurchgangAufteilungWirksam();
-
-	int getZeitplanZeitlimitMinuten();
-
-	void setZeitplanZeitlimitMinuten(int minuten);
-
-	int getZeitplanDurchgangPauseMinuten();
-
-	void setZeitplanDurchgangPauseMinuten(int minuten);
-
-	int getZeitplanRundenPauseMinuten();
-
-	void setZeitplanRundenPauseMinuten(int minuten);
-
-	String getZeitplanTurnierStartzeit();
-
-	void setZeitplanTurnierStartzeit(String hhMm);
 
 }

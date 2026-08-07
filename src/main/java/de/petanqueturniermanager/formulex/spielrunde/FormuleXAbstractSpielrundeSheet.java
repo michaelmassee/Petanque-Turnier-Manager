@@ -36,6 +36,8 @@ import de.petanqueturniermanager.algorithmen.formulex.FormuleXErgebnis;
 import de.petanqueturniermanager.algorithmen.formulex.FormuleXRanglisteRechner;
 import de.petanqueturniermanager.algorithmen.formulex.FormuleXTeamErgebnis;
 import de.petanqueturniermanager.basesheet.SheetTabFarben;
+import de.petanqueturniermanager.basesheet.konfiguration.IZeitplanPropertiesSpalte;
+import de.petanqueturniermanager.basesheet.spielrunde.IZeitplanSpielrundeSheet;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeFooterHelper;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeHelper;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
@@ -44,7 +46,6 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.formulex.konfiguration.FormuleXKonfigurationSheet;
 import de.petanqueturniermanager.formulex.meldeliste.FormuleXMeldeListeSheetUpdate;
 import de.petanqueturniermanager.helper.ColorHelper;
-import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeUnGeradeStyle;
@@ -79,7 +80,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
  * Verwaltet Spaltenstruktur, Sheet-Formatierung und das Einlesen gespielter Runden.
  * Subklassen implementieren die konkrete Spielrunden-Logik (Nächste / Aktualisieren).
  */
-public abstract class FormuleXAbstractSpielrundeSheet extends SheetRunner implements ISheet {
+public abstract class FormuleXAbstractSpielrundeSheet extends SheetRunner implements IZeitplanSpielrundeSheet {
 
     private static final Logger LOGGER = LogManager.getLogger(FormuleXAbstractSpielrundeSheet.class);
 
@@ -95,7 +96,14 @@ public abstract class FormuleXAbstractSpielrundeSheet extends SheetRunner implem
     public static final int TEAM_B_SPALTE = TEAM_A_SPALTE + 1;
     public static final int ERG_TEAM_A_SPALTE = TEAM_B_SPALTE + 1;
     public static final int ERG_TEAM_B_SPALTE = ERG_TEAM_A_SPALTE + 1;
-    public static final int FEHLER_SPALTE = ERG_TEAM_B_SPALTE + 1;
+    /**
+     * Nur befuellt bei aktiver Rundenzeitplanung (isDurchgangAufteilungWirksam), sonst leer.
+     * Siehe {@link de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrundeSheet#ZEIT_SPALTE}
+     * fuer die identische Semantik (Durchgang-Start-/Endzeit, Durchgaenge optisch per Trennlinie
+     * statt Text-Label unterschieden).
+     */
+    public static final int ZEIT_SPALTE = ERG_TEAM_B_SPALTE + 1;
+    public static final int FEHLER_SPALTE = ZEIT_SPALTE + 1;
 
     private static final int MIN_MELDUNGEN = 4;
 
@@ -127,11 +135,13 @@ public abstract class FormuleXAbstractSpielrundeSheet extends SheetRunner implem
                 getSpielrundeSchluessel(rundeNr.getNr()), getLegacySheetName(rundeNr));
     }
 
-    protected String getSpielrundeSchluessel(int rundeNr) {
+    @Override
+    public String getSpielrundeSchluessel(int rundeNr) {
         return SheetMetadataHelper.SCHLUESSEL_FORMULEX_SPIELRUNDE_PREFIX + rundeNr;
     }
 
-    protected String getSheetName(SpielRundeNr nr) {
+    @Override
+    public String getSheetName(SpielRundeNr nr) {
         return SheetNamen.formulexSpielrunde(nr.getNr());
     }
 
@@ -144,8 +154,39 @@ public abstract class FormuleXAbstractSpielrundeSheet extends SheetRunner implem
         return TurnierSheet.from(getXSpreadSheet(), getWorkingSpreadsheet());
     }
 
+    @Override
     public final SpielRundeNr getSpielRundeNr() throws GenerateException {
         return getKonfigurationSheet().getAktiveSpielRunde();
+    }
+
+    @Override
+    public int getErsteHeaderZeile() {
+        return ERSTE_HEADER_ZEILE;
+    }
+
+    @Override
+    public int getZweiteHeaderZeile() {
+        return ZWEITE_HEADER_ZEILE;
+    }
+
+    @Override
+    public int getErsteDatenZeile() {
+        return ERSTE_DATEN_ZEILE;
+    }
+
+    @Override
+    public int getBahnNrSpalte() {
+        return BAHN_NR_SPALTE;
+    }
+
+    @Override
+    public int getZeitSpalte() {
+        return ZEIT_SPALTE;
+    }
+
+    @Override
+    public int getNrCharHeight() {
+        return NR_CHARHEIGHT;
     }
 
     public SpielRundeNr getSpielRundeNrInSheet() {
@@ -375,10 +416,12 @@ public abstract class FormuleXAbstractSpielrundeSheet extends SheetRunner implem
 
         teamPaarungenEinfuegen(paarungen);
         datenErsteSpalte();
+        bahnNummerierungProDurchgangFallsAktiv(paarungen.size());
         datenformatieren();
         fehlerSpalteFormatieren();
         header();
         trennlinienSetzen();
+        durchgangTrennlinienSetzen(paarungen.size());
         druckBereichSetzen();
         SheetFreeze.from(getTurnierSheet()).anzZeilen(ERSTE_DATEN_ZEILE).doFreeze();
 
@@ -409,6 +452,8 @@ public abstract class FormuleXAbstractSpielrundeSheet extends SheetRunner implem
 
         Position startPos = Position.from(TEAM_A_SPALTE, ERSTE_DATEN_ZEILE);
         RangeHelper.from(this, rangeData.getRangePosition(startPos)).setDataInRange(rangeData);
+
+        durchgangInfoSpaltenSchreiben(paarungen.size());
     }
 
     private void datenErsteSpalte() throws GenerateException {
@@ -543,6 +588,8 @@ public abstract class FormuleXAbstractSpielrundeSheet extends SheetRunner implem
         headerValueZeile2.setValue(I18n.get("schweizer.spielrunde.spalte.ergebnis")).spaltePlus(1)
                 .setEndPosMergeSpaltePlus(1);
         getSheetHelper().setStringValueInCell(headerValueZeile2);
+
+        rundenStartzeitFeld();
     }
 
     private void fehlerSpalteFormatieren() throws GenerateException {
@@ -606,8 +653,10 @@ public abstract class FormuleXAbstractSpielrundeSheet extends SheetRunner implem
         if (letztePos == null) {
             return;
         }
+        // Bei aktiver Zeitplanung wird der Druckbereich bis ZEIT_SPALTE erweitert (ohne FEHLER_SPALTE).
+        int letzteDruckSpalte = getKonfigurationSheet().isZeitplanAktiv() ? ZEIT_SPALTE : ERG_TEAM_B_SPALTE;
         RangePosition druckBereich = RangePosition.from(BAHN_NR_SPALTE, ERSTE_HEADER_ZEILE,
-                Position.from(ERG_TEAM_B_SPALTE, letztePos.getZeile()));
+                Position.from(letzteDruckSpalte, letztePos.getZeile()));
         PrintArea.from(getXSpreadSheet(), getWorkingSpreadsheet()).setPrintArea(druckBereich);
         SpielrundeFooterHelper.schreibeFooterUndErweitereDruckbereich(this, getXSpreadSheet(), getWorkingSpreadsheet());
     }

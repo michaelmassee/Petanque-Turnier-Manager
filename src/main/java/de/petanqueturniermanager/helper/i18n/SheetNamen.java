@@ -44,6 +44,7 @@ public final class SheetNamen {
     public static final String KEY_CHECKIN_LISTE                    = "sheet.name.checkin.liste";
     public static final String KEY_TEILNEHMER                       = "sheet.name.teilnehmer";
     public static final String KEY_SIEGERGELD                       = "sheet.name.siegergeld";
+    public static final String KEY_PLANUNGSRECHNER                  = "sheet.name.planungsrechner";
     public static final String KEY_POULE_VORRUNDE                   = "sheet.name.poule.vorrunde";
     public static final String KEY_POULE_TEILNEHMER                 = "sheet.name.poule.teilnehmer";
     public static final String KEY_POULE_VORRUNDEN_RANGLISTE        = "sheet.name.poule.vorrunden.rangliste";
@@ -115,6 +116,7 @@ public final class SheetNamen {
     public static final String LEGACY_CHECKIN_LISTE                 = "Checkin Liste";
     public static final String LEGACY_TEILNEHMER                    = "Teilnehmer";
     public static final String LEGACY_SIEGERGELD                    = "Siegergeld";
+    public static final String LEGACY_PLANUNGSRECHNER               = "Planungsrechner";
     public static final String LEGACY_KO_TURNIERBAUM_EINZEL         = "KO Turnierbaum";
     public static final String LEGACY_SPIELRUNDE_PRAEFIX            = "Spielrunde";
     public static final String LEGACY_SPIELRUNDE_PLAN_PRAEFIX       = "SpielrundePlan";
@@ -159,6 +161,10 @@ public final class SheetNamen {
 
     public static String siegergeld() {
         return getOderFallback(KEY_SIEGERGELD, LEGACY_SIEGERGELD);
+    }
+
+    public static String planungsrechner() {
+        return getOderFallback(KEY_PLANUNGSRECHNER, LEGACY_PLANUNGSRECHNER);
     }
 
     public static String spielplan() {

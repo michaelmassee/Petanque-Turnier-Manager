@@ -56,6 +56,7 @@ public class SheetMetadataHelper {
     /** Exakter Schlüssel für das turniersystemübergreifende Teilnehmer-Sheet (je Turnier genau eines). */
     public static final String SCHLUESSEL_TEILNEHMER = "__PTM_TEILNEHMER__";
     public static final String SCHLUESSEL_SIEGERGELD = "__PTM_SIEGERGELD__";
+    public static final String SCHLUESSEL_PLANUNGSRECHNER = "__PTM_PLANUNGSRECHNER__";
 
     // ── Konstanten: bereits vorhanden ────────────────────────────────────────
 

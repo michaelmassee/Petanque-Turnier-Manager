@@ -65,10 +65,12 @@ import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
+import de.petanqueturniermanager.helper.cellvalue.properties.ICommonProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.RowProperties;
 import de.petanqueturniermanager.helper.position.FillAutoPosition;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.sheet.numberformat.NumberFormatHelper;
 
 // welcher service ???
 // https://www.openoffice.org/api/docs/common/ref/com/sun/star/lang/XComponent-xref.html
@@ -753,6 +755,17 @@ public class SheetHelper {
 
 	public void setProperties(XPropertySet xPropSet, CellProperties properties) {
 		properties.forEach((key, value) -> setProperty(xPropSet, key, value));
+
+		// Sonderbehandelung fuer NumberFormat, analog XPropertyHelper#setProperties: userNumberFormat
+		// wird nicht in die Property-Map eingetragen, sondern muss erst per NumberFormatHelper in
+		// einen Format-Index im Dokument aufgeloest werden.
+		if (properties.getUserNumberFormat() != null) {
+			int idx = NumberFormatHelper.from(currentSpreadsheet.getWorkingSpreadsheetDocument())
+					.getIdx(properties.getUserNumberFormat());
+			if (idx > -1) {
+				setProperty(xPropSet, ICommonProperties.NUMBERFORMAT, Integer.valueOf(idx));
+			}
+		}
 	}
 
 	public void setProperties(XPropertySet xPropSet, Map<String, Object> properties) {

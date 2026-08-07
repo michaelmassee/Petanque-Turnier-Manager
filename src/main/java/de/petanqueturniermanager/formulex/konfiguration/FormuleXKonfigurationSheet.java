@@ -6,6 +6,7 @@ package de.petanqueturniermanager.formulex.konfiguration;
 import de.petanqueturniermanager.basesheet.konfiguration.BaseKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.konfiguration.IFreispielPropertiesSpalte;
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
+import de.petanqueturniermanager.basesheet.konfiguration.IZeitplanPropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
@@ -21,7 +22,8 @@ import de.petanqueturniermanager.supermelee.SpielRundeNr;
 /**
  * Konfigurationssheet für das Formule X Turniersystem.
  */
-public class FormuleXKonfigurationSheet extends BaseKonfigurationSheet implements IFreispielPropertiesSpalte {
+public class FormuleXKonfigurationSheet extends BaseKonfigurationSheet
+        implements IFreispielPropertiesSpalte, IZeitplanPropertiesSpalte {
 
     private final FormuleXPropertiesSpalte propertiesSpalte;
 
@@ -86,6 +88,7 @@ public class FormuleXKonfigurationSheet extends BaseKonfigurationSheet implement
         propertiesSpalte.setAnzahlRunden(anzahl);
     }
 
+    @Override
     public SpielrundeSpielbahn getSpielrundeSpielbahn() {
         return propertiesSpalte.getSpielrundeSpielbahn();
     }
@@ -146,5 +149,70 @@ public class FormuleXKonfigurationSheet extends BaseKonfigurationSheet implement
     @Override
     public Integer getFreispielPunkteMinus() {
         return propertiesSpalte.getFreispielPunkteMinus();
+    }
+
+    @Override
+    public boolean isZeitplanAktiv() {
+        return propertiesSpalte.isZeitplanAktiv();
+    }
+
+    @Override
+    public void setZeitplanAktiv(boolean aktiv) {
+        propertiesSpalte.setZeitplanAktiv(aktiv);
+    }
+
+    @Override
+    public int getZeitplanAnzahlBahnen() {
+        return propertiesSpalte.getZeitplanAnzahlBahnen();
+    }
+
+    @Override
+    public void setZeitplanAnzahlBahnen(int bahnen) {
+        propertiesSpalte.setZeitplanAnzahlBahnen(bahnen);
+    }
+
+    @Override
+    public boolean isDurchgangAufteilungWirksam() {
+        return propertiesSpalte.isDurchgangAufteilungWirksam();
+    }
+
+    @Override
+    public int getZeitplanZeitlimitMinuten() {
+        return propertiesSpalte.getZeitplanZeitlimitMinuten();
+    }
+
+    @Override
+    public void setZeitplanZeitlimitMinuten(int minuten) {
+        propertiesSpalte.setZeitplanZeitlimitMinuten(minuten);
+    }
+
+    @Override
+    public int getZeitplanDurchgangPauseMinuten() {
+        return propertiesSpalte.getZeitplanDurchgangPauseMinuten();
+    }
+
+    @Override
+    public void setZeitplanDurchgangPauseMinuten(int minuten) {
+        propertiesSpalte.setZeitplanDurchgangPauseMinuten(minuten);
+    }
+
+    @Override
+    public int getZeitplanRundenPauseMinuten() {
+        return propertiesSpalte.getZeitplanRundenPauseMinuten();
+    }
+
+    @Override
+    public void setZeitplanRundenPauseMinuten(int minuten) {
+        propertiesSpalte.setZeitplanRundenPauseMinuten(minuten);
+    }
+
+    @Override
+    public String getZeitplanTurnierStartzeit() {
+        return propertiesSpalte.getZeitplanTurnierStartzeit();
+    }
+
+    @Override
+    public void setZeitplanTurnierStartzeit(String hhMm) {
+        propertiesSpalte.setZeitplanTurnierStartzeit(hhMm);
     }
 }
