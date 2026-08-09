@@ -38,6 +38,8 @@ public final class WhatsAppBridgeSetup {
 	private static final Logger logger = LogManager.getLogger(WhatsAppBridgeSetup.class);
 
 	static final String NODE_VERSION = System.getProperty("ptm.whatsapp.node.version", "22.22.2");
+	// von @whiskeysockets/baileys per "engines" in package-lock.json gefordert
+	private static final int MIN_NODE_MAJOR_VERSION = 20;
 	private static final String DOWNLOAD_BASE_URL = System.getProperty("ptm.whatsapp.node.download.baseUrl",
 			"https://nodejs.org/dist");
 	private static final Duration VERSION_CHECK_TIMEOUT = Duration.ofSeconds(5);
@@ -253,16 +255,32 @@ public final class WhatsAppBridgeSetup {
 		builder.redirectErrorStream(true);
 		try {
 			Process process = builder.start();
-			if (!process.waitFor(VERSION_CHECK_TIMEOUT.toSeconds(), TimeUnit.SECONDS)) {
-				process.destroyForcibly();
+			TimeoutWaechter waechter = new TimeoutWaechter(process, VERSION_CHECK_TIMEOUT);
+			String ausgabe = liesAusgabe(process.getInputStream());
+			process.waitFor();
+			waechter.stoppen();
+			if (waechter.zeitUeberschritten() || process.exitValue() != 0) {
 				return false;
 			}
-			return process.exitValue() == 0;
+			return erfuelltNodeMindestversion(ausgabe);
 		} catch (IOException e) {
 			logger.debug("Node-Kandidat konnte nicht gestartet werden: {}", node, e);
 			return false;
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
+			return false;
+		}
+	}
+
+	static boolean erfuelltNodeMindestversion(String versionsAusgabe) {
+		String ersteZeile = versionsAusgabe.lines().findFirst().orElse("").trim();
+		String ohnePraefix = ersteZeile.startsWith("v") ? ersteZeile.substring(1) : ersteZeile;
+		int punkt = ohnePraefix.indexOf('.');
+		String major = punkt >= 0 ? ohnePraefix.substring(0, punkt) : ohnePraefix;
+		try {
+			return Integer.parseInt(major) >= MIN_NODE_MAJOR_VERSION;
+		} catch (NumberFormatException e) {
+			logger.debug("Node-Version konnte nicht ermittelt werden aus: '{}'", versionsAusgabe);
 			return false;
 		}
 	}

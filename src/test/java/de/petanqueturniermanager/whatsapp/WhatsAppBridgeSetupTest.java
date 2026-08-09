@@ -21,6 +21,24 @@ class WhatsAppBridgeSetupTest {
 	Path tempDir;
 
 	@Test
+	void erfuelltNodeMindestversion_akzeptiertUnterstuetzteVersion() {
+		assertThat(WhatsAppBridgeSetup.erfuelltNodeMindestversion("v22.22.2")).isTrue();
+		assertThat(WhatsAppBridgeSetup.erfuelltNodeMindestversion("v20.0.0")).isTrue();
+	}
+
+	@Test
+	void erfuelltNodeMindestversion_lehntZuAlteVersionAb() {
+		assertThat(WhatsAppBridgeSetup.erfuelltNodeMindestversion("v18.20.4")).isFalse();
+		assertThat(WhatsAppBridgeSetup.erfuelltNodeMindestversion("v16.20.2")).isFalse();
+	}
+
+	@Test
+	void erfuelltNodeMindestversion_lehntUnlesbareAusgabeAb() {
+		assertThat(WhatsAppBridgeSetup.erfuelltNodeMindestversion("")).isFalse();
+		assertThat(WhatsAppBridgeSetup.erfuelltNodeMindestversion("command not found")).isFalse();
+	}
+
+	@Test
 	void fehlendesNodeLoestSetupDialogAus() {
 		assertThatThrownBy(() -> WhatsAppBridgeSetup.nodePfadOderSetupNoetig(tempDir, ""))
 				.isInstanceOf(WhatsAppBridgeSetupRequiredException.class)
