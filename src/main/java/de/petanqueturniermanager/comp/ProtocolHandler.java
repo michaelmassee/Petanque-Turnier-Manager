@@ -1512,7 +1512,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	private void starteWhatsAppPost(WorkingSpreadsheet ws, WhatsAppAktion aktion) throws GenerateException {
 		TurnierSystem ts = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();
 		if (ts == TurnierSystem.KEIN) {
-			return;
+			throw new GenerateException(I18n.get("msg.text.kein.turnier"));
 		}
 		new WhatsAppPostRunner(ws, ts, aktion).testTurnierVorhanden().start();
 	}
