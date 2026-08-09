@@ -9,7 +9,9 @@ import de.petanqueturniermanager.helper.i18n.I18n;
 public enum WhatsAppAktion {
 	TEILNEHMER("TEILNEHMER", "whatsapp.aktion.teilnehmer"),
 	SPIELRUNDE("AKTUELLE_SPIELRUNDE", "whatsapp.aktion.spielrunde"),
-	RANGLISTE("RANGLISTE", "whatsapp.aktion.rangliste");
+	RANGLISTE("RANGLISTE", "whatsapp.aktion.rangliste"),
+	AKTUELLES_BLATT(null, "whatsapp.aktion.aktuelles.blatt"),
+	SELEKTION(null, "whatsapp.aktion.selektion");
 
 	private final String resolverKey;
 	private final String i18nKey;

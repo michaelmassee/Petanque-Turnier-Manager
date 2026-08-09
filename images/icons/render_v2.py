@@ -40,6 +40,7 @@ TIMER = [
 ]
 WHATSAPP = [
     "toolbar-whatsapp-teilnehmer", "toolbar-whatsapp-spielrunde", "toolbar-whatsapp-rangliste",
+    "toolbar-whatsapp-blatt", "toolbar-whatsapp-selektion",
 ]
 
 ALL = HAUPT + SPIELTAG + TIMER + WHATSAPP
@@ -75,6 +76,8 @@ LABELS = {
     "toolbar-whatsapp-teilnehmer": ("WA Teilnehmerliste",  "ptm:toolbar_whatsapp_teilnehmer_posten"),
     "toolbar-whatsapp-spielrunde": ("WA Spielrunde",       "ptm:toolbar_whatsapp_spielrunde_posten"),
     "toolbar-whatsapp-rangliste": ("WA Rangliste",        "ptm:toolbar_whatsapp_rangliste_posten"),
+    "toolbar-whatsapp-blatt":     ("WA Aktuelles Blatt",  "ptm:toolbar_whatsapp_blatt_posten"),
+    "toolbar-whatsapp-selektion": ("WA Selektion",        "ptm:toolbar_whatsapp_selektion_posten"),
 }
 
 

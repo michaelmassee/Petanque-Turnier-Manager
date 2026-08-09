@@ -68,6 +68,36 @@
                     <prop oor:name="Target" oor:type="xs:string"><value>_self</value></prop>
                     <prop oor:name="Context" oor:type="xs:string"><value>com.sun.star.sheet.SpreadsheetDocument</value></prop>
                 </node>
+
+                <node oor:name="m4" oor:op="replace">
+                    <prop oor:name="URL" oor:type="xs:string">
+                        <value>ptm:toolbar_whatsapp_blatt_posten</value>
+                    </prop>
+                    <prop oor:name="Title">
+                        <value xml:lang="de">Aktuelles Blatt posten</value>
+                        <value xml:lang="en">Post current sheet</value>
+                        <value xml:lang="es">Publicar hoja actual</value>
+                        <value xml:lang="fr">Publier la feuille actuelle</value>
+                        <value xml:lang="nl">Huidig blad plaatsen</value>
+                    </prop>
+                    <prop oor:name="Target" oor:type="xs:string"><value>_self</value></prop>
+                    <prop oor:name="Context" oor:type="xs:string"><value>com.sun.star.sheet.SpreadsheetDocument</value></prop>
+                </node>
+
+                <node oor:name="m5" oor:op="replace">
+                    <prop oor:name="URL" oor:type="xs:string">
+                        <value>ptm:toolbar_whatsapp_selektion_posten</value>
+                    </prop>
+                    <prop oor:name="Title">
+                        <value xml:lang="de">Selektion posten</value>
+                        <value xml:lang="en">Post selection</value>
+                        <value xml:lang="es">Publicar selección</value>
+                        <value xml:lang="fr">Publier la sélection</value>
+                        <value xml:lang="nl">Selectie plaatsen</value>
+                    </prop>
+                    <prop oor:name="Target" oor:type="xs:string"><value>_self</value></prop>
+                    <prop oor:name="Context" oor:type="xs:string"><value>com.sun.star.sheet.SpreadsheetDocument</value></prop>
+                </node>
             </node>
         </node>
 
@@ -108,6 +138,32 @@
                     </prop>
                     <prop oor:name="ImageBigURL" oor:type="xs:string">
                         <value>%origin%/images/24/toolbar-whatsapp-rangliste.png</value>
+                    </prop>
+                </node>
+            </node>
+            <node oor:name="de.petanqueturniermanager.toolbar.whatsapp.blatt" oor:op="replace">
+                <prop oor:name="URL" oor:type="xs:string">
+                    <value>ptm:toolbar_whatsapp_blatt_posten</value>
+                </prop>
+                <node oor:name="UserDefinedImages">
+                    <prop oor:name="ImageSmallURL" oor:type="xs:string">
+                        <value>%origin%/images/16/toolbar-whatsapp-blatt.png</value>
+                    </prop>
+                    <prop oor:name="ImageBigURL" oor:type="xs:string">
+                        <value>%origin%/images/24/toolbar-whatsapp-blatt.png</value>
+                    </prop>
+                </node>
+            </node>
+            <node oor:name="de.petanqueturniermanager.toolbar.whatsapp.selektion" oor:op="replace">
+                <prop oor:name="URL" oor:type="xs:string">
+                    <value>ptm:toolbar_whatsapp_selektion_posten</value>
+                </prop>
+                <node oor:name="UserDefinedImages">
+                    <prop oor:name="ImageSmallURL" oor:type="xs:string">
+                        <value>%origin%/images/16/toolbar-whatsapp-selektion.png</value>
+                    </prop>
+                    <prop oor:name="ImageBigURL" oor:type="xs:string">
+                        <value>%origin%/images/24/toolbar-whatsapp-selektion.png</value>
                     </prop>
                 </node>
             </node>

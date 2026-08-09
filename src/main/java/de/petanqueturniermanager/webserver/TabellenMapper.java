@@ -98,6 +98,28 @@ public class TabellenMapper {
         }
     }
 
+    /**
+     * Mappt das übergebene Sheet auf den explizit vorgegebenen Bereich statt auf den
+     * automatisch ermittelten Druckbereich (z.B. für den WhatsApp-Export der aktuellen
+     * Zellauswahl).
+     *
+     * @param sheet             anzuzeigendes Sheet
+     * @param doc                Dokument, aus dem der PageStyle gelesen wird
+     * @param expliziterBereich zu rendernder Zellbereich
+     * @return TabelleModel mit Grid, Zellen, Spaltenbreiten, Zeilenhöhen und Kopf-/Fußzeile
+     */
+    public TabelleModel map(XSpreadsheet sheet, XSpreadsheetDocument doc, CellRangeAddress expliziterBereich) {
+        try {
+            if (expliziterBereich == null) {
+                return leeresModell();
+            }
+            return mapBereich(sheet, doc, expliziterBereich);
+        } catch (Exception e) {
+            logger.error("Fehler beim Mappen des Sheets mit explizitem Bereich", e);
+            return leeresModell();
+        }
+    }
+
     private TabelleModel mapBereich(XSpreadsheet sheet, XSpreadsheetDocument doc, CellRangeAddress bereich) {
         int numZeilen = bereich.EndRow - bereich.StartRow + 1;
         int numSpalten = bereich.EndColumn - bereich.StartColumn + 1;

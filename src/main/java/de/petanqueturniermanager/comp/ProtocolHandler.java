@@ -484,6 +484,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_TOOLBAR_WHATSAPP_TEILNEHMER_POSTEN = "toolbar_whatsapp_teilnehmer_posten";
 	public static final String CMD_TOOLBAR_WHATSAPP_SPIELRUNDE_POSTEN = "toolbar_whatsapp_spielrunde_posten";
 	public static final String CMD_TOOLBAR_WHATSAPP_RANGLISTE_POSTEN = "toolbar_whatsapp_rangliste_posten";
+	public static final String CMD_TOOLBAR_WHATSAPP_BLATT_POSTEN = "toolbar_whatsapp_blatt_posten";
+	public static final String CMD_TOOLBAR_WHATSAPP_SELEKTION_POSTEN = "toolbar_whatsapp_selektion_posten";
 	public static final String CMD_SIDEBAR_TOGGLE               = "sidebar_toggle";
 	/** Deck-ID der PétTurnMngr-Seitenleiste, siehe registry/.../UI/Sidebar.xcu. */
 	private static final String SIDEBAR_DECK_ID = "PetanqueTurnierManagerDeck";
@@ -1298,6 +1300,12 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_TOOLBAR_WHATSAPP_RANGLISTE_POSTEN:
 				starteWhatsAppPost(ws, WhatsAppAktion.RANGLISTE);
 				break;
+			case CMD_TOOLBAR_WHATSAPP_BLATT_POSTEN:
+				starteWhatsAppPost(ws, WhatsAppAktion.AKTUELLES_BLATT);
+				break;
+			case CMD_TOOLBAR_WHATSAPP_SELEKTION_POSTEN:
+				starteWhatsAppPost(ws, WhatsAppAktion.SELEKTION);
+				break;
 			default:
 				ProcessBox.from().fehler("ungueltige Aktion " + command);
 				logger.warn("Unbekannter Befehl: {}", command);
@@ -2028,7 +2036,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			// Z5 WhatsAppToolbar
 			CMD_TOOLBAR_WHATSAPP_TEILNEHMER_POSTEN,
 			CMD_TOOLBAR_WHATSAPP_SPIELRUNDE_POSTEN,
-			CMD_TOOLBAR_WHATSAPP_RANGLISTE_POSTEN);
+			CMD_TOOLBAR_WHATSAPP_RANGLISTE_POSTEN,
+			CMD_TOOLBAR_WHATSAPP_BLATT_POSTEN,
+			CMD_TOOLBAR_WHATSAPP_SELEKTION_POSTEN);
 
 	private static boolean isEnabled(String command, XSpreadsheetDocument document) {
 		if (SheetRunner.isRunning()) {
@@ -2211,7 +2221,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_KI_NEUES_TURNIER                       -> true;
 			case CMD_TOOLBAR_WHATSAPP_TEILNEHMER_POSTEN,
 				 CMD_TOOLBAR_WHATSAPP_SPIELRUNDE_POSTEN,
-				 CMD_TOOLBAR_WHATSAPP_RANGLISTE_POSTEN       -> ts != TurnierSystem.KEIN;
+				 CMD_TOOLBAR_WHATSAPP_RANGLISTE_POSTEN,
+				 CMD_TOOLBAR_WHATSAPP_BLATT_POSTEN,
+				 CMD_TOOLBAR_WHATSAPP_SELEKTION_POSTEN       -> ts != TurnierSystem.KEIN;
 			case CMD_TURNIER_MODUS                          -> true;
 			case CMD_SPIELERDB_OEFFNEN,
 				 CMD_SPIELERDB_VEREINE,

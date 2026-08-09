@@ -10,8 +10,14 @@ import java.nio.file.Path;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.sun.star.container.XIndexAccess;
 import com.sun.star.container.XNamed;
+import com.sun.star.lang.IndexOutOfBoundsException;
+import com.sun.star.lang.WrappedTargetException;
+import com.sun.star.sheet.XCellRangeAddressable;
 import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.table.CellRangeAddress;
+import com.sun.star.view.XSelectionSupplier;
 
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -52,11 +58,9 @@ public class WhatsAppBildExportService {
 		if (aktion == WhatsAppAktion.RANGLISTE) {
 			WhatsAppRanglisteAktualisierer.aktualisiereWennNoetig(ws, ts);
 		}
-		XSpreadsheet sheet = SheetResolverFactory.erstellen(aktion.resolverKey()).resolve(ws)
-				.orElseThrow(() -> new GenerateException(I18n.get("whatsapp.post.fehler.kein.blatt",
-						aktion.titel(ts))));
+		XSpreadsheet sheet = ermittleSheet(aktion, ts, ws);
 		String sheetName = sheetName(sheet);
-		TabelleModel model = TABELLEN_MAPPER.map(sheet, ws.getWorkingSpreadsheetDocument());
+		TabelleModel model = mappeModell(aktion, ws, sheet);
 		if (model.getZeilen() == 0 || model.getSpalten() == 0) {
 			throw new GenerateException(I18n.get("whatsapp.post.fehler.kein.blatt", aktion.titel(ts)));
 		}
@@ -70,6 +74,72 @@ public class WhatsAppBildExportService {
 			throw new GenerateException(e.getMessage());
 		}
 		return new ExportiertesBild(sheetName, pngDatei, png);
+	}
+
+	private static XSpreadsheet ermittleSheet(WhatsAppAktion aktion, TurnierSystem ts, WorkingSpreadsheet ws)
+			throws GenerateException {
+		if (aktion == WhatsAppAktion.AKTUELLES_BLATT || aktion == WhatsAppAktion.SELEKTION) {
+			return aktivesSheet(ws);
+		}
+		return SheetResolverFactory.erstellen(aktion.resolverKey()).resolve(ws)
+				.orElseThrow(() -> new GenerateException(I18n.get("whatsapp.post.fehler.kein.blatt",
+						aktion.titel(ts))));
+	}
+
+	private static TabelleModel mappeModell(WhatsAppAktion aktion, WorkingSpreadsheet ws, XSpreadsheet sheet)
+			throws GenerateException {
+		if (aktion == WhatsAppAktion.SELEKTION) {
+			CellRangeAddress bereich = aktuelleSelektion(ws);
+			if (bereich == null) {
+				throw new GenerateException(I18n.get("whatsapp.post.fehler.keine.selektion"));
+			}
+			return TABELLEN_MAPPER.map(sheet, ws.getWorkingSpreadsheetDocument(), bereich);
+		}
+		return TABELLEN_MAPPER.map(sheet, ws.getWorkingSpreadsheetDocument());
+	}
+
+	private static XSpreadsheet aktivesSheet(WorkingSpreadsheet ws) {
+		return ws.getWorkingSpreadsheetView().getActiveSheet();
+	}
+
+	private static CellRangeAddress aktuelleSelektion(WorkingSpreadsheet ws) {
+		XSelectionSupplier selectionSupplier = Lo.qi(XSelectionSupplier.class, ws.getWorkingSpreadsheetView());
+		if (selectionSupplier == null) {
+			return null;
+		}
+		Object selektion = selectionSupplier.getSelection();
+		XCellRangeAddressable einzelBereich = Lo.qi(XCellRangeAddressable.class, selektion);
+		if (einzelBereich != null) {
+			return einzelBereich.getRangeAddress();
+		}
+		XIndexAccess mehrfachBereiche = Lo.qi(XIndexAccess.class, selektion);
+		if (mehrfachBereiche == null) {
+			return null;
+		}
+		CellRangeAddress vereinigt = null;
+		for (int i = 0; i < mehrfachBereiche.getCount(); i++) {
+			try {
+				XCellRangeAddressable teilBereich = Lo.qi(XCellRangeAddressable.class, mehrfachBereiche.getByIndex(i));
+				if (teilBereich == null) {
+					continue;
+				}
+				vereinigt = vereinigt == null ? teilBereich.getRangeAddress()
+						: vereinigen(vereinigt, teilBereich.getRangeAddress());
+			} catch (IndexOutOfBoundsException | WrappedTargetException e) {
+				logger.debug("Teilbereich der Selektion nicht lesbar", e);
+			}
+		}
+		return vereinigt;
+	}
+
+	private static CellRangeAddress vereinigen(CellRangeAddress a, CellRangeAddress b) {
+		var box = new CellRangeAddress();
+		box.Sheet = a.Sheet;
+		box.StartColumn = Math.min(a.StartColumn, b.StartColumn);
+		box.StartRow = Math.min(a.StartRow, b.StartRow);
+		box.EndColumn = Math.max(a.EndColumn, b.EndColumn);
+		box.EndRow = Math.max(a.EndRow, b.EndRow);
+		return box;
 	}
 
 	private static String sheetName(XSpreadsheet sheet) throws GenerateException {

@@ -496,6 +496,31 @@ ICONS["toolbar-whatsapp-rangliste"] = svg(f'''
   """)}
 ''')
 
+# ============================================================
+# 28. WHATSAPP AKTUELLES BLATT — Chat-Bubble + Tabellen-Badge (posten des aktiven Blatts)
+# ============================================================
+ICONS["toolbar-whatsapp-blatt"] = svg(f'''
+  {whatsapp_bubble()}
+  {whatsapp_badge(C['screen'], f"""
+  <rect x="44" y="44" width="12" height="12" fill="none" stroke="{C['paper']}" stroke-width="{S*1.3}"/>
+  <line x1="50" y1="44" x2="50" y2="56" stroke="{C['paper']}" stroke-width="{S*1.1}"/>
+  <line x1="44" y1="50" x2="56" y2="50" stroke="{C['paper']}" stroke-width="{S*1.1}"/>
+  """)}
+''')
+
+# ============================================================
+# 29. WHATSAPP SELEKTION — Chat-Bubble + Auswahlrahmen-Badge (posten der Zellauswahl)
+# ============================================================
+ICONS["toolbar-whatsapp-selektion"] = svg(f'''
+  {whatsapp_bubble()}
+  {whatsapp_badge(C['stop'], f"""
+  <rect x="44" y="44" width="12" height="12" fill="none" stroke="{C['paper']}"
+        stroke-width="{S*1.3}" stroke-dasharray="3 2"/>
+  <circle cx="44" cy="44" r="1.6" fill="{C['paper']}"/>
+  <circle cx="56" cy="56" r="1.6" fill="{C['paper']}"/>
+  """)}
+''')
+
 
 # ============================================================
 # SCHREIBEN
