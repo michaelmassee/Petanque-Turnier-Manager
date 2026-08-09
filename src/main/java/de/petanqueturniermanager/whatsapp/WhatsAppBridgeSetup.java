@@ -89,15 +89,15 @@ public final class WhatsAppBridgeSetup {
 	}
 
 	static Path installierePortableNode(Consumer<Schritt> fortschritt) throws WhatsAppBridgeException {
-		Path vorhandenerNode = findeNodeInRuntime(WhatsAppBridgeManager.userConfigDir());
-		if (vorhandenerNode != null) {
-			return vorhandenerNode;
-		}
-		NodePaket paket = paketFuerAktuellePlattform();
-		Path runtimeDir = runtimeDir();
-		Path zielDir = runtimeDir.resolve(paket.rootVerzeichnis());
-		Path node = zielDir.resolve(paket.executableRelativ());
 		try {
+			Path vorhandenerNode = findeNodeInRuntime(WhatsAppBridgeManager.userConfigDir());
+			if (vorhandenerNode != null) {
+				return vorhandenerNode;
+			}
+			NodePaket paket = paketFuerAktuellePlattform();
+			Path runtimeDir = runtimeDir();
+			Path zielDir = runtimeDir.resolve(paket.rootVerzeichnis());
+			Path node = zielDir.resolve(paket.executableRelativ());
 			Files.createDirectories(runtimeDir);
 			Path download = runtimeDir.resolve(paket.dateiname());
 			fortschritt(fortschritt, Schritt.NODE_DOWNLOAD);
@@ -116,6 +116,8 @@ public final class WhatsAppBridgeSetup {
 			return node;
 		} catch (IOException e) {
 			throw new WhatsAppBridgeException("Portable Node.js konnte nicht installiert werden: " + e.getMessage(), e);
+		} catch (IllegalStateException e) {
+			throw new WhatsAppBridgeException(e.getMessage(), e);
 		}
 	}
 
