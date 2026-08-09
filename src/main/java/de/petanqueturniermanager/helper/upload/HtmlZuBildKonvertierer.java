@@ -39,9 +39,11 @@ public class HtmlZuBildKonvertierer {
     /**
      * Großzügige @page-Breite in CSS-px, weit über jedem realistischen Druckbereich (z.B. A0
      * hochkant sind ~3179 CSS-px) – wird nach dem Rendern wieder auf den Inhalt zugeschnitten,
-     * die genaue Größe spielt daher keine Rolle, solange sie ausreicht.
+     * die genaue Größe spielt daher keine Rolle, solange sie ausreicht. Nur die Breite braucht
+     * diesen Puffer: die Java2D-Engine im Single-Page-Modus bestimmt die Rasterhöhe bereits aus
+     * dem tatsächlichen Inhalt (siehe Klassen-Doku), unabhängig von diesem Wert.
      */
-    private static final int GROSSZUEGIGE_SEITENBREITE_PX = 8000;
+    private static final int GROSSZUEGIGE_SEITENBREITE_PX = 3500;
 
     private HtmlZuBildKonvertierer() {
     }
