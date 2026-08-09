@@ -93,7 +93,11 @@ public class WhatsAppBildExportService {
 			if (bereich == null) {
 				throw new GenerateException(I18n.get("whatsapp.post.fehler.keine.selektion"));
 			}
-			return TABELLEN_MAPPER.map(sheet, ws.getWorkingSpreadsheetDocument(), bereich);
+			CellRangeAddress geklemmterBereich = TABELLEN_MAPPER.clipAufUsedArea(sheet, bereich);
+			if (geklemmterBereich == null) {
+				throw new GenerateException(I18n.get("whatsapp.post.fehler.keine.selektion"));
+			}
+			return TABELLEN_MAPPER.map(sheet, ws.getWorkingSpreadsheetDocument(), geklemmterBereich);
 		}
 		return TABELLEN_MAPPER.map(sheet, ws.getWorkingSpreadsheetDocument());
 	}
@@ -102,7 +106,7 @@ public class WhatsAppBildExportService {
 		return ws.getWorkingSpreadsheetView().getActiveSheet();
 	}
 
-	private static CellRangeAddress aktuelleSelektion(WorkingSpreadsheet ws) {
+	private static CellRangeAddress aktuelleSelektion(WorkingSpreadsheet ws) throws GenerateException {
 		XSelectionSupplier selectionSupplier = Lo.qi(XSelectionSupplier.class, ws.getWorkingSpreadsheetView());
 		if (selectionSupplier == null) {
 			return null;
@@ -113,33 +117,19 @@ public class WhatsAppBildExportService {
 			return einzelBereich.getRangeAddress();
 		}
 		XIndexAccess mehrfachBereiche = Lo.qi(XIndexAccess.class, selektion);
-		if (mehrfachBereiche == null) {
+		if (mehrfachBereiche == null || mehrfachBereiche.getCount() == 0) {
 			return null;
 		}
-		CellRangeAddress vereinigt = null;
-		for (int i = 0; i < mehrfachBereiche.getCount(); i++) {
-			try {
-				XCellRangeAddressable teilBereich = Lo.qi(XCellRangeAddressable.class, mehrfachBereiche.getByIndex(i));
-				if (teilBereich == null) {
-					continue;
-				}
-				vereinigt = vereinigt == null ? teilBereich.getRangeAddress()
-						: vereinigen(vereinigt, teilBereich.getRangeAddress());
-			} catch (IndexOutOfBoundsException | WrappedTargetException e) {
-				logger.debug("Teilbereich der Selektion nicht lesbar", e);
-			}
+		if (mehrfachBereiche.getCount() > 1) {
+			throw new GenerateException(I18n.get("whatsapp.post.fehler.mehrfachselektion"));
 		}
-		return vereinigt;
-	}
-
-	private static CellRangeAddress vereinigen(CellRangeAddress a, CellRangeAddress b) {
-		var box = new CellRangeAddress();
-		box.Sheet = a.Sheet;
-		box.StartColumn = Math.min(a.StartColumn, b.StartColumn);
-		box.StartRow = Math.min(a.StartRow, b.StartRow);
-		box.EndColumn = Math.max(a.EndColumn, b.EndColumn);
-		box.EndRow = Math.max(a.EndRow, b.EndRow);
-		return box;
+		try {
+			XCellRangeAddressable teilBereich = Lo.qi(XCellRangeAddressable.class, mehrfachBereiche.getByIndex(0));
+			return teilBereich != null ? teilBereich.getRangeAddress() : null;
+		} catch (IndexOutOfBoundsException | WrappedTargetException e) {
+			logger.debug("Teilbereich der Selektion nicht lesbar", e);
+			return null;
+		}
 	}
 
 	private static String sheetName(XSpreadsheet sheet) throws GenerateException {

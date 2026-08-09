@@ -480,6 +480,7 @@ tasks.register('buildOXT', Zip) {
     // Node.js und node_modules werden bei Bedarf lokal im Benutzerprofil eingerichtet.
     from('tools/whatsapp-bridge') {
         include 'package.json'
+        include 'package-lock.json'
         include 'server.js'
         into 'tools/whatsapp-bridge'
     }

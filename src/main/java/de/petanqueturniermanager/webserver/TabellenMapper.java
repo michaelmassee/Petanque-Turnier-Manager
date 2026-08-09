@@ -120,6 +120,52 @@ public class TabellenMapper {
         }
     }
 
+    /**
+     * Klemmt einen (z.B. vom Nutzer selektierten) Bereich auf die Used-Area des Sheets.
+     * <p>
+     * Ohne dieses Klemmen könnte eine ganze Spalten-/Zeilen-/Blatt-Selektion bis zu
+     * 1.048.576 Zeilen umfassen und {@link #mapBereich} beim zellweisen Iterieren einfrieren
+     * lassen. Der reguläre Vollblatt-Export ({@link #map(XSpreadsheet, XSpreadsheetDocument)})
+     * hat dieses Problem nicht, weil {@link #ermittleDruckbereich} bereits auf die Used-Area
+     * zurückfällt — dieselbe Absicherung wird hier für explizit übergebene Bereiche nachgebildet.
+     *
+     * @param sheet   Sheet, dessen Used-Area als Grenze dient
+     * @param bereich zu klemmender Bereich
+     * @return Schnittmenge aus {@code bereich} und Used-Area, oder {@code null} falls keine Überlappung
+     *         besteht bzw. die Used-Area nicht ermittelbar ist
+     */
+    public CellRangeAddress clipAufUsedArea(XSpreadsheet sheet, CellRangeAddress bereich) {
+        CellRangeAddress usedArea = ermittleUsedArea(sheet);
+        if (usedArea == null) {
+            return null;
+        }
+        return schneide(bereich, usedArea);
+    }
+
+    /**
+     * Berechnet die Schnittmenge zweier Zellbereiche (reine Arithmetik, kein UNO-Zugriff).
+     *
+     * @param a erster Bereich
+     * @param b zweiter Bereich
+     * @return Schnittbereich, oder {@code null} falls sich {@code a} und {@code b} nicht überlappen
+     */
+    static CellRangeAddress schneide(CellRangeAddress a, CellRangeAddress b) {
+        int startRow = Math.max(a.StartRow, b.StartRow);
+        int endRow = Math.min(a.EndRow, b.EndRow);
+        int startColumn = Math.max(a.StartColumn, b.StartColumn);
+        int endColumn = Math.min(a.EndColumn, b.EndColumn);
+        if (startRow > endRow || startColumn > endColumn) {
+            return null;
+        }
+        var schnitt = new CellRangeAddress();
+        schnitt.Sheet = a.Sheet;
+        schnitt.StartRow = startRow;
+        schnitt.EndRow = endRow;
+        schnitt.StartColumn = startColumn;
+        schnitt.EndColumn = endColumn;
+        return schnitt;
+    }
+
     private TabelleModel mapBereich(XSpreadsheet sheet, XSpreadsheetDocument doc, CellRangeAddress bereich) {
         int numZeilen = bereich.EndRow - bereich.StartRow + 1;
         int numSpalten = bereich.EndColumn - bereich.StartColumn + 1;
