@@ -21,11 +21,13 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.whatsapp.WhatsAppChatAuswahlDialog.WhatsAppPostAuswahl;
 
 public class WhatsAppPostRunner extends SheetRunner {
 
 	private static final Logger logger = LogManager.getLogger(WhatsAppPostRunner.class);
 	private static final String PROP_LETZTER_WHATSAPP_CHAT = "WhatsApp Letzter Chat";
+	private static final String PROP_WHATSAPP_KOPF_FUSSZEILE = "WhatsApp Kopf Fusszeile";
 
 	private final WhatsAppAktion aktion;
 
@@ -50,18 +52,21 @@ public class WhatsAppPostRunner extends SheetRunner {
 
 		var docPropHelper = new DocumentPropertiesHelper(getWorkingSpreadsheet());
 		String letzterChatId = docPropHelper.getStringProperty(PROP_LETZTER_WHATSAPP_CHAT, "");
-		WhatsAppChatEintrag chat = WhatsAppChatAuswahlDialog
-				.zeigen(getWorkingSpreadsheet(), chats, letzterChatId)
+		boolean letzteKopfFusszeileWahl = docPropHelper.getBooleanProperty(PROP_WHATSAPP_KOPF_FUSSZEILE, false);
+		WhatsAppPostAuswahl auswahl = WhatsAppChatAuswahlDialog
+				.zeigen(getWorkingSpreadsheet(), chats, letzterChatId, letzteKopfFusszeileWahl)
 				.orElse(null);
-		if (chat == null) {
+		if (auswahl == null) {
 			throw new GenerateException(I18n.get("whatsapp.post.abgebrochen"));
 		}
+		WhatsAppChatEintrag chat = auswahl.chat();
 		docPropHelper.setStringProperty(PROP_LETZTER_WHATSAPP_CHAT, chat.id());
+		docPropHelper.setBooleanProperty(PROP_WHATSAPP_KOPF_FUSSZEILE, auswahl.mitKopfFusszeile());
 
 		Path tempVerzeichnis = tempVerzeichnis();
 		try {
 			var bild = new WhatsAppBildExportService(getWorkingSpreadsheet())
-					.exportiere(aktion, getTurnierSystem(), tempVerzeichnis);
+					.exportiere(aktion, getTurnierSystem(), tempVerzeichnis, auswahl.mitKopfFusszeile());
 			String caption = I18n.get("whatsapp.post.caption", aktion.titel(getTurnierSystem()), bild.sheetName());
 			WhatsAppBridgeManager.starteOderVerbinde().sendeBild(chat.chatId(), caption, bild.bytes());
 			processBox().info(I18n.get("whatsapp.post.erfolg", chat.anzeigeName()));

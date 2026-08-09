@@ -15,6 +15,7 @@ import com.sun.star.awt.ActionEvent;
 import com.sun.star.awt.PushButtonType;
 import com.sun.star.awt.XActionListener;
 import com.sun.star.awt.XButton;
+import com.sun.star.awt.XCheckBox;
 import com.sun.star.awt.XControlContainer;
 import com.sun.star.awt.XDialog;
 import com.sun.star.awt.XListBox;
@@ -42,26 +43,31 @@ public final class WhatsAppChatAuswahlDialog extends AbstractUnoDialog {
 	private final WorkingSpreadsheet ws;
 	private final List<WhatsAppChatEintrag> chats;
 	private final String letzterChatId;
+	private final boolean kopfFusszeileVorauswahl;
 
 	private XControlContainer xcc;
 	private XDialog xDialog;
 	private WhatsAppChatEintrag ausgewaehlt;
+	private boolean kopfFusszeileAusgewaehlt;
 
-	private WhatsAppChatAuswahlDialog(WorkingSpreadsheet ws, List<WhatsAppChatEintrag> chats, String letzterChatId) {
+	private WhatsAppChatAuswahlDialog(WorkingSpreadsheet ws, List<WhatsAppChatEintrag> chats, String letzterChatId,
+			boolean kopfFusszeileVorauswahl) {
 		super(ws.getxContext());
 		this.ws = ws;
 		this.chats = chats;
 		this.letzterChatId = letzterChatId;
+		this.kopfFusszeileVorauswahl = kopfFusszeileVorauswahl;
 	}
 
-	public static Optional<WhatsAppChatEintrag> zeigen(WorkingSpreadsheet ws, List<WhatsAppChatEintrag> chats,
-			String letzterChatId) throws GenerateException {
-		var future = new CompletableFuture<Optional<WhatsAppChatEintrag>>();
+	public static Optional<WhatsAppPostAuswahl> zeigen(WorkingSpreadsheet ws, List<WhatsAppChatEintrag> chats,
+			String letzterChatId, boolean kopfFusszeileVorauswahl) throws GenerateException {
+		var future = new CompletableFuture<Optional<WhatsAppPostAuswahl>>();
 		LoMainThread.post(ws.getxContext(), () -> {
 			try {
-				var dialog = new WhatsAppChatAuswahlDialog(ws, chats, letzterChatId);
+				var dialog = new WhatsAppChatAuswahlDialog(ws, chats, letzterChatId, kopfFusszeileVorauswahl);
 				dialog.erstelleUndAusfuehren();
-				future.complete(Optional.ofNullable(dialog.ausgewaehlt));
+				future.complete(Optional.ofNullable(dialog.ausgewaehlt)
+						.map(chat -> new WhatsAppPostAuswahl(chat, dialog.kopfFusszeileAusgewaehlt)));
 			} catch (Exception e) {
 				logger.error("Fehler im WhatsApp-Chat-Auswahl-Dialog", e);
 				future.completeExceptionally(e);
@@ -78,6 +84,10 @@ public final class WhatsAppChatAuswahlDialog extends AbstractUnoDialog {
 		}
 	}
 
+	/** Ergebnis des Dialogs: ausgewählter Chat plus Kopf-/Fußzeile-Checkbox-Zustand. */
+	record WhatsAppPostAuswahl(WhatsAppChatEintrag chat, boolean mitKopfFusszeile) {
+	}
+
 	@Override
 	protected String getTitel() {
 		return I18n.get("whatsapp.chat.auswahl.dialog.titel");
@@ -90,7 +100,7 @@ public final class WhatsAppChatAuswahlDialog extends AbstractUnoDialog {
 
 	@Override
 	protected int getHoehe() {
-		return 95;
+		return 102;
 	}
 
 	@Override
@@ -106,9 +116,11 @@ public final class WhatsAppChatAuswahlDialog extends AbstractUnoDialog {
 		this.xcc = Lo.qi(XControlContainer.class, dialog);
 		label(xMSF, cont, "lblChat", I18n.get("whatsapp.chat.auswahl.dialog.label"), 8, 8, 224, 10);
 		String[] items = chats.stream().map(WhatsAppChatAuswahlDialog::anzeigeZeile).toArray(String[]::new);
-		listBox(xMSF, cont, "lstChat", items, vorauswahl(), 8, 20, 224, 45);
-		button(xMSF, cont, "btnOk", I18n.get("dialog.ok"), 52, 70, 55, 14, (short) PushButtonType.STANDARD_value);
-		button(xMSF, cont, "btnAbbrechen", I18n.get("dialog.abbrechen"), 117, 70, 75, 14,
+		listBox(xMSF, cont, "lstChat", items, vorauswahl(), 8, 20, 224, 40);
+		checkBox(xMSF, cont, "chkKopfFusszeile", I18n.get("whatsapp.chat.auswahl.dialog.kopf.fusszeile"),
+				kopfFusszeileVorauswahl, 8, 63, 224, 10);
+		button(xMSF, cont, "btnOk", I18n.get("dialog.ok"), 52, 80, 55, 14, (short) PushButtonType.STANDARD_value);
+		button(xMSF, cont, "btnAbbrechen", I18n.get("dialog.abbrechen"), 117, 80, 75, 14,
 				(short) PushButtonType.CANCEL_value);
 		registriereOkButton();
 	}
@@ -153,6 +165,13 @@ public final class WhatsAppChatAuswahlDialog extends AbstractUnoDialog {
 				ausgewaehlt = chats.get(pos);
 			}
 		}
+		var checkCtrl = xcc.getControl("chkKopfFusszeile");
+		if (checkCtrl != null) {
+			XCheckBox checkBox = Lo.qi(XCheckBox.class, checkCtrl);
+			if (checkBox != null) {
+				kopfFusszeileAusgewaehlt = checkBox.getState() != 0;
+			}
+		}
 		xDialog.endExecute();
 	}
 
@@ -186,6 +205,20 @@ public final class WhatsAppChatAuswahlDialog extends AbstractUnoDialog {
 		if (items.length > 0) {
 			props.setPropertyValue("SelectedItems", new short[] { (short) Math.max(0, vorauswahl) });
 		}
+		cont.insertByName(name, model);
+	}
+
+	private static void checkBox(XMultiServiceFactory xMSF, XNameContainer cont,
+			String name, String label, boolean checked, int x, int y, int w, int h)
+			throws com.sun.star.uno.Exception {
+		var model = xMSF.createInstance("com.sun.star.awt.UnoControlCheckBoxModel");
+		var props = Lo.qi(XPropertySet.class, model);
+		props.setPropertyValue("Label", label);
+		props.setPropertyValue("PositionX", x);
+		props.setPropertyValue("PositionY", y);
+		props.setPropertyValue("Width", w);
+		props.setPropertyValue("Height", h);
+		props.setPropertyValue("State", (short) (checked ? 1 : 0));
 		cont.insertByName(name, model);
 	}
 

@@ -144,6 +144,40 @@ class HtmlZuBildKonvertiererTest {
                 .isEqualTo(Color.RED);
     }
 
+    /**
+     * Kopf-/Fußzeile werden als {@code <caption>}/{@code <tfoot>} gerendert statt als einfacher
+     * {@code <div>}, weil ein block-level {@code <div>} in der bewusst überbreiten (~8000px)
+     * Body-Einbettung von {@link HtmlZuBildKonvertierer} auf volle Seitenbreite gestreckt würde –
+     * der 1:1-Zuschnitt hätte dann ein riesiges, fast leeres Bild erzeugt. Dieser Test rendert eine
+     * schmale Tabelle mit Kopf-/Fußzeile und stellt sicher, dass das Bild an der Tabellenbreite
+     * bleibt statt an der Seitenbreite.
+     */
+    @Test
+    void kopfUndFusszeileBleibenAnTabellenbreiteGebunden() throws Exception {
+        var stil = new StyleModel(false, false, ROT, null, null, null,
+                1, 1, 0, false, null, 0, null, null, null, null);
+        var gitterZeile = List.of("cell-0-0", "cell-0-1", "cell-0-2");
+        Map<String, ZelleModel> zellen = new LinkedHashMap<>();
+        Map<Integer, Integer> spaltenBreiten = new LinkedHashMap<>();
+        for (int c = 0; c < 3; c++) {
+            String id = "cell-0-" + c;
+            zellen.put(id, new ZelleModel(id, "Zelle " + c, stil));
+            spaltenBreiten.put(c, 2000);
+        }
+        var model = new TabelleModel(1, 3, List.of(gitterZeile), zellen,
+                spaltenBreiten, Map.of(0, 600), 0, 0, 0,
+                "Links", "Mitte", "Rechts", "FussLinks", "FussMitte", "FussRechts");
+
+        String fragment = TabelleHtmlRenderer.fuerPdf().render(model, true);
+        byte[] png = HtmlZuBildKonvertierer.konvertiere(fragment, "");
+        BufferedImage bild = ImageIO.read(new ByteArrayInputStream(png));
+        assertThat(bild).isNotNull();
+        // Erwartete Tabellenbreite liegt im niedrigen dreistelligen Pixelbereich; bei einem Bug
+        // (caption/tfoot auf volle 8000px-Seitenbreite gestreckt) wäre die Breite ca. 14000px.
+        assertThat(bild.getWidth()).isLessThan(1000);
+        assertRechteKanteIstRot(bild);
+    }
+
     private void assertRechteKanteIstRot(BufferedImage bild) {
         int letztePixelSpalte = bild.getWidth() - 1;
         Color pixel = new Color(bild.getRGB(letztePixelSpalte, bild.getHeight() / 2), false);

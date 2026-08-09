@@ -182,6 +182,48 @@ class TabelleHtmlRendererTest {
     }
 
     @Test
+    void mitKopfFusszeileTrueUndText_RendertKopfUndFusszeile() {
+        var model = einspaltigesModellMitKopfFusszeile("cell-0-0", "Text", standardStil(),
+                "Links", "Mitte", "Rechts", "FussLinks", "FussMitte", "FussRechts");
+        var html = renderer.render(model, true);
+        assertThat(html).contains("Links").contains("Mitte").contains("Rechts");
+        assertThat(html).contains("<tfoot>").contains("FussLinks").contains("FussMitte")
+                .contains("FussRechts").contains("</tfoot>");
+        // Kopfzeile steht in einer eigenen führenden <tbody> nach colgroup, vor dem eigentlichen Inhalt
+        assertThat(html.indexOf("<colgroup>")).isLessThan(html.indexOf("Links"));
+        assertThat(html.indexOf("Links")).isLessThan(html.indexOf(">Text<"));
+        // tfoot muss im Markup vor der eigentlichen Daten-tbody stehen (klassisches (X)HTML-Tabellenmodell)
+        assertThat(html.indexOf("<tfoot>")).isLessThan(html.lastIndexOf("<tbody>"));
+    }
+
+    @Test
+    void mitKopfFusszeileTrueAberLeer_RendertWederZusatzzeileNochTfoot() {
+        var model = einspaltigesModell("cell-0-0", "Text", standardStil());
+        var html = renderer.render(model, true);
+        assertThat(html).doesNotContain("<tfoot>");
+        assertThat(html.split("<tbody>", -1)).hasSize(2); // genau eine (die Daten-)tbody
+    }
+
+    @Test
+    void ohneFlag_IgnoriertGesetzteKopfFusszeile() {
+        var model = einspaltigesModellMitKopfFusszeile("cell-0-0", "Text", standardStil(),
+                "Links", "Mitte", "Rechts", "FussLinks", "FussMitte", "FussRechts");
+        var html = renderer.render(model);
+        assertThat(html).doesNotContain("<tfoot>").doesNotContain("Links").doesNotContain("FussLinks");
+    }
+
+    @Test
+    void mitKopfFusszeile_ErzeugtWohlgeformtesXml() throws Exception {
+        var model = einspaltigesModellMitKopfFusszeile("cell-0-0", "<script>alert(1)</script>", standardStil(),
+                "Links", "Mitte", "Rechts", "FussLinks", "FussMitte", "FussRechts");
+        var html = renderer.render(model, true);
+        var builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+        assertThatCode(() -> builder.parse(new InputSource(new StringReader(html))))
+                .doesNotThrowAnyException();
+        assertThat(html).doesNotContain("<script>");
+    }
+
+    @Test
     void zeilenumbruchTrue_RendertNormal() {
         var stil = new StyleModel(false, false, null, null, null, null,
                 1, 1, 0, true, null, 0, null, null, null, null);
@@ -198,6 +240,16 @@ class TabelleHtmlRendererTest {
         return new TabelleModel(1, 1, gitter, Map.of(id, zelle),
                 Map.of(0, 2000), Map.of(0, 600),
                 0, 0, 0, "", "", "", "", "", "");
+    }
+
+    private TabelleModel einspaltigesModellMitKopfFusszeile(String id, String wert, StyleModel stil,
+            String kopfLinks, String kopfMitte, String kopfRechts,
+            String fussLinks, String fussMitte, String fussRechts) {
+        var zelle = zelleModel(id, wert, stil);
+        var gitter = List.of(List.of(id));
+        return new TabelleModel(1, 1, gitter, Map.of(id, zelle),
+                Map.of(0, 2000), Map.of(0, 600),
+                0, 0, 0, kopfLinks, kopfMitte, kopfRechts, fussLinks, fussMitte, fussRechts);
     }
 
     private TabelleModel modellMit(List<List<String>> gitter) {

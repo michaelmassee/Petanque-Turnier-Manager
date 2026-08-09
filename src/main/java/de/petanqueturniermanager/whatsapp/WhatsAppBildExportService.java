@@ -53,8 +53,8 @@ public class WhatsAppBildExportService {
 		this.ws = ws;
 	}
 
-	public ExportiertesBild exportiere(WhatsAppAktion aktion, TurnierSystem ts, Path zielVerzeichnis)
-			throws GenerateException {
+	public ExportiertesBild exportiere(WhatsAppAktion aktion, TurnierSystem ts, Path zielVerzeichnis,
+			boolean mitKopfFusszeile) throws GenerateException {
 		if (aktion == WhatsAppAktion.RANGLISTE) {
 			WhatsAppRanglisteAktualisierer.aktualisiereWennNoetig(ws, ts);
 		}
@@ -64,7 +64,7 @@ public class WhatsAppBildExportService {
 		if (model.getZeilen() == 0 || model.getSpalten() == 0) {
 			throw new GenerateException(I18n.get("whatsapp.post.fehler.kein.blatt", aktion.titel(ts)));
 		}
-		String tabelleFragment = TABELLE_HTML_RENDERER.render(model);
+		String tabelleFragment = TABELLE_HTML_RENDERER.render(model, mitKopfFusszeile);
 		byte[] png = HtmlZuBildKonvertierer.konvertiere(tabelleFragment, zielVerzeichnis.toUri().toString());
 		Path pngDatei = zielVerzeichnis.resolve(sheetName + ".png");
 		try {
