@@ -1,0 +1,126 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<oor:component-data oor:package="org.openoffice.Office" oor:name="Addons" xmlns:oor="http://openoffice.org/2001/registry" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<node oor:name="AddonUI">
+		<node oor:name="OfficeMenuBar">
+			<node oor:name="de.petanqueturniermanager.menubar" oor:op="fuse">
+				<prop oor:name="Title" oor:type="xs:string">
+					<value xml:lang="de">PétTurnMngr</value>
+					<value xml:lang="en">PétTurnMngr</value>
+					<value xml:lang="es">PétTurnMngr</value>
+					<value xml:lang="fr">PétTurnMngr</value>
+					<value xml:lang="nl">PétTurnMngr</value>
+				</prop>
+				<prop oor:name="Context" oor:type="xs:string">
+					<value>com.sun.star.sheet.SpreadsheetDocument</value>
+				</prop>
+				<node oor:name="Submenu">
+					<!-- ****************************************************************** -->
+					<!-- WhatsApp -->
+					<!-- ****************************************************************** -->
+					<node oor:name="X8" oor:op="replace">
+						<prop oor:name="Title">
+							<value xml:lang="de">WhatsApp</value>
+							<value xml:lang="en">WhatsApp</value>
+							<value xml:lang="es">WhatsApp</value>
+							<value xml:lang="fr">WhatsApp</value>
+							<value xml:lang="nl">WhatsApp</value>
+						</prop>
+						<prop oor:name="Target" oor:type="xs:string">
+							<value>_self</value>
+						</prop>
+						<node oor:name="Submenu">
+							<!-- ****************************************************************** -->
+							<node oor:name="X8A" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Teilnehmerliste posten</value>
+									<value xml:lang="en">Post participant list</value>
+									<value xml:lang="es">Publicar lista de participantes</value>
+									<value xml:lang="fr">Publier la liste des participants</value>
+									<value xml:lang="nl">Deelnemerslijst plaatsen</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:toolbar_whatsapp_teilnehmer_posten</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+							<!-- ****************************************************************** -->
+							<node oor:name="X8B" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Aktuelle Spielrunde posten</value>
+									<value xml:lang="en">Post current round</value>
+									<value xml:lang="es">Publicar ronda actual</value>
+									<value xml:lang="fr">Publier la ronde actuelle</value>
+									<value xml:lang="nl">Actuele speelronde plaatsen</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:toolbar_whatsapp_spielrunde_posten</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+							<!-- ****************************************************************** -->
+							<node oor:name="X8C" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Rangliste posten</value>
+									<value xml:lang="en">Post ranking</value>
+									<value xml:lang="es">Publicar clasificación</value>
+									<value xml:lang="fr">Publier le classement</value>
+									<value xml:lang="nl">Ranglijst plaatsen</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:toolbar_whatsapp_rangliste_posten</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+							<!-- ****************************************************************** -->
+							<node oor:name="X8D" oor:op="replace">
+								<prop oor:name="URL" oor:type="xs:string">
+									<value>private:separator</value>
+								</prop>
+							</node>
+							<!-- ****************************************************************** -->
+							<node oor:name="X8E" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Aktuelles Blatt posten</value>
+									<value xml:lang="en">Post current sheet</value>
+									<value xml:lang="es">Publicar hoja actual</value>
+									<value xml:lang="fr">Publier la feuille actuelle</value>
+									<value xml:lang="nl">Huidig blad plaatsen</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:toolbar_whatsapp_blatt_posten</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+							<!-- ****************************************************************** -->
+							<node oor:name="X8F" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Selektion posten</value>
+									<value xml:lang="en">Post selection</value>
+									<value xml:lang="es">Publicar selección</value>
+									<value xml:lang="fr">Publier la sélection</value>
+									<value xml:lang="nl">Selectie plaatsen</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:toolbar_whatsapp_selektion_posten</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+						</node>
+					</node>
+
+				</node>
+			</node>
+		</node>
+
+	</node>
+</oor:component-data>
