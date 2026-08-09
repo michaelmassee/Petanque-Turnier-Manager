@@ -6,6 +6,7 @@ package de.petanqueturniermanager.helper.i18n;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.lang.reflect.Field;
+import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -65,6 +66,23 @@ class I18nTest {
         I18n.init(null);
         assertThat(I18n.get("enum.turniersystem.supermelee")).isNotEmpty();
         assertThat(I18n.get("enum.turniersystem.ko")).isNotEmpty();
+    }
+
+    @Test
+    void get_mitEinzelnemApostroph_ersetztPlatzhalterTrotzdem() {
+        // Regressionstest: ein einzelnes, nicht verdoppeltes ' darf keinen Quote-Block auslösen
+        // (frühere MessageFormat-basierte Implementierung hat hier {0} verschluckt)
+        I18n.initFuerTest(Locale.FRENCH);
+        String ergebnis = I18n.get("error.tabelle.nicht.vorhanden", "Meldeliste");
+        assertThat(ergebnis).isEqualTo("Le tableau 'Meldeliste' n'existe pas.");
+    }
+
+    @Test
+    void get_mitVerdoppeltemApostroph_liefertLiteralenApostroph() {
+        // ''{0}'' ist die bestehende Konvention für "Parameter in Anführungszeichen zeigen"
+        I18n.init(null);
+        String ergebnis = I18n.get("error.tabelle.nicht.vorhanden", "Meldeliste");
+        assertThat(ergebnis).isEqualTo("Die Tabelle 'Meldeliste' ist nicht vorhanden.");
     }
 
     @Test

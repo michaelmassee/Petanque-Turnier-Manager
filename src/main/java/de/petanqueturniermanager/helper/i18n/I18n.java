@@ -5,7 +5,6 @@ package de.petanqueturniermanager.helper.i18n;
 
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.text.MessageFormat;
 import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.PropertyResourceBundle;
@@ -100,14 +99,53 @@ public final class I18n {
     }
 
     /**
-     * Gibt den lokalisierten Text mit MessageFormat-Parametern zurück.
+     * Gibt den lokalisierten Text mit ersetzten {0}/{1}/…-Platzhaltern zurück.
      *
      * @param key  I18n-Schlüssel
-     * @param args Parameter für MessageFormat (z.B. Rundennummer)
+     * @param args Werte für die Platzhalter (z.B. Rundennummer)
      * @return formatierter lokalisierter Text
      */
     public static String get(String key, Object... args) {
-        return MessageFormat.format(get(key), args);
+        return formatiere(get(key), args);
+    }
+
+    /**
+     * Ersetzt {@code {n}}-Platzhalter durch {@code args[n]}. Bewusst kein {@link java.text.MessageFormat}:
+     * dessen Quoting-Regel (ein einzelnes, nicht verdoppeltes {@code '} startet einen Literal-Block
+     * bis zum nächsten {@code '}) wird in Übersetzungen mit grammatikalischen Apostrophen
+     * (z.B. Französisch "n'est") unabsichtlich ausgelöst und verschluckt danach alle Platzhalter.
+     * Unterstützt daher nur die im Bundle tatsächlich genutzte Untermenge: {@code ''} als literales
+     * Apostroph, ein einzelnes {@code '} bleibt literal, {@code {n}} wird ersetzt.
+     *
+     * @param muster I18n-Text mit Platzhaltern
+     * @param args   Werte für die Platzhalter
+     * @return formatierter Text
+     */
+    private static String formatiere(String muster, Object... args) {
+        StringBuilder ergebnis = new StringBuilder(muster.length());
+        int i = 0;
+        while (i < muster.length()) {
+            char zeichen = muster.charAt(i);
+            if (zeichen == '\'' && i + 1 < muster.length() && muster.charAt(i + 1) == '\'') {
+                ergebnis.append('\'');
+                i += 2;
+            } else if (zeichen == '{') {
+                int schluss = muster.indexOf('}', i + 1);
+                String index = schluss > i ? muster.substring(i + 1, schluss) : "";
+                if (schluss > i && index.chars().allMatch(Character::isDigit) && !index.isEmpty()
+                        && Integer.parseInt(index) < args.length) {
+                    ergebnis.append(args[Integer.parseInt(index)]);
+                    i = schluss + 1;
+                } else {
+                    ergebnis.append(zeichen);
+                    i++;
+                }
+            } else {
+                ergebnis.append(zeichen);
+                i++;
+            }
+        }
+        return ergebnis.toString();
     }
 
     private static ResourceBundle getOrFallback(Locale ziel, ResourceBundle.Control ctrl) {
