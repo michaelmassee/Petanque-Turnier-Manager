@@ -104,21 +104,28 @@ public class HtmlZuBildKonvertierer {
      * Schneidet das Bild links-oben-verankert auf die tatsächliche Inhaltsgröße zu (letzte
      * Spalte/Zeile mit einem nicht-weißen Pixel) – reduziert die großzügig überbreite/-hohe Seite
      * auf den echten Inhalt, egal wie groß dieser tatsächlich ist.
+     * <p>
+     * Die Pixel werden einmalig per Bulk-{@code getRGB} in ein Array gelesen statt pro Pixel
+     * einzeln über {@link BufferedImage#getRGB(int, int)} – bei nahezu leeren/sehr großen Bildern
+     * (Worst-Case-Scan über die gesamte Fläche) vermeidet das Millionen einzelner Methodenaufrufe.
      */
     private static BufferedImage aufInhaltZuschneiden(BufferedImage bild) {
-        int breite = inhaltsbreite(bild);
-        int hoehe = inhaltshoehe(bild, breite);
-        if (breite <= 0 || hoehe <= 0 || (breite >= bild.getWidth() && hoehe >= bild.getHeight())) {
+        int width = bild.getWidth();
+        int height = bild.getHeight();
+        int[] pixel = bild.getRGB(0, 0, width, height, null, 0, width);
+        int breite = inhaltsbreite(pixel, width, height);
+        int hoehe = inhaltshoehe(pixel, width, height, breite);
+        if (breite <= 0 || hoehe <= 0 || (breite >= width && hoehe >= height)) {
             return bild;
         }
-        return bild.getSubimage(0, 0, Math.min(breite, bild.getWidth()), Math.min(hoehe, bild.getHeight()));
+        return bild.getSubimage(0, 0, Math.min(breite, width), Math.min(hoehe, height));
     }
 
     /** Letzte (von rechts gesehene) Spalte mit mindestens einem nicht-weißen Pixel, oder 0. */
-    private static int inhaltsbreite(BufferedImage bild) {
-        for (int x = bild.getWidth() - 1; x >= 0; x--) {
-            for (int y = 0; y < bild.getHeight(); y++) {
-                if (istNichtWeiss(bild.getRGB(x, y))) {
+    private static int inhaltsbreite(int[] pixel, int width, int height) {
+        for (int x = width - 1; x >= 0; x--) {
+            for (int y = 0; y < height; y++) {
+                if (istNichtWeiss(pixel[y * width + x])) {
                     return x + 1;
                 }
             }
@@ -127,11 +134,12 @@ public class HtmlZuBildKonvertierer {
     }
 
     /** Letzte (von unten gesehene) Zeile mit mindestens einem nicht-weißen Pixel, oder 0. */
-    private static int inhaltshoehe(BufferedImage bild, int breite) {
-        int maxX = Math.min(breite, bild.getWidth());
-        for (int y = bild.getHeight() - 1; y >= 0; y--) {
+    private static int inhaltshoehe(int[] pixel, int width, int height, int breite) {
+        int maxX = Math.min(breite, width);
+        for (int y = height - 1; y >= 0; y--) {
+            int zeilenOffset = y * width;
             for (int x = 0; x < maxX; x++) {
-                if (istNichtWeiss(bild.getRGB(x, y))) {
+                if (istNichtWeiss(pixel[zeilenOffset + x])) {
                     return y + 1;
                 }
             }
