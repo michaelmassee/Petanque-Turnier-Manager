@@ -132,7 +132,7 @@ public final class I18n {
             } else if (zeichen == '{') {
                 int schluss = muster.indexOf('}', i + 1);
                 String index = schluss > i ? muster.substring(i + 1, schluss) : "";
-                if (schluss > i && index.chars().allMatch(Character::isDigit) && !index.isEmpty()
+                if (schluss > i && !index.isEmpty() && index.chars().allMatch(Character::isDigit)
                         && Integer.parseInt(index) < args.length) {
                     ergebnis.append(args[Integer.parseInt(index)]);
                     i = schluss + 1;
