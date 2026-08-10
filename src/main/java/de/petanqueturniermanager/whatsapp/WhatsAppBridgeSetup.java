@@ -141,6 +141,7 @@ public final class WhatsAppBridgeSetup {
 			kopiereWennVorhanden(sourceDir.resolve("server.js"), runtimeBridgeDir.resolve("server.js"));
 			kopiereWennVorhanden(sourceDir.resolve("package.json"), runtimeBridgeDir.resolve("package.json"));
 			kopiereWennVorhanden(sourceDir.resolve("package-lock.json"), runtimeBridgeDir.resolve("package-lock.json"), false);
+			kopiereWennVorhanden(sourceDir.resolve(".npmrc"), runtimeBridgeDir.resolve(".npmrc"), false);
 		} catch (IOException e) {
 			throw new WhatsAppBridgeException("WhatsApp-Bridge konnte nicht in den Benutzerordner kopiert werden: "
 					+ e.getMessage(), e);
