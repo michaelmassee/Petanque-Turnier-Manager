@@ -3,10 +3,13 @@
  */
 package de.petanqueturniermanager.whatsapp;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -39,6 +42,13 @@ import de.petanqueturniermanager.konfigdialog.AbstractUnoDialog;
 public final class WhatsAppChatAuswahlDialog extends AbstractUnoDialog {
 
 	private static final Logger logger = LogManager.getLogger(WhatsAppChatAuswahlDialog.class);
+
+	/**
+	 * Grosszügiger Sicherheitsnetz-Timeout gegen ein dauerhaftes Blockieren, falls
+	 * {@link LoMainThread#post} das Runnable wider Erwarten nie abarbeitet – bewusst weit über
+	 * jeder realistischen Nutzer-Bedenkzeit für den Chat-Auswahl-Dialog gewählt.
+	 */
+	private static final Duration DIALOG_TIMEOUT = Duration.ofMinutes(30);
 
 	private final WorkingSpreadsheet ws;
 	private final List<WhatsAppChatEintrag> chats;
@@ -74,13 +84,16 @@ public final class WhatsAppChatAuswahlDialog extends AbstractUnoDialog {
 			}
 		});
 		try {
-			return future.get();
+			return future.get(DIALOG_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
 			return Optional.empty();
 		} catch (ExecutionException e) {
 			Throwable cause = e.getCause();
 			throw new GenerateException(cause != null ? cause.getMessage() : e.getMessage());
+		} catch (TimeoutException e) {
+			logger.warn("WhatsApp-Chat-Auswahl-Dialog hat nicht rechtzeitig geantwortet", e);
+			throw new GenerateException("WhatsApp-Chat-Auswahl-Dialog hat nicht rechtzeitig geantwortet");
 		}
 	}
 

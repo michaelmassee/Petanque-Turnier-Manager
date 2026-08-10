@@ -3,10 +3,13 @@
  */
 package de.petanqueturniermanager.comp;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -235,6 +238,13 @@ public final class WhatsAppChatOptionsEventHandler extends WeakBase
 		return WhatsAppBridgeManager.starteOderVerbinde();
 	}
 
+	/**
+	 * Grosszügiger Sicherheitsnetz-Timeout gegen ein dauerhaftes Blockieren, falls
+	 * {@link LoMainThread#post} das Runnable wider Erwarten nie abarbeitet – bewusst weit über
+	 * jeder realistischen Nutzer-Bedenkzeit für den Ja/Nein-Dialog gewählt.
+	 */
+	private static final Duration WHATSAPP_SETUP_DIALOG_TIMEOUT = Duration.ofMinutes(30);
+
 	private boolean frageWhatsAppSetup() throws WhatsAppBridgeException {
 		CountDownLatch latch = new CountDownLatch(1);
 		AtomicReference<MessageBoxResult> result = new AtomicReference<>(MessageBoxResult.NO);
@@ -249,7 +259,9 @@ public final class WhatsAppChatOptionsEventHandler extends WeakBase
 			}
 		});
 		try {
-			latch.await();
+			if (!latch.await(WHATSAPP_SETUP_DIALOG_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS)) {
+				throw new WhatsAppBridgeException("WhatsApp-Setup-Dialog hat nicht rechtzeitig geantwortet");
+			}
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
 			throw new WhatsAppBridgeException("WhatsApp-Setup-Dialog wurde unterbrochen", e);
@@ -270,27 +282,23 @@ public final class WhatsAppChatOptionsEventHandler extends WeakBase
 	private int mergeChats(List<WhatsAppBridgeChat> chats) {
 		int geaendert = 0;
 		String zeit = Instant.now().toString();
+		Map<String, Integer> indexNachChatId = new HashMap<>();
+		for (int i = 0; i < eintraege.size(); i++) {
+			indexNachChatId.put(eintraege.get(i).chatId(), i);
+		}
 		for (WhatsAppBridgeChat chat : chats) {
-			int idx = indexVonChatId(chat.id());
-			var eintrag = new WhatsAppChatEintrag(idx >= 0 ? eintraege.get(idx).id() : null,
-					chat.name(), chat.id(), chat.type(), zeit, "", idx >= 0 && eintraege.get(idx).favorit());
-			if (idx >= 0) {
+			Integer idx = indexNachChatId.get(chat.id());
+			var eintrag = new WhatsAppChatEintrag(idx != null ? eintraege.get(idx).id() : null,
+					chat.name(), chat.id(), chat.type(), zeit, "", idx != null && eintraege.get(idx).favorit());
+			if (idx != null) {
 				eintraege.set(idx, eintrag);
 			} else {
 				eintraege.add(eintrag);
+				indexNachChatId.put(chat.id(), eintraege.size() - 1);
 			}
 			geaendert++;
 		}
 		return geaendert;
-	}
-
-	private int indexVonChatId(String chatId) {
-		for (int i = 0; i < eintraege.size(); i++) {
-			if (eintraege.get(i).chatId().equals(chatId)) {
-				return i;
-			}
-		}
-		return -1;
 	}
 
 	private void kloneZeile(XControlContainer container) {
