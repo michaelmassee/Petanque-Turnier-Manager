@@ -189,7 +189,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 				.setCharColor(ColorHelper.CHAR_COLOR_RED);
 
 		StringCellValue errStrCelVal = StringCellValue
-				.from(xSheet, Position.from(meldeListe.getMeldungenSpalte().getErsteMeldungNameSpalte(),
+				.from(xSheet, Position.from(meldeListe.getMeldungenSpalte().getNamenOderTeamnameSpalte(),
 						meldeListe.getErsteDatenZiele()))
 				.setCharColor(ColorHelper.CHAR_COLOR_RED);
 
@@ -223,7 +223,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 			if (StringUtils.isNotEmpty(spielerName)) {
 				if (spielrNamenInSheet.contains(cleanUpSpielerName(spielerName))) {
 					// RED Color in alle Namens-Spalten
-					for (int sp = meldeListe.getMeldungenSpalte().getErsteMeldungNameSpalte();
+					for (int sp = meldeListe.getMeldungenSpalte().getNamenOderTeamnameSpalte();
 							sp <= letzteNamensSpalte; sp++) {
 						String zellValue = meldeListe.getSheetHelper().getTextFromCell(xSheet,
 								Position.from(sp, spielerZeilecntr));
@@ -354,7 +354,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	public void zeileOhneSpielerNamenEntfernen() throws GenerateException {
 		meldeListe.processBoxinfo("processbox.meldeliste.zeilen.ohne.namen.entfernen");
 
-		doSort(meldeListe.getMeldungenSpalte().getErsteMeldungNameSpalte(), true); // alle zeilen ohne namen nach unten sortieren, egal ob daten oder nicht
+		doSort(meldeListe.getMeldungenSpalte().getNamenOderTeamnameSpalte(), true); // alle zeilen ohne namen nach unten sortieren, egal ob daten oder nicht
 		int letzteNrZeile = meldeListe.naechsteFreieDatenZeileInSpielerNrSpalte();
 		if (letzteNrZeile < meldeListe.getErsteDatenZiele()) { // daten vorhanden ?
 			return; // keine Daten
@@ -366,7 +366,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 		meldeListe.getMeldungenSpalte().trimNamenUndTeamnameSpalten(letzteNrZeile - 1);
 		// erneut sortieren: eine Zeile mit nur Leerzeichen war beim ersten Sortieren (vor dem
 		// Trimmen) noch "nicht leer" und kann daher oberhalb einer echten Meldung gelandet sein
-		doSort(meldeListe.getMeldungenSpalte().getErsteMeldungNameSpalte(), true);
+		doSort(meldeListe.getMeldungenSpalte().getNamenOderTeamnameSpalte(), true);
 
 		int letzteZeileMitSpielerName = meldeListe.letzteZeileMitSpielerName(); // erst ab zeilen ohne namen anfangen
 
@@ -409,7 +409,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	}
 
 	public String formulaSverweisSpielernamen(String spielrNrAdresse) {
-		int ersteName = meldeListe.getMeldungenSpalte().getErsteMeldungNameSpalte();
+		int ersteName = meldeListe.getMeldungenSpalte().getNamenOderTeamnameSpalte();
 		int letzteName = meldeListe.getMeldungenSpalte().getLetzteMeldungNameSpalte();
 		String ersteZelleAddress = Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE).getAddressWith$();
 		String letzteZelleAddress = Position.from(letzteName, 999).getAddressWith$();
@@ -551,7 +551,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	 * Namensspalte, wird diese verwendet.
 	 */
 	private int nachnameSpieler1Spalte() {
-		int ersteNamenSpalte = meldeListe.getMeldungenSpalte().getErsteMeldungNameSpalte();
+		int ersteNamenSpalte = meldeListe.getMeldungenSpalte().getNamenOderTeamnameSpalte();
 		int letzteNamenSpalte = meldeListe.getMeldungenSpalte().getLetzteMeldungNameSpalte();
 		return ersteNamenSpalte < letzteNamenSpalte ? ersteNamenSpalte + 1 : ersteNamenSpalte;
 	}

@@ -75,7 +75,7 @@ class KaskadeTurnierParameterDialog {
         dlgProps.setPropertyValue("PositionX", Integer.valueOf(50));
         dlgProps.setPropertyValue("PositionY", Integer.valueOf(50));
         dlgProps.setPropertyValue("Width", Integer.valueOf(160));
-        dlgProps.setPropertyValue("Height", Integer.valueOf(175));
+        dlgProps.setPropertyValue("Height", Integer.valueOf(187));
         dlgProps.setPropertyValue("Title", I18n.get("dialog.kaskade.turnier.parameter.titel"));
         dlgProps.setPropertyValue("Moveable", Boolean.TRUE);
 
@@ -94,26 +94,28 @@ class KaskadeTurnierParameterDialog {
                 Formation.DOUBLETTE.getBezeichnung(), 8, 33, 140, 10, standardFormation == Formation.DOUBLETTE);
         fuegeRadioButton(xMSF, cont, "radioTriplette",
                 Formation.TRIPLETTE.getBezeichnung(), 8, 45, 140, 10, standardFormation == Formation.TRIPLETTE);
+        fuegeRadioButton(xMSF, cont, "radioNurTeamname",
+                Formation.NUR_TEAMNAME.getBezeichnung(), 8, 57, 140, 10, standardFormation == Formation.NUR_TEAMNAME);
 
-        fuegeTrennlinie(xMSF, cont, "sep1", 5, 59, 150, 2);
+        fuegeTrennlinie(xMSF, cont, "sep1", 5, 71, 150, 2);
 
         fuegeCheckBox(xMSF, cont, "cbTeamname", I18n.get("dialog.poule.label.teamname"),
-                8, 65, 140, 10, standardTeamnameAnzeigen);
+                8, 77, 140, 10, standardTeamnameAnzeigen);
         fuegeCheckBox(xMSF, cont, "cbVereinsname", I18n.get("dialog.poule.label.vereinsname"),
-                8, 79, 140, 10, standardVereinsnameAnzeigen);
+                8, 91, 140, 10, standardVereinsnameAnzeigen);
 
-        fuegeTrennlinie(xMSF, cont, "sep2", 5, 93, 150, 2);
+        fuegeTrennlinie(xMSF, cont, "sep2", 5, 105, 150, 2);
 
-        fuegeLabel(xMSF, cont, "lblKaskaden", I18n.get("dialog.kaskade.label.anzahl.kaskaden"), 8, 99, 140, 10);
+        fuegeLabel(xMSF, cont, "lblKaskaden", I18n.get("dialog.kaskade.label.anzahl.kaskaden"), 8, 111, 140, 10);
         fuegeRadioButton(xMSF, cont, "radioKaskaden2",
-                I18n.get("dialog.kaskade.label.kaskaden.2"), 8, 113, 140, 10, standardAnzahlKaskaden == 2);
+                I18n.get("dialog.kaskade.label.kaskaden.2"), 8, 125, 140, 10, standardAnzahlKaskaden == 2);
         fuegeRadioButton(xMSF, cont, "radioKaskaden3",
-                I18n.get("dialog.kaskade.label.kaskaden.3"), 8, 125, 140, 10, standardAnzahlKaskaden == 3);
+                I18n.get("dialog.kaskade.label.kaskaden.3"), 8, 137, 140, 10, standardAnzahlKaskaden == 3);
 
-        fuegeTrennlinie(xMSF, cont, "sep3", 5, 139, 150, 2);
+        fuegeTrennlinie(xMSF, cont, "sep3", 5, 151, 150, 2);
 
-        fuegeButton(xMSF, cont, "btnOk", I18n.get("dialog.button.ok"), 22, 153, 50, 14);
-        fuegeButton(xMSF, cont, "btnCancel", I18n.get("dialog.button.abbrechen"), 88, 153, 60, 14);
+        fuegeButton(xMSF, cont, "btnOk", I18n.get("dialog.button.ok"), 22, 165, 50, 14);
+        fuegeButton(xMSF, cont, "btnCancel", I18n.get("dialog.button.abbrechen"), 88, 165, 60, 14);
 
         XDialog xDialog = Lo.qi(XDialog.class, dialog);
         okGedrueckt = false;
@@ -150,7 +152,8 @@ class KaskadeTurnierParameterDialog {
         Optional<TurnierParameter> ergebnis = Optional.empty();
         if (okGedrueckt) {
             Formation formation = leseFormation(xcc);
-            boolean teamnameAnzeigen = leseCheckBoxZustand(xcc, "cbTeamname");
+            // Nur Teamname: Teamname-Anzeige ist die einzige Team-Identität und daher zwingend aktiv.
+            boolean teamnameAnzeigen = formation == Formation.NUR_TEAMNAME || leseCheckBoxZustand(xcc, "cbTeamname");
             boolean vereinsnameAnzeigen = leseCheckBoxZustand(xcc, "cbVereinsname");
             int anzahlKaskaden = leseAnzahlKaskaden(xcc);
             ergebnis = Optional.of(new TurnierParameter(formation, teamnameAnzeigen, vereinsnameAnzeigen, anzahlKaskaden));
@@ -172,6 +175,9 @@ class KaskadeTurnierParameterDialog {
         }
         if (istRadioGewaehlt(xcc, "radioDoublette")) {
             return Formation.DOUBLETTE;
+        }
+        if (istRadioGewaehlt(xcc, "radioNurTeamname")) {
+            return Formation.NUR_TEAMNAME;
         }
         return Formation.TRIPLETTE;
     }

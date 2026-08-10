@@ -43,7 +43,7 @@ public final class MeldelisteZielFactory {
             return Optional.empty();
         }
         Optional<MeldelisteLayout> layoutOpt = leseLayout(ts, ws);
-        if (layoutOpt.isEmpty()) {
+        if (layoutOpt.isEmpty() || layoutOpt.get().formation() == Formation.NUR_TEAMNAME) {
             return Optional.empty();
         }
         MeldelisteLayout l = layoutOpt.get();
@@ -66,6 +66,25 @@ public final class MeldelisteZielFactory {
             case LIGA -> Optional.of(ts);
             default -> Optional.empty();
         };
+    }
+
+    /**
+     * Liefert das Turniersystem des aktiven Dokuments, sofern die Meldeliste-Formation
+     * {@link Formation#NUR_TEAMNAME} konfiguriert ist – dort gibt es keine einzelnen
+     * Spieler, die Spieler-DB-Übernahme ist daher sinnlos. Für alle anderen Fälle
+     * (inkl. Liga, das über {@link #nichtUnterstuetztesSystem} separat gemeldet wird)
+     * liefert die Methode {@link Optional#empty()}.
+     */
+    public static Optional<TurnierSystem> formationNichtUnterstuetzt(WorkingSpreadsheet ws) {
+        TurnierSystem ts = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();
+        if (ts == null || ts == TurnierSystem.KEIN || ts == TurnierSystem.LIGA) {
+            return Optional.empty();
+        }
+        Optional<MeldelisteLayout> layoutOpt = leseLayout(ts, ws);
+        if (layoutOpt.isPresent() && layoutOpt.get().formation() == Formation.NUR_TEAMNAME) {
+            return Optional.of(ts);
+        }
+        return Optional.empty();
     }
 
     /**

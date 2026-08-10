@@ -78,20 +78,26 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_RECHTS)
 				.setDescription("config.desc.header.rechts"));
 
+		// Formation/Teamname/Vereinsname sind nach Meldeliste-Erstellung nicht mehr änderbar
+		// (nur noch über den Turnier-Parameter-Dialog beim Anlegen) - daher intern(), nicht im Options-Dialog.
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_MELDELISTE_FORMATION)
 				.setDefaultVal(Formation.DOUBLETTE.name())
 				.setDescription("config.desc.ko.formation"))
 				.addAuswahl(Formation.TETE.name(), Formation.TETE.getBezeichnung())
 				.addAuswahl(Formation.DOUBLETTE.name(), Formation.DOUBLETTE.getBezeichnung())
-				.addAuswahl(Formation.TRIPLETTE.name(), Formation.TRIPLETTE.getBezeichnung()));
+				.addAuswahl(Formation.TRIPLETTE.name(), Formation.TRIPLETTE.getBezeichnung())
+				.addAuswahl(Formation.NUR_TEAMNAME.name(), Formation.NUR_TEAMNAME.getBezeichnung())
+				.intern());
 
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_MELDELISTE_TEAMNAME)
 				.setDefaultVal("J").setDescription("config.desc.meldeliste.teamname"))
-				.addAuswahl("J", "Ja").addAuswahl("N", "Nein"));
+				.addAuswahl("J", "Ja").addAuswahl("N", "Nein")
+				.intern());
 
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_MELDELISTE_VEREINSNAME)
 				.setDefaultVal("N").setDescription("config.desc.ko.vereinsname"))
-				.addAuswahl("J", "Ja").addAuswahl("N", "Nein"));
+				.addAuswahl("J", "Ja").addAuswahl("N", "Nein")
+				.intern());
 
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty
 				.from(KONFIG_PROP_SPIELBAUM_TEAM_ANZEIGE)
@@ -239,9 +245,17 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 
 	public void setMeldeListeFormation(Formation formation) {
 		setStringProperty(KONFIG_PROP_MELDELISTE_FORMATION, formation.name());
+		if (formation == Formation.NUR_TEAMNAME) {
+			setMeldeListeTeamnameAnzeigen(true); // persistiert den erzwungenen Zustand
+		}
 	}
 
 	public boolean isMeldeListeTeamnameAnzeigen() {
+		// Nur Teamname: Teamname-Anzeige ist die einzige Team-Identität und daher zwingend aktiv,
+		// unabhängig vom gespeicherten Rohwert (z.B. bei älteren Dateien).
+		if (getMeldeListeFormation() == Formation.NUR_TEAMNAME) {
+			return true;
+		}
 		return "J".equalsIgnoreCase(readStringProperty(KONFIG_PROP_MELDELISTE_TEAMNAME));
 	}
 

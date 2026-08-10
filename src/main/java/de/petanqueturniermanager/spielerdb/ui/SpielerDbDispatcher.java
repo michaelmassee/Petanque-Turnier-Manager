@@ -331,9 +331,15 @@ public final class SpielerDbDispatcher {
      */
     private static void zeigeFehlerKeinZiel(XComponentContext ctx, WorkingSpreadsheet ws) {
         Optional<TurnierSystem> nichtUnterstuetzt = MeldelisteZielFactory.nichtUnterstuetztesSystem(ws);
-        String text = nichtUnterstuetzt
-                .map(ts -> I18n.get("spielerdb.fehler.system_nicht_unterstuetzt", ts.getBezeichnung()))
-                .orElseGet(() -> I18n.get("spielerdb.fehler.keine_meldeliste"));
+        Optional<TurnierSystem> formationNichtUnterstuetzt = MeldelisteZielFactory.formationNichtUnterstuetzt(ws);
+        String text;
+        if (nichtUnterstuetzt.isPresent()) {
+            text = I18n.get("spielerdb.fehler.system_nicht_unterstuetzt", nichtUnterstuetzt.get().getBezeichnung());
+        } else if (formationNichtUnterstuetzt.isPresent()) {
+            text = I18n.get("spielerdb.fehler.formation_nicht_unterstuetzt");
+        } else {
+            text = I18n.get("spielerdb.fehler.keine_meldeliste");
+        }
         MessageBox.from(ctx, MessageBoxTypeEnum.WARN_OK)
                 .caption(I18n.get("spielerdb.menu.toplevel"))
                 .message(text)

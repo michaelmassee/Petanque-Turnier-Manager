@@ -89,7 +89,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 		this.spalteMeldungNameWidth = spalteMeldungNameWidth;
 		this.meldungNrSpalte = spielerNrSpalte;
 		this.ersteMeldungNameSpalte = spielerNrSpalte + ersteMeldungNameSpalteOffset;
-		this.anzNamenSpalten = (anzNamenSpaltenOverride != null && anzNamenSpaltenOverride > 0)
+		this.anzNamenSpalten = anzNamenSpaltenOverride != null
 				? anzNamenSpaltenOverride
 				: this.formation.getAnzSpieler();
 		this.letzteMeldungNameSpalte = this.ersteMeldungNameSpalte + this.anzNamenSpalten - 1;
@@ -147,12 +147,14 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 						.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().doubleLn().forRight().toBorder()));
 		// -------------------------------------
 
-		// Namen
-		RangePosition namenDataRange = RangePosition.from(ersteMeldungNameSpalte, ersteDatenZiele,
-				letzteMeldungNameSpalte, letzteDatenZeile);
+		// Namen (bei Formation.NUR_TEAMNAME keine Namensspalten vorhanden)
+		if (anzNamenSpalten > 0) {
+			RangePosition namenDataRange = RangePosition.from(ersteMeldungNameSpalte, ersteDatenZiele,
+					letzteMeldungNameSpalte, letzteDatenZeile);
 
-		getSheetHelper().setPropertiesInRange(getXSpreadsheet(), namenDataRange, CellProperties.from().centerJustify()
-				.setBorder(BorderFactory.from().allThin().boldLn().forTop().toBorder()).setShrinkToFit(true));
+			getSheetHelper().setPropertiesInRange(getXSpreadsheet(), namenDataRange, CellProperties.from().centerJustify()
+					.setBorder(BorderFactory.from().allThin().boldLn().forTop().toBorder()).setShrinkToFit(true));
+		}
 
 	}
 
@@ -176,19 +178,22 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 		getSheetHelper().setStringValueInCell(celVal); // spieler nr
 		// --------------------------------------------------------------------------------------------
 
-		celVal.addColumnProperties(columnProperties.setWidth(spalteMeldungNameWidth)).setComment(null)
-				.spalte(ersteMeldungNameSpalte)
-				.setBorder(BorderFactory.from().allThin().boldLn().forTop().toBorder()).setCellBackColor(headerColor);
+		// Namen-Header (bei Formation.NUR_TEAMNAME keine Namensspalten vorhanden)
+		if (anzNamenSpalten > 0) {
+			celVal.addColumnProperties(columnProperties.setWidth(spalteMeldungNameWidth)).setComment(null)
+					.spalte(ersteMeldungNameSpalte)
+					.setBorder(BorderFactory.from().allThin().boldLn().forTop().toBorder()).setCellBackColor(headerColor);
 
-		if (anzZeilenInHeader > 1) {
-			// weil spalte sich geändert hat
-			celVal.setEndPosMergeZeilePlus(1);
-		}
+			if (anzZeilenInHeader > 1) {
+				// weil spalte sich geändert hat
+				celVal.setEndPosMergeZeilePlus(1);
+			}
 
-		for (int anzSpieler = 0; anzSpieler < getAnzahlSpielerNamenSpalten(); anzSpieler++) {
-			celVal.setValue(I18n.get(headerKeysProSpieler.get(anzSpieler)));
-			getSheetHelper().setStringValueInCell(celVal);
-			celVal.spaltePlusEins();
+			for (int anzSpieler = 0; anzSpieler < getAnzahlSpielerNamenSpalten(); anzSpieler++) {
+				celVal.setValue(I18n.get(headerKeysProSpieler.get(anzSpieler)));
+				getSheetHelper().setStringValueInCell(celVal);
+				celVal.spaltePlusEins();
+			}
 		}
 	}
 
@@ -269,8 +274,9 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 	 * @throws GenerateException
 	 */
 	public int letzteZeileMitSpielerName() throws GenerateException {
-		Position resultFreieZelle = RangeSearchHelper.from(getISheet(), RangePosition.from(ersteMeldungNameSpalte,
-				getErsteDatenZiele(), ersteMeldungNameSpalte, MAX_ANZ_MELDUNGEN)).searchLastNotEmptyInSpalte();
+		int namenSpalte = getNamenOderTeamnameSpalte();
+		Position resultFreieZelle = RangeSearchHelper.from(getISheet(), RangePosition.from(namenSpalte,
+				getErsteDatenZiele(), namenSpalte, MAX_ANZ_MELDUNGEN)).searchLastNotEmptyInSpalte();
 		if (resultFreieZelle != null) {
 			return resultFreieZelle.getZeile();
 		}
@@ -329,12 +335,16 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 		Position startPosNr = Position.from(meldungNrSpalte, getErsteDatenZiele());
 		RangeHelper.from(getISheet(), spielrNrData.getRangePosition(startPosNr)).setDataInRange(spielrNrData);
 
-		// filldown formula fuer name
-		String verweisAufMeldeListeFormula = meldeliste.formulaSverweisSpielernamen("INDIRECT(ADDRESS(ROW();1;4))");
-		StringCellValue strCelValSpielerName = StringCellValue.from(getXSpreadsheet(),
-				Position.from(meldungNrSpalte, getErsteDatenZiele()));
-		getSheetHelper().setFormulaInCell(strCelValSpielerName.spaltePlusEins().setValue(verweisAufMeldeListeFormula)
-				.setFillAutoDown(getLetzteMitDatenZeileInSpielerNrSpalte()));
+		// filldown formula fuer name: bei Formation.NUR_TEAMNAME gibt es keine Spielernamen-Spalte,
+		// die Spalte direkt nach der Nr-Spalte ist dort die frei editierbare Teamname-Spalte und
+		// darf nicht mit einer SVERWEIS-Formel überschrieben werden.
+		if (anzNamenSpalten > 0) {
+			String verweisAufMeldeListeFormula = meldeliste.formulaSverweisSpielernamen("INDIRECT(ADDRESS(ROW();1;4))");
+			StringCellValue strCelValSpielerName = StringCellValue.from(getXSpreadsheet(),
+					Position.from(meldungNrSpalte, getErsteDatenZiele()));
+			getSheetHelper().setFormulaInCell(strCelValSpielerName.spaltePlusEins().setValue(verweisAufMeldeListeFormula)
+					.setFillAutoDown(getLetzteMitDatenZeileInSpielerNrSpalte()));
+		}
 	}
 
 	/**
@@ -407,6 +417,19 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 	}
 
 	/**
+	 * Spalte, die für Sortierung/Leerzeilen-Erkennung als "Name" der Meldung dient: normalerweise
+	 * die erste Spielernamen-Spalte, bei {@link de.petanqueturniermanager.basesheet.meldeliste.Formation#NUR_TEAMNAME}
+	 * (keine Spielernamen-Spalten) stattdessen die Teamname-Spalte.
+	 */
+	public int getNamenOderTeamnameSpalte() {
+		if (anzNamenSpalten > 0) {
+			return ersteMeldungNameSpalte;
+		}
+		int teamnameSpalte = getTeamnameSpalte();
+		return teamnameSpalte >= 0 ? teamnameSpalte : meldungNrSpalte;
+	}
+
+	/**
 	 * Trimmt alle Namens-Zellen (und die Teamname-Zelle, falls vorhanden) je Zeile blockweise:
 	 * führende/nachfolgende Leerzeichen werden entfernt. Verhindert, dass Whitespace-Reste eine
 	 * nachfolgende Leer-Prüfung (z.B. {@link MeldeListeHelper#zeileOhneSpielerNamenEntfernen()})
@@ -419,6 +442,9 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 			return;
 		}
 		int teamnameSpalte = getTeamnameSpalte();
+		if (anzNamenSpalten == 0 && teamnameSpalte < 0) {
+			return; // weder Namens- noch Teamname-Spalte vorhanden, nichts zu trimmen
+		}
 		int startSpalte = teamnameSpalte >= 0 ? teamnameSpalte : ersteMeldungNameSpalte;
 		RangePosition bereich = RangePosition.from(startSpalte, ersteDatenZiele, letzteMeldungNameSpalte, letzteZeile);
 		RangeHelper rangeHelper = RangeHelper.from(getISheet(), bereich);
@@ -447,6 +473,16 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 	 * 1 Spalte: unverändert. 2 Spalten: {@code "Nachname, Vorname"}. >2 Spalten: durch Leerzeichen verbunden.
 	 */
 	public String leseSpielerNameZeile(XSpreadsheet sheet, int zeile) throws GenerateException {
+		if (anzNamenSpalten == 0) {
+			// Formation.NUR_TEAMNAME: keine Spielernamen-Spalten, die Teamname-Spalte ist die
+			// namensgebende Spalte dieser Zeile (u.a. für Leerzeilen-Erkennung/Duplikatprüfung
+			// in MeldeListeHelper relevant).
+			int teamnameSpalte = getTeamnameSpalte();
+			if (teamnameSpalte < 0) {
+				return "";
+			}
+			return StringUtils.trimToEmpty(getSheetHelper().getTextFromCell(sheet, Position.from(teamnameSpalte, zeile)));
+		}
 		if (anzNamenSpalten == 1) {
 			return StringUtils.trimToEmpty(
 					getSheetHelper().getTextFromCell(sheet, Position.from(ersteMeldungNameSpalte, zeile)));
@@ -584,7 +620,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 
 		/** Überschreibt die aus {@link Formation#getAnzSpieler()} abgeleitete Anzahl Namens-Spalten. */
 		public Bldr anzNamenSpalten(int anz) {
-			checkArgument(anz > 0);
+			checkArgument(anz >= 0);
 			this.anzNamenSpalten = anz;
 			return this;
 		}

@@ -11,7 +11,8 @@ public enum Formation {
 	TETE(1, "enum.formation.tete", 1), // Formé
 	DOUBLETTE(2, "enum.formation.doublette", 2), // Formé
 	TRIPLETTE(3, "enum.formation.triplette", 3), // Formé
-	MELEE(4, "enum.formation.melee", 1); // wenn die Teamgroese nicht festeht, wird z.b. bei Supermelee gebraucht
+	MELEE(4, "enum.formation.melee", 1), // wenn die Teamgroese nicht festeht, wird z.b. bei Supermelee gebraucht
+	NUR_TEAMNAME(5, "enum.formation.nur_teamname", 0); // keine Spielernamen, nur Teamname-Spalte
 
 	private final String i18nKey;
 	private final int id;

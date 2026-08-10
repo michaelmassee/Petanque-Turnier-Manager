@@ -97,7 +97,8 @@ public class JGJStartDialog {
 		addListBox(xMSF, cont, "lstFormation",
 				new String[] { Formation.TETE.getBezeichnung(),
 						Formation.DOUBLETTE.getBezeichnung(),
-						Formation.TRIPLETTE.getBezeichnung() },
+						Formation.TRIPLETTE.getBezeichnung(),
+						Formation.NUR_TEAMNAME.getBezeichnung() },
 				(short) 0, 92, 6, 70, 12);
 
 		addFixedLine(xMSF, cont, "sep1", 5, 24, 160, 2);
@@ -166,7 +167,8 @@ public class JGJStartDialog {
 		Optional<StartParameter> result = Optional.empty();
 		if (okPressed) {
 			Formation formation = readFormation(xcc);
-			boolean teamnameAnzeigen = readCheckBoxState(xcc, "cbTeamname");
+			// Nur Teamname: Teamname-Anzeige ist die einzige Team-Identität und daher zwingend aktiv.
+			boolean teamnameAnzeigen = formation == Formation.NUR_TEAMNAME || readCheckBoxState(xcc, "cbTeamname");
 			boolean vereinsnameAnzeigen = readCheckBoxState(xcc, "cbVereinsname");
 			SpielplanTeamAnzeige spielplanAnzeige = readListBoxSelected(xcc, "lstSpielplanAnzeige") == 1
 					? SpielplanTeamAnzeige.NAME : SpielplanTeamAnzeige.NR;
@@ -206,6 +208,7 @@ public class JGJStartDialog {
 		return switch (readListBoxSelected(xcc, "lstFormation")) {
 			case 1 -> Formation.DOUBLETTE;
 			case 2 -> Formation.TRIPLETTE;
+			case 3 -> Formation.NUR_TEAMNAME;
 			default -> Formation.TETE;
 		};
 	}

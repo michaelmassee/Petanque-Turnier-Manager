@@ -92,7 +92,8 @@ class FormuleXTurnierParameterDialog {
         fuegeListBox(xMSF, cont, "lstFormation",
                 new String[] { Formation.TETE.getBezeichnung(),
                         Formation.DOUBLETTE.getBezeichnung(),
-                        Formation.TRIPLETTE.getBezeichnung() },
+                        Formation.TRIPLETTE.getBezeichnung(),
+                        Formation.NUR_TEAMNAME.getBezeichnung() },
                 formationIndex(standardFormation), 92, 6, 60, 12);
 
         fuegeTrennlinie(xMSF, cont, "sep1", 5, 24, 150, 2);
@@ -147,7 +148,8 @@ class FormuleXTurnierParameterDialog {
         Optional<TurnierParameter> ergebnis = Optional.empty();
         if (okGedrueckt) {
             Formation formation = leseFormation(xcc);
-            boolean teamnameAnzeigen = leseCheckBoxZustand(xcc, "cbTeamname");
+            // Nur Teamname: Teamname-Anzeige ist die einzige Team-Identität und daher zwingend aktiv.
+            boolean teamnameAnzeigen = formation == Formation.NUR_TEAMNAME || leseCheckBoxZustand(xcc, "cbTeamname");
             boolean vereinsnameAnzeigen = leseCheckBoxZustand(xcc, "cbVereinsname");
             int anzahlRunden = leseSpinnerWert(xcc, "spinnerRunden", standardAnzahlRunden);
             ergebnis = Optional.of(new TurnierParameter(formation, teamnameAnzeigen, vereinsnameAnzeigen, anzahlRunden));
@@ -167,6 +169,7 @@ class FormuleXTurnierParameterDialog {
         return switch (leseListBoxAuswahl(xcc, "lstFormation")) {
             case 1 -> Formation.DOUBLETTE;
             case 2 -> Formation.TRIPLETTE;
+            case 3 -> Formation.NUR_TEAMNAME;
             default -> Formation.TETE;
         };
     }
@@ -175,6 +178,7 @@ class FormuleXTurnierParameterDialog {
         return switch (formation) {
             case DOUBLETTE -> 1;
             case TRIPLETTE -> 2;
+            case NUR_TEAMNAME -> 3;
             default -> 0;
         };
     }

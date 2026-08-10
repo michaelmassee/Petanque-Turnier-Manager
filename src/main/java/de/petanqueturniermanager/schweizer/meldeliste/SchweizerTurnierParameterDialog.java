@@ -111,7 +111,8 @@ public class SchweizerTurnierParameterDialog {
 		addListBox(xMSF, cont, "lstFormation",
 				new String[] { Formation.TETE.getBezeichnung(),
 						Formation.DOUBLETTE.getBezeichnung(),
-						Formation.TRIPLETTE.getBezeichnung() },
+						Formation.TRIPLETTE.getBezeichnung(),
+						Formation.NUR_TEAMNAME.getBezeichnung() },
 				formationIndex(defaultFormation), 92, 6, 60, 12);
 
 		addFixedLine(xMSF, cont, "sep1", 5, 24, 150, 2);
@@ -178,7 +179,8 @@ public class SchweizerTurnierParameterDialog {
 		Optional<TurnierParameter> result = Optional.empty();
 		if (okPressed) {
 			Formation formation = readFormation(xcc);
-			boolean teamnameAnzeigen = readCheckBoxState(xcc, "cbTeamname");
+			// Nur Teamname: Teamname-Anzeige ist die einzige Team-Identität und daher zwingend aktiv.
+			boolean teamnameAnzeigen = formation == Formation.NUR_TEAMNAME || readCheckBoxState(xcc, "cbTeamname");
 			boolean vereinsnameAnzeigen = readCheckBoxState(xcc, "cbVereinsname");
 			SpielplanTeamAnzeige spielplanAnzeige = readListBoxSelected(xcc, "lstSpielplan") == 1
 					? SpielplanTeamAnzeige.NAME : SpielplanTeamAnzeige.NR;
@@ -202,6 +204,7 @@ public class SchweizerTurnierParameterDialog {
 		return switch (readListBoxSelected(xcc, "lstFormation")) {
 			case 1 -> Formation.DOUBLETTE;
 			case 2 -> Formation.TRIPLETTE;
+			case 3 -> Formation.NUR_TEAMNAME;
 			default -> Formation.TETE;
 		};
 	}
@@ -210,6 +213,7 @@ public class SchweizerTurnierParameterDialog {
 		return switch (formation) {
 			case DOUBLETTE -> 1;
 			case TRIPLETTE -> 2;
+			case NUR_TEAMNAME -> 3;
 			default -> 0;
 		};
 	}
