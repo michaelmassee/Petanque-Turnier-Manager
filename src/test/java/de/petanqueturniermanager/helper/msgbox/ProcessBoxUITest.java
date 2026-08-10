@@ -2,11 +2,14 @@ package de.petanqueturniermanager.helper.msgbox;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.List;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import de.petanqueturniermanager.BaseCalcUITest;
+import de.petanqueturniermanager.helper.msgbox.ProcessBox.LinkEintrag;
 
 /**
  * Smoke-Tests für die UNO-basierte {@link ProcessBox}.
@@ -93,5 +96,34 @@ public class ProcessBoxUITest extends BaseCalcUITest {
         String text = pb.getLogText();
         assertThat(text).contains("erste Zeile").contains("zweite Zeile");
         assertThat(text.lines().count()).as("zwei Log-Zeilen").isGreaterThanOrEqualTo(2);
+    }
+
+    @Test
+    public void links_setzt_und_versteckt_slots() {
+        ProcessBox.setHeadlessMode(false);
+        ProcessBox.forceinit(starter.getxComponentContext());
+        var pb = ProcessBox.from();
+
+        pb.links(List.of(
+                new LinkEintrag("Release-Seite öffnen", "https://example.com/release"),
+                new LinkEintrag("ptm.oxt", "https://example.com/ptm.oxt")));
+        pb.flushUiUpdatesForTest();
+
+        assertThat(pb.getLinkForTest(0)).as("Slot 0 belegt")
+                .isEqualTo(new LinkEintrag("Release-Seite öffnen", "https://example.com/release"));
+        assertThat(pb.getLinkForTest(1)).as("Slot 1 belegt")
+                .isEqualTo(new LinkEintrag("ptm.oxt", "https://example.com/ptm.oxt"));
+        assertThat(pb.getLinkForTest(2)).as("Slot 2 unbelegt -> ausgeblendet").isNull();
+
+        pb.links(List.of(new LinkEintrag("nur einer", "https://example.com/eins")));
+        pb.flushUiUpdatesForTest();
+
+        assertThat(pb.getLinkForTest(0)).as("Slot 0 neu belegt")
+                .isEqualTo(new LinkEintrag("nur einer", "https://example.com/eins"));
+        assertThat(pb.getLinkForTest(1)).as("Slot 1 wieder ausgeblendet").isNull();
+
+        pb.clear();
+        pb.flushUiUpdatesForTest();
+        assertThat(pb.getLinkForTest(0)).as("clear() blendet alle Links aus").isNull();
     }
 }

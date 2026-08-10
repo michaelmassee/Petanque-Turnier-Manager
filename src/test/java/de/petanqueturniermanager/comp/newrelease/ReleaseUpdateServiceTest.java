@@ -89,7 +89,7 @@ class ReleaseUpdateServiceTest {
     @Test
     void preReleaseWirdNichtAlsUpdateGemeldet() throws Exception {
         var release = new ReleaseInfo("v2.0.0-rc1", "v2.0.0-rc1",
-                Instant.now(), true, null, List.of());
+                Instant.now(), true, null, List.of(), null);
         var client = new FesterClient(Optional.of(release));
         var service = serviceMitInstallierterVersion("1.0.0", client);
         triggerInit(service);
@@ -251,7 +251,7 @@ class ReleaseUpdateServiceTest {
 
     private static ReleaseInfo stabilesRelease(String tag) {
         return new ReleaseInfo(tag, tag, Instant.now(), false, null,
-                List.of(new AssetInfo("ptm.oxt", "https://example.com/" + tag + "/ptm.oxt")));
+                List.of(new AssetInfo("ptm.oxt", "https://example.com/" + tag + "/ptm.oxt")), null);
     }
 
     // ── Test-Clients ─────────────────────────────────────────────────

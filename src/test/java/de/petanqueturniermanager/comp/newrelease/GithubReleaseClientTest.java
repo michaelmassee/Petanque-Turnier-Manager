@@ -47,6 +47,7 @@ class GithubReleaseClientTest {
                   "name": "v1.2.3",
                   "published_at": "2026-04-01T10:00:00Z",
                   "prerelease": false,
+                  "html_url": "https://github.com/foo/bar/releases/tag/v1.2.3",
                   "assets": [
                     {
                       "name": "PetanqueTurnierManager-1.2.3.oxt",
@@ -64,6 +65,8 @@ class GithubReleaseClientTest {
         assertThat(release.get().assets()).hasSize(1);
         assertThat(release.get().assets().get(0).downloadUrl())
                 .isEqualTo("https://example.com/PetanqueTurnierManager-1.2.3.oxt");
+        assertThat(release.get().htmlUrl())
+                .isEqualTo("https://github.com/foo/bar/releases/tag/v1.2.3");
     }
 
     @Test

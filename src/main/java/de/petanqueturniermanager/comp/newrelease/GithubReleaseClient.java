@@ -116,7 +116,8 @@ public class GithubReleaseClient {
                     }
                 }
             }
-            return Optional.of(new ReleaseInfo(dto.tagName, name, publishedAt, dto.prerelease, dto.body, assets));
+            return Optional.of(new ReleaseInfo(dto.tagName, name, publishedAt, dto.prerelease, dto.body, assets,
+                    dto.htmlUrl));
         } catch (JsonSyntaxException e) {
             logger.warn("GitHub-Antwort war kein gültiges JSON", e);
             return Optional.empty();
@@ -152,6 +153,9 @@ public class GithubReleaseClient {
         String body;
         @Nullable
         List<AssetDto> assets;
+        @SerializedName("html_url")
+        @Nullable
+        String htmlUrl;
     }
 
     private static final class AssetDto {

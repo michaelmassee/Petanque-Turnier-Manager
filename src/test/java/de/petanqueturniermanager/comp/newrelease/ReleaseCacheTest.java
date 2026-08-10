@@ -43,6 +43,8 @@ class ReleaseCacheTest {
         assertThat(geladen.get().assets()).hasSize(1);
         assertThat(geladen.get().assets().get(0).downloadUrl())
                 .isEqualTo("https://example.com/foo.oxt");
+        assertThat(geladen.get().htmlUrl())
+                .isEqualTo("https://github.com/foo/bar/releases/tag/v1.2.3");
     }
 
     @Test
@@ -112,7 +114,8 @@ class ReleaseCacheTest {
         cache.schreibe(beispielRelease());
         var neuesRelease = new ReleaseInfo(
                 "v2.0.0", "v2.0.0", Instant.now(), false, null,
-                List.of(new AssetInfo("ptm-2.0.0.oxt", "https://example.com/ptm-2.0.0.oxt")));
+                List.of(new AssetInfo("ptm-2.0.0.oxt", "https://example.com/ptm-2.0.0.oxt")),
+                "https://github.com/foo/bar/releases/tag/v2.0.0");
         cache.schreibe(neuesRelease);
 
         var geladen = cache.ladeWennFrisch(Duration.ofHours(1));
@@ -127,7 +130,8 @@ class ReleaseCacheTest {
                 Instant.parse("2026-04-01T10:00:00Z"),
                 false,
                 "Release-Notes",
-                List.of(new AssetInfo("foo.oxt", "https://example.com/foo.oxt")));
+                List.of(new AssetInfo("foo.oxt", "https://example.com/foo.oxt")),
+                "https://github.com/foo/bar/releases/tag/v1.2.3");
     }
 
     private List<Path> listeKorruptDateien() throws IOException {

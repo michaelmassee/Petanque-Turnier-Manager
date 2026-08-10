@@ -26,6 +26,8 @@ import org.jspecify.annotations.Nullable;
  * @param prerelease Markierung, ob es sich um ein Pre-Release handelt.
  * @param body Markdown-Release-Notes ({@code body} aus der GitHub-API); kann {@code null}/leer sein.
  * @param assets Liste der hochgeladenen Asset-Dateien (kann leer sein).
+ * @param htmlUrl Link zur Release-Seite auf github.com ({@code html_url} aus der
+ *                GitHub-API); kann {@code null} sein, falls GitHub das Feld nicht liefert.
  */
 public record ReleaseInfo(
         String tagName,
@@ -33,7 +35,8 @@ public record ReleaseInfo(
         @Nullable Instant publishedAt,
         boolean prerelease,
         @Nullable String body,
-        List<AssetInfo> assets) {
+        List<AssetInfo> assets,
+        @Nullable String htmlUrl) {
 
     public ReleaseInfo {
         Objects.requireNonNull(tagName, "tagName");

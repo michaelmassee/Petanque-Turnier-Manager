@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -93,7 +94,11 @@ public class ProcessBox implements TimerListener {
     private static final int DLG_WIDTH = 320;
     private static final int PAD = 4;
     private static final int LOG_HEIGHT = 110;
-    private static final int VERSION_Y = PAD + LOG_HEIGHT + 2;
+    private static final int MAX_LINKS = 3;
+    private static final int LINK_ROW_HEIGHT = 10;
+    private static final int LINKS_Y = PAD + LOG_HEIGHT + 2;
+    private static final int LINKS_HEIGHT = MAX_LINKS * LINK_ROW_HEIGHT;
+    private static final int VERSION_Y = LINKS_Y + LINKS_HEIGHT + 2;
     private static final int VERSION_HEIGHT = 10;
     private static final int TIMER_Y = VERSION_Y + VERSION_HEIGHT + 2;
     private static final int TIMER_HEIGHT = 10;
@@ -196,6 +201,7 @@ public class ProcessBox implements TimerListener {
 
     private XPropertySet logEditProps;
     private XTextComponent logEditText;
+    private XPropertySet[] linkProps;
     private XPropertySet infoLabelProps;
     private XPropertySet neueVersionLabelProps;
     private XPropertySet timerUhrProps;
@@ -270,6 +276,20 @@ public class ProcessBox implements TimerListener {
                     m.setPropertyValue("ReadOnly", Boolean.TRUE);
                     m.setPropertyValue("VScroll", Boolean.TRUE);
                 });
+
+        // Klickbare Links (z.B. Release-Seite, Downloads) — feste Anzahl Slots,
+        // standardmäßig ausgeblendet, Klick öffnet URL nativ im Standardbrowser.
+        linkProps = new XPropertySet[MAX_LINKS];
+        for (int i = 0; i < MAX_LINKS; i++) {
+            int y = LINKS_Y + i * LINK_ROW_HEIGHT;
+            linkProps[i] = addControl(msf, modelContainer, "link" + i,
+                    "com.sun.star.awt.UnoControlFixedHyperlinkModel",
+                    PAD, y, DLG_WIDTH - 2 * PAD, LINK_ROW_HEIGHT, m -> {
+                        m.setPropertyValue("Label", "");
+                        m.setPropertyValue("URL", "");
+                        m.setPropertyValue("EnableVisible", Boolean.FALSE);
+                    });
+        }
 
         // Neue-Version-Hinweis
         neueVersionLabelProps = addControl(msf, modelContainer, "nvLabel",
@@ -533,12 +553,43 @@ public class ProcessBox implements TimerListener {
         }
     }
 
+    /** Ein klickbarer Link (z.B. Release-Seite, Download-Asset) für {@link #links(List)}. */
+    public record LinkEintrag(String label, String url) {
+        public LinkEintrag {
+            checkNotNull(label);
+            checkNotNull(url);
+        }
+    }
+
     // ── Public API ────────────────────────────────────────────────────────────
 
     public ProcessBox clearWennNotRunning() {
         if (!disposed && !SheetRunner.isRunning()) {
             clear();
         }
+        return this;
+    }
+
+    /**
+     * Setzt die klickbaren Link-Zeilen unterhalb des Logs (max. {@value #MAX_LINKS}).
+     * Überzählige Einträge werden ignoriert, nicht belegte Slots ausgeblendet.
+     * Ein Klick öffnet die URL nativ im Standardbrowser (VCL-Hyperlink-Control).
+     */
+    public ProcessBox links(List<LinkEintrag> links) {
+        if (disposed || linkProps == null) return this;
+        List<LinkEintrag> snapshot = links != null ? List.copyOf(links) : List.of();
+        runOnMain(() -> {
+            for (int i = 0; i < linkProps.length; i++) {
+                if (i < snapshot.size()) {
+                    var eintrag = snapshot.get(i);
+                    setPropertySafe(linkProps[i], "Label", eintrag.label());
+                    setPropertySafe(linkProps[i], "URL", eintrag.url());
+                    setPropertySafe(linkProps[i], "EnableVisible", Boolean.TRUE);
+                } else {
+                    setPropertySafe(linkProps[i], "EnableVisible", Boolean.FALSE);
+                }
+            }
+        });
         return this;
     }
 
@@ -571,6 +622,7 @@ public class ProcessBox implements TimerListener {
         if (disposed || logEditProps == null) return this;
         isFehler = false;
         runOnMain(() -> setPropertySafe(logEditProps, "Text", ""));
+        links(List.of());
         return this;
     }
 
@@ -782,6 +834,21 @@ public class ProcessBox implements TimerListener {
             Thread.currentThread().interrupt();
         } catch (RuntimeException e) {
             logger.debug("flushUiUpdatesForTest fehlgeschlagen", e);
+        }
+    }
+
+    /** Liefert den aktuellen Link-Eintrag eines Slots, oder {@code null} falls ausgeblendet (für Tests). */
+    public final LinkEintrag getLinkForTest(int index) {
+        if (linkProps == null || index < 0 || index >= linkProps.length) return null;
+        try {
+            var props = linkProps[index];
+            Object sichtbar = props.getPropertyValue("EnableVisible");
+            if (!(sichtbar instanceof Boolean b) || !b) return null;
+            Object label = props.getPropertyValue("Label");
+            Object url = props.getPropertyValue("URL");
+            return new LinkEintrag(label instanceof String s ? s : "", url instanceof String s ? s : "");
+        } catch (com.sun.star.uno.Exception e) {
+            return null;
         }
     }
 
