@@ -609,6 +609,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 					// Druckvorschau-Übergang loggen: Controller bereits gewechselt wenn dieses Event feuert.
 					// DRUCKVORSCHAU_AKTIV wird hier NICHT zurückgesetzt – FillToolbar läuft noch.
 					// Der Reset erfolgt erst in onViewCreated, wenn der neue Controller vollständig aktiv ist.
+					// Nur Calc-Dokumente tracken: das Event kommt für ALLE LO-Dokumente (auch versteckte
+					// Writer-Docs, z.B. beim HTML→ODT/DOCX-Export via HtmlZuWriterKonvertierer).
+					if (DocumentHelper.getCurrentSpreadsheetDocumentFrom(source) == null) return;
 					try {
 						var xModel = Lo.qi(XModel.class, source);
 						if (xModel == null) return;
@@ -626,6 +629,11 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 					logger.trace("[FOKUS-TRACE] onViewCreated: source={}", beschreibeSource(source));
 					// Druckvorschau-Tracking: Controller-Typ des neuen Views bestimmen.
 					// ScPreviewController implementiert XSpreadsheetView nicht.
+					// Nur Calc-Dokumente tracken: das Event kommt für ALLE LO-Dokumente (auch versteckte
+					// Writer-Docs, z.B. beim HTML→ODT/DOCX-Export via HtmlZuWriterKonvertierer) – ohne
+					// diesen Guard würde ein solcher Export DRUCKVORSCHAU_AKTIV dauerhaft auf true setzen
+					// und alle Menüaktionen blockieren, weil danach nie wieder ein Calc-View erzeugt wird.
+					if (DocumentHelper.getCurrentSpreadsheetDocumentFrom(source) == null) return;
 					try {
 						var xModel = Lo.qi(XModel.class, source);
 						if (xModel == null) return;
