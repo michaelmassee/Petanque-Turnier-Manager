@@ -108,6 +108,19 @@ class FormuleXListeDelegate implements MeldeListeKonstanten {
         return konfigurationSheet.isMeldeListeTeamnameAnzeigen() ? 1 : -1;
     }
 
+    /**
+     * Spalte, anhand derer erkannt wird, ob eine Zeile befüllt ist. Normalerweise die
+     * Vorname-Spalte von Spieler 1; bei Formation.NUR_TEAMNAME gibt es keine Spieler-Spalten
+     * (getVornameSpalte(0) würde auf die Setzposition-Spalte zeigen), daher dort die
+     * Teamname-Spalte.
+     */
+    int getZeilenKennungSpalte() throws GenerateException {
+        if (konfigurationSheet.getMeldeListeFormation().getAnzSpieler() > 0) {
+            return getVornameSpalte(0);
+        }
+        return getTeamnameSpalte();
+    }
+
     /** Anzahl Spalten pro Spieler: 2 (Vorname+Nachname) oder 3 (+Vereinsname). */
     int getSpaltenProSpieler() throws GenerateException {
         return konfigurationSheet.isMeldeListeVereinsnameAnzeigen() ? 3 : 2;
@@ -460,7 +473,7 @@ class FormuleXListeDelegate implements MeldeListeKonstanten {
     TeamMeldungen getAktiveMeldungen() throws GenerateException {
         sheet.processBoxinfo("processbox.ko.meldeliste.einlesen");
         XSpreadsheet xSheet = sheet.getXSpreadSheet();
-        int vornameSpalte = getVornameSpalte(0);
+        int vornameSpalte = getZeilenKennungSpalte();
         int spSpalte = getSetzPositionSpalte();
         int aktivSpalte = getAktivSpalte();
         int letzteZeile = letzteZeileMitDaten(xSheet);
@@ -491,7 +504,7 @@ class FormuleXListeDelegate implements MeldeListeKonstanten {
     TeamMeldungen getMeldungenSortiertNachSetzposition() throws GenerateException {
         sheet.processBoxinfo("processbox.ko.meldeliste.sortieren");
         XSpreadsheet xSheet = sheet.getXSpreadSheet();
-        int vornameSpalte = getVornameSpalte(0);
+        int vornameSpalte = getZeilenKennungSpalte();
         int spSpalte = getSetzPositionSpalte();
         int aktivSpalte = getAktivSpalte();
         int letzteZeile = letzteZeileMitDaten(xSheet);
@@ -560,7 +573,7 @@ class FormuleXListeDelegate implements MeldeListeKonstanten {
      * Liest die Vorname-Spalte als Block via {@link RangeHelper} statt 500 Einzelzugriffe.
      */
     int letzteZeileMitDaten(XSpreadsheet xSheet) throws GenerateException {
-        int vornameSpalte = getVornameSpalte(0);
+        int vornameSpalte = getZeilenKennungSpalte();
         int letzte = ERSTE_DATEN_ZEILE - 1;
         int maxZeile = ERSTE_DATEN_ZEILE + 500;
         RangePosition range = RangePosition.from(vornameSpalte, ERSTE_DATEN_ZEILE, vornameSpalte, maxZeile);
@@ -622,7 +635,7 @@ class FormuleXListeDelegate implements MeldeListeKonstanten {
         int letzteZeile = letzteZeileMitDaten(xSheet);
         TeamMeldungen meldungen = new TeamMeldungen();
         for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
-            String vorname = sheet.getSheetHelper().getTextFromCell(xSheet, Position.from(getVornameSpalte(0), zeile));
+            String vorname = sheet.getSheetHelper().getTextFromCell(xSheet, Position.from(getZeilenKennungSpalte(), zeile));
             if (vorname == null || vorname.isEmpty()) {
                 continue;
             }
@@ -641,7 +654,7 @@ class FormuleXListeDelegate implements MeldeListeKonstanten {
         XSpreadsheet xSheet = sheet.getXSpreadSheet();
         int letzteZeile = letzteZeileMitDaten(xSheet);
         for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
-            String vorname = sheet.getSheetHelper().getTextFromCell(xSheet, Position.from(getVornameSpalte(0), zeile));
+            String vorname = sheet.getSheetHelper().getTextFromCell(xSheet, Position.from(getZeilenKennungSpalte(), zeile));
             if (vorname == null || vorname.isEmpty()) {
                 continue;
             }
@@ -748,7 +761,7 @@ class FormuleXListeDelegate implements MeldeListeKonstanten {
         int letzteZeile = letzteZeileMitDaten(xSheet);
         List<String> namen = new ArrayList<>();
         for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
-            String vorname = sheet.getSheetHelper().getTextFromCell(xSheet, Position.from(getVornameSpalte(0), zeile));
+            String vorname = sheet.getSheetHelper().getTextFromCell(xSheet, Position.from(getZeilenKennungSpalte(), zeile));
             if (vorname != null && !vorname.isEmpty()) {
                 namen.add(vorname);
             }

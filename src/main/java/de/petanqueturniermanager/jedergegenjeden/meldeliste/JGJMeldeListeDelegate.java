@@ -89,6 +89,19 @@ class JGJMeldeListeDelegate implements MeldeListeKonstanten {
 		return konfigurationSheet.isMeldeListeTeamnameAnzeigen() ? 1 : -1;
 	}
 
+	/**
+	 * Spalte, anhand derer erkannt wird, ob eine Zeile befüllt ist. Normalerweise die
+	 * Vorname-Spalte von Spieler 1; bei Formation.NUR_TEAMNAME gibt es keine Spieler-Spalten
+	 * (getVornameSpalte(0) würde auf die Setzposition-Spalte zeigen), daher dort die
+	 * Teamname-Spalte.
+	 */
+	int getZeilenKennungSpalte() {
+		if (konfigurationSheet.getMeldeListeFormation().getAnzSpieler() > 0) {
+			return getVornameSpalte(0);
+		}
+		return getTeamnameSpalte();
+	}
+
 	int getSpaltenProSpieler() {
 		return konfigurationSheet.isMeldeListeVereinsnameAnzeigen() ? 3 : 2;
 	}
@@ -351,7 +364,7 @@ class JGJMeldeListeDelegate implements MeldeListeKonstanten {
 		int letzteZeile = letzteZeileMitDaten(xSheet);
 		TeamMeldungen meldungen = new TeamMeldungen();
 		for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
-			String vorname = sheet.getSheetHelper().getTextFromCell(xSheet, Position.from(getVornameSpalte(0), zeile));
+			String vorname = sheet.getSheetHelper().getTextFromCell(xSheet, Position.from(getZeilenKennungSpalte(), zeile));
 			if (vorname == null || vorname.isEmpty()) {
 				continue;
 			}
@@ -370,7 +383,7 @@ class JGJMeldeListeDelegate implements MeldeListeKonstanten {
 		int letzteZeile = letzteZeileMitDaten(xSheet);
 		TeamMeldungen meldungen = new TeamMeldungen();
 		for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
-			String vorname = sheet.getSheetHelper().getTextFromCell(xSheet, Position.from(getVornameSpalte(0), zeile));
+			String vorname = sheet.getSheetHelper().getTextFromCell(xSheet, Position.from(getZeilenKennungSpalte(), zeile));
 			if (vorname == null || vorname.isEmpty()) {
 				continue;
 			}
@@ -477,7 +490,7 @@ class JGJMeldeListeDelegate implements MeldeListeKonstanten {
 	// ---------------------------------------------------------------
 
 	int letzteZeileMitDaten(XSpreadsheet xSheet) throws GenerateException {
-		int vornameSpalte = getVornameSpalte(0);
+		int vornameSpalte = getZeilenKennungSpalte();
 		int letzte = ERSTE_DATEN_ZEILE - 1;
 		int maxZeile = ERSTE_DATEN_ZEILE + 500;
 		for (int zeile = ERSTE_DATEN_ZEILE; zeile <= maxZeile; zeile++) {
@@ -548,7 +561,7 @@ class JGJMeldeListeDelegate implements MeldeListeKonstanten {
 		int letzteZeile = letzteZeileMitDaten(xSheet);
 		List<String> namen = new ArrayList<>();
 		for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
-			String vorname = sheet.getSheetHelper().getTextFromCell(xSheet, Position.from(getVornameSpalte(0), zeile));
+			String vorname = sheet.getSheetHelper().getTextFromCell(xSheet, Position.from(getZeilenKennungSpalte(), zeile));
 			if (vorname != null && !vorname.isEmpty()) {
 				namen.add(vorname);
 			}
@@ -630,7 +643,7 @@ class JGJMeldeListeDelegate implements MeldeListeKonstanten {
 		if (letzteZeile < ERSTE_DATEN_ZEILE) {
 			return;
 		}
-		int vornameSpalte = getVornameSpalte(0);
+		int vornameSpalte = getZeilenKennungSpalte();
 		RangePosition range = RangePosition.from(getTeamNrSpalte(), ERSTE_DATEN_ZEILE,
 				getAktivSpalte(), letzteZeile);
 		SortHelper.from(sheet, range).spalteToSort(getTeamNrSpalte()).abSteigendSortieren().doSort();
@@ -685,7 +698,7 @@ class JGJMeldeListeDelegate implements MeldeListeKonstanten {
 		XSpreadsheet xSheet = sheet.getXSpreadSheet();
 		int letzteZeile = letzteZeileMitDaten(xSheet);
 		for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
-			String vorname = sheet.getSheetHelper().getTextFromCell(xSheet, Position.from(getVornameSpalte(0), zeile));
+			String vorname = sheet.getSheetHelper().getTextFromCell(xSheet, Position.from(getZeilenKennungSpalte(), zeile));
 			if (vorname == null || vorname.isEmpty()) {
 				continue;
 			}

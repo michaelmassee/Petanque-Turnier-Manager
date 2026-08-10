@@ -87,6 +87,19 @@ class PouleListeDelegate implements MeldeListeKonstanten {
         return konfigurationSheet.isMeldeListeTeamnameAnzeigen() ? 1 : -1;
     }
 
+    /**
+     * Spalte, anhand derer erkannt wird, ob eine Zeile befüllt ist. Normalerweise die
+     * Vorname-Spalte von Spieler 1; bei Formation.NUR_TEAMNAME gibt es keine Spieler-Spalten
+     * (getVornameSpalte(0) würde auf die Setzposition-Spalte zeigen), daher dort die
+     * Teamname-Spalte.
+     */
+    int getZeilenKennungSpalte() throws GenerateException {
+        if (konfigurationSheet.getMeldeListeFormation().getAnzSpieler() > 0) {
+            return getVornameSpalte(0);
+        }
+        return getTeamnameSpalte();
+    }
+
     /** Anzahl Spalten pro Spieler: 2 (Vorname+Nachname) oder 3 (+Vereinsname). */
     int getSpaltenProSpieler() throws GenerateException {
         return konfigurationSheet.isMeldeListeVereinsnameAnzeigen() ? 3 : 2;
@@ -398,7 +411,7 @@ class PouleListeDelegate implements MeldeListeKonstanten {
         var hatAktivEintrag = false;
 
         for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
-            var vorname = sheet.getSheetHelper().getTextFromCell(xSheet, Position.from(getVornameSpalte(0), zeile));
+            var vorname = sheet.getSheetHelper().getTextFromCell(xSheet, Position.from(getZeilenKennungSpalte(), zeile));
             if (vorname == null || vorname.isEmpty()) {
                 continue;
             }
@@ -466,7 +479,7 @@ class PouleListeDelegate implements MeldeListeKonstanten {
      * Gibt ERSTE_DATEN_ZEILE - 1 zurück wenn keine Daten vorhanden.
      */
     int letzteZeileMitDaten(XSpreadsheet xSheet) throws GenerateException {
-        var vornameSpalte = getVornameSpalte(0);
+        var vornameSpalte = getZeilenKennungSpalte();
         var letzte = ERSTE_DATEN_ZEILE - 1;
         var maxZeile = ERSTE_DATEN_ZEILE + 500;
         for (int zeile = ERSTE_DATEN_ZEILE; zeile <= maxZeile; zeile++) {
@@ -488,7 +501,7 @@ class PouleListeDelegate implements MeldeListeKonstanten {
         var letzteZeile = letzteZeileMitDaten(xSheet);
         var meldungen = new TeamMeldungen();
         for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
-            var vorname = sheet.getSheetHelper().getTextFromCell(xSheet, Position.from(getVornameSpalte(0), zeile));
+            var vorname = sheet.getSheetHelper().getTextFromCell(xSheet, Position.from(getZeilenKennungSpalte(), zeile));
             if (vorname == null || vorname.isEmpty()) {
                 continue;
             }
@@ -571,7 +584,7 @@ class PouleListeDelegate implements MeldeListeKonstanten {
         var letzteZeile = letzteZeileMitDaten(xSheet);
         List<String> namen = new ArrayList<>();
         for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
-            var vorname = sheet.getSheetHelper().getTextFromCell(xSheet, Position.from(getVornameSpalte(0), zeile));
+            var vorname = sheet.getSheetHelper().getTextFromCell(xSheet, Position.from(getZeilenKennungSpalte(), zeile));
             if (vorname != null && !vorname.isEmpty()) {
                 namen.add(vorname);
             }

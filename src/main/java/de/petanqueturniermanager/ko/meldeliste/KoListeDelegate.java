@@ -103,6 +103,18 @@ class KoListeDelegate implements MeldeListeKonstanten {
 		return konfigurationSheet.isMeldeListeTeamnameAnzeigen() ? 1 : -1;
 	}
 
+	/**
+	 * Spalte, anhand derer erkannt wird, ob eine Zeile befüllt ist. Normalerweise die
+	 * Vorname-Spalte von Spieler 1; bei Formation.NUR_TEAMNAME gibt es keine Spieler-Spalten
+	 * (getVornameSpalte(0) würde auf die RNG-Spalte zeigen), daher dort die Teamname-Spalte.
+	 */
+	int getZeilenKennungSpalte() throws GenerateException {
+		if (konfigurationSheet.getMeldeListeFormation().getAnzSpieler() > 0) {
+			return getVornameSpalte(0);
+		}
+		return getTeamnameSpalte();
+	}
+
 	/** Anzahl Spalten pro Spieler: 2 (Vorname+Nachname) oder 3 (+Vereinsname). */
 	int getSpaltenProSpieler() throws GenerateException {
 		return konfigurationSheet.isMeldeListeVereinsnameAnzeigen() ? 3 : 2;
@@ -437,7 +449,7 @@ class KoListeDelegate implements MeldeListeKonstanten {
 		// - Text-Wert → rot
 		// - Zeile hat Spielernamen aber RNG ist leer (≤ 0) → rot
 		// - Duplikat (Wert > 0, aber mehrfach vorhanden) → rot
-		int vornameSpalteNr = getVornameSpalte(0) + 1; // ADDRESS ist 1-basiert
+		int vornameSpalteNr = getZeilenKennungSpalte() + 1; // ADDRESS ist 1-basiert
 		String vornameRef = "INDIRECT(ADDRESS(ROW();" + vornameSpalteNr + "))";
 		String kondRngLeer = "AND(" + vornameRef + "<>\"\";" + ConditionalFormatHelper.FORMULA_CURRENT_CELL + "<=0)";
 		String kondDoppeltRng = "AND(" + ConditionalFormatHelper.FORMULA_CURRENT_CELL + ">0;COUNTIF("
@@ -490,7 +502,7 @@ class KoListeDelegate implements MeldeListeKonstanten {
 	/** Liest alle Team-Meldungen aus dem Sheet, unabhängig vom Aktiv-Status. */
 	TeamMeldungen getAlleMeldungen() throws GenerateException {
 		XSpreadsheet xSheet = sheet.getXSpreadSheet();
-		int vornameSpalte = getVornameSpalte(0);
+		int vornameSpalte = getZeilenKennungSpalte();
 		int letzteZeile = letzteZeileMitDaten(xSheet);
 		TeamMeldungen meldungen = new TeamMeldungen();
 		for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
@@ -510,7 +522,7 @@ class KoListeDelegate implements MeldeListeKonstanten {
 	/** Setzt alle Teams mit gültiger Teamnummer auf AKTIV_WERT_NIMMT_TEIL (1). */
 	void alleTeamsAktivieren() throws GenerateException {
 		XSpreadsheet xSheet = sheet.getXSpreadSheet();
-		int vornameSpalte = getVornameSpalte(0);
+		int vornameSpalte = getZeilenKennungSpalte();
 		int aktivSpalte = getAktivSpalte();
 		int letzteZeile = letzteZeileMitDaten(xSheet);
 		for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
@@ -531,7 +543,7 @@ class KoListeDelegate implements MeldeListeKonstanten {
 	TeamMeldungen getAktiveMeldungen() throws GenerateException {
 		sheet.processBoxinfo("processbox.ko.meldeliste.einlesen");
 		XSpreadsheet xSheet = sheet.getXSpreadSheet();
-		int vornameSpalte = getVornameSpalte(0);
+		int vornameSpalte = getZeilenKennungSpalte();
 		int aktivSpalte = getAktivSpalte();
 		int letzteZeile = letzteZeileMitDaten(xSheet);
 
@@ -560,7 +572,7 @@ class KoListeDelegate implements MeldeListeKonstanten {
 	TeamMeldungen getMeldungenSortiertNachRangliste() throws GenerateException {
 		sheet.processBoxinfo("processbox.ko.meldeliste.sortieren");
 		XSpreadsheet xSheet = sheet.getXSpreadSheet();
-		int vornameSpalte = getVornameSpalte(0);
+		int vornameSpalte = getZeilenKennungSpalte();
 		int rngSpalte = getRanglisteSpalte();
 		int aktivSpalte = getAktivSpalte();
 		int letzteZeile = letzteZeileMitDaten(xSheet);
@@ -601,7 +613,7 @@ class KoListeDelegate implements MeldeListeKonstanten {
 	 */
 	String validiereRangSpalte() throws GenerateException {
 		XSpreadsheet xSheet = sheet.getXSpreadSheet();
-		int vornameSpalte = getVornameSpalte(0);
+		int vornameSpalte = getZeilenKennungSpalte();
 		int rngSpalte = getRanglisteSpalte();
 		int aktivSpalte = getAktivSpalte();
 		int letzteZeile = letzteZeileMitDaten(xSheet);
@@ -640,7 +652,7 @@ class KoListeDelegate implements MeldeListeKonstanten {
 
 	void rangSpalteDurchnummerieren() throws GenerateException {
 		XSpreadsheet xSheet = sheet.getXSpreadSheet();
-		int vornameSpalte = getVornameSpalte(0);
+		int vornameSpalte = getZeilenKennungSpalte();
 		int rngSpalte = getRanglisteSpalte();
 		int aktivSpalte = getAktivSpalte();
 		int letzteZeile = letzteZeileMitDaten(xSheet);
@@ -665,7 +677,7 @@ class KoListeDelegate implements MeldeListeKonstanten {
 	 * Gibt ERSTE_DATEN_ZEILE - 1 zurück wenn keine Daten vorhanden.
 	 */
 	int letzteZeileMitDaten(XSpreadsheet xSheet) throws GenerateException {
-		int vornameSpalte = getVornameSpalte(0);
+		int vornameSpalte = getZeilenKennungSpalte();
 		int letzte = ERSTE_DATEN_ZEILE - 1;
 		int maxZeile = ERSTE_DATEN_ZEILE + 500;
 		for (int zeile = ERSTE_DATEN_ZEILE; zeile <= maxZeile; zeile++) {
@@ -811,7 +823,7 @@ class KoListeDelegate implements MeldeListeKonstanten {
 		int letzteZeile = letzteZeileMitDaten(xSheet);
 		List<String> namen = new ArrayList<>();
 		for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
-			String vorname = sheet.getSheetHelper().getTextFromCell(xSheet, Position.from(getVornameSpalte(0), zeile));
+			String vorname = sheet.getSheetHelper().getTextFromCell(xSheet, Position.from(getZeilenKennungSpalte(), zeile));
 			if (vorname != null && !vorname.isEmpty()) {
 				namen.add(vorname);
 			}
