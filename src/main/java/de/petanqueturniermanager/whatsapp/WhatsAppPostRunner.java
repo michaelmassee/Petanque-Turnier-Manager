@@ -57,7 +57,7 @@ public class WhatsAppPostRunner extends SheetRunner {
 				.zeigen(getWorkingSpreadsheet(), chats, letzterChatId, letzteKopfFusszeileWahl)
 				.orElse(null);
 		if (auswahl == null) {
-			throw new GenerateException(I18n.get("whatsapp.post.abgebrochen"));
+			return;
 		}
 		WhatsAppChatEintrag chat = auswahl.chat();
 		docPropHelper.setStringProperty(PROP_LETZTER_WHATSAPP_CHAT, chat.id());

@@ -482,6 +482,7 @@ tasks.register('buildOXT', Zip) {
         include 'package.json'
         include 'package-lock.json'
         include 'server.js'
+        include '.npmrc'
         into 'tools/whatsapp-bridge'
     }
 
