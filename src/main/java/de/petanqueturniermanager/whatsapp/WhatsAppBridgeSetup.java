@@ -290,7 +290,8 @@ public final class WhatsAppBridgeSetup {
 		Path nodeModules = bridgeDir.resolve("node_modules");
 		return Files.isDirectory(nodeModules.resolve("@whiskeysockets").resolve("baileys"))
 				&& Files.isDirectory(nodeModules.resolve("express"))
-				&& Files.isDirectory(nodeModules.resolve("qrcode"));
+				&& Files.isDirectory(nodeModules.resolve("qrcode"))
+				&& Files.isDirectory(nodeModules.resolve("pino"));
 	}
 
 	static NodePaket paketFuerAktuellePlattform() {
