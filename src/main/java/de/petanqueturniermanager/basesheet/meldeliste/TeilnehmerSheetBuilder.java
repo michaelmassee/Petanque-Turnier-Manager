@@ -30,11 +30,14 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
  * Erzeugt einen einheitlichen mehrspaltigen Block mit Header, Daten, Zebra-Farben,
  * Freeze des Header und Druckbereich inkl. Wiederholungs-Header-Zeile.
  *
- * Layout pro Block (dynamisch je nach Teamname-Property):
+ * Layout pro Block (dynamisch je nach Teamname-Property und Spieler-Spalte):
  * <ul>
- * <li>{@code teamnameAktiv = false}: Nr · Spieler · (Leerspalte)</li>
- * <li>{@code teamnameAktiv = true}:  Nr · Teamname · Spieler · (Leerspalte)</li>
+ * <li>{@code teamnameAktiv = false, spielerSpalteAktiv = true}: Nr · Spieler · (Leerspalte)</li>
+ * <li>{@code teamnameAktiv = true, spielerSpalteAktiv = true}:  Nr · Teamname · Spieler · (Leerspalte)</li>
+ * <li>{@code teamnameAktiv = true, spielerSpalteAktiv = false}: Nr · Teamname · (Leerspalte)</li>
  * </ul>
+ * ({@code spielerSpalteAktiv = false} kommt nur bei aktivem Teamnamen vor, z.B. Formation
+ * „Nur Teamname" ohne Spielernamen.)
  */
 public final class TeilnehmerSheetBuilder {
 
@@ -53,6 +56,7 @@ public final class TeilnehmerSheetBuilder {
     private final ISheet sheet;
     private List<TeilnehmerEintrag> daten = List.of();
     private boolean teamnameAktiv = false;
+    private boolean spielerSpalteAktiv = true;
     private int maxProBlock = 40;
     private int headerFarbe = 0xC0C0C0;
     private int geradeFarbe = 0xFFFFFF;
@@ -81,6 +85,12 @@ public final class TeilnehmerSheetBuilder {
         return this;
     }
 
+    /** Ob eine Spieler-Spalte angezeigt wird. Default {@code true}. */
+    public TeilnehmerSheetBuilder spielerSpalteAktiv(boolean aktiv) {
+        this.spielerSpalteAktiv = aktiv;
+        return this;
+    }
+
     public TeilnehmerSheetBuilder maxProBlock(int n) {
         this.maxProBlock = Math.max(1, n);
         return this;
@@ -105,8 +115,9 @@ public final class TeilnehmerSheetBuilder {
 
     /** Erstellt Header, Daten, Border, Zebra-Farben und liefert die Zeilennummer der letzten Datenzeile zurück. */
     public TeilnehmerSheetBuilder aufbauen() throws GenerateException {
-        int spaltenProBlock = teamnameAktiv ? 4 : 3; // Nr · [Teamname ·] Spieler · Leer
-        int datenSpaltenProBlock = teamnameAktiv ? 3 : 2;
+        // Nr · [Teamname ·] [Spieler ·] Leer
+        int datenSpaltenProBlock = 1 + (teamnameAktiv ? 1 : 0) + (spielerSpalteAktiv ? 1 : 0);
+        int spaltenProBlock = datenSpaltenProBlock + 1;
         int anzahlEintraege = daten.size();
         int zeilenProBlock = Math.min(maxProBlock, Math.max(anzahlEintraege, 1));
         int anzBloecke = Math.max(1, (anzahlEintraege + maxProBlock - 1) / maxProBlock);
@@ -186,11 +197,13 @@ public final class TeilnehmerSheetBuilder {
         for (int b = 0; b < anzBloecke; b++) {
             int base = b * spaltenProBlock;
             sheetHelper.setColumnProperties(xSheet, base, propNr);
+            int spalte = base + 1;
             if (teamnameAktiv) {
-                sheetHelper.setColumnProperties(xSheet, base + 1, propTeamname);
-                sheetHelper.setColumnProperties(xSheet, base + 2, propSpieler);
-            } else {
-                sheetHelper.setColumnProperties(xSheet, base + 1, propSpieler);
+                sheetHelper.setColumnProperties(xSheet, spalte, propTeamname);
+                spalte++;
+            }
+            if (spielerSpalteAktiv) {
+                sheetHelper.setColumnProperties(xSheet, spalte, propSpieler);
             }
             if (b < anzBloecke - 1) {
                 sheetHelper.setColumnProperties(xSheet, base + datenSpaltenProBlock, propLeer);
@@ -203,11 +216,13 @@ public final class TeilnehmerSheetBuilder {
         var xSheet = sheet.getXSpreadSheet();
         for (int b = 0; b < anzBloecke; b++) {
             int base = b * spaltenProBlock;
+            int spalte = base + 1;
             if (teamnameAktiv) {
-                sheetHelper.setOptimaleBreitePlusMarge(xSheet, base + 1, SheetHelper.OPTIMALE_BREITE_MARGE);
-                sheetHelper.setOptimaleBreitePlusMarge(xSheet, base + 2, SheetHelper.OPTIMALE_BREITE_MARGE);
-            } else {
-                sheetHelper.setOptimaleBreitePlusMarge(xSheet, base + 1, SheetHelper.OPTIMALE_BREITE_MARGE);
+                sheetHelper.setOptimaleBreitePlusMarge(xSheet, spalte, SheetHelper.OPTIMALE_BREITE_MARGE);
+                spalte++;
+            }
+            if (spielerSpalteAktiv) {
+                sheetHelper.setOptimaleBreitePlusMarge(xSheet, spalte, SheetHelper.OPTIMALE_BREITE_MARGE);
             }
         }
     }
@@ -217,11 +232,13 @@ public final class TeilnehmerSheetBuilder {
         for (int b = 0; b < anzBloecke; b++) {
             int base = b * spaltenProBlock;
             schreibeHeaderZelle(base, "column.header.nr", headerBorder);
+            int spalte = base + 1;
             if (teamnameAktiv) {
-                schreibeHeaderZelle(base + 1, "column.header.teamname", headerBorder);
-                schreibeHeaderZelle(base + 2, spielerHeaderKey, headerBorder);
-            } else {
-                schreibeHeaderZelle(base + 1, spielerHeaderKey, headerBorder);
+                schreibeHeaderZelle(spalte, "column.header.teamname", headerBorder);
+                spalte++;
+            }
+            if (spielerSpalteAktiv) {
+                schreibeHeaderZelle(spalte, spielerHeaderKey, headerBorder);
             }
         }
     }
@@ -261,21 +278,30 @@ public final class TeilnehmerSheetBuilder {
             if (teamnameAktiv) {
                 row.newString(t.teamname() != null ? t.teamname() : "");
             }
-            row.newString(t.spielerNamen() != null ? t.spielerNamen() : "");
+            if (spielerSpalteAktiv) {
+                row.newString(t.spielerNamen() != null ? t.spielerNamen() : "");
+            }
         } else {
             row.newEmpty();
             if (teamnameAktiv) {
                 row.newEmpty();
             }
-            row.newEmpty();
+            if (spielerSpalteAktiv) {
+                row.newEmpty();
+            }
         }
+    }
+
+    /** Letzte Datenspalte (relativ zur Block-Basis) – Teamname und/oder Spieler, je nach aktiven Spalten. */
+    private int letzteDatenSpalteImBlock(int base) {
+        return base + (teamnameAktiv ? 1 : 0) + (spielerSpalteAktiv ? 1 : 0);
     }
 
     private void datenBorderSetzen(int anzBloecke, int spaltenProBlock, int zeilenProBlock) throws GenerateException {
         var dataBorder = BorderFactory.from().allThin().toBorder();
         for (int b = 0; b < anzBloecke; b++) {
             int base = b * spaltenProBlock;
-            int letzteSpalteImBlock = teamnameAktiv ? base + 2 : base + 1;
+            int letzteSpalteImBlock = letzteDatenSpalteImBlock(base);
             RangePosition cellRange = RangePosition.from(base, ERSTE_DATEN_ZEILE,
                     letzteSpalteImBlock, ERSTE_DATEN_ZEILE + zeilenProBlock - 1);
             sheet.getSheetHelper().setPropertiesInRange(sheet.getXSpreadSheet(), cellRange,
@@ -290,7 +316,7 @@ public final class TeilnehmerSheetBuilder {
     private void zebraFarbenSetzen(int anzBloecke, int spaltenProBlock, int zeilenProBlock) throws GenerateException {
         for (int b = 0; b < anzBloecke; b++) {
             int base = b * spaltenProBlock;
-            int letzteSpalteImBlock = teamnameAktiv ? base + 2 : base + 1;
+            int letzteSpalteImBlock = letzteDatenSpalteImBlock(base);
             SheetHelper.faerbeZeilenAbwechselnd(sheet,
                     RangePosition.from(base, ERSTE_DATEN_ZEILE, letzteSpalteImBlock,
                             ERSTE_DATEN_ZEILE + zeilenProBlock - 1),

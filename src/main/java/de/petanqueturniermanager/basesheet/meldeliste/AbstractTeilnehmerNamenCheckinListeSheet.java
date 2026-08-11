@@ -55,6 +55,12 @@ public abstract class AbstractTeilnehmerNamenCheckinListeSheet extends AbstractC
 		return istTeamnameAktiv();
 	}
 
+	/** Bei Formation ohne Spielernamen (z.B. „Nur Teamname") wird keine Spieler-Spalte angezeigt. */
+	@Override
+	protected boolean spielerSpalteAktiv() {
+		return getFormation().getAnzSpieler() > 0;
+	}
+
 	@Override
 	protected Map<Integer, String> teamnamenNachNummer() throws GenerateException {
 		return leseTeilnehmerNamen().teamnamen();

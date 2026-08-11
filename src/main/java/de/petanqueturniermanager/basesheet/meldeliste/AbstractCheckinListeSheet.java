@@ -62,15 +62,22 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 	 * Spalten-Geometrie eines Checkin-Blocks – analog zur Teilnehmerliste, ergänzt um die
 	 * Checkbox- und Trennspalte:
 	 * <ul>
-	 * <li>{@code teamSpalte = false}: Nr · Spieler · Checkbox · (Trennspalte)</li>
-	 * <li>{@code teamSpalte = true}:  Nr · Teamname · Spieler · Checkbox · (Trennspalte)</li>
+	 * <li>{@code teamSpalte = false, spielerSpalte = true}: Nr · Spieler · Checkbox · (Trennspalte)</li>
+	 * <li>{@code teamSpalte = true, spielerSpalte = true}:  Nr · Teamname · Spieler · Checkbox · (Trennspalte)</li>
+	 * <li>{@code teamSpalte = true, spielerSpalte = false}: Nr · Teamname · Checkbox · (Trennspalte)</li>
 	 * </ul>
+	 * ({@code teamSpalte = false, spielerSpalte = false} kommt nicht vor.)
 	 * Alle Spaltenindizes sind relativ zum Sheet (inkl. Block-Versatz).
 	 */
-	private record BlockLayout(boolean teamSpalte) {
+	private record BlockLayout(boolean teamSpalte, boolean spielerSpalte) {
+		/** Letzte Namens-Spalte (Teamname oder Spieler) relativ zur Basis, 0-basiert ab Nr-Spalte. */
+		private int letzteNamensSpalteOffset() {
+			return (teamSpalte ? 1 : 0) + (spielerSpalte ? 1 : 0);
+		}
+
 		/** Spalten je Block inkl. Checkbox und Trennspalte. */
 		int spaltenProBlock() {
-			return teamSpalte ? 5 : 4;
+			return letzteNamensSpalteOffset() + 1 /* Checkbox */ + 1 /* Trennspalte */ + 1 /* Nr */;
 		}
 
 		int basis(int blk) {
@@ -86,12 +93,18 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 			return basis(blk) + 1;
 		}
 
+		/** Nur gültig, wenn {@link #spielerSpalte()}. */
 		int spielerSpalte(int blk) {
 			return basis(blk) + (teamSpalte ? 2 : 1);
 		}
 
+		/** Letzte Namens-Spalte des Blocks (Spieler, oder Teamname wenn keine Spieler-Spalte aktiv ist). */
+		int letzteNamensSpalte(int blk) {
+			return basis(blk) + letzteNamensSpalteOffset();
+		}
+
 		int checkboxSpalte(int blk) {
-			return spielerSpalte(blk) + 1;
+			return letzteNamensSpalte(blk) + 1;
 		}
 
 		/** Letzte Spalte des Blocks (Checkbox) – Grenze für Rahmen und Druckbereich. */
@@ -195,12 +208,12 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 	 * Befüllt den Checkin-Bereich blockweise als Block-Schreibvorgang (kein zellenweises Schreiben).
 	 */
 	private void fuelleBereich(List<Integer> nummern) throws GenerateException {
-		final BlockLayout layout = new BlockLayout(teamSpalteAktiv());
+		final BlockLayout layout = new BlockLayout(teamSpalteAktiv(), spielerSpalteAktiv());
 
 		if (nummern.isEmpty()) {
 			// Leere Meldeliste: dennoch Kopfzeile + Fußzeile (Anzahl 0) anzeigen und Druckbereich setzen.
 			kopfzeileSchreiben(0, layout);
-			int letzteSpalte = layout.spielerSpalte(0);
+			int letzteSpalte = layout.letzteNamensSpalte(0);
 			int footerZeile = footerSchreiben(0, KOPF_ZEILE, letzteSpalte);
 			printBereichDefinieren(footerZeile, letzteSpalte);
 			return;
@@ -208,7 +221,7 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 
 		final int maxProSpalte = getMaxProSpalte();
 		final int anzBloecke = (int) Math.ceil((double) nummern.size() / maxProSpalte);
-		final Map<Integer, String> spielerNamen = namenNachNummer();
+		final Map<Integer, String> spielerNamen = layout.spielerSpalte() ? namenNachNummer() : Map.of();
 		final Map<Integer, String> teamnamen = layout.teamSpalte() ? teamnamenNachNummer() : Map.of();
 		final Map<Integer, Boolean> checkboxStatus = checkboxStatusNachNummer();
 		final String haken = I18n.get("checkinliste.haken");
@@ -224,7 +237,9 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 					if (layout.teamSpalte()) {
 						zeileData.newString(teamnamen.getOrDefault(nr, ""));
 					}
-					zeileData.newString(spielerNamen.getOrDefault(nr, ""));
+					if (layout.spielerSpalte()) {
+						zeileData.newString(spielerNamen.getOrDefault(nr, ""));
+					}
 					// Checkbox-Spalte: Haken, wenn der Aktiv-Status in der Meldeliste gesetzt ist.
 					if (checkboxStatus.getOrDefault(nr, false)) {
 						zeileData.newString(haken);
@@ -285,9 +300,11 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 				getSheetHelper().setOptimaleBreitePlusMarge(getXSpreadSheet(), layout.teamSpalte(blkCntr),
 						SheetHelper.OPTIMALE_BREITE_MARGE);
 			}
-			getSheetHelper().setColumnProperties(getXSpreadSheet(), layout.spielerSpalte(blkCntr), columnPropName);
-			getSheetHelper().setOptimaleBreitePlusMarge(getXSpreadSheet(), layout.spielerSpalte(blkCntr),
-					SheetHelper.OPTIMALE_BREITE_MARGE);
+			if (layout.spielerSpalte()) {
+				getSheetHelper().setColumnProperties(getXSpreadSheet(), layout.spielerSpalte(blkCntr), columnPropName);
+				getSheetHelper().setOptimaleBreitePlusMarge(getXSpreadSheet(), layout.spielerSpalte(blkCntr),
+						SheetHelper.OPTIMALE_BREITE_MARGE);
+			}
 			getSheetHelper().setColumnProperties(getXSpreadSheet(), layout.checkboxSpalte(blkCntr), columnPropChkBox);
 
 			int blockEnde = layout.letzteBlockSpalte(blkCntr);
@@ -320,8 +337,9 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 
 	/**
 	 * Schreibt die Kopfzeile eines Blocks in {@link #KOPF_ZEILE} – im Stil der Teilnehmerliste.
-	 * Bei aktiver Teamname-Spalte werden drei Überschriften („Nr"/„Teamname"/„Spieler") gesetzt,
-	 * sonst zwei („Nr"/„Name"). Wird im befüllten wie im leeren Fall genutzt.
+	 * Bei aktiver Teamname- und Spieler-Spalte werden drei Überschriften („Nr"/„Teamname"/„Spieler")
+	 * gesetzt, ohne Spieler-Spalte (Formation ohne Spielernamen) nur „Nr"/„Teamname", ohne
+	 * Teamname-Spalte zwei („Nr"/„Name"). Wird im befüllten wie im leeren Fall genutzt.
 	 *
 	 * @param blkCntr Block-Index (0-basiert)
 	 * @param layout  Spalten-Geometrie des Blocks
@@ -336,8 +354,10 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 		if (layout.teamSpalte()) {
 			headerZelleSchreiben(layout.teamSpalte(blkCntr), "column.header.teamname",
 					TEAMNAME_SPALTE_WIDTH, headerColor, border);
-			headerZelleSchreiben(layout.spielerSpalte(blkCntr), "column.header.spieler",
-					getNameSpalteWidth(), headerColor, border);
+			if (layout.spielerSpalte()) {
+				headerZelleSchreiben(layout.spielerSpalte(blkCntr), "column.header.spieler",
+						getNameSpalteWidth(), headerColor, border);
+			}
 		} else {
 			headerZelleSchreiben(layout.spielerSpalte(blkCntr), "column.header.name",
 					getNameSpalteWidth(), headerColor, border);
@@ -466,5 +486,14 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 	 */
 	protected Map<Integer, String> teamnamenNachNummer() throws GenerateException {
 		return Map.of();
+	}
+
+	/**
+	 * Ob eine Spieler-Spalte angezeigt wird. Default {@code true}. Systeme mit der Formation
+	 * „Nur Teamname" (keine Spielernamen in der Meldeliste) liefern hier {@code false}, siehe
+	 * {@link AbstractTeilnehmerNamenCheckinListeSheet#spielerSpalteAktiv()}.
+	 */
+	protected boolean spielerSpalteAktiv() {
+		return true;
 	}
 }

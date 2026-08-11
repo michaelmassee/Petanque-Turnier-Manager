@@ -87,6 +87,7 @@ public class KoTeilnehmerSheet extends SheetRunner implements ISheet {
         TeamMeldungen aktiveMeldungen = meldeliste.getAktiveMeldungen();
 
         boolean teamnameAktiv = konfigurationSheet.isMeldeListeTeamnameAnzeigen();
+        boolean spielerSpalteAktiv = konfigurationSheet.getMeldeListeFormation().getAnzSpieler() > 0;
 
         List<TeilnehmerEintrag> eintraege = new ArrayList<>(aktiveMeldungen.size());
         if (aktiveMeldungen.size() > 0) {
@@ -112,6 +113,7 @@ public class KoTeilnehmerSheet extends SheetRunner implements ISheet {
         TeilnehmerSheetBuilder builder = TeilnehmerSheetBuilder.from(this)
                 .daten(eintraege)
                 .teamnameAktiv(teamnameAktiv)
+                .spielerSpalteAktiv(spielerSpalteAktiv)
                 .maxProBlock(konfigurationSheet.getMaxAnzTeilnehmerInSpalte())
                 .headerFarbe(konfigurationSheet.getMeldeListeHeaderFarbe())
                 .zebraFarben(konfigurationSheet.getMeldeListeHintergrundFarbeGerade(),
