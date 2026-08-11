@@ -47,6 +47,17 @@ class TeilnehmerStatusServiceTest {
         assertThat(schema.namensSpalten()).containsExactly(2, 3);
     }
 
+    @Test
+    void zaehlschemaFaelltBeiFormationNurTeamnameAufTeamnameSpalteZurueck() {
+        var zellen = new TestZellen()
+                .set(1, 1, I18n.get("column.header.teamname"));
+
+        var schema = TeilnehmerStatusService.zaehlschema(zellen::text);
+
+        assertThat(schema.ersteDatenZeile()).isEqualTo(2);
+        assertThat(schema.namensSpalten()).containsExactly(1);
+    }
+
     private static final class TestZellen {
         private final Map<String, String> werte = new HashMap<>();
 

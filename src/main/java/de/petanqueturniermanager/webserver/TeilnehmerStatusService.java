@@ -171,6 +171,7 @@ public final class TeilnehmerStatusService {
     private static TeilnehmerNamenListen namenListen(SheetHelper sh, XSpreadsheet sheet, int aktivSpalte,
             Zaehlschema schema, TeilnehmerNamenLeser.TeilnehmerNamen teilnehmerNamen) {
         Map<Integer, String> spielerNamen = teilnehmerNamen.spielerNamen();
+        Map<Integer, String> teamnamen = teilnehmerNamen.teamnamen();
         Map<Integer, String> sortNamen = teilnehmerNamen.sortNamen();
         List<NamenEintrag> nichtEingecheckt = new ArrayList<>();
         List<NamenEintrag> eingecheckt = new ArrayList<>();
@@ -185,6 +186,10 @@ public final class TeilnehmerStatusService {
             leereZeilenInFolge = 0;
             int nr = sh.getIntFromCell(sheet, Position.from(MeldeListeKonstanten.SPIELER_NR_SPALTE, zeile));
             String name = spielerNamen.getOrDefault(nr, "");
+            if (name.isBlank()) {
+                // Formation "Nur Teamname": keine Spielernamen vorhanden, auf Teamname ausweichen.
+                name = teamnamen.getOrDefault(nr, "");
+            }
             if (name.isBlank()) {
                 continue;
             }
@@ -389,6 +394,16 @@ public final class TeilnehmerStatusService {
                 vorname, nachname, name);
         if (!zweizeilig.namensSpalten().isEmpty()) {
             return zweizeilig;
+        }
+
+        // Formation "Nur Teamname": keine Vorname/Nachname/Name-Spalten vorhanden, dafür eine
+        // Teamname-Spalte – als Namensspalte verwenden, statt auf den festen Offset-Fallback
+        // zurückzufallen (der bei diesem Layout ins Leere zeigen kann).
+        String teamname = I18n.get("column.header.teamname");
+        Zaehlschema teamnameSchema = zaehlschemaAusHeaderZeile(zellen, MeldeListeKonstanten.ZWEITE_HEADER_ZEILE,
+                teamname);
+        if (!teamnameSchema.namensSpalten().isEmpty()) {
+            return teamnameSchema;
         }
 
         return new Zaehlschema(MeldeListeKonstanten.ERSTE_DATEN_ZEILE,
