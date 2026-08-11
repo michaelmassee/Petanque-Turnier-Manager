@@ -28,6 +28,7 @@ import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeGerad
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
@@ -178,6 +179,12 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 
 		doSort(SPIELER_NR_SPALTE, false); // hoechste nummer oben, ohne nummer nach unten
 
+		// Rot-Markierung eines vorherigen Laufs zurücksetzen: die Prüfung bricht beim ersten
+		// gefundenen Duplikat ab (throw) und markiert daher immer nur die eine Fundstelle. Ohne
+		// Reset bliebe eine bereits korrigierte Zeile aus einem früheren Lauf dauerhaft rot,
+		// weil kein Code-Pfad eine nicht mehr doppelte Zeile aktiv zurück auf Schwarz setzt.
+		zuruecksetzenFehlerFarbe(letzteSpielZeile);
+
 		// doppelte spieler Nummer entfernen !?!?!
 		HashSet<Integer> spielrNrInSheet = new HashSet<>();
 		HashSet<String> spielrNamenInSheet = new HashSet<>();
@@ -234,6 +241,28 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 				}
 				spielrNamenInSheet.add(cleanUpSpielerName(spielerName));
 			}
+		}
+	}
+
+	/**
+	 * Setzt die Schriftfarbe der Nr- und Namens-/Teamname-Spalte im Datenbereich blockweise auf
+	 * Schwarz zurück - Gegenstück zur Rot-Markierung in {@link #testDoppelteMeldungen()}, die nur
+	 * beim jeweils ersten gefundenen Duplikat greift und daher nie von sich aus wieder zurückgesetzt
+	 * wird.
+	 */
+	private void zuruecksetzenFehlerFarbe(int letzteZeile) throws GenerateException {
+		XSpreadsheet xSheet = getXSpreadSheet();
+		int ersteZeile = meldeListe.getErsteDatenZiele();
+		CellProperties schwarz = CellProperties.from().setCharColor(ColorHelper.CHAR_COLOR_BLACK);
+
+		RangePosition nrRange = RangePosition.from(SPIELER_NR_SPALTE, ersteZeile, SPIELER_NR_SPALTE, letzteZeile);
+		meldeListe.getSheetHelper().setPropertiesInRange(xSheet, nrRange, schwarz);
+
+		int ersteNamenSpalte = meldeListe.getMeldungenSpalte().getNamenOderTeamnameSpalte();
+		int letzteNamenSpalte = meldeListe.getMeldungenSpalte().getLetzteMeldungNameSpalte();
+		if (letzteNamenSpalte >= ersteNamenSpalte) {
+			RangePosition namenRange = RangePosition.from(ersteNamenSpalte, ersteZeile, letzteNamenSpalte, letzteZeile);
+			meldeListe.getSheetHelper().setPropertiesInRange(xSheet, namenRange, schwarz);
 		}
 	}
 
