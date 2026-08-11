@@ -44,7 +44,7 @@ final class RanglistenSiegergeldQuelle implements SiegergeldQuelle {
 	}
 
 	@Override
-	public List<SiegergeldEintrag> leseTop3() throws GenerateException {
+	public List<SiegergeldEintrag> leseTop(int maxPlatz) throws GenerateException {
 		XSpreadsheet sheet = findeSheet();
 		if (sheet == null) {
 			return List.of();
@@ -58,7 +58,7 @@ final class RanglistenSiegergeldQuelle implements SiegergeldQuelle {
 				continue;
 			}
 			int platz = sheetHelper.getIntFromCell(sheet, Position.from(platzSpalte, zeile));
-			if (platz < 1 || platz > 3) {
+			if (platz < 1 || platz > maxPlatz) {
 				continue;
 			}
 			int nr = sheetHelper.getIntFromCell(sheet, Position.from(nrSpalte, zeile));
@@ -71,9 +71,13 @@ final class RanglistenSiegergeldQuelle implements SiegergeldQuelle {
 	@Override
 	public int teilnehmerAnzahl() throws GenerateException {
 		if (teilnehmerAnzahlQuelle != null) {
-			int anzahl = teilnehmerAnzahlQuelle.lese();
-			if (anzahl > 0) {
-				return anzahl;
+			try {
+				int anzahl = teilnehmerAnzahlQuelle.lese();
+				if (anzahl > 0) {
+					return anzahl;
+				}
+			} catch (GenerateException e) {
+				// Bei systemunabhaengiger Nutzung kann eine Rangliste ohne passende Meldeliste existieren.
 			}
 		}
 		XSpreadsheet sheet = findeSheet();

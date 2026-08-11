@@ -48,7 +48,7 @@ final class MaastrichterSiegergeldQuelle implements SiegergeldQuelle {
 	}
 
 	@Override
-	public List<SiegergeldEintrag> leseTop3() throws GenerateException {
+	public List<SiegergeldEintrag> leseTop(int maxPlatz) throws GenerateException {
 		TeamMeldungen aktiveMeldungen = meldeliste.getAktiveMeldungen();
 		if (aktiveMeldungen.size() == 0) {
 			return List.of();
@@ -66,7 +66,7 @@ final class MaastrichterSiegergeldQuelle implements SiegergeldQuelle {
 					konfigurationSheet.getSpielbaumSpielbahn() != SpielrundeSpielbahn.X,
 					konfigurationSheet.isSpielbaumBahnNurRunde1(), true,
 					konfigurationSheet.isSpielbaumSpielUmPlatz3());
-			leseGruppe(finalSheet, layout, gruppe.getKey(), namenIndex, result);
+			leseGruppe(finalSheet, layout, gruppe.getKey(), namenIndex, result, maxPlatz);
 		}
 		result.sort(Comparator.comparing(SiegergeldEintrag::gruppe).thenComparingInt(SiegergeldEintrag::platz));
 		return result;
@@ -84,20 +84,23 @@ final class MaastrichterSiegergeldQuelle implements SiegergeldQuelle {
 	}
 
 	private void leseGruppe(XSpreadsheet finalSheet, KoTurnierbaumLayout layout, String gruppe,
-			NamenIndex namenIndex, List<SiegergeldEintrag> result) {
+			NamenIndex namenIndex, List<SiegergeldEintrag> result, int maxPlatz) {
 		TeamRef platz1 = leseSieger(finalSheet, layout.siegerSpalte(), layout.siegerNameSpalte(),
 				layout.siegerZeile(), namenIndex);
 		if (platz1.istLeer()) {
 			return;
 		}
 		result.add(platz1.toEintrag(gruppe, 1));
+		if (maxPlatz < 2) {
+			return;
+		}
 
 		TeamRef platz2 = leseFinalVerlierer(finalSheet, layout, namenIndex);
 		if (!platz2.istLeer()) {
 			result.add(platz2.toEintrag(gruppe, 2));
 		}
 
-		if (layout.hatSpielUmPlatz3()) {
+		if (maxPlatz >= 3 && layout.hatSpielUmPlatz3()) {
 			TeamRef platz3 = leseSieger(finalSheet, layout.siegerSpalte(), layout.siegerNameSpalte(),
 					layout.platz3SiegerZeile(), namenIndex);
 			if (!platz3.istLeer()) {

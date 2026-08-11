@@ -4,6 +4,7 @@
 package de.petanqueturniermanager.siegergeld;
 
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -66,5 +67,26 @@ public final class SiegergeldQuellen {
 		case MAASTRICHTER -> Optional.of(new MaastrichterSiegergeldQuelle(ws));
 		default -> Optional.empty();
 		};
+	}
+
+	static Optional<SiegergeldQuelle> ersteGefundeneRanglistenQuelle(WorkingSpreadsheet ws, int maxPlatz)
+			throws de.petanqueturniermanager.exception.GenerateException {
+		for (SiegergeldQuelle quelle : einfacheRanglistenQuellen(ws).toList()) {
+			if (!quelle.leseTop(maxPlatz).isEmpty()) {
+				return Optional.of(quelle);
+			}
+		}
+		return Optional.empty();
+	}
+
+	private static Stream<SiegergeldQuelle> einfacheRanglistenQuellen(WorkingSpreadsheet ws) {
+		return Stream.of(
+				fuer(ws, TurnierSystem.SUPERMELEE),
+				fuer(ws, TurnierSystem.LIGA),
+				fuer(ws, TurnierSystem.SCHWEIZER),
+				fuer(ws, TurnierSystem.FORMULEX),
+				fuer(ws, TurnierSystem.TRIPTETE),
+				fuer(ws, TurnierSystem.JGJ))
+				.flatMap(Optional::stream);
 	}
 }

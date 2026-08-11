@@ -159,7 +159,6 @@ import de.petanqueturniermanager.schweizer.spielrunde.SchweizerSpielrundeSheetNa
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerTurnierTestDaten;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerSpielrundeSheetUpdate;
 import de.petanqueturniermanager.planungsrechner.PlanungsrechnerSheet;
-import de.petanqueturniermanager.siegergeld.SiegergeldQuellen;
 import de.petanqueturniermanager.siegergeld.SiegergeldSheet;
 import de.petanqueturniermanager.formulex.export.FormuleXExportInVerzeichnis;
 import de.petanqueturniermanager.formulex.export.FormuleXFtpUpload;
@@ -851,7 +850,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				ladeAktuellenTurnierExportHoch(ws);
 				break;
 			case CMD_SIEGERGELD_BERECHNEN:
-				new SiegergeldSheet(ws).testTurnierVorhanden().backUpDocument().start();
+				new SiegergeldSheet(ws).backUpDocument().start();
 				break;
 			case CMD_PLANUNGSRECHNER_BERECHNEN:
 				new PlanungsrechnerSheet(ws).backUpDocument().start();
@@ -2070,7 +2069,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_EXPORT_VERZEICHNIS,
 				 CMD_EXPORT_FTP_UPLOAD,
 				 CMD_EXPORT_NOTEBOOKLM                    -> istExportfaehigesTurnier(ts);
-			case CMD_SIEGERGELD_BERECHNEN                 -> SiegergeldQuellen.istUnterstuetzt(ts);
+			case CMD_SIEGERGELD_BERECHNEN                 -> true;
 			// Planungsrechner: eigenständig, unabhängig vom aktiven Turniersystem immer aktiv
 			case CMD_PLANUNGSRECHNER_BERECHNEN              -> true;
 			// SuperMelee: neues Turnier nur wenn keins aktiv

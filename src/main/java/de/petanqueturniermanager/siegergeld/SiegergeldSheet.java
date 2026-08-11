@@ -7,6 +7,7 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import com.sun.star.awt.FontWeight;
 import com.sun.star.sheet.XSpreadsheet;
@@ -25,8 +26,6 @@ import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
-import de.petanqueturniermanager.helper.msgbox.MessageBox;
-import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
@@ -84,21 +83,16 @@ public class SiegergeldSheet extends SheetRunner implements ISheet {
 
 	@Override
 	protected void doRun() throws GenerateException {
-		TurnierSystem turnierSystem = ermittleTurnierSystem();
-		var quelle = SiegergeldQuellen.fuer(getWorkingSpreadsheet(), turnierSystem);
-		if (quelle.isEmpty()) {
-			MessageBox.from(getxContext(), MessageBoxTypeEnum.INFO_OK)
-					.caption(I18n.get("msg.caption.siegergeld"))
-					.message(I18n.get("msg.text.siegergeld.nicht.unterstuetzt", turnierSystem.getBezeichnung()))
-					.show();
+		Optional<SiegergeldStartOptionen> startOptionen = SiegergeldStartDialog.zeigen(getWorkingSpreadsheet());
+		if (startOptionen.isEmpty()) {
+			ProcessBox.from().info("Abbruch vom Benutzer, Siegergeld wurde nicht erstellt");
 			return;
 		}
-
-		SiegergeldQuelle siegergeldQuelle = quelle.get();
-		List<SiegergeldEintrag> eintraege = siegergeldQuelle.leseTop3();
-		if (eintraege.isEmpty()) {
-			eintraege = siegergeldQuelle.allgemeineEintraege();
-		}
+		SiegergeldStartOptionen optionen = startOptionen.get();
+		TurnierSystem turnierSystem = ermittleTurnierSystem();
+		Optional<SiegergeldQuelle> quelle = ermittleQuelle(turnierSystem, optionen);
+		List<SiegergeldEintrag> eintraege = erstelleEintraege(optionen, quelle);
+		int teilnehmer = teilnehmerAnzahl(quelle);
 
 		if (!NewSheet.from(this, SheetNamen.siegergeld(), SheetMetadataHelper.SCHLUESSEL_SIEGERGELD)
 				.pos(DefaultSheetPos.SIEGERGELD).setForceCreate(true).setActiv()
@@ -108,11 +102,41 @@ public class SiegergeldSheet extends SheetRunner implements ISheet {
 		}
 
 		XSpreadsheet sheet = getXSpreadSheet();
-		schreibeSheet(sheet, eintraege, siegergeldQuelle.teilnehmerAnzahl());
+		schreibeSheet(sheet, eintraege, teilnehmer, optionen);
 		if (SheetRunner.isRunning()) {
 			getSheetHelper().setActiveSheet(sheet);
 			SheetRunner.unterdrückeNaechstesSelectionChange();
 		}
+	}
+
+	private Optional<SiegergeldQuelle> ermittleQuelle(TurnierSystem turnierSystem, SiegergeldStartOptionen optionen)
+			throws GenerateException {
+		Optional<SiegergeldQuelle> quelle = SiegergeldQuellen.fuer(getWorkingSpreadsheet(), turnierSystem);
+		if (quelle.isPresent() || optionen.modus() != SiegergeldModus.RANGLISTE) {
+			return quelle;
+		}
+		return SiegergeldQuellen.ersteGefundeneRanglistenQuelle(getWorkingSpreadsheet(), optionen.ranglistenPlaetze());
+	}
+
+	private List<SiegergeldEintrag> erstelleEintraege(SiegergeldStartOptionen optionen,
+			Optional<SiegergeldQuelle> quelle) throws GenerateException {
+		if (optionen.modus() == SiegergeldModus.GRUPPEN) {
+			return SiegergeldAllgemeineEintraege.gruppen(optionen.gruppenAnzahl(), optionen.plaetzeProGruppe());
+		}
+		if (quelle.isPresent()) {
+			List<SiegergeldEintrag> eintraege = quelle.get().leseTop(optionen.ranglistenPlaetze());
+			if (!eintraege.isEmpty()) {
+				return eintraege;
+			}
+		}
+		return SiegergeldAllgemeineEintraege.einzelgruppe(optionen.ranglistenPlaetze());
+	}
+
+	private int teilnehmerAnzahl(Optional<SiegergeldQuelle> quelle) throws GenerateException {
+		if (quelle.isEmpty()) {
+			return 0;
+		}
+		return quelle.get().teilnehmerAnzahl();
 	}
 
 	private TurnierSystem ermittleTurnierSystem() {
@@ -123,7 +147,8 @@ public class SiegergeldSheet extends SheetRunner implements ISheet {
 		return turnierSystem == null ? TurnierSystem.KEIN : turnierSystem;
 	}
 
-	private void schreibeSheet(XSpreadsheet sheet, List<SiegergeldEintrag> eintraege, int teilnehmer) throws GenerateException {
+	private void schreibeSheet(XSpreadsheet sheet, List<SiegergeldEintrag> eintraege, int teilnehmer,
+			SiegergeldStartOptionen optionen) throws GenerateException {
 		processBoxinfo("processbox.erstelle.sheet", SheetNamen.siegergeld());
 		SheetHelper sh = getSheetHelper();
 		List<SiegergeldEintrag> sortierteEintraege = sortierteEintraege(eintraege);
@@ -131,7 +156,7 @@ public class SiegergeldSheet extends SheetRunner implements ISheet {
 		schreibeTitel(sheet);
 		schreibeEingaben(sheet, teilnehmer);
 		schreibeTabellenHeader(sheet);
-		int letzteZeile = schreibeEintraege(sheet, sortierteEintraege);
+		int letzteZeile = schreibeEintraege(sheet, sortierteEintraege, optionen);
 
 		for (int spalte = SPALTE_GRUPPE; spalte <= SPALTE_BETRAG_AUFGERUNDET; spalte++) {
 			sh.setOptimaleBreitePlusMarge(sheet, spalte, SheetHelper.OPTIMALE_BREITE_MARGE);
@@ -197,11 +222,12 @@ public class SiegergeldSheet extends SheetRunner implements ISheet {
 		}
 	}
 
-	private int schreibeEintraege(XSpreadsheet sheet, List<SiegergeldEintrag> eintraege) throws GenerateException {
+	private int schreibeEintraege(XSpreadsheet sheet, List<SiegergeldEintrag> eintraege,
+			SiegergeldStartOptionen optionen) throws GenerateException {
 		Map<String, Integer> gruppenStartZeilen = gruppenStartZeilen(eintraege);
 		int letzteZeile = ERSTE_DATEN_ZEILE + eintraege.size() - 1;
 
-		schreibeWerteBlock(sheet, eintraege, gruppenStartZeilen, letzteZeile);
+		schreibeWerteBlock(sheet, eintraege, gruppenStartZeilen, letzteZeile, optionen);
 
 		for (Map.Entry<String, Integer> gruppenStart : gruppenStartZeilen.entrySet()) {
 			schreibeGruppenZelle(sheet, gruppenStart.getKey(), gruppenStart.getValue(), gruppenStartZeilen, eintraege);
@@ -228,8 +254,9 @@ public class SiegergeldSheet extends SheetRunner implements ISheet {
 	 * (RangeHelper/RangeData/RowData) statt zellenweise in der Schleife.
 	 */
 	private void schreibeWerteBlock(XSpreadsheet sheet, List<SiegergeldEintrag> eintraege,
-			Map<String, Integer> gruppenStartZeilen, int letzteZeile) throws GenerateException {
-		String ersteGruppenName = eintraege.get(0).gruppe();
+			Map<String, Integer> gruppenStartZeilen, int letzteZeile,
+			SiegergeldStartOptionen optionen) throws GenerateException {
+		List<String> gruppen = gruppenStartZeilen.keySet().stream().toList();
 		RangeData werteBlock = new RangeData();
 		for (int i = 0; i < eintraege.size(); i++) {
 			SiegergeldEintrag eintrag = eintraege.get(i);
@@ -238,11 +265,12 @@ public class SiegergeldSheet extends SheetRunner implements ISheet {
 			zeileData.newInt(eintrag.platz());
 			zeileData.newInt(0);
 			if (gruppenStartZeilen.get(eintrag.gruppe()) == zeile) {
-				zeileData.newInt(SiegergeldVerteilung.gruppenAnteil(ersteGruppenName, eintrag.gruppe()));
+				zeileData.newInt(SiegergeldVerteilung.gruppenAnteil(gruppen.indexOf(eintrag.gruppe()), gruppen.size()));
 			} else {
 				zeileData.newEmpty();
 			}
-			zeileData.newInt(SiegergeldVerteilung.platzAnteil(eintrag.platz()));
+			zeileData.newInt(SiegergeldVerteilung.platzAnteil(eintrag.platz(), optionen.relevantePlaetze(),
+					optionen.vorlage()));
 		}
 		RangeHelper.from(sheet, getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
 				RangePosition.from(SPALTE_PLATZ, ERSTE_DATEN_ZEILE, SPALTE_PLATZANTEIL, letzteZeile))

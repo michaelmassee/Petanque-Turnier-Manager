@@ -30,7 +30,7 @@ final class JgjSiegergeldQuelle implements SiegergeldQuelle {
 	}
 
 	@Override
-	public List<SiegergeldEintrag> leseTop3() throws GenerateException {
+	public List<SiegergeldEintrag> leseTop(int maxPlatz) throws GenerateException {
 		XSpreadsheet sheet = findeSheet();
 		if (sheet == null) {
 			return List.of();
@@ -45,7 +45,7 @@ final class JgjSiegergeldQuelle implements SiegergeldQuelle {
 				continue;
 			}
 			int platz = sheetHelper.getIntFromCell(sheet, Position.from(JGJGesamtranglisteSheet.PLATZ_SPALTE, zeile));
-			if (platz < 1 || platz > 3) {
+			if (platz < 1 || platz > maxPlatz) {
 				continue;
 			}
 			String gruppe = sheetHelper.getTextFromCell(sheet, Position.from(JGJGesamtranglisteSheet.GRUPPE_SPALTE, zeile));
@@ -58,9 +58,13 @@ final class JgjSiegergeldQuelle implements SiegergeldQuelle {
 
 	@Override
 	public int teilnehmerAnzahl() throws GenerateException {
-		TeamMeldungen aktiveMeldungen = new JGJMeldeListeSheet_Update(workingSpreadsheet).getAktiveMeldungen();
-		if (aktiveMeldungen.size() > 0) {
-			return aktiveMeldungen.size();
+		try {
+			TeamMeldungen aktiveMeldungen = new JGJMeldeListeSheet_Update(workingSpreadsheet).getAktiveMeldungen();
+			if (aktiveMeldungen.size() > 0) {
+				return aktiveMeldungen.size();
+			}
+		} catch (GenerateException e) {
+			// Bei systemunabhaengiger Nutzung kann eine Rangliste ohne passende Meldeliste existieren.
 		}
 		XSpreadsheet sheet = findeSheet();
 		if (sheet == null) {

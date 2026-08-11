@@ -107,12 +107,11 @@ public class ProtocolHandlerCommandsTest {
 
 		// isEnabled(...) ist private und benoetigt einen echten XSpreadsheetDocument-Kontext,
 		// daher hier nur ein Quelltext-Check statt eines echten Verhaltenstests. Siegergeld
-		// wird nur fuer die von SiegergeldQuellen tatsaechlich unterstuetzten Turniersysteme
-		// aktiviert (nicht fuer alle exportfaehigen Systeme wie KO/POULE/KASKADE).
+		// ist als freier Rechner bewusst unabhängig vom aktiven Turniersystem verfügbar.
 		assertThat(source)
-				.as("Siegergeld darf im Menü nur für von SiegergeldQuellen unterstützte Turniersysteme aktiv sein")
+				.as("Siegergeld muss im Menü unabhängig vom Turniersystem aktiv sein")
 				.containsPattern("case\\s+CMD_SIEGERGELD_BERECHNEN\\s*"
 						+ "(?:(?!case\\s)[\\s\\S])*?"
-						+ "->\\s*SiegergeldQuellen\\.istUnterstuetzt\\(ts\\)");
+						+ "->\\s*true");
 	}
 }

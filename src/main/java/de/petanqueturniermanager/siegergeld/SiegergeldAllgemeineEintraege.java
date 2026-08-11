@@ -6,6 +6,7 @@ package de.petanqueturniermanager.siegergeld;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.IntStream;
 
 final class SiegergeldAllgemeineEintraege {
 
@@ -14,6 +15,13 @@ final class SiegergeldAllgemeineEintraege {
 
 	static List<SiegergeldEintrag> einzelgruppe(int plaetze) {
 		return gruppen(List.of("A"), plaetze);
+	}
+
+	static List<SiegergeldEintrag> gruppen(int gruppenAnzahl, int plaetze) {
+		List<String> gruppen = IntStream.range(0, gruppenAnzahl)
+				.mapToObj(SiegergeldAllgemeineEintraege::gruppenBuchstabe)
+				.toList();
+		return gruppen(gruppen, plaetze);
 	}
 
 	static List<SiegergeldEintrag> gruppen(Collection<String> gruppen, int plaetze) {

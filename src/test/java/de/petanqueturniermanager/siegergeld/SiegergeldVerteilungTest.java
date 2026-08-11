@@ -22,9 +22,34 @@ class SiegergeldVerteilungTest {
 	}
 
 	@Test
-	void gruppenAnteilDefaultGiltFuerAllePlaetzeDerErstenGruppe() {
-		assertThat(SiegergeldVerteilung.gruppenAnteil("A", "A")).isEqualTo(100);
-		assertThat(SiegergeldVerteilung.gruppenAnteil("A", "B")).isZero();
+	void platzAnteilKommtAusVorlageUndAnzahlPlaetze() {
+		assertThat(SiegergeldVerteilung.platzAnteil(1, 3, SiegergeldVerteilungsVorlage.STAFFEL_50_30_20))
+				.isEqualTo(50);
+		assertThat(SiegergeldVerteilung.platzAnteil(2, 3, SiegergeldVerteilungsVorlage.STAFFEL_50_30_20))
+				.isEqualTo(30);
+		assertThat(SiegergeldVerteilung.platzAnteil(3, 3, SiegergeldVerteilungsVorlage.STAFFEL_50_30_20))
+				.isEqualTo(20);
+		assertThat(SiegergeldVerteilung.platzAnteil(4, 3, SiegergeldVerteilungsVorlage.STAFFEL_50_30_20))
+				.isZero();
+	}
+
+	@Test
+	void platzAnteilGleichmaessigVerteiltRestAufErstePlaetze() {
+		assertThat(SiegergeldVerteilung.platzAnteil(1, 3, SiegergeldVerteilungsVorlage.GLEICHMAESSIG))
+				.isEqualTo(34);
+		assertThat(SiegergeldVerteilung.platzAnteil(2, 3, SiegergeldVerteilungsVorlage.GLEICHMAESSIG))
+				.isEqualTo(33);
+		assertThat(SiegergeldVerteilung.platzAnteil(3, 3, SiegergeldVerteilungsVorlage.GLEICHMAESSIG))
+				.isEqualTo(33);
+	}
+
+	@Test
+	void gruppenAnteilWirdGleichmaessigAufGruppenVerteilt() {
+		assertThat(SiegergeldVerteilung.gruppenAnteil(0, 1)).isEqualTo(100);
+		assertThat(SiegergeldVerteilung.gruppenAnteil(0, 3)).isEqualTo(34);
+		assertThat(SiegergeldVerteilung.gruppenAnteil(1, 3)).isEqualTo(33);
+		assertThat(SiegergeldVerteilung.gruppenAnteil(2, 3)).isEqualTo(33);
+		assertThat(SiegergeldVerteilung.gruppenAnteil(3, 3)).isZero();
 	}
 
 	@Test
@@ -41,6 +66,19 @@ class SiegergeldVerteilungTest {
 						org.assertj.core.groups.Tuple.tuple("B", 2, 0, ""),
 						org.assertj.core.groups.Tuple.tuple("B", 3, 0, ""),
 						org.assertj.core.groups.Tuple.tuple("B", 4, 0, ""));
+	}
+
+	@Test
+	void allgemeineEintraegeKoennenGruppenPerAnzahlErzeugen() {
+		assertThat(SiegergeldAllgemeineEintraege.gruppen(3, 2))
+				.extracting(SiegergeldEintrag::gruppe, SiegergeldEintrag::platz)
+				.containsExactly(
+						org.assertj.core.groups.Tuple.tuple("A", 1),
+						org.assertj.core.groups.Tuple.tuple("A", 2),
+						org.assertj.core.groups.Tuple.tuple("B", 1),
+						org.assertj.core.groups.Tuple.tuple("B", 2),
+						org.assertj.core.groups.Tuple.tuple("C", 1),
+						org.assertj.core.groups.Tuple.tuple("C", 2));
 	}
 
 	@Test
