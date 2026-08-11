@@ -24,8 +24,6 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.border.BorderFactory;
-import de.petanqueturniermanager.helper.cellstyle.EditierbareZelleHintergrundFarbeGeradeStyle;
-import de.petanqueturniermanager.helper.cellstyle.EditierbareZelleHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
@@ -341,29 +339,8 @@ class JGJMeldeListeDelegate implements MeldeListeKonstanten {
 		RangePosition editierbareRange = RangePosition.from(1, ERSTE_DATEN_ZEILE, getAktivSpalte(), letzteDatenZeile);
 		EditierbaresZelleFormatHelper.anwenden(sheet, editierbareRange);
 
-		// Formation "Nur Teamname": Teamname ist die einzige Team-Identität - doppelte Teamnamen
-		// live wie bei der Team-Nr-Spalte mit rotem Zellhintergrund markieren. Muss NACH
-		// EditierbaresZelleFormatHelper.anwenden() UND mit .clear() auf die (an dieser Stelle
-		// homogen mit dessen Zebra-Regeln belegte) Teamname-Spalte neu aufgebaut werden: anwenden()
-		// liest/schreibt "ConditionalFormat" für den gesamten editierbaren Bereich als Ganzes und
-		// würde eine zuvor nur auf die Teamname-Spalte gesetzte Regel sonst überschreiben.
-		if (konfigurationSheet.isMeldeListeTeamnameAnzeigen() && anzSpieler == 0) {
-			RangePosition teamnameRange = RangePosition.from(1, ERSTE_DATEN_ZEILE, 1, letzteDatenZeile);
-			String kondDoppeltTeamname = "AND(NOT(ISBLANK(" + ConditionalFormatHelper.FORMULA_CURRENT_CELL
-					+ "));COUNTIF(" + Position.from(1, 0).getSpalteAddressWith$() + ";"
-					+ ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")>1)";
-			var geradeStyle = new EditierbareZelleHintergrundFarbeGeradeStyle(
-					EditierbaresZelleFormatHelper.EDITIERBAR_GERADE_FARBE);
-			var ungeradeStyle = new EditierbareZelleHintergrundFarbeUnGeradeStyle(
-					EditierbaresZelleFormatHelper.EDITIERBAR_UNGERADE_FARBE);
-			ConditionalFormatHelper.from(sheet, teamnameRange).clear()
-					.formula1(kondDoppeltTeamname).operator(ConditionOperator.FORMULA).styleIsFehler()
-					.applyAndDoReset()
-					.formulaIsEvenRowAndBoolProp(EditierbaresZelleFormatHelper.PROPERTY_KEY).style(geradeStyle)
-					.applyAndDoReset()
-					.formulaIsOddRowAndBoolProp(EditierbaresZelleFormatHelper.PROPERTY_KEY).style(ungeradeStyle)
-					.applyAndDoReset();
-		}
+		MeldeListeKonstanten.markiereDoppelteTeamnamenBeiNurTeamname(sheet, konfigurationSheet.isMeldeListeTeamnameAnzeigen(),
+				anzSpieler == 0, letzteDatenZeile);
 	}
 
 	void formatZeilenfarben() throws GenerateException {
