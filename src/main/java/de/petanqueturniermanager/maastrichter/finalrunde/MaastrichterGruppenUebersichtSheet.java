@@ -60,11 +60,18 @@ public class MaastrichterGruppenUebersichtSheet extends SheetRunner implements I
 
     private final MaastrichterKonfigurationSheet konfigurationSheet;
     private final MaastrichterMeldeListeSheetUpdate meldeliste;
+    private final Map<Integer, String> gruppenZuweisungen;
 
     public MaastrichterGruppenUebersichtSheet(WorkingSpreadsheet workingSpreadsheet) {
+        this(workingSpreadsheet, Map.of());
+    }
+
+    public MaastrichterGruppenUebersichtSheet(WorkingSpreadsheet workingSpreadsheet,
+            Map<Integer, String> gruppenZuweisungen) {
         super(workingSpreadsheet, TurnierSystem.MAASTRICHTER, "Maastrichter-Gruppen-Übersicht");
         konfigurationSheet = new MaastrichterKonfigurationSheet(workingSpreadsheet);
         meldeliste = new MaastrichterMeldeListeSheetUpdate(workingSpreadsheet);
+        this.gruppenZuweisungen = Map.copyOf(gruppenZuweisungen);
     }
 
     @Override
@@ -113,8 +120,10 @@ public class MaastrichterGruppenUebersichtSheet extends SheetRunner implements I
                     konfigurationSheet.isMeldeListeVereinsnameAnzeigen()).lesen();
             Map<Integer, String> spielerNamen = namen.spielerNamen();
             Map<Integer, String> teamnamen = namen.teamnamen();
-            Map<Integer, String> teamNrZuGruppe = MaastrichterGruppenSpalteHelper
-                    .lesePreservedGruppen(new MaastrichterVorrundenRanglisteSheetUpdate(getWorkingSpreadsheet()));
+            Map<Integer, String> teamNrZuGruppe = gruppenZuweisungen.isEmpty()
+                    ? MaastrichterGruppenSpalteHelper
+                            .lesePreservedGruppen(new MaastrichterVorrundenRanglisteSheetUpdate(getWorkingSpreadsheet()))
+                    : gruppenZuweisungen;
 
             for (Team team : aktiveMeldungen.getTeamList()) {
                 int nr = team.getNr();

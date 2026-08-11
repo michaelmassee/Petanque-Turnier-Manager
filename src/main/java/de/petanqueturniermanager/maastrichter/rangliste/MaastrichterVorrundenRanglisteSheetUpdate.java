@@ -43,6 +43,11 @@ public class MaastrichterVorrundenRanglisteSheetUpdate extends SchweizerRanglist
 		super.doRun();
 	}
 
+	public void aktualisiereMitGruppenZuweisungen(Map<Integer, String> teamNrZuGruppe) throws GenerateException {
+		preservedGruppen = Map.copyOf(teamNrZuGruppe);
+		super.doRun();
+	}
+
 	@Override
 	protected int letzteAnzeigeSpalte() {
 		return MaastrichterGruppenSpalteHelper.GRUPPE_SPALTE;

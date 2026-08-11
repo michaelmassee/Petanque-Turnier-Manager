@@ -184,9 +184,9 @@ public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet {
 		// Gruppen-Buchstaben einmalig in die Vorrunden-Rangliste schreiben
 		// (Spalte "Gruppe"). Nachfolgende Rangliste-Refreshs erhalten die Werte.
 		if (!teamNrZuGruppe.isEmpty()) {
+			new MaastrichterGruppenUebersichtSheet(getWorkingSpreadsheet(), teamNrZuGruppe).generate();
 			new MaastrichterVorrundenRanglisteSheetUpdate(getWorkingSpreadsheet())
-					.schreibeGruppenZuweisungen(teamNrZuGruppe);
-			new MaastrichterGruppenUebersichtSheet(getWorkingSpreadsheet()).generate();
+					.aktualisiereMitGruppenZuweisungen(teamNrZuGruppe);
 		}
 	}
 

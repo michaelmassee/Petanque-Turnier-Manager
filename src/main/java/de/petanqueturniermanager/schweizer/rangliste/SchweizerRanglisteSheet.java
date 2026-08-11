@@ -35,6 +35,7 @@ import de.petanqueturniermanager.helper.sheet.search.RangeSearchHelper;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
+import de.petanqueturniermanager.helper.cellvalue.properties.RowProperties;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
@@ -312,25 +313,6 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 		// Erweiterungen für Subklassen (z.B. Maastrichter: Gruppe-Spalte)
 		erweitereDaten(sheet, sortiert, ERSTE_DATEN_ZEILE + sortiert.size() - 1);
 
-		// Zebra-Formatierung für Datenbereich
-		if (!sortiert.isEmpty()) {
-			int letzteZeile = ERSTE_DATEN_ZEILE + sortiert.size() - 1;
-			RangePosition datenRange = RangePosition.from(TEAM_NR_SPALTE, ERSTE_DATEN_ZEILE,
-					letzteAnzeigeSpalte(), letzteZeile);
-			RanglisteGeradeUngeradeFormatHelper.from(this, datenRange)
-					.geradeFarbe(getKonfigurationSheet().getRanglisteHintergrundFarbeGerade())
-					.ungeradeFarbe(getKonfigurationSheet().getRanglisteHintergrundFarbeUnGerade())
-					.validateSpalte(validateSpalte())
-					.apply();
-
-			// Absicherung: Leerzeile + Fußzeile direkt unterhalb der Daten dürfen keine
-			// Zebra-Hintergrundfarbe tragen (z.B. Rest aus einem früheren Aufbau mit mehr Zeilen).
-			RangePosition leerBereichUnterDaten = RangePosition.from(TEAM_NR_SPALTE, letzteZeile + 1,
-					letzteAnzeigeSpalte(), letzteZeile + 2);
-			getSheetHelper().setPropertiesInRange(sheet, leerBereichUnterDaten,
-					CellProperties.from().setCellBackColor(-1));
-		}
-
 		// Footer und Druckbereich
 		int letzteZeile;
 		if (sortiert.isEmpty()) {
@@ -339,8 +321,45 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 			insertFooter(sheet, sortiert.size(), modus);
 			letzteZeile = ERSTE_DATEN_ZEILE + sortiert.size() + 1;
 		}
+
+		// Zebra-Formatierung für Datenbereich
+		if (!sortiert.isEmpty()) {
+			int letzteDatenZeile = ERSTE_DATEN_ZEILE + sortiert.size() - 1;
+			RangePosition datenRange = RangePosition.from(TEAM_NR_SPALTE, ERSTE_DATEN_ZEILE,
+					letzteAnzeigeSpalte(), letzteDatenZeile);
+			RanglisteGeradeUngeradeFormatHelper.from(this, datenRange)
+					.geradeFarbe(getKonfigurationSheet().getRanglisteHintergrundFarbeGerade())
+					.ungeradeFarbe(getKonfigurationSheet().getRanglisteHintergrundFarbeUnGerade())
+					.validateSpalte(validateSpalte())
+					.apply();
+		}
 		setzeDruckbereich(sheet, letzteZeile);
 		getxCalculatable().calculateAll();
+		if (!sortiert.isEmpty()) {
+			formatiereFussbereich(sheet, ERSTE_DATEN_ZEILE + sortiert.size() - 1);
+		}
+	}
+
+	private void formatiereFussbereich(XSpreadsheet sheet, int letzteDatenZeile) throws GenerateException {
+		int leerZeile = letzteDatenZeile + 1;
+		int footerZeile = letzteDatenZeile + 2;
+		RangePosition leerzeileRange = RangePosition.from(TEAM_NR_SPALTE, leerZeile,
+				letzteAnzeigeSpalte(), leerZeile);
+		RangeHelper.from(sheet, getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), leerzeileRange)
+				.clearRange();
+		try {
+			for (int zeile = leerZeile; zeile <= footerZeile; zeile++) {
+				getSheetHelper().setRowProperties(sheet, zeile,
+						RowProperties.from().setCellBackColor(-1).setCellbackgroundTransparent(true));
+				for (int spalte = TEAM_NR_SPALTE; spalte <= letzteAnzeigeSpalte(); spalte++) {
+					var props = getSheetHelper().getCellPropertySet(sheet.getCellByPosition(spalte, zeile));
+					props.setPropertyValue("CellBackColor", Integer.valueOf(-1));
+					props.setPropertyValue("IsCellBackgroundTransparent", Boolean.TRUE);
+				}
+			}
+		} catch (Exception e) {
+			throw new GenerateException("Fussbereich konnte nicht transparent formatiert werden: " + e.getMessage());
+		}
 	}
 
 	private List<TeamRanglisteData> leseAlleSpielergebnisse(TeamMeldungen aktiveMeldungen, int bisSpielrunde,

@@ -17,9 +17,9 @@ public final class RanglisteUpdateHelper {
     private RanglisteUpdateHelper() {}
 
     /**
-     * Löscht veraltete Datenzeilen wenn sich die Teamanzahl verringert hat.
-     * Bei gleichbleibender oder größerer Teamanzahl passiert nichts, da
-     * {@code insertDatenAlsWerte} die vorhandenen Zellen überschreibt.
+     * Löscht veraltete Zeilen unterhalb der neuen Datentabelle vor dem Neuschreiben.
+     * Die erste Leerzeile und die Fußzeile werden ebenfalls geleert, weil sie keine
+     * Datenzeilen sind und beim anschließenden Schreiben neu aufgebaut werden.
      *
      * @param rangliste     Die Ranglisten-Sheet-Instanz (muss {@link IRangliste} implementieren)
      * @param sheet         Das aktive Spreadsheet
@@ -29,9 +29,11 @@ public final class RanglisteUpdateHelper {
             throws GenerateException {
         int bisherigeLetzte = rangliste.sucheLetzteZeileMitSpielerNummer();
         int neueLetzte = rangliste.getErsteDatenZiele() + neueTeamAnzahl - 1;
-        if (bisherigeLetzte > neueLetzte) {
-            RangePosition alteDatenzeilen = RangePosition.from(rangliste.getErsteSpalte(), neueLetzte + 1,
-                    rangliste.validateSpalte(), bisherigeLetzte);
+        int ersteNichtDatenZeile = neueLetzte + 1;
+        int letzteZuLeerndeZeile = Math.max(bisherigeLetzte, neueLetzte + 2);
+        if (letzteZuLeerndeZeile >= ersteNichtDatenZeile) {
+            RangePosition alteDatenzeilen = RangePosition.from(rangliste.getErsteSpalte(), ersteNichtDatenZeile,
+                    rangliste.validateSpalte(), letzteZuLeerndeZeile);
             RangeHelper.from(sheet,
                     rangliste.getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
                     alteDatenzeilen)

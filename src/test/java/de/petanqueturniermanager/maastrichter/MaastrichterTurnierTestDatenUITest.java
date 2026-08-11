@@ -208,6 +208,33 @@ public class MaastrichterTurnierTestDatenUITest extends BaseCalcUITest {
 				.isEqualTo(TRANSPARENT);
 	}
 
+	@Test
+	public void maastrichterRanglisteNeuaufbauHatKeineZebraZeilenUnterhalbDerTabelle() throws GenerateException {
+		int anzTeams = 14;
+		new MaastrichterTurnierTestDaten(wkingSpreadsheet, anzTeams, 3, 16).generate();
+
+		XSpreadsheet rangliste = SheetMetadataHelper.findeSheetUndHeile(
+				wkingSpreadsheet.getWorkingSpreadsheetDocument(),
+				SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX, null);
+		assertThat(rangliste).as("Maastrichter Vorrunden-Rangliste muss existieren").isNotNull();
+
+		int letzteDatenZeile = new MaastrichterVorrundenRanglisteSheetUpdate(wkingSpreadsheet)
+				.sucheLetzteZeileMitSpielerNummer();
+		assertThat(letzteDatenZeile)
+				.as("Die Vorrunden-Rangliste muss genau %d Teamzeilen haben", anzTeams)
+				.isEqualTo(SchweizerRanglisteSheet.ERSTE_DATEN_ZEILE + anzTeams - 1);
+		int ersteZeileUnterDaten = letzteDatenZeile + 1;
+		int footerZeile = ersteZeileUnterDaten + 1;
+		for (int spalte = SchweizerRanglisteSheet.TEAM_NR_SPALTE; spalte <= SchweizerRanglisteSheet.VALIDATE_SPALTE; spalte++) {
+			assertThat(cellBackColor(rangliste, spalte, ersteZeileUnterDaten))
+					.as("Leerzeile unterhalb der Vorrunden-Rangliste darf keine Zebra-Farbe haben, Spalte %d", spalte)
+					.isEqualTo(TRANSPARENT);
+			assertThat(cellBackColor(rangliste, spalte, footerZeile))
+					.as("Fußzeile unterhalb der Vorrunden-Rangliste darf keine Zebra-Farbe haben, Spalte %d", spalte)
+					.isEqualTo(TRANSPARENT);
+		}
+	}
+
 	/**
 	 * Forme-Phase: nach der vollständigen Maastrichter-Vorrunde wird zusätzlich die
 	 * KO-Gruppe AB (Forme/KoGruppeABSheet) erzeugt.
