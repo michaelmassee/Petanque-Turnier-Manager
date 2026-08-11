@@ -50,4 +50,8 @@ public enum Formation {
 		return anzSpieler;
 	}
 
+	public boolean hatSpielerSpalte() {
+		return anzSpieler > 0;
+	}
+
 }

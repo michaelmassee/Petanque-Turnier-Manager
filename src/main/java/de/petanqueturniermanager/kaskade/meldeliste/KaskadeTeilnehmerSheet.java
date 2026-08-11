@@ -87,7 +87,7 @@ public class KaskadeTeilnehmerSheet extends SheetRunner implements ISheet {
         TeamMeldungen aktiveMeldungen = meldeliste.getAktiveMeldungen();
 
         boolean teamnameAktiv = konfigurationSheet.isMeldeListeTeamnameAnzeigen();
-        boolean spielerSpalteAktiv = konfigurationSheet.getMeldeListeFormation().getAnzSpieler() > 0;
+        boolean spielerSpalteAktiv = konfigurationSheet.getMeldeListeFormation().hatSpielerSpalte();
 
         List<TeilnehmerEintrag> eintraege = new ArrayList<>(aktiveMeldungen.size());
         if (aktiveMeldungen.size() > 0) {
