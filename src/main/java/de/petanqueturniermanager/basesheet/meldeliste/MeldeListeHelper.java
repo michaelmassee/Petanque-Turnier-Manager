@@ -179,9 +179,9 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 
 		doSort(SPIELER_NR_SPALTE, false); // hoechste nummer oben, ohne nummer nach unten
 
-		// Rot-Markierung eines vorherigen Laufs zurücksetzen: die Prüfung bricht beim ersten
+		// Fehler-Markierung eines vorherigen Laufs zurücksetzen: die Prüfung bricht beim ersten
 		// gefundenen Duplikat ab (throw) und markiert daher immer nur die eine Fundstelle. Ohne
-		// Reset bliebe eine bereits korrigierte Zeile aus einem früheren Lauf dauerhaft rot,
+		// Reset bliebe eine bereits korrigierte Zeile aus einem früheren Lauf dauerhaft farbig,
 		// weil kein Code-Pfad eine nicht mehr doppelte Zeile aktiv zurück auf Schwarz setzt.
 		zuruecksetzenFehlerFarbe(letzteSpielZeile);
 
@@ -193,12 +193,12 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 		String spielerName;
 		NumberCellValue errCelVal = NumberCellValue
 				.from(xSheet, Position.from(SPIELER_NR_SPALTE, meldeListe.getErsteDatenZiele()))
-				.setCharColor(ColorHelper.CHAR_COLOR_RED);
+				.setCharColor(ColorHelper.CHAR_COLOR_ORANGE);
 
 		StringCellValue errStrCelVal = StringCellValue
 				.from(xSheet, Position.from(meldeListe.getMeldungenSpalte().getNamenOderTeamnameSpalte(),
 						meldeListe.getErsteDatenZiele()))
-				.setCharColor(ColorHelper.CHAR_COLOR_RED);
+				.setCharColor(ColorHelper.CHAR_COLOR_ORANGE);
 
 		int letzteNamensSpalte = meldeListe.getMeldungenSpalte().getLetzteMeldungNameSpalte();
 
@@ -210,7 +210,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 					Position.from(SPIELER_NR_SPALTE, spielerZeilecntr));
 			if (spielrNr > 0) {
 				if (spielrNrInSheet.contains(spielrNr)) {
-					// RED Color
+					// Error color
 					meldeListe.getSheetHelper()
 							.setNumberValueInCell(errCelVal.setValue((double) spielrNr).zeile(spielerZeilecntr));
 					throw new DoppelteStartnummerException(spielrNr, I18n.get("error.meldeliste.spieler.nr", spielrNr));
@@ -229,7 +229,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 
 			if (StringUtils.isNotEmpty(spielerName)) {
 				if (spielrNamenInSheet.contains(cleanUpSpielerName(spielerName))) {
-					// RED Color in alle Namens-Spalten
+					// Error color in alle Namens-Spalten
 					for (int sp = meldeListe.getMeldungenSpalte().getNamenOderTeamnameSpalte();
 							sp <= letzteNamensSpalte; sp++) {
 						String zellValue = meldeListe.getSheetHelper().getTextFromCell(xSheet,
@@ -246,7 +246,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 
 	/**
 	 * Setzt die Schriftfarbe der Nr- und Namens-/Teamname-Spalte im Datenbereich blockweise auf
-	 * Schwarz zurück - Gegenstück zur Rot-Markierung in {@link #testDoppelteMeldungen()}, die nur
+	 * Schwarz zurück - Gegenstück zur Fehler-Markierung in {@link #testDoppelteMeldungen()}, die nur
 	 * beim jeweils ersten gefundenen Duplikat greift und daher nie von sich aus wieder zurückgesetzt
 	 * wird.
 	 */

@@ -24,9 +24,9 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 
 /**
- * Regressionstest (Bug-Report): nach Korrektur eines doppelten Spielernamens blieb die zuvor rot
- * markierte Schrift dauerhaft rot, weil {@code MeldeListeHelper.testDoppelteMeldungen()} nur beim
- * jeweils ERSTEN gefundenen Duplikat eine Zeile rot färbt und danach abbricht (throw) - eine
+ * Regressionstest (Bug-Report): nach Korrektur eines doppelten Spielernamens blieb die zuvor
+ * markierte Schrift dauerhaft farbig, weil {@code MeldeListeHelper.testDoppelteMeldungen()} nur beim
+ * jeweils ERSTEN gefundenen Duplikat eine Zeile einfärbt und danach abbricht (throw) - eine
  * inzwischen korrigierte, nicht mehr doppelte Zeile wurde nie aktiv zurück auf Schwarz gesetzt.
  */
 class SchweizerMeldeListeDoppelteNamenFarbeZuruecksetzenUITest extends BaseCalcUITest {
@@ -52,37 +52,37 @@ class SchweizerMeldeListeDoppelteNamenFarbeZuruecksetzenUITest extends BaseCalcU
 		}
 		RangeHelper.from(xSheet, doc, data.getRangePosition(Position.from(0, ersteDatenZeile))).setDataInRange(data);
 
-		// 1. Sync: Duplikat wird erkannt und eine Zeile rot markiert.
+		// 1. Sync: Duplikat wird erkannt und eine Zeile orange markiert.
 		assertThatThrownBy(meldeListeNew::upDateSheet).isInstanceOf(GenerateException.class);
 
-		boolean roteZeileGefunden = false;
+		boolean orangeZeileGefunden = false;
 		for (int zeile = ersteDatenZeile; zeile <= ersteDatenZeile + 1; zeile++) {
-			if (istRot(xSheet, vornameSpalte, zeile)) {
-				roteZeileGefunden = true;
+			if (hatSchriftfarbe(xSheet, vornameSpalte, zeile, ColorHelper.CHAR_COLOR_ORANGE)) {
+				orangeZeileGefunden = true;
 				break;
 			}
 		}
-		assertThat(roteZeileGefunden).as("nach dem ersten Sync muss eine Zeile rot markiert sein").isTrue();
+		assertThat(orangeZeileGefunden).as("nach dem ersten Sync muss eine Zeile orange markiert sein").isTrue();
 
 		// 2. Duplikat korrigieren.
 		meldeListeNew.getSheetHelper().setStringValueInCell(
 				StringCellValue.from(xSheet, Position.from(nachnameSpalte, ersteDatenZeile + 1), "Andere"));
 
-		// 3. Erneuter Sync: darf keine Zeile mehr rot markiert lassen.
+		// 3. Erneuter Sync: darf keine Zeile mehr farbig markiert lassen.
 		meldeListeNew.upDateSheet();
 
 		for (int zeile = ersteDatenZeile; zeile <= ersteDatenZeile + 1; zeile++) {
-			assertThat(istRot(xSheet, vornameSpalte, zeile))
-					.as("Zeile %d muss nach Korrektur des Duplikats wieder schwarz sein", zeile).isFalse();
-			assertThat(istRot(xSheet, nachnameSpalte, zeile))
-					.as("Zeile %d muss nach Korrektur des Duplikats wieder schwarz sein", zeile).isFalse();
+			assertThat(hatSchriftfarbe(xSheet, vornameSpalte, zeile, ColorHelper.CHAR_COLOR_BLACK))
+					.as("Zeile %d muss nach Korrektur des Duplikats wieder schwarz sein", zeile).isTrue();
+			assertThat(hatSchriftfarbe(xSheet, nachnameSpalte, zeile, ColorHelper.CHAR_COLOR_BLACK))
+					.as("Zeile %d muss nach Korrektur des Duplikats wieder schwarz sein", zeile).isTrue();
 		}
 	}
 
-	private boolean istRot(XSpreadsheet sheet, int spalte, int zeile) throws Exception {
+	private boolean hatSchriftfarbe(XSpreadsheet sheet, int spalte, int zeile, int farbe) throws Exception {
 		XCell xCell = sheet.getCellByPosition(spalte, zeile);
 		XPropertySet props = Lo.qi(XPropertySet.class, xCell);
 		int charColor = (Integer) props.getPropertyValue("CharColor");
-		return charColor == ColorHelper.CHAR_COLOR_RED;
+		return charColor == farbe;
 	}
 }

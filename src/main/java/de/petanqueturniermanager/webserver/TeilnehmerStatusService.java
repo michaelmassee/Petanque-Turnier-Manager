@@ -168,7 +168,7 @@ public final class TeilnehmerStatusService {
     /** Ein Listeneintrag vor der Sortierung: Anzeige-Name + Sortierschlüssel (Nachname Spieler 1). */
     private record NamenEintrag(int nr, String name, String sortName) {}
 
-    private static TeilnehmerNamenListen namenListen(SheetHelper sh, XSpreadsheet sheet, int aktivSpalte,
+    static TeilnehmerNamenListen namenListen(SheetHelper sh, XSpreadsheet sheet, int aktivSpalte,
             Zaehlschema schema, TeilnehmerNamenLeser.TeilnehmerNamen teilnehmerNamen) {
         Map<Integer, String> spielerNamen = teilnehmerNamen.spielerNamen();
         Map<Integer, String> teamnamen = teilnehmerNamen.teamnamen();
@@ -191,14 +191,30 @@ public final class TeilnehmerStatusService {
                 name = teamnamen.getOrDefault(nr, "");
             }
             if (name.isBlank()) {
+                // Startseiten-Zähler erkennen die Meldung direkt über die Namensspalten. Die Listen
+                // dürfen im Nur-Teamname-Layout nicht leer bleiben, nur weil die Team-Nr für den
+                // TeilnehmerNamenLeser-Lookup fehlt oder nicht synchronisiert ist.
+                name = nameAusNamensSpalten(sh, sheet, schema.namensSpalten(), zeile);
+            }
+            if (name.isBlank()) {
                 continue;
             }
-            var eintrag = new NamenEintrag(nr, name, sortNamen.getOrDefault(nr, ""));
+            var eintrag = new NamenEintrag(nr, name, sortNamen.getOrDefault(nr, name));
             boolean istEingecheckt = aktivSpalte >= 0
                     && sh.getIntFromCell(sheet, Position.from(aktivSpalte, zeile)) == WERT_AKTIV;
             (istEingecheckt ? eingecheckt : nichtEingecheckt).add(eintrag);
         }
         return new TeilnehmerNamenListen(namenSortiert(nichtEingecheckt), namenSortiert(eingecheckt));
+    }
+
+    private static String nameAusNamensSpalten(SheetHelper sh, XSpreadsheet sheet, List<Integer> namensSpalten,
+            int zeile) {
+        return namensSpalten.stream()
+                .map(spalte -> sh.getTextFromCell(sheet, Position.from(spalte, zeile)))
+                .filter(text -> text != null && !text.isBlank())
+                .map(String::trim)
+                .findFirst()
+                .orElse("");
     }
 
     /**

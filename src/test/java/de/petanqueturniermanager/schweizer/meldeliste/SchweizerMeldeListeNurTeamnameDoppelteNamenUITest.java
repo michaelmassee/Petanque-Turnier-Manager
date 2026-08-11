@@ -23,7 +23,7 @@ import de.petanqueturniermanager.helper.position.Position;
  * Regressionstest: bei Formation.NUR_TEAMNAME (Teamname ist die einzige Team-Identität) muss die
  * Teamname-Spalte bei doppeltem Wert - genau wie die Team-Nr-Spalte - über eine live nachgeführte
  * bedingte Formatierung (roter Zellhintergrund, {@code FehlerStyle}) markiert werden, statt nur
- * über die einmalige, verzögerte Rotfärbung der Schrift aus
+ * über die einmalige, verzögerte Einfärbung der Schrift aus
  * {@link de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper#testDoppelteMeldungen()}.
  * <p>
  * Geprüft wird die Existenz der COUNTIF-Duplikat-Formel als bedingte Formatierung (nicht die
