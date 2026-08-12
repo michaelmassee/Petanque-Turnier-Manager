@@ -255,8 +255,11 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 
 	private static String setzpositionUngueltigFormel() {
 		String zelle = ConditionalFormatHelper.FORMULA_CURRENT_CELL;
-		return "AND(NOT(ISBLANK(" + zelle + "));OR(NOT(ISNUMBER(" + zelle + "));" + zelle + "<>INT(" + zelle + ");"
-				+ zelle + "<0))";
+		// IF-Guard statt OR(NOT(ISNUMBER(..));..): OR() propagiert Fehler aus INT()/<>-Vergleich
+		// bei Textwerten (kein Short-Circuit in Calc), wodurch die Formel #VALUE! statt TRUE
+		// liefert und die Fehlerfarbe für Text ausbleibt.
+		return "AND(NOT(ISBLANK(" + zelle + "));IF(ISNUMBER(" + zelle + ");OR(" + zelle + "<0;" + zelle + "<>INT("
+				+ zelle + "));TRUE))";
 	}
 
 	/**

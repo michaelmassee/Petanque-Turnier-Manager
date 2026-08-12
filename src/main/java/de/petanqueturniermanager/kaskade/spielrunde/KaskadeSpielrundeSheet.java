@@ -280,6 +280,11 @@ public class KaskadeSpielrundeSheet extends SheetRunner implements ISheet {
                 } else if (aktivB && !aktivA) {
                     zeile.add(new CellData(freispielMinus));
                     zeile.add(new CellData(freispielPlus));
+                } else if (!aktivA && !aktivB && nrA != null && nrB != null) {
+                    // Beide Teams bereits ausgestiegen: beide "verlieren" per Walkover, damit die
+                    // Zeile als gespielt gilt und die Bracket-Fortführung nicht blockiert wird.
+                    zeile.add(new CellData(freispielMinus));
+                    zeile.add(new CellData(freispielMinus));
                 } else {
                     zeile.add(new CellData(""));
                     zeile.add(new CellData(""));
