@@ -332,7 +332,8 @@ class JGJMeldeListeDelegate implements MeldeListeKonstanten {
 		sheet.getSheetHelper().setPropertiesInRange(sheet.getXSpreadSheet(), spRange,
 				CellProperties.from().centerJustify().setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder()));
 
-		meldeListeHelper.bereinigeUngueltigeSetzpositionWerte(getSetzPositionSpalte(), ERSTE_DATEN_ZEILE, letzteDatenZeile);
+		meldeListeHelper.bereinigeUngueltigeSetzpositionWerte(getSetzPositionSpalte(), getZeilenKennungSpalte(),
+				ERSTE_DATEN_ZEILE, letzteDatenZeile);
 		meldeListeHelper.formatiereSetzpositionSpalteFehlerfarbe(sheet, spRange);
 
 		RangePosition aktivRange = RangePosition.from(getAktivSpalte(), ERSTE_DATEN_ZEILE,
@@ -340,8 +341,8 @@ class JGJMeldeListeDelegate implements MeldeListeKonstanten {
 		sheet.getSheetHelper().setPropertiesInRange(sheet.getXSpreadSheet(), aktivRange,
 				CellProperties.from().centerJustify().setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder()));
 
-		meldeListeHelper.bereinigeUngueltigeAktivWerte(getAktivSpalte(), ERSTE_DATEN_ZEILE, letzteDatenZeile,
-				AKTIV_GUELTIGE_WERTE);
+		meldeListeHelper.bereinigeUngueltigeAktivWerte(getAktivSpalte(), getZeilenKennungSpalte(), ERSTE_DATEN_ZEILE,
+				letzteDatenZeile, AKTIV_GUELTIGE_WERTE);
 		meldeListeHelper.formatiereAktivSpalteFehlerfarbe(sheet, aktivRange, AKTIV_GUELTIGE_WERTE);
 
 		RangePosition editierbareRange = RangePosition.from(1, ERSTE_DATEN_ZEILE, getAktivSpalte(), letzteDatenZeile);

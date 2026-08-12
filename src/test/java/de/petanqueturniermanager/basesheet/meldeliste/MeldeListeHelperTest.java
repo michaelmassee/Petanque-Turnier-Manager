@@ -14,6 +14,7 @@ import org.mockito.Mockito;
 
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
+import com.sun.star.text.XText;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.DoppelteStartnummerException;
@@ -337,42 +338,95 @@ public class MeldeListeHelperTest {
 		assertThat(captor.getValue().getValue()).isEqualTo(2.0);
 	}
 
+	/** Stubbt sowohl getTextFromCell (getrimmt) als auch getXTextFromCell (roh, ungetrimmt) für eine Zelle. */
+	private void stubZelle(Position pos, String rawText) {
+		Mockito.when(sheetHelperMock.getTextFromCell(any(XSpreadsheet.class), eq(pos)))
+				.thenReturn(rawText == null ? null : rawText.trim());
+		XText xTextMock = Mockito.mock(XText.class);
+		Mockito.when(xTextMock.getString()).thenReturn(rawText == null ? "" : rawText);
+		Mockito.when(sheetHelperMock.getXTextFromCell(any(XSpreadsheet.class), eq(pos))).thenReturn(xTextMock);
+	}
+
 	@Test
 	public void testBereinigeUngueltigeSetzpositionWerte_LoeschtNurUngueltigeWerte() throws Exception {
 		int spalte = 4;
+		int nameSpalte = 1;
 		int ersteZeile = MeldeListeKonstanten.ERSTE_DATEN_ZEILE;
 
+		// Alle Zeilen haben einen Namen -> nur der SP-Wert selbst entscheidet
+		for (int i = 0; i <= 4; i++) {
+			stubZelle(Position.from(nameSpalte, ersteZeile + i), "Team " + i);
+		}
+
 		// Zeile 0: leer -> bleibt unangetastet
-		Mockito.when(sheetHelperMock.getTextFromCell(any(XSpreadsheet.class), eq(Position.from(spalte, ersteZeile))))
-				.thenReturn(null);
+		stubZelle(Position.from(spalte, ersteZeile), null);
 		// Zeile 1: "0" -> gueltig (kein Setzstatus), bleibt
-		Mockito.when(sheetHelperMock.getTextFromCell(any(XSpreadsheet.class),
-				eq(Position.from(spalte, ersteZeile + 1)))).thenReturn("0");
+		stubZelle(Position.from(spalte, ersteZeile + 1), "0");
 		Mockito.when(sheetHelperMock.getIntFromCell(any(XSpreadsheet.class),
 				eq(Position.from(spalte, ersteZeile + 1)))).thenReturn(0);
 		// Zeile 2: "5" -> gueltig, bleibt
-		Mockito.when(sheetHelperMock.getTextFromCell(any(XSpreadsheet.class),
-				eq(Position.from(spalte, ersteZeile + 2)))).thenReturn("5");
+		stubZelle(Position.from(spalte, ersteZeile + 2), "5");
 		Mockito.when(sheetHelperMock.getIntFromCell(any(XSpreadsheet.class),
 				eq(Position.from(spalte, ersteZeile + 2)))).thenReturn(5);
 		// Zeile 3: "abc" -> ungueltig (Text), muss geloescht werden
-		Mockito.when(sheetHelperMock.getTextFromCell(any(XSpreadsheet.class),
-				eq(Position.from(spalte, ersteZeile + 3)))).thenReturn("abc");
+		stubZelle(Position.from(spalte, ersteZeile + 3), "abc");
 		Mockito.when(sheetHelperMock.getIntFromCell(any(XSpreadsheet.class),
 				eq(Position.from(spalte, ersteZeile + 3)))).thenReturn(-1);
 		// Zeile 4: "-3" -> ungueltig (negativ), muss geloescht werden
-		Mockito.when(sheetHelperMock.getTextFromCell(any(XSpreadsheet.class),
-				eq(Position.from(spalte, ersteZeile + 4)))).thenReturn("-3");
+		stubZelle(Position.from(spalte, ersteZeile + 4), "-3");
 		Mockito.when(sheetHelperMock.getIntFromCell(any(XSpreadsheet.class),
 				eq(Position.from(spalte, ersteZeile + 4)))).thenReturn(-3);
 
-		meldeListeHelper.bereinigeUngueltigeSetzpositionWerte(spalte, ersteZeile, ersteZeile + 4);
+		meldeListeHelper.bereinigeUngueltigeSetzpositionWerte(spalte, nameSpalte, ersteZeile, ersteZeile + 4);
 
 		verify(sheetHelperMock, times(1)).clearValInCell(any(XSpreadsheet.class),
 				eq(Position.from(spalte, ersteZeile + 3)));
 		verify(sheetHelperMock, times(1)).clearValInCell(any(XSpreadsheet.class),
 				eq(Position.from(spalte, ersteZeile + 4)));
 		verify(sheetHelperMock, times(2)).clearValInCell(any(XSpreadsheet.class), any(Position.class));
+	}
+
+	@Test
+	public void testBereinigeUngueltigeSetzpositionWerte_LoeschtSpOhneZugehoerigeMeldung() throws Exception {
+		int spalte = 4;
+		int nameSpalte = 1;
+		int ersteZeile = MeldeListeKonstanten.ERSTE_DATEN_ZEILE;
+
+		// Zeile 0: gueltige SP "1", aber kein Name -> "verwaist", muss geloescht werden
+		stubZelle(Position.from(nameSpalte, ersteZeile), null);
+		stubZelle(Position.from(spalte, ersteZeile), "1");
+		Mockito.when(sheetHelperMock.getIntFromCell(any(XSpreadsheet.class), eq(Position.from(spalte, ersteZeile))))
+				.thenReturn(1);
+		// Zeile 1: gueltige SP "1" mit Name -> bleibt
+		stubZelle(Position.from(nameSpalte, ersteZeile + 1), "Team 1");
+		stubZelle(Position.from(spalte, ersteZeile + 1), "1");
+		Mockito.when(sheetHelperMock.getIntFromCell(any(XSpreadsheet.class),
+				eq(Position.from(spalte, ersteZeile + 1)))).thenReturn(1);
+
+		meldeListeHelper.bereinigeUngueltigeSetzpositionWerte(spalte, nameSpalte, ersteZeile, ersteZeile + 1);
+
+		verify(sheetHelperMock, times(1)).clearValInCell(any(XSpreadsheet.class),
+				eq(Position.from(spalte, ersteZeile)));
+		verify(sheetHelperMock, times(1)).clearValInCell(any(XSpreadsheet.class), any(Position.class));
+	}
+
+	@Test
+	public void testBereinigeUngueltigeSetzpositionWerte_LoeschtReinesLeerzeichen() throws Exception {
+		int spalte = 4;
+		int nameSpalte = 1;
+		int ersteZeile = MeldeListeKonstanten.ERSTE_DATEN_ZEILE;
+
+		stubZelle(Position.from(nameSpalte, ersteZeile), "Team 0");
+		// Zelle enthaelt nur ein Leerzeichen (roh " ", getrimmt "") - muss trotzdem als "hat Inhalt"
+		// erkannt und wegen ungueltigem Wert geloescht werden, statt als leer uebersprungen zu werden.
+		stubZelle(Position.from(spalte, ersteZeile), " ");
+		Mockito.when(sheetHelperMock.getIntFromCell(any(XSpreadsheet.class), eq(Position.from(spalte, ersteZeile))))
+				.thenReturn(-1);
+
+		meldeListeHelper.bereinigeUngueltigeSetzpositionWerte(spalte, nameSpalte, ersteZeile, ersteZeile);
+
+		verify(sheetHelperMock, times(1)).clearValInCell(any(XSpreadsheet.class),
+				eq(Position.from(spalte, ersteZeile)));
 	}
 
 	private void initReturnSpielerDaten(SpielerNrName[] spielerNrnameList) throws GenerateException {

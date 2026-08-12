@@ -149,22 +149,37 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	/**
 	 * Löscht Werte in der Aktiv-Spalte, die weder leer noch in {@code gueltigeWerte} enthalten sind –
 	 * Gegenstück zur Fehlerfarben-Markierung in {@link #formatiereAktivSpalteFehlerfarbe}, damit ein
-	 * Refresh/Vollaufbau ungültige Werte nicht dauerhaft stehen lässt.
+	 * Refresh/Vollaufbau ungültige Werte nicht dauerhaft stehen lässt. Zusätzlich wird ein
+	 * Aktiv-Wert ohne zugehörige Meldung (Namens-/Teamname-Spalte {@code zeilenKennungSpalte} leer)
+	 * gelöscht, sonst bleibt ein "verwaister" Aktiv-Wert stehen, wenn eine Meldung entfernt wird,
+	 * ohne die Aktiv-Zelle selbst zu leeren.
 	 */
-	public void bereinigeUngueltigeAktivWerte(int aktivSpalte, int ersteDatenZeile, int letzteDatenZeile,
-			List<Integer> gueltigeWerte) throws GenerateException {
+	public void bereinigeUngueltigeAktivWerte(int aktivSpalte, int zeilenKennungSpalte, int ersteDatenZeile,
+			int letzteDatenZeile, List<Integer> gueltigeWerte) throws GenerateException {
 		XSpreadsheet xSheet = getXSpreadSheet();
 		for (int zeile = ersteDatenZeile; zeile <= letzteDatenZeile; zeile++) {
 			Position pos = Position.from(aktivSpalte, zeile);
-			String text = meldeListe.getSheetHelper().getTextFromCell(xSheet, pos);
-			if (StringUtils.isBlank(text)) {
+			if (istZelleWirklichLeer(xSheet, pos)) {
 				continue;
 			}
+			String name = meldeListe.getSheetHelper().getTextFromCell(xSheet, Position.from(zeilenKennungSpalte, zeile));
 			int wert = meldeListe.getSheetHelper().getIntFromCell(xSheet, pos);
-			if (!gueltigeWerte.contains(wert)) {
+			if (StringUtils.isBlank(name) || !gueltigeWerte.contains(wert)) {
 				meldeListe.getSheetHelper().clearValInCell(xSheet, pos);
 			}
 		}
+	}
+
+	/**
+	 * Prüft, ob eine Zelle wirklich leer ist (kein Inhalt, auch kein reines Leerzeichen) – im
+	 * Unterschied zu {@link de.petanqueturniermanager.helper.sheet.SheetHelper#getTextFromCell}, das
+	 * den Inhalt trimmt und eine Zelle mit nur Leerzeichen fälschlich wie eine leere Zelle aussehen
+	 * lässt. Ein Leerzeichen ist selbst kein gültiger Aktiv-/SP-Wert und muss beim Refresh bereinigt
+	 * statt übersprungen werden.
+	 */
+	private boolean istZelleWirklichLeer(XSpreadsheet xSheet, Position pos) throws GenerateException {
+		var xText = meldeListe.getSheetHelper().getXTextFromCell(xSheet, pos);
+		return xText == null || xText.getString() == null || xText.getString().isEmpty();
 	}
 
 	/**
@@ -208,18 +223,20 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	 * Ganzzahl sind – Gegenstück zur Fehlerfarben-Markierung in
 	 * {@link #formatiereSetzpositionSpalteFehlerfarbe}, damit ein Refresh/Vollaufbau ungültige Werte
 	 * (Text, Dezimalzahlen, negative Zahlen) nicht dauerhaft stehen lässt. 0 bleibt gültig (= "kein
-	 * Setzstatus").
+	 * Setzstatus"). Zusätzlich wird eine SP ohne zugehörige Meldung (Namens-/Teamname-Spalte
+	 * {@code zeilenKennungSpalte} leer) gelöscht, sonst bleibt ein "verwaister" SP-Wert stehen,
+	 * wenn eine Meldung entfernt wird, ohne die SP-Zelle selbst zu leeren.
 	 */
-	public void bereinigeUngueltigeSetzpositionWerte(int setzposSpalte, int ersteDatenZeile, int letzteDatenZeile)
-			throws GenerateException {
+	public void bereinigeUngueltigeSetzpositionWerte(int setzposSpalte, int zeilenKennungSpalte, int ersteDatenZeile,
+			int letzteDatenZeile) throws GenerateException {
 		XSpreadsheet xSheet = getXSpreadSheet();
 		for (int zeile = ersteDatenZeile; zeile <= letzteDatenZeile; zeile++) {
 			Position pos = Position.from(setzposSpalte, zeile);
-			String text = meldeListe.getSheetHelper().getTextFromCell(xSheet, pos);
-			if (StringUtils.isBlank(text)) {
+			if (istZelleWirklichLeer(xSheet, pos)) {
 				continue;
 			}
-			if (meldeListe.getSheetHelper().getIntFromCell(xSheet, pos) < 0) {
+			String name = meldeListe.getSheetHelper().getTextFromCell(xSheet, Position.from(zeilenKennungSpalte, zeile));
+			if (StringUtils.isBlank(name) || meldeListe.getSheetHelper().getIntFromCell(xSheet, pos) < 0) {
 				meldeListe.getSheetHelper().clearValInCell(xSheet, pos);
 			}
 		}

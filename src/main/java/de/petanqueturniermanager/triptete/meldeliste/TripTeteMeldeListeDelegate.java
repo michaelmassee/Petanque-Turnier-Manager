@@ -310,8 +310,8 @@ class TripTeteMeldeListeDelegate implements MeldeListeKonstanten {
                 RangeProperties.from().centerJustify()
                         .setBorder(BorderFactory.from().allThin().toBorder()));
 
-        meldeListeHelper.bereinigeUngueltigeAktivWerte(getAktivSpalte(), ERSTE_DATEN_ZEILE_OVERRIDE, letzteDatenZeile,
-                AKTIV_GUELTIGE_WERTE);
+        meldeListeHelper.bereinigeUngueltigeAktivWerte(getAktivSpalte(), getVornameSpalte(0), ERSTE_DATEN_ZEILE_OVERRIDE,
+                letzteDatenZeile, AKTIV_GUELTIGE_WERTE);
         meldeListeHelper.formatiereAktivSpalteFehlerfarbe(sheet, aktivRange, AKTIV_GUELTIGE_WERTE, farbeGerade,
                 farbeUngerade);
 

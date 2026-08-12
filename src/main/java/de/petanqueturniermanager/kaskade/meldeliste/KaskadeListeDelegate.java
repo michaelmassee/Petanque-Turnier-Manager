@@ -430,7 +430,8 @@ class KaskadeListeDelegate implements MeldeListeKonstanten {
 
         // SP ist optional (leer oder 0 = kein Setzstatus). Gleiche SP-Werte sind erlaubt und beabsichtigt:
         // Teams mit identischer SP werden in Runde 1 nicht gegeneinander ausgelost.
-        meldeListeHelper.bereinigeUngueltigeSetzpositionWerte(getSetzPositionSpalte(), ERSTE_DATEN_ZEILE, letzteDatenZeile);
+        meldeListeHelper.bereinigeUngueltigeSetzpositionWerte(getSetzPositionSpalte(), getZeilenKennungSpalte(),
+                ERSTE_DATEN_ZEILE, letzteDatenZeile);
         meldeListeHelper.formatiereSetzpositionSpalteFehlerfarbe(sheet, spRange, farbeGerade, farbeUngerade);
 
         RangePosition aktivRange = RangePosition.from(getAktivSpalte(), ERSTE_DATEN_ZEILE,
@@ -439,8 +440,8 @@ class KaskadeListeDelegate implements MeldeListeKonstanten {
                 RangeProperties.from().centerJustify()
                         .setBorder(BorderFactory.from().allThin().toBorder()));
 
-        meldeListeHelper.bereinigeUngueltigeAktivWerte(getAktivSpalte(), ERSTE_DATEN_ZEILE, letzteDatenZeile,
-                AKTIV_GUELTIGE_WERTE);
+        meldeListeHelper.bereinigeUngueltigeAktivWerte(getAktivSpalte(), getZeilenKennungSpalte(), ERSTE_DATEN_ZEILE,
+                letzteDatenZeile, AKTIV_GUELTIGE_WERTE);
         meldeListeHelper.formatiereAktivSpalteFehlerfarbe(sheet, aktivRange, AKTIV_GUELTIGE_WERTE, farbeGerade,
                 farbeUngerade);
 
