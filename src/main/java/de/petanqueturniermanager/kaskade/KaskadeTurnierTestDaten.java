@@ -37,11 +37,11 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
  */
 public class KaskadeTurnierTestDaten extends SheetRunner implements ISheet {
 
-    private static final int ANZ_TEAMS    = 97;
+    static final int ANZ_TEAMS    = 97;
     private static final int ANZ_KASKADEN = 3;  // → Endfelder A bis H
 
     private final KaskadeMeldeListeSheetTestDaten meldelisteTestDaten;
-    private final KaskadeSpielrundeSheet          spielrundeSheet;
+    final KaskadeSpielrundeSheet                  spielrundeSheet;
     private final KaskadeKonfigurationSheet       konfigurationSheet;
 
     public KaskadeTurnierTestDaten(WorkingSpreadsheet workingSpreadsheet) {
@@ -80,30 +80,40 @@ public class KaskadeTurnierTestDaten extends SheetRunner implements ISheet {
                 .prefix(getLogPrefix()).validate()) {
             return;
         }
+        generate(ANZ_KASKADEN, true);
 
+        // Kopfzeile setzen
+        konfigurationSheet.setKopfZeileMitte("Kaskaden-KO 97 Teams (A\u2013H)");
+        konfigurationSheet.seitenstileAktualisieren();
+    }
+
+    /**
+     * Generiert nur die ersten {@code anzKaskadenRunden} Kaskadenrunden (mit Ergebnissen), optional
+     * gefolgt vom Abschluss (Gruppenrangliste + KO-Felder A-H). Fuer Tests, die zwischen zwei
+     * Kaskadenrunden eingreifen wollen (z.B. Team auf "ausgestiegen" setzen).
+     */
+    public void generate(int anzKaskadenRunden, boolean mitAbschluss) throws GenerateException {
         // 1. Meldeliste mit 97 Teams anlegen (setzt intern anzahlKaskaden=2)
         meldelisteTestDaten.erstelleMeldelisteWithTestdaten();
 
         // 2. Kaskadenrunden-Anzahl auf 3 überschreiben (→ Endfelder A–H)
         konfigurationSheet.setAnzahlKaskaden(ANZ_KASKADEN);
 
-        // 3. Kaskadenrunden 1–3 erstellen und mit Zufallsergebnissen füllen
+        // 3. Kaskadenrunden erstellen und mit Zufallsergebnissen füllen
         spielrundeSheet.setForceOk(true);
-        for (int rundeNr = 1; rundeNr <= ANZ_KASKADEN; rundeNr++) {
+        for (int rundeNr = 1; rundeNr <= anzKaskadenRunden; rundeNr++) {
             SheetRunner.testDoCancelTask();
             processBoxinfo("processbox.erstelle.spielrunde", rundeNr, ANZ_KASKADEN);
             spielrundeSheet.naechsteRunde();
             ergebnisseEinfuegen(rundeNr);
         }
 
-        // 4. Gruppenrangliste + KO-Felder A–H erstellen
-        //    (aktiveRunde=3 >= anzahlKaskaden=3 → KaskadeSpielrundeSheet erkennt Abschluss)
-        SheetRunner.testDoCancelTask();
-        spielrundeSheet.naechsteRunde();
-
-        // 5. Kopfzeile setzen
-        konfigurationSheet.setKopfZeileMitte("Kaskaden-KO 97 Teams (A\u2013H)");
-        konfigurationSheet.seitenstileAktualisieren();
+        // 4. Gruppenrangliste + KO-Felder A–H erstellen (optional)
+        //    (aktiveRunde=ANZ_KASKADEN >= anzahlKaskaden → KaskadeSpielrundeSheet erkennt Abschluss)
+        if (mitAbschluss) {
+            SheetRunner.testDoCancelTask();
+            spielrundeSheet.naechsteRunde();
+        }
     }
 
     // ---------------------------------------------------------------
@@ -112,7 +122,7 @@ public class KaskadeTurnierTestDaten extends SheetRunner implements ISheet {
      * Füllt alle Spielpaarungen der angegebenen Kaskadenrunde mit Zufallsergebnissen.
      * Freilos-Zeilen werden übersprungen (Team B leer).
      */
-    private void ergebnisseEinfuegen(int rundeNr) throws GenerateException {
+    void ergebnisseEinfuegen(int rundeNr) throws GenerateException {
         var xDoc  = getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
         var sheet = SheetMetadataHelper.findeSheetUndHeile(
                 xDoc, SheetMetadataHelper.schluesselKaskadenRunde(rundeNr),
@@ -135,6 +145,11 @@ public class KaskadeTurnierTestDaten extends SheetRunner implements ISheet {
             }
             // Team B = 0/leer → Freilos, Ergebnis ist vorbelegt
             if (zeile.size() < 3 || zeile.get(2).getIntVal(0) <= 0) {
+                continue;
+            }
+            // Ergebnis bereits vorbelegt (z.B. Freispiel-Walkover für ein zwischenzeitlich
+            // ausgestiegenes Team, siehe KaskadeSpielrundeSheet.spielrundeEintragen) – nicht überschreiben.
+            if (zeile.size() > 3 && zeile.get(3).getIntVal(0) > 0) {
                 continue;
             }
 

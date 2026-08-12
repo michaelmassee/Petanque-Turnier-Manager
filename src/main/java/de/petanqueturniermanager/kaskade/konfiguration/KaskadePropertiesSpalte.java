@@ -35,6 +35,7 @@ public class KaskadePropertiesSpalte extends BasePropertiesSpalte {
     public static final String KONFIG_PROP_FREISPIEL_PUNKTE_MINUS  = "Freispiel Punkte -";
     public static final String KONFIG_PROP_AKTIVE_KASKADENRUNDE    = "Aktive Kaskadenrunde";
     public static final String KONFIG_PROP_KO_FELDER_ERSTELLT      = "KO-Felder erstellt";
+    public static final String KONFIG_PROP_ANZAHL_TEAMS_RUNDE1     = "Anzahl Teams Runde 1";
 
     static {
         ADDUploadProp(KONFIG_PROPERTIES);
@@ -190,6 +191,21 @@ public class KaskadePropertiesSpalte extends BasePropertiesSpalte {
 
     public void setAktiveKaskadenRunde(int rundeNr) {
         writeIntProperty(KONFIG_PROP_AKTIVE_KASKADENRUNDE, Math.max(0, rundeNr));
+    }
+
+    /**
+     * Anzahl Teams, mit der Kaskadenrunde 1 tatsächlich erstellt wurde (0 = noch keine Runde
+     * erstellt). Bleibt für die gesamte Kaskade fest – der Plan ({@code KaskadenKoRundenPlaner})
+     * darf für Folgerunden NICHT anhand der aktuellen Anzahl aktiver Teams neu berechnet werden,
+     * sonst passt die Gruppenstruktur nicht mehr zu den bereits geschriebenen Runden-Sheets (z.B.
+     * wenn zwischen zwei Runden ein Team auf "ausgestiegen" gesetzt wird).
+     */
+    public int getAnzahlTeamsRunde1() {
+        return readIntProperty(KONFIG_PROP_ANZAHL_TEAMS_RUNDE1);
+    }
+
+    public void setAnzahlTeamsRunde1(int anzahl) {
+        writeIntProperty(KONFIG_PROP_ANZAHL_TEAMS_RUNDE1, Math.max(0, anzahl));
     }
 
     public int getFreispielPunktePlus() {

@@ -122,6 +122,14 @@ public class KaskadeKonfigurationSheet extends BaseKonfigurationSheet {
         propertiesSpalte.setAktiveKaskadenRunde(rundeNr);
     }
 
+    public int getAnzahlTeamsRunde1() {
+        return propertiesSpalte.getAnzahlTeamsRunde1();
+    }
+
+    public void setAnzahlTeamsRunde1(int anzahl) {
+        propertiesSpalte.setAnzahlTeamsRunde1(anzahl);
+    }
+
     public boolean isKoFelderErstellt() {
         return propertiesSpalte.isKoFelderErstellt();
     }

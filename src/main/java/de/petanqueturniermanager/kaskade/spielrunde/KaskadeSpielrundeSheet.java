@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.sun.star.awt.FontWeight;
 import com.sun.star.sheet.XSpreadsheet;
@@ -185,9 +187,20 @@ public class KaskadeSpielrundeSheet extends SheetRunner implements ISheet {
             return;
         }
 
+        // Plan-Größe ab Runde 1 fixieren: NICHT aus der aktuellen Anzahl aktiver Teams neu
+        // berechnen, sonst passt die Gruppenstruktur für Folgerunden nicht mehr zu den bereits
+        // geschriebenen Runden-Sheets (z.B. wenn zwischenzeitlich ein Team ausgestiegen ist).
+        int planTeamAnzahl;
+        if (naechsteRundeNr == 1) {
+            planTeamAnzahl = meldungenNachSP.size();
+            konfigurationSheet.setAnzahlTeamsRunde1(planTeamAnzahl);
+        } else {
+            planTeamAnzahl = konfigurationSheet.getAnzahlTeamsRunde1();
+        }
+
         boolean freispielGewonnen = konfigurationSheet.getFreispielPunktePlus()
                 > konfigurationSheet.getFreispielPunkteMinus();
-        var plan  = KaskadenKoRundenPlaner.berechne(meldungenNachSP.size(), anzahlKaskaden, freispielGewonnen);
+        var plan  = KaskadenKoRundenPlaner.berechne(planTeamAnzahl, anzahlKaskaden, freispielGewonnen);
         var runde = plan.kaskadeRunden().get(naechsteRundeNr - 1);
 
         aktuelleRundeNr = naechsteRundeNr;
@@ -230,6 +243,13 @@ public class KaskadeSpielrundeSheet extends SheetRunner implements ISheet {
 
         var teamNrMap = teamNrMapErstellen(ersteRunde, plan, runde.rundenNr(), meldungenNachSP);
 
+        // Zwischenzeitlich ausgestiegene Teams: die Plan-Form (siehe planTeamAnzahl-Fixierung in
+        // naechsteRunde()) bleibt unverändert, ein solches Team bekommt aber automatisch ein
+        // Freispiel-Ergebnis statt einer echten Paarung – so "verliert" es fortan jede Runde per
+        // Walkover und verschwindet über den Verlierer-Pfad, ohne die Gruppenstruktur zu verändern.
+        Set<Integer> aktiveTeamNrn = meldungenNachSP.teams().stream().map(Team::getNr)
+                .collect(Collectors.toSet());
+
         var datenBlock    = new RangeData();
         var gruppeBlocks  = new ArrayList<GruppeBlock>();
         int laufendeNr         = 1;
@@ -240,23 +260,41 @@ public class KaskadeSpielrundeSheet extends SheetRunner implements ISheet {
             int gruppeStart = aktuelleDatenZeile;
 
             for (var spiel : gruppenRunde.spielPaare()) {
+                Integer nrA = resolveTeamNr(gruppenRunde.pfad(), spiel.positionA(), teamNrMap);
+                Integer nrB = resolveTeamNr(gruppenRunde.pfad(), spiel.positionB(), teamNrMap);
+                boolean aktivA = nrA != null && aktiveTeamNrn.contains(nrA);
+                boolean aktivB = nrB != null && aktiveTeamNrn.contains(nrB);
+
                 var zeile = datenBlock.addNewRow();
                 zeile.add(new CellData(laufendeNr));
                 zeile.add(teamCellData(gruppenRunde.pfad(), spiel.positionA(), teamNrMap));
                 zeile.add(teamCellData(gruppenRunde.pfad(), spiel.positionB(), teamNrMap));
-                zeile.add(new CellData(""));
-                zeile.add(new CellData(""));
+                if (aktivA && !aktivB) {
+                    zeile.add(new CellData(freispielPlus));
+                    zeile.add(new CellData(freispielMinus));
+                } else if (aktivB && !aktivA) {
+                    zeile.add(new CellData(freispielMinus));
+                    zeile.add(new CellData(freispielPlus));
+                } else {
+                    zeile.add(new CellData(""));
+                    zeile.add(new CellData(""));
+                }
                 laufendeNr++;
                 aktuelleDatenZeile++;
             }
 
             if (gruppenRunde.anzFreilose() > 0) {
+                Integer freilosNr = resolveTeamNr(gruppenRunde.pfad(), gruppenRunde.anzTeams(), teamNrMap);
+                boolean freilosAktiv = freilosNr != null && aktiveTeamNrn.contains(freilosNr);
+
                 var freilosZeile = datenBlock.addNewRow();
                 freilosZeile.add(new CellData(laufendeNr));
                 freilosZeile.add(teamCellData(gruppenRunde.pfad(), gruppenRunde.anzTeams(), teamNrMap));
                 freilosZeile.add(new CellData(""));       // kein Gegner = Freilos
-                freilosZeile.add(new CellData(freispielPlus));   // ERG_TEAM_A vorbelegen
-                freilosZeile.add(new CellData(freispielMinus));  // ERG_TEAM_B vorbelegen
+                // Ein ausgestiegenes Team darf das Freilos nicht als "Sieg" gutgeschrieben
+                // bekommen, sonst würde es über den Sieger-Pfad ewig weiter mitgeführt.
+                freilosZeile.add(new CellData(freilosAktiv ? freispielPlus : freispielMinus));
+                freilosZeile.add(new CellData(freilosAktiv ? freispielMinus : freispielPlus));
                 laufendeNr++;
                 aktuelleDatenZeile++;
             }
@@ -287,17 +325,29 @@ public class KaskadeSpielrundeSheet extends SheetRunner implements ISheet {
     }
 
     /**
+     * Liefert die echte Teamnummer für {@code pfad} und {@code position}, oder {@code null}
+     * falls der Eintrag fehlt (sollte nicht vorkommen).
+     */
+    private Integer resolveTeamNr(String pfad, int position, Map<String, List<Integer>> teamNrMap) {
+        if (teamNrMap != null) {
+            var teams = teamNrMap.get(pfad);
+            if (teams != null && position >= 1 && position <= teams.size()) {
+                return teams.get(position - 1);
+            }
+        }
+        return null;
+    }
+
+    /**
      * Erzeugt den Zell-Inhalt für eine Team-Zelle anhand der Teamnummern-Map.
      * <p>
      * Liefert die echte Teamnummer für {@code pfad} und {@code position}.
      * Falls der Eintrag fehlt (sollte nicht vorkommen), wird ein Fallback-Label erzeugt.
      */
     private CellData teamCellData(String pfad, int position, Map<String, List<Integer>> teamNrMap) {
-        if (teamNrMap != null) {
-            var teams = teamNrMap.get(pfad);
-            if (teams != null && position >= 1 && position <= teams.size()) {
-                return new CellData(teams.get(position - 1));
-            }
+        Integer teamNr = resolveTeamNr(pfad, position, teamNrMap);
+        if (teamNr != null) {
+            return new CellData(teamNr);
         }
         var label = pfad.isEmpty() ? String.valueOf(position) : pfad + "-" + position;
         return new CellData(label);
