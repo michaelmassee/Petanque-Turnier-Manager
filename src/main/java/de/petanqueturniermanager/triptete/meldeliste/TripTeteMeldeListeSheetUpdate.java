@@ -25,6 +25,9 @@ public class TripTeteMeldeListeSheetUpdate extends SheetRunner implements IMelde
 
     private static final String METADATA_SCHLUESSEL = SheetMetadataHelper.SCHLUESSEL_TRIPTETE_MELDELISTE;
 
+    public static final int AKTIV_WERT_NIMMT_TEIL = TripTeteMeldeListeDelegate.AKTIV_WERT_NIMMT_TEIL;
+    public static final int AKTIV_WERT_AUSGESTIEGEN = TripTeteMeldeListeDelegate.AKTIV_WERT_AUSGESTIEGEN;
+
     private final TripTeteMeldeListeDelegate delegate;
 
     public TripTeteMeldeListeSheetUpdate(WorkingSpreadsheet workingSpreadsheet) {
@@ -97,6 +100,10 @@ public class TripTeteMeldeListeSheetUpdate extends SheetRunner implements IMelde
     @Override
     public int getSpielerZeileNr(int spielerNr) throws GenerateException {
         return delegate.getSpielerZeileNr(spielerNr);
+    }
+
+    public int getAktivSpalte() throws GenerateException {
+        return delegate.getAktivSpalte();
     }
 
     @Override
