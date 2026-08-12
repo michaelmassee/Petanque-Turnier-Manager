@@ -337,6 +337,44 @@ public class MeldeListeHelperTest {
 		assertThat(captor.getValue().getValue()).isEqualTo(2.0);
 	}
 
+	@Test
+	public void testBereinigeUngueltigeSetzpositionWerte_LoeschtNurUngueltigeWerte() throws Exception {
+		int spalte = 4;
+		int ersteZeile = MeldeListeKonstanten.ERSTE_DATEN_ZEILE;
+
+		// Zeile 0: leer -> bleibt unangetastet
+		Mockito.when(sheetHelperMock.getTextFromCell(any(XSpreadsheet.class), eq(Position.from(spalte, ersteZeile))))
+				.thenReturn(null);
+		// Zeile 1: "0" -> gueltig (kein Setzstatus), bleibt
+		Mockito.when(sheetHelperMock.getTextFromCell(any(XSpreadsheet.class),
+				eq(Position.from(spalte, ersteZeile + 1)))).thenReturn("0");
+		Mockito.when(sheetHelperMock.getIntFromCell(any(XSpreadsheet.class),
+				eq(Position.from(spalte, ersteZeile + 1)))).thenReturn(0);
+		// Zeile 2: "5" -> gueltig, bleibt
+		Mockito.when(sheetHelperMock.getTextFromCell(any(XSpreadsheet.class),
+				eq(Position.from(spalte, ersteZeile + 2)))).thenReturn("5");
+		Mockito.when(sheetHelperMock.getIntFromCell(any(XSpreadsheet.class),
+				eq(Position.from(spalte, ersteZeile + 2)))).thenReturn(5);
+		// Zeile 3: "abc" -> ungueltig (Text), muss geloescht werden
+		Mockito.when(sheetHelperMock.getTextFromCell(any(XSpreadsheet.class),
+				eq(Position.from(spalte, ersteZeile + 3)))).thenReturn("abc");
+		Mockito.when(sheetHelperMock.getIntFromCell(any(XSpreadsheet.class),
+				eq(Position.from(spalte, ersteZeile + 3)))).thenReturn(-1);
+		// Zeile 4: "-3" -> ungueltig (negativ), muss geloescht werden
+		Mockito.when(sheetHelperMock.getTextFromCell(any(XSpreadsheet.class),
+				eq(Position.from(spalte, ersteZeile + 4)))).thenReturn("-3");
+		Mockito.when(sheetHelperMock.getIntFromCell(any(XSpreadsheet.class),
+				eq(Position.from(spalte, ersteZeile + 4)))).thenReturn(-3);
+
+		meldeListeHelper.bereinigeUngueltigeSetzpositionWerte(spalte, ersteZeile, ersteZeile + 4);
+
+		verify(sheetHelperMock, times(1)).clearValInCell(any(XSpreadsheet.class),
+				eq(Position.from(spalte, ersteZeile + 3)));
+		verify(sheetHelperMock, times(1)).clearValInCell(any(XSpreadsheet.class),
+				eq(Position.from(spalte, ersteZeile + 4)));
+		verify(sheetHelperMock, times(2)).clearValInCell(any(XSpreadsheet.class), any(Position.class));
+	}
+
 	private void initReturnSpielerDaten(SpielerNrName[] spielerNrnameList) throws GenerateException {
 
 		Position spielerNrPos = Position.from(MeldeListeKonstanten.SPIELER_NR_SPALTE,

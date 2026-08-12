@@ -431,10 +431,8 @@ class FormuleXListeDelegate implements MeldeListeKonstanten {
                 RangeProperties.from().setBorder(
                         BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder()));
 
-        ConditionalFormatHelper.from(sheet, spRange).clear()
-                .formulaIsText().styleIsFehler().applyAndDoReset()
-                .formulaIsEvenRow().style(farbeGerade).applyAndDoReset()
-                .formulaIsOddRow().style(farbeUngerade).applyAndDoReset();
+        meldeListeHelper.bereinigeUngueltigeSetzpositionWerte(getSetzPositionSpalte(), ERSTE_DATEN_ZEILE, letzteDatenZeile);
+        meldeListeHelper.formatiereSetzpositionSpalteFehlerfarbe(sheet, spRange, farbeGerade, farbeUngerade);
 
         RangePosition aktivRange = RangePosition.from(getAktivSpalte(), ERSTE_DATEN_ZEILE,
                 getAktivSpalte(), letzteDatenZeile);

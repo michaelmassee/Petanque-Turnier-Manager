@@ -128,8 +128,8 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 		int setzposSpalte = setzPositionSpalte();
 		var setzposRangePos = RangePosition.from(setzposSpalte, ERSTE_DATEN_ZEILE, setzposSpalte, letzteDatenZeile);
 		ConditionalFormatHelper.from(sheet, setzposRangePos).clear()
-				.formula1("0").formula2("90").operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndDoReset()
-				.formulaIsText().styleIsFehler().applyAndDoReset();
+				.formula1(setzpositionUngueltigFormel()).operator(ConditionOperator.FORMULA)
+				.styleIsFehler().applyAndDoReset();
 		SheetHelper.faerbeZeilenAbwechselnd(sheet, setzposRangePos,
 				geradeStyle.getFarbe(), ungeradeStyle.getFarbe());
 	}
@@ -201,6 +201,62 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 			kondAktivUngueltig.append(';').append(ConditionalFormatHelper.FORMULA_CURRENT_CELL).append("<>").append(wert);
 		}
 		return kondAktivUngueltig.append(')').toString();
+	}
+
+	/**
+	 * Löscht Werte in der Setzpositions-Spalte, die weder leer noch eine gültige nicht-negative
+	 * Ganzzahl sind – Gegenstück zur Fehlerfarben-Markierung in
+	 * {@link #formatiereSetzpositionSpalteFehlerfarbe}, damit ein Refresh/Vollaufbau ungültige Werte
+	 * (Text, Dezimalzahlen, negative Zahlen) nicht dauerhaft stehen lässt. 0 bleibt gültig (= "kein
+	 * Setzstatus").
+	 */
+	public void bereinigeUngueltigeSetzpositionWerte(int setzposSpalte, int ersteDatenZeile, int letzteDatenZeile)
+			throws GenerateException {
+		XSpreadsheet xSheet = getXSpreadSheet();
+		for (int zeile = ersteDatenZeile; zeile <= letzteDatenZeile; zeile++) {
+			Position pos = Position.from(setzposSpalte, zeile);
+			String text = meldeListe.getSheetHelper().getTextFromCell(xSheet, pos);
+			if (StringUtils.isBlank(text)) {
+				continue;
+			}
+			if (meldeListe.getSheetHelper().getIntFromCell(xSheet, pos) < 0) {
+				meldeListe.getSheetHelper().clearValInCell(xSheet, pos);
+			}
+		}
+	}
+
+	/**
+	 * Bedingte Formatierung der Setzpositions-Spalte: Fehlerfarbe wenn die Zelle weder leer noch eine
+	 * gültige nicht-negative Ganzzahl ist (0 = "kein Setzstatus", erlaubt und beabsichtigt). Für
+	 * Systeme, deren Zeilenfarbe nicht über bedingte Formatierung, sondern direkt gesetzt wird (z.B.
+	 * Schweizer/Poule/JGJ).
+	 */
+	public void formatiereSetzpositionSpalteFehlerfarbe(ISheet sheet, RangePosition spRange)
+			throws GenerateException {
+		ConditionalFormatHelper.from(sheet, spRange).clear()
+				.formula1(setzpositionUngueltigFormel()).operator(ConditionOperator.FORMULA)
+				.styleIsFehler().applyAndDoReset();
+	}
+
+	/**
+	 * Wie {@link #formatiereSetzpositionSpalteFehlerfarbe(ISheet, RangePosition)}, hängt aber
+	 * zusätzlich die Zeilenfarbe (gerade/ungerade) als bedingte Formatierung mit niedrigerer
+	 * Priorität an.
+	 */
+	public void formatiereSetzpositionSpalteFehlerfarbe(ISheet sheet, RangePosition spRange,
+			MeldungenHintergrundFarbeGeradeStyle farbeGerade, MeldungenHintergrundFarbeUnGeradeStyle farbeUngerade)
+			throws GenerateException {
+		ConditionalFormatHelper.from(sheet, spRange).clear()
+				.formula1(setzpositionUngueltigFormel()).operator(ConditionOperator.FORMULA)
+				.styleIsFehler().applyAndDoReset()
+				.formulaIsEvenRow().style(farbeGerade).applyAndDoReset()
+				.formulaIsOddRow().style(farbeUngerade).applyAndDoReset();
+	}
+
+	private static String setzpositionUngueltigFormel() {
+		String zelle = ConditionalFormatHelper.FORMULA_CURRENT_CELL;
+		return "AND(NOT(ISBLANK(" + zelle + "));OR(NOT(ISNUMBER(" + zelle + "));" + zelle + "<>INT(" + zelle + ");"
+				+ zelle + "<0))";
 	}
 
 	/**

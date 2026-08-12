@@ -359,6 +359,9 @@ class PouleListeDelegate implements MeldeListeKonstanten {
                 CellProperties.from().centerJustify().setBorder(
                         BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder()));
 
+        meldeListeHelper.bereinigeUngueltigeSetzpositionWerte(getSetzPositionSpalte(), ERSTE_DATEN_ZEILE, letzteDatenZeile);
+        meldeListeHelper.formatiereSetzpositionSpalteFehlerfarbe(sheet, spRange);
+
         // Aktiv-Spalte
         var aktivRange = RangePosition.from(getAktivSpalte(), ERSTE_DATEN_ZEILE, getAktivSpalte(), letzteDatenZeile);
         sheet.getSheetHelper().setPropertiesInRange(sheet.getXSpreadSheet(), aktivRange,

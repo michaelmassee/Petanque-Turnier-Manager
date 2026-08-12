@@ -264,6 +264,8 @@ class SupermeleeListeDelegate implements MeldeListeKonstanten {
 
 		meldeListeHelper.insertFormulaSetzpositionGeradeUngradeFarbe(letzteDatenZeile, sheet,
 				meldungenHintergrundFarbeGeradeStyle, meldungenHintergrundFarbeUnGeradeStyle);
+		meldeListeHelper.bereinigeUngueltigeSetzpositionWerte(meldeListeHelper.setzPositionSpalte(), ERSTE_DATEN_ZEILE,
+				letzteDatenZeile);
 		meldeListeHelper.insertFormulaSpieltageSpaltenGeradeUngradeFarbe(letzteDatenZeile, letzteSpielTagSpalte(),
 				sheet, meldungenHintergrundFarbeGeradeStyle, meldungenHintergrundFarbeUnGeradeStyle);
 
