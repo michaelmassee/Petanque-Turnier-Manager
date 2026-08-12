@@ -147,6 +147,63 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	}
 
 	/**
+	 * Löscht Werte in der Aktiv-Spalte, die weder leer noch in {@code gueltigeWerte} enthalten sind –
+	 * Gegenstück zur Fehlerfarben-Markierung in {@link #formatiereAktivSpalteFehlerfarbe}, damit ein
+	 * Refresh/Vollaufbau ungültige Werte nicht dauerhaft stehen lässt.
+	 */
+	public void bereinigeUngueltigeAktivWerte(int aktivSpalte, int ersteDatenZeile, int letzteDatenZeile,
+			List<Integer> gueltigeWerte) throws GenerateException {
+		XSpreadsheet xSheet = getXSpreadSheet();
+		for (int zeile = ersteDatenZeile; zeile <= letzteDatenZeile; zeile++) {
+			Position pos = Position.from(aktivSpalte, zeile);
+			String text = meldeListe.getSheetHelper().getTextFromCell(xSheet, pos);
+			if (StringUtils.isBlank(text)) {
+				continue;
+			}
+			int wert = meldeListe.getSheetHelper().getIntFromCell(xSheet, pos);
+			if (!gueltigeWerte.contains(wert)) {
+				meldeListe.getSheetHelper().clearValInCell(xSheet, pos);
+			}
+		}
+	}
+
+	/**
+	 * Bedingte Formatierung der Aktiv-Spalte: Fehlerfarbe wenn die Zelle weder leer noch in
+	 * {@code gueltigeWerte} enthalten ist. Für Systeme, deren Zeilenfarbe nicht über bedingte
+	 * Formatierung, sondern direkt gesetzt wird (z.B. Poule).
+	 */
+	public void formatiereAktivSpalteFehlerfarbe(ISheet sheet, RangePosition aktivRange, List<Integer> gueltigeWerte)
+			throws GenerateException {
+		ConditionalFormatHelper.from(sheet, aktivRange).clear()
+				.formula1(aktivUngueltigFormel(gueltigeWerte)).operator(ConditionOperator.FORMULA)
+				.styleIsFehler().applyAndDoReset();
+	}
+
+	/**
+	 * Wie {@link #formatiereAktivSpalteFehlerfarbe(ISheet, RangePosition, List)}, hängt aber
+	 * zusätzlich die Zeilenfarbe (gerade/ungerade) als bedingte Formatierung mit niedrigerer
+	 * Priorität an.
+	 */
+	public void formatiereAktivSpalteFehlerfarbe(ISheet sheet, RangePosition aktivRange, List<Integer> gueltigeWerte,
+			MeldungenHintergrundFarbeGeradeStyle farbeGerade, MeldungenHintergrundFarbeUnGeradeStyle farbeUngerade)
+			throws GenerateException {
+		ConditionalFormatHelper.from(sheet, aktivRange).clear()
+				.formula1(aktivUngueltigFormel(gueltigeWerte)).operator(ConditionOperator.FORMULA)
+				.styleIsFehler().applyAndDoReset()
+				.formulaIsEvenRow().style(farbeGerade).applyAndDoReset()
+				.formulaIsOddRow().style(farbeUngerade).applyAndDoReset();
+	}
+
+	private static String aktivUngueltigFormel(List<Integer> gueltigeWerte) {
+		StringBuilder kondAktivUngueltig = new StringBuilder("AND(NOT(ISBLANK(")
+				.append(ConditionalFormatHelper.FORMULA_CURRENT_CELL).append("))");
+		for (Integer wert : gueltigeWerte) {
+			kondAktivUngueltig.append(';').append(ConditionalFormatHelper.FORMULA_CURRENT_CELL).append("<>").append(wert);
+		}
+		return kondAktivUngueltig.append(')').toString();
+	}
+
+	/**
 	 *
 	 * @param spalteNr 0 = erste spalte
 	 * @param isAscending

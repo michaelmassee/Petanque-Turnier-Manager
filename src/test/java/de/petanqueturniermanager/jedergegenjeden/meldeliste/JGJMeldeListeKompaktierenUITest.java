@@ -122,27 +122,30 @@ class JGJMeldeListeKompaktierenUITest extends BaseCalcUITest {
         int nachnameSpalte = 2;
         int aktivSpalte = 4;
 
+        // Aktiv-Wert bewusst nur bei einem der drei Teams gesetzt (einziger gültiger Wert = 1,
+        // siehe JGJMeldeListeDelegate.AKTIV_WERT_NIMMT_TEIL) – reicht als Fingerprint, um zu
+        // prüfen, dass die Aktiv-Spalte beim Sortieren mit der richtigen Zeile mitwandert.
         RangeData data = new RangeData();
         RowData team3 = data.addNewRow();
         team3.newInt(3);
         team3.newString("Team");
         team3.newString("Drei");
         team3.newEmpty();
-        team3.newInt(1);
+        team3.newEmpty();
 
         RowData team1 = data.addNewRow();
         team1.newInt(1);
         team1.newString("Team");
         team1.newString("Eins");
         team1.newEmpty();
-        team1.newInt(2);
+        team1.newInt(1);
 
         RowData team2 = data.addNewRow();
         team2.newInt(2);
         team2.newString("Team");
         team2.newString("Zwei");
         team2.newEmpty();
-        team2.newInt(3);
+        team2.newEmpty();
 
         XSpreadsheet xSheet = meldeListeNew.getXSpreadSheet();
         RangeHelper.from(xSheet, doc, data.getRangePosition(Position.from(0, ERSTE_DATEN_ZEILE))).setDataInRange(data);
@@ -155,15 +158,15 @@ class JGJMeldeListeKompaktierenUITest extends BaseCalcUITest {
 
         assertThat(nachAktualisieren.get(0).get(0).getIntVal(-1)).isEqualTo(1);
         assertThat(nachAktualisieren.get(0).get(nachnameSpalte).getStringVal()).isEqualTo("Eins");
-        assertThat(nachAktualisieren.get(0).get(aktivSpalte).getIntVal(-1)).isEqualTo(2);
+        assertThat(nachAktualisieren.get(0).get(aktivSpalte).getIntVal(-1)).isEqualTo(1);
 
         assertThat(nachAktualisieren.get(1).get(0).getIntVal(-1)).isEqualTo(2);
         assertThat(nachAktualisieren.get(1).get(nachnameSpalte).getStringVal()).isEqualTo("Zwei");
-        assertThat(nachAktualisieren.get(1).get(aktivSpalte).getIntVal(-1)).isEqualTo(3);
+        assertThat(nachAktualisieren.get(1).get(aktivSpalte).getStringVal()).isNullOrEmpty();
 
         assertThat(nachAktualisieren.get(2).get(0).getIntVal(-1)).isEqualTo(3);
         assertThat(nachAktualisieren.get(2).get(nachnameSpalte).getStringVal()).isEqualTo("Drei");
-        assertThat(nachAktualisieren.get(2).get(aktivSpalte).getIntVal(-1)).isEqualTo(1);
+        assertThat(nachAktualisieren.get(2).get(aktivSpalte).getStringVal()).isNullOrEmpty();
     }
 
 }

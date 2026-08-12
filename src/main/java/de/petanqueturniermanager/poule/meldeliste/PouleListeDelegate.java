@@ -58,6 +58,7 @@ class PouleListeDelegate implements MeldeListeKonstanten {
 
     static final int AKTIV_WERT_NIMMT_TEIL = 1;
     static final int AKTIV_WERT_AUSGESTIEGEN = 2;
+    private static final List<Integer> AKTIV_GUELTIGE_WERTE = List.of(AKTIV_WERT_NIMMT_TEIL, AKTIV_WERT_AUSGESTIEGEN);
 
     private final IMeldeliste<TeamMeldungen, Team> sheet;
     private final PouleKonfigurationSheet konfigurationSheet;
@@ -363,6 +364,10 @@ class PouleListeDelegate implements MeldeListeKonstanten {
         sheet.getSheetHelper().setPropertiesInRange(sheet.getXSpreadSheet(), aktivRange,
                 CellProperties.from().centerJustify().setBorder(
                         BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder()));
+
+        meldeListeHelper.bereinigeUngueltigeAktivWerte(getAktivSpalte(), ERSTE_DATEN_ZEILE, letzteDatenZeile,
+                AKTIV_GUELTIGE_WERTE);
+        meldeListeHelper.formatiereAktivSpalteFehlerfarbe(sheet, aktivRange, AKTIV_GUELTIGE_WERTE);
 
         // Editierbare Felder hervorheben: Spalte 1 bis Aktiv
         var editierbareRange = RangePosition.from(1, ERSTE_DATEN_ZEILE, getAktivSpalte(), letzteDatenZeile);

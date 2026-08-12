@@ -63,6 +63,7 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 	static final int AKTIV_SPALTE_WIDTH = 700;
 	static final int AKTIV_WERT_NIMMT_TEIL = 1;
 	static final int AKTIV_WERT_AUSGESTIEGEN = 2;
+	private static final List<Integer> AKTIV_GUELTIGE_WERTE = List.of(AKTIV_WERT_NIMMT_TEIL, AKTIV_WERT_AUSGESTIEGEN);
 
 	private final IMeldeliste<TeamMeldungen, Team> sheet;
 	private final SchweizerKonfigurationSheet konfigurationSheet;
@@ -386,6 +387,10 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 				getAktivSpalte(), letzteDatenZeile);
 		sheet.getSheetHelper().setPropertiesInRange(sheet.getXSpreadSheet(), aktivRange,
 				CellProperties.from().centerJustify().setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder()));
+
+		meldeListeHelper.bereinigeUngueltigeAktivWerte(getAktivSpalte(), ERSTE_DATEN_ZEILE, letzteDatenZeile,
+				AKTIV_GUELTIGE_WERTE);
+		meldeListeHelper.formatiereAktivSpalteFehlerfarbe(sheet, aktivRange, AKTIV_GUELTIGE_WERTE);
 
 		// Editierbare Felder hervorheben: Spalten 1..Aktiv (ohne Nr-Spalte 0)
 		int aktivSpalte = getAktivSpalte();

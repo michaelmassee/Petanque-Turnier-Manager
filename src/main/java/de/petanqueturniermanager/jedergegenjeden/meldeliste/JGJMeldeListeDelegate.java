@@ -60,6 +60,7 @@ class JGJMeldeListeDelegate implements MeldeListeKonstanten {
 	static final int AKTIV_SPALTE_WIDTH = 700;
 
 	static final int AKTIV_WERT_NIMMT_TEIL = 1;
+	private static final List<Integer> AKTIV_GUELTIGE_WERTE = List.of(AKTIV_WERT_NIMMT_TEIL);
 
 	private final IMeldeliste<TeamMeldungen, Team> sheet;
 	private final JGJKonfigurationSheet konfigurationSheet;
@@ -335,6 +336,10 @@ class JGJMeldeListeDelegate implements MeldeListeKonstanten {
 				getAktivSpalte(), letzteDatenZeile);
 		sheet.getSheetHelper().setPropertiesInRange(sheet.getXSpreadSheet(), aktivRange,
 				CellProperties.from().centerJustify().setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder()));
+
+		meldeListeHelper.bereinigeUngueltigeAktivWerte(getAktivSpalte(), ERSTE_DATEN_ZEILE, letzteDatenZeile,
+				AKTIV_GUELTIGE_WERTE);
+		meldeListeHelper.formatiereAktivSpalteFehlerfarbe(sheet, aktivRange, AKTIV_GUELTIGE_WERTE);
 
 		RangePosition editierbareRange = RangePosition.from(1, ERSTE_DATEN_ZEILE, getAktivSpalte(), letzteDatenZeile);
 		EditierbaresZelleFormatHelper.anwenden(sheet, editierbareRange);

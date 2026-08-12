@@ -104,7 +104,7 @@ public class SchweizerTurnierTestDaten extends SchweizerAbstractSpielrundeSheet 
 		konfig.seitenstileAktualisieren();
 	}
 
-	private void ergebnisseEinfuegen(XSpreadsheet sheet) throws GenerateException {
+	void ergebnisseEinfuegen(XSpreadsheet sheet) throws GenerateException {
 		RangePosition readRange = RangePosition.from(
 				TEAM_A_SPALTE, ERSTE_DATEN_ZEILE, ERG_TEAM_B_SPALTE, ERSTE_DATEN_ZEILE + 100);
 		RangeData data = RangeHelper

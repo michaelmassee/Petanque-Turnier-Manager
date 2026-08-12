@@ -72,6 +72,7 @@ class FormuleXListeDelegate implements MeldeListeKonstanten {
 
     static final int AKTIV_WERT_NIMMT_TEIL = 1;
     static final int AKTIV_WERT_AUSGESTIEGEN = 2;
+    private static final List<Integer> AKTIV_GUELTIGE_WERTE = List.of(AKTIV_WERT_NIMMT_TEIL, AKTIV_WERT_AUSGESTIEGEN);
 
     private static final int NR_SPALTE_WIDTH = 800;
     private static final int NAME_SPALTE_WIDTH = 3000;
@@ -441,14 +442,10 @@ class FormuleXListeDelegate implements MeldeListeKonstanten {
                 RangeProperties.from().centerJustify()
                         .setBorder(BorderFactory.from().allThin().toBorder()));
 
-        String kondAktivUngueltig = "AND(NOT(ISBLANK(" + ConditionalFormatHelper.FORMULA_CURRENT_CELL + "));"
-                + ConditionalFormatHelper.FORMULA_CURRENT_CELL + "<>1;"
-                + ConditionalFormatHelper.FORMULA_CURRENT_CELL + "<>2)";
-        ConditionalFormatHelper.from(sheet, aktivRange).clear()
-                .formula1(kondAktivUngueltig).operator(ConditionOperator.FORMULA)
-                .styleIsFehler().applyAndDoReset()
-                .formulaIsEvenRow().style(farbeGerade).applyAndDoReset()
-                .formulaIsOddRow().style(farbeUngerade).applyAndDoReset();
+        meldeListeHelper.bereinigeUngueltigeAktivWerte(getAktivSpalte(), ERSTE_DATEN_ZEILE, letzteDatenZeile,
+                AKTIV_GUELTIGE_WERTE);
+        meldeListeHelper.formatiereAktivSpalteFehlerfarbe(sheet, aktivRange, AKTIV_GUELTIGE_WERTE, farbeGerade,
+                farbeUngerade);
 
         EditierbaresZelleFormatHelper.anwenden(sheet, RangePosition.from(1, ERSTE_DATEN_ZEILE, getAktivSpalte(), letzteDatenZeile));
 
