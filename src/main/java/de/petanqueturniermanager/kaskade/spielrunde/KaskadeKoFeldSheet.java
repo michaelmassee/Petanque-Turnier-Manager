@@ -84,7 +84,8 @@ public class KaskadeKoFeldSheet extends SheetRunner implements ISheet {
         processBoxinfo("processbox.kaskade.ko.felder.erstellen");
 
         meldeListe.upDateSheet();
-        int gesamtTeams = meldeListe.getMeldungenSortiertNachSetzposition().size();
+        int gesamtTeams = KaskadePlanGroesse.ermittleFixierteTeamAnzahl(getWorkingSpreadsheet(), konfigurationSheet,
+                meldeListe.getMeldungenSortiertNachSetzposition().size());
 
         boolean freispielGewonnen = konfigurationSheet.getFreispielPunktePlus()
                 > konfigurationSheet.getFreispielPunkteMinus();

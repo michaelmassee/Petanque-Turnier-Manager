@@ -71,15 +71,15 @@ public class KaskadeGruppenRanglisteSheet extends SheetRunner implements ISheet 
      * Pro Gruppe: 2 Spalten (Pos | Team-Nr).
      * Gruppen-Spaltenoffsets (relativ zum Start des Gruppenblocks):
      */
-    private static final int BLOCK_POS_OFFSET  = 0;
-    private static final int BLOCK_NR_OFFSET   = 1;
-    private static final int BLOCK_BREITE      = 2;
+    public static final int BLOCK_POS_OFFSET  = 0;
+    public static final int BLOCK_NR_OFFSET   = 1;
+    public static final int BLOCK_BREITE      = 2;
 
     /** Zeilen-Layout. */
     private static final int HAUPTHEADER_ZEILE = 0;
     private static final int GRUPPE_HEADER_ZEILE = 1;
     private static final int SPALTEN_HEADER_ZEILE = 2;
-    private static final int ERSTE_DATEN_ZEILE = 3;
+    public static final int ERSTE_DATEN_ZEILE = 3;
 
     private static final int CHARHEIGHT_HAUPTHEADER = 16;
     private static final int CHARHEIGHT_HEADER       = 13;
@@ -163,7 +163,8 @@ public class KaskadeGruppenRanglisteSheet extends SheetRunner implements ISheet 
      */
     protected KaskadenKoRundenPlan ermittlePlan() throws GenerateException {
         meldeListe.upDateSheet();
-        int gesamtTeams = meldeListe.getMeldungenSortiertNachSetzposition().size();
+        int gesamtTeams = KaskadePlanGroesse.ermittleFixierteTeamAnzahl(getWorkingSpreadsheet(), konfigurationSheet,
+                meldeListe.getMeldungenSortiertNachSetzposition().size());
         boolean freispielGewonnen = konfigurationSheet.getFreispielPunktePlus()
                 > konfigurationSheet.getFreispielPunkteMinus();
         return KaskadenKoRundenPlaner.berechne(

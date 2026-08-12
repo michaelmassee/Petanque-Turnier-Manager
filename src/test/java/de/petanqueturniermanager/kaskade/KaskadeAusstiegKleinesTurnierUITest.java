@@ -3,7 +3,9 @@ package de.petanqueturniermanager.kaskade;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,6 +22,7 @@ import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.kaskade.konfiguration.KaskadeKonfigurationSheet;
 import de.petanqueturniermanager.kaskade.meldeliste.KaskadeMeldeListeSheetUpdate;
+import de.petanqueturniermanager.kaskade.spielrunde.KaskadeGruppenRanglisteSheet;
 import de.petanqueturniermanager.kaskade.spielrunde.KaskadeSpielrundeSheet;
 
 /**
@@ -112,6 +115,43 @@ public class KaskadeAusstiegKleinesTurnierUITest extends BaseCalcUITest {
 
         XSpreadsheet koFeldA = sheetHlp.findByName(SheetNamen.kaskadenFeld("A"));
         assertThat(koFeldA).as("KO-Feld A muss nach Turnierabschluss vorhanden sein").isNotNull();
+
+        // Struktur-Regression: der Abschluss (KaskadeGruppenRanglisteSheet/KaskadeKoFeldSheet) darf
+        // den Plan NICHT erneut aus der aktuellen aktiven Teamzahl (ANZ_TEAMS - 1, da ein Team
+        // ausgestiegen ist) berechnen, sonst würde die Gruppenstruktur nicht mehr zu den bereits
+        // geschriebenen Kaskadenrunden passen. Alle ANZ_TEAMS Teams (inkl. des ausgestiegenen, das
+        // per Walkover verloren hat) müssen in der Gruppenrangliste auftauchen.
+        Set<Integer> teamNrnInGruppenrangliste = leseAlleTeamNrnAusGruppenrangliste();
+        assertThat(teamNrnInGruppenrangliste)
+                .as("Gruppenrangliste muss die fixierte Runde-1-Teamanzahl (%d) verwenden, nicht die "
+                        + "geschrumpfte aktive Teamzahl", ANZ_TEAMS)
+                .hasSize(ANZ_TEAMS)
+                .contains(AUSGESTIEGENES_TEAM_NR);
+    }
+
+    private Set<Integer> leseAlleTeamNrnAusGruppenrangliste() throws GenerateException {
+        XSpreadsheet sheet = sheetHlp.findByName(SheetNamen.kaskadeGruppenrangliste());
+        assertThat(sheet).as("Gruppenrangliste-Sheet").isNotNull();
+
+        Set<Integer> teamNrn = new HashSet<>();
+        for (int block = 0; block < 20; block++) {
+            int nrSpalte = block * KaskadeGruppenRanglisteSheet.BLOCK_BREITE
+                    + KaskadeGruppenRanglisteSheet.BLOCK_NR_OFFSET;
+            RangePosition range = RangePosition.from(nrSpalte, KaskadeGruppenRanglisteSheet.ERSTE_DATEN_ZEILE,
+                    nrSpalte, KaskadeGruppenRanglisteSheet.ERSTE_DATEN_ZEILE + 50);
+            RangeData data = RangeHelper.from(sheet, wkingSpreadsheet.getWorkingSpreadsheetDocument(), range)
+                    .getDataFromRange();
+            for (var row : data) {
+                if (row.isEmpty()) {
+                    continue;
+                }
+                int wert = row.get(0).getIntVal(0);
+                if (wert > 0) {
+                    teamNrn.add(wert);
+                }
+            }
+        }
+        return teamNrn;
     }
 
     /**

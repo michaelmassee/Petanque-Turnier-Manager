@@ -195,7 +195,8 @@ public class KaskadeSpielrundeSheet extends SheetRunner implements ISheet {
             planTeamAnzahl = meldungenNachSP.size();
             konfigurationSheet.setAnzahlTeamsRunde1(planTeamAnzahl);
         } else {
-            planTeamAnzahl = konfigurationSheet.getAnzahlTeamsRunde1();
+            planTeamAnzahl = KaskadePlanGroesse.ermittleFixierteTeamAnzahl(getWorkingSpreadsheet(),
+                    konfigurationSheet, meldungenNachSP.size());
         }
 
         boolean freispielGewonnen = konfigurationSheet.getFreispielPunktePlus()
