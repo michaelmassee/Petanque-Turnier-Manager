@@ -43,6 +43,15 @@ public class EditierbaresZelleFormatHelper {
 	 * sodass die Darstellung per Konfiguration ohne Sheet-Rebuild abschaltbar ist.
 	 * Vorhandene bedingte Formatierungen (z. B. Fehlerprüfungen) bleiben erhalten
 	 * und haben Vorrang, da sie mit niedrigerem Index zuerst geprüft werden.
+	 * <p>
+	 * Iteriert spaltenweise statt {@code range} als Ganzes zu behandeln: LO liest die Property
+	 * {@code "ConditionalFormat"} für einen mehrspaltigen Bereich über {@code GetCurrentAttrsDeep()},
+	 * das nur dann ein auswertbares Ergebnis liefert, wenn die Zell-Attribute (inkl.
+	 * Conditional-Format-Index) über den gesamten Bereich homogen sind (vgl.
+	 * {@link ConditionalFormatHelper#clearOnly}). Trägt z.B. die Setzpositions- oder Aktiv-Spalte
+	 * bereits eine eigene Fehlerprüfung (andere Spalte = anderer CF-Zustand), ist der Bereich nicht
+	 * homogen - {@code append()} würde dann fälschlich den (leeren) Zustand der ersten Spalte auf
+	 * alle Spalten zurückschreiben und die Fehlerprüfung der übrigen Spalten stumm löschen.
 	 *
 	 * @param sheet Sheet, auf dem formatiert wird
 	 * @param range Zellbereich der editierbaren Felder
@@ -52,9 +61,12 @@ public class EditierbaresZelleFormatHelper {
 		new DocumentPropertiesHelper(sheet.getWorkingSpreadsheet()).initBooleanPropertyIfAbsent(PROPERTY_KEY, true);
 		var geradeStyle = new EditierbareZelleHintergrundFarbeGeradeStyle(EDITIERBAR_GERADE_FARBE);
 		var ungeradeStyle = new EditierbareZelleHintergrundFarbeUnGeradeStyle(EDITIERBAR_UNGERADE_FARBE);
-		ConditionalFormatHelper.from(sheet, range).append()
-				.formulaIsEvenRowAndBoolProp(PROPERTY_KEY).style(geradeStyle).applyAndDoReset()
-				.formulaIsOddRowAndBoolProp(PROPERTY_KEY).style(ungeradeStyle).applyAndDoReset();
+		for (int spalte = range.getStartSpalte(); spalte <= range.getEndeSpalte(); spalte++) {
+			RangePosition spaltenRange = RangePosition.from(spalte, range.getStartZeile(), spalte, range.getEndeZeile());
+			ConditionalFormatHelper.from(sheet, spaltenRange).append()
+					.formulaIsEvenRowAndBoolProp(PROPERTY_KEY).style(geradeStyle).applyAndDoReset()
+					.formulaIsOddRowAndBoolProp(PROPERTY_KEY).style(ungeradeStyle).applyAndDoReset();
+		}
 	}
 
 	/**
