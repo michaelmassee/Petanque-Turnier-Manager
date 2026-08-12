@@ -281,9 +281,12 @@ public class KaskadeSpielrundeSheet extends SheetRunner implements ISheet {
                     zeile.add(new CellData(freispielMinus));
                     zeile.add(new CellData(freispielPlus));
                 } else if (!aktivA && !aktivB && nrA != null && nrB != null) {
-                    // Beide Teams bereits ausgestiegen: beide "verlieren" per Walkover, damit die
-                    // Zeile als gespielt gilt und die Bracket-Fortführung nicht blockiert wird.
-                    zeile.add(new CellData(freispielMinus));
+                    // Beide Teams bereits ausgestiegen: Team A gewinnt nominell per Walkover
+                    // (wie ein regulärer Freilos-Fall) - ein "Gleichstand" (ergA=ergB) würde die
+                    // Fehlerformel in fehlerSpalteFormatieren() auslösen, da Pétanque keine
+                    // Unentschieden kennt. Die Zeile gilt damit als gespielt, die
+                    // Bracket-Fortführung wird nicht blockiert.
+                    zeile.add(new CellData(freispielPlus));
                     zeile.add(new CellData(freispielMinus));
                 } else {
                     zeile.add(new CellData(""));
