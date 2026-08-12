@@ -235,14 +235,19 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 		}
 
 		SchweizerMeldeListeSheetUpdate meldeliste = erstelleMeldeListeSheet();
-		TeamMeldungen aktiveMeldungen = meldeliste.getAktiveMeldungen();
-		if (aktiveMeldungen.size() == 0) {
+		// Ausgestiegene Teams bleiben mit ihrem bisherigen Ergebnis in der Rangliste stehen
+		// (Pétanque-Konvention Schweizer System: ein vorzeitiger Ausstieg darf weder das eigene
+		// Ergebnis noch – über die Buchholz-Wertung – das der Gegner verfälschen). Nur die
+		// Rundenerzeugung selbst (SchweizerSpielrundeSheetNaechste) verwendet weiterhin
+		// getAktiveMeldungen(), damit Ausgestiegene nicht mehr neu gepaart werden.
+		TeamMeldungen aktiveUndAusgesetztMeldungen = meldeliste.getAktiveUndAusgesetztMeldungen();
+		if (aktiveUndAusgesetztMeldungen.size() == 0) {
 			processBoxinfo("processbox.abbruch");
 			return;
 		}
 
 		insertHeader(sheet, getKonfigurationSheet().getRankingModus());
-		berechnungUndSchreiben(sheet, meldeliste, aktiveMeldungen);
+		berechnungUndSchreiben(sheet, meldeliste, aktiveUndAusgesetztMeldungen);
 
 		if (SheetRunner.isRunning()) {
 			getSheetHelper().setActiveSheet(sheet);

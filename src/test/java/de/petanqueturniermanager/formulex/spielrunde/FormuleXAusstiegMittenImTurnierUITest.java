@@ -23,9 +23,11 @@ import de.petanqueturniermanager.supermelee.SpielRundeNr;
 
 /**
  * Regression: ein Team steigt NACH bereits gespielter Runde 1 aus (Aktiv-Spalte = 2).
- * Erwartet (aktuelles, konsistentes Verhalten): Runde 2 paart das Team nicht mehr, Runde-1-Ergebnisse
- * bleiben unverändert stehen, und die Rangliste führt (wie Paarungen) nur noch die verbleibenden
- * aktiven Teams – das ausgestiegene Team fällt komplett aus der Rangliste.
+ * Erwartet (aktuelles, konsistentes Verhalten, Pétanque-Konvention Schweizer System): Runde 2 paart
+ * das Team nicht mehr, Runde-1-Ergebnisse bleiben unverändert stehen. Die Rangliste bleibt dagegen
+ * mit dem bisherigen Ergebnis des ausgestiegenen Teams stehen ({@code getAktiveUndAusgesetztMeldungen()})
+ * – ein vorzeitiger Ausstieg darf weder das eigene, bereits erspielte Ergebnis noch das der Gegner
+ * verfälschen.
  */
 public class FormuleXAusstiegMittenImTurnierUITest extends BaseCalcUITest {
 
@@ -89,9 +91,10 @@ public class FormuleXAusstiegMittenImTurnierUITest extends BaseCalcUITest {
                 .hasSize(ANZ_TEAMS - 1)
                 .doesNotContain(AUSGESTIEGENES_TEAM_NR);
 
-        // Rangliste erzeugen: darf nicht crashen. FormuleXRanglisteSheet baut ausschließlich aus
-        // getAktiveMeldungen() auf (Aktiv==1) – ein ausgestiegenes Team fällt damit konsequent auch
-        // aus der Rangliste raus (Rangliste = Ranking der aktuell aktiven Teams), analog zu Paarungen.
+        // Rangliste erzeugen: darf nicht crashen. FormuleXRanglisteSheet baut aus
+        // getAktiveUndAusgesetztMeldungen() auf – das ausgestiegene Team bleibt mit seinem
+        // bisherigen (Runde-1-)Ergebnis in der Rangliste stehen, wird aber (siehe oben) nicht mehr
+        // neu gepaart.
         FormuleXRanglisteSheet ranglisteSheet = new FormuleXRanglisteSheet(wkingSpreadsheet);
         ranglisteSheet.doRun();
 
@@ -100,20 +103,46 @@ public class FormuleXAusstiegMittenImTurnierUITest extends BaseCalcUITest {
 
         RangePosition ranglisteRange = RangePosition.from(
                 FormuleXRanglisteSheet.TEAM_NR_SPALTE, FormuleXRanglisteSheet.ERSTE_DATEN_ZEILE,
-                FormuleXRanglisteSheet.SIEGE_SPALTE, FormuleXRanglisteSheet.ERSTE_DATEN_ZEILE + ANZ_TEAMS - 2);
+                FormuleXRanglisteSheet.SIEGE_SPALTE, FormuleXRanglisteSheet.ERSTE_DATEN_ZEILE + ANZ_TEAMS - 1);
         RangeData ranglisteData = RangeHelper
                 .from(rangliste, wkingSpreadsheet.getWorkingSpreadsheetDocument(), ranglisteRange)
                 .getDataFromRange();
         assertThat(ranglisteData)
-                .as("Rangliste muss die " + (ANZ_TEAMS - 1) + " weiterhin aktiven Teams listen")
-                .hasSize(ANZ_TEAMS - 1);
+                .as("Rangliste muss weiterhin alle " + ANZ_TEAMS + " Teams listen (inkl. ausgestiegenem)")
+                .hasSize(ANZ_TEAMS);
 
         boolean ausgestiegenesTeamInRangliste = ranglisteData.stream()
                 .anyMatch(row -> row.get(FormuleXRanglisteSheet.TEAM_NR_SPALTE).getIntVal(-1)
                         == AUSGESTIEGENES_TEAM_NR);
         assertThat(ausgestiegenesTeamInRangliste)
-                .as("Ausgestiegenes Team wird konsequent nicht mehr in der Rangliste geführt")
-                .isFalse();
+                .as("Ausgestiegenes Team bleibt mit seinem bisherigen Ergebnis in der Rangliste")
+                .isTrue();
+
+        // Regression: jede echte Paarungszeile (Runde 1 UND Runde 2, beide sind zu diesem Zeitpunkt
+        // bereits gespielt) vergibt genau einen Sieg (echter Gewinn oder Freilos). Die Siege-Summe
+        // über die GESAMTE Rangliste muss dieser Zeilenzahl entsprechen - würde der Gegner des
+        // ausgestiegenen Teams seinen bereits erspielten Sieg verlieren, fehlte hier ein Sieg.
+        int erwarteteSiege = zaehleGueltigeZeilen(runde1VorAusstieg) + zaehleGueltigeZeilen(runde2Paarungen);
+        int siegeSumme = ranglisteData.stream()
+                .mapToInt(row -> row.get(FormuleXRanglisteSheet.SIEGE_SPALTE).getIntVal(0))
+                .sum();
+        assertThat(siegeSumme)
+                .as("Kein Sieg darf durch den Ausstieg des Gegners aus der Rangliste-Summe verschwinden")
+                .isEqualTo(erwarteteSiege);
+    }
+
+    /**
+     * Zählt die echten Paarungszeilen (bis zur ersten Zeile ohne gültige Team-A-Nr).
+     */
+    private int zaehleGueltigeZeilen(List<List<Integer>> paarungen) {
+        int anzahl = 0;
+        for (var row : paarungen) {
+            if (row.get(0) <= 0) {
+                break;
+            }
+            anzahl++;
+        }
+        return anzahl;
     }
 
     /**

@@ -87,6 +87,7 @@ public class MaastrichterAusstiegMittenImTurnierUITest extends BaseCalcUITest {
             assertThat(row.get(1)).as("Ausgestiegenes Team darf nicht mehr als Team B gepaart werden")
                     .isNotEqualTo(AUSGESTIEGENES_TEAM_NR);
         }
+        List<List<Integer>> vorrunde3Paarungen = leseSpielpaarungWerte(SheetNamen.spielrunde(3));
 
         // Rangliste + Finalrunden erzeugen: darf mit dem ausgestiegenen Team nicht crashen
         testDaten.ranglisteSheet.doRun();
@@ -94,25 +95,52 @@ public class MaastrichterAusstiegMittenImTurnierUITest extends BaseCalcUITest {
         RangePosition ranglisteRange = RangePosition.from(
                 MaastrichterVorrundenRanglisteSheet.TEAM_NR_SPALTE, MaastrichterVorrundenRanglisteSheet.ERSTE_DATEN_ZEILE,
                 MaastrichterVorrundenRanglisteSheet.SIEGE_SPALTE,
-                MaastrichterVorrundenRanglisteSheet.ERSTE_DATEN_ZEILE + ANZ_TEAMS - 2);
+                MaastrichterVorrundenRanglisteSheet.ERSTE_DATEN_ZEILE + ANZ_TEAMS - 1);
         XSpreadsheet rangliste = sheetHlp.findByName(SheetNamen.maastrichterVorrundenRangliste());
         assertThat(rangliste).as("Rangliste-Sheet").isNotNull();
         RangeData ranglisteDaten = RangeHelper
                 .from(rangliste, wkingSpreadsheet.getWorkingSpreadsheetDocument(), ranglisteRange)
                 .getDataFromRange();
         assertThat(ranglisteDaten)
-                .as("Rangliste muss die " + (ANZ_TEAMS - 1) + " weiterhin aktiven Teams listen")
-                .hasSize(ANZ_TEAMS - 1);
+                .as("Rangliste muss weiterhin alle " + ANZ_TEAMS + " Teams listen (inkl. ausgestiegenem)")
+                .hasSize(ANZ_TEAMS);
         boolean ausgestiegenesTeamInRangliste = ranglisteDaten.stream()
                 .anyMatch(row -> row.get(MaastrichterVorrundenRanglisteSheet.TEAM_NR_SPALTE).getIntVal(-1)
                         == AUSGESTIEGENES_TEAM_NR);
         assertThat(ausgestiegenesTeamInRangliste)
-                .as("Ausgestiegenes Team wird konsequent nicht mehr in der Rangliste geführt")
-                .isFalse();
+                .as("Ausgestiegenes Team bleibt mit seinem bisherigen Vorrunden-Ergebnis in der Rangliste")
+                .isTrue();
+
+        // Regression: jede echte Paarungszeile (Vorrunden 1-3, alle sind zu diesem Zeitpunkt bereits
+        // gespielt) vergibt genau einen Sieg. Die Siege-Summe über die GESAMTE Rangliste muss dieser
+        // Zeilenzahl entsprechen - würde der Gegner des ausgestiegenen Teams seinen bereits
+        // erspielten Sieg verlieren, fehlte hier ein Sieg.
+        int erwarteteSiege = zaehleGueltigeZeilen(vorrunde1VorAusstieg) + zaehleGueltigeZeilen(vorrunde2Paarungen)
+                + zaehleGueltigeZeilen(vorrunde3Paarungen);
+        int siegeSumme = ranglisteDaten.stream()
+                .mapToInt(row -> row.get(MaastrichterVorrundenRanglisteSheet.SIEGE_SPALTE).getIntVal(0))
+                .sum();
+        assertThat(siegeSumme)
+                .as("Kein Sieg darf durch den Ausstieg des Gegners aus der Rangliste-Summe verschwinden")
+                .isEqualTo(erwarteteSiege);
 
         testDaten.finalrundeSheet.doRun();
         XSpreadsheet finaleGruppeA = sheetHlp.findByName(SheetNamen.koFinaleGruppe("A"));
         assertThat(finaleGruppeA).as("Finalrunden-Gruppe A muss nach Turnierabschluss vorhanden sein").isNotNull();
+    }
+
+    /**
+     * Zählt die echten Paarungszeilen (bis zur ersten Zeile ohne gültige Team-A-Nr).
+     */
+    private int zaehleGueltigeZeilen(List<List<Integer>> paarungen) {
+        int anzahl = 0;
+        for (var row : paarungen) {
+            if (row.get(0) <= 0) {
+                break;
+            }
+            anzahl++;
+        }
+        return anzahl;
     }
 
     private List<List<Integer>> leseSpielpaarungWerte(String sheetName) throws GenerateException {

@@ -136,14 +136,16 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
         }
 
         FormuleXMeldeListeSheetUpdate meldeliste = new FormuleXMeldeListeSheetUpdate(getWorkingSpreadsheet());
-        TeamMeldungen aktiveMeldungen = meldeliste.getAktiveMeldungen();
-        if (aktiveMeldungen.size() == 0) {
+        // Ausgestiegene Teams bleiben mit ihrem bisherigen Ergebnis in der Rangliste stehen (siehe
+        // SchweizerRanglisteSheet); nur die Rundenerzeugung selbst schließt sie von Neupaarungen aus.
+        TeamMeldungen aktiveUndAusgesetztMeldungen = meldeliste.getAktiveUndAusgesetztMeldungen();
+        if (aktiveUndAusgesetztMeldungen.size() == 0) {
             processBoxinfo("processbox.abbruch");
             return;
         }
 
         insertHeader(sheet);
-        berechnungUndSchreiben(sheet, meldeliste, aktiveMeldungen);
+        berechnungUndSchreiben(sheet, meldeliste, aktiveUndAusgesetztMeldungen);
 
         if (SheetRunner.isRunning()) {
             getSheetHelper().setActiveSheet(sheet);

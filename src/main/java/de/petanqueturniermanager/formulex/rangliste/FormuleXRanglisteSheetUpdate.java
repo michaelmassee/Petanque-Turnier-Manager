@@ -45,14 +45,16 @@ public class FormuleXRanglisteSheetUpdate extends FormuleXRanglisteSheet {
         processBoxinfo("processbox.rangliste.aktualisieren");
 
         FormuleXMeldeListeSheetUpdate meldeliste = new FormuleXMeldeListeSheetUpdate(getWorkingSpreadsheet());
-        TeamMeldungen aktiveMeldungen = meldeliste.getAktiveMeldungen();
-        if (aktiveMeldungen.size() == 0) {
+        // Siehe FormuleXRanglisteSheet.doRunIntern(): ausgestiegene Teams bleiben mit ihrem
+        // bisherigen Ergebnis in der Rangliste stehen.
+        TeamMeldungen aktiveUndAusgesetztMeldungen = meldeliste.getAktiveUndAusgesetztMeldungen();
+        if (aktiveUndAusgesetztMeldungen.size() == 0) {
             processBoxinfo("processbox.abbruch");
             return;
         }
 
-        RanglisteUpdateHelper.loescheDatenzeilen(this, sheet, aktiveMeldungen.size());
-        berechnungUndSchreiben(sheet, meldeliste, aktiveMeldungen);
+        RanglisteUpdateHelper.loescheDatenzeilen(this, sheet, aktiveUndAusgesetztMeldungen.size());
+        berechnungUndSchreiben(sheet, meldeliste, aktiveUndAusgesetztMeldungen);
 
 
         // Bewusst KEIN setActiveSheet(sheet): Im Listener-Pfad ist der User schon auf der

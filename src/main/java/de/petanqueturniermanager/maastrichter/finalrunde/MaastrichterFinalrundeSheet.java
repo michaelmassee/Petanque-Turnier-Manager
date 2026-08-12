@@ -110,9 +110,14 @@ public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet {
 		int anzVorrunden = konfigSheet.getAnzVorrunden();
 		SchweizerRankingModus modus = konfigSheet.getRankingModus();
 
-		// Alle Vorrunden-Ergebnisse einlesen
+		// Ausgestiegene Teams bleiben mit ihrem bisherigen Vorrunden-Ergebnis in der Auswertung
+		// (siehe SchweizerRanglisteSheet) - sonst gehen sowohl ihr eigenes Ergebnis als auch die
+		// Siege/Punkte der Gegner gegen sie verloren. Sie werden weiter unten in
+		// erstelleGruppeTeams(gruppeErg, aktiveMeldungen) trotzdem NICHT den spielenden
+		// Finalgruppen zugeordnet, da dort bewusst die rein aktive Teamliste verwendet wird.
+		TeamMeldungen aktiveUndAusgesetztMeldungen = meldeliste.getAktiveUndAusgesetztMeldungen();
 		List<SchweizerTeamErgebnis> ergebnisse = leseVorrundenErgebnisse(
-				aktiveMeldungen, anzVorrunden, meldeliste);
+				aktiveUndAusgesetztMeldungen, anzVorrunden, meldeliste);
 
 		// Nach Schweizer Kriterien sortieren (für korrekte Setzliste pro Gruppe)
 		List<SchweizerTeamErgebnis> sortiert = new SchweizerSystem()
