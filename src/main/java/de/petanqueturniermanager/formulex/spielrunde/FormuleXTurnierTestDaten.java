@@ -34,7 +34,7 @@ public class FormuleXTurnierTestDaten extends FormuleXAbstractSpielrundeSheet {
     public static final int ANZ_RUNDEN  = 5;
 
     private final FormuleXMeldeListeSheetTestDaten meldelisteTestDaten;
-    private final FormuleXSpielrundeSheetNaechste  naechsteSpielrunde;
+    final FormuleXSpielrundeSheetNaechste          naechsteSpielrunde;
     private final FormuleXRanglisteSheet           ranglisteSheet;
     private final FormuleXTeilnehmerSheet          teilnehmerSheet;
 
@@ -59,6 +59,17 @@ public class FormuleXTurnierTestDaten extends FormuleXAbstractSpielrundeSheet {
     }
 
     public void generate() throws GenerateException {
+        generate(ANZ_RUNDEN, true);
+
+        // Teilnehmer erstellen
+        SheetRunner.testDoCancelTask();
+        teilnehmerSheet.generate();
+
+        // Seitenstile aktualisieren
+        naechsteSpielrunde.getKonfigurationSheet().seitenstileAktualisieren();
+    }
+
+    public void generate(int anzRunden, boolean mitRangliste) throws GenerateException {
         // 1. Meldeliste erstellen
         meldelisteTestDaten.erstelleMeldelisteWithTestdaten();
         naechsteSpielrunde.getKonfigurationSheet().setSpielrundeSpielbahn(SpielrundeSpielbahn.R);
@@ -66,7 +77,7 @@ public class FormuleXTurnierTestDaten extends FormuleXAbstractSpielrundeSheet {
         naechsteSpielrunde.getKonfigurationSheet().setAnzahlRunden(ANZ_RUNDEN);
 
         // 2. Spielrunden erstellen und mit Zufallsergebnissen füllen
-        for (int runde = 1; runde <= ANZ_RUNDEN; runde++) {
+        for (int runde = 1; runde <= anzRunden; runde++) {
             SheetRunner.testDoCancelTask();
             processBoxinfo("processbox.erstelle.spielrunde", runde, ANZ_RUNDEN);
             naechsteSpielrunde.doRun();
@@ -80,19 +91,14 @@ public class FormuleXTurnierTestDaten extends FormuleXAbstractSpielrundeSheet {
             }
         }
 
-        // 3. Rangliste erstellen
-        SheetRunner.testDoCancelTask();
-        ranglisteSheet.doRun();
-
-        // 4. Teilnehmer erstellen
-        SheetRunner.testDoCancelTask();
-        teilnehmerSheet.generate();
-
-        // 5. Seitenstile aktualisieren
-        naechsteSpielrunde.getKonfigurationSheet().seitenstileAktualisieren();
+        // 3. Rangliste erstellen (optional)
+        if (mitRangliste) {
+            SheetRunner.testDoCancelTask();
+            ranglisteSheet.doRun();
+        }
     }
 
-    private void ergebnisseEinfuegen(XSpreadsheet sheet) throws GenerateException {
+    void ergebnisseEinfuegen(XSpreadsheet sheet) throws GenerateException {
         var xDoc = getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
         RangePosition readRange = RangePosition.from(
                 TEAM_A_SPALTE, ERSTE_DATEN_ZEILE, ERG_TEAM_B_SPALTE, ERSTE_DATEN_ZEILE + 100);

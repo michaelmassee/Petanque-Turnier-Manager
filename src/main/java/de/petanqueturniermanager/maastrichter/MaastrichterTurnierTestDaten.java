@@ -54,9 +54,9 @@ public class MaastrichterTurnierTestDaten extends SheetRunner implements ISheet,
 	private final int gruppenGroesse;
 
 	private final MaastrichterMeldeListeSheetTestDaten meldelisteTestDaten;
-	private final MaastrichterSpielrundeSheetNaechste naechsteVorrunde;
-	private final MaastrichterVorrundenRanglisteSheet ranglisteSheet;
-	private final MaastrichterFinalrundeSheet finalrundeSheet;
+	final MaastrichterSpielrundeSheetNaechste naechsteVorrunde;
+	final MaastrichterVorrundenRanglisteSheet ranglisteSheet;
+	final MaastrichterFinalrundeSheet finalrundeSheet;
 	private final MaastrichterTeilnehmerSheet teilnehmerSheet;
 
 	/** Standard-Konstruktor: 12 Teams, 3 Vorrunden, gruppenGroesse=16 */
@@ -113,6 +113,25 @@ public class MaastrichterTurnierTestDaten extends SheetRunner implements ISheet,
 			return;
 		}
 
+		generate(anzVorrunden, true);
+
+		// Teilnehmerliste erstellen
+		SheetRunner.testDoCancelTask();
+		processBoxinfo("processbox.erstelle.teilnehmerliste");
+		teilnehmerSheet.generate();
+
+		// Kopfzeile und Werbefußzeile setzen
+		MaastrichterKonfigurationSheet konfigSheet = new MaastrichterKonfigurationSheet(getWorkingSpreadsheet());
+		konfigSheet.setKopfZeileMitte(getTurnierSystem().getBezeichnung());
+		konfigSheet.seitenstileAktualisieren();
+	}
+
+	/**
+	 * Generiert nur die ersten {@code anzVorrundenZuSpielen} Vorrunden (mit Ergebnissen), optional
+	 * gefolgt von Vorrunden-Rangliste + Finalrunden. Für Tests, die zwischen zwei Vorrunden
+	 * eingreifen wollen (z.B. Team auf "ausgestiegen" setzen).
+	 */
+	public void generate(int anzVorrundenZuSpielen, boolean mitRanglisteUndFinale) throws GenerateException {
 		// 1. Meldeliste erstellen (löscht alle vorhandenen Sheets)
 		meldelisteTestDaten.erstelleTestdaten();
 
@@ -124,7 +143,7 @@ public class MaastrichterTurnierTestDaten extends SheetRunner implements ISheet,
 		konfigSheet.setMaastrichterGruppenModus(MaastrichterGruppenModus.NACH_GROESSE);
 
 		// 2. Vorrunden erstellen und mit Zufallsergebnissen füllen
-		for (int runde = 1; runde <= anzVorrunden; runde++) {
+		for (int runde = 1; runde <= anzVorrundenZuSpielen; runde++) {
 			SheetRunner.testDoCancelTask();
 			processBoxinfo("processbox.erstelle.vorrunde", runde, anzVorrunden);
 			naechsteVorrunde.erstelleNaechsteVorrunde();
@@ -138,30 +157,23 @@ public class MaastrichterTurnierTestDaten extends SheetRunner implements ISheet,
 			}
 		}
 
-		// 3. Vorrunden-Rangliste erstellen
-		SheetRunner.testDoCancelTask();
-		processBoxinfo("processbox.erstelle.rangliste");
-		ranglisteSheet.doRun();
+		if (mitRanglisteUndFinale) {
+			// 3. Vorrunden-Rangliste erstellen
+			SheetRunner.testDoCancelTask();
+			processBoxinfo("processbox.erstelle.rangliste");
+			ranglisteSheet.doRun();
 
-		// 4. Finalrunden erstellen
-		SheetRunner.testDoCancelTask();
-		processBoxinfo("processbox.erstelle.finalrunde");
-		finalrundeSheet.doRun();
-
-		// 5. Teilnehmerliste erstellen
-		SheetRunner.testDoCancelTask();
-		processBoxinfo("processbox.erstelle.teilnehmerliste");
-		teilnehmerSheet.generate();
-
-		// 6. Kopfzeile und Werbefußzeile setzen
-		konfigSheet.setKopfZeileMitte(getTurnierSystem().getBezeichnung());
-		konfigSheet.seitenstileAktualisieren();
+			// 4. Finalrunden erstellen
+			SheetRunner.testDoCancelTask();
+			processBoxinfo("processbox.erstelle.finalrunde");
+			finalrundeSheet.doRun();
+		}
 	}
 
 	/**
 	 * Füllt alle Paarungen des Vorrunden-Sheets mit Zufallsergebnissen (13:x).
 	 */
-	private void ergebnisseEinfuegen(XSpreadsheet sheet) throws GenerateException {
+	void ergebnisseEinfuegen(XSpreadsheet sheet) throws GenerateException {
 		RangePosition readRange = RangePosition.from(
 				SchweizerAbstractSpielrundeSheet.TEAM_A_SPALTE,
 				SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE,
