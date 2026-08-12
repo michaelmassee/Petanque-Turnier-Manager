@@ -179,7 +179,11 @@ public class KaskadeSpielrundeSheet extends SheetRunner implements ISheet {
         }
         var meldungenNachSP = meldeListe.getMeldungenSortiertNachSetzposition();
 
-        if (meldungenNachSP.size() < 4) {
+        // Die Mindestanzahl gilt nur für die Turnier-Eröffnung (Runde 1), die die Plan-Größe
+        // fixiert. Ab Runde 2 kann meldungenNachSP (aktive Teams) durch zwischenzeitliche
+        // Ausstiege unter 4 fallen, ohne dass die bereits fixierte Gruppenstruktur betroffen ist
+        // (ausgestiegene Teams bekommen automatisch ein Freispiel-Walkover, siehe spielrundeEintragen()).
+        if (naechsteRundeNr == 1 && meldungenNachSP.size() < 4) {
             MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK)
                     .caption(I18n.get("msg.caption.aktuelle.spielrunde.fehler"))
                     .message(I18n.get("kaskade.spielrunde.fehler.zu.wenige.teams"))

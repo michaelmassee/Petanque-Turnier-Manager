@@ -627,6 +627,33 @@ class FormuleXListeDelegate implements MeldeListeKonstanten {
         }
     }
 
+    /** Liest alle Team-Meldungen mit Aktiv-Wert NIMMT_TEIL oder AUSGESTIEGEN (also gültigem Aktiv-Wert) aus dem Sheet. */
+    TeamMeldungen getAktiveUndAusgesetztMeldungen() throws GenerateException {
+        XSpreadsheet xSheet = sheet.getXSpreadSheet();
+        int vornameSpalte = getZeilenKennungSpalte();
+        int spSpalte = getSetzPositionSpalte();
+        int aktivSpalte = getAktivSpalte();
+        int letzteZeile = letzteZeileMitDaten(xSheet);
+
+        TeamMeldungen meldungen = new TeamMeldungen();
+        for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
+            String vorname = sheet.getSheetHelper().getTextFromCell(xSheet, Position.from(vornameSpalte, zeile));
+            if (vorname == null || vorname.isEmpty()) {
+                continue;
+            }
+            int nr = sheet.getSheetHelper().getIntFromCell(xSheet, Position.from(getTeamNrSpalte(), zeile));
+            if (nr <= 0) {
+                continue;
+            }
+            int aktiv = sheet.getSheetHelper().getIntFromCell(xSheet, Position.from(aktivSpalte, zeile));
+            if (AKTIV_GUELTIGE_WERTE.contains(aktiv)) {
+                int setzPos = sheet.getSheetHelper().getIntFromCell(xSheet, Position.from(spSpalte, zeile));
+                meldungen.addTeamWennNichtVorhanden(Team.from(nr).setSetzPos(setzPos));
+            }
+        }
+        return meldungen;
+    }
+
     /** Liest alle Team-Meldungen aus dem Sheet, unabhängig vom Aktiv-Status. */
     TeamMeldungen getAlleMeldungen() throws GenerateException {
         XSpreadsheet xSheet = sheet.getXSpreadSheet();

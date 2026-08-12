@@ -121,7 +121,9 @@ public class KaskadeGruppenUebersichtSheet extends SheetRunner implements ISheet
                     konfigurationSheet.isMeldeListeVereinsnameAnzeigen()).lesen();
             Map<Integer, String> spielerNamen = namen.spielerNamen();
             Map<Integer, String> teamnamen = namen.teamnamen();
-            Map<Integer, String> teamNrZuGruppe = ermittleTeamNrZuGruppe(aktiveMeldungen.size());
+            int planTeamAnzahl = KaskadePlanGroesse.ermittleFixierteTeamAnzahl(getWorkingSpreadsheet(),
+                    konfigurationSheet, aktiveMeldungen.size());
+            Map<Integer, String> teamNrZuGruppe = ermittleTeamNrZuGruppe(planTeamAnzahl);
 
             for (Team team : aktiveMeldungen.getTeamList()) {
                 int nr = team.getNr();

@@ -117,7 +117,7 @@ public class FormuleXMeldeListeSheetNew extends SheetRunner
 
     @Override
     public TeamMeldungen getAktiveUndAusgesetztMeldungen() throws GenerateException {
-        return getAlleMeldungen();
+        return delegate.getAktiveUndAusgesetztMeldungen();
     }
 
     @Override
