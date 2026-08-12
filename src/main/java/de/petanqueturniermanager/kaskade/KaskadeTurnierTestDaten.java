@@ -37,16 +37,29 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
  */
 public class KaskadeTurnierTestDaten extends SheetRunner implements ISheet {
 
-    static final int ANZ_TEAMS    = 97;
-    private static final int ANZ_KASKADEN = 3;  // → Endfelder A bis H
+    private static final int DEFAULT_ANZ_TEAMS    = 97;
+    private static final int DEFAULT_ANZ_KASKADEN = 3;  // → Endfelder A bis H
+
+    private final int anzTeams;
+    private final int anzKaskaden;
 
     private final KaskadeMeldeListeSheetTestDaten meldelisteTestDaten;
     final KaskadeSpielrundeSheet                  spielrundeSheet;
     private final KaskadeKonfigurationSheet       konfigurationSheet;
 
     public KaskadeTurnierTestDaten(WorkingSpreadsheet workingSpreadsheet) {
+        this(workingSpreadsheet, DEFAULT_ANZ_TEAMS, DEFAULT_ANZ_KASKADEN);
+    }
+
+    /**
+     * Parametrisierter Konstruktor für Tests mit abweichender Teamanzahl/Kaskadenrunden
+     * (z.B. Regressionstest des Ausstieg-Fixes mit deutlich weniger Teams als im Standardfall).
+     */
+    public KaskadeTurnierTestDaten(WorkingSpreadsheet workingSpreadsheet, int anzTeams, int anzKaskaden) {
         super(workingSpreadsheet, TurnierSystem.KASKADE, "Kaskaden-Turnier-Testdaten");
-        meldelisteTestDaten = new KaskadeMeldeListeSheetTestDaten(workingSpreadsheet, ANZ_TEAMS);
+        this.anzTeams    = anzTeams;
+        this.anzKaskaden = anzKaskaden;
+        meldelisteTestDaten = new KaskadeMeldeListeSheetTestDaten(workingSpreadsheet, anzTeams);
         spielrundeSheet     = new KaskadeSpielrundeSheet(workingSpreadsheet);
         konfigurationSheet  = new KaskadeKonfigurationSheet(workingSpreadsheet);
     }
@@ -80,7 +93,7 @@ public class KaskadeTurnierTestDaten extends SheetRunner implements ISheet {
                 .prefix(getLogPrefix()).validate()) {
             return;
         }
-        generate(ANZ_KASKADEN, true);
+        generate(anzKaskaden, true);
 
         // Kopfzeile setzen
         konfigurationSheet.setKopfZeileMitte("Kaskaden-KO 97 Teams (A\u2013H)");
@@ -93,17 +106,17 @@ public class KaskadeTurnierTestDaten extends SheetRunner implements ISheet {
      * Kaskadenrunden eingreifen wollen (z.B. Team auf "ausgestiegen" setzen).
      */
     public void generate(int anzKaskadenRunden, boolean mitAbschluss) throws GenerateException {
-        // 1. Meldeliste mit 97 Teams anlegen (setzt intern anzahlKaskaden=2)
+        // 1. Meldeliste anlegen
         meldelisteTestDaten.erstelleMeldelisteWithTestdaten();
 
-        // 2. Kaskadenrunden-Anzahl auf 3 überschreiben (→ Endfelder A–H)
-        konfigurationSheet.setAnzahlKaskaden(ANZ_KASKADEN);
+        // 2. Kaskadenrunden-Anzahl überschreiben
+        konfigurationSheet.setAnzahlKaskaden(anzKaskaden);
 
         // 3. Kaskadenrunden erstellen und mit Zufallsergebnissen füllen
         spielrundeSheet.setForceOk(true);
         for (int rundeNr = 1; rundeNr <= anzKaskadenRunden; rundeNr++) {
             SheetRunner.testDoCancelTask();
-            processBoxinfo("processbox.erstelle.spielrunde", rundeNr, ANZ_KASKADEN);
+            processBoxinfo("processbox.erstelle.spielrunde", rundeNr, anzKaskaden);
             spielrundeSheet.naechsteRunde();
             ergebnisseEinfuegen(rundeNr);
         }
