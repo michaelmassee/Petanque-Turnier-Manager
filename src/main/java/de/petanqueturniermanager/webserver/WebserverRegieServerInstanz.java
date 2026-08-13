@@ -406,7 +406,8 @@ public class WebserverRegieServerInstanz {
                 .replace("&", "&amp;")
                 .replace("<", "&lt;")
                 .replace(">", "&gt;")
-                .replace("\"", "&quot;");
+                .replace("\"", "&quot;")
+                .replace("'", "&#39;");
     }
 
     private record PfadTeile(String slug, String rest) {

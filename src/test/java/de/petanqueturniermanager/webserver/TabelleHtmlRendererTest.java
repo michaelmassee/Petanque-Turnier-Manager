@@ -224,6 +224,17 @@ class TabelleHtmlRendererTest {
     }
 
     @Test
+    void schriftartMitInjectionZeichen_wirdAufAllowlistBereinigt() {
+        var stil = new StyleModel(false, false, null, null, null, null,
+                1, 1, 0, false, "Arial\", background:url(x); color:red; //", 0, null, null, null, null);
+        var model = einspaltigesModell("cell-0-0", "Text", stil);
+        var html = renderer.render(model);
+        assertThat(html).doesNotContain("\", background")
+                .doesNotContain("url(")
+                .contains("font-family:Arial, backgroundurlx colorred ;");
+    }
+
+    @Test
     void zeilenumbruchTrue_RendertNormal() {
         var stil = new StyleModel(false, false, null, null, null, null,
                 1, 1, 0, true, null, 0, null, null, null, null);

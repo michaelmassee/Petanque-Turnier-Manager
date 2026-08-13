@@ -254,7 +254,7 @@ public class TabelleHtmlRenderer {
     }
 
     private String bereinigeFontFamily(String fontFamily) {
-        return fontFamily.replaceAll("[;\"'<>]", "");
+        return fontFamily.replaceAll("[^\\p{L}\\p{N} ,\\-]", "");
     }
 
     private String formatPt(float pt) {
