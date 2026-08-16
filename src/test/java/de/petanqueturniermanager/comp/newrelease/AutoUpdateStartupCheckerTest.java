@@ -9,7 +9,6 @@ import static org.mockito.Mockito.mock;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 
 import com.sun.star.uno.XComponentContext;
 
@@ -20,9 +19,6 @@ import com.sun.star.uno.XComponentContext;
  * false liefern, bevor jemals UI-Code erreicht wird.
  */
 class AutoUpdateStartupCheckerTest {
-
-    @TempDir
-    java.nio.file.Path tempDir;
 
     private XComponentContext context;
 
@@ -48,15 +44,14 @@ class AutoUpdateStartupCheckerTest {
     }
 
     @Test
-    void keinDialogWennKeinUpdateVerfuegbar() throws Exception {
-        var cache = new ReleaseCache(tempDir.resolve("release.info"));
+    void keinDialogWennKeinUpdateVerfuegbar() {
         var client = new GithubReleaseClient("owner/repo") {
             @Override
             public java.util.Optional<ReleaseInfo> ladeLetztesRelease() {
                 return java.util.Optional.empty();
             }
         };
-        var service = new ReleaseUpdateService(context, cache, client, java.util.List.of());
+        var service = new ReleaseUpdateService(context, client, java.util.List.of());
         ReleaseUpdateService.ersetzeSingletonFuerTest(service);
 
         var checker = new AutoUpdateStartupChecker(context);

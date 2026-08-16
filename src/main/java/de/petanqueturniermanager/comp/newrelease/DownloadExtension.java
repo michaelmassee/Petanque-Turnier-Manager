@@ -57,7 +57,8 @@ public class DownloadExtension extends SheetRunner {
     protected void doRun() throws GenerateException {
         ExtensionsHelper extensionsHelper = ExtensionsHelper.from(getxContext());
         processBoxinfo("processbox.download.start");
-        processBoxinfo("processbox.installierte.version", extensionsHelper.getVersionNummer());
+        processBoxinfo("processbox.installierte.version",
+                extensionsHelper.versionNummerOptional().orElse(I18n.get("version.unbekannt")));
 
         ReleaseInfo release;
         try {

@@ -28,7 +28,7 @@ import de.petanqueturniermanager.helper.perflog.PerfLog;
  * <b>Lifecycle:</b>
  * <ul>
  *   <li>{@link #init(XComponentContext)} wird beim Plugin-Start aufgerufen.
- *       Der Aufruf kehrt sofort zurück – jeglicher Netz-/Disk-IO läuft im
+ *       Der Aufruf kehrt sofort zurück – jeglicher Netz-IO läuft im
  *       Daemon-Executor.</li>
  *   <li>{@link #get()} liefert den initialisierten Singleton.</li>
  *   <li>{@link #dispose()} fährt den Executor herunter (idempotent).
@@ -36,15 +36,13 @@ import de.petanqueturniermanager.helper.perflog.PerfLog;
  * </ul>
  *
  * <p>
- * <b>Update-Strategie:</b>
- * <ol>
- *   <li>Cache-Eintrag jünger als {@link #CACHE_TTL} → sofort übernehmen, kein Netz-Call.</li>
- *   <li>Sonst Background-Refresh mit bis zu drei Versuchen
- *       (Backoff {@code 1s}, {@code 5s}, {@code 30s}).</li>
- *   <li>Auch wenn alle Retries fehlschlagen: ein älterer Cache-Eintrag wird
- *       als Fallback weiter angezeigt; Status springt auf
- *       {@link UpdateStatus#NICHT_VERFUEGBAR}.</li>
- * </ol>
+ * <b>Update-Strategie:</b> bei jedem LO-Start ein Live-Fetch von GitHub mit bis zu
+ * drei Versuchen (Backoff {@code 1s}, {@code 5s}, {@code 30s}). Kein Disk-Cache –
+ * der Check läuft ohnehin nur einmal pro (typischerweise stunden- bis tagelanger)
+ * LO-Session, ein Cache würde daher kaum echte Netz-Calls einsparen, aber eine
+ * zusätzliche Fehlerklasse (Korruption, Serialisierung) einführen. Schlagen alle
+ * Retries fehl, gibt es für diese Session einfach keine Update-Info –
+ * Status {@link UpdateStatus#NICHT_VERFUEGBAR}.
  *
  * <p>
  * Listener-Notifications laufen im Executor – nie im aufrufenden Thread,
@@ -55,7 +53,6 @@ public final class ReleaseUpdateService {
     private static final Logger logger = LogManager.getLogger(ReleaseUpdateService.class);
 
     public static final String GITHUB_REPOSITORY = "michaelmassee/Petanque-Turnier-Manager";
-    public static final Duration CACHE_TTL = Duration.ofHours(6);
     static final List<Duration> DEFAULT_RETRY_BACKOFFS = List.of(
             Duration.ofSeconds(1),
             Duration.ofSeconds(5),
@@ -66,7 +63,6 @@ public final class ReleaseUpdateService {
     private static @Nullable ReleaseUpdateService instanz;
 
     private final XComponentContext context;
-    private final ReleaseCache cache;
     private final GithubReleaseClient client;
     private final List<Duration> retryBackoffs;
     private final ExecutorService executor;
@@ -77,14 +73,12 @@ public final class ReleaseUpdateService {
     private volatile Optional<String> installierteVersion = Optional.empty();
     private volatile boolean disposed;
 
-    ReleaseUpdateService(XComponentContext context, ReleaseCache cache, GithubReleaseClient client) {
-        this(context, cache, client, DEFAULT_RETRY_BACKOFFS);
+    ReleaseUpdateService(XComponentContext context, GithubReleaseClient client) {
+        this(context, client, DEFAULT_RETRY_BACKOFFS);
     }
 
-    ReleaseUpdateService(XComponentContext context, ReleaseCache cache, GithubReleaseClient client,
-            List<Duration> retryBackoffs) {
+    ReleaseUpdateService(XComponentContext context, GithubReleaseClient client, List<Duration> retryBackoffs) {
         this.context = Objects.requireNonNull(context, "context");
-        this.cache = Objects.requireNonNull(cache, "cache");
         this.client = Objects.requireNonNull(client, "client");
         this.retryBackoffs = List.copyOf(Objects.requireNonNull(retryBackoffs, "retryBackoffs"));
         this.executor = Executors.newSingleThreadExecutor(daemonThreadFactory());
@@ -102,10 +96,7 @@ public final class ReleaseUpdateService {
                 logger.debug("ReleaseUpdateService bereits initialisiert – init() wird ignoriert");
                 return;
             }
-            instanz = new ReleaseUpdateService(
-                    context,
-                    new ReleaseCache(),
-                    new GithubReleaseClient(GITHUB_REPOSITORY));
+            instanz = new ReleaseUpdateService(context, new GithubReleaseClient(GITHUB_REPOSITORY));
             instanz.starteInitialenRefresh();
         }
     }
@@ -143,8 +134,8 @@ public final class ReleaseUpdateService {
 
     private void starteInitialenRefresh() {
         // Komplett asynchron auf dem Background-Executor: InstallierteVersion.ermitteln
-        // und ReleaseCache.lade* sind File-/UNO-IO, die nicht auf dem LO-Main-Thread
-        // im Plugin-Init laufen dürfen (sonst weißes Calc-Fenster beim Start).
+        // ist UNO-IO, das nicht auf dem LO-Main-Thread im Plugin-Init laufen darf
+        // (sonst weißes Calc-Fenster beim Start).
         executor.execute(this::initialerRefreshInternalMitTiming);
     }
 
@@ -159,23 +150,22 @@ public final class ReleaseUpdateService {
     }
 
     private void initialerRefreshInternal() {
+        aktualisiereInstallierteVersionFallsUnbekannt();
+        fuehreRefreshAus();
+    }
+
+    /**
+     * Versucht die installierte Version zu ermitteln, falls noch unbekannt.
+     * Wird sowohl beim Start als auch vor jedem Retry-Versuch aufgerufen: liefert
+     * {@link com.sun.star.deployment.XPackageInformationProvider} die eigene Extension
+     * in einem frühen Init-Moment noch nicht (LO-Registrierung u.U. noch nicht
+     * abgeschlossen), bekommt der Lookup so innerhalb des bestehenden
+     * Retry-Fensters mehrere Versuche, statt für die ganze Session leer zu bleiben.
+     */
+    private void aktualisiereInstallierteVersionFallsUnbekannt() {
         if (installierteVersion.isEmpty()) {
             installierteVersion = InstallierteVersion.ermitteln(context).map(InstallierteVersion::raw);
         }
-        var frisch = cache.ladeWennFrisch(CACHE_TTL);
-        if (frisch.isPresent()) {
-            aktuellesRelease = frisch;
-            aktualisiereStatusAusCache(frisch.get());
-            benachrichtigeListener();
-            return;
-        }
-        // älterer Cache als Übergangsanzeige akzeptieren
-        var alt = cache.ladeUnabhaengigVomAlter();
-        if (alt.isPresent()) {
-            aktuellesRelease = alt;
-            aktualisiereStatusAusCache(alt.get());
-        }
-        plane(false);
     }
 
     /**
@@ -193,7 +183,7 @@ public final class ReleaseUpdateService {
     }
 
     /**
-     * Zuletzt bekannte neueste Release-Info (aus Cache oder live abgerufen).
+     * Zuletzt live von GitHub abgerufene Release-Info.
      */
     public Optional<ReleaseInfo> getAktuellesRelease() {
         return aktuellesRelease;
@@ -215,11 +205,10 @@ public final class ReleaseUpdateService {
 
     /**
      * Stößt einen Refresh-Versuch im Hintergrund an.
-     * Bei {@code force=true} wird die Cache-TTL ignoriert.
      * Nicht-blockierend; ist der Executor bereits geshutdownet, passiert nichts.
      */
-    public void triggerRefresh(boolean force) {
-        plane(force);
+    public void triggerRefresh() {
+        plane();
     }
 
     /**
@@ -267,41 +256,28 @@ public final class ReleaseUpdateService {
         }
     }
 
-    private void plane(boolean force) {
+    private void plane() {
         if (disposed || executor.isShutdown()) {
             return;
         }
         try {
-            executor.execute(() -> fuehreRefreshAus(force));
+            executor.execute(this::fuehreRefreshAus);
         } catch (java.util.concurrent.RejectedExecutionException e) {
             logger.debug("Refresh-Task abgewiesen (Executor herunterfahren?)");
         }
     }
 
-    private void fuehreRefreshAus(boolean force) {
-        if (!force) {
-            var frisch = cache.ladeWennFrisch(CACHE_TTL);
-            if (frisch.isPresent()) {
-                aktuellesRelease = frisch;
-                aktualisiereStatusAusCache(frisch.get());
-                benachrichtigeListener();
-                return;
-            }
-        }
+    private void fuehreRefreshAus() {
         setzeStatus(UpdateStatus.LAEUFT);
         benachrichtigeListener();
         for (int versuch = 0; versuch < retryBackoffs.size(); versuch++) {
             if (Thread.currentThread().isInterrupted() || disposed) {
                 return;
             }
+            aktualisiereInstallierteVersionFallsUnbekannt();
             var release = client.ladeLetztesRelease();
             if (release.isPresent()) {
                 aktuellesRelease = release;
-                try {
-                    cache.schreibe(release.get());
-                } catch (java.io.IOException e) {
-                    logger.warn("Konnte Cache nicht schreiben: {}", e.getMessage());
-                }
                 aktualisiereStatusAusRelease(release.get());
                 benachrichtigeListener();
                 return;
@@ -312,8 +288,7 @@ public final class ReleaseUpdateService {
                 }
             }
         }
-        // alle Retries fehlgeschlagen – Status zurücksetzen, gecachten Release-Stand
-        // (falls vorhanden) trotzdem als Anzeige stehen lassen.
+        // alle Retries fehlgeschlagen – kein Release-Stand für diese Session.
         setzeStatus(UpdateStatus.NICHT_VERFUEGBAR);
         benachrichtigeListener();
     }
@@ -326,10 +301,6 @@ public final class ReleaseUpdateService {
             Thread.currentThread().interrupt();
             return false;
         }
-    }
-
-    private void aktualisiereStatusAusCache(ReleaseInfo release) {
-        aktualisiereStatusAusRelease(release);
     }
 
     private void aktualisiereStatusAusRelease(ReleaseInfo release) {

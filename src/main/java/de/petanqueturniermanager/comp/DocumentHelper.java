@@ -27,6 +27,7 @@ import de.petanqueturniermanager.comp.newrelease.ExtensionsHelper;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
@@ -185,9 +186,10 @@ public class DocumentHelper {
 		TurnierSystem spielsystem = docPropHelper.getTurnierSystemAusDocument();
 		// haben wir ein Turnier Dokument ?
 		if (spielsystem != TurnierSystem.KEIN) {
-			String pluginVersionNummer = ExtensionsHelper.from(workingSpreadsheet.getxContext()).getVersionNummer();
+			String pluginVersionNummer = ExtensionsHelper.from(workingSpreadsheet.getxContext())
+					.versionNummerOptional().orElse(I18n.get("version.unbekannt"));
 			docPropHelper.setStringProperty(BasePropertiesSpalte.KONFIG_PROP_ERSTELLT_MIT_VERSION, pluginVersionNummer);
-			ProcessBox.from().info("Speichere Plugin-Version '" + pluginVersionNummer + "' im Dokument.");
+			ProcessBox.from().info(I18n.get("processbox.plugin.version.speichern", pluginVersionNummer));
 		}
 	}
 

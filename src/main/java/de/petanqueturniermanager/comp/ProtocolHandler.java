@@ -53,8 +53,8 @@ import de.petanqueturniermanager.timer.TimerManager;
 import de.petanqueturniermanager.webserver.WebServerManager;
 import de.petanqueturniermanager.comp.newrelease.DirectUpdate;
 import de.petanqueturniermanager.comp.newrelease.DownloadExtension;
+import de.petanqueturniermanager.comp.newrelease.ReleaseSeiteUrl;
 import de.petanqueturniermanager.comp.newrelease.ReleaseUpdateService;
-import de.petanqueturniermanager.comp.newrelease.ReleaseInfosAnzeigen;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEventListener;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
@@ -1236,7 +1236,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			// ------------------------------
 			// Download / Stop / Neue Version
 			case CMD_RELEASE_INFOS_ANZEIGEN:
-				new ReleaseInfosAnzeigen(ws).start();
+				oeffneBrowserUrl(ReleaseSeiteUrl.ermitteln());
 				break;
 			case CMD_DIREKT_AKTUALISIEREN:
 				new DirectUpdate(ws).start();

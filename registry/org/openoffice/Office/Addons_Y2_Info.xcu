@@ -38,11 +38,11 @@
 						<node oor:name="Submenu">
 							<node oor:name="Y6A" oor:op="replace">
 								<prop oor:name="Title">
-									<value xml:lang="de">Release-Infos</value>
-								<value xml:lang="en">Release Notes</value>
-									<value xml:lang="es">Notas de versión</value>
-									<value xml:lang="fr">Notes de version</value>
-									<value xml:lang="nl">Versie-informatie</value>
+									<value xml:lang="de">Release-Seite öffnen</value>
+								<value xml:lang="en">Open release page</value>
+									<value xml:lang="es">Abrir página de la versión</value>
+									<value xml:lang="fr">Ouvrir la page de la version</value>
+									<value xml:lang="nl">Releasepagina openen</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:releaseInfosAnzeigen</value>

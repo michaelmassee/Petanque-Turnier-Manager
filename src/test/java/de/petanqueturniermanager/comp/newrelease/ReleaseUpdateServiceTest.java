@@ -6,7 +6,6 @@ package de.petanqueturniermanager.comp.newrelease;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.URI;
 import java.time.Duration;
@@ -22,56 +21,21 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 
 import com.sun.star.uno.XComponentContext;
 
 class ReleaseUpdateServiceTest {
 
-    @TempDir
-    java.nio.file.Path tempDir;
-
     private XComponentContext context;
-    private ReleaseCache cache;
 
     @BeforeEach
     void setup() {
         context = mock(XComponentContext.class);
-        cache = new ReleaseCache(tempDir.resolve("release.info"));
     }
 
     @AfterEach
     void teardown() {
         ReleaseUpdateService.resetSingletonFuerTest();
-    }
-
-    @Test
-    void frischerCacheVerhindertNetzCall() throws Exception {
-        var release = stabilesRelease("v2.0.0");
-        cache.schreibe(release);
-
-        var client = new ZaehlenderClient();
-        var service = serviceMitInstallierterVersion("1.0.0", client);
-        triggerInit(service);
-
-        wartenBisStatusNicht(service, UpdateStatus.UNBEKANNT);
-
-        assertThat(service.getStatus()).isEqualTo(UpdateStatus.UPDATE_VERFUEGBAR);
-        assertThat(client.aufrufe.get()).isZero();
-    }
-
-    @Test
-    void leererCacheTriggertNetzCall() throws Exception {
-        var release = stabilesRelease("v1.0.0");
-        var client = new FesterClient(Optional.of(release));
-        var service = serviceMitInstallierterVersion("1.0.0", client);
-        triggerInit(service);
-
-        wartenBisStatusEntweder(service, UpdateStatus.KEIN_UPDATE, UpdateStatus.UPDATE_VERFUEGBAR);
-
-        assertThat(service.getStatus()).isEqualTo(UpdateStatus.KEIN_UPDATE);
-        assertThat(service.getAktuellesRelease()).isPresent();
-        assertThat(cache.ladeUnabhaengigVomAlter()).isPresent();
     }
 
     @Test
@@ -123,6 +87,24 @@ class ReleaseUpdateServiceTest {
         wartenBisStatusEntweder(service, UpdateStatus.NICHT_VERFUEGBAR);
         assertThat(service.getStatus()).isEqualTo(UpdateStatus.NICHT_VERFUEGBAR);
         assertThat(client.aufrufe.get()).isEqualTo(ReleaseUpdateService.DEFAULT_RETRY_BACKOFFS.size());
+    }
+
+    @Test
+    void installierteVersionWirdBeiRetryErneutErmittelt() throws Exception {
+        var release = stabilesRelease("v2.0.0");
+        var client = new ScriptedClient(Optional.empty(), Optional.of(release));
+        // Kein Reflection-Vorbelegen von installierteVersion – simuliert, dass die
+        // Extension beim ersten Versuch noch nicht in der LO-Extension-Liste steht.
+        var service = new ReleaseUpdateService(context, client, List.of(Duration.ofMillis(1), Duration.ofMillis(1)));
+
+        triggerInit(service);
+        wartenBisStatusEntweder(service, UpdateStatus.UPDATE_VERFUEGBAR, UpdateStatus.KEIN_UPDATE,
+                UpdateStatus.NICHT_VERFUEGBAR);
+
+        // InstallierteVersion.ermitteln() liefert im Test (kein echter UNO-Kontext) immer leer –
+        // hier wird nur sichergestellt, dass der Lookup pro Retry-Versuch erneut aufgerufen wird,
+        // statt nach dem ersten Fehlschlag für die Session leer zu bleiben (kein Crash, kein Hang).
+        assertThat(client.aufrufe.get()).isEqualTo(2);
     }
 
     @Test
@@ -179,7 +161,7 @@ class ReleaseUpdateServiceTest {
     void triggerRefreshNachDisposeMachtNichts() {
         var service = serviceMitInstallierterVersion("1.0.0", new FesterClient(Optional.empty()));
         service.dispose();
-        service.triggerRefresh(true);
+        service.triggerRefresh();
         // Kein Crash erwartet.
     }
 
@@ -206,7 +188,7 @@ class ReleaseUpdateServiceTest {
         var backoffs = (kurzerBackoff != null)
                 ? List.of(kurzerBackoff, kurzerBackoff, kurzerBackoff)
                 : ReleaseUpdateService.DEFAULT_RETRY_BACKOFFS;
-        var service = new ReleaseUpdateService(context, cache, client, backoffs);
+        var service = new ReleaseUpdateService(context, client, backoffs);
         setzeInstallierteVersion(service, version);
         return service;
     }
@@ -229,14 +211,6 @@ class ReleaseUpdateServiceTest {
             m.invoke(service);
         } catch (ReflectiveOperationException e) {
             throw new IllegalStateException(e);
-        }
-    }
-
-    private static void wartenBisStatusNicht(ReleaseUpdateService service, UpdateStatus unerwuenscht)
-            throws InterruptedException {
-        var deadline = System.nanoTime() + Duration.ofSeconds(5).toNanos();
-        while (service.getStatus() == unerwuenscht && System.nanoTime() < deadline) {
-            Thread.sleep(20);
         }
     }
 
@@ -269,12 +243,6 @@ class ReleaseUpdateServiceTest {
         public Optional<ReleaseInfo> ladeLetztesRelease() {
             aufrufe.incrementAndGet();
             return antwort;
-        }
-    }
-
-    private static class ZaehlenderClient extends FesterClient {
-        ZaehlenderClient() {
-            super(Optional.empty());
         }
     }
 
@@ -320,10 +288,5 @@ class ReleaseUpdateServiceTest {
             }
             return antwort;
         }
-    }
-
-    @SuppressWarnings("unused")
-    private static void unbenutzt() throws IOException {
-        // damit der IOException-Import nicht meckert
     }
 }
