@@ -367,6 +367,9 @@ public final class WhatsAppBridgeSetup {
 				return null;
 			});
 		} catch (IOException e) {
+			if (Thread.currentThread().isInterrupted()) {
+				throw e;
+			}
 			throw new IOException("Verbindung zu " + url + " fehlgeschlagen nach " + DOWNLOAD_VERSUCHE
 					+ " Versuchen (evtl. Firewall/Proxy oder SSL/TLS-Zertifikatsproblem): " + e.getMessage(), e);
 		}
@@ -403,6 +406,9 @@ public final class WhatsAppBridgeSetup {
 						.orElseThrow(() -> new IOException("Keine Prüfsumme für " + dateiname + " gefunden in " + url));
 			});
 		} catch (IOException e) {
+			if (Thread.currentThread().isInterrupted()) {
+				throw e;
+			}
 			throw new IOException("Verbindung zu " + url + " fehlgeschlagen nach " + DOWNLOAD_VERSUCHE + " Versuchen: "
 					+ e.getMessage(), e);
 		}
