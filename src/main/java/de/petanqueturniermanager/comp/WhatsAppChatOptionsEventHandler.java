@@ -233,7 +233,12 @@ public final class WhatsAppChatOptionsEventHandler extends WeakBase
 			if (!frageWhatsAppSetup()) {
 				throw new WhatsAppBridgeException(I18n.get("whatsapp.chat.konfig.setup.abgebrochen"), e);
 			}
-			WhatsAppBridgeManager.installieren(schritt -> zeigeSetupStatus(container, schritt));
+			try {
+				WhatsAppBridgeManager.installieren(schritt -> zeigeSetupStatus(container, schritt));
+			} catch (WhatsAppBridgeException installFehler) {
+				throw new WhatsAppBridgeException(installFehler.getMessage() + "\n"
+						+ I18n.get("whatsapp.chat.konfig.setup.fehlgeschlagen.wiki"), installFehler);
+			}
 		}
 		return WhatsAppBridgeManager.starteOderVerbinde();
 	}

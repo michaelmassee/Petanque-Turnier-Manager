@@ -16,7 +16,6 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.PosixFilePermission;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -48,6 +47,8 @@ public final class WhatsAppBridgeSetup {
 	private static final Duration TAR_PRUEFEN_TIMEOUT = Duration.ofSeconds(30);
 	private static final Duration DOWNLOAD_VERBINDUNGS_TIMEOUT = Duration.ofSeconds(10);
 	private static final Duration DOWNLOAD_TIMEOUT = Duration.ofMinutes(5);
+	private static final int DOWNLOAD_VERSUCHE = 3;
+	private static final Duration DOWNLOAD_WIEDERHOLUNG_PAUSE = Duration.ofSeconds(2);
 
 	public enum Schritt {
 		NODE_DOWNLOAD, NODE_INSTALL, BRIDGE_INSTALL, FERTIG
@@ -331,17 +332,25 @@ public final class WhatsAppBridgeSetup {
 	}
 
 	private static void download(String url, Path ziel) throws IOException {
-		HttpClient client = HttpClient.newBuilder().connectTimeout(DOWNLOAD_VERBINDUNGS_TIMEOUT).build();
-		HttpRequest request = HttpRequest.newBuilder(URI.create(url)).timeout(DOWNLOAD_TIMEOUT).GET().build();
 		try {
-			HttpResponse<Path> response = client.send(request,
-					HttpResponse.BodyHandlers.ofFile(ziel, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING));
-			if (response.statusCode() != 200) {
-				throw new IOException("Download fehlgeschlagen (HTTP " + response.statusCode() + "): " + url);
-			}
-		} catch (InterruptedException e) {
-			Thread.currentThread().interrupt();
-			throw new IOException("Download wurde unterbrochen: " + url, e);
+			mitWiederholung("Download von " + url, () -> {
+				HttpClient client = HttpClient.newBuilder()
+						.version(HttpClient.Version.HTTP_1_1)
+						.connectTimeout(DOWNLOAD_VERBINDUNGS_TIMEOUT)
+						.build();
+				HttpRequest request = HttpRequest.newBuilder(URI.create(url)).timeout(DOWNLOAD_TIMEOUT).GET().build();
+				HttpResponse<InputStream> response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
+				if (response.statusCode() != 200) {
+					throw new IOException("Download fehlgeschlagen (HTTP " + response.statusCode() + "): " + url);
+				}
+				try (InputStream eingang = response.body()) {
+					Files.copy(eingang, ziel, StandardCopyOption.REPLACE_EXISTING);
+				}
+				return null;
+			});
+		} catch (IOException e) {
+			throw new IOException("Verbindung zu " + url + " fehlgeschlagen nach " + DOWNLOAD_VERSUCHE
+					+ " Versuchen (evtl. Firewall/Proxy oder SSL/TLS-Zertifikatsproblem): " + e.getMessage(), e);
 		}
 	}
 
@@ -357,24 +366,61 @@ public final class WhatsAppBridgeSetup {
 	}
 
 	private static String ladeErwarteteChecksumme(String url, String dateiname) throws IOException {
-		HttpClient client = HttpClient.newBuilder().connectTimeout(DOWNLOAD_VERBINDUNGS_TIMEOUT).build();
-		HttpRequest request = HttpRequest.newBuilder(URI.create(url)).timeout(DOWNLOAD_TIMEOUT).GET().build();
-		HttpResponse<String> response;
 		try {
-			response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+			return mitWiederholung("Laden der Prüfsummen von " + url, () -> {
+				HttpClient client = HttpClient.newBuilder()
+						.version(HttpClient.Version.HTTP_1_1)
+						.connectTimeout(DOWNLOAD_VERBINDUNGS_TIMEOUT)
+						.build();
+				HttpRequest request = HttpRequest.newBuilder(URI.create(url)).timeout(DOWNLOAD_TIMEOUT).GET().build();
+				HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+				if (response.statusCode() != 200) {
+					throw new IOException("Prüfsummen konnten nicht geladen werden (HTTP " + response.statusCode() + "): " + url);
+				}
+				return response.body().lines()
+						.map(String::trim)
+						.filter(zeile -> zeile.endsWith(dateiname))
+						.map(zeile -> zeile.split("\\s+")[0])
+						.findFirst()
+						.orElseThrow(() -> new IOException("Keine Prüfsumme für " + dateiname + " gefunden in " + url));
+			});
+		} catch (IOException e) {
+			throw new IOException("Verbindung zu " + url + " fehlgeschlagen nach " + DOWNLOAD_VERSUCHE + " Versuchen: "
+					+ e.getMessage(), e);
+		}
+	}
+
+	@FunctionalInterface
+	private interface WiederholbareAktion<T> {
+		T ausfuehren() throws IOException, InterruptedException;
+	}
+
+	private static <T> T mitWiederholung(String beschreibung, WiederholbareAktion<T> aktion) throws IOException {
+		IOException letzterFehler = null;
+		for (int versuch = 1; versuch <= DOWNLOAD_VERSUCHE; versuch++) {
+			try {
+				return aktion.ausfuehren();
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+				throw new IOException(beschreibung + " wurde unterbrochen", e);
+			} catch (IOException e) {
+				letzterFehler = e;
+				logger.warn("{} fehlgeschlagen (Versuch {}/{}): {}", beschreibung, versuch, DOWNLOAD_VERSUCHE, e.getMessage());
+				if (versuch < DOWNLOAD_VERSUCHE) {
+					pausiereVorWiederholung(beschreibung);
+				}
+			}
+		}
+		throw letzterFehler;
+	}
+
+	private static void pausiereVorWiederholung(String beschreibung) throws IOException {
+		try {
+			Thread.sleep(DOWNLOAD_WIEDERHOLUNG_PAUSE.toMillis());
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
-			throw new IOException("Laden der Prüfsummen wurde unterbrochen: " + url, e);
+			throw new IOException(beschreibung + " wurde beim Warten auf Wiederholung unterbrochen", e);
 		}
-		if (response.statusCode() != 200) {
-			throw new IOException("Prüfsummen konnten nicht geladen werden (HTTP " + response.statusCode() + "): " + url);
-		}
-		return response.body().lines()
-				.map(String::trim)
-				.filter(zeile -> zeile.endsWith(dateiname))
-				.map(zeile -> zeile.split("\\s+")[0])
-				.findFirst()
-				.orElseThrow(() -> new IOException("Keine Prüfsumme für " + dateiname + " gefunden in " + url));
 	}
 
 	private static String sha256Hex(Path datei) throws IOException {
