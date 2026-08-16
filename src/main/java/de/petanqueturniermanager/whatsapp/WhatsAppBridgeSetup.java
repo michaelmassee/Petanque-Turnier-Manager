@@ -166,6 +166,7 @@ public final class WhatsAppBridgeSetup {
 		ProcessBuilder builder = new ProcessBuilder(npm.toString(), "install", "--omit=dev");
 		builder.directory(bridgeDir.toFile());
 		builder.redirectErrorStream(true);
+		ergaenzeNodeBinInPath(builder, node);
 		try {
 			Process process = builder.start();
 			TimeoutWaechter waechter = new TimeoutWaechter(process, NPM_INSTALL_TIMEOUT);
@@ -185,6 +186,23 @@ public final class WhatsAppBridgeSetup {
 			Thread.currentThread().interrupt();
 			throw new WhatsAppBridgeException("Installation der WhatsApp-Bridge wurde unterbrochen", e);
 		}
+	}
+
+	/**
+	 * npm ruft intern node über das Shebang "#!/usr/bin/env node" auf – env sucht node dabei über
+	 * PATH, nicht relativ zum aufgerufenen npm-Skript. Ohne diese Ergänzung schlägt npm install mit
+	 * portablem Node.js fehl ("env: node: Datei oder Verzeichnis nicht gefunden"), sobald das
+	 * Node-Verzeichnis nicht bereits im PATH der LibreOffice-Umgebung liegt.
+	 */
+	private static void ergaenzeNodeBinInPath(ProcessBuilder builder, Path node) {
+		Path nodeBinDir = node.toAbsolutePath().getParent();
+		if (nodeBinDir == null) {
+			return;
+		}
+		String bisherigerPath = builder.environment().getOrDefault("PATH", "");
+		String neuerPath = bisherigerPath.isBlank() ? nodeBinDir.toString()
+				: nodeBinDir + java.io.File.pathSeparator + bisherigerPath;
+		builder.environment().put("PATH", neuerPath);
 	}
 
 	private static Path findeNode(Path userConfigDir, String pathEnv) {
