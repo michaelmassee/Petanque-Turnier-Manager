@@ -90,7 +90,7 @@ public class SchweizerEndranglisteSheet extends SheetRunner implements ISheet {
 	}
 
 	@Override
-	protected void doRun() throws GenerateException {
+	public void doRun() throws GenerateException {
 		int anzahlSpieltage = countAnzahlSpieltage();
 		if (anzahlSpieltage < 2) {
 			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK)
