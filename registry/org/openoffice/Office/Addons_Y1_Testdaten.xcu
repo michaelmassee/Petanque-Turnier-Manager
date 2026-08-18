@@ -88,6 +88,22 @@
 											<value>_self</value>
 										</prop>
 									</node>
+
+									<node oor:name="A1A3" oor:op="replace">
+										<prop oor:name="Title">
+											<value xml:lang="de">Turnierserie (16 Teams, 2 Spieltage à 3 Runden + Serien-Endrangliste)</value>
+											<value xml:lang="en">Tournament Series (16 Teams, 2 Match Days of 3 Rounds + Series Ranking)</value>
+											<value xml:lang="es">Serie de torneos (16 equipos, 2 jornadas de 3 rondas + clasificación de la serie)</value>
+											<value xml:lang="fr">Série de tournois (16 équipes, 2 journées de 3 tours + classement de la série)</value>
+											<value xml:lang="nl">Toernooiserie (16 teams, 2 speeldagen van 3 ronden + serie-eindranglijst)</value>
+										</prop>
+										<prop oor:name="URL">
+											<value>ptm:formulex_testdaten_turnier_serie</value>
+										</prop>
+										<prop oor:name="Target" oor:type="xs:string">
+											<value>_self</value>
+										</prop>
+									</node>
 								</node>
 							</node>
 
@@ -566,6 +582,22 @@
 										</prop>
 										<prop oor:name="URL">
 											<value>ptm:schweizer_testdaten_turnier_19</value>
+										</prop>
+										<prop oor:name="Target" oor:type="xs:string">
+											<value>_self</value>
+										</prop>
+									</node>
+
+									<node oor:name="A8A4" oor:op="replace">
+										<prop oor:name="Title">
+											<value xml:lang="de">Turnierserie (16 Teams, 2 Spieltage à 3 Runden + Serien-Endrangliste)</value>
+											<value xml:lang="en">Tournament Series (16 Teams, 2 Match Days of 3 Rounds + Series Ranking)</value>
+											<value xml:lang="es">Serie de torneos (16 equipos, 2 jornadas de 3 rondas + clasificación de la serie)</value>
+											<value xml:lang="fr">Série de tournois (16 équipes, 2 journées de 3 tours + classement de la série)</value>
+											<value xml:lang="nl">Toernooiserie (16 teams, 2 speeldagen van 3 ronden + serie-eindranglijst)</value>
+										</prop>
+										<prop oor:name="URL">
+											<value>ptm:schweizer_testdaten_turnier_serie</value>
 										</prop>
 										<prop oor:name="Target" oor:type="xs:string">
 											<value>_self</value>
