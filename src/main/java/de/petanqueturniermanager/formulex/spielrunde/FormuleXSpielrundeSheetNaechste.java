@@ -33,6 +33,33 @@ public class FormuleXSpielrundeSheetNaechste extends FormuleXAbstractSpielrundeS
         super(workingSpreadsheet);
     }
 
+    /**
+     * Für Spieltag 1 (Default, Einzelturnier) unverändert; ab Spieltag 2 spieltag-eindeutiger
+     * Schlüssel, damit nur Runden des aktuell aktiven Spieltags gelesen/geschrieben werden.
+     */
+    @Override
+    public String getSpielrundeSchluessel(int rundeNr) {
+        int spieltagNr = getKonfigurationSheet().getAktiveSpieltag().getNr();
+        if (spieltagNr <= 1) {
+            return super.getSpielrundeSchluessel(rundeNr);
+        }
+        return SheetMetadataHelper.schluesselFormuleXSpielrundeSpieltag(spieltagNr, rundeNr);
+    }
+
+    /**
+     * Für Spieltag 1 (Default, Einzelturnier) unverändert; ab Spieltag 2 Sheetname mit
+     * Spieltag-Bezug (wiederverwendet die bereits vorhandene, system-neutrale
+     * "{0}.{1}. Spielrunde"-Namensvorlage).
+     */
+    @Override
+    public String getSheetName(SpielRundeNr nr) {
+        int spieltagNr = getKonfigurationSheet().getAktiveSpieltag().getNr();
+        if (spieltagNr <= 1) {
+            return super.getSheetName(nr);
+        }
+        return de.petanqueturniermanager.helper.i18n.SheetNamen.supermeleeSpielrunde(spieltagNr, nr.getNr());
+    }
+
     @Override
     protected void doRun() throws GenerateException {
         getxCalculatable().enableAutomaticCalculation(false);

@@ -328,6 +328,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_FORMULEX_NAECHSTE_SPIELRUNDE      = "formulex_naechste_spielrunde";
 	public static final String CMD_FORMULEX_AKTUELLE_SPIELRUNDE      = "formulex_aktuelle_spielrunde";
 	public static final String CMD_FORMULEX_RANGLISTE                = "formulex_rangliste";
+	public static final String CMD_FORMULEX_NAECHSTE_SPIELTAG        = "formulex_naechste_spieltag";
+	public static final String CMD_FORMULEX_ENDRANGLISTE             = "formulex_endrangliste";
 	public static final String CMD_FORMULEX_TESTDATEN_MELDELISTE     = "formulex_testdaten_meldeliste";
 	public static final String CMD_FORMULEX_TESTDATEN_TURNIER        = "formulex_testdaten_turnier";
 	// Kaskaden-KO
@@ -1152,6 +1154,14 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				break;
 			case CMD_FORMULEX_RANGLISTE:
 				new FormuleXRanglisteSheet(ws).testTurnierSystem(TurnierSystem.FORMULEX).start();
+				break;
+			case CMD_FORMULEX_NAECHSTE_SPIELTAG:
+				new de.petanqueturniermanager.formulex.meldeliste.FormuleXMeldeListeSheetNaechsterSpieltag(ws)
+						.testTurnierSystem(TurnierSystem.FORMULEX).backUpDocument().backupDocumentAfterRun().start();
+				break;
+			case CMD_FORMULEX_ENDRANGLISTE:
+				new de.petanqueturniermanager.formulex.endrangliste.FormuleXEndranglisteSheet(ws)
+						.testTurnierSystem(TurnierSystem.FORMULEX).start();
 				break;
 			case CMD_FORMULEX_TESTDATEN_MELDELISTE:
 				new FormuleXMeldeListeSheetTestDaten(ws, 17).testKeinAnderesTurnierVorhanden().start();
@@ -2140,6 +2150,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_FORMULEX_UPDATE_MELDELISTE,
 				 CMD_FORMULEX_TEILNEHMER, CMD_FORMULEX_CHECKIN,
 				 CMD_FORMULEX_NAECHSTE_SPIELRUNDE,
+				 CMD_FORMULEX_NAECHSTE_SPIELTAG,
+				 CMD_FORMULEX_ENDRANGLISTE,
 				 CMD_FORMULEX_RANGLISTE -> ts == TurnierSystem.FORMULEX;
 			case CMD_FORMULEX_AKTUELLE_SPIELRUNDE           -> ts == TurnierSystem.FORMULEX && hatFormuleXSpielrunde(ws);
 			case CMD_FORMULEX_TESTDATEN_MELDELISTE,

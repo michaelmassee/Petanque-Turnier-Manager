@@ -73,6 +73,10 @@ public class FormuleXMeldeListeSheetNew extends SheetRunner
         delegate.upDateSheet();
     }
 
+    public void naechsteSpieltag() throws GenerateException {
+        delegate.naechsteSpieltag();
+    }
+
     public int getNrSpalte() {
         return delegate.getNrSpalte();
     }

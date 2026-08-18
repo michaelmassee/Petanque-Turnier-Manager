@@ -141,6 +141,7 @@ public class SheetMetadataHelper {
     public static final String SCHLUESSEL_FORMULEX_MELDELISTE        = "__PTM_FORMULEX_MELDELISTE__";
     public static final String SCHLUESSEL_FORMULEX_SPIELRUNDE_PREFIX = "__PTM_FORMULEX_SPIELRUNDE_";
     public static final String SCHLUESSEL_FORMULEX_RANGLISTE         = "__PTM_FORMULEX_RANGLISTE__";
+    public static final String SCHLUESSEL_FORMULEX_ENDRANGLISTE      = "__PTM_FORMULEX_ENDRANGLISTE__";
 
     // ── Konstanten: Forme / KO-Runden ────────────────────────────────────────
 
@@ -201,6 +202,15 @@ public class SheetMetadataHelper {
 
     public static String schluesselFormuleXSpielrunde(int rundeNr) {
         return SCHLUESSEL_FORMULEX_SPIELRUNDE_PREFIX + rundeNr;
+    }
+
+    /**
+     * Spieltag-eindeutiger Spielrunden-Schluessel fuer FormuleX-Turnierserien (mehrere Spieltage).
+     * Nur fuer Spieltag &gt; 1 verwendet - Spieltag 1 nutzt weiterhin {@link #schluesselFormuleXSpielrunde(int)}
+     * unveraendert (Rueckwaertskompatibilitaet mit Einzelturnier-Dateien).
+     */
+    public static String schluesselFormuleXSpielrundeSpieltag(int spieltagNr, int rundeNr) {
+        return SCHLUESSEL_FORMULEX_SPIELRUNDE_PREFIX + spieltagNr + "_" + rundeNr + SCHLUESSEL_SUFFIX;
     }
 
     public static String schluesselMaastrichterVorrunde(int rundeNr) {
