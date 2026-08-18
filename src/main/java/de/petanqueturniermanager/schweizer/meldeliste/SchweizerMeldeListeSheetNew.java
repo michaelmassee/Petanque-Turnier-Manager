@@ -211,6 +211,16 @@ public class SchweizerMeldeListeSheetNew extends SheetRunner
 		delegate.naechsteSpieltag();
 	}
 
+	/**
+	 * Setzt alle Teams mit gültiger Teamnummer auf AKTIV_WERT_NIMMT_TEIL für den aktuellen Spieltag.
+	 * {@link #naechsteSpieltag()} lässt die neue Aktiv-Spalte absichtlich leer (Check-in erfolgt
+	 * normalerweise manuell); dieser Aufruf ist der explizite Gegenpart dazu für Konsumenten wie
+	 * TestDaten-Generatoren, die alle Teams sofort für den neuen Spieltag aktivieren wollen.
+	 */
+	public void alleTeamsAktivieren() throws GenerateException {
+		delegate.alleTeamsAktivieren();
+	}
+
 	// ---------------------------------------------------------------
 	// Eigene Methoden
 	// ---------------------------------------------------------------

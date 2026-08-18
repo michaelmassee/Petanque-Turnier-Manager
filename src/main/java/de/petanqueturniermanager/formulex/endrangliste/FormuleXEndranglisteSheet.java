@@ -120,8 +120,10 @@ public class FormuleXEndranglisteSheet extends SheetRunner implements ISheet {
             cache.put(spieltagNr, leseSpieltagRangliste(spieltag, teamNamen));
         }
 
+        // FormuleX: ein Spieltag, an dem ein Team ausschließlich Freilose hatte (Standardwertung,
+        // kein echtes Spiel), darf nie als Streichresultat gewählt werden (siehe leseSpieltagRangliste()).
         Map<Integer, TeamEndranglisteErgebnis> endrangliste = TurnierserieAggregator.berechneEndrangliste(cache,
-                anzahlSpieltage, false);
+                anzahlSpieltage, true);
 
         List<TeamEndranglisteErgebnis> sortiert = new ArrayList<>(endrangliste.values());
         sortiert.sort(null); // natuerliche Ordnung: bestes Team zuerst (siehe TeamEndranglisteErgebnis.compareTo)
@@ -203,9 +205,14 @@ public class FormuleXEndranglisteSheet extends SheetRunner implements ISheet {
             int punktePlus = row.get(FormuleXRanglisteSheet.PUNKTE_PLUS_SPALTE).getIntVal(0);
             int punkteMinus = row.get(FormuleXRanglisteSheet.PUNKTE_MINUS_SPALTE).getIntVal(0);
 
+            // Ein echtes Spiel tauscht immer Punkte aus (0-13-Skala, ein Freilos zählt als Sieg ohne
+            // Punkte, siehe FormuleXRanglisteSheet.leseRundeEin()). Punktelos über den gesamten
+            // Spieltag bei mind. einem Sieg heißt daher: ausschließlich Freilose an diesem Spieltag.
+            boolean istFreilosSpieltag = siege > 0 && siege >= anzahlRunden && punktePlus == 0 && punkteMinus == 0;
+
             TeamSpieltagErgebnis ergebnis = new TeamSpieltagErgebnis(spieltag, teamNr).setSpielPlus(siege)
                     .setSpielMinus(Math.max(0, anzahlRunden - siege)).setPunktePlus(punktePlus)
-                    .setPunkteMinus(punkteMinus);
+                    .setPunkteMinus(punkteMinus).setFreilos(istFreilosSpieltag);
             ergebnisse.put(teamNr, ergebnis);
         }
         return ergebnisse;

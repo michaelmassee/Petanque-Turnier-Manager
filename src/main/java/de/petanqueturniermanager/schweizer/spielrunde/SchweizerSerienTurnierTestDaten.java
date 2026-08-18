@@ -87,8 +87,11 @@ public class SchweizerSerienTurnierTestDaten extends SchweizerAbstractSpielrunde
 			}
 
 			if (spieltag < anzSpieltage) {
-				// Archiviert die Rangliste dieses Spieltags und wechselt auf den nächsten.
+				// Archiviert die Rangliste dieses Spieltags und wechselt auf den nächsten. Die neue
+				// Aktiv-Spalte ist danach absichtlich leer (Check-in erfolgt normalerweise manuell) –
+				// für das Beispielturnier sollen aber alle Teams am nächsten Spieltag weiterspielen.
 				meldeListeSheetNew.naechsteSpieltag();
+				meldeListeSheetNew.alleTeamsAktivieren();
 			} else {
 				// Letzter Spieltag: nur archivieren, kein Wechsel mehr nötig.
 				new SchweizerSpieltagRanglisteSheet(getWorkingSpreadsheet(), SpielTagNr.from(spieltag)).doRun();
