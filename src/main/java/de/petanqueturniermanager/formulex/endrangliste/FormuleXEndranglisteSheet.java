@@ -6,8 +6,10 @@ package de.petanqueturniermanager.formulex.endrangliste;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.sun.star.awt.FontWeight;
 import com.sun.star.sheet.XSpreadsheet;
@@ -23,6 +25,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.formulex.konfiguration.FormuleXKonfigurationSheet;
 import de.petanqueturniermanager.formulex.rangliste.FormuleXRanglisteSheet;
+import de.petanqueturniermanager.formulex.spielrunde.FormuleXAbstractSpielrundeSheet;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
@@ -120,8 +123,9 @@ public class FormuleXEndranglisteSheet extends SheetRunner implements ISheet {
             cache.put(spieltagNr, leseSpieltagRangliste(spieltag, teamNamen));
         }
 
-        // FormuleX: ein Spieltag, an dem ein Team ausschließlich Freilose hatte (Standardwertung,
-        // kein echtes Spiel), darf nie als Streichresultat gewählt werden (siehe leseSpieltagRangliste()).
+        // FormuleX: ein Spieltag, an dem ein Team mindestens ein Freilos hatte (auch bei sonst
+        // echten Runden am selben Tag), darf nie als Streichresultat gewählt werden (siehe
+        // ermittleFreilosTeams()/leseSpieltagRangliste()).
         Map<Integer, TeamEndranglisteErgebnis> endrangliste = TurnierserieAggregator.berechneEndrangliste(cache,
                 anzahlSpieltage, true);
 
@@ -151,24 +155,71 @@ public class FormuleXEndranglisteSheet extends SheetRunner implements ISheet {
         return anzahl;
     }
 
+    /** Named-Range-Schlüssel und Legacy-Sheetname für eine Spielrunde eines Spieltags. */
+    private record RundeSheetRef(String schluessel, String legacyName) {
+    }
+
+    private RundeSheetRef rundeSheetRef(SpielTagNr spieltag, int rundeNr) {
+        String schluessel = spieltag.getNr() <= 1
+                ? SheetMetadataHelper.schluesselFormuleXSpielrunde(rundeNr)
+                : SheetMetadataHelper.schluesselFormuleXSpielrundeSpieltag(spieltag.getNr(), rundeNr);
+        String legacyName = spieltag.getNr() <= 1
+                ? rundeNr + ". Spielrunde"
+                : SheetNamen.supermeleeSpielrunde(spieltag.getNr(), rundeNr);
+        return new RundeSheetRef(schluessel, legacyName);
+    }
+
     /** Zählt die für einen Spieltag gespielten Runden (bricht bei der ersten Lücke ab). */
     private int countAnzahlRunden(SpielTagNr spieltag) throws GenerateException {
         var xDoc = getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
         int anzahl = 0;
         for (int rundeNr = 1; rundeNr <= 90; rundeNr++) {
-            String schluessel = spieltag.getNr() <= 1
-                    ? SheetMetadataHelper.schluesselFormuleXSpielrunde(rundeNr)
-                    : SheetMetadataHelper.schluesselFormuleXSpielrundeSpieltag(spieltag.getNr(), rundeNr);
-            String legacyName = spieltag.getNr() <= 1
-                    ? rundeNr + ". Spielrunde"
-                    : SheetNamen.supermeleeSpielrunde(spieltag.getNr(), rundeNr);
-            XSpreadsheet sheet = SheetMetadataHelper.findeSheetUndHeile(xDoc, schluessel, legacyName);
+            RundeSheetRef ref = rundeSheetRef(spieltag, rundeNr);
+            XSpreadsheet sheet = SheetMetadataHelper.findeSheetUndHeile(xDoc, ref.schluessel(), ref.legacyName());
             if (sheet == null) {
                 break;
             }
             anzahl++;
         }
         return anzahl;
+    }
+
+    /**
+     * Liest die archivierten Spielrunden-Sheets eines Spieltags und ermittelt, welche Teams an
+     * mindestens einer Runde dieses Spieltags ein Freilos hatten (Zeile mit Team B &lt;= 0, siehe
+     * {@link FormuleXRanglisteSheet#leseRundeEin}). Anders als ein reiner Punkte-Vergleich auf der
+     * bereits aggregierten Spieltag-Rangliste erkennt dies auch Freilose an Tagen, an denen das
+     * Team sonst ganz normal echte Runden gespielt hat (mehrrundige Spieltage).
+     */
+    private Set<Integer> ermittleFreilosTeams(SpielTagNr spieltag, int anzahlRunden) throws GenerateException {
+        var xDoc = getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
+        Set<Integer> freilosTeams = new HashSet<>();
+        RangePosition readRange = RangePosition.from(FormuleXAbstractSpielrundeSheet.TEAM_A_SPALTE,
+                FormuleXAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE, FormuleXAbstractSpielrundeSheet.TEAM_B_SPALTE,
+                FormuleXAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE + 999);
+
+        for (int rundeNr = 1; rundeNr <= anzahlRunden; rundeNr++) {
+            RundeSheetRef ref = rundeSheetRef(spieltag, rundeNr);
+            XSpreadsheet rundeSheet = SheetMetadataHelper.findeSheetUndHeile(xDoc, ref.schluessel(), ref.legacyName());
+            if (rundeSheet == null) {
+                continue;
+            }
+            RangeData rowsData = RangeHelper.from(rundeSheet, xDoc, readRange).getDataFromRange();
+            for (RowData row : rowsData) {
+                if (row.size() < 1) {
+                    break;
+                }
+                int nrA = row.get(0).getIntVal(0);
+                if (nrA <= 0) {
+                    break;
+                }
+                int nrB = row.size() > 1 ? row.get(1).getIntVal(0) : 0;
+                if (nrB <= 0) {
+                    freilosTeams.add(nrA);
+                }
+            }
+        }
+        return freilosTeams;
     }
 
     private Map<Integer, TeamSpieltagErgebnis> leseSpieltagRangliste(SpielTagNr spieltag,
@@ -184,6 +235,7 @@ public class FormuleXEndranglisteSheet extends SheetRunner implements ISheet {
         }
 
         int anzahlRunden = countAnzahlRunden(spieltag);
+        Set<Integer> freilosTeams = ermittleFreilosTeams(spieltag, anzahlRunden);
         RangePosition leseBereich = RangePosition.from(FormuleXRanglisteSheet.TEAM_NR_SPALTE,
                 FormuleXRanglisteSheet.ERSTE_DATEN_ZEILE, FormuleXRanglisteSheet.PUNKTE_DIFF_SPALTE,
                 FormuleXRanglisteSheet.ERSTE_DATEN_ZEILE + 999);
@@ -205,14 +257,9 @@ public class FormuleXEndranglisteSheet extends SheetRunner implements ISheet {
             int punktePlus = row.get(FormuleXRanglisteSheet.PUNKTE_PLUS_SPALTE).getIntVal(0);
             int punkteMinus = row.get(FormuleXRanglisteSheet.PUNKTE_MINUS_SPALTE).getIntVal(0);
 
-            // Ein echtes Spiel tauscht immer Punkte aus (0-13-Skala, ein Freilos zählt als Sieg ohne
-            // Punkte, siehe FormuleXRanglisteSheet.leseRundeEin()). Punktelos über den gesamten
-            // Spieltag bei mind. einem Sieg heißt daher: ausschließlich Freilose an diesem Spieltag.
-            boolean istFreilosSpieltag = siege > 0 && siege >= anzahlRunden && punktePlus == 0 && punkteMinus == 0;
-
             TeamSpieltagErgebnis ergebnis = new TeamSpieltagErgebnis(spieltag, teamNr).setSpielPlus(siege)
                     .setSpielMinus(Math.max(0, anzahlRunden - siege)).setPunktePlus(punktePlus)
-                    .setPunkteMinus(punkteMinus).setFreilos(istFreilosSpieltag);
+                    .setPunkteMinus(punkteMinus).setFreilos(freilosTeams.contains(teamNr));
             ergebnisse.put(teamNr, ergebnis);
         }
         return ergebnisse;
