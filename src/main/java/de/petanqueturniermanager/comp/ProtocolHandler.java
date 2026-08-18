@@ -293,6 +293,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_SCHWEIZER_UPDATE_MELDELISTE = "schweizer_update_meldeliste";
 	public static final String CMD_SCHWEIZER_AKTUELLE_SPIELRUNDE = "schweizer_aktuelle_spielrunde";
 	public static final String CMD_SCHWEIZER_NAECHSTE_SPIELRUNDE = "schweizer_naechste_spielrunde";
+	public static final String CMD_SCHWEIZER_NAECHSTE_SPIELTAG = "schweizer_naechste_spieltag";
+	public static final String CMD_SCHWEIZER_ENDRANGLISTE = "schweizer_endrangliste";
 	public static final String CMD_SCHWEIZER_RANGLISTE = "schweizer_rangliste";
 	public static final String CMD_SCHWEIZER_RANGLISTE_SORTIEREN = "schweizer_rangliste_sortieren";
 	public static final String CMD_SCHWEIZER_TESTDATEN_MELDELISTE = "schweizer_testdaten_meldeliste";
@@ -1029,6 +1031,14 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				break;
 			case CMD_SCHWEIZER_NAECHSTE_SPIELRUNDE:
 				new SchweizerSpielrundeSheetNaechste(ws).testTurnierSystem(TurnierSystem.SCHWEIZER).backUpDocument().backupDocumentAfterRun().start();
+				break;
+			case CMD_SCHWEIZER_NAECHSTE_SPIELTAG:
+				new de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetNaechsterSpieltag(ws)
+						.testTurnierSystem(TurnierSystem.SCHWEIZER).backUpDocument().backupDocumentAfterRun().start();
+				break;
+			case CMD_SCHWEIZER_ENDRANGLISTE:
+				new de.petanqueturniermanager.schweizer.endrangliste.SchweizerEndranglisteSheet(ws)
+						.testTurnierSystem(TurnierSystem.SCHWEIZER).start();
 				break;
 			case CMD_SCHWEIZER_RANGLISTE:
 				new SchweizerRanglisteSheet(ws).testTurnierSystem(TurnierSystem.SCHWEIZER).start();
@@ -2160,6 +2170,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_SCHWEIZER_UPDATE_MELDELISTE,
 				 CMD_SCHWEIZER_TEILNEHMER, CMD_SCHWEIZER_CHECKIN,
 				 CMD_SCHWEIZER_NAECHSTE_SPIELRUNDE,
+				 CMD_SCHWEIZER_NAECHSTE_SPIELTAG,
+				 CMD_SCHWEIZER_ENDRANGLISTE,
 				 CMD_SCHWEIZER_RANGLISTE,
 				 CMD_SCHWEIZER_RANGLISTE_SORTIEREN -> ts == TurnierSystem.SCHWEIZER;
 			case CMD_SCHWEIZER_AKTUELLE_SPIELRUNDE          -> ts == TurnierSystem.SCHWEIZER && hatSchweizerSpielrunde(ws);

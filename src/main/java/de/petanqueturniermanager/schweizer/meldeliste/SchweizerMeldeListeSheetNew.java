@@ -206,6 +206,11 @@ public class SchweizerMeldeListeSheetNew extends SheetRunner
 		delegate.setAktiveSpielRunde(spielRundeNr);
 	}
 
+	/** Legt einen neuen Spieltag an (Turnierserie): siehe {@link SchweizerListeDelegate#naechsteSpieltag()}. */
+	public void naechsteSpieltag() throws GenerateException {
+		delegate.naechsteSpieltag();
+	}
+
 	// ---------------------------------------------------------------
 	// Eigene Methoden
 	// ---------------------------------------------------------------

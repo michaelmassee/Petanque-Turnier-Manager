@@ -105,6 +105,7 @@ public class SheetMetadataHelper {
     // ── Konstanten: Schweizer ────────────────────────────────────────────────
 
     public static final String SCHLUESSEL_SCHWEIZER_RANGLISTE = "__PTM_SCHWEIZER_RANGLISTE__";
+    public static final String SCHLUESSEL_SCHWEIZER_ENDRANGLISTE = "__PTM_SCHWEIZER_ENDRANGLISTE__";
     public static final String SCHLUESSEL_SCHWEIZER_MELDELISTE = "__PTM_SCHWEIZER_MELDELISTE__";
     public static final String SCHLUESSEL_SCHWEIZER_SPIELRUNDE_PREFIX = "__PTM_SCHWEIZER_SPIELRUNDE_";
 
@@ -187,6 +188,15 @@ public class SheetMetadataHelper {
 
     public static String schluesselSchweizerSpielrunde(int rundeNr) {
         return SCHLUESSEL_SCHWEIZER_SPIELRUNDE_PREFIX + rundeNr + SCHLUESSEL_SUFFIX;
+    }
+
+    /**
+     * Spieltag-eindeutiger Spielrunden-Schluessel fuer Schweizer-Turnierserien (mehrere Spieltage).
+     * Nur fuer Spieltag &gt; 1 verwendet - Spieltag 1 nutzt weiterhin {@link #schluesselSchweizerSpielrunde(int)}
+     * unveraendert (Rueckwaertskompatibilitaet mit Einzelturnier-Dateien).
+     */
+    public static String schluesselSchweizerSpielrundeSpieltag(int spieltagNr, int rundeNr) {
+        return SCHLUESSEL_SCHWEIZER_SPIELRUNDE_PREFIX + spieltagNr + "_" + rundeNr + SCHLUESSEL_SUFFIX;
     }
 
     public static String schluesselFormuleXSpielrunde(int rundeNr) {

@@ -37,6 +37,36 @@ public class SchweizerSpielrundeSheetNaechste extends SchweizerAbstractSpielrund
 		super(workingSpreadsheet, ts, sheetBaseName);
 	}
 
+	/**
+	 * Für Spieltag 1 (Default, Einzelturnier) unverändert; ab Spieltag 2 spieltag-eindeutiger
+	 * Schlüssel, damit Spielrunden verschiedener Spieltage nicht kollidieren (Turnierserie).
+	 * Maastrichter überschreibt diese Methode selbst vollständig (siehe
+	 * {@code MaastrichterSpielrundeSheetNaechste}) und ist damit von dieser Änderung nicht betroffen.
+	 */
+	@Override
+	public String getSpielrundeSchluessel(int rundeNr) {
+		int spieltagNr = getKonfigurationSheet().getAktiveSpieltag().getNr();
+		if (spieltagNr <= 1) {
+			return super.getSpielrundeSchluessel(rundeNr);
+		}
+		return SheetMetadataHelper.schluesselSchweizerSpielrundeSpieltag(spieltagNr, rundeNr);
+	}
+
+	/**
+	 * Für Spieltag 1 (Default, Einzelturnier) unverändert; ab Spieltag 2 Sheetname mit
+	 * Spieltag-Bezug (wiederverwendet die bereits vorhandene, system-neutrale
+	 * "{0}.{1}. Spielrunde"-Namensvorlage). Maastrichter überschreibt diese Methode selbst
+	 * vollständig und ist damit von dieser Änderung nicht betroffen.
+	 */
+	@Override
+	public String getSheetName(SpielRundeNr nr) {
+		int spieltagNr = getKonfigurationSheet().getAktiveSpieltag().getNr();
+		if (spieltagNr <= 1) {
+			return super.getSheetName(nr);
+		}
+		return de.petanqueturniermanager.helper.i18n.SheetNamen.supermeleeSpielrunde(spieltagNr, nr.getNr());
+	}
+
 	@Override
 	public void doRun() throws GenerateException {
 		getxCalculatable().enableAutomaticCalculation(false); // speed up
