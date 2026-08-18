@@ -2,7 +2,7 @@
 * Erstellung : 09.05.2018 / Michael Massee
 **/
 
-package de.petanqueturniermanager.supermelee;
+package de.petanqueturniermanager.basesheet.meldeliste;
 
 import static com.google.common.base.Preconditions.checkArgument;
 

@@ -6,7 +6,7 @@ package de.petanqueturniermanager.schweizer.aggregation;
 
 import de.petanqueturniermanager.algorithmen.schweizer.SchweizerTeamErgebnis;
 import de.petanqueturniermanager.algorithmen.turnierserie.ergebnis.TeamSpieltagErgebnis;
-import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.basesheet.meldeliste.SpielTagNr;
 
 /**
  * Übersetzt ein {@link SchweizerTeamErgebnis} (Siege/Buchholz/Feinbuchholz-basierte Wertung

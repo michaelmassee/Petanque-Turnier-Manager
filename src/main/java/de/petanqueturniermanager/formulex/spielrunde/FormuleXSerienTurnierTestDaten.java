@@ -12,7 +12,7 @@ import de.petanqueturniermanager.formulex.meldeliste.FormuleXMeldeListeSheetNew;
 import de.petanqueturniermanager.formulex.meldeliste.FormuleXMeldeListeSheetTestDaten;
 import de.petanqueturniermanager.formulex.spieltagrangliste.FormuleXSpieltagRanglisteSheet;
 import de.petanqueturniermanager.helper.NewTestDatenValidator;
-import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.basesheet.meldeliste.SpielTagNr;
 
 /**
  * Generiert ein vollständiges FormuleX-Beispielturnier mit mehreren Spieltagen und

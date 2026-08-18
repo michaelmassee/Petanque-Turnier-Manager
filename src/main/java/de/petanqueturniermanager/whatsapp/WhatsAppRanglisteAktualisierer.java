@@ -25,7 +25,7 @@ import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheetUpdate;
 import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterVorrundenRanglisteSheetUpdate;
 import de.petanqueturniermanager.poule.rangliste.PouleVorrundenRanglisteSheetUpdate;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheetUpdate;
-import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.basesheet.meldeliste.SpielTagNr;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheetUpdate;
 import de.petanqueturniermanager.triptete.rangliste.TripTeteRanglisteSheet;

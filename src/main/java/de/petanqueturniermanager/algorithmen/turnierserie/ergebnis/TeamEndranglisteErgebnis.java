@@ -11,7 +11,7 @@ import java.util.Comparator;
 
 import com.google.common.base.MoreObjects;
 
-import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.basesheet.meldeliste.SpielTagNr;
 
 /**
  * Über alle Spieltage einer Turnierserie aggregiertes Team-Ergebnis (ohne Streich-Spieltag).

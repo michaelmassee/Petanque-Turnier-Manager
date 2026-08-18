@@ -16,6 +16,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sun.star.sheet.XSpreadsheet;
 
+import de.petanqueturniermanager.basesheet.meldeliste.SpielRundeNr;
+import de.petanqueturniermanager.basesheet.meldeliste.SpielTagNr;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.position.Position;

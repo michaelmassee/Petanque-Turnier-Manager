@@ -27,7 +27,7 @@ import com.sun.star.text.XText;
 
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.LogUtil;
-import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.basesheet.meldeliste.SpielTagNr;
 
 /**
  * Schreibt und liest Sheet-Metadaten als benannte Bereiche im Dokument.

@@ -13,7 +13,7 @@ import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetNew;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetTestDaten;
 import de.petanqueturniermanager.schweizer.spieltagrangliste.SchweizerSpieltagRanglisteSheet;
-import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.basesheet.meldeliste.SpielTagNr;
 
 /**
  * Generiert ein vollständiges Schweizer-Beispielturnier mit mehreren Spieltagen und

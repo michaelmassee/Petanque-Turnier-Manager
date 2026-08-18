@@ -17,8 +17,8 @@ import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeUnGe
 import de.petanqueturniermanager.helper.pagestyle.PageStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
-import de.petanqueturniermanager.supermelee.SpielRundeNr;
-import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.basesheet.meldeliste.SpielRundeNr;
+import de.petanqueturniermanager.basesheet.meldeliste.SpielTagNr;
 
 /**
  * Konfigurationssheet für das Formule X Turniersystem.

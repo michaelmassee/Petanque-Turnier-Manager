@@ -20,8 +20,8 @@ import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
 import de.petanqueturniermanager.konfigdialog.HeaderFooterConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ZeitplanConfigProperty;
-import de.petanqueturniermanager.supermelee.SpielRundeNr;
-import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.basesheet.meldeliste.SpielRundeNr;
+import de.petanqueturniermanager.basesheet.meldeliste.SpielTagNr;
 
 /**
  * Konfigurationseigenschaften für das Formule X Turniersystem.

@@ -12,7 +12,7 @@ import java.util.Comparator;
 
 import com.google.common.base.MoreObjects;
 
-import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.basesheet.meldeliste.SpielTagNr;
 
 /**
  * Ergebnis eines Teams an einem einzelnen Spieltag einer Turnierserie.

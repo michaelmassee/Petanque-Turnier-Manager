@@ -30,7 +30,7 @@ import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.perflog.PerfLog;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
-import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.basesheet.meldeliste.SpielTagNr;
 
 /**
  * Reagiert auf Sheet-Aktivierungen (Tab-Wechsel, Fenster-Fokus) und löst einen Sheet-Sync

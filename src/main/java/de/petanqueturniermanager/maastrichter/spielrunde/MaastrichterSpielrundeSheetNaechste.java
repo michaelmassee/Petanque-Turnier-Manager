@@ -17,7 +17,7 @@ import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterVorrundenRan
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetUpdate;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerSpielrundeSheetNaechste;
-import de.petanqueturniermanager.supermelee.SpielRundeNr;
+import de.petanqueturniermanager.basesheet.meldeliste.SpielRundeNr;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**

@@ -12,7 +12,7 @@ import java.util.TreeSet;
 
 import de.petanqueturniermanager.algorithmen.turnierserie.ergebnis.TeamEndranglisteErgebnis;
 import de.petanqueturniermanager.algorithmen.turnierserie.ergebnis.TeamSpieltagErgebnis;
-import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.basesheet.meldeliste.SpielTagNr;
 
 /**
  * UNO-freie Aggregationslogik für Turnierserien mit team-basierten Systemen (Schweizer System,

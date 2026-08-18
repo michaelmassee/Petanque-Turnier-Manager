@@ -72,7 +72,7 @@ import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheetUpda
 import de.petanqueturniermanager.triptete.meldeliste.TripTeteCheckinListeSheetUpdate;
 import de.petanqueturniermanager.triptete.meldeliste.TripTeteTeilnehmerSheetUpdate;
 import de.petanqueturniermanager.triptete.rangliste.TripTeteRanglisteSheetUpdate;
-import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.basesheet.meldeliste.SpielTagNr;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheetUpdate;
 import de.petanqueturniermanager.supermelee.meldeliste.AnmeldungenSheetUpdate;
 import de.petanqueturniermanager.supermelee.meldeliste.SupermeleeTeilnehmerSheetUpdate;
