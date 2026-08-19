@@ -81,6 +81,12 @@ public class PtmPublicService extends WeakBase implements XServiceInfo {
     // -------------------------------------------------------------------------
     // Interner Dokument-Zugriff
 
+    /**
+     * Bewusst fokus-basiert (Ausnahme von CLAUDE.md, Abschnitt „Mehrere offene Turnier-Dokumente"):
+     * ein aus Basic aufgerufener {@code createUnoService(...)} hat wie {@code ThisComponent} keinen
+     * eigenen Dokumentbezug – „das aktuell aktive Dokument" ist hier die korrekte, vom Makro-Autor
+     * erwartete Semantik, nicht ein Leak-Risiko.
+     */
     private DocumentPropertiesHelper getDocumentPropertiesHelper() {
         try {
             XSpreadsheetDocument doc = DocumentHelper.getCurrentSpreadsheetDocument(xContext);

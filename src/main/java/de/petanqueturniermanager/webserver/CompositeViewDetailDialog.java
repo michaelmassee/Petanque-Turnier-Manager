@@ -1294,6 +1294,10 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
 
     private String[] ladeComboBoxItems() {
         List<String> geoeffnet = new ArrayList<>();
+        // Bewusst fokus-basiert (Ausnahme von CLAUDE.md, Abschnitt „Mehrere offene Turnier-Dokumente"):
+        // die Composite-View-Konfiguration (GlobalProperties) ist global, nicht dokumentgebunden –
+        // hier wird nur eine Blattnamen-Vorschlagsliste für die ComboBox befüllt (best-effort,
+        // kein dokumentbezogener State-Zugriff), analog CompositeViewsOptionsEventHandler.
         XSpreadsheetDocument doc = DocumentHelper.getCurrentSpreadsheetDocument(xContext);
         if (doc != null) {
             geoeffnet.addAll(Arrays.asList(doc.getSheets().getElementNames()));
