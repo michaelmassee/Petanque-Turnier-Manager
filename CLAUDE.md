@@ -244,6 +244,20 @@ Details und Muster: `turniersysteme/RANGLISTE_LISTENER.md`. Generische Infrastru
 
 **Wichtig zum Freeze:** Eingefrorene Einträge sind NICHT automatisch „ok". ArchUnit faltet inline-Lambdas (`LoMainThread.post(ctx, () -> …)`) in die umschließende Methode → der Marshalling-Schnitt ist im Graph unsichtbar, korrekt-marshallte Pfade erscheinen daher als (akzeptierte) Verstöße. **Methodenreferenzen** (`post(ctx, this::foo)`) wirken dagegen als echter Schnitt und tauchen gar nicht erst auf — bei neuem Marshalling-Code daher Methodenreferenz bevorzugen. Re-Freeze nur nach manueller Prüfung, dass der neue Pfad wirklich über `LoMainThread.post`/`runOnMain` läuft: `freeze.refreeze=true` in `src/test/resources/archunit.properties` setzen, einmal laufen lassen, Store committen, Flag zurücknehmen.
 
+## Mehrere offene Turnier-Dokumente: kein fokus-basierter Dokumentzugriff
+
+**Bug-Klasse (zwei Fixes am 2026-08-19, `286754dc` und `e828766b`):** Code, der für ein bestimmtes, konkretes Dokument gelten soll (ein Hintergrund-Thread, der Sheets für Dokument B aufbaut; ein Toolbar-Status-Listener, der zu Dokument A/dessen Frame gehört), löste das relevante `XSpreadsheetDocument` fokus-basiert auf (`DocumentHelper.getCurrentSpreadsheetDocument(...)`, `getCurrentSpreadsheetDocumentFrom(...)`, `ProtocolHandler.holeAktivesDokument()`). Ist parallel ein zweites Turnier-Dokument geöffnet und hält gerade den UI-Fokus, liefert dieser Pfad das falsche Dokument — Properties (`PTM.ALG.INTPROPERTY(...)`), Toolbar-Enabled-Status oder Sortier-Dropdown-Häkchen "lecken" dann zwischen den Dokumenten.
+
+**Regel:** Diese fokus-basierten Methoden dürfen NICHT für funktionale Entscheidungen (Properties lesen/schreiben, Enabled-/Status-Berechnung, Dropdown-Zustand o.ä.) verwendet werden, wenn der Aufrufer eigentlich ein bestimmtes Dokument meint. Zulässig bleiben sie nur für reines UI-Tracing/Logging oder echte "was hat gerade den Fokus"-Fragen (z.B. Druckvorschau-Erkennung).
+
+**Stattdessen, je nach Kontext:**
+- Callback/Listener, der an einem Frame hängt → Dokument beim Registrieren über den Frame auflösen (Muster: `ProtocolHandler.ermittleDokumentAusFrame()`), nicht bei jeder Statusabfrage neu fokus-basiert.
+- Hintergrund-Code (SheetRunner, onLoad), der für ein bestimmtes Dokument läuft → `de.petanqueturniermanager.comp.DokumentKontext` (ThreadLocal) setzen, bevor die Arbeit läuft (`mitKontext`/`mitKontextWerfend`).
+
+**Pflicht-Regressionstest:** Jeder neue dokumentbezogene State-Mechanismus (Property, Toolbar-Status, Sidebar-Inhalt, Dropdown, …) braucht einen Test nach dem Muster von `GlobalImplMehrDokumenteUITest` bzw. `ProtocolHandlerStatusPerFrameTest`: zwei Dokumente gleichzeitig offen, unterschiedliche Werte, Fokus explizit auf das "falsche" Dokument gelegt, dann prüfen dass der Mechanismus trotzdem den Wert des gemeinten Dokuments liefert.
+
+**Automatisiertes Gate:** `DokumentFokusKonventionTest` (Quelltext-Scan, `src/test/java/de/petanqueturniermanager/arch/`) vergleicht alle Aufrufstellen der o.g. fokus-basierten Methoden gegen eine hart codierte Allowlist. Eine neue Datei oder eine höhere Trefferzahl in einer bestehenden Datei lässt den Test fehlschlagen — jeder neue fokus-basierte Zugriff muss dadurch bewusst geprüft und die Allowlist im selben Commit begründet erweitert werden.
+
 ## Business Logic & Rules
 
 Regeln für jedes Turniersystem sind in `turniersysteme/` dokumentiert:

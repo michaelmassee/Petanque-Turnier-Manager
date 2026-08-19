@@ -1963,7 +1963,15 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				Thread.currentThread().getName());
 	}
 
-	/** Liefert das aktuell aktive Spreadsheet-Dokument, oder {@code null} wenn keines aktiv ist. */
+	/**
+	 * Liefert das aktuell aktive Spreadsheet-Dokument, oder {@code null} wenn keines aktiv ist.
+	 * <p>
+	 * <b>Achtung, fokus-basiert:</b> bei mehreren gleichzeitig offenen Turnier-Dokumenten NICHT für
+	 * funktionale Entscheidungen (Status/Enabled, Properties, …) verwenden, wenn eigentlich ein
+	 * bestimmtes Dokument gemeint ist — sonst Leak zwischen Dokumenten wie in Fix {@code e828766b}.
+	 * Für Listener, die an einem Frame hängen, stattdessen {@link #ermittleDokumentAusFrame()}
+	 * verwenden. Siehe CLAUDE.md, Abschnitt „Mehrere offene Turnier-Dokumente".
+	 */
 	private static XSpreadsheetDocument holeAktivesDokument() {
 		try {
 			XSpreadsheetDocument doc = DocumentHelper.getCurrentSpreadsheetDocument(SHARED_CONTEXT);

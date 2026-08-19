@@ -81,6 +81,14 @@ public class DocumentHelper {
 	/**
 	 * Returns the current Spreadsheet document (if any) <br>
 	 *
+	 * <p>
+	 * <b>Achtung, fokus-basiert:</b> liefert das UI-fokussierte Dokument. Bei mehreren gleichzeitig
+	 * offenen Turnier-Dokumenten NICHT für funktionale Entscheidungen (Properties, Status, …)
+	 * verwenden, wenn eigentlich ein bestimmtes Dokument gemeint ist — sonst Leak zwischen
+	 * Dokumenten wie in den Fixes {@code 286754dc} und {@code e828766b}. Stattdessen
+	 * {@link DokumentKontext} (Hintergrund-Code) bzw. eine frame-gebundene Auflösung (Listener,
+	 * siehe {@code ProtocolHandler.ermittleDokumentAusFrame()}) verwenden. Siehe CLAUDE.md,
+	 * Abschnitt „Mehrere offene Turnier-Dokumente".
 	 */
 	public static XSpreadsheetDocument getCurrentSpreadsheetDocument(XComponentContext xContext) {
 		checkNotNull(xContext, "xContext = null");
@@ -122,6 +130,9 @@ public class DocumentHelper {
 	 * <p>
 	 * Das Event-Source-Objekt ist typischerweise direkt das schließende Dokument oder
 	 * ein {@link XModel}-Interface darauf.
+	 * <p>
+	 * Anders als {@link #getCurrentSpreadsheetDocument(XComponentContext)} nicht fokus-basiert,
+	 * sondern aus dem Event-{@code source}-Objekt selbst abgeleitet — daher hier unbedenklich.
 	 *
 	 * @param source Event-Source aus {@code GlobalEventListener.notifyEvent}
 	 * @return das Spreadsheet-Dokument, oder {@code null} wenn keins erkennbar
