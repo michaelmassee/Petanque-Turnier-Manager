@@ -1737,7 +1737,11 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		String command = url.Path;
 		List<StatusEntry> list = STATUS_LISTENERS.computeIfAbsent(command,
 				k -> Collections.synchronizedList(new ArrayList<>()));
-		list.add(new StatusEntry(listener, url));
+		// Dokument über den per initialize() gesetzten Frame auflösen (nicht global-fokus-basiert):
+		// diese Instanz gehört zu genau einem Frame/Dokument. holeAktivesDokument() würde bei
+		// mehreren offenen Turnier-Dokumenten den Status des jeweils fokussierten Dokuments liefern.
+		XSpreadsheetDocument dokumentDiesesFrames = ermittleDokumentAusFrame();
+		list.add(new StatusEntry(listener, url, dokumentDiesesFrames));
 		logger.trace("[FOKUS-TRACE] addStatusListener: cmd='{}' handlerHash={} frameHash={} listeners[{}]={} listenerClass={} thread={} druckvorschau={}",
 				command, System.identityHashCode(this),
 				frame == null ? "null" : System.identityHashCode(frame),
@@ -1758,19 +1762,19 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		// dauerhaft enabled (Workaround tdf#172207 — Toolbar-Listener sind nicht von
 		// Menü-Listenern unterscheidbar, daher wird der Override für diese URLs auch
 		// im Menü wirksam). Für übrige Befehle echte isEnabled-Bewertung.
-		boolean enabled = TOOLBAR_ONLY_CMDS.contains(command) || isEnabled(command, holeAktivesDokument());
+		boolean enabled = TOOLBAR_ONLY_CMDS.contains(command) || isEnabled(command, dokumentDiesesFrames);
 		postStatus(listener, url, enabled);
 		// Meldeliste-, Checkin- und Teilnehmer-Button sind ToggleDropdownButtons (siehe
 		// Addons_Z2_Toolbar.xcu). Ihre Dropdown-Einträge (Sortierung nach Nr/Name/Team)
 		// werden hier per ControlCommand "SetList" an den Controller gemeldet.
 		if (CMD_TOOLBAR_MELDELISTE_AKTUALISIEREN.equals(command)) {
-			postSortDropdownListe(listener, url, MELDELISTE_SORT_I18N_PREFIX,
+			postSortDropdownListe(listener, url, dokumentDiesesFrames, MELDELISTE_SORT_I18N_PREFIX,
 					BasePropertiesSpalte.KONFIG_PROP_MELDELISTE_SORT_MODUS, TeilnehmerListeSortModus.NUMMER);
 		} else if (CMD_TOOLBAR_CHECKIN.equals(command)) {
-			postSortDropdownListe(listener, url, CHECKIN_SORT_I18N_PREFIX,
+			postSortDropdownListe(listener, url, dokumentDiesesFrames, CHECKIN_SORT_I18N_PREFIX,
 					BasePropertiesSpalte.KONFIG_PROP_CHECKIN_LISTE_SORT_MODUS, TeilnehmerListeSortModus.NAME);
 		} else if (CMD_TOOLBAR_TEILNEHMER.equals(command)) {
-			postSortDropdownListe(listener, url, TEILNEHMER_SORT_I18N_PREFIX,
+			postSortDropdownListe(listener, url, dokumentDiesesFrames, TEILNEHMER_SORT_I18N_PREFIX,
 					BasePropertiesSpalte.KONFIG_PROP_TEILNEHMER_LISTE_SORT_MODUS, TeilnehmerListeSortModus.NAME);
 		}
 	}
@@ -1819,8 +1823,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	 * Toolbar-Controller (LO {@code ToggleButtonToolbarController}) und markiert anschließend
 	 * per "CheckItemPos" den aktuell konfigurierten Sortier-Modus (Haken im Dropdown).
 	 */
-	private static void postSortDropdownListe(XStatusListener listener, URL url, String i18nPrefix,
-			String propertyKey, TeilnehmerListeSortModus defaultModus) {
+	private static void postSortDropdownListe(XStatusListener listener, URL url, XSpreadsheetDocument dokument,
+			String i18nPrefix, String propertyKey, TeilnehmerListeSortModus defaultModus) {
 		try {
 			String[] labels = SORT_DROPDOWN_REIHENFOLGE.stream()
 					.map(modus -> sortLabel(i18nPrefix, modus))
@@ -1833,7 +1837,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 
 			// SetList löscht im Controller die aktuelle Auswahl → ohne CheckItemPos bliebe
 			// der Haken weg. Index des konfigurierten Modus nachreichen.
-			int checkPos = SORT_DROPDOWN_REIHENFOLGE.indexOf(aktuellerSortModus(propertyKey, defaultModus));
+			int checkPos = SORT_DROPDOWN_REIHENFOLGE.indexOf(aktuellerSortModus(dokument, propertyKey, defaultModus));
 			if (checkPos >= 0) {
 				com.sun.star.frame.ControlCommand checkPosCmd = new com.sun.star.frame.ControlCommand();
 				checkPosCmd.Command = "CheckItemPos";
@@ -1860,14 +1864,13 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	}
 
 	/** Liest den aktuell konfigurierten Sortier-Modus aus der Dokument-Property (Fallback {@code defaultModus}). */
-	private static TeilnehmerListeSortModus aktuellerSortModus(String propertyKey,
+	private static TeilnehmerListeSortModus aktuellerSortModus(XSpreadsheetDocument dokument, String propertyKey,
 			TeilnehmerListeSortModus defaultModus) {
 		try {
-			XSpreadsheetDocument doc = holeAktivesDokument();
-			if (doc == null) {
+			if (dokument == null) {
 				return defaultModus;
 			}
-			String key = new DocumentPropertiesHelper(doc).getStringProperty(propertyKey, defaultModus.getKey());
+			String key = new DocumentPropertiesHelper(dokument).getStringProperty(propertyKey, defaultModus.getKey());
 			return TeilnehmerListeSortModus.valueOf(key);
 		} catch (Exception e) {
 			return defaultModus;
@@ -2358,13 +2361,16 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		logger.trace("[FOKUS-TRACE] notifyAllListeners #{} START thread={} aktiverDoc={} commands={} listeners={} caller={}",
 				notifyId, Thread.currentThread().getName(), beschreibeDokument(aktivesDokument),
 				snapshot.size(), totalListeners, caller);
-		// URL-basierter Override (tdf#172207): Befehle in TOOLBAR_ONLY_CMDS dauerhaft
-		// enabled; Rest echte isEnabled-Bewertung. Pro command nur einmal berechnen.
+		// URL-basierter Override (tdf#172207): Befehle in TOOLBAR_ONLY_CMDS dauerhaft enabled;
+		// Rest echte isEnabled-Bewertung pro Listener und dessen EIGENEM Dokument (StatusEntry.dokument()) –
+		// nicht global einmal pro Kommando, sonst bekämen bei mehreren offenen Turnier-Dokumenten alle
+		// Toolbars denselben (ggf. falschen) Status des zufällig fokussierten Dokuments.
 		int listenerAnzahl = 0;
 		for (Map.Entry<String, List<StatusEntry>> entry : snapshot.entrySet()) {
 			String cmd = entry.getKey();
-			boolean enabled = TOOLBAR_ONLY_CMDS.contains(cmd) || isEnabled(cmd, aktivesDokument);
+			boolean toolbarOnly = TOOLBAR_ONLY_CMDS.contains(cmd);
 			for (StatusEntry e : new ArrayList<>(entry.getValue())) {
+				boolean enabled = toolbarOnly || isEnabled(cmd, e.dokument());
 				postStatus(e.listener, e.url, enabled);
 				listenerAnzahl++;
 			}
@@ -2465,6 +2471,13 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 
 	// -------------------------------------------------------------------------
 
-	private record StatusEntry(XStatusListener listener, URL url) {
+	/**
+	 * {@code dokument}: das Dokument, dessen Frame diesen Listener registriert hat (via
+	 * {@link #ermittleDokumentAusFrame()} zum Registrierungszeitpunkt) – nicht das global
+	 * fokussierte Dokument. Bei mehreren gleichzeitig offenen Turnier-Dokumenten hat jeder
+	 * Toolbar-Listener sein eigenes {@code dokument}, damit {@link #notifyAllListeners()} den
+	 * Status pro Frame statt einmal global berechnet.
+	 */
+	private record StatusEntry(XStatusListener listener, URL url, XSpreadsheetDocument dokument) {
 	}
 }
