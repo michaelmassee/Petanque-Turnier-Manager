@@ -14,8 +14,10 @@ import org.junit.jupiter.api.Test;
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.comp.DokumentKontext;
 import de.petanqueturniermanager.comp.OfficeDocumentHelper;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleePropertiesSpalte;
@@ -25,6 +27,11 @@ import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleePropertiesSp
  * Turnier-Dokumenten. Bug: Wird zu einem bestehenden Turnier (Dokument A, Spieltag=2) über
  * die Toolbar ein neues, leeres Turnier in einer neuen Datei gestartet (Dokument B), liefert
  * {@code PTM.ALG.INTPROPERTY("Spieltag")} in B fälschlich A's Wert statt B's eigenem.
+ * <p>
+ * Fix: {@code SheetRunner.run()} umschließt {@code doRun()} jetzt mit
+ * {@link DokumentKontext#mitKontextWerfend}, sodass {@code GlobalImpl.getDocumentPropertiesHelper()}
+ * das jeweils eigene Dokument liest statt fokus-basiert über
+ * {@code DocumentHelper.getCurrentSpreadsheetDocument()} zurückzufallen.
  */
 public class GlobalImplMehrDokumenteUITest extends BaseCalcUITest {
 
@@ -39,12 +46,14 @@ public class GlobalImplMehrDokumenteUITest extends BaseCalcUITest {
 	}
 
 	/**
-	 * GlobalImpl.getDocumentPropertiesHelper() fällt außerhalb des onLoad-Fensters (in dem
-	 * GlobalImpl.mitDokumentKontext() das ThreadLocal setzt) auf
-	 * DocumentHelper.getCurrentSpreadsheetDocument() zurück, die fokus-basiert über
-	 * Desktop.getCurrentComponent() auflöst. Hält Dokument A zum Auswertungszeitpunkt noch
-	 * den Fokus, liest PTM.ALG.INTPROPERTY(...) A's Property statt der des eigentlich
-	 * gemeinten Dokuments B.
+	 * GlobalImpl.getDocumentPropertiesHelper() liest vorrangig {@link DokumentKontext#get()} und
+	 * fällt nur ohne gesetzten Kontext auf das fokus-basierte
+	 * {@code DocumentHelper.getCurrentSpreadsheetDocument()} zurück. {@code SheetRunner.run()}
+	 * setzt diesen Kontext jetzt auf das eigene Dokument, bevor {@code doRun()} (und damit z.B.
+	 * {@code MeldeListeSheet_New} beim Anlegen eines neuen Turniers) läuft -- unabhängig davon,
+	 * welches Dokument gerade den UI-Fokus hält. Dieser Test stellt exakt die Produktionssituation
+	 * nach ("Dokument B wird gerade aufgebaut, Dokument A hat noch den Fokus") und prüft, dass
+	 * {@code PTM.ALG.INTPROPERTY(...)} dabei B's eigenen Wert liefert statt A's.
 	 * <p>
 	 * Hinweis zur Testtechnik: Der Wert wird bewusst per direktem Java-Aufruf auf einer
 	 * eigenen {@code GlobalImpl}-Instanz gelesen (wie auch die anderen PTM.ALG.*-Tests in
@@ -53,12 +62,10 @@ public class GlobalImplMehrDokumenteUITest extends BaseCalcUITest {
 	 * innerhalb des LibreOffice-Prozesses einen eigenen, vom Testprozess entkoppelten
 	 * Property-Cache ({@code DocumentPropertiesHelper.PROPLISTE}) -- über Socket geschriebene
 	 * Zellformeln liefern dadurch keine verlässlichen Werte für einen Value-Vergleich. Der
-	 * direkte Aufruf prüft exakt dieselbe Auflösungslogik ({@code getDocumentPropertiesHelper()}
-	 * / {@code DocumentHelper.getCurrentSpreadsheetDocument()}), ohne von dieser Testharness-
-	 * Einschränkung betroffen zu sein.
+	 * direkte Aufruf prüft exakt dieselbe Auflösungslogik.
 	 */
 	@Test
-	public void intPropertyLiestNichtVonFokussiertemAltdokument() {
+	public void intPropertyLiestEigenesDokumentTrotzFokussiertemAltdokument() throws GenerateException {
 		// Dokument A ("altes" Turnier): Spieltag = 2
 		docPropHelper.setIntProperty(SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG, 2);
 		docPropHelper.setIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM,
@@ -83,9 +90,13 @@ public class GlobalImplMehrDokumenteUITest extends BaseCalcUITest {
 		fokussiere(doc);
 
 		GlobalImpl impl = new GlobalImpl(starter.getxComponentContext());
-		int spieltagWert = impl.ptmintproperty(SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG);
+		int[] spieltagWert = new int[1];
+		// Simuliert, was SheetRunner.run() jetzt für B tut: doRun() läuft mit B als DokumentKontext,
+		// unabhängig davon, dass A gerade den Fokus hält.
+		DokumentKontext.mitKontextWerfend(zweitesDokument, () ->
+				spieltagWert[0] = impl.ptmintproperty(SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG));
 
-		assertThat(spieltagWert)
+		assertThat(spieltagWert[0])
 				.as("PTM.ALG.INTPROPERTY(\"Spieltag\") muss den Wert des gemeinten Dokuments B liefern (1), "
 						+ "nicht den des noch fokussierten Altdokuments A (2)")
 				.isEqualTo(1);

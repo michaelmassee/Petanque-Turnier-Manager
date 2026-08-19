@@ -23,6 +23,7 @@ import de.petanqueturniermanager.algorithmen.common.CadrageRechner;
 import de.petanqueturniermanager.algorithmen.liga.Direktvergleich;
 import de.petanqueturniermanager.algorithmen.poule.PouleGruppenRechner;
 import de.petanqueturniermanager.comp.DocumentHelper;
+import de.petanqueturniermanager.comp.DokumentKontext;
 import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
@@ -50,7 +51,6 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	};
 
 	private static final AtomicBoolean isDirty = new AtomicBoolean(false);
-	private static final ThreadLocal<XSpreadsheetDocument> dokumentKontext = new ThreadLocal<>();
 
 	// DisplayNames aus GlobalAddIn.xcu - diese werden für Formeln in Calc verwendet
 	// =PTM.ALG.INTPROPERTY("propertyname")
@@ -165,27 +165,9 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	 * @return
 	 */
 
-	public static void mitDokumentKontext(XSpreadsheetDocument doc, Runnable aktion) {
-		XSpreadsheetDocument vorher = dokumentKontext.get();
-		if (doc != null) {
-			dokumentKontext.set(doc);
-		} else {
-			dokumentKontext.remove();
-		}
-		try {
-			aktion.run();
-		} finally {
-			if (vorher != null) {
-				dokumentKontext.set(vorher);
-			} else {
-				dokumentKontext.remove();
-			}
-		}
-	}
-
 	private DocumentPropertiesHelper getDocumentPropertiesHelper() {
 		try {
-			XSpreadsheetDocument doc = dokumentKontext.get();
+			XSpreadsheetDocument doc = DokumentKontext.get();
 			if (doc == null) {
 				doc = DocumentHelper.getCurrentSpreadsheetDocument(xContext);
 			}

@@ -19,6 +19,7 @@ import com.sun.star.uno.XComponentContext;
 import com.sun.star.util.XModifiable;
 
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
+import de.petanqueturniermanager.comp.DokumentKontext;
 import de.petanqueturniermanager.comp.GlobalProperties;
 import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -223,7 +224,11 @@ public abstract class SheetRunner extends Thread {
 								.ifPresent(k -> BlattschutzManager.get().beginCommandScope(k, workingSpreadsheet));
 					}
 					if (!benoetigtLebendesDokument() || isDocumentAlive()) {
-						doRun();
+						// DokumentKontext setzen: GlobalImpl.getDocumentPropertiesHelper() liest das ThreadLocal
+						// vorrangig vor dem fokus-basierten Fallback, damit PTM.ALG.*-Formeln, die doRun() für
+						// dieses Dokument schreibt, auch dann korrekt aufgelöst werden, wenn gerade ein anderes
+						// Dokument den UI-Fokus hält (z.B. während des Anlegens eines neuen Turniers).
+						DokumentKontext.mitKontextWerfend(workingSpreadsheet.getWorkingSpreadsheetDocument(), this::doRun);
 						if (isDocumentAlive()) {
 							WebServerManager.get().sseRefreshSenden(workingSpreadsheet);
 							// Während des Runners eingetroffene Modify-Events wurden vom Listener

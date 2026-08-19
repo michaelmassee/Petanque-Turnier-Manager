@@ -7,6 +7,7 @@ import com.sun.star.frame.XModel;
 import com.sun.star.sheet.XCalculatable;
 import com.sun.star.sheet.XSpreadsheetDocument;
 
+import de.petanqueturniermanager.comp.DokumentKontext;
 import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
@@ -55,7 +56,7 @@ public class UpdatePropertieFunctionsSheetRecalcOnLoad implements IGlobalEventLi
 			XCalculatable xCal = Lo.qi(XCalculatable.class, xSpreadsheetDocument);
 			if (xCal != null) {
 				logger.debug("onload calculateAll mit Dokument-Kontext (dirty={})", warDirty);
-				GlobalImpl.mitDokumentKontext(xSpreadsheetDocument, xCal::calculateAll);
+				DokumentKontext.mitKontext(xSpreadsheetDocument, xCal::calculateAll);
 				GlobalImpl.getAndSetDirty(false);
 			}
 		} else if (warDirty) {
