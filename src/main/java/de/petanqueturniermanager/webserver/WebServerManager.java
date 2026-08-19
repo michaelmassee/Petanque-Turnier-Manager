@@ -217,10 +217,29 @@ public final class WebServerManager implements TimerListener {
     /**
      * Startet alle konfigurierten Webserver-Instanzen.
      * Führt nach dem Start direkt ein initiales Rendering durch.
+     * <p>
+     * Ermittelt das Owner-Dokument fokus-basiert (siehe {@link #starten(XComponentContext,
+     * XSpreadsheetDocument)} für die deterministische Variante) – nur verwenden, wenn kein
+     * konkretes Dokument bekannt ist (z.B. globaler Bootstrap in {@code PetanqueTurnierMngrSingleton.init()}).
      *
      * @param ctx LibreOffice-Kontext für das initiale Rendering
      */
     public synchronized void starten(XComponentContext ctx) {
+        starten(ctx, null);
+    }
+
+    /**
+     * Startet alle konfigurierten Webserver-Instanzen für ein konkretes Turnier-Dokument.
+     * Führt nach dem Start direkt ein initiales Rendering durch.
+     *
+     * @param ctx      LibreOffice-Kontext für das initiale Rendering
+     * @param dokument das Dokument, das den Webserver besitzt (z.B. per {@code
+     *                 ProtocolHandler.ermittleDokumentAusFrame()} aufgelöst); {@code null}
+     *                 fällt auf das fokussierte Dokument zurück – dann ggf. Leak-Risiko bei
+     *                 mehreren offenen Turnier-Dokumenten, siehe CLAUDE.md, Abschnitt
+     *                 „Mehrere offene Turnier-Dokumente".
+     */
+    public synchronized void starten(XComponentContext ctx, XSpreadsheetDocument dokument) {
         if (laeuft) {
             logger.debug("WebServerManager läuft bereits");
             return;
@@ -276,11 +295,11 @@ public final class WebServerManager implements TimerListener {
         if (!compositeInstanzen.isEmpty() || startseiteInstanz != null || regieInstanz != null) {
             laeuft = true;
             gespeicherterCtx = ctx;
-            ownerDocument = new WorkingSpreadsheet(ctx).getWorkingSpreadsheetDocument();
+            ownerDocument = dokument != null ? dokument : new WorkingSpreadsheet(ctx).getWorkingSpreadsheetDocument();
             logger.info("Webserver Owner-Dokument gesetzt: {}", ownerDocument != null ? "ja" : "null");
             statusListenerBenachrichtigen();
             try {
-                sseRefreshSendenIntern(new WorkingSpreadsheet(ctx));
+                sseRefreshSendenIntern(erzeugeWorkingSpreadsheetFuerOwner(ctx));
             } catch (Exception e) {
                 logger.debug("Initiales Rendering fehlgeschlagen: {}", e.getMessage());
                 sendeHinweisAnAlle(
@@ -703,7 +722,7 @@ public final class WebServerManager implements TimerListener {
                 return;
             }
             try {
-                pushStartseiteFallsAktiv(new WorkingSpreadsheet(ctx));
+                pushStartseiteFallsAktiv(erzeugeWorkingSpreadsheetFuerOwner(ctx));
             } catch (RuntimeException e) {
                 logger.warn("Live-Push der Startseite nach Konfig-Änderung fehlgeschlagen: {}", e.getMessage(), e);
             }
@@ -952,6 +971,17 @@ public final class WebServerManager implements TimerListener {
         int version = versionZaehler.incrementAndGet();
         instanz.setCachedInitJson(GSON.toJson(
                 CompositeSseNachricht.init(version, alleInitPanels, konfig.wurzel(), konfig.zoom(), konfig.mitHeaderFooter(), konfig.rand().toDaten())));
+    }
+
+    /**
+     * Liefert ein {@link WorkingSpreadsheet} für das bekannte {@link #ownerDocument} statt
+     * fokus-basiert neu aufzulösen – vermeidet eine erneute, ggf. abweichende Auflösung des
+     * UI-fokussierten Dokuments, während der Webserver bereits läuft (siehe CLAUDE.md, Abschnitt
+     * „Mehrere offene Turnier-Dokumente"). Fällt auf den fokus-basierten no-arg-Konstruktor
+     * zurück, falls {@link #ownerDocument} (noch) unbekannt ist.
+     */
+    private WorkingSpreadsheet erzeugeWorkingSpreadsheetFuerOwner(XComponentContext ctx) {
+        return ownerDocument != null ? new WorkingSpreadsheet(ctx, ownerDocument) : new WorkingSpreadsheet(ctx);
     }
 
     private void sseRefreshSendenIntern(WorkingSpreadsheet ws) {

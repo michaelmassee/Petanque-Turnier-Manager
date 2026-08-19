@@ -1616,7 +1616,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				} else {
 					ProcessBox.init(xContext).visibleWennAutomatisch().clear().run();
 					try {
-						WebServerManager.get().starten(xContext);
+						WebServerManager.get().starten(xContext, ermittleDokumentAusFrame());
 						notifyAllListeners();
 					} finally {
 						ProcessBox.from().ready();
@@ -1648,7 +1648,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_WEBSERVER_URL_9  -> oeffneBrowserUrlFuerSlot(8);
 			case CMD_WEBSERVER_URL_10 -> oeffneBrowserUrlFuerSlot(9);
 			case CMD_TURNIER_MODUS -> {
-				var ws = new WorkingSpreadsheet(xContext);
+				var ws = erzeugeWorkingSpreadsheetFuerDispatch();
 				TurnierModus.get().umschalten(ws);
 				notifyAllListeners();
 			}
