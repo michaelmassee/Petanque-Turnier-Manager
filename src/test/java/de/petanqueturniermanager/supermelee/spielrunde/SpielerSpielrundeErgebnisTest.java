@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
 
 import de.petanqueturniermanager.helper.position.Position;
-import de.petanqueturniermanager.supermelee.SpielRundeNr;
+import de.petanqueturniermanager.basesheet.meldeliste.SpielRundeNr;
 
 public class SpielerSpielrundeErgebnisTest {
 

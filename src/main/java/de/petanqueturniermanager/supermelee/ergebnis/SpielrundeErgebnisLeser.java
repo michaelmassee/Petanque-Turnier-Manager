@@ -24,7 +24,7 @@ import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
-import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.basesheet.meldeliste.SpielTagNr;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheetKonstanten;
 
 /**

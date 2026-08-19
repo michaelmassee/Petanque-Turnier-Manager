@@ -20,7 +20,8 @@ import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
 import de.petanqueturniermanager.konfigdialog.HeaderFooterConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ZeitplanConfigProperty;
-import de.petanqueturniermanager.supermelee.SpielRundeNr;
+import de.petanqueturniermanager.basesheet.meldeliste.SpielRundeNr;
+import de.petanqueturniermanager.basesheet.meldeliste.SpielTagNr;
 
 /**
  * Konfigurationseigenschaften für das Formule X Turniersystem.
@@ -42,6 +43,8 @@ public class FormuleXPropertiesSpalte extends BasePropertiesSpalte
 
     public static final String KONFIG_PROP_ANZAHL_RUNDEN           = "Anzahl Runden";
     public static final String KONFIG_PROP_NAME_SPIELRUNDE         = "Spielrunde";
+    /** Aktueller Spieltag einer Turnierserie (analog SchweizerPropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG). */
+    public static final String KONFIG_PROP_NAME_SPIELTAG           = "Spieltag";
 
     private static final String KONFIG_PROP_SPIELRUNDE_COLOR_BACK_GERADE   = "Spielrunde Hintergrund Gerade";
     private static final String KONFIG_PROP_SPIELRUNDE_COLOR_BACK_UNGERADE = "Spielrunde Hintergrund Ungerade";
@@ -68,6 +71,9 @@ public class FormuleXPropertiesSpalte extends BasePropertiesSpalte
 
         KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_ANZAHL_RUNDEN)
                 .setDefaultVal(4).setDescription("config.desc.formulex.anzahl.runden"));
+
+        KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELTAG)
+                .setDefaultVal(1).setDescription("config.desc.formulex.spieltag"));
 
         KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELRUNDE_COLOR_BACK_GERADE)
                 .setDefaultVal(DEFAULT_GERADE_BACK_COLOR)
@@ -162,6 +168,14 @@ public class FormuleXPropertiesSpalte extends BasePropertiesSpalte
 
     public SpielRundeNr getAktiveSpielRunde() {
         return SpielRundeNr.from(readIntProperty(KONFIG_PROP_NAME_SPIELRUNDE));
+    }
+
+    public void setAktiveSpieltag(SpielTagNr spieltag) {
+        writeIntProperty(KONFIG_PROP_NAME_SPIELTAG, spieltag.getNr());
+    }
+
+    public SpielTagNr getAktiveSpieltag() {
+        return SpielTagNr.from(readIntProperty(KONFIG_PROP_NAME_SPIELTAG));
     }
 
     public int getAnzahlRunden() {

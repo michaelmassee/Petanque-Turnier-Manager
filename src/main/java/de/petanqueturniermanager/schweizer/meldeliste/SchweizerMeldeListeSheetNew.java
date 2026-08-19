@@ -29,7 +29,7 @@ import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
-import de.petanqueturniermanager.supermelee.SpielRundeNr;
+import de.petanqueturniermanager.basesheet.meldeliste.SpielRundeNr;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
@@ -204,6 +204,21 @@ public class SchweizerMeldeListeSheetNew extends SheetRunner
 
 	public void setAktiveSpielRunde(SpielRundeNr spielRundeNr) throws GenerateException {
 		delegate.setAktiveSpielRunde(spielRundeNr);
+	}
+
+	/** Legt einen neuen Spieltag an (Turnierserie): siehe {@link SchweizerListeDelegate#naechsteSpieltag()}. */
+	public void naechsteSpieltag() throws GenerateException {
+		delegate.naechsteSpieltag();
+	}
+
+	/**
+	 * Setzt alle Teams mit gültiger Teamnummer auf AKTIV_WERT_NIMMT_TEIL für den aktuellen Spieltag.
+	 * {@link #naechsteSpieltag()} lässt die neue Aktiv-Spalte absichtlich leer (Check-in erfolgt
+	 * normalerweise manuell); dieser Aufruf ist der explizite Gegenpart dazu für Konsumenten wie
+	 * TestDaten-Generatoren, die alle Teams sofort für den neuen Spieltag aktivieren wollen.
+	 */
+	public void alleTeamsAktivieren() throws GenerateException {
+		delegate.alleTeamsAktivieren();
 	}
 
 	// ---------------------------------------------------------------

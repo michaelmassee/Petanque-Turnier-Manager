@@ -20,7 +20,7 @@ import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
 import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
-import de.petanqueturniermanager.supermelee.SpielRundeNr;
+import de.petanqueturniermanager.basesheet.meldeliste.SpielRundeNr;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**

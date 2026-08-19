@@ -35,7 +35,7 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.supermelee.SuperMeleeSummenSpalten;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet;
-import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.basesheet.meldeliste.SpielTagNr;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 

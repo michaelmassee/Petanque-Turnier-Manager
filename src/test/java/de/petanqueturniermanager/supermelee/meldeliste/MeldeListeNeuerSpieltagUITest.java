@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.basesheet.meldeliste.SpielTagNr;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleePropertiesSpalte;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Naechste;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Update;

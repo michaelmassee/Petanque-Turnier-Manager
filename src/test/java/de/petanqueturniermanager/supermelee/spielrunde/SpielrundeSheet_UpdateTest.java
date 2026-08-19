@@ -25,8 +25,8 @@ import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeGera
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
-import de.petanqueturniermanager.supermelee.SpielRundeNr;
-import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.basesheet.meldeliste.SpielRundeNr;
+import de.petanqueturniermanager.basesheet.meldeliste.SpielTagNr;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
 

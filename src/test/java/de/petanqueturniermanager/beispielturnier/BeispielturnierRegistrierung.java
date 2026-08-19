@@ -26,9 +26,11 @@ import de.petanqueturniermanager.poule.PouleTurnierTestDaten;
 import de.petanqueturniermanager.poule.meldeliste.PouleMeldeListeSheetTestDaten;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetTestDaten;
 import de.petanqueturniermanager.schweizer.spielrunde.Schweizer19TeamsTurnierTestDaten;
+import de.petanqueturniermanager.schweizer.spielrunde.SchweizerSerienTurnierTestDaten;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerTurnierTestDaten;
 import de.petanqueturniermanager.kaskade.KaskadeTurnierTestDaten;
 import de.petanqueturniermanager.kaskade.meldeliste.KaskadeMeldeListeSheetTestDaten;
+import de.petanqueturniermanager.formulex.spielrunde.FormuleXSerienTurnierTestDaten;
 import de.petanqueturniermanager.formulex.spielrunde.FormuleXTurnierTestDaten;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_TestDaten;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_TestDaten;
@@ -207,6 +209,16 @@ public final class BeispielturnierRegistrierung {
                         "Schweizer19TeamsTurnierTestDaten.java"),
 
                 new Eintrag(
+                        "Schweizer System – Turnierserie (16 Teams, 2 Spieltage à 3 Runden, Endrangliste)",
+                        ws -> new SchweizerSerienTurnierTestDaten(ws).generate(),
+                        List.of(
+                                SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_MELDELISTE,
+                                SheetMetadataHelper.schluesselSpieltagRangliste(1),
+                                SheetMetadataHelper.schluesselSpieltagRangliste(2),
+                                SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_ENDRANGLISTE),
+                        "SchweizerSerienTurnierTestDaten.java"),
+
+                new Eintrag(
                         "K.-O. – nur Meldeliste (8 Teams)",
                         ws -> new KoMeldeListeSheetTestDaten(ws, 8).erstelleMeldelisteWithTestdaten(),
                         List.of(SheetMetadataHelper.SCHLUESSEL_KO_MELDELISTE),
@@ -320,7 +332,17 @@ public final class BeispielturnierRegistrierung {
                                 SheetMetadataHelper.schluesselFormuleXSpielrunde(5),
                                 SheetMetadataHelper.SCHLUESSEL_FORMULEX_RANGLISTE,
                                 SheetMetadataHelper.SCHLUESSEL_TEILNEHMER),
-                        "FormuleXTurnierTestDaten.java")
+                        "FormuleXTurnierTestDaten.java"),
+
+                new Eintrag(
+                        "Formule X – Turnierserie (16 Teams, 2 Spieltage, Endrangliste)",
+                        ws -> new FormuleXSerienTurnierTestDaten(ws).generate(),
+                        List.of(
+                                SheetMetadataHelper.SCHLUESSEL_FORMULEX_MELDELISTE,
+                                SheetMetadataHelper.schluesselSpieltagRangliste(1),
+                                SheetMetadataHelper.schluesselSpieltagRangliste(2),
+                                SheetMetadataHelper.SCHLUESSEL_FORMULEX_ENDRANGLISTE),
+                        "FormuleXSerienTurnierTestDaten.java")
         );
     }
 }

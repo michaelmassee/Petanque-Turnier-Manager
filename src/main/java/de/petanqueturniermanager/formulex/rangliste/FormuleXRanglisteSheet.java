@@ -55,7 +55,7 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.helper.sheet.search.RangeSearchHelper;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
-import de.petanqueturniermanager.supermelee.SpielRundeNr;
+import de.petanqueturniermanager.basesheet.meldeliste.SpielRundeNr;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
@@ -102,12 +102,38 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
         return konfigurationSheet;
     }
 
+    /** Name des Ranglisten-Sheets (überschreibbar für Subklassen, z.B. Spieltag-Rangliste). */
+    protected String getRanglistenSheetName() {
+        return SheetNamen.formulexRangliste();
+    }
+
+    /** Named-Range-Schlüssel für die Sheet-Metadaten (überschreibbar für Subklassen). */
+    protected String getMetadatenSchluessel() {
+        return SheetMetadataHelper.SCHLUESSEL_FORMULEX_RANGLISTE;
+    }
+
+    /**
+     * Named-Range-Schlüssel für ein einzelnes Spielrunden-Sheet.
+     * <p>
+     * Für Spieltag 1 (Default, Einzelturnier) unverändert; ab Spieltag 2 spieltag-eindeutiger
+     * Schlüssel, damit nur die Spielrunden des aktuell aktiven Spieltags eingelesen werden
+     * (siehe {@link de.petanqueturniermanager.formulex.spielrunde.FormuleXSpielrundeSheetNaechste#getSpielrundeSchluessel(int)},
+     * das denselben Schlüssel beim Anlegen der Runde schreibt).
+     */
+    protected String getSpielrundenMetadatenSchluessel(int rundeNr) {
+        int spieltagNr = konfigurationSheet.getAktiveSpieltag().getNr();
+        if (spieltagNr <= 1) {
+            return SheetMetadataHelper.schluesselFormuleXSpielrunde(rundeNr);
+        }
+        return SheetMetadataHelper.schluesselFormuleXSpielrundeSpieltag(spieltagNr, rundeNr);
+    }
+
     @Override
     public XSpreadsheet getXSpreadSheet() throws GenerateException {
         return SheetMetadataHelper.findeSheetUndHeile(
                 getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
-                SheetMetadataHelper.SCHLUESSEL_FORMULEX_RANGLISTE,
-                SheetNamen.formulexRangliste());
+                getMetadatenSchluessel(),
+                getRanglistenSheetName());
     }
 
     @Override
@@ -124,7 +150,7 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
         LOGGER.debug("doRunIntern START – Thread='{}'", Thread.currentThread().getName());
         processBoxinfo("processbox.rangliste.einfuegen");
 
-        NewSheet.from(this, SheetNamen.formulexRangliste(), SheetMetadataHelper.SCHLUESSEL_FORMULEX_RANGLISTE)
+        NewSheet.from(this, getRanglistenSheetName(), getMetadatenSchluessel())
                 .pos(DefaultSheetPos.SCHWEIZER_ENDRANGLISTE)
                 .forceCreate()
                 .tabColor(konfigurationSheet.getRanglisteTabFarbe())
@@ -154,7 +180,7 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
         }
         SheetSyncSignaturStore.commitVollaufbau(
                 getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
-                SheetMetadataHelper.SCHLUESSEL_FORMULEX_RANGLISTE,
+                getMetadatenSchluessel(),
                 new EingabeSignatur(SignaturQuellen::fuerFormuleX));
         LOGGER.debug("doRunIntern ENDE – Thread='{}'", Thread.currentThread().getName());
     }
@@ -241,7 +267,7 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
         for (int runde = 1; runde <= bisSpielrunde; runde++) {
             SheetRunner.testDoCancelTask();
             XSpreadsheet rundeSheet = SheetMetadataHelper.findeSheetUndHeile(xDoc,
-                    SheetMetadataHelper.SCHLUESSEL_FORMULEX_SPIELRUNDE_PREFIX + runde,
+                    getSpielrundenMetadatenSchluessel(runde),
                     SpielRundeNr.from(runde).getNr() + ". Spielrunde");
             if (rundeSheet == null) {
                 LOGGER.debug("leseAlleRunden: Runde {} – Sheet nicht gefunden, übersprungen", runde);

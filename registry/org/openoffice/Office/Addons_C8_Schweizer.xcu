@@ -194,8 +194,39 @@
 								<prop oor:name="Target" oor:type="xs:string"><value>_self</value></prop>
 							</node>
 
+							<node oor:name="C8A13" oor:op="replace">
+								<prop oor:name="URL" oor:type="xs:string">
+									<value>private:separator</value>
+								</prop>
+							</node>
 
+							<node oor:name="C8A14" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Next Match Day</value>
+									<value xml:lang="de">Nächster Spieltag</value>
+									<value xml:lang="es">Siguiente jornada</value>
+									<value xml:lang="fr">Journée suivante</value>
+									<value xml:lang="nl">Volgende speeldag</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:schweizer_naechste_spieltag</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string"><value>_self</value></prop>
+							</node>
 
+							<node oor:name="C8A15" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Final Ranking (Series)</value>
+									<value xml:lang="de">Endrangliste (Serie)</value>
+									<value xml:lang="es">Clasificación final (serie)</value>
+									<value xml:lang="fr">Classement final (série)</value>
+									<value xml:lang="nl">Eindranglijst (reeks)</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:schweizer_endrangliste</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string"><value>_self</value></prop>
+							</node>
 
 
 						</node>

@@ -25,7 +25,7 @@ import de.petanqueturniermanager.helper.upload.AbstractExportInVerzeichnis;
 import de.petanqueturniermanager.helper.upload.ExportErgebnis;
 import de.petanqueturniermanager.helper.upload.ExportFormat;
 import de.petanqueturniermanager.helper.upload.ExportHtmlSeite;
-import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.basesheet.meldeliste.SpielTagNr;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheetUpdate;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet;

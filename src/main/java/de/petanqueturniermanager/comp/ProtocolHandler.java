@@ -80,6 +80,7 @@ import de.petanqueturniermanager.formulex.meldeliste.FormuleXTeilnehmerSheet;
 import de.petanqueturniermanager.formulex.rangliste.FormuleXRanglisteSheet;
 import de.petanqueturniermanager.formulex.spielrunde.FormuleXSpielrundeSheetNaechste;
 import de.petanqueturniermanager.formulex.spielrunde.FormuleXTurnierTestDaten;
+import de.petanqueturniermanager.formulex.spielrunde.FormuleXSerienTurnierTestDaten;
 import de.petanqueturniermanager.formulex.spielrunde.FormuleXSpielrundeSheetUpdate;
 import de.petanqueturniermanager.kaskade.KaskadeTurnierTestDaten;
 import de.petanqueturniermanager.kaskade.meldeliste.KaskadeMeldeListeSheetNew;
@@ -157,6 +158,7 @@ import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheetSort
 import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerSpielrundeSheetNaechste;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerTurnierTestDaten;
+import de.petanqueturniermanager.schweizer.spielrunde.SchweizerSerienTurnierTestDaten;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerSpielrundeSheetUpdate;
 import de.petanqueturniermanager.planungsrechner.PlanungsrechnerSheet;
 import de.petanqueturniermanager.siegergeld.SiegergeldSheet;
@@ -293,11 +295,14 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_SCHWEIZER_UPDATE_MELDELISTE = "schweizer_update_meldeliste";
 	public static final String CMD_SCHWEIZER_AKTUELLE_SPIELRUNDE = "schweizer_aktuelle_spielrunde";
 	public static final String CMD_SCHWEIZER_NAECHSTE_SPIELRUNDE = "schweizer_naechste_spielrunde";
+	public static final String CMD_SCHWEIZER_NAECHSTE_SPIELTAG = "schweizer_naechste_spieltag";
+	public static final String CMD_SCHWEIZER_ENDRANGLISTE = "schweizer_endrangliste";
 	public static final String CMD_SCHWEIZER_RANGLISTE = "schweizer_rangliste";
 	public static final String CMD_SCHWEIZER_RANGLISTE_SORTIEREN = "schweizer_rangliste_sortieren";
 	public static final String CMD_SCHWEIZER_TESTDATEN_MELDELISTE = "schweizer_testdaten_meldeliste";
 	public static final String CMD_SCHWEIZER_TESTDATEN_TURNIER = "schweizer_testdaten_turnier";
 	public static final String CMD_SCHWEIZER_TESTDATEN_TURNIER_19 = "schweizer_testdaten_turnier_19";
+	public static final String CMD_SCHWEIZER_TESTDATEN_TURNIER_SERIE = "schweizer_testdaten_turnier_serie";
 	// Maastrichter
 	public static final String CMD_MAASTRICHTER_START = "maastrichter_start";
 	public static final String CMD_MAASTRICHTER_UPDATE_MELDELISTE = "maastrichter_update_meldeliste";
@@ -326,8 +331,11 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_FORMULEX_NAECHSTE_SPIELRUNDE      = "formulex_naechste_spielrunde";
 	public static final String CMD_FORMULEX_AKTUELLE_SPIELRUNDE      = "formulex_aktuelle_spielrunde";
 	public static final String CMD_FORMULEX_RANGLISTE                = "formulex_rangliste";
+	public static final String CMD_FORMULEX_NAECHSTE_SPIELTAG        = "formulex_naechste_spieltag";
+	public static final String CMD_FORMULEX_ENDRANGLISTE             = "formulex_endrangliste";
 	public static final String CMD_FORMULEX_TESTDATEN_MELDELISTE     = "formulex_testdaten_meldeliste";
 	public static final String CMD_FORMULEX_TESTDATEN_TURNIER        = "formulex_testdaten_turnier";
+	public static final String CMD_FORMULEX_TESTDATEN_TURNIER_SERIE  = "formulex_testdaten_turnier_serie";
 	// Kaskaden-KO
 	public static final String CMD_KASKADE_START              = "kaskade_start";
 	public static final String CMD_KASKADE_UPDATE_MELDELISTE  = "kaskade_update_meldeliste";
@@ -1030,6 +1038,14 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_SCHWEIZER_NAECHSTE_SPIELRUNDE:
 				new SchweizerSpielrundeSheetNaechste(ws).testTurnierSystem(TurnierSystem.SCHWEIZER).backUpDocument().backupDocumentAfterRun().start();
 				break;
+			case CMD_SCHWEIZER_NAECHSTE_SPIELTAG:
+				new de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetNaechsterSpieltag(ws)
+						.testTurnierSystem(TurnierSystem.SCHWEIZER).backUpDocument().backupDocumentAfterRun().start();
+				break;
+			case CMD_SCHWEIZER_ENDRANGLISTE:
+				new de.petanqueturniermanager.schweizer.endrangliste.SchweizerEndranglisteSheet(ws)
+						.testTurnierSystem(TurnierSystem.SCHWEIZER).start();
+				break;
 			case CMD_SCHWEIZER_RANGLISTE:
 				new SchweizerRanglisteSheet(ws).testTurnierSystem(TurnierSystem.SCHWEIZER).start();
 				break;
@@ -1045,6 +1061,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_SCHWEIZER_TESTDATEN_TURNIER_19:
 				// 19 Teams: ungerade → 1 Freilos pro Runde, Teamname in Spielrunde, Bahn Random
 				new SchweizerTurnierTestDaten(ws, 19, SpielplanTeamAnzeige.NAME).testKeinAnderesTurnierVorhanden().start();
+				break;
+			case CMD_SCHWEIZER_TESTDATEN_TURNIER_SERIE:
+				new SchweizerSerienTurnierTestDaten(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
 			// ------------------------------
 			// Maastrichter System
@@ -1143,11 +1162,22 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_FORMULEX_RANGLISTE:
 				new FormuleXRanglisteSheet(ws).testTurnierSystem(TurnierSystem.FORMULEX).start();
 				break;
+			case CMD_FORMULEX_NAECHSTE_SPIELTAG:
+				new de.petanqueturniermanager.formulex.meldeliste.FormuleXMeldeListeSheetNaechsterSpieltag(ws)
+						.testTurnierSystem(TurnierSystem.FORMULEX).backUpDocument().backupDocumentAfterRun().start();
+				break;
+			case CMD_FORMULEX_ENDRANGLISTE:
+				new de.petanqueturniermanager.formulex.endrangliste.FormuleXEndranglisteSheet(ws)
+						.testTurnierSystem(TurnierSystem.FORMULEX).start();
+				break;
 			case CMD_FORMULEX_TESTDATEN_MELDELISTE:
 				new FormuleXMeldeListeSheetTestDaten(ws, 17).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_FORMULEX_TESTDATEN_TURNIER:
 				new FormuleXTurnierTestDaten(ws).testKeinAnderesTurnierVorhanden().start();
+				break;
+			case CMD_FORMULEX_TESTDATEN_TURNIER_SERIE:
+				new FormuleXSerienTurnierTestDaten(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
 			// ------------------------------
 			// Kaskaden-KO
@@ -2130,10 +2160,13 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_FORMULEX_UPDATE_MELDELISTE,
 				 CMD_FORMULEX_TEILNEHMER, CMD_FORMULEX_CHECKIN,
 				 CMD_FORMULEX_NAECHSTE_SPIELRUNDE,
+				 CMD_FORMULEX_NAECHSTE_SPIELTAG,
+				 CMD_FORMULEX_ENDRANGLISTE,
 				 CMD_FORMULEX_RANGLISTE -> ts == TurnierSystem.FORMULEX;
 			case CMD_FORMULEX_AKTUELLE_SPIELRUNDE           -> ts == TurnierSystem.FORMULEX && hatFormuleXSpielrunde(ws);
 			case CMD_FORMULEX_TESTDATEN_MELDELISTE,
-				 CMD_FORMULEX_TESTDATEN_TURNIER             -> ts == TurnierSystem.KEIN || ts == TurnierSystem.FORMULEX;
+				 CMD_FORMULEX_TESTDATEN_TURNIER,
+				 CMD_FORMULEX_TESTDATEN_TURNIER_SERIE       -> ts == TurnierSystem.KEIN || ts == TurnierSystem.FORMULEX;
 			case CMD_KASKADE_START                          -> ts == TurnierSystem.KEIN;
 			case CMD_KASKADE_UPDATE_MELDELISTE,
 				 CMD_KASKADE_TEILNEHMER, CMD_KASKADE_CHECKIN -> ts == TurnierSystem.KASKADE;
@@ -2160,12 +2193,15 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_SCHWEIZER_UPDATE_MELDELISTE,
 				 CMD_SCHWEIZER_TEILNEHMER, CMD_SCHWEIZER_CHECKIN,
 				 CMD_SCHWEIZER_NAECHSTE_SPIELRUNDE,
+				 CMD_SCHWEIZER_NAECHSTE_SPIELTAG,
+				 CMD_SCHWEIZER_ENDRANGLISTE,
 				 CMD_SCHWEIZER_RANGLISTE,
 				 CMD_SCHWEIZER_RANGLISTE_SORTIEREN -> ts == TurnierSystem.SCHWEIZER;
 			case CMD_SCHWEIZER_AKTUELLE_SPIELRUNDE          -> ts == TurnierSystem.SCHWEIZER && hatSchweizerSpielrunde(ws);
 			case CMD_SCHWEIZER_TESTDATEN_MELDELISTE,
 				 CMD_SCHWEIZER_TESTDATEN_TURNIER,
-				 CMD_SCHWEIZER_TESTDATEN_TURNIER_19        -> ts == TurnierSystem.KEIN || ts == TurnierSystem.SCHWEIZER;
+				 CMD_SCHWEIZER_TESTDATEN_TURNIER_19,
+				 CMD_SCHWEIZER_TESTDATEN_TURNIER_SERIE     -> ts == TurnierSystem.KEIN || ts == TurnierSystem.SCHWEIZER;
 			case CMD_KONFIGURATION_TURNIER,
 				 CMD_KONFIGURATION_TURNIER_MENU,
 				 CMD_KONFIGURATION_KOPFFUSSZEILEN,

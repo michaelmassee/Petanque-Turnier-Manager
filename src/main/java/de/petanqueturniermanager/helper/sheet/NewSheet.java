@@ -27,7 +27,7 @@ import de.petanqueturniermanager.helper.pagestyle.PageStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleDef;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
-import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.basesheet.meldeliste.SpielTagNr;
 
 public class NewSheet extends BaseHelper {
 

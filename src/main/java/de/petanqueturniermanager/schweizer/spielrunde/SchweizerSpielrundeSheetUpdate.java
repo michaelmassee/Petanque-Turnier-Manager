@@ -6,7 +6,7 @@ import de.petanqueturniermanager.algorithmen.schweizer.SchweizerTeamErgebnis;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.model.TeamMeldungen;
-import de.petanqueturniermanager.supermelee.SpielRundeNr;
+import de.petanqueturniermanager.basesheet.meldeliste.SpielRundeNr;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**

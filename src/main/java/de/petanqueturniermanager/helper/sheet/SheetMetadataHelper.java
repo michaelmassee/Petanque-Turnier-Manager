@@ -27,7 +27,7 @@ import com.sun.star.text.XText;
 
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.LogUtil;
-import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.basesheet.meldeliste.SpielTagNr;
 
 /**
  * Schreibt und liest Sheet-Metadaten als benannte Bereiche im Dokument.
@@ -105,6 +105,7 @@ public class SheetMetadataHelper {
     // ── Konstanten: Schweizer ────────────────────────────────────────────────
 
     public static final String SCHLUESSEL_SCHWEIZER_RANGLISTE = "__PTM_SCHWEIZER_RANGLISTE__";
+    public static final String SCHLUESSEL_SCHWEIZER_ENDRANGLISTE = "__PTM_SCHWEIZER_ENDRANGLISTE__";
     public static final String SCHLUESSEL_SCHWEIZER_MELDELISTE = "__PTM_SCHWEIZER_MELDELISTE__";
     public static final String SCHLUESSEL_SCHWEIZER_SPIELRUNDE_PREFIX = "__PTM_SCHWEIZER_SPIELRUNDE_";
 
@@ -140,6 +141,7 @@ public class SheetMetadataHelper {
     public static final String SCHLUESSEL_FORMULEX_MELDELISTE        = "__PTM_FORMULEX_MELDELISTE__";
     public static final String SCHLUESSEL_FORMULEX_SPIELRUNDE_PREFIX = "__PTM_FORMULEX_SPIELRUNDE_";
     public static final String SCHLUESSEL_FORMULEX_RANGLISTE         = "__PTM_FORMULEX_RANGLISTE__";
+    public static final String SCHLUESSEL_FORMULEX_ENDRANGLISTE      = "__PTM_FORMULEX_ENDRANGLISTE__";
 
     // ── Konstanten: Forme / KO-Runden ────────────────────────────────────────
 
@@ -189,8 +191,26 @@ public class SheetMetadataHelper {
         return SCHLUESSEL_SCHWEIZER_SPIELRUNDE_PREFIX + rundeNr + SCHLUESSEL_SUFFIX;
     }
 
+    /**
+     * Spieltag-eindeutiger Spielrunden-Schluessel fuer Schweizer-Turnierserien (mehrere Spieltage).
+     * Nur fuer Spieltag &gt; 1 verwendet - Spieltag 1 nutzt weiterhin {@link #schluesselSchweizerSpielrunde(int)}
+     * unveraendert (Rueckwaertskompatibilitaet mit Einzelturnier-Dateien).
+     */
+    public static String schluesselSchweizerSpielrundeSpieltag(int spieltagNr, int rundeNr) {
+        return SCHLUESSEL_SCHWEIZER_SPIELRUNDE_PREFIX + spieltagNr + "_" + rundeNr + SCHLUESSEL_SUFFIX;
+    }
+
     public static String schluesselFormuleXSpielrunde(int rundeNr) {
         return SCHLUESSEL_FORMULEX_SPIELRUNDE_PREFIX + rundeNr;
+    }
+
+    /**
+     * Spieltag-eindeutiger Spielrunden-Schluessel fuer FormuleX-Turnierserien (mehrere Spieltage).
+     * Nur fuer Spieltag &gt; 1 verwendet - Spieltag 1 nutzt weiterhin {@link #schluesselFormuleXSpielrunde(int)}
+     * unveraendert (Rueckwaertskompatibilitaet mit Einzelturnier-Dateien).
+     */
+    public static String schluesselFormuleXSpielrundeSpieltag(int spieltagNr, int rundeNr) {
+        return SCHLUESSEL_FORMULEX_SPIELRUNDE_PREFIX + spieltagNr + "_" + rundeNr + SCHLUESSEL_SUFFIX;
     }
 
     public static String schluesselMaastrichterVorrunde(int rundeNr) {

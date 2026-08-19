@@ -8,6 +8,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.sun.star.awt.FontWeight;
 import com.sun.star.sheet.ConditionOperator;
 import com.sun.star.sheet.XSpreadsheet;
@@ -38,7 +40,9 @@ import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerRankingModus;
-import de.petanqueturniermanager.supermelee.SpielRundeNr;
+import de.petanqueturniermanager.schweizer.spieltagrangliste.SchweizerSpieltagRanglisteSheet;
+import de.petanqueturniermanager.basesheet.meldeliste.SpielRundeNr;
+import de.petanqueturniermanager.basesheet.meldeliste.SpielTagNr;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
@@ -161,9 +165,75 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 		return getLetzteDataSpalte() + 1;
 	}
 
-	/** Aktiv/Inaktiv-Spalte – direkt nach der Setzposition-Spalte. */
+	/** Aktiv/Inaktiv-Spalte des aktuellen Spieltags (siehe {@link #getSpielTag()}) – direkt nach der Setzposition-Spalte. */
 	int getAktivSpalte() throws GenerateException {
 		return getSetzPositionSpalte() + 1;
+	}
+
+	/**
+	 * Aktiv/Inaktiv-Spalte für einen bestimmten Spieltag einer Turnierserie. Nutzt dieselbe
+	 * Spieltag-Spalten-Infrastruktur wie Supermelee ({@link MeldeListeHelper#spieltagSpalte(SpielTagNr)}).
+	 * Für Spieltag 1 identisch mit {@link #getAktivSpalte()} (gleiche Spaltenposition, gleiche
+	 * Wertekodierung {@link de.petanqueturniermanager.basesheet.meldeliste.SpielrundeGespielt} –
+	 * bestehende Einzelturnier-Dateien sind ohne Migration kompatibel).
+	 */
+	int getAktivSpalte(SpielTagNr spieltag) {
+		return meldeListeHelper.spieltagSpalte(spieltag);
+	}
+
+	/**
+	 * Aktueller Spieltag – reine Weiterleitung an die persistierte Konfiguration (wie
+	 * {@link #getAktiveSpielRunde}/{@link #setAktiveSpielRunde}), kein eigener Zustand im Delegate.
+	 * Default {@code SpielTagNr.from(1)} (Einzelturnier-Verhalten unverändert), da
+	 * {@code KONFIG_PROP_NAME_SPIELTAG} mit Default 1 registriert ist.
+	 */
+	SpielTagNr getSpielTag() {
+		return konfigurationSheet.getAktiveSpieltag();
+	}
+
+	/** Setzt den aktuellen Spieltag für Turnierserien-Betrieb (mehrere Spieltage), persistiert in der Konfiguration. */
+	void setSpielTag(SpielTagNr spielTag) {
+		konfigurationSheet.setAktiveSpieltag(checkNotNull(spielTag, "spielTag == null"));
+	}
+
+	/**
+	 * Zählt die Anzahl bereits angelegter Spieltag-Spalten (nicht-leere Header ab
+	 * {@link MeldeListeHelper#ersteSpieltagSpalte()}), analog
+	 * {@code SupermeleeListeDelegate.countAnzSpieltageInMeldeliste()}. Anders als dort wird nicht
+	 * auf exakten Header-Text geprüft (robuster gegen die Migration von der bisherigen einzelnen
+	 * "Aktiv"-Spalte auf nummerierte "Aktiv N"-Spalten): jede nicht-leere Spalte zählt als
+	 * vorhandener Spieltag, ein Abbruch erfolgt bei der ersten leeren Spalte.
+	 */
+	int countAnzSpieltageInMeldeliste() throws GenerateException {
+		int anzSpieltage = 0;
+		Position posHeader = Position.from(meldeListeHelper.ersteSpieltagSpalte(), ZWEITE_HEADER_ZEILE);
+		for (int spieltagCntr = 1; spieltagCntr < 90; spieltagCntr++) {
+			String header = sheet.getSheetHelper().getTextFromCell(sheet.getXSpreadSheet(), posHeader);
+			if (StringUtils.isBlank(header)) {
+				break;
+			}
+			anzSpieltage++;
+			posHeader.spaltePlusEins();
+		}
+		return anzSpieltage;
+	}
+
+	/**
+	 * Legt einen neuen Spieltag an: archiviert zunächst die Rangliste des abzuschließenden
+	 * Spieltags (siehe {@link SchweizerSpieltagRanglisteSheet}, Grundlage für die spätere
+	 * Serien-Endrangliste), erhöht dann den Spieltag-Zähler, setzt die Spielrunde auf 1 zurück
+	 * und aktualisiert das Sheet (rendert die neue Aktiv-Spalte). Analog
+	 * {@code MeldeListeSheet_NeuerSpieltag.naechsteSpieltag()} bei Supermelee – Team-Stammdaten
+	 * bleiben unverändert, nur die neue Aktiv-Spalte des neuen Spieltags ist zunächst leer.
+	 */
+	void naechsteSpieltag() throws GenerateException {
+		SpielTagNr abzuschliessenderSpieltag = getSpielTag();
+		new SchweizerSpieltagRanglisteSheet(sheet.getWorkingSpreadsheet(), abzuschliessenderSpieltag).doRun();
+
+		int anzSpieltage = countAnzSpieltageInMeldeliste();
+		setSpielTag(SpielTagNr.from(anzSpieltage + 1));
+		konfigurationSheet.setAktiveSpielRunde(SpielRundeNr.from(1));
+		upDateSheet();
 	}
 
 	// ---------------------------------------------------------------
@@ -195,7 +265,7 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 		if (letzteDatenZeile < ERSTE_DATEN_ZEILE) {
 			return;
 		}
-		int letzteSpalte = getAktivSpalte();
+		int letzteSpalte = getAktivSpalte(getSpielTag());
 		var bereich = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_HEADER_ZEILE, letzteSpalte, letzteDatenZeile);
 		PrintArea.from(sheet.getXSpreadSheet(), sheet.getWorkingSpreadsheet())
 				.setPrintArea(bereich)
@@ -271,21 +341,29 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 				.setRotate90();
 		sheet.getSheetHelper().setStringValueInCell(spHeader);
 
-		// Aktiv-Spalte: merged über beide Header-Zeilen
+		// Aktiv-Spalte(n): eine Spalte pro Spieltag der Turnierserie (mind. der aktuelle Spieltag,
+		// plus alle bereits vorhandenen früheren Spieltage – analog Supermelees Spieltag-Spalten).
 		ColumnProperties colPropAktiv = ColumnProperties.from().setWidth(AKTIV_SPALTE_WIDTH)
 				.setHoriJustify(CellHoriJustify.CENTER).setVertJustify(CellVertJustify2.CENTER)
 				.margin(MeldeListeKonstanten.CELL_MARGIN);
-		StringCellValue aktivHeader = StringCellValue
-				.from(sheet.getXSpreadSheet(), Position.from(getAktivSpalte(), ZWEITE_HEADER_ZEILE),
-						I18n.get("column.header.aktiv"))
-				.addColumnProperties(colPropAktiv)
-				.setCellBackColor(headerColor)
-				.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder())
-				.setVertJustify(CellVertJustify2.CENTER)
-				.setComment(I18n.get("schweizer.meldeliste.comment.aktiv"))
-				.setEndPosMergeZeilePlus(1)
-				.setRotate90();
-		sheet.getSheetHelper().setStringValueInCell(aktivHeader);
+		int anzSpieltageHeader = Math.max(countAnzSpieltageInMeldeliste(), getSpielTag().getNr());
+		for (int spieltagCntr = 1; spieltagCntr <= anzSpieltageHeader; spieltagCntr++) {
+			SpielTagNr spieltagFuerHeader = SpielTagNr.from(spieltagCntr);
+			String aktivHeaderText = spieltagCntr == 1
+					? I18n.get("column.header.aktiv")
+					: I18n.get("column.header.aktiv") + " " + spieltagCntr;
+			StringCellValue aktivHeader = StringCellValue
+					.from(sheet.getXSpreadSheet(), Position.from(getAktivSpalte(spieltagFuerHeader), ZWEITE_HEADER_ZEILE),
+							aktivHeaderText)
+					.addColumnProperties(colPropAktiv)
+					.setCellBackColor(headerColor)
+					.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder())
+					.setVertJustify(CellVertJustify2.CENTER)
+					.setComment(I18n.get("schweizer.meldeliste.comment.aktiv"))
+					.setEndPosMergeZeilePlus(1)
+					.setRotate90();
+			sheet.getSheetHelper().setStringValueInCell(aktivHeader);
+		}
 
 		// Spieler-Blöcke
 		for (int s = 0; s < anzSpieler; s++) {
@@ -386,18 +464,18 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 				ERSTE_DATEN_ZEILE, letzteDatenZeile);
 		meldeListeHelper.formatiereSetzpositionSpalteFehlerfarbe(sheet, spRange);
 
-		// Aktiv-Spalte
-		RangePosition aktivRange = RangePosition.from(getAktivSpalte(), ERSTE_DATEN_ZEILE,
-				getAktivSpalte(), letzteDatenZeile);
+		// Aktiv-Spalte des aktuellen Spieltags
+		int aktivSpalte = getAktivSpalte(getSpielTag());
+		RangePosition aktivRange = RangePosition.from(aktivSpalte, ERSTE_DATEN_ZEILE,
+				aktivSpalte, letzteDatenZeile);
 		sheet.getSheetHelper().setPropertiesInRange(sheet.getXSpreadSheet(), aktivRange,
 				CellProperties.from().centerJustify().setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder()));
 
-		meldeListeHelper.bereinigeUngueltigeAktivWerte(getAktivSpalte(), getZeilenKennungSpalte(), ERSTE_DATEN_ZEILE,
+		meldeListeHelper.bereinigeUngueltigeAktivWerte(aktivSpalte, getZeilenKennungSpalte(), ERSTE_DATEN_ZEILE,
 				letzteDatenZeile, AKTIV_GUELTIGE_WERTE);
 		meldeListeHelper.formatiereAktivSpalteFehlerfarbe(sheet, aktivRange, AKTIV_GUELTIGE_WERTE);
 
 		// Editierbare Felder hervorheben: Spalten 1..Aktiv (ohne Nr-Spalte 0)
-		int aktivSpalte = getAktivSpalte();
 		RangePosition editierbareRange = RangePosition.from(1, ERSTE_DATEN_ZEILE, aktivSpalte, letzteDatenZeile);
 		EditierbaresZelleFormatHelper.anwenden(sheet, editierbareRange);
 
@@ -410,7 +488,7 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 		Integer ungeradeColor = konfigurationSheet.getMeldeListeHintergrundFarbeUnGerade();
 
 		int letzteDatenZeile = getLetzteDatenZeileUseMin();
-		int letzteSpalte = getAktivSpalte();
+		int letzteSpalte = getAktivSpalte(getSpielTag());
 
 		for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteDatenZeile; zeile++) {
 			RangePosition zeileRange = RangePosition.from(getTeamNrSpalte(), zeile, letzteSpalte, zeile);
@@ -430,10 +508,11 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 		return ERSTE_DATEN_ZEILE;
 	}
 
-	/** Liest alle aktiven Team-Meldungen aus dem Sheet (Aktiv-Spalte == AKTIV_WERT_NIMMT_TEIL). */
+	/** Liest alle aktiven Team-Meldungen aus dem Sheet (Aktiv-Spalte des aktuellen Spieltags == AKTIV_WERT_NIMMT_TEIL). */
 	TeamMeldungen getAktiveMeldungen() throws GenerateException {
 		XSpreadsheet xSheet = sheet.getXSpreadSheet();
 		int letzteZeile = letzteZeileMitDaten(xSheet);
+		int aktivSpalte = getAktivSpalte(getSpielTag());
 		TeamMeldungen meldungen = new TeamMeldungen();
 		for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
 			String vorname = sheet.getSheetHelper().getTextFromCell(xSheet, Position.from(getZeilenKennungSpalte(), zeile));
@@ -444,7 +523,7 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 			if (nr <= 0) {
 				continue;
 			}
-			int aktivWert = sheet.getSheetHelper().getIntFromCell(xSheet, Position.from(getAktivSpalte(), zeile));
+			int aktivWert = sheet.getSheetHelper().getIntFromCell(xSheet, Position.from(aktivSpalte, zeile));
 			if (aktivWert == AKTIV_WERT_NIMMT_TEIL) {
 				int setzPos = sheet.getSheetHelper().getIntFromCell(xSheet, Position.from(getSetzPositionSpalte(), zeile));
 				meldungen.addTeamWennNichtVorhanden(Team.from(nr).setSetzPos(setzPos));
@@ -453,10 +532,14 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 		return meldungen;
 	}
 
-	/** Liest alle Team-Meldungen mit Aktiv-Wert NIMMT_TEIL oder AUSGESTIEGEN (also gültigem Aktiv-Wert) aus dem Sheet. */
+	/**
+	 * Liest alle Team-Meldungen mit Aktiv-Wert NIMMT_TEIL oder AUSGESTIEGEN (also gültigem
+	 * Aktiv-Wert) für den aktuellen Spieltag (siehe {@link #getSpielTag()}) aus dem Sheet.
+	 */
 	TeamMeldungen getAktiveUndAusgesetztMeldungen() throws GenerateException {
 		XSpreadsheet xSheet = sheet.getXSpreadSheet();
 		int letzteZeile = letzteZeileMitDaten(xSheet);
+		int aktivSpalte = getAktivSpalte(getSpielTag());
 		TeamMeldungen meldungen = new TeamMeldungen();
 		for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
 			String vorname = sheet.getSheetHelper().getTextFromCell(xSheet, Position.from(getZeilenKennungSpalte(), zeile));
@@ -467,7 +550,7 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 			if (nr <= 0) {
 				continue;
 			}
-			int aktivWert = sheet.getSheetHelper().getIntFromCell(xSheet, Position.from(getAktivSpalte(), zeile));
+			int aktivWert = sheet.getSheetHelper().getIntFromCell(xSheet, Position.from(aktivSpalte, zeile));
 			if (AKTIV_GUELTIGE_WERTE.contains(aktivWert)) {
 				int setzPos = sheet.getSheetHelper().getIntFromCell(xSheet, Position.from(getSetzPositionSpalte(), zeile));
 				meldungen.addTeamWennNichtVorhanden(Team.from(nr).setSetzPos(setzPos));
@@ -496,10 +579,11 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 		return meldungen;
 	}
 
-	/** Setzt alle Teams mit gültiger Teamnummer auf AKTIV_WERT_NIMMT_TEIL (1). */
+	/** Setzt alle Teams mit gültiger Teamnummer auf AKTIV_WERT_NIMMT_TEIL (1) für den aktuellen Spieltag. */
 	void alleTeamsAktivieren() throws GenerateException {
 		XSpreadsheet xSheet = sheet.getXSpreadSheet();
 		int letzteZeile = letzteZeileMitDaten(xSheet);
+		int aktivSpalte = getAktivSpalte(getSpielTag());
 		for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
 			String vorname = sheet.getSheetHelper().getTextFromCell(xSheet, Position.from(getZeilenKennungSpalte(), zeile));
 			if (vorname == null || vorname.isEmpty()) {
@@ -510,7 +594,7 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 				continue;
 			}
 			sheet.getSheetHelper().setNumberValueInCell(
-					NumberCellValue.from(xSheet, Position.from(getAktivSpalte(), zeile)).setValue(AKTIV_WERT_NIMMT_TEIL));
+					NumberCellValue.from(xSheet, Position.from(aktivSpalte, zeile)).setValue(AKTIV_WERT_NIMMT_TEIL));
 		}
 	}
 

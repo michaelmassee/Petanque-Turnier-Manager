@@ -15,7 +15,7 @@ import com.sun.star.sheet.XSpreadsheetDocument;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.rangliste.RanglisteUpdateHelper;
-import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.basesheet.meldeliste.SpielTagNr;
 
 /**
  * Aktualisiert eine Supermelee Spieltag-Rangliste ohne das Sheet neu zu

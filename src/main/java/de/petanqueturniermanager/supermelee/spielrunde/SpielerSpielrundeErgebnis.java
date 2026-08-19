@@ -10,7 +10,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.common.base.MoreObjects;
 
 import de.petanqueturniermanager.helper.position.Position;
-import de.petanqueturniermanager.supermelee.SpielRundeNr;
+import de.petanqueturniermanager.basesheet.meldeliste.SpielRundeNr;
 
 public class SpielerSpielrundeErgebnis {
 
