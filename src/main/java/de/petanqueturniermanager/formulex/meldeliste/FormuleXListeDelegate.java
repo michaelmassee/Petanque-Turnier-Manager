@@ -11,8 +11,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
-
 import com.sun.star.awt.FontWeight;
 import com.sun.star.sheet.ConditionOperator;
 import com.sun.star.sheet.XSpreadsheet;
@@ -53,9 +51,6 @@ import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
-import de.petanqueturniermanager.formulex.spieltagrangliste.FormuleXSpieltagRanglisteSheet;
-import de.petanqueturniermanager.basesheet.meldeliste.SpielRundeNr;
-import de.petanqueturniermanager.basesheet.meldeliste.SpielTagNr;
 
 /**
  * Delegate für die Formule X Meldeliste.<br>
@@ -166,58 +161,9 @@ class FormuleXListeDelegate implements MeldeListeKonstanten {
         return getLetzteDataSpalte() + 1;
     }
 
-    /** Aktiv/Inaktiv-Spalte des aktuellen Spieltags (siehe {@link #getSpielTag()}) – direkt nach der SP-Spalte. */
+    /** Aktiv/Inaktiv-Spalte – direkt nach der SP-Spalte. */
     int getAktivSpalte() throws GenerateException {
         return getSetzPositionSpalte() + 1;
-    }
-
-    /**
-     * Aktiv/Inaktiv-Spalte für einen bestimmten Spieltag einer Turnierserie. Nutzt dieselbe
-     * Spieltag-Spalten-Infrastruktur wie Supermelee/Schweizer ({@link MeldeListeHelper#spieltagSpalte(SpielTagNr)}).
-     * Für Spieltag 1 identisch mit {@link #getAktivSpalte()}.
-     */
-    int getAktivSpalte(SpielTagNr spieltag) {
-        return meldeListeHelper.spieltagSpalte(spieltag);
-    }
-
-    /** Aktueller Spieltag – reine Weiterleitung an die persistierte Konfiguration, Default 1. */
-    SpielTagNr getSpielTag() {
-        return konfigurationSheet.getAktiveSpieltag();
-    }
-
-    /** Setzt den aktuellen Spieltag für Turnierserien-Betrieb (mehrere Spieltage), persistiert in der Konfiguration. */
-    void setSpielTag(SpielTagNr spielTag) {
-        konfigurationSheet.setAktiveSpieltag(checkNotNull(spielTag, "spielTag == null"));
-    }
-
-    /** Zählt die bereits angelegten Spieltag-Spalten (nicht-leere Header ab {@link MeldeListeHelper#ersteSpieltagSpalte()}). */
-    int countAnzSpieltageInMeldeliste() throws GenerateException {
-        int anzSpieltage = 0;
-        Position posHeader = Position.from(meldeListeHelper.ersteSpieltagSpalte(), ZWEITE_HEADER_ZEILE);
-        for (int spieltagCntr = 1; spieltagCntr < 90; spieltagCntr++) {
-            String header = sheet.getSheetHelper().getTextFromCell(sheet.getXSpreadSheet(), posHeader);
-            if (StringUtils.isBlank(header)) {
-                break;
-            }
-            anzSpieltage++;
-            posHeader.spaltePlusEins();
-        }
-        return anzSpieltage;
-    }
-
-    /**
-     * Legt einen neuen Spieltag an: archiviert zunächst die Rangliste des abzuschließenden
-     * Spieltags (siehe {@link FormuleXSpieltagRanglisteSheet}), erhöht dann den Spieltag-Zähler,
-     * setzt die Spielrunde auf 1 zurück und aktualisiert das Sheet.
-     */
-    void naechsteSpieltag() throws GenerateException {
-        SpielTagNr abzuschliessenderSpieltag = getSpielTag();
-        new FormuleXSpieltagRanglisteSheet(sheet.getWorkingSpreadsheet(), abzuschliessenderSpieltag).doRun();
-
-        int anzSpieltage = countAnzSpieltageInMeldeliste();
-        setSpielTag(SpielTagNr.from(anzSpieltage + 1));
-        konfigurationSheet.setAktiveSpielRunde(SpielRundeNr.from(1));
-        upDateSheet();
     }
 
     // ---------------------------------------------------------------
@@ -251,7 +197,7 @@ class FormuleXListeDelegate implements MeldeListeKonstanten {
         if (letzteDatenZeile < ERSTE_DATEN_ZEILE) {
             return;
         }
-        int letzteSpalte = getAktivSpalte(getSpielTag());
+        int letzteSpalte = getAktivSpalte();
         var bereich = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_HEADER_ZEILE, letzteSpalte, letzteDatenZeile);
         PrintArea.from(sheet.getXSpreadSheet(), sheet.getWorkingSpreadsheet())
                 .setPrintArea(bereich)
@@ -403,25 +349,18 @@ class FormuleXListeDelegate implements MeldeListeKonstanten {
         ColumnProperties colPropAktiv = ColumnProperties.from().setWidth(AKTIV_SPALTE_WIDTH)
                 .setHoriJustify(CellHoriJustify.CENTER).setVertJustify(CellVertJustify2.CENTER)
                 .margin(MeldeListeKonstanten.CELL_MARGIN);
-        int anzSpieltageHeader = Math.max(countAnzSpieltageInMeldeliste(), getSpielTag().getNr());
-        for (int spieltagCntr = 1; spieltagCntr <= anzSpieltageHeader; spieltagCntr++) {
-            SpielTagNr spieltagFuerHeader = SpielTagNr.from(spieltagCntr);
-            String aktivHeaderText = spieltagCntr == 1
-                    ? I18n.get("column.header.aktiv")
-                    : I18n.get("column.header.aktiv") + " " + spieltagCntr;
-            sheet.getSheetHelper().setStringValueInCell(
-                    StringCellValue.from(sheet.getXSpreadSheet(),
-                            Position.from(getAktivSpalte(spieltagFuerHeader), ZWEITE_HEADER_ZEILE), aktivHeaderText)
-                            .addColumnProperties(colPropAktiv)
-                            .setCellBackColor(headerColor)
-                            .setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder())
-                            .setVertJustify(CellVertJustify2.CENTER)
-                            .setCharWeight(FontWeight.BOLD)
-                            .setComment(I18n.get("schweizer.meldeliste.comment.aktiv"))
-                            .setRotate90()
-                            .setEndPosMergeZeilePlus(1)
-                            .setShrinkToFit(true));
-        }
+        sheet.getSheetHelper().setStringValueInCell(
+                StringCellValue.from(sheet.getXSpreadSheet(), Position.from(getAktivSpalte(), ZWEITE_HEADER_ZEILE),
+                        I18n.get("column.header.aktiv"))
+                        .addColumnProperties(colPropAktiv)
+                        .setCellBackColor(headerColor)
+                        .setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder())
+                        .setVertJustify(CellVertJustify2.CENTER)
+                        .setCharWeight(FontWeight.BOLD)
+                        .setComment(I18n.get("schweizer.meldeliste.comment.aktiv"))
+                        .setRotate90()
+                        .setEndPosMergeZeilePlus(1)
+                        .setShrinkToFit(true));
 
         sheet.getSheetHelper().setStringValueInCell(
                 StringCellValue
@@ -496,19 +435,18 @@ class FormuleXListeDelegate implements MeldeListeKonstanten {
                 ERSTE_DATEN_ZEILE, letzteDatenZeile);
         meldeListeHelper.formatiereSetzpositionSpalteFehlerfarbe(sheet, spRange, farbeGerade, farbeUngerade);
 
-        int aktivSpalte = getAktivSpalte(getSpielTag());
-        RangePosition aktivRange = RangePosition.from(aktivSpalte, ERSTE_DATEN_ZEILE,
-                aktivSpalte, letzteDatenZeile);
+        RangePosition aktivRange = RangePosition.from(getAktivSpalte(), ERSTE_DATEN_ZEILE,
+                getAktivSpalte(), letzteDatenZeile);
         RangeHelper.from(sheet, aktivRange).setRangeProperties(
                 RangeProperties.from().centerJustify()
                         .setBorder(BorderFactory.from().allThin().toBorder()));
 
-        meldeListeHelper.bereinigeUngueltigeAktivWerte(aktivSpalte, getZeilenKennungSpalte(), ERSTE_DATEN_ZEILE,
+        meldeListeHelper.bereinigeUngueltigeAktivWerte(getAktivSpalte(), getZeilenKennungSpalte(), ERSTE_DATEN_ZEILE,
                 letzteDatenZeile, AKTIV_GUELTIGE_WERTE);
         meldeListeHelper.formatiereAktivSpalteFehlerfarbe(sheet, aktivRange, AKTIV_GUELTIGE_WERTE, farbeGerade,
                 farbeUngerade);
 
-        EditierbaresZelleFormatHelper.anwenden(sheet, RangePosition.from(1, ERSTE_DATEN_ZEILE, aktivSpalte, letzteDatenZeile));
+        EditierbaresZelleFormatHelper.anwenden(sheet, RangePosition.from(1, ERSTE_DATEN_ZEILE, getAktivSpalte(), letzteDatenZeile));
 
         MeldeListeKonstanten.markiereDoppelteTeamnamenBeiNurTeamname(sheet, konfigurationSheet.isMeldeListeTeamnameAnzeigen(),
                 anzSpieler == 0, letzteDatenZeile);
@@ -521,7 +459,7 @@ class FormuleXListeDelegate implements MeldeListeKonstanten {
         int letzteDatenZeile = getLetzteDatenZeileUseMin();
 
         RangePosition datenRange = RangePosition.from(getTeamNrSpalte(), ERSTE_DATEN_ZEILE,
-                getAktivSpalte(getSpielTag()), letzteDatenZeile);
+                getAktivSpalte(), letzteDatenZeile);
         ConditionalFormatHelper.from(sheet, datenRange).clear().formulaIsEvenRow().style(farbeGerade).applyAndDoReset();
         ConditionalFormatHelper.from(sheet, datenRange).formulaIsOddRow().style(farbeUngerade).applyAndDoReset();
     }
@@ -536,7 +474,7 @@ class FormuleXListeDelegate implements MeldeListeKonstanten {
         XSpreadsheet xSheet = sheet.getXSpreadSheet();
         int vornameSpalte = getZeilenKennungSpalte();
         int spSpalte = getSetzPositionSpalte();
-        int aktivSpalte = getAktivSpalte(getSpielTag());
+        int aktivSpalte = getAktivSpalte();
         int letzteZeile = letzteZeileMitDaten(xSheet);
 
         TeamMeldungen meldungen = new TeamMeldungen();
@@ -567,7 +505,7 @@ class FormuleXListeDelegate implements MeldeListeKonstanten {
         XSpreadsheet xSheet = sheet.getXSpreadSheet();
         int vornameSpalte = getZeilenKennungSpalte();
         int spSpalte = getSetzPositionSpalte();
-        int aktivSpalte = getAktivSpalte(getSpielTag());
+        int aktivSpalte = getAktivSpalte();
         int letzteZeile = letzteZeileMitDaten(xSheet);
 
         record TeamZeile(int nr, int sp) {}
@@ -695,7 +633,7 @@ class FormuleXListeDelegate implements MeldeListeKonstanten {
         XSpreadsheet xSheet = sheet.getXSpreadSheet();
         int vornameSpalte = getZeilenKennungSpalte();
         int spSpalte = getSetzPositionSpalte();
-        int aktivSpalte = getAktivSpalte(getSpielTag());
+        int aktivSpalte = getAktivSpalte();
         int letzteZeile = letzteZeileMitDaten(xSheet);
 
         TeamMeldungen meldungen = new TeamMeldungen();
@@ -741,7 +679,6 @@ class FormuleXListeDelegate implements MeldeListeKonstanten {
     void alleTeamsAktivieren() throws GenerateException {
         XSpreadsheet xSheet = sheet.getXSpreadSheet();
         int letzteZeile = letzteZeileMitDaten(xSheet);
-        int aktivSpalte = getAktivSpalte(getSpielTag());
         for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
             String vorname = sheet.getSheetHelper().getTextFromCell(xSheet, Position.from(getZeilenKennungSpalte(), zeile));
             if (vorname == null || vorname.isEmpty()) {
@@ -752,7 +689,7 @@ class FormuleXListeDelegate implements MeldeListeKonstanten {
                 continue;
             }
             sheet.getSheetHelper().setNumberValueInCell(
-                    NumberCellValue.from(xSheet, Position.from(aktivSpalte, zeile))
+                    NumberCellValue.from(xSheet, Position.from(getAktivSpalte(), zeile))
                             .setValue(AKTIV_WERT_NIMMT_TEIL));
         }
     }

@@ -10,7 +10,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-import de.petanqueturniermanager.basesheet.meldeliste.SpielTagNr;
+import de.petanqueturniermanager.supermelee.SpielTagNr;
 
 public class SpielerSpieltagErgebnisTest {
 

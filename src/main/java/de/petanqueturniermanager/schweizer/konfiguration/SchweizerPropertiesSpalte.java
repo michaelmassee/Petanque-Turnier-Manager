@@ -18,8 +18,7 @@ import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
 import de.petanqueturniermanager.konfigdialog.HeaderFooterConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ZeitplanConfigProperty;
-import de.petanqueturniermanager.basesheet.meldeliste.SpielRundeNr;
-import de.petanqueturniermanager.basesheet.meldeliste.SpielTagNr;
+import de.petanqueturniermanager.supermelee.SpielRundeNr;
 
 /**
  * @author Michael Massee
@@ -42,8 +41,6 @@ public class SchweizerPropertiesSpalte extends BasePropertiesSpalte implements I
 	private static final String KONFIG_PROP_KOPF_ZEILE_MITTE = "Kopfzeile Mitte";
 	private static final String KONFIG_PROP_KOPF_ZEILE_RECHTS = "Kopfzeile Rechts";
 	public static final String KONFIG_PROP_NAME_SPIELRUNDE = "Spielrunde";
-	/** Aktueller Spieltag einer Turnierserie (analog SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG). */
-	public static final String KONFIG_PROP_NAME_SPIELTAG = "Spieltag";
 
 	private static final String KONFIG_PROP_SPIELRUNDE_COLOR_BACK_GERADE = "Spielrunde Hintergrund Gerade";
 	private static final String KONFIG_PROP_SPIELRUNDE_COLOR_BACK_UNGERADE = "Spielrunde Hintergrund Ungerade";
@@ -67,8 +64,6 @@ public class SchweizerPropertiesSpalte extends BasePropertiesSpalte implements I
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELRUNDE)
 				.setDefaultVal(1).setDescription("config.desc.aktuelle.spielrunde"));
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELTAG)
-				.setDefaultVal(1).setDescription("config.desc.schweizer.spieltag"));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELRUNDE_COLOR_BACK_GERADE)
 				.setDefaultVal(DEFAULT_GERADE_BACK_COLOR)
@@ -186,16 +181,6 @@ public class SchweizerPropertiesSpalte extends BasePropertiesSpalte implements I
 	@Override
 	public SpielRundeNr getAktiveSpielRunde() {
 		return SpielRundeNr.from(readIntProperty(KONFIG_PROP_NAME_SPIELRUNDE));
-	}
-
-	@Override
-	public final void setAktiveSpieltag(SpielTagNr spieltag) {
-		writeIntProperty(KONFIG_PROP_NAME_SPIELTAG, spieltag.getNr());
-	}
-
-	@Override
-	public SpielTagNr getAktiveSpieltag() {
-		return SpielTagNr.from(readIntProperty(KONFIG_PROP_NAME_SPIELTAG));
 	}
 
 	@Override

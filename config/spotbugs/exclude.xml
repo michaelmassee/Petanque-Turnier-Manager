@@ -72,12 +72,11 @@
     </Match>
 
     <!--
-        EQ_COMPARETO_USE_OBJECT_EQUALS: SpielerEndranglisteErgebnis, SpielerSpieltagErgebnis,
-        TripTeteTeamErgebnis sowie die team-basierten Turnierserien-Pendants TeamEndranglisteErgebnis
-        und TeamSpieltagErgebnis ueberschreiben compareTo() (Rangordnung nach Spielen/Punkten), aber
-        nicht equals(). Das ist beabsichtigt: equals() bleibt identity-basiert (Object), weil zwei
+        EQ_COMPARETO_USE_OBJECT_EQUALS: SpielerEndranglisteErgebnis, SpielerSpieltagErgebnis und
+        TripTeteTeamErgebnis ueberschreiben compareTo() (Rangordnung nach Spielen/Punkten), aber nicht equals().
+        Das ist beabsichtigt: equals() bleibt identity-basiert (Object), weil zwei
         Ergebnisinstanzen mit identischen Statistik-Feldern semantisch nicht "gleich" sind —
-        sie gehoeren zu unterschiedlichen Spielern/Teams oder Spieltagen. compareTo() definiert
+        sie gehoeren zu unterschiedlichen Spielern oder Spieltagen. compareTo() definiert
         nur die Sortierung in der Rangliste, keine Aequivalenzrelation.
         → Bewusst akzeptierte Inkonsistenz mit Comparable-Empfehlung.
     -->
@@ -86,8 +85,6 @@
             <Class name="de.petanqueturniermanager.supermelee.ergebnis.SpielerEndranglisteErgebnis"/>
             <Class name="de.petanqueturniermanager.supermelee.ergebnis.SpielerSpieltagErgebnis"/>
             <Class name="de.petanqueturniermanager.algorithmen.triptete.TripTeteTeamErgebnis"/>
-            <Class name="de.petanqueturniermanager.algorithmen.turnierserie.ergebnis.TeamEndranglisteErgebnis"/>
-            <Class name="de.petanqueturniermanager.algorithmen.turnierserie.ergebnis.TeamSpieltagErgebnis"/>
         </Or>
         <Bug pattern="EQ_COMPARETO_USE_OBJECT_EQUALS"/>
     </Match>

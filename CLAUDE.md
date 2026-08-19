@@ -30,7 +30,7 @@ Lauf: `./gradlew spotbugsMain` — Reports: `build/reports/spotbugs/main.{html,x
 **Architekturweite Excludes** (akzeptierte Kategorie-/Klassen-Pauschalen, alle in `exclude.xml` begründet):
 - **`MALICIOUS_CODE`** (komplette Kategorie): Defensive-Copy-Pflicht greift nicht für UNO-Remote-Proxies, geteiltes Domain-Modell und statische Property-Registries.
 - **`CT_CONSTRUCTOR_THROW`** (7 Klassen): Kein Finalizer-Attack-Risiko in plugin-internem Code.
-- **`EQ_COMPARETO_USE_OBJECT_EQUALS`** (`Spieler*Ergebnis`, `Team*Ergebnis`): `compareTo` definiert Sortierung, `equals` bleibt bewusst identity-basiert.
+- **`EQ_COMPARETO_USE_OBJECT_EQUALS`** (`Spieler*Ergebnis`): `compareTo` definiert Sortierung, `equals` bleibt bewusst identity-basiert.
 - **`UG_SYNC_SET_UNSYNC_GET`** + **`SING_SINGLETON_GETTER_NOT_SYNCHRONIZED`**: Felder sind `volatile`, Reads brauchen kein `synchronized`.
 - **`ProtocolHandler.SHARED_CONTEXT`** + **`ProtocolHandler.isEnabled` (`REC_CATCH_EXCEPTION`)**: Beabsichtigter Cross-Instance-State bzw. defensiver Catch-all für Toolbar-Stabilität.
 

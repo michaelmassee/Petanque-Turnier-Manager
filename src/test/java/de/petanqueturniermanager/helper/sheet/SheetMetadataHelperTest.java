@@ -19,7 +19,7 @@ import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.table.CellAddress;
 
-import de.petanqueturniermanager.basesheet.meldeliste.SpielTagNr;
+import de.petanqueturniermanager.supermelee.SpielTagNr;
 
 /**
  * Unit-Tests für {@link SheetMetadataHelper}.

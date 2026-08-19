@@ -13,8 +13,8 @@ import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeGera
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
-import de.petanqueturniermanager.basesheet.meldeliste.SpielRundeNr;
-import de.petanqueturniermanager.basesheet.meldeliste.SpielTagNr;
+import de.petanqueturniermanager.supermelee.SpielRundeNr;
+import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 

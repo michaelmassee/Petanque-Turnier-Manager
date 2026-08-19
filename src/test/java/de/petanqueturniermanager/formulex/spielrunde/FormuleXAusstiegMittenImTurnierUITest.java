@@ -19,7 +19,7 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
-import de.petanqueturniermanager.basesheet.meldeliste.SpielRundeNr;
+import de.petanqueturniermanager.supermelee.SpielRundeNr;
 
 /**
  * Regression: ein Team steigt NACH bereits gespielter Runde 1 aus (Aktiv-Spalte = 2).

@@ -32,7 +32,7 @@ import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
-import de.petanqueturniermanager.basesheet.meldeliste.SpielRundeNr;
+import de.petanqueturniermanager.supermelee.SpielRundeNr;
 
 /**
  * Gemeinsame Implementierung der Rundenzeitplanung (Turnier-Startzeit-Feld, optionale

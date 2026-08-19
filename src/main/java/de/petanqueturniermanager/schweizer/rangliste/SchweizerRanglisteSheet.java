@@ -154,18 +154,9 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 	 * Named-Range-Schlüssel für ein einzelnes Spielrunden-Sheet.
 	 * Subklassen (z.B. Maastrichter) überschreiben dies, damit beim Lookup nicht
 	 * versehentlich ein systemfremder Schlüssel ins Dokument geheilt wird.
-	 * <p>
-	 * Für Spieltag 1 (Default, Einzelturnier) unverändert; ab Spieltag 2 spieltag-eindeutiger
-	 * Schlüssel, damit nur die Spielrunden des aktuell aktiven Spieltags eingelesen werden
-	 * (siehe {@link de.petanqueturniermanager.schweizer.spielrunde.SchweizerSpielrundeSheetNaechste#getSpielrundeSchluessel(int)},
-	 * das denselben Schlüssel beim Anlegen der Runde schreibt).
 	 */
 	protected String getSpielrundenMetadatenSchluessel(int rundeNr) {
-		int spieltagNr = getKonfigurationSheet().getAktiveSpieltag().getNr();
-		if (spieltagNr <= 1) {
-			return SheetMetadataHelper.schluesselSchweizerSpielrunde(rundeNr);
-		}
-		return SheetMetadataHelper.schluesselSchweizerSpielrundeSpieltag(spieltagNr, rundeNr);
+		return SheetMetadataHelper.schluesselSchweizerSpielrunde(rundeNr);
 	}
 
 	/** Erstellt das Meldelisten-Sheet-Objekt für das Lesen der Teamnamen/Nummern. */

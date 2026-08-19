@@ -17,8 +17,7 @@ import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeUnGe
 import de.petanqueturniermanager.helper.pagestyle.PageStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
-import de.petanqueturniermanager.basesheet.meldeliste.SpielRundeNr;
-import de.petanqueturniermanager.basesheet.meldeliste.SpielTagNr;
+import de.petanqueturniermanager.supermelee.SpielRundeNr;
 
 /**
  * Konfigurationssheet für das Formule X Turniersystem.
@@ -79,14 +78,6 @@ public class FormuleXKonfigurationSheet extends BaseKonfigurationSheet
 
     public SpielRundeNr getAktiveSpielRunde() {
         return propertiesSpalte.getAktiveSpielRunde();
-    }
-
-    public void setAktiveSpieltag(SpielTagNr spieltag) {
-        propertiesSpalte.setAktiveSpieltag(spieltag);
-    }
-
-    public SpielTagNr getAktiveSpieltag() {
-        return propertiesSpalte.getAktiveSpieltag();
     }
 
     public int getAnzahlRunden() {

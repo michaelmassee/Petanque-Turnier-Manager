@@ -6,7 +6,7 @@ package de.petanqueturniermanager.formulex.spielrunde;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.model.TeamMeldungen;
-import de.petanqueturniermanager.basesheet.meldeliste.SpielRundeNr;
+import de.petanqueturniermanager.supermelee.SpielRundeNr;
 
 /**
  * Aktualisiert die aktuelle Formule X Spielrunde (Formatierung und Paarungen neu aufbauen).

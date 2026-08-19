@@ -17,7 +17,7 @@ import com.sun.star.text.XTextCursor;
 
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.sheet.XPropertyHelper;
-import de.petanqueturniermanager.basesheet.meldeliste.SpielTagNr;
+import de.petanqueturniermanager.supermelee.SpielTagNr;
 
 public class PageStyleDef {
 

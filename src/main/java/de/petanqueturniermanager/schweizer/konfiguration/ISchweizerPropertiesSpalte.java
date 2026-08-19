@@ -8,8 +8,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeUnGeradeStyle;
-import de.petanqueturniermanager.basesheet.meldeliste.SpielRundeNr;
-import de.petanqueturniermanager.basesheet.meldeliste.SpielTagNr;
+import de.petanqueturniermanager.supermelee.SpielRundeNr;
 
 /**
  * @author Michael Massee
@@ -27,10 +26,6 @@ public interface ISchweizerPropertiesSpalte extends de.petanqueturniermanager.ba
 	void setAktiveSpielRunde(SpielRundeNr neueSpielrunde);
 
 	SpielRundeNr getAktiveSpielRunde();
-
-	void setAktiveSpieltag(SpielTagNr spieltag);
-
-	SpielTagNr getAktiveSpieltag();
 
 	Integer getSpielRundeHintergrundFarbeGerade();
 

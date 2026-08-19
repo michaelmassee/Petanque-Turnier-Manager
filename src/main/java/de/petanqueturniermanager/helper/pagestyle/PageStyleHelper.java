@@ -24,7 +24,7 @@ import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.sheet.BaseHelper;
 import de.petanqueturniermanager.helper.sheet.XPropertyHelper;
-import de.petanqueturniermanager.basesheet.meldeliste.SpielTagNr;
+import de.petanqueturniermanager.supermelee.SpielTagNr;
 
 /**
  * Zwischensumme auf jeder Seite in der Fußzeile<br>

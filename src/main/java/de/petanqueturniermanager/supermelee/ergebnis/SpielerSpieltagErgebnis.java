@@ -12,7 +12,7 @@ import java.util.Comparator;
 
 import com.google.common.base.MoreObjects;
 
-import de.petanqueturniermanager.basesheet.meldeliste.SpielTagNr;
+import de.petanqueturniermanager.supermelee.SpielTagNr;
 
 public class SpielerSpieltagErgebnis extends AbstractErgebnis<SpielerSpieltagErgebnis> implements Comparable<SpielerSpieltagErgebnis> {
 

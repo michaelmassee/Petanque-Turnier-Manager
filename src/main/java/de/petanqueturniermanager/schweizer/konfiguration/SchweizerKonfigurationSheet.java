@@ -15,8 +15,7 @@ import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeUnGe
 import de.petanqueturniermanager.helper.pagestyle.PageStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
-import de.petanqueturniermanager.basesheet.meldeliste.SpielRundeNr;
-import de.petanqueturniermanager.basesheet.meldeliste.SpielTagNr;
+import de.petanqueturniermanager.supermelee.SpielRundeNr;
 
 /**
  * @author Michael Massee
@@ -92,16 +91,6 @@ public class SchweizerKonfigurationSheet extends BaseKonfigurationSheet
 	@Override
 	public final SpielRundeNr getAktiveSpielRunde() {
 		return getPropertiesSpalte().getAktiveSpielRunde();
-	}
-
-	@Override
-	public final void setAktiveSpieltag(SpielTagNr spieltag) {
-		getPropertiesSpalte().setAktiveSpieltag(spieltag);
-	}
-
-	@Override
-	public final SpielTagNr getAktiveSpieltag() {
-		return getPropertiesSpalte().getAktiveSpieltag();
 	}
 
 	@Override
