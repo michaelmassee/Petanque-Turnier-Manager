@@ -212,31 +212,34 @@ public abstract class SheetRunner extends Thread {
 					if (koordinatorVorgekoppelt && !silentBackground) {
 						processBox().run(); // Nur Menü-Aktionen: ProcessBox animieren und sichtbar halten
 					}
-					if (turnierSystem != TurnierSystem.KEIN && isUpdateKonfigurationSheetBeforeDoRun()
-							&& isDocumentAlive()) {
-						updateKonfigurationSheet();
-					}
-					// Lazy-Unprotect-Scope öffnen: ein einziges entsperren/schuetzen pro Kommando
-					// statt mehrfaches Toggle in jeder Sub-Operation. Echte Entsperrung passiert
-					// erst beim ersten Style-/CF-Trigger (ConditionalFormatHelper / RangeHelper.clearRange).
-					if (turnierSystem != TurnierSystem.KEIN && TurnierModus.get().istAktiv()) {
-						BlattschutzRegistry.fuer(turnierSystem)
-								.ifPresent(k -> BlattschutzManager.get().beginCommandScope(k, workingSpreadsheet));
-					}
-					if (!benoetigtLebendesDokument() || isDocumentAlive()) {
-						// DokumentKontext setzen: GlobalImpl.getDocumentPropertiesHelper() liest das ThreadLocal
-						// vorrangig vor dem fokus-basierten Fallback, damit PTM.ALG.*-Formeln, die doRun() für
-						// dieses Dokument schreibt, auch dann korrekt aufgelöst werden, wenn gerade ein anderes
-						// Dokument den UI-Fokus hält (z.B. während des Anlegens eines neuen Turniers).
-						DokumentKontext.mitKontextWerfend(workingSpreadsheet.getWorkingSpreadsheetDocument(), this::doRun);
-						if (isDocumentAlive()) {
-							WebServerManager.get().sseRefreshSenden(workingSpreadsheet);
-							// Während des Runners eingetroffene Modify-Events wurden vom Listener
-							// zwar als dirty markiert, aber nicht eingeplant. Hier nachholen,
-							// damit kein Benutzer-Event verloren geht.
-							WebServerManager.get().getModifyListener().markDirtyAndSchedule();
+					// DokumentKontext setzen: GlobalImpl.getDocumentPropertiesHelper() liest das ThreadLocal
+					// vorrangig vor dem fokus-basierten Fallback, damit PTM.ALG.*-Formeln – auch solche, die
+					// schon updateKonfigurationSheet() auswertet, nicht erst doRun() – korrekt aufgelöst
+					// werden, wenn gerade ein anderes Dokument den UI-Fokus hält (z.B. während des Anlegens
+					// eines neuen Turniers).
+					DokumentKontext.mitKontextWerfend(workingSpreadsheet.getWorkingSpreadsheetDocument(), () -> {
+						if (turnierSystem != TurnierSystem.KEIN && isUpdateKonfigurationSheetBeforeDoRun()
+								&& isDocumentAlive()) {
+							updateKonfigurationSheet();
 						}
-					}
+						// Lazy-Unprotect-Scope öffnen: ein einziges entsperren/schuetzen pro Kommando
+						// statt mehrfaches Toggle in jeder Sub-Operation. Echte Entsperrung passiert
+						// erst beim ersten Style-/CF-Trigger (ConditionalFormatHelper / RangeHelper.clearRange).
+						if (turnierSystem != TurnierSystem.KEIN && TurnierModus.get().istAktiv()) {
+							BlattschutzRegistry.fuer(turnierSystem)
+									.ifPresent(k -> BlattschutzManager.get().beginCommandScope(k, workingSpreadsheet));
+						}
+						if (!benoetigtLebendesDokument() || isDocumentAlive()) {
+							doRun();
+							if (isDocumentAlive()) {
+								WebServerManager.get().sseRefreshSenden(workingSpreadsheet);
+								// Während des Runners eingetroffene Modify-Events wurden vom Listener
+								// zwar als dirty markiert, aber nicht eingeplant. Hier nachholen,
+								// damit kein Benutzer-Event verloren geht.
+								WebServerManager.get().getModifyListener().markDirtyAndSchedule();
+							}
+						}
+					});
 				} catch (DisposedException e) {
 					documentDisposed = true;
 					// Aus UI-Sicht ein sauberer Abbruch (kein ERROR-Log), aber die eigentliche
