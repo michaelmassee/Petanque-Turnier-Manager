@@ -1623,7 +1623,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 						WebServerManager.get().starten(xContext, ermittleDokumentAusFrame());
 						notifyAllListeners();
 					} finally {
-						ProcessBox.from().ready();
+						processBoxFuerDispatchFrame().ready();
 					}
 					if (!WebServerManager.get().isLaeuft()) {
 						MessageBox.from(xContext, MessageBoxTypeEnum.ERROR_OK)
@@ -1638,7 +1638,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 					WebServerManager.get().stoppen();
 					notifyAllListeners();
 				} finally {
-					ProcessBox.from().ready();
+					processBoxFuerDispatchFrame().ready();
 				}
 			}
 			case CMD_WEBSERVER_URL_1  -> oeffneBrowserUrlFuerSlot(0);

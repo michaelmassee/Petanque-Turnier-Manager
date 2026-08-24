@@ -244,6 +244,7 @@ public class ProcessBox implements TimerListener {
             initDialog();
         } catch (RuntimeException | com.sun.star.uno.Exception e) {
             logger.error("ProcessBox-Dialog konnte nicht initialisiert werden", e);
+            disposeDialogControls();
         }
         try {
             ReleaseUpdateService.get().addStatusListener(versionsStatusListener);
@@ -576,7 +577,8 @@ public class ProcessBox implements TimerListener {
                     logEditProps.setPropertyValue("Text", logText);
                 }
             } catch (RuntimeException | com.sun.star.uno.Exception e) {
-                logger.warn("ProcessBox-Dialog konnte nicht an Dispatch-Frame gebunden werden", e);
+                logger.error("ProcessBox-Dialog konnte nicht an Dispatch-Frame gebunden werden – ProcessBox bleibt inaktiv", e);
+                disposeDialogControls();
             }
         });
         return this;
@@ -1071,13 +1073,15 @@ public class ProcessBox implements TimerListener {
     private void setVisibleInternal(boolean sichtbar) {
         if (xWindow == null) return;
         runOnMain(() -> {
+            XWindow fensterZurAusfuehrungszeit = xWindow;
+            if (fensterZurAusfuehrungszeit == null) return;
             try {
                 if (sichtbar) {
                     wendeFenstergroesseAn();
                 }
-                xWindow.setVisible(sichtbar);
-                XWindow2 xw2 = Lo.qi(XWindow2.class, xWindow);
-                Rectangle posSize = xWindow.getPosSize();
+                fensterZurAusfuehrungszeit.setVisible(sichtbar);
+                XWindow2 xw2 = Lo.qi(XWindow2.class, fensterZurAusfuehrungszeit);
+                Rectangle posSize = fensterZurAusfuehrungszeit.getPosSize();
                 Object peer = dialogControl != null ? dialogControl.getPeer() : null;
                 logger.debug("setVisible({}) ausgeführt (Thread={}): isVisible={}, peer={}, posSize=({},{} {}x{})",
                         sichtbar, Thread.currentThread().getName(),
@@ -1115,7 +1119,8 @@ public class ProcessBox implements TimerListener {
                     xw2 != null ? xw2.isVisible() : "n/a",
                     posSize.X, posSize.Y, posSize.Width, posSize.Height);
         } catch (RuntimeException | com.sun.star.uno.Exception e) {
-            logger.warn("ProcessBox-Dialog konnte nach Peer-Verlust nicht neu aufgebaut werden", e);
+            logger.error("ProcessBox-Dialog konnte nach Peer-Verlust nicht neu aufgebaut werden – ProcessBox bleibt inaktiv", e);
+            disposeDialogControls();
         }
     }
 
