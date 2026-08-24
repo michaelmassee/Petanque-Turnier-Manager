@@ -167,6 +167,8 @@ public class ProcessBox implements TimerListener {
 
     public static void zeigeImVordergrund() {
         var pb = processBox;
+        logger.debug("zeigeImVordergrund: pb={}, disposed={}, xWindow={}",
+                pb != null, pb != null && pb.disposed, pb != null ? pb.xWindow != null : "n/a");
         if (pb != null) {
             pb.visible();
             pb.toFront();
@@ -534,6 +536,10 @@ public class ProcessBox implements TimerListener {
         } catch (RuntimeException e) {
             logger.debug("Throbber-Stop beim Dispose fehlgeschlagen", e);
         }
+        disposeDialogControls();
+    }
+
+    private void disposeDialogControls() {
         if (xWindow != null) {
             try {
                 xWindow.setVisible(false);
@@ -551,6 +557,23 @@ public class ProcessBox implements TimerListener {
                 logger.debug("Dialog-Dispose fehlgeschlagen", e);
             }
         }
+        dialogControl = null;
+        xDialog = null;
+        xWindow = null;
+        controls = null;
+        logEditProps = null;
+        logEditText = null;
+        linkProps = null;
+        infoLabelProps = null;
+        neueVersionLabelProps = null;
+        timerUhrProps = null;
+        timerBezeichnungProps = null;
+        throbberProps = null;
+        throbber = null;
+        readyImageProps = null;
+        errorImageProps = null;
+        stopBtnProps = null;
+        abbrechenAutoCloseBtnProps = null;
     }
 
     /** Ein klickbarer Link (z.B. Release-Seite, Download-Asset) für {@link #links(List)}. */
@@ -712,12 +735,14 @@ public class ProcessBox implements TimerListener {
     }
 
     public ProcessBox visible() {
+        logger.debug("visible(): disposed={}, xWindow={}", disposed, xWindow != null);
         if (disposed || xWindow == null) return this;
         setVisibleInternal(true);
         return this;
     }
 
     public ProcessBox toFront() {
+        logger.debug("toFront(): disposed={}, xWindow={}", disposed, xWindow != null);
         if (disposed || xWindow == null) return this;
         if (!GlobalProperties.get().isProzessBoxAutomatischAnzeigen()) return this;
         toFrontInternal();
@@ -858,7 +883,7 @@ public class ProcessBox implements TimerListener {
         try {
             Object o = logEditProps.getPropertyValue("Text");
             return o instanceof String s ? s : "";
-        } catch (com.sun.star.uno.Exception e) {
+        } catch (RuntimeException | com.sun.star.uno.Exception e) {
             return "";
         }
     }
@@ -1004,23 +1029,66 @@ public class ProcessBox implements TimerListener {
         if (xWindow == null) return;
         runOnMain(() -> {
             try {
+                if (sichtbar) {
+                    wendeFenstergroesseAn();
+                }
                 xWindow.setVisible(sichtbar);
+                XWindow2 xw2 = Lo.qi(XWindow2.class, xWindow);
+                Rectangle posSize = xWindow.getPosSize();
+                Object peer = dialogControl != null ? dialogControl.getPeer() : null;
+                logger.debug("setVisible({}) ausgeführt (Thread={}): isVisible={}, peer={}, posSize=({},{} {}x{})",
+                        sichtbar, Thread.currentThread().getName(),
+                        xw2 != null ? xw2.isVisible() : "n/a", peer != null,
+                        posSize.X, posSize.Y, posSize.Width, posSize.Height);
+                if (sichtbar && !hatPositiveFenstergroesse(posSize)) {
+                    logger.warn("ProcessBox-Peer hat nach setVisible(true) keine nutzbare Größe: "
+                            + "posSize=({},{} {}x{}) – Dialog wird neu aufgebaut",
+                            posSize.X, posSize.Y, posSize.Width, posSize.Height);
+                    rebuildDialogNachPeerVerlust();
+                }
             } catch (RuntimeException e) {
-                logger.debug("setVisible({}) fehlgeschlagen", sichtbar, e);
+                logger.warn("setVisible({}) fehlgeschlagen", sichtbar, e);
             }
         });
+    }
+
+    private static boolean hatPositiveFenstergroesse(Rectangle posSize) {
+        return posSize != null && posSize.Width > 0 && posSize.Height > 0;
+    }
+
+    private void rebuildDialogNachPeerVerlust() {
+        String logText = getLogText();
+        disposeDialogControls();
+        try {
+            initDialog();
+            if (!logText.isEmpty() && logEditProps != null) {
+                logEditProps.setPropertyValue("Text", logText);
+            }
+            wendeFenstergroesseAn();
+            xWindow.setVisible(true);
+            Rectangle posSize = xWindow.getPosSize();
+            XWindow2 xw2 = Lo.qi(XWindow2.class, xWindow);
+            logger.debug("ProcessBox-Dialog neu aufgebaut: isVisible={}, posSize=({},{} {}x{})",
+                    xw2 != null ? xw2.isVisible() : "n/a",
+                    posSize.X, posSize.Y, posSize.Width, posSize.Height);
+        } catch (RuntimeException | com.sun.star.uno.Exception e) {
+            logger.warn("ProcessBox-Dialog konnte nach Peer-Verlust nicht neu aufgebaut werden", e);
+        }
     }
 
     private void toFrontInternal() {
         if (dialogControl == null) return;
         runOnMain(() -> {
             try {
-                XTopWindow top = Lo.qi(XTopWindow.class, dialogControl.getPeer());
+                Object peer = dialogControl.getPeer();
+                XTopWindow top = Lo.qi(XTopWindow.class, peer);
+                logger.debug("toFront() ausgeführt (Thread={}): peer={}, topWindow={}",
+                        Thread.currentThread().getName(), peer != null, top != null);
                 if (top != null) {
                     top.toFront();
                 }
             } catch (RuntimeException e) {
-                logger.debug("toFront fehlgeschlagen", e);
+                logger.warn("toFront fehlgeschlagen", e);
             }
         });
     }
@@ -1043,10 +1111,11 @@ public class ProcessBox implements TimerListener {
         if (disposed) return;
         XRequestCallback dispatcher = mainThreadDispatcher;
         if (dispatcher == null) {
+            logger.warn("runOnMain: mainThreadDispatcher==null (Thread={}) – führe direkt aus", Thread.currentThread().getName());
             try {
                 r.run();
             } catch (RuntimeException e) {
-                logger.debug("UI-Update (direkt) fehlgeschlagen", e);
+                logger.warn("UI-Update (direkt) fehlgeschlagen", e);
             }
             return;
         }
@@ -1056,15 +1125,16 @@ public class ProcessBox implements TimerListener {
                 try {
                     r.run();
                 } catch (RuntimeException e) {
-                    logger.debug("UI-Update (Main-Thread) fehlgeschlagen", e);
+                    logger.warn("UI-Update (Main-Thread) fehlgeschlagen", e);
                 }
             }, null);
         } catch (RuntimeException e) {
-            logger.debug("AsyncCallback-Post fehlgeschlagen – führe direkt aus", e);
+            logger.warn("AsyncCallback-Post fehlgeschlagen (Thread={}, disposed={}) – führe direkt aus",
+                    Thread.currentThread().getName(), disposed, e);
             try {
                 r.run();
             } catch (RuntimeException ex) {
-                logger.debug("UI-Update (Fallback) fehlgeschlagen", ex);
+                logger.warn("UI-Update (Fallback) fehlgeschlagen", ex);
             }
         }
     }
