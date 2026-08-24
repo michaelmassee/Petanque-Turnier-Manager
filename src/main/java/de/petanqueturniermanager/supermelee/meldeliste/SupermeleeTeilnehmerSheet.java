@@ -133,11 +133,19 @@ public class SupermeleeTeilnehmerSheet extends SheetRunner implements ISheet {
                 .setShrinkToFit(true);
         getSheetHelper().setStringValueInCell(footer);
 
-        SuperMeleeTeamRechner teamRechner = new SuperMeleeTeamRechner(eintraege.size());
+        int anzDoublette = 0;
+        int anzTriplette = 0;
+        int anzBahnen = 0;
+        if (!eintraege.isEmpty()) {
+            SuperMeleeTeamRechner teamRechner = new SuperMeleeTeamRechner(eintraege.size());
+            anzDoublette = teamRechner.getAnzDoublette();
+            anzTriplette = teamRechner.getAnzTriplette();
+            anzBahnen = teamRechner.getAnzBahnen();
+        }
         footer.zeilePlusEins().setValue(I18n.get("teilnehmer.footer.teams",
-                teamRechner.getAnzDoublette(), teamRechner.getAnzTriplette()));
+                anzDoublette, anzTriplette));
         getSheetHelper().setStringValueInCell(footer);
-        footer.zeilePlusEins().setValue(I18n.get("teilnehmer.footer.bahnen", teamRechner.getAnzBahnen()));
+        footer.zeilePlusEins().setValue(I18n.get("teilnehmer.footer.bahnen", anzBahnen));
         getSheetHelper().setStringValueInCell(footer);
 
         builder.freezeUndPrintbereich(footer.getPos().getZeile());
