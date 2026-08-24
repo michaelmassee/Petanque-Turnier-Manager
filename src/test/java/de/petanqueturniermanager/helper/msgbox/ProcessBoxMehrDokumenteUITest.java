@@ -3,6 +3,9 @@ package de.petanqueturniermanager.helper.msgbox;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.sun.star.awt.Rectangle;
+import com.sun.star.frame.XFrame;
+import com.sun.star.frame.XTitle;
+import com.sun.star.lang.XComponent;
 import com.sun.star.sheet.XSpreadsheetDocument;
 
 import org.junit.jupiter.api.AfterEach;
@@ -10,7 +13,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import de.petanqueturniermanager.BaseCalcUITest;
+import de.petanqueturniermanager.comp.DocumentHelper;
 import de.petanqueturniermanager.comp.OfficeDocumentHelper;
+import de.petanqueturniermanager.helper.Lo;
 
 /**
  * Reproduktionstest für den gemeldeten Bug: Dokument A wird geöffnet, die ProcessBox
@@ -56,7 +61,7 @@ class ProcessBoxMehrDokumenteUITest extends BaseCalcUITest {
 	@Test
 	void prozessboxWeiterhinNutzbarInZweitemDokumentNachSchliessenDesErsten() {
 		// Schritt 1: ProcessBox in Dokument A (doc, aus BaseCalcUITest) benutzen.
-		ProcessBox.zeigeImVordergrund();
+		ProcessBox.zeigeImVordergrund(starter.getxComponentContext(), frameVon(doc));
 		ProcessBox.from().flushUiUpdatesForTest();
 		assertThat(ProcessBox.from().istSichtbar())
 				.as("ProcessBox muss in Dokument A sichtbar werden")
@@ -74,13 +79,38 @@ class ProcessBoxMehrDokumenteUITest extends BaseCalcUITest {
 		doc = null; // verhindert doppeltes closeDoc() in BaseCalcUITest.afterTest()
 
 		// Schritt 4: ProcessBox muss in Dokument B weiterhin funktionieren.
-		ProcessBox.zeigeImVordergrund();
+		OfficeDocumentHelper.setVisible(zweitesDokument, true);
+		XFrame frameB = frameVon(zweitesDokument);
+		ProcessBox.zeigeImVordergrund(starter.getxComponentContext(), frameB);
 		ProcessBox.from().flushUiUpdatesForTest();
 		assertThat(ProcessBox.from().istSichtbar())
 				.as("ProcessBox muss nach Schließen von Dokument A weiterhin (für Dokument B) "
 						+ "sichtbar gemacht werden können")
 				.isTrue();
 		assertFenstergroessePositiv("Dokument B nach Schließen von Dokument A");
+		assertAktiverFrame(frameB, "Dokument B muss nach ProcessBox-Anzeige aktiv bleiben");
+	}
+
+	@Test
+	void prozessboxAusZweitemDokumentHoltNichtDasErsteDokumentNachVorne() {
+		ProcessBox.zeigeImVordergrund(starter.getxComponentContext(), frameVon(doc));
+		ProcessBox.from().flushUiUpdatesForTest();
+		ProcessBox.from().hide();
+		ProcessBox.from().flushUiUpdatesForTest();
+
+		zweitesDokument = OfficeDocumentHelper.from(loader).createSichtbaresCalc();
+		assertThat(zweitesDokument).as("zweites Dokument konnte nicht erstellt werden").isNotNull();
+		OfficeDocumentHelper.setVisible(zweitesDokument, true);
+		XFrame frameB = frameVon(zweitesDokument);
+
+		ProcessBox.zeigeImVordergrund(starter.getxComponentContext(), frameB);
+		ProcessBox.from().flushUiUpdatesForTest();
+
+		assertThat(ProcessBox.from().istSichtbar())
+				.as("ProcessBox muss aus Dokument B sichtbar werden")
+				.isTrue();
+		assertFenstergroessePositiv("Dokument B");
+		assertAktiverFrame(frameB, "ProcessBox darf beim Anzeigen aus Dokument B nicht Dokument A fokussieren");
 	}
 
 	private static void assertFenstergroessePositiv(String kontext) {
@@ -91,5 +121,21 @@ class ProcessBoxMehrDokumenteUITest extends BaseCalcUITest {
 		assertThat(posSize.Height)
 				.as("ProcessBox-Fensterhöhe muss positiv sein: " + kontext)
 				.isPositive();
+	}
+
+	private static XFrame frameVon(XSpreadsheetDocument dokument) {
+		return OfficeDocumentHelper.getFrame(Lo.qi(XComponent.class, dokument));
+	}
+
+	private static void assertAktiverFrame(XFrame erwarteterFrame, String beschreibung) {
+		XFrame aktuellerFrame = DocumentHelper.getCurrentFrame(starter.getxComponentContext());
+		assertThat(frameTitel(aktuellerFrame))
+				.as(beschreibung)
+				.isEqualTo(frameTitel(erwarteterFrame));
+	}
+
+	private static String frameTitel(XFrame frame) {
+		XTitle title = Lo.qi(XTitle.class, frame);
+		return title != null ? title.getTitle() : "<kein Titel>";
 	}
 }

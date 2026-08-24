@@ -662,6 +662,8 @@ public abstract class SheetRunner extends Thread {
 	}
 
 	public ProcessBox processBox() {
+		logger.debug("processBox() angefordert (Thread={}, dokument={})",
+				Thread.currentThread().getName(), workingSpreadsheet.getWorkingSpreadsheetDocument());
 		return ProcessBox.from().prefix(logPrefix);
 	}
 

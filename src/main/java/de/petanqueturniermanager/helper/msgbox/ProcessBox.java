@@ -44,6 +44,7 @@ import com.sun.star.awt.XTopWindow;
 import com.sun.star.awt.XTopWindowListener;
 import com.sun.star.awt.XWindow;
 import com.sun.star.awt.XWindow2;
+import com.sun.star.awt.XWindowPeer;
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.frame.XFrame;
 import com.sun.star.container.XNameContainer;
@@ -144,6 +145,12 @@ public class ProcessBox implements TimerListener {
         return processBox;
     }
 
+    public static ProcessBox forFrame(XComponentContext xContext, XFrame frame) {
+        ProcessBox pb = init(xContext);
+        pb.bindToFrame(frame);
+        return pb;
+    }
+
     public static ProcessBox forceinit(XComponentContext xContext) {
         checkNotNull(xContext);
         checkState(!SheetRunner.isRunning(), "forceinit darf nicht aufgerufen werden während SheetRunner aktiv ist");
@@ -173,6 +180,11 @@ public class ProcessBox implements TimerListener {
             pb.visible();
             pb.toFront();
         }
+    }
+
+    public static void zeigeImVordergrund(XComponentContext xContext, XFrame frame) {
+        forFrame(xContext, frame);
+        zeigeImVordergrund();
     }
 
     public static void applyVordergrundEinstellung() {
@@ -217,6 +229,7 @@ public class ProcessBox implements TimerListener {
 
     /** Postet Runnables auf den LO-Main-Thread (FIFO). Null wenn Init fehlschlug. */
     private XRequestCallback mainThreadDispatcher;
+    private XWindowPeer parentPeer;
 
     private ScheduledExecutorService autoCloseExec;
     private ScheduledFuture<?> autoCloseTask;
@@ -396,7 +409,7 @@ public class ProcessBox implements TimerListener {
         Object toolkit = mcf.createInstanceWithContext("com.sun.star.awt.Toolkit", xContext);
         XToolkit xToolkit = Lo.qi(XToolkit.class, toolkit);
         xWindow.setVisible(false);
-        dialogControl.createPeer(xToolkit, null);
+        dialogControl.createPeer(xToolkit, parentPeer);
 
         // Top-Level-Peer übernimmt die AppFont-Modellmaße nicht zuverlässig (Dialog
         // erscheint sonst maximiert) → Größe/Position explizit in Pixel erzwingen.
@@ -537,6 +550,36 @@ public class ProcessBox implements TimerListener {
             logger.debug("Throbber-Stop beim Dispose fehlgeschlagen", e);
         }
         disposeDialogControls();
+    }
+
+    private ProcessBox bindToFrame(XFrame frame) {
+        if (disposed || headlessMode || frame == null) return this;
+        XWindow containerWindow;
+        try {
+            containerWindow = frame.getContainerWindow();
+        } catch (RuntimeException e) {
+            logger.debug("ProcessBox-Frame-Bindung: ContainerWindow nicht verfügbar", e);
+            return this;
+        }
+        XWindowPeer nextParentPeer = Lo.qi(XWindowPeer.class, containerWindow);
+        if (nextParentPeer == null || nextParentPeer == parentPeer) return this;
+        runOnMain(() -> {
+            if (disposed || nextParentPeer == parentPeer) return;
+            String logText = getLogText();
+            logger.debug("ProcessBox-Dialog wird an Dispatch-Frame gebunden (parentPeerWechsel={}→{})",
+                    parentPeer != null, true);
+            disposeDialogControls();
+            parentPeer = nextParentPeer;
+            try {
+                initDialog();
+                if (!logText.isEmpty() && logEditProps != null) {
+                    logEditProps.setPropertyValue("Text", logText);
+                }
+            } catch (RuntimeException | com.sun.star.uno.Exception e) {
+                logger.warn("ProcessBox-Dialog konnte nicht an Dispatch-Frame gebunden werden", e);
+            }
+        });
+        return this;
     }
 
     private void disposeDialogControls() {

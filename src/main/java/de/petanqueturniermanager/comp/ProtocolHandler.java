@@ -725,6 +725,10 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		return new WorkingSpreadsheet(xContext);
 	}
 
+	private ProcessBox processBoxFuerDispatchFrame() {
+		return ProcessBox.forFrame(xContext, frame);
+	}
+
 	private XSpreadsheetDocument ermittleDokumentAusFrame() {
 		XFrame f = frame;
 		if (f == null) {
@@ -842,7 +846,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			// Dokument muss über den Frame laufen (siehe initialize/ermittleDokumentAusFrame),
 			// damit Focus-Wechsel zwischen Klick und Dispatch nicht das Ziel-Doc verändern.
 			WorkingSpreadsheet ws = erzeugeWorkingSpreadsheetFuerDispatch();
-			ProcessBox.from().visibleWennAutomatisch().clearWennNotRunning().info("Start " + command);
+			processBoxFuerDispatchFrame().visibleWennAutomatisch().clearWennNotRunning().info("Start " + command);
 			switch (command) {
 			// ------------------------------
 			// Export
@@ -1245,7 +1249,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				Log4J.openLogFile();
 				break;
 			case CMD_PROCESSBOX_ANZEIGEN:
-				ProcessBox.zeigeImVordergrund();
+				ProcessBox.zeigeImVordergrund(xContext, frame);
 				break;
 			case CMD_PROJEKT_SEITE_OEFFNEN:
 				oeffneBrowserUrl(PROJEKT_SEITE_URL);
@@ -1418,7 +1422,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		var einstellungen = einstellungenOpt.get();
 		var zielVerzeichnis = einstellungen.verzeichnis();
 		var format = einstellungen.format();
-		ProcessBox.from().visibleWennAutomatisch().clearWennNotRunning().info("Start " + CMD_EXPORT_VERZEICHNIS);
+		processBoxFuerDispatchFrame().visibleWennAutomatisch().clearWennNotRunning().info("Start " + CMD_EXPORT_VERZEICHNIS);
 		switch (new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument()) {
 			case SUPERMELEE -> new SupermeleeExportInVerzeichnis(ws, zielVerzeichnis, format)
 					.testTurnierSystem(TurnierSystem.SUPERMELEE).start();
@@ -1449,7 +1453,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		if (pfadOpt.isEmpty()) {
 			return;
 		}
-		ProcessBox.from().visibleWennAutomatisch().clearWennNotRunning().info("Start " + CMD_EXPORT_NOTEBOOKLM);
+		processBoxFuerDispatchFrame().visibleWennAutomatisch().clearWennNotRunning().info("Start " + CMD_EXPORT_NOTEBOOKLM);
 		Path zielVerzeichnis = NotebookLmExporter.bereiteExportOrdnerVor(pfadOpt.get());
 		NotebookLmExporter.exportiereQuellen(zielVerzeichnis);
 		NotebookLmExporter.exportiereSystemInfo(zielVerzeichnis, ws);
@@ -1597,7 +1601,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			return;
 		}
 		WorkingSpreadsheet ws = erzeugeWorkingSpreadsheetFuerDispatch();
-		ProcessBox.from().visibleWennAutomatisch().clearWennNotRunning().info("Start " + CMD_DOWNLOAD_EXTENSION);
+		processBoxFuerDispatchFrame().visibleWennAutomatisch().clearWennNotRunning().info("Start " + CMD_DOWNLOAD_EXTENSION);
 		new DownloadExtension(ws, zielVerzeichnis).start();
 	}
 
@@ -1614,7 +1618,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 							.caption(I18n.get("webserver.starten"))
 							.message(I18n.get("webserver.keine.ports.konfiguriert")).show();
 				} else {
-					ProcessBox.init(xContext).visibleWennAutomatisch().clear().run();
+					processBoxFuerDispatchFrame().visibleWennAutomatisch().clear().run();
 					try {
 						WebServerManager.get().starten(xContext, ermittleDokumentAusFrame());
 						notifyAllListeners();
@@ -1629,7 +1633,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				}
 			}
 			case CMD_WEBSERVER_STOPPEN -> {
-				ProcessBox.init(xContext).visibleWennAutomatisch().clear().run();
+				processBoxFuerDispatchFrame().visibleWennAutomatisch().clear().run();
 				try {
 					WebServerManager.get().stoppen();
 					notifyAllListeners();
@@ -1662,7 +1666,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	 * Loggt die Aktion in der ProcessBox.
 	 */
 	private void oeffneBrowserUrlFuerSlot(int slot) {
-		ProcessBox.init(xContext).visibleWennAutomatisch();
+		processBoxFuerDispatchFrame().visibleWennAutomatisch();
 		var url = WebServerManager.get().getUrlFuerSlot(slot);
 		if (url != null) {
 			oeffneBrowserUrl(url);
