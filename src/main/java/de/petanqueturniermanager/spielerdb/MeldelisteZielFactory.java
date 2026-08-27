@@ -4,19 +4,31 @@ import java.util.Optional;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jspecify.annotations.Nullable;
 
+import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.formulex.konfiguration.FormuleXKonfigurationSheet;
+import de.petanqueturniermanager.formulex.meldeliste.FormuleXMeldeListeSheetUpdate;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationSheet;
+import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSheet_Update;
 import de.petanqueturniermanager.kaskade.konfiguration.KaskadeKonfigurationSheet;
+import de.petanqueturniermanager.kaskade.meldeliste.KaskadeMeldeListeSheetUpdate;
 import de.petanqueturniermanager.ko.konfiguration.KoKonfigurationSheet;
+import de.petanqueturniermanager.ko.meldeliste.KoMeldeListeSheetUpdate;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
+import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterMeldeListeSheetUpdate;
 import de.petanqueturniermanager.poule.konfiguration.PouleKonfigurationSheet;
+import de.petanqueturniermanager.poule.meldeliste.PouleMeldeListeSheetUpdate;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
+import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetUpdate;
+import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
 import de.petanqueturniermanager.triptete.konfiguration.TripTeteKonfigurationSheet;
+import de.petanqueturniermanager.triptete.meldeliste.TripTeteMeldeListeSheetUpdate;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
@@ -85,6 +97,41 @@ public final class MeldelisteZielFactory {
             return Optional.of(ts);
         }
         return Optional.empty();
+    }
+
+    /**
+     * Startet den system-passenden "Meldeliste aktualisieren"-Lauf als {@link SheetRunner}
+     * (asynchron, eigener Thread, eigener Blattschutz-Scope) — vergibt dabei u.&nbsp;a. die
+     * Team-Nr neu geschriebener Bloecke. Gemeinsam genutzt von der Spieler-DB- und der
+     * PTM-Online-Integration, die beide per {@link MeldelisteZiel#schreibeBlock} neue Zeilen
+     * anlegen und anschliessend diesen Lauf brauchen. LIGA/KEIN sind nicht erreichbar, da
+     * {@link #fuerAktivesSheet} dafuer kein Ziel liefert; der Zweig bleibt defensiv ohne Aktion.
+     *
+     * @return der gestartete {@link SheetRunner}, oder {@code null} wenn für {@code ts} kein
+     *         Update-Lauf existiert (LIGA/KEIN) oder das Starten fehlschlug.
+     */
+    public static @Nullable SheetRunner starteMeldelisteUpdate(WorkingSpreadsheet ws, TurnierSystem ts) {
+        try {
+            SheetRunner runner = switch (ts) {
+                case SUPERMELEE -> new MeldeListeSheet_Update(ws).testTurnierSystem(TurnierSystem.SUPERMELEE);
+                case SCHWEIZER -> new SchweizerMeldeListeSheetUpdate(ws).testTurnierSystem(TurnierSystem.SCHWEIZER);
+                case FORMULEX -> new FormuleXMeldeListeSheetUpdate(ws).testTurnierSystem(TurnierSystem.FORMULEX);
+                case KO -> new KoMeldeListeSheetUpdate(ws).testTurnierSystem(TurnierSystem.KO).backUpDocument();
+                case JGJ -> new JGJMeldeListeSheet_Update(ws).testTurnierSystem(TurnierSystem.JGJ).backUpDocument();
+                case MAASTRICHTER -> new MaastrichterMeldeListeSheetUpdate(ws).testTurnierSystem(TurnierSystem.MAASTRICHTER).backUpDocument();
+                case KASKADE -> new KaskadeMeldeListeSheetUpdate(ws).testTurnierSystem(TurnierSystem.KASKADE).backUpDocument();
+                case POULE -> new PouleMeldeListeSheetUpdate(ws).testTurnierSystem(TurnierSystem.POULE).backUpDocument();
+                case TRIPTETE -> new TripTeteMeldeListeSheetUpdate(ws).testTurnierSystem(TurnierSystem.TRIPTETE).backUpDocument();
+                case LIGA, KEIN -> null;
+            };
+            if (runner != null) {
+                runner.start();
+            }
+            return runner;
+        } catch (GenerateException e) {
+            logger.error("Meldeliste-Aktualisieren nach Übernahme neuer Meldungen fehlgeschlagen", e);
+            return null;
+        }
     }
 
     /**

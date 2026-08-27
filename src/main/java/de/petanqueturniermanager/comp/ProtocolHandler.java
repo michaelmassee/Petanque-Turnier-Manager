@@ -391,6 +391,11 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_SPIELERDB_EXPORT        = "spielerdb_export";
 	public static final String CMD_SPIELERDB_IMPORT        = "spielerdb_import";
 	public static final String CMD_SPIELERDB_WEBVIEW       = "spielerdb_webview";
+	// PTM-Online
+	public static final String CMD_PTMONLINE_KONFIGURIEREN           = "ptmonline_konfigurieren";
+	public static final String CMD_PTMONLINE_TURNIER_ANLEGEN         = "ptmonline_turnier_anlegen";
+	public static final String CMD_PTMONLINE_ANMELDUNGEN_IMPORTIEREN = "ptmonline_anmeldungen_importieren";
+	public static final String CMD_PTMONLINE_ERGEBNISSE_EXPORTIEREN  = "ptmonline_ergebnisse_exportieren";
 	// Konfiguration
 	public static final String CMD_KONFIGURATION_TURNIER = "konfiguration_turnier";
 	/**
@@ -1389,6 +1394,15 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 					.importSpielerDb(erzeugeWorkingSpreadsheetFuerDispatch());
 			case CMD_SPIELERDB_WEBVIEW          -> de.petanqueturniermanager.spielerdb.ui.SpielerDbDispatcher
 					.zeigeWebView(erzeugeWorkingSpreadsheetFuerDispatch());
+			// PTM-Online-Aktionen: analog Spieler-DB ohne ProcessBox, damit Dialoge nicht überdeckt werden
+			case CMD_PTMONLINE_KONFIGURIEREN           -> de.petanqueturniermanager.ptmonline.ui.PtmOnlineDispatcher
+					.konfigurieren(erzeugeWorkingSpreadsheetFuerDispatch());
+			case CMD_PTMONLINE_TURNIER_ANLEGEN         -> de.petanqueturniermanager.ptmonline.ui.PtmOnlineDispatcher
+					.turnierOnlineAnlegen(erzeugeWorkingSpreadsheetFuerDispatch());
+			case CMD_PTMONLINE_ANMELDUNGEN_IMPORTIEREN -> de.petanqueturniermanager.ptmonline.ui.PtmOnlineDispatcher
+					.anmeldungenImportieren(erzeugeWorkingSpreadsheetFuerDispatch());
+			case CMD_PTMONLINE_ERGEBNISSE_EXPORTIEREN  -> de.petanqueturniermanager.ptmonline.ui.PtmOnlineDispatcher
+					.ergebnisseExportieren(erzeugeWorkingSpreadsheetFuerDispatch());
 			default -> { return false; }
 		}
 		return true;
@@ -2257,6 +2271,11 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_SPIELERDB_IMPORT,
 				 CMD_SPIELERDB_WEBVIEW                      -> true;
 			case CMD_SPIELERDB_IN_MELDELISTE                -> ts != TurnierSystem.KEIN;
+			case CMD_PTMONLINE_KONFIGURIEREN                -> true;
+			case CMD_PTMONLINE_TURNIER_ANLEGEN,
+				 CMD_PTMONLINE_ANMELDUNGEN_IMPORTIEREN,
+				 CMD_PTMONLINE_ERGEBNISSE_EXPORTIEREN       -> ts != TurnierSystem.KEIN
+					&& new de.petanqueturniermanager.ptmonline.PtmOnlineConfig().isConfigured();
 			case CMD_TIMER_STARTEN_DIALOG                   -> timerInaktivOderBeendet();
 			case CMD_TIMER_PAUSE_FORTSETZEN,
 				 CMD_TIMER_STOPPEN,

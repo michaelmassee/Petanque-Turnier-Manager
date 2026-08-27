@@ -1,0 +1,98 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<oor:component-data oor:package="org.openoffice.Office" oor:name="Addons" xmlns:oor="http://openoffice.org/2001/registry" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<node oor:name="AddonUI">
+		<node oor:name="OfficeMenuBar">
+			<node oor:name="de.petanqueturniermanager.menubar" oor:op="fuse">
+				<prop oor:name="Title" oor:type="xs:string">
+					<value xml:lang="de">PétTurnMngr</value>
+					<value xml:lang="en">PétTurnMngr</value>
+					<value xml:lang="es">PétTurnMngr</value>
+					<value xml:lang="fr">PétTurnMngr</value>
+					<value xml:lang="nl">PétTurnMngr</value>
+				</prop>
+				<prop oor:name="Context" oor:type="xs:string">
+					<value>com.sun.star.sheet.SpreadsheetDocument</value>
+				</prop>
+				<node oor:name="Submenu">
+					<node oor:name="X9" oor:op="replace">
+						<prop oor:name="Title" oor:type="xs:string">
+							<value xml:lang="de">PTM-Online</value>
+							<value xml:lang="en">PTM-Online</value>
+							<value xml:lang="es">PTM-Online</value>
+							<value xml:lang="fr">PTM-Online</value>
+							<value xml:lang="nl">PTM-Online</value>
+						</prop>
+						<prop oor:name="Target" oor:type="xs:string">
+							<value>_self</value>
+						</prop>
+						<node oor:name="Submenu">
+							<node oor:name="X9X1" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Konfigurieren</value>
+									<value xml:lang="en">Configure</value>
+									<value xml:lang="es">Configurar</value>
+									<value xml:lang="fr">Configurer</value>
+									<value xml:lang="nl">Configureren</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:ptmonline_konfigurieren</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+							<node oor:name="X9X2" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Turnier online anlegen</value>
+									<value xml:lang="en">Create tournament online</value>
+									<value xml:lang="es">Crear torneo en línea</value>
+									<value xml:lang="fr">Créer un tournoi en ligne</value>
+									<value xml:lang="nl">Toernooi online aanmaken</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:ptmonline_turnier_anlegen</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+							<node oor:name="X9X3" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Anmeldungen importieren</value>
+									<value xml:lang="en">Import registrations</value>
+									<value xml:lang="es">Importar inscripciones</value>
+									<value xml:lang="fr">Importer les inscriptions</value>
+									<value xml:lang="nl">Registraties importeren</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:ptmonline_anmeldungen_importieren</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+							<node oor:name="X9X4" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Ergebnisse exportieren</value>
+									<value xml:lang="en">Export results</value>
+									<value xml:lang="es">Exportar resultados</value>
+									<value xml:lang="fr">Exporter les résultats</value>
+									<value xml:lang="nl">Resultaten exporteren</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:ptmonline_ergebnisse_exportieren</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+						</node>
+					</node>
+				</node>
+			</node>
+		</node>
+	</node>
+</oor:component-data>
