@@ -58,6 +58,7 @@ public class GlobalProperties {
 	/** System-Property zum Erzwingen von {@link #isNewVersionCheckImmerTrue()} ohne UI-Checkbox. */
 	private static final String NEW_VERSION_CHECK_SYSTEM_PROPERTY = "de.petanqueturniermanager.newVersionCheck";
 	private static final String AUTO_UPDATE_DIALOG_PROP = "auto.update.dialog.beim.start";
+	private static final String INCLUDE_BETA_VERSIONS_PROP = "auto.update.include.beta.versions";
 	private static final String UPDATE_SKIP_VERSION_PROP = "auto.update.skip.version";
 	private static final String PROZESSBOX_AUTOMATISCH_ANZEIGEN_PROP = "prozessbox.automatisch.anzeigen";
 	private static final String PROZESSBOX_AUTOMATISCH_SCHLIESSEN_PROP = "prozessbox.automatisch.schliessen";
@@ -802,7 +803,8 @@ public class GlobalProperties {
 				getBooleanMitDefault(PROZESSBOX_AUTOMATISCH_SCHLIESSEN_PROP, true),
 				getBoolean(PERFORMANCE_LOGGING_PROP),
 				getLogLevel(),
-				getBooleanMitDefault(AUTO_UPDATE_DIALOG_PROP, true));
+				getBooleanMitDefault(AUTO_UPDATE_DIALOG_PROP, true),
+				getBooleanMitDefault(INCLUDE_BETA_VERSIONS_PROP, false));
 	}
 
 	private static void pluginOptionenInMap(PluginOptionen optionen) {
@@ -820,6 +822,7 @@ public class GlobalProperties {
 			propMap.put(LOG_LEVEL_PROP, optionen.logLevel());
 		}
 		setBooleanProp(AUTO_UPDATE_DIALOG_PROP, optionen.autoUpdateDialogBeimStart());
+		setBooleanProp(INCLUDE_BETA_VERSIONS_PROP, optionen.includeBetaVersions());
 	}
 
 	private KiOptionen kiOptionenAusMap() {
@@ -1269,6 +1272,14 @@ public class GlobalProperties {
 
 	public boolean isAutoUpdateDialogBeimStartAktiv() {
 		return getBooleanMitDefault(AUTO_UPDATE_DIALOG_PROP, true);
+	}
+
+	/**
+	 * {@code true}, wenn der Update-Check auch Pre-Release(Beta)-Versionen berücksichtigen soll,
+	 * statt wie im Default nur stabile Releases.
+	 */
+	public boolean isIncludeBetaVersions() {
+		return getBooleanMitDefault(INCLUDE_BETA_VERSIONS_PROP, false);
 	}
 
 	/**
@@ -1856,11 +1867,12 @@ public class GlobalProperties {
 
 	public void speichern(boolean autosave, boolean backup, boolean newVersionCheck,
 			boolean prozessBoxAutomatischAnzeigen, boolean prozessBoxAutomatischSchliessen,
-			boolean performanceLogging, String logLevel, boolean autoUpdateDialogBeimStart) {
+			boolean performanceLogging, String logLevel, boolean autoUpdateDialogBeimStart,
+			boolean includeBetaVersions) {
 		try {
 			PluginOptionen optionen = new PluginOptionen(autosave, backup, newVersionCheck,
 					prozessBoxAutomatischAnzeigen, prozessBoxAutomatischSchliessen,
-					performanceLogging, logLevel, autoUpdateDialogBeimStart);
+					performanceLogging, logLevel, autoUpdateDialogBeimStart, includeBetaVersions);
 			pluginOptionenInMap(optionen);
 			XComponentContext context = libreOfficeContext;
 			if (context != null) {

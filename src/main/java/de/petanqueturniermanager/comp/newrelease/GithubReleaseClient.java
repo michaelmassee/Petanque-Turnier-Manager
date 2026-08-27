@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -68,13 +69,33 @@ public class GithubReleaseClient {
     }
 
     /**
-     * Holt das {@code /releases/latest} eines Repositories.
+     * Holt das {@code /releases/latest} eines Repositories – liefert per GitHub-API-Definition
+     * ausschließlich das neueste <b>stabile</b> Release (kein Prerelease, kein Draft).
      * Gibt {@link Optional#empty()} bei jedem nicht-{@code 200}-Status, Timeout,
      * IO-Fehler oder Parsing-Problem zurück. Alle Fehler werden geloggt –
      * der Aufrufer entscheidet über Retry.
      */
     public Optional<ReleaseInfo> ladeLetztesRelease() {
-        var url = baseUri.resolve("/repos/" + repository + "/releases/latest");
+        return ladeUndParse(baseUri.resolve("/repos/" + repository + "/releases/latest"), this::parseAntwort);
+    }
+
+    /**
+     * Holt das jeweils neueste Release eines Repositories.
+     *
+     * @param inklusiveBeta {@code true}: liefert das insgesamt neueste veröffentlichte Release
+     *                      (kann ein Prerelease sein), über {@code /releases} mit {@code per_page=1}
+     *                      – dieser Endpunkt sortiert nach Erstellungsdatum und schließt (bei
+     *                      unauthentifiziertem Zugriff auf ein öffentliches Repository) Drafts aus.
+     *                      {@code false}: identisch zu {@link #ladeLetztesRelease()}.
+     */
+    public Optional<ReleaseInfo> ladeLetztesRelease(boolean inklusiveBeta) {
+        if (!inklusiveBeta) {
+            return ladeLetztesRelease();
+        }
+        return ladeUndParse(baseUri.resolve("/repos/" + repository + "/releases?per_page=1"), this::parseListAntwort);
+    }
+
+    private Optional<ReleaseInfo> ladeUndParse(URI url, Function<String, Optional<ReleaseInfo>> parser) {
         var request = HttpRequest.newBuilder(url)
                 .timeout(readTimeout)
                 .header("Accept", "application/vnd.github+json")
@@ -88,7 +109,7 @@ public class GithubReleaseClient {
                 logger.warn("GitHub-Release-Abruf für {} lieferte HTTP {}", repository, response.statusCode());
                 return Optional.empty();
             }
-            return parseAntwort(response.body());
+            return parser.apply(response.body());
         } catch (IOException e) {
             logger.warn("GitHub-Release-Abruf für {} schlug fehl: {}", repository, e.getMessage());
             return Optional.empty();
@@ -102,26 +123,44 @@ public class GithubReleaseClient {
     private Optional<ReleaseInfo> parseAntwort(String json) {
         try {
             var dto = gson.fromJson(json, ReleaseDto.class);
-            if (dto == null || dto.tagName == null) {
-                logger.warn("GitHub-Antwort enthielt kein tag_name-Feld");
-                return Optional.empty();
-            }
-            var name = (dto.name != null && !dto.name.isBlank()) ? dto.name : dto.tagName;
-            Instant publishedAt = parseInstant(dto.publishedAt);
-            List<AssetInfo> assets = new ArrayList<>();
-            if (dto.assets != null) {
-                for (var asset : dto.assets) {
-                    if (asset != null && asset.name != null && asset.browserDownloadUrl != null) {
-                        assets.add(new AssetInfo(asset.name, asset.browserDownloadUrl));
-                    }
-                }
-            }
-            return Optional.of(new ReleaseInfo(dto.tagName, name, publishedAt, dto.prerelease, dto.body, assets,
-                    dto.htmlUrl));
+            return zuReleaseInfo(dto);
         } catch (JsonSyntaxException e) {
             logger.warn("GitHub-Antwort war kein gültiges JSON", e);
             return Optional.empty();
         }
+    }
+
+    private Optional<ReleaseInfo> parseListAntwort(String json) {
+        try {
+            var dtos = gson.fromJson(json, ReleaseDto[].class);
+            if (dtos == null || dtos.length == 0) {
+                logger.warn("GitHub-Release-Liste war leer");
+                return Optional.empty();
+            }
+            return zuReleaseInfo(dtos[0]);
+        } catch (JsonSyntaxException e) {
+            logger.warn("GitHub-Antwort war kein gültiges JSON", e);
+            return Optional.empty();
+        }
+    }
+
+    private static Optional<ReleaseInfo> zuReleaseInfo(@Nullable ReleaseDto dto) {
+        if (dto == null || dto.tagName == null) {
+            logger.warn("GitHub-Antwort enthielt kein tag_name-Feld");
+            return Optional.empty();
+        }
+        var name = (dto.name != null && !dto.name.isBlank()) ? dto.name : dto.tagName;
+        Instant publishedAt = parseInstant(dto.publishedAt);
+        List<AssetInfo> assets = new ArrayList<>();
+        if (dto.assets != null) {
+            for (var asset : dto.assets) {
+                if (asset != null && asset.name != null && asset.browserDownloadUrl != null) {
+                    assets.add(new AssetInfo(asset.name, asset.browserDownloadUrl));
+                }
+            }
+        }
+        return Optional.of(new ReleaseInfo(dto.tagName, name, publishedAt, dto.prerelease, dto.body, assets,
+                dto.htmlUrl));
     }
 
     private static @Nullable Instant parseInstant(@Nullable String iso) {

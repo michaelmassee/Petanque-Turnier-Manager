@@ -34,6 +34,7 @@ final class LibreOfficePluginOptionenSpeicher {
 	private static final String PROP_PERFORMANCE_LOGGING = "PerformanceLogging";
 	private static final String PROP_LOG_LEVEL = "LogLevel";
 	private static final String PROP_AUTO_UPDATE_DIALOG_STARTUP = "AutoUpdateDialogStartup";
+	private static final String PROP_INCLUDE_BETA_VERSIONS = "IncludeBetaVersions";
 	/**
 	 * @deprecated Nur für den einmaligen Legacy-Import relevant; kann mit {@link #istLegacyImportErledigt()}
 	 *             und {@link #importiereLegacy(PluginOptionen)} entfernt werden.
@@ -59,7 +60,8 @@ final class LibreOfficePluginOptionenSpeicher {
 					booleanWert(props, PROP_PROCESSBOX_CLOSE, true),
 					booleanWert(props, PROP_PERFORMANCE_LOGGING, false),
 					stringWert(props, PROP_LOG_LEVEL),
-					booleanWert(props, PROP_AUTO_UPDATE_DIALOG_STARTUP, true));
+					booleanWert(props, PROP_AUTO_UPDATE_DIALOG_STARTUP, true),
+					booleanWert(props, PROP_INCLUDE_BETA_VERSIONS, false));
 		} catch (Exception e) {
 			throw new IllegalStateException("LibreOffice Plugin-Optionen konnten nicht gelesen werden", e);
 		} finally {
@@ -97,6 +99,7 @@ final class LibreOfficePluginOptionenSpeicher {
 			props.setPropertyValue(PROP_PERFORMANCE_LOGGING, Boolean.valueOf(optionen.performanceLogging()));
 			props.setPropertyValue(PROP_LOG_LEVEL, optionen.logLevel());
 			props.setPropertyValue(PROP_AUTO_UPDATE_DIALOG_STARTUP, Boolean.valueOf(optionen.autoUpdateDialogBeimStart()));
+			props.setPropertyValue(PROP_INCLUDE_BETA_VERSIONS, Boolean.valueOf(optionen.includeBetaVersions()));
 			props.setPropertyValue(PROP_LEGACY_IMPORTED, Boolean.TRUE);
 			commit(props);
 		} catch (Exception e) {

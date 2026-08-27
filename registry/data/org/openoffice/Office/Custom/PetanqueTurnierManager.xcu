@@ -29,6 +29,9 @@
         <prop oor:name="AutoUpdateDialogStartup">
             <value>true</value>
         </prop>
+        <prop oor:name="IncludeBetaVersions">
+            <value>false</value>
+        </prop>
         <prop oor:name="LegacyPropertiesImported">
             <value>false</value>
         </prop>

@@ -49,14 +49,25 @@ public final class VersionVergleicher {
      *       unabhängig vom Versionsnummer-Vergleich.</li>
      *   <li>Andernfalls wird semantisch verglichen.</li>
      * </ul>
+     *
+     * <p>Entspricht {@link #istNeuer(String, String, boolean)} mit {@code erlaubeVorabversion=false}.
      */
     public static boolean istNeuer(@Nullable String installiert, @Nullable String verfuegbar) {
+        return istNeuer(installiert, verfuegbar, false);
+    }
+
+    /**
+     * Wie {@link #istNeuer(String, String)}, erlaubt aber mit {@code erlaubeVorabversion=true},
+     * dass ein Pre-Release auf der {@code verfuegbar}-Seite als Update gemeldet wird (Beta-Update-Kanal).
+     */
+    public static boolean istNeuer(@Nullable String installiert, @Nullable String verfuegbar,
+            boolean erlaubeVorabversion) {
         var normInst = normalisieren(installiert);
         var normNeu = normalisieren(verfuegbar);
         if (normInst == null || normNeu == null) {
             return false;
         }
-        if (istPreRelease(normNeu)) {
+        if (istPreRelease(normNeu) && !erlaubeVorabversion) {
             return false;
         }
         return new Version(normNeu).isHigherThan(normInst);

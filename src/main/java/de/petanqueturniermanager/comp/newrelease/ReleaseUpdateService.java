@@ -19,6 +19,7 @@ import org.jspecify.annotations.Nullable;
 
 import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.comp.GlobalProperties;
 import de.petanqueturniermanager.helper.perflog.PerfLog;
 
 /**
@@ -275,7 +276,7 @@ public final class ReleaseUpdateService {
                 return;
             }
             aktualisiereInstallierteVersionFallsUnbekannt();
-            var release = client.ladeLetztesRelease();
+            var release = client.ladeLetztesRelease(GlobalProperties.get().isIncludeBetaVersions());
             if (release.isPresent()) {
                 aktuellesRelease = release;
                 aktualisiereStatusAusRelease(release.get());
@@ -306,11 +307,12 @@ public final class ReleaseUpdateService {
     private void aktualisiereStatusAusRelease(ReleaseInfo release) {
         var inst = installierteVersion.orElse(null);
         var verfuegbar = release.tagName();
-        if (release.prerelease()) {
+        var betaErlaubt = GlobalProperties.get().isIncludeBetaVersions();
+        if (release.prerelease() && !betaErlaubt) {
             setzeStatus(UpdateStatus.KEIN_UPDATE);
             return;
         }
-        if (VersionVergleicher.istNeuer(inst, verfuegbar)) {
+        if (VersionVergleicher.istNeuer(inst, verfuegbar, betaErlaubt)) {
             setzeStatus(UpdateStatus.UPDATE_VERFUEGBAR);
         } else {
             setzeStatus(UpdateStatus.KEIN_UPDATE);

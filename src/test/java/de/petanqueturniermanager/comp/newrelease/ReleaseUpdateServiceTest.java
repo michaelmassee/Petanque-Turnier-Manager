@@ -24,6 +24,8 @@ import org.junit.jupiter.api.Test;
 
 import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.comp.GlobalProperties;
+
 class ReleaseUpdateServiceTest {
 
     private XComponentContext context;
@@ -60,6 +62,29 @@ class ReleaseUpdateServiceTest {
 
         wartenBisStatusEntweder(service, UpdateStatus.KEIN_UPDATE);
         assertThat(service.getStatus()).isEqualTo(UpdateStatus.KEIN_UPDATE);
+    }
+
+    @Test
+    void preReleaseFuehrtBeiAktivierterBetaOptionZuUpdateVerfuegbar() throws Exception {
+        var gp = GlobalProperties.get();
+        gp.speichern(false, false, false, true, true, false, "", true, true);
+        try {
+            var release = new ReleaseInfo("v2.0.0-rc1", "v2.0.0-rc1",
+                    Instant.now(), true, null, List.of(), null);
+            var client = new FesterClient(Optional.of(release)) {
+                @Override
+                public Optional<ReleaseInfo> ladeLetztesRelease(boolean inklusiveBeta) {
+                    return ladeLetztesRelease();
+                }
+            };
+            var service = serviceMitInstallierterVersion("1.0.0", client);
+            triggerInit(service);
+
+            wartenBisStatusEntweder(service, UpdateStatus.UPDATE_VERFUEGBAR);
+            assertThat(service.getStatus()).isEqualTo(UpdateStatus.UPDATE_VERFUEGBAR);
+        } finally {
+            gp.speichern(false, false, false, true, true, false, "", true, false);
+        }
     }
 
     @Test
