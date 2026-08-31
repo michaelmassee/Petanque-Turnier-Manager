@@ -73,6 +73,7 @@ public class SheetMetadataHelper {
     public static final String SCHLUESSEL_SUPERMELEE_SPIELTAG_TEILNEHMER_PREFIX = "__PTM_SUPERMELEE_TEILNEHMER_";
     public static final String SCHLUESSEL_SUPERMELEE_SPIELRUNDE_PREFIX = "__PTM_SUPERMELEE_SPIELRUNDE_";
     public static final String SCHLUESSEL_SUPERMELEE_SPIELRUNDE_PLAN_PREFIX = "__PTM_SUPERMELEE_SPIELRUNDE_PLAN_";
+    public static final String SCHLUESSEL_SUPERMELEE_PTM_ONLINE = "__PTM_SUPERMELEE_PTM_ONLINE__";
 
     // ── Konstanten: JederGegenJeden ──────────────────────────────────────────
 

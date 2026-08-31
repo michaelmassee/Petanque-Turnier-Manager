@@ -194,6 +194,21 @@
     </Match>
 
     <!--
+        Gson-DTOs für die PTM-Online-REST-API (TournamentDto, RegistrationDto, ResultUpdateDto):
+        öffentliche Felder werden von Gson per Reflection beim JSON-(De-)Serialisieren gesetzt/gelesen
+        bzw. dienen 1:1 als Wire-Format-Definition. SpotBugs sieht keinen expliziten Java-Read/Write
+        auf einzelnen Feldern → False Positive, kein Bug.
+    -->
+    <Match>
+        <Or>
+            <Class name="de.petanqueturniermanager.onlinesync.TournamentDto"/>
+            <Class name="de.petanqueturniermanager.onlinesync.RegistrationDto"/>
+            <Class name="de.petanqueturniermanager.onlinesync.ResultUpdateDto"/>
+        </Or>
+        <Bug pattern="UUF_UNUSED_PUBLIC_OR_PROTECTED_FIELD,UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD,URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD"/>
+    </Match>
+
+    <!--
         ReleaseUpdateService nutzt ein Singleton-Pattern mit init()/get()/dispose(),
         hat aber einen package-private Konstruktor für Tests (Injection von Fake-Cache
         und Fake-Client). Der echte Produktivpfad geht ausschliesslich über init().

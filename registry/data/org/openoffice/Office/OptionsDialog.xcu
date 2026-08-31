@@ -86,6 +86,24 @@
                         <value>de.petanqueturniermanager.FtpServerOptionsEventHandler</value>
                     </prop>
                 </node>
+                <node oor:name="de.petanqueturniermanager.options.ptmonline" oor:op="fuse">
+                    <prop oor:name="Id">
+                        <value>de.petanqueturniermanager.ptmonline</value>
+                    </prop>
+                    <prop oor:name="Label">
+                        <value xml:lang="de">PTM Online</value>
+                        <value xml:lang="en">PTM Online</value>
+                        <value xml:lang="es">PTM Online</value>
+                        <value xml:lang="fr">PTM Online</value>
+                        <value xml:lang="nl">PTM Online</value>
+                    </prop>
+                    <prop oor:name="OptionsPage">
+                        <value>%origin%/dialogs/PtmOnlineOptions.xdl</value>
+                    </prop>
+                    <prop oor:name="EventHandlerService">
+                        <value>de.petanqueturniermanager.PtmOnlineOptionsEventHandler</value>
+                    </prop>
+                </node>
                 <node oor:name="de.petanqueturniermanager.options.whatsappchats" oor:op="fuse">
                     <prop oor:name="Id">
                         <value>de.petanqueturniermanager.whatsappchats</value>

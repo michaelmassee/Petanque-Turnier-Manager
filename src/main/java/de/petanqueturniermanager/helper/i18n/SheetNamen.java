@@ -93,6 +93,7 @@ public final class SheetNamen {
     public static final String KEY_JGJ_GRUPPE_SPIELPLAN_MUSTER      = "sheet.name.jgj.gruppe.spielplan.muster";
     /** JGJ Gesamtrangliste: gruppenübergreifende Rangliste über alle Gruppen. */
     public static final String KEY_JGJ_GESAMTRANGLISTE             = "sheet.name.jgj.gesamtrangliste";
+    public static final String KEY_PTM_ONLINE                      = "sheet.name.ptm.online";
 
     // ── Legacy-Werte: unveränderliche deutsche Originalnamen ─────────────────
     // Werden ausschließlich als Fallback in findeSheetUndHeile() für alte Dokumente verwendet.
@@ -136,6 +137,7 @@ public final class SheetNamen {
     public static final String LEGACY_KASKADE_FELD_SUFFIX            = "Feld";
     public static final String LEGACY_KASKADE_GRUPPENRANGLISTE       = "Kaskaden-Gruppenrangliste";
     public static final String LEGACY_MAASTRICHTER_GRUPPEN_UEBERSICHT = "Gruppen-Übersicht";
+    public static final String LEGACY_PTM_ONLINE                     = "PTM Online";
     public static final String LEGACY_KASKADE_GRUPPEN_UEBERSICHT     = "Kaskaden-Gruppen-Übersicht";
 
     private SheetNamen() {
@@ -185,6 +187,10 @@ public final class SheetNamen {
 
     public static String supermeleeTeams() {
         return getOderFallback(KEY_SUPERMELEE_TEAMS, LEGACY_SUPERMELEE_TEAMS);
+    }
+
+    public static String ptmOnline() {
+        return getOderFallback(KEY_PTM_ONLINE, LEGACY_PTM_ONLINE);
     }
 
     public static String koKonfiguration() {

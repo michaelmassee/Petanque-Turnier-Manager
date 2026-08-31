@@ -95,6 +95,19 @@
                 <value/>
             </prop>
         </group>
+        <group oor:name="PtmOnline">
+            <info>
+                <desc>PTM Online (REST API) connection settings.</desc>
+            </info>
+            <prop oor:name="ApiKey" oor:type="xs:string">
+                <info><desc>API key for PTM Online.</desc></info>
+                <value/>
+            </prop>
+            <prop oor:name="BaseUrl" oor:type="xs:string">
+                <info><desc>Base URL of the PTM Online instance.</desc></info>
+                <value/>
+            </prop>
+        </group>
         <group oor:name="Startseite">
             <info>
                 <desc>Turnier-Startseite webserver options.</desc>
