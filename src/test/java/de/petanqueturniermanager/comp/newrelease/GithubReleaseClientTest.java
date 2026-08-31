@@ -88,6 +88,53 @@ class GithubReleaseClientTest {
     }
 
     @Test
+    void inklusiveBetaFalseNutztLatestEndpunkt() {
+        registriereHandler("/repos/foo/bar/releases/latest", 200, """
+                {
+                  "tag_name": "v1.2.3",
+                  "prerelease": false,
+                  "assets": []
+                }
+                """);
+
+        var release = neuerClient("foo/bar").ladeLetztesRelease(false);
+
+        assertThat(release).isPresent();
+        assertThat(release.get().tagName()).isEqualTo("v1.2.3");
+    }
+
+    @Test
+    void inklusiveBetaTrueNutztReleaseListeUndErstenEintrag() {
+        registriereHandler("/repos/foo/bar/releases", 200, """
+                [
+                  {
+                    "tag_name": "v1.3.0-rc1",
+                    "prerelease": true,
+                    "assets": []
+                  },
+                  {
+                    "tag_name": "v1.2.3",
+                    "prerelease": false,
+                    "assets": []
+                  }
+                ]
+                """);
+
+        var release = neuerClient("foo/bar").ladeLetztesRelease(true);
+
+        assertThat(release).isPresent();
+        assertThat(release.get().tagName()).isEqualTo("v1.3.0-rc1");
+        assertThat(release.get().prerelease()).isTrue();
+    }
+
+    @Test
+    void inklusiveBetaTrueLiefertEmptyBeiLeererListe() {
+        registriereHandler("/repos/foo/bar/releases", 200, "[]");
+
+        assertThat(neuerClient("foo/bar").ladeLetztesRelease(true)).isEmpty();
+    }
+
+    @Test
     void liefertEmptyBeiHttp404() {
         registriereHandler("/repos/foo/bar/releases/latest", 404, "{\"message\":\"Not Found\"}");
 

@@ -84,7 +84,7 @@ class GlobalPropertiesTest {
     void testSpeichernUndLesen() {
         var gp = GlobalProperties.get();
 
-        gp.speichern(true, true, false, true, true, true, "debug", true);
+        gp.speichern(true, true, false, true, true, true, "debug", true, false);
 
         GlobalProperties.resetForTest();
         var gp2 = GlobalProperties.get();
@@ -114,11 +114,11 @@ class GlobalPropertiesTest {
         var gp = GlobalProperties.get();
         assertFalse(gp.isPerformanceLogging(), "Default muss false sein");
 
-        gp.speichern(false, false, false, true, true, true, "", true);
+        gp.speichern(false, false, false, true, true, true, "", true, false);
         GlobalProperties.resetForTest();
         assertTrue(GlobalProperties.get().isPerformanceLogging());
 
-        GlobalProperties.get().speichern(false, false, false, true, true, false, "", true);
+        GlobalProperties.get().speichern(false, false, false, true, true, false, "", true, false);
         GlobalProperties.resetForTest();
         assertFalse(GlobalProperties.get().isPerformanceLogging());
     }
@@ -534,7 +534,7 @@ class GlobalPropertiesTest {
 
         Runnable schreibend = () -> {
             for (int i = 0; i < 20; i++) {
-                gp.speichern(i % 2 == 0, i % 3 == 0, false, true, true, false, "info", true);
+                gp.speichern(i % 2 == 0, i % 3 == 0, false, true, true, false, "info", true, false);
             }
         };
 

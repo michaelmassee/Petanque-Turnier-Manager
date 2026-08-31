@@ -51,6 +51,15 @@ class VersionVergleicherTest {
         assertThat(VersionVergleicher.istNeuer("1.0.0-rc1", "1.0.1")).isTrue();
     }
 
+    @Test
+    void preReleaseGiltMitErlaubeVorabversionAlsUpdate() {
+        assertThat(VersionVergleicher.istNeuer("1.0.0", "1.0.1-rc1", true)).isTrue();
+        assertThat(VersionVergleicher.istNeuer("1.0.0", "1.0.1-rc1", false)).isFalse();
+        assertThat(VersionVergleicher.istNeuer("1.0.0", "0.9.0-rc1", true))
+                .as("Vorabversion muss trotzdem semantisch neuer sein")
+                .isFalse();
+    }
+
     @ParameterizedTest
     @CsvSource({
             "''          , 1.0.0",
