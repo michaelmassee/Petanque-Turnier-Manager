@@ -23,6 +23,7 @@ import com.sun.star.frame.XController2;
 import com.sun.star.frame.XDispatch;
 import com.sun.star.frame.XDispatchProvider;
 import com.sun.star.frame.XFrame;
+import com.sun.star.frame.XFramesSupplier;
 import com.sun.star.frame.XStatusListener;
 import com.sun.star.frame.XModel;
 import com.sun.star.lang.DisposedException;
@@ -573,6 +574,10 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				@Override
 				public void onNew(Object source) {
 					logger.trace("[FOKUS-TRACE] onNew: source={}", beschreibeSource(source));
+					// Neue Turnier-Dokumente entstehen meist über "Neues Turnier" (Factory-basiert,
+					// leeres Dokument) – das feuert onNew statt onLoad. Webserver-Bindung daher auch
+					// hier, nicht nur in onLoad.
+					bindeWebserverFallsAktiv(DocumentHelper.getCurrentSpreadsheetDocumentFrom(source));
 					notifyAllListeners();
 				}
 
@@ -592,6 +597,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 						if (kiosk) {
 							TurnierModus.get().aktivieren(ws);
 						}
+						bindeWebserverFallsAktiv(doc);
 					}
 					notifyAllListeners();
 				}
@@ -675,6 +681,14 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				}
 			});
 			SheetRunner.addStateChangeListener(ProtocolHandler::notifyAllListeners);
+			// Catch-up für das allererste, schon offene Dokument: ProtocolHandler wird lazy
+			// erzeugt, dessen onLoad kann also schon gefeuert haben, bevor der globale Listener
+			// oben registriert war (gleiche Race wie ToolbarAnzeigenListener.zeigeToolbarInAllenFrames).
+			// Bindet den Webserver nur, wenn GENAU EIN Calc-Dokument offen ist – bei keinem oder
+			// mehreren bewusst kein Rateversuch (kein fokus-basierter Fallback, siehe CLAUDE.md
+			// „Mehrere offene Turnier-Dokumente"); der Webserver startet dann später über den
+			// onLoad-Handler eines weiteren Dokuments oder manuell über das Menü.
+			bindeWebserverFallsAktiv(ermittleEinzigesOffenesSpreadsheetDokument(xContext));
 			long tNachRegistriert = System.nanoTime();
 			PerfLog.log(logger, "[STARTUP-TIMING] ProtocolHandler-ctor REGISTERED-Block (IGlobalEventListener+ITurnierEventListener+SheetRunner): {} ms",
 					(tNachRegistriert - t) / 1_000_000L);
@@ -734,6 +748,63 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 
 	private ProcessBox processBoxFuerDispatchFrame() {
 		return ProcessBox.forFrame(xContext, frame);
+	}
+
+	/**
+	 * Bindet den Webserver deterministisch an {@code doc}, falls {@code doc != null} und der
+	 * Webserver laut Konfiguration aktiv sein soll. {@link WebServerManager#starten} ist
+	 * idempotent (No-Op falls schon aktiv) – kein fokus-basiertes Raten, siehe CLAUDE.md
+	 * „Mehrere offene Turnier-Dokumente".
+	 */
+	private void bindeWebserverFallsAktiv(XSpreadsheetDocument doc) {
+		if (doc != null && GlobalProperties.get().isWebserverAktiv()) {
+			WebServerManager.get().starten(xContext, doc);
+		}
+	}
+
+	/**
+	 * Durchsucht alle aktuell offenen Frames deterministisch (kein Fokus-Bezug) und liefert das
+	 * einzige gefundene {@link XSpreadsheetDocument} – oder {@code null}, wenn keins oder mehrere
+	 * offen sind. Für den Webserver-Start-Catch-up im Ctor: bei Mehrdeutigkeit bewusst nicht raten
+	 * (siehe CLAUDE.md „Mehrere offene Turnier-Dokumente"), analog zu
+	 * {@code ToolbarAnzeigenListener.zeigeToolbarInAllenFrames}, das aber alle Frames bedient statt
+	 * eine Eindeutigkeit vorauszusetzen.
+	 * <p>
+	 * Paket-sichtbar (statt {@code private}) für {@code ProtocolHandlerWebserverCatchUpTest}.
+	 */
+	static XSpreadsheetDocument ermittleEinzigesOffenesSpreadsheetDokument(XComponentContext xContext) {
+		var xDesktop = DocumentHelper.getCurrentDesktop(xContext);
+		if (xDesktop == null) {
+			return null;
+		}
+		var xFramesSupplier = Lo.qi(XFramesSupplier.class, xDesktop);
+		if (xFramesSupplier == null) {
+			return null;
+		}
+		var xFrames = xFramesSupplier.getFrames();
+		if (xFrames == null) {
+			return null;
+		}
+		XSpreadsheetDocument gefunden = null;
+		for (int i = 0; i < xFrames.getCount(); i++) {
+			try {
+				var xFrame = Lo.qi(XFrame.class, xFrames.getByIndex(i));
+				if (xFrame == null || xFrame.getController() == null) {
+					continue;
+				}
+				var doc = Lo.qi(XSpreadsheetDocument.class, xFrame.getController().getModel());
+				if (doc == null) {
+					continue;
+				}
+				if (gefunden != null && !gefunden.equals(doc)) {
+					return null; // mehrdeutig – nicht raten
+				}
+				gefunden = doc;
+			} catch (Exception e) {
+				logger.error("Fehler beim Durchsuchen der Frames (Webserver-Catch-up)", e);
+			}
+		}
+		return gefunden;
 	}
 
 	private XSpreadsheetDocument ermittleDokumentAusFrame() {

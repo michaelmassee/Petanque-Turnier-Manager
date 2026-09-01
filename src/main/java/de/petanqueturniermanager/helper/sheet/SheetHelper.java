@@ -60,6 +60,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.cellvalue.AbstractCellValueWithSheet;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
@@ -78,14 +79,6 @@ import de.petanqueturniermanager.helper.sheet.numberformat.NumberFormatHelper;
 public class SheetHelper {
 
 	private static final Logger logger = LogManager.getLogger(SheetHelper.class);
-
-	// http://www.ooowiki.de/DeutschEnglischCalcFunktionen.html
-	private static final String[] FORMULA_GERMAN_SEARCH_LIST = new String[] { "ISTNV", "WENNNV", "WENN",
-			"ISOKALENDERWOCHE", "ISTZAHL", "ANZAHL", "ANZAHL2", "ZÄHLENWENN",
-			"PTM.ALG.DIREKTVERGLEICH" };
-	private static final String[] FORMULA_ENGLISH_REPLACEMENT_LIST = new String[] { "ISNA", "IFNA", "IF", "ISOWEEKNUM",
-			"ISNUMBER", "COUNT", "COUNTA", "COUNTIF",
-			"PTM.ALG.DIRECTCOMPARISON" };
 
 	private final WorkingSpreadsheet currentSpreadsheet;
 
@@ -343,10 +336,7 @@ public class SheetHelper {
 		try {
 			xCell = sheet.getCellByPosition(pos.getSpalte(), pos.getZeile());
 
-			// Deutsch nach Englisch
-			// http://www.ooowiki.de/DeutschEnglischCalcFunktionen.html
-			formula = StringUtils.replaceEach(formula.trim(), FORMULA_GERMAN_SEARCH_LIST,
-					FORMULA_ENGLISH_REPLACEMENT_LIST);
+			formula = formula.trim();
 			xCell.setFormula(formula.startsWith("=") ? formula : "=" + formula);
 		} catch (IndexOutOfBoundsException e) {
 			logger.error(e.getMessage(), e);
@@ -388,6 +378,37 @@ public class SheetHelper {
 			xRangeFormula.setFormulaArray(formelnMit);
 		} catch (IndexOutOfBoundsException e) {
 			logger.error(e.getMessage(), e);
+		}
+	}
+
+	/**
+	 * Prüft einen Zellbereich (nach einem vorangegangenen {@code calculateAll()}) auf Formel-
+	 * Berechnungsfehler – z.B. {@code #NAME?}, wenn eine PTM-Add-in-Funktion in dieser
+	 * LibreOffice-Installation nicht aufgelöst werden kann – und wirft dann eine sprechende,
+	 * übersetzte {@link GenerateException} statt den Fehler unbemerkt zu lassen, sodass er
+	 * erst als schwer verständlicher Folgefehler (z.B. NullPointerException beim Auswerten
+	 * angeblich leerer Zellen) an anderer Stelle sichtbar wird. Turniersystem-unabhängig
+	 * nutzbar von jedem Aufrufer, der Formeln schreibt und danach neu berechnet.
+	 *
+	 * @param sheet    Tabellenblatt
+	 * @param rangePos zu prüfender Bereich
+	 * @throws GenerateException wenn mindestens eine Zelle im Bereich einen Berechnungsfehler hat
+	 */
+	public void pruefeBereichAufFormelFehler(XSpreadsheet sheet, RangePosition rangePos) throws GenerateException {
+		checkNotNull(sheet);
+		checkNotNull(rangePos);
+
+		try {
+			for (int zeile = rangePos.getStartZeile(); zeile <= rangePos.getEndeZeile(); zeile++) {
+				for (int spalte = rangePos.getStartSpalte(); spalte <= rangePos.getEndeSpalte(); spalte++) {
+					XCell xCell = sheet.getCellByPosition(spalte, zeile);
+					if (xCell != null && xCell.getError() != 0) {
+						throw new GenerateException(I18n.get("sheethelper.fehler.formelfehler"));
+					}
+				}
+			}
+		} catch (IndexOutOfBoundsException e) {
+			throw new java.lang.IllegalArgumentException("rangePos liegt außerhalb des Sheet-Bereichs: " + rangePos, e);
 		}
 	}
 

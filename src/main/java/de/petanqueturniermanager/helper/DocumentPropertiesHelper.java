@@ -8,6 +8,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang3.math.NumberUtils;
@@ -25,8 +26,11 @@ import com.sun.star.beans.XPropertySet;
 import com.sun.star.document.XDocumentProperties;
 import com.sun.star.document.XDocumentPropertiesSupplier;
 import com.sun.star.frame.XModel;
+import com.sun.star.lang.EventObject;
 import com.sun.star.lang.IllegalArgumentException;
 import com.sun.star.lang.WrappedTargetException;
+import com.sun.star.lang.XComponent;
+import com.sun.star.lang.XEventListener;
 import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XInterface;
@@ -73,6 +77,11 @@ public class DocumentPropertiesHelper {
 	private static final ConcurrentHashMap<String, ConcurrentHashMap<String, String>> PROPLISTE =
 	        new ConcurrentHashMap<>();
 
+	// OIDs, für die bereits ein dokument-eigener Dispose-Listener registriert wurde (siehe
+	// registriereCloseListenerFallsNoetig). Verhindert doppelte Listener-Registrierung bei
+	// wiederholten DocumentPropertiesHelper-Konstruktionen für dasselbe Dokument.
+	private static final Set<String> CLOSE_LISTENER_REGISTRIERT = ConcurrentHashMap.newKeySet();
+
 	private final XSpreadsheetDocument xSpreadsheetDocument;
 	private final ConcurrentHashMap<String, String> currentPropListe;
 	private boolean firstLoad = false;
@@ -104,6 +113,7 @@ public class DocumentPropertiesHelper {
 			var vorhandene = PROPLISTE.putIfAbsent(oid, neueListe);
 			currentPropListe = vorhandene != null ? vorhandene : neueListe;
 			firstLoad = vorhandene == null;
+			registriereCloseListenerFallsNoetig(oid, xSpreadsheetDocument);
 		}
 	}
 
@@ -111,12 +121,50 @@ public class DocumentPropertiesHelper {
 		return UnoRuntime.generateOid(Lo.qi(XInterface.class, doc));
 	}
 
+	/**
+	 * Bindet die Cache-Bereinigung für {@code oid} synchron an die Dispose-Kette DIESES
+	 * Dokuments, statt sich allein auf den asynchronen globalen {@code OnUnload}-Broadcast
+	 * ({@code GlobalEventListener}) zu verlassen. Ohne diesen direkten Listener kann eine
+	 * wiederverwendete UNO-OID (z.B. weil die LO-Session viele Dokumente in Folge öffnet/schließt,
+	 * wie in Test-Suiten) den PROPLISTE-Eintrag eines bereits geschlossenen Dokuments für ein neu
+	 * erzeugtes Dokument "erben", solange der globale Broadcast den alten Eintrag noch nicht
+	 * entfernt hat.
+	 */
+	private static void registriereCloseListenerFallsNoetig(String oid, XSpreadsheetDocument dokument) {
+		if (!CLOSE_LISTENER_REGISTRIERT.add(oid)) {
+			return; // fuer diese OID bereits registriert
+		}
+		XComponent xComponent = Lo.qi(XComponent.class, dokument);
+		if (xComponent == null) {
+			PROPLISTE.remove(oid);
+			CLOSE_LISTENER_REGISTRIERT.remove(oid);
+			return;
+		}
+		try {
+			xComponent.addEventListener(new XEventListener() {
+				@Override
+				public void disposing(EventObject event) {
+					PROPLISTE.remove(oid);
+					CLOSE_LISTENER_REGISTRIERT.remove(oid);
+				}
+			});
+		} catch (RuntimeException e) {
+			// Das Dokument kann zwischen Cache-Aufbau und Listener-Registrierung geschlossen werden.
+			PROPLISTE.remove(oid);
+			CLOSE_LISTENER_REGISTRIERT.remove(oid);
+			throw e;
+		}
+	}
+
 	public boolean isEmpty() {
 		return currentPropListe.isEmpty();
 	}
 
 	/**
-	 * Document close – entfernt den Cache-Eintrag für das geschlossene Dokument.
+	 * Document close – entfernt den Cache-Eintrag für das geschlossene Dokument. Sicherheitsnetz
+	 * für den asynchronen globalen {@code OnUnload}-Broadcast; der Normalfall ist bereits durch
+	 * {@link #registriereCloseListenerFallsNoetig} synchron abgedeckt, ein fehlender Cache-Eintrag
+	 * hier ist daher erwartet und kein Fehlerzeichen mehr.
 	 */
 	public static void removeDocument(Object source) {
 		try {
@@ -126,11 +174,8 @@ public class DocumentPropertiesHelper {
 				// null dann wenn kein XSpreadsheetDocument
 				if (xSpreadsheetDocument != null) {
 					var oid = dokumentOid(xSpreadsheetDocument);
-					var removed = PROPLISTE.remove(oid);
-					if (removed == null) {
-						logger.warn("removeDocument: Kein Cache-Eintrag für OID={}, Class={}",
-								oid, source.getClass().getName());
-					}
+					PROPLISTE.remove(oid);
+					CLOSE_LISTENER_REGISTRIERT.remove(oid);
 				}
 			}
 		} catch (Exception e) {

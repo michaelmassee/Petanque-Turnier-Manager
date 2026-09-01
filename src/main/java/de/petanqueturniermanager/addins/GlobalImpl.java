@@ -58,7 +58,7 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	public static final String PTM_INT_PROPERTY = "PTM.ALG.INTPROPERTY";
 	public static final String PTM_STRING_PROPERTY = "PTM.ALG.STRINGPROPERTY";
 	public static final String PTM_BOOLEAN_PROPERTY = "PTM.ALG.BOOLEANPROPERTY";
-	public static final String PTM_DIREKTVERGLEICH = "PTM.ALG.DIREKTVERGLEICH";
+	public static final String PTM_DIREKTVERGLEICH = "PTM.ALG.DIRECTCOMPARISON";
 	public static final String PTM_TURNIERSYSTEM = "PTM.ALG.TURNIERSYSTEM";
 	public static final String PTM_TEAM_ANZEIGE = "PTM.ALG.TEAMANZEIGE";
 

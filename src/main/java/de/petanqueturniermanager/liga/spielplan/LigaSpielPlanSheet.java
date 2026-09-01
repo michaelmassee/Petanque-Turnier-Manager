@@ -202,7 +202,7 @@ public class LigaSpielPlanSheet extends SheetRunner implements ISheet {
 			Position posKw = Position.from(KW_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE);
 			StringCellValue formulaKw = StringCellValue.from(getXSpreadSheet(), posKw)
 					.setFillAutoDown(letzteSpielZeile);
-			formulaKw.setValue("IF(ISBLANK(" + posDatum.getAddress() + ");\"\";ISOKALENDERWOCHE("
+			formulaKw.setValue("IF(ISBLANK(" + posDatum.getAddress() + ");\"\";ISOWEEKNUM("
 					+ posDatum.getAddress() + "))");
 			getSheetHelper().setFormulaInCell(formulaKw);
 		}

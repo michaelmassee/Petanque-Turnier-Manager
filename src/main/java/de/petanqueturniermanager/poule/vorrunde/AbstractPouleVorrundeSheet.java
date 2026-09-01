@@ -338,6 +338,12 @@ public abstract class AbstractPouleVorrundeSheet extends SheetRunner implements 
                 Position.from(SPALTE_TEAM_B_NAME, zeile),
                 vlookupDirekt(Position.from(SPALTE_TEAM_B_NR, zeile).getAddress())));
 
+        // Früh prüfen, ob eine der gerade geschriebenen Team-Namen-Formeln (z.B. wegen einer
+        // nicht auflösbaren PTM.ALG.*-Add-in-Funktion) einen Berechnungsfehler liefert, statt
+        // das erst als schwer verständlichen Folgefehler an anderer Stelle auffallen zu lassen.
+        getSheetHelper().pruefeBereichAufFormelFehler(xSheet,
+                RangePosition.from(SPALTE_TEAM_A_NAME, zeile, SPALTE_TEAM_B_NAME, zeile));
+
         schreibeErgZellen(xSheet, zeile, vorrundeZeile);
 
         if (schreibeFehlerSpalte()) {
@@ -366,6 +372,12 @@ public abstract class AbstractPouleVorrundeSheet extends SheetRunner implements 
         getSheetHelper().setFormulaInCell(StringCellValue.from(xSheet,
                 Position.from(SPALTE_TEAM_B_NAME, zeile),
                 vlookupMitGuard(Position.from(SPALTE_TEAM_B_NR, zeile).getAddress())));
+
+        // Früh prüfen, ob eine der gerade geschriebenen Team-Namen-Formeln (z.B. wegen einer
+        // nicht auflösbaren PTM.ALG.*-Add-in-Funktion) einen Berechnungsfehler liefert, statt
+        // das erst als schwer verständlichen Folgefehler an anderer Stelle auffallen zu lassen.
+        getSheetHelper().pruefeBereichAufFormelFehler(xSheet,
+                RangePosition.from(SPALTE_TEAM_A_NAME, zeile, SPALTE_TEAM_B_NAME, zeile));
 
         schreibeErgZellen(xSheet, zeile, vorrundeZeile);
 

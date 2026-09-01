@@ -94,20 +94,44 @@ public class ProcessBox implements TimerListener {
     private static final int DLG_POS_Y = 60;
     private static final int DLG_WIDTH = 320;
     private static final int PAD = 4;
+    private static final int GAP = 2;
     private static final int LOG_HEIGHT = 110;
     private static final int MAX_LINKS = 3;
     private static final int LINK_ROW_HEIGHT = 10;
-    private static final int LINKS_Y = PAD + LOG_HEIGHT + 2;
-    private static final int LINKS_HEIGHT = MAX_LINKS * LINK_ROW_HEIGHT;
-    private static final int VERSION_Y = LINKS_Y + LINKS_HEIGHT + 2;
     private static final int VERSION_HEIGHT = 10;
-    private static final int TIMER_Y = VERSION_Y + VERSION_HEIGHT + 2;
     private static final int TIMER_HEIGHT = 10;
-    private static final int FOOTER_Y = TIMER_Y + TIMER_HEIGHT + 2;
     private static final int FOOTER_HEIGHT = 14;
-    private static final int DLG_HEIGHT = FOOTER_Y + FOOTER_HEIGHT + PAD;
     private static final int STATUS_WIDTH = 20;
     private static final int BUTTON_WIDTH = 30;
+
+    /**
+     * Alles unterhalb des Log-Edits ist von der aktuell sichtbaren Link-Zeilen-Anzahl
+     * und davon, ob der „Neue Version verfügbar"-Hinweis gerade sichtbar ist, abhängig:
+     * ungenutzte Link-Slots bzw. ein ausgeblendeter Versions-Hinweis reservieren keinen
+     * Platz mehr (vorher fix reserviert, meist leer → toter Raum direkt unter dem Log).
+     * {@link #wendeLayoutFuerAktuellenZustandAn()} schiebt die darunterliegenden
+     * Controls live nach, sobald sich Link-Anzahl ({@link #links(List)}) oder
+     * Versions-Hinweis-Sichtbarkeit ({@link #aktualisiereNeueVersionLabel()}) ändern.
+     */
+    private static int linksY() {
+        return PAD + LOG_HEIGHT + GAP;
+    }
+
+    private static int versionY(int linkAnzahl) {
+        return linksY() + linkAnzahl * LINK_ROW_HEIGHT + (linkAnzahl > 0 ? GAP : 0);
+    }
+
+    private static int timerY(int linkAnzahl, boolean versionHinweisSichtbar) {
+        return versionY(linkAnzahl) + (versionHinweisSichtbar ? VERSION_HEIGHT + GAP : 0);
+    }
+
+    private static int footerY(int linkAnzahl, boolean versionHinweisSichtbar) {
+        return timerY(linkAnzahl, versionHinweisSichtbar) + TIMER_HEIGHT + GAP;
+    }
+
+    private static int dlgHeight(int linkAnzahl, boolean versionHinweisSichtbar) {
+        return footerY(linkAnzahl, versionHinweisSichtbar) + FOOTER_HEIGHT + PAD;
+    }
 
     private static final int COLOR_VERSION = 0xCC4400;
     private static final int COLOR_TIMER_TITEL = 0x666666;
@@ -218,14 +242,24 @@ public class ProcessBox implements TimerListener {
     private XPropertySet[] linkProps;
     private XPropertySet infoLabelProps;
     private XPropertySet neueVersionLabelProps;
+    private XPropertySet timerTitelProps;
     private XPropertySet timerUhrProps;
     private XPropertySet timerBezeichnungProps;
     private XPropertySet throbberProps;
     private XAnimation throbber;
     private XPropertySet readyImageProps;
     private XPropertySet errorImageProps;
+    private XPropertySet logBtnProps;
     private XPropertySet stopBtnProps;
     private XPropertySet abbrechenAutoCloseBtnProps;
+
+    /** Anzahl aktuell sichtbarer Link-Zeilen (0..{@value #MAX_LINKS}) – bestimmt die
+     *  Y-Position aller Controls unterhalb des Link-Blocks, siehe {@link #links(List)}. */
+    private volatile int aktuelleLinkAnzahl = 0;
+
+    /** Ob der „Neue Version verfügbar"-Hinweis gerade sichtbar ist – bestimmt die
+     *  Y-Position von Timer- und Footer-Zeile, siehe {@link #aktualisiereNeueVersionLabel()}. */
+    private volatile boolean versionHinweisSichtbar = false;
 
     /** Postet Runnables auf den LO-Main-Thread (FIFO). Null wenn Init fehlschlug. */
     private XRequestCallback mainThreadDispatcher;
@@ -275,7 +309,7 @@ public class ProcessBox implements TimerListener {
         dlgProps.setPropertyValue("PositionX", DLG_POS_X);
         dlgProps.setPropertyValue("PositionY", DLG_POS_Y);
         dlgProps.setPropertyValue("Width", DLG_WIDTH);
-        dlgProps.setPropertyValue("Height", DLG_HEIGHT);
+        dlgProps.setPropertyValue("Height", dlgHeight(aktuelleLinkAnzahl, versionHinweisSichtbar));
         dlgProps.setPropertyValue("Moveable", Boolean.TRUE);
         dlgProps.setPropertyValue("Sizeable", Boolean.TRUE);
         dlgProps.setPropertyValue("Closeable", Boolean.TRUE);
@@ -297,7 +331,7 @@ public class ProcessBox implements TimerListener {
         // standardmäßig ausgeblendet, Klick öffnet URL nativ im Standardbrowser.
         linkProps = new XPropertySet[MAX_LINKS];
         for (int i = 0; i < MAX_LINKS; i++) {
-            int y = LINKS_Y + i * LINK_ROW_HEIGHT;
+            int y = linksY() + i * LINK_ROW_HEIGHT;
             linkProps[i] = addControl(msf, modelContainer, "link" + i,
                     "com.sun.star.awt.UnoControlFixedHyperlinkModel",
                     PAD, y, DLG_WIDTH - 2 * PAD, LINK_ROW_HEIGHT, m -> {
@@ -308,46 +342,50 @@ public class ProcessBox implements TimerListener {
         }
 
         // Neue-Version-Hinweis
+        int versionY = versionY(aktuelleLinkAnzahl);
+        int timerY = timerY(aktuelleLinkAnzahl, versionHinweisSichtbar);
+        int footerY = footerY(aktuelleLinkAnzahl, versionHinweisSichtbar);
+
         neueVersionLabelProps = addControl(msf, modelContainer, "nvLabel",
                 "com.sun.star.awt.UnoControlFixedTextModel",
-                PAD, VERSION_Y, DLG_WIDTH - 2 * PAD, VERSION_HEIGHT, m -> {
+                PAD, versionY, DLG_WIDTH - 2 * PAD, VERSION_HEIGHT, m -> {
                     m.setPropertyValue("Align", (short) 1);
                     m.setPropertyValue("TextColor", COLOR_VERSION);
                     m.setPropertyValue("EnableVisible", Boolean.FALSE);
                 });
 
         // Timer-Zeile
-        addControl(msf, modelContainer, "timerTitel",
+        timerTitelProps = addControl(msf, modelContainer, "timerTitel",
                 "com.sun.star.awt.UnoControlFixedTextModel",
-                PAD, TIMER_Y, 80, TIMER_HEIGHT, m -> {
+                PAD, timerY, 80, TIMER_HEIGHT, m -> {
                     m.setPropertyValue("Label", I18n.get("timer.processbox.zeile.label") + ":");
                     m.setPropertyValue("TextColor", COLOR_TIMER_TITEL);
                 });
         timerUhrProps = addControl(msf, modelContainer, "timerUhr",
                 "com.sun.star.awt.UnoControlFixedTextModel",
-                PAD + 82, TIMER_Y, 50, TIMER_HEIGHT, m -> {
+                PAD + 82, timerY, 50, TIMER_HEIGHT, m -> {
                     m.setPropertyValue("Label", "--:--");
                     m.setPropertyValue("TextColor", COLOR_TIMER_INAKTIV);
                 });
         timerBezeichnungProps = addControl(msf, modelContainer, "timerBez",
                 "com.sun.star.awt.UnoControlFixedTextModel",
-                PAD + 134, TIMER_Y, DLG_WIDTH - PAD - 138, TIMER_HEIGHT, m -> {
+                PAD + 134, timerY, DLG_WIDTH - PAD - 138, TIMER_HEIGHT, m -> {
                     m.setPropertyValue("Label", "");
                     m.setPropertyValue("TextColor", COLOR_TIMER_TITEL);
                 });
 
-        // Status-Bereich (überlappend an Position PAD/FOOTER_Y):
+        // Status-Bereich (überlappend an Position PAD/footerY):
         // Throbber (sichtbar während run), Ready/Error-Bild (sichtbar nach ready)
         throbberProps = addControl(msf, modelContainer, "throbber",
                 "com.sun.star.awt.SpinningProgressControlModel",
-                PAD, FOOTER_Y, STATUS_WIDTH, FOOTER_HEIGHT, m -> {
+                PAD, footerY, STATUS_WIDTH, FOOTER_HEIGHT, m -> {
                     m.setPropertyValue("EnableVisible", Boolean.FALSE);
                 });
 
         String readyUrl = extractImageToTemp("check25x32.png");
         readyImageProps = addControl(msf, modelContainer, "readyImg",
                 "com.sun.star.awt.UnoControlImageControlModel",
-                PAD, FOOTER_Y, STATUS_WIDTH, FOOTER_HEIGHT, m -> {
+                PAD, footerY, STATUS_WIDTH, FOOTER_HEIGHT, m -> {
                     if (readyUrl != null) {
                         m.setPropertyValue("ImageURL", readyUrl);
                     }
@@ -358,7 +396,7 @@ public class ProcessBox implements TimerListener {
         String errorUrl = extractImageToTemp("cross32x32.png");
         errorImageProps = addControl(msf, modelContainer, "errorImg",
                 "com.sun.star.awt.UnoControlImageControlModel",
-                PAD, FOOTER_Y, STATUS_WIDTH, FOOTER_HEIGHT, m -> {
+                PAD, footerY, STATUS_WIDTH, FOOTER_HEIGHT, m -> {
                     if (errorUrl != null) {
                         m.setPropertyValue("ImageURL", errorUrl);
                     }
@@ -372,21 +410,21 @@ public class ProcessBox implements TimerListener {
         int buttonsBlock = 2 * BUTTON_WIDTH + 8;
         infoLabelProps = addControl(msf, modelContainer, "infoLbl",
                 "com.sun.star.awt.UnoControlFixedTextModel",
-                infoX, FOOTER_Y + 2, DLG_WIDTH - infoX - buttonsBlock - PAD, FOOTER_HEIGHT - 4, m -> {
+                infoX, footerY + 2, DLG_WIDTH - infoX - buttonsBlock - PAD, FOOTER_HEIGHT - 4, m -> {
                     m.setPropertyValue("Label", "..");
                     m.setPropertyValue("Align", (short) 0);
                 });
 
         // Buttons
-        addControl(msf, modelContainer, "logBtn",
+        logBtnProps = addControl(msf, modelContainer, "logBtn",
                 "com.sun.star.awt.UnoControlButtonModel",
-                DLG_WIDTH - 2 * BUTTON_WIDTH - PAD - 4, FOOTER_Y, BUTTON_WIDTH, FOOTER_HEIGHT, m -> {
+                DLG_WIDTH - 2 * BUTTON_WIDTH - PAD - 4, footerY, BUTTON_WIDTH, FOOTER_HEIGHT, m -> {
                     m.setPropertyValue("Label", "Log");
                     m.setPropertyValue("HelpText", "Logdatei");
                 });
         stopBtnProps = addControl(msf, modelContainer, "stopBtn",
                 "com.sun.star.awt.UnoControlButtonModel",
-                DLG_WIDTH - BUTTON_WIDTH - PAD, FOOTER_Y, BUTTON_WIDTH, FOOTER_HEIGHT, m -> {
+                DLG_WIDTH - BUTTON_WIDTH - PAD, footerY, BUTTON_WIDTH, FOOTER_HEIGHT, m -> {
                     m.setPropertyValue("Label", "Stop");
                     m.setPropertyValue("HelpText", "Stop Verarbeitung");
                     m.setPropertyValue("Enabled", Boolean.FALSE);
@@ -394,7 +432,7 @@ public class ProcessBox implements TimerListener {
         // Auto-Close abbrechen — überlagert stopBtn, gegenseitig ausschließend
         abbrechenAutoCloseBtnProps = addControl(msf, modelContainer, "abbrAcBtn",
                 "com.sun.star.awt.UnoControlButtonModel",
-                DLG_WIDTH - BUTTON_WIDTH - PAD, FOOTER_Y, BUTTON_WIDTH, FOOTER_HEIGHT, m -> {
+                DLG_WIDTH - BUTTON_WIDTH - PAD, footerY, BUTTON_WIDTH, FOOTER_HEIGHT, m -> {
                     m.setPropertyValue("Label", "");
                     m.setPropertyValue("EnableVisible", Boolean.FALSE);
                 });
@@ -499,13 +537,57 @@ public class ProcessBox implements TimerListener {
         }
         try {
             Size groessePx = conversion.convertSizeToPixel(
-                    new Size(DLG_WIDTH, DLG_HEIGHT), MeasureUnit.APPFONT);
+                    new Size(DLG_WIDTH, dlgHeight(aktuelleLinkAnzahl, versionHinweisSichtbar)), MeasureUnit.APPFONT);
             Point positionPx = ermittlePosition(conversion, groessePx);
             xWindow.setPosSize(positionPx.X, positionPx.Y, groessePx.Width, groessePx.Height,
                     PosSize.POSSIZE);
         } catch (com.sun.star.lang.IllegalArgumentException e) {
             logger.debug("Fenstergröße konnte nicht in Pixel umgerechnet werden", e);
         }
+    }
+
+    /**
+     * Passt nur die Fensterhöhe des bereits erzeugten Peers an {@link #aktuelleLinkAnzahl}
+     * an, ohne Position/Breite zu verändern (kein Recentering während der Nutzer den
+     * Dialog gerade sieht). Wird von {@link #wendeLayoutFuerAktuellenZustandAn()} nach
+     * einer Änderung der Link-Anzahl aufgerufen.
+     */
+    private void passeFensterhoeheAn() {
+        if (xWindow == null || dialogControl == null) return;
+        XUnitConversion conversion = Lo.qi(XUnitConversion.class, dialogControl.getPeer());
+        if (conversion == null) return;
+        try {
+            Size groessePx = conversion.convertSizeToPixel(
+                    new Size(DLG_WIDTH, dlgHeight(aktuelleLinkAnzahl, versionHinweisSichtbar)), MeasureUnit.APPFONT);
+            xWindow.setPosSize(0, 0, groessePx.Width, groessePx.Height, PosSize.SIZE);
+        } catch (com.sun.star.lang.IllegalArgumentException e) {
+            logger.debug("Fensterhöhe konnte nicht in Pixel umgerechnet werden", e);
+        }
+    }
+
+    /**
+     * Schiebt alle Controls unterhalb des Link-Blocks (Versions-Hinweis, Timer-Zeile,
+     * Status-/Footer-Zeile) sowie die Dialoghöhe auf die zu {@link #aktuelleLinkAnzahl}
+     * und {@link #versionHinweisSichtbar} passende Position. Muss auf dem LO-Main-Thread laufen.
+     */
+    private void wendeLayoutFuerAktuellenZustandAn() {
+        if (dialogControl == null) return;
+        int linkAnzahl = aktuelleLinkAnzahl;
+        boolean versionSichtbar = versionHinweisSichtbar;
+        setPropertySafe(neueVersionLabelProps, "PositionY", versionY(linkAnzahl));
+        setPropertySafe(timerTitelProps, "PositionY", timerY(linkAnzahl, versionSichtbar));
+        setPropertySafe(timerUhrProps, "PositionY", timerY(linkAnzahl, versionSichtbar));
+        setPropertySafe(timerBezeichnungProps, "PositionY", timerY(linkAnzahl, versionSichtbar));
+        setPropertySafe(throbberProps, "PositionY", footerY(linkAnzahl, versionSichtbar));
+        setPropertySafe(readyImageProps, "PositionY", footerY(linkAnzahl, versionSichtbar));
+        setPropertySafe(errorImageProps, "PositionY", footerY(linkAnzahl, versionSichtbar));
+        setPropertySafe(infoLabelProps, "PositionY", footerY(linkAnzahl, versionSichtbar) + 2);
+        setPropertySafe(logBtnProps, "PositionY", footerY(linkAnzahl, versionSichtbar));
+        setPropertySafe(stopBtnProps, "PositionY", footerY(linkAnzahl, versionSichtbar));
+        setPropertySafe(abbrechenAutoCloseBtnProps, "PositionY", footerY(linkAnzahl, versionSichtbar));
+        setPropertySafe(Lo.qi(XPropertySet.class, dialogControl.getModel()), "Height",
+                dlgHeight(linkAnzahl, versionSichtbar));
+        passeFensterhoeheAn();
     }
 
     /**
@@ -611,12 +693,14 @@ public class ProcessBox implements TimerListener {
         linkProps = null;
         infoLabelProps = null;
         neueVersionLabelProps = null;
+        timerTitelProps = null;
         timerUhrProps = null;
         timerBezeichnungProps = null;
         throbberProps = null;
         throbber = null;
         readyImageProps = null;
         errorImageProps = null;
+        logBtnProps = null;
         stopBtnProps = null;
         abbrechenAutoCloseBtnProps = null;
     }
@@ -646,6 +730,9 @@ public class ProcessBox implements TimerListener {
     public ProcessBox links(List<LinkEintrag> links) {
         if (disposed || linkProps == null) return this;
         List<LinkEintrag> snapshot = links != null ? List.copyOf(links) : List.of();
+        int neueAnzahl = Math.min(snapshot.size(), linkProps.length);
+        boolean anzahlGeaendert = neueAnzahl != aktuelleLinkAnzahl;
+        aktuelleLinkAnzahl = neueAnzahl;
         runOnMain(() -> {
             for (int i = 0; i < linkProps.length; i++) {
                 if (i < snapshot.size()) {
@@ -656,6 +743,9 @@ public class ProcessBox implements TimerListener {
                 } else {
                     setPropertySafe(linkProps[i], "EnableVisible", Boolean.FALSE);
                 }
+            }
+            if (anzahlGeaendert) {
+                wendeLayoutFuerAktuellenZustandAn();
             }
         });
         return this;
@@ -1040,11 +1130,16 @@ public class ProcessBox implements TimerListener {
                         neueVersionNummer != null ? neueVersionNummer : "?")
                 : null;
         boolean sichtbar = neueVersion;
+        boolean sichtbarkeitGeaendert = sichtbar != versionHinweisSichtbar;
+        versionHinweisSichtbar = sichtbar;
         runOnMain(() -> {
             if (label != null) {
                 setPropertySafe(neueVersionLabelProps, "Label", label);
             }
             setPropertySafe(neueVersionLabelProps, "EnableVisible", sichtbar);
+            if (sichtbarkeitGeaendert) {
+                wendeLayoutFuerAktuellenZustandAn();
+            }
         });
     }
 

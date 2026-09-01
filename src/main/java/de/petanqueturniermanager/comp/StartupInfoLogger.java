@@ -11,6 +11,8 @@ import com.sun.star.container.XHierarchicalNameAccess;
 import com.sun.star.lang.XMultiServiceFactory;
 import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.comp.LoRuntimeVersion.LoProdukt;
+
 import de.petanqueturniermanager.comp.newrelease.ExtensionsHelper;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.perflog.PerfLog;
@@ -43,14 +45,15 @@ public final class StartupInfoLogger {
     }
 
     private static String baueBanner(XComponentContext context) {
-        String[] loProdukt = ermittleLibreOfficeProdukt(context);
+        LoProdukt loProdukt = LoRuntimeVersion.ermittleProdukt(context);
         return String.join("\n",
                 "",
                 TRENNER,
                 " Pétanque-Turnier-Manager — Startup",
                 TRENNER,
                 zeile("Plugin-Version",   ermittlePluginVersion(context)),
-                zeile("LibreOffice",      loProdukt[0] + " " + loProdukt[1]),
+                zeile("LibreOffice",      loProdukt.name() + " " + loProdukt.version()),
+                zeile("LO (Build)",       LoVersionChecker.ermittleBuildVersion()),
                 zeile("Java",             ermittleJava()),
                 zeile("OS",               ermittleOs()),
                 zeile("Locale (JVM)",     Locale.getDefault().toString()),
@@ -74,25 +77,6 @@ public final class StartupInfoLogger {
             return v != null ? v : UNBEKANNT;
         } catch (Exception e) {
             return UNBEKANNT;
-        }
-    }
-
-    /** Liefert {@code [ooName, ooSetupVersionAboutBox]} bzw. Fallbacks. */
-    private static String[] ermittleLibreOfficeProdukt(XComponentContext context) {
-        try {
-            XMultiServiceFactory msf = Lo.qi(XMultiServiceFactory.class,
-                    context.getServiceManager().createInstanceWithContext(
-                            "com.sun.star.configuration.ConfigurationProvider", context));
-            PropertyValue pv = new PropertyValue("nodepath", 0,
-                    "/org.openoffice.Setup/Product", PropertyState.DIRECT_VALUE);
-            Object acc = msf.createInstanceWithArguments(
-                    "com.sun.star.configuration.ConfigurationAccess", new Object[] { pv });
-            XHierarchicalNameAccess hna = Lo.qi(XHierarchicalNameAccess.class, acc);
-            String name = sicherString(hna, "ooName", "LibreOffice");
-            String version = sicherString(hna, "ooSetupVersionAboutBox", UNBEKANNT);
-            return new String[] { name, version };
-        } catch (Exception e) {
-            return new String[] { "LibreOffice", UNBEKANNT };
         }
     }
 

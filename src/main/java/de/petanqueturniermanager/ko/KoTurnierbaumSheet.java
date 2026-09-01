@@ -74,7 +74,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
  * Zeile 0: Rundentitel (merged über alle Spalten der Runde)<br>
  * Zeile 1: Spalten-Überschriften (Bahn, Nr/Teamname, Pkt)<br>
  * Runde 1 (ab Zeile 2): direkte Einträge nach Setzliste (aus RNG-Spalte der Meldeliste)<br>
- * Runden 2+: WENN-Formeln berechnen Gewinner aus Vorrundenscores<br>
+ * Runden 2+: IF-Formeln berechnen Gewinner aus Vorrundenscores<br>
  * Abschlusskolonne: Sieger-Anzeige
  */
 public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
@@ -569,7 +569,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	 * Schreibt deterministische Test-Ergebnisse in Runde 1 (und ggf. Cadrage) eines bereits
 	 * erstellten Turnierbaum-Sheets. Pro Match wird ein Sieger via {@link RandomSource} gewählt,
 	 * 13 in dessen Score-Zelle geschrieben und {@code RandomSource.nextInt(13)} in die Score-Zelle
-	 * des Verlierers. Die {@code WENN}-Sieger-Formeln in Runden 2+ lösen die Folgerunden danach
+	 * des Verlierers. Die {@code IF}-Sieger-Formeln in Runden 2+ lösen die Folgerunden danach
 	 * automatisch auf, sobald LO neu rechnet.
 	 *
 	 * <p>Voraussetzung: Der Layout-State (bracketGroesse, mitCadrage, anzOhneCadrage, Offsets) muss
@@ -1418,6 +1418,11 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 							.setCellBackColor(farbe)
 							.setBorder(BorderFactory.from().allThin().toBorder())
 							.setHoriJustify(CellHoriJustify.LEFT));
+			// Früh prüfen, ob die gerade geschriebene Team-Namen-Formel (z.B. wegen einer nicht
+			// auflösbaren PTM.ALG.*-Add-in-Funktion) einen Berechnungsfehler liefert, statt das
+			// erst als schwer verständlichen Folgefehler an anderer Stelle auffallen zu lassen.
+			getSheetHelper().pruefeBereichAufFormelFehler(xSheet,
+					RangePosition.from(teamSpalte(1), zeile, teamSpalte(1), zeile));
 		} else {
 			// Teamnummer direkt
 			getSheetHelper().setNumberValueInCell(
@@ -1477,7 +1482,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	}
 
 	/**
-	 * Schreibt die WENN-Gewinner-Formel für Runden 2+.<br>
+	 * Schreibt die IF-Gewinner-Formel für Runden 2+.<br>
 	 * Gewinner = Team mit höherer Punktzahl. Bei Gleichstand: "?".<br>
 	 * Im NR-Modus wird die Teamnummer propagiert, im NAME-Modus der Teamname.
 	 */
@@ -1495,9 +1500,9 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		String teamBAddr = Position.from(teamSpalte(feederRunde), rowFeederB).getAddressWith$();
 
 		// Scores müssen Zahlen und explizit nicht leer sein, damit Calc leere Zellen nicht als 0 wertet.
-		String formel = "WENN(" + beideScoresVorhandenFormel(scoreAAddr, scoreBAddr) + ";"
-				+ "WENN(" + scoreAAddr + ">" + scoreBAddr + ";" + teamAAddr + ";"
-				+ "WENN(" + scoreAAddr + "<" + scoreBAddr + ";" + teamBAddr + ";\"?\"));"
+		String formel = "IF(" + beideScoresVorhandenFormel(scoreAAddr, scoreBAddr) + ";"
+				+ "IF(" + scoreAAddr + ">" + scoreBAddr + ";" + teamAAddr + ";"
+				+ "IF(" + scoreAAddr + "<" + scoreBAddr + ";" + teamBAddr + ";\"?\"));"
 				+ "\"\")";
 
 		int targetRow = istTeamA ? teamAZeile(runde, match) : teamBZeile(runde, match);
@@ -1551,9 +1556,9 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		String teamAAddr = Position.from(teamSpalte(numRunden), rowFinaleA).getAddressWith$();
 		String teamBAddr = Position.from(teamSpalte(numRunden), rowFinaleB).getAddressWith$();
 
-		String siegerFormel = "WENN(" + beideScoresVorhandenFormel(scoreAAddr, scoreBAddr) + ";"
-				+ "WENN(" + scoreAAddr + ">" + scoreBAddr + ";" + teamAAddr + ";"
-				+ "WENN(" + scoreAAddr + "<" + scoreBAddr + ";" + teamBAddr + ";\"?\"));"
+		String siegerFormel = "IF(" + beideScoresVorhandenFormel(scoreAAddr, scoreBAddr) + ";"
+				+ "IF(" + scoreAAddr + ">" + scoreBAddr + ";" + teamAAddr + ";"
+				+ "IF(" + scoreAAddr + "<" + scoreBAddr + ";" + teamBAddr + ";\"?\"));"
 				+ "\"\")";
 
 		CellHoriJustify justify = (teamAnzeige == KoSpielbaumTeamAnzeige.NAME)
@@ -1570,7 +1575,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		// Im NR-Modus: zusätzlich Teamname via SVERWEIS in der Nebenspalte
 		if (teamAnzeige == KoSpielbaumTeamAnzeige.NR) {
 			String siegerNrAddr = Position.from(siegerSp, siegerZeile).getAddressWith$();
-			String siegerNameFormel = "WENN(UND(ISTZAHL(" + siegerNrAddr + ");" + siegerNrAddr
+			String siegerNameFormel = "IF(AND(ISNUMBER(" + siegerNrAddr + ");" + siegerNrAddr
 					+ "<>\"\";" + siegerNrAddr + ">0);" + MeldeListeHelper.teamNameFormel(siegerNrAddr,
 							meldeListeTeamnameAnzeigen, meldeListeFormation, meldeListeVereinsnameAnzeigen) + ";\"\")";
 
@@ -1582,6 +1587,11 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 							.setCharWeight(FontWeight.BOLD)
 							.setShrinkToFit(true)
 							.setHoriJustify(CellHoriJustify.LEFT));
+			// Früh prüfen, ob die gerade geschriebene Team-Namen-Formel (z.B. wegen einer nicht
+			// auflösbaren PTM.ALG.*-Add-in-Funktion) einen Berechnungsfehler liefert, statt das
+			// erst als schwer verständlichen Folgefehler an anderer Stelle auffallen zu lassen.
+			getSheetHelper().pruefeBereichAufFormelFehler(xSheet, RangePosition.from(
+					siegerNameSpalte(numRunden), siegerZeile, siegerNameSpalte(numRunden), siegerZeile));
 		}
 	}
 
@@ -1694,6 +1704,10 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 							.setCellBackColor(farbe)
 							.setBorder(BorderFactory.from().allThin().toBorder())
 							.setHoriJustify(CellHoriJustify.LEFT));
+			// Früh prüfen, ob die gerade geschriebene Team-Namen-Formel (z.B. wegen einer nicht
+			// auflösbaren PTM.ALG.*-Add-in-Funktion) einen Berechnungsfehler liefert, statt das
+			// erst als schwer verständlichen Folgefehler an anderer Stelle auffallen zu lassen.
+			getSheetHelper().pruefeBereichAufFormelFehler(xSheet, RangePosition.from(spalte, zeile, spalte, zeile));
 		} else {
 			getSheetHelper().setNumberValueInCell(
 					NumberCellValue.from(xSheet, Position.from(spalte, zeile))
@@ -1721,9 +1735,9 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		String teamAAddr = Position.from(cadrageTeamSpalte(), rowA).getAddressWith$();
 		String teamBAddr = Position.from(cadrageTeamSpalte(), rowB).getAddressWith$();
 
-		String formel = "WENN(" + beideScoresVorhandenFormel(scoreAAddr, scoreBAddr) + ";"
-				+ "WENN(" + scoreAAddr + ">" + scoreBAddr + ";" + teamAAddr + ";"
-				+ "WENN(" + scoreAAddr + "<" + scoreBAddr + ";" + teamBAddr + ";\"?\"));"
+		String formel = "IF(" + beideScoresVorhandenFormel(scoreAAddr, scoreBAddr) + ";"
+				+ "IF(" + scoreAAddr + ">" + scoreBAddr + ";" + teamAAddr + ";"
+				+ "IF(" + scoreAAddr + "<" + scoreBAddr + ";" + teamBAddr + ";\"?\"));"
 				+ "\"\")";
 
 		int farbe = istSlotA ? teamBFarbe : teamAFarbe;
@@ -1852,9 +1866,9 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		String teamBAddr = Position.from(teamSpalte(feederRunde), rowFeederB).getAddressWith$();
 
 		// Verlierer = Team mit niedrigere Punktzahl (umgekehrt zur Gewinner-Formel)
-		String formel = "WENN(" + beideScoresVorhandenFormel(scoreAAddr, scoreBAddr) + ";"
-				+ "WENN(" + scoreAAddr + "<" + scoreBAddr + ";" + teamAAddr + ";"
-				+ "WENN(" + scoreAAddr + ">" + scoreBAddr + ";" + teamBAddr + ";\"?\"));"
+		String formel = "IF(" + beideScoresVorhandenFormel(scoreAAddr, scoreBAddr) + ";"
+				+ "IF(" + scoreAAddr + "<" + scoreBAddr + ";" + teamAAddr + ";"
+				+ "IF(" + scoreAAddr + ">" + scoreBAddr + ";" + teamBAddr + ";\"?\"));"
 				+ "\"\")";
 
 		CellHoriJustify justify = (teamAnzeige == KoSpielbaumTeamAnzeige.NAME)
@@ -1880,9 +1894,9 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		String teamAAddr = Position.from(teamSpalte(numRunden), teamAZeile).getAddressWith$();
 		String teamBAddr = Position.from(teamSpalte(numRunden), teamBZeile).getAddressWith$();
 
-		String drittePlatzFormel = "WENN(" + beideScoresVorhandenFormel(scoreAAddr, scoreBAddr) + ";"
-				+ "WENN(" + scoreAAddr + ">" + scoreBAddr + ";" + teamAAddr + ";"
-				+ "WENN(" + scoreAAddr + "<" + scoreBAddr + ";" + teamBAddr + ";\"?\"));"
+		String drittePlatzFormel = "IF(" + beideScoresVorhandenFormel(scoreAAddr, scoreBAddr) + ";"
+				+ "IF(" + scoreAAddr + ">" + scoreBAddr + ";" + teamAAddr + ";"
+				+ "IF(" + scoreAAddr + "<" + scoreBAddr + ";" + teamBAddr + ";\"?\"));"
 				+ "\"\")";
 
 		CellHoriJustify justify = (teamAnzeige == KoSpielbaumTeamAnzeige.NAME)
@@ -1899,7 +1913,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		// Im NR-Modus: Teamname via SVERWEIS in der Nebenspalte
 		if (teamAnzeige == KoSpielbaumTeamAnzeige.NR) {
 			String drittePlatzNrAddr = Position.from(siegerSp, siegerZeile).getAddressWith$();
-			String drittePlatzNameFormel = "WENN(UND(ISTZAHL(" + drittePlatzNrAddr + ");" + drittePlatzNrAddr
+			String drittePlatzNameFormel = "IF(AND(ISNUMBER(" + drittePlatzNrAddr + ");" + drittePlatzNrAddr
 					+ "<>\"\";" + drittePlatzNrAddr + ">0);" + MeldeListeHelper.teamNameFormel(drittePlatzNrAddr,
 						meldeListeTeamnameAnzeigen, meldeListeFormation, meldeListeVereinsnameAnzeigen) + ";\"\")";
 
@@ -1911,12 +1925,17 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 							.setCharWeight(FontWeight.BOLD)
 							.setShrinkToFit(true)
 							.setHoriJustify(CellHoriJustify.LEFT));
+			// Früh prüfen, ob die gerade geschriebene Team-Namen-Formel (z.B. wegen einer nicht
+			// auflösbaren PTM.ALG.*-Add-in-Funktion) einen Berechnungsfehler liefert, statt das
+			// erst als schwer verständlichen Folgefehler an anderer Stelle auffallen zu lassen.
+			getSheetHelper().pruefeBereichAufFormelFehler(xSheet, RangePosition.from(
+					siegerNameSpalte(numRunden), siegerZeile, siegerNameSpalte(numRunden), siegerZeile));
 		}
 	}
 
 	private String beideScoresVorhandenFormel(String scoreAAddr, String scoreBAddr) {
-		return "UND(ISTZAHL(" + scoreAAddr + ");" + scoreAAddr + "<>\"\";"
-				+ "ISTZAHL(" + scoreBAddr + ");" + scoreBAddr + "<>\"\")";
+		return "AND(ISNUMBER(" + scoreAAddr + ");" + scoreAAddr + "<>\"\";"
+				+ "ISNUMBER(" + scoreBAddr + ");" + scoreBAddr + "<>\"\")";
 	}
 
 }

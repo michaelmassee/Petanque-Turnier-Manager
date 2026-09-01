@@ -573,7 +573,13 @@ public abstract class SheetRunner extends Thread {
 					.message(I18n.get("msg.text.verarbeitung.abgebrochen")).show();
 		} else {
 			processBox().fehler(e.getMessage());
-			getLogger().error(e.getMessage(), e);
+			if (e.istNurWarnung()) {
+				// Erwartbare Eingabe-Validierung (Anwender muss selbst etwas korrigieren),
+				// kein Plugin-Fehler – daher nur als Warnung protokollieren, nicht als ERROR.
+				getLogger().warn(e.getMessage());
+			} else {
+				getLogger().error(e.getMessage(), e);
+			}
 			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK)
 					.caption(I18n.get("msg.caption.fehler"))
 					.message(e.getMessage()).show();

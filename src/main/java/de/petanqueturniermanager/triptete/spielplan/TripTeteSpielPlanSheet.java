@@ -325,10 +325,19 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet {
 				.setPos(Position.from(NAME_B_SPALTE, ERSTE_DATEN_ZEILE))
 				.setFillAutoDown(letzteSpielZeile);
 		getSheetHelper().setFormulaInCell(nameBFormel);
+
+		// generate() läuft mit deaktivierter Automatikberechnung (Performance); ohne expliziten
+		// Rechenlauf blieben die neuen Formelzellen unberechnet. Danach früh prüfen, ob eine
+		// Formel (z.B. wegen einer nicht auflösbaren PTM.ALG.*-Add-in-Funktion) einen
+		// Berechnungsfehler liefert, statt das erst als schwer verständlichen Folgefehler
+		// an anderer Stelle auffallen zu lassen.
+		getxCalculatable().calculateAll();
+		getSheetHelper().pruefeBereichAufFormelFehler(getXSpreadSheet(),
+				RangePosition.from(NAME_A_SPALTE, ERSTE_DATEN_ZEILE, NAME_B_SPALTE, letzteSpielZeile));
 	}
 
 	private String freispielName(String formulaName) {
-		return "WENNNV(" + formulaName + ";\"" + I18n.get("spielplan.freispiel.name") + "\")";
+		return "IFNA(" + formulaName + ";\"" + I18n.get("spielplan.freispiel.name") + "\")";
 	}
 
 	private void insertFormulaWertSpalten() throws GenerateException {
@@ -346,11 +355,11 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet {
 		Position siegeAPos = Position.from(SIEGE_A, ERSTE_DATEN_ZEILE);
 		Position siegeBPos = Position.from(SIEGE_B, ERSTE_DATEN_ZEILE);
 		StringCellValue punkteA = StringCellValue.from(getXSpreadSheet())
-				.setValue("WENN(" + siegeAPos.getAddress() + ">=2;1;0)")
+				.setValue("IF(" + siegeAPos.getAddress() + ">=2;1;0)")
 				.setPos(Position.from(PUNKTE_A, ERSTE_DATEN_ZEILE)).setFillAutoDown(letzteSpielZeile);
 		getSheetHelper().setFormulaInCell(punkteA);
 		StringCellValue punkteB = StringCellValue.from(getXSpreadSheet())
-				.setValue("WENN(" + siegeBPos.getAddress() + ">=2;1;0)")
+				.setValue("IF(" + siegeBPos.getAddress() + ">=2;1;0)")
 				.setPos(Position.from(PUNKTE_B, ERSTE_DATEN_ZEILE)).setFillAutoDown(letzteSpielZeile);
 		getSheetHelper().setFormulaInCell(punkteB);
 
@@ -377,9 +386,9 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet {
 		String bDouAdr = fuerA ? douB.getAddress() : douA.getAddress();
 		String aTeteAdr = fuerA ? teteA.getAddress() : teteB.getAddress();
 		String bTeteAdr = fuerA ? teteB.getAddress() : teteA.getAddress();
-		return "WENN(" + aAdr + ">" + bAdr + ";1;0)"
-				+ "+WENN(" + aDouAdr + ">" + bDouAdr + ";1;0)"
-				+ "+WENN(" + aTeteAdr + ">" + bTeteAdr + ";1;0)";
+		return "IF(" + aAdr + ">" + bAdr + ";1;0)"
+				+ "+IF(" + aDouAdr + ">" + bDouAdr + ";1;0)"
+				+ "+IF(" + aTeteAdr + ">" + bTeteAdr + ";1;0)";
 	}
 
 	/** Σ Spielpunkte: Summe aller drei Partie-Spielpunkte für ein Team. */

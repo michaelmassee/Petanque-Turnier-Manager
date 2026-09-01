@@ -399,8 +399,12 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 	 * @throws GenerateException
 	 */
 	private void datenErsteSpalte() throws GenerateException {
+		Position letztePos = letztePositionRechtsUnten();
+		if (letztePos == null) {
+			throw new GenerateException(I18n.get("schweizer.spielrunde.fehler.keine.paarungen"));
+		}
 		Integer headerColor = getKonfigurationSheet().getSpielRundeHeaderFarbe();
-		Integer letzteZeile = letztePositionRechtsUnten().getZeile();
+		Integer letzteZeile = letztePos.getZeile();
 		SpielrundeSpielbahn spielrundeSpielbahn = getKonfigurationSheet().getSpielrundeSpielbahn();
 
 		spielrundeHelper.datenErsteSpalte(spielrundeSpielbahn, ERSTE_DATEN_ZEILE, letzteZeile, BAHN_NR_SPALTE,
@@ -775,6 +779,11 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		// ohne expliziten Rechenlauf blieben die neuen Formelzellen bis zum nächsten
 		// Nutzer-Trigger auf 0 stehen.
 		getxCalculatable().calculateAll();
+
+		// Frühzeitig erkennen, wenn eine der gerade geschriebenen Formeln (z.B. wegen einer
+		// nicht auflösbaren PTM.ALG.*-Add-in-Funktion) einen Berechnungsfehler liefert –
+		// sonst fällt das erst als schwer verständlicher Folgefehler an anderer Stelle auf.
+		getSheetHelper().pruefeBereichAufFormelFehler(getXSpreadSheet(), teamRange);
 	}
 
 	/**
