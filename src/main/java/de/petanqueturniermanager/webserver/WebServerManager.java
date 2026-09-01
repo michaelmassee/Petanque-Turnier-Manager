@@ -233,6 +233,22 @@ public final class WebServerManager implements TimerListener {
      */
     public synchronized void starten(XComponentContext ctx, XSpreadsheetDocument dokument) {
         if (laeuft) {
+            // Ein früher manueller Start kann noch keinen Dispatch-Frame (und damit kein
+            // Dokument) haben. Der erste spätere onLoad/onNew-Aufruf liefert dann den
+            // eindeutigen Owner nach, ohne erneut auf den Fokus zurückzufallen.
+            if (ownerDocument == null && dokument != null) {
+                ownerDocument = dokument;
+                logger.info("Webserver Owner-Dokument nachträglich gesetzt");
+                statusListenerBenachrichtigen();
+                try {
+                    sseRefreshSendenIntern(erzeugeWorkingSpreadsheetFuerOwner(ctx));
+                } catch (Exception e) {
+                    logger.debug("Initiales Rendering nach Owner-Bindung fehlgeschlagen: {}", e.getMessage());
+                    sendeHinweisAnAlle(
+                            I18n.get("webserver.hinweis.kein.dokument.titel"),
+                            I18n.get("webserver.hinweis.kein.dokument.text"));
+                }
+            }
             logger.debug("WebServerManager läuft bereits");
             return;
         }
@@ -720,7 +736,10 @@ public final class WebServerManager implements TimerListener {
                 return;
             }
             try {
-                pushStartseiteFallsAktiv(erzeugeWorkingSpreadsheetFuerOwner(ctx));
+                var ws = erzeugeWorkingSpreadsheetFuerOwner(ctx);
+                if (ws != null) {
+                    pushStartseiteFallsAktiv(ws);
+                }
             } catch (RuntimeException e) {
                 logger.warn("Live-Push der Startseite nach Konfig-Änderung fehlgeschlagen: {}", e.getMessage(), e);
             }
