@@ -136,16 +136,24 @@ public class DocumentPropertiesHelper {
 		}
 		XComponent xComponent = Lo.qi(XComponent.class, dokument);
 		if (xComponent == null) {
+			PROPLISTE.remove(oid);
 			CLOSE_LISTENER_REGISTRIERT.remove(oid);
 			return;
 		}
-		xComponent.addEventListener(new XEventListener() {
-			@Override
-			public void disposing(EventObject event) {
-				PROPLISTE.remove(oid);
-				CLOSE_LISTENER_REGISTRIERT.remove(oid);
-			}
-		});
+		try {
+			xComponent.addEventListener(new XEventListener() {
+				@Override
+				public void disposing(EventObject event) {
+					PROPLISTE.remove(oid);
+					CLOSE_LISTENER_REGISTRIERT.remove(oid);
+				}
+			});
+		} catch (RuntimeException e) {
+			// Das Dokument kann zwischen Cache-Aufbau und Listener-Registrierung geschlossen werden.
+			PROPLISTE.remove(oid);
+			CLOSE_LISTENER_REGISTRIERT.remove(oid);
+			throw e;
+		}
 	}
 
 	public boolean isEmpty() {
