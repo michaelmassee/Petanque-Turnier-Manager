@@ -55,6 +55,7 @@ public final class PtmOnlineOptionsEventHandler extends WeakBase implements XSer
 	private static final String CTL_LABEL = "PtmOnlineLabel";
 	private static final String CTL_API_KEY_LABEL = "PtmOnlineApiKeyLabel";
 	private static final String CTL_API_KEY_FELD = "PtmOnlineApiKeyFeld";
+	private static final String CTL_API_KEY_ANZEIGEN = "PtmOnlineApiKeyAnzeigen";
 	private static final String CTL_BASE_URL_LABEL = "PtmOnlineBaseUrlLabel";
 	private static final String CTL_BASE_URL_FELD = "PtmOnlineBaseUrlFeld";
 	private static final String CTL_VERBINDUNG_TESTEN = "PtmOnlineVerbindungTesten";
@@ -95,6 +96,7 @@ public final class PtmOnlineOptionsEventHandler extends WeakBase implements XSer
 		XControlContainer container = container(window);
 		setLabel(container, CTL_LABEL, I18n.get("ptmonline.konfig.bereich"));
 		setLabel(container, CTL_API_KEY_LABEL, I18n.get("ptmonline.konfig.label.apikey"));
+		setLabel(container, CTL_API_KEY_ANZEIGEN, I18n.get("ptmonline.config.label.apikey.anzeigen"));
 		setLabel(container, CTL_BASE_URL_LABEL, I18n.get("ptmonline.konfig.label.baseurl"));
 		setLabel(container, CTL_VERBINDUNG_TESTEN, I18n.get("ptmonline.konfig.btn.testen"));
 
@@ -130,7 +132,57 @@ public final class PtmOnlineOptionsEventHandler extends WeakBase implements XSer
 				}
 			});
 		}
+		XButton anzeigenButton = control(container, CTL_API_KEY_ANZEIGEN, XButton.class);
+		if (anzeigenButton != null) {
+			anzeigenButton.addActionListener(new XActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent event) {
+					beimApiKeyAnzeigenGeklickt(container);
+				}
+
+				@Override
+				public void disposing(EventObject event) {
+					// nichts zu tun
+				}
+			});
+		}
 		listenerContainer = container;
+	}
+
+	/**
+	 * Schaltet bei jedem Klick die Maskierung (EchoChar) des API-Key-Felds um. Vorbild:
+	 * {@code PtmOnlineConfigDialog.beimApiKeyAnzeigenGeklickt} — gleicher vcl-Repaint-Workaround.
+	 */
+	private static void beimApiKeyAnzeigenGeklickt(XControlContainer container) {
+		XControl feldCtrl = container.getControl(CTL_API_KEY_FELD);
+		XControl buttonCtrl = container.getControl(CTL_API_KEY_ANZEIGEN);
+		if (feldCtrl == null || buttonCtrl == null) {
+			return;
+		}
+		XPropertySet feldProps = UnoRuntime.queryInterface(XPropertySet.class, feldCtrl.getModel());
+		XPropertySet buttonProps = UnoRuntime.queryInterface(XPropertySet.class, buttonCtrl.getModel());
+		if (feldProps == null || buttonProps == null) {
+			return;
+		}
+		try {
+			short aktuellerEchoChar = (short) feldProps.getPropertyValue("EchoChar");
+			boolean sichtbar = aktuellerEchoChar == 0;
+			feldProps.setPropertyValue("EchoChar", sichtbar ? (short) '*' : (short) 0);
+			erzwingeRepaint(feldCtrl);
+			buttonProps.setPropertyValue("Label", I18n.get(
+					sichtbar ? "ptmonline.config.label.apikey.anzeigen" : "ptmonline.config.label.apikey.verbergen"));
+		} catch (Exception e) {
+			logger.debug("API-Key Anzeige-Umschaltung fehlgeschlagen", e);
+		}
+	}
+
+	private static void erzwingeRepaint(XControl ctrl) {
+		XWindow fenster = UnoRuntime.queryInterface(XWindow.class, ctrl.getPeer());
+		if (fenster == null) {
+			return;
+		}
+		fenster.setVisible(false);
+		fenster.setVisible(true);
 	}
 
 	private void verbindungTesten(XControlContainer container) {

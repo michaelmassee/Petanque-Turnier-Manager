@@ -42,24 +42,6 @@ public final class PtmOnlineDispatcher {
 
     private PtmOnlineDispatcher() {}
 
-    public static void konfigurieren(WorkingSpreadsheet ws) {
-        XComponentContext ctx = ws.getxContext();
-        ProcessBox pb = ProcessBox.from();
-        boolean warSichtbar = pb.istSichtbar();
-        if (warSichtbar) {
-            pb.hide();
-        }
-        try {
-            new PtmOnlineConfigDialog(ctx, new PtmOnlineConfig(), null).zeigen();
-        } catch (com.sun.star.uno.Exception | RuntimeException e) {
-            logger.error("PTM-Online-Konfigurationsdialog fehlgeschlagen", e);
-        } finally {
-            if (warSichtbar) {
-                pb.visibleWennAutomatisch();
-            }
-        }
-    }
-
     public static void turnierOnlineAnlegen(WorkingSpreadsheet ws) {
         XComponentContext ctx = ws.getxContext();
         PtmOnlineConfig config = new PtmOnlineConfig();
