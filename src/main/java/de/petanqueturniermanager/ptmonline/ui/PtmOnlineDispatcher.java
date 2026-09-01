@@ -26,6 +26,7 @@ import de.petanqueturniermanager.ptmonline.RegistrationImportTask;
 import de.petanqueturniermanager.ptmonline.ResultExportTask;
 import de.petanqueturniermanager.ptmonline.TournamentSyncClient;
 import de.petanqueturniermanager.ptmonline.dto.CreateTournamentDto;
+import de.petanqueturniermanager.ptmonline.sheet.PtmOnlineInfoSheet;
 import de.petanqueturniermanager.spielerdb.MeldelisteZiel;
 import de.petanqueturniermanager.spielerdb.MeldelisteZielFactory;
 
@@ -75,7 +76,7 @@ public final class PtmOnlineDispatcher {
                 onlineTyp.get(), onlineFormation, "draft", "private");
 
         Thread worker = new Thread(
-                () -> turnierAnlegenImHintergrund(ctx, zugangsdaten.baseUrl(), zugangsdaten.apiKey(), mapping, dto),
+                () -> turnierAnlegenImHintergrund(ws, ctx, zugangsdaten.baseUrl(), zugangsdaten.apiKey(), mapping, dto),
                 "PTM-Online-TurnierAnlegen");
         worker.start();
     }
@@ -98,13 +99,14 @@ public final class PtmOnlineDispatcher {
         }
     }
 
-    private static void turnierAnlegenImHintergrund(
+    private static void turnierAnlegenImHintergrund(WorkingSpreadsheet ws,
             XComponentContext ctx, String baseUrl, String apiKey, PtmOnlineRegistrationMapping mapping, CreateTournamentDto dto) {
         try {
             TournamentSyncClient client = new TournamentSyncClient(baseUrl, apiKey);
             String tournamentId = client.createTournament(dto);
             LoMainThread.post(ctx, () -> {
                 mapping.setTournamentId(tournamentId);
+                PtmOnlineInfoSheet.aktualisiereBestEffort(ws, baseUrl, mapping);
                 MessageBox.from(ctx, MessageBoxTypeEnum.INFO_OK)
                         .caption(I18n.get("ptmonline.menu.toplevel"))
                         .message(I18n.get("ptmonline.erfolg.turnier_angelegt", tournamentId))

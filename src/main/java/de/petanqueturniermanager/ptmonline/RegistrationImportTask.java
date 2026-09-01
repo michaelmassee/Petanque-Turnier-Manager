@@ -26,6 +26,7 @@ import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationDto;
+import de.petanqueturniermanager.ptmonline.sheet.PtmOnlineInfoSheet;
 import de.petanqueturniermanager.spielerdb.MeldelisteZiel;
 import de.petanqueturniermanager.spielerdb.MeldelisteZielFactory;
 import de.petanqueturniermanager.spielerdb.SpielerMitVerein;
@@ -95,11 +96,11 @@ public final class RegistrationImportTask {
             return;
         }
 
-        LoMainThread.post(ctx, () -> schreibeUndAktualisiere(ws, ctx, mapping, ts, ziel, neue));
+        LoMainThread.post(ctx, () -> schreibeUndAktualisiere(ws, ctx, baseUrl, mapping, ts, ziel, neue));
     }
 
     /** Laeuft auf dem Main-Thread: schreibt neue Bloecke, stoesst den Update-Lauf an. */
-    private static void schreibeUndAktualisiere(WorkingSpreadsheet ws, XComponentContext ctx,
+    private static void schreibeUndAktualisiere(WorkingSpreadsheet ws, XComponentContext ctx, String baseUrl,
             PtmOnlineRegistrationMapping mapping, TurnierSystem ts, MeldelisteZiel ziel, List<RegistrationDto> neue) {
         List<RegistrationDto> geschrieben = new ArrayList<>();
         for (RegistrationDto reg : neue) {
@@ -125,7 +126,7 @@ public final class RegistrationImportTask {
         SheetRunner runner = MeldelisteZielFactory.starteMeldelisteUpdate(ws, ts);
         Instant jetzt = Instant.now();
         Thread abschluss = new Thread(
-                () -> warteAufAbschlussUndAktualisiereMapping(ctx, mapping, ziel, geschrieben, jetzt, runner),
+                () -> warteAufAbschlussUndAktualisiereMapping(ws, ctx, baseUrl, mapping, ziel, geschrieben, jetzt, runner),
                 "PTM-Online-ImportAbschluss");
         abschluss.start();
     }
@@ -137,7 +138,7 @@ public final class RegistrationImportTask {
      * Ein join() auf dem Main-Thread waere hier riskant, falls der Runner intern selbst
      * per LoMainThread.post zurueckmarshalliert (Deadlock-Gefahr).
      */
-    private static void warteAufAbschlussUndAktualisiereMapping(XComponentContext ctx,
+    private static void warteAufAbschlussUndAktualisiereMapping(WorkingSpreadsheet ws, XComponentContext ctx, String baseUrl,
             PtmOnlineRegistrationMapping mapping, MeldelisteZiel ziel, List<RegistrationDto> geschrieben,
             Instant jetzt, @Nullable SheetRunner runner) {
         if (runner != null) {
@@ -148,11 +149,11 @@ public final class RegistrationImportTask {
                 return;
             }
         }
-        LoMainThread.post(ctx, () -> aktualisiereMappingUndZeigeErfolg(ctx, mapping, ziel, geschrieben, jetzt));
+        LoMainThread.post(ctx, () -> aktualisiereMappingUndZeigeErfolg(ws, ctx, baseUrl, mapping, ziel, geschrieben, jetzt));
     }
 
-    private static void aktualisiereMappingUndZeigeErfolg(XComponentContext ctx, PtmOnlineRegistrationMapping mapping,
-            MeldelisteZiel ziel, List<RegistrationDto> geschrieben, Instant jetzt) {
+    private static void aktualisiereMappingUndZeigeErfolg(WorkingSpreadsheet ws, XComponentContext ctx, String baseUrl,
+            PtmOnlineRegistrationMapping mapping, MeldelisteZiel ziel, List<RegistrationDto> geschrieben, Instant jetzt) {
         for (RegistrationDto reg : geschrieben) {
             int zeile = ziel.findeZeileMitName(reg.firstName() + " " + reg.lastName());
             if (zeile > 0) {
@@ -162,6 +163,7 @@ public final class RegistrationImportTask {
             }
         }
         mapping.setLastSync(jetzt);
+        PtmOnlineInfoSheet.aktualisiereBestEffort(ws, baseUrl, mapping);
         zeigeInfo(ctx, I18n.get("ptmonline.erfolg.anmeldungen_importiert", geschrieben.size()));
     }
 

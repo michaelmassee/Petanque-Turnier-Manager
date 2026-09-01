@@ -21,6 +21,7 @@ import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationResultDto;
+import de.petanqueturniermanager.ptmonline.sheet.PtmOnlineInfoSheet;
 
 /**
  * Exportiert die Setzposition bereits importierter Anmeldungen zurueck nach PTM-Online. Der
@@ -66,17 +67,21 @@ public final class ResultExportTask {
                 .toList();
 
         Thread worker = new Thread(
-                () -> exportiereImHintergrund(ctx, zugangsdaten.baseUrl(), zugangsdaten.apiKey(), tournamentId.get(), results),
+                () -> exportiereImHintergrund(
+                        ws, ctx, zugangsdaten.baseUrl(), zugangsdaten.apiKey(), mapping, tournamentId.get(), results),
                 "PTM-Online-Export");
         worker.start();
     }
 
-    private static void exportiereImHintergrund(
-            XComponentContext ctx, String baseUrl, String apiKey, String tournamentId, List<RegistrationResultDto> results) {
+    private static void exportiereImHintergrund(WorkingSpreadsheet ws, XComponentContext ctx, String baseUrl, String apiKey,
+            PtmOnlineRegistrationMapping mapping, String tournamentId, List<RegistrationResultDto> results) {
         try {
             TournamentSyncClient client = new TournamentSyncClient(baseUrl, apiKey);
             int aktualisiert = client.pushResults(tournamentId, results);
-            LoMainThread.post(ctx, () -> zeigeInfo(ctx, I18n.get("ptmonline.erfolg.ergebnisse_exportiert", aktualisiert)));
+            LoMainThread.post(ctx, () -> {
+                PtmOnlineInfoSheet.aktualisiereBestEffort(ws, baseUrl, mapping);
+                zeigeInfo(ctx, I18n.get("ptmonline.erfolg.ergebnisse_exportiert", aktualisiert));
+            });
         } catch (IOException e) {
             logger.error("PTM-Online: Ergebnisse exportieren fehlgeschlagen", e);
             LoMainThread.post(ctx, () -> zeigeNetzwerkFehler(ctx, e));
