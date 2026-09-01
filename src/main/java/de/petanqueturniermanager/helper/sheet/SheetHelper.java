@@ -80,14 +80,6 @@ public class SheetHelper {
 
 	private static final Logger logger = LogManager.getLogger(SheetHelper.class);
 
-	// http://www.ooowiki.de/DeutschEnglischCalcFunktionen.html
-	private static final String[] FORMULA_GERMAN_SEARCH_LIST = new String[] { "ISTNV", "WENNNV", "WENN",
-			"ISOKALENDERWOCHE", "ISTZAHL", "ANZAHL", "ANZAHL2", "ZÄHLENWENN",
-			"PTM.ALG.DIREKTVERGLEICH" };
-	private static final String[] FORMULA_ENGLISH_REPLACEMENT_LIST = new String[] { "ISNA", "IFNA", "IF", "ISOWEEKNUM",
-			"ISNUMBER", "COUNT", "COUNTA", "COUNTIF",
-			"PTM.ALG.DIRECTCOMPARISON" };
-
 	private final WorkingSpreadsheet currentSpreadsheet;
 
 	public SheetHelper(WorkingSpreadsheet currentSpreadsheet) {
@@ -344,10 +336,7 @@ public class SheetHelper {
 		try {
 			xCell = sheet.getCellByPosition(pos.getSpalte(), pos.getZeile());
 
-			// Deutsch nach Englisch
-			// http://www.ooowiki.de/DeutschEnglischCalcFunktionen.html
-			formula = StringUtils.replaceEach(formula.trim(), FORMULA_GERMAN_SEARCH_LIST,
-					FORMULA_ENGLISH_REPLACEMENT_LIST);
+			formula = formula.trim();
 			xCell.setFormula(formula.startsWith("=") ? formula : "=" + formula);
 		} catch (IndexOutOfBoundsException e) {
 			logger.error(e.getMessage(), e);

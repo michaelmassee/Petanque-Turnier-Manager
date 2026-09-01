@@ -438,7 +438,7 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 				.setBorder(BorderFactory.from().allThin().toBorder());
 
 		{
-			String formulaHeimPunkteStr = "WENN("
+			String formulaHeimPunkteStr = "IF("
 					+ Position.from(SPIELPNKT_A_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE).getAddress() + ">"
 					+ Position.from(SPIELPNKT_B_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE).getAddress() + ";1;0)";
 
@@ -454,7 +454,7 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 		}
 
 		{
-			String formulaGastPunkteStr = "WENN("
+			String formulaGastPunkteStr = "IF("
 					+ Position.from(SPIELPNKT_B_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE).getAddress() + ">"
 					+ Position.from(SPIELPNKT_A_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE).getAddress() + ";1;0)";
 
