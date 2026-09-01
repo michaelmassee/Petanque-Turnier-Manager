@@ -931,6 +931,41 @@ tasks.register('buildSpielerDbFrontend', Exec) {
 processResources.dependsOn 'buildFrontend'
 processResources.dependsOn 'buildSpielerDbFrontend'
 
+// ===================================================
+// LO-Build-Version (für Laufzeit-Kompatibilitätsprüfung, siehe LoVersionChecker)
+// ===================================================
+
+tasks.register('generateLoVersionInfo') {
+    group = 'LibreOffice'
+    description = 'Ermittelt die LO-Version, gegen die aktuell gebaut wird (soffice --version), und schreibt sie in eine Properties-Datei'
+    def outputFile = file("${buildDir}/generated/resources/loVersionInfo/de/petanqueturniermanager/comp/build-lo-version.properties")
+    outputs.file(outputFile)
+    doLast {
+        String version = 'unbekannt'
+        try {
+            def process = new ProcessBuilder("${libreOfficeProgramPath}/soffice", '--version')
+                    .redirectErrorStream(true)
+                    .start()
+            def text = process.inputStream.getText('UTF-8')
+            process.waitFor()
+            def matcher = text =~ /(\d+(?:\.\d+)+)/
+            if (matcher.find()) {
+                version = matcher.group(1)
+            } else {
+                logger.warn("generateLoVersionInfo: konnte LO-Version nicht aus 'soffice --version' parsen: ${text.trim()}")
+            }
+        } catch (Exception e) {
+            // Darf den Build niemals scheitern lassen - LO-Build-Version ist rein diagnostisch.
+            logger.warn("generateLoVersionInfo: 'soffice --version' fehlgeschlagen (${e.message}) - verwende 'unbekannt'")
+        }
+        outputFile.parentFile.mkdirs()
+        outputFile.text = "lo.build.version=${version}\n"
+    }
+}
+
+sourceSets.main.resources.srcDir("${buildDir}/generated/resources/loVersionInfo")
+processResources.dependsOn 'generateLoVersionInfo'
+
 // Build-Task
 def pluginOxtDatei = layout.buildDirectory.file("distributions/${project.name}-${version}.oxt")
 

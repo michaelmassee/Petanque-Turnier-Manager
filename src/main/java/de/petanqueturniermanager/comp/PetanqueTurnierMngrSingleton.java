@@ -149,6 +149,7 @@ public class PetanqueTurnierMngrSingleton {
 		MacAwtHeadlessSchutz.aktiviereFallsMacOS();
 		sharedContext = context;
 		StartupInfoLogger.logStartupInfo(context);
+		LoVersionChecker.pruefeUndLoggeKompatibilitaet(context);
 		GlobalProperties.setLibreOfficeContext(context);
 		GlobalProperties.get(); // just do an init, read properties if not already there
 
