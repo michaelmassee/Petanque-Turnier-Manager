@@ -186,7 +186,6 @@ import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_New;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_TestDaten;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
 import de.petanqueturniermanager.supermelee.meldeliste.SupermeleeTeilnehmerSheet;
-import de.petanqueturniermanager.supermelee.online.SupermeleeOnlineSyncSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundePlan;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Naechste;
@@ -257,7 +256,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_MELDELISTE_TESTDATEN = "meldeliste_testdaten";
 	public static final String CMD_SPIELRUNDEN_TESTDATEN = "spielrunden_testdaten";
 	public static final String CMD_SPIELTAGRANGLISTE_TESTDATEN = "SpieltagRanglisteSheet_TestDaten";
-	public static final String CMD_SUPERMELEE_ONLINE_SYNC = "supermelee_online_sync";
 	// Liga
 	public static final String CMD_LIGA_NEUE_MELDELISTE = "liga_neue_meldeliste";
 	public static final String CMD_LIGA_UPDATE_MELDELISTE = "liga_update_meldeliste";
@@ -943,9 +941,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				break;
 			case CMD_UPDATE_MELDELISTE:
 				new MeldeListeSheet_Update(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).start();
-				break;
-			case CMD_SUPERMELEE_ONLINE_SYNC:
-				new SupermeleeOnlineSyncSheet(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).start();
 				break;
 			case CMD_ANMELDUNGEN:
 				new AnmeldungenSheet(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).backUpDocument().start();
@@ -2184,8 +2179,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_SPIELTAG_RANGLISTE, CMD_SPIELTAG_RANGLISTE_SORT,
 				 CMD_SUPERMELEE_ENDRANGLISTE, CMD_SUPERMELEE_ENDRANGLISTE_SORT,
 				 CMD_SUPERMELEE_TEAMPAARUNGEN,
-				 CMD_SUPERMELEE_VALIDATE, CMD_SUPERMELEE_SPIELTAGRANGLISTE_VALIDATE,
-				 CMD_SUPERMELEE_ONLINE_SYNC                     -> ts == TurnierSystem.SUPERMELEE;
+				 CMD_SUPERMELEE_VALIDATE, CMD_SUPERMELEE_SPIELTAGRANGLISTE_VALIDATE
+					                                             -> ts == TurnierSystem.SUPERMELEE;
 			case CMD_AKTUELLE_SPIELRUNDE                    -> ts == TurnierSystem.SUPERMELEE && hatSupermeleeSpielrunde(ws);
 			case CMD_MELDELISTE_TESTDATEN, CMD_SPIELRUNDEN_TESTDATEN,
 				 CMD_SPIELTAGRANGLISTE_TESTDATEN        -> ts == TurnierSystem.KEIN || ts == TurnierSystem.SUPERMELEE;

@@ -327,23 +327,6 @@
 								</prop>
 							</node>
 
-							<node oor:name="C9A22" oor:op="replace">
-								<prop oor:name="Title">
-									<value xml:lang="en">Sync with PTM Online</value>
-									<value xml:lang="de">Mit PTM Online synchronisieren</value>
-									<value xml:lang="es">Sincronizar con PTM Online</value>
-									<value xml:lang="fr">Synchroniser avec PTM Online</value>
-									<value xml:lang="nl">Synchroniseren met PTM Online</value>
-								</prop>
-								<prop oor:name="URL">
-									<value>ptm:supermelee_online_sync</value>
-								</prop>
-								<prop oor:name="Target" oor:type="xs:string">
-									<value>_self</value>
-								</prop>
-							</node>
-
-
 
 						</node>
 					</node>
