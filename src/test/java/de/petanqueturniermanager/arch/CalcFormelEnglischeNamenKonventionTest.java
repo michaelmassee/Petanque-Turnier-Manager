@@ -32,10 +32,15 @@ import org.junit.jupiter.api.Test;
  * {@link DokumentFokusKonventionTest}): jedes Java-String-Literal in {@code src/main/java} wird
  * auf bekannte deutsche Calc-Funktionsnamen unmittelbar vor einer öffnenden Klammer geprüft.
  * <p>
- * Ausgenommen sind unsere eigenen {@code PTM.ALG.*}-Add-in-Funktionsnamen (z.B.
- * {@code PTM.ALG.DIREKTVERGLEICH}) – deren DisplayNames sind laut {@code GlobalAddIn.xcu} pro
- * Locale registriert und werden von LO für Add-ins locale-unabhängig aufgelöst (anders als
- * ODF-Kernfunktionen), siehe Kommentar in {@code GlobalImpl.java}.
+ * Das gilt auch für unsere eigenen {@code PTM.ALG.*}-Add-in-Funktionen: obwohl deren
+ * DisplayNames laut {@code GlobalAddIn.xcu} pro Locale registriert sind, verlangt
+ * {@code XCell.setFormula()} auch hier den englischen DisplayName (empirisch verifiziert via
+ * {@code DirektVergleichUITest} – mit dem deutschen Namen berechnete die Formel ein falsches
+ * Ergebnis statt {@code #NAME?}). Deshalb hält {@code GlobalImpl.PTM_DIREKTVERGLEICH} den
+ * String {@code "PTM.ALG.DIRECTCOMPARISON"}, nicht {@code "PTM.ALG.DIREKTVERGLEICH"}. Die
+ * Add-in-eigenen Funktionsnamen (z.B. {@code DIREKTVERGLEICH}, {@code TURNIERSYSTEM}) stehen
+ * bewusst nicht in {@link #DEUTSCHE_CALC_FUNKTIONSNAMEN} – dort steht nur die Konstante, nicht
+ * ihr Wert, im Quelltext.
  */
 class CalcFormelEnglischeNamenKonventionTest {
 
