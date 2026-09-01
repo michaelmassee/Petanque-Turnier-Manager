@@ -189,10 +189,10 @@ public class PetanqueTurnierMngrSingleton {
 		ReleaseUpdateService.get().addStatusListener(autoUpdateStartupChecker::pruefeUndZeige);
 		autoUpdateStartupChecker.pruefeUndZeige();
 		t = logTimingAndReset("ReleaseUpdateService.init (async) + AutoUpdateStartupChecker", t);
-		if (GlobalProperties.get().isWebserverAktiv()) {
-			WebServerManager.get().starten(context);
-			t = logTimingAndReset("WebServerManager.starten", t);
-		}
+		// Kein Webserver-Bootstrap-Start hier: WebServerManager.starten() braucht ein konkretes
+		// Owner-Dokument (kein fokus-basiertes Raten, siehe CLAUDE.md „Mehrere offene
+		// Turnier-Dokumente"). Die Bindung übernimmt ProtocolHandler deterministisch, sobald ein
+		// Dokument tatsächlich da ist (onLoad-Handler bzw. Frame-Scan-Catch-up im Ctor).
 		addGlobalEventListener(new ToolbarAnzeigenListener());
 		t = logTimingAndReset("addGlobalEventListener ToolbarAnzeigenListener", t);
 		addGlobalEventListener(new SidebarAnzeigenListener());

@@ -215,29 +215,21 @@ public final class WebServerManager implements TimerListener {
     }
 
     /**
-     * Startet alle konfigurierten Webserver-Instanzen.
-     * Führt nach dem Start direkt ein initiales Rendering durch.
-     * <p>
-     * Ermittelt das Owner-Dokument fokus-basiert (siehe {@link #starten(XComponentContext,
-     * XSpreadsheetDocument)} für die deterministische Variante) – nur verwenden, wenn kein
-     * konkretes Dokument bekannt ist (z.B. globaler Bootstrap in {@code PetanqueTurnierMngrSingleton.init()}).
-     *
-     * @param ctx LibreOffice-Kontext für das initiale Rendering
-     */
-    public synchronized void starten(XComponentContext ctx) {
-        starten(ctx, null);
-    }
-
-    /**
      * Startet alle konfigurierten Webserver-Instanzen für ein konkretes Turnier-Dokument.
      * Führt nach dem Start direkt ein initiales Rendering durch.
+     * <p>
+     * Der Webserver darf nie ohne bekanntes Owner-Dokument starten (kein fokus-basiertes Raten –
+     * siehe CLAUDE.md, Abschnitt „Mehrere offene Turnier-Dokumente"). Aufrufer: {@code
+     * ProtocolHandler}s globaler {@code onLoad}-Handler bindet deterministisch an das jeweils
+     * geladene Dokument, sowie der einmalige Frame-Scan-Catch-up im {@code ProtocolHandler}-Ctor
+     * für das erste, schon offene Dokument; außerdem der manuelle Menü-Start über {@code
+     * ermittleDokumentAusFrame()}.
      *
      * @param ctx      LibreOffice-Kontext für das initiale Rendering
-     * @param dokument das Dokument, das den Webserver besitzt (z.B. per {@code
-     *                 ProtocolHandler.ermittleDokumentAusFrame()} aufgelöst); {@code null}
-     *                 fällt auf das fokussierte Dokument zurück – dann ggf. Leak-Risiko bei
-     *                 mehreren offenen Turnier-Dokumenten, siehe CLAUDE.md, Abschnitt
-     *                 „Mehrere offene Turnier-Dokumente".
+     * @param dokument das Dokument, das den Webserver besitzt; {@code null} startet die
+     *                 konfigurierten Server ohne Owner (kein initiales Rendering, kein
+     *                 Live-Update, bis der Webserver mit einem konkreten Dokument neu
+     *                 gestartet wird) – sollte vom Aufrufer möglichst vermieden werden.
      */
     public synchronized void starten(XComponentContext ctx, XSpreadsheetDocument dokument) {
         if (laeuft) {
@@ -295,16 +287,22 @@ public final class WebServerManager implements TimerListener {
         if (!compositeInstanzen.isEmpty() || startseiteInstanz != null || regieInstanz != null) {
             laeuft = true;
             gespeicherterCtx = ctx;
-            ownerDocument = dokument != null ? dokument : new WorkingSpreadsheet(ctx).getWorkingSpreadsheetDocument();
-            logger.info("Webserver Owner-Dokument gesetzt: {}", ownerDocument != null ? "ja" : "null");
+            // Kein fokus-basierter Fallback: ein unbekanntes Owner-Dokument bleibt bewusst null,
+            // statt per "gerade fokussiertes Dokument" zu raten (Leak-Risiko bei mehreren offenen
+            // Turnier-Dokumenten, siehe CLAUDE.md „Mehrere offene Turnier-Dokumente"). Aufrufer
+            // müssen ein konkretes Dokument übergeben (siehe ProtocolHandler.onLoad-Bindung).
+            ownerDocument = dokument;
+            logger.info("Webserver Owner-Dokument gesetzt: {}", ownerDocument != null ? "ja" : "nein");
             statusListenerBenachrichtigen();
-            try {
-                sseRefreshSendenIntern(erzeugeWorkingSpreadsheetFuerOwner(ctx));
-            } catch (Exception e) {
-                logger.debug("Initiales Rendering fehlgeschlagen: {}", e.getMessage());
-                sendeHinweisAnAlle(
-                        I18n.get("webserver.hinweis.kein.dokument.titel"),
-                        I18n.get("webserver.hinweis.kein.dokument.text"));
+            if (ownerDocument != null) {
+                try {
+                    sseRefreshSendenIntern(erzeugeWorkingSpreadsheetFuerOwner(ctx));
+                } catch (Exception e) {
+                    logger.debug("Initiales Rendering fehlgeschlagen: {}", e.getMessage());
+                    sendeHinweisAnAlle(
+                            I18n.get("webserver.hinweis.kein.dokument.titel"),
+                            I18n.get("webserver.hinweis.kein.dokument.text"));
+                }
             }
             starteWatchdog();
         }
@@ -977,11 +975,11 @@ public final class WebServerManager implements TimerListener {
      * Liefert ein {@link WorkingSpreadsheet} für das bekannte {@link #ownerDocument} statt
      * fokus-basiert neu aufzulösen – vermeidet eine erneute, ggf. abweichende Auflösung des
      * UI-fokussierten Dokuments, während der Webserver bereits läuft (siehe CLAUDE.md, Abschnitt
-     * „Mehrere offene Turnier-Dokumente"). Fällt auf den fokus-basierten no-arg-Konstruktor
-     * zurück, falls {@link #ownerDocument} (noch) unbekannt ist.
+     * „Mehrere offene Turnier-Dokumente"). Liefert {@code null}, falls {@link #ownerDocument}
+     * (noch) unbekannt ist – kein fokus-basierter Fallback, Aufrufer müssen {@code null} vertragen.
      */
     private WorkingSpreadsheet erzeugeWorkingSpreadsheetFuerOwner(XComponentContext ctx) {
-        return ownerDocument != null ? new WorkingSpreadsheet(ctx, ownerDocument) : new WorkingSpreadsheet(ctx);
+        return ownerDocument != null ? new WorkingSpreadsheet(ctx, ownerDocument) : null;
     }
 
     private void sseRefreshSendenIntern(WorkingSpreadsheet ws) {
