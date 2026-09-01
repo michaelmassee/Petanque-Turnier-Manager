@@ -4,7 +4,7 @@
 package de.petanqueturniermanager.ptmonline.ui;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
+import java.time.LocalTime;
 
 import org.jspecify.annotations.Nullable;
 
@@ -13,8 +13,10 @@ import com.sun.star.awt.PushButtonType;
 import com.sun.star.awt.XActionListener;
 import com.sun.star.awt.XButton;
 import com.sun.star.awt.XControlContainer;
+import com.sun.star.awt.XDateField;
 import com.sun.star.awt.XDialog;
 import com.sun.star.awt.XTextComponent;
+import com.sun.star.awt.XTimeField;
 import com.sun.star.awt.XToolkit;
 import com.sun.star.awt.XWindowPeer;
 import com.sun.star.beans.XPropertySet;
@@ -23,6 +25,8 @@ import com.sun.star.lang.EventObject;
 import com.sun.star.lang.XMultiComponentFactory;
 import com.sun.star.lang.XMultiServiceFactory;
 import com.sun.star.uno.XComponentContext;
+import com.sun.star.util.Date;
+import com.sun.star.util.Time;
 
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
@@ -38,7 +42,8 @@ import de.petanqueturniermanager.konfigdialog.AbstractUnoDialog;
 public final class PtmOnlineTurnierAnlegenDialog extends AbstractUnoDialog {
 
     private static final int DIALOG_BREITE = 220;
-    private static final int DIALOG_HOEHE = 110;
+    private static final int DIALOG_HOEHE = 126;
+    private static final LocalTime STANDARD_STARTZEIT = LocalTime.of(9, 0);
     private static final int LABEL_X = 8;
     private static final int LABEL_W = 55;
     private static final int FELD_X = 66;
@@ -96,7 +101,11 @@ public final class PtmOnlineTurnierAnlegenDialog extends AbstractUnoDialog {
 
         y += ZEILE_H;
         label(xMSF, cont, "lblDatum", I18n.get("ptmonline.turnier.dialog.label.datum"), LABEL_X, y, LABEL_W, 10);
-        textFeld(xMSF, cont, "txtDatum", LocalDate.now().toString(), FELD_X, y - 2, FELD_W, 12);
+        datumFeld(xMSF, cont, "txtDatum", LocalDate.now(), FELD_X, y - 2, FELD_W, 12);
+
+        y += ZEILE_H;
+        label(xMSF, cont, "lblStartzeit", I18n.get("ptmonline.turnier.dialog.label.startzeit"), LABEL_X, y, LABEL_W, 10);
+        zeitFeld(xMSF, cont, "txtStartzeit", STANDARD_STARTZEIT, FELD_X, y - 2, FELD_W, 12);
 
         y += ZEILE_H;
         label(xMSF, cont, "lblOrt", I18n.get("ptmonline.turnier.dialog.label.ort"), LABEL_X, y, LABEL_W, 10);
@@ -112,7 +121,7 @@ public final class PtmOnlineTurnierAnlegenDialog extends AbstractUnoDialog {
     }
 
     /** Vom Nutzer eingegebene, validierte Turnier-Eckdaten. */
-    public record Werte(String name, String datumIso, String ort) {
+    public record Werte(String name, String datumIso, String startzeitIso, String ort) {
     }
 
     private void beimOkGeklickt() {
@@ -120,17 +129,12 @@ public final class PtmOnlineTurnierAnlegenDialog extends AbstractUnoDialog {
             return;
         }
         String name = text(xcc, "txtName");
-        String datum = text(xcc, "txtDatum");
+        LocalDate datum = datum(xcc, "txtDatum");
+        LocalTime startzeit = zeit(xcc, "txtStartzeit");
         String ort = text(xcc, "txtOrt");
 
         if (name.length() < 2) {
             zeigeFehler(I18n.get("ptmonline.turnier.dialog.fehler.name_leer"));
-            return;
-        }
-        try {
-            LocalDate.parse(datum);
-        } catch (DateTimeParseException e) {
-            zeigeFehler(I18n.get("ptmonline.turnier.dialog.fehler.datum_ungueltig"));
             return;
         }
         if (ort.isBlank()) {
@@ -138,7 +142,7 @@ public final class PtmOnlineTurnierAnlegenDialog extends AbstractUnoDialog {
             return;
         }
 
-        ergebnis = new Werte(name, datum, ort);
+        ergebnis = new Werte(name, datum.toString(), startzeit.toString(), ort);
         xDialog.endExecute();
     }
 
@@ -158,6 +162,32 @@ public final class PtmOnlineTurnierAnlegenDialog extends AbstractUnoDialog {
         }
         var tc = Lo.qi(XTextComponent.class, ctrl);
         return tc == null ? "" : tc.getText().trim();
+    }
+
+    private static LocalDate datum(XControlContainer xcc, String name) {
+        var ctrl = xcc.getControl(name);
+        if (ctrl == null) {
+            return LocalDate.now();
+        }
+        var df = Lo.qi(XDateField.class, ctrl);
+        if (df == null) {
+            return LocalDate.now();
+        }
+        Date d = df.getDate();
+        return LocalDate.of(d.Year, d.Month, d.Day);
+    }
+
+    private static LocalTime zeit(XControlContainer xcc, String name) {
+        var ctrl = xcc.getControl(name);
+        if (ctrl == null) {
+            return STANDARD_STARTZEIT;
+        }
+        var tf = Lo.qi(XTimeField.class, ctrl);
+        if (tf == null) {
+            return STANDARD_STARTZEIT;
+        }
+        Time t = tf.getTime();
+        return LocalTime.of(t.Hours, t.Minutes);
     }
 
     private static void registriereKlick(XControlContainer xcc, String name, Runnable aktion) {
@@ -204,6 +234,33 @@ public final class PtmOnlineTurnierAnlegenDialog extends AbstractUnoDialog {
         props.setPropertyValue("Height", h);
         props.setPropertyValue("Text", text);
         props.setPropertyValue("MultiLine", Boolean.FALSE);
+        cont.insertByName(name, model);
+    }
+
+    private static void datumFeld(XMultiServiceFactory xMSF, XNameContainer cont,
+            String name, LocalDate wert, int x, int y, int w, int h) throws com.sun.star.uno.Exception {
+        var model = xMSF.createInstance("com.sun.star.awt.UnoControlDateFieldModel");
+        var props = Lo.qi(XPropertySet.class, model);
+        props.setPropertyValue("PositionX", x);
+        props.setPropertyValue("PositionY", y);
+        props.setPropertyValue("Width", w);
+        props.setPropertyValue("Height", h);
+        props.setPropertyValue("Dropdown", Boolean.TRUE);
+        props.setPropertyValue("Date",
+                new Date((short) wert.getDayOfMonth(), (short) wert.getMonthValue(), (short) wert.getYear()));
+        cont.insertByName(name, model);
+    }
+
+    private static void zeitFeld(XMultiServiceFactory xMSF, XNameContainer cont,
+            String name, LocalTime wert, int x, int y, int w, int h) throws com.sun.star.uno.Exception {
+        var model = xMSF.createInstance("com.sun.star.awt.UnoControlTimeFieldModel");
+        var props = Lo.qi(XPropertySet.class, model);
+        props.setPropertyValue("PositionX", x);
+        props.setPropertyValue("PositionY", y);
+        props.setPropertyValue("Width", w);
+        props.setPropertyValue("Height", h);
+        props.setPropertyValue("Time",
+                new Time(0, (short) 0, (short) wert.getMinute(), (short) wert.getHour(), false));
         cont.insertByName(name, model);
     }
 
