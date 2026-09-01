@@ -13,6 +13,7 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.comp.LibreOfficePtmOnlineSpeicher;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.LoMainThread;
@@ -20,7 +21,6 @@ import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
-import de.petanqueturniermanager.ptmonline.PtmOnlineConfig;
 import de.petanqueturniermanager.ptmonline.PtmOnlineRegistrationMapping;
 import de.petanqueturniermanager.ptmonline.RegistrationImportTask;
 import de.petanqueturniermanager.ptmonline.ResultExportTask;
@@ -42,27 +42,9 @@ public final class PtmOnlineDispatcher {
 
     private PtmOnlineDispatcher() {}
 
-    public static void konfigurieren(WorkingSpreadsheet ws) {
-        XComponentContext ctx = ws.getxContext();
-        ProcessBox pb = ProcessBox.from();
-        boolean warSichtbar = pb.istSichtbar();
-        if (warSichtbar) {
-            pb.hide();
-        }
-        try {
-            new PtmOnlineConfigDialog(ctx, new PtmOnlineConfig(), null).zeigen();
-        } catch (com.sun.star.uno.Exception | RuntimeException e) {
-            logger.error("PTM-Online-Konfigurationsdialog fehlgeschlagen", e);
-        } finally {
-            if (warSichtbar) {
-                pb.visibleWennAutomatisch();
-            }
-        }
-    }
-
     public static void turnierOnlineAnlegen(WorkingSpreadsheet ws) {
         XComponentContext ctx = ws.getxContext();
-        PtmOnlineConfig config = new PtmOnlineConfig();
+        var config = new LibreOfficePtmOnlineSpeicher(ctx).laden();
         if (!config.isConfigured()) {
             zeigeFehler(ctx, I18n.get("ptmonline.fehler.nicht_konfiguriert"));
             return;
@@ -116,9 +98,9 @@ public final class PtmOnlineDispatcher {
     }
 
     private static void turnierAnlegenImHintergrund(
-            XComponentContext ctx, PtmOnlineConfig config, PtmOnlineRegistrationMapping mapping, CreateTournamentDto dto) {
+            XComponentContext ctx, LibreOfficePtmOnlineSpeicher.Zugangsdaten config, PtmOnlineRegistrationMapping mapping, CreateTournamentDto dto) {
         try {
-            TournamentSyncClient client = new TournamentSyncClient(config.getBaseUrl(), config.getApiKey());
+            TournamentSyncClient client = new TournamentSyncClient(config.baseUrl(), config.apiKey());
             String tournamentId = client.createTournament(dto);
             LoMainThread.post(ctx, () -> {
                 mapping.setTournamentId(tournamentId);

@@ -18,6 +18,7 @@ import com.sun.star.uno.XComponentContext;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.comp.LibreOfficePtmOnlineSpeicher;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.LoMainThread;
@@ -42,7 +43,7 @@ public final class RegistrationImportTask {
 
     public static void starte(WorkingSpreadsheet ws) {
         XComponentContext ctx = ws.getxContext();
-        PtmOnlineConfig config = new PtmOnlineConfig();
+        var config = new LibreOfficePtmOnlineSpeicher(ctx).laden();
         if (!config.isConfigured()) {
             zeigeFehler(ctx, I18n.get("ptmonline.fehler.nicht_konfiguriert"));
             return;
@@ -71,11 +72,12 @@ public final class RegistrationImportTask {
         worker.start();
     }
 
-    private static void importiereImHintergrund(WorkingSpreadsheet ws, XComponentContext ctx, PtmOnlineConfig config,
+    private static void importiereImHintergrund(WorkingSpreadsheet ws, XComponentContext ctx,
+            LibreOfficePtmOnlineSpeicher.Zugangsdaten config,
             PtmOnlineRegistrationMapping mapping, String tournamentId, TurnierSystem ts, MeldelisteZiel ziel) {
         List<RegistrationDto> neue;
         try {
-            TournamentSyncClient client = new TournamentSyncClient(config.getBaseUrl(), config.getApiKey());
+            TournamentSyncClient client = new TournamentSyncClient(config.baseUrl(), config.apiKey());
             Instant since = mapping.getLastSync().orElse(Instant.EPOCH);
             List<RegistrationDto> alle = client.fetchRegistrations(tournamentId, since);
             neue = alle.stream().filter(r -> !mapping.istBereitsImportiert(r.id())).toList();

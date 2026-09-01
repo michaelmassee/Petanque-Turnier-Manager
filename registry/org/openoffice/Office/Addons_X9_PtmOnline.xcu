@@ -28,22 +28,6 @@
 						<node oor:name="Submenu">
 							<node oor:name="X9X1" oor:op="replace">
 								<prop oor:name="Title">
-									<value xml:lang="de">Konfigurieren</value>
-									<value xml:lang="en">Configure</value>
-									<value xml:lang="es">Configurar</value>
-									<value xml:lang="fr">Configurer</value>
-									<value xml:lang="nl">Configureren</value>
-								</prop>
-								<prop oor:name="URL">
-									<value>ptm:ptmonline_konfigurieren</value>
-								</prop>
-								<prop oor:name="Target" oor:type="xs:string">
-									<value>_self</value>
-								</prop>
-							</node>
-
-							<node oor:name="X9X2" oor:op="replace">
-								<prop oor:name="Title">
 									<value xml:lang="de">Turnier online anlegen</value>
 									<value xml:lang="en">Create tournament online</value>
 									<value xml:lang="es">Crear torneo en línea</value>
@@ -58,7 +42,7 @@
 								</prop>
 							</node>
 
-							<node oor:name="X9X3" oor:op="replace">
+							<node oor:name="X9X2" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Anmeldungen importieren</value>
 									<value xml:lang="en">Import registrations</value>
@@ -74,7 +58,7 @@
 								</prop>
 							</node>
 
-							<node oor:name="X9X4" oor:op="replace">
+							<node oor:name="X9X3" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Ergebnisse exportieren</value>
 									<value xml:lang="en">Export results</value>

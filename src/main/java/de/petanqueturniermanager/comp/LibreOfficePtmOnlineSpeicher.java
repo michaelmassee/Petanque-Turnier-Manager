@@ -29,6 +29,9 @@ public final class LibreOfficePtmOnlineSpeicher {
 	private static final String PROP_BASE_URL = "BaseUrl";
 
 	public record Zugangsdaten(String apiKey, String baseUrl) {
+		public boolean isConfigured() {
+			return !baseUrl.isBlank() && !apiKey.isBlank();
+		}
 	}
 
 	private final XComponentContext context;
