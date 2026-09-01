@@ -408,7 +408,7 @@ public class SheetHelper {
 				}
 			}
 		} catch (IndexOutOfBoundsException e) {
-			logger.error(e.getMessage(), e);
+			throw new java.lang.IllegalArgumentException("rangePos liegt außerhalb des Sheet-Bereichs: " + rangePos, e);
 		}
 	}
 
