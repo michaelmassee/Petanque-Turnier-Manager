@@ -370,7 +370,9 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 						meldeListe.getSheetHelper().setStringValueInCell(
 								errStrCelVal.spalte(sp).setValue(zellValue).zeile(spielerZeilecntr));
 					}
-					throw new GenerateException(I18n.get("error.meldeliste.spieler.name", spielerName, spielerZeilecntr));
+					// Erwartbare Eingabe-Validierung (Anwender muss den Namen selbst bereinigen),
+					// kein Plugin-Fehler – daher nur als Warnung protokollieren (GenerateException(msg, true)).
+					throw new GenerateException(I18n.get("error.meldeliste.spieler.name", spielerName, spielerZeilecntr), true);
 				}
 				spielrNamenInSheet.add(cleanUpSpielerName(spielerName));
 			}
