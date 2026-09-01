@@ -325,6 +325,15 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet {
 				.setPos(Position.from(NAME_B_SPALTE, ERSTE_DATEN_ZEILE))
 				.setFillAutoDown(letzteSpielZeile);
 		getSheetHelper().setFormulaInCell(nameBFormel);
+
+		// generate() läuft mit deaktivierter Automatikberechnung (Performance); ohne expliziten
+		// Rechenlauf blieben die neuen Formelzellen unberechnet. Danach früh prüfen, ob eine
+		// Formel (z.B. wegen einer nicht auflösbaren PTM.ALG.*-Add-in-Funktion) einen
+		// Berechnungsfehler liefert, statt das erst als schwer verständlichen Folgefehler
+		// an anderer Stelle auffallen zu lassen.
+		getxCalculatable().calculateAll();
+		getSheetHelper().pruefeBereichAufFormelFehler(getXSpreadSheet(),
+				RangePosition.from(NAME_A_SPALTE, ERSTE_DATEN_ZEILE, NAME_B_SPALTE, letzteSpielZeile));
 	}
 
 	private String freispielName(String formulaName) {

@@ -366,6 +366,11 @@ public class PouleVorrundenRanglisteSheet extends SheetRunner implements ISheet 
             getSheetHelper().setFormulaInCell(
                     StringCellValue.from(xSheet, Position.from(SPALTE_NAME, z), teamAnzeige));
         }
+        // Früh prüfen, ob eine der gerade geschriebenen Team-Namen-Formeln (z.B. wegen einer
+        // nicht auflösbaren PTM.ALG.*-Add-in-Funktion) einen Berechnungsfehler liefert, statt
+        // das erst als schwer verständlichen Folgefehler an anderer Stelle auffallen zu lassen.
+        getSheetHelper().pruefeBereichAufFormelFehler(xSheet,
+                RangePosition.from(SPALTE_NAME, HEADER_ZEILEN, SPALTE_NAME, aktuelleZeile - 1));
 
         // Formatierung: Rahmen + Zentrierung für alle Datenzellen
         int letzteZeile = aktuelleZeile - 1;

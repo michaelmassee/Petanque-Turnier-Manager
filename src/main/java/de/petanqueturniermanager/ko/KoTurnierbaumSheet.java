@@ -1418,6 +1418,11 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 							.setCellBackColor(farbe)
 							.setBorder(BorderFactory.from().allThin().toBorder())
 							.setHoriJustify(CellHoriJustify.LEFT));
+			// Früh prüfen, ob die gerade geschriebene Team-Namen-Formel (z.B. wegen einer nicht
+			// auflösbaren PTM.ALG.*-Add-in-Funktion) einen Berechnungsfehler liefert, statt das
+			// erst als schwer verständlichen Folgefehler an anderer Stelle auffallen zu lassen.
+			getSheetHelper().pruefeBereichAufFormelFehler(xSheet,
+					RangePosition.from(teamSpalte(1), zeile, teamSpalte(1), zeile));
 		} else {
 			// Teamnummer direkt
 			getSheetHelper().setNumberValueInCell(
@@ -1582,6 +1587,11 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 							.setCharWeight(FontWeight.BOLD)
 							.setShrinkToFit(true)
 							.setHoriJustify(CellHoriJustify.LEFT));
+			// Früh prüfen, ob die gerade geschriebene Team-Namen-Formel (z.B. wegen einer nicht
+			// auflösbaren PTM.ALG.*-Add-in-Funktion) einen Berechnungsfehler liefert, statt das
+			// erst als schwer verständlichen Folgefehler an anderer Stelle auffallen zu lassen.
+			getSheetHelper().pruefeBereichAufFormelFehler(xSheet, RangePosition.from(
+					siegerNameSpalte(numRunden), siegerZeile, siegerNameSpalte(numRunden), siegerZeile));
 		}
 	}
 
@@ -1694,6 +1704,10 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 							.setCellBackColor(farbe)
 							.setBorder(BorderFactory.from().allThin().toBorder())
 							.setHoriJustify(CellHoriJustify.LEFT));
+			// Früh prüfen, ob die gerade geschriebene Team-Namen-Formel (z.B. wegen einer nicht
+			// auflösbaren PTM.ALG.*-Add-in-Funktion) einen Berechnungsfehler liefert, statt das
+			// erst als schwer verständlichen Folgefehler an anderer Stelle auffallen zu lassen.
+			getSheetHelper().pruefeBereichAufFormelFehler(xSheet, RangePosition.from(spalte, zeile, spalte, zeile));
 		} else {
 			getSheetHelper().setNumberValueInCell(
 					NumberCellValue.from(xSheet, Position.from(spalte, zeile))
@@ -1911,6 +1925,11 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 							.setCharWeight(FontWeight.BOLD)
 							.setShrinkToFit(true)
 							.setHoriJustify(CellHoriJustify.LEFT));
+			// Früh prüfen, ob die gerade geschriebene Team-Namen-Formel (z.B. wegen einer nicht
+			// auflösbaren PTM.ALG.*-Add-in-Funktion) einen Berechnungsfehler liefert, statt das
+			// erst als schwer verständlichen Folgefehler an anderer Stelle auffallen zu lassen.
+			getSheetHelper().pruefeBereichAufFormelFehler(xSheet, RangePosition.from(
+					siegerNameSpalte(numRunden), siegerZeile, siegerNameSpalte(numRunden), siegerZeile));
 		}
 	}
 

@@ -290,6 +290,11 @@ public class JGJGruppenSpielplaeneSheet implements ISheet {
 					"IF(" + nrBAdresse + "<=0;" + calcStringLiteral(freispielText) + ";"
 							+ teamNameFormel.formula(nrBAdresse) + ")");
 		}
+		// Früh prüfen, ob eine der gerade geschriebenen Team-Namen-Formeln (z.B. wegen einer
+		// nicht auflösbaren PTM.ALG.*-Add-in-Funktion) einen Berechnungsfehler liefert, statt
+		// das erst als schwer verständlichen Folgefehler an anderer Stelle auffallen zu lassen.
+		getSheetHelper().pruefeBereichAufFormelFehler(aktuellesSheet,
+				RangePosition.from(SPALTE_TEAM_A, ERSTE_DATEN_ZEILE, SPALTE_TEAM_B, letzteDatenZeile));
 	}
 
 	private static String calcStringLiteral(String value) {
