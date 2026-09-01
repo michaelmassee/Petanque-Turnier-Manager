@@ -779,6 +779,11 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		// ohne expliziten Rechenlauf blieben die neuen Formelzellen bis zum nächsten
 		// Nutzer-Trigger auf 0 stehen.
 		getxCalculatable().calculateAll();
+
+		// Frühzeitig erkennen, wenn eine der gerade geschriebenen Formeln (z.B. wegen einer
+		// nicht auflösbaren PTM.ALG.*-Add-in-Funktion) einen Berechnungsfehler liefert –
+		// sonst fällt das erst als schwer verständlicher Folgefehler an anderer Stelle auf.
+		getSheetHelper().pruefeBereichAufFormelFehler(getXSpreadSheet(), teamRange);
 	}
 
 	/**

@@ -60,6 +60,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.cellvalue.AbstractCellValueWithSheet;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
@@ -386,6 +387,37 @@ public class SheetHelper {
 					rangePos.getEndeSpalte(), rangePos.getEndeZeile());
 			XCellRangeFormula xRangeFormula = Lo.qi(XCellRangeFormula.class, xCellRange);
 			xRangeFormula.setFormulaArray(formelnMit);
+		} catch (IndexOutOfBoundsException e) {
+			logger.error(e.getMessage(), e);
+		}
+	}
+
+	/**
+	 * Prüft einen Zellbereich (nach einem vorangegangenen {@code calculateAll()}) auf Formel-
+	 * Berechnungsfehler – z.B. {@code #NAME?}, wenn eine PTM-Add-in-Funktion in dieser
+	 * LibreOffice-Installation nicht aufgelöst werden kann – und wirft dann eine sprechende,
+	 * übersetzte {@link GenerateException} statt den Fehler unbemerkt zu lassen, sodass er
+	 * erst als schwer verständlicher Folgefehler (z.B. NullPointerException beim Auswerten
+	 * angeblich leerer Zellen) an anderer Stelle sichtbar wird. Turniersystem-unabhängig
+	 * nutzbar von jedem Aufrufer, der Formeln schreibt und danach neu berechnet.
+	 *
+	 * @param sheet    Tabellenblatt
+	 * @param rangePos zu prüfender Bereich
+	 * @throws GenerateException wenn mindestens eine Zelle im Bereich einen Berechnungsfehler hat
+	 */
+	public void pruefeBereichAufFormelFehler(XSpreadsheet sheet, RangePosition rangePos) throws GenerateException {
+		checkNotNull(sheet);
+		checkNotNull(rangePos);
+
+		try {
+			for (int zeile = rangePos.getStartZeile(); zeile <= rangePos.getEndeZeile(); zeile++) {
+				for (int spalte = rangePos.getStartSpalte(); spalte <= rangePos.getEndeSpalte(); spalte++) {
+					XCell xCell = sheet.getCellByPosition(spalte, zeile);
+					if (xCell != null && xCell.getError() != 0) {
+						throw new GenerateException(I18n.get("sheethelper.fehler.formelfehler"));
+					}
+				}
+			}
 		} catch (IndexOutOfBoundsException e) {
 			logger.error(e.getMessage(), e);
 		}
