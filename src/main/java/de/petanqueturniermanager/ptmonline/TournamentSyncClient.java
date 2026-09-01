@@ -22,7 +22,8 @@ import de.petanqueturniermanager.ptmonline.dto.RegistrationResultDto;
 /**
  * Client fuer die PTM-Online REST-API: legt Turniere an und gleicht Anmeldungen/Ergebnisse
  * zwischen dem lokalen Turnierdokument und PTM-Online bidirektional ab. Benoetigt einen von einem
- * PTM-Online-Administrator freigeschalteten API-Schluessel (siehe {@link PtmOnlineConfig}).
+ * PTM-Online-Administrator freigeschalteten API-Schluessel (siehe
+ * {@link de.petanqueturniermanager.comp.LibreOfficePtmOnlineSpeicher}).
  */
 public class TournamentSyncClient extends PtmOnlineHttpClient {
 
@@ -32,6 +33,11 @@ public class TournamentSyncClient extends PtmOnlineHttpClient {
 
     TournamentSyncClient(HttpClient httpClient, String baseUrl, String apiKey) {
         super(httpClient, baseUrl, apiKey);
+    }
+
+    /** Leichter Verbindungstest: listet die eigenen Turniere; wirft bei Fehler eine {@link IOException}. */
+    public void pruefeVerbindung() throws IOException, InterruptedException {
+        get("/api/tournaments");
     }
 
     /**

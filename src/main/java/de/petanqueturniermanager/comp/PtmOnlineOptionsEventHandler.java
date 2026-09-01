@@ -3,6 +3,7 @@
  */
 package de.petanqueturniermanager.comp;
 
+import java.io.IOException;
 import java.util.Arrays;
 
 import org.apache.logging.log4j.LogManager;
@@ -31,8 +32,7 @@ import com.sun.star.uno.XComponentContext;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
-import de.petanqueturniermanager.onlinesync.PtmOnlineApiClient;
-import de.petanqueturniermanager.onlinesync.PtmOnlineException;
+import de.petanqueturniermanager.ptmonline.TournamentSyncClient;
 
 /**
  * Event-Handler fuer die "PTM Online"-Seite unter Extras -&gt; Optionen.
@@ -189,15 +189,17 @@ public final class PtmOnlineOptionsEventHandler extends WeakBase implements XSer
 		String apiKey = getText(container, CTL_API_KEY_FELD);
 		String baseUrl = getText(container, CTL_BASE_URL_FELD);
 		try {
-			new PtmOnlineApiClient(apiKey, baseUrl).pruefeVerbindung();
+			new TournamentSyncClient(baseUrl, apiKey).pruefeVerbindung();
 			MessageBox.from(context, MessageBoxTypeEnum.INFO_OK)
 					.caption(I18n.get("ptmonline.konfig.test.titel"))
 					.message(I18n.get("ptmonline.konfig.test.erfolg")).show();
-		} catch (PtmOnlineException e) {
+		} catch (IOException e) {
 			logger.warn("PTM-Online-Verbindungstest fehlgeschlagen: {}", e.getMessage(), e);
 			MessageBox.from(context, MessageBoxTypeEnum.ERROR_OK)
 					.caption(I18n.get("ptmonline.konfig.test.titel"))
 					.message(I18n.get("ptmonline.konfig.test.fehler", e.getMessage())).show();
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
 		}
 	}
 

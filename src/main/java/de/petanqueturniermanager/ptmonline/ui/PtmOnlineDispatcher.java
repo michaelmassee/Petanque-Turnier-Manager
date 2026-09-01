@@ -13,6 +13,7 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.comp.LibreOfficePtmOnlineSpeicher;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.LoMainThread;
@@ -20,7 +21,6 @@ import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
-import de.petanqueturniermanager.ptmonline.PtmOnlineConfig;
 import de.petanqueturniermanager.ptmonline.PtmOnlineRegistrationMapping;
 import de.petanqueturniermanager.ptmonline.RegistrationImportTask;
 import de.petanqueturniermanager.ptmonline.ResultExportTask;
@@ -44,8 +44,8 @@ public final class PtmOnlineDispatcher {
 
     public static void turnierOnlineAnlegen(WorkingSpreadsheet ws) {
         XComponentContext ctx = ws.getxContext();
-        PtmOnlineConfig config = new PtmOnlineConfig();
-        if (!config.isConfigured()) {
+        var zugangsdaten = new LibreOfficePtmOnlineSpeicher(ctx).laden();
+        if (!zugangsdaten.isConfigured()) {
             zeigeFehler(ctx, I18n.get("ptmonline.fehler.nicht_konfiguriert"));
             return;
         }
@@ -75,7 +75,8 @@ public final class PtmOnlineDispatcher {
                 onlineTyp.get(), onlineFormation, "draft", "private");
 
         Thread worker = new Thread(
-                () -> turnierAnlegenImHintergrund(ctx, config, mapping, dto), "PTM-Online-TurnierAnlegen");
+                () -> turnierAnlegenImHintergrund(ctx, zugangsdaten.baseUrl(), zugangsdaten.apiKey(), mapping, dto),
+                "PTM-Online-TurnierAnlegen");
         worker.start();
     }
 
@@ -98,9 +99,9 @@ public final class PtmOnlineDispatcher {
     }
 
     private static void turnierAnlegenImHintergrund(
-            XComponentContext ctx, PtmOnlineConfig config, PtmOnlineRegistrationMapping mapping, CreateTournamentDto dto) {
+            XComponentContext ctx, String baseUrl, String apiKey, PtmOnlineRegistrationMapping mapping, CreateTournamentDto dto) {
         try {
-            TournamentSyncClient client = new TournamentSyncClient(config.getBaseUrl(), config.getApiKey());
+            TournamentSyncClient client = new TournamentSyncClient(baseUrl, apiKey);
             String tournamentId = client.createTournament(dto);
             LoMainThread.post(ctx, () -> {
                 mapping.setTournamentId(tournamentId);

@@ -2348,7 +2348,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_PTMONLINE_TURNIER_ANLEGEN,
 				 CMD_PTMONLINE_ANMELDUNGEN_IMPORTIEREN,
 				 CMD_PTMONLINE_ERGEBNISSE_EXPORTIEREN       -> ts != TurnierSystem.KEIN
-					&& new de.petanqueturniermanager.ptmonline.PtmOnlineConfig().isConfigured();
+					&& new LibreOfficePtmOnlineSpeicher(ctx).laden().isConfigured();
 			case CMD_TIMER_STARTEN_DIALOG                   -> timerInaktivOderBeendet();
 			case CMD_TIMER_PAUSE_FORTSETZEN,
 				 CMD_TIMER_STOPPEN,

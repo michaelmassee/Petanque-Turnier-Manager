@@ -13,6 +13,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.comp.LibreOfficePtmOnlineSpeicher;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.LoMainThread;
@@ -41,8 +42,8 @@ public final class ResultExportTask {
 
     public static void starte(WorkingSpreadsheet ws) {
         XComponentContext ctx = ws.getxContext();
-        PtmOnlineConfig config = new PtmOnlineConfig();
-        if (!config.isConfigured()) {
+        var zugangsdaten = new LibreOfficePtmOnlineSpeicher(ctx).laden();
+        if (!zugangsdaten.isConfigured()) {
             zeigeFehler(ctx, I18n.get("ptmonline.fehler.nicht_konfiguriert"));
             return;
         }
@@ -65,14 +66,15 @@ public final class ResultExportTask {
                 .toList();
 
         Thread worker = new Thread(
-                () -> exportiereImHintergrund(ctx, config, tournamentId.get(), results), "PTM-Online-Export");
+                () -> exportiereImHintergrund(ctx, zugangsdaten.baseUrl(), zugangsdaten.apiKey(), tournamentId.get(), results),
+                "PTM-Online-Export");
         worker.start();
     }
 
     private static void exportiereImHintergrund(
-            XComponentContext ctx, PtmOnlineConfig config, String tournamentId, List<RegistrationResultDto> results) {
+            XComponentContext ctx, String baseUrl, String apiKey, String tournamentId, List<RegistrationResultDto> results) {
         try {
-            TournamentSyncClient client = new TournamentSyncClient(config.getBaseUrl(), config.getApiKey());
+            TournamentSyncClient client = new TournamentSyncClient(baseUrl, apiKey);
             int aktualisiert = client.pushResults(tournamentId, results);
             LoMainThread.post(ctx, () -> zeigeInfo(ctx, I18n.get("ptmonline.erfolg.ergebnisse_exportiert", aktualisiert)));
         } catch (IOException e) {

@@ -18,6 +18,7 @@ import com.sun.star.uno.XComponentContext;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.comp.LibreOfficePtmOnlineSpeicher;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.LoMainThread;
@@ -42,8 +43,8 @@ public final class RegistrationImportTask {
 
     public static void starte(WorkingSpreadsheet ws) {
         XComponentContext ctx = ws.getxContext();
-        PtmOnlineConfig config = new PtmOnlineConfig();
-        if (!config.isConfigured()) {
+        var zugangsdaten = new LibreOfficePtmOnlineSpeicher(ctx).laden();
+        if (!zugangsdaten.isConfigured()) {
             zeigeFehler(ctx, I18n.get("ptmonline.fehler.nicht_konfiguriert"));
             return;
         }
@@ -66,16 +67,17 @@ public final class RegistrationImportTask {
         MeldelisteZiel ziel = zielOpt.get();
 
         Thread worker = new Thread(
-                () -> importiereImHintergrund(ws, ctx, config, mapping, tournamentId.get(), ts, ziel),
+                () -> importiereImHintergrund(
+                        ws, ctx, zugangsdaten.baseUrl(), zugangsdaten.apiKey(), mapping, tournamentId.get(), ts, ziel),
                 "PTM-Online-Import");
         worker.start();
     }
 
-    private static void importiereImHintergrund(WorkingSpreadsheet ws, XComponentContext ctx, PtmOnlineConfig config,
+    private static void importiereImHintergrund(WorkingSpreadsheet ws, XComponentContext ctx, String baseUrl, String apiKey,
             PtmOnlineRegistrationMapping mapping, String tournamentId, TurnierSystem ts, MeldelisteZiel ziel) {
         List<RegistrationDto> neue;
         try {
-            TournamentSyncClient client = new TournamentSyncClient(config.getBaseUrl(), config.getApiKey());
+            TournamentSyncClient client = new TournamentSyncClient(baseUrl, apiKey);
             Instant since = mapping.getLastSync().orElse(Instant.EPOCH);
             List<RegistrationDto> alle = client.fetchRegistrations(tournamentId, since);
             neue = alle.stream().filter(r -> !mapping.istBereitsImportiert(r.id())).toList();
