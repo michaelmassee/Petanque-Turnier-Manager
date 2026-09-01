@@ -399,8 +399,12 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 	 * @throws GenerateException
 	 */
 	private void datenErsteSpalte() throws GenerateException {
+		Position letztePos = letztePositionRechtsUnten();
+		if (letztePos == null) {
+			throw new GenerateException(I18n.get("schweizer.spielrunde.fehler.keine.paarungen"));
+		}
 		Integer headerColor = getKonfigurationSheet().getSpielRundeHeaderFarbe();
-		Integer letzteZeile = letztePositionRechtsUnten().getZeile();
+		Integer letzteZeile = letztePos.getZeile();
 		SpielrundeSpielbahn spielrundeSpielbahn = getKonfigurationSheet().getSpielrundeSpielbahn();
 
 		spielrundeHelper.datenErsteSpalte(spielrundeSpielbahn, ERSTE_DATEN_ZEILE, letzteZeile, BAHN_NR_SPALTE,
