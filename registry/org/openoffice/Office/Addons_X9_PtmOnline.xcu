@@ -41,6 +41,28 @@
 									<value>_self</value>
 								</prop>
 							</node>
+							<node oor:name="X9X1a" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Eckdaten nach PTM Online übertragen</value>
+									<value xml:lang="en">Send tournament details to PTM Online</value>
+									<value xml:lang="es">Enviar datos del torneo a PTM Online</value>
+									<value xml:lang="fr">Envoyer les informations du tournoi à PTM Online</value>
+									<value xml:lang="nl">Toernooigegevens naar PTM Online sturen</value>
+								</prop>
+								<prop oor:name="URL"><value>ptm:ptmonline_eckdaten_uebertragen</value></prop>
+								<prop oor:name="Target"><value>_self</value></prop>
+							</node>
+							<node oor:name="X9X1b" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Eckdaten im Turnierdokument bearbeiten</value>
+									<value xml:lang="en">Edit tournament details in the document</value>
+									<value xml:lang="es">Editar datos del torneo en el documento</value>
+									<value xml:lang="fr">Modifier les informations dans le document</value>
+									<value xml:lang="nl">Toernooigegevens in het document bewerken</value>
+								</prop>
+								<prop oor:name="URL"><value>ptm:ptmonline_eckdaten_bearbeiten</value></prop>
+								<prop oor:name="Target"><value>_self</value></prop>
+							</node>
 
 							<node oor:name="X9X2" oor:op="replace">
 								<prop oor:name="Title">

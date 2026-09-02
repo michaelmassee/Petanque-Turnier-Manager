@@ -11,6 +11,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
+import de.petanqueturniermanager.ptmonline.dto.TournamentMetadataDto;
 
 public class PtmOnlineRegistrationMappingTest {
 
@@ -25,6 +26,19 @@ public class PtmOnlineRegistrationMappingTest {
 		when(docProps.getStringProperty(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString()))
 				.thenAnswer(invocation -> gespeichert.getOrDefault(invocation.<String>getArgument(0), invocation.getArgument(1)));
 		return docProps;
+	}
+
+	@Test
+	public void speichertUndLiestDokumentgefuehrteTurnierEckdaten() {
+		PtmOnlineRegistrationMapping mapping = new PtmOnlineRegistrationMapping(fakeDocProps());
+		TournamentMetadataDto metadata = new TournamentMetadataDto(
+				"Herbstturnier", "2026-10-03", "09:00", "Bouleplatz", "Beschreibung", "schweizer",
+				"doublette", "registration", 32, null, 500, "Verein", "mail@example.test", null,
+				"public", "intern", true, true);
+
+		mapping.setTournamentMetadata(metadata);
+
+		assertThat(mapping.getTournamentMetadata()).contains(metadata);
 	}
 
 	@Test

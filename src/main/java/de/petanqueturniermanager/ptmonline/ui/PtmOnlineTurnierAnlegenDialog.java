@@ -51,14 +51,21 @@ public final class PtmOnlineTurnierAnlegenDialog extends AbstractUnoDialog {
     private static final int ZEILE_H = 16;
 
     @Nullable private final XWindowPeer parentPeer;
+    @Nullable private final Werte vorbesetzung;
 
     @Nullable private XControlContainer xcc;
     @Nullable private XDialog xDialog;
     @Nullable private Werte ergebnis;
 
     public PtmOnlineTurnierAnlegenDialog(XComponentContext xContext, @Nullable XWindowPeer parentPeer) {
+        this(xContext, parentPeer, null);
+    }
+
+    public PtmOnlineTurnierAnlegenDialog(XComponentContext xContext, @Nullable XWindowPeer parentPeer,
+            @Nullable Werte vorbesetzung) {
         super(xContext);
         this.parentPeer = parentPeer;
+        this.vorbesetzung = vorbesetzung;
     }
 
     @Override
@@ -97,19 +104,19 @@ public final class PtmOnlineTurnierAnlegenDialog extends AbstractUnoDialog {
 
         int y = 8;
         label(xMSF, cont, "lblName", I18n.get("ptmonline.turnier.dialog.label.name"), LABEL_X, y, LABEL_W, 10);
-        textFeld(xMSF, cont, "txtName", "", FELD_X, y - 2, FELD_W, 12);
+        textFeld(xMSF, cont, "txtName", vorbesetzung == null ? "" : vorbesetzung.name(), FELD_X, y - 2, FELD_W, 12);
 
         y += ZEILE_H;
         label(xMSF, cont, "lblDatum", I18n.get("ptmonline.turnier.dialog.label.datum"), LABEL_X, y, LABEL_W, 10);
-        datumFeld(xMSF, cont, "txtDatum", LocalDate.now(), FELD_X, y - 2, FELD_W, 12);
+        datumFeld(xMSF, cont, "txtDatum", vorbesetzung == null ? LocalDate.now() : LocalDate.parse(vorbesetzung.datumIso()), FELD_X, y - 2, FELD_W, 12);
 
         y += ZEILE_H;
         label(xMSF, cont, "lblStartzeit", I18n.get("ptmonline.turnier.dialog.label.startzeit"), LABEL_X, y, LABEL_W, 10);
-        zeitFeld(xMSF, cont, "txtStartzeit", STANDARD_STARTZEIT, FELD_X, y - 2, FELD_W, 12);
+        zeitFeld(xMSF, cont, "txtStartzeit", vorbesetzung == null ? STANDARD_STARTZEIT : LocalTime.parse(vorbesetzung.startzeitIso()), FELD_X, y - 2, FELD_W, 12);
 
         y += ZEILE_H;
         label(xMSF, cont, "lblOrt", I18n.get("ptmonline.turnier.dialog.label.ort"), LABEL_X, y, LABEL_W, 10);
-        textFeld(xMSF, cont, "txtOrt", "", FELD_X, y - 2, FELD_W, 12);
+        textFeld(xMSF, cont, "txtOrt", vorbesetzung == null ? "" : vorbesetzung.ort(), FELD_X, y - 2, FELD_W, 12);
 
         y += ZEILE_H + 8;
         button(xMSF, cont, "btnOk", I18n.get("dialog.ok"), FELD_X + FELD_W - 135, y, 55, ZEILE_H,

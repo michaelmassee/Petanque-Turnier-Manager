@@ -394,6 +394,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_SPIELERDB_WEBVIEW       = "spielerdb_webview";
 	// PTM-Online
 	public static final String CMD_PTMONLINE_TURNIER_ANLEGEN         = "ptmonline_turnier_anlegen";
+	public static final String CMD_PTMONLINE_ECKDATEN_UEBERTRAGEN    = "ptmonline_eckdaten_uebertragen";
+	public static final String CMD_PTMONLINE_ECKDATEN_BEARBEITEN     = "ptmonline_eckdaten_bearbeiten";
 	public static final String CMD_PTMONLINE_ANMELDUNGEN_IMPORTIEREN = "ptmonline_anmeldungen_importieren";
 	public static final String CMD_PTMONLINE_ERGEBNISSE_EXPORTIEREN  = "ptmonline_ergebnisse_exportieren";
 	// Konfiguration
@@ -1467,6 +1469,10 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			// PTM-Online-Aktionen: analog Spieler-DB ohne ProcessBox, damit Dialoge nicht überdeckt werden
 			case CMD_PTMONLINE_TURNIER_ANLEGEN         -> de.petanqueturniermanager.ptmonline.ui.PtmOnlineDispatcher
 					.turnierOnlineAnlegen(erzeugeWorkingSpreadsheetFuerDispatch());
+			case CMD_PTMONLINE_ECKDATEN_UEBERTRAGEN    -> de.petanqueturniermanager.ptmonline.ui.PtmOnlineDispatcher
+					.eckdatenNachOnlineUebertragen(erzeugeWorkingSpreadsheetFuerDispatch());
+			case CMD_PTMONLINE_ECKDATEN_BEARBEITEN     -> de.petanqueturniermanager.ptmonline.ui.PtmOnlineDispatcher
+					.eckdatenBearbeiten(erzeugeWorkingSpreadsheetFuerDispatch());
 			case CMD_PTMONLINE_ANMELDUNGEN_IMPORTIEREN -> de.petanqueturniermanager.ptmonline.ui.PtmOnlineDispatcher
 					.anmeldungenImportieren(erzeugeWorkingSpreadsheetFuerDispatch());
 			case CMD_PTMONLINE_ERGEBNISSE_EXPORTIEREN  -> de.petanqueturniermanager.ptmonline.ui.PtmOnlineDispatcher

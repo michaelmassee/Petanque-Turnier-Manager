@@ -42,6 +42,20 @@ public interface MeldelisteZiel extends AbgleichQuelle {
     int schreibeBlock(List<SpielerMitVerein> spieler) throws MeldelisteSchreibException;
 
     /**
+     * Wie {@link #schreibeBlock(List)}, liefert aber zusätzlich die eindeutig bestimmte,
+     * 1-basierte Meldelistenzeile des neu angelegten Blocks.
+     */
+    int schreibeBlockUndLiefereZeile(List<SpielerMitVerein> spieler) throws MeldelisteSchreibException;
+
+    /**
+     * Liest die nach dem Meldelisten-Update vergebene Team-Nr. aus einer bekannten,
+     * 1-basierten Meldelistenzeile.
+     *
+     * @return Team-Nr. oder {@code -1}, wenn keine Nummer gelesen werden kann.
+     */
+    int getTeamNrAusZeile(int meldelistenZeile);
+
+    /**
      * Team-Zähler der Meldeliste.
      *
      * @param angemeldet belegte Teams ohne Checkin-Haken

@@ -226,4 +226,14 @@ class LibreOfficeOptionsPackagingTest {
 
 		assertThat(addons).doesNotContain("ptm:pluginKonfiguration");
 	}
+
+	@Test
+	void ptmOnlineHatDieProduktionsdomainAlsStandardBaseUrl() throws Exception {
+		String schema = Files.readString(
+				Path.of("registry/schema/org/openoffice/Office/Custom/PetanqueTurnierManager.xcs"));
+
+		assertThat(schema).contains("<group oor:name=\"PtmOnline\">")
+				.contains("<prop oor:name=\"BaseUrl\" oor:type=\"xs:string\">")
+				.contains("<value>https://ptmonline.org</value>");
+	}
 }

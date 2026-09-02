@@ -18,6 +18,7 @@ import com.google.gson.JsonObject;
 import de.petanqueturniermanager.ptmonline.dto.CreateTournamentDto;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationDto;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationResultDto;
+import de.petanqueturniermanager.ptmonline.dto.TournamentMetadataDto;
 
 /**
  * Client fuer die PTM-Online REST-API: legt Turniere an und gleicht Anmeldungen/Ergebnisse
@@ -47,6 +48,12 @@ public class TournamentSyncClient extends PtmOnlineHttpClient {
         HttpResponse<String> response = post("/api/tournaments", GSON.toJson(tournament));
         JsonObject payload = GSON.fromJson(response.body(), JsonObject.class);
         return payload.getAsJsonObject("tournament").get("id").getAsString();
+    }
+
+    /** Überträgt die allein im Turnierdokument gepflegten Eckdaten und markiert das Turnier online als dokumentverwaltet. */
+    public void pushTournamentMetadata(String tournamentId, TournamentMetadataDto metadata)
+            throws IOException, InterruptedException {
+        put("/api/sync/tournaments/" + encode(tournamentId) + "/metadata", GSON.toJson(metadata));
     }
 
     /**

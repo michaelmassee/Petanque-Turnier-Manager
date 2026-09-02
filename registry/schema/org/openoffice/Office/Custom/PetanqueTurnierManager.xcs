@@ -105,7 +105,7 @@
             </prop>
             <prop oor:name="BaseUrl" oor:type="xs:string">
                 <info><desc>Base URL of the PTM Online instance.</desc></info>
-                <value/>
+                <value>https://ptmonline.org</value>
             </prop>
         </group>
         <group oor:name="Startseite">

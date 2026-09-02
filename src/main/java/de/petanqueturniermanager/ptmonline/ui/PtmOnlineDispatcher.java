@@ -26,6 +26,7 @@ import de.petanqueturniermanager.ptmonline.RegistrationImportTask;
 import de.petanqueturniermanager.ptmonline.ResultExportTask;
 import de.petanqueturniermanager.ptmonline.TournamentSyncClient;
 import de.petanqueturniermanager.ptmonline.dto.CreateTournamentDto;
+import de.petanqueturniermanager.ptmonline.dto.TournamentMetadataDto;
 import de.petanqueturniermanager.ptmonline.sheet.PtmOnlineInfoSheet;
 import de.petanqueturniermanager.spielerdb.MeldelisteZiel;
 import de.petanqueturniermanager.spielerdb.MeldelisteZielFactory;
@@ -72,23 +73,32 @@ public final class PtmOnlineDispatcher {
         }
 
         CreateTournamentDto dto = new CreateTournamentDto(
-                werte.name(), werte.datumIso(), null, werte.ort(), null,
+                werte.name(), werte.datumIso(), werte.startzeitIso(), werte.ort(), null,
                 onlineTyp.get(), onlineFormation, "draft", "private");
+        TournamentMetadataDto metadata = new TournamentMetadataDto(
+                werte.name(), werte.datumIso(), werte.startzeitIso(), werte.ort(), null,
+                onlineTyp.get(), onlineFormation, "draft", 0, null, 0, null, null, null,
+                "private", null, false, false);
 
         Thread worker = new Thread(
-                () -> turnierAnlegenImHintergrund(ws, ctx, zugangsdaten.baseUrl(), zugangsdaten.apiKey(), mapping, dto),
+                () -> turnierAnlegenImHintergrund(ws, ctx, zugangsdaten.baseUrl(), zugangsdaten.apiKey(), mapping, dto, metadata),
                 "PTM-Online-TurnierAnlegen");
         worker.start();
     }
 
     private static PtmOnlineTurnierAnlegenDialog.Werte zeigeTurnierAnlegenDialog(XComponentContext ctx) {
+		return zeigeTurnierAnlegenDialog(ctx, null);
+	}
+
+	private static PtmOnlineTurnierAnlegenDialog.Werte zeigeTurnierAnlegenDialog(XComponentContext ctx,
+			PtmOnlineTurnierAnlegenDialog.Werte vorbesetzung) {
         ProcessBox pb = ProcessBox.from();
         boolean warSichtbar = pb.istSichtbar();
         if (warSichtbar) {
             pb.hide();
         }
         try {
-            return new PtmOnlineTurnierAnlegenDialog(ctx, null).zeigen();
+            return new PtmOnlineTurnierAnlegenDialog(ctx, null, vorbesetzung).zeigen();
         } catch (com.sun.star.uno.Exception | RuntimeException e) {
             logger.error("PTM-Online-Turnier-anlegen-Dialog fehlgeschlagen", e);
             return null;
@@ -100,12 +110,15 @@ public final class PtmOnlineDispatcher {
     }
 
     private static void turnierAnlegenImHintergrund(WorkingSpreadsheet ws,
-            XComponentContext ctx, String baseUrl, String apiKey, PtmOnlineRegistrationMapping mapping, CreateTournamentDto dto) {
+            XComponentContext ctx, String baseUrl, String apiKey, PtmOnlineRegistrationMapping mapping,
+            CreateTournamentDto dto, TournamentMetadataDto metadata) {
         try {
             TournamentSyncClient client = new TournamentSyncClient(baseUrl, apiKey);
             String tournamentId = client.createTournament(dto);
+            client.pushTournamentMetadata(tournamentId, metadata);
             LoMainThread.post(ctx, () -> {
                 mapping.setTournamentId(tournamentId);
+                mapping.setTournamentMetadata(metadata);
                 PtmOnlineInfoSheet.aktualisiereBestEffort(ws, baseUrl, mapping);
                 MessageBox.from(ctx, MessageBoxTypeEnum.INFO_OK)
                         .caption(I18n.get("ptmonline.menu.toplevel"))
@@ -127,6 +140,57 @@ public final class PtmOnlineDispatcher {
     public static void ergebnisseExportieren(WorkingSpreadsheet ws) {
         ResultExportTask.starte(ws);
     }
+
+    /** Überträgt die im Dokument gespeicherten, führenden PTM-Online-Eckdaten bewusst nur auf Nutzeraktion. */
+    public static void eckdatenNachOnlineUebertragen(WorkingSpreadsheet ws) {
+        XComponentContext ctx = ws.getxContext();
+        var zugangsdaten = new LibreOfficePtmOnlineSpeicher(ctx).laden();
+        PtmOnlineRegistrationMapping mapping = new PtmOnlineRegistrationMapping(new DocumentPropertiesHelper(ws));
+        Optional<String> tournamentId = mapping.getTournamentId();
+        Optional<TournamentMetadataDto> metadata = mapping.getTournamentMetadata();
+        if (!zugangsdaten.isConfigured() || tournamentId.isEmpty() || metadata.isEmpty()) {
+            zeigeFehler(ctx, I18n.get("ptmonline.fehler.turnier_nicht_angelegt"));
+            return;
+        }
+        new Thread(() -> {
+            try {
+                new TournamentSyncClient(zugangsdaten.baseUrl(), zugangsdaten.apiKey())
+                        .pushTournamentMetadata(tournamentId.get(), metadata.get());
+                LoMainThread.post(ctx, () -> {
+                    PtmOnlineInfoSheet.aktualisiereBestEffort(ws, zugangsdaten.baseUrl(), mapping);
+                    MessageBox.from(ctx, MessageBoxTypeEnum.INFO_OK).caption(I18n.get("ptmonline.menu.toplevel"))
+                            .message(I18n.get("ptmonline.erfolg.turnier_angelegt", tournamentId.get())).show();
+                });
+            } catch (IOException e) {
+                logger.error("PTM-Online: Eckdatenabgleich fehlgeschlagen", e);
+                LoMainThread.post(ctx, () -> zeigeNetzwerkFehler(ctx, e));
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }, "PTM-Online-EckdatenAbgleich").start();
+    }
+
+	/** Ändert die im Dokument gespeicherten Grunddaten; der Online-Abgleich bleibt bewusst explizit. */
+	public static void eckdatenBearbeiten(WorkingSpreadsheet ws) {
+		XComponentContext ctx = ws.getxContext();
+		PtmOnlineRegistrationMapping mapping = new PtmOnlineRegistrationMapping(new DocumentPropertiesHelper(ws));
+		Optional<TournamentMetadataDto> bisher = mapping.getTournamentMetadata();
+		if (bisher.isEmpty()) {
+			zeigeFehler(ctx, I18n.get("ptmonline.fehler.turnier_nicht_angelegt"));
+			return;
+		}
+		TournamentMetadataDto alt = bisher.get();
+		PtmOnlineTurnierAnlegenDialog.Werte werte = zeigeTurnierAnlegenDialog(ctx,
+				new PtmOnlineTurnierAnlegenDialog.Werte(alt.name(), alt.date(), alt.startTime(), alt.location()));
+		if (werte == null) {
+			return;
+		}
+		mapping.setTournamentMetadata(new TournamentMetadataDto(
+				werte.name(), werte.datumIso(), werte.startzeitIso(), werte.ort(), alt.description(), alt.type(),
+				alt.formation(), alt.status(), alt.maxRegistrations(), alt.registrationDeadline(), alt.entryFeeCents(),
+				alt.contactName(), alt.contactEmail(), alt.contactPhone(), alt.visibility(), alt.internalNotes(),
+				alt.participantsPublic(), alt.licenseRequired()));
+	}
 
     /** Ordnet das lokale Turniersystem dem passenden {@code type}-Wert der PTM-Online-API zu. */
     private static Optional<String> mapOnlineTyp(TurnierSystem ts) {

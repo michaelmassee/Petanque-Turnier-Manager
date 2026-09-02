@@ -30,6 +30,7 @@ import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.LoMainThread;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.ptmonline.TournamentSyncClient;
@@ -188,19 +189,30 @@ public final class PtmOnlineOptionsEventHandler extends WeakBase implements XSer
 	private void verbindungTesten(XControlContainer container) {
 		String apiKey = getText(container, CTL_API_KEY_FELD);
 		String baseUrl = getText(container, CTL_BASE_URL_FELD);
-		try {
-			new TournamentSyncClient(baseUrl, apiKey).pruefeVerbindung();
+		new Thread(() -> {
+			try {
+				new TournamentSyncClient(baseUrl, apiKey).pruefeVerbindung();
+				LoMainThread.post(context, () -> zeigeVerbindungstestErgebnis(null));
+			} catch (IOException | RuntimeException e) {
+				logger.warn("PTM-Online-Verbindungstest fehlgeschlagen: {}", e.getMessage(), e);
+				LoMainThread.post(context, () -> zeigeVerbindungstestErgebnis(e));
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+			}
+		}, "PTM-Online-Verbindungstest").start();
+	}
+
+	private void zeigeVerbindungstestErgebnis(Exception fehler) {
+		if (fehler == null) {
 			MessageBox.from(context, MessageBoxTypeEnum.INFO_OK)
 					.caption(I18n.get("ptmonline.konfig.test.titel"))
 					.message(I18n.get("ptmonline.konfig.test.erfolg")).show();
-		} catch (IOException e) {
-			logger.warn("PTM-Online-Verbindungstest fehlgeschlagen: {}", e.getMessage(), e);
-			MessageBox.from(context, MessageBoxTypeEnum.ERROR_OK)
-					.caption(I18n.get("ptmonline.konfig.test.titel"))
-					.message(I18n.get("ptmonline.konfig.test.fehler", e.getMessage())).show();
-		} catch (InterruptedException e) {
-			Thread.currentThread().interrupt();
+			return;
 		}
+		String meldung = fehler.getMessage() == null ? fehler.getClass().getSimpleName() : fehler.getMessage();
+		MessageBox.from(context, MessageBoxTypeEnum.ERROR_OK)
+				.caption(I18n.get("ptmonline.konfig.test.titel"))
+				.message(I18n.get("ptmonline.konfig.test.fehler", meldung)).show();
 	}
 
 	// ---- UNO-Control-Hilfsmethoden ----

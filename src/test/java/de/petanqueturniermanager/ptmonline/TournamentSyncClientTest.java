@@ -19,6 +19,7 @@ import org.mockito.ArgumentCaptor;
 import de.petanqueturniermanager.ptmonline.dto.CreateTournamentDto;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationDto;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationResultDto;
+import de.petanqueturniermanager.ptmonline.dto.TournamentMetadataDto;
 
 public class TournamentSyncClientTest {
 
@@ -28,6 +29,24 @@ public class TournamentSyncClientTest {
 		when(response.statusCode()).thenReturn(statusCode);
 		when(response.body()).thenReturn(body);
 		return response;
+	}
+
+	@Test
+	public void pushTournamentMetadataSendetPutAnDenGeschuetztenSyncEndpunkt() throws Exception {
+		HttpClient httpClient = mock(HttpClient.class);
+		HttpResponse<String> response = mockResponse(200, "{\"tournament\":{\"id\":\"t1\"}}");
+		when(httpClient.<String>send(any(HttpRequest.class), any())).thenReturn(response);
+
+		TournamentSyncClient client = new TournamentSyncClient(httpClient, "https://ptm-online.example.com", "ptm_secret");
+		client.pushTournamentMetadata("t1", new TournamentMetadataDto(
+				"Test-Turnier", "2026-09-01", "09:00", "Testplatz", null, "schweizer", "doublette",
+				"draft", 0, null, 0, null, null, null, "private", null, false, false));
+
+		ArgumentCaptor<HttpRequest> captor = ArgumentCaptor.forClass(HttpRequest.class);
+		verify(httpClient).send(captor.capture(), any());
+		assertThat(captor.getValue().method()).isEqualTo("PUT");
+		assertThat(captor.getValue().uri().toString())
+				.isEqualTo("https://ptm-online.example.com/api/sync/tournaments/t1/metadata");
 	}
 
 	@Test

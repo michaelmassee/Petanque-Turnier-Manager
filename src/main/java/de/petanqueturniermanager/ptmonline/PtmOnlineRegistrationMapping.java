@@ -24,6 +24,7 @@ public class PtmOnlineRegistrationMapping {
     private static final String PROP_REGISTRATION_MAP = "ptmOnlineRegistrationMap";
     private static final String PROP_LAST_SYNC = "ptmOnlineLastSync";
     private static final String PROP_TOURNAMENT_ID = "ptmOnlineTournamentId";
+    private static final String PROP_TOURNAMENT_METADATA = "ptmOnlineTournamentMetadata";
 
     private static final Gson GSON = new Gson();
     private static final Type MAP_TYPE = new TypeToken<Map<Integer, String>>() {}.getType();
@@ -70,6 +71,16 @@ public class PtmOnlineRegistrationMapping {
     public Optional<String> getTournamentId() {
         String wert = docProps.getStringProperty(PROP_TOURNAMENT_ID, "");
         return wert.isBlank() ? Optional.empty() : Optional.of(wert);
+    }
+
+    public void setTournamentMetadata(de.petanqueturniermanager.ptmonline.dto.TournamentMetadataDto metadata) {
+        docProps.setStringProperty(PROP_TOURNAMENT_METADATA, GSON.toJson(metadata));
+    }
+
+    public Optional<de.petanqueturniermanager.ptmonline.dto.TournamentMetadataDto> getTournamentMetadata() {
+        String wert = docProps.getStringProperty(PROP_TOURNAMENT_METADATA, "");
+        return wert.isBlank() ? Optional.empty()
+                : Optional.ofNullable(GSON.fromJson(wert, de.petanqueturniermanager.ptmonline.dto.TournamentMetadataDto.class));
     }
 
     private Map<Integer, String> loadMappings() {

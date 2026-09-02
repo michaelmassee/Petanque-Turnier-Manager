@@ -241,6 +241,24 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
 
     @Override
     public int findeZeileMitName(String spielerName) {
+        int zeile = findeNullbasierteZeileMitName(spielerName);
+        return zeile < 0 ? -1 : zeile + 1;
+    }
+
+    @Override
+    public int getTeamNrAusZeile(int meldelistenZeile) {
+        if (meldelistenZeile <= 0) {
+            return -1;
+        }
+        try {
+            return (int) Math.round(sheet.getCellByPosition(SPALTE_NR, meldelistenZeile - 1).getValue());
+        } catch (Exception e) {
+            logger.warn("Team-Nr. in Meldeliste konnte nicht gelesen werden", e);
+            return -1;
+        }
+    }
+
+    private int findeNullbasierteZeileMitName(String spielerName) {
         String norm = spielerName.strip().toLowerCase(Locale.ROOT);
         for (int zeile = ersteDatenZeile; zeile <= MAX_DATEN_ZEILE; zeile++) {
             String erstesVor = sicherText(sheetHelper, sheet, vornameSpalte(0), zeile).strip();
@@ -253,7 +271,7 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
                 String nach = sicherText(sheetHelper, sheet, nachnameSpalte(s), zeile).strip();
                 String voll = (vor + " " + nach).strip();
                 if (voll.toLowerCase(Locale.ROOT).equals(norm)) {
-                    return zeile + 1; // 1-basiert (Sheet-Zeile inkl. Header)
+                    return zeile;
                 }
             }
         }
@@ -270,8 +288,19 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
      */
     @Override
     public int schreibeBlock(List<SpielerMitVerein> spieler) throws MeldelisteSchreibException {
+        schreibeBlockInZeile(spieler);
+        return spieler.size();
+    }
+
+    @Override
+    public int schreibeBlockUndLiefereZeile(List<SpielerMitVerein> spieler) throws MeldelisteSchreibException {
+        return schreibeBlockInZeile(spieler) + 1;
+    }
+
+    /** Schreibt den Block und liefert die 0-basierte Sheet-Zeile. */
+    private int schreibeBlockInZeile(List<SpielerMitVerein> spieler) throws MeldelisteSchreibException {
         if (spieler.isEmpty()) {
-            return 0;
+            return -1;
         }
         if (spieler.size() > anzSpieler) {
             throw new MeldelisteSchreibException(
@@ -317,7 +346,7 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
             // keine Teams aktiv. Sollen alle aktiviert werden?".
             sheetHelper.setNumberValueInCell(NumberCellValue
                     .from(sheet, Position.from(aktivSpalte(), zeile)).setValue(AKTIV_WERT_NIMMT_TEIL));
-            return spieler.size();
+            return zeile;
         } catch (Exception e) {
             throw new MeldelisteSchreibException("Schreibvorgang fehlgeschlagen", e);
         }
