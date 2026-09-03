@@ -78,12 +78,14 @@ public final class PtmOnlineDispatcher {
             return; // Abgebrochen
         }
 
+        String beschreibung = leerZuNull(werte.beschreibung());
         CreateTournamentDto dto = new CreateTournamentDto(
-                werte.name(), werte.datumIso(), werte.startzeitIso(), werte.ort(), null,
+                werte.name(), werte.datumIso(), werte.startzeitIso(), werte.ort(), beschreibung,
                 onlineTyp, onlineFormation, "draft", "private");
         TournamentMetadataDto metadata = new TournamentMetadataDto(
-                werte.name(), werte.datumIso(), werte.startzeitIso(), werte.ort(), null,
-                onlineTyp, onlineFormation, "draft", 0, null, 0, null, null, null,
+                werte.name(), werte.datumIso(), werte.startzeitIso(), werte.ort(), beschreibung,
+                onlineTyp, onlineFormation, "draft", werte.maxAnmeldungen(), null, 0,
+                leerZuNull(werte.kontaktName()), leerZuNull(werte.kontaktEmail()), leerZuNull(werte.kontaktTelefon()),
                 "private", null, false, false);
 
         Thread worker = new Thread(
@@ -120,6 +122,7 @@ public final class PtmOnlineDispatcher {
                 LoMainThread.post(ctx, () -> {
                     mapping.setTournamentMetadata(online.get());
                     PtmOnlineInfoSheet.aktualisiereBestEffort(ws, zugangsdaten.baseUrl(), mapping);
+                    PtmOnlineInfoSheet.schreibeEckdatenBestEffort(ws, online.get());
                     MessageBox.from(ctx, MessageBoxTypeEnum.INFO_OK)
                             .caption(I18n.get("ptmonline.menu.toplevel"))
                             .message(I18n.get("ptmonline.info.bereits_verknuepft", tournamentId))
@@ -169,6 +172,7 @@ public final class PtmOnlineDispatcher {
                 mapping.setTournamentId(tournamentId);
                 mapping.setTournamentMetadata(metadata);
                 PtmOnlineInfoSheet.aktualisiereBestEffort(ws, baseUrl, mapping);
+                PtmOnlineInfoSheet.schreibeEckdatenBestEffort(ws, metadata);
                 MessageBox.from(ctx, MessageBoxTypeEnum.INFO_OK)
                         .caption(I18n.get("ptmonline.menu.toplevel"))
                         .message(I18n.get("ptmonline.erfolg.turnier_angelegt", tournamentId))
@@ -191,17 +195,20 @@ public final class PtmOnlineDispatcher {
     }
 
     /**
-     * Überträgt die im Dokument gespeicherten, führenden PTM-Online-Eckdaten bewusst nur auf
-     * Nutzeraktion. Die Formation wird dabei stets frisch aus Turniersystem/Meldeliste neu berechnet
-     * (nicht der zuletzt gespeicherte Wert übernommen) — so korrigiert dieser Abgleich auch ein
-     * online abweichend hinterlegtes {@code formation} (z.B. Supermelee faelschlich als "doublette").
+     * Überträgt die im Sheet "PTM Online" gepflegten, führenden PTM-Online-Eckdaten bewusst nur auf
+     * Nutzeraktion. Der Nutzer kann dort ALLE Felder direkt editieren (siehe {@link PtmOnlineInfoSheet}),
+     * daher wird von dort gelesen statt vom zuletzt in DocumentProperties gespeicherten Stand. Die
+     * Formation wird zusaetzlich stets frisch aus Turniersystem/Meldeliste neu berechnet (nicht der im
+     * Sheet stehende Wert übernommen) — so korrigiert dieser Abgleich auch ein online abweichend
+     * hinterlegtes {@code formation} (z.B. Supermelee faelschlich als "doublette").
      */
     public static void eckdatenNachOnlineUebertragen(WorkingSpreadsheet ws) {
         XComponentContext ctx = ws.getxContext();
         var zugangsdaten = new LibreOfficePtmOnlineSpeicher(ctx).laden();
         PtmOnlineRegistrationMapping mapping = new PtmOnlineRegistrationMapping(new DocumentPropertiesHelper(ws));
         Optional<String> tournamentId = mapping.getTournamentId();
-        Optional<TournamentMetadataDto> gespeichert = mapping.getTournamentMetadata();
+        Optional<TournamentMetadataDto> gespeichert = PtmOnlineInfoSheet.leseEckdaten(ws)
+                .or(mapping::getTournamentMetadata);
         if (!zugangsdaten.isConfigured() || tournamentId.isEmpty() || gespeichert.isEmpty()) {
             zeigeFehler(ctx, I18n.get("ptmonline.fehler.turnier_nicht_angelegt"));
             return;
@@ -216,6 +223,7 @@ public final class PtmOnlineDispatcher {
                 LoMainThread.post(ctx, () -> {
                     mapping.setTournamentMetadata(metadata);
                     PtmOnlineInfoSheet.aktualisiereBestEffort(ws, zugangsdaten.baseUrl(), mapping);
+                    PtmOnlineInfoSheet.schreibeEckdatenBestEffort(ws, metadata);
                     MessageBox.from(ctx, MessageBoxTypeEnum.INFO_OK).caption(I18n.get("ptmonline.menu.toplevel"))
                             .message(I18n.get("ptmonline.erfolg.turnier_angelegt", tournamentId.get())).show();
                 });
@@ -239,26 +247,44 @@ public final class PtmOnlineDispatcher {
                 alt.participantsPublic(), alt.licenseRequired());
     }
 
-	/** Ändert die im Dokument gespeicherten Grunddaten; der Online-Abgleich bleibt bewusst explizit. */
+	/**
+	 * Ändert die "wichtigsten" Grunddaten per Dialog; alle übrigen Felder bleiben unangetastet
+	 * editierbar direkt im Sheet "PTM Online" (siehe {@link PtmOnlineInfoSheet}). Der Online-Abgleich
+	 * bleibt bewusst explizit ({@link #eckdatenNachOnlineUebertragen}).
+	 */
 	public static void eckdatenBearbeiten(WorkingSpreadsheet ws) {
 		XComponentContext ctx = ws.getxContext();
 		PtmOnlineRegistrationMapping mapping = new PtmOnlineRegistrationMapping(new DocumentPropertiesHelper(ws));
-		Optional<TournamentMetadataDto> bisher = mapping.getTournamentMetadata();
-		if (bisher.isEmpty()) {
+		if (mapping.getTournamentId().isEmpty()) {
 			zeigeFehler(ctx, I18n.get("ptmonline.fehler.turnier_nicht_angelegt"));
 			return;
 		}
-		TournamentMetadataDto alt = bisher.get();
+		TournamentMetadataDto alt = PtmOnlineInfoSheet.leseEckdaten(ws).or(mapping::getTournamentMetadata)
+				.orElseGet(() -> new TournamentMetadataDto("", "", "", "", null, "", "", "draft", 0, null, 0,
+						null, null, null, "private", null, false, false));
 		PtmOnlineTurnierAnlegenDialog.Werte werte = zeigeTurnierAnlegenDialog(ctx,
-				new PtmOnlineTurnierAnlegenDialog.Werte(alt.name(), alt.date(), alt.startTime(), alt.location()));
+				new PtmOnlineTurnierAnlegenDialog.Werte(alt.name(), alt.date(), alt.startTime(), alt.location(),
+						nullZuLeer(alt.description()), nullZuLeer(alt.contactName()), nullZuLeer(alt.contactEmail()),
+						nullZuLeer(alt.contactPhone()), alt.maxRegistrations()));
 		if (werte == null) {
 			return;
 		}
-		mapping.setTournamentMetadata(new TournamentMetadataDto(
-				werte.name(), werte.datumIso(), werte.startzeitIso(), werte.ort(), alt.description(), alt.type(),
-				alt.formation(), alt.status(), alt.maxRegistrations(), alt.registrationDeadline(), alt.entryFeeCents(),
-				alt.contactName(), alt.contactEmail(), alt.contactPhone(), alt.visibility(), alt.internalNotes(),
-				alt.participantsPublic(), alt.licenseRequired()));
+		TournamentMetadataDto neu = new TournamentMetadataDto(
+				werte.name(), werte.datumIso(), werte.startzeitIso(), werte.ort(), leerZuNull(werte.beschreibung()),
+				alt.type(), alt.formation(), alt.status(), werte.maxAnmeldungen(), alt.registrationDeadline(),
+				alt.entryFeeCents(), leerZuNull(werte.kontaktName()), leerZuNull(werte.kontaktEmail()),
+				leerZuNull(werte.kontaktTelefon()), alt.visibility(), alt.internalNotes(),
+				alt.participantsPublic(), alt.licenseRequired());
+		mapping.setTournamentMetadata(neu);
+		PtmOnlineInfoSheet.schreibeEckdatenBestEffort(ws, neu);
+	}
+
+	private static String nullZuLeer(String wert) {
+		return wert == null ? "" : wert;
+	}
+
+	private static String leerZuNull(String wert) {
+		return wert == null || wert.isBlank() ? null : wert;
 	}
 
     /** Ordnet das lokale Turniersystem dem passenden {@code type}-Wert der PTM-Online-API zu. */

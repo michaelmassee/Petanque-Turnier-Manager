@@ -42,13 +42,14 @@ import de.petanqueturniermanager.konfigdialog.AbstractUnoDialog;
 public final class PtmOnlineTurnierAnlegenDialog extends AbstractUnoDialog {
 
     private static final int DIALOG_BREITE = 220;
-    private static final int DIALOG_HOEHE = 126;
+    private static final int DIALOG_HOEHE = 236;
     private static final LocalTime STANDARD_STARTZEIT = LocalTime.of(9, 0);
     private static final int LABEL_X = 8;
     private static final int LABEL_W = 55;
     private static final int FELD_X = 66;
     private static final int FELD_W = 146;
     private static final int ZEILE_H = 16;
+    private static final int BESCHREIBUNG_H = 30;
 
     @Nullable private final XWindowPeer parentPeer;
     @Nullable private final Werte vorbesetzung;
@@ -118,6 +119,29 @@ public final class PtmOnlineTurnierAnlegenDialog extends AbstractUnoDialog {
         label(xMSF, cont, "lblOrt", I18n.get("ptmonline.turnier.dialog.label.ort"), LABEL_X, y, LABEL_W, 10);
         textFeld(xMSF, cont, "txtOrt", vorbesetzung == null ? "" : vorbesetzung.ort(), FELD_X, y - 2, FELD_W, 12);
 
+        y += ZEILE_H;
+        label(xMSF, cont, "lblBeschreibung", I18n.get("ptmonline.turnier.dialog.label.beschreibung"), LABEL_X, y, LABEL_W, 10);
+        textFeldMehrzeilig(xMSF, cont, "txtBeschreibung", vorbesetzung == null ? "" : vorbesetzung.beschreibung(),
+                FELD_X, y - 2, FELD_W, BESCHREIBUNG_H);
+
+        y += BESCHREIBUNG_H + 4;
+        label(xMSF, cont, "lblKontaktName", I18n.get("ptmonline.turnier.dialog.label.kontakt_name"), LABEL_X, y, LABEL_W, 10);
+        textFeld(xMSF, cont, "txtKontaktName", vorbesetzung == null ? "" : vorbesetzung.kontaktName(), FELD_X, y - 2, FELD_W, 12);
+
+        y += ZEILE_H;
+        label(xMSF, cont, "lblKontaktEmail", I18n.get("ptmonline.turnier.dialog.label.kontakt_email"), LABEL_X, y, LABEL_W, 10);
+        textFeld(xMSF, cont, "txtKontaktEmail", vorbesetzung == null ? "" : vorbesetzung.kontaktEmail(), FELD_X, y - 2, FELD_W, 12);
+
+        y += ZEILE_H;
+        label(xMSF, cont, "lblKontaktTelefon", I18n.get("ptmonline.turnier.dialog.label.kontakt_telefon"), LABEL_X, y, LABEL_W, 10);
+        textFeld(xMSF, cont, "txtKontaktTelefon", vorbesetzung == null ? "" : vorbesetzung.kontaktTelefon(), FELD_X, y - 2, FELD_W, 12);
+
+        y += ZEILE_H;
+        label(xMSF, cont, "lblMaxAnmeldungen", I18n.get("ptmonline.turnier.dialog.label.max_anmeldungen"), LABEL_X, y, LABEL_W, 10);
+        textFeld(xMSF, cont, "txtMaxAnmeldungen",
+                vorbesetzung == null || vorbesetzung.maxAnmeldungen() <= 0 ? "" : Integer.toString(vorbesetzung.maxAnmeldungen()),
+                FELD_X, y - 2, FELD_W, 12);
+
         y += ZEILE_H + 8;
         button(xMSF, cont, "btnOk", I18n.get("dialog.ok"), FELD_X + FELD_W - 135, y, 55, ZEILE_H,
                 (short) PushButtonType.STANDARD_value);
@@ -127,8 +151,13 @@ public final class PtmOnlineTurnierAnlegenDialog extends AbstractUnoDialog {
         registriereKlick(xcc, "btnOk", this::beimOkGeklickt);
     }
 
-    /** Vom Nutzer eingegebene, validierte Turnier-Eckdaten. */
-    public record Werte(String name, String datumIso, String startzeitIso, String ort) {
+    /**
+     * Vom Nutzer eingegebene, validierte Turnier-Eckdaten. Deckt bewusst nur die wichtigsten
+     * PTM-Online-Felder ab (Rest wird direkt im Sheet "PTM Online" editiert, siehe
+     * {@link de.petanqueturniermanager.ptmonline.sheet.PtmOnlineInfoSheet}).
+     */
+    public record Werte(String name, String datumIso, String startzeitIso, String ort, String beschreibung,
+            String kontaktName, String kontaktEmail, String kontaktTelefon, int maxAnmeldungen) {
     }
 
     private void beimOkGeklickt() {
@@ -139,6 +168,11 @@ public final class PtmOnlineTurnierAnlegenDialog extends AbstractUnoDialog {
         LocalDate datum = datum(xcc, "txtDatum");
         LocalTime startzeit = zeit(xcc, "txtStartzeit");
         String ort = text(xcc, "txtOrt");
+        String beschreibung = text(xcc, "txtBeschreibung");
+        String kontaktName = text(xcc, "txtKontaktName");
+        String kontaktEmail = text(xcc, "txtKontaktEmail");
+        String kontaktTelefon = text(xcc, "txtKontaktTelefon");
+        int maxAnmeldungen = ganzzahl(text(xcc, "txtMaxAnmeldungen"));
 
         if (name.length() < 2) {
             zeigeFehler(I18n.get("ptmonline.turnier.dialog.fehler.name_leer"));
@@ -149,8 +183,17 @@ public final class PtmOnlineTurnierAnlegenDialog extends AbstractUnoDialog {
             return;
         }
 
-        ergebnis = new Werte(name, datum.toString(), startzeit.toString(), ort);
+        ergebnis = new Werte(name, datum.toString(), startzeit.toString(), ort, beschreibung,
+                kontaktName, kontaktEmail, kontaktTelefon, maxAnmeldungen);
         xDialog.endExecute();
+    }
+
+    private static int ganzzahl(String text) {
+        try {
+            return text.isBlank() ? 0 : Integer.parseInt(text.trim());
+        } catch (NumberFormatException e) {
+            return 0;
+        }
     }
 
     private void zeigeFehler(String meldung) {
@@ -241,6 +284,20 @@ public final class PtmOnlineTurnierAnlegenDialog extends AbstractUnoDialog {
         props.setPropertyValue("Height", h);
         props.setPropertyValue("Text", text);
         props.setPropertyValue("MultiLine", Boolean.FALSE);
+        cont.insertByName(name, model);
+    }
+
+    private static void textFeldMehrzeilig(XMultiServiceFactory xMSF, XNameContainer cont,
+            String name, String text, int x, int y, int w, int h) throws com.sun.star.uno.Exception {
+        var model = xMSF.createInstance("com.sun.star.awt.UnoControlEditModel");
+        var props = Lo.qi(XPropertySet.class, model);
+        props.setPropertyValue("PositionX", x);
+        props.setPropertyValue("PositionY", y);
+        props.setPropertyValue("Width", w);
+        props.setPropertyValue("Height", h);
+        props.setPropertyValue("Text", text);
+        props.setPropertyValue("MultiLine", Boolean.TRUE);
+        props.setPropertyValue("VScroll", Boolean.TRUE);
         cont.insertByName(name, model);
     }
 
