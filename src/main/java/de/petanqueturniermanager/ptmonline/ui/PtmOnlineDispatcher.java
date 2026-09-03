@@ -58,7 +58,7 @@ public final class PtmOnlineDispatcher {
             zeigeFehler(ctx, I18n.get("ptmonline.turnier.dialog.fehler.system_nicht_unterstuetzt"));
             return;
         }
-        String onlineFormation = mapOnlineFormation(MeldelisteZielFactory.fuerAktivesSheet(ws));
+        String onlineFormation = mapOnlineFormation(ts, MeldelisteZielFactory.fuerAktivesSheet(ws));
 
         PtmOnlineRegistrationMapping mapping = new PtmOnlineRegistrationMapping(new DocumentPropertiesHelper(ws));
         Optional<String> vorhandeneId = mapping.getTournamentId();
@@ -190,22 +190,31 @@ public final class PtmOnlineDispatcher {
         ResultExportTask.starte(ws);
     }
 
-    /** Überträgt die im Dokument gespeicherten, führenden PTM-Online-Eckdaten bewusst nur auf Nutzeraktion. */
+    /**
+     * Überträgt die im Dokument gespeicherten, führenden PTM-Online-Eckdaten bewusst nur auf
+     * Nutzeraktion. Die Formation wird dabei stets frisch aus Turniersystem/Meldeliste neu berechnet
+     * (nicht der zuletzt gespeicherte Wert übernommen) — so korrigiert dieser Abgleich auch ein
+     * online abweichend hinterlegtes {@code formation} (z.B. Supermelee faelschlich als "doublette").
+     */
     public static void eckdatenNachOnlineUebertragen(WorkingSpreadsheet ws) {
         XComponentContext ctx = ws.getxContext();
         var zugangsdaten = new LibreOfficePtmOnlineSpeicher(ctx).laden();
         PtmOnlineRegistrationMapping mapping = new PtmOnlineRegistrationMapping(new DocumentPropertiesHelper(ws));
         Optional<String> tournamentId = mapping.getTournamentId();
-        Optional<TournamentMetadataDto> metadata = mapping.getTournamentMetadata();
-        if (!zugangsdaten.isConfigured() || tournamentId.isEmpty() || metadata.isEmpty()) {
+        Optional<TournamentMetadataDto> gespeichert = mapping.getTournamentMetadata();
+        if (!zugangsdaten.isConfigured() || tournamentId.isEmpty() || gespeichert.isEmpty()) {
             zeigeFehler(ctx, I18n.get("ptmonline.fehler.turnier_nicht_angelegt"));
             return;
         }
+        TurnierSystem ts = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();
+        String onlineFormation = mapOnlineFormation(ts, MeldelisteZielFactory.fuerAktivesSheet(ws));
+        TournamentMetadataDto metadata = mitFormation(gespeichert.get(), onlineFormation);
         new Thread(() -> {
             try {
                 new TournamentSyncClient(zugangsdaten.baseUrl(), zugangsdaten.apiKey())
-                        .pushTournamentMetadata(tournamentId.get(), metadata.get());
+                        .pushTournamentMetadata(tournamentId.get(), metadata);
                 LoMainThread.post(ctx, () -> {
+                    mapping.setTournamentMetadata(metadata);
                     PtmOnlineInfoSheet.aktualisiereBestEffort(ws, zugangsdaten.baseUrl(), mapping);
                     MessageBox.from(ctx, MessageBoxTypeEnum.INFO_OK).caption(I18n.get("ptmonline.menu.toplevel"))
                             .message(I18n.get("ptmonline.erfolg.turnier_angelegt", tournamentId.get())).show();
@@ -217,6 +226,17 @@ public final class PtmOnlineDispatcher {
                 Thread.currentThread().interrupt();
             }
         }, "PTM-Online-EckdatenAbgleich").start();
+    }
+
+    private static TournamentMetadataDto mitFormation(TournamentMetadataDto alt, String formation) {
+        if (alt.formation().equals(formation)) {
+            return alt;
+        }
+        return new TournamentMetadataDto(
+                alt.name(), alt.date(), alt.startTime(), alt.location(), alt.description(), alt.type(),
+                formation, alt.status(), alt.maxRegistrations(), alt.registrationDeadline(), alt.entryFeeCents(),
+                alt.contactName(), alt.contactEmail(), alt.contactPhone(), alt.visibility(), alt.internalNotes(),
+                alt.participantsPublic(), alt.licenseRequired());
     }
 
 	/** Ändert die im Dokument gespeicherten Grunddaten; der Online-Abgleich bleibt bewusst explizit. */
@@ -261,12 +281,17 @@ public final class PtmOnlineDispatcher {
 
     /**
      * Ordnet die lokale Formation der Meldeliste dem passenden {@code formation}-Wert der
-     * PTM-Online-API zu (dort nur {@code tete}/{@code doublette}/{@code triplette}). Ist noch keine
-     * Meldeliste aktiv oder eine nicht direkt abbildbare Formation (MELEE/NUR_TEAMNAME) gesetzt,
-     * wird defensiv "doublette" als haeufigster Fall angenommen — reine Anzeige-Metadaten online,
-     * ohne Einfluss auf die lokale Spiellogik.
+     * PTM-Online-API zu (dort nur {@code tete}/{@code doublette}/{@code triplette}). Supermelee hat
+     * lokal die technische Formation {@link Formation#MELEE} (keine feste Teamgroesse), spielt aber
+     * immer als Einzelspieler — dort wird die Meldeliste-Formation bewusst ignoriert und immer
+     * "tete" gemeldet. Ist ansonsten noch keine Meldeliste aktiv oder eine nicht direkt abbildbare
+     * Formation (MELEE/NUR_TEAMNAME) gesetzt, wird defensiv "doublette" als haeufigster Fall
+     * angenommen — reine Anzeige-Metadaten online, ohne Einfluss auf die lokale Spiellogik.
      */
-    private static String mapOnlineFormation(Optional<MeldelisteZiel> ziel) {
+    private static String mapOnlineFormation(TurnierSystem ts, Optional<MeldelisteZiel> ziel) {
+        if (ts == TurnierSystem.SUPERMELEE) {
+            return "tete";
+        }
         Formation formation = ziel.map(MeldelisteZiel::getFormation).orElse(Formation.DOUBLETTE);
         return switch (formation) {
             case TETE -> "tete";
