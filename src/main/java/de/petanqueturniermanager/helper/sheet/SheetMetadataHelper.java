@@ -57,6 +57,7 @@ public class SheetMetadataHelper {
     public static final String SCHLUESSEL_TEILNEHMER = "__PTM_TEILNEHMER__";
     public static final String SCHLUESSEL_SIEGERGELD = "__PTM_SIEGERGELD__";
     public static final String SCHLUESSEL_PLANUNGSRECHNER = "__PTM_PLANUNGSRECHNER__";
+    public static final String SCHLUESSEL_PTM_ONLINE_INFO = "__PTM_ONLINE_INFO__";
 
     // ── Konstanten: bereits vorhanden ────────────────────────────────────────
 

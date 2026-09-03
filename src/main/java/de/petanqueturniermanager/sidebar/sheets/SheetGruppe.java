@@ -92,7 +92,8 @@ public enum SheetGruppe {
     )),
 
     ALLGEMEIN("sidebar.sheets.gruppe.allgemein", List.of(
-            "__PTM_TEILNEHMER__"
+            "__PTM_TEILNEHMER__",
+            "__PTM_ONLINE_INFO__"
     ));
 
     private final String i18nKey;

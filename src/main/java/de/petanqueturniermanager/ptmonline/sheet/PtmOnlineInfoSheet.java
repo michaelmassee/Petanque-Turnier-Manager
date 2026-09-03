@@ -14,6 +14,7 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.awt.FontWeight;
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.table.XCellRange;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -25,6 +26,7 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.ptmonline.PtmOnlineRegistrationMapping;
@@ -92,10 +94,26 @@ public final class PtmOnlineInfoSheet {
             throw new GenerateException(I18n.get("error.tabelle.nicht.vorhanden", sheetName));
         }
 
+        registriereSheetMetadaten(ws, sheet);
         schreibeStammdaten(ws, sheet, baseUrl, mapping);
         schreibeMapping(ws, sheet, mapping);
         if (neuAngelegt) {
             formatiere(sh, sheet);
+        }
+    }
+
+    /**
+     * Registriert das Sheet als Named-Range-Metadaten-Eintrag (Schluessel {@link
+     * SheetMetadataHelper#SCHLUESSEL_PTM_ONLINE_INFO}), damit es in der Sidebar-Sheetliste
+     * ({@link de.petanqueturniermanager.sidebar.sheets.SheetBaumOrganisierer}) erscheint — die
+     * liest ausschliesslich Sheets mit solchen Schluesseln, nicht die Tabs des Dokuments direkt.
+     * {@link SheetHelper#newIfNotExist} (oben in {@link #aktualisiere}) legt das Sheet nur an, ohne
+     * diese Metadaten zu schreiben.
+     */
+    private static void registriereSheetMetadaten(WorkingSpreadsheet ws, XSpreadsheet sheet) {
+        XSpreadsheetDocument xDoc = ws.getWorkingSpreadsheetDocument();
+        if (!SheetMetadataHelper.istRegistriertesSheet(xDoc, sheet, SheetMetadataHelper.SCHLUESSEL_PTM_ONLINE_INFO)) {
+            SheetMetadataHelper.schreibeSheetMetadaten(xDoc, sheet, SheetMetadataHelper.SCHLUESSEL_PTM_ONLINE_INFO);
         }
     }
 
