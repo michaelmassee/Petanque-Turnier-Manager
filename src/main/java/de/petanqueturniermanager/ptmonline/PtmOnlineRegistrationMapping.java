@@ -73,6 +73,12 @@ public class PtmOnlineRegistrationMapping {
         return wert.isBlank() ? Optional.empty() : Optional.of(wert);
     }
 
+    /** Entfernt die lokale Online-Verknuepfung (ID + Metadaten), z.B. wenn das Online-Turnier geloescht wurde. */
+    public void clearTournament() {
+        docProps.setStringProperty(PROP_TOURNAMENT_ID, "");
+        docProps.setStringProperty(PROP_TOURNAMENT_METADATA, "");
+    }
+
     public void setTournamentMetadata(de.petanqueturniermanager.ptmonline.dto.TournamentMetadataDto metadata) {
         docProps.setStringProperty(PROP_TOURNAMENT_METADATA, GSON.toJson(metadata));
     }

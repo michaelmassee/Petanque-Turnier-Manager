@@ -9,6 +9,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.Optional;
 
 import com.google.gson.Gson;
 
@@ -43,6 +44,17 @@ abstract class PtmOnlineHttpClient {
         return send(authorized(HttpRequest.newBuilder(uri(path))).GET());
     }
 
+    /** Wie {@link #get(String)}, liefert bei HTTP 404 aber {@code Optional.empty()} statt zu werfen. */
+    final Optional<HttpResponse<String>> getIfPresent(String path) throws IOException, InterruptedException {
+        HttpResponse<String> response = httpClient.send(
+                authorized(HttpRequest.newBuilder(uri(path))).GET().build(), HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() == 404) {
+            return Optional.empty();
+        }
+        pruefeStatus(response);
+        return Optional.of(response);
+    }
+
     final HttpResponse<String> post(String path, String jsonBody) throws IOException, InterruptedException {
         return send(authorized(HttpRequest.newBuilder(uri(path)))
                 .header("Content-Type", "application/json")
@@ -61,9 +73,13 @@ abstract class PtmOnlineHttpClient {
 
     private HttpResponse<String> send(HttpRequest.Builder requestBuilder) throws IOException, InterruptedException {
         HttpResponse<String> response = httpClient.send(requestBuilder.build(), HttpResponse.BodyHandlers.ofString());
+        pruefeStatus(response);
+        return response;
+    }
+
+    private void pruefeStatus(HttpResponse<String> response) throws IOException {
         if (response.statusCode() < 200 || response.statusCode() >= 300) {
             throw new IOException("PTM-Online API Fehler " + response.statusCode() + ": " + response.body());
         }
-        return response;
     }
 }

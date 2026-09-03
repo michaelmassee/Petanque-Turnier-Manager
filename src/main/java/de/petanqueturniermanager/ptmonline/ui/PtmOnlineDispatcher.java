@@ -52,13 +52,6 @@ public final class PtmOnlineDispatcher {
             return;
         }
 
-        PtmOnlineRegistrationMapping mapping = new PtmOnlineRegistrationMapping(new DocumentPropertiesHelper(ws));
-        Optional<String> vorhandeneId = mapping.getTournamentId();
-        if (vorhandeneId.isPresent()) {
-            zeigeFehler(ctx, I18n.get("ptmonline.fehler.turnier_bereits_angelegt", vorhandeneId.get()));
-            return;
-        }
-
         TurnierSystem ts = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();
         Optional<String> onlineTyp = mapOnlineTyp(ts);
         if (onlineTyp.isEmpty()) {
@@ -67,6 +60,19 @@ public final class PtmOnlineDispatcher {
         }
         String onlineFormation = mapOnlineFormation(MeldelisteZielFactory.fuerAktivesSheet(ws));
 
+        PtmOnlineRegistrationMapping mapping = new PtmOnlineRegistrationMapping(new DocumentPropertiesHelper(ws));
+        Optional<String> vorhandeneId = mapping.getTournamentId();
+        if (vorhandeneId.isPresent()) {
+            pruefeVorhandeneVerknuepfung(ws, ctx, zugangsdaten, mapping, vorhandeneId.get());
+            return;
+        }
+
+        legeNeuesTurnierAn(ws, ctx, zugangsdaten, mapping, onlineTyp.get(), onlineFormation);
+    }
+
+    private static void legeNeuesTurnierAn(WorkingSpreadsheet ws, XComponentContext ctx,
+            LibreOfficePtmOnlineSpeicher.Zugangsdaten zugangsdaten, PtmOnlineRegistrationMapping mapping,
+            String onlineTyp, String onlineFormation) {
         PtmOnlineTurnierAnlegenDialog.Werte werte = zeigeTurnierAnlegenDialog(ctx);
         if (werte == null) {
             return; // Abgebrochen
@@ -74,15 +80,58 @@ public final class PtmOnlineDispatcher {
 
         CreateTournamentDto dto = new CreateTournamentDto(
                 werte.name(), werte.datumIso(), werte.startzeitIso(), werte.ort(), null,
-                onlineTyp.get(), onlineFormation, "draft", "private");
+                onlineTyp, onlineFormation, "draft", "private");
         TournamentMetadataDto metadata = new TournamentMetadataDto(
                 werte.name(), werte.datumIso(), werte.startzeitIso(), werte.ort(), null,
-                onlineTyp.get(), onlineFormation, "draft", 0, null, 0, null, null, null,
+                onlineTyp, onlineFormation, "draft", 0, null, 0, null, null, null,
                 "private", null, false, false);
 
         Thread worker = new Thread(
                 () -> turnierAnlegenImHintergrund(ws, ctx, zugangsdaten.baseUrl(), zugangsdaten.apiKey(), mapping, dto, metadata),
                 "PTM-Online-TurnierAnlegen");
+        worker.start();
+    }
+
+    /**
+     * Eine lokal hinterlegte Turnier-ID kann veraltet sein, wenn das Online-Turnier zwischenzeitlich
+     * geloescht wurde. Statt den Nutzer dann dauerhaft mit "bereits angelegt" zu blockieren, wird der
+     * Online-Stand geprueft: existiert das Turnier nicht mehr, wird die Verknuepfung entfernt (Nutzer
+     * kann "Turnier online anlegen" danach direkt erneut ausfuehren); existiert es noch, werden
+     * lokale Metadaten und das "PTM Online"-Info-Sheet aus dem Online-Stand aufgefrischt (kein
+     * Duplikat online).
+     */
+    private static void pruefeVorhandeneVerknuepfung(WorkingSpreadsheet ws, XComponentContext ctx,
+            LibreOfficePtmOnlineSpeicher.Zugangsdaten zugangsdaten, PtmOnlineRegistrationMapping mapping,
+            String tournamentId) {
+        Thread worker = new Thread(() -> {
+            try {
+                TournamentSyncClient client = new TournamentSyncClient(zugangsdaten.baseUrl(), zugangsdaten.apiKey());
+                Optional<TournamentMetadataDto> online = client.fetchTournament(tournamentId);
+                if (online.isEmpty()) {
+                    LoMainThread.post(ctx, () -> {
+                        mapping.clearTournament();
+                        MessageBox.from(ctx, MessageBoxTypeEnum.INFO_OK)
+                                .caption(I18n.get("ptmonline.menu.toplevel"))
+                                .message(I18n.get("ptmonline.info.verknuepfung_entfernt", tournamentId))
+                                .show();
+                    });
+                    return;
+                }
+                LoMainThread.post(ctx, () -> {
+                    mapping.setTournamentMetadata(online.get());
+                    PtmOnlineInfoSheet.aktualisiereBestEffort(ws, zugangsdaten.baseUrl(), mapping);
+                    MessageBox.from(ctx, MessageBoxTypeEnum.INFO_OK)
+                            .caption(I18n.get("ptmonline.menu.toplevel"))
+                            .message(I18n.get("ptmonline.info.bereits_verknuepft", tournamentId))
+                            .show();
+                });
+            } catch (IOException e) {
+                logger.error("PTM-Online: Pruefung der vorhandenen Verknuepfung fehlgeschlagen", e);
+                LoMainThread.post(ctx, () -> zeigeNetzwerkFehler(ctx, e));
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }, "PTM-Online-VerknuepfungPruefen");
         worker.start();
     }
 

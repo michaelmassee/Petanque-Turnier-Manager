@@ -11,6 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -48,6 +49,19 @@ public class TournamentSyncClient extends PtmOnlineHttpClient {
         HttpResponse<String> response = post("/api/tournaments", GSON.toJson(tournament));
         JsonObject payload = GSON.fromJson(response.body(), JsonObject.class);
         return payload.getAsJsonObject("tournament").get("id").getAsString();
+    }
+
+    /**
+     * Fragt den aktuellen Online-Stand eines Turniers ab (fuer den Abgleich mit einer lokal
+     * gespeicherten Turnier-ID); leer, wenn das Turnier online nicht mehr existiert (z.B. geloescht).
+     */
+    public Optional<TournamentMetadataDto> fetchTournament(String tournamentId) throws IOException, InterruptedException {
+        Optional<HttpResponse<String>> response = getIfPresent("/api/tournaments/" + encode(tournamentId));
+        if (response.isEmpty()) {
+            return Optional.empty();
+        }
+        JsonObject payload = GSON.fromJson(response.get().body(), JsonObject.class);
+        return Optional.of(GSON.fromJson(payload.getAsJsonObject("tournament"), TournamentMetadataDto.class));
     }
 
     /** Überträgt die allein im Turnierdokument gepflegten Eckdaten und markiert das Turnier online als dokumentverwaltet. */
