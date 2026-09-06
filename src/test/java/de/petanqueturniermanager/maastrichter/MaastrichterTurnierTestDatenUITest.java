@@ -32,6 +32,7 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.maastrichter.korunde.KoGruppeABSheet;
 import de.petanqueturniermanager.maastrichter.finalrunde.MaastrichterFinalrundeSheet;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
+import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterGruppenSpalteHelper;
 import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterVorrundenRanglisteSheetUpdate;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteAnalyseAssert;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheet;
@@ -171,6 +172,44 @@ public class MaastrichterTurnierTestDatenUITest extends BaseCalcUITest {
 		assertThat(sheetHlp.getIntFromCell(gruppeB, Position.from(0, 5)))
 				.as("Cadrage zaehlt als erste KO-Runde und wird nach Gruppe A weiter nummeriert")
 				.isEqualTo(9);
+	}
+
+	/**
+	 * Neue Option "Maximale Anzahl Teams KO-Phase": Bei 25 Teams, Gruppengröße 16 und
+	 * Cutoff=16 dürfen nur die besten 16 Teams eine KO-Gruppe (A) bekommen - es entsteht
+	 * keine B-Gruppe mehr für den Rest. Die übrigen 9 Teams bleiben mit der Cutoff-
+	 * Markierung (statt Gruppenbuchstabe) in der Vorrunden-Rangliste stehen.
+	 */
+	@Test
+	public void maastrichterMaxTeamsKoPhaseBegrenztKoTeilnehmerUndMarkiertRest() throws GenerateException {
+		final int anzTeams = 25;
+		final int maxTeamsKoPhase = 16;
+		new MaastrichterTurnierTestDaten(wkingSpreadsheet, anzTeams, 3, 16).generate();
+
+		var konfig = new MaastrichterKonfigurationSheet(wkingSpreadsheet);
+		konfig.setMaxTeamsKoPhase(maxTeamsKoPhase);
+		new MaastrichterFinalrundeSheet(wkingSpreadsheet).doRun();
+
+		assertThat(sheetHlp.findByName(SheetNamen.koFinaleGruppe("A")))
+				.as("A-Finale muss bei Cutoff=16 aus den besten 16 Teams entstehen").isNotNull();
+		assertThat(sheetHlp.findByName(SheetNamen.koFinaleGruppe("B")))
+				.as("Bei Cutoff=16 darf für den Rest keine weitere Finalgruppe mehr entstehen").isNull();
+
+		XSpreadsheet rangliste = sheetHlp.findByName(SheetNamen.maastrichterVorrundenRangliste());
+		assertThat(rangliste).as("Vorrunden-Rangliste-Sheet muss vorhanden sein").isNotNull();
+
+		String cutoffMarkierung = MaastrichterGruppenSpalteHelper.keinKoMarker();
+		for (int i = 0; i < anzTeams; i++) {
+			int zeile = SchweizerRanglisteSheet.ERSTE_DATEN_ZEILE + i;
+			String gruppe = sheetHlp.getTextFromCell(rangliste,
+					Position.from(MaastrichterGruppenSpalteHelper.GRUPPE_SPALTE, zeile));
+			if (i < maxTeamsKoPhase) {
+				assertThat(gruppe).as("Rang %d (innerhalb Cutoff) muss Gruppe A tragen", i + 1).isEqualTo("A");
+			} else {
+				assertThat(gruppe).as("Rang %d (außerhalb Cutoff) muss die Cutoff-Markierung tragen", i + 1)
+						.isEqualTo(cutoffMarkierung);
+			}
+		}
 	}
 
 	@Test

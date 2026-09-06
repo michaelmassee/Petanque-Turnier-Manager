@@ -49,6 +49,14 @@ public class MaastrichterKonfigurationSheet extends SchweizerKonfigurationSheet 
 		getPropertiesSpalte().setAnzVorrunden(anzVorrunden);
 	}
 
+	public int getMaxTeamsKoPhase() {
+		return getPropertiesSpalte().getMaxTeamsKoPhase();
+	}
+
+	public void setMaxTeamsKoPhase(int maxTeamsKoPhase) {
+		getPropertiesSpalte().setMaxTeamsKoPhase(maxTeamsKoPhase);
+	}
+
 	@Override
 	public int getGruppenGroesse() {
 		return getPropertiesSpalte().getGruppenGroesse();

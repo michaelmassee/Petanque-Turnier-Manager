@@ -198,7 +198,7 @@ public class MaastrichterGruppenUebersichtSheet extends SheetRunner implements I
                     || !eintraege.get(i).gruppe().equals(eintraege.get(blockStart).gruppe());
             if (blockEndeErreicht) {
                 String gruppe = eintraege.get(blockStart).gruppe();
-                if (!gruppe.isEmpty()) {
+                if (!gruppe.isEmpty() && Character.isLetter(gruppe.charAt(0))) {
                     getSheetHelper().setPropertiesInRange(sheet,
                             RangePosition.from(SPALTE_GRUPPE, ERSTE_DATEN_ZEILE + blockStart,
                                     SPALTE_GRUPPE, ERSTE_DATEN_ZEILE + i - 1),

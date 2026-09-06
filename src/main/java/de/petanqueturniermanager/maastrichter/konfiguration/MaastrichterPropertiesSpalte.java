@@ -29,12 +29,16 @@ public class MaastrichterPropertiesSpalte extends SchweizerPropertiesSpalte {
 	private static final String KONFIG_PROP_ANZ_VORRUNDEN = "Anzahl Vorrunden";
 	static final String KONFIG_PROP_GRUPPEN_MODUS = "Gruppen-Modus";
 
+	private static final String KONFIG_PROP_MAX_TEAMS_KO_PHASE = "Maximale Anzahl Teams KO-Phase";
+
 	static {
 		KONFIG_PROPERTIES.addAll(SchweizerPropertiesSpalte.KONFIG_PROPERTIES);
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TAB_COLOR_CADRAGE)
 				.setDefaultVal(SheetTabFarben.FORME_CADRAGE).tabFarbe());
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_ANZ_VORRUNDEN)
 				.setDefaultVal(3).setDescription("config.desc.maastrichter.anz.vorrunden"));
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_MAX_TEAMS_KO_PHASE)
+				.setDefaultVal(0).setDescription("config.desc.maastrichter.max.teams.ko.phase"));
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty
 				.from(KONFIG_PROP_GRUPPEN_MODUS)
 				.setDefaultVal(MaastrichterGruppenModus.NACH_GROESSE.name())
@@ -61,6 +65,20 @@ public class MaastrichterPropertiesSpalte extends SchweizerPropertiesSpalte {
 
 	public void setAnzVorrunden(int anzVorrunden) {
 		writeIntProperty(KONFIG_PROP_ANZ_VORRUNDEN, anzVorrunden);
+	}
+
+	/**
+	 * Maximale Anzahl Teams, die nach der Vorrunde noch in die KO-Phase (Finalgruppen)
+	 * übernommen werden. {@code 0} bedeutet: kein Limit, alle Teams spielen KO.
+	 * Schwächer platzierte Teams bleiben in der Vorrunden-Rangliste stehen, spielen aber
+	 * keine KO-Partie mehr.
+	 */
+	public int getMaxTeamsKoPhase() {
+		return Math.max(0, readIntProperty(KONFIG_PROP_MAX_TEAMS_KO_PHASE));
+	}
+
+	public void setMaxTeamsKoPhase(int maxTeamsKoPhase) {
+		writeIntProperty(KONFIG_PROP_MAX_TEAMS_KO_PHASE, Math.max(0, maxTeamsKoPhase));
 	}
 
 	public KoSpielbaumTeamAnzeige getSpielbaumTeamAnzeige() {

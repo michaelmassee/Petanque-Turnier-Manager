@@ -24,6 +24,7 @@ import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
+import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterGruppenSpalteHelper;
 import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterVorrundenRanglisteSheetUpdate;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
@@ -51,6 +52,9 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
  * Ablauf:
  * <ol>
  *   <li>Alle "N. Vorrunde"-Blätter lesen → Siege/Punkte pro Team berechnen</li>
+ *   <li>Optional: nur die besten "Maximale Anzahl Teams KO-Phase" Teams übernehmen
+ *       (0 = kein Limit); schwächer platzierte Teams bleiben ohne KO-Spiel, aber mit
+ *       Cutoff-Markierung in der Vorrunden-Rangliste stehen</li>
  *   <li>Teams nach konfiguriertem Modus in Finalgruppen einteilen:
  *       <ul>
  *         <li>{@link MaastrichterGruppenModus#NACH_SIEGEN}: A = max. Siege, B = max-1, ...</li>
@@ -131,16 +135,31 @@ public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet {
 			return;
 		}
 
+		// Obergrenze für die KO-Phase: schwächer platzierte Teams bleiben ohne KO-Spiel,
+		// tauchen aber weiterhin (mit Cutoff-Markierung statt Gruppenbuchstabe) in der
+		// Vorrunden-Rangliste auf.
+		int maxTeamsKoPhase = konfigSheet.getMaxTeamsKoPhase();
+		List<SchweizerTeamErgebnis> teamsFuerKo = sortiert;
+		List<SchweizerTeamErgebnis> ausserhalbCutoff = List.of();
+		if (maxTeamsKoPhase > 0 && sortiert.size() > maxTeamsKoPhase) {
+			teamsFuerKo = sortiert.subList(0, maxTeamsKoPhase);
+			ausserhalbCutoff = sortiert.subList(maxTeamsKoPhase, sortiert.size());
+			processBoxinfo("processbox.maastrichter.cutoff.info", ausserhalbCutoff.size());
+		}
+
 		// Gruppen gemäß konfiguriertem Modus bilden
 		MaastrichterGruppenModus gruppenModus = konfigSheet.getMaastrichterGruppenModus();
 		List<List<SchweizerTeamErgebnis>> gruppen = switch (gruppenModus) {
-			case NACH_SIEGEN -> teileNachSiegen(sortiert, anzVorrunden);
-			case NACH_GROESSE -> teileNachGroesse(sortiert, konfigSheet.getGruppenGroesse(),
+			case NACH_SIEGEN -> teileNachSiegen(teamsFuerKo, anzVorrunden);
+			case NACH_GROESSE -> teileNachGroesse(teamsFuerKo, konfigSheet.getGruppenGroesse(),
 					konfigSheet.getMinLetzteGruppeGroesse());
 		};
 
 		// Buchstabe wird nur für Gruppen mit ≥2 Teams vergeben, damit 'A' immer belegt ist
 		Map<Integer, String> teamNrZuGruppe = new HashMap<>();
+		for (SchweizerTeamErgebnis erg : ausserhalbCutoff) {
+			teamNrZuGruppe.put(erg.teamNr(), MaastrichterGruppenSpalteHelper.keinKoMarker());
+		}
 		List<Finalgruppe> finalgruppen = new ArrayList<>();
 		char naechsterBuchstabe = 'A';
 

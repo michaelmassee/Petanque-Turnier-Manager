@@ -94,6 +94,14 @@ Beispiele:
 > Ist die tatsächliche Gruppengröße keine Zweierpotenz, gleicht Cadrage automatisch aus (siehe
 > Kapitel 5) – das gilt unverändert auch für die ohnehin oft ungleich große letzte Gruppe.
 
+> **Konfiguration „Maximale Anzahl Teams KO-Phase":** Optionale Obergrenze für die Gesamtzahl
+> der Teams, die nach der Vorrunde überhaupt noch KO spielen (Default `0` = kein Limit, alle
+> Teams). Ist die Vorrunde größer als das konfigurierte Limit, wird die A/B/C/D-Aufteilung
+> (Abschnitt 3) nur noch auf den besten X Teams der Vorrunden-Rangliste durchgeführt – der
+> Rest scheidet ohne KO-Partie aus. Diese Teams bleiben mit ihrer Vorrunden-Platzierung in der
+> Vorrunden-Rangliste stehen, tragen dort aber statt eines Gruppenbuchstabens eine eigene
+> Cutoff-Markierung.
+
 ---
 # 5. Cadrage – Berechnung
 

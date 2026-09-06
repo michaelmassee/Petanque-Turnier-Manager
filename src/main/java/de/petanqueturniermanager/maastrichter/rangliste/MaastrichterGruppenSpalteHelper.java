@@ -45,6 +45,17 @@ public final class MaastrichterGruppenSpalteHelper {
 	private static final int COL_WIDTH = 1400;
 	private static final Logger logger = LogManager.getLogger(MaastrichterGruppenSpalteHelper.class);
 
+	/**
+	 * Markierung für Teams, die wegen der konfigurierten Obergrenze
+	 * ("Maximale Anzahl Teams KO-Phase") keine KO-Gruppe mehr zugewiesen bekommen haben,
+	 * aber weiterhin in der Vorrunden-Rangliste stehen. Unterscheidet den bewussten
+	 * Cutoff-Fall optisch von einer leeren Zelle. Lokale-abhängig, daher als Methode
+	 * (nicht als statisches Feld) ausgewertet.
+	 */
+	public static String keinKoMarker() {
+		return I18n.get("maastrichter.gruppe.kein.ko.markierung");
+	}
+
 	private MaastrichterGruppenSpalteHelper() {
 		// Utility-Klasse – keine Instanzen
 	}
@@ -194,7 +205,7 @@ public final class MaastrichterGruppenSpalteHelper {
 					|| !gruppenSpalte.get(i).equals(gruppenSpalte.get(blockStart));
 			if (blockEndeErreicht) {
 				String gruppe = gruppenSpalte.get(blockStart);
-				if (!gruppe.isEmpty()) {
+				if (!gruppe.isEmpty() && Character.isLetter(gruppe.charAt(0))) {
 					rangliste.getSheetHelper().setPropertiesInRange(sheet,
 							RangePosition.from(GRUPPE_SPALTE, SchweizerRanglisteSheet.ERSTE_DATEN_ZEILE + blockStart,
 									GRUPPE_SPALTE, SchweizerRanglisteSheet.ERSTE_DATEN_ZEILE + i - 1),
