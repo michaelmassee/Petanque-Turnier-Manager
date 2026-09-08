@@ -15,6 +15,7 @@
     "qrcode": "^1.5.4"
   },
   "overrides": {
-    "libsignal": "https://codeload.github.com/whiskeysockets/libsignal-node/tar.gz/bcea72df9ec34d9d9140ab30619cf479c7c144c7"
+    "libsignal": "https://codeload.github.com/whiskeysockets/libsignal-node/tar.gz/bcea72df9ec34d9d9140ab30619cf479c7c144c7",
+    "qs": "^6.16.0"
   }
 }
