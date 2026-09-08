@@ -22,6 +22,7 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationSheet;
 import de.petanqueturniermanager.kaskade.konfiguration.KaskadeKonfigurationSheet;
 import de.petanqueturniermanager.ko.konfiguration.KoKonfigurationSheet;
+import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
 import de.petanqueturniermanager.poule.konfiguration.PouleKonfigurationSheet;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 
@@ -47,8 +48,9 @@ public final class MeleeAnmeldungKonfiguration {
 
 	/**
 	 * Fabriken je Turniersystem mit konfigurierbarer Meldeliste-Formation. Systeme ohne
-	 * konfigurierbare Formation (Liga, Maastrichter, Supermelee, Trip-Tête) haben bewusst
-	 * keinen Eintrag – für sie gibt es keine Melee-Anmeldung.
+	 * konfigurierbare Formation (Liga, Supermelee, Trip-Tête) haben bewusst keinen Eintrag – für sie
+	 * gibt es keine Melee-Anmeldung. Maastrichter erweitert das Schweizer Konfigurations-Sheet
+	 * (identische Formation-Optionen) und ist deshalb hier gleichwertig gelistet.
 	 */
 	private static final Map<TurnierSystem, Function<WorkingSpreadsheet, BaseKonfigurationSheet>> FABRIKEN =
 			Map.of(
@@ -57,7 +59,8 @@ public final class MeleeAnmeldungKonfiguration {
 					TurnierSystem.KO, KoKonfigurationSheet::new,
 					TurnierSystem.KASKADE, KaskadeKonfigurationSheet::new,
 					TurnierSystem.POULE, PouleKonfigurationSheet::new,
-					TurnierSystem.FORMULEX, FormuleXKonfigurationSheet::new);
+					TurnierSystem.FORMULEX, FormuleXKonfigurationSheet::new,
+					TurnierSystem.MAASTRICHTER, MaastrichterKonfigurationSheet::new);
 
 	/** Named-Range-Schlüssel des Melee-Anmeldung-Sheets je Turniersystem. */
 	private static final Map<TurnierSystem, String> METADATEN_SCHLUESSEL = Map.of(
@@ -66,7 +69,8 @@ public final class MeleeAnmeldungKonfiguration {
 			TurnierSystem.KO, SheetMetadataHelper.SCHLUESSEL_KO_MELEE_ANMELDUNG,
 			TurnierSystem.KASKADE, SheetMetadataHelper.SCHLUESSEL_KASKADE_MELEE_ANMELDUNG,
 			TurnierSystem.POULE, SheetMetadataHelper.SCHLUESSEL_POULE_MELEE_ANMELDUNG,
-			TurnierSystem.FORMULEX, SheetMetadataHelper.SCHLUESSEL_FORMULEX_MELEE_ANMELDUNG);
+			TurnierSystem.FORMULEX, SheetMetadataHelper.SCHLUESSEL_FORMULEX_MELEE_ANMELDUNG,
+			TurnierSystem.MAASTRICHTER, SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_MELEE_ANMELDUNG);
 
 	private MeleeAnmeldungKonfiguration() {
 	}

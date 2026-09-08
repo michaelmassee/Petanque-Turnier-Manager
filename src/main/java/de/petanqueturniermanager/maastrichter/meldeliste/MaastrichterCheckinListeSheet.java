@@ -89,6 +89,11 @@ public class MaastrichterCheckinListeSheet extends AbstractTeilnehmerNamenChecki
 	}
 
 	@Override
+	protected String getMeleeAnmeldungSchluessel() {
+		return SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_MELEE_ANMELDUNG;
+	}
+
+	@Override
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
 		return SheetMetadataHelper.findeSheetUndHeile(
 				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),

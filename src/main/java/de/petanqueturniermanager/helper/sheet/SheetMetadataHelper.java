@@ -155,6 +155,7 @@ public class SheetMetadataHelper {
     public static final String SCHLUESSEL_KASKADE_MELEE_ANMELDUNG = "__PTM_KASKADE_MELEE_ANMELDUNG__";
     public static final String SCHLUESSEL_POULE_MELEE_ANMELDUNG = "__PTM_POULE_MELEE_ANMELDUNG__";
     public static final String SCHLUESSEL_FORMULEX_MELEE_ANMELDUNG = "__PTM_FORMULEX_MELEE_ANMELDUNG__";
+    public static final String SCHLUESSEL_MAASTRICHTER_MELEE_ANMELDUNG = "__PTM_MAASTRICHTER_MELEE_ANMELDUNG__";
 
     // ── Konstanten: Checkin-Listen (je System, außer Supermelee/Liga) ─────────
 

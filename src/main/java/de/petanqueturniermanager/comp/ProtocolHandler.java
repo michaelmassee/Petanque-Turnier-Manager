@@ -370,6 +370,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_POULE_MELEE_UEBERNEHMEN = "poule_melee_uebernehmen";
 	public static final String CMD_FORMULEX_MELEE_ANMELDUNG   = "formulex_melee_anmeldung";
 	public static final String CMD_FORMULEX_MELEE_UEBERNEHMEN = "formulex_melee_uebernehmen";
+	public static final String CMD_MAASTRICHTER_MELEE_ANMELDUNG   = "maastrichter_melee_anmeldung";
+	public static final String CMD_MAASTRICHTER_MELEE_UEBERNEHMEN = "maastrichter_melee_uebernehmen";
 	// Poule A/B
 	public static final String CMD_POULE_START               = "poule_start";
 	public static final String CMD_POULE_UPDATE_MELDELISTE   = "poule_update_meldeliste";
@@ -1184,6 +1186,12 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				break;
 			case CMD_MAASTRICHTER_CHECKIN:
 				new de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterCheckinListeSheet(ws).testTurnierSystem(TurnierSystem.MAASTRICHTER).backUpDocument().start();
+				break;
+			case CMD_MAASTRICHTER_MELEE_ANMELDUNG:
+				new de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterMeleeAnmeldungSheet(ws).testTurnierSystem(TurnierSystem.MAASTRICHTER).start();
+				break;
+			case CMD_MAASTRICHTER_MELEE_UEBERNEHMEN:
+				new de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterMeleeAnmeldungUebernehmenSheet(ws).testTurnierSystem(TurnierSystem.MAASTRICHTER).backUpDocument().start();
 				break;
 			case CMD_MAASTRICHTER_TESTDATEN_TURNIER:
 				new MaastrichterTurnierTestDaten(ws).testKeinAnderesTurnierVorhanden().start();
@@ -2265,6 +2273,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_MAASTRICHTER_TEILNEHMER, CMD_MAASTRICHTER_CHECKIN,
 				 CMD_MAASTRICHTER_GRUPPEN_UEBERSICHT -> ts == TurnierSystem.MAASTRICHTER;
 			case CMD_MAASTRICHTER_AKTUELLE_VORRUNDE         -> ts == TurnierSystem.MAASTRICHTER && hatMaastrichterVorrunde(ws);
+			case CMD_MAASTRICHTER_MELEE_ANMELDUNG   -> ts == TurnierSystem.MAASTRICHTER && meleeAnmeldungAktiv(ws);
+			case CMD_MAASTRICHTER_MELEE_UEBERNEHMEN -> ts == TurnierSystem.MAASTRICHTER && meleeAnmeldungAktiv(ws)
+					&& hatOffeneMeleeAnmeldungen(ws, SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_MELEE_ANMELDUNG);
 			case CMD_MAASTRICHTER_TESTDATEN_TURNIER,
 				 CMD_MAASTRICHTER_TESTDATEN_TURNIER_57,
 				 CMD_MAASTRICHTER_TESTDATEN_TURNIER_35      -> ts == TurnierSystem.KEIN || ts == TurnierSystem.MAASTRICHTER;
