@@ -5,7 +5,6 @@ package de.petanqueturniermanager.basesheet.konfiguration;
 
 import de.petanqueturniermanager.basesheet.SheetTabFarben;
 import de.petanqueturniermanager.basesheet.meldeliste.TeilnehmerListeSortModus;
-import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGeradeStyle;
 
@@ -123,14 +122,6 @@ public interface IPropertiesSpalte {
 	 */
 	default boolean isMeleeAnmeldungAktiv() {
 		return false;
-	}
-
-	/**
-	 * Team-Mix-Modus für die Übernahme der Mêlée-Anmeldungen in die Meldeliste.
-	 * Default {@link SuperMeleeMode#Triplette} (Triplette bevorzugt, Rest mit Doubletten aufgefüllt).
-	 */
-	default SuperMeleeMode getMeleeTeamModus() {
-		return SuperMeleeMode.Triplette;
 	}
 
 }

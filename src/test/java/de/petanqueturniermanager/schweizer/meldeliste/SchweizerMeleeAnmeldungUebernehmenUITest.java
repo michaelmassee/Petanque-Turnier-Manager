@@ -16,9 +16,12 @@ import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungKonstanten;
+import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungLeser;
+import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungZeile;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 
@@ -44,6 +47,33 @@ class SchweizerMeleeAnmeldungUebernehmenUITest extends BaseCalcUITest implements
 				.containsExactlyInAnyOrderElementsOf(nachErsterUebernahme)
 				.doesNotHaveDuplicates()
 				.hasSize(6);
+	}
+
+	/**
+	 * Regression: 7 eingecheckte Anmeldungen bei Formation Doublette müssen 3 volle Doubletten
+	 * ergeben; die 7. Anmeldung muss offen (nicht übernommen) stehen bleiben, statt die gesamte
+	 * Übernahme abzubrechen (Bug: der Team-Bildner erzwang für genau 7 Spieler unabhängig von der
+	 * Formation ein 3er-Team, was bei Doublette nicht in die Meldeliste passte).
+	 */
+	@Test
+	void siebenSpielerBeiDoubletteBildenDreiTeamsUndLassenEinenOffen() throws Exception {
+		meldeliste = new SchweizerMeldeListeSheetNew(wkingSpreadsheet);
+		meldeliste.createMeldelisteWithParams(Formation.DOUBLETTE, false, false);
+		docPropHelper.setBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_MELEE_ANMELDUNG, true);
+		meleeAnmeldungenAnlegen(7);
+
+		new SchweizerMeleeAnmeldungUebernehmenSheet(wkingSpreadsheet).uebernehmen();
+
+		assertThat(nachnamenInMeldeliste())
+				.as("bei Doublette muessen aus 7 Anmeldungen genau 3 volle Teams (6 Spieler) entstehen")
+				.hasSize(6);
+
+		List<MeleeAnmeldungZeile> zeilen = MeleeAnmeldungLeser.lesen(wkingSpreadsheet,
+				SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_MELEE_ANMELDUNG);
+		assertThat(zeilen).filteredOn(MeleeAnmeldungZeile::istOffen)
+				.as("die 7. Anmeldung darf nicht mit uebernommen worden sein und muss offen bleiben")
+				.hasSize(1)
+				.allMatch(MeleeAnmeldungZeile::eingecheckt);
 	}
 
 	private void meleeAnmeldungenAnlegen(int anzahl) throws Exception {

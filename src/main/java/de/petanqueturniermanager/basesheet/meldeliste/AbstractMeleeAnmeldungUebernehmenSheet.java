@@ -37,8 +37,9 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
  * <ol>
  * <li>Mêlée-Anmeldung-Sheet lesen, auf <b>offen</b> (noch nicht übernommen) und <b>eingecheckt</b>
  * filtern – nicht erschienene Spieler bleiben unangetastet stehen.</li>
- * <li>Teams über den {@link MeleeAnmeldungTeamBildner} mischen (Team-Modus aus der
- * Konfiguration, Setzpositionen werden beachtet).</li>
+ * <li>Teams über den {@link MeleeAnmeldungTeamBildner} in der Größe der Meldeliste-Formation
+ * mischen (Setzpositionen werden beachtet); reicht die Spielerzahl nicht für eine ganze Anzahl
+ * Teams, bleiben die überzähligen Spieler offen stehen.</li>
  * <li>Teams blockweise ans Ende der Meldeliste schreiben (Teamname, Spielernamen, Setzposition,
  * Aktiv-Kennzeichen) und die Meldeliste aktualisieren.</li>
  * <li>Die übernommenen Mêlée-Zeilen als „Übernommen" markieren – die Zeilen bleiben erhalten und
@@ -97,26 +98,26 @@ public abstract class AbstractMeleeAnmeldungUebernehmenSheet extends SheetRunner
 		}
 
 		processBoxinfo("processbox.melee.uebernehmen", offeneEingecheckte.size());
-		List<MeleeTeam> teams = MeleeAnmeldungTeamBildner.bildeTeams(
-				alsMeleeSpieler(offeneEingecheckte), getKonfigurationSheet().getMeleeTeamModus());
+		int teamGroesse = getFormationKonfiguration().getMeldeListeFormation().getAnzSpieler();
+		List<MeleeTeam> teams = MeleeAnmeldungTeamBildner.bildeTeams(alsMeleeSpieler(offeneEingecheckte), teamGroesse);
 		if (teams.isEmpty()) {
 			zeigeHinweis("msg.text.melee.keine.anmeldungen");
 			return;
 		}
-		int anzSpielerSpalten = getFormationKonfiguration().getMeldeListeFormation().getAnzSpieler();
-		if (teams.stream().anyMatch(team -> team.spieler().size() > anzSpielerSpalten)) {
-			zeigeHinweis("msg.text.melee.formation.zu.klein");
-			return;
-		}
+
+		Set<Integer> uebernommeneZeilen = teams.stream().flatMap(t -> t.spieler().stream())
+				.map(MeleeSpieler::zeile).collect(Collectors.toSet());
+		List<MeleeAnmeldungZeile> tatsaechlichUebernommene = offeneEingecheckte.stream()
+				.filter(z -> uebernommeneZeilen.contains(z.zeile())).toList();
 
 		schreibeTeamsInMeldeliste(teams);
 		meldelisteAktualisieren();
-		markiereAlsUebernommen(alleZeilen, offeneEingecheckte);
+		markiereAlsUebernommen(alleZeilen, tatsaechlichUebernommene);
 	}
 
 	private static List<MeleeSpieler> alsMeleeSpieler(List<MeleeAnmeldungZeile> zeilen) {
 		return zeilen.stream()
-				.map(z -> new MeleeSpieler(z.nr(), z.vorname(), z.nachname(), z.setzPosition()))
+				.map(z -> new MeleeSpieler(z.zeile(), z.nr(), z.vorname(), z.nachname(), z.setzPosition()))
 				.toList();
 	}
 

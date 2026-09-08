@@ -29,7 +29,6 @@ import de.petanqueturniermanager.konfigdialog.HeaderFooterConfigProperty;
 import de.petanqueturniermanager.konfigdialog.SpielrundeFooterConfigProperty;
 import de.petanqueturniermanager.konfigdialog.SheetAuswahlConfigProperty;
 import de.petanqueturniermanager.helper.i18n.I18n;
-import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
 
 /**
  * @author Michael Massee
@@ -75,7 +74,6 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	public static final String KONFIG_PROP_MELDELISTE_SORT_MODUS = "Meldeliste Sortierung";
 
 	public static final String KONFIG_PROP_MELEE_ANMELDUNG = "Melee Anmeldung";
-	public static final String KONFIG_PROP_MELEE_TEAM_MODUS = "Melee Team Modus";
 
 	// Export
 	public static final String KONFIG_PROP_MELDELISTE_EXPORTIEREN = "Meldeliste exportieren";
@@ -200,14 +198,14 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	}
 
 	/**
-	 * Fügt die beiden Properties der Melee-Anmeldung hinzu: den Ein/Aus-Schalter
-	 * ({@link #KONFIG_PROP_MELEE_ANMELDUNG}) und den Team-Mix-Modus
-	 * ({@link #KONFIG_PROP_MELEE_TEAM_MODUS}).
+	 * Fügt den Ein/Aus-Schalter der Mêlée-Anmeldung hinzu ({@link #KONFIG_PROP_MELEE_ANMELDUNG}).
+	 * Die Team-Größe ergibt sich beim Übernehmen ausschließlich aus der im Turnier eingestellten
+	 * Meldeliste-Formation (Doublette oder Triplette) – ein separater Team-Mix-Modus ist nicht
+	 * nötig, da die Meldeliste ohnehin nur eine feste Team-Größe kennt.
 	 * <p>
-	 * Beide Properties sind im Options-Dialog immer <b>sichtbar</b>, werden aber
-	 * <b>ausgegraut</b> dargestellt, wenn die im Turnier eingestellte Formation keine
-	 * Melee-Anmeldung zulässt (siehe {@link MeleeAnmeldungKonfiguration#istMoeglich(
-	 * de.petanqueturniermanager.comp.WorkingSpreadsheet)}).
+	 * Das Property ist im Options-Dialog immer <b>sichtbar</b>, wird aber <b>ausgegraut</b>
+	 * dargestellt, wenn die im Turnier eingestellte Formation keine Mêlée-Anmeldung zulässt (siehe
+	 * {@link MeleeAnmeldungKonfiguration#istMoeglich(de.petanqueturniermanager.comp.WorkingSpreadsheet)}).
 	 * <p>
 	 * Aufzurufen von jedem Turniersystem mit konfigurierbarer Meldeliste-Formation
 	 * (Schweizer, JGJ, KO, Kaskade, Poule, Formule&nbsp;X).
@@ -219,13 +217,6 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 				.setDefaultVal(false)
 				.setDescription("config.desc.melee.anmeldung")
 				.aktivWenn(MeleeAnmeldungKonfiguration::istMoeglich));
-
-		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_MELEE_TEAM_MODUS)
-				.setDefaultVal(SuperMeleeMode.Triplette.name())
-				.setDescription("config.desc.melee.team.modus")
-				.aktivWenn(MeleeAnmeldungKonfiguration::istMoeglich))
-				.addAuswahl(SuperMeleeMode.Triplette.name(), I18n.get("config.melee.team.modus.triplette"))
-				.addAuswahl(SuperMeleeMode.Doublette.name(), I18n.get("config.melee.team.modus.doublette")));
 	}
 
 	/**
@@ -547,11 +538,6 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	@Override
 	public boolean isMeleeAnmeldungAktiv() {
 		return Boolean.TRUE.equals(readBooleanProperty(KONFIG_PROP_MELEE_ANMELDUNG));
-	}
-
-	@Override
-	public SuperMeleeMode getMeleeTeamModus() {
-		return readEnumProperty(KONFIG_PROP_MELEE_TEAM_MODUS, SuperMeleeMode.class, SuperMeleeMode.Triplette);
 	}
 
 	@Override

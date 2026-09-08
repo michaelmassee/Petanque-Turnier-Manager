@@ -3,25 +3,26 @@
  */
 package de.petanqueturniermanager.algorithmen.common;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import de.petanqueturniermanager.helper.random.RandomSource;
-import de.petanqueturniermanager.supermelee.SuperMeleeTeamRechner;
-import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
 
 /**
- * Mischt eine Liste loser Mêlée-Spieler zu Teams (Doublette/Triplette-Mix).
+ * Mischt eine Liste loser Mêlée-Spieler zu Teams fester Größe.
  * <p>
- * Die Team-Größen ergeben sich aus {@link SuperMeleeTeamRechner} – identisch zur Supermêlée-Logik:
- * im Modus {@link SuperMeleeMode#Triplette} werden Tripletten bevorzugt und mit Doubletten
- * aufgefüllt, im Modus {@link SuperMeleeMode#Doublette} umgekehrt.
+ * Die Team-Größe ergibt sich aus der Meldeliste-Formation des Zielsystems (Doublette oder
+ * Triplette – die Mêlée-Anmeldung ist nur bei diesen beiden Formationen aktivierbar) und ist damit
+ * für alle gebildeten Teams identisch. Reicht die Spielerzahl nicht für eine ganze Anzahl Teams
+ * dieser Größe, bleiben die überzähligen Spieler unangetastet offen stehen, bis weitere Spieler
+ * dazukommen – es wird bewusst kein Team gebildet, das größer oder kleiner als die vorgegebene
+ * Größe ist.
  * <p>
  * <b>Setzpositionen (SP):</b> Spieler mit identischer, von 0 verschiedener SP dürfen nicht im
  * selben Team landen (typischer Einsatz: alle Spieler eines Vereins bekommen dieselbe SP). Das neu
@@ -34,7 +35,7 @@ import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
 public final class MeleeAnmeldungTeamBildner {
 
 	/** Kleinste sinnvolle Team-Größe – darunter kann kein Team gebildet werden. */
-	private static final int MIN_ANZ_SPIELER = 2;
+	private static final int MIN_TEAM_GROESSE = 2;
 
 	/**
 	 * Maximale Anzahl Misch-Versuche, um die SP-Bedingung zu erfüllen, bevor sie fallen gelassen
@@ -44,23 +45,15 @@ public final class MeleeAnmeldungTeamBildner {
 	private static final int MAX_MISCH_VERSUCHE = 200;
 
 	/**
-	 * Kleinstfelder, für die die Formeln des {@link SuperMeleeTeamRechner} kein gültiges Ergebnis
-	 * liefern, fachlich aber eindeutig aufteilbar sind.
-	 */
-	private static final Map<Integer, List<Integer>> KLEINE_FELDER = Map.of(
-			2, List.of(2),
-			3, List.of(3),
-			7, List.of(3, 2, 2));
-
-	/**
 	 * Ein Mêlée-Spieler als Eingabe der Team-Bildung.
 	 *
+	 * @param zeile        0-basierter Zeilenindex im Mêlée-Anmeldung-Sheet (Rückverweis für den Aufrufer)
 	 * @param nr           laufende Nummer der Anmeldung (nur für Nachvollziehbarkeit)
 	 * @param vorname      Vorname
 	 * @param nachname     Nachname
 	 * @param setzPosition Setzposition; 0 = kein Setzstatus
 	 */
-	public record MeleeSpieler(int nr, String vorname, String nachname, int setzPosition) {
+	public record MeleeSpieler(int zeile, int nr, String vorname, String nachname, int setzPosition) {
 	}
 
 	/**
@@ -80,66 +73,30 @@ public final class MeleeAnmeldungTeamBildner {
 	}
 
 	/**
-	 * Bildet aus den übergebenen Spielern Teams.
+	 * Bildet aus den übergebenen Spielern so viele vollständige Teams der vorgegebenen Größe wie
+	 * möglich. Reicht die Spielerzahl nicht für eine ganze Anzahl Teams, bleiben die überzähligen
+	 * Spieler unverteilt (sie tauchen in keinem der zurückgegebenen Teams auf).
 	 *
-	 * @param spieler zu verteilende Spieler (Reihenfolge ist unerheblich)
-	 * @param modus   bevorzugte Team-Größe
-	 * @return gebildete Teams; leere Liste wenn weniger als {@value #MIN_ANZ_SPIELER} Spieler
-	 *         übergeben wurden
+	 * @param spieler     zu verteilende Spieler (Reihenfolge ist unerheblich)
+	 * @param teamGroesse feste Team-Größe (Meldeliste-Formation: Doublette = 2, Triplette = 3)
+	 * @return gebildete Teams; leere Liste wenn weniger als {@code teamGroesse} Spieler übergeben
+	 *         wurden
 	 */
-	public static List<MeleeTeam> bildeTeams(List<MeleeSpieler> spieler, SuperMeleeMode modus) {
+	public static List<MeleeTeam> bildeTeams(List<MeleeSpieler> spieler, int teamGroesse) {
 		checkNotNull(spieler);
-		checkNotNull(modus);
-		if (spieler.size() < MIN_ANZ_SPIELER) {
+		checkArgument(teamGroesse >= MIN_TEAM_GROESSE, "teamGroesse muss mindestens %s sein", MIN_TEAM_GROESSE);
+		int anzTeams = spieler.size() / teamGroesse;
+		if (anzTeams == 0) {
 			return List.of();
 		}
-		List<Integer> teamGroessen = teamGroessen(spieler.size(), modus);
-		return verteile(spieler, teamGroessen);
-	}
-
-	/**
-	 * Ermittelt die Team-Größen für die gegebene Spielerzahl.
-	 * <p>
-	 * Für die üblichen Feldgrößen liefert der {@link SuperMeleeTeamRechner} die Aufteilung – damit
-	 * verhält sich die Mêlée-Anmeldung identisch zur bekannten Supermêlée-Auslosung (inkl. dessen
-	 * bevorzugt gerader Teamanzahl).
-	 * <p>
-	 * Seine Formeln setzen allerdings ein hinreichend großes Feld voraus und liefern für 2, 3 und 7
-	 * Spieler eine negative Team-Anzahl ({@code valideAnzahlSpieler()} meldet nur die 7). Diese
-	 * Kleinstfelder werden daher direkt aufgeteilt; zusätzlich prüft
-	 * {@link #istPlausibel(SuperMeleeTeamRechner, int)} das Ergebnis defensiv gegen die
-	 * Spielerzahl.
-	 */
-	private static List<Integer> teamGroessen(int anzSpieler, SuperMeleeMode modus) {
-		List<Integer> kleinesFeld = KLEINE_FELDER.get(anzSpieler);
-		if (kleinesFeld != null) {
-			return kleinesFeld;
-		}
-		SuperMeleeTeamRechner rechner = new SuperMeleeTeamRechner(anzSpieler, modus);
-		if (!istPlausibel(rechner, anzSpieler)) {
-			// Defensive Absicherung: lieber ein einzelnes Team bilden als die Anmeldungen
-			// kommentarlos zu verwerfen.
-			return List.of(anzSpieler);
-		}
-		List<Integer> groessen = new ArrayList<>();
-		for (int i = 0; i < rechner.getAnzTriplette(); i++) {
-			groessen.add(3);
-		}
-		for (int i = 0; i < rechner.getAnzDoublette(); i++) {
-			groessen.add(2);
-		}
-		return groessen;
-	}
-
-	private static boolean istPlausibel(SuperMeleeTeamRechner rechner, int anzSpieler) {
-		return rechner.getAnzTriplette() >= 0 && rechner.getAnzDoublette() >= 0
-				&& rechner.getAnzTriplette() * 3 + rechner.getAnzDoublette() * 2 == anzSpieler;
+		return verteile(spieler, Collections.nCopies(anzTeams, teamGroesse));
 	}
 
 	/**
 	 * Verteilt die Spieler zufällig auf die vorgegebenen Team-Größen und beachtet dabei die
-	 * SP-Bedingung. Ist sie nach {@value #MAX_MISCH_VERSUCHE} Versuchen nicht erfüllbar, wird die
-	 * letzte Verteilung verwendet – die Auslosung scheitert bewusst nie hart.
+	 * SP-Bedingung. Überzählige Spieler (mehr Spieler als die Summe der Team-Größen) bleiben
+	 * unverteilt. Ist die SP-Bedingung nach {@value #MAX_MISCH_VERSUCHE} Versuchen nicht erfüllbar,
+	 * wird die letzte Verteilung verwendet – die Auslosung scheitert bewusst nie hart.
 	 */
 	private static List<MeleeTeam> verteile(List<MeleeSpieler> spieler, List<Integer> teamGroessen) {
 		List<MeleeTeam> letzteVerteilung = null;
