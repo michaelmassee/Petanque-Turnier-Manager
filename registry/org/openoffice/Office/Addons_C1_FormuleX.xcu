@@ -77,6 +77,38 @@
 
 							<node oor:name="C1A4" oor:op="replace">
 								<prop oor:name="Title">
+									<value xml:lang="en">Melee Registration</value>
+									<value xml:lang="de">Melee Anmeldung</value>
+									<value xml:lang="es">Inscripci&#243;n mel&#233;</value>
+									<value xml:lang="fr">Inscription m&#234;l&#233;e</value>
+									<value xml:lang="nl">Melee-aanmelding</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:formulex_melee_anmeldung</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+							<node oor:name="C1A5" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Transfer Melee Registrations</value>
+									<value xml:lang="de">Melee Anmeldungen &#252;bernehmen</value>
+									<value xml:lang="es">Transferir inscripciones en mel&#233;</value>
+									<value xml:lang="fr">Transf&#233;rer les inscriptions en m&#234;l&#233;e</value>
+									<value xml:lang="nl">Melee-aanmeldingen overnemen</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:formulex_melee_uebernehmen</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+							<node oor:name="C1A6" oor:op="replace">
+								<prop oor:name="Title">
 									<value xml:lang="en">Update Entrylist</value>
 									<value xml:lang="de">Meldeliste Aktualisieren</value>
 									<value xml:lang="es">Actualizar lista de inscripciones</value>
@@ -91,7 +123,7 @@
 								</prop>
 							</node>
 
-							<node oor:name="C1A5" oor:op="replace">
+							<node oor:name="C1A7" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Participants</value>
 									<value xml:lang="de">Teilnehmer</value>
@@ -107,7 +139,7 @@
 								</prop>
 							</node>
 
-							<node oor:name="C1A6" oor:op="replace">
+							<node oor:name="C1A8" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Check-in List</value>
 									<value xml:lang="de">Checkin Liste</value>
@@ -123,13 +155,13 @@
 								</prop>
 							</node>
 
-							<node oor:name="C1A7" oor:op="replace">
+							<node oor:name="C1A9" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
 
-							<node oor:name="C1A8" oor:op="replace">
+							<node oor:name="C1A10" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Next Round</value>
 									<value xml:lang="de">Nächste Spielrunde</value>
@@ -145,7 +177,7 @@
 								</prop>
 							</node>
 
-							<node oor:name="C1A9" oor:op="replace">
+							<node oor:name="C1A11" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Rebuild Current Round</value>
 									<value xml:lang="de">Aktuelle Spielrunde aktualisieren</value>
@@ -161,13 +193,13 @@
 								</prop>
 							</node>
 
-							<node oor:name="C1A10" oor:op="replace">
+							<node oor:name="C1A12" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
 
-							<node oor:name="C1A11" oor:op="replace">
+							<node oor:name="C1A13" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Ranking</value>
 									<value xml:lang="de">Rangliste</value>

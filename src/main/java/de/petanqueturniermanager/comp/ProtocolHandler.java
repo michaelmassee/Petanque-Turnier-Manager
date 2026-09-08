@@ -186,6 +186,9 @@ import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_New;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_TestDaten;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
 import de.petanqueturniermanager.supermelee.meldeliste.SupermeleeTeilnehmerSheet;
+import de.petanqueturniermanager.basesheet.konfiguration.MeleeAnmeldungKonfiguration;
+import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungLeser;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundePlan;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Naechste;
@@ -350,6 +353,21 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_SCHWEIZER_CHECKIN    = "schweizer_checkin";
 	public static final String CMD_POULE_CHECKIN        = "poule_checkin";
 	public static final String CMD_MAASTRICHTER_CHECKIN = "maastrichter_checkin";
+
+	// Melee-Anmeldung: Vorstufe zur Meldeliste (lose Einzelspieler) je System mit
+	// waehlbarer Formation - Sheet oeffnen/erstellen und Uebernahme in die Meldeliste.
+	public static final String CMD_SCHWEIZER_MELEE_ANMELDUNG   = "schweizer_melee_anmeldung";
+	public static final String CMD_SCHWEIZER_MELEE_UEBERNEHMEN = "schweizer_melee_uebernehmen";
+	public static final String CMD_JGJ_MELEE_ANMELDUNG   = "jgj_melee_anmeldung";
+	public static final String CMD_JGJ_MELEE_UEBERNEHMEN = "jgj_melee_uebernehmen";
+	public static final String CMD_KO_MELEE_ANMELDUNG   = "ko_melee_anmeldung";
+	public static final String CMD_KO_MELEE_UEBERNEHMEN = "ko_melee_uebernehmen";
+	public static final String CMD_KASKADE_MELEE_ANMELDUNG   = "kaskade_melee_anmeldung";
+	public static final String CMD_KASKADE_MELEE_UEBERNEHMEN = "kaskade_melee_uebernehmen";
+	public static final String CMD_POULE_MELEE_ANMELDUNG   = "poule_melee_anmeldung";
+	public static final String CMD_POULE_MELEE_UEBERNEHMEN = "poule_melee_uebernehmen";
+	public static final String CMD_FORMULEX_MELEE_ANMELDUNG   = "formulex_melee_anmeldung";
+	public static final String CMD_FORMULEX_MELEE_UEBERNEHMEN = "formulex_melee_uebernehmen";
 	// Poule A/B
 	public static final String CMD_POULE_START               = "poule_start";
 	public static final String CMD_POULE_UPDATE_MELDELISTE   = "poule_update_meldeliste";
@@ -1058,6 +1076,12 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_JGJ_CHECKIN:
 				new de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJCheckinListeSheet(ws).testTurnierSystem(TurnierSystem.JGJ).backUpDocument().start();
 				break;
+			case CMD_JGJ_MELEE_ANMELDUNG:
+				new de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeleeAnmeldungSheet(ws).testTurnierSystem(TurnierSystem.JGJ).start();
+				break;
+			case CMD_JGJ_MELEE_UEBERNEHMEN:
+				new de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeleeAnmeldungUebernehmenSheet(ws).testTurnierSystem(TurnierSystem.JGJ).backUpDocument().start();
+				break;
 			case CMD_JGJ_SPIELPLAN:
 				new JGJSpielPlanSheet(ws).testTurnierSystem(TurnierSystem.JGJ).backUpDocument().backupDocumentAfterRun().start();
 				break;
@@ -1098,6 +1122,12 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				break;
 			case CMD_SCHWEIZER_CHECKIN:
 				new de.petanqueturniermanager.schweizer.meldeliste.SchweizerCheckinListeSheet(ws).testTurnierSystem(TurnierSystem.SCHWEIZER).backUpDocument().start();
+				break;
+			case CMD_SCHWEIZER_MELEE_ANMELDUNG:
+				new de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeleeAnmeldungSheet(ws).testTurnierSystem(TurnierSystem.SCHWEIZER).start();
+				break;
+			case CMD_SCHWEIZER_MELEE_UEBERNEHMEN:
+				new de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeleeAnmeldungUebernehmenSheet(ws).testTurnierSystem(TurnierSystem.SCHWEIZER).backUpDocument().start();
 				break;
 			case CMD_SCHWEIZER_AKTUELLE_SPIELRUNDE:
 				new SchweizerSpielrundeSheetUpdate(ws).testTurnierSystem(TurnierSystem.SCHWEIZER).backUpDocument().backupDocumentAfterRun().start();
@@ -1180,6 +1210,12 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_KO_CHECKIN:
 				new de.petanqueturniermanager.ko.meldeliste.KoCheckinListeSheet(ws).testTurnierSystem(TurnierSystem.KO).backUpDocument().start();
 				break;
+			case CMD_KO_MELEE_ANMELDUNG:
+				new de.petanqueturniermanager.ko.meldeliste.KoMeleeAnmeldungSheet(ws).testTurnierSystem(TurnierSystem.KO).start();
+				break;
+			case CMD_KO_MELEE_UEBERNEHMEN:
+				new de.petanqueturniermanager.ko.meldeliste.KoMeleeAnmeldungUebernehmenSheet(ws).testTurnierSystem(TurnierSystem.KO).backUpDocument().start();
+				break;
 			case CMD_KO_TURNIERBAUM:
 				new KoTurnierbaumSheet(ws).testTurnierSystem(TurnierSystem.KO).backUpDocument().backupDocumentAfterRun().start();
 				break;
@@ -1209,6 +1245,12 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_FORMULEX_CHECKIN:
 				new de.petanqueturniermanager.formulex.meldeliste.FormuleXCheckinListeSheet(ws).testTurnierSystem(TurnierSystem.FORMULEX).backUpDocument().start();
 				break;
+			case CMD_FORMULEX_MELEE_ANMELDUNG:
+				new de.petanqueturniermanager.formulex.meldeliste.FormuleXMeleeAnmeldungSheet(ws).testTurnierSystem(TurnierSystem.FORMULEX).start();
+				break;
+			case CMD_FORMULEX_MELEE_UEBERNEHMEN:
+				new de.petanqueturniermanager.formulex.meldeliste.FormuleXMeleeAnmeldungUebernehmenSheet(ws).testTurnierSystem(TurnierSystem.FORMULEX).backUpDocument().start();
+				break;
 			case CMD_FORMULEX_NAECHSTE_SPIELRUNDE:
 				new FormuleXSpielrundeSheetNaechste(ws).testTurnierSystem(TurnierSystem.FORMULEX).backUpDocument().backupDocumentAfterRun().start();
 				break;
@@ -1237,6 +1279,12 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				break;
 			case CMD_KASKADE_CHECKIN:
 				new de.petanqueturniermanager.kaskade.meldeliste.KaskadeCheckinListeSheet(ws).testTurnierSystem(TurnierSystem.KASKADE).backUpDocument().start();
+				break;
+			case CMD_KASKADE_MELEE_ANMELDUNG:
+				new de.petanqueturniermanager.kaskade.meldeliste.KaskadeMeleeAnmeldungSheet(ws).testTurnierSystem(TurnierSystem.KASKADE).start();
+				break;
+			case CMD_KASKADE_MELEE_UEBERNEHMEN:
+				new de.petanqueturniermanager.kaskade.meldeliste.KaskadeMeleeAnmeldungUebernehmenSheet(ws).testTurnierSystem(TurnierSystem.KASKADE).backUpDocument().start();
 				break;
 			case CMD_KASKADE_TESTDATEN_MELDELISTE:
 				new KaskadeMeldeListeSheetTestDaten(ws, 73).testKeinAnderesTurnierVorhanden().start();
@@ -1272,6 +1320,12 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				break;
 			case CMD_POULE_CHECKIN:
 				new de.petanqueturniermanager.poule.meldeliste.PouleCheckinListeSheet(ws).testTurnierSystem(TurnierSystem.POULE).backUpDocument().start();
+				break;
+			case CMD_POULE_MELEE_ANMELDUNG:
+				new de.petanqueturniermanager.poule.meldeliste.PouleMeleeAnmeldungSheet(ws).testTurnierSystem(TurnierSystem.POULE).start();
+				break;
+			case CMD_POULE_MELEE_UEBERNEHMEN:
+				new de.petanqueturniermanager.poule.meldeliste.PouleMeleeAnmeldungUebernehmenSheet(ws).testTurnierSystem(TurnierSystem.POULE).backUpDocument().start();
 				break;
 			case CMD_POULE_TESTDATEN_MELDELISTE:
 				new PouleMeldeListeSheetTestDaten(ws).testKeinAnderesTurnierVorhanden().start();
@@ -2249,6 +2303,27 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_SCHWEIZER_RANGLISTE,
 				 CMD_SCHWEIZER_RANGLISTE_SORTIEREN -> ts == TurnierSystem.SCHWEIZER;
 			case CMD_SCHWEIZER_AKTUELLE_SPIELRUNDE          -> ts == TurnierSystem.SCHWEIZER && hatSchweizerSpielrunde(ws);
+
+			// Melee-Anmeldung: nur bei aktiv geschalteter Option (Formation Doublette/Triplette).
+			// "Uebernehmen" zusaetzlich nur, wenn es offene, eingecheckte Anmeldungen gibt.
+			case CMD_SCHWEIZER_MELEE_ANMELDUNG   -> ts == TurnierSystem.SCHWEIZER && meleeAnmeldungAktiv(ws);
+			case CMD_SCHWEIZER_MELEE_UEBERNEHMEN -> ts == TurnierSystem.SCHWEIZER && meleeAnmeldungAktiv(ws)
+					&& hatOffeneMeleeAnmeldungen(ws, SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_MELEE_ANMELDUNG);
+			case CMD_JGJ_MELEE_ANMELDUNG   -> ts == TurnierSystem.JGJ && meleeAnmeldungAktiv(ws);
+			case CMD_JGJ_MELEE_UEBERNEHMEN -> ts == TurnierSystem.JGJ && meleeAnmeldungAktiv(ws)
+					&& hatOffeneMeleeAnmeldungen(ws, SheetMetadataHelper.SCHLUESSEL_JGJ_MELEE_ANMELDUNG);
+			case CMD_KO_MELEE_ANMELDUNG   -> ts == TurnierSystem.KO && meleeAnmeldungAktiv(ws);
+			case CMD_KO_MELEE_UEBERNEHMEN -> ts == TurnierSystem.KO && meleeAnmeldungAktiv(ws)
+					&& hatOffeneMeleeAnmeldungen(ws, SheetMetadataHelper.SCHLUESSEL_KO_MELEE_ANMELDUNG);
+			case CMD_KASKADE_MELEE_ANMELDUNG   -> ts == TurnierSystem.KASKADE && meleeAnmeldungAktiv(ws);
+			case CMD_KASKADE_MELEE_UEBERNEHMEN -> ts == TurnierSystem.KASKADE && meleeAnmeldungAktiv(ws)
+					&& hatOffeneMeleeAnmeldungen(ws, SheetMetadataHelper.SCHLUESSEL_KASKADE_MELEE_ANMELDUNG);
+			case CMD_POULE_MELEE_ANMELDUNG   -> ts == TurnierSystem.POULE && meleeAnmeldungAktiv(ws);
+			case CMD_POULE_MELEE_UEBERNEHMEN -> ts == TurnierSystem.POULE && meleeAnmeldungAktiv(ws)
+					&& hatOffeneMeleeAnmeldungen(ws, SheetMetadataHelper.SCHLUESSEL_POULE_MELEE_ANMELDUNG);
+			case CMD_FORMULEX_MELEE_ANMELDUNG   -> ts == TurnierSystem.FORMULEX && meleeAnmeldungAktiv(ws);
+			case CMD_FORMULEX_MELEE_UEBERNEHMEN -> ts == TurnierSystem.FORMULEX && meleeAnmeldungAktiv(ws)
+					&& hatOffeneMeleeAnmeldungen(ws, SheetMetadataHelper.SCHLUESSEL_FORMULEX_MELEE_ANMELDUNG);
 			case CMD_SCHWEIZER_TESTDATEN_MELDELISTE,
 				 CMD_SCHWEIZER_TESTDATEN_TURNIER,
 				 CMD_SCHWEIZER_TESTDATEN_TURNIER_19        -> ts == TurnierSystem.KEIN || ts == TurnierSystem.SCHWEIZER;
@@ -2375,6 +2450,35 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			return doc.getSheets().hasByName(de.petanqueturniermanager.helper.i18n.SheetNamen.maastrichterVorrunde(1))
 					|| doc.getSheets().hasByName(legacyName);
 		} catch (Exception e) { return false; }
+	}
+
+	/**
+	 * Ob die Melee-Anmeldung im gemeinten Dokument nutzbar ist: Formation Doublette/Triplette
+	 * <b>und</b> die Option eingeschaltet. Bewusst dokument-basiert (nicht fokus-basiert), damit
+	 * bei mehreren offenen Turnier-Dokumenten der Menuestatus nicht "leckt".
+	 */
+	private static boolean meleeAnmeldungAktiv(WorkingSpreadsheet ws) {
+		try {
+			return MeleeAnmeldungKonfiguration.istAktiv(ws);
+		} catch (Exception e) {
+			logger.debug("Melee-Anmeldung-Status konnte nicht ermittelt werden: {}", e.getMessage());
+			return false;
+		}
+	}
+
+	/**
+	 * Ob es im Melee-Anmeldung-Sheet mindestens zwei noch nicht uebernommene, eingecheckte
+	 * Anmeldungen gibt - erst dann laesst sich ueberhaupt ein Team bilden.
+	 */
+	private static boolean hatOffeneMeleeAnmeldungen(WorkingSpreadsheet ws, String metadatenSchluessel) {
+		try {
+			long anzahl = MeleeAnmeldungLeser.lesen(ws, metadatenSchluessel).stream()
+					.filter(zeile -> zeile.istOffen() && zeile.eingecheckt()).count();
+			return anzahl >= 2;
+		} catch (Exception e) {
+			logger.debug("Offene Melee-Anmeldungen konnten nicht ermittelt werden: {}", e.getMessage());
+			return false;
+		}
 	}
 
 	private static boolean hatSchweizerSpielrunde(WorkingSpreadsheet ws) {
