@@ -30,6 +30,15 @@ public class AddConfigElementsToWindow {
 		this.layout = checkNotNull(layout);
 	}
 
+	/**
+	 * Ob das Eingabeelement der Property ausgegraut (nicht bedienbar) dargestellt werden muss.
+	 * Bewusst kein Ausblenden: der Anwender soll die Option weiterhin sehen und daran erkennen,
+	 * dass sie in der aktuellen Turnier-Konfiguration nicht anwendbar ist.
+	 */
+	private boolean istGesperrt(ConfigProperty<?> configProperty) {
+		return !configProperty.istAktiv(currentSpreadsheet);
+	}
+
 	public void addPropToPanel(ConfigProperty<?> configProperty) {
 
 		switch (configProperty.getType()) {
@@ -43,7 +52,8 @@ public class AddConfigElementsToWindow {
 			} else if (configProperty instanceof AuswahlConfigProperty) {
 				// ComboBox
 				AuswahlConfigElement auswahlConfigElement = new AuswahlConfigElement(
-						guiFactoryCreateParam, (AuswahlConfigProperty) configProperty, currentSpreadsheet);
+						guiFactoryCreateParam, (AuswahlConfigProperty) configProperty, currentSpreadsheet,
+						istGesperrt(configProperty));
 				layout.addLayout(auswahlConfigElement.getLayout(), 1);
 			} else if (configProperty.isKompaktesTextfeld()) {
 				// schmales Textfeld ohne Textarea-Edit-Button
@@ -63,7 +73,8 @@ public class AddConfigElementsToWindow {
 			// create checkbox
 			@SuppressWarnings("unchecked")
 			BooleanConfigElement booleanConfigElement = new BooleanConfigElement(
-					guiFactoryCreateParam, (ConfigProperty<Boolean>) configProperty, currentSpreadsheet);
+					guiFactoryCreateParam, (ConfigProperty<Boolean>) configProperty, currentSpreadsheet,
+					istGesperrt(configProperty));
 			layout.addLayout(booleanConfigElement.getLayout(), 1);
 			break;
 		case COLOR:

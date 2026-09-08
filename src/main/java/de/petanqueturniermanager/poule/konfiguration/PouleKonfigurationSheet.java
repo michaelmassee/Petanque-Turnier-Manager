@@ -6,6 +6,7 @@ package de.petanqueturniermanager.poule.konfiguration;
 import de.petanqueturniermanager.basesheet.konfiguration.BaseKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.meldeliste.IFormationKonfiguration;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.pagestyle.PageStyle;
@@ -16,7 +17,8 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 /**
  * Konfigurationsblatt für das Poule-A/B-Turniersystem.
  */
-public class PouleKonfigurationSheet extends BaseKonfigurationSheet implements IPoulePropertiesSpalte {
+public class PouleKonfigurationSheet extends BaseKonfigurationSheet
+        implements IPoulePropertiesSpalte, IFormationKonfiguration {
 
     private final PoulePropertiesSpalte propertiesSpalte;
 

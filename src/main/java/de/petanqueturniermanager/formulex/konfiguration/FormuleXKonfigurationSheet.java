@@ -8,6 +8,7 @@ import de.petanqueturniermanager.basesheet.konfiguration.IFreispielPropertiesSpa
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.konfiguration.IZeitplanPropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.meldeliste.IFormationKonfiguration;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -23,7 +24,7 @@ import de.petanqueturniermanager.supermelee.SpielRundeNr;
  * Konfigurationssheet für das Formule X Turniersystem.
  */
 public class FormuleXKonfigurationSheet extends BaseKonfigurationSheet
-        implements IFreispielPropertiesSpalte, IZeitplanPropertiesSpalte {
+        implements IFreispielPropertiesSpalte, IZeitplanPropertiesSpalte, IFormationKonfiguration {
 
     private final FormuleXPropertiesSpalte propertiesSpalte;
 

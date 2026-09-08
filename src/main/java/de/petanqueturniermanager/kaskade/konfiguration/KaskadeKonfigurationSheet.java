@@ -7,6 +7,7 @@ import de.petanqueturniermanager.basesheet.konfiguration.BaseKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.konfiguration.IPropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.meldeliste.IFormationKonfiguration;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.pagestyle.PageStyle;
@@ -17,7 +18,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 /**
  * Konfigurationssheet für das Kaskaden-KO-Turniersystem.
  */
-public class KaskadeKonfigurationSheet extends BaseKonfigurationSheet {
+public class KaskadeKonfigurationSheet extends BaseKonfigurationSheet implements IFormationKonfiguration {
 
     private final KaskadePropertiesSpalte propertiesSpalte;
 

@@ -37,6 +37,7 @@ public class PoulePropertiesSpalte extends BasePropertiesSpalte implements IPoul
         ADDBaseProp(KONFIG_PROPERTIES, false); // Rangliste-Farben noch nicht benötigt
         addCheckinSortProp(KONFIG_PROPERTIES);
         addTeilnehmerListeSortProp(KONFIG_PROPERTIES);
+        addMeleeAnmeldungProp(KONFIG_PROPERTIES);
     }
 
     private static final String KONFIG_PROP_KOPF_ZEILE_LINKS      = "Kopfzeile Links";

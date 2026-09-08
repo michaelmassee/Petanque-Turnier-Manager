@@ -4,6 +4,7 @@ import de.petanqueturniermanager.basesheet.konfiguration.BaseKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.konfiguration.IPropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.meldeliste.IFormationKonfiguration;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -19,7 +20,7 @@ import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
  */
 
 public class JGJKonfigurationSheet extends BaseKonfigurationSheet
-		implements IJGJProperiesSpalte, IKoBracketKonfiguration {
+		implements IJGJProperiesSpalte, IKoBracketKonfiguration, IFormationKonfiguration {
 
 	public static final int MELDUNG_NAME_WIDTH = 8000;
 

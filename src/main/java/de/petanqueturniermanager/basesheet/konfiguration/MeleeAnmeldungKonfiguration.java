@@ -1,0 +1,116 @@
+/*
+ * Erstellung 2026 / Michael Massee
+ */
+package de.petanqueturniermanager.basesheet.konfiguration;
+
+import java.util.Map;
+import java.util.function.Function;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.meldeliste.IFormationKonfiguration;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.formulex.konfiguration.FormuleXKonfigurationSheet;
+import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
+import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationSheet;
+import de.petanqueturniermanager.kaskade.konfiguration.KaskadeKonfigurationSheet;
+import de.petanqueturniermanager.ko.konfiguration.KoKonfigurationSheet;
+import de.petanqueturniermanager.poule.konfiguration.PouleKonfigurationSheet;
+import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
+
+/**
+ * Zentrale Auskunft darüber, ob die Melee-Anmeldung (Vorab-Liste loser Einzelspieler, die per
+ * Menü-Kommando zu Teams gemischt und in die Meldeliste übernommen werden) im aktuellen Dokument
+ * <b>möglich</b> und <b>aktiviert</b> ist.
+ * <p>
+ * Möglich ist sie nur bei Turniersystemen mit konfigurierbarer Meldeliste-Formation
+ * ({@link IFormationKonfiguration}) und dort nur bei den Formationen
+ * {@link Formation#DOUBLETTE} und {@link Formation#TRIPLETTE}: bei
+ * {@link Formation#TETE} ist jeder Einzelspieler bereits ein eigenständiges Team, bei
+ * {@link Formation#NUR_TEAMNAME} werden ganze Teams am Stück gemeldet – eine Vorstufe aus losen
+ * Einzelspielern ergibt in beiden Fällen fachlich keinen Sinn.
+ * <p>
+ * Die Auflösung erfolgt bewusst über das im Dokument hinterlegte Turniersystem (nicht fokus-basiert),
+ * damit bei mehreren offenen Turnier-Dokumenten immer die Konfiguration des <b>gemeinten</b>
+ * Dokuments gelesen wird.
+ */
+public final class MeleeAnmeldungKonfiguration {
+
+	private static final Logger logger = LogManager.getLogger(MeleeAnmeldungKonfiguration.class);
+
+	/**
+	 * Fabriken je Turniersystem mit konfigurierbarer Meldeliste-Formation. Systeme ohne
+	 * konfigurierbare Formation (Liga, Maastrichter, Supermelee, Trip-Tête) haben bewusst
+	 * keinen Eintrag – für sie gibt es keine Melee-Anmeldung.
+	 */
+	private static final Map<TurnierSystem, Function<WorkingSpreadsheet, BaseKonfigurationSheet>> FABRIKEN =
+			Map.of(
+					TurnierSystem.SCHWEIZER, SchweizerKonfigurationSheet::new,
+					TurnierSystem.JGJ, JGJKonfigurationSheet::new,
+					TurnierSystem.KO, KoKonfigurationSheet::new,
+					TurnierSystem.KASKADE, KaskadeKonfigurationSheet::new,
+					TurnierSystem.POULE, PouleKonfigurationSheet::new,
+					TurnierSystem.FORMULEX, FormuleXKonfigurationSheet::new);
+
+	private MeleeAnmeldungKonfiguration() {
+	}
+
+	/**
+	 * @param ws aktuelles Dokument
+	 * @return das Konfigurations-Sheet des Turniersystems, oder {@code null} wenn das System keine
+	 *         konfigurierbare Meldeliste-Formation kennt bzw. kein Turnier vorhanden ist
+	 */
+	public static BaseKonfigurationSheet konfiguration(WorkingSpreadsheet ws) {
+		if (ws == null || ws.getWorkingSpreadsheetDocument() == null) {
+			return null;
+		}
+		try {
+			TurnierSystem turnierSystem = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();
+			Function<WorkingSpreadsheet, BaseKonfigurationSheet> fabrik = FABRIKEN.get(turnierSystem);
+			return fabrik == null ? null : fabrik.apply(ws);
+		} catch (RuntimeException e) {
+			logger.warn("Konfiguration für die Melee-Anmeldung konnte nicht ermittelt werden", e);
+			return null;
+		}
+	}
+
+	/**
+	 * @param ws aktuelles Dokument
+	 * @return {@code true} wenn die eingestellte Formation eine Melee-Anmeldung fachlich zulässt
+	 */
+	public static boolean istMoeglich(WorkingSpreadsheet ws) {
+		return istMoeglich(konfiguration(ws));
+	}
+
+	/**
+	 * @param konfigurationSheet Konfigurations-Sheet, darf {@code null} sein
+	 * @return {@code true} wenn die eingestellte Formation eine Melee-Anmeldung fachlich zulässt
+	 */
+	public static boolean istMoeglich(BaseKonfigurationSheet konfigurationSheet) {
+		if (!(konfigurationSheet instanceof IFormationKonfiguration formationKonfiguration)) {
+			return false;
+		}
+		Formation formation = formationKonfiguration.getMeldeListeFormation();
+		return formation == Formation.DOUBLETTE || formation == Formation.TRIPLETTE;
+	}
+
+	/**
+	 * @param ws aktuelles Dokument
+	 * @return {@code true} wenn die Melee-Anmeldung möglich <b>und</b> in der Turnier-Konfiguration
+	 *         eingeschaltet ist
+	 */
+	public static boolean istAktiv(WorkingSpreadsheet ws) {
+		return istAktiv(konfiguration(ws));
+	}
+
+	/**
+	 * @param konfigurationSheet Konfigurations-Sheet, darf {@code null} sein
+	 * @return {@code true} wenn die Melee-Anmeldung möglich <b>und</b> eingeschaltet ist
+	 */
+	public static boolean istAktiv(BaseKonfigurationSheet konfigurationSheet) {
+		return istMoeglich(konfigurationSheet) && konfigurationSheet.isMeleeAnmeldungAktiv();
+	}
+}

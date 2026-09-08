@@ -47,6 +47,7 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 		ADDBaseProp(KONFIG_PROPERTIES, false);
 		addCheckinSortProp(KONFIG_PROPERTIES);
 		addTeilnehmerListeSortProp(KONFIG_PROPERTIES);
+		addMeleeAnmeldungProp(KONFIG_PROPERTIES);
 	}
 	public static final String KONFIG_PROP_SPIELBAUM_TEAM_ANZEIGE = "Spielbaum Team Anzeige";
 	public static final String KONFIG_PROP_SPIELBAUM_SPIELBAHN = "Spielbaum Spielbahn";

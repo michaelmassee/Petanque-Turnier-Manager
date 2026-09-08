@@ -24,6 +24,7 @@ public class ConfigProperty<V> {
 	private boolean exportKonfig; // Export/Upload-Konfigurationsdialog
 	private boolean kompaktesTextfeld; // STRING: schmales Textfeld ohne Textarea-Edit-Button (z.B. Uhrzeit)
 	private Predicate<String> validator; // STRING: optionale Format-Validierung (z.B. HH:MM)
+	private Predicate<WorkingSpreadsheet> aktivWenn; // optionale Bedingung für die Bedienbarkeit im Dialog
 	private Consumer<WorkingSpreadsheet> nachSpeichernAktion;
 
 	protected ConfigProperty(ConfigPropertyType type, String key) {
@@ -130,6 +131,25 @@ public class ConfigProperty<V> {
 
 	public final Predicate<String> getValidator() {
 		return validator;
+	}
+
+	/**
+	 * Registriert eine Bedingung, ob diese Property im Konfigurationsdialog bedienbar ist. Ist die
+	 * Bedingung nicht erfüllt, wird das Eingabeelement <b>ausgegraut</b> dargestellt (nicht
+	 * ausgeblendet) – der Anwender sieht die Option damit weiterhin, kann sie aber nicht verstellen.
+	 * Ohne registrierte Bedingung ist die Property immer bedienbar.
+	 */
+	public ConfigProperty<V> aktivWenn(Predicate<WorkingSpreadsheet> bedingung) {
+		this.aktivWenn = checkNotNull(bedingung);
+		return this;
+	}
+
+	/**
+	 * @param currentSpreadsheet aktuelles Dokument
+	 * @return {@code true} wenn das Eingabeelement bedienbar ist
+	 */
+	public final boolean istAktiv(WorkingSpreadsheet currentSpreadsheet) {
+		return aktivWenn == null || aktivWenn.test(currentSpreadsheet);
 	}
 
 	public ConfigProperty<V> mitNachSpeichernAktion(Consumer<WorkingSpreadsheet> aktion) {
