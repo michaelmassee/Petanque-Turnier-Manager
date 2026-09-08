@@ -571,6 +571,22 @@
 											<value>_self</value>
 										</prop>
 									</node>
+
+									<node oor:name="A8A4" oor:op="replace">
+										<prop oor:name="Title">
+											<value xml:lang="de">Melee-Anmeldung (7 Einzelspieler, Doublette)</value>
+											<value xml:lang="en">Melee Registration (7 individual players, Doublette)</value>
+											<value xml:lang="es">Inscripción Melee (7 jugadores individuales, Doublette)</value>
+											<value xml:lang="fr">Inscription Melee (7 joueurs individuels, Doublette)</value>
+											<value xml:lang="nl">Melee-aanmelding (7 individuele spelers, Doublette)</value>
+										</prop>
+										<prop oor:name="URL">
+											<value>ptm:schweizer_testdaten_melee_anmeldung</value>
+										</prop>
+										<prop oor:name="Target" oor:type="xs:string">
+											<value>_self</value>
+										</prop>
+									</node>
 								</node>
 							</node>
 

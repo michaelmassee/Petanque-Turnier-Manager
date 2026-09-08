@@ -292,6 +292,22 @@ class JGJMeldeListeDelegate implements MeldeListeKonstanten {
 		}
 	}
 
+	private void formatiereDoppelteSpielerNamen(int anzSpieler, int letzteDatenZeile) throws GenerateException {
+		if (anzSpieler == 0) {
+			return;
+		}
+		int[] vornamen = new int[anzSpieler];
+		int[] nachnamen = new int[anzSpieler];
+		for (int s = 0; s < anzSpieler; s++) {
+			vornamen[s] = getVornameSpalte(s);
+			nachnamen[s] = getNachnameSpalte(s);
+		}
+		meldeListeHelper.insertFormulaFuerDoppelteSpielerNamenGeradeUngradeFarbe(vornamen, nachnamen,
+				ERSTE_DATEN_ZEILE, letzteDatenZeile, sheet,
+				konfigurationSheet.getMeldeListeHintergrundFarbeGeradeStyle(),
+				konfigurationSheet.getMeldeListeHintergrundFarbeUnGeradeStyle());
+	}
+
 	void formatDatenSpalten() throws GenerateException {
 		Formation formation = konfigurationSheet.getMeldeListeFormation();
 		int anzSpieler = formation.getAnzSpieler();
@@ -347,6 +363,7 @@ class JGJMeldeListeDelegate implements MeldeListeKonstanten {
 
 		RangePosition editierbareRange = RangePosition.from(1, ERSTE_DATEN_ZEILE, getAktivSpalte(), letzteDatenZeile);
 		EditierbaresZelleFormatHelper.anwenden(sheet, editierbareRange);
+		formatiereDoppelteSpielerNamen(anzSpieler, letzteDatenZeile);
 
 		MeldeListeKonstanten.markiereDoppelteTeamnamenBeiNurTeamname(sheet, konfigurationSheet.isMeldeListeTeamnameAnzeigen(),
 				anzSpieler == 0, letzteDatenZeile);

@@ -7,8 +7,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import de.petanqueturniermanager.helper.random.RandomSource;
 import de.petanqueturniermanager.supermelee.SuperMeleeTeamRechner;
@@ -180,7 +182,12 @@ public final class MeleeAnmeldungTeamBildner {
 
 	/** Ein Team ist gültig, solange keine SP &gt; 0 darin doppelt vorkommt. */
 	private static boolean erfuelltSetzPositionen(MeleeTeam team) {
-		List<Integer> gesetzte = team.spieler().stream().map(MeleeSpieler::setzPosition).filter(sp -> sp > 0).toList();
-		return gesetzte.size() == gesetzte.stream().distinct().count();
+		Set<Integer> gesehen = new HashSet<>();
+		for (MeleeSpieler spieler : team.spieler()) {
+			if (spieler.setzPosition() > 0 && !gesehen.add(spieler.setzPosition())) {
+				return false;
+			}
+		}
+		return true;
 	}
 }

@@ -25,6 +25,7 @@ import de.petanqueturniermanager.poule.Poule37TeamsTurnierTestDaten;
 import de.petanqueturniermanager.poule.PouleTurnierTestDaten;
 import de.petanqueturniermanager.poule.meldeliste.PouleMeldeListeSheetTestDaten;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetTestDaten;
+import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeleeAnmeldungTurnierTestDaten;
 import de.petanqueturniermanager.schweizer.spielrunde.Schweizer19TeamsTurnierTestDaten;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerTurnierTestDaten;
 import de.petanqueturniermanager.kaskade.KaskadeTurnierTestDaten;
@@ -205,6 +206,14 @@ public final class BeispielturnierRegistrierung {
                                 SheetMetadataHelper.schluesselSchweizerSpielrunde(3),
                                 SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_RANGLISTE),
                         "Schweizer19TeamsTurnierTestDaten.java"),
+
+                new Eintrag(
+                        "Schweizer System – Melee-Anmeldung (7 Anmeldungen, Doublette)",
+                        ws -> new SchweizerMeleeAnmeldungTurnierTestDaten(ws).doRun(),
+                        List.of(
+                                SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_MELDELISTE,
+                                SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_MELEE_ANMELDUNG),
+                        "SchweizerMeleeAnmeldungTurnierTestDaten.java"),
 
                 new Eintrag(
                         "K.-O. – nur Meldeliste (8 Teams)",

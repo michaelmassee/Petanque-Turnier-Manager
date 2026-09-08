@@ -264,7 +264,7 @@ class PouleListeDelegate implements MeldeListeKonstanten {
         sheet.getSheetHelper().setStringValueInCell(aktivHeader);
 
         // Spieler-Blöcke
-        for (int s = 0; s < anzSpieler; s++) {
+		for (int s = 0; s < anzSpieler; s++) {
             var vornameSpalte = getVornameSpalte(s);
             var spielerTitel = I18n.get("poule.meldeliste.header.spieler", s + 1);
 
@@ -309,9 +309,9 @@ class PouleListeDelegate implements MeldeListeKonstanten {
                         .setBorder(BorderFactory.from().allThin().toBorder())
                         .setVertJustify(CellVertJustify2.CENTER);
                 sheet.getSheetHelper().setStringValueInCell(vereinsHeader);
+		}
             }
         }
-    }
 
     void formatDatenSpalten() throws GenerateException {
         var formation = konfigurationSheet.getMeldeListeFormation();
@@ -352,7 +352,6 @@ class PouleListeDelegate implements MeldeListeKonstanten {
                     CellProperties.from().setBorder(
                             BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder()).setShrinkToFit(true));
         }
-
         // Setzposition-Spalte
         var spRange = RangePosition.from(getSetzPositionSpalte(), ERSTE_DATEN_ZEILE, getSetzPositionSpalte(), letzteDatenZeile);
         sheet.getSheetHelper().setPropertiesInRange(sheet.getXSpreadSheet(), spRange,
@@ -376,6 +375,7 @@ class PouleListeDelegate implements MeldeListeKonstanten {
         // Editierbare Felder hervorheben: Spalte 1 bis Aktiv
         var editierbareRange = RangePosition.from(1, ERSTE_DATEN_ZEILE, getAktivSpalte(), letzteDatenZeile);
         EditierbaresZelleFormatHelper.anwenden(sheet, editierbareRange);
+		formatiereDoppelteSpielerNamen(anzSpieler, letzteDatenZeile);
         var editierbar = new CellProtection();
         editierbar.IsLocked = false;
         sheet.getSheetHelper().setPropertiesInRange(sheet.getXSpreadSheet(), editierbareRange,
@@ -384,6 +384,20 @@ class PouleListeDelegate implements MeldeListeKonstanten {
         MeldeListeKonstanten.markiereDoppelteTeamnamenBeiNurTeamname(sheet, konfigurationSheet.isMeldeListeTeamnameAnzeigen(),
                 anzSpieler == 0, letzteDatenZeile);
     }
+
+	private void formatiereDoppelteSpielerNamen(int anzSpieler, int letzteDatenZeile) throws GenerateException {
+		if (anzSpieler == 0) return;
+		int[] vornamen = new int[anzSpieler];
+		int[] nachnamen = new int[anzSpieler];
+		for (int s = 0; s < anzSpieler; s++) {
+			vornamen[s] = getVornameSpalte(s);
+			nachnamen[s] = getNachnameSpalte(s);
+		}
+		meldeListeHelper.insertFormulaFuerDoppelteSpielerNamenGeradeUngradeFarbe(vornamen, nachnamen,
+				ERSTE_DATEN_ZEILE, letzteDatenZeile, sheet,
+				konfigurationSheet.getMeldeListeHintergrundFarbeGeradeStyle(),
+				konfigurationSheet.getMeldeListeHintergrundFarbeUnGeradeStyle());
+	}
 
     void formatZeilenfarben() throws GenerateException {
         var geradeColor = konfigurationSheet.getMeldeListeHintergrundFarbeGerade();

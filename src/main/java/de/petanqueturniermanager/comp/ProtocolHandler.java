@@ -152,6 +152,7 @@ import de.petanqueturniermanager.poule.vorrunde.PouleSpielplaeneSheet;
 import de.petanqueturniermanager.poule.vorrunde.PouleVorrundeSheet;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetNew;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetTestDaten;
+import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeleeAnmeldungTurnierTestDaten;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetUpdate;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheet;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheetSortOnly;
@@ -302,6 +303,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_SCHWEIZER_TESTDATEN_MELDELISTE = "schweizer_testdaten_meldeliste";
 	public static final String CMD_SCHWEIZER_TESTDATEN_TURNIER = "schweizer_testdaten_turnier";
 	public static final String CMD_SCHWEIZER_TESTDATEN_TURNIER_19 = "schweizer_testdaten_turnier_19";
+	public static final String CMD_SCHWEIZER_TESTDATEN_MELEE_ANMELDUNG = "schweizer_testdaten_melee_anmeldung";
 	// Maastrichter
 	public static final String CMD_MAASTRICHTER_START = "maastrichter_start";
 	public static final String CMD_MAASTRICHTER_UPDATE_MELDELISTE = "maastrichter_update_meldeliste";
@@ -1150,6 +1152,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_SCHWEIZER_TESTDATEN_TURNIER_19:
 				// 19 Teams: ungerade → 1 Freilos pro Runde, Teamname in Spielrunde, Bahn Random
 				new SchweizerTurnierTestDaten(ws, 19, SpielplanTeamAnzeige.NAME).testKeinAnderesTurnierVorhanden().start();
+				break;
+			case CMD_SCHWEIZER_TESTDATEN_MELEE_ANMELDUNG:
+				new SchweizerMeleeAnmeldungTurnierTestDaten(ws).testKeinAnderesTurnierVorhanden().start();
 				break;
 			// ------------------------------
 			// Maastrichter System
@@ -2325,8 +2330,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_FORMULEX_MELEE_UEBERNEHMEN -> ts == TurnierSystem.FORMULEX && meleeAnmeldungAktiv(ws)
 					&& hatOffeneMeleeAnmeldungen(ws, SheetMetadataHelper.SCHLUESSEL_FORMULEX_MELEE_ANMELDUNG);
 			case CMD_SCHWEIZER_TESTDATEN_MELDELISTE,
-				 CMD_SCHWEIZER_TESTDATEN_TURNIER,
-				 CMD_SCHWEIZER_TESTDATEN_TURNIER_19        -> ts == TurnierSystem.KEIN || ts == TurnierSystem.SCHWEIZER;
+					 CMD_SCHWEIZER_TESTDATEN_TURNIER,
+					 CMD_SCHWEIZER_TESTDATEN_TURNIER_19,
+					 CMD_SCHWEIZER_TESTDATEN_MELEE_ANMELDUNG  -> ts == TurnierSystem.KEIN || ts == TurnierSystem.SCHWEIZER;
 			case CMD_KONFIGURATION_TURNIER,
 				 CMD_KONFIGURATION_TURNIER_MENU,
 				 CMD_KONFIGURATION_KOPFFUSSZEILEN,
@@ -2472,9 +2478,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	 */
 	private static boolean hatOffeneMeleeAnmeldungen(WorkingSpreadsheet ws, String metadatenSchluessel) {
 		try {
-			long anzahl = MeleeAnmeldungLeser.lesen(ws, metadatenSchluessel).stream()
-					.filter(zeile -> zeile.istOffen() && zeile.eingecheckt()).count();
-			return anzahl >= 2;
+			return MeleeAnmeldungLeser.lesen(ws, metadatenSchluessel).stream()
+					.filter(zeile -> zeile.istOffen() && zeile.eingecheckt())
+					.limit(2).count() == 2;
 		} catch (Exception e) {
 			logger.debug("Offene Melee-Anmeldungen konnten nicht ermittelt werden: {}", e.getMessage());
 			return false;

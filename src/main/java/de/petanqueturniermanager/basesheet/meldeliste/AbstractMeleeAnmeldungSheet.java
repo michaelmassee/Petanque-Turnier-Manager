@@ -27,9 +27,11 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
+import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
@@ -124,9 +126,17 @@ public abstract class AbstractMeleeAnmeldungSheet extends SheetRunner
 				CellProperties.from().centerJustify().setShrinkToFit(true)
 						.setBorder(BorderFactory.from().allThin().toBorder()));
 
+		SheetHelper.faerbeZeilenAbwechselnd(this,
+				RangePosition.from(SPALTE_NR, ERSTE_DATEN_ZEILE, LETZTE_SPALTE, letzteZeile),
+				getKonfigurationSheet().getMeldeListeHintergrundFarbeGerade(),
+				getKonfigurationSheet().getMeldeListeHintergrundFarbeUnGerade());
+
 		// Fehlerfarbe für ungültige Setzpositionen – identische Regel wie in den Meldelisten.
 		MeldeListeHelper.formatiereSetzpositionSpalteFehlerfarbe(this,
 				RangePosition.from(SPALTE_SETZPOSITION, ERSTE_DATEN_ZEILE, SPALTE_SETZPOSITION, letzteZeile));
+
+		EditierbaresZelleFormatHelper.anwenden(this,
+				RangePosition.from(SPALTE_VORNAME, ERSTE_DATEN_ZEILE, SPALTE_EINGECHECKT, letzteZeile));
 	}
 
 	/**

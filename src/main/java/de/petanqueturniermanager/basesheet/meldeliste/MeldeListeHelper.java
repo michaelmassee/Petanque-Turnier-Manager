@@ -122,6 +122,68 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 		// -----------------------------------------------
 	}
 
+	/**
+	 * Markiert einen Spieler rot, wenn seine Vor-/Nachname-Kombination in einer
+	 * beliebigen Spielerposition der Meldeliste nochmals vorkommt. Bei Teamlisten
+	 * sind die Namenspaare nicht zusammenhängend (z.B. Vorname 1, Nachname 1,
+	 * Vorname 2, Nachname 2); eine einzelne COUNTIFS-Formel über den gesamten
+	 * Bereich würde diese Spalten fälschlich als einen Namen behandeln.
+	 */
+	public void insertFormulaFuerDoppelteSpielerNamenGeradeUngradeFarbe(int[] vornameSpalten, int[] nachnameSpalten,
+			int ersteDatenZeile, int letzteDatenZeile, ISheet sheet,
+			MeldungenHintergrundFarbeGeradeStyle geradeStyle,
+			MeldungenHintergrundFarbeUnGeradeStyle ungeradeStyle) throws GenerateException {
+		checkArgument(vornameSpalten.length > 0 && vornameSpalten.length == nachnameSpalten.length,
+				"Vor- und Nachnamensspalten müssen paarweise angegeben werden");
+		for (int spieler = 0; spieler < vornameSpalten.length; spieler++) {
+			int vornameSpalte = vornameSpalten[spieler];
+			int nachnameSpalte = nachnameSpalten[spieler];
+			RangePosition nameRange = RangePosition.from(vornameSpalte, ersteDatenZeile, nachnameSpalte,
+					letzteDatenZeile);
+			String formel = doppelteSpielerNamenFormel(vornameSpalten, nachnameSpalten, vornameSpalte, nachnameSpalte,
+					ersteDatenZeile);
+			ConditionalFormatHelper.from(sheet, nameRange).clear()
+					.formula1(formel).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndDoReset();
+			SheetHelper.faerbeZeilenAbwechselnd(sheet, nameRange, geradeStyle.getFarbe(), ungeradeStyle.getFarbe());
+		}
+	}
+
+	private String doppelteSpielerNamenFormel(int[] vornameSpalten, int[] nachnameSpalten, int vornameSpalte,
+			int nachnameSpalte, int ersteDatenZeile) {
+		String vornameAktuell = cleanString(absoluteSpalteRelativeZeile(vornameSpalte, ersteDatenZeile));
+		String nachnameAktuell = cleanString(absoluteSpalteRelativeZeile(nachnameSpalte, ersteDatenZeile));
+		StringBuilder treffer = new StringBuilder();
+		for (int spieler = 0; spieler < vornameSpalten.length; spieler++) {
+			if (spieler > 0) {
+				treffer.append('+');
+			}
+			treffer.append("COUNTIFS(")
+					.append(cleanString(absoluteBereich(vornameSpalten[spieler], ersteDatenZeile))).append(';').append(vornameAktuell)
+					.append(';').append(cleanString(absoluteBereich(nachnameSpalten[spieler], ersteDatenZeile))).append(';')
+					.append(nachnameAktuell).append(')');
+		}
+		return "AND(" + vornameAktuell + "<>\"\";" + nachnameAktuell + "<>\"\";( " + treffer + ")>1)";
+	}
+
+	private String absoluteBereich(int spalte, int ersteDatenZeile) {
+		return "$" + Position.from(spalte, ersteDatenZeile).getSpalteString() + "$" + (ersteDatenZeile + 1)
+				+ ":$" + Position.from(spalte, letzteMeldungZeile()).getSpalteString() + "$" + (letzteMeldungZeile() + 1);
+	}
+
+	private String absoluteSpalteRelativeZeile(int spalte, int ersteDatenZeile) {
+		return "$" + Position.from(spalte, ersteDatenZeile).getSpalteString() + (ersteDatenZeile + 1);
+	}
+
+	private String cleanString(String referenz) {
+		// CLEAN entfernt Tabs und Steuerzeichen; geschützte Leerzeichen entstehen
+		// häufig beim Einfügen aus Web-Seiten und werden davor zu normalen Leerzeichen.
+		return "TRIM(CLEAN(SUBSTITUTE(" + referenz + ";CHAR(160);\" \")))";
+	}
+
+	private int letzteMeldungZeile() {
+		return MeldungenSpalte.MAX_ANZ_MELDUNGEN;
+	}
+
 	public void insertFormulaSetzpositionGeradeUngradeFarbe(int letzteDatenZeile, ISheet sheet,
 			MeldungenHintergrundFarbeGeradeStyle geradeStyle,
 			MeldungenHintergrundFarbeUnGeradeStyle ungeradeStyle) throws GenerateException {

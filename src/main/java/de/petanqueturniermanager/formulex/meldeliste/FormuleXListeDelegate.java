@@ -284,7 +284,7 @@ class FormuleXListeDelegate implements MeldeListeKonstanten {
                             .setShrinkToFit(true));
         }
 
-        for (int s = 0; s < anzSpieler; s++) {
+		for (int s = 0; s < anzSpieler; s++) {
             int vornameSpalte = getVornameSpalte(s);
             String spielerTitel = "Spieler " + (s + 1);
 
@@ -329,7 +329,6 @@ class FormuleXListeDelegate implements MeldeListeKonstanten {
                                 .setShrinkToFit(true));
             }
         }
-
         ColumnProperties colPropSp = ColumnProperties.from().setWidth(SP_SPALTE_WIDTH)
                 .setHoriJustify(CellHoriJustify.CENTER).setVertJustify(CellVertJustify2.CENTER)
                 .margin(MeldeListeKonstanten.CELL_MARGIN);
@@ -424,7 +423,6 @@ class FormuleXListeDelegate implements MeldeListeKonstanten {
                     RangeProperties.from().setBorder(
                             BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder()));
         }
-
         RangePosition spRange = RangePosition.from(getSetzPositionSpalte(), ERSTE_DATEN_ZEILE,
                 getSetzPositionSpalte(), letzteDatenZeile);
         RangeHelper.from(sheet, spRange).setRangeProperties(
@@ -447,10 +445,25 @@ class FormuleXListeDelegate implements MeldeListeKonstanten {
                 farbeUngerade);
 
         EditierbaresZelleFormatHelper.anwenden(sheet, RangePosition.from(1, ERSTE_DATEN_ZEILE, getAktivSpalte(), letzteDatenZeile));
+		formatiereDoppelteSpielerNamen(anzSpieler, letzteDatenZeile, farbeGerade, farbeUngerade);
 
         MeldeListeKonstanten.markiereDoppelteTeamnamenBeiNurTeamname(sheet, konfigurationSheet.isMeldeListeTeamnameAnzeigen(),
                 anzSpieler == 0, letzteDatenZeile);
     }
+
+	private void formatiereDoppelteSpielerNamen(int anzSpieler, int letzteDatenZeile,
+			MeldungenHintergrundFarbeGeradeStyle farbeGerade,
+			MeldungenHintergrundFarbeUnGeradeStyle farbeUngerade) throws GenerateException {
+		if (anzSpieler == 0) return;
+		int[] vornamen = new int[anzSpieler];
+		int[] nachnamen = new int[anzSpieler];
+		for (int s = 0; s < anzSpieler; s++) {
+			vornamen[s] = getVornameSpalte(s);
+			nachnamen[s] = getNachnameSpalte(s);
+		}
+		meldeListeHelper.insertFormulaFuerDoppelteSpielerNamenGeradeUngradeFarbe(vornamen, nachnamen,
+				ERSTE_DATEN_ZEILE, letzteDatenZeile, sheet, farbeGerade, farbeUngerade);
+	}
 
     private void formatZeilenfarben() throws GenerateException {
         MeldungenHintergrundFarbeGeradeStyle farbeGerade = konfigurationSheet.getMeldeListeHintergrundFarbeGeradeStyle();

@@ -72,6 +72,14 @@ public abstract class AbstractMeleeAnmeldungUebernehmenSheet extends SheetRunner
 
 	@Override
 	protected void doRun() throws GenerateException {
+		uebernehmen();
+	}
+
+	/**
+	 * Führt die Übernahme synchron aus. Der öffentliche Einstiegspunkt erlaubt
+	 * UI-Regressionstests, die zwei aufeinanderfolgende Übernahmen prüfen.
+	 */
+	public void uebernehmen() throws GenerateException {
 		if (!MeleeAnmeldungKonfiguration.istAktiv(getKonfigurationSheet())) {
 			zeigeHinweis("msg.text.melee.nicht.aktiv");
 			return;
@@ -93,6 +101,11 @@ public abstract class AbstractMeleeAnmeldungUebernehmenSheet extends SheetRunner
 				alsMeleeSpieler(offeneEingecheckte), getKonfigurationSheet().getMeleeTeamModus());
 		if (teams.isEmpty()) {
 			zeigeHinweis("msg.text.melee.keine.anmeldungen");
+			return;
+		}
+		int anzSpielerSpalten = getFormationKonfiguration().getMeldeListeFormation().getAnzSpieler();
+		if (teams.stream().anyMatch(team -> team.spieler().size() > anzSpielerSpalten)) {
+			zeigeHinweis("msg.text.melee.formation.zu.klein");
 			return;
 		}
 

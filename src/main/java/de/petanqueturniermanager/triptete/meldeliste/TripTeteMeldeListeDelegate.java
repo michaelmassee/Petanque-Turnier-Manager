@@ -233,7 +233,6 @@ class TripTeteMeldeListeDelegate implements MeldeListeKonstanten {
                                 .setShrinkToFit(true));
             }
         }
-
         ColumnProperties colPropAktiv = ColumnProperties.from().setWidth(AKTIV_SPALTE_WIDTH)
                 .setHoriJustify(CellHoriJustify.CENTER).setVertJustify(CellVertJustify2.CENTER)
                 .margin(MeldeListeKonstanten.CELL_MARGIN);
@@ -261,6 +260,22 @@ class TripTeteMeldeListeDelegate implements MeldeListeKonstanten {
                         .setShrinkToFit(true)
                         .setCharColor("00599d"));
     }
+
+	private void formatiereDoppelteSpielerNamen(int anzSpieler, int letzteDatenZeile,
+			MeldungenHintergrundFarbeGeradeStyle farbeGerade,
+			MeldungenHintergrundFarbeUnGeradeStyle farbeUngerade) throws GenerateException {
+		if (anzSpieler == 0) {
+			return;
+		}
+		int[] vornamen = new int[anzSpieler];
+		int[] nachnamen = new int[anzSpieler];
+		for (int s = 0; s < anzSpieler; s++) {
+			vornamen[s] = getVornameSpalte(s);
+			nachnamen[s] = getNachnameSpalte(s);
+		}
+		meldeListeHelper.insertFormulaFuerDoppelteSpielerNamenGeradeUngradeFarbe(vornamen, nachnamen,
+				ERSTE_DATEN_ZEILE_OVERRIDE, letzteDatenZeile, sheet, farbeGerade, farbeUngerade);
+	}
 
     private void formatDatenSpalten() throws GenerateException {
         int letzteDatenZeile = getLetzteDatenZeileUseMin();
@@ -303,7 +318,6 @@ class TripTeteMeldeListeDelegate implements MeldeListeKonstanten {
                     RangeProperties.from().setBorder(
                             BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder()));
         }
-
         RangePosition aktivRange = RangePosition.from(getAktivSpalte(), ERSTE_DATEN_ZEILE_OVERRIDE,
                 getAktivSpalte(), letzteDatenZeile);
         RangeHelper.from(sheet, aktivRange).setRangeProperties(
@@ -317,6 +331,7 @@ class TripTeteMeldeListeDelegate implements MeldeListeKonstanten {
 
         EditierbaresZelleFormatHelper.anwenden(sheet,
                 RangePosition.from(1, ERSTE_DATEN_ZEILE_OVERRIDE, getAktivSpalte(), letzteDatenZeile));
+		formatiereDoppelteSpielerNamen(anzSpieler, letzteDatenZeile, farbeGerade, farbeUngerade);
     }
 
     // ---------------------------------------------------------------
