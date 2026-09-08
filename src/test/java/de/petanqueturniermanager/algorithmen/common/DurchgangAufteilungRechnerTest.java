@@ -56,4 +56,39 @@ public class DurchgangAufteilungRechnerTest {
         assertThatThrownBy(() -> DurchgangAufteilungRechner.berechne(16, -1))
                 .isInstanceOf(IllegalArgumentException.class);
     }
+
+    @Test
+    public void testGleichmaessig_falseDelegiertAnChunkAufteilung() {
+        assertThat(DurchgangAufteilungRechner.berechne(17, 8, false)).containsExactly(8, 8, 1);
+    }
+
+    @Test
+    public void testGleichmaessig_restWirdVerteiltStattImLetztenBlock() {
+        // 13 Paarungen (z.B. 26 Teams), 4 Bahnen -> [4, 3, 3, 3] statt [4, 4, 4, 1]
+        assertThat(DurchgangAufteilungRechner.berechne(13, 4, true)).containsExactly(4, 3, 3, 3);
+    }
+
+    @Test
+    public void testGleichmaessig_restBlockKleinerAlsBahnenWirdVerteilt() {
+        // 17 Paarungen, 8 Bahnen -> ceil(17/8)=3 Bloecke, gleichmaessig verteilt: [6, 6, 5]
+        assertThat(DurchgangAufteilungRechner.berechne(17, 8, true)).containsExactly(6, 6, 5);
+    }
+
+    @Test
+    public void testGleichmaessig_exakteTeilbarkeitUnveraendert() {
+        assertThat(DurchgangAufteilungRechner.berechne(16, 8, true)).containsExactly(8, 8);
+    }
+
+    @Test
+    public void testGleichmaessig_einBlockWennBahnenGroesserAlsPaarungen() {
+        assertThat(DurchgangAufteilungRechner.berechne(5, 8, true)).containsExactly(5);
+    }
+
+    @Test
+    public void testGleichmaessig_illegalArgUnveraendert() {
+        assertThatThrownBy(() -> DurchgangAufteilungRechner.berechne(0, 8, true))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> DurchgangAufteilungRechner.berechne(16, 0, true))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
 }

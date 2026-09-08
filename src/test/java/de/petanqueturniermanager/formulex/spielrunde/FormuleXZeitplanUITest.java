@@ -111,6 +111,7 @@ public class FormuleXZeitplanUITest extends BaseCalcUITest {
 		konfig.setZeitplanZeitlimitMinuten(15);
 		konfig.setZeitplanDurchgangPauseMinuten(5);
 		konfig.setZeitplanTurnierStartzeit("09:00");
+		konfig.setDurchgangGleichmaessigAufteilen(false); // testet explizit die Chunk-Aufteilung [3, 3, 2]
 		spielrundeNaechste.doRun();
 
 		XSpreadsheet runde1 = spielrundeNaechste.getXSpreadSheet();
@@ -173,6 +174,35 @@ public class FormuleXZeitplanUITest extends BaseCalcUITest {
 	}
 
 	/**
+	 * Default-Verhalten (Property nicht explizit gesetzt): Paarungen werden gleichmäßig auf die
+	 * Durchgänge verteilt statt den Rest im letzten Durchgang zu sammeln.
+	 */
+	@Test
+	public void featureAn_GleichmaessigeAufteilungIstDefaultUndVerteiltRestGleichmaessig() throws GenerateException {
+		int anzTeams = 26; // 13 Paarungen, 4 Bahnen -> gleichmaessig [4, 3, 3, 3] statt Chunk [4, 4, 4, 1]
+		new FormuleXMeldeListeSheetTestDaten(wkingSpreadsheet, anzTeams).erstelleMeldelisteWithTestdaten();
+		FormuleXSpielrundeSheetNaechste spielrundeNaechste = new FormuleXSpielrundeSheetNaechste(wkingSpreadsheet);
+		var konfig = spielrundeNaechste.getKonfigurationSheet();
+		konfig.setSpielrundeSpielbahn(SpielrundeSpielbahn.N);
+		konfig.setZeitplanAktiv(true);
+		konfig.setZeitplanAnzahlBahnen(4);
+		konfig.setZeitplanTurnierStartzeit("09:00");
+		assertThat(konfig.isDurchgangGleichmaessigAufgeteilt()).as("Default muss gleichmaessige Aufteilung sein").isTrue();
+		spielrundeNaechste.doRun();
+
+		XSpreadsheet runde1 = spielrundeNaechste.getXSpreadSheet();
+		assertThat(runde1).isNotNull();
+
+		// Bloecke [4, 3, 3, 3] -> Bahn-Nr beginnt bei den relativen Zeilen 0, 4, 7, 10 neu bei 1
+		RangeData bahnNrn = ladeBahnNummern(runde1, anzTeams / 2);
+		int[] erwarteteBahnNr = { 1, 2, 3, 4, 1, 2, 3, 1, 2, 3, 1, 2, 3 };
+		for (int i = 0; i < erwarteteBahnNr.length; i++) {
+			assertThat(bahnNrn.get(i).get(0).getIntVal(-1))
+					.as("Bahn-Nr Zeile %d", i).isEqualTo(erwarteteBahnNr[i]);
+		}
+	}
+
+	/**
 	 * Regressionstest (Portierung aus Schweizer): einzeiliger letzter Durchgang-Block (Start- und
 	 * Endzeile identisch). Die Ende-Formel referenziert die Endzeit-Zelle des VORHERIGEN Blocks +
 	 * Zeitlimit — NICHT sich selbst (Calc-Zirkelbezug).
@@ -187,6 +217,7 @@ public class FormuleXZeitplanUITest extends BaseCalcUITest {
 		konfig.setZeitplanAktiv(true);
 		konfig.setZeitplanAnzahlBahnen(BAHNEN);
 		konfig.setZeitplanTurnierStartzeit("09:00");
+		konfig.setDurchgangGleichmaessigAufteilen(false); // erzwingt Chunk-Aufteilung [3, 3, 1] mit einzeiligem letzten Block
 		spielrundeNaechste.doRun();
 
 		XSpreadsheet runde1 = spielrundeNaechste.getXSpreadSheet();

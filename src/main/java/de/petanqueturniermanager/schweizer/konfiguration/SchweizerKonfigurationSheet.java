@@ -214,6 +214,16 @@ public class SchweizerKonfigurationSheet extends BaseKonfigurationSheet
 	}
 
 	@Override
+	public boolean isDurchgangGleichmaessigAufgeteilt() {
+		return propertiesSpalte.isDurchgangGleichmaessigAufgeteilt();
+	}
+
+	@Override
+	public void setDurchgangGleichmaessigAufteilen(boolean gleichmaessig) {
+		propertiesSpalte.setDurchgangGleichmaessigAufteilen(gleichmaessig);
+	}
+
+	@Override
 	public int getZeitplanZeitlimitMinuten() {
 		return propertiesSpalte.getZeitplanZeitlimitMinuten();
 	}

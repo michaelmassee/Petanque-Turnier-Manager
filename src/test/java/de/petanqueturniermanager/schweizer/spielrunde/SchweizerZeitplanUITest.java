@@ -284,6 +284,36 @@ public class SchweizerZeitplanUITest extends BaseCalcUITest {
 	}
 
 	/**
+	 * Default-Verhalten (Property nicht explizit gesetzt): Paarungen werden gleichmäßig auf die
+	 * Durchgänge verteilt statt den Rest im letzten Durchgang zu sammeln.
+	 */
+	@Test
+	public void featureAn_GleichmaessigeAufteilungIstDefaultUndVerteiltRestGleichmaessig() throws GenerateException {
+		int anzTeams = 26; // 13 Paarungen, 4 Bahnen -> gleichmaessig [4, 3, 3, 3] statt Chunk [4, 4, 4, 1]
+		new SchweizerMeldeListeSheetTestDaten(wkingSpreadsheet, anzTeams).doRun();
+		SchweizerSpielrundeSheetNaechste spielrundeNaechste = new SchweizerSpielrundeSheetNaechste(wkingSpreadsheet);
+		var konfig = spielrundeNaechste.getKonfigurationSheet();
+		konfig.setSpielplanTeamAnzeige(SpielplanTeamAnzeige.NR);
+		konfig.setSpielrundeSpielbahn(SpielrundeSpielbahn.N);
+		konfig.setZeitplanAktiv(true);
+		konfig.setZeitplanAnzahlBahnen(4);
+		konfig.setZeitplanTurnierStartzeit("09:00");
+		assertThat(konfig.isDurchgangGleichmaessigAufgeteilt()).as("Default muss gleichmaessige Aufteilung sein").isTrue();
+		spielrundeNaechste.doRun();
+
+		XSpreadsheet runde1 = spielrundeNaechste.getXSpreadSheet();
+		assertThat(runde1).isNotNull();
+
+		// Bloecke [4, 3, 3, 3] -> Bahn-Nr beginnt bei den relativen Zeilen 0, 4, 7, 10 neu bei 1
+		RangeData bahnNrn = ladeBahnNummern(runde1, anzTeams / 2);
+		int[] erwarteteBahnNr = { 1, 2, 3, 4, 1, 2, 3, 1, 2, 3, 1, 2, 3 };
+		for (int i = 0; i < erwarteteBahnNr.length; i++) {
+			assertThat(bahnNrn.get(i).get(0).getIntVal(-1))
+					.as("Bahn-Nr Zeile %d", i).isEqualTo(erwarteteBahnNr[i]);
+		}
+	}
+
+	/**
 	 * Regressionstest (Bug-Report, reale ODS-Datei): Nach mehrfachem "Neu auslosen" mit
 	 * unterschiedlicher Bahnen-Anzahl (dadurch unterschiedliche Durchgang-Block-Grenzen je Lauf)
 	 * haeuften sich ueberlappende, teils veraltete bedingte Formatierungs-Regeln auf denselben
@@ -300,6 +330,7 @@ public class SchweizerZeitplanUITest extends BaseCalcUITest {
 		konfig.setSpielplanTeamAnzeige(SpielplanTeamAnzeige.NR);
 		konfig.setSpielrundeSpielbahn(SpielrundeSpielbahn.N);
 		konfig.setZeitplanAktiv(true);
+		konfig.setDurchgangGleichmaessigAufteilen(false); // erzwingt Chunk-Aufteilung, siehe Bloecke unten
 		konfig.setZeitplanAnzahlBahnen(4); // 7 Paarungen / 4 Bahnen -> Bloecke [4, 3]
 		spielrundeNaechste.doRun();
 
@@ -349,6 +380,7 @@ public class SchweizerZeitplanUITest extends BaseCalcUITest {
 		konfig.setZeitplanAktiv(true);
 		konfig.setZeitplanAnzahlBahnen(BAHNEN);
 		konfig.setZeitplanTurnierStartzeit("09:00");
+		konfig.setDurchgangGleichmaessigAufteilen(false); // erzwingt Chunk-Aufteilung [3, 3, 1] mit einzeiligem letzten Block
 		spielrundeNaechste.doRun();
 
 		XSpreadsheet runde1 = spielrundeNaechste.getXSpreadSheet();

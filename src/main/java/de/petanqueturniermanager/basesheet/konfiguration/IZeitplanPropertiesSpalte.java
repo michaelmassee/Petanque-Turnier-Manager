@@ -22,6 +22,7 @@ public interface IZeitplanPropertiesSpalte {
 	String KONFIG_PROP_ZEITPLAN_DURCHGANG_PAUSE_MINUTEN = "Durchgang Pause (Minuten)";
 	String KONFIG_PROP_ZEITPLAN_RUNDEN_PAUSE_MINUTEN = "Runden Pause (Minuten)";
 	String KONFIG_PROP_ZEITPLAN_TURNIER_STARTZEIT = "Turnier Startzeit";
+	String KONFIG_PROP_ZEITPLAN_DURCHGAENGE_GLEICHMAESSIG = "Durchgaenge gleichmaessig aufteilen";
 
 	boolean isZeitplanAktiv();
 
@@ -33,6 +34,15 @@ public interface IZeitplanPropertiesSpalte {
 
 	/** {@code isZeitplanAktiv() && getZeitplanAnzahlBahnen() > 0} — steuert die Durchgang-Aufteilung innerhalb einer Runde. */
 	boolean isDurchgangAufteilungWirksam();
+
+	/**
+	 * Steuert den Modus von {@code DurchgangAufteilungRechner.berechne(...)}: {@code true} =
+	 * Paarungen werden möglichst gleichmäßig auf die Durchgänge verteilt, {@code false} = alte
+	 * Chunk-Aufteilung (Durchgänge bis zur Bahnenzahl auffüllen, Rest im letzten Durchgang).
+	 */
+	boolean isDurchgangGleichmaessigAufgeteilt();
+
+	void setDurchgangGleichmaessigAufteilen(boolean gleichmaessig);
 
 	int getZeitplanZeitlimitMinuten();
 

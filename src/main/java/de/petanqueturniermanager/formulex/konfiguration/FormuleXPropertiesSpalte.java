@@ -124,6 +124,8 @@ public class FormuleXPropertiesSpalte extends BasePropertiesSpalte
         KONFIG_PROPERTIES.add(ZeitplanConfigProperty.<String>from(ConfigPropertyType.STRING, KONFIG_PROP_ZEITPLAN_TURNIER_STARTZEIT)
                 .setDefaultVal("09:00").setDescription("config.desc.zeitplan.turnier.startzeit").kompaktesTextfeld()
                 .validierung(StringTools::isValidUhrzeitHhMm));
+        KONFIG_PROPERTIES.add(ZeitplanConfigProperty.<Boolean>from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_ZEITPLAN_DURCHGAENGE_GLEICHMAESSIG)
+                .setDefaultVal(true).setDescription("config.desc.zeitplan.durchgaenge.gleichmaessig"));
 
         ADDUploadProp(KONFIG_PROPERTIES);
         ADDSpielrundenExportProp(KONFIG_PROPERTIES);
@@ -267,6 +269,16 @@ public class FormuleXPropertiesSpalte extends BasePropertiesSpalte
     @Override
     public boolean isDurchgangAufteilungWirksam() {
         return isZeitplanAktiv() && getZeitplanAnzahlBahnen() > 0;
+    }
+
+    @Override
+    public boolean isDurchgangGleichmaessigAufgeteilt() {
+        return Boolean.TRUE.equals(readBooleanProperty(KONFIG_PROP_ZEITPLAN_DURCHGAENGE_GLEICHMAESSIG));
+    }
+
+    @Override
+    public void setDurchgangGleichmaessigAufteilen(boolean gleichmaessig) {
+        setStringProperty(KONFIG_PROP_ZEITPLAN_DURCHGAENGE_GLEICHMAESSIG, StringTools.booleanToString(gleichmaessig));
     }
 
     @Override

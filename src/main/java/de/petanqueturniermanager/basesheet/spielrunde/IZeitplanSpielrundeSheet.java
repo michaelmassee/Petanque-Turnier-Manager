@@ -206,7 +206,8 @@ public interface IZeitplanSpielrundeSheet extends ISheet {
 			return;
 		}
 		int bahnen = getKonfigurationSheet().getZeitplanAnzahlBahnen();
-		List<Integer> bloecke = DurchgangAufteilungRechner.berechne(anzahlPaarungen, bahnen);
+		List<Integer> bloecke = DurchgangAufteilungRechner.berechne(anzahlPaarungen, bahnen,
+				getKonfigurationSheet().isDurchgangGleichmaessigAufgeteilt());
 		if (bloecke.size() <= 1) {
 			return; // Paarungen passen in einen Durchgang, keine Aufteilung noetig
 		}
@@ -276,7 +277,8 @@ public interface IZeitplanSpielrundeSheet extends ISheet {
 			return;
 		}
 		List<Integer> bloecke = DurchgangAufteilungRechner.berechne(anzahlPaarungen,
-				getKonfigurationSheet().getZeitplanAnzahlBahnen());
+				getKonfigurationSheet().getZeitplanAnzahlBahnen(),
+				getKonfigurationSheet().isDurchgangGleichmaessigAufgeteilt());
 		if (bloecke.size() <= 1) {
 			return;
 		}
@@ -303,7 +305,8 @@ public interface IZeitplanSpielrundeSheet extends ISheet {
 			return;
 		}
 		List<Integer> bloecke = DurchgangAufteilungRechner.berechne(anzahlPaarungen,
-				getKonfigurationSheet().getZeitplanAnzahlBahnen());
+				getKonfigurationSheet().getZeitplanAnzahlBahnen(),
+				getKonfigurationSheet().isDurchgangGleichmaessigAufgeteilt());
 		if (bloecke.size() <= 1) {
 			return;
 		}
