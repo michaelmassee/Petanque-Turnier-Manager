@@ -248,7 +248,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	 * Systeme, deren Zeilenfarbe nicht über bedingte Formatierung, sondern direkt gesetzt wird (z.B.
 	 * Schweizer/Poule/JGJ).
 	 */
-	public void formatiereSetzpositionSpalteFehlerfarbe(ISheet sheet, RangePosition spRange)
+	public static void formatiereSetzpositionSpalteFehlerfarbe(ISheet sheet, RangePosition spRange)
 			throws GenerateException {
 		ConditionalFormatHelper.from(sheet, spRange).clear()
 				.formula1(setzpositionUngueltigFormel()).operator(ConditionOperator.FORMULA)
@@ -260,7 +260,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	 * zusätzlich die Zeilenfarbe (gerade/ungerade) als bedingte Formatierung mit niedrigerer
 	 * Priorität an.
 	 */
-	public void formatiereSetzpositionSpalteFehlerfarbe(ISheet sheet, RangePosition spRange,
+	public static void formatiereSetzpositionSpalteFehlerfarbe(ISheet sheet, RangePosition spRange,
 			MeldungenHintergrundFarbeGeradeStyle farbeGerade, MeldungenHintergrundFarbeUnGeradeStyle farbeUngerade)
 			throws GenerateException {
 		ConditionalFormatHelper.from(sheet, spRange).clear()

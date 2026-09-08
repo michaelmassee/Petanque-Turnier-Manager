@@ -433,7 +433,7 @@ class FormuleXListeDelegate implements MeldeListeKonstanten {
 
         meldeListeHelper.bereinigeUngueltigeSetzpositionWerte(getSetzPositionSpalte(), getZeilenKennungSpalte(),
                 ERSTE_DATEN_ZEILE, letzteDatenZeile);
-        meldeListeHelper.formatiereSetzpositionSpalteFehlerfarbe(sheet, spRange, farbeGerade, farbeUngerade);
+        MeldeListeHelper.formatiereSetzpositionSpalteFehlerfarbe(sheet, spRange, farbeGerade, farbeUngerade);
 
         RangePosition aktivRange = RangePosition.from(getAktivSpalte(), ERSTE_DATEN_ZEILE,
                 getAktivSpalte(), letzteDatenZeile);

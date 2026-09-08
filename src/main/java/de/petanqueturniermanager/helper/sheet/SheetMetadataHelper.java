@@ -147,6 +147,15 @@ public class SheetMetadataHelper {
     public static final String SCHLUESSEL_FORME_CADRAGE = "__PTM_FORME_CADRAGE__";
     public static final String SCHLUESSEL_FORME_KO_GRUPPE = "__PTM_FORME_KO_GRUPPE__";
 
+    // ── Konstanten: Melee-Anmeldung (Systeme mit waehlbarer Formation) ───────
+
+    public static final String SCHLUESSEL_SCHWEIZER_MELEE_ANMELDUNG = "__PTM_SCHWEIZER_MELEE_ANMELDUNG__";
+    public static final String SCHLUESSEL_JGJ_MELEE_ANMELDUNG = "__PTM_JGJ_MELEE_ANMELDUNG__";
+    public static final String SCHLUESSEL_KO_MELEE_ANMELDUNG = "__PTM_KO_MELEE_ANMELDUNG__";
+    public static final String SCHLUESSEL_KASKADE_MELEE_ANMELDUNG = "__PTM_KASKADE_MELEE_ANMELDUNG__";
+    public static final String SCHLUESSEL_POULE_MELEE_ANMELDUNG = "__PTM_POULE_MELEE_ANMELDUNG__";
+    public static final String SCHLUESSEL_FORMULEX_MELEE_ANMELDUNG = "__PTM_FORMULEX_MELEE_ANMELDUNG__";
+
     // ── Konstanten: Checkin-Listen (je System, außer Supermelee/Liga) ─────────
 
     public static final String SCHLUESSEL_JGJ_CHECKIN_LISTE = "__PTM_JGJ_CHECKIN_LISTE__";

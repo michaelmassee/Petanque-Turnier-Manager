@@ -361,7 +361,7 @@ class PouleListeDelegate implements MeldeListeKonstanten {
 
         meldeListeHelper.bereinigeUngueltigeSetzpositionWerte(getSetzPositionSpalte(), getZeilenKennungSpalte(),
                 ERSTE_DATEN_ZEILE, letzteDatenZeile);
-        meldeListeHelper.formatiereSetzpositionSpalteFehlerfarbe(sheet, spRange);
+        MeldeListeHelper.formatiereSetzpositionSpalteFehlerfarbe(sheet, spRange);
 
         // Aktiv-Spalte
         var aktivRange = RangePosition.from(getAktivSpalte(), ERSTE_DATEN_ZEILE, getAktivSpalte(), letzteDatenZeile);

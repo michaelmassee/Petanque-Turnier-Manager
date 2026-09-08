@@ -432,7 +432,7 @@ class KaskadeListeDelegate implements MeldeListeKonstanten {
         // Teams mit identischer SP werden in Runde 1 nicht gegeneinander ausgelost.
         meldeListeHelper.bereinigeUngueltigeSetzpositionWerte(getSetzPositionSpalte(), getZeilenKennungSpalte(),
                 ERSTE_DATEN_ZEILE, letzteDatenZeile);
-        meldeListeHelper.formatiereSetzpositionSpalteFehlerfarbe(sheet, spRange, farbeGerade, farbeUngerade);
+        MeldeListeHelper.formatiereSetzpositionSpalteFehlerfarbe(sheet, spRange, farbeGerade, farbeUngerade);
 
         RangePosition aktivRange = RangePosition.from(getAktivSpalte(), ERSTE_DATEN_ZEILE,
                 getAktivSpalte(), letzteDatenZeile);

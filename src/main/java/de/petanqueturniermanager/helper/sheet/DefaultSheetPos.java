@@ -14,6 +14,13 @@ public class DefaultSheetPos {
 
 	}
 
+	/**
+	 * Melee-Anmeldung: Vorstufe zur Meldeliste (lose Einzelspieler) und daher – fachlich wie im
+	 * Ablauf – vor der Meldeliste einsortiert. Gilt für alle Systeme mit wählbarer Formation
+	 * (Schweizer, JGJ, KO, Kaskade, Poule, Formule X), die alle {@link #MELDELISTE} = 0 verwenden.
+	 */
+	public static final short MELEE_ANMELDUNG = 0;
+
 	public static final short MELDELISTE = 0;
 	public static final short SIEGERGELD = 1;
 	public static final short PLANUNGSRECHNER = 0;
