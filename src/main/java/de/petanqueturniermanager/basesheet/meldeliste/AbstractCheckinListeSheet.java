@@ -12,6 +12,7 @@ import com.sun.star.table.CellHoriJustify;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.konfiguration.BaseKonfigurationSheet;
+import de.petanqueturniermanager.basesheet.konfiguration.MeleeAnmeldungKonfiguration;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
@@ -173,30 +174,87 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 	 * Bei leerer Meldeliste wird dennoch eine gültige (leere) Checkin-Liste erstellt.
 	 */
 	private void sortiereUndFuelle() throws GenerateException {
-		List<Integer> nummern = ladeNummern();
-		if (!nummern.isEmpty()) {
+		List<CheckinEintrag> eintraege = ladeEintraege();
+		if (!eintraege.isEmpty()) {
 			TeilnehmerListeSortModus modus = getKonfigurationSheet().getCheckinListeSortModus();
 			if (modus == TeilnehmerListeSortModus.TEAMNAME && !teamnameVerfuegbar()) {
 				modus = TeilnehmerListeSortModus.NAME;
 			}
-			nummern = sortiereNummern(nummern, ladeSortDaten(), modus);
+			eintraege = sortiereEintraege(eintraege, modus);
 		}
-		fuelleBereich(nummern);
+		fuelleBereich(eintraege);
 	}
 
 	/**
-	 * Sortiert die Nummern in-memory über den {@link TeilnehmerListeSortModus#comparator()}.
-	 * Nummern ohne Sortierdaten werden mit leeren Schlüsseln behandelt.
+	 * Stellt die anzuzeigenden Einträge zusammen: die Meldungen der Meldeliste und – bei aktiver
+	 * Melee-Anmeldung – zusätzlich die noch nicht übernommenen Melee-Einzelspieler.
+	 * <p>
+	 * Nach einer Übernahme entsteht dadurch keine Lücke: die bereits gebildeten Teams stehen als
+	 * reguläre Meldungen in der Meldeliste, die verbliebenen Einzelspieler kommen weiterhin aus der
+	 * Melee-Anmeldung.
 	 */
-	private static List<Integer> sortiereNummern(List<Integer> nummern, Map<Integer, SortSchluessel> sortDaten,
-			TeilnehmerListeSortModus modus) {
-		List<TeilnehmerEintrag> eintraege = new ArrayList<>(nummern.size());
-		for (int nr : nummern) {
-			SortSchluessel sk = sortDaten.getOrDefault(nr, SortSchluessel.LEER);
-			eintraege.add(new TeilnehmerEintrag(nr, sk.teamname(), "", sk.sortNachname()));
+	protected List<CheckinEintrag> ladeEintraege() throws GenerateException {
+		List<Integer> nummern = ladeNummern();
+		List<CheckinEintrag> eintraege = new ArrayList<>(nummern.size());
+		if (!nummern.isEmpty()) {
+			Map<Integer, SortSchluessel> sortDaten = ladeSortDaten();
+			Map<Integer, String> spielerNamen = spielerSpalteAktiv() ? namenNachNummer() : Map.of();
+			Map<Integer, String> teamnamen = teamSpalteAktiv() ? teamnamenNachNummer() : Map.of();
+			Map<Integer, Boolean> checkboxStatus = checkboxStatusNachNummer();
+			for (int nr : nummern) {
+				SortSchluessel sk = sortDaten.getOrDefault(nr, SortSchluessel.LEER);
+				eintraege.add(new CheckinEintrag(nr, teamnamen.getOrDefault(nr, sk.teamname()),
+						spielerNamen.getOrDefault(nr, ""), sk.sortNachname(),
+						checkboxStatus.getOrDefault(nr, false)));
+			}
 		}
-		eintraege.sort(modus.comparator());
-		return eintraege.stream().map(TeilnehmerEintrag::nr).toList();
+		eintraege.addAll(offeneMeleeEintraege());
+		return eintraege;
+	}
+
+	/**
+	 * Die noch nicht übernommenen Melee-Anmeldungen als Checkin-Einträge – leer, wenn das System
+	 * keine Melee-Anmeldung kennt oder sie im Turnier nicht eingeschaltet ist.
+	 */
+	private List<CheckinEintrag> offeneMeleeEintraege() {
+		String schluessel = getMeleeAnmeldungSchluessel();
+		if (schluessel == null || !MeleeAnmeldungKonfiguration.istAktiv(getKonfigurationSheet())) {
+			return List.of();
+		}
+		return MeleeAnmeldungLeser.lesen(getWorkingSpreadsheet(), schluessel).stream()
+				.filter(MeleeAnmeldungZeile::istOffen)
+				.map(zeile -> new CheckinEintrag(zeile.nr(), "", zeile.anzeigeName(), zeile.sortName(),
+						zeile.eingecheckt()))
+				.toList();
+	}
+
+	/**
+	 * Sortiert die Einträge in-memory über den {@link TeilnehmerListeSortModus#comparator()}.
+	 * Sortiert wird über einen Index-Schlüssel, weil Melde-/Team-Nummern und Melee-Nummern zwei
+	 * unabhängige Zählungen sind und sich daher überschneiden dürfen.
+	 */
+	private static List<CheckinEintrag> sortiereEintraege(List<CheckinEintrag> eintraege,
+			TeilnehmerListeSortModus modus) {
+		List<TeilnehmerEintrag> sortierschluessel = new ArrayList<>(eintraege.size());
+		for (int idx = 0; idx < eintraege.size(); idx++) {
+			CheckinEintrag eintrag = eintraege.get(idx);
+			sortierschluessel.add(new TeilnehmerEintrag(idx, eintrag.teamname(), "", eintrag.sortName()));
+		}
+		sortierschluessel.sort(modus.comparator());
+		return sortierschluessel.stream().map(schluessel -> eintraege.get(schluessel.nr())).toList();
+	}
+
+	/**
+	 * Ein Eintrag der Checkin-Liste – entweder eine Meldung aus der Meldeliste oder eine noch
+	 * offene Melee-Anmeldung.
+	 *
+	 * @param nr          angezeigte Nummer
+	 * @param teamname    freier Teamname (leer, wenn nicht verfügbar)
+	 * @param name        angezeigter Spieler-/Teamname
+	 * @param sortName    Sortierschlüssel (Nachname Spieler 1)
+	 * @param eingecheckt ob der Haken in der Checkbox-Spalte gesetzt wird
+	 */
+	protected record CheckinEintrag(int nr, String teamname, String name, String sortName, boolean eingecheckt) {
 	}
 
 	/** Löscht den bisherigen Inhalt der existierenden Checkin-Liste (Update-Pfad). */
@@ -207,10 +265,10 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 	/**
 	 * Befüllt den Checkin-Bereich blockweise als Block-Schreibvorgang (kein zellenweises Schreiben).
 	 */
-	private void fuelleBereich(List<Integer> nummern) throws GenerateException {
+	private void fuelleBereich(List<CheckinEintrag> eintraege) throws GenerateException {
 		final BlockLayout layout = new BlockLayout(teamSpalteAktiv(), spielerSpalteAktiv());
 
-		if (nummern.isEmpty()) {
+		if (eintraege.isEmpty()) {
 			// Leere Meldeliste: dennoch Kopfzeile + Fußzeile (Anzahl 0) anzeigen und Druckbereich setzen.
 			kopfzeileSchreiben(0, layout);
 			int letzteSpalte = layout.letzteNamensSpalte(0);
@@ -220,10 +278,7 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 		}
 
 		final int maxProSpalte = getMaxProSpalte();
-		final int anzBloecke = (int) Math.ceil((double) nummern.size() / maxProSpalte);
-		final Map<Integer, String> spielerNamen = layout.spielerSpalte() ? namenNachNummer() : Map.of();
-		final Map<Integer, String> teamnamen = layout.teamSpalte() ? teamnamenNachNummer() : Map.of();
-		final Map<Integer, Boolean> checkboxStatus = checkboxStatusNachNummer();
+		final int anzBloecke = (int) Math.ceil((double) eintraege.size() / maxProSpalte);
 		final String haken = I18n.get("checkinliste.haken");
 
 		RangeData data = new RangeData();
@@ -231,17 +286,17 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 			RowData zeileData = data.addNewRow();
 			for (int blkCntr = 1; blkCntr <= anzBloecke; blkCntr++) {
 				int idx = zeileImBlock + (blkCntr - 1) * maxProSpalte;
-				if (idx < nummern.size()) {
-					int nr = nummern.get(idx);
-					zeileData.newInt(nr);
+				if (idx < eintraege.size()) {
+					CheckinEintrag eintrag = eintraege.get(idx);
+					zeileData.newInt(eintrag.nr());
 					if (layout.teamSpalte()) {
-						zeileData.newString(teamnamen.getOrDefault(nr, ""));
+						zeileData.newString(eintrag.teamname());
 					}
 					if (layout.spielerSpalte()) {
-						zeileData.newString(spielerNamen.getOrDefault(nr, ""));
+						zeileData.newString(eintrag.name());
 					}
-					// Checkbox-Spalte: Haken, wenn der Aktiv-Status in der Meldeliste gesetzt ist.
-					if (checkboxStatus.getOrDefault(nr, false)) {
+					// Checkbox-Spalte: Haken, wenn der Eintrag bereits eingecheckt ist.
+					if (eintrag.eingecheckt()) {
 						zeileData.newString(haken);
 					} else {
 						zeileData.newEmpty();
@@ -255,8 +310,8 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 		RangePosition rangePosition = data.getRangePosition(Position.from(NR_SPALTE, ERSTE_DATEN_ZEILE));
 		RangeHelper.from(this, rangePosition).setDataInRange(data);
 
-		FormatErgebnis fmt = spaltenFormatieren(nummern, anzBloecke, maxProSpalte, layout);
-		int footerZeile = footerSchreiben(nummern.size(), fmt.letzteDatenZeile(), fmt.letzteSpalte());
+		FormatErgebnis fmt = spaltenFormatieren(eintraege.size(), anzBloecke, maxProSpalte, layout);
+		int footerZeile = footerSchreiben(eintraege.size(), fmt.letzteDatenZeile(), fmt.letzteSpalte());
 		printBereichDefinieren(footerZeile, fmt.letzteSpalte());
 	}
 
@@ -264,7 +319,7 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 	private record FormatErgebnis(int letzteDatenZeile, int letzteSpalte) {
 	}
 
-	private FormatErgebnis spaltenFormatieren(List<Integer> nummern, int anzBloecke, int maxProSpalte,
+	private FormatErgebnis spaltenFormatieren(int anzEintraege, int anzBloecke, int maxProSpalte,
 			BlockLayout layout) throws GenerateException {
 		RangeProperties rangePropNr = RangeProperties.from().setHoriJustify(CellHoriJustify.CENTER)
 				.setCharColor(ColorHelper.CHAR_COLOR_GRAY_SPIELER_NR);
@@ -282,7 +337,7 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 		for (int blkCntr = 0; blkCntr < anzBloecke; blkCntr++) {
 			int letzteZeile = ERSTE_DATEN_ZEILE + maxProSpalte - 1;
 			if (blkCntr + 1 == anzBloecke) {
-				letzteZeile = ERSTE_DATEN_ZEILE + (nummern.size() - ((anzBloecke - 1) * maxProSpalte)) - 1;
+				letzteZeile = ERSTE_DATEN_ZEILE + (anzEintraege - ((anzBloecke - 1) * maxProSpalte)) - 1;
 			}
 			maxMeldungZeile = Math.max(maxMeldungZeile, letzteZeile);
 
@@ -404,6 +459,15 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 
 	/** Metadaten-Schlüssel zur Wiedererkennung des Sheets. */
 	protected abstract String getMetadatenSchluessel();
+
+	/**
+	 * Named-Range-Schlüssel des Melee-Anmeldung-Sheets dieses Turniersystems, oder {@code null}
+	 * wenn das System keine Melee-Anmeldung kennt (Default). Nur bei eingeschalteter
+	 * Melee-Anmeldung werden die offenen Einzelspieler zusätzlich in der Checkin-Liste gezeigt.
+	 */
+	protected String getMeleeAnmeldungSchluessel() {
+		return null;
+	}
 
 	/**
 	 * Setzt den Seitenstil auf dem {@link NewSheet}-Builder. Default: keine Anpassung

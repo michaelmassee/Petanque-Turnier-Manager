@@ -14,7 +14,9 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.basesheet.konfiguration.MeleeAnmeldungKonfiguration;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungZeile;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.TeilnehmerNamenLeser;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -158,11 +160,40 @@ public final class TeilnehmerStatusService {
                     .from(meldelisteAnsicht, schema.ersteDatenZeile(), namenKonfiguration.formation(),
                             namenKonfiguration.teamnameAktiv(), namenKonfiguration.vereinsnameAktiv())
                     .lesen();
-            return namenListen(sh, sheet, aktivSpalte, schema, teilnehmerNamen);
+            return mitMeleeAnmeldungen(ws, namenListen(sh, sheet, aktivSpalte, schema, teilnehmerNamen));
         } catch (RuntimeException | GenerateException e) {
             logger.warn("Teilnehmerlisten konnten nicht ermittelt werden", e);
             return new TeilnehmerNamenListen(List.of(), List.of());
         }
+    }
+
+
+    /**
+     * Ergänzt die aus der Meldeliste gebildeten Listen um die noch offenen Melee-Anmeldungen –
+     * nur wenn die Melee-Anmeldung im Dokument eingeschaltet ist.
+     * <p>
+     * Damit zeigt die Turnier-Startseite dieselbe kombinierte Sicht wie die gedruckte
+     * Checkin-Liste: links die angemeldeten, noch nicht eingecheckten Einzelspieler, rechts die
+     * eingecheckten Einzelspieler <b>plus</b> die bereits per Übernahme gebildeten Teams (die
+     * ausschließlich aus eingecheckten Spielern bestehen und deshalb in der Meldeliste als aktiv
+     * geführt werden). Nach einer Übernahme entsteht dadurch keine Lücke in der Anzeige.
+     */
+    private static TeilnehmerNamenListen mitMeleeAnmeldungen(WorkingSpreadsheet ws,
+            TeilnehmerNamenListen ausMeldeliste) {
+        List<MeleeAnmeldungZeile> offene = MeleeAnmeldungKonfiguration.offeneAnmeldungen(ws);
+        if (offene.isEmpty()) {
+            return ausMeldeliste;
+        }
+        List<String> nichtEingecheckt = new ArrayList<>(ausMeldeliste.angemeldetNichtEingecheckt());
+        List<String> eingecheckt = new ArrayList<>(ausMeldeliste.eingecheckt());
+        for (MeleeAnmeldungZeile zeile : offene) {
+            String name = zeile.anzeigeName();
+            if (name.isBlank()) {
+                continue;
+            }
+            (zeile.eingecheckt() ? eingecheckt : nichtEingecheckt).add(name);
+        }
+        return new TeilnehmerNamenListen(List.copyOf(nichtEingecheckt), List.copyOf(eingecheckt));
     }
 
     /** Ein Listeneintrag vor der Sortierung: Anzeige-Name + Sortierschlüssel (Nachname Spieler 1). */
