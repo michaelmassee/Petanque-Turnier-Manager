@@ -30,11 +30,9 @@ import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
-import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
-import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 
 /**
  * Gemeinsame Basis der Mêlée-Anmeldung-Sheets aller Turniersysteme mit wählbarer
@@ -140,20 +138,11 @@ public abstract class AbstractMeleeAnmeldungSheet extends SheetRunner
 	}
 
 	/**
-	 * Vergibt fortlaufende Nummern für alle Zeilen mit Namen (blockweise geschrieben). Zeilen ohne
-	 * Namen bleiben unberührt, damit die Nummerierung dem Anwender nicht in leere Zeilen „vorläuft".
+	 * Vergibt fortlaufende Nummern für alle Zeilen mit Namen. Delegiert an
+	 * {@link MeleeAnmeldungNummerierung}, das auch von der Übernehmen-Logik genutzt wird.
 	 */
 	private void nummernSchreiben() throws GenerateException {
-		List<MeleeAnmeldungZeile> zeilen = leseAnmeldungen();
-		if (zeilen.isEmpty()) {
-			return;
-		}
-		RangeData data = new RangeData();
-		for (int idx = 0; idx < zeilen.size(); idx++) {
-			data.addNewRow().newInt(idx + 1);
-		}
-		RangePosition bereich = data.getRangePosition(Position.from(SPALTE_NR, ERSTE_DATEN_ZEILE));
-		RangeHelper.from(this, bereich).setDataInRange(data);
+		MeleeAnmeldungNummerierung.nummerieren(getWorkingSpreadsheet(), getXSpreadSheet());
 	}
 
 	/**

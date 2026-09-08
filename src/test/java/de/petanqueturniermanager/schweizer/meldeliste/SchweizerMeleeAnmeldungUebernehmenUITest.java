@@ -80,13 +80,42 @@ class SchweizerMeleeAnmeldungUebernehmenUITest extends BaseCalcUITest implements
 				.containsExactly("MeleeTestNachname6");
 	}
 
+	/**
+	 * Regression: Zeilen, die ohne Nr eingefügt wurden (z.B. per Copy-Paste, ohne den Menüpunkt
+	 * „Mêlée Anmeldung" zwischendurch erneut auszuführen), müssen spätestens beim „Übernehmen"
+	 * lückenlos durchnummeriert werden – die Nr-Spalte darf keine leeren/0-Werte zeigen.
+	 */
+	@Test
+	void uebernehmenNummeriertZeilenOhneNrNach() throws Exception {
+		meldeliste = new SchweizerMeldeListeSheetNew(wkingSpreadsheet);
+		meldeliste.createMeldelisteWithParams(Formation.DOUBLETTE, false, false);
+		docPropHelper.setBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_MELEE_ANMELDUNG, true);
+		meleeAnmeldungenAnlegen(4, false);
+
+		new SchweizerMeleeAnmeldungUebernehmenSheet(wkingSpreadsheet).uebernehmen();
+
+		List<MeleeAnmeldungZeile> zeilen = MeleeAnmeldungLeser.lesen(wkingSpreadsheet,
+				SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_MELEE_ANMELDUNG);
+		assertThat(zeilen).extracting(MeleeAnmeldungZeile::nr)
+				.as("nach dem Übernehmen muss die Nr-Spalte lückenlos 1..n sein, auch wenn sie vorher leer war")
+				.containsExactly(1, 2, 3, 4);
+	}
+
 	private void meleeAnmeldungenAnlegen(int anzahl) throws Exception {
+		meleeAnmeldungenAnlegen(anzahl, true);
+	}
+
+	private void meleeAnmeldungenAnlegen(int anzahl, boolean mitNr) throws Exception {
 		SchweizerMeleeAnmeldungSheet melee = new SchweizerMeleeAnmeldungSheet(wkingSpreadsheet);
 		melee.generate();
 		RangeData data = new RangeData();
 		for (int i = 0; i < anzahl; i++) {
 			RowData zeile = data.addNewRow();
-			zeile.newInt(i + 1);
+			if (mitNr) {
+				zeile.newInt(i + 1);
+			} else {
+				zeile.newEmpty();
+			}
 			zeile.newString("Vorname " + i);
 			zeile.newString("MeleeTestNachname" + i);
 			zeile.newEmpty();

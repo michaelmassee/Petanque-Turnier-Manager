@@ -35,6 +35,8 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
  * <p>
  * Ablauf:
  * <ol>
+ * <li>Nr-Spalte des Mêlée-Anmeldung-Sheets lückenlos durchnummerieren ({@link MeleeAnmeldungNummerierung})
+ * – deckt z.B. per Copy-Paste eingefügte Zeilen ab, die noch keine Nummer haben.</li>
  * <li>Mêlée-Anmeldung-Sheet lesen, auf <b>offen</b> (noch nicht übernommen) und <b>eingecheckt</b>
  * filtern – nicht erschienene Spieler bleiben unangetastet stehen.</li>
  * <li>Teams über den {@link MeleeAnmeldungTeamBildner} in der Größe der Meldeliste-Formation
@@ -85,6 +87,8 @@ public abstract class AbstractMeleeAnmeldungUebernehmenSheet extends SheetRunner
 			zeigeHinweis("msg.text.melee.nicht.aktiv");
 			return;
 		}
+
+		MeleeAnmeldungNummerierung.nummerieren(getWorkingSpreadsheet(), getXSpreadSheet());
 
 		List<MeleeAnmeldungZeile> alleZeilen = MeleeAnmeldungLeser.lesen(getWorkingSpreadsheet(),
 				getMeleeMetadatenSchluessel());
