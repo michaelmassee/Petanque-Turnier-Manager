@@ -20,4 +20,14 @@ public interface IFormationKonfiguration {
 	 * @return die im Turnier eingestellte Meldeliste-Formation
 	 */
 	Formation getMeldeListeFormation();
+
+	/**
+	 * @return {@code true} wenn die Meldeliste eine freie Teamname-Spalte führt
+	 */
+	boolean isMeldeListeTeamnameAnzeigen();
+
+	/**
+	 * @return {@code true} wenn die Meldeliste je Spieler eine Vereinsname-Spalte führt
+	 */
+	boolean isMeldeListeVereinsnameAnzeigen();
 }
