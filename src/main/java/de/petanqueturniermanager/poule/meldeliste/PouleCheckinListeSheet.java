@@ -100,4 +100,10 @@ public class PouleCheckinListeSheet extends AbstractTeilnehmerNamenCheckinListeS
 	public final TurnierSheet getTurnierSheet() throws GenerateException {
 		return TurnierSheet.from(getXSpreadSheet(), getWorkingSpreadsheet());
 	}
+
+	@Override
+	protected String getMeleeAnmeldungSchluessel() {
+		return SheetMetadataHelper.SCHLUESSEL_POULE_MELEE_ANMELDUNG;
+	}
+
 }

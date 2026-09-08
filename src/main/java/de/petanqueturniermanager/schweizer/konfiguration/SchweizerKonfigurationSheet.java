@@ -6,6 +6,7 @@ package de.petanqueturniermanager.schweizer.konfiguration;
 import de.petanqueturniermanager.basesheet.konfiguration.BaseKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.meldeliste.IFormationKonfiguration;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -21,7 +22,7 @@ import de.petanqueturniermanager.supermelee.SpielRundeNr;
  * @author Michael Massee
  */
 public class SchweizerKonfigurationSheet extends BaseKonfigurationSheet
-		implements ISchweizerPropertiesSpalte {
+		implements ISchweizerPropertiesSpalte, IFormationKonfiguration {
 
 	private final SchweizerPropertiesSpalte propertiesSpalte;
 

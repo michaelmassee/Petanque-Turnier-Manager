@@ -111,4 +111,10 @@ public class JGJCheckinListeSheet extends AbstractTeilnehmerNamenCheckinListeShe
 	public final TurnierSheet getTurnierSheet() throws GenerateException {
 		return TurnierSheet.from(getXSpreadSheet(), getWorkingSpreadsheet());
 	}
+
+	@Override
+	protected String getMeleeAnmeldungSchluessel() {
+		return SheetMetadataHelper.SCHLUESSEL_JGJ_MELEE_ANMELDUNG;
+	}
+
 }

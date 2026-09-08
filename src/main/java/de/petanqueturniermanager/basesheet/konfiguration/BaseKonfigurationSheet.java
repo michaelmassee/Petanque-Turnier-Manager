@@ -278,6 +278,16 @@ public abstract class BaseKonfigurationSheet extends SheetRunner implements IPro
 		return getPropertiesSpalte().getMeldelisteSortModus();
 	}
 
+	@Override
+	public final boolean isMeleeAnmeldungAktiv() {
+		return getPropertiesSpalte().isMeleeAnmeldungAktiv();
+	}
+
+	@Override
+	public final de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode getMeleeTeamModus() {
+		return getPropertiesSpalte().getMeleeTeamModus();
+	}
+
 	/**
 	 * @return the propertiesSpalte
 	 */

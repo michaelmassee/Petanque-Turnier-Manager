@@ -31,12 +31,17 @@ public class AuswahlConfigElement implements ConfigElement, XItemListener {
 
 	public AuswahlConfigElement(GuiFactoryCreateParam guiFactoryCreateParam,
 			AuswahlConfigProperty configProperty, WorkingSpreadsheet workingSpreadsheet) {
+		this(guiFactoryCreateParam, configProperty, workingSpreadsheet, false);
+	}
+
+	public AuswahlConfigElement(GuiFactoryCreateParam guiFactoryCreateParam,
+			AuswahlConfigProperty configProperty, WorkingSpreadsheet workingSpreadsheet, boolean readOnly) {
 		this.configProperty = checkNotNull(configProperty);
 		this.workingSpreadsheet = checkNotNull(workingSpreadsheet);
 		var labelText = configProperty.getDescription() != null ? configProperty.getDescription() : configProperty.getKey();
 		labelPlusCombobox = LabelPlusCombobox.from(guiFactoryCreateParam).labelText(labelText)
 				.helpText(labelText).addAuswahlItems(configProperty.getAuswahl())
-				.addListener(this).select(getComboboxItemValue());
+				.addListener(this).select(getComboboxItemValue()).enabled(!readOnly);
 	}
 
 	@Override

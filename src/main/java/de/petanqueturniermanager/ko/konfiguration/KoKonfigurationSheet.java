@@ -7,6 +7,7 @@ import de.petanqueturniermanager.basesheet.konfiguration.BaseKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.konfiguration.IPropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.meldeliste.IFormationKonfiguration;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -18,7 +19,8 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 /**
  * Konfigurationssheet für das K.-O.-Turniersystem.
  */
-public class KoKonfigurationSheet extends BaseKonfigurationSheet implements IKoBracketKonfiguration {
+public class KoKonfigurationSheet extends BaseKonfigurationSheet
+		implements IKoBracketKonfiguration, IFormationKonfiguration {
 
 	private final KoPropertiesSpalte propertiesSpalte;
 

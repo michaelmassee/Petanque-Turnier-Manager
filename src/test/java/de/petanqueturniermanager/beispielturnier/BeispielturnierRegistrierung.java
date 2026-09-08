@@ -21,10 +21,12 @@ import de.petanqueturniermanager.liga.spielplan.LigaTurnierTestDaten;
 import de.petanqueturniermanager.maastrichter.Maastrichter35TeamsTurnierTestDaten;
 import de.petanqueturniermanager.maastrichter.Maastrichter57TeamsTurnierTestDaten;
 import de.petanqueturniermanager.maastrichter.MaastrichterTurnierTestDaten;
+import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterMeleeAnmeldungTurnierTestDaten;
 import de.petanqueturniermanager.poule.Poule37TeamsTurnierTestDaten;
 import de.petanqueturniermanager.poule.PouleTurnierTestDaten;
 import de.petanqueturniermanager.poule.meldeliste.PouleMeldeListeSheetTestDaten;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetTestDaten;
+import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeleeAnmeldungTurnierTestDaten;
 import de.petanqueturniermanager.schweizer.spielrunde.Schweizer19TeamsTurnierTestDaten;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerTurnierTestDaten;
 import de.petanqueturniermanager.kaskade.KaskadeTurnierTestDaten;
@@ -205,6 +207,22 @@ public final class BeispielturnierRegistrierung {
                                 SheetMetadataHelper.schluesselSchweizerSpielrunde(3),
                                 SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_RANGLISTE),
                         "Schweizer19TeamsTurnierTestDaten.java"),
+
+                new Eintrag(
+                        "Schweizer System – Melee-Anmeldung (7 Anmeldungen, Doublette)",
+                        ws -> new SchweizerMeleeAnmeldungTurnierTestDaten(ws).doRun(),
+                        List.of(
+                                SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_MELDELISTE,
+                                SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_MELEE_ANMELDUNG),
+                        "SchweizerMeleeAnmeldungTurnierTestDaten.java"),
+
+                new Eintrag(
+                        "Maastrichter – Melee-Anmeldung (7 Anmeldungen, Doublette)",
+                        ws -> new MaastrichterMeleeAnmeldungTurnierTestDaten(ws).doRun(),
+                        List.of(
+                                SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_MELDELISTE,
+                                SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_MELEE_ANMELDUNG),
+                        "MaastrichterMeleeAnmeldungTurnierTestDaten.java"),
 
                 new Eintrag(
                         "K.-O. – nur Meldeliste (8 Teams)",

@@ -100,4 +100,10 @@ public class SchweizerCheckinListeSheet extends AbstractTeilnehmerNamenCheckinLi
 	public final TurnierSheet getTurnierSheet() throws GenerateException {
 		return TurnierSheet.from(getXSpreadSheet(), getWorkingSpreadsheet());
 	}
+
+	@Override
+	protected String getMeleeAnmeldungSchluessel() {
+		return SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_MELEE_ANMELDUNG;
+	}
+
 }

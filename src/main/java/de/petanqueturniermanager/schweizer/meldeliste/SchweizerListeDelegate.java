@@ -363,7 +363,6 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 			sheet.getSheetHelper().setPropertiesInRange(sheet.getXSpreadSheet(), teamnameRange,
 					CellProperties.from().setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder()).setShrinkToFit(true));
 		}
-
 		// Spieler-Spalten (Vorname + Nachname [+ Vereinsname])
 		for (int s = 0; s < anzSpieler; s++) {
 			int ersteSpielSpalte = getVornameSpalte(s);
@@ -384,7 +383,7 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 
 		meldeListeHelper.bereinigeUngueltigeSetzpositionWerte(getSetzPositionSpalte(), getZeilenKennungSpalte(),
 				ERSTE_DATEN_ZEILE, letzteDatenZeile);
-		meldeListeHelper.formatiereSetzpositionSpalteFehlerfarbe(sheet, spRange);
+		MeldeListeHelper.formatiereSetzpositionSpalteFehlerfarbe(sheet, spRange);
 
 		// Aktiv-Spalte
 		RangePosition aktivRange = RangePosition.from(getAktivSpalte(), ERSTE_DATEN_ZEILE,
@@ -400,9 +399,26 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 		int aktivSpalte = getAktivSpalte();
 		RangePosition editierbareRange = RangePosition.from(1, ERSTE_DATEN_ZEILE, aktivSpalte, letzteDatenZeile);
 		EditierbaresZelleFormatHelper.anwenden(sheet, editierbareRange);
+		formatiereDoppelteSpielerNamen(anzSpieler, letzteDatenZeile);
 
 		MeldeListeKonstanten.markiereDoppelteTeamnamenBeiNurTeamname(sheet, konfigurationSheet.isMeldeListeTeamnameAnzeigen(),
 				formation.getAnzSpieler() == 0, letzteDatenZeile);
+	}
+
+	private void formatiereDoppelteSpielerNamen(int anzSpieler, int letzteDatenZeile) throws GenerateException {
+		if (anzSpieler == 0) {
+			return;
+		}
+		int[] vornamen = new int[anzSpieler];
+		int[] nachnamen = new int[anzSpieler];
+		for (int s = 0; s < anzSpieler; s++) {
+			vornamen[s] = getVornameSpalte(s);
+			nachnamen[s] = getNachnameSpalte(s);
+		}
+		meldeListeHelper.insertFormulaFuerDoppelteSpielerNamenGeradeUngradeFarbe(vornamen, nachnamen,
+				ERSTE_DATEN_ZEILE, letzteDatenZeile, sheet,
+				konfigurationSheet.getMeldeListeHintergrundFarbeGeradeStyle(),
+				konfigurationSheet.getMeldeListeHintergrundFarbeUnGeradeStyle());
 	}
 
 	void formatZeilenfarben() throws GenerateException {

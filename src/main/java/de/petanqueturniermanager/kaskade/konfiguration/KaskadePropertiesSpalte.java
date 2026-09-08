@@ -44,6 +44,7 @@ public class KaskadePropertiesSpalte extends BasePropertiesSpalte {
         ADDBaseProp(KONFIG_PROPERTIES);
         addCheckinSortProp(KONFIG_PROPERTIES);
         addTeilnehmerListeSortProp(KONFIG_PROPERTIES);
+        addMeleeAnmeldungProp(KONFIG_PROPERTIES);
     }
 
     static {

@@ -104,6 +104,17 @@ public abstract class BaseField<T> {
 		return (T) this;
 	}
 
+	/**
+	 * Schaltet das Control bedienbar bzw. ausgegraut. Anders als {@link #readOnly(boolean)} wird
+	 * ausschließlich {@code Enabled} gesetzt – für Control-Modelle ohne {@code ReadOnly}-Property
+	 * (z.B. {@code UnoControlListBoxModel}).
+	 */
+	@SuppressWarnings("unchecked")
+	public T enabled(boolean enabled) {
+		setProperty(GuiFactory.ENABLED, enabled);
+		return (T) this;
+	}
+
 	@SuppressWarnings("unchecked")
 	public T helpText(XMultiPropertySet xMultiPropertySet, String text) {
 		if (ObjectUtils.allNotNull(xMultiPropertySet, text)) {

@@ -100,4 +100,10 @@ public class FormuleXCheckinListeSheet extends AbstractTeilnehmerNamenCheckinLis
 	public final TurnierSheet getTurnierSheet() throws GenerateException {
 		return TurnierSheet.from(getXSpreadSheet(), getWorkingSpreadsheet());
 	}
+
+	@Override
+	protected String getMeleeAnmeldungSchluessel() {
+		return SheetMetadataHelper.SCHLUESSEL_FORMULEX_MELEE_ANMELDUNG;
+	}
+
 }

@@ -332,7 +332,6 @@ class KoListeDelegate implements MeldeListeKonstanten {
 								.setShrinkToFit(true));
 			}
 		}
-
 		// RNG-Spalte (Rangliste): über Zeile 1+2 gemergt
 		ColumnProperties colPropRng = ColumnProperties.from().setWidth(RNG_SPALTE_WIDTH)
 				.setHoriJustify(CellHoriJustify.CENTER).setVertJustify(CellVertJustify2.CENTER)
@@ -379,6 +378,22 @@ class KoListeDelegate implements MeldeListeKonstanten {
 						.setVertJustify(CellVertJustify2.TOP)
 						.setShrinkToFit(true)
 						.setCharColor("00599d"));
+	}
+
+	private void formatiereDoppelteSpielerNamen(int anzSpieler, int letzteDatenZeile,
+			MeldungenHintergrundFarbeGeradeStyle farbeGerade,
+			MeldungenHintergrundFarbeUnGeradeStyle farbeUngerade) throws GenerateException {
+		if (anzSpieler == 0) {
+			return;
+		}
+		int[] vornamen = new int[anzSpieler];
+		int[] nachnamen = new int[anzSpieler];
+		for (int s = 0; s < anzSpieler; s++) {
+			vornamen[s] = getVornameSpalte(s);
+			nachnamen[s] = getNachnameSpalte(s);
+		}
+		meldeListeHelper.insertFormulaFuerDoppelteSpielerNamenGeradeUngradeFarbe(vornamen, nachnamen,
+				ERSTE_DATEN_ZEILE, letzteDatenZeile, sheet, farbeGerade, farbeUngerade);
 	}
 
 	int getLetzteDatenZeileUseMin() throws GenerateException {
@@ -477,6 +492,7 @@ class KoListeDelegate implements MeldeListeKonstanten {
 
 		int aktivSpalte = getAktivSpalte();
 		EditierbaresZelleFormatHelper.anwenden(sheet, RangePosition.from(1, ERSTE_DATEN_ZEILE, aktivSpalte, letzteDatenZeile));
+		formatiereDoppelteSpielerNamen(anzSpieler, letzteDatenZeile, farbeGerade, farbeUngerade);
 
 		MeldeListeKonstanten.markiereDoppelteTeamnamenBeiNurTeamname(sheet, konfigurationSheet.isMeldeListeTeamnameAnzeigen(),
 				anzSpieler == 0, letzteDatenZeile);

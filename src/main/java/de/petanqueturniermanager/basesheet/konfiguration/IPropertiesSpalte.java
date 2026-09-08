@@ -5,6 +5,7 @@ package de.petanqueturniermanager.basesheet.konfiguration;
 
 import de.petanqueturniermanager.basesheet.SheetTabFarben;
 import de.petanqueturniermanager.basesheet.meldeliste.TeilnehmerListeSortModus;
+import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGeradeStyle;
 
@@ -112,6 +113,24 @@ public interface IPropertiesSpalte {
 	 */
 	default TeilnehmerListeSortModus getMeldelisteSortModus() {
 		return TeilnehmerListeSortModus.NUMMER;
+	}
+
+	/**
+	 * Ob die Melee-Anmeldung (Vorab-Liste loser Einzelspieler) eingeschaltet ist. Default
+	 * {@code false}. Nur Turniersysteme mit konfigurierbarer Meldeliste-Formation registrieren die
+	 * zugehörige Property, siehe
+	 * {@code BasePropertiesSpalte#addMeleeAnmeldungProp(java.util.List)}.
+	 */
+	default boolean isMeleeAnmeldungAktiv() {
+		return false;
+	}
+
+	/**
+	 * Team-Mix-Modus für die Übernahme der Melee-Anmeldungen in die Meldeliste.
+	 * Default {@link SuperMeleeMode#Triplette} (Triplette bevorzugt, Rest mit Doubletten aufgefüllt).
+	 */
+	default SuperMeleeMode getMeleeTeamModus() {
+		return SuperMeleeMode.Triplette;
 	}
 
 }

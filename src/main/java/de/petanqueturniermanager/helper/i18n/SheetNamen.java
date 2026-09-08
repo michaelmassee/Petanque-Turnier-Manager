@@ -42,6 +42,7 @@ public final class SheetNamen {
     public static final String KEY_MAASTRICHTER_VR_RANGLISTE        = "sheet.name.maastrichter.vorrunden.rangliste";
     public static final String KEY_ANMELDUNGEN                      = "sheet.name.anmeldungen";
     public static final String KEY_CHECKIN_LISTE                    = "sheet.name.checkin.liste";
+    public static final String KEY_MELEE_ANMELDUNG                  = "sheet.name.melee.anmeldung";
     public static final String KEY_TEILNEHMER                       = "sheet.name.teilnehmer";
     public static final String KEY_SIEGERGELD                       = "sheet.name.siegergeld";
     public static final String KEY_PLANUNGSRECHNER                  = "sheet.name.planungsrechner";
@@ -114,6 +115,7 @@ public final class SheetNamen {
     public static final String LEGACY_MAASTRICHTER_VR_RANGLISTE     = "Vorrunden-Rangliste";
     public static final String LEGACY_ANMELDUNGEN                   = "Anmeldungen";
     public static final String LEGACY_CHECKIN_LISTE                 = "Checkin Liste";
+    public static final String LEGACY_MELEE_ANMELDUNG                = "Melee Anmeldung";
     public static final String LEGACY_TEILNEHMER                    = "Teilnehmer";
     public static final String LEGACY_SIEGERGELD                    = "Siegergeld";
     public static final String LEGACY_PLANUNGSRECHNER               = "Planungsrechner";
@@ -248,6 +250,16 @@ public final class SheetNamen {
 
     public static String teilnehmer() {
         return getOderFallback(KEY_TEILNEHMER, LEGACY_TEILNEHMER);
+    }
+
+    /**
+     * Melee-Anmeldung: Vorstufe zur Meldeliste, in der lose Einzelspieler erfasst werden,
+     * z.B. "Melee Anmeldung".
+     *
+     * @return lokalisierter Tabellenname
+     */
+    public static String meleeAnmeldung() {
+        return getOderFallback(KEY_MELEE_ANMELDUNG, LEGACY_MELEE_ANMELDUNG);
     }
 
     public static String maastrichterGruppenUebersicht() {

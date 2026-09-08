@@ -100,4 +100,10 @@ public class KaskadeCheckinListeSheet extends AbstractTeilnehmerNamenCheckinList
 	public final TurnierSheet getTurnierSheet() throws GenerateException {
 		return TurnierSheet.from(getXSpreadSheet(), getWorkingSpreadsheet());
 	}
+
+	@Override
+	protected String getMeleeAnmeldungSchluessel() {
+		return SheetMetadataHelper.SCHLUESSEL_KASKADE_MELEE_ANMELDUNG;
+	}
+
 }

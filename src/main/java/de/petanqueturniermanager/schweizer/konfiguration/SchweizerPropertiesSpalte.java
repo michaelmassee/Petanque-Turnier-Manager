@@ -32,6 +32,7 @@ public class SchweizerPropertiesSpalte extends BasePropertiesSpalte implements I
 		ADDBaseProp(KONFIG_PROPERTIES);
 		addCheckinSortProp(KONFIG_PROPERTIES);
 		addTeilnehmerListeSortProp(KONFIG_PROPERTIES);
+		addMeleeAnmeldungProp(KONFIG_PROPERTIES);
 	}
 
 	public static final String KONFIG_PROP_FREISPIEL_PUNKTE_PLUS  = "Freispiel Punkte +";

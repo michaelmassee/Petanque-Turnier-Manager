@@ -80,6 +80,38 @@
 
 							<node oor:name="C6A4" oor:op="replace">
 								<prop oor:name="Title">
+									<value xml:lang="en">Melee Registration</value>
+									<value xml:lang="de">Melee Anmeldung</value>
+									<value xml:lang="es">Inscripci&#243;n mel&#233;</value>
+									<value xml:lang="fr">Inscription m&#234;l&#233;e</value>
+									<value xml:lang="nl">Melee-aanmelding</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:maastrichter_melee_anmeldung</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+							<node oor:name="C6A5" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Transfer Melee Registrations</value>
+									<value xml:lang="de">Melee Anmeldungen &#252;bernehmen</value>
+									<value xml:lang="es">Transferir inscripciones en mel&#233;</value>
+									<value xml:lang="fr">Transf&#233;rer les inscriptions en m&#234;l&#233;e</value>
+									<value xml:lang="nl">Melee-aanmeldingen overnemen</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:maastrichter_melee_uebernehmen</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+							<node oor:name="C6A6" oor:op="replace">
+								<prop oor:name="Title">
 									<value xml:lang="de">Meldeliste Aktualisieren</value>
 									<value xml:lang="en">Update Entry List</value>
 									<value xml:lang="es">Actualizar lista de inscripciones</value>
@@ -94,7 +126,7 @@
 								</prop>
 							</node>
 
-							<node oor:name="C6A5" oor:op="replace">
+							<node oor:name="C6A7" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Teilnehmerliste</value>
 									<value xml:lang="en">Participants List</value>
@@ -110,7 +142,7 @@
 								</prop>
 							</node>
 
-							<node oor:name="C6A6" oor:op="replace">
+							<node oor:name="C6A8" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Check-in List</value>
 									<value xml:lang="de">Checkin Liste</value>
@@ -126,13 +158,13 @@
 								</prop>
 							</node>
 
-							<node oor:name="C6A7" oor:op="replace">
+							<node oor:name="C6A9" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
 
-							<node oor:name="C6A8" oor:op="replace">
+							<node oor:name="C6A10" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Neue Spielrunde</value>
 									<value xml:lang="en">New Round</value>
@@ -148,7 +180,7 @@
 								</prop>
 							</node>
 
-							<node oor:name="C6A9" oor:op="replace">
+							<node oor:name="C6A11" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Spielrunde neu auslosen</value>
 									<value xml:lang="en">Re-draw Round</value>
@@ -164,13 +196,13 @@
 								</prop>
 							</node>
 
-							<node oor:name="C6A10" oor:op="replace">
+							<node oor:name="C6A12" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
 
-							<node oor:name="C6A11" oor:op="replace">
+							<node oor:name="C6A13" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Spielrunden-Rangliste</value>
 									<value xml:lang="en">Round Ranking</value>
@@ -186,13 +218,13 @@
 								</prop>
 							</node>
 
-							<node oor:name="C6A12" oor:op="replace">
+							<node oor:name="C6A14" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
 
-							<node oor:name="C6A13" oor:op="replace">
+							<node oor:name="C6A15" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Finalrunden erstellen</value>
 									<value xml:lang="en">Create Final Rounds</value>
@@ -208,7 +240,7 @@
 								</prop>
 							</node>
 
-							<node oor:name="C6A14" oor:op="replace">
+							<node oor:name="C6A16" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Gruppen-Übersicht</value>
 									<value xml:lang="en">Group Overview</value>

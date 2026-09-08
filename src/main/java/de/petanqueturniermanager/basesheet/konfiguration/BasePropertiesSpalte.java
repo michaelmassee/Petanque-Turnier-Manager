@@ -29,6 +29,7 @@ import de.petanqueturniermanager.konfigdialog.HeaderFooterConfigProperty;
 import de.petanqueturniermanager.konfigdialog.SpielrundeFooterConfigProperty;
 import de.petanqueturniermanager.konfigdialog.SheetAuswahlConfigProperty;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
 
 /**
  * @author Michael Massee
@@ -72,6 +73,9 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	public static final String KONFIG_PROP_TEILNEHMER_LISTE_SORT_MODUS = "Teilnehmerliste Sortierung";
 
 	public static final String KONFIG_PROP_MELDELISTE_SORT_MODUS = "Meldeliste Sortierung";
+
+	public static final String KONFIG_PROP_MELEE_ANMELDUNG = "Melee Anmeldung";
+	public static final String KONFIG_PROP_MELEE_TEAM_MODUS = "Melee Team Modus";
 
 	// Export
 	public static final String KONFIG_PROP_MELDELISTE_EXPORTIEREN = "Meldeliste exportieren";
@@ -193,6 +197,35 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 				.addAuswahl(TeilnehmerListeSortModus.NUMMER.getKey(), I18n.get("config.teilnehmer.sort.nummer"))
 				.addAuswahl(TeilnehmerListeSortModus.NAME.getKey(), I18n.get("config.teilnehmer.sort.name"))
 				.addAuswahl(TeilnehmerListeSortModus.TEAMNAME.getKey(), I18n.get("config.teilnehmer.sort.teamname")));
+	}
+
+	/**
+	 * Fügt die beiden Properties der Melee-Anmeldung hinzu: den Ein/Aus-Schalter
+	 * ({@link #KONFIG_PROP_MELEE_ANMELDUNG}) und den Team-Mix-Modus
+	 * ({@link #KONFIG_PROP_MELEE_TEAM_MODUS}).
+	 * <p>
+	 * Beide Properties sind im Options-Dialog immer <b>sichtbar</b>, werden aber
+	 * <b>ausgegraut</b> dargestellt, wenn die im Turnier eingestellte Formation keine
+	 * Melee-Anmeldung zulässt (siehe {@link MeleeAnmeldungKonfiguration#istMoeglich(
+	 * de.petanqueturniermanager.comp.WorkingSpreadsheet)}).
+	 * <p>
+	 * Aufzurufen von jedem Turniersystem mit konfigurierbarer Meldeliste-Formation
+	 * (Schweizer, JGJ, KO, Kaskade, Poule, Formule&nbsp;X).
+	 *
+	 * @param KONFIG_PROPERTIES Property-Liste des jeweiligen Systems
+	 */
+	protected static void addMeleeAnmeldungProp(List<ConfigProperty<?>> KONFIG_PROPERTIES) {
+		KONFIG_PROPERTIES.add(ConfigProperty.<Boolean>from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_MELEE_ANMELDUNG)
+				.setDefaultVal(false)
+				.setDescription("config.desc.melee.anmeldung")
+				.aktivWenn(MeleeAnmeldungKonfiguration::istMoeglich));
+
+		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_MELEE_TEAM_MODUS)
+				.setDefaultVal(SuperMeleeMode.Triplette.name())
+				.setDescription("config.desc.melee.team.modus")
+				.aktivWenn(MeleeAnmeldungKonfiguration::istMoeglich))
+				.addAuswahl(SuperMeleeMode.Triplette.name(), I18n.get("config.melee.team.modus.triplette"))
+				.addAuswahl(SuperMeleeMode.Doublette.name(), I18n.get("config.melee.team.modus.doublette")));
 	}
 
 	/**
@@ -509,6 +542,16 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	public TeilnehmerListeSortModus getMeldelisteSortModus() {
 		return readEnumProperty(KONFIG_PROP_MELDELISTE_SORT_MODUS, TeilnehmerListeSortModus.class,
 				TeilnehmerListeSortModus.NUMMER);
+	}
+
+	@Override
+	public boolean isMeleeAnmeldungAktiv() {
+		return Boolean.TRUE.equals(readBooleanProperty(KONFIG_PROP_MELEE_ANMELDUNG));
+	}
+
+	@Override
+	public SuperMeleeMode getMeleeTeamModus() {
+		return readEnumProperty(KONFIG_PROP_MELEE_TEAM_MODUS, SuperMeleeMode.class, SuperMeleeMode.Triplette);
 	}
 
 	@Override
