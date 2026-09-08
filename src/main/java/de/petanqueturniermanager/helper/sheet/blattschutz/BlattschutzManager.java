@@ -9,6 +9,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.util.CellProtection;
 import com.sun.star.util.XProtectable;
 
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
@@ -59,6 +61,21 @@ public class BlattschutzManager {
 
     private static final Logger logger = LogManager.getLogger(BlattschutzManager.class);
     private static final BlattschutzManager INSTANCE = new BlattschutzManager();
+
+    /**
+     * Schlüssel aller Mêlée-Anmeldung-Sheets – identisches Spaltenlayout
+     * ({@link MeleeAnmeldungKonstanten}) in allen sieben Systemen, die die
+     * Mêlée-Anmeldung anbieten. Zentral statt pro System dupliziert, siehe
+     * {@link #sammleMeleeAnmeldungSchutzInfos}.
+     */
+    private static final List<String> MELEE_ANMELDUNG_SCHLUESSEL = List.of(
+            SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_MELEE_ANMELDUNG,
+            SheetMetadataHelper.SCHLUESSEL_JGJ_MELEE_ANMELDUNG,
+            SheetMetadataHelper.SCHLUESSEL_KO_MELEE_ANMELDUNG,
+            SheetMetadataHelper.SCHLUESSEL_KASKADE_MELEE_ANMELDUNG,
+            SheetMetadataHelper.SCHLUESSEL_POULE_MELEE_ANMELDUNG,
+            SheetMetadataHelper.SCHLUESSEL_FORMULEX_MELEE_ANMELDUNG,
+            SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_MELEE_ANMELDUNG);
 
     /**
      * Thread-lokaler Scope-Zustand eines laufenden Kommandos. Ein Scope hält
@@ -315,7 +332,24 @@ public class BlattschutzManager {
         SheetMetadataHelper.findeSheet(xDoc, SheetMetadataHelper.SCHLUESSEL_PLANUNGSRECHNER)
                 .ifPresent(sheet -> alle.add(SheetSchutzInfo.mitEditierbarenBereichen(sheet,
                         PlanungsrechnerSheet.editierbareEingabeBereiche())));
+        sammleMeleeAnmeldungSchutzInfos(xDoc, alle);
         return alle;
+    }
+
+    /**
+     * Mêlée-Anmeldung-Sheets: editierbar sind Vorname/Nachname/SP/Eingecheckt
+     * (Spalte {@code SPALTE_VORNAME} bis {@code SPALTE_EINGECHECKT}); Nr wird vom System
+     * durchnummeriert ({@code AbstractMeleeAnmeldungSheet.nummernSchreiben}) und Übernommen
+     * beim Übernehmen-Kommando gesetzt – beide Spalten bleiben gesperrt.
+     */
+    private void sammleMeleeAnmeldungSchutzInfos(XSpreadsheetDocument xDoc, List<SheetSchutzInfo> infos) {
+        for (var schluessel : MELEE_ANMELDUNG_SCHLUESSEL) {
+            SheetMetadataHelper.findeSheet(xDoc, schluessel).ifPresent(sheet -> infos.add(
+                    SheetSchutzInfo.mitEditierbarenBereichen(sheet, List.of(RangePosition.from(
+                            MeleeAnmeldungKonstanten.SPALTE_VORNAME, MeleeAnmeldungKonstanten.ERSTE_DATEN_ZEILE,
+                            MeleeAnmeldungKonstanten.SPALTE_EINGECHECKT,
+                            MeleeAnmeldungKonstanten.MAX_ANZ_ANMELDUNGEN)))));
+        }
     }
 
     private void schuetzeSheet(XSpreadsheet sheet) {
