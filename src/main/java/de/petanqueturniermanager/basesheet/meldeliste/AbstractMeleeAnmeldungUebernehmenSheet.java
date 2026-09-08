@@ -113,6 +113,11 @@ public abstract class AbstractMeleeAnmeldungUebernehmenSheet extends SheetRunner
 		schreibeTeamsInMeldeliste(teams);
 		meldelisteAktualisieren();
 		markiereAlsUebernommen(alleZeilen, tatsaechlichUebernommene);
+
+		int anzahlOffenGeblieben = offeneEingecheckte.size() - tatsaechlichUebernommene.size();
+		if (anzahlOffenGeblieben > 0) {
+			zeigeHinweisMitParameter("msg.text.melee.spieler.offen.geblieben", anzahlOffenGeblieben);
+		}
 	}
 
 	private static List<MeleeSpieler> alsMeleeSpieler(List<MeleeAnmeldungZeile> zeilen) {
@@ -199,6 +204,13 @@ public abstract class AbstractMeleeAnmeldungUebernehmenSheet extends SheetRunner
 		MessageBox.from(getxContext(), MessageBoxTypeEnum.INFO_OK)
 				.caption(I18n.get("msg.caption.melee.uebernehmen"))
 				.message(I18n.get(i18nKey))
+				.show();
+	}
+
+	private void zeigeHinweisMitParameter(String i18nKey, Object... args) {
+		MessageBox.from(getxContext(), MessageBoxTypeEnum.INFO_OK)
+				.caption(I18n.get("msg.caption.melee.uebernehmen"))
+				.message(I18n.get(i18nKey, args))
 				.show();
 	}
 
