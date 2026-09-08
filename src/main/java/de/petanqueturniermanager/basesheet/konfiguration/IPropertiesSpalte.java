@@ -116,7 +116,7 @@ public interface IPropertiesSpalte {
 	}
 
 	/**
-	 * Ob die Melee-Anmeldung (Vorab-Liste loser Einzelspieler) eingeschaltet ist. Default
+	 * Ob die Mêlée-Anmeldung (Vorab-Liste loser Einzelspieler) eingeschaltet ist. Default
 	 * {@code false}. Nur Turniersysteme mit konfigurierbarer Meldeliste-Formation registrieren die
 	 * zugehörige Property, siehe
 	 * {@code BasePropertiesSpalte#addMeleeAnmeldungProp(java.util.List)}.
@@ -126,7 +126,7 @@ public interface IPropertiesSpalte {
 	}
 
 	/**
-	 * Team-Mix-Modus für die Übernahme der Melee-Anmeldungen in die Meldeliste.
+	 * Team-Mix-Modus für die Übernahme der Mêlée-Anmeldungen in die Meldeliste.
 	 * Default {@link SuperMeleeMode#Triplette} (Triplette bevorzugt, Rest mit Doubletten aufgefüllt).
 	 */
 	default SuperMeleeMode getMeleeTeamModus() {

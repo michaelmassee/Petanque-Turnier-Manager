@@ -356,7 +356,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_POULE_CHECKIN        = "poule_checkin";
 	public static final String CMD_MAASTRICHTER_CHECKIN = "maastrichter_checkin";
 
-	// Melee-Anmeldung: Vorstufe zur Meldeliste (lose Einzelspieler) je System mit
+	// Mêlée-Anmeldung: Vorstufe zur Meldeliste (lose Einzelspieler) je System mit
 	// waehlbarer Formation - Sheet oeffnen/erstellen und Uebernahme in die Meldeliste.
 	public static final String CMD_SCHWEIZER_MELEE_ANMELDUNG   = "schweizer_melee_anmeldung";
 	public static final String CMD_SCHWEIZER_MELEE_UEBERNEHMEN = "schweizer_melee_uebernehmen";
@@ -2320,7 +2320,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_SCHWEIZER_RANGLISTE_SORTIEREN -> ts == TurnierSystem.SCHWEIZER;
 			case CMD_SCHWEIZER_AKTUELLE_SPIELRUNDE          -> ts == TurnierSystem.SCHWEIZER && hatSchweizerSpielrunde(ws);
 
-			// Melee-Anmeldung: nur bei aktiv geschalteter Option (Formation Doublette/Triplette).
+			// Mêlée-Anmeldung: nur bei aktiv geschalteter Option (Formation Doublette/Triplette).
 			// "Uebernehmen" zusaetzlich nur, wenn es offene, eingecheckte Anmeldungen gibt.
 			case CMD_SCHWEIZER_MELEE_ANMELDUNG   -> ts == TurnierSystem.SCHWEIZER && meleeAnmeldungAktiv(ws);
 			case CMD_SCHWEIZER_MELEE_UEBERNEHMEN -> ts == TurnierSystem.SCHWEIZER && meleeAnmeldungAktiv(ws)
@@ -2470,7 +2470,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	}
 
 	/**
-	 * Ob die Melee-Anmeldung im gemeinten Dokument nutzbar ist: Formation Doublette/Triplette
+	 * Ob die Mêlée-Anmeldung im gemeinten Dokument nutzbar ist: Formation Doublette/Triplette
 	 * <b>und</b> die Option eingeschaltet. Bewusst dokument-basiert (nicht fokus-basiert), damit
 	 * bei mehreren offenen Turnier-Dokumenten der Menuestatus nicht "leckt".
 	 */
@@ -2478,13 +2478,13 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		try {
 			return MeleeAnmeldungKonfiguration.istAktiv(ws);
 		} catch (Exception e) {
-			logger.debug("Melee-Anmeldung-Status konnte nicht ermittelt werden: {}", e.getMessage());
+			logger.debug("Mêlée-Anmeldung-Status konnte nicht ermittelt werden: {}", e.getMessage());
 			return false;
 		}
 	}
 
 	/**
-	 * Ob es im Melee-Anmeldung-Sheet mindestens zwei noch nicht uebernommene, eingecheckte
+	 * Ob es im Mêlée-Anmeldung-Sheet mindestens zwei noch nicht uebernommene, eingecheckte
 	 * Anmeldungen gibt - erst dann laesst sich ueberhaupt ein Team bilden.
 	 */
 	private static boolean hatOffeneMeleeAnmeldungen(WorkingSpreadsheet ws, String metadatenSchluessel) {
@@ -2493,7 +2493,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 					.filter(zeile -> zeile.istOffen() && zeile.eingecheckt())
 					.limit(2).count() == 2;
 		} catch (Exception e) {
-			logger.debug("Offene Melee-Anmeldungen konnten nicht ermittelt werden: {}", e.getMessage());
+			logger.debug("Offene Mêlée-Anmeldungen konnten nicht ermittelt werden: {}", e.getMessage());
 			return false;
 		}
 	}

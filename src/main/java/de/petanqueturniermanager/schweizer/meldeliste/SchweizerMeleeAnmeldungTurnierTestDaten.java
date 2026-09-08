@@ -22,8 +22,8 @@ import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationS
 /**
  * Schweizer-Beispiel für die Anmeldung einzelner Spieler vor der Teambildung.
  * <p>
- * Es erstellt eine leere Doublette-Meldeliste und sieben eingecheckte Melee-Anmeldungen.
- * Beim Menüpunkt „Melee-Anmeldungen übernehmen" werden drei Doublettes angelegt; die siebte
+ * Es erstellt eine leere Doublette-Meldeliste und sieben eingecheckte Mêlée-Anmeldungen.
+ * Beim Menüpunkt „Mêlée-Anmeldungen übernehmen" werden drei Doublettes angelegt; die siebte
  * Anmeldung bleibt bewusst offen, bis ein weiterer Spieler eingecheckt wird.
  */
 public class SchweizerMeleeAnmeldungTurnierTestDaten extends SheetRunner implements MeleeAnmeldungKonstanten {
@@ -31,7 +31,7 @@ public class SchweizerMeleeAnmeldungTurnierTestDaten extends SheetRunner impleme
 	private static final int ANZ_ANMELDUNGEN = 7;
 
 	public SchweizerMeleeAnmeldungTurnierTestDaten(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet, TurnierSystem.SCHWEIZER, "Schweizer-Melee-Beispiel");
+		super(workingSpreadsheet, TurnierSystem.SCHWEIZER, "Schweizer-Mêlée-Beispiel");
 	}
 
 	@Override

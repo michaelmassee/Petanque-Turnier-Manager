@@ -22,7 +22,7 @@ import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 
-/** Regression: derselbe Melee-Spieler darf nicht ein zweites Mal übernommen werden. */
+/** Regression: derselbe Mêlée-Spieler darf nicht ein zweites Mal übernommen werden. */
 class SchweizerMeleeAnmeldungUebernehmenUITest extends BaseCalcUITest implements MeleeAnmeldungKonstanten {
 
 	private SchweizerMeldeListeSheetNew meldeliste;

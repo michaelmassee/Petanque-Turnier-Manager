@@ -187,11 +187,11 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 
 	/**
 	 * Stellt die anzuzeigenden Einträge zusammen: die Meldungen der Meldeliste und – bei aktiver
-	 * Melee-Anmeldung – zusätzlich die noch nicht übernommenen Melee-Einzelspieler.
+	 * Mêlée-Anmeldung – zusätzlich die noch nicht übernommenen Mêlée-Einzelspieler.
 	 * <p>
 	 * Nach einer Übernahme entsteht dadurch keine Lücke: die bereits gebildeten Teams stehen als
 	 * reguläre Meldungen in der Meldeliste, die verbliebenen Einzelspieler kommen weiterhin aus der
-	 * Melee-Anmeldung.
+	 * Mêlée-Anmeldung.
 	 */
 	protected List<CheckinEintrag> ladeEintraege() throws GenerateException {
 		List<Integer> nummern = ladeNummern();
@@ -213,8 +213,8 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 	}
 
 	/**
-	 * Die noch nicht übernommenen Melee-Anmeldungen als Checkin-Einträge – leer, wenn das System
-	 * keine Melee-Anmeldung kennt oder sie im Turnier nicht eingeschaltet ist.
+	 * Die noch nicht übernommenen Mêlée-Anmeldungen als Checkin-Einträge – leer, wenn das System
+	 * keine Mêlée-Anmeldung kennt oder sie im Turnier nicht eingeschaltet ist.
 	 */
 	private List<CheckinEintrag> offeneMeleeEintraege() {
 		String schluessel = getMeleeAnmeldungSchluessel();
@@ -230,7 +230,7 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 
 	/**
 	 * Sortiert die Einträge in-memory über den {@link TeilnehmerListeSortModus#comparator()}.
-	 * Sortiert wird über einen Index-Schlüssel, weil Melde-/Team-Nummern und Melee-Nummern zwei
+	 * Sortiert wird über einen Index-Schlüssel, weil Melde-/Team-Nummern und Mêlée-Nummern zwei
 	 * unabhängige Zählungen sind und sich daher überschneiden dürfen.
 	 */
 	private static List<CheckinEintrag> sortiereEintraege(List<CheckinEintrag> eintraege,
@@ -246,7 +246,7 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 
 	/**
 	 * Ein Eintrag der Checkin-Liste – entweder eine Meldung aus der Meldeliste oder eine noch
-	 * offene Melee-Anmeldung.
+	 * offene Mêlée-Anmeldung.
 	 *
 	 * @param nr          angezeigte Nummer
 	 * @param teamname    freier Teamname (leer, wenn nicht verfügbar)
@@ -461,9 +461,9 @@ public abstract class AbstractCheckinListeSheet extends SheetRunner implements I
 	protected abstract String getMetadatenSchluessel();
 
 	/**
-	 * Named-Range-Schlüssel des Melee-Anmeldung-Sheets dieses Turniersystems, oder {@code null}
-	 * wenn das System keine Melee-Anmeldung kennt (Default). Nur bei eingeschalteter
-	 * Melee-Anmeldung werden die offenen Einzelspieler zusätzlich in der Checkin-Liste gezeigt.
+	 * Named-Range-Schlüssel des Mêlée-Anmeldung-Sheets dieses Turniersystems, oder {@code null}
+	 * wenn das System keine Mêlée-Anmeldung kennt (Default). Nur bei eingeschalteter
+	 * Mêlée-Anmeldung werden die offenen Einzelspieler zusätzlich in der Checkin-Liste gezeigt.
 	 */
 	protected String getMeleeAnmeldungSchluessel() {
 		return null;

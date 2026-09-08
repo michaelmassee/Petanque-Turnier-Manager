@@ -13,7 +13,7 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
 
 /**
- * Übernimmt die eingecheckten Melee-Anmeldungen des Maastrichter-Systems als Teams in die
+ * Übernimmt die eingecheckten Mêlée-Anmeldungen des Maastrichter-Systems als Teams in die
  * Meldeliste.
  */
 public class MaastrichterMeleeAnmeldungUebernehmenSheet extends AbstractMeleeAnmeldungUebernehmenSheet {
@@ -22,7 +22,7 @@ public class MaastrichterMeleeAnmeldungUebernehmenSheet extends AbstractMeleeAnm
 	private final MaastrichterMeldeListeSheetUpdate meldeliste;
 
 	public MaastrichterMeleeAnmeldungUebernehmenSheet(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet, TurnierSystem.MAASTRICHTER, "Maastrichter-Melee-Uebernahme");
+		super(workingSpreadsheet, TurnierSystem.MAASTRICHTER, "Maastrichter-Mêlée-Uebernahme");
 		konfigurationSheet = new MaastrichterKonfigurationSheet(workingSpreadsheet);
 		meldeliste = new MaastrichterMeldeListeSheetUpdate(workingSpreadsheet);
 	}

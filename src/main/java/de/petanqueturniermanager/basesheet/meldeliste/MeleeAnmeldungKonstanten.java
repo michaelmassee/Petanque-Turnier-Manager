@@ -4,7 +4,7 @@
 package de.petanqueturniermanager.basesheet.meldeliste;
 
 /**
- * Gemeinsame Konstanten des Melee-Anmeldung-Sheets: einer schlichten Vorstufe zur Meldeliste, in
+ * Gemeinsame Konstanten des Mêlée-Anmeldung-Sheets: einer schlichten Vorstufe zur Meldeliste, in
  * der lose Einzelspieler erfasst werden, bevor sie per Menü-Kommando zu Teams gemischt und in die
  * eigentliche Meldeliste übernommen werden.
  * <p>

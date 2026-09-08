@@ -209,7 +209,7 @@ public final class BeispielturnierRegistrierung {
                         "Schweizer19TeamsTurnierTestDaten.java"),
 
                 new Eintrag(
-                        "Schweizer System – Melee-Anmeldung (7 Anmeldungen, Doublette)",
+                        "Schweizer System – Mêlée-Anmeldung (7 Anmeldungen, Doublette)",
                         ws -> new SchweizerMeleeAnmeldungTurnierTestDaten(ws).doRun(),
                         List.of(
                                 SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_MELDELISTE,
@@ -217,7 +217,7 @@ public final class BeispielturnierRegistrierung {
                         "SchweizerMeleeAnmeldungTurnierTestDaten.java"),
 
                 new Eintrag(
-                        "Maastrichter – Melee-Anmeldung (7 Anmeldungen, Doublette)",
+                        "Maastrichter – Mêlée-Anmeldung (7 Anmeldungen, Doublette)",
                         ws -> new MaastrichterMeleeAnmeldungTurnierTestDaten(ws).doRun(),
                         List.of(
                                 SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_MELDELISTE,

@@ -27,7 +27,7 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 
 /**
- * Regression für Melee-Übernahmen: erscheint ein Spieler in mehreren Teams,
+ * Regression für Mêlée-Übernahmen: erscheint ein Spieler in mehreren Teams,
  * muss seine Vor-/Nachname-Kombination durch die rote Fehlerformatierung auffallen.
  */
 class MaastrichterMeleeDoppelteNamenFehlerfarbeUITest extends BaseCalcUITest {

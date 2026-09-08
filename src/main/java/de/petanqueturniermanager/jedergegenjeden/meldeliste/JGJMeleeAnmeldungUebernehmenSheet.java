@@ -13,7 +13,7 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationSheet;
 
 /**
- * Übernimmt die eingecheckten Melee-Anmeldungen des JGJ-Systems als Teams in die Meldeliste.
+ * Übernimmt die eingecheckten Mêlée-Anmeldungen des JGJ-Systems als Teams in die Meldeliste.
  */
 public class JGJMeleeAnmeldungUebernehmenSheet extends AbstractMeleeAnmeldungUebernehmenSheet {
 
@@ -21,7 +21,7 @@ public class JGJMeleeAnmeldungUebernehmenSheet extends AbstractMeleeAnmeldungUeb
 	private final JGJMeldeListeSheet_Update meldeliste;
 
 	public JGJMeleeAnmeldungUebernehmenSheet(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet, TurnierSystem.JGJ, "JGJ-Melee-Uebernahme");
+		super(workingSpreadsheet, TurnierSystem.JGJ, "JGJ-Mêlée-Uebernahme");
 		konfigurationSheet = new JGJKonfigurationSheet(workingSpreadsheet);
 		meldeliste = new JGJMeldeListeSheet_Update(workingSpreadsheet);
 	}

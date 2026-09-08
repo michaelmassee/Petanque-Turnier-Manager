@@ -6,7 +6,7 @@ package de.petanqueturniermanager.basesheet.meldeliste;
 import org.apache.commons.lang3.StringUtils;
 
 /**
- * Eine Zeile des Melee-Anmeldung-Sheets.
+ * Eine Zeile des Mêlée-Anmeldung-Sheets.
  *
  * @param zeile         0-basierter Zeilenindex im Sheet (für das Zurückschreiben der Markierung)
  * @param nr            laufende Nummer der Anmeldung

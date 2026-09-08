@@ -37,11 +37,11 @@ import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 
 /**
- * Gemeinsame Basis der Melee-Anmeldung-Sheets aller Turniersysteme mit wählbarer
+ * Gemeinsame Basis der Mêlée-Anmeldung-Sheets aller Turniersysteme mit wählbarer
  * Meldeliste-Formation (Schweizer, JGJ, KO, Kaskade, Poule, Formule&nbsp;X).
  * <p>
  * Das Sheet ist eine schlichte Erfassungsliste loser Einzelspieler (Vorname, Nachname,
- * Setzposition, Eingecheckt-Markierung). Per Menü-Kommando „Melee-Anmeldung übernehmen" werden
+ * Setzposition, Eingecheckt-Markierung). Per Menü-Kommando „Mêlée-Anmeldung übernehmen" werden
  * daraus Teams gemischt und in die eigentliche Meldeliste geschrieben; die Zeilen bleiben erhalten
  * und werden als „Übernommen" markiert.
  * <p>
@@ -66,7 +66,7 @@ public abstract class AbstractMeleeAnmeldungSheet extends SheetRunner
 	}
 
 	/**
-	 * Erzeugt das Melee-Anmeldung-Sheet (falls noch nicht vorhanden) und baut Kopfzeile,
+	 * Erzeugt das Mêlée-Anmeldung-Sheet (falls noch nicht vorhanden) und baut Kopfzeile,
 	 * Spaltenformate, Fixierung und Druckbereich auf.
 	 */
 	public void generate() throws GenerateException {
@@ -180,7 +180,7 @@ public abstract class AbstractMeleeAnmeldungSheet extends SheetRunner
 	}
 
 	/**
-	 * @return {@code true} wenn die Melee-Anmeldung für dieses Dokument aktiv geschaltet ist
+	 * @return {@code true} wenn die Mêlée-Anmeldung für dieses Dokument aktiv geschaltet ist
 	 */
 	protected final boolean istMeleeAnmeldungAktiv() {
 		return MeleeAnmeldungKonfiguration.istAktiv(getKonfigurationSheet());

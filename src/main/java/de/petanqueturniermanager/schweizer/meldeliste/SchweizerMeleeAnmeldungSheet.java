@@ -11,7 +11,7 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 
 /**
- * Melee-Anmeldung des Schweizer-Systems: Vorstufe zur Meldeliste, in der lose Einzelspieler
+ * Mêlée-Anmeldung des Schweizer-Systems: Vorstufe zur Meldeliste, in der lose Einzelspieler
  * erfasst und vor Ort eingecheckt werden. Die Übernahme in die Meldeliste erfolgt über
  * {@link SchweizerMeleeAnmeldungUebernehmenSheet}.
  */
@@ -20,7 +20,7 @@ public class SchweizerMeleeAnmeldungSheet extends AbstractMeleeAnmeldungSheet {
 	private final SchweizerKonfigurationSheet konfigurationSheet;
 
 	public SchweizerMeleeAnmeldungSheet(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet, TurnierSystem.SCHWEIZER, "Schweizer-Melee-Anmeldung");
+		super(workingSpreadsheet, TurnierSystem.SCHWEIZER, "Schweizer-Mêlée-Anmeldung");
 		konfigurationSheet = new SchweizerKonfigurationSheet(workingSpreadsheet);
 	}
 

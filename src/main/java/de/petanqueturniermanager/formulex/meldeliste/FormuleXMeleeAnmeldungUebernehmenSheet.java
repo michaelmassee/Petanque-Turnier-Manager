@@ -13,7 +13,7 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.formulex.konfiguration.FormuleXKonfigurationSheet;
 
 /**
- * Übernimmt die eingecheckten Melee-Anmeldungen des FormuleX-Systems als Teams in die Meldeliste.
+ * Übernimmt die eingecheckten Mêlée-Anmeldungen des FormuleX-Systems als Teams in die Meldeliste.
  */
 public class FormuleXMeleeAnmeldungUebernehmenSheet extends AbstractMeleeAnmeldungUebernehmenSheet {
 
@@ -21,7 +21,7 @@ public class FormuleXMeleeAnmeldungUebernehmenSheet extends AbstractMeleeAnmeldu
 	private final FormuleXMeldeListeSheetUpdate meldeliste;
 
 	public FormuleXMeleeAnmeldungUebernehmenSheet(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet, TurnierSystem.FORMULEX, "FormuleX-Melee-Uebernahme");
+		super(workingSpreadsheet, TurnierSystem.FORMULEX, "FormuleX-Mêlée-Uebernahme");
 		konfigurationSheet = new FormuleXKonfigurationSheet(workingSpreadsheet);
 		meldeliste = new FormuleXMeldeListeSheetUpdate(workingSpreadsheet);
 	}

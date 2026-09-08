@@ -27,7 +27,7 @@ import de.petanqueturniermanager.poule.konfiguration.PouleKonfigurationSheet;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 
 /**
- * Zentrale Auskunft darüber, ob die Melee-Anmeldung (Vorab-Liste loser Einzelspieler, die per
+ * Zentrale Auskunft darüber, ob die Mêlée-Anmeldung (Vorab-Liste loser Einzelspieler, die per
  * Menü-Kommando zu Teams gemischt und in die Meldeliste übernommen werden) im aktuellen Dokument
  * <b>möglich</b> und <b>aktiviert</b> ist.
  * <p>
@@ -49,7 +49,7 @@ public final class MeleeAnmeldungKonfiguration {
 	/**
 	 * Fabriken je Turniersystem mit konfigurierbarer Meldeliste-Formation. Systeme ohne
 	 * konfigurierbare Formation (Liga, Supermelee, Trip-Tête) haben bewusst keinen Eintrag – für sie
-	 * gibt es keine Melee-Anmeldung. Maastrichter erweitert das Schweizer Konfigurations-Sheet
+	 * gibt es keine Mêlée-Anmeldung. Maastrichter erweitert das Schweizer Konfigurations-Sheet
 	 * (identische Formation-Optionen) und ist deshalb hier gleichwertig gelistet.
 	 */
 	private static final Map<TurnierSystem, Function<WorkingSpreadsheet, BaseKonfigurationSheet>> FABRIKEN =
@@ -62,7 +62,7 @@ public final class MeleeAnmeldungKonfiguration {
 					TurnierSystem.FORMULEX, FormuleXKonfigurationSheet::new,
 					TurnierSystem.MAASTRICHTER, MaastrichterKonfigurationSheet::new);
 
-	/** Named-Range-Schlüssel des Melee-Anmeldung-Sheets je Turniersystem. */
+	/** Named-Range-Schlüssel des Mêlée-Anmeldung-Sheets je Turniersystem. */
 	private static final Map<TurnierSystem, String> METADATEN_SCHLUESSEL = Map.of(
 			TurnierSystem.SCHWEIZER, SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_MELEE_ANMELDUNG,
 			TurnierSystem.JGJ, SheetMetadataHelper.SCHLUESSEL_JGJ_MELEE_ANMELDUNG,
@@ -76,10 +76,10 @@ public final class MeleeAnmeldungKonfiguration {
 	}
 
 	/**
-	 * Liefert die noch nicht übernommenen Melee-Anmeldungen des Dokuments.
+	 * Liefert die noch nicht übernommenen Mêlée-Anmeldungen des Dokuments.
 	 *
 	 * @param ws aktuelles Dokument
-	 * @return offene Anmeldungen, oder eine leere Liste wenn die Melee-Anmeldung nicht aktiv ist
+	 * @return offene Anmeldungen, oder eine leere Liste wenn die Mêlée-Anmeldung nicht aktiv ist
 	 */
 	public static List<MeleeAnmeldungZeile> offeneAnmeldungen(WorkingSpreadsheet ws) {
 		if (!istAktiv(ws)) {
@@ -109,14 +109,14 @@ public final class MeleeAnmeldungKonfiguration {
 			Function<WorkingSpreadsheet, BaseKonfigurationSheet> fabrik = FABRIKEN.get(turnierSystem);
 			return fabrik == null ? null : fabrik.apply(ws);
 		} catch (RuntimeException e) {
-			logger.warn("Konfiguration für die Melee-Anmeldung konnte nicht ermittelt werden", e);
+			logger.warn("Konfiguration für die Mêlée-Anmeldung konnte nicht ermittelt werden", e);
 			return null;
 		}
 	}
 
 	/**
 	 * @param ws aktuelles Dokument
-	 * @return {@code true} wenn die eingestellte Formation eine Melee-Anmeldung fachlich zulässt
+	 * @return {@code true} wenn die eingestellte Formation eine Mêlée-Anmeldung fachlich zulässt
 	 */
 	public static boolean istMoeglich(WorkingSpreadsheet ws) {
 		return istMoeglich(konfiguration(ws));
@@ -124,7 +124,7 @@ public final class MeleeAnmeldungKonfiguration {
 
 	/**
 	 * @param konfigurationSheet Konfigurations-Sheet, darf {@code null} sein
-	 * @return {@code true} wenn die eingestellte Formation eine Melee-Anmeldung fachlich zulässt
+	 * @return {@code true} wenn die eingestellte Formation eine Mêlée-Anmeldung fachlich zulässt
 	 */
 	public static boolean istMoeglich(BaseKonfigurationSheet konfigurationSheet) {
 		if (!(konfigurationSheet instanceof IFormationKonfiguration formationKonfiguration)) {
@@ -136,7 +136,7 @@ public final class MeleeAnmeldungKonfiguration {
 
 	/**
 	 * @param ws aktuelles Dokument
-	 * @return {@code true} wenn die Melee-Anmeldung möglich <b>und</b> in der Turnier-Konfiguration
+	 * @return {@code true} wenn die Mêlée-Anmeldung möglich <b>und</b> in der Turnier-Konfiguration
 	 *         eingeschaltet ist
 	 */
 	public static boolean istAktiv(WorkingSpreadsheet ws) {
@@ -145,7 +145,7 @@ public final class MeleeAnmeldungKonfiguration {
 
 	/**
 	 * @param konfigurationSheet Konfigurations-Sheet, darf {@code null} sein
-	 * @return {@code true} wenn die Melee-Anmeldung möglich <b>und</b> eingeschaltet ist
+	 * @return {@code true} wenn die Mêlée-Anmeldung möglich <b>und</b> eingeschaltet ist
 	 */
 	public static boolean istAktiv(BaseKonfigurationSheet konfigurationSheet) {
 		return istMoeglich(konfigurationSheet) && konfigurationSheet.isMeleeAnmeldungAktiv();

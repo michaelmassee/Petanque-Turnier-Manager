@@ -77,11 +77,11 @@
 
 							<node oor:name="C3A4" oor:op="replace">
 								<prop oor:name="Title">
-									<value xml:lang="en">Melee Registration</value>
-									<value xml:lang="de">Melee Anmeldung</value>
-									<value xml:lang="es">Inscripci&#243;n mel&#233;</value>
-									<value xml:lang="fr">Inscription m&#234;l&#233;e</value>
-									<value xml:lang="nl">Melee-aanmelding</value>
+									<value xml:lang="en">Mêlée Registration</value>
+									<value xml:lang="de">Mêlée Anmeldung</value>
+									<value xml:lang="es">Inscripción Mêlée</value>
+									<value xml:lang="fr">Inscription Mêlée</value>
+									<value xml:lang="nl">Mêlée-aanmelding</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:ko_melee_anmeldung</value>
@@ -93,11 +93,11 @@
 
 							<node oor:name="C3A5" oor:op="replace">
 								<prop oor:name="Title">
-									<value xml:lang="en">Transfer Melee Registrations</value>
-									<value xml:lang="de">Melee Anmeldungen &#252;bernehmen</value>
-									<value xml:lang="es">Transferir inscripciones en mel&#233;</value>
-									<value xml:lang="fr">Transf&#233;rer les inscriptions en m&#234;l&#233;e</value>
-									<value xml:lang="nl">Melee-aanmeldingen overnemen</value>
+									<value xml:lang="en">Transfer Mêlée Registrations</value>
+									<value xml:lang="de">Mêlée Anmeldungen übernehmen</value>
+									<value xml:lang="es">Transferir inscripciones Mêlée</value>
+									<value xml:lang="fr">Transférer les inscriptions Mêlée</value>
+									<value xml:lang="nl">Mêlée-aanmeldingen overnemen</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:ko_melee_uebernehmen</value>

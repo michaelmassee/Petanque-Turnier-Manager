@@ -11,7 +11,7 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.formulex.konfiguration.FormuleXKonfigurationSheet;
 
 /**
- * Melee-Anmeldung des FormuleX-Systems: Vorstufe zur Meldeliste, in der lose Einzelspieler
+ * Mêlée-Anmeldung des FormuleX-Systems: Vorstufe zur Meldeliste, in der lose Einzelspieler
  * erfasst und vor Ort eingecheckt werden. Die Übernahme in die Meldeliste erfolgt über
  * {@link FormuleXMeleeAnmeldungUebernehmenSheet}.
  */
@@ -20,7 +20,7 @@ public class FormuleXMeleeAnmeldungSheet extends AbstractMeleeAnmeldungSheet {
 	private final FormuleXKonfigurationSheet konfigurationSheet;
 
 	public FormuleXMeleeAnmeldungSheet(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet, TurnierSystem.FORMULEX, "FormuleX-Melee-Anmeldung");
+		super(workingSpreadsheet, TurnierSystem.FORMULEX, "FormuleX-Mêlée-Anmeldung");
 		konfigurationSheet = new FormuleXKonfigurationSheet(workingSpreadsheet);
 	}
 

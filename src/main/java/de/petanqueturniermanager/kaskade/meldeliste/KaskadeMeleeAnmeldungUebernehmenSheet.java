@@ -13,7 +13,7 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.kaskade.konfiguration.KaskadeKonfigurationSheet;
 
 /**
- * Übernimmt die eingecheckten Melee-Anmeldungen des Kaskade-Systems als Teams in die Meldeliste.
+ * Übernimmt die eingecheckten Mêlée-Anmeldungen des Kaskade-Systems als Teams in die Meldeliste.
  */
 public class KaskadeMeleeAnmeldungUebernehmenSheet extends AbstractMeleeAnmeldungUebernehmenSheet {
 
@@ -21,7 +21,7 @@ public class KaskadeMeleeAnmeldungUebernehmenSheet extends AbstractMeleeAnmeldun
 	private final KaskadeMeldeListeSheetUpdate meldeliste;
 
 	public KaskadeMeleeAnmeldungUebernehmenSheet(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet, TurnierSystem.KASKADE, "Kaskade-Melee-Uebernahme");
+		super(workingSpreadsheet, TurnierSystem.KASKADE, "Kaskade-Mêlée-Uebernahme");
 		konfigurationSheet = new KaskadeKonfigurationSheet(workingSpreadsheet);
 		meldeliste = new KaskadeMeldeListeSheetUpdate(workingSpreadsheet);
 	}

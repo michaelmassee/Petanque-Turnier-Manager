@@ -13,7 +13,7 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.poule.konfiguration.PouleKonfigurationSheet;
 
 /**
- * Übernimmt die eingecheckten Melee-Anmeldungen des Poule-Systems als Teams in die Meldeliste.
+ * Übernimmt die eingecheckten Mêlée-Anmeldungen des Poule-Systems als Teams in die Meldeliste.
  */
 public class PouleMeleeAnmeldungUebernehmenSheet extends AbstractMeleeAnmeldungUebernehmenSheet {
 
@@ -21,7 +21,7 @@ public class PouleMeleeAnmeldungUebernehmenSheet extends AbstractMeleeAnmeldungU
 	private final PouleMeldeListeSheetUpdate meldeliste;
 
 	public PouleMeleeAnmeldungUebernehmenSheet(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet, TurnierSystem.POULE, "Poule-Melee-Uebernahme");
+		super(workingSpreadsheet, TurnierSystem.POULE, "Poule-Mêlée-Uebernahme");
 		konfigurationSheet = new PouleKonfigurationSheet(workingSpreadsheet);
 		meldeliste = new PouleMeldeListeSheetUpdate(workingSpreadsheet);
 	}

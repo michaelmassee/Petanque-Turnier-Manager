@@ -11,7 +11,7 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
 
 /**
- * Melee-Anmeldung des Maastrichter-Systems: Vorstufe zur Meldeliste, in der lose Einzelspieler
+ * Mêlée-Anmeldung des Maastrichter-Systems: Vorstufe zur Meldeliste, in der lose Einzelspieler
  * erfasst und vor Ort eingecheckt werden. Die Übernahme in die Meldeliste erfolgt über
  * {@link MaastrichterMeleeAnmeldungUebernehmenSheet}.
  */
@@ -20,7 +20,7 @@ public class MaastrichterMeleeAnmeldungSheet extends AbstractMeleeAnmeldungSheet
 	private final MaastrichterKonfigurationSheet konfigurationSheet;
 
 	public MaastrichterMeleeAnmeldungSheet(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet, TurnierSystem.MAASTRICHTER, "Maastrichter-Melee-Anmeldung");
+		super(workingSpreadsheet, TurnierSystem.MAASTRICHTER, "Maastrichter-Mêlée-Anmeldung");
 		konfigurationSheet = new MaastrichterKonfigurationSheet(workingSpreadsheet);
 	}
 

@@ -11,7 +11,7 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.kaskade.konfiguration.KaskadeKonfigurationSheet;
 
 /**
- * Melee-Anmeldung des Kaskade-Systems: Vorstufe zur Meldeliste, in der lose Einzelspieler
+ * Mêlée-Anmeldung des Kaskade-Systems: Vorstufe zur Meldeliste, in der lose Einzelspieler
  * erfasst und vor Ort eingecheckt werden. Die Übernahme in die Meldeliste erfolgt über
  * {@link KaskadeMeleeAnmeldungUebernehmenSheet}.
  */
@@ -20,7 +20,7 @@ public class KaskadeMeleeAnmeldungSheet extends AbstractMeleeAnmeldungSheet {
 	private final KaskadeKonfigurationSheet konfigurationSheet;
 
 	public KaskadeMeleeAnmeldungSheet(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet, TurnierSystem.KASKADE, "Kaskade-Melee-Anmeldung");
+		super(workingSpreadsheet, TurnierSystem.KASKADE, "Kaskade-Mêlée-Anmeldung");
 		konfigurationSheet = new KaskadeKonfigurationSheet(workingSpreadsheet);
 	}
 

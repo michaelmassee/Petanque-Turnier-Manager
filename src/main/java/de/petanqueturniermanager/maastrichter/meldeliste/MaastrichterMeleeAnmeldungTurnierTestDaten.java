@@ -23,8 +23,8 @@ import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 /**
  * Maastrichter-Beispiel für die Anmeldung einzelner Spieler vor der Teambildung.
  * <p>
- * Es erstellt eine leere Doublette-Meldeliste und sieben eingecheckte Melee-Anmeldungen.
- * Beim Menüpunkt „Melee-Anmeldungen übernehmen" werden drei Doublettes angelegt; die siebte
+ * Es erstellt eine leere Doublette-Meldeliste und sieben eingecheckte Mêlée-Anmeldungen.
+ * Beim Menüpunkt „Mêlée-Anmeldungen übernehmen" werden drei Doublettes angelegt; die siebte
  * Anmeldung bleibt bewusst offen, bis ein weiterer Spieler eingecheckt wird.
  */
 public class MaastrichterMeleeAnmeldungTurnierTestDaten extends SheetRunner implements MeleeAnmeldungKonstanten {
@@ -32,7 +32,7 @@ public class MaastrichterMeleeAnmeldungTurnierTestDaten extends SheetRunner impl
 	private static final int ANZ_ANMELDUNGEN = 7;
 
 	public MaastrichterMeleeAnmeldungTurnierTestDaten(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet, TurnierSystem.MAASTRICHTER, "Maastrichter-Melee-Beispiel");
+		super(workingSpreadsheet, TurnierSystem.MAASTRICHTER, "Maastrichter-Mêlée-Beispiel");
 	}
 
 	@Override

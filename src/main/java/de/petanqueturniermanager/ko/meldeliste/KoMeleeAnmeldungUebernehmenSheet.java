@@ -13,7 +13,7 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.ko.konfiguration.KoKonfigurationSheet;
 
 /**
- * Übernimmt die eingecheckten Melee-Anmeldungen des Ko-Systems als Teams in die Meldeliste.
+ * Übernimmt die eingecheckten Mêlée-Anmeldungen des Ko-Systems als Teams in die Meldeliste.
  */
 public class KoMeleeAnmeldungUebernehmenSheet extends AbstractMeleeAnmeldungUebernehmenSheet {
 
@@ -21,7 +21,7 @@ public class KoMeleeAnmeldungUebernehmenSheet extends AbstractMeleeAnmeldungUebe
 	private final KoMeldeListeSheetUpdate meldeliste;
 
 	public KoMeleeAnmeldungUebernehmenSheet(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet, TurnierSystem.KO, "KO-Melee-Uebernahme");
+		super(workingSpreadsheet, TurnierSystem.KO, "KO-Mêlée-Uebernahme");
 		konfigurationSheet = new KoKonfigurationSheet(workingSpreadsheet);
 		meldeliste = new KoMeldeListeSheetUpdate(workingSpreadsheet);
 	}

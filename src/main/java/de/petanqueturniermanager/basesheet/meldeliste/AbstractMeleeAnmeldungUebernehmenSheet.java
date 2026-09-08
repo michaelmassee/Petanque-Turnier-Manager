@@ -31,17 +31,17 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 
 /**
- * Übernimmt die offenen, eingecheckten Melee-Anmeldungen als Teams in die Meldeliste.
+ * Übernimmt die offenen, eingecheckten Mêlée-Anmeldungen als Teams in die Meldeliste.
  * <p>
  * Ablauf:
  * <ol>
- * <li>Melee-Anmeldung-Sheet lesen, auf <b>offen</b> (noch nicht übernommen) und <b>eingecheckt</b>
+ * <li>Mêlée-Anmeldung-Sheet lesen, auf <b>offen</b> (noch nicht übernommen) und <b>eingecheckt</b>
  * filtern – nicht erschienene Spieler bleiben unangetastet stehen.</li>
  * <li>Teams über den {@link MeleeAnmeldungTeamBildner} mischen (Team-Modus aus der
  * Konfiguration, Setzpositionen werden beachtet).</li>
  * <li>Teams blockweise ans Ende der Meldeliste schreiben (Teamname, Spielernamen, Setzposition,
  * Aktiv-Kennzeichen) und die Meldeliste aktualisieren.</li>
- * <li>Die übernommenen Melee-Zeilen als „Übernommen" markieren – die Zeilen bleiben erhalten und
+ * <li>Die übernommenen Mêlée-Zeilen als „Übernommen" markieren – die Zeilen bleiben erhalten und
  * werden dadurch kein zweites Mal übernommen.</li>
  * </ol>
  * <p>
@@ -134,7 +134,7 @@ public abstract class AbstractMeleeAnmeldungUebernehmenSheet extends SheetRunner
 			testDoCancelTask();
 			RowData zeile = data.addNewRow();
 			if (teamnameAktiv) {
-				// Freier Teamname bleibt leer – bei einer Melee-Auslosung gibt es keinen
+				// Freier Teamname bleibt leer – bei einer Mêlée-Auslosung gibt es keinen
 				// gemeldeten Teamnamen; der Anwender kann ihn nachtragen.
 				zeile.newEmpty();
 			}
@@ -161,7 +161,7 @@ public abstract class AbstractMeleeAnmeldungUebernehmenSheet extends SheetRunner
 	}
 
 	/**
-	 * Markiert die übernommenen Zeilen im Melee-Anmeldung-Sheet. Geschrieben wird der komplette
+	 * Markiert die übernommenen Zeilen im Mêlée-Anmeldung-Sheet. Geschrieben wird der komplette
 	 * Zeilenbereich von der ersten bis zur letzten übernommenen Zeile am Stück. Dazwischen liegende
 	 * Zeilen behalten ihren bisherigen Zustand: bereits früher übernommene bleiben markiert, noch
 	 * nicht eingecheckte bleiben leer.
@@ -223,7 +223,7 @@ public abstract class AbstractMeleeAnmeldungUebernehmenSheet extends SheetRunner
 	 */
 	protected abstract IFormationKonfiguration getFormationKonfiguration();
 
-	/** Named-Range-Schlüssel des Melee-Anmeldung-Sheets. */
+	/** Named-Range-Schlüssel des Mêlée-Anmeldung-Sheets. */
 	protected abstract String getMeleeMetadatenSchluessel();
 
 	/** Die Ziel-Meldeliste (Quelle des Sheets, in das die Teams geschrieben werden). */

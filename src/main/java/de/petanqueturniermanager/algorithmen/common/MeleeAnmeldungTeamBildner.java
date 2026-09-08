@@ -17,7 +17,7 @@ import de.petanqueturniermanager.supermelee.SuperMeleeTeamRechner;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
 
 /**
- * Mischt eine Liste loser Melee-Spieler zu Teams (Doublette/Triplette-Mix).
+ * Mischt eine Liste loser Mêlée-Spieler zu Teams (Doublette/Triplette-Mix).
  * <p>
  * Die Team-Größen ergeben sich aus {@link SuperMeleeTeamRechner} – identisch zur Supermêlée-Logik:
  * im Modus {@link SuperMeleeMode#Triplette} werden Tripletten bevorzugt und mit Doubletten
@@ -53,7 +53,7 @@ public final class MeleeAnmeldungTeamBildner {
 			7, List.of(3, 2, 2));
 
 	/**
-	 * Ein Melee-Spieler als Eingabe der Team-Bildung.
+	 * Ein Mêlée-Spieler als Eingabe der Team-Bildung.
 	 *
 	 * @param nr           laufende Nummer der Anmeldung (nur für Nachvollziehbarkeit)
 	 * @param vorname      Vorname
@@ -101,7 +101,7 @@ public final class MeleeAnmeldungTeamBildner {
 	 * Ermittelt die Team-Größen für die gegebene Spielerzahl.
 	 * <p>
 	 * Für die üblichen Feldgrößen liefert der {@link SuperMeleeTeamRechner} die Aufteilung – damit
-	 * verhält sich die Melee-Anmeldung identisch zur bekannten Supermêlée-Auslosung (inkl. dessen
+	 * verhält sich die Mêlée-Anmeldung identisch zur bekannten Supermêlée-Auslosung (inkl. dessen
 	 * bevorzugt gerader Teamanzahl).
 	 * <p>
 	 * Seine Formeln setzen allerdings ein hinreichend großes Feld voraus und liefern für 2, 3 und 7

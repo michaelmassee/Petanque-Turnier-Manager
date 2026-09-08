@@ -115,7 +115,7 @@ public final class SheetNamen {
     public static final String LEGACY_MAASTRICHTER_VR_RANGLISTE     = "Vorrunden-Rangliste";
     public static final String LEGACY_ANMELDUNGEN                   = "Anmeldungen";
     public static final String LEGACY_CHECKIN_LISTE                 = "Checkin Liste";
-    public static final String LEGACY_MELEE_ANMELDUNG                = "Melee Anmeldung";
+    public static final String LEGACY_MELEE_ANMELDUNG                = "Mêlée Anmeldung";
     public static final String LEGACY_TEILNEHMER                    = "Teilnehmer";
     public static final String LEGACY_SIEGERGELD                    = "Siegergeld";
     public static final String LEGACY_PLANUNGSRECHNER               = "Planungsrechner";
@@ -253,8 +253,8 @@ public final class SheetNamen {
     }
 
     /**
-     * Melee-Anmeldung: Vorstufe zur Meldeliste, in der lose Einzelspieler erfasst werden,
-     * z.B. "Melee Anmeldung".
+     * Mêlée-Anmeldung: Vorstufe zur Meldeliste, in der lose Einzelspieler erfasst werden,
+     * z.B. "Mêlée Anmeldung".
      *
      * @return lokalisierter Tabellenname
      */

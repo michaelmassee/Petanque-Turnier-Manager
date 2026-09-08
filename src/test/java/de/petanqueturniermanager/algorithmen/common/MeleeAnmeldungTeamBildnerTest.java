@@ -15,7 +15,7 @@ import de.petanqueturniermanager.helper.random.RandomSource;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
 
 /**
- * Testet die Team-Bildung aus Melee-Anmeldungen: Team-Größen je Modus, SP-Bedingung und die
+ * Testet die Team-Bildung aus Mêlée-Anmeldungen: Team-Größen je Modus, SP-Bedingung und die
  * abgeleitete Team-Setzposition.
  */
 public class MeleeAnmeldungTeamBildnerTest {

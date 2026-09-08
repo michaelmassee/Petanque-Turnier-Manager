@@ -21,7 +21,7 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 
-/** Regression: derselbe Melee-Spieler darf nicht ein zweites Mal übernommen werden. */
+/** Regression: derselbe Mêlée-Spieler darf nicht ein zweites Mal übernommen werden. */
 class MaastrichterMeleeAnmeldungUebernehmenUITest extends BaseCalcUITest implements MeleeAnmeldungKonstanten {
 
 	/** Entspricht SchweizerListeDelegate.ERSTE_DATEN_ZEILE (identisches Meldeliste-Layout). */

@@ -23,7 +23,7 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 
 /**
- * Liest das Melee-Anmeldung-Sheet blockweise ein.
+ * Liest das Mêlée-Anmeldung-Sheet blockweise ein.
  * <p>
  * Bewusst ein eigenständiger, rein lesender Helper (kein {@code SheetRunner}): sowohl die
  * Checkin-Liste als auch der Live-Push der Turnier-Startseite brauchen die Daten, ohne einen
@@ -37,7 +37,7 @@ public final class MeleeAnmeldungLeser implements MeleeAnmeldungKonstanten {
 	}
 
 	/**
-	 * Liest alle befüllten Zeilen des Melee-Anmeldung-Sheets.
+	 * Liest alle befüllten Zeilen des Mêlée-Anmeldung-Sheets.
 	 *
 	 * @param ws                 aktuelles Dokument
 	 * @param metadatenSchluessel Named-Range-Schlüssel des System-Sheets
@@ -52,7 +52,7 @@ public final class MeleeAnmeldungLeser implements MeleeAnmeldungKonstanten {
 	}
 
 	/**
-	 * Liest alle befüllten Zeilen aus einem bereits bekannten Melee-Anmeldung-Sheet.
+	 * Liest alle befüllten Zeilen aus einem bereits bekannten Mêlée-Anmeldung-Sheet.
 	 */
 	public static List<MeleeAnmeldungZeile> lesen(WorkingSpreadsheet ws, XSpreadsheet xSheet) {
 		List<MeleeAnmeldungZeile> zeilen = new ArrayList<>();
@@ -68,14 +68,14 @@ public final class MeleeAnmeldungLeser implements MeleeAnmeldungKonstanten {
 				}
 			}
 		} catch (RuntimeException e) {
-			logger.warn("Melee-Anmeldungen konnten nicht gelesen werden", e);
+			logger.warn("Mêlée-Anmeldungen konnten nicht gelesen werden", e);
 			return List.of();
 		}
 		return zeilen;
 	}
 
 	/**
-	 * Sucht das Melee-Anmeldung-Sheet über die Named-Range-Metadaten, ersatzweise über den
+	 * Sucht das Mêlée-Anmeldung-Sheet über die Named-Range-Metadaten, ersatzweise über den
 	 * lokalisierten Tabellennamen.
 	 *
 	 * @return das Sheet oder {@code null} wenn es (noch) nicht existiert

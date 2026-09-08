@@ -169,8 +169,8 @@ public final class TeilnehmerStatusService {
 
 
     /**
-     * Ergänzt die aus der Meldeliste gebildeten Listen um die noch offenen Melee-Anmeldungen –
-     * nur wenn die Melee-Anmeldung im Dokument eingeschaltet ist.
+     * Ergänzt die aus der Meldeliste gebildeten Listen um die noch offenen Mêlée-Anmeldungen –
+     * nur wenn die Mêlée-Anmeldung im Dokument eingeschaltet ist.
      * <p>
      * Damit zeigt die Turnier-Startseite dieselbe kombinierte Sicht wie die gedruckte
      * Checkin-Liste: links die angemeldeten, noch nicht eingecheckten Einzelspieler, rechts die

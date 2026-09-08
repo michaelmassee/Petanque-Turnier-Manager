@@ -13,7 +13,7 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 
 /**
- * Übernimmt die eingecheckten Melee-Anmeldungen des Schweizer-Systems als Teams in die Meldeliste.
+ * Übernimmt die eingecheckten Mêlée-Anmeldungen des Schweizer-Systems als Teams in die Meldeliste.
  */
 public class SchweizerMeleeAnmeldungUebernehmenSheet extends AbstractMeleeAnmeldungUebernehmenSheet {
 
@@ -21,7 +21,7 @@ public class SchweizerMeleeAnmeldungUebernehmenSheet extends AbstractMeleeAnmeld
 	private final SchweizerMeldeListeSheetUpdate meldeliste;
 
 	public SchweizerMeleeAnmeldungUebernehmenSheet(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet, TurnierSystem.SCHWEIZER, "Schweizer-Melee-Uebernahme");
+		super(workingSpreadsheet, TurnierSystem.SCHWEIZER, "Schweizer-Mêlée-Uebernahme");
 		konfigurationSheet = new SchweizerKonfigurationSheet(workingSpreadsheet);
 		meldeliste = new SchweizerMeldeListeSheetUpdate(workingSpreadsheet);
 	}

@@ -11,7 +11,7 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationSheet;
 
 /**
- * Melee-Anmeldung des JGJ-Systems: Vorstufe zur Meldeliste, in der lose Einzelspieler
+ * Mêlée-Anmeldung des JGJ-Systems: Vorstufe zur Meldeliste, in der lose Einzelspieler
  * erfasst und vor Ort eingecheckt werden. Die Übernahme in die Meldeliste erfolgt über
  * {@link JGJMeleeAnmeldungUebernehmenSheet}.
  */
@@ -20,7 +20,7 @@ public class JGJMeleeAnmeldungSheet extends AbstractMeleeAnmeldungSheet {
 	private final JGJKonfigurationSheet konfigurationSheet;
 
 	public JGJMeleeAnmeldungSheet(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet, TurnierSystem.JGJ, "JGJ-Melee-Anmeldung");
+		super(workingSpreadsheet, TurnierSystem.JGJ, "JGJ-Mêlée-Anmeldung");
 		konfigurationSheet = new JGJKonfigurationSheet(workingSpreadsheet);
 	}
 

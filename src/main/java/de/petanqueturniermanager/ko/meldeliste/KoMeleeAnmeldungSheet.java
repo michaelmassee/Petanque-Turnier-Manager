@@ -11,7 +11,7 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.ko.konfiguration.KoKonfigurationSheet;
 
 /**
- * Melee-Anmeldung des Ko-Systems: Vorstufe zur Meldeliste, in der lose Einzelspieler
+ * Mêlée-Anmeldung des Ko-Systems: Vorstufe zur Meldeliste, in der lose Einzelspieler
  * erfasst und vor Ort eingecheckt werden. Die Übernahme in die Meldeliste erfolgt über
  * {@link KoMeleeAnmeldungUebernehmenSheet}.
  */
@@ -20,7 +20,7 @@ public class KoMeleeAnmeldungSheet extends AbstractMeleeAnmeldungSheet {
 	private final KoKonfigurationSheet konfigurationSheet;
 
 	public KoMeleeAnmeldungSheet(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet, TurnierSystem.KO, "KO-Melee-Anmeldung");
+		super(workingSpreadsheet, TurnierSystem.KO, "KO-Mêlée-Anmeldung");
 		konfigurationSheet = new KoKonfigurationSheet(workingSpreadsheet);
 	}
 
