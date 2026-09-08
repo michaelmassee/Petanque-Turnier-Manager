@@ -241,6 +241,11 @@ public class SheetBaumOrganisierer {
         var ergebnis = new ArrayList<BlattBaumEintrag>();
 
         koKnoten.stream()
+                .filter(k -> SheetMetadataHelper.SCHLUESSEL_KO_MELEE_ANMELDUNG.equals(k.metadatenSchluessel()))
+                .map(k -> new BlattKnoten(blattName(k), k.metadatenSchluessel()))
+                .forEach(ergebnis::add);
+
+        koKnoten.stream()
                 .filter(k -> SheetMetadataHelper.SCHLUESSEL_KO_MELDELISTE.equals(k.metadatenSchluessel()))
                 .map(k -> new BlattKnoten(blattName(k), k.metadatenSchluessel()))
                 .forEach(ergebnis::add);
@@ -268,6 +273,11 @@ public class SheetBaumOrganisierer {
      */
     private List<BlattBaumEintrag> schweizerEintraege(List<BlattKnoten> knoten, List<BlattKnoten> allgemeinKnoten) {
         var ergebnis = new ArrayList<BlattBaumEintrag>();
+
+        knoten.stream()
+                .filter(k -> SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_MELEE_ANMELDUNG.equals(k.metadatenSchluessel()))
+                .map(k -> new BlattKnoten(blattName(k), k.metadatenSchluessel()))
+                .forEach(ergebnis::add);
 
         knoten.stream()
                 .filter(k -> SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_MELDELISTE.equals(k.metadatenSchluessel()))
@@ -304,6 +314,11 @@ public class SheetBaumOrganisierer {
         var ergebnis = new ArrayList<BlattBaumEintrag>();
 
         knoten.stream()
+                .filter(k -> SheetMetadataHelper.SCHLUESSEL_FORMULEX_MELEE_ANMELDUNG.equals(k.metadatenSchluessel()))
+                .map(k -> new BlattKnoten(blattName(k), k.metadatenSchluessel()))
+                .forEach(ergebnis::add);
+
+        knoten.stream()
                 .filter(k -> SheetMetadataHelper.SCHLUESSEL_FORMULEX_MELDELISTE.equals(k.metadatenSchluessel()))
                 .map(k -> new BlattKnoten(blattName(k), k.metadatenSchluessel()))
                 .forEach(ergebnis::add);
@@ -338,6 +353,11 @@ public class SheetBaumOrganisierer {
     private List<BlattBaumEintrag> jgjEintraege(List<BlattKnoten> knoten, List<BlattKnoten> allgemeinKnoten,
             Set<String> kollabierteUnterGruppen) {
         var ergebnis = new ArrayList<BlattBaumEintrag>();
+
+        knoten.stream()
+                .filter(k -> SheetMetadataHelper.SCHLUESSEL_JGJ_MELEE_ANMELDUNG.equals(k.metadatenSchluessel()))
+                .map(k -> new BlattKnoten(blattName(k), k.metadatenSchluessel()))
+                .forEach(ergebnis::add);
 
         knoten.stream()
                 .filter(k -> SheetMetadataHelper.SCHLUESSEL_JGJ_MELDELISTE.equals(k.metadatenSchluessel()))
@@ -402,6 +422,12 @@ public class SheetBaumOrganisierer {
             Set<String> kollabierteUnterGruppen) {
         var ergebnis = new ArrayList<BlattBaumEintrag>();
 
+        // Mêlée-Anmeldung noch vor der Meldeliste (fachliche Vorstufe)
+        pouleKnoten.stream()
+                .filter(k -> SheetMetadataHelper.SCHLUESSEL_POULE_MELEE_ANMELDUNG.equals(k.metadatenSchluessel()))
+                .map(k -> new BlattKnoten(blattName(k), k.metadatenSchluessel()))
+                .forEach(ergebnis::add);
+
         // Meldeliste an erster Stelle ohne Einrückung
         pouleKnoten.stream()
                 .filter(k -> SheetMetadataHelper.SCHLUESSEL_POULE_MELDELISTE.equals(k.metadatenSchluessel()))
@@ -421,7 +447,8 @@ public class SheetBaumOrganisierer {
 
         // Vorrunde-Untergruppe
         var vorrundeKnoten = pouleKnoten.stream()
-                .filter(k -> !SheetMetadataHelper.SCHLUESSEL_POULE_MELDELISTE.equals(k.metadatenSchluessel())
+                .filter(k -> !SheetMetadataHelper.SCHLUESSEL_POULE_MELEE_ANMELDUNG.equals(k.metadatenSchluessel())
+                        && !SheetMetadataHelper.SCHLUESSEL_POULE_MELDELISTE.equals(k.metadatenSchluessel())
                         && !SheetMetadataHelper.SCHLUESSEL_POULE_CHECKIN_LISTE.equals(k.metadatenSchluessel())
                         && !k.metadatenSchluessel().startsWith(SheetMetadataHelper.SCHLUESSEL_POULE_KO_PREFIX))
                 .map(k -> new BlattKnoten("  " + blattName(k), k.metadatenSchluessel()))
@@ -472,6 +499,11 @@ public class SheetBaumOrganisierer {
             List<BlattKnoten> allgemeinKnoten,
             Set<String> kollabierteUnterGruppen) {
         var ergebnis = new ArrayList<BlattBaumEintrag>();
+
+        maastrichterKnoten.stream()
+                .filter(k -> SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_MELEE_ANMELDUNG.equals(k.metadatenSchluessel()))
+                .map(k -> new BlattKnoten(blattName(k), k.metadatenSchluessel()))
+                .forEach(ergebnis::add);
 
         maastrichterKnoten.stream()
                 .filter(k -> SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_MELDELISTE.equals(k.metadatenSchluessel()))
@@ -536,6 +568,11 @@ public class SheetBaumOrganisierer {
             List<BlattKnoten> kaskadeKnoten,
             Set<String> kollabierteUnterGruppen) {
         var ergebnis = new ArrayList<BlattBaumEintrag>();
+
+        kaskadeKnoten.stream()
+                .filter(k -> SheetMetadataHelper.SCHLUESSEL_KASKADE_MELEE_ANMELDUNG.equals(k.metadatenSchluessel()))
+                .map(k -> new BlattKnoten(blattName(k), k.metadatenSchluessel()))
+                .forEach(ergebnis::add);
 
         kaskadeKnoten.stream()
                 .filter(k -> SheetMetadataHelper.SCHLUESSEL_KASKADE_MELDELISTE.equals(k.metadatenSchluessel()))

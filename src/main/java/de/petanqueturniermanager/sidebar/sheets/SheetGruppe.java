@@ -23,6 +23,7 @@ public enum SheetGruppe {
     )),
 
     SCHWEIZER("enum.turniersystem.schweizer", List.of(
+            "__PTM_SCHWEIZER_MELEE_ANMELDUNG__",
             "__PTM_SCHWEIZER_MELDELISTE__",
             "__PTM_SCHWEIZER_CHECKIN_LISTE__",
             "__PTM_SCHWEIZER_SPIELRUNDE_",
@@ -30,6 +31,7 @@ public enum SheetGruppe {
     )),
 
     JGJ("enum.turniersystem.jgj", List.of(
+            "__PTM_JGJ_MELEE_ANMELDUNG__",
             "__PTM_JGJ_MELDELISTE__",
             "__PTM_JGJ_CHECKIN_LISTE__",
             "__PTM_JGJ_SPIELPLAN__",
@@ -47,12 +49,14 @@ public enum SheetGruppe {
     )),
 
     KO("enum.turniersystem.ko", List.of(
+            "__PTM_KO_MELEE_ANMELDUNG__",
             "__PTM_KO_MELDELISTE__",
             "__PTM_KO_CHECKIN_LISTE__",
             "__PTM_KO_TURNIERBAUM_"
     )),
 
     KASKADE("enum.turniersystem.kaskade", List.of(
+            "__PTM_KASKADE_MELEE_ANMELDUNG__",
             "__PTM_KASKADE_MELDELISTE__",
             "__PTM_KASKADE_CHECKIN_LISTE__",
             "__PTM_KASKADE_RUNDE_",
@@ -62,6 +66,7 @@ public enum SheetGruppe {
     )),
 
     FORMULEX("enum.turniersystem.formulex", List.of(
+            "__PTM_FORMULEX_MELEE_ANMELDUNG__",
             "__PTM_FORMULEX_MELDELISTE__",
             "__PTM_FORMULEX_CHECKIN_LISTE__",
             "__PTM_FORMULEX_SPIELRUNDE_",
@@ -69,6 +74,7 @@ public enum SheetGruppe {
     )),
 
     MAASTRICHTER("enum.turniersystem.maastrichter", List.of(
+            "__PTM_MAASTRICHTER_MELEE_ANMELDUNG__",
             "__PTM_MAASTRICHTER_MELDELISTE__",
             "__PTM_MAASTRICHTER_CHECKIN_LISTE__",
             "__PTM_MAASTRICHTER_VORRUNDE_",
@@ -77,6 +83,7 @@ public enum SheetGruppe {
     )),
 
     POULE("enum.turniersystem.poule", List.of(
+            "__PTM_POULE_MELEE_ANMELDUNG__",
             "__PTM_POULE_MELDELISTE__",
             "__PTM_POULE_CHECKIN_LISTE__",
             "__PTM_POULE_VORRUNDE__",
