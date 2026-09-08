@@ -141,10 +141,19 @@ public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet {
 		int maxTeamsKoPhase = konfigSheet.getMaxTeamsKoPhase();
 		List<SchweizerTeamErgebnis> teamsFuerKo = sortiert;
 		List<SchweizerTeamErgebnis> ausserhalbCutoff = List.of();
-		if (maxTeamsKoPhase > 0 && sortiert.size() > maxTeamsKoPhase) {
-			teamsFuerKo = sortiert.subList(0, maxTeamsKoPhase);
-			ausserhalbCutoff = sortiert.subList(maxTeamsKoPhase, sortiert.size());
-			processBoxinfo("processbox.maastrichter.cutoff.info", ausserhalbCutoff.size());
+		if (maxTeamsKoPhase > 0) {
+			// Ausgestiegene Teams bleiben für die Vorrundenrangliste erhalten, dürfen aber
+			// keinen der tatsächlich spielenden KO-Plätze verbrauchen.
+			List<SchweizerTeamErgebnis> aktiveTeamsNachRang = sortiert.stream()
+					.filter(erg -> aktiveMeldungen.getTeam(erg.teamNr()) != null)
+					.toList();
+			List<SchweizerTeamErgebnis> aktiveTeamsImKo = aktiveTeamsNachRang.subList(0,
+					Math.min(maxTeamsKoPhase, aktiveTeamsNachRang.size()));
+			teamsFuerKo = aktiveTeamsImKo;
+			ausserhalbCutoff = sortiert.stream().filter(erg -> !aktiveTeamsImKo.contains(erg)).toList();
+			if (!ausserhalbCutoff.isEmpty()) {
+				processBoxinfo("processbox.maastrichter.cutoff.info", ausserhalbCutoff.size());
+			}
 		}
 
 		// Gruppen gemäß konfiguriertem Modus bilden

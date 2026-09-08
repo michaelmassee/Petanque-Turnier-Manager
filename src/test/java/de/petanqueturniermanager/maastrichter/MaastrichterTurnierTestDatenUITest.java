@@ -3,7 +3,9 @@ package de.petanqueturniermanager.maastrichter;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.AfterEach;
@@ -20,6 +22,7 @@ import com.sun.star.uno.UnoRuntime;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.Position;
@@ -32,6 +35,7 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.maastrichter.korunde.KoGruppeABSheet;
 import de.petanqueturniermanager.maastrichter.finalrunde.MaastrichterFinalrundeSheet;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
+import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterMeldeListeSheetUpdate;
 import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterGruppenSpalteHelper;
 import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterVorrundenRanglisteSheetUpdate;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteAnalyseAssert;
@@ -210,6 +214,66 @@ public class MaastrichterTurnierTestDatenUITest extends BaseCalcUITest {
 						.isEqualTo(cutoffMarkierung);
 			}
 		}
+	}
+
+	@Test
+	public void maastrichterMaxTeamsKoPhaseZaehltAusgestiegeneTeamsNichtAlsKoTeilnehmer() throws GenerateException {
+		final int anzTeams = 25;
+		final int maxTeamsKoPhase = 16;
+		var testDaten = new MaastrichterTurnierTestDaten(wkingSpreadsheet, anzTeams, 3, 16);
+		testDaten.generate(3, false);
+		testDaten.ranglisteSheet.doRun();
+
+		XSpreadsheet rangliste = sheetHlp.findByName(SheetNamen.maastrichterVorrundenRangliste());
+		assertThat(rangliste).as("Vorrunden-Rangliste-Sheet muss vorhanden sein").isNotNull();
+		List<Integer> teamNrNachRang = leseTeamNrNachRang(rangliste, anzTeams);
+		int ausgestiegenesTopTeam = teamNrNachRang.get(0);
+		int letztesAktivesTeamInnerhalbCutoff = teamNrNachRang.get(maxTeamsKoPhase);
+		int erstesAktivesTeamAusserhalbCutoff = teamNrNachRang.get(maxTeamsKoPhase + 1);
+
+		MaastrichterMeldeListeSheetUpdate meldeliste = new MaastrichterMeldeListeSheetUpdate(wkingSpreadsheet);
+		int zeile = meldeliste.getSpielerZeileNr(ausgestiegenesTopTeam);
+		sheetHlp.setNumberValueInCell(NumberCellValue.from(meldeliste.getXSpreadSheet(),
+				Position.from(meldeliste.getAktivSpalte(), zeile))
+				.setValue(MaastrichterMeldeListeSheetUpdate.AKTIV_WERT_AUSGESTIEGEN));
+
+		var konfig = new MaastrichterKonfigurationSheet(wkingSpreadsheet);
+		konfig.setMaxTeamsKoPhase(maxTeamsKoPhase);
+		testDaten.finalrundeSheet.doRun();
+
+		String cutoffMarkierung = MaastrichterGruppenSpalteHelper.keinKoMarker();
+		assertThat(gruppeFuerTeamNr(rangliste, ausgestiegenesTopTeam, anzTeams))
+				.as("Ausgestiegenes Spitzen-Team darf keinen KO-Platz belegen")
+				.isEqualTo(cutoffMarkierung);
+		assertThat(gruppeFuerTeamNr(rangliste, letztesAktivesTeamInnerhalbCutoff, anzTeams))
+				.as("Das 16. aktive Team nach Rang muss noch KO spielen")
+				.isEqualTo("A");
+		assertThat(gruppeFuerTeamNr(rangliste, erstesAktivesTeamAusserhalbCutoff, anzTeams))
+				.as("Das 17. aktive Team nach Rang muss außerhalb des KO-Cutoffs bleiben")
+				.isEqualTo(cutoffMarkierung);
+	}
+
+	private List<Integer> leseTeamNrNachRang(XSpreadsheet rangliste, int anzTeams) throws GenerateException {
+		List<Integer> teamNrNachRang = new ArrayList<>();
+		for (int i = 0; i < anzTeams; i++) {
+			teamNrNachRang.add(sheetHlp.getIntFromCell(rangliste,
+					Position.from(SchweizerRanglisteSheet.TEAM_NR_SPALTE,
+							SchweizerRanglisteSheet.ERSTE_DATEN_ZEILE + i)));
+		}
+		return teamNrNachRang;
+	}
+
+	private String gruppeFuerTeamNr(XSpreadsheet rangliste, int teamNr, int anzTeams) throws GenerateException {
+		for (int i = 0; i < anzTeams; i++) {
+			int aktuelleTeamNr = sheetHlp.getIntFromCell(rangliste,
+					Position.from(SchweizerRanglisteSheet.TEAM_NR_SPALTE,
+							SchweizerRanglisteSheet.ERSTE_DATEN_ZEILE + i));
+			if (aktuelleTeamNr == teamNr) {
+				return sheetHlp.getTextFromCell(rangliste, Position.from(MaastrichterGruppenSpalteHelper.GRUPPE_SPALTE,
+						SchweizerRanglisteSheet.ERSTE_DATEN_ZEILE + i));
+			}
+		}
+		throw new AssertionError("Team " + teamNr + " nicht in der Rangliste gefunden");
 	}
 
 	@Test
