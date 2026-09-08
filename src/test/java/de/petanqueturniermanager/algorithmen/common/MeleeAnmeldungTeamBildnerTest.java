@@ -110,6 +110,22 @@ public class MeleeAnmeldungTeamBildnerTest {
 		assertThat(verwendeteZeilen).hasSize(6).doesNotHaveDuplicates();
 	}
 
+	/**
+	 * Regression: nicht irgendein Spieler darf offen bleiben, sondern immer die zuletzt in der
+	 * Liste stehenden (bei der Mêlée-Anmeldung: die zuletzt eingecheckten). Bug-Report: bei 7
+	 * Spielern (Nr. 1-7) blieb per Zufall Nr. 5 offen, obwohl Nr. 7 zuletzt in der Liste stand.
+	 */
+	@Test
+	public void testNichtRestlosTeilbareAnzahl_lässtImmerDieLetztenOffen() {
+		for (int wiederholung = 0; wiederholung < 20; wiederholung++) {
+			List<MeleeTeam> teams = MeleeAnmeldungTeamBildner.bildeTeams(spieler(7), 2);
+			List<Integer> verwendeteNrn = teams.stream().flatMap(t -> t.spieler().stream())
+					.map(MeleeSpieler::nr).toList();
+			assertThat(verwendeteNrn).as("Durchlauf %d: verwendet werden muessen genau die ersten 6 (Nr. 1-6)",
+					wiederholung).containsExactlyInAnyOrder(1, 2, 3, 4, 5, 6);
+		}
+	}
+
 	// ---------------------------------------------------------------
 	// Setzpositionen
 	// ---------------------------------------------------------------

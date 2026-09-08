@@ -97,13 +97,15 @@ public abstract class AbstractMeleeAnmeldungUebernehmenSheet extends SheetRunner
 			return;
 		}
 
-		processBoxinfo("processbox.melee.uebernehmen", offeneEingecheckte.size());
 		int teamGroesse = getFormationKonfiguration().getMeldeListeFormation().getAnzSpieler();
-		List<MeleeTeam> teams = MeleeAnmeldungTeamBildner.bildeTeams(alsMeleeSpieler(offeneEingecheckte), teamGroesse);
-		if (teams.isEmpty()) {
+		int anzVerwendbareSpieler = (offeneEingecheckte.size() / teamGroesse) * teamGroesse;
+		if (anzVerwendbareSpieler == 0) {
 			zeigeHinweis("msg.text.melee.keine.anmeldungen");
 			return;
 		}
+
+		processBoxinfo("processbox.melee.uebernehmen", anzVerwendbareSpieler);
+		List<MeleeTeam> teams = MeleeAnmeldungTeamBildner.bildeTeams(alsMeleeSpieler(offeneEingecheckte), teamGroesse);
 
 		Set<Integer> uebernommeneZeilen = teams.stream().flatMap(t -> t.spieler().stream())
 				.map(MeleeSpieler::zeile).collect(Collectors.toSet());

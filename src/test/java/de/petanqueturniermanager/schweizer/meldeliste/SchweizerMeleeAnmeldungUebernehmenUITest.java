@@ -54,9 +54,12 @@ class SchweizerMeleeAnmeldungUebernehmenUITest extends BaseCalcUITest implements
 	 * ergeben; die 7. Anmeldung muss offen (nicht übernommen) stehen bleiben, statt die gesamte
 	 * Übernahme abzubrechen (Bug: der Team-Bildner erzwang für genau 7 Spieler unabhängig von der
 	 * Formation ein 3er-Team, was bei Doublette nicht in die Meldeliste passte).
+	 * <p>
+	 * Zusätzlich muss zwingend die <b>letzte</b> Anmeldung (Nr. 7) offen bleiben, nicht irgendeine
+	 * zufällig ausgewählte (Bug-Report: Nr. 5 blieb offen, obwohl Nr. 7 die letzte in der Liste war).
 	 */
 	@Test
-	void siebenSpielerBeiDoubletteBildenDreiTeamsUndLassenEinenOffen() throws Exception {
+	void siebenSpielerBeiDoubletteBildenDreiTeamsUndLassenLetztenOffen() throws Exception {
 		meldeliste = new SchweizerMeldeListeSheetNew(wkingSpreadsheet);
 		meldeliste.createMeldelisteWithParams(Formation.DOUBLETTE, false, false);
 		docPropHelper.setBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_MELEE_ANMELDUNG, true);
@@ -66,14 +69,15 @@ class SchweizerMeleeAnmeldungUebernehmenUITest extends BaseCalcUITest implements
 
 		assertThat(nachnamenInMeldeliste())
 				.as("bei Doublette muessen aus 7 Anmeldungen genau 3 volle Teams (6 Spieler) entstehen")
-				.hasSize(6);
+				.hasSize(6)
+				.doesNotContain("MeleeTestNachname6");
 
 		List<MeleeAnmeldungZeile> zeilen = MeleeAnmeldungLeser.lesen(wkingSpreadsheet,
 				SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_MELEE_ANMELDUNG);
 		assertThat(zeilen).filteredOn(MeleeAnmeldungZeile::istOffen)
-				.as("die 7. Anmeldung darf nicht mit uebernommen worden sein und muss offen bleiben")
-				.hasSize(1)
-				.allMatch(MeleeAnmeldungZeile::eingecheckt);
+				.as("nur die letzte Anmeldung (Nr. 7) darf offen bleiben")
+				.extracting(MeleeAnmeldungZeile::nachname)
+				.containsExactly("MeleeTestNachname6");
 	}
 
 	private void meleeAnmeldungenAnlegen(int anzahl) throws Exception {

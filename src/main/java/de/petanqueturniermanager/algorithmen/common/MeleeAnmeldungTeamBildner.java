@@ -77,7 +77,14 @@ public final class MeleeAnmeldungTeamBildner {
 	 * möglich. Reicht die Spielerzahl nicht für eine ganze Anzahl Teams, bleiben die überzähligen
 	 * Spieler unverteilt (sie tauchen in keinem der zurückgegebenen Teams auf).
 	 *
-	 * @param spieler     zu verteilende Spieler (Reihenfolge ist unerheblich)
+	 * Reicht die Spielerzahl nicht für eine ganze Anzahl Teams, bleiben bewusst die
+	 * <b>letzten</b> Spieler in der übergebenen Reihenfolge unverteilt – bei der Mêlée-Anmeldung
+	 * also die zuletzt eingecheckten. Welche Spieler einem Team zugeteilt werden, ist damit
+	 * deterministisch; nur die Zusammensetzung der Teams selbst wird zufällig gemischt.
+	 *
+	 * @param spieler     zu verteilende Spieler in fester Reihenfolge (z.B. Zeilenreihenfolge im
+	 *                    Mêlée-Anmeldung-Sheet); nur die vorderen Einträge werden bei einem nicht
+	 *                    restlos teilbaren Rest berücksichtigt
 	 * @param teamGroesse feste Team-Größe (Meldeliste-Formation: Doublette = 2, Triplette = 3)
 	 * @return gebildete Teams; leere Liste wenn weniger als {@code teamGroesse} Spieler übergeben
 	 *         wurden
@@ -89,7 +96,8 @@ public final class MeleeAnmeldungTeamBildner {
 		if (anzTeams == 0) {
 			return List.of();
 		}
-		return verteile(spieler, Collections.nCopies(anzTeams, teamGroesse));
+		List<MeleeSpieler> zuVerteilen = spieler.subList(0, anzTeams * teamGroesse);
+		return verteile(zuVerteilen, Collections.nCopies(anzTeams, teamGroesse));
 	}
 
 	/**
