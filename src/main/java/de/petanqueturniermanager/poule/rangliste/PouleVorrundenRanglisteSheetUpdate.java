@@ -35,7 +35,11 @@ public class PouleVorrundenRanglisteSheetUpdate extends PouleVorrundenRanglisteS
     public void doRun() throws GenerateException {
         if (getXSpreadSheet() == null) {
             // Kein Sheet vorhanden → Vollaufbau
-            new PouleVorrundenRanglisteSheet(getWorkingSpreadsheet()).doRun();
+            PouleVorrundenRanglisteSheet neuAufbau = new PouleVorrundenRanglisteSheet(getWorkingSpreadsheet());
+            neuAufbau.doRun();
+            // Ergebnis der delegierten Instanz übernehmen, damit Aufrufer (z.B. PouleKoSheet)
+            // unabhängig davon, ob Erst- oder Folgeaufbau lief, dieselbe API nutzen können.
+            setZuletztSortierteGruppen(neuAufbau.getZuletztSortierteGruppen());
             return;
         }
 

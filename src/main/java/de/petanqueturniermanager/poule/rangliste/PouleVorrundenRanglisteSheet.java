@@ -92,6 +92,7 @@ public class PouleVorrundenRanglisteSheet extends SheetRunner implements ISheet 
     private static final int BREITE_TURNIER = 1500;
 
     private final PouleKonfigurationSheet konfigurationSheet;
+    private List<List<PouleTeamErgebnis>> zuletztSortierteGruppen = List.of();
 
     public PouleVorrundenRanglisteSheet(WorkingSpreadsheet workingSpreadsheet) {
         super(workingSpreadsheet, TurnierSystem.POULE, "Poule-Vorrunden-Rangliste");
@@ -114,6 +115,25 @@ public class PouleVorrundenRanglisteSheet extends SheetRunner implements ISheet 
     @Override
     protected PouleKonfigurationSheet getKonfigurationSheet() {
         return konfigurationSheet;
+    }
+
+    /**
+     * Die zuletzt von {@link #berechnungUndSchreiben} berechnete und ins Sheet geschriebene
+     * Gruppeneinteilung (pro Gruppe nach Poule-Kriterien sortiert). Ermöglicht Aufrufern, die
+     * unmittelbar nach einem {@code doRun()} dieselben Daten weiterverwenden möchten (z.B. für
+     * die KO-Bracket-Erstellung), das Vorrunde-Sheet nicht ein zweites Mal einzulesen und dabei
+     * versehentlich von der Rangliste abweichende Ergebnisse zu berechnen.
+     */
+    public List<List<PouleTeamErgebnis>> getZuletztSortierteGruppen() {
+        return zuletztSortierteGruppen;
+    }
+
+    /**
+     * Für {@link PouleVorrundenRanglisteSheetUpdate}: wenn der Erstaufbau an eine andere Instanz
+     * delegiert wird, muss deren Ergebnis hier übernommen werden.
+     */
+    protected void setZuletztSortierteGruppen(List<List<PouleTeamErgebnis>> gruppen) {
+        this.zuletztSortierteGruppen = gruppen;
     }
 
     @Override
@@ -163,6 +183,7 @@ public class PouleVorrundenRanglisteSheet extends SheetRunner implements ISheet 
 
         var gruppenErgebnisse = leseGruppenErgebnisse(vorrundeSheet);
         var sortiertGruppen = sortiereGruppen(gruppenErgebnisse);
+        setZuletztSortierteGruppen(sortiertGruppen);
 
         spaltenBreitenSetzen(xSheet);
         headerSchreiben(xSheet);

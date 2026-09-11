@@ -4,14 +4,11 @@
 package de.petanqueturniermanager.poule.ko;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
-import de.petanqueturniermanager.algorithmen.poule.PouleRanglisteRechner;
 import de.petanqueturniermanager.algorithmen.poule.PouleTeamErgebnis;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -21,19 +18,15 @@ import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
-import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
-import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
-import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.ko.KoTurnierbaumSheet;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.poule.konfiguration.PouleKonfigurationSheet;
 import de.petanqueturniermanager.poule.meldeliste.PouleMeldeListeSheetUpdate;
 import de.petanqueturniermanager.poule.rangliste.PouleVorrundenRanglisteSheetUpdate;
-import de.petanqueturniermanager.poule.vorrunde.AbstractPouleVorrundeSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
@@ -41,8 +34,9 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
  * <p>
  * Ablauf:
  * <ol>
- *   <li>Vorrunden-Rangliste prüfen und ggf. erstellen/aktualisieren</li>
- *   <li>Vorrunde-Sheet lesen und Gruppen-Rankings berechnen</li>
+ *   <li>Vorrunden-Rangliste aktualisieren und deren bereits sortierte Gruppen übernehmen
+ *       ({@link PouleVorrundenRanglisteSheetUpdate#getZuletztSortierteGruppen()}) –
+ *       kein eigenes, zweites Einlesen des Vorrunde-Sheets</li>
  *   <li>A-Teams und B-Teams mit Cross-Seeding bestimmen</li>
  *   <li>Alte KO-Sheets löschen</li>
  *   <li>KO-Bracket-Sheets für A- und B-Turnier erstellen</li>
@@ -74,24 +68,15 @@ public class PouleKoSheet extends SheetRunner implements ISheet {
     public void doRun() throws GenerateException {
         processBoxinfo("processbox.poule.ko.erstellen");
 
-        if (!pruefeUndAktualisiereVorrundenRangliste()) {
+        PouleVorrundenRanglisteSheetUpdate ranglisteUpdate = pruefeUndAktualisiereVorrundenRangliste();
+        if (ranglisteUpdate == null) {
             return;
         }
 
-        var vorrundeSheet = SheetMetadataHelper.findeSheetUndHeile(
-                getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
-                SheetMetadataHelper.SCHLUESSEL_POULE_VORRUNDE,
-                SheetNamen.pouleVorrunde());
-
-        if (vorrundeSheet == null) {
-            MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK)
-                    .caption(I18n.get("poule.ko.caption"))
-                    .message(I18n.get("poule.ko.fehler.keine.ergebnisse"))
-                    .show();
-            return;
-        }
-
-        var gruppenErgebnisse = leseUndSortiereGruppen(vorrundeSheet);
+        // Bereits von der Vorrunden-Rangliste berechnete und geschriebene Gruppeneinteilung
+        // wiederverwenden – kein zweites Einlesen des Vorrunde-Sheets, damit KO-Bracket und
+        // Rangliste niemals auseinanderlaufen können.
+        var gruppenErgebnisse = ranglisteUpdate.getZuletztSortierteGruppen();
 
         if (gruppenErgebnisse.isEmpty()) {
             MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK)
@@ -141,94 +126,6 @@ public class PouleKoSheet extends SheetRunner implements ISheet {
                     SheetMetadataHelper.schluesselPouleKo("B"), null));
         }
         koSheet.erstelleGruppenBrackets(bracketAuftraege, konfigAdapter);
-    }
-
-    /**
-     * Liest das Vorrunde-Sheet und berechnet die sortierten Ergebnisse pro Gruppe.
-     *
-     * @return Liste von sortierten Gruppen (Platz 1 zuerst), leere Liste wenn keine Daten
-     */
-    private List<List<PouleTeamErgebnis>> leseUndSortiereGruppen(XSpreadsheet vorrundeSheet)
-            throws GenerateException {
-
-        var readRange = RangePosition.from(
-                AbstractPouleVorrundeSheet.SPALTE_POULE_NR,
-                AbstractPouleVorrundeSheet.ERSTE_DATEN_ZEILE,
-                AbstractPouleVorrundeSheet.SPALTE_ERG_B,
-                AbstractPouleVorrundeSheet.ERSTE_DATEN_ZEILE + 9999);
-
-        var rowsData = RangeHelper
-                .from(vorrundeSheet, getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), readRange)
-                .getDataFromRange();
-
-        List<Map<Integer, int[]>> gruppenRoh = new ArrayList<>();
-        Map<Integer, int[]> aktuelleGruppe = null;
-
-        for (RowData row : rowsData) {
-            if (row.size() < 7) {
-                break;
-            }
-
-            // Neue Gruppe: SPALTE_POULE_NR ist nur in der ersten Zeile des Merge-Blocks nicht leer.
-            String pouleNrStr = row.get(0).getStringVal();
-            if (pouleNrStr != null && !pouleNrStr.isEmpty()) {
-                aktuelleGruppe = new HashMap<>();
-                gruppenRoh.add(aktuelleGruppe);
-            }
-
-            if (aktuelleGruppe == null) {
-                continue;
-            }
-
-            int teamANr = row.get(1).getIntVal(0);
-            int teamBNr = row.get(3).getIntVal(0);
-
-            int ergA = row.get(5).getIntVal(0);
-            int ergB = row.get(6).getIntVal(0);
-
-            if (teamANr > 0 && teamBNr == 0) {
-                aktuelleGruppe.computeIfAbsent(teamANr, k -> new int[4])[0]++;
-                continue;
-            }
-
-            if (teamANr <= 0) {
-                continue;
-            }
-
-            aktuelleGruppe.computeIfAbsent(teamANr, k -> new int[4]);
-            aktuelleGruppe.computeIfAbsent(teamBNr, k -> new int[4]);
-
-            if (ergA > 0 || ergB > 0) {
-                aktuelleGruppe.get(teamANr)[2] += ergA;
-                aktuelleGruppe.get(teamANr)[3] += ergB;
-                aktuelleGruppe.get(teamBNr)[2] += ergB;
-                aktuelleGruppe.get(teamBNr)[3] += ergA;
-
-                if (ergA > ergB) {
-                    aktuelleGruppe.get(teamANr)[0]++;
-                    aktuelleGruppe.get(teamBNr)[1]++;
-                } else if (ergB > ergA) {
-                    aktuelleGruppe.get(teamBNr)[0]++;
-                    aktuelleGruppe.get(teamANr)[1]++;
-                }
-            }
-        }
-
-        var rechner = new PouleRanglisteRechner();
-        var sortiertGruppen = new ArrayList<List<PouleTeamErgebnis>>();
-
-        for (var gruppeRoh : gruppenRoh) {
-            var ergebnisse = new ArrayList<PouleTeamErgebnis>();
-            for (var entry : gruppeRoh.entrySet()) {
-                int teamNr = entry.getKey();
-                int[] stats = entry.getValue();
-                ergebnisse.add(new PouleTeamErgebnis(teamNr, stats[0], stats[1],
-                        stats[2] - stats[3], stats[2], List.of()));
-            }
-            sortiertGruppen.add(rechner.sortiere(ergebnisse));
-        }
-
-        return sortiertGruppen;
     }
 
     /**
@@ -307,9 +204,10 @@ public class PouleKoSheet extends SheetRunner implements ISheet {
      * Prüft ob die Vorrunden-Rangliste vorhanden ist. Wenn nicht, wird der Benutzer
      * gefragt ob sie erstellt werden soll. Die Rangliste wird immer aktualisiert.
      *
-     * @return true wenn Rangliste vorhanden und aktualisiert, false wenn abgebrochen
+     * @return die aktualisierte Vorrunden-Rangliste (zum Weiterverwenden ihrer sortierten
+     *         Gruppen), oder {@code null} wenn der Benutzer abgebrochen hat
      */
-    private boolean pruefeUndAktualisiereVorrundenRangliste() throws GenerateException {
+    private PouleVorrundenRanglisteSheetUpdate pruefeUndAktualisiereVorrundenRangliste() throws GenerateException {
         var ranglisteUpdate = new PouleVorrundenRanglisteSheetUpdate(getWorkingSpreadsheet());
         if (ranglisteUpdate.getXSpreadSheet() == null) {
             MessageBoxResult result = MessageBox.from(getxContext(), MessageBoxTypeEnum.WARN_YES_NO)
@@ -317,12 +215,12 @@ public class PouleKoSheet extends SheetRunner implements ISheet {
                     .message(I18n.get("poule.ko.vorrunden.rangliste.fehlt.text"))
                     .show();
             if (result != MessageBoxResult.YES) {
-                return false;
+                return null;
             }
         }
         processBoxinfo("processbox.rangliste.aktualisieren");
         ranglisteUpdate.doRun();
-        return true;
+        return ranglisteUpdate;
     }
 
     /**

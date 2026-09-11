@@ -318,9 +318,18 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 
 			int nrB = resolveTeamNr(row.get(1)); // TEAM_B_SPALTE (relativ: 1)
 			if (nrB <= 0) {
-				// Freilos für Team A
+				// Freilos für Team A – Sieg zählen und die konfigurierten Freispiel-Punkte
+				// verbuchen (in der Zeile bereits als ERG-Werte vorbelegt, siehe
+				// teamPaarungenEinfuegen()). Ohne das wich die Punktedifferenz hier von der
+				// Rangliste (SchweizerRanglisteSheet/SchweizerRundenLeser) ab und sortierte die
+				// Setzliste für die nächste Runde bei Freilos-Teams falsch ein.
 				teamA.setHatteFreilos(true);
-				statsMap.computeIfAbsent(nrA, k -> new int[3])[0]++;
+				int[] statsA = statsMap.computeIfAbsent(nrA, k -> new int[3]);
+				int freispielPlus = getKonfigurationSheet().getFreispielPunktePlus();
+				int freispielMinus = getKonfigurationSheet().getFreispielPunkteMinus();
+				statsA[0]++; // siege
+				statsA[1] += freispielPlus - freispielMinus; // punktediff
+				statsA[2] += freispielPlus; // punkte+
 				continue;
 			}
 			Team teamB = aktiveMeldungen.getTeam(nrB);
