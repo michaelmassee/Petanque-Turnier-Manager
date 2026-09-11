@@ -174,4 +174,64 @@ public class SchweizerTurnierTestDaten19TeamsUITest extends BaseCalcUITest {
 				.as("Rangliste muss nach Kiosk-Update " + ANZ_TEAMS + " Einträge haben")
 				.hasSize(ANZ_TEAMS);
 	}
+
+	/**
+	 * Regressionstest: {@link SchweizerAbstractSpielrundeSheet#gespieltenRundenEinlesen} (bestimmt
+	 * die Setzliste für die nächste Runde) muss beim Freilos dieselben Freispiel-Punkte verbuchen
+	 * wie die Rangliste (Standard 13:7), nicht 0:0. Sonst weicht die Punktedifferenz, nach der die
+	 * nächste Runde gepaart wird, von der Rangliste ab und ein Freilos-Team kann falsch eingestuft
+	 * werden. Nutzt Teamnummer-Anzeige (statt der Teamname-Anzeige des Klassen-Feldes
+	 * {@code testDaten}), damit die Team-Nr direkt aus der Zelle lesbar ist, ohne SVERWEIS-Formeln.
+	 */
+	@Test
+	public void gespieltenRundenEinlesenVerbuchtFreispielPunkteBeimFreilos() throws GenerateException {
+		var nrModusTestDaten = new SchweizerTurnierTestDaten(wkingSpreadsheet, ANZ_TEAMS, SpielplanTeamAnzeige.NR);
+		nrModusTestDaten.generate(1, false);
+
+		XSpreadsheet vorrunde1 = sheetHlp.findByName("1. " + SchweizerAbstractSpielrundeSheet.SHEET_NAMEN);
+		assertThat(vorrunde1).as("Spielrunde 1 muss existieren").isNotNull();
+		int freilosTeamNr = ermittleFreilosTeamNr(vorrunde1);
+		assertThat(freilosTeamNr).as("Bei " + ANZ_TEAMS + " Teams muss genau ein Freilos existieren")
+				.isGreaterThan(0);
+
+		var naechsteSpielrunde = nrModusTestDaten.naechsteSpielrunde;
+		int freispielPlus = naechsteSpielrunde.getKonfigurationSheet().getFreispielPunktePlus();
+		int freispielMinus = naechsteSpielrunde.getKonfigurationSheet().getFreispielPunkteMinus();
+
+		var aktiveMeldungen = naechsteSpielrunde.getMeldeListe().getAktiveMeldungen();
+		var ergebnisse = naechsteSpielrunde.gespieltenRundenEinlesen(aktiveMeldungen, 1, 1);
+
+		var freilosErgebnis = ergebnisse.stream()
+				.filter(erg -> erg.teamNr() == freilosTeamNr)
+				.findFirst()
+				.orElseThrow();
+
+		assertThat(freilosErgebnis.siege()).as("Freilos-Team muss als Sieg gezählt werden").isEqualTo(1);
+		assertThat(freilosErgebnis.punktedifferenz())
+				.as("Freilos-Team muss die konfigurierten Freispiel-Punkte (%d:%d) verbucht bekommen",
+						freispielPlus, freispielMinus)
+				.isEqualTo(freispielPlus - freispielMinus);
+	}
+
+	/**
+	 * Sucht in der Spielrunde die Zeile ohne Gegner-Team (Freilos) und liefert die
+	 * TeamNr von Team A dieser Zeile, oder -1 falls keine gefunden wurde.
+	 */
+	private int ermittleFreilosTeamNr(XSpreadsheet rundeSheet) throws GenerateException {
+		RangePosition leseRange = RangePosition.from(
+				SchweizerAbstractSpielrundeSheet.TEAM_A_SPALTE, SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE,
+				SchweizerAbstractSpielrundeSheet.TEAM_B_SPALTE,
+				SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE + ANZ_TEAMS);
+		RangeData data = RangeHelper
+				.from(rundeSheet, wkingSpreadsheet.getWorkingSpreadsheetDocument(), leseRange)
+				.getDataFromRange();
+
+		for (var row : data) {
+			int nrA = row.get(0).getIntVal(-1);
+			if (nrA <= 0) break;
+			int nrB = row.get(1).getIntVal(-1);
+			if (nrB <= 0) return nrA;
+		}
+		return -1;
+	}
 }
