@@ -19,6 +19,7 @@ import com.sun.star.table.TableBorder2;
 import com.sun.star.text.XText;
 import com.sun.star.uno.UnoRuntime;
 
+import de.petanqueturniermanager.algorithmen.schweizer.SchweizerRundenLeser;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.SheetRunner;
@@ -38,6 +39,7 @@ import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigur
 import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterMeldeListeSheetUpdate;
 import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterGruppenSpalteHelper;
 import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterVorrundenRanglisteSheetUpdate;
+import de.petanqueturniermanager.schweizer.konfiguration.SchweizerRankingModus;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteAnalyseAssert;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheet;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrundeSheet;
@@ -400,6 +402,85 @@ public class MaastrichterTurnierTestDatenUITest extends BaseCalcUITest {
 		assertThat(freilosZeile.get(SchweizerRanglisteSheet.PUNKTE_DIFF_SPALTE).getIntVal(Integer.MIN_VALUE))
 				.as("Punkte-Differenz des Freilos-Teams muss Freispiel+ - Freispiel- sein")
 				.isEqualTo(freispielPlus - freispielMinus);
+	}
+
+	/**
+	 * Regressionstest: {@link MaastrichterFinalrundeSheet} berechnete die Vorrunden-Ergebnisse
+	 * für die KO-Gruppeneinteilung früher unabhängig von der Vorrunden-Rangliste neu – mit
+	 * abweichender Freilos-Punkte-Behandlung ({@link SchweizerRundenLeser} vereinheitlicht das
+	 * jetzt).
+	 * <p>
+	 * Deterministisches Szenario (7 Teams – Minimum für eine Spielrunde ist 6 –, 1 Vorrunde,
+	 * Ranking-Modus OHNE_BUCHHOLZ damit nur Siege→Δ→Punkte+ zählen, Gruppengröße 3): drei
+	 * Paarungen bekommen feste Ergebnisse, das siebte Team bekommt automatisch das Freilos.
+	 * Mit korrekt verbuchten Freispiel-Punkten (Standard 13:7 → Δ=+6) liegt das Freilos-Team
+	 * zwischen den Δ=+13/+12-Siegern und dem Δ=+2-Sieger und landet noch in Gruppe A (Rang 3
+	 * von 3). Ohne die Freispiel-Punkte (der ursprüngliche Bug) hätte es Δ=0 und würde hinter
+	 * den Δ=+2-Sieger auf Rang 4 fallen – und damit in Gruppe B statt A.
+	 */
+	@Test
+	public void maastrichterFinalrundeGruppenZuweisungStimmtBeiFreilosMitVorrundenRanglisteUeberein()
+			throws GenerateException {
+		final int anzTeams = 7;
+		final int gruppenGroesse = 3;
+		var testDaten = new MaastrichterTurnierTestDaten(wkingSpreadsheet, anzTeams, 1, gruppenGroesse);
+		testDaten.generate(1, false);
+		new MaastrichterKonfigurationSheet(wkingSpreadsheet).setRankingModus(SchweizerRankingModus.OHNE_BUCHHOLZ);
+
+		XSpreadsheet vorrunde1 = sheetHlp.findByName(SheetNamen.maastrichterVorrunde(1));
+		assertThat(vorrunde1).as("Maastrichter Vorrunde 1 muss existieren").isNotNull();
+		int freilosTeamNr = ermittleFreilosTeamNr(vorrunde1, anzTeams);
+		assertThat(freilosTeamNr).as("Bei 7 Teams muss genau ein Freilos existieren").isGreaterThan(0);
+
+		setzeVorrundenErgebnis(vorrunde1, 0, 13, 0);
+		setzeVorrundenErgebnis(vorrunde1, 1, 10, 8);
+		setzeVorrundenErgebnis(vorrunde1, 2, 13, 1);
+
+		testDaten.ranglisteSheet.doRun();
+		testDaten.finalrundeSheet.doRun();
+
+		XSpreadsheet rangliste = sheetHlp.findByName(SheetNamen.maastrichterVorrundenRangliste());
+		assertThat(rangliste).as("Vorrunden-Rangliste-Sheet muss vorhanden sein").isNotNull();
+		assertThat(gruppeFuerTeamNr(rangliste, freilosTeamNr, anzTeams))
+				.as("Freilos-Team mit korrekt verbuchten Freispiel-Punkten (Δ=+6) muss vor dem "
+						+ "Δ=+2-Sieger einsortiert werden und damit noch in Gruppe A (Größe 3) landen")
+				.isEqualTo("A");
+	}
+
+	/**
+	 * Setzt das Ergebnis der {@code paarungsIndex}-ten Paarung (0-basiert, Freilos-Zeilen
+	 * werden nicht mitgezählt) in der übergebenen Vorrunden-Spielrunde.
+	 */
+	private void setzeVorrundenErgebnis(XSpreadsheet rundeSheet, int paarungsIndex, int ergA, int ergB)
+			throws GenerateException {
+		RangePosition leseRange = RangePosition.from(
+				SchweizerAbstractSpielrundeSheet.TEAM_A_SPALTE, SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE,
+				SchweizerAbstractSpielrundeSheet.TEAM_B_SPALTE,
+				SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE + 100);
+		RangeData data = RangeHelper
+				.from(rundeSheet, wkingSpreadsheet.getWorkingSpreadsheetDocument(), leseRange)
+				.getDataFromRange();
+
+		int gefundenePaarungen = -1;
+		for (int i = 0; i < data.size(); i++) {
+			RowData row = data.get(i);
+			int nrA = row.get(0).getIntVal(-1);
+			if (nrA <= 0) break;
+			int nrB = row.get(1).getIntVal(-1);
+			if (nrB <= 0) continue; // Freilos – zählt nicht als Paarung
+			gefundenePaarungen++;
+			if (gefundenePaarungen == paarungsIndex) {
+				int zeile = SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE + i;
+				sheetHlp.setNumberValueInCell(NumberCellValue
+						.from(rundeSheet, Position.from(SchweizerAbstractSpielrundeSheet.ERG_TEAM_A_SPALTE, zeile))
+						.setValue(ergA));
+				sheetHlp.setNumberValueInCell(NumberCellValue
+						.from(rundeSheet, Position.from(SchweizerAbstractSpielrundeSheet.ERG_TEAM_B_SPALTE, zeile))
+						.setValue(ergB));
+				return;
+			}
+		}
+		throw new AssertionError("Paarung Nr. " + paarungsIndex + " nicht gefunden");
 	}
 
 	/**

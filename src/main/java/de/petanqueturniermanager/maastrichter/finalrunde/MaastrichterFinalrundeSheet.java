@@ -15,7 +15,6 @@ import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.algorithmen.common.GruppenAufteilungRechner;
-import de.petanqueturniermanager.algorithmen.schweizer.SchweizerSystem;
 import de.petanqueturniermanager.algorithmen.schweizer.SchweizerTeamErgebnis;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -26,23 +25,16 @@ import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterGruppenSpalteHelper;
 import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterVorrundenRanglisteSheetUpdate;
-import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
-import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
-import de.petanqueturniermanager.helper.sheet.rangedata.CellData;
-import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
-import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.ko.KoTurnierbaumSheet;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterGruppenModus;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
-import de.petanqueturniermanager.schweizer.konfiguration.SchweizerRankingModus;
 import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterMeldeListeSheetUpdate;
-import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrundeSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
@@ -51,7 +43,9 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
  * <p>
  * Ablauf:
  * <ol>
- *   <li>Alle "N. Vorrunde"-Blätter lesen → Siege/Punkte pro Team berechnen</li>
+ *   <li>Vorrunden-Rangliste aktualisieren und deren bereits sortierte Ergebnisse übernehmen
+ *       ({@link MaastrichterVorrundenRanglisteSheetUpdate#getZuletztSortierteErgebnisse()}) –
+ *       kein eigenes, zweites Einlesen der "N. Vorrunde"-Blätter</li>
  *   <li>Optional: nur die besten "Maximale Anzahl Teams KO-Phase" Teams übernehmen
  *       (0 = kein Limit); schwächer platzierte Teams bleiben ohne KO-Spiel, aber mit
  *       Cutoff-Markierung in der Vorrunden-Rangliste stehen</li>
@@ -96,7 +90,8 @@ public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet {
 	public void doRun() throws GenerateException {
 		processBoxinfo("processbox.maastrichter.finalrunde.erstellen");
 
-		if (!pruefeUndAktualisiereVorrundenRangliste()) {
+		MaastrichterVorrundenRanglisteSheetUpdate ranglisteUpdate = pruefeUndAktualisiereVorrundenRangliste();
+		if (ranglisteUpdate == null) {
 			return;
 		}
 
@@ -112,20 +107,14 @@ public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet {
 
 		MaastrichterKonfigurationSheet konfigSheet = getKonfigurationSheet();
 		int anzVorrunden = konfigSheet.getAnzVorrunden();
-		SchweizerRankingModus modus = konfigSheet.getRankingModus();
 
-		// Ausgestiegene Teams bleiben mit ihrem bisherigen Vorrunden-Ergebnis in der Auswertung
-		// (siehe SchweizerRanglisteSheet) - sonst gehen sowohl ihr eigenes Ergebnis als auch die
-		// Siege/Punkte der Gegner gegen sie verloren. Sie werden weiter unten in
+		// Bereits von der Vorrunden-Rangliste berechnete und geschriebene Reihenfolge
+		// wiederverwenden – kein zweites Einlesen der Vorrunden-Sheets, damit KO-Einteilung und
+		// Rangliste niemals auseinanderlaufen können (ausgestiegene Teams sind darin enthalten,
+		// siehe SchweizerRanglisteSheet; sie werden weiter unten in
 		// erstelleGruppeTeams(gruppeErg, aktiveMeldungen) trotzdem NICHT den spielenden
-		// Finalgruppen zugeordnet, da dort bewusst die rein aktive Teamliste verwendet wird.
-		TeamMeldungen aktiveUndAusgesetztMeldungen = meldeliste.getAktiveUndAusgesetztMeldungen();
-		List<SchweizerTeamErgebnis> ergebnisse = leseVorrundenErgebnisse(
-				aktiveUndAusgesetztMeldungen, anzVorrunden, meldeliste);
-
-		// Nach Schweizer Kriterien sortieren (für korrekte Setzliste pro Gruppe)
-		List<SchweizerTeamErgebnis> sortiert = new SchweizerSystem()
-				.sortiereNachAuswertungskriterien(ergebnisse, modus);
+		// Finalgruppen zugeordnet, da dort bewusst die rein aktive Teamliste verwendet wird).
+		List<SchweizerTeamErgebnis> sortiert = ranglisteUpdate.getZuletztSortierteErgebnisse();
 
 		if (sortiert.isEmpty()) {
 			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK)
@@ -275,107 +264,6 @@ public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet {
 	}
 
 	/**
-	 * Liest alle Vorrunden-Blätter und berechnet Siege, Punkte und Gegnerlisten pro Team.
-	 */
-	private List<SchweizerTeamErgebnis> leseVorrundenErgebnisse(
-			TeamMeldungen aktiveMeldungen, int anzVorrunden,
-			MaastrichterMeldeListeSheetUpdate meldeliste) throws GenerateException {
-
-		Map<Integer, int[]> statsMap = new HashMap<>(); // teamNr → [0]=siege, [1]=punkte+, [2]=punkte-
-		Map<Integer, List<Integer>> gegnerMap = new HashMap<>();
-		for (Team team : aktiveMeldungen.teams()) {
-			statsMap.put(team.getNr(), new int[3]);
-			gegnerMap.put(team.getNr(), new ArrayList<>());
-		}
-
-		for (int runde = 1; runde <= anzVorrunden; runde++) {
-			SheetRunner.testDoCancelTask();
-			String legacyName = runde + ". " + SheetNamen.LEGACY_MAASTRICHTER_VORRUNDE_PRAEFIX;
-			XSpreadsheet rundeSheet = SheetMetadataHelper.findeSheetUndHeile(
-					getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
-					SheetMetadataHelper.schluesselMaastrichterVorrunde(runde), legacyName);
-			if (rundeSheet == null) {
-				logger.warn("Vorrunden-Sheet '{}' nicht gefunden, übersprungen.", legacyName);
-				continue;
-			}
-			leseRundeEin(rundeSheet, aktiveMeldungen, statsMap, gegnerMap, meldeliste);
-		}
-
-		List<SchweizerTeamErgebnis> ergebnisse = new ArrayList<>();
-		for (Team team : aktiveMeldungen.teams()) {
-			int[] stats = statsMap.getOrDefault(team.getNr(), new int[3]);
-			List<Integer> gegnerNrn = gegnerMap.getOrDefault(team.getNr(), new ArrayList<>());
-			int punkteDiff = stats[1] - stats[2];
-			ergebnisse.add(new SchweizerTeamErgebnis(team.getNr(), stats[0], punkteDiff, stats[1], gegnerNrn));
-		}
-		return ergebnisse;
-	}
-
-	/**
-	 * Liest eine einzelne Spielrunde ein und aktualisiert Statistiken.
-	 */
-	private void leseRundeEin(XSpreadsheet rundeSheet, TeamMeldungen aktiveMeldungen,
-			Map<Integer, int[]> statsMap, Map<Integer, List<Integer>> gegnerMap,
-			MaastrichterMeldeListeSheetUpdate meldeliste) throws GenerateException {
-
-		RangePosition readRange = RangePosition.from(
-				SchweizerAbstractSpielrundeSheet.TEAM_A_SPALTE,
-				SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE,
-				SchweizerAbstractSpielrundeSheet.ERG_TEAM_B_SPALTE,
-				SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE + 999);
-
-		RangeData rowsData = RangeHelper
-				.from(rundeSheet, getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), readRange)
-				.getDataFromRange();
-
-		for (RowData row : rowsData) {
-			if (row.size() < 2) break;
-
-			int nrA = resolveTeamNr(row.get(0), meldeliste);
-			if (nrA <= 0) break;
-			Team teamA = aktiveMeldungen.getTeam(nrA);
-			if (teamA == null) continue;
-
-			int nrB = resolveTeamNr(row.get(1), meldeliste);
-			if (nrB <= 0) {
-				// Freilos für Team A
-				statsMap.computeIfAbsent(nrA, k -> new int[3])[0]++;
-				continue;
-			}
-			Team teamB = aktiveMeldungen.getTeam(nrB);
-			if (teamB == null) continue;
-
-			gegnerMap.computeIfAbsent(nrA, k -> new ArrayList<>()).add(nrB);
-			gegnerMap.computeIfAbsent(nrB, k -> new ArrayList<>()).add(nrA);
-
-			int ergA = (row.size() > 2) ? row.get(2).getIntVal(0) : 0;
-			int ergB = (row.size() > 3) ? row.get(3).getIntVal(0) : 0;
-
-			if (ergA > 0 || ergB > 0) {
-				statsMap.computeIfAbsent(nrA, k -> new int[3])[1] += ergA;
-				statsMap.computeIfAbsent(nrA, k -> new int[3])[2] += ergB;
-				statsMap.computeIfAbsent(nrB, k -> new int[3])[1] += ergB;
-				statsMap.computeIfAbsent(nrB, k -> new int[3])[2] += ergA;
-				if (ergA > ergB) {
-					statsMap.computeIfAbsent(nrA, k -> new int[3])[0]++;
-				} else if (ergB > ergA) {
-					statsMap.computeIfAbsent(nrB, k -> new int[3])[0]++;
-				}
-			}
-		}
-	}
-
-	private int resolveTeamNr(CellData cell, MaastrichterMeldeListeSheetUpdate meldeliste) throws GenerateException {
-		int nr = cell.getIntVal(0);
-		if (nr > 0) return nr;
-		String name = cell.getStringVal();
-		if (name != null && !name.isEmpty()) {
-			return meldeliste.getTeamNrByTeamname(name);
-		}
-		return 0;
-	}
-
-	/**
 	 * Erstellt ein {@link TeamMeldungen}-Objekt aus den sortierten Ergebnissen einer Gruppe.
 	 * Die Reihenfolge der Teams entspricht der Rangliste (Platz 1 zuerst) und dient
 	 * als Setzliste für den KO-Bracket.
@@ -396,9 +284,11 @@ public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet {
 	 * Prüft ob die Vorrunden-Rangliste vorhanden ist. Wenn nicht, wird der Benutzer gefragt ob sie
 	 * erstellt werden soll. Wenn vorhanden (oder gerade erstellt), wird sie immer aktualisiert.
 	 *
-	 * @return true wenn die Rangliste vorhanden und aktualisiert wurde, false wenn abgebrochen
+	 * @return die aktualisierte Vorrunden-Rangliste (zum Weiterverwenden ihrer sortierten
+	 *         Ergebnisse), oder {@code null} wenn der Benutzer abgebrochen hat
 	 */
-	private boolean pruefeUndAktualisiereVorrundenRangliste() throws GenerateException {
+	private MaastrichterVorrundenRanglisteSheetUpdate pruefeUndAktualisiereVorrundenRangliste()
+			throws GenerateException {
 		var ranglisteUpdate = new MaastrichterVorrundenRanglisteSheetUpdate(getWorkingSpreadsheet());
 		if (ranglisteUpdate.getXSpreadSheet() == null) {
 			MessageBoxResult result = MessageBox.from(getxContext(), MessageBoxTypeEnum.WARN_YES_NO)
@@ -406,12 +296,12 @@ public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet {
 					.message(I18n.get("maastrichter.finalrunde.vorrunden.rangliste.fehlt.text"))
 					.show();
 			if (result != MessageBoxResult.YES) {
-				return false;
+				return null;
 			}
 		}
 		processBoxinfo("processbox.rangliste.aktualisieren");
 		ranglisteUpdate.doRun();
-		return true;
+		return ranglisteUpdate;
 	}
 
 	/**

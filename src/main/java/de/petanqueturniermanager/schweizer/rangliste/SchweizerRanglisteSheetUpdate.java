@@ -45,7 +45,11 @@ public class SchweizerRanglisteSheetUpdate extends SchweizerRanglisteSheet {
 		if (sheet == null) {
 			logger.debug("RanglisteUpdate: Sheet '{}' nicht vorhanden – vollständiger Erstaufbau",
 					getRanglistenSheetName());
-			erstelleNeuAufbauSheet().doRun();
+			SchweizerRanglisteSheet neuAufbau = erstelleNeuAufbauSheet();
+			neuAufbau.doRun();
+			// Ergebnis der delegierten Instanz übernehmen, damit Aufrufer (z.B. Maastrichter-
+			// Finalrunde) unabhängig davon, ob Erst- oder Folgeaufbau lief, dieselbe API nutzen können.
+			setZuletztSortierteErgebnisse(neuAufbau.getZuletztSortierteErgebnisse());
 			// Schutz wird im rekursiven doRun() von SchweizerRanglisteSheet gesetzt
 			return;
 		}

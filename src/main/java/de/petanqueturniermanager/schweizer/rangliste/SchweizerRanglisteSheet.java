@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
@@ -17,6 +16,7 @@ import org.apache.logging.log4j.Logger;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
+import de.petanqueturniermanager.algorithmen.schweizer.SchweizerRundenLeser;
 import de.petanqueturniermanager.algorithmen.schweizer.SchweizerSystem;
 import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.ColorHelper;
@@ -45,10 +45,8 @@ import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.RanglisteGeradeUngeradeFormatHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
-import de.petanqueturniermanager.helper.sheet.rangedata.CellData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
-import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerRankingModus;
@@ -96,21 +94,9 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 
 	private static final Logger logger = LogManager.getLogger(SchweizerRanglisteSheet.class);
 
-	/** Hält die erweiterten Auswertungsdaten für die Ranglisten-Sortierung. */
-	private record TeamRanglisteData(int teamNr, int siege, int punktePlus, int punkteMinus,
-			List<Integer> gegnerNrn) {
-
-		int punkteDiff() {
-			return punktePlus - punkteMinus;
-		}
-
-		SchweizerTeamErgebnis toErgebnis() {
-			return new SchweizerTeamErgebnis(teamNr, siege, punkteDiff(), punktePlus, gegnerNrn);
-		}
-	}
-
 	private final SchweizerKonfigurationSheet konfigurationSheet;
 	private final RangListeSorter rangListeSorter;
+	private List<SchweizerTeamErgebnis> zuletztSortierteErgebnisse = List.of();
 
 	public SchweizerRanglisteSheet(WorkingSpreadsheet workingSpreadsheet) {
 		this(workingSpreadsheet, TurnierSystem.SCHWEIZER);
@@ -171,6 +157,25 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 
 	protected RangListeSorter getRangListeSorter() {
 		return rangListeSorter;
+	}
+
+	/**
+	 * Die zuletzt von {@link #berechnungUndSchreiben} berechnete und ins Sheet geschriebene
+	 * Rangliste (nach Schweizer Kriterien sortiert). Ermöglicht Aufrufern, die unmittelbar nach
+	 * einem {@code doRun()} dieselben Daten weiterverwenden möchten (z.B. für eine KO-Einteilung),
+	 * die Vorrunden-Sheets nicht ein zweites Mal einzulesen und dabei versehentlich von der
+	 * Rangliste abweichende Ergebnisse zu berechnen.
+	 */
+	public List<SchweizerTeamErgebnis> getZuletztSortierteErgebnisse() {
+		return zuletztSortierteErgebnisse;
+	}
+
+	/**
+	 * Für {@link SchweizerRanglisteSheetUpdate}: wenn der Erstaufbau an eine andere Instanz
+	 * delegiert wird, muss deren Ergebnis hier übernommen werden.
+	 */
+	protected void setZuletztSortierteErgebnisse(List<SchweizerTeamErgebnis> ergebnisse) {
+		this.zuletztSortierteErgebnisse = ergebnisse;
 	}
 
 	/**
@@ -275,15 +280,16 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 		logger.debug("berechnungUndSchreiben – {} Spielrunden, Modus={}, Thread='{}'",
 				bisSpielrunde, modus, Thread.currentThread().getName());
 
-		List<TeamRanglisteData> ranglisteData = leseAlleSpielergebnisse(aktiveMeldungen, bisSpielrunde, meldeliste);
+		List<SchweizerTeamErgebnis> ergebnisse = SchweizerRundenLeser.leseErgebnisse(getWorkingSpreadsheet(),
+				aktiveMeldungen, bisSpielrunde, this::getSpielrundenMetadatenSchluessel, getSpielrundenBasisName(),
+				meldeliste, getKonfigurationSheet().getFreispielPunktePlus(),
+				getKonfigurationSheet().getFreispielPunkteMinus());
 		logger.debug("berechnungUndSchreiben – {} Teams, Siege-Summe={}",
-				ranglisteData.size(), ranglisteData.stream().mapToInt(TeamRanglisteData::siege).sum());
+				ergebnisse.size(), ergebnisse.stream().mapToInt(SchweizerTeamErgebnis::siege).sum());
 
-		List<SchweizerTeamErgebnis> ergebnisse = ranglisteData.stream()
-				.map(TeamRanglisteData::toErgebnis)
-				.collect(Collectors.toList());
 		List<SchweizerTeamErgebnis> sortiert = new SchweizerSystem().sortiereNachAuswertungskriterien(ergebnisse,
 				modus);
+		setZuletztSortierteErgebnisse(sortiert);
 
 		// BHZ/FBHZ nur berechnen wenn der Modus es erfordert – bei OHNE_BUCHHOLZ bleiben die Spalten leer (0)
 		var schweizerSystem = new SchweizerSystem();
@@ -365,113 +371,6 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 		} catch (Exception e) {
 			throw new GenerateException("Fussbereich konnte nicht transparent formatiert werden: " + e.getMessage());
 		}
-	}
-
-	private List<TeamRanglisteData> leseAlleSpielergebnisse(TeamMeldungen aktiveMeldungen, int bisSpielrunde,
-			SchweizerMeldeListeSheetUpdate meldeliste) throws GenerateException {
-
-		Map<Integer, int[]> statsMap = new HashMap<>(); // teamNr → [0]=siege, [1]=punkte+, [2]=punkte-
-		Map<Integer, List<Integer>> gegnerMap = new HashMap<>();
-		for (Team team : aktiveMeldungen.teams()) {
-			statsMap.put(team.getNr(), new int[3]);
-			gegnerMap.put(team.getNr(), new ArrayList<>());
-		}
-
-		var xDoc = getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
-		for (int runde = 1; runde <= bisSpielrunde; runde++) {
-			SheetRunner.testDoCancelTask();
-			// Iterations-Lookup: Metadaten-first (überlebt Umbenennung), Fallback auf Namen
-			XSpreadsheet rundeSheet = SheetMetadataHelper.findeSheetUndHeile(xDoc,
-					getSpielrundenMetadatenSchluessel(runde), runde + ". " + getSpielrundenBasisName());
-			if (rundeSheet == null) {
-				logger.debug("leseAlleSpielergebnisse: Runde {} – Sheet nicht gefunden, übersprungen", runde);
-				continue;
-			}
-			logger.debug("leseAlleSpielergebnisse: lese Runde {}", runde);
-			leseRundeEin(rundeSheet, aktiveMeldungen, statsMap, gegnerMap, meldeliste);
-		}
-
-		List<TeamRanglisteData> result = new ArrayList<>();
-		for (Team team : aktiveMeldungen.teams()) {
-			int[] stats = statsMap.getOrDefault(team.getNr(), new int[3]);
-			List<Integer> gegnerNrn = gegnerMap.getOrDefault(team.getNr(), new ArrayList<>());
-			result.add(new TeamRanglisteData(team.getNr(), stats[0], stats[1], stats[2], gegnerNrn));
-		}
-		return result;
-	}
-
-	private void leseRundeEin(XSpreadsheet rundeSheet, TeamMeldungen aktiveMeldungen,
-			Map<Integer, int[]> statsMap, Map<Integer, List<Integer>> gegnerMap,
-			SchweizerMeldeListeSheetUpdate meldeliste) throws GenerateException {
-		int dbgSiegeVorher = statsMap.values().stream().mapToInt(a -> a[0]).sum();
-
-		// Lese ab TEAM_A_SPALTE(1) bis ERG_TEAM_B_SPALTE(4), ab ERSTE_DATEN_ZEILE(2)
-		RangePosition readRange = RangePosition.from(
-				SchweizerAbstractSpielrundeSheet.TEAM_A_SPALTE,
-				SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE,
-				SchweizerAbstractSpielrundeSheet.ERG_TEAM_B_SPALTE,
-				SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE + 999);
-		RangeData rowsData = RangeHelper
-				.from(rundeSheet, getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), readRange)
-				.getDataFromRange();
-
-		int dbgZeilen = 0;
-		for (RowData row : rowsData) {
-			if (row.size() < 2) break;
-
-			int nrA = resolveTeamNr(row.get(0), meldeliste);
-			if (nrA <= 0) break; // Ende der Daten
-			dbgZeilen++;
-			Team teamA = aktiveMeldungen.getTeam(nrA);
-			if (teamA == null) continue;
-
-			int nrB = resolveTeamNr(row.get(1), meldeliste);
-			if (nrB <= 0) {
-				// Freilos für Team A – Sieg zählen und die konfigurierten Freispiel-Punkte
-				// verbuchen (kein echter Gegner, daher kein Eintrag in gegnerMap für BHZ/FBHZ).
-				int[] statsA = statsMap.computeIfAbsent(nrA, k -> new int[3]);
-				statsA[0]++; // siege
-				statsA[1] += getKonfigurationSheet().getFreispielPunktePlus();  // punkte+
-				statsA[2] += getKonfigurationSheet().getFreispielPunkteMinus(); // punkte-
-				continue;
-			}
-			Team teamB = aktiveMeldungen.getTeam(nrB);
-			if (teamB == null) continue;
-
-			int ergA = (row.size() > 2) ? row.get(2).getIntVal(0) : 0;
-			int ergB = (row.size() > 3) ? row.get(3).getIntVal(0) : 0;
-
-			if (ergA > 0 || ergB > 0) {
-				// Gegner erst bei tatsächlich eingetragenem Ergebnis für BHZ/FBHZ zählen –
-				// eine bereits erzeugte, aber noch ungespielte Paarung darf die Buchholz-Werte
-				// der Vorrunden-Rangliste nicht beeinflussen.
-				gegnerMap.computeIfAbsent(nrA, k -> new ArrayList<>()).add(nrB);
-				gegnerMap.computeIfAbsent(nrB, k -> new ArrayList<>()).add(nrA);
-
-				statsMap.computeIfAbsent(nrA, k -> new int[3])[1] += ergA; // punkte+
-				statsMap.computeIfAbsent(nrA, k -> new int[3])[2] += ergB; // punkte-
-				statsMap.computeIfAbsent(nrB, k -> new int[3])[1] += ergB; // punkte+
-				statsMap.computeIfAbsent(nrB, k -> new int[3])[2] += ergA; // punkte-
-				if (ergA > ergB) {
-					statsMap.computeIfAbsent(nrA, k -> new int[3])[0]++; // siege für A
-				} else if (ergB > ergA) {
-					statsMap.computeIfAbsent(nrB, k -> new int[3])[0]++; // siege für B
-				}
-			}
-		}
-		int dbgSiegeNachher = statsMap.values().stream().mapToInt(a -> a[0]).sum();
-		logger.debug("leseRundeEin: {} Paarungszeilen verarbeitet, neue Siege in dieser Runde: {}",
-				dbgZeilen, dbgSiegeNachher - dbgSiegeVorher);
-	}
-
-	private int resolveTeamNr(CellData cell, SchweizerMeldeListeSheetUpdate meldeliste) throws GenerateException {
-		int nr = cell.getIntVal(0);
-		if (nr > 0) return nr;
-		String name = cell.getStringVal();
-		if (name != null && !name.isEmpty()) {
-			return meldeliste.getTeamNrByTeamname(name);
-		}
-		return 0;
 	}
 
 	private void insertHeader(XSpreadsheet sheet, SchweizerRankingModus modus) throws GenerateException {
