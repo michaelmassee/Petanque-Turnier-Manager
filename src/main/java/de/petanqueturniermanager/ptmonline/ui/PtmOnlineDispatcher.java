@@ -50,9 +50,11 @@ public final class PtmOnlineDispatcher {
      * anschliessend die beiden Sheets "Turnierinformationen"/"Meldungen" an.
      */
     public static void turnierVerbinden(WorkingSpreadsheet ws) {
+        logger.info("PTM-Online: turnierVerbinden() gestartet (Thread={})", Thread.currentThread().getName());
         XComponentContext ctx = ws.getxContext();
         var config = new LibreOfficePtmOnlineSpeicher(ctx).laden();
         if (!config.isConfigured()) {
+            logger.info("PTM-Online: nicht konfiguriert, breche ab");
             zeigeFehler(ctx, I18n.get("ptmonline.fehler.nicht_konfiguriert"));
             return;
         }
@@ -67,8 +69,10 @@ public final class PtmOnlineDispatcher {
             zeigeFehler(ctx, e.getMessage());
             return;
         }
+        logger.info("PTM-Online: Turniersystem={}, Spieltag={}", ts, spieltagNr);
 
         if (TurnierSystemOnlineTypMapping.onlineTyp(ts).isEmpty()) {
+            logger.info("PTM-Online: Turniersystem {} nicht unterstuetzt, breche ab", ts);
             zeigeFehler(ctx, I18n.get("ptmonline.turnier.verbinden.dialog.fehler.system_nicht_unterstuetzt"));
             return;
         }
@@ -76,16 +80,20 @@ public final class PtmOnlineDispatcher {
         Thread worker = new Thread(
                 () -> verbindenImHintergrund(ws, ctx, config, ts, spieltagNr), "PTM-Online-Verbinden");
         worker.start();
+        logger.info("PTM-Online: Hintergrund-Thread gestartet, turnierVerbinden() kehrt zurueck");
     }
 
     private static void verbindenImHintergrund(WorkingSpreadsheet ws, XComponentContext ctx,
             LibreOfficePtmOnlineSpeicher.Zugangsdaten config, TurnierSystem ts, Integer spieltagNr) {
+        logger.info("PTM-Online: verbindenImHintergrund() gestartet (Thread={}), lade Turnierliste von {}",
+                Thread.currentThread().getName(), config.baseUrl());
         List<OnlineTournamentDto> passende;
         try {
             TournamentSyncClient client = new TournamentSyncClient(config.baseUrl(), config.apiKey());
             passende = client.listTournaments().stream()
                     .filter(t -> TurnierSystemOnlineTypMapping.passtZu(ts, t))
                     .toList();
+            logger.info("PTM-Online: {} passende Turniere geladen", passende.size());
         } catch (IOException e) {
             logger.error("PTM-Online: Turnierliste laden fehlgeschlagen", e);
             LoMainThread.post(ctx, () -> zeigeNetzwerkFehler(ctx, e));
@@ -95,7 +103,9 @@ public final class PtmOnlineDispatcher {
             return;
         }
 
+        logger.info("PTM-Online: zeige Auswahldialog");
         Optional<OnlineTournamentDto> auswahl = zeigeAuswahlDialog(ws, ctx, passende);
+        logger.info("PTM-Online: Auswahldialog beendet, Auswahl vorhanden={}", auswahl.isPresent());
         if (auswahl.isEmpty()) {
             return; // Abgebrochen oder keine Turniere vorhanden
         }
@@ -103,6 +113,7 @@ public final class PtmOnlineDispatcher {
         try {
             TournamentSyncClient client = new TournamentSyncClient(config.baseUrl(), config.apiKey());
             client.connect(auswahl.get().id);
+            logger.info("PTM-Online: Turnier {} verbunden (Server-Aufruf ok)", auswahl.get().id);
         } catch (IOException e) {
             logger.error("PTM-Online: Turnier verbinden fehlgeschlagen", e);
             LoMainThread.post(ctx, () -> zeigeNetzwerkFehler(ctx, e));

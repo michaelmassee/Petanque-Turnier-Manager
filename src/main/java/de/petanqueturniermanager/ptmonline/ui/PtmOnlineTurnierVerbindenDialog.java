@@ -62,11 +62,17 @@ final class PtmOnlineTurnierVerbindenDialog extends AbstractUnoDialog {
 
 	static Optional<OnlineTournamentDto> zeigen(XComponentContext ctx, XWindowPeer parentPeer, List<OnlineTournamentDto> kandidaten)
 			throws GenerateException {
+		logger.info("PtmOnlineTurnierVerbindenDialog.zeigen(): poste auf Main-Thread (Thread={}, {} Kandidaten)",
+				Thread.currentThread().getName(), kandidaten.size());
 		var future = new CompletableFuture<Optional<OnlineTournamentDto>>();
 		LoMainThread.post(ctx, () -> {
+			logger.info("PtmOnlineTurnierVerbindenDialog: Main-Thread-Callback laeuft (Thread={})",
+					Thread.currentThread().getName());
 			try {
 				var dialog = new PtmOnlineTurnierVerbindenDialog(ctx, parentPeer, kandidaten);
 				dialog.erstelleUndAusfuehren();
+				logger.info("PtmOnlineTurnierVerbindenDialog: erstelleUndAusfuehren() zurueck, ausgewaehlt={}",
+						dialog.ausgewaehlt != null);
 				future.complete(Optional.ofNullable(dialog.ausgewaehlt));
 			} catch (Exception e) {
 				logger.error("Fehler im PTM-Online-Verbinden-Dialog", e);
