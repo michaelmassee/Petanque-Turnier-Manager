@@ -27,6 +27,7 @@ public final class LibreOfficePtmOnlineSpeicher {
 	private static final String NODE_PATH = "/org.openoffice.Office.Custom.PetanqueTurnierManager/PtmOnline";
 	private static final String PROP_API_KEY = "ApiKey";
 	private static final String PROP_BASE_URL = "BaseUrl";
+	private static final String DEFAULT_BASE_URL = "https://ptmonline.org";
 
 	public record Zugangsdaten(String apiKey, String baseUrl) {
 		public boolean isConfigured() {
@@ -44,7 +45,8 @@ public final class LibreOfficePtmOnlineSpeicher {
 		XPropertySet props = null;
 		try {
 			props = konfiguration(false);
-			return new Zugangsdaten(stringWert(props, PROP_API_KEY), stringWert(props, PROP_BASE_URL));
+			String baseUrl = stringWert(props, PROP_BASE_URL);
+			return new Zugangsdaten(stringWert(props, PROP_API_KEY), baseUrl.isBlank() ? DEFAULT_BASE_URL : baseUrl);
 		} catch (Exception e) {
 			throw new IllegalStateException("PTM-Online-Zugangsdaten konnten nicht gelesen werden", e);
 		} finally {
