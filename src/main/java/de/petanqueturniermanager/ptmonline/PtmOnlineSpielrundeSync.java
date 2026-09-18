@@ -208,7 +208,7 @@ public final class PtmOnlineSpielrundeSync {
                 erster.vorname(), erster.nachname(), erster.vereinName(), null,
                 zweiter != null ? zweiter.vorname() : null, zweiter != null ? zweiter.nachname() : null,
                 dritter != null ? dritter.vorname() : null, dritter != null ? dritter.nachname() : null,
-                null, true, true);
+                null, true, true, List.of());
     }
 
     private static String netzwerkFehlerText(IOException e) {
