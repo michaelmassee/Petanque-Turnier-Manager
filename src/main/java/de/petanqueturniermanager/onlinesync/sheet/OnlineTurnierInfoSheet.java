@@ -8,6 +8,7 @@ import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.sun.star.container.XNamed;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
@@ -15,6 +16,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
@@ -114,6 +116,19 @@ public class OnlineTurnierInfoSheet extends SheetRunner implements ISheet {
 		labels.addNewRow().newString(I18n.get("ptmonline.sheet.label.status"));
 		labels.addNewRow().newString(I18n.get("ptmonline.sheet.label.letzter.sync"));
 		RangeHelper.from(this, labels.getRangePosition(Position.from(SPALTE_LABEL, ZEILE_TITEL))).setDataInRange(labels);
+	}
+
+	/** Entfernt dieses Sheet wieder aus dem Dokument (Gegenstueck zu {@link #verbinden}). */
+	public void entfernen() throws GenerateException {
+		Optional<XSpreadsheet> sheet = SheetMetadataHelper
+				.findeSheet(getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), metadatenSchluessel());
+		if (sheet.isEmpty()) {
+			return;
+		}
+		XNamed named = Lo.qi(XNamed.class, sheet.get());
+		if (named != null) {
+			getSheetHelper().removeSheet(named.getName());
+		}
 	}
 
 	public Optional<String> getTournamentId() throws GenerateException {

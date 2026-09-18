@@ -37,6 +37,12 @@ public class PtmOnlineRegistrationMapping {
         meldungenSheet.sicherstellen();
     }
 
+    /** Entfernt beide Sheets wieder aus dem Dokument (Gegenstück zu {@link #verbinden}). */
+    public void trennen() throws GenerateException {
+        infoSheet.entfernen();
+        meldungenSheet.entfernen();
+    }
+
     public void addMapping(int teamNr, String onlineRegistrationId, String vorname, String nachname) throws GenerateException {
         meldungenSheet.addMapping(teamNr, onlineRegistrationId, vorname, nachname);
     }

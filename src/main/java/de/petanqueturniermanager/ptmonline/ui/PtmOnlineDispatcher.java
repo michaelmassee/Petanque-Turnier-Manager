@@ -20,6 +20,7 @@ import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.LoMainThread;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
+import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.onlinesync.OnlineTournamentDto;
@@ -161,6 +162,82 @@ public final class PtmOnlineDispatcher {
                 .show();
     }
 
+    /**
+     * Trennt die Verbindung des Dokuments (bzw. bei Supermelee des aktiven Spieltags) zu seinem
+     * PTM-Online-Turnier wieder: fragt beim Nutzer nach, hebt serverseitig die
+     * Dokument-Verwaltung ({@code document_managed}) wieder auf und entfernt die beiden Sheets
+     * "Turnierinformationen"/"Meldungen".
+     */
+    public static void verbindungTrennen(WorkingSpreadsheet ws) {
+        logger.info("PTM-Online: verbindungTrennen() gestartet (Thread={})", Thread.currentThread().getName());
+        XComponentContext ctx = ws.getxContext();
+        var config = new LibreOfficePtmOnlineSpeicher(ctx).laden();
+        if (!config.isConfigured()) {
+            zeigeFehler(ctx, I18n.get("ptmonline.fehler.nicht_konfiguriert"));
+            return;
+        }
+
+        PtmOnlineRegistrationMapping mapping;
+        Optional<String> tournamentId;
+        try {
+            TurnierSystem ts = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();
+            Integer spieltagNr = SpieltagKontext.aktiverSpieltagOderNull(ws, ts);
+            mapping = new PtmOnlineRegistrationMapping(ws, ts, spieltagNr);
+            tournamentId = mapping.getTournamentId();
+        } catch (GenerateException e) {
+            logger.error("PTM-Online: Verbindungsstatus ermitteln fehlgeschlagen", e);
+            zeigeFehler(ctx, e.getMessage());
+            return;
+        }
+        if (tournamentId.isEmpty()) {
+            zeigeFehler(ctx, I18n.get("ptmonline.fehler.turnier_nicht_verbunden"));
+            return;
+        }
+
+        MessageBoxResult antwort = MessageBox.from(ctx, MessageBoxTypeEnum.WARN_YES_NO)
+                .caption(I18n.get("ptmonline.menu.toplevel"))
+                .message(I18n.get("ptmonline.trennen.dialog.frage"))
+                .show();
+        if (antwort != MessageBoxResult.YES) {
+            logger.info("PTM-Online: Trennen vom Nutzer abgelehnt");
+            return;
+        }
+
+        PtmOnlineRegistrationMapping finaleMapping = mapping;
+        String finaleTournamentId = tournamentId.get();
+        Thread worker = new Thread(
+                () -> trennenImHintergrund(ctx, config, finaleMapping, finaleTournamentId), "PTM-Online-Trennen");
+        worker.start();
+    }
+
+    private static void trennenImHintergrund(XComponentContext ctx,
+            LibreOfficePtmOnlineSpeicher.Zugangsdaten config, PtmOnlineRegistrationMapping mapping, String tournamentId) {
+        try {
+            TournamentSyncClient client = new TournamentSyncClient(config.baseUrl(), config.apiKey());
+            client.disconnect(tournamentId);
+            logger.info("PTM-Online: Turnier {} getrennt (Server-Aufruf ok)", tournamentId);
+        } catch (IOException e) {
+            logger.error("PTM-Online: Verbindung trennen (Server-Aufruf) fehlgeschlagen", e);
+            LoMainThread.post(ctx, () -> zeigeNetzwerkFehler(ctx, e));
+            return;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return;
+        }
+
+        LoMainThread.post(ctx, () -> sheetsEntfernenUndErfolgZeigen(ctx, mapping));
+    }
+
+    private static void sheetsEntfernenUndErfolgZeigen(XComponentContext ctx, PtmOnlineRegistrationMapping mapping) {
+        try {
+            mapping.trennen();
+            zeigeInfo(ctx, I18n.get("ptmonline.erfolg.verbindung_getrennt"));
+        } catch (GenerateException e) {
+            logger.error("PTM-Online: Sheets nach Trennen entfernen fehlgeschlagen", e);
+            zeigeFehler(ctx, e.getMessage());
+        }
+    }
+
     public static void anmeldungenImportieren(WorkingSpreadsheet ws) {
         RegistrationImportTask.starte(ws);
     }
@@ -181,6 +258,13 @@ public final class PtmOnlineDispatcher {
     private static void zeigeFehler(XComponentContext ctx, String meldung) {
         MessageBox.from(ctx, MessageBoxTypeEnum.ERROR_OK)
                 .caption(I18n.get("ptmonline.fehler.titel"))
+                .message(meldung)
+                .show();
+    }
+
+    private static void zeigeInfo(XComponentContext ctx, String meldung) {
+        MessageBox.from(ctx, MessageBoxTypeEnum.INFO_OK)
+                .caption(I18n.get("ptmonline.menu.toplevel"))
                 .message(meldung)
                 .show();
     }

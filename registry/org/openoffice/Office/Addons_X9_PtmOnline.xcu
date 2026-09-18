@@ -73,6 +73,22 @@
 									<value>_self</value>
 								</prop>
 							</node>
+
+							<node oor:name="X9X4" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Verbindung trennen</value>
+									<value xml:lang="en">Disconnect</value>
+									<value xml:lang="es">Desconectar</value>
+									<value xml:lang="fr">Déconnecter</value>
+									<value xml:lang="nl">Verbinding verbreken</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:ptmonline_verbindung_trennen</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
 						</node>
 					</node>
 				</node>

@@ -59,6 +59,14 @@ public class TournamentSyncClient extends PtmOnlineHttpClient {
     }
 
     /**
+     * Löst die Verbindung des lokalen Dokuments wieder (setzt serverseitig
+     * {@code document_managed = 0}, hebt damit auch die Web-UI-Bearbeitungssperre wieder auf).
+     */
+    public void disconnect(String tournamentId) throws IOException, InterruptedException {
+        post("/api/sync/tournaments/" + encode(tournamentId) + "/disconnect", "{}");
+    }
+
+    /**
      * Holt online eingegangene Anmeldungen eines Turniers, optional nur die seit {@code since}
      * geaenderten (fuer inkrementellen Abgleich).
      */
