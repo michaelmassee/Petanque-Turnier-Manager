@@ -12,6 +12,7 @@ de.petanqueturniermanager.comp.FtpServerOptionsEventHandler
 de.petanqueturniermanager.comp.WhatsAppChatOptionsEventHandler
 de.petanqueturniermanager.comp.TabFarbenOptionsEventHandler
 de.petanqueturniermanager.comp.KiOptionsEventHandler
+de.petanqueturniermanager.comp.PtmOnlineOptionsEventHandler
 
 # Deactivated components (uncomment if needed)
 #de.petanqueturniermanager.addins.DoublerImpl

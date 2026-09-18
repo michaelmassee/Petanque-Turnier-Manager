@@ -58,4 +58,9 @@
             <service name="de.petanqueturniermanager.KiOptionsEventHandler"/>
         </implementation>
     </component>
+    <component loader="com.sun.star.loader.Java2" uri="PetanqueTurnierManager-1.0.0.jar">
+        <implementation name="de.petanqueturniermanager.comp.PtmOnlineOptionsEventHandler">
+            <service name="de.petanqueturniermanager.PtmOnlineOptionsEventHandler"/>
+        </implementation>
+    </component>
 </components>

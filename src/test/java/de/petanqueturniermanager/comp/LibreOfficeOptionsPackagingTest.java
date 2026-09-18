@@ -88,7 +88,8 @@ class LibreOfficeOptionsPackagingTest {
 
 		for (String handler : List.of("PluginOptionsEventHandler", "WebserverRegieOptionsEventHandler",
 				"CompositeViewsOptionsEventHandler", "FtpServerOptionsEventHandler",
-				"WhatsAppChatOptionsEventHandler", "TabFarbenOptionsEventHandler", "KiOptionsEventHandler")) {
+				"WhatsAppChatOptionsEventHandler", "TabFarbenOptionsEventHandler", "KiOptionsEventHandler",
+				"PtmOnlineOptionsEventHandler")) {
 			assertThat(components)
 					.as("EventHandlerService fehlt in components: %s", handler)
 					.contains("de.petanqueturniermanager.comp." + handler)
@@ -107,6 +108,7 @@ class LibreOfficeOptionsPackagingTest {
 		Path compositeViewsXdl = Path.of("registry/data/org/openoffice/Office/dialogs/CompositeViewsOptions.xdl");
 		Path whatsAppXdl = Path.of("registry/data/org/openoffice/Office/dialogs/WhatsAppChatOptions.xdl");
 		Path kiXdl = Path.of("registry/data/org/openoffice/Office/dialogs/KiOptions.xdl");
+		Path ptmOnlineXdl = Path.of("registry/data/org/openoffice/Office/dialogs/PtmOnlineOptions.xdl");
 
 		assertThat(xcu)
 				.contains("PetanqueTurnierManager")
@@ -119,12 +121,36 @@ class LibreOfficeOptionsPackagingTest {
 				.contains("%origin%/dialogs/WhatsAppChatOptions.xdl")
 				.contains("de.petanqueturniermanager.WhatsAppChatOptionsEventHandler")
 				.contains("%origin%/dialogs/KiOptions.xdl")
-				.contains("de.petanqueturniermanager.KiOptionsEventHandler");
+				.contains("de.petanqueturniermanager.KiOptionsEventHandler")
+				.contains("%origin%/dialogs/PtmOnlineOptions.xdl")
+				.contains("de.petanqueturniermanager.PtmOnlineOptionsEventHandler");
 		assertThat(pluginXdl).exists();
 		assertThat(regieXdl).exists();
 		assertThat(compositeViewsXdl).exists();
 		assertThat(whatsAppXdl).exists();
 		assertThat(kiXdl).exists();
+		assertThat(ptmOnlineXdl).exists();
+	}
+
+	@Test
+	void ptmOnlineOptionsSeiteIstPaketiert() throws Exception {
+		String schema = Files.readString(
+				Path.of("registry/schema/org/openoffice/Office/Custom/PetanqueTurnierManager.xcs"));
+		String data = Files.readString(
+				Path.of("registry/data/org/openoffice/Office/Custom/PetanqueTurnierManager.xcu"));
+		String xdl = Files.readString(Path.of("registry/data/org/openoffice/Office/dialogs/PtmOnlineOptions.xdl"));
+
+		assertThat(schema)
+				.contains("oor:name=\"PtmOnline\"")
+				.contains("oor:name=\"ApiKey\"")
+				.contains("oor:name=\"BaseUrl\"");
+		assertThat(data).contains("<node oor:name=\"PtmOnline\">");
+		assertThat(xdl)
+				.contains("dlg:id=\"PtmOnlineApiKeyFeld\"")
+				.contains("dlg:id=\"PtmOnlineBaseUrlFeld\"")
+				.contains("dlg:id=\"PtmOnlineVerbindungTesten\"")
+				.contains("dlg:id=\"PtmOnlineTrennen\"")
+				.contains("dlg:id=\"PtmOnlineStatus\"");
 	}
 
 	@Test
