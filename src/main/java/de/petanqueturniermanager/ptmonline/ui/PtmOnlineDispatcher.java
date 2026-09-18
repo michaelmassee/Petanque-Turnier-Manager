@@ -115,22 +115,20 @@ public final class PtmOnlineDispatcher {
         LoMainThread.post(ctx, () -> sheetsAnlegenUndErfolgZeigen(ws, ctx, ts, spieltagNr, auswahl.get()));
     }
 
+    /**
+     * Läuft auf einem Hintergrund-Thread (siehe {@link #verbindenImHintergrund}), NICHT dem
+     * LO-Main-Thread — die {@link ProcessBox} darf hier daher NICHT direkt angefasst werden
+     * (setVisible/hide sind VCL-Aufrufe, siehe Threading-Regel in CLAUDE.md). Das eigentliche
+     * Anzeigen des Dialogs marshalliert {@link PtmOnlineTurnierVerbindenDialog#zeigen} bereits
+     * selbst per {@code LoMainThread.post} zurück auf den Main-Thread.
+     */
     private static Optional<OnlineTournamentDto> zeigeAuswahlDialog(
             WorkingSpreadsheet ws, XComponentContext ctx, List<OnlineTournamentDto> passende) {
-        ProcessBox pb = ProcessBox.from();
-        boolean warSichtbar = pb.istSichtbar();
-        if (warSichtbar) {
-            pb.hide();
-        }
         try {
             return PtmOnlineTurnierVerbindenDialog.zeigen(ctx, ws.getContainerWindowPeer(), passende);
         } catch (GenerateException e) {
             logger.error("PTM-Online-Verbinden-Dialog fehlgeschlagen", e);
             return Optional.empty();
-        } finally {
-            if (warSichtbar) {
-                pb.visibleWennAutomatisch();
-            }
         }
     }
 
