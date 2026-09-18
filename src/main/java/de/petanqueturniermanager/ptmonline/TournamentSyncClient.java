@@ -16,6 +16,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import de.petanqueturniermanager.onlinesync.OnlineTournamentDto;
+import de.petanqueturniermanager.ptmonline.dto.NeueOnlineAnmeldung;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationDto;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationResultDto;
 
@@ -64,6 +65,29 @@ public class TournamentSyncClient extends PtmOnlineHttpClient {
      */
     public void disconnect(String tournamentId) throws IOException, InterruptedException {
         post("/api/sync/tournaments/" + encode(tournamentId) + "/disconnect", "{}");
+    }
+
+    /**
+     * Startet das verbundene Online-Turnier (Statuswechsel auf {@code running}) aus dem
+     * Turnierdokument heraus - anders als der Web-UI-Weg ({@code POST /api/tournaments/{id}/start})
+     * funktioniert dieser Endpoint auch fuer dokumentverwaltete Turniere (die Web-UI-Variante
+     * verweigert das bewusst). Idempotent, wenn das Turnier bereits laeuft.
+     */
+    public void start(String tournamentId) throws IOException, InterruptedException {
+        post("/api/sync/tournaments/" + encode(tournamentId) + "/start", "{}");
+    }
+
+    /**
+     * Legt eine neue Anmeldung ohne die oeffentliche Registrierungsmaske an - fuer lokal (im
+     * Turnierdokument) erfasste Teams, die online noch nicht bekannt sind. Liefert die neue
+     * Anmeldung inkl. Online-Id fuer das lokale Mapping zurueck.
+     */
+    public RegistrationDto createRegistration(String tournamentId, NeueOnlineAnmeldung anmeldung)
+            throws IOException, InterruptedException {
+        HttpResponse<String> response = post(
+                "/api/sync/tournaments/" + encode(tournamentId) + "/registrations", GSON.toJson(anmeldung));
+        JsonObject payload = GSON.fromJson(response.body(), JsonObject.class);
+        return GSON.fromJson(payload.get("registration"), RegistrationDto.class);
     }
 
     /**

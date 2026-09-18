@@ -5,6 +5,8 @@ package de.petanqueturniermanager.supermelee.spielrunde;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.Set;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.sun.star.sheet.XSpreadsheet;
 
@@ -21,6 +23,7 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.model.SpielerMeldungen;
+import de.petanqueturniermanager.ptmonline.PtmOnlineSpielrundeSync;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheetUpdate;
@@ -156,6 +159,17 @@ public class SpielrundeSheet_Naechste extends SheetRunner
 	public boolean naechsteSpielrundeEinfuegen() throws GenerateException {
 		SpielRundeNr aktuelleSpielrunde = getKonfigurationSheet().getAktiveSpielRunde();
 		setSpielRundeNr(aktuelleSpielrunde);
+		boolean istErsteRunde = getSheetHelper().findByName(getSheetName(getSpielTag(), getSpielRundeNr())) == null
+				&& aktuelleSpielrunde.getNr() == 1;
+
+		getMeldeListe().upDateSheet();
+		// Kein zuverlaessiges "endgueltig ausgestiegen" bei Supermelee: SpielrundeGespielt.AUSGESETZT
+		// ist nur ein Spieltag-Bye, keine dauerhafte Abmeldung vom Turnier - daher immer leere Menge,
+		// PtmOnlineSpielrundeSync laesst den Online-Status fuer nicht-aktive Teams dann unveraendert.
+		PtmOnlineSpielrundeSync.abgleichen(getWorkingSpreadsheet(), getTurnierSystem(), istErsteRunde,
+				PtmOnlineSpielrundeSync.nummern(getMeldeListe().getAlleMeldungen()),
+				PtmOnlineSpielrundeSync.nummern(getMeldeListe().getAktiveMeldungen()), Set.of());
+
 		getMeldeListe().upDateSheet();
 		SpielerMeldungen aktiveMeldungen = getMeldeListe().getAktiveMeldungen();
 

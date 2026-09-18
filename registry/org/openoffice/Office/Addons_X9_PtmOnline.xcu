@@ -60,22 +60,6 @@
 
 							<node oor:name="X9X3" oor:op="replace">
 								<prop oor:name="Title">
-									<value xml:lang="de">Ergebnisse exportieren</value>
-									<value xml:lang="en">Export results</value>
-									<value xml:lang="es">Exportar resultados</value>
-									<value xml:lang="fr">Exporter les résultats</value>
-									<value xml:lang="nl">Resultaten exporteren</value>
-								</prop>
-								<prop oor:name="URL">
-									<value>ptm:ptmonline_ergebnisse_exportieren</value>
-								</prop>
-								<prop oor:name="Target" oor:type="xs:string">
-									<value>_self</value>
-								</prop>
-							</node>
-
-							<node oor:name="X9X4" oor:op="replace">
-								<prop oor:name="Title">
 									<value xml:lang="de">Verbindung trennen</value>
 									<value xml:lang="en">Disconnect</value>
 									<value xml:lang="es">Desconectar</value>

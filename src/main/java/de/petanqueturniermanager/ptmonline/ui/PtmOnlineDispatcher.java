@@ -28,7 +28,6 @@ import de.petanqueturniermanager.onlinesync.SpieltagKontext;
 import de.petanqueturniermanager.onlinesync.TurnierSystemOnlineTypMapping;
 import de.petanqueturniermanager.ptmonline.PtmOnlineRegistrationMapping;
 import de.petanqueturniermanager.ptmonline.RegistrationImportTask;
-import de.petanqueturniermanager.ptmonline.ResultExportTask;
 import de.petanqueturniermanager.ptmonline.TournamentSyncClient;
 
 /**
@@ -240,10 +239,6 @@ public final class PtmOnlineDispatcher {
 
     public static void anmeldungenImportieren(WorkingSpreadsheet ws) {
         RegistrationImportTask.starte(ws);
-    }
-
-    public static void ergebnisseExportieren(WorkingSpreadsheet ws) {
-        ResultExportTask.starte(ws);
     }
 
     private static void zeigeNetzwerkFehler(XComponentContext ctx, IOException e) {

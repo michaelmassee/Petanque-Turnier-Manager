@@ -24,6 +24,7 @@ public record RegistrationDto(
         String teamName,
         Integer seedingPosition,
         String status,
+        Boolean active,
         String registeredAt,
         String confirmedAt,
         String createdAt,

@@ -36,6 +36,12 @@ import de.petanqueturniermanager.spielerdb.SpielerMitVerein;
  * Importiert online eingegangene, noch nicht lokal vorhandene Anmeldungen (PTM-Online) in die
  * aktive Meldeliste. Nutzt denselben turniersystem-generischen Schreibpfad wie die Spieler-DB-
  * Integration ({@link MeldelisteZiel#schreibeBlock}, {@link MeldelisteZielFactory#starteMeldelisteUpdate}).
+ * <p>
+ * {@link #fuehreImportDurch} ist die synchrone Kernlogik: sie darf auf jedem Hintergrund-Thread
+ * laufen (Sheet-Schreibzugriffe hier sind reine SheetRunner-Background-Thread-Operationen, siehe
+ * CLAUDE.md-Threading-Regel) und wird sowohl vom menuegetriggerten {@link #starte} (eigener
+ * Worker-Thread, UI-Feedback per {@link LoMainThread#post}) als auch synchron aus einem bereits
+ * laufenden {@code SheetRunner} heraus genutzt (Rundenstart-Hook, {@link PtmOnlineSpielrundeSync}).
  */
 public final class RegistrationImportTask {
 
@@ -74,51 +80,61 @@ public final class RegistrationImportTask {
         }
 
         MeldelisteZiel ziel = zielOpt.get();
+        PtmOnlineRegistrationMapping finaleMapping = mapping;
+        String finaleTournamentId = tournamentId.get();
 
         Thread worker = new Thread(
-                () -> importiereImHintergrund(ws, ctx, config, mapping, tournamentId.get(), ts, ziel),
+                () -> importiereUndZeigeErgebnis(ws, ctx, config, finaleMapping, finaleTournamentId, ts, ziel),
                 "PTM-Online-Import");
         worker.start();
     }
 
-    private static void importiereImHintergrund(WorkingSpreadsheet ws, XComponentContext ctx,
-            LibreOfficePtmOnlineSpeicher.Zugangsdaten config,
-            PtmOnlineRegistrationMapping mapping, String tournamentId, TurnierSystem ts, MeldelisteZiel ziel) {
-        List<RegistrationDto> neue;
+    private static void importiereUndZeigeErgebnis(WorkingSpreadsheet ws, XComponentContext ctx,
+            LibreOfficePtmOnlineSpeicher.Zugangsdaten config, PtmOnlineRegistrationMapping mapping,
+            String tournamentId, TurnierSystem ts, MeldelisteZiel ziel) {
         try {
-            TournamentSyncClient client = new TournamentSyncClient(config.baseUrl(), config.apiKey());
-            Instant since = mapping.getLastSync().orElse(Instant.EPOCH);
-            List<RegistrationDto> alle = client.fetchRegistrations(tournamentId, since);
-            neue = new ArrayList<>();
-            for (RegistrationDto reg : alle) {
-                if (!mapping.istBereitsImportiert(reg.id())) {
-                    neue.add(reg);
-                }
-            }
+            int anzahl = fuehreImportDurch(ws, config, mapping, tournamentId, ts, ziel);
+            String meldung = anzahl == 0
+                    ? I18n.get("ptmonline.erfolg.keine_neuen_anmeldungen")
+                    : I18n.get("ptmonline.erfolg.anmeldungen_importiert", anzahl);
+            LoMainThread.post(ctx, () -> zeigeInfo(ctx, meldung));
         } catch (IOException e) {
-            logger.error("PTM-Online: Anmeldungen abrufen fehlgeschlagen", e);
+            logger.error("PTM-Online: Anmeldungen importieren fehlgeschlagen", e);
             LoMainThread.post(ctx, () -> zeigeNetzwerkFehler(ctx, e));
-            return;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            return;
         } catch (GenerateException e) {
-            logger.error("PTM-Online: Meldungen-Sheet lesen fehlgeschlagen", e);
+            logger.error("PTM-Online: Meldungen-Sheet lesen/schreiben fehlgeschlagen", e);
             LoMainThread.post(ctx, () -> zeigeFehler(ctx, e.getMessage()));
-            return;
         }
-
-        if (neue.isEmpty()) {
-            LoMainThread.post(ctx, () -> zeigeInfo(ctx, I18n.get("ptmonline.erfolg.keine_neuen_anmeldungen")));
-            return;
-        }
-
-        LoMainThread.post(ctx, () -> schreibeUndAktualisiere(ws, ctx, mapping, ts, ziel, neue));
     }
 
-    /** Laeuft auf dem Main-Thread: schreibt neue Bloecke, stoesst den Update-Lauf an. */
-    private static void schreibeUndAktualisiere(WorkingSpreadsheet ws, XComponentContext ctx,
-            PtmOnlineRegistrationMapping mapping, TurnierSystem ts, MeldelisteZiel ziel, List<RegistrationDto> neue) {
+    /**
+     * Holt neue Online-Anmeldungen, schreibt sie in die Meldeliste und aktualisiert das Mapping.
+     * Synchron, blockierend (inkl. Warten auf den angestossenen Meldeliste-Update-Runner) - darf
+     * NICHT vom LO-Main-Thread aus aufgerufen werden, wenn der Aufrufer selbst schon auf dem
+     * Main-Thread laeuft und dort auf einen SheetRunner wartet (Deadlock-Risiko, siehe
+     * {@code LoMainThread}-Dokumentation); auf jedem anderen (Hintergrund-)Thread unkritisch.
+     *
+     * @return Anzahl tatsaechlich importierter Anmeldungen (0, wenn keine neuen vorlagen oder keine
+     *         zur Meldeliste-Formation passte).
+     */
+    public static int fuehreImportDurch(WorkingSpreadsheet ws, LibreOfficePtmOnlineSpeicher.Zugangsdaten config,
+            PtmOnlineRegistrationMapping mapping, String tournamentId, TurnierSystem ts, MeldelisteZiel ziel)
+            throws IOException, InterruptedException, GenerateException {
+        TournamentSyncClient client = new TournamentSyncClient(config.baseUrl(), config.apiKey());
+        Instant since = mapping.getLastSync().orElse(Instant.EPOCH);
+        List<RegistrationDto> alle = client.fetchRegistrations(tournamentId, since);
+        List<RegistrationDto> neue = new ArrayList<>();
+        for (RegistrationDto reg : alle) {
+            if (!mapping.istBereitsImportiert(reg.id())) {
+                neue.add(reg);
+            }
+        }
+        if (neue.isEmpty()) {
+            return 0;
+        }
+
         List<RegistrationDto> geschrieben = new ArrayList<>();
         for (RegistrationDto reg : neue) {
             List<SpielerMitVerein> spieler = zuSpielerListe(reg, ziel.getFormation());
@@ -134,60 +150,27 @@ public final class RegistrationImportTask {
                 logger.error("PTM-Online: Anmeldung {} konnte nicht in die Meldeliste geschrieben werden", reg.id(), e);
             }
         }
-
         if (geschrieben.isEmpty()) {
-            zeigeInfo(ctx, I18n.get("ptmonline.erfolg.keine_neuen_anmeldungen"));
-            return;
+            return 0;
         }
 
         SheetRunner runner = MeldelisteZielFactory.starteMeldelisteUpdate(ws, ts);
-        Instant jetzt = Instant.now();
-        Thread abschluss = new Thread(
-                () -> warteAufAbschlussUndAktualisiereMapping(ctx, mapping, ziel, geschrieben, jetzt, runner),
-                "PTM-Online-ImportAbschluss");
-        abschluss.start();
-    }
-
-    /**
-     * Wartet (auf einem eigenen Hintergrund-Thread, NICHT dem Main-Thread) auf das Ende des
-     * Meldeliste-Aktualisieren-Laufs, der erst die Team-Nr vergibt — analog zum
-     * start()+join()-Muster fuer synchrone Abhaengigkeit von einem SheetRunner-Ergebnis.
-     * Ein join() auf dem Main-Thread waere hier riskant, falls der Runner intern selbst
-     * per LoMainThread.post zurueckmarshalliert (Deadlock-Gefahr).
-     */
-    private static void warteAufAbschlussUndAktualisiereMapping(XComponentContext ctx,
-            PtmOnlineRegistrationMapping mapping, MeldelisteZiel ziel, List<RegistrationDto> geschrieben,
-            Instant jetzt, @Nullable SheetRunner runner) {
         if (runner != null) {
-            try {
-                runner.join();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                return;
-            }
+            runner.join();
         }
-        LoMainThread.post(ctx, () -> aktualisiereMappingUndZeigeErfolg(ctx, mapping, ziel, geschrieben, jetzt));
-    }
 
-    private static void aktualisiereMappingUndZeigeErfolg(XComponentContext ctx, PtmOnlineRegistrationMapping mapping,
-            MeldelisteZiel ziel, List<RegistrationDto> geschrieben, Instant jetzt) {
-        try {
-            for (RegistrationDto reg : geschrieben) {
-                String name = reg.firstName() + " " + reg.lastName();
-                int zeile = ziel.findeZeileMitName(name);
-                if (zeile > 0) {
-                    mapping.addMapping(zeile, reg.id(), reg.firstName(), reg.lastName());
-                } else {
-                    logger.warn("PTM-Online: Meldeliste-Zeile für importierte Anmeldung {} nicht gefunden", reg.id());
-                }
+        Instant jetzt = Instant.now();
+        for (RegistrationDto reg : geschrieben) {
+            String name = reg.firstName() + " " + reg.lastName();
+            int zeile = ziel.findeZeileMitName(name);
+            if (zeile > 0) {
+                mapping.addMapping(zeile, reg.id(), reg.firstName(), reg.lastName());
+            } else {
+                logger.warn("PTM-Online: Meldeliste-Zeile für importierte Anmeldung {} nicht gefunden", reg.id());
             }
-            mapping.setLastSync(jetzt);
-        } catch (GenerateException e) {
-            logger.error("PTM-Online: Meldungen-Sheet aktualisieren fehlgeschlagen", e);
-            zeigeFehler(ctx, e.getMessage());
-            return;
         }
-        zeigeInfo(ctx, I18n.get("ptmonline.erfolg.anmeldungen_importiert", geschrieben.size()));
+        mapping.setLastSync(jetzt);
+        return geschrieben.size();
     }
 
     /**

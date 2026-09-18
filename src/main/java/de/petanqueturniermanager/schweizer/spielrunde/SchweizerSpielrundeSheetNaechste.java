@@ -1,6 +1,8 @@
 package de.petanqueturniermanager.schweizer.spielrunde;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.sun.star.sheet.XSpreadsheet;
 
@@ -18,6 +20,7 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.model.TeamMeldungen;
+import de.petanqueturniermanager.ptmonline.PtmOnlineSpielrundeSync;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheetUpdate;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
@@ -47,6 +50,16 @@ public class SchweizerSpielrundeSheetNaechste extends SchweizerAbstractSpielrund
 	public boolean naechsteSpielrundeEinfuegen() throws GenerateException {
 		SpielRundeNr aktuelleSpielrunde = getKonfigurationSheet().getAktiveSpielRunde();
 		setSpielRundeNrInSheet(aktuelleSpielrunde);
+		boolean istErsteRunde = getXSpreadSheet() == null && aktuelleSpielrunde.getNr() == 1;
+
+		getMeldeListe().vollstaendigAktualisieren();
+		TeamMeldungen aktivUndAusgesetztVorSync = getMeldeListe().getAktiveUndAusgesetztMeldungen();
+		Set<Integer> aktiveNrVorSync = PtmOnlineSpielrundeSync.nummern(getMeldeListe().getAktiveMeldungen());
+		Set<Integer> ausgestiegeneNr = new HashSet<>(PtmOnlineSpielrundeSync.nummern(aktivUndAusgesetztVorSync));
+		ausgestiegeneNr.removeAll(aktiveNrVorSync);
+		PtmOnlineSpielrundeSync.abgleichen(getWorkingSpreadsheet(), getTurnierSystem(), istErsteRunde,
+				PtmOnlineSpielrundeSync.nummern(getMeldeListe().getAlleMeldungen()), aktiveNrVorSync, ausgestiegeneNr);
+
 		getMeldeListe().vollstaendigAktualisieren();
 		TeamMeldungen aktiveMeldungen = getMeldeListe().getAktiveMeldungen();
 

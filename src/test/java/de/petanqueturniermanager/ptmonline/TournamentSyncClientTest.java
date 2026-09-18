@@ -88,7 +88,7 @@ public class TournamentSyncClientTest {
 
 		TournamentSyncClient client = new TournamentSyncClient(httpClient, "https://ptm-online.example.com", "ptm_secret");
 		int updated = client.pushResults("t1",
-				List.of(new RegistrationResultDto("r1", "confirmed", 1), new RegistrationResultDto("r2", "confirmed", 2)));
+				List.of(new RegistrationResultDto("r1", "confirmed", 1, true), new RegistrationResultDto("r2", "confirmed", 2, true)));
 
 		assertThat(updated).isEqualTo(2);
 
