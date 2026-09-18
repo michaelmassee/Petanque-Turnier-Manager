@@ -20,11 +20,13 @@ import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.LibreOfficePtmOnlineSpeicher;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.LoMainThread;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
+import de.petanqueturniermanager.onlinesync.SpieltagKontext;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationDto;
 import de.petanqueturniermanager.spielerdb.MeldelisteZiel;
 import de.petanqueturniermanager.spielerdb.MeldelisteZielFactory;
@@ -55,15 +57,22 @@ public final class RegistrationImportTask {
             return;
         }
 
-        DocumentPropertiesHelper docProps = new DocumentPropertiesHelper(ws);
-        PtmOnlineRegistrationMapping mapping = new PtmOnlineRegistrationMapping(docProps);
-        Optional<String> tournamentId = mapping.getTournamentId();
+        TurnierSystem ts = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();
+        PtmOnlineRegistrationMapping mapping;
+        Optional<String> tournamentId;
+        try {
+            Integer spieltagNr = SpieltagKontext.aktiverSpieltagOderNull(ws, ts);
+            mapping = new PtmOnlineRegistrationMapping(ws, ts, spieltagNr);
+            tournamentId = mapping.getTournamentId();
+        } catch (GenerateException e) {
+            zeigeFehler(ctx, e.getMessage());
+            return;
+        }
         if (tournamentId.isEmpty()) {
             zeigeFehler(ctx, I18n.get("ptmonline.fehler.turnier_nicht_angelegt"));
             return;
         }
 
-        TurnierSystem ts = docProps.getTurnierSystemAusDocument();
         MeldelisteZiel ziel = zielOpt.get();
 
         Thread worker = new Thread(
@@ -80,13 +89,22 @@ public final class RegistrationImportTask {
             TournamentSyncClient client = new TournamentSyncClient(config.baseUrl(), config.apiKey());
             Instant since = mapping.getLastSync().orElse(Instant.EPOCH);
             List<RegistrationDto> alle = client.fetchRegistrations(tournamentId, since);
-            neue = alle.stream().filter(r -> !mapping.istBereitsImportiert(r.id())).toList();
+            neue = new ArrayList<>();
+            for (RegistrationDto reg : alle) {
+                if (!mapping.istBereitsImportiert(reg.id())) {
+                    neue.add(reg);
+                }
+            }
         } catch (IOException e) {
             logger.error("PTM-Online: Anmeldungen abrufen fehlgeschlagen", e);
             LoMainThread.post(ctx, () -> zeigeNetzwerkFehler(ctx, e));
             return;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+            return;
+        } catch (GenerateException e) {
+            logger.error("PTM-Online: Meldungen-Sheet lesen fehlgeschlagen", e);
+            LoMainThread.post(ctx, () -> zeigeFehler(ctx, e.getMessage()));
             return;
         }
 
@@ -153,15 +171,22 @@ public final class RegistrationImportTask {
 
     private static void aktualisiereMappingUndZeigeErfolg(XComponentContext ctx, PtmOnlineRegistrationMapping mapping,
             MeldelisteZiel ziel, List<RegistrationDto> geschrieben, Instant jetzt) {
-        for (RegistrationDto reg : geschrieben) {
-            int zeile = ziel.findeZeileMitName(reg.firstName() + " " + reg.lastName());
-            if (zeile > 0) {
-                mapping.addMapping(zeile, reg.id());
-            } else {
-                logger.warn("PTM-Online: Meldeliste-Zeile für importierte Anmeldung {} nicht gefunden", reg.id());
+        try {
+            for (RegistrationDto reg : geschrieben) {
+                String name = reg.firstName() + " " + reg.lastName();
+                int zeile = ziel.findeZeileMitName(name);
+                if (zeile > 0) {
+                    mapping.addMapping(zeile, reg.id(), name);
+                } else {
+                    logger.warn("PTM-Online: Meldeliste-Zeile für importierte Anmeldung {} nicht gefunden", reg.id());
+                }
             }
+            mapping.setLastSync(jetzt);
+        } catch (GenerateException e) {
+            logger.error("PTM-Online: Meldungen-Sheet aktualisieren fehlgeschlagen", e);
+            zeigeFehler(ctx, e.getMessage());
+            return;
         }
-        mapping.setLastSync(jetzt);
         zeigeInfo(ctx, I18n.get("ptmonline.erfolg.anmeldungen_importiert", geschrieben.size()));
     }
 

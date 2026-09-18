@@ -13,13 +13,16 @@ import org.apache.logging.log4j.Logger;
 
 import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.LibreOfficePtmOnlineSpeicher;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.LoMainThread;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
+import de.petanqueturniermanager.onlinesync.SpieltagKontext;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationResultDto;
 
 /**
@@ -48,14 +51,23 @@ public final class ResultExportTask {
             return;
         }
 
-        PtmOnlineRegistrationMapping mapping = new PtmOnlineRegistrationMapping(new DocumentPropertiesHelper(ws));
-        Optional<String> tournamentId = mapping.getTournamentId();
-        if (tournamentId.isEmpty()) {
-            zeigeFehler(ctx, I18n.get("ptmonline.fehler.turnier_nicht_angelegt"));
+        TurnierSystem ts = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();
+        Optional<String> tournamentId;
+        Map<Integer, String> alleMappings;
+        try {
+            Integer spieltagNr = SpieltagKontext.aktiverSpieltagOderNull(ws, ts);
+            PtmOnlineRegistrationMapping mapping = new PtmOnlineRegistrationMapping(ws, ts, spieltagNr);
+            tournamentId = mapping.getTournamentId();
+            if (tournamentId.isEmpty()) {
+                zeigeFehler(ctx, I18n.get("ptmonline.fehler.turnier_nicht_angelegt"));
+                return;
+            }
+            alleMappings = mapping.getAlleMappings();
+        } catch (GenerateException e) {
+            zeigeFehler(ctx, e.getMessage());
             return;
         }
 
-        Map<Integer, String> alleMappings = mapping.getAlleMappings();
         if (alleMappings.isEmpty()) {
             zeigeInfo(ctx, I18n.get("ptmonline.erfolg.ergebnisse_exportiert", 0));
             return;

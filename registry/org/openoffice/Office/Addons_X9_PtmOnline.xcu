@@ -28,14 +28,14 @@
 						<node oor:name="Submenu">
 							<node oor:name="X9X1" oor:op="replace">
 								<prop oor:name="Title">
-									<value xml:lang="de">Turnier online anlegen</value>
-									<value xml:lang="en">Create tournament online</value>
-									<value xml:lang="es">Crear torneo en línea</value>
-									<value xml:lang="fr">Créer un tournoi en ligne</value>
-									<value xml:lang="nl">Toernooi online aanmaken</value>
+									<value xml:lang="de">Mit Online-Turnier verbinden</value>
+									<value xml:lang="en">Connect to online tournament</value>
+									<value xml:lang="es">Conectar con torneo en línea</value>
+									<value xml:lang="fr">Se connecter à un tournoi en ligne</value>
+									<value xml:lang="nl">Verbinden met online toernooi</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>ptm:ptmonline_turnier_anlegen</value>
+									<value>ptm:ptmonline_turnier_verbinden</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>

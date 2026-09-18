@@ -16,7 +16,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
-import de.petanqueturniermanager.ptmonline.dto.CreateTournamentDto;
+import de.petanqueturniermanager.onlinesync.OnlineTournamentDto;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationDto;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationResultDto;
 
@@ -31,22 +31,38 @@ public class TournamentSyncClientTest {
 	}
 
 	@Test
-	public void createTournamentSendetPostUndLiefertId() throws Exception {
+	public void listTournamentsParstListeAusDerAntwort() throws Exception {
 		HttpClient httpClient = mock(HttpClient.class);
-		HttpResponse<String> response = mockResponse(201, "{\"tournament\":{\"id\":\"tid-1\"}}");
+		String body = "{\"tournaments\":[{\"id\":\"t1\",\"name\":\"Herbstturnier\",\"type\":\"schweizer\",\"registrationType\":\"forme\",\"status\":\"registration\",\"documentManaged\":false}]}";
+		HttpResponse<String> response = mockResponse(200, body);
 		when(httpClient.<String>send(any(HttpRequest.class), any())).thenReturn(response);
 
 		TournamentSyncClient client = new TournamentSyncClient(httpClient, "https://ptm-online.example.com", "ptm_secret");
-		String id = client.createTournament(
-				new CreateTournamentDto("Test-Turnier", "2026-09-01", null, "Testplatz", null, "schweizer", "doublette", "registration", "public"));
+		List<OnlineTournamentDto> turniere = client.listTournaments();
 
-		assertThat(id).isEqualTo("tid-1");
+		assertThat(turniere).hasSize(1);
+		assertThat(turniere.get(0).id).isEqualTo("t1");
+		assertThat(turniere.get(0).type).isEqualTo("schweizer");
 
 		ArgumentCaptor<HttpRequest> captor = ArgumentCaptor.forClass(HttpRequest.class);
 		verify(httpClient).send(captor.capture(), any());
-		HttpRequest sent = captor.getValue();
-		assertThat(sent.uri().toString()).isEqualTo("https://ptm-online.example.com/api/tournaments");
-		assertThat(sent.headers().firstValue("Authorization")).contains("Bearer ptm_secret");
+		assertThat(captor.getValue().uri().toString()).isEqualTo("https://ptm-online.example.com/api/sync/tournaments");
+		assertThat(captor.getValue().headers().firstValue("Authorization")).contains("Bearer ptm_secret");
+	}
+
+	@Test
+	public void connectSendetPostAnConnectEndpoint() throws Exception {
+		HttpClient httpClient = mock(HttpClient.class);
+		HttpResponse<String> response = mockResponse(200, "{\"ok\":true}");
+		when(httpClient.<String>send(any(HttpRequest.class), any())).thenReturn(response);
+
+		TournamentSyncClient client = new TournamentSyncClient(httpClient, "https://ptm-online.example.com", "ptm_secret");
+		client.connect("t1");
+
+		ArgumentCaptor<HttpRequest> captor = ArgumentCaptor.forClass(HttpRequest.class);
+		verify(httpClient).send(captor.capture(), any());
+		assertThat(captor.getValue().uri().toString()).isEqualTo("https://ptm-online.example.com/api/sync/tournaments/t1/connect");
+		assertThat(captor.getValue().method()).isEqualTo("POST");
 	}
 
 	@Test

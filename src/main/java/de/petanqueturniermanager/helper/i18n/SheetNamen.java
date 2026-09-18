@@ -93,7 +93,12 @@ public final class SheetNamen {
     public static final String KEY_JGJ_GRUPPE_SPIELPLAN_MUSTER      = "sheet.name.jgj.gruppe.spielplan.muster";
     /** JGJ Gesamtrangliste: gruppenübergreifende Rangliste über alle Gruppen. */
     public static final String KEY_JGJ_GESAMTRANGLISTE             = "sheet.name.jgj.gesamtrangliste";
-    public static final String KEY_PTM_ONLINE                      = "sheet.name.ptm.online";
+    public static final String KEY_PTM_ONLINE_INFO                  = "sheet.name.ptm.online.info";
+    public static final String KEY_PTM_ONLINE_MELDUNGEN             = "sheet.name.ptm.online.meldungen";
+    /** PTM-Online-Turnierinformationen je Spieltag (Supermelee): {0} = Spieltagnummer. */
+    public static final String KEY_PTM_ONLINE_INFO_MUSTER           = "sheet.name.ptm.online.info.muster";
+    /** PTM-Online-Meldungen je Spieltag (Supermelee): {0} = Spieltagnummer. */
+    public static final String KEY_PTM_ONLINE_MELDUNGEN_MUSTER      = "sheet.name.ptm.online.meldungen.muster";
 
     // ── Legacy-Werte: unveränderliche deutsche Originalnamen ─────────────────
     // Werden ausschließlich als Fallback in findeSheetUndHeile() für alte Dokumente verwendet.
@@ -137,7 +142,8 @@ public final class SheetNamen {
     public static final String LEGACY_KASKADE_FELD_SUFFIX            = "Feld";
     public static final String LEGACY_KASKADE_GRUPPENRANGLISTE       = "Kaskaden-Gruppenrangliste";
     public static final String LEGACY_MAASTRICHTER_GRUPPEN_UEBERSICHT = "Gruppen-Übersicht";
-    public static final String LEGACY_PTM_ONLINE                     = "PTM Online";
+    public static final String LEGACY_PTM_ONLINE_INFO                = "Turnierinformationen";
+public static final String LEGACY_PTM_ONLINE_MELDUNGEN           = "Meldungen";
     public static final String LEGACY_KASKADE_GRUPPEN_UEBERSICHT     = "Kaskaden-Gruppen-Übersicht";
 
     private SheetNamen() {
@@ -189,8 +195,35 @@ public final class SheetNamen {
         return getOderFallback(KEY_SUPERMELEE_TEAMS, LEGACY_SUPERMELEE_TEAMS);
     }
 
-    public static String ptmOnline() {
-        return getOderFallback(KEY_PTM_ONLINE, LEGACY_PTM_ONLINE);
+    public static String ptmOnlineInfo() {
+        return getOderFallback(KEY_PTM_ONLINE_INFO, LEGACY_PTM_ONLINE_INFO);
+    }
+
+    public static String ptmOnlineMeldungen() {
+        return getOderFallback(KEY_PTM_ONLINE_MELDUNGEN, LEGACY_PTM_ONLINE_MELDUNGEN);
+    }
+
+    /**
+     * PTM-Online-Turnierinformationen eines einzelnen Spieltags (Supermelee): z.B.
+     * "1. Spieltag Turnierinformationen".
+     *
+     * @param spieltagNr Nummer des Spieltags
+     * @return lokalisierter Tabellenname
+     */
+    public static String ptmOnlineInfo(int spieltagNr) {
+        var muster = getOderFallback(KEY_PTM_ONLINE_INFO_MUSTER, "{0}. Spieltag " + LEGACY_PTM_ONLINE_INFO);
+        return new MessageFormat(muster, Locale.ROOT).format(new Object[]{spieltagNr});
+    }
+
+    /**
+     * PTM-Online-Meldungen eines einzelnen Spieltags (Supermelee): z.B. "1. Spieltag Meldungen".
+     *
+     * @param spieltagNr Nummer des Spieltags
+     * @return lokalisierter Tabellenname
+     */
+    public static String ptmOnlineMeldungen(int spieltagNr) {
+        var muster = getOderFallback(KEY_PTM_ONLINE_MELDUNGEN_MUSTER, "{0}. Spieltag " + LEGACY_PTM_ONLINE_MELDUNGEN);
+        return new MessageFormat(muster, Locale.ROOT).format(new Object[]{spieltagNr});
     }
 
     public static String koKonfiguration() {

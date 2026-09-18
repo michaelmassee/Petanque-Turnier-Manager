@@ -63,6 +63,16 @@ public class SheetMetadataHelper {
     public static final String SCHLUESSEL_SPIELTAG_RANGLISTE_PREFIX = "__PTM_SPIELTAG_";
     public static final String SCHLUESSEL_SPIELTAG_RANGLISTE_SUFFIX = "__";
 
+    // ── Konstanten: PTM-Online (turniersystemübergreifend, siehe onlinesync/ptmonline) ──────────
+
+    /** Turnierinformationen-Sheet, wenn das Dokument (ohne Spieltage) mit genau einem Online-Turnier verbunden ist. */
+    public static final String SCHLUESSEL_PTM_ONLINE_INFO = "__PTM_ONLINE_INFO__";
+    /** Meldungen-Mapping-Sheet, wenn das Dokument (ohne Spieltage) mit genau einem Online-Turnier verbunden ist. */
+    public static final String SCHLUESSEL_PTM_ONLINE_MELDUNGEN = "__PTM_ONLINE_MELDUNGEN__";
+    /** Prefix für die Supermelee-Variante (1 Verbindung pro Spieltag, siehe {@link #schluesselPtmOnlineInfo(int)}). */
+    public static final String SCHLUESSEL_PTM_ONLINE_INFO_SPIELTAG_PREFIX = "__PTM_ONLINE_INFO_SPIELTAG_";
+    public static final String SCHLUESSEL_PTM_ONLINE_MELDUNGEN_SPIELTAG_PREFIX = "__PTM_ONLINE_MELDUNGEN_SPIELTAG_";
+
     // ── Konstanten: Supermelee ───────────────────────────────────────────────
 
     public static final String SCHLUESSEL_SUPERMELEE_MELDELISTE = "__PTM_SUPERMELEE_MELDELISTE__";
@@ -73,7 +83,6 @@ public class SheetMetadataHelper {
     public static final String SCHLUESSEL_SUPERMELEE_SPIELTAG_TEILNEHMER_PREFIX = "__PTM_SUPERMELEE_TEILNEHMER_";
     public static final String SCHLUESSEL_SUPERMELEE_SPIELRUNDE_PREFIX = "__PTM_SUPERMELEE_SPIELRUNDE_";
     public static final String SCHLUESSEL_SUPERMELEE_SPIELRUNDE_PLAN_PREFIX = "__PTM_SUPERMELEE_SPIELRUNDE_PLAN_";
-    public static final String SCHLUESSEL_SUPERMELEE_PTM_ONLINE = "__PTM_SUPERMELEE_PTM_ONLINE__";
 
     // ── Konstanten: JederGegenJeden ──────────────────────────────────────────
 
@@ -184,6 +193,14 @@ public class SheetMetadataHelper {
 
     public static String schluesselSpieltagRangliste(int spieltagNr) {
         return SCHLUESSEL_SPIELTAG_RANGLISTE_PREFIX + spieltagNr + SCHLUESSEL_SPIELTAG_RANGLISTE_SUFFIX;
+    }
+
+    public static String schluesselPtmOnlineInfo(int spieltagNr) {
+        return SCHLUESSEL_PTM_ONLINE_INFO_SPIELTAG_PREFIX + spieltagNr + SCHLUESSEL_SPIELTAG_RANGLISTE_SUFFIX;
+    }
+
+    public static String schluesselPtmOnlineMeldungen(int spieltagNr) {
+        return SCHLUESSEL_PTM_ONLINE_MELDUNGEN_SPIELTAG_PREFIX + spieltagNr + SCHLUESSEL_SPIELTAG_RANGLISTE_SUFFIX;
     }
 
     public static String schluesselSchweizerSpielrunde(int rundeNr) {

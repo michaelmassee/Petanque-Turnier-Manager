@@ -11,35 +11,21 @@ import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.time.Duration;
-import java.time.Instant;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonSyntaxException;
-
 /**
- * HTTP-Client für die PTM-Online-REST-API (Cloudflare-Worker-App, siehe
- * {@code Petanque-Turnier-Manager-Online/SECURITY.md}). Auth per API-Key
- * ({@code Authorization: Bearer ptm_...}).
- * <p>
- * Die genaue JSON-Antwortform der Endpunkte ist außerhalb dieses Repos definiert; dieser Client
- * parst daher defensiv sowohl eine direkte Objekt-/Array-Antwort als auch eine unter einem
- * naheliegenden Schlüssel ({@code tournament}/{@code registrations}) verpackte Antwort.
+ * HTTP-Client für den PTM-Online-Verbindungstest (Extras &gt; Optionen &gt; PétTurnMngr &gt; PTM
+ * Online). Auth per API-Key ({@code Authorization: Bearer ptm_...}). Die eigentliche
+ * Turnier-Synchronisation (Liste laden, verbinden, Anmeldungen/Ergebnisse abgleichen) läuft über
+ * {@link de.petanqueturniermanager.ptmonline.TournamentSyncClient}.
  */
 public class PtmOnlineApiClient {
 
 	private static final Logger logger = LogManager.getLogger(PtmOnlineApiClient.class);
 
-	private static final Gson GSON = new GsonBuilder().create();
 	private static final Duration TIMEOUT = Duration.ofSeconds(15);
 
 	private final String apiKey;
@@ -52,41 +38,12 @@ public class PtmOnlineApiClient {
 		this.httpClient = HttpClient.newBuilder().connectTimeout(TIMEOUT).build();
 	}
 
-	/** Leichter Verbindungstest: listet die eigenen Turniere; wirft bei Fehler eine {@link PtmOnlineException}. */
+	/**
+	 * Leichter Verbindungstest: listet die zum API-Key gehörenden Turniere; wirft bei fehlendem/
+	 * ungültigem Key oder Netzwerkfehler eine {@link PtmOnlineException}.
+	 */
 	public void pruefeVerbindung() throws PtmOnlineException {
-		senden(request("GET", "/api/tournaments", null));
-	}
-
-	public TournamentDto createTournament(TournamentDto turnier) throws PtmOnlineException {
-		String antwort = senden(request("POST", "/api/tournaments", GSON.toJson(turnier)));
-		JsonObject json = parseObject(antwort);
-		JsonObject turnierJson = json.has("tournament") && json.get("tournament").isJsonObject()
-				? json.getAsJsonObject("tournament")
-				: json;
-		return GSON.fromJson(turnierJson, TournamentDto.class);
-	}
-
-	public List<RegistrationDto> getRegistrationsSince(String tournamentId, Instant since) throws PtmOnlineException {
-		String pfad = "/api/sync/tournaments/" + tournamentId + "/registrations";
-		if (since != null) {
-			pfad += "?since=" + DateTimeFormatter.ISO_INSTANT.format(since);
-		}
-		String antwort = senden(request("GET", pfad, null));
-		JsonElement json = com.google.gson.JsonParser.parseString(antwort);
-		JsonArray array = json.isJsonObject() && json.getAsJsonObject().has("registrations")
-				? json.getAsJsonObject().getAsJsonArray("registrations")
-				: json.getAsJsonArray();
-		return GSON.fromJson(array, new com.google.gson.reflect.TypeToken<List<RegistrationDto>>() {
-		}.getType());
-	}
-
-	public void postResults(String tournamentId, List<ResultUpdateDto> updates) throws PtmOnlineException {
-		if (updates == null || updates.isEmpty()) {
-			return;
-		}
-		JsonObject body = new JsonObject();
-		body.add("registrations", GSON.toJsonTree(updates));
-		senden(request("POST", "/api/sync/tournaments/" + tournamentId + "/results", GSON.toJson(body)));
+		senden(request("GET", "/api/sync/tournaments", null));
 	}
 
 	private HttpRequest request(String method, String pfad, String jsonBody) throws PtmOnlineException {
@@ -121,14 +78,6 @@ public class PtmOnlineApiClient {
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
 			throw new PtmOnlineException("PTM-Online-Anfrage wurde unterbrochen", e);
-		}
-	}
-
-	private static JsonObject parseObject(String json) throws PtmOnlineException {
-		try {
-			return com.google.gson.JsonParser.parseString(json).getAsJsonObject();
-		} catch (JsonSyntaxException | IllegalStateException e) {
-			throw new PtmOnlineException("Antwort von PTM Online konnte nicht gelesen werden: " + e.getMessage(), e);
 		}
 	}
 }

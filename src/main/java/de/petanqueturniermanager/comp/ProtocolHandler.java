@@ -186,7 +186,6 @@ import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_New;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_TestDaten;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
 import de.petanqueturniermanager.supermelee.meldeliste.SupermeleeTeilnehmerSheet;
-import de.petanqueturniermanager.supermelee.online.SupermeleeOnlineSyncSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundePlan;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Naechste;
@@ -257,7 +256,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_MELDELISTE_TESTDATEN = "meldeliste_testdaten";
 	public static final String CMD_SPIELRUNDEN_TESTDATEN = "spielrunden_testdaten";
 	public static final String CMD_SPIELTAGRANGLISTE_TESTDATEN = "SpieltagRanglisteSheet_TestDaten";
-	public static final String CMD_SUPERMELEE_ONLINE_SYNC = "supermelee_online_sync";
 	// Liga
 	public static final String CMD_LIGA_NEUE_MELDELISTE = "liga_neue_meldeliste";
 	public static final String CMD_LIGA_UPDATE_MELDELISTE = "liga_update_meldeliste";
@@ -395,7 +393,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_SPIELERDB_IMPORT        = "spielerdb_import";
 	public static final String CMD_SPIELERDB_WEBVIEW       = "spielerdb_webview";
 	// PTM-Online
-	public static final String CMD_PTMONLINE_TURNIER_ANLEGEN         = "ptmonline_turnier_anlegen";
+	public static final String CMD_PTMONLINE_TURNIER_VERBINDEN       = "ptmonline_turnier_verbinden";
 	public static final String CMD_PTMONLINE_ANMELDUNGEN_IMPORTIEREN = "ptmonline_anmeldungen_importieren";
 	public static final String CMD_PTMONLINE_ERGEBNISSE_EXPORTIEREN  = "ptmonline_ergebnisse_exportieren";
 	// Konfiguration
@@ -944,9 +942,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_UPDATE_MELDELISTE:
 				new MeldeListeSheet_Update(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).start();
 				break;
-			case CMD_SUPERMELEE_ONLINE_SYNC:
-				new SupermeleeOnlineSyncSheet(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).start();
-				break;
 			case CMD_ANMELDUNGEN:
 				new AnmeldungenSheet(ws).testTurnierSystem(TurnierSystem.SUPERMELEE).backUpDocument().start();
 				break;
@@ -1470,8 +1465,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_SPIELERDB_WEBVIEW          -> de.petanqueturniermanager.spielerdb.ui.SpielerDbDispatcher
 					.zeigeWebView(erzeugeWorkingSpreadsheetFuerDispatch());
 			// PTM-Online-Aktionen: analog Spieler-DB ohne ProcessBox, damit Dialoge nicht überdeckt werden
-			case CMD_PTMONLINE_TURNIER_ANLEGEN         -> de.petanqueturniermanager.ptmonline.ui.PtmOnlineDispatcher
-					.turnierOnlineAnlegen(erzeugeWorkingSpreadsheetFuerDispatch());
+			case CMD_PTMONLINE_TURNIER_VERBINDEN       -> de.petanqueturniermanager.ptmonline.ui.PtmOnlineDispatcher
+					.turnierVerbinden(erzeugeWorkingSpreadsheetFuerDispatch());
 			case CMD_PTMONLINE_ANMELDUNGEN_IMPORTIEREN -> de.petanqueturniermanager.ptmonline.ui.PtmOnlineDispatcher
 					.anmeldungenImportieren(erzeugeWorkingSpreadsheetFuerDispatch());
 			case CMD_PTMONLINE_ERGEBNISSE_EXPORTIEREN  -> de.petanqueturniermanager.ptmonline.ui.PtmOnlineDispatcher
@@ -2184,8 +2179,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_SPIELTAG_RANGLISTE, CMD_SPIELTAG_RANGLISTE_SORT,
 				 CMD_SUPERMELEE_ENDRANGLISTE, CMD_SUPERMELEE_ENDRANGLISTE_SORT,
 				 CMD_SUPERMELEE_TEAMPAARUNGEN,
-				 CMD_SUPERMELEE_VALIDATE, CMD_SUPERMELEE_SPIELTAGRANGLISTE_VALIDATE,
-				 CMD_SUPERMELEE_ONLINE_SYNC                     -> ts == TurnierSystem.SUPERMELEE;
+				 CMD_SUPERMELEE_VALIDATE, CMD_SUPERMELEE_SPIELTAGRANGLISTE_VALIDATE -> ts == TurnierSystem.SUPERMELEE;
 			case CMD_AKTUELLE_SPIELRUNDE                    -> ts == TurnierSystem.SUPERMELEE && hatSupermeleeSpielrunde(ws);
 			case CMD_MELDELISTE_TESTDATEN, CMD_SPIELRUNDEN_TESTDATEN,
 				 CMD_SPIELTAGRANGLISTE_TESTDATEN        -> ts == TurnierSystem.KEIN || ts == TurnierSystem.SUPERMELEE;
@@ -2345,7 +2339,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_SPIELERDB_IMPORT,
 				 CMD_SPIELERDB_WEBVIEW                      -> true;
 			case CMD_SPIELERDB_IN_MELDELISTE                -> ts != TurnierSystem.KEIN;
-			case CMD_PTMONLINE_TURNIER_ANLEGEN,
+			case CMD_PTMONLINE_TURNIER_VERBINDEN,
 				 CMD_PTMONLINE_ANMELDUNGEN_IMPORTIEREN,
 				 CMD_PTMONLINE_ERGEBNISSE_EXPORTIEREN       -> ts != TurnierSystem.KEIN
 					&& new LibreOfficePtmOnlineSpeicher(ctx).laden().isConfigured();

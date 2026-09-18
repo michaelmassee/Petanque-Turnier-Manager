@@ -15,7 +15,7 @@ import java.util.List;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
-import de.petanqueturniermanager.ptmonline.dto.CreateTournamentDto;
+import de.petanqueturniermanager.onlinesync.OnlineTournamentDto;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationDto;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationResultDto;
 
@@ -36,12 +36,26 @@ public class TournamentSyncClient extends PtmOnlineHttpClient {
     }
 
     /**
-     * Legt ein neues Turnier online an und liefert dessen PTM-Online-ID.
+     * Listet die Turniere, die der Besitzer des aktiven API-Keys verwalten darf (Owner oder
+     * Editor) - Grundlage für die Auswahlliste "Mit Online-Turnier verbinden".
      */
-    public String createTournament(CreateTournamentDto tournament) throws IOException, InterruptedException {
-        HttpResponse<String> response = post("/api/tournaments", GSON.toJson(tournament));
+    public List<OnlineTournamentDto> listTournaments() throws IOException, InterruptedException {
+        HttpResponse<String> response = get("/api/sync/tournaments");
         JsonObject payload = GSON.fromJson(response.body(), JsonObject.class);
-        return payload.getAsJsonObject("tournament").get("id").getAsString();
+
+        List<OnlineTournamentDto> turniere = new ArrayList<>();
+        for (var element : payload.getAsJsonArray("tournaments")) {
+            turniere.add(GSON.fromJson(element, OnlineTournamentDto.class));
+        }
+        return turniere;
+    }
+
+    /**
+     * Verbindet das lokale Dokument mit einem bestehenden Online-Turnier (setzt serverseitig
+     * {@code document_managed = 1}, ohne sonstige Metadaten zu ändern).
+     */
+    public void connect(String tournamentId) throws IOException, InterruptedException {
+        post("/api/sync/tournaments/" + encode(tournamentId) + "/connect", "{}");
     }
 
     /**
