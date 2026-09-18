@@ -38,7 +38,8 @@ public class OnlineTurnierMeldungenSheet extends SheetRunner implements ISheet {
 
 	private static final int SPALTE_SPIELER_NR = 0;
 	private static final int SPALTE_ONLINE_ID = 1;
-	private static final int SPALTE_NAME = 2;
+	private static final int SPALTE_VORNAME = 2;
+	private static final int SPALTE_NACHNAME = 3;
 
 	private static final int ZEILE_TITEL = 0;
 	private static final int ZEILE_HEADER = 1;
@@ -94,12 +95,13 @@ public class OnlineTurnierMeldungenSheet extends SheetRunner implements ISheet {
 	}
 
 	private void schreibeHeader() throws GenerateException {
-		schreibeZeile(ZEILE_TITEL, I18n.get("ptmonline.sheet.meldungen.titel"), "", "");
+		schreibeZeile(ZEILE_TITEL, I18n.get("ptmonline.sheet.meldungen.titel"), "", "", "");
 		schreibeZeile(ZEILE_HEADER, I18n.get("ptmonline.sheet.mapping.header.spielernr"),
-				I18n.get("ptmonline.sheet.mapping.header.onlineid"), I18n.get("ptmonline.sheet.mapping.header.name"));
+				I18n.get("ptmonline.sheet.mapping.header.onlineid"), I18n.get("ptmonline.sheet.mapping.header.vorname"),
+				I18n.get("ptmonline.sheet.mapping.header.nachname"));
 	}
 
-	public void addMapping(int teamNr, String onlineId, String name) throws GenerateException {
+	public void addMapping(int teamNr, String onlineId, String vorname, String nachname) throws GenerateException {
 		Map<Integer, String> vorhanden = leseMapping();
 		if (vorhanden.containsKey(teamNr)) {
 			return;
@@ -109,7 +111,8 @@ public class OnlineTurnierMeldungenSheet extends SheetRunner implements ISheet {
 		RowData row = zeile.addNewRow();
 		row.newInt(teamNr);
 		row.newString(onlineId);
-		row.newString(StringUtils.defaultString(name));
+		row.newString(StringUtils.defaultString(vorname));
+		row.newString(StringUtils.defaultString(nachname));
 		RangeHelper.from(this, zeile.getRangePosition(Position.from(SPALTE_SPIELER_NR, naechsteFreieZeile))).setDataInRange(zeile);
 	}
 
@@ -127,7 +130,7 @@ public class OnlineTurnierMeldungenSheet extends SheetRunner implements ISheet {
 
 	private Map<Integer, String> leseMapping() throws GenerateException {
 		Map<Integer, String> ergebnis = new LinkedHashMap<>();
-		RangePosition bereich = RangePosition.from(SPALTE_SPIELER_NR, ERSTE_DATEN_ZEILE, SPALTE_NAME, ERSTE_DATEN_ZEILE + MAX_ZEILEN);
+		RangePosition bereich = RangePosition.from(SPALTE_SPIELER_NR, ERSTE_DATEN_ZEILE, SPALTE_NACHNAME, ERSTE_DATEN_ZEILE + MAX_ZEILEN);
 		RangeData daten = RangeHelper.from(this, bereich).getDataFromRange();
 		for (RowData zeile : daten) {
 			if (zeile.isEmpty()) {

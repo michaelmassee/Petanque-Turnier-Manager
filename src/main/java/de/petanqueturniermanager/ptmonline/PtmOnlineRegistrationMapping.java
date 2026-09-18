@@ -37,8 +37,8 @@ public class PtmOnlineRegistrationMapping {
         meldungenSheet.sicherstellen();
     }
 
-    public void addMapping(int teamNr, String onlineRegistrationId, String name) throws GenerateException {
-        meldungenSheet.addMapping(teamNr, onlineRegistrationId, name);
+    public void addMapping(int teamNr, String onlineRegistrationId, String vorname, String nachname) throws GenerateException {
+        meldungenSheet.addMapping(teamNr, onlineRegistrationId, vorname, nachname);
     }
 
     public Optional<String> getOnlineId(int teamNr) throws GenerateException {

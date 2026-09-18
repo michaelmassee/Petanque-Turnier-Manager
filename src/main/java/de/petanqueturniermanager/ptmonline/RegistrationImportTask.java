@@ -176,7 +176,7 @@ public final class RegistrationImportTask {
                 String name = reg.firstName() + " " + reg.lastName();
                 int zeile = ziel.findeZeileMitName(name);
                 if (zeile > 0) {
-                    mapping.addMapping(zeile, reg.id(), name);
+                    mapping.addMapping(zeile, reg.id(), reg.firstName(), reg.lastName());
                 } else {
                     logger.warn("PTM-Online: Meldeliste-Zeile für importierte Anmeldung {} nicht gefunden", reg.id());
                 }
