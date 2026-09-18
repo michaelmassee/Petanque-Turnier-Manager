@@ -5,13 +5,18 @@ package de.petanqueturniermanager.ptmonline.ui;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import org.junit.jupiter.api.Test;
 
+import com.tngtech.archunit.core.domain.AccessTarget.MethodCallTarget;
 import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaClasses;
+import com.tngtech.archunit.core.domain.JavaCodeUnit;
 import com.tngtech.archunit.core.domain.JavaMethod;
 import com.tngtech.archunit.core.domain.JavaMethodCall;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
@@ -31,10 +36,36 @@ import com.tngtech.archunit.core.importer.ClassFileImporter;
  * {@code ProcessBox} ab, das intern aber bereits per {@code runOnMain(...)} korrekt marshallt —
  * nur {@code istSichtbar()} tut das NICHT). Dieser Test bleibt daher bewusst eng auf die konkrete
  * Off-Thread-Methode dieser Klasse beschränkt.
+ * <p>
+ * {@link #postZielMethodenRuehrenThreadJoinNichtAn()} sichert einen zweiten, verwandten Bug ab: die
+ * per {@code LoMainThread.post(...)} auf den Main-Thread marshallten Methoden riefen (vor dem Fix)
+ * transitiv {@code SheetRunner.start()}+{@code .join()} auf — der Main-Thread haelt beim Ausfuehren
+ * des Callbacks bereits den SolarMutex, das {@code join()} auf den neu gestarteten Sheet-Thread
+ * deadlockte. Der reale Aufrufpfad verlaesst dabei {@code PtmOnlineDispatcher} (ueber
+ * {@code PtmOnlineRegistrationMapping} bis hinein in {@code OnlineTurnierInfoSheet}/
+ * {@code OnlineTurnierMeldungenSheet}, wo {@code SheetRunner.start()+.join()} tatsaechlich passiert)
+ * — die Traversal MUSS daher klassenuebergreifend erfolgen (siehe {@link #erreichbar}, analog zum
+ * BFS-Muster in {@code ThreadingCallGraphArchTest}, dort ueber {@code JavaCodeUnit}+
+ * {@code target.resolveMember()}).
+ * <p>
+ * Ein Versuch, das als generelles projektweites Call-Graph-Gate (jede Methode, die
+ * {@code LoMainThread.post} aufruft, als Wurzel) umzusetzen, wurde verworfen: die BFS ist
+ * ordnungs-unempfindlich und markierte auch den bereits gefixten Code als Verstoss, weil das
+ * (sichere) {@code join()} im selben Methodenkoerper VOR dem {@code post(...)}-Aufruf liegt, nicht
+ * darin. Dieser Test prueft daher gezielt nur die tatsaechlichen Post-Ziel-Methoden.
  */
 class PtmOnlineDispatcherThreadingTest {
 
     private static final String PROCESS_BOX = "de.petanqueturniermanager.helper.msgbox.ProcessBox";
+    private static final String THREAD_FQN = "java.lang.Thread";
+    private static final String JOIN_METHODE = "join";
+
+    /**
+     * Methoden, die aktuell als {@code () -> methodeName(...)}-Ziel an {@code LoMainThread.post(...)}
+     * uebergeben werden - laufen also auf dem LO-Main-Thread. Bei Erweiterung von
+     * {@code PtmOnlineDispatcher} um weitere {@code LoMainThread.post}-Aufrufe hier ergaenzen.
+     */
+    private static final Set<String> POST_ZIEL_METHODEN = Set.of("zeigeErfolg", "zeigeFehler", "zeigeNetzwerkFehler");
 
     @Test
     void verbindenImHintergrundRuehrtProcessBoxNichtDirektAn() {
@@ -48,8 +79,8 @@ class PtmOnlineDispatcherThreadingTest {
                         "PtmOnlineDispatcher.verbindenImHintergrund()/zeigeAuswahlDialog() nicht gefunden - "
                                 + "Methode umbenannt? Diesen Test dann auf den neuen Namen anpassen."));
 
-        Set<String> direkteProcessBoxAufrufe = new HashSet<>();
-        sammleProcessBoxAufrufe(dispatcher, methode.getName(), direkteProcessBoxAufrufe, new HashSet<>());
+        Set<String> direkteProcessBoxAufrufe = erreichbar(methode,
+                target -> target.getOwner().getFullName().equals(PROCESS_BOX));
 
         assertThat(direkteProcessBoxAufrufe)
                 .as("PtmOnlineDispatcher.verbindenImHintergrund()/zeigeAuswahlDialog() läuft auf einem "
@@ -59,25 +90,55 @@ class PtmOnlineDispatcherThreadingTest {
                 .isEmpty();
     }
 
-    /** Verfolgt Methodenaufrufe innerhalb der {@code PtmOnlineDispatcher}-Klasse rekursiv. */
-    private static void sammleProcessBoxAufrufe(JavaClass dispatcherClass, String methodenName,
-            Set<String> gefunden, Set<String> besucht) {
-        if (!besucht.add(methodenName)) {
-            return;
+    @Test
+    void postZielMethodenRuehrenThreadJoinNichtAn() {
+        JavaClasses classes = new ClassFileImporter().importPackages("de.petanqueturniermanager");
+        JavaClass dispatcher = classes.get(PtmOnlineDispatcher.class);
+
+        Set<String> gefunden = new HashSet<>();
+        for (String zielMethode : POST_ZIEL_METHODEN) {
+            JavaMethod methode = dispatcher.getMethods().stream()
+                    .filter(m -> m.getName().equals(zielMethode))
+                    .findFirst()
+                    .orElseThrow(() -> new AssertionError(
+                            "PtmOnlineDispatcher." + zielMethode + "() nicht gefunden - Methode umbenannt? "
+                                    + "POST_ZIEL_METHODEN anpassen."));
+            gefunden.addAll(erreichbar(methode,
+                    target -> target.getName().equals(JOIN_METHODE) && target.getOwner().isAssignableTo(THREAD_FQN)));
         }
-        for (JavaMethod methode : dispatcherClass.getMethods()) {
-            if (!methode.getName().equals(methodenName)) {
+
+        assertThat(gefunden)
+                .as("Die per LoMainThread.post(...) auf den Main-Thread marshallten Methoden ("
+                        + POST_ZIEL_METHODEN + ") duerfen kein Thread.join()/SheetRunner.join() erreichen - "
+                        + "der Main-Thread haelt beim Ausfuehren des Callbacks bereits den SolarMutex "
+                        + "(Deadlock-Risiko, siehe Klassen-Javadoc).")
+                .isEmpty();
+    }
+
+    /**
+     * Klassenübergreifende BFS über den Aufruf-Graph ab {@code wurzel} (Muster analog
+     * {@code ThreadingCallGraphArchTest.erreichtKeineVclSenkeAusFremdThread}): jeder Treffer auf
+     * {@code istTreffer} wird gesammelt, jeder aufgelöste Aufruf-Ziel-{@link JavaCodeUnit} wird
+     * unabhängig von seiner Owner-Klasse weiterverfolgt.
+     */
+    private static Set<String> erreichbar(JavaCodeUnit wurzel, Predicate<MethodCallTarget> istTreffer) {
+        Set<String> gefunden = new HashSet<>();
+        Set<JavaCodeUnit> besucht = new HashSet<>();
+        Deque<JavaCodeUnit> queue = new ArrayDeque<>();
+        queue.add(wurzel);
+        while (!queue.isEmpty()) {
+            JavaCodeUnit aktuell = queue.poll();
+            if (!besucht.add(aktuell)) {
                 continue;
             }
-            for (JavaMethodCall call : methode.getMethodCallsFromSelf()) {
-                var target = call.getTarget();
-                if (target.getOwner().getFullName().equals(PROCESS_BOX)) {
-                    gefunden.add(target.getName());
+            for (JavaMethodCall call : aktuell.getMethodCallsFromSelf()) {
+                MethodCallTarget target = call.getTarget();
+                if (istTreffer.test(target)) {
+                    gefunden.add(target.getOwner().getSimpleName() + "." + target.getName());
                 }
-                if (target.getOwner().equals(dispatcherClass)) {
-                    sammleProcessBoxAufrufe(dispatcherClass, target.getName(), gefunden, besucht);
-                }
+                target.resolveMember().ifPresent(queue::add);
             }
         }
+        return gefunden;
     }
 }

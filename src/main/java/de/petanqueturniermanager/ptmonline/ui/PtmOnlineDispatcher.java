@@ -123,7 +123,18 @@ public final class PtmOnlineDispatcher {
             return;
         }
 
-        LoMainThread.post(ctx, () -> sheetsAnlegenUndErfolgZeigen(ws, ctx, ts, spieltagNr, auswahl.get()));
+        logger.info("PTM-Online: lege Sheets fuer Verbindung an");
+        try {
+            new PtmOnlineRegistrationMapping(ws, ts, spieltagNr).verbinden(auswahl.get());
+            logger.info("PTM-Online: Sheets angelegt, zeige Erfolg");
+            LoMainThread.post(ctx, () -> zeigeErfolg(ctx, auswahl.get()));
+        } catch (GenerateException | InterruptedException e) {
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+            logger.error("PTM-Online: Sheets fuer Verbindung anlegen fehlgeschlagen", e);
+            LoMainThread.post(ctx, () -> zeigeFehler(ctx, e.getMessage()));
+        }
     }
 
     /**
@@ -143,21 +154,11 @@ public final class PtmOnlineDispatcher {
         }
     }
 
-    private static void sheetsAnlegenUndErfolgZeigen(WorkingSpreadsheet ws, XComponentContext ctx,
-            TurnierSystem ts, Integer spieltagNr, OnlineTournamentDto turnier) {
-        try {
-            new PtmOnlineRegistrationMapping(ws, ts, spieltagNr).verbinden(turnier);
-            MessageBox.from(ctx, MessageBoxTypeEnum.INFO_OK)
-                    .caption(I18n.get("ptmonline.menu.toplevel"))
-                    .message(I18n.get("ptmonline.erfolg.turnier_verbunden", turnier.name))
-                    .show();
-        } catch (GenerateException | InterruptedException e) {
-            if (e instanceof InterruptedException) {
-                Thread.currentThread().interrupt();
-            }
-            logger.error("PTM-Online: Sheets fuer Verbindung anlegen fehlgeschlagen", e);
-            zeigeFehler(ctx, e.getMessage());
-        }
+    private static void zeigeErfolg(XComponentContext ctx, OnlineTournamentDto turnier) {
+        MessageBox.from(ctx, MessageBoxTypeEnum.INFO_OK)
+                .caption(I18n.get("ptmonline.menu.toplevel"))
+                .message(I18n.get("ptmonline.erfolg.turnier_verbunden", turnier.name))
+                .show();
     }
 
     public static void anmeldungenImportieren(WorkingSpreadsheet ws) {
