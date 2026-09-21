@@ -243,7 +243,7 @@ public final class SheetResolverFactory {
         m.put(TRIPTETE, new MetadatenSheetResolver(SheetMetadataHelper.SCHLUESSEL_TRIPTETE_RANGLISTE, name));
         m.put(SUPERMELEE, new SupermeleeAktiveSpieltagRanglisteSheetResolver());
         m.put(MAASTRICHTER, new MetadatenSheetResolver(
-                SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX, name));
+                SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDEN_RANGLISTE, name));
         return m;
     }
 

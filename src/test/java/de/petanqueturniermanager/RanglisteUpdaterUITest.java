@@ -152,7 +152,7 @@ class RanglisteUpdaterUITest extends BaseCalcUITest {
                 TurnierSystem.MAASTRICHTER,
                 ws -> new MaastrichterTurnierTestDaten(ws).generate(),
                 ws -> new MaastrichterVorrundenRanglisteSheetUpdate(ws).doRun(),
-                SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX,
+                SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDEN_RANGLISTE,
                 SchweizerRanglisteSheet.TEAM_NR_SPALTE,
                 SchweizerRanglisteSheet.SIEGE_SPALTE,
                 SchweizerRanglisteSheet.PUNKTE_DIFF_SPALTE,

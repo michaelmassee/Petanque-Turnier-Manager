@@ -54,7 +54,7 @@ class SheetResolverFactoryTest {
                 .as("Maastrichter-RANGLISTE muss die Vorrunden-Rangliste anzeigen")
                 .isInstanceOfSatisfying(MetadatenSheetResolver.class,
                         delegate -> assertThat(delegate.metadatenSchluesselFuerTest())
-                                .isEqualTo(SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX));
+                                .isEqualTo(SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDEN_RANGLISTE));
     }
 
     @Test

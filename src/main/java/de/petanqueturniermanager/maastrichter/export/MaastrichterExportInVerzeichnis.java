@@ -34,7 +34,7 @@ public class MaastrichterExportInVerzeichnis extends AbstractExportInVerzeichnis
     protected ExportErgebnis exportiereInVerzeichnis(Path zielVerzeichnis) throws GenerateException {
         var ws = getWorkingSpreadsheet();
         var konfiguration = new MaastrichterKonfigurationSheet(ws);
-        aktualisiereExportSheetWennDirty(SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX,
+        aktualisiereExportSheetWennDirty(SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDEN_RANGLISTE,
                 new EingabeSignatur(SignaturQuellen::fuerMaastrichter),
                 () -> new MaastrichterVorrundenRanglisteSheetUpdate(ws).doRun());
 
@@ -42,7 +42,7 @@ public class MaastrichterExportInVerzeichnis extends AbstractExportInVerzeichnis
         String teilnehmerlisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_TEILNEHMER, SheetNamen.teilnehmer());
         boolean meldelisteExportieren = konfiguration.isMeldelisteExportieren();
         boolean teilnehmerlisteExportieren = konfiguration.isTeilnehmerlisteExportieren();
-        String ranglisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX, SheetNamen.maastrichterVorrundenRangliste());
+        String ranglisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDEN_RANGLISTE, SheetNamen.maastrichterVorrundenRangliste());
         var vorrunden = konfiguration.isSpielrundenExportieren()
                 ? rundenSheetEintraegePerSchluessel(SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX, SheetNamen::maastrichterVorrunde)
                 : List.<RundenSheetEintrag>of();

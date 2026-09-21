@@ -520,7 +520,8 @@ public class SheetBaumOrganisierer {
                 .forEach(ergebnis::add);
 
         var vorrundeKnoten = maastrichterKnoten.stream()
-                .filter(k -> k.metadatenSchluessel().startsWith(SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX))
+                .filter(k -> k.metadatenSchluessel().startsWith(SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX)
+                        || SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDEN_RANGLISTE.equals(k.metadatenSchluessel()))
                 .map(k -> new BlattKnoten("  " + blattName(k), k.metadatenSchluessel()))
                 .toList();
 

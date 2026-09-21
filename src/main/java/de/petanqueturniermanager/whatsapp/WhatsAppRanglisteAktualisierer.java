@@ -61,7 +61,7 @@ final class WhatsAppRanglisteAktualisierer {
 		case POULE -> SheetSyncRebuild.aktualisiereWennDirty(doc, SheetMetadataHelper.SCHLUESSEL_POULE_VORRUNDEN_RANGLISTE,
 				new EingabeSignatur(SignaturQuellen::fuerPoule),
 				() -> new PouleVorrundenRanglisteSheetUpdate(ws).doRun());
-		case MAASTRICHTER -> SheetSyncRebuild.aktualisiereWennDirty(doc, SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX,
+		case MAASTRICHTER -> SheetSyncRebuild.aktualisiereWennDirty(doc, SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDEN_RANGLISTE,
 				new EingabeSignatur(SignaturQuellen::fuerMaastrichter),
 				() -> new MaastrichterVorrundenRanglisteSheetUpdate(ws).doRun());
 		case TRIPTETE -> aktualisiereTripTete(ws, doc);
