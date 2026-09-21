@@ -118,6 +118,28 @@ public final class WhatsAppBridgeManager {
 		}
 	}
 
+	/**
+	 * Beendet den laufenden Bridge-Prozess (falls vorhanden). Der nächste {@link #starteOderVerbinde()}-Aufruf
+	 * startet einen frischen Prozess, der mit der dann (leeren oder neuen) Session unter {@code PTM_WA_SESSION_DIR}
+	 * verbindet.
+	 */
+	public static synchronized void beenden() {
+		Process laufenderProzess = process;
+		if (laufenderProzess == null) {
+			return;
+		}
+		laufenderProzess.destroy();
+		try {
+			if (!laufenderProzess.waitFor(5, TimeUnit.SECONDS)) {
+				laufenderProzess.destroyForcibly();
+			}
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			laufenderProzess.destroyForcibly();
+		}
+		process = null;
+	}
+
 	public static void vorbereiten(Consumer<WhatsAppBridgeSetup.Schritt> fortschritt) throws WhatsAppBridgeException {
 		WhatsAppBridgeSetup.vorbereitenWennMoeglich(fortschritt);
 	}

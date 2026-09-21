@@ -1,5 +1,6 @@
 'use strict';
 
+const fs = require('fs/promises');
 const express = require('express');
 const qrcode = require('qrcode');
 const pino = require('pino');
@@ -74,6 +75,25 @@ app.get('/groups', async (_req, res) => {
   } catch (error) {
     res.status(502).json({ error: error.message });
   }
+});
+
+app.post('/logout', async (_req, res) => {
+  try {
+    if (sock) {
+      await sock.logout();
+    }
+  } catch (error) {
+    // Konto ist serverseitig ggf. schon getrennt - trotzdem lokale Session entfernen.
+  }
+  try {
+    await fs.rm(sessionDir, { recursive: true, force: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+    return;
+  }
+  status = 'disconnected:logged_out';
+  lastQr = '';
+  res.json({ ok: true });
 });
 
 app.post('/send-image', async (req, res) => {
