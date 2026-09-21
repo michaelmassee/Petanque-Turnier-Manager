@@ -159,8 +159,7 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 			rangListeSpalte.upDateRanglisteSpalte();
 			streichspieltagBloeckeDirektFaerben();
 			getxCalculatable().calculate();
-			Position footerPos = endRanglisteFormatter.addFooter().getPos();
-			printBereichDefinieren(footerPos);
+			aktualisiereFooterUndDruckbereich();
 			processBoxinfo("processbox.header.festsetzen");
 			SheetFreeze.from(getTurnierSheet()).anzZeilen(3).anzSpalten(3).doFreeze();
 		}
@@ -168,6 +167,17 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
 				METADATA_SCHLUESSEL,
 				new EingabeSignatur(SignaturQuellen::fuerSupermeleeEnd));
+	}
+
+	/**
+	 * Schreibt die Fußzeile neu und setzt den Druckbereich passend zur neuen Fußzeilen-Position.
+	 * Gemeinsame Methode für Vollaufbau {@link #upDateSheet()} und inkrementelles Update aus
+	 * {@code EndranglisteSheetUpdate} – ohne diesen Aufruf bliebe die Fußzeile nach einem
+	 * Update teilweise geleert und würde nie neu geschrieben.
+	 */
+	protected void aktualisiereFooterUndDruckbereich() throws GenerateException {
+		Position footerPos = endRanglisteFormatter.addFooter().getPos();
+		printBereichDefinieren(footerPos);
 	}
 
 	private void printBereichDefinieren(Position footerPos) throws GenerateException {

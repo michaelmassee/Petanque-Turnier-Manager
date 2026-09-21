@@ -89,6 +89,8 @@ public class SpieltagRanglisteSheetUpdate extends SpieltagRanglisteSheet {
 		getxCalculatable().calculate();
 		getRangListeSorter().doSort();
 		getRangListeSpalte().upDateRanglisteSpalte();
+		getxCalculatable().calculate();
+		aktualisiereFooterUndDruckbereich();
 	}
 
 	private static final class ReentrancyState {
