@@ -240,7 +240,7 @@ public class SchweizerMeldeListeSheetUpdate extends SheetRunner
 			return;
 		}
 		RangePosition range = RangePosition.from(getTeamNrSpalte(), ERSTE_DATEN_ZEILE,
-				getSetzPositionSpalte(), letzteZeile);
+				getAktivSpalte() + 1, letzteZeile);
 		SortHelper.from(this, range).spalteToSort(spalteNr).aufSteigendSortieren(aufsteigend).doSort();
 	}
 
@@ -269,6 +269,7 @@ public class SchweizerMeldeListeSheetUpdate extends SheetRunner
 		teamnummernVergeben(xSheet);
 		nachTeamNrSortieren(xSheet);
 		upDateSheet();
+		de.petanqueturniermanager.spielerdb.MeldelisteZielFactory.erstelleLokalePtmOnlineUuids(getWorkingSpreadsheet());
 		return true;
 	}
 
@@ -313,7 +314,7 @@ private void stringsBesinigen(XSpreadsheet xSheet) throws GenerateException {
 		int vornameSpalte = getVornameSpalte(0);
 		// Nr-Spalte absteigend sortieren (höchste Nr zuerst, leere ans Ende)
 		RangePosition range = RangePosition.from(getTeamNrSpalte(), ERSTE_DATEN_ZEILE,
-				getAktivSpalte(), letzteZeile);
+				getAktivSpalte() + 1, letzteZeile);
 		SortHelper.from(this, range).spalteToSort(getTeamNrSpalte()).abSteigendSortieren().doSort();
 
 		// Höchste vorhandene Nr lesen
@@ -341,7 +342,7 @@ private void stringsBesinigen(XSpreadsheet xSheet) throws GenerateException {
 			return;
 		}
 		RangePosition range = RangePosition.from(getTeamNrSpalte(), ERSTE_DATEN_ZEILE,
-				getAktivSpalte(), letzteZeile);
+				getAktivSpalte() + 1, letzteZeile);
 		SortHelper.from(this, range).spalteToSort(getTeamNrSpalte()).aufSteigendSortieren(true).doSort();
 	}
 

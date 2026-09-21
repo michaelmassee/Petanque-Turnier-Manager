@@ -4,7 +4,6 @@
 package de.petanqueturniermanager.ptmonline;
 
 import java.io.IOException;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -31,9 +30,9 @@ import de.petanqueturniermanager.onlinesync.SpieltagKontext;
 import de.petanqueturniermanager.ptmonline.dto.NeueOnlineAnmeldung;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationDto;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationResultDto;
-import de.petanqueturniermanager.spielerdb.MeldelisteSpielerDaten;
 import de.petanqueturniermanager.spielerdb.MeldelisteZiel;
 import de.petanqueturniermanager.spielerdb.MeldelisteZielFactory;
+import de.petanqueturniermanager.spielerdb.MeldelisteSpielerDaten;
 
 /**
  * Gleicht bei jedem Spielrunden-Start die Meldeliste des Turnierdokuments automatisch mit dem
@@ -80,7 +79,8 @@ public final class PtmOnlineSpielrundeSync {
      *                             unverändert, nur {@code active} wird gepusht.
      */
     public static void abgleichen(WorkingSpreadsheet ws, TurnierSystem ts, boolean istErsteRunde,
-            Set<Integer> alleTeamNummern, Set<Integer> aktiveTeamNummern, Set<Integer> ausgestiegeneTeamNummern) {
+            Set<Integer> alleTeamNummern, Set<Integer> aktiveTeamNummern, Set<Integer> ausgestiegeneTeamNummern,
+            RegistrationImportTask.MeldelistenAktualisierung meldelistenAktualisierung) {
         XComponentContext ctx = ws.getxContext();
         var config = new LibreOfficePtmOnlineSpeicher(ctx).laden();
         if (!config.isConfigured()) {
@@ -111,6 +111,14 @@ public final class PtmOnlineSpielrundeSync {
         TournamentSyncClient client = new TournamentSyncClient(config.baseUrl(), config.apiKey());
         List<String> fehler = new ArrayList<>();
 
+        try {
+            mapping.migriereLegacyTeamnummern(uuidProTeam(ziel));
+            mapping.aktualisiereAnzeigeFormeln(formelnProUuid(ziel));
+        } catch (GenerateException e) {
+            logger.error("PTM-Online: Altes Mapping konnte nicht migriert werden", e);
+            fehler.add(e.getMessage());
+        }
+
         if (istErsteRunde) {
             try {
                 client.start(tournamentId);
@@ -124,7 +132,8 @@ public final class PtmOnlineSpielrundeSync {
         }
 
         try {
-            RegistrationImportTask.fuehreImportDurch(ws, config, mapping, tournamentId, ts, ziel);
+            RegistrationImportTask.fuehreImportDurch(ws, config, mapping, tournamentId, ts, ziel,
+                    meldelistenAktualisierung);
         } catch (IOException e) {
             logger.error("PTM-Online: Anmeldungen importieren fehlgeschlagen", e);
             fehler.add(netzwerkFehlerText(e));
@@ -150,13 +159,6 @@ public final class PtmOnlineSpielrundeSync {
             return;
         }
 
-        try {
-            mapping.setLastSync(Instant.now());
-        } catch (GenerateException e) {
-            logger.error("PTM-Online: Sync-Zeitpunkt schreiben fehlgeschlagen", e);
-            fehler.add(e.getMessage());
-        }
-
         if (!fehler.isEmpty()) {
             zeigeFehlerSammlung(ctx, fehler);
         }
@@ -170,8 +172,9 @@ public final class PtmOnlineSpielrundeSync {
             TournamentSyncClient client, String tournamentId, Set<Integer> alle, Set<Integer> aktive,
             Set<Integer> ausgestiegen) throws IOException, InterruptedException, GenerateException {
         List<RegistrationResultDto> results = new ArrayList<>();
+        Map<Integer, Integer> zeileProTeam = zeileProTeam(ziel);
         for (int teamNr : alle) {
-            Optional<String> onlineId = mapping.getOnlineId(teamNr);
+            Optional<String> onlineId = onlineId(mapping, ziel, zeileProTeam.getOrDefault(teamNr, -1));
             if (onlineId.isEmpty()) {
                 continue;
             }
@@ -187,16 +190,77 @@ public final class PtmOnlineSpielrundeSync {
                 .collect(Collectors.groupingBy(MeldelisteSpielerDaten::zeile1Basiert, LinkedHashMap::new, Collectors.toList()));
 
         for (int teamNr : aktive) {
-            if (mapping.getOnlineId(teamNr).isPresent()) {
+            int zeile = zeileProTeam.getOrDefault(teamNr, -1);
+            if (onlineId(mapping, ziel, zeile).isPresent()) {
                 continue;
             }
-            List<MeldelisteSpielerDaten> spieler = proTeam.get(teamNr);
+            List<MeldelisteSpielerDaten> spieler = proTeam.get(zeile);
             if (spieler == null || spieler.isEmpty()) {
                 continue;
             }
             NeueOnlineAnmeldung anmeldung = zuAnmeldung(spieler);
             RegistrationDto angelegt = client.createRegistration(tournamentId, anmeldung);
-            mapping.addMapping(teamNr, angelegt.id(), anmeldung.firstName(), anmeldung.lastName());
+            String uuid = lokaleUuid(ziel, zeile);
+            mapping.addMapping(uuid, angelegt.id(), teamnummerFormel(ziel, uuid));
+        }
+    }
+
+    private static Map<Integer, Integer> zeileProTeam(MeldelisteZiel ziel) {
+        Map<Integer, Integer> ergebnis = new LinkedHashMap<>();
+        for (MeldelisteSpielerDaten spieler : ziel.leseAlleSpielerRoh()) {
+            int teamNr = ziel.getTeamNrAusZeile(spieler.zeile1Basiert());
+            if (teamNr > 0) {
+                ergebnis.putIfAbsent(teamNr, spieler.zeile1Basiert());
+            }
+        }
+        return ergebnis;
+    }
+
+    private static Map<Integer, String> uuidProTeam(MeldelisteZiel ziel) throws GenerateException {
+        Map<Integer, String> ergebnis = new LinkedHashMap<>();
+        for (MeldelisteSpielerDaten spieler : ziel.leseAlleSpielerRoh()) {
+            int teamNr = ziel.getTeamNrAusZeile(spieler.zeile1Basiert());
+            if (teamNr > 0) {
+                ergebnis.putIfAbsent(teamNr, lokaleUuid(ziel, spieler.zeile1Basiert()));
+            }
+        }
+        return ergebnis;
+    }
+
+    private static Map<String, String> formelnProUuid(MeldelisteZiel ziel) throws GenerateException {
+        Map<String, String> ergebnis = new LinkedHashMap<>();
+        for (MeldelisteSpielerDaten spieler : ziel.leseAlleSpielerRoh()) {
+            String uuid = lokaleUuid(ziel, spieler.zeile1Basiert());
+            try {
+                ergebnis.put(uuid, ziel.formelTeamNrAusLokalerUuid(uuid));
+            } catch (MeldelisteZiel.MeldelisteSchreibException e) {
+                throw new GenerateException(e.getMessage());
+            }
+        }
+        return ergebnis;
+    }
+
+    private static Optional<String> onlineId(PtmOnlineRegistrationMapping mapping, MeldelisteZiel ziel, int zeile)
+            throws GenerateException {
+        if (zeile <= 0) {
+            return Optional.empty();
+        }
+        return mapping.getOnlineId(lokaleUuid(ziel, zeile));
+    }
+
+    private static String lokaleUuid(MeldelisteZiel ziel, int zeile) throws GenerateException {
+        try {
+            return ziel.getOderErzeugeLokaleUuid(zeile);
+        } catch (MeldelisteZiel.MeldelisteSchreibException e) {
+            throw new GenerateException(e.getMessage());
+        }
+    }
+
+    private static String teamnummerFormel(MeldelisteZiel ziel, String uuid) throws GenerateException {
+        try {
+            return ziel.formelTeamNrAusLokalerUuid(uuid);
+        } catch (MeldelisteZiel.MeldelisteSchreibException e) {
+            throw new GenerateException(e.getMessage());
         }
     }
 
@@ -208,7 +272,7 @@ public final class PtmOnlineSpielrundeSync {
                 erster.vorname(), erster.nachname(), erster.vereinName(), null,
                 zweiter != null ? zweiter.vorname() : null, zweiter != null ? zweiter.nachname() : null,
                 dritter != null ? dritter.vorname() : null, dritter != null ? dritter.nachname() : null,
-                null, true, true, List.of());
+                null, true, true, List.of(), List.of());
     }
 
     private static String netzwerkFehlerText(IOException e) {

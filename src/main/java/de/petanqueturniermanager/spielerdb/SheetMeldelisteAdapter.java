@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -14,6 +15,10 @@ import com.sun.star.sheet.XSpreadsheetDocument;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
+import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
+import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
@@ -54,6 +59,7 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
     private static final int SPALTE_NR = 0;
     private static final int HEADER_ZEILE_MAX_SCAN = 5;
     private static final int MAX_DATEN_ZEILE = 999;
+    private static final int MAX_UUID_SPALTE_SCAN = 100;
 
     /**
      * Wert in der Aktiv-Spalte: „nimmt teil". Die Konvention ist über
@@ -270,6 +276,11 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
      */
     @Override
     public int schreibeBlock(List<SpielerMitVerein> spieler) throws MeldelisteSchreibException {
+        return schreibeBlockUndLiefereZeile(spieler) < 0 ? 0 : spieler.size();
+    }
+
+    @Override
+    public int schreibeBlockUndLiefereZeile(List<SpielerMitVerein> spieler) throws MeldelisteSchreibException {
         if (spieler.isEmpty()) {
             return 0;
         }
@@ -317,10 +328,122 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
             // keine Teams aktiv. Sollen alle aktiviert werden?".
             sheetHelper.setNumberValueInCell(NumberCellValue
                     .from(sheet, Position.from(aktivSpalte(), zeile)).setValue(AKTIV_WERT_NIMMT_TEIL));
-            return spieler.size();
+            return zeile + 1;
         } catch (Exception e) {
             throw new MeldelisteSchreibException("Schreibvorgang fehlgeschlagen", e);
         }
+    }
+
+    @Override
+    public int getTeamNrAusZeile(int zeile1Basiert) {
+        if (zeile1Basiert <= 0) {
+            return -1;
+        }
+        return sheetHelper.getIntFromCell(sheet, Position.from(SPALTE_NR, zeile1Basiert - 1));
+    }
+
+    @Override
+    public String getOderErzeugeLokaleUuid(int zeile1Basiert) throws MeldelisteSchreibException {
+        if (zeile1Basiert <= 0) {
+            throw new MeldelisteSchreibException("Ungültige Meldelistenzeile");
+        }
+        try {
+            int spalte = uuidSpalte();
+            int zeile = zeile1Basiert - 1;
+            String vorhanden = sicherText(sheetHelper, sheet, spalte, zeile).strip();
+            if (!vorhanden.isEmpty()) {
+                return vorhanden;
+            }
+            String uuid = UUID.randomUUID().toString();
+            sheetHelper.setStringValueInCell(StringCellValue.from(sheet, Position.from(spalte, zeile), uuid));
+            return uuid;
+        } catch (Exception e) {
+            throw new MeldelisteSchreibException("Lokale PTM-Online-ID konnte nicht geschrieben werden", e);
+        }
+    }
+
+    @Override
+    public void setzeLokaleUuid(int zeile1Basiert, String uuid) throws MeldelisteSchreibException {
+        try {
+            sheetHelper.setStringValueInCell(StringCellValue.from(sheet,
+                    Position.from(uuidSpalte(), zeile1Basiert - 1), uuid));
+        } catch (Exception e) {
+            throw new MeldelisteSchreibException("Lokale PTM-Online-ID konnte nicht wiederhergestellt werden", e);
+        }
+    }
+
+    @Override
+    public String formelTeamNrAusLokalerUuid(String uuid) throws MeldelisteSchreibException {
+        try {
+            String uuidStart = Position.from(uuidSpalte(), 0).getAddressWith$();
+            String uuidEnde = Position.from(uuidSpalte(), MAX_DATEN_ZEILE).getAddressWith$();
+            String nummern = "$'" + SheetNamen.meldeliste() + "'.$A$1:$A$" + (MAX_DATEN_ZEILE + 1);
+            String uuids = "$'" + SheetNamen.meldeliste() + "'." + uuidStart + ":" + uuidEnde;
+            return "IFNA(INDEX(" + nummern + ";MATCH(\"" + uuid + "\";" + uuids + ";0));\"\")";
+        } catch (Exception e) {
+            throw new MeldelisteSchreibException("Teamnummer-Formel konnte nicht erzeugt werden", e);
+        }
+    }
+
+    /** Sichtbare letzte Spalte. Sie wird nicht aus Teamnummern oder Namen hergeleitet. */
+    private int uuidSpalte() throws Exception {
+        String header = I18n.get("ptmonline.meldeliste.header.lokaleuuid");
+        int headerZeile = Math.max(0, ersteDatenZeile - 1);
+        if (system == TurnierSystem.SUPERMELEE) {
+            int zielSpalte = letzteSupermeleeSpieltagSpalte(headerZeile) + 1;
+            int bisherigeSpalte = findeUuidSpalte(header, headerZeile);
+            if (bisherigeSpalte >= 0 && bisherigeSpalte != zielSpalte) {
+                for (int zeile = ersteDatenZeile; zeile <= MAX_DATEN_ZEILE; zeile++) {
+                    String uuid = sicherText(sheetHelper, sheet, bisherigeSpalte, zeile);
+                    if (!uuid.isBlank()) {
+                        sheetHelper.setStringValueInCell(StringCellValue.from(sheet, Position.from(zielSpalte, zeile), uuid));
+                    }
+                }
+                sheetHelper.setStringValueInCell(StringCellValue.from(sheet, Position.from(bisherigeSpalte, headerZeile), ""));
+            }
+            sheetHelper.setStringValueInCell(StringCellValue.from(sheet, Position.from(zielSpalte, headerZeile), header));
+            sheetHelper.setColumnProperties(sheet, zielSpalte, ColumnProperties.from().isVisible(false));
+            return zielSpalte;
+        }
+        int letzteBenutzteSpalte = aktivSpalte();
+        for (int spalte = 0; spalte <= MAX_UUID_SPALTE_SCAN; spalte++) {
+            String wert = sicherText(sheetHelper, sheet, spalte, headerZeile).strip();
+            if (header.equals(wert)) {
+                sheetHelper.setColumnProperties(sheet, spalte, ColumnProperties.from().isVisible(false));
+                return spalte;
+            }
+            if (!wert.isEmpty()) {
+                letzteBenutzteSpalte = Math.max(letzteBenutzteSpalte, spalte);
+            }
+        }
+        int uuidSpalte = letzteBenutzteSpalte + 1;
+        sheetHelper.setStringValueInCell(StringCellValue.from(sheet, Position.from(uuidSpalte, headerZeile), header));
+        sheetHelper.setColumnProperties(sheet, uuidSpalte, ColumnProperties.from().isVisible(false));
+        return uuidSpalte;
+    }
+
+    private int findeUuidSpalte(String header, int headerZeile) {
+        for (int spalte = 0; spalte <= MAX_UUID_SPALTE_SCAN; spalte++) {
+            if (header.equals(sicherText(sheetHelper, sheet, spalte, headerZeile).strip())) {
+                return spalte;
+            }
+        }
+        return -1;
+    }
+
+    /** UUID direkt nach dem letzten Spieltag; die folgende Spalte bleibt als Abstand zum Infoblock frei. */
+    private int letzteSupermeleeSpieltagSpalte(int headerZeile) {
+        int letzte = letzteSchreibSpalte + 2; // Spielername(n), SP, erster Spieltag
+        String spieltag = I18n.get("column.header.spieltag");
+        for (int spalte = letzte; spalte <= MAX_UUID_SPALTE_SCAN; spalte++) {
+            String wert = sicherText(sheetHelper, sheet, spalte, headerZeile).strip();
+            if (wert.startsWith(spieltag)) {
+                letzte = spalte;
+            } else {
+                break;
+            }
+        }
+        return letzte;
     }
 
     private int aktivSpalte() {

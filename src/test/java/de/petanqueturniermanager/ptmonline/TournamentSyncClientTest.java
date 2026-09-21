@@ -16,7 +16,10 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+import com.google.gson.Gson;
+
 import de.petanqueturniermanager.onlinesync.OnlineTournamentDto;
+import de.petanqueturniermanager.ptmonline.dto.NeueOnlineAnmeldung;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationDto;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationResultDto;
 
@@ -95,6 +98,14 @@ public class TournamentSyncClientTest {
 		ArgumentCaptor<HttpRequest> captor = ArgumentCaptor.forClass(HttpRequest.class);
 		verify(httpClient).send(captor.capture(), any());
 		assertThat(captor.getValue().method()).isEqualTo("POST");
+	}
+
+	@Test
+	public void direkteAnmeldungSendetLeereTeilnehmerantwortenAlsArray() {
+		NeueOnlineAnmeldung anmeldung = new NeueOnlineAnmeldung("Max", "Muster", null, null,
+				null, null, null, null, null, true, true, List.of(), List.of());
+
+		assertThat(new Gson().toJson(anmeldung)).contains("\"registrationAnswers\":[]");
 	}
 
 	@Test

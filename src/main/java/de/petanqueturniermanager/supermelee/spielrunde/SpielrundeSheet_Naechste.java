@@ -168,7 +168,8 @@ public class SpielrundeSheet_Naechste extends SheetRunner
 		// PtmOnlineSpielrundeSync laesst den Online-Status fuer nicht-aktive Teams dann unveraendert.
 		PtmOnlineSpielrundeSync.abgleichen(getWorkingSpreadsheet(), getTurnierSystem(), istErsteRunde,
 				PtmOnlineSpielrundeSync.nummern(getMeldeListe().getAlleMeldungen()),
-				PtmOnlineSpielrundeSync.nummern(getMeldeListe().getAktiveMeldungen()), Set.of());
+				PtmOnlineSpielrundeSync.nummern(getMeldeListe().getAktiveMeldungen()), Set.of(),
+				() -> getMeldeListe().upDateSheet());
 
 		getMeldeListe().upDateSheet();
 		SpielerMeldungen aktiveMeldungen = getMeldeListe().getAktiveMeldungen();

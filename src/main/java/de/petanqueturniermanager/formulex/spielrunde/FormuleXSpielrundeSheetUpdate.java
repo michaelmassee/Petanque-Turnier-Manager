@@ -3,9 +3,13 @@
  */
 package de.petanqueturniermanager.formulex.spielrunde;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.model.TeamMeldungen;
+import de.petanqueturniermanager.ptmonline.PtmOnlineSpielrundeSync;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 
 /**
@@ -24,6 +28,15 @@ public class FormuleXSpielrundeSheetUpdate extends FormuleXAbstractSpielrundeShe
         SpielRundeNr aktuelleSpielrunde = getKonfigurationSheet().getAktiveSpielRunde();
         processBoxinfo("processbox.aktuelle.spielrunde", aktuelleSpielrunde.getNr());
         setSpielRundeNrInSheet(aktuelleSpielrunde);
+        getMeldeListe().upDateSheet();
+        TeamMeldungen aktivUndAusgesetztVorSync = getMeldeListe().getAktiveUndAusgesetztMeldungen();
+        Set<Integer> aktiveNrVorSync = PtmOnlineSpielrundeSync.nummern(getMeldeListe().getAktiveMeldungen());
+        Set<Integer> ausgestiegeneNr = new HashSet<>(PtmOnlineSpielrundeSync.nummern(aktivUndAusgesetztVorSync));
+        ausgestiegeneNr.removeAll(aktiveNrVorSync);
+        PtmOnlineSpielrundeSync.abgleichen(getWorkingSpreadsheet(), getTurnierSystem(), false,
+                PtmOnlineSpielrundeSync.nummern(getMeldeListe().getAlleMeldungen()), aktiveNrVorSync, ausgestiegeneNr,
+                () -> getMeldeListe().vollstaendigAktualisieren());
+
         getMeldeListe().upDateSheet();
         TeamMeldungen aktiveMeldungen = getMeldeListe().getAktiveMeldungen();
 

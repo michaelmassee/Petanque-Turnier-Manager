@@ -63,7 +63,8 @@ class SupermeleeListeDelegate implements MeldeListeKonstanten {
 	static final String PTM_SM_DOUBL_NUR_TRIPLETTE  = GlobalImpl.PTM_SUPERMELEE_DOUBL_NUR_TRIPLETTE;
 
 	static final int MIN_ANZAHL_SPIELER_ZEILEN = 100;
-	static final int SUMMEN_SPALTE_OFFSET = 2;
+	/** UUID direkt nach dem letzten Spieltag, danach eine Leer-Spalte vor dem Infoblock. */
+	static final int SUMMEN_SPALTE_OFFSET = 3;
 	static final int SUMMEN_ERSTE_ZEILE = ERSTE_DATEN_ZEILE + 5;
 	static final int SUMMEN_AKTIVE_ZEILE = SUMMEN_ERSTE_ZEILE;
 	static final int SUMMEN_INAKTIVE_ZEILE = SUMMEN_ERSTE_ZEILE + 1;
@@ -86,6 +87,7 @@ class SupermeleeListeDelegate implements MeldeListeKonstanten {
 	static final int ERSTE_ZEILE_INFO = 0;
 
 	private final IMeldeliste<SpielerMeldungen, Spieler> sheet;
+	private final WorkingSpreadsheet workingSpreadsheet;
 	private final SuperMeleeKonfigurationSheet konfigurationSheet;
 	private final MeldungenSpalte<SpielerMeldungen, Spieler> meldungenSpalte;
 	private final MeldeListeHelper<SpielerMeldungen, Spieler> meldeListeHelper;
@@ -94,6 +96,7 @@ class SupermeleeListeDelegate implements MeldeListeKonstanten {
 	SupermeleeListeDelegate(IMeldeliste<SpielerMeldungen, Spieler> sheet, WorkingSpreadsheet ws,
 			SuperMeleeKonfigurationSheet konfigurationSheet, String metadatenSchluessel) {
 		this.sheet = sheet;
+		this.workingSpreadsheet = ws;
 		this.konfigurationSheet = konfigurationSheet;
 		meldungenSpalte = MeldungenSpalte.builder().ersteDatenZiele(ERSTE_DATEN_ZEILE)
 				.minAnzZeilen(MIN_ANZAHL_SPIELER_ZEILEN).spielerNrSpalte(SPIELER_NR_SPALTE).sheet(sheet)
@@ -135,6 +138,8 @@ class SupermeleeListeDelegate implements MeldeListeKonstanten {
 	}
 
 	void upDateSheet() throws GenerateException {
+		var lokaleUuids = de.petanqueturniermanager.spielerdb.MeldelisteZielFactory
+				.sichereLokalePtmOnlineUuids(workingSpreadsheet);
 		PageStyleHelper.from(sheet, PageStyle.PETTURNMNGR).initDefaultFooter().create().applytoSheet();
 		sheet.processBoxinfo("processbox.supermelee.meldeliste.aktualisieren");
 
@@ -180,6 +185,9 @@ class SupermeleeListeDelegate implements MeldeListeKonstanten {
 
 		// headerlines
 		SheetFreeze.from(sheet.getTurnierSheet()).anzZeilen(2).doFreeze();
+		de.petanqueturniermanager.spielerdb.MeldelisteZielFactory
+				.stelleLokalePtmOnlineUuidsWiederher(workingSpreadsheet, lokaleUuids);
+		de.petanqueturniermanager.spielerdb.MeldelisteZielFactory.erstelleLokalePtmOnlineUuids(workingSpreadsheet);
 	}
 
 	/** Aktive Spielrunde und Spieltag in den Info-Block schreiben. */

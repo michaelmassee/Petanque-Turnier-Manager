@@ -5,6 +5,8 @@ package de.petanqueturniermanager.supermelee.spielrunde;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.Set;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.sun.star.sheet.XSpreadsheet;
 
@@ -16,6 +18,7 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.model.SpielerMeldungen;
+import de.petanqueturniermanager.ptmonline.PtmOnlineSpielrundeSync;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
@@ -142,6 +145,14 @@ public class SpielrundeSheet_Update extends SheetRunner
 		setSpielTag(getKonfigurationSheet().getAktiveSpieltag());
 		SpielRundeNr aktuelleSpielrunde = getKonfigurationSheet().getAktiveSpielRunde();
 		setSpielRundeNr(aktuelleSpielrunde);
+		getMeldeListe().upDateSheet();
+		// Wie beim Anlegen der nächsten Runde: auch eine erneute Auslosung muss den
+		// Online-Status und nachträgliche Anmeldungen abgleichen.
+		PtmOnlineSpielrundeSync.abgleichen(getWorkingSpreadsheet(), getTurnierSystem(), false,
+				PtmOnlineSpielrundeSync.nummern(getMeldeListe().getAlleMeldungen()),
+				PtmOnlineSpielrundeSync.nummern(getMeldeListe().getAktiveMeldungen()), Set.of(),
+				() -> getMeldeListe().upDateSheet());
+
 		getMeldeListe().upDateSheet();
 		SpielerMeldungen aktiveMeldungen = getMeldeListe().getAktiveMeldungen();
 

@@ -42,6 +42,38 @@ public interface MeldelisteZiel extends AbgleichQuelle {
     int schreibeBlock(List<SpielerMitVerein> spieler) throws MeldelisteSchreibException;
 
     /**
+     * Schreibt einen Block und liefert die konkrete, 1-basierte Sheet-Zeile. Der Rückgabewert ist
+     * für stabile externe Zuordnungen gedacht; Namen sind bei Mehrfachmeldungen nicht eindeutig.
+     */
+    default int schreibeBlockUndLiefereZeile(List<SpielerMitVerein> spieler) throws MeldelisteSchreibException {
+        schreibeBlock(spieler);
+        return -1;
+    }
+
+    /** Liefert die lokale Team-/Spieler-Nr einer konkreten, 1-basierten Sheet-Zeile. */
+    default int getTeamNrAusZeile(int zeile1Basiert) {
+        return -1;
+    }
+
+    /**
+     * Liefert die dauerhafte lokale Kennung der Meldelistenzeile und legt sie bei Bedarf an.
+     * Diese Kennung ist unabhängig von Teamnummer, Namen und Sortierung.
+     */
+    default String getOderErzeugeLokaleUuid(int zeile1Basiert) throws MeldelisteSchreibException {
+        throw new MeldelisteSchreibException("Lokale PTM-Online-ID wird von dieser Meldeliste nicht unterstützt");
+    }
+
+    /** Setzt eine zuvor gesicherte lokale UUID wieder auf die zugehörige Meldelistenzeile. */
+    default void setzeLokaleUuid(int zeile1Basiert, String uuid) throws MeldelisteSchreibException {
+        throw new MeldelisteSchreibException("Lokale PTM-Online-ID wird von dieser Meldeliste nicht unterstützt");
+    }
+
+    /** Formel, die aus der lokalen UUID stets die aktuell angezeigte Team-/Spielernummer ermittelt. */
+    default String formelTeamNrAusLokalerUuid(String uuid) throws MeldelisteSchreibException {
+        throw new MeldelisteSchreibException("Lokale PTM-Online-ID wird von dieser Meldeliste nicht unterstützt");
+    }
+
+    /**
      * Team-Zähler der Meldeliste.
      *
      * @param angemeldet belegte Teams ohne Checkin-Haken

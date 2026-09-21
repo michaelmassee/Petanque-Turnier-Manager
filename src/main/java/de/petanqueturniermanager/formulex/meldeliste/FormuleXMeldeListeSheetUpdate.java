@@ -217,7 +217,7 @@ public class FormuleXMeldeListeSheetUpdate extends SheetRunner
             return;
         }
         RangePosition range = RangePosition.from(getNrSpalte(), ERSTE_DATEN_ZEILE,
-                delegate.getAktivSpalte(), letzteZeile);
+                delegate.getAktivSpalte() + 1, letzteZeile);
         SortHelper.from(this, range).spalteToSort(spalteNr).aufSteigendSortieren(aufsteigend).doSort();
     }
 
@@ -255,6 +255,7 @@ public class FormuleXMeldeListeSheetUpdate extends SheetRunner
         aktivDefaultSetzen(xSheet);
         nachNrSortieren(xSheet);
         upDateSheet();
+        de.petanqueturniermanager.spielerdb.MeldelisteZielFactory.erstelleLokalePtmOnlineUuids(getWorkingSpreadsheet());
         return true;
     }
 
@@ -289,7 +290,7 @@ public class FormuleXMeldeListeSheetUpdate extends SheetRunner
         int nrSpalte = getNrSpalte();
         int vornameSpalte = delegate.getVornameSpalte(0);
 
-        RangePosition sortRange = RangePosition.from(nrSpalte, ERSTE_DATEN_ZEILE, delegate.getAktivSpalte(),
+        RangePosition sortRange = RangePosition.from(nrSpalte, ERSTE_DATEN_ZEILE, delegate.getAktivSpalte() + 1,
                 letzteZeile);
         SortHelper.from(this, sortRange).spalteToSort(nrSpalte).abSteigendSortieren().doSort();
 
@@ -316,7 +317,7 @@ public class FormuleXMeldeListeSheetUpdate extends SheetRunner
             return;
         }
         RangePosition range = RangePosition.from(getNrSpalte(), ERSTE_DATEN_ZEILE,
-                delegate.getAktivSpalte(), letzteZeile);
+                delegate.getAktivSpalte() + 1, letzteZeile);
         SortHelper.from(this, range).spalteToSort(getNrSpalte()).aufSteigendSortieren(true).doSort();
     }
 

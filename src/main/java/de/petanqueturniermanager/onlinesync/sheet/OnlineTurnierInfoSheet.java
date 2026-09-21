@@ -136,6 +136,15 @@ public class OnlineTurnierInfoSheet extends SheetRunner implements ISheet {
 		return wert.isBlank() ? Optional.empty() : Optional.of(wert);
 	}
 
+	/** Liefert bei einer noch nicht angelegten Verbindung bewusst keinen Wert. */
+	public Optional<String> getTournamentIdWennVorhanden() throws GenerateException {
+		if (SheetMetadataHelper.findeSheet(getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), metadatenSchluessel())
+				.isEmpty()) {
+			return Optional.empty();
+		}
+		return getTournamentId();
+	}
+
 	public Optional<Instant> getLastSync() throws GenerateException {
 		String wert = leseWert(ZEILE_LETZTER_SYNC);
 		if (wert.isBlank()) {
@@ -149,7 +158,7 @@ public class OnlineTurnierInfoSheet extends SheetRunner implements ISheet {
 	}
 
 	public void setLastSync(Instant zeitpunkt) throws GenerateException {
-		schreibeWert(ZEILE_LETZTER_SYNC, zeitpunkt.toString());
+		schreibeWert(ZEILE_LETZTER_SYNC, zeitpunkt == null ? "" : zeitpunkt.toString());
 	}
 
 	private String leseWert(int zeile) throws GenerateException {

@@ -4,7 +4,6 @@
 package de.petanqueturniermanager.ptmonline;
 
 import java.time.Instant;
-import java.util.Map;
 import java.util.Optional;
 
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
@@ -33,8 +32,13 @@ public class PtmOnlineRegistrationMapping {
 
     /** Legt beide Sheets an (falls nötig) und schreibt die Verbindungsdaten - einmalig beim Verbinden. */
     public void verbinden(OnlineTournamentDto turnier) throws GenerateException, InterruptedException {
+        Optional<String> bisherigeTurnierId = infoSheet.getTournamentIdWennVorhanden();
         infoSheet.verbinden(turnier);
         meldungenSheet.sicherstellen();
+        if (bisherigeTurnierId.isPresent() && !bisherigeTurnierId.get().equals(turnier.id)) {
+            meldungenSheet.leeren();
+            infoSheet.setLastSync(null);
+        }
     }
 
     /** Entfernt beide Sheets wieder aus dem Dokument (Gegenstück zu {@link #verbinden}). */
@@ -43,12 +47,12 @@ public class PtmOnlineRegistrationMapping {
         meldungenSheet.entfernen();
     }
 
-    public void addMapping(int teamNr, String onlineRegistrationId, String vorname, String nachname) throws GenerateException {
-        meldungenSheet.addMapping(teamNr, onlineRegistrationId, vorname, nachname);
+    public void addMapping(String lokaleUuid, String onlineRegistrationId, String nummerFormel) throws GenerateException {
+        meldungenSheet.addMapping(lokaleUuid, onlineRegistrationId, nummerFormel);
     }
 
-    public Optional<String> getOnlineId(int teamNr) throws GenerateException {
-        return meldungenSheet.getOnlineId(teamNr);
+    public Optional<String> getOnlineId(String lokaleUuid) throws GenerateException {
+        return meldungenSheet.getOnlineId(lokaleUuid);
     }
 
     /** Ob {@code onlineRegistrationId} bereits einer lokalen Team-Nr zugeordnet ist (bereits importiert). */
@@ -56,10 +60,14 @@ public class PtmOnlineRegistrationMapping {
         return meldungenSheet.istBereitsImportiert(onlineRegistrationId);
     }
 
-    /** Unveränderliche Kopie aller aktuell gespeicherten Team-Nr/Online-ID-Zuordnungen. */
-    public Map<Integer, String> getAlleMappings() throws GenerateException {
-        return meldungenSheet.getAlleMappings();
+    public void migriereLegacyTeamnummern(java.util.Map<Integer, String> uuidProTeamnummer) throws GenerateException {
+        meldungenSheet.migriereLegacyTeamnummern(uuidProTeamnummer);
     }
+
+    public void aktualisiereAnzeigeFormeln(java.util.Map<String, String> formelnProUuid) throws GenerateException {
+        meldungenSheet.aktualisiereAnzeigeFormeln(formelnProUuid);
+    }
+
 
     public void setLastSync(Instant zeitpunkt) throws GenerateException {
         infoSheet.setLastSync(zeitpunkt);

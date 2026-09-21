@@ -14,10 +14,11 @@ import java.util.List;
  * {@code confirmImmediately=true}: Anmeldung direkt als {@code confirmed} anlegen statt
  * {@code pending}/Warteliste.
  * <p>
- * {@code feeSelections} MUSS als (ggf. leeres) Array mitgeschickt werden - {@code resolveFeeSelections}
- * im Worker verlangt bei neu angelegten Registrierungen (kein {@code existing}) zwingend ein Array,
- * sonst schlaegt der Aufruf mit „Ungueltige Startgeld-Auswahl" fehl. Startgeld ist fuer lokal (im
- * Turnierdokument) erfasste Teams kein Pflichtfeld, daher immer leer.
+ * {@code feeSelections} und {@code registrationAnswers} MUESSEN als (ggf. leere) Arrays mitgeschickt
+ * werden. Der Worker verlangt bei neu angelegten Registrierungen (kein {@code existing}) beide Felder,
+ * sonst schlaegt der Aufruf mit „Ungueltige Startgeld-Auswahl" beziehungsweise „Ungueltige
+ * Teilnehmerantworten" fehl. Fuer lokal im Turnierdokument erfasste Teams sind beides keine
+ * Pflichtangaben, daher immer leer.
  */
 public record NeueOnlineAnmeldung(
         String firstName,
@@ -31,5 +32,6 @@ public record NeueOnlineAnmeldung(
         String teamName,
         boolean noEmail,
         boolean confirmImmediately,
-        List<Object> feeSelections) {
+        List<Object> feeSelections,
+        List<Object> registrationAnswers) {
 }

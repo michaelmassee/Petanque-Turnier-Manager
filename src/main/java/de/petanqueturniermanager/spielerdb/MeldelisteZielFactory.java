@@ -1,6 +1,9 @@
 package de.petanqueturniermanager.spielerdb;
 
 import java.util.Optional;
+import java.util.LinkedHashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -96,6 +99,69 @@ public final class MeldelisteZielFactory {
         MeldelisteLayout l = layoutOpt.get();
         return SheetMeldelisteAdapter.fuer(ws, SheetNamen.meldeliste(), ts,
                 l.formation(), l.teamnameAktiv(), l.vereinsnameAktiv());
+    }
+
+    /**
+     * Ergänzt beim normalen Meldelisten-Refresh genau einmal eine lokale UUID für jede belegte
+     * Zeile. Die UUID ist die einzige stabile Identität für die PTM-Online-Zuordnung.
+     */
+    public static void erstelleLokalePtmOnlineUuids(WorkingSpreadsheet ws) throws GenerateException {
+        Optional<MeldelisteZiel> ziel = fuerAktivesSheet(ws);
+        if (ziel.isEmpty()) {
+            return;
+        }
+        try {
+            for (int zeile : new LinkedHashSet<>(ziel.get().leseAlleSpielerRoh().stream()
+                    .map(MeldelisteSpielerDaten::zeile1Basiert).toList())) {
+                ziel.get().getOderErzeugeLokaleUuid(zeile);
+            }
+        } catch (MeldelisteZiel.MeldelisteSchreibException e) {
+            throw new GenerateException(e.getMessage());
+        }
+    }
+
+    /** Sichert UUIDs nach lokaler Spieler-/Teamnummer für Umbauten dynamischer Meldelisten. */
+    public static Map<Integer, String> sichereLokalePtmOnlineUuids(WorkingSpreadsheet ws) throws GenerateException {
+        Map<Integer, String> ergebnis = new LinkedHashMap<>();
+        Optional<MeldelisteZiel> ziel = fuerAktivesSheet(ws);
+        if (ziel.isEmpty()) {
+            return ergebnis;
+        }
+        try {
+            for (int zeile : new LinkedHashSet<>(ziel.get().leseAlleSpielerRoh().stream()
+                    .map(MeldelisteSpielerDaten::zeile1Basiert).toList())) {
+                int nr = ziel.get().getTeamNrAusZeile(zeile);
+                if (nr > 0) {
+                    ergebnis.put(nr, ziel.get().getOderErzeugeLokaleUuid(zeile));
+                }
+            }
+            return ergebnis;
+        } catch (MeldelisteZiel.MeldelisteSchreibException e) {
+            throw new GenerateException(e.getMessage());
+        }
+    }
+
+    /** Stellt beim dynamischen Spaltenumbau gesicherte UUIDs wieder an ihren Spieler-/Teamnummern her. */
+    public static void stelleLokalePtmOnlineUuidsWiederher(WorkingSpreadsheet ws, Map<Integer, String> uuids)
+            throws GenerateException {
+        if (uuids.isEmpty()) {
+            return;
+        }
+        Optional<MeldelisteZiel> ziel = fuerAktivesSheet(ws);
+        if (ziel.isEmpty()) {
+            return;
+        }
+        try {
+            for (int zeile : new LinkedHashSet<>(ziel.get().leseAlleSpielerRoh().stream()
+                    .map(MeldelisteSpielerDaten::zeile1Basiert).toList())) {
+                String uuid = uuids.get(ziel.get().getTeamNrAusZeile(zeile));
+                if (uuid != null) {
+                    ziel.get().setzeLokaleUuid(zeile, uuid);
+                }
+            }
+        } catch (MeldelisteZiel.MeldelisteSchreibException e) {
+            throw new GenerateException(e.getMessage());
+        }
     }
 
     /**
