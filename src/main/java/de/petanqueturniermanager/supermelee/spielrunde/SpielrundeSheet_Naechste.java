@@ -5,7 +5,6 @@ package de.petanqueturniermanager.supermelee.spielrunde;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.sun.star.sheet.XSpreadsheet;
@@ -163,12 +162,15 @@ public class SpielrundeSheet_Naechste extends SheetRunner
 				&& aktuelleSpielrunde.getNr() == 1;
 
 		getMeldeListe().upDateSheet();
-		// Kein zuverlaessiges "endgueltig ausgestiegen" bei Supermelee: SpielrundeGespielt.AUSGESETZT
-		// ist nur ein Spieltag-Bye, keine dauerhafte Abmeldung vom Turnier - daher immer leere Menge,
-		// PtmOnlineSpielrundeSync laesst den Online-Status fuer nicht-aktive Teams dann unveraendert.
+		// SpielrundeGespielt.AUSGESETZT (Wert 2, "ausgesetzt" fuer den aktuellen Spieltag) wird als
+		// PTM-Online-Status "withdrawn" ("Ausgestiegen") gemeldet. Eine leere Spieltag-Zelle (NEIN)
+		// bleibt bewusst ohne Statusmeldung (nur active=false) - eine automatische "cancelled"-Meldung
+		// wuerde serverseitig eine Stornierungs-Mail sowie Freigabe von Warteliste-/Kapazitaetsplaetzen
+		// ausloesen, was fuer eine reine Spieltag-Pause nicht gewollt ist.
 		PtmOnlineSpielrundeSync.abgleichen(getWorkingSpreadsheet(), getTurnierSystem(), istErsteRunde,
 				PtmOnlineSpielrundeSync.nummern(getMeldeListe().getAlleMeldungen()),
-				PtmOnlineSpielrundeSync.nummern(getMeldeListe().getAktiveMeldungen()), Set.of(),
+				PtmOnlineSpielrundeSync.nummern(getMeldeListe().getAktiveMeldungen()),
+				PtmOnlineSpielrundeSync.nummern(getMeldeListe().getAusgesetztMeldungen()),
 				() -> getMeldeListe().upDateSheet());
 
 		getMeldeListe().upDateSheet();

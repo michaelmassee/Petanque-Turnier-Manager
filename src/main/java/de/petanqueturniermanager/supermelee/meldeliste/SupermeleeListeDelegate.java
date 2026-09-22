@@ -573,6 +573,11 @@ class SupermeleeListeDelegate implements MeldeListeKonstanten {
 		return meldeListeHelperGetMeldungen(getSpielTag(), List.of(SpielrundeGespielt.JA));
 	}
 
+	/** Für den aktuellen Spieltag als "ausgesetzt" markierte Meldungen (PTM-Online: "Ausgestiegen"). */
+	SpielerMeldungen getAusgesetztMeldungen() throws GenerateException {
+		return meldeListeHelperGetMeldungen(getSpielTag(), List.of(SpielrundeGespielt.AUSGESETZT));
+	}
+
 	SpielerMeldungen getInAktiveMeldungen() throws GenerateException {
 		return meldeListeHelperGetMeldungen(SpielTagNr.from(1), List.of(SpielrundeGespielt.NEIN));
 	}

@@ -5,7 +5,6 @@ package de.petanqueturniermanager.supermelee.spielrunde;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.sun.star.sheet.XSpreadsheet;
@@ -147,10 +146,12 @@ public class SpielrundeSheet_Update extends SheetRunner
 		setSpielRundeNr(aktuelleSpielrunde);
 		getMeldeListe().upDateSheet();
 		// Wie beim Anlegen der nächsten Runde: auch eine erneute Auslosung muss den
-		// Online-Status und nachträgliche Anmeldungen abgleichen.
+		// Online-Status und nachträgliche Anmeldungen abgleichen (siehe SpielrundeSheet_Naechste
+		// für die Begründung der ausgesetzt→withdrawn-Zuordnung).
 		PtmOnlineSpielrundeSync.abgleichen(getWorkingSpreadsheet(), getTurnierSystem(), false,
 				PtmOnlineSpielrundeSync.nummern(getMeldeListe().getAlleMeldungen()),
-				PtmOnlineSpielrundeSync.nummern(getMeldeListe().getAktiveMeldungen()), Set.of(),
+				PtmOnlineSpielrundeSync.nummern(getMeldeListe().getAktiveMeldungen()),
+				PtmOnlineSpielrundeSync.nummern(getMeldeListe().getAusgesetztMeldungen()),
 				() -> getMeldeListe().upDateSheet());
 
 		getMeldeListe().upDateSheet();

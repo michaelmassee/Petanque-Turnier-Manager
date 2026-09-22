@@ -111,6 +111,11 @@ public class MeldeListeSheet_Update extends SheetRunner implements IMeldeliste<S
 		return delegate.getAlleMeldungen();
 	}
 
+	/** Für den aktuellen Spieltag als "ausgesetzt" markierte Meldungen (PTM-Online: "Ausgestiegen"). */
+	public SpielerMeldungen getAusgesetztMeldungen() throws GenerateException {
+		return delegate.getAusgesetztMeldungen();
+	}
+
 	public void alleSpielAktivieren() throws GenerateException {
 		delegate.alleSpielAktivieren();
 	}

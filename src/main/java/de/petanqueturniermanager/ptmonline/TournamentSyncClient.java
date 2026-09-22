@@ -77,12 +77,6 @@ public class TournamentSyncClient extends PtmOnlineHttpClient {
         return binding;
     }
 
-    /** @deprecated Jede neue Verbindung muss eine Dokument-ID und ein Schreib-Lease besitzen. */
-    @Deprecated
-    public void connect(String tournamentId) throws IOException, InterruptedException {
-        post("/api/sync/tournaments/" + encode(tournamentId) + "/connect", "{}");
-    }
-
     /**
      * Löst die Verbindung des lokalen Dokuments wieder (setzt serverseitig
      * {@code document_managed = 0}, hebt damit auch die Web-UI-Bearbeitungssperre wieder auf).
