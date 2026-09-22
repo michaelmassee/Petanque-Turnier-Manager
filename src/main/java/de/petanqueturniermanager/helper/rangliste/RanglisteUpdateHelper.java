@@ -20,6 +20,13 @@ public final class RanglisteUpdateHelper {
      * Löscht veraltete Zeilen unterhalb der neuen Datentabelle vor dem Neuschreiben.
      * Die erste Leerzeile und die Fußzeile werden ebenfalls geleert, weil sie keine
      * Datenzeilen sind und beim anschließenden Schreiben neu aufgebaut werden.
+     * <p>
+     * {@code sucheLetzteZeileMitSpielerNummer()} findet nur Zeilen mit einer echten
+     * Spieler-/Team-Nummer (Regex {@code ^\d}); eine mehrzeilige Fußzeile (z.B. bei
+     * Supermelee: 3 Textzeilen ohne Leerzeile davor) wird davon nicht erfasst und bliebe
+     * sonst nach dem Update stehen. {@code getLetzteMitDatenZeileInSpielerNrSpalte()}
+     * findet dagegen die letzte NICHT LEERE Zelle unabhängig vom Inhalt und deckt damit
+     * auch eine bestehende Fußzeile vollständig ab.
      *
      * @param rangliste     Die Ranglisten-Sheet-Instanz (muss {@link IRangliste} implementieren)
      * @param sheet         Das aktive Spreadsheet
@@ -27,7 +34,8 @@ public final class RanglisteUpdateHelper {
      */
     public static void loescheDatenzeilen(IRangliste rangliste, XSpreadsheet sheet, int neueTeamAnzahl)
             throws GenerateException {
-        int bisherigeLetzte = rangliste.sucheLetzteZeileMitSpielerNummer();
+        int bisherigeLetzte = Math.max(rangliste.sucheLetzteZeileMitSpielerNummer(),
+                rangliste.getLetzteMitDatenZeileInSpielerNrSpalte());
         int neueLetzte = rangliste.getErsteDatenZiele() + neueTeamAnzahl - 1;
         int ersteNichtDatenZeile = neueLetzte + 1;
         int letzteZuLeerndeZeile = Math.max(bisherigeLetzte, neueLetzte + 2);

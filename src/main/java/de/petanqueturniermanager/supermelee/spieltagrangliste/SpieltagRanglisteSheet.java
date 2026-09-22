@@ -203,8 +203,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements ISpielTagRang
 		rangListeSorter.doSort();
 		getRangListeSpalte().upDateRanglisteSpalte();
 		getxCalculatable().calculate();
-		Position footerPos = ranglisteFormatter.addFooter().getPos();
-		printBereichDefinieren(footerPos);
+		aktualisiereFooterUndDruckbereich();
 		processBoxinfo("processbox.header.festsetzen");
 		SheetFreeze.from(getTurnierSheet()).anzZeilen(3).anzSpalten(3).doFreeze();
 
@@ -214,6 +213,17 @@ public class SpieltagRanglisteSheet extends SheetRunner implements ISpielTagRang
 				"SUPERMELEE_SPIELTAG_" + nr,
 				new EingabeSignatur(
 						xDoc -> SignaturQuellen.fuerSupermeleeSpieltag(xDoc, nr)));
+	}
+
+	/**
+	 * Schreibt die Fußzeile neu und setzt den Druckbereich passend zur neuen Fußzeilen-Position.
+	 * Gemeinsame Methode für Vollaufbau {@link #generate(SpielTagNr)} und inkrementelles Update
+	 * aus {@code SpieltagRanglisteSheetUpdate} – ohne diesen Aufruf bliebe die Fußzeile nach
+	 * einem Update teilweise geleert und würde nie neu geschrieben.
+	 */
+	protected void aktualisiereFooterUndDruckbereich() throws GenerateException {
+		Position footerPos = ranglisteFormatter.addFooter().getPos();
+		printBereichDefinieren(footerPos);
 	}
 
 	private void printBereichDefinieren(Position footerPos) throws GenerateException {

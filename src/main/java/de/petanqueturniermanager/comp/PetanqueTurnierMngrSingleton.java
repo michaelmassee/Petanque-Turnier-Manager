@@ -211,7 +211,7 @@ public class PetanqueTurnierMngrSingleton {
 				(ws, ignored) -> new SchweizerRanglisteSheetUpdate(ws)));
 		t = logTimingAndReset("SheetSyncListener SCHWEIZER", t);
 		sheetAktivierungsDispatcher.registriere(SheetSyncListener.fuerSchluessel(context,
-				SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX,
+				SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDEN_RANGLISTE,
 				TurnierSystem.MAASTRICHTER,
 				new EingabeSignatur(SignaturQuellen::fuerMaastrichter),
 				(ws, ignored) -> new MaastrichterVorrundenRanglisteSheetUpdate(ws)));

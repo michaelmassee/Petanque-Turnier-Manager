@@ -76,7 +76,7 @@ public class MaastrichterVorrundenRanglisteSheetUpdate extends SchweizerRanglist
 
 	@Override
 	protected String getMetadatenSchluessel() {
-		return SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX;
+		return SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDEN_RANGLISTE;
 	}
 
 	@Override

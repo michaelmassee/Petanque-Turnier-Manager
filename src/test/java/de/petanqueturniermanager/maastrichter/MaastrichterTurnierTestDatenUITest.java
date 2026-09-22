@@ -284,7 +284,7 @@ public class MaastrichterTurnierTestDatenUITest extends BaseCalcUITest {
 
 		var xDoc = wkingSpreadsheet.getWorkingSpreadsheetDocument();
 		XSpreadsheet rangliste = SheetMetadataHelper.findeSheetUndHeile(xDoc,
-				SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX, null);
+				SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDEN_RANGLISTE, null);
 		assertThat(rangliste).as("Maastrichter Vorrunden-Rangliste muss existieren").isNotNull();
 
 		int ersteAlteZeile = SchweizerRanglisteSheet.ERSTE_DATEN_ZEILE + 10;
@@ -320,7 +320,7 @@ public class MaastrichterTurnierTestDatenUITest extends BaseCalcUITest {
 
 		XSpreadsheet rangliste = SheetMetadataHelper.findeSheetUndHeile(
 				wkingSpreadsheet.getWorkingSpreadsheetDocument(),
-				SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX, null);
+				SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDEN_RANGLISTE, null);
 		assertThat(rangliste).as("Maastrichter Vorrunden-Rangliste muss existieren").isNotNull();
 
 		int letzteDatenZeile = new MaastrichterVorrundenRanglisteSheetUpdate(wkingSpreadsheet)
@@ -545,7 +545,7 @@ public class MaastrichterTurnierTestDatenUITest extends BaseCalcUITest {
 					SheetMetadataHelper.schluesselMaastrichterVorrunde(runde));
 		}
 		erwartung.put(SheetNamen.maastrichterVorrundenRangliste(),
-				SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX);
+				SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDEN_RANGLISTE);
 		erwartung.put(SheetNamen.teilnehmer(), SheetMetadataHelper.SCHLUESSEL_TEILNEHMER);
 		erwartung.put(SheetNamen.maastrichterGruppenUebersicht(),
 				SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_GRUPPEN_UEBERSICHT);

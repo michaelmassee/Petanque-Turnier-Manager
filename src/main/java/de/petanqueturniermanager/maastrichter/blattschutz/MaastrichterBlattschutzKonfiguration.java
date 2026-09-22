@@ -71,7 +71,8 @@ public class MaastrichterBlattschutzKonfiguration implements IBlattschutzKonfigu
         var infos = new ArrayList<SheetSchutzInfo>();
 
         sammleMeldelisteSchutzInfo(xDoc, ws, infos);
-        sammleVorrundenUndRanglisteSchutzInfos(xDoc, ws, infos);
+        sammleVorrundenRanglisteSchutzInfo(xDoc, infos);
+        sammleVorrundenSchutzInfos(xDoc, ws, infos);
         sammleFinalrundenSchutzInfos(xDoc, infos);
         sammleCheckinListeSchutzInfo(xDoc, infos);
         sammleGruppenUebersichtSchutzInfo(xDoc, infos);
@@ -104,36 +105,32 @@ public class MaastrichterBlattschutzKonfiguration implements IBlattschutzKonfigu
         });
     }
 
-    /**
-     * Sammelt Schutzinfos für alle Vorrunden und die Vorrunden-Rangliste.
-     * Der Schlüssel der Rangliste ist der Prefix selbst (endet nicht mit "__"),
-     * Vorrunden haben numerische Suffixe (enden mit "__").
-     */
-    private void sammleVorrundenUndRanglisteSchutzInfos(XSpreadsheetDocument xDoc, WorkingSpreadsheet ws,
+    /** Sammelt die Schutzinfo für die Vorrunden-Rangliste: vollständig gesperrt. */
+    private void sammleVorrundenRanglisteSchutzInfo(XSpreadsheetDocument xDoc, List<SheetSchutzInfo> infos) {
+        SheetMetadataHelper.findeSheet(xDoc, SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDEN_RANGLISTE)
+                .ifPresent(sheet -> infos.add(SheetSchutzInfo.vollGesperrt(sheet)));
+    }
+
+    /** Sammelt Schutzinfos für alle Vorrunden: Ergebnis-Spalten editierbar. */
+    private void sammleVorrundenSchutzInfos(XSpreadsheetDocument xDoc, WorkingSpreadsheet ws,
             List<SheetSchutzInfo> infos) {
         var schluessel = SheetMetadataHelper.getSchluesselMitPrefix(xDoc,
                 SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX);
         boolean zeitplanAktiv = new MaastrichterKonfigurationSheet(ws).isZeitplanAktiv();
         for (var key : schluessel) {
             SheetMetadataHelper.findeSheet(xDoc, key).ifPresent(sheet -> {
-                if (key.equals(SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX)) {
-                    // Vorrunden-Rangliste: kein Schlüssel-Suffix → vollständig gesperrt
-                    infos.add(SheetSchutzInfo.vollGesperrt(sheet));
-                } else {
-                    // Vorrunde: Ergebnis-Spalten editierbar
-                    var bereiche = new ArrayList<RangePosition>();
-                    bereiche.add(berechneVorrundeErgebnisBereich(sheet));
-                    if (zeitplanAktiv) {
-                        // Rundenstartzeit-Zelle (einziges haendisches Zeit-Eingabefeld, analog
-                        // SchweizerBlattschutzKonfiguration.sammleSpielrundenSchutzInfos)
-                        bereiche.add(RangePosition.from(
-                                SchweizerAbstractSpielrundeSheet.ZEIT_SPALTE,
-                                SchweizerAbstractSpielrundeSheet.ZWEITE_HEADER_ZEILE,
-                                SchweizerAbstractSpielrundeSheet.ZEIT_SPALTE,
-                                SchweizerAbstractSpielrundeSheet.ZWEITE_HEADER_ZEILE));
-                    }
-                    infos.add(SheetSchutzInfo.mitEditierbarenBereichen(sheet, bereiche));
+                var bereiche = new ArrayList<RangePosition>();
+                bereiche.add(berechneVorrundeErgebnisBereich(sheet));
+                if (zeitplanAktiv) {
+                    // Rundenstartzeit-Zelle (einziges haendisches Zeit-Eingabefeld, analog
+                    // SchweizerBlattschutzKonfiguration.sammleSpielrundenSchutzInfos)
+                    bereiche.add(RangePosition.from(
+                            SchweizerAbstractSpielrundeSheet.ZEIT_SPALTE,
+                            SchweizerAbstractSpielrundeSheet.ZWEITE_HEADER_ZEILE,
+                            SchweizerAbstractSpielrundeSheet.ZEIT_SPALTE,
+                            SchweizerAbstractSpielrundeSheet.ZWEITE_HEADER_ZEILE));
                 }
+                infos.add(SheetSchutzInfo.mitEditierbarenBereichen(sheet, bereiche));
             });
         }
     }

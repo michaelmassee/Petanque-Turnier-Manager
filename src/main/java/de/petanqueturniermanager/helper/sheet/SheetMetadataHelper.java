@@ -134,6 +134,15 @@ public class SheetMetadataHelper {
     // ── Konstanten: Maastrichter ─────────────────────────────────────────────
     public static final String SCHLUESSEL_MAASTRICHTER_MELDELISTE = "__PTM_MAASTRICHTER_MELDELISTE__";
     public static final String SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX = "__PTM_MAASTRICHTER_VORRUNDE_";
+    /**
+     * Eigenständiger Schlüssel der Vorrunden-Rangliste selbst – bewusst <b>nicht</b> mit
+     * {@link #SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX} gebildet, obwohl dieser Prefix auch für
+     * die Suche nach den einzelnen Vorrunden-Sheets verwendet wird. Frühere Versionen nutzten den
+     * nackten Prefix als Rangliste-Schlüssel; da jeder String sein eigenes Prefix erfüllt
+     * ({@code startsWith}), fand sich die Rangliste dadurch selbst als Eingabequelle ihrer eigenen
+     * Änderungs-Signatur (Self-Reference, verhinderte zuverlässige Sheet-Sync-Updates).
+     */
+    public static final String SCHLUESSEL_MAASTRICHTER_VORRUNDEN_RANGLISTE = "__PTM_MAASTRICHTER_VORRUNDEN_RANGLISTE__";
     public static final String SCHLUESSEL_MAASTRICHTER_FINALRUNDE_PREFIX = "__PTM_MAASTRICHTER_FINALRUNDE_";
     public static final String SCHLUESSEL_MAASTRICHTER_GRUPPEN_UEBERSICHT = "__PTM_MAASTRICHTER_GRUPPEN_UEBERSICHT__";
 

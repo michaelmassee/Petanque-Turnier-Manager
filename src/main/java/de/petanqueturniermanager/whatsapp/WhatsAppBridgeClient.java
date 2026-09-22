@@ -57,6 +57,10 @@ public class WhatsAppBridgeClient {
 				.toList();
 	}
 
+	public void logout() throws WhatsAppBridgeException {
+		postJson("/logout", new JsonObject());
+	}
+
 	public void sendeBild(String chatId, String caption, byte[] pngBytes) throws WhatsAppBridgeException {
 		JsonObject payload = new JsonObject();
 		payload.addProperty("chatId", chatId);

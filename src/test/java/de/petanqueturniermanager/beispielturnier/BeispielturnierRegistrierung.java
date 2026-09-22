@@ -111,7 +111,7 @@ public final class BeispielturnierRegistrierung {
                                 SheetMetadataHelper.schluesselMaastrichterVorrunde(2),
                                 SheetMetadataHelper.schluesselMaastrichterVorrunde(3),
                                 // Vorrunden-Rangliste nutzt PREFIX als Schlüssel
-                                SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX,
+                                SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDEN_RANGLISTE,
                                 // A-Finale (alle 12 Teams in einer Gruppe)
                                 SheetMetadataHelper.schluesselMaastrichterFinalrunde("A")),
                         "MaastrichterTurnierTestDaten.java"),
@@ -254,7 +254,7 @@ public final class BeispielturnierRegistrierung {
                                 SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_MELDELISTE,
                                 SheetMetadataHelper.schluesselMaastrichterVorrunde(1),
                                 SheetMetadataHelper.schluesselMaastrichterVorrunde(4),
-                                SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX,
+                                SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDEN_RANGLISTE,
                                 SheetMetadataHelper.schluesselMaastrichterFinalrunde("A"),
                                 SheetMetadataHelper.schluesselMaastrichterFinalrunde("D")),
                         "Maastrichter57TeamsTurnierTestDaten.java"),
@@ -266,7 +266,7 @@ public final class BeispielturnierRegistrierung {
                                 SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_MELDELISTE,
                                 SheetMetadataHelper.schluesselMaastrichterVorrunde(1),
                                 SheetMetadataHelper.schluesselMaastrichterVorrunde(3),
-                                SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX,
+                                SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDEN_RANGLISTE,
                                 SheetMetadataHelper.schluesselMaastrichterFinalrunde("A"),
                                 SheetMetadataHelper.schluesselMaastrichterFinalrunde("B")),
                         "Maastrichter35TeamsTurnierTestDaten.java"),

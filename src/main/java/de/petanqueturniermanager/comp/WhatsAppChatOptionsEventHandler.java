@@ -81,6 +81,7 @@ public final class WhatsAppChatOptionsEventHandler extends WeakBase
 	private static final String CTL_FAVORIT = "WhatsAppChatFavorit";
 	private static final String CTL_LOGIN = "WhatsAppChatLogin";
 	private static final String CTL_AKTUALISIEREN = "WhatsAppChatAktualisieren";
+	private static final String CTL_TRENNEN = "WhatsAppChatTrennen";
 	private static final String CTL_STATUS = "WhatsAppChatStatus";
 
 	private final XComponentContext context;
@@ -126,6 +127,7 @@ public final class WhatsAppChatOptionsEventHandler extends WeakBase
 		setLabel(container, CTL_FAVORIT, I18n.get("whatsapp.chat.konfig.favorit"));
 		setLabel(container, CTL_LOGIN, I18n.get("whatsapp.chat.konfig.btn.login"));
 		setLabel(container, CTL_AKTUALISIEREN, I18n.get("whatsapp.chat.konfig.btn.aktualisieren"));
+		setLabel(container, CTL_TRENNEN, I18n.get("whatsapp.chat.konfig.btn.trennen"));
 		if (eintraege == null) {
 			eintraege = new ArrayList<>(GlobalProperties.get().getWhatsAppChatEintraege());
 		}
@@ -148,6 +150,7 @@ public final class WhatsAppChatOptionsEventHandler extends WeakBase
 		registriereActionListener(container, CTL_LOESCHEN, () -> loescheZeile(container));
 		registriereActionListener(container, CTL_LOGIN, () -> loginAnzeigen(container));
 		registriereActionListener(container, CTL_AKTUALISIEREN, () -> aktualisiereAusBridge(container));
+		registriereActionListener(container, CTL_TRENNEN, () -> trennenAnzeigen(container));
 		registriereFavoritListener(container);
 		registriereAuswahlListener(container, () -> aktualisiereAuswahlAbhaengigeButtons(container));
 		listenerContainer = container;
@@ -201,6 +204,32 @@ public final class WhatsAppChatOptionsEventHandler extends WeakBase
 			status = client.status();
 		}
 		return status;
+	}
+
+	/**
+	 * Trennt die aktuelle WhatsApp-Verbindung (serverseitiges Logout + Löschen der lokalen Session) und beendet
+	 * den Bridge-Prozess. Läuft im Action-Listener-Callback bereits auf dem Main-Thread, daher hier synchroner
+	 * Bestätigungsdialog statt {@link LoMainThread#post}.
+	 */
+	private void trennenAnzeigen(XControlContainer container) {
+		MessageBoxResult result = MessageBox.from(context, MessageBoxTypeEnum.QUESTION_YES_NO)
+				.caption(I18n.get("whatsapp.chat.konfig.confirm.trennen.titel"))
+				.message(I18n.get("whatsapp.chat.konfig.confirm.trennen.text"))
+				.show();
+		if (result != MessageBoxResult.YES) {
+			return;
+		}
+		setStatus(container, I18n.get("whatsapp.chat.konfig.status.trennen"));
+		new Thread(() -> {
+			try {
+				WhatsAppBridgeManager.client().logout();
+			} catch (WhatsAppBridgeException e) {
+				logger.debug("WhatsApp-Logout beim Trennen fehlgeschlagen (Bridge vermutlich nicht aktiv)", e);
+			} finally {
+				WhatsAppBridgeManager.beenden();
+			}
+			LoMainThread.post(context, () -> setStatus(container, I18n.get("whatsapp.chat.konfig.status.getrennt")));
+		}, "PTM-WhatsApp-Trennen").start();
 	}
 
 	private void aktualisiereAusBridge(XControlContainer container) {
