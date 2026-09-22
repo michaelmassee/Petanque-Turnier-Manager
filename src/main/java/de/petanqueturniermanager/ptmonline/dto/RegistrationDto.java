@@ -3,6 +3,8 @@
  */
 package de.petanqueturniermanager.ptmonline.dto;
 
+import java.util.List;
+
 /**
  * Spiegelt das JSON-Feld {@code registration} / {@code registrations[]} der PTM-Online REST-API
  * (siehe {@code toPublicRegistration()} in {@code src/worker.js}).
@@ -18,15 +20,27 @@ public record RegistrationDto(
         String partnerFirstName,
         String partnerLastName,
         String partnerEmail,
+        String partnerLicenseNr,
         String partner2FirstName,
         String partner2LastName,
         String partner2Email,
+        String partner2LicenseNr,
         String teamName,
         Integer seedingPosition,
         String status,
+        Boolean noEmail,
+        Boolean isVip,
         Boolean active,
+        List<RegistrationFeeDto> feeSelections,
+        Integer feeTotalCents,
+        List<RegistrationAnswerDto> registrationAnswers,
+        String organizerMessage,
+        String language,
         String registeredAt,
         String confirmedAt,
         String createdAt,
-        String updatedAt) {
+        String updatedAt,
+        String localRegistrationUuid,
+        Integer registrationRevision,
+        Integer executionRevision) {
 }

@@ -61,6 +61,8 @@ public final class RegistrationImportTask {
 
     private record GeschriebeneAnmeldung(RegistrationDto registration, int zeile1Basiert) {}
 
+    public record AbgleichErgebnis(int lokalImportiert, int onlineAngelegt) {}
+
     public static void starte(WorkingSpreadsheet ws) {
         XComponentContext ctx = ws.getxContext();
         var config = new LibreOfficePtmOnlineSpeicher(ctx).laden();
@@ -105,11 +107,10 @@ public final class RegistrationImportTask {
             LibreOfficePtmOnlineSpeicher.Zugangsdaten config, PtmOnlineRegistrationMapping mapping,
             String tournamentId, TurnierSystem ts, MeldelisteZiel ziel) {
         try {
-            int anzahl = fuehreImportDurch(ws, config, mapping, tournamentId, ts, ziel,
+            AbgleichErgebnis ergebnis = fuehreAbgleichDurch(ws, config, mapping, tournamentId, ts, ziel,
                     () -> aktualisiereMeldeliste(ws, ts));
-            String meldung = anzahl == 0
-                    ? I18n.get("ptmonline.erfolg.keine_neuen_anmeldungen")
-                    : I18n.get("ptmonline.erfolg.anmeldungen_importiert", anzahl);
+            String meldung = I18n.get("ptmonline.erfolg.anmeldungen_abgeglichen",
+                    ergebnis.lokalImportiert(), ergebnis.onlineAngelegt());
             LoMainThread.post(ctx, () -> zeigeInfo(ctx, meldung));
         } catch (IOException e) {
             logger.error("PTM-Online: Anmeldungen importieren fehlgeschlagen", e);
@@ -138,6 +139,18 @@ public final class RegistrationImportTask {
         return fuehreImportDurch(ws, config, mapping, tournamentId, ts, ziel, () -> aktualisiereMeldeliste(ws, ts));
     }
 
+    /** Manueller Abgleich: importiert neue Online-Meldungen und legt neue lokale Meldungen online an. */
+    public static AbgleichErgebnis fuehreAbgleichDurch(WorkingSpreadsheet ws,
+            LibreOfficePtmOnlineSpeicher.Zugangsdaten config, PtmOnlineRegistrationMapping mapping, String tournamentId,
+            TurnierSystem ts, MeldelisteZiel ziel, MeldelistenAktualisierung aktualisierung)
+            throws IOException, InterruptedException, GenerateException {
+        mapping.sicherstellen();
+        int lokalImportiert = fuehreImportDurch(ws, config, mapping, tournamentId, ts, ziel, aktualisierung);
+        int onlineAngelegt = neueLokaleMeldungenAnlegen(config, mapping, tournamentId, ziel);
+        aktualisiereBezeichnungen(config, mapping, tournamentId, ziel);
+        return new AbgleichErgebnis(lokalImportiert, onlineAngelegt);
+    }
+
     public static int fuehreImportDurch(WorkingSpreadsheet ws, LibreOfficePtmOnlineSpeicher.Zugangsdaten config,
             PtmOnlineRegistrationMapping mapping, String tournamentId, TurnierSystem ts, MeldelisteZiel ziel,
             MeldelistenAktualisierung aktualisierung)
@@ -146,9 +159,10 @@ public final class RegistrationImportTask {
         Instant abgleichStart = Instant.now();
         Instant since = mapping.getLastSync().orElse(Instant.EPOCH);
         List<RegistrationDto> alle = client.fetchRegistrations(tournamentId, since);
+        uebernehmeOnlineStornierungen(ziel, mapping, alle);
         List<RegistrationDto> neue = new ArrayList<>();
         for (RegistrationDto reg : alle) {
-            if (!mapping.istBereitsImportiert(reg.id())) {
+            if (!"cancelled".equals(reg.status()) && !mapping.istBereitsImportiert(reg.id())) {
                 neue.add(reg);
             }
         }
@@ -205,7 +219,9 @@ public final class RegistrationImportTask {
             RegistrationDto reg = geschriebene.registration();
             try {
                 String uuid = ziel.getOderErzeugeLokaleUuid(geschriebene.zeile1Basiert());
-                mapping.addMapping(uuid, reg.id(), ziel.formelTeamNrAusLokalerUuid(uuid));
+                mapping.addMapping(uuid, reg.id(), ziel.formelTeamNrAusLokalerUuid(uuid), executionRevision(reg),
+                        lokaleBezeichnung(ziel, geschriebene.zeile1Basiert()), onlineBezeichnung(reg), onlineStatus(reg));
+                mapping.setOnlineDetails(uuid, reg);
             } catch (MeldelisteZiel.MeldelisteSchreibException e) {
                 logger.warn("PTM-Online: Lokale UUID für importierte Anmeldung {} nicht ermittelt", reg.id(), e);
                 vollstaendigImportiert = false;
@@ -221,7 +237,9 @@ public final class RegistrationImportTask {
             RegistrationDto reg, int zeile) throws GenerateException {
         try {
             String uuid = ziel.getOderErzeugeLokaleUuid(zeile);
-            mapping.addMapping(uuid, reg.id(), ziel.formelTeamNrAusLokalerUuid(uuid));
+            mapping.addMapping(uuid, reg.id(), ziel.formelTeamNrAusLokalerUuid(uuid), executionRevision(reg),
+                    lokaleBezeichnung(ziel, zeile), onlineBezeichnung(reg), onlineStatus(reg));
+            mapping.setOnlineDetails(uuid, reg);
         } catch (MeldelisteZiel.MeldelisteSchreibException e) {
             throw new GenerateException("Lokale vorhandene Anmeldung konnte nicht verknüpft werden: " + e.getMessage());
         }
@@ -257,6 +275,156 @@ public final class RegistrationImportTask {
         if (runner.isLetzterLaufFehlgeschlagen()) {
             throw new GenerateException("Meldeliste konnte nicht aktualisiert werden");
         }
+    }
+
+    private static int executionRevision(RegistrationDto registration) {
+        return registration.executionRevision() == null ? 1 : Math.max(1, registration.executionRevision());
+    }
+
+    private static int neueLokaleMeldungenAnlegen(LibreOfficePtmOnlineSpeicher.Zugangsdaten config,
+            PtmOnlineRegistrationMapping mapping, String tournamentId, MeldelisteZiel ziel)
+            throws IOException, InterruptedException, GenerateException {
+        String documentId = mapping.getSyncDocumentId()
+                .orElseThrow(() -> new GenerateException(I18n.get("ptmonline.fehler.dokumentbindung_unvollstaendig")));
+        String leaseToken = mapping.getLeaseToken()
+                .orElseThrow(() -> new GenerateException(I18n.get("ptmonline.fehler.dokumentbindung_unvollstaendig")));
+        TournamentSyncClient client = new TournamentSyncClient(config.baseUrl(), config.apiKey(), documentId, leaseToken);
+        Map<Integer, List<MeldelisteSpielerDaten>> proZeile = ziel.leseAlleSpielerRoh().stream()
+                .collect(Collectors.groupingBy(MeldelisteSpielerDaten::zeile1Basiert, LinkedHashMap::new, Collectors.toList()));
+        int angelegt = 0;
+        for (Map.Entry<Integer, List<MeldelisteSpielerDaten>> eintrag : proZeile.entrySet()) {
+            List<MeldelisteSpielerDaten> spieler = eintrag.getValue();
+            if (spieler.isEmpty()) {
+                continue;
+            }
+            String uuid;
+            try {
+                uuid = ziel.getOderErzeugeLokaleUuid(eintrag.getKey());
+            } catch (MeldelisteZiel.MeldelisteSchreibException e) {
+                throw new GenerateException(e.getMessage());
+            }
+            if (mapping.getOnlineId(uuid).isPresent()) {
+                continue;
+            }
+            RegistrationDto remote = client.upsertRegistration(tournamentId, uuid, zuOnlineAnmeldung(spieler));
+            try {
+                mapping.addMapping(uuid, remote.id(), ziel.formelTeamNrAusLokalerUuid(uuid), executionRevision(remote),
+                        lokaleBezeichnung(ziel, eintrag.getKey()), onlineBezeichnung(remote), onlineStatus(remote));
+                mapping.setOnlineDetails(uuid, remote);
+            } catch (MeldelisteZiel.MeldelisteSchreibException e) {
+                throw new GenerateException(e.getMessage());
+            }
+            angelegt++;
+        }
+        return angelegt;
+    }
+
+    private static de.petanqueturniermanager.ptmonline.dto.NeueOnlineAnmeldung zuOnlineAnmeldung(
+            List<MeldelisteSpielerDaten> spieler) {
+        MeldelisteSpielerDaten erster = spieler.get(0);
+        MeldelisteSpielerDaten zweiter = spieler.size() > 1 ? spieler.get(1) : null;
+        MeldelisteSpielerDaten dritter = spieler.size() > 2 ? spieler.get(2) : null;
+        return new de.petanqueturniermanager.ptmonline.dto.NeueOnlineAnmeldung(
+                erster.vorname(), erster.nachname(), erster.vereinName(), null,
+                zweiter == null ? null : zweiter.vorname(), zweiter == null ? null : zweiter.nachname(),
+                dritter == null ? null : dritter.vorname(), dritter == null ? null : dritter.nachname(),
+                null, true, true, List.of(), List.of());
+    }
+
+    private static void aktualisiereBezeichnungen(LibreOfficePtmOnlineSpeicher.Zugangsdaten config,
+            PtmOnlineRegistrationMapping mapping, String tournamentId, MeldelisteZiel ziel)
+            throws IOException, InterruptedException, GenerateException {
+        String documentId = mapping.getSyncDocumentId()
+                .orElseThrow(() -> new GenerateException(I18n.get("ptmonline.fehler.dokumentbindung_unvollstaendig")));
+        String leaseToken = mapping.getLeaseToken()
+                .orElseThrow(() -> new GenerateException(I18n.get("ptmonline.fehler.dokumentbindung_unvollstaendig")));
+        Map<String, RegistrationDto> remoteProId = new TournamentSyncClient(config.baseUrl(), config.apiKey(), documentId, leaseToken)
+                .fetchRegistrations(tournamentId, null).stream()
+                .collect(Collectors.toMap(RegistrationDto::id, registration -> registration));
+        for (MeldelisteSpielerDaten spieler : ziel.leseAlleSpielerRoh()) {
+            String uuid;
+            try {
+                uuid = ziel.getOderErzeugeLokaleUuid(spieler.zeile1Basiert());
+            } catch (MeldelisteZiel.MeldelisteSchreibException e) {
+                throw new GenerateException(e.getMessage());
+            }
+            Optional<String> onlineId = mapping.getOnlineId(uuid);
+            if (onlineId.isEmpty()) {
+                continue;
+            }
+            RegistrationDto remote = remoteProId.get(onlineId.get());
+            mapping.setBezeichnungen(uuid, lokaleBezeichnung(ziel, spieler.zeile1Basiert()),
+                    remote == null ? "" : onlineBezeichnung(remote), remote == null ? "" : onlineStatus(remote));
+            if (remote != null) {
+                mapping.setOnlineDetails(uuid, remote);
+            }
+        }
+    }
+
+    private static String lokaleBezeichnung(MeldelisteZiel ziel, int zeile1Basiert) {
+        return ziel.leseAlleSpielerRoh().stream()
+                .filter(spieler -> spieler.zeile1Basiert() == zeile1Basiert)
+                .map(RegistrationImportTask::spielerBezeichnung)
+                .filter(name -> !name.isBlank())
+                .collect(Collectors.joining(" / "));
+    }
+
+    private static String onlineBezeichnung(RegistrationDto registration) {
+        return java.util.stream.Stream.of(
+                name(registration.firstName(), registration.lastName()),
+                name(registration.partnerFirstName(), registration.partnerLastName()),
+                name(registration.partner2FirstName(), registration.partner2LastName()))
+                .filter(name -> !name.isBlank())
+                .collect(Collectors.joining(" / "));
+    }
+
+    private static String spielerBezeichnung(MeldelisteSpielerDaten spieler) {
+        return name(spieler.vorname(), spieler.nachname());
+    }
+
+    private static String name(String vorname, String nachname) {
+        return (String.valueOf(vorname == null ? "" : vorname).strip() + " "
+                + String.valueOf(nachname == null ? "" : nachname).strip()).strip();
+    }
+
+    private static void uebernehmeOnlineStornierungen(MeldelisteZiel ziel, PtmOnlineRegistrationMapping mapping,
+            List<RegistrationDto> registrations) throws GenerateException {
+        for (RegistrationDto registration : registrations) {
+            if (!"cancelled".equals(registration.status())) {
+                continue;
+            }
+            Optional<String> lokaleUuid = mapping.getLokaleUuid(registration.id());
+            if (lokaleUuid.isEmpty()) {
+                continue;
+            }
+            for (MeldelisteSpielerDaten spieler : ziel.leseAlleSpielerRoh()) {
+                try {
+                    if (lokaleUuid.get().equals(ziel.getOderErzeugeLokaleUuid(spieler.zeile1Basiert()))) {
+                        ziel.markiereAlsAbgemeldet(spieler.zeile1Basiert());
+                        mapping.setBezeichnungen(lokaleUuid.get(), lokaleBezeichnung(ziel, spieler.zeile1Basiert()),
+                                onlineBezeichnung(registration), onlineStatus(registration));
+                        mapping.setOnlineDetails(lokaleUuid.get(), registration);
+                        break;
+                    }
+                } catch (MeldelisteZiel.MeldelisteSchreibException e) {
+                    throw new GenerateException(e.getMessage());
+                }
+            }
+        }
+    }
+
+    private static String onlineStatus(RegistrationDto registration) {
+        if (registration.status() == null) {
+            return "";
+        }
+        return switch (registration.status()) {
+            case "pending" -> I18n.get("ptmonline.status.offen");
+            case "confirmed" -> I18n.get("ptmonline.status.bestaetigt");
+            case "waitlist" -> I18n.get("ptmonline.status.warteliste");
+            case "cancelled" -> I18n.get("ptmonline.status.storniert");
+            case "withdrawn" -> I18n.get("ptmonline.status.ausgestiegen");
+            default -> registration.status();
+        };
     }
 
     /**

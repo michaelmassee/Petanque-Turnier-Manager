@@ -48,6 +48,9 @@ public class OnlineTurnierInfoSheet extends SheetRunner implements ISheet {
 	private static final int ZEILE_ONLINE_STATUS = 6;
 	private static final int ZEILE_VERBINDUNGSSTATUS = 7;
 	private static final int ZEILE_LETZTER_SYNC = 8;
+	private static final int ZEILE_SYNC_DOKUMENT_ID = 9;
+	private static final int ZEILE_LEASE_TOKEN = 10;
+	private static final int ZEILE_BINDING_REVISION = 11;
 
 	private final Integer spieltagNr;
 
@@ -115,6 +118,9 @@ public class OnlineTurnierInfoSheet extends SheetRunner implements ISheet {
 		labels.addNewRow().newString(I18n.get("ptmonline.sheet.label.online.status"));
 		labels.addNewRow().newString(I18n.get("ptmonline.sheet.label.status"));
 		labels.addNewRow().newString(I18n.get("ptmonline.sheet.label.letzter.sync"));
+		labels.addNewRow().newString(I18n.get("ptmonline.sheet.label.sync.document"));
+		labels.addNewRow().newString(I18n.get("ptmonline.sheet.label.sync.lease"));
+		labels.addNewRow().newString(I18n.get("ptmonline.sheet.label.sync.revision"));
 		RangeHelper.from(this, labels.getRangePosition(Position.from(SPALTE_LABEL, ZEILE_TITEL))).setDataInRange(labels);
 	}
 
@@ -159,6 +165,22 @@ public class OnlineTurnierInfoSheet extends SheetRunner implements ISheet {
 
 	public void setLastSync(Instant zeitpunkt) throws GenerateException {
 		schreibeWert(ZEILE_LETZTER_SYNC, zeitpunkt == null ? "" : zeitpunkt.toString());
+	}
+
+	public void setSyncBinding(String documentId, String leaseToken, long revision) throws GenerateException {
+		schreibeWert(ZEILE_SYNC_DOKUMENT_ID, documentId);
+		schreibeWert(ZEILE_LEASE_TOKEN, leaseToken);
+		schreibeWert(ZEILE_BINDING_REVISION, Long.toString(revision));
+	}
+
+	public Optional<String> getSyncDocumentId() throws GenerateException {
+		String value = leseWert(ZEILE_SYNC_DOKUMENT_ID);
+		return value.isBlank() ? Optional.empty() : Optional.of(value);
+	}
+
+	public Optional<String> getLeaseToken() throws GenerateException {
+		String value = leseWert(ZEILE_LEASE_TOKEN);
+		return value.isBlank() ? Optional.empty() : Optional.of(value);
 	}
 
 	private String leseWert(int zeile) throws GenerateException {

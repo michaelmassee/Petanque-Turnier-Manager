@@ -22,6 +22,7 @@ import de.petanqueturniermanager.onlinesync.OnlineTournamentDto;
 import de.petanqueturniermanager.ptmonline.dto.NeueOnlineAnmeldung;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationDto;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationResultDto;
+import de.petanqueturniermanager.ptmonline.dto.SyncBindingDto;
 
 public class TournamentSyncClientTest {
 
@@ -51,6 +52,22 @@ public class TournamentSyncClientTest {
 		verify(httpClient).send(captor.capture(), any());
 		assertThat(captor.getValue().uri().toString()).isEqualTo("https://ptm-online.example.com/api/sync/tournaments");
 		assertThat(captor.getValue().headers().firstValue("Authorization")).contains("Bearer ptm_secret");
+	}
+
+	@Test
+	public void connectBindetDokumentUndLease() throws Exception {
+		HttpClient httpClient = mock(HttpClient.class);
+		HttpResponse<String> response = mockResponse(200,
+				"{\"ok\":true,\"syncDocumentId\":\"e9e9caec-e0b1-4fe0-8fee-a229279b9f73\",\"bindingRevision\":1}");
+		when(httpClient.<String>send(any(HttpRequest.class), any())).thenReturn(response);
+
+		TournamentSyncClient client = new TournamentSyncClient(httpClient, "https://ptm-online.example.com", "ptm_secret");
+		SyncBindingDto binding = client.connect("t1", "e9e9caec-e0b1-4fe0-8fee-a229279b9f73", "01234567890123456789012345678901");
+
+		assertThat(binding.bindingRevision()).isEqualTo(1);
+		ArgumentCaptor<HttpRequest> captor = ArgumentCaptor.forClass(HttpRequest.class);
+		verify(httpClient).send(captor.capture(), any());
+		assertThat(captor.getValue().bodyPublisher()).isPresent();
 	}
 
 	@Test
@@ -91,7 +108,7 @@ public class TournamentSyncClientTest {
 
 		TournamentSyncClient client = new TournamentSyncClient(httpClient, "https://ptm-online.example.com", "ptm_secret");
 		int updated = client.pushResults("t1",
-				List.of(new RegistrationResultDto("r1", "confirmed", 1, true), new RegistrationResultDto("r2", "confirmed", 2, true)));
+				List.of(new RegistrationResultDto("r1", "confirmed", 1, true, null), new RegistrationResultDto("r2", "confirmed", 2, true, null)));
 
 		assertThat(updated).isEqualTo(2);
 

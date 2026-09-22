@@ -22,6 +22,7 @@ import de.petanqueturniermanager.comp.LibreOfficePtmOnlineSpeicher;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.LoMainThread;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.model.IMeldung;
@@ -108,7 +109,21 @@ public final class PtmOnlineSpielrundeSync {
             return;
         }
         String tournamentId = tournamentIdOpt.get();
-        TournamentSyncClient client = new TournamentSyncClient(config.baseUrl(), config.apiKey());
+        Optional<String> syncDocumentId;
+        Optional<String> leaseToken;
+        try {
+            syncDocumentId = mapping.getSyncDocumentId();
+            leaseToken = mapping.getLeaseToken();
+        } catch (GenerateException e) {
+            zeigeFehlerSammlung(ctx, List.of(e.getMessage()));
+            return;
+        }
+        if (syncDocumentId.isEmpty() || leaseToken.isEmpty()) {
+            zeigeFehlerSammlung(ctx, List.of(I18n.get("ptmonline.fehler.dokumentbindung_unvollstaendig")));
+            return;
+        }
+        TournamentSyncClient client = new TournamentSyncClient(config.baseUrl(), config.apiKey(),
+                syncDocumentId.get(), leaseToken.get());
         List<String> fehler = new ArrayList<>();
 
         try {
@@ -117,6 +132,9 @@ public final class PtmOnlineSpielrundeSync {
         } catch (GenerateException e) {
             logger.error("PTM-Online: Altes Mapping konnte nicht migriert werden", e);
             fehler.add(e.getMessage());
+        } catch (RuntimeException e) {
+            logger.error("PTM-Online: Unerwarteter Mapping-Fehler", e);
+            fehler.add(netzwerkFehlerText(e));
         }
 
         if (istErsteRunde) {
@@ -128,21 +146,29 @@ public final class PtmOnlineSpielrundeSync {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 return;
+            } catch (RuntimeException e) {
+                logger.error("PTM-Online: Turnierstart lieferte einen unerwarteten Fehler", e);
+                fehler.add(netzwerkFehlerText(e));
             }
         }
 
-        try {
-            RegistrationImportTask.fuehreImportDurch(ws, config, mapping, tournamentId, ts, ziel,
-                    meldelistenAktualisierung);
-        } catch (IOException e) {
-            logger.error("PTM-Online: Anmeldungen importieren fehlgeschlagen", e);
-            fehler.add(netzwerkFehlerText(e));
-        } catch (GenerateException e) {
-            logger.error("PTM-Online: Meldungen-Sheet lesen/schreiben fehlgeschlagen", e);
-            fehler.add(e.getMessage());
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            return;
+        if (istErsteRunde) {
+            try {
+                RegistrationImportTask.fuehreImportDurch(ws, config, mapping, tournamentId, ts, ziel,
+                        meldelistenAktualisierung);
+            } catch (IOException e) {
+                logger.error("PTM-Online: Anmeldungen importieren fehlgeschlagen", e);
+                fehler.add(netzwerkFehlerText(e));
+            } catch (GenerateException e) {
+                logger.error("PTM-Online: Meldungen-Sheet lesen/schreiben fehlgeschlagen", e);
+                fehler.add(e.getMessage());
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return;
+            } catch (RuntimeException e) {
+                logger.error("PTM-Online: Unerwarteter Importfehler", e);
+                fehler.add(netzwerkFehlerText(e));
+            }
         }
 
         try {
@@ -157,6 +183,9 @@ public final class PtmOnlineSpielrundeSync {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             return;
+        } catch (RuntimeException e) {
+            logger.error("PTM-Online: Unerwarteter Status-Abgleichfehler", e);
+            fehler.add(netzwerkFehlerText(e));
         }
 
         if (!fehler.isEmpty()) {
@@ -172,6 +201,7 @@ public final class PtmOnlineSpielrundeSync {
             TournamentSyncClient client, String tournamentId, Set<Integer> alle, Set<Integer> aktive,
             Set<Integer> ausgestiegen) throws IOException, InterruptedException, GenerateException {
         List<RegistrationResultDto> results = new ArrayList<>();
+        Map<String, String> lokaleUuidProOnlineId = new LinkedHashMap<>();
         Map<Integer, Integer> zeileProTeam = zeileProTeam(ziel);
         for (int teamNr : alle) {
             Optional<String> onlineId = onlineId(mapping, ziel, zeileProTeam.getOrDefault(teamNr, -1));
@@ -180,10 +210,22 @@ public final class PtmOnlineSpielrundeSync {
             }
             boolean istAktiv = aktive.contains(teamNr);
             String status = ausgestiegen.contains(teamNr) ? "withdrawn" : null;
-            results.add(new RegistrationResultDto(onlineId.get(), status, teamNr, istAktiv));
+            String uuid = lokaleUuid(ziel, zeileProTeam.getOrDefault(teamNr, -1));
+            int revision = mapping.getExecutionRevision(uuid);
+            results.add(new RegistrationResultDto(onlineId.get(), status, teamNr, istAktiv, revision));
+            lokaleUuidProOnlineId.put(onlineId.get(), uuid);
         }
         if (!results.isEmpty()) {
-            client.pushResults(tournamentId, results);
+            int updatedCount = client.pushResults(tournamentId, results);
+            if (updatedCount == results.size()) {
+                for (RegistrationResultDto result : results) {
+                    mapping.setExecutionRevision(lokaleUuidProOnlineId.get(result.id()), result.expectedExecutionRevision() + 1);
+                }
+            } else {
+                logger.warn("PTM-Online: Status-Push aktualisierte nur {} von {} Anmeldungen; "
+                        + "lokale executionRevision bleibt unveraendert fuer den naechsten Abgleich", updatedCount,
+                        results.size());
+            }
         }
 
         Map<Integer, List<MeldelisteSpielerDaten>> proTeam = ziel.leseAlleSpielerRoh().stream()
@@ -199,9 +241,12 @@ public final class PtmOnlineSpielrundeSync {
                 continue;
             }
             NeueOnlineAnmeldung anmeldung = zuAnmeldung(spieler);
-            RegistrationDto angelegt = client.createRegistration(tournamentId, anmeldung);
             String uuid = lokaleUuid(ziel, zeile);
-            mapping.addMapping(uuid, angelegt.id(), teamnummerFormel(ziel, uuid));
+            RegistrationDto angelegt = client.upsertRegistration(tournamentId, uuid, anmeldung);
+            mapping.addMapping(uuid, angelegt.id(), teamnummerFormel(ziel, uuid),
+                    angelegt.executionRevision() == null ? 1 : angelegt.executionRevision(),
+                    bezeichnung(spieler), bezeichnung(angelegt), onlineStatus(angelegt.status()));
+            mapping.setOnlineDetails(uuid, angelegt);
         }
     }
 
@@ -275,14 +320,45 @@ public final class PtmOnlineSpielrundeSync {
                 null, true, true, List.of(), List.of());
     }
 
-    private static String netzwerkFehlerText(IOException e) {
+    private static String bezeichnung(List<MeldelisteSpielerDaten> spieler) {
+        return spieler.stream().map(eintrag -> bezeichnung(eintrag.vorname(), eintrag.nachname()))
+                .filter(name -> !name.isBlank()).collect(Collectors.joining(" / "));
+    }
+
+    private static String bezeichnung(RegistrationDto registration) {
+        return java.util.stream.Stream.of(
+                bezeichnung(registration.firstName(), registration.lastName()),
+                bezeichnung(registration.partnerFirstName(), registration.partnerLastName()),
+                bezeichnung(registration.partner2FirstName(), registration.partner2LastName()))
+                .filter(name -> !name.isBlank()).collect(Collectors.joining(" / "));
+    }
+
+    private static String bezeichnung(String vorname, String nachname) {
+        return ((vorname == null ? "" : vorname.strip()) + " " + (nachname == null ? "" : nachname.strip())).strip();
+    }
+
+    private static String onlineStatus(String status) {
+        if (status == null) {
+            return "";
+        }
+        return switch (status) {
+            case "pending" -> I18n.get("ptmonline.status.offen");
+            case "confirmed" -> I18n.get("ptmonline.status.bestaetigt");
+            case "waitlist" -> I18n.get("ptmonline.status.warteliste");
+            case "cancelled" -> I18n.get("ptmonline.status.storniert");
+            case "withdrawn" -> I18n.get("ptmonline.status.ausgestiegen");
+            default -> status;
+        };
+    }
+
+    private static String netzwerkFehlerText(Exception e) {
         return e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
     }
 
     private static void zeigeFehlerSammlung(XComponentContext ctx, List<String> fehler) {
-        MessageBox.from(ctx, MessageBoxTypeEnum.WARN_OK)
+        LoMainThread.post(ctx, () -> MessageBox.from(ctx, MessageBoxTypeEnum.WARN_OK)
                 .caption(I18n.get("ptmonline.fehler.titel"))
                 .message(I18n.get("ptmonline.fehler.rundenstart_abgleich", String.join("\n", fehler)))
-                .show();
+                .show());
     }
 }

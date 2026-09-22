@@ -15,6 +15,8 @@ public enum SheetGruppe {
             "__PTM_SUPERMELEE_MELDELISTE__",
             "__PTM_SUPERMELEE_TEAMS__",
             "__PTM_SUPERMELEE_ANMELDUNGEN_",
+            "__PTM_ONLINE_INFO_SPIELTAG_",
+            "__PTM_ONLINE_MELDUNGEN_SPIELTAG_",
             "__PTM_SUPERMELEE_TEILNEHMER_",
             "__PTM_SUPERMELEE_SPIELRUNDE_PLAN_",
             "__PTM_SUPERMELEE_SPIELRUNDE_",

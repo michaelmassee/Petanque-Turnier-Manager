@@ -68,6 +68,11 @@ public interface MeldelisteZiel extends AbgleichQuelle {
         throw new MeldelisteSchreibException("Lokale PTM-Online-ID wird von dieser Meldeliste nicht unterstützt");
     }
 
+    /** Markiert eine Meldung als abgemeldet, ohne die Spieler- oder Teamdaten zu löschen. */
+    default void markiereAlsAbgemeldet(int zeile1Basiert) throws MeldelisteSchreibException {
+        throw new MeldelisteSchreibException("Abmelden wird von dieser Meldeliste nicht unterstützt");
+    }
+
     /** Formel, die aus der lokalen UUID stets die aktuell angezeigte Team-/Spielernummer ermittelt. */
     default String formelTeamNrAusLokalerUuid(String uuid) throws MeldelisteSchreibException {
         throw new MeldelisteSchreibException("Lokale PTM-Online-ID wird von dieser Meldeliste nicht unterstützt");

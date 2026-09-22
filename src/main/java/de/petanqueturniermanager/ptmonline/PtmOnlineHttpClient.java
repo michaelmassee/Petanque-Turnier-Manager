@@ -24,15 +24,23 @@ abstract class PtmOnlineHttpClient {
     private final HttpClient httpClient;
     private final String baseUrl;
     private final String apiKey;
+    private final String syncDocumentId;
+    private final String leaseToken;
 
     PtmOnlineHttpClient(String baseUrl, String apiKey) {
-        this(HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(30)).build(), baseUrl, apiKey);
+        this(HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(30)).build(), baseUrl, apiKey, null, null);
     }
 
     PtmOnlineHttpClient(HttpClient httpClient, String baseUrl, String apiKey) {
+        this(httpClient, baseUrl, apiKey, null, null);
+    }
+
+    PtmOnlineHttpClient(HttpClient httpClient, String baseUrl, String apiKey, String syncDocumentId, String leaseToken) {
         this.httpClient = httpClient;
         this.baseUrl = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
         this.apiKey = apiKey;
+        this.syncDocumentId = syncDocumentId;
+        this.leaseToken = leaseToken;
     }
 
     final URI uri(String path) {
@@ -49,8 +57,18 @@ abstract class PtmOnlineHttpClient {
                 .POST(HttpRequest.BodyPublishers.ofString(jsonBody)));
     }
 
+    final HttpResponse<String> put(String path, String jsonBody) throws IOException, InterruptedException {
+        return send(authorized(HttpRequest.newBuilder(uri(path)))
+                .header("Content-Type", "application/json")
+                .PUT(HttpRequest.BodyPublishers.ofString(jsonBody)));
+    }
+
     private HttpRequest.Builder authorized(HttpRequest.Builder builder) {
-        return builder.header("Authorization", "Bearer " + apiKey).timeout(Duration.ofSeconds(30));
+        builder.header("Authorization", "Bearer " + apiKey).timeout(Duration.ofSeconds(30));
+        if (syncDocumentId != null && leaseToken != null) {
+            builder.header("X-PTM-Sync-Document", syncDocumentId).header("X-PTM-Sync-Lease", leaseToken);
+        }
+        return builder;
     }
 
     private HttpResponse<String> send(HttpRequest.Builder requestBuilder) throws IOException, InterruptedException {

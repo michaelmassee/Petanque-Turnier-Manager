@@ -80,6 +80,12 @@ class SheetGruppeTest {
     }
 
     @Test
+    void ptmOnlineBlaetterEinesSupermeleeSpieltagsWerdenDemSpieltagZugeordnet() {
+        assertThat(SheetGruppe.fuerSchluessel("__PTM_ONLINE_INFO_SPIELTAG_1__")).contains(SheetGruppe.SUPERMELEE);
+        assertThat(SheetGruppe.fuerSchluessel("__PTM_ONLINE_MELDUNGEN_SPIELTAG_1__")).contains(SheetGruppe.SUPERMELEE);
+    }
+
+    @Test
     void ligaTermineProTeilnehmerBleibenAufLigaEbene() {
         String termine = "__PTM_LIGA_TERMINE_PRO_TEILNEHMER_1__";
 

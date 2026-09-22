@@ -16,9 +16,11 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import de.petanqueturniermanager.onlinesync.OnlineTournamentDto;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.ptmonline.dto.NeueOnlineAnmeldung;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationDto;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationResultDto;
+import de.petanqueturniermanager.ptmonline.dto.SyncBindingDto;
 
 /**
  * Client fuer die PTM-Online REST-API: legt Turniere an und gleicht Anmeldungen/Ergebnisse
@@ -30,6 +32,12 @@ public class TournamentSyncClient extends PtmOnlineHttpClient {
 
     public TournamentSyncClient(String baseUrl, String apiKey) {
         super(baseUrl, apiKey);
+    }
+
+    /** Client für alle schreibenden Aufrufe eines konkret gebundenen Turnierdokuments. */
+    public TournamentSyncClient(String baseUrl, String apiKey, String syncDocumentId, String leaseToken) {
+        super(HttpClient.newBuilder().connectTimeout(java.time.Duration.ofSeconds(30)).build(), baseUrl, apiKey,
+                syncDocumentId, leaseToken);
     }
 
     TournamentSyncClient(HttpClient httpClient, String baseUrl, String apiKey) {
@@ -55,6 +63,22 @@ public class TournamentSyncClient extends PtmOnlineHttpClient {
      * Verbindet das lokale Dokument mit einem bestehenden Online-Turnier (setzt serverseitig
      * {@code document_managed = 1}, ohne sonstige Metadaten zu ändern).
      */
+    public SyncBindingDto connect(String tournamentId, String syncDocumentId, String leaseToken)
+            throws IOException, InterruptedException {
+        JsonObject body = new JsonObject();
+        body.addProperty("syncDocumentId", syncDocumentId);
+        body.addProperty("leaseToken", leaseToken);
+        HttpResponse<String> response = post("/api/sync/tournaments/" + encode(tournamentId) + "/connect", body.toString());
+        SyncBindingDto binding = GSON.fromJson(response.body(), SyncBindingDto.class);
+        if (binding == null || !binding.ok() || binding.syncDocumentId() == null
+                || !syncDocumentId.equals(binding.syncDocumentId()) || binding.bindingRevision() < 1) {
+            throw new IOException(I18n.get("ptmonline.fehler.server_ohne_dokumentbindung"));
+        }
+        return binding;
+    }
+
+    /** @deprecated Jede neue Verbindung muss eine Dokument-ID und ein Schreib-Lease besitzen. */
+    @Deprecated
     public void connect(String tournamentId) throws IOException, InterruptedException {
         post("/api/sync/tournaments/" + encode(tournamentId) + "/connect", "{}");
     }
@@ -86,6 +110,15 @@ public class TournamentSyncClient extends PtmOnlineHttpClient {
             throws IOException, InterruptedException {
         HttpResponse<String> response = post(
                 "/api/sync/tournaments/" + encode(tournamentId) + "/registrations", GSON.toJson(anmeldung));
+        JsonObject payload = GSON.fromJson(response.body(), JsonObject.class);
+        return GSON.fromJson(payload.get("registration"), RegistrationDto.class);
+    }
+
+    /** Idempotente Neuanlage durch die lokale, dauerhafte Meldelisten-UUID. */
+    public RegistrationDto upsertRegistration(String tournamentId, String lokaleUuid, NeueOnlineAnmeldung anmeldung)
+            throws IOException, InterruptedException {
+        HttpResponse<String> response = put("/api/sync/tournaments/" + encode(tournamentId)
+                + "/registrations/" + encode(lokaleUuid), GSON.toJson(anmeldung));
         JsonObject payload = GSON.fromJson(response.body(), JsonObject.class);
         return GSON.fromJson(payload.get("registration"), RegistrationDto.class);
     }

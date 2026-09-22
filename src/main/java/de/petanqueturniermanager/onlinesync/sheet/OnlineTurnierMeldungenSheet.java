@@ -40,6 +40,13 @@ public class OnlineTurnierMeldungenSheet extends SheetRunner implements ISheet {
 	private static final int SPALTE_ANZEIGE_NR = 0;
 	private static final int SPALTE_ONLINE_ID = 1;
 	private static final int SPALTE_LOKALE_UUID = 2;
+	private static final int SPALTE_EXECUTION_REVISION = 3;
+	private static final int SPALTE_LOKALE_BEZEICHNUNG = 4;
+	private static final int SPALTE_ONLINE_BEZEICHNUNG = 5;
+	private static final int SPALTE_ONLINE_STATUS = 6;
+	private static final int SPALTE_ONLINE_TARIFE = 7;
+	private static final int SPALTE_ONLINE_FRAGEN = 8;
+	private static final int SPALTE_ONLINE_SNAPSHOT = 9;
 
 	private static final int ZEILE_TITEL = 0;
 	private static final int ZEILE_HEADER = 1;
@@ -95,13 +102,21 @@ public class OnlineTurnierMeldungenSheet extends SheetRunner implements ISheet {
 	}
 
 	private void schreibeHeader() throws GenerateException {
-		schreibeZeile(ZEILE_TITEL, I18n.get("ptmonline.sheet.meldungen.titel"), "", "", "");
+		schreibeZeile(ZEILE_TITEL, I18n.get("ptmonline.sheet.meldungen.titel"), "", "", "", "", "", "", "", "", "");
 		schreibeZeile(ZEILE_HEADER, I18n.get("ptmonline.sheet.mapping.header.spielernr"),
-				I18n.get("ptmonline.sheet.mapping.header.onlineid"), I18n.get("ptmonline.sheet.mapping.header.lokaleuuid"));
-		getSheetHelper().setColumnProperties(getXSpreadSheet(), SPALTE_LOKALE_UUID, ColumnProperties.from().isVisible(false));
+				I18n.get("ptmonline.sheet.mapping.header.onlineid"), I18n.get("ptmonline.sheet.mapping.header.lokaleuuid"), "",
+				I18n.get("ptmonline.sheet.mapping.header.lokalebezeichnung"),
+				I18n.get("ptmonline.sheet.mapping.header.onlinebezeichnung"),
+				I18n.get("ptmonline.sheet.mapping.header.onlinestatus"),
+				I18n.get("ptmonline.sheet.mapping.header.onlinetarife"),
+				I18n.get("ptmonline.sheet.mapping.header.onlinefragen"),
+				I18n.get("ptmonline.sheet.mapping.header.onlinesnapshot"));
+		getSheetHelper().setColumnProperties(getXSpreadSheet(), SPALTE_LOKALE_UUID, ColumnProperties.from().isVisible(true));
+		getSheetHelper().setColumnProperties(getXSpreadSheet(), SPALTE_EXECUTION_REVISION, ColumnProperties.from().isVisible(false));
 	}
 
-	public void addMapping(String lokaleUuid, String onlineId, String nummerFormel) throws GenerateException {
+	public void addMapping(String lokaleUuid, String onlineId, String nummerFormel, int executionRevision,
+			String lokaleBezeichnung, String onlineBezeichnung, String onlineStatus) throws GenerateException {
 		if (getOnlineId(lokaleUuid).isPresent()) {
 			return;
 		}
@@ -111,6 +126,10 @@ public class OnlineTurnierMeldungenSheet extends SheetRunner implements ISheet {
 		row.newEmpty();
 		row.newString(onlineId);
 		row.newString(lokaleUuid);
+		row.newInt(Math.max(1, executionRevision));
+		row.newString(StringUtils.defaultString(lokaleBezeichnung));
+		row.newString(StringUtils.defaultString(onlineBezeichnung));
+		row.newString(StringUtils.defaultString(onlineStatus));
 		RangeHelper.from(this, zeile.getRangePosition(Position.from(SPALTE_ANZEIGE_NR, naechsteFreieZeile))).setDataInRange(zeile);
 		getSheetHelper().setFormulaInCell(StringCellValue.from(getXSpreadSheet(),
 				Position.from(SPALTE_ANZEIGE_NR, naechsteFreieZeile), nummerFormel));
@@ -148,6 +167,69 @@ public class OnlineTurnierMeldungenSheet extends SheetRunner implements ISheet {
 		return false;
 	}
 
+	public java.util.Optional<String> getLokaleUuid(String onlineId) throws GenerateException {
+		for (RowData zeile : leseDaten()) {
+			if (!zeile.isEmpty() && onlineId.equals(text(zeile, SPALTE_ONLINE_ID))) {
+				return java.util.Optional.ofNullable(text(zeile, SPALTE_LOKALE_UUID)).filter(uuid -> !uuid.isBlank());
+			}
+		}
+		return java.util.Optional.empty();
+	}
+
+	public int getExecutionRevision(String lokaleUuid) throws GenerateException {
+		for (RowData zeile : leseDaten()) {
+			if (lokaleUuid.equals(text(zeile, SPALTE_LOKALE_UUID))) {
+				return zeile.size() > SPALTE_EXECUTION_REVISION
+						? Math.max(1, zeile.get(SPALTE_EXECUTION_REVISION).getIntVal(1)) : 1;
+			}
+		}
+		return 1;
+	}
+
+	public void setExecutionRevision(String lokaleUuid, int executionRevision) throws GenerateException {
+		RangeData daten = leseDaten();
+		for (int i = 0; i < daten.size(); i++) {
+			if (lokaleUuid.equals(text(daten.get(i), SPALTE_LOKALE_UUID))) {
+				getSheetHelper().setNumberValueInCell(de.petanqueturniermanager.helper.cellvalue.NumberCellValue.from(
+						getXSpreadSheet(), Position.from(SPALTE_EXECUTION_REVISION, ERSTE_DATEN_ZEILE + i)).setValue(Math.max(1, executionRevision)));
+				return;
+			}
+		}
+	}
+
+	public void setBezeichnungen(String lokaleUuid, String lokaleBezeichnung, String onlineBezeichnung,
+			String onlineStatus) throws GenerateException {
+		RangeData daten = leseDaten();
+		for (int i = 0; i < daten.size(); i++) {
+			if (lokaleUuid.equals(text(daten.get(i), SPALTE_LOKALE_UUID))) {
+				int zeile = ERSTE_DATEN_ZEILE + i;
+				getSheetHelper().setStringValueInCell(StringCellValue.from(getXSpreadSheet(),
+						Position.from(SPALTE_LOKALE_BEZEICHNUNG, zeile), StringUtils.defaultString(lokaleBezeichnung)));
+				getSheetHelper().setStringValueInCell(StringCellValue.from(getXSpreadSheet(),
+						Position.from(SPALTE_ONLINE_BEZEICHNUNG, zeile), StringUtils.defaultString(onlineBezeichnung)));
+				getSheetHelper().setStringValueInCell(StringCellValue.from(getXSpreadSheet(),
+						Position.from(SPALTE_ONLINE_STATUS, zeile), StringUtils.defaultString(onlineStatus)));
+				return;
+			}
+		}
+	}
+
+	public void setOnlineDetails(String lokaleUuid, String tarife, String fragen, String snapshot) throws GenerateException {
+		RangeData daten = leseDaten();
+		for (int i = 0; i < daten.size(); i++) {
+			if (lokaleUuid.equals(text(daten.get(i), SPALTE_LOKALE_UUID))) {
+				int zeile = ERSTE_DATEN_ZEILE + i;
+				getSheetHelper().setStringValueInCell(StringCellValue.from(getXSpreadSheet(),
+						Position.from(SPALTE_ONLINE_TARIFE, zeile), StringUtils.defaultString(tarife)));
+				getSheetHelper().setStringValueInCell(StringCellValue.from(getXSpreadSheet(),
+						Position.from(SPALTE_ONLINE_FRAGEN, zeile), StringUtils.defaultString(fragen)));
+				getSheetHelper().setStringValueInCell(StringCellValue.from(getXSpreadSheet(),
+						Position.from(SPALTE_ONLINE_SNAPSHOT, zeile), StringUtils.defaultString(snapshot)));
+				return;
+			}
+		}
+	}
+
 	/**
 	 * Überführt das frühere Nummern-Mapping einmalig. Es wird nur dann benutzt, wenn die erste
 	 * Spalte noch keine UUID enthält; danach ist auch ein späteres Umnummerieren folgenlos.
@@ -178,6 +260,13 @@ public class OnlineTurnierMeldungenSheet extends SheetRunner implements ISheet {
 			neu.newEmpty();
 			neu.newString(alt.size() > SPALTE_ONLINE_ID ? alt.get(SPALTE_ONLINE_ID).getStringVal() : "");
 			neu.newString(StringUtils.defaultString(uuid));
+			neu.newInt(1);
+			neu.newString("");
+			neu.newString("");
+			neu.newString("");
+			neu.newString("");
+			neu.newString("");
+			neu.newString("");
 		}
 		RangeHelper.from(this, migriert.getRangePosition(Position.from(SPALTE_ANZEIGE_NR, ERSTE_DATEN_ZEILE))).setDataInRange(migriert);
 		schreibeHeader();
@@ -200,12 +289,12 @@ public class OnlineTurnierMeldungenSheet extends SheetRunner implements ISheet {
 
 	public void leeren() throws GenerateException {
 		RangeHelper.from(this, RangePosition.from(SPALTE_ANZEIGE_NR, ERSTE_DATEN_ZEILE,
-				SPALTE_LOKALE_UUID, ERSTE_DATEN_ZEILE + MAX_ZEILEN)).clearRange();
+				SPALTE_ONLINE_SNAPSHOT, ERSTE_DATEN_ZEILE + MAX_ZEILEN)).clearRange();
 	}
 
 	private RangeData leseDaten() throws GenerateException {
 		return RangeHelper.from(this, RangePosition.from(SPALTE_ANZEIGE_NR, ERSTE_DATEN_ZEILE,
-				SPALTE_LOKALE_UUID, ERSTE_DATEN_ZEILE + MAX_ZEILEN)).getDataFromRange();
+				SPALTE_ONLINE_SNAPSHOT, ERSTE_DATEN_ZEILE + MAX_ZEILEN)).getDataFromRange();
 	}
 
 	private int naechsteFreieZeile() throws GenerateException {

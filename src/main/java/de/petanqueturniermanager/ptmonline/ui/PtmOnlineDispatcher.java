@@ -6,6 +6,7 @@ package de.petanqueturniermanager.ptmonline.ui;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -110,9 +111,13 @@ public final class PtmOnlineDispatcher {
             return; // Abgebrochen oder keine Turniere vorhanden
         }
 
+        de.petanqueturniermanager.ptmonline.dto.SyncBindingDto binding;
+        String leaseToken;
         try {
+            String syncDocumentId = UUID.randomUUID().toString();
+            leaseToken = UUID.randomUUID().toString() + UUID.randomUUID();
             TournamentSyncClient client = new TournamentSyncClient(config.baseUrl(), config.apiKey());
-            client.connect(auswahl.get().id);
+            binding = client.connect(auswahl.get().id, syncDocumentId, leaseToken);
             logger.info("PTM-Online: Turnier {} verbunden (Server-Aufruf ok)", auswahl.get().id);
         } catch (IOException e) {
             logger.error("PTM-Online: Turnier verbinden fehlgeschlagen", e);
@@ -125,7 +130,9 @@ public final class PtmOnlineDispatcher {
 
         logger.info("PTM-Online: lege Sheets fuer Verbindung an");
         try {
-            new PtmOnlineRegistrationMapping(ws, ts, spieltagNr).verbinden(auswahl.get());
+            PtmOnlineRegistrationMapping mapping = new PtmOnlineRegistrationMapping(ws, ts, spieltagNr);
+            mapping.verbinden(auswahl.get());
+            mapping.setSyncBinding(binding, leaseToken);
             logger.info("PTM-Online: Sheets angelegt, zeige Erfolg");
             LoMainThread.post(ctx, () -> zeigeErfolg(ctx, auswahl.get()));
         } catch (GenerateException | InterruptedException e) {
@@ -212,12 +219,21 @@ public final class PtmOnlineDispatcher {
     private static void trennenImHintergrund(XComponentContext ctx,
             LibreOfficePtmOnlineSpeicher.Zugangsdaten config, PtmOnlineRegistrationMapping mapping, String tournamentId) {
         try {
-            TournamentSyncClient client = new TournamentSyncClient(config.baseUrl(), config.apiKey());
+            Optional<String> documentId = mapping.getSyncDocumentId();
+            Optional<String> leaseToken = mapping.getLeaseToken();
+            if (documentId.isEmpty() || leaseToken.isEmpty()) {
+                throw new GenerateException(I18n.get("ptmonline.fehler.dokumentbindung_unvollstaendig"));
+            }
+            TournamentSyncClient client = new TournamentSyncClient(config.baseUrl(), config.apiKey(), documentId.get(), leaseToken.get());
             client.disconnect(tournamentId);
             logger.info("PTM-Online: Turnier {} getrennt (Server-Aufruf ok)", tournamentId);
         } catch (IOException e) {
             logger.error("PTM-Online: Verbindung trennen (Server-Aufruf) fehlgeschlagen", e);
             LoMainThread.post(ctx, () -> zeigeNetzwerkFehler(ctx, e));
+            return;
+        } catch (GenerateException e) {
+            logger.error("PTM-Online: Schreib-Lease lesen fehlgeschlagen", e);
+            LoMainThread.post(ctx, () -> zeigeFehler(ctx, e.getMessage()));
             return;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

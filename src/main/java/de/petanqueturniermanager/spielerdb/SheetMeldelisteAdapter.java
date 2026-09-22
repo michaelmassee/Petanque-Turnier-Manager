@@ -70,6 +70,8 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
      * gelten und der Update-Workflow käme mit „Es sind keine Teams aktiv".
      */
     private static final int AKTIV_WERT_NIMMT_TEIL = 1;
+    /** In allen unterstützten Team-Meldelisten bedeutet 2 „ausgestiegen/abgemeldet“. */
+    private static final int AKTIV_WERT_ABGEMELDET = 2;
 
     private final XSpreadsheetDocument doc;
     private final XSpreadsheet sheet;
@@ -340,6 +342,19 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
             return -1;
         }
         return sheetHelper.getIntFromCell(sheet, Position.from(SPALTE_NR, zeile1Basiert - 1));
+    }
+
+    @Override
+    public void markiereAlsAbgemeldet(int zeile1Basiert) throws MeldelisteSchreibException {
+        if (zeile1Basiert <= 0) {
+            throw new MeldelisteSchreibException("Ungültige Meldelistenzeile");
+        }
+        try {
+            sheetHelper.setNumberValueInCell(NumberCellValue.from(sheet,
+                    Position.from(aktivSpalte(), zeile1Basiert - 1)).setValue(AKTIV_WERT_ABGEMELDET));
+        } catch (Exception e) {
+            throw new MeldelisteSchreibException("Abmeldung konnte nicht markiert werden", e);
+        }
     }
 
     @Override
