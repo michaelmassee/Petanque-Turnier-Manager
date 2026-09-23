@@ -162,11 +162,10 @@ public class SpielrundeSheet_Naechste extends SheetRunner
 				&& aktuelleSpielrunde.getNr() == 1;
 
 		getMeldeListe().upDateSheet();
-		// SpielrundeGespielt.AUSGESETZT (Wert 2, "ausgesetzt" fuer den aktuellen Spieltag) wird als
-		// PTM-Online-Status "withdrawn" ("Ausgestiegen") gemeldet. Eine leere Spieltag-Zelle (NEIN)
-		// bleibt bewusst ohne Statusmeldung (nur active=false) - eine automatische "cancelled"-Meldung
-		// wuerde serverseitig eine Stornierungs-Mail sowie Freigabe von Warteliste-/Kapazitaetsplaetzen
-		// ausloesen, was fuer eine reine Spieltag-Pause nicht gewollt ist.
+		// Die Spieltag-Spalte wird als PTM-Online-Teilnahme gemeldet: leer (NEIN) = inaktiv,
+		// 1 = aktiv, 2 (AUSGESETZT) = ausgesetzt. Der online verwaltete Anmeldestatus bleibt
+		// unveraendert - eine automatische Stornierung wuerde serverseitig eine Stornierungs-Mail
+		// sowie Freigabe von Warteliste-/Kapazitaetsplaetzen ausloesen.
 		PtmOnlineSpielrundeSync.abgleichen(getWorkingSpreadsheet(), getTurnierSystem(), istErsteRunde,
 				PtmOnlineSpielrundeSync.nummern(getMeldeListe().getAlleMeldungen()),
 				PtmOnlineSpielrundeSync.nummern(getMeldeListe().getAktiveMeldungen()),

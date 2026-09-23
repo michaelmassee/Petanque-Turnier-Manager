@@ -72,12 +72,11 @@ public final class PtmOnlineSpielrundeSync {
      *                             {@link PtmOnlineRegistrationMapping} als Team-Nr verwendet).
      * @param aktiveTeamNummern    Teilmenge davon: aktuell aktiv/teilnehmend.
      * @param ausgestiegeneTeamNummern
-     *                             Teilmenge davon: endgültig ausgestiegen (permanent, nicht nur für
-     *                             die aktuelle Runde pausiert). Leer, wenn das Turniersystem diesen
-     *                             Zustand nicht zuverlässig von "pausiert" unterscheiden kann (z.&nbsp;B.
-     *                             Supermelee: AUSGESETZT ist nur ein Spieltag-Bye, keine dauerhafte
-     *                             Abmeldung) — dann bleibt der Online-Status für diese Teams
-     *                             unverändert, nur {@code active} wird gepusht.
+     *                             Teilmenge davon: ausgesetzt (Aktiv-Spalte = 2, nimmt nicht mehr
+     *                             teil). Wird als Teilnahme {@link OnlineTeilnahme#AUSGESETZT}
+     *                             gemeldet, der online verwaltete Anmeldestatus bleibt unverändert.
+     *                             Teams, die weder aktiv noch ausgesetzt sind, gelten als
+     *                             {@link OnlineTeilnahme#INAKTIV}.
      */
     public static void abgleichen(WorkingSpreadsheet ws, TurnierSystem ts, boolean istErsteRunde,
             Set<Integer> alleTeamNummern, Set<Integer> aktiveTeamNummern, Set<Integer> ausgestiegeneTeamNummern,
@@ -194,7 +193,7 @@ public final class PtmOnlineSpielrundeSync {
     }
 
     /**
-     * Pusht den lokalen Aktiv-/Ausgestiegen-Status aller bereits online zugeordneten Teams und legt
+     * Pusht die lokale Teilnahme (inaktiv/aktiv/ausgesetzt) aller bereits online zugeordneten Teams und legt
      * für lokal neu erfasste, aktive Teams ohne Online-Zuordnung eine neue Anmeldung an.
      */
     private static void statusPushenUndNeueAnlegen(MeldelisteZiel ziel, PtmOnlineRegistrationMapping mapping,
@@ -208,11 +207,10 @@ public final class PtmOnlineSpielrundeSync {
             if (onlineId.isEmpty()) {
                 continue;
             }
-            boolean istAktiv = aktive.contains(teamNr);
-            String status = ausgestiegen.contains(teamNr) ? "withdrawn" : null;
+            OnlineTeilnahme teilnahme = OnlineTeilnahme.aus(aktive.contains(teamNr), ausgestiegen.contains(teamNr));
             String uuid = lokaleUuid(ziel, zeileProTeam.getOrDefault(teamNr, -1));
             int revision = mapping.getExecutionRevision(uuid);
-            results.add(new RegistrationResultDto(onlineId.get(), status, teamNr, istAktiv, revision));
+            results.add(new RegistrationResultDto(onlineId.get(), null, teamNr, teilnahme.apiWert(), revision));
             lokaleUuidProOnlineId.put(onlineId.get(), uuid);
         }
         if (!results.isEmpty()) {
@@ -245,7 +243,7 @@ public final class PtmOnlineSpielrundeSync {
             RegistrationDto angelegt = client.upsertRegistration(tournamentId, uuid, anmeldung);
             mapping.addMapping(uuid, angelegt.id(), teamnummerFormel(ziel, uuid),
                     angelegt.executionRevision() == null ? 1 : angelegt.executionRevision(),
-                    bezeichnung(spieler), bezeichnung(angelegt), onlineStatus(angelegt.status()));
+                    bezeichnung(spieler), bezeichnung(angelegt), OnlineAnmeldeStatus.anzeige(angelegt.status()));
             mapping.setOnlineDetails(uuid, angelegt);
         }
     }
@@ -335,20 +333,6 @@ public final class PtmOnlineSpielrundeSync {
 
     private static String bezeichnung(String vorname, String nachname) {
         return ((vorname == null ? "" : vorname.strip()) + " " + (nachname == null ? "" : nachname.strip())).strip();
-    }
-
-    private static String onlineStatus(String status) {
-        if (status == null) {
-            return "";
-        }
-        return switch (status) {
-            case "pending" -> I18n.get("ptmonline.status.offen");
-            case "confirmed" -> I18n.get("ptmonline.status.bestaetigt");
-            case "waitlist" -> I18n.get("ptmonline.status.warteliste");
-            case "cancelled" -> I18n.get("ptmonline.status.storniert");
-            case "withdrawn" -> I18n.get("ptmonline.status.ausgestiegen");
-            default -> status;
-        };
     }
 
     private static String netzwerkFehlerText(Exception e) {

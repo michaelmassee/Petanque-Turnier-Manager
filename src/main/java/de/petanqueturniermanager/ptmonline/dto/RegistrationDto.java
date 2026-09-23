@@ -30,7 +30,7 @@ public record RegistrationDto(
         String status,
         Boolean noEmail,
         Boolean isVip,
-        Boolean active,
+        String participation,
         List<RegistrationFeeDto> feeSelections,
         Integer feeTotalCents,
         List<RegistrationAnswerDto> registrationAnswers,

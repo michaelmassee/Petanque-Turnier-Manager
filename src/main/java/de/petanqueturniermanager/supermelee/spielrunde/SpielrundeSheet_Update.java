@@ -146,8 +146,7 @@ public class SpielrundeSheet_Update extends SheetRunner
 		setSpielRundeNr(aktuelleSpielrunde);
 		getMeldeListe().upDateSheet();
 		// Wie beim Anlegen der nächsten Runde: auch eine erneute Auslosung muss den
-		// Online-Status und nachträgliche Anmeldungen abgleichen (siehe SpielrundeSheet_Naechste
-		// für die Begründung der ausgesetzt→withdrawn-Zuordnung).
+		// Online-Teilnahme und nachträgliche Anmeldungen abgleichen (siehe SpielrundeSheet_Naechste).
 		PtmOnlineSpielrundeSync.abgleichen(getWorkingSpreadsheet(), getTurnierSystem(), false,
 				PtmOnlineSpielrundeSync.nummern(getMeldeListe().getAlleMeldungen()),
 				PtmOnlineSpielrundeSync.nummern(getMeldeListe().getAktiveMeldungen()),

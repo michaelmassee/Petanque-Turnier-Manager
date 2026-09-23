@@ -38,8 +38,8 @@ import de.petanqueturniermanager.spielerdb.MeldelisteSpielerDaten;
 import de.petanqueturniermanager.spielerdb.SpielerMitVerein;
 
 /**
- * Importiert online eingegangene, noch nicht lokal vorhandene Anmeldungen (PTM-Online) in die
- * aktive Meldeliste. Nutzt denselben turniersystem-generischen Schreibpfad wie die Spieler-DB-
+ * Importiert online eingegangene, bestaetigte und noch nicht lokal vorhandene Anmeldungen
+ * (PTM-Online) in die aktive Meldeliste. Nutzt denselben turniersystem-generischen Schreibpfad wie die Spieler-DB-
  * Integration ({@link MeldelisteZiel#schreibeBlock}, {@link MeldelisteZielFactory#starteMeldelisteUpdate}).
  * <p>
  * {@link #fuehreImportDurch} ist die synchrone Kernlogik: sie darf auf jedem Hintergrund-Thread
@@ -162,7 +162,7 @@ public final class RegistrationImportTask {
         uebernehmeOnlineStornierungen(ziel, mapping, alle);
         List<RegistrationDto> neue = new ArrayList<>();
         for (RegistrationDto reg : alle) {
-            if (!"cancelled".equals(reg.status()) && !mapping.istBereitsImportiert(reg.id())) {
+            if (istImportierbar(reg) && !mapping.istBereitsImportiert(reg.id())) {
                 neue.add(reg);
             }
         }
@@ -231,6 +231,15 @@ public final class RegistrationImportTask {
             mapping.setLastSync(abgleichStart);
         }
         return geschrieben.size();
+    }
+
+    /**
+     * Nur bestaetigte Anmeldungen werden lokal in die Meldeliste uebernommen. Offene, Warteliste- und
+     * stornierte Anmeldungen bleiben online; wird eine offene Anmeldung spaeter bestaetigt, liefert der
+     * {@code since}-Abruf (Filter auf {@code updated_at}) sie beim naechsten Abgleich erneut.
+     */
+    static boolean istImportierbar(RegistrationDto registration) {
+        return OnlineAnmeldeStatus.istBestaetigt(registration.status());
     }
 
     private static void verknuepfeBestehendeZeile(PtmOnlineRegistrationMapping mapping, MeldelisteZiel ziel,
@@ -390,7 +399,7 @@ public final class RegistrationImportTask {
     private static void uebernehmeOnlineStornierungen(MeldelisteZiel ziel, PtmOnlineRegistrationMapping mapping,
             List<RegistrationDto> registrations) throws GenerateException {
         for (RegistrationDto registration : registrations) {
-            if (!"cancelled".equals(registration.status())) {
+            if (!OnlineAnmeldeStatus.istStorniert(registration.status())) {
                 continue;
             }
             Optional<String> lokaleUuid = mapping.getLokaleUuid(registration.id());
@@ -414,17 +423,7 @@ public final class RegistrationImportTask {
     }
 
     private static String onlineStatus(RegistrationDto registration) {
-        if (registration.status() == null) {
-            return "";
-        }
-        return switch (registration.status()) {
-            case "pending" -> I18n.get("ptmonline.status.offen");
-            case "confirmed" -> I18n.get("ptmonline.status.bestaetigt");
-            case "waitlist" -> I18n.get("ptmonline.status.warteliste");
-            case "cancelled" -> I18n.get("ptmonline.status.storniert");
-            case "withdrawn" -> I18n.get("ptmonline.status.ausgestiegen");
-            default -> registration.status();
-        };
+        return OnlineAnmeldeStatus.anzeige(registration.status());
     }
 
     /**

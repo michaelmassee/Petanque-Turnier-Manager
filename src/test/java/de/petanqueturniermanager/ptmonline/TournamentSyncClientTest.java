@@ -93,13 +93,22 @@ public class TournamentSyncClientTest {
 
 		TournamentSyncClient client = new TournamentSyncClient(httpClient, "https://ptm-online.example.com", "ptm_secret");
 		int updated = client.pushResults("t1",
-				List.of(new RegistrationResultDto("r1", "confirmed", 1, true, null), new RegistrationResultDto("r2", "confirmed", 2, true, null)));
+				List.of(new RegistrationResultDto("r1", null, 1, OnlineTeilnahme.AKTIV.apiWert(), null),
+						new RegistrationResultDto("r2", null, 2, OnlineTeilnahme.AUSGESETZT.apiWert(), null)));
 
 		assertThat(updated).isEqualTo(2);
 
 		ArgumentCaptor<HttpRequest> captor = ArgumentCaptor.forClass(HttpRequest.class);
 		verify(httpClient).send(captor.capture(), any());
 		assertThat(captor.getValue().method()).isEqualTo("POST");
+	}
+
+	@Test
+	public void ergebnisPayloadMeldetTeilnahmeUndKeinenAnmeldestatus() {
+		String json = new Gson().toJson(new RegistrationResultDto("r1", null, 3, OnlineTeilnahme.INAKTIV.apiWert(), 2));
+
+		assertThat(json).contains("\"participation\":\"inactive\"").doesNotContain("\"active\"")
+				.doesNotContain("\"status\"");
 	}
 
 	@Test
