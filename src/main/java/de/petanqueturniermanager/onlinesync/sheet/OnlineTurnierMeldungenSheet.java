@@ -323,7 +323,11 @@ public class OnlineTurnierMeldungenSheet extends SheetRunner implements ISheet {
 				SPALTE_ONLINE_SNAPSHOT, ERSTE_DATEN_ZEILE + MAX_ZEILEN)).clearRange();
 	}
 
+	/** Keine Zeilen, solange das Dokument nicht mit PTM-Online verbunden ist (Blatt fehlt). */
 	private RangeData leseDaten() throws GenerateException {
+		if (getXSpreadSheet() == null) {
+			return new RangeData();
+		}
 		return RangeHelper.from(this, RangePosition.from(SPALTE_ANZEIGE_NR, ERSTE_DATEN_ZEILE,
 				SPALTE_ONLINE_SNAPSHOT, ERSTE_DATEN_ZEILE + MAX_ZEILEN)).getDataFromRange();
 	}

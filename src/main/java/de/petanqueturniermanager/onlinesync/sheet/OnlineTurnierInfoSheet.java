@@ -183,8 +183,13 @@ public class OnlineTurnierInfoSheet extends SheetRunner implements ISheet {
 		return value.isBlank() ? Optional.empty() : Optional.of(value);
 	}
 
+	/** Leer, solange das Dokument nicht mit PTM-Online verbunden ist (Blatt fehlt). */
 	private String leseWert(int zeile) throws GenerateException {
-		return getSheetHelper().getTextFromCell(getXSpreadSheet(), Position.from(SPALTE_WERT, zeile));
+		XSpreadsheet sheet = getXSpreadSheet();
+		if (sheet == null) {
+			return "";
+		}
+		return StringUtils.defaultString(getSheetHelper().getTextFromCell(sheet, Position.from(SPALTE_WERT, zeile)));
 	}
 
 	private void schreibeWert(int zeile, String wert) throws GenerateException {
