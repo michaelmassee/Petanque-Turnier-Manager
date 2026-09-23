@@ -176,6 +176,37 @@ public class OnlineTurnierMeldungenSheet extends SheetRunner implements ISheet {
 		return java.util.Optional.empty();
 	}
 
+	/** Unveränderter JSON-Snapshot der zuletzt übernommenen Online-Anmeldung dieser lokalen Meldung. */
+	public java.util.Optional<String> getOnlineSnapshot(String lokaleUuid) throws GenerateException {
+		for (RowData zeile : leseDaten()) {
+			if (lokaleUuid.equals(text(zeile, SPALTE_LOKALE_UUID))) {
+				return java.util.Optional.ofNullable(text(zeile, SPALTE_ONLINE_SNAPSHOT)).filter(json -> !json.isBlank());
+			}
+		}
+		return java.util.Optional.empty();
+	}
+
+	/**
+	 * Ordnet eine bereits zugeordnete lokale Meldung einer anderen Online-Anmeldung zu (z.&nbsp;B.
+	 * Neuanmeldung nach Online-Storno); die Zeile samt Anzeige-Formel bleibt erhalten.
+	 */
+	public void ersetzeOnlineId(String lokaleUuid, String onlineId, int executionRevision) throws GenerateException {
+		RangeData daten = leseDaten();
+		for (int i = 0; i < daten.size(); i++) {
+			if (lokaleUuid.equals(text(daten.get(i), SPALTE_LOKALE_UUID))) {
+				RangeData werte = new RangeData();
+				RowData row = werte.addNewRow();
+				row.newString(onlineId);
+				row.newString(lokaleUuid);
+				row.newInt(Math.max(1, executionRevision));
+				RangeHelper.from(this, werte.getRangePosition(Position.from(SPALTE_ONLINE_ID, ERSTE_DATEN_ZEILE + i)))
+						.setDataInRange(werte);
+				return;
+			}
+		}
+		throw new GenerateException("Keine PTM-Online-Zuordnung für lokale Meldung " + lokaleUuid);
+	}
+
 	public int getExecutionRevision(String lokaleUuid) throws GenerateException {
 		for (RowData zeile : leseDaten()) {
 			if (lokaleUuid.equals(text(zeile, SPALTE_LOKALE_UUID))) {

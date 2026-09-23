@@ -74,7 +74,7 @@ abstract class PtmOnlineHttpClient {
     private HttpResponse<String> send(HttpRequest.Builder requestBuilder) throws IOException, InterruptedException {
         HttpResponse<String> response = httpClient.send(requestBuilder.build(), HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() < 200 || response.statusCode() >= 300) {
-            throw new IOException("PTM-Online API Fehler " + response.statusCode() + ": " + response.body());
+            throw new PtmOnlineHttpException(response.statusCode(), response.body());
         }
         return response;
     }

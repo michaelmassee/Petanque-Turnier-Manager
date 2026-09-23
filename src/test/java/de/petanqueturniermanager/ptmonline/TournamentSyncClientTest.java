@@ -129,4 +129,20 @@ public class TournamentSyncClientTest {
 
 		assertThatThrownBy(() -> client.fetchRegistrations("t1", null)).isInstanceOf(IOException.class).hasMessageContaining("401");
 	}
+
+	@Test
+	public void upsertMitDoppeltemSpielerLiefertBereitsAngemeldet() throws Exception {
+		HttpClient httpClient = mock(HttpClient.class);
+		HttpResponse<String> response = mockResponse(409,
+				"{\"error\":\"Dieser Spieler ist bereits angemeldet\",\"details\":{\"field\":\"firstName\",\"name\":\"Hans Müller\"}}");
+		when(httpClient.<String>send(any(HttpRequest.class), any())).thenReturn(response);
+
+		TournamentSyncClient client = new TournamentSyncClient(httpClient, "https://ptm-online.example.com", "ptm_secret");
+		NeueOnlineAnmeldung anmeldung = new NeueOnlineAnmeldung("Hans", "Müller", null, null, null, null, null, null,
+				null, true, true, List.of(), List.of());
+
+		assertThatThrownBy(() -> client.upsertRegistration("t1", "e9e9caec-e0b1-4fe0-8fee-a229279b9f73", anmeldung))
+				.isInstanceOfSatisfying(PtmOnlineHttpException.class,
+						e -> assertThat(e.istBereitsAngemeldet()).isTrue());
+	}
 }

@@ -375,6 +375,21 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
     }
 
     @Override
+    public void hebeAbmeldungAuf(int zeile1Basiert) throws MeldelisteSchreibException {
+        if (zeile1Basiert <= 0) {
+            throw new MeldelisteSchreibException("Ungültige Meldelistenzeile");
+        }
+        try {
+            Position aktiv = Position.from(aktivSpalte(), zeile1Basiert - 1);
+            if (sheetHelper.getIntFromCell(sheet, aktiv) == AKTIV_WERT_ABGEMELDET) {
+                sheetHelper.clearValInCell(sheet, aktiv);
+            }
+        } catch (Exception e) {
+            throw new MeldelisteSchreibException("Abmeldung konnte nicht aufgehoben werden", e);
+        }
+    }
+
+    @Override
     public String getOderErzeugeLokaleUuid(int zeile1Basiert) throws MeldelisteSchreibException {
         if (zeile1Basiert <= 0) {
             throw new MeldelisteSchreibException("Ungültige Meldelistenzeile");

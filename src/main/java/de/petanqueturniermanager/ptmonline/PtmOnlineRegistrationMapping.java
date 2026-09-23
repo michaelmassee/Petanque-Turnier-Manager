@@ -83,6 +83,20 @@ public class PtmOnlineRegistrationMapping {
         return meldungenSheet.getLokaleUuid(onlineRegistrationId);
     }
 
+    /** Ob die zuletzt übernommene Online-Anmeldung dieser lokalen Meldung online storniert ist. */
+    public boolean istOnlineStorniert(String lokaleUuid) throws GenerateException {
+        return meldungenSheet.getOnlineSnapshot(lokaleUuid)
+                .map(json -> GSON.fromJson(json, RegistrationDto.class))
+                .map(registration -> OnlineAnmeldeStatus.istStorniert(registration.status()))
+                .orElse(false);
+    }
+
+    /** Hängt eine bereits zugeordnete lokale Meldung auf eine andere Online-Anmeldung um. */
+    public void ersetzeOnlineId(String lokaleUuid, String onlineRegistrationId, int executionRevision)
+            throws GenerateException {
+        meldungenSheet.ersetzeOnlineId(lokaleUuid, onlineRegistrationId, executionRevision);
+    }
+
     public int getExecutionRevision(String lokaleUuid) throws GenerateException {
         return meldungenSheet.getExecutionRevision(lokaleUuid);
     }

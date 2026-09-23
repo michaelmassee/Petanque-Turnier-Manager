@@ -17,6 +17,7 @@ import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.ptmonline.RegistrationImportTask.ImportErgebnis;
@@ -113,6 +114,37 @@ class RegistrationImportZuordnungUITest extends BaseCalcUITest {
         assertThat(mapping.istBereitsImportiert("r1")).isTrue();
     }
 
+    @Test
+    void abweichendeSchreibweiseWieOnlineWirdVerknuepft() throws Exception {
+        ziel.schreibeBlock(List.of(spieler("Jean-Paul", "Müller")));
+
+        ImportErgebnis ergebnis = uebernehme(anmeldung("r1", "Jean Paul", "Muller"));
+
+        assertThat(ergebnis).isEqualTo(new ImportErgebnis(0, List.of(), List.of()));
+        assertThat(anzahlZeilen()).isEqualTo(1);
+        assertThat(mapping.istBereitsImportiert("r1")).isTrue();
+    }
+
+    @Test
+    void neuanmeldungNachOnlineStornoUebernimmtBisherigeZeile() throws Exception {
+        ziel.schreibeBlock(List.of(spieler("Hans", "Müller")));
+        uebernehme(anmeldung("r1", "Hans", "Müller"));
+        int zeile = ziel.findeZeileMitName("Hans Müller");
+        String uuid = mapping.getLokaleUuid("r1").orElseThrow();
+        // Zustand nach übernommenem Online-Storno (uebernehmeOnlineStornierungen)
+        ziel.markiereAlsAbgemeldet(zeile);
+        mapping.setOnlineDetails(uuid, anmeldung("r1", "Hans", "Müller", "cancelled"));
+
+        ImportErgebnis ergebnis = uebernehme(anmeldung("r2", "Hans", "Müller"));
+
+        assertThat(ergebnis).isEqualTo(new ImportErgebnis(0, List.of(), List.of()));
+        assertThat(anzahlZeilen()).isEqualTo(1);
+        assertThat(mapping.getLokaleUuid("r2")).contains(uuid);
+        assertThat(mapping.istBereitsImportiert("r1")).isFalse();
+        assertThat(aktivWert(zeile)).as("Abmeldung aufgehoben, neue Anmeldung ist noch nicht eingecheckt")
+                .isNullOrEmpty();
+    }
+
     private ImportErgebnis uebernehme(RegistrationDto... anmeldungen) throws Exception {
         return RegistrationImportTask.uebernehmeAnmeldungen(List.of(anmeldungen), mapping, ziel,
                 () -> new SchweizerMeldeListeSheetUpdate(wkingSpreadsheet).vollstaendigAktualisieren());
@@ -122,12 +154,21 @@ class RegistrationImportZuordnungUITest extends BaseCalcUITest {
         return ziel.leseAlleSpielerRoh().stream().map(MeldelisteSpielerDaten::zeile1Basiert).distinct().count();
     }
 
+    private String aktivWert(int zeile1Basiert) throws GenerateException {
+        return meldeListe.getSheetHelper().getTextFromCell(meldeListe.getXSpreadSheet(),
+                Position.from(meldeListe.getAktivSpalte(), zeile1Basiert - 1));
+    }
+
     private static RegistrationDto anmeldung(String id, String vorname, String nachname) {
+        return anmeldung(id, vorname, nachname, "confirmed");
+    }
+
+    private static RegistrationDto anmeldung(String id, String vorname, String nachname, String status) {
         JsonObject json = new JsonObject();
         json.addProperty("id", id);
         json.addProperty("firstName", vorname);
         json.addProperty("lastName", nachname);
-        json.addProperty("status", "confirmed");
+        json.addProperty("status", status);
         return new Gson().fromJson(json, RegistrationDto.class);
     }
 

@@ -74,6 +74,14 @@ public interface MeldelisteZiel extends AbgleichQuelle {
         throw new MeldelisteSchreibException("Abmelden wird von dieser Meldeliste nicht unterstützt");
     }
 
+    /**
+     * Hebt eine Abmeldung wieder auf: steht die Meldung auf „abgemeldet“, wird die Aktiv-Spalte
+     * geleert (inaktiv, noch nicht eingecheckt). Andere Teilnahme-Werte bleiben unverändert.
+     */
+    default void hebeAbmeldungAuf(int zeile1Basiert) throws MeldelisteSchreibException {
+        throw new MeldelisteSchreibException("Abmelden wird von dieser Meldeliste nicht unterstützt");
+    }
+
     /** Formel, die aus der lokalen UUID stets die aktuell angezeigte Team-/Spielernummer ermittelt. */
     default String formelTeamNrAusLokalerUuid(String uuid) throws MeldelisteSchreibException {
         throw new MeldelisteSchreibException("Lokale PTM-Online-ID wird von dieser Meldeliste nicht unterstützt");
