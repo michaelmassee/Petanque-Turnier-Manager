@@ -147,7 +147,8 @@ class RegistrationImportZuordnungUITest extends BaseCalcUITest {
 
     private ImportErgebnis uebernehme(RegistrationDto... anmeldungen) throws Exception {
         return RegistrationImportTask.uebernehmeAnmeldungen(List.of(anmeldungen), mapping, ziel,
-                () -> new SchweizerMeldeListeSheetUpdate(wkingSpreadsheet).vollstaendigAktualisieren());
+                () -> new SchweizerMeldeListeSheetUpdate(wkingSpreadsheet).vollstaendigAktualisieren(),
+                AbgleichFortschritt.OHNE);
     }
 
     private long anzahlZeilen() {

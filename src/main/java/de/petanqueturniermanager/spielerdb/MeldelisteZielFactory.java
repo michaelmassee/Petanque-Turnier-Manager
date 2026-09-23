@@ -87,6 +87,27 @@ public final class MeldelisteZielFactory {
         }
     }
 
+    /**
+     * Führt den system-passenden "Meldeliste aktualisieren"-Lauf synchron im aufrufenden Thread aus
+     * (gleiche Arbeit wie {@code doRun()} des Update-Runners). Für Aufrufer, die selbst schon als
+     * {@link SheetRunner} laufen und daher keinen zweiten Runner starten können.
+     */
+    public static void aktualisiereMeldelisteSynchron(WorkingSpreadsheet ws, TurnierSystem ts)
+            throws GenerateException {
+        switch (ts) {
+            case SUPERMELEE -> new MeldeListeSheet_Update(ws).aktualisiereFuerAktivenSpieltag();
+            case SCHWEIZER -> new SchweizerMeldeListeSheetUpdate(ws).vollstaendigAktualisieren();
+            case FORMULEX -> new FormuleXMeldeListeSheetUpdate(ws).vollstaendigAktualisieren();
+            case KO -> new KoMeldeListeSheetUpdate(ws).aktualisiereMeldeliste();
+            case JGJ -> new JGJMeldeListeSheet_Update(ws).upDateSheet();
+            case MAASTRICHTER -> new MaastrichterMeldeListeSheetUpdate(ws).vollstaendigAktualisieren();
+            case KASKADE -> new KaskadeMeldeListeSheetUpdate(ws).vollstaendigAktualisieren();
+            case POULE -> new PouleMeldeListeSheetUpdate(ws).vollstaendigAktualisieren();
+            case TRIPTETE -> new TripTeteMeldeListeSheetUpdate(ws).upDateSheet();
+            case LIGA, KEIN -> throw new GenerateException("Meldeliste konnte nicht aktualisiert werden");
+        }
+    }
+
     public static Optional<MeldelisteZiel> fuerAktivesSheet(WorkingSpreadsheet ws) {
         TurnierSystem ts = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();
         if (ts == null || ts == TurnierSystem.KEIN) {

@@ -124,6 +124,16 @@ public abstract class SheetRunner extends Thread {
 		koordinator.abbrechenPruefen();
 	}
 
+	/**
+	 * Abbruch-Exception wie aus {@link #testDoCancelTask()}, für Runner, die eine Unterbrechung selbst
+	 * erkannt und das Interrupt-Flag dabei verbraucht haben (z.&nbsp;B. {@link InterruptedException} aus
+	 * einem blockierenden HTTP-Aufruf). Die anschließenden UNO-Aufräumaufrufe laufen so nicht auf einem
+	 * noch unterbrochenen Thread.
+	 */
+	protected static GenerateException verarbeitungAbgebrochen() {
+		return new GenerateException(VERARBEITUNG_ABGEBROCHEN);
+	}
+
 	public static final void cancelRunner() {
 		koordinator.abbrechen();
 	}

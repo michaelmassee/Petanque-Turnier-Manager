@@ -224,6 +224,14 @@ public class PouleMeldeListeSheetUpdate extends SheetRunner
 
     @Override
     protected void doRun() throws GenerateException {
+        vollstaendigAktualisieren();
+    }
+
+    /**
+     * Bereinigt, vergibt Nummern, sortiert und aktualisiert das Sheet vollständig. Wird von
+     * {@link #doRun()} und synchron aus anderen laufenden SheetRunnern (PTM-Online-Abgleich) genutzt.
+     */
+    public void vollstaendigAktualisieren() throws GenerateException {
         XSpreadsheet xSheet = getXSpreadSheet();
         if (xSheet == null) {
             logger.warn("Poule Meldeliste nicht gefunden");

@@ -236,6 +236,14 @@ public class MeldeListeSheet_Update extends SheetRunner implements IMeldeliste<S
 
 	@Override
 	protected void doRun() throws GenerateException {
+		aktualisiereFuerAktivenSpieltag();
+	}
+
+	/**
+	 * Aktualisiert die Meldeliste für den aktiven Spieltag. Wird von {@link #doRun()} und synchron
+	 * aus anderen laufenden SheetRunnern (PTM-Online-Abgleich) genutzt.
+	 */
+	public void aktualisiereFuerAktivenSpieltag() throws GenerateException {
 		setSpielTag(getKonfigurationSheet().getAktiveSpieltag());
 		upDateSheet();
 	}

@@ -21,14 +21,12 @@ import org.jspecify.annotations.Nullable;
 
 import com.sun.star.uno.XComponentContext;
 
-import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.LibreOfficePtmOnlineSpeicher;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
-import de.petanqueturniermanager.helper.LoMainThread;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
@@ -46,11 +44,9 @@ import de.petanqueturniermanager.spielerdb.SpielerMitVerein;
  * Nutzt denselben turniersystem-generischen Schreibpfad wie die Spieler-DB-Integration
  * ({@link MeldelisteZiel#schreibeBlock}, {@link MeldelisteZielFactory#starteMeldelisteUpdate}).
  * <p>
- * {@link #fuehreImportDurch} ist die synchrone Kernlogik: sie darf auf jedem Hintergrund-Thread
- * laufen (Sheet-Schreibzugriffe hier sind reine SheetRunner-Background-Thread-Operationen, siehe
- * CLAUDE.md-Threading-Regel) und wird sowohl vom menuegetriggerten {@link #starte} (eigener
- * Worker-Thread, UI-Feedback per {@link LoMainThread#post}) als auch synchron aus einem bereits
- * laufenden {@code SheetRunner} heraus genutzt (Rundenstart-Hook, {@link PtmOnlineSpielrundeSync}).
+ * {@link #fuehreImportDurch} ist die synchrone Kernlogik und läuft immer innerhalb eines
+ * {@code SheetRunner}: beim menügetriggerten Abgleich im {@link PtmOnlineAbgleichSheetRunner} (ProcessBox,
+ * Abbruch), beim Rundenstart im Spielrunden-Runner ({@link PtmOnlineSpielrundeSync}).
  */
 public final class RegistrationImportTask {
 
@@ -157,68 +153,44 @@ public final class RegistrationImportTask {
             return;
         }
 
-        MeldelisteZiel ziel = zielOpt.get();
-        PtmOnlineRegistrationMapping finaleMapping = mapping;
-        String finaleTournamentId = tournamentId.get();
-
-        Thread worker = new Thread(
-                () -> importiereUndZeigeErgebnis(ws, ctx, config, finaleMapping, finaleTournamentId, ts, ziel),
-                "PTM-Online-Import");
-        worker.start();
-    }
-
-    private static void importiereUndZeigeErgebnis(WorkingSpreadsheet ws, XComponentContext ctx,
-            LibreOfficePtmOnlineSpeicher.Zugangsdaten config, PtmOnlineRegistrationMapping mapping,
-            String tournamentId, TurnierSystem ts, MeldelisteZiel ziel) {
-        try {
-            AbgleichErgebnis ergebnis = fuehreAbgleichDurch(config, mapping, tournamentId, ziel,
-                    () -> aktualisiereMeldeliste(ws, ts));
-            List<String> absaetze = new ArrayList<>();
-            absaetze.add(I18n.get("ptmonline.erfolg.anmeldungen_abgeglichen",
-                    ergebnis.importErgebnis().importiert(), ergebnis.onlineAngelegt()));
-            absaetze.addAll(ergebnis.hinweise());
-            String meldung = String.join("\n\n", absaetze);
-            LoMainThread.post(ctx, () -> zeigeInfo(ctx, meldung));
-        } catch (IOException e) {
-            logger.error("PTM-Online: Anmeldungen importieren fehlgeschlagen", e);
-            LoMainThread.post(ctx, () -> zeigeNetzwerkFehler(ctx, e));
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        } catch (GenerateException e) {
-            logger.error("PTM-Online: Meldungen-Sheet lesen/schreiben fehlgeschlagen", e);
-            LoMainThread.post(ctx, () -> zeigeFehler(ctx, e.getMessage()));
-        }
+        new PtmOnlineAbgleichSheetRunner(ws, ts, config, mapping, tournamentId.get(), zielOpt.get()).start();
     }
 
     /** Manueller Abgleich: importiert neue Online-Meldungen und legt neue lokale Meldungen online an. */
     public static AbgleichErgebnis fuehreAbgleichDurch(LibreOfficePtmOnlineSpeicher.Zugangsdaten config,
             PtmOnlineRegistrationMapping mapping, String tournamentId, MeldelisteZiel ziel,
-            MeldelistenAktualisierung aktualisierung)
+            MeldelistenAktualisierung aktualisierung, AbgleichFortschritt fortschritt)
             throws IOException, InterruptedException, GenerateException {
         mapping.sicherstellen();
-        ImportErgebnis importErgebnis = fuehreImportDurch(config, mapping, tournamentId, ziel, aktualisierung);
-        NeuanlageErgebnis neuanlage = neueLokaleMeldungenAnlegen(config, mapping, tournamentId, ziel);
+        ImportErgebnis importErgebnis = fuehreImportDurch(config, mapping, tournamentId, ziel, aktualisierung,
+                fortschritt);
+        fortschritt.pruefeAbbruch();
+        fortschritt.status(I18n.get("ptmonline.fortschritt.lokale_meldungen_anlegen"));
+        NeuanlageErgebnis neuanlage = neueLokaleMeldungenAnlegen(config, mapping, tournamentId, ziel, fortschritt);
+        fortschritt.pruefeAbbruch();
+        fortschritt.status(I18n.get("ptmonline.fortschritt.details_aktualisieren"));
         aktualisiereBezeichnungen(config, mapping, tournamentId, ziel);
         return new AbgleichErgebnis(importErgebnis, neuanlage.angelegt(), neuanlage.abgelehnt());
     }
 
     /**
      * Holt neue Online-Anmeldungen, schreibt sie in die Meldeliste und aktualisiert das Mapping.
-     * Synchron, blockierend (inkl. Warten auf den angestossenen Meldeliste-Update-Runner) - darf
-     * NICHT vom LO-Main-Thread aus aufgerufen werden, wenn der Aufrufer selbst schon auf dem
-     * Main-Thread laeuft und dort auf einen SheetRunner wartet (Deadlock-Risiko, siehe
-     * {@code LoMainThread}-Dokumentation); auf jedem anderen (Hintergrund-)Thread unkritisch.
+     * Synchron und blockierend; läuft innerhalb eines {@code SheetRunner} (manueller Abgleich,
+     * Rundenstart), nie auf dem LO-Main-Thread.
      */
     public static ImportErgebnis fuehreImportDurch(LibreOfficePtmOnlineSpeicher.Zugangsdaten config,
             PtmOnlineRegistrationMapping mapping, String tournamentId, MeldelisteZiel ziel,
-            MeldelistenAktualisierung aktualisierung)
+            MeldelistenAktualisierung aktualisierung, AbgleichFortschritt fortschritt)
             throws IOException, InterruptedException, GenerateException {
         TournamentSyncClient client = new TournamentSyncClient(config.baseUrl(), config.apiKey());
         Instant abgleichStart = Instant.now();
         Instant since = mapping.getLastSync().orElse(Instant.EPOCH);
+        fortschritt.status(I18n.get("ptmonline.fortschritt.anmeldungen_abrufen"));
         List<RegistrationDto> alle = client.fetchRegistrations(tournamentId, since);
+        fortschritt.status(I18n.get("ptmonline.fortschritt.anmeldungen_abgerufen", alle.size()));
+        fortschritt.pruefeAbbruch();
         uebernehmeOnlineStornierungen(ziel, mapping, alle);
-        ImportErgebnis ergebnis = uebernehmeAnmeldungen(alle, mapping, ziel, aktualisierung);
+        ImportErgebnis ergebnis = uebernehmeAnmeldungen(alle, mapping, ziel, aktualisierung, fortschritt);
         if (ergebnis.vollstaendig()) {
             mapping.setLastSync(abgleichStart);
         }
@@ -240,8 +212,8 @@ public final class RegistrationImportTask {
      * </ul>
      */
     static ImportErgebnis uebernehmeAnmeldungen(List<RegistrationDto> registrations,
-            PtmOnlineRegistrationMapping mapping, MeldelisteZiel ziel, MeldelistenAktualisierung aktualisierung)
-            throws GenerateException, InterruptedException {
+            PtmOnlineRegistrationMapping mapping, MeldelisteZiel ziel, MeldelistenAktualisierung aktualisierung,
+            AbgleichFortschritt fortschritt) throws GenerateException, InterruptedException {
         List<RegistrationDto> neue = new ArrayList<>();
         for (RegistrationDto reg : registrations) {
             if (istImportierbar(reg) && !mapping.istBereitsImportiert(reg.id())) {
@@ -259,6 +231,7 @@ public final class RegistrationImportTask {
         List<String> nichtZuordenbar = new ArrayList<>();
         Map<String, List<Integer>> vorhandeneZeilen = vorhandeneZeilenNachBesetzung(ziel);
         for (RegistrationDto reg : neue) {
+            fortschritt.pruefeAbbruch();
             List<SpielerMitVerein> spieler = zuSpielerListe(reg, ziel.getFormation());
             if (spieler == null) {
                 logger.warn("PTM-Online: Anmeldung {} passt nicht zur Formation {} der Meldeliste, übersprungen",
@@ -271,6 +244,7 @@ public final class RegistrationImportTask {
             List<Integer> freieZeilen = nichtVerknuepfteZeilen(mapping, ziel, gleicheZeilen, geschriebeneZeilen);
             if (freieZeilen.size() == 1) {
                 verknuepfeBestehendeZeile(mapping, ziel, reg, freieZeilen.getFirst());
+                fortschritt.status(I18n.get("ptmonline.fortschritt.meldung_verknuepft", onlineBezeichnung(reg)));
                 continue;
             }
             if (freieZeilen.size() > 1) {
@@ -281,6 +255,7 @@ public final class RegistrationImportTask {
             List<Integer> stornierteZeilen = onlineStornierteZeilen(mapping, ziel, gleicheZeilen, geschriebeneZeilen);
             if (stornierteZeilen.size() == 1) {
                 verknuepfeNachOnlineStorno(mapping, ziel, reg, stornierteZeilen.getFirst());
+                fortschritt.status(I18n.get("ptmonline.fortschritt.meldung_verknuepft", onlineBezeichnung(reg)));
                 continue;
             }
             if (!gleicheZeilen.isEmpty()) {
@@ -296,6 +271,7 @@ public final class RegistrationImportTask {
                     nichtZuordenbar.add(onlineBezeichnung(reg));
                 } else {
                     geschrieben.add(new GeschriebeneAnmeldung(reg, zeile));
+                    fortschritt.status(I18n.get("ptmonline.fortschritt.meldung_uebernommen", onlineBezeichnung(reg)));
                     geschriebeneZeilen.add(zeile);
                     vorhandeneZeilen.computeIfAbsent(besetzung, ignored -> new ArrayList<>()).add(zeile);
                 }
@@ -308,6 +284,7 @@ public final class RegistrationImportTask {
             return new ImportErgebnis(0, namensgleich, nichtZuordenbar);
         }
 
+        fortschritt.status(I18n.get("ptmonline.fortschritt.meldeliste_aktualisieren"));
         aktualisierung.aktualisieren();
 
         int importiert = 0;
@@ -421,24 +398,12 @@ public final class RegistrationImportTask {
         return nameSchluessel.sorted().collect(Collectors.joining("\u0000"));
     }
 
-    private static void aktualisiereMeldeliste(WorkingSpreadsheet ws, TurnierSystem ts)
-            throws GenerateException, InterruptedException {
-        SheetRunner runner = MeldelisteZielFactory.starteMeldelisteUpdate(ws, ts);
-        if (runner == null) {
-            throw new GenerateException("Meldeliste konnte nicht aktualisiert werden");
-        }
-        runner.join();
-        if (runner.isLetzterLaufFehlgeschlagen()) {
-            throw new GenerateException("Meldeliste konnte nicht aktualisiert werden");
-        }
-    }
-
     private static int executionRevision(RegistrationDto registration) {
         return registration.executionRevision() == null ? 1 : Math.max(1, registration.executionRevision());
     }
 
     private static NeuanlageErgebnis neueLokaleMeldungenAnlegen(LibreOfficePtmOnlineSpeicher.Zugangsdaten config,
-            PtmOnlineRegistrationMapping mapping, String tournamentId, MeldelisteZiel ziel)
+            PtmOnlineRegistrationMapping mapping, String tournamentId, MeldelisteZiel ziel, AbgleichFortschritt fortschritt)
             throws IOException, InterruptedException, GenerateException {
         String documentId = mapping.getSyncDocumentId()
                 .orElseThrow(() -> new GenerateException(I18n.get("ptmonline.fehler.dokumentbindung_unvollstaendig")));
@@ -463,6 +428,7 @@ public final class RegistrationImportTask {
             if (mapping.getOnlineId(uuid).isPresent()) {
                 continue;
             }
+            fortschritt.pruefeAbbruch();
             RegistrationDto remote;
             try {
                 remote = client.upsertRegistration(tournamentId, uuid, zuOnlineAnmeldung(spieler));
@@ -482,6 +448,7 @@ public final class RegistrationImportTask {
                 throw new GenerateException(e.getMessage());
             }
             angelegt++;
+            fortschritt.status(I18n.get("ptmonline.fortschritt.meldung_online_angelegt", lokaleBezeichnung(ziel, eintrag.getKey())));
         }
         return new NeuanlageErgebnis(angelegt, abgelehnt);
     }
@@ -626,17 +593,6 @@ public final class RegistrationImportTask {
                 vereinName == null ? null : vereinName.strip(), List.of(), List.of(), lizenznr);
     }
 
-    private static void zeigeNetzwerkFehler(XComponentContext ctx, IOException e) {
-        String meldung = e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
-        boolean nichtFreigeschaltet = meldung.contains(" 401");
-        MessageBox.from(ctx, MessageBoxTypeEnum.ERROR_OK)
-                .caption(I18n.get("ptmonline.fehler.titel"))
-                .message(nichtFreigeschaltet
-                        ? I18n.get("ptmonline.fehler.nicht_freigeschaltet")
-                        : I18n.get("ptmonline.fehler.netzwerk", meldung))
-                .show();
-    }
-
     private static void zeigeFehler(XComponentContext ctx, String meldung) {
         MessageBox.from(ctx, MessageBoxTypeEnum.ERROR_OK)
                 .caption(I18n.get("ptmonline.fehler.titel"))
@@ -644,10 +600,4 @@ public final class RegistrationImportTask {
                 .show();
     }
 
-    private static void zeigeInfo(XComponentContext ctx, String meldung) {
-        MessageBox.from(ctx, MessageBoxTypeEnum.INFO_OK)
-                .caption(I18n.get("ptmonline.menu.toplevel"))
-                .message(meldung)
-                .show();
-    }
 }
