@@ -119,9 +119,10 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 	@Override
 	protected void doRun() throws GenerateException {
 		meldeListe.vollstaendigAktualisieren();
-		PtmOnlineSpielrundeSync.pruefeVorTurnierstart(getWorkingSpreadsheet(), getTurnierSystem());
 		TeamMeldungen aktiveMeldungen = ladeAktiveMeldungen();
 		if (aktiveMeldungen != null) {
+			PtmOnlineSpielrundeSync.turnierstartAbgleichen(getWorkingSpreadsheet(), getTurnierSystem(), true,
+					meldeListe.getAlleMeldungen(), aktiveMeldungen);
 			generate(aktiveMeldungen);
 		}
 	}

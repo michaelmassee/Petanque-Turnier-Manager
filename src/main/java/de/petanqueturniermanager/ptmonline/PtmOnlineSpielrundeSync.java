@@ -5,6 +5,7 @@ package de.petanqueturniermanager.ptmonline;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,6 +55,8 @@ public final class PtmOnlineSpielrundeSync {
 
     private static final Logger logger = LogManager.getLogger(PtmOnlineSpielrundeSync.class);
     private static final int MAX_NAMEN_IN_RUECKFRAGE = 15;
+    /** Aktiv-Spalte „ausgestiegen/abgemeldet“, in allen Team-Meldelisten einheitlich. */
+    private static final int AKTIV_WERT_AUSGESTIEGEN = 2;
 
     private PtmOnlineSpielrundeSync() {}
 
@@ -85,12 +88,48 @@ public final class PtmOnlineSpielrundeSync {
     public static void abgleichen(WorkingSpreadsheet ws, TurnierSystem ts, boolean istErsteRunde,
             Set<Integer> alleTeamNummern, Set<Integer> aktiveTeamNummern, Set<Integer> ausgestiegeneTeamNummern)
             throws GenerateException {
-        Optional<Verbindung> verbindungOpt = verbindung(ws, ts);
-        if (verbindungOpt.isEmpty()) {
+        Optional<Verbindung> verbindung = verbindung(ws, ts);
+        if (verbindung.isPresent()) {
+            abgleichen(ws.getxContext(), verbindung.get(), istErsteRunde, alleTeamNummern, aktiveTeamNummern,
+                    ausgestiegeneTeamNummern);
+        }
+    }
+
+    /**
+     * Rundenstart-Abgleich für Systeme, deren Meldeliste „ausgestiegen“ (Aktiv-Spalte = 2) nicht als eigene
+     * Meldungsmenge liefert (KO, JGJ, Poule, Kaskade, Trip-Tête): Ausgestiegene werden aus der Aktiv-Spalte
+     * gelesen, sofern das System sie nicht ohnehin als aktiv führt. Sonst wie {@link #abgleichen}.
+     *
+     * @param alleMeldungen   alle Meldungen der Meldeliste
+     * @param aktiveMeldungen die Meldungen, die das System in der Runde tatsächlich spielen lässt
+     */
+    public static void turnierstartAbgleichen(WorkingSpreadsheet ws, TurnierSystem ts, boolean istErsteRunde,
+            IMeldungen<?, ?> alleMeldungen, IMeldungen<?, ?> aktiveMeldungen) throws GenerateException {
+        Optional<Verbindung> verbindung = verbindung(ws, ts);
+        if (verbindung.isEmpty()) {
             return;
         }
-        Verbindung verbindung = verbindungOpt.get();
-        XComponentContext ctx = ws.getxContext();
+        Set<Integer> aktive = nummern(aktiveMeldungen);
+        Set<Integer> ausgestiegene = ausgestiegeneTeamNummern(verbindung.get().ziel());
+        ausgestiegene.removeAll(aktive);
+        abgleichen(ws.getxContext(), verbindung.get(), istErsteRunde, nummern(alleMeldungen), aktive, ausgestiegene);
+    }
+
+    private static Set<Integer> ausgestiegeneTeamNummern(MeldelisteZiel ziel) {
+        Set<Integer> ausgestiegene = new HashSet<>();
+        for (int zeile : ziel.leseAlleSpielerRoh().stream().map(MeldelisteSpielerDaten::zeile1Basiert)
+                .distinct().toList()) {
+            int teamNr = ziel.getTeamNrAusZeile(zeile);
+            if (teamNr > 0 && ziel.getAktivWertAusZeile(zeile) == AKTIV_WERT_AUSGESTIEGEN) {
+                ausgestiegene.add(teamNr);
+            }
+        }
+        return ausgestiegene;
+    }
+
+    private static void abgleichen(XComponentContext ctx, Verbindung verbindung, boolean istErsteRunde,
+            Set<Integer> alleTeamNummern, Set<Integer> aktiveTeamNummern, Set<Integer> ausgestiegeneTeamNummern)
+            throws GenerateException {
         var config = verbindung.config();
         MeldelisteZiel ziel = verbindung.ziel();
         PtmOnlineRegistrationMapping mapping = verbindung.mapping();
@@ -162,30 +201,6 @@ public final class PtmOnlineSpielrundeSync {
             fehler.add(netzwerkFehlerText(e));
         }
 
-        if (!fehler.isEmpty()) {
-            zeigeFehlerSammlung(ctx, fehler);
-        }
-    }
-
-    /**
-     * Rückfrage vor dem Turnierstart für Systeme ohne Rundenstart-Abgleich (KO, JGJ, Poule, Kaskade,
-     * Trip-Tête): fehlen in der Meldeliste bestätigte Online-Meldungen, kann der Anwender abbrechen.
-     * Ohne PTM-Online-Verbindung passiert nichts.
-     *
-     * @throws GenerateException Abbruch ({@link SheetRunner#verarbeitungAbgebrochen()}), wenn der Anwender
-     *                           ohne die fehlenden Meldungen nicht weitermachen will.
-     */
-    public static void pruefeVorTurnierstart(WorkingSpreadsheet ws, TurnierSystem ts) throws GenerateException {
-        Optional<Verbindung> verbindung = verbindung(ws, ts);
-        if (verbindung.isEmpty()) {
-            return;
-        }
-        XComponentContext ctx = ws.getxContext();
-        List<String> fehler = new ArrayList<>();
-        Verbindung v = verbindung.get();
-        if (!weiterTrotzFehlenderOnlineMeldungen(ctx, v.config(), v.mapping(), v.tournamentId(), v.ziel(), fehler)) {
-            throw SheetRunner.verarbeitungAbgebrochen();
-        }
         if (!fehler.isEmpty()) {
             zeigeFehlerSammlung(ctx, fehler);
         }

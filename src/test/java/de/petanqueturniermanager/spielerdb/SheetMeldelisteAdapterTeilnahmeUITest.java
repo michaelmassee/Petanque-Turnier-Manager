@@ -67,6 +67,20 @@ class SheetMeldelisteAdapterTeilnahmeUITest extends BaseCalcUITest {
         assertThat(aktivWert(zeile)).isEqualTo("1");
     }
 
+    @Test
+    void aktivWertLiefertTeilnahmeDerZeile() throws Exception {
+        int aktiv = ziel.schreibeBlockUndLiefereZeile(List.of(spieler("Dora", "Aktiv")), NeueMeldungTeilnahme.AKTIV);
+        int inaktiv = ziel.schreibeBlockUndLiefereZeile(List.of(spieler("Emil", "Inaktiv")),
+                NeueMeldungTeilnahme.INAKTIV);
+        int abgemeldet = ziel.schreibeBlockUndLiefereZeile(List.of(spieler("Fritz", "Weg")),
+                NeueMeldungTeilnahme.AKTIV);
+        ziel.markiereAlsAbgemeldet(abgemeldet);
+
+        assertThat(ziel.getAktivWertAusZeile(aktiv)).isEqualTo(1);
+        assertThat(ziel.getAktivWertAusZeile(inaktiv)).isEqualTo(-1);
+        assertThat(ziel.getAktivWertAusZeile(abgemeldet)).isEqualTo(2);
+    }
+
     private String aktivWert(int zeile1Basiert) throws GenerateException {
         XSpreadsheet xSheet = meldeListe.getXSpreadSheet();
         return meldeListe.getSheetHelper().getTextFromCell(xSheet,

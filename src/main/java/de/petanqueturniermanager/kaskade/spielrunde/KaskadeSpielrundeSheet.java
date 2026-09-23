@@ -175,10 +175,11 @@ public class KaskadeSpielrundeSheet extends SheetRunner implements ISheet {
 
         if (naechsteRundeNr == 1) {
             meldeListe.vollstaendigAktualisieren();
-            PtmOnlineSpielrundeSync.pruefeVorTurnierstart(getWorkingSpreadsheet(), getTurnierSystem());
         } else {
             meldeListe.upDateSheet();
         }
+        PtmOnlineSpielrundeSync.turnierstartAbgleichen(getWorkingSpreadsheet(), getTurnierSystem(),
+                naechsteRundeNr == 1, meldeListe.getAlleMeldungen(), meldeListe.getAktiveMeldungen());
         var meldungenNachSP = meldeListe.getMeldungenSortiertNachSetzposition();
 
         // Die Mindestanzahl gilt nur für die Turnier-Eröffnung (Runde 1), die die Plan-Größe

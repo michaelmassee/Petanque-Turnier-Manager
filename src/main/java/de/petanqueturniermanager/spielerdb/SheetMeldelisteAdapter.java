@@ -354,6 +354,14 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
     }
 
     @Override
+    public int getAktivWertAusZeile(int zeile1Basiert) {
+        if (zeile1Basiert <= 0) {
+            return -1;
+        }
+        return sheetHelper.getIntFromCell(sheet, Position.from(aktivSpalte(), zeile1Basiert - 1));
+    }
+
+    @Override
     public int getTeamNrAusZeile(int zeile1Basiert) {
         if (zeile1Basiert <= 0) {
             return -1;
@@ -493,8 +501,12 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
         return letzte;
     }
 
+    /**
+     * Aktiv-Spalte: bei den meisten Team-Meldelisten zwei Spalten rechts der letzten Spielerdaten-Spalte
+     * (dazwischen SP/RNG), bei Trip-Tête direkt daneben – dort gibt es keine Setzpositionsspalte.
+     */
     private int aktivSpalte() {
-        return letzteSchreibSpalte + 2;
+        return letzteSchreibSpalte + (system == TurnierSystem.TRIPTETE ? 1 : 2);
     }
 
     /** Erste Zeile, in der kein Spieler eingetragen ist (Vorname + Nachname Slot 0 leer). */

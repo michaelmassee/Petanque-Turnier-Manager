@@ -51,6 +51,14 @@ public interface MeldelisteZiel extends AbgleichQuelle {
     int schreibeBlockUndLiefereZeile(List<SpielerMitVerein> spieler, NeueMeldungTeilnahme teilnahme)
             throws MeldelisteSchreibException;
 
+    /**
+     * Wert der Aktiv-Spalte einer konkreten, 1-basierten Sheet-Zeile (1 = nimmt teil, 2 = ausgestiegen),
+     * {@code -1} wenn leer oder nicht lesbar.
+     */
+    default int getAktivWertAusZeile(int zeile1Basiert) {
+        return -1;
+    }
+
     /** Liefert die lokale Team-/Spieler-Nr einer konkreten, 1-basierten Sheet-Zeile. */
     default int getTeamNrAusZeile(int zeile1Basiert) {
         return -1;

@@ -51,9 +51,10 @@ public class PouleVorrundeSheet extends AbstractPouleVorrundeSheet {
     public void doRun() throws GenerateException {
         processBoxinfo("processbox.poule.vorrunde.erstellen");
         meldeliste.upDateSheet();
-        PtmOnlineSpielrundeSync.pruefeVorTurnierstart(getWorkingSpreadsheet(), getTurnierSystem());
 
         var meldungen = meldeliste.getAktiveMeldungen();
+        PtmOnlineSpielrundeSync.turnierstartAbgleichen(getWorkingSpreadsheet(), getTurnierSystem(), true,
+                meldeliste.getAlleMeldungen(), meldungen);
         int anzTeams = meldungen.size();
 
         if (anzTeams < 3) {

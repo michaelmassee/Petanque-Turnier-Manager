@@ -120,8 +120,11 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet {
 	@Override
 	protected void doRun() throws GenerateException {
 		meldeListe.upDateSheet();
-		PtmOnlineSpielrundeSync.pruefeVorTurnierstart(getWorkingSpreadsheet(), getTurnierSystem());
-		generate(meldeListe.getAlleMeldungen());
+		TeamMeldungen alleMeldungen = meldeListe.getAlleMeldungen();
+		// Trip-Tête spielt immer mit allen Meldungen
+		PtmOnlineSpielrundeSync.turnierstartAbgleichen(getWorkingSpreadsheet(), getTurnierSystem(), true,
+				alleMeldungen, alleMeldungen);
+		generate(alleMeldungen);
 	}
 
 	public void generate(TeamMeldungen meldungen) throws GenerateException {

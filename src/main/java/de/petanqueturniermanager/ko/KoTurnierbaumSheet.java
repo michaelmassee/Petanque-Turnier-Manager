@@ -682,8 +682,9 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		}
 
 		meldeliste.aktualisiereMeldeliste();
-		PtmOnlineSpielrundeSync.pruefeVorTurnierstart(getWorkingSpreadsheet(), getTurnierSystem());
 		pruefeUndFragObAlleAktivieren();
+		PtmOnlineSpielrundeSync.turnierstartAbgleichen(getWorkingSpreadsheet(), getTurnierSystem(), true,
+				meldeliste.getAlleMeldungen(), meldeliste.getAktiveMeldungen());
 
 		String rangFehler = meldeliste.validiereRangSpalte();
 		if (rangFehler != null) {
