@@ -66,8 +66,7 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
      * Schweizer/JGJ/KO/Poule/FormuleX/Kaskade hinweg konstant
      * ({@code AKTIV_WERT_NIMMT_TEIL = 1}); die Aktiv-Spalte selbst sitzt zwei
      * Spalten rechts neben der letzten Spielerdaten-Spalte (dazwischen liegt
-     * SP/RNG). Übernommene Teams würden ohne dieses Flag als „inaktiv"
-     * gelten und der Update-Workflow käme mit „Es sind keine Teams aktiv".
+     * SP/RNG). Gesetzt nur für {@link NeueMeldungTeilnahme#AKTIV}.
      */
     private static final int AKTIV_WERT_NIMMT_TEIL = 1;
     /** In allen unterstützten Team-Meldelisten bedeutet 2 „ausgestiegen/abgemeldet“. */
@@ -278,11 +277,12 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
      */
     @Override
     public int schreibeBlock(List<SpielerMitVerein> spieler) throws MeldelisteSchreibException {
-        return schreibeBlockUndLiefereZeile(spieler) < 0 ? 0 : spieler.size();
+        return schreibeBlockUndLiefereZeile(spieler, NeueMeldungTeilnahme.AKTIV) < 0 ? 0 : spieler.size();
     }
 
     @Override
-    public int schreibeBlockUndLiefereZeile(List<SpielerMitVerein> spieler) throws MeldelisteSchreibException {
+    public int schreibeBlockUndLiefereZeile(List<SpielerMitVerein> spieler, NeueMeldungTeilnahme teilnahme)
+            throws MeldelisteSchreibException {
         if (spieler.isEmpty()) {
             return 0;
         }
@@ -325,11 +325,12 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
             RangePosition pos = RangePosition.from(1, zeile, letzteSchreibSpalte, zeile);
             RangeHelper.from(sheet, doc, pos).setDataInRange(rangeData);
 
-            // Aktiv-Spalte (= letzteDatenSpalte + 2) auf „nimmt teil" setzen,
-            // sonst kommt „Meldeliste Aktualisieren" mit der Frage „Es sind
-            // keine Teams aktiv. Sollen alle aktiviert werden?".
-            sheetHelper.setNumberValueInCell(NumberCellValue
-                    .from(sheet, Position.from(aktivSpalte(), zeile)).setValue(AKTIV_WERT_NIMMT_TEIL));
+            // Aktiv-Spalte (= letzteDatenSpalte + 2) nur bei AKTIV auf „nimmt teil"
+            // setzen; INAKTIV lässt sie leer (noch nicht eingecheckt).
+            if (teilnahme == NeueMeldungTeilnahme.AKTIV) {
+                sheetHelper.setNumberValueInCell(NumberCellValue
+                        .from(sheet, Position.from(aktivSpalte(), zeile)).setValue(AKTIV_WERT_NIMMT_TEIL));
+            }
             return zeile + 1;
         } catch (Exception e) {
             throw new MeldelisteSchreibException("Schreibvorgang fehlgeschlagen", e);

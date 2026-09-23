@@ -39,8 +39,9 @@ import de.petanqueturniermanager.spielerdb.SpielerMitVerein;
 
 /**
  * Importiert online eingegangene, bestaetigte und noch nicht lokal vorhandene Anmeldungen
- * (PTM-Online) in die aktive Meldeliste. Nutzt denselben turniersystem-generischen Schreibpfad wie die Spieler-DB-
- * Integration ({@link MeldelisteZiel#schreibeBlock}, {@link MeldelisteZielFactory#starteMeldelisteUpdate}).
+ * (PTM-Online) in die aktive Meldeliste. Neue Zeilen bleiben in der Aktiv-Spalte leer (inaktiv):
+ * der Anmeldestatus sagt nichts über die Teilnahme aus, die erst mit dem Check-in gesetzt wird.
+ * Nutzt denselben turniersystem-generischen Schreibpfad wie die Spieler-DB-Integration ({@link MeldelisteZiel#schreibeBlock}, {@link MeldelisteZielFactory#starteMeldelisteUpdate}).
  * <p>
  * {@link #fuehreImportDurch} ist die synchrone Kernlogik: sie darf auf jedem Hintergrund-Thread
  * laufen (Sheet-Schreibzugriffe hier sind reine SheetRunner-Background-Thread-Operationen, siehe
@@ -193,7 +194,7 @@ public final class RegistrationImportTask {
                 continue;
             }
             try {
-                int zeile = ziel.schreibeBlockUndLiefereZeile(spieler);
+                int zeile = ziel.schreibeBlockUndLiefereZeile(spieler, MeldelisteZiel.NeueMeldungTeilnahme.INAKTIV);
                 if (zeile <= 0) {
                     logger.error("PTM-Online: Anmeldung {} lieferte keine eindeutige Meldeliste-Zeile", reg.id());
                     vollstaendigImportiert = false;

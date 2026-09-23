@@ -44,11 +44,12 @@ public interface MeldelisteZiel extends AbgleichQuelle {
     /**
      * Schreibt einen Block und liefert die konkrete, 1-basierte Sheet-Zeile. Der Rückgabewert ist
      * für stabile externe Zuordnungen gedacht; Namen sind bei Mehrfachmeldungen nicht eindeutig.
+     *
+     * @param teilnahme Anfangswert der Aktiv-Spalte der neuen Zeile.
+     * @return 1-basierte Sheet-Zeile, {@code 0} bei leerer Spielerliste.
      */
-    default int schreibeBlockUndLiefereZeile(List<SpielerMitVerein> spieler) throws MeldelisteSchreibException {
-        schreibeBlock(spieler);
-        return -1;
-    }
+    int schreibeBlockUndLiefereZeile(List<SpielerMitVerein> spieler, NeueMeldungTeilnahme teilnahme)
+            throws MeldelisteSchreibException;
 
     /** Liefert die lokale Team-/Spieler-Nr einer konkreten, 1-basierten Sheet-Zeile. */
     default int getTeamNrAusZeile(int zeile1Basiert) {
@@ -76,6 +77,14 @@ public interface MeldelisteZiel extends AbgleichQuelle {
     /** Formel, die aus der lokalen UUID stets die aktuell angezeigte Team-/Spielernummer ermittelt. */
     default String formelTeamNrAusLokalerUuid(String uuid) throws MeldelisteSchreibException {
         throw new MeldelisteSchreibException("Lokale PTM-Online-ID wird von dieser Meldeliste nicht unterstützt");
+    }
+
+    /** Anfangswert der Aktiv-Spalte für eine neu geschriebene Meldung. */
+    enum NeueMeldungTeilnahme {
+        /** Aktiv-Spalte = 1: nimmt teil (z.B. Übernahme aus der Spieler-DB vor Ort). */
+        AKTIV,
+        /** Aktiv-Spalte bleibt leer: noch nicht eingecheckt (z.B. Import aus PTM-Online). */
+        INAKTIV
     }
 
     /**
