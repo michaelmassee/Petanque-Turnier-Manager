@@ -62,6 +62,7 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.ko.meldeliste.KoMeldeListeSheetUpdate;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.ptmonline.PtmOnlineSpielrundeSync;
 
 /**
  * Erstellt und aktualisiert den K.-O.-Turnierbaum als Spreadsheet.<br>
@@ -681,6 +682,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		}
 
 		meldeliste.aktualisiereMeldeliste();
+		PtmOnlineSpielrundeSync.pruefeVorTurnierstart(getWorkingSpreadsheet(), getTurnierSystem());
 		pruefeUndFragObAlleAktivieren();
 
 		String rangFehler = meldeliste.validiereRangSpalte();

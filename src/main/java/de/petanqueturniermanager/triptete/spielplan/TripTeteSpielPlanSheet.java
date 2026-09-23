@@ -38,6 +38,7 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.helper.sheet.search.RangeSearchHelper;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.model.TeamPaarung;
+import de.petanqueturniermanager.ptmonline.PtmOnlineSpielrundeSync;
 import de.petanqueturniermanager.supermelee.AbstractSuperMeleeRanglisteFormatter;
 import de.petanqueturniermanager.triptete.konfiguration.TripTeteKonfigurationSheet;
 import de.petanqueturniermanager.triptete.meldeliste.TripTeteMeldeListeSheetUpdate;
@@ -119,6 +120,7 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet {
 	@Override
 	protected void doRun() throws GenerateException {
 		meldeListe.upDateSheet();
+		PtmOnlineSpielrundeSync.pruefeVorTurnierstart(getWorkingSpreadsheet(), getTurnierSystem());
 		generate(meldeListe.getAlleMeldungen());
 	}
 

@@ -17,6 +17,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.LibreOfficePtmOnlineSpeicher;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -24,6 +25,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.LoMainThread;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
+import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.model.IMeldung;
 import de.petanqueturniermanager.model.IMeldungen;
@@ -51,6 +53,7 @@ import de.petanqueturniermanager.spielerdb.MeldelisteSpielerDaten;
 public final class PtmOnlineSpielrundeSync {
 
     private static final Logger logger = LogManager.getLogger(PtmOnlineSpielrundeSync.class);
+    private static final int MAX_NAMEN_IN_RUECKFRAGE = 15;
 
     private PtmOnlineSpielrundeSync() {}
 
@@ -65,8 +68,9 @@ public final class PtmOnlineSpielrundeSync {
 
     /**
      * @param istErsteRunde        {@code true}, wenn dieser Aufruf die allererste Spielrunde des
-     *                             Turniers (bzw. bei Supermelee: des Spieltags) erzeugt — startet in
-     *                             diesem Fall zusätzlich das Online-Turnier.
+     *                             Turniers (bzw. bei Supermelee: des Spieltags) erzeugt — prüft dann, ob
+     *                             online noch bestätigte Meldungen fehlen (Rückfrage), und startet das
+     *                             Online-Turnier.
      * @param alleTeamNummern      Team-/Spieler-Nummern aller aktuell in der Meldeliste erfassten
      *                             Teams (entspricht der Zeilennummerierung, die auch
      *                             {@link PtmOnlineRegistrationMapping} als Team-Nr verwendet).
@@ -79,35 +83,18 @@ public final class PtmOnlineSpielrundeSync {
      *                             {@link OnlineTeilnahme#INAKTIV}.
      */
     public static void abgleichen(WorkingSpreadsheet ws, TurnierSystem ts, boolean istErsteRunde,
-            Set<Integer> alleTeamNummern, Set<Integer> aktiveTeamNummern, Set<Integer> ausgestiegeneTeamNummern,
-            RegistrationImportTask.MeldelistenAktualisierung meldelistenAktualisierung) {
+            Set<Integer> alleTeamNummern, Set<Integer> aktiveTeamNummern, Set<Integer> ausgestiegeneTeamNummern)
+            throws GenerateException {
+        Optional<Verbindung> verbindungOpt = verbindung(ws, ts);
+        if (verbindungOpt.isEmpty()) {
+            return;
+        }
+        Verbindung verbindung = verbindungOpt.get();
         XComponentContext ctx = ws.getxContext();
-        var config = new LibreOfficePtmOnlineSpeicher(ctx).laden();
-        if (!config.isConfigured()) {
-            return;
-        }
-
-        Optional<MeldelisteZiel> zielOpt = MeldelisteZielFactory.fuerAktivesSheet(ws);
-        if (zielOpt.isEmpty()) {
-            return;
-        }
-        MeldelisteZiel ziel = zielOpt.get();
-
-        PtmOnlineRegistrationMapping mapping;
-        Optional<String> tournamentIdOpt;
-        try {
-            Integer spieltagNr = SpieltagKontext.aktiverSpieltagOderNull(ws, ts);
-            mapping = new PtmOnlineRegistrationMapping(ws, ts, spieltagNr);
-            tournamentIdOpt = mapping.getTournamentId();
-        } catch (GenerateException e) {
-            logger.error("PTM-Online: Verbindungsdaten lesen fehlgeschlagen", e);
-            zeigeFehlerSammlung(ctx, List.of(e.getMessage()));
-            return;
-        }
-        if (tournamentIdOpt.isEmpty()) {
-            return;
-        }
-        String tournamentId = tournamentIdOpt.get();
+        var config = verbindung.config();
+        MeldelisteZiel ziel = verbindung.ziel();
+        PtmOnlineRegistrationMapping mapping = verbindung.mapping();
+        String tournamentId = verbindung.tournamentId();
         Optional<String> syncDocumentId;
         Optional<String> leaseToken;
         try {
@@ -136,6 +123,10 @@ public final class PtmOnlineSpielrundeSync {
             fehler.add(netzwerkFehlerText(e));
         }
 
+        if (istErsteRunde && !weiterTrotzFehlenderOnlineMeldungen(ctx, config, mapping, tournamentId, ziel, fehler)) {
+            throw SheetRunner.verarbeitungAbgebrochen();
+        }
+
         if (istErsteRunde) {
             try {
                 client.start(tournamentId);
@@ -147,26 +138,6 @@ public final class PtmOnlineSpielrundeSync {
                 return;
             } catch (RuntimeException e) {
                 logger.error("PTM-Online: Turnierstart lieferte einen unerwarteten Fehler", e);
-                fehler.add(netzwerkFehlerText(e));
-            }
-        }
-
-        if (istErsteRunde) {
-            try {
-                RegistrationImportTask.ImportErgebnis importErgebnis = RegistrationImportTask.fuehreImportDurch(
-                        config, mapping, tournamentId, ziel, meldelistenAktualisierung, AbgleichFortschritt.OHNE);
-                fehler.addAll(importErgebnis.hinweise());
-            } catch (IOException e) {
-                logger.error("PTM-Online: Anmeldungen importieren fehlgeschlagen", e);
-                fehler.add(netzwerkFehlerText(e));
-            } catch (GenerateException e) {
-                logger.error("PTM-Online: Meldungen-Sheet lesen/schreiben fehlgeschlagen", e);
-                fehler.add(e.getMessage());
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                return;
-            } catch (RuntimeException e) {
-                logger.error("PTM-Online: Unerwarteter Importfehler", e);
                 fehler.add(netzwerkFehlerText(e));
             }
         }
@@ -194,6 +165,98 @@ public final class PtmOnlineSpielrundeSync {
         if (!fehler.isEmpty()) {
             zeigeFehlerSammlung(ctx, fehler);
         }
+    }
+
+    /**
+     * Rückfrage vor dem Turnierstart für Systeme ohne Rundenstart-Abgleich (KO, JGJ, Poule, Kaskade,
+     * Trip-Tête): fehlen in der Meldeliste bestätigte Online-Meldungen, kann der Anwender abbrechen.
+     * Ohne PTM-Online-Verbindung passiert nichts.
+     *
+     * @throws GenerateException Abbruch ({@link SheetRunner#verarbeitungAbgebrochen()}), wenn der Anwender
+     *                           ohne die fehlenden Meldungen nicht weitermachen will.
+     */
+    public static void pruefeVorTurnierstart(WorkingSpreadsheet ws, TurnierSystem ts) throws GenerateException {
+        Optional<Verbindung> verbindung = verbindung(ws, ts);
+        if (verbindung.isEmpty()) {
+            return;
+        }
+        XComponentContext ctx = ws.getxContext();
+        List<String> fehler = new ArrayList<>();
+        Verbindung v = verbindung.get();
+        if (!weiterTrotzFehlenderOnlineMeldungen(ctx, v.config(), v.mapping(), v.tournamentId(), v.ziel(), fehler)) {
+            throw SheetRunner.verarbeitungAbgebrochen();
+        }
+        if (!fehler.isEmpty()) {
+            zeigeFehlerSammlung(ctx, fehler);
+        }
+    }
+
+    private record Verbindung(LibreOfficePtmOnlineSpeicher.Zugangsdaten config, MeldelisteZiel ziel,
+            PtmOnlineRegistrationMapping mapping, String tournamentId) {}
+
+    /**
+     * Verbindungsdaten des Dokuments (bzw. bei Supermelee des aktiven Spieltags), leer wenn kein
+     * PTM-Online-Zugang eingerichtet, keine Meldeliste vorhanden oder das Dokument nicht verbunden ist.
+     */
+    private static Optional<Verbindung> verbindung(WorkingSpreadsheet ws, TurnierSystem ts) {
+        XComponentContext ctx = ws.getxContext();
+        var config = new LibreOfficePtmOnlineSpeicher(ctx).laden();
+        if (!config.isConfigured()) {
+            return Optional.empty();
+        }
+        Optional<MeldelisteZiel> ziel = MeldelisteZielFactory.fuerAktivesSheet(ws);
+        if (ziel.isEmpty()) {
+            return Optional.empty();
+        }
+        try {
+            Integer spieltagNr = SpieltagKontext.aktiverSpieltagOderNull(ws, ts);
+            PtmOnlineRegistrationMapping mapping = new PtmOnlineRegistrationMapping(ws, ts, spieltagNr);
+            return mapping.getTournamentId()
+                    .map(tournamentId -> new Verbindung(config, ziel.get(), mapping, tournamentId));
+        } catch (GenerateException e) {
+            logger.error("PTM-Online: Verbindungsdaten lesen fehlgeschlagen", e);
+            zeigeFehlerSammlung(ctx, List.of(e.getMessage()));
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Vor dem Turnierstart: Fehlen in der Meldeliste bestätigte Online-Meldungen, wird nachgefragt, ob die
+     * Runde trotzdem erstellt werden soll. Übernommen wird hier nichts – dafür ist der manuelle Abgleich da.
+     * Kann online nicht geprüft werden, geht es mit einem Hinweis weiter, damit ein Netzproblem den
+     * Turnierbeginn nicht blockiert.
+     *
+     * @return {@code false}, wenn der Anwender abbricht.
+     */
+    private static boolean weiterTrotzFehlenderOnlineMeldungen(XComponentContext ctx,
+            LibreOfficePtmOnlineSpeicher.Zugangsdaten config, PtmOnlineRegistrationMapping mapping,
+            String tournamentId, MeldelisteZiel ziel, List<String> fehler) throws GenerateException {
+        List<String> fehlend;
+        try {
+            fehlend = RegistrationImportTask.pruefeVorTurnierstart(config, mapping, tournamentId, ziel);
+        } catch (IOException e) {
+            logger.error("PTM-Online: Online-Meldungen vor Turnierstart prüfen fehlgeschlagen", e);
+            fehler.add(netzwerkFehlerText(e));
+            return true;
+        } catch (InterruptedException e) {
+            logger.debug("PTM-Online: Prüfung vor Turnierstart abgebrochen", e);
+            throw SheetRunner.verarbeitungAbgebrochen();
+        }
+        if (fehlend.isEmpty()) {
+            return true;
+        }
+        MessageBoxResult antwort = MessageBox.from(ctx, MessageBoxTypeEnum.WARN_YES_NO)
+                .caption(I18n.get("ptmonline.frage.fehlende_meldungen.titel"))
+                .message(I18n.get("ptmonline.frage.fehlende_meldungen", fehlend.size(), namensListe(fehlend)))
+                .show();
+        return antwort == MessageBoxResult.YES;
+    }
+
+    private static String namensListe(List<String> namen) {
+        if (namen.size() <= MAX_NAMEN_IN_RUECKFRAGE) {
+            return String.join("\n", namen);
+        }
+        return String.join("\n", namen.subList(0, MAX_NAMEN_IN_RUECKFRAGE)) + "\n…";
     }
 
     /**

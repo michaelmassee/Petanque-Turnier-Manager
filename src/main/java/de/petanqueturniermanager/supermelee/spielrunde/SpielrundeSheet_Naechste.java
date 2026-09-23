@@ -169,8 +169,7 @@ public class SpielrundeSheet_Naechste extends SheetRunner
 		PtmOnlineSpielrundeSync.abgleichen(getWorkingSpreadsheet(), getTurnierSystem(), istErsteRunde,
 				PtmOnlineSpielrundeSync.nummern(getMeldeListe().getAlleMeldungen()),
 				PtmOnlineSpielrundeSync.nummern(getMeldeListe().getAktiveMeldungen()),
-				PtmOnlineSpielrundeSync.nummern(getMeldeListe().getAusgesetztMeldungen()),
-				() -> getMeldeListe().upDateSheet());
+				PtmOnlineSpielrundeSync.nummern(getMeldeListe().getAusgesetztMeldungen()));
 
 		getMeldeListe().upDateSheet();
 		SpielerMeldungen aktiveMeldungen = getMeldeListe().getAktiveMeldungen();

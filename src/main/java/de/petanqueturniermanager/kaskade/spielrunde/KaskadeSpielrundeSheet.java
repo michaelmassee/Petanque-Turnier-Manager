@@ -60,6 +60,7 @@ import de.petanqueturniermanager.kaskade.meldeliste.KaskadeMeldeListeSheetUpdate
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.ptmonline.PtmOnlineSpielrundeSync;
 
 /**
  * Erstellt das Rundenplan-Sheet für die nächste Kaskadenrunde.
@@ -174,6 +175,7 @@ public class KaskadeSpielrundeSheet extends SheetRunner implements ISheet {
 
         if (naechsteRundeNr == 1) {
             meldeListe.vollstaendigAktualisieren();
+            PtmOnlineSpielrundeSync.pruefeVorTurnierstart(getWorkingSpreadsheet(), getTurnierSystem());
         } else {
             meldeListe.upDateSheet();
         }

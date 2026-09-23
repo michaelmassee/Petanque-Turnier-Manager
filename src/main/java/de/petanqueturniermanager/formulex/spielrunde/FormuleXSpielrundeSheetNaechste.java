@@ -55,8 +55,7 @@ public class FormuleXSpielrundeSheetNaechste extends FormuleXAbstractSpielrundeS
         Set<Integer> ausgestiegeneNr = new HashSet<>(PtmOnlineSpielrundeSync.nummern(aktivUndAusgesetztVorSync));
         ausgestiegeneNr.removeAll(aktiveNrVorSync);
         PtmOnlineSpielrundeSync.abgleichen(getWorkingSpreadsheet(), getTurnierSystem(), istErsteRunde,
-                PtmOnlineSpielrundeSync.nummern(getMeldeListe().getAlleMeldungen()), aktiveNrVorSync, ausgestiegeneNr,
-                () -> getMeldeListe().vollstaendigAktualisieren());
+                PtmOnlineSpielrundeSync.nummern(getMeldeListe().getAlleMeldungen()), aktiveNrVorSync, ausgestiegeneNr);
 
         getMeldeListe().vollstaendigAktualisieren();
         TeamMeldungen aktiveMeldungen = getMeldeListe().getAktiveMeldungen();

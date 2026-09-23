@@ -44,6 +44,7 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.helper.sheet.search.RangeSearchHelper;
 import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationSheet;
 import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSheet_Update;
+import de.petanqueturniermanager.ptmonline.PtmOnlineSpielrundeSync;
 import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.model.LigaSpielPlan;
@@ -118,6 +119,7 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 	@Override
 	protected void doRun() throws GenerateException {
 		meldeListe.vollstaendigAktualisieren();
+		PtmOnlineSpielrundeSync.pruefeVorTurnierstart(getWorkingSpreadsheet(), getTurnierSystem());
 		TeamMeldungen aktiveMeldungen = ladeAktiveMeldungen();
 		if (aktiveMeldungen != null) {
 			generate(aktiveMeldungen);

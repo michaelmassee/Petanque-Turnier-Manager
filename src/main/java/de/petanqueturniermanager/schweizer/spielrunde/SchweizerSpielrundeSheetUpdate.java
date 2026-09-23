@@ -41,8 +41,7 @@ public class SchweizerSpielrundeSheetUpdate extends SchweizerAbstractSpielrundeS
 		Set<Integer> ausgestiegeneNr = new HashSet<>(PtmOnlineSpielrundeSync.nummern(aktivUndAusgesetztVorSync));
 		ausgestiegeneNr.removeAll(aktiveNrVorSync);
 		PtmOnlineSpielrundeSync.abgleichen(getWorkingSpreadsheet(), getTurnierSystem(), false,
-				PtmOnlineSpielrundeSync.nummern(getMeldeListe().getAlleMeldungen()), aktiveNrVorSync, ausgestiegeneNr,
-				() -> getMeldeListe().vollstaendigAktualisieren());
+				PtmOnlineSpielrundeSync.nummern(getMeldeListe().getAlleMeldungen()), aktiveNrVorSync, ausgestiegeneNr);
 
 		getMeldeListe().upDateSheet();
 		TeamMeldungen aktiveMeldungen = getMeldeListe().getAktiveMeldungen();

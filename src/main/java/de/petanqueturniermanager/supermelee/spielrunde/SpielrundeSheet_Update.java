@@ -150,8 +150,7 @@ public class SpielrundeSheet_Update extends SheetRunner
 		PtmOnlineSpielrundeSync.abgleichen(getWorkingSpreadsheet(), getTurnierSystem(), false,
 				PtmOnlineSpielrundeSync.nummern(getMeldeListe().getAlleMeldungen()),
 				PtmOnlineSpielrundeSync.nummern(getMeldeListe().getAktiveMeldungen()),
-				PtmOnlineSpielrundeSync.nummern(getMeldeListe().getAusgesetztMeldungen()),
-				() -> getMeldeListe().upDateSheet());
+				PtmOnlineSpielrundeSync.nummern(getMeldeListe().getAusgesetztMeldungen()));
 
 		getMeldeListe().upDateSheet();
 		SpielerMeldungen aktiveMeldungen = getMeldeListe().getAktiveMeldungen();

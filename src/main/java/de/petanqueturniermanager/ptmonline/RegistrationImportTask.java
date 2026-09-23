@@ -44,9 +44,9 @@ import de.petanqueturniermanager.spielerdb.SpielerMitVerein;
  * Nutzt denselben turniersystem-generischen Schreibpfad wie die Spieler-DB-Integration
  * ({@link MeldelisteZiel#schreibeBlock}, {@link MeldelisteZielFactory#starteMeldelisteUpdate}).
  * <p>
- * {@link #fuehreImportDurch} ist die synchrone Kernlogik und läuft immer innerhalb eines
- * {@code SheetRunner}: beim menügetriggerten Abgleich im {@link PtmOnlineAbgleichSheetRunner} (ProcessBox,
- * Abbruch), beim Rundenstart im Spielrunden-Runner ({@link PtmOnlineSpielrundeSync}).
+ * Übernommen wird nur beim manuellen Abgleich ({@link PtmOnlineAbgleichSheetRunner}: ProcessBox, Abbruch).
+ * Der Rundenstart ({@link PtmOnlineSpielrundeSync}) importiert nicht, sondern fragt vor dem Turnierstart
+ * nach, wenn online noch Meldungen fehlen ({@link #pruefeVorTurnierstart}).
  */
 public final class RegistrationImportTask {
 
@@ -174,11 +174,55 @@ public final class RegistrationImportTask {
     }
 
     /**
-     * Holt neue Online-Anmeldungen, schreibt sie in die Meldeliste und aktualisiert das Mapping.
-     * Synchron und blockierend; läuft innerhalb eines {@code SheetRunner} (manueller Abgleich,
-     * Rundenstart), nie auf dem LO-Main-Thread.
+     * Prüfung vor dem Turnierstart (erste Spielrunde): importiert nichts, sondern liefert die bestätigten
+     * Online-Anmeldungen, die noch in keiner Meldelistenzeile stehen. Namensgleiche, vor Ort erfasste und
+     * noch nicht verknüpfte Zeilen werden dabei verknüpft – sonst legt der Rundenstart sie online erneut an
+     * und PTM-Online lehnt sie als doppelte Spieler ab. {@code lastSync} bleibt unverändert, damit ein
+     * späterer manueller Abgleich die fehlenden Anmeldungen weiterhin abruft.
+     *
+     * @return Online-Bezeichnungen der fehlenden Anmeldungen, leer wenn die Meldeliste vollständig ist.
      */
-    public static ImportErgebnis fuehreImportDurch(LibreOfficePtmOnlineSpeicher.Zugangsdaten config,
+    public static List<String> pruefeVorTurnierstart(LibreOfficePtmOnlineSpeicher.Zugangsdaten config,
+            PtmOnlineRegistrationMapping mapping, String tournamentId, MeldelisteZiel ziel)
+            throws IOException, InterruptedException, GenerateException {
+        TournamentSyncClient client = new TournamentSyncClient(config.baseUrl(), config.apiKey());
+        List<RegistrationDto> registrations = client.fetchRegistrations(tournamentId,
+                mapping.getLastSync().orElse(Instant.EPOCH));
+        Map<String, List<Integer>> vorhandeneZeilen = vorhandeneZeilenNachBesetzung(ziel);
+        List<String> fehlend = new ArrayList<>();
+        for (RegistrationDto reg : registrations) {
+            if (!istImportierbar(reg) || mapping.istBereitsImportiert(reg.id())) {
+                continue;
+            }
+            List<Integer> gleicheZeilen = vorhandeneZeilen.getOrDefault(besetzungsSchluessel(reg), List.of());
+            if (gleicheZeilen.isEmpty()) {
+                fehlend.add(onlineBezeichnung(reg));
+                continue;
+            }
+            List<Integer> freieZeilen = nichtVerknuepfteZeilen(mapping, ziel, gleicheZeilen, Set.of());
+            if (freieZeilen.size() == 1) {
+                verknuepfeBestehendeZeile(mapping, ziel, reg, freieZeilen.getFirst());
+            }
+        }
+        return fehlend;
+    }
+
+    /** Besetzung einer Online-Anmeldung aus allen angegebenen Spielernamen, unabhängig von der Formation. */
+    private static String besetzungsSchluessel(RegistrationDto reg) {
+        return besetzungsSchluessel(Stream.of(
+                        new String[] { reg.firstName(), reg.lastName() },
+                        new String[] { reg.partnerFirstName(), reg.partnerLastName() },
+                        new String[] { reg.partner2FirstName(), reg.partner2LastName() })
+                .filter(name -> !istLeer(name[0]) || !istLeer(name[1]))
+                .map(name -> OnlineSpielerName.schluessel(name[0], name[1])));
+    }
+
+    /**
+     * Holt neue Online-Anmeldungen, schreibt sie in die Meldeliste und aktualisiert das Mapping.
+     * Synchron und blockierend; läuft innerhalb des {@link PtmOnlineAbgleichSheetRunner}, nie auf dem
+     * LO-Main-Thread.
+     */
+    private static ImportErgebnis fuehreImportDurch(LibreOfficePtmOnlineSpeicher.Zugangsdaten config,
             PtmOnlineRegistrationMapping mapping, String tournamentId, MeldelisteZiel ziel,
             MeldelistenAktualisierung aktualisierung, AbgleichFortschritt fortschritt)
             throws IOException, InterruptedException, GenerateException {

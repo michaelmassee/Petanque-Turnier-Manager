@@ -20,6 +20,7 @@ import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
+import de.petanqueturniermanager.ptmonline.PtmOnlineSpielrundeSync;
 
 /**
  * Erstellt das Poule-Vorrunde-Sheet für das Poule-A/B-Turniersystem.
@@ -50,6 +51,7 @@ public class PouleVorrundeSheet extends AbstractPouleVorrundeSheet {
     public void doRun() throws GenerateException {
         processBoxinfo("processbox.poule.vorrunde.erstellen");
         meldeliste.upDateSheet();
+        PtmOnlineSpielrundeSync.pruefeVorTurnierstart(getWorkingSpreadsheet(), getTurnierSystem());
 
         var meldungen = meldeliste.getAktiveMeldungen();
         int anzTeams = meldungen.size();
