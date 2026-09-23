@@ -39,6 +39,11 @@ class SheetMeldelisteAdapterTeilnahmeUITest extends BaseCalcUITest {
     }
 
     @Test
+    void leereMeldelisteLiefertKeineUeberschriftAlsMeldung() {
+        assertThat(ziel.leseAlleSpielerRoh()).isEmpty();
+    }
+
+    @Test
     void inaktiveMeldungLaesstAktivSpalteLeer() throws Exception {
         int zeile = ziel.schreibeBlockUndLiefereZeile(List.of(spieler("Anna", "Online")),
                 NeueMeldungTeilnahme.INAKTIV);

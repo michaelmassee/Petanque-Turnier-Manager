@@ -98,7 +98,7 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
         this.teamnameAktiv = teamnameAktiv;
         this.vereinsnameAktiv = vereinsnameAktiv;
         this.anzSpieler = Math.max(1, formation.getAnzSpieler());
-        this.ersterSpielerOffset = teamnameAktiv ? 2 : 1;
+        this.ersterSpielerOffset = ersterSpielerOffset(teamnameAktiv);
         this.spaltenProSpieler = vereinsnameAktiv ? 3 : 2;
         this.letzteSchreibSpalte = ersterSpielerOffset + anzSpieler * spaltenProSpieler - 1;
     }
@@ -120,7 +120,7 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
             if (sheet == null) {
                 return Optional.empty();
             }
-            int datenZeile = ermittleErsteDatenZeile(sh, sheet);
+            int datenZeile = ermittleErsteDatenZeile(sh, sheet, ersterSpielerOffset(teamnameAktiv));
             return Optional.of(new SheetMeldelisteAdapter(
                     ws.getWorkingSpreadsheetDocument(), sheet, sh, ts, formation, datenZeile,
                     teamnameAktiv, vereinsnameAktiv));
@@ -130,11 +130,27 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
         }
     }
 
-    private static int ermittleErsteDatenZeile(SheetHelper sh, XSpreadsheet sheet) {
+    /** Spalte des ersten Vornamens: rechts neben Nr und ggf. Teamname. */
+    private static int ersterSpielerOffset(boolean teamnameAktiv) {
+        return teamnameAktiv ? 2 : 1;
+    }
+
+    /**
+     * Erste Datenzeile: die erste Zeile mit Nr. Ohne vergebene Nr (leere oder noch nicht
+     * aktualisierte Meldeliste) die Zeile unter der Spaltenüberschrift „Vorname“ – sonst würde
+     * die Überschriftenzeile als Meldung „Vorname Nachname“ gelesen.
+     */
+    private static int ermittleErsteDatenZeile(SheetHelper sh, XSpreadsheet sheet, int vornameSpalte) {
         for (int zeile = 0; zeile <= HEADER_ZEILE_MAX_SCAN; zeile++) {
             String inhalt = sicherText(sh, sheet, SPALTE_NR, zeile).strip();
             if (inhalt.matches("\\d+")) {
                 return zeile;
+            }
+        }
+        String vornameUeberschrift = I18n.get("column.header.vorname");
+        for (int zeile = 0; zeile <= HEADER_ZEILE_MAX_SCAN; zeile++) {
+            if (vornameUeberschrift.equalsIgnoreCase(sicherText(sh, sheet, vornameSpalte, zeile).strip())) {
+                return zeile + 1;
             }
         }
         // Fallback: erste Zeile direkt nach erkanntem Header — Spalte A leer.

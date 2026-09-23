@@ -153,8 +153,9 @@ public final class PtmOnlineSpielrundeSync {
 
         if (istErsteRunde) {
             try {
-                RegistrationImportTask.fuehreImportDurch(ws, config, mapping, tournamentId, ts, ziel,
-                        meldelistenAktualisierung);
+                RegistrationImportTask.ImportErgebnis importErgebnis = RegistrationImportTask.fuehreImportDurch(
+                        config, mapping, tournamentId, ziel, meldelistenAktualisierung);
+                fehler.addAll(importErgebnis.hinweise());
             } catch (IOException e) {
                 logger.error("PTM-Online: Anmeldungen importieren fehlgeschlagen", e);
                 fehler.add(netzwerkFehlerText(e));
