@@ -85,7 +85,10 @@ public class OnlineTurnierMeldungenSheet extends SheetRunner implements ISheet {
 		return TurnierSheet.from(getXSpreadSheet(), getWorkingSpreadsheet());
 	}
 
-	/** Legt das Sheet (falls nötig) an und schreibt die Spaltenüberschriften. */
+	/**
+	 * Legt das Sheet (falls nötig) in einem eigenen SheetRunner an und schreibt die Spaltenüberschriften.
+	 * Nur außerhalb eines laufenden SheetRunners aufrufen – dort stattdessen {@link #anlegen()}.
+	 */
 	public void sicherstellen() throws GenerateException, InterruptedException {
 		start();
 		join();
@@ -94,11 +97,19 @@ public class OnlineTurnierMeldungenSheet extends SheetRunner implements ISheet {
 		}
 	}
 
-	@Override
-	protected void doRun() throws GenerateException {
+	/**
+	 * Legt das Sheet (falls nötig) synchron im aufrufenden Thread an und schreibt die Spaltenüberschriften.
+	 * Für Aufrufer, die selbst als SheetRunner laufen und daher keinen zweiten Runner starten können.
+	 */
+	public void anlegen() throws GenerateException {
 		NewSheet.from(this, sheetName(), metadatenSchluessel())
 				.pos(DefaultSheetPos.SUPERMELEE_WORK).useIfExist().create();
 		schreibeHeader();
+	}
+
+	@Override
+	protected void doRun() throws GenerateException {
+		anlegen();
 	}
 
 	private void schreibeHeader() throws GenerateException {

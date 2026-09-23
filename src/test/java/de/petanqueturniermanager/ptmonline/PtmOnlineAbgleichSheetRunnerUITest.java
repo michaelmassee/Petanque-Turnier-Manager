@@ -16,8 +16,12 @@ import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
+import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.onlinesync.OnlineTournamentDto;
+import de.petanqueturniermanager.onlinesync.sheet.OnlineTurnierMeldungenSheet;
 import de.petanqueturniermanager.ptmonline.dto.SyncBindingDto;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetNew;
 import de.petanqueturniermanager.spielerdb.MeldelisteSpielerDaten;
@@ -38,6 +42,8 @@ import de.petanqueturniermanager.spielerdb.SpielerMitVerein;
 class PtmOnlineAbgleichSheetRunnerUITest extends BaseCalcUITest {
 
     private static final String TURNIER_ID = "t1";
+    /** Spaltenüberschrift „Online-ID“ der Zuordnungstabelle (Zeile 2, Spalte B). */
+    private static final Position KOPF_ONLINE_ID = Position.from(1, 1);
     private static final String ANMELDUNGEN = """
             {"registrations":[
               {"id":"r1","tournamentId":"t1","firstName":"Anna","lastName":"Schmidt","status":"confirmed"},
@@ -90,6 +96,27 @@ class PtmOnlineAbgleichSheetRunnerUITest extends BaseCalcUITest {
         assertThat(ziel.getTeamNrAusZeile(ziel.findeZeileMitName("Anna Schmidt")))
                 .as("Meldeliste im selben Runner aktualisiert: neue Zeile hat eine Nr").isPositive();
         assertThat(server.anzahlOnlineAngelegt()).as("alle lokalen Meldungen sind schon online").isZero();
+    }
+
+    /**
+     * Regression: Der Abgleich läuft selbst als SheetRunner. Das Anlegen der Zuordnungstabelle darf darin
+     * keinen zweiten Runner starten, sonst meldet LO „Verarbeitung läuft bereits“ und die Tabelle wird nicht
+     * aktualisiert.
+     */
+    @Test
+    void abgleichAktualisiertZuordnungstabelleOhneZweitenRunner() throws Exception {
+        OnlineTurnierMeldungenSheet meldungen = new OnlineTurnierMeldungenSheet(wkingSpreadsheet,
+                TurnierSystem.SCHWEIZER, null);
+        meldungen.getSheetHelper().setStringValueInCell(
+                StringCellValue.from(meldungen.getXSpreadSheet(), KOPF_ONLINE_ID, ""));
+        PtmOnlineAbgleichSheetRunner runner = neuerRunner();
+
+        runner.start();
+        runner.join();
+
+        assertThat(runner.isLetzterLaufFehlgeschlagen()).isFalse();
+        assertThat(meldungen.getSheetHelper().getTextFromCell(meldungen.getXSpreadSheet(), KOPF_ONLINE_ID))
+                .isEqualTo(I18n.get("ptmonline.sheet.mapping.header.onlineid"));
     }
 
     @Test

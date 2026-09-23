@@ -53,9 +53,12 @@ public class PtmOnlineRegistrationMapping {
         infoSheet.setSyncBinding(binding.syncDocumentId(), leaseToken, binding.bindingRevision());
     }
 
-    /** Aktualisiert die sichtbaren Überschriften einer bestehenden Zuordnungstabelle. */
-    public void sicherstellen() throws GenerateException, InterruptedException {
-        meldungenSheet.sicherstellen();
+    /**
+     * Legt die Zuordnungstabelle bei Bedarf an und aktualisiert ihre Überschriften. Läuft synchron und ist
+     * für Aufrufer innerhalb eines laufenden SheetRunners gedacht (Meldungsabgleich).
+     */
+    public void sicherstellen() throws GenerateException {
+        meldungenSheet.anlegen();
     }
 
     /** Entfernt beide Sheets wieder aus dem Dokument (Gegenstück zu {@link #verbinden}). */
