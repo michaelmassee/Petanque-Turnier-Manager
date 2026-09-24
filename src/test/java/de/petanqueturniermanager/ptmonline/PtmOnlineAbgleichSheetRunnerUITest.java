@@ -6,10 +6,15 @@ package de.petanqueturniermanager.ptmonline;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import com.google.gson.JsonObject;
 
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.SheetRunner;
@@ -42,6 +47,8 @@ import de.petanqueturniermanager.spielerdb.SpielerMitVerein;
 class PtmOnlineAbgleichSheetRunnerUITest extends BaseCalcUITest {
 
     private static final String TURNIER_ID = "t1";
+    private static final String DOCUMENT_ID = "e9e9caec-e0b1-4fe0-8fee-a229279b9f73";
+    private static final String LEASE_TOKEN = "01234567890123456789012345678901";
     /** Spaltenüberschrift „Online-ID“ der Zuordnungstabelle (Zeile 2, Spalte B). */
     private static final Position KOPF_ONLINE_ID = Position.from(1, 1);
     private static final String ANMELDUNGEN = """
@@ -71,8 +78,7 @@ class PtmOnlineAbgleichSheetRunnerUITest extends BaseCalcUITest {
         turnier.name = "Testturnier";
         turnier.type = "schweizer";
         mapping.verbinden(turnier);
-        mapping.setSyncBinding(new SyncBindingDto(true, "e9e9caec-e0b1-4fe0-8fee-a229279b9f73", 1),
-                "01234567890123456789012345678901");
+        mapping.setSyncBinding(new SyncBindingDto(true, DOCUMENT_ID, 1), LEASE_TOKEN);
     }
 
     @AfterEach
@@ -145,6 +151,29 @@ class PtmOnlineAbgleichSheetRunnerUITest extends BaseCalcUITest {
         assertThat(mapping.istBereitsImportiert("r1")).isFalse();
         assertThat(mapping.istBereitsImportiert("r2")).as("vor Ort erfasste Zeile verknüpft").isTrue();
         assertThat(mapping.getLastSync()).as("späterer Abgleich ruft die fehlenden weiter ab").isEmpty();
+    }
+
+    /** Rundenstart meldet die lokale Setzposition (Meldeliste ist Master), nicht die Team-Nr. */
+    @Test
+    void rundenstartMeldetLokaleSetzpositionStattTeamNr() throws Exception {
+        PtmOnlineAbgleichSheetRunner runner = neuerRunner();
+        runner.start();
+        runner.join();
+        int zeileHans = ziel.findeZeileMitName("Hans Müller");
+        ziel.uebernehmeOnlineSetzposition(zeileHans, 3);
+        Set<Integer> teams = Set.of(ziel.getTeamNrAusZeile(zeileHans),
+                ziel.getTeamNrAusZeile(ziel.findeZeileMitName("Anna Schmidt")));
+
+        var zugang = server.zugangsdaten();
+        PtmOnlineSpielrundeSync.statusPushenUndNeueAnlegen(ziel, mapping,
+                new TournamentSyncClient(zugang.baseUrl(), zugang.apiKey(), DOCUMENT_ID, LEASE_TOKEN), TURNIER_ID,
+                PtmOnlineSpielrundeSync.lokaleMeldungen(ziel, ziel, teams, teams, Set.of()));
+
+        Map<String, JsonObject> gepusht = server.gepushteErgebnisse().stream()
+                .collect(Collectors.toMap(eintrag -> eintrag.get("id").getAsString(), eintrag -> eintrag));
+        assertThat(gepusht).containsOnlyKeys("r1", "r2");
+        assertThat(gepusht.get("r2").get("seedingPosition").getAsInt()).as("Hans Müller, lokal gesetzt").isEqualTo(3);
+        assertThat(gepusht.get("r1").has("seedingPosition")).as("Anna Schmidt ohne SP: online löschen").isFalse();
     }
 
     private PtmOnlineAbgleichSheetRunner neuerRunner() {

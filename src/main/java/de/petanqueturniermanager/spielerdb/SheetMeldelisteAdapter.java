@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.OptionalInt;
+import java.util.Set;
 import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
@@ -71,6 +73,13 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
     private static final int AKTIV_WERT_NIMMT_TEIL = 1;
     /** In allen unterstützten Team-Meldelisten bedeutet 2 „ausgestiegen/abgemeldet“. */
     private static final int AKTIV_WERT_ABGEMELDET = 2;
+    /**
+     * Systeme mit Setzpositionsspalte direkt vor der Aktiv-Spalte: SP bzw. bei KO die RNG-Spalte (Setzreihenfolge
+     * des Turnierbaums). Supermêlée und Trip-Tête haben keine.
+     */
+    private static final Set<TurnierSystem> SYSTEME_MIT_SETZPOSITION = Set.of(TurnierSystem.SCHWEIZER,
+            TurnierSystem.MAASTRICHTER, TurnierSystem.JGJ, TurnierSystem.KO, TurnierSystem.KASKADE,
+            TurnierSystem.POULE, TurnierSystem.FORMULEX);
 
     private final XSpreadsheetDocument doc;
     private final XSpreadsheet sheet;
@@ -370,6 +379,29 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
     }
 
     @Override
+    public OptionalInt getSetzpositionAusZeile(int zeile1Basiert) {
+        if (zeile1Basiert <= 0 || !SYSTEME_MIT_SETZPOSITION.contains(system)) {
+            return OptionalInt.empty();
+        }
+        int setzposition = sheetHelper.getIntFromCell(sheet, Position.from(setzpositionSpalte(), zeile1Basiert - 1));
+        return setzposition > 0 ? OptionalInt.of(setzposition) : OptionalInt.empty();
+    }
+
+    @Override
+    public void uebernehmeOnlineSetzposition(int zeile1Basiert, int setzposition) throws MeldelisteSchreibException {
+        if (setzposition <= 0 || !SYSTEME_MIT_SETZPOSITION.contains(system)
+                || getSetzpositionAusZeile(zeile1Basiert).isPresent()) {
+            return;
+        }
+        try {
+            sheetHelper.setNumberValueInCell(NumberCellValue.from(sheet,
+                    Position.from(setzpositionSpalte(), zeile1Basiert - 1)).setValue(setzposition));
+        } catch (Exception e) {
+            throw new MeldelisteSchreibException("Setzposition konnte nicht geschrieben werden", e);
+        }
+    }
+
+    @Override
     public void markiereAlsAbgemeldet(int zeile1Basiert) throws MeldelisteSchreibException {
         if (zeile1Basiert <= 0) {
             throw new MeldelisteSchreibException("Ungültige Meldelistenzeile");
@@ -499,6 +531,11 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
             }
         }
         return letzte;
+    }
+
+    /** Setzposition (SP bzw. KO-RNG) direkt vor der Aktiv-Spalte; nur für {@link #SYSTEME_MIT_SETZPOSITION}. */
+    private int setzpositionSpalte() {
+        return letzteSchreibSpalte + 1;
     }
 
     /**

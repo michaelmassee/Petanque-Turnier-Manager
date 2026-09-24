@@ -10,6 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -221,9 +222,10 @@ public final class PtmOnlineSpielrundeSync {
     }
 
     /**
-     * Teilnahme je Meldung im Sync-Ziel. Ohne Mêlée entspricht jede Meldung einem Team der Meldeliste (die
-     * Team-Nr wird als Setzposition gemeldet). Bei Mêlée-Anmeldung sind die Online-Anmeldungen Einzelspieler:
-     * jeder erhält die Teilnahme seines lokal gemischten Teams ({@link MeleeTeilnahme}).
+     * Teilnahme und Setzposition je Meldung im Sync-Ziel. Ohne Mêlée entspricht jede Meldung einem Team der
+     * Meldeliste. Bei Mêlée-Anmeldung sind die Online-Anmeldungen Einzelspieler: jeder erhält die Teilnahme
+     * seines lokal gemischten Teams ({@link MeleeTeilnahme}). Gemeldet wird immer die lokale Setzposition – das
+     * Turnierdokument ist Master, eine lokal leere Setzposition löscht die online gepflegte.
      */
     static List<LokaleOnlineMeldung> lokaleMeldungen(MeldelisteZiel ziel, MeldelisteZiel meldeliste,
             Set<Integer> alle, Set<Integer> aktive, Set<Integer> ausgestiegen) {
@@ -233,9 +235,14 @@ public final class PtmOnlineSpielrundeSync {
         Map<Integer, Integer> zeileProTeam = zeileProTeam(ziel);
         return alle.stream()
                 .filter(zeileProTeam::containsKey)
-                .map(teamNr -> new LokaleOnlineMeldung(zeileProTeam.get(teamNr),
-                        OnlineTeilnahme.aus(aktive.contains(teamNr), ausgestiegen.contains(teamNr)), teamNr))
+                .map(teamNr -> teamMeldung(ziel, zeileProTeam.get(teamNr),
+                        OnlineTeilnahme.aus(aktive.contains(teamNr), ausgestiegen.contains(teamNr))))
                 .toList();
+    }
+
+    private static LokaleOnlineMeldung teamMeldung(MeldelisteZiel ziel, int zeile, OnlineTeilnahme teilnahme) {
+        OptionalInt setzposition = ziel.getSetzpositionAusZeile(zeile);
+        return new LokaleOnlineMeldung(zeile, teilnahme, setzposition.isPresent() ? setzposition.getAsInt() : null);
     }
 
     private static Map<Integer, List<MeldelisteSpielerDaten>> spielerProTeam(MeldelisteZiel meldeliste) {

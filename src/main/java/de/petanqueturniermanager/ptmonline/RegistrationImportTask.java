@@ -419,7 +419,10 @@ public final class RegistrationImportTask {
         uebernehmeSetzposition(ziel, reg, zeile);
     }
 
-    /** Online gepflegte Setzposition übernehmen; scheitert das, bleibt die Anmeldung trotzdem übernommen. */
+    /**
+     * Online gepflegte Setzposition übernehmen, sofern die Zeile noch keine hat. Scheitert das, bleibt die
+     * Anmeldung trotzdem übernommen.
+     */
     private static void uebernehmeSetzposition(MeldelisteZiel ziel, RegistrationDto reg, int zeile1Basiert) {
         if (reg.seedingPosition() == null) {
             return;

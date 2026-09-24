@@ -145,6 +145,26 @@ class RegistrationImportZuordnungUITest extends BaseCalcUITest {
                 .isNullOrEmpty();
     }
 
+    @Test
+    void onlineSetzpositionWirdInDieMeldelisteUebernommen() throws Exception {
+        uebernehme(anmeldungMitSetzposition("r1", "Hans", "Müller", 4), anmeldung("r2", "Anna", "Schmidt"));
+
+        assertThat(ziel.getSetzpositionAusZeile(ziel.findeZeileMitName("Hans Müller"))).hasValue(4);
+        assertThat(ziel.getSetzpositionAusZeile(ziel.findeZeileMitName("Anna Schmidt"))).isEmpty();
+    }
+
+    @Test
+    void lokaleSetzpositionHatBeimVerknuepfenVorrang() throws Exception {
+        ziel.schreibeBlock(List.of(spieler("Hans", "Müller")));
+        int zeile = ziel.findeZeileMitName("Hans Müller");
+        ziel.uebernehmeOnlineSetzposition(zeile, 1);
+
+        uebernehme(anmeldungMitSetzposition("r1", "Hans", "Müller", 5));
+
+        assertThat(mapping.istBereitsImportiert("r1")).isTrue();
+        assertThat(ziel.getSetzpositionAusZeile(zeile)).hasValue(1);
+    }
+
     private ImportErgebnis uebernehme(RegistrationDto... anmeldungen) throws Exception {
         return RegistrationImportTask.uebernehmeAnmeldungen(List.of(anmeldungen), mapping, ziel,
                 () -> new SchweizerMeldeListeSheetUpdate(wkingSpreadsheet).vollstaendigAktualisieren(),
@@ -158,6 +178,13 @@ class RegistrationImportZuordnungUITest extends BaseCalcUITest {
     private String aktivWert(int zeile1Basiert) throws GenerateException {
         return meldeListe.getSheetHelper().getTextFromCell(meldeListe.getXSpreadSheet(),
                 Position.from(meldeListe.getAktivSpalte(), zeile1Basiert - 1));
+    }
+
+    private static RegistrationDto anmeldungMitSetzposition(String id, String vorname, String nachname,
+            int setzposition) {
+        JsonObject json = new Gson().toJsonTree(anmeldung(id, vorname, nachname)).getAsJsonObject();
+        json.addProperty("seedingPosition", setzposition);
+        return new Gson().fromJson(json, RegistrationDto.class);
     }
 
     private static RegistrationDto anmeldung(String id, String vorname, String nachname) {

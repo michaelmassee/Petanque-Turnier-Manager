@@ -1,6 +1,7 @@
 package de.petanqueturniermanager.spielerdb;
 
 import java.util.List;
+import java.util.OptionalInt;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 
@@ -84,11 +85,18 @@ public interface MeldelisteZiel extends AbgleichQuelle {
 
     /**
      * Übernimmt die online gemeldete Setzposition, sofern die Zeile noch keine hat – lokale Setzungen haben
-     * Vorrang. Nur das Mêlée-Ziel übernimmt sie: in der Team-Meldeliste meldet der Rundenstart die Team-Nr als
-     * Setzposition, eine online gepflegte Setzposition hat dort keine lokale Entsprechung.
+     * Vorrang. Ziele ohne Setzpositionsspalte (Supermêlée, Trip-Tête) ignorieren sie.
      */
     default void uebernehmeOnlineSetzposition(int zeile1Basiert, int setzposition) throws MeldelisteSchreibException {
-        // Team-Meldeliste: bewusst keine Übernahme, siehe Javadoc
+        // Ziel ohne Setzpositionsspalte: nichts zu übernehmen
+    }
+
+    /**
+     * Setzposition einer Zeile ({@code > 0}), leer wenn keine gesetzt ist oder das Ziel keine
+     * Setzpositionsspalte hat.
+     */
+    default OptionalInt getSetzpositionAusZeile(int zeile1Basiert) {
+        return OptionalInt.empty();
     }
 
     /**
