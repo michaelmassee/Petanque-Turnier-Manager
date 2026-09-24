@@ -52,6 +52,14 @@ public interface MeldelisteZiel extends AbgleichQuelle {
             throws MeldelisteSchreibException;
 
     /**
+     * {@code true}, wenn das Ziel das Mêlée-Anmeldung-Sheet ist: jede Zeile ein Einzelspieler, die
+     * Teams entstehen erst lokal beim „Mêlée übernehmen“ und haben keine Team-Nr im Sinne der Runden.
+     */
+    default boolean istMeleeAnmeldung() {
+        return false;
+    }
+
+    /**
      * Wert der Aktiv-Spalte einer konkreten, 1-basierten Sheet-Zeile (1 = nimmt teil, 2 = ausgestiegen),
      * {@code -1} wenn leer oder nicht lesbar.
      */

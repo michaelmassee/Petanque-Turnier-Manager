@@ -52,11 +52,14 @@ public final class PtmOnlineAbgleichSheetRunner extends SheetRunner {
     @Override
     protected void doRun() throws GenerateException {
         processBox().info(I18n.get("ptmonline.fortschritt.abgleich_start"));
+        if (ziel.istMeleeAnmeldung()) {
+            // Mêlée-Anmeldung-Sheet anlegen, falls es fehlt – sonst hätten Online-Anmeldungen kein Ziel.
+            zielAktualisieren();
+        }
         AbgleichErgebnis ergebnis;
         try {
             ergebnis = RegistrationImportTask.fuehreAbgleichDurch(config, mapping, tournamentId, ziel,
-                    () -> MeldelisteZielFactory.aktualisiereMeldelisteSynchron(getWorkingSpreadsheet(), getTurnierSystem()),
-                    new ProcessBoxFortschritt());
+                    this::zielAktualisieren, new ProcessBoxFortschritt());
         } catch (InterruptedException e) {
             // Stop-Knopf unterbricht den Thread, auch mitten in einem HTTP-Aufruf. Die Unterbrechung ist
             // damit vollständig als Abbruch behandelt; das Flag bleibt bewusst verbraucht, damit die
@@ -68,6 +71,10 @@ public final class PtmOnlineAbgleichSheetRunner extends SheetRunner {
             throw new GenerateException(netzwerkFehlerText(e));
         }
         zeigeErgebnis(ergebnis);
+    }
+
+    private void zielAktualisieren() throws GenerateException {
+        MeldelisteZielFactory.aktualisiereZielSynchron(getWorkingSpreadsheet(), getTurnierSystem(), ziel);
     }
 
     private void zeigeErgebnis(AbgleichErgebnis ergebnis) {

@@ -5,11 +5,13 @@ package de.petanqueturniermanager.basesheet.konfiguration;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import de.petanqueturniermanager.basesheet.meldeliste.AbstractMeleeAnmeldungSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.IFormationKonfiguration;
 import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungLeser;
@@ -17,14 +19,21 @@ import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungZeile;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.formulex.konfiguration.FormuleXKonfigurationSheet;
+import de.petanqueturniermanager.formulex.meldeliste.FormuleXMeleeAnmeldungSheet;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationSheet;
+import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeleeAnmeldungSheet;
 import de.petanqueturniermanager.kaskade.konfiguration.KaskadeKonfigurationSheet;
+import de.petanqueturniermanager.kaskade.meldeliste.KaskadeMeleeAnmeldungSheet;
 import de.petanqueturniermanager.ko.konfiguration.KoKonfigurationSheet;
+import de.petanqueturniermanager.ko.meldeliste.KoMeleeAnmeldungSheet;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
+import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterMeleeAnmeldungSheet;
 import de.petanqueturniermanager.poule.konfiguration.PouleKonfigurationSheet;
+import de.petanqueturniermanager.poule.meldeliste.PouleMeleeAnmeldungSheet;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
+import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeleeAnmeldungSheet;
 
 /**
  * Zentrale Auskunft darüber, ob die Mêlée-Anmeldung (Vorab-Liste loser Einzelspieler, die per
@@ -72,6 +81,17 @@ public final class MeleeAnmeldungKonfiguration {
 			TurnierSystem.FORMULEX, SheetMetadataHelper.SCHLUESSEL_FORMULEX_MELEE_ANMELDUNG,
 			TurnierSystem.MAASTRICHTER, SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_MELEE_ANMELDUNG);
 
+	/** Aufbau des Mêlée-Anmeldung-Sheets je Turniersystem. */
+	private static final Map<TurnierSystem, Function<WorkingSpreadsheet, AbstractMeleeAnmeldungSheet>> SHEETS =
+			Map.of(
+					TurnierSystem.SCHWEIZER, SchweizerMeleeAnmeldungSheet::new,
+					TurnierSystem.JGJ, JGJMeleeAnmeldungSheet::new,
+					TurnierSystem.KO, KoMeleeAnmeldungSheet::new,
+					TurnierSystem.KASKADE, KaskadeMeleeAnmeldungSheet::new,
+					TurnierSystem.POULE, PouleMeleeAnmeldungSheet::new,
+					TurnierSystem.FORMULEX, FormuleXMeleeAnmeldungSheet::new,
+					TurnierSystem.MAASTRICHTER, MaastrichterMeleeAnmeldungSheet::new);
+
 	private MeleeAnmeldungKonfiguration() {
 	}
 
@@ -85,14 +105,29 @@ public final class MeleeAnmeldungKonfiguration {
 		if (!istAktiv(ws)) {
 			return List.of();
 		}
+		return metadatenSchluessel(new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument())
+				.map(schluessel -> MeleeAnmeldungLeser.lesen(ws, schluessel).stream()
+						.filter(MeleeAnmeldungZeile::istOffen)
+						.toList())
+				.orElse(List.of());
+	}
+
+	/**
+	 * @param turnierSystem Turniersystem des Dokuments
+	 * @return Named-Range-Schlüssel des Mêlée-Anmeldung-Sheets, leer bei Systemen ohne Mêlée-Anmeldung
+	 */
+	public static Optional<String> metadatenSchluessel(TurnierSystem turnierSystem) {
+		return Optional.ofNullable(turnierSystem).map(METADATEN_SCHLUESSEL::get);
+	}
+
+	/**
+	 * @param ws Dokument
+	 * @return das Mêlée-Anmeldung-Sheet des Turniersystems (nicht gestartet, für synchronen Aufbau per
+	 *         {@link AbstractMeleeAnmeldungSheet#generate()}), leer bei Systemen ohne Mêlée-Anmeldung
+	 */
+	public static Optional<AbstractMeleeAnmeldungSheet> meleeAnmeldungSheet(WorkingSpreadsheet ws) {
 		TurnierSystem turnierSystem = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();
-		String schluessel = METADATEN_SCHLUESSEL.get(turnierSystem);
-		if (schluessel == null) {
-			return List.of();
-		}
-		return MeleeAnmeldungLeser.lesen(ws, schluessel).stream()
-				.filter(MeleeAnmeldungZeile::istOffen)
-				.toList();
+		return Optional.ofNullable(turnierSystem).map(SHEETS::get).map(fabrik -> fabrik.apply(ws));
 	}
 
 	/**

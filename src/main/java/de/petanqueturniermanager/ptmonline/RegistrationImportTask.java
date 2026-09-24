@@ -43,6 +43,8 @@ import de.petanqueturniermanager.spielerdb.SpielerMitVerein;
  * der Anmeldestatus sagt nichts über die Teilnahme aus, die erst mit dem Check-in gesetzt wird.
  * Nutzt denselben turniersystem-generischen Schreibpfad wie die Spieler-DB-Integration
  * ({@link MeldelisteZiel#schreibeBlock}, {@link MeldelisteZielFactory#starteMeldelisteUpdate}).
+ * Bei aktiver Mêlée-Anmeldung ist das Ziel stattdessen das Mêlée-Anmeldung-Sheet
+ * ({@link MeldelisteZielFactory#fuerPtmOnline}): Online-Mêlée-Turniere nehmen nur Einzelspieler an.
  * <p>
  * Übernommen wird nur beim manuellen Abgleich ({@link PtmOnlineAbgleichSheetRunner}: ProcessBox, Abbruch).
  * Der Rundenstart ({@link PtmOnlineSpielrundeSync}) importiert nicht, sondern fragt vor dem Turnierstart
@@ -131,7 +133,7 @@ public final class RegistrationImportTask {
             return;
         }
 
-        Optional<MeldelisteZiel> zielOpt = MeldelisteZielFactory.fuerAktivesSheet(ws);
+        Optional<MeldelisteZiel> zielOpt = MeldelisteZielFactory.fuerPtmOnline(ws);
         if (zielOpt.isEmpty()) {
             zeigeFehler(ctx, I18n.get("ptmonline.fehler.keine_meldeliste"));
             return;

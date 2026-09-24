@@ -10,6 +10,8 @@ import org.apache.logging.log4j.Logger;
 import org.jspecify.annotations.Nullable;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.basesheet.konfiguration.MeleeAnmeldungKonfiguration;
+import de.petanqueturniermanager.basesheet.meldeliste.AbstractMeleeAnmeldungSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -106,6 +108,37 @@ public final class MeldelisteZielFactory {
             case TRIPTETE -> new TripTeteMeldeListeSheetUpdate(ws).upDateSheet();
             case LIGA, KEIN -> throw new GenerateException("Meldeliste konnte nicht aktualisiert werden");
         }
+    }
+
+    /**
+     * Sync-Ziel für PTM-Online: bei aktiver Mêlée-Anmeldung das Mêlée-Anmeldung-Sheet (ein Online-Mêlée-Turnier
+     * nimmt nur Einzelspieler an), sonst die Meldeliste wie {@link #fuerAktivesSheet}. Das Mêlée-Ziel entsteht
+     * auch, wenn das Sheet noch fehlt; {@link #aktualisiereZielSynchron} legt es an.
+     */
+    public static Optional<MeldelisteZiel> fuerPtmOnline(WorkingSpreadsheet ws) {
+        if (MeleeAnmeldungKonfiguration.istAktiv(ws)) {
+            TurnierSystem ts = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();
+            Optional<String> schluessel = MeleeAnmeldungKonfiguration.metadatenSchluessel(ts);
+            if (schluessel.isPresent()) {
+                return Optional.of(new MeleeAnmeldungZiel(ws, ts, schluessel.get()));
+            }
+        }
+        return fuerAktivesSheet(ws);
+    }
+
+    /**
+     * Synchrones Aktualisieren des Ziels: beim Mêlée-Ziel datenerhaltender Neuaufbau des Mêlée-Anmeldung-Sheets
+     * (legt es bei Bedarf an), sonst {@link #aktualisiereMeldelisteSynchron}.
+     */
+    public static void aktualisiereZielSynchron(WorkingSpreadsheet ws, TurnierSystem ts, MeldelisteZiel ziel)
+            throws GenerateException {
+        if (!ziel.istMeleeAnmeldung()) {
+            aktualisiereMeldelisteSynchron(ws, ts);
+            return;
+        }
+        AbstractMeleeAnmeldungSheet meleeSheet = MeleeAnmeldungKonfiguration.meleeAnmeldungSheet(ws)
+                .orElseThrow(() -> new GenerateException("Mêlée-Anmeldung konnte nicht aktualisiert werden"));
+        meleeSheet.generate();
     }
 
     public static Optional<MeldelisteZiel> fuerAktivesSheet(WorkingSpreadsheet ws) {

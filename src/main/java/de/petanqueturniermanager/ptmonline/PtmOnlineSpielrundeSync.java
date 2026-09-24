@@ -181,6 +181,25 @@ public final class PtmOnlineSpielrundeSync {
             }
         }
 
+        if (ziel.istMeleeAnmeldung()) {
+            // Online-Mêlée: die Anmeldungen sind Einzelspieler, die Team-Nummern der Runde gehören zu den
+            // lokal gemischten Teams. Teilnahme je Team auf die Mitglieds-Anmeldungen umzulegen ist noch
+            // nicht umgesetzt – bis dahin weder Status-Push noch Online-Anlage von Teams.
+            logger.info("PTM-Online: Mêlée-Anmeldung aktiv, Teilnahme-Abgleich der Teams wird übersprungen");
+        } else if (!statusPushen(ziel, mapping, client, tournamentId, alleTeamNummern, aktiveTeamNummern,
+                ausgestiegeneTeamNummern, fehler)) {
+            return;
+        }
+
+        if (!fehler.isEmpty()) {
+            zeigeFehlerSammlung(ctx, fehler);
+        }
+    }
+
+    /** @return {@code false}, wenn der Thread dabei unterbrochen wurde. */
+    private static boolean statusPushen(MeldelisteZiel ziel, PtmOnlineRegistrationMapping mapping,
+            TournamentSyncClient client, String tournamentId, Set<Integer> alleTeamNummern,
+            Set<Integer> aktiveTeamNummern, Set<Integer> ausgestiegeneTeamNummern, List<String> fehler) {
         try {
             List<String> abgelehnt = statusPushenUndNeueAnlegen(ziel, mapping, client, tournamentId,
                     alleTeamNummern, aktiveTeamNummern, ausgestiegeneTeamNummern);
@@ -195,15 +214,12 @@ public final class PtmOnlineSpielrundeSync {
             fehler.add(e.getMessage());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            return;
+            return false;
         } catch (RuntimeException e) {
             logger.error("PTM-Online: Unerwarteter Status-Abgleichfehler", e);
             fehler.add(netzwerkFehlerText(e));
         }
-
-        if (!fehler.isEmpty()) {
-            zeigeFehlerSammlung(ctx, fehler);
-        }
+        return true;
     }
 
     private record Verbindung(LibreOfficePtmOnlineSpeicher.Zugangsdaten config, MeldelisteZiel ziel,
@@ -219,7 +235,7 @@ public final class PtmOnlineSpielrundeSync {
         if (!config.isConfigured()) {
             return Optional.empty();
         }
-        Optional<MeldelisteZiel> ziel = MeldelisteZielFactory.fuerAktivesSheet(ws);
+        Optional<MeldelisteZiel> ziel = MeldelisteZielFactory.fuerPtmOnline(ws);
         if (ziel.isEmpty()) {
             return Optional.empty();
         }
