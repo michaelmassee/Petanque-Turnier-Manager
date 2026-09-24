@@ -5,21 +5,33 @@ package de.petanqueturniermanager.ptmonline;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Optional;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
+import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.util.XProtectable;
+
 import de.petanqueturniermanager.BaseCalcUITest;
+import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
+import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
+import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzRegistry;
 import de.petanqueturniermanager.onlinesync.OnlineTournamentDto;
+import de.petanqueturniermanager.onlinesync.sheet.PtmOnlineSyncSheet;
+import de.petanqueturniermanager.onlinesync.sheet.PtmOnlineSyncStatus;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationDto;
 import de.petanqueturniermanager.ptmonline.dto.SyncBindingDto;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetNew;
+import de.petanqueturniermanager.toolbar.TurnierModus;
 
 /**
  * Das Blatt „PTMOnline Sync“: genau ein Blatt je Verbindung, bei Supermelee eines je Spieltag.
@@ -79,6 +91,61 @@ class PtmOnlineSyncSheetUITest extends BaseCalcUITest {
         assertThat(sheetVorhanden(SheetMetadataHelper.schluesselPtmOnlineSync(10)))
                 .as("Trennen von Spieltag 1 lässt Spieltag 10 stehen").isTrue();
         assertThat(spieltag10.getTournamentId()).contains("t10");
+    }
+
+    @Test
+    void pauseBleibtVerbundenUndStopptDenRundenstartSync() throws Exception {
+        PtmOnlineRegistrationMapping mapping = verbinde(TurnierSystem.SCHWEIZER, null, "t1");
+        assertThat(PtmOnlineSpielrundeSync.istSyncAktiv(mapping)).isTrue();
+
+        mapping.setPausiert(true);
+
+        assertThat(mapping.istPausiert()).isTrue();
+        assertThat(mapping.getTournamentId()).as("Verbindung bleibt bestehen").contains("t1");
+        assertThat(PtmOnlineSpielrundeSync.istSyncAktiv(mapping)).isFalse();
+        assertThat(PtmOnlineSyncSheet.leseStatus(wkingSpreadsheet, null))
+                .isEqualTo(new PtmOnlineSyncStatus(true, true, Optional.empty()));
+
+        mapping.setPausiert(false);
+
+        assertThat(mapping.istPausiert()).isFalse();
+        assertThat(PtmOnlineSpielrundeSync.istSyncAktiv(mapping)).isTrue();
+    }
+
+    @Test
+    void neuesVerbindenHebtDiePauseAuf() throws Exception {
+        PtmOnlineRegistrationMapping mapping = verbinde(TurnierSystem.SCHWEIZER, null, "t1");
+        mapping.setPausiert(true);
+
+        PtmOnlineRegistrationMapping neu = verbinde(TurnierSystem.SCHWEIZER, null, "t1");
+
+        assertThat(neu.istPausiert()).isFalse();
+    }
+
+    @Test
+    void pausierenImTurnierModusSchreibtInsGesperrteBlatt() throws Exception {
+        PtmOnlineRegistrationMapping mapping = verbinde(TurnierSystem.SCHWEIZER, null, "t1");
+        docPropHelper.setIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM,
+                TurnierSystem.SCHWEIZER.getId());
+        var konfig = BlattschutzRegistry.fuer(TurnierSystem.SCHWEIZER).orElseThrow();
+        TurnierModus.get().setAktivForTest(true);
+        try {
+            BlattschutzManager.get().schuetzen(konfig, wkingSpreadsheet);
+            BlattschutzManager.get().beginCommandScope(konfig, wkingSpreadsheet);
+            try {
+                mapping.setPausiert(true);
+            } finally {
+                BlattschutzManager.get().endCommandScope();
+            }
+
+            assertThat(mapping.istPausiert()).isTrue();
+            XSpreadsheet sync = SheetMetadataHelper.findeSheet(wkingSpreadsheet.getWorkingSpreadsheetDocument(),
+                    SheetMetadataHelper.SCHLUESSEL_PTM_ONLINE_SYNC).orElseThrow();
+            assertThat(Lo.qi(XProtectable.class, sync).isProtected()).as("danach wieder gesperrt").isTrue();
+        } finally {
+            BlattschutzManager.get().entsperren(konfig, wkingSpreadsheet);
+            TurnierModus.get().setAktivForTest(false);
+        }
     }
 
     private PtmOnlineRegistrationMapping verbinde(TurnierSystem system, Integer spieltagNr, String turnierId)

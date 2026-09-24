@@ -76,6 +76,11 @@ public class TimerManager {
         }
     }
 
+    /** Ob {@link #init} bereits gelaufen ist – für Aufrufer, die ohne Timer weiterarbeiten können. */
+    public static boolean istInitialisiert() {
+        return instanz != null;
+    }
+
     /**
      * Gibt die aktive Instanz zurück.
      *

@@ -142,16 +142,25 @@ public final class RegistrationImportTask {
         TurnierSystem ts = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();
         PtmOnlineRegistrationMapping mapping;
         Optional<String> tournamentId;
+        boolean pausiert;
         try {
             Integer spieltagNr = SpieltagKontext.aktiverSpieltagOderNull(ws, ts);
             mapping = new PtmOnlineRegistrationMapping(ws, ts, spieltagNr);
             tournamentId = mapping.getTournamentId();
+            pausiert = mapping.istPausiert();
         } catch (GenerateException e) {
             zeigeFehler(ctx, e.getMessage());
             return;
         }
         if (tournamentId.isEmpty()) {
             zeigeFehler(ctx, I18n.get("ptmonline.fehler.turnier_nicht_angelegt"));
+            return;
+        }
+        if (pausiert) {
+            MessageBox.from(ctx, MessageBoxTypeEnum.INFO_OK)
+                    .caption(I18n.get("ptmonline.menu.toplevel"))
+                    .message(I18n.get("ptmonline.hinweis.sync_pausiert"))
+                    .show();
             return;
         }
 

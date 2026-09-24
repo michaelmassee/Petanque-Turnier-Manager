@@ -60,6 +60,38 @@
 
 							<node oor:name="X9X3" oor:op="replace">
 								<prop oor:name="Title">
+									<value xml:lang="de">Sync pausieren</value>
+									<value xml:lang="en">Pause sync</value>
+									<value xml:lang="es">Pausar sincronización</value>
+									<value xml:lang="fr">Mettre la synchronisation en pause</value>
+									<value xml:lang="nl">Synchronisatie pauzeren</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:ptmonline_sync_pausieren</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+							<node oor:name="X9X4" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Sync fortsetzen</value>
+									<value xml:lang="en">Resume sync</value>
+									<value xml:lang="es">Reanudar sincronización</value>
+									<value xml:lang="fr">Reprendre la synchronisation</value>
+									<value xml:lang="nl">Synchronisatie hervatten</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:ptmonline_sync_fortsetzen</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+							<node oor:name="X9X5" oor:op="replace">
+								<prop oor:name="Title">
 									<value xml:lang="de">Verbindung trennen</value>
 									<value xml:lang="en">Disconnect</value>
 									<value xml:lang="es">Desconectar</value>

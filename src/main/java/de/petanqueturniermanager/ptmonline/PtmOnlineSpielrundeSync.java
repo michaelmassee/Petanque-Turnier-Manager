@@ -136,6 +136,9 @@ public final class PtmOnlineSpielrundeSync {
         MeldelisteZiel ziel = verbindung.ziel();
         PtmOnlineRegistrationMapping mapping = verbindung.mapping();
         String tournamentId = verbindung.tournamentId();
+        if (!istSyncAktiv(mapping)) {
+            return;
+        }
         Optional<String> syncDocumentId;
         Optional<String> leaseToken;
         try {
@@ -253,6 +256,22 @@ public final class PtmOnlineSpielrundeSync {
             }
         }
         return ergebnis;
+    }
+
+    /**
+     * Pausierter Sync: die Spielrunde entsteht normal, aber ohne Rückfrage, Online-Start und Status-Push. Ist der
+     * Zustand nicht lesbar, wird wie bisher synchronisiert.
+     */
+    static boolean istSyncAktiv(PtmOnlineRegistrationMapping mapping) {
+        try {
+            if (mapping.istPausiert()) {
+                logger.info("PTM-Online: Sync pausiert, Rundenstart-Abgleich übersprungen");
+                return false;
+            }
+        } catch (GenerateException e) {
+            logger.warn("PTM-Online: Pausenzustand nicht lesbar, synchronisiere", e);
+        }
+        return true;
     }
 
     /**

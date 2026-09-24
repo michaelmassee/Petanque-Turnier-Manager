@@ -418,6 +418,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_PTMONLINE_TURNIER_VERBINDEN       = "ptmonline_turnier_verbinden";
 	public static final String CMD_PTMONLINE_VERBINDUNG_TRENNEN      = "ptmonline_verbindung_trennen";
 	public static final String CMD_PTMONLINE_ANMELDUNGEN_IMPORTIEREN = "ptmonline_anmeldungen_importieren";
+	public static final String CMD_PTMONLINE_SYNC_PAUSIEREN          = "ptmonline_sync_pausieren";
+	public static final String CMD_PTMONLINE_SYNC_FORTSETZEN         = "ptmonline_sync_fortsetzen";
 	// Konfiguration
 	public static final String CMD_KONFIGURATION_TURNIER = "konfiguration_turnier";
 	/**
@@ -1537,6 +1539,10 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 					.verbindungTrennen(erzeugeWorkingSpreadsheetFuerDispatch());
 			case CMD_PTMONLINE_ANMELDUNGEN_IMPORTIEREN -> de.petanqueturniermanager.ptmonline.ui.PtmOnlineDispatcher
 					.anmeldungenImportieren(erzeugeWorkingSpreadsheetFuerDispatch());
+			case CMD_PTMONLINE_SYNC_PAUSIEREN          -> de.petanqueturniermanager.ptmonline.ui.PtmOnlineDispatcher
+					.syncPausieren(erzeugeWorkingSpreadsheetFuerDispatch());
+			case CMD_PTMONLINE_SYNC_FORTSETZEN         -> de.petanqueturniermanager.ptmonline.ui.PtmOnlineDispatcher
+					.syncFortsetzen(erzeugeWorkingSpreadsheetFuerDispatch());
 			default -> { return false; }
 		}
 		return true;
@@ -2432,7 +2438,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_SPIELERDB_IN_MELDELISTE                -> ts != TurnierSystem.KEIN;
 			case CMD_PTMONLINE_TURNIER_VERBINDEN,
 				 CMD_PTMONLINE_VERBINDUNG_TRENNEN,
-				 CMD_PTMONLINE_ANMELDUNGEN_IMPORTIEREN       -> ts != TurnierSystem.KEIN;
+				 CMD_PTMONLINE_ANMELDUNGEN_IMPORTIEREN,
+				 CMD_PTMONLINE_SYNC_PAUSIEREN,
+				 CMD_PTMONLINE_SYNC_FORTSETZEN               -> ts != TurnierSystem.KEIN;
 			case CMD_TIMER_STARTEN_DIALOG                   -> timerInaktivOderBeendet();
 			case CMD_TIMER_PAUSE_FORTSETZEN,
 				 CMD_TIMER_STOPPEN,

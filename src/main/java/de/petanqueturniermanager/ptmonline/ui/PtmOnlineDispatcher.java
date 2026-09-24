@@ -290,11 +290,13 @@ public final class PtmOnlineDispatcher {
             return;
         }
 
+        TurnierSystem ts;
+        Integer spieltagNr;
         PtmOnlineRegistrationMapping mapping;
         Optional<String> tournamentId;
         try {
-            TurnierSystem ts = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();
-            Integer spieltagNr = SpieltagKontext.aktiverSpieltagOderNull(ws, ts);
+            ts = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();
+            spieltagNr = SpieltagKontext.aktiverSpieltagOderNull(ws, ts);
             mapping = new PtmOnlineRegistrationMapping(ws, ts, spieltagNr);
             tournamentId = mapping.getTournamentId();
         } catch (GenerateException e) {
@@ -318,13 +320,40 @@ public final class PtmOnlineDispatcher {
 
         PtmOnlineRegistrationMapping finaleMapping = mapping;
         String finaleTournamentId = tournamentId.get();
+        var lokalEntfernen = new PtmOnlineVerbindungsRunner(ws, ts, spieltagNr,
+                PtmOnlineVerbindungsRunner.Aktion.LOKAL_ENTFERNEN);
         Thread worker = new Thread(
-                () -> trennenImHintergrund(ctx, config, finaleMapping, finaleTournamentId), "PTM-Online-Trennen");
+                () -> trennenImHintergrund(ctx, config, finaleMapping, finaleTournamentId, lokalEntfernen),
+                "PTM-Online-Trennen");
         worker.start();
     }
 
+    /**
+     * Hält den Sync der Verbindung an (bzw. setzt ihn fort) – ohne Server-Aufruf, jederzeit auch offline. Die
+     * Verbindung selbst bleibt bestehen; solange pausiert, laufen weder Meldungsabgleich noch Rundenstart-Sync.
+     */
+    public static void syncPausieren(WorkingSpreadsheet ws) {
+        starteVerbindungsAktion(ws, PtmOnlineVerbindungsRunner.Aktion.PAUSIEREN);
+    }
+
+    public static void syncFortsetzen(WorkingSpreadsheet ws) {
+        starteVerbindungsAktion(ws, PtmOnlineVerbindungsRunner.Aktion.FORTSETZEN);
+    }
+
+    private static void starteVerbindungsAktion(WorkingSpreadsheet ws, PtmOnlineVerbindungsRunner.Aktion aktion) {
+        try {
+            TurnierSystem ts = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();
+            Integer spieltagNr = SpieltagKontext.aktiverSpieltagOderNull(ws, ts);
+            new PtmOnlineVerbindungsRunner(ws, ts, spieltagNr, aktion).start();
+        } catch (GenerateException e) {
+            logger.error("PTM-Online: {} fehlgeschlagen", aktion, e);
+            zeigeFehler(ws.getxContext(), e.getMessage());
+        }
+    }
+
     private static void trennenImHintergrund(XComponentContext ctx,
-            LibreOfficePtmOnlineSpeicher.Zugangsdaten config, PtmOnlineRegistrationMapping mapping, String tournamentId) {
+            LibreOfficePtmOnlineSpeicher.Zugangsdaten config, PtmOnlineRegistrationMapping mapping, String tournamentId,
+            PtmOnlineVerbindungsRunner lokalEntfernen) {
         try {
             Optional<String> documentId = mapping.getSyncDocumentId();
             Optional<String> leaseToken = mapping.getLeaseToken();
@@ -356,17 +385,7 @@ public final class PtmOnlineDispatcher {
             return;
         }
 
-        LoMainThread.post(ctx, () -> sheetsEntfernenUndErfolgZeigen(ctx, mapping));
-    }
-
-    private static void sheetsEntfernenUndErfolgZeigen(XComponentContext ctx, PtmOnlineRegistrationMapping mapping) {
-        try {
-            mapping.trennen();
-            zeigeInfo(ctx, I18n.get("ptmonline.erfolg.verbindung_getrennt"));
-        } catch (GenerateException e) {
-            logger.error("PTM-Online: Sync-Blatt nach Trennen entfernen fehlgeschlagen", e);
-            zeigeFehler(ctx, e.getMessage());
-        }
+        lokalEntfernen.start();
     }
 
     public static void anmeldungenImportieren(WorkingSpreadsheet ws) {
@@ -389,13 +408,6 @@ public final class PtmOnlineDispatcher {
     private static void zeigeFehler(XComponentContext ctx, String meldung) {
         MessageBox.from(ctx, MessageBoxTypeEnum.ERROR_OK)
                 .caption(I18n.get("ptmonline.fehler.titel"))
-                .message(meldung)
-                .show();
-    }
-
-    private static void zeigeInfo(XComponentContext ctx, String meldung) {
-        MessageBox.from(ctx, MessageBoxTypeEnum.INFO_OK)
-                .caption(I18n.get("ptmonline.menu.toplevel"))
                 .message(meldung)
                 .show();
     }

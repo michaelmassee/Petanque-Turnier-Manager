@@ -14,7 +14,15 @@ import com.sun.star.ui.XSidebar;
 import com.sun.star.ui.XToolPanel;
 
 import de.petanqueturniermanager.BaseCalcUITest;
+import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
+import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.onlinesync.OnlineTournamentDto;
+import de.petanqueturniermanager.ptmonline.PtmOnlineRegistrationMapping;
+import de.petanqueturniermanager.ptmonline.dto.SyncBindingDto;
+import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetNew;
 import de.petanqueturniermanager.sidebar.PetanqueTurnierManagerPanelFactory;
 
 /**
@@ -99,6 +107,28 @@ public class SidebarUITest extends BaseCalcUITest {
 		InfoSidebarPanel p = neuesPanel();
 		panel = null; // AfterEach soll nicht nochmal disposen
 		assertThatCode(() -> Lo.qi(XComponent.class, p).dispose()).doesNotThrowAnyException();
+	}
+
+	@Test
+	@DisplayName("InfoPanel: PTM-Online-Status nicht verbunden → verbunden → pausiert")
+	void infoPanel_ZeigtPtmOnlineStatus() throws Exception {
+		new SchweizerMeldeListeSheetNew(wkingSpreadsheet).createMeldelisteWithParams(Formation.TETE, false, false);
+		docPropHelper.setIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM,
+				TurnierSystem.SCHWEIZER.getId());
+		InfoSidebarContent content = (InfoSidebarContent) neuesPanel().getRealInterface();
+		assertThat(content.ptmOnlineStatusAnzeige()).isEqualTo(I18n.get("sidebar.info.ptmonline.nicht_verbunden"));
+
+		PtmOnlineRegistrationMapping mapping = new PtmOnlineRegistrationMapping(wkingSpreadsheet,
+				TurnierSystem.SCHWEIZER, null);
+		OnlineTournamentDto turnier = new OnlineTournamentDto();
+		turnier.id = "t1";
+		turnier.name = "Testturnier";
+		mapping.verbinden(turnier, new SyncBindingDto(true, "e9e9caec-e0b1-4fe0-8fee-a229279b9f73", 1),
+				"01234567890123456789012345678901");
+		assertThat(content.ptmOnlineStatusAnzeige()).isEqualTo(I18n.get("sidebar.info.ptmonline.verbunden_ohne_sync"));
+
+		mapping.setPausiert(true);
+		assertThat(content.ptmOnlineStatusAnzeige()).isEqualTo(I18n.get("sidebar.info.ptmonline.pausiert"));
 	}
 
 	@Test

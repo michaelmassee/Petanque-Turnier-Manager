@@ -129,6 +129,15 @@ public class PtmOnlineRegistrationMapping {
         syncSheet.aktualisiereAnzeigeFormeln(formelnProUuid);
     }
 
+    /** Pausiert: kein Meldungsabgleich und kein Rundenstart-Sync; die Verbindung selbst bleibt bestehen. */
+    public boolean istPausiert() throws GenerateException {
+        return syncSheet.istPausiert();
+    }
+
+    public void setPausiert(boolean pausiert) throws GenerateException {
+        syncSheet.setPausiert(pausiert);
+    }
+
     public void setLastSync(Instant zeitpunkt) throws GenerateException {
         syncSheet.setLastSync(zeitpunkt);
     }

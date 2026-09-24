@@ -65,8 +65,7 @@ class PtmOnlineDispatcherThreadingTest {
      * uebergeben werden - laufen also auf dem LO-Main-Thread. Bei Erweiterung von
      * {@code PtmOnlineDispatcher} um weitere {@code LoMainThread.post}-Aufrufe hier ergaenzen.
      */
-    private static final Set<String> POST_ZIEL_METHODEN = Set.of("zeigeErfolg", "zeigeFehler", "zeigeNetzwerkFehler",
-            "sheetsEntfernenUndErfolgZeigen");
+    private static final Set<String> POST_ZIEL_METHODEN = Set.of("zeigeErfolg", "zeigeFehler", "zeigeNetzwerkFehler");
 
     @Test
     void verbindenImHintergrundRuehrtProcessBoxNichtDirektAn() {
