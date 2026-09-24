@@ -319,6 +319,7 @@ public final class RegistrationImportTask {
                     geschrieben.add(new GeschriebeneAnmeldung(reg, zeile));
                     fortschritt.status(I18n.get("ptmonline.fortschritt.meldung_uebernommen", onlineBezeichnung(reg)));
                     geschriebeneZeilen.add(zeile);
+                    uebernehmeSetzposition(ziel, reg, zeile);
                     vorhandeneZeilen.computeIfAbsent(besetzung, ignored -> new ArrayList<>()).add(zeile);
                 }
             } catch (MeldelisteZiel.MeldelisteSchreibException e) {
@@ -401,6 +402,7 @@ public final class RegistrationImportTask {
         mapping.ersetzeOnlineId(uuid, reg.id(), executionRevision(reg));
         mapping.setBezeichnungen(uuid, lokaleBezeichnung(ziel, zeile), onlineBezeichnung(reg), onlineStatus(reg));
         mapping.setOnlineDetails(uuid, reg);
+        uebernehmeSetzposition(ziel, reg, zeile);
         logger.info("PTM-Online: Neuanmeldung {} nach Storno mit bestehender Meldelistenzeile {} verknüpft", reg.id(), zeile);
     }
 
@@ -414,6 +416,19 @@ public final class RegistrationImportTask {
             throw new GenerateException("Lokale vorhandene Anmeldung konnte nicht verknüpft werden: " + e.getMessage());
         }
         mapping.setOnlineDetails(uuid, reg);
+        uebernehmeSetzposition(ziel, reg, zeile);
+    }
+
+    /** Online gepflegte Setzposition übernehmen; scheitert das, bleibt die Anmeldung trotzdem übernommen. */
+    private static void uebernehmeSetzposition(MeldelisteZiel ziel, RegistrationDto reg, int zeile1Basiert) {
+        if (reg.seedingPosition() == null) {
+            return;
+        }
+        try {
+            ziel.uebernehmeOnlineSetzposition(zeile1Basiert, reg.seedingPosition());
+        } catch (MeldelisteZiel.MeldelisteSchreibException e) {
+            logger.warn("PTM-Online: Setzposition der Anmeldung {} nicht übernommen", reg.id(), e);
+        }
     }
 
     private static String lokaleUuid(MeldelisteZiel ziel, int zeile1Basiert) throws GenerateException {

@@ -17,9 +17,11 @@ import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.konfiguration.MeleeAnmeldungKonfiguration;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungLeser;
 import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungZeile;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.ptmonline.RegistrationImportTask.ImportErgebnis;
@@ -113,6 +115,35 @@ class RegistrationImportMeleeUITest extends BaseCalcUITest {
         assertThat(meleeZeilen().getFirst().eingecheckt()).isFalse();
     }
 
+    @Test
+    void onlineSetzpositionWirdUebernommen() throws Exception {
+        uebernehme(anmeldung("r1", "Hans", "Müller", 3), anmeldung("r2", "Anna", "Schmidt"));
+
+        assertThat(meleeZeilen()).extracting(MeleeAnmeldungZeile::setzPosition).containsExactly(3, 0);
+    }
+
+    @Test
+    void lokaleSetzpositionHatBeimVerknuepfenVorrang() throws Exception {
+        int zeile = ziel.schreibeBlockUndLiefereZeile(List.of(spieler("Hans", "Müller")), NeueMeldungTeilnahme.INAKTIV);
+        SchweizerMeleeAnmeldungSheet meleeSheet = new SchweizerMeleeAnmeldungSheet(wkingSpreadsheet);
+        meleeSheet.getSheetHelper().setNumberValueInCell(NumberCellValue.from(meleeSheet.getXSpreadSheet(),
+                Position.from(MeleeAnmeldungKonstanten.SPALTE_SETZPOSITION, zeile - 1)).setValue(1));
+
+        uebernehme(anmeldung("r1", "Hans", "Müller", 5));
+
+        assertThat(mapping.istBereitsImportiert("r1")).isTrue();
+        assertThat(meleeZeilen()).extracting(MeleeAnmeldungZeile::setzPosition).containsExactly(1);
+    }
+
+    @Test
+    void verknuepfteZeileOhneSetzpositionUebernimmtDieOnline() throws Exception {
+        ziel.schreibeBlock(List.of(spieler("Hans", "Müller")));
+
+        uebernehme(anmeldung("r1", "Hans", "Müller", 2));
+
+        assertThat(meleeZeilen()).extracting(MeleeAnmeldungZeile::setzPosition).containsExactly(2);
+    }
+
     private ImportErgebnis uebernehme(RegistrationDto... anmeldungen) throws Exception {
         return RegistrationImportTask.uebernehmeAnmeldungen(List.of(anmeldungen), mapping, ziel,
                 () -> MeldelisteZielFactory.aktualisiereZielSynchron(wkingSpreadsheet, TurnierSystem.SCHWEIZER, ziel),
@@ -121,6 +152,12 @@ class RegistrationImportMeleeUITest extends BaseCalcUITest {
 
     private List<MeleeAnmeldungZeile> meleeZeilen() {
         return MeleeAnmeldungLeser.lesen(wkingSpreadsheet, SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_MELEE_ANMELDUNG);
+    }
+
+    private static RegistrationDto anmeldung(String id, String vorname, String nachname, int setzposition) {
+        JsonObject json = new Gson().toJsonTree(anmeldung(id, vorname, nachname)).getAsJsonObject();
+        json.addProperty("seedingPosition", setzposition);
+        return new Gson().fromJson(json, RegistrationDto.class);
     }
 
     private static RegistrationDto anmeldung(String id, String vorname, String nachname) {

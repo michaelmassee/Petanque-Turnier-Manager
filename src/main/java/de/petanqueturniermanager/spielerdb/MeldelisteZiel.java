@@ -83,6 +83,15 @@ public interface MeldelisteZiel extends AbgleichQuelle {
     }
 
     /**
+     * Übernimmt die online gemeldete Setzposition, sofern die Zeile noch keine hat – lokale Setzungen haben
+     * Vorrang. Nur das Mêlée-Ziel übernimmt sie: in der Team-Meldeliste meldet der Rundenstart die Team-Nr als
+     * Setzposition, eine online gepflegte Setzposition hat dort keine lokale Entsprechung.
+     */
+    default void uebernehmeOnlineSetzposition(int zeile1Basiert, int setzposition) throws MeldelisteSchreibException {
+        // Team-Meldeliste: bewusst keine Übernahme, siehe Javadoc
+    }
+
+    /**
      * Hebt eine Abmeldung wieder auf: steht die Meldung auf „abgemeldet“, wird die Aktiv-Spalte
      * geleert (inaktiv, noch nicht eingecheckt). Andere Teilnahme-Werte bleiben unverändert.
      */

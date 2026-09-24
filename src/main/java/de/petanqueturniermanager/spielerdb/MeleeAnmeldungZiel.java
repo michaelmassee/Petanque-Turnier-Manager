@@ -21,6 +21,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungZeile;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.i18n.I18n;
@@ -221,6 +222,16 @@ public final class MeleeAnmeldungZiel implements MeldelisteZiel, MeleeAnmeldungK
 		String uuids = blatt + Position.from(SPALTE_PTM_ONLINE_UUID, ERSTE_DATEN_ZEILE).getAddressWith$() + ":"
 				+ Position.from(SPALTE_PTM_ONLINE_UUID, LETZTE_DATEN_ZEILE).getAddressWith$();
 		return "IFNA(INDEX(" + nummern + ";MATCH(\"" + uuid + "\";" + uuids + ";0));\"\")";
+	}
+
+	@Override
+	public void uebernehmeOnlineSetzposition(int zeile1Basiert, int setzposition) throws MeldelisteSchreibException {
+		Optional<MeleeAnmeldungZeile> zeile = zeile(zeile1Basiert);
+		if (setzposition <= 0 || zeile.isEmpty() || zeile.get().setzPosition() > 0) {
+			return;
+		}
+		sheetHelper.setNumberValueInCell(NumberCellValue
+				.from(sheet(), Position.from(SPALTE_SETZPOSITION, zeile.get().zeile())).setValue(setzposition));
 	}
 
 	/**
