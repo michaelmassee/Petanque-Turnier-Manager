@@ -522,6 +522,38 @@ ICONS["toolbar-whatsapp-selektion"] = svg(f'''
 ''')
 
 
+def ptm_online_wolke():
+    """Gemeinsame Basis der PTM-Online-Icons: Wolke mit zwei Sync-Pfeilen."""
+    return f'''
+  <path d="M 15 43 C 6 43 6 30 16 30 C 16 20 30 15 35 22 C 41 14 55 20 51 31 C 59 32 59 43 50 43 Z"
+        fill="#DBEAFE" stroke="{C['ink']}" stroke-width="{S}" stroke-linejoin="round"/>
+  <path d="M 24 32 A 8 8 0 0 1 38 28" fill="none" stroke="{C['info']}" stroke-width="{S*1.6}" stroke-linecap="round"/>
+  <path d="M 39 23 L 39 29 L 33 29" fill="none" stroke="{C['info']}" stroke-width="{S*1.6}"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 40 35 A 8 8 0 0 1 26 39" fill="none" stroke="{C['info']}" stroke-width="{S*1.6}" stroke-linecap="round"/>
+  <path d="M 25 44 L 25 38 L 31 38" fill="none" stroke="{C['info']}" stroke-width="{S*1.6}"
+        stroke-linecap="round" stroke-linejoin="round"/>'''
+
+
+# ============================================================
+# 30. PTM-ONLINE SYNC PAUSIEREN — Sync-Wolke mit Pause-Badge
+# ============================================================
+ICONS["toolbar-ptmonline-sync-pausieren"] = svg(f'''
+  {ptm_online_wolke()}
+  <circle cx="52" cy="52" r="10" fill="{C['cochon']}" stroke="{C['ink']}" stroke-width="{S}"/>
+  <rect x="48" y="47" width="3" height="10" rx="0.5" fill="{C['paper']}"/>
+  <rect x="53" y="47" width="3" height="10" rx="0.5" fill="{C['paper']}"/>
+''')
+
+# ============================================================
+# 31. PTM-ONLINE SYNC FORTSETZEN — Sync-Wolke mit Play-Badge
+# ============================================================
+ICONS["toolbar-ptmonline-sync-fortsetzen"] = svg(f'''
+  {ptm_online_wolke()}
+  <circle cx="52" cy="52" r="10" fill="{C['go']}" stroke="{C['ink']}" stroke-width="{S}"/>
+  <path d="M 49 48 L 56 52 L 49 56 Z" fill="{C['paper']}" stroke-linejoin="round"/>
+''')
+
 # ============================================================
 # SCHREIBEN
 # ============================================================

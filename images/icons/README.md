@@ -47,6 +47,8 @@ Die einheitliche Stoppuhr macht die Gruppe in der Toolbar sofort als zusammengeh
 | m11 Turnieransicht (Kiosk) | `ptm:turnier_modus` | `toolbar-turnier-modus.png` |
 | m13 Webserver starten | `ptm:webserver_starten` | `toolbar-webserver-starten.png` |
 | m14 Webserver stoppen | `ptm:webserver_stoppen` | `toolbar-webserver-stoppen.png` |
+| m17 PTM-Online-Sync pausieren | `ptm:ptmonline_sync_pausieren` | `toolbar-ptmonline-sync-pausieren.png` |
+| m18 PTM-Online-Sync fortsetzen | `ptm:ptmonline_sync_fortsetzen` | `toolbar-ptmonline-sync-fortsetzen.png` |
 | m16 Neues Turnier in neuer Datei | `ptm:toolbar_neu_in_neuer_datei` | `toolbar-neu-in-neuer-datei.png` |
 | m17 Öffnen | `ptm:toolbar_oeffnen` | `toolbar-oeffnen.png` |
 | m18 Speichern | `.uno:Save` | *LibreOffice-Standard, nicht eigenes Icon* |
