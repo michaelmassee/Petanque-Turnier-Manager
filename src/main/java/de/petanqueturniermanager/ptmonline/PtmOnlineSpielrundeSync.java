@@ -348,43 +348,26 @@ public final class PtmOnlineSpielrundeSync {
     }
 
     /**
-     * Pusht die lokale Teilnahme aller bereits online zugeordneten Meldungen und legt für aktive Meldungen ohne
-     * Online-Zuordnung (vor Ort erfasst) eine neue Anmeldung an.
+     * Legt für aktive Meldungen ohne Online-Zuordnung (vor Ort erfasst) eine neue Anmeldung an und pusht danach
+     * die lokale Teilnahme aller online zugeordneten Meldungen. Erst anlegen, dann pushen: PTM-Online legt
+     * Nachmeldungen eines im Dokument durchgeführten Turniers inaktiv an – der Push setzt sie gleich aktiv.
      *
      * @return Bezeichnungen der Meldungen, die PTM-Online beim Anlegen als bereits angemeldet abgelehnt hat.
      */
     static List<String> statusPushenUndNeueAnlegen(MeldelisteZiel ziel, PtmOnlineRegistrationMapping mapping,
             TournamentSyncClient client, String tournamentId, List<LokaleOnlineMeldung> meldungen)
             throws IOException, InterruptedException, GenerateException {
-        List<RegistrationResultDto> results = new ArrayList<>();
-        Map<String, String> lokaleUuidProOnlineId = new LinkedHashMap<>();
-        for (LokaleOnlineMeldung meldung : meldungen) {
-            Optional<String> onlineId = onlineId(mapping, ziel, meldung.zeile1Basiert());
-            if (onlineId.isEmpty()) {
-                continue;
-            }
-            String uuid = lokaleUuid(ziel, meldung.zeile1Basiert());
-            int revision = mapping.getExecutionRevision(uuid);
-            results.add(new RegistrationResultDto(onlineId.get(), null, meldung.seedingPosition(),
-                    meldung.teilnahme().apiWert(), revision));
-            lokaleUuidProOnlineId.put(onlineId.get(), uuid);
-        }
-        if (!results.isEmpty()) {
-            int updatedCount = client.pushResults(tournamentId, results);
-            if (updatedCount == results.size()) {
-                for (RegistrationResultDto result : results) {
-                    mapping.setExecutionRevision(lokaleUuidProOnlineId.get(result.id()), result.expectedExecutionRevision() + 1);
-                }
-            } else {
-                logger.warn("PTM-Online: Status-Push aktualisierte nur {} von {} Anmeldungen; "
-                        + "lokale executionRevision bleibt unveraendert fuer den naechsten Abgleich", updatedCount,
-                        results.size());
-            }
-        }
+        List<String> abgelehnt = neueMeldungenAnlegen(ziel, mapping, client, tournamentId, meldungen);
+        teilnahmePushen(ziel, mapping, client, tournamentId, meldungen);
+        return abgelehnt;
+    }
 
+    private static List<String> neueMeldungenAnlegen(MeldelisteZiel ziel, PtmOnlineRegistrationMapping mapping,
+            TournamentSyncClient client, String tournamentId, List<LokaleOnlineMeldung> meldungen)
+            throws IOException, InterruptedException, GenerateException {
         Map<Integer, List<MeldelisteSpielerDaten>> proZeile = ziel.leseAlleSpielerRoh().stream()
-                .collect(Collectors.groupingBy(MeldelisteSpielerDaten::zeile1Basiert, LinkedHashMap::new, Collectors.toList()));
-
+                .collect(Collectors.groupingBy(MeldelisteSpielerDaten::zeile1Basiert, LinkedHashMap::new,
+                        Collectors.toList()));
         List<String> abgelehnt = new ArrayList<>();
         for (LokaleOnlineMeldung meldung : meldungen) {
             int zeile = meldung.zeile1Basiert();
@@ -395,11 +378,10 @@ public final class PtmOnlineSpielrundeSync {
             if (spieler == null || spieler.isEmpty()) {
                 continue;
             }
-            NeueOnlineAnmeldung anmeldung = zuAnmeldung(spieler);
             String uuid = lokaleUuid(ziel, zeile);
             RegistrationDto angelegt;
             try {
-                angelegt = client.upsertRegistration(tournamentId, uuid, anmeldung);
+                angelegt = client.upsertRegistration(tournamentId, uuid, zuAnmeldung(spieler));
             } catch (PtmOnlineHttpException e) {
                 if (!e.istBereitsAngemeldet()) {
                     throw e;
@@ -414,6 +396,37 @@ public final class PtmOnlineSpielrundeSync {
             mapping.setOnlineDetails(uuid, angelegt);
         }
         return abgelehnt;
+    }
+
+    private static void teilnahmePushen(MeldelisteZiel ziel, PtmOnlineRegistrationMapping mapping,
+            TournamentSyncClient client, String tournamentId, List<LokaleOnlineMeldung> meldungen)
+            throws IOException, InterruptedException, GenerateException {
+        List<RegistrationResultDto> results = new ArrayList<>();
+        Map<String, String> lokaleUuidProOnlineId = new LinkedHashMap<>();
+        for (LokaleOnlineMeldung meldung : meldungen) {
+            Optional<String> onlineId = onlineId(mapping, ziel, meldung.zeile1Basiert());
+            if (onlineId.isEmpty()) {
+                continue;
+            }
+            String uuid = lokaleUuid(ziel, meldung.zeile1Basiert());
+            results.add(new RegistrationResultDto(onlineId.get(), null, meldung.seedingPosition(),
+                    meldung.teilnahme().apiWert(), mapping.getExecutionRevision(uuid)));
+            lokaleUuidProOnlineId.put(onlineId.get(), uuid);
+        }
+        if (results.isEmpty()) {
+            return;
+        }
+        int updatedCount = client.pushResults(tournamentId, results);
+        if (updatedCount != results.size()) {
+            logger.warn("PTM-Online: Status-Push aktualisierte nur {} von {} Anmeldungen; "
+                    + "lokale executionRevision bleibt unveraendert fuer den naechsten Abgleich", updatedCount,
+                    results.size());
+            return;
+        }
+        for (RegistrationResultDto result : results) {
+            mapping.setExecutionRevision(lokaleUuidProOnlineId.get(result.id()),
+                    result.expectedExecutionRevision() + 1);
+        }
     }
 
     private static Map<Integer, Integer> zeileProTeam(MeldelisteZiel ziel) {

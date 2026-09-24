@@ -5,6 +5,7 @@ package de.petanqueturniermanager.ptmonline;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -103,7 +104,8 @@ class PtmOnlineMeleeRundenSyncUITest extends BaseCalcUITest {
         List<String> abgelehnt = synchronisiere(alleTeams, alleTeams, Set.of());
 
         assertThat(abgelehnt).isEmpty();
-        assertThat(teilnahmeProOnlineId()).containsOnlyKeys("r1", "r2", "r3");
+        assertThat(teilnahmeProOnlineId()).as("Nachmeldung nach dem Anlegen gleich aktiv gemeldet")
+                .containsOnlyKeys("r1", "r2", "r3", "online-1");
         assertThat(teilnahmeProOnlineId().values()).containsOnly("active");
         assertThat(server.gepushteErgebnisse()).allSatisfy(eintrag -> assertThat(eintrag.has("seedingPosition"))
                 .as("Mêlée-Spieler ohne Setzposition: nicht die Team-Nr melden").isFalse());
@@ -123,11 +125,16 @@ class PtmOnlineMeleeRundenSyncUITest extends BaseCalcUITest {
 
         synchronisiere(alleTeams, Set.of(teamVonHans), ausgesetzt);
 
-        Map<String, String> erwartet = ONLINE_ID.entrySet().stream().collect(Collectors.toMap(Map.Entry::getValue,
-                eintrag -> teamNr(eintrag.getKey()) == teamVonHans ? "active" : "withdrawn"));
+        boolean paulSpielt = teamNr("Paul Neu") == teamVonHans;
+        Map<String, String> erwartet = new HashMap<>(ONLINE_ID.entrySet().stream().collect(
+                Collectors.toMap(Map.Entry::getValue,
+                        eintrag -> teamNr(eintrag.getKey()) == teamVonHans ? "active" : "withdrawn")));
+        if (paulSpielt) {
+            erwartet.put("online-1", "active");
+        }
         assertThat(teilnahmeProOnlineId()).isEqualTo(erwartet);
         assertThat(server.onlineAngelegt()).as("Paul Neu nur angelegt, wenn sein Team spielt")
-                .hasSize(teamNr("Paul Neu") == teamVonHans ? 1 : 0);
+                .hasSize(paulSpielt ? 1 : 0);
     }
 
     private List<String> synchronisiere(Set<Integer> alle, Set<Integer> aktive, Set<Integer> ausgesetzt)
