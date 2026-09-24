@@ -25,6 +25,7 @@ import com.sun.star.lang.XMultiServiceFactory;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungDialogOption;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
@@ -39,6 +40,7 @@ import de.petanqueturniermanager.helper.msgbox.ProcessBox;
  *   <li>Formation: Tête / Doublette / Triplette (Radio-Buttons)</li>
  *   <li>Teamname anzeigen: Ja / Nein (Checkbox)</li>
  *   <li>Vereinsname anzeigen: Ja / Nein (Checkbox)</li>
+ *   <li>Mêlée-Anmeldung (nur bei Doublette/Triplette)</li>
  *   <li>Anzahl Kaskaden: 2 (A/B/C/D) oder 3 (A/B/C/D/E/F/G/H) (Radio-Buttons)</li>
  * </ul>
  */
@@ -48,6 +50,7 @@ class KaskadeTurnierParameterDialog {
             Formation formation,
             boolean teamnameAnzeigen,
             boolean vereinsnameAnzeigen,
+            boolean meleeAnmeldung,
             int anzahlKaskaden) {
     }
 
@@ -75,7 +78,7 @@ class KaskadeTurnierParameterDialog {
         dlgProps.setPropertyValue("PositionX", Integer.valueOf(50));
         dlgProps.setPropertyValue("PositionY", Integer.valueOf(50));
         dlgProps.setPropertyValue("Width", Integer.valueOf(160));
-        dlgProps.setPropertyValue("Height", Integer.valueOf(187));
+        dlgProps.setPropertyValue("Height", Integer.valueOf(187 + MeleeAnmeldungDialogOption.HOEHE));
         dlgProps.setPropertyValue("Title", I18n.get("dialog.kaskade.turnier.parameter.titel"));
         dlgProps.setPropertyValue("Moveable", Boolean.TRUE);
 
@@ -103,25 +106,31 @@ class KaskadeTurnierParameterDialog {
                 8, 77, 140, 10, standardTeamnameAnzeigen);
         fuegeCheckBox(xMSF, cont, "cbVereinsname", I18n.get("dialog.poule.label.vereinsname"),
                 8, 91, 140, 10, standardVereinsnameAnzeigen);
+        MeleeAnmeldungDialogOption.hinzufuegen(xMSF, cont, 8, 105, 140, standardFormation);
 
-        fuegeTrennlinie(xMSF, cont, "sep2", 5, 105, 150, 2);
+        int y = MeleeAnmeldungDialogOption.HOEHE;
+        fuegeTrennlinie(xMSF, cont, "sep2", 5, 105 + y, 150, 2);
 
-        fuegeLabel(xMSF, cont, "lblKaskaden", I18n.get("dialog.kaskade.label.anzahl.kaskaden"), 8, 111, 140, 10);
+        fuegeLabel(xMSF, cont, "lblKaskaden", I18n.get("dialog.kaskade.label.anzahl.kaskaden"), 8, 111 + y, 140, 10);
         fuegeRadioButton(xMSF, cont, "radioKaskaden2",
-                I18n.get("dialog.kaskade.label.kaskaden.2"), 8, 125, 140, 10, standardAnzahlKaskaden == 2);
+                I18n.get("dialog.kaskade.label.kaskaden.2"), 8, 125 + y, 140, 10, standardAnzahlKaskaden == 2);
         fuegeRadioButton(xMSF, cont, "radioKaskaden3",
-                I18n.get("dialog.kaskade.label.kaskaden.3"), 8, 137, 140, 10, standardAnzahlKaskaden == 3);
+                I18n.get("dialog.kaskade.label.kaskaden.3"), 8, 137 + y, 140, 10, standardAnzahlKaskaden == 3);
 
-        fuegeTrennlinie(xMSF, cont, "sep3", 5, 151, 150, 2);
+        fuegeTrennlinie(xMSF, cont, "sep3", 5, 151 + y, 150, 2);
 
-        fuegeButton(xMSF, cont, "btnOk", I18n.get("dialog.button.ok"), 22, 165, 50, 14);
-        fuegeButton(xMSF, cont, "btnCancel", I18n.get("dialog.button.abbrechen"), 88, 165, 60, 14);
+        fuegeButton(xMSF, cont, "btnOk", I18n.get("dialog.button.ok"), 22, 165 + y, 50, 14);
+        fuegeButton(xMSF, cont, "btnCancel", I18n.get("dialog.button.abbrechen"), 88, 165 + y, 60, 14);
+
+        MeleeAnmeldungDialogOption.anFormationKoppeln(xcc, () -> leseFormation(xcc),
+                "radioTete", "radioDoublette", "radioTriplette", "radioNurTeamname");
 
         XDialog xDialog = Lo.qi(XDialog.class, dialog);
         okGedrueckt = false;
         haengeButtonListener(xcc, "btnOk", new XActionListener() {
             @Override
             public void disposing(EventObject e) {
+                // keine Ressourcen zu lösen
             }
 
             @Override
@@ -133,6 +142,7 @@ class KaskadeTurnierParameterDialog {
         haengeButtonListener(xcc, "btnCancel", new XActionListener() {
             @Override
             public void disposing(EventObject e) {
+                // keine Ressourcen zu lösen
             }
 
             @Override
@@ -155,8 +165,10 @@ class KaskadeTurnierParameterDialog {
             // Nur Teamname: Teamname-Anzeige ist die einzige Team-Identität und daher zwingend aktiv.
             boolean teamnameAnzeigen = formation == Formation.NUR_TEAMNAME || leseCheckBoxZustand(xcc, "cbTeamname");
             boolean vereinsnameAnzeigen = leseCheckBoxZustand(xcc, "cbVereinsname");
+            boolean meleeAnmeldung = MeleeAnmeldungDialogOption.istGewaehlt(xcc, formation);
             int anzahlKaskaden = leseAnzahlKaskaden(xcc);
-            ergebnis = Optional.of(new TurnierParameter(formation, teamnameAnzeigen, vereinsnameAnzeigen, anzahlKaskaden));
+            ergebnis = Optional.of(new TurnierParameter(formation, teamnameAnzeigen, vereinsnameAnzeigen,
+                    meleeAnmeldung, anzahlKaskaden));
         }
 
         Lo.qi(XComponent.class, dialog).dispose();

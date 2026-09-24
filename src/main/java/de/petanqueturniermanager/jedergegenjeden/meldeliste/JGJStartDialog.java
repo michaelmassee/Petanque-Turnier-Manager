@@ -27,6 +27,7 @@ import com.sun.star.lang.XMultiServiceFactory;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungDialogOption;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
@@ -41,6 +42,7 @@ import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
  * <li>Formation: Tête / Doublette / Triplette (Radio-Buttons)</li>
  * <li>Teamname anzeigen (Checkbox)</li>
  * <li>Vereinsname anzeigen (Checkbox)</li>
+ * <li>Mêlée-Anmeldung (nur bei Doublette/Triplette)</li>
  * <li>Anzeige im Spielplan: Teamnummer / Teamname (Radio-Buttons)</li>
  * </ul>
  */
@@ -49,10 +51,14 @@ public class JGJStartDialog {
 	/** Ergebnis des Dialogs. */
 	public record StartParameter(Formation formation,
 		boolean teamnameAnzeigen, boolean vereinsnameAnzeigen,
+		boolean meleeAnmeldung,
 		SpielplanTeamAnzeige spielplanTeamAnzeige,
 		int gruppengroesse,
 		boolean mitRueckrunde) {
 	}
+
+	/** Im Dialog vorausgewählte Formation. */
+	private static final Formation START_FORMATION = Formation.TETE;
 
 	private final WorkingSpreadsheet workingSpreadsheet;
 	private volatile boolean okPressed = false;
@@ -79,7 +85,7 @@ public class JGJStartDialog {
 		dlgProps.setPropertyValue("PositionX", Integer.valueOf(50));
 		dlgProps.setPropertyValue("PositionY", Integer.valueOf(50));
 		dlgProps.setPropertyValue("Width", Integer.valueOf(170));
-		dlgProps.setPropertyValue("Height", Integer.valueOf(162));
+		dlgProps.setPropertyValue("Height", Integer.valueOf(162 + MeleeAnmeldungDialogOption.HOEHE));
 		dlgProps.setPropertyValue("Title", I18n.get("dialog.jgj.title.neue.meldeliste"));
 		dlgProps.setPropertyValue("Moveable", Boolean.TRUE);
 
@@ -99,7 +105,7 @@ public class JGJStartDialog {
 						Formation.DOUBLETTE.getBezeichnung(),
 						Formation.TRIPLETTE.getBezeichnung(),
 						Formation.NUR_TEAMNAME.getBezeichnung() },
-				(short) 0, 92, 6, 70, 12);
+				formationIndex(START_FORMATION), 92, 6, 70, 12);
 
 		addFixedLine(xMSF, cont, "sep1", 5, 24, 160, 2);
 
@@ -107,27 +113,31 @@ public class JGJStartDialog {
 				I18n.get("dialog.jgj.label.teamname"), 8, 30, 150, 10, false);
 		addCheckBox(xMSF, cont, "cbVereinsname",
 				I18n.get("dialog.jgj.label.vereinsname"), 8, 44, 150, 10, false);
+		MeleeAnmeldungDialogOption.hinzufuegen(xMSF, cont, 8, 58, 150, START_FORMATION);
 
-		addFixedLine(xMSF, cont, "sep2", 5, 58, 160, 2);
+		int y = MeleeAnmeldungDialogOption.HOEHE;
+		addFixedLine(xMSF, cont, "sep2", 5, 58 + y, 160, 2);
 
-		addLabel(xMSF, cont, "lblSpielplanAnzeige", I18n.get("dialog.jgj.label.spielplan.anzeige"), 8, 62, 80, 10);
+		addLabel(xMSF, cont, "lblSpielplanAnzeige", I18n.get("dialog.jgj.label.spielplan.anzeige"), 8, 62 + y, 80, 10);
 		addListBox(xMSF, cont, "lstSpielplanAnzeige",
 				new String[] { I18n.get("dialog.jgj.spielplan.teamnummer"),
 						I18n.get("dialog.jgj.spielplan.teamname") },
-				(short) 0, 92, 60, 70, 12);
+				(short) 0, 92, 60 + y, 70, 12);
 
-		addFixedLine(xMSF, cont, "sep3", 5, 78, 160, 2);
+		addFixedLine(xMSF, cont, "sep3", 5, 78 + y, 160, 2);
 
-		addLabel(xMSF, cont, "lblGruppengroesse", I18n.get("dialog.jgj.label.gruppengroesse"), 8, 82, 150, 10);
-		addEditField(xMSF, cont, "editGruppengroesse", 8, 94, 60, 14);
+		addLabel(xMSF, cont, "lblGruppengroesse", I18n.get("dialog.jgj.label.gruppengroesse"), 8, 82 + y, 150, 10);
+		addEditField(xMSF, cont, "editGruppengroesse", 8, 94 + y, 60, 14);
 
 		addCheckBox(xMSF, cont, "cbRueckrunde",
-				I18n.get("dialog.jgj.label.rueckrunde"), 8, 112, 150, 12, false);
+				I18n.get("dialog.jgj.label.rueckrunde"), 8, 112 + y, 150, 12, false);
 
-		addFixedLine(xMSF, cont, "sep4", 5, 128, 160, 2);
+		addFixedLine(xMSF, cont, "sep4", 5, 128 + y, 160, 2);
 
-		addButton(xMSF, cont, "btnOk", "OK", 30, 142, 50, 14);
-		addButton(xMSF, cont, "btnCancel", I18n.get("button.abbrechen"), 100, 142, 60, 14);
+		addButton(xMSF, cont, "btnOk", I18n.get("dialog.button.ok"), 30, 142 + y, 50, 14);
+		addButton(xMSF, cont, "btnCancel", I18n.get("button.abbrechen"), 100, 142 + y, 60, 14);
+
+		MeleeAnmeldungDialogOption.anFormationKoppeln(xcc, () -> readFormation(xcc), "lstFormation");
 
 		// 4. Button-Listener VOR createPeer() anhängen
 		XDialog xDialog = Lo.qi(XDialog.class, dialog);
@@ -135,6 +145,7 @@ public class JGJStartDialog {
 		attachButtonListener(xcc, "btnOk", new XActionListener() {
 			@Override
 			public void disposing(EventObject e) {
+				// keine Ressourcen zu lösen
 			}
 
 			@Override
@@ -146,6 +157,7 @@ public class JGJStartDialog {
 		attachButtonListener(xcc, "btnCancel", new XActionListener() {
 			@Override
 			public void disposing(EventObject e) {
+				// keine Ressourcen zu lösen
 			}
 
 			@Override
@@ -170,11 +182,13 @@ public class JGJStartDialog {
 			// Nur Teamname: Teamname-Anzeige ist die einzige Team-Identität und daher zwingend aktiv.
 			boolean teamnameAnzeigen = formation == Formation.NUR_TEAMNAME || readCheckBoxState(xcc, "cbTeamname");
 			boolean vereinsnameAnzeigen = readCheckBoxState(xcc, "cbVereinsname");
+			boolean meleeAnmeldung = MeleeAnmeldungDialogOption.istGewaehlt(xcc, formation);
 			SpielplanTeamAnzeige spielplanAnzeige = readListBoxSelected(xcc, "lstSpielplanAnzeige") == 1
 					? SpielplanTeamAnzeige.NAME : SpielplanTeamAnzeige.NR;
 			int gruppengroesse = parseGruppengroesse(readEditText(xcc, "editGruppengroesse"));
 			boolean mitRueckrunde = readCheckBoxState(xcc, "cbRueckrunde");
-			result = Optional.of(new StartParameter(formation, teamnameAnzeigen, vereinsnameAnzeigen, spielplanAnzeige, gruppengroesse, mitRueckrunde));
+			result = Optional.of(new StartParameter(formation, teamnameAnzeigen, vereinsnameAnzeigen, meleeAnmeldung,
+					spielplanAnzeige, gruppengroesse, mitRueckrunde));
 		}
 
 		Lo.qi(XComponent.class, dialog).dispose();
@@ -210,6 +224,15 @@ public class JGJStartDialog {
 			case 2 -> Formation.TRIPLETTE;
 			case 3 -> Formation.NUR_TEAMNAME;
 			default -> Formation.TETE;
+		};
+	}
+
+	private static short formationIndex(Formation formation) {
+		return switch (formation) {
+			case DOUBLETTE -> 1;
+			case TRIPLETTE -> 2;
+			case NUR_TEAMNAME -> 3;
+			default -> 0;
 		};
 	}
 

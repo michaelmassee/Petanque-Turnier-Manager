@@ -26,6 +26,7 @@ import com.sun.star.lang.XMultiServiceFactory;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungDialogOption;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.Lo;
@@ -43,6 +44,7 @@ import de.petanqueturniermanager.ko.konfiguration.KoSpielbaumTeamAnzeige;
  * <li>Formation: Tête / Doublette / Triplette</li>
  * <li>Teamname anzeigen</li>
  * <li>Vereinsname anzeigen</li>
+ * <li>Mêlée-Anmeldung (nur bei Doublette/Triplette)</li>
  * <li>Anzeige im Spielbaum: Teamnummer / Teamname</li>
  * <li>Bahnnummer im Spielbaum</li>
  * <li>Bahnnummer nur in Runde 1</li>
@@ -54,31 +56,9 @@ import de.petanqueturniermanager.ko.konfiguration.KoSpielbaumTeamAnzeige;
 public class KoTurnierParameterDialog {
 
 	/** Ergebnis des Dialogs. */
-	public static class TurnierParameter {
-		public final Formation formation;
-		public final boolean teamnameAnzeigen;
-		public final boolean vereinsnameAnzeigen;
-		public final KoSpielbaumTeamAnzeige spielbaumTeamAnzeige;
-		public final SpielrundeSpielbahn spielbaumSpielbahn;
-		public final boolean spielbaumBahnNurRunde1;
-		public final boolean spielUmPlatz3;
-		public final int gruppenGroesse;
-		public final int minLetzteGruppeGroesse;
-
-		public TurnierParameter(Formation formation, boolean teamnameAnzeigen, boolean vereinsnameAnzeigen,
-				KoSpielbaumTeamAnzeige spielbaumTeamAnzeige, SpielrundeSpielbahn spielbaumSpielbahn,
-				boolean spielbaumBahnNurRunde1, boolean spielUmPlatz3, int gruppenGroesse,
-				int minLetzteGruppeGroesse) {
-			this.formation = formation;
-			this.teamnameAnzeigen = teamnameAnzeigen;
-			this.vereinsnameAnzeigen = vereinsnameAnzeigen;
-			this.spielbaumTeamAnzeige = spielbaumTeamAnzeige;
-			this.spielbaumSpielbahn = spielbaumSpielbahn;
-			this.spielbaumBahnNurRunde1 = spielbaumBahnNurRunde1;
-			this.spielUmPlatz3 = spielUmPlatz3;
-			this.gruppenGroesse = gruppenGroesse;
-			this.minLetzteGruppeGroesse = minLetzteGruppeGroesse;
-		}
+	public record TurnierParameter(Formation formation, boolean teamnameAnzeigen, boolean vereinsnameAnzeigen,
+			boolean meleeAnmeldung, KoSpielbaumTeamAnzeige spielbaumTeamAnzeige, SpielrundeSpielbahn spielbaumSpielbahn,
+			boolean spielbaumBahnNurRunde1, boolean spielUmPlatz3, int gruppenGroesse, int minLetzteGruppeGroesse) {
 	}
 
 	private final WorkingSpreadsheet workingSpreadsheet;
@@ -114,8 +94,8 @@ public class KoTurnierParameterDialog {
 		dlgProps.setPropertyValue("PositionX", Integer.valueOf(50));
 		dlgProps.setPropertyValue("PositionY", Integer.valueOf(50));
 		dlgProps.setPropertyValue("Width", Integer.valueOf(160));
-		dlgProps.setPropertyValue("Height", Integer.valueOf(229));
-		dlgProps.setPropertyValue("Title", "K.-O. Turnier \u2013 Parameter");
+		dlgProps.setPropertyValue("Height", Integer.valueOf(229 + MeleeAnmeldungDialogOption.HOEHE));
+		dlgProps.setPropertyValue("Title", I18n.get("dialog.ko.titel"));
 		dlgProps.setPropertyValue("Moveable", Boolean.TRUE);
 
 		// 2. Dialog-Control anlegen
@@ -128,7 +108,7 @@ public class KoTurnierParameterDialog {
 		XNameContainer cont = Lo.qi(XNameContainer.class, dialogModel);
 		XControlContainer xcc = Lo.qi(XControlContainer.class, dialog);
 
-		addLabel(xMSF, cont, "lblFormation", "Formation:", 8, 8, 80, 10);
+		addLabel(xMSF, cont, "lblFormation", I18n.get("dialog.poule.label.formation"), 8, 8, 80, 10);
 		addListBox(xMSF, cont, "lstFormation",
 				new String[] { Formation.TETE.getBezeichnung(),
 						Formation.DOUBLETTE.getBezeichnung(),
@@ -138,46 +118,54 @@ public class KoTurnierParameterDialog {
 
 		addFixedLine(xMSF, cont, "sep1", 5, 24, 150, 2);
 
-		addCheckBox(xMSF, cont, "cbTeamname", "Teamname anzeigen", 8, 30, 140, 10, defaultTeamnameAnzeigen);
-		addCheckBox(xMSF, cont, "cbVereinsname", "Vereinsname anzeigen", 8, 44, 140, 10, defaultVereinsnameAnzeigen);
+		addCheckBox(xMSF, cont, "cbTeamname", I18n.get("dialog.poule.label.teamname"), 8, 30, 140, 10,
+				defaultTeamnameAnzeigen);
+		addCheckBox(xMSF, cont, "cbVereinsname", I18n.get("dialog.poule.label.vereinsname"), 8, 44, 140, 10,
+				defaultVereinsnameAnzeigen);
+		MeleeAnmeldungDialogOption.hinzufuegen(xMSF, cont, 8, 58, 140, defaultFormation);
 
-		addFixedLine(xMSF, cont, "sep2", 5, 58, 150, 2);
+		int y = MeleeAnmeldungDialogOption.HOEHE;
+		addFixedLine(xMSF, cont, "sep2", 5, 58 + y, 150, 2);
 
-		addLabel(xMSF, cont, "lblSpielbaum", "Anzeige im Spielbaum:", 8, 64, 80, 10);
+		addLabel(xMSF, cont, "lblSpielbaum", I18n.get("dialog.ko.spielbaum.anzeige.label"), 8, 64 + y, 80, 10);
 		addListBox(xMSF, cont, "lstSpielbaum",
-				new String[] { "Teamnummer", "Teamname" },
+				new String[] { I18n.get("dialog.ko.auswahl.nr"), I18n.get("dialog.ko.auswahl.name") },
 				(short) (defaultSpielbaumTeamAnzeige == KoSpielbaumTeamAnzeige.NAME ? 1 : 0),
-				92, 62, 60, 12);
+				92, 62 + y, 60, 12);
 
-		addFixedLine(xMSF, cont, "sep3", 5, 80, 150, 2);
+		addFixedLine(xMSF, cont, "sep3", 5, 80 + y, 150, 2);
 
-		addLabel(xMSF, cont, "lblSpielbahn", "Spielbahn im Spielbaum:", 8, 86, 70, 10);
+		addLabel(xMSF, cont, "lblSpielbahn", I18n.get("dialog.ko.spielbahn.label"), 8, 86 + y, 70, 10);
 		addListBox(xMSF, cont, "lstSpielbahn",
-				new String[] { "Keine Spalte", "Leere Spalte (händisch)",
-						"Durchnummerieren (1-n)", "Zufällig vergeben" },
-				spielbahnIndex(defaultSpielbahn), 82, 84, 70, 12);
+				new String[] { I18n.get("dialog.ko.spielbahn.keine"), I18n.get("dialog.ko.spielbahn.leer"),
+						I18n.get("dialog.ko.spielbahn.nummeriert"), I18n.get("dialog.ko.spielbahn.zufaellig") },
+				spielbahnIndex(defaultSpielbahn), 82, 84 + y, 70, 12);
 
-		addCheckBox(xMSF, cont, "cbBahnNurRunde1", I18n.get("dialog.ko.bahn.nur.runde1"), 8, 104, 140, 10,
+		addCheckBox(xMSF, cont, "cbBahnNurRunde1", I18n.get("dialog.ko.bahn.nur.runde1"), 8, 104 + y, 140, 10,
 				defaultSpielbaumBahnNurRunde1);
 
-		addFixedLine(xMSF, cont, "sep4", 5, 118, 150, 2);
+		addFixedLine(xMSF, cont, "sep4", 5, 118 + y, 150, 2);
 
-		addCheckBox(xMSF, cont, "cbPlatz3", "Spiel um Platz 3/4", 8, 124, 140, 10, defaultSpielUmPlatz3);
+		addCheckBox(xMSF, cont, "cbPlatz3", I18n.get("dialog.ko.spiel.um.platz3"), 8, 124 + y, 140, 10,
+				defaultSpielUmPlatz3);
 
-		addFixedLine(xMSF, cont, "sep5", 5, 138, 150, 2);
+		addFixedLine(xMSF, cont, "sep5", 5, 138 + y, 150, 2);
 
-		addLabel(xMSF, cont, "lblGruppenGroesse", "Gruppen Größe:", 8, 144, 80, 10);
-		addNumericField(xMSF, cont, "nfGruppenGroesse", defaultGruppenGroesse, 2, 256, 92, 156, 60, 12);
+		addLabel(xMSF, cont, "lblGruppenGroesse", I18n.get("dialog.ko.gruppen.groesse.label"), 8, 144 + y, 80, 10);
+		addNumericField(xMSF, cont, "nfGruppenGroesse", defaultGruppenGroesse, 2, 256, 92, 156 + y, 60, 12);
 
-		addFixedLine(xMSF, cont, "sep6", 5, 172, 150, 2);
+		addFixedLine(xMSF, cont, "sep6", 5, 172 + y, 150, 2);
 
-		addLabel(xMSF, cont, "lblMinLetzteGruppe", I18n.get("dialog.ko.min.letzte.gruppe.label"), 8, 178, 80, 10);
-		addNumericField(xMSF, cont, "nfMinLetzteGruppe", defaultMinLetzteGruppeGroesse, 2, 256, 92, 190, 60, 12);
+		addLabel(xMSF, cont, "lblMinLetzteGruppe", I18n.get("dialog.ko.min.letzte.gruppe.label"), 8, 178 + y, 80,
+				10);
+		addNumericField(xMSF, cont, "nfMinLetzteGruppe", defaultMinLetzteGruppeGroesse, 2, 256, 92, 190 + y, 60, 12);
 
-		addFixedLine(xMSF, cont, "sep7", 5, 206, 150, 2);
+		addFixedLine(xMSF, cont, "sep7", 5, 206 + y, 150, 2);
 
-		addButton(xMSF, cont, "btnOk", "OK", 22, 212, 50, 14);
-		addButton(xMSF, cont, "btnCancel", "Abbrechen", 88, 212, 60, 14);
+		addButton(xMSF, cont, "btnOk", I18n.get("dialog.button.ok"), 22, 212 + y, 50, 14);
+		addButton(xMSF, cont, "btnCancel", I18n.get("dialog.button.abbrechen"), 88, 212 + y, 60, 14);
+
+		MeleeAnmeldungDialogOption.anFormationKoppeln(xcc, () -> readFormation(xcc), "lstFormation");
 
 		// 4. Button-Listener anhängen
 		XDialog xDialog = Lo.qi(XDialog.class, dialog);
@@ -185,6 +173,7 @@ public class KoTurnierParameterDialog {
 		attachButtonListener(xcc, "btnOk", new XActionListener() {
 			@Override
 			public void disposing(EventObject e) {
+				// keine Ressourcen zu lösen
 			}
 
 			@Override
@@ -196,6 +185,7 @@ public class KoTurnierParameterDialog {
 		attachButtonListener(xcc, "btnCancel", new XActionListener() {
 			@Override
 			public void disposing(EventObject e) {
+				// keine Ressourcen zu lösen
 			}
 
 			@Override
@@ -220,6 +210,7 @@ public class KoTurnierParameterDialog {
 			// Nur Teamname: Teamname-Anzeige ist die einzige Team-Identität und daher zwingend aktiv.
 			boolean teamnameAnzeigen = formation == Formation.NUR_TEAMNAME || readCheckBoxState(xcc, "cbTeamname");
 			boolean vereinsnameAnzeigen = readCheckBoxState(xcc, "cbVereinsname");
+			boolean meleeAnmeldung = MeleeAnmeldungDialogOption.istGewaehlt(xcc, formation);
 			KoSpielbaumTeamAnzeige spielbaumAnzeige = readListBoxSelected(xcc, "lstSpielbaum") == 1
 					? KoSpielbaumTeamAnzeige.NAME
 					: KoSpielbaumTeamAnzeige.NR;
@@ -235,7 +226,7 @@ public class KoTurnierParameterDialog {
 					readNumericField(xcc, "nfGruppenGroesse", defaultGruppenGroesse));
 			int minLetzteGruppeGroesse = KoPropertiesSpalte.normalisiereMinLetzteGruppeGroesse(
 					readNumericField(xcc, "nfMinLetzteGruppe", defaultMinLetzteGruppeGroesse));
-			result = Optional.of(new TurnierParameter(formation, teamnameAnzeigen, vereinsnameAnzeigen,
+			result = Optional.of(new TurnierParameter(formation, teamnameAnzeigen, vereinsnameAnzeigen, meleeAnmeldung,
 					spielbaumAnzeige, spielbahn, spielbaumBahnNurRunde1, spielUmPlatz3, gruppenGroesse,
 					minLetzteGruppeGroesse));
 		}

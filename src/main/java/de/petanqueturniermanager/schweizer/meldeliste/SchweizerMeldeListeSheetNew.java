@@ -14,6 +14,7 @@ import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.uno.Exception;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.basesheet.konfiguration.MeleeAnmeldungKonfiguration;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.IMeldeliste;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
@@ -240,10 +241,15 @@ public class SchweizerMeldeListeSheetNew extends SheetRunner
 		// Erst nach Bestätigung: TurnierSystem + Page Styles setzen
 		getKonfigurationSheet().update();
 
+		var parameter = param.get();
 		getSheetHelper().removeAllSheetsExclude();
-		getKonfigurationSheet().setRankingModus(param.get().rankingModus);
-		createMeldelisteWithParams(param.get().formation, param.get().teamnameAnzeigen, param.get().vereinsnameAnzeigen,
-				param.get().spielplanTeamAnzeige);
+		getKonfigurationSheet().setRankingModus(parameter.rankingModus());
+		createMeldelisteWithParams(parameter.formation(), parameter.teamnameAnzeigen(), parameter.vereinsnameAnzeigen(),
+				parameter.spielplanTeamAnzeige());
+		if (parameter.meleeAnmeldung()) {
+			MeleeAnmeldungKonfiguration.einschalten(getWorkingSpreadsheet());
+			new SchweizerMeleeAnmeldungSheet(getWorkingSpreadsheet()).generate();
+		}
 	}
 
 	/**

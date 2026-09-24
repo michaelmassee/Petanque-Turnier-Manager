@@ -54,4 +54,13 @@ public enum Formation {
 		return anzSpieler > 0;
 	}
 
+	/**
+	 * Ob sich Teams dieser Formation aus einer Mêlée-Anmeldung (lose Einzelspieler) bilden lassen.
+	 * Bei {@link #TETE} ist jeder Einzelspieler bereits ein Team, bei {@link #NUR_TEAMNAME} werden
+	 * ganze Teams gemeldet – eine Vorstufe aus losen Einzelspielern ergibt dort keinen Sinn.
+	 */
+	public boolean erlaubtMeleeAnmeldung() {
+		return this == DOUBLETTE || this == TRIPLETTE;
+	}
+
 }

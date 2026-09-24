@@ -12,6 +12,7 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.basesheet.konfiguration.MeleeAnmeldungKonfiguration;
 import de.petanqueturniermanager.basesheet.meldeliste.IMeldeliste;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
@@ -253,15 +254,18 @@ public class KoMeldeListeSheetNew extends SheetRunner
 
 		// Werte in KonfigSheet speichern
 		var params = result.get();
-		konfig.setMeldeListeFormation(params.formation);
-		konfig.setMeldeListeTeamnameAnzeigen(params.teamnameAnzeigen);
-		konfig.setMeldeListeVereinsnameAnzeigen(params.vereinsnameAnzeigen);
-		konfig.setSpielbaumTeamAnzeige(params.spielbaumTeamAnzeige);
-		konfig.setSpielbaumSpielbahn(params.spielbaumSpielbahn);
-		konfig.setSpielbaumBahnNurRunde1(params.spielbaumBahnNurRunde1);
-		konfig.setSpielbaumSpielUmPlatz3(params.spielUmPlatz3);
-		konfig.setGruppenGroesse(params.gruppenGroesse);
-		konfig.setMinLetzteGruppeGroesse(params.minLetzteGruppeGroesse);
+		konfig.setMeldeListeFormation(params.formation());
+		konfig.setMeldeListeTeamnameAnzeigen(params.teamnameAnzeigen());
+		konfig.setMeldeListeVereinsnameAnzeigen(params.vereinsnameAnzeigen());
+		konfig.setSpielbaumTeamAnzeige(params.spielbaumTeamAnzeige());
+		konfig.setSpielbaumSpielbahn(params.spielbaumSpielbahn());
+		konfig.setSpielbaumBahnNurRunde1(params.spielbaumBahnNurRunde1());
+		konfig.setSpielbaumSpielUmPlatz3(params.spielUmPlatz3());
+		konfig.setGruppenGroesse(params.gruppenGroesse());
+		konfig.setMinLetzteGruppeGroesse(params.minLetzteGruppeGroesse());
+		if (params.meleeAnmeldung()) {
+			MeleeAnmeldungKonfiguration.einschalten(getWorkingSpreadsheet());
+		}
 
 		// KonfigSheet mit neuen Werten neu rendern
 		getKonfigurationSheet().update();
@@ -269,6 +273,9 @@ public class KoMeldeListeSheetNew extends SheetRunner
 		// Alle anderen Blätter entfernen, dann Meldeliste erstellen
 		getSheetHelper().removeAllSheetsExclude();
 		createMeldelisteWithParams();
+		if (params.meleeAnmeldung()) {
+			new KoMeleeAnmeldungSheet(getWorkingSpreadsheet()).generate();
+		}
 	}
 
 }

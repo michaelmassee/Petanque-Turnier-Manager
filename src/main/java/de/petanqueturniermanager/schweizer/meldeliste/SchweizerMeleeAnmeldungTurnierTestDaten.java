@@ -4,13 +4,12 @@
 package de.petanqueturniermanager.schweizer.meldeliste;
 
 import de.petanqueturniermanager.SheetRunner;
-import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
+import de.petanqueturniermanager.basesheet.konfiguration.MeleeAnmeldungKonfiguration;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.NewTestDatenValidator;
 import de.petanqueturniermanager.helper.TestnamenLoader;
 import de.petanqueturniermanager.helper.position.Position;
@@ -49,8 +48,7 @@ public class SchweizerMeleeAnmeldungTurnierTestDaten extends SheetRunner impleme
 
 		SchweizerMeldeListeSheetNew meldeliste = new SchweizerMeldeListeSheetNew(getWorkingSpreadsheet());
 		meldeliste.createMeldelisteWithParams(Formation.DOUBLETTE, false, false);
-		new DocumentPropertiesHelper(getWorkingSpreadsheet()).setBooleanProperty(
-				BasePropertiesSpalte.KONFIG_PROP_MELEE_ANMELDUNG, true);
+		MeleeAnmeldungKonfiguration.einschalten(getWorkingSpreadsheet());
 
 		SchweizerMeleeAnmeldungSheet meleeAnmeldung = new SchweizerMeleeAnmeldungSheet(getWorkingSpreadsheet());
 		meleeAnmeldung.generate();

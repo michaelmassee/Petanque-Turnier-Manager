@@ -26,6 +26,7 @@ import com.sun.star.lang.XMultiServiceFactory;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungDialogOption;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.Lo;
@@ -44,40 +45,11 @@ import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 public class MaastrichterTurnierParameterDialog {
 
 	/** Ergebnis des Dialogs. */
-	public static class TurnierParameter {
-		public final Formation formation;
-		public final boolean teamnameAnzeigen;
-		public final boolean vereinsnameAnzeigen;
-		public final SpielplanTeamAnzeige spielplanTeamAnzeige;
-		public final SchweizerRankingModus rankingModus;
-		public final int anzVorrunden;
-		public final KoSpielbaumTeamAnzeige spielbaumTeamAnzeige;
-		public final SpielrundeSpielbahn spielbaumSpielbahn;
-		public final boolean spielbaumBahnNurRunde1;
-		public final boolean spielUmPlatz3;
-		public final int gruppenGroesse;
-		public final int minLetzteGruppeGroesse;
-		public final MaastrichterGruppenModus gruppenModus;
-
-		public TurnierParameter(Formation formation, boolean teamnameAnzeigen, boolean vereinsnameAnzeigen,
-				SpielplanTeamAnzeige spielplanTeamAnzeige, SchweizerRankingModus rankingModus, int anzVorrunden,
-				KoSpielbaumTeamAnzeige spielbaumTeamAnzeige, SpielrundeSpielbahn spielbaumSpielbahn,
-				boolean spielbaumBahnNurRunde1, boolean spielUmPlatz3, int gruppenGroesse, int minLetzteGruppeGroesse,
-				MaastrichterGruppenModus gruppenModus) {
-			this.formation = formation;
-			this.teamnameAnzeigen = teamnameAnzeigen;
-			this.vereinsnameAnzeigen = vereinsnameAnzeigen;
-			this.spielplanTeamAnzeige = spielplanTeamAnzeige;
-			this.rankingModus = rankingModus;
-			this.anzVorrunden = anzVorrunden;
-			this.spielbaumTeamAnzeige = spielbaumTeamAnzeige;
-			this.spielbaumSpielbahn = spielbaumSpielbahn;
-			this.spielbaumBahnNurRunde1 = spielbaumBahnNurRunde1;
-			this.spielUmPlatz3 = spielUmPlatz3;
-			this.gruppenGroesse = gruppenGroesse;
-			this.minLetzteGruppeGroesse = minLetzteGruppeGroesse;
-			this.gruppenModus = gruppenModus;
-		}
+	public record TurnierParameter(Formation formation, boolean teamnameAnzeigen, boolean vereinsnameAnzeigen,
+			boolean meleeAnmeldung, SpielplanTeamAnzeige spielplanTeamAnzeige, SchweizerRankingModus rankingModus,
+			int anzVorrunden, KoSpielbaumTeamAnzeige spielbaumTeamAnzeige, SpielrundeSpielbahn spielbaumSpielbahn,
+			boolean spielbaumBahnNurRunde1, boolean spielUmPlatz3, int gruppenGroesse, int minLetzteGruppeGroesse,
+			MaastrichterGruppenModus gruppenModus) {
 	}
 
 	private final WorkingSpreadsheet workingSpreadsheet;
@@ -106,7 +78,7 @@ public class MaastrichterTurnierParameterDialog {
 		dlgProps.setPropertyValue("PositionX", Integer.valueOf(50));
 		dlgProps.setPropertyValue("PositionY", Integer.valueOf(50));
 		dlgProps.setPropertyValue("Width", Integer.valueOf(160));
-		dlgProps.setPropertyValue("Height", Integer.valueOf(263));
+		dlgProps.setPropertyValue("Height", Integer.valueOf(263 + MeleeAnmeldungDialogOption.HOEHE));
 		dlgProps.setPropertyValue("Title", I18n.get("dialog.maastrichter.titel"));
 		dlgProps.setPropertyValue("Moveable", Boolean.TRUE);
 
@@ -132,74 +104,80 @@ public class MaastrichterTurnierParameterDialog {
 		addCheckBox(xMSF, cont, "cbVereinsname", I18n.get("dialog.maastrichter.vereinsname.anzeigen"), 8, 44, 140, 10,
 				defaultVereinsnameAnzeigen);
 
-		addFixedLine(xMSF, cont, "sep2", 5, 60, 150, 2);
-		addLabel(xMSF, cont, "lblSpielplan", I18n.get("dialog.maastrichter.spielplan.anzeige.label"), 8, 64, 80, 10);
+		MeleeAnmeldungDialogOption.hinzufuegen(xMSF, cont, 8, 58, 140, defaultFormation);
+
+		int y = MeleeAnmeldungDialogOption.HOEHE;
+		addFixedLine(xMSF, cont, "sep2", 5, 60 + y, 150, 2);
+		addLabel(xMSF, cont, "lblSpielplan", I18n.get("dialog.maastrichter.spielplan.anzeige.label"), 8, 64 + y, 80, 10);
 		addListBox(xMSF, cont, "lstSpielplan",
 				new String[] { I18n.get("dialog.maastrichter.auswahl.nr"),
 						I18n.get("dialog.maastrichter.auswahl.name") },
 				(short) (defaultSpielplanTeamAnzeige == SpielplanTeamAnzeige.NAME ? 1 : 0),
-				92, 62, 60, 12);
+				92, 62 + y, 60, 12);
 
-		addFixedLine(xMSF, cont, "sep3", 5, 80, 150, 2);
-		addLabel(xMSF, cont, "lblRankingModus", I18n.get("dialog.maastrichter.ranking.modus.label"), 8, 84, 80, 10);
+		addFixedLine(xMSF, cont, "sep3", 5, 80 + y, 150, 2);
+		addLabel(xMSF, cont, "lblRankingModus", I18n.get("dialog.maastrichter.ranking.modus.label"), 8, 84 + y, 80, 10);
 		addListBox(xMSF, cont, "lstRankingModus",
 				new String[] { I18n.get("dialog.maastrichter.ranking.mit.buchholz"),
 						I18n.get("dialog.maastrichter.ranking.ohne.buchholz") },
 				(short) (defaultRankingModus == SchweizerRankingModus.OHNE_BUCHHOLZ ? 1 : 0),
-				92, 82, 60, 12);
+				92, 82 + y, 60, 12);
 
-		addFixedLine(xMSF, cont, "sep4", 5, 100, 150, 2);
-		addLabel(xMSF, cont, "lblAnzVorrunden", I18n.get("dialog.maastrichter.anz.vorrunden.label"), 8, 104, 100, 10);
-		addNumericField(xMSF, cont, "nfAnzVorrunden", defaultAnzVorrunden, 2, 5, 112, 102, 40, 12);
+		addFixedLine(xMSF, cont, "sep4", 5, 100 + y, 150, 2);
+		addLabel(xMSF, cont, "lblAnzVorrunden", I18n.get("dialog.maastrichter.anz.vorrunden.label"), 8, 104 + y, 100, 10);
+		addNumericField(xMSF, cont, "nfAnzVorrunden", defaultAnzVorrunden, 2, 5, 112, 102 + y, 40, 12);
 
-		addFixedLine(xMSF, cont, "sep5", 5, 121, 150, 2);
+		addFixedLine(xMSF, cont, "sep5", 5, 121 + y, 150, 2);
 		addLabel(xMSF, cont, "lblSpielbaumTeamAnzeige", I18n.get("dialog.maastrichter.spielbaum.anzeige.label"), 8,
-				125, 80, 10);
+				125 + y, 80, 10);
 		addListBox(xMSF, cont, "lstSpielbaum",
 				new String[] { I18n.get("dialog.maastrichter.auswahl.nr"),
 						I18n.get("dialog.maastrichter.auswahl.name") },
 				(short) (defaultSpielbaumTeamAnzeige == KoSpielbaumTeamAnzeige.NAME ? 1 : 0),
-				92, 123, 60, 12);
+				92, 123 + y, 60, 12);
 
 		addLabel(xMSF, cont, "lblSpielbahn", I18n.get("dialog.maastrichter.spielbaum.spielbahn.label"), 8,
-				141, 80, 10);
+				141 + y, 80, 10);
 		addListBox(xMSF, cont, "lstSpielbahn",
 				new String[] { I18n.get("dialog.maastrichter.spielbahn.keine"),
 						I18n.get("dialog.maastrichter.spielbahn.leer"),
 						I18n.get("dialog.maastrichter.spielbahn.nummeriert"),
 						I18n.get("dialog.maastrichter.spielbahn.zufaellig") },
-				spielbahnIndex(defaultSpielbaumSpielbahn), 92, 139, 60, 12);
+				spielbahnIndex(defaultSpielbaumSpielbahn), 92, 139 + y, 60, 12);
 
-		addCheckBox(xMSF, cont, "cbBahnNurRunde1", I18n.get("dialog.maastrichter.bahn.nur.runde1"), 8, 157, 140, 10,
+		addCheckBox(xMSF, cont, "cbBahnNurRunde1", I18n.get("dialog.maastrichter.bahn.nur.runde1"), 8, 157 + y, 140, 10,
 				defaultSpielbaumBahnNurRunde1);
 
-		addCheckBox(xMSF, cont, "cbSpielUmPlatz3", I18n.get("dialog.maastrichter.spiel.um.platz3"), 8, 171, 140, 10,
+		addCheckBox(xMSF, cont, "cbSpielUmPlatz3", I18n.get("dialog.maastrichter.spiel.um.platz3"), 8, 171 + y, 140, 10,
 				defaultSpielUmPlatz3);
 
-		addFixedLine(xMSF, cont, "sep6", 5, 185, 150, 2);
-		addLabel(xMSF, cont, "lblGruppenModus", I18n.get("dialog.maastrichter.gruppen.modus.label"), 8, 189, 80, 10);
+		addFixedLine(xMSF, cont, "sep6", 5, 185 + y, 150, 2);
+		addLabel(xMSF, cont, "lblGruppenModus", I18n.get("dialog.maastrichter.gruppen.modus.label"), 8, 189 + y, 80, 10);
 		addListBox(xMSF, cont, "lstGruppenModus",
 				new String[] { I18n.get("dialog.maastrichter.gruppen.modus.nach.siegen"),
 						I18n.get("dialog.maastrichter.gruppen.modus.nach.groesse") },
 				(short) (defaultGruppenModus == MaastrichterGruppenModus.NACH_GROESSE ? 1 : 0),
-				92, 187, 60, 12);
-		addFixedLine(xMSF, cont, "sep7", 5, 203, 150, 2);
-		addLabel(xMSF, cont, "lblGruppenGroesse", I18n.get("dialog.maastrichter.gruppen.groesse.label"), 8, 207, 80,
+				92, 187 + y, 60, 12);
+		addFixedLine(xMSF, cont, "sep7", 5, 203 + y, 150, 2);
+		addLabel(xMSF, cont, "lblGruppenGroesse", I18n.get("dialog.maastrichter.gruppen.groesse.label"), 8, 207 + y, 80,
 				10);
-		addNumericField(xMSF, cont, "nfGruppenGroesse", defaultGruppenGroesse, 2, 256, 92, 205, 60, 12);
+		addNumericField(xMSF, cont, "nfGruppenGroesse", defaultGruppenGroesse, 2, 256, 92, 205 + y, 60, 12);
 
-		addFixedLine(xMSF, cont, "sep8", 5, 221, 150, 2);
-		addLabel(xMSF, cont, "lblMinLetzteGruppe", I18n.get("dialog.maastrichter.min.letzte.gruppe.label"), 8, 227, 80, 10);
-		addNumericField(xMSF, cont, "nfMinLetzteGruppe", defaultMinLetzteGruppeGroesse, 2, 256, 92, 225, 60, 12);
+		addFixedLine(xMSF, cont, "sep8", 5, 221 + y, 150, 2);
+		addLabel(xMSF, cont, "lblMinLetzteGruppe", I18n.get("dialog.maastrichter.min.letzte.gruppe.label"), 8, 227 + y, 80, 10);
+		addNumericField(xMSF, cont, "nfMinLetzteGruppe", defaultMinLetzteGruppeGroesse, 2, 256, 92, 225 + y, 60, 12);
 
-		addButton(xMSF, cont, "btnOk", I18n.get("dialog.ok"), 22, 242, 50, 14);
-		addButton(xMSF, cont, "btnCancel", I18n.get("dialog.abbrechen"), 88, 242, 60, 14);
+		addButton(xMSF, cont, "btnOk", I18n.get("dialog.ok"), 22, 242 + y, 50, 14);
+		addButton(xMSF, cont, "btnCancel", I18n.get("dialog.abbrechen"), 88, 242 + y, 60, 14);
+
+		MeleeAnmeldungDialogOption.anFormationKoppeln(xcc, () -> readFormation(xcc), "lstFormation");
 
 		XDialog xDialog = Lo.qi(XDialog.class, dialog);
 		okPressed = false;
 		attachButtonListener(xcc, "btnOk", new XActionListener() {
 			@Override
 			public void disposing(EventObject e) {
+				// keine Ressourcen zu lösen
 			}
 
 			@Override
@@ -211,6 +189,7 @@ public class MaastrichterTurnierParameterDialog {
 		attachButtonListener(xcc, "btnCancel", new XActionListener() {
 			@Override
 			public void disposing(EventObject e) {
+				// keine Ressourcen zu lösen
 			}
 
 			@Override
@@ -233,6 +212,7 @@ public class MaastrichterTurnierParameterDialog {
 			// Nur Teamname: Teamname-Anzeige ist die einzige Team-Identität und daher zwingend aktiv.
 			boolean teamnameAnzeigen = formation == Formation.NUR_TEAMNAME || readCheckBoxState(xcc, "cbTeamname");
 			boolean vereinsnameAnzeigen = readCheckBoxState(xcc, "cbVereinsname");
+			boolean meleeAnmeldung = MeleeAnmeldungDialogOption.istGewaehlt(xcc, formation);
 			SpielplanTeamAnzeige spielplanAnzeige = readListBoxSelected(xcc, "lstSpielplan") == 1
 					? SpielplanTeamAnzeige.NAME : SpielplanTeamAnzeige.NR;
 			SchweizerRankingModus rankingModus = readListBoxSelected(xcc, "lstRankingModus") == 1
@@ -254,7 +234,7 @@ public class MaastrichterTurnierParameterDialog {
 					readNumericField(xcc, "nfGruppenGroesse", defaultGruppenGroesse));
 			int minLetzteGruppeGroesse = KoPropertiesSpalte.normalisiereMinLetzteGruppeGroesse(
 					readNumericField(xcc, "nfMinLetzteGruppe", defaultMinLetzteGruppeGroesse));
-			result = Optional.of(new TurnierParameter(formation, teamnameAnzeigen, vereinsnameAnzeigen,
+			result = Optional.of(new TurnierParameter(formation, teamnameAnzeigen, vereinsnameAnzeigen, meleeAnmeldung,
 					spielplanAnzeige, rankingModus, anzVorrunden, spielbaumTeamAnzeige,
 					spielbahn, spielbaumBahnNurRunde1, spielUmPlatz3, gruppenGroesse, minLetzteGruppeGroesse,
 					gruppenModus));
@@ -299,31 +279,38 @@ public class MaastrichterTurnierParameterDialog {
 
 	private short readListBoxSelected(XControlContainer xcc, String name) {
 		XControl ctrl = xcc.getControl(name);
-		if (ctrl == null) return 0;
+		if (ctrl == null) {
+			return 0;
+		}
 		XListBox lb = Lo.qi(XListBox.class, ctrl);
 		return lb != null ? lb.getSelectedItemPos() : 0;
 	}
 
 	private boolean readCheckBoxState(XControlContainer xcc, String name) {
 		XControl ctrl = xcc.getControl(name);
-		if (ctrl == null) return false;
+		if (ctrl == null) {
+			return false;
+		}
 		XCheckBox cb = Lo.qi(XCheckBox.class, ctrl);
 		return cb != null && cb.getState() == 1;
 	}
 
 	private int readNumericField(XControlContainer xcc, String name, int defaultVal) {
 		XControl ctrl = xcc.getControl(name);
-		if (ctrl == null) return defaultVal;
+		if (ctrl == null) {
+			return defaultVal;
+		}
 		XNumericField nf = Lo.qi(XNumericField.class, ctrl);
-		if (nf == null) return defaultVal;
-		return (int) nf.getValue();
+		return nf != null ? (int) nf.getValue() : defaultVal;
 	}
 
 	private void attachButtonListener(XControlContainer xcc, String name, XActionListener listener) {
 		XControl ctrl = xcc.getControl(name);
 		if (ctrl != null) {
 			XButton btn = Lo.qi(XButton.class, ctrl);
-			if (btn != null) btn.addActionListener(listener);
+			if (btn != null) {
+				btn.addActionListener(listener);
+			}
 		}
 	}
 

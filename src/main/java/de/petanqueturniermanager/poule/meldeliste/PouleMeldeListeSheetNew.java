@@ -13,6 +13,7 @@ import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.uno.Exception;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.basesheet.konfiguration.MeleeAnmeldungKonfiguration;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.IMeldeliste;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
@@ -228,6 +229,10 @@ public class PouleMeldeListeSheetNew extends SheetRunner
         getKonfigurationSheet().update();
         getSheetHelper().removeAllSheetsExclude();
         createMeldelisteWithParams(param.get().formation(), param.get().teamnameAnzeigen(), param.get().vereinsnameAnzeigen());
+        if (param.get().meleeAnmeldung()) {
+            MeleeAnmeldungKonfiguration.einschalten(getWorkingSpreadsheet());
+            new PouleMeleeAnmeldungSheet(getWorkingSpreadsheet()).generate();
+        }
     }
 
     /**

@@ -130,8 +130,16 @@ public final class MeleeAnmeldungKonfiguration {
 		if (!(konfigurationSheet instanceof IFormationKonfiguration formationKonfiguration)) {
 			return false;
 		}
-		Formation formation = formationKonfiguration.getMeldeListeFormation();
-		return formation == Formation.DOUBLETTE || formation == Formation.TRIPLETTE;
+		return formationKonfiguration.getMeldeListeFormation().erlaubtMeleeAnmeldung();
+	}
+
+	/**
+	 * Schaltet die Mêlée-Anmeldung in der Turnier-Konfiguration des Dokuments ein.
+	 *
+	 * @param ws Dokument, dessen Konfiguration geändert wird
+	 */
+	public static void einschalten(WorkingSpreadsheet ws) {
+		new DocumentPropertiesHelper(ws).setBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_MELEE_ANMELDUNG, true);
 	}
 
 	/**

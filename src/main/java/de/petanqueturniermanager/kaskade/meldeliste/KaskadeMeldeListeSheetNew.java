@@ -12,6 +12,7 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.basesheet.konfiguration.MeleeAnmeldungKonfiguration;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.IMeldeliste;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
@@ -254,6 +255,10 @@ public class KaskadeMeldeListeSheetNew extends SheetRunner
                 param.get().teamnameAnzeigen(),
                 param.get().vereinsnameAnzeigen(),
                 param.get().anzahlKaskaden());
+        if (param.get().meleeAnmeldung()) {
+            MeleeAnmeldungKonfiguration.einschalten(getWorkingSpreadsheet());
+            new KaskadeMeleeAnmeldungSheet(getWorkingSpreadsheet()).generate();
+        }
 
         logger.info("Kaskaden-KO Meldeliste erstellt.");
     }
