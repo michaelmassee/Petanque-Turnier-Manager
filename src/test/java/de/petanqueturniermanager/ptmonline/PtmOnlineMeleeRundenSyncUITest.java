@@ -159,8 +159,7 @@ class PtmOnlineMeleeRundenSyncUITest extends BaseCalcUITest {
         turnier.id = TURNIER_ID;
         turnier.name = "Mêlée-Testturnier";
         turnier.type = "schweizer";
-        mapping.verbinden(turnier);
-        mapping.setSyncBinding(new SyncBindingDto(true, DOCUMENT_ID, 1), LEASE_TOKEN);
+        mapping.verbinden(turnier, new SyncBindingDto(true, DOCUMENT_ID, 1), LEASE_TOKEN);
     }
 
     /** Eingecheckt-Markierung für alle vier Spieler, als Block geschrieben. */

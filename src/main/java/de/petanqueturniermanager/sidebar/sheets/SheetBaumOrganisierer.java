@@ -48,8 +48,7 @@ public class SheetBaumOrganisierer {
 
     private static final List<String> SUPERMELEE_SPIELTAG_PRAEFIXA = List.of(
             "__PTM_SUPERMELEE_ANMELDUNGEN_",
-            "__PTM_ONLINE_INFO_SPIELTAG_",
-            "__PTM_ONLINE_MELDUNGEN_SPIELTAG_",
+            "__PTM_ONLINE_SYNC_SPIELTAG_",
             "__PTM_SUPERMELEE_TEILNEHMER_",
             "__PTM_SUPERMELEE_SPIELRUNDE_PLAN_",
             "__PTM_SUPERMELEE_SPIELRUNDE_",

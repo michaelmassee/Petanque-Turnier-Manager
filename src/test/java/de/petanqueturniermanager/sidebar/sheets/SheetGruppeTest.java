@@ -7,6 +7,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
+
 /**
  * Sichert die Gruppen-Zuordnung der PTM-Identitäts-Schlüssel ab.
  * <p>
@@ -80,9 +82,20 @@ class SheetGruppeTest {
     }
 
     @Test
-    void ptmOnlineBlaetterEinesSupermeleeSpieltagsWerdenDemSpieltagZugeordnet() {
-        assertThat(SheetGruppe.fuerSchluessel("__PTM_ONLINE_INFO_SPIELTAG_1__")).contains(SheetGruppe.SUPERMELEE);
-        assertThat(SheetGruppe.fuerSchluessel("__PTM_ONLINE_MELDUNGEN_SPIELTAG_1__")).contains(SheetGruppe.SUPERMELEE);
+    void ptmOnlineSyncBlattEinesSupermeleeSpieltagsGehoertZuSupermelee() {
+        assertThat(SheetGruppe.fuerSchluessel(SheetMetadataHelper.schluesselPtmOnlineSync(1)))
+                .contains(SheetGruppe.SUPERMELEE);
+        assertThat(SheetGruppe.fuerSchluessel(SheetMetadataHelper.schluesselPtmOnlineSync(10)))
+                .contains(SheetGruppe.SUPERMELEE);
+    }
+
+    @Test
+    void ptmOnlineSyncSchluesselSindJeSpieltagEindeutig() {
+        assertThat(SheetMetadataHelper.schluesselPtmOnlineSync(10))
+                .as("Spieltag 10 darf nicht mit dem Schlüssel von Spieltag 1 beginnen")
+                .doesNotStartWith(SheetMetadataHelper.schluesselPtmOnlineSync(1));
+        assertThat(SheetMetadataHelper.SCHLUESSEL_PTM_ONLINE_SYNC)
+                .doesNotStartWith(SheetMetadataHelper.SCHLUESSEL_PTM_ONLINE_SYNC_SPIELTAG_PREFIX);
     }
 
     @Test

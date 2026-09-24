@@ -23,6 +23,8 @@ import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungZeile;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.position.Position;
+import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
+import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzRegistry;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.ptmonline.RegistrationImportTask.ImportErgebnis;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationDto;
@@ -33,6 +35,7 @@ import de.petanqueturniermanager.spielerdb.MeldelisteZiel.NeueMeldungTeilnahme;
 import de.petanqueturniermanager.spielerdb.MeldelisteZielFactory;
 import de.petanqueturniermanager.spielerdb.MeleeAnmeldungZiel;
 import de.petanqueturniermanager.spielerdb.SpielerMitVerein;
+import de.petanqueturniermanager.toolbar.TurnierModus;
 
 /**
  * PTM-Online-Abgleich bei aktiver Mêlée-Anmeldung: Online-Mêlée-Turniere liefern Einzelspieler. Sie
@@ -142,6 +145,30 @@ class RegistrationImportMeleeUITest extends BaseCalcUITest {
         uebernehme(anmeldung("r1", "Hans", "Müller", 2));
 
         assertThat(meleeZeilen()).extracting(MeleeAnmeldungZeile::setzPosition).containsExactly(2);
+    }
+
+    /** Im Turnier-Modus ist die UUID-Spalte des Mêlée-Blatts gesperrt; der Import schreibt trotzdem hinein. */
+    @Test
+    void importImTurnierModusSchreibtInGesperrteUuidSpalte() throws Exception {
+        var konfig = BlattschutzRegistry.fuer(TurnierSystem.SCHWEIZER).orElseThrow();
+        TurnierModus.get().setAktivForTest(true);
+        try {
+            BlattschutzManager.get().schuetzen(konfig, wkingSpreadsheet);
+            BlattschutzManager.get().beginCommandScope(konfig, wkingSpreadsheet);
+            ImportErgebnis ergebnis;
+            try {
+                ergebnis = uebernehme(anmeldung("r1", "Hans", "Müller", 2));
+            } finally {
+                BlattschutzManager.get().endCommandScope();
+            }
+
+            assertThat(ergebnis).isEqualTo(new ImportErgebnis(1, List.of(), List.of()));
+            assertThat(meleeZeilen()).extracting(MeleeAnmeldungZeile::setzPosition).containsExactly(2);
+            assertThat(mapping.getLokaleUuid("r1")).isPresent();
+        } finally {
+            BlattschutzManager.get().entsperren(konfig, wkingSpreadsheet);
+            TurnierModus.get().setAktivForTest(false);
+        }
     }
 
     private ImportErgebnis uebernehme(RegistrationDto... anmeldungen) throws Exception {

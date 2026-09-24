@@ -333,7 +333,22 @@ public class BlattschutzManager {
                 .ifPresent(sheet -> alle.add(SheetSchutzInfo.mitEditierbarenBereichen(sheet,
                         PlanungsrechnerSheet.editierbareEingabeBereiche())));
         sammleMeleeAnmeldungSchutzInfos(xDoc, alle);
+        sammlePtmOnlineSyncSchutzInfos(xDoc, alle);
         return alle;
+    }
+
+    /**
+     * „PTMOnline Sync“-Sheets schreibt nur das Plugin – vollständig gesperrt. Der Basis-Schlüssel wird exakt
+     * gesucht, die Spieltag-Varianten (Supermelee) per Prefix: gesperrt werden bewusst alle Spieltage.
+     */
+    private void sammlePtmOnlineSyncSchutzInfos(XSpreadsheetDocument xDoc, List<SheetSchutzInfo> infos) {
+        SheetMetadataHelper.findeSheet(xDoc, SheetMetadataHelper.SCHLUESSEL_PTM_ONLINE_SYNC)
+                .ifPresent(sheet -> infos.add(SheetSchutzInfo.vollGesperrt(sheet)));
+        for (var schluessel : SheetMetadataHelper.getSchluesselMitPrefix(xDoc,
+                SheetMetadataHelper.SCHLUESSEL_PTM_ONLINE_SYNC_SPIELTAG_PREFIX)) {
+            SheetMetadataHelper.findeSheet(xDoc, schluessel)
+                    .ifPresent(sheet -> infos.add(SheetSchutzInfo.vollGesperrt(sheet)));
+        }
     }
 
     /**
@@ -364,6 +379,33 @@ public class BlattschutzManager {
     }
 
     /**
+     * Schreibvorgang auf Zellen, die im Turnier-Modus gesperrt sein können, ohne selbst den Lazy-Unprotect
+     * auszulösen – z.B. Einzelzell-Writes über {@code SheetHelper.setStringValueInCell} oder Formatierung per
+     * {@code setPropertiesInRange}. Innerhalb eines Scopes wird einmalig lazy entsperrt; der physische Fallback
+     * deckt Aufrufe außerhalb eines Scopes und abweichenden Sheet-Zustand ab.
+     */
+    public void schreibeEntsperrt(XSpreadsheet sheet, Runnable schreibvorgang) {
+        mitEntsperrt(sheet, () -> {
+            schreibvorgang.run();
+            return null;
+        });
+    }
+
+    /** Wie {@link #schreibeEntsperrt}, für Schreibvorgänge mit Ergebnis oder geprüfter Exception. */
+    public <T, E extends Exception> T mitEntsperrt(XSpreadsheet sheet, Schreibvorgang<T, E> schreibvorgang) throws E {
+        if (SCOPE.get() != null) {
+            ensureUnprotectedInScope();
+        }
+        return physischEntsperrt(sheet, schreibvorgang);
+    }
+
+    /** Schreibvorgang für {@link #mitEntsperrt}. */
+    @FunctionalInterface
+    public interface Schreibvorgang<T, E extends Exception> {
+        T ausfuehren() throws E;
+    }
+
+    /**
      * Fallback-Absicherung direkt am Schreibpunkt (z.B. {@code RangeHelper.setDataInRange}):
      * führt {@code schreibvorgang} garantiert auf einem physisch entsperrten Sheet aus.
      * <p>
@@ -385,13 +427,22 @@ public class BlattschutzManager {
      * außerhalb der Konfiguration liegt.
      */
     public void mitFallbackEntsperrt(XSpreadsheet sheet, Runnable schreibvorgang) {
+        physischEntsperrt(sheet, () -> {
+            schreibvorgang.run();
+            return null;
+        });
+    }
+
+    /** Entsperrt {@code sheet} nur, wenn es physisch gesperrt ist, und stellt den Zustand danach exakt wieder her. */
+    private static <T, E extends Exception> T physischEntsperrt(XSpreadsheet sheet, Schreibvorgang<T, E> schreibvorgang)
+            throws E {
         var xProt = Lo.qi(XProtectable.class, sheet);
         boolean warGeschuetzt = xProt.isProtected();
         if (warGeschuetzt) {
             xProt.unprotect("");
         }
         try {
-            schreibvorgang.run();
+            return schreibvorgang.ausfuehren();
         } finally {
             if (warGeschuetzt) {
                 xProt.protect("");

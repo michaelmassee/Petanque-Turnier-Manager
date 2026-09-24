@@ -340,7 +340,7 @@ public final class RegistrationImportTask {
             try {
                 String uuid = ziel.getOderErzeugeLokaleUuid(geschriebene.zeile1Basiert());
                 mapping.addMapping(uuid, reg.id(), ziel.formelTeamNrAusLokalerUuid(uuid), executionRevision(reg),
-                        lokaleBezeichnung(ziel, geschriebene.zeile1Basiert()), onlineBezeichnung(reg), onlineStatus(reg));
+                        lokaleBezeichnung(ziel, geschriebene.zeile1Basiert()), onlineStatus(reg));
                 mapping.setOnlineDetails(uuid, reg);
                 importiert++;
             } catch (MeldelisteZiel.MeldelisteSchreibException e) {
@@ -400,7 +400,7 @@ public final class RegistrationImportTask {
             throw new GenerateException("Abmeldung konnte nicht aufgehoben werden: " + e.getMessage());
         }
         mapping.ersetzeOnlineId(uuid, reg.id(), executionRevision(reg));
-        mapping.setBezeichnungen(uuid, lokaleBezeichnung(ziel, zeile), onlineBezeichnung(reg), onlineStatus(reg));
+        mapping.setBezeichnung(uuid, lokaleBezeichnung(ziel, zeile), onlineStatus(reg));
         mapping.setOnlineDetails(uuid, reg);
         uebernehmeSetzposition(ziel, reg, zeile);
         logger.info("PTM-Online: Neuanmeldung {} nach Storno mit bestehender Meldelistenzeile {} verknüpft", reg.id(), zeile);
@@ -411,7 +411,7 @@ public final class RegistrationImportTask {
         String uuid = lokaleUuid(ziel, zeile);
         try {
             mapping.addMapping(uuid, reg.id(), ziel.formelTeamNrAusLokalerUuid(uuid), executionRevision(reg),
-                    lokaleBezeichnung(ziel, zeile), onlineBezeichnung(reg), onlineStatus(reg));
+                    lokaleBezeichnung(ziel, zeile), onlineStatus(reg));
         } catch (MeldelisteZiel.MeldelisteSchreibException e) {
             throw new GenerateException("Lokale vorhandene Anmeldung konnte nicht verknüpft werden: " + e.getMessage());
         }
@@ -506,7 +506,7 @@ public final class RegistrationImportTask {
             }
             try {
                 mapping.addMapping(uuid, remote.id(), ziel.formelTeamNrAusLokalerUuid(uuid), executionRevision(remote),
-                        lokaleBezeichnung(ziel, eintrag.getKey()), onlineBezeichnung(remote), onlineStatus(remote));
+                        lokaleBezeichnung(ziel, eintrag.getKey()), onlineStatus(remote));
                 mapping.setOnlineDetails(uuid, remote);
             } catch (MeldelisteZiel.MeldelisteSchreibException e) {
                 throw new GenerateException(e.getMessage());
@@ -551,8 +551,8 @@ public final class RegistrationImportTask {
                 continue;
             }
             RegistrationDto remote = remoteProId.get(onlineId.get());
-            mapping.setBezeichnungen(uuid, lokaleBezeichnung(ziel, spieler.zeile1Basiert()),
-                    remote == null ? "" : onlineBezeichnung(remote), remote == null ? "" : onlineStatus(remote));
+            mapping.setBezeichnung(uuid, lokaleBezeichnung(ziel, spieler.zeile1Basiert()),
+                    remote == null ? "" : onlineStatus(remote));
             if (remote != null) {
                 mapping.setOnlineDetails(uuid, remote);
             }
@@ -599,8 +599,8 @@ public final class RegistrationImportTask {
                 try {
                     if (lokaleUuid.get().equals(ziel.getOderErzeugeLokaleUuid(spieler.zeile1Basiert()))) {
                         ziel.markiereAlsAbgemeldet(spieler.zeile1Basiert());
-                        mapping.setBezeichnungen(lokaleUuid.get(), lokaleBezeichnung(ziel, spieler.zeile1Basiert()),
-                                onlineBezeichnung(registration), onlineStatus(registration));
+                        mapping.setBezeichnung(lokaleUuid.get(), lokaleBezeichnung(ziel, spieler.zeile1Basiert()),
+                                onlineStatus(registration));
                         mapping.setOnlineDetails(lokaleUuid.get(), registration);
                         break;
                     }

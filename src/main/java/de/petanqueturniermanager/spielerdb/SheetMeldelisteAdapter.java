@@ -25,6 +25,7 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
+import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
@@ -353,8 +354,8 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
             // Aktiv-Spalte (= letzteDatenSpalte + 2) nur bei AKTIV auf „nimmt teil"
             // setzen; INAKTIV lässt sie leer (noch nicht eingecheckt).
             if (teilnahme == NeueMeldungTeilnahme.AKTIV) {
-                sheetHelper.setNumberValueInCell(NumberCellValue
-                        .from(sheet, Position.from(aktivSpalte(), zeile)).setValue(AKTIV_WERT_NIMMT_TEIL));
+                BlattschutzManager.get().schreibeEntsperrt(sheet, () -> sheetHelper.setNumberValueInCell(NumberCellValue
+                        .from(sheet, Position.from(aktivSpalte(), zeile)).setValue(AKTIV_WERT_NIMMT_TEIL)));
             }
             return zeile + 1;
         } catch (Exception e) {
@@ -394,8 +395,9 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
             return;
         }
         try {
-            sheetHelper.setNumberValueInCell(NumberCellValue.from(sheet,
-                    Position.from(setzpositionSpalte(), zeile1Basiert - 1)).setValue(setzposition));
+            BlattschutzManager.get().schreibeEntsperrt(sheet, () -> sheetHelper.setNumberValueInCell(
+                    NumberCellValue.from(sheet, Position.from(setzpositionSpalte(), zeile1Basiert - 1))
+                            .setValue(setzposition)));
         } catch (Exception e) {
             throw new MeldelisteSchreibException("Setzposition konnte nicht geschrieben werden", e);
         }
@@ -407,8 +409,9 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
             throw new MeldelisteSchreibException("Ungültige Meldelistenzeile");
         }
         try {
-            sheetHelper.setNumberValueInCell(NumberCellValue.from(sheet,
-                    Position.from(aktivSpalte(), zeile1Basiert - 1)).setValue(AKTIV_WERT_ABGEMELDET));
+            BlattschutzManager.get().schreibeEntsperrt(sheet, () -> sheetHelper.setNumberValueInCell(
+                    NumberCellValue.from(sheet, Position.from(aktivSpalte(), zeile1Basiert - 1))
+                            .setValue(AKTIV_WERT_ABGEMELDET)));
         } catch (Exception e) {
             throw new MeldelisteSchreibException("Abmeldung konnte nicht markiert werden", e);
         }
@@ -422,7 +425,7 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
         try {
             Position aktiv = Position.from(aktivSpalte(), zeile1Basiert - 1);
             if (sheetHelper.getIntFromCell(sheet, aktiv) == AKTIV_WERT_ABGEMELDET) {
-                sheetHelper.clearValInCell(sheet, aktiv);
+                BlattschutzManager.get().schreibeEntsperrt(sheet, () -> sheetHelper.clearValInCell(sheet, aktiv));
             }
         } catch (Exception e) {
             throw new MeldelisteSchreibException("Abmeldung konnte nicht aufgehoben werden", e);
@@ -435,15 +438,17 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
             throw new MeldelisteSchreibException("Ungültige Meldelistenzeile");
         }
         try {
-            int spalte = uuidSpalte();
-            int zeile = zeile1Basiert - 1;
-            String vorhanden = sicherText(sheetHelper, sheet, spalte, zeile).strip();
-            if (!vorhanden.isEmpty()) {
-                return vorhanden;
-            }
-            String uuid = UUID.randomUUID().toString();
-            sheetHelper.setStringValueInCell(StringCellValue.from(sheet, Position.from(spalte, zeile), uuid));
-            return uuid;
+            return BlattschutzManager.get().mitEntsperrt(sheet, () -> {
+                int spalte = uuidSpalte();
+                int zeile = zeile1Basiert - 1;
+                String vorhanden = sicherText(sheetHelper, sheet, spalte, zeile).strip();
+                if (!vorhanden.isEmpty()) {
+                    return vorhanden;
+                }
+                String uuid = UUID.randomUUID().toString();
+                sheetHelper.setStringValueInCell(StringCellValue.from(sheet, Position.from(spalte, zeile), uuid));
+                return uuid;
+            });
         } catch (Exception e) {
             throw new MeldelisteSchreibException("Lokale PTM-Online-ID konnte nicht geschrieben werden", e);
         }
@@ -452,8 +457,8 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
     @Override
     public void setzeLokaleUuid(int zeile1Basiert, String uuid) throws MeldelisteSchreibException {
         try {
-            sheetHelper.setStringValueInCell(StringCellValue.from(sheet,
-                    Position.from(uuidSpalte(), zeile1Basiert - 1), uuid));
+            BlattschutzManager.get().mitEntsperrt(sheet, () -> sheetHelper.setStringValueInCell(
+                    StringCellValue.from(sheet, Position.from(uuidSpalte(), zeile1Basiert - 1), uuid)));
         } catch (Exception e) {
             throw new MeldelisteSchreibException("Lokale PTM-Online-ID konnte nicht wiederhergestellt werden", e);
         }
@@ -462,8 +467,9 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
     @Override
     public String formelTeamNrAusLokalerUuid(String uuid) throws MeldelisteSchreibException {
         try {
-            String uuidStart = Position.from(uuidSpalte(), 0).getAddressWith$();
-            String uuidEnde = Position.from(uuidSpalte(), MAX_DATEN_ZEILE).getAddressWith$();
+            int spalte = BlattschutzManager.get().mitEntsperrt(sheet, this::uuidSpalte);
+            String uuidStart = Position.from(spalte, 0).getAddressWith$();
+            String uuidEnde = Position.from(spalte, MAX_DATEN_ZEILE).getAddressWith$();
             String nummern = "$'" + SheetNamen.meldeliste() + "'.$A$1:$A$" + (MAX_DATEN_ZEILE + 1);
             String uuids = "$'" + SheetNamen.meldeliste() + "'." + uuidStart + ":" + uuidEnde;
             return "IFNA(INDEX(" + nummern + ";MATCH(\"" + uuid + "\";" + uuids + ";0));\"\")";
@@ -472,7 +478,10 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
         }
     }
 
-    /** Sichtbare letzte Spalte. Sie wird nicht aus Teamnummern oder Namen hergeleitet. */
+    /**
+     * Sichtbare letzte Spalte. Sie wird nicht aus Teamnummern oder Namen hergeleitet. Schreibt Überschrift und
+     * Ausblendung – nur innerhalb von {@link BlattschutzManager#mitEntsperrt} aufrufen.
+     */
     private int uuidSpalte() throws Exception {
         String header = I18n.get("ptmonline.meldeliste.header.lokaleuuid");
         int headerZeile = Math.max(0, ersteDatenZeile - 1);

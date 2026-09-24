@@ -154,10 +154,9 @@ public final class PtmOnlineSpielrundeSync {
         List<String> fehler = new ArrayList<>();
 
         try {
-            mapping.migriereLegacyTeamnummern(uuidProTeam(ziel));
             mapping.aktualisiereAnzeigeFormeln(formelnProUuid(ziel));
         } catch (GenerateException e) {
-            logger.error("PTM-Online: Altes Mapping konnte nicht migriert werden", e);
+            logger.error("PTM-Online: Nr-Formeln der Zuordnung konnten nicht aktualisiert werden", e);
             fehler.add(e.getMessage());
         } catch (RuntimeException e) {
             logger.error("PTM-Online: Unerwarteter Mapping-Fehler", e);
@@ -392,7 +391,7 @@ public final class PtmOnlineSpielrundeSync {
             }
             mapping.addMapping(uuid, angelegt.id(), teamnummerFormel(ziel, uuid),
                     angelegt.executionRevision() == null ? 1 : angelegt.executionRevision(),
-                    bezeichnung(spieler), bezeichnung(angelegt), OnlineAnmeldeStatus.anzeige(angelegt.status()));
+                    bezeichnung(spieler), OnlineAnmeldeStatus.anzeige(angelegt.status()));
             mapping.setOnlineDetails(uuid, angelegt);
         }
         return abgelehnt;
@@ -404,17 +403,6 @@ public final class PtmOnlineSpielrundeSync {
             int teamNr = ziel.getTeamNrAusZeile(spieler.zeile1Basiert());
             if (teamNr > 0) {
                 ergebnis.putIfAbsent(teamNr, spieler.zeile1Basiert());
-            }
-        }
-        return ergebnis;
-    }
-
-    private static Map<Integer, String> uuidProTeam(MeldelisteZiel ziel) throws GenerateException {
-        Map<Integer, String> ergebnis = new LinkedHashMap<>();
-        for (MeldelisteSpielerDaten spieler : ziel.leseAlleSpielerRoh()) {
-            int teamNr = ziel.getTeamNrAusZeile(spieler.zeile1Basiert());
-            if (teamNr > 0) {
-                ergebnis.putIfAbsent(teamNr, lokaleUuid(ziel, spieler.zeile1Basiert()));
             }
         }
         return ergebnis;
@@ -470,14 +458,6 @@ public final class PtmOnlineSpielrundeSync {
 
     private static String bezeichnung(List<MeldelisteSpielerDaten> spieler) {
         return spieler.stream().map(eintrag -> bezeichnung(eintrag.vorname(), eintrag.nachname()))
-                .filter(name -> !name.isBlank()).collect(Collectors.joining(" / "));
-    }
-
-    private static String bezeichnung(RegistrationDto registration) {
-        return java.util.stream.Stream.of(
-                bezeichnung(registration.firstName(), registration.lastName()),
-                bezeichnung(registration.partnerFirstName(), registration.partnerLastName()),
-                bezeichnung(registration.partner2FirstName(), registration.partner2LastName()))
                 .filter(name -> !name.isBlank()).collect(Collectors.joining(" / "));
     }
 

@@ -30,6 +30,7 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
+import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 
@@ -194,8 +195,10 @@ public final class MeleeAnmeldungZiel implements MeldelisteZiel, MeleeAnmeldungK
 	}
 
 	private void schreibeUuid(XSpreadsheet sheet, Position position, String uuid) {
-		stelleUuidSpalteBereit(sheet);
-		sheetHelper.setStringValueInCell(StringCellValue.from(sheet, position, uuid));
+		BlattschutzManager.get().schreibeEntsperrt(sheet, () -> {
+			stelleUuidSpalteBereit(sheet);
+			sheetHelper.setStringValueInCell(StringCellValue.from(sheet, position, uuid));
+		});
 	}
 
 	/** Überschrift der ausgeblendeten UUID-Spalte, einmalig beim ersten Schreiben einer UUID. */
@@ -230,8 +233,10 @@ public final class MeleeAnmeldungZiel implements MeldelisteZiel, MeleeAnmeldungK
 		if (setzposition <= 0 || zeile.isEmpty() || zeile.get().setzPosition() > 0) {
 			return;
 		}
-		sheetHelper.setNumberValueInCell(NumberCellValue
-				.from(sheet(), Position.from(SPALTE_SETZPOSITION, zeile.get().zeile())).setValue(setzposition));
+		XSpreadsheet sheet = sheet();
+		Position position = Position.from(SPALTE_SETZPOSITION, zeile.get().zeile());
+		BlattschutzManager.get().schreibeEntsperrt(sheet,
+				() -> sheetHelper.setNumberValueInCell(NumberCellValue.from(sheet, position).setValue(setzposition)));
 	}
 
 	/**
@@ -250,7 +255,9 @@ public final class MeleeAnmeldungZiel implements MeldelisteZiel, MeleeAnmeldungK
 					zeile.get().anzeigeName());
 			return;
 		}
-		sheetHelper.clearValInCell(sheet(), Position.from(SPALTE_EINGECHECKT, zeile.get().zeile()));
+		XSpreadsheet sheet = sheet();
+		Position position = Position.from(SPALTE_EINGECHECKT, zeile.get().zeile());
+		BlattschutzManager.get().schreibeEntsperrt(sheet, () -> sheetHelper.clearValInCell(sheet, position));
 	}
 
 	/**

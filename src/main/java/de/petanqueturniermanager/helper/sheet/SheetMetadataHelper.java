@@ -65,13 +65,13 @@ public class SheetMetadataHelper {
 
     // ── Konstanten: PTM-Online (turniersystemübergreifend, siehe onlinesync/ptmonline) ──────────
 
-    /** Turnierinformationen-Sheet, wenn das Dokument (ohne Spieltage) mit genau einem Online-Turnier verbunden ist. */
-    public static final String SCHLUESSEL_PTM_ONLINE_INFO = "__PTM_ONLINE_INFO__";
-    /** Meldungen-Mapping-Sheet, wenn das Dokument (ohne Spieltage) mit genau einem Online-Turnier verbunden ist. */
-    public static final String SCHLUESSEL_PTM_ONLINE_MELDUNGEN = "__PTM_ONLINE_MELDUNGEN__";
-    /** Prefix für die Supermelee-Variante (1 Verbindung pro Spieltag, siehe {@link #schluesselPtmOnlineInfo(int)}). */
-    public static final String SCHLUESSEL_PTM_ONLINE_INFO_SPIELTAG_PREFIX = "__PTM_ONLINE_INFO_SPIELTAG_";
-    public static final String SCHLUESSEL_PTM_ONLINE_MELDUNGEN_SPIELTAG_PREFIX = "__PTM_ONLINE_MELDUNGEN_SPIELTAG_";
+    /** „PTMOnline Sync“-Sheet, wenn das Dokument (ohne Spieltage) mit genau einem Online-Turnier verbunden ist. */
+    public static final String SCHLUESSEL_PTM_ONLINE_SYNC = "__PTM_ONLINE_SYNC__";
+    /**
+     * Prefix für die Supermelee-Variante (1 Verbindung pro Spieltag, siehe {@link #schluesselPtmOnlineSync(int)}).
+     * Der Basis-Schlüssel {@link #SCHLUESSEL_PTM_ONLINE_SYNC} beginnt bewusst nicht mit diesem Prefix.
+     */
+    public static final String SCHLUESSEL_PTM_ONLINE_SYNC_SPIELTAG_PREFIX = "__PTM_ONLINE_SYNC_SPIELTAG_";
 
     // ── Konstanten: Supermelee ───────────────────────────────────────────────
 
@@ -214,12 +214,12 @@ public class SheetMetadataHelper {
         return SCHLUESSEL_SPIELTAG_RANGLISTE_PREFIX + spieltagNr + SCHLUESSEL_SPIELTAG_RANGLISTE_SUFFIX;
     }
 
-    public static String schluesselPtmOnlineInfo(int spieltagNr) {
-        return SCHLUESSEL_PTM_ONLINE_INFO_SPIELTAG_PREFIX + spieltagNr + SCHLUESSEL_SPIELTAG_RANGLISTE_SUFFIX;
-    }
-
-    public static String schluesselPtmOnlineMeldungen(int spieltagNr) {
-        return SCHLUESSEL_PTM_ONLINE_MELDUNGEN_SPIELTAG_PREFIX + spieltagNr + SCHLUESSEL_SPIELTAG_RANGLISTE_SUFFIX;
+    /**
+     * Vollständiger Schlüssel inkl. Suffix: Lookups immer hierüber, nie über Prefix + Nr – sonst träfe Spieltag 1
+     * auch 10, 11, …
+     */
+    public static String schluesselPtmOnlineSync(int spieltagNr) {
+        return SCHLUESSEL_PTM_ONLINE_SYNC_SPIELTAG_PREFIX + spieltagNr + SCHLUESSEL_SPIELTAG_RANGLISTE_SUFFIX;
     }
 
     public static String schluesselSchweizerSpielrunde(int rundeNr) {

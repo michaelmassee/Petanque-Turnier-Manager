@@ -48,7 +48,7 @@ public final class PtmOnlineDispatcher {
      * Verbindet das Dokument (bzw. bei Supermelee den aktiven Spieltag) mit einem bereits
      * bestehenden PTM-Online-Turnier: laedt die zum API-Key gehoerenden, zum lokalen
      * {@link TurnierSystem} passenden Turniere, laesst den Nutzer eines auswaehlen und legt
-     * anschliessend die beiden Sheets "Turnierinformationen"/"Meldungen" an.
+     * anschliessend das Blatt "PTMOnline Sync" an.
      */
     public static void turnierVerbinden(WorkingSpreadsheet ws) {
         logger.info("PTM-Online: turnierVerbinden() gestartet (Thread={})", Thread.currentThread().getName());
@@ -128,18 +128,17 @@ public final class PtmOnlineDispatcher {
             return;
         }
 
-        logger.info("PTM-Online: lege Sheets fuer Verbindung an");
+        logger.info("PTM-Online: lege Sync-Blatt fuer Verbindung an");
         try {
             PtmOnlineRegistrationMapping mapping = new PtmOnlineRegistrationMapping(ws, ts, spieltagNr);
-            mapping.verbinden(auswahl.get());
-            mapping.setSyncBinding(binding, leaseToken);
-            logger.info("PTM-Online: Sheets angelegt, zeige Erfolg");
+            mapping.verbinden(auswahl.get(), binding, leaseToken);
+            logger.info("PTM-Online: Sync-Blatt angelegt, zeige Erfolg");
             LoMainThread.post(ctx, () -> zeigeErfolg(ctx, auswahl.get()));
         } catch (GenerateException | InterruptedException e) {
             if (e instanceof InterruptedException) {
                 Thread.currentThread().interrupt();
             }
-            logger.error("PTM-Online: Sheets fuer Verbindung anlegen fehlgeschlagen", e);
+            logger.error("PTM-Online: Sync-Blatt fuer Verbindung anlegen fehlgeschlagen", e);
             LoMainThread.post(ctx, () -> zeigeFehler(ctx, e.getMessage()));
         }
     }
@@ -171,8 +170,8 @@ public final class PtmOnlineDispatcher {
     /**
      * Trennt die Verbindung des Dokuments (bzw. bei Supermelee des aktiven Spieltags) zu seinem
      * PTM-Online-Turnier wieder: fragt beim Nutzer nach, hebt serverseitig die
-     * Dokument-Verwaltung ({@code document_managed}) wieder auf und entfernt die beiden Sheets
-     * "Turnierinformationen"/"Meldungen".
+     * Dokument-Verwaltung ({@code document_managed}) wieder auf und entfernt das Blatt
+     * "PTMOnline Sync".
      */
     public static void verbindungTrennen(WorkingSpreadsheet ws) {
         logger.info("PTM-Online: verbindungTrennen() gestartet (Thread={})", Thread.currentThread().getName());
@@ -248,7 +247,7 @@ public final class PtmOnlineDispatcher {
             mapping.trennen();
             zeigeInfo(ctx, I18n.get("ptmonline.erfolg.verbindung_getrennt"));
         } catch (GenerateException e) {
-            logger.error("PTM-Online: Sheets nach Trennen entfernen fehlgeschlagen", e);
+            logger.error("PTM-Online: Sync-Blatt nach Trennen entfernen fehlgeschlagen", e);
             zeigeFehler(ctx, e.getMessage());
         }
     }

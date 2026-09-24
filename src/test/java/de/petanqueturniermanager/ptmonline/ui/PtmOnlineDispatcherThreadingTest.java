@@ -42,8 +42,8 @@ import com.tngtech.archunit.core.importer.ClassFileImporter;
  * transitiv {@code SheetRunner.start()}+{@code .join()} auf — der Main-Thread haelt beim Ausfuehren
  * des Callbacks bereits den SolarMutex, das {@code join()} auf den neu gestarteten Sheet-Thread
  * deadlockte. Der reale Aufrufpfad verlaesst dabei {@code PtmOnlineDispatcher} (ueber
- * {@code PtmOnlineRegistrationMapping} bis hinein in {@code OnlineTurnierInfoSheet}/
- * {@code OnlineTurnierMeldungenSheet}, wo {@code SheetRunner.start()+.join()} tatsaechlich passiert)
+ * {@code PtmOnlineRegistrationMapping} bis hinein in {@code PtmOnlineSyncSheet}, wo
+ * {@code SheetRunner.start()+.join()} tatsaechlich passiert)
  * — die Traversal MUSS daher klassenuebergreifend erfolgen (siehe {@link #erreichbar}, analog zum
  * BFS-Muster in {@code ThreadingCallGraphArchTest}, dort ueber {@code JavaCodeUnit}+
  * {@code target.resolveMember()}).
