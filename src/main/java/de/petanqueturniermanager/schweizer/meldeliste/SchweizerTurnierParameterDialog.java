@@ -26,8 +26,10 @@ import com.sun.star.lang.XMultiServiceFactory;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungDialogOption;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerRankingModus;
 import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
@@ -38,28 +40,18 @@ import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
  * <p>
  * Abgefragt werden:
  * <ul>
- * <li>Formation: Tête / Doublette / Triplette (Radio-Buttons)</li>
- * <li>Teamname anzeigen: Ja / Nein (Checkbox)</li>
+ * <li>Formation: Tête / Doublette / Triplette / Nur Teamname</li>
+ * <li>Teamname und Vereinsname anzeigen</li>
+ * <li>Mêlée-Anmeldung (nur bei Doublette/Triplette)</li>
+ * <li>Anzeige im Spielplan: Teamnummer / Teamname</li>
+ * <li>Ranglisten-Wertung: mit / ohne Buchholz</li>
  * </ul>
  */
 public class SchweizerTurnierParameterDialog {
 
 	/** Ergebnis des Dialogs. */
-	public static class TurnierParameter {
-		public final Formation formation;
-		public final boolean teamnameAnzeigen;
-		public final boolean vereinsnameAnzeigen;
-		public final SpielplanTeamAnzeige spielplanTeamAnzeige;
-		public final SchweizerRankingModus rankingModus;
-
-		public TurnierParameter(Formation formation, boolean teamnameAnzeigen, boolean vereinsnameAnzeigen,
-				SpielplanTeamAnzeige spielplanTeamAnzeige, SchweizerRankingModus rankingModus) {
-			this.formation = formation;
-			this.teamnameAnzeigen = teamnameAnzeigen;
-			this.vereinsnameAnzeigen = vereinsnameAnzeigen;
-			this.spielplanTeamAnzeige = spielplanTeamAnzeige;
-			this.rankingModus = rankingModus;
-		}
+	public record TurnierParameter(Formation formation, boolean teamnameAnzeigen, boolean vereinsnameAnzeigen,
+			boolean meleeAnmeldung, SpielplanTeamAnzeige spielplanTeamAnzeige, SchweizerRankingModus rankingModus) {
 	}
 
 	private final WorkingSpreadsheet workingSpreadsheet;
@@ -76,6 +68,7 @@ public class SchweizerTurnierParameterDialog {
 	 * @param defaultTeamnameAnzeigen     vorausgewählter Teamname-Status
 	 * @param defaultVereinsnameAnzeigen  vorausgewählter Vereinsname-Status
 	 * @param defaultSpielplanTeamAnzeige vorausgewählte Spielplan-Anzeige
+	 * @param defaultRankingModus         vorausgewählte Ranglisten-Wertung
 	 * @return Optional mit TurnierParameter bei OK, leer bei Abbrechen
 	 */
 	public Optional<TurnierParameter> show(Formation defaultFormation, boolean defaultTeamnameAnzeigen,
@@ -93,8 +86,8 @@ public class SchweizerTurnierParameterDialog {
 		dlgProps.setPropertyValue("PositionX", Integer.valueOf(50));
 		dlgProps.setPropertyValue("PositionY", Integer.valueOf(50));
 		dlgProps.setPropertyValue("Width", Integer.valueOf(160));
-		dlgProps.setPropertyValue("Height", Integer.valueOf(121));
-		dlgProps.setPropertyValue("Title", "Schweizer Turnier \u2013 Parameter");
+		dlgProps.setPropertyValue("Height", Integer.valueOf(121 + MeleeAnmeldungDialogOption.HOEHE));
+		dlgProps.setPropertyValue("Title", I18n.get("dialog.schweizer.titel"));
 		dlgProps.setPropertyValue("Moveable", Boolean.TRUE);
 
 		// 2. Dialog-Control anlegen und Modell setzen
@@ -107,7 +100,7 @@ public class SchweizerTurnierParameterDialog {
 		XNameContainer cont = Lo.qi(XNameContainer.class, dialogModel);
 		XControlContainer xcc = Lo.qi(XControlContainer.class, dialog);
 
-		addLabel(xMSF, cont, "lblFormation", "Formation:", 8, 8, 80, 10);
+		addLabel(xMSF, cont, "lblFormation", I18n.get("dialog.poule.label.formation"), 8, 8, 80, 10);
 		addListBox(xMSF, cont, "lstFormation",
 				new String[] { Formation.TETE.getBezeichnung(),
 						Formation.DOUBLETTE.getBezeichnung(),
@@ -117,29 +110,35 @@ public class SchweizerTurnierParameterDialog {
 
 		addFixedLine(xMSF, cont, "sep1", 5, 24, 150, 2);
 
-		addCheckBox(xMSF, cont, "cbTeamname", "Teamname anzeigen",
+		addCheckBox(xMSF, cont, "cbTeamname", I18n.get("dialog.poule.label.teamname"),
 				8, 30, 140, 10, defaultTeamnameAnzeigen);
 
-		addCheckBox(xMSF, cont, "cbVereinsname", "Vereinsname anzeigen",
+		addCheckBox(xMSF, cont, "cbVereinsname", I18n.get("dialog.poule.label.vereinsname"),
 				8, 44, 140, 10, defaultVereinsnameAnzeigen);
 
-		addFixedLine(xMSF, cont, "sep2", 5, 60, 150, 2);
+		MeleeAnmeldungDialogOption.hinzufuegen(xMSF, cont, 8, 58, 140, defaultFormation);
 
-		addLabel(xMSF, cont, "lblSpielplan", "Anzeige in Spielplan:", 8, 64, 80, 10);
+		int y = MeleeAnmeldungDialogOption.HOEHE;
+		addFixedLine(xMSF, cont, "sep2", 5, 60 + y, 150, 2);
+
+		addLabel(xMSF, cont, "lblSpielplan", I18n.get("dialog.schweizer.spielplan.anzeige.label"), 8, 64 + y, 80, 10);
 		addListBox(xMSF, cont, "lstSpielplan",
-				new String[] { "Teamnummer", "Teamname" },
+				new String[] { I18n.get("dialog.schweizer.auswahl.nr"), I18n.get("dialog.schweizer.auswahl.name") },
 				(short) (defaultSpielplanTeamAnzeige == SpielplanTeamAnzeige.NAME ? 1 : 0),
-				92, 62, 60, 12);
+				92, 62 + y, 60, 12);
 
-		addFixedLine(xMSF, cont, "sep3", 5, 80, 150, 2);
-		addLabel(xMSF, cont, "lblRankingModus", "Ranglisten-Wertung:", 8, 86, 80, 10);
+		addFixedLine(xMSF, cont, "sep3", 5, 80 + y, 150, 2);
+		addLabel(xMSF, cont, "lblRankingModus", I18n.get("dialog.schweizer.ranking.modus.label"), 8, 86 + y, 80, 10);
 		addListBox(xMSF, cont, "lstRankingModus",
-				new String[] { "Mit Buchholz (Standard)", "Ohne Buchholz" },
+				new String[] { I18n.get("dialog.schweizer.ranking.mit.buchholz"),
+						I18n.get("dialog.schweizer.ranking.ohne.buchholz") },
 				(short) (defaultRankingModus == SchweizerRankingModus.OHNE_BUCHHOLZ ? 1 : 0),
-				92, 84, 60, 12);
+				92, 84 + y, 60, 12);
 
-		addButton(xMSF, cont, "btnOk", "OK", 22, 102, 50, 14);
-		addButton(xMSF, cont, "btnCancel", "Abbrechen", 88, 102, 60, 14);
+		addButton(xMSF, cont, "btnOk", I18n.get("dialog.button.ok"), 22, 102 + y, 50, 14);
+		addButton(xMSF, cont, "btnCancel", I18n.get("dialog.button.abbrechen"), 88, 102 + y, 60, 14);
+
+		MeleeAnmeldungDialogOption.anFormationKoppeln(xcc, () -> readFormation(xcc), "lstFormation");
 
 		// 4. Button-Listener VOR createPeer() anhängen
 		XDialog xDialog = Lo.qi(XDialog.class, dialog);
@@ -147,6 +146,7 @@ public class SchweizerTurnierParameterDialog {
 		attachButtonListener(xcc, "btnOk", new XActionListener() {
 			@Override
 			public void disposing(EventObject e) {
+				// keine Ressourcen zu lösen
 			}
 
 			@Override
@@ -158,6 +158,7 @@ public class SchweizerTurnierParameterDialog {
 		attachButtonListener(xcc, "btnCancel", new XActionListener() {
 			@Override
 			public void disposing(EventObject e) {
+				// keine Ressourcen zu lösen
 			}
 
 			@Override
@@ -182,12 +183,13 @@ public class SchweizerTurnierParameterDialog {
 			// Nur Teamname: Teamname-Anzeige ist die einzige Team-Identität und daher zwingend aktiv.
 			boolean teamnameAnzeigen = formation == Formation.NUR_TEAMNAME || readCheckBoxState(xcc, "cbTeamname");
 			boolean vereinsnameAnzeigen = readCheckBoxState(xcc, "cbVereinsname");
+			boolean meleeAnmeldung = MeleeAnmeldungDialogOption.istGewaehlt(xcc, formation);
 			SpielplanTeamAnzeige spielplanAnzeige = readListBoxSelected(xcc, "lstSpielplan") == 1
 					? SpielplanTeamAnzeige.NAME : SpielplanTeamAnzeige.NR;
 			SchweizerRankingModus rankingModus = readListBoxSelected(xcc, "lstRankingModus") == 1
 					? SchweizerRankingModus.OHNE_BUCHHOLZ : SchweizerRankingModus.MIT_BUCHHOLZ;
-			result = Optional.of(
-					new TurnierParameter(formation, teamnameAnzeigen, vereinsnameAnzeigen, spielplanAnzeige, rankingModus));
+			result = Optional.of(new TurnierParameter(formation, teamnameAnzeigen, vereinsnameAnzeigen, meleeAnmeldung,
+					spielplanAnzeige, rankingModus));
 		}
 
 		Lo.qi(XComponent.class, dialog).dispose();

@@ -25,6 +25,7 @@ import com.sun.star.lang.XMultiServiceFactory;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungDialogOption;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
@@ -39,6 +40,7 @@ import de.petanqueturniermanager.helper.msgbox.ProcessBox;
  *   <li>Formation: Tête / Doublette / Triplette (Radio-Buttons)</li>
  *   <li>Teamname anzeigen: Ja / Nein (Checkbox)</li>
  *   <li>Vereinsname anzeigen: Ja / Nein (Checkbox)</li>
+ *   <li>Mêlée-Anmeldung (nur bei Doublette/Triplette)</li>
  * </ul>
  * <p>
  * TODO: Zukünftige Erweiterungen: Anzahl Gruppen, Setzlogik
@@ -52,7 +54,8 @@ class PouleTurnierParameterDialog {
     record TurnierParameter(
             Formation formation,
             boolean teamnameAnzeigen,
-            boolean vereinsnameAnzeigen) {
+            boolean vereinsnameAnzeigen,
+            boolean meleeAnmeldung) {
     }
 
     private final WorkingSpreadsheet workingSpreadsheet;
@@ -87,7 +90,7 @@ class PouleTurnierParameterDialog {
         dlgProps.setPropertyValue("PositionX", Integer.valueOf(50));
         dlgProps.setPropertyValue("PositionY", Integer.valueOf(50));
         dlgProps.setPropertyValue("Width", Integer.valueOf(160));
-        dlgProps.setPropertyValue("Height", Integer.valueOf(95));
+        dlgProps.setPropertyValue("Height", Integer.valueOf(95 + MeleeAnmeldungDialogOption.HOEHE));
         dlgProps.setPropertyValue("Title", I18n.get("dialog.poule.turnier.parameter.titel"));
         dlgProps.setPropertyValue("Moveable", Boolean.TRUE);
 
@@ -114,15 +117,20 @@ class PouleTurnierParameterDialog {
 
         fuegeCheckBox(xMSF, cont, "cbVereinsname", I18n.get("dialog.poule.label.vereinsname"),
                 8, 44, 140, 10, standardVereinsnameAnzeigen);
+        MeleeAnmeldungDialogOption.hinzufuegen(xMSF, cont, 8, 58, 140, standardFormation);
 
-        fuegeButton(xMSF, cont, "btnOk", I18n.get("dialog.button.ok"), 22, 75, 50, 14);
-        fuegeButton(xMSF, cont, "btnCancel", I18n.get("dialog.button.abbrechen"), 88, 75, 60, 14);
+        int y = MeleeAnmeldungDialogOption.HOEHE;
+        fuegeButton(xMSF, cont, "btnOk", I18n.get("dialog.button.ok"), 22, 75 + y, 50, 14);
+        fuegeButton(xMSF, cont, "btnCancel", I18n.get("dialog.button.abbrechen"), 88, 75 + y, 60, 14);
+
+        MeleeAnmeldungDialogOption.anFormationKoppeln(xcc, () -> leseFormation(xcc), "lstFormation");
 
         XDialog xDialog = Lo.qi(XDialog.class, dialog);
         okGedrueckt = false;
         haengeButtonListener(xcc, "btnOk", new XActionListener() {
             @Override
             public void disposing(EventObject e) {
+                // keine Ressourcen zu lösen
             }
 
             @Override
@@ -134,6 +142,7 @@ class PouleTurnierParameterDialog {
         haengeButtonListener(xcc, "btnCancel", new XActionListener() {
             @Override
             public void disposing(EventObject e) {
+                // keine Ressourcen zu lösen
             }
 
             @Override
@@ -156,7 +165,9 @@ class PouleTurnierParameterDialog {
             // Nur Teamname: Teamname-Anzeige ist die einzige Team-Identität und daher zwingend aktiv.
             boolean teamnameAnzeigen = formation == Formation.NUR_TEAMNAME || leseCheckBoxZustand(xcc, "cbTeamname");
             boolean vereinsnameAnzeigen = leseCheckBoxZustand(xcc, "cbVereinsname");
-            ergebnis = Optional.of(new TurnierParameter(formation, teamnameAnzeigen, vereinsnameAnzeigen));
+            boolean meleeAnmeldung = MeleeAnmeldungDialogOption.istGewaehlt(xcc, formation);
+            ergebnis = Optional.of(new TurnierParameter(formation, teamnameAnzeigen, vereinsnameAnzeigen,
+                    meleeAnmeldung));
         }
 
         Lo.qi(XComponent.class, dialog).dispose();

@@ -9,6 +9,7 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.basesheet.konfiguration.MeleeAnmeldungKonfiguration;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.IMeldeliste;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
@@ -208,6 +209,10 @@ public class JGJMeldeListeSheet_New extends SheetRunner implements IMeldeliste<T
 		createMeldelisteWithParams(param.get().formation(),
 				param.get().teamnameAnzeigen(), param.get().vereinsnameAnzeigen(),
 				param.get().spielplanTeamAnzeige(), param.get().gruppengroesse(), param.get().mitRueckrunde());
+		if (param.get().meleeAnmeldung()) {
+			MeleeAnmeldungKonfiguration.einschalten(getWorkingSpreadsheet());
+			new JGJMeleeAnmeldungSheet(getWorkingSpreadsheet()).generate();
+		}
 	}
 
 }

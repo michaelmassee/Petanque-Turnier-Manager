@@ -11,6 +11,7 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.basesheet.konfiguration.MeleeAnmeldungKonfiguration;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -24,6 +25,7 @@ import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterGruppenModus;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
 import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
@@ -87,8 +89,9 @@ public class MaastrichterMeldeListeSheetNew extends SheetRunner implements IShee
 					konfigurationSheet.getMinLetzteGruppeGroesse(),
 					konfigurationSheet.getMaastrichterGruppenModus());
 		} catch (Exception e) {
-			logger.error("{} Fehler beim Anzeigen des Parameterdialogs: {}", e.getMessage(), e);
-			throw new GenerateException("Fehler beim Anzeigen des Parameterdialogs: " + e.getMessage());
+			String errMsg = I18n.get("error.dialog.parameterdialog", e.getMessage());
+			logger.error(errMsg, e);
+			throw new GenerateException(errMsg);
 		}
 
 		if (param.isEmpty()) {
@@ -100,19 +103,24 @@ public class MaastrichterMeldeListeSheetNew extends SheetRunner implements IShee
 
 		getSheetHelper().removeAllSheetsExclude();
 
-		konfigurationSheet.setRankingModus(param.get().rankingModus);
-		konfigurationSheet.setAnzVorrunden(param.get().anzVorrunden);
+		var parameter = param.get();
+		konfigurationSheet.setRankingModus(parameter.rankingModus());
+		konfigurationSheet.setAnzVorrunden(parameter.anzVorrunden());
 		konfigurationSheet.setAktiveSpielRunde(SpielRundeNr.from(1));
-		konfigurationSheet.setSpielbaumTeamAnzeige(param.get().spielbaumTeamAnzeige);
-		konfigurationSheet.setSpielbaumSpielbahn(param.get().spielbaumSpielbahn);
-		konfigurationSheet.setSpielbaumBahnNurRunde1(param.get().spielbaumBahnNurRunde1);
-		konfigurationSheet.setSpielbaumSpielUmPlatz3(param.get().spielUmPlatz3);
-		konfigurationSheet.setGruppenGroesse(param.get().gruppenGroesse);
-		konfigurationSheet.setMinLetzteGruppeGroesse(param.get().minLetzteGruppeGroesse);
-		konfigurationSheet.setMaastrichterGruppenModus(param.get().gruppenModus);
+		konfigurationSheet.setSpielbaumTeamAnzeige(parameter.spielbaumTeamAnzeige());
+		konfigurationSheet.setSpielbaumSpielbahn(parameter.spielbaumSpielbahn());
+		konfigurationSheet.setSpielbaumBahnNurRunde1(parameter.spielbaumBahnNurRunde1());
+		konfigurationSheet.setSpielbaumSpielUmPlatz3(parameter.spielUmPlatz3());
+		konfigurationSheet.setGruppenGroesse(parameter.gruppenGroesse());
+		konfigurationSheet.setMinLetzteGruppeGroesse(parameter.minLetzteGruppeGroesse());
+		konfigurationSheet.setMaastrichterGruppenModus(parameter.gruppenModus());
 
-		erstelleMeldeliste(param.get().formation, param.get().teamnameAnzeigen, param.get().vereinsnameAnzeigen,
-				param.get().spielplanTeamAnzeige);
+		erstelleMeldeliste(parameter.formation(), parameter.teamnameAnzeigen(), parameter.vereinsnameAnzeigen(),
+				parameter.spielplanTeamAnzeige());
+		if (parameter.meleeAnmeldung()) {
+			MeleeAnmeldungKonfiguration.einschalten(getWorkingSpreadsheet());
+			new MaastrichterMeleeAnmeldungSheet(getWorkingSpreadsheet()).generate();
+		}
 	}
 
 	/**
