@@ -29,6 +29,7 @@ class SheetRunnerKoordinator {
 
     private final AtomicBoolean laeuft = new AtomicBoolean();
     private volatile SheetRunner aktuellerRunner = null;
+    private volatile Thread ausfuehrenderThread = null;
     private final List<Runnable> zustandsListener =
             Collections.synchronizedList(new ArrayList<>());
 
@@ -44,6 +45,20 @@ class SheetRunnerKoordinator {
     /** Gibt zurück, ob aktuell ein {@link SheetRunner} aktiv ist. */
     boolean isRunning() {
         return laeuft.get();
+    }
+
+    /** Klassenname des aktiven Runners für Meldungen, leer wenn keiner läuft. */
+    String getRunnerName() {
+        SheetRunner snapshot = aktuellerRunner;
+        return snapshot == null ? "" : snapshot.getClass().getSimpleName();
+    }
+
+    /**
+     * Ob {@code thread} gerade einen SheetRunner-Lauf ausführt – der Runner-Thread selbst oder ein Thread,
+     * der {@link SheetRunner#run()} direkt aufgerufen hat.
+     */
+    boolean fuehrtLaufAus(Thread thread) {
+        return thread != null && thread == ausfuehrenderThread;
     }
 
     /**
@@ -88,9 +103,13 @@ class SheetRunnerKoordinator {
         return laeuft.getAndSet(neuerWert);
     }
 
-    /** Setzt den aktuell aktiven Runner (oder {@code null} nach Abschluss). */
+    /**
+     * Setzt den aktuell aktiven Runner (oder {@code null} nach Abschluss). Wird vom ausführenden Thread
+     * aufgerufen und merkt sich diesen für {@link #fuehrtLaufAus(Thread)}.
+     */
     void setRunner(SheetRunner runner) {
         this.aktuellerRunner = runner;
+        this.ausfuehrenderThread = runner == null ? null : Thread.currentThread();
     }
 
     /** Setzt das Lauf-Flag direkt. */

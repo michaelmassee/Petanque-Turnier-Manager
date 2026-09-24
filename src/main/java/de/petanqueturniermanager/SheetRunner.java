@@ -158,6 +158,7 @@ public abstract class SheetRunner extends Thread {
 	 */
 	@Override
 	public final synchronized void start() {
+		verbieteStartInLaufendemRunner();
 		if (!koordinator.getAndSetLaeuft(true)) {
 			koordinatorVorgekoppelt = true;
 			super.start();
@@ -179,6 +180,7 @@ public abstract class SheetRunner extends Thread {
 	 * Koordinator bereits läuft, wird stillschweigend nichts getan (kein Popup).
 	 */
 	public final synchronized void startSilent() {
+		verbieteStartInLaufendemRunner();
 		if (!koordinator.getAndSetLaeuft(true)) {
 			koordinatorVorgekoppelt = true;
 			silentBackground = true;
@@ -188,6 +190,7 @@ public abstract class SheetRunner extends Thread {
 
 	@Override
 	public final void run() {
+		verbieteStartInLaufendemRunner();
 		boolean laueftJetzt = koordinatorVorgekoppelt || !koordinator.getAndSetLaeuft(true);
 		if (laueftJetzt) {
 			logger.debug("Start SheetRunner");
@@ -359,6 +362,23 @@ public abstract class SheetRunner extends Thread {
 			MessageBox.from(getxContext(), MessageBoxTypeEnum.WARN_OK)
 					.caption(I18n.get("msg.caption.aktive.verarbeitung"))
 					.message(I18n.get("msg.text.verarbeitung.laeuft")).show();
+		}
+	}
+
+	/**
+	 * Ein SheetRunner darf nicht aus einem laufenden SheetRunner heraus gestartet werden – weder per
+	 * {@link #start()}/{@link #startSilent()} noch per direktem {@link #run()}. Der Koordinator lässt nur
+	 * einen Lauf zu: Der innere würde abgelehnt oder still übersprungen, und der Aufrufer liefe weiter, als
+	 * wäre die Arbeit erledigt ({@code join()} auf den nie gestarteten Thread kehrt sofort zurück). Das ist
+	 * ein Programmierfehler; stattdessen die Arbeit synchron aufrufen (öffentliche Methode, auf die
+	 * {@code doRun()} delegiert).
+	 *
+	 * @throws IllegalStateException wenn der aufrufende Thread gerade einen SheetRunner-Lauf ausführt
+	 */
+	private void verbieteStartInLaufendemRunner() {
+		if (koordinator.fuehrtLaufAus(Thread.currentThread())) {
+			throw new IllegalStateException(I18n.get("processbox.fehler.runner.verschachtelt",
+					getClass().getSimpleName(), koordinator.getRunnerName()));
 		}
 	}
 

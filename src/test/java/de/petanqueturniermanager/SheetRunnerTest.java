@@ -149,6 +149,74 @@ public class SheetRunnerTest {
 		assertThat(SheetRunner.isRunning()).isFalse();
 	}
 
+	// --- Verschachtelter Start ---
+
+	@Test
+	public void startInLaufendemRunner_wirftIllegalStateException() throws InterruptedException {
+		assertThat(fehlerBeimStartInLaufendemRunner(SheetRunner::start))
+				.isInstanceOf(IllegalStateException.class);
+	}
+
+	@Test
+	public void startSilentInLaufendemRunner_wirftIllegalStateException() throws InterruptedException {
+		assertThat(fehlerBeimStartInLaufendemRunner(SheetRunner::startSilent))
+				.isInstanceOf(IllegalStateException.class);
+	}
+
+	@Test
+	public void runDirektInLaufendemRunner_wirftIllegalStateException() throws InterruptedException {
+		assertThat(fehlerBeimStartInLaufendemRunner(SheetRunner::run))
+				.isInstanceOf(IllegalStateException.class);
+	}
+
+	/** Wie in den UITests: der äußere Runner läuft per direktem run() auf dem Test-Thread. */
+	@Test
+	public void startInDirektAusgefuehrtemRunner_wirftIllegalStateException() {
+		TestSheetRunner innerer = new TestSheetRunner(workingSpreadsheetMock, TurnierSystem.KEIN, null,
+				processBoxMock);
+		testRunner.imDoRun = innerer::start;
+
+		testRunner.run();
+
+		assertThat(testRunner.fehlerImDoRun).isInstanceOf(IllegalStateException.class);
+		assertThat(innerer.doRunCalled).isFalse();
+		assertThat(testRunner.isLetzterLaufFehlgeschlagen()).isTrue();
+	}
+
+	@Test
+	public void runnerNachEinanderStartenBleibtErlaubt() throws InterruptedException {
+		testRunner.start();
+		testRunner.join();
+		TestSheetRunner zweiter = new TestSheetRunner(workingSpreadsheetMock, TurnierSystem.KEIN, null,
+				processBoxMock);
+
+		zweiter.start();
+		zweiter.join();
+
+		assertThat(zweiter.doRunCalled).isTrue();
+		assertThat(zweiter.isLetzterLaufFehlgeschlagen()).isFalse();
+	}
+
+	/**
+	 * Startet {@link #testRunner} als eigenen Thread und lässt ihn in seinem {@code doRun()} einen zweiten
+	 * Runner auf die angegebene Art starten.
+	 *
+	 * @return die dabei geworfene Exception, {@code null} wenn keine
+	 */
+	private RuntimeException fehlerBeimStartInLaufendemRunner(java.util.function.Consumer<SheetRunner> starteInneren)
+			throws InterruptedException {
+		TestSheetRunner innerer = new TestSheetRunner(workingSpreadsheetMock, TurnierSystem.KEIN, null,
+				processBoxMock);
+		testRunner.imDoRun = () -> starteInneren.accept(innerer);
+
+		testRunner.start();
+		testRunner.join();
+
+		assertThat(innerer.doRunCalled).as("innerer Runner darf nicht laufen").isFalse();
+		assertThat(testRunner.isLetzterLaufFehlgeschlagen()).as("äußerer Lauf gilt als fehlgeschlagen").isTrue();
+		return testRunner.fehlerImDoRun;
+	}
+
 	// --- Innere konkrete Testklasse ---
 
 	static class TestSheetRunner extends SheetRunner {
@@ -157,6 +225,10 @@ public class SheetRunnerTest {
 		boolean doRunCalled = false;
 		boolean generateExceptionBehandelt = false;
 		GenerateException doRunException = null;
+		Runnable imDoRun = () -> {
+			// standardmäßig nichts
+		};
+		volatile RuntimeException fehlerImDoRun = null;
 
 		TestSheetRunner(WorkingSpreadsheet ws, TurnierSystem system, String logPrefix, ProcessBox processBoxMock) {
 			super(ws, system, logPrefix);
@@ -179,6 +251,12 @@ public class SheetRunnerTest {
 			doRunCalled = true;
 			if (doRunException != null) {
 				throw doRunException;
+			}
+			try {
+				imDoRun.run();
+			} catch (RuntimeException e) {
+				fehlerImDoRun = e;
+				throw e;
 			}
 		}
 
