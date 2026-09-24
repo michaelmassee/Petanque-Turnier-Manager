@@ -45,7 +45,7 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
  * Das Sheet wird bei jedem Zugriff neu aufgelöst: Das Ziel entsteht auch dann, wenn das Mêlée-Sheet noch
  * fehlt (z.&nbsp;B. beim Rundenstart-Abgleich); Lesen liefert dann nichts, Schreiben scheitert.
  */
-final class MeleeAnmeldungZiel implements MeldelisteZiel, MeleeAnmeldungKonstanten {
+public final class MeleeAnmeldungZiel implements MeldelisteZiel, MeleeAnmeldungKonstanten {
 
 	private static final Logger logger = LogManager.getLogger(MeleeAnmeldungZiel.class);
 
@@ -76,17 +76,13 @@ final class MeleeAnmeldungZiel implements MeldelisteZiel, MeleeAnmeldungKonstant
 		return system.getBezeichnung();
 	}
 
-	@Override
-	public boolean istMeleeAnmeldung() {
-		return true;
-	}
-
-	private List<MeleeAnmeldungZeile> zeilen() {
+	/** Alle Zeilen der Mêlée-Anmeldung inkl. Eingecheckt-/Übernommen-Markierung und Setzposition. */
+	public List<MeleeAnmeldungZeile> leseMeleeZeilen() {
 		return MeleeAnmeldungLeser.lesen(ws, metadatenSchluessel);
 	}
 
 	private Optional<MeleeAnmeldungZeile> zeile(int zeile1Basiert) {
-		return zeilen().stream().filter(z -> z.zeile() == zeile1Basiert - 1).findFirst();
+		return leseMeleeZeilen().stream().filter(z -> z.zeile() == zeile1Basiert - 1).findFirst();
 	}
 
 	private XSpreadsheet sheet() throws MeldelisteSchreibException {
@@ -99,19 +95,19 @@ final class MeleeAnmeldungZiel implements MeldelisteZiel, MeleeAnmeldungKonstant
 
 	@Override
 	public List<MeldelisteSpielerDaten> leseAlleSpielerRoh() {
-		return zeilen().stream()
+		return leseMeleeZeilen().stream()
 				.map(z -> new MeldelisteSpielerDaten(z.vorname(), z.nachname(), null, z.zeile() + 1))
 				.toList();
 	}
 
 	@Override
 	public List<String> getVorhandeneSpielernamen() {
-		return zeilen().stream().map(MeleeAnmeldungZeile::anzeigeName).toList();
+		return leseMeleeZeilen().stream().map(MeleeAnmeldungZeile::anzeigeName).toList();
 	}
 
 	@Override
 	public MeldelisteStatus getMeldelisteStatus() {
-		List<MeleeAnmeldungZeile> zeilen = zeilen();
+		List<MeleeAnmeldungZeile> zeilen = leseMeleeZeilen();
 		int checkin = (int) zeilen.stream().filter(MeleeAnmeldungZeile::eingecheckt).count();
 		return new MeldelisteStatus(zeilen.size() - checkin, checkin, zeilen.size());
 	}
@@ -119,7 +115,7 @@ final class MeleeAnmeldungZiel implements MeldelisteZiel, MeleeAnmeldungKonstant
 	@Override
 	public int findeZeileMitName(String spielerName) {
 		String gesucht = spielerName.strip().toLowerCase(Locale.ROOT);
-		return zeilen().stream()
+		return leseMeleeZeilen().stream()
 				.filter(z -> z.anzeigeName().toLowerCase(Locale.ROOT).equals(gesucht))
 				.mapToInt(z -> z.zeile() + 1)
 				.findFirst().orElse(-1);
@@ -167,7 +163,7 @@ final class MeleeAnmeldungZiel implements MeldelisteZiel, MeleeAnmeldungKonstant
 	}
 
 	private int naechsteFreieZeile() {
-		return zeilen().stream().mapToInt(MeleeAnmeldungZeile::zeile).max().orElse(ERSTE_DATEN_ZEILE - 1) + 1;
+		return leseMeleeZeilen().stream().mapToInt(MeleeAnmeldungZeile::zeile).max().orElse(ERSTE_DATEN_ZEILE - 1) + 1;
 	}
 
 	@Override

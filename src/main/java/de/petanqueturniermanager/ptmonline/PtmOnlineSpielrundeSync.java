@@ -37,6 +37,7 @@ import de.petanqueturniermanager.ptmonline.dto.RegistrationResultDto;
 import de.petanqueturniermanager.spielerdb.MeldelisteZiel;
 import de.petanqueturniermanager.spielerdb.MeldelisteZielFactory;
 import de.petanqueturniermanager.spielerdb.MeldelisteSpielerDaten;
+import de.petanqueturniermanager.spielerdb.MeleeAnmeldungZiel;
 
 /**
  * Gleicht bei jedem Spielrunden-Start die Meldeliste des Turnierdokuments automatisch mit dem
@@ -110,7 +111,7 @@ public final class PtmOnlineSpielrundeSync {
             return;
         }
         Set<Integer> aktive = nummern(aktiveMeldungen);
-        Set<Integer> ausgestiegene = ausgestiegeneTeamNummern(verbindung.get().ziel());
+        Set<Integer> ausgestiegene = ausgestiegeneTeamNummern(verbindung.get().meldeliste());
         ausgestiegene.removeAll(aktive);
         abgleichen(ws.getxContext(), verbindung.get(), istErsteRunde, nummern(alleMeldungen), aktive, ausgestiegene);
     }
@@ -181,13 +182,8 @@ public final class PtmOnlineSpielrundeSync {
             }
         }
 
-        if (ziel.istMeleeAnmeldung()) {
-            // Online-Mêlée: die Anmeldungen sind Einzelspieler, die Team-Nummern der Runde gehören zu den
-            // lokal gemischten Teams. Teilnahme je Team auf die Mitglieds-Anmeldungen umzulegen ist noch
-            // nicht umgesetzt – bis dahin weder Status-Push noch Online-Anlage von Teams.
-            logger.info("PTM-Online: Mêlée-Anmeldung aktiv, Teilnahme-Abgleich der Teams wird übersprungen");
-        } else if (!statusPushen(ziel, mapping, client, tournamentId, alleTeamNummern, aktiveTeamNummern,
-                ausgestiegeneTeamNummern, fehler)) {
+        if (!statusPushen(verbindung, client, alleTeamNummern, aktiveTeamNummern, ausgestiegeneTeamNummern,
+                fehler)) {
             return;
         }
 
@@ -197,12 +193,14 @@ public final class PtmOnlineSpielrundeSync {
     }
 
     /** @return {@code false}, wenn der Thread dabei unterbrochen wurde. */
-    private static boolean statusPushen(MeldelisteZiel ziel, PtmOnlineRegistrationMapping mapping,
-            TournamentSyncClient client, String tournamentId, Set<Integer> alleTeamNummern,
-            Set<Integer> aktiveTeamNummern, Set<Integer> ausgestiegeneTeamNummern, List<String> fehler) {
+    private static boolean statusPushen(Verbindung verbindung, TournamentSyncClient client,
+            Set<Integer> alleTeamNummern, Set<Integer> aktiveTeamNummern, Set<Integer> ausgestiegeneTeamNummern,
+            List<String> fehler) {
         try {
-            List<String> abgelehnt = statusPushenUndNeueAnlegen(ziel, mapping, client, tournamentId,
+            List<LokaleOnlineMeldung> meldungen = lokaleMeldungen(verbindung.ziel(), verbindung.meldeliste(),
                     alleTeamNummern, aktiveTeamNummern, ausgestiegeneTeamNummern);
+            List<String> abgelehnt = statusPushenUndNeueAnlegen(verbindung.ziel(), verbindung.mapping(), client,
+                    verbindung.tournamentId(), meldungen);
             if (!abgelehnt.isEmpty()) {
                 fehler.add(RegistrationImportTask.onlineAbgelehntHinweis(abgelehnt));
             }
@@ -222,8 +220,41 @@ public final class PtmOnlineSpielrundeSync {
         return true;
     }
 
+    /**
+     * Teilnahme je Meldung im Sync-Ziel. Ohne Mêlée entspricht jede Meldung einem Team der Meldeliste (die
+     * Team-Nr wird als Setzposition gemeldet). Bei Mêlée-Anmeldung sind die Online-Anmeldungen Einzelspieler:
+     * jeder erhält die Teilnahme seines lokal gemischten Teams ({@link MeleeTeilnahme}).
+     */
+    static List<LokaleOnlineMeldung> lokaleMeldungen(MeldelisteZiel ziel, MeldelisteZiel meldeliste,
+            Set<Integer> alle, Set<Integer> aktive, Set<Integer> ausgestiegen) {
+        if (ziel instanceof MeleeAnmeldungZiel melee) {
+            return MeleeTeilnahme.ermittle(melee.leseMeleeZeilen(), spielerProTeam(meldeliste), aktive, ausgestiegen);
+        }
+        Map<Integer, Integer> zeileProTeam = zeileProTeam(ziel);
+        return alle.stream()
+                .filter(zeileProTeam::containsKey)
+                .map(teamNr -> new LokaleOnlineMeldung(zeileProTeam.get(teamNr),
+                        OnlineTeilnahme.aus(aktive.contains(teamNr), ausgestiegen.contains(teamNr)), teamNr))
+                .toList();
+    }
+
+    private static Map<Integer, List<MeldelisteSpielerDaten>> spielerProTeam(MeldelisteZiel meldeliste) {
+        Map<Integer, List<MeldelisteSpielerDaten>> ergebnis = new LinkedHashMap<>();
+        for (MeldelisteSpielerDaten spieler : meldeliste.leseAlleSpielerRoh()) {
+            int teamNr = meldeliste.getTeamNrAusZeile(spieler.zeile1Basiert());
+            if (teamNr > 0) {
+                ergebnis.computeIfAbsent(teamNr, ignored -> new ArrayList<>()).add(spieler);
+            }
+        }
+        return ergebnis;
+    }
+
+    /**
+     * @param ziel       Sync-Ziel mit den lokalen PTM-Online-IDs (Meldeliste bzw. Mêlée-Anmeldung)
+     * @param meldeliste Team-Meldeliste der Spielrunden; ohne Mêlée identisch mit {@code ziel}
+     */
     private record Verbindung(LibreOfficePtmOnlineSpeicher.Zugangsdaten config, MeldelisteZiel ziel,
-            PtmOnlineRegistrationMapping mapping, String tournamentId) {}
+            MeldelisteZiel meldeliste, PtmOnlineRegistrationMapping mapping, String tournamentId) {}
 
     /**
      * Verbindungsdaten des Dokuments (bzw. bei Supermelee des aktiven Spieltags), leer wenn kein
@@ -236,14 +267,15 @@ public final class PtmOnlineSpielrundeSync {
             return Optional.empty();
         }
         Optional<MeldelisteZiel> ziel = MeldelisteZielFactory.fuerPtmOnline(ws);
-        if (ziel.isEmpty()) {
+        Optional<MeldelisteZiel> meldeliste = MeldelisteZielFactory.fuerAktivesSheet(ws);
+        if (ziel.isEmpty() || meldeliste.isEmpty()) {
             return Optional.empty();
         }
         try {
             Integer spieltagNr = SpieltagKontext.aktiverSpieltagOderNull(ws, ts);
             PtmOnlineRegistrationMapping mapping = new PtmOnlineRegistrationMapping(ws, ts, spieltagNr);
             return mapping.getTournamentId()
-                    .map(tournamentId -> new Verbindung(config, ziel.get(), mapping, tournamentId));
+                    .map(tournamentId -> new Verbindung(config, ziel.get(), meldeliste.get(), mapping, tournamentId));
         } catch (GenerateException e) {
             logger.error("PTM-Online: Verbindungsdaten lesen fehlgeschlagen", e);
             zeigeFehlerSammlung(ctx, List.of(e.getMessage()));
@@ -291,26 +323,25 @@ public final class PtmOnlineSpielrundeSync {
     }
 
     /**
-     * Pusht die lokale Teilnahme (inaktiv/aktiv/ausgesetzt) aller bereits online zugeordneten Teams und legt
-     * für lokal neu erfasste, aktive Teams ohne Online-Zuordnung eine neue Anmeldung an.
+     * Pusht die lokale Teilnahme aller bereits online zugeordneten Meldungen und legt für aktive Meldungen ohne
+     * Online-Zuordnung (vor Ort erfasst) eine neue Anmeldung an.
      *
-     * @return Bezeichnungen der Teams, die PTM-Online beim Anlegen als bereits angemeldet abgelehnt hat.
+     * @return Bezeichnungen der Meldungen, die PTM-Online beim Anlegen als bereits angemeldet abgelehnt hat.
      */
-    private static List<String> statusPushenUndNeueAnlegen(MeldelisteZiel ziel, PtmOnlineRegistrationMapping mapping,
-            TournamentSyncClient client, String tournamentId, Set<Integer> alle, Set<Integer> aktive,
-            Set<Integer> ausgestiegen) throws IOException, InterruptedException, GenerateException {
+    static List<String> statusPushenUndNeueAnlegen(MeldelisteZiel ziel, PtmOnlineRegistrationMapping mapping,
+            TournamentSyncClient client, String tournamentId, List<LokaleOnlineMeldung> meldungen)
+            throws IOException, InterruptedException, GenerateException {
         List<RegistrationResultDto> results = new ArrayList<>();
         Map<String, String> lokaleUuidProOnlineId = new LinkedHashMap<>();
-        Map<Integer, Integer> zeileProTeam = zeileProTeam(ziel);
-        for (int teamNr : alle) {
-            Optional<String> onlineId = onlineId(mapping, ziel, zeileProTeam.getOrDefault(teamNr, -1));
+        for (LokaleOnlineMeldung meldung : meldungen) {
+            Optional<String> onlineId = onlineId(mapping, ziel, meldung.zeile1Basiert());
             if (onlineId.isEmpty()) {
                 continue;
             }
-            OnlineTeilnahme teilnahme = OnlineTeilnahme.aus(aktive.contains(teamNr), ausgestiegen.contains(teamNr));
-            String uuid = lokaleUuid(ziel, zeileProTeam.getOrDefault(teamNr, -1));
+            String uuid = lokaleUuid(ziel, meldung.zeile1Basiert());
             int revision = mapping.getExecutionRevision(uuid);
-            results.add(new RegistrationResultDto(onlineId.get(), null, teamNr, teilnahme.apiWert(), revision));
+            results.add(new RegistrationResultDto(onlineId.get(), null, meldung.seedingPosition(),
+                    meldung.teilnahme().apiWert(), revision));
             lokaleUuidProOnlineId.put(onlineId.get(), uuid);
         }
         if (!results.isEmpty()) {
@@ -326,16 +357,16 @@ public final class PtmOnlineSpielrundeSync {
             }
         }
 
-        Map<Integer, List<MeldelisteSpielerDaten>> proTeam = ziel.leseAlleSpielerRoh().stream()
+        Map<Integer, List<MeldelisteSpielerDaten>> proZeile = ziel.leseAlleSpielerRoh().stream()
                 .collect(Collectors.groupingBy(MeldelisteSpielerDaten::zeile1Basiert, LinkedHashMap::new, Collectors.toList()));
 
         List<String> abgelehnt = new ArrayList<>();
-        for (int teamNr : aktive) {
-            int zeile = zeileProTeam.getOrDefault(teamNr, -1);
-            if (onlineId(mapping, ziel, zeile).isPresent()) {
+        for (LokaleOnlineMeldung meldung : meldungen) {
+            int zeile = meldung.zeile1Basiert();
+            if (meldung.teilnahme() != OnlineTeilnahme.AKTIV || onlineId(mapping, ziel, zeile).isPresent()) {
                 continue;
             }
-            List<MeldelisteSpielerDaten> spieler = proTeam.get(zeile);
+            List<MeldelisteSpielerDaten> spieler = proZeile.get(zeile);
             if (spieler == null || spieler.isEmpty()) {
                 continue;
             }
@@ -348,7 +379,7 @@ public final class PtmOnlineSpielrundeSync {
                 if (!e.istBereitsAngemeldet()) {
                     throw e;
                 }
-                logger.warn("PTM-Online: Team {} online abgelehnt (bereits angemeldet)", teamNr, e);
+                logger.warn("PTM-Online: Meldung in Zeile {} online abgelehnt (bereits angemeldet)", zeile, e);
                 abgelehnt.add(bezeichnung(spieler));
                 continue;
             }

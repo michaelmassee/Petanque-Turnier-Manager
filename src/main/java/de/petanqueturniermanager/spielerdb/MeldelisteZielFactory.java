@@ -132,7 +132,7 @@ public final class MeldelisteZielFactory {
      */
     public static void aktualisiereZielSynchron(WorkingSpreadsheet ws, TurnierSystem ts, MeldelisteZiel ziel)
             throws GenerateException {
-        if (!ziel.istMeleeAnmeldung()) {
+        if (!(ziel instanceof MeleeAnmeldungZiel)) {
             aktualisiereMeldelisteSynchron(ws, ts);
             return;
         }

@@ -29,6 +29,7 @@ import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeleeAnmeldungShe
 import de.petanqueturniermanager.spielerdb.MeldelisteZiel;
 import de.petanqueturniermanager.spielerdb.MeldelisteZiel.NeueMeldungTeilnahme;
 import de.petanqueturniermanager.spielerdb.MeldelisteZielFactory;
+import de.petanqueturniermanager.spielerdb.MeleeAnmeldungZiel;
 import de.petanqueturniermanager.spielerdb.SpielerMitVerein;
 
 /**
@@ -60,7 +61,7 @@ class RegistrationImportMeleeUITest extends BaseCalcUITest {
 
     @Test
     void zielIstDasMeleeSheetMitEinzelspielern() {
-        assertThat(ziel.istMeleeAnmeldung()).isTrue();
+        assertThat(ziel).isInstanceOf(MeleeAnmeldungZiel.class);
         assertThat(ziel.getFormation()).isEqualTo(Formation.TETE);
     }
 

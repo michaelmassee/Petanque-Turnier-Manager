@@ -19,6 +19,7 @@ import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.ptmonline.RegistrationImportTask.AbgleichErgebnis;
 import de.petanqueturniermanager.spielerdb.MeldelisteZiel;
 import de.petanqueturniermanager.spielerdb.MeldelisteZielFactory;
+import de.petanqueturniermanager.spielerdb.MeleeAnmeldungZiel;
 
 /**
  * Manueller Abgleich der Meldungen mit PTM-Online als normaler {@link SheetRunner}: Statuszeilen in
@@ -52,7 +53,7 @@ public final class PtmOnlineAbgleichSheetRunner extends SheetRunner {
     @Override
     protected void doRun() throws GenerateException {
         processBox().info(I18n.get("ptmonline.fortschritt.abgleich_start"));
-        if (ziel.istMeleeAnmeldung()) {
+        if (ziel instanceof MeleeAnmeldungZiel) {
             // Mêlée-Anmeldung-Sheet anlegen, falls es fehlt – sonst hätten Online-Anmeldungen kein Ziel.
             zielAktualisieren();
         }
