@@ -52,16 +52,24 @@ final class PtmOnlineTurnierVerbindenDialog extends AbstractUnoDialog {
 
 	private XControlContainer xcc;
 	private XDialog xDialog;
+	/** Online-Turnier, mit dem dieses Dokument bereits verbunden ist; {@code null} wenn nicht verbunden. */
+	private final String eigeneTurnierId;
 	private OnlineTournamentDto ausgewaehlt;
 
-	private PtmOnlineTurnierVerbindenDialog(XComponentContext ctx, XWindowPeer parentPeer, List<OnlineTournamentDto> kandidaten) {
+	private PtmOnlineTurnierVerbindenDialog(XComponentContext ctx, XWindowPeer parentPeer,
+			List<OnlineTournamentDto> kandidaten, String eigeneTurnierId) {
 		super(ctx);
 		this.parentPeer = parentPeer;
 		this.kandidaten = kandidaten;
+		this.eigeneTurnierId = eigeneTurnierId;
 	}
 
-	static Optional<OnlineTournamentDto> zeigen(XComponentContext ctx, XWindowPeer parentPeer, List<OnlineTournamentDto> kandidaten)
-			throws GenerateException {
+	/**
+	 * @param eigeneTurnierId Online-Turnier, mit dem dieses Dokument bereits verbunden ist, sonst {@code null} –
+	 *                        für den Verbindungsstatus je Listeneintrag
+	 */
+	static Optional<OnlineTournamentDto> zeigen(XComponentContext ctx, XWindowPeer parentPeer,
+			List<OnlineTournamentDto> kandidaten, String eigeneTurnierId) throws GenerateException {
 		logger.info("PtmOnlineTurnierVerbindenDialog.zeigen(): poste auf Main-Thread (Thread={}, {} Kandidaten)",
 				Thread.currentThread().getName(), kandidaten.size());
 		var future = new CompletableFuture<Optional<OnlineTournamentDto>>();
@@ -69,7 +77,7 @@ final class PtmOnlineTurnierVerbindenDialog extends AbstractUnoDialog {
 			logger.info("PtmOnlineTurnierVerbindenDialog: Main-Thread-Callback laeuft (Thread={})",
 					Thread.currentThread().getName());
 			try {
-				var dialog = new PtmOnlineTurnierVerbindenDialog(ctx, parentPeer, kandidaten);
+				var dialog = new PtmOnlineTurnierVerbindenDialog(ctx, parentPeer, kandidaten, eigeneTurnierId);
 				dialog.erstelleUndAusfuehren();
 				logger.info("PtmOnlineTurnierVerbindenDialog: erstelleUndAusfuehren() zurueck, ausgewaehlt={}",
 						dialog.ausgewaehlt != null);
@@ -176,9 +184,18 @@ final class PtmOnlineTurnierVerbindenDialog extends AbstractUnoDialog {
 		for (int i = 0; i < kandidaten.size(); i++) {
 			OnlineTournamentDto t = kandidaten.get(i);
 			items[i] = StringUtils.defaultString(t.name) + "  —  " + StringUtils.defaultString(t.date)
-					+ "  (" + StringUtils.defaultString(t.status) + ")";
+					+ "  (" + StringUtils.defaultString(t.status) + ")  —  " + verbindungsStatus(t);
 		}
 		return items;
+	}
+
+	/** Online und Dokument sind immer 1:1 verbunden – die Liste zeigt, wer ein Turnier gerade hält. */
+	private String verbindungsStatus(OnlineTournamentDto turnier) {
+		if (turnier.id != null && turnier.id.equals(eigeneTurnierId)) {
+			return I18n.get("ptmonline.turnier.verbinden.dialog.status.dieses_dokument");
+		}
+		return turnier.documentManaged ? I18n.get("ptmonline.turnier.verbinden.dialog.status.anderes_dokument")
+				: I18n.get("ptmonline.turnier.verbinden.dialog.status.nicht_verbunden");
 	}
 
 	private static void label(XMultiServiceFactory xMSF, XNameContainer cont,

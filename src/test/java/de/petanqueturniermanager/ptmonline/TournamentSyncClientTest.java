@@ -71,6 +71,24 @@ public class TournamentSyncClientTest {
 	}
 
 	@Test
+	public void takeoverSendetErwarteteRevisionUndUebernimmtBindung() throws Exception {
+		HttpClient httpClient = mock(HttpClient.class);
+		HttpResponse<String> response = mockResponse(200,
+				"{\"ok\":true,\"syncDocumentId\":\"e9e9caec-e0b1-4fe0-8fee-a229279b9f73\",\"bindingRevision\":2}");
+		when(httpClient.<String>send(any(HttpRequest.class), any())).thenReturn(response);
+
+		TournamentSyncClient client = new TournamentSyncClient(httpClient, "https://ptm-online.example.com", "ptm_secret");
+		SyncBindingDto binding = client.takeover("t1", "e9e9caec-e0b1-4fe0-8fee-a229279b9f73",
+				"01234567890123456789012345678901", 1);
+
+		assertThat(binding.bindingRevision()).isEqualTo(2);
+		ArgumentCaptor<HttpRequest> captor = ArgumentCaptor.forClass(HttpRequest.class);
+		verify(httpClient).send(captor.capture(), any());
+		assertThat(captor.getValue().uri().toString())
+				.isEqualTo("https://ptm-online.example.com/api/sync/tournaments/t1/takeover");
+	}
+
+	@Test
 	public void fetchRegistrationsParstListeAusDerAntwort() throws Exception {
 		HttpClient httpClient = mock(HttpClient.class);
 		String body = "{\"registrations\":[{\"id\":\"r1\",\"tournamentId\":\"t1\",\"firstName\":\"Max\",\"lastName\":\"Muster\",\"status\":\"confirmed\"}],\"cursor\":\"2026-01-01T00:00:00.000Z\"}";

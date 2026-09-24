@@ -100,6 +100,9 @@ public final class PtmOnlineAbgleichSheetRunner extends SheetRunner {
         if (e instanceof PtmOnlineHttpException http && http.getStatusCode() == HTTP_NICHT_AUTORISIERT) {
             return I18n.get("ptmonline.fehler.nicht_freigeschaltet");
         }
+        if (e instanceof PtmOnlineHttpException http && http.istBindungAbgeloest()) {
+            return I18n.get("ptmonline.fehler.bindung_abgeloest");
+        }
         String meldung = e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
         return I18n.get("ptmonline.fehler.netzwerk", meldung);
     }

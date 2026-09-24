@@ -466,6 +466,9 @@ public final class PtmOnlineSpielrundeSync {
     }
 
     private static String netzwerkFehlerText(Exception e) {
+        if (e instanceof PtmOnlineHttpException http && http.istBindungAbgeloest()) {
+            return I18n.get("ptmonline.fehler.bindung_abgeloest");
+        }
         return e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
     }
 

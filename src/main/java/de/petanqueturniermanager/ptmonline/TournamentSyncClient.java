@@ -11,6 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -69,12 +70,32 @@ public class TournamentSyncClient extends PtmOnlineHttpClient {
         body.addProperty("syncDocumentId", syncDocumentId);
         body.addProperty("leaseToken", leaseToken);
         HttpResponse<String> response = post("/api/sync/tournaments/" + encode(tournamentId) + "/connect", body.toString());
-        SyncBindingDto binding = GSON.fromJson(response.body(), SyncBindingDto.class);
+        return pruefeBindung(GSON.fromJson(response.body(), SyncBindingDto.class), syncDocumentId);
+    }
+
+    private static SyncBindingDto pruefeBindung(SyncBindingDto binding, String syncDocumentId) throws IOException {
         if (binding == null || !binding.ok() || binding.syncDocumentId() == null
                 || !syncDocumentId.equals(binding.syncDocumentId()) || binding.bindingRevision() < 1) {
             throw new IOException(I18n.get("ptmonline.fehler.server_ohne_dokumentbindung"));
         }
         return binding;
+    }
+
+    /**
+     * Übernimmt ein Online-Turnier, das mit einem anderen Turnierdokument verbunden ist: das bisherige Dokument
+     * verliert seine Bindung (Online-Turnier und Dokument sind immer 1:1 verbunden). {@code expectedBindingRevision}
+     * stammt aus dem {@code document_bound}-Konflikt des vorangegangenen {@link #connect}.
+     */
+    public SyncBindingDto takeover(String tournamentId, String syncDocumentId, String leaseToken,
+            long expectedBindingRevision) throws IOException, InterruptedException {
+        JsonObject body = new JsonObject();
+        body.addProperty("syncDocumentId", syncDocumentId);
+        body.addProperty("leaseToken", leaseToken);
+        body.addProperty("takeoverRequestId", UUID.randomUUID().toString());
+        body.addProperty("expectedBindingRevision", expectedBindingRevision);
+        HttpResponse<String> response = post("/api/sync/tournaments/" + encode(tournamentId) + "/takeover",
+                body.toString());
+        return pruefeBindung(GSON.fromJson(response.body(), SyncBindingDto.class), syncDocumentId);
     }
 
     /**
