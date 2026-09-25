@@ -14,7 +14,9 @@ import java.util.List;
 import java.util.UUID;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 
 import de.petanqueturniermanager.onlinesync.OnlineTournamentDto;
 import de.petanqueturniermanager.helper.i18n.I18n;
@@ -50,11 +52,10 @@ public class TournamentSyncClient extends PtmOnlineHttpClient {
      * Editor) - Grundlage für die Auswahlliste "Mit Online-Turnier verbinden".
      */
     public List<OnlineTournamentDto> listTournaments() throws IOException, InterruptedException {
-        HttpResponse<String> response = get("/api/sync/tournaments");
-        JsonObject payload = GSON.fromJson(response.body(), JsonObject.class);
+        JsonObject payload = leseAntwort(get("/api/sync/tournaments"));
 
         List<OnlineTournamentDto> turniere = new ArrayList<>();
-        for (var element : payload.getAsJsonArray("tournaments")) {
+        for (var element : pflichtArray(payload, "tournaments")) {
             turniere.add(GSON.fromJson(element, OnlineTournamentDto.class));
         }
         return turniere;
@@ -70,7 +71,7 @@ public class TournamentSyncClient extends PtmOnlineHttpClient {
         body.addProperty("syncDocumentId", syncDocumentId);
         body.addProperty("leaseToken", leaseToken);
         HttpResponse<String> response = post("/api/sync/tournaments/" + encode(tournamentId) + "/connect", body.toString());
-        return pruefeBindung(GSON.fromJson(response.body(), SyncBindingDto.class), syncDocumentId);
+        return pruefeBindung(leseAntwort(response, SyncBindingDto.class), syncDocumentId);
     }
 
     private static SyncBindingDto pruefeBindung(SyncBindingDto binding, String syncDocumentId) throws IOException {
@@ -95,7 +96,7 @@ public class TournamentSyncClient extends PtmOnlineHttpClient {
         body.addProperty("expectedBindingRevision", expectedBindingRevision);
         HttpResponse<String> response = post("/api/sync/tournaments/" + encode(tournamentId) + "/takeover",
                 body.toString());
-        return pruefeBindung(GSON.fromJson(response.body(), SyncBindingDto.class), syncDocumentId);
+        return pruefeBindung(leseAntwort(response, SyncBindingDto.class), syncDocumentId);
     }
 
     /**
@@ -125,8 +126,7 @@ public class TournamentSyncClient extends PtmOnlineHttpClient {
             throws IOException, InterruptedException {
         HttpResponse<String> response = post(
                 "/api/sync/tournaments/" + encode(tournamentId) + "/registrations", GSON.toJson(anmeldung));
-        JsonObject payload = GSON.fromJson(response.body(), JsonObject.class);
-        return GSON.fromJson(payload.get("registration"), RegistrationDto.class);
+        return leseRegistration(response);
     }
 
     /** Idempotente Neuanlage durch die lokale, dauerhafte Meldelisten-UUID. */
@@ -134,8 +134,7 @@ public class TournamentSyncClient extends PtmOnlineHttpClient {
             throws IOException, InterruptedException {
         HttpResponse<String> response = put("/api/sync/tournaments/" + encode(tournamentId)
                 + "/registrations/" + encode(lokaleUuid), GSON.toJson(anmeldung));
-        JsonObject payload = GSON.fromJson(response.body(), JsonObject.class);
-        return GSON.fromJson(payload.get("registration"), RegistrationDto.class);
+        return leseRegistration(response);
     }
 
     /**
@@ -148,11 +147,10 @@ public class TournamentSyncClient extends PtmOnlineHttpClient {
             path += "?since=" + encode(since.toString());
         }
 
-        HttpResponse<String> response = get(path);
-        JsonObject payload = GSON.fromJson(response.body(), JsonObject.class);
+        JsonObject payload = leseAntwort(get(path));
 
         List<RegistrationDto> registrations = new ArrayList<>();
-        for (var element : payload.getAsJsonArray("registrations")) {
+        for (var element : pflichtArray(payload, "registrations")) {
             registrations.add(GSON.fromJson(element, RegistrationDto.class));
         }
         return registrations;
@@ -169,9 +167,62 @@ public class TournamentSyncClient extends PtmOnlineHttpClient {
         JsonObject body = new JsonObject();
         body.add("registrations", registrationsArray);
 
-        HttpResponse<String> response = post("/api/sync/tournaments/" + encode(tournamentId) + "/results", body.toString());
-        JsonObject payload = GSON.fromJson(response.body(), JsonObject.class);
-        return payload.get("updatedCount").getAsInt();
+        JsonObject payload = leseAntwort(
+                post("/api/sync/tournaments/" + encode(tournamentId) + "/results", body.toString()));
+        JsonElement updatedCount = pflichtfeld(payload, "updatedCount");
+        if (!updatedCount.isJsonPrimitive() || !updatedCount.getAsJsonPrimitive().isNumber()) {
+            throw unvollstaendigeAntwort("updatedCount");
+        }
+        return updatedCount.getAsInt();
+    }
+
+    private static RegistrationDto leseRegistration(HttpResponse<String> response) throws IOException {
+        JsonElement registration = pflichtfeld(leseAntwort(response), "registration");
+        if (!registration.isJsonObject()) {
+            throw unvollstaendigeAntwort("registration");
+        }
+        return GSON.fromJson(registration, RegistrationDto.class);
+    }
+
+    private static JsonObject leseAntwort(HttpResponse<String> response) throws IOException {
+        return leseAntwort(response, JsonObject.class);
+    }
+
+    /**
+     * Parst den Antwort-Body. Leere oder syntaktisch kaputte Antworten werden zu einer
+     * {@link IOException}, damit Aufrufer sie wie jeden anderen Verbindungsfehler behandeln.
+     */
+    private static <T> T leseAntwort(HttpResponse<String> response, Class<T> typ) throws IOException {
+        T payload;
+        try {
+            payload = GSON.fromJson(response.body(), typ);
+        } catch (JsonParseException e) {
+            throw new IOException(I18n.get("ptmonline.fehler.antwort_ungueltig"), e);
+        }
+        if (payload == null) {
+            throw new IOException(I18n.get("ptmonline.fehler.antwort_ungueltig"));
+        }
+        return payload;
+    }
+
+    private static JsonElement pflichtfeld(JsonObject payload, String feld) throws IOException {
+        JsonElement wert = payload.get(feld);
+        if (wert == null || wert.isJsonNull()) {
+            throw unvollstaendigeAntwort(feld);
+        }
+        return wert;
+    }
+
+    private static JsonArray pflichtArray(JsonObject payload, String feld) throws IOException {
+        JsonElement wert = pflichtfeld(payload, feld);
+        if (!wert.isJsonArray()) {
+            throw unvollstaendigeAntwort(feld);
+        }
+        return wert.getAsJsonArray();
+    }
+
+    private static IOException unvollstaendigeAntwort(String feld) {
+        return new IOException(I18n.get("ptmonline.fehler.antwort_unvollstaendig", feld));
     }
 
     private static String encode(String value) {

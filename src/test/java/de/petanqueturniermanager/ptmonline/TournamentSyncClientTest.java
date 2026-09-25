@@ -163,4 +163,51 @@ public class TournamentSyncClientTest {
 				.isInstanceOfSatisfying(PtmOnlineHttpException.class,
 						e -> assertThat(e.istBereitsAngemeldet()).isTrue());
 	}
+
+	@Test
+	public void pushResultsOhneUpdatedCountWirftIOException() throws Exception {
+		TournamentSyncClient client = clientMitAntwort("{}");
+
+		assertThatThrownBy(() -> client.pushResults("t1", List.of())).isExactlyInstanceOf(IOException.class)
+				.hasMessageContaining("updatedCount");
+	}
+
+	@Test
+	public void fetchRegistrationsOhneArrayWirftIOException() throws Exception {
+		TournamentSyncClient client = clientMitAntwort("{\"registrations\":null}");
+
+		assertThatThrownBy(() -> client.fetchRegistrations("t1", null)).isExactlyInstanceOf(IOException.class)
+				.hasMessageContaining("registrations");
+	}
+
+	@Test
+	public void createRegistrationOhneRegistrationWirftIOException() throws Exception {
+		TournamentSyncClient client = clientMitAntwort("{\"ok\":true}");
+		NeueOnlineAnmeldung anmeldung = new NeueOnlineAnmeldung("Max", "Muster", null, null, null, null, null, null,
+				null, true, true, List.of(), List.of());
+
+		assertThatThrownBy(() -> client.createRegistration("t1", anmeldung)).isExactlyInstanceOf(IOException.class)
+				.hasMessageContaining("registration");
+	}
+
+	@Test
+	public void listTournamentsMitKaputterAntwortWirftIOException() throws Exception {
+		TournamentSyncClient client = clientMitAntwort("<html>Bad Gateway</html>");
+
+		assertThatThrownBy(client::listTournaments).isExactlyInstanceOf(IOException.class);
+	}
+
+	@Test
+	public void listTournamentsMitLeererAntwortWirftIOException() throws Exception {
+		TournamentSyncClient client = clientMitAntwort("");
+
+		assertThatThrownBy(client::listTournaments).isExactlyInstanceOf(IOException.class);
+	}
+
+	private TournamentSyncClient clientMitAntwort(String body) throws Exception {
+		HttpClient httpClient = mock(HttpClient.class);
+		HttpResponse<String> response = mockResponse(200, body);
+		when(httpClient.<String>send(any(HttpRequest.class), any())).thenReturn(response);
+		return new TournamentSyncClient(httpClient, "https://ptm-online.example.com", "ptm_secret");
+	}
 }
