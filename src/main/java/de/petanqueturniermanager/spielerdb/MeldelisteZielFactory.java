@@ -178,8 +178,13 @@ public final class MeldelisteZielFactory {
                 .toList());
     }
 
-    /** Sichert UUIDs nach lokaler Spieler-/Teamnummer für Umbauten dynamischer Meldelisten. */
-    public static Map<Integer, String> sichereLokalePtmOnlineUuids(WorkingSpreadsheet ws) throws GenerateException {
+    /**
+     * Sichert die vorhandenen UUIDs nach lokaler Spieler-/Teamnummer und räumt danach ihre Spalte – für Umbauten
+     * dynamischer Meldelisten, bei denen die UUID-Spalte wandert (Supermelee: neuer Spieltag belegt sie). Legt keine
+     * neuen UUIDs an; das übernimmt {@link #erstelleLokalePtmOnlineUuids} nach dem Umbau.
+     */
+    public static Map<Integer, String> sichereUndEntferneLokalePtmOnlineUuids(WorkingSpreadsheet ws)
+            throws GenerateException {
         Map<Integer, String> ergebnis = new LinkedHashMap<>();
         Optional<MeldelisteZiel> ziel = fuerAktivesSheet(ws);
         if (ziel.isEmpty()) {
@@ -193,8 +198,9 @@ public final class MeldelisteZielFactory {
                     nrProZeile.put(zeile, nr);
                 }
             }
-            ziel.get().getOderErzeugeLokaleUuids(nrProZeile.keySet())
+            ziel.get().leseLokaleUuids(nrProZeile.keySet())
                     .forEach((zeile, uuid) -> ergebnis.put(nrProZeile.get(zeile), uuid));
+            ziel.get().entferneLokaleUuids();
             return ergebnis;
         } catch (MeldelisteZiel.MeldelisteSchreibException e) {
             throw new GenerateException(e.getMessage());

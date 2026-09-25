@@ -176,10 +176,13 @@ public class MeldeListeSheet_NeuerSpieltag extends SheetRunner implements IMelde
 		// Blattschutz entfernen: clearContents wird von LO auf gesperrten Zellen lautlos ignoriert.
 		// upDateSheet() → formatDaten() setzt den Schutz danach korrekt neu.
 
+		// Die neue Spieltag-Spalte ist bisher die Spalte der lokalen PTM-Online-IDs: erst sichern, dann leeren.
 		RangePosition cleanUpRange = RangePosition.from(aktuelleSpieltagSpalte(), ERSTE_HEADER_ZEILE,
 				aktuelleSpieltagSpalte(), MeldungenSpalte.MAX_ANZ_MELDUNGEN);
-		RangeHelper.from(this, cleanUpRange).clearRange();
-		upDateSheet();
+		delegate.mitGesichertenLokalenUuids(() -> {
+			RangeHelper.from(this, cleanUpRange).clearRange();
+			delegate.aufbauen();
+		});
 		getxCalculatable().calculateAll();
 	}
 

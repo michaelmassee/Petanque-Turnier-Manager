@@ -461,6 +461,24 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
     }
 
     @Override
+    public Map<Integer, String> leseLokaleUuids(Collection<Integer> zeilen1Basiert) {
+        int spalte = findeSpalte(leseKopfzeile(), I18n.get("ptmonline.meldeliste.header.lokaleuuid"));
+        if (spalte < 0) {
+            return Map.of();
+        }
+        return new LokaleUuidSpalte(sheet, doc, spalte).lese(zeilen1Basiert);
+    }
+
+    @Override
+    public void entferneLokaleUuids() {
+        int spalte = findeSpalte(leseKopfzeile(), I18n.get("ptmonline.meldeliste.header.lokaleuuid"));
+        uuidSpalteCache = -1;
+        if (spalte >= 0) {
+            RangeHelper.from(sheet, doc, RangePosition.from(spalte, headerZeile(), spalte, MAX_DATEN_ZEILE)).clearRange();
+        }
+    }
+
+    @Override
     public void setzeLokaleUuid(int zeile1Basiert, String uuid) throws MeldelisteSchreibException {
         setzeLokaleUuids(Map.of(zeile1Basiert, uuid));
     }

@@ -42,7 +42,7 @@ final class LokaleUuidSpalte {
         if (zeilen1Basiert.isEmpty()) {
             return ergebnis;
         }
-        Block block = lese(zeilen1Basiert);
+        Block block = leseBlock(zeilen1Basiert);
         boolean geaendert = false;
         for (int zeile : zeilen1Basiert) {
             String uuid = block.get(zeile);
@@ -59,17 +59,33 @@ final class LokaleUuidSpalte {
         return ergebnis;
     }
 
+    /** Vorhandene UUIDs der Zeilen, ohne fehlende anzulegen; Zeilen ohne UUID fehlen im Ergebnis. */
+    Map<Integer, String> lese(Collection<Integer> zeilen1Basiert) {
+        Map<Integer, String> ergebnis = new LinkedHashMap<>();
+        if (zeilen1Basiert.isEmpty()) {
+            return ergebnis;
+        }
+        Block block = leseBlock(zeilen1Basiert);
+        for (int zeile : zeilen1Basiert) {
+            String uuid = block.get(zeile);
+            if (!uuid.isEmpty()) {
+                ergebnis.put(zeile, uuid);
+            }
+        }
+        return ergebnis;
+    }
+
     /** Setzt zuvor gesicherte UUIDs wieder auf ihre Zeilen, in einem Schreibzugriff. */
     void setze(Map<Integer, String> uuidProZeile) throws GenerateException {
         if (uuidProZeile.isEmpty()) {
             return;
         }
-        Block block = lese(uuidProZeile.keySet());
+        Block block = leseBlock(uuidProZeile.keySet());
         uuidProZeile.forEach(block::set);
         block.schreibe();
     }
 
-    private Block lese(Collection<Integer> zeilen1Basiert) {
+    private Block leseBlock(Collection<Integer> zeilen1Basiert) {
         int ersteZeile = zeilen1Basiert.stream().mapToInt(Integer::intValue).min().orElseThrow() - 1;
         int letzteZeile = zeilen1Basiert.stream().mapToInt(Integer::intValue).max().orElseThrow() - 1;
         RangePosition bereich = RangePosition.from(spalte, ersteZeile, spalte, letzteZeile);
