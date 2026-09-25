@@ -53,6 +53,10 @@ import com.tngtech.archunit.core.importer.ClassFileImporter;
  * ordnungs-unempfindlich und markierte auch den bereits gefixten Code als Verstoss, weil das
  * (sichere) {@code join()} im selben Methodenkoerper VOR dem {@code post(...)}-Aufruf liegt, nicht
  * darin. Dieser Test prueft daher gezielt nur die tatsaechlichen Post-Ziel-Methoden.
+ * <p>
+ * Seit Verbinden und Trennen komplett in einem SheetRunner laufen ({@link PtmOnlineVerbindenRunner},
+ * {@link PtmOnlineVerbindungsRunner}), meldet der Runner den Erfolg selbst; der Dispatcher postet nur noch
+ * Fehlermeldungen.
  */
 class PtmOnlineDispatcherThreadingTest {
 
@@ -65,7 +69,7 @@ class PtmOnlineDispatcherThreadingTest {
      * uebergeben werden - laufen also auf dem LO-Main-Thread. Bei Erweiterung von
      * {@code PtmOnlineDispatcher} um weitere {@code LoMainThread.post}-Aufrufe hier ergaenzen.
      */
-    private static final Set<String> POST_ZIEL_METHODEN = Set.of("zeigeErfolg", "zeigeFehler", "zeigeNetzwerkFehler");
+    private static final Set<String> POST_ZIEL_METHODEN = Set.of("zeigeFehler", "zeigeNetzwerkFehler");
 
     @Test
     void verbindenImHintergrundRuehrtProcessBoxNichtDirektAn() {

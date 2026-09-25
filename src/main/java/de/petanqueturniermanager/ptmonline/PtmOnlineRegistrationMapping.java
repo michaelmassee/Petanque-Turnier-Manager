@@ -31,11 +31,11 @@ public class PtmOnlineRegistrationMapping {
     }
 
     /**
-     * Legt das Blatt an (falls nötig) und schreibt die Verbindungsdaten - einmalig beim Verbinden. Wechselt das
-     * Online-Turnier, wird die bisherige Zuordnung geleert.
+     * Legt das Blatt an (falls nötig) und schreibt die Verbindungsdaten - einmalig beim Verbinden, synchron
+     * innerhalb eines laufenden SheetRunners. Wechselt das Online-Turnier, wird die bisherige Zuordnung geleert.
      */
     public void verbinden(OnlineTournamentDto turnier, SyncBindingDto binding, String leaseToken)
-            throws GenerateException, InterruptedException {
+            throws GenerateException {
         syncSheet.verbinden(turnier, binding.syncDocumentId(), leaseToken);
     }
 

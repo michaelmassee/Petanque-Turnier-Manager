@@ -28,8 +28,6 @@ import de.petanqueturniermanager.spielerdb.MeleeAnmeldungZiel;
  */
 public final class PtmOnlineAbgleichSheetRunner extends SheetRunner {
 
-    private static final int HTTP_NICHT_AUTORISIERT = 401;
-
     private final LibreOfficePtmOnlineSpeicher.Zugangsdaten config;
     private final PtmOnlineRegistrationMapping mapping;
     private final String tournamentId;
@@ -69,7 +67,7 @@ public final class PtmOnlineAbgleichSheetRunner extends SheetRunner {
             throw verarbeitungAbgebrochen();
         } catch (IOException e) {
             getLogger().error("PTM-Online: Abgleich der Meldungen fehlgeschlagen", e);
-            throw new GenerateException(netzwerkFehlerText(e));
+            throw new GenerateException(PtmOnlineFehlerText.fuer(e));
         }
         zeigeErgebnis(ergebnis);
     }
@@ -94,17 +92,6 @@ public final class PtmOnlineAbgleichSheetRunner extends SheetRunner {
                 .caption(I18n.get("ptmonline.menu.toplevel"))
                 .message(String.join("\n\n", absaetze))
                 .show();
-    }
-
-    private static String netzwerkFehlerText(IOException e) {
-        if (e instanceof PtmOnlineHttpException http && http.getStatusCode() == HTTP_NICHT_AUTORISIERT) {
-            return I18n.get("ptmonline.fehler.nicht_freigeschaltet");
-        }
-        if (e instanceof PtmOnlineHttpException http && http.istBindungAbgeloest()) {
-            return I18n.get("ptmonline.fehler.bindung_abgeloest");
-        }
-        String meldung = e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
-        return I18n.get("ptmonline.fehler.netzwerk", meldung);
     }
 
     /** Statuszeilen in die ProcessBox, Abbruchpunkte über den SheetRunner-Stop-Knopf. */

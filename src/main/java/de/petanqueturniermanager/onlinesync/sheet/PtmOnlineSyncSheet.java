@@ -101,9 +101,6 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 	private static final TableBorder2 HEADER_BORDER = BorderFactory.from().allThin().boldLn().forBottom().toBorder();
 
 	private final Integer spieltagNr;
-	private OnlineTournamentDto neueVerbindung;
-	private String neueSyncDokumentId;
-	private String neuerLeaseToken;
 
 	public PtmOnlineSyncSheet(WorkingSpreadsheet workingSpreadsheet, TurnierSystem turnierSystem,
 			Integer spieltagNrOderNull) {
@@ -143,43 +140,30 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 	// ── Anlegen, Verbinden, Entfernen ────────────────────────────────────────
 
 	/**
-	 * Legt das Blatt an (falls nötig) und schreibt die Verbindungsdaten – in einem eigenen SheetRunner, damit
-	 * auch das Schreiben im Blattschutz-Scope läuft. Wechselt das Online-Turnier, wird die Zuordnung geleert.
+	 * Legt das Blatt an (falls nötig) und schreibt die Verbindungsdaten. Läuft synchron und gehört in einen
+	 * laufenden SheetRunner (Blattschutz-Scope, kein paralleler Lauf). Wechselt das Online-Turnier, wird die
+	 * Zuordnung geleert.
 	 */
 	public void verbinden(OnlineTournamentDto turnier, String syncDokumentId, String leaseToken)
-			throws GenerateException, InterruptedException {
-		neueVerbindung = turnier;
-		neueSyncDokumentId = syncDokumentId;
-		neuerLeaseToken = leaseToken;
-		try {
-			start();
-			join();
-		} finally {
-			neueVerbindung = null;
+			throws GenerateException {
+		Optional<String> bisherigesTurnier = getTournamentId();
+		anlegen();
+		if (bisherigesTurnier.isPresent() && !bisherigesTurnier.get().equals(turnier.id)) {
+			leeren();
 		}
-		if (isLetzterLaufFehlgeschlagen()) {
-			throw new GenerateException(I18n.get("ptmonline.sheet.fehler.anlegen"));
-		}
+		RangeData kopf = new RangeData();
+		kopfZeile(kopf, sheetName() + " – " + StringUtils.defaultString(turnier.name), "");
+		kopfZeile(kopf, I18n.get("ptmonline.sheet.label.onlineid"), turnier.id);
+		kopfZeile(kopf, I18n.get("ptmonline.sheet.label.letzter.sync"), "");
+		kopfZeile(kopf, I18n.get("ptmonline.sheet.label.sync.document"), syncDokumentId);
+		kopfZeile(kopf, I18n.get("ptmonline.sheet.label.sync.lease"), leaseToken);
+		RangeHelper.from(this, kopf.getRangePosition(Position.from(SPALTE_LABEL, ZEILE_TITEL))).setDataInRange(kopf);
+		setPausiert(false);
 	}
 
 	@Override
 	protected void doRun() throws GenerateException {
-		Optional<String> bisherigesTurnier = getTournamentId();
 		anlegen();
-		if (neueVerbindung == null) {
-			return;
-		}
-		if (bisherigesTurnier.isPresent() && !bisherigesTurnier.get().equals(neueVerbindung.id)) {
-			leeren();
-		}
-		RangeData kopf = new RangeData();
-		kopfZeile(kopf, sheetName() + " – " + StringUtils.defaultString(neueVerbindung.name), "");
-		kopfZeile(kopf, I18n.get("ptmonline.sheet.label.onlineid"), neueVerbindung.id);
-		kopfZeile(kopf, I18n.get("ptmonline.sheet.label.letzter.sync"), "");
-		kopfZeile(kopf, I18n.get("ptmonline.sheet.label.sync.document"), neueSyncDokumentId);
-		kopfZeile(kopf, I18n.get("ptmonline.sheet.label.sync.lease"), neuerLeaseToken);
-		RangeHelper.from(this, kopf.getRangePosition(Position.from(SPALTE_LABEL, ZEILE_TITEL))).setDataInRange(kopf);
-		setPausiert(false);
 	}
 
 	private static void kopfZeile(RangeData kopf, String label, String wert) {
