@@ -3,8 +3,10 @@
  */
 package de.petanqueturniermanager.spielerdb;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -170,38 +172,55 @@ public final class MeleeAnmeldungZiel implements MeldelisteZiel, MeleeAnmeldungK
 
 	@Override
 	public String getOderErzeugeLokaleUuid(int zeile1Basiert) throws MeldelisteSchreibException {
-		Position position = uuidPosition(zeile1Basiert);
-		XSpreadsheet sheet = sheet();
-		String vorhanden = text(sheet, position);
-		if (!vorhanden.isEmpty()) {
-			return vorhanden;
+		String uuid = getOderErzeugeLokaleUuids(List.of(zeile1Basiert)).get(zeile1Basiert);
+		if (uuid == null) {
+			throw new MeldelisteSchreibException("Lokale PTM-Online-ID konnte nicht geschrieben werden");
 		}
-		String uuid = UUID.randomUUID().toString();
-		schreibeUuid(sheet, position, uuid);
 		return uuid;
 	}
 
 	@Override
-	public void setzeLokaleUuid(int zeile1Basiert, String uuid) throws MeldelisteSchreibException {
-		schreibeUuid(sheet(), uuidPosition(zeile1Basiert), uuid);
+	public Map<Integer, String> getOderErzeugeLokaleUuids(Collection<Integer> zeilen1Basiert)
+			throws MeldelisteSchreibException {
+		try {
+			return uuidSpalte(zeilen1Basiert).getOderErzeuge(zeilen1Basiert);
+		} catch (GenerateException e) {
+			throw new MeldelisteSchreibException("Lokale PTM-Online-ID konnte nicht geschrieben werden", e);
+		}
 	}
 
-	private static Position uuidPosition(int zeile1Basiert) throws MeldelisteSchreibException {
+	@Override
+	public void setzeLokaleUuid(int zeile1Basiert, String uuid) throws MeldelisteSchreibException {
+		setzeLokaleUuids(Map.of(zeile1Basiert, uuid));
+	}
+
+	@Override
+	public void setzeLokaleUuids(Map<Integer, String> uuidProZeile) throws MeldelisteSchreibException {
+		try {
+			uuidSpalte(uuidProZeile.keySet()).setze(uuidProZeile);
+		} catch (GenerateException e) {
+			throw new MeldelisteSchreibException("Lokale PTM-Online-ID konnte nicht wiederhergestellt werden", e);
+		}
+	}
+
+	/** Prüft die Zeilen und stellt die Überschrift der UUID-Spalte bereit. */
+	private LokaleUuidSpalte uuidSpalte(Collection<Integer> zeilen1Basiert) throws MeldelisteSchreibException {
+		for (int zeile : zeilen1Basiert) {
+			pruefeDatenZeile(zeile);
+		}
+		XSpreadsheet sheet = sheet();
+		BlattschutzManager.get().schreibeEntsperrt(sheet, () -> stelleUuidSpalteBereit(sheet));
+		return new LokaleUuidSpalte(sheet, ws.getWorkingSpreadsheetDocument(), SPALTE_PTM_ONLINE_UUID);
+	}
+
+	private static void pruefeDatenZeile(int zeile1Basiert) throws MeldelisteSchreibException {
 		int zeile = zeile1Basiert - 1;
 		if (zeile < ERSTE_DATEN_ZEILE || zeile > LETZTE_DATEN_ZEILE) {
 			throw new MeldelisteSchreibException("Ungültige Zeile der Mêlée-Anmeldung: " + zeile1Basiert);
 		}
-		return Position.from(SPALTE_PTM_ONLINE_UUID, zeile);
 	}
 
-	private void schreibeUuid(XSpreadsheet sheet, Position position, String uuid) {
-		BlattschutzManager.get().schreibeEntsperrt(sheet, () -> {
-			stelleUuidSpalteBereit(sheet);
-			sheetHelper.setStringValueInCell(StringCellValue.from(sheet, position, uuid));
-		});
-	}
-
-	/** Überschrift der ausgeblendeten UUID-Spalte, einmalig beim ersten Schreiben einer UUID. */
+	/** Überschrift der ausgeblendeten UUID-Spalte, geschrieben nur solange sie fehlt. */
 	private void stelleUuidSpalteBereit(XSpreadsheet sheet) {
 		String header = I18n.get("ptmonline.meldeliste.header.lokaleuuid");
 		Position kopf = Position.from(SPALTE_PTM_ONLINE_UUID, KOPF_ZEILE);

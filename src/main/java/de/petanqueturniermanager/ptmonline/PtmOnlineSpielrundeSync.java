@@ -32,6 +32,7 @@ import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.model.IMeldung;
 import de.petanqueturniermanager.model.IMeldungen;
 import de.petanqueturniermanager.onlinesync.SpieltagKontext;
+import de.petanqueturniermanager.onlinesync.sheet.NeueZuordnung;
 import de.petanqueturniermanager.ptmonline.dto.NeueOnlineAnmeldung;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationDto;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationResultDto;
@@ -357,61 +358,75 @@ public final class PtmOnlineSpielrundeSync {
     static List<String> statusPushenUndNeueAnlegen(MeldelisteZiel ziel, PtmOnlineRegistrationMapping mapping,
             TournamentSyncClient client, String tournamentId, List<LokaleOnlineMeldung> meldungen)
             throws IOException, InterruptedException, GenerateException {
-        List<String> abgelehnt = neueMeldungenAnlegen(ziel, mapping, client, tournamentId, meldungen);
-        teilnahmePushen(ziel, mapping, client, tournamentId, meldungen);
+        Map<Integer, String> uuidProZeile = lokaleUuids(ziel, meldungen.stream()
+                .map(LokaleOnlineMeldung::zeile1Basiert).filter(zeile -> zeile > 0).toList());
+        List<String> abgelehnt = neueMeldungenAnlegen(ziel, mapping, client, tournamentId, meldungen, uuidProZeile);
+        teilnahmePushen(mapping, client, tournamentId, meldungen, uuidProZeile);
         return abgelehnt;
     }
 
     private static List<String> neueMeldungenAnlegen(MeldelisteZiel ziel, PtmOnlineRegistrationMapping mapping,
-            TournamentSyncClient client, String tournamentId, List<LokaleOnlineMeldung> meldungen)
-            throws IOException, InterruptedException, GenerateException {
+            TournamentSyncClient client, String tournamentId, List<LokaleOnlineMeldung> meldungen,
+            Map<Integer, String> uuidProZeile) throws IOException, InterruptedException, GenerateException {
         Map<Integer, List<MeldelisteSpielerDaten>> proZeile = ziel.leseAlleSpielerRoh().stream()
                 .collect(Collectors.groupingBy(MeldelisteSpielerDaten::zeile1Basiert, LinkedHashMap::new,
                         Collectors.toList()));
+        Map<String, String> onlineIds = mapping.getOnlineIdsProUuid();
         List<String> abgelehnt = new ArrayList<>();
-        for (LokaleOnlineMeldung meldung : meldungen) {
-            int zeile = meldung.zeile1Basiert();
-            if (meldung.teilnahme() != OnlineTeilnahme.AKTIV || onlineId(mapping, ziel, zeile).isPresent()) {
-                continue;
-            }
-            List<MeldelisteSpielerDaten> spieler = proZeile.get(zeile);
-            if (spieler == null || spieler.isEmpty()) {
-                continue;
-            }
-            String uuid = lokaleUuid(ziel, zeile);
-            RegistrationDto angelegt;
-            try {
-                angelegt = client.upsertRegistration(tournamentId, uuid, zuAnmeldung(spieler));
-            } catch (PtmOnlineHttpException e) {
-                if (!e.istBereitsAngemeldet()) {
-                    throw e;
+        List<NeueZuordnung> neueZuordnungen = new ArrayList<>();
+        try {
+            for (LokaleOnlineMeldung meldung : meldungen) {
+                String uuid = uuidProZeile.get(meldung.zeile1Basiert());
+                List<MeldelisteSpielerDaten> spieler = proZeile.getOrDefault(meldung.zeile1Basiert(), List.of());
+                if (uuid == null || meldung.teilnahme() != OnlineTeilnahme.AKTIV || onlineIds.containsKey(uuid)
+                        || spieler.isEmpty()) {
+                    continue;
                 }
-                logger.warn("PTM-Online: Meldung in Zeile {} online abgelehnt (bereits angemeldet)", zeile, e);
-                abgelehnt.add(bezeichnung(spieler));
-                continue;
+                Optional<RegistrationDto> angelegt = legeOnlineAn(client, tournamentId, uuid, spieler, abgelehnt);
+                if (angelegt.isPresent()) {
+                    neueZuordnungen.add(PtmOnlineRegistrationMapping.neueZuordnung(uuid, teamnummerFormel(ziel, uuid),
+                            bezeichnung(spieler), angelegt.get()));
+                }
             }
-            mapping.addMapping(uuid, angelegt.id(), teamnummerFormel(ziel, uuid),
-                    angelegt.executionRevision() == null ? 1 : angelegt.executionRevision(),
-                    bezeichnung(spieler), OnlineAnmeldeStatus.anzeige(angelegt.status()));
-            mapping.setOnlineDetails(uuid, angelegt);
+        } finally {
+            // Auch nach einem Netzfehler: bereits online angelegte Meldungen lokal zuordnen.
+            mapping.addMappings(neueZuordnungen);
         }
         return abgelehnt;
     }
 
-    private static void teilnahmePushen(MeldelisteZiel ziel, PtmOnlineRegistrationMapping mapping,
-            TournamentSyncClient client, String tournamentId, List<LokaleOnlineMeldung> meldungen)
+    /** @return leer, wenn PTM-Online die Meldung als bereits angemeldet ablehnt (dann in {@code abgelehnt}). */
+    private static Optional<RegistrationDto> legeOnlineAn(TournamentSyncClient client, String tournamentId, String uuid,
+            List<MeldelisteSpielerDaten> spieler, List<String> abgelehnt) throws IOException, InterruptedException {
+        try {
+            return Optional.of(client.upsertRegistration(tournamentId, uuid, zuAnmeldung(spieler)));
+        } catch (PtmOnlineHttpException e) {
+            if (!e.istBereitsAngemeldet()) {
+                throw e;
+            }
+            logger.warn("PTM-Online: Meldung {} online abgelehnt (bereits angemeldet)", uuid, e);
+            abgelehnt.add(bezeichnung(spieler));
+            return Optional.empty();
+        }
+    }
+
+    private static void teilnahmePushen(PtmOnlineRegistrationMapping mapping, TournamentSyncClient client,
+            String tournamentId, List<LokaleOnlineMeldung> meldungen, Map<Integer, String> uuidProZeile)
             throws IOException, InterruptedException, GenerateException {
+        Map<String, String> onlineIds = mapping.getOnlineIdsProUuid();
+        Map<String, Integer> revisionen = mapping.getExecutionRevisionenProUuid();
         List<RegistrationResultDto> results = new ArrayList<>();
-        Map<String, String> lokaleUuidProOnlineId = new LinkedHashMap<>();
+        Map<String, Integer> neueRevisionen = new LinkedHashMap<>();
         for (LokaleOnlineMeldung meldung : meldungen) {
-            Optional<String> onlineId = onlineId(mapping, ziel, meldung.zeile1Basiert());
-            if (onlineId.isEmpty()) {
+            String uuid = uuidProZeile.get(meldung.zeile1Basiert());
+            String onlineId = uuid == null ? null : onlineIds.get(uuid);
+            if (onlineId == null) {
                 continue;
             }
-            String uuid = lokaleUuid(ziel, meldung.zeile1Basiert());
-            results.add(new RegistrationResultDto(onlineId.get(), null, meldung.seedingPosition(),
-                    meldung.teilnahme().apiWert(), mapping.getExecutionRevision(uuid)));
-            lokaleUuidProOnlineId.put(onlineId.get(), uuid);
+            int revision = revisionen.getOrDefault(uuid, 1);
+            results.add(new RegistrationResultDto(onlineId, null, meldung.seedingPosition(),
+                    meldung.teilnahme().apiWert(), revision));
+            neueRevisionen.put(uuid, revision + 1);
         }
         if (results.isEmpty()) {
             return;
@@ -423,10 +438,7 @@ public final class PtmOnlineSpielrundeSync {
                     results.size());
             return;
         }
-        for (RegistrationResultDto result : results) {
-            mapping.setExecutionRevision(lokaleUuidProOnlineId.get(result.id()),
-                    result.expectedExecutionRevision() + 1);
-        }
+        mapping.setExecutionRevisionen(neueRevisionen);
     }
 
     private static Map<Integer, Integer> zeileProTeam(MeldelisteZiel ziel) {
@@ -441,29 +453,20 @@ public final class PtmOnlineSpielrundeSync {
     }
 
     private static Map<String, String> formelnProUuid(MeldelisteZiel ziel) throws GenerateException {
+        List<Integer> zeilen = ziel.leseAlleSpielerRoh().stream().map(MeldelisteSpielerDaten::zeile1Basiert)
+                .distinct().toList();
         Map<String, String> ergebnis = new LinkedHashMap<>();
-        for (MeldelisteSpielerDaten spieler : ziel.leseAlleSpielerRoh()) {
-            String uuid = lokaleUuid(ziel, spieler.zeile1Basiert());
-            try {
-                ergebnis.put(uuid, ziel.formelTeamNrAusLokalerUuid(uuid));
-            } catch (MeldelisteZiel.MeldelisteSchreibException e) {
-                throw new GenerateException(e.getMessage());
-            }
+        for (String uuid : lokaleUuids(ziel, zeilen).values()) {
+            ergebnis.put(uuid, teamnummerFormel(ziel, uuid));
         }
         return ergebnis;
     }
 
-    private static Optional<String> onlineId(PtmOnlineRegistrationMapping mapping, MeldelisteZiel ziel, int zeile)
+    /** Lokale UUIDs der Zeilen in einem Block; fehlende werden angelegt. */
+    private static Map<Integer, String> lokaleUuids(MeldelisteZiel ziel, List<Integer> zeilen1Basiert)
             throws GenerateException {
-        if (zeile <= 0) {
-            return Optional.empty();
-        }
-        return mapping.getOnlineId(lokaleUuid(ziel, zeile));
-    }
-
-    private static String lokaleUuid(MeldelisteZiel ziel, int zeile) throws GenerateException {
         try {
-            return ziel.getOderErzeugeLokaleUuid(zeile);
+            return ziel.getOderErzeugeLokaleUuids(zeilen1Basiert);
         } catch (MeldelisteZiel.MeldelisteSchreibException e) {
             throw new GenerateException(e.getMessage());
         }

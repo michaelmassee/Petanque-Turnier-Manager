@@ -1,13 +1,16 @@
 package de.petanqueturniermanager.spielerdb;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -16,6 +19,7 @@ import com.sun.star.sheet.XSpreadsheetDocument;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
@@ -95,6 +99,8 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
     private final int spaltenProSpieler;
     /** Erste Spalte rechts vom letzten Spieler-Block (exklusive). */
     private final int letzteSchreibSpalte;
+    /** Einmal ermittelte UUID-Spalte, {@code -1} solange unbekannt (siehe {@link #uuidSpalte()}). */
+    private int uuidSpalteCache = -1;
 
     private SheetMeldelisteAdapter(XSpreadsheetDocument doc, XSpreadsheet sheet,
             SheetHelper sheetHelper, TurnierSystem system, Formation formation,
@@ -434,21 +440,21 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
 
     @Override
     public String getOderErzeugeLokaleUuid(int zeile1Basiert) throws MeldelisteSchreibException {
-        if (zeile1Basiert <= 0) {
+        String uuid = getOderErzeugeLokaleUuids(List.of(zeile1Basiert)).get(zeile1Basiert);
+        if (uuid == null) {
+            throw new MeldelisteSchreibException("Lokale PTM-Online-ID konnte nicht geschrieben werden");
+        }
+        return uuid;
+    }
+
+    @Override
+    public Map<Integer, String> getOderErzeugeLokaleUuids(Collection<Integer> zeilen1Basiert)
+            throws MeldelisteSchreibException {
+        if (zeilen1Basiert.stream().anyMatch(zeile -> zeile <= 0)) {
             throw new MeldelisteSchreibException("Ungültige Meldelistenzeile");
         }
         try {
-            return BlattschutzManager.get().mitEntsperrt(sheet, () -> {
-                int spalte = uuidSpalte();
-                int zeile = zeile1Basiert - 1;
-                String vorhanden = sicherText(sheetHelper, sheet, spalte, zeile).strip();
-                if (!vorhanden.isEmpty()) {
-                    return vorhanden;
-                }
-                String uuid = UUID.randomUUID().toString();
-                sheetHelper.setStringValueInCell(StringCellValue.from(sheet, Position.from(spalte, zeile), uuid));
-                return uuid;
-            });
+            return uuidSpalteBlock().getOderErzeuge(zeilen1Basiert);
         } catch (Exception e) {
             throw new MeldelisteSchreibException("Lokale PTM-Online-ID konnte nicht geschrieben werden", e);
         }
@@ -456,9 +462,13 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
 
     @Override
     public void setzeLokaleUuid(int zeile1Basiert, String uuid) throws MeldelisteSchreibException {
+        setzeLokaleUuids(Map.of(zeile1Basiert, uuid));
+    }
+
+    @Override
+    public void setzeLokaleUuids(Map<Integer, String> uuidProZeile) throws MeldelisteSchreibException {
         try {
-            BlattschutzManager.get().mitEntsperrt(sheet, () -> sheetHelper.setStringValueInCell(
-                    StringCellValue.from(sheet, Position.from(uuidSpalte(), zeile1Basiert - 1), uuid)));
+            uuidSpalteBlock().setze(uuidProZeile);
         } catch (Exception e) {
             throw new MeldelisteSchreibException("Lokale PTM-Online-ID konnte nicht wiederhergestellt werden", e);
         }
@@ -467,7 +477,7 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
     @Override
     public String formelTeamNrAusLokalerUuid(String uuid) throws MeldelisteSchreibException {
         try {
-            int spalte = BlattschutzManager.get().mitEntsperrt(sheet, this::uuidSpalte);
+            int spalte = uuidSpalte();
             String uuidStart = Position.from(spalte, 0).getAddressWith$();
             String uuidEnde = Position.from(spalte, MAX_DATEN_ZEILE).getAddressWith$();
             String nummern = "$'" + SheetNamen.meldeliste() + "'.$A$1:$A$" + (MAX_DATEN_ZEILE + 1);
@@ -478,37 +488,57 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
         }
     }
 
+    private LokaleUuidSpalte uuidSpalteBlock() throws Exception {
+        return new LokaleUuidSpalte(sheet, doc, uuidSpalte());
+    }
+
+    /**
+     * UUID-Spalte dieser Meldeliste. Ermittelt wird sie einmal je Adapter; danach genügt ein Blick auf die
+     * Überschrift, ob sie noch gilt (bei Supermelee verschiebt ein neuer Spieltag die Spalte nach rechts).
+     */
+    private int uuidSpalte() throws Exception {
+        String header = I18n.get("ptmonline.meldeliste.header.lokaleuuid");
+        int headerZeile = headerZeile();
+        if (uuidSpalteCache >= 0 && header.equals(sicherText(sheetHelper, sheet, uuidSpalteCache, headerZeile).strip())
+                && (system != TurnierSystem.SUPERMELEE || uuidSpalteCache == supermeleeUuidZielSpalte(leseKopfzeile()))) {
+            return uuidSpalteCache;
+        }
+        uuidSpalteCache = BlattschutzManager.get().mitEntsperrt(sheet, () -> ermittleUuidSpalte(header));
+        return uuidSpalteCache;
+    }
+
+    private int headerZeile() {
+        return Math.max(0, ersteDatenZeile - 1);
+    }
+
     /**
      * Sichtbare letzte Spalte. Sie wird nicht aus Teamnummern oder Namen hergeleitet. Schreibt Überschrift und
      * Ausblendung – nur innerhalb von {@link BlattschutzManager#mitEntsperrt} aufrufen.
      */
-    private int uuidSpalte() throws Exception {
-        String header = I18n.get("ptmonline.meldeliste.header.lokaleuuid");
-        int headerZeile = Math.max(0, ersteDatenZeile - 1);
+    private int ermittleUuidSpalte(String header) throws GenerateException {
+        int headerZeile = headerZeile();
+        String[] kopfzeile = leseKopfzeile();
         if (system == TurnierSystem.SUPERMELEE) {
-            int zielSpalte = letzteSupermeleeSpieltagSpalte(headerZeile) + 1;
-            int bisherigeSpalte = findeUuidSpalte(header, headerZeile);
+            int zielSpalte = supermeleeUuidZielSpalte(kopfzeile);
+            int bisherigeSpalte = findeSpalte(kopfzeile, header);
             if (bisherigeSpalte >= 0 && bisherigeSpalte != zielSpalte) {
-                for (int zeile = ersteDatenZeile; zeile <= MAX_DATEN_ZEILE; zeile++) {
-                    String uuid = sicherText(sheetHelper, sheet, bisherigeSpalte, zeile);
-                    if (!uuid.isBlank()) {
-                        sheetHelper.setStringValueInCell(StringCellValue.from(sheet, Position.from(zielSpalte, zeile), uuid));
-                    }
-                }
+                verschiebeUuids(bisherigeSpalte, zielSpalte);
                 sheetHelper.setStringValueInCell(StringCellValue.from(sheet, Position.from(bisherigeSpalte, headerZeile), ""));
             }
-            sheetHelper.setStringValueInCell(StringCellValue.from(sheet, Position.from(zielSpalte, headerZeile), header));
+            if (zielSpalte >= kopfzeile.length || !header.equals(kopfzeile[zielSpalte])) {
+                sheetHelper.setStringValueInCell(StringCellValue.from(sheet, Position.from(zielSpalte, headerZeile), header));
+            }
             sheetHelper.setColumnProperties(sheet, zielSpalte, ColumnProperties.from().isVisible(false));
             return zielSpalte;
         }
+        int vorhandeneSpalte = findeSpalte(kopfzeile, header);
+        if (vorhandeneSpalte >= 0) {
+            sheetHelper.setColumnProperties(sheet, vorhandeneSpalte, ColumnProperties.from().isVisible(false));
+            return vorhandeneSpalte;
+        }
         int letzteBenutzteSpalte = aktivSpalte();
-        for (int spalte = 0; spalte <= MAX_UUID_SPALTE_SCAN; spalte++) {
-            String wert = sicherText(sheetHelper, sheet, spalte, headerZeile).strip();
-            if (header.equals(wert)) {
-                sheetHelper.setColumnProperties(sheet, spalte, ColumnProperties.from().isVisible(false));
-                return spalte;
-            }
-            if (!wert.isEmpty()) {
+        for (int spalte = 0; spalte < kopfzeile.length; spalte++) {
+            if (!kopfzeile[spalte].isEmpty()) {
                 letzteBenutzteSpalte = Math.max(letzteBenutzteSpalte, spalte);
             }
         }
@@ -518,28 +548,49 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
         return uuidSpalte;
     }
 
-    private int findeUuidSpalte(String header, int headerZeile) {
-        for (int spalte = 0; spalte <= MAX_UUID_SPALTE_SCAN; spalte++) {
-            if (header.equals(sicherText(sheetHelper, sheet, spalte, headerZeile).strip())) {
+    /** Überschriftenzeile bis {@link #MAX_UUID_SPALTE_SCAN} in einem Lesezugriff, getrimmt. */
+    private String[] leseKopfzeile() {
+        RangeData daten = RangeHelper.from(sheet, doc,
+                RangePosition.from(0, headerZeile(), MAX_UUID_SPALTE_SCAN, headerZeile())).getDataFromRange();
+        String[] kopfzeile = new String[MAX_UUID_SPALTE_SCAN + 1];
+        RowData zeile = daten.isEmpty() ? new RowData() : daten.get(0);
+        for (int spalte = 0; spalte < kopfzeile.length; spalte++) {
+            kopfzeile[spalte] = spalte < zeile.size()
+                    ? StringUtils.strip(StringUtils.defaultString(zeile.get(spalte).getStringVal()))
+                    : "";
+        }
+        return kopfzeile;
+    }
+
+    private static int findeSpalte(String[] kopfzeile, String header) {
+        for (int spalte = 0; spalte < kopfzeile.length; spalte++) {
+            if (header.equals(kopfzeile[spalte])) {
                 return spalte;
             }
         }
         return -1;
     }
 
+    /** Kopiert die UUIDs aller Datenzeilen als Block in die neue UUID-Spalte. */
+    private void verschiebeUuids(int vonSpalte, int nachSpalte) throws GenerateException {
+        RangeData uuids = RangeHelper.from(sheet, doc,
+                RangePosition.from(vonSpalte, ersteDatenZeile, vonSpalte, MAX_DATEN_ZEILE)).getDataFromRange();
+        RangeHelper.from(sheet, doc, RangePosition.from(nachSpalte, ersteDatenZeile, nachSpalte, MAX_DATEN_ZEILE))
+                .setDataInRange(uuids);
+    }
+
     /** UUID direkt nach dem letzten Spieltag; die folgende Spalte bleibt als Abstand zum Infoblock frei. */
-    private int letzteSupermeleeSpieltagSpalte(int headerZeile) {
+    private int supermeleeUuidZielSpalte(String[] kopfzeile) {
         int letzte = letzteSchreibSpalte + 2; // Spielername(n), SP, erster Spieltag
         String spieltag = I18n.get("column.header.spieltag");
-        for (int spalte = letzte; spalte <= MAX_UUID_SPALTE_SCAN; spalte++) {
-            String wert = sicherText(sheetHelper, sheet, spalte, headerZeile).strip();
-            if (wert.startsWith(spieltag)) {
+        for (int spalte = letzte; spalte < kopfzeile.length; spalte++) {
+            if (kopfzeile[spalte].startsWith(spieltag)) {
                 letzte = spalte;
             } else {
                 break;
             }
         }
-        return letzte;
+        return letzte + 1;
     }
 
     /** Setzposition (SP bzw. KO-RNG) direkt vor der Aktiv-Spalte; nur für {@link #SYSTEME_MIT_SETZPOSITION}. */

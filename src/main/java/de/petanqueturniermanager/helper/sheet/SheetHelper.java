@@ -382,6 +382,26 @@ public class SheetHelper {
 	}
 
 	/**
+	 * Liest die Formeln eines Bereichs in einem einzigen UNO-Call – Gegenstück zu
+	 * {@link #setFormulaArrayInRange}. Formelzellen liefern ihre Formel mit führendem {@code =},
+	 * Wertzellen ihren Inhalt als Text, leere Zellen einen leeren String.
+	 *
+	 * @return Formel-Strings je Zeile/Spalte, leeres Array bei ungültigem Bereich
+	 */
+	public String[][] getFormulaArrayFromRange(XSpreadsheet sheet, RangePosition rangePos) {
+		checkNotNull(sheet);
+		checkNotNull(rangePos);
+		try {
+			XCellRange xCellRange = sheet.getCellRangeByPosition(rangePos.getStartSpalte(), rangePos.getStartZeile(),
+					rangePos.getEndeSpalte(), rangePos.getEndeZeile());
+			return Lo.qi(XCellRangeFormula.class, xCellRange).getFormulaArray();
+		} catch (IndexOutOfBoundsException e) {
+			logger.error(e.getMessage(), e);
+			return new String[0][0];
+		}
+	}
+
+	/**
 	 * Prüft einen Zellbereich (nach einem vorangegangenen {@code calculateAll()}) auf Formel-
 	 * Berechnungsfehler – z.B. {@code #NAME?}, wenn eine PTM-Add-in-Funktion in dieser
 	 * LibreOffice-Installation nicht aufgelöst werden kann – und wirft dann eine sprechende,

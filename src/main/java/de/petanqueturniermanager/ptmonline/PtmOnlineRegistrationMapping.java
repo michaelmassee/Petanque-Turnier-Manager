@@ -4,13 +4,22 @@
 package de.petanqueturniermanager.ptmonline;
 
 import java.time.Instant;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.onlinesync.OnlineTournamentDto;
+import de.petanqueturniermanager.onlinesync.sheet.NeueZuordnung;
 import de.petanqueturniermanager.onlinesync.sheet.PtmOnlineSyncSheet;
+import de.petanqueturniermanager.onlinesync.sheet.ZuordnungsAnzeige;
 import de.petanqueturniermanager.ptmonline.dto.SyncBindingDto;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationAnswerDto;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationDto;
@@ -67,6 +76,11 @@ public class PtmOnlineRegistrationMapping {
         return syncSheet.istBereitsImportiert(onlineRegistrationId);
     }
 
+    /** Alle bereits zugeordneten Online-IDs – einmal lesen statt {@link #istBereitsImportiert} je Anmeldung. */
+    public Set<String> getImportierteOnlineIds() throws GenerateException {
+        return syncSheet.getOnlineIds();
+    }
+
     public Optional<String> getLokaleUuid(String onlineRegistrationId) throws GenerateException {
         return syncSheet.getLokaleUuid(onlineRegistrationId);
     }
@@ -82,12 +96,18 @@ public class PtmOnlineRegistrationMapping {
         syncSheet.ersetzeOnlineId(lokaleUuid, onlineRegistrationId, executionRevision);
     }
 
-    public int getExecutionRevision(String lokaleUuid) throws GenerateException {
-        return syncSheet.getExecutionRevision(lokaleUuid);
+    /** Online-ID je lokaler UUID aller Zuordnungen – einmal lesen statt {@link #getOnlineId} je Meldung. */
+    public Map<String, String> getOnlineIdsProUuid() throws GenerateException {
+        return syncSheet.getOnlineIdsProUuid();
     }
 
-    public void setExecutionRevision(String lokaleUuid, int executionRevision) throws GenerateException {
-        syncSheet.setExecutionRevision(lokaleUuid, executionRevision);
+    public Map<String, Integer> getExecutionRevisionenProUuid() throws GenerateException {
+        return syncSheet.getExecutionRevisionenProUuid();
+    }
+
+    /** Setzt die Ausführungsrevisionen mehrerer Zuordnungen in einem Schreibzugriff. */
+    public void setExecutionRevisionen(Map<String, Integer> revisionProUuid) throws GenerateException {
+        syncSheet.setExecutionRevisionen(revisionProUuid);
     }
 
     public void setBezeichnung(String lokaleUuid, String lokaleBezeichnung, String onlineStatus)
@@ -97,18 +117,61 @@ public class PtmOnlineRegistrationMapping {
 
     /** Schreibt Tarife und Anmeldefragen lesbar sowie den unübersetzten Anmeldestatus (Storno-Erkennung). */
     public void setOnlineDetails(String lokaleUuid, RegistrationDto registration) throws GenerateException {
+        ZuordnungsAnzeige.OnlineDetails details = onlineDetails(registration);
+        syncSheet.setOnlineDetails(lokaleUuid, details.tarife(), details.fragen(), details.rohStatus());
+    }
+
+    /**
+     * Neue Zuordnung zu einer Online-Anmeldung samt lesbarer Details, zum gesammelten Schreiben per
+     * {@link #addMappings}.
+     */
+    public static NeueZuordnung neueZuordnung(String lokaleUuid, String nummerFormel, String lokaleBezeichnung,
+            RegistrationDto registration) {
+        ZuordnungsAnzeige.OnlineDetails details = onlineDetails(registration);
+        return new NeueZuordnung(lokaleUuid, registration.id(), nummerFormel,
+                registration.executionRevision() == null ? 1 : registration.executionRevision(), lokaleBezeichnung,
+                OnlineAnmeldeStatus.anzeige(registration.status()), details.tarife(), details.fragen(),
+                details.rohStatus());
+    }
+
+    /** Schreibt mehrere neue Zuordnungen in einem Zugriff (siehe {@link PtmOnlineSyncSheet#addMappings}). */
+    public void addMappings(List<NeueZuordnung> zuordnungen) throws GenerateException {
+        syncSheet.addMappings(zuordnungen);
+    }
+
+    /**
+     * Aktualisiert Bezeichnung, Status und – sofern die Online-Anmeldung bekannt ist – die Details mehrerer
+     * Zuordnungen in einem Zugriff.
+     *
+     * @param bezeichnungProUuid   lokale Bezeichnung je lokaler UUID
+     * @param registrationProUuid  aktuelle Online-Anmeldung je lokaler UUID; fehlt sie, wird der Status geleert
+     */
+    public void aktualisiereAnzeigen(Map<String, String> bezeichnungProUuid,
+            Map<String, RegistrationDto> registrationProUuid) throws GenerateException {
+        Map<String, ZuordnungsAnzeige> anzeigen = new LinkedHashMap<>();
+        bezeichnungProUuid.forEach((uuid, bezeichnung) -> {
+            RegistrationDto registration = registrationProUuid.get(uuid);
+            anzeigen.put(uuid, registration == null
+                    ? new ZuordnungsAnzeige(bezeichnung, "", Optional.empty())
+                    : new ZuordnungsAnzeige(bezeichnung, OnlineAnmeldeStatus.anzeige(registration.status()),
+                            Optional.of(onlineDetails(registration))));
+        });
+        syncSheet.setAnzeigen(anzeigen);
+    }
+
+    private static ZuordnungsAnzeige.OnlineDetails onlineDetails(RegistrationDto registration) {
         String tarife = registration.feeSelections() == null ? "" : registration.feeSelections().stream()
                 .map(PtmOnlineRegistrationMapping::tarifText).filter(text -> !text.isBlank())
-                .collect(java.util.stream.Collectors.joining(" | "));
+                .collect(Collectors.joining(" | "));
         String fragen = registration.registrationAnswers() == null ? "" : registration.registrationAnswers().stream()
                 .map(PtmOnlineRegistrationMapping::frageText).filter(text -> !text.isBlank())
-                .collect(java.util.stream.Collectors.joining(" | "));
-        syncSheet.setOnlineDetails(lokaleUuid, tarife, fragen, registration.status());
+                .collect(Collectors.joining(" | "));
+        return new ZuordnungsAnzeige.OnlineDetails(tarife, fragen, registration.status());
     }
 
     private static String tarifText(RegistrationFeeDto tarif) {
         if (tarif == null) return "";
-        String betrag = tarif.amountCents() == null ? "" : String.format(java.util.Locale.ROOT, "%.2f EUR", tarif.amountCents() / 100.0);
+        String betrag = tarif.amountCents() == null ? "" : String.format(Locale.ROOT, "%.2f EUR", tarif.amountCents() / 100.0);
         return (String.valueOf(tarif.name() == null ? "" : tarif.name()).strip() + (betrag.isBlank() ? "" : ": " + betrag)).strip();
     }
 
@@ -116,16 +179,16 @@ public class PtmOnlineRegistrationMapping {
         if (antwort == null) return "";
         String frage = antwort.questionLabel() == null ? antwort.questionId() : antwort.questionLabel();
         String teilnehmer = switch (antwort.participant() == null ? "" : antwort.participant()) {
-            case "primary" -> de.petanqueturniermanager.helper.i18n.I18n.get("ptmonline.teilnehmer.spieler1");
-            case "partner" -> de.petanqueturniermanager.helper.i18n.I18n.get("ptmonline.teilnehmer.partner");
-            case "partner2" -> de.petanqueturniermanager.helper.i18n.I18n.get("ptmonline.teilnehmer.partner2");
+            case "primary" -> I18n.get("ptmonline.teilnehmer.spieler1");
+            case "partner" -> I18n.get("ptmonline.teilnehmer.partner");
+            case "partner2" -> I18n.get("ptmonline.teilnehmer.partner2");
             default -> "";
         };
         return (String.valueOf(frage == null ? "" : frage).strip()
                 + (teilnehmer.isBlank() ? "" : " (" + teilnehmer + ")")).strip();
     }
 
-    public void aktualisiereAnzeigeFormeln(java.util.Map<String, String> formelnProUuid) throws GenerateException {
+    public void aktualisiereAnzeigeFormeln(Map<String, String> formelnProUuid) throws GenerateException {
         syncSheet.aktualisiereAnzeigeFormeln(formelnProUuid);
     }
 

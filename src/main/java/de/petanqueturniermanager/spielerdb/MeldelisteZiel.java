@@ -1,6 +1,9 @@
 package de.petanqueturniermanager.spielerdb;
 
+import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.OptionalInt;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
@@ -76,6 +79,28 @@ public interface MeldelisteZiel extends AbgleichQuelle {
     /** Setzt eine zuvor gesicherte lokale UUID wieder auf die zugehörige Meldelistenzeile. */
     default void setzeLokaleUuid(int zeile1Basiert, String uuid) throws MeldelisteSchreibException {
         throw new MeldelisteSchreibException("Lokale PTM-Online-ID wird von dieser Meldeliste nicht unterstützt");
+    }
+
+    /**
+     * Wie {@link #getOderErzeugeLokaleUuid} für viele Zeilen auf einmal. Implementierungen lesen und schreiben die
+     * UUID-Spalte dabei als Block statt Zeile für Zeile.
+     *
+     * @return UUID je 1-basierter Sheet-Zeile, in der Reihenfolge von {@code zeilen1Basiert}
+     */
+    default Map<Integer, String> getOderErzeugeLokaleUuids(Collection<Integer> zeilen1Basiert)
+            throws MeldelisteSchreibException {
+        Map<Integer, String> ergebnis = new LinkedHashMap<>();
+        for (int zeile : zeilen1Basiert) {
+            ergebnis.put(zeile, getOderErzeugeLokaleUuid(zeile));
+        }
+        return ergebnis;
+    }
+
+    /** Wie {@link #setzeLokaleUuid} für viele Zeilen auf einmal (Schlüssel: 1-basierte Sheet-Zeile). */
+    default void setzeLokaleUuids(Map<Integer, String> uuidProZeile) throws MeldelisteSchreibException {
+        for (Map.Entry<Integer, String> eintrag : uuidProZeile.entrySet()) {
+            setzeLokaleUuid(eintrag.getKey(), eintrag.getValue());
+        }
     }
 
     /** Markiert eine Meldung als abgemeldet, ohne die Spieler- oder Teamdaten zu löschen. */

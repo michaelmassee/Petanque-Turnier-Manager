@@ -4,6 +4,7 @@ import java.util.Optional;
 import java.util.LinkedHashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -165,13 +166,16 @@ public final class MeldelisteZielFactory {
             return;
         }
         try {
-            for (int zeile : new LinkedHashSet<>(ziel.get().leseAlleSpielerRoh().stream()
-                    .map(MeldelisteSpielerDaten::zeile1Basiert).toList())) {
-                ziel.get().getOderErzeugeLokaleUuid(zeile);
-            }
+            ziel.get().getOderErzeugeLokaleUuids(belegteZeilen(ziel.get()));
         } catch (MeldelisteZiel.MeldelisteSchreibException e) {
             throw new GenerateException(e.getMessage());
         }
+    }
+
+    /** 1-basierte Sheet-Zeilen mit mindestens einem eingetragenen Spieler, ohne Duplikate. */
+    private static Set<Integer> belegteZeilen(MeldelisteZiel ziel) {
+        return new LinkedHashSet<>(ziel.leseAlleSpielerRoh().stream().map(MeldelisteSpielerDaten::zeile1Basiert)
+                .toList());
     }
 
     /** Sichert UUIDs nach lokaler Spieler-/Teamnummer für Umbauten dynamischer Meldelisten. */
@@ -182,13 +186,15 @@ public final class MeldelisteZielFactory {
             return ergebnis;
         }
         try {
-            for (int zeile : new LinkedHashSet<>(ziel.get().leseAlleSpielerRoh().stream()
-                    .map(MeldelisteSpielerDaten::zeile1Basiert).toList())) {
+            Map<Integer, Integer> nrProZeile = new LinkedHashMap<>();
+            for (int zeile : belegteZeilen(ziel.get())) {
                 int nr = ziel.get().getTeamNrAusZeile(zeile);
                 if (nr > 0) {
-                    ergebnis.put(nr, ziel.get().getOderErzeugeLokaleUuid(zeile));
+                    nrProZeile.put(zeile, nr);
                 }
             }
+            ziel.get().getOderErzeugeLokaleUuids(nrProZeile.keySet())
+                    .forEach((zeile, uuid) -> ergebnis.put(nrProZeile.get(zeile), uuid));
             return ergebnis;
         } catch (MeldelisteZiel.MeldelisteSchreibException e) {
             throw new GenerateException(e.getMessage());
@@ -206,13 +212,14 @@ public final class MeldelisteZielFactory {
             return;
         }
         try {
-            for (int zeile : new LinkedHashSet<>(ziel.get().leseAlleSpielerRoh().stream()
-                    .map(MeldelisteSpielerDaten::zeile1Basiert).toList())) {
+            Map<Integer, String> uuidProZeile = new LinkedHashMap<>();
+            for (int zeile : belegteZeilen(ziel.get())) {
                 String uuid = uuids.get(ziel.get().getTeamNrAusZeile(zeile));
                 if (uuid != null) {
-                    ziel.get().setzeLokaleUuid(zeile, uuid);
+                    uuidProZeile.put(zeile, uuid);
                 }
             }
+            ziel.get().setzeLokaleUuids(uuidProZeile);
         } catch (MeldelisteZiel.MeldelisteSchreibException e) {
             throw new GenerateException(e.getMessage());
         }
