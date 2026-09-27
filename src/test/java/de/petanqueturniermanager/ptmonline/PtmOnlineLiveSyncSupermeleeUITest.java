@@ -62,6 +62,7 @@ class PtmOnlineLiveSyncSupermeleeUITest extends BaseCalcUITest {
         RandomSource.setSeed(42L);
         MessageBox.setDialogeUeberspringen(true);
         server = new PtmOnlineTestServer(TURNIER_ID, "{\"registrations\":[]}");
+        PtmOnlineLiveSync.vergessen(TURNIER_ID);
         new SupermeleeTurnierTestDaten(wkingSpreadsheet).generate();
         docPropHelper.setIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM,
                 TurnierSystem.SUPERMELEE.getId());

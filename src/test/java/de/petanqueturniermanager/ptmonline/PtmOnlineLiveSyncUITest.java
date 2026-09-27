@@ -62,6 +62,7 @@ class PtmOnlineLiveSyncUITest extends BaseCalcUITest {
         RandomSource.setSeed(42L);
         MessageBox.setDialogeUeberspringen(true);
         server = new PtmOnlineTestServer(TURNIER_ID, "{\"registrations\":[]}");
+        PtmOnlineLiveSync.vergessen(TURNIER_ID);
         new SchweizerMeldeListeSheetTestDaten(wkingSpreadsheet, ANZ_TEAMS).doRun();
         docPropHelper.setIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM,
                 TurnierSystem.SCHWEIZER.getId());
@@ -108,6 +109,20 @@ class PtmOnlineLiveSyncUITest extends BaseCalcUITest {
             }
             assertThat(namenImBlatt).as("Paarung %s wie im Blatt", paar).contains(namen);
         }
+    }
+
+    @Test
+    void beiPausiertemSyncWirdNichtsUebertragen() throws Exception {
+        ersteRunde(SpielplanTeamAnzeige.NR);
+        PtmOnlineVerbindung verbindung = alleTeamsVerbinden();
+        verbindung.mapping().setPausiert(true);
+
+        PtmOnlineLiveSync.uebertragen(verbindung,
+                LiveStandQuellen.fuer(wkingSpreadsheet, TurnierSystem.SCHWEIZER, null).orElseThrow());
+
+        assertThat(server.runden()).isEmpty();
+        assertThat(server.geloeschteRunden()).isEmpty();
+        assertThat(server.rangliste()).isNull();
     }
 
     @Test

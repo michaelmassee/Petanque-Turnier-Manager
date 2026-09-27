@@ -17,6 +17,7 @@ import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.ptmonline.PtmOnlineFehlerText;
 import de.petanqueturniermanager.ptmonline.PtmOnlineHttpException;
+import de.petanqueturniermanager.ptmonline.PtmOnlineLiveBeobachter;
 import de.petanqueturniermanager.ptmonline.PtmOnlineRegistrationMapping;
 import de.petanqueturniermanager.ptmonline.TournamentSyncClient;
 
@@ -115,6 +116,10 @@ final class PtmOnlineVerbindungsRunner extends SheetRunner {
             return;
         }
         mapping.setPausiert(pausieren);
+        if (!pausieren) {
+            PtmOnlineLiveBeobachter.nachPauseUebertragen(getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
+                    mapping.getTournamentId().orElseThrow());
+        }
         zeigeInfo(I18n.get(pausieren ? "ptmonline.erfolg.sync_pausiert" : "ptmonline.erfolg.sync_fortgesetzt"));
     }
 

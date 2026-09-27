@@ -4,6 +4,7 @@
 package de.petanqueturniermanager.ptmonline;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -27,7 +28,9 @@ import de.petanqueturniermanager.spielerdb.MeleeAnmeldungZiel;
  * <li>Bei Mêlée-Anmeldung gibt es online nur Einzelspieler; ein lokal gemischtes Team wird über die Namen seiner
  * Spieler auf deren Online-IDs abgebildet (wie {@link MeleeTeilnahme}). Mehrdeutige Namen werden nicht geraten.</li>
  * </ul>
- * Teams, für die nicht alle Spieler eine Online-ID haben, fehlen in der Zuordnung.
+ * Teams, für die nicht alle Spieler eine Online-ID haben, fehlen in der Zuordnung. Gelesen wird nur: Zeilen ohne
+ * lokale UUID haben ohnehin keine Online-Zuordnung, und die Übertragung darf im Hintergrund nichts ins Dokument
+ * schreiben.
  */
 final class LiveNummernAufloesung {
 
@@ -45,7 +48,7 @@ final class LiveNummernAufloesung {
     private static Map<Integer, List<String>> teams(MeldelisteZiel ziel, Map<String, String> onlineIdProUuid)
             throws GenerateException {
         Map<Integer, Integer> zeileProTeam = PtmOnlineSpielrundeSync.zeileProTeam(ziel);
-        Map<Integer, String> uuidProZeile = PtmOnlineSpielrundeSync.lokaleUuids(ziel, zeileProTeam.values());
+        Map<Integer, String> uuidProZeile = vorhandeneUuids(ziel, zeileProTeam.values());
         Map<Integer, List<String>> ergebnis = new LinkedHashMap<>();
         zeileProTeam.forEach((teamNr, zeile) -> {
             String onlineId = onlineId(onlineIdProUuid, uuidProZeile.get(zeile));
@@ -77,6 +80,15 @@ final class LiveNummernAufloesung {
         return ergebnis;
     }
 
+    private static Map<Integer, String> vorhandeneUuids(MeldelisteZiel ziel, Collection<Integer> zeilen1Basiert)
+            throws GenerateException {
+        try {
+            return ziel.leseLokaleUuids(zeilen1Basiert);
+        } catch (MeldelisteZiel.MeldelisteSchreibException e) {
+            throw new GenerateException(e.getMessage());
+        }
+    }
+
     private static @Nullable String onlineId(Map<String, String> onlineIdProUuid, @Nullable String uuid) {
         return uuid == null ? null : onlineIdProUuid.get(uuid);
     }
@@ -86,7 +98,7 @@ final class LiveNummernAufloesung {
             throws GenerateException {
         List<MeleeAnmeldungZeile> zeilen = melee.leseMeleeZeilen().stream().filter(MeleeAnmeldungZeile::uebernommen)
                 .toList();
-        Map<Integer, String> uuidProZeile = PtmOnlineSpielrundeSync.lokaleUuids(melee,
+        Map<Integer, String> uuidProZeile = vorhandeneUuids(melee,
                 zeilen.stream().map(zeile -> zeile.zeile() + 1).toList());
         Map<String, String> ergebnis = new HashMap<>();
         Set<String> mehrdeutig = new HashSet<>();

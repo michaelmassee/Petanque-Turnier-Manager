@@ -5,8 +5,8 @@ package de.petanqueturniermanager.ptmonline;
 
 /**
  * Markiert {@link de.petanqueturniermanager.SheetRunner}, deren Lauf Spielrunden, Ergebnisse oder die Rangliste
- * verändern kann. Nach einem solchen Lauf überträgt der SheetRunner den Stand an die PTM-Online-Live-Ansicht
- * ({@link PtmOnlineLiveSync}) – einmal je Kommando, auch wenn der Runner intern weitere Runner synchron aufruft.
+ * verändern kann. Nach einem solchen Lauf stößt der SheetRunner die Übertragung an die PTM-Online-Live-Ansicht an
+ * ({@link PtmOnlineLiveBeobachter}) – einmal je Kommando, ohne auf das Netz zu warten.
  */
 public interface PtmOnlineLiveAusloeser {
 }

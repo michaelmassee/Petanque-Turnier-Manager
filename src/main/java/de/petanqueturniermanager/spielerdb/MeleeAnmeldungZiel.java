@@ -203,6 +203,16 @@ public final class MeleeAnmeldungZiel implements MeldelisteZiel, MeleeAnmeldungK
 		}
 	}
 
+	@Override
+	public Map<Integer, String> leseLokaleUuids(Collection<Integer> zeilen1Basiert) {
+		XSpreadsheet sheet = MeleeAnmeldungLeser.findeSheet(ws, metadatenSchluessel);
+		if (sheet == null) {
+			return Map.of();
+		}
+		return new LokaleUuidSpalte(sheet, ws.getWorkingSpreadsheetDocument(), SPALTE_PTM_ONLINE_UUID)
+				.lese(zeilen1Basiert);
+	}
+
 	/** Prüft die Zeilen und stellt die Überschrift der UUID-Spalte bereit. */
 	private LokaleUuidSpalte uuidSpalte(Collection<Integer> zeilen1Basiert) throws MeldelisteSchreibException {
 		for (int zeile : zeilen1Basiert) {

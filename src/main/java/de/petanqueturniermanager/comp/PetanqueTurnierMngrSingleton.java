@@ -46,6 +46,7 @@ import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet;
 import de.petanqueturniermanager.liga.spielplan.LigaTermineProTeilnehmerSheet;
 import de.petanqueturniermanager.maastrichter.blattschutz.MaastrichterBlattschutzKonfiguration;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
+import de.petanqueturniermanager.ptmonline.PtmOnlineLiveBeobachter;
 import de.petanqueturniermanager.schweizer.blattschutz.SchweizerBlattschutzKonfiguration;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrundeSheet;
@@ -198,6 +199,7 @@ public class PetanqueTurnierMngrSingleton {
 		addGlobalEventListener(new SidebarAnzeigenListener());
 		t = logTimingAndReset("addGlobalEventListener SidebarAnzeigenListener", t);
 		addGlobalEventListener(SidebarPanelDelegator.get());
+		addGlobalEventListener(PtmOnlineLiveBeobachter.init(context));
 		t = logTimingAndReset("addGlobalEventListener SidebarPanelDelegator", t);
 		addGlobalEventListener(new UpdatePropertieFunctionsSheetRecalcOnLoad());
 		t = logTimingAndReset("addGlobalEventListener UpdatePropertieFunctionsSheetRecalcOnLoad", t);

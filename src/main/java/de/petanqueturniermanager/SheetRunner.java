@@ -39,7 +39,7 @@ import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzRegistry;
 import de.petanqueturniermanager.helper.sheet.io.BackUp;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.ptmonline.PtmOnlineLiveAusloeser;
-import de.petanqueturniermanager.ptmonline.PtmOnlineLiveSync;
+import de.petanqueturniermanager.ptmonline.PtmOnlineLiveBeobachter;
 import de.petanqueturniermanager.toolbar.TurnierModus;
 
 public abstract class SheetRunner extends Thread {
@@ -253,7 +253,7 @@ public abstract class SheetRunner extends Thread {
 								// damit kein Benutzer-Event verloren geht.
 								WebServerManager.get().getModifyListener().markDirtyAndSchedule();
 								if (this instanceof PtmOnlineLiveAusloeser) {
-									PtmOnlineLiveSync.uebertragen(workingSpreadsheet, turnierSystem, !silentBackground);
+									PtmOnlineLiveBeobachter.anstossen(workingSpreadsheet.getWorkingSpreadsheetDocument());
 								}
 							}
 						}

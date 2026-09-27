@@ -51,6 +51,8 @@ public final class PtmOnlineAbgleichSheetRunner extends SheetRunner implements P
     @Override
     protected void doRun() throws GenerateException {
         processBox().info(I18n.get("ptmonline.fortschritt.abgleich_start"));
+        // Manueller Abgleich überträgt den Live-Stand komplett neu, auch wenn er unverändert scheint.
+        PtmOnlineLiveSync.vergessen(tournamentId);
         if (ziel instanceof MeleeAnmeldungZiel) {
             // Mêlée-Anmeldung-Sheet anlegen, falls es fehlt – sonst hätten Online-Anmeldungen kein Ziel.
             zielAktualisieren();

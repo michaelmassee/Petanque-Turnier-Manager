@@ -7,21 +7,12 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Consumer;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import com.sun.star.uno.XComponentContext;
+import java.util.TreeMap;
 
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.helper.LoMainThread;
-import de.petanqueturniermanager.helper.i18n.I18n;
-import de.petanqueturniermanager.helper.msgbox.MessageBox;
-import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
-import de.petanqueturniermanager.ptmonline.live.LiveRunde;
+import de.petanqueturniermanager.ptmonline.dto.LiveMatchDto;
 import de.petanqueturniermanager.ptmonline.live.LiveStandQuelle;
 import de.petanqueturniermanager.ptmonline.live.LiveStandQuellen;
 import de.petanqueturniermanager.ptmonline.live.LiveTurnierStand;
@@ -31,55 +22,46 @@ import de.petanqueturniermanager.ptmonline.live.LiveTurnierStand;
  * Turniers an PTM-Online – Grundlage der persönlichen Live-Ansicht der Spieler („Aktuelle Partie“, „Meine
  * Partien“, Rangliste).
  * <p>
- * Übertragen wird immer der komplette Stand: PTM-Online ersetzt jede Runde atomar, Korrekturen im Dokument
- * (neu ausgeloste Runde, geänderte Ergebnisse) kommen so 1:1 an. Lokal gelöschte Runden werden online ebenfalls
- * gelöscht.
+ * Grundlage ist immer der komplette Stand des Dokuments: PTM-Online ersetzt jede Runde atomar, Korrekturen
+ * (neu ausgeloste Runde, geänderte Ergebnisse) kommen 1:1 an, lokal gelöschte Runden werden online gelöscht.
+ * Gesendet wird nur, was sich seit der letzten erfolgreichen Übertragung geändert hat
+ * ({@link LiveUebertragungsGedaechtnis}).
  * <p>
- * Läuft synchron im aufrufenden {@code SheetRunner}. No-Op, wenn das Dokument nicht verbunden oder der Sync
- * pausiert ist. Fehler werden gesammelt gemeldet – die Live-Übertragung blockiert den Turnierbetrieb nie.
+ * Läuft ausschließlich im Hintergrund-Thread des {@link PtmOnlineLiveBeobachter}, der auch Wiederholungen bei
+ * Netzfehlern übernimmt – der Turnierbetrieb wartet nie auf das Netz.
  */
 public final class PtmOnlineLiveSync {
 
-    private static final Logger logger = LogManager.getLogger(PtmOnlineLiveSync.class);
     private static final int MAX_RUNDEN_NR = 999;
+    private static final LiveUebertragungsGedaechtnis GEDAECHTNIS = new LiveUebertragungsGedaechtnis();
 
     private PtmOnlineLiveSync() {}
 
     /**
-     * Überträgt den aktuellen Stand des Dokuments bzw. bei Supermelee des aktiven Spieltags.
+     * Überträgt den aktuellen Stand des Dokuments bzw. bei Supermelee des aktiven Spieltags. No-Op, wenn das
+     * Dokument nicht verbunden oder der Sync pausiert ist.
      *
-     * @param fehlerMelden {@code false} für Hintergrundläufe: Fehler nur protokollieren, damit z.&nbsp;B. ohne Netz
-     *                     nicht bei jeder Ranglisten-Aktualisierung ein Dialog erscheint
+     * @throws IOException       Netz-/Serverfehler; der Aufrufer wiederholt später
+     * @throws GenerateException Dokument nicht lesbar
      */
-    public static void uebertragen(WorkingSpreadsheet ws, TurnierSystem ts, boolean fehlerMelden) {
-        Consumer<String> fehlerAnzeige = fehlerMelden ? fehler -> zeigeFehler(ws.getxContext(), fehler)
-                : fehler -> { /* Hintergrundlauf: nur protokolliert */ };
-        try {
-            Optional<PtmOnlineVerbindung> verbindung = PtmOnlineVerbindung.ermitteln(ws, ts);
-            if (verbindung.isEmpty() || !PtmOnlineSpielrundeSync.istSyncAktiv(verbindung.get().mapping())) {
-                return;
-            }
-            Optional<LiveStandQuelle> quelle = LiveStandQuellen.fuer(ws, ts, verbindung.get().spieltagNr());
-            if (quelle.isPresent()) {
-                uebertragen(verbindung.get(), quelle.get());
-            }
-        } catch (IOException e) {
-            logger.warn("PTM-Online: Live-Übertragung fehlgeschlagen", e);
-            fehlerAnzeige.accept(PtmOnlineFehlerText.fuer(e));
-        } catch (GenerateException e) {
-            logger.error("PTM-Online: Live-Stand nicht lesbar", e);
-            fehlerAnzeige.accept(e.getMessage());
-        } catch (InterruptedException e) {
-            logger.debug("PTM-Online: Live-Übertragung abgebrochen", e);
-            Thread.currentThread().interrupt();
-        } catch (RuntimeException e) {
-            logger.error("PTM-Online: Unerwarteter Fehler bei der Live-Übertragung", e);
-            fehlerAnzeige.accept(e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage());
+    static void uebertragen(WorkingSpreadsheet ws, TurnierSystem ts)
+            throws GenerateException, IOException, InterruptedException {
+        Optional<PtmOnlineVerbindung> verbindung = PtmOnlineVerbindung.ermitteln(ws, ts);
+        if (verbindung.isEmpty()) {
+            return;
+        }
+        Optional<LiveStandQuelle> quelle = LiveStandQuellen.fuer(ws, ts, verbindung.get().spieltagNr());
+        if (quelle.isPresent()) {
+            uebertragen(verbindung.get(), quelle.get());
         }
     }
 
+    /** Bei pausiertem Sync wird nichts gelesen und nichts übertragen. */
     static void uebertragen(PtmOnlineVerbindung verbindung, LiveStandQuelle quelle)
             throws GenerateException, IOException, InterruptedException {
+        if (!PtmOnlineSpielrundeSync.istSyncAktiv(verbindung.mapping())) {
+            return;
+        }
         LiveTurnierStand stand = quelle.lese();
         Map<Integer, List<String>> onlineIds = LiveNummernAufloesung.ermitteln(verbindung);
         uebertragen(verbindung.gebundenerClient(), verbindung.tournamentId(), stand, onlineIds);
@@ -87,13 +69,55 @@ public final class PtmOnlineLiveSync {
 
     static void uebertragen(TournamentSyncClient client, String tournamentId, LiveTurnierStand stand,
             Map<Integer, List<String>> onlineIds) throws IOException, InterruptedException {
-        for (LiveRunde runde : stand.runden()) {
-            client.putRound(tournamentId, runde.nr(), LiveUebertragungsDaten.matches(runde, onlineIds));
+        uebertragen(client, tournamentId, stand, onlineIds, GEDAECHTNIS);
+    }
+
+    /** Sendet nur, was sich seit der letzten erfolgreichen Übertragung geändert hat. */
+    static void uebertragen(TournamentSyncClient client, String tournamentId, LiveTurnierStand stand,
+            Map<Integer, List<String>> onlineIds, LiveUebertragungsGedaechtnis gedaechtnis)
+            throws IOException, InterruptedException {
+        Optional<LiveUebertragungsGedaechtnis.Stand> bisher = gedaechtnis.letzter(tournamentId);
+        LiveUebertragungsGedaechtnis.Stand neu = neuerStand(stand, onlineIds);
+        try {
+            sendeAenderungen(client, tournamentId, bisher, neu);
+        } catch (IOException | InterruptedException | RuntimeException e) {
+            gedaechtnis.vergessen(tournamentId);
+            throw e;
         }
-        loescheUeberzaehligeRunden(client, tournamentId,
-                stand.runden().stream().mapToInt(LiveRunde::nr).max().orElse(0) + 1);
-        if (!stand.rangliste().isEmpty()) {
-            client.putRanking(tournamentId, LiveUebertragungsDaten.rangliste(stand.rangliste(), onlineIds));
+        gedaechtnis.merke(tournamentId, neu);
+    }
+
+    /** Übertragungsgedächtnis verwerfen: der nächste Lauf überträgt den kompletten Stand (manueller Abgleich). */
+    static void vergessen(String tournamentId) {
+        GEDAECHTNIS.vergessen(tournamentId);
+    }
+
+    private static LiveUebertragungsGedaechtnis.Stand neuerStand(LiveTurnierStand stand,
+            Map<Integer, List<String>> onlineIds) {
+        Map<Integer, List<LiveMatchDto>> runden = new TreeMap<>();
+        stand.runden().forEach(runde -> runden.put(runde.nr(), LiveUebertragungsDaten.matches(runde, onlineIds)));
+        return new LiveUebertragungsGedaechtnis.Stand(runden,
+                LiveUebertragungsDaten.rangliste(stand.rangliste(), onlineIds));
+    }
+
+    private static void sendeAenderungen(TournamentSyncClient client, String tournamentId,
+            Optional<LiveUebertragungsGedaechtnis.Stand> bisher, LiveUebertragungsGedaechtnis.Stand neu)
+            throws IOException, InterruptedException {
+        Map<Integer, List<LiveMatchDto>> bisherigeRunden = bisher.map(LiveUebertragungsGedaechtnis.Stand::runden)
+                .orElse(Map.of());
+        for (Map.Entry<Integer, List<LiveMatchDto>> runde : new TreeMap<>(neu.runden()).entrySet()) {
+            if (!runde.getValue().equals(bisherigeRunden.get(runde.getKey()))) {
+                client.putRound(tournamentId, runde.getKey(), runde.getValue());
+            }
+        }
+        int naechsteRunde = neu.runden().keySet().stream().mapToInt(Integer::intValue).max().orElse(0) + 1;
+        if (bisher.isEmpty() || bisherigeRunden.keySet().stream().anyMatch(nr -> nr >= naechsteRunde)) {
+            loescheUeberzaehligeRunden(client, tournamentId, naechsteRunde);
+        }
+        boolean ranglisteGeaendert = !neu.rangliste()
+                .equals(bisher.map(LiveUebertragungsGedaechtnis.Stand::rangliste).orElse(null));
+        if (!neu.rangliste().isEmpty() && ranglisteGeaendert) {
+            client.putRanking(tournamentId, neu.rangliste());
         }
     }
 
@@ -104,12 +128,5 @@ public final class PtmOnlineLiveSync {
         while (runde <= MAX_RUNDEN_NR && client.deleteRound(tournamentId, runde)) {
             runde++;
         }
-    }
-
-    private static void zeigeFehler(XComponentContext ctx, String fehler) {
-        LoMainThread.post(ctx, () -> MessageBox.from(ctx, MessageBoxTypeEnum.WARN_OK)
-                .caption(I18n.get("ptmonline.fehler.titel"))
-                .message(I18n.get("ptmonline.fehler.live_uebertragung", fehler))
-                .show());
     }
 }
