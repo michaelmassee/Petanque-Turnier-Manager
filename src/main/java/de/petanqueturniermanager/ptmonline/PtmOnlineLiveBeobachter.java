@@ -4,6 +4,7 @@
 package de.petanqueturniermanager.ptmonline;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -11,9 +12,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jspecify.annotations.Nullable;
 
 import com.sun.star.frame.XModel;
 import com.sun.star.lang.DisposedException;
@@ -32,6 +35,8 @@ import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.ptmonline.live.LiveStandQuelle;
+import de.petanqueturniermanager.ptmonline.live.LiveStandQuellen;
 
 /**
  * Überträgt den Live-Stand an PTM-Online, sobald sich ein Turnierdokument ändert: Jedes Turnierdokument erhält
@@ -93,6 +98,21 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
     }
 
     /**
+     * Reiht den Status-Abgleich eines Rundenstarts zum Senden im Hintergrund ein; eine noch nicht gesendete ältere
+     * Momentaufnahme wird ersetzt. Der Status wird vor der nächsten Live-Übertragung gesendet (Turnierstart und
+     * Online-Zuordnung neuer Meldungen sind Voraussetzung für die Runden der Live-Ansicht).
+     *
+     * @return {@code false}, wenn kein Beobachter läuft (Plugin nicht gestartet) – dann muss der Aufrufer selbst
+     *         senden
+     */
+    static boolean statusEinreihen(XSpreadsheetDocument xDoc, PtmOnlineStatusAuftrag auftrag) {
+        PtmOnlineLiveBeobachter beobachter = instanz;
+        Optional<Beobachtung> beobachtung = beobachter == null ? Optional.empty() : beobachter.registriere(xDoc);
+        beobachtung.ifPresent(b -> b.statusEinreihen(auftrag));
+        return beobachtung.isPresent();
+    }
+
+    /**
      * Nach „Sync fortsetzen“: während der Pause aufgelaufene Änderungen komplett übertragen, auch wenn der Stand
      * gegenüber der letzten Übertragung unverändert scheint.
      */
@@ -123,8 +143,9 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
     }
 
     /**
-     * Änderungs-Listener eines Dokuments mit „offen“-Merker: je Welle von Änderungen genau eine Übertragung,
-     * nach Fehlern Wiederholung mit wachsendem Abstand.
+     * Änderungs-Listener eines Dokuments mit „offen“-Merker: je Welle von Änderungen genau ein Durchlauf, nach
+     * Fehlern Wiederholung mit wachsendem Abstand. Ein Durchlauf schreibt zuerst ein noch offenes Status-Ergebnis
+     * zurück, sendet dann einen offenen Status-Abgleich und überträgt zuletzt den Live-Stand.
      */
     private final class Beobachtung implements XModifyListener {
 
@@ -132,6 +153,9 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
         private final XSpreadsheetDocument xDoc;
         private final AtomicBoolean offen = new AtomicBoolean();
         private final AtomicBoolean eingeplant = new AtomicBoolean();
+        private final AtomicReference<PtmOnlineStatusAuftrag> offenerStatus = new AtomicReference<>();
+        /** Nur vom Thread „PTM-Online-Live“ verwendet. */
+        private PtmOnlineStatusAbgleich.@Nullable Ergebnis offenesSchreiben;
         /** Nur vom Thread „PTM-Online-Live“ verändert. */
         private long naechsteWiederholungMs = VERZOEGERUNG_MS;
 
@@ -156,13 +180,18 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
             planeEin(ANSTOSS_MS);
         }
 
+        void statusEinreihen(PtmOnlineStatusAuftrag auftrag) {
+            offenerStatus.accumulateAndGet(auftrag, (aelter, neu) -> neu.ersetzt(aelter));
+            anstossen();
+        }
+
         private void planeEin(long verzoegerungMs) {
             if (eingeplant.compareAndSet(false, true)) {
-                ausfuehrung.schedule(this::uebertrage, verzoegerungMs, TimeUnit.MILLISECONDS);
+                ausfuehrung.schedule(this::durchlauf, verzoegerungMs, TimeUnit.MILLISECONDS);
             }
         }
 
-        private void uebertrage() {
+        private void durchlauf() {
             eingeplant.set(false);
             if (SheetRunner.isRunning()) {
                 planeEin(VERZOEGERUNG_MS);
@@ -174,12 +203,16 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
             try {
                 TurnierSystem ts = new DocumentPropertiesHelper(xDoc).getTurnierSystemAusDocument();
                 if (ts != TurnierSystem.KEIN) {
-                    DokumentKontext.mitKontextWerfend(xDoc, () -> uebertrageStand(ts));
+                    DokumentKontext.mitKontextWerfend(xDoc, () -> uebertrage(new WorkingSpreadsheet(xContext, xDoc), ts));
                 }
                 naechsteWiederholungMs = VERZOEGERUNG_MS;
             } catch (DisposedException e) {
                 logger.debug("PTM-Online Live: Dokument {} geschlossen", oid, e);
                 beobachtungen.remove(oid);
+            } catch (SchreibenVerschoben e) {
+                logger.debug("PTM-Online Live: Zurückschreiben verschoben, ein anderer Lauf ist aktiv", e);
+                offen.set(true);
+                planeEin(VERZOEGERUNG_MS);
             } catch (GenerateException | RuntimeException e) {
                 logger.warn("PTM-Online Live: Übertragung fehlgeschlagen, neuer Versuch in {} ms",
                         naechsteWiederholungMs, e);
@@ -187,9 +220,24 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
             }
         }
 
-        private void uebertrageStand(TurnierSystem ts) throws GenerateException {
+        private void uebertrage(WorkingSpreadsheet ws, TurnierSystem ts) throws GenerateException {
+            Optional<PtmOnlineVerbindung> verbindung = PtmOnlineVerbindung.ermitteln(ws, ts);
+            if (verbindung.isEmpty()) {
+                offenerStatus.set(null);
+                offenesSchreiben = null;
+                return;
+            }
+            if (!PtmOnlineSpielrundeSync.istSyncAktiv(verbindung.get().mapping())) {
+                // Pause: nichts senden; ein offener Status-Abgleich wartet auf „Sync fortsetzen“.
+                return;
+            }
             try {
-                PtmOnlineLiveSync.uebertragen(new WorkingSpreadsheet(xContext, xDoc), ts);
+                schreibeOffenesErgebnis(ws, ts, verbindung.get());
+                sendeOffenenStatus(ws, ts, verbindung.get());
+                Optional<LiveStandQuelle> quelle = LiveStandQuellen.fuer(ws, ts, verbindung.get().spieltagNr());
+                if (quelle.isPresent()) {
+                    PtmOnlineLiveSync.uebertragen(verbindung.get(), quelle.get());
+                }
             } catch (IOException e) {
                 throw new GenerateException(PtmOnlineFehlerText.fuer(e));
             } catch (InterruptedException e) {
@@ -198,10 +246,57 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
             }
         }
 
+        private void sendeOffenenStatus(WorkingSpreadsheet ws, TurnierSystem ts, PtmOnlineVerbindung verbindung)
+                throws GenerateException, IOException, InterruptedException {
+            PtmOnlineStatusAuftrag auftrag = offenerStatus.get();
+            if (auftrag == null) {
+                return;
+            }
+            PtmOnlineStatusAbgleich.Ergebnis ergebnis = PtmOnlineStatusAbgleich.senden(auftrag,
+                    verbindung.mapping(), verbindung.gebundenerClient());
+            offenerStatus.compareAndSet(auftrag, null);
+            offenesSchreiben = ergebnis;
+            if (!ergebnis.abgelehnt().isEmpty()) {
+                PtmOnlineSpielrundeSync.zeigeFehlerSammlung(xContext,
+                        List.of(RegistrationImportTask.onlineAbgelehntHinweis(ergebnis.abgelehnt())));
+            }
+            schreibeOffenesErgebnis(ws, ts, verbindung);
+        }
+
+        /** Schreibt im eigenen SheetRunner zurück; ist gerade ein anderer Lauf aktiv, wird verschoben. */
+        private void schreibeOffenesErgebnis(WorkingSpreadsheet ws, TurnierSystem ts, PtmOnlineVerbindung verbindung)
+                throws GenerateException, InterruptedException {
+            PtmOnlineStatusAbgleich.Ergebnis ergebnis = offenesSchreiben;
+            if (ergebnis == null) {
+                return;
+            }
+            PtmOnlineStatusSchreibRunner runner = new PtmOnlineStatusSchreibRunner(ws, ts, verbindung.mapping(),
+                    ergebnis);
+            runner.startSilent();
+            if (runner.getState() == Thread.State.NEW) {
+                throw new SchreibenVerschoben();
+            }
+            runner.join();
+            if (runner.isLetzterLaufFehlgeschlagen()) {
+                throw new GenerateException("PTM-Online: Status-Ergebnis konnte nicht zurückgeschrieben werden");
+            }
+            offenesSchreiben = null;
+        }
+
         private void wiederholen() {
             offen.set(true);
             planeEin(naechsteWiederholungMs);
             naechsteWiederholungMs = Math.min(naechsteWiederholungMs * 2, MAX_WIEDERHOLUNG_MS);
+        }
+    }
+
+    /** Ein anderer SheetRunner belegt gerade das Dokument; das Zurückschreiben folgt im nächsten Durchlauf. */
+    private static final class SchreibenVerschoben extends GenerateException {
+
+        private static final long serialVersionUID = 1L;
+
+        SchreibenVerschoben() {
+            super("PTM-Online: Zurückschreiben verschoben");
         }
     }
 }

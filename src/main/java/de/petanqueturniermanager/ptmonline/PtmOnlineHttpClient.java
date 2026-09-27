@@ -20,15 +20,17 @@ import com.google.gson.Gson;
 abstract class PtmOnlineHttpClient {
 
     static final Gson GSON = new Gson();
+    static final Duration STANDARD_TIMEOUT = Duration.ofSeconds(30);
 
     private final HttpClient httpClient;
     private final String baseUrl;
     private final String apiKey;
     private final String syncDocumentId;
     private final String leaseToken;
+    private final Duration timeout;
 
     PtmOnlineHttpClient(String baseUrl, String apiKey) {
-        this(HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(30)).build(), baseUrl, apiKey, null, null);
+        this(HttpClient.newBuilder().connectTimeout(STANDARD_TIMEOUT).build(), baseUrl, apiKey, null, null);
     }
 
     PtmOnlineHttpClient(HttpClient httpClient, String baseUrl, String apiKey) {
@@ -36,6 +38,13 @@ abstract class PtmOnlineHttpClient {
     }
 
     PtmOnlineHttpClient(HttpClient httpClient, String baseUrl, String apiKey, String syncDocumentId, String leaseToken) {
+        this(httpClient, baseUrl, apiKey, syncDocumentId, leaseToken, STANDARD_TIMEOUT);
+    }
+
+    /** @param timeout Zeitlimit je Anfrage (Verbindungsaufbau und Antwort) */
+    PtmOnlineHttpClient(HttpClient httpClient, String baseUrl, String apiKey, String syncDocumentId, String leaseToken,
+            Duration timeout) {
+        this.timeout = timeout;
         this.httpClient = httpClient;
         this.baseUrl = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
         this.apiKey = apiKey;
@@ -68,7 +77,7 @@ abstract class PtmOnlineHttpClient {
     }
 
     private HttpRequest.Builder authorized(HttpRequest.Builder builder) {
-        builder.header("Authorization", "Bearer " + apiKey).timeout(Duration.ofSeconds(30));
+        builder.header("Authorization", "Bearer " + apiKey).timeout(timeout);
         if (syncDocumentId != null && leaseToken != null) {
             builder.header("X-PTM-Sync-Document", syncDocumentId).header("X-PTM-Sync-Lease", leaseToken);
         }

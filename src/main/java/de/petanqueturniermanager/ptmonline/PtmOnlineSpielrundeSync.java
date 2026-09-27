@@ -32,28 +32,22 @@ import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.model.IMeldung;
 import de.petanqueturniermanager.model.IMeldungen;
-import de.petanqueturniermanager.onlinesync.SpieltagKontext;
-import de.petanqueturniermanager.onlinesync.sheet.NeueZuordnung;
 import de.petanqueturniermanager.ptmonline.dto.NeueOnlineAnmeldung;
-import de.petanqueturniermanager.ptmonline.dto.RegistrationDto;
-import de.petanqueturniermanager.ptmonline.dto.RegistrationResultDto;
 import de.petanqueturniermanager.spielerdb.MeldelisteZiel;
-import de.petanqueturniermanager.spielerdb.MeldelisteZielFactory;
 import de.petanqueturniermanager.spielerdb.MeldelisteSpielerDaten;
 import de.petanqueturniermanager.spielerdb.MeleeAnmeldungZiel;
 
 /**
  * Gleicht bei jedem Spielrunden-Start die Meldeliste des Turnierdokuments automatisch mit dem
  * verbundenen PTM-Online-Turnier ab (Prinzip "Turnierdokument ist Master"). Wird synchron aus dem
- * jeweiligen {@code *SpielrundeSheetNaechste}-{@code SheetRunner} heraus aufgerufen — läuft also
- * bereits auf einem Hintergrund-Thread, kein zusätzliches Threading/{@code LoMainThread} nötig
- * (Sheet-Schreibzugriffe und {@link MessageBox}-Dialoge sind auf einem SheetRunner-Thread erlaubt,
- * siehe CLAUDE.md-Threading-Regel).
+ * jeweiligen {@code *SpielrundeSheetNaechste}-{@code SheetRunner} heraus aufgerufen.
  * <p>
- * No-Op, wenn PTM-Online nicht konfiguriert oder das Dokument nicht mit einem Online-Turnier
- * verbunden ist. Netzwerk-/API-Fehler werden gesammelt und am Ende in einer einzigen
- * {@link MessageBox}-Warnung gezeigt — die Spielrundenerstellung selbst läuft in jedem Fall weiter,
- * der Online-Abgleich darf den Turnierbetrieb nie blockieren.
+ * Synchron läuft nur der lokale Teil (Nr-Formeln, lokale UUIDs, Momentaufnahme als
+ * {@link PtmOnlineStatusAuftrag}) und vor der ersten Runde die Rückfrage zu fehlenden Online-Meldungen – mit
+ * kurzem Zeitlimit. Turnierstart, Nachmeldungen und Teilnahme-Push sendet der {@link PtmOnlineLiveBeobachter} im
+ * Hintergrund, mit Wiederholung bei Netzfehlern: die Auslosung wartet nie auf das Netz.
+ * <p>
+ * No-Op, wenn PTM-Online nicht konfiguriert, das Dokument nicht verbunden oder der Sync pausiert ist.
  */
 public final class PtmOnlineSpielrundeSync {
 
@@ -94,7 +88,7 @@ public final class PtmOnlineSpielrundeSync {
             throws GenerateException {
         Optional<PtmOnlineVerbindung> verbindung = verbindung(ws, ts);
         if (verbindung.isPresent()) {
-            abgleichen(ws.getxContext(), verbindung.get(), istErsteRunde, alleTeamNummern, aktiveTeamNummern,
+            abgleichen(ws, verbindung.get(), istErsteRunde, alleTeamNummern, aktiveTeamNummern,
                     ausgestiegeneTeamNummern);
         }
     }
@@ -116,7 +110,7 @@ public final class PtmOnlineSpielrundeSync {
         Set<Integer> aktive = nummern(aktiveMeldungen);
         Set<Integer> ausgestiegene = ausgestiegeneTeamNummern(verbindung.get().meldeliste());
         ausgestiegene.removeAll(aktive);
-        abgleichen(ws.getxContext(), verbindung.get(), istErsteRunde, nummern(alleMeldungen), aktive, ausgestiegene);
+        abgleichen(ws, verbindung.get(), istErsteRunde, nummern(alleMeldungen), aktive, ausgestiegene);
     }
 
     private static Set<Integer> ausgestiegeneTeamNummern(MeldelisteZiel ziel) {
@@ -131,9 +125,15 @@ public final class PtmOnlineSpielrundeSync {
         return ausgestiegene;
     }
 
-    private static void abgleichen(XComponentContext ctx, PtmOnlineVerbindung verbindung, boolean istErsteRunde,
+    /**
+     * Lokaler Teil synchron (Nr-Formeln, Rückfrage vor dem Turnierstart, Momentaufnahme); Turnierstart,
+     * Nachmeldungen und Teilnahme-Push laufen im Hintergrund ({@link PtmOnlineLiveBeobachter}), damit die Auslosung
+     * nicht auf das Netz wartet.
+     */
+    private static void abgleichen(WorkingSpreadsheet ws, PtmOnlineVerbindung verbindung, boolean istErsteRunde,
             Set<Integer> alleTeamNummern, Set<Integer> aktiveTeamNummern, Set<Integer> ausgestiegeneTeamNummern)
             throws GenerateException {
+        XComponentContext ctx = ws.getxContext();
         var config = verbindung.config();
         MeldelisteZiel ziel = verbindung.ziel();
         PtmOnlineRegistrationMapping mapping = verbindung.mapping();
@@ -164,24 +164,20 @@ public final class PtmOnlineSpielrundeSync {
             throw SheetRunner.verarbeitungAbgebrochen();
         }
 
-        if (istErsteRunde) {
-            try {
-                client.start(tournamentId);
-            } catch (IOException e) {
-                logger.error("PTM-Online: Turnier starten fehlgeschlagen", e);
-                fehler.add(netzwerkFehlerText(e));
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                return;
-            } catch (RuntimeException e) {
-                logger.error("PTM-Online: Turnierstart lieferte einen unerwarteten Fehler", e);
-                fehler.add(netzwerkFehlerText(e));
+        try {
+            PtmOnlineStatusAuftrag auftrag = statusAuftrag(ziel, mapping, tournamentId, istErsteRunde,
+                    lokaleMeldungen(ziel, verbindung.meldeliste(), alleTeamNummern, aktiveTeamNummern,
+                            ausgestiegeneTeamNummern));
+            if (!PtmOnlineLiveBeobachter.statusEinreihen(ws.getWorkingSpreadsheetDocument(), auftrag)) {
+                // Ohne Hintergrund-Beobachter (nur in Tests ohne Plugin-Start) wie früher direkt senden.
+                sendeSynchron(mapping, client, auftrag, fehler);
             }
-        }
-
-        if (!statusPushen(verbindung, client, alleTeamNummern, aktiveTeamNummern, ausgestiegeneTeamNummern,
-                fehler)) {
-            return;
+        } catch (GenerateException e) {
+            logger.error("PTM-Online: Status-Abgleich nicht vorbereitbar", e);
+            fehler.add(e.getMessage());
+        } catch (RuntimeException e) {
+            logger.error("PTM-Online: Unerwarteter Status-Abgleichfehler", e);
+            fehler.add(netzwerkFehlerText(e));
         }
 
         if (!fehler.isEmpty()) {
@@ -189,32 +185,20 @@ public final class PtmOnlineSpielrundeSync {
         }
     }
 
-    /** @return {@code false}, wenn der Thread dabei unterbrochen wurde. */
-    private static boolean statusPushen(PtmOnlineVerbindung verbindung, TournamentSyncClient client,
-            Set<Integer> alleTeamNummern, Set<Integer> aktiveTeamNummern, Set<Integer> ausgestiegeneTeamNummern,
-            List<String> fehler) {
+    private static void sendeSynchron(PtmOnlineRegistrationMapping mapping, TournamentSyncClient client,
+            PtmOnlineStatusAuftrag auftrag, List<String> fehler) throws GenerateException {
         try {
-            List<LokaleOnlineMeldung> meldungen = lokaleMeldungen(verbindung.ziel(), verbindung.meldeliste(),
-                    alleTeamNummern, aktiveTeamNummern, ausgestiegeneTeamNummern);
-            List<String> abgelehnt = statusPushenUndNeueAnlegen(verbindung.ziel(), verbindung.mapping(), client,
-                    verbindung.tournamentId(), meldungen);
-            if (!abgelehnt.isEmpty()) {
-                fehler.add(RegistrationImportTask.onlineAbgelehntHinweis(abgelehnt));
+            PtmOnlineStatusAbgleich.Ergebnis ergebnis = PtmOnlineStatusAbgleich.senden(auftrag, mapping, client);
+            PtmOnlineStatusAbgleich.schreiben(mapping, ergebnis);
+            if (!ergebnis.abgelehnt().isEmpty()) {
+                fehler.add(RegistrationImportTask.onlineAbgelehntHinweis(ergebnis.abgelehnt()));
             }
         } catch (IOException e) {
             logger.error("PTM-Online: Status-Abgleich fehlgeschlagen", e);
             fehler.add(netzwerkFehlerText(e));
-        } catch (GenerateException e) {
-            logger.error("PTM-Online: Mapping-Sheet lesen/schreiben fehlgeschlagen", e);
-            fehler.add(e.getMessage());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            return false;
-        } catch (RuntimeException e) {
-            logger.error("PTM-Online: Unerwarteter Status-Abgleichfehler", e);
-            fehler.add(netzwerkFehlerText(e));
         }
-        return true;
     }
 
     /**
@@ -323,95 +307,48 @@ public final class PtmOnlineSpielrundeSync {
 
     /**
      * Legt für aktive Meldungen ohne Online-Zuordnung (vor Ort erfasst) eine neue Anmeldung an und pusht danach
-     * die lokale Teilnahme aller online zugeordneten Meldungen. Erst anlegen, dann pushen: PTM-Online legt
-     * Nachmeldungen eines im Dokument durchgeführten Turniers inaktiv an – der Push setzt sie gleich aktiv.
+     * die lokale Teilnahme aller online zugeordneten Meldungen – synchron, für den manuellen Abgleich und Tests.
      *
      * @return Bezeichnungen der Meldungen, die PTM-Online beim Anlegen als bereits angemeldet abgelehnt hat.
      */
     static List<String> statusPushenUndNeueAnlegen(MeldelisteZiel ziel, PtmOnlineRegistrationMapping mapping,
             TournamentSyncClient client, String tournamentId, List<LokaleOnlineMeldung> meldungen)
             throws IOException, InterruptedException, GenerateException {
-        Map<Integer, String> uuidProZeile = lokaleUuids(ziel, meldungen.stream()
-                .map(LokaleOnlineMeldung::zeile1Basiert).filter(zeile -> zeile > 0).toList());
-        List<String> abgelehnt = neueMeldungenAnlegen(ziel, mapping, client, tournamentId, meldungen, uuidProZeile);
-        teilnahmePushen(mapping, client, tournamentId, meldungen, uuidProZeile);
-        return abgelehnt;
+        PtmOnlineStatusAbgleich.Ergebnis ergebnis = PtmOnlineStatusAbgleich.senden(
+                statusAuftrag(ziel, mapping, tournamentId, false, meldungen), mapping, client);
+        PtmOnlineStatusAbgleich.schreiben(mapping, ergebnis);
+        return ergebnis.abgelehnt();
     }
 
-    private static List<String> neueMeldungenAnlegen(MeldelisteZiel ziel, PtmOnlineRegistrationMapping mapping,
-            TournamentSyncClient client, String tournamentId, List<LokaleOnlineMeldung> meldungen,
-            Map<Integer, String> uuidProZeile) throws IOException, InterruptedException, GenerateException {
+    /**
+     * Momentaufnahme für den Status-Abgleich: lokale UUIDs (fehlende werden angelegt), Teilnahme, Setzposition und
+     * für aktive Meldungen ohne Online-Zuordnung die Anmeldedaten. Läuft im SheetRunner; danach braucht das Senden
+     * das Dokument nicht mehr.
+     */
+    static PtmOnlineStatusAuftrag statusAuftrag(MeldelisteZiel ziel, PtmOnlineRegistrationMapping mapping,
+            String tournamentId, boolean turnierStarten, List<LokaleOnlineMeldung> meldungen)
+            throws GenerateException {
+        Map<Integer, String> uuidProZeile = lokaleUuids(ziel, meldungen.stream()
+                .map(LokaleOnlineMeldung::zeile1Basiert).filter(zeile -> zeile > 0).toList());
         Map<Integer, List<MeldelisteSpielerDaten>> proZeile = ziel.leseAlleSpielerRoh().stream()
                 .collect(Collectors.groupingBy(MeldelisteSpielerDaten::zeile1Basiert, LinkedHashMap::new,
                         Collectors.toList()));
         Map<String, String> onlineIds = mapping.getOnlineIdsProUuid();
-        List<String> abgelehnt = new ArrayList<>();
-        List<NeueZuordnung> neueZuordnungen = new ArrayList<>();
-        try {
-            for (LokaleOnlineMeldung meldung : meldungen) {
-                String uuid = uuidProZeile.get(meldung.zeile1Basiert());
-                List<MeldelisteSpielerDaten> spieler = proZeile.getOrDefault(meldung.zeile1Basiert(), List.of());
-                if (uuid == null || meldung.teilnahme() != OnlineTeilnahme.AKTIV || onlineIds.containsKey(uuid)
-                        || spieler.isEmpty()) {
-                    continue;
-                }
-                Optional<RegistrationDto> angelegt = legeOnlineAn(client, tournamentId, uuid, spieler, abgelehnt);
-                if (angelegt.isPresent()) {
-                    neueZuordnungen.add(PtmOnlineRegistrationMapping.neueZuordnung(uuid, teamnummerFormel(ziel, uuid),
-                            bezeichnung(spieler), angelegt.get()));
-                }
-            }
-        } finally {
-            // Auch nach einem Netzfehler: bereits online angelegte Meldungen lokal zuordnen.
-            mapping.addMappings(neueZuordnungen);
-        }
-        return abgelehnt;
-    }
-
-    /** @return leer, wenn PTM-Online die Meldung als bereits angemeldet ablehnt (dann in {@code abgelehnt}). */
-    private static Optional<RegistrationDto> legeOnlineAn(TournamentSyncClient client, String tournamentId, String uuid,
-            List<MeldelisteSpielerDaten> spieler, List<String> abgelehnt) throws IOException, InterruptedException {
-        try {
-            return Optional.of(client.upsertRegistration(tournamentId, uuid, zuAnmeldung(spieler)));
-        } catch (PtmOnlineHttpException e) {
-            if (!e.istBereitsAngemeldet()) {
-                throw e;
-            }
-            logger.warn("PTM-Online: Meldung {} online abgelehnt (bereits angemeldet)", uuid, e);
-            abgelehnt.add(bezeichnung(spieler));
-            return Optional.empty();
-        }
-    }
-
-    private static void teilnahmePushen(PtmOnlineRegistrationMapping mapping, TournamentSyncClient client,
-            String tournamentId, List<LokaleOnlineMeldung> meldungen, Map<Integer, String> uuidProZeile)
-            throws IOException, InterruptedException, GenerateException {
-        Map<String, String> onlineIds = mapping.getOnlineIdsProUuid();
-        Map<String, Integer> revisionen = mapping.getExecutionRevisionenProUuid();
-        List<RegistrationResultDto> results = new ArrayList<>();
-        Map<String, Integer> neueRevisionen = new LinkedHashMap<>();
+        List<PtmOnlineStatusAuftrag.Eintrag> eintraege = new ArrayList<>();
         for (LokaleOnlineMeldung meldung : meldungen) {
             String uuid = uuidProZeile.get(meldung.zeile1Basiert());
-            String onlineId = uuid == null ? null : onlineIds.get(uuid);
-            if (onlineId == null) {
+            if (uuid == null) {
                 continue;
             }
-            int revision = revisionen.getOrDefault(uuid, 1);
-            results.add(new RegistrationResultDto(onlineId, null, meldung.seedingPosition(),
-                    meldung.teilnahme().apiWert(), revision));
-            neueRevisionen.put(uuid, revision + 1);
+            List<MeldelisteSpielerDaten> spieler = proZeile.getOrDefault(meldung.zeile1Basiert(), List.of());
+            boolean neuAnlegen = meldung.teilnahme() == OnlineTeilnahme.AKTIV && !onlineIds.containsKey(uuid)
+                    && !spieler.isEmpty();
+            PtmOnlineStatusAuftrag.NeueAnlage anlage = neuAnlegen ? new PtmOnlineStatusAuftrag.NeueAnlage(
+                    zuAnmeldung(spieler), bezeichnung(spieler), teamnummerFormel(ziel, uuid)) : null;
+            eintraege.add(new PtmOnlineStatusAuftrag.Eintrag(uuid, meldung.teilnahme(), meldung.seedingPosition(),
+                    anlage));
         }
-        if (results.isEmpty()) {
-            return;
-        }
-        int updatedCount = client.pushResults(tournamentId, results);
-        if (updatedCount != results.size()) {
-            logger.warn("PTM-Online: Status-Push aktualisierte nur {} von {} Anmeldungen; "
-                    + "lokale executionRevision bleibt unveraendert fuer den naechsten Abgleich", updatedCount,
-                    results.size());
-            return;
-        }
-        mapping.setExecutionRevisionen(neueRevisionen);
+        return new PtmOnlineStatusAuftrag(tournamentId, turnierStarten, eintraege);
     }
 
     static Map<Integer, Integer> zeileProTeam(MeldelisteZiel ziel) {
@@ -480,7 +417,7 @@ public final class PtmOnlineSpielrundeSync {
         return e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
     }
 
-    private static void zeigeFehlerSammlung(XComponentContext ctx, List<String> fehler) {
+    static void zeigeFehlerSammlung(XComponentContext ctx, List<String> fehler) {
         LoMainThread.post(ctx, () -> MessageBox.from(ctx, MessageBoxTypeEnum.WARN_OK)
                 .caption(I18n.get("ptmonline.fehler.titel"))
                 .message(I18n.get("ptmonline.fehler.rundenstart_abgleich", String.join("\n", fehler)))

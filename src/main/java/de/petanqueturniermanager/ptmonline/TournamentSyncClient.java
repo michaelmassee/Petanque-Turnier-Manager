@@ -8,6 +8,7 @@ import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,8 +42,21 @@ public class TournamentSyncClient extends PtmOnlineHttpClient {
 
     /** Client für alle schreibenden Aufrufe eines konkret gebundenen Turnierdokuments. */
     public TournamentSyncClient(String baseUrl, String apiKey, String syncDocumentId, String leaseToken) {
-        super(HttpClient.newBuilder().connectTimeout(java.time.Duration.ofSeconds(30)).build(), baseUrl, apiKey,
-                syncDocumentId, leaseToken);
+        super(HttpClient.newBuilder().connectTimeout(STANDARD_TIMEOUT).build(), baseUrl, apiKey, syncDocumentId,
+                leaseToken);
+    }
+
+    /**
+     * Lesender Client mit kurzem Zeitlimit für Abfragen, auf die der Turnierbetrieb warten muss (Rückfrage vor dem
+     * Turnierstart): bei schlechtem Netz lieber schnell ohne Online-Daten weiter als lange blockieren.
+     */
+    public static TournamentSyncClient mitKurzemTimeout(String baseUrl, String apiKey, Duration timeout) {
+        return new TournamentSyncClient(HttpClient.newBuilder().connectTimeout(timeout).build(), baseUrl, apiKey,
+                timeout);
+    }
+
+    private TournamentSyncClient(HttpClient httpClient, String baseUrl, String apiKey, Duration timeout) {
+        super(httpClient, baseUrl, apiKey, null, null, timeout);
     }
 
     TournamentSyncClient(HttpClient httpClient, String baseUrl, String apiKey) {

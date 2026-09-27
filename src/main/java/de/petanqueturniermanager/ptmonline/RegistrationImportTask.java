@@ -4,6 +4,7 @@
 package de.petanqueturniermanager.ptmonline;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -55,6 +56,8 @@ import de.petanqueturniermanager.spielerdb.SpielerMitVerein;
 public final class RegistrationImportTask {
 
     private static final Logger logger = LogManager.getLogger(RegistrationImportTask.class);
+    /** Die Prüfung vor dem Turnierstart hält die Auslosung auf – bei schlechtem Netz nicht länger als so. */
+    static final Duration TIMEOUT_VOR_TURNIERSTART = Duration.ofSeconds(8);
 
     private RegistrationImportTask() {}
 
@@ -191,14 +194,16 @@ public final class RegistrationImportTask {
      * Online-Anmeldungen, die noch in keiner Meldelistenzeile stehen. Namensgleiche, vor Ort erfasste und
      * noch nicht verknüpfte Zeilen werden dabei verknüpft – sonst legt der Rundenstart sie online erneut an
      * und PTM-Online lehnt sie als doppelte Spieler ab. {@code lastSync} bleibt unverändert, damit ein
-     * späterer manueller Abgleich die fehlenden Anmeldungen weiterhin abruft.
+     * späterer manueller Abgleich die fehlenden Anmeldungen weiterhin abruft. Kurzes Zeitlimit
+     * ({@link #TIMEOUT_VOR_TURNIERSTART}): bei schlechtem Netz geht der Turnierstart mit einem Hinweis weiter.
      *
      * @return Online-Bezeichnungen der fehlenden Anmeldungen, leer wenn die Meldeliste vollständig ist.
      */
     public static List<String> pruefeVorTurnierstart(LibreOfficePtmOnlineSpeicher.Zugangsdaten config,
             PtmOnlineRegistrationMapping mapping, String tournamentId, MeldelisteZiel ziel)
             throws IOException, InterruptedException, GenerateException {
-        TournamentSyncClient client = new TournamentSyncClient(config.baseUrl(), config.apiKey());
+        TournamentSyncClient client = TournamentSyncClient.mitKurzemTimeout(config.baseUrl(), config.apiKey(),
+                TIMEOUT_VOR_TURNIERSTART);
         List<RegistrationDto> registrations = client.fetchRegistrations(tournamentId,
                 mapping.getLastSync().orElse(Instant.EPOCH));
         Map<String, List<Integer>> vorhandeneZeilen = vorhandeneZeilenNachBesetzung(ziel);

@@ -9,12 +9,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
 
-import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
-import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.ptmonline.dto.LiveMatchDto;
 import de.petanqueturniermanager.ptmonline.live.LiveStandQuelle;
-import de.petanqueturniermanager.ptmonline.live.LiveStandQuellen;
 import de.petanqueturniermanager.ptmonline.live.LiveTurnierStand;
 
 /**
@@ -36,25 +33,6 @@ public final class PtmOnlineLiveSync {
     private static final LiveUebertragungsGedaechtnis GEDAECHTNIS = new LiveUebertragungsGedaechtnis();
 
     private PtmOnlineLiveSync() {}
-
-    /**
-     * Überträgt den aktuellen Stand des Dokuments bzw. bei Supermelee des aktiven Spieltags. No-Op, wenn das
-     * Dokument nicht verbunden oder der Sync pausiert ist.
-     *
-     * @throws IOException       Netz-/Serverfehler; der Aufrufer wiederholt später
-     * @throws GenerateException Dokument nicht lesbar
-     */
-    static void uebertragen(WorkingSpreadsheet ws, TurnierSystem ts)
-            throws GenerateException, IOException, InterruptedException {
-        Optional<PtmOnlineVerbindung> verbindung = PtmOnlineVerbindung.ermitteln(ws, ts);
-        if (verbindung.isEmpty()) {
-            return;
-        }
-        Optional<LiveStandQuelle> quelle = LiveStandQuellen.fuer(ws, ts, verbindung.get().spieltagNr());
-        if (quelle.isPresent()) {
-            uebertragen(verbindung.get(), quelle.get());
-        }
-    }
 
     /** Bei pausiertem Sync wird nichts gelesen und nichts übertragen. */
     static void uebertragen(PtmOnlineVerbindung verbindung, LiveStandQuelle quelle)
