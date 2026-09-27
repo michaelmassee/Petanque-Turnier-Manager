@@ -5,6 +5,7 @@ package de.petanqueturniermanager.ptmonline;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -91,7 +92,7 @@ public final class PtmOnlineSpielrundeSync {
     public static void abgleichen(WorkingSpreadsheet ws, TurnierSystem ts, boolean istErsteRunde,
             Set<Integer> alleTeamNummern, Set<Integer> aktiveTeamNummern, Set<Integer> ausgestiegeneTeamNummern)
             throws GenerateException {
-        Optional<Verbindung> verbindung = verbindung(ws, ts);
+        Optional<PtmOnlineVerbindung> verbindung = verbindung(ws, ts);
         if (verbindung.isPresent()) {
             abgleichen(ws.getxContext(), verbindung.get(), istErsteRunde, alleTeamNummern, aktiveTeamNummern,
                     ausgestiegeneTeamNummern);
@@ -108,7 +109,7 @@ public final class PtmOnlineSpielrundeSync {
      */
     public static void turnierstartAbgleichen(WorkingSpreadsheet ws, TurnierSystem ts, boolean istErsteRunde,
             IMeldungen<?, ?> alleMeldungen, IMeldungen<?, ?> aktiveMeldungen) throws GenerateException {
-        Optional<Verbindung> verbindung = verbindung(ws, ts);
+        Optional<PtmOnlineVerbindung> verbindung = verbindung(ws, ts);
         if (verbindung.isEmpty()) {
             return;
         }
@@ -130,7 +131,7 @@ public final class PtmOnlineSpielrundeSync {
         return ausgestiegene;
     }
 
-    private static void abgleichen(XComponentContext ctx, Verbindung verbindung, boolean istErsteRunde,
+    private static void abgleichen(XComponentContext ctx, PtmOnlineVerbindung verbindung, boolean istErsteRunde,
             Set<Integer> alleTeamNummern, Set<Integer> aktiveTeamNummern, Set<Integer> ausgestiegeneTeamNummern)
             throws GenerateException {
         var config = verbindung.config();
@@ -140,21 +141,13 @@ public final class PtmOnlineSpielrundeSync {
         if (!istSyncAktiv(mapping)) {
             return;
         }
-        Optional<String> syncDocumentId;
-        Optional<String> leaseToken;
+        TournamentSyncClient client;
         try {
-            syncDocumentId = mapping.getSyncDocumentId();
-            leaseToken = mapping.getLeaseToken();
+            client = verbindung.gebundenerClient();
         } catch (GenerateException e) {
             zeigeFehlerSammlung(ctx, List.of(e.getMessage()));
             return;
         }
-        if (syncDocumentId.isEmpty() || leaseToken.isEmpty()) {
-            zeigeFehlerSammlung(ctx, List.of(I18n.get("ptmonline.fehler.dokumentbindung_unvollstaendig")));
-            return;
-        }
-        TournamentSyncClient client = new TournamentSyncClient(config.baseUrl(), config.apiKey(),
-                syncDocumentId.get(), leaseToken.get());
         List<String> fehler = new ArrayList<>();
 
         try {
@@ -197,7 +190,7 @@ public final class PtmOnlineSpielrundeSync {
     }
 
     /** @return {@code false}, wenn der Thread dabei unterbrochen wurde. */
-    private static boolean statusPushen(Verbindung verbindung, TournamentSyncClient client,
+    private static boolean statusPushen(PtmOnlineVerbindung verbindung, TournamentSyncClient client,
             Set<Integer> alleTeamNummern, Set<Integer> aktiveTeamNummern, Set<Integer> ausgestiegeneTeamNummern,
             List<String> fehler) {
         try {
@@ -248,7 +241,7 @@ public final class PtmOnlineSpielrundeSync {
         return new LokaleOnlineMeldung(zeile, teilnahme, setzposition.isPresent() ? setzposition.getAsInt() : null);
     }
 
-    private static Map<Integer, List<MeldelisteSpielerDaten>> spielerProTeam(MeldelisteZiel meldeliste) {
+    static Map<Integer, List<MeldelisteSpielerDaten>> spielerProTeam(MeldelisteZiel meldeliste) {
         Map<Integer, List<MeldelisteSpielerDaten>> ergebnis = new LinkedHashMap<>();
         for (MeldelisteSpielerDaten spieler : meldeliste.leseAlleSpielerRoh()) {
             int teamNr = meldeliste.getTeamNrAusZeile(spieler.zeile1Basiert());
@@ -276,35 +269,15 @@ public final class PtmOnlineSpielrundeSync {
     }
 
     /**
-     * @param ziel       Sync-Ziel mit den lokalen PTM-Online-IDs (Meldeliste bzw. Mêlée-Anmeldung)
-     * @param meldeliste Team-Meldeliste der Spielrunden; ohne Mêlée identisch mit {@code ziel}
+     * Verbindungsdaten des Dokuments, leer wenn nicht verbunden. Nicht lesbare Verbindungsdaten werden gemeldet und
+     * wie „nicht verbunden“ behandelt – der Online-Abgleich darf den Turnierbetrieb nie blockieren.
      */
-    private record Verbindung(LibreOfficePtmOnlineSpeicher.Zugangsdaten config, MeldelisteZiel ziel,
-            MeldelisteZiel meldeliste, PtmOnlineRegistrationMapping mapping, String tournamentId) {}
-
-    /**
-     * Verbindungsdaten des Dokuments (bzw. bei Supermelee des aktiven Spieltags), leer wenn kein
-     * PTM-Online-Zugang eingerichtet, keine Meldeliste vorhanden oder das Dokument nicht verbunden ist.
-     */
-    private static Optional<Verbindung> verbindung(WorkingSpreadsheet ws, TurnierSystem ts) {
-        XComponentContext ctx = ws.getxContext();
-        var config = new LibreOfficePtmOnlineSpeicher(ctx).laden();
-        if (!config.isConfigured()) {
-            return Optional.empty();
-        }
-        Optional<MeldelisteZiel> ziel = MeldelisteZielFactory.fuerPtmOnline(ws);
-        Optional<MeldelisteZiel> meldeliste = MeldelisteZielFactory.fuerAktivesSheet(ws);
-        if (ziel.isEmpty() || meldeliste.isEmpty()) {
-            return Optional.empty();
-        }
+    private static Optional<PtmOnlineVerbindung> verbindung(WorkingSpreadsheet ws, TurnierSystem ts) {
         try {
-            Integer spieltagNr = SpieltagKontext.aktiverSpieltagOderNull(ws, ts);
-            PtmOnlineRegistrationMapping mapping = new PtmOnlineRegistrationMapping(ws, ts, spieltagNr);
-            return mapping.getTournamentId()
-                    .map(tournamentId -> new Verbindung(config, ziel.get(), meldeliste.get(), mapping, tournamentId));
+            return PtmOnlineVerbindung.ermitteln(ws, ts);
         } catch (GenerateException e) {
             logger.error("PTM-Online: Verbindungsdaten lesen fehlgeschlagen", e);
-            zeigeFehlerSammlung(ctx, List.of(e.getMessage()));
+            zeigeFehlerSammlung(ws.getxContext(), List.of(e.getMessage()));
             return Optional.empty();
         }
     }
@@ -441,7 +414,7 @@ public final class PtmOnlineSpielrundeSync {
         mapping.setExecutionRevisionen(neueRevisionen);
     }
 
-    private static Map<Integer, Integer> zeileProTeam(MeldelisteZiel ziel) {
+    static Map<Integer, Integer> zeileProTeam(MeldelisteZiel ziel) {
         Map<Integer, Integer> ergebnis = new LinkedHashMap<>();
         for (MeldelisteSpielerDaten spieler : ziel.leseAlleSpielerRoh()) {
             int teamNr = ziel.getTeamNrAusZeile(spieler.zeile1Basiert());
@@ -463,7 +436,7 @@ public final class PtmOnlineSpielrundeSync {
     }
 
     /** Lokale UUIDs der Zeilen in einem Block; fehlende werden angelegt. */
-    private static Map<Integer, String> lokaleUuids(MeldelisteZiel ziel, List<Integer> zeilen1Basiert)
+    static Map<Integer, String> lokaleUuids(MeldelisteZiel ziel, Collection<Integer> zeilen1Basiert)
             throws GenerateException {
         try {
             return ziel.getOderErzeugeLokaleUuids(zeilen1Basiert);

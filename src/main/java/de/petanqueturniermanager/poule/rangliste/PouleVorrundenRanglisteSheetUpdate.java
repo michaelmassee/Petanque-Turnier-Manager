@@ -12,6 +12,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
+import de.petanqueturniermanager.ptmonline.PtmOnlineLiveAusloeser;
 
 /**
  * Aktualisiert die Poule Vorrunden-Rangliste ohne das Sheet neu zu erstellen.
@@ -23,7 +24,7 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
  * Dadurch werden keine Sheet-Events ausgelöst, die eine Race Condition
  * mit dem {@code SheetSyncListener} verursachen könnten.
  */
-public class PouleVorrundenRanglisteSheetUpdate extends PouleVorrundenRanglisteSheet {
+public class PouleVorrundenRanglisteSheetUpdate extends PouleVorrundenRanglisteSheet implements PtmOnlineLiveAusloeser {
 
     private static final Logger logger = LogManager.getLogger(PouleVorrundenRanglisteSheetUpdate.class);
 

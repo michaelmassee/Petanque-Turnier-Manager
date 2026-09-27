@@ -17,6 +17,7 @@ import de.petanqueturniermanager.algorithmen.kaskaden.KaskadenFeldBelegung;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.ptmonline.PtmOnlineLiveAusloeser;
 
 /**
  * Aktualisiert die Kaskade-Gruppenrangliste ohne Sheet-Neuaufbau: schreibt nur
@@ -29,7 +30,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
  * Reentrancy: pro Dokument höchstens ein Update gleichzeitig. Während eines
  * Laufs eintreffende Events lösen genau einen Dirty-Rerun aus.
  */
-public class KaskadeGruppenRanglisteSheetUpdate extends KaskadeGruppenRanglisteSheet {
+public class KaskadeGruppenRanglisteSheetUpdate extends KaskadeGruppenRanglisteSheet implements PtmOnlineLiveAusloeser {
 
 	private static final Logger logger = LogManager.getLogger(KaskadeGruppenRanglisteSheetUpdate.class);
 

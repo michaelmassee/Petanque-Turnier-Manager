@@ -28,6 +28,7 @@ import de.petanqueturniermanager.poule.konfiguration.PouleKonfigurationSheet;
 import de.petanqueturniermanager.poule.meldeliste.PouleMeldeListeSheetUpdate;
 import de.petanqueturniermanager.poule.rangliste.PouleVorrundenRanglisteSheetUpdate;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.ptmonline.PtmOnlineLiveAusloeser;
 
 /**
  * Erstellt die KO-Bracket-Sheets (A-Finale, B-Finale) für das Poule-A/B-Turniersystem.
@@ -42,7 +43,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
  *   <li>KO-Bracket-Sheets für A- und B-Turnier erstellen</li>
  * </ol>
  */
-public class PouleKoSheet extends SheetRunner implements ISheet {
+public class PouleKoSheet extends SheetRunner implements ISheet, PtmOnlineLiveAusloeser {
 
     public PouleKoSheet(WorkingSpreadsheet workingSpreadsheet) {
         super(workingSpreadsheet, TurnierSystem.POULE, "Poule-KO");

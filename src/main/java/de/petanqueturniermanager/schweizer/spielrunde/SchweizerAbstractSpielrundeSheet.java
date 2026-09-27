@@ -61,6 +61,7 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
+import de.petanqueturniermanager.ptmonline.PtmOnlineLiveAusloeser;
 import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 import de.petanqueturniermanager.model.TeamPaarung;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
@@ -74,7 +75,7 @@ import de.petanqueturniermanager.supermelee.SpielRundeNr;
  * Erstellung 27.03.2024 / Michael Massee
  */
 
-public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner implements IZeitplanSpielrundeSheet {
+public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner implements IZeitplanSpielrundeSheet, PtmOnlineLiveAusloeser {
 
 	private static final Logger LOGGER = LogManager.getLogger(SchweizerAbstractSpielrundeSheet.class);
 

@@ -38,6 +38,7 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.helper.sheet.search.RangeSearchHelper;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.model.TeamPaarung;
+import de.petanqueturniermanager.ptmonline.PtmOnlineLiveAusloeser;
 import de.petanqueturniermanager.ptmonline.PtmOnlineSpielrundeSync;
 import de.petanqueturniermanager.supermelee.AbstractSuperMeleeRanglisteFormatter;
 import de.petanqueturniermanager.triptete.konfiguration.TripTeteKonfigurationSheet;
@@ -47,7 +48,7 @@ import de.petanqueturniermanager.triptete.meldeliste.TripTeteMeldeListeSheetUpda
  * Trip-Tête-Spielplan: Round-Robin-Paarungen, pro Begegnung drei Partien
  * (Triplette / Doublette / Tête-à-tête) in einer Zeile.
  */
-public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet {
+public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet, PtmOnlineLiveAusloeser {
 
 	public static String sheetName() {
 		return SheetNamen.spielplan();

@@ -26,7 +26,7 @@ import de.petanqueturniermanager.spielerdb.MeleeAnmeldungZiel;
  * der ProcessBox, Abbruch über den Stop-Knopf, eigener Blattschutz-Scope. Die Meldeliste wird nach
  * dem Import synchron im selben Runner aktualisiert, da parallel kein zweiter Runner starten kann.
  */
-public final class PtmOnlineAbgleichSheetRunner extends SheetRunner {
+public final class PtmOnlineAbgleichSheetRunner extends SheetRunner implements PtmOnlineLiveAusloeser {
 
     private final LibreOfficePtmOnlineSpeicher.Zugangsdaten config;
     private final PtmOnlineRegistrationMapping mapping;

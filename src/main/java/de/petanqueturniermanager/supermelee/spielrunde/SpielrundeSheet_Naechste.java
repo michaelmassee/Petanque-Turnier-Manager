@@ -22,6 +22,7 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.model.SpielerMeldungen;
+import de.petanqueturniermanager.ptmonline.PtmOnlineLiveAusloeser;
 import de.petanqueturniermanager.ptmonline.PtmOnlineSpielrundeSync;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
@@ -33,7 +34,7 @@ import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteS
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheetUpdate;
 
 public class SpielrundeSheet_Naechste extends SheetRunner
-		implements ISheet, ISpielrundeSheet, SpielrundeSheetKonstanten {
+		implements ISheet, ISpielrundeSheet, SpielrundeSheetKonstanten, PtmOnlineLiveAusloeser {
 
 	private final SpielrundeDelegate delegate;
 

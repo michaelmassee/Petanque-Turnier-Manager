@@ -28,6 +28,7 @@ import de.petanqueturniermanager.ko.KoTurnierbaumSheet;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.ptmonline.PtmOnlineLiveAusloeser;
 
 /**
  * Erstellt für jedes Kaskaden-Endfeld (A, B, C, D …) einen visuellen KO-Turnierbaum.<br>
@@ -38,7 +39,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
  *
  * @author Michael Massee
  */
-public class KaskadeKoFeldSheet extends SheetRunner implements ISheet {
+public class KaskadeKoFeldSheet extends SheetRunner implements ISheet, PtmOnlineLiveAusloeser {
 
     private static final Logger LOGGER = LogManager.getLogger(KaskadeKoFeldSheet.class);
 

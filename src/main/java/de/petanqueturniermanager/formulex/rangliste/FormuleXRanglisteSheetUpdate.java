@@ -13,6 +13,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.formulex.meldeliste.FormuleXMeldeListeSheetUpdate;
 import de.petanqueturniermanager.helper.rangliste.RanglisteUpdateHelper;
 import de.petanqueturniermanager.model.TeamMeldungen;
+import de.petanqueturniermanager.ptmonline.PtmOnlineLiveAusloeser;
 
 /**
  * Aktualisiert die Formule X Rangliste ohne das Sheet neu zu erstellen.
@@ -23,7 +24,7 @@ import de.petanqueturniermanager.model.TeamMeldungen;
  * Fallback: Wenn das Rangliste-Sheet noch nicht existiert, wird automatisch
  * {@link FormuleXRanglisteSheet#doRun()} ausgelöst.
  */
-public class FormuleXRanglisteSheetUpdate extends FormuleXRanglisteSheet {
+public class FormuleXRanglisteSheetUpdate extends FormuleXRanglisteSheet implements PtmOnlineLiveAusloeser {
 
     private static final Logger LOGGER = LogManager.getLogger(FormuleXRanglisteSheetUpdate.class);
 

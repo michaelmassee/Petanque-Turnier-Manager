@@ -36,6 +36,7 @@ import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterMeldeListeSheetUpdate;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.ptmonline.PtmOnlineLiveAusloeser;
 
 /**
  * Erstellt die Finalrundenblätter (A-Finale, B-Finale, C-Finale, D-Finale) für das
@@ -62,7 +63,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
  *   <li>Pro nicht-leerer Gruppe mit ≥2 Teams: KO-Bracket-Blatt erstellen</li>
  * </ol>
  */
-public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet {
+public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet, PtmOnlineLiveAusloeser {
 
 	private static final Logger logger = LogManager.getLogger(MaastrichterFinalrundeSheet.class);
 

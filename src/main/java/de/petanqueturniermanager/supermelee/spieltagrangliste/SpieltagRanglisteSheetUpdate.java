@@ -15,6 +15,7 @@ import com.sun.star.sheet.XSpreadsheetDocument;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.rangliste.RanglisteUpdateHelper;
+import de.petanqueturniermanager.ptmonline.PtmOnlineLiveAusloeser;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 
 /**
@@ -30,7 +31,7 @@ import de.petanqueturniermanager.supermelee.SpielTagNr;
  * läuft genau einmal nochmal durch — so gehen keine Refreshes verloren, ohne
  * dass parallele Threads dasselbe Sheet bearbeiten.
  */
-public class SpieltagRanglisteSheetUpdate extends SpieltagRanglisteSheet {
+public class SpieltagRanglisteSheetUpdate extends SpieltagRanglisteSheet implements PtmOnlineLiveAusloeser {
 
 	private static final Logger logger = LogManager.getLogger(SpieltagRanglisteSheetUpdate.class);
 

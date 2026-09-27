@@ -8,10 +8,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
+import java.util.concurrent.Flow;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -19,6 +22,8 @@ import org.mockito.ArgumentCaptor;
 import com.google.gson.Gson;
 
 import de.petanqueturniermanager.onlinesync.OnlineTournamentDto;
+import de.petanqueturniermanager.ptmonline.dto.LiveMatchDto;
+import de.petanqueturniermanager.ptmonline.dto.LiveRankingEntryDto;
 import de.petanqueturniermanager.ptmonline.dto.NeueOnlineAnmeldung;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationDto;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationResultDto;
@@ -202,6 +207,94 @@ public class TournamentSyncClientTest {
 		TournamentSyncClient client = clientMitAntwort("");
 
 		assertThatThrownBy(client::listTournaments).isExactlyInstanceOf(IOException.class);
+	}
+
+	@Test
+	public void putRoundSendetPartienOhneNullFelder() throws Exception {
+		HttpClient httpClient = httpClientMitAntwort("{\"roundNumber\":2,\"matchCount\":1,\"created\":true}");
+		TournamentSyncClient client = new TournamentSyncClient(httpClient, "https://ptm-online.example.com", "ptm_secret");
+
+		int anzahl = client.putRound("t 1", 2,
+				List.of(new LiveMatchDto(List.of("r1"), List.of(), null, null, "7", null)));
+
+		assertThat(anzahl).isEqualTo(1);
+		HttpRequest request = gesendeteAnfrage(httpClient);
+		assertThat(request.method()).isEqualTo("PUT");
+		assertThat(request.uri().toString()).isEqualTo("https://ptm-online.example.com/api/sync/tournaments/t+1/rounds/2");
+		assertThat(bodyAlsText(request))
+				.isEqualTo("{\"matches\":[{\"teamA\":[\"r1\"],\"teamB\":[],\"court\":\"7\"}]}");
+	}
+
+	@Test
+	public void deleteRoundLiefertObDieRundeExistierte() throws Exception {
+		HttpClient httpClient = httpClientMitAntwort("{\"ok\":true,\"deleted\":true}");
+		TournamentSyncClient client = new TournamentSyncClient(httpClient, "https://ptm-online.example.com", "ptm_secret");
+
+		assertThat(client.deleteRound("t1", 3)).isTrue();
+		HttpRequest request = gesendeteAnfrage(httpClient);
+		assertThat(request.method()).isEqualTo("DELETE");
+		assertThat(request.uri().toString()).isEqualTo("https://ptm-online.example.com/api/sync/tournaments/t1/rounds/3");
+	}
+
+	@Test
+	public void deleteRoundOhneDeletedWirftIOException() throws Exception {
+		TournamentSyncClient client = clientMitAntwort("{\"ok\":true}");
+
+		assertThatThrownBy(() -> client.deleteRound("t1", 3)).isExactlyInstanceOf(IOException.class);
+	}
+
+	@Test
+	public void putRankingSendetEintraege() throws Exception {
+		HttpClient httpClient = httpClientMitAntwort("{\"entryCount\":1}");
+		TournamentSyncClient client = new TournamentSyncClient(httpClient, "https://ptm-online.example.com", "ptm_secret");
+
+		int anzahl = client.putRanking("t1", List.of(new LiveRankingEntryDto(1, List.of("r1"), 3, 39, 12)));
+
+		assertThat(anzahl).isEqualTo(1);
+		HttpRequest request = gesendeteAnfrage(httpClient);
+		assertThat(request.uri().toString()).isEqualTo("https://ptm-online.example.com/api/sync/tournaments/t1/ranking");
+		assertThat(bodyAlsText(request)).isEqualTo(
+				"{\"entries\":[{\"place\":1,\"registrationIds\":[\"r1\"],\"wins\":3,\"pointsFor\":39,\"pointsAgainst\":12}]}");
+	}
+
+	private HttpClient httpClientMitAntwort(String body) throws Exception {
+		HttpClient httpClient = mock(HttpClient.class);
+		HttpResponse<String> response = mockResponse(200, body);
+		when(httpClient.<String>send(any(HttpRequest.class), any())).thenReturn(response);
+		return httpClient;
+	}
+
+	private static HttpRequest gesendeteAnfrage(HttpClient httpClient) throws Exception {
+		ArgumentCaptor<HttpRequest> captor = ArgumentCaptor.forClass(HttpRequest.class);
+		verify(httpClient).send(captor.capture(), any());
+		return captor.getValue();
+	}
+
+	/** Liest den Body einer gebauten Anfrage über das Flow-API des {@link HttpRequest.BodyPublisher}. */
+	private static String bodyAlsText(HttpRequest request) {
+		StringBuilder text = new StringBuilder();
+		request.bodyPublisher().orElseThrow().subscribe(new Flow.Subscriber<ByteBuffer>() {
+			@Override
+			public void onSubscribe(Flow.Subscription subscription) {
+				subscription.request(Long.MAX_VALUE);
+			}
+
+			@Override
+			public void onNext(ByteBuffer teil) {
+				text.append(StandardCharsets.UTF_8.decode(teil));
+			}
+
+			@Override
+			public void onError(Throwable fehler) {
+				throw new IllegalStateException(fehler);
+			}
+
+			@Override
+			public void onComplete() {
+				// Body vollständig gelesen
+			}
+		});
+		return text.toString();
 	}
 
 	private TournamentSyncClient clientMitAntwort(String body) throws Exception {

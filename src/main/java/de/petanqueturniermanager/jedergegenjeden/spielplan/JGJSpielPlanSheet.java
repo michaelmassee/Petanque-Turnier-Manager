@@ -44,6 +44,7 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.helper.sheet.search.RangeSearchHelper;
 import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationSheet;
 import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSheet_Update;
+import de.petanqueturniermanager.ptmonline.PtmOnlineLiveAusloeser;
 import de.petanqueturniermanager.ptmonline.PtmOnlineSpielrundeSync;
 import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
@@ -57,7 +58,7 @@ import de.petanqueturniermanager.supermelee.AbstractSuperMeleeRanglisteFormatter
  * Erstellung 01.08.2022 / Michael Massee
  */
 
-public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
+public class JGJSpielPlanSheet extends SheetRunner implements ISheet, PtmOnlineLiveAusloeser {
 
 	public static final String LEGACY_SHEET_NAMEN = SheetNamen.LEGACY_SPIELPLAN;
 

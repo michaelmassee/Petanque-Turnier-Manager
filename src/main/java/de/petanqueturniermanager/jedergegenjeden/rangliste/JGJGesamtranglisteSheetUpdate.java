@@ -11,6 +11,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSheet_Update;
 import de.petanqueturniermanager.model.TeamMeldungen;
+import de.petanqueturniermanager.ptmonline.PtmOnlineLiveAusloeser;
 
 /**
  * Aktualisiert die JGJ-Gesamtrangliste ohne das Sheet neu zu erstellen.
@@ -25,7 +26,7 @@ import de.petanqueturniermanager.model.TeamMeldungen;
  * ausgelöst. Bei nur einer Gruppe ist die Gesamtrangliste nicht sinnvoll –
  * das Update bricht dann still ab.
  */
-public class JGJGesamtranglisteSheetUpdate extends JGJGesamtranglisteSheet {
+public class JGJGesamtranglisteSheetUpdate extends JGJGesamtranglisteSheet implements PtmOnlineLiveAusloeser {
 
 	private static final Logger logger = LogManager.getLogger(JGJGesamtranglisteSheetUpdate.class);
 

@@ -63,6 +63,10 @@ abstract class PtmOnlineHttpClient {
                 .PUT(HttpRequest.BodyPublishers.ofString(jsonBody)));
     }
 
+    final HttpResponse<String> delete(String path) throws IOException, InterruptedException {
+        return send(authorized(HttpRequest.newBuilder(uri(path))).DELETE());
+    }
+
     private HttpRequest.Builder authorized(HttpRequest.Builder builder) {
         builder.header("Authorization", "Bearer " + apiKey).timeout(Duration.ofSeconds(30));
         if (syncDocumentId != null && leaseToken != null) {

@@ -32,11 +32,12 @@ import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteRechner;
 import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteRechner.TeamStats;
 import de.petanqueturniermanager.ko.KoTurnierbaumSheet;
 import de.petanqueturniermanager.model.TeamMeldungen;
+import de.petanqueturniermanager.ptmonline.PtmOnlineLiveAusloeser;
 
 /**
  * Erstellt JGJ-Finalrunden aus der gruppenübergreifenden Gesamtrangliste.
  */
-public class JGJFinalrundeSheet extends SheetRunner implements ISheet {
+public class JGJFinalrundeSheet extends SheetRunner implements ISheet, PtmOnlineLiveAusloeser {
 
 	private static final Logger logger = LogManager.getLogger(JGJFinalrundeSheet.class);
 

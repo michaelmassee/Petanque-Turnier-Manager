@@ -60,6 +60,7 @@ import de.petanqueturniermanager.kaskade.meldeliste.KaskadeMeldeListeSheetUpdate
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.ptmonline.PtmOnlineLiveAusloeser;
 import de.petanqueturniermanager.ptmonline.PtmOnlineSpielrundeSync;
 
 /**
@@ -72,7 +73,7 @@ import de.petanqueturniermanager.ptmonline.PtmOnlineSpielrundeSync;
  *   <li>Sonst → nächste Kaskadenrunde erstellen</li>
  * </ul>
  */
-public class KaskadeSpielrundeSheet extends SheetRunner implements ISheet {
+public class KaskadeSpielrundeSheet extends SheetRunner implements ISheet, PtmOnlineLiveAusloeser {
 
     public static final int GRUPPE_SPALTE     = 0;
     public static final int SPIEL_NR_SPALTE   = 1;

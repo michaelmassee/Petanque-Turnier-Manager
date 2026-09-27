@@ -20,6 +20,8 @@ import com.google.gson.JsonParseException;
 
 import de.petanqueturniermanager.onlinesync.OnlineTournamentDto;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.ptmonline.dto.LiveMatchDto;
+import de.petanqueturniermanager.ptmonline.dto.LiveRankingEntryDto;
 import de.petanqueturniermanager.ptmonline.dto.NeueOnlineAnmeldung;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationDto;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationResultDto;
@@ -169,11 +171,52 @@ public class TournamentSyncClient extends PtmOnlineHttpClient {
 
         JsonObject payload = leseAntwort(
                 post("/api/sync/tournaments/" + encode(tournamentId) + "/results", body.toString()));
-        JsonElement updatedCount = pflichtfeld(payload, "updatedCount");
-        if (!updatedCount.isJsonPrimitive() || !updatedCount.getAsJsonPrimitive().isNumber()) {
-            throw unvollstaendigeAntwort("updatedCount");
+        return pflichtZahl(payload, "updatedCount");
+    }
+
+    /**
+     * Überträgt eine komplette Spielrunde (Paarungen, Ergebnisse, Bahn) für die Live-Ansicht. PTM-Online ersetzt
+     * die Runde atomar; nur ein neu angelegter Rundeneintrag löst dort die Push-Benachrichtigung aus.
+     *
+     * @return Anzahl der von PTM-Online übernommenen Partien
+     */
+    public int putRound(String tournamentId, int roundNumber, List<LiveMatchDto> matches)
+            throws IOException, InterruptedException {
+        JsonObject body = new JsonObject();
+        body.add("matches", GSON.toJsonTree(matches));
+        JsonObject payload = leseAntwort(put(rundePfad(tournamentId, roundNumber), body.toString()));
+        return pflichtZahl(payload, "matchCount");
+    }
+
+    /** @return {@code true}, wenn PTM-Online die Runde kannte und gelöscht hat */
+    public boolean deleteRound(String tournamentId, int roundNumber) throws IOException, InterruptedException {
+        JsonElement deleted = pflichtfeld(leseAntwort(delete(rundePfad(tournamentId, roundNumber))), "deleted");
+        if (!deleted.isJsonPrimitive() || !deleted.getAsJsonPrimitive().isBoolean()) {
+            throw unvollstaendigeAntwort("deleted");
         }
-        return updatedCount.getAsInt();
+        return deleted.getAsBoolean();
+    }
+
+    /** Ersetzt den Ranglisten-Snapshot der Live-Ansicht (Turnierdokument ist Referenz). */
+    public int putRanking(String tournamentId, List<LiveRankingEntryDto> entries)
+            throws IOException, InterruptedException {
+        JsonObject body = new JsonObject();
+        body.add("entries", GSON.toJsonTree(entries));
+        JsonObject payload = leseAntwort(
+                put("/api/sync/tournaments/" + encode(tournamentId) + "/ranking", body.toString()));
+        return pflichtZahl(payload, "entryCount");
+    }
+
+    private static String rundePfad(String tournamentId, int roundNumber) {
+        return "/api/sync/tournaments/" + encode(tournamentId) + "/rounds/" + roundNumber;
+    }
+
+    private static int pflichtZahl(JsonObject payload, String feld) throws IOException {
+        JsonElement wert = pflichtfeld(payload, feld);
+        if (!wert.isJsonPrimitive() || !wert.getAsJsonPrimitive().isNumber()) {
+            throw unvollstaendigeAntwort(feld);
+        }
+        return wert.getAsInt();
     }
 
     private static RegistrationDto leseRegistration(HttpResponse<String> response) throws IOException {

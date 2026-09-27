@@ -62,6 +62,7 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.ko.meldeliste.KoMeldeListeSheetUpdate;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.ptmonline.PtmOnlineLiveAusloeser;
 import de.petanqueturniermanager.ptmonline.PtmOnlineSpielrundeSync;
 
 /**
@@ -78,7 +79,7 @@ import de.petanqueturniermanager.ptmonline.PtmOnlineSpielrundeSync;
  * Runden 2+: IF-Formeln berechnen Gewinner aus Vorrundenscores<br>
  * Abschlusskolonne: Sieger-Anzeige
  */
-public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
+public class KoTurnierbaumSheet extends SheetRunner implements ISheet, PtmOnlineLiveAusloeser {
 
 	private static final Logger logger = LogManager.getLogger(KoTurnierbaumSheet.class);
 

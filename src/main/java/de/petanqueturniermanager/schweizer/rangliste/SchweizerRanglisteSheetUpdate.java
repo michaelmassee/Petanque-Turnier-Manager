@@ -9,6 +9,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.rangliste.RanglisteUpdateHelper;
 import de.petanqueturniermanager.model.TeamMeldungen;
+import de.petanqueturniermanager.ptmonline.PtmOnlineLiveAusloeser;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetUpdate;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
@@ -26,7 +27,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
  * Fallback: Wenn das Rangliste-Sheet noch nicht existiert, wird automatisch
  * {@link SchweizerRanglisteSheet#doRun()} ausgelöst (vollständiger Erstaufbau).
  */
-public class SchweizerRanglisteSheetUpdate extends SchweizerRanglisteSheet {
+public class SchweizerRanglisteSheetUpdate extends SchweizerRanglisteSheet implements PtmOnlineLiveAusloeser {
 
 	private static final Logger logger = LogManager.getLogger(SchweizerRanglisteSheetUpdate.class);
 

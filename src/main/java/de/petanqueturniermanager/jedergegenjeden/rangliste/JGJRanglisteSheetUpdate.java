@@ -10,6 +10,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.rangliste.RanglisteUpdateHelper;
 import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSheet_Update;
 import de.petanqueturniermanager.model.TeamMeldungen;
+import de.petanqueturniermanager.ptmonline.PtmOnlineLiveAusloeser;
 
 /**
  * Aktualisiert die JGJ-Rangliste ohne das Sheet neu zu erstellen.
@@ -21,7 +22,7 @@ import de.petanqueturniermanager.model.TeamMeldungen;
  * Fallback: Wenn das Rangliste-Sheet noch nicht existiert, wird automatisch
  * {@link JGJRanglisteSheet#upDateSheet()} ausgelöst (vollständiger Erstaufbau).
  */
-public class JGJRanglisteSheetUpdate extends JGJRanglisteSheet {
+public class JGJRanglisteSheetUpdate extends JGJRanglisteSheet implements PtmOnlineLiveAusloeser {
 
     private static final Logger logger = LogManager.getLogger(JGJRanglisteSheetUpdate.class);
 

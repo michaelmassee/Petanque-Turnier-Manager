@@ -20,6 +20,7 @@ import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
+import de.petanqueturniermanager.ptmonline.PtmOnlineLiveAusloeser;
 import de.petanqueturniermanager.ptmonline.PtmOnlineSpielrundeSync;
 
 /**
@@ -28,7 +29,7 @@ import de.petanqueturniermanager.ptmonline.PtmOnlineSpielrundeSync;
  * Zeigt alle Poule-Gruppen mit ihren Spielen und Ergebnisfeldern in einem einzigen Sheet.
  * Formeln berechnen für Runden 2 und 3 automatisch die Sieger/Verlierer.
  */
-public class PouleVorrundeSheet extends AbstractPouleVorrundeSheet {
+public class PouleVorrundeSheet extends AbstractPouleVorrundeSheet implements PtmOnlineLiveAusloeser {
 
     public PouleVorrundeSheet(WorkingSpreadsheet workingSpreadsheet) {
         super(workingSpreadsheet, "Poule-Vorrunde");

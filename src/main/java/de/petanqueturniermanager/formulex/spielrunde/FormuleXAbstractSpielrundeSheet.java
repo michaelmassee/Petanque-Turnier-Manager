@@ -71,6 +71,7 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.model.TeamPaarung;
+import de.petanqueturniermanager.ptmonline.PtmOnlineLiveAusloeser;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
@@ -80,7 +81,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
  * Verwaltet Spaltenstruktur, Sheet-Formatierung und das Einlesen gespielter Runden.
  * Subklassen implementieren die konkrete Spielrunden-Logik (Nächste / Aktualisieren).
  */
-public abstract class FormuleXAbstractSpielrundeSheet extends SheetRunner implements IZeitplanSpielrundeSheet {
+public abstract class FormuleXAbstractSpielrundeSheet extends SheetRunner implements IZeitplanSpielrundeSheet, PtmOnlineLiveAusloeser {
 
     private static final Logger LOGGER = LogManager.getLogger(FormuleXAbstractSpielrundeSheet.class);
 

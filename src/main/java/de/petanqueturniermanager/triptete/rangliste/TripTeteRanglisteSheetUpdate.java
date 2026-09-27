@@ -8,6 +8,7 @@ import com.sun.star.sheet.XSpreadsheet;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.model.TeamMeldungen;
+import de.petanqueturniermanager.ptmonline.PtmOnlineLiveAusloeser;
 
 /**
  * Listener-sicheres Rangliste-Update: Aktualisiert nur den Datenbereich der
@@ -19,7 +20,7 @@ import de.petanqueturniermanager.model.TeamMeldungen;
  * über die Meldeliste hinzugekommene Teams unformatiert (Bug bei wachsender
  * Teilnehmerzahl, z.B. 15 Teams).
  */
-public class TripTeteRanglisteSheetUpdate extends TripTeteRanglisteSheet {
+public class TripTeteRanglisteSheetUpdate extends TripTeteRanglisteSheet implements PtmOnlineLiveAusloeser {
 
 	private static final Logger logger = LogManager.getLogger(TripTeteRanglisteSheetUpdate.class);
 
