@@ -293,6 +293,26 @@ public class MeldeListeHelperTest {
 	}
 
 	@Test
+	public void testZeileOhneSpielerNamenEntfernen_KeinNameMehrVorhanden_leertAlleZeilen() throws Exception {
+		SpielerNrName[] spielerNrNameList = new SpielerNrName[] { new SpielerNrName(1, ""),
+				new SpielerNrName(2, ""), new SpielerNrName(3, "") };
+		initReturnSpielerDaten(spielerNrNameList);
+		// keine Zeile hat mehr einen Namen -> letzteZeileMitSpielerName liefert 0
+		Mockito.when(iMeldelisteMock.letzteZeileMitSpielerName()).thenReturn(0);
+		Mockito.when(iMeldelisteMock.getErsteDatenZiele()).thenReturn(MeldeListeKonstanten.ERSTE_DATEN_ZEILE);
+		int letzteSpielTagSpalte = 6;
+		Mockito.when(iMeldelisteMock.letzteSpielTagSpalte()).thenReturn(letzteSpielTagSpalte);
+
+		meldeListeHelper.zeileOhneSpielerNamenEntfernen();
+
+		for (int i = 0; i < spielerNrNameList.length; i++) {
+			int zeile = MeldeListeKonstanten.ERSTE_DATEN_ZEILE + i;
+			verify(xSpreadsheetMock, times(1)).getCellRangeByPosition(MeldeListeKonstanten.SPIELER_NR_SPALTE, zeile,
+					letzteSpielTagSpalte, zeile);
+		}
+	}
+
+	@Test
 	public void testUpdateMeldungenNr_EinzelneMeldungOhneNummer_bekommtNummer() throws Exception {
 		// Regression: einzelne Meldung (letzteSpielZeile == ErsteDatenZiele) darf beim
 		// Nummerieren nicht als "keine Daten" behandelt werden (siehe Trip-Tête-Bug).

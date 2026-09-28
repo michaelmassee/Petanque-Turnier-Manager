@@ -594,21 +594,27 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 		// Trimmen) noch "nicht leer" und kann daher oberhalb einer echten Meldung gelandet sein
 		doSort(meldeListe.getMeldungenSpalte().getNamenOderTeamnameSpalte(), true);
 
-		int letzteZeileMitSpielerName = meldeListe.letzteZeileMitSpielerName(); // erst ab zeilen ohne namen anfangen
-
-		if (letzteZeileMitSpielerName > 0) {
-			for (int spielerNrZeilecntr = letzteZeileMitSpielerName; spielerNrZeilecntr < letzteNrZeile; spielerNrZeilecntr++) {
-				// alle Namens-Spalten kombiniert prüfen (z.B. Supermelee Vorname+Nachname),
-				// sonst wird eine Zeile mit leerem Vorname aber gefülltem Nachname fälschlich entfernt
-				String spielerNamen = meldeListe.getMeldungenSpalte().leseSpielerNameZeile(xSheet, spielerNrZeilecntr);
-				if (StringUtils.isBlank(spielerNamen)) { // null oder leer oder leerzeichen
-					// Ganze Zeile leeren (Nr, Setzposition, Aktiv, Spieltag-Status), nicht nur die
-					// Nr-Zelle – sonst bleiben verwaiste Werte (z.B. Aktiv-Flag) in der Leerzeile stehen.
-					RangeHelper.from(meldeListe, RangePosition.from(SPIELER_NR_SPALTE, spielerNrZeilecntr,
-							meldeListe.letzteSpielTagSpalte(), spielerNrZeilecntr)).clearRange();
-				}
+		for (int zeile = ersteZeileFuerLeerzeilenPruefung(); zeile < letzteNrZeile; zeile++) {
+			// alle Namens-Spalten kombiniert prüfen (z.B. Supermelee Vorname+Nachname),
+			// sonst wird eine Zeile mit leerem Vorname aber gefülltem Nachname fälschlich entfernt
+			String spielerNamen = meldeListe.getMeldungenSpalte().leseSpielerNameZeile(xSheet, zeile);
+			if (StringUtils.isBlank(spielerNamen)) {
+				// Ganze Zeile leeren (Nr, Setzposition, Aktiv, Spieltag-Status), nicht nur die
+				// Nr-Zelle – sonst bleiben verwaiste Werte (z.B. Aktiv-Flag) in der Leerzeile stehen.
+				RangeHelper.from(meldeListe, RangePosition.from(SPIELER_NR_SPALTE, zeile,
+						meldeListe.letzteSpielTagSpalte(), zeile)).clearRange();
 			}
 		}
+	}
+
+	/**
+	 * Erste Zeile, ab der nach dem Sortieren auf Zeilen ohne Namen geprüft wird: die letzte Zeile mit
+	 * Namen (Zeilen ohne Namen liegen darunter). Steht in keiner Zeile mehr ein Name, liefert
+	 * {@link IMeldeliste#letzteZeileMitSpielerName()} 0 – dann ist jede Datenzeile zu prüfen, sonst
+	 * blieben die Nummern aller geleerten Zeilen stehen.
+	 */
+	private int ersteZeileFuerLeerzeilenPruefung() throws GenerateException {
+		return Math.max(meldeListe.letzteZeileMitSpielerName(), meldeListe.getErsteDatenZiele());
 	}
 
 	/**
