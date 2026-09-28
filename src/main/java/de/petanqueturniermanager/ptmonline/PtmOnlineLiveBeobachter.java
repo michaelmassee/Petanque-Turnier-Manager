@@ -35,6 +35,10 @@ import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
+import de.petanqueturniermanager.helper.msgbox.MessageBox;
+import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.LoMainThread;
 import de.petanqueturniermanager.ptmonline.live.LiveStandQuelle;
 import de.petanqueturniermanager.ptmonline.live.LiveStandQuellen;
 
@@ -242,12 +246,44 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
                 if (quelle.isPresent()) {
                     PtmOnlineLiveSync.uebertragen(verbindung.get(), quelle.get());
                 }
+            } catch (PtmOnlineHttpException e) {
+                if (!e.istTurnierGeloescht()) {
+                    throw new GenerateException(PtmOnlineFehlerText.fuer(e));
+                }
+                verbindungAufheben(ws, ts, verbindung.get(), e);
             } catch (IOException e) {
                 throw new GenerateException(PtmOnlineFehlerText.fuer(e));
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 throw new GenerateException(e.getMessage());
             }
+        }
+
+        /**
+         * Das Online-Turnier wurde in PTM-Online gelöscht: statt endlos zu wiederholen, wird das Blatt „PTMOnline
+         * Sync“ archiviert (gilt dann als nicht verbunden) und einmal darauf hingewiesen. Offene Übertragungen
+         * entfallen, das Turnier läuft im Dokument normal weiter.
+         */
+        private void verbindungAufheben(WorkingSpreadsheet ws, TurnierSystem ts, PtmOnlineVerbindung verbindung,
+                PtmOnlineHttpException grund) throws GenerateException {
+            logger.warn("PTM-Online: Online-Turnier {} wurde gelöscht, Verbindung wird aufgehoben",
+                    verbindung.tournamentId(), grund);
+            offenerStatus.set(null);
+            offenesSchreiben = null;
+            PtmOnlineLiveSync.vergessen(verbindung.tournamentId());
+            try {
+                fuehreAus(new PtmOnlineArchivRunner(ws, ts, verbindung.mapping()),
+                        "PTM-Online: Blatt konnte nach dem Löschen des Online-Turniers nicht archiviert werden");
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new GenerateException(e.getMessage());
+            }
+            LoMainThread.post(xContext, this::zeigeTurnierGeloescht);
+        }
+
+        private void zeigeTurnierGeloescht() {
+            MessageBox.from(xContext, MessageBoxTypeEnum.WARN_OK).caption(I18n.get("ptmonline.menu.toplevel"))
+                    .message(I18n.get("ptmonline.turnier.geloescht")).show();
         }
 
         private void sendeOffenenStatus(WorkingSpreadsheet ws, TurnierSystem ts, PtmOnlineVerbindung verbindung)
@@ -295,24 +331,29 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
             schreibeOffenesErgebnis(ws, ts, verbindung);
         }
 
-        /** Schreibt im eigenen SheetRunner zurück; ist gerade ein anderer Lauf aktiv, wird verschoben. */
+        /** Schreibt im eigenen SheetRunner zurück (siehe {@link #fuehreAus}). */
         private void schreibeOffenesErgebnis(WorkingSpreadsheet ws, TurnierSystem ts, PtmOnlineVerbindung verbindung)
                 throws GenerateException, InterruptedException {
             PtmOnlineStatusAbgleich.Ergebnis ergebnis = offenesSchreiben;
             if (ergebnis == null) {
                 return;
             }
-            PtmOnlineStatusSchreibRunner runner = new PtmOnlineStatusSchreibRunner(ws, ts, verbindung.mapping(),
-                    ergebnis);
+            fuehreAus(new PtmOnlineStatusSchreibRunner(ws, ts, verbindung.mapping(), ergebnis),
+                    "PTM-Online: Status-Ergebnis konnte nicht zurückgeschrieben werden");
+            offenesSchreiben = null;
+        }
+
+        /** Führt einen stillen Schreib-Lauf aus und wartet darauf; ist gerade ein anderer Lauf aktiv, wird verschoben. */
+        private static void fuehreAus(SheetRunner runner, String fehlertext)
+                throws GenerateException, InterruptedException {
             runner.startSilent();
             if (runner.getState() == Thread.State.NEW) {
                 throw new SchreibenVerschoben();
             }
             runner.join();
             if (runner.isLetzterLaufFehlgeschlagen()) {
-                throw new GenerateException("PTM-Online: Status-Ergebnis konnte nicht zurückgeschrieben werden");
+                throw new GenerateException(fehlertext);
             }
-            offenesSchreiben = null;
         }
 
         private void wiederholen() {

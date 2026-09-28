@@ -58,6 +58,21 @@ class PtmOnlineHttpExceptionTest {
     }
 
     @Test
+    void geloeschtesTurnierWirdErkannt() {
+        assertThat(new PtmOnlineHttpException(404, "{\"error\":\"Turnier nicht gefunden\"}").istTurnierGeloescht())
+                .isTrue();
+    }
+
+    @Test
+    void andereNichtGefundenAntwortenSindKeinGeloeschtesTurnier() {
+        assertThat(new PtmOnlineHttpException(404, "{\"error\":\"Anmeldung nicht gefunden\"}").istTurnierGeloescht())
+                .isFalse();
+        assertThat(new PtmOnlineHttpException(404, "<html>Not Found</html>").istTurnierGeloescht()).isFalse();
+        assertThat(new PtmOnlineHttpException(409, "{\"error\":\"Turnier nicht gefunden\"}").istTurnierGeloescht())
+                .isFalse();
+    }
+
+    @Test
     void meldungBleibtKompatibelZurBisherigenIoException() {
         assertThat(new PtmOnlineHttpException(401, "unauthorized").getMessage())
                 .isEqualTo("PTM-Online API Fehler 401: unauthorized");

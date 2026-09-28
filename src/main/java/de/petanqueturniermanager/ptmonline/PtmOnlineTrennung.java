@@ -25,8 +25,8 @@ public final class PtmOnlineTrennung {
     private PtmOnlineTrennung() {}
 
     /**
-     * Trennt online. Hält inzwischen ein anderes Dokument das Online-Turnier (oder niemand), gilt die Bindung als
-     * bereits gelöst – kein Fehler.
+     * Trennt online. Hält inzwischen ein anderes Dokument das Online-Turnier (oder niemand) oder wurde es online
+     * gelöscht, gilt die Bindung als bereits gelöst – kein Fehler.
      *
      * @throws GenerateException wenn die Verbindung lokal nicht vollständig ist
      * @throws IOException       wenn der Server nicht erreichbar ist oder die Trennung ablehnt
@@ -47,10 +47,10 @@ public final class PtmOnlineTrennung {
                     .disconnect(tournamentId.get());
             logger.info("PTM-Online: Turnier {} getrennt (Server-Aufruf ok)", tournamentId.get());
         } catch (PtmOnlineHttpException e) {
-            if (!e.istBindungAbgeloest()) {
+            if (!e.istBindungAbgeloest() && !e.istTurnierGeloescht()) {
                 throw e;
             }
-            logger.info("PTM-Online: Turnier {} online nicht mehr an dieses Dokument gebunden, trenne nur lokal",
+            logger.info("PTM-Online: Turnier {} online nicht mehr an dieses Dokument gebunden oder gelöscht, trenne nur lokal",
                     tournamentId.get(), e);
         }
     }

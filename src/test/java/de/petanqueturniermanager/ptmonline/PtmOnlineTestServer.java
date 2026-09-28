@@ -35,6 +35,8 @@ import de.petanqueturniermanager.comp.LibreOfficePtmOnlineSpeicher;
 final class PtmOnlineTestServer implements AutoCloseable {
 
     private static final long MAX_WARTEZEIT_SEKUNDEN = 30;
+    private static final int HTTP_OK = 200;
+    private static final int HTTP_NOT_FOUND = 404;
 
     private final HttpServer server;
     private final String anmeldungenJson;
@@ -45,6 +47,7 @@ final class PtmOnlineTestServer implements AutoCloseable {
     private final Map<Integer, JsonArray> runden = new ConcurrentSkipListMap<>();
     private final List<Integer> geloeschteRunden = new CopyOnWriteArrayList<>();
     private volatile JsonArray rangliste;
+    private volatile boolean turnierGeloescht;
     private final CountDownLatch abrufAngekommen = new CountDownLatch(1);
     private volatile CountDownLatch antwortFreigabe = new CountDownLatch(0);
 
@@ -71,6 +74,11 @@ final class PtmOnlineTestServer implements AutoCloseable {
     /** Request-Bodies der Online-Anlagen (PUT), in Eingangsreihenfolge. */
     List<JsonObject> onlineAngelegt() {
         return List.copyOf(onlineAngelegt);
+    }
+
+    /** Ab jetzt antwortet der Server wie PTM-Online nach dem Löschen des Turniers (404 „Turnier nicht gefunden“). */
+    void turnierLoeschen() {
+        turnierGeloescht = true;
     }
 
     int anzahlGetrennt() {
@@ -148,6 +156,10 @@ final class PtmOnlineTestServer implements AutoCloseable {
     }
 
     private void trennen(HttpExchange exchange) throws IOException {
+        if (turnierGeloescht) {
+            antworte(exchange, HTTP_NOT_FOUND, "{\"error\":\"Turnier nicht gefunden\"}");
+            return;
+        }
         anzahlGetrennt.incrementAndGet();
         antworte(exchange, "{\"ok\":true}");
     }
@@ -182,9 +194,13 @@ final class PtmOnlineTestServer implements AutoCloseable {
     }
 
     private static void antworte(HttpExchange exchange, String json) throws IOException {
+        antworte(exchange, HTTP_OK, json);
+    }
+
+    private static void antworte(HttpExchange exchange, int status, String json) throws IOException {
         byte[] antwort = json.getBytes(StandardCharsets.UTF_8);
         exchange.getResponseHeaders().add("Content-Type", "application/json");
-        exchange.sendResponseHeaders(200, antwort.length);
+        exchange.sendResponseHeaders(status, antwort.length);
         try (OutputStream body = exchange.getResponseBody()) {
             body.write(antwort);
         }

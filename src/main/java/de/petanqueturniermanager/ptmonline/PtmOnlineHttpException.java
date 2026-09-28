@@ -16,7 +16,10 @@ import com.google.gson.JsonParser;
 public final class PtmOnlineHttpException extends IOException {
 
     private static final long serialVersionUID = 1L;
+    private static final int HTTP_NOT_FOUND = 404;
     private static final int HTTP_CONFLICT = 409;
+    /** Fehlertext der PTM-Online-API, wenn es das Turnier nicht (mehr) gibt; unübersetzt, Teil des API-Vertrags. */
+    private static final String TURNIER_NICHT_GEFUNDEN = "Turnier nicht gefunden";
 
     private final int statusCode;
     private final String antwort;
@@ -66,6 +69,16 @@ public final class PtmOnlineHttpException extends IOException {
         return hatKonfliktCode("execution_conflict");
     }
 
+    /**
+     * Das Online-Turnier existiert nicht mehr – in PTM-Online gelöscht. Andere 404-Antworten (z.&nbsp;B. eine
+     * einzelne Anmeldung) zählen nicht dazu.
+     */
+    public boolean istTurnierGeloescht() {
+        return statusCode == HTTP_NOT_FOUND && antwortJson().map(json -> json.get("error"))
+                .filter(JsonElement::isJsonPrimitive)
+                .map(fehler -> TURNIER_NICHT_GEFUNDEN.equals(fehler.getAsString())).orElse(false);
+    }
+
     /** Aktuelle Bindungsrevision des Online-Turniers aus einem Bindungskonflikt. */
     public OptionalLong bindingRevision() {
         return details().filter(details -> details.has("bindingRevision"))
@@ -83,15 +96,16 @@ public final class PtmOnlineHttpException extends IOException {
         if (statusCode != HTTP_CONFLICT) {
             return Optional.empty();
         }
+        return antwortJson().map(json -> json.get("details")).filter(JsonElement::isJsonObject)
+                .map(JsonElement::getAsJsonObject);
+    }
+
+    /** Antwort als JSON-Objekt; leer, wenn sie kein JSON-Objekt ist. */
+    private Optional<JsonObject> antwortJson() {
         try {
             JsonElement json = JsonParser.parseString(antwort);
-            if (!json.isJsonObject()) {
-                return Optional.empty();
-            }
-            JsonElement details = json.getAsJsonObject().get("details");
-            return details != null && details.isJsonObject() ? Optional.of(details.getAsJsonObject())
-                    : Optional.empty();
-        } catch (JsonParseException | IllegalStateException | UnsupportedOperationException e) {
+            return json.isJsonObject() ? Optional.of(json.getAsJsonObject()) : Optional.empty();
+        } catch (JsonParseException e) {
             return Optional.empty();
         }
     }

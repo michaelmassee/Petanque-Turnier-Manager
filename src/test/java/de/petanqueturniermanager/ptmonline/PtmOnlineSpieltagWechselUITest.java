@@ -4,6 +4,7 @@
 package de.petanqueturniermanager.ptmonline;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -66,6 +67,15 @@ class PtmOnlineSpieltagWechselUITest extends BaseCalcUITest {
         PtmOnlineSpieltagWechsel.trenneVorherigeSpieltage(wkingSpreadsheet, 2, nichtErreichbar);
 
         pruefeArchiviert();
+    }
+
+    @Test
+    void geloeschtesOnlineTurnierGiltBeimTrennenAlsBereitsGetrennt() {
+        server.turnierLoeschen();
+
+        assertThatCode(() -> PtmOnlineTrennung.online(server.zugangsdaten(), spieltag1))
+                .as("gelöschtes Online-Turnier darf das lokale Trennen nicht blockieren").doesNotThrowAnyException();
+        assertThat(server.anzahlGetrennt()).isZero();
     }
 
     @Test
