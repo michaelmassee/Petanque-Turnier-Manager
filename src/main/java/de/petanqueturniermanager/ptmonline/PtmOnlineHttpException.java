@@ -6,6 +6,8 @@ package de.petanqueturniermanager.ptmonline;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.OptionalLong;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -69,6 +71,36 @@ public final class PtmOnlineHttpException extends IOException {
      */
     public boolean istRevisionsKonflikt() {
         return hatKonfliktCode("execution_conflict");
+    }
+
+    /**
+     * Anzeigename der Online-Anmeldung aus einem Zuordnungskonflikt ({@code registration_mapping_conflict}): die
+     * Anmeldung hängt online noch an einer anderen Meldelisten-Zeile als der, die das Dokument ihr gerade zuordnen
+     * wollte. Leer bei allen anderen Fehlern.
+     */
+    public Optional<String> zuordnungsKonfliktAnmeldung() {
+        if (!hatKonfliktCode("registration_mapping_conflict")) {
+            return Optional.empty();
+        }
+        return details().map(details -> details.get("registration")).filter(JsonElement::isJsonObject)
+                .map(JsonElement::getAsJsonObject).map(PtmOnlineHttpException::anmeldungsName)
+                .filter(name -> !name.isBlank());
+    }
+
+    private static String anmeldungsName(JsonObject registration) {
+        return Stream.of(name(registration, "firstName", "lastName"),
+                name(registration, "partnerFirstName", "partnerLastName"),
+                name(registration, "partner2FirstName", "partner2LastName"))
+                .filter(name -> !name.isBlank()).collect(Collectors.joining(" / "));
+    }
+
+    private static String name(JsonObject registration, String vornameFeld, String nachnameFeld) {
+        return (text(registration, vornameFeld) + " " + text(registration, nachnameFeld)).strip();
+    }
+
+    private static String text(JsonObject json, String feld) {
+        JsonElement wert = json.get(feld);
+        return wert != null && wert.isJsonPrimitive() ? wert.getAsString().strip() : "";
     }
 
     /**
