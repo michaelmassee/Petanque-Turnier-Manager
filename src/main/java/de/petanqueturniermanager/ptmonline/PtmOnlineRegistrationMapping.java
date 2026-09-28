@@ -201,6 +201,11 @@ public class PtmOnlineRegistrationMapping {
         syncSheet.setPausiert(pausiert);
     }
 
+    /** Archiviert die getrennte Verbindung: Blatt bleibt zur Einsicht, gilt aber als nicht verbunden. */
+    public void archivieren() throws GenerateException {
+        syncSheet.archivieren();
+    }
+
     public void setLastSync(Instant zeitpunkt) throws GenerateException {
         syncSheet.setLastSync(zeitpunkt);
     }

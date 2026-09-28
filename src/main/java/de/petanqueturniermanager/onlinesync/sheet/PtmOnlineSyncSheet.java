@@ -73,7 +73,7 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 	private static final int ZEILE_LETZTER_SYNC = 2;
 	private static final int ZEILE_SYNC_DOKUMENT = 3;
 	private static final int ZEILE_LEASE = 4;
-	/** Sync aktiv/pausiert: Anzeige in Spalte B, maßgeblich ist der Marker in {@link #SPALTE_PAUSE_MARKER}. */
+	/** Sync aktiv/pausiert/getrennt: Anzeige in Spalte B, maßgeblich ist der Marker in {@link #SPALTE_PAUSE_MARKER}. */
 	private static final int ZEILE_SYNC_STATUS = 5;
 	private static final int ZEILE_HEADER = 6;
 	private static final int ERSTE_DATEN_ZEILE = 7;
@@ -93,6 +93,11 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 	/** Ausgeblendete Spalte der Statuszeile: sprachneutraler Marker, damit ein Sprachwechsel die Pause nicht bricht. */
 	private static final int SPALTE_PAUSE_MARKER = SPALTE_ONLINE_ID;
 	private static final String PAUSE_MARKER = "PAUSIERT";
+	/**
+	 * Archiv: die Verbindung wurde getrennt (Supermelee: neuer Spieltag), Blatt und Zuordnung bleiben zur Einsicht
+	 * stehen. Ein archiviertes Blatt gilt überall als nicht verbunden.
+	 */
+	private static final String ARCHIV_MARKER = "GETRENNT";
 	private static final int LETZTE_SPALTE = SPALTE_STATUS_ROH;
 
 	private static final int BREITE_NR = 1400;
@@ -148,7 +153,7 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 	 */
 	public void verbinden(OnlineTournamentDto turnier, String syncDokumentId, String leaseToken)
 			throws GenerateException {
-		Optional<String> bisherigesTurnier = getTournamentId();
+		Optional<String> bisherigesTurnier = optional(leseWert(ZEILE_TURNIER_ID));
 		anlegen();
 		if (bisherigesTurnier.isPresent() && !bisherigesTurnier.get().equals(turnier.id)) {
 			leeren();
@@ -160,7 +165,7 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 		kopfZeile(kopf, I18n.get("ptmonline.sheet.label.sync.document"), syncDokumentId);
 		kopfZeile(kopf, I18n.get("ptmonline.sheet.label.sync.lease"), leaseToken);
 		RangeHelper.from(this, kopf.getRangePosition(Position.from(SPALTE_LABEL, ZEILE_TITEL))).setDataInRange(kopf);
-		setPausiert(false);
+		schreibeStatus(SyncStatus.AKTIV);
 	}
 
 	@Override
@@ -192,7 +197,7 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 				I18n.get("ptmonline.sheet.mapping.header.revision"),
 				I18n.get("ptmonline.sheet.mapping.header.statusroh")).forEach(kopfzeile::newString);
 		RangeHelper.from(this, header.getRangePosition(Position.from(SPALTE_NR, ZEILE_HEADER))).setDataInRange(header);
-		setPausiert(istPausiert());
+		schreibeStatus(leseSyncStatus());
 		formatieren();
 	}
 
@@ -267,7 +272,11 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 
 	// ── Verbindungsdaten ─────────────────────────────────────────────────────
 
+	/** Online-Turnier der aktiven Verbindung; leer ohne Verbindung und bei archiviertem Blatt. */
 	public Optional<String> getTournamentId() throws GenerateException {
+		if (leseSyncStatus() == SyncStatus.ARCHIVIERT) {
+			return Optional.empty();
+		}
 		return optional(leseWert(ZEILE_TURNIER_ID));
 	}
 
@@ -289,26 +298,67 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 
 	/** Pausiert: kein Meldungsabgleich, kein Rundenstart-Sync. Die Verbindung selbst bleibt bestehen. */
 	public boolean istPausiert() throws GenerateException {
-		if (SheetMetadataHelper.findeSheet(getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
-				metadatenSchluessel()).isEmpty()) {
-			return false;
-		}
-		return PAUSE_MARKER.equals(StringUtils.strip(getSheetHelper().getTextFromCell(getXSpreadSheet(),
-				Position.from(SPALTE_PAUSE_MARKER, ZEILE_SYNC_STATUS))));
+		return leseSyncStatus() == SyncStatus.PAUSIERT;
 	}
 
 	/** Schreibt die Statuszeile: Label, übersetzte Anzeige (Spalte B) und den sprachneutralen Marker. */
 	public void setPausiert(boolean pausiert) throws GenerateException {
+		schreibeStatus(pausiert ? SyncStatus.PAUSIERT : SyncStatus.AKTIV);
+	}
+
+	/**
+	 * Archiviert das Blatt nach dem Trennen: Verbindungsdaten und Zuordnung bleiben zur Einsicht stehen, das Blatt
+	 * gilt aber als nicht verbunden. Ein erneutes {@link #verbinden} hebt das Archiv auf.
+	 */
+	public void archivieren() throws GenerateException {
+		schreibeStatus(SyncStatus.ARCHIVIERT);
+	}
+
+	/** Zustand laut sprachneutralem Marker; ohne Blatt {@link SyncStatus#AKTIV}. */
+	private SyncStatus leseSyncStatus() throws GenerateException {
+		if (SheetMetadataHelper.findeSheet(getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
+				metadatenSchluessel()).isEmpty()) {
+			return SyncStatus.AKTIV;
+		}
+		return SyncStatus.ausMarker(StringUtils.strip(getSheetHelper().getTextFromCell(getXSpreadSheet(),
+				Position.from(SPALTE_PAUSE_MARKER, ZEILE_SYNC_STATUS))));
+	}
+
+	private void schreibeStatus(SyncStatus status) throws GenerateException {
 		RangeData daten = new RangeData();
 		RowData zeile = daten.addNewRow();
 		zeile.newString(I18n.get("ptmonline.sheet.label.sync"));
-		zeile.newString(I18n.get(pausiert ? "ptmonline.sheet.sync.pausiert" : "ptmonline.sheet.sync.aktiv"));
+		zeile.newString(I18n.get(status.anzeigeSchluessel));
 		for (int spalte = SPALTE_WERT + 1; spalte < SPALTE_PAUSE_MARKER; spalte++) {
 			zeile.newEmpty();
 		}
-		zeile.newString(pausiert ? PAUSE_MARKER : "");
+		zeile.newString(status.marker);
 		RangeHelper.from(this, daten.getRangePosition(Position.from(SPALTE_LABEL, ZEILE_SYNC_STATUS)))
 				.setDataInRange(daten);
+	}
+
+	/** Zustand der Verbindung, gespeichert als sprachneutraler Marker in der Statuszeile. */
+	private enum SyncStatus {
+		AKTIV("", "ptmonline.sheet.sync.aktiv"),
+		PAUSIERT(PAUSE_MARKER, "ptmonline.sheet.sync.pausiert"),
+		ARCHIVIERT(ARCHIV_MARKER, "ptmonline.sheet.sync.getrennt");
+
+		private final String marker;
+		private final String anzeigeSchluessel;
+
+		SyncStatus(String marker, String anzeigeSchluessel) {
+			this.marker = marker;
+			this.anzeigeSchluessel = anzeigeSchluessel;
+		}
+
+		static SyncStatus ausMarker(String marker) {
+			for (SyncStatus status : values()) {
+				if (status.marker.equals(marker)) {
+					return status;
+				}
+			}
+			return AKTIV;
+		}
 	}
 
 	/**
@@ -325,8 +375,10 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 			RangeData daten = RangeHelper.from(sheet.get(), xDoc,
 					RangePosition.from(SPALTE_LABEL, ZEILE_TURNIER_ID, SPALTE_PAUSE_MARKER, ZEILE_SYNC_STATUS))
 					.getDataFromRange();
-			boolean verbunden = !kopfWert(daten, ZEILE_TURNIER_ID, SPALTE_WERT).isBlank();
-			boolean pausiert = PAUSE_MARKER.equals(kopfWert(daten, ZEILE_SYNC_STATUS, SPALTE_PAUSE_MARKER));
+			SyncStatus status = SyncStatus.ausMarker(kopfWert(daten, ZEILE_SYNC_STATUS, SPALTE_PAUSE_MARKER));
+			boolean verbunden = !kopfWert(daten, ZEILE_TURNIER_ID, SPALTE_WERT).isBlank()
+					&& status != SyncStatus.ARCHIVIERT;
+			boolean pausiert = status == SyncStatus.PAUSIERT;
 			return new PtmOnlineSyncStatus(verbunden, pausiert,
 					parseZeitpunkt(kopfWert(daten, ZEILE_LETZTER_SYNC, SPALTE_WERT)));
 		} catch (RuntimeException e) {

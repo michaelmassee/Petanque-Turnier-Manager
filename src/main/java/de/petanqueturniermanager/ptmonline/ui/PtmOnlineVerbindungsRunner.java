@@ -4,7 +4,6 @@
 package de.petanqueturniermanager.ptmonline.ui;
 
 import java.io.IOException;
-import java.util.Optional;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
@@ -16,10 +15,9 @@ import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.ptmonline.PtmOnlineFehlerText;
-import de.petanqueturniermanager.ptmonline.PtmOnlineHttpException;
 import de.petanqueturniermanager.ptmonline.PtmOnlineLiveBeobachter;
 import de.petanqueturniermanager.ptmonline.PtmOnlineRegistrationMapping;
-import de.petanqueturniermanager.ptmonline.TournamentSyncClient;
+import de.petanqueturniermanager.ptmonline.PtmOnlineTrennung;
 
 /**
  * Änderungen an einer bestehenden PTM-Online-Verbindung. Pausieren/Fortsetzen kommen ohne Server-Aufruf aus und
@@ -71,27 +69,8 @@ final class PtmOnlineVerbindungsRunner extends SheetRunner {
      * niemand), wird trotzdem lokal aufgeräumt.
      */
     private void onlineTrennen(PtmOnlineRegistrationMapping mapping) throws GenerateException {
-        Optional<String> tournamentId = mapping.getTournamentId();
-        if (tournamentId.isEmpty()) {
-            throw new GenerateException(I18n.get("ptmonline.fehler.turnier_nicht_verbunden"));
-        }
-        Optional<String> documentId = mapping.getSyncDocumentId();
-        Optional<String> leaseToken = mapping.getLeaseToken();
-        if (documentId.isEmpty() || leaseToken.isEmpty()) {
-            throw new GenerateException(I18n.get("ptmonline.fehler.dokumentbindung_unvollstaendig"));
-        }
-        var config = new LibreOfficePtmOnlineSpeicher(getxContext()).laden();
         try {
-            new TournamentSyncClient(config.baseUrl(), config.apiKey(), documentId.get(), leaseToken.get())
-                    .disconnect(tournamentId.get());
-            getLogger().info("PTM-Online: Turnier {} getrennt (Server-Aufruf ok)", tournamentId.get());
-        } catch (PtmOnlineHttpException e) {
-            if (!e.istBindungAbgeloest()) {
-                getLogger().error("PTM-Online: Verbindung trennen (Server-Aufruf) fehlgeschlagen", e);
-                throw new GenerateException(PtmOnlineFehlerText.fuer(e));
-            }
-            getLogger().info("PTM-Online: Turnier {} online nicht mehr an dieses Dokument gebunden, trenne nur lokal",
-                    tournamentId.get(), e);
+            PtmOnlineTrennung.online(new LibreOfficePtmOnlineSpeicher(getxContext()).laden(), mapping);
         } catch (IOException e) {
             getLogger().error("PTM-Online: Verbindung trennen (Server-Aufruf) fehlgeschlagen", e);
             throw new GenerateException(PtmOnlineFehlerText.fuer(e));

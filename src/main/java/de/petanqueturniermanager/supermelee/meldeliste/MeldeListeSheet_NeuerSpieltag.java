@@ -23,6 +23,7 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.SpielerMeldungen;
+import de.petanqueturniermanager.ptmonline.PtmOnlineSpieltagWechsel;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
@@ -184,6 +185,8 @@ public class MeldeListeSheet_NeuerSpieltag extends SheetRunner implements IMelde
 			delegate.aufbauen();
 		});
 		getxCalculatable().calculateAll();
+		// Jeder Spieltag ist online ein eigenes Turnier: die bisherigen Verbindungen enden hier.
+		PtmOnlineSpieltagWechsel.trenneVorherigeSpieltage(getWorkingSpreadsheet(), anzSpieltage + 1);
 	}
 
 	@Override

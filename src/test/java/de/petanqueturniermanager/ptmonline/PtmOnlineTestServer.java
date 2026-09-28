@@ -28,8 +28,9 @@ import de.petanqueturniermanager.comp.LibreOfficePtmOnlineSpeicher;
  * Lokaler Ersatz für den Anmeldungs-Endpunkt von PTM-Online in UITests: beantwortet jeden Aufruf von
  * {@code /api/sync/tournaments/<id>/registrations} mit einer festen Anmeldungsliste, zählt Online-Anlagen
  * (PUT) und kann Antworten zurückhalten, um einen Abbruch während eines Serveraufrufs zu testen.
- * Online-Anlagen und Status-Pushes ({@code /results}) werden für Prüfungen aufgezeichnet, ebenso die
- * Live-Übertragung von Runden ({@code /rounds/<nr>}) und Rangliste ({@code /ranking}).
+ * Online-Anlagen, Status-Pushes ({@code /results}) und Trennungen ({@code /disconnect}) werden für Prüfungen
+ * aufgezeichnet, ebenso die Live-Übertragung von Runden ({@code /rounds/<nr>}) und Rangliste
+ * ({@code /ranking}).
  */
 final class PtmOnlineTestServer implements AutoCloseable {
 
@@ -38,6 +39,7 @@ final class PtmOnlineTestServer implements AutoCloseable {
     private final HttpServer server;
     private final String anmeldungenJson;
     private final AtomicInteger anzahlOnlineAngelegt = new AtomicInteger();
+    private final AtomicInteger anzahlGetrennt = new AtomicInteger();
     private final List<JsonObject> onlineAngelegt = new CopyOnWriteArrayList<>();
     private final List<JsonObject> gepushteErgebnisse = new CopyOnWriteArrayList<>();
     private final Map<Integer, JsonArray> runden = new ConcurrentSkipListMap<>();
@@ -51,6 +53,7 @@ final class PtmOnlineTestServer implements AutoCloseable {
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         server.createContext("/api/sync/tournaments/" + turnierId + "/registrations", this::beantworte);
         server.createContext("/api/sync/tournaments/" + turnierId + "/results", this::ergebnisseAnnehmen);
+        server.createContext("/api/sync/tournaments/" + turnierId + "/disconnect", this::trennen);
         server.createContext("/api/sync/tournaments/" + turnierId + "/rounds/", this::runde);
         server.createContext("/api/sync/tournaments/" + turnierId + "/ranking", this::ranglisteAnnehmen);
         server.start();
@@ -68,6 +71,10 @@ final class PtmOnlineTestServer implements AutoCloseable {
     /** Request-Bodies der Online-Anlagen (PUT), in Eingangsreihenfolge. */
     List<JsonObject> onlineAngelegt() {
         return List.copyOf(onlineAngelegt);
+    }
+
+    int anzahlGetrennt() {
+        return anzahlGetrennt.get();
     }
 
     /** Alle per {@code /results} gepushten Einträge, in Eingangsreihenfolge. */
@@ -138,6 +145,11 @@ final class PtmOnlineTestServer implements AutoCloseable {
         JsonObject antwort = new JsonObject();
         antwort.addProperty("updatedCount", registrations.size());
         antworte(exchange, antwort.toString());
+    }
+
+    private void trennen(HttpExchange exchange) throws IOException {
+        anzahlGetrennt.incrementAndGet();
+        antworte(exchange, "{\"ok\":true}");
     }
 
     /** PUT ersetzt die Runde, DELETE entfernt sie – wie PTM-Online. */
