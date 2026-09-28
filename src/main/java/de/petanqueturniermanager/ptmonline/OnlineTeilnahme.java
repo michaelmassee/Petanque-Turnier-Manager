@@ -25,6 +25,16 @@ public enum OnlineTeilnahme {
         return apiWert;
     }
 
+    /** Wert der Aktiv-Spalte für „nimmt teil“. */
+    static final int AKTIV_WERT_NIMMT_TEIL = 1;
+    /** Wert der Aktiv-Spalte für „ausgesetzt/ausgestiegen“, in allen Meldelisten einheitlich. */
+    static final int AKTIV_WERT_AUSGESETZT = 2;
+
+    /** Teilnahme laut Wert der Aktiv-Spalte; alles außer 1 und 2 gilt als inaktiv. */
+    public static OnlineTeilnahme ausAktivWert(int aktivWert) {
+        return aus(aktivWert == AKTIV_WERT_NIMMT_TEIL, aktivWert == AKTIV_WERT_AUSGESETZT);
+    }
+
     /** Ausgesetzt hat Vorrang vor aktiv; weder noch entspricht einer leeren Aktiv-Zelle (inaktiv). */
     public static OnlineTeilnahme aus(boolean aktiv, boolean ausgesetzt) {
         if (ausgesetzt) {

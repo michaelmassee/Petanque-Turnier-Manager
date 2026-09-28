@@ -58,6 +58,14 @@ public final class PtmOnlineHttpException extends IOException {
                 || hatKonfliktCode("document_unbound");
     }
 
+    /**
+     * Die Ausführungsdaten einer Meldung wurden online zwischenzeitlich geändert ({@code execution_conflict}): die
+     * lokal bekannte Ausführungsrevision ist veraltet, PTM-Online hat nichts übernommen.
+     */
+    public boolean istRevisionsKonflikt() {
+        return hatKonfliktCode("execution_conflict");
+    }
+
     /** Aktuelle Bindungsrevision des Online-Turniers aus einem Bindungskonflikt. */
     public OptionalLong bindingRevision() {
         return details().filter(details -> details.has("bindingRevision"))

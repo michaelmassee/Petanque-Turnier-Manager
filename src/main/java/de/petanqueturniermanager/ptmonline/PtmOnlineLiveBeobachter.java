@@ -41,8 +41,9 @@ import de.petanqueturniermanager.ptmonline.live.LiveStandQuellen;
 /**
  * Überträgt den Live-Stand an PTM-Online, sobald sich ein Turnierdokument ändert: Jedes Turnierdokument erhält
  * einen {@link XModifyListener}; nach einer Änderung wird kurz gewartet (weitere Eingaben werden gebündelt) und
- * dann übertragen – nur, was sich geändert hat (siehe {@link LiveUebertragungsGedaechtnis}). Turnier-Kommandos
- * stoßen die Übertragung über {@link #anstossen} an ({@link PtmOnlineLiveAusloeser}).
+ * dann übertragen – nur, was sich geändert hat (siehe {@link LiveUebertragungsGedaechtnis}). Dazu gehört auch der
+ * Check-in in der Meldeliste ({@link PtmOnlineCheckin}). Turnier-Kommandos stoßen die Übertragung über
+ * {@link #anstossen} an ({@link PtmOnlineLiveAusloeser}).
  * <p>
  * Instabiles Netz: Übertragen wird ausschließlich auf dem eigenen Thread „PTM-Online-Live“ – Auslosen und
  * Ergebnis-Eingabe warten nie auf das Netz. Scheitert eine Übertragung, bleibt der Stand als offen markiert und
@@ -145,7 +146,7 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
     /**
      * Änderungs-Listener eines Dokuments mit „offen“-Merker: je Welle von Änderungen genau ein Durchlauf, nach
      * Fehlern Wiederholung mit wachsendem Abstand. Ein Durchlauf schreibt zuerst ein noch offenes Status-Ergebnis
-     * zurück, sendet dann einen offenen Status-Abgleich und überträgt zuletzt den Live-Stand.
+     * zurück, sendet dann einen offenen Status-Abgleich und geänderte Check-ins und überträgt zuletzt den Live-Stand.
      */
     private final class Beobachtung implements XModifyListener {
 
@@ -154,6 +155,8 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
         private final AtomicBoolean offen = new AtomicBoolean();
         private final AtomicBoolean eingeplant = new AtomicBoolean();
         private final AtomicReference<PtmOnlineStatusAuftrag> offenerStatus = new AtomicReference<>();
+        /** Nur vom Thread „PTM-Online-Live“ verwendet. */
+        private final PtmOnlineCheckin checkin = new PtmOnlineCheckin();
         /** Nur vom Thread „PTM-Online-Live“ verwendet. */
         private PtmOnlineStatusAbgleich.@Nullable Ergebnis offenesSchreiben;
         /** Nur vom Thread „PTM-Online-Live“ verändert. */
@@ -234,6 +237,7 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
             try {
                 schreibeOffenesErgebnis(ws, ts, verbindung.get());
                 sendeOffenenStatus(ws, ts, verbindung.get());
+                sendeCheckinAenderungen(ws, ts, verbindung.get());
                 Optional<LiveStandQuelle> quelle = LiveStandQuellen.fuer(ws, ts, verbindung.get().spieltagNr());
                 if (quelle.isPresent()) {
                     PtmOnlineLiveSync.uebertragen(verbindung.get(), quelle.get());
@@ -256,10 +260,38 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
                     verbindung.mapping(), verbindung.gebundenerClient());
             offenerStatus.compareAndSet(auftrag, null);
             offenesSchreiben = ergebnis;
+            checkin.uebernehmen(auftrag);
             if (!ergebnis.abgelehnt().isEmpty()) {
                 PtmOnlineSpielrundeSync.zeigeFehlerSammlung(xContext,
                         List.of(RegistrationImportTask.onlineAbgelehntHinweis(ergebnis.abgelehnt())));
             }
+            schreibeOffenesErgebnis(ws, ts, verbindung);
+        }
+
+        /**
+         * Meldet geänderte Check-ins sofort (siehe {@link PtmOnlineCheckin}). Hat PTM-Online die Teilnahme
+         * inzwischen selbst geändert (Revisionskonflikt), wird die Änderung verworfen statt endlos wiederholt – der
+         * nächste Rundenstart gleicht ohnehin vollständig ab.
+         */
+        private void sendeCheckinAenderungen(WorkingSpreadsheet ws, TurnierSystem ts, PtmOnlineVerbindung verbindung)
+                throws GenerateException, IOException, InterruptedException {
+            Optional<PtmOnlineCheckin.Aenderung> aenderung = checkin.ermittle(verbindung.tournamentId(),
+                    PtmOnlineCheckin.leseStand(ws, ts, verbindung));
+            if (aenderung.isEmpty()) {
+                return;
+            }
+            try {
+                offenesSchreiben = PtmOnlineStatusAbgleich.senden(aenderung.get().auftrag(), verbindung.mapping(),
+                        verbindung.gebundenerClient());
+                logger.info("PTM-Online: {} geänderte Check-ins gemeldet",
+                        aenderung.get().auftrag().eintraege().size());
+            } catch (PtmOnlineHttpException e) {
+                if (!e.istRevisionsKonflikt()) {
+                    throw e;
+                }
+                logger.warn("PTM-Online: Check-in online zwischenzeitlich geändert, Meldung verworfen", e);
+            }
+            checkin.bestaetigen(aenderung.get());
             schreibeOffenesErgebnis(ws, ts, verbindung);
         }
 

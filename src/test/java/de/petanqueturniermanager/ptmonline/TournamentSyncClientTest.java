@@ -14,13 +14,16 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.Flow;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 import com.google.gson.Gson;
 
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.onlinesync.OnlineTournamentDto;
 import de.petanqueturniermanager.ptmonline.dto.LiveMatchDto;
 import de.petanqueturniermanager.ptmonline.dto.LiveRankingEntryDto;
@@ -30,6 +33,12 @@ import de.petanqueturniermanager.ptmonline.dto.RegistrationResultDto;
 import de.petanqueturniermanager.ptmonline.dto.SyncBindingDto;
 
 public class TournamentSyncClientTest {
+
+	/** Fehlermeldungen nennen das fehlende Feld über I18n-Platzhalter – unabhängig von der Testreihenfolge laden. */
+	@BeforeAll
+	static void initI18n() {
+		I18n.initFuerTest(Locale.GERMAN);
+	}
 
 	@SuppressWarnings("unchecked")
 	private HttpResponse<String> mockResponse(int statusCode, String body) {

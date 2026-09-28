@@ -53,8 +53,6 @@ public final class PtmOnlineSpielrundeSync {
 
     private static final Logger logger = LogManager.getLogger(PtmOnlineSpielrundeSync.class);
     private static final int MAX_NAMEN_IN_RUECKFRAGE = 15;
-    /** Aktiv-Spalte „ausgestiegen/abgemeldet“, in allen Team-Meldelisten einheitlich. */
-    private static final int AKTIV_WERT_AUSGESTIEGEN = 2;
 
     private PtmOnlineSpielrundeSync() {}
 
@@ -114,15 +112,7 @@ public final class PtmOnlineSpielrundeSync {
     }
 
     private static Set<Integer> ausgestiegeneTeamNummern(MeldelisteZiel ziel) {
-        Set<Integer> ausgestiegene = new HashSet<>();
-        for (int zeile : ziel.leseAlleSpielerRoh().stream().map(MeldelisteSpielerDaten::zeile1Basiert)
-                .distinct().toList()) {
-            int teamNr = ziel.getTeamNrAusZeile(zeile);
-            if (teamNr > 0 && ziel.getAktivWertAusZeile(zeile) == AKTIV_WERT_AUSGESTIEGEN) {
-                ausgestiegene.add(teamNr);
-            }
-        }
-        return ausgestiegene;
+        return new HashSet<>(TeilnahmeNummern.ausAktivSpalte(ziel).ausgesetzt());
     }
 
     /**
