@@ -276,7 +276,7 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
         private void sendeCheckinAenderungen(WorkingSpreadsheet ws, TurnierSystem ts, PtmOnlineVerbindung verbindung)
                 throws GenerateException, IOException, InterruptedException {
             Optional<PtmOnlineCheckin.Aenderung> aenderung = checkin.ermittle(verbindung.tournamentId(),
-                    PtmOnlineCheckin.leseStand(ws, ts, verbindung));
+                    PtmOnlineCheckin.leseStand(verbindung));
             if (aenderung.isEmpty()) {
                 return;
             }

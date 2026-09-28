@@ -99,12 +99,14 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
     private final int spaltenProSpieler;
     /** Erste Spalte rechts vom letzten Spieler-Block (exklusive). */
     private final int letzteSchreibSpalte;
+    /** Nur Supermelee: Spieltag, dessen Spalte als Aktiv-Spalte gilt (je Spieltag eine eigene Spalte). */
+    private final int aktiverSpieltag;
     /** Einmal ermittelte UUID-Spalte, {@code -1} solange unbekannt (siehe {@link #uuidSpalte()}). */
     private int uuidSpalteCache = -1;
 
     private SheetMeldelisteAdapter(XSpreadsheetDocument doc, XSpreadsheet sheet,
             SheetHelper sheetHelper, TurnierSystem system, Formation formation,
-            int ersteDatenZeile, boolean teamnameAktiv, boolean vereinsnameAktiv) {
+            int ersteDatenZeile, boolean teamnameAktiv, boolean vereinsnameAktiv, int aktiverSpieltag) {
         this.doc = doc;
         this.sheet = sheet;
         this.sheetHelper = sheetHelper;
@@ -117,6 +119,7 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
         this.ersterSpielerOffset = ersterSpielerOffset(teamnameAktiv);
         this.spaltenProSpieler = vereinsnameAktiv ? 3 : 2;
         this.letzteSchreibSpalte = ersterSpielerOffset + anzSpieler * spaltenProSpieler - 1;
+        this.aktiverSpieltag = Math.max(1, aktiverSpieltag);
     }
 
     /**
@@ -124,9 +127,12 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
      * die der Aufrufer aus dem system-spezifischen KonfigurationSheet gelesen hat.
      * Vermeidet Property-Lookups direkt im Adapter — die Quelle der Wahrheit ist
      * jeweils der zum Turniersystem passende {@code *KonfigurationSheet}.
+     *
+     * @param aktiverSpieltag nur Supermelee: aktiver Spieltag, dessen Spalte Check-in und Abmeldung trägt; sonst
+     *                        ohne Bedeutung
      */
-    static Optional<MeldelisteZiel> fuer(WorkingSpreadsheet ws, String sheetName,
-            TurnierSystem ts, Formation formation, boolean teamnameAktiv, boolean vereinsnameAktiv) {
+    static Optional<MeldelisteZiel> fuer(WorkingSpreadsheet ws, String sheetName, TurnierSystem ts,
+            Formation formation, boolean teamnameAktiv, boolean vereinsnameAktiv, int aktiverSpieltag) {
         try {
             if (ts == null || ts == TurnierSystem.KEIN) {
                 return Optional.empty();
@@ -139,7 +145,7 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
             int datenZeile = ermittleErsteDatenZeile(sh, sheet, ersterSpielerOffset(teamnameAktiv));
             return Optional.of(new SheetMeldelisteAdapter(
                     ws.getWorkingSpreadsheetDocument(), sheet, sh, ts, formation, datenZeile,
-                    teamnameAktiv, vereinsnameAktiv));
+                    teamnameAktiv, vereinsnameAktiv, aktiverSpieltag));
         } catch (Exception e) {
             logger.warn("Adapter-Erkennung fehlgeschlagen", e);
             return Optional.empty();
@@ -618,10 +624,15 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
 
     /**
      * Aktiv-Spalte: bei den meisten Team-Meldelisten zwei Spalten rechts der letzten Spielerdaten-Spalte
-     * (dazwischen SP/RNG), bei Trip-Tête direkt daneben – dort gibt es keine Setzpositionsspalte.
+     * (dazwischen SP/RNG), bei Trip-Tête direkt daneben – dort gibt es keine Setzpositionsspalte. Supermelee hat
+     * nach SP je Spieltag eine Spalte; maßgeblich ist die des aktiven Spieltags.
      */
     private int aktivSpalte() {
-        return letzteSchreibSpalte + (system == TurnierSystem.TRIPTETE ? 1 : 2);
+        return switch (system) {
+            case SUPERMELEE -> letzteSchreibSpalte + 1 + aktiverSpieltag;
+            case TRIPTETE -> letzteSchreibSpalte + 1;
+            default -> letzteSchreibSpalte + 2;
+        };
     }
 
     /** Erste Zeile, in der kein Spieler eingetragen ist (Vorname + Nachname Slot 0 leer). */

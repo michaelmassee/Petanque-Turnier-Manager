@@ -82,8 +82,7 @@ class PtmOnlineCheckinSupermeleeUITest extends BaseCalcUITest {
         schreibeAktivSpalte(1, List.of("", "1", "1"));
         schreibeAktivSpalte(spieltag, List.of("1", "2", ""));
 
-        List<PtmOnlineStatusAuftrag.Eintrag> stand = PtmOnlineCheckin.leseStand(wkingSpreadsheet,
-                TurnierSystem.SUPERMELEE, verbindung);
+        List<PtmOnlineStatusAuftrag.Eintrag> stand = PtmOnlineCheckin.leseStand(verbindung);
 
         Map<String, OnlineTeilnahme> teilnahme = teilnahmeProOnlineId(verbindung, stand);
         assertThat(teilnahme).containsEntry(onlineId(spielerNr.get(0)), OnlineTeilnahme.AKTIV)

@@ -35,7 +35,7 @@ class SheetMeldelisteAdapterTeilnahmeUITest extends BaseCalcUITest {
         meldeListe = new SchweizerMeldeListeSheetNew(wkingSpreadsheet);
         meldeListe.createMeldelisteWithParams(Formation.TETE, false, false);
         ziel = SheetMeldelisteAdapter.fuer(wkingSpreadsheet, SheetNamen.meldeliste(), TurnierSystem.SCHWEIZER,
-                Formation.TETE, false, false).orElseThrow();
+                Formation.TETE, false, false, 1).orElseThrow();
     }
 
     @Test

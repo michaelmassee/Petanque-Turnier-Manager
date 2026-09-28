@@ -25,7 +25,7 @@ record TeilnahmeNummern(Set<Integer> alle, Set<Integer> aktive, Set<Integer> aus
         ausgesetzt = Set.copyOf(ausgesetzt);
     }
 
-    /** Liest die Aktiv-Spalte einer Team-Meldeliste (nicht Supermelee: dort je Spieltag eine eigene Spalte). */
+    /** Liest die Aktiv-Spalte der Meldeliste (Supermelee: die des aktiven Spieltags). */
     static TeilnahmeNummern ausAktivSpalte(MeldelisteZiel meldeliste) {
         Set<Integer> alle = new HashSet<>();
         Set<Integer> aktive = new HashSet<>();

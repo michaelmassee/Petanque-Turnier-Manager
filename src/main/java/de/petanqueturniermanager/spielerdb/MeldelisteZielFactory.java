@@ -32,6 +32,7 @@ import de.petanqueturniermanager.poule.konfiguration.PouleKonfigurationSheet;
 import de.petanqueturniermanager.poule.meldeliste.PouleMeldeListeSheetUpdate;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetUpdate;
+import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
 import de.petanqueturniermanager.triptete.konfiguration.TripTeteKonfigurationSheet;
 import de.petanqueturniermanager.triptete.meldeliste.TripTeteMeldeListeSheetUpdate;
@@ -153,7 +154,7 @@ public final class MeldelisteZielFactory {
         }
         MeldelisteLayout l = layoutOpt.get();
         return SheetMeldelisteAdapter.fuer(ws, SheetNamen.meldeliste(), ts,
-                l.formation(), l.teamnameAktiv(), l.vereinsnameAktiv());
+                l.formation(), l.teamnameAktiv(), l.vereinsnameAktiv(), l.aktiverSpieltag());
     }
 
     /**
@@ -268,21 +269,31 @@ public final class MeldelisteZielFactory {
     }
 
     /**
-     * Layout-Triplet aus dem system-spezifischen KonfigurationSheet.
+     * Layout aus dem system-spezifischen KonfigurationSheet.
+     *
+     * @param aktiverSpieltag nur Supermelee: Spieltag, dessen Spalte als Aktiv-Spalte gilt; sonst 1
      */
-    private record MeldelisteLayout(Formation formation, boolean teamnameAktiv, boolean vereinsnameAktiv) {}
+    private record MeldelisteLayout(Formation formation, boolean teamnameAktiv, boolean vereinsnameAktiv,
+            int aktiverSpieltag) {
+
+        MeldelisteLayout(Formation formation, boolean teamnameAktiv, boolean vereinsnameAktiv) {
+            this(formation, teamnameAktiv, vereinsnameAktiv, 1);
+        }
+    }
 
     /**
      * Liest das Meldeliste-Layout aus dem zum Turniersystem passenden Konfigurations-Sheet.
      * Supermelee hat keine konfigurierbare Formation — dort gilt immer
-     * {@link Formation#MELEE} und es gibt keine Teamname-/Vereinsname-Spalten.
+     * {@link Formation#MELEE} und es gibt keine Teamname-/Vereinsname-Spalten; die Aktiv-Spalte ist die des
+     * aktiven Spieltags.
      * Für Systeme ohne Spieler-DB-Übernahme-Unterstützung (Liga)
      * liefert die Methode {@link Optional#empty()}.
      */
     private static Optional<MeldelisteLayout> leseLayout(TurnierSystem ts, WorkingSpreadsheet ws) {
         try {
             return switch (ts) {
-                case SUPERMELEE -> Optional.of(new MeldelisteLayout(Formation.MELEE, false, false));
+                case SUPERMELEE -> Optional.of(new MeldelisteLayout(Formation.MELEE, false, false,
+                        new SuperMeleeKonfigurationSheet(ws).getAktiveSpieltag().getNr()));
                 case KO -> {
                     KoKonfigurationSheet k = new KoKonfigurationSheet(ws);
                     yield Optional.of(new MeldelisteLayout(k.getMeldeListeFormation(),

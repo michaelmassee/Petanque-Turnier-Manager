@@ -12,12 +12,8 @@ import java.util.Optional;
 
 import org.jspecify.annotations.Nullable;
 
-import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
-import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.spielerdb.MeldelisteZiel;
-import de.petanqueturniermanager.supermelee.SpielTagNr;
-import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
 
 /**
  * Check-in am Turniertag: meldet Teilnahme-Änderungen der Meldeliste sofort an PTM-Online statt erst beim
@@ -94,11 +90,10 @@ final class PtmOnlineCheckin {
 
     /**
      * Liest die aktuelle Teilnahme aller online zugeordneten Meldungen, ohne das Dokument zu verändern. Bei
-     * Supermelee zählt die Spalte des verbundenen Spieltags.
+     * Supermelee liefert die Meldeliste die Spalte des aktiven (= verbundenen) Spieltags.
      */
-    static List<PtmOnlineStatusAuftrag.Eintrag> leseStand(WorkingSpreadsheet ws, TurnierSystem ts,
-            PtmOnlineVerbindung verbindung) throws GenerateException {
-        TeilnahmeNummern nummern = teilnahmeNummern(ws, ts, verbindung);
+    static List<PtmOnlineStatusAuftrag.Eintrag> leseStand(PtmOnlineVerbindung verbindung) throws GenerateException {
+        TeilnahmeNummern nummern = TeilnahmeNummern.ausAktivSpalte(verbindung.meldeliste());
         MeldelisteZiel ziel = verbindung.ziel();
         List<LokaleOnlineMeldung> meldungen = PtmOnlineSpielrundeSync.lokaleMeldungen(ziel, verbindung.meldeliste(),
                 nummern.alle(), nummern.aktive(), nummern.ausgesetzt());
@@ -114,19 +109,6 @@ final class PtmOnlineCheckin {
             }
         }
         return eintraege;
-    }
-
-    private static TeilnahmeNummern teilnahmeNummern(WorkingSpreadsheet ws, TurnierSystem ts,
-            PtmOnlineVerbindung verbindung) throws GenerateException {
-        Integer spieltagNr = verbindung.spieltagNr();
-        if (ts != TurnierSystem.SUPERMELEE || spieltagNr == null) {
-            return TeilnahmeNummern.ausAktivSpalte(verbindung.meldeliste());
-        }
-        MeldeListeSheet_Update meldeliste = new MeldeListeSheet_Update(ws);
-        meldeliste.setSpielTag(SpielTagNr.from(spieltagNr));
-        return new TeilnahmeNummern(PtmOnlineSpielrundeSync.nummern(meldeliste.getAlleMeldungen()),
-                PtmOnlineSpielrundeSync.nummern(meldeliste.getAktiveMeldungen()),
-                PtmOnlineSpielrundeSync.nummern(meldeliste.getAusgesetztMeldungen()));
     }
 
     private static Map<Integer, String> leseLokaleUuids(MeldelisteZiel ziel, List<Integer> zeilen1Basiert)
