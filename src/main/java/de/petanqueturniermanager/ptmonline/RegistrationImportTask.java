@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -608,6 +609,7 @@ public final class RegistrationImportTask {
         Map<String, String> vertauschteOnlineIds = erkenneVertauschteOnlineIds(uuidProZeile, spielerProZeile,
                 onlineIds, remoteProId);
         if (!vertauschteOnlineIds.isEmpty()) {
+            pruefeGeschlossenenTausch(vertauschteOnlineIds, onlineIds, remoteProId);
             List<RegistrationDto> neuZugeordnet = client.tauscheDokumentZuordnungen(tournamentId,
                     vertauschteOnlineIds);
             if (neuZugeordnet.size() != vertauschteOnlineIds.size()) {
@@ -720,6 +722,34 @@ public final class RegistrationImportTask {
             return Map.of();
         }
         return vertauscht;
+    }
+
+    /**
+     * Ein Tausch muss in sich geschlossen sein: jede neu zugeordnete Online-Anmeldung muss bisher an einer der
+     * mitgetauschten Zeilen hängen. Sonst bliebe sie zusätzlich an einer unveränderten Zeile (doppelter Eintrag oder
+     * unvollständiger Ringtausch) – PTM-Online würde das ohnehin ablehnen, hier gibt es dafür eine klare Meldung.
+     */
+    private static void pruefeGeschlossenenTausch(Map<String, String> vertauschteOnlineIds,
+            Map<String, String> onlineIds, Map<String, RegistrationDto> remoteProId) throws GenerateException {
+        var nichtMitgetauscht = nichtMitgetauschteOnlineId(vertauschteOnlineIds, onlineIds);
+        if (nichtMitgetauscht.isPresent()) {
+            RegistrationDto registration = remoteProId.get(nichtMitgetauscht.get());
+            String anzeige = registration == null ? nichtMitgetauscht.get() : onlineBezeichnung(registration);
+            throw new GenerateException(I18n.get("ptmonline.fehler.zuordnungskonflikt", anzeige));
+        }
+    }
+
+    /**
+     * @param vertauschteOnlineIds neue Online-ID je mitgetauschter lokaler UUID
+     * @param onlineIds            bisherige Online-ID je lokaler UUID
+     * @return eine neu zugeordnete Online-ID, die bisher an keiner der mitgetauschten Zeilen hing
+     */
+    static Optional<String> nichtMitgetauschteOnlineId(Map<String, String> vertauschteOnlineIds,
+            Map<String, String> onlineIds) {
+        Set<String> bisherigeOnlineIds = vertauschteOnlineIds.keySet().stream().map(onlineIds::get)
+                .filter(Objects::nonNull).collect(Collectors.toSet());
+        return vertauschteOnlineIds.values().stream().filter(onlineId -> !bisherigeOnlineIds.contains(onlineId))
+                .findFirst();
     }
 
     /** Eine teilweise oder mehrdeutige Team-Umstellung darf niemals als Namenskorrektur umgehängt werden. */
