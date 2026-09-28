@@ -160,6 +160,10 @@ public final class MeldelisteZielFactory {
     /**
      * Ergänzt beim normalen Meldelisten-Refresh genau einmal eine lokale UUID für jede belegte
      * Zeile. Die UUID ist die einzige stabile Identität für die PTM-Online-Zuordnung.
+     * <p>
+     * Zuvor werden UUIDs leerer Zeilen entfernt. Sonst erbt eine neu eingetragene Meldung nach
+     * dem Löschen einer Zeile deren alte UUID und damit unter Umständen die PTM-Online-Zuordnung
+     * eines anderen Spielers.
      */
     public static void erstelleLokalePtmOnlineUuids(WorkingSpreadsheet ws) throws GenerateException {
         Optional<MeldelisteZiel> ziel = fuerAktivesSheet(ws);
@@ -167,7 +171,11 @@ public final class MeldelisteZielFactory {
             return;
         }
         try {
-            ziel.get().getOderErzeugeLokaleUuids(belegteZeilen(ziel.get()));
+            Set<Integer> belegteZeilen = belegteZeilen(ziel.get());
+            Map<Integer, String> vorhandeneUuids = ziel.get().leseLokaleUuids(belegteZeilen);
+            ziel.get().entferneLokaleUuids();
+            ziel.get().setzeLokaleUuids(vorhandeneUuids);
+            ziel.get().getOderErzeugeLokaleUuids(belegteZeilen);
         } catch (MeldelisteZiel.MeldelisteSchreibException e) {
             throw new GenerateException(e.getMessage());
         }

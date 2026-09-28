@@ -11,6 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.List;
 import java.util.UUID;
 
@@ -151,6 +152,44 @@ public class TournamentSyncClient extends PtmOnlineHttpClient {
         HttpResponse<String> response = put("/api/sync/tournaments/" + encode(tournamentId)
                 + "/registrations/" + encode(lokaleUuid), GSON.toJson(anmeldung));
         return leseRegistration(response);
+    }
+
+    /**
+     * Aktualisiert die sichtbaren Teilnehmerdaten einer bestehenden Zuordnung aus dem Turnierdokument.
+     * Die lokale UUID bleibt dabei die stabile Identität; PTM-Online behält seine Anmeldungs-, Kontakt- und
+     * Startgelddaten. Die Revision verhindert, dass ein zeitgleicher Ausführungs-Update überschrieben wird.
+     */
+    public RegistrationDto aktualisiereDokumentAnmeldung(String tournamentId, String lokaleUuid,
+            String onlineRegistrationId, NeueOnlineAnmeldung anmeldung, int expectedExecutionRevision)
+            throws IOException, InterruptedException {
+        JsonObject body = GSON.toJsonTree(anmeldung).getAsJsonObject();
+        body.addProperty("documentMaster", true);
+        body.addProperty("onlineRegistrationId", onlineRegistrationId);
+        body.addProperty("expectedExecutionRevision", expectedExecutionRevision);
+        HttpResponse<String> response = put("/api/sync/tournaments/" + encode(tournamentId)
+                + "/registrations/" + encode(lokaleUuid), body.toString());
+        return leseRegistration(response);
+    }
+
+    /** Tauscht eine vollständig erkannte, eindeutige Menge lokaler und Online-Zuordnungen atomar. */
+    public List<RegistrationDto> tauscheDokumentZuordnungen(String tournamentId,
+            Map<String, String> onlineIdProLokalerUuid) throws IOException, InterruptedException {
+        JsonArray mappings = new JsonArray();
+        onlineIdProLokalerUuid.forEach((lokaleUuid, onlineId) -> {
+            JsonObject mapping = new JsonObject();
+            mapping.addProperty("localRegistrationUuid", lokaleUuid);
+            mapping.addProperty("onlineRegistrationId", onlineId);
+            mappings.add(mapping);
+        });
+        JsonObject body = new JsonObject();
+        body.add("mappings", mappings);
+        JsonObject payload = leseAntwort(put("/api/sync/tournaments/" + encode(tournamentId)
+                + "/registration-mappings", body.toString()));
+        List<RegistrationDto> registrations = new ArrayList<>();
+        for (JsonElement element : pflichtArray(payload, "registrations")) {
+            registrations.add(GSON.fromJson(element, RegistrationDto.class));
+        }
+        return registrations;
     }
 
     /**

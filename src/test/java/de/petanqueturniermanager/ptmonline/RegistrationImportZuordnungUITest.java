@@ -38,6 +38,7 @@ import de.petanqueturniermanager.spielerdb.SpielerMitVerein;
 class RegistrationImportZuordnungUITest extends BaseCalcUITest {
 
     /** Tête ohne Teamname: Nr | Vorname | Nachname. */
+    private static final int VORNAME_SPALTE_TETE = 1;
     private static final int NACHNAME_SPALTE_TETE = 2;
 
     private SchweizerMeldeListeSheetNew meldeListe;
@@ -163,6 +164,23 @@ class RegistrationImportZuordnungUITest extends BaseCalcUITest {
 
         assertThat(mapping.istBereitsImportiert("r1")).isTrue();
         assertThat(ziel.getSetzpositionAusZeile(zeile)).hasValue(1);
+    }
+
+    @Test
+    void geloeschteZeileVererbtIhreOnlineZuordnungNichtAnEineNeueMeldung() throws Exception {
+        uebernehme(anmeldung("r1", "Hans", "Müller"));
+        String alteUuid = mapping.getLokaleUuid("r1").orElseThrow();
+        int zeile = ziel.findeZeileMitName("Hans Müller");
+        meldeListe.getSheetHelper().setStringValueInCell(StringCellValue.from(meldeListe.getXSpreadSheet(),
+                Position.from(VORNAME_SPALTE_TETE, zeile - 1), ""));
+        meldeListe.getSheetHelper().setStringValueInCell(StringCellValue.from(meldeListe.getXSpreadSheet(),
+                Position.from(NACHNAME_SPALTE_TETE, zeile - 1), ""));
+        new SchweizerMeldeListeSheetUpdate(wkingSpreadsheet).vollstaendigAktualisieren();
+        assertThat(ziel.leseLokaleUuids(List.of(zeile))).isEmpty();
+
+        uebernehme(anmeldung("r2", "Anna", "Schmidt"));
+
+        assertThat(mapping.getLokaleUuid("r2").orElseThrow()).isNotEqualTo(alteUuid);
     }
 
     private ImportErgebnis uebernehme(RegistrationDto... anmeldungen) throws Exception {

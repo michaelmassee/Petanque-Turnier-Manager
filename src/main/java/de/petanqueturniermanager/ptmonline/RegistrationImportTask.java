@@ -35,6 +35,7 @@ import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.onlinesync.SpieltagKontext;
 import de.petanqueturniermanager.onlinesync.sheet.NeueZuordnung;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationDto;
+import de.petanqueturniermanager.ptmonline.dto.NeueOnlineAnmeldung;
 import de.petanqueturniermanager.spielerdb.MeldelisteZiel;
 import de.petanqueturniermanager.spielerdb.MeldelisteZielFactory;
 import de.petanqueturniermanager.spielerdb.MeldelisteSpielerDaten;
@@ -231,6 +232,16 @@ public final class RegistrationImportTask {
                         new String[] { reg.firstName(), reg.lastName() },
                         new String[] { reg.partnerFirstName(), reg.partnerLastName() },
                         new String[] { reg.partner2FirstName(), reg.partner2LastName() })
+                .filter(name -> !istLeer(name[0]) || !istLeer(name[1]))
+                .map(name -> OnlineSpielerName.schluessel(name[0], name[1])));
+    }
+
+    /** Gleicher, reihenfolgeunabhängiger Schlüssel für die aus dem Dokument gebaute Anmeldung. */
+    private static String besetzungsSchluessel(NeueOnlineAnmeldung anmeldung) {
+        return besetzungsSchluessel(Stream.of(
+                        new String[] { anmeldung.firstName(), anmeldung.lastName() },
+                        new String[] { anmeldung.partnerFirstName(), anmeldung.partnerLastName() },
+                        new String[] { anmeldung.partner2FirstName(), anmeldung.partner2LastName() })
                 .filter(name -> !istLeer(name[0]) || !istLeer(name[1]))
                 .map(name -> OnlineSpielerName.schluessel(name[0], name[1])));
     }
@@ -587,26 +598,126 @@ public final class RegistrationImportTask {
     private static void aktualisiereBezeichnungen(LibreOfficePtmOnlineSpeicher.Zugangsdaten config,
             PtmOnlineRegistrationMapping mapping, String tournamentId, MeldelisteZiel ziel)
             throws IOException, InterruptedException, GenerateException {
-        Map<String, RegistrationDto> remoteProId = gebundenerClient(config, mapping)
-                .fetchRegistrations(tournamentId, null).stream()
+        TournamentSyncClient client = gebundenerClient(config, mapping);
+        Map<String, RegistrationDto> remoteProId = client.fetchRegistrations(tournamentId, null).stream()
                 .collect(Collectors.toMap(RegistrationDto::id, registration -> registration));
         Map<Integer, String> bezeichnungProZeile = lokaleBezeichnungen(ziel);
         Map<Integer, String> uuidProZeile = lokaleUuids(ziel, bezeichnungProZeile.keySet());
-        Map<String, String> onlineIds = mapping.getOnlineIdsProUuid();
+        Map<Integer, List<MeldelisteSpielerDaten>> spielerProZeile = spielerProZeile(ziel);
+        Map<String, String> onlineIds = new LinkedHashMap<>(mapping.getOnlineIdsProUuid());
+        Map<String, String> vertauschteOnlineIds = erkenneVertauschteOnlineIds(uuidProZeile, spielerProZeile,
+                onlineIds, remoteProId);
+        if (!vertauschteOnlineIds.isEmpty()) {
+            List<RegistrationDto> neuZugeordnet = client.tauscheDokumentZuordnungen(tournamentId,
+                    vertauschteOnlineIds);
+            if (neuZugeordnet.size() != vertauschteOnlineIds.size()) {
+                throw new GenerateException(I18n.get("ptmonline.fehler.antwort_unvollstaendig", "registrations"));
+            }
+            Map<String, Integer> revisionenDerVertauschten = new LinkedHashMap<>();
+            for (RegistrationDto registration : neuZugeordnet) {
+                String lokaleUuid = registration.localRegistrationUuid();
+                if (lokaleUuid == null || !registration.id().equals(vertauschteOnlineIds.get(lokaleUuid))) {
+                    throw new GenerateException(I18n.get("ptmonline.fehler.online_zuordnung_abweichend",
+                            registration.id()));
+                }
+                remoteProId.put(registration.id(), registration);
+                revisionenDerVertauschten.put(lokaleUuid, executionRevision(registration));
+            }
+            mapping.ersetzeOnlineIds(vertauschteOnlineIds, revisionenDerVertauschten);
+            onlineIds.putAll(vertauschteOnlineIds);
+        }
         Map<String, String> bezeichnungProUuid = new LinkedHashMap<>();
         Map<String, RegistrationDto> registrationProUuid = new LinkedHashMap<>();
-        uuidProZeile.forEach((zeile, uuid) -> {
+        Map<String, String> uuidProOnlineId = new LinkedHashMap<>();
+        for (Map.Entry<Integer, String> eintrag : uuidProZeile.entrySet()) {
+            int zeile = eintrag.getKey();
+            String uuid = eintrag.getValue();
             String onlineId = onlineIds.get(uuid);
             if (onlineId == null) {
-                return;
+                continue;
+            }
+            String bereitsZugeordnet = uuidProOnlineId.putIfAbsent(onlineId, uuid);
+            if (bereitsZugeordnet != null && !bereitsZugeordnet.equals(uuid)) {
+                throw new GenerateException(I18n.get("ptmonline.fehler.doppelte_online_zuordnung", onlineId));
             }
             bezeichnungProUuid.put(uuid, bezeichnungProZeile.get(zeile));
             RegistrationDto remote = remoteProId.get(onlineId);
-            if (remote != null) {
-                registrationProUuid.put(uuid, remote);
+            if (remote == null) {
+                throw new GenerateException(I18n.get("ptmonline.fehler.online_zuordnung_fehlend", onlineId));
             }
-        });
+            NeueOnlineAnmeldung lokal = zuOnlineAnmeldung(spielerProZeile.get(zeile));
+            if (!besetzungsSchluessel(lokal).equals(besetzungsSchluessel(remote))) {
+                remote = client.aktualisiereDokumentAnmeldung(tournamentId, uuid, onlineId, lokal,
+                        executionRevision(remote));
+                if (!uuid.equals(remote.localRegistrationUuid())) {
+                    throw new GenerateException(I18n.get("ptmonline.fehler.online_zuordnung_abweichend", onlineId));
+                }
+                if (!besetzungsSchluessel(lokal).equals(besetzungsSchluessel(remote))) {
+                    throw new GenerateException(I18n.get("ptmonline.fehler.online_namen_abweichend",
+                            bezeichnungProZeile.get(zeile)));
+                }
+            }
+            registrationProUuid.put(uuid, remote);
+        }
         mapping.aktualisiereAnzeigen(bezeichnungProUuid, registrationProUuid);
+        Map<String, Integer> revisionen = registrationProUuid.entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey,
+                        eintrag -> executionRevision(eintrag.getValue()), (links, rechts) -> rechts,
+                        LinkedHashMap::new));
+        mapping.setExecutionRevisionen(revisionen);
+    }
+
+    /**
+     * Erkennt einen vollständigen, eindeutigen Tausch bereits zugeordneter Teams. Dabei bleiben die
+     * registrierungsbezogenen Online-Daten (z.B. Kontakt und Live-Link) beim jeweiligen Team, statt dass die
+     * Namen in zwei Registrierungen überschrieben werden. Eine bloße Namenskorrektur liefert eine leere Map.
+     */
+    private static Map<String, String> erkenneVertauschteOnlineIds(Map<Integer, String> uuidProZeile,
+            Map<Integer, List<MeldelisteSpielerDaten>> spielerProZeile, Map<String, String> onlineIds,
+            Map<String, RegistrationDto> remoteProId) {
+        Map<String, String> uuidProOnlineBesetzung = new LinkedHashMap<>();
+        Set<String> mehrdeutigeBesetzungen = new HashSet<>();
+        for (String uuid : uuidProZeile.values()) {
+            String onlineId = onlineIds.get(uuid);
+            RegistrationDto remote = onlineId == null ? null : remoteProId.get(onlineId);
+            if (remote == null) {
+                continue;
+            }
+            String besetzung = besetzungsSchluessel(remote);
+            String vorherigeUuid = uuidProOnlineBesetzung.putIfAbsent(besetzung, uuid);
+            if (vorherigeUuid != null && !vorherigeUuid.equals(uuid)) {
+                mehrdeutigeBesetzungen.add(besetzung);
+            }
+        }
+        Map<String, String> vertauscht = new LinkedHashMap<>();
+        for (Map.Entry<Integer, String> eintrag : uuidProZeile.entrySet()) {
+            String uuid = eintrag.getValue();
+            String onlineId = onlineIds.get(uuid);
+            RegistrationDto remote = onlineId == null ? null : remoteProId.get(onlineId);
+            if (remote == null) {
+                continue;
+            }
+            String lokal = besetzungsSchluessel(zuOnlineAnmeldung(spielerProZeile.get(eintrag.getKey())));
+            if (lokal.equals(besetzungsSchluessel(remote))) {
+                continue;
+            }
+            if (mehrdeutigeBesetzungen.contains(lokal)) {
+                return Map.of();
+            }
+            String uuidMitLokalerBesetzung = uuidProOnlineBesetzung.get(lokal);
+            if (uuidMitLokalerBesetzung == null) {
+                return Map.of();
+            }
+            String getauschteOnlineId = onlineIds.get(uuidMitLokalerBesetzung);
+            if (getauschteOnlineId == null || getauschteOnlineId.equals(onlineId)) {
+                return Map.of();
+            }
+            vertauscht.put(uuid, getauschteOnlineId);
+        }
+        if (vertauscht.size() < 2 || new HashSet<>(vertauscht.values()).size() != vertauscht.size()) {
+            return Map.of();
+        }
+        return vertauscht;
     }
 
     private static String lokaleBezeichnung(MeldelisteZiel ziel, int zeile1Basiert) {
