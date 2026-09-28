@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalLong;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -55,7 +56,9 @@ import de.petanqueturniermanager.ptmonline.live.LiveStandQuellen;
  * gelingt. Fehler werden nur protokolliert, damit ohne Netz nicht bei jeder Eingabe ein Dialog erscheint.
  * <p>
  * Threading: {@code modified()} läuft im UNO-Event-Thread und plant nur ein. Die Übertragung liest das Dokument
- * nur (keine UI, kein Schreibzugriff) und wartet, solange ein {@link SheetRunner} arbeitet. Nicht verbundene
+ * nur (keine UI; zurückgeschrieben wird in einem eigenen {@link SheetRunner}) und wartet, solange ein Runner
+ * arbeitet. Jeder Lesevorgang wird verworfen und später wiederholt, wenn währenddessen ein Runner begonnen hat
+ * ({@link #konsistentLesen}) – sonst könnte ein halb geschriebener Stand übertragen werden. Nicht verbundene
  * Dokumente und pausierter Sync sind No-Ops – bei Pause wird nichts übertragen, beim Fortsetzen der komplette
  * Stand ({@link #nachPauseUebertragen}).
  */
@@ -216,8 +219,8 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
             } catch (DisposedException e) {
                 logger.debug("PTM-Online Live: Dokument {} geschlossen", oid, e);
                 beobachtungen.remove(oid);
-            } catch (SchreibenVerschoben e) {
-                logger.debug("PTM-Online Live: Zurückschreiben verschoben, ein anderer Lauf ist aktiv", e);
+            } catch (LaufVerschoben e) {
+                logger.debug("{}", e.getMessage(), e);
                 offen.set(true);
                 planeEin(VERZOEGERUNG_MS);
             } catch (GenerateException | RuntimeException e) {
@@ -228,7 +231,7 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
         }
 
         private void uebertrage(WorkingSpreadsheet ws, TurnierSystem ts) throws GenerateException {
-            Optional<PtmOnlineVerbindung> verbindung = PtmOnlineVerbindung.ermitteln(ws, ts);
+            Optional<PtmOnlineVerbindung> verbindung = konsistentLesen(() -> PtmOnlineVerbindung.ermitteln(ws, ts));
             if (verbindung.isEmpty()) {
                 offenerStatus.set(null);
                 offenesSchreiben = null;
@@ -244,7 +247,8 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
                 sendeCheckinAenderungen(ws, ts, verbindung.get());
                 Optional<LiveStandQuelle> quelle = LiveStandQuellen.fuer(ws, ts, verbindung.get().spieltagNr());
                 if (quelle.isPresent()) {
-                    uebertrageLiveStand(verbindung.get(), quelle.get());
+                    uebertrageLiveStand(verbindung.get(),
+                            konsistentLesen(() -> PtmOnlineLiveSync.lese(verbindung.get(), quelle.get())));
                 }
             } catch (PtmOnlineHttpException e) {
                 if (!e.istTurnierGeloescht()) {
@@ -263,16 +267,16 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
          * Überträgt den Live-Stand. Lehnt PTM-Online die Runden ab, weil der Turnierstart aus dem Dokument nie
          * angekommen ist (z.&nbsp;B. offline geschlossen), wird er nachgeholt und die Übertragung wiederholt.
          */
-        private void uebertrageLiveStand(PtmOnlineVerbindung verbindung, LiveStandQuelle quelle)
+        private void uebertrageLiveStand(PtmOnlineVerbindung verbindung, PtmOnlineLiveSync.Momentaufnahme stand)
                 throws GenerateException, IOException, InterruptedException {
             try {
-                PtmOnlineLiveSync.uebertragen(verbindung, quelle);
+                PtmOnlineLiveSync.uebertragen(verbindung, stand);
             } catch (PtmOnlineHttpException e) {
                 if (!e.istOnlineDurchgefuehrt()
                         || !PtmOnlineTurnierstart.nachholen(verbindung.gebundenerClient(), verbindung.tournamentId())) {
                     throw e;
                 }
-                PtmOnlineLiveSync.uebertragen(verbindung, quelle);
+                PtmOnlineLiveSync.uebertragen(verbindung, stand);
             }
         }
 
@@ -329,7 +333,7 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
         private void sendeCheckinAenderungen(WorkingSpreadsheet ws, TurnierSystem ts, PtmOnlineVerbindung verbindung)
                 throws GenerateException, IOException, InterruptedException {
             Optional<PtmOnlineCheckin.Aenderung> aenderung = checkin.ermittle(verbindung.tournamentId(),
-                    PtmOnlineCheckin.leseStand(verbindung));
+                    konsistentLesen(() -> PtmOnlineCheckin.leseStand(verbindung)));
             if (aenderung.isEmpty()) {
                 return;
             }
@@ -365,7 +369,7 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
                 throws GenerateException, InterruptedException {
             runner.startSilent();
             if (runner.getState() == Thread.State.NEW) {
-                throw new SchreibenVerschoben();
+                throw new LaufVerschoben("Zurückschreiben verschoben, ein anderer Lauf ist aktiv");
             }
             runner.join();
             if (runner.isLetzterLaufFehlgeschlagen()) {
@@ -380,13 +384,34 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
         }
     }
 
-    /** Ein anderer SheetRunner belegt gerade das Dokument; das Zurückschreiben folgt im nächsten Durchlauf. */
-    private static final class SchreibenVerschoben extends GenerateException {
+    /**
+     * Liest außerhalb eines {@link SheetRunner}-Laufs aus dem Dokument. Beginnt währenddessen ein Lauf, kann das
+     * Gelesene ein halb geschriebener Stand sein: dann wird es verworfen und der Durchlauf später wiederholt.
+     */
+    private static <T> T konsistentLesen(DokumentLeser<T> leser) throws GenerateException {
+        OptionalLong stand = SheetRunner.ruhenderLaufStand();
+        if (stand.isEmpty()) {
+            throw new LaufVerschoben("Lesen verschoben, ein anderer Lauf ist aktiv");
+        }
+        T gelesen = leser.lese();
+        if (!SheetRunner.unveraendertSeit(stand.getAsLong())) {
+            throw new LaufVerschoben("Gelesener Stand verworfen, ein anderer Lauf hat währenddessen begonnen");
+        }
+        return gelesen;
+    }
+
+    @FunctionalInterface
+    private interface DokumentLeser<T> {
+        T lese() throws GenerateException;
+    }
+
+    /** Ein anderer SheetRunner belegt gerade das Dokument; Lesen bzw. Zurückschreiben folgt im nächsten Durchlauf. */
+    private static final class LaufVerschoben extends GenerateException {
 
         private static final long serialVersionUID = 1L;
 
-        SchreibenVerschoben() {
-            super("PTM-Online: Zurückschreiben verschoben");
+        LaufVerschoben(String grund) {
+            super("PTM-Online Live: " + grund);
         }
     }
 }

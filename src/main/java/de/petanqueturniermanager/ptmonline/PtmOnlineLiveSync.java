@@ -34,15 +34,27 @@ public final class PtmOnlineLiveSync {
 
     private PtmOnlineLiveSync() {}
 
+    /** Aus dem Dokument gelesener Live-Stand samt Zuordnung der lokalen Nummern zu Online-IDs. */
+    record Momentaufnahme(LiveTurnierStand stand, Map<Integer, List<String>> onlineIds) {}
+
     /** Bei pausiertem Sync wird nichts gelesen und nichts übertragen. */
     static void uebertragen(PtmOnlineVerbindung verbindung, LiveStandQuelle quelle)
             throws GenerateException, IOException, InterruptedException {
         if (!PtmOnlineSpielrundeSync.istSyncAktiv(verbindung.mapping())) {
             return;
         }
-        LiveTurnierStand stand = quelle.lese();
-        Map<Integer, List<String>> onlineIds = LiveNummernAufloesung.ermitteln(verbindung);
-        uebertragen(verbindung.gebundenerClient(), verbindung.tournamentId(), stand, onlineIds);
+        uebertragen(verbindung, lese(verbindung, quelle));
+    }
+
+    /** Liest alles für die Übertragung Nötige aus dem Dokument – danach braucht das Senden kein Dokument mehr. */
+    static Momentaufnahme lese(PtmOnlineVerbindung verbindung, LiveStandQuelle quelle) throws GenerateException {
+        return new Momentaufnahme(quelle.lese(), LiveNummernAufloesung.ermitteln(verbindung));
+    }
+
+    static void uebertragen(PtmOnlineVerbindung verbindung, Momentaufnahme momentaufnahme)
+            throws GenerateException, IOException, InterruptedException {
+        uebertragen(verbindung.gebundenerClient(), verbindung.tournamentId(), momentaufnahme.stand(),
+                momentaufnahme.onlineIds());
     }
 
     static void uebertragen(TournamentSyncClient client, String tournamentId, LiveTurnierStand stand,

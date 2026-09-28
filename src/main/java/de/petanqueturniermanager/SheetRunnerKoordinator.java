@@ -7,7 +7,9 @@ package de.petanqueturniermanager;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.OptionalLong;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -28,6 +30,8 @@ class SheetRunnerKoordinator {
     private static final Logger logger = LogManager.getLogger(SheetRunnerKoordinator.class);
 
     private final AtomicBoolean laeuft = new AtomicBoolean();
+    /** Zählt jeden begonnenen Lauf; erkennt Läufe, die während eines Lesevorgangs begonnen und geendet haben. */
+    private final AtomicLong laufZaehler = new AtomicLong();
     private volatile SheetRunner aktuellerRunner = null;
     private volatile Thread ausfuehrenderThread = null;
     private final List<Runnable> zustandsListener =
@@ -45,6 +49,24 @@ class SheetRunnerKoordinator {
     /** Gibt zurück, ob aktuell ein {@link SheetRunner} aktiv ist. */
     boolean isRunning() {
         return laeuft.get();
+    }
+
+    /**
+     * Momentaufnahme für konsistentes Lesen außerhalb eines Laufs (siehe {@link #unveraendertSeit}).
+     *
+     * @return leer, solange ein Lauf aktiv ist
+     */
+    OptionalLong ruhenderLaufStand() {
+        long stand = laufZaehler.get();
+        return laeuft.get() ? OptionalLong.empty() : OptionalLong.of(stand);
+    }
+
+    /**
+     * Ob seit {@code stand} (aus {@link #ruhenderLaufStand()}) kein Lauf begonnen hat und gerade keiner aktiv ist
+     * – dann hat während des dazwischen liegenden Lesens kein Runner geschrieben.
+     */
+    boolean unveraendertSeit(long stand) {
+        return !laeuft.get() && laufZaehler.get() == stand;
     }
 
     /** Klassenname des aktiven Runners für Meldungen, leer wenn keiner läuft. */
@@ -100,7 +122,9 @@ class SheetRunnerKoordinator {
      * @return der vorherige Wert
      */
     boolean getAndSetLaeuft(boolean neuerWert) {
-        return laeuft.getAndSet(neuerWert);
+        boolean vorher = laeuft.getAndSet(neuerWert);
+        zaehleLaufbeginn(vorher, neuerWert);
+        return vorher;
     }
 
     /**
@@ -114,7 +138,14 @@ class SheetRunnerKoordinator {
 
     /** Setzt das Lauf-Flag direkt. */
     void setLaeuft(boolean wert) {
-        laeuft.set(wert);
+        zaehleLaufbeginn(laeuft.getAndSet(wert), wert);
+    }
+
+    /** Erst nach dem Setzen des Flags zählen: ein Leser sieht so entweder das Flag oder den neuen Zählerstand. */
+    private void zaehleLaufbeginn(boolean vorher, boolean neuerWert) {
+        if (!vorher && neuerWert) {
+            laufZaehler.incrementAndGet();
+        }
     }
 
     /**

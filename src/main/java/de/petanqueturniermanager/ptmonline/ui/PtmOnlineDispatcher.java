@@ -10,6 +10,7 @@ import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.sun.star.awt.XWindowPeer;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
@@ -49,6 +50,10 @@ public final class PtmOnlineDispatcher {
      * bestehenden PTM-Online-Turnier: laedt die zum API-Key gehoerenden, zum lokalen
      * {@link TurnierSystem} passenden Turniere, laesst den Nutzer eines auswaehlen und legt
      * anschliessend das Blatt "PTMOnline Sync" an.
+     * <p>
+     * Alles, was aus dem Dokument gebraucht wird (Turniersystem, Spieltag, bisherige Verbindung, Fenster für den
+     * Dialog), wird hier vor dem Thread-Start gelesen; der Hintergrund-Thread lädt nur noch übers Netz und zeigt
+     * den Dialog per {@code LoMainThread.post}.
      */
     public static void turnierVerbinden(WorkingSpreadsheet ws) {
         logger.info("PTM-Online: turnierVerbinden() gestartet (Thread={})", Thread.currentThread().getName());
@@ -78,21 +83,40 @@ public final class PtmOnlineDispatcher {
             return;
         }
 
-        Thread worker = new Thread(
-                () -> verbindenImHintergrund(ws, ctx, config, ts, spieltagNr), "PTM-Online-Verbinden");
+        String eigeneTurnierId;
+        try {
+            eigeneTurnierId = new PtmOnlineRegistrationMapping(ws, ts, spieltagNr).getTournamentId().orElse(null);
+        } catch (GenerateException e) {
+            logger.error("PTM-Online: bisherige Verbindung lesen fehlgeschlagen", e);
+            zeigeFehler(ctx, e.getMessage());
+            return;
+        }
+        var auftrag = new VerbindenAuftrag(ws, config, ts, spieltagNr, eigeneTurnierId, ws.getContainerWindowPeer());
+
+        Thread worker = new Thread(() -> verbindenImHintergrund(auftrag), "PTM-Online-Verbinden");
         worker.start();
         logger.info("PTM-Online: Hintergrund-Thread gestartet, turnierVerbinden() kehrt zurueck");
     }
 
-    private static void verbindenImHintergrund(WorkingSpreadsheet ws, XComponentContext ctx,
-            LibreOfficePtmOnlineSpeicher.Zugangsdaten config, TurnierSystem ts, Integer spieltagNr) {
+    /** Vor dem Thread-Start aus dem Dokument gelesene Eingaben für {@link #verbindenImHintergrund}. */
+    private record VerbindenAuftrag(WorkingSpreadsheet ws, LibreOfficePtmOnlineSpeicher.Zugangsdaten config,
+            TurnierSystem ts, Integer spieltagNr, String eigeneTurnierId, XWindowPeer parentPeer) {
+
+        XComponentContext ctx() {
+            return ws.getxContext();
+        }
+    }
+
+    private static void verbindenImHintergrund(VerbindenAuftrag auftrag) {
+        XComponentContext ctx = auftrag.ctx();
+        LibreOfficePtmOnlineSpeicher.Zugangsdaten config = auftrag.config();
         logger.info("PTM-Online: verbindenImHintergrund() gestartet (Thread={}), lade Turnierliste von {}",
                 Thread.currentThread().getName(), config.baseUrl());
         List<OnlineTournamentDto> passende;
         try {
             TournamentSyncClient client = new TournamentSyncClient(config.baseUrl(), config.apiKey());
             passende = client.listTournaments().stream()
-                    .filter(t -> TurnierSystemOnlineTypMapping.passtZu(ts, t))
+                    .filter(t -> TurnierSystemOnlineTypMapping.passtZu(auftrag.ts(), t))
                     .toList();
             logger.info("PTM-Online: {} passende Turniere geladen", passende.size());
         } catch (IOException e) {
@@ -104,20 +128,12 @@ public final class PtmOnlineDispatcher {
             return;
         }
 
-        String eigeneTurnierId;
-        try {
-            eigeneTurnierId = new PtmOnlineRegistrationMapping(ws, ts, spieltagNr).getTournamentId().orElse(null);
-        } catch (GenerateException e) {
-            logger.error("PTM-Online: bisherige Verbindung lesen fehlgeschlagen", e);
-            LoMainThread.post(ctx, () -> zeigeFehler(ctx, e.getMessage()));
-            return;
-        }
-
         logger.info("PTM-Online: zeige Auswahldialog");
-        Optional<OnlineTournamentDto> auswahl = zeigeAuswahlDialog(ws, ctx, passende, eigeneTurnierId);
+        Optional<OnlineTournamentDto> auswahl = zeigeAuswahlDialog(auftrag, passende);
         logger.info("PTM-Online: Auswahldialog beendet, Auswahl vorhanden={}", auswahl.isPresent());
         // Server-Bindung und Sync-Blatt in einem Runner: läuft schon einer, bleibt auch der Server unberührt.
-        auswahl.ifPresent(turnier -> new PtmOnlineVerbindenRunner(ws, ts, spieltagNr, config, turnier).start());
+        auswahl.ifPresent(turnier -> new PtmOnlineVerbindenRunner(auftrag.ws(), auftrag.ts(), auftrag.spieltagNr(),
+                config, turnier).start());
     }
 
     /**
@@ -127,10 +143,11 @@ public final class PtmOnlineDispatcher {
      * Anzeigen des Dialogs marshalliert {@link PtmOnlineTurnierVerbindenDialog#zeigen} bereits
      * selbst per {@code LoMainThread.post} zurück auf den Main-Thread.
      */
-    private static Optional<OnlineTournamentDto> zeigeAuswahlDialog(WorkingSpreadsheet ws, XComponentContext ctx,
-            List<OnlineTournamentDto> passende, String eigeneTurnierId) {
+    private static Optional<OnlineTournamentDto> zeigeAuswahlDialog(VerbindenAuftrag auftrag,
+            List<OnlineTournamentDto> passende) {
         try {
-            return PtmOnlineTurnierVerbindenDialog.zeigen(ctx, ws.getContainerWindowPeer(), passende, eigeneTurnierId);
+            return PtmOnlineTurnierVerbindenDialog.zeigen(auftrag.ctx(), auftrag.parentPeer(), passende,
+                    auftrag.eigeneTurnierId());
         } catch (GenerateException e) {
             logger.error("PTM-Online-Verbinden-Dialog fehlgeschlagen", e);
             return Optional.empty();

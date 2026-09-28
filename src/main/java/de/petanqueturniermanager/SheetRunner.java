@@ -7,6 +7,8 @@ package de.petanqueturniermanager;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.OptionalLong;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -663,6 +665,21 @@ public abstract class SheetRunner extends Thread {
 
 	public static boolean isRunning() {
 		return koordinator.isRunning();
+	}
+
+	/**
+	 * Für Hintergrund-Leser außerhalb eines Laufs: Stand vor dem Lesen merken und danach mit
+	 * {@link #unveraendertSeit(long)} prüfen, ob zwischendurch ein Runner geschrieben haben kann.
+	 *
+	 * @return leer, solange ein Lauf aktiv ist
+	 */
+	public static OptionalLong ruhenderLaufStand() {
+		return koordinator.ruhenderLaufStand();
+	}
+
+	/** Ob seit {@code stand} (aus {@link #ruhenderLaufStand()}) kein Lauf begonnen hat und keiner aktiv ist. */
+	public static boolean unveraendertSeit(long stand) {
+		return koordinator.unveraendertSeit(stand);
 	}
 
 	/**
