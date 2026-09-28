@@ -13,15 +13,18 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
+import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.ptmonline.PtmOnlineFehlerText;
+import de.petanqueturniermanager.ptmonline.PtmOnlineHttpException;
 import de.petanqueturniermanager.ptmonline.PtmOnlineLiveBeobachter;
 import de.petanqueturniermanager.ptmonline.PtmOnlineRegistrationMapping;
 import de.petanqueturniermanager.ptmonline.PtmOnlineTrennung;
 
 /**
  * Änderungen an einer bestehenden PTM-Online-Verbindung. Pausieren/Fortsetzen kommen ohne Server-Aufruf aus und
- * funktionieren daher auch offline; Trennen löst die Bindung online und entfernt danach das Blatt. Läuft als
+ * funktionieren daher auch offline; Trennen löst die Bindung online (offline auf Nachfrage nur lokal) und entfernt
+ * danach das Blatt. Läuft als
  * {@link SheetRunner}: eigener Blattschutz-Scope (das Blatt „PTMOnline Sync“ ist im Turnier-Modus gesperrt), kein
  * paralleler Lauf, und die Sidebar aktualisiert ihren Verbindungsstatus über den Runner-Zustandswechsel.
  */
@@ -66,19 +69,32 @@ final class PtmOnlineVerbindungsRunner extends SheetRunner {
 
     /**
      * Hebt serverseitig die Dokument-Verwaltung auf. Hält online inzwischen ein anderes Dokument das Turnier (oder
-     * niemand), wird trotzdem lokal aufgeräumt.
+     * niemand), wird trotzdem lokal aufgeräumt. Ist PTM-Online nicht erreichbar (offline), kann auf Nachfrage nur
+     * lokal getrennt werden.
      */
     private void onlineTrennen(PtmOnlineRegistrationMapping mapping) throws GenerateException {
         try {
             PtmOnlineTrennung.online(new LibreOfficePtmOnlineSpeicher(getxContext()).laden(), mapping);
-        } catch (IOException e) {
+        } catch (PtmOnlineHttpException e) {
             getLogger().error("PTM-Online: Verbindung trennen (Server-Aufruf) fehlgeschlagen", e);
             throw new GenerateException(PtmOnlineFehlerText.fuer(e));
+        } catch (IOException e) {
+            getLogger().warn("PTM-Online: Verbindung trennen – Server nicht erreichbar", e);
+            if (!nurLokalTrennen(e)) {
+                throw verarbeitungAbgebrochen();
+            }
         } catch (InterruptedException e) {
             // Interrupt-Flag bleibt verbraucht, damit die UNO-Aufräumaufrufe nicht auf einem unterbrochenen Thread laufen.
             getLogger().debug("PTM-Online: Trennen während des Serveraufrufs abgebrochen", e);
             throw verarbeitungAbgebrochen();
         }
+    }
+
+    private boolean nurLokalTrennen(IOException netzfehler) {
+        return MessageBox.from(getxContext(), MessageBoxTypeEnum.WARN_YES_NO)
+                .caption(I18n.get("ptmonline.fehler.titel"))
+                .message(I18n.get("ptmonline.trennen.offline.frage", PtmOnlineFehlerText.fuer(netzfehler)))
+                .show() == MessageBoxResult.YES;
     }
 
     private void schalteSync(PtmOnlineRegistrationMapping mapping, boolean pausieren) throws GenerateException {

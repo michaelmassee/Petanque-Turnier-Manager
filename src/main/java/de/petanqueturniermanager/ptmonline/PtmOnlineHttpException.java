@@ -20,6 +20,8 @@ public final class PtmOnlineHttpException extends IOException {
     private static final int HTTP_CONFLICT = 409;
     /** Fehlertext der PTM-Online-API, wenn es das Turnier nicht (mehr) gibt; unübersetzt, Teil des API-Vertrags. */
     private static final String TURNIER_NICHT_GEFUNDEN = "Turnier nicht gefunden";
+    /** Anfang des Fehlertexts, wenn das Turnier online (nicht im Dokument) durchgeführt wird; Teil des API-Vertrags. */
+    private static final String ONLINE_DURCHGEFUEHRT = "Dieses Turnier wird online durchgeführt";
 
     private final int statusCode;
     private final String antwort;
@@ -74,9 +76,22 @@ public final class PtmOnlineHttpException extends IOException {
      * einzelne Anmeldung) zählen nicht dazu.
      */
     public boolean istTurnierGeloescht() {
-        return statusCode == HTTP_NOT_FOUND && antwortJson().map(json -> json.get("error"))
-                .filter(JsonElement::isJsonPrimitive)
-                .map(fehler -> TURNIER_NICHT_GEFUNDEN.equals(fehler.getAsString())).orElse(false);
+        return statusCode == HTTP_NOT_FOUND && fehlertext().filter(TURNIER_NICHT_GEFUNDEN::equals).isPresent();
+    }
+
+    /**
+     * PTM-Online nimmt keine Runden aus dem Dokument an, weil das Turnier dort nicht als im Dokument durchgeführt
+     * gilt – entweder wird es tatsächlich online durchgeführt, oder der Turnierstart aus dem Dokument kam nie an.
+     */
+    public boolean istOnlineDurchgefuehrt() {
+        return statusCode == HTTP_CONFLICT && fehlertext().filter(text -> text.startsWith(ONLINE_DURCHGEFUEHRT))
+                .isPresent();
+    }
+
+    /** Feld {@code error} der Antwort. */
+    private Optional<String> fehlertext() {
+        return antwortJson().map(json -> json.get("error")).filter(JsonElement::isJsonPrimitive)
+                .map(JsonElement::getAsString);
     }
 
     /** Aktuelle Bindungsrevision des Online-Turniers aus einem Bindungskonflikt. */

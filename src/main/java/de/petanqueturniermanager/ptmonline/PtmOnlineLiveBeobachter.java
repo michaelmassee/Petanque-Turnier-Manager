@@ -244,7 +244,7 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
                 sendeCheckinAenderungen(ws, ts, verbindung.get());
                 Optional<LiveStandQuelle> quelle = LiveStandQuellen.fuer(ws, ts, verbindung.get().spieltagNr());
                 if (quelle.isPresent()) {
-                    PtmOnlineLiveSync.uebertragen(verbindung.get(), quelle.get());
+                    uebertrageLiveStand(verbindung.get(), quelle.get());
                 }
             } catch (PtmOnlineHttpException e) {
                 if (!e.istTurnierGeloescht()) {
@@ -256,6 +256,23 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 throw new GenerateException(e.getMessage());
+            }
+        }
+
+        /**
+         * Überträgt den Live-Stand. Lehnt PTM-Online die Runden ab, weil der Turnierstart aus dem Dokument nie
+         * angekommen ist (z.&nbsp;B. offline geschlossen), wird er nachgeholt und die Übertragung wiederholt.
+         */
+        private void uebertrageLiveStand(PtmOnlineVerbindung verbindung, LiveStandQuelle quelle)
+                throws GenerateException, IOException, InterruptedException {
+            try {
+                PtmOnlineLiveSync.uebertragen(verbindung, quelle);
+            } catch (PtmOnlineHttpException e) {
+                if (!e.istOnlineDurchgefuehrt()
+                        || !PtmOnlineTurnierstart.nachholen(verbindung.gebundenerClient(), verbindung.tournamentId())) {
+                    throw e;
+                }
+                PtmOnlineLiveSync.uebertragen(verbindung, quelle);
             }
         }
 

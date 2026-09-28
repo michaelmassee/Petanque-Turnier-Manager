@@ -73,6 +73,15 @@ class PtmOnlineHttpExceptionTest {
     }
 
     @Test
+    void nichtImDokumentDurchgefuehrtesTurnierWirdErkannt() {
+        String antwort = "{\"error\":\"Dieses Turnier wird online durchgeführt. Runden werden nicht aus dem "
+                + "Turnierdokument übernommen.\"}";
+        assertThat(new PtmOnlineHttpException(409, antwort).istOnlineDurchgefuehrt()).isTrue();
+        assertThat(new PtmOnlineHttpException(409, "{\"error\":\"x\"}").istOnlineDurchgefuehrt()).isFalse();
+        assertThat(new PtmOnlineHttpException(400, antwort).istOnlineDurchgefuehrt()).isFalse();
+    }
+
+    @Test
     void meldungBleibtKompatibelZurBisherigenIoException() {
         assertThat(new PtmOnlineHttpException(401, "unauthorized").getMessage())
                 .isEqualTo("PTM-Online API Fehler 401: unauthorized");
