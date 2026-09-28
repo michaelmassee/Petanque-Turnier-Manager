@@ -625,6 +625,8 @@ public final class RegistrationImportTask {
             }
             mapping.ersetzeOnlineIds(vertauschteOnlineIds, revisionenDerVertauschten);
             onlineIds.putAll(vertauschteOnlineIds);
+        } else {
+            pruefeMehrdeutigenTeamwechsel(uuidProZeile, spielerProZeile, onlineIds, remoteProId);
         }
         Map<String, String> bezeichnungProUuid = new LinkedHashMap<>();
         Map<String, RegistrationDto> registrationProUuid = new LinkedHashMap<>();
@@ -718,6 +720,32 @@ public final class RegistrationImportTask {
             return Map.of();
         }
         return vertauscht;
+    }
+
+    /** Eine teilweise oder mehrdeutige Team-Umstellung darf niemals als Namenskorrektur umgehängt werden. */
+    private static void pruefeMehrdeutigenTeamwechsel(Map<Integer, String> uuidProZeile,
+            Map<Integer, List<MeldelisteSpielerDaten>> spielerProZeile, Map<String, String> onlineIds,
+            Map<String, RegistrationDto> remoteProId) throws GenerateException {
+        Map<String, String> uuidProLokalerBesetzung = new LinkedHashMap<>();
+        Map<String, String> uuidProOnlineBesetzung = new LinkedHashMap<>();
+        for (Map.Entry<Integer, String> eintrag : uuidProZeile.entrySet()) {
+            String uuid = eintrag.getValue();
+            uuidProLokalerBesetzung.putIfAbsent(besetzungsSchluessel(zuOnlineAnmeldung(spielerProZeile.get(eintrag.getKey()))), uuid);
+            RegistrationDto remote = remoteProId.get(onlineIds.get(uuid));
+            if (remote != null) uuidProOnlineBesetzung.putIfAbsent(besetzungsSchluessel(remote), uuid);
+        }
+        for (Map.Entry<Integer, String> eintrag : uuidProZeile.entrySet()) {
+            String uuid = eintrag.getValue();
+            RegistrationDto remote = remoteProId.get(onlineIds.get(uuid));
+            if (remote == null) continue;
+            String lokal = besetzungsSchluessel(zuOnlineAnmeldung(spielerProZeile.get(eintrag.getKey())));
+            String online = besetzungsSchluessel(remote);
+            if (!lokal.equals(online) && ((uuidProOnlineBesetzung.containsKey(lokal)
+                    && !uuid.equals(uuidProOnlineBesetzung.get(lokal))) || (uuidProLokalerBesetzung.containsKey(online)
+                    && !uuid.equals(uuidProLokalerBesetzung.get(online))))) {
+                throw new GenerateException(I18n.get("ptmonline.fehler.online_zuordnung_abweichend", onlineIds.get(uuid)));
+            }
+        }
     }
 
     private static String lokaleBezeichnung(MeldelisteZiel ziel, int zeile1Basiert) {
