@@ -16,6 +16,7 @@ import com.google.gson.JsonObject;
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.meldeliste.TeilnehmerListeSortModus;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
@@ -65,6 +66,31 @@ class RegistrationImportZuordnungUITest extends BaseCalcUITest {
         assertThat(ergebnis).isEqualTo(new ImportErgebnis(0, List.of(), List.of()));
         assertThat(anzahlZeilen()).isEqualTo(1);
         assertThat(mapping.istBereitsImportiert("r1")).isTrue();
+    }
+
+    /**
+     * Das Aktualisieren nach dem Import sortiert die Meldeliste (hier nach Name) und verschiebt die gerade
+     * geschriebenen Zeilen. Jede Online-Anmeldung muss trotzdem an der Zeile ihres Spielers hängen.
+     */
+    @Test
+    void importNachUmsortierenVerknuepftJedeAnmeldungMitIhremSpieler() throws Exception {
+        docPropHelper.setStringProperty(BasePropertiesSpalte.KONFIG_PROP_MELDELISTE_SORT_MODUS,
+                TeilnehmerListeSortModus.NAME.getKey());
+        List<String[]> namen = List.of(new String[] { "Zora", "Zeller" }, new String[] { "Yves", "Yilmaz" },
+                new String[] { "Anna", "Adler" }, new String[] { "Moritz", "Maier" }, new String[] { "Berta", "Bauer" });
+        RegistrationDto[] anmeldungen = new RegistrationDto[namen.size()];
+        for (int i = 0; i < namen.size(); i++) {
+            anmeldungen[i] = anmeldung("r" + i, namen.get(i)[0], namen.get(i)[1]);
+        }
+
+        ImportErgebnis ergebnis = uebernehme(anmeldungen);
+
+        assertThat(ergebnis.importiert()).isEqualTo(namen.size());
+        for (int i = 0; i < namen.size(); i++) {
+            int zeile = ziel.findeZeileMitName(namen.get(i)[0] + " " + namen.get(i)[1]);
+            assertThat(mapping.getLokaleUuid("r" + i)).as(namen.get(i)[0] + " " + namen.get(i)[1])
+                    .contains(ziel.leseLokaleUuids(List.of(zeile)).get(zeile));
+        }
     }
 
     @Test

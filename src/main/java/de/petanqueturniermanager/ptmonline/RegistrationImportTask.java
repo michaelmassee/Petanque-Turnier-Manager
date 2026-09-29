@@ -68,7 +68,11 @@ public final class RegistrationImportTask {
         void aktualisieren() throws GenerateException, InterruptedException;
     }
 
-    private record GeschriebeneAnmeldung(RegistrationDto registration, int zeile1Basiert) {}
+    /**
+     * In die Meldeliste geschriebene Anmeldung. Die Zeile gilt nur bis zum Aktualisieren der Meldeliste, das
+     * sortiert und Zeilen verschiebt – danach wird sie über die (eindeutige) Besetzung neu ermittelt.
+     */
+    private record GeschriebeneAnmeldung(RegistrationDto registration, String besetzung) {}
 
     /**
      * Nicht übernommene Anmeldungen werden beim nächsten Abgleich erneut versucht ({@code lastSync}
@@ -345,7 +349,7 @@ public final class RegistrationImportTask {
                     logger.error("PTM-Online: Anmeldung {} lieferte keine eindeutige Meldeliste-Zeile", reg.id());
                     nichtZuordenbar.add(onlineBezeichnung(reg));
                 } else {
-                    geschrieben.add(new GeschriebeneAnmeldung(reg, zeile));
+                    geschrieben.add(new GeschriebeneAnmeldung(reg, besetzung));
                     fortschritt.status(I18n.get("ptmonline.fortschritt.meldung_uebernommen", onlineBezeichnung(reg)));
                     geschriebeneZeilen.add(zeile);
                     uebernehmeSetzposition(ziel, reg, zeile);
@@ -363,21 +367,22 @@ public final class RegistrationImportTask {
         fortschritt.status(I18n.get("ptmonline.fortschritt.meldeliste_aktualisieren"));
         aktualisierung.aktualisieren();
 
+        Map<RegistrationDto, Integer> zeileProAnmeldung = zeilenNachAktualisierung(ziel, geschrieben, nichtZuordenbar);
         Map<Integer, String> uuidProZeile;
         try {
-            uuidProZeile = ziel.getOderErzeugeLokaleUuids(
-                    geschrieben.stream().map(GeschriebeneAnmeldung::zeile1Basiert).toList());
+            uuidProZeile = ziel.getOderErzeugeLokaleUuids(zeileProAnmeldung.values());
         } catch (MeldelisteZiel.MeldelisteSchreibException e) {
             throw new GenerateException(e.getMessage());
         }
         Map<Integer, String> bezeichnungProZeile = lokaleBezeichnungen(ziel);
         List<NeueZuordnung> zuordnungen = new ArrayList<>();
-        for (GeschriebeneAnmeldung geschriebene : geschrieben) {
-            RegistrationDto reg = geschriebene.registration();
-            String uuid = uuidProZeile.get(geschriebene.zeile1Basiert());
+        for (Map.Entry<RegistrationDto, Integer> eintrag : zeileProAnmeldung.entrySet()) {
+            RegistrationDto reg = eintrag.getKey();
+            int zeile = eintrag.getValue();
+            String uuid = uuidProZeile.get(zeile);
             try {
                 zuordnungen.add(PtmOnlineRegistrationMapping.neueZuordnung(uuid, ziel.formelTeamNrAusLokalerUuid(uuid),
-                        bezeichnungProZeile.getOrDefault(geschriebene.zeile1Basiert(), ""), reg));
+                        bezeichnungProZeile.getOrDefault(zeile, ""), reg));
             } catch (MeldelisteZiel.MeldelisteSchreibException e) {
                 logger.warn("PTM-Online: Nummernformel für importierte Anmeldung {} nicht ermittelt", reg.id(), e);
                 nichtZuordenbar.add(onlineBezeichnung(reg));
@@ -385,6 +390,29 @@ public final class RegistrationImportTask {
         }
         mapping.addMappings(zuordnungen);
         return new ImportErgebnis(zuordnungen.size(), namensgleich, nichtZuordenbar);
+    }
+
+    /**
+     * Ermittelt die Zeilen der geschriebenen Anmeldungen nach dem Aktualisieren der Meldeliste neu. Die beim
+     * Schreiben gelieferte Zeile ist dann veraltet, weil das Aktualisieren sortiert – sie zu verwenden, verknüpft
+     * Online-Anmeldungen mit fremden Meldelistenzeilen. Geschrieben wird nur eine Besetzung, die noch in keiner
+     * Zeile stand; ist sie trotzdem nicht mehr eindeutig auffindbar, wird die Anmeldung nicht zugeordnet.
+     */
+    private static Map<RegistrationDto, Integer> zeilenNachAktualisierung(MeldelisteZiel ziel,
+            List<GeschriebeneAnmeldung> geschrieben, List<String> nichtZuordenbar) {
+        Map<String, List<Integer>> zeilenNachBesetzung = vorhandeneZeilenNachBesetzung(ziel);
+        Map<RegistrationDto, Integer> zeileProAnmeldung = new LinkedHashMap<>();
+        for (GeschriebeneAnmeldung geschriebene : geschrieben) {
+            List<Integer> zeilen = zeilenNachBesetzung.getOrDefault(geschriebene.besetzung(), List.of());
+            if (zeilen.size() == 1) {
+                zeileProAnmeldung.put(geschriebene.registration(), zeilen.getFirst());
+            } else {
+                logger.error("PTM-Online: Anmeldung {} steht nach dem Aktualisieren in {} Meldelistenzeilen",
+                        geschriebene.registration().id(), zeilen.size());
+                nichtZuordenbar.add(onlineBezeichnung(geschriebene.registration()));
+            }
+        }
+        return zeileProAnmeldung;
     }
 
     /**
