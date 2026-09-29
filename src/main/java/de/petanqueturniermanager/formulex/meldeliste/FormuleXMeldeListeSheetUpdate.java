@@ -13,6 +13,7 @@ import java.util.List;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.meldeliste.IMeldeliste;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldelisteSortBereich;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -218,7 +219,7 @@ public class FormuleXMeldeListeSheetUpdate extends SheetRunner
         }
         RangePosition range = RangePosition.from(getNrSpalte(), ERSTE_DATEN_ZEILE,
                 delegate.getAktivSpalte() + 1, letzteZeile);
-        SortHelper.from(this, range).spalteToSort(spalteNr).aufSteigendSortieren(aufsteigend).doSort();
+        SortHelper.from(this, MeldelisteSortBereich.mitLokalerUuidSpalte(this, range, ERSTE_DATEN_ZEILE - 1)).spalteToSort(spalteNr).aufSteigendSortieren(aufsteigend).doSort();
     }
 
     public String validiereSetzpositionSpalte() {
@@ -292,7 +293,7 @@ public class FormuleXMeldeListeSheetUpdate extends SheetRunner
 
         RangePosition sortRange = RangePosition.from(nrSpalte, ERSTE_DATEN_ZEILE, delegate.getAktivSpalte() + 1,
                 letzteZeile);
-        SortHelper.from(this, sortRange).spalteToSort(nrSpalte).abSteigendSortieren().doSort();
+        SortHelper.from(this, MeldelisteSortBereich.mitLokalerUuidSpalte(this, sortRange, ERSTE_DATEN_ZEILE - 1)).spalteToSort(nrSpalte).abSteigendSortieren().doSort();
 
         int letztNr = Math.max(0,
                 getSheetHelper().getIntFromCell(xSheet, Position.from(nrSpalte, ERSTE_DATEN_ZEILE)));
@@ -318,7 +319,7 @@ public class FormuleXMeldeListeSheetUpdate extends SheetRunner
         }
         RangePosition range = RangePosition.from(getNrSpalte(), ERSTE_DATEN_ZEILE,
                 delegate.getAktivSpalte() + 1, letzteZeile);
-        SortHelper.from(this, range).spalteToSort(getNrSpalte()).aufSteigendSortieren(true).doSort();
+        SortHelper.from(this, MeldelisteSortBereich.mitLokalerUuidSpalte(this, range, ERSTE_DATEN_ZEILE - 1)).spalteToSort(getNrSpalte()).aufSteigendSortieren(true).doSort();
     }
 
 }

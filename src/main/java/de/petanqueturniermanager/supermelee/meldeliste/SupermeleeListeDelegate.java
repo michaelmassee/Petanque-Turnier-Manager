@@ -10,7 +10,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -45,6 +44,7 @@ import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.spielerdb.MeldelisteZielFactory;
+import de.petanqueturniermanager.spielerdb.MeldelisteZielFactory.GesicherteLokaleUuids;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
@@ -149,7 +149,7 @@ class SupermeleeListeDelegate implements MeldeListeKonstanten {
 	 * auch nach einem Fehler – hinter dem jetzt letzten Spieltag wiederhergestellt.
 	 */
 	void mitGesichertenLokalenUuids(MeldelistenUmbau umbau) throws GenerateException {
-		Map<Integer, String> lokaleUuids = MeldelisteZielFactory.sichereUndEntferneLokalePtmOnlineUuids(workingSpreadsheet);
+		GesicherteLokaleUuids lokaleUuids = MeldelisteZielFactory.sichereUndEntferneLokalePtmOnlineUuids(workingSpreadsheet);
 		try {
 			umbau.ausfuehren();
 		} finally {

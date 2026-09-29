@@ -13,6 +13,7 @@ import java.util.List;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.meldeliste.IMeldeliste;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldelisteSortBereich;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -220,7 +221,7 @@ public class KoMeldeListeSheetUpdate extends SheetRunner
 		}
 		RangePosition range = RangePosition.from(getNrSpalte(), ERSTE_DATEN_ZEILE,
 				delegate.getAktivSpalte(), letzteZeile);
-		SortHelper.from(this, range).spalteToSort(spalteNr).aufSteigendSortieren(aufsteigend).doSort();
+		SortHelper.from(this, MeldelisteSortBereich.mitLokalerUuidSpalte(this, range, ERSTE_DATEN_ZEILE - 1)).spalteToSort(spalteNr).aufSteigendSortieren(aufsteigend).doSort();
 	}
 
 	/**
@@ -307,7 +308,7 @@ public class KoMeldeListeSheetUpdate extends SheetRunner
 		// Höchste vorhandene Nr lesen (absteigend sortieren, dann erste Zeile lesen)
 		RangePosition sortRange = RangePosition.from(nrSpalte, ERSTE_DATEN_ZEILE, delegate.getAktivSpalte(),
 				letzteZeile);
-		SortHelper.from(this, sortRange).spalteToSort(nrSpalte).abSteigendSortieren().doSort();
+		SortHelper.from(this, MeldelisteSortBereich.mitLokalerUuidSpalte(this, sortRange, ERSTE_DATEN_ZEILE - 1)).spalteToSort(nrSpalte).abSteigendSortieren().doSort();
 
 		int letztNr = Math.max(0,
 				getSheetHelper().getIntFromCell(xSheet, Position.from(nrSpalte, ERSTE_DATEN_ZEILE)));
@@ -337,7 +338,7 @@ public class KoMeldeListeSheetUpdate extends SheetRunner
 		}
 		RangePosition range = RangePosition.from(getNrSpalte(), ERSTE_DATEN_ZEILE,
 				delegate.getAktivSpalte(), letzteZeile);
-		SortHelper.from(this, range).spalteToSort(delegate.getRanglisteSpalte())
+		SortHelper.from(this, MeldelisteSortBereich.mitLokalerUuidSpalte(this, range, ERSTE_DATEN_ZEILE - 1)).spalteToSort(delegate.getRanglisteSpalte())
 				.aufSteigendSortieren(true).doSort();
 	}
 

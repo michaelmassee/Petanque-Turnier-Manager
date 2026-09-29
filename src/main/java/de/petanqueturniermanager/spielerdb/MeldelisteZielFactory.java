@@ -1,10 +1,12 @@
 package de.petanqueturniermanager.spielerdb;
 
-import java.util.Optional;
-import java.util.LinkedHashSet;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -188,36 +190,58 @@ public final class MeldelisteZielFactory {
     }
 
     /**
-     * Sichert die vorhandenen UUIDs nach lokaler Spieler-/Teamnummer und räumt danach ihre Spalte – für Umbauten
-     * dynamischer Meldelisten, bei denen die UUID-Spalte wandert (Supermelee: neuer Spieltag belegt sie). Legt keine
-     * neuen UUIDs an; das übernimmt {@link #erstelleLokalePtmOnlineUuids} nach dem Umbau.
+     * Beim Umbau gesicherte UUIDs: nach Spieler-/Teamnummer, und für Zeilen, die noch keine Nummer haben (neu
+     * eingetragen, Nummer vergibt erst der Umbau), nach ihrer Besetzung.
      */
-    public static Map<Integer, String> sichereUndEntferneLokalePtmOnlineUuids(WorkingSpreadsheet ws)
+    public record GesicherteLokaleUuids(Map<Integer, String> proNummer, Map<String, String> proBesetzungOhneNummer) {
+
+        public boolean isEmpty() {
+            return proNummer.isEmpty() && proBesetzungOhneNummer.isEmpty();
+        }
+    }
+
+    /**
+     * Sichert die vorhandenen UUIDs und räumt danach ihre Spalte – für Umbauten dynamischer Meldelisten, bei denen die
+     * UUID-Spalte wandert (Supermelee: neuer Spieltag belegt sie). Legt keine neuen UUIDs an; das übernimmt
+     * {@link #erstelleLokalePtmOnlineUuids} nach dem Umbau.
+     */
+    public static GesicherteLokaleUuids sichereUndEntferneLokalePtmOnlineUuids(WorkingSpreadsheet ws)
             throws GenerateException {
-        Map<Integer, String> ergebnis = new LinkedHashMap<>();
+        Map<Integer, String> proNummer = new LinkedHashMap<>();
+        Map<String, String> proBesetzung = new LinkedHashMap<>();
         Optional<MeldelisteZiel> ziel = fuerAktivesSheet(ws);
         if (ziel.isEmpty()) {
-            return ergebnis;
+            return new GesicherteLokaleUuids(proNummer, proBesetzung);
         }
         try {
-            Map<Integer, Integer> nrProZeile = new LinkedHashMap<>();
-            for (int zeile : belegteZeilen(ziel.get())) {
-                int nr = ziel.get().getTeamNrAusZeile(zeile);
+            Map<Integer, String> besetzungProZeile = besetzungProZeile(ziel.get());
+            Map<Integer, String> uuidProZeile = ziel.get().leseLokaleUuids(besetzungProZeile.keySet());
+            Set<String> mehrdeutig = new HashSet<>();
+            for (Map.Entry<Integer, String> eintrag : uuidProZeile.entrySet()) {
+                int nr = ziel.get().getTeamNrAusZeile(eintrag.getKey());
                 if (nr > 0) {
-                    nrProZeile.put(zeile, nr);
+                    proNummer.put(nr, eintrag.getValue());
+                    continue;
+                }
+                String besetzung = besetzungProZeile.get(eintrag.getKey());
+                if (proBesetzung.putIfAbsent(besetzung, eintrag.getValue()) != null) {
+                    mehrdeutig.add(besetzung);
                 }
             }
-            ziel.get().leseLokaleUuids(nrProZeile.keySet())
-                    .forEach((zeile, uuid) -> ergebnis.put(nrProZeile.get(zeile), uuid));
+            // Doppelte Namen ohne Nummer lassen sich nach dem Umbau nicht zuordnen; sie erhalten dann neue UUIDs.
+            proBesetzung.keySet().removeAll(mehrdeutig);
             ziel.get().entferneLokaleUuids();
-            return ergebnis;
+            return new GesicherteLokaleUuids(proNummer, proBesetzung);
         } catch (MeldelisteZiel.MeldelisteSchreibException e) {
             throw new GenerateException(e.getMessage());
         }
     }
 
-    /** Stellt beim dynamischen Spaltenumbau gesicherte UUIDs wieder an ihren Spieler-/Teamnummern her. */
-    public static void stelleLokalePtmOnlineUuidsWiederher(WorkingSpreadsheet ws, Map<Integer, String> uuids)
+    /**
+     * Stellt beim dynamischen Spaltenumbau gesicherte UUIDs wieder her: an ihrer Spieler-/Teamnummer, sonst an der
+     * Zeile mit derselben Besetzung.
+     */
+    public static void stelleLokalePtmOnlineUuidsWiederher(WorkingSpreadsheet ws, GesicherteLokaleUuids uuids)
             throws GenerateException {
         if (uuids.isEmpty()) {
             return;
@@ -228,16 +252,27 @@ public final class MeldelisteZielFactory {
         }
         try {
             Map<Integer, String> uuidProZeile = new LinkedHashMap<>();
-            for (int zeile : belegteZeilen(ziel.get())) {
-                String uuid = uuids.get(ziel.get().getTeamNrAusZeile(zeile));
+            besetzungProZeile(ziel.get()).forEach((zeile, besetzung) -> {
+                String uuid = uuids.proNummer().get(ziel.get().getTeamNrAusZeile(zeile));
+                if (uuid == null) {
+                    uuid = uuids.proBesetzungOhneNummer().get(besetzung);
+                }
                 if (uuid != null) {
                     uuidProZeile.put(zeile, uuid);
                 }
-            }
+            });
             ziel.get().setzeLokaleUuids(uuidProZeile);
         } catch (MeldelisteZiel.MeldelisteSchreibException e) {
             throw new GenerateException(e.getMessage());
         }
+    }
+
+    /** Besetzung (sortierte Spielernamen) je belegter, 1-basierter Sheet-Zeile. */
+    private static Map<Integer, String> besetzungProZeile(MeldelisteZiel ziel) {
+        return ziel.leseAlleSpielerRoh().stream().collect(Collectors.groupingBy(MeldelisteSpielerDaten::zeile1Basiert,
+                LinkedHashMap::new, Collectors.mapping(spieler -> spieler.vorname() + " " + spieler.nachname(),
+                        Collectors.collectingAndThen(Collectors.toList(),
+                                namen -> namen.stream().sorted().collect(Collectors.joining("\u0000"))))));
     }
 
     /**

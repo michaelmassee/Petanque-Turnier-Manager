@@ -351,10 +351,15 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	public void doSort(int spalteNr, boolean isAscending) throws GenerateException {
 		int letzteSpielZeile = meldeListe.getMeldungenSpalte().letzteZeileMitSpielerName();
 		if (letzteSpielZeile > meldeListe.getErsteDatenZiele()) { // daten vorhanden
-			RangePosition rangeToSort = RangePosition.from(SPIELER_NR_SPALTE, meldeListe.getErsteDatenZiele(),
-					meldeListe.letzteSpielTagSpalte(), letzteSpielZeile);
+			RangePosition rangeToSort = datenBereichMitLokalerUuid(meldeListe.getErsteDatenZiele(), letzteSpielZeile);
 			SortHelper.from(meldeListe, rangeToSort).spalteToSort(spalteNr).aufSteigendSortieren(isAscending).doSort();
 		}
+	}
+
+	/** Datenzeilen von der Nr-Spalte bis einschließlich der (ausgeblendeten) Spalte mit der lokalen PTM-Online-ID. */
+	private RangePosition datenBereichMitLokalerUuid(int ersteZeile, int letzteZeile) throws GenerateException {
+		return MeldelisteSortBereich.mitLokalerUuidSpalte(meldeListe, RangePosition.from(SPIELER_NR_SPALTE,
+				ersteZeile, meldeListe.letzteSpielTagSpalte(), letzteZeile), meldeListe.getErsteDatenZiele() - 1);
 	}
 
 	/**
@@ -601,8 +606,8 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 			if (StringUtils.isBlank(spielerNamen)) {
 				// Ganze Zeile leeren (Nr, Setzposition, Aktiv, Spieltag-Status), nicht nur die
 				// Nr-Zelle – sonst bleiben verwaiste Werte (z.B. Aktiv-Flag) in der Leerzeile stehen.
-				RangeHelper.from(meldeListe, RangePosition.from(SPIELER_NR_SPALTE, zeile,
-						meldeListe.letzteSpielTagSpalte(), zeile)).clearRange();
+				// inkl. lokaler PTM-Online-ID, sonst erbt eine später hier eingetragene Meldung die UUID
+				RangeHelper.from(meldeListe, datenBereichMitLokalerUuid(zeile, zeile)).clearRange();
 			}
 		}
 	}

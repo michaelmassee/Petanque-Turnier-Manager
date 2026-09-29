@@ -19,6 +19,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.IMeldeliste;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldelisteSortBereich;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -619,7 +620,7 @@ class JGJMeldeListeDelegate implements MeldeListeKonstanten {
 		int letzteZeile = getLetzteDatenZeileUseMin();
 		RangePosition rangeToSort = RangePosition.from(getTeamNrSpalte(), ERSTE_DATEN_ZEILE,
 				getAktivSpalte(), letzteZeile);
-		SortHelper.from(sheet, rangeToSort).spalteToSort(spalteNr).aufSteigendSortieren(aufsteigend).doSort();
+		SortHelper.from(sheet, MeldelisteSortBereich.mitLokalerUuidSpalte(sheet, rangeToSort, ERSTE_DATEN_ZEILE - 1)).spalteToSort(spalteNr).aufSteigendSortieren(aufsteigend).doSort();
 	}
 
 	// ---------------------------------------------------------------
@@ -675,7 +676,7 @@ class JGJMeldeListeDelegate implements MeldeListeKonstanten {
 		int vornameSpalte = getZeilenKennungSpalte();
 		RangePosition range = RangePosition.from(getTeamNrSpalte(), ERSTE_DATEN_ZEILE,
 				getAktivSpalte(), letzteZeile);
-		SortHelper.from(sheet, range).spalteToSort(getTeamNrSpalte()).abSteigendSortieren().doSort();
+		SortHelper.from(sheet, MeldelisteSortBereich.mitLokalerUuidSpalte(sheet, range, ERSTE_DATEN_ZEILE - 1)).spalteToSort(getTeamNrSpalte()).abSteigendSortieren().doSort();
 		int letztNr = Math.max(0,
 				sheet.getSheetHelper().getIntFromCell(xSheet, Position.from(getTeamNrSpalte(), ERSTE_DATEN_ZEILE)));
 		for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
@@ -699,7 +700,7 @@ class JGJMeldeListeDelegate implements MeldeListeKonstanten {
 		}
 		RangePosition range = RangePosition.from(getTeamNrSpalte(), ERSTE_DATEN_ZEILE,
 				getAktivSpalte(), letzteZeile);
-		SortHelper.from(sheet, range).spalteToSort(getTeamNrSpalte()).aufSteigendSortieren(true).doSort();
+		SortHelper.from(sheet, MeldelisteSortBereich.mitLokalerUuidSpalte(sheet, range, ERSTE_DATEN_ZEILE - 1)).spalteToSort(getTeamNrSpalte()).aufSteigendSortieren(true).doSort();
 	}
 
 	// ---------------------------------------------------------------
