@@ -15,7 +15,6 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.concurrent.Flow;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -167,19 +166,6 @@ public class TournamentSyncClientTest {
 		assertThat(bodyAlsText(request)).contains("\"documentMaster\":true")
 				.contains("\"onlineRegistrationId\":\"d8d8caec-e0b1-4fe0-8fee-a229279b9f73\"")
 				.contains("\"expectedExecutionRevision\":4").contains("\"firstName\":\"Anna\"");
-	}
-
-	@Test
-	public void teamtauschSendetEindeutigeLokaleUndOnlineIds() throws Exception {
-		HttpClient httpClient = httpClientMitAntwort("{\"registrations\":[{\"id\":\"d8d8caec-e0b1-4fe0-8fee-a229279b9f73\"},{\"id\":\"c7c7caec-e0b1-4fe0-8fee-a229279b9f73\"}]}");
-		TournamentSyncClient client = new TournamentSyncClient(httpClient, "https://ptm-online.example.com", "ptm_secret");
-		client.tauscheDokumentZuordnungen("t1", Map.of(
-				"e9e9caec-e0b1-4fe0-8fee-a229279b9f73", "d8d8caec-e0b1-4fe0-8fee-a229279b9f73",
-				"f0f0caec-e0b1-4fe0-8fee-a229279b9f73", "c7c7caec-e0b1-4fe0-8fee-a229279b9f73"));
-
-		HttpRequest request = gesendeteAnfrage(httpClient);
-		assertThat(request.uri().toString()).isEqualTo("https://ptm-online.example.com/api/sync/tournaments/t1/registration-mappings");
-		assertThat(bodyAlsText(request)).contains("\"localRegistrationUuid\"").contains("\"onlineRegistrationId\"");
 	}
 
 	@Test

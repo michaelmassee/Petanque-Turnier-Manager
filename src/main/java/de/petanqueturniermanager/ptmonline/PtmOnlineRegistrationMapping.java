@@ -96,12 +96,6 @@ public class PtmOnlineRegistrationMapping {
         syncSheet.ersetzeOnlineId(lokaleUuid, onlineRegistrationId, executionRevision);
     }
 
-    /** Tauscht mehrere Zuordnungen in einem Schreibzugriff. */
-    public void ersetzeOnlineIds(Map<String, String> onlineIdProLokalerUuid,
-            Map<String, Integer> executionRevisionProLokalerUuid) throws GenerateException {
-        syncSheet.ersetzeOnlineIds(onlineIdProLokalerUuid, executionRevisionProLokalerUuid);
-    }
-
     /** Online-ID je lokaler UUID aller Zuordnungen – einmal lesen statt {@link #getOnlineId} je Meldung. */
     public Map<String, String> getOnlineIdsProUuid() throws GenerateException {
         return syncSheet.getOnlineIdsProUuid();

@@ -563,35 +563,6 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 		RangeHelper.from(this, daten.getRangePosition(Position.from(SPALTE_ONLINE_ID, zeile))).setDataInRange(daten);
 	}
 
-	/** Ersetzt mehrere Online-IDs zusammen, damit ein Teamtausch keine Zwischenzuordnung sichtbar macht. */
-	public void ersetzeOnlineIds(Map<String, String> onlineIdProLokalerUuid,
-			Map<String, Integer> executionRevisionProLokalerUuid) throws GenerateException {
-		RangeData bisher = leseDaten();
-		int anzahl = anzahlBelegterZeilen(bisher);
-		if (anzahl == 0 || onlineIdProLokalerUuid.isEmpty()) {
-			return;
-		}
-		RangeData neu = new RangeData();
-		for (int i = 0; i < anzahl; i++) {
-			RowData zeile = bisher.get(i);
-			String uuid = text(zeile, SPALTE_LOKALE_UUID);
-			String onlineId = onlineIdProLokalerUuid.get(uuid);
-			RowData ziel = neu.addNewRow();
-			if (onlineId == null) {
-				ziel.add(zeile.get(SPALTE_ONLINE_ID));
-				ziel.add(zeile.get(SPALTE_LOKALE_UUID));
-				ziel.add(zeile.get(SPALTE_REVISION));
-				continue;
-			}
-			ziel.newString(onlineId);
-			ziel.newString(uuid);
-			ziel.newInt(Math.max(1, executionRevisionProLokalerUuid.getOrDefault(uuid,
-					zeile.get(SPALTE_REVISION).getIntVal(1))));
-		}
-		RangeHelper.from(this, neu.getRangePosition(Position.from(SPALTE_ONLINE_ID, ERSTE_DATEN_ZEILE)))
-				.setDataInRange(neu);
-	}
-
 	public void setBezeichnung(String lokaleUuid, String lokaleBezeichnung, String onlineStatus)
 			throws GenerateException {
 		Optional<Integer> zeile = zeileIndexMitUuid(lokaleUuid);

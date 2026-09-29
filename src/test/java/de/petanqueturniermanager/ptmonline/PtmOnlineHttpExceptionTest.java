@@ -82,23 +82,6 @@ class PtmOnlineHttpExceptionTest {
     }
 
     @Test
-    void zuordnungsKonfliktLiefertNameDerOnlineAnmeldung() {
-        String antwort = "{\"error\":\"x\",\"details\":{\"code\":\"registration_mapping_conflict\","
-                + "\"registration\":{\"firstName\":\"Petra\",\"lastName\":\"Daum\",\"partnerFirstName\":\"Uwe\","
-                + "\"partnerLastName\":\"Kern\",\"partner2FirstName\":null,\"partner2LastName\":null}}}";
-        assertThat(new PtmOnlineHttpException(409, antwort).zuordnungsKonfliktAnmeldung())
-                .hasValue("Petra Daum / Uwe Kern");
-    }
-
-    @Test
-    void andereKonflikteSindKeinZuordnungsKonflikt() {
-        String antwort = "{\"error\":\"x\",\"details\":{\"code\":\"execution_conflict\","
-                + "\"registration\":{\"firstName\":\"Petra\",\"lastName\":\"Daum\"}}}";
-        assertThat(new PtmOnlineHttpException(409, antwort).zuordnungsKonfliktAnmeldung()).isEmpty();
-        assertThat(new PtmOnlineHttpException(409, "<html>Conflict</html>").zuordnungsKonfliktAnmeldung()).isEmpty();
-    }
-
-    @Test
     void meldungBleibtKompatibelZurBisherigenIoException() {
         assertThat(new PtmOnlineHttpException(401, "unauthorized").getMessage())
                 .isEqualTo("PTM-Online API Fehler 401: unauthorized");

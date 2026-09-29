@@ -21,12 +21,6 @@ public final class PtmOnlineFehlerText {
         if (e instanceof PtmOnlineHttpException http && http.istBindungAbgeloest()) {
             return I18n.get("ptmonline.fehler.bindung_abgeloest");
         }
-        if (e instanceof PtmOnlineHttpException http) {
-            var konfliktAnmeldung = http.zuordnungsKonfliktAnmeldung();
-            if (konfliktAnmeldung.isPresent()) {
-                return I18n.get("ptmonline.fehler.zuordnungskonflikt", konfliktAnmeldung.get());
-            }
-        }
         String meldung = e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
         return I18n.get("ptmonline.fehler.netzwerk", meldung);
     }
