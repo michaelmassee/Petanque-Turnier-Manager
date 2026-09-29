@@ -116,6 +116,7 @@ public final class PtmOnlineDispatcher {
         try {
             TournamentSyncClient client = new TournamentSyncClient(config.baseUrl(), config.apiKey());
             passende = client.listTournaments().stream()
+                    .filter(OnlineTournamentDto::istVerbindbar)
                     .filter(t -> TurnierSystemOnlineTypMapping.passtZu(auftrag.ts(), t))
                     .toList();
             logger.info("PTM-Online: {} passende Turniere geladen", passende.size());

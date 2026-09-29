@@ -24,4 +24,12 @@ public class OnlineTournamentDto {
 
 	@SerializedName("documentManaged")
 	public boolean documentManaged;
+
+	/**
+	 * Abgeschlossene Turniere nehmen kein Turnierdokument mehr an (PTM-Online lehnt das Verbinden mit
+	 * {@code tournament_finished} ab) und erscheinen daher nicht in der Verbinden-Auswahl.
+	 */
+	public boolean istVerbindbar() {
+		return !"finished".equals(status);
+	}
 }
