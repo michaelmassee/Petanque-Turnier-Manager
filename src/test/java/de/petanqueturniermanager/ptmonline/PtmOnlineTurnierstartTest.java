@@ -4,21 +4,16 @@
 package de.petanqueturniermanager.ptmonline;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-import de.petanqueturniermanager.onlinesync.OnlineTournamentDto;
-
 /**
- * Ein offline verloren gegangener Turnierstart wird nachgeholt – aber nur, solange das Online-Turnier noch nicht
- * läuft; ein bereits laufendes wird online durchgeführt und darf nicht vom Dokument übernommen werden.
+ * Ein verloren gegangener Turnierstart wird nachgeholt. Ob das Dokument übernehmen darf, entscheidet PTM-Online: ein
+ * online mit eigenen Runden durchgeführtes Turnier lehnt der Start mit 409 ab.
  */
 class PtmOnlineTurnierstartTest {
 
@@ -27,33 +22,25 @@ class PtmOnlineTurnierstartTest {
     private final TournamentSyncClient client = mock(TournamentSyncClient.class);
 
     @Test
-    void nichtGestartetesTurnierWirdGestartet() throws Exception {
-        when(client.listTournaments()).thenReturn(List.of(turnier(TURNIER_ID, "registration")));
-
+    void startWirdNachgeholt() throws Exception {
         assertThat(PtmOnlineTurnierstart.nachholen(client, TURNIER_ID)).isTrue();
         verify(client).start(TURNIER_ID);
     }
 
     @Test
-    void onlineLaufendesTurnierWirdNichtUebernommen() throws Exception {
-        when(client.listTournaments()).thenReturn(List.of(turnier(TURNIER_ID, "running")));
+    void onlineDurchgefuehrtesTurnierWirdNichtUebernommen() throws Exception {
+        doThrow(new PtmOnlineHttpException(409,
+                "{\"error\":\"Dieses Turnier wird online durchgeführt. Runden werden nicht aus dem Turnierdokument übernommen.\"}"))
+                .when(client).start(TURNIER_ID);
 
         assertThat(PtmOnlineTurnierstart.nachholen(client, TURNIER_ID)).isFalse();
-        verify(client, never()).start(anyString());
     }
 
     @Test
-    void unbekanntesTurnierWirdNichtGestartet() throws Exception {
-        when(client.listTournaments()).thenReturn(List.of(turnier("anderes", "registration")));
+    void andereFehlerWerdenWeitergereicht() throws Exception {
+        PtmOnlineHttpException fehler = new PtmOnlineHttpException(500, "{\"error\":\"x\"}");
+        doThrow(fehler).when(client).start(TURNIER_ID);
 
-        assertThat(PtmOnlineTurnierstart.nachholen(client, TURNIER_ID)).isFalse();
-        verify(client, never()).start(anyString());
-    }
-
-    private static OnlineTournamentDto turnier(String id, String status) {
-        OnlineTournamentDto turnier = new OnlineTournamentDto();
-        turnier.id = id;
-        turnier.status = status;
-        return turnier;
+        assertThatThrownBy(() -> PtmOnlineTurnierstart.nachholen(client, TURNIER_ID)).isSameAs(fehler);
     }
 }

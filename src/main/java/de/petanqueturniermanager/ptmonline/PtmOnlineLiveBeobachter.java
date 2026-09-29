@@ -265,16 +265,22 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
 
         /**
          * Überträgt den Live-Stand. Lehnt PTM-Online die Runden ab, weil der Turnierstart aus dem Dokument nie
-         * angekommen ist (z.&nbsp;B. offline geschlossen), wird er nachgeholt und die Übertragung wiederholt.
+         * angekommen ist (z.&nbsp;B. offline geschlossen), wird er nachgeholt und die Übertragung wiederholt. Wird
+         * das Turnier tatsächlich online durchgeführt, ist die Ablehnung endgültig: kein Wiederholen, der Stand wird
+         * verworfen.
          */
         private void uebertrageLiveStand(PtmOnlineVerbindung verbindung, PtmOnlineLiveSync.Momentaufnahme stand)
                 throws GenerateException, IOException, InterruptedException {
             try {
                 PtmOnlineLiveSync.uebertragen(verbindung, stand);
             } catch (PtmOnlineHttpException e) {
-                if (!e.istOnlineDurchgefuehrt()
-                        || !PtmOnlineTurnierstart.nachholen(verbindung.gebundenerClient(), verbindung.tournamentId())) {
+                if (!e.istOnlineDurchgefuehrt()) {
                     throw e;
+                }
+                if (!PtmOnlineTurnierstart.nachholen(verbindung.gebundenerClient(), verbindung.tournamentId())) {
+                    logger.warn("PTM-Online Live: Turnier {} wird online durchgeführt, Live-Stand wird nicht übertragen",
+                            verbindung.tournamentId());
+                    return;
                 }
                 PtmOnlineLiveSync.uebertragen(verbindung, stand);
             }
@@ -313,8 +319,19 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
             if (auftrag == null) {
                 return;
             }
-            PtmOnlineStatusAbgleich.Ergebnis ergebnis = PtmOnlineStatusAbgleich.senden(auftrag,
-                    verbindung.mapping(), verbindung.gebundenerClient());
+            PtmOnlineStatusAbgleich.Ergebnis ergebnis;
+            try {
+                ergebnis = PtmOnlineStatusAbgleich.senden(auftrag, verbindung.mapping(), verbindung.gebundenerClient());
+            } catch (PtmOnlineHttpException e) {
+                if (!e.istOnlineDurchgefuehrt()) {
+                    throw e;
+                }
+                // Endgültig abgelehnt (Turnier läuft online mit eigenen Runden): verwerfen statt endlos wiederholen.
+                logger.warn("PTM-Online: Turnier {} wird online durchgeführt, Status-Abgleich verworfen",
+                        auftrag.tournamentId(), e);
+                offenerStatus.compareAndSet(auftrag, null);
+                return;
+            }
             offenerStatus.compareAndSet(auftrag, null);
             offenesSchreiben = ergebnis;
             checkin.uebernehmen(auftrag);
