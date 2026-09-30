@@ -29,7 +29,7 @@ class PtmOnlineCheckinTest {
 
         assertThat(aenderung).isPresent();
         assertThat(uuids(aenderung.get())).containsExactly("a");
-        assertThat(aenderung.get().auftrag().turnierStarten()).isFalse();
+        assertThat(aenderung.get().auftrag().tournamentId()).isEqualTo(TURNIER);
     }
 
     @Test
@@ -89,7 +89,7 @@ class PtmOnlineCheckinTest {
 
     @Test
     void rundenstartAbgleichGiltAlsGemeldet() {
-        checkin.uebernehmen(new PtmOnlineStatusAuftrag(TURNIER, true,
+        checkin.uebernehmen(new PtmOnlineStatusAuftrag(TURNIER,
                 List.of(eintrag("a", OnlineTeilnahme.AKTIV), eintrag("b", OnlineTeilnahme.INAKTIV))));
 
         assertThat(checkin.ermittle(TURNIER, List.of(eintrag("a", OnlineTeilnahme.AKTIV),
@@ -102,7 +102,7 @@ class PtmOnlineCheckinTest {
     }
 
     private static PtmOnlineStatusAuftrag.Eintrag eintrag(String uuid, OnlineTeilnahme teilnahme) {
-        return new PtmOnlineStatusAuftrag.Eintrag(uuid, teilnahme, null, null);
+        return new PtmOnlineStatusAuftrag.Eintrag(uuid, teilnahme, null);
     }
 
     private static List<String> uuids(PtmOnlineCheckin.Aenderung aenderung) {

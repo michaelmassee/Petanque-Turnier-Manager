@@ -12,12 +12,10 @@ import de.petanqueturniermanager.ptmonline.dto.LiveMatchDto;
 import de.petanqueturniermanager.ptmonline.dto.LiveRankingEntryDto;
 
 /**
- * Merkt sich je Online-Turnier den zuletzt vollständig übertragenen Live-Stand, damit nur geänderte Runden und
- * eine geänderte Rangliste erneut gesendet werden. Bei jeder Ergebnis-Eingabe wird der Stand neu gelesen – ohne
- * Gedächtnis ginge jedes Mal das ganze Turnier über das Netz.
- * <p>
- * Nach einem Fehler wird der Eintrag verworfen: welcher Teil online angekommen ist, ist dann unbekannt, der
- * nächste Lauf überträgt wieder alles.
+ * Merkt sich je Online-Turnier den zuletzt als Aufträge erfassten Live-Stand, damit nur geänderte Runden und eine
+ * geänderte Rangliste erneut erfasst werden. Bei jeder Ergebnis-Eingabe wird der Stand neu gelesen – ohne Gedächtnis
+ * ginge jedes Mal das ganze Turnier über das Netz. Die erfassten Aufträge liegen im Puffer und werden gesendet, bis
+ * PTM-Online sie angenommen hat; nach einem Neustart fehlt das Gedächtnis, dann wird wieder alles erfasst.
  */
 final class LiveUebertragungsGedaechtnis {
 

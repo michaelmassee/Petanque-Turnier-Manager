@@ -186,10 +186,13 @@ class PtmOnlineAbgleichSheetRunnerUITest extends BaseCalcUITest {
         List<String> fehlend = RegistrationImportTask.pruefeVorTurnierstart(server.zugangsdaten(), mapping,
                 TURNIER_ID, ziel);
 
-        assertThat(fehlend).as("nur bestätigte, noch nicht erfasste Meldungen").containsExactly("Anna Schmidt");
+        assertThat(fehlend).as("nur bestätigte, noch nicht zugeordnete Meldungen; gleichnamige nur als Hinweis")
+                .hasSize(2).first().isEqualTo("Anna Schmidt");
+        assertThat(fehlend.get(1)).startsWith("Hans Müller (");
         assertThat(nachnamen()).as("nichts importiert").containsExactly("Müller");
         assertThat(mapping.istBereitsImportiert("r1")).isFalse();
-        assertThat(mapping.istBereitsImportiert("r2")).as("vor Ort erfasste Zeile verknüpft").isTrue();
+        assertThat(mapping.istBereitsImportiert("r2")).as("gleichnamige Zeile nicht automatisch verknüpft")
+                .isFalse();
         assertThat(mapping.getLastSync()).as("späterer Abgleich ruft die fehlenden weiter ab").isEmpty();
     }
 
@@ -205,9 +208,10 @@ class PtmOnlineAbgleichSheetRunnerUITest extends BaseCalcUITest {
                 ziel.getTeamNrAusZeile(ziel.findeZeileMitName("Anna Schmidt")));
 
         var zugang = server.zugangsdaten();
-        PtmOnlineSpielrundeSync.statusPushenUndNeueAnlegen(ziel, mapping,
+        PtmOnlineAuftragsTestHilfe.teilnahmeSenden(wkingSpreadsheet, mapping,
                 new TournamentSyncClient(zugang.baseUrl(), zugang.apiKey(), DOCUMENT_ID, LEASE_TOKEN), TURNIER_ID,
-                PtmOnlineSpielrundeSync.lokaleMeldungen(ziel, ziel, teams, teams, Set.of()));
+                PtmOnlineSpielrundeSync.statusAuftrag(ziel, TURNIER_ID,
+                        PtmOnlineSpielrundeSync.lokaleMeldungen(ziel, ziel, teams, teams, Set.of())).eintraege());
 
         Map<String, JsonObject> gepusht = server.gepushteErgebnisse().stream()
                 .collect(Collectors.toMap(eintrag -> eintrag.get("id").getAsString(), eintrag -> eintrag));
@@ -217,8 +221,8 @@ class PtmOnlineAbgleichSheetRunnerUITest extends BaseCalcUITest {
     }
 
     private PtmOnlineAbgleichSheetRunner neuerRunner() {
-        return new PtmOnlineAbgleichSheetRunner(wkingSpreadsheet, TurnierSystem.SCHWEIZER, server.zugangsdaten(),
-                mapping, TURNIER_ID, ziel);
+        return new PtmOnlineAbgleichSheetRunner(wkingSpreadsheet, TurnierSystem.SCHWEIZER, null,
+                server.zugangsdaten(), mapping, TURNIER_ID, ziel);
     }
 
     private List<String> nachnamen() {

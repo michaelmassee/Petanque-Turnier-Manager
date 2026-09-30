@@ -73,7 +73,7 @@ class PtmOnlineSpieltagWechselUITest extends BaseCalcUITest {
     void geloeschtesOnlineTurnierGiltBeimTrennenAlsBereitsGetrennt() {
         server.turnierLoeschen();
 
-        assertThatCode(() -> PtmOnlineTrennung.online(server.zugangsdaten(), spieltag1))
+        assertThatCode(() -> PtmOnlineTrennung.online(wkingSpreadsheet, 1, server.zugangsdaten(), spieltag1))
                 .as("gelöschtes Online-Turnier darf das lokale Trennen nicht blockieren").doesNotThrowAnyException();
         assertThat(server.anzahlGetrennt()).isZero();
     }

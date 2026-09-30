@@ -42,5 +42,17 @@ public record RegistrationDto(
         String updatedAt,
         String localRegistrationUuid,
         Integer registrationRevision,
-        Integer executionRevision) {
+        Integer executionRevision,
+        Boolean overCapacity,
+        Boolean receivedAfterStart) {
+
+    /** Nachmeldung der Turnierleitung über die Online-Kapazität hinaus (T-24). */
+    public boolean istUeberKapazitaet() {
+        return Boolean.TRUE.equals(overCapacity);
+    }
+
+    /** Online nach dem lokalen Turnierstart eingegangen; wird nie automatisch importiert (KP-05). */
+    public boolean istNachTurnierstartEingegangen() {
+        return Boolean.TRUE.equals(receivedAfterStart);
+    }
 }

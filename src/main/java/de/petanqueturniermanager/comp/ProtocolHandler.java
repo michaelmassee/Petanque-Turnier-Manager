@@ -418,6 +418,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_PTMONLINE_TURNIER_VERBINDEN       = "ptmonline_turnier_verbinden";
 	public static final String CMD_PTMONLINE_VERBINDUNG_TRENNEN      = "ptmonline_verbindung_trennen";
 	public static final String CMD_PTMONLINE_ANMELDUNGEN_IMPORTIEREN = "ptmonline_anmeldungen_importieren";
+	public static final String CMD_PTMONLINE_ZUORDNUNG_WIEDERHERSTELLEN = "ptmonline_zuordnung_wiederherstellen";
 	public static final String CMD_PTMONLINE_SYNC_PAUSIEREN          = "ptmonline_sync_pausieren";
 	public static final String CMD_PTMONLINE_SYNC_FORTSETZEN         = "ptmonline_sync_fortsetzen";
 	// Konfiguration
@@ -1539,6 +1540,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 					.verbindungTrennen(erzeugeWorkingSpreadsheetFuerDispatch());
 			case CMD_PTMONLINE_ANMELDUNGEN_IMPORTIEREN -> de.petanqueturniermanager.ptmonline.ui.PtmOnlineDispatcher
 					.anmeldungenImportieren(erzeugeWorkingSpreadsheetFuerDispatch());
+			case CMD_PTMONLINE_ZUORDNUNG_WIEDERHERSTELLEN -> de.petanqueturniermanager.ptmonline.ui.PtmOnlineDispatcher
+					.zuordnungWiederherstellen(erzeugeWorkingSpreadsheetFuerDispatch());
 			case CMD_PTMONLINE_SYNC_PAUSIEREN          -> de.petanqueturniermanager.ptmonline.ui.PtmOnlineDispatcher
 					.syncPausieren(erzeugeWorkingSpreadsheetFuerDispatch());
 			case CMD_PTMONLINE_SYNC_FORTSETZEN         -> de.petanqueturniermanager.ptmonline.ui.PtmOnlineDispatcher

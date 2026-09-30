@@ -48,7 +48,7 @@ public final class PtmOnlineSpieltagWechsel {
             if (mapping.getTournamentId().isEmpty()) {
                 continue;
             }
-            onlineTrennen(config, mapping, spieltag).ifPresent(warnungen::add);
+            onlineTrennen(ws, config, mapping, spieltag).ifPresent(warnungen::add);
             mapping.archivieren();
             getrennt.add(spieltag);
         }
@@ -58,15 +58,18 @@ public final class PtmOnlineSpieltagWechsel {
     }
 
     /** @return Warnung, wenn das Online-Turnier nicht getrennt werden konnte */
-    private static Optional<String> onlineTrennen(LibreOfficePtmOnlineSpeicher.Zugangsdaten config,
-            PtmOnlineRegistrationMapping mapping, int spieltag) throws GenerateException {
+    private static Optional<String> onlineTrennen(WorkingSpreadsheet ws,
+            LibreOfficePtmOnlineSpeicher.Zugangsdaten config, PtmOnlineRegistrationMapping mapping, int spieltag) {
         if (!config.isConfigured()) {
             return Optional.of(I18n.get("ptmonline.spieltag.trennen.fehlgeschlagen", spieltag,
                     I18n.get("ptmonline.fehler.nicht_konfiguriert")));
         }
         try {
-            PtmOnlineTrennung.online(config, mapping);
+            PtmOnlineTrennung.online(ws, spieltag, config, mapping);
             return Optional.empty();
+        } catch (GenerateException e) {
+            logger.warn("PTM-Online: Spieltag {} online nicht getrennt", spieltag, e);
+            return Optional.of(I18n.get("ptmonline.spieltag.trennen.fehlgeschlagen", spieltag, e.getMessage()));
         } catch (IOException e) {
             logger.warn("PTM-Online: Spieltag {} online nicht getrennt", spieltag, e);
             return Optional.of(I18n.get("ptmonline.spieltag.trennen.fehlgeschlagen", spieltag,

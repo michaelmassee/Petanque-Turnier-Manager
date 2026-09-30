@@ -12,6 +12,9 @@ import java.time.Duration;
 
 import com.google.gson.Gson;
 
+import de.petanqueturniermanager.ptmonline.auftrag.SyncAuftrag;
+import de.petanqueturniermanager.ptmonline.auftrag.versand.SyncAntwort;
+
 /**
  * Gemeinsame HTTP-Orchestrierung (Request-Aufbau, Bearer-Auth, Statuscode-Pruefung) fuer alle
  * Clients gegen die PTM-Online REST-API. Nur freigeschaltete (vom Admin genehmigte) API-Schluessel
@@ -66,14 +69,26 @@ abstract class PtmOnlineHttpClient {
                 .POST(HttpRequest.BodyPublishers.ofString(jsonBody)));
     }
 
-    final HttpResponse<String> put(String path, String jsonBody) throws IOException, InterruptedException {
-        return send(authorized(HttpRequest.newBuilder(uri(path)))
-                .header("Content-Type", "application/json")
-                .PUT(HttpRequest.BodyPublishers.ofString(jsonBody)));
-    }
-
-    final HttpResponse<String> delete(String path) throws IOException, InterruptedException {
-        return send(authorized(HttpRequest.newBuilder(uri(path))).DELETE());
+    /**
+     * Sendet einen gezählten Schreibauftrag mit Auftrags-ID und Schreibzähler (T-19, T-23). Anders als die übrigen
+     * Aufrufe wirft eine Ablehnung keine Ausnahme: die Antwort wird unabhängig vom Statuscode geliefert, damit der
+     * Versand zwischen fachlicher Ablehnung und Wiederholung unterscheiden kann.
+     *
+     * @throws IOException nur, wenn PTM-Online nicht erreichbar war
+     */
+    final SyncAntwort sendeAuftrag(SyncAuftrag auftrag) throws IOException, InterruptedException {
+        HttpRequest.Builder builder = authorized(HttpRequest.newBuilder(uri(auftrag.pfad())))
+                .header("X-PTM-Request-Id", auftrag.auftragsId())
+                .header("X-PTM-Sync-Counter", Long.toString(auftrag.zaehler()));
+        if (auftrag.body().isEmpty()) {
+            builder.method(auftrag.methode(), HttpRequest.BodyPublishers.noBody());
+        } else {
+            builder.header("Content-Type", "application/json")
+                    .method(auftrag.methode(), HttpRequest.BodyPublishers.ofString(auftrag.body()));
+        }
+        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+        return new SyncAntwort(response.statusCode(), response.body(),
+                response.headers().firstValue("X-PTM-Replayed").isPresent());
     }
 
     private HttpRequest.Builder authorized(HttpRequest.Builder builder) {

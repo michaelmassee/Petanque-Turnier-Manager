@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jspecify.annotations.Nullable;
+
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
@@ -28,15 +30,17 @@ import de.petanqueturniermanager.spielerdb.MeleeAnmeldungZiel;
  */
 public final class PtmOnlineAbgleichSheetRunner extends SheetRunner implements PtmOnlineLiveAusloeser {
 
+    private final @Nullable Integer spieltagNr;
     private final LibreOfficePtmOnlineSpeicher.Zugangsdaten config;
     private final PtmOnlineRegistrationMapping mapping;
     private final String tournamentId;
     private final MeldelisteZiel ziel;
 
     public PtmOnlineAbgleichSheetRunner(WorkingSpreadsheet ws, TurnierSystem turnierSystem,
-            LibreOfficePtmOnlineSpeicher.Zugangsdaten config, PtmOnlineRegistrationMapping mapping,
-            String tournamentId, MeldelisteZiel ziel) {
+            @Nullable Integer spieltagNr, LibreOfficePtmOnlineSpeicher.Zugangsdaten config,
+            PtmOnlineRegistrationMapping mapping, String tournamentId, MeldelisteZiel ziel) {
         super(ws, turnierSystem, "PTM-Online");
+        this.spieltagNr = spieltagNr;
         this.config = config;
         this.mapping = mapping;
         this.tournamentId = tournamentId;
@@ -59,7 +63,8 @@ public final class PtmOnlineAbgleichSheetRunner extends SheetRunner implements P
         }
         AbgleichErgebnis ergebnis;
         try {
-            ergebnis = RegistrationImportTask.fuehreAbgleichDurch(config, mapping, tournamentId, ziel,
+            ergebnis = RegistrationImportTask.fuehreAbgleichDurch(config, mapping,
+                    PtmOnlineAuftraege.bestand(getWorkingSpreadsheet(), mapping, spieltagNr), tournamentId, ziel,
                     this::zielAktualisieren, new ProcessBoxFortschritt());
         } catch (InterruptedException e) {
             // Stop-Knopf unterbricht den Thread, auch mitten in einem HTTP-Aufruf. Die Unterbrechung ist

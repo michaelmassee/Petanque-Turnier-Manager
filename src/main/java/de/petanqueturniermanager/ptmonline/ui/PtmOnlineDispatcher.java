@@ -13,6 +13,7 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.awt.XWindowPeer;
 import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.basesheet.konfiguration.MeleeAnmeldungKonfiguration;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.LibreOfficePtmOnlineSpeicher;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -29,6 +30,7 @@ import de.petanqueturniermanager.onlinesync.SpieltagKontext;
 import de.petanqueturniermanager.onlinesync.TurnierSystemOnlineTypMapping;
 import de.petanqueturniermanager.ptmonline.PtmOnlineFehlerText;
 import de.petanqueturniermanager.ptmonline.PtmOnlineRegistrationMapping;
+import de.petanqueturniermanager.ptmonline.PtmOnlineZuordnungWiederherstellRunner;
 import de.petanqueturniermanager.ptmonline.RegistrationImportTask;
 import de.petanqueturniermanager.ptmonline.TournamentSyncClient;
 
@@ -91,7 +93,8 @@ public final class PtmOnlineDispatcher {
             zeigeFehler(ctx, e.getMessage());
             return;
         }
-        var auftrag = new VerbindenAuftrag(ws, config, ts, spieltagNr, eigeneTurnierId, ws.getContainerWindowPeer());
+        var auftrag = new VerbindenAuftrag(ws, config, ts, spieltagNr, MeleeAnmeldungKonfiguration.istAktiv(ws),
+                eigeneTurnierId, ws.getContainerWindowPeer());
 
         Thread worker = new Thread(() -> verbindenImHintergrund(auftrag), "PTM-Online-Verbinden");
         worker.start();
@@ -100,7 +103,8 @@ public final class PtmOnlineDispatcher {
 
     /** Vor dem Thread-Start aus dem Dokument gelesene Eingaben für {@link #verbindenImHintergrund}. */
     private record VerbindenAuftrag(WorkingSpreadsheet ws, LibreOfficePtmOnlineSpeicher.Zugangsdaten config,
-            TurnierSystem ts, Integer spieltagNr, String eigeneTurnierId, XWindowPeer parentPeer) {
+            TurnierSystem ts, Integer spieltagNr, boolean meleeAnmeldung, String eigeneTurnierId,
+            XWindowPeer parentPeer) {
 
         XComponentContext ctx() {
             return ws.getxContext();
@@ -117,7 +121,7 @@ public final class PtmOnlineDispatcher {
             TournamentSyncClient client = new TournamentSyncClient(config.baseUrl(), config.apiKey());
             passende = client.listTournaments().stream()
                     .filter(OnlineTournamentDto::istVerbindbar)
-                    .filter(t -> TurnierSystemOnlineTypMapping.passtZu(auftrag.ts(), t))
+                    .filter(t -> TurnierSystemOnlineTypMapping.passtZu(auftrag.ts(), auftrag.meleeAnmeldung(), t))
                     .toList();
             logger.info("PTM-Online: {} passende Turniere geladen", passende.size());
         } catch (IOException e) {
@@ -225,6 +229,24 @@ public final class PtmOnlineDispatcher {
 
     public static void anmeldungenImportieren(WorkingSpreadsheet ws) {
         RegistrationImportTask.starte(ws);
+    }
+
+    /** Stellt nach beschädigtem Sync-Blatt die vom Server bestätigten Zuordnungen wieder her (T-21). */
+    public static void zuordnungWiederherstellen(WorkingSpreadsheet ws) {
+        XComponentContext ctx = ws.getxContext();
+        LibreOfficePtmOnlineSpeicher.Zugangsdaten config = new LibreOfficePtmOnlineSpeicher(ctx).laden();
+        if (!config.isConfigured()) {
+            zeigeFehler(ctx, I18n.get("ptmonline.fehler.nicht_konfiguriert"));
+            return;
+        }
+        try {
+            TurnierSystem ts = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();
+            Integer spieltagNr = SpieltagKontext.aktiverSpieltagOderNull(ws, ts);
+            new PtmOnlineZuordnungWiederherstellRunner(ws, ts, spieltagNr, config).start();
+        } catch (GenerateException e) {
+            logger.error("PTM-Online: Zuordnung wiederherstellen fehlgeschlagen", e);
+            zeigeFehler(ctx, e.getMessage());
+        }
     }
 
     private static void zeigeNetzwerkFehler(XComponentContext ctx, IOException e) {

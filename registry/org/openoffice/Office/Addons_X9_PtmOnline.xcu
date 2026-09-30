@@ -105,6 +105,22 @@
 									<value>_self</value>
 								</prop>
 							</node>
+
+							<node oor:name="X9X6" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Zuordnung vom Server wiederherstellen</value>
+									<value xml:lang="en">Restore mapping from server</value>
+									<value xml:lang="es">Restaurar asignación desde el servidor</value>
+									<value xml:lang="fr">Restaurer les correspondances depuis le serveur</value>
+									<value xml:lang="nl">Toewijzing van server herstellen</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:ptmonline_zuordnung_wiederherstellen</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
 						</node>
 					</node>
 				</node>

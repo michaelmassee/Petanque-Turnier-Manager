@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.OptionalInt;
 import java.util.Map;
 import java.util.stream.StreamSupport;
 
@@ -88,7 +89,7 @@ class PtmOnlineLiveSyncUITest extends BaseCalcUITest {
                 .containsExactlyInAnyOrderElementsOf(alleOnlineIds());
         assertThat(matches).filteredOn(match -> !istFreilos(match)).allSatisfy(match -> assertThat(
                 match.getAsJsonObject().get("court").getAsString()).as("Bahn").matches("\\d+"));
-        assertThat(server.geloeschteRunden()).as("nicht mehr vorhandene Folgerunde online gelöscht").containsExactly(2);
+        assertThat(server.geloeschteRunden()).as("lokal nicht mehr vorhandene Online-Runde gelöscht").containsExactly(2);
     }
 
     @Test
@@ -117,8 +118,9 @@ class PtmOnlineLiveSyncUITest extends BaseCalcUITest {
         PtmOnlineVerbindung verbindung = alleTeamsVerbinden();
         verbindung.mapping().setPausiert(true);
 
-        PtmOnlineLiveSync.uebertragen(verbindung,
-                LiveStandQuellen.fuer(wkingSpreadsheet, TurnierSystem.SCHWEIZER, null).orElseThrow());
+        PtmOnlineAuftragsTestHilfe.liveUebertragen(wkingSpreadsheet, verbindung,
+                LiveStandQuellen.fuer(wkingSpreadsheet, TurnierSystem.SCHWEIZER, null).orElseThrow(),
+                OptionalInt.of(0));
 
         assertThat(server.runden()).isEmpty();
         assertThat(server.geloeschteRunden()).isEmpty();
@@ -178,9 +180,11 @@ class PtmOnlineLiveSyncUITest extends BaseCalcUITest {
         return runde;
     }
 
+    /** Überträgt wie nach dem Öffnen: PTM-Online kennt noch zwei Runden aus einem früheren Stand. */
     private void uebertragen() throws Exception {
-        PtmOnlineLiveSync.uebertragen(alleTeamsVerbinden(),
-                LiveStandQuellen.fuer(wkingSpreadsheet, TurnierSystem.SCHWEIZER, null).orElseThrow());
+        PtmOnlineAuftragsTestHilfe.liveUebertragen(wkingSpreadsheet, alleTeamsVerbinden(),
+                LiveStandQuellen.fuer(wkingSpreadsheet, TurnierSystem.SCHWEIZER, null).orElseThrow(),
+                OptionalInt.of(2));
     }
 
     /** Verbindet das Dokument und ordnet jedem Team die Online-Id {@code online-<Team-Nr>} zu. */

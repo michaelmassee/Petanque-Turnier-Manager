@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.OptionalInt;
 import java.util.Map;
 import java.util.stream.StreamSupport;
 
@@ -78,8 +79,9 @@ class PtmOnlineLiveSyncSupermeleeUITest extends BaseCalcUITest {
 
     @Test
     void spieltagMitRundenErgebnissenUndRanglisteWirdUebertragen() throws Exception {
-        PtmOnlineLiveSync.uebertragen(alleSpielerVerbinden(),
-                LiveStandQuellen.fuer(wkingSpreadsheet, TurnierSystem.SUPERMELEE, spieltag).orElseThrow());
+        PtmOnlineAuftragsTestHilfe.liveUebertragen(wkingSpreadsheet, alleSpielerVerbinden(),
+                LiveStandQuellen.fuer(wkingSpreadsheet, TurnierSystem.SUPERMELEE, spieltag).orElseThrow(),
+                OptionalInt.of(0));
 
         List<Integer> rundenNummern = new ArrayList<>();
         for (int nr = 1; spielrunde(nr) != null; nr++) {

@@ -5,6 +5,7 @@ package de.petanqueturniermanager.onlinesync.sheet;
 
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -50,6 +51,9 @@ import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.onlinesync.OnlineTournamentDto;
+import de.petanqueturniermanager.ptmonline.auftrag.AuftragsArt;
+import de.petanqueturniermanager.ptmonline.auftrag.AuftragsBestand;
+import de.petanqueturniermanager.ptmonline.auftrag.SyncAuftrag;
 
 /**
  * „PTMOnline Sync“: das einzige Blatt einer PTM-Online-Verbindung. Oben die Verbindungsdaten, darunter die
@@ -99,6 +103,21 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 	 */
 	private static final String ARCHIV_MARKER = "GETRENNT";
 	private static final int LETZTE_SPALTE = SPALTE_STATUS_ROH;
+
+	/*
+	 * Schreibzähler und Auftragspuffer der Bindung (T-09, T-19, T-23), in ausgeblendeten Spalten rechts der
+	 * Zuordnung: gespeichert mit dem Dokument, geschützt wie das übrige Blatt, und je Supermelee-Spieltag getrennt wie
+	 * die Bindung selbst. Oben Kopfwerte (Label | Wert), ab der Kopfzeile der Tabelle die Pufferzeilen.
+	 */
+	private static final int SPALTE_KOPF_LABEL = 10;
+	private static final int SPALTE_KOPF_WERT = 11;
+	private static final int KOPF_ZAEHLER = 0;
+	private static final int KOPF_CONNECT_ID = 1;
+	private static final int KOPF_RUNNING_AUSSTEHEND = 2;
+	private static final int KOPF_OFFLINE_BESTAETIGT = 3;
+	private static final int SPALTE_AUFTRAG_ID = 10;
+	private static final int SPALTE_AUFTRAG_ZEITPUNKT = 19;
+	private static final int LETZTE_PUFFER_SPALTE = SPALTE_AUFTRAG_ZEITPUNKT;
 
 	private static final int BREITE_NR = 1400;
 	private static final int BREITE_NAME = 6000;
@@ -225,7 +244,7 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 			spalte(helper, sheet, SPALTE_STATUS, BREITE_STATUS, true);
 			spalte(helper, sheet, SPALTE_TARIFE, BREITE_TEXT, true);
 			spalte(helper, sheet, SPALTE_FRAGEN, BREITE_TEXT, true);
-			for (int spalte = SPALTE_ONLINE_ID; spalte <= LETZTE_SPALTE; spalte++) {
+			for (int spalte = SPALTE_ONLINE_ID; spalte <= LETZTE_PUFFER_SPALTE; spalte++) {
 				spalte(helper, sheet, spalte, BREITE_STATUS, false);
 			}
 			helper.setPropertiesInRange(sheet, RangePosition.from(SPALTE_LABEL, ZEILE_TITEL, SPALTE_LABEL, ZEILE_TITEL),
@@ -423,6 +442,146 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 
 	private static Optional<String> optional(String wert) {
 		return wert.isBlank() ? Optional.empty() : Optional.of(wert);
+	}
+
+	// ── Schreibzähler und Auftragspuffer ──────────────────────────────────────
+
+	/**
+	 * Liest Schreibzähler und Pufferzeilen. Unlesbare Zeilen (manuell verändert) werden übersprungen und
+	 * protokolliert; ohne Blatt ein leerer Bestand.
+	 */
+	public AuftragsBestand leseAuftragsBestand() throws GenerateException {
+		if (!blattVorhanden()) {
+			return AuftragsBestand.leer();
+		}
+		long zaehler = parseLong(leseKopf(KOPF_ZAEHLER));
+		RangeData daten = RangeHelper.from(this, RangePosition.from(SPALTE_AUFTRAG_ID, ERSTE_DATEN_ZEILE,
+				LETZTE_PUFFER_SPALTE, LETZTE_DATEN_ZEILE)).getDataFromRange();
+		List<AuftragsBestand.Eintrag> eintraege = new ArrayList<>();
+		for (RowData zeile : daten) {
+			if (text(zeile, 0).isBlank()) {
+				continue;
+			}
+			try {
+				eintraege.add(pufferEintrag(zeile));
+			} catch (IllegalArgumentException | DateTimeParseException e) {
+				getLogger().warn("PTM-Online: unlesbare Zeile im Auftragspuffer übersprungen", e);
+			}
+		}
+		return AuftragsBestand.aus(zaehler, eintraege);
+	}
+
+	/** Schreibt Zähler und alle Pufferzeilen als Block; nicht mehr benötigte Zeilen werden geleert. */
+	public void schreibeAuftragsBestand(AuftragsBestand bestand) throws GenerateException {
+		List<AuftragsBestand.Eintrag> eintraege = bestand.eintraege();
+		if (eintraege.size() > MAX_ZEILEN) {
+			throw new GenerateException("PTM-Online: Auftragspuffer ist voll");
+		}
+		schreibeKopf(KOPF_ZAEHLER, "ptmonline.sheet.label.schreibzaehler", Long.toString(bestand.zaehler()));
+		schreibePufferKopfzeile();
+		RangeHelper.from(this, RangePosition.from(SPALTE_AUFTRAG_ID, ERSTE_DATEN_ZEILE, LETZTE_PUFFER_SPALTE,
+				LETZTE_DATEN_ZEILE)).clearRange();
+		if (!eintraege.isEmpty()) {
+			RangeData zeilen = new RangeData();
+			eintraege.forEach(eintrag -> pufferZeile(zeilen.addNewRow(), eintrag));
+			RangeHelper.from(this, zeilen.getRangePosition(Position.from(SPALTE_AUFTRAG_ID, ERSTE_DATEN_ZEILE)))
+					.setDataInRange(zeilen);
+		}
+		bestand.gespeichert();
+	}
+
+	/** Stabile ID des laufenden Verbindungsversuchs; vor dem Senden gespeichert, damit eine Wiederholung sie trägt. */
+	public Optional<String> getConnectRequestId() throws GenerateException {
+		return optional(leseKopf(KOPF_CONNECT_ID));
+	}
+
+	public void setConnectRequestId(String connectRequestId) throws GenerateException {
+		schreibeKopf(KOPF_CONNECT_ID, "ptmonline.sheet.label.verbindungsauftrag", connectRequestId);
+	}
+
+	/** Lokaler Startzeitpunkt, solange der Übergang zu {@code running} online noch nicht bestätigt ist (KP-05). */
+	public Optional<Instant> getRunningAusstehendSeit() throws GenerateException {
+		return parseZeitpunkt(leseKopf(KOPF_RUNNING_AUSSTEHEND));
+	}
+
+	public void setRunningAusstehendSeit(Instant lokalerStart) throws GenerateException {
+		schreibeKopf(KOPF_RUNNING_AUSSTEHEND, "ptmonline.sheet.label.running.ausstehend",
+				lokalerStart == null ? "" : lokalerStart.toString());
+	}
+
+	/** Protokolliert die ausdrückliche Bestätigung, ohne letzten Abgleich zu starten (P-25). */
+	public void protokolliereOfflineBestaetigung(Instant zeitpunkt, Instant letzterSync) throws GenerateException {
+		schreibeKopf(KOPF_OFFLINE_BESTAETIGT, "ptmonline.sheet.label.offline.bestaetigt",
+				zeitpunkt + " / " + (letzterSync == null ? "-" : letzterSync.toString()));
+	}
+
+	private boolean blattVorhanden() {
+		return SheetMetadataHelper.findeSheet(getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
+				metadatenSchluessel()).isPresent();
+	}
+
+	private String leseKopf(int zeile) throws GenerateException {
+		if (!blattVorhanden()) {
+			return "";
+		}
+		return StringUtils.defaultString(getSheetHelper().getTextFromCell(getXSpreadSheet(),
+				Position.from(SPALTE_KOPF_WERT, zeile))).strip();
+	}
+
+	private void schreibeKopf(int zeile, String labelSchluessel, String wert) throws GenerateException {
+		RangeData daten = new RangeData();
+		RowData kopf = daten.addNewRow();
+		kopf.newString(I18n.get(labelSchluessel));
+		kopf.newString(StringUtils.defaultString(wert));
+		RangeHelper.from(this, daten.getRangePosition(Position.from(SPALTE_KOPF_LABEL, zeile))).setDataInRange(daten);
+	}
+
+	private void schreibePufferKopfzeile() throws GenerateException {
+		RangeData kopf = new RangeData();
+		RowData zeile = kopf.addNewRow();
+		List.of("ptmonline.sheet.auftrag.header.id", "ptmonline.sheet.auftrag.header.zaehler",
+				"ptmonline.sheet.auftrag.header.art", "ptmonline.sheet.auftrag.header.methode",
+				"ptmonline.sheet.auftrag.header.pfad", "ptmonline.sheet.auftrag.header.body",
+				"ptmonline.sheet.auftrag.header.kontext", "ptmonline.sheet.auftrag.header.zustand",
+				"ptmonline.sheet.auftrag.header.grund", "ptmonline.sheet.auftrag.header.zeitpunkt")
+				.forEach(schluessel -> zeile.newString(I18n.get(schluessel)));
+		RangeHelper.from(this, kopf.getRangePosition(Position.from(SPALTE_AUFTRAG_ID, ZEILE_HEADER)))
+				.setDataInRange(kopf);
+	}
+
+	private static void pufferZeile(RowData zeile, AuftragsBestand.Eintrag eintrag) {
+		SyncAuftrag auftrag = eintrag.auftrag();
+		zeile.newString(auftrag.auftragsId());
+		zeile.newString(Long.toString(auftrag.zaehler()));
+		zeile.newString(auftrag.art().name());
+		zeile.newString(auftrag.methode());
+		zeile.newString(auftrag.pfad());
+		zeile.newString(auftrag.body());
+		zeile.newString(auftrag.kontext());
+		zeile.newString(eintrag.zustand().name());
+		zeile.newString(eintrag.grund());
+		zeile.newString(eintrag.zeitpunkt().toString());
+	}
+
+	private static AuftragsBestand.Eintrag pufferEintrag(RowData zeile) {
+		SyncAuftrag auftrag = new SyncAuftrag(text(zeile, 0), parseLong(text(zeile, 1)),
+				AuftragsArt.valueOf(text(zeile, 2)), text(zeile, 3), text(zeile, 4), rohText(zeile, 5),
+				rohText(zeile, 6));
+		return new AuftragsBestand.Eintrag(auftrag, AuftragsBestand.Zustand.valueOf(text(zeile, 7)), text(zeile, 8),
+				Instant.parse(text(zeile, SPALTE_AUFTRAG_ZEITPUNKT - SPALTE_AUFTRAG_ID)));
+	}
+
+	private static long parseLong(String wert) {
+		try {
+			return wert.isBlank() ? 0 : Long.parseLong(wert);
+		} catch (NumberFormatException e) {
+			throw new IllegalArgumentException("Ungültige Zahl im Auftragspuffer: " + wert, e);
+		}
+	}
+
+	/** Nutzlast unverändert (ohne strip): sie ist Teil des Idempotenz-Hashs. */
+	private static String rohText(RowData zeile, int spalte) {
+		return zeile.size() > spalte ? StringUtils.defaultString(zeile.get(spalte).getStringVal()) : "";
 	}
 
 	// ── Zuordnung lokale Meldung ↔ Online-Anmeldung ─────────────────────────

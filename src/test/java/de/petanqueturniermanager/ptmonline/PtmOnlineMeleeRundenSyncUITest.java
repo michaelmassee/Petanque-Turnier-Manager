@@ -46,7 +46,7 @@ import de.petanqueturniermanager.spielerdb.SpielerMitVerein;
  * Rundenstart-Sync bei Mêlée-Anmeldung gegen einen lokalen Test-Server: Online gibt es nur
  * Einzelanmeldungen, gespielt wird in lokal gemischten Doublettes. Jede Einzelanmeldung erhält die
  * Teilnahme ihres Teams; ein vor Ort erfasster, aktiver Spieler wird online als Einzelspieler angelegt –
- * nie als Team.
+ * nie als Team – und bringt seine Teilnahme gleich mit.
  */
 class PtmOnlineMeleeRundenSyncUITest extends BaseCalcUITest {
 
@@ -104,13 +104,14 @@ class PtmOnlineMeleeRundenSyncUITest extends BaseCalcUITest {
         List<String> abgelehnt = synchronisiere(alleTeams, alleTeams, Set.of());
 
         assertThat(abgelehnt).isEmpty();
-        assertThat(teilnahmeProOnlineId()).as("Nachmeldung nach dem Anlegen gleich aktiv gemeldet")
-                .containsOnlyKeys("r1", "r2", "r3", "online-1");
+        assertThat(teilnahmeProOnlineId()).containsOnlyKeys("r1", "r2", "r3");
         assertThat(teilnahmeProOnlineId().values()).containsOnly("active");
         assertThat(server.gepushteErgebnisse()).allSatisfy(eintrag -> assertThat(eintrag.has("seedingPosition"))
                 .as("Mêlée-Spieler ohne Setzposition: nicht die Team-Nr melden").isFalse());
         assertThat(server.onlineAngelegt()).singleElement().satisfies(anmeldung -> {
             assertThat(anmeldung.get("firstName").getAsString()).isEqualTo("Paul");
+            assertThat(anmeldung.get("participation").getAsString()).as("Nachmeldung mit ihrer Teilnahme angelegt")
+                    .isEqualTo("active");
             assertThat(anmeldung.has("partnerFirstName")).as("Einzelspieler, kein Team").isFalse();
         });
         assertThat(mapping.getLokaleUuid("online-1")).isPresent();
@@ -129,9 +130,6 @@ class PtmOnlineMeleeRundenSyncUITest extends BaseCalcUITest {
         Map<String, String> erwartet = new HashMap<>(ONLINE_ID.entrySet().stream().collect(
                 Collectors.toMap(Map.Entry::getValue,
                         eintrag -> teamNr(eintrag.getKey()) == teamVonHans ? "active" : "withdrawn")));
-        if (paulSpielt) {
-            erwartet.put("online-1", "active");
-        }
         assertThat(teilnahmeProOnlineId()).isEqualTo(erwartet);
         assertThat(server.onlineAngelegt()).as("Paul Neu nur angelegt, wenn sein Team spielt")
                 .hasSize(paulSpielt ? 1 : 0);
@@ -144,7 +142,8 @@ class PtmOnlineMeleeRundenSyncUITest extends BaseCalcUITest {
         var zugang = server.zugangsdaten();
         TournamentSyncClient client = new TournamentSyncClient(zugang.baseUrl(), zugang.apiKey(), DOCUMENT_ID,
                 LEASE_TOKEN);
-        return PtmOnlineSpielrundeSync.statusPushenUndNeueAnlegen(ziel, mapping, client, TURNIER_ID, meldungen);
+        return PtmOnlineAuftragsTestHilfe.anlegenUndTeilnahmeSenden(wkingSpreadsheet, ziel, mapping, client, TURNIER_ID,
+                meldungen);
     }
 
     private Map<String, String> teilnahmeProOnlineId() {

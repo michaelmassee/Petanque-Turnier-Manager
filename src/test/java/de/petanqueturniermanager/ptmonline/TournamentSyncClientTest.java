@@ -11,26 +11,31 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.net.http.HttpClient;
+import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.Flow;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
-import com.google.gson.Gson;
-
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.onlinesync.OnlineTournamentDto;
+import de.petanqueturniermanager.ptmonline.auftrag.AuftragsArt;
+import de.petanqueturniermanager.ptmonline.auftrag.SyncAuftrag;
+import de.petanqueturniermanager.ptmonline.auftrag.versand.SyncAntwort;
 import de.petanqueturniermanager.ptmonline.dto.LiveMatchDto;
 import de.petanqueturniermanager.ptmonline.dto.LiveRankingEntryDto;
 import de.petanqueturniermanager.ptmonline.dto.NeueOnlineAnmeldung;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationDto;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationResultDto;
+import de.petanqueturniermanager.ptmonline.dto.ServerZuordnungDto;
 import de.petanqueturniermanager.ptmonline.dto.SyncBindingDto;
+import de.petanqueturniermanager.ptmonline.dto.SyncStandDto;
 
 public class TournamentSyncClientTest {
 
@@ -69,101 +74,134 @@ public class TournamentSyncClientTest {
 	}
 
 	@Test
-	public void connectBindetDokumentUndLease() throws Exception {
-		HttpClient httpClient = mock(HttpClient.class);
-		HttpResponse<String> response = mockResponse(200,
-				"{\"ok\":true,\"syncDocumentId\":\"e9e9caec-e0b1-4fe0-8fee-a229279b9f73\",\"bindingRevision\":1}");
-		when(httpClient.<String>send(any(HttpRequest.class), any())).thenReturn(response);
-
+	public void connectSendetProtokollversionUndVerbindungsAuftragsId() throws Exception {
+		HttpClient httpClient = httpClientMitAntwort(
+				"{\"ok\":true,\"syncDocumentId\":\"e9e9caec-e0b1-4fe0-8fee-a229279b9f73\",\"bindingRevision\":1,\"writeCounter\":0}");
 		TournamentSyncClient client = new TournamentSyncClient(httpClient, "https://ptm-online.example.com", "ptm_secret");
-		SyncBindingDto binding = client.connect("t1", "e9e9caec-e0b1-4fe0-8fee-a229279b9f73", "01234567890123456789012345678901");
+
+		SyncBindingDto binding = client.connect("t1", "e9e9caec-e0b1-4fe0-8fee-a229279b9f73",
+				"01234567890123456789012345678901", "connect-1", false);
 
 		assertThat(binding.bindingRevision()).isEqualTo(1);
-		ArgumentCaptor<HttpRequest> captor = ArgumentCaptor.forClass(HttpRequest.class);
-		verify(httpClient).send(captor.capture(), any());
-		assertThat(captor.getValue().bodyPublisher()).isPresent();
+		assertThat(binding.writeCounter()).isZero();
+		assertThat(bodyAlsText(gesendeteAnfrage(httpClient))).contains("\"protocolVersion\":2")
+				.contains("\"connectRequestId\":\"connect-1\"").doesNotContain("recovery");
 	}
 
 	@Test
-	public void takeoverSendetErwarteteRevisionUndUebernimmtBindung() throws Exception {
-		HttpClient httpClient = mock(HttpClient.class);
-		HttpResponse<String> response = mockResponse(200,
+	public void wiederherstellungSendetDieAusdrueklicheBestaetigung() throws Exception {
+		HttpClient httpClient = httpClientMitAntwort(
 				"{\"ok\":true,\"syncDocumentId\":\"e9e9caec-e0b1-4fe0-8fee-a229279b9f73\",\"bindingRevision\":2}");
-		when(httpClient.<String>send(any(HttpRequest.class), any())).thenReturn(response);
-
 		TournamentSyncClient client = new TournamentSyncClient(httpClient, "https://ptm-online.example.com", "ptm_secret");
+
 		SyncBindingDto binding = client.takeover("t1", "e9e9caec-e0b1-4fe0-8fee-a229279b9f73",
-				"01234567890123456789012345678901", 1);
+				"01234567890123456789012345678901", 1, "takeover-1", true);
 
 		assertThat(binding.bindingRevision()).isEqualTo(2);
-		ArgumentCaptor<HttpRequest> captor = ArgumentCaptor.forClass(HttpRequest.class);
-		verify(httpClient).send(captor.capture(), any());
-		assertThat(captor.getValue().uri().toString())
-				.isEqualTo("https://ptm-online.example.com/api/sync/tournaments/t1/takeover");
+		HttpRequest request = gesendeteAnfrage(httpClient);
+		assertThat(request.uri().toString()).isEqualTo("https://ptm-online.example.com/api/sync/tournaments/t1/takeover");
+		assertThat(bodyAlsText(request)).contains("\"recovery\":true").contains("\"takeoverRequestId\":\"takeover-1\"")
+				.contains("\"expectedBindingRevision\":1");
+	}
+
+	@Test
+	public void wiederherstellungNoetigNenntDieOnlineRunden() {
+		PtmOnlineHttpException e = new PtmOnlineHttpException(409,
+				"{\"error\":\"x\",\"details\":{\"code\":\"recovery_required\",\"roundsOnline\":3}}");
+
+		assertThat(e.istWiederherstellungNoetig()).isTrue();
+		assertThat(e.rundenOnline()).isEqualTo(3);
+		assertThat(new PtmOnlineHttpException(409, "{\"details\":{\"code\":\"document_forked\"}}").istDokumentGeforkt())
+				.isTrue();
 	}
 
 	@Test
 	public void fetchRegistrationsParstListeAusDerAntwort() throws Exception {
-		HttpClient httpClient = mock(HttpClient.class);
-		String body = "{\"registrations\":[{\"id\":\"r1\",\"tournamentId\":\"t1\",\"firstName\":\"Max\",\"lastName\":\"Muster\",\"status\":\"confirmed\"}],\"cursor\":\"2026-01-01T00:00:00.000Z\"}";
-		HttpResponse<String> response = mockResponse(200, body);
-		when(httpClient.<String>send(any(HttpRequest.class), any())).thenReturn(response);
+		String body = "{\"registrations\":[{\"id\":\"r1\",\"tournamentId\":\"t1\",\"firstName\":\"Max\",\"lastName\":\"Muster\",\"status\":\"confirmed\",\"receivedAfterStart\":true}],\"cursor\":\"2026-01-01T00:00:00.000Z\"}";
+		TournamentSyncClient client = clientMitAntwort(body);
 
-		TournamentSyncClient client = new TournamentSyncClient(httpClient, "https://ptm-online.example.com", "ptm_secret");
 		List<RegistrationDto> registrations = client.fetchRegistrations("t1", null);
 
 		assertThat(registrations).hasSize(1);
 		assertThat(registrations.get(0).firstName()).isEqualTo("Max");
-		assertThat(registrations.get(0).status()).isEqualTo("confirmed");
+		assertThat(registrations.get(0).istNachTurnierstartEingegangen()).isTrue();
+		assertThat(registrations.get(0).istUeberKapazitaet()).isFalse();
 	}
 
 	@Test
-	public void pushResultsSendetRegistrationsArrayUndLiefertUpdatedCount() throws Exception {
-		HttpClient httpClient = mock(HttpClient.class);
-		HttpResponse<String> response = mockResponse(200, "{\"updatedCount\":2}");
-		when(httpClient.<String>send(any(HttpRequest.class), any())).thenReturn(response);
-
+	public void fetchSyncStandLiestNurDenTurnierzustand() throws Exception {
+		HttpClient httpClient = httpClientMitAntwort("{\"registrations\":[],\"tournament\":{\"status\":\"running\","
+				+ "\"registrationClosed\":true,\"roundsOnline\":4,\"writeCounter\":7}}");
 		TournamentSyncClient client = new TournamentSyncClient(httpClient, "https://ptm-online.example.com", "ptm_secret");
-		int updated = client.pushResults("t1",
-				List.of(new RegistrationResultDto("r1", null, 1, OnlineTeilnahme.AKTIV.apiWert(), null),
-						new RegistrationResultDto("r2", null, 2, OnlineTeilnahme.AUSGESETZT.apiWert(), null)));
 
-		assertThat(updated).isEqualTo(2);
+		SyncStandDto stand = client.fetchSyncStand("t1");
 
-		ArgumentCaptor<HttpRequest> captor = ArgumentCaptor.forClass(HttpRequest.class);
-		verify(httpClient).send(captor.capture(), any());
-		assertThat(captor.getValue().method()).isEqualTo("POST");
+		assertThat(stand.istRunning()).isTrue();
+		assertThat(stand.roundsOnline()).isEqualTo(4);
+		assertThat(stand.writeCounter()).isEqualTo(7);
+		assertThat(gesendeteAnfrage(httpClient).uri().toString()).contains("/api/sync/tournaments/t1/registrations?since=");
+	}
+
+	@Test
+	public void fetchMappingLiefertDieServerZuordnungen() throws Exception {
+		TournamentSyncClient client = clientMitAntwort("{\"mappings\":[{\"onlineRegistrationId\":\"r1\","
+				+ "\"localRegistrationUuid\":\"u1\",\"status\":\"confirmed\",\"executionRevision\":3}]}");
+
+		List<ServerZuordnungDto> zuordnungen = client.fetchMapping("t1");
+
+		assertThat(zuordnungen).singleElement().satisfies(zuordnung -> {
+			assertThat(zuordnung.localRegistrationUuid()).isEqualTo("u1");
+			assertThat(zuordnung.revision()).isEqualTo(3);
+		});
+	}
+
+	@Test
+	public void sendeUebertraegtAuftragsIdUndSchreibzaehlerUndLiefertAuchAblehnungen() throws Exception {
+		HttpClient httpClient = mock(HttpClient.class);
+		HttpResponse<String> response = mockResponse(409, "{\"details\":{\"code\":\"tournament_running\"}}");
+		when(response.headers()).thenReturn(HttpHeaders.of(Map.of("X-PTM-Replayed", List.of("1")), (a, b) -> true));
+		when(httpClient.<String>send(any(HttpRequest.class), any())).thenReturn(response);
+		TournamentSyncClient client = new TournamentSyncClient(httpClient, "https://ptm-online.example.com", "ptm_secret");
+		SyncAuftrag auftrag = new SyncAuftrag("auftrag-1", 5, AuftragsArt.TEILNAHME, "POST",
+				TournamentSyncClient.ergebnissePfad("t1"), "{\"registrations\":[]}", "{}");
+
+		SyncAntwort antwort = client.sende(auftrag);
+
+		assertThat(antwort.status()).isEqualTo(409);
+		assertThat(antwort.wiederholt()).isTrue();
+		assertThat(antwort.code()).contains("tournament_running");
+		HttpRequest request = gesendeteAnfrage(httpClient);
+		assertThat(request.headers().firstValue("X-PTM-Request-Id")).contains("auftrag-1");
+		assertThat(request.headers().firstValue("X-PTM-Sync-Counter")).contains("5");
+		assertThat(bodyAlsText(request)).isEqualTo("{\"registrations\":[]}");
 	}
 
 	@Test
 	public void ergebnisPayloadMeldetTeilnahmeUndKeinenAnmeldestatus() {
-		String json = new Gson().toJson(new RegistrationResultDto("r1", null, 3, OnlineTeilnahme.INAKTIV.apiWert(), 2));
+		String json = TournamentSyncClient.ergebnisseBody(
+				List.of(new RegistrationResultDto("r1", null, 3, OnlineTeilnahme.INAKTIV.apiWert(), 2)));
 
 		assertThat(json).contains("\"participation\":\"inactive\"").doesNotContain("\"active\"")
-				.doesNotContain("\"status\"");
+				.doesNotContain("\"status\"").contains("\"expectedExecutionRevision\":2");
 	}
 
 	@Test
-	public void direkteAnmeldungSendetLeereTeilnehmerantwortenAlsArray() {
+	public void anlageSendetLeereTeilnehmerantwortenUndDieLokaleTeilnahme() {
 		NeueOnlineAnmeldung anmeldung = new NeueOnlineAnmeldung("Max", "Muster", null, null,
 				null, null, null, null, null, true, true, List.of(), List.of());
 
-		assertThat(new Gson().toJson(anmeldung)).contains("\"registrationAnswers\":[]");
+		assertThat(TournamentSyncClient.anlageBody(anmeldung, OnlineTeilnahme.AKTIV.apiWert(), 4))
+				.contains("\"registrationAnswers\":[]").contains("\"participation\":\"active\"")
+				.contains("\"seedingPosition\":4");
 	}
 
 	@Test
-	public void dokumentMasterUpdateSendetLokaleNamenUndErwarteteRevision() throws Exception {
-		HttpClient httpClient = httpClientMitAntwort("{\"registration\":{\"id\":\"r1\",\"firstName\":\"Anna\",\"lastName\":\"Schmidt\"}}");
-		TournamentSyncClient client = new TournamentSyncClient(httpClient, "https://ptm-online.example.com", "ptm_secret");
+	public void dokumentMasterUpdateSendetLokaleNamenUndErwarteteRevision() {
 		NeueOnlineAnmeldung anmeldung = new NeueOnlineAnmeldung("Anna", "Schmidt", "Verein", null,
 				null, null, null, null, null, true, true, List.of(), List.of());
 
-		client.aktualisiereDokumentAnmeldung("t1", "e9e9caec-e0b1-4fe0-8fee-a229279b9f73",
-				"d8d8caec-e0b1-4fe0-8fee-a229279b9f73", anmeldung, 4);
-
-		HttpRequest request = gesendeteAnfrage(httpClient);
-		assertThat(request.method()).isEqualTo("PUT");
-		assertThat(bodyAlsText(request)).contains("\"documentMaster\":true")
+		assertThat(TournamentSyncClient.aenderungBody(anmeldung, "d8d8caec-e0b1-4fe0-8fee-a229279b9f73", 4))
+				.contains("\"documentMaster\":true")
 				.contains("\"onlineRegistrationId\":\"d8d8caec-e0b1-4fe0-8fee-a229279b9f73\"")
 				.contains("\"expectedExecutionRevision\":4").contains("\"firstName\":\"Anna\"");
 	}
@@ -180,27 +218,9 @@ public class TournamentSyncClientTest {
 	}
 
 	@Test
-	public void upsertMitDoppeltemSpielerLiefertBereitsAngemeldet() throws Exception {
-		HttpClient httpClient = mock(HttpClient.class);
-		HttpResponse<String> response = mockResponse(409,
-				"{\"error\":\"Dieser Spieler ist bereits angemeldet\",\"details\":{\"field\":\"firstName\",\"name\":\"Hans Müller\"}}");
-		when(httpClient.<String>send(any(HttpRequest.class), any())).thenReturn(response);
-
-		TournamentSyncClient client = new TournamentSyncClient(httpClient, "https://ptm-online.example.com", "ptm_secret");
-		NeueOnlineAnmeldung anmeldung = new NeueOnlineAnmeldung("Hans", "Müller", null, null, null, null, null, null,
-				null, true, true, List.of(), List.of());
-
-		assertThatThrownBy(() -> client.upsertRegistration("t1", "e9e9caec-e0b1-4fe0-8fee-a229279b9f73", anmeldung))
-				.isInstanceOfSatisfying(PtmOnlineHttpException.class,
-						e -> assertThat(e.istBereitsAngemeldet()).isTrue());
-	}
-
-	@Test
-	public void pushResultsOhneUpdatedCountWirftIOException() throws Exception {
-		TournamentSyncClient client = clientMitAntwort("{}");
-
-		assertThatThrownBy(() -> client.pushResults("t1", List.of())).isExactlyInstanceOf(IOException.class)
-				.hasMessageContaining("updatedCount");
+	public void antwortOhneUpdatedCountWirftIOException() {
+		assertThatThrownBy(() -> TournamentSyncClient.zahlAus(new SyncAntwort(200, "{}", false), "updatedCount"))
+				.isExactlyInstanceOf(IOException.class).hasMessageContaining("updatedCount");
 	}
 
 	@Test
@@ -212,13 +232,9 @@ public class TournamentSyncClientTest {
 	}
 
 	@Test
-	public void createRegistrationOhneRegistrationWirftIOException() throws Exception {
-		TournamentSyncClient client = clientMitAntwort("{\"ok\":true}");
-		NeueOnlineAnmeldung anmeldung = new NeueOnlineAnmeldung("Max", "Muster", null, null, null, null, null, null,
-				null, true, true, List.of(), List.of());
-
-		assertThatThrownBy(() -> client.createRegistration("t1", anmeldung)).isExactlyInstanceOf(IOException.class)
-				.hasMessageContaining("registration");
+	public void antwortOhneRegistrationWirftIOException() {
+		assertThatThrownBy(() -> TournamentSyncClient.registrationAus(new SyncAntwort(200, "{\"ok\":true}", false)))
+				.isExactlyInstanceOf(IOException.class).hasMessageContaining("registration");
 	}
 
 	@Test
@@ -236,51 +252,18 @@ public class TournamentSyncClientTest {
 	}
 
 	@Test
-	public void putRoundSendetPartienOhneNullFelder() throws Exception {
-		HttpClient httpClient = httpClientMitAntwort("{\"roundNumber\":2,\"matchCount\":1,\"created\":true}");
-		TournamentSyncClient client = new TournamentSyncClient(httpClient, "https://ptm-online.example.com", "ptm_secret");
-
-		int anzahl = client.putRound("t 1", 2,
-				List.of(new LiveMatchDto(List.of("r1"), List.of(), null, null, "7", null)));
-
-		assertThat(anzahl).isEqualTo(1);
-		HttpRequest request = gesendeteAnfrage(httpClient);
-		assertThat(request.method()).isEqualTo("PUT");
-		assertThat(request.uri().toString()).isEqualTo("https://ptm-online.example.com/api/sync/tournaments/t+1/rounds/2");
-		assertThat(bodyAlsText(request))
-				.isEqualTo("{\"matches\":[{\"teamA\":[\"r1\"],\"teamB\":[],\"court\":\"7\"}]}");
+	public void rundeSendetPartienOhneNullFelder() {
+		assertThat(TournamentSyncClient.rundePfad("t 1", 2)).isEqualTo("/api/sync/tournaments/t+1/rounds/2");
+		assertThat(TournamentSyncClient.rundeBody(List.of(new LiveMatchDto(List.of("r1"), List.of(), null, null, "7",
+				null)))).isEqualTo("{\"matches\":[{\"teamA\":[\"r1\"],\"teamB\":[],\"court\":\"7\"}]}");
 	}
 
 	@Test
-	public void deleteRoundLiefertObDieRundeExistierte() throws Exception {
-		HttpClient httpClient = httpClientMitAntwort("{\"ok\":true,\"deleted\":true}");
-		TournamentSyncClient client = new TournamentSyncClient(httpClient, "https://ptm-online.example.com", "ptm_secret");
-
-		assertThat(client.deleteRound("t1", 3)).isTrue();
-		HttpRequest request = gesendeteAnfrage(httpClient);
-		assertThat(request.method()).isEqualTo("DELETE");
-		assertThat(request.uri().toString()).isEqualTo("https://ptm-online.example.com/api/sync/tournaments/t1/rounds/3");
-	}
-
-	@Test
-	public void deleteRoundOhneDeletedWirftIOException() throws Exception {
-		TournamentSyncClient client = clientMitAntwort("{\"ok\":true}");
-
-		assertThatThrownBy(() -> client.deleteRound("t1", 3)).isExactlyInstanceOf(IOException.class);
-	}
-
-	@Test
-	public void putRankingSendetEintraege() throws Exception {
-		HttpClient httpClient = httpClientMitAntwort("{\"entryCount\":1}");
-		TournamentSyncClient client = new TournamentSyncClient(httpClient, "https://ptm-online.example.com", "ptm_secret");
-
-		int anzahl = client.putRanking("t1", List.of(new LiveRankingEntryDto(1, List.of("r1"), 3, 39, 12)));
-
-		assertThat(anzahl).isEqualTo(1);
-		HttpRequest request = gesendeteAnfrage(httpClient);
-		assertThat(request.uri().toString()).isEqualTo("https://ptm-online.example.com/api/sync/tournaments/t1/ranking");
-		assertThat(bodyAlsText(request)).isEqualTo(
-				"{\"entries\":[{\"place\":1,\"registrationIds\":[\"r1\"],\"wins\":3,\"pointsFor\":39,\"pointsAgainst\":12}]}");
+	public void ranglisteSendetEintraege() {
+		assertThat(TournamentSyncClient.ranglistePfad("t1")).isEqualTo("/api/sync/tournaments/t1/ranking");
+		assertThat(TournamentSyncClient.ranglisteBody(List.of(new LiveRankingEntryDto(1, List.of("r1"), 3, 39, 12))))
+				.isEqualTo(
+						"{\"entries\":[{\"place\":1,\"registrationIds\":[\"r1\"],\"wins\":3,\"pointsFor\":39,\"pointsAgainst\":12}]}");
 	}
 
 	private HttpClient httpClientMitAntwort(String body) throws Exception {

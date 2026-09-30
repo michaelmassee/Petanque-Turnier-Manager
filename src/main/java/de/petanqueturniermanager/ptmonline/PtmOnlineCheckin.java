@@ -17,8 +17,7 @@ import de.petanqueturniermanager.spielerdb.MeldelisteZiel;
 
 /**
  * Check-in am Turniertag: meldet Teilnahme-Änderungen der Meldeliste sofort an PTM-Online statt erst beim
- * Rundenstart. Damit erhalten die Spieler die Postfach-Nachricht „Du bist eingecheckt“ (und den Live-Link) schon
- * beim Einchecken. PTM-Online verschickt sie je Meldung und Online-Turnier nur einmal – auch wenn die Teilnahme am
+ * Rundenstart. Damit erhalten die Spieler die Postfach-Nachricht „Du bist eingecheckt“ schon beim Einchecken. PTM-Online verschickt sie je Meldung und Online-Turnier nur einmal – auch wenn die Teilnahme am
  * Turniertag mehrfach wechselt. Bei Supermelee ist jeder Spieltag ein eigenes Online-Turnier.
  * <p>
  * Gepusht werden nur Änderungen gegenüber dem zuletzt bekannten Stand je Online-Turnier. Ist für eine Meldung noch
@@ -26,7 +25,7 @@ import de.petanqueturniermanager.spielerdb.MeldelisteZiel;
  * lokal leerer Check-in nimmt einen online erfolgten nicht zurück. Online-Anlage, fehlende lokale IDs und Turnierstart
  * bleiben dem Rundenstart vorbehalten – hier wird das Dokument nur gelesen.
  * <p>
- * Nur vom Thread „PTM-Online-Live“ verwendet ({@link PtmOnlineLiveBeobachter}).
+ * Nur im Dokument-Kontext der Auftragserfassung verwendet ({@link PtmOnlineLiveBeobachter}).
  */
 final class PtmOnlineCheckin {
 
@@ -66,7 +65,7 @@ final class PtmOnlineCheckin {
             bekannterStand.put(tournamentId, stand);
             return Optional.empty();
         }
-        return Optional.of(new Aenderung(new PtmOnlineStatusAuftrag(tournamentId, false, geaendert), stand));
+        return Optional.of(new Aenderung(new PtmOnlineStatusAuftrag(tournamentId, geaendert), stand));
     }
 
     private static boolean istZuMelden(@Nullable OnlineTeilnahme bekannt, OnlineTeilnahme aktuell) {
@@ -76,7 +75,7 @@ final class PtmOnlineCheckin {
         return bekannt != aktuell;
     }
 
-    /** Die Änderung ist erledigt (gesendet oder online verworfen); ihr Stand gilt als bekannt. */
+    /** Die Änderung ist als Auftrag gespeichert; ihr Stand gilt als bekannt. */
     void bestaetigen(Aenderung aenderung) {
         bekannterStand.put(aenderung.auftrag().tournamentId(), aenderung.stand());
     }
@@ -104,8 +103,7 @@ final class PtmOnlineCheckin {
         for (LokaleOnlineMeldung meldung : meldungen) {
             String uuid = uuidProZeile.get(meldung.zeile1Basiert());
             if (uuid != null && onlineIds.containsKey(uuid)) {
-                eintraege.add(new PtmOnlineStatusAuftrag.Eintrag(uuid, meldung.teilnahme(), meldung.seedingPosition(),
-                        null));
+                eintraege.add(new PtmOnlineStatusAuftrag.Eintrag(uuid, meldung.teilnahme(), meldung.seedingPosition()));
             }
         }
         return eintraege;

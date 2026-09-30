@@ -109,6 +109,22 @@ public class ThreadingCallGraphArchTest {
     }
 
     /**
+     * Der Hintergrund-Versand der PTM-Online-Schreibaufträge liest und schreibt kein Dokument (Spezifikation T-09):
+     * Aufträge entstehen fertig serialisiert im Dokument-Kontext, der Versand sendet nur. Das Paket darf daher
+     * keinerlei UNO-API verwenden.
+     */
+    @Test
+    void ptmOnlineVersandVerwendetKeinUno() {
+        JavaClasses classes = new ClassFileImporter()
+                .importPackages("de.petanqueturniermanager.ptmonline.auftrag.versand");
+
+        ArchRuleDefinition.noClasses().that().resideInAPackage("..ptmonline.auftrag.versand..")
+                .should().dependOnClassesThat().resideInAPackage("com.sun.star..")
+                .because("der Versand läuft im Hintergrund und darf das Dokument nicht anfassen (T-09)")
+                .check(classes);
+    }
+
+    /**
      * Günstige Absicherung gegen das lautlose Entwerten der Methodenreferenz-Wurzel
      * {@link #NOTIFY_OWNER}#{@link #NOTIFY_METHODE} (Variante „c" aus der Review-Diskussion): Die
      * Wurzel ist hier rein namensbasiert hartkodiert, weil sie nicht über ein {@link #ROOT_INTERFACES}

@@ -34,6 +34,7 @@ import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.onlinesync.SpieltagKontext;
 import de.petanqueturniermanager.onlinesync.sheet.NeueZuordnung;
+import de.petanqueturniermanager.ptmonline.auftrag.AuftragsBestand;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationDto;
 import de.petanqueturniermanager.ptmonline.dto.NeueOnlineAnmeldung;
 import de.petanqueturniermanager.spielerdb.MeldelisteZiel;
@@ -83,14 +84,23 @@ public final class RegistrationImportTask {
      *                        Aktualisieren der Meldeliste)
      * @param nichtZuordenbar Online-Bezeichnungen der Anmeldungen, die nicht zur Formation passen, zu
      *                        mehreren Zeilen passen oder nicht geschrieben werden konnten
+     * @param nachStart       Online-Bezeichnungen der Anmeldungen, die nach dem lokalen Turnierstart eingegangen sind;
+     *                        sie werden nie automatisch übernommen (KP-05)
      */
-    public record ImportErgebnis(int importiert, List<String> namensgleich, List<String> nichtZuordenbar) {
+    public record ImportErgebnis(int importiert, List<String> namensgleich, List<String> nichtZuordenbar,
+            List<String> nachStart) {
 
         public ImportErgebnis {
             namensgleich = List.copyOf(namensgleich);
             nichtZuordenbar = List.copyOf(nichtZuordenbar);
+            nachStart = List.copyOf(nachStart);
         }
 
+        public ImportErgebnis(int importiert, List<String> namensgleich, List<String> nichtZuordenbar) {
+            this(importiert, namensgleich, nichtZuordenbar, List.of());
+        }
+
+        /** Nach dem Turnierstart eingegangene Anmeldungen zählen nicht: sie warten auf die Entscheidung der Leitung. */
         public boolean vollstaendig() {
             return namensgleich.isEmpty() && nichtZuordenbar.isEmpty();
         }
@@ -105,18 +115,26 @@ public final class RegistrationImportTask {
                 hinweise.add(I18n.get("ptmonline.hinweis.anmeldungen_nicht_zuordenbar",
                         String.join(", ", nichtZuordenbar)));
             }
+            if (!nachStart.isEmpty()) {
+                hinweise.add(I18n.get("ptmonline.hinweis.anmeldungen_nach_start", String.join(", ", nachStart)));
+            }
             return hinweise;
         }
     }
 
     /**
-     * @param onlineAbgelehnt lokale Bezeichnungen der Meldungen, die PTM-Online beim Anlegen abgelehnt hat, weil
-     *                        ein Spieler oder der Teamname dort bereits angemeldet ist
+     * @param onlineAbgelehnt  lokale Bezeichnungen der Meldungen, die PTM-Online beim Anlegen abgelehnt hat, weil
+     *                         ein Spieler oder der Teamname dort bereits angemeldet ist
+     * @param nichtAngelegt    lokale Bezeichnungen der Meldungen, die wegen des Turnierstarts nicht mehr online
+     *                         angelegt wurden; sie bleiben rein lokal (E-13)
+     * @param ueberKapazitaet  Anzahl der Nachmeldungen der Turnierleitung über die Online-Kapazität hinaus (T-24)
      */
-    public record AbgleichErgebnis(ImportErgebnis importErgebnis, int onlineAngelegt, List<String> onlineAbgelehnt) {
+    public record AbgleichErgebnis(ImportErgebnis importErgebnis, int onlineAngelegt, List<String> onlineAbgelehnt,
+            List<String> nichtAngelegt, int ueberKapazitaet) {
 
         public AbgleichErgebnis {
             onlineAbgelehnt = List.copyOf(onlineAbgelehnt);
+            nichtAngelegt = List.copyOf(nichtAngelegt);
         }
 
         public List<String> hinweise() {
@@ -124,11 +142,17 @@ public final class RegistrationImportTask {
             if (!onlineAbgelehnt.isEmpty()) {
                 hinweise.add(onlineAbgelehntHinweis(onlineAbgelehnt));
             }
+            if (!nichtAngelegt.isEmpty()) {
+                hinweise.add(I18n.get("ptmonline.hinweis.nach_start_lokal", String.join(", ", nichtAngelegt)));
+            }
+            if (ueberKapazitaet > 0) {
+                hinweise.add(I18n.get("ptmonline.hinweis.ueber_kapazitaet", ueberKapazitaet));
+            }
             return hinweise;
         }
     }
 
-    private record NeuanlageErgebnis(int angelegt, List<String> abgelehnt) {}
+    private record NeuanlageErgebnis(int angelegt, List<String> abgelehnt, List<String> nichtAngelegt) {}
 
     /** Benutzerhinweis zu lokalen Meldungen, die PTM-Online als bereits angemeldet abgelehnt hat. */
     public static String onlineAbgelehntHinweis(List<String> lokaleBezeichnungen) {
@@ -153,8 +177,9 @@ public final class RegistrationImportTask {
         PtmOnlineRegistrationMapping mapping;
         Optional<String> tournamentId;
         boolean pausiert;
+        Integer spieltagNr;
         try {
-            Integer spieltagNr = SpieltagKontext.aktiverSpieltagOderNull(ws, ts);
+            spieltagNr = SpieltagKontext.aktiverSpieltagOderNull(ws, ts);
             mapping = new PtmOnlineRegistrationMapping(ws, ts, spieltagNr);
             tournamentId = mapping.getTournamentId();
             pausiert = mapping.istPausiert();
@@ -174,12 +199,17 @@ public final class RegistrationImportTask {
             return;
         }
 
-        new PtmOnlineAbgleichSheetRunner(ws, ts, config, mapping, tournamentId.get(), zielOpt.get()).start();
+        new PtmOnlineAbgleichSheetRunner(ws, ts, spieltagNr, config, mapping, tournamentId.get(), zielOpt.get())
+                .start();
     }
 
-    /** Manueller Abgleich: importiert neue Online-Meldungen und legt neue lokale Meldungen online an. */
+    /**
+     * Manueller Abgleich: importiert neue Online-Meldungen und legt neue lokale Meldungen online an. Anlage und
+     * Namenskorrektur sind gezählte Aufträge (T-23, T-24); sie werden im Puffer gespeichert und in Zählerreihenfolge
+     * gesendet – zusammen mit noch offenen Aufträgen aus dem Hintergrund.
+     */
     public static AbgleichErgebnis fuehreAbgleichDurch(LibreOfficePtmOnlineSpeicher.Zugangsdaten config,
-            PtmOnlineRegistrationMapping mapping, String tournamentId, MeldelisteZiel ziel,
+            PtmOnlineRegistrationMapping mapping, AuftragsBestand bestand, String tournamentId, MeldelisteZiel ziel,
             MeldelistenAktualisierung aktualisierung, AbgleichFortschritt fortschritt)
             throws IOException, InterruptedException, GenerateException {
         mapping.sicherstellen();
@@ -187,20 +217,20 @@ public final class RegistrationImportTask {
                 fortschritt);
         fortschritt.pruefeAbbruch();
         fortschritt.status(I18n.get("ptmonline.fortschritt.lokale_meldungen_anlegen"));
-        NeuanlageErgebnis neuanlage = neueLokaleMeldungenAnlegen(config, mapping, tournamentId, ziel, fortschritt);
+        NeuanlageErgebnis neuanlage = neueLokaleMeldungenAnlegen(config, mapping, bestand, tournamentId, ziel);
         fortschritt.pruefeAbbruch();
         fortschritt.status(I18n.get("ptmonline.fortschritt.details_aktualisieren"));
-        aktualisiereBezeichnungen(config, mapping, tournamentId, ziel);
-        return new AbgleichErgebnis(importErgebnis, neuanlage.angelegt(), neuanlage.abgelehnt());
+        int ueberKapazitaet = aktualisiereBezeichnungen(config, mapping, bestand, tournamentId, ziel);
+        return new AbgleichErgebnis(importErgebnis, neuanlage.angelegt(), neuanlage.abgelehnt(),
+                neuanlage.nichtAngelegt(), ueberKapazitaet);
     }
 
     /**
-     * Prüfung vor dem Turnierstart (erste Spielrunde): importiert nichts, sondern liefert die bestätigten
-     * Online-Anmeldungen, die noch in keiner Meldelistenzeile stehen. Namensgleiche, vor Ort erfasste und
-     * noch nicht verknüpfte Zeilen werden dabei verknüpft – sonst legt der Rundenstart sie online erneut an
-     * und PTM-Online lehnt sie als doppelte Spieler ab. {@code lastSync} bleibt unverändert, damit ein
-     * späterer manueller Abgleich die fehlenden Anmeldungen weiterhin abruft. Kurzes Zeitlimit
-     * ({@link #TIMEOUT_VOR_TURNIERSTART}): bei schlechtem Netz geht der Turnierstart mit einem Hinweis weiter.
+     * Prüfung vor dem Turnierstart (erste Spielrunde): liest nur und liefert die bestätigten Online-Anmeldungen, die
+     * noch in keiner Meldelistenzeile stehen. Steht eine namensgleiche, noch nicht verknüpfte Zeile in der Meldeliste,
+     * wird nichts automatisch verknüpft – die Anmeldung erscheint mit dem Hinweis „möglicherweise identisch“, die
+     * Turnierleitung entscheidet im manuellen Abgleich. {@code lastSync} bleibt unverändert. Kurzes Zeitlimit
+     * ({@link #TIMEOUT_VOR_TURNIERSTART}): bei schlechtem Netz fragt der Rundenstart ausdrücklich nach.
      *
      * @return Online-Bezeichnungen der fehlenden Anmeldungen, leer wenn die Meldeliste vollständig ist.
      */
@@ -218,14 +248,9 @@ public final class RegistrationImportTask {
                 continue;
             }
             List<Integer> gleicheZeilen = vorhandeneZeilen.getOrDefault(besetzungsSchluessel(reg), List.of());
-            if (gleicheZeilen.isEmpty()) {
-                fehlend.add(onlineBezeichnung(reg));
-                continue;
-            }
             List<Integer> freieZeilen = nichtVerknuepfteZeilen(mapping, ziel, gleicheZeilen, Set.of());
-            if (freieZeilen.size() == 1) {
-                verknuepfeBestehendeZeile(mapping, ziel, reg, freieZeilen.getFirst());
-            }
+            fehlend.add(freieZeilen.isEmpty() ? onlineBezeichnung(reg)
+                    : I18n.get("ptmonline.hinweis.moeglicherweise_identisch", onlineBezeichnung(reg)));
         }
         return fehlend;
     }
@@ -292,15 +317,21 @@ public final class RegistrationImportTask {
             PtmOnlineRegistrationMapping mapping, MeldelisteZiel ziel, MeldelistenAktualisierung aktualisierung,
             AbgleichFortschritt fortschritt) throws GenerateException, InterruptedException {
         List<RegistrationDto> neue = new ArrayList<>();
+        List<String> nachStart = new ArrayList<>();
         Set<String> importierte = mapping.getImportierteOnlineIds();
         for (RegistrationDto reg : registrations) {
-            if (istImportierbar(reg) && !importierte.contains(reg.id())) {
+            if (!istImportierbar(reg) || importierte.contains(reg.id())) {
+                continue;
+            }
+            if (reg.istNachTurnierstartEingegangen()) {
+                nachStart.add(onlineBezeichnung(reg));
+            } else {
                 neue.add(reg);
             }
         }
 
         if (neue.isEmpty()) {
-            return new ImportErgebnis(0, List.of(), List.of());
+            return new ImportErgebnis(0, List.of(), List.of(), nachStart);
         }
 
         List<GeschriebeneAnmeldung> geschrieben = new ArrayList<>();
@@ -360,7 +391,7 @@ public final class RegistrationImportTask {
             }
         }
         if (geschrieben.isEmpty()) {
-            return new ImportErgebnis(0, namensgleich, nichtZuordenbar);
+            return new ImportErgebnis(0, namensgleich, nichtZuordenbar, nachStart);
         }
 
         fortschritt.status(I18n.get("ptmonline.fortschritt.meldeliste_aktualisieren"));
@@ -388,7 +419,7 @@ public final class RegistrationImportTask {
             }
         }
         mapping.addMappings(zuordnungen);
-        return new ImportErgebnis(zuordnungen.size(), namensgleich, nichtZuordenbar);
+        return new ImportErgebnis(zuordnungen.size(), namensgleich, nichtZuordenbar, nachStart);
     }
 
     /**
@@ -529,43 +560,49 @@ public final class RegistrationImportTask {
         return registration.executionRevision() == null ? 1 : Math.max(1, registration.executionRevision());
     }
 
+    /**
+     * Legt alle lokalen Meldungen ohne Online-Zuordnung als Aufträge an (Teilnahme inaktiv – den Check-in meldet die
+     * Check-in-Erkennung) und sendet sie. Nach dem Turnierstart lehnt PTM-Online ab; die Meldungen bleiben lokal.
+     */
     private static NeuanlageErgebnis neueLokaleMeldungenAnlegen(LibreOfficePtmOnlineSpeicher.Zugangsdaten config,
-            PtmOnlineRegistrationMapping mapping, String tournamentId, MeldelisteZiel ziel, AbgleichFortschritt fortschritt)
+            PtmOnlineRegistrationMapping mapping, AuftragsBestand bestand, String tournamentId, MeldelisteZiel ziel)
             throws IOException, InterruptedException, GenerateException {
-        TournamentSyncClient client = gebundenerClient(config, mapping);
         Map<Integer, List<MeldelisteSpielerDaten>> proZeile = spielerProZeile(ziel);
         Map<Integer, String> uuidProZeile = lokaleUuids(ziel, proZeile.keySet());
         Map<String, String> onlineIds = mapping.getOnlineIdsProUuid();
-        List<String> abgelehnt = new ArrayList<>();
-        List<NeueZuordnung> zuordnungen = new ArrayList<>();
-        try {
-            for (Map.Entry<Integer, List<MeldelisteSpielerDaten>> eintrag : proZeile.entrySet()) {
-                String uuid = uuidProZeile.get(eintrag.getKey());
-                if (uuid == null || onlineIds.containsKey(uuid)) {
-                    continue;
-                }
-                fortschritt.pruefeAbbruch();
-                String bezeichnung = bezeichnung(eintrag.getValue());
-                RegistrationDto remote;
-                try {
-                    remote = client.upsertRegistration(tournamentId, uuid, zuOnlineAnmeldung(eintrag.getValue()));
-                } catch (PtmOnlineHttpException e) {
-                    if (!e.istBereitsAngemeldet()) {
-                        throw e;
-                    }
-                    logger.warn("PTM-Online: lokale Meldung {} online abgelehnt (bereits angemeldet)", uuid, e);
-                    abgelehnt.add(bezeichnung);
-                    continue;
-                }
-                zuordnungen.add(PtmOnlineRegistrationMapping.neueZuordnung(uuid, formelTeamNr(ziel, uuid), bezeichnung,
-                        remote));
-                fortschritt.status(I18n.get("ptmonline.fortschritt.meldung_online_angelegt", bezeichnung));
+        for (Map.Entry<Integer, List<MeldelisteSpielerDaten>> eintrag : proZeile.entrySet()) {
+            String uuid = uuidProZeile.get(eintrag.getKey());
+            if (uuid == null || onlineIds.containsKey(uuid)) {
+                continue;
             }
-        } finally {
-            // Auch nach Abbruch oder Netzfehler: bereits online angelegte Meldungen lokal zuordnen.
-            mapping.addMappings(zuordnungen);
+            PtmOnlineAuftraege.anlage(bestand, tournamentId, uuid, zuOnlineAnmeldung(eintrag.getValue()),
+                    OnlineTeilnahme.INAKTIV, null, formelTeamNr(ziel, uuid), bezeichnung(eintrag.getValue()));
         }
-        return new NeuanlageErgebnis(zuordnungen.size(), abgelehnt);
+        PtmOnlineAuftraege.Anwendung anwendung = sendeSynchron(config, mapping, bestand);
+        return new NeuanlageErgebnis(anwendung.angelegt(), anwendung.abgelehnt(), anwendung.nachStart());
+    }
+
+    /**
+     * Sendet alle offenen Aufträge synchron und wendet die Ergebnisse an. Bricht der Versand ab, wird das wie ein
+     * Verbindungsfehler gemeldet; die Aufträge bleiben gespeichert und gehen beim nächsten Versuch mit derselben
+     * Auftrags-ID hinaus.
+     */
+    private static PtmOnlineAuftraege.Anwendung sendeSynchron(LibreOfficePtmOnlineSpeicher.Zugangsdaten config,
+            PtmOnlineRegistrationMapping mapping, AuftragsBestand bestand)
+            throws IOException, InterruptedException, GenerateException {
+        PtmOnlineAuftraege.SynchronerVersand versand = PtmOnlineAuftraege.sendeSynchron(bestand, mapping,
+                gebundenerClient(config, mapping), false);
+        switch (versand.stopp()) {
+            case FERTIG -> {
+                return versand.anwendung();
+            }
+            case DOKUMENT_GEFORKT -> throw new GenerateException(I18n.get("ptmonline.fehler.dokument_geforkt"));
+            case BINDUNG_ABGELOEST -> throw new GenerateException(I18n.get("ptmonline.fehler.bindung_abgeloest"));
+            case TURNIER_GELOESCHT -> throw new GenerateException(I18n.get("ptmonline.turnier.geloescht"));
+            case NETZ, SERVERFEHLER, NICHT_BERECHTIGT -> throw new IOException(
+                    I18n.get("ptmonline.fehler.auftraege_nicht_gesendet", versand.stopp()));
+            default -> throw new IllegalStateException("Unbekannter Versandstopp " + versand.stopp());
+        }
     }
 
     private static TournamentSyncClient gebundenerClient(LibreOfficePtmOnlineSpeicher.Zugangsdaten config,
@@ -623,8 +660,15 @@ public final class RegistrationImportTask {
                 null, true, true, List.of(), List.of());
     }
 
-    private static void aktualisiereBezeichnungen(LibreOfficePtmOnlineSpeicher.Zugangsdaten config,
-            PtmOnlineRegistrationMapping mapping, String tournamentId, MeldelisteZiel ziel)
+    /**
+     * Gleicht die Namen zugeordneter Meldungen ab: weicht die Besetzung online ab, überträgt ein Änderungsauftrag den
+     * lokalen Stand (das Dokument ist Master) und vermerkt dabei online die lokale UUID (T-21). Danach werden Anzeige
+     * und Ausführungsrevisionen des Sync-Blatts aktualisiert.
+     *
+     * @return Anzahl der zugeordneten Anmeldungen, die online über der Kapazität liegen
+     */
+    private static int aktualisiereBezeichnungen(LibreOfficePtmOnlineSpeicher.Zugangsdaten config,
+            PtmOnlineRegistrationMapping mapping, AuftragsBestand bestand, String tournamentId, MeldelisteZiel ziel)
             throws IOException, InterruptedException, GenerateException {
         TournamentSyncClient client = gebundenerClient(config, mapping);
         Map<String, RegistrationDto> remoteProId = client.fetchRegistrations(tournamentId, null).stream()
@@ -636,6 +680,7 @@ public final class RegistrationImportTask {
         Map<String, String> bezeichnungProUuid = new LinkedHashMap<>();
         Map<String, RegistrationDto> registrationProUuid = new LinkedHashMap<>();
         Map<String, String> uuidProOnlineId = new LinkedHashMap<>();
+        Map<String, String> geaenderteZeilen = new LinkedHashMap<>();
         for (Map.Entry<Integer, String> eintrag : uuidProZeile.entrySet()) {
             int zeile = eintrag.getKey();
             String uuid = eintrag.getValue();
@@ -652,19 +697,23 @@ public final class RegistrationImportTask {
             if (remote == null) {
                 throw new GenerateException(I18n.get("ptmonline.fehler.online_zuordnung_fehlend", onlineId));
             }
+            registrationProUuid.put(uuid, remote);
             NeueOnlineAnmeldung lokal = zuOnlineAnmeldung(spielerProZeile.get(zeile));
             if (!besetzungsSchluessel(lokal).equals(besetzungsSchluessel(remote))) {
-                remote = client.aktualisiereDokumentAnmeldung(tournamentId, uuid, onlineId, lokal,
-                        executionRevision(remote));
-                if (!onlineId.equals(remote.id())) {
-                    throw new GenerateException(I18n.get("ptmonline.fehler.online_zuordnung_abweichend", onlineId));
-                }
-                if (!besetzungsSchluessel(lokal).equals(besetzungsSchluessel(remote))) {
-                    throw new GenerateException(I18n.get("ptmonline.fehler.online_namen_abweichend",
-                            bezeichnungProZeile.get(zeile)));
-                }
+                PtmOnlineAuftraege.aenderung(bestand, tournamentId, uuid, onlineId, lokal, executionRevision(remote),
+                        bezeichnungProZeile.get(zeile));
+                geaenderteZeilen.put(uuid, bezeichnungProZeile.get(zeile));
             }
-            registrationProUuid.put(uuid, remote);
+        }
+        if (!geaenderteZeilen.isEmpty()) {
+            Map<String, RegistrationDto> geaendert = sendeSynchron(config, mapping, bestand).geaendert();
+            for (Map.Entry<String, String> zeile : geaenderteZeilen.entrySet()) {
+                RegistrationDto remote = geaendert.get(zeile.getKey());
+                if (remote == null || !onlineIds.get(zeile.getKey()).equals(remote.id())) {
+                    throw new GenerateException(I18n.get("ptmonline.fehler.online_namen_abweichend", zeile.getValue()));
+                }
+                registrationProUuid.put(zeile.getKey(), remote);
+            }
         }
         mapping.aktualisiereAnzeigen(bezeichnungProUuid, registrationProUuid);
         Map<String, Integer> revisionen = registrationProUuid.entrySet().stream()
@@ -672,6 +721,7 @@ public final class RegistrationImportTask {
                         eintrag -> executionRevision(eintrag.getValue()), (links, rechts) -> rechts,
                         LinkedHashMap::new));
         mapping.setExecutionRevisionen(revisionen);
+        return (int) registrationProUuid.values().stream().filter(RegistrationDto::istUeberKapazitaet).count();
     }
 
     private static String lokaleBezeichnung(MeldelisteZiel ziel, int zeile1Basiert) {

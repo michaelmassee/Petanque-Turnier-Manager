@@ -21,12 +21,17 @@ import com.google.gson.JsonParseException;
 
 import de.petanqueturniermanager.onlinesync.OnlineTournamentDto;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.ptmonline.auftrag.SyncAuftrag;
+import de.petanqueturniermanager.ptmonline.auftrag.versand.AuftragsSender;
+import de.petanqueturniermanager.ptmonline.auftrag.versand.SyncAntwort;
 import de.petanqueturniermanager.ptmonline.dto.LiveMatchDto;
 import de.petanqueturniermanager.ptmonline.dto.LiveRankingEntryDto;
 import de.petanqueturniermanager.ptmonline.dto.NeueOnlineAnmeldung;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationDto;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationResultDto;
+import de.petanqueturniermanager.ptmonline.dto.ServerZuordnungDto;
 import de.petanqueturniermanager.ptmonline.dto.SyncBindingDto;
+import de.petanqueturniermanager.ptmonline.dto.SyncStandDto;
 
 /**
  * Client fuer die PTM-Online REST-API: legt Turniere an und gleicht Anmeldungen/Ergebnisse
@@ -34,7 +39,13 @@ import de.petanqueturniermanager.ptmonline.dto.SyncBindingDto;
  * PTM-Online-Administrator freigeschalteten API-Schluessel (siehe
  * {@link de.petanqueturniermanager.comp.LibreOfficePtmOnlineSpeicher}).
  */
-public class TournamentSyncClient extends PtmOnlineHttpClient {
+public class TournamentSyncClient extends PtmOnlineHttpClient implements AuftragsSender {
+
+    /**
+     * Protokollversion dieses PTM: Schreibaufträge tragen Auftrags-ID und Schreibzähler (T-19, T-23). PTM-Online
+     * speichert sie mit der Bindung und verlangt danach beides.
+     */
+    static final int PROTOKOLL_VERSION = 2;
 
     public TournamentSyncClient(String baseUrl, String apiKey) {
         super(baseUrl, apiKey);
@@ -79,13 +90,23 @@ public class TournamentSyncClient extends PtmOnlineHttpClient {
 
     /**
      * Verbindet das lokale Dokument mit einem bestehenden Online-Turnier (setzt serverseitig
-     * {@code document_managed = 1}, ohne sonstige Metadaten zu ändern).
+     * {@code document_managed = 1}, ohne sonstige Metadaten zu ändern). Eine neue Bindung beginnt mit Schreibzähler
+     * 0; die Wiederholung derselben Verbindung ({@code connectRequestId}) liefert den aktuellen Zählerstand (P-22).
+     *
+     * @param connectRequestId stabile ID dieses Verbindungsversuchs, vor dem Senden gespeichert
+     * @param wiederherstellung ausdrückliche Bestätigung, ein bereits laufendes Turnier mit diesem Dokument
+     *                          wiederherzustellen (E-03); ohne sie lehnt PTM-Online mit {@code recovery_required} ab
      */
-    public SyncBindingDto connect(String tournamentId, String syncDocumentId, String leaseToken)
-            throws IOException, InterruptedException {
+    public SyncBindingDto connect(String tournamentId, String syncDocumentId, String leaseToken,
+            String connectRequestId, boolean wiederherstellung) throws IOException, InterruptedException {
         JsonObject body = new JsonObject();
         body.addProperty("syncDocumentId", syncDocumentId);
         body.addProperty("leaseToken", leaseToken);
+        body.addProperty("protocolVersion", PROTOKOLL_VERSION);
+        body.addProperty("connectRequestId", connectRequestId);
+        if (wiederherstellung) {
+            body.addProperty("recovery", true);
+        }
         HttpResponse<String> response = post("/api/sync/tournaments/" + encode(tournamentId) + "/connect", body.toString());
         return pruefeBindung(leseAntwort(response, SyncBindingDto.class), syncDocumentId);
     }
@@ -104,71 +125,20 @@ public class TournamentSyncClient extends PtmOnlineHttpClient {
      * stammt aus dem {@code document_bound}-Konflikt des vorangegangenen {@link #connect}.
      */
     public SyncBindingDto takeover(String tournamentId, String syncDocumentId, String leaseToken,
-            long expectedBindingRevision) throws IOException, InterruptedException {
+            long expectedBindingRevision, String takeoverRequestId, boolean wiederherstellung)
+            throws IOException, InterruptedException {
         JsonObject body = new JsonObject();
         body.addProperty("syncDocumentId", syncDocumentId);
         body.addProperty("leaseToken", leaseToken);
-        body.addProperty("takeoverRequestId", UUID.randomUUID().toString());
+        body.addProperty("takeoverRequestId", takeoverRequestId);
         body.addProperty("expectedBindingRevision", expectedBindingRevision);
+        body.addProperty("protocolVersion", PROTOKOLL_VERSION);
+        if (wiederherstellung) {
+            body.addProperty("recovery", true);
+        }
         HttpResponse<String> response = post("/api/sync/tournaments/" + encode(tournamentId) + "/takeover",
                 body.toString());
         return pruefeBindung(leseAntwort(response, SyncBindingDto.class), syncDocumentId);
-    }
-
-    /**
-     * Löst die Verbindung des lokalen Dokuments wieder (setzt serverseitig
-     * {@code document_managed = 0}, hebt damit auch die Web-UI-Bearbeitungssperre wieder auf).
-     */
-    public void disconnect(String tournamentId) throws IOException, InterruptedException {
-        post("/api/sync/tournaments/" + encode(tournamentId) + "/disconnect", "{}");
-    }
-
-    /**
-     * Startet das verbundene Online-Turnier (Statuswechsel auf {@code running}) aus dem
-     * Turnierdokument heraus - anders als der Web-UI-Weg ({@code POST /api/tournaments/{id}/start})
-     * funktioniert dieser Endpoint auch fuer dokumentverwaltete Turniere (die Web-UI-Variante
-     * verweigert das bewusst). Idempotent, wenn das Turnier bereits laeuft.
-     */
-    public void start(String tournamentId) throws IOException, InterruptedException {
-        post("/api/sync/tournaments/" + encode(tournamentId) + "/start", "{}");
-    }
-
-    /**
-     * Legt eine neue Anmeldung ohne die oeffentliche Registrierungsmaske an - fuer lokal (im
-     * Turnierdokument) erfasste Teams, die online noch nicht bekannt sind. Liefert die neue
-     * Anmeldung inkl. Online-Id fuer das lokale Mapping zurueck.
-     */
-    public RegistrationDto createRegistration(String tournamentId, NeueOnlineAnmeldung anmeldung)
-            throws IOException, InterruptedException {
-        HttpResponse<String> response = post(
-                "/api/sync/tournaments/" + encode(tournamentId) + "/registrations", GSON.toJson(anmeldung));
-        return leseRegistration(response);
-    }
-
-    /** Idempotente Neuanlage durch die lokale, dauerhafte Meldelisten-UUID. */
-    public RegistrationDto upsertRegistration(String tournamentId, String lokaleUuid, NeueOnlineAnmeldung anmeldung)
-            throws IOException, InterruptedException {
-        HttpResponse<String> response = put("/api/sync/tournaments/" + encode(tournamentId)
-                + "/registrations/" + encode(lokaleUuid), GSON.toJson(anmeldung));
-        return leseRegistration(response);
-    }
-
-    /**
-     * Aktualisiert die sichtbaren Teilnehmerdaten einer bestehenden Zuordnung aus dem Turnierdokument. Adressiert
-     * wird über die Online-ID aus dem Sync-Blatt; die lokale UUID dient online nur als Schlüssel der Neuanlage
-     * ({@link #upsertRegistration}) und wird hier nicht geprüft. PTM-Online behält seine Anmeldungs-, Kontakt- und
-     * Startgelddaten. Die Revision verhindert, dass ein zeitgleicher Ausführungs-Update überschrieben wird.
-     */
-    public RegistrationDto aktualisiereDokumentAnmeldung(String tournamentId, String lokaleUuid,
-            String onlineRegistrationId, NeueOnlineAnmeldung anmeldung, int expectedExecutionRevision)
-            throws IOException, InterruptedException {
-        JsonObject body = GSON.toJsonTree(anmeldung).getAsJsonObject();
-        body.addProperty("documentMaster", true);
-        body.addProperty("onlineRegistrationId", onlineRegistrationId);
-        body.addProperty("expectedExecutionRevision", expectedExecutionRevision);
-        HttpResponse<String> response = put("/api/sync/tournaments/" + encode(tournamentId)
-                + "/registrations/" + encode(lokaleUuid), body.toString());
-        return leseRegistration(response);
     }
 
     /**
@@ -191,56 +161,126 @@ public class TournamentSyncClient extends PtmOnlineHttpClient {
     }
 
     /**
-     * Schreibt lokal geaenderte Status-/Ranglisten-Werte zurueck nach PTM-Online. Legt keine neuen
-     * Anmeldungen an, aktualisiert nur bestehende (per {@code id} referenziert).
+     * Zustand des Online-Turniers (Status, Anmeldeschluss, Online-Runden, Schreibzähler), ohne Anmeldungen: der
+     * Abruf der Anmeldeliste mit einem Zeitpunkt in der Zukunft liefert nur den Turnierzustand.
      */
-    public int pushResults(String tournamentId, List<RegistrationResultDto> results) throws IOException, InterruptedException {
+    public SyncStandDto fetchSyncStand(String tournamentId) throws IOException, InterruptedException {
+        String path = "/api/sync/tournaments/" + encode(tournamentId) + "/registrations?since="
+                + encode(Instant.now().plus(Duration.ofDays(1)).toString());
+        JsonElement stand = pflichtfeld(leseAntwort(get(path)), "tournament");
+        if (!stand.isJsonObject()) {
+            throw unvollstaendigeAntwort("tournament");
+        }
+        return GSON.fromJson(stand, SyncStandDto.class);
+    }
+
+    /** Serverseitig bekannte Zuordnungen lokale UUID ↔ Online-Anmeldung (T-21); braucht die Dokumentbindung. */
+    public List<ServerZuordnungDto> fetchMapping(String tournamentId) throws IOException, InterruptedException {
+        JsonObject payload = leseAntwort(get("/api/sync/tournaments/" + encode(tournamentId) + "/mapping"));
+        List<ServerZuordnungDto> zuordnungen = new ArrayList<>();
+        for (var element : pflichtArray(payload, "mappings")) {
+            zuordnungen.add(GSON.fromJson(element, ServerZuordnungDto.class));
+        }
+        return zuordnungen;
+    }
+
+    /** Sendet einen gezählten Schreibauftrag (siehe {@link PtmOnlineHttpClient#sendeAuftrag}). */
+    @Override
+    public SyncAntwort sende(SyncAuftrag auftrag) throws IOException, InterruptedException {
+        return sendeAuftrag(auftrag);
+    }
+
+    // ── Pfade und Nutzlasten der Schreibaufträge ─────────────────────────────
+
+    public static String trennenPfad(String tournamentId) {
+        return turnierPfad(tournamentId) + "/disconnect";
+    }
+
+    static String startPfad(String tournamentId) {
+        return turnierPfad(tournamentId) + "/start";
+    }
+
+    static String anmeldungPfad(String tournamentId, String lokaleUuid) {
+        return turnierPfad(tournamentId) + "/registrations/" + encode(lokaleUuid);
+    }
+
+    static String ergebnissePfad(String tournamentId) {
+        return turnierPfad(tournamentId) + "/results";
+    }
+
+    static String ranglistePfad(String tournamentId) {
+        return turnierPfad(tournamentId) + "/ranking";
+    }
+
+    /** Nutzlast des Turnierstarts mit dem lokalen Startzeitpunkt (P-26). */
+    static String startBody(Instant lokalerStart) {
+        JsonObject body = new JsonObject();
+        body.addProperty("localStartedAt", lokalerStart.toString());
+        return body.toString();
+    }
+
+    /** Nutzlast einer Online-Anlage samt Teilnahme und Setzposition der neuen Meldung. */
+    static String anlageBody(NeueOnlineAnmeldung anmeldung, String teilnahme, Integer setzposition) {
+        JsonObject body = GSON.toJsonTree(anmeldung).getAsJsonObject();
+        body.addProperty("participation", teilnahme);
+        if (setzposition != null) {
+            body.addProperty("seedingPosition", setzposition);
+        }
+        return body.toString();
+    }
+
+    /** Nutzlast einer Namenskorrektur aus dem Dokument (siehe PTM-Online {@code documentMaster}). */
+    static String aenderungBody(NeueOnlineAnmeldung anmeldung, String onlineRegistrationId,
+            int expectedExecutionRevision) {
+        JsonObject body = GSON.toJsonTree(anmeldung).getAsJsonObject();
+        body.addProperty("documentMaster", true);
+        body.addProperty("onlineRegistrationId", onlineRegistrationId);
+        body.addProperty("expectedExecutionRevision", expectedExecutionRevision);
+        return body.toString();
+    }
+
+    static String ergebnisseBody(List<RegistrationResultDto> results) {
         JsonArray registrationsArray = new JsonArray();
         results.stream().map(GSON::toJsonTree).forEach(registrationsArray::add);
-
         JsonObject body = new JsonObject();
         body.add("registrations", registrationsArray);
-
-        JsonObject payload = leseAntwort(
-                post("/api/sync/tournaments/" + encode(tournamentId) + "/results", body.toString()));
-        return pflichtZahl(payload, "updatedCount");
+        return body.toString();
     }
 
-    /**
-     * Überträgt eine komplette Spielrunde (Paarungen, Ergebnisse, Bahn) für die Live-Ansicht. PTM-Online ersetzt
-     * die Runde atomar; nur ein neu angelegter Rundeneintrag löst dort die Push-Benachrichtigung aus.
-     *
-     * @return Anzahl der von PTM-Online übernommenen Partien
-     */
-    public int putRound(String tournamentId, int roundNumber, List<LiveMatchDto> matches)
-            throws IOException, InterruptedException {
+    static String rundeBody(List<LiveMatchDto> matches) {
         JsonObject body = new JsonObject();
         body.add("matches", GSON.toJsonTree(matches));
-        JsonObject payload = leseAntwort(put(rundePfad(tournamentId, roundNumber), body.toString()));
-        return pflichtZahl(payload, "matchCount");
+        return body.toString();
     }
 
-    /** @return {@code true}, wenn PTM-Online die Runde kannte und gelöscht hat */
-    public boolean deleteRound(String tournamentId, int roundNumber) throws IOException, InterruptedException {
-        JsonElement deleted = pflichtfeld(leseAntwort(delete(rundePfad(tournamentId, roundNumber))), "deleted");
-        if (!deleted.isJsonPrimitive() || !deleted.getAsJsonPrimitive().isBoolean()) {
-            throw unvollstaendigeAntwort("deleted");
-        }
-        return deleted.getAsBoolean();
-    }
-
-    /** Ersetzt den Ranglisten-Snapshot der Live-Ansicht (Turnierdokument ist Referenz). */
-    public int putRanking(String tournamentId, List<LiveRankingEntryDto> entries)
-            throws IOException, InterruptedException {
+    static String ranglisteBody(List<LiveRankingEntryDto> entries) {
         JsonObject body = new JsonObject();
         body.add("entries", GSON.toJsonTree(entries));
-        JsonObject payload = leseAntwort(
-                put("/api/sync/tournaments/" + encode(tournamentId) + "/ranking", body.toString()));
-        return pflichtZahl(payload, "entryCount");
+        return body.toString();
     }
 
-    private static String rundePfad(String tournamentId, int roundNumber) {
-        return "/api/sync/tournaments/" + encode(tournamentId) + "/rounds/" + roundNumber;
+    // ── Antworten der Schreibaufträge ────────────────────────────────────────
+
+    /** Anmeldung aus der Antwort einer Anlage oder Änderung. */
+    static RegistrationDto registrationAus(SyncAntwort antwort) throws IOException {
+        JsonElement registration = pflichtfeld(leseAntwort(antwort.body(), JsonObject.class), "registration");
+        if (!registration.isJsonObject()) {
+            throw unvollstaendigeAntwort("registration");
+        }
+        return GSON.fromJson(registration, RegistrationDto.class);
+    }
+
+    /** Ganzzahliges Pflichtfeld der Antwort (z.&nbsp;B. {@code updatedCount}). */
+    static int zahlAus(SyncAntwort antwort, String feld) throws IOException {
+        return pflichtZahl(leseAntwort(antwort.body(), JsonObject.class), feld);
+    }
+
+    private static String turnierPfad(String tournamentId) {
+        return "/api/sync/tournaments/" + encode(tournamentId);
+    }
+
+    static String rundePfad(String tournamentId, int roundNumber) {
+        return turnierPfad(tournamentId) + "/rounds/" + roundNumber;
     }
 
     private static int pflichtZahl(JsonObject payload, String feld) throws IOException {
@@ -249,14 +289,6 @@ public class TournamentSyncClient extends PtmOnlineHttpClient {
             throw unvollstaendigeAntwort(feld);
         }
         return wert.getAsInt();
-    }
-
-    private static RegistrationDto leseRegistration(HttpResponse<String> response) throws IOException {
-        JsonElement registration = pflichtfeld(leseAntwort(response), "registration");
-        if (!registration.isJsonObject()) {
-            throw unvollstaendigeAntwort("registration");
-        }
-        return GSON.fromJson(registration, RegistrationDto.class);
     }
 
     private static JsonObject leseAntwort(HttpResponse<String> response) throws IOException {
@@ -268,9 +300,13 @@ public class TournamentSyncClient extends PtmOnlineHttpClient {
      * {@link IOException}, damit Aufrufer sie wie jeden anderen Verbindungsfehler behandeln.
      */
     private static <T> T leseAntwort(HttpResponse<String> response, Class<T> typ) throws IOException {
+        return leseAntwort(response.body(), typ);
+    }
+
+    private static <T> T leseAntwort(String antwort, Class<T> typ) throws IOException {
         T payload;
         try {
-            payload = GSON.fromJson(response.body(), typ);
+            payload = GSON.fromJson(antwort, typ);
         } catch (JsonParseException e) {
             throw new IOException(I18n.get("ptmonline.fehler.antwort_ungueltig"), e);
         }

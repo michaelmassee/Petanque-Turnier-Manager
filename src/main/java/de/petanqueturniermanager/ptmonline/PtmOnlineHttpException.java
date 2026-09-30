@@ -72,6 +72,37 @@ public final class PtmOnlineHttpException extends IOException {
     }
 
     /**
+     * Schreibzähler veraltet: eine Kopie dieses Dokuments hat inzwischen geschrieben ({@code document_forked}, E-24).
+     */
+    public boolean istDokumentGeforkt() {
+        return hatKonfliktCode("document_forked");
+    }
+
+    /**
+     * Das Online-Turnier läuft bereits; ein anderes Dokument kann nur als ausdrückliche Wiederherstellung verbunden
+     * werden ({@code recovery_required}, E-03). {@link #rundenOnline()} nennt die online vorhandenen Runden.
+     */
+    public boolean istWiederherstellungNoetig() {
+        return hatKonfliktCode("recovery_required");
+    }
+
+    /** Anzahl der online vorhandenen Spielrunden aus {@code recovery_required}; 0, wenn nicht angegeben. */
+    public int rundenOnline() {
+        return details().filter(details -> details.has("roundsOnline"))
+                .map(details -> details.get("roundsOnline").getAsInt()).orElse(0);
+    }
+
+    /** PTM-Online legt ab {@code running} keine Anmeldung mehr an ({@code tournament_running}, E-13). */
+    public boolean istTurnierLaeuft() {
+        return hatKonfliktCode("tournament_running");
+    }
+
+    /** Das Online-Turnier ist abgeschlossen und nimmt kein Dokument mehr an ({@code tournament_finished}). */
+    public boolean istTurnierAbgeschlossen() {
+        return hatKonfliktCode("tournament_finished");
+    }
+
+    /**
      * Das Online-Turnier existiert nicht mehr – in PTM-Online gelöscht. Andere 404-Antworten (z.&nbsp;B. eine
      * einzelne Anmeldung) zählen nicht dazu.
      */

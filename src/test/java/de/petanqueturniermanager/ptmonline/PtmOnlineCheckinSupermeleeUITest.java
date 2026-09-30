@@ -90,7 +90,8 @@ class PtmOnlineCheckinSupermeleeUITest extends BaseCalcUITest {
                 .containsEntry(onlineId(spielerNr.get(2)), OnlineTeilnahme.INAKTIV);
 
         PtmOnlineCheckin.Aenderung aenderung = new PtmOnlineCheckin().ermittle(TURNIER_ID, stand).orElseThrow();
-        PtmOnlineStatusAbgleich.senden(aenderung.auftrag(), verbindung.mapping(), verbindung.gebundenerClient());
+        PtmOnlineAuftragsTestHilfe.teilnahmeSenden(wkingSpreadsheet, verbindung.mapping(), verbindung.gebundenerClient(),
+                TURNIER_ID, aenderung.auftrag().eintraege());
 
         List<JsonObject> gepusht = server.gepushteErgebnisse();
         assertThat(gepusht).isNotEmpty().allSatisfy(

@@ -16,7 +16,6 @@ import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.ptmonline.PtmOnlineFehlerText;
-import de.petanqueturniermanager.ptmonline.PtmOnlineHttpException;
 import de.petanqueturniermanager.ptmonline.PtmOnlineLiveBeobachter;
 import de.petanqueturniermanager.ptmonline.PtmOnlineRegistrationMapping;
 import de.petanqueturniermanager.ptmonline.PtmOnlineTrennung;
@@ -74,10 +73,8 @@ final class PtmOnlineVerbindungsRunner extends SheetRunner {
      */
     private void onlineTrennen(PtmOnlineRegistrationMapping mapping) throws GenerateException {
         try {
-            PtmOnlineTrennung.online(new LibreOfficePtmOnlineSpeicher(getxContext()).laden(), mapping);
-        } catch (PtmOnlineHttpException e) {
-            getLogger().error("PTM-Online: Verbindung trennen (Server-Aufruf) fehlgeschlagen", e);
-            throw new GenerateException(PtmOnlineFehlerText.fuer(e));
+            PtmOnlineTrennung.online(getWorkingSpreadsheet(), spieltagNr,
+                    new LibreOfficePtmOnlineSpeicher(getxContext()).laden(), mapping);
         } catch (IOException e) {
             getLogger().warn("PTM-Online: Verbindung trennen – Server nicht erreichbar", e);
             if (!nurLokalTrennen(e)) {

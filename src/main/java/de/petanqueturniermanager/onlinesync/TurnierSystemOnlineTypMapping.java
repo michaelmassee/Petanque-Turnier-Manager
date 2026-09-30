@@ -14,9 +14,9 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
  * <p>
  * Supermelee ist serverseitig <b>kein eigener {@code type}-Wert mehr</b> (Migration
  * {@code 0031_registration_type_supermelee.sql}): dort gilt {@code type="rangliste"} <b>und</b>
- * {@code registrationType="supermelee"}. Für alle anderen Turniersysteme ist der reine
- * {@code type}-Vergleich ausreichend, {@code registrationType} ist dort {@code "forme"} und für
- * den Systemvergleich irrelevant.
+ * {@code registrationType="supermelee"}. Für alle anderen Turniersysteme unterscheidet
+ * {@code registrationType} Einzel-Anmeldung ({@code "melee"}, lokal die Mêlée-Anmeldeliste) von
+ * Team-Anmeldung ({@code "forme"}, lokal die Meldeliste).
  */
 public final class TurnierSystemOnlineTypMapping {
 
@@ -40,18 +40,27 @@ public final class TurnierSystemOnlineTypMapping {
 		return Optional.ofNullable(typ);
 	}
 
-	/** {@code registrationType}-Wert, der für das gegebene {@link TurnierSystem} zusätzlich zum {@code type} passen muss. */
-	public static Optional<String> onlineRegistrationTyp(TurnierSystem ts) {
-		return ts == TurnierSystem.SUPERMELEE ? Optional.of("supermelee") : Optional.empty();
+	/**
+	 * {@code registrationType}-Wert, der zusätzlich zum {@code type} passen muss: Supermêlée immer
+	 * {@code supermelee}; sonst entscheidet die Anmeldeart des Dokuments – eine Mêlée-Anmeldeliste passt nur
+	 * zu {@code melee}, eine Team-Meldeliste nur zu {@code forme}.
+	 */
+	public static String onlineRegistrationTyp(TurnierSystem ts, boolean meleeAnmeldung) {
+		if (ts == TurnierSystem.SUPERMELEE) {
+			return "supermelee";
+		}
+		return meleeAnmeldung ? "melee" : "forme";
 	}
 
-	/** Ob das online gemeldete Turnier ({@code type}/{@code registrationType}) zum lokalen {@link TurnierSystem} passt. */
-	public static boolean passtZu(TurnierSystem ts, OnlineTournamentDto online) {
+	/**
+	 * Ob das online gemeldete Turnier ({@code type}/{@code registrationType}) zum lokalen {@link TurnierSystem}
+	 * und zur Anmeldeart des Dokuments passt.
+	 */
+	public static boolean passtZu(TurnierSystem ts, boolean meleeAnmeldung, OnlineTournamentDto online) {
 		Optional<String> erwarteterTyp = onlineTyp(ts);
 		if (erwarteterTyp.isEmpty() || !erwarteterTyp.get().equals(online.type)) {
 			return false;
 		}
-		Optional<String> erwarteterRegistrationTyp = onlineRegistrationTyp(ts);
-		return erwarteterRegistrationTyp.isEmpty() || erwarteterRegistrationTyp.get().equals(online.registrationType);
+		return onlineRegistrationTyp(ts, meleeAnmeldung).equals(online.registrationType);
 	}
 }

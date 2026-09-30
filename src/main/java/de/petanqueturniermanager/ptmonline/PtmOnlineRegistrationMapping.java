@@ -20,6 +20,7 @@ import de.petanqueturniermanager.onlinesync.OnlineTournamentDto;
 import de.petanqueturniermanager.onlinesync.sheet.NeueZuordnung;
 import de.petanqueturniermanager.onlinesync.sheet.PtmOnlineSyncSheet;
 import de.petanqueturniermanager.onlinesync.sheet.ZuordnungsAnzeige;
+import de.petanqueturniermanager.ptmonline.auftrag.AuftragsBestand;
 import de.petanqueturniermanager.ptmonline.dto.SyncBindingDto;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationAnswerDto;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationDto;
@@ -224,5 +225,36 @@ public class PtmOnlineRegistrationMapping {
 
     public Optional<String> getLeaseToken() throws GenerateException {
         return syncSheet.getLeaseToken();
+    }
+
+    /** Schreibzähler und Auftragspuffer der Bindung, wie mit dem Dokument gespeichert. */
+    public AuftragsBestand leseAuftragsBestand() throws GenerateException {
+        return syncSheet.leseAuftragsBestand();
+    }
+
+    /** Speichert Schreibzähler und Auftragspuffer; nur im Dokument-Kontext (SheetRunner). */
+    public void schreibeAuftragsBestand(AuftragsBestand bestand) throws GenerateException {
+        syncSheet.schreibeAuftragsBestand(bestand);
+    }
+
+    public Optional<String> getConnectRequestId() throws GenerateException {
+        return syncSheet.getConnectRequestId();
+    }
+
+    public void setConnectRequestId(String connectRequestId) throws GenerateException {
+        syncSheet.setConnectRequestId(connectRequestId);
+    }
+
+    /** Lokaler Turnierstart, dessen Übergang zu {@code running} online noch aussteht (KP-05). */
+    public Optional<Instant> getRunningAusstehendSeit() throws GenerateException {
+        return syncSheet.getRunningAusstehendSeit();
+    }
+
+    public void setRunningAusstehendSeit(Instant lokalerStart) throws GenerateException {
+        syncSheet.setRunningAusstehendSeit(lokalerStart);
+    }
+
+    public void protokolliereOfflineBestaetigung(Instant zeitpunkt, Instant letzterSync) throws GenerateException {
+        syncSheet.protokolliereOfflineBestaetigung(zeitpunkt, letzterSync);
     }
 }
