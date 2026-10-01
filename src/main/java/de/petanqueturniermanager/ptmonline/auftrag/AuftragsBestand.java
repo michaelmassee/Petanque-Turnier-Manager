@@ -32,7 +32,9 @@ public final class AuftragsBestand {
 
     /** Zustand einer Pufferzeile; angenommene Aufträge verschwinden aus dem Puffer. */
     public enum Zustand {
-        OFFEN, VERWORFEN, ABGELEHNT
+        OFFEN, VERWORFEN, ABGELEHNT,
+        /** Abgelehnt, und die Turnierleitung hat die Ablehnung in der Konfliktliste zur Kenntnis genommen (A-29). */
+        QUITTIERT
     }
 
     /**
@@ -132,6 +134,18 @@ public final class AuftragsBestand {
         }
         geaendert = true;
         kuerzeProtokoll();
+    }
+
+    /** Markiert einen abgelehnten Auftrag als zur Kenntnis genommen; die Protokollzeile bleibt stehen. */
+    public synchronized void quittiere(String auftragsId) {
+        boolean abgelehnt = eintraege.stream().anyMatch(eintrag -> eintrag.zustand() == Zustand.ABGELEHNT
+                && eintrag.auftrag().auftragsId().equals(auftragsId));
+        if (abgelehnt) {
+            eintraege.replaceAll(eintrag -> eintrag.auftrag().auftragsId().equals(auftragsId)
+                    ? new Eintrag(eintrag.auftrag(), Zustand.QUITTIERT, eintrag.grund(), Instant.now())
+                    : eintrag);
+            geaendert = true;
+        }
     }
 
     /**

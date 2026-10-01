@@ -14,9 +14,12 @@ import org.junit.jupiter.api.Test;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsArt;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsBestand;
 import de.petanqueturniermanager.ptmonline.auftrag.SyncAuftrag;
+import de.petanqueturniermanager.ptmonline.auftrag.versand.SyncAntwort;
+import de.petanqueturniermanager.ptmonline.auftrag.versand.VersandErgebnis;
 import de.petanqueturniermanager.ptmonline.dto.MeleeTeamDto;
 
 class PtmOnlineAuftraegeTest {
@@ -103,5 +106,40 @@ class PtmOnlineAuftraegeTest {
             assertThat(JsonParser.parseString(auftrag.body()).getAsJsonObject().getAsJsonArray("teams").get(0)
                     .getAsJsonObject().getAsJsonArray("registrationIds")).hasSize(2);
         });
+    }
+
+    @Test
+    void abgelehnteAuftraegeWerdenZuFaellenBisSieQuittiertSind() {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        SyncAuftrag aenderung = bestand.erzeuge(AuftragsArt.ANMELDUNG_AENDERN, "PUT", "/x", "{}",
+                "{\"lokaleUuid\":\"u1\",\"bezeichnung\":\"Anna Adler\"}");
+        SyncAuftrag runde = bestand.erzeuge(AuftragsArt.RUNDE, "PUT", "/r", "{}", "{}");
+        for (SyncAuftrag auftrag : List.of(aenderung, runde)) {
+            VersandErgebnis abgelehnt = new VersandErgebnis(auftrag, new SyncAntwort(409, "{}", false), false);
+            bestand.gesendet(abgelehnt);
+            bestand.angewendet(abgelehnt, auftrag == aenderung ? "composition_locked" : "HTTP 409");
+        }
+
+        List<PtmOnlineAuftraege.AbgelehnterFall> faelle = PtmOnlineAuftraege.abgelehnteFaelle(bestand);
+
+        assertThat(faelle).extracting(fall -> fall.fall().lokal()).containsExactly("Anna Adler (#1)",
+                AuftragsArt.RUNDE.anzeige() + " (#2)");
+        assertThat(faelle.getFirst().fall().lokaleUuid()).isEqualTo("u1");
+        assertThat(faelle.getFirst().fall().optionen()).containsExactly(Entscheidung.ZUR_KENNTNIS);
+        assertThat(faelle.get(0).fall().schluessel()).isNotEqualTo(faelle.get(1).fall().schluessel());
+
+        bestand.quittiere(aenderung.auftragsId());
+
+        assertThat(PtmOnlineAuftraege.abgelehnteFaelle(bestand)).extracting(PtmOnlineAuftraege.AbgelehnterFall::auftragsId)
+                .containsExactly(runde.auftragsId());
+    }
+
+    @Test
+    void bekannteAblehnungscodesErhaltenEigeneHinweise() {
+        I18n.init(null);
+
+        assertThat(PtmOnlineAuftraege.ablehnungsHinweis("composition_locked"))
+                .isEqualTo(I18n.get("ptmonline.konflikt.hinweis.abgelehnt.composition_locked"));
+        assertThat(PtmOnlineAuftraege.ablehnungsHinweis("HTTP 500")).contains("HTTP 500");
     }
 }

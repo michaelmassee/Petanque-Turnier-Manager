@@ -314,11 +314,14 @@ public final class RegistrationImportTask {
         fortschritt.status(I18n.get("ptmonline.fortschritt.details_aktualisieren"));
         Bezeichnungsabgleich bezeichnungen = aktualisiereBezeichnungen(config, mapping, bestand, tournamentId, ziel,
                 aktualisierung, sammlung);
-        meldeNichtUebertragene(sammlung, importLauf.ergebnis(), neuanlage);
+        meldeNichtUebertragene(sammlung, importLauf.ergebnis());
         if (!sammlung.protokoll().isEmpty()) {
             PtmOnlineAuftraege.entscheidungen(bestand, tournamentId, sammlung.protokoll());
             sendeSynchron(config, mapping, bestand);
         }
+        // Zuletzt: auch Ablehnungen dieses Laufs und des Hintergrundversands (A-29).
+        PtmOnlineAuftraege.abgelehnteFaelle(bestand).forEach(abgelehnt -> sammlung.melde(abgelehnt.fall()));
+        PtmOnlineAuftraege.speichern(bestand, mapping);
         mapping.konfliktListe().schreibe(sammlung.zeilen(), zeitpunktText(Instant.now()));
         OnlineBefunde online = new OnlineBefunde(importLauf.status().ausgeschlossen(),
                 importLauf.status().wiederBestaetigt(), bezeichnungen.kontoKonflikte(),
@@ -1202,6 +1205,12 @@ public final class RegistrationImportTask {
         if (!sammlung.hatEntscheidungen()) {
             return;
         }
+        for (PtmOnlineAuftraege.AbgelehnterFall abgelehnt : PtmOnlineAuftraege.abgelehnteFaelle(bestand)) {
+            if (sammlung.entscheidung(abgelehnt.fall()).isPresent()) {
+                bestand.quittiere(abgelehnt.auftragsId());
+                sammlung.angewendet(Entscheidung.ZUR_KENNTNIS, abgelehnt.fall().lokaleUuid(), null);
+            }
+        }
         Map<String, Integer> revisionen = mapping.getExecutionRevisionenProUuid();
         Map<String, ZuordnungsZusatz> neueVermerke = new LinkedHashMap<>();
         for (LokalerFall lokal : lokaleFaelle(ziel, mapping)) {
@@ -1277,17 +1286,15 @@ public final class RegistrationImportTask {
         }
     }
 
-    /** Anmeldungen und Meldungen, die in diesem Abgleich nicht übertragen werden konnten. */
-    private static void meldeNichtUebertragene(KonfliktSammlung sammlung, ImportErgebnis ergebnis,
-            NeuanlageErgebnis neuanlage) {
+    /**
+     * Online-Anmeldungen, die dieser Abgleich nicht übernehmen konnte. Lokale Meldungen, deren Online-Anlage
+     * abgelehnt wurde, erscheinen als abgelehnte Aufträge.
+     */
+    private static void meldeNichtUebertragene(KonfliktSammlung sammlung, ImportErgebnis ergebnis) {
         ergebnis.namensgleich().forEach(name -> sammlung.melde(nichtUebertragen("", name,
                 "ptmonline.konflikt.hinweis.namensgleich")));
         ergebnis.nichtZuordenbar().forEach(name -> sammlung.melde(nichtUebertragen("", name,
                 "ptmonline.konflikt.hinweis.nicht_zuordenbar")));
-        neuanlage.abgelehnt().forEach(name -> sammlung.melde(nichtUebertragen(name, "",
-                "ptmonline.konflikt.hinweis.online_abgelehnt")));
-        neuanlage.nichtAngelegt().forEach(name -> sammlung.melde(nichtUebertragen(name, "",
-                "ptmonline.konflikt.hinweis.nach_start_lokal")));
     }
 
     private static KonfliktFall nichtUebertragen(String lokal, String online, String hinweisSchluessel) {

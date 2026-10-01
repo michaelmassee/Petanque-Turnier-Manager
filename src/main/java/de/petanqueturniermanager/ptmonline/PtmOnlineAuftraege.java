@@ -26,6 +26,7 @@ import com.sun.star.uno.UnoRuntime;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.onlinesync.sheet.NeueZuordnung;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsArt;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsBestand;
@@ -245,6 +246,41 @@ public final class PtmOnlineAuftraege {
             bestand.erzeuge(AuftragsArt.ENTSCHEIDUNGEN, "POST", TournamentSyncClient.entscheidungenPfad(tournamentId),
                     TournamentSyncClient.entscheidungenBody(teil), "{}");
         }
+    }
+
+    /** Ein abgelehnter, noch nicht zur Kenntnis genommener Auftrag als Fall der Konfliktliste. */
+    record AbgelehnterFall(String auftragsId, KonfliktFall fall) {}
+
+    /**
+     * Abgelehnte, noch nicht quittierte Aufträge als Fälle der Konfliktliste (A-29) – auch die aus dem
+     * Hintergrundversand. Die Bezeichnung trägt den Schreibzähler, unter dem der Auftrag im Sync-Blatt steht.
+     */
+    static List<AbgelehnterFall> abgelehnteFaelle(AuftragsBestand bestand) {
+        List<AbgelehnterFall> faelle = new ArrayList<>();
+        for (AuftragsBestand.Eintrag eintrag : bestand.eintraege()) {
+            if (eintrag.zustand() != AuftragsBestand.Zustand.ABGELEHNT) {
+                continue;
+            }
+            SyncAuftrag auftrag = eintrag.auftrag();
+            JsonObject kontext = kontext(auftrag);
+            String bezeichnung = text(kontext, KONTEXT_BEZEICHNUNG);
+            String lokal = (bezeichnung.isEmpty() ? auftrag.art().anzeige() : bezeichnung) + " (#" + auftrag.zaehler()
+                    + ")";
+            String uuid = text(kontext, KONTEXT_UUID);
+            faelle.add(new AbgelehnterFall(auftrag.auftragsId(), new KonfliktFall(KonfliktArt.AUFTRAG_ABGELEHNT,
+                    uuid.isEmpty() ? null : uuid, List.of(), lokal, auftrag.art().anzeige(),
+                    ablehnungsHinweis(eintrag.grund()), List.of(Entscheidung.ZUR_KENNTNIS))));
+        }
+        return faelle;
+    }
+
+    /** Was eine Ablehnung bedeutet und was zu tun ist; unbekannte Gründe erscheinen unverändert. */
+    static String ablehnungsHinweis(String grund) {
+        return switch (grund) {
+            case "composition_locked", "registration_drawn", "user_id_invalid", "unit_invalid", "execution_conflict",
+                    CODE_TURNIER_LAEUFT -> I18n.get("ptmonline.konflikt.hinweis.abgelehnt." + grund);
+            default -> I18n.get("ptmonline.konflikt.hinweis.abgelehnt", grund);
+        };
     }
 
     /** Trennen: offene Aufträge sind danach sinnlos und werden verworfen. */

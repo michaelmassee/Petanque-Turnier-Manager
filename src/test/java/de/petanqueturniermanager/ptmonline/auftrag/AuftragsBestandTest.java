@@ -143,4 +143,23 @@ class AuftragsBestandTest {
         assertThat(bestand.eintraege()).hasSize(AuftragsBestand.MAX_PROTOKOLL + 1);
         assertThat(bestand.zuSenden(false)).containsExactly(offen);
     }
+
+    @Test
+    void quittierterAuftragBleibtImProtokoll() {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        SyncAuftrag abgelehnt = erzeuge(bestand, AuftragsArt.ANMELDUNG_AENDERN);
+        SyncAuftrag offen = erzeuge(bestand, AuftragsArt.TEILNAHME);
+        bestand.gesendet(ergebnis(abgelehnt, false));
+        bestand.angewendet(ergebnis(abgelehnt, false), "composition_locked");
+        bestand.gespeichert();
+
+        bestand.quittiere(offen.auftragsId());
+        assertThat(bestand.istGeaendert()).as("nur abgelehnte lassen sich quittieren").isFalse();
+        bestand.quittiere(abgelehnt.auftragsId());
+
+        assertThat(bestand.eintraege()).extracting(AuftragsBestand.Eintrag::zustand)
+                .containsExactly(AuftragsBestand.Zustand.QUITTIERT, AuftragsBestand.Zustand.OFFEN);
+        assertThat(bestand.eintraege().getFirst().grund()).isEqualTo("composition_locked");
+        assertThat(bestand.istGeaendert()).isTrue();
+    }
 }

@@ -3,6 +3,10 @@
  */
 package de.petanqueturniermanager.ptmonline.auftrag;
 
+import java.util.Locale;
+
+import de.petanqueturniermanager.helper.i18n.I18n;
+
 /**
  * Art eines Schreibauftrags an PTM-Online (Auftragsmatrix der Spezifikation). Jede Art zählt: sie erhält eine eigene
  * Auftrags-ID und den nächsten Schreibzähler des Dokuments. Verbinden und Übernehmen sind keine Aufträge – sie
@@ -40,6 +44,10 @@ public enum AuftragsArt {
      */
     public boolean wirdBeimStartVerworfen() {
         return this == ANMELDUNG_ANLEGEN || this == ANMELDUNG_AENDERN || this == TEILNAHME;
+    }
+
+    public String anzeige() {
+        return I18n.get("ptmonline.auftrag.art." + name().toLowerCase(Locale.ROOT));
     }
 
     /** Nur der Übergang zu {@code running} darf auch bei pausiertem Sync gesendet werden (KP-05, P-58). */

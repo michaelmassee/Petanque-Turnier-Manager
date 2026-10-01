@@ -33,6 +33,8 @@ public enum Entscheidung {
     ONLINE_STORNIEREN(null),
     /** Nach dem Turnierstart eingegangene Anmeldung übernehmen (KP-05). */
     UEBERNEHMEN("link"),
+    /** Ablehnung eines Schreibauftrags zur Kenntnis genommen; sie verschwindet aus der Konfliktliste. */
+    ZUR_KENNTNIS(null),
     /** Erste Runde trotz offener Ausschlussgründe im Vorabcheck gestartet (A-29). */
     TROTZDEM_STARTEN("start_despite_findings");
 

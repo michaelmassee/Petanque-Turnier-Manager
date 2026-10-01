@@ -30,7 +30,9 @@ public enum KonfliktArt {
     /** Gleicher Name oder gleiche E-Mail ohne Konto, nur ein Hinweis (KP-06 b'). */
     MOEGLICHE_DUBLETTE(false),
     /** Anmeldung oder Meldung, die nicht übertragen werden konnte. */
-    NICHT_UEBERTRAGEN(false);
+    NICHT_UEBERTRAGEN(false),
+    /** PTM-Online hat einen Schreibauftrag fachlich abgelehnt (A-29). */
+    AUFTRAG_ABGELEHNT(false);
 
     private final boolean ausschlussgrund;
 
