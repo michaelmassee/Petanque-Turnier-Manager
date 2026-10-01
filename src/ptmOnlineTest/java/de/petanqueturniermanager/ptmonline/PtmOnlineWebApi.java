@@ -35,7 +35,7 @@ final class PtmOnlineWebApi {
     }
 
     /** Öffentliches Turnier mit offener Online-Anmeldung, angelegt mit dem API-Schlüssel des Organisators. */
-    String turnierAnlegen(String name, String typ, String formation, LocalDate datum)
+    String turnierAnlegen(String name, String typ, String anmeldeTyp, String formation, LocalDate datum)
             throws IOException, InterruptedException {
         JsonObject body = new JsonObject();
         body.addProperty("name", name);
@@ -45,7 +45,7 @@ final class PtmOnlineWebApi {
         body.addProperty("location", "Testplatz");
         body.addProperty("type", typ);
         body.addProperty("formation", formation);
-        body.addProperty("registrationType", "forme");
+        body.addProperty("registrationType", anmeldeTyp);
         body.addProperty("status", "registration");
         body.addProperty("visibility", "public");
         body.addProperty("participantsPublic", true);

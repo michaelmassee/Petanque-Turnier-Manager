@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -39,10 +40,15 @@ import de.petanqueturniermanager.spielerdb.MeldelisteZiel;
 import de.petanqueturniermanager.spielerdb.MeldelisteZielFactory;
 import de.petanqueturniermanager.spielerdb.MeldelisteZiel.NeueMeldungTeilnahme;
 import de.petanqueturniermanager.spielerdb.SpielerMitVerein;
+import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
+import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
+import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_New;
+import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
 
 /**
- * Grundlage der PTM-Online-Zusammenspiel-Tests: echtes Calc-Dokument mit Schweizer Meldeliste, verbunden über den
- * echten Verbinden-Runner mit einem Turnier auf dem lokal gestarteten PTM-Online-Worker
+ * Grundlage der PTM-Online-Zusammenspiel-Tests: echtes Calc-Dokument mit Meldeliste (Schweizer oder Supermêlée),
+ * verbunden über den echten Verbinden-Runner mit einem Turnier auf dem lokal gestarteten PTM-Online-Worker
  * ({@link LokalerPtmOnlineServer}). Jeder Test legt sein eigenes Online-Turnier an.
  * <p>
  * Die Zugangsdaten werden nur im Speicher ersetzt ({@link LibreOfficePtmOnlineSpeicher#setZugangsdatenForTest}); das
@@ -50,12 +56,14 @@ import de.petanqueturniermanager.spielerdb.SpielerMitVerein;
  */
 abstract class BasePtmOnlineZusammenspielTest extends BaseCalcUITest {
 
-    protected static final TurnierSystem SYSTEM = TurnierSystem.SCHWEIZER;
     private static final Duration WARTEZEIT = Duration.ofSeconds(30);
 
     protected static LokalerPtmOnlineServer server;
     protected static PtmOnlineWebApi online;
 
+    /** Turniersystem des Dokuments; bei Supermêlée zusätzlich der verbundene Spieltag. */
+    protected TurnierSystem system;
+    protected Integer spieltagNr;
     protected MeldelisteZiel ziel;
     protected PtmOnlineRegistrationMapping mapping;
     protected String turnierId;
@@ -86,11 +94,37 @@ abstract class BasePtmOnlineZusammenspielTest extends BaseCalcUITest {
 
     /** Online-Turnier (Schweizer, Formée) und leere lokale Meldeliste in derselben Formation. */
     protected void turnierAnlegen(Formation formation, LocalDate datum) throws Exception {
-        turnierId = online.turnierAnlegen("E2E " + getClass().getSimpleName(), "schweizer",
-                formation.name().toLowerCase(java.util.Locale.ROOT), datum);
+        system = TurnierSystem.SCHWEIZER;
+        spieltagNr = null;
+        turnierId = online.turnierAnlegen("E2E " + getClass().getSimpleName(), "schweizer", "forme",
+                formation.name().toLowerCase(Locale.ROOT), datum);
         new SchweizerMeldeListeSheetNew(wkingSpreadsheet).createMeldelisteWithParams(formation, false, false);
-        docPropHelper.setIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM, SYSTEM.getId());
+        docPropHelper.setIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM, system.getId());
         ziel = MeldelisteZielFactory.fuerPtmOnline(wkingSpreadsheet).orElseThrow();
+    }
+
+    /** Leere Supermêlée-Meldeliste (Triplette) mit Spieltag 1 als aktivem Spieltag. */
+    protected void supermeleeMeldelisteAnlegen() throws Exception {
+        system = TurnierSystem.SUPERMELEE;
+        new MeldeListeSheet_New(wkingSpreadsheet).createMeldelisteWithParams(SuperMeleeMode.Triplette);
+        docPropHelper.setIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM, system.getId());
+        aktivenSpieltagUebernehmen();
+    }
+
+    /**
+     * Jeder Supermêlée-Spieltag ist online ein eigenes Turnier (E-25): legt es an; verbunden wird es mit dem aktiven
+     * Spieltag.
+     */
+    protected void supermeleeSpieltagOnlineAnlegen(LocalDate datum) throws Exception {
+        turnierId = online.turnierAnlegen("E2E Supermêlée Spieltag " + spieltagNr, "rangliste", "supermelee",
+                "triplette", datum);
+    }
+
+    /** Nach einem Spieltagwechsel: Spieltag-Nr und Sync-Ziel des neuen aktiven Spieltags. */
+    protected void aktivenSpieltagUebernehmen() throws Exception {
+        spieltagNr = new SuperMeleeKonfigurationSheet(wkingSpreadsheet).getAktiveSpieltag().getNr();
+        ziel = MeldelisteZielFactory.fuerPtmOnline(wkingSpreadsheet).orElseThrow();
+        mapping = null;
     }
 
     /** Wie „Verbinden“ im Menü: Server-Bindung, Blatt „PTMOnline Sync“, Schreib-Lease. */
@@ -98,18 +132,19 @@ abstract class BasePtmOnlineZusammenspielTest extends BaseCalcUITest {
         OnlineTournamentDto turnier = new OnlineTournamentDto();
         turnier.id = turnierId;
         turnier.name = "E2E";
-        turnier.type = "schweizer";
-        turnier.registrationType = "forme";
+        boolean supermelee = system == TurnierSystem.SUPERMELEE;
+        turnier.type = supermelee ? "rangliste" : "schweizer";
+        turnier.registrationType = supermelee ? "supermelee" : "forme";
         turnier.status = "registration";
-        assertThat(PtmOnlineVerbindenTestZugang.verbinden(wkingSpreadsheet, SYSTEM, null, server.zugangsdaten(),
-                turnier)).as("Verbinden erfolgreich").isTrue();
-        mapping = new PtmOnlineRegistrationMapping(wkingSpreadsheet, SYSTEM, null);
+        assertThat(PtmOnlineVerbindenTestZugang.verbinden(wkingSpreadsheet, system, spieltagNr,
+                server.zugangsdaten(), turnier)).as("Verbinden erfolgreich").isTrue();
+        mapping = new PtmOnlineRegistrationMapping(wkingSpreadsheet, system, spieltagNr);
         assertThat(mapping.getTournamentId()).contains(turnierId);
     }
 
     /** Manueller Abgleich (Menü „Abgleichen“). */
     protected void abgleichen() throws Exception {
-        PtmOnlineAbgleichSheetRunner runner = new PtmOnlineAbgleichSheetRunner(wkingSpreadsheet, SYSTEM, null,
+        PtmOnlineAbgleichSheetRunner runner = new PtmOnlineAbgleichSheetRunner(wkingSpreadsheet, system, spieltagNr,
                 server.zugangsdaten(), mapping, turnierId, ziel);
         runner.start();
         runner.join();
@@ -126,8 +161,18 @@ abstract class BasePtmOnlineZusammenspielTest extends BaseCalcUITest {
         return ziel.schreibeBlockUndLiefereZeile(spieler, NeueMeldungTeilnahme.INAKTIV);
     }
 
-    /** Check-in in der Aktiv-Spalte, wie die Turnierleitung vor Ort. */
+    /**
+     * Check-in wie die Turnierleitung vor Ort: Aktiv-Spalte bzw. bei Supermêlée die Spalte des aktiven Spieltags
+     * (Eintrag = am Spieltag gemeldet).
+     */
     protected void einchecken(int zeile1Basiert) throws Exception {
+        if (system == TurnierSystem.SUPERMELEE) {
+            MeldeListeSheet_Update meldeliste = new MeldeListeSheet_Update(wkingSpreadsheet);
+            sheetHlp.setNumberValueInCell(NumberCellValue.from(meldeliste.getXSpreadSheet(),
+                    Position.from(meldeliste.spieltagSpalte(SpielTagNr.from(spieltagNr)), zeile1Basiert - 1))
+                    .setValue(1));
+            return;
+        }
         SchweizerMeldeListeSheetUpdate meldeliste = new SchweizerMeldeListeSheetUpdate(wkingSpreadsheet);
         sheetHlp.setNumberValueInCell(NumberCellValue.from(meldeliste.getXSpreadSheet(),
                 Position.from(meldeliste.getAktivSpalte(), zeile1Basiert - 1))
