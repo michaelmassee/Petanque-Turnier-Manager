@@ -25,7 +25,9 @@ public enum AuftragsArt {
     /** Löschen einer lokal nicht mehr vorhandenen Spielrunde. */
     RUNDE_LOESCHEN,
     /** Ranglisten-Snapshot für die Live-Ansicht. */
-    RANGLISTE;
+    RANGLISTE,
+    /** Vollständige Zuordnung der Mêlée-Einzelanmeldungen zu den lokal gemischten Teams (KP-18). */
+    MELEE_TEAMS;
 
     /**
      * Noch nicht gesendete Aufträge dieser Art aus der Zeit vor dem lokalen Turnierstart werden beim Start verworfen

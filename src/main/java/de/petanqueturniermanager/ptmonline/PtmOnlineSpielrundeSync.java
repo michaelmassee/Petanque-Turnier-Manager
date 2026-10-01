@@ -4,6 +4,7 @@
 package de.petanqueturniermanager.ptmonline;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -14,9 +15,11 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
@@ -37,6 +40,7 @@ import de.petanqueturniermanager.model.IMeldung;
 import de.petanqueturniermanager.model.IMeldungen;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsBestand;
 import de.petanqueturniermanager.ptmonline.auftrag.SyncAuftrag;
+import de.petanqueturniermanager.ptmonline.dto.MeleeTeamDto;
 import de.petanqueturniermanager.spielerdb.MeldelisteZiel;
 import de.petanqueturniermanager.spielerdb.MeldelisteSpielerDaten;
 import de.petanqueturniermanager.spielerdb.MeleeAnmeldungZiel;
@@ -158,6 +162,14 @@ public final class PtmOnlineSpielrundeSync {
                     verbindung.meldeliste(), alleTeamNummern, aktiveTeamNummern, ausgestiegeneTeamNummern));
             PtmOnlineAuftraege.teilnahme(bestand, tournamentId, status.eintraege(), mapping.getOnlineIdsProUuid(),
                     mapping.getExecutionRevisionenProUuid());
+            if (ziel instanceof MeleeAnmeldungZiel melee) {
+                PtmOnlineAuftraege.meleeTeams(bestand, tournamentId,
+                        meleeTeams(tournamentId, MeleeTeilnahme.zeilenProTeam(melee.leseMeleeZeilen(),
+                                spielerProTeam(verbindung.meldeliste())),
+                                lokaleUuids(melee, melee.leseMeleeZeilen().stream().map(zeile -> zeile.zeile() + 1)
+                                        .toList()),
+                                mapping.getOnlineIdsProUuid()));
+            }
             PtmOnlineLiveBeobachter.teilnahmeErfasst(ws.getWorkingSpreadsheetDocument(), status);
         }
         PtmOnlineAuftraege.speichern(bestand, mapping);
@@ -216,6 +228,33 @@ public final class PtmOnlineSpielrundeSync {
     private static LokaleOnlineMeldung teamMeldung(MeldelisteZiel ziel, int zeile, OnlineTeilnahme teilnahme) {
         OptionalInt setzposition = ziel.getSetzpositionAusZeile(zeile);
         return new LokaleOnlineMeldung(zeile, teilnahme, setzposition.isPresent() ? setzposition.getAsInt() : null);
+    }
+
+    /**
+     * Mêlée-Teams mit den Online-IDs ihrer Spieler (KP-18). Die Team-UUID ist aus Turnier und Team-Nr abgeleitet und
+     * bleibt so über alle Runden stabil, ohne in der Meldeliste gespeichert zu werden. Spieler ohne Online-Zuordnung
+     * fehlen, Teams ohne einen zugeordneten Spieler entfallen.
+     *
+     * @param zeilenProTeam Mêlée-Zeilen (1-basiert) je Team-Nr
+     * @param uuidProZeile  lokale UUID je Mêlée-Zeile
+     * @param onlineIds     Online-ID je lokaler UUID
+     */
+    static List<MeleeTeamDto> meleeTeams(String tournamentId, Map<Integer, List<Integer>> zeilenProTeam,
+            Map<Integer, String> uuidProZeile, Map<String, String> onlineIds) {
+        List<MeleeTeamDto> teams = new ArrayList<>();
+        zeilenProTeam.forEach((teamNr, zeilen) -> {
+            List<String> registrationIds = zeilen.stream().map(uuidProZeile::get).filter(Objects::nonNull)
+                    .map(onlineIds::get).filter(Objects::nonNull).distinct().toList();
+            if (!registrationIds.isEmpty()) {
+                teams.add(new MeleeTeamDto(meleeTeamUuid(tournamentId, teamNr), registrationIds));
+            }
+        });
+        return teams;
+    }
+
+    static String meleeTeamUuid(String tournamentId, int teamNr) {
+        return UUID.nameUUIDFromBytes(("ptm-melee-team|" + tournamentId + "|" + teamNr)
+                .getBytes(StandardCharsets.UTF_8)).toString();
     }
 
     static Map<Integer, List<MeldelisteSpielerDaten>> spielerProTeam(MeldelisteZiel meldeliste) {

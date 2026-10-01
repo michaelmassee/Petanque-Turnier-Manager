@@ -35,6 +35,7 @@ import de.petanqueturniermanager.ptmonline.auftrag.versand.VersandErgebnis;
 import de.petanqueturniermanager.ptmonline.auftrag.versand.VersandStopp;
 import de.petanqueturniermanager.ptmonline.dto.LiveMatchDto;
 import de.petanqueturniermanager.ptmonline.dto.LiveRankingEntryDto;
+import de.petanqueturniermanager.ptmonline.dto.MeleeTeamDto;
 import de.petanqueturniermanager.ptmonline.dto.NeueOnlineAnmeldung;
 import de.petanqueturniermanager.ptmonline.dto.PersonDto;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationDto;
@@ -208,6 +209,19 @@ public final class PtmOnlineAuftraege {
         bestand.erzeuge(AuftragsArt.RANGLISTE, "PUT", pfad, TournamentSyncClient.ranglisteBody(eintraege), "{}");
     }
 
+    /**
+     * Mêlée-Teamzuordnung (KP-18); ersetzt online die vorige vollständig, ein ungesendeter älterer Stand entfällt.
+     * Ohne Team mit zugeordneter Anmeldung entsteht kein Auftrag.
+     */
+    static void meleeTeams(AuftragsBestand bestand, String tournamentId, List<MeleeTeamDto> teams) {
+        if (teams.isEmpty()) {
+            return;
+        }
+        String pfad = TournamentSyncClient.meleeTeamsPfad(tournamentId);
+        bestand.entferneUeberholte(auftrag -> auftrag.pfad().equals(pfad));
+        bestand.erzeuge(AuftragsArt.MELEE_TEAMS, "PUT", pfad, TournamentSyncClient.meleeTeamsBody(teams), "{}");
+    }
+
     /** Trennen: offene Aufträge sind danach sinnlos und werden verworfen. */
     static SyncAuftrag trennen(AuftragsBestand bestand, String tournamentId, String grundVerworfen) {
         bestand.verwerfe(art -> true, grundVerworfen);
@@ -304,7 +318,7 @@ public final class PtmOnlineAuftraege {
                                     + "Revisionen bleiben für den nächsten Abgleich", auftrag.zaehler());
                         }
                     }
-                    case START, TRENNEN, RUNDE, RUNDE_LOESCHEN, RANGLISTE -> {
+                    case START, TRENNEN, RUNDE, RUNDE_LOESCHEN, RANGLISTE, MELEE_TEAMS -> {
                         // Nichts im Dokument festzuhalten.
                     }
                 }

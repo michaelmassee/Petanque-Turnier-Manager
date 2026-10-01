@@ -3,11 +3,13 @@
  */
 package de.petanqueturniermanager.ptmonline;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungZeile;
 import de.petanqueturniermanager.spielerdb.MeldelisteSpielerDaten;
@@ -40,6 +42,27 @@ final class MeleeTeilnahme {
                         teilnahme(zeile, teamProName, aktive, ausgestiegen),
                         zeile.setzPosition() > 0 ? zeile.setzPosition() : null))
                 .toList();
+    }
+
+    /**
+     * Mêlée-Zeilen (1-basiert) je Team-Nr der Meldeliste, Teams aufsteigend, Spieler in Meldelisten-Reihenfolge (KP-18).
+     * Nicht übernommene Spieler und mehrdeutige Namen fehlen – wie bei der Teilnahme wird nichts geraten.
+     */
+    static Map<Integer, List<Integer>> zeilenProTeam(List<MeleeAnmeldungZeile> meleeZeilen,
+            Map<Integer, List<MeldelisteSpielerDaten>> spielerProTeam) {
+        Map<String, Integer> teamProName = teamProName(spielerProTeam);
+        Map<String, Integer> zeileProName = new HashMap<>();
+        meleeZeilen.stream().filter(MeleeAnmeldungZeile::uebernommen).forEach(zeile -> zeileProName
+                .put(OnlineSpielerName.schluessel(zeile.vorname(), zeile.nachname()), zeile.zeile() + 1));
+        Map<Integer, List<Integer>> ergebnis = new TreeMap<>();
+        spielerProTeam.forEach((teamNr, spielerListe) -> spielerListe.forEach(spieler -> {
+            String name = OnlineSpielerName.schluessel(spieler.vorname(), spieler.nachname());
+            Integer zeile = zeileProName.get(name);
+            if (zeile != null && teamNr.equals(teamProName.get(name))) {
+                ergebnis.computeIfAbsent(teamNr, ignored -> new ArrayList<>()).add(zeile);
+            }
+        }));
+        return ergebnis;
     }
 
     private static OnlineTeilnahme teilnahme(MeleeAnmeldungZeile zeile, Map<String, Integer> teamProName,

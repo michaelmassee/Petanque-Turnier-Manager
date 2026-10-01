@@ -17,6 +17,7 @@ import com.google.gson.JsonParser;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsArt;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsBestand;
 import de.petanqueturniermanager.ptmonline.auftrag.SyncAuftrag;
+import de.petanqueturniermanager.ptmonline.dto.MeleeTeamDto;
 
 class PtmOnlineAuftraegeTest {
 
@@ -86,5 +87,21 @@ class PtmOnlineAuftraegeTest {
         PtmOnlineAuftraege.trennen(bestand, TURNIER, "getrennt");
 
         assertThat(bestand.zuSenden(false)).extracting(SyncAuftrag::art).containsExactly(AuftragsArt.TRENNEN);
+    }
+
+    @Test
+    void neueMeleeTeamzuordnungUeberholtDieUngesendeteAlte() {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        PtmOnlineAuftraege.meleeTeams(bestand, TURNIER, List.of(new MeleeTeamDto("a", List.of("r1"))));
+        PtmOnlineAuftraege.meleeTeams(bestand, TURNIER, List.of(new MeleeTeamDto("b", List.of("r1", "r2"))));
+        PtmOnlineAuftraege.meleeTeams(bestand, TURNIER, List.of());
+
+        assertThat(bestand.zuSenden(false)).singleElement().satisfies(auftrag -> {
+            assertThat(auftrag.art()).isEqualTo(AuftragsArt.MELEE_TEAMS);
+            assertThat(auftrag.methode()).isEqualTo("PUT");
+            assertThat(auftrag.pfad()).endsWith("/t1/melee-teams");
+            assertThat(JsonParser.parseString(auftrag.body()).getAsJsonObject().getAsJsonArray("teams").get(0)
+                    .getAsJsonObject().getAsJsonArray("registrationIds")).hasSize(2);
+        });
     }
 }

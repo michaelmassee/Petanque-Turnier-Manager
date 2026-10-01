@@ -28,6 +28,7 @@ import de.petanqueturniermanager.ptmonline.dto.AnmeldungsAbruf;
 import de.petanqueturniermanager.ptmonline.dto.KonfliktListeDto;
 import de.petanqueturniermanager.ptmonline.dto.LiveMatchDto;
 import de.petanqueturniermanager.ptmonline.dto.LiveRankingEntryDto;
+import de.petanqueturniermanager.ptmonline.dto.MeleeTeamDto;
 import de.petanqueturniermanager.ptmonline.dto.NeueOnlineAnmeldung;
 import de.petanqueturniermanager.ptmonline.dto.PersonDto;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationDto;
@@ -228,6 +229,10 @@ public class TournamentSyncClient extends PtmOnlineHttpClient implements Auftrag
         return turnierPfad(tournamentId) + "/ranking";
     }
 
+    static String meleeTeamsPfad(String tournamentId) {
+        return turnierPfad(tournamentId) + "/melee-teams";
+    }
+
     /** Nutzlast des Turnierstarts mit dem lokalen Startzeitpunkt (P-26). */
     static String startBody(Instant lokalerStart) {
         JsonObject body = new JsonObject();
@@ -277,6 +282,12 @@ public class TournamentSyncClient extends PtmOnlineHttpClient implements Auftrag
     static String ranglisteBody(List<LiveRankingEntryDto> entries) {
         JsonObject body = new JsonObject();
         body.add("entries", GSON.toJsonTree(entries));
+        return body.toString();
+    }
+
+    static String meleeTeamsBody(List<MeleeTeamDto> teams) {
+        JsonObject body = new JsonObject();
+        body.add("teams", GSON.toJsonTree(teams));
         return body.toString();
     }
 
