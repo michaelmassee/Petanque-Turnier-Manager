@@ -2,6 +2,7 @@ package de.petanqueturniermanager.spielerdb;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Locale;
@@ -373,6 +374,29 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
         } catch (Exception e) {
             throw new MeldelisteSchreibException("Schreibvorgang fehlgeschlagen", e);
         }
+    }
+
+    @Override
+    public boolean istSpielerpool() {
+        return system == TurnierSystem.SUPERMELEE;
+    }
+
+    /** Supermêlée: Zeilen mit einem Eintrag in der Spalte des aktiven Spieltags, in einem Lesezugriff. */
+    @Override
+    public Optional<Set<Integer>> zeilenDesAktivenSpieltags() {
+        if (system != TurnierSystem.SUPERMELEE) {
+            return Optional.empty();
+        }
+        RangeData daten = RangeHelper.from(sheet, doc,
+                RangePosition.from(aktivSpalte(), ersteDatenZeile, aktivSpalte(), MAX_DATEN_ZEILE)).getDataFromRange();
+        Set<Integer> zeilen = new HashSet<>();
+        for (int index = 0; index < daten.size(); index++) {
+            RowData zeile = daten.get(index);
+            if (!zeile.isEmpty() && zeile.get(0).getIntVal(0) > 0) {
+                zeilen.add(ersteDatenZeile + index + 1);
+            }
+        }
+        return Optional.of(zeilen);
     }
 
     @Override

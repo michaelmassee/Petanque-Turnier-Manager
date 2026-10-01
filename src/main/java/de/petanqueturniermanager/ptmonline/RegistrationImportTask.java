@@ -550,7 +550,8 @@ public final class RegistrationImportTask {
      * <li>keine Zeile mit derselben Besetzung: neue, inaktive Zeile;</li>
      * <li>genau eine noch nicht online verknüpfte Zeile: „möglicherweise identisch“ (KP-06 a2). Ohne Entscheidung
      * wird weder importiert noch die Zeile online angelegt; „verknüpfen“ ordnet die Zeile der Anmeldung zu,
-     * „getrennt“ lässt die Zeile normal online anlegen;</li>
+     * „getrennt“ lässt die Zeile normal online anlegen. Im Spielerpool (Supermêlée) ist der gleiche Name derselbe
+     * Spieler: die Zeile wird ohne Rückfrage verknüpft, der Spieler behält seine Spieler-Nr über die Spieltage;</li>
      * <li>genau eine namensgleiche Zeile hängt an einer online stornierten Anmeldung: Neuanmeldung
      * derselben Person, die Zeile wird auf die neue Anmeldung umgehängt und ihre Abmeldung aufgehoben;</li>
      * <li>alle namensgleichen Zeilen anderweitig verknüpft (oder in diesem Lauf neu geschrieben): nicht
@@ -615,6 +616,11 @@ public final class RegistrationImportTask {
             List<Integer> freieZeilen = nichtVerknuepfteZeilen(mapping, ziel, gleicheZeilen, geschriebeneZeilen);
             if (freieZeilen.size() == 1) {
                 int zeile = freieZeilen.getFirst();
+                if (ziel.istSpielerpool()) {
+                    verknuepfeBestehendeZeile(mapping, ziel, reg, zeile);
+                    fortschritt.status(I18n.get("ptmonline.fortschritt.meldung_verknuepft", onlineBezeichnung(reg)));
+                    continue;
+                }
                 String uuid = lokaleUuid(ziel, zeile);
                 KonfliktFall fall = new KonfliktFall(KonfliktArt.MOEGLICH_IDENTISCH, uuid, List.of(reg.id()),
                         lokaleBezeichnung(ziel, zeile), onlineBezeichnung(reg),
@@ -849,6 +855,8 @@ public final class RegistrationImportTask {
     /**
      * Legt alle lokalen Meldungen ohne Online-Zuordnung als Aufträge an (Teilnahme inaktiv – den Check-in meldet die
      * Check-in-Erkennung) und sendet sie. Nach dem Turnierstart lehnt PTM-Online ab; die Meldungen bleiben lokal.
+     * Bei Spieltagen (Supermêlée) gehören nur die am aktiven Spieltag gemeldeten Zeilen zu dessen Online-Turnier;
+     * der übrige Spielerpool bleibt rein lokal.
      */
     private static NeuanlageErgebnis neueLokaleMeldungenAnlegen(LibreOfficePtmOnlineSpeicher.Zugangsdaten config,
             PtmOnlineRegistrationMapping mapping, AuftragsBestand bestand, String tournamentId, MeldelisteZiel ziel,
@@ -856,9 +864,11 @@ public final class RegistrationImportTask {
         Map<Integer, List<MeldelisteSpielerDaten>> proZeile = spielerProZeile(ziel);
         Map<Integer, String> uuidProZeile = lokaleUuids(ziel, proZeile.keySet());
         Map<String, String> onlineIds = mapping.getOnlineIdsProUuid();
+        Optional<Set<Integer>> spieltagZeilen = ziel.zeilenDesAktivenSpieltags();
         for (Map.Entry<Integer, List<MeldelisteSpielerDaten>> eintrag : proZeile.entrySet()) {
             String uuid = uuidProZeile.get(eintrag.getKey());
-            if (uuid == null || onlineIds.containsKey(uuid) || sammlung.istZurueckgehalten(uuid)) {
+            if (uuid == null || onlineIds.containsKey(uuid) || sammlung.istZurueckgehalten(uuid)
+                    || spieltagZeilen.filter(zeilen -> !zeilen.contains(eintrag.getKey())).isPresent()) {
                 continue;
             }
             PtmOnlineAuftraege.anlage(bestand, tournamentId, uuid, zuOnlineAnmeldung(eintrag.getValue()),

@@ -4,7 +4,9 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.OptionalInt;
+import java.util.Set;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 
@@ -54,6 +56,23 @@ public interface MeldelisteZiel extends AbgleichQuelle {
      */
     int schreibeBlockUndLiefereZeile(List<SpielerMitVerein> spieler, NeueMeldungTeilnahme teilnahme)
             throws MeldelisteSchreibException;
+
+    /**
+     * Spielerpool über mehrere Spieltage (Supermêlée): Die Meldeliste lässt keine doppelten Namen zu, ein gleicher Name
+     * ist daher derselbe Spieler – er wird beim Abgleich mit seiner Zeile verknüpft, statt als „möglicherweise
+     * identisch“ auf eine Entscheidung zu warten.
+     */
+    default boolean istSpielerpool() {
+        return false;
+    }
+
+    /**
+     * Zeilen (1-basiert), die am aktiven Spieltag gemeldet sind; leer, wenn die Meldeliste keine Spieltage kennt.
+     * Nur diese Zeilen gehören zum Online-Turnier des Spieltags.
+     */
+    default Optional<Set<Integer>> zeilenDesAktivenSpieltags() {
+        return Optional.empty();
+    }
 
     /**
      * Wert der Aktiv-Spalte einer konkreten, 1-basierten Sheet-Zeile (1 = nimmt teil, 2 = ausgestiegen),
