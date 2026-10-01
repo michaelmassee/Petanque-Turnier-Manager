@@ -6,6 +6,7 @@ package de.petanqueturniermanager.ptmonline;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,10 +32,10 @@ import de.petanqueturniermanager.spielerdb.MeldelisteZielFactory;
 import de.petanqueturniermanager.spielerdb.SpielerMitVerein;
 
 /**
- * Zuordnung importierter Online-Anmeldungen zu bestehenden Meldelistenzeilen bei gleichen Namen:
- * eine noch nicht verknüpfte, namensgleiche Zeile wird übernommen, eine bereits verknüpfte nie. Die
- * weitere Anmeldung wird dann gemeldet statt still verworfen, und nach dem Unterscheidbarmachen des
- * lokalen Namens beim nächsten Abgleich übernommen.
+ * Zuordnung importierter Online-Anmeldungen zu bestehenden Meldelistenzeilen bei gleichen Namen (KP-06 a2): eine
+ * noch nicht verknüpfte, namensgleiche Zeile gilt als „möglicherweise identisch“ und wird erst mit der Entscheidung
+ * „verknüpfen“ übernommen; eine bereits verknüpfte nie. Die weitere Anmeldung wird dann gemeldet statt still
+ * verworfen, und nach dem Unterscheidbarmachen des lokalen Namens beim nächsten Abgleich übernommen.
  */
 class RegistrationImportZuordnungUITest extends BaseCalcUITest {
 
@@ -58,14 +59,51 @@ class RegistrationImportZuordnungUITest extends BaseCalcUITest {
     }
 
     @Test
-    void namensgleicheLokaleZeileWirdVerknuepftStattNeuAngelegt() throws Exception {
+    void namensgleicheLokaleZeileIstOhneEntscheidungMoeglicherweiseIdentisch() throws Exception {
         ziel.schreibeBlock(List.of(spieler("Hans", "Müller")));
+        KonfliktSammlung sammlung = KonfliktSammlung.ohneEntscheidungen();
 
-        ImportErgebnis ergebnis = uebernehme(anmeldung("r1", "Hans", "Müller"));
+        ImportErgebnis ergebnis = uebernehme(sammlung, anmeldung("r1", "Hans", "Müller"));
+
+        assertThat(ergebnis.moeglichIdentisch()).containsExactly("Hans Müller");
+        assertThat(ergebnis.vollstaendig()).as("Anmeldung kommt beim nächsten Abgleich wieder").isFalse();
+        assertThat(anzahlZeilen()).isEqualTo(1);
+        assertThat(mapping.istBereitsImportiert("r1")).isFalse();
+        String uuid = uuidVon("Hans Müller");
+        assertThat(sammlung.istZurueckgehalten(uuid)).as("lokale Zeile wird nicht online angelegt").isTrue();
+        assertThat(sammlung.faelle()).singleElement().satisfies(fall -> {
+            assertThat(fall.art()).isEqualTo(KonfliktArt.MOEGLICH_IDENTISCH);
+            assertThat(fall.optionen()).containsExactly(Entscheidung.VERKNUEPFEN, Entscheidung.GETRENNT);
+        });
+    }
+
+    @Test
+    void namensgleicheLokaleZeileWirdNachEntscheidungVerknuepftStattNeuAngelegt() throws Exception {
+        ziel.schreibeBlock(List.of(spieler("Hans", "Müller")));
+        KonfliktSammlung sammlung = verknuepfen("r1", "Hans Müller");
+
+        ImportErgebnis ergebnis = uebernehme(sammlung, anmeldung("r1", "Hans", "Müller"));
 
         assertThat(ergebnis).isEqualTo(new ImportErgebnis(0, List.of(), List.of()));
         assertThat(anzahlZeilen()).isEqualTo(1);
         assertThat(mapping.istBereitsImportiert("r1")).isTrue();
+        assertThat(sammlung.faelle()).isEmpty();
+        assertThat(sammlung.protokoll()).extracting(KonfliktSammlung.Protokoll::entscheidung)
+                .containsExactly(Entscheidung.VERKNUEPFEN);
+    }
+
+    @Test
+    void bewusstGetrenntLaesstDieZeileOnlineAnlegenUndMeldetDieAnmeldung() throws Exception {
+        ziel.schreibeBlock(List.of(spieler("Hans", "Müller")));
+        String uuid = uuidVon("Hans Müller");
+        KonfliktSammlung sammlung = KonfliktSammlung.mit(Map.of(
+                KonfliktFall.schluessel(KonfliktArt.MOEGLICH_IDENTISCH, uuid, List.of("r1")), "GETRENNT"));
+
+        ImportErgebnis ergebnis = uebernehme(sammlung, anmeldung("r1", "Hans", "Müller"));
+
+        assertThat(ergebnis.namensgleich()).containsExactly("Hans Müller");
+        assertThat(mapping.istBereitsImportiert("r1")).isFalse();
+        assertThat(sammlung.istZurueckgehalten(uuid)).isFalse();
     }
 
     /**
@@ -97,7 +135,8 @@ class RegistrationImportZuordnungUITest extends BaseCalcUITest {
     void zweiteNamensgleicheAnmeldungWirdNichtUebernommenSondernGemeldet() throws Exception {
         ziel.schreibeBlock(List.of(spieler("Hans", "Müller")));
 
-        ImportErgebnis ergebnis = uebernehme(anmeldung("r1", "Hans", "Müller"), anmeldung("r2", "Hans", "Müller"));
+        ImportErgebnis ergebnis = uebernehme(verknuepfen("r1", "Hans Müller"), anmeldung("r1", "Hans", "Müller"),
+                anmeldung("r2", "Hans", "Müller"));
 
         assertThat(ergebnis.namensgleich()).containsExactly("Hans Müller");
         assertThat(ergebnis.vollstaendig()).isFalse();
@@ -119,7 +158,8 @@ class RegistrationImportZuordnungUITest extends BaseCalcUITest {
     @Test
     void nachUmbenennenDerLokalenZeileWirdZweiteAnmeldungUebernommen() throws Exception {
         ziel.schreibeBlock(List.of(spieler("Hans", "Müller")));
-        uebernehme(anmeldung("r1", "Hans", "Müller"), anmeldung("r2", "Hans", "Müller"));
+        uebernehme(verknuepfen("r1", "Hans Müller"), anmeldung("r1", "Hans", "Müller"),
+                anmeldung("r2", "Hans", "Müller"));
 
         int lokaleZeile = ziel.findeZeileMitName("Hans Müller");
         meldeListe.getSheetHelper().setStringValueInCell(StringCellValue.from(meldeListe.getXSpreadSheet(),
@@ -135,7 +175,7 @@ class RegistrationImportZuordnungUITest extends BaseCalcUITest {
     void leerzeichenInOnlineNamenVerhindernZuordnungNicht() throws Exception {
         ziel.schreibeBlock(List.of(spieler("Anna", "Schmidt")));
 
-        uebernehme(anmeldung("r1", " Anna ", "Schmidt "));
+        uebernehme(verknuepfen("r1", "Anna Schmidt"), anmeldung("r1", " Anna ", "Schmidt "));
 
         assertThat(anzahlZeilen()).isEqualTo(1);
         assertThat(mapping.istBereitsImportiert("r1")).isTrue();
@@ -145,7 +185,8 @@ class RegistrationImportZuordnungUITest extends BaseCalcUITest {
     void abweichendeSchreibweiseWieOnlineWirdVerknuepft() throws Exception {
         ziel.schreibeBlock(List.of(spieler("Jean-Paul", "Müller")));
 
-        ImportErgebnis ergebnis = uebernehme(anmeldung("r1", "Jean Paul", "Muller"));
+        ImportErgebnis ergebnis = uebernehme(verknuepfen("r1", "Jean-Paul Müller"),
+                anmeldung("r1", "Jean Paul", "Muller"));
 
         assertThat(ergebnis).isEqualTo(new ImportErgebnis(0, List.of(), List.of()));
         assertThat(anzahlZeilen()).isEqualTo(1);
@@ -155,7 +196,7 @@ class RegistrationImportZuordnungUITest extends BaseCalcUITest {
     @Test
     void neuanmeldungNachOnlineStornoUebernimmtBisherigeZeile() throws Exception {
         ziel.schreibeBlock(List.of(spieler("Hans", "Müller")));
-        uebernehme(anmeldung("r1", "Hans", "Müller"));
+        uebernehme(verknuepfen("r1", "Hans Müller"), anmeldung("r1", "Hans", "Müller"));
         int zeile = ziel.findeZeileMitName("Hans Müller");
         String uuid = mapping.getLokaleUuid("r1").orElseThrow();
         // Zustand nach übernommenem Online-Storno (uebernehmeOnlineStornierungen)
@@ -186,7 +227,7 @@ class RegistrationImportZuordnungUITest extends BaseCalcUITest {
         int zeile = ziel.findeZeileMitName("Hans Müller");
         ziel.uebernehmeOnlineSetzposition(zeile, 1);
 
-        uebernehme(anmeldungMitSetzposition("r1", "Hans", "Müller", 5));
+        uebernehme(verknuepfen("r1", "Hans Müller"), anmeldungMitSetzposition("r1", "Hans", "Müller", 5));
 
         assertThat(mapping.istBereitsImportiert("r1")).isTrue();
         assertThat(ziel.getSetzpositionAusZeile(zeile)).hasValue(1);
@@ -210,9 +251,23 @@ class RegistrationImportZuordnungUITest extends BaseCalcUITest {
     }
 
     private ImportErgebnis uebernehme(RegistrationDto... anmeldungen) throws Exception {
+        return uebernehme(KonfliktSammlung.ohneEntscheidungen(), anmeldungen);
+    }
+
+    private ImportErgebnis uebernehme(KonfliktSammlung sammlung, RegistrationDto... anmeldungen) throws Exception {
         return RegistrationImportTask.uebernehmeAnmeldungen(List.of(anmeldungen), mapping, ziel,
                 () -> new SchweizerMeldeListeSheetUpdate(wkingSpreadsheet).vollstaendigAktualisieren(),
-                AbgleichFortschritt.OHNE);
+                AbgleichFortschritt.OHNE, sammlung);
+    }
+
+    /** Entscheidung „verknüpfen“ zur namensgleichen Zeile, wie sie die Turnierleitung in der Konfliktliste trifft. */
+    private KonfliktSammlung verknuepfen(String onlineId, String lokalerName) throws Exception {
+        return KonfliktSammlung.mit(Map.of(KonfliktFall.schluessel(KonfliktArt.MOEGLICH_IDENTISCH,
+                uuidVon(lokalerName), List.of(onlineId)), Entscheidung.VERKNUEPFEN.anzeige()));
+    }
+
+    private String uuidVon(String lokalerName) throws Exception {
+        return ziel.getOderErzeugeLokaleUuid(ziel.findeZeileMitName(lokalerName));
     }
 
     private long anzahlZeilen() {

@@ -48,8 +48,9 @@ import de.petanqueturniermanager.toolbar.TurnierModus;
  * <li>Der manuelle Abgleich läuft als SheetRunner, aktualisiert die Meldeliste im selben Runner (kein
  * zweiter Runner, keine „Verarbeitung läuft“-Kollision) und lässt sich während eines Serverabrufs
  * abbrechen.</li>
- * <li>Die Prüfung vor dem Turnierstart importiert nichts, meldet fehlende Online-Meldungen und verknüpft
- * vor Ort erfasste, namensgleiche Zeilen.</li>
+ * <li>Die Prüfung vor dem Turnierstart importiert nichts und meldet fehlende Online-Meldungen.</li>
+ * <li>Vor Ort erfasste, namensgleiche Zeilen stehen als „möglicherweise identisch“ in der Konfliktliste und werden
+ * nach der Entscheidung „verknüpfen“ beim nächsten Abgleich verknüpft (KP-06 a2, A-29).</li>
  * </ul>
  */
 class PtmOnlineAbgleichSheetRunnerUITest extends BaseCalcUITest {
@@ -95,20 +96,68 @@ class PtmOnlineAbgleichSheetRunnerUITest extends BaseCalcUITest {
     }
 
     @Test
-    void abgleichUebernimmtUndVerknuepftImSelbenRunner() throws Exception {
-        PtmOnlineAbgleichSheetRunner runner = neuerRunner();
+    void abgleichUebernimmtUndVerknuepftNachEntscheidungInDerKonfliktliste() throws Exception {
+        abgleichen();
 
-        runner.start();
-        runner.join();
-
-        assertThat(runner.isLetzterLaufFehlgeschlagen()).isFalse();
         assertThat(mapping.istBereitsImportiert("r1")).as("neue Online-Anmeldung übernommen").isTrue();
-        assertThat(mapping.istBereitsImportiert("r2")).as("mit vor Ort erfasster Zeile verknüpft").isTrue();
+        assertThat(mapping.istBereitsImportiert("r2")).as("gleichnamige Zeile nicht automatisch verknüpft")
+                .isFalse();
         assertThat(mapping.istBereitsImportiert("r3")).as("offene Anmeldung nicht übernommen").isFalse();
         assertThat(nachnamen()).containsExactlyInAnyOrder("Schmidt", "Müller");
         assertThat(ziel.getTeamNrAusZeile(ziel.findeZeileMitName("Anna Schmidt")))
                 .as("Meldeliste im selben Runner aktualisiert: neue Zeile hat eine Nr").isPositive();
-        assertThat(server.anzahlOnlineAngelegt()).as("alle lokalen Meldungen sind schon online").isZero();
+        assertThat(server.anzahlOnlineAngelegt()).as("möglicherweise identische Zeile nicht online angelegt")
+                .isZero();
+        String fall = KonfliktFall.schluessel(KonfliktArt.MOEGLICH_IDENTISCH, uuidVonHans(), List.of("r2"));
+        assertThat(mapping.konfliktListe().leseFaelle()).containsOnlyKeys(fall);
+
+        mapping.konfliktListe().setzeEntscheidung(fall, Entscheidung.VERKNUEPFEN.anzeige());
+        abgleichen();
+
+        assertThat(mapping.istBereitsImportiert("r2")).as("nach „verknüpfen“ zugeordnet").isTrue();
+        assertThat(server.anzahlOnlineAngelegt()).isZero();
+        assertThat(mapping.konfliktListe().leseFaelle()).as("Fall erledigt").isEmpty();
+        assertThat(server.entscheidungen()).singleElement().satisfies(entscheidung -> {
+            assertThat(entscheidung.get("decision").getAsString()).isEqualTo("link");
+            assertThat(entscheidung.get("onlineRegistrationId").getAsString()).isEqualTo("r2");
+        });
+    }
+
+    @Test
+    void bewusstGetrenntLegtDieLokaleZeileOnlineAn() throws Exception {
+        abgleichen();
+        String fall = KonfliktFall.schluessel(KonfliktArt.MOEGLICH_IDENTISCH, uuidVonHans(), List.of("r2"));
+        mapping.konfliktListe().setzeEntscheidung(fall, Entscheidung.GETRENNT.anzeige());
+
+        abgleichen();
+
+        assertThat(server.anzahlOnlineAngelegt()).as("lokale Zeile zusätzlich online angelegt").isEqualTo(1);
+        assertThat(mapping.istBereitsImportiert("r2")).isFalse();
+        assertThat(mapping.konfliktListe().leseFaelle().keySet())
+                .as("gleichnamige Anmeldung bleibt als nicht übertragen gemeldet")
+                .allMatch(schluessel -> schluessel.startsWith(KonfliktArt.NICHT_UEBERTRAGEN.name()));
+        assertThat(server.entscheidungen()).extracting(entscheidung -> entscheidung.get("decision").getAsString())
+                .containsExactly("separate");
+    }
+
+    private void abgleichen() throws Exception {
+        PtmOnlineAbgleichSheetRunner runner = neuerRunner();
+        runner.start();
+        runner.join();
+        assertThat(runner.isLetzterLaufFehlgeschlagen()).isFalse();
+    }
+
+    private String uuidVonHans() throws Exception {
+        return ziel.getOderErzeugeLokaleUuid(ziel.findeZeileMitName("Hans Müller"));
+    }
+
+    /** Wie im Turnierbetrieb: Hans Müller als „möglicherweise identisch“ mit r2 bestätigt. */
+    private void abgleichenUndHansVerknuepfen() throws Exception {
+        abgleichen();
+        mapping.konfliktListe().setzeEntscheidung(
+                KonfliktFall.schluessel(KonfliktArt.MOEGLICH_IDENTISCH, uuidVonHans(), List.of("r2")),
+                Entscheidung.VERKNUEPFEN.anzeige());
+        abgleichen();
     }
 
     /**
@@ -144,15 +193,13 @@ class PtmOnlineAbgleichSheetRunnerUITest extends BaseCalcUITest {
             XSpreadsheet syncSheet = new PtmOnlineSyncSheet(wkingSpreadsheet, TurnierSystem.SCHWEIZER, null)
                     .getXSpreadSheet();
             assertThat(Lo.qi(XProtectable.class, syncSheet).isProtected()).as("vor dem Abgleich gesperrt").isTrue();
-            PtmOnlineAbgleichSheetRunner runner = neuerRunner();
+            abgleichenUndHansVerknuepfen();
 
-            runner.start();
-            runner.join();
-
-            assertThat(runner.isLetzterLaufFehlgeschlagen()).isFalse();
             assertThat(mapping.istBereitsImportiert("r1")).isTrue();
-            assertThat(mapping.istBereitsImportiert("r2")).isTrue();
+            assertThat(mapping.istBereitsImportiert("r2")).as("Entscheidung im gesperrten Blatt eingetragen").isTrue();
             assertThat(Lo.qi(XProtectable.class, syncSheet).isProtected()).as("nach dem Abgleich gesperrt").isTrue();
+            XSpreadsheet konflikte = mapping.konfliktListe().getXSpreadSheet();
+            assertThat(Lo.qi(XProtectable.class, konflikte).isProtected()).as("Konfliktliste gesperrt").isTrue();
 
             mapping.trennen();
 
@@ -184,7 +231,7 @@ class PtmOnlineAbgleichSheetRunnerUITest extends BaseCalcUITest {
     @Test
     void pruefungVorTurnierstartMeldetFehlendeUndImportiertNichts() throws Exception {
         List<String> fehlend = RegistrationImportTask.pruefeVorTurnierstart(server.zugangsdaten(), mapping,
-                TURNIER_ID, ziel);
+                TURNIER_ID, ziel).fehlend();
 
         assertThat(fehlend).as("nur bestätigte, noch nicht zugeordnete Meldungen; gleichnamige nur als Hinweis")
                 .hasSize(2).first().isEqualTo("Anna Schmidt");
@@ -199,9 +246,7 @@ class PtmOnlineAbgleichSheetRunnerUITest extends BaseCalcUITest {
     /** Rundenstart meldet die lokale Setzposition (Meldeliste ist Master), nicht die Team-Nr. */
     @Test
     void rundenstartMeldetLokaleSetzpositionStattTeamNr() throws Exception {
-        PtmOnlineAbgleichSheetRunner runner = neuerRunner();
-        runner.start();
-        runner.join();
+        abgleichenUndHansVerknuepfen();
         int zeileHans = ziel.findeZeileMitName("Hans Müller");
         ziel.uebernehmeOnlineSetzposition(zeileHans, 3);
         Set<Integer> teams = Set.of(ziel.getTeamNrAusZeile(zeileHans),

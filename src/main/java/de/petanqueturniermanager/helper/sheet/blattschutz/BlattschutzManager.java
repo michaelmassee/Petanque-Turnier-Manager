@@ -24,6 +24,7 @@ import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
+import de.petanqueturniermanager.onlinesync.sheet.PtmOnlineKonfliktSheet;
 import de.petanqueturniermanager.planungsrechner.PlanungsrechnerSheet;
 import de.petanqueturniermanager.toolbar.TurnierModus;
 
@@ -334,6 +335,10 @@ public class BlattschutzManager {
                         PlanungsrechnerSheet.editierbareEingabeBereiche())));
         sammleMeleeAnmeldungSchutzInfos(xDoc, alle);
         sammlePtmOnlineSyncSchutzInfos(xDoc, alle);
+        // Konfliktliste: nur die Entscheidungsspalte bearbeitet die Turnierleitung (A-29).
+        SheetMetadataHelper.findeSheet(xDoc, SheetMetadataHelper.SCHLUESSEL_PTM_ONLINE_KONFLIKTE)
+                .ifPresent(sheet -> alle.add(SheetSchutzInfo.mitEditierbarenBereichen(sheet,
+                        List.of(PtmOnlineKonfliktSheet.editierbarerBereich()))));
         return alle;
     }
 

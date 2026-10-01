@@ -98,12 +98,15 @@ public final class SheetNamen {
     public static final String KEY_PTM_ONLINE_SYNC                  = "sheet.name.ptm.online.sync";
     /** PTM-Online-Sync-Blatt je Spieltag (Supermelee): {0} = Spieltagnummer. */
     public static final String KEY_PTM_ONLINE_SYNC_MUSTER           = "sheet.name.ptm.online.sync.muster";
+    /** PTM-Online-Konfliktliste: offene Fälle des Abgleichs mit Entscheidungsspalte (A-29). */
+    public static final String KEY_PTM_ONLINE_KONFLIKTE             = "sheet.name.ptm.online.konflikte";
 
     // ── Legacy-Werte: unveränderliche deutsche Originalnamen ─────────────────
     // Werden ausschließlich als Fallback in findeSheetUndHeile() für alte Dokumente verwendet.
 
     /** Eigenname, in allen Sprachen gleich; nur Fallback, falls der i18n-Key fehlt. */
     private static final String PTM_ONLINE_SYNC_FALLBACK             = "PTMOnline Sync";
+    private static final String PTM_ONLINE_KONFLIKTE_FALLBACK        = "PTMOnline Konflikte";
 
     public static final String LEGACY_MELDELISTE                    = "Meldeliste";
     public static final String LEGACY_RANGLISTE                     = "Rangliste";
@@ -162,6 +165,10 @@ public final class SheetNamen {
 
     public static String ptmOnlineSync() {
         return getOderFallback(KEY_PTM_ONLINE_SYNC, PTM_ONLINE_SYNC_FALLBACK);
+    }
+
+    public static String ptmOnlineKonflikte() {
+        return getOderFallback(KEY_PTM_ONLINE_KONFLIKTE, PTM_ONLINE_KONFLIKTE_FALLBACK);
     }
 
     /**

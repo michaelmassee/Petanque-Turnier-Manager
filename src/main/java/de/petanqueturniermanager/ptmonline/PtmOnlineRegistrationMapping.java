@@ -18,6 +18,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.onlinesync.OnlineTournamentDto;
 import de.petanqueturniermanager.onlinesync.sheet.NeueZuordnung;
+import de.petanqueturniermanager.onlinesync.sheet.PtmOnlineKonfliktSheet;
 import de.petanqueturniermanager.onlinesync.sheet.PtmOnlineSyncSheet;
 import de.petanqueturniermanager.onlinesync.sheet.ZuordnungsAnzeige;
 import de.petanqueturniermanager.onlinesync.sheet.ZuordnungsZusatz;
@@ -36,9 +37,16 @@ import de.petanqueturniermanager.ptmonline.dto.RegistrationFeeDto;
 public class PtmOnlineRegistrationMapping {
 
     private final PtmOnlineSyncSheet syncSheet;
+    private final PtmOnlineKonfliktSheet konfliktSheet;
 
     public PtmOnlineRegistrationMapping(WorkingSpreadsheet ws, TurnierSystem turnierSystem, Integer spieltagNrOderNull) {
         this.syncSheet = new PtmOnlineSyncSheet(ws, turnierSystem, spieltagNrOderNull);
+        this.konfliktSheet = new PtmOnlineKonfliktSheet(ws, turnierSystem);
+    }
+
+    /** Gesammelte Konfliktliste des Abgleichs mit den Entscheidungen der Turnierleitung (A-29). */
+    public PtmOnlineKonfliktSheet konfliktListe() {
+        return konfliktSheet;
     }
 
     /**
@@ -101,6 +109,16 @@ public class PtmOnlineRegistrationMapping {
     /** Online-ID je lokaler UUID aller Zuordnungen – einmal lesen statt {@link #getOnlineId} je Meldung. */
     public Map<String, String> getOnlineIdsProUuid() throws GenerateException {
         return syncSheet.getOnlineIdsProUuid();
+    }
+
+    /** Lokale Bezeichnung je lokaler UUID – auch für Meldungen, deren Zeile es nicht mehr gibt. */
+    public Map<String, String> getBezeichnungenProUuid() throws GenerateException {
+        return syncSheet.getBezeichnungenProUuid();
+    }
+
+    /** Roher Online-Status je lokaler UUID, wie ihn der letzte Abgleich gesehen hat. */
+    public Map<String, String> getRohStatusProUuid() throws GenerateException {
+        return syncSheet.getRohStatusProUuid();
     }
 
     public Map<String, Integer> getExecutionRevisionenProUuid() throws GenerateException {

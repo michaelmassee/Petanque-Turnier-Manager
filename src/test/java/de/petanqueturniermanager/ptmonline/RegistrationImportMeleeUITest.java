@@ -6,6 +6,7 @@ package de.petanqueturniermanager.ptmonline;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -89,7 +90,12 @@ class RegistrationImportMeleeUITest extends BaseCalcUITest {
     void vorOrtErfassterSpielerWirdVerknuepftStattDoppeltAngelegt() throws Exception {
         ziel.schreibeBlock(List.of(spieler("Hans", "Müller")));
 
-        ImportErgebnis ergebnis = uebernehme(anmeldung("r1", "Hans", "Müller"));
+        ImportErgebnis ohneEntscheidung = uebernehme(anmeldung("r1", "Hans", "Müller"));
+        assertThat(ohneEntscheidung.moeglichIdentisch()).as("KP-06 a2: erst nach Entscheidung verknüpft")
+                .containsExactly("Hans Müller");
+        assertThat(mapping.istBereitsImportiert("r1")).isFalse();
+
+        ImportErgebnis ergebnis = uebernehme(verknuepfen("r1", "Hans Müller"), anmeldung("r1", "Hans", "Müller"));
 
         assertThat(ergebnis).isEqualTo(new ImportErgebnis(0, List.of(), List.of()));
         assertThat(meleeZeilen()).hasSize(1);
@@ -132,7 +138,7 @@ class RegistrationImportMeleeUITest extends BaseCalcUITest {
         meleeSheet.getSheetHelper().setNumberValueInCell(NumberCellValue.from(meleeSheet.getXSpreadSheet(),
                 Position.from(MeleeAnmeldungKonstanten.SPALTE_SETZPOSITION, zeile - 1)).setValue(1));
 
-        uebernehme(anmeldung("r1", "Hans", "Müller", 5));
+        uebernehme(verknuepfen("r1", "Hans Müller"), anmeldung("r1", "Hans", "Müller", 5));
 
         assertThat(mapping.istBereitsImportiert("r1")).isTrue();
         assertThat(meleeZeilen()).extracting(MeleeAnmeldungZeile::setzPosition).containsExactly(1);
@@ -142,7 +148,7 @@ class RegistrationImportMeleeUITest extends BaseCalcUITest {
     void verknuepfteZeileOhneSetzpositionUebernimmtDieOnline() throws Exception {
         ziel.schreibeBlock(List.of(spieler("Hans", "Müller")));
 
-        uebernehme(anmeldung("r1", "Hans", "Müller", 2));
+        uebernehme(verknuepfen("r1", "Hans Müller"), anmeldung("r1", "Hans", "Müller", 2));
 
         assertThat(meleeZeilen()).extracting(MeleeAnmeldungZeile::setzPosition).containsExactly(2);
     }
@@ -172,9 +178,20 @@ class RegistrationImportMeleeUITest extends BaseCalcUITest {
     }
 
     private ImportErgebnis uebernehme(RegistrationDto... anmeldungen) throws Exception {
+        return uebernehme(KonfliktSammlung.ohneEntscheidungen(), anmeldungen);
+    }
+
+    private ImportErgebnis uebernehme(KonfliktSammlung sammlung, RegistrationDto... anmeldungen) throws Exception {
         return RegistrationImportTask.uebernehmeAnmeldungen(List.of(anmeldungen), mapping, ziel,
                 () -> MeldelisteZielFactory.aktualisiereZielSynchron(wkingSpreadsheet, TurnierSystem.SCHWEIZER, ziel),
-                AbgleichFortschritt.OHNE);
+                AbgleichFortschritt.OHNE, sammlung);
+    }
+
+    /** Entscheidung „verknüpfen“ zur namensgleichen Zeile, wie sie die Turnierleitung in der Konfliktliste trifft. */
+    private KonfliktSammlung verknuepfen(String onlineId, String lokalerName) throws Exception {
+        String uuid = ziel.getOderErzeugeLokaleUuid(ziel.findeZeileMitName(lokalerName));
+        return KonfliktSammlung.mit(Map.of(KonfliktFall.schluessel(KonfliktArt.MOEGLICH_IDENTISCH, uuid,
+                List.of(onlineId)), Entscheidung.VERKNUEPFEN.name()));
     }
 
     private List<MeleeAnmeldungZeile> meleeZeilen() {

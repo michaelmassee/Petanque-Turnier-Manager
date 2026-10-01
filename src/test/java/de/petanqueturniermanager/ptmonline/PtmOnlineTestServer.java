@@ -30,7 +30,7 @@ import de.petanqueturniermanager.comp.LibreOfficePtmOnlineSpeicher;
  * (PUT) und kann Antworten zurückhalten, um einen Abbruch während eines Serveraufrufs zu testen.
  * Online-Anlagen, Status-Pushes ({@code /results}) und Trennungen ({@code /disconnect}) werden für Prüfungen
  * aufgezeichnet, ebenso die Live-Übertragung von Runden ({@code /rounds/<nr>}) und Rangliste
- * ({@code /ranking}).
+ * ({@code /ranking}) und das Protokoll der Entscheidungen ({@code /decisions}).
  */
 final class PtmOnlineTestServer implements AutoCloseable {
 
@@ -46,6 +46,8 @@ final class PtmOnlineTestServer implements AutoCloseable {
     private final List<JsonObject> gepushteErgebnisse = new CopyOnWriteArrayList<>();
     private final Map<Integer, JsonArray> runden = new ConcurrentSkipListMap<>();
     private final List<Integer> geloeschteRunden = new CopyOnWriteArrayList<>();
+    private final List<JsonObject> entscheidungen = new CopyOnWriteArrayList<>();
+    private final List<JsonObject> angelegte = new CopyOnWriteArrayList<>();
     private volatile JsonArray rangliste;
     private volatile boolean turnierGeloescht;
     private final CountDownLatch abrufAngekommen = new CountDownLatch(1);
@@ -59,6 +61,7 @@ final class PtmOnlineTestServer implements AutoCloseable {
         server.createContext("/api/sync/tournaments/" + turnierId + "/disconnect", this::trennen);
         server.createContext("/api/sync/tournaments/" + turnierId + "/rounds/", this::runde);
         server.createContext("/api/sync/tournaments/" + turnierId + "/ranking", this::ranglisteAnnehmen);
+        server.createContext("/api/sync/tournaments/" + turnierId + "/decisions", this::entscheidungenAnnehmen);
         server.start();
     }
 
@@ -100,6 +103,11 @@ final class PtmOnlineTestServer implements AutoCloseable {
         return List.copyOf(geloeschteRunden);
     }
 
+    /** Alle protokollierten Entscheidungen, in Eingangsreihenfolge. */
+    List<JsonObject> entscheidungen() {
+        return List.copyOf(entscheidungen);
+    }
+
     /** Zuletzt übertragene Rangliste, {@code null} wenn keine übertragen wurde. */
     JsonArray rangliste() {
         return rangliste;
@@ -131,7 +139,17 @@ final class PtmOnlineTestServer implements AutoCloseable {
             antworte(exchange, angelegteAnmeldung(exchange));
             return;
         }
-        antworte(exchange, anmeldungenJson);
+        antworte(exchange, anmeldungenMitAngelegten());
+    }
+
+    /** Die festen Anmeldungen und – wie bei PTM-Online – die inzwischen online angelegten. */
+    private String anmeldungenMitAngelegten() {
+        JsonObject antwort = JsonParser.parseString(anmeldungenJson).getAsJsonObject();
+        if (!angelegte.isEmpty()) {
+            JsonArray registrations = antwort.getAsJsonArray("registrations");
+            angelegte.forEach(registrations::add);
+        }
+        return antwort.toString();
     }
 
     /** Antwort wie PTM-Online: die angelegte Anmeldung mit neuer Online-Id und den gesendeten Namen. */
@@ -142,6 +160,7 @@ final class PtmOnlineTestServer implements AutoCloseable {
         registration.addProperty("id", "online-" + anzahlOnlineAngelegt.incrementAndGet());
         registration.addProperty("status", "confirmed");
         registration.addProperty("executionRevision", 1);
+        angelegte.add(registration);
         JsonObject antwort = new JsonObject();
         antwort.add("registration", registration);
         return antwort.toString();
@@ -186,6 +205,14 @@ final class PtmOnlineTestServer implements AutoCloseable {
         rangliste = leseBody(exchange).getAsJsonObject().getAsJsonArray("entries");
         JsonObject antwort = new JsonObject();
         antwort.addProperty("entryCount", rangliste.size());
+        antworte(exchange, antwort.toString());
+    }
+
+    private void entscheidungenAnnehmen(HttpExchange exchange) throws IOException {
+        JsonArray decisions = leseBody(exchange).getAsJsonObject().getAsJsonArray("decisions");
+        decisions.forEach(eintrag -> entscheidungen.add(eintrag.getAsJsonObject()));
+        JsonObject antwort = new JsonObject();
+        antwort.addProperty("recorded", decisions.size());
         antworte(exchange, antwort.toString());
     }
 

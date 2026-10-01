@@ -6,6 +6,9 @@ package de.petanqueturniermanager.ptmonline;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -24,12 +27,14 @@ import org.jspecify.annotations.Nullable;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungZeile;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.LibreOfficePtmOnlineSpeicher;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.onlinesync.SpieltagKontext;
@@ -43,6 +48,7 @@ import de.petanqueturniermanager.ptmonline.dto.PersonDto;
 import de.petanqueturniermanager.spielerdb.MeldelisteZiel;
 import de.petanqueturniermanager.spielerdb.MeldelisteZielFactory;
 import de.petanqueturniermanager.spielerdb.MeldelisteSpielerDaten;
+import de.petanqueturniermanager.spielerdb.MeleeAnmeldungZiel;
 import de.petanqueturniermanager.spielerdb.SpielerMitVerein;
 
 /**
@@ -89,29 +95,36 @@ public final class RegistrationImportTask {
      *                        mehreren Zeilen passen oder nicht geschrieben werden konnten
      * @param nachStart       Online-Bezeichnungen der Anmeldungen, die nach dem lokalen Turnierstart eingegangen sind;
      *                        sie werden nie automatisch übernommen (KP-05)
+     * @param moeglichIdentisch Online-Bezeichnungen der Anmeldungen, zu denen eine gleichnamige, noch nicht
+     *                        verknüpfte Meldelistenzeile steht; die Turnierleitung entscheidet (KP-06 a2)
      */
     public record ImportErgebnis(int importiert, List<String> namensgleich, List<String> nichtZuordenbar,
-            List<String> nachStart, List<String> unvollstaendig) {
+            List<String> nachStart, List<String> unvollstaendig, List<String> moeglichIdentisch) {
 
         public ImportErgebnis {
             namensgleich = List.copyOf(namensgleich);
             nichtZuordenbar = List.copyOf(nichtZuordenbar);
             nachStart = List.copyOf(nachStart);
             unvollstaendig = List.copyOf(unvollstaendig);
+            moeglichIdentisch = List.copyOf(moeglichIdentisch);
         }
 
         public ImportErgebnis(int importiert, List<String> namensgleich, List<String> nichtZuordenbar,
                 List<String> nachStart) {
-            this(importiert, namensgleich, nichtZuordenbar, nachStart, List.of());
+            this(importiert, namensgleich, nichtZuordenbar, nachStart, List.of(), List.of());
         }
 
         public ImportErgebnis(int importiert, List<String> namensgleich, List<String> nichtZuordenbar) {
-            this(importiert, namensgleich, nichtZuordenbar, List.of(), List.of());
+            this(importiert, namensgleich, nichtZuordenbar, List.of(), List.of(), List.of());
         }
 
-        /** Nach dem Turnierstart eingegangene Anmeldungen zählen nicht: sie warten auf die Entscheidung der Leitung. */
+        /**
+         * Nach dem Turnierstart eingegangene Anmeldungen zählen nicht: sie stehen in der Konfliktliste, die der
+         * Abgleich aus allen Online-Anmeldungen bildet. Offene „möglicherweise identisch“-Fälle zählen, damit die
+         * Anmeldung beim nächsten Abgleich wieder geliefert wird.
+         */
         public boolean vollstaendig() {
-            return namensgleich.isEmpty() && nichtZuordenbar.isEmpty();
+            return namensgleich.isEmpty() && nichtZuordenbar.isEmpty() && moeglichIdentisch.isEmpty();
         }
 
         /** Benutzerhinweise zu nicht übernommenen Anmeldungen, leer wenn alles übernommen wurde. */
@@ -130,6 +143,10 @@ public final class RegistrationImportTask {
             if (!unvollstaendig.isEmpty()) {
                 hinweise.add(I18n.get("ptmonline.hinweis.team_unvollstaendig", String.join(", ", unvollstaendig)));
             }
+            if (!moeglichIdentisch.isEmpty()) {
+                hinweise.add(I18n.get("ptmonline.hinweis.anmeldungen_moeglich_identisch",
+                        String.join(", ", moeglichIdentisch)));
+            }
             return hinweise;
         }
     }
@@ -144,16 +161,18 @@ public final class RegistrationImportTask {
      *                         Meldungen (KP-14) sowie die Konfliktliste des Online-Turniers (KP-06)
      */
     public record AbgleichErgebnis(ImportErgebnis importErgebnis, int onlineAngelegt, List<String> onlineAbgelehnt,
-            List<String> nichtAngelegt, int ueberKapazitaet, OnlineBefunde online) {
+            List<String> nichtAngelegt, int ueberKapazitaet, OnlineBefunde online, List<KonfliktFall> offeneFaelle) {
 
         public AbgleichErgebnis {
             onlineAbgelehnt = List.copyOf(onlineAbgelehnt);
             nichtAngelegt = List.copyOf(nichtAngelegt);
+            offeneFaelle = List.copyOf(offeneFaelle);
         }
 
         public AbgleichErgebnis(ImportErgebnis importErgebnis, int onlineAngelegt, List<String> onlineAbgelehnt,
                 List<String> nichtAngelegt, int ueberKapazitaet) {
-            this(importErgebnis, onlineAngelegt, onlineAbgelehnt, nichtAngelegt, ueberKapazitaet, OnlineBefunde.KEINE);
+            this(importErgebnis, onlineAngelegt, onlineAbgelehnt, nichtAngelegt, ueberKapazitaet, OnlineBefunde.KEINE,
+                    List.of());
         }
 
         public List<String> hinweise() {
@@ -168,6 +187,10 @@ public final class RegistrationImportTask {
                 hinweise.add(I18n.get("ptmonline.hinweis.ueber_kapazitaet", ueberKapazitaet));
             }
             hinweise.addAll(online.hinweise());
+            if (!offeneFaelle.isEmpty()) {
+                hinweise.add(I18n.get("ptmonline.hinweis.konfliktliste", offeneFaelle.size(),
+                        SheetNamen.ptmOnlineKonflikte()));
+            }
             return hinweise;
         }
     }
@@ -278,19 +301,35 @@ public final class RegistrationImportTask {
             MeldelistenAktualisierung aktualisierung, AbgleichFortschritt fortschritt)
             throws IOException, InterruptedException, GenerateException {
         mapping.sicherstellen();
-        ImportLauf importLauf = fuehreImportDurch(config, mapping, tournamentId, ziel, aktualisierung, fortschritt);
+        // Entscheidungen der vorigen Konfliktliste (A-29) wirken in diesem Lauf; die Liste wird am Ende neu gebildet.
+        KonfliktSammlung sammlung = KonfliktSammlung.mit(mapping.konfliktListe().leseEntscheidungen());
+        wendeLokaleEntscheidungenAn(ziel, mapping, bestand, tournamentId, sammlung);
+        ImportLauf importLauf = fuehreImportDurch(config, mapping, tournamentId, ziel, aktualisierung, fortschritt,
+                sammlung);
         fortschritt.pruefeAbbruch();
         fortschritt.status(I18n.get("ptmonline.fortschritt.lokale_meldungen_anlegen"));
-        NeuanlageErgebnis neuanlage = neueLokaleMeldungenAnlegen(config, mapping, bestand, tournamentId, ziel);
+        NeuanlageErgebnis neuanlage = neueLokaleMeldungenAnlegen(config, mapping, bestand, tournamentId, ziel,
+                sammlung);
         fortschritt.pruefeAbbruch();
         fortschritt.status(I18n.get("ptmonline.fortschritt.details_aktualisieren"));
         Bezeichnungsabgleich bezeichnungen = aktualisiereBezeichnungen(config, mapping, bestand, tournamentId, ziel,
-                aktualisierung);
+                aktualisierung, sammlung);
+        meldeNichtUebertragene(sammlung, importLauf.ergebnis(), neuanlage);
+        if (!sammlung.protokoll().isEmpty()) {
+            PtmOnlineAuftraege.entscheidungen(bestand, tournamentId, sammlung.protokoll());
+            sendeSynchron(config, mapping, bestand);
+        }
+        mapping.konfliktListe().schreibe(sammlung.zeilen(), zeitpunktText(Instant.now()));
         OnlineBefunde online = new OnlineBefunde(importLauf.status().ausgeschlossen(),
                 importLauf.status().wiederBestaetigt(), bezeichnungen.kontoKonflikte(),
                 bezeichnungen.moeglicheDubletten(), bezeichnungen.onlineUebernommen(), bezeichnungen.namensKonflikte());
         return new AbgleichErgebnis(importLauf.ergebnis(), neuanlage.angelegt(), neuanlage.abgelehnt(),
-                neuanlage.nichtAngelegt(), bezeichnungen.ueberKapazitaet(), online);
+                neuanlage.nichtAngelegt(), bezeichnungen.ueberKapazitaet(), online, sammlung.faelle());
+    }
+
+    private static String zeitpunktText(Instant zeitpunkt) {
+        return DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT).withZone(ZoneId.systemDefault())
+                .format(zeitpunkt);
     }
 
     /**
@@ -340,15 +379,17 @@ public final class RegistrationImportTask {
      * Turnierleitung entscheidet im manuellen Abgleich. {@code lastSync} bleibt unverändert. Kurzes Zeitlimit
      * ({@link #TIMEOUT_VOR_TURNIERSTART}): bei schlechtem Netz fragt der Rundenstart ausdrücklich nach.
      *
-     * @return Online-Bezeichnungen der fehlenden Anmeldungen, leer wenn die Meldeliste vollständig ist.
+     * Zusätzlich nennt die Prüfung die Doppelbelegungen eines Kontos (KP-06 b) als Ausschlussgrund.
+     *
+     * @return fehlende Anmeldungen (leer, wenn die Meldeliste vollständig ist) und Online-Ausschlussgründe
      */
-    public static List<String> pruefeVorTurnierstart(LibreOfficePtmOnlineSpeicher.Zugangsdaten config,
+    public static Vorabcheck pruefeVorTurnierstart(LibreOfficePtmOnlineSpeicher.Zugangsdaten config,
             PtmOnlineRegistrationMapping mapping, String tournamentId, MeldelisteZiel ziel)
             throws IOException, InterruptedException, GenerateException {
         TournamentSyncClient client = TournamentSyncClient.mitKurzemTimeout(config.baseUrl(), config.apiKey(),
                 TIMEOUT_VOR_TURNIERSTART);
-        List<RegistrationDto> registrations = client.fetchRegistrations(tournamentId,
-                mapping.getLastSync().orElse(Instant.EPOCH));
+        AnmeldungsAbruf abruf = client.fetchAbgleich(tournamentId, mapping.getLastSync().orElse(Instant.EPOCH));
+        List<RegistrationDto> registrations = abruf.registrations();
         Map<String, List<Integer>> vorhandeneZeilen = vorhandeneZeilenNachBesetzung(ziel);
         List<String> fehlend = new ArrayList<>();
         for (RegistrationDto reg : registrations) {
@@ -360,7 +401,67 @@ public final class RegistrationImportTask {
             fehlend.add(freieZeilen.isEmpty() ? onlineBezeichnung(reg)
                     : I18n.get("ptmonline.hinweis.moeglicherweise_identisch", onlineBezeichnung(reg)));
         }
-        return fehlend;
+        // Bezeichnungen der Doppelbelegungen: lokal zugeordnete über die Meldeliste, sonst wie online angemeldet.
+        Map<String, String> bezeichnungProOnlineId = new LinkedHashMap<>();
+        Map<String, String> namen = mapping.getBezeichnungenProUuid();
+        mapping.getOnlineIdsProUuid().forEach((uuid, onlineId) -> bezeichnungProOnlineId.put(onlineId,
+                namen.getOrDefault(uuid, onlineId)));
+        registrations.forEach(reg -> bezeichnungProOnlineId.putIfAbsent(reg.id(), onlineBezeichnung(reg)));
+        List<String> ausschluss = abruf.konflikte().accountConflicts().stream()
+                .map(konflikt -> KonfliktArt.KONTO_KONFLIKT.anzeige() + ": "
+                        + bezeichnungen(konflikt.registrationIds(), bezeichnungProOnlineId))
+                .toList();
+        return new Vorabcheck(fehlend, ausschluss);
+    }
+
+    /**
+     * Ergebnis der Prüfung vor dem Turnierstart.
+     *
+     * @param fehlend           bestätigte Online-Anmeldungen, die noch in keiner Meldelistenzeile stehen
+     * @param ausschlussgruende offene Fälle, die die Auslosung betreffen (A-29); reine Hinweise fehlen
+     */
+    public record Vorabcheck(List<String> fehlend, List<String> ausschlussgruende) {
+
+        public Vorabcheck {
+            fehlend = List.copyOf(fehlend);
+            ausschlussgruende = List.copyOf(ausschlussgruende);
+        }
+    }
+
+    /**
+     * Ausschlussgründe, die das Dokument ohne Netz kennt (A-29, KP-14, E-20, KP-18): online stornierte oder wartende
+     * Meldungen, die eingecheckt waren, eingecheckte unvollständige Teams und – bei Mêlée-Anmeldung – eingecheckte
+     * Spieler, die noch in keinem Team sind (P-53). Liest nur.
+     */
+    public static List<String> lokaleAusschlussgruende(PtmOnlineRegistrationMapping mapping, MeldelisteZiel ziel)
+            throws GenerateException {
+        List<String> gruende = new ArrayList<>();
+        Map<String, String> namen = mapping.getBezeichnungenProUuid();
+        mapping.getZusaetzeProUuid().forEach((uuid, zusatz) -> {
+            ZuordnungsVermerke vermerke = ZuordnungsVermerke.lese(zusatz.vermerk());
+            if (vermerke.hat(ZuordnungsVermerke.AUSGESCHLOSSEN) && !vermerke.hat(ZuordnungsVermerke.LOKAL_ENTFERNT)
+                    && vermerke.zahl(ZuordnungsVermerke.AUSGESCHLOSSEN).orElse(-1) == 1) {
+                gruende.add(KonfliktArt.ONLINE_AUSGESCHLOSSEN.anzeige() + ": " + namen.getOrDefault(uuid, uuid));
+            }
+        });
+        int formationsStaerke = ziel.getFormation().getAnzSpieler();
+        if (formationsStaerke > 1) {
+            spielerProZeile(ziel).forEach((zeile, spieler) -> {
+                if (spieler.size() < formationsStaerke && ziel.getAktivWertAusZeile(zeile) == 1) {
+                    gruende.add(KonfliktArt.UNVOLLSTAENDIG.anzeige() + ": " + bezeichnung(spieler));
+                }
+            });
+        }
+        if (ziel instanceof MeleeAnmeldungZiel melee) {
+            List<String> ohneTeam = melee.leseMeleeZeilen().stream()
+                    .filter(zeile -> zeile.eingecheckt() && !zeile.uebernommen())
+                    .map(MeleeAnmeldungZeile::anzeigeName).toList();
+            if (!ohneTeam.isEmpty()) {
+                gruende.add(I18n.get("ptmonline.vorabcheck.melee_ohne_team", ohneTeam.size(),
+                        String.join(", ", ohneTeam)));
+            }
+        }
+        return gruende;
     }
 
     /** Besetzung einer Online-Anmeldung aus allen angegebenen Spielernamen, unabhängig von der Formation. */
@@ -380,17 +481,19 @@ public final class RegistrationImportTask {
      */
     private static ImportLauf fuehreImportDurch(LibreOfficePtmOnlineSpeicher.Zugangsdaten config,
             PtmOnlineRegistrationMapping mapping, String tournamentId, MeldelisteZiel ziel,
-            MeldelistenAktualisierung aktualisierung, AbgleichFortschritt fortschritt)
+            MeldelistenAktualisierung aktualisierung, AbgleichFortschritt fortschritt, KonfliktSammlung sammlung)
             throws IOException, InterruptedException, GenerateException {
         TournamentSyncClient client = new TournamentSyncClient(config.baseUrl(), config.apiKey());
         Instant abgleichStart = Instant.now();
-        Instant since = mapping.getLastSync().orElse(Instant.EPOCH);
+        // Mit Entscheidungen alle Anmeldungen holen: eine nach dem Start eingegangene liefert der since-Abruf sonst
+        // nicht mehr, obwohl die Turnierleitung sie übernehmen will.
+        Instant since = sammlung.hatEntscheidungen() ? Instant.EPOCH : mapping.getLastSync().orElse(Instant.EPOCH);
         fortschritt.status(I18n.get("ptmonline.fortschritt.anmeldungen_abrufen"));
         List<RegistrationDto> alle = client.fetchRegistrations(tournamentId, since);
         fortschritt.status(I18n.get("ptmonline.fortschritt.anmeldungen_abgerufen", alle.size()));
         fortschritt.pruefeAbbruch();
         StatusUebernahme status = uebernehmeOnlineStatus(ziel, mapping, alle);
-        ImportErgebnis ergebnis = uebernehmeAnmeldungen(alle, mapping, ziel, aktualisierung, fortschritt);
+        ImportErgebnis ergebnis = uebernehmeAnmeldungen(alle, mapping, ziel, aktualisierung, fortschritt, sammlung);
         if (ergebnis.vollstaendig()) {
             mapping.setLastSync(abgleichStart);
         }
@@ -401,8 +504,9 @@ public final class RegistrationImportTask {
      * Ordnet bestätigte, noch nicht importierte Anmeldungen der Meldeliste zu:
      * <ul>
      * <li>keine Zeile mit derselben Besetzung: neue, inaktive Zeile;</li>
-     * <li>genau eine noch nicht online verknüpfte Zeile: wird verknüpft (vor Ort erfasst und
-     * zusätzlich online gemeldet);</li>
+     * <li>genau eine noch nicht online verknüpfte Zeile: „möglicherweise identisch“ (KP-06 a2). Ohne Entscheidung
+     * wird weder importiert noch die Zeile online angelegt; „verknüpfen“ ordnet die Zeile der Anmeldung zu,
+     * „getrennt“ lässt die Zeile normal online anlegen;</li>
      * <li>genau eine namensgleiche Zeile hängt an einer online stornierten Anmeldung: Neuanmeldung
      * derselben Person, die Zeile wird auf die neue Anmeldung umgehängt und ihre Abmeldung aufgehoben;</li>
      * <li>alle namensgleichen Zeilen anderweitig verknüpft (oder in diesem Lauf neu geschrieben): nicht
@@ -414,6 +518,13 @@ public final class RegistrationImportTask {
     static ImportErgebnis uebernehmeAnmeldungen(List<RegistrationDto> registrations,
             PtmOnlineRegistrationMapping mapping, MeldelisteZiel ziel, MeldelistenAktualisierung aktualisierung,
             AbgleichFortschritt fortschritt) throws GenerateException, InterruptedException {
+        return uebernehmeAnmeldungen(registrations, mapping, ziel, aktualisierung, fortschritt,
+                KonfliktSammlung.ohneEntscheidungen());
+    }
+
+    static ImportErgebnis uebernehmeAnmeldungen(List<RegistrationDto> registrations,
+            PtmOnlineRegistrationMapping mapping, MeldelisteZiel ziel, MeldelistenAktualisierung aktualisierung,
+            AbgleichFortschritt fortschritt, KonfliktSammlung sammlung) throws GenerateException, InterruptedException {
         List<RegistrationDto> neue = new ArrayList<>();
         List<String> nachStart = new ArrayList<>();
         Set<String> importierte = mapping.getImportierteOnlineIds();
@@ -421,10 +532,13 @@ public final class RegistrationImportTask {
             if (!istImportierbar(reg) || importierte.contains(reg.id())) {
                 continue;
             }
-            if (reg.istNachTurnierstartEingegangen()) {
-                nachStart.add(onlineBezeichnung(reg));
-            } else {
+            if (!reg.istNachTurnierstartEingegangen()) {
                 neue.add(reg);
+            } else if (sammlung.entscheidung(nachStartFall(reg)).isPresent()) {
+                neue.add(reg);
+                sammlung.angewendet(Entscheidung.UEBERNEHMEN, null, reg.id());
+            } else {
+                nachStart.add(onlineBezeichnung(reg));
             }
         }
 
@@ -437,6 +551,7 @@ public final class RegistrationImportTask {
         List<String> namensgleich = new ArrayList<>();
         List<String> nichtZuordenbar = new ArrayList<>();
         List<String> unvollstaendig = new ArrayList<>();
+        List<String> moeglichIdentisch = new ArrayList<>();
         Map<String, List<Integer>> vorhandeneZeilen = vorhandeneZeilenNachBesetzung(ziel);
         for (RegistrationDto reg : neue) {
             fortschritt.pruefeAbbruch();
@@ -455,8 +570,27 @@ public final class RegistrationImportTask {
             List<Integer> gleicheZeilen = vorhandeneZeilen.getOrDefault(besetzung, List.of());
             List<Integer> freieZeilen = nichtVerknuepfteZeilen(mapping, ziel, gleicheZeilen, geschriebeneZeilen);
             if (freieZeilen.size() == 1) {
-                verknuepfeBestehendeZeile(mapping, ziel, reg, freieZeilen.getFirst());
-                fortschritt.status(I18n.get("ptmonline.fortschritt.meldung_verknuepft", onlineBezeichnung(reg)));
+                int zeile = freieZeilen.getFirst();
+                String uuid = lokaleUuid(ziel, zeile);
+                KonfliktFall fall = new KonfliktFall(KonfliktArt.MOEGLICH_IDENTISCH, uuid, List.of(reg.id()),
+                        lokaleBezeichnung(ziel, zeile), onlineBezeichnung(reg),
+                        I18n.get("ptmonline.konflikt.hinweis.moeglich_identisch"),
+                        List.of(Entscheidung.VERKNUEPFEN, Entscheidung.GETRENNT));
+                Optional<Entscheidung> entscheidung = sammlung.entscheidung(fall);
+                if (entscheidung.isEmpty()) {
+                    sammlung.melde(fall);
+                    sammlung.halteZurueck(uuid);
+                    moeglichIdentisch.add(onlineBezeichnung(reg));
+                } else if (entscheidung.get() == Entscheidung.VERKNUEPFEN) {
+                    verknuepfeBestehendeZeile(mapping, ziel, reg, zeile);
+                    sammlung.angewendet(Entscheidung.VERKNUEPFEN, uuid, reg.id());
+                    fortschritt.status(I18n.get("ptmonline.fortschritt.meldung_verknuepft", onlineBezeichnung(reg)));
+                } else {
+                    // Bewusst getrennt: die Zeile wird online angelegt; die gleichnamige Anmeldung bleibt, bis die
+                    // Turnierleitung einen der Namen unterscheidbar macht.
+                    sammlung.angewendet(Entscheidung.GETRENNT, uuid, reg.id());
+                    namensgleich.add(onlineBezeichnung(reg));
+                }
                 continue;
             }
             if (freieZeilen.size() > 1) {
@@ -494,7 +628,7 @@ public final class RegistrationImportTask {
             }
         }
         if (geschrieben.isEmpty()) {
-            return new ImportErgebnis(0, namensgleich, nichtZuordenbar, nachStart, unvollstaendig);
+            return new ImportErgebnis(0, namensgleich, nichtZuordenbar, nachStart, unvollstaendig, moeglichIdentisch);
         }
 
         fortschritt.status(I18n.get("ptmonline.fortschritt.meldeliste_aktualisieren"));
@@ -522,7 +656,8 @@ public final class RegistrationImportTask {
             }
         }
         mapping.addMappings(zuordnungen);
-        return new ImportErgebnis(zuordnungen.size(), namensgleich, nichtZuordenbar, nachStart, unvollstaendig);
+        return new ImportErgebnis(zuordnungen.size(), namensgleich, nichtZuordenbar, nachStart, unvollstaendig,
+                moeglichIdentisch);
     }
 
     /**
@@ -672,14 +807,14 @@ public final class RegistrationImportTask {
      * Check-in-Erkennung) und sendet sie. Nach dem Turnierstart lehnt PTM-Online ab; die Meldungen bleiben lokal.
      */
     private static NeuanlageErgebnis neueLokaleMeldungenAnlegen(LibreOfficePtmOnlineSpeicher.Zugangsdaten config,
-            PtmOnlineRegistrationMapping mapping, AuftragsBestand bestand, String tournamentId, MeldelisteZiel ziel)
-            throws IOException, InterruptedException, GenerateException {
+            PtmOnlineRegistrationMapping mapping, AuftragsBestand bestand, String tournamentId, MeldelisteZiel ziel,
+            KonfliktSammlung sammlung) throws IOException, InterruptedException, GenerateException {
         Map<Integer, List<MeldelisteSpielerDaten>> proZeile = spielerProZeile(ziel);
         Map<Integer, String> uuidProZeile = lokaleUuids(ziel, proZeile.keySet());
         Map<String, String> onlineIds = mapping.getOnlineIdsProUuid();
         for (Map.Entry<Integer, List<MeldelisteSpielerDaten>> eintrag : proZeile.entrySet()) {
             String uuid = uuidProZeile.get(eintrag.getKey());
-            if (uuid == null || onlineIds.containsKey(uuid)) {
+            if (uuid == null || onlineIds.containsKey(uuid) || sammlung.istZurueckgehalten(uuid)) {
                 continue;
             }
             PtmOnlineAuftraege.anlage(bestand, tournamentId, uuid, zuOnlineAnmeldung(eintrag.getValue()),
@@ -808,7 +943,8 @@ public final class RegistrationImportTask {
      */
     private static Bezeichnungsabgleich aktualisiereBezeichnungen(LibreOfficePtmOnlineSpeicher.Zugangsdaten config,
             PtmOnlineRegistrationMapping mapping, AuftragsBestand bestand, String tournamentId, MeldelisteZiel ziel,
-            MeldelistenAktualisierung aktualisierung) throws IOException, InterruptedException, GenerateException {
+            MeldelistenAktualisierung aktualisierung, KonfliktSammlung sammlung)
+            throws IOException, InterruptedException, GenerateException {
         TournamentSyncClient client = gebundenerClient(config, mapping);
         AnmeldungsAbruf abruf = client.fetchAbgleich(tournamentId, null);
         Map<String, RegistrationDto> remoteProId = abruf.registrations().stream()
@@ -818,8 +954,9 @@ public final class RegistrationImportTask {
 
         List<String> onlineUebernommen = new ArrayList<>();
         List<NamensKonflikt> namensKonflikte = new ArrayList<>();
-        if (uebernehmeOnlineBesetzungen(ziel, onlineIds, zusaetze, remoteProId, abruf.turnierLaeuft(),
-                onlineUebernommen, namensKonflikte)) {
+        Set<String> lokalBehalten = new HashSet<>();
+        if (uebernehmeOnlineBesetzungen(ziel, onlineIds, zusaetze, remoteProId, abruf.turnierLaeuft(), sammlung,
+                new BesetzungsBefunde(onlineUebernommen, namensKonflikte, lokalBehalten))) {
             // Geänderte Namen können die Reihenfolge der Meldeliste ändern; die UUID wandert mit der Zeile.
             aktualisierung.aktualisieren();
         }
@@ -852,8 +989,9 @@ public final class RegistrationImportTask {
             registrationProUuid.put(uuid, remote);
             List<AbgeglicheneBesetzung.Person> lokal = personen(spielerProZeile.get(zeile));
             AbgeglicheneBesetzung online = AbgeglicheneBesetzung.ausOnline(remote.personen());
-            if (!konfliktUuids.contains(uuid) && richtung(AbgeglicheneBesetzung.von(lokal), online,
-                    zuletzt(zusaetze, uuid)) == BesetzungsRichtung.NACH_ONLINE) {
+            boolean nurLokalGeaendert = !konfliktUuids.contains(uuid) && richtung(AbgeglicheneBesetzung.von(lokal),
+                    online, zuletzt(zusaetze, uuid)) == BesetzungsRichtung.NACH_ONLINE;
+            if (nurLokalGeaendert || lokalBehalten.contains(uuid)) {
                 // Benutzer-IDs aus dem aktuellen Online-Stand: Hat sich online ein Konto gelöst, wäre eine gemerkte ID
                 // veraltet und PTM-Online würde den ganzen Auftrag als fremde ID ablehnen (T-17).
                 PtmOnlineAuftraege.aenderung(bestand, tournamentId, uuid, onlineId,
@@ -894,6 +1032,7 @@ public final class RegistrationImportTask {
         remoteProId.forEach((onlineId, registration) -> bezeichnungProOnlineId.put(onlineId,
                 Optional.ofNullable(uuidProOnlineId.get(onlineId)).map(bezeichnungProUuid::get)
                         .orElseGet(() -> onlineBezeichnung(registration))));
+        sammleOffeneFaelle(ziel, mapping, abruf, bezeichnungProOnlineId, spielerProZeile, uuidProZeile, sammlung);
         return new Bezeichnungsabgleich(ueberKapazitaet,
                 abruf.konflikte().accountConflicts().stream()
                         .map(konflikt -> bezeichnungen(konflikt.registrationIds(), bezeichnungProOnlineId)).toList(),
@@ -908,13 +1047,23 @@ public final class RegistrationImportTask {
     }
 
     /**
+     * Ergebnisse von {@link #uebernehmeOnlineBesetzungen}.
+     *
+     * @param lokalBehalten lokale UUIDs, deren Besetzung die Turnierleitung im Konflikt behalten hat; sie geht online
+     */
+    private record BesetzungsBefunde(List<String> onlineUebernommen, List<NamensKonflikt> namensKonflikte,
+            Set<String> lokalBehalten) {}
+
+    /**
      * Übernimmt nur online geänderte Besetzungen in die Meldeliste und sammelt beidseitige Konflikte (KP-16, KP-20).
+     * Eine Entscheidung der Turnierleitung löst einen Konflikt: „Online übernehmen“ schreibt den Online-Stand in die
+     * Meldeliste, „lokal behalten“ überträgt den lokalen.
      *
      * @return ob Namen in der Meldeliste geändert wurden
      */
     private static boolean uebernehmeOnlineBesetzungen(MeldelisteZiel ziel, Map<String, String> onlineIds,
             Map<String, ZuordnungsZusatz> zusaetze, Map<String, RegistrationDto> remoteProId, boolean turnierLaeuft,
-            List<String> onlineUebernommen, List<NamensKonflikt> namensKonflikte) throws GenerateException {
+            KonfliktSammlung sammlung, BesetzungsBefunde befunde) throws GenerateException {
         Map<Integer, List<MeldelisteSpielerDaten>> spielerProZeile = spielerProZeile(ziel);
         Map<Integer, String> uuidProZeile = lokaleUuids(ziel, spielerProZeile.keySet());
         boolean geaendert = false;
@@ -925,33 +1074,225 @@ public final class RegistrationImportTask {
             if (remote == null) {
                 continue;
             }
+            String lokalText = bezeichnung(spielerProZeile.get(zeile));
             AbgeglicheneBesetzung lokal = AbgeglicheneBesetzung.von(personen(spielerProZeile.get(zeile)));
             AbgeglicheneBesetzung online = AbgeglicheneBesetzung.ausOnline(remote.personen());
-            switch (richtung(lokal, online, zuletzt(zusaetze, uuid))) {
-                case NACH_LOKAL -> {
-                    List<SpielerMitVerein> spieler = zuSpielerListe(remote, ziel.getFormation());
-                    try {
-                        if (spieler == null) {
-                            throw new MeldelisteZiel.MeldelisteSchreibException(
-                                    I18n.get("ptmonline.hinweis.anmeldungen_nicht_zuordenbar", onlineBezeichnung(remote)));
-                        }
-                        ziel.ersetzeSpielerNamen(zeile, spieler);
-                        onlineUebernommen.add(bezeichnung(spielerProZeile.get(zeile)) + " → " + onlineBezeichnung(remote));
-                        geaendert = true;
-                    } catch (MeldelisteZiel.MeldelisteSchreibException e) {
-                        logger.warn("PTM-Online: Online-Besetzung für Zeile {} nicht übernommen", zeile, e);
-                        namensKonflikte.add(new NamensKonflikt(uuid, bezeichnung(spielerProZeile.get(zeile)),
-                                onlineBezeichnung(remote), false, e.getMessage()));
-                    }
+            BesetzungsRichtung richtung = richtung(lokal, online, zuletzt(zusaetze, uuid));
+            if (richtung == BesetzungsRichtung.KONFLIKT) {
+                NamensKonflikt konflikt = new NamensKonflikt(uuid, lokalText, onlineBezeichnung(remote),
+                        !turnierLaeuft && ziel.getAktivWertAusZeile(zeile) != 1, null);
+                KonfliktFall fall = namensFall(konflikt, remote.id(),
+                        List.of(Entscheidung.ONLINE_UEBERNEHMEN, Entscheidung.LOKAL_BEHALTEN));
+                Optional<Entscheidung> entscheidung = sammlung.entscheidung(fall);
+                if (entscheidung.isEmpty()) {
+                    befunde.namensKonflikte().add(konflikt);
+                    sammlung.melde(fall);
+                    continue;
                 }
-                case KONFLIKT -> namensKonflikte.add(new NamensKonflikt(uuid, bezeichnung(spielerProZeile.get(zeile)),
-                        onlineBezeichnung(remote), !turnierLaeuft && ziel.getAktivWertAusZeile(zeile) != 1, null));
-                case GLEICH, NACH_ONLINE -> {
-                    // Gleich: nichts zu tun. Nach online: übernimmt der Änderungsauftrag im Hauptlauf.
+                sammlung.angewendet(entscheidung.get(), uuid, remote.id());
+                if (entscheidung.get() == Entscheidung.LOKAL_BEHALTEN) {
+                    befunde.lokalBehalten().add(uuid);
+                    continue;
                 }
+            } else if (richtung != BesetzungsRichtung.NACH_LOKAL) {
+                // Gleich: nichts zu tun. Nach online: übernimmt der Änderungsauftrag im Hauptlauf.
+                continue;
             }
+            geaendert |= uebernehmeOnlineBesetzung(ziel, zeile, uuid, lokalText, remote, sammlung, befunde);
         }
         return geaendert;
+    }
+
+    /**
+     * Schreibt die Online-Besetzung in die Meldelistenzeile. Lässt sie sich nicht übernehmen (z. B. Mêlée-Spieler
+     * schon im Team), ist das ein Konflikt, den nur „lokal behalten“ löst.
+     *
+     * @return ob die Zeile geändert wurde
+     */
+    private static boolean uebernehmeOnlineBesetzung(MeldelisteZiel ziel, int zeile, String uuid, String lokalText,
+            RegistrationDto remote, KonfliktSammlung sammlung, BesetzungsBefunde befunde) {
+        List<SpielerMitVerein> spieler = zuSpielerListe(remote, ziel.getFormation());
+        try {
+            if (spieler == null) {
+                throw new MeldelisteZiel.MeldelisteSchreibException(
+                        I18n.get("ptmonline.hinweis.anmeldungen_nicht_zuordenbar", onlineBezeichnung(remote)));
+            }
+            ziel.ersetzeSpielerNamen(zeile, spieler);
+            befunde.onlineUebernommen().add(lokalText + " → " + onlineBezeichnung(remote));
+            return true;
+        } catch (MeldelisteZiel.MeldelisteSchreibException e) {
+            logger.warn("PTM-Online: Online-Besetzung für Zeile {} nicht übernommen", zeile, e);
+            NamensKonflikt konflikt = new NamensKonflikt(uuid, lokalText, onlineBezeichnung(remote), false,
+                    e.getMessage());
+            KonfliktFall fall = namensFall(konflikt, remote.id(), List.of(Entscheidung.LOKAL_BEHALTEN));
+            if (sammlung.entscheidung(fall).isPresent()) {
+                sammlung.angewendet(Entscheidung.LOKAL_BEHALTEN, uuid, remote.id());
+                befunde.lokalBehalten().add(uuid);
+            } else {
+                befunde.namensKonflikte().add(konflikt);
+                sammlung.melde(fall);
+            }
+            return false;
+        }
+    }
+
+    private static KonfliktFall namensFall(NamensKonflikt konflikt, String onlineId, List<Entscheidung> optionen) {
+        return new KonfliktFall(KonfliktArt.NAMENSKONFLIKT, konflikt.lokaleUuid(), List.of(onlineId),
+                konflikt.lokal(), konflikt.online(), konflikt.hinweis(), optionen);
+    }
+
+    private static KonfliktFall nachStartFall(RegistrationDto registration) {
+        return new KonfliktFall(KonfliktArt.NACH_START, null, List.of(registration.id()), "",
+                onlineBezeichnung(registration), I18n.get("ptmonline.konflikt.hinweis.nach_start"),
+                List.of(Entscheidung.UEBERNEHMEN));
+    }
+
+    // ── Konfliktliste (A-29) ────────────────────────────────────────────────
+
+    /**
+     * Zustand einer zugeordneten Meldung, über den die Turnierleitung entscheidet: online ausgeschlossen (KP-14) oder
+     * lokal fehlend (KP-15).
+     */
+    private record LokalerFall(KonfliktFall fall, String uuid, String onlineId, @Nullable Integer zeile,
+            ZuordnungsVermerke vermerke) {}
+
+    /** Online ausgeschlossene und lokal fehlende zugeordnete Meldungen, nach dem aktuellen Stand des Dokuments. */
+    private static List<LokalerFall> lokaleFaelle(MeldelisteZiel ziel, PtmOnlineRegistrationMapping mapping)
+            throws GenerateException {
+        Map<String, ZuordnungsZusatz> zusaetze = mapping.getZusaetzeProUuid();
+        Map<String, Integer> zeileProUuid = zeileProLokalerUuid(ziel);
+        Map<String, String> namen = mapping.getBezeichnungenProUuid();
+        Map<String, String> rohStatus = mapping.getRohStatusProUuid();
+        List<LokalerFall> faelle = new ArrayList<>();
+        for (Map.Entry<String, String> zuordnung : mapping.getOnlineIdsProUuid().entrySet()) {
+            String uuid = zuordnung.getKey();
+            String onlineId = zuordnung.getValue();
+            ZuordnungsZusatz zusatz = zusaetze.get(uuid);
+            ZuordnungsVermerke vermerke = ZuordnungsVermerke.lese(zusatz == null ? null : zusatz.vermerk());
+            if (vermerke.hat(ZuordnungsVermerke.LOKAL_ENTFERNT)) {
+                continue;
+            }
+            Integer zeile = zeileProUuid.get(uuid);
+            String status = rohStatus.get(uuid);
+            String name = namen.getOrDefault(uuid, "");
+            if (zeile == null) {
+                List<Entscheidung> optionen = OnlineAnmeldeStatus.istStorniert(status)
+                        ? List.of(Entscheidung.NUR_LOKAL_ENTFERNEN)
+                        : List.of(Entscheidung.NUR_LOKAL_ENTFERNEN, Entscheidung.ONLINE_STORNIEREN);
+                faelle.add(new LokalerFall(new KonfliktFall(KonfliktArt.LOKAL_FEHLEND, uuid, List.of(onlineId), name,
+                        OnlineAnmeldeStatus.anzeige(status), I18n.get("ptmonline.konflikt.hinweis.lokal_fehlend"),
+                        optionen), uuid, onlineId, null, vermerke));
+            } else if (vermerke.hat(ZuordnungsVermerke.AUSGESCHLOSSEN)) {
+                faelle.add(new LokalerFall(new KonfliktFall(KonfliktArt.ONLINE_AUSGESCHLOSSEN, uuid,
+                        List.of(onlineId), name, OnlineAnmeldeStatus.anzeige(status),
+                        I18n.get("ptmonline.konflikt.hinweis.online_ausgeschlossen"),
+                        List.of(Entscheidung.BEHALTEN)), uuid, onlineId, zeile, vermerke));
+            }
+        }
+        return faelle;
+    }
+
+    /**
+     * Wendet die Entscheidungen zu online ausgeschlossenen und lokal fehlenden Meldungen an: „bewusst behalten“ hebt
+     * den Ausschluss auf und stellt den alten Check-in-Zustand her (KP-14), „nur lokal entfernen“ und „online
+     * stornieren“ vermerken die Meldung als lokal entfernt, Letzteres mit einem Storno-Auftrag (KP-15).
+     */
+    private static void wendeLokaleEntscheidungenAn(MeldelisteZiel ziel, PtmOnlineRegistrationMapping mapping,
+            AuftragsBestand bestand, String tournamentId, KonfliktSammlung sammlung) throws GenerateException {
+        if (!sammlung.hatEntscheidungen()) {
+            return;
+        }
+        Map<String, Integer> revisionen = mapping.getExecutionRevisionenProUuid();
+        Map<String, ZuordnungsZusatz> neueVermerke = new LinkedHashMap<>();
+        for (LokalerFall lokal : lokaleFaelle(ziel, mapping)) {
+            Optional<Entscheidung> entscheidung = sammlung.entscheidung(lokal.fall());
+            if (entscheidung.isEmpty()) {
+                continue;
+            }
+            ZuordnungsVermerke vermerke = switch (entscheidung.get()) {
+                case BEHALTEN -> {
+                    stelleAktivWertWiederHer(ziel, lokal);
+                    yield lokal.vermerke().ohne(ZuordnungsVermerke.AUSGESCHLOSSEN).mit(ZuordnungsVermerke.BEHALTEN);
+                }
+                case ONLINE_STORNIEREN -> {
+                    PtmOnlineAuftraege.storno(bestand, tournamentId, lokal.uuid(), lokal.onlineId(),
+                            revisionen.getOrDefault(lokal.uuid(), 1));
+                    yield lokal.vermerke().mit(ZuordnungsVermerke.LOKAL_ENTFERNT);
+                }
+                default -> lokal.vermerke().mit(ZuordnungsVermerke.LOKAL_ENTFERNT);
+            };
+            neueVermerke.put(lokal.uuid(), ZuordnungsZusatz.nurVermerk(vermerke.alsText()));
+            sammlung.angewendet(entscheidung.get(), lokal.uuid(), lokal.onlineId());
+        }
+        mapping.setZusaetze(neueVermerke);
+    }
+
+    private static void stelleAktivWertWiederHer(MeldelisteZiel ziel, LokalerFall lokal) throws GenerateException {
+        if (lokal.zeile() == null) {
+            return;
+        }
+        try {
+            ziel.stelleAktivWertWiederHer(lokal.zeile(),
+                    lokal.vermerke().zahl(ZuordnungsVermerke.AUSGESCHLOSSEN).orElse(-1));
+        } catch (MeldelisteZiel.MeldelisteSchreibException e) {
+            throw new GenerateException(e.getMessage());
+        }
+    }
+
+    /**
+     * Ergänzt die Konfliktliste um die Fälle, die sich aus dem Stand nach dem Abgleich ergeben: online ausgeschlossen,
+     * lokal fehlend, nach dem Start eingegangen, Doppelbelegungen, mögliche Dubletten und unvollständige Teams.
+     */
+    private static void sammleOffeneFaelle(MeldelisteZiel ziel, PtmOnlineRegistrationMapping mapping,
+            AnmeldungsAbruf abruf, Map<String, String> bezeichnungProOnlineId,
+            Map<Integer, List<MeldelisteSpielerDaten>> spielerProZeile, Map<Integer, String> uuidProZeile,
+            KonfliktSammlung sammlung) throws GenerateException {
+        lokaleFaelle(ziel, mapping).forEach(lokal -> sammlung.melde(lokal.fall()));
+        Set<String> importierte = mapping.getImportierteOnlineIds();
+        abruf.registrations().stream()
+                .filter(registration -> istImportierbar(registration) && registration.istNachTurnierstartEingegangen()
+                        && !importierte.contains(registration.id()))
+                .forEach(registration -> sammlung.melde(nachStartFall(registration)));
+        abruf.konflikte().accountConflicts().forEach(konflikt -> sammlung.melde(new KonfliktFall(
+                KonfliktArt.KONTO_KONFLIKT, null, konflikt.registrationIds(), "",
+                bezeichnungen(konflikt.registrationIds(), bezeichnungProOnlineId),
+                I18n.get("ptmonline.konflikt.hinweis.konto_konflikt"), List.of())));
+        abruf.konflikte().possibleDuplicates().forEach(dublette -> sammlung.melde(new KonfliktFall(
+                KonfliktArt.MOEGLICHE_DUBLETTE, null, dublette.registrationIds(), "",
+                bezeichnungen(dublette.registrationIds(), bezeichnungProOnlineId),
+                I18n.get("ptmonline.konflikt.hinweis.moegliche_dublette"), List.of())));
+        int formationsStaerke = ziel.getFormation().getAnzSpieler();
+        if (formationsStaerke > 1) {
+            Map<String, String> onlineIds = mapping.getOnlineIdsProUuid();
+            spielerProZeile.forEach((zeile, spieler) -> {
+                String uuid = uuidProZeile.get(zeile);
+                if (uuid != null && spieler.size() < formationsStaerke) {
+                    String onlineId = onlineIds.get(uuid);
+                    sammlung.melde(new KonfliktFall(KonfliktArt.UNVOLLSTAENDIG, uuid,
+                            onlineId == null ? List.of() : List.of(onlineId), bezeichnung(spieler), "",
+                            I18n.get("ptmonline.konflikt.hinweis.unvollstaendig", spieler.size(), formationsStaerke),
+                            List.of()));
+                }
+            });
+        }
+    }
+
+    /** Anmeldungen und Meldungen, die in diesem Abgleich nicht übertragen werden konnten. */
+    private static void meldeNichtUebertragene(KonfliktSammlung sammlung, ImportErgebnis ergebnis,
+            NeuanlageErgebnis neuanlage) {
+        ergebnis.namensgleich().forEach(name -> sammlung.melde(nichtUebertragen("", name,
+                "ptmonline.konflikt.hinweis.namensgleich")));
+        ergebnis.nichtZuordenbar().forEach(name -> sammlung.melde(nichtUebertragen("", name,
+                "ptmonline.konflikt.hinweis.nicht_zuordenbar")));
+        neuanlage.abgelehnt().forEach(name -> sammlung.melde(nichtUebertragen(name, "",
+                "ptmonline.konflikt.hinweis.online_abgelehnt")));
+        neuanlage.nichtAngelegt().forEach(name -> sammlung.melde(nichtUebertragen(name, "",
+                "ptmonline.konflikt.hinweis.nach_start_lokal")));
+    }
+
+    private static KonfliktFall nichtUebertragen(String lokal, String online, String hinweisSchluessel) {
+        return new KonfliktFall(KonfliktArt.NICHT_UEBERTRAGEN, null, List.of(), lokal, online,
+                I18n.get(hinweisSchluessel), List.of());
     }
 
     private static String bezeichnungen(List<String> onlineIds, Map<String, String> bezeichnungProOnlineId) {

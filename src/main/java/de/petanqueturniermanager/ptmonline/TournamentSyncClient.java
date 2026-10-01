@@ -12,6 +12,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import com.google.gson.JsonArray;
@@ -229,6 +230,10 @@ public class TournamentSyncClient extends PtmOnlineHttpClient implements Auftrag
         return turnierPfad(tournamentId) + "/ranking";
     }
 
+    static String entscheidungenPfad(String tournamentId) {
+        return turnierPfad(tournamentId) + "/decisions";
+    }
+
     static String meleeTeamsPfad(String tournamentId) {
         return turnierPfad(tournamentId) + "/melee-teams";
     }
@@ -282,6 +287,38 @@ public class TournamentSyncClient extends PtmOnlineHttpClient implements Auftrag
     static String ranglisteBody(List<LiveRankingEntryDto> entries) {
         JsonObject body = new JsonObject();
         body.add("entries", GSON.toJsonTree(entries));
+        return body.toString();
+    }
+
+    /** Stornierung einer zugeordneten Anmeldung; Namen und Personen bleiben online unverändert. */
+    static String stornoBody(String onlineRegistrationId, int expectedExecutionRevision) {
+        JsonObject body = new JsonObject();
+        body.addProperty("onlineRegistrationId", onlineRegistrationId);
+        body.addProperty("expectedExecutionRevision", expectedExecutionRevision);
+        body.addProperty("status", "cancelled");
+        return body.toString();
+    }
+
+    /** Entscheidungen der Turnierleitung fürs Online-Protokoll (lokale UUID und Online-ID, soweit bekannt). */
+    static String entscheidungenBody(List<KonfliktSammlung.Protokoll> protokoll) {
+        JsonArray decisions = new JsonArray();
+        for (KonfliktSammlung.Protokoll eintrag : protokoll) {
+            Optional<String> code = eintrag.entscheidung().serverCode();
+            if (code.isEmpty()) {
+                continue;
+            }
+            JsonObject decision = new JsonObject();
+            decision.addProperty("decision", code.get());
+            if (eintrag.onlineId() != null) {
+                decision.addProperty("onlineRegistrationId", eintrag.onlineId());
+            }
+            if (eintrag.lokaleUuid() != null) {
+                decision.addProperty("localRegistrationUuid", eintrag.lokaleUuid());
+            }
+            decisions.add(decision);
+        }
+        JsonObject body = new JsonObject();
+        body.add("decisions", decisions);
         return body.toString();
     }
 

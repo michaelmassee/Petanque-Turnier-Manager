@@ -27,7 +27,11 @@ public enum AuftragsArt {
     /** Ranglisten-Snapshot für die Live-Ansicht. */
     RANGLISTE,
     /** Vollständige Zuordnung der Mêlée-Einzelanmeldungen zu den lokal gemischten Teams (KP-18). */
-    MELEE_TEAMS;
+    MELEE_TEAMS,
+    /** Online-Stornierung einer lokal gelöschten, verknüpften Meldung (KP-15). */
+    ANMELDUNG_STORNIEREN,
+    /** Protokoll der Entscheidungen der Turnierleitung aus der Konfliktliste (A-29). */
+    ENTSCHEIDUNGEN;
 
     /**
      * Noch nicht gesendete Aufträge dieser Art aus der Zeit vor dem lokalen Turnierstart werden beim Start verworfen

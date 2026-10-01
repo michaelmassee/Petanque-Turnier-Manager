@@ -59,6 +59,7 @@ public final class PtmOnlineAuftraege {
     private static final String KONTEXT_BEZEICHNUNG = "bezeichnung";
     private static final String KONTEXT_REVISIONEN = "revisionen";
     private static final String CODE_TURNIER_LAEUFT = "tournament_running";
+    private static final int MAX_ENTSCHEIDUNGEN_JE_AUFTRAG = 200;
 
     private PtmOnlineAuftraege() {}
 
@@ -222,6 +223,30 @@ public final class PtmOnlineAuftraege {
         bestand.erzeuge(AuftragsArt.MELEE_TEAMS, "PUT", pfad, TournamentSyncClient.meleeTeamsBody(teams), "{}");
     }
 
+    /** Online-Stornierung einer lokal entfernten, verknüpften Meldung (KP-15); wird ohne Netz nachgeholt. */
+    static void storno(AuftragsBestand bestand, String tournamentId, String lokaleUuid, String onlineRegistrationId,
+            int erwarteteRevision) {
+        bestand.erzeuge(AuftragsArt.ANMELDUNG_STORNIEREN, "PUT", TournamentSyncClient.anmeldungPfad(tournamentId,
+                lokaleUuid), TournamentSyncClient.stornoBody(onlineRegistrationId, erwarteteRevision), "{}");
+    }
+
+    /**
+     * Protokoll angewendeter Entscheidungen (A-29). Entscheidungen, die ein eigener Schreibvorgang protokolliert,
+     * fehlen; bleibt keine übrig, entsteht kein Auftrag.
+     */
+    static void entscheidungen(AuftragsBestand bestand, String tournamentId,
+            List<KonfliktSammlung.Protokoll> protokoll) {
+        List<KonfliktSammlung.Protokoll> zuMelden = protokoll.stream()
+                .filter(eintrag -> eintrag.entscheidung().serverCode().isPresent()).toList();
+        // PTM-Online nimmt höchstens 200 Entscheidungen je Aufruf an.
+        for (int start = 0; start < zuMelden.size(); start += MAX_ENTSCHEIDUNGEN_JE_AUFTRAG) {
+            List<KonfliktSammlung.Protokoll> teil = zuMelden.subList(start,
+                    Math.min(zuMelden.size(), start + MAX_ENTSCHEIDUNGEN_JE_AUFTRAG));
+            bestand.erzeuge(AuftragsArt.ENTSCHEIDUNGEN, "POST", TournamentSyncClient.entscheidungenPfad(tournamentId),
+                    TournamentSyncClient.entscheidungenBody(teil), "{}");
+        }
+    }
+
     /** Trennen: offene Aufträge sind danach sinnlos und werden verworfen. */
     static SyncAuftrag trennen(AuftragsBestand bestand, String tournamentId, String grundVerworfen) {
         bestand.verwerfe(art -> true, grundVerworfen);
@@ -318,7 +343,7 @@ public final class PtmOnlineAuftraege {
                                     + "Revisionen bleiben für den nächsten Abgleich", auftrag.zaehler());
                         }
                     }
-                    case START, TRENNEN, RUNDE, RUNDE_LOESCHEN, RANGLISTE, MELEE_TEAMS -> {
+                    case START, TRENNEN, RUNDE, RUNDE_LOESCHEN, RANGLISTE, MELEE_TEAMS, ANMELDUNG_STORNIEREN, ENTSCHEIDUNGEN -> {
                         // Nichts im Dokument festzuhalten.
                     }
                 }

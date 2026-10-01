@@ -140,8 +140,13 @@ public final class PtmOnlineSpielrundeSync {
             aktualisiereNrFormeln(ziel, mapping, fehler);
         }
         boolean startSenden = true;
+        boolean trotzBefunden = false;
         if (istErsteRunde) {
-            startSenden = pausiert ? nurStartSendenTrotzPause(ctx) : vorabcheckBestaetigt(ctx, verbindung);
+            if (pausiert) {
+                startSenden = nurStartSendenTrotzPause(ctx);
+            } else {
+                trotzBefunden = vorabcheckBestaetigt(ctx, verbindung);
+            }
         }
 
         AuftragsBestand bestand = PtmOnlineAuftraege.bestand(ws, mapping, verbindung.spieltagNr());
@@ -154,6 +159,11 @@ public final class PtmOnlineSpielrundeSync {
                 if (!verworfen.isEmpty()) {
                     logger.info("PTM-Online: {} ungesendete Aufträge der Anmeldephase beim Turnierstart verworfen",
                             verworfen.size());
+                }
+                // Nach running, damit der Start der erste Schreibvorgang bleibt (KP-05).
+                if (trotzBefunden) {
+                    PtmOnlineAuftraege.entscheidungen(bestand, tournamentId,
+                            List.of(new KonfliktSammlung.Protokoll(Entscheidung.TROTZDEM_STARTEN, null, null)));
                 }
             }
         }
@@ -299,32 +309,41 @@ public final class PtmOnlineSpielrundeSync {
     }
 
     /**
-     * Vorabcheck vor der ersten Runde (E-04, E-05, KP-05): Die Turnierleitung bestätigt ausdrücklich, dass mit der
+     * Vorabcheck vor der ersten Runde (E-04, E-05, KP-05, A-29): Die Turnierleitung bestätigt ausdrücklich, dass mit der
      * Runde die Online-Anmeldung geschlossen wird – mit der Liste bestätigter Online-Meldungen, die in der Meldeliste
-     * fehlen. Ist PTM-Online nicht erreichbar, nennt die Rückfrage den letzten erfolgreichen Abgleich; die Bestätigung
-     * wird im Sync-Blatt protokolliert (P-25). Übernommen wird hier nichts – dafür ist der manuelle Abgleich da.
+     * fehlen, und den offenen Ausschlussgründen (Konto doppelt angemeldet, online storniert trotz Check-in,
+     * unvollständige Teams, Mêlée-Spieler ohne Team). Die lokalen Gründe kennt das Dokument auch ohne Netz. Ist
+     * PTM-Online nicht erreichbar, nennt die Rückfrage den letzten erfolgreichen Abgleich; die Bestätigung wird im
+     * Sync-Blatt protokolliert (P-25). Übernommen wird hier nichts – dafür ist der manuelle Abgleich da.
      *
-     * @return immer {@code true}; ohne Bestätigung wird die Runde abgebrochen
+     * @return ob trotz fehlender Meldungen oder offener Ausschlussgründe gestartet wird; ohne Bestätigung wird die
+     *         Runde abgebrochen
      */
     private static boolean vorabcheckBestaetigt(XComponentContext ctx, PtmOnlineVerbindung verbindung)
             throws GenerateException {
         PtmOnlineRegistrationMapping mapping = verbindung.mapping();
+        List<String> lokaleGruende = RegistrationImportTask.lokaleAusschlussgruende(mapping, verbindung.ziel());
         MessageBoxResult antwort;
+        boolean befunde;
         try {
-            List<String> fehlend = RegistrationImportTask.pruefeVorTurnierstart(verbindung.config(), mapping,
-                    verbindung.tournamentId(), verbindung.ziel());
-            String meldung = fehlend.isEmpty() ? I18n.get("ptmonline.frage.turnierstart")
-                    : I18n.get("ptmonline.frage.fehlende_meldungen", fehlend.size(), namensListe(fehlend));
+            RegistrationImportTask.Vorabcheck check = RegistrationImportTask.pruefeVorTurnierstart(
+                    verbindung.config(), mapping, verbindung.tournamentId(), verbindung.ziel());
+            List<String> ausschluss = new ArrayList<>(lokaleGruende);
+            ausschluss.addAll(check.ausschlussgruende());
+            befunde = !check.fehlend().isEmpty() || !ausschluss.isEmpty();
             antwort = MessageBox.from(ctx, MessageBoxTypeEnum.WARN_YES_NO)
-                    .caption(I18n.get("ptmonline.frage.fehlende_meldungen.titel")).message(meldung).show();
+                    .caption(I18n.get("ptmonline.frage.fehlende_meldungen.titel"))
+                    .message(vorabcheckText(check.fehlend(), ausschluss)).show();
         } catch (IOException e) {
             logger.warn("PTM-Online: Online-Meldungen vor Turnierstart nicht prüfbar", e);
             Optional<Instant> letzterSync = mapping.getLastSync();
+            String offline = I18n.get("ptmonline.frage.turnierstart_offline", netzwerkFehlerText(e),
+                    letzterSync.map(PtmOnlineSpielrundeSync::zeitpunktText)
+                            .orElse(I18n.get("ptmonline.letzter_sync.nie")));
+            befunde = !lokaleGruende.isEmpty();
             antwort = MessageBox.from(ctx, MessageBoxTypeEnum.WARN_YES_NO)
                     .caption(I18n.get("ptmonline.frage.fehlende_meldungen.titel"))
-                    .message(I18n.get("ptmonline.frage.turnierstart_offline", netzwerkFehlerText(e),
-                            letzterSync.map(PtmOnlineSpielrundeSync::zeitpunktText)
-                                    .orElse(I18n.get("ptmonline.letzter_sync.nie"))))
+                    .message(befunde ? ausschlussText(lokaleGruende) + "\n\n" + offline : offline)
                     .show();
             if (antwort == MessageBoxResult.YES) {
                 mapping.protokolliereOfflineBestaetigung(Instant.now(), letzterSync.orElse(null));
@@ -336,7 +355,23 @@ public final class PtmOnlineSpielrundeSync {
         if (antwort != MessageBoxResult.YES) {
             throw SheetRunner.verarbeitungAbgebrochen();
         }
-        return true;
+        return befunde;
+    }
+
+    /** Text der Startrückfrage: ohne Befunde die schlichte Bestätigung, sonst fehlende Meldungen und Gründe. */
+    static String vorabcheckText(List<String> fehlend, List<String> ausschluss) {
+        if (ausschluss.isEmpty()) {
+            return fehlend.isEmpty() ? I18n.get("ptmonline.frage.turnierstart")
+                    : I18n.get("ptmonline.frage.fehlende_meldungen", fehlend.size(), namensListe(fehlend));
+        }
+        String abschnitte = fehlend.isEmpty() ? ausschlussText(ausschluss)
+                : I18n.get("ptmonline.vorabcheck.fehlend", fehlend.size(), namensListe(fehlend)) + "\n\n"
+                        + ausschlussText(ausschluss);
+        return I18n.get("ptmonline.frage.vorabcheck", abschnitte);
+    }
+
+    private static String ausschlussText(List<String> ausschluss) {
+        return I18n.get("ptmonline.vorabcheck.ausschluss", namensListe(ausschluss));
     }
 
     private static String zeitpunktText(Instant zeitpunkt) {

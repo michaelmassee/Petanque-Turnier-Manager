@@ -815,6 +815,30 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 		return ergebnis;
 	}
 
+	/** Lokale Bezeichnung (Name) je lokaler UUID aller Zuordnungen, in einem Lesezugriff. */
+	public Map<String, String> getBezeichnungenProUuid() throws GenerateException {
+		Map<String, String> ergebnis = new LinkedHashMap<>();
+		for (RowData zeile : leseDaten()) {
+			String uuid = text(zeile, SPALTE_LOKALE_UUID);
+			if (!uuid.isBlank()) {
+				ergebnis.putIfAbsent(uuid, text(zeile, SPALTE_NAME));
+			}
+		}
+		return ergebnis;
+	}
+
+	/** Roher Online-Status je lokaler UUID aller Zuordnungen, in einem Lesezugriff. */
+	public Map<String, String> getRohStatusProUuid() throws GenerateException {
+		Map<String, String> ergebnis = new LinkedHashMap<>();
+		for (RowData zeile : leseDaten()) {
+			String uuid = text(zeile, SPALTE_LOKALE_UUID);
+			if (!uuid.isBlank()) {
+				ergebnis.putIfAbsent(uuid, text(zeile, SPALTE_STATUS_ROH));
+			}
+		}
+		return ergebnis;
+	}
+
 	/** Ausführungsrevision je lokaler UUID aller Zuordnungen, in einem Lesezugriff. */
 	public Map<String, Integer> getExecutionRevisionenProUuid() throws GenerateException {
 		Map<String, Integer> ergebnis = new LinkedHashMap<>();

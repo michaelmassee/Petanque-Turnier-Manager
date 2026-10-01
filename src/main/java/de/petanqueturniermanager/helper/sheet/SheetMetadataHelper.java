@@ -67,6 +67,8 @@ public class SheetMetadataHelper {
 
     /** „PTMOnline Sync“-Sheet, wenn das Dokument (ohne Spieltage) mit genau einem Online-Turnier verbunden ist. */
     public static final String SCHLUESSEL_PTM_ONLINE_SYNC = "__PTM_ONLINE_SYNC__";
+    /** Konfliktliste von PTM-Online (A-29), eine je Dokument; beginnt bewusst nicht mit dem Spieltag-Prefix. */
+    public static final String SCHLUESSEL_PTM_ONLINE_KONFLIKTE = "__PTM_ONLINE_KONFLIKTE__";
     /**
      * Prefix für die Supermelee-Variante (1 Verbindung pro Spieltag, siehe {@link #schluesselPtmOnlineSync(int)}).
      * Der Basis-Schlüssel {@link #SCHLUESSEL_PTM_ONLINE_SYNC} beginnt bewusst nicht mit diesem Prefix.
