@@ -77,7 +77,8 @@ final class PtmOnlineCheckin {
 
     /** Die Änderung ist als Auftrag gespeichert; ihr Stand gilt als bekannt. */
     void bestaetigen(Aenderung aenderung) {
-        bekannterStand.put(aenderung.auftrag().tournamentId(), aenderung.stand());
+        // Veränderbare Kopie: ein späterer Rundenstart-Abgleich ergänzt den Stand ({@link #uebernehmen}).
+        bekannterStand.put(aenderung.auftrag().tournamentId(), new HashMap<>(aenderung.stand()));
     }
 
     /** Ein gesendeter Rundenstart-Abgleich hat die Teilnahme seiner Meldungen gemeldet. */

@@ -35,13 +35,25 @@ public final class LibreOfficePtmOnlineSpeicher {
 		}
 	}
 
+	/** Nur für Tests: ersetzt die gespeicherten Zugangsdaten, ohne das LibreOffice-Benutzerprofil zu verändern. */
+	private static volatile Zugangsdaten testZugangsdaten;
+
 	private final XComponentContext context;
 
 	public LibreOfficePtmOnlineSpeicher(XComponentContext context) {
 		this.context = context;
 	}
 
+	/** Nur für Tests: {@code null} hebt die Ersetzung wieder auf. */
+	public static void setZugangsdatenForTest(Zugangsdaten zugangsdaten) {
+		testZugangsdaten = zugangsdaten;
+	}
+
 	public Zugangsdaten laden() {
+		Zugangsdaten ersetzt = testZugangsdaten;
+		if (ersetzt != null) {
+			return ersetzt;
+		}
 		XPropertySet props = null;
 		try {
 			props = konfiguration(false);

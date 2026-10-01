@@ -812,6 +812,7 @@ Stufe 1 bis 3 sind umgesetzt, PTM Online und PTM jeweils auf dem Branch `ptm-onl
 | Nach Turnierstart eingegangene Anmeldung stornieren | Aus PTM nur „Übernehmen“; Stornieren erfolgt in PTM Online. |
 | Lokale UUID einer Online-Anmeldung | Das gebundene Dokument darf sie weiter überschreiben (bestehendes PTM-Verhalten). |
 | Vorbeugung „Anmeldung schließen“ | Bei Team-Meldelisten zählt jede belegte Aktiv-Spalte als begonnener Check-in; die Rückfrage kann daher etwas früher kommen. |
+| Zusammenspieltests PTM ↔ PTM Online | Eigene Suite `./gradlew ptmOnlineTests` im Hauptprojekt gegen einen lokal gestarteten PTM-Online-Worker mit eigener D1: Import, Online-Anlage (T-24), Verknüpfen nach Entscheidung (KP-06 a2), Konto-Doppelbelegung bis „Verschiedene Personen“ (KP-06 b/c), Auslosungsausschluss unvollständiger Teams mit Turnierstart online (P-42), Online-Storno nach Import (E-14), Schließen der Anmeldung am Turniertag bzw. ab Check-in (KP-05). Dabei gefunden und behoben: Rundenstart nach einem am Turniertag gemeldeten Check-in brach ab. |
 
 ## Restrisiken und Maßnahmen
 

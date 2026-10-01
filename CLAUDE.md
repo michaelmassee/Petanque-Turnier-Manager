@@ -141,6 +141,7 @@ IDL files in `idl/` define the XGlobal interface for Calc functions. The `addin/
 - **Framework**: JUnit 4, AssertJ, Mockito, PowerMock
 - **Unit tests**: Algorithm and model tests run standalone with `./gradlew test`
 - **UI tests**: Classes ending in `UITest` extend `BaseCalcUITest`, which launches a headless LibreOffice instance via `OfficeStarter` using the user's installed extension from `~/.config/libreoffice/4`. These tests require the extension to be installed first via `./gradlew reinstallExtension`.
+- **PTM-Online-Zusammenspiel**: eigenes Sourceset `src/ptmOnlineTest`, nur über `./gradlew ptmOnlineTests` (nicht Teil von `test`, `uiTests`, `runAllTests`). Startet einen echten PTM-Online-Worker (`wrangler dev` aus dem Online-Repo, Standard `../Petanque-Turnier-Manager-Online`, sonst `-Pptmonline.repo=...`) lokal mit frischer D1 unter `build/ptmonline-e2e`, ohne `.dev.vars` (kein Mailversand). Voraussetzung im Online-Repo: `npm install` und `npm run build`. Zugangsdaten werden nur im Speicher ersetzt (`LibreOfficePtmOnlineSpeicher.setZugangsdatenForTest`), das LO-Profil bleibt unberührt.
 
 ### Reproduzierbare Zufallsdaten – `RandomSource`
 

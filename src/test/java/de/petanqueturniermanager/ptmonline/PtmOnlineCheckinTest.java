@@ -96,6 +96,18 @@ class PtmOnlineCheckinTest {
                 eintrag("b", OnlineTeilnahme.INAKTIV)))).isEmpty();
     }
 
+    /** Regression: Check-in am Turniertag gemeldet, danach Runde 1 – der Rundenstart warf beim Übernehmen. */
+    @Test
+    void rundenstartNachBestaetigtemCheckinErgaenztDenBekanntenStand() {
+        bestaetige(checkin.ermittle(TURNIER, List.of(eintrag("a", OnlineTeilnahme.AKTIV))));
+
+        checkin.uebernehmen(new PtmOnlineStatusAuftrag(TURNIER,
+                List.of(eintrag("a", OnlineTeilnahme.AKTIV), eintrag("b", OnlineTeilnahme.AKTIV))));
+
+        assertThat(checkin.ermittle(TURNIER, List.of(eintrag("a", OnlineTeilnahme.AKTIV),
+                eintrag("b", OnlineTeilnahme.AKTIV)))).isEmpty();
+    }
+
     private void bestaetige(Optional<PtmOnlineCheckin.Aenderung> aenderung) {
         assertThat(aenderung).isPresent();
         checkin.bestaetigen(aenderung.get());
