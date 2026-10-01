@@ -16,10 +16,8 @@ import com.google.gson.JsonParser;
 public final class PtmOnlineHttpException extends IOException {
 
     private static final long serialVersionUID = 1L;
-    private static final int HTTP_NOT_FOUND = 404;
     private static final int HTTP_CONFLICT = 409;
-    /** Fehlertext der PTM-Online-API, wenn es das Turnier nicht (mehr) gibt; unübersetzt, Teil des API-Vertrags. */
-    private static final String TURNIER_NICHT_GEFUNDEN = "Turnier nicht gefunden";
+    private static final int HTTP_GONE = 410;
     /** Anfang des Fehlertexts, wenn das Turnier online (nicht im Dokument) durchgeführt wird; Teil des API-Vertrags. */
     private static final String ONLINE_DURCHGEFUEHRT = "Dieses Turnier wird online durchgeführt";
 
@@ -103,11 +101,14 @@ public final class PtmOnlineHttpException extends IOException {
     }
 
     /**
-     * Das Online-Turnier existiert nicht mehr – in PTM-Online gelöscht. Andere 404-Antworten (z.&nbsp;B. eine
-     * einzelne Anmeldung) zählen nicht dazu.
+     * Das Online-Turnier wurde in PTM-Online gelöscht: nur der ausdrückliche Löschnachweis (410 bzw. Code
+     * {@code tournament_deleted}) zählt. 404, 403 oder ein Netzfehler beenden die Verbindung nie (KP-07, P-31).
      */
     public boolean istTurnierGeloescht() {
-        return statusCode == HTTP_NOT_FOUND && fehlertext().filter(TURNIER_NICHT_GEFUNDEN::equals).isPresent();
+        return statusCode == HTTP_GONE || antwortJson().map(json -> json.get("details"))
+                .filter(JsonElement::isJsonObject).map(JsonElement::getAsJsonObject)
+                .map(details -> details.get("code")).filter(JsonElement::isJsonPrimitive)
+                .map(JsonElement::getAsString).filter("tournament_deleted"::equals).isPresent();
     }
 
     /**

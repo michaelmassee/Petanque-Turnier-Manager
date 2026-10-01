@@ -36,7 +36,7 @@ final class PtmOnlineTestServer implements AutoCloseable {
 
     private static final long MAX_WARTEZEIT_SEKUNDEN = 30;
     private static final int HTTP_OK = 200;
-    private static final int HTTP_NOT_FOUND = 404;
+    private static final int HTTP_GONE = 410;
 
     private final HttpServer server;
     private final String anmeldungenJson;
@@ -79,7 +79,7 @@ final class PtmOnlineTestServer implements AutoCloseable {
         return List.copyOf(onlineAngelegt);
     }
 
-    /** Ab jetzt antwortet der Server wie PTM-Online nach dem Löschen des Turniers (404 „Turnier nicht gefunden“). */
+    /** Ab jetzt antwortet der Server wie PTM-Online nach dem Löschen des Turniers (410 mit Löschnachweis). */
     void turnierLoeschen() {
         turnierGeloescht = true;
     }
@@ -176,7 +176,8 @@ final class PtmOnlineTestServer implements AutoCloseable {
 
     private void trennen(HttpExchange exchange) throws IOException {
         if (turnierGeloescht) {
-            antworte(exchange, HTTP_NOT_FOUND, "{\"error\":\"Turnier nicht gefunden\"}");
+            antworte(exchange, HTTP_GONE,
+                    "{\"error\":\"Turnier gelöscht\",\"details\":{\"code\":\"tournament_deleted\"}}");
             return;
         }
         anzahlGetrennt.incrementAndGet();

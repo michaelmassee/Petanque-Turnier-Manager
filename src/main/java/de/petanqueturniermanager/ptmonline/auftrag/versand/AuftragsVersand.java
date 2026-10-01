@@ -29,14 +29,11 @@ public final class AuftragsVersand {
 
     private static final int HTTP_UNAUTHORIZED = 401;
     private static final int HTTP_FORBIDDEN = 403;
-    private static final int HTTP_NOT_FOUND = 404;
     private static final int HTTP_GONE = 410;
     private static final int HTTP_TOO_MANY_REQUESTS = 429;
     private static final int HTTP_SERVER_ERROR = 500;
     private static final Set<String> BINDUNG_ABGELOEST = Set.of("document_replaced", "lease_invalid",
             "document_unbound");
-    /** Fehlertext von PTM-Online, wenn es das Turnier nicht (mehr) gibt; unübersetzt, Teil des API-Vertrags. */
-    private static final String TURNIER_NICHT_GEFUNDEN = "Turnier nicht gefunden";
 
     private AuftragsVersand() {}
 
@@ -101,11 +98,8 @@ public final class AuftragsVersand {
         return Optional.empty();
     }
 
+    /** Nur der ausdrückliche Löschnachweis zählt; 404, 403 oder ein Netzfehler nie (KP-07, P-31). */
     private static boolean istTurnierGeloescht(SyncAntwort antwort, Optional<String> code) {
-        if (antwort.status() == HTTP_GONE || code.filter("tournament_deleted"::equals).isPresent()) {
-            return true;
-        }
-        return antwort.status() == HTTP_NOT_FOUND
-                && antwort.fehlertext().filter(TURNIER_NICHT_GEFUNDEN::equals).isPresent();
+        return antwort.status() == HTTP_GONE || code.filter("tournament_deleted"::equals).isPresent();
     }
 }

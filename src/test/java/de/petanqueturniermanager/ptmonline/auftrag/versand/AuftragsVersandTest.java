@@ -79,8 +79,11 @@ class AuftragsVersandTest {
         assertThat(AuftragsVersand.stoppGrund(antwort(409, "{\"details\":{\"code\":\"lease_invalid\"}}")))
                 .contains(VersandStopp.BINDUNG_ABGELOEST);
         assertThat(AuftragsVersand.stoppGrund(antwort(410, "{}"))).contains(VersandStopp.TURNIER_GELOESCHT);
-        assertThat(AuftragsVersand.stoppGrund(antwort(404, "{\"error\":\"Turnier nicht gefunden\"}")))
+        assertThat(AuftragsVersand.stoppGrund(antwort(410,
+                "{\"error\":\"Turnier gelöscht\",\"details\":{\"code\":\"tournament_deleted\"}}")))
                 .contains(VersandStopp.TURNIER_GELOESCHT);
+        assertThat(AuftragsVersand.stoppGrund(antwort(404, "{\"error\":\"Turnier nicht gefunden\"}")))
+                .as("404 ist kein Löschnachweis (P-31)").isEmpty();
         assertThat(AuftragsVersand.stoppGrund(antwort(404, "{\"error\":\"Anmeldung nicht gefunden\"}"))).isEmpty();
         assertThat(AuftragsVersand.stoppGrund(antwort(403, "{}"))).contains(VersandStopp.NICHT_BERECHTIGT);
         assertThat(AuftragsVersand.stoppGrund(antwort(503, "kaputt"))).contains(VersandStopp.SERVERFEHLER);

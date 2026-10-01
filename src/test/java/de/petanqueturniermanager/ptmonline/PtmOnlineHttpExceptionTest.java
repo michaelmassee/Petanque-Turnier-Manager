@@ -58,9 +58,12 @@ class PtmOnlineHttpExceptionTest {
     }
 
     @Test
-    void geloeschtesTurnierWirdErkannt() {
+    void geloeschtesTurnierWirdNurAmLoeschnachweisErkannt() {
+        assertThat(new PtmOnlineHttpException(410,
+                "{\"error\":\"Turnier gelöscht\",\"details\":{\"code\":\"tournament_deleted\"}}")
+                .istTurnierGeloescht()).isTrue();
         assertThat(new PtmOnlineHttpException(404, "{\"error\":\"Turnier nicht gefunden\"}").istTurnierGeloescht())
-                .isTrue();
+                .as("404 ist kein Löschnachweis (P-31)").isFalse();
     }
 
     @Test
