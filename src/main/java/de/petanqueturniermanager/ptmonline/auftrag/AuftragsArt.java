@@ -35,7 +35,9 @@ public enum AuftragsArt {
     /** Online-Stornierung einer lokal gelöschten, verknüpften Meldung (KP-15). */
     ANMELDUNG_STORNIEREN,
     /** Protokoll der Entscheidungen der Turnierleitung aus der Konfliktliste (A-29). */
-    ENTSCHEIDUNGEN;
+    ENTSCHEIDUNGEN,
+    /** Schließen der Online-Anmeldung vor dem Check-in (KP-05, Vorbeugung). */
+    ANMELDUNG_SCHLIESSEN;
 
     /**
      * Noch nicht gesendete Aufträge dieser Art aus der Zeit vor dem lokalen Turnierstart werden beim Start verworfen

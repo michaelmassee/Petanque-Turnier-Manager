@@ -5,6 +5,7 @@ package de.petanqueturniermanager.ptmonline;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -138,6 +139,30 @@ class PtmOnlineAbgleichSheetRunnerUITest extends BaseCalcUITest {
                 .allMatch(schluessel -> schluessel.startsWith(KonfliktArt.NICHT_UEBERTRAGEN.name()));
         assertThat(server.entscheidungen()).extracting(entscheidung -> entscheidung.get("decision").getAsString())
                 .containsExactly("separate");
+    }
+
+    @Test
+    void amTurniertagBietetDerAbgleichAnDieOnlineAnmeldungZuSchliessen() throws Exception {
+        server.close();
+        String heute = LocalDate.now().toString();
+        server = new PtmOnlineTestServer(TURNIER_ID, ANMELDUNGEN.replace("{\"registrations\":[",
+                "{\"tournament\":{\"status\":\"registration\",\"registrationClosed\":false,\"roundsOnline\":0,"
+                        + "\"writeCounter\":0,\"date\":\"" + heute + "\"},\"registrations\":["));
+        MessageBox.setDialogeUeberspringen(true);
+
+        abgleichen();
+
+        assertThat(server.anmeldungGeschlossen()).as("Rückfrage mit Ja beantwortet")
+                .singleElement().satisfies(body -> assertThat(body.get("closed").getAsBoolean()).isTrue());
+    }
+
+    @Test
+    void ohneTurnierstandBietetDerAbgleichNichtsAn() throws Exception {
+        MessageBox.setDialogeUeberspringen(true);
+
+        abgleichen();
+
+        assertThat(server.anmeldungGeschlossen()).isEmpty();
     }
 
     private void abgleichen() throws Exception {

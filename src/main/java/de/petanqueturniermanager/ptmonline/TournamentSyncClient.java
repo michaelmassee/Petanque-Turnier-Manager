@@ -230,6 +230,10 @@ public class TournamentSyncClient extends PtmOnlineHttpClient implements Auftrag
         return turnierPfad(tournamentId) + "/ranking";
     }
 
+    static String anmeldungSchliessenPfad(String tournamentId) {
+        return turnierPfad(tournamentId) + "/registration-closed";
+    }
+
     static String entscheidungenPfad(String tournamentId) {
         return turnierPfad(tournamentId) + "/decisions";
     }

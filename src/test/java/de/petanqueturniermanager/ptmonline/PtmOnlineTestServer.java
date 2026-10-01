@@ -48,6 +48,7 @@ final class PtmOnlineTestServer implements AutoCloseable {
     private final List<Integer> geloeschteRunden = new CopyOnWriteArrayList<>();
     private final List<JsonObject> entscheidungen = new CopyOnWriteArrayList<>();
     private final List<JsonObject> angelegte = new CopyOnWriteArrayList<>();
+    private final List<JsonObject> anmeldungGeschlossen = new CopyOnWriteArrayList<>();
     private volatile JsonArray rangliste;
     private volatile boolean turnierGeloescht;
     private final CountDownLatch abrufAngekommen = new CountDownLatch(1);
@@ -62,6 +63,7 @@ final class PtmOnlineTestServer implements AutoCloseable {
         server.createContext("/api/sync/tournaments/" + turnierId + "/rounds/", this::runde);
         server.createContext("/api/sync/tournaments/" + turnierId + "/ranking", this::ranglisteAnnehmen);
         server.createContext("/api/sync/tournaments/" + turnierId + "/decisions", this::entscheidungenAnnehmen);
+        server.createContext("/api/sync/tournaments/" + turnierId + "/registration-closed", this::anmeldungSchliessen);
         server.start();
     }
 
@@ -101,6 +103,11 @@ final class PtmOnlineTestServer implements AutoCloseable {
     /** Rundennummern aller DELETE-Aufrufe, in Eingangsreihenfolge. */
     List<Integer> geloeschteRunden() {
         return List.copyOf(geloeschteRunden);
+    }
+
+    /** Bodies aller Aufrufe zum Schließen bzw. Öffnen der Online-Anmeldung, in Eingangsreihenfolge. */
+    List<JsonObject> anmeldungGeschlossen() {
+        return List.copyOf(anmeldungGeschlossen);
     }
 
     /** Alle protokollierten Entscheidungen, in Eingangsreihenfolge. */
@@ -206,6 +213,14 @@ final class PtmOnlineTestServer implements AutoCloseable {
         rangliste = leseBody(exchange).getAsJsonObject().getAsJsonArray("entries");
         JsonObject antwort = new JsonObject();
         antwort.addProperty("entryCount", rangliste.size());
+        antworte(exchange, antwort.toString());
+    }
+
+    private void anmeldungSchliessen(HttpExchange exchange) throws IOException {
+        JsonObject body = leseBody(exchange).getAsJsonObject();
+        anmeldungGeschlossen.add(body);
+        JsonObject antwort = new JsonObject();
+        antwort.add("registrationClosed", body.get("closed"));
         antworte(exchange, antwort.toString());
     }
 

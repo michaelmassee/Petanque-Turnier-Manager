@@ -3,6 +3,7 @@ package de.petanqueturniermanager.ptmonline;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,6 +13,7 @@ import com.google.gson.Gson;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationDto;
+import de.petanqueturniermanager.ptmonline.dto.SyncStandDto;
 import de.petanqueturniermanager.spielerdb.SpielerMitVerein;
 
 public class RegistrationImportFilterTest {
@@ -123,5 +125,28 @@ public class RegistrationImportFilterTest {
 	public void anmeldestatusKenntKeinAusgestiegen() {
 		assertThat(OnlineAnmeldeStatus.aus("withdrawn")).isEmpty();
 		assertThat(OnlineAnmeldeStatus.anzeige(null)).isEmpty();
+	}
+
+	private static SyncStandDto stand(String status, boolean geschlossen, String datum) {
+		return new SyncStandDto(status, geschlossen, null, 0, 0, datum);
+	}
+
+	@Test
+	public void schliessenWirdAmTurniertagOderNachDemErstenCheckinAngeboten() {
+		LocalDate heute = LocalDate.of(2026, 10, 3);
+
+		assertThat(RegistrationImportTask.schliessenAnbieten(stand("registration", false, "2026-10-03"), heute, false))
+				.isTrue();
+		assertThat(RegistrationImportTask.schliessenAnbieten(stand("registration", false, "2026-10-04"), heute, false))
+				.as("Vortag ohne Check-in").isFalse();
+		assertThat(RegistrationImportTask.schliessenAnbieten(stand("registration", false, "2026-10-04"), heute, true))
+				.as("schon eingecheckt").isTrue();
+		assertThat(RegistrationImportTask.schliessenAnbieten(stand("registration", true, "2026-10-03"), heute, true))
+				.as("bereits geschlossen").isFalse();
+		assertThat(RegistrationImportTask.schliessenAnbieten(stand("running", false, "2026-10-03"), heute, true))
+				.as("läuft schon").isFalse();
+		assertThat(RegistrationImportTask.schliessenAnbieten(stand("registration", false, null), heute, false))
+				.as("älterer Server ohne Datum").isFalse();
+		assertThat(RegistrationImportTask.schliessenAnbieten(null, heute, true)).isFalse();
 	}
 }

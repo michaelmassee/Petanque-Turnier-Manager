@@ -248,6 +248,13 @@ public final class PtmOnlineAuftraege {
         }
     }
 
+    /** Schließt die Online-Anmeldung, damit bis zum Rundenstart keine Anmeldungen mehr eingehen (KP-05). */
+    static void anmeldungSchliessen(AuftragsBestand bestand, String tournamentId) {
+        String pfad = TournamentSyncClient.anmeldungSchliessenPfad(tournamentId);
+        bestand.entferneUeberholte(auftrag -> auftrag.pfad().equals(pfad));
+        bestand.erzeuge(AuftragsArt.ANMELDUNG_SCHLIESSEN, "PUT", pfad, "{\"closed\":true}", "{}");
+    }
+
     /** Ein abgelehnter, noch nicht zur Kenntnis genommener Auftrag als Fall der Konfliktliste. */
     record AbgelehnterFall(String auftragsId, KonfliktFall fall) {}
 
@@ -379,7 +386,8 @@ public final class PtmOnlineAuftraege {
                                     + "Revisionen bleiben für den nächsten Abgleich", auftrag.zaehler());
                         }
                     }
-                    case START, TRENNEN, RUNDE, RUNDE_LOESCHEN, RANGLISTE, MELEE_TEAMS, ANMELDUNG_STORNIEREN, ENTSCHEIDUNGEN -> {
+                    case START, TRENNEN, RUNDE, RUNDE_LOESCHEN, RANGLISTE, MELEE_TEAMS, ANMELDUNG_STORNIEREN, ENTSCHEIDUNGEN,
+                            ANMELDUNG_SCHLIESSEN -> {
                         // Nichts im Dokument festzuhalten.
                     }
                 }

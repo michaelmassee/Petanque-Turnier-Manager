@@ -17,6 +17,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
+import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.ptmonline.RegistrationImportTask.AbgleichErgebnis;
 import de.petanqueturniermanager.spielerdb.MeldelisteZiel;
@@ -77,6 +78,36 @@ public final class PtmOnlineAbgleichSheetRunner extends SheetRunner implements P
             throw new GenerateException(PtmOnlineFehlerText.fuer(e));
         }
         zeigeErgebnis(ergebnis);
+        if (ergebnis.schliessenAnbieten()) {
+            bieteAnmeldungSchliessenAn();
+        }
+    }
+
+    /**
+     * Vorbeugung vor dem Check-in (KP-05): Auf Wunsch schließt PTM die Online-Anmeldung, damit bis zum Rundenstart
+     * keine Anmeldungen mehr eingehen. Ohne Netz bleibt der Auftrag gespeichert und wird nachgeholt.
+     */
+    private void bieteAnmeldungSchliessenAn() throws GenerateException {
+        MessageBoxResult antwort = MessageBox.from(getxContext(), MessageBoxTypeEnum.QUESTION_YES_NO)
+                .caption(I18n.get("ptmonline.frage.anmeldung_schliessen.titel"))
+                .message(I18n.get("ptmonline.frage.anmeldung_schliessen")).show();
+        if (antwort != MessageBoxResult.YES) {
+            return;
+        }
+        try {
+            if (RegistrationImportTask.schliesseOnlineAnmeldung(config, mapping,
+                    PtmOnlineAuftraege.bestand(getWorkingSpreadsheet(), mapping, spieltagNr), tournamentId)) {
+                processBox().info(I18n.get("ptmonline.erfolg.anmeldung_geschlossen"));
+            } else {
+                processBox().fehler(I18n.get("ptmonline.hinweis.anmeldung_schliessen_abgelehnt"));
+            }
+        } catch (InterruptedException e) {
+            getLogger().debug("PTM-Online: Schließen der Online-Anmeldung abgebrochen", e);
+            throw verarbeitungAbgebrochen();
+        } catch (IOException e) {
+            getLogger().warn("PTM-Online: Online-Anmeldung nicht geschlossen, Auftrag wird nachgeholt", e);
+            processBox().fehler(I18n.get("ptmonline.hinweis.anmeldung_schliessen_nachgeholt", PtmOnlineFehlerText.fuer(e)));
+        }
     }
 
     private void zielAktualisieren() throws GenerateException {

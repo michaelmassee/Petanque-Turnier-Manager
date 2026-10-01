@@ -142,4 +142,18 @@ class PtmOnlineAuftraegeTest {
                 .isEqualTo(I18n.get("ptmonline.konflikt.hinweis.abgelehnt.composition_locked"));
         assertThat(PtmOnlineAuftraege.ablehnungsHinweis("HTTP 500")).contains("HTTP 500");
     }
+
+    @Test
+    void schliessenDerAnmeldungIstEinGezaehlterAuftragOhneDoppelung() {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        PtmOnlineAuftraege.anmeldungSchliessen(bestand, TURNIER);
+        PtmOnlineAuftraege.anmeldungSchliessen(bestand, TURNIER);
+
+        assertThat(bestand.zuSenden(false)).singleElement().satisfies(auftrag -> {
+            assertThat(auftrag.art()).isEqualTo(AuftragsArt.ANMELDUNG_SCHLIESSEN);
+            assertThat(auftrag.methode()).isEqualTo("PUT");
+            assertThat(auftrag.pfad()).endsWith("/t1/registration-closed");
+            assertThat(auftrag.body()).isEqualTo("{\"closed\":true}");
+        });
+    }
 }

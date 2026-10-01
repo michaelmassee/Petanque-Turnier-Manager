@@ -6,8 +6,10 @@ package de.petanqueturniermanager.ptmonline;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.time.format.FormatStyle;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -40,11 +42,13 @@ import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.onlinesync.SpieltagKontext;
 import de.petanqueturniermanager.onlinesync.sheet.NeueZuordnung;
 import de.petanqueturniermanager.onlinesync.sheet.ZuordnungsZusatz;
+import de.petanqueturniermanager.ptmonline.auftrag.AuftragsArt;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsBestand;
 import de.petanqueturniermanager.ptmonline.dto.AnmeldungsAbruf;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationDto;
 import de.petanqueturniermanager.ptmonline.dto.NeueOnlineAnmeldung;
 import de.petanqueturniermanager.ptmonline.dto.PersonDto;
+import de.petanqueturniermanager.ptmonline.dto.SyncStandDto;
 import de.petanqueturniermanager.spielerdb.MeldelisteZiel;
 import de.petanqueturniermanager.spielerdb.MeldelisteZielFactory;
 import de.petanqueturniermanager.spielerdb.MeldelisteSpielerDaten;
@@ -161,7 +165,8 @@ public final class RegistrationImportTask {
      *                         Meldungen (KP-14) sowie die Konfliktliste des Online-Turniers (KP-06)
      */
     public record AbgleichErgebnis(ImportErgebnis importErgebnis, int onlineAngelegt, List<String> onlineAbgelehnt,
-            List<String> nichtAngelegt, int ueberKapazitaet, OnlineBefunde online, List<KonfliktFall> offeneFaelle) {
+            List<String> nichtAngelegt, int ueberKapazitaet, OnlineBefunde online, List<KonfliktFall> offeneFaelle,
+            boolean schliessenAnbieten) {
 
         public AbgleichErgebnis {
             onlineAbgelehnt = List.copyOf(onlineAbgelehnt);
@@ -172,7 +177,7 @@ public final class RegistrationImportTask {
         public AbgleichErgebnis(ImportErgebnis importErgebnis, int onlineAngelegt, List<String> onlineAbgelehnt,
                 List<String> nichtAngelegt, int ueberKapazitaet) {
             this(importErgebnis, onlineAngelegt, onlineAbgelehnt, nichtAngelegt, ueberKapazitaet, OnlineBefunde.KEINE,
-                    List.of());
+                    List.of(), false);
         }
 
         public List<String> hinweise() {
@@ -326,8 +331,43 @@ public final class RegistrationImportTask {
         OnlineBefunde online = new OnlineBefunde(importLauf.status().ausgeschlossen(),
                 importLauf.status().wiederBestaetigt(), bezeichnungen.kontoKonflikte(),
                 bezeichnungen.moeglicheDubletten(), bezeichnungen.onlineUebernommen(), bezeichnungen.namensKonflikte());
+        boolean schliessenAnbieten = schliessenAnbieten(bezeichnungen.stand(), LocalDate.now(),
+                ziel.getMeldelisteStatus().checkin() > 0);
         return new AbgleichErgebnis(importLauf.ergebnis(), neuanlage.angelegt(), neuanlage.abgelehnt(),
-                neuanlage.nichtAngelegt(), bezeichnungen.ueberKapazitaet(), online, sammlung.faelle());
+                neuanlage.nichtAngelegt(), bezeichnungen.ueberKapazitaet(), online, sammlung.faelle(),
+                schliessenAnbieten);
+    }
+
+    /**
+     * Vorbeugung (KP-05): Beim Abgleich vor dem Check-in bietet PTM an, die Online-Anmeldung zu schließen, damit bis
+     * zum Rundenstart keine Anmeldungen mehr eingehen. Angeboten wird es, solange sie online noch offen ist und der
+     * Check-in ansteht – am Turniertag oder sobald lokal eingecheckt wird.
+     */
+    static boolean schliessenAnbieten(@Nullable SyncStandDto stand, LocalDate heute, boolean lokalEingecheckt) {
+        if (stand == null || !stand.istAnmeldungOffen()) {
+            return false;
+        }
+        if (lokalEingecheckt) {
+            return true;
+        }
+        try {
+            return stand.date() != null && !LocalDate.parse(stand.date()).isAfter(heute);
+        } catch (DateTimeParseException e) {
+            logger.warn("PTM-Online: Turniertag {} nicht lesbar", stand.date(), e);
+            return false;
+        }
+    }
+
+    /**
+     * Schließt die Online-Anmeldung als gezählter Auftrag und sendet ihn sofort.
+     *
+     * @return ob PTM-Online das Schließen angenommen hat
+     */
+    public static boolean schliesseOnlineAnmeldung(LibreOfficePtmOnlineSpeicher.Zugangsdaten config,
+            PtmOnlineRegistrationMapping mapping, AuftragsBestand bestand, String tournamentId)
+            throws IOException, InterruptedException, GenerateException {
+        PtmOnlineAuftraege.anmeldungSchliessen(bestand, tournamentId);
+        return sendeSynchron(config, mapping, bestand).abgelehnt(AuftragsArt.ANMELDUNG_SCHLIESSEN).isEmpty();
     }
 
     private static String zeitpunktText(Instant zeitpunkt) {
@@ -373,7 +413,8 @@ public final class RegistrationImportTask {
      * @param moeglicheDubletten Bezeichnungen je möglicher Dublette
      */
     private record Bezeichnungsabgleich(int ueberKapazitaet, List<String> kontoKonflikte,
-            List<String> moeglicheDubletten, List<String> onlineUebernommen, List<NamensKonflikt> namensKonflikte) {}
+            List<String> moeglicheDubletten, List<String> onlineUebernommen, List<NamensKonflikt> namensKonflikte,
+            @Nullable SyncStandDto stand) {}
 
     /**
      * Prüfung vor dem Turnierstart (erste Spielrunde): liest nur und liefert die bestätigten Online-Anmeldungen, die
@@ -1041,7 +1082,7 @@ public final class RegistrationImportTask {
                         .map(konflikt -> bezeichnungen(konflikt.registrationIds(), bezeichnungProOnlineId)).toList(),
                 abruf.konflikte().possibleDuplicates().stream()
                         .map(dublette -> bezeichnungen(dublette.registrationIds(), bezeichnungProOnlineId)).toList(),
-                onlineUebernommen, namensKonflikte);
+                onlineUebernommen, namensKonflikte, abruf.stand());
     }
 
     private static AbgeglicheneBesetzung zuletzt(Map<String, ZuordnungsZusatz> zusaetze, String uuid) {
