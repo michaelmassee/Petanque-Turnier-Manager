@@ -289,6 +289,34 @@ public final class MeleeAnmeldungZiel implements MeldelisteZiel, MeleeAnmeldungK
 		BlattschutzManager.get().schreibeEntsperrt(sheet, () -> sheetHelper.clearValInCell(sheet, position));
 	}
 
+	/**
+	 * Ersetzt den Namen einer Einzelanmeldung. Ist der Spieler schon in ein Team der Meldeliste übernommen, bleibt die
+	 * Zeile unverändert: Der Name steht dann auch im Team und wird dort gepflegt.
+	 */
+	@Override
+	public void ersetzeSpielerNamen(int zeile1Basiert, List<SpielerMitVerein> spieler) throws MeldelisteSchreibException {
+		Optional<MeleeAnmeldungZeile> zeile = zeile(zeile1Basiert);
+		if (zeile.isEmpty() || spieler.size() != 1) {
+			throw new MeldelisteSchreibException("Ungültige Namensänderung für Zeile " + zeile1Basiert);
+		}
+		if (zeile.get().uebernommen()) {
+			throw new MeldelisteSchreibException(I18n.get("ptmonline.hinweis.melee_bereits_uebernommen",
+					zeile.get().anzeigeName()));
+		}
+		RangeData data = new RangeData();
+		RowData row = data.addNewRow();
+		row.newString(spieler.getFirst().vorname());
+		row.newString(spieler.getFirst().nachname());
+		XSpreadsheet sheet = sheet();
+		try {
+			RangeHelper.from(sheet, ws.getWorkingSpreadsheetDocument(),
+					RangePosition.from(SPALTE_VORNAME, zeile.get().zeile(), SPALTE_VORNAME + 1, zeile.get().zeile()))
+					.setDataInRange(data);
+		} catch (GenerateException e) {
+			throw new MeldelisteSchreibException("Name konnte nicht geändert werden", e);
+		}
+	}
+
 	/** Eingecheckt = 1, sonst {@code -1} – im selben Sinn wie die Aktiv-Spalte der Team-Meldelisten. */
 	@Override
 	public int getAktivWertAusZeile(int zeile1Basiert) {

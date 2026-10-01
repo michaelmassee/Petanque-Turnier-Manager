@@ -170,8 +170,10 @@ public class TournamentSyncClient extends PtmOnlineHttpClient implements Auftrag
             registrations.add(GSON.fromJson(element, RegistrationDto.class));
         }
         JsonElement konflikte = payload.get("conflicts");
+        JsonElement stand = payload.get("tournament");
         return new AnmeldungsAbruf(registrations, konflikte != null && konflikte.isJsonObject()
-                ? GSON.fromJson(konflikte, KonfliktListeDto.class) : KonfliktListeDto.leer());
+                ? GSON.fromJson(konflikte, KonfliktListeDto.class) : KonfliktListeDto.leer(),
+                stand != null && stand.isJsonObject() ? GSON.fromJson(stand, SyncStandDto.class) : null);
     }
 
     /**

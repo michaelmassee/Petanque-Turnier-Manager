@@ -445,6 +445,35 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
     }
 
     @Override
+    public void ersetzeSpielerNamen(int zeile1Basiert, List<SpielerMitVerein> spieler) throws MeldelisteSchreibException {
+        if (zeile1Basiert <= 0 || spieler.isEmpty() || spieler.size() > anzSpieler) {
+            throw new MeldelisteSchreibException("Ungültige Namensänderung für Zeile " + zeile1Basiert);
+        }
+        try {
+            int zeile = zeile1Basiert - 1;
+            RangePosition bereich = RangePosition.from(vornameSpalte(0), zeile, letzteSchreibSpalte, zeile);
+            RangeData bisher = RangeHelper.from(sheet, doc, bereich).getDataFromRange();
+            RowData alt = bisher.isEmpty() ? new RowData() : bisher.get(0);
+            RowData neu = new RowData();
+            for (int slot = 0; slot < anzSpieler; slot++) {
+                boolean belegt = slot < spieler.size();
+                neu.newString(belegt ? spieler.get(slot).vorname() : "");
+                neu.newString(belegt ? spieler.get(slot).nachname() : "");
+                if (vereinsnameAktiv) {
+                    int vereinIndex = slot * spaltenProSpieler + 2;
+                    String verein = vereinIndex < alt.size() ? StringUtils.defaultString(alt.get(vereinIndex).getStringVal()) : "";
+                    neu.newString(belegt ? verein : "");
+                }
+            }
+            RangeData daten = new RangeData();
+            daten.add(neu);
+            RangeHelper.from(sheet, doc, bereich).setDataInRange(daten);
+        } catch (Exception e) {
+            throw new MeldelisteSchreibException("Namen konnten nicht geändert werden", e);
+        }
+    }
+
+    @Override
     public void stelleAktivWertWiederHer(int zeile1Basiert, int aktivWert) throws MeldelisteSchreibException {
         if (zeile1Basiert <= 0) {
             throw new MeldelisteSchreibException("Ungültige Meldelistenzeile");

@@ -3,6 +3,9 @@ package de.petanqueturniermanager.ptmonline;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 
 import com.google.gson.Gson;
@@ -65,6 +68,55 @@ public class RegistrationImportFilterTest {
 		assertThat(RegistrationImportTask.istOnlineAusgeschlossen(anmeldungMitStatus("waitlist"))).isTrue();
 		assertThat(RegistrationImportTask.istOnlineAusgeschlossen(anmeldungMitStatus("confirmed"))).isFalse();
 		assertThat(RegistrationImportTask.istOnlineAusgeschlossen(anmeldungMitStatus("pending"))).isFalse();
+	}
+
+	private static AbgeglicheneBesetzung besetzung(String... namen) {
+		List<AbgeglicheneBesetzung.Person> personen = new ArrayList<>();
+		for (int i = 0; i < namen.length; i += 2) {
+			personen.add(new AbgeglicheneBesetzung.Person(namen[i], namen[i + 1], null));
+		}
+		return AbgeglicheneBesetzung.von(personen);
+	}
+
+	@Test
+	public void gleicheBesetzungBrauchtKeinenAbgleich() {
+		assertThat(RegistrationImportTask.richtung(besetzung("Anna", "Adler", "Ben", "Berg"),
+				besetzung("ben", "BERG", "Anna", "Adler"), besetzung("Carl", "Cramer", "Anna", "Adler")))
+				.isEqualTo(RegistrationImportTask.BesetzungsRichtung.GLEICH);
+	}
+
+	@Test
+	public void nurLokalGeaendertGehtOnline() {
+		assertThat(RegistrationImportTask.richtung(besetzung("Anna", "Adler", "Ben", "Berg"),
+				besetzung("Anna", "Adler", "Carl", "Cramer"), besetzung("Anna", "Adler", "Carl", "Cramer")))
+				.isEqualTo(RegistrationImportTask.BesetzungsRichtung.NACH_ONLINE);
+	}
+
+	@Test
+	public void nurOnlineGeaendertWirdLokalUebernommen() {
+		assertThat(RegistrationImportTask.richtung(besetzung("Anna", "Adler", "Carl", "Cramer"),
+				besetzung("Anna", "Adler", "Ben", "Berg"), besetzung("Anna", "Adler", "Carl", "Cramer")))
+				.isEqualTo(RegistrationImportTask.BesetzungsRichtung.NACH_LOKAL);
+	}
+
+	@Test
+	public void beidseitigUnterschiedlichGeaendertIstKonflikt() {
+		assertThat(RegistrationImportTask.richtung(besetzung("Anna", "Adler", "Dora", "Dietz"),
+				besetzung("Anna", "Adler", "Ben", "Berg"), besetzung("Anna", "Adler", "Carl", "Cramer")))
+				.isEqualTo(RegistrationImportTask.BesetzungsRichtung.KONFLIKT);
+	}
+
+	@Test
+	public void ohneGespeicherteBesetzungBleibtDasDokumentMaster() {
+		assertThat(RegistrationImportTask.richtung(besetzung("Anna", "Adler"), besetzung("Anne", "Adler"),
+				AbgeglicheneBesetzung.leer())).isEqualTo(RegistrationImportTask.BesetzungsRichtung.NACH_ONLINE);
+	}
+
+	@Test
+	public void namensKonfliktZeigtGrundStattVorauswahl() {
+		RegistrationImportTask.NamensKonflikt mitGrund = new RegistrationImportTask.NamensKonflikt("u1", "Adler",
+				"Berg", false, "schon übernommen");
+		assertThat(mitGrund.hinweis()).isEqualTo("schon übernommen");
 	}
 
 	@Test

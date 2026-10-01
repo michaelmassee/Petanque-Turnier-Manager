@@ -150,6 +150,14 @@ public interface MeldelisteZiel extends AbgleichQuelle {
     }
 
     /**
+     * Ersetzt die Namen der Personen einer Meldung, z.&nbsp;B. wenn nur online eine Namens- oder Besetzungsänderung
+     * stattfand (E-16). Slots über die Liste hinaus werden geleert; Verein und Teilnahme bleiben unverändert.
+     */
+    default void ersetzeSpielerNamen(int zeile1Basiert, List<SpielerMitVerein> spieler) throws MeldelisteSchreibException {
+        throw new MeldelisteSchreibException("Namen ersetzen wird von dieser Meldeliste nicht unterstützt");
+    }
+
+    /**
      * Setzt die Aktiv-Spalte auf einen zuvor gelesenen Wert ({@link #getAktivWertAusZeile}) zurück, z.&nbsp;B. wenn eine
      * online stornierte Meldung wieder bestätigt wird und ihr lokaler Check-in-Zustand unverändert bleiben soll (KP-14).
      * Ein Wert {@code <= 0} leert die Spalte.
