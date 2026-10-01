@@ -34,9 +34,12 @@ import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.onlinesync.SpieltagKontext;
 import de.petanqueturniermanager.onlinesync.sheet.NeueZuordnung;
+import de.petanqueturniermanager.onlinesync.sheet.ZuordnungsZusatz;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsBestand;
+import de.petanqueturniermanager.ptmonline.dto.AnmeldungsAbruf;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationDto;
 import de.petanqueturniermanager.ptmonline.dto.NeueOnlineAnmeldung;
+import de.petanqueturniermanager.ptmonline.dto.PersonDto;
 import de.petanqueturniermanager.spielerdb.MeldelisteZiel;
 import de.petanqueturniermanager.spielerdb.MeldelisteZielFactory;
 import de.petanqueturniermanager.spielerdb.MeldelisteSpielerDaten;
@@ -88,16 +91,22 @@ public final class RegistrationImportTask {
      *                        sie werden nie automatisch übernommen (KP-05)
      */
     public record ImportErgebnis(int importiert, List<String> namensgleich, List<String> nichtZuordenbar,
-            List<String> nachStart) {
+            List<String> nachStart, List<String> unvollstaendig) {
 
         public ImportErgebnis {
             namensgleich = List.copyOf(namensgleich);
             nichtZuordenbar = List.copyOf(nichtZuordenbar);
             nachStart = List.copyOf(nachStart);
+            unvollstaendig = List.copyOf(unvollstaendig);
+        }
+
+        public ImportErgebnis(int importiert, List<String> namensgleich, List<String> nichtZuordenbar,
+                List<String> nachStart) {
+            this(importiert, namensgleich, nichtZuordenbar, nachStart, List.of());
         }
 
         public ImportErgebnis(int importiert, List<String> namensgleich, List<String> nichtZuordenbar) {
-            this(importiert, namensgleich, nichtZuordenbar, List.of());
+            this(importiert, namensgleich, nichtZuordenbar, List.of(), List.of());
         }
 
         /** Nach dem Turnierstart eingegangene Anmeldungen zählen nicht: sie warten auf die Entscheidung der Leitung. */
@@ -118,6 +127,9 @@ public final class RegistrationImportTask {
             if (!nachStart.isEmpty()) {
                 hinweise.add(I18n.get("ptmonline.hinweis.anmeldungen_nach_start", String.join(", ", nachStart)));
             }
+            if (!unvollstaendig.isEmpty()) {
+                hinweise.add(I18n.get("ptmonline.hinweis.team_unvollstaendig", String.join(", ", unvollstaendig)));
+            }
             return hinweise;
         }
     }
@@ -128,13 +140,20 @@ public final class RegistrationImportTask {
      * @param nichtAngelegt    lokale Bezeichnungen der Meldungen, die wegen des Turnierstarts nicht mehr online
      *                         angelegt wurden; sie bleiben rein lokal (E-13)
      * @param ueberKapazitaet  Anzahl der Nachmeldungen der Turnierleitung über die Online-Kapazität hinaus (T-24)
+     * @param online           online stornierte oder auf die Warteliste gesetzte und daher lokal ausgeschlossene
+     *                         Meldungen (KP-14) sowie die Konfliktliste des Online-Turniers (KP-06)
      */
     public record AbgleichErgebnis(ImportErgebnis importErgebnis, int onlineAngelegt, List<String> onlineAbgelehnt,
-            List<String> nichtAngelegt, int ueberKapazitaet) {
+            List<String> nichtAngelegt, int ueberKapazitaet, OnlineBefunde online) {
 
         public AbgleichErgebnis {
             onlineAbgelehnt = List.copyOf(onlineAbgelehnt);
             nichtAngelegt = List.copyOf(nichtAngelegt);
+        }
+
+        public AbgleichErgebnis(ImportErgebnis importErgebnis, int onlineAngelegt, List<String> onlineAbgelehnt,
+                List<String> nichtAngelegt, int ueberKapazitaet) {
+            this(importErgebnis, onlineAngelegt, onlineAbgelehnt, nichtAngelegt, ueberKapazitaet, OnlineBefunde.KEINE);
         }
 
         public List<String> hinweise() {
@@ -147,6 +166,45 @@ public final class RegistrationImportTask {
             }
             if (ueberKapazitaet > 0) {
                 hinweise.add(I18n.get("ptmonline.hinweis.ueber_kapazitaet", ueberKapazitaet));
+            }
+            hinweise.addAll(online.hinweise());
+            return hinweise;
+        }
+    }
+
+    /**
+     * Was der Abgleich online vorgefunden hat und die Turnierleitung wissen muss.
+     *
+     * @param ausgeschlossen      lokale Bezeichnungen online stornierter oder wartender, lokal ausgeschlossener Meldungen
+     * @param wiederBestaetigt    lokale Bezeichnungen wieder bestätigter, nicht mehr ausgeschlossener Meldungen
+     * @param kontoKonflikte      je Doppelbelegung eines Kontos die Bezeichnungen der betroffenen Anmeldungen
+     * @param moeglicheDubletten  je möglicher Dublette die Bezeichnungen der betroffenen Anmeldungen (nur Hinweis)
+     */
+    public record OnlineBefunde(List<String> ausgeschlossen, List<String> wiederBestaetigt, List<String> kontoKonflikte,
+            List<String> moeglicheDubletten) {
+
+        static final OnlineBefunde KEINE = new OnlineBefunde(List.of(), List.of(), List.of(), List.of());
+
+        public OnlineBefunde {
+            ausgeschlossen = List.copyOf(ausgeschlossen);
+            wiederBestaetigt = List.copyOf(wiederBestaetigt);
+            kontoKonflikte = List.copyOf(kontoKonflikte);
+            moeglicheDubletten = List.copyOf(moeglicheDubletten);
+        }
+
+        public List<String> hinweise() {
+            List<String> hinweise = new ArrayList<>();
+            if (!ausgeschlossen.isEmpty()) {
+                hinweise.add(I18n.get("ptmonline.hinweis.online_ausgeschlossen", String.join(", ", ausgeschlossen)));
+            }
+            if (!wiederBestaetigt.isEmpty()) {
+                hinweise.add(I18n.get("ptmonline.hinweis.online_wieder_bestaetigt", String.join(", ", wiederBestaetigt)));
+            }
+            if (!kontoKonflikte.isEmpty()) {
+                hinweise.add(I18n.get("ptmonline.hinweis.konto_konflikt", String.join("; ", kontoKonflikte)));
+            }
+            if (!moeglicheDubletten.isEmpty()) {
+                hinweise.add(I18n.get("ptmonline.hinweis.moegliche_dublette", String.join("; ", moeglicheDubletten)));
             }
             return hinweise;
         }
@@ -213,17 +271,33 @@ public final class RegistrationImportTask {
             MeldelistenAktualisierung aktualisierung, AbgleichFortschritt fortschritt)
             throws IOException, InterruptedException, GenerateException {
         mapping.sicherstellen();
-        ImportErgebnis importErgebnis = fuehreImportDurch(config, mapping, tournamentId, ziel, aktualisierung,
-                fortschritt);
+        ImportLauf importLauf = fuehreImportDurch(config, mapping, tournamentId, ziel, aktualisierung, fortschritt);
         fortschritt.pruefeAbbruch();
         fortschritt.status(I18n.get("ptmonline.fortschritt.lokale_meldungen_anlegen"));
         NeuanlageErgebnis neuanlage = neueLokaleMeldungenAnlegen(config, mapping, bestand, tournamentId, ziel);
         fortschritt.pruefeAbbruch();
         fortschritt.status(I18n.get("ptmonline.fortschritt.details_aktualisieren"));
-        int ueberKapazitaet = aktualisiereBezeichnungen(config, mapping, bestand, tournamentId, ziel);
-        return new AbgleichErgebnis(importErgebnis, neuanlage.angelegt(), neuanlage.abgelehnt(),
-                neuanlage.nichtAngelegt(), ueberKapazitaet);
+        Bezeichnungsabgleich bezeichnungen = aktualisiereBezeichnungen(config, mapping, bestand, tournamentId, ziel);
+        OnlineBefunde online = new OnlineBefunde(importLauf.status().ausgeschlossen(),
+                importLauf.status().wiederBestaetigt(), bezeichnungen.kontoKonflikte(),
+                bezeichnungen.moeglicheDubletten());
+        return new AbgleichErgebnis(importLauf.ergebnis(), neuanlage.angelegt(), neuanlage.abgelehnt(),
+                neuanlage.nichtAngelegt(), bezeichnungen.ueberKapazitaet(), online);
     }
+
+    /** Ergebnis des Imports samt der übernommenen Online-Statuswechsel. */
+    private record ImportLauf(ImportErgebnis ergebnis, StatusUebernahme status) {}
+
+    /** Online stornierte/wartende Meldungen, die ausgeschlossen, und wieder bestätigte, die zurückgeholt wurden. */
+    private record StatusUebernahme(List<String> ausgeschlossen, List<String> wiederBestaetigt) {}
+
+    /**
+     * @param ueberKapazitaet    zugeordnete Anmeldungen über der Online-Kapazität
+     * @param kontoKonflikte     Bezeichnungen je Doppelbelegung eines Kontos
+     * @param moeglicheDubletten Bezeichnungen je möglicher Dublette
+     */
+    private record Bezeichnungsabgleich(int ueberKapazitaet, List<String> kontoKonflikte,
+            List<String> moeglicheDubletten) {}
 
     /**
      * Prüfung vor dem Turnierstart (erste Spielrunde): liest nur und liefert die bestätigten Online-Anmeldungen, die
@@ -280,7 +354,7 @@ public final class RegistrationImportTask {
      * Synchron und blockierend; läuft innerhalb des {@link PtmOnlineAbgleichSheetRunner}, nie auf dem
      * LO-Main-Thread.
      */
-    private static ImportErgebnis fuehreImportDurch(LibreOfficePtmOnlineSpeicher.Zugangsdaten config,
+    private static ImportLauf fuehreImportDurch(LibreOfficePtmOnlineSpeicher.Zugangsdaten config,
             PtmOnlineRegistrationMapping mapping, String tournamentId, MeldelisteZiel ziel,
             MeldelistenAktualisierung aktualisierung, AbgleichFortschritt fortschritt)
             throws IOException, InterruptedException, GenerateException {
@@ -291,12 +365,12 @@ public final class RegistrationImportTask {
         List<RegistrationDto> alle = client.fetchRegistrations(tournamentId, since);
         fortschritt.status(I18n.get("ptmonline.fortschritt.anmeldungen_abgerufen", alle.size()));
         fortschritt.pruefeAbbruch();
-        uebernehmeOnlineStornierungen(ziel, mapping, alle);
+        StatusUebernahme status = uebernehmeOnlineStatus(ziel, mapping, alle);
         ImportErgebnis ergebnis = uebernehmeAnmeldungen(alle, mapping, ziel, aktualisierung, fortschritt);
         if (ergebnis.vollstaendig()) {
             mapping.setLastSync(abgleichStart);
         }
-        return ergebnis;
+        return new ImportLauf(ergebnis, status);
     }
 
     /**
@@ -338,6 +412,7 @@ public final class RegistrationImportTask {
         Set<Integer> geschriebeneZeilen = new HashSet<>();
         List<String> namensgleich = new ArrayList<>();
         List<String> nichtZuordenbar = new ArrayList<>();
+        List<String> unvollstaendig = new ArrayList<>();
         Map<String, List<Integer>> vorhandeneZeilen = vorhandeneZeilenNachBesetzung(ziel);
         for (RegistrationDto reg : neue) {
             fortschritt.pruefeAbbruch();
@@ -347,6 +422,10 @@ public final class RegistrationImportTask {
                         reg.id(), ziel.getFormation());
                 nichtZuordenbar.add(onlineBezeichnung(reg));
                 continue;
+            }
+            if (spieler.size() < ziel.getFormation().getAnzSpieler()) {
+                // Formée-Team mit weniger Personen als die Formation: wird importiert und vor Ort vervollständigt (E-20).
+                unvollstaendig.add(onlineBezeichnung(reg));
             }
             String besetzung = besetzungsSchluessel(spieler.stream().map(s -> OnlineSpielerName.schluessel(s.vorname(), s.nachname())));
             List<Integer> gleicheZeilen = vorhandeneZeilen.getOrDefault(besetzung, List.of());
@@ -391,7 +470,7 @@ public final class RegistrationImportTask {
             }
         }
         if (geschrieben.isEmpty()) {
-            return new ImportErgebnis(0, namensgleich, nichtZuordenbar, nachStart);
+            return new ImportErgebnis(0, namensgleich, nichtZuordenbar, nachStart, unvollstaendig);
         }
 
         fortschritt.status(I18n.get("ptmonline.fortschritt.meldeliste_aktualisieren"));
@@ -419,7 +498,7 @@ public final class RegistrationImportTask {
             }
         }
         mapping.addMappings(zuordnungen);
-        return new ImportErgebnis(zuordnungen.size(), namensgleich, nichtZuordenbar, nachStart);
+        return new ImportErgebnis(zuordnungen.size(), namensgleich, nichtZuordenbar, nachStart, unvollstaendig);
     }
 
     /**
@@ -496,6 +575,8 @@ public final class RegistrationImportTask {
         mapping.ersetzeOnlineId(uuid, reg.id(), executionRevision(reg));
         mapping.setBezeichnung(uuid, lokaleBezeichnung(ziel, zeile), onlineStatus(reg));
         mapping.setOnlineDetails(uuid, reg);
+        mapping.setZusaetze(Map.of(uuid, new ZuordnungsZusatz(
+                AbgeglicheneBesetzung.ausOnline(reg.personen()).alsText(), "")));
         uebernehmeSetzposition(ziel, reg, zeile);
         logger.info("PTM-Online: Neuanmeldung {} nach Storno mit bestehender Meldelistenzeile {} verknüpft", reg.id(), zeile);
     }
@@ -510,6 +591,8 @@ public final class RegistrationImportTask {
             throw new GenerateException("Lokale vorhandene Anmeldung konnte nicht verknüpft werden: " + e.getMessage());
         }
         mapping.setOnlineDetails(uuid, reg);
+        mapping.setZusaetze(Map.of(uuid,
+                ZuordnungsZusatz.nurBesetzung(AbgeglicheneBesetzung.ausOnline(reg.personen()).alsText())));
         uebernehmeSetzposition(ziel, reg, zeile);
     }
 
@@ -662,16 +745,16 @@ public final class RegistrationImportTask {
 
     /**
      * Gleicht die Namen zugeordneter Meldungen ab: weicht die Besetzung online ab, überträgt ein Änderungsauftrag den
-     * lokalen Stand (das Dokument ist Master) und vermerkt dabei online die lokale UUID (T-21). Danach werden Anzeige
-     * und Ausführungsrevisionen des Sync-Blatts aktualisiert.
-     *
-     * @return Anzahl der zugeordneten Anmeldungen, die online über der Kapazität liegen
+     * lokalen Stand (das Dokument ist Master) und vermerkt dabei online die lokale UUID (T-21). Jede Person geht mit
+     * der Benutzer-ID hinaus, die sie zuletzt trug; eine ersetzte Person verliert sie (T-17, P-45). Danach werden
+     * Anzeige, Ausführungsrevisionen und die zuletzt abgeglichene Besetzung des Sync-Blatts aktualisiert.
      */
-    private static int aktualisiereBezeichnungen(LibreOfficePtmOnlineSpeicher.Zugangsdaten config,
+    private static Bezeichnungsabgleich aktualisiereBezeichnungen(LibreOfficePtmOnlineSpeicher.Zugangsdaten config,
             PtmOnlineRegistrationMapping mapping, AuftragsBestand bestand, String tournamentId, MeldelisteZiel ziel)
             throws IOException, InterruptedException, GenerateException {
         TournamentSyncClient client = gebundenerClient(config, mapping);
-        Map<String, RegistrationDto> remoteProId = client.fetchRegistrations(tournamentId, null).stream()
+        AnmeldungsAbruf abruf = client.fetchAbgleich(tournamentId, null);
+        Map<String, RegistrationDto> remoteProId = abruf.registrations().stream()
                 .collect(Collectors.toMap(RegistrationDto::id, registration -> registration));
         Map<Integer, String> bezeichnungProZeile = lokaleBezeichnungen(ziel);
         Map<Integer, String> uuidProZeile = lokaleUuids(ziel, bezeichnungProZeile.keySet());
@@ -698,10 +781,14 @@ public final class RegistrationImportTask {
                 throw new GenerateException(I18n.get("ptmonline.fehler.online_zuordnung_fehlend", onlineId));
             }
             registrationProUuid.put(uuid, remote);
-            NeueOnlineAnmeldung lokal = zuOnlineAnmeldung(spielerProZeile.get(zeile));
-            if (!besetzungsSchluessel(lokal).equals(besetzungsSchluessel(remote))) {
-                PtmOnlineAuftraege.aenderung(bestand, tournamentId, uuid, onlineId, lokal, executionRevision(remote),
-                        bezeichnungProZeile.get(zeile));
+            List<AbgeglicheneBesetzung.Person> lokal = personen(spielerProZeile.get(zeile));
+            NeueOnlineAnmeldung lokaleAnmeldung = zuOnlineAnmeldung(spielerProZeile.get(zeile));
+            if (!besetzungsSchluessel(lokaleAnmeldung).equals(besetzungsSchluessel(remote))) {
+                // Benutzer-IDs aus dem aktuellen Online-Stand: Hat sich online ein Konto gelöst, wäre eine gemerkte ID
+                // veraltet und PTM-Online würde den ganzen Auftrag als fremde ID ablehnen (T-17).
+                PtmOnlineAuftraege.aenderung(bestand, tournamentId, uuid, onlineId, lokaleAnmeldung,
+                        AbgeglicheneBesetzung.ausOnline(remote.personen()).fuerUebertragung(lokal),
+                        executionRevision(remote), bezeichnungProZeile.get(zeile));
                 geaenderteZeilen.put(uuid, bezeichnungProZeile.get(zeile));
             }
         }
@@ -721,7 +808,34 @@ public final class RegistrationImportTask {
                         eintrag -> executionRevision(eintrag.getValue()), (links, rechts) -> rechts,
                         LinkedHashMap::new));
         mapping.setExecutionRevisionen(revisionen);
-        return (int) registrationProUuid.values().stream().filter(RegistrationDto::istUeberKapazitaet).count();
+        // Der Online-Stand nach dem Abgleich ist die zuletzt abgeglichene Besetzung – samt neuer Benutzer-IDs, z. B.
+        // nachdem online eine Slot-E-Mail eingetragen wurde (P-47).
+        Map<String, ZuordnungsZusatz> besetzungen = new LinkedHashMap<>();
+        registrationProUuid.forEach((uuid, registration) -> besetzungen.put(uuid,
+                ZuordnungsZusatz.nurBesetzung(AbgeglicheneBesetzung.ausOnline(registration.personen()).alsText())));
+        mapping.setZusaetze(besetzungen);
+        int ueberKapazitaet = (int) registrationProUuid.values().stream().filter(RegistrationDto::istUeberKapazitaet)
+                .count();
+        Map<String, String> bezeichnungProOnlineId = new LinkedHashMap<>();
+        remoteProId.forEach((onlineId, registration) -> bezeichnungProOnlineId.put(onlineId,
+                Optional.ofNullable(uuidProOnlineId.get(onlineId)).map(bezeichnungProUuid::get)
+                        .orElseGet(() -> onlineBezeichnung(registration))));
+        return new Bezeichnungsabgleich(ueberKapazitaet,
+                abruf.konflikte().accountConflicts().stream()
+                        .map(konflikt -> bezeichnungen(konflikt.registrationIds(), bezeichnungProOnlineId)).toList(),
+                abruf.konflikte().possibleDuplicates().stream()
+                        .map(dublette -> bezeichnungen(dublette.registrationIds(), bezeichnungProOnlineId)).toList());
+    }
+
+    private static String bezeichnungen(List<String> onlineIds, Map<String, String> bezeichnungProOnlineId) {
+        return onlineIds.stream().map(onlineId -> bezeichnungProOnlineId.getOrDefault(onlineId, onlineId))
+                .collect(Collectors.joining(" / "));
+    }
+
+    /** Personen einer Meldelistenzeile in Slot-Reihenfolge. */
+    private static List<AbgeglicheneBesetzung.Person> personen(List<MeldelisteSpielerDaten> spieler) {
+        return spieler.stream().map(daten -> new AbgeglicheneBesetzung.Person(daten.vorname(), daten.nachname(), null))
+                .toList();
     }
 
     private static String lokaleBezeichnung(MeldelisteZiel ziel, int zeile1Basiert) {
@@ -750,30 +864,80 @@ public final class RegistrationImportTask {
                 + String.valueOf(nachname == null ? "" : nachname).strip()).strip();
     }
 
-    private static void uebernehmeOnlineStornierungen(MeldelisteZiel ziel, PtmOnlineRegistrationMapping mapping,
+    /**
+     * Online stornierte oder auf die Warteliste gesetzte, bereits zugeordnete Meldungen werden lokal als abgemeldet
+     * markiert und so von der Auslosung ausgeschlossen, nie gelöscht (E-14, KP-14). Der Aktiv-Wert davor wird im
+     * Vermerk gemerkt: Wird die Anmeldung online wieder bestätigt, entfällt der Ausschluss und der lokale Check-in-Zustand
+     * ist wieder genau der alte. Behält die Turnierleitung eine Meldung bewusst, wird sie nicht erneut ausgeschlossen.
+     */
+    private static StatusUebernahme uebernehmeOnlineStatus(MeldelisteZiel ziel, PtmOnlineRegistrationMapping mapping,
             List<RegistrationDto> registrations) throws GenerateException {
-        for (RegistrationDto registration : registrations) {
-            if (!OnlineAnmeldeStatus.istStorniert(registration.status())) {
+        Map<String, String> uuidProOnlineId = new LinkedHashMap<>();
+        mapping.getOnlineIdsProUuid().forEach((uuid, onlineId) -> uuidProOnlineId.putIfAbsent(onlineId, uuid));
+        List<RegistrationDto> zugeordnete = registrations.stream()
+                .filter(registration -> uuidProOnlineId.containsKey(registration.id())).toList();
+        if (zugeordnete.isEmpty()) {
+            return new StatusUebernahme(List.of(), List.of());
+        }
+        Map<String, ZuordnungsZusatz> zusaetze = mapping.getZusaetzeProUuid();
+        Map<String, Integer> zeileProUuid = zeileProLokalerUuid(ziel);
+        Map<String, ZuordnungsZusatz> neueVermerke = new LinkedHashMap<>();
+        List<String> ausgeschlossen = new ArrayList<>();
+        List<String> wiederBestaetigt = new ArrayList<>();
+        for (RegistrationDto registration : zugeordnete) {
+            String uuid = uuidProOnlineId.get(registration.id());
+            Integer zeile = zeileProUuid.get(uuid);
+            if (zeile == null) {
                 continue;
             }
-            Optional<String> lokaleUuid = mapping.getLokaleUuid(registration.id());
-            if (lokaleUuid.isEmpty()) {
-                continue;
-            }
-            for (MeldelisteSpielerDaten spieler : ziel.leseAlleSpielerRoh()) {
-                try {
-                    if (lokaleUuid.get().equals(ziel.getOderErzeugeLokaleUuid(spieler.zeile1Basiert()))) {
-                        ziel.markiereAlsAbgemeldet(spieler.zeile1Basiert());
-                        mapping.setBezeichnung(lokaleUuid.get(), lokaleBezeichnung(ziel, spieler.zeile1Basiert()),
-                                onlineStatus(registration));
-                        mapping.setOnlineDetails(lokaleUuid.get(), registration);
-                        break;
+            ZuordnungsZusatz zusatz = zusaetze.get(uuid);
+            ZuordnungsVermerke bisher = ZuordnungsVermerke.lese(zusatz == null ? null : zusatz.vermerk());
+            ZuordnungsVermerke vermerke = bisher;
+            try {
+                if (istOnlineAusgeschlossen(registration)) {
+                    if (!bisher.hat(ZuordnungsVermerke.AUSGESCHLOSSEN) && !bisher.hat(ZuordnungsVermerke.BEHALTEN)) {
+                        int vorher = ziel.getAktivWertAusZeile(zeile);
+                        ziel.markiereAlsAbgemeldet(zeile);
+                        vermerke = bisher.mit(ZuordnungsVermerke.AUSGESCHLOSSEN, Integer.toString(vorher));
+                        ausgeschlossen.add(lokaleBezeichnung(ziel, zeile) + " (" + onlineStatus(registration) + ")");
                     }
-                } catch (MeldelisteZiel.MeldelisteSchreibException e) {
-                    throw new GenerateException(e.getMessage());
+                } else if (OnlineAnmeldeStatus.istBestaetigt(registration.status())) {
+                    if (bisher.hat(ZuordnungsVermerke.AUSGESCHLOSSEN)) {
+                        ziel.stelleAktivWertWiederHer(zeile, bisher.zahl(ZuordnungsVermerke.AUSGESCHLOSSEN).orElse(-1));
+                        wiederBestaetigt.add(lokaleBezeichnung(ziel, zeile));
+                    }
+                    vermerke = bisher.ohne(ZuordnungsVermerke.AUSGESCHLOSSEN).ohne(ZuordnungsVermerke.BEHALTEN);
                 }
+            } catch (MeldelisteZiel.MeldelisteSchreibException e) {
+                throw new GenerateException(e.getMessage());
+            }
+            if (!vermerke.equals(bisher)) {
+                neueVermerke.put(uuid, ZuordnungsZusatz.nurVermerk(vermerke.alsText()));
+                mapping.setBezeichnung(uuid, lokaleBezeichnung(ziel, zeile), onlineStatus(registration));
+                mapping.setOnlineDetails(uuid, registration);
             }
         }
+        mapping.setZusaetze(neueVermerke);
+        return new StatusUebernahme(ausgeschlossen, wiederBestaetigt);
+    }
+
+    /** Online storniert oder auf der Warteliste: lokal von der Auslosung ausgeschlossen (E-14). */
+    static boolean istOnlineAusgeschlossen(RegistrationDto registration) {
+        return OnlineAnmeldeStatus.istStorniert(registration.status())
+                || OnlineAnmeldeStatus.WARTELISTE.apiWert().equals(registration.status());
+    }
+
+    /** 1-basierte Meldelistenzeile je vorhandener lokaler UUID; Zeilen ohne UUID fehlen. */
+    private static Map<String, Integer> zeileProLokalerUuid(MeldelisteZiel ziel) throws GenerateException {
+        List<Integer> zeilen = ziel.leseAlleSpielerRoh().stream().map(MeldelisteSpielerDaten::zeile1Basiert).distinct()
+                .toList();
+        Map<String, Integer> ergebnis = new LinkedHashMap<>();
+        try {
+            ziel.leseLokaleUuids(zeilen).forEach((zeile, uuid) -> ergebnis.putIfAbsent(uuid, zeile));
+        } catch (MeldelisteZiel.MeldelisteSchreibException e) {
+            throw new GenerateException(e.getMessage());
+        }
+        return ergebnis;
     }
 
     private static String onlineStatus(RegistrationDto registration) {
@@ -781,30 +945,21 @@ public final class RegistrationImportTask {
     }
 
     /**
-     * Baut die Spielerliste passend zur Meldeliste-Formation. Liefert {@code null}, wenn die
-     * Registrierung fuer die geforderte Spielerzahl nicht genug ausgefuellte Namen mitbringt
-     * (defensiv statt Absturz — z.B. Doublette-Meldeliste, aber Anmeldung ohne Partnername).
+     * Baut die Spielerliste aus den Personen-Slots der Anmeldung. Liefert {@code null}, wenn die Personenzahl nicht zur
+     * Meldeliste passt: genau eine Person bei Einzelanmeldung, sonst 2 bis zur Formationsstärke (E-20). Ein Formée-Team
+     * mit weniger Personen als die Formation ist zulässig und wird unvollständig importiert.
      */
-    private static @Nullable List<SpielerMitVerein> zuSpielerListe(RegistrationDto reg, Formation formation) {
-        if (istLeer(reg.firstName()) || istLeer(reg.lastName())) {
+    static @Nullable List<SpielerMitVerein> zuSpielerListe(RegistrationDto reg, Formation formation) {
+        List<PersonDto> personen = reg.personen().stream()
+                .filter(person -> !istLeer(person.firstName()) && !istLeer(person.lastName())).toList();
+        int hoechstens = Math.max(1, formation.getAnzSpieler());
+        int mindestens = hoechstens == 1 ? 1 : 2;
+        if (personen.size() < mindestens || personen.size() > hoechstens) {
             return null;
         }
-        List<SpielerMitVerein> spieler = new ArrayList<>();
-        spieler.add(neuerSpieler(reg.firstName(), reg.lastName(), reg.club(), reg.licenseNr()));
-
-        if (formation.getAnzSpieler() >= 2) {
-            if (istLeer(reg.partnerFirstName()) || istLeer(reg.partnerLastName())) {
-                return null;
-            }
-            spieler.add(neuerSpieler(reg.partnerFirstName(), reg.partnerLastName(), reg.club(), null));
-        }
-        if (formation.getAnzSpieler() >= 3) {
-            if (istLeer(reg.partner2FirstName()) || istLeer(reg.partner2LastName())) {
-                return null;
-            }
-            spieler.add(neuerSpieler(reg.partner2FirstName(), reg.partner2LastName(), reg.club(), null));
-        }
-        return spieler;
+        return personen.stream()
+                .map(person -> neuerSpieler(person.firstName(), person.lastName(), reg.club(), person.licenseNr()))
+                .toList();
     }
 
     private static boolean istLeer(@Nullable String wert) {

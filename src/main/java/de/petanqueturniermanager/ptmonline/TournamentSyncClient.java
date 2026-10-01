@@ -24,9 +24,12 @@ import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.ptmonline.auftrag.SyncAuftrag;
 import de.petanqueturniermanager.ptmonline.auftrag.versand.AuftragsSender;
 import de.petanqueturniermanager.ptmonline.auftrag.versand.SyncAntwort;
+import de.petanqueturniermanager.ptmonline.dto.AnmeldungsAbruf;
+import de.petanqueturniermanager.ptmonline.dto.KonfliktListeDto;
 import de.petanqueturniermanager.ptmonline.dto.LiveMatchDto;
 import de.petanqueturniermanager.ptmonline.dto.LiveRankingEntryDto;
 import de.petanqueturniermanager.ptmonline.dto.NeueOnlineAnmeldung;
+import de.petanqueturniermanager.ptmonline.dto.PersonDto;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationDto;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationResultDto;
 import de.petanqueturniermanager.ptmonline.dto.ServerZuordnungDto;
@@ -146,6 +149,15 @@ public class TournamentSyncClient extends PtmOnlineHttpClient implements Auftrag
      * geaenderten (fuer inkrementellen Abgleich).
      */
     public List<RegistrationDto> fetchRegistrations(String tournamentId, Instant since) throws IOException, InterruptedException {
+        return fetchAbgleich(tournamentId, since).registrations();
+    }
+
+    /**
+     * Wie {@link #fetchRegistrations}, zusätzlich mit der vollständigen Konfliktliste des Online-Turniers
+     * (Doppelbelegungen von Konten und mögliche Dubletten, KP-06). Ein älterer Server ohne Konfliktliste liefert eine
+     * leere.
+     */
+    public AnmeldungsAbruf fetchAbgleich(String tournamentId, Instant since) throws IOException, InterruptedException {
         String path = "/api/sync/tournaments/" + encode(tournamentId) + "/registrations";
         if (since != null) {
             path += "?since=" + encode(since.toString());
@@ -157,7 +169,9 @@ public class TournamentSyncClient extends PtmOnlineHttpClient implements Auftrag
         for (var element : pflichtArray(payload, "registrations")) {
             registrations.add(GSON.fromJson(element, RegistrationDto.class));
         }
-        return registrations;
+        JsonElement konflikte = payload.get("conflicts");
+        return new AnmeldungsAbruf(registrations, konflikte != null && konflikte.isJsonObject()
+                ? GSON.fromJson(konflikte, KonfliktListeDto.class) : KonfliktListeDto.leer());
     }
 
     /**
@@ -229,10 +243,15 @@ public class TournamentSyncClient extends PtmOnlineHttpClient implements Auftrag
         return body.toString();
     }
 
-    /** Nutzlast einer Namenskorrektur aus dem Dokument (siehe PTM-Online {@code documentMaster}). */
-    static String aenderungBody(NeueOnlineAnmeldung anmeldung, String onlineRegistrationId,
+    /**
+     * Nutzlast einer Besetzungsänderung aus dem Dokument (siehe PTM-Online {@code documentMaster}). {@code persons}
+     * trägt je Slot die Benutzer-ID, die die Person zuletzt hatte; ohne ID gilt ein zuvor verknüpfter Slot als
+     * Personenwechsel (T-17, T-18).
+     */
+    static String aenderungBody(NeueOnlineAnmeldung anmeldung, List<PersonDto> personen, String onlineRegistrationId,
             int expectedExecutionRevision) {
         JsonObject body = GSON.toJsonTree(anmeldung).getAsJsonObject();
+        body.add("persons", GSON.toJsonTree(personen));
         body.addProperty("documentMaster", true);
         body.addProperty("onlineRegistrationId", onlineRegistrationId);
         body.addProperty("expectedExecutionRevision", expectedExecutionRevision);

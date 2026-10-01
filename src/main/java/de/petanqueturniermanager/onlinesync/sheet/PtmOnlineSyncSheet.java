@@ -118,6 +118,13 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 	private static final int SPALTE_AUFTRAG_ID = 10;
 	private static final int SPALTE_AUFTRAG_ZEITPUNKT = 19;
 	private static final int LETZTE_PUFFER_SPALTE = SPALTE_AUFTRAG_ZEITPUNKT;
+	/*
+	 * Zusatz je Zuordnung rechts des Auftragspuffers (T-15, T-17, T-18): die zuletzt abgeglichene Besetzung samt
+	 * Benutzer-IDs und sprachneutrale Vermerke (z.&nbsp;B. „lokal entfernt“). Gleiche Zeile wie die Zuordnung.
+	 */
+	private static final int SPALTE_BESETZUNG = 20;
+	private static final int SPALTE_VERMERK = 21;
+	private static final int LETZTE_ZUSATZ_SPALTE = SPALTE_VERMERK;
 
 	private static final int BREITE_NR = 1400;
 	private static final int BREITE_NAME = 6000;
@@ -216,6 +223,12 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 				I18n.get("ptmonline.sheet.mapping.header.revision"),
 				I18n.get("ptmonline.sheet.mapping.header.statusroh")).forEach(kopfzeile::newString);
 		RangeHelper.from(this, header.getRangePosition(Position.from(SPALTE_NR, ZEILE_HEADER))).setDataInRange(header);
+		RangeData zusatzKopf = new RangeData();
+		RowData zusatzZeile = zusatzKopf.addNewRow();
+		zusatzZeile.newString(I18n.get("ptmonline.sheet.mapping.header.besetzung"));
+		zusatzZeile.newString(I18n.get("ptmonline.sheet.mapping.header.vermerk"));
+		RangeHelper.from(this, zusatzKopf.getRangePosition(Position.from(SPALTE_BESETZUNG, ZEILE_HEADER)))
+				.setDataInRange(zusatzKopf);
 		schreibeStatus(leseSyncStatus());
 		formatieren();
 	}
@@ -589,7 +602,7 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 	public void addMapping(String lokaleUuid, String onlineId, String nummerFormel, int executionRevision,
 			String lokaleBezeichnung, String onlineStatus) throws GenerateException {
 		addMappings(List.of(new NeueZuordnung(lokaleUuid, onlineId, nummerFormel, executionRevision,
-				lokaleBezeichnung, onlineStatus, "", "", "")));
+				lokaleBezeichnung, onlineStatus, "", "", "", "", "")));
 	}
 
 	/**
@@ -630,6 +643,13 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 			formeln[index++][0] = zuordnung.nummerFormel();
 		}
 		RangeHelper.from(this, zeilen.getRangePosition(Position.from(SPALTE_NR, ersteZeile))).setDataInRange(zeilen);
+		RangeData zusatz = new RangeData();
+		for (NeueZuordnung zuordnung : neue.values()) {
+			RowData neu = zusatz.addNewRow();
+			neu.newString(StringUtils.defaultString(zuordnung.besetzung()));
+			neu.newString(StringUtils.defaultString(zuordnung.vermerk()));
+		}
+		RangeHelper.from(this, zusatz.getRangePosition(Position.from(SPALTE_BESETZUNG, ersteZeile))).setDataInRange(zusatz);
 		XSpreadsheet sheet = getXSpreadSheet();
 		SheetHelper helper = getSheetHelper();
 		RangePosition nrBereich = RangePosition.from(SPALTE_NR, ersteZeile, SPALTE_NR, letzteZeile);
@@ -842,6 +862,57 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 	public void leeren() throws GenerateException {
 		RangeHelper.from(this, RangePosition.from(SPALTE_NR, ERSTE_DATEN_ZEILE, LETZTE_SPALTE, LETZTE_DATEN_ZEILE))
 				.clearRange();
+		RangeHelper.from(this, RangePosition.from(SPALTE_BESETZUNG, ERSTE_DATEN_ZEILE, LETZTE_ZUSATZ_SPALTE,
+				LETZTE_DATEN_ZEILE)).clearRange();
+	}
+
+	// ── Zusatz je Zuordnung: abgeglichene Besetzung und Vermerke ─────────────
+
+	/** Zuletzt abgeglichene Besetzung und Vermerke je lokaler UUID, in einem Lesezugriff je Spaltenblock. */
+	public Map<String, ZuordnungsZusatz> getZusaetzeProUuid() throws GenerateException {
+		RangeData daten = leseDaten();
+		int anzahl = anzahlBelegterZeilen(daten);
+		Map<String, ZuordnungsZusatz> ergebnis = new LinkedHashMap<>();
+		if (anzahl == 0) {
+			return ergebnis;
+		}
+		RangeData zusatz = leseZusatz(anzahl);
+		for (int i = 0; i < anzahl; i++) {
+			String uuid = text(daten.get(i), SPALTE_LOKALE_UUID);
+			RowData zeile = i < zusatz.size() ? zusatz.get(i) : new RowData();
+			if (!uuid.isBlank()) {
+				ergebnis.putIfAbsent(uuid, new ZuordnungsZusatz(rohText(zeile, 0), text(zeile, 1)));
+			}
+		}
+		return ergebnis;
+	}
+
+	/**
+	 * Setzt Besetzung und/oder Vermerk mehrerer Zuordnungen in einem Schreibzugriff; nicht genannte Zeilen und
+	 * {@code null}-Werte bleiben unverändert.
+	 */
+	public void setZusaetze(Map<String, ZuordnungsZusatz> zusatzProUuid) throws GenerateException {
+		RangeData daten = leseDaten();
+		int anzahl = anzahlBelegterZeilen(daten);
+		if (anzahl == 0 || zusatzProUuid.isEmpty()) {
+			return;
+		}
+		RangeData bisher = leseZusatz(anzahl);
+		RangeData neu = new RangeData();
+		for (int i = 0; i < anzahl; i++) {
+			RowData alt = i < bisher.size() ? bisher.get(i) : new RowData();
+			ZuordnungsZusatz zusatz = zusatzProUuid.get(text(daten.get(i), SPALTE_LOKALE_UUID));
+			RowData zeile = neu.addNewRow();
+			zeile.newString(zusatz != null && zusatz.besetzung() != null ? zusatz.besetzung() : rohText(alt, 0));
+			zeile.newString(zusatz != null && zusatz.vermerk() != null ? zusatz.vermerk() : text(alt, 1));
+		}
+		RangeHelper.from(this, neu.getRangePosition(Position.from(SPALTE_BESETZUNG, ERSTE_DATEN_ZEILE)))
+				.setDataInRange(neu);
+	}
+
+	private RangeData leseZusatz(int anzahl) throws GenerateException {
+		return RangeHelper.from(this, RangePosition.from(SPALTE_BESETZUNG, ERSTE_DATEN_ZEILE, LETZTE_ZUSATZ_SPALTE,
+				ERSTE_DATEN_ZEILE + anzahl - 1)).getDataFromRange();
 	}
 
 	/** Keine Zeilen, solange das Dokument nicht verbunden ist (Blatt fehlt). */

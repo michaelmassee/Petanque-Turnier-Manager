@@ -445,6 +445,25 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
     }
 
     @Override
+    public void stelleAktivWertWiederHer(int zeile1Basiert, int aktivWert) throws MeldelisteSchreibException {
+        if (zeile1Basiert <= 0) {
+            throw new MeldelisteSchreibException("Ungültige Meldelistenzeile");
+        }
+        try {
+            Position aktiv = Position.from(aktivSpalte(), zeile1Basiert - 1);
+            BlattschutzManager.get().schreibeEntsperrt(sheet, () -> {
+                if (aktivWert > 0) {
+                    sheetHelper.setNumberValueInCell(NumberCellValue.from(sheet, aktiv).setValue(aktivWert));
+                } else {
+                    sheetHelper.clearValInCell(sheet, aktiv);
+                }
+            });
+        } catch (Exception e) {
+            throw new MeldelisteSchreibException("Teilnahme konnte nicht wiederhergestellt werden", e);
+        }
+    }
+
+    @Override
     public String getOderErzeugeLokaleUuid(int zeile1Basiert) throws MeldelisteSchreibException {
         String uuid = getOderErzeugeLokaleUuids(List.of(zeile1Basiert)).get(zeile1Basiert);
         if (uuid == null) {

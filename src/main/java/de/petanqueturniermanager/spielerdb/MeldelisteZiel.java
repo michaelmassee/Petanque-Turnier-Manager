@@ -149,6 +149,15 @@ public interface MeldelisteZiel extends AbgleichQuelle {
         throw new MeldelisteSchreibException("Abmelden wird von dieser Meldeliste nicht unterstützt");
     }
 
+    /**
+     * Setzt die Aktiv-Spalte auf einen zuvor gelesenen Wert ({@link #getAktivWertAusZeile}) zurück, z.&nbsp;B. wenn eine
+     * online stornierte Meldung wieder bestätigt wird und ihr lokaler Check-in-Zustand unverändert bleiben soll (KP-14).
+     * Ein Wert {@code <= 0} leert die Spalte.
+     */
+    default void stelleAktivWertWiederHer(int zeile1Basiert, int aktivWert) throws MeldelisteSchreibException {
+        throw new MeldelisteSchreibException("Teilnahme wird von dieser Meldeliste nicht unterstützt");
+    }
+
     /** Formel, die aus der lokalen UUID stets die aktuell angezeigte Team-/Spielernummer ermittelt. */
     default String formelTeamNrAusLokalerUuid(String uuid) throws MeldelisteSchreibException {
         throw new MeldelisteSchreibException("Lokale PTM-Online-ID wird von dieser Meldeliste nicht unterstützt");

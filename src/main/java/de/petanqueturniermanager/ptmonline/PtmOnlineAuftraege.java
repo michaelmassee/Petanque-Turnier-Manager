@@ -36,6 +36,7 @@ import de.petanqueturniermanager.ptmonline.auftrag.versand.VersandStopp;
 import de.petanqueturniermanager.ptmonline.dto.LiveMatchDto;
 import de.petanqueturniermanager.ptmonline.dto.LiveRankingEntryDto;
 import de.petanqueturniermanager.ptmonline.dto.NeueOnlineAnmeldung;
+import de.petanqueturniermanager.ptmonline.dto.PersonDto;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationDto;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationResultDto;
 
@@ -172,7 +173,8 @@ public final class PtmOnlineAuftraege {
 
     /** Namenskorrektur einer zugeordneten Meldung aus dem Dokument; die lokale UUID wird dabei online vermerkt. */
     static SyncAuftrag aenderung(AuftragsBestand bestand, String tournamentId, String lokaleUuid,
-            String onlineRegistrationId, NeueOnlineAnmeldung anmeldung, int erwarteteRevision, String bezeichnung) {
+            String onlineRegistrationId, NeueOnlineAnmeldung anmeldung, List<PersonDto> personen,
+            int erwarteteRevision, String bezeichnung) {
         JsonObject revisionen = new JsonObject();
         revisionen.addProperty(lokaleUuid, erwarteteRevision + 1);
         JsonObject kontext = new JsonObject();
@@ -181,7 +183,7 @@ public final class PtmOnlineAuftraege {
         kontext.add(KONTEXT_REVISIONEN, revisionen);
         return bestand.erzeuge(AuftragsArt.ANMELDUNG_AENDERN, "PUT",
                 TournamentSyncClient.anmeldungPfad(tournamentId, lokaleUuid),
-                TournamentSyncClient.aenderungBody(anmeldung, onlineRegistrationId, erwarteteRevision),
+                TournamentSyncClient.aenderungBody(anmeldung, personen, onlineRegistrationId, erwarteteRevision),
                 kontext.toString());
     }
 

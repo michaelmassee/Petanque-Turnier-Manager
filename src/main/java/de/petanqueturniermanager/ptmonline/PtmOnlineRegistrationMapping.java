@@ -20,6 +20,7 @@ import de.petanqueturniermanager.onlinesync.OnlineTournamentDto;
 import de.petanqueturniermanager.onlinesync.sheet.NeueZuordnung;
 import de.petanqueturniermanager.onlinesync.sheet.PtmOnlineSyncSheet;
 import de.petanqueturniermanager.onlinesync.sheet.ZuordnungsAnzeige;
+import de.petanqueturniermanager.onlinesync.sheet.ZuordnungsZusatz;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsBestand;
 import de.petanqueturniermanager.ptmonline.dto.SyncBindingDto;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationAnswerDto;
@@ -132,7 +133,17 @@ public class PtmOnlineRegistrationMapping {
         return new NeueZuordnung(lokaleUuid, registration.id(), nummerFormel,
                 registration.executionRevision() == null ? 1 : registration.executionRevision(), lokaleBezeichnung,
                 OnlineAnmeldeStatus.anzeige(registration.status()), details.tarife(), details.fragen(),
-                details.rohStatus());
+                details.rohStatus(), AbgeglicheneBesetzung.ausOnline(registration.personen()).alsText(), "");
+    }
+
+    /** Zuletzt abgeglichene Besetzung und Vermerke je lokaler UUID (T-15, T-17). */
+    public Map<String, ZuordnungsZusatz> getZusaetzeProUuid() throws GenerateException {
+        return syncSheet.getZusaetzeProUuid();
+    }
+
+    /** Setzt Besetzung und/oder Vermerke mehrerer Zuordnungen in einem Schreibzugriff. */
+    public void setZusaetze(Map<String, ZuordnungsZusatz> zusatzProUuid) throws GenerateException {
+        syncSheet.setZusaetze(zusatzProUuid);
     }
 
     /** Schreibt mehrere neue Zuordnungen in einem Zugriff (siehe {@link PtmOnlineSyncSheet#addMappings}). */

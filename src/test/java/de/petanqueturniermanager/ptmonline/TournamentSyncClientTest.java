@@ -28,9 +28,12 @@ import de.petanqueturniermanager.onlinesync.OnlineTournamentDto;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsArt;
 import de.petanqueturniermanager.ptmonline.auftrag.SyncAuftrag;
 import de.petanqueturniermanager.ptmonline.auftrag.versand.SyncAntwort;
+import de.petanqueturniermanager.ptmonline.dto.AnmeldungsAbruf;
+import de.petanqueturniermanager.ptmonline.dto.KonfliktListeDto;
 import de.petanqueturniermanager.ptmonline.dto.LiveMatchDto;
 import de.petanqueturniermanager.ptmonline.dto.LiveRankingEntryDto;
 import de.petanqueturniermanager.ptmonline.dto.NeueOnlineAnmeldung;
+import de.petanqueturniermanager.ptmonline.dto.PersonDto;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationDto;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationResultDto;
 import de.petanqueturniermanager.ptmonline.dto.ServerZuordnungDto;
@@ -200,10 +203,49 @@ public class TournamentSyncClientTest {
 		NeueOnlineAnmeldung anmeldung = new NeueOnlineAnmeldung("Anna", "Schmidt", "Verein", null,
 				null, null, null, null, null, true, true, List.of(), List.of());
 
-		assertThat(TournamentSyncClient.aenderungBody(anmeldung, "d8d8caec-e0b1-4fe0-8fee-a229279b9f73", 4))
+		List<PersonDto> personen = List.of(new PersonDto(1, "Anna", "Schmidt", null, "konto-anna"));
+
+		assertThat(TournamentSyncClient.aenderungBody(anmeldung, personen, "d8d8caec-e0b1-4fe0-8fee-a229279b9f73", 4))
 				.contains("\"documentMaster\":true")
 				.contains("\"onlineRegistrationId\":\"d8d8caec-e0b1-4fe0-8fee-a229279b9f73\"")
-				.contains("\"expectedExecutionRevision\":4").contains("\"firstName\":\"Anna\"");
+				.contains("\"expectedExecutionRevision\":4").contains("\"firstName\":\"Anna\"")
+				.contains("\"persons\":[{\"slot\":1,\"firstName\":\"Anna\",\"lastName\":\"Schmidt\",\"userId\":\"konto-anna\"}]");
+	}
+
+	@Test
+	public void abgleichLiefertPersonenMitBenutzerIdUndDieKonfliktliste() throws Exception {
+		HttpClient httpClient = httpClientMitAntwort("""
+				{"registrations":[{"id":"r1","firstName":"Anna","lastName":"Adler","status":"confirmed",
+				  "persons":[{"slot":1,"firstName":"Anna","lastName":"Adler","userId":"u1"},
+				             {"slot":2,"firstName":"Ben","lastName":"Berg","userId":null}],
+				  "accountConflict":true,"incomplete":true,"meleeTeamUuid":"team-1"}],
+				 "cursor":"x","conflicts":{"accountConflicts":[{"userId":"u1","registrationIds":["r1","r2"]}],
+				  "possibleDuplicates":[{"kind":"name","registrationIds":["r3","r4"]}]}}""");
+		TournamentSyncClient client = new TournamentSyncClient(httpClient, "https://ptm-online.example.com", "ptm_secret");
+
+		AnmeldungsAbruf abruf = client.fetchAbgleich("t1", null);
+
+		RegistrationDto anmeldung = abruf.registrations().getFirst();
+		assertThat(anmeldung.personen()).extracting(PersonDto::userId).containsExactly("u1", null);
+		assertThat(anmeldung.istKontoKonflikt()).isTrue();
+		assertThat(anmeldung.istUnvollstaendig()).isTrue();
+		assertThat(anmeldung.meleeTeamUuid()).isEqualTo("team-1");
+		assertThat(abruf.konflikte().accountConflicts().getFirst().registrationIds()).containsExactly("r1", "r2");
+		assertThat(abruf.konflikte().possibleDuplicates().getFirst().kind()).isEqualTo("name");
+	}
+
+	@Test
+	public void abgleichOhneKonfliktlisteUndOhnePersonenNutztDieNamensfelder() throws Exception {
+		HttpClient httpClient = httpClientMitAntwort("""
+				{"registrations":[{"id":"r1","firstName":"Anna","lastName":"Adler","partnerFirstName":"Ben",
+				  "partnerLastName":"Berg","status":"confirmed"}],"cursor":"x"}""");
+		TournamentSyncClient client = new TournamentSyncClient(httpClient, "https://ptm-online.example.com", "ptm_secret");
+
+		AnmeldungsAbruf abruf = client.fetchAbgleich("t1", null);
+
+		assertThat(abruf.konflikte()).isEqualTo(KonfliktListeDto.leer());
+		assertThat(abruf.registrations().getFirst().personen())
+				.containsExactly(new PersonDto(1, "Anna", "Adler", null, null), new PersonDto(2, "Ben", "Berg", null, null));
 	}
 
 	@Test

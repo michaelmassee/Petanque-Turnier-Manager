@@ -289,6 +289,30 @@ public final class MeleeAnmeldungZiel implements MeldelisteZiel, MeleeAnmeldungK
 		BlattschutzManager.get().schreibeEntsperrt(sheet, () -> sheetHelper.clearValInCell(sheet, position));
 	}
 
+	/** Eingecheckt = 1, sonst {@code -1} – im selben Sinn wie die Aktiv-Spalte der Team-Meldelisten. */
+	@Override
+	public int getAktivWertAusZeile(int zeile1Basiert) {
+		return zeile(zeile1Basiert).filter(MeleeAnmeldungZeile::eingecheckt).map(zeile -> 1).orElse(-1);
+	}
+
+	/** Stellt die Eingecheckt-Markierung wieder her, solange der Spieler noch keinem Team übernommen ist. */
+	@Override
+	public void stelleAktivWertWiederHer(int zeile1Basiert, int aktivWert) throws MeldelisteSchreibException {
+		Optional<MeleeAnmeldungZeile> zeile = zeile(zeile1Basiert);
+		if (zeile.isEmpty() || zeile.get().uebernommen() || zeile.get().eingecheckt() == (aktivWert == 1)) {
+			return;
+		}
+		XSpreadsheet sheet = sheet();
+		Position position = Position.from(SPALTE_EINGECHECKT, zeile.get().zeile());
+		BlattschutzManager.get().schreibeEntsperrt(sheet, () -> {
+			if (aktivWert == 1) {
+				sheetHelper.setStringValueInCell(StringCellValue.from(sheet, position).setValue(MARKIERUNG));
+			} else {
+				sheetHelper.clearValInCell(sheet, position);
+			}
+		});
+	}
+
 	/**
 	 * Neuanmeldung nach Storno: nichts zu tun. Die Zeile bleibt ohne Eingecheckt-Markierung (= inaktiv),
 	 * wie jede neu importierte Anmeldung.
