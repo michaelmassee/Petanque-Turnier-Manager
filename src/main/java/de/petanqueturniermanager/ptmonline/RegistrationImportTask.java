@@ -17,6 +17,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -45,6 +46,7 @@ import de.petanqueturniermanager.onlinesync.sheet.ZuordnungsZusatz;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsArt;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsBestand;
 import de.petanqueturniermanager.ptmonline.dto.AnmeldungsAbruf;
+import de.petanqueturniermanager.ptmonline.dto.KonfliktListeDto;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationDto;
 import de.petanqueturniermanager.ptmonline.dto.NeueOnlineAnmeldung;
 import de.petanqueturniermanager.ptmonline.dto.PersonDto;
@@ -423,9 +425,10 @@ public final class RegistrationImportTask {
      * Turnierleitung entscheidet im manuellen Abgleich. {@code lastSync} bleibt unverändert. Kurzes Zeitlimit
      * ({@link #TIMEOUT_VOR_TURNIERSTART}): bei schlechtem Netz fragt der Rundenstart ausdrücklich nach.
      *
-     * Zusätzlich nennt die Prüfung die Doppelbelegungen eines Kontos (KP-06 b) als Ausschlussgrund.
+     * Zusätzlich aktualisiert die Prüfung den Vermerk der Doppelbelegungen eines Kontos (KP-06 b), damit die
+     * Auslosung und {@link #lokaleAusschlussgruende} den aktuellen Stand kennen.
      *
-     * @return fehlende Anmeldungen (leer, wenn die Meldeliste vollständig ist) und Online-Ausschlussgründe
+     * @return fehlende Anmeldungen, leer wenn die Meldeliste vollständig ist
      */
     public static Vorabcheck pruefeVorTurnierstart(LibreOfficePtmOnlineSpeicher.Zugangsdaten config,
             PtmOnlineRegistrationMapping mapping, String tournamentId, MeldelisteZiel ziel)
@@ -445,37 +448,84 @@ public final class RegistrationImportTask {
             fehlend.add(freieZeilen.isEmpty() ? onlineBezeichnung(reg)
                     : I18n.get("ptmonline.hinweis.moeglicherweise_identisch", onlineBezeichnung(reg)));
         }
-        // Bezeichnungen der Doppelbelegungen: lokal zugeordnete über die Meldeliste, sonst wie online angemeldet.
-        Map<String, String> bezeichnungProOnlineId = new LinkedHashMap<>();
-        Map<String, String> namen = mapping.getBezeichnungenProUuid();
-        mapping.getOnlineIdsProUuid().forEach((uuid, onlineId) -> bezeichnungProOnlineId.put(onlineId,
-                namen.getOrDefault(uuid, onlineId)));
-        registrations.forEach(reg -> bezeichnungProOnlineId.putIfAbsent(reg.id(), onlineBezeichnung(reg)));
-        List<String> ausschluss = abruf.konflikte().accountConflicts().stream()
-                .map(konflikt -> KonfliktArt.KONTO_KONFLIKT.anzeige() + ": "
-                        + bezeichnungen(konflikt.registrationIds(), bezeichnungProOnlineId))
-                .toList();
-        return new Vorabcheck(fehlend, ausschluss);
+        aktualisiereKontoKonflikte(mapping, abruf.konflikte());
+        return new Vorabcheck(fehlend);
     }
 
     /**
      * Ergebnis der Prüfung vor dem Turnierstart.
      *
-     * @param fehlend           bestätigte Online-Anmeldungen, die noch in keiner Meldelistenzeile stehen
-     * @param ausschlussgruende offene Fälle, die die Auslosung betreffen (A-29); reine Hinweise fehlen
+     * @param fehlend bestätigte Online-Anmeldungen, die noch in keiner Meldelistenzeile stehen
      */
-    public record Vorabcheck(List<String> fehlend, List<String> ausschlussgruende) {
+    public record Vorabcheck(List<String> fehlend) {
 
         public Vorabcheck {
             fehlend = List.copyOf(fehlend);
-            ausschlussgruende = List.copyOf(ausschlussgruende);
         }
     }
 
     /**
-     * Ausschlussgründe, die das Dokument ohne Netz kennt (A-29, KP-14, E-20, KP-18): online stornierte oder wartende
-     * Meldungen, die eingecheckt waren, eingecheckte unvollständige Teams und – bei Mêlée-Anmeldung – eingecheckte
-     * Spieler, die noch in keinem Team sind (P-53). Liest nur.
+     * Setzt den Vermerk {@link ZuordnungsVermerke#KONTO_KONFLIKT} an allen zugeordneten Meldungen, die online in einer
+     * Doppelbelegung stehen, und entfernt ihn – samt Freigabe – an allen anderen (KP-06 b).
+     */
+    static void aktualisiereKontoKonflikte(PtmOnlineRegistrationMapping mapping, KonfliktListeDto konflikte)
+            throws GenerateException {
+        Map<String, String> uuidProOnlineId = new LinkedHashMap<>();
+        Map<String, String> onlineIds = mapping.getOnlineIdsProUuid();
+        onlineIds.forEach((uuid, onlineId) -> uuidProOnlineId.putIfAbsent(onlineId, uuid));
+        Set<String> betroffen = konflikte.accountConflicts().stream()
+                .flatMap(konflikt -> konflikt.registrationIds().stream()).map(uuidProOnlineId::get)
+                .filter(Objects::nonNull).collect(Collectors.toSet());
+        Map<String, ZuordnungsZusatz> zusaetze = mapping.getZusaetzeProUuid();
+        Map<String, ZuordnungsZusatz> neueVermerke = new LinkedHashMap<>();
+        for (String uuid : onlineIds.keySet()) {
+            ZuordnungsZusatz zusatz = zusaetze.get(uuid);
+            ZuordnungsVermerke bisher = ZuordnungsVermerke.lese(zusatz == null ? null : zusatz.vermerk());
+            ZuordnungsVermerke neu = betroffen.contains(uuid) ? bisher.mit(ZuordnungsVermerke.KONTO_KONFLIKT)
+                    : bisher.ohne(ZuordnungsVermerke.KONTO_KONFLIKT).ohne(ZuordnungsVermerke.KONTO_FREIGEGEBEN);
+            if (!neu.equals(bisher)) {
+                neueVermerke.put(uuid, ZuordnungsZusatz.nurVermerk(neu.alsText()));
+            }
+        }
+        mapping.setZusaetze(neueVermerke);
+    }
+
+    /**
+     * Meldelistenzeilen, die nicht ausgelost werden (P-30, P-42), mit Grund: Doppelbelegung eines Kontos, solange
+     * nicht als verschiedene Personen aufgelöst, und Teams mit weniger Personen als die Formation. Liest nur.
+     *
+     * @return Grund (Art und Bezeichnung) je 1-basierter Zeile
+     */
+    public static Map<Integer, String> gesperrteZeilen(PtmOnlineRegistrationMapping mapping, MeldelisteZiel ziel)
+            throws GenerateException {
+        Map<Integer, String> gesperrt = new LinkedHashMap<>();
+        Map<String, Integer> zeileProUuid = zeileProLokalerUuid(ziel);
+        Map<String, String> namen = mapping.getBezeichnungenProUuid();
+        for (Map.Entry<String, ZuordnungsZusatz> zusatz : mapping.getZusaetzeProUuid().entrySet()) {
+            ZuordnungsVermerke vermerke = ZuordnungsVermerke.lese(zusatz.getValue().vermerk());
+            Integer zeile = zeileProUuid.get(zusatz.getKey());
+            if (zeile != null && vermerke.hat(ZuordnungsVermerke.KONTO_KONFLIKT)
+                    && !vermerke.hat(ZuordnungsVermerke.KONTO_FREIGEGEBEN)) {
+                gesperrt.put(zeile, KonfliktArt.KONTO_KONFLIKT.anzeige() + ": "
+                        + namen.getOrDefault(zusatz.getKey(), zusatz.getKey()));
+            }
+        }
+        int formationsStaerke = ziel.getFormation().getAnzSpieler();
+        if (formationsStaerke > 1) {
+            spielerProZeile(ziel).forEach((zeile, spieler) -> {
+                if (spieler.size() < formationsStaerke) {
+                    gesperrt.putIfAbsent(zeile, KonfliktArt.UNVOLLSTAENDIG.anzeige() + ": " + bezeichnung(spieler));
+                }
+            });
+        }
+        return gesperrt;
+    }
+
+    /**
+     * Ausschlussgründe, die das Dokument kennt (A-29, KP-06, KP-14, E-20, KP-18): online stornierte oder wartende
+     * Meldungen, die eingecheckt waren, eingecheckte gesperrte Meldungen ({@link #gesperrteZeilen}) und – bei
+     * Mêlée-Anmeldung – eingecheckte Spieler, die noch in keinem Team sind (P-53). Liest nur; Doppelbelegungen kennt
+     * es aus dem letzten Abgleich bzw. Vorabcheck.
      */
     public static List<String> lokaleAusschlussgruende(PtmOnlineRegistrationMapping mapping, MeldelisteZiel ziel)
             throws GenerateException {
@@ -488,14 +538,6 @@ public final class RegistrationImportTask {
                 gruende.add(KonfliktArt.ONLINE_AUSGESCHLOSSEN.anzeige() + ": " + namen.getOrDefault(uuid, uuid));
             }
         });
-        int formationsStaerke = ziel.getFormation().getAnzSpieler();
-        if (formationsStaerke > 1) {
-            spielerProZeile(ziel).forEach((zeile, spieler) -> {
-                if (spieler.size() < formationsStaerke && ziel.getAktivWertAusZeile(zeile) == 1) {
-                    gruende.add(KonfliktArt.UNVOLLSTAENDIG.anzeige() + ": " + bezeichnung(spieler));
-                }
-            });
-        }
         if (ziel instanceof MeleeAnmeldungZiel melee) {
             List<String> ohneTeam = melee.leseMeleeZeilen().stream()
                     .filter(zeile -> zeile.eingecheckt() && !zeile.uebernommen())
@@ -504,6 +546,12 @@ public final class RegistrationImportTask {
                 gruende.add(I18n.get("ptmonline.vorabcheck.melee_ohne_team", ohneTeam.size(),
                         String.join(", ", ohneTeam)));
             }
+        } else {
+            gesperrteZeilen(mapping, ziel).forEach((zeile, grund) -> {
+                if (ziel.getAktivWertAusZeile(zeile) == 1) {
+                    gruende.add(grund);
+                }
+            });
         }
         return gruende;
     }
@@ -1313,10 +1361,33 @@ public final class RegistrationImportTask {
                 .filter(registration -> istImportierbar(registration) && registration.istNachTurnierstartEingegangen()
                         && !importierte.contains(registration.id()))
                 .forEach(registration -> sammlung.melde(nachStartFall(registration)));
-        abruf.konflikte().accountConflicts().forEach(konflikt -> sammlung.melde(new KonfliktFall(
-                KonfliktArt.KONTO_KONFLIKT, null, konflikt.registrationIds(), "",
-                bezeichnungen(konflikt.registrationIds(), bezeichnungProOnlineId),
-                I18n.get("ptmonline.konflikt.hinweis.konto_konflikt"), List.of())));
+        aktualisiereKontoKonflikte(mapping, abruf.konflikte());
+        Map<String, String> uuidProOnlineId = new LinkedHashMap<>();
+        mapping.getOnlineIdsProUuid().forEach((uuid, onlineId) -> uuidProOnlineId.putIfAbsent(onlineId, uuid));
+        Map<String, ZuordnungsZusatz> freigaben = new LinkedHashMap<>();
+        for (KonfliktListeDto.KontoKonflikt konflikt : abruf.konflikte().accountConflicts()) {
+            KonfliktFall fall = new KonfliktFall(KonfliktArt.KONTO_KONFLIKT, null, konflikt.registrationIds(), "",
+                    bezeichnungen(konflikt.registrationIds(), bezeichnungProOnlineId),
+                    I18n.get("ptmonline.konflikt.hinweis.konto_konflikt"),
+                    List.of(Entscheidung.VERSCHIEDENE_PERSONEN));
+            if (sammlung.entscheidung(fall).isEmpty()) {
+                sammlung.melde(fall);
+                continue;
+            }
+            // Verschiedene Personen (KP-06 c): die beteiligten Meldungen sind wieder auslosbar.
+            Map<String, ZuordnungsZusatz> zusaetze = mapping.getZusaetzeProUuid();
+            for (String onlineId : konflikt.registrationIds()) {
+                String uuid = uuidProOnlineId.get(onlineId);
+                if (uuid != null) {
+                    ZuordnungsZusatz zusatz = zusaetze.get(uuid);
+                    freigaben.put(uuid, ZuordnungsZusatz.nurVermerk(ZuordnungsVermerke
+                            .lese(zusatz == null ? null : zusatz.vermerk()).mit(ZuordnungsVermerke.KONTO_FREIGEGEBEN)
+                            .alsText()));
+                }
+                sammlung.angewendet(Entscheidung.VERSCHIEDENE_PERSONEN, uuid, onlineId);
+            }
+        }
+        mapping.setZusaetze(freigaben);
         abruf.konflikte().possibleDuplicates().forEach(dublette -> sammlung.melde(new KonfliktFall(
                 KonfliktArt.MOEGLICHE_DUBLETTE, null, dublette.registrationIds(), "",
                 bezeichnungen(dublette.registrationIds(), bezeichnungProOnlineId),

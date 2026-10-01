@@ -56,6 +56,7 @@ public class PouleVorrundeSheet extends AbstractPouleVorrundeSheet implements Pt
         var meldungen = meldeliste.getAktiveMeldungen();
         PtmOnlineSpielrundeSync.turnierstartAbgleichen(getWorkingSpreadsheet(), getTurnierSystem(), true,
                 meldeliste.getAlleMeldungen(), meldungen);
+        meldungen = PtmOnlineSpielrundeSync.ohneGesperrte(getWorkingSpreadsheet(), getTurnierSystem(), meldungen);
         int anzTeams = meldungen.size();
 
         if (anzTeams < 3) {

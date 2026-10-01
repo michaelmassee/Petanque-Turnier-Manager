@@ -124,7 +124,8 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet, PtmOnlineL
 		if (aktiveMeldungen != null) {
 			PtmOnlineSpielrundeSync.turnierstartAbgleichen(getWorkingSpreadsheet(), getTurnierSystem(), true,
 					meldeListe.getAlleMeldungen(), aktiveMeldungen);
-			generate(aktiveMeldungen);
+			generate(PtmOnlineSpielrundeSync.ohneGesperrte(getWorkingSpreadsheet(), getTurnierSystem(),
+					aktiveMeldungen));
 		}
 	}
 

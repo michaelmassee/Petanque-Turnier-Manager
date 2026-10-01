@@ -699,7 +699,8 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet, PtmOnline
 			meldeliste.rangSpalteDurchnummerieren();
 		}
 
-		TeamMeldungen alleMeldungen = meldeliste.getMeldungenSortiertNachRangliste();
+		TeamMeldungen alleMeldungen = PtmOnlineSpielrundeSync.ohneGesperrte(getWorkingSpreadsheet(),
+				getTurnierSystem(), meldeliste.getMeldungenSortiertNachRangliste());
 		if (alleMeldungen.size() < 2) {
 			MessageBox.from(getWorkingSpreadsheet(), MessageBoxTypeEnum.ERROR_OK)
 					.caption(I18n.get("msg.caption.ko.turnierbaum"))

@@ -189,6 +189,9 @@ public class SpielrundeSheet_Naechste extends SheetRunner
 			}
 		}
 
+		// PTM-Online: gesperrte Meldungen (Konto doppelt angemeldet, Team unvollständig) nicht auslosen.
+		aktiveMeldungen = PtmOnlineSpielrundeSync.ohneGesperrte(getWorkingSpreadsheet(), getTurnierSystem(), aktiveMeldungen);
+
 		if (!canStart(aktiveMeldungen)) {
 			return false;
 		}

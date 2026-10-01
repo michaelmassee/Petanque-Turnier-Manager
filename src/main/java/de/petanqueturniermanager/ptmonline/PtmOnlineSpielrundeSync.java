@@ -38,6 +38,10 @@ import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.model.IMeldung;
 import de.petanqueturniermanager.model.IMeldungen;
+import de.petanqueturniermanager.model.Spieler;
+import de.petanqueturniermanager.model.SpielerMeldungen;
+import de.petanqueturniermanager.model.Team;
+import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsBestand;
 import de.petanqueturniermanager.ptmonline.auftrag.SyncAuftrag;
 import de.petanqueturniermanager.ptmonline.dto.MeleeTeamDto;
@@ -322,14 +326,13 @@ public final class PtmOnlineSpielrundeSync {
     private static boolean vorabcheckBestaetigt(XComponentContext ctx, PtmOnlineVerbindung verbindung)
             throws GenerateException {
         PtmOnlineRegistrationMapping mapping = verbindung.mapping();
-        List<String> lokaleGruende = RegistrationImportTask.lokaleAusschlussgruende(mapping, verbindung.ziel());
         MessageBoxResult antwort;
         boolean befunde;
         try {
             RegistrationImportTask.Vorabcheck check = RegistrationImportTask.pruefeVorTurnierstart(
                     verbindung.config(), mapping, verbindung.tournamentId(), verbindung.ziel());
-            List<String> ausschluss = new ArrayList<>(lokaleGruende);
-            ausschluss.addAll(check.ausschlussgruende());
+            // Nach der Prüfung: sie hat die Doppelbelegungen eines Kontos aktualisiert.
+            List<String> ausschluss = RegistrationImportTask.lokaleAusschlussgruende(mapping, verbindung.ziel());
             befunde = !check.fehlend().isEmpty() || !ausschluss.isEmpty();
             antwort = MessageBox.from(ctx, MessageBoxTypeEnum.WARN_YES_NO)
                     .caption(I18n.get("ptmonline.frage.fehlende_meldungen.titel"))
@@ -340,6 +343,7 @@ public final class PtmOnlineSpielrundeSync {
             String offline = I18n.get("ptmonline.frage.turnierstart_offline", netzwerkFehlerText(e),
                     letzterSync.map(PtmOnlineSpielrundeSync::zeitpunktText)
                             .orElse(I18n.get("ptmonline.letzter_sync.nie")));
+            List<String> lokaleGruende = RegistrationImportTask.lokaleAusschlussgruende(mapping, verbindung.ziel());
             befunde = !lokaleGruende.isEmpty();
             antwort = MessageBox.from(ctx, MessageBoxTypeEnum.WARN_YES_NO)
                     .caption(I18n.get("ptmonline.frage.fehlende_meldungen.titel"))
@@ -356,6 +360,85 @@ public final class PtmOnlineSpielrundeSync {
             throw SheetRunner.verarbeitungAbgebrochen();
         }
         return befunde;
+    }
+
+    /**
+     * Ohne gesperrte Meldungen (P-30, P-42): Doppelbelegung eines Kontos, solange nicht als verschiedene Personen
+     * aufgelöst, und unvollständige Teams. Eingecheckt bleiben sie, nur ausgelost werden sie nicht; die
+     * Turnierleitung erfährt, welche Meldungen warum fehlen. Ohne Verbindung oder bei Mêlée-Anmeldung (die Teams
+     * entstehen lokal) unverändert.
+     */
+    public static TeamMeldungen ohneGesperrte(WorkingSpreadsheet ws, TurnierSystem ts, TeamMeldungen meldungen) {
+        Map<Integer, String> gesperrt = gesperrteNummern(ws, ts);
+        if (gesperrt.isEmpty()) {
+            return meldungen;
+        }
+        List<String> entfernt = new ArrayList<>();
+        TeamMeldungen auslosbar = ohne(meldungen, gesperrt, entfernt);
+        zeigeGesperrte(ws.getxContext(), entfernt);
+        return auslosbar;
+    }
+
+    /**
+     * Meldungen ohne die gesperrten Nummern, Reihenfolge unverändert.
+     *
+     * @param entfernt erhält den Grund je entfernter Meldung
+     */
+    static TeamMeldungen ohne(TeamMeldungen meldungen, Map<Integer, String> gesperrt, List<String> entfernt) {
+        TeamMeldungen auslosbar = new TeamMeldungen();
+        for (Team team : meldungen.teams()) {
+            String grund = gesperrt.get(team.getNr());
+            if (grund == null) {
+                auslosbar.addTeamWennNichtVorhanden(team);
+            } else {
+                entfernt.add(grund);
+            }
+        }
+        return entfernt.isEmpty() ? meldungen : auslosbar;
+    }
+
+    /** Wie {@link #ohneGesperrte(WorkingSpreadsheet, TurnierSystem, TeamMeldungen)} für Supermêlée-Spieler. */
+    public static SpielerMeldungen ohneGesperrte(WorkingSpreadsheet ws, TurnierSystem ts, SpielerMeldungen meldungen) {
+        Map<Integer, String> gesperrt = gesperrteNummern(ws, ts);
+        List<String> entfernt = new ArrayList<>();
+        for (Spieler spieler : new ArrayList<>(meldungen.spieler())) {
+            String grund = gesperrt.get(spieler.getNr());
+            if (grund != null) {
+                meldungen.removeSpieler(spieler);
+                entfernt.add(grund);
+            }
+        }
+        zeigeGesperrte(ws.getxContext(), entfernt);
+        return meldungen;
+    }
+
+    /** Gesperrte Team- bzw. Spielernummern mit Grund; leer ohne Verbindung und bei Mêlée-Anmeldung. */
+    static Map<Integer, String> gesperrteNummern(WorkingSpreadsheet ws, TurnierSystem ts) {
+        Optional<PtmOnlineVerbindung> verbindung = verbindung(ws, ts);
+        if (verbindung.isEmpty() || verbindung.get().ziel() instanceof MeleeAnmeldungZiel) {
+            return Map.of();
+        }
+        MeldelisteZiel ziel = verbindung.get().ziel();
+        Map<Integer, String> nummern = new LinkedHashMap<>();
+        try {
+            RegistrationImportTask.gesperrteZeilen(verbindung.get().mapping(), ziel)
+                    .forEach((zeile, grund) -> nummern.put(ziel.getTeamNrAusZeile(zeile), grund));
+        } catch (GenerateException e) {
+            // Die Auslosung darf an PTM-Online nie scheitern: ohne lesbaren Stand wird nichts gesperrt.
+            logger.error("PTM-Online: gesperrte Meldungen nicht ermittelbar, Auslosung ohne Sperre", e);
+            return Map.of();
+        }
+        nummern.remove(-1);
+        return nummern;
+    }
+
+    private static void zeigeGesperrte(XComponentContext ctx, List<String> entfernt) {
+        if (entfernt.isEmpty()) {
+            return;
+        }
+        logger.info("PTM-Online: {} gesperrte Meldungen nicht ausgelost", entfernt.size());
+        MessageBox.from(ctx, MessageBoxTypeEnum.WARN_OK).caption(I18n.get("ptmonline.auslosung.gesperrt.titel"))
+                .message(I18n.get("ptmonline.auslosung.gesperrt", namensListe(entfernt))).show();
     }
 
     /** Text der Startrückfrage: ohne Befunde die schlichte Bestätigung, sonst fehlende Meldungen und Gründe. */

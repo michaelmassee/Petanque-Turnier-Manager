@@ -165,6 +165,30 @@ class PtmOnlineAbgleichSheetRunnerUITest extends BaseCalcUITest {
         assertThat(server.anmeldungGeschlossen()).isEmpty();
     }
 
+    @Test
+    void kontoDoppelbelegungSperrtBisZurAufloesungAlsVerschiedenePersonen() throws Exception {
+        server.close();
+        server = new PtmOnlineTestServer(TURNIER_ID, ANMELDUNGEN.replace("{\"registrations\":[",
+                "{\"conflicts\":{\"accountConflicts\":[{\"userId\":\"konto-x\",\"registrationIds\":[\"r1\",\"r2\"]}],"
+                        + "\"possibleDuplicates\":[]},\"registrations\":["));
+        abgleichenUndHansVerknuepfen();
+
+        Map<Integer, String> gesperrt = RegistrationImportTask.gesperrteZeilen(mapping, ziel);
+        assertThat(gesperrt).as("beide Meldungen der Doppelbelegung gesperrt")
+                .containsOnlyKeys(ziel.findeZeileMitName("Anna Schmidt"), ziel.findeZeileMitName("Hans Müller"));
+        String fall = KonfliktFall.schluessel(KonfliktArt.KONTO_KONFLIKT, null, List.of("r1", "r2"));
+        assertThat(mapping.konfliktListe().leseFaelle()).containsKey(fall);
+
+        mapping.konfliktListe().setzeEntscheidung(fall, Entscheidung.VERSCHIEDENE_PERSONEN.anzeige());
+        abgleichen();
+
+        assertThat(RegistrationImportTask.gesperrteZeilen(mapping, ziel)).as("als verschiedene Personen freigegeben")
+                .isEmpty();
+        assertThat(mapping.konfliktListe().leseFaelle()).doesNotContainKey(fall);
+        assertThat(server.entscheidungen()).extracting(entscheidung -> entscheidung.get("decision").getAsString())
+                .contains("resolve_different_persons");
+    }
+
     private void abgleichen() throws Exception {
         PtmOnlineAbgleichSheetRunner runner = neuerRunner();
         runner.start();

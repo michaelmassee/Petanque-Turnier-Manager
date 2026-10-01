@@ -182,6 +182,11 @@ public class KaskadeSpielrundeSheet extends SheetRunner implements ISheet, PtmOn
         PtmOnlineSpielrundeSync.turnierstartAbgleichen(getWorkingSpreadsheet(), getTurnierSystem(),
                 naechsteRundeNr == 1, meldeListe.getAlleMeldungen(), meldeListe.getAktiveMeldungen());
         var meldungenNachSP = meldeListe.getMeldungenSortiertNachSetzposition();
+        if (naechsteRundeNr == 1) {
+            // PTM-Online: gesperrte Meldungen nicht in die Eröffnung; ab Runde 2 ist die Gruppenstruktur fixiert.
+            meldungenNachSP = PtmOnlineSpielrundeSync.ohneGesperrte(getWorkingSpreadsheet(), getTurnierSystem(),
+                    meldungenNachSP);
+        }
 
         // Die Mindestanzahl gilt nur für die Turnier-Eröffnung (Runde 1), die die Plan-Größe
         // fixiert. Ab Runde 2 kann meldungenNachSP (aktive Teams) durch zwischenzeitliche

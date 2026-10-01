@@ -77,6 +77,9 @@ public class SchweizerSpielrundeSheetNaechste extends SchweizerAbstractSpielrund
 			}
 		}
 
+		// PTM-Online: gesperrte Meldungen (Konto doppelt angemeldet, Team unvollständig) nicht auslosen.
+		aktiveMeldungen = PtmOnlineSpielrundeSync.ohneGesperrte(getWorkingSpreadsheet(), getTurnierSystem(), aktiveMeldungen);
+
 		if (!canStart(aktiveMeldungen)) {
 			return false;
 		}

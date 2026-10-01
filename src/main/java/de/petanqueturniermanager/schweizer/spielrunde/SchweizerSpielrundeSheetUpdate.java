@@ -46,6 +46,9 @@ public class SchweizerSpielrundeSheetUpdate extends SchweizerAbstractSpielrundeS
 		getMeldeListe().upDateSheet();
 		TeamMeldungen aktiveMeldungen = getMeldeListe().getAktiveMeldungen();
 
+		// PTM-Online: gesperrte Meldungen (Konto doppelt angemeldet, Team unvollständig) nicht auslosen.
+		aktiveMeldungen = PtmOnlineSpielrundeSync.ohneGesperrte(getWorkingSpreadsheet(), getTurnierSystem(), aktiveMeldungen);
+
 		if (!canStart(aktiveMeldungen)) {
 			return;
 		}

@@ -26,6 +26,13 @@ public final class ZuordnungsVermerke {
     static final String BEHALTEN = "BEHALTEN";
     /** Die Meldung wurde lokal entfernt; die Online-Anmeldung wird nicht erneut importiert (KP-15). */
     static final String LOKAL_ENTFERNT = "LOKAL_ENTFERNT";
+    /**
+     * Eine Person mit Konto steht online in mehreren Anmeldungen, darunter dieser (KP-06 b): Die Meldung wird nicht
+     * ausgelost, bis der Konflikt online aufgelöst ist. Jeder Abgleich setzt bzw. entfernt den Vermerk.
+     */
+    static final String KONTO_KONFLIKT = "KONTO_KONFLIKT";
+    /** Die Turnierleitung hat die Doppelbelegung als verschiedene Personen aufgelöst (KP-06 c); wieder auslosbar. */
+    static final String KONTO_FREIGEGEBEN = "KONTO_FREIGEGEBEN";
 
     private static final String KEIN_WERT = "";
 

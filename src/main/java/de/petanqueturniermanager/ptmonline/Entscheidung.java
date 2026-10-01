@@ -33,6 +33,8 @@ public enum Entscheidung {
     ONLINE_STORNIEREN(null),
     /** Nach dem Turnierstart eingegangene Anmeldung übernehmen (KP-05). */
     UEBERNEHMEN("link"),
+    /** Doppelbelegung eines Kontos betrifft verschiedene Personen; die Meldungen sind wieder auslosbar (KP-06 c). */
+    VERSCHIEDENE_PERSONEN("resolve_different_persons"),
     /** Ablehnung eines Schreibauftrags zur Kenntnis genommen; sie verschwindet aus der Konfliktliste. */
     ZUR_KENNTNIS(null),
     /** Erste Runde trotz offener Ausschlussgründe im Vorabcheck gestartet (A-29). */
