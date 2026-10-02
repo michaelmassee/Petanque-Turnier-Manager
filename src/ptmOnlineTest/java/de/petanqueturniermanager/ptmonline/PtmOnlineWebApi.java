@@ -71,10 +71,12 @@ final class PtmOnlineWebApi {
         }
     }
 
-    /** Öffentliche Anmeldung ohne Konto (wie ein Gast über das Formular) mit beiden Einverständnissen. */
+    /**
+     * Öffentliche Anmeldung ohne Konto (wie ein Gast über das Formular) mit beiden Einverständnissen. Die E-Mail von
+     * Spieler 1 ist Pflicht; ein Gast ohne Adresse erhält eine eindeutige, keinem Konto gehörende Test-Adresse.
+     */
     String anmelden(String turnierId, Person... personen) throws IOException, InterruptedException {
         JsonObject body = new JsonObject();
-        body.addProperty("email", "kontakt@example.test");
         body.addProperty("publicationNoticeAccepted", true);
         body.addProperty("personsConsentAccepted", true);
         body.add("feeSelections", new JsonArray());
@@ -87,11 +89,19 @@ final class PtmOnlineWebApi {
             body.addProperty(praefix.isEmpty() ? "lastName" : praefix + "LastName", person.nachname());
             if (person.email() != null) {
                 body.addProperty(praefix.isEmpty() ? "playerEmail" : praefix + "Email", person.email());
+            } else if (praefix.isEmpty()) {
+                body.addProperty("playerEmail", gastEmail(person));
             }
         }
         HttpRequest anfrage = anfrage("/api/tournaments/" + turnierId + "/registrations")
                 .POST(HttpRequest.BodyPublishers.ofString(body.toString())).build();
         return senden(anfrage, 201).getAsJsonObject("registration").get("id").getAsString();
+    }
+
+    private static String gastEmail(Person person) {
+        String lokalteil = (person.vorname() + "." + person.nachname()).toLowerCase(java.util.Locale.ROOT)
+                .replaceAll("[^a-z0-9.]", "");
+        return lokalteil + "." + java.util.UUID.randomUUID().toString().substring(0, 8) + "@gast.example.test";
     }
 
     /** Alle Anmeldungen in der Verwaltungssicht des Organisators. */
