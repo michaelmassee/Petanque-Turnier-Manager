@@ -806,7 +806,7 @@ Stufe 1 bis 3 sind umgesetzt, PTM Online und PTM jeweils auf dem Branch `ptm-onl
 | Punkt | Stand |
 | - | - |
 | Konfliktliste und Entscheidungen (A-29) | Blatt „PTMOnline Konflikte“ mit Entscheidungsspalte; Entscheidungen wirken beim nächsten Abgleich und werden online protokolliert. |
-| Gelöschtes Online-Turnier (KP-07) | Nur 410 bzw. `tournament_deleted` beendet die Verbindung; 404 nie. |
+| Gelöschtes Online-Turnier (KP-07) | Nur 410 bzw. `tournament_deleted` beendet die Verbindung; 404 nie. Auch Turniere, die mit einem Konto gelöscht werden (Admin-Löschung mit „Turniere mitlöschen“, Selbstlöschung), hinterlassen den Löschnachweis und einen Protokolleintrag; die Admin-Löschung läuft atomar. |
 | Supermêlée mehrere Spieltage | Nach E-25 umgesetzt. |
 | Auslosung schließt Konfliktmeldungen aus (P-30, P-42) | Umgesetzt: Meldungen mit Konto-Doppelbelegung (bis online aufgelöst oder in der Konfliktliste als „Verschiedene Personen“ freigegeben, KP-06 c) und unvollständige Teams bleiben eingecheckt, werden aber nicht ausgelost; die Turnierleitung sieht, welche Meldungen warum fehlen. Gilt bei verbundenem Dokument für Schweizer, Formule X, Supermêlée, JGJ, Poule und KO; bei Kaskade nur für die Eröffnungsrunde (danach ist die Gruppenstruktur fixiert). Nicht bei Trip-Tête (spielt immer mit allen Meldungen) und bei Mêlée-Anmeldung (Teams entstehen lokal). Die Doppelbelegung kennt PTM aus dem letzten Abgleich bzw. dem Vorabcheck. |
 | Nach Turnierstart eingegangene Anmeldung stornieren | Aus PTM nur „Übernehmen“; Stornieren erfolgt in PTM Online. |
