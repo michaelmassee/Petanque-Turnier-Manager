@@ -786,8 +786,8 @@ Damit bleiben öffentliche Anmeldung, lokale Anwesenheit und Turnierauslosung na
 
 | ID | Anforderung |
 | - | - |
-| DS-01 | Wer eine Anmeldung abschickt, muss im Formular bestätigen, dass die eingetragenen Personen mit der Weitergabe ihres Namens und ihrer E-Mail an den Veranstalter einverstanden sind. |
-| DS-02 | Automatisch verknüpfte Konten werden per Postbox informiert (E-22). Personen ohne Konto erhalten keine automatische Nachricht; die Information obliegt dem absendenden Konto (DS-01). |
+| DS-01 | Wer eine Anmeldung abschickt, bestätigt im Formular mit **einer** Pflicht-Checkbox (seit 2026-10-02 zusammengefasst mit dem Veröffentlichungshinweis), dass alle eingetragenen Personen einverstanden sind, dass ihre Anmeldedaten (Name, E-Mail-Adresse) an den Veranstalter gehen und Name, Verein, Teamname und Partnernamen bei öffentlicher Teilnehmerliste auf der Turnierseite erscheinen können. |
+| DS-02 | Alle Personen mit Slot-E-Mail erhalten die Anmeldebestätigung (E-11); eine Postbox-Nachricht bei automatischer Kontoverknüpfung gibt es seit 2026-10-02 nicht mehr (E-22). Personen ohne E-Mail informiert das absendende Konto (DS-01). |
 | DS-03 | Namen erscheinen in öffentlichen Teilnehmerlisten, Paarungen und Ranglisten nur, wenn das Turnier seine Teilnehmer öffentlich zeigt; das gilt auch für lokal nachgemeldete Personen. E-Mails, Kontodaten und Tarife sind nie öffentlich (KP-12). |
 | DS-04 | Kontakt- und Slot-E-Mails, Antworten auf Online-Fragen und Tarife werden nach Abschluss des Turniers nach einer festen Frist von 12 Monaten ab Turnierdatum gelöscht. Die Frist gilt für alle Turniere und ist nicht einstellbar; Namen, Ergebnisse und Ranglisten bleiben erhalten. |
 | DS-05 | Das Protokoll nach T-14 bleibt revisionssicher, wird aber nach derselben Frist pseudonymisiert: E-Mail-Adressen und Kontozuordnungen werden durch nicht rückführbare Kennungen ersetzt. |
