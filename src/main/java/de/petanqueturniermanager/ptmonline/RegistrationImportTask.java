@@ -73,6 +73,8 @@ import de.petanqueturniermanager.spielerdb.SpielerMitVerein;
 public final class RegistrationImportTask {
 
     private static final Logger logger = LogManager.getLogger(RegistrationImportTask.class);
+    /** Aktiv-Wert „nimmt teil“ (Check-in); bei Supermêlée der Eintrag in der Spalte des Spieltags. */
+    private static final int AKTIV_EINGECHECKT = 1;
     /** Die Prüfung vor dem Turnierstart hält die Auslosung auf – bei schlechtem Netz nicht länger als so. */
     static final Duration TIMEOUT_VOR_TURNIERSTART = Duration.ofSeconds(8);
 
@@ -205,18 +207,22 @@ public final class RegistrationImportTask {
     /**
      * Was der Abgleich online vorgefunden hat und die Turnierleitung wissen muss.
      *
+     * @param entfernt            lokale Bezeichnungen online stornierter oder wartender, noch nicht eingecheckter und
+     *                            daher entfernter Meldungen
      * @param ausgeschlossen      lokale Bezeichnungen online stornierter oder wartender, lokal ausgeschlossener Meldungen
      * @param wiederBestaetigt    lokale Bezeichnungen wieder bestätigter, nicht mehr ausgeschlossener Meldungen
      * @param kontoKonflikte      je Doppelbelegung eines Kontos die Bezeichnungen der betroffenen Anmeldungen
      * @param moeglicheDubletten  je möglicher Dublette die Bezeichnungen der betroffenen Anmeldungen (nur Hinweis)
      */
-    public record OnlineBefunde(List<String> ausgeschlossen, List<String> wiederBestaetigt, List<String> kontoKonflikte,
-            List<String> moeglicheDubletten, List<String> onlineUebernommen, List<NamensKonflikt> namensKonflikte) {
+    public record OnlineBefunde(List<String> entfernt, List<String> ausgeschlossen, List<String> wiederBestaetigt,
+            List<String> kontoKonflikte, List<String> moeglicheDubletten, List<String> onlineUebernommen,
+            List<NamensKonflikt> namensKonflikte) {
 
         static final OnlineBefunde KEINE = new OnlineBefunde(List.of(), List.of(), List.of(), List.of(), List.of(),
-                List.of());
+                List.of(), List.of());
 
         public OnlineBefunde {
+            entfernt = List.copyOf(entfernt);
             ausgeschlossen = List.copyOf(ausgeschlossen);
             wiederBestaetigt = List.copyOf(wiederBestaetigt);
             kontoKonflikte = List.copyOf(kontoKonflikte);
@@ -227,6 +233,9 @@ public final class RegistrationImportTask {
 
         public List<String> hinweise() {
             List<String> hinweise = new ArrayList<>();
+            if (!entfernt.isEmpty()) {
+                hinweise.add(I18n.get("ptmonline.hinweis.online_entfernt", String.join(", ", entfernt)));
+            }
             if (!ausgeschlossen.isEmpty()) {
                 hinweise.add(I18n.get("ptmonline.hinweis.online_ausgeschlossen", String.join(", ", ausgeschlossen)));
             }
@@ -330,7 +339,7 @@ public final class RegistrationImportTask {
         PtmOnlineAuftraege.abgelehnteFaelle(bestand).forEach(abgelehnt -> sammlung.melde(abgelehnt.fall()));
         PtmOnlineAuftraege.speichern(bestand, mapping);
         mapping.konfliktListe().schreibe(sammlung.zeilen(), zeitpunktText(Instant.now()));
-        OnlineBefunde online = new OnlineBefunde(importLauf.status().ausgeschlossen(),
+        OnlineBefunde online = new OnlineBefunde(importLauf.status().entfernt(), importLauf.status().ausgeschlossen(),
                 importLauf.status().wiederBestaetigt(), bezeichnungen.kontoKonflikte(),
                 bezeichnungen.moeglicheDubletten(), bezeichnungen.onlineUebernommen(), bezeichnungen.namensKonflikte());
         boolean schliessenAnbieten = schliessenAnbieten(bezeichnungen.stand(), LocalDate.now(),
@@ -406,8 +415,11 @@ public final class RegistrationImportTask {
     /** Ergebnis des Imports samt der übernommenen Online-Statuswechsel. */
     private record ImportLauf(ImportErgebnis ergebnis, StatusUebernahme status) {}
 
-    /** Online stornierte/wartende Meldungen, die ausgeschlossen, und wieder bestätigte, die zurückgeholt wurden. */
-    private record StatusUebernahme(List<String> ausgeschlossen, List<String> wiederBestaetigt) {}
+    /**
+     * Online stornierte/wartende Meldungen, die entfernt (noch nicht eingecheckt) oder ausgeschlossen (eingecheckt)
+     * wurden, und wieder bestätigte, die zurückgeholt wurden.
+     */
+    private record StatusUebernahme(List<String> entfernt, List<String> ausgeschlossen, List<String> wiederBestaetigt) {}
 
     /**
      * @param ueberKapazitaet    zugeordnete Anmeldungen über der Online-Kapazität
@@ -585,6 +597,11 @@ public final class RegistrationImportTask {
         fortschritt.status(I18n.get("ptmonline.fortschritt.anmeldungen_abgerufen", alle.size()));
         fortschritt.pruefeAbbruch();
         StatusUebernahme status = uebernehmeOnlineStatus(ziel, mapping, alle);
+        if (!status.entfernt().isEmpty() && !ziel.istSpielerpool()) {
+            // Entfernte Meldungen hinterlassen leere Zeilen; erst das Aktualisieren schließt die Lücken, sonst sieht der
+            // folgende Import die Zeilen dahinter nicht.
+            aktualisierung.aktualisieren();
+        }
         ImportErgebnis ergebnis = uebernehmeAnmeldungen(alle, mapping, ziel, aktualisierung, fortschritt, sammlung);
         if (ergebnis.vollstaendig()) {
             mapping.setLastSync(abgleichStart);
@@ -1462,10 +1479,16 @@ public final class RegistrationImportTask {
     }
 
     /**
-     * Online stornierte oder auf die Warteliste gesetzte, bereits zugeordnete Meldungen werden lokal als abgemeldet
-     * markiert und so von der Auslosung ausgeschlossen, nie gelöscht (E-14, KP-14). Der Aktiv-Wert davor wird im
-     * Vermerk gemerkt: Wird die Anmeldung online wieder bestätigt, entfällt der Ausschluss und der lokale Check-in-Zustand
-     * ist wieder genau der alte. Behält die Turnierleitung eine Meldung bewusst, wird sie nicht erneut ausgeschlossen.
+     * Online stornierte oder auf die Warteliste gesetzte, bereits zugeordnete Meldungen (E-14, KP-14):
+     * <ul>
+     * <li>Noch nicht eingecheckt: Die Meldung wird aus der Meldeliste entfernt und ihre Zuordnung gelöscht. Meldet sich
+     * dasselbe Team neu an oder rückt es nach, wird es wie jede neue Anmeldung übernommen – ohne Doppeleintrag. Bei
+     * Supermêlée (Spielerpool) bleibt der Spieler im Pool, nur die Zuordnung zum Spieltag entfällt.</li>
+     * <li>Eingecheckt (das Team steht vor Ort): Die Meldung bleibt, wird als abgemeldet markiert, nicht ausgelost und
+     * erscheint in der Konfliktliste. Der Aktiv-Wert davor wird im Vermerk gemerkt: Wird die Anmeldung online wieder
+     * bestätigt, ist der lokale Check-in-Zustand wieder genau der alte. Behält die Turnierleitung eine Meldung bewusst,
+     * wird sie nicht erneut ausgeschlossen.</li>
+     * </ul>
      */
     private static StatusUebernahme uebernehmeOnlineStatus(MeldelisteZiel ziel, PtmOnlineRegistrationMapping mapping,
             List<RegistrationDto> registrations) throws GenerateException {
@@ -1474,13 +1497,15 @@ public final class RegistrationImportTask {
         List<RegistrationDto> zugeordnete = registrations.stream()
                 .filter(registration -> uuidProOnlineId.containsKey(registration.id())).toList();
         if (zugeordnete.isEmpty()) {
-            return new StatusUebernahme(List.of(), List.of());
+            return new StatusUebernahme(List.of(), List.of(), List.of());
         }
         Map<String, ZuordnungsZusatz> zusaetze = mapping.getZusaetzeProUuid();
         Map<String, Integer> zeileProUuid = zeileProLokalerUuid(ziel);
         Map<String, ZuordnungsZusatz> neueVermerke = new LinkedHashMap<>();
         List<String> ausgeschlossen = new ArrayList<>();
         List<String> wiederBestaetigt = new ArrayList<>();
+        Map<String, Integer> zuEntfernen = new LinkedHashMap<>();
+        List<String> entfernt = new ArrayList<>();
         for (RegistrationDto registration : zugeordnete) {
             String uuid = uuidProOnlineId.get(registration.id());
             Integer zeile = zeileProUuid.get(uuid);
@@ -1494,6 +1519,11 @@ public final class RegistrationImportTask {
                 if (istOnlineAusgeschlossen(registration)) {
                     if (!bisher.hat(ZuordnungsVermerke.AUSGESCHLOSSEN) && !bisher.hat(ZuordnungsVermerke.BEHALTEN)) {
                         int vorher = ziel.getAktivWertAusZeile(zeile);
+                        if (vorher != AKTIV_EINGECHECKT) {
+                            zuEntfernen.put(uuid, zeile);
+                            entfernt.add(lokaleBezeichnung(ziel, zeile) + " (" + onlineStatus(registration) + ")");
+                            continue;
+                        }
                         ziel.markiereAlsAbgemeldet(zeile);
                         vermerke = bisher.mit(ZuordnungsVermerke.AUSGESCHLOSSEN, Integer.toString(vorher));
                         ausgeschlossen.add(lokaleBezeichnung(ziel, zeile) + " (" + onlineStatus(registration) + ")");
@@ -1515,7 +1545,31 @@ public final class RegistrationImportTask {
             }
         }
         mapping.setZusaetze(neueVermerke);
-        return new StatusUebernahme(ausgeschlossen, wiederBestaetigt);
+        entferneMeldungen(ziel, mapping, zuEntfernen);
+        return new StatusUebernahme(entfernt, ausgeschlossen, wiederBestaetigt);
+    }
+
+    /**
+     * Entfernt die Meldungen aus der Liste – im Supermêlée-Spielerpool bleiben die Spieler stehen – und danach ihre
+     * Zuordnungen.
+     */
+    private static void entferneMeldungen(MeldelisteZiel ziel, PtmOnlineRegistrationMapping mapping,
+            Map<String, Integer> zeileProUuid) throws GenerateException {
+        if (zeileProUuid.isEmpty()) {
+            return;
+        }
+        if (!ziel.istSpielerpool()) {
+            try {
+                for (int zeile : zeileProUuid.values()) {
+                    ziel.entferneMeldung(zeile);
+                }
+            } catch (MeldelisteZiel.MeldelisteSchreibException e) {
+                throw new GenerateException(e.getMessage());
+            }
+        }
+        mapping.entferneZuordnungen(zeileProUuid.keySet());
+        logger.info("PTM-Online: {} online stornierte bzw. wartende, nicht eingecheckte Meldungen entfernt",
+                zeileProUuid.size());
     }
 
     /** Online storniert oder auf der Warteliste: lokal von der Auslosung ausgeschlossen (E-14). */

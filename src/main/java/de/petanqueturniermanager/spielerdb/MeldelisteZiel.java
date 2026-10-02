@@ -139,6 +139,14 @@ public interface MeldelisteZiel extends AbgleichQuelle {
         }
     }
 
+    /**
+     * Entfernt eine Meldung samt lokaler PTM-Online-ID aus der Liste (online storniert oder auf der Warteliste, noch
+     * nicht eingecheckt). Die Zeile bleibt leer zurück; „Meldeliste aktualisieren“ schließt die Lücke.
+     */
+    default void entferneMeldung(int zeile1Basiert) throws MeldelisteSchreibException {
+        throw new MeldelisteSchreibException("Entfernen wird von dieser Meldeliste nicht unterstützt");
+    }
+
     /** Markiert eine Meldung als abgemeldet, ohne die Spieler- oder Teamdaten zu löschen. */
     default void markiereAlsAbgemeldet(int zeile1Basiert) throws MeldelisteSchreibException {
         throw new MeldelisteSchreibException("Abmelden wird von dieser Meldeliste nicht unterstützt");

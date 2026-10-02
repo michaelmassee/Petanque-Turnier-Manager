@@ -439,6 +439,21 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
         }
     }
 
+    /** Leert die ganze Zeile von der Nr- bis zur UUID-Spalte – wie „Meldeliste aktualisieren“ eine Zeile ohne Namen. */
+    @Override
+    public void entferneMeldung(int zeile1Basiert) throws MeldelisteSchreibException {
+        if (zeile1Basiert <= 0) {
+            throw new MeldelisteSchreibException("Ungültige Meldelistenzeile");
+        }
+        try {
+            int zeile = zeile1Basiert - 1;
+            RangePosition bereich = RangePosition.from(SPALTE_NR, zeile, uuidSpalte(), zeile);
+            BlattschutzManager.get().schreibeEntsperrt(sheet, () -> RangeHelper.from(sheet, doc, bereich).clearRange());
+        } catch (Exception e) {
+            throw new MeldelisteSchreibException("Meldung konnte nicht entfernt werden", e);
+        }
+    }
+
     @Override
     public void markiereAlsAbgemeldet(int zeile1Basiert) throws MeldelisteSchreibException {
         if (zeile1Basiert <= 0) {

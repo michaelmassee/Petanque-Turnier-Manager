@@ -137,6 +137,31 @@ class PtmOnlineSupermeleeZusammenspielTest extends BasePtmOnlineZusammenspielTes
                 () -> "running".equals(online.turnier(turnierId).get("status").getAsString()));
     }
 
+    @Test
+    void stornoAmSpieltagLaesstDenSpielerImPoolUndNeuanmeldungVerknuepftIhnWieder() throws Exception {
+        supermeleeMeldelisteAnlegen();
+        supermeleeSpieltagOnlineAnlegen(IN_EINEM_MONAT);
+        List<Person> spieler = spieler("Storno", 3);
+        Map<String, Person> angemeldet = onlineAnmelden(spieler);
+        String idErster = angemeldet.keySet().iterator().next();
+        Person erster = spieler.getFirst();
+        verbinden();
+        abgleichen();
+        String uuidErster = ziel.getOderErzeugeLokaleUuid(zeile(erster));
+
+        online.stornieren(turnierId, idErster);
+        abgleichen();
+
+        assertThat(lokaleMeldungen()).as("Spieler bleibt im Pool (E-25)").hasSize(3);
+        assertThat(mapping.istBereitsImportiert(idErster)).as("Zuordnung zum Spieltag entfernt").isFalse();
+
+        String idNeu = online.anmelden(turnierId, erster);
+        abgleichen();
+
+        assertThat(lokaleMeldungen()).as("kein Doppeleintrag im Pool").hasSize(3);
+        assertThat(mapping.getLokaleUuid(idNeu)).as("mit seiner Pool-Zeile verknüpft").contains(uuidErster);
+    }
+
     /** Einzelanmeldungen ohne Konto; liefert Online-ID → Person. */
     private Map<String, Person> onlineAnmelden(List<Person> personen) throws Exception {
         Map<String, Person> angemeldet = new LinkedHashMap<>();
@@ -157,6 +182,7 @@ class PtmOnlineSupermeleeZusammenspielTest extends BasePtmOnlineZusammenspielTes
     /** Spielrunde 1 des aktiven Spieltags wie über das Menü; die Spielrunde muss danach existieren. */
     private void ersteRundeAuslosen() throws Exception {
         SpielrundeSheet_Naechste runde = new SpielrundeSheet_Naechste(wkingSpreadsheet);
+        warteBisKeineVerarbeitungLaeuft();
         runde.run();
         assertThat(sheetHlp.findByName(runde.getSheetName(SpielTagNr.from(spieltagNr), SpielRundeNr.from(1))))
                 .as("Spielrunde 1 von Spieltag %s angelegt", spieltagNr).isNotNull();

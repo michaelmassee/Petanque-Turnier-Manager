@@ -110,8 +110,13 @@ final class PtmOnlineWebApi {
 
     /** Storniert eine Anmeldung in der Verwaltung (Organisator, nach dem Import durch PTM). */
     void stornieren(String turnierId, String anmeldungId) throws IOException, InterruptedException {
+        statusSetzen(turnierId, anmeldungId, "cancelled");
+    }
+
+    /** Setzt den Anmeldestatus in der Verwaltung, z. B. „waitlist“ oder wieder „confirmed“. */
+    void statusSetzen(String turnierId, String anmeldungId, String status) throws IOException, InterruptedException {
         JsonObject anmeldung = anmeldung(turnierId, anmeldungId).orElseThrow();
-        anmeldung.addProperty("status", "cancelled");
+        anmeldung.addProperty("status", status);
         senden(mitApiKey("PUT", "/api/registrations/" + anmeldungId, anmeldung), 200);
     }
 

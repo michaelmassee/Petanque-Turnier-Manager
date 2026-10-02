@@ -189,7 +189,52 @@ class PtmOnlineSchweizerZusammenspielTest extends BasePtmOnlineZusammenspielTest
     }
 
     @Test
-    void onlineStornoNachDemImportMeldetDieZeileLokalAb() throws Exception {
+    void onlineStornoVorDemCheckInEntferntDieMeldungUndEineNeuanmeldungErzeugtKeinenDoppeleintrag() throws Exception {
+        turnierAnlegen(Formation.TRIPLETTE, IN_EINEM_MONAT);
+        String idA = online.anmelden(turnierId, TEAM_A);
+        online.anmelden(turnierId, TEAM_B);
+        verbinden();
+        abgleichen();
+
+        online.stornieren(turnierId, idA);
+        abgleichen();
+
+        assertThat(lokaleMeldungen().values()).as("storniert und nicht eingecheckt: entfernt").containsExactly(namen(TEAM_B));
+        assertThat(mapping.istBereitsImportiert(idA)).as("Zuordnung entfernt").isFalse();
+        assertThat(konfliktArten()).doesNotContain(KonfliktArt.ONLINE_AUSGESCHLOSSEN);
+
+        String idNeu = online.anmelden(turnierId, TEAM_A);
+        abgleichen();
+
+        assertThat(lokaleMeldungen().values()).as("dasselbe Team neu angemeldet: genau einmal in der Meldeliste")
+                .containsExactlyInAnyOrder(namen(TEAM_A), namen(TEAM_B));
+        assertThat(mapping.istBereitsImportiert(idNeu)).isTrue();
+    }
+
+    @Test
+    void warteplatzVorDemCheckInEntferntDieMeldungUndNachrueckenUebernimmtSieWieder() throws Exception {
+        turnierAnlegen(Formation.TRIPLETTE, IN_EINEM_MONAT);
+        String idA = online.anmelden(turnierId, TEAM_A);
+        online.anmelden(turnierId, TEAM_B);
+        verbinden();
+        abgleichen();
+
+        online.statusSetzen(turnierId, idA, "waitlist");
+        abgleichen();
+
+        assertThat(lokaleMeldungen().values()).as("auf der Warteliste: entfernt").containsExactly(namen(TEAM_B));
+        assertThat(mapping.istBereitsImportiert(idA)).as("Zuordnung entfernt").isFalse();
+
+        online.statusSetzen(turnierId, idA, "confirmed");
+        abgleichen();
+
+        assertThat(lokaleMeldungen().values()).as("nachgerückt: wieder genau einmal übernommen")
+                .containsExactlyInAnyOrder(namen(TEAM_A), namen(TEAM_B));
+        assertThat(mapping.istBereitsImportiert(idA)).isTrue();
+    }
+
+    @Test
+    void onlineStornoNachDemCheckInMeldetDieZeileLokalAb() throws Exception {
         turnierAnlegen(Formation.TRIPLETTE, IN_EINEM_MONAT);
         String idA = online.anmelden(turnierId, TEAM_A);
         online.anmelden(turnierId, TEAM_B);

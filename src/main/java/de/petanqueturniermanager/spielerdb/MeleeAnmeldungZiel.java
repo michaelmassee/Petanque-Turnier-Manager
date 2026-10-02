@@ -268,6 +268,17 @@ public final class MeleeAnmeldungZiel implements MeldelisteZiel, MeleeAnmeldungK
 				() -> sheetHelper.setNumberValueInCell(NumberCellValue.from(sheet, position).setValue(setzposition)));
 	}
 
+	/** Leert die ganze Zeile der Einzelanmeldung samt lokaler PTM-Online-ID. */
+	@Override
+	public void entferneMeldung(int zeile1Basiert) throws MeldelisteSchreibException {
+		pruefeDatenZeile(zeile1Basiert);
+		XSpreadsheet sheet = sheet();
+		int zeile = zeile1Basiert - 1;
+		RangePosition bereich = RangePosition.from(SPALTE_NR, zeile, SPALTE_PTM_ONLINE_UUID, zeile);
+		BlattschutzManager.get().schreibeEntsperrt(sheet,
+				() -> RangeHelper.from(sheet, ws.getWorkingSpreadsheetDocument(), bereich).clearRange());
+	}
+
 	/**
 	 * Online storniert: Eingecheckt-Markierung entfernen, damit der Spieler beim nächsten „Mêlée
 	 * übernehmen“ nicht in ein Team gemischt wird. Ist er bereits übernommen, steckt er schon in einem

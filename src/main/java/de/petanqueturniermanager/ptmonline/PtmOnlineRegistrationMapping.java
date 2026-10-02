@@ -91,6 +91,11 @@ public class PtmOnlineRegistrationMapping {
         return syncSheet.getOnlineIds();
     }
 
+    /** Entfernt die Zuordnungen dieser lokalen UUIDs; die Online-Anmeldungen gelten danach als nicht importiert. */
+    public void entferneZuordnungen(Set<String> lokaleUuids) throws GenerateException {
+        syncSheet.entferneZuordnungen(lokaleUuids);
+    }
+
     public Optional<String> getLokaleUuid(String onlineRegistrationId) throws GenerateException {
         return syncSheet.getLokaleUuid(onlineRegistrationId);
     }

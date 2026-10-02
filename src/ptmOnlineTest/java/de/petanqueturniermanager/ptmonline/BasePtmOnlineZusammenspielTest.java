@@ -24,6 +24,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 
 import de.petanqueturniermanager.BaseCalcUITest;
+import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
@@ -170,7 +171,8 @@ abstract class BasePtmOnlineZusammenspielTest extends BaseCalcUITest {
         turnier.registrationType = anmeldeTyp;
         turnier.status = "registration";
         assertThat(PtmOnlineVerbindenTestZugang.verbinden(wkingSpreadsheet, system, spieltagNr,
-                server.zugangsdaten(), turnier)).as("Verbinden erfolgreich").isTrue();
+                server.zugangsdaten(), turnier, BasePtmOnlineZusammenspielTest::starteUndWarte))
+                .as("Verbinden erfolgreich").isTrue();
         mapping = new PtmOnlineRegistrationMapping(wkingSpreadsheet, system, spieltagNr);
         assertThat(mapping.getTournamentId()).contains(turnierId);
     }
@@ -179,8 +181,7 @@ abstract class BasePtmOnlineZusammenspielTest extends BaseCalcUITest {
     protected void abgleichen() throws Exception {
         PtmOnlineAbgleichSheetRunner runner = new PtmOnlineAbgleichSheetRunner(wkingSpreadsheet, system, spieltagNr,
                 server.zugangsdaten(), mapping, turnierId, ziel);
-        runner.start();
-        runner.join();
+        starteUndWarte(runner);
         assertThat(runner.isLetzterLaufFehlgeschlagen()).as("Abgleich ohne Fehler").isFalse();
     }
 
@@ -247,6 +248,7 @@ abstract class BasePtmOnlineZusammenspielTest extends BaseCalcUITest {
     protected Set<Integer> schweizerRundeAuslosen() throws Exception {
         SchweizerSpielrundeSheetNaechste runde = new SchweizerSpielrundeSheetNaechste(wkingSpreadsheet);
         runde.getKonfigurationSheet().setSpielrundeSpielbahn(SpielrundeSpielbahn.N);
+        warteBisKeineVerarbeitungLaeuft();
         runde.doRun();
         assertThat(runde.getXSpreadSheet()).as("Spielrunde angelegt").isNotNull();
         letzteRunde = runde;
@@ -264,6 +266,32 @@ abstract class BasePtmOnlineZusammenspielTest extends BaseCalcUITest {
             }
         }
         return teams;
+    }
+
+    /**
+     * Startet einen Runner wie über das Menü und wartet auf sein Ende. Läuft gerade eine andere Verarbeitung (z. B. die
+     * Erfassung des Beobachters nach einem Abgleich), weist PTM den Start mit „Verarbeitung läuft bereits“ ab – dann
+     * wie die Turnierleitung erneut versuchen, statt den Lauf stillschweigend zu verlieren.
+     */
+    protected static void starteUndWarte(SheetRunner runner) throws Exception {
+        Instant frist = Instant.now().plus(WARTEZEIT);
+        while (true) {
+            warteBisKeineVerarbeitungLaeuft();
+            runner.start();
+            if (runner.getState() != Thread.State.NEW) {
+                runner.join();
+                return;
+            }
+            if (Instant.now().isAfter(frist)) {
+                throw new AssertionError("Runner nicht gestartet, Verarbeitung blockiert: " + runner.getClass());
+            }
+            Thread.sleep(100);
+        }
+    }
+
+    /** Für Kommandos, die der Test direkt im eigenen Thread ausführt (doRun): erst laufende Verarbeitung abwarten. */
+    protected static void warteBisKeineVerarbeitungLaeuft() throws Exception {
+        warteBis("keine laufende Verarbeitung", () -> !SheetRunner.isRunning());
     }
 
     /** Wartet auf einen asynchron übertragenen Stand (Auftragsversand im Hintergrund). */

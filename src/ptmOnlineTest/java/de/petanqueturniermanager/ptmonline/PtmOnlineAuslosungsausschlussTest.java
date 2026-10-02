@@ -133,6 +133,7 @@ class PtmOnlineAuslosungsausschlussTest extends BasePtmOnlineZusammenspielTest {
             ziel.stelleAktivWertWiederHer(zeile, 1);
         }
 
+        warteBisKeineVerarbeitungLaeuft();
         aufbau.auslosung().runner(wkingSpreadsheet).run();
         // Im Betrieb meldet LibreOffice die Änderungen der Auslosung; der Beobachter überträgt sie.
         PtmOnlineLiveBeobachter.anstossen(wkingSpreadsheet.getWorkingSpreadsheetDocument());

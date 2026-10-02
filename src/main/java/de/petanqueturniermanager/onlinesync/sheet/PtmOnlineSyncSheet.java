@@ -883,6 +883,64 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 		return 0;
 	}
 
+	/**
+	 * Entfernt die Zuordnungen der genannten lokalen UUIDs; die übrigen Zeilen rücken samt Nr-Formel und Zusatz
+	 * lückenlos nach oben. Eine entfernte Online-Anmeldung gilt danach als nicht importiert.
+	 */
+	public void entferneZuordnungen(Set<String> lokaleUuids) throws GenerateException {
+		RangeData daten = leseDaten();
+		int anzahl = anzahlBelegterZeilen(daten);
+		if (anzahl == 0 || lokaleUuids.isEmpty()) {
+			return;
+		}
+		RangeData zusatz = leseZusatz(anzahl);
+		XSpreadsheet sheet = getXSpreadSheet();
+		SheetHelper helper = getSheetHelper();
+		int letzteZeile = ERSTE_DATEN_ZEILE + anzahl - 1;
+		String[][] formeln = helper.getFormulaArrayFromRange(sheet,
+				RangePosition.from(SPALTE_NR, ERSTE_DATEN_ZEILE, SPALTE_NR, letzteZeile));
+		RangeData bleibt = new RangeData();
+		RangeData bleibtZusatz = new RangeData();
+		List<String[]> bleibtFormeln = new ArrayList<>();
+		for (int i = 0; i < anzahl; i++) {
+			RowData zeile = daten.get(i);
+			if (lokaleUuids.contains(text(zeile, SPALTE_LOKALE_UUID))) {
+				continue;
+			}
+			RowData neu = bleibt.addNewRow();
+			for (int spalte = SPALTE_NAME; spalte <= LETZTE_SPALTE; spalte++) {
+				if (spalte < zeile.size()) {
+					neu.add(zeile.get(spalte));
+				} else {
+					neu.newEmpty();
+				}
+			}
+			RowData alt = i < zusatz.size() ? zusatz.get(i) : new RowData();
+			RowData neuZusatz = bleibtZusatz.addNewRow();
+			neuZusatz.newString(rohText(alt, 0));
+			neuZusatz.newString(text(alt, 1));
+			bleibtFormeln.add(new String[] { formeln[i][0] });
+		}
+		if (bleibt.size() == anzahl) {
+			return;
+		}
+		RangeHelper.from(this, RangePosition.from(SPALTE_NR, ERSTE_DATEN_ZEILE, LETZTE_SPALTE, letzteZeile))
+				.clearRange();
+		RangeHelper.from(this, RangePosition.from(SPALTE_BESETZUNG, ERSTE_DATEN_ZEILE, LETZTE_ZUSATZ_SPALTE,
+				letzteZeile)).clearRange();
+		if (bleibt.isEmpty()) {
+			return;
+		}
+		RangeHelper.from(this, bleibt.getRangePosition(Position.from(SPALTE_NAME, ERSTE_DATEN_ZEILE)))
+				.setDataInRange(bleibt);
+		RangeHelper.from(this, bleibtZusatz.getRangePosition(Position.from(SPALTE_BESETZUNG, ERSTE_DATEN_ZEILE)))
+				.setDataInRange(bleibtZusatz);
+		RangePosition nrBereich = RangePosition.from(SPALTE_NR, ERSTE_DATEN_ZEILE, SPALTE_NR,
+				ERSTE_DATEN_ZEILE + bleibt.size() - 1);
+		String[][] neueFormeln = bleibtFormeln.toArray(String[][]::new);
+		BlattschutzManager.get().schreibeEntsperrt(sheet, () -> helper.setFormulaArrayInRange(sheet, nrBereich, neueFormeln));
+	}
+
 	public void leeren() throws GenerateException {
 		RangeHelper.from(this, RangePosition.from(SPALTE_NR, ERSTE_DATEN_ZEILE, LETZTE_SPALTE, LETZTE_DATEN_ZEILE))
 				.clearRange();
