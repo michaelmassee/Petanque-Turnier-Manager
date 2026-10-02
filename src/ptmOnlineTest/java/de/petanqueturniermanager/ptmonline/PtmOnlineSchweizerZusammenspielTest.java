@@ -6,6 +6,8 @@ package de.petanqueturniermanager.ptmonline;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -18,13 +20,13 @@ import org.junit.jupiter.api.Test;
 import com.google.gson.JsonObject;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
+import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
-import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.ptmonline.PtmOnlineWebApi.Person;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrundeSheet;
-import de.petanqueturniermanager.schweizer.spielrunde.SchweizerSpielrundeSheetNaechste;
 
 /**
  * Zusammenspiel PTM ↔ PTM Online an einem Schweizer Triplette-Turnier, gegen den lokal gestarteten Worker: Import,
@@ -131,12 +133,7 @@ class PtmOnlineSchweizerZusammenspielTest extends BasePtmOnlineZusammenspielTest
     @Test
     void ersteRundeLostUnvollstaendigeNichtAusUndStartetDasTurnierOnline() throws Exception {
         turnierAnlegen(Formation.TRIPLETTE, IN_EINEM_MONAT);
-        Map<String, Person[]> vollstaendig = new LinkedHashMap<>();
-        for (int i = 1; i <= 7; i++) {
-            Person[] team = { Person.gast("Voll" + i, "Erster"), Person.gast("Voll" + i, "Zweiter"),
-                    Person.gast("Voll" + i, "Dritter") };
-            vollstaendig.put(online.anmelden(turnierId, team), team);
-        }
+        Map<String, Person[]> vollstaendig = vollstaendigeTeams(7);
         String idZuZweit = online.anmelden(turnierId, TEAM_ZU_ZWEIT);
         verbinden();
         abgleichen();
@@ -145,7 +142,7 @@ class PtmOnlineSchweizerZusammenspielTest extends BasePtmOnlineZusammenspielTest
         }
         einchecken(zeile(TEAM_ZU_ZWEIT[0]));
 
-        Set<Integer> ausgelost = ersteRundeAuslosen();
+        Set<Integer> ausgelost = schweizerRundeAuslosen();
 
         assertThat(ausgelost).as("eingecheckt und vollständig ausgelost, unvollständig nicht (P-42)")
                 .containsExactlyInAnyOrderElementsOf(vollstaendig.values().stream().map(this::teamNr).toList());
@@ -158,6 +155,37 @@ class PtmOnlineSchweizerZusammenspielTest extends BasePtmOnlineZusammenspielTest
         });
         assertThat(anmeldung(online.anmeldungen(turnierId), idZuZweit).get("participation").getAsString())
                 .as("nicht ausgelost, bleibt aber eingecheckt (P-42)").isEqualTo("active");
+    }
+
+    @Test
+    void spielrundeUndErgebnisseErscheinenOnlineInDerLiveAnsicht() throws Exception {
+        turnierAnlegen(Formation.TRIPLETTE, IN_EINEM_MONAT);
+        Map<String, Person[]> teams = vollstaendigeTeams(6);
+        verbinden();
+        abgleichen();
+        for (Person[] team : teams.values()) {
+            einchecken(zeile(team[0]));
+        }
+        Map<Integer, String> idProTeamNr = new HashMap<>();
+        teams.forEach((id, team) -> idProTeamNr.put(teamNr(team), id));
+
+        schweizerRundeAuslosen();
+
+        Set<Set<String>> paareImBlatt = new HashSet<>();
+        for (int[] paar : paareImBlatt()) {
+            paareImBlatt.add(Set.of(idProTeamNr.get(paar[1]), idProTeamNr.get(paar[2])));
+        }
+        assertThat(paareImBlatt).hasSize(3);
+        warteBis("Runde 1 mit den Paarungen des Dokuments online", () -> paareOnline().equals(paareImBlatt));
+
+        for (int[] paar : paareImBlatt()) {
+            ergebnisEintragen(paar[0], 13, 7);
+        }
+        // Im Betrieb meldet LibreOffice die Änderung; der Beobachter überträgt sie mit kurzer Verzögerung.
+        PtmOnlineLiveBeobachter.anstossen(wkingSpreadsheet.getWorkingSpreadsheetDocument());
+
+        warteBis("Ergebnisse online", () -> spieleOnline().stream().allMatch(
+                spiel -> istZahl(spiel, "scoreA", 13) && istZahl(spiel, "scoreB", 7)));
     }
 
     @Test
@@ -208,25 +236,70 @@ class PtmOnlineSchweizerZusammenspielTest extends BasePtmOnlineZusammenspielTest
         assertThat(lokaleMeldungen().values()).as("vorher noch übernommen").containsExactly(namen(TEAM_A));
     }
 
-    private Set<Integer> ersteRundeAuslosen() throws Exception {
-        SchweizerSpielrundeSheetNaechste runde = new SchweizerSpielrundeSheetNaechste(wkingSpreadsheet);
-        runde.getKonfigurationSheet().setSpielrundeSpielbahn(SpielrundeSpielbahn.N);
-        runde.doRun();
-        assertThat(runde.getXSpreadSheet()).as("Spielrunde 1 angelegt").isNotNull();
+    /** Vollständige Triplette-Teams, online angemeldet; Online-ID → Team. */
+    private Map<String, Person[]> vollstaendigeTeams(int anzahl) throws Exception {
+        Map<String, Person[]> teams = new LinkedHashMap<>();
+        for (int i = 1; i <= anzahl; i++) {
+            Person[] team = { Person.gast("Voll" + i, "Erster"), Person.gast("Voll" + i, "Zweiter"),
+                    Person.gast("Voll" + i, "Dritter") };
+            teams.put(online.anmelden(turnierId, team), team);
+        }
+        return teams;
+    }
+
+    /** Paarungen der zuletzt ausgelosten Runde: {Blattzeile, Team A, Team B}. */
+    private List<int[]> paareImBlatt() throws Exception {
         int erste = SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE;
-        Set<Integer> teams = new HashSet<>();
-        for (RowData zeile : RangeHelper.from(runde.getXSpreadSheet(), wkingSpreadsheet.getWorkingSpreadsheetDocument(),
+        List<int[]> paare = new ArrayList<>();
+        int zeile = erste;
+        for (RowData daten : RangeHelper.from(letzteRunde.getXSpreadSheet(),
+                wkingSpreadsheet.getWorkingSpreadsheetDocument(),
                 RangePosition.from(SchweizerAbstractSpielrundeSheet.TEAM_A_SPALTE, erste,
                         SchweizerAbstractSpielrundeSheet.TEAM_B_SPALTE, erste + 10))
                 .getDataFromRange()) {
-            for (int spalte = 0; spalte < 2; spalte++) {
-                int nr = zeile.get(spalte).getIntVal(0);
-                if (nr > 0) {
-                    teams.add(nr);
-                }
+            int teamA = daten.get(0).getIntVal(0);
+            int teamB = daten.get(1).getIntVal(0);
+            if (teamA > 0 && teamB > 0) {
+                paare.add(new int[] { zeile, teamA, teamB });
             }
+            zeile++;
         }
-        return teams;
+        return paare;
+    }
+
+    private void ergebnisEintragen(int zeile, int punkteA, int punkteB) throws Exception {
+        var blatt = letzteRunde.getXSpreadSheet();
+        sheetHlp.setNumberValueInCell(NumberCellValue.from(blatt,
+                Position.from(SchweizerAbstractSpielrundeSheet.ERG_TEAM_A_SPALTE, zeile)).setValue(punkteA));
+        sheetHlp.setNumberValueInCell(NumberCellValue.from(blatt,
+                Position.from(SchweizerAbstractSpielrundeSheet.ERG_TEAM_B_SPALTE, zeile)).setValue(punkteB));
+    }
+
+    /** Spiele der ersten Online-Runde (leer, solange sie nicht übertragen ist). */
+    private List<JsonObject> spieleOnline() throws Exception {
+        List<JsonObject> runden = online.runden(turnierId);
+        List<JsonObject> spiele = new ArrayList<>();
+        if (!runden.isEmpty()) {
+            runden.getFirst().getAsJsonArray("matches").forEach(spiel -> spiele.add(spiel.getAsJsonObject()));
+        }
+        return spiele;
+    }
+
+    /** Paarungen der ersten Online-Runde als Mengen von Online-IDs (Freilos ohne Gegner nicht mitgezählt). */
+    private Set<Set<String>> paareOnline() throws Exception {
+        Set<Set<String>> paare = new HashSet<>();
+        for (JsonObject spiel : spieleOnline()) {
+            if (spiel.getAsJsonArray("teamB").isEmpty()) {
+                continue;
+            }
+            paare.add(Set.of(spiel.getAsJsonArray("teamA").get(0).getAsJsonObject().get("id").getAsString(),
+                    spiel.getAsJsonArray("teamB").get(0).getAsJsonObject().get("id").getAsString()));
+        }
+        return paare;
+    }
+
+    private static boolean istZahl(JsonObject spiel, String feld, int wert) {
+        return spiel.has(feld) && !spiel.get(feld).isJsonNull() && spiel.get(feld).getAsInt() == wert;
     }
 
     private int teamNr(Person[] team) {

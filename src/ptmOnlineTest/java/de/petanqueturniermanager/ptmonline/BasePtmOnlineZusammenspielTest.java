@@ -10,6 +10,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -23,6 +24,12 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 
 import de.petanqueturniermanager.BaseCalcUITest;
+import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
+import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
+import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrundeSheet;
+import de.petanqueturniermanager.schweizer.spielrunde.SchweizerSpielrundeSheetNaechste;
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
@@ -33,7 +40,9 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.onlinesync.OnlineTournamentDto;
 import de.petanqueturniermanager.ptmonline.PtmOnlineWebApi.Person;
 import de.petanqueturniermanager.ptmonline.ui.PtmOnlineVerbindenTestZugang;
+import de.petanqueturniermanager.basesheet.konfiguration.MeleeAnmeldungKonfiguration;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetNew;
+import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeleeAnmeldungSheet;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetUpdate;
 import de.petanqueturniermanager.spielerdb.MeldelisteSpielerDaten;
 import de.petanqueturniermanager.spielerdb.MeldelisteZiel;
@@ -64,9 +73,15 @@ abstract class BasePtmOnlineZusammenspielTest extends BaseCalcUITest {
     /** Turniersystem des Dokuments; bei Supermêlée zusätzlich der verbundene Spieltag. */
     protected TurnierSystem system;
     protected Integer spieltagNr;
+    /** Online-Anmeldetyp: „forme“ (Teams), „melee“ (Einzelne, Teams entstehen in PTM) oder „supermelee“. */
+    protected String anmeldeTyp;
+    /** Turniersystem online (z. B. „schweizer“, „rangliste“, „ko“). */
+    protected String onlineTyp;
     protected MeldelisteZiel ziel;
     protected PtmOnlineRegistrationMapping mapping;
     protected String turnierId;
+    /** Zuletzt ausgeloste Schweizer Spielrunde. */
+    protected SchweizerSpielrundeSheetNaechste letzteRunde;
 
     @BeforeAll
     static void lokalenWorkerStarten() {
@@ -94,18 +109,37 @@ abstract class BasePtmOnlineZusammenspielTest extends BaseCalcUITest {
 
     /** Online-Turnier (Schweizer, Formée) und leere lokale Meldeliste in derselben Formation. */
     protected void turnierAnlegen(Formation formation, LocalDate datum) throws Exception {
+        schweizerAnlegen("forme", formation, datum);
+        ziel = MeldelisteZielFactory.fuerPtmOnline(wkingSpreadsheet).orElseThrow();
+    }
+
+    /**
+     * Schweizer mit Mêlée-Anmeldung: online melden sich Einzelne an, lokal stehen sie in der Mêlée-Anmeldeliste
+     * (Sync-Ziel), die Teams der Formation entstehen erst beim Übernehmen in die Meldeliste.
+     */
+    protected void meleeTurnierAnlegen(Formation formation, LocalDate datum) throws Exception {
+        schweizerAnlegen("melee", formation, datum);
+        MeleeAnmeldungKonfiguration.einschalten(wkingSpreadsheet);
+        new SchweizerMeleeAnmeldungSheet(wkingSpreadsheet).generate();
+        ziel = MeldelisteZielFactory.fuerPtmOnline(wkingSpreadsheet).orElseThrow();
+    }
+
+    private void schweizerAnlegen(String typ, Formation formation, LocalDate datum) throws Exception {
         system = TurnierSystem.SCHWEIZER;
         spieltagNr = null;
-        turnierId = online.turnierAnlegen("E2E " + getClass().getSimpleName(), "schweizer", "forme",
+        anmeldeTyp = typ;
+        onlineTyp = "schweizer";
+        turnierId = online.turnierAnlegen("E2E " + getClass().getSimpleName(), "schweizer", anmeldeTyp,
                 formation.name().toLowerCase(Locale.ROOT), datum);
         new SchweizerMeldeListeSheetNew(wkingSpreadsheet).createMeldelisteWithParams(formation, false, false);
         docPropHelper.setIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM, system.getId());
-        ziel = MeldelisteZielFactory.fuerPtmOnline(wkingSpreadsheet).orElseThrow();
     }
 
     /** Leere Supermêlée-Meldeliste (Triplette) mit Spieltag 1 als aktivem Spieltag. */
     protected void supermeleeMeldelisteAnlegen() throws Exception {
         system = TurnierSystem.SUPERMELEE;
+        anmeldeTyp = "supermelee";
+        onlineTyp = "rangliste";
         new MeldeListeSheet_New(wkingSpreadsheet).createMeldelisteWithParams(SuperMeleeMode.Triplette);
         docPropHelper.setIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM, system.getId());
         aktivenSpieltagUebernehmen();
@@ -132,9 +166,8 @@ abstract class BasePtmOnlineZusammenspielTest extends BaseCalcUITest {
         OnlineTournamentDto turnier = new OnlineTournamentDto();
         turnier.id = turnierId;
         turnier.name = "E2E";
-        boolean supermelee = system == TurnierSystem.SUPERMELEE;
-        turnier.type = supermelee ? "rangliste" : "schweizer";
-        turnier.registrationType = supermelee ? "supermelee" : "forme";
+        turnier.type = onlineTyp;
+        turnier.registrationType = anmeldeTyp;
         turnier.status = "registration";
         assertThat(PtmOnlineVerbindenTestZugang.verbinden(wkingSpreadsheet, system, spieltagNr,
                 server.zugangsdaten(), turnier)).as("Verbinden erfolgreich").isTrue();
@@ -208,6 +241,29 @@ abstract class BasePtmOnlineZusammenspielTest extends BaseCalcUITest {
             arten.add(KonfliktArt.valueOf(schluessel.substring(0, schluessel.indexOf('|'))));
         }
         return arten;
+    }
+
+    /** Nächste Schweizer Spielrunde wie über das Menü; liefert die ausgelosten Team-Nummern. */
+    protected Set<Integer> schweizerRundeAuslosen() throws Exception {
+        SchweizerSpielrundeSheetNaechste runde = new SchweizerSpielrundeSheetNaechste(wkingSpreadsheet);
+        runde.getKonfigurationSheet().setSpielrundeSpielbahn(SpielrundeSpielbahn.N);
+        runde.doRun();
+        assertThat(runde.getXSpreadSheet()).as("Spielrunde angelegt").isNotNull();
+        letzteRunde = runde;
+        int erste = SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE;
+        Set<Integer> teams = new HashSet<>();
+        for (RowData zeile : RangeHelper.from(runde.getXSpreadSheet(), wkingSpreadsheet.getWorkingSpreadsheetDocument(),
+                RangePosition.from(SchweizerAbstractSpielrundeSheet.TEAM_A_SPALTE, erste,
+                        SchweizerAbstractSpielrundeSheet.TEAM_B_SPALTE, erste + 10))
+                .getDataFromRange()) {
+            for (int spalte = 0; spalte < 2; spalte++) {
+                int nr = zeile.get(spalte).getIntVal(0);
+                if (nr > 0) {
+                    teams.add(nr);
+                }
+            }
+        }
+        return teams;
     }
 
     /** Wartet auf einen asynchron übertragenen Stand (Auftragsversand im Hintergrund). */

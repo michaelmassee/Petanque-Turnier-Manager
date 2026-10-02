@@ -115,6 +115,22 @@ final class PtmOnlineWebApi {
         senden(mitApiKey("PUT", "/api/registrations/" + anmeldungId, anmeldung), 200);
     }
 
+    /** Vom Dokument übertragene Runden mit Paarungen und Ergebnissen, wie sie die Live-Ansicht zeigt. */
+    List<JsonObject> runden(String turnierId) throws IOException, InterruptedException {
+        List<JsonObject> runden = new ArrayList<>();
+        for (JsonElement element : senden(mitSession("/api/tournaments/" + turnierId + "/rounds").GET().build(), 200)
+                .getAsJsonArray("rounds")) {
+            runden.add(element.getAsJsonObject());
+        }
+        return runden;
+    }
+
+    /** Rangliste online; bei Durchführung im Dokument der übertragene Stand. */
+    JsonArray rangliste(String turnierId) throws IOException, InterruptedException {
+        return senden(mitSession("/api/tournaments/" + turnierId + "/ranking").GET().build(), 200)
+                .getAsJsonArray("ranking");
+    }
+
     JsonObject turnier(String turnierId) throws IOException, InterruptedException {
         return senden(mitSession("/api/tournaments/" + turnierId).GET().build(), 200).getAsJsonObject("tournament");
     }
