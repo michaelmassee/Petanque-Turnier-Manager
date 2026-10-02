@@ -54,6 +54,7 @@ import de.petanqueturniermanager.supermelee.AbstractSuperMeleeRanglisteFormatter
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.SuperMeleeSummenSpalten;
+import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheetUpdate;
 import de.petanqueturniermanager.supermelee.ergebnis.SpielerSpieltagErgebnis;
 import de.petanqueturniermanager.supermelee.ergebnis.SpielrundeErgebnisLeser;
 import de.petanqueturniermanager.supermelee.ergebnis.SpielrundeErgebnisLeser.RundenErgebnis;
@@ -213,6 +214,29 @@ public class SpieltagRanglisteSheet extends SheetRunner implements ISpielTagRang
 				"SUPERMELEE_SPIELTAG_" + nr,
 				new EingabeSignatur(
 						xDoc -> SignaturQuellen.fuerSupermeleeSpieltag(xDoc, nr)));
+
+		aktualisiereBestehendeEndrangliste();
+	}
+
+	/**
+	 * Das Anlegen einer neuen Spieltag-Rangliste verändert die Spaltenstruktur der
+	 * Endrangliste. Deshalb muss eine bereits vorhandene Endrangliste sofort
+	 * neu aufgebaut werden, nicht erst vor der nächsten Spielrunde oder beim
+	 * manuellen Sortieren. Passt das Layout noch (z. B. beim Refresh eines
+	 * bestehenden Spieltags), bleibt die Werte-Aktualisierung den üblichen
+	 * Ranglisten-Hooks überlassen.
+	 */
+	private void aktualisiereBestehendeEndrangliste() throws GenerateException {
+		EndranglisteSheetUpdate endrangliste = new EndranglisteSheetUpdate(getWorkingSpreadsheet());
+		XSpreadsheet endranglisteSheet = endrangliste.getXSpreadSheet();
+		if (endranglisteSheet == null || endrangliste.getAnzahlSpieltage() < 2
+				|| endrangliste.hatAktuellesSpieltageLayout(endranglisteSheet)) {
+			return;
+		}
+		endrangliste.doRun();
+		// Der Neuaufbau aktiviert die Endrangliste; die gerade erzeugte
+		// Spieltag-Rangliste soll aber sichtbar bleiben.
+		getSheetHelper().setActiveSheet(getXSpreadSheet());
 	}
 
 	/**
@@ -475,6 +499,9 @@ public class SpieltagRanglisteSheet extends SheetRunner implements ISpielTagRang
 		// letzte Zeile ?
 		RangePosition searchRange = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, 9999);
 		Position lastNotEmptyPos = RangeSearchHelper.from(this, searchRange).searchLastNotEmptyInSpalte();
+		if (lastNotEmptyPos == null) {
+			return spielerNrlist; // Spieltag-Rangliste ohne Spieler
+		}
 
 		// daten in array einlesen
 		RangePosition spielNrRange = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE,

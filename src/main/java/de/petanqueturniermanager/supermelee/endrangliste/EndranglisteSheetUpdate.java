@@ -65,6 +65,11 @@ public class EndranglisteSheetUpdate extends EndranglisteSheet {
 			new EndranglisteSheet(getWorkingSpreadsheet()).doRun();
 			return;
 		}
+		if (!hatAktuellesSpieltageLayout(sheet)) {
+			logger.debug("Endrangliste-Layout enthält nicht alle Spieltage – vollständiger Neuaufbau");
+			new EndranglisteSheet(getWorkingSpreadsheet()).doRun();
+			return;
+		}
 		processBoxinfo("processbox.rangliste.aktualisieren");
 
 		int anzSpieltage = getAnzahlSpieltage();

@@ -23,6 +23,11 @@ public class EndranglisteSheet_Sort extends EndranglisteSheet {
 			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK)
 					.caption(I18n.get("msg.caption.fehler.sortieren.rangliste"))
 					.message(errorMsg).show();
+		} else if (!hatAktuellesSpieltageLayout(sheet)) {
+			// Beim Hinzukommen eines Spieltags fehlen im alten Sheet dessen sechs
+			// Ergebnis-Spalten, die Summen- und die Sortierspalten. Sortieren würde
+			// dann falsche Spalten verwenden; daher zuerst vollständig neu aufbauen.
+			new EndranglisteSheet(getWorkingSpreadsheet()).doRun();
 		} else {
 			TurnierSheet.from(sheet, getWorkingSpreadsheet()).setActiv();
 			getRangListeSorter().doSort();

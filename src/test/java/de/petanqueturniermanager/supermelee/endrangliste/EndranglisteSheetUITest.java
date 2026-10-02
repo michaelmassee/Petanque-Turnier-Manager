@@ -20,6 +20,7 @@ import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.supermelee.RanglisteTestDaten;
@@ -248,6 +249,33 @@ public class EndranglisteSheetUITest extends BaseCalcUITest {
 
 		int summeNachher = summiereEndRanglistePunktePlus();
 		assertThat(summeNachher).isLessThan(summeVorher);
+	}
+
+	@Test
+	public void sortierenBautEndranglisteNeuAufWennEinWeitererSpieltagHinzugekommenIst()
+			throws GenerateException {
+		testMeldeListeErstellen.initMitAlleDieSpielen(ANZ_MELDUNGEN);
+
+		for (int i = 1; i <= ANZ_SPIELTAGE; i++) {
+			SpielTagNr spieltag = SpielTagNr.from(i);
+			meldeListeSheet_NeuerSpieltag.setAktiveSpieltag(spieltag);
+			meldeListeSheet_NeuerSpieltag.setAktiveSpielRunde(SpielRundeNr.from(1));
+			testMeldeListeErstellen.addMitAlleDieSpielenAktuelleSpieltag(spieltag);
+			ranglisteTestDaten.erstelleTestSpielrunden(ANZ_RUNDEN, false, spieltag);
+			spieltagRangliste.run();
+		}
+		endranglisteSheet.run();
+
+		// Der neue Spieltag existiert bereits, die Endrangliste stammt aber noch
+		// aus dem Stand mit drei Spieltagen – genau der Fall des Anwenderdokuments.
+		sheetHlp.newIfNotExist(SheetNamen.spieltagRangliste(4), (short) 0);
+		assertThat(endranglisteSheet.hatAktuellesSpieltageLayout(endranglisteSheet.getXSpreadSheet())).isFalse();
+
+		endranglisteSheetSort.run();
+
+		assertThat(endranglisteSheet.hatAktuellesSpieltageLayout(endranglisteSheet.getXSpreadSheet())).isTrue();
+		assertThat(endranglisteSheet.getErsteSummeSpalte()).isEqualTo(EndranglisteSheet.ERSTE_SPIELTAG_SPALTE
+				+ (4 * SuperMeleeSummenSpalten.ANZAHL_SPALTEN_IN_SUMME));
 	}
 
 	private int summiereEndRanglistePunktePlus() throws GenerateException {

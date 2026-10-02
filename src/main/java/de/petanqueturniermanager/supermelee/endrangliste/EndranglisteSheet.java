@@ -636,6 +636,20 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 		return spieltagRanglisteSheet;
 	}
 
+	/**
+	 * Prüft, ob die vorhandene Endrangliste noch zu der Zahl der Spieltag-Ranglisten
+	 * passt. Ein inkrementelles Update kann Werte ändern, aber keine zusätzlichen
+	 * Spieltag-Blöcke samt Headern und Sortierspalten anlegen.
+	 */
+	public boolean hatAktuellesSpieltageLayout(XSpreadsheet sheet) throws GenerateException {
+		if (sheet == null) {
+			return false;
+		}
+		String header = getSheetHelper().getTextFromCell(sheet,
+				Position.from(getErsteSummeSpalte(), AbstractSuperMeleeRanglisteFormatter.ERSTE_KOPFDATEN_ZEILE));
+		return "Summe".equals(header);
+	}
+
 	@Override
 	public int validateSpalte() throws GenerateException {
 		return getManuellSortSpalte() + PUNKTE_DIV_OFFS;

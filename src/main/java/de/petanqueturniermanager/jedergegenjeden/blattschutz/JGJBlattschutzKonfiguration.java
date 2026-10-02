@@ -18,6 +18,7 @@ import com.sun.star.table.XCell;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellstyle.CellStyleHelper;
 import de.petanqueturniermanager.helper.cellstyle.EditierbareZelleHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.EditierbareZelleHintergrundFarbeUnGeradeStyle;
@@ -26,6 +27,7 @@ import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.blattschutz.IBlattschutzKonfiguration;
 import de.petanqueturniermanager.helper.sheet.blattschutz.SheetSchutzInfo;
+import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationSheet;
 import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJSpielPlanSheet;
 import de.petanqueturniermanager.ko.KoTurnierbaumSheet;
 
@@ -34,7 +36,8 @@ import de.petanqueturniermanager.ko.KoTurnierbaumSheet;
  * <p>
  * Editierbare Bereiche:
  * <ul>
- *   <li><b>Meldeliste:</b> Name-Spalte (B)</li>
+ *   <li><b>Meldeliste:</b> Alle manuellen Eingabespalten außer Nr: optionaler Teamname,
+ *       Spielername/Verein, SP und Aktiv</li>
  *   <li><b>Spielplan:</b> Spielpunkte A und B (nur bis zur letzten Datenzeile)</li>
  *   <li><b>Rangliste, Gesamtrangliste, Direktvergleich, Checkin-Liste, Gruppen-Aushänge:</b> vollständig gesperrt</li>
  * </ul>
@@ -67,18 +70,41 @@ public class JGJBlattschutzKonfiguration implements IBlattschutzKonfiguration, M
         var xDoc = ws.getWorkingSpreadsheetDocument();
         var infos = new ArrayList<SheetSchutzInfo>();
 
-        sammleMeldelisteSchutzInfo(xDoc, infos);
+        sammleMeldelisteSchutzInfo(xDoc, ws, infos);
         sammleSpielplanSchutzInfo(xDoc, infos);
         sammleVollGesperrteSheets(xDoc, infos);
 
         return infos;
     }
 
-    private void sammleMeldelisteSchutzInfo(XSpreadsheetDocument xDoc, List<SheetSchutzInfo> infos) {
-        SheetMetadataHelper.findeSheet(xDoc, SheetMetadataHelper.SCHLUESSEL_JGJ_MELDELISTE).ifPresent(sheet ->
-                infos.add(SheetSchutzInfo.mitEditierbarenBereichen(sheet, List.of(
-                        RangePosition.from(SPIELER_NR_SPALTE + 1, ERSTE_DATEN_ZEILE,
-                                SPIELER_NR_SPALTE + 1, MeldungenSpalte.MAX_ANZ_MELDUNGEN)))));
+    private void sammleMeldelisteSchutzInfo(XSpreadsheetDocument xDoc, WorkingSpreadsheet ws,
+            List<SheetSchutzInfo> infos) {
+        SheetMetadataHelper.findeSheet(xDoc, SheetMetadataHelper.SCHLUESSEL_JGJ_MELDELISTE).ifPresent(sheet -> {
+            // Fallback wie bisher: nur die Namensspalte, damit die Meldeliste bei
+            // unlesbarer Konfiguration nicht komplett gesperrt wird.
+            int letzteSpalte = SPIELER_NR_SPALTE + 1;
+            try {
+                letzteSpalte = berechneAktivSpalte(new JGJKonfigurationSheet(ws));
+            } catch (GenerateException e) {
+                logger.warn("Editierbare Meldeliste-Spalten konnten nicht berechnet werden: {}", e.getMessage(), e);
+            }
+            infos.add(SheetSchutzInfo.mitEditierbarenBereichen(sheet, List.of(
+                    RangePosition.from(SPIELER_NR_SPALTE + 1, ERSTE_DATEN_ZEILE,
+                            letzteSpalte, MeldungenSpalte.MAX_ANZ_MELDUNGEN))));
+        });
+    }
+
+    /**
+     * Layout: Nr, optional Teamname, Spieler (Vorname/Nachname/[Verein]), SP, Aktiv.
+     * Die Freigabe muss mit dem tatsächlich erzeugten Layout übereinstimmen; eine
+     * feste Namensspalte würde bei Team- und Mehrspieler-Formationen den Rest sperren.
+     */
+    private int berechneAktivSpalte(JGJKonfigurationSheet konfigSheet) throws GenerateException {
+        int spaltenProSpieler = konfigSheet.isMeldeListeVereinsnameAnzeigen() ? 3 : 2;
+        int ersterSpielerOffset = konfigSheet.isMeldeListeTeamnameAnzeigen() ? 2 : 1;
+        int letzteDatenSpalte = ersterSpielerOffset
+                + konfigSheet.getMeldeListeFormation().getAnzSpieler() * spaltenProSpieler - 1;
+        return letzteDatenSpalte + 2; // +1 = SP, +2 = Aktiv
     }
 
     private void sammleSpielplanSchutzInfo(XSpreadsheetDocument xDoc, List<SheetSchutzInfo> infos) {

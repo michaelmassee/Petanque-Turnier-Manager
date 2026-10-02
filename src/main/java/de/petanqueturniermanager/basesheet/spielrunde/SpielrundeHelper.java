@@ -24,6 +24,7 @@ import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
+import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 
 /**
@@ -165,6 +166,12 @@ public class SpielrundeHelper {
 		SheetHelper.faerbeZeilenAbwechselnd(sheet, rangeErsteSpalte,
 				spielrundeHintergrundFarbeGeradeStyle.getFarbe(),
 				spielrundeHintergrundFarbeUnGeradeStyle.getFarbe());
+		if (spielrundeSpielbahnFlagAusKonfig == SpielrundeSpielbahn.L) {
+			// Eine bewusst leere Bahnspalte ist eine manuelle Eingabe, keine automatisch
+			// vergebene Paarungsnummer. Die Markierung folgt derselben Nutzeroption wie
+			// die übrigen editierbaren Felder und ergänzt die Duplikat-Prüfung oberhalb.
+			EditierbaresZelleFormatHelper.anwenden(sheet, rangeErsteSpalte);
+		}
 
 	}
 
