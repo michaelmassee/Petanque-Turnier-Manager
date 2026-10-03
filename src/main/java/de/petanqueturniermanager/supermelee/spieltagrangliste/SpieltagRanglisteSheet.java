@@ -392,7 +392,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements ISpielTagRang
 		StringCellValue header = StringCellValue
 				.from(getXSpreadSheet(), Position.from(nichtGespieltSpalte, ERSTE_DATEN_ZEILE - 1))
 				.addColumnProperties(columnProperties)
-				.setValue("NG");
+				.setValue(I18n.get("supermelee.spieltagrangliste.header.nicht.gespielt"));
 		getSheetHelper().setStringValueInCell(header);
 	}
 

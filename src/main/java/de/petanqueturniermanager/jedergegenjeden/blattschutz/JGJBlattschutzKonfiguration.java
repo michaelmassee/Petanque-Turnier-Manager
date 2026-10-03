@@ -18,7 +18,6 @@ import com.sun.star.table.XCell;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
-import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellstyle.CellStyleHelper;
 import de.petanqueturniermanager.helper.cellstyle.EditierbareZelleHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.EditierbareZelleHintergrundFarbeUnGeradeStyle;
@@ -28,6 +27,7 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.blattschutz.IBlattschutzKonfiguration;
 import de.petanqueturniermanager.helper.sheet.blattschutz.SheetSchutzInfo;
 import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationSheet;
+import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSpalten;
 import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJSpielPlanSheet;
 import de.petanqueturniermanager.ko.KoTurnierbaumSheet;
 
@@ -84,27 +84,14 @@ public class JGJBlattschutzKonfiguration implements IBlattschutzKonfiguration, M
             // unlesbarer Konfiguration nicht komplett gesperrt wird.
             int letzteSpalte = SPIELER_NR_SPALTE + 1;
             try {
-                letzteSpalte = berechneAktivSpalte(new JGJKonfigurationSheet(ws));
-            } catch (GenerateException e) {
+                letzteSpalte = JGJMeldeListeSpalten.aktivSpalte(new JGJKonfigurationSheet(ws));
+            } catch (RuntimeException e) {
                 logger.warn("Editierbare Meldeliste-Spalten konnten nicht berechnet werden: {}", e.getMessage(), e);
             }
             infos.add(SheetSchutzInfo.mitEditierbarenBereichen(sheet, List.of(
                     RangePosition.from(SPIELER_NR_SPALTE + 1, ERSTE_DATEN_ZEILE,
                             letzteSpalte, MeldungenSpalte.MAX_ANZ_MELDUNGEN))));
         });
-    }
-
-    /**
-     * Layout: Nr, optional Teamname, Spieler (Vorname/Nachname/[Verein]), SP, Aktiv.
-     * Die Freigabe muss mit dem tatsächlich erzeugten Layout übereinstimmen; eine
-     * feste Namensspalte würde bei Team- und Mehrspieler-Formationen den Rest sperren.
-     */
-    private int berechneAktivSpalte(JGJKonfigurationSheet konfigSheet) throws GenerateException {
-        int spaltenProSpieler = konfigSheet.isMeldeListeVereinsnameAnzeigen() ? 3 : 2;
-        int ersterSpielerOffset = konfigSheet.isMeldeListeTeamnameAnzeigen() ? 2 : 1;
-        int letzteDatenSpalte = ersterSpielerOffset
-                + konfigSheet.getMeldeListeFormation().getAnzSpieler() * spaltenProSpieler - 1;
-        return letzteDatenSpalte + 2; // +1 = SP, +2 = Aktiv
     }
 
     private void sammleSpielplanSchutzInfo(XSpreadsheetDocument xDoc, List<SheetSchutzInfo> infos) {

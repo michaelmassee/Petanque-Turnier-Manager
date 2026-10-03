@@ -23,6 +23,12 @@ public class EndranglisteSheet_Sort extends EndranglisteSheet {
 			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK)
 					.caption(I18n.get("msg.caption.fehler.sortieren.rangliste"))
 					.message(errorMsg).show();
+		} else if (getAnzahlSpieltage() < 2) {
+			// Ohne zweiten Spieltag ist kein Neuaufbau möglich; die vorhandene
+			// Endrangliste bleibt unverändert stehen statt geleert zu werden.
+			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK)
+					.caption(I18n.get("msg.caption.fehler.sortieren.rangliste"))
+					.message(I18n.get("msg.text.ungueltige.anzahl.spieltage", getAnzahlSpieltage())).show();
 		} else if (!hatAktuellesSpieltageLayout(sheet)) {
 			// Beim Hinzukommen eines Spieltags fehlen im alten Sheet dessen sechs
 			// Ergebnis-Spalten, die Summen- und die Sortierspalten. Sortieren würde

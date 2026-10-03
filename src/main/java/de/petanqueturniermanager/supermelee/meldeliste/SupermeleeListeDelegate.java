@@ -374,7 +374,8 @@ class SupermeleeListeDelegate implements MeldeListeKonstanten {
 		sheet.getSheetHelper().setStringValueInCell(bezCelVal);
 
 		var modusHeaderVal = StringCellValue.from(xSheet).spalte(ersteSummeSpalte())
-				.zeile(TRIPL_MODE_HEADER).setHoriJustify(CellHoriJustify.CENTER).setValue("Supermêlée Triplette.")
+				.zeile(TRIPL_MODE_HEADER).setHoriJustify(CellHoriJustify.CENTER)
+				.setValue(I18n.get("supermelee.meldeliste.header.triplette"))
 				.setComment(I18n.get("supermelee.meldeliste.comment.tripl.modus.header"))
 				.setEndPosMergeSpaltePlus(getSpielTag().getNr());
 		sheet.getSheetHelper().setStringValueInCell(modusHeaderVal);
@@ -385,14 +386,16 @@ class SupermeleeListeDelegate implements MeldeListeKonstanten {
 		bezCelVal.setComment(I18n.get("supermelee.meldeliste.comment.tripl.anz.triplette")).setValue("∑x3").zeile(TRIPL_MODE_ANZ_TRIPLETTE);
 		sheet.getSheetHelper().setStringValueInCell(bezCelVal);
 
-		bezCelVal.setComment(I18n.get("supermelee.meldeliste.comment.tripl.kann.doublette")).setValue("Doublette");
+		bezCelVal.setComment(I18n.get("supermelee.meldeliste.comment.tripl.kann.doublette"))
+				.setValue(I18n.get("enum.formation.doublette"));
 		sheet.getSheetHelper().setStringValueInCell(bezCelVal.zeile(TRIPL_MODE_SUMMEN_KANN_DOUBLETTE_ZEILE));
 
 		bezCelVal.setComment(I18n.get("supermelee.meldeliste.comment.tripl.spielbahnen")).setValue(I18n.get("column.header.bahnen"));
 		sheet.getSheetHelper().setStringValueInCell(bezCelVal.zeile(TRIPL_MODE_SUMMEN_SPIELBAHNEN));
 
 		modusHeaderVal.spalte(ersteSummeSpalte()).zeile(DOUBL_MODE_HEADER)
-				.setEndPosMergeSpaltePlus(getSpielTag().getNr()).setValue("Supermêlée Doublette.")
+				.setEndPosMergeSpaltePlus(getSpielTag().getNr())
+				.setValue(I18n.get("supermelee.meldeliste.header.doublette"))
 				.setComment(I18n.get("supermelee.meldeliste.comment.doubl.modus.header"));
 		sheet.getSheetHelper().setStringValueInCell(modusHeaderVal);
 
@@ -402,7 +405,8 @@ class SupermeleeListeDelegate implements MeldeListeKonstanten {
 		bezCelVal.setComment(I18n.get("supermelee.meldeliste.comment.doubl.anz.triplette")).setValue("∑x3");
 		sheet.getSheetHelper().setStringValueInCell(bezCelVal.zeile(DOUBL_MODE_ANZ_TRIPLETTE));
 
-		bezCelVal.setComment(I18n.get("supermelee.meldeliste.comment.doubl.kann.triplette")).setValue("Triplette");
+		bezCelVal.setComment(I18n.get("supermelee.meldeliste.comment.doubl.kann.triplette"))
+				.setValue(I18n.get("enum.formation.triplette"));
 		sheet.getSheetHelper().setStringValueInCell(bezCelVal.zeile(DOUBL_MODE_SUMMEN_KANN_TRIPLETTE_ZEILE));
 
 		bezCelVal.setComment(I18n.get("supermelee.meldeliste.comment.doubl.spielbahnen")).setValue(I18n.get("column.header.bahnen"));
@@ -417,7 +421,8 @@ class SupermeleeListeDelegate implements MeldeListeKonstanten {
 			var posSpieltagWerte = Position.from(ersteSummeSpalte() + spieltagCntr, SUMMEN_ERSTE_ZEILE - 1);
 
 			var tagHeader = StringCellValue.from(xSheet).setPos(posSpieltagWerte)
-					.setBorder(border).setValue("Tag " + spieltagCntr).setColumnProperties(spalteWertProp)
+					.setBorder(border).setValue(I18n.get("supermelee.meldeliste.header.tag", spieltagCntr))
+					.setColumnProperties(spalteWertProp)
 					.setCellBackColor(headerBackColor);
 			sheet.getSheetHelper().setStringValueInCell(tagHeader);
 

@@ -320,7 +320,8 @@ public class EndranglisteSheetUITest extends BaseCalcUITest {
 		int tageSpalte = endranglisteSheet.getErsteSummeSpalte() + SuperMeleeSummenSpalten.ANZAHL_SPALTEN_IN_SUMME;
 		Position tagePos = Position.from(tageSpalte, AbstractSuperMeleeRanglisteFormatter.ERSTE_KOPFDATEN_ZEILE);
 		Position streichPos = Position.from(tageSpalte + 1, AbstractSuperMeleeRanglisteFormatter.ERSTE_KOPFDATEN_ZEILE);
-		assertThat(sheetHlp.getTextFromCell(sheet, spieltagPos)).isEqualTo("3. Spieltag");
+		assertThat(sheetHlp.getTextFromCell(sheet, spieltagPos))
+				.isEqualTo(EndRanglisteFormatter.spieltagHeader(ANZ_SPIELTAGE));
 		assertThat(sheetHlp.getTextFromCell(sheet, tagePos)).isEqualTo("Tage");
 		assertThat(sheetHlp.getTextFromCell(sheet, streichPos)).isEqualTo("Streich");
 
@@ -333,14 +334,45 @@ public class EndranglisteSheetUITest extends BaseCalcUITest {
 
 			XSpreadsheet neu = endranglisteSheet.getXSpreadSheet();
 			assertThat(endranglisteSheet.hatAktuellesSpieltageLayout(neu)).isTrue();
-			assertThat(sheetHlp.getTextFromCell(neu, spieltagPos)).isEqualTo("Match Day 3");
+			assertThat(sheetHlp.getTextFromCell(neu, spieltagPos))
+					.isEqualTo(EndRanglisteFormatter.spieltagHeader(ANZ_SPIELTAGE));
 			assertThat(sheetHlp.getTextFromCell(neu, Position.from(endranglisteSheet.getErsteSummeSpalte(),
-					AbstractSuperMeleeRanglisteFormatter.ERSTE_KOPFDATEN_ZEILE))).isEqualTo("Total");
+					AbstractSuperMeleeRanglisteFormatter.ERSTE_KOPFDATEN_ZEILE)))
+					.isEqualTo(AbstractSuperMeleeRanglisteFormatter.summeHeader());
 			assertThat(sheetHlp.getTextFromCell(neu, tagePos)).isEqualTo("Days");
 			assertThat(sheetHlp.getTextFromCell(neu, streichPos)).isEqualTo("Scratch");
 		} finally {
 			I18n.initFuerTest(Locale.GERMAN);
 		}
+	}
+
+	@Test
+	public void wenigerAlsZweiSpieltage_updateUndSortierenLassenEndranglisteStehen() throws GenerateException {
+		erstelleEndranglisteMitDreiSpieltagen();
+		int letzteZeileVorher = endranglisteSheet.getLetzteMitDatenZeileInSpielerNrSpalte();
+		Position summeVorherPos = Position.from(endranglisteSheet.getErsteSummeSpalte(),
+				AbstractSuperMeleeRanglisteFormatter.ERSTE_KOPFDATEN_ZEILE);
+		assertThat(letzteZeileVorher).isGreaterThanOrEqualTo(EndranglisteSheet.ERSTE_DATEN_ZEILE);
+
+		// Spieltag 2 wird gelöscht (z. B. um ihn neu zu erzeugen) – es zählt nur noch Spieltag 1
+		sheetHlp.removeSheet(SheetNamen.spieltagRangliste(2));
+		assertThat(endranglisteSheet.getAnzahlSpieltage()).isEqualTo(1);
+
+		// Automatischer Refresh (Blattaktivierung, Export) darf die Endrangliste nicht leeren
+		new EndranglisteSheetUpdate(wkingSpreadsheet).doRun();
+		assertEndranglisteUnveraendert(letzteZeileVorher, summeVorherPos);
+
+		// Manuelles Sortieren zeigt nur die Fehlermeldung und baut nicht neu auf
+		endranglisteSheetSort.run();
+		assertEndranglisteUnveraendert(letzteZeileVorher, summeVorherPos);
+	}
+
+	private void assertEndranglisteUnveraendert(int letzteZeileVorher, Position summePos) throws GenerateException {
+		XSpreadsheet sheet = endranglisteSheet.getXSpreadSheet();
+		assertThat(sheet).isNotNull();
+		assertThat(endranglisteSheet.getLetzteMitDatenZeileInSpielerNrSpalte()).isEqualTo(letzteZeileVorher);
+		assertThat(sheetHlp.getTextFromCell(sheet, summePos))
+				.isEqualTo(AbstractSuperMeleeRanglisteFormatter.summeHeader());
 	}
 
 	private void erstelleEndranglisteMitDreiSpieltagen() throws GenerateException {

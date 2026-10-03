@@ -65,17 +65,19 @@ public class EndranglisteSheetUpdate extends EndranglisteSheet {
 			new EndranglisteSheet(getWorkingSpreadsheet()).doRun();
 			return;
 		}
+		// Vor der Layout-Prüfung: bei weniger als 2 Spieltagen passt das Layout nie,
+		// ein Neuaufbau würde die vorhandene Endrangliste leeren und eine Fehlermeldung
+		// zeigen – aus einem automatischen Refresh heraus (Blattaktivierung, Export).
+		int anzSpieltage = getAnzahlSpieltage();
+		if (anzSpieltage < 2) {
+			return;
+		}
 		if (!hatAktuellesSpieltageLayout(sheet)) {
 			logger.debug("Endrangliste-Layout enthält nicht alle Spieltage – vollständiger Neuaufbau");
 			new EndranglisteSheet(getWorkingSpreadsheet()).doRun();
 			return;
 		}
 		processBoxinfo("processbox.rangliste.aktualisieren");
-
-		int anzSpieltage = getAnzahlSpieltage();
-		if (anzSpieltage < 2) {
-			return;
-		}
 
 		int spielerAnzahl = getSpielerSpalte().getSpielerNrList().size();
 		RanglisteUpdateHelper.loescheDatenzeilen(this, sheet, spielerAnzahl);

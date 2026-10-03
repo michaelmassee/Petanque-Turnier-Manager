@@ -340,7 +340,7 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 				.setShrinkToFit(true);
 		StringCellValue stValHeader = StringCellValue.from(getXSpreadSheet(), headerPos)
 				.setColumnProperties(colPropErsteSpalten);
-		getSheetHelper().setStringValueInCell(stValHeader.setValue("Nr.").setEndPosMergeZeilePlus(1));
+		getSheetHelper().setStringValueInCell(stValHeader.setValue(I18n.get("column.header.nr")).setEndPosMergeZeilePlus(1));
 		colPropErsteSpalten.setWidth(800);
 
 		getSheetHelper().setStringValueInCell(stValHeader

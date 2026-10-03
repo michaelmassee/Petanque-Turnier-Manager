@@ -23,6 +23,7 @@ import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
@@ -293,7 +294,7 @@ public class SpielrundeUITest extends BaseCalcUITest {
 		XSpreadsheet spielrunde2 = sheetHlp.findByName("1.2. Spielrunde");
 		assertThat(spielrunde2).isNotNull();
 		headerStr = sheetHlp.getTextFromCell(spielrunde2, headerpos);
-		assertThat(headerStr).isNotNull().isEqualTo("Bahn");
+		assertThat(headerStr).isNotNull().isEqualTo(I18n.get("column.header.bahn"));
 
 		//**************************************************************************************************		
 
@@ -305,7 +306,7 @@ public class SpielrundeUITest extends BaseCalcUITest {
 		assertThat(nrData).isNotNull().isNotEmpty().hasSize(5);
 		assertThat(nrData).extracting(t -> t.get(0).getIntVal(-1)).containsExactly(1, 2, 3, 4, -1);
 		headerStr = sheetHlp.getTextFromCell(spielrunde3, headerpos);
-		assertThat(headerStr).isNotNull().isEqualTo("Bahn");
+		assertThat(headerStr).isNotNull().isEqualTo(I18n.get("column.header.bahn"));
 
 		//**************************************************************************************************
 
@@ -317,7 +318,7 @@ public class SpielrundeUITest extends BaseCalcUITest {
 		assertThat(nrData).isNotNull().isNotEmpty().hasSize(5);
 		assertThat(nrData).extracting(t -> t.get(0).getIntVal(-1)).containsAll(Ints.asList(1, 2, 3, 4, -1));
 		headerStr = sheetHlp.getTextFromCell(spielrunde4, headerpos);
-		assertThat(headerStr).isNotNull().isEqualTo("Bahn");
+		assertThat(headerStr).isNotNull().isEqualTo(I18n.get("column.header.bahn"));
 
 		// waitEnter();
 

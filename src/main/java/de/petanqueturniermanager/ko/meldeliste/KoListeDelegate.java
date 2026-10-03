@@ -206,11 +206,11 @@ class KoListeDelegate implements MeldeListeKonstanten {
 
 		// Kopfzeile
 		sheet.getSheetHelper().setStringValueInCell(
-				StringCellValue.from(xKonfigSheet, Position.from(0, 0), "Eigenschaft")
+				StringCellValue.from(xKonfigSheet, Position.from(0, 0), I18n.get("column.header.eigenschaft"))
 						.setCharWeight(FontWeight.BOLD)
 						.setCellBackColor(headerFarbe));
 		sheet.getSheetHelper().setStringValueInCell(
-				StringCellValue.from(xKonfigSheet, Position.from(1, 0), "Wert")
+				StringCellValue.from(xKonfigSheet, Position.from(1, 0), I18n.get("column.header.wert"))
 						.setCharWeight(FontWeight.BOLD)
 						.setCellBackColor(headerFarbe));
 

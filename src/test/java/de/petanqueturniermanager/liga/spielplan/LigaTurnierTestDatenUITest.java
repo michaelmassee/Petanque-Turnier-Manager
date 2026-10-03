@@ -238,15 +238,15 @@ public class LigaTurnierTestDatenUITest extends BaseCalcUITest {
 					RangePosition.from(0, 0, 12, 2 + erwarteteTermineProTeam + 5),
 					termine, wkingSpreadsheet.getWorkingSpreadsheetDocument());
 
-			assertThat(rangeData.get(0).get(0).getStringVal()).isEqualTo("Spiel");
-			assertThat(rangeData.get(0).get(1).getStringVal()).isEqualTo("Datum");
-			assertThat(rangeData.get(0).get(5).getStringVal()).isEqualTo("Gegner");
+			assertThat(rangeData.get(0).get(0).getStringVal()).isEqualTo(I18n.get("liga.termine.header.spiel"));
+			assertThat(rangeData.get(0).get(1).getStringVal()).isEqualTo(I18n.get("column.header.datum"));
+			assertThat(rangeData.get(0).get(5).getStringVal()).isEqualTo(I18n.get("liga.termine.header.gegner"));
 			assertThat(rangeData.get(0).get(6).getStringVal()).isEqualTo(I18n.get("liga.termine.header.status"));
 			assertThat(zellProperty(termine, 6, 0, ICommonProperties.ROTATEANGLE))
 					.as("Status-Header muss um 90 Grad gedreht sein")
 					.isEqualTo(StringCellValue.ROTATEANGLE_PLUS_90);
-			assertThat(rangeData.get(0).get(7).getStringVal()).isEqualTo("Punkte");
-			assertThat(rangeData.get(0).get(9).getStringVal()).isEqualTo("Siege");
+			assertThat(rangeData.get(0).get(7).getStringVal()).isEqualTo(I18n.get("column.header.punkte"));
+			assertThat(rangeData.get(0).get(9).getStringVal()).isEqualTo(I18n.get("column.header.siege"));
 			assertThat(rangeData.get(0).get(11).getStringVal()).isEqualTo(I18n.get("liga.termine.header.sp.punkte"));
 			assertThat(rangeData.get(1).get(7).getStringVal()).isEqualTo(I18n.get("liga.termine.header.eigene.kurz"));
 			assertThat(rangeData.get(1).get(8).getStringVal()).isEqualTo(I18n.get("liga.termine.header.gegner.kurz"));

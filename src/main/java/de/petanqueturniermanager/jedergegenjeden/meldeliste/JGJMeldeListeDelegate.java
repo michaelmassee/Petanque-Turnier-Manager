@@ -104,11 +104,11 @@ class JGJMeldeListeDelegate implements MeldeListeKonstanten {
 	}
 
 	int getSpaltenProSpieler() {
-		return konfigurationSheet.isMeldeListeVereinsnameAnzeigen() ? 3 : 2;
+		return JGJMeldeListeSpalten.spaltenProSpieler(konfigurationSheet);
 	}
 
 	int getErsterSpielerOffset() {
-		return konfigurationSheet.isMeldeListeTeamnameAnzeigen() ? 2 : 1;
+		return JGJMeldeListeSpalten.ersterSpielerOffset(konfigurationSheet);
 	}
 
 	int getSpielerNameErsteSpalte() {
@@ -131,16 +131,15 @@ class JGJMeldeListeDelegate implements MeldeListeKonstanten {
 	}
 
 	int getLetzteDataSpalte() {
-		Formation f = konfigurationSheet.getMeldeListeFormation();
-		return getErsterSpielerOffset() + f.getAnzSpieler() * getSpaltenProSpieler() - 1;
+		return JGJMeldeListeSpalten.letzteDataSpalte(konfigurationSheet);
 	}
 
 	int getSetzPositionSpalte() {
-		return getLetzteDataSpalte() + 1;
+		return JGJMeldeListeSpalten.setzPositionSpalte(konfigurationSheet);
 	}
 
 	int getAktivSpalte() {
-		return getSetzPositionSpalte() + 1;
+		return JGJMeldeListeSpalten.aktivSpalte(konfigurationSheet);
 	}
 
 	/** Erste Spieltag-Spalte = direkt nach der Aktiv-Spalte. */

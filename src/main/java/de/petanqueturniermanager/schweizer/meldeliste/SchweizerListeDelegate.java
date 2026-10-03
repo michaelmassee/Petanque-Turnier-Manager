@@ -58,6 +58,7 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 	static final int NR_SPALTE_WIDTH = 800;
 	static final int NAME_SPALTE_WIDTH = 3000;
 	static final int TEAMNAME_SPALTE_WIDTH = 3000;
+	static final int NUR_TEAMNAME_SPALTE_WIDTH = TEAMNAME_SPALTE_WIDTH * 2;
 	static final int VEREINSNAME_SPALTE_WIDTH = 2500;
 
 	static final int AKTIV_SPALTE_WIDTH = 700;
@@ -244,10 +245,12 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 
 		// Teamname-Spalte (optional): merged über Zeile 1+2 (ZWEITE + DRITTE Header-Zeile)
 		if (teamnameAktiv) {
+			int teamnameSpalteWidth = formation == Formation.NUR_TEAMNAME
+					? NUR_TEAMNAME_SPALTE_WIDTH : TEAMNAME_SPALTE_WIDTH;
 			StringCellValue teamnameHeader = StringCellValue
 					.from(sheet.getXSpreadSheet(), Position.from(1, ZWEITE_HEADER_ZEILE),
 							I18n.get("column.header.teamname"))
-					.addColumnProperties(colPropName.setWidth(TEAMNAME_SPALTE_WIDTH))
+					.addColumnProperties(colPropName.setWidth(teamnameSpalteWidth))
 					.setCellBackColor(headerColor)
 					.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder())
 					.setVertJustify(CellVertJustify2.CENTER)

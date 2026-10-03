@@ -131,12 +131,12 @@ public class EndRanglisteFormatter extends AbstractSuperMeleeRanglisteFormatter 
 				.setEndPosMergeSpaltePlus(getLetzteSpalte())
 				.addCellProperty(IS_TEXT_WRAPPED, Boolean.TRUE)
 				.addRowProperty("OptimalHeight", Boolean.TRUE)
-				.setValue("Aus der Endranglistenwertung entfallen eine einmalige Nichtteilnahme bzw. das"));
+				.setValue(I18n.get("supermelee.endrangliste.hinweis.zeile1")));
 		getSheetHelper().setStringValueInCell(stringVal.zeilePlusEins()
 				.setEndPosMergeSpaltePlus(getLetzteSpalte())
 				.addCellProperty(IS_TEXT_WRAPPED, Boolean.TRUE)
 				.addRowProperty("OptimalHeight", Boolean.TRUE)
-				.setValue("schlechteste Tagesergebnis wenn an allen Spieltagen teilgenommen wurde"));
+				.setValue(I18n.get("supermelee.endrangliste.hinweis.zeile2")));
 
 		return stringVal;
 	}

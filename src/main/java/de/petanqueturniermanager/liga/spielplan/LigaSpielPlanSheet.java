@@ -353,20 +353,20 @@ public class LigaSpielPlanSheet extends SheetRunner implements ISheet {
 				.setShrinkToFit(true);
 		StringCellValue stValHeader = StringCellValue.from(getXSpreadSheet(), headerPos)
 				.setColumnProperties(colPropErsteSpalten);
-		getSheetHelper().setStringValueInCell(stValHeader.setValue("Nr.").setEndPosMergeZeilePlus(1));
+		getSheetHelper().setStringValueInCell(stValHeader.setValue(I18n.get("column.header.nr")).setEndPosMergeZeilePlus(1));
 		colPropErsteSpalten.setWidth(800);
-		getSheetHelper().setStringValueInCell(stValHeader.setValue("KW").spalte(KW_SPALTE).setEndPosMergeZeilePlus(1));
+		getSheetHelper().setStringValueInCell(stValHeader.setValue(I18n.get("column.header.kalenderwoche")).spalte(KW_SPALTE).setEndPosMergeZeilePlus(1));
 		getSheetHelper()
-				.setStringValueInCell(stValHeader.setValue("Tag").spalte(WOCHENTAG_SPALTE).setEndPosMergeZeilePlus(1));
+				.setStringValueInCell(stValHeader.setValue(I18n.get("column.header.wochentag")).spalte(WOCHENTAG_SPALTE).setEndPosMergeZeilePlus(1));
 		colPropErsteSpalten.setWidth(2000);
 		getSheetHelper()
-				.setStringValueInCell(stValHeader.setValue("Datum").spalte(DATUM_SPALTE).setEndPosMergeZeilePlus(1));
+				.setStringValueInCell(stValHeader.setValue(I18n.get("column.header.datum")).spalte(DATUM_SPALTE).setEndPosMergeZeilePlus(1));
 
 		getSheetHelper().setStringValueInCell(
-				stValHeader.setValue("Uhrzeit").spalte(UHRZEIT_SPALTE).setEndPosMergeZeilePlus(1));
+				stValHeader.setValue(I18n.get("column.header.uhrzeit")).spalte(UHRZEIT_SPALTE).setEndPosMergeZeilePlus(1));
 
 		getSheetHelper()
-				.setStringValueInCell(stValHeader.setValue("Ort").spalte(ORT_SPALTE).setEndPosMergeZeilePlus(1));
+				.setStringValueInCell(stValHeader.setValue(I18n.get("column.header.ort")).spalte(ORT_SPALTE).setEndPosMergeZeilePlus(1));
 
 		// header erste Zeile
 		getSheetHelper().setFormulaInCell(stValHeader
@@ -376,28 +376,28 @@ public class LigaSpielPlanSheet extends SheetRunner implements ISheet {
 		getSheetHelper().setStringValueInCell(
 				stValHeader.setValue(I18n.get("column.header.punkte")).spalte(PUNKTE_A_SPALTE).setEndPosMergeSpaltePlus(1));
 		getSheetHelper().setStringValueInCell(
-				stValHeader.setValue("Siege").spalte(SPIELE_A_SPALTE).setEndPosMergeSpaltePlus(1));
+				stValHeader.setValue(I18n.get("column.header.siege")).spalte(SPIELE_A_SPALTE).setEndPosMergeSpaltePlus(1));
 		getSheetHelper().setStringValueInCell(
-				stValHeader.setValue("SpPunkte").spalte(SPIELPNKT_A_SPALTE).setEndPosMergeSpaltePlus(1));
+				stValHeader.setValue(I18n.get("liga.termine.header.sp.punkte")).spalte(SPIELPNKT_A_SPALTE).setEndPosMergeSpaltePlus(1));
 
 		// header zweite Zeile
 		ColumnProperties colProp = ColumnProperties.from().setWidth(LigaKonfigurationSheet.LIGA_MELDUNG_NAME_WIDTH);
 		stValHeader.setEndPosMerge(null).zeilePlusEins().setColumnProperties(colProp);
 		// name
-		getSheetHelper().setStringValueInCell(stValHeader.setValue("Heim").spalte(NAME_A_SPALTE));
-		getSheetHelper().setStringValueInCell(stValHeader.setValue("Gast").spalte(NAME_B_SPALTE));
+		getSheetHelper().setStringValueInCell(stValHeader.setValue(I18n.get("column.header.heim")).spalte(NAME_A_SPALTE));
+		getSheetHelper().setStringValueInCell(stValHeader.setValue(I18n.get("column.header.gast")).spalte(NAME_B_SPALTE));
 
 		// Punkte
 		stValHeader.getColumnProperties().setWidth(PUNKTE_NR_WIDTH);
 
-		getSheetHelper().setStringValueInCell(stValHeader.setValue("H").spalte(PUNKTE_A_SPALTE));
-		getSheetHelper().setStringValueInCell(stValHeader.setValue("G").spalte(PUNKTE_B_SPALTE));
+		getSheetHelper().setStringValueInCell(stValHeader.setValue(I18n.get("column.header.heim.kurz")).spalte(PUNKTE_A_SPALTE));
+		getSheetHelper().setStringValueInCell(stValHeader.setValue(I18n.get("column.header.gast.kurz")).spalte(PUNKTE_B_SPALTE));
 
-		getSheetHelper().setStringValueInCell(stValHeader.setValue("H").spalte(SPIELE_A_SPALTE));
-		getSheetHelper().setStringValueInCell(stValHeader.setValue("G").spalte(SPIELE_B_SPALTE));
+		getSheetHelper().setStringValueInCell(stValHeader.setValue(I18n.get("column.header.heim.kurz")).spalte(SPIELE_A_SPALTE));
+		getSheetHelper().setStringValueInCell(stValHeader.setValue(I18n.get("column.header.gast.kurz")).spalte(SPIELE_B_SPALTE));
 
-		getSheetHelper().setStringValueInCell(stValHeader.setValue("H").spalte(SPIELPNKT_A_SPALTE));
-		getSheetHelper().setStringValueInCell(stValHeader.setValue("G").spalte(SPIELPNKT_B_SPALTE));
+		getSheetHelper().setStringValueInCell(stValHeader.setValue(I18n.get("column.header.heim.kurz")).spalte(SPIELPNKT_A_SPALTE));
+		getSheetHelper().setStringValueInCell(stValHeader.setValue(I18n.get("column.header.gast.kurz")).spalte(SPIELPNKT_B_SPALTE));
 	}
 
 	private void insertArbeitsspalten(List<List<TeamPaarung>> spielPlanHRunde, List<List<TeamPaarung>> spielPlanRRunde)

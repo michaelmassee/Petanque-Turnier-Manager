@@ -113,7 +113,6 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	private static final int NAME_COL_WIDTH = 3000;
 	private static final int SCORE_COL_WIDTH = 900;
 	private static final int CONNECTOR_COL_WIDTH = 400;
-	private static final String BAHN_HEADER_KURZ = "Bn";
 
 	/** Breite der Sieger-Name-Spalte (letzte sichtbare Spalte im Turnierbaum). */
 	static final int SIEGER_NAME_COL_WIDTH = 5000;
@@ -1310,7 +1309,8 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	}
 
 	private void schreibeHeader(XSpreadsheet xSheet, int numRunden) throws GenerateException {
-		String teamHeader = (teamAnzeige == KoSpielbaumTeamAnzeige.NAME) ? "Teamname" : "Nr";
+		String teamHeader = (teamAnzeige == KoSpielbaumTeamAnzeige.NAME)
+				? I18n.get("column.header.teamname") : I18n.get("column.header.nr");
 
 		if (mitCadrage) {
 			int titelStartSpalte = mitBahnInCadrage() ? cadrageBahnSpalte() : cadrageTeamSpalte();
@@ -1324,10 +1324,10 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 							.setBorder(BorderFactory.from().allThin().toBorder())
 							.setShrinkToFit(true));
 			if (mitBahnInCadrage()) {
-				schreibeSpaltenHeader(xSheet, cadrageBahnSpalte(), BAHN_HEADER_KURZ);
+				schreibeSpaltenHeader(xSheet, cadrageBahnSpalte(), I18n.get("column.header.bahn.kurz"));
 			}
 			schreibeSpaltenHeader(xSheet, cadrageTeamSpalte(), teamHeader);
-			schreibeSpaltenHeader(xSheet, cadrageScoreSpalte(), "Pkt");
+			schreibeSpaltenHeader(xSheet, cadrageScoreSpalte(), I18n.get("column.header.punkte.kurz"));
 		}
 
 		for (int r = 1; r <= numRunden; r++) {
@@ -1347,10 +1347,10 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 
 			// Zeile 1: Spalten-Überschriften
 			if (mitBahnInRunde(r)) {
-				schreibeSpaltenHeader(xSheet, bahnSpalte(r), BAHN_HEADER_KURZ);
+				schreibeSpaltenHeader(xSheet, bahnSpalte(r), I18n.get("column.header.bahn.kurz"));
 			}
 			schreibeSpaltenHeader(xSheet, teamSpalte(r), teamHeader);
-			schreibeSpaltenHeader(xSheet, scoreSpalte(r), "Pkt");
+			schreibeSpaltenHeader(xSheet, scoreSpalte(r), I18n.get("column.header.punkte.kurz"));
 		}
 
 		// Sieger-Header (merged über siegerSpalte + siegerNameSpalte)
@@ -1813,7 +1813,8 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		// Bereichs-Header "Spiel um Platz 3/4" in den Finale-Spalten
 		int headerStartSpalte = mitBahnInRunde(numRunden) ? bahnSpalte(numRunden) : teamSpalte(numRunden);
 		getSheetHelper().setStringValueInCell(
-				StringCellValue.from(xSheet, Position.from(headerStartSpalte, platz3HeaderZeile), "Spiel um Platz 3/4")
+				StringCellValue.from(xSheet, Position.from(headerStartSpalte, platz3HeaderZeile),
+						I18n.get("ko.turnierbaum.platz3.spiel"))
 						.setEndPosMergeSpaltePlus(hauptRundenSpalten(numRunden) - 1)
 						.setCharWeight(FontWeight.BOLD)
 						.setHoriJustify(CellHoriJustify.CENTER)
@@ -1824,7 +1825,8 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 
 		// "3. Platz" Kopf-Label in der Sieger-Spalte
 		getSheetHelper().setStringValueInCell(
-				StringCellValue.from(xSheet, Position.from(siegerSpalte(numRunden), platz3HeaderZeile), "3. Platz")
+				StringCellValue.from(xSheet, Position.from(siegerSpalte(numRunden), platz3HeaderZeile),
+						I18n.get("ko.turnierbaum.platz3.platz"))
 						.setEndPosMergeSpaltePlus(1)
 						.setCharWeight(FontWeight.BOLD)
 						.setHoriJustify(CellHoriJustify.CENTER)

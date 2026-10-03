@@ -10,6 +10,7 @@ import de.petanqueturniermanager.algorithmen.common.KoRundeTeamPaarungen;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.model.FormeSpielrunde;
@@ -34,7 +35,8 @@ public class SpielRundeInSheet {
 
 		Position posHeader = Position.from(grpCntr * 2, HEADERZEILE);
 		String gruppeLetter = String.valueOf((char) ((grpCntr + 1) + 64));
-		StringCellValue header = StringCellValue.from(spreadsheet, posHeader).setEndPosMergeSpaltePlus(1).setValue("Gruppe " + gruppeLetter);
+		StringCellValue header = StringCellValue.from(spreadsheet, posHeader).setEndPosMergeSpaltePlus(1)
+				.setValue(I18n.get("maastrichter.korunde.header.gruppe", gruppeLetter));
 		getSheetHelper().setStringValueInCell(header);
 
 		Position posPaarungen = Position.from(grpCntr * 2, ERSTEZEILE);

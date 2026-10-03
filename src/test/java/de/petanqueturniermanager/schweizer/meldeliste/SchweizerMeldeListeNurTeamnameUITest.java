@@ -11,6 +11,7 @@ import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.helper.cellvalue.properties.ICommonProperties;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
@@ -42,6 +43,11 @@ class SchweizerMeldeListeNurTeamnameUITest extends BaseCalcUITest {
         assertThat(meldeListeNew.getTeamnameSpalte()).isEqualTo(1);
         assertThat(meldeListeNew.getSetzPositionSpalte()).isEqualTo(2);
         assertThat(meldeListeNew.getAktivSpalte()).isEqualTo(3);
+
+        assertThat(sheetHlp.getColumnPropertySet(meldeListeNew.getXSpreadSheet(), meldeListeNew.getTeamnameSpalte())
+                .getPropertyValue(ICommonProperties.WIDTH))
+                .as("Bei Nur Teamname muss die alleinige Teamname-Spalte doppelte Standardbreite haben")
+                .isEqualTo(SchweizerListeDelegate.NUR_TEAMNAME_SPALTE_WIDTH);
 
         int ersteDatenZeile = SchweizerListeDelegate.ERSTE_DATEN_ZEILE;
 

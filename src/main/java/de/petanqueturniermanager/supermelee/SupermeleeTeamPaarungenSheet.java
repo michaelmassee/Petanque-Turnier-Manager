@@ -103,17 +103,17 @@ public class SupermeleeTeamPaarungenSheet extends SheetRunner implements ISheet 
 				headerVal.spaltePlusEins().setValue("∑x2").setComment(I18n.get("supermelee.teampaarungen.comment.tripl.doubl.doublette")));
 		getSheetHelper().setStringValueInCell(
 				headerVal.spaltePlusEins().setValue("∑x3").setComment(I18n.get("supermelee.teampaarungen.comment.tripl.doubl.triplette")));
-		getSheetHelper().setStringValueInCell(headerVal.spaltePlusEins().setValue("Doubl")
+		getSheetHelper().setStringValueInCell(headerVal.spaltePlusEins().setValue(I18n.get("supermelee.teampaarungen.header.doublette"))
 				.setComment(I18n.get("supermelee.teampaarungen.comment.nur.doublette.spieler")));
 		getSheetHelper().setStringValueInCell(headerVal.spaltePlusEins().setValue("∑x2")
 				.setComment(I18n.get("supermelee.teampaarungen.comment.nur.doublette.teams")));
-		getSheetHelper().setStringValueInCell(headerVal.spaltePlusEins().setValue("Ung")
+		getSheetHelper().setStringValueInCell(headerVal.spaltePlusEins().setValue(I18n.get("supermelee.teampaarungen.header.ungueltig"))
 				.setComment(I18n.get("supermelee.teampaarungen.comment.ungueltig")));
 		getSheetHelper().setStringValueInCell(
 				headerVal.spaltePlusEins().setValue("∑x2").setComment(I18n.get("supermelee.teampaarungen.comment.doubl.tripl.doublette")));
 		getSheetHelper().setStringValueInCell(
 				headerVal.spaltePlusEins().setValue("∑x3").setComment(I18n.get("supermelee.teampaarungen.comment.doubl.tripl.triplette")));
-		getSheetHelper().setStringValueInCell(headerVal.spaltePlusEins().setValue("Tripl")
+		getSheetHelper().setStringValueInCell(headerVal.spaltePlusEins().setValue(I18n.get("supermelee.teampaarungen.header.triplette"))
 				.setComment(I18n.get("supermelee.teampaarungen.comment.nur.triplette.spieler")));
 		getSheetHelper().setStringValueInCell(headerVal.spaltePlusEins().setValue("∑x3")
 				.setComment(I18n.get("supermelee.teampaarungen.comment.nur.triplette.teams")));
