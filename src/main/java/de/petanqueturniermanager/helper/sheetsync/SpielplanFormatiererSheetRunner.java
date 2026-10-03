@@ -12,6 +12,7 @@ import com.sun.star.beans.XPropertySet;
 import com.sun.star.sheet.XSheetConditionalEntries;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.uno.XComponentContext;
+import com.sun.star.util.XProtectable;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
@@ -39,6 +40,9 @@ import de.petanqueturniermanager.toolbar.TurnierModus;
  *   <li>Bedingte Formatierung editierbarer Felder prüfen und setzen, wenn
  *       sie fehlt (z.B. nach Blattschutz-Toggle oder LO-Reload).</li>
  * </ol>
+ * Beide Prüfungen laufen zuerst rein lesend. Nur wenn etwas zu reparieren ist oder das Blatt
+ * im Turniermodus ungeschützt vorgefunden wird, öffnet der Runner einen Blattschutz-Scope.
+ * <p>
  * Die System-spezifische Konfiguration (Ranges, Farben, Blattschutz) liefert
  * der {@link KonfigSupplier}, der im Factory-Lambda pro System definiert wird.
  */
@@ -78,8 +82,20 @@ public final class SpielplanFormatiererSheetRunner extends SheetRunner implement
         SpielplanFormatiererKonfig konfig = konfigSupplier.berechne(this);
         if (konfig == null) return;
 
+        // Zuerst ausschließlich lesen. Beim üblichen Tab-Wechsel ist das Blatt
+        // bereits korrekt formatiert und geschützt; dann darf weder ein Blattschutz-Scope
+        // geöffnet noch ein Protect/Unprotect-Zyklus für sämtliche Turnierblätter
+        // ausgelöst werden.
         boolean mitBlattschutz = konfig.blattschutzKonfig() != null && TurnierModus.get().istAktiv();
+        boolean zebraReparaturNoetig = SheetHelper.brauchtZebraReparatur(this,
+                konfig.datenRange(), konfig.geradeFarbe(), konfig.ungeradeFarbe());
+        boolean cfReparaturNoetig = cfFehlt(konfig);
+        boolean schutzReparaturNoetig = mitBlattschutz && !istGeschuetzt();
+        if (!zebraReparaturNoetig && !cfReparaturNoetig && !schutzReparaturNoetig) return;
+
         if (mitBlattschutz) {
+            // Das Scope-Ende schützt alle Blätter der Turnier-Konfiguration – damit wird auch
+            // ein ungeschützt vorgefundenes Blatt wieder gesperrt.
             BlattschutzManager.get().beginCommandScope(konfig.blattschutzKonfig(), getWorkingSpreadsheet());
             // SheetRunner.run() ruft endCommandScope() immer im finally – kein manuelles close nötig.
         }
@@ -87,8 +103,10 @@ public final class SpielplanFormatiererSheetRunner extends SheetRunner implement
         // Kein ohneModifiedFlag nötig: Dies ist ein transparenter Lauf (siehe
         // istModifiedFlagTransparent()) – SheetRunner.run() stellt den Vor-Lauf-Modified-Zustand
         // nach dem Freigeben des ControllerLocks wieder her und unterdrückt das autoSave.
-        formatiereZebra(konfig);
-        if (cfFehlt(konfig)) {
+        if (zebraReparaturNoetig) {
+            formatiereZebra(konfig);
+        }
+        if (cfReparaturNoetig) {
             setzeEditierbarCF(konfig);
         }
     }
@@ -105,6 +123,10 @@ public final class SpielplanFormatiererSheetRunner extends SheetRunner implement
     private void formatiereZebra(SpielplanFormatiererKonfig konfig) throws GenerateException {
         SheetHelper.faerbeZeilenAbwechselnd(this, konfig.datenRange(),
                 konfig.geradeFarbe(), konfig.ungeradeFarbe());
+    }
+
+    private boolean istGeschuetzt() {
+        return Lo.qi(XProtectable.class, xSheet).isProtected();
     }
 
     private boolean cfFehlt(SpielplanFormatiererKonfig konfig) {

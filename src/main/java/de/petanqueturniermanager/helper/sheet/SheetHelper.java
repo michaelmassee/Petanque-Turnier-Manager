@@ -7,6 +7,7 @@ package de.petanqueturniermanager.helper.sheet;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -913,6 +914,7 @@ public class SheetHelper {
 	/**
 	 * Färbt Zeilen im angegebenen Bereich abwechselnd direkt (nicht via bedingte Formatierung).<br>
 	 * Gerade Zeilen (ROW()-basiert, 1-indiziert) erhalten {@code geradeFarbe}, ungerade {@code ungeradeFarbe}.
+	 * Bereits korrekt gefärbte Zeilengruppen bleiben unangetastet.
 	 *
 	 * @param iSheet        Ziel-Sheet
 	 * @param range         Zielbereich
@@ -921,37 +923,74 @@ public class SheetHelper {
 	 */
 	public static void faerbeZeilenAbwechselnd(ISheet iSheet, RangePosition range,
 			int geradeFarbe, int ungeradeFarbe) throws GenerateException {
-		var xSheet = iSheet.getXSpreadSheet();
+		for (ZebraTeil teil : zebraTeile(iSheet, range, geradeFarbe, ungeradeFarbe)) {
+			if (!hatHintergrund(teil)) {
+				setzeHintergrund(teil);
+			}
+		}
+	}
+
+	/**
+	 * Prüft rein lesend, ob {@link #faerbeZeilenAbwechselnd} im Bereich etwas schreiben müsste.
+	 * <p>
+	 * Pro Farbe genügt ein Lesezugriff auf einen Multi-Range-Container, unabhängig von der
+	 * Zeilenanzahl. Ein nicht nutzbarer Bereich oder ein bereits geschlossenes Dokument gilt als
+	 * nicht reparaturbedürftig, weil auch das Färben dort nichts schreiben würde.
+	 *
+	 * @return {@code true}, wenn mindestens eine Zeilengruppe nicht die Soll-Farbe hat
+	 */
+	public static boolean brauchtZebraReparatur(ISheet iSheet, RangePosition range,
+			int geradeFarbe, int ungeradeFarbe) throws GenerateException {
+		try {
+			return zebraTeile(iSheet, range, geradeFarbe, ungeradeFarbe).stream()
+					.anyMatch(teil -> !hatHintergrund(teil));
+		} catch (DisposedException e) {
+			logger.debug("Zebra-Prüfung übersprungen: Dokument bereits geschlossen", e);
+			return false;
+		}
+	}
+
+	/** Alle Zeilen einer Farbe im Zebra-Bereich als ein Multi-Range samt Soll-Farbe. */
+	private record ZebraTeil(XSheetCellRanges ranges, int sollFarbe) {
+	}
+
+	/**
+	 * Zerlegt den Bereich in die Zeilengruppen für gerade und ungerade Zeilennummern.
+	 * Einzige Stelle, die die Zuordnung Zeile → Farbe festlegt.
+	 *
+	 * @return nicht-leere Zeilengruppen; leer, wenn der Bereich nicht nutzbar ist
+	 */
+	private static List<ZebraTeil> zebraTeile(ISheet iSheet, RangePosition range,
+			int geradeFarbe, int ungeradeFarbe) throws GenerateException {
 		int startSpalte = range.getStartSpalte();
 		int endSpalte = range.getEndeSpalte();
 		int startZeile = range.getStartZeile();
 		int endZeile = range.getEndeZeile();
 		if (endZeile < startZeile) {
-			return;
+			return List.of();
 		}
 
-		// Sheet-Index aus dem Zielbereich ermitteln
+		var xSheet = iSheet.getXSpreadSheet();
 		short sheetIdx;
 		try {
 			XCellRange fullRange = xSheet.getCellRangeByPosition(startSpalte, startZeile, endSpalte, endZeile);
 			sheetIdx = Lo.qi(XCellRangeAddressable.class, fullRange).getRangeAddress().Sheet;
 		} catch (IndexOutOfBoundsException | IllegalArgumentException e) {
 			logger.error(e.getMessage(), e);
-			return;
+			return List.of();
 		} catch (DisposedException e) {
 			logger.debug("Zebra-Formatierung übersprungen: Dokument bereits geschlossen", e);
-			return;
+			return List.of();
 		} catch (RuntimeException e) {
 			logger.warn("Zebra-Formatierung übersprungen: Zielbereich nicht nutzbar", e);
-			return;
+			return List.of();
 		}
 
-		// Multi-Range-Container über den Service "com.sun.star.sheet.SheetCellRanges"
 		XSpreadsheetDocument doc = iSheet.getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
 		XMultiServiceFactory factory = Lo.qi(XMultiServiceFactory.class, doc);
 		if (factory == null) {
-			logger.error("XMultiServiceFactory==null beim faerbeZeilenAbwechselnd");
-			return;
+			logger.error("XMultiServiceFactory==null bei der Zebra-Formatierung");
+			return List.of();
 		}
 
 		XSheetCellRanges geradeRanges;
@@ -963,7 +1002,7 @@ public class SheetHelper {
 					factory.createInstance("com.sun.star.sheet.SheetCellRanges"));
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
-			return;
+			return List.of();
 		}
 
 		XSheetCellRangeContainer geradeContainer = Lo.qi(XSheetCellRangeContainer.class, geradeRanges);
@@ -982,28 +1021,36 @@ public class SheetHelper {
 			}
 		}
 
+		var teile = new ArrayList<ZebraTeil>(2);
 		if (hatGerade) {
-			setzeHintergrundFallsAbweichend(geradeRanges, geradeFarbe);
+			teile.add(new ZebraTeil(geradeRanges, geradeFarbe));
 		}
 		if (hatUngerade) {
-			setzeHintergrundFallsAbweichend(ungeradeRanges, ungeradeFarbe);
+			teile.add(new ZebraTeil(ungeradeRanges, ungeradeFarbe));
 		}
+		return teile;
 	}
 
 	/**
-	 * Setzt {@code CellBackColor} eines Range-Containers nur, wenn die Ist-Farbe vom Soll abweicht.
-	 * <p>
 	 * {@code getPropertyValue("CellBackColor")} liefert bei durchgehend einheitlicher Farbe genau
-	 * diese, bei gemischten Farben {@code -1}. Dadurch bleibt bereits korrekt gefärbtes Zebra
-	 * unangetastet (kein Schreibzugriff → kein Repaint, kein Modified-Flag).
+	 * diese, bei gemischten Farben {@code -1}.
+	 *
+	 * @return {@code true}, wenn alle Zellen der Zeilengruppe die Soll-Farbe haben; bei einem
+	 *         Lesefehler {@code false}, damit der Schreibpfad greift
 	 */
-	private static void setzeHintergrundFallsAbweichend(XSheetCellRanges ranges, int sollFarbe) {
-		XPropertySet props = Lo.qi(XPropertySet.class, ranges);
+	private static boolean hatHintergrund(ZebraTeil teil) {
 		try {
-			if (props.getPropertyValue("CellBackColor") instanceof Integer istFarbe && istFarbe == sollFarbe) {
-				return;
-			}
-			props.setPropertyValue("CellBackColor", sollFarbe);
+			return Lo.qi(XPropertySet.class, teil.ranges()).getPropertyValue("CellBackColor") instanceof Integer istFarbe
+					&& istFarbe == teil.sollFarbe();
+		} catch (UnknownPropertyException | WrappedTargetException e) {
+			logger.warn("Hintergrundfarbe konnte nicht gelesen werden", e);
+			return false;
+		}
+	}
+
+	private static void setzeHintergrund(ZebraTeil teil) {
+		try {
+			Lo.qi(XPropertySet.class, teil.ranges()).setPropertyValue("CellBackColor", teil.sollFarbe());
 		} catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException
 				| WrappedTargetException e) {
 			logger.error(e.getMessage(), e);
