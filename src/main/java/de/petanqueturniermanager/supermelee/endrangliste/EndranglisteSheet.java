@@ -290,7 +290,7 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 				.setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setHoriJustify(CellHoriJustify.CENTER);
 		StringCellValue headerStreichspieltag = StringCellValue.from(getXSpreadSheet(), startStreichspieltag)
 				.setEndPosMerge(endStreichspieltag).setCharWeight(FontWeight.LIGHT).setRotateAngle(27000)
-				.setVertJustify(CellVertJustify2.CENTER).setValue("Streich")
+				.setVertJustify(CellVertJustify2.CENTER).setValue(I18n.get("supermelee.endrangliste.header.streich"))
 				.setCellBackColor(endRanglisteFormatter.getHeaderFarbe())
 				.setBorder(BorderFactory.from().allBold().toBorder())
 				.setComment(I18n.get("supermelee.endrangliste.comment.streich.spieltag"))
@@ -341,7 +341,7 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 				.setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setHoriJustify(CellHoriJustify.CENTER);
 		StringCellValue headerAnzTage = StringCellValue.from(getXSpreadSheet(), start).setEndPosMerge(end)
 				.setCharWeight(FontWeight.LIGHT).setRotateAngle(27000).setVertJustify(CellVertJustify2.CENTER)
-				.setValue("Tage").setCellBackColor(endRanglisteFormatter.getHeaderFarbe())
+				.setValue(I18n.get("supermelee.endrangliste.header.tage")).setCellBackColor(endRanglisteFormatter.getHeaderFarbe())
 				.setBorder(BorderFactory.from().allBold().toBorder())
 				.setComment(I18n.get("supermelee.endrangliste.comment.gespielte.tage"))
 				.setColumnProperties(celColumProp);
@@ -640,14 +640,30 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 	 * Prüft, ob die vorhandene Endrangliste noch zu der Zahl der Spieltag-Ranglisten
 	 * passt. Ein inkrementelles Update kann Werte ändern, aber keine zusätzlichen
 	 * Spieltag-Blöcke samt Headern und Sortierspalten anlegen.
+	 * <p>
+	 * Geprüft werden die Überschriften an den aus der aktuellen Spieltag-Anzahl
+	 * berechneten Positionen: der letzte Spieltag-Block ("N. Spieltag") und direkt
+	 * dahinter der Summen-Block. Beide Texte kommen aus I18n; ein in einer anderen
+	 * Sprache aufgebautes Blatt gilt deshalb als veraltet und wird einmal neu
+	 * aufgebaut – das ist gewollt und unschädlich.
 	 */
 	public boolean hatAktuellesSpieltageLayout(XSpreadsheet sheet) throws GenerateException {
 		if (sheet == null) {
 			return false;
 		}
-		String header = getSheetHelper().getTextFromCell(sheet,
-				Position.from(getErsteSummeSpalte(), AbstractSuperMeleeRanglisteFormatter.ERSTE_KOPFDATEN_ZEILE));
-		return "Summe".equals(header);
+		int anzSpieltage = getAnzahlSpieltage();
+		if (anzSpieltage < 1) {
+			return false;
+		}
+		int ersteSummeSpalte = getErsteSummeSpalte();
+		// Der Spieltag-Header ist über den Block verbunden, der Text steht in dessen erster Zelle
+		int letzterSpieltagSpalte = ersteSummeSpalte - getAnzSpaltenInSpieltag();
+		String spieltagHeader = getSheetHelper().getTextFromCell(sheet,
+				Position.from(letzterSpieltagSpalte, AbstractSuperMeleeRanglisteFormatter.ERSTE_KOPFDATEN_ZEILE));
+		String summeHeader = getSheetHelper().getTextFromCell(sheet,
+				Position.from(ersteSummeSpalte, AbstractSuperMeleeRanglisteFormatter.ERSTE_KOPFDATEN_ZEILE));
+		return EndRanglisteFormatter.spieltagHeader(anzSpieltage).equals(spieltagHeader)
+				&& AbstractSuperMeleeRanglisteFormatter.summeHeader().equals(summeHeader);
 	}
 
 	@Override

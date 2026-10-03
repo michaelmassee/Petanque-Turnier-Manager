@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -20,9 +21,11 @@ import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
+import de.petanqueturniermanager.supermelee.AbstractSuperMeleeRanglisteFormatter;
 import de.petanqueturniermanager.supermelee.RanglisteTestDaten;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
@@ -254,17 +257,7 @@ public class EndranglisteSheetUITest extends BaseCalcUITest {
 	@Test
 	public void sortierenBautEndranglisteNeuAufWennEinWeitererSpieltagHinzugekommenIst()
 			throws GenerateException {
-		testMeldeListeErstellen.initMitAlleDieSpielen(ANZ_MELDUNGEN);
-
-		for (int i = 1; i <= ANZ_SPIELTAGE; i++) {
-			SpielTagNr spieltag = SpielTagNr.from(i);
-			meldeListeSheet_NeuerSpieltag.setAktiveSpieltag(spieltag);
-			meldeListeSheet_NeuerSpieltag.setAktiveSpielRunde(SpielRundeNr.from(1));
-			testMeldeListeErstellen.addMitAlleDieSpielenAktuelleSpieltag(spieltag);
-			ranglisteTestDaten.erstelleTestSpielrunden(ANZ_RUNDEN, false, spieltag);
-			spieltagRangliste.run();
-		}
-		endranglisteSheet.run();
+		erstelleEndranglisteMitDreiSpieltagen();
 
 		// Der neue Spieltag existiert bereits, die Endrangliste stammt aber noch
 		// aus dem Stand mit drei Spieltagen – genau der Fall des Anwenderdokuments.
@@ -276,6 +269,92 @@ public class EndranglisteSheetUITest extends BaseCalcUITest {
 		assertThat(endranglisteSheet.hatAktuellesSpieltageLayout(endranglisteSheet.getXSpreadSheet())).isTrue();
 		assertThat(endranglisteSheet.getErsteSummeSpalte()).isEqualTo(EndranglisteSheet.ERSTE_SPIELTAG_SPALTE
 				+ (4 * SuperMeleeSummenSpalten.ANZAHL_SPALTEN_IN_SUMME));
+	}
+
+	@Test
+	public void layoutGiltAlsVeraltetWennUeberschriftDesLetztenSpieltagsNichtPasst()
+			throws GenerateException {
+		erstelleEndranglisteMitDreiSpieltagen();
+		XSpreadsheet sheet = endranglisteSheet.getXSpreadSheet();
+		assertThat(endranglisteSheet.hatAktuellesSpieltageLayout(sheet)).isTrue();
+
+		// "Summe" bleibt an der berechneten Stelle, nur der Block davor passt nicht
+		int letzterSpieltagSpalte = EndranglisteSheet.ERSTE_SPIELTAG_SPALTE
+				+ ((ANZ_SPIELTAGE - 1) * SuperMeleeSummenSpalten.ANZAHL_SPALTEN_IN_SUMME);
+		Position headerPos = Position.from(letzterSpieltagSpalte,
+				AbstractSuperMeleeRanglisteFormatter.ERSTE_KOPFDATEN_ZEILE);
+		assertThat(sheetHlp.getTextFromCell(sheet, headerPos))
+				.isEqualTo(EndRanglisteFormatter.spieltagHeader(ANZ_SPIELTAGE));
+		sheetHlp.setStringValueInCell(StringCellValue.from(sheet, headerPos, EndRanglisteFormatter.spieltagHeader(2)));
+
+		assertThat(endranglisteSheet.hatAktuellesSpieltageLayout(sheet)).isFalse();
+
+		endranglisteSheetSort.run();
+
+		assertThat(endranglisteSheet.hatAktuellesSpieltageLayout(endranglisteSheet.getXSpreadSheet())).isTrue();
+	}
+
+	@Test
+	public void layoutGiltAlsVeraltetWennSummenUeberschriftFehlt() throws GenerateException {
+		erstelleEndranglisteMitDreiSpieltagen();
+		XSpreadsheet sheet = endranglisteSheet.getXSpreadSheet();
+
+		Position summePos = Position.from(endranglisteSheet.getErsteSummeSpalte(),
+				AbstractSuperMeleeRanglisteFormatter.ERSTE_KOPFDATEN_ZEILE);
+		assertThat(sheetHlp.getTextFromCell(sheet, summePos))
+				.isEqualTo(AbstractSuperMeleeRanglisteFormatter.summeHeader());
+		sheetHlp.setStringValueInCell(StringCellValue.from(sheet, summePos, "x"));
+
+		assertThat(endranglisteSheet.hatAktuellesSpieltageLayout(sheet)).isFalse();
+	}
+
+	@Test
+	public void spracheGewechselt_endranglisteWirdInNeuerSpracheNeuAufgebaut() throws GenerateException {
+		erstelleEndranglisteMitDreiSpieltagen();
+		XSpreadsheet sheet = endranglisteSheet.getXSpreadSheet();
+		int letzterSpieltagSpalte = endranglisteSheet.getErsteSummeSpalte()
+				- SuperMeleeSummenSpalten.ANZAHL_SPALTEN_IN_SUMME;
+		Position spieltagPos = Position.from(letzterSpieltagSpalte,
+				AbstractSuperMeleeRanglisteFormatter.ERSTE_KOPFDATEN_ZEILE);
+		// Hinter dem Summen-Block: Spalte "Tage", danach "Streich"
+		int tageSpalte = endranglisteSheet.getErsteSummeSpalte() + SuperMeleeSummenSpalten.ANZAHL_SPALTEN_IN_SUMME;
+		Position tagePos = Position.from(tageSpalte, AbstractSuperMeleeRanglisteFormatter.ERSTE_KOPFDATEN_ZEILE);
+		Position streichPos = Position.from(tageSpalte + 1, AbstractSuperMeleeRanglisteFormatter.ERSTE_KOPFDATEN_ZEILE);
+		assertThat(sheetHlp.getTextFromCell(sheet, spieltagPos)).isEqualTo("3. Spieltag");
+		assertThat(sheetHlp.getTextFromCell(sheet, tagePos)).isEqualTo("Tage");
+		assertThat(sheetHlp.getTextFromCell(sheet, streichPos)).isEqualTo("Streich");
+
+		try {
+			I18n.initFuerTest(Locale.ENGLISH);
+			// Deutsch aufgebautes Blatt passt nicht zu den englischen Überschriften
+			assertThat(endranglisteSheet.hatAktuellesSpieltageLayout(sheet)).isFalse();
+
+			endranglisteSheetSort.run();
+
+			XSpreadsheet neu = endranglisteSheet.getXSpreadSheet();
+			assertThat(endranglisteSheet.hatAktuellesSpieltageLayout(neu)).isTrue();
+			assertThat(sheetHlp.getTextFromCell(neu, spieltagPos)).isEqualTo("Match Day 3");
+			assertThat(sheetHlp.getTextFromCell(neu, Position.from(endranglisteSheet.getErsteSummeSpalte(),
+					AbstractSuperMeleeRanglisteFormatter.ERSTE_KOPFDATEN_ZEILE))).isEqualTo("Total");
+			assertThat(sheetHlp.getTextFromCell(neu, tagePos)).isEqualTo("Days");
+			assertThat(sheetHlp.getTextFromCell(neu, streichPos)).isEqualTo("Scratch");
+		} finally {
+			I18n.initFuerTest(Locale.GERMAN);
+		}
+	}
+
+	private void erstelleEndranglisteMitDreiSpieltagen() throws GenerateException {
+		testMeldeListeErstellen.initMitAlleDieSpielen(ANZ_MELDUNGEN);
+
+		for (int i = 1; i <= ANZ_SPIELTAGE; i++) {
+			SpielTagNr spieltag = SpielTagNr.from(i);
+			meldeListeSheet_NeuerSpieltag.setAktiveSpieltag(spieltag);
+			meldeListeSheet_NeuerSpieltag.setAktiveSpielRunde(SpielRundeNr.from(1));
+			testMeldeListeErstellen.addMitAlleDieSpielenAktuelleSpieltag(spieltag);
+			ranglisteTestDaten.erstelleTestSpielrunden(ANZ_RUNDEN, false, spieltag);
+			spieltagRangliste.run();
+		}
+		endranglisteSheet.run();
 	}
 
 	private int summiereEndRanglistePunktePlus() throws GenerateException {

@@ -127,10 +127,18 @@ public abstract class AbstractSuperMeleeRanglisteFormatter {
 
 	}
 
+	/**
+	 * Überschrift über dem Summen-Block. Wird beim Aufbau geschrieben und von
+	 * {@code EndranglisteSheet#hatAktuellesSpieltageLayout} wieder gelesen.
+	 */
+	public static String summeHeader() {
+		return I18n.get("column.header.summe");
+	}
+
 	protected void formatErsteZeileSummeSpalte(int summeSpalte) throws GenerateException {
 		ColumnProperties columnProperties = ColumnProperties.from().setHoriJustify(CellHoriJustify.CENTER);
 		StringCellValue headerSumme = StringCellValue
-				.from(getSheet(), Position.from(summeSpalte + SPIELE_PLUS_OFFS, ERSTE_KOPFDATEN_ZEILE), "Summe")
+				.from(getSheet(), Position.from(summeSpalte + SPIELE_PLUS_OFFS, ERSTE_KOPFDATEN_ZEILE), summeHeader())
 				.setColumnProperties(columnProperties).setEndPosMergeSpaltePlus(5)
 				.setBorder(BorderFactory.from().allThin().boldLn().forLeft().forTop().forRight().toBorder())
 				.setCellBackColor(getHeaderFarbe()).setShrinkToFit(true);
