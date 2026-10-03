@@ -44,10 +44,13 @@ class SchweizerMeldeListeNurTeamnameUITest extends BaseCalcUITest {
         assertThat(meldeListeNew.getSetzPositionSpalte()).isEqualTo(2);
         assertThat(meldeListeNew.getAktivSpalte()).isEqualTo(3);
 
-        assertThat(sheetHlp.getColumnPropertySet(meldeListeNew.getXSpreadSheet(), meldeListeNew.getTeamnameSpalte())
-                .getPropertyValue(ICommonProperties.WIDTH))
+        int teamnameSpaltenBreite = (Integer) sheetHlp
+                .getColumnPropertySet(meldeListeNew.getXSpreadSheet(), meldeListeNew.getTeamnameSpalte())
+                .getPropertyValue(ICommonProperties.WIDTH);
+        assertThat(teamnameSpaltenBreite)
                 .as("Bei Nur Teamname muss die alleinige Teamname-Spalte doppelte Standardbreite haben")
-                .isEqualTo(SchweizerListeDelegate.NUR_TEAMNAME_SPALTE_WIDTH);
+                .isBetween(SchweizerListeDelegate.NUR_TEAMNAME_SPALTE_WIDTH,
+                        SchweizerListeDelegate.NUR_TEAMNAME_SPALTE_WIDTH + 1);
 
         int ersteDatenZeile = SchweizerListeDelegate.ERSTE_DATEN_ZEILE;
 

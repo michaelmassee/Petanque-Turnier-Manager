@@ -268,7 +268,7 @@ public class LigaTurnierTestDatenUITest extends BaseCalcUITest {
 				}
 				assertThat(rangeData.get(zeile).get(5).getStringVal())
 						.as("Team %d Termin %s darf kein Freispiel enthalten", teamNr, spielNr)
-						.isNotEqualTo("Freispiel");
+						.isNotEqualTo(I18n.get("spielplan.freispiel.name"));
 				pruefeTerminErgebnis(rangeData, zeile, spielplanDaten);
 				pruefeTerminStatus(termine, rangeData, zeile);
 				anzahlTermine++;
@@ -295,7 +295,7 @@ public class LigaTurnierTestDatenUITest extends BaseCalcUITest {
 			if (spielNr == null || spielNr.isBlank()) {
 				break;
 			}
-			if (!"Freispiel".equals(row.get(LigaSpielPlanSheet.NAME_B_SPALTE).getStringVal())) {
+			if (!I18n.get("spielplan.freispiel.name").equals(row.get(LigaSpielPlanSheet.NAME_B_SPALTE).getStringVal())) {
 				if (ersteEchteBegegnungZeile < 0) {
 					ersteEchteBegegnungZeile = zeile;
 				}
@@ -315,7 +315,7 @@ public class LigaTurnierTestDatenUITest extends BaseCalcUITest {
 				if (spalte == LigaSpielPlanSheet.NAME_B_SPALTE) {
 					assertThat(row.get(spalte).getStringVal())
 							.as("%s: Freispiel-Hinweis muss in der Gast-Spalte stehen", spielNr)
-							.isEqualTo("Freispiel");
+							.isEqualTo(I18n.get("spielplan.freispiel.name"));
 					continue;
 				}
 				assertThat(row.get(spalte).getStringVal())
