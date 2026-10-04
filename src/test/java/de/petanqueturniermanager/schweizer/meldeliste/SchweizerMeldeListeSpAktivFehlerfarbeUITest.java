@@ -19,6 +19,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.position.Position;
+import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 
 /**
  * Regressionstest: die Fehlerfarben-CF der Setzpositions- und Aktiv-Spalte darf nach dem
@@ -81,6 +82,20 @@ class SchweizerMeldeListeSpAktivFehlerfarbeUITest extends BaseCalcUITest {
 		assertThat(validation.getPropertyValue("ShowErrorMessage")).isEqualTo(Boolean.TRUE);
 		assertThat((String) validation.getPropertyValue("ErrorMessage")).contains("1, 2");
 		assertThat(Lo.qi(XSheetCondition.class, validation).getFormula1()).isEqualTo("{1;2}");
+	}
+
+	@Test
+	void namensfelderBehaltenEditierfarbeNebenDerDuplikatPruefung() throws Exception {
+		SchweizerMeldeListeSheetNew meldeListeNew = new SchweizerMeldeListeSheetNew(wkingSpreadsheet);
+		meldeListeNew.createMeldelisteWithParams(Formation.DOUBLETTE, true, false);
+
+		var formeln = alleConditionalFormatFormeln(meldeListeNew.getXSpreadSheet(),
+				Position.from(meldeListeNew.getVornameSpalte(0), SchweizerListeDelegate.ERSTE_DATEN_ZEILE));
+
+		assertThat(formeln.getFirst()).as("Die Duplikat-Prüfung muss vor der Editierfarbe Vorrang haben")
+				.containsIgnoringCase("COUNTIFS");
+		assertThat(formeln).as("Vor- und Nachname bleiben als editierbare Eingabefelder hervorgehoben")
+				.anySatisfy(formel -> assertThat(formel).contains(EditierbaresZelleFormatHelper.PROPERTY_KEY));
 	}
 
 	private java.util.List<String> alleConditionalFormatFormeln(XSpreadsheet sheet, Position pos)

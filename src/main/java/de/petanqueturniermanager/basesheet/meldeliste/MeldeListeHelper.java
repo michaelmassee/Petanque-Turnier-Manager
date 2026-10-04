@@ -43,6 +43,7 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
+import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
@@ -136,10 +137,8 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	 * Vorname 2, Nachname 2); eine einzelne COUNTIFS-Formel über den gesamten
 	 * Bereich würde diese Spalten fälschlich als einen Namen behandeln.
 	 */
-	public void insertFormulaFuerDoppelteSpielerNamenGeradeUngradeFarbe(int[] vornameSpalten, int[] nachnameSpalten,
-			int ersteDatenZeile, int letzteDatenZeile, ISheet sheet,
-			MeldungenHintergrundFarbeGeradeStyle geradeStyle,
-			MeldungenHintergrundFarbeUnGeradeStyle ungeradeStyle) throws GenerateException {
+	public void insertFormulaFuerDoppelteSpielerNamen(int[] vornameSpalten, int[] nachnameSpalten,
+			int ersteDatenZeile, int letzteDatenZeile, ISheet sheet) throws GenerateException {
 		checkArgument(vornameSpalten.length > 0 && vornameSpalten.length == nachnameSpalten.length,
 				"Vor- und Nachnamensspalten müssen paarweise angegeben werden");
 		for (int spieler = 0; spieler < vornameSpalten.length; spieler++) {
@@ -151,7 +150,11 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 					ersteDatenZeile);
 			ConditionalFormatHelper.from(sheet, nameRange).clear()
 					.formula1(formel).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndDoReset();
-			SheetHelper.faerbeZeilenAbwechselnd(sheet, nameRange, geradeStyle.getFarbe(), ungeradeStyle.getFarbe());
+			// Die Duplikat-Prüfung ersetzt ihre bedingten Formate vollständig. Die
+			// Editierfarbe muss deshalb erst danach angehängt werden: Fehler bleibt
+			// vorrangig, leere bzw. gültige Namenszellen bleiben klar als Eingabefeld
+			// erkennbar (statt wieder die blaue Standard-Zeilenfarbe zu erhalten).
+			EditierbaresZelleFormatHelper.anwenden(sheet, nameRange);
 		}
 	}
 

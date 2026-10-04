@@ -273,8 +273,8 @@ class TripTeteMeldeListeDelegate implements MeldeListeKonstanten {
 			vornamen[s] = getVornameSpalte(s);
 			nachnamen[s] = getNachnameSpalte(s);
 		}
-		meldeListeHelper.insertFormulaFuerDoppelteSpielerNamenGeradeUngradeFarbe(vornamen, nachnamen,
-				ERSTE_DATEN_ZEILE_OVERRIDE, letzteDatenZeile, sheet, farbeGerade, farbeUngerade);
+		meldeListeHelper.insertFormulaFuerDoppelteSpielerNamen(vornamen, nachnamen,
+				ERSTE_DATEN_ZEILE_OVERRIDE, letzteDatenZeile, sheet);
 	}
 
     private void formatDatenSpalten() throws GenerateException {

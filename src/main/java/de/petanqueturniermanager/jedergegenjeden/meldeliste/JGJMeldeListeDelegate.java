@@ -301,10 +301,8 @@ class JGJMeldeListeDelegate implements MeldeListeKonstanten {
 			vornamen[s] = getVornameSpalte(s);
 			nachnamen[s] = getNachnameSpalte(s);
 		}
-		meldeListeHelper.insertFormulaFuerDoppelteSpielerNamenGeradeUngradeFarbe(vornamen, nachnamen,
-				ERSTE_DATEN_ZEILE, letzteDatenZeile, sheet,
-				konfigurationSheet.getMeldeListeHintergrundFarbeGeradeStyle(),
-				konfigurationSheet.getMeldeListeHintergrundFarbeUnGeradeStyle());
+		meldeListeHelper.insertFormulaFuerDoppelteSpielerNamen(vornamen, nachnamen,
+				ERSTE_DATEN_ZEILE, letzteDatenZeile, sheet);
 	}
 
 	void formatDatenSpalten() throws GenerateException {
