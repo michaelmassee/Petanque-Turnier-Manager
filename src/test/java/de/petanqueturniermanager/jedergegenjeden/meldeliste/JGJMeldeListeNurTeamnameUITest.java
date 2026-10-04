@@ -8,6 +8,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
 
 import com.sun.star.beans.XPropertySet;
+import com.sun.star.sheet.ValidationType;
+import com.sun.star.sheet.XSheetCondition;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.util.CellProtection;
 import com.sun.star.util.XProtectable;
@@ -72,6 +74,26 @@ class JGJMeldeListeNurTeamnameUITest extends BaseCalcUITest {
         // (bei NUR_TEAMNAME gar nicht existierende) Spieler-Spalte.
         assertThat(meldeListeNew.getAktiveMeldungen().getMeldungen()).hasSize(4);
         assertThat(meldeListeNew.getAlleMeldungen().getMeldungen()).hasSize(4);
+    }
+
+    @Test
+    void aktivSpalteHatNurDieJgjTeilnahmeDatengueltigkeit() throws Exception {
+        JGJMeldeListeSheet_New meldeListeNew = new JGJMeldeListeSheet_New(wkingSpreadsheet);
+        meldeListeNew.createMeldelisteWithParams(Formation.NUR_TEAMNAME, false, false, SpielplanTeamAnzeige.NR);
+        JGJMeldeListeDelegate spaltenSonde = new JGJMeldeListeDelegate(meldeListeNew, wkingSpreadsheet,
+                TurnierSystem.JGJ);
+
+        XPropertySet cellProperties = Lo.qi(XPropertySet.class,
+                meldeListeNew.getXSpreadSheet().getCellByPosition(spaltenSonde.getAktivSpalte(),
+                        JGJMeldeListeDelegate.ERSTE_DATEN_ZEILE));
+        XPropertySet validation = Lo.qi(XPropertySet.class, cellProperties.getPropertyValue("Validation"));
+
+        assertThat(validation.getPropertyValue("Type")).isEqualTo(ValidationType.LIST);
+        assertThat(validation.getPropertyValue("ShowInputMessage")).isEqualTo(Boolean.TRUE);
+        assertThat((String) validation.getPropertyValue("InputMessage")).contains("1 = Nimmt teil").doesNotContain("2 =");
+        assertThat(validation.getPropertyValue("ShowErrorMessage")).isEqualTo(Boolean.TRUE);
+        assertThat((String) validation.getPropertyValue("ErrorMessage")).contains("Nur 1").doesNotContain("1, 2");
+        assertThat(Lo.qi(XSheetCondition.class, validation).getFormula1()).isEqualTo("{1}");
     }
 
     /**

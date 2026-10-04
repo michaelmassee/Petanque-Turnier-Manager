@@ -11,9 +11,13 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.beans.XPropertySet;
+import com.sun.star.sheet.ValidationType;
+import com.sun.star.sheet.XSheetCondition;
 
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
@@ -67,6 +71,21 @@ public class MeldeListeSheetUITest extends BaseCalcUITest {
 
 		// waitEnter();
 
+	}
+
+	@Test
+	public void spieltagSpalteHatAktivDatengueltigkeit() throws Exception {
+		TestSuperMeleeMeldeListeErstellen testdaten = new TestSuperMeleeMeldeListeErstellen(wkingSpreadsheet, doc);
+		testdaten.run();
+
+		int spieltagSpalte = testdaten.getMeldeListeSheetNew().aktuelleSpieltagSpalte();
+		XPropertySet cellProperties = Lo.qi(XPropertySet.class,
+				testdaten.getXSpreadSheet().getCellByPosition(spieltagSpalte, MeldeListeSheet_Update.ERSTE_DATEN_ZEILE));
+		XPropertySet validation = Lo.qi(XPropertySet.class, cellProperties.getPropertyValue("Validation"));
+
+		assertThat(validation.getPropertyValue("Type")).isEqualTo(ValidationType.LIST);
+		assertThat(validation.getPropertyValue("IgnoreBlankCells")).isEqualTo(Boolean.TRUE);
+		assertThat(Lo.qi(XSheetCondition.class, validation).getFormula1()).isEqualTo("{1;2}");
 	}
 
 	/**

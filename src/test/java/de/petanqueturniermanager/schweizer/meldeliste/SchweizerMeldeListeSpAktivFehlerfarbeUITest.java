@@ -9,7 +9,9 @@ import org.junit.jupiter.api.Test;
 
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.sheet.XSheetConditionalEntries;
+import com.sun.star.sheet.XSheetCondition;
 import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.sheet.ValidationType;
 import com.sun.star.table.XCell;
 
 import de.petanqueturniermanager.BaseCalcUITest;
@@ -60,6 +62,25 @@ class SchweizerMeldeListeSpAktivFehlerfarbeUITest extends BaseCalcUITest {
 				.as("Aktiv-Spalte muss nach dem vollständigen Sheetaufbau weiterhin eine "
 						+ "ISBLANK-Fehlerprüfung als bedingte Formatierung haben")
 				.anySatisfy(formel -> assertThat(formel).containsIgnoringCase("ISBLANK"));
+	}
+
+	@Test
+	void aktivSpalteHatNativeDatengueltigkeitMitTeilnahmeUndAusstieg() throws Exception {
+		SchweizerMeldeListeSheetNew meldeListeNew = new SchweizerMeldeListeSheetNew(wkingSpreadsheet);
+		meldeListeNew.createMeldelisteWithParams(Formation.DOUBLETTE, true, false);
+
+		XSpreadsheet sheet = meldeListeNew.getXSpreadSheet();
+		XCell xCell = sheet.getCellByPosition(meldeListeNew.getAktivSpalte(), SchweizerListeDelegate.ERSTE_DATEN_ZEILE);
+		XPropertySet cellProperties = Lo.qi(XPropertySet.class, xCell);
+		XPropertySet validation = Lo.qi(XPropertySet.class, cellProperties.getPropertyValue("Validation"));
+
+		assertThat(validation.getPropertyValue("Type")).isEqualTo(ValidationType.LIST);
+		assertThat(validation.getPropertyValue("IgnoreBlankCells")).isEqualTo(Boolean.TRUE);
+		assertThat(validation.getPropertyValue("ShowInputMessage")).isEqualTo(Boolean.TRUE);
+		assertThat((String) validation.getPropertyValue("InputMessage")).contains("1 = Nimmt teil", "2 =");
+		assertThat(validation.getPropertyValue("ShowErrorMessage")).isEqualTo(Boolean.TRUE);
+		assertThat((String) validation.getPropertyValue("ErrorMessage")).contains("1, 2");
+		assertThat(Lo.qi(XSheetCondition.class, validation).getFormula1()).isEqualTo("{1;2}");
 	}
 
 	private java.util.List<String> alleConditionalFormatFormeln(XSpreadsheet sheet, Position pos)
