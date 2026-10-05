@@ -43,7 +43,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
  * <li>Teamname anzeigen (Checkbox)</li>
  * <li>Vereinsname anzeigen (Checkbox)</li>
  * <li>Mêlée-Anmeldung (nur bei Doublette/Triplette)</li>
- * <li>Anzeige im Spielplan: Teamnummer / Teamname (Radio-Buttons)</li>
+ * <li>Anzeige im Spielplan: Teamnummer / Spielernamen / Teamname</li>
  * </ul>
  */
 public class JGJStartDialog {
@@ -121,6 +121,7 @@ public class JGJStartDialog {
 		addLabel(xMSF, cont, "lblSpielplanAnzeige", I18n.get("dialog.jgj.label.spielplan.anzeige"), 8, 62 + y, 80, 10);
 		addListBox(xMSF, cont, "lstSpielplanAnzeige",
 				new String[] { I18n.get("dialog.jgj.spielplan.teamnummer"),
+						I18n.get("dialog.jgj.spielplan.spielernamen"),
 						I18n.get("dialog.jgj.spielplan.teamname") },
 				(short) 0, 92, 60 + y, 70, 12);
 
@@ -183,8 +184,7 @@ public class JGJStartDialog {
 			boolean teamnameAnzeigen = formation == Formation.NUR_TEAMNAME || readCheckBoxState(xcc, "cbTeamname");
 			boolean vereinsnameAnzeigen = readCheckBoxState(xcc, "cbVereinsname");
 			boolean meleeAnmeldung = MeleeAnmeldungDialogOption.istGewaehlt(xcc, formation);
-			TeamAnzeige spielplanAnzeige = readListBoxSelected(xcc, "lstSpielplanAnzeige") == 1
-					? TeamAnzeige.NAME : TeamAnzeige.NR;
+			TeamAnzeige spielplanAnzeige = spielplanAnzeige(readListBoxSelected(xcc, "lstSpielplanAnzeige"));
 			int gruppengroesse = parseGruppengroesse(readEditText(xcc, "editGruppengroesse"));
 			boolean mitRueckrunde = readCheckBoxState(xcc, "cbRueckrunde");
 			result = Optional.of(new StartParameter(formation, teamnameAnzeigen, vereinsnameAnzeigen, meleeAnmeldung,
@@ -195,6 +195,11 @@ public class JGJStartDialog {
 		ProcessBox.from().visibleWennAutomatisch();
 
 		return result;
+	}
+
+	/** Ordnet die Listbox-Reihenfolge zentral der dauerhaft gespeicherten Enum zu. */
+	static TeamAnzeige spielplanAnzeige(short auswahl) {
+		return TeamAnzeige.ausDialogIndex(auswahl);
 	}
 
 	// ---------------------------------------------------------------
