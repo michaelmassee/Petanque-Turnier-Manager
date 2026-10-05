@@ -8,10 +8,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
 
 import com.sun.star.beans.XPropertySet;
-import com.sun.star.sheet.XSheetConditionalEntries;
-import com.sun.star.sheet.XSheetCondition;
-import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.ValidationType;
+import com.sun.star.sheet.XSheetCondition;
+import com.sun.star.sheet.XSheetConditionalEntries;
+import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.XCell;
 
 import de.petanqueturniermanager.BaseCalcUITest;
@@ -48,6 +48,21 @@ class SchweizerMeldeListeSpAktivFehlerfarbeUITest extends BaseCalcUITest {
 				.as("SP-Spalte muss nach dem vollständigen Sheetaufbau weiterhin eine "
 						+ "ISBLANK/ISNUMBER-Fehlerprüfung als bedingte Formatierung haben")
 				.anySatisfy(formel -> assertThat(formel).containsIgnoringCase("ISBLANK"));
+	}
+
+	@Test
+	void spSpalteHatNativeNichtnegativeGanzzahlDatengueltigkeit() throws Exception {
+		SchweizerMeldeListeSheetNew meldeListeNew = new SchweizerMeldeListeSheetNew(wkingSpreadsheet);
+		meldeListeNew.createMeldelisteWithParams(Formation.DOUBLETTE, true, false);
+
+		XCell xCell = meldeListeNew.getXSpreadSheet().getCellByPosition(meldeListeNew.getSetzPositionSpalte(),
+				SchweizerListeDelegate.ERSTE_DATEN_ZEILE);
+		XPropertySet cellProperties = Lo.qi(XPropertySet.class, xCell);
+		XPropertySet validation = Lo.qi(XPropertySet.class, cellProperties.getPropertyValue("Validation"));
+
+		assertThat(validation.getPropertyValue("Type")).isEqualTo(ValidationType.WHOLE);
+		assertThat(validation.getPropertyValue("IgnoreBlankCells")).isEqualTo(Boolean.TRUE);
+		assertThat(Lo.qi(XSheetCondition.class, validation).getFormula1()).isEqualTo("0");
 	}
 
 	@Test

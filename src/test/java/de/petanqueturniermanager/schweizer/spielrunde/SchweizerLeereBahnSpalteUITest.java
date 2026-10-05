@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
 
 import com.sun.star.beans.XPropertySet;
+import com.sun.star.sheet.ValidationAlertStyle;
+import com.sun.star.sheet.ValidationType;
 import com.sun.star.sheet.XSheetCondition;
 import com.sun.star.sheet.XSheetConditionalEntries;
 import com.sun.star.sheet.XSpreadsheet;
@@ -41,6 +43,14 @@ class SchweizerLeereBahnSpalteUITest extends BaseCalcUITest {
         assertThat(hatEditierbareFelderFormatierung(sheet, bahn))
                 .as("leere Bahnspalte muss die Editierfarben-Formatierung erhalten")
                 .isTrue();
+        XPropertySet validation = Lo.qi(XPropertySet.class, Lo.qi(XPropertySet.class,
+                sheet.getCellByPosition(bahn.getSpalte(), bahn.getZeile())).getPropertyValue("Validation"));
+        assertThat(validation.getPropertyValue("Type")).isEqualTo(ValidationType.CUSTOM);
+        assertThat(validation.getPropertyValue("ErrorAlertStyle"))
+                .as("Bahnspalte warnt nur, statt Eingaben abzulehnen").isEqualTo(ValidationAlertStyle.WARNING);
+        assertThat(Lo.qi(XSheetCondition.class, validation).getFormula1())
+                .as("Bahnbezeichnungen als Text erlaubt, keine Eindeutigkeitsprüfung")
+                .contains("ISTEXT").doesNotContain("COUNTIF");
 
         TurnierModus.get().setAktivForTest(true);
         try {

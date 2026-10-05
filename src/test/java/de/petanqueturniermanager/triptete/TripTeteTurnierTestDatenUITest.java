@@ -10,17 +10,22 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.sun.star.beans.XPropertySet;
+import com.sun.star.sheet.ValidationType;
+import com.sun.star.sheet.XSheetCondition;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.random.RandomSource;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.triptete.rangliste.TripTeteRanglisteSheet;
+import de.petanqueturniermanager.triptete.spielplan.TripTeteSpielPlanSheet;
 import de.petanqueturniermanager.triptete.spielplan.TripTeteSpielPlanSheetTestDaten;
 
 /**
@@ -55,6 +60,20 @@ public class TripTeteTurnierTestDatenUITest extends BaseCalcUITest {
         validiereMeldelistePerJson("triptete-meldeliste.json");
         validiereSpielplanPerJson("triptete-spielplan.json");
         validiereRanglistePerJson("triptete-rangliste.json");
+    }
+
+    @Test
+    public void tripTeteErgebnisHatNativeDatengueltigkeitBisZumSpielziel() throws Exception {
+        new TripTeteSpielPlanSheetTestDaten(wkingSpreadsheet).generate();
+
+        XSpreadsheet spielplan = sheetHlp.findByName(SheetNamen.spielplan());
+        XPropertySet cellProperties = Lo.qi(XPropertySet.class, spielplan.getCellByPosition(
+                TripTeteSpielPlanSheet.TRI_A_SPALTE, TripTeteSpielPlanSheet.ERSTE_DATEN_ZEILE));
+        XPropertySet validation = Lo.qi(XPropertySet.class, cellProperties.getPropertyValue("Validation"));
+
+        assertThat(validation.getPropertyValue("Type")).isEqualTo(ValidationType.WHOLE);
+        assertThat(Lo.qi(XSheetCondition.class, validation).getFormula1()).isEqualTo("0");
+        assertThat(Lo.qi(XSheetCondition.class, validation).getFormula2()).isEqualTo("13");
     }
 
     /**

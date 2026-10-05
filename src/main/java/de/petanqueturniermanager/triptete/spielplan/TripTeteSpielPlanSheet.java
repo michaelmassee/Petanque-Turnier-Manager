@@ -26,6 +26,7 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeFooterHelper;
 import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
+import de.petanqueturniermanager.helper.sheet.DatengueltigkeitHelper;
 import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
@@ -421,8 +422,10 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet {
 				.ungeradeFarbe(farbeUngerade).apply();
 
 		// Editierbare Zellen: Ergebnisse aller drei Partien (Bahnen sind systemvergeben und gesperrt)
-		EditierbaresZelleFormatHelper.anwenden(this, RangePosition.from(
-				TRI_A_SPALTE, ERSTE_DATEN_ZEILE, TETE_B_SPALTE, letzteSpielZeile));
+		RangePosition ergebnisRange = RangePosition.from(TRI_A_SPALTE, ERSTE_DATEN_ZEILE, TETE_B_SPALTE,
+				letzteSpielZeile);
+		DatengueltigkeitHelper.setzeGanzzahlBereich(this, ergebnisRange, 0, getKonfigurationSheet().getSpielZiel());
+		EditierbaresZelleFormatHelper.anwenden(this, ergebnisRange);
 
 		// Trenner: zwischen Runden (= je anzPaarungen Zeilen) ein dicker Strich
 		RangeProperties trenner = RangeProperties.from()

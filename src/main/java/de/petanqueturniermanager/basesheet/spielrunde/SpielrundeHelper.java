@@ -24,6 +24,7 @@ import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
+import de.petanqueturniermanager.helper.sheet.DatengueltigkeitHelper;
 import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 
@@ -171,6 +172,7 @@ public class SpielrundeHelper {
 			// vergebene Paarungsnummer. Die Markierung folgt derselben Nutzeroption wie
 			// die übrigen editierbaren Felder und ergänzt die Duplikat-Prüfung oberhalb.
 			EditierbaresZelleFormatHelper.anwenden(sheet, rangeErsteSpalte);
+			DatengueltigkeitHelper.setzeBahnDatengueltigkeit(sheet, rangeErsteSpalte);
 		}
 
 	}
@@ -202,12 +204,13 @@ public class SpielrundeHelper {
 	 */
 	public void formatiereErgebnissRange(ISheet iSheet, RangePosition ergebnissRange, int ersteErgebnisSpalte)
 			throws GenerateException {
+		DatengueltigkeitHelper.setzeSpielpunkte(iSheet, ergebnissRange);
 		String cellA = "INDIRECT(ADDRESS(ROW();" + (ersteErgebnisSpalte + 1) + "))";
 		String cellB = "INDIRECT(ADDRESS(ROW();" + (ersteErgebnisSpalte + 2) + "))";
 		String formulaGleicheWerte = "AND(NOT(ISBLANK(" + cellA + "));NOT(ISBLANK(" + cellB + "));"
 				+ cellA + "=" + cellB + ")";
 		ConditionalFormatHelper.from(iSheet, ergebnissRange).clear()
-				.formula1("0").formula2("13").operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndDoReset()
+				.formula1("0").formula2(String.valueOf(DatengueltigkeitHelper.MAX_SPIELPUNKTE)).operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndDoReset()
 				.formula1("ISTEXT(" + ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")")
 				.operator(ConditionOperator.FORMULA).styleIsFehler().applyAndDoReset()
 				.formula1(formulaGleicheWerte).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndDoReset();

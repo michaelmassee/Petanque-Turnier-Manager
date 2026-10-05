@@ -27,9 +27,10 @@ final class FrameZuordnung<T> {
     /** Ordnet dem Frame den Wert zu, falls er noch keinen hat; liefert {@code true} bei neuer Zuordnung. */
     synchronized boolean zuordnenFallsNeu(XFrame frame, T wert) {
         if (frame == null || finde(frame).isPresent()) return false;
-        var eintrag = new Eintrag<>(frame, wert);
+        var listener = new FrameSchliessenListener(frame);
+        var eintrag = new Eintrag<>(frame, wert, listener);
         eintraege.add(eintrag);
-        frame.addEventListener(new FrameSchliessenListener(eintrag));
+        frame.addEventListener(listener);
         return true;
     }
 
@@ -40,7 +41,13 @@ final class FrameZuordnung<T> {
     synchronized Optional<T> entfernen(XFrame frame) {
         if (frame == null) return Optional.empty();
         Optional<Eintrag<T>> eintrag = finde(frame);
-        eintrag.ifPresent(eintraege::remove);
+        eintrag.ifPresent(e -> {
+            eintraege.remove(e);
+            // Ein Dokument kann während seiner Lebensdauer den Turniermodus beliebig oft
+            // verlassen und wieder betreten. Der Close-Listener muss deshalb beim normalen
+            // Entfernen ebenfalls weg; sonst wächst die Listener-Liste des Frames pro Zyklus.
+            e.frame().removeEventListener(e.listener());
+        });
         return eintrag.map(Eintrag::wert);
     }
 
@@ -48,29 +55,29 @@ final class FrameZuordnung<T> {
         return eintraege.isEmpty();
     }
 
-    private synchronized void vergessen(Eintrag<T> eintrag) {
-        eintraege.remove(eintrag);
+    private synchronized void vergessen(XFrame frame) {
+        finde(frame).ifPresent(eintraege::remove);
     }
 
     private Optional<Eintrag<T>> finde(XFrame frame) {
         return eintraege.stream().filter(e -> UnoRuntime.areSame(e.frame(), frame)).findFirst();
     }
 
-    private record Eintrag<T>(XFrame frame, T wert) {
+    private record Eintrag<T>(XFrame frame, T wert, XEventListener listener) {
     }
 
     /** Ein geschlossener Frame gibt seine UI-Elemente selbst frei; nur die Zuordnung muss weg. */
     private final class FrameSchliessenListener extends WeakBase implements XEventListener {
 
-        private final Eintrag<T> eintrag;
+        private final XFrame frame;
 
-        FrameSchliessenListener(Eintrag<T> eintrag) {
-            this.eintrag = eintrag;
+        FrameSchliessenListener(XFrame frame) {
+            this.frame = frame;
         }
 
         @Override
         public void disposing(EventObject source) {
-            vergessen(eintrag);
+            vergessen(frame);
         }
     }
 }

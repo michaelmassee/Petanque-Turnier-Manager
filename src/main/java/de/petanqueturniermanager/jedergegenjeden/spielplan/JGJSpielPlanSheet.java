@@ -33,6 +33,7 @@ import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
+import de.petanqueturniermanager.helper.sheet.DatengueltigkeitHelper;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.RanglisteGeradeUngeradeFormatHelper;
@@ -635,6 +636,7 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 	}
 
 	private void formatiereErgebnisZellen(RangePosition ergRange) throws GenerateException {
+		DatengueltigkeitHelper.setzeSpielpunkte(this, ergRange);
 		String cellA = "INDIRECT(ADDRESS(ROW();" + (SPIELPNKT_A_SPALTE + 1) + "))";
 		String cellB = "INDIRECT(ADDRESS(ROW();" + (SPIELPNKT_B_SPALTE + 1) + "))";
 		String formulaGleicheWerte = "AND(NOT(ISBLANK(" + cellA + "));NOT(ISBLANK(" + cellB + "));"

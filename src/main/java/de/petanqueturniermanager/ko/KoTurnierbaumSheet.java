@@ -48,6 +48,7 @@ import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.random.RandomSource;
 
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
+import de.petanqueturniermanager.helper.sheet.DatengueltigkeitHelper;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
@@ -1118,6 +1119,8 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 
 			var rangeA = RangePosition.from(posA);
 			var rangeB = RangePosition.from(posB);
+			DatengueltigkeitHelper.setzeSpielpunkte(this, rangeA);
+			DatengueltigkeitHelper.setzeSpielpunkte(this, rangeB);
 
 			// Fehlerprüfungen einzeln pro Zelle – vermeidet Einfärben von Lückenzeilen zwischen den Paaren
 			ConditionalFormatHelper.from(this, rangeA).clear()

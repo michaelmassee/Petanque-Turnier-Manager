@@ -211,6 +211,11 @@ Details und Implementierungsmuster: `turniersysteme/BLATTSCHUTZ.md`
 - Neues System: `FooBlattschutzKonfiguration implements IBlattschutzKonfiguration` + `BlattschutzRegistry.register()`
 - `CellStyleHelper.from(XSpreadsheetDocument, AbstractCellStyleDef).apply()` für Kontexte ohne ISheet
 
+## Native Datengültigkeit (Eingabeprüfung)
+Details und Übersicht aller Regeln: `turniersysteme/DATENGUELTIGKEIT.md`
+
+**Kritische Regel:** Die Bahnspalte (manuelle Bahnvergabe) ist **bewusst locker**: Text erlaubt, keine Eindeutigkeitsprüfung, nur Warnung statt Ablehnung. Nicht wieder verschärfen – harte Eindeutigkeit blockiert das Tauschen zweier Bahnen, Bahnbezeichnungen wie „A3" sind üblich.
+
 ## SheetSyncListener – Architekturregeln
 Details und Muster: `turniersysteme/RANGLISTE_LISTENER.md`. Generische Infrastruktur in `helper/sheetsync/` (ehemals `helper/rangliste/`), genutzt für Ranglisten UND andere Sheet-Synchronisationen (z. B. Supermelee-Spieltag-Teilnehmerliste).
 

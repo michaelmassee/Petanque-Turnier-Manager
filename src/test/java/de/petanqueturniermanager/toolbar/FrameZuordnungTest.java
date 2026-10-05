@@ -52,6 +52,18 @@ class FrameZuordnungTest {
     }
 
     @Test
+    void entfernenDeregistriertDenCloseListener() {
+        XFrame frame = mock(XFrame.class);
+        zuordnung.zuordnenFallsNeu(frame, "A");
+        var listener = ArgumentCaptor.forClass(XEventListener.class);
+        verify(frame).addEventListener(listener.capture());
+
+        zuordnung.entfernen(frame);
+
+        verify(frame).removeEventListener(listener.getValue());
+    }
+
+    @Test
     void geschlossenerFrameWirdVergessen() {
         XFrame frame = mock(XFrame.class);
         zuordnung.zuordnenFallsNeu(frame, "A");

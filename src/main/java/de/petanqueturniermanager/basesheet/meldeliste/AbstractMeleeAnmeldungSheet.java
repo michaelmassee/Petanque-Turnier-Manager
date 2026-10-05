@@ -5,6 +5,8 @@ package de.petanqueturniermanager.basesheet.meldeliste;
 
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
@@ -29,10 +31,13 @@ import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
+import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
+import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
+import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 
 /**
  * Gemeinsame Basis der Mêlée-Anmeldung-Sheets aller Turniersysteme mit wählbarer
@@ -132,9 +137,40 @@ public abstract class AbstractMeleeAnmeldungSheet extends SheetRunner
 		// Fehlerfarbe für ungültige Setzpositionen – identische Regel wie in den Meldelisten.
 		MeldeListeHelper.formatiereSetzpositionSpalteFehlerfarbe(this,
 				RangePosition.from(SPALTE_SETZPOSITION, ERSTE_DATEN_ZEILE, SPALTE_SETZPOSITION, letzteZeile));
+		MeldeListeHelper.setzeMeleeEingechecktDatengueltigkeit(this,
+				RangePosition.from(SPALTE_EINGECHECKT, ERSTE_DATEN_ZEILE, SPALTE_EINGECHECKT, letzteZeile));
+		normalisiereEingecheckteMarkierungen(letzteZeile);
 
 		EditierbaresZelleFormatHelper.anwenden(this,
 				RangePosition.from(SPALTE_VORNAME, ERSTE_DATEN_ZEILE, SPALTE_EINGECHECKT, letzteZeile));
+	}
+
+	/**
+	 * Überführt ältere freie Check-in-Markierungen (z.B. "ja" oder einen Haken) in den eindeutigen
+	 * Listenwert {@value #MARKIERUNG}; jeder nicht leere Wert gilt wie bisher als eingecheckt. Die Spalte
+	 * wird nur geschrieben, wenn sich tatsächlich etwas ändert, damit ein erneuter Blattaufbau das
+	 * Dokument nicht unnötig als geändert markiert.
+	 */
+	private void normalisiereEingecheckteMarkierungen(int letzteZeile) throws GenerateException {
+		RangePosition spalte = RangePosition.from(SPALTE_EINGECHECKT, ERSTE_DATEN_ZEILE, SPALTE_EINGECHECKT,
+				letzteZeile);
+		RangeData vorhanden = RangeHelper.from(this, spalte).getDataFromRange();
+		RangeData normalisiert = new RangeData();
+		boolean geaendert = false;
+		for (RowData zeile : vorhanden) {
+			String wert = zeile.isEmpty() ? null : zeile.get(0).getStringVal();
+			RowData neueZeile = normalisiert.addNewRow();
+			if (StringUtils.isBlank(wert)) {
+				neueZeile.newEmpty();
+			} else {
+				neueZeile.newString(MARKIERUNG);
+				geaendert |= !MARKIERUNG.equals(wert);
+			}
+		}
+		if (geaendert) {
+			RangeHelper.from(this, normalisiert.getRangePosition(Position.from(SPALTE_EINGECHECKT, ERSTE_DATEN_ZEILE)))
+					.setDataInRange(normalisiert);
+		}
 	}
 
 	/**

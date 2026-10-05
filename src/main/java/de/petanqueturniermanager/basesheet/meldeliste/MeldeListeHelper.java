@@ -9,31 +9,21 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.sun.star.awt.FontWeight;
-import com.sun.star.beans.XPropertySet;
 import com.sun.star.sheet.ConditionOperator;
-import com.sun.star.sheet.TableValidationVisibility;
-import com.sun.star.sheet.ValidationAlertStyle;
-import com.sun.star.sheet.ValidationType;
-import com.sun.star.sheet.XSheetCondition;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
-import com.sun.star.table.XCellRange;
 
 import de.petanqueturniermanager.addins.GlobalImpl;
 import de.petanqueturniermanager.exception.DoppelteStartnummerException;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.ISheet;
-import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
@@ -46,6 +36,7 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
+import de.petanqueturniermanager.helper.sheet.DatengueltigkeitHelper;
 import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
@@ -63,8 +54,6 @@ import de.petanqueturniermanager.helper.i18n.SheetNamen;
  *
  */
 public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonstanten {
-
-	private static final Logger logger = LogManager.getLogger(MeldeListeHelper.class);
 
 	/** Gültige Werte einer Spieltag-Spalte: gespielt bzw. ausgesetzt (leer = nicht dabei). */
 	private static final List<Integer> GUELTIGE_SPIELTAG_WERTE = List.of(SpielrundeGespielt.JA.getId(),
@@ -310,37 +299,26 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	 */
 	public static void setzeAktivDatengueltigkeit(ISheet sheet, RangePosition aktivRange,
 			List<Integer> gueltigeWerte) throws GenerateException {
-		try {
-			XSpreadsheet xSheet = sheet.getXSpreadSheet();
-			XCellRange xRange = xSheet.getCellRangeByPosition(aktivRange.getStartSpalte(), aktivRange.getStartZeile(),
-					aktivRange.getEndeSpalte(), aktivRange.getEndeZeile());
-			XPropertySet rangeProperties = Lo.qi(XPropertySet.class, xRange);
-			XPropertySet validation = Lo.qi(XPropertySet.class, rangeProperties.getPropertyValue("Validation"));
-			validation.setPropertyValue("Type", ValidationType.LIST);
-			validation.setPropertyValue("IgnoreBlankCells", Boolean.TRUE);
-			validation.setPropertyValue("ShowList", Short.valueOf(TableValidationVisibility.UNSORTED));
-			validation.setPropertyValue("ShowInputMessage", Boolean.TRUE);
-			validation.setPropertyValue("InputTitle", I18n.get("meldeliste.aktiv.eingabehilfe.titel"));
-			validation.setPropertyValue("InputMessage", I18n.get(gueltigeWerte.size() == 1
-					? "meldeliste.aktiv.eingabehilfe.jgj"
-					: "meldeliste.aktiv.eingabehilfe.standard"));
-			validation.setPropertyValue("ShowErrorMessage", Boolean.TRUE);
-			validation.setPropertyValue("ErrorAlertStyle", ValidationAlertStyle.STOP);
-			validation.setPropertyValue("ErrorTitle", I18n.get("meldeliste.aktiv.fehler.titel"));
-			validation.setPropertyValue("ErrorMessage", I18n.get(gueltigeWerte.size() == 1
-					? "meldeliste.aktiv.fehler.jgj"
-					: "meldeliste.aktiv.fehler.standard"));
-			XSheetCondition condition = Lo.qi(XSheetCondition.class, validation);
-			// Eine Listen-Validierung erwartet eine Calc-Formel, die eine Liste/Matrix liefert.
-			// "1;2" allein wird als unvollständige Formel gelesen (Err:509); die geschweiften
-			// Klammern machen daraus eine gültige einspaltige Array-Konstante.
-			condition.setFormula1("{" + gueltigeWerte.stream().map(String::valueOf)
-					.collect(Collectors.joining(";")) + "}");
-			rangeProperties.setPropertyValue("Validation", validation);
-		} catch (com.sun.star.uno.Exception | RuntimeException e) {
-			logger.error("Datengültigkeit der Aktiv-Spalte konnte nicht gesetzt werden", e);
-			throw new GenerateException(I18n.get("error.meldeliste.aktiv.datengueltigkeit", e.getMessage()));
-		}
+		boolean nurAktiv = gueltigeWerte.size() == 1;
+		DatengueltigkeitHelper.setzeZahlenListe(sheet, aktivRange, gueltigeWerte,
+				new DatengueltigkeitHelper.Meldungen("meldeliste.aktiv.eingabehilfe.titel",
+						nurAktiv ? "meldeliste.aktiv.eingabehilfe.jgj" : "meldeliste.aktiv.eingabehilfe.standard",
+						"meldeliste.aktiv.fehler.titel",
+						nurAktiv ? "meldeliste.aktiv.fehler.jgj" : "meldeliste.aktiv.fehler.standard",
+						"datengueltigkeit.spalte.aktiv"));
+	}
+
+	/**
+	 * Richtet für die Mêlée-Anmeldung eine native Calc-Auswahlliste für Check-ins ein. Eine leere
+	 * Zelle bedeutet nicht eingecheckt; {@value MeleeAnmeldungKonstanten#MARKIERUNG} markiert die
+	 * Teilnahme an der späteren Team-Auslosung.
+	 */
+	public static void setzeMeleeEingechecktDatengueltigkeit(ISheet sheet, RangePosition eingechecktRange)
+			throws GenerateException {
+		DatengueltigkeitHelper.setzeTextListe(sheet, eingechecktRange, List.of(MeleeAnmeldungKonstanten.MARKIERUNG),
+				new DatengueltigkeitHelper.Meldungen("melee.anmeldung.eingecheckt.eingabehilfe.titel",
+						"melee.anmeldung.eingecheckt.eingabehilfe", "melee.anmeldung.eingecheckt.fehler.titel",
+						"melee.anmeldung.eingecheckt.fehler", "datengueltigkeit.spalte.checkin"));
 	}
 
 	/**
@@ -375,6 +353,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	 */
 	public static void formatiereSetzpositionSpalteFehlerfarbe(ISheet sheet, RangePosition spRange)
 			throws GenerateException {
+		DatengueltigkeitHelper.setzeNichtNegativeGanzzahl(sheet, spRange);
 		ConditionalFormatHelper.from(sheet, spRange).clear()
 				.formula1(setzpositionUngueltigFormel()).operator(ConditionOperator.FORMULA)
 				.styleIsFehler().applyAndDoReset();
@@ -388,6 +367,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	public static void formatiereSetzpositionSpalteFehlerfarbe(ISheet sheet, RangePosition spRange,
 			MeldungenHintergrundFarbeGeradeStyle farbeGerade, MeldungenHintergrundFarbeUnGeradeStyle farbeUngerade)
 			throws GenerateException {
+		DatengueltigkeitHelper.setzeNichtNegativeGanzzahl(sheet, spRange);
 		ConditionalFormatHelper.from(sheet, spRange).clear()
 				.formula1(setzpositionUngueltigFormel()).operator(ConditionOperator.FORMULA)
 				.styleIsFehler().applyAndDoReset()
