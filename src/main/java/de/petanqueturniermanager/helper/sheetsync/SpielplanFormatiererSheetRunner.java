@@ -86,7 +86,7 @@ public final class SpielplanFormatiererSheetRunner extends SheetRunner implement
         // bereits korrekt formatiert und geschützt; dann darf weder ein Blattschutz-Scope
         // geöffnet noch ein Protect/Unprotect-Zyklus für sämtliche Turnierblätter
         // ausgelöst werden.
-        boolean mitBlattschutz = konfig.blattschutzKonfig() != null && TurnierModus.get().istAktiv();
+        boolean mitBlattschutz = konfig.blattschutzKonfig() != null && TurnierModus.get().istAktiv(getWorkingSpreadsheet());
         boolean zebraReparaturNoetig = SheetHelper.brauchtZebraReparatur(this,
                 konfig.datenRange(), konfig.geradeFarbe(), konfig.ungeradeFarbe());
         boolean cfReparaturNoetig = cfFehlt(konfig);

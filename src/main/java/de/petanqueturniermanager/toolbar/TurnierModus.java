@@ -2,6 +2,7 @@ package de.petanqueturniermanager.toolbar;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.logging.log4j.LogManager;
@@ -16,10 +17,12 @@ import com.sun.star.frame.XLayoutManager;
 import com.sun.star.frame.XModel;
 import com.sun.star.frame.XStatusListener;
 import com.sun.star.lang.EventObject;
+import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.ui.XUIElement;
 import com.sun.star.util.XURLTransformer;
 
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
+import de.petanqueturniermanager.comp.DokumentKontext;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.sidebar.SidebarAnzeigenListener;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
@@ -34,6 +37,10 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 /**
  * Verwaltung des Turnier-Modus (Kiosk-Modus) für LibreOffice Calc.
  * Die PTM-Toolbar bleibt immer sichtbar.
+ * <p>
+ * Der Modus gilt je Dokumentfenster: Status, ausgeblendete Leisten und der Zustand der
+ * Rechenleiste werden pro Frame gespeichert, damit mehrere gleichzeitig geöffnete
+ * Turnier-Dokumente sich nicht gegenseitig beeinflussen.
  */
 public class TurnierModus {
 
@@ -41,17 +48,18 @@ public class TurnierModus {
 
     private static final TurnierModus INSTANCE = new TurnierModus();
 
+    private static final String MENUELEISTE = "private:resource/menubar/menubar";
+
     private static final List<String> STANDARD_ELEMENTE = List.of(
-            "private:resource/menubar/menubar",
+            MENUELEISTE,
             "private:resource/toolbar/standardbar",
             "private:resource/toolbar/formatobjectbar",
             "private:resource/statusbar/statusbar"
     );
 
-    private volatile boolean aktiv = false;
-    private final List<String> gespeicherteElemente = new ArrayList<>();
+    private final FrameZuordnung<KioskZustand> kioskZustaende = new FrameZuordnung<>();
     private final AtomicBoolean startupDurchgefuehrt = new AtomicBoolean(false);
-    private Boolean gespeicherteRechnerleiste = null;
+    private volatile boolean aktivFuerTest = false;
     private final KioskFormatierungsSchutzVerwaltung kioskFormatierungsSchutz = new KioskFormatierungsSchutzVerwaltung();
 
     private TurnierModus() {
@@ -61,13 +69,34 @@ public class TurnierModus {
         return INSTANCE;
     }
 
-    public boolean istAktiv() {
-        return aktiv;
+    /** Ob der Turniermodus im Fenster dieses Dokuments aktiv ist. */
+    public boolean istAktiv(XSpreadsheetDocument dokument) {
+        return aktivFuerTest || kioskZustaende.wert(holeFrame(dokument)).isPresent();
     }
 
-    /** Nur für Tests: setzt das aktiv-Flag direkt ohne UI-Side-Effects. */
+    public boolean istAktiv(WorkingSpreadsheet ws) {
+        return istAktiv(ws.getWorkingSpreadsheetDocument());
+    }
+
+    /**
+     * Für Code ohne eigenen Dokumentbezug: prüft das Dokument aus dem {@link DokumentKontext}
+     * (gesetzt von {@code SheetRunner.run()}). Ohne Kontext zählt, ob der Modus in irgendeinem
+     * Dokument aktiv ist.
+     */
+    public boolean istAktivImAktuellenKontext() {
+        XSpreadsheetDocument dokument = DokumentKontext.get();
+        if (dokument != null) {
+            return istAktiv(dokument);
+        }
+        return aktivFuerTest || !kioskZustaende.istLeer();
+    }
+
+    /**
+     * Nur für Tests: lässt den Turniermodus ohne UI-Side-Effects für alle Dokumente als aktiv
+     * gelten bzw. hebt das wieder auf.
+     */
     public void setAktivForTest(boolean wert) {
-        this.aktiv = wert;
+        this.aktivFuerTest = wert;
     }
 
     public void umschalten(WorkingSpreadsheet ws) {
@@ -75,7 +104,7 @@ public class TurnierModus {
             var lm = holeLayoutManager(ws);
             if (lm == null) return;
 
-            boolean istGeradeKiosk = !lm.isElementVisible("private:resource/menubar/menubar");
+            boolean istGeradeKiosk = !lm.isElementVisible(MENUELEISTE);
             boolean neuerZustand;
             if (istGeradeKiosk) {
                 deaktivierenIntern(lm, ws);
@@ -152,23 +181,32 @@ public class TurnierModus {
     }
 
     private void aktivierenIntern(XLayoutManager lm, WorkingSpreadsheet ws) {
-        gespeicherteElemente.clear();
-        gespeicherteRechnerleiste = leseRechnerleistenZustand(ws);
+        XFrame frame = holeFrame(ws);
+        // Bereits aktiv: den gespeicherten Ausgangszustand behalten – ein erneutes Erfassen sähe
+        // nur noch die ausgeblendete Oberfläche und könnte sie später nicht wiederherstellen.
+        boolean bereitsAktiv = kioskZustaende.wert(frame).isPresent();
+        boolean rechnerleisteWarSichtbar = !bereitsAktiv && leseRechnerleistenZustand(ws);
+        List<String> ausgeblendeteElemente = new ArrayList<>();
         String ptmUrl = ToolbarAnzeigenListener.TOOLBAR_RESOURCE_URL;
 
         try {
             lm.lock();
             // Nicht-PTM-Elemente ausblenden. url==null → unbekanntes Element → NICHT ausblenden.
             try {
-                for (XUIElement el : lm.getElements()) {
-                    String url = el.getResourceURL();
-                    if (url == null) continue;
+                for (XUIElement element : lm.getElements()) {
+                    String url = element.getResourceURL();
+                    if (url == null || url.equals(MENUELEISTE)) continue;
                     if (url.contains("de.petanqueturniermanager.toolbar")) continue;
                     if (lm.isElementVisible(url)) {
-                        gespeicherteElemente.add(url);
+                        ausgeblendeteElemente.add(url);
                         lm.hideElement(url);
                     }
                 }
+                // Die Menüleiste immer ausblenden, auch wenn LO sie noch nicht erzeugt hat (Fenster
+                // direkt nach dem Laden): der LayoutManager merkt sich den Zustand und wendet ihn
+                // beim späteren Erzeugen an. Sonst erschiene sie im Turniermodus nachträglich.
+                lm.hideElement(MENUELEISTE);
+                ausgeblendeteElemente.add(MENUELEISTE);
             } catch (Exception e) {
                 logger.error("Fehler beim Ausblenden der UI-Elemente", e);
             }
@@ -179,8 +217,12 @@ public class TurnierModus {
         // Rechenleiste ausblenden – nur wenn sie aktuell sichtbar ist.
         // Der Dispatch kann einen LO-internen Layout-Refresh auslösen, der
         // Context-sensitive Toolbars neu bewertet.
-        if (Boolean.TRUE.equals(gespeicherteRechnerleiste)) {
+        if (rechnerleisteWarSichtbar) {
             setzeRechnerleiste(ws, false);
+        }
+        if (!bereitsAktiv) {
+            kioskZustaende.zuordnenFallsNeu(frame,
+                    new KioskZustand(List.copyOf(ausgeblendeteElemente), rechnerleisteWarSichtbar));
         }
 
         // PTM-Toolbar nach dem Layout-Refresh einblenden.
@@ -192,16 +234,18 @@ public class TurnierModus {
         ToolbarAnzeigenListener.zeigeToolbarInAllenFrames(ws.getxContext());
         TimerToolbarSteuerung.anzeigenInAllenFrames(ws.getxContext());
 
-        aktiv = true;
         schuetzeBlattschutzFuerAktivesTournierSystem(ws);
-        kioskFormatierungsSchutz.aktivieren(holeFrame(ws));
+        kioskFormatierungsSchutz.aktivieren(frame);
         SidebarAnzeigenListener.zeigePtmSidebar(ws);
     }
 
     private void deaktivierenIntern(XLayoutManager lm, WorkingSpreadsheet ws) {
-        kioskFormatierungsSchutz.deaktivieren(holeFrame(ws));
+        XFrame frame = holeFrame(ws);
+        kioskFormatierungsSchutz.deaktivieren(frame);
         entsperreBlattschutzFuerAktivesTournierSystem(ws);
-        var zuRestaurieren = gespeicherteElemente.isEmpty() ? STANDARD_ELEMENTE : gespeicherteElemente;
+        Optional<KioskZustand> zustand = kioskZustaende.entfernen(frame);
+        List<String> zuRestaurieren = zustand.map(KioskZustand::ausgeblendeteElemente)
+                .filter(elemente -> !elemente.isEmpty()).orElse(STANDARD_ELEMENTE);
         String ptmUrl = ToolbarAnzeigenListener.TOOLBAR_RESOURCE_URL;
 
         try {
@@ -221,13 +265,10 @@ public class TurnierModus {
 
         } finally {
             lm.unlock();
-            gespeicherteElemente.clear();
-            aktiv = false;
         }
 
         // Rechenleiste auf gespeicherten Zustand zurücksetzen (Standard: sichtbar)
-        setzeRechnerleiste(ws, gespeicherteRechnerleiste == null || gespeicherteRechnerleiste);
-        gespeicherteRechnerleiste = null;
+        setzeRechnerleiste(ws, zustand.map(KioskZustand::rechnerleisteWarSichtbar).orElse(true));
     }
 
     private boolean leseRechnerleistenZustand(WorkingSpreadsheet ws) {
@@ -294,7 +335,11 @@ public class TurnierModus {
     }
 
     private XFrame holeFrame(WorkingSpreadsheet ws) {
-        var xModel = Lo.qi(XModel.class, ws.getWorkingSpreadsheetDocument());
+        return holeFrame(ws.getWorkingSpreadsheetDocument());
+    }
+
+    private static XFrame holeFrame(XSpreadsheetDocument dokument) {
+        var xModel = Lo.qi(XModel.class, dokument);
         if (xModel == null || xModel.getCurrentController() == null) return null;
         return xModel.getCurrentController().getFrame();
     }
@@ -313,5 +358,9 @@ public class TurnierModus {
             logger.error("Fehler beim Holen des LayoutManagers", e);
             return null;
         }
+    }
+
+    /** Ausgangszustand eines Fensters vor dem Turniermodus, für die Wiederherstellung. */
+    private record KioskZustand(List<String> ausgeblendeteElemente, boolean rechnerleisteWarSichtbar) {
     }
 }

@@ -181,16 +181,13 @@ public class BlattschutzManager {
      * – es wird {@link IllegalStateException} geworfen. Ist der Turnier-Modus
      * nicht aktiv, sind Sheets ohnehin ungeschützt und es passiert nichts.
      * <p>
-     * <b>Hinweis (future-proofing):</b> Der {@code TurnierModus.istAktiv()}-Check
-     * verlässt sich auf den globalen Singleton-State; bei perspektivisch
-     * mehreren parallel geöffneten Dokumenten mit unterschiedlichem Modus
-     * wäre die alleinige Autorität über {@code state != null} robuster.
-     * Heute genügt der Check.
+     * Der Turnier-Modus wird pro Dokument geprüft: maßgeblich ist das Dokument aus
+     * dem {@code DokumentKontext} des laufenden {@code SheetRunner}.
      */
     public void ensureUnprotectedInScope() {
         ScopeState state = SCOPE.get();
         if (state == null) {
-            if (TurnierModus.get().istAktiv()) {
+            if (TurnierModus.get().istAktivImAktuellenKontext()) {
                 throw new IllegalStateException(
                         "Style/CF-Operation außerhalb eines aktiven BlattschutzScopes – "
                                 + "diese Operation muss innerhalb eines SheetRunner.run() laufen.");
@@ -222,7 +219,7 @@ public class BlattschutzManager {
      * </pre>
      */
     public BlattschutzScope scopeFuer(TurnierSystem ts, WorkingSpreadsheet ws) {
-        if (ts == null || ts == TurnierSystem.KEIN || !TurnierModus.get().istAktiv()) {
+        if (ts == null || ts == TurnierSystem.KEIN || !TurnierModus.get().istAktiv(ws)) {
             return () -> { };
         }
         IBlattschutzKonfiguration konfig = BlattschutzRegistry.fuer(ts).orElse(null);
@@ -367,12 +364,11 @@ public class BlattschutzManager {
      * Fallback-Absicherung direkt am Schreibpunkt (z.B. {@code RangeHelper.setDataInRange}):
      * führt {@code schreibvorgang} garantiert auf einem physisch entsperrten Sheet aus.
      * <p>
-     * Hintergrund: {@code TurnierModus.istAktiv()} ist ein <b>globaler</b> Singleton-Flag, der
-     * pro Prozess (nicht pro Dokument) geführt wird. Bei mehreren gleichzeitig geöffneten
-     * Dokumenten mit unterschiedlichem Kiosk-Zustand – oder wenn eine frühere Entsperr-Operation
-     * fehlgeschlagen ist (siehe {@code doSchuetzen}/{@code doEntsperren}, die Fehler pro Sheet nur
-     * loggen statt zu werfen) – kann der physische Blattschutz eines konkreten Sheets vom globalen
-     * Flag abweichen. In diesem Fall würde {@link #ensureUnprotectedInScope()} No-Op bleiben und
+     * Hintergrund: Der Scope-Zustand beschreibt nur die Sheets der aktiven Blattschutz-Konfiguration.
+     * Wenn eine frühere Entsperr-Operation fehlgeschlagen ist (siehe {@code doSchuetzen}/
+     * {@code doEntsperren}, die Fehler pro Sheet nur loggen statt zu werfen) oder ein Sheet nicht
+     * Teil dieser Konfiguration ist, kann sein physischer Blattschutz vom Scope-Zustand
+     * abweichen. In diesem Fall würde {@link #ensureUnprotectedInScope()} No-Op bleiben und
      * der nachfolgende {@code setDataArray()}-Aufruf mit einer {@code RuntimeException} scheitern.
      * <p>
      * Prüft den physischen Zustand <em>immer</em> direkt am übergebenen Sheet – auch innerhalb

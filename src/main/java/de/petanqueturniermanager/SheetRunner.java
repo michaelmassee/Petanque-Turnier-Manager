@@ -225,7 +225,7 @@ public abstract class SheetRunner extends Thread {
 						// Lazy-Unprotect-Scope öffnen: ein einziges entsperren/schuetzen pro Kommando
 						// statt mehrfaches Toggle in jeder Sub-Operation. Echte Entsperrung passiert
 						// erst beim ersten Style-/CF-Trigger (ConditionalFormatHelper / RangeHelper.clearRange).
-						if (turnierSystem != TurnierSystem.KEIN && TurnierModus.get().istAktiv()) {
+						if (turnierSystem != TurnierSystem.KEIN && TurnierModus.get().istAktiv(workingSpreadsheet)) {
 							BlattschutzRegistry.fuer(turnierSystem)
 									.ifPresent(k -> BlattschutzManager.get().beginCommandScope(k, workingSpreadsheet));
 						}

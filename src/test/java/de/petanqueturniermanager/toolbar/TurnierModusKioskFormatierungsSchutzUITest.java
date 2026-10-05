@@ -35,7 +35,7 @@ class TurnierModusKioskFormatierungsSchutzUITest extends BaseCalcUITest {
         var turnierModus = TurnierModus.get();
         turnierModus.aktivieren(wkingSpreadsheet);
         try {
-            assertThat(turnierModus.istAktiv()).isTrue();
+            assertThat(turnierModus.istAktiv(wkingSpreadsheet)).isTrue();
             assertThat(istBefehlAktiv(doc, ".uno:ResetAttributes"))
                     .as("Formatierungen löschen ist im Kioskmodus deaktiviert").isFalse();
         } finally {

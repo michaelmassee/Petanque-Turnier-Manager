@@ -1905,7 +1905,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		// Menü-Listenern unterscheidbar, daher wird der Override für diese URLs auch
 		// im Menü wirksam). Für übrige Befehle echte isEnabled-Bewertung.
 		boolean enabled = TOOLBAR_ONLY_CMDS.contains(command) || isEnabled(command, dokumentDiesesFrames);
-		postStatus(listener, url, enabled);
+		postStatus(listener, url, enabled, dokumentDiesesFrames);
 		// Meldeliste-, Checkin- und Teilnehmer-Button sind ToggleDropdownButtons (siehe
 		// Addons_Z2_Toolbar.xcu). Ihre Dropdown-Einträge (Sortierung nach Nr/Name/Team)
 		// werden hier per ControlCommand "SetList" an den Controller gemeldet.
@@ -2575,7 +2575,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			boolean toolbarOnly = TOOLBAR_ONLY_CMDS.contains(cmd);
 			for (StatusEntry e : new ArrayList<>(entry.getValue())) {
 				boolean enabled = toolbarOnly || isEnabled(cmd, e.dokument());
-				postStatus(e.listener, e.url, enabled);
+				postStatus(e.listener, e.url, enabled, e.dokument());
 				listenerAnzahl++;
 			}
 		}
@@ -2597,13 +2597,14 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		}
 	}
 
-	private static void postStatus(XStatusListener listener, URL url, boolean enabled) {
+	private static void postStatus(XStatusListener listener, URL url, boolean enabled,
+			XSpreadsheetDocument dokument) {
 		try {
 			FeatureStateEvent event = new FeatureStateEvent();
 			event.FeatureURL = url;
 			event.IsEnabled = enabled;
 			event.Requery = false;
-			setzeUrlSlotState(event, url.Path);
+			setzeCommandState(event, url.Path, dokument);
 			listener.statusChanged(event);
 		} catch (DisposedException e) {
 			// Listener wurde disposed (Toolbar-Abbau beim Controller-Wechsel) → bereinigen
@@ -2617,8 +2618,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	/**
 	 * Setzt FeatureStateEvent.State für URL-Slot-Befehle dynamisch auf "[SheetName] – [URL]".
 	 * Platzhalter "—" wenn kein Port aktiv – verhindert Geister-Einträge im Menü.
+	 * Der Turniermodus-Haken spiegelt den Zustand des Dokuments dieses Listeners.
 	 */
-	private static void setzeUrlSlotState(FeatureStateEvent event, String command) {
+	private static void setzeCommandState(FeatureStateEvent event, String command, XSpreadsheetDocument dokument) {
 		int slot = switch (command) {
 			case CMD_WEBSERVER_URL_1  -> 0;
 			case CMD_WEBSERVER_URL_2  -> 1;
@@ -2637,7 +2639,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			event.State = label != null ? label : "—";
 		}
 		if (CMD_TURNIER_MODUS.equals(command)) {
-			event.State = TurnierModus.get().istAktiv();
+			event.State = dokument != null && TurnierModus.get().istAktiv(dokument);
 		}
 	}
 
