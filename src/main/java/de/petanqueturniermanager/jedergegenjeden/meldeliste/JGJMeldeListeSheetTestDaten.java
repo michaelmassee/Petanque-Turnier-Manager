@@ -15,7 +15,7 @@ import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationSheet;
 import de.petanqueturniermanager.model.TeamMeldungen;
-import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
@@ -64,7 +64,7 @@ public class JGJMeldeListeSheetTestDaten extends SheetRunner implements ISheet {
     }
 
     public void erstellenUndBefuellen() throws GenerateException {
-        meldeListe.createMeldelisteWithParams(formation, false, false, SpielplanTeamAnzeige.NR, gruppengroesse);
+        meldeListe.createMeldelisteWithParams(formation, false, false, TeamAnzeige.NR, gruppengroesse);
         testNamenEinfuegen();
     }
 

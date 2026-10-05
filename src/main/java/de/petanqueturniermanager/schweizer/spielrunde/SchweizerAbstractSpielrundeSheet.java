@@ -27,9 +27,8 @@ import com.sun.star.table.TableBorder2;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.algorithmen.schweizer.SchweizerSystem;
 import de.petanqueturniermanager.algorithmen.schweizer.SchweizerTeamErgebnis;
-import de.petanqueturniermanager.basesheet.konfiguration.IZeitplanPropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
-import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeigeHelper;
 import de.petanqueturniermanager.basesheet.spielrunde.IZeitplanSpielrundeSheet;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeFooterHelper;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeHelper;
@@ -61,7 +60,7 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
-import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.model.TeamPaarung;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerRankingModus;
@@ -423,7 +422,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 	private void header() throws GenerateException {
 		processBoxinfo("processbox.formatiere.header");
 		Integer headerColor = getKonfigurationSheet().getSpielRundeHeaderFarbe();
-		boolean nameMode = getKonfigurationSheet().getSpielplanTeamAnzeige() == SpielplanTeamAnzeige.NAME;
+		boolean nameMode = getKonfigurationSheet().getSpielplanTeamAnzeige() != TeamAnzeige.NR;
 
 		Position headerStart = Position.from(TEAM_A_SPALTE, ERSTE_HEADER_ZEILE);
 
@@ -489,7 +488,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		getSheetHelper().setPropertyInRange(sheet, datenRangeInclErg, VERT_JUSTIFY, CellVertJustify2.CENTER);
 
 		RangePosition abSpalten = RangePosition.from(datenRangeInclErg).endeSpalte(TEAM_B_SPALTE);
-		if (getKonfigurationSheet().getSpielplanTeamAnzeige() == SpielplanTeamAnzeige.NAME) {
+		if (getKonfigurationSheet().getSpielplanTeamAnzeige() != TeamAnzeige.NR) {
 			// Teamname-Modus: Font 12, an Zellgröße anpassen, Spaltenbreite 6 cm
 			getSheetHelper().setPropertyInRange(sheet, abSpalten, CHAR_HEIGHT, 12);
 			getSheetHelper().setPropertyInRange(sheet, abSpalten, SHRINK_TO_FIT, Boolean.TRUE);
@@ -717,7 +716,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 			return;
 		}
 
-		boolean useTeamname = getKonfigurationSheet().getSpielplanTeamAnzeige() == SpielplanTeamAnzeige.NAME;
+		boolean useNames = getKonfigurationSheet().getSpielplanTeamAnzeige() != TeamAnzeige.NR;
 		int freispielPlus = getKonfigurationSheet().getFreispielPunktePlus();
 		int freispielMinus = getKonfigurationSheet().getFreispielPunkteMinus();
 		RangeData rangeData = new RangeData();
@@ -727,7 +726,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 			if (!teamPaarung.hasB()) {
 				// Freilos – Team A ohne Gegner eintragen, ERG mit Freispiel-Werten vorbelegen
 				RowData freilosRow = rangeData.addNewRow();
-				if (useTeamname) {
+				if (useNames) {
 					freilosRow.add(new CellData("")); // Name folgt per Formel (teamNamenFormelnSchreiben)
 				} else {
 					freilosRow.add(new CellData(teamPaarung.getA().getNr()));
@@ -737,7 +736,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 				freilosRow.add(new CellData(freispielMinus)); // ERG_TEAM_B vorbelegen
 				continue;
 			}
-			if (useTeamname) {
+			if (useNames) {
 				RowData row = rangeData.addNewRow();
 				row.add(new CellData("")); // Name folgt per Formel (teamNamenFormelnSchreiben)
 				row.add(new CellData(""));
@@ -749,7 +748,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		Position startPos = Position.from(TEAM_A_SPALTE, ERSTE_DATEN_ZEILE);
 		RangeHelper.from(this, rangeData.getRangePosition(startPos)).setDataInRange(rangeData);
 
-		if (useTeamname) {
+		if (useNames) {
 			teamNamenFormelnSchreiben(paarungen);
 		}
 
@@ -757,26 +756,26 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 	}
 
 	/**
-	 * Schreibt die Team-Namen im Anzeigemodus {@link SpielplanTeamAnzeige#NAME} als
-	 * SVERWEIS-Formel (statt statischem Text), damit eine spätere Umbenennung in der
-	 * Meldeliste im Spielplan sofort sichtbar bleibt (siehe auch {@link #resolveTeamNr}).
+	 * Schreibt Team- oder zusammengesetzte Spielernamen als SVERWEIS-Formel (statt statischem
+	 * Text), damit Änderungen in der Meldeliste im Spielplan sofort sichtbar bleiben
+	 * (siehe auch {@link #resolveTeamNr}).
 	 */
 	private void teamNamenFormelnSchreiben(List<TeamPaarung> paarungen) throws GenerateException {
 		if (paarungen.isEmpty()) {
 			return;
 		}
-		boolean teamnameAnzeigen = getKonfigurationSheet().isMeldeListeTeamnameAnzeigen();
 		boolean vereinsnameAnzeigen = getKonfigurationSheet().isMeldeListeVereinsnameAnzeigen();
 		Formation formation = getKonfigurationSheet().getMeldeListeFormation();
+		TeamAnzeige anzeige = getKonfigurationSheet().getSpielplanTeamAnzeige();
 
 		String[][] formulas = new String[paarungen.size()][2];
 		for (int i = 0; i < paarungen.size(); i++) {
 			TeamPaarung teamPaarung = paarungen.get(i);
-			formulas[i][0] = MeldeListeHelper.teamNameFormel(String.valueOf(teamPaarung.getA().getNr()),
-					teamnameAnzeigen, formation, vereinsnameAnzeigen);
+			formulas[i][0] = TeamAnzeigeHelper.formel(String.valueOf(teamPaarung.getA().getNr()), anzeige,
+					formation, vereinsnameAnzeigen);
 			formulas[i][1] = teamPaarung.hasB()
-					? MeldeListeHelper.teamNameFormel(String.valueOf(teamPaarung.getB().getNr()), teamnameAnzeigen,
-							formation, vereinsnameAnzeigen)
+					? TeamAnzeigeHelper.formel(String.valueOf(teamPaarung.getB().getNr()), anzeige, formation,
+							vereinsnameAnzeigen)
 					: "";
 		}
 

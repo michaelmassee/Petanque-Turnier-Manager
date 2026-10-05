@@ -1101,9 +1101,18 @@ public class SheetHelper {
 		return setColumnWidth(sheet, pos.getSpalte(), width);
 	}
 
+	/**
+	 * Achtung: LibreOffice ignoriert {@code width == 0} (die Spalte behält ihre Breite). Zum
+	 * Ausblenden {@link #setColumnVisible(XSpreadsheet, int, boolean)} verwenden.
+	 */
 	public XPropertySet setColumnWidth(XSpreadsheet sheet, int spalte, int width) {
 		checkNotNull(sheet);
 		return setColumnProperty(sheet, spalte, "Width", Integer.valueOf(width));
+	}
+
+	/** Blendet eine Spalte ein bzw. aus (über {@code IsVisible}, da Breite 0 wirkungslos ist). */
+	public XPropertySet setColumnVisible(XSpreadsheet sheet, int spalte, boolean sichtbar) {
+		return setColumnProperty(sheet, spalte, ColumnProperties.ISVISIBLE, Boolean.valueOf(sichtbar));
 	}
 
 	/** Standard-Marge für optimale Spaltenbreite: 0,2 cm (200 × 1/100 mm). */

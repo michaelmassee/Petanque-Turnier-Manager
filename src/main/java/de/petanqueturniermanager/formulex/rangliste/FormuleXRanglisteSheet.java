@@ -57,7 +57,9 @@ import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeigeHelper;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 
 /**
  * Erstellt die Rangliste für das Formule X Turniersystem.
@@ -329,6 +331,10 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
 
     private Map<Integer, String> leseTeamnamen(FormuleXMeldeListeSheetUpdate meldeliste) throws GenerateException {
         Map<Integer, String> result = new HashMap<>();
+        TeamAnzeige anzeige = konfigurationSheet.getRanglisteTeamAnzeige();
+        if (anzeige == TeamAnzeige.NR) {
+            return result;
+        }
         XSpreadsheet mlSheet = meldeliste.getXSpreadSheet();
         if (mlSheet == null) {
             return result;
@@ -338,7 +344,7 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
         int nrSpalte    = meldeliste.getNrSpalte();
         int ersteZeile  = meldeliste.getErsteDatenZeile();
 
-        if (konfigurationSheet.isMeldeListeTeamnameAnzeigen()) {
+        if (anzeige == TeamAnzeige.NAME) {
             int nameSpalte = meldeliste.getTeamnameSpalte();
             int maxSpalte  = Math.max(nrSpalte, nameSpalte);
             var data = RangeHelper
@@ -416,6 +422,7 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
      */
     private void insertHeader(XSpreadsheet sheet) throws GenerateException {
         Integer headerColor = konfigurationSheet.getRanglisteHeaderFarbe();
+        TeamAnzeige teamAnzeige = konfigurationSheet.getRanglisteTeamAnzeige();
 
         int[][] spaltenBreiten = {
                 { TEAM_NAME_SPALTE,    COL_WIDTH_NAME  },
@@ -431,6 +438,7 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
                     ColumnProperties.from().setWidth(sw[1])
                             .setHoriJustify(CellHoriJustify.CENTER).setVertJustify(CellVertJustify2.CENTER));
         }
+        getSheetHelper().setColumnVisible(sheet, TEAM_NAME_SPALTE, !teamAnzeige.istNummer());
 
         // ── Zeile 1+2: Einzel-Spalten, vertikal zusammengeführt ─────────────────
         // headerCellProps wird von allen Spalten geteilt (setCellProperties() weist die
@@ -439,7 +447,7 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
         // nachfolgend verarbeiteten Spalten ein (siehe Platz-Spalte weiter unten).
         String[] texte = {
                 I18n.get("column.header.nr"),
-                I18n.get("formulex.rangliste.spalte.team"),
+                I18n.get(TeamAnzeigeHelper.headerI18nKey(teamAnzeige)),
                 I18n.get("column.header.siege"),
                 I18n.get("formulex.rangliste.spalte.wertung"),
         };

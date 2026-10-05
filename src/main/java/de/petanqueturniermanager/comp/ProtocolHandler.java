@@ -156,7 +156,7 @@ import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeleeAnmeldungTur
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetUpdate;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheet;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheetSortOnly;
-import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerSpielrundeSheetNaechste;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerTurnierTestDaten;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerSpielrundeSheetUpdate;
@@ -1153,7 +1153,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				break;
 			case CMD_SCHWEIZER_TESTDATEN_TURNIER_19:
 				// 19 Teams: ungerade → 1 Freilos pro Runde, Teamname in Spielrunde, Bahn Random
-				new SchweizerTurnierTestDaten(ws, 19, SpielplanTeamAnzeige.NAME).testKeinAnderesTurnierVorhanden().start();
+				new SchweizerTurnierTestDaten(ws, 19, TeamAnzeige.NAME).testKeinAnderesTurnierVorhanden().start();
 				break;
 			case CMD_SCHWEIZER_TESTDATEN_MELEE_ANMELDUNG:
 				new SchweizerMeleeAnmeldungTurnierTestDaten(ws).testKeinAnderesTurnierVorhanden().start();

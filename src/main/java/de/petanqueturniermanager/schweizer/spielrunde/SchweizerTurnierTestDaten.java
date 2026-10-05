@@ -7,7 +7,6 @@ import com.sun.star.sheet.XSpreadsheet;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
-import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.NewTestDatenValidator;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
@@ -16,7 +15,7 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
-import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetTestDaten;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
@@ -26,13 +25,13 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
  * Meldeliste + Spielrunden mit Zufallsergebnissen + Rangliste.
  * <p>
  * Standard: 16 Teams, Triplette, Teamnummer-Anzeige.<br>
- * Parametrisiert: beliebige Teamanzahl und SpielplanTeamAnzeige konfigurierbar.
+ * Parametrisiert: beliebige Teamanzahl und TeamAnzeige konfigurierbar.
  */
 public class SchweizerTurnierTestDaten extends SchweizerAbstractSpielrundeSheet {
 
 	private static final int ANZ_RUNDEN = 3;
 
-	private final SpielplanTeamAnzeige spielplanTeamAnzeige;
+	private final TeamAnzeige spielplanTeamAnzeige;
 
 	private final SchweizerMeldeListeSheetTestDaten meldelisteTestDaten;
 	public final SchweizerSpielrundeSheetNaechste naechsteSpielrunde;
@@ -40,17 +39,18 @@ public class SchweizerTurnierTestDaten extends SchweizerAbstractSpielrundeSheet 
 
 	/** Standard-Konstruktor: 16 Teams, Teamnummer-Anzeige */
 	public SchweizerTurnierTestDaten(WorkingSpreadsheet workingSpreadsheet) {
-		this(workingSpreadsheet, SchweizerMeldeListeSheetTestDaten.ANZ_TEAMS_DEFAULT, SpielplanTeamAnzeige.NR);
+		this(workingSpreadsheet, SchweizerMeldeListeSheetTestDaten.ANZ_TEAMS_DEFAULT, TeamAnzeige.NR);
 	}
 
 	/**
 	 * Parametrisierter Konstruktor.
 	 *
 	 * @param anzTeams            Anzahl zu generierender Teams
-	 * @param spielplanTeamAnzeige NR = Teamnummer, NAME = Teamname in der Spielrunde
+	 * @param spielplanTeamAnzeige NR = Teamnummer, SPIELERNAMEN = zusammengesetzte Spielernamen,
+	 *        NAME = Teamname in der Spielrunde
 	 */
 	public SchweizerTurnierTestDaten(WorkingSpreadsheet workingSpreadsheet,
-			int anzTeams, SpielplanTeamAnzeige spielplanTeamAnzeige) {
+			int anzTeams, TeamAnzeige spielplanTeamAnzeige) {
 		super(workingSpreadsheet);
 		this.spielplanTeamAnzeige = spielplanTeamAnzeige;
 		meldelisteTestDaten = new SchweizerMeldeListeSheetTestDaten(workingSpreadsheet, anzTeams);
@@ -115,7 +115,7 @@ public class SchweizerTurnierTestDaten extends SchweizerAbstractSpielrundeSheet 
 			RowData row = data.get(i);
 			if (row.size() < 2) break;
 
-			// Funktioniert sowohl für SpielplanTeamAnzeige.NR (int) als auch .NAME (String)
+			// Funktioniert sowohl für TeamAnzeige.NR (int) als auch .NAME (String)
 			int nrA = row.get(0).getIntVal(0);
 			if (nrA <= 0) {
 				String valA = row.get(0).getStringVal();

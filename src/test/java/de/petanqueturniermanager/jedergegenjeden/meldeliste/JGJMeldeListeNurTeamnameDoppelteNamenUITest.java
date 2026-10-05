@@ -18,7 +18,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.position.Position;
-import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 
 /**
  * Regressionstest analog {@code SchweizerMeldeListeNurTeamnameDoppelteNamenUITest}: bei
@@ -30,7 +30,7 @@ class JGJMeldeListeNurTeamnameDoppelteNamenUITest extends BaseCalcUITest {
 	@Test
 	void teamnameSpalteHatLiveDuplikatPruefungWieTeamNrSpalte() throws Exception {
 		JGJMeldeListeSheet_New meldeListeNew = new JGJMeldeListeSheet_New(wkingSpreadsheet);
-		meldeListeNew.createMeldelisteWithParams(Formation.NUR_TEAMNAME, false, false, SpielplanTeamAnzeige.NR);
+		meldeListeNew.createMeldelisteWithParams(Formation.NUR_TEAMNAME, false, false, TeamAnzeige.NR);
 
 		int ersteDatenZeile = JGJMeldeListeDelegate.ERSTE_DATEN_ZEILE;
 		int teamnameSpalte = 1; // Nr=0, Teamname=1 - einheitliches Layout aller Systeme

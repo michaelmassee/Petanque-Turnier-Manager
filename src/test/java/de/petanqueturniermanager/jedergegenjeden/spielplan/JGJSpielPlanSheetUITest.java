@@ -20,7 +20,7 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationSheet;
 import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJTestMeldeListeErstellen;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
-import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 
 /**
  * UITest fuer den JGJ-Spielplan (Jeder-gegen-Jeden).<br>
@@ -121,7 +121,7 @@ public class JGJSpielPlanSheetUITest extends BaseCalcUITest {
 	@Test
 	public void spielplanTeamnamenVerwendenPtmTeamAnzeigeFormel() throws GenerateException {
 		JGJKonfigurationSheet konfiguration = new JGJKonfigurationSheet(wkingSpreadsheet);
-		konfiguration.setSpielplanTeamAnzeige(SpielplanTeamAnzeige.NAME);
+		konfiguration.setSpielplanTeamAnzeige(TeamAnzeige.NAME);
 
 		JGJSpielPlanSheet spielPlan = new JGJSpielPlanSheet(wkingSpreadsheet);
 		spielPlan.run();
@@ -139,7 +139,7 @@ public class JGJSpielPlanSheetUITest extends BaseCalcUITest {
 	@Test
 	public void gruppenSpielplanTeamnamenVerwendenPtmTeamAnzeigeFormel() throws GenerateException {
 		JGJKonfigurationSheet konfiguration = new JGJKonfigurationSheet(wkingSpreadsheet);
-		konfiguration.setSpielplanTeamAnzeige(SpielplanTeamAnzeige.NAME);
+		konfiguration.setSpielplanTeamAnzeige(TeamAnzeige.NAME);
 		konfiguration.setGruppengroesse(2);
 
 		new JGJSpielPlanSheet(wkingSpreadsheet).run();

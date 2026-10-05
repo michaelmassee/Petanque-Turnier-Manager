@@ -14,6 +14,7 @@ import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationSheet;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
@@ -148,6 +149,10 @@ public class JGJMeldeListeSheet_Update extends SheetRunner implements IMeldelist
 
 	public String formulaSpielplanTeamName(String nrAdresse) throws GenerateException {
 		return delegate.formulaSpielplanTeamName(nrAdresse);
+	}
+
+	public Map<Integer, String> leseTeamNamen(TeamAnzeige anzeige) throws GenerateException {
+		return delegate.leseTeamNamen(anzeige);
 	}
 
 	public Map<Integer, String> leseTeamNamen() throws GenerateException {

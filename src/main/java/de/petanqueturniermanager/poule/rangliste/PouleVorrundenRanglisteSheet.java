@@ -48,7 +48,7 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.poule.konfiguration.PouleKonfigurationSheet;
 import de.petanqueturniermanager.poule.vorrunde.AbstractPouleVorrundeSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
-import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeigeHelper;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
@@ -380,8 +380,8 @@ public class PouleVorrundenRanglisteSheet extends SheetRunner implements ISheet 
 
         // Zentrale PTM-Formel für Name-Spalte (referenziert Nr-Zelle in gleicher Zeile)
         for (int z = HEADER_ZEILEN; z < aktuelleZeile; z++) {
-            String teamAnzeige = MeldeListeHelper.teamNameFormel(Position.from(SPALTE_NR, z).getAddress(),
-                    konfigurationSheet.isMeldeListeTeamnameAnzeigen(),
+            String teamAnzeige = TeamAnzeigeHelper.formel(Position.from(SPALTE_NR, z).getAddress(),
+                    konfigurationSheet.getRanglisteTeamAnzeige(),
                     konfigurationSheet.getMeldeListeFormation(),
                     konfigurationSheet.isMeldeListeVereinsnameAnzeigen());
             getSheetHelper().setFormulaInCell(
@@ -465,7 +465,8 @@ public class PouleVorrundenRanglisteSheet extends SheetRunner implements ISheet 
         // schreibeHeaderZelle(xSheet, SPALTE_PLATZ, I18n.get("column.header.platz"), headerFarbe, border);
         schreibeHeaderZelle(xSheet, SPALTE_GRUPPE, I18n.get("poule.rangliste.header.gruppe"), headerFarbe, border);
         schreibeHeaderZelle(xSheet, SPALTE_NR, I18n.get("column.header.nr"), headerFarbe, border);
-        schreibeHeaderZelle(xSheet, SPALTE_NAME, I18n.get("column.header.name"), headerFarbe, border);
+        schreibeHeaderZelle(xSheet, SPALTE_NAME,
+                I18n.get(TeamAnzeigeHelper.headerI18nKey(konfigurationSheet.getRanglisteTeamAnzeige())), headerFarbe, border);
 
 
 
@@ -560,6 +561,8 @@ public class PouleVorrundenRanglisteSheet extends SheetRunner implements ISheet 
                 ColumnProperties.from().setWidth(BREITE_NR).setHoriJustify(CellHoriJustify.CENTER));
         getSheetHelper().setColumnProperties(xSheet, SPALTE_NAME,
                 ColumnProperties.from().setWidth(BREITE_NAME));
+        getSheetHelper().setColumnVisible(xSheet, SPALTE_NAME,
+                !konfigurationSheet.getRanglisteTeamAnzeige().istNummer());
         getSheetHelper().setColumnProperties(xSheet, SPALTE_SIEGE,
                 ColumnProperties.from().setWidth(BREITE_ZAHL).setHoriJustify(CellHoriJustify.CENTER));
         getSheetHelper().setColumnProperties(xSheet, SPALTE_NDLG,

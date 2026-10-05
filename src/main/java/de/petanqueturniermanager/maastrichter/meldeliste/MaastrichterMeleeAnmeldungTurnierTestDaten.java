@@ -18,7 +18,7 @@ import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
-import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 
 /**
  * Maastrichter-Beispiel für die Anmeldung einzelner Spieler vor der Teambildung.
@@ -49,7 +49,7 @@ public class MaastrichterMeleeAnmeldungTurnierTestDaten extends SheetRunner impl
 		getSheetHelper().removeAllSheetsExclude();
 
 		MaastrichterMeldeListeSheetNew meldeliste = new MaastrichterMeldeListeSheetNew(getWorkingSpreadsheet());
-		meldeliste.erstelleMeldeliste(Formation.DOUBLETTE, false, false, SpielplanTeamAnzeige.NR);
+		meldeliste.erstelleMeldeliste(Formation.DOUBLETTE, false, false, TeamAnzeige.NR);
 		new DocumentPropertiesHelper(getWorkingSpreadsheet()).setBooleanProperty(
 				BasePropertiesSpalte.KONFIG_PROP_MELEE_ANMELDUNG, true);
 

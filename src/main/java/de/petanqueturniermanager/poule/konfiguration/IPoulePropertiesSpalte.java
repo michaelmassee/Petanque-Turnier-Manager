@@ -5,6 +5,7 @@ package de.petanqueturniermanager.poule.konfiguration;
 
 import de.petanqueturniermanager.basesheet.konfiguration.IPropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 
 /**
  * Konfigurationseigenschaften für das Poule-A/B-Turniersystem.
@@ -22,6 +23,14 @@ public interface IPoulePropertiesSpalte extends IPropertiesSpalte {
     void setMeldeListeTeamnameAnzeigen(boolean anzeigen);
 
     void setMeldeListeVereinsnameAnzeigen(boolean anzeigen);
+
+    TeamAnzeige getSpielplanTeamAnzeige();
+
+    void setSpielplanTeamAnzeige(TeamAnzeige anzeige);
+
+    TeamAnzeige getRanglisteTeamAnzeige();
+
+    void setRanglisteTeamAnzeige(TeamAnzeige anzeige);
 
     boolean isSpielplanMitBahnspalte();
 

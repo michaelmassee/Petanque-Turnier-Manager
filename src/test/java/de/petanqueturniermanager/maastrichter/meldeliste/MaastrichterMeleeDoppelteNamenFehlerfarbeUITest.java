@@ -24,7 +24,7 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
-import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 
 /**
  * Regression für Mêlée-Übernahmen: erscheint ein Spieler in mehreren Teams,
@@ -38,7 +38,7 @@ class MaastrichterMeleeDoppelteNamenFehlerfarbeUITest extends BaseCalcUITest {
 	@Test
 	void doppelteSpielernamenHabenEineGueltigeFehlerformatierung() throws Exception {
 		new MaastrichterMeldeListeSheetNew(wkingSpreadsheet)
-				.erstelleMeldeliste(Formation.DOUBLETTE, false, false, SpielplanTeamAnzeige.NR);
+				.erstelleMeldeliste(Formation.DOUBLETTE, false, false, TeamAnzeige.NR);
 		MaastrichterMeldeListeSheetUpdate meldeliste = new MaastrichterMeldeListeSheetUpdate(wkingSpreadsheet);
 		XSpreadsheet sheet = meldeliste.getXSpreadSheet();
 		int ersteZeile = MELDELISTE_ERSTE_DATEN_ZEILE;

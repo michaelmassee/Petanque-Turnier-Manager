@@ -9,21 +9,24 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.sun.star.beans.XPropertySet;
 import com.sun.star.awt.FontWeight;
+import com.sun.star.beans.XPropertySet;
 import com.sun.star.sheet.ConditionOperator;
 import com.sun.star.sheet.TableValidationVisibility;
 import com.sun.star.sheet.ValidationAlertStyle;
 import com.sun.star.sheet.ValidationType;
 import com.sun.star.sheet.XSheetCondition;
 import com.sun.star.sheet.XSpreadsheet;
-import com.sun.star.table.XCellRange;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
+import com.sun.star.table.XCellRange;
 
 import de.petanqueturniermanager.addins.GlobalImpl;
 import de.petanqueturniermanager.exception.DoppelteStartnummerException;
@@ -54,13 +57,18 @@ import de.petanqueturniermanager.model.IMeldungen;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
-import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
  * @author Michael Massee
  *
  */
 public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonstanten {
+
+	private static final Logger logger = LogManager.getLogger(MeldeListeHelper.class);
+
+	/** Gültige Werte einer Spieltag-Spalte: gespielt bzw. ausgesetzt (leer = nicht dabei). */
+	private static final List<Integer> GUELTIGE_SPIELTAG_WERTE = List.of(SpielrundeGespielt.JA.getId(),
+			SpielrundeGespielt.AUSGESETZT.getId());
 
 	private final IMeldeliste<MLD_LIST_TYPE, MLDTYPE> meldeListe;
 	private final String metadatenSchluessel;
@@ -211,10 +219,12 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 			MeldungenHintergrundFarbeUnGeradeStyle ungeradeStyle) throws GenerateException {
 		var spieltageRangePos = RangePosition.from(ersteSpieltagSpalte(), ERSTE_DATEN_ZEILE,
 				letzteSpieltagSpalte, letzteDatenZeile);
-		setzeAktivDatengueltigkeit(sheet, spieltageRangePos, List.of(1, 2));
+		setzeAktivDatengueltigkeit(sheet, spieltageRangePos, GUELTIGE_SPIELTAG_WERTE);
+		// Fehlerfarbe nach derselben Regel wie die Datengültigkeit, damit z.B. eine 0 aus älteren
+		// Dateien markiert wird statt still als gültig durchzugehen.
 		ConditionalFormatHelper.from(sheet, spieltageRangePos).clear()
-				.formula1("0").formula2("2").operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndDoReset()
-				.formulaIsText().styleIsFehler().applyAndDoReset();
+				.formula1(aktivUngueltigFormel(GUELTIGE_SPIELTAG_WERTE)).operator(ConditionOperator.FORMULA)
+				.styleIsFehler().applyAndDoReset();
 		SheetHelper.faerbeZeilenAbwechselnd(sheet, spieltageRangePos,
 				geradeStyle.getFarbe(), ungeradeStyle.getFarbe());
 	}
@@ -325,9 +335,10 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 			// "1;2" allein wird als unvollständige Formel gelesen (Err:509); die geschweiften
 			// Klammern machen daraus eine gültige einspaltige Array-Konstante.
 			condition.setFormula1("{" + gueltigeWerte.stream().map(String::valueOf)
-					.collect(java.util.stream.Collectors.joining(";")) + "}");
+					.collect(Collectors.joining(";")) + "}");
 			rangeProperties.setPropertyValue("Validation", validation);
-		} catch (Exception e) {
+		} catch (com.sun.star.uno.Exception | RuntimeException e) {
+			logger.error("Datengültigkeit der Aktiv-Spalte konnte nicht gesetzt werden", e);
 			throw new GenerateException(I18n.get("error.meldeliste.aktiv.datengueltigkeit", e.getMessage()));
 		}
 	}

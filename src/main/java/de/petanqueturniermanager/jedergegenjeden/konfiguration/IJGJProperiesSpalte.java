@@ -2,7 +2,7 @@ package de.petanqueturniermanager.jedergegenjeden.konfiguration;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 
 /**
  * Erstellung 01.08.2022 / Michael Massee
@@ -33,9 +33,13 @@ public interface IJGJProperiesSpalte extends de.petanqueturniermanager.basesheet
 
 	void setMeldeListeVereinsnameAnzeigen(boolean anzeigen);
 
-	SpielplanTeamAnzeige getSpielplanTeamAnzeige();
+	TeamAnzeige getSpielplanTeamAnzeige();
 
-	void setSpielplanTeamAnzeige(SpielplanTeamAnzeige anzeige);
+	void setSpielplanTeamAnzeige(TeamAnzeige anzeige);
+
+	TeamAnzeige getRanglisteTeamAnzeige();
+
+	void setRanglisteTeamAnzeige(TeamAnzeige anzeige);
 
 	int getGruppengroesse();
 

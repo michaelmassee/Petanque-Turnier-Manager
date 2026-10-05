@@ -3,6 +3,7 @@
  */
 package de.petanqueturniermanager.ko.konfiguration;
 
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.basesheet.konfiguration.BaseKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.konfiguration.IPropertiesSpalte;
@@ -97,11 +98,11 @@ public class KoKonfigurationSheet extends BaseKonfigurationSheet
 		propertiesSpalte.setMeldeListeVereinsnameAnzeigen(anzeigen);
 	}
 
-	public KoSpielbaumTeamAnzeige getSpielbaumTeamAnzeige() {
+	public TeamAnzeige getSpielbaumTeamAnzeige() {
 		return propertiesSpalte.getSpielbaumTeamAnzeige();
 	}
 
-	public void setSpielbaumTeamAnzeige(KoSpielbaumTeamAnzeige anzeige) {
+	public void setSpielbaumTeamAnzeige(TeamAnzeige anzeige) {
 		propertiesSpalte.setSpielbaumTeamAnzeige(anzeige);
 	}
 

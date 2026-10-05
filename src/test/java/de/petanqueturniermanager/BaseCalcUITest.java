@@ -46,6 +46,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
+import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
@@ -338,6 +339,16 @@ public abstract class BaseCalcUITest {
 			e.printStackTrace();
 		}
 
+	}
+
+	/** Liest {@code IsVisible} der Spalte (Breite 0 blendet in LibreOffice nicht aus). */
+	protected boolean istSpalteSichtbar(XSpreadsheet sheet, int spalte) {
+		XPropertySet spaltenProperties = sheetHlp.getColumnPropertySet(sheet, spalte);
+		try {
+			return Boolean.TRUE.equals(spaltenProperties.getPropertyValue(ColumnProperties.ISVISIBLE));
+		} catch (com.sun.star.uno.Exception e) {
+			throw new IllegalStateException("IsVisible der Spalte " + spalte + " nicht lesbar", e);
+		}
 	}
 
 	protected void recalcAll() {

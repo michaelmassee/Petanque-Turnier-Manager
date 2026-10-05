@@ -25,7 +25,7 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
 import de.petanqueturniermanager.jedergegenjeden.blattschutz.JGJBlattschutzKonfiguration;
 import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationSheet;
-import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.toolbar.TurnierModus;
 
 /**
@@ -40,7 +40,7 @@ class JGJMeldeListeNurTeamnameUITest extends BaseCalcUITest {
     @Test
     void meldelisteOhneSpielerspaltenWirdKorrektAufgebaut() throws Exception {
         JGJMeldeListeSheet_New meldeListeNew = new JGJMeldeListeSheet_New(wkingSpreadsheet);
-        meldeListeNew.createMeldelisteWithParams(Formation.NUR_TEAMNAME, false, false, SpielplanTeamAnzeige.NR);
+        meldeListeNew.createMeldelisteWithParams(Formation.NUR_TEAMNAME, false, false, TeamAnzeige.NR);
 
         JGJKonfigurationSheet konfig = new JGJKonfigurationSheet(wkingSpreadsheet);
         assertThat(konfig.getMeldeListeFormation()).isEqualTo(Formation.NUR_TEAMNAME);
@@ -79,7 +79,7 @@ class JGJMeldeListeNurTeamnameUITest extends BaseCalcUITest {
     @Test
     void aktivSpalteHatNurDieJgjTeilnahmeDatengueltigkeit() throws Exception {
         JGJMeldeListeSheet_New meldeListeNew = new JGJMeldeListeSheet_New(wkingSpreadsheet);
-        meldeListeNew.createMeldelisteWithParams(Formation.NUR_TEAMNAME, false, false, SpielplanTeamAnzeige.NR);
+        meldeListeNew.createMeldelisteWithParams(Formation.NUR_TEAMNAME, false, false, TeamAnzeige.NR);
         JGJMeldeListeDelegate spaltenSonde = new JGJMeldeListeDelegate(meldeListeNew, wkingSpreadsheet,
                 TurnierSystem.JGJ);
 
@@ -104,7 +104,7 @@ class JGJMeldeListeNurTeamnameUITest extends BaseCalcUITest {
     @Test
     void kioskModus_gibtDenVollstaendigenKonfiguriertenMeldelistenEingabebereichFrei() throws Exception {
         JGJMeldeListeSheet_New meldeListeNew = new JGJMeldeListeSheet_New(wkingSpreadsheet);
-        meldeListeNew.createMeldelisteWithParams(Formation.DOUBLETTE, true, true, SpielplanTeamAnzeige.NR);
+        meldeListeNew.createMeldelisteWithParams(Formation.DOUBLETTE, true, true, TeamAnzeige.NR);
         XSpreadsheet sheet = meldeListeNew.getXSpreadSheet();
 
         TurnierModus.get().setAktivForTest(true);

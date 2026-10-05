@@ -3,7 +3,7 @@ package de.petanqueturniermanager.jedergegenjeden.konfiguration;
 import java.util.ArrayList;
 import java.util.List;
 
-import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
+import de.petanqueturniermanager.basesheet.konfiguration.TeamAnzeigePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.helper.ISheet;
@@ -12,14 +12,13 @@ import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
 import de.petanqueturniermanager.konfigdialog.HeaderFooterConfigProperty;
 import de.petanqueturniermanager.ko.konfiguration.KoPropertiesSpalte;
-import de.petanqueturniermanager.ko.konfiguration.KoSpielbaumTeamAnzeige;
-import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 
 /**
  * Erstellung 01.08.2022 / Michael Massee
  */
 
-public class JGJPropertiesSpalte extends BasePropertiesSpalte implements IJGJProperiesSpalte {
+public class JGJPropertiesSpalte extends TeamAnzeigePropertiesSpalte implements IJGJProperiesSpalte {
 
 	public static final List<ConfigProperty<?>> KONFIG_PROPERTIES = new ArrayList<>();
 
@@ -88,10 +87,18 @@ public class JGJPropertiesSpalte extends BasePropertiesSpalte implements IJGJPro
 				.intern());
 
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE)
-				.setDefaultVal(SpielplanTeamAnzeige.NR.name())
+				.setDefaultVal(TeamAnzeige.NR.name())
 				.setDescription("config.desc.jgj.spielplan.team.anzeige"))
-				.addAuswahl(SpielplanTeamAnzeige.NR.name(), "Teamnummer")
-				.addAuswahl(SpielplanTeamAnzeige.NAME.name(), "Teamname"));
+				.addAuswahl(TeamAnzeige.NR.name(), "Teamnummer")
+				.addAuswahl(TeamAnzeige.SPIELERNAMEN.name(), "Spielernamen")
+				.addAuswahl(TeamAnzeige.NAME.name(), "Teamname"));
+
+		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_RANGLISTE_TEAM_ANZEIGE)
+				.setDefaultVal(TeamAnzeige.NAME.name())
+				.setDescription("config.desc.jgj.rangliste.team.anzeige"))
+				.addAuswahl(TeamAnzeige.NR.name(), "Teamnummer")
+				.addAuswahl(TeamAnzeige.SPIELERNAMEN.name(), "Spielernamen")
+				.addAuswahl(TeamAnzeige.NAME.name(), "Teamname"));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_FREISPIEL_PUNKTE_PLUS)
 				.setDefaultVal(13).setDescription("config.desc.freispiel.punkte.plus"));
@@ -213,13 +220,13 @@ public class JGJPropertiesSpalte extends BasePropertiesSpalte implements IJGJPro
 	}
 
 	@Override
-	public SpielplanTeamAnzeige getSpielplanTeamAnzeige() {
-		return readEnumProperty(KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE, SpielplanTeamAnzeige.class, SpielplanTeamAnzeige.NR);
+	public TeamAnzeige getSpielplanTeamAnzeige() {
+		return leseTeamAnzeige(KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE, TeamAnzeige.NR);
 	}
 
 	@Override
-	public void setSpielplanTeamAnzeige(SpielplanTeamAnzeige anzeige) {
-		setStringProperty(KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE, anzeige.name());
+	public void setSpielplanTeamAnzeige(TeamAnzeige anzeige) {
+		schreibeTeamAnzeige(KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE, anzeige);
 	}
 
 	@Override
@@ -244,13 +251,12 @@ public class JGJPropertiesSpalte extends BasePropertiesSpalte implements IJGJPro
 				JGJGesamtranglisteSortModus.class, JGJGesamtranglisteSortModus.GRUPPENPLATZ);
 	}
 
-	public KoSpielbaumTeamAnzeige getSpielbaumTeamAnzeige() {
-		return readEnumProperty(KoPropertiesSpalte.KONFIG_PROP_SPIELBAUM_TEAM_ANZEIGE,
-				KoSpielbaumTeamAnzeige.class, KoSpielbaumTeamAnzeige.NR);
+	public TeamAnzeige getSpielbaumTeamAnzeige() {
+		return leseTeamAnzeige(KoPropertiesSpalte.KONFIG_PROP_SPIELBAUM_TEAM_ANZEIGE, TeamAnzeige.NR);
 	}
 
-	public void setSpielbaumTeamAnzeige(KoSpielbaumTeamAnzeige anzeige) {
-		setStringProperty(KoPropertiesSpalte.KONFIG_PROP_SPIELBAUM_TEAM_ANZEIGE, anzeige.name());
+	public void setSpielbaumTeamAnzeige(TeamAnzeige anzeige) {
+		schreibeTeamAnzeige(KoPropertiesSpalte.KONFIG_PROP_SPIELBAUM_TEAM_ANZEIGE, anzeige);
 	}
 
 	public SpielrundeSpielbahn getSpielbaumSpielbahn() {

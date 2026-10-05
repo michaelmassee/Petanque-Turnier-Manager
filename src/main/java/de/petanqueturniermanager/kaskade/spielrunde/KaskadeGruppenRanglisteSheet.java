@@ -10,6 +10,7 @@ import static de.petanqueturniermanager.helper.cellvalue.properties.ICommonPrope
 import static de.petanqueturniermanager.helper.cellvalue.properties.ICommonProperties.VERT_JUSTIFY;
 
 import java.util.List;
+import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -24,6 +25,8 @@ import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.algorithmen.kaskaden.KaskadenFeldBelegung;
 import de.petanqueturniermanager.algorithmen.kaskaden.KaskadenKoRundenPlan;
 import de.petanqueturniermanager.algorithmen.kaskaden.KaskadenKoRundenPlaner;
+import de.petanqueturniermanager.basesheet.meldeliste.TeilnehmerNamenLeser;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeigeHelper;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
@@ -51,12 +54,13 @@ import de.petanqueturniermanager.kaskade.konfiguration.KaskadeKonfigurationSheet
 import de.petanqueturniermanager.kaskade.meldeliste.KaskadeMeldeListeSheetUpdate;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 
 /**
  * Erstellt die Kaskaden-Gruppenrangliste nach Abschluss aller Kaskadenrunden.<br>
  * <br>
  * Das Sheet zeigt für jedes Endfeld (A, B, C, D …) die Setzliste der zugewiesenen
- * Teams nebeneinander: jeweils zwei Spalten (Pos | Team-Nr).<br>
+ * Teams nebeneinander: Pos, Team-Nr und die gewählte sichtbare Teamkennung.<br>
  * <br>
  * Die Feldbelegung wird aus den gespeicherten Kaskadenrunden-Sheets gelesen
  * ({@link KaskadeRundenErgebnisLeser}).
@@ -68,12 +72,13 @@ public class KaskadeGruppenRanglisteSheet extends SheetRunner implements ISheet 
     private static final Logger LOGGER = LogManager.getLogger(KaskadeGruppenRanglisteSheet.class);
 
     /**
-     * Pro Gruppe: 2 Spalten (Pos | Team-Nr).
+     * Pro Gruppe: 3 Spalten (Pos | Team-Nr | sichtbare Kennung).
      * Gruppen-Spaltenoffsets (relativ zum Start des Gruppenblocks):
      */
     public static final int BLOCK_POS_OFFSET  = 0;
     public static final int BLOCK_NR_OFFSET   = 1;
-    public static final int BLOCK_BREITE      = 2;
+    public static final int BLOCK_NAME_OFFSET = 2;
+    public static final int BLOCK_BREITE      = 3;
 
     /** Zeilen-Layout. */
     private static final int HAUPTHEADER_ZEILE = 0;
@@ -146,7 +151,7 @@ public class KaskadeGruppenRanglisteSheet extends SheetRunner implements ISheet 
 
         hauptHeaderSchreiben(plan, belegungen);
         gruppeHeadersSchreiben(belegungen);
-        datenSchreiben(belegungen);
+        datenSchreiben(belegungen, leseTeamNamen());
         formatieren(belegungen);
         druckBereichSetzen(plan, belegungen);
         SheetFreeze.from(getTurnierSheet()).anzZeilen(ERSTE_DATEN_ZEILE).doFreeze();
@@ -179,12 +184,12 @@ public class KaskadeGruppenRanglisteSheet extends SheetRunner implements ISheet 
     }
 
     /**
-     * Schreibt nur den Datenbereich (Pos + Team-Nr pro Gruppe) ohne Sheet-Neuaufbau
+     * Schreibt nur den Datenbereich (Pos, Team-Nr, sichtbare Kennung) ohne Sheet-Neuaufbau
      * oder Header-/Formatierungs-Änderungen. Für das inkrementelle Update aus
      * {@link KaskadeGruppenRanglisteSheetUpdate}.
      */
     protected void aktualisiereDatenblock(List<KaskadenFeldBelegung> belegungen) throws GenerateException {
-        datenSchreiben(belegungen);
+        datenSchreiben(belegungen, leseTeamNamen());
     }
 
     // ---------------------------------------------------------------
@@ -214,13 +219,14 @@ public class KaskadeGruppenRanglisteSheet extends SheetRunner implements ISheet 
     }
 
     /**
-     * Schreibt die Gruppen-Überschrift und Spalten-Header (Pos | Nr) für jede Gruppe.
+     * Schreibt die Gruppen-Überschrift und Spalten-Header für jede Gruppe.
      */
     private void gruppeHeadersSchreiben(List<KaskadenFeldBelegung> belegungen) throws GenerateException {
         var sheet       = getXSpreadSheet();
         var headerFarbe = konfigurationSheet.getMeldeListeHeaderFarbe();
         var posLabel    = I18n.get("kaskade.gruppenrangliste.spalte.pos");
-        var nrLabel     = I18n.get("kaskade.gruppenrangliste.spalte.team");
+        var nrLabel     = I18n.get("column.header.nr");
+        var nameLabel   = I18n.get(TeamAnzeigeHelper.headerI18nKey(konfigurationSheet.getRanglisteTeamAnzeige()));
 
         for (int i = 0; i < belegungen.size(); i++) {
             var belegung    = belegungen.get(i);
@@ -231,12 +237,14 @@ public class KaskadeGruppenRanglisteSheet extends SheetRunner implements ISheet 
                     ? BorderFactory.from().allThin().toBorder()
                     : BorderFactory.from().allThin().doubleLn().forRight().toBorder();
 
-            // Spalten-Header-Border: fette Unterlinie als Trenner zum Datenbereich + ggf. doppelte rechte Trennlinie
-            var spaltenHeaderBorderNr = istLetzte
+            // Spalten-Header-Border: fette Unterlinie als Trenner zum Datenbereich; die
+            // Gruppen-Trennlinie liegt rechts an der sichtbaren Kennung.
+            var spaltenHeaderBorder = BorderFactory.from().allThin().boldLn().forBottom().toBorder();
+            var spaltenHeaderBorderName = istLetzte
                     ? BorderFactory.from().allThin().boldLn().forBottom().toBorder()
                     : BorderFactory.from().allThin().boldLn().forBottom().doubleLn().forRight().toBorder();
 
-            // Gruppen-Header (über beide Spalten des Blocks)
+            // Gruppen-Header (über alle Spalten des Blocks)
             var gruppeHeader = StringCellValue.from(sheet,
                     Position.from(basisSpalte + BLOCK_POS_OFFSET, GRUPPE_HEADER_ZEILE))
                     .setValue(I18n.get("kaskade.feld.info.header",
@@ -270,15 +278,26 @@ public class KaskadeGruppenRanglisteSheet extends SheetRunner implements ISheet 
                     .centerHoriJustify()
                     .setCharHeight(CHARHEIGHT_HEADER)
                     .setCellBackColor(headerFarbe)
-                    .setBorder(spaltenHeaderBorderNr);
+                    .setBorder(spaltenHeaderBorder);
             getSheetHelper().setStringValueInCell(nrHeader);
+
+            var nameHeader = StringCellValue.from(sheet,
+                    Position.from(basisSpalte + BLOCK_NAME_OFFSET, SPALTEN_HEADER_ZEILE))
+                    .setValue(nameLabel)
+                    .setVertJustify(CellVertJustify2.CENTER)
+                    .centerHoriJustify()
+                    .setCharHeight(CHARHEIGHT_HEADER)
+                    .setCellBackColor(headerFarbe)
+                    .setBorder(spaltenHeaderBorderName);
+            getSheetHelper().setStringValueInCell(nameHeader);
         }
     }
 
     /**
-     * Schreibt die Teamdaten (Pos + Team-Nr) für alle Gruppen als Datenblock.
+     * Schreibt die Teamdaten (Pos, Team-Nr, sichtbare Kennung) für alle Gruppen als Datenblock.
      */
-    private void datenSchreiben(List<KaskadenFeldBelegung> belegungen) throws GenerateException {
+    private void datenSchreiben(List<KaskadenFeldBelegung> belegungen, Map<Integer, String> teamNamen)
+            throws GenerateException {
         int maxZeilen = belegungen.stream()
                 .mapToInt(b -> b.teamNrs().size())
                 .max()
@@ -298,7 +317,9 @@ public class KaskadeGruppenRanglisteSheet extends SheetRunner implements ISheet 
             for (int pos = 1; pos <= teamNrs.size(); pos++) {
                 var zeile = datenBlock.addNewRow();
                 zeile.add(new CellData(pos));             // Pos
-                zeile.add(new CellData(teamNrs.get(pos - 1))); // Team-Nr
+                int teamNr = teamNrs.get(pos - 1);
+                zeile.add(new CellData(teamNr));
+                zeile.add(new CellData(teamNamen.getOrDefault(teamNr, "")));
             }
 
             var datenStart = Position.from(basisSpalte, ERSTE_DATEN_ZEILE);
@@ -344,16 +365,31 @@ public class KaskadeGruppenRanglisteSheet extends SheetRunner implements ISheet 
             getSheetHelper().setPropertyInRange(sheet, nrRange, CHAR_WEIGHT, FontWeight.BOLD);
         }
 
-        // Doppelte vertikale Trennlinie rechts an jeder NR-Spalte (außer der letzten Gruppe)
+        // Doppelte vertikale Trennlinie rechts an jeder sichtbaren Kennung (außer der letzten Gruppe)
         var trennBorder = BorderFactory.from().allThin().doubleLn().forRight().toBorder();
         for (int i = 0; i < belegungen.size() - 1; i++) {
-            int nrSpalte = i * BLOCK_BREITE + BLOCK_NR_OFFSET;
-            var trennRange = RangePosition.from(nrSpalte, ERSTE_DATEN_ZEILE, nrSpalte, letzteZeile);
+            int nameSpalte = i * BLOCK_BREITE + BLOCK_NAME_OFFSET;
+            var trennRange = RangePosition.from(nameSpalte, ERSTE_DATEN_ZEILE, nameSpalte, letzteZeile);
             getSheetHelper().setPropertyInRange(sheet, trennRange, TABLE_BORDER2, trennBorder);
         }
 
         // Alle Spalten und Zeilen auf optimale Breite/Höhe setzen
         getSheetHelper().setOptimaleBreiteUndHoeheAlles(sheet, HAUPTHEADER_ZEILE, letzteZeile, 0, letzteSpalte);
+        boolean namenSichtbar = !konfigurationSheet.getRanglisteTeamAnzeige().istNummer();
+        for (int i = 0; i < belegungen.size(); i++) {
+            getSheetHelper().setColumnVisible(sheet, i * BLOCK_BREITE + BLOCK_NAME_OFFSET, namenSichtbar);
+        }
+    }
+
+    private Map<Integer, String> leseTeamNamen() throws GenerateException {
+        TeamAnzeige anzeige = konfigurationSheet.getRanglisteTeamAnzeige();
+        if (anzeige == TeamAnzeige.NR) {
+            return Map.of();
+        }
+        var namen = TeilnehmerNamenLeser.from(meldeListe, meldeListe.getErsteDatenZeile(), konfigurationSheet.getMeldeListeFormation(),
+                konfigurationSheet.isMeldeListeTeamnameAnzeigen(),
+                konfigurationSheet.isMeldeListeVereinsnameAnzeigen()).lesen();
+        return anzeige == TeamAnzeige.NAME ? namen.teamnamen() : namen.spielerNamen();
     }
 
     private void druckBereichSetzen(KaskadenKoRundenPlan plan, List<KaskadenFeldBelegung> belegungen)

@@ -32,7 +32,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
-import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 
 /**
  * Modaler Start-Dialog für neue JGJ-Meldelisten.
@@ -52,7 +52,7 @@ public class JGJStartDialog {
 	public record StartParameter(Formation formation,
 		boolean teamnameAnzeigen, boolean vereinsnameAnzeigen,
 		boolean meleeAnmeldung,
-		SpielplanTeamAnzeige spielplanTeamAnzeige,
+		TeamAnzeige spielplanTeamAnzeige,
 		int gruppengroesse,
 		boolean mitRueckrunde) {
 	}
@@ -183,8 +183,8 @@ public class JGJStartDialog {
 			boolean teamnameAnzeigen = formation == Formation.NUR_TEAMNAME || readCheckBoxState(xcc, "cbTeamname");
 			boolean vereinsnameAnzeigen = readCheckBoxState(xcc, "cbVereinsname");
 			boolean meleeAnmeldung = MeleeAnmeldungDialogOption.istGewaehlt(xcc, formation);
-			SpielplanTeamAnzeige spielplanAnzeige = readListBoxSelected(xcc, "lstSpielplanAnzeige") == 1
-					? SpielplanTeamAnzeige.NAME : SpielplanTeamAnzeige.NR;
+			TeamAnzeige spielplanAnzeige = readListBoxSelected(xcc, "lstSpielplanAnzeige") == 1
+					? TeamAnzeige.NAME : TeamAnzeige.NR;
 			int gruppengroesse = parseGruppengroesse(readEditText(xcc, "editGruppengroesse"));
 			boolean mitRueckrunde = readCheckBoxState(xcc, "cbRueckrunde");
 			result = Optional.of(new StartParameter(formation, teamnameAnzeigen, vereinsnameAnzeigen, meleeAnmeldung,

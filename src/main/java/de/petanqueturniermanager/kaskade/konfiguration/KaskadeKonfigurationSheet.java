@@ -14,6 +14,7 @@ import de.petanqueturniermanager.helper.pagestyle.PageStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 
 /**
  * Konfigurationssheet für das Kaskaden-KO-Turniersystem.
@@ -93,6 +94,22 @@ public class KaskadeKonfigurationSheet extends BaseKonfigurationSheet implements
 
     public void setMeldeListeVereinsnameAnzeigen(boolean anzeigen) {
         propertiesSpalte.setMeldeListeVereinsnameAnzeigen(anzeigen);
+    }
+
+    public TeamAnzeige getRanglisteTeamAnzeige() {
+        return propertiesSpalte.getRanglisteTeamAnzeige();
+    }
+
+    public void setRanglisteTeamAnzeige(TeamAnzeige anzeige) {
+        propertiesSpalte.setRanglisteTeamAnzeige(anzeige);
+    }
+
+    public TeamAnzeige getSpielbaumTeamAnzeige() {
+        return propertiesSpalte.getSpielbaumTeamAnzeige();
+    }
+
+    public void setSpielbaumTeamAnzeige(TeamAnzeige anzeige) {
+        propertiesSpalte.setSpielbaumTeamAnzeige(anzeige);
     }
 
     public int getKaskadenTabFarbe() {

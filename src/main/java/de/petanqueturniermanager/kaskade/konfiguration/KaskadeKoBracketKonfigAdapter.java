@@ -6,7 +6,7 @@ package de.petanqueturniermanager.kaskade.konfiguration;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.ko.konfiguration.IKoBracketKonfiguration;
-import de.petanqueturniermanager.ko.konfiguration.KoSpielbaumTeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 
 /**
  * Adapter: verbindet {@link KaskadeKonfigurationSheet} mit dem {@link IKoBracketKonfiguration}-Interface,
@@ -27,8 +27,8 @@ public class KaskadeKoBracketKonfigAdapter implements IKoBracketKonfiguration {
     }
 
     @Override
-    public KoSpielbaumTeamAnzeige getSpielbaumTeamAnzeige() {
-        return KoSpielbaumTeamAnzeige.NR;
+    public TeamAnzeige getSpielbaumTeamAnzeige() {
+        return konfiguration.getSpielbaumTeamAnzeige();
     }
 
     /** Kaskade hat keine Spielbahn-Zuweisung im KO-Turnierbaum. */

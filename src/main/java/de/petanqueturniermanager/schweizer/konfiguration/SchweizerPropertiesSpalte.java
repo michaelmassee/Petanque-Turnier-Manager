@@ -6,7 +6,8 @@ package de.petanqueturniermanager.schweizer.konfiguration;
 import java.util.ArrayList;
 import java.util.List;
 
-import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
+import de.petanqueturniermanager.basesheet.konfiguration.TeamAnzeigePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.helper.ISheet;
@@ -24,7 +25,7 @@ import de.petanqueturniermanager.supermelee.SpielRundeNr;
  * @author Michael Massee
  *
  */
-public class SchweizerPropertiesSpalte extends BasePropertiesSpalte implements ISchweizerPropertiesSpalte {
+public class SchweizerPropertiesSpalte extends TeamAnzeigePropertiesSpalte implements ISchweizerPropertiesSpalte {
 
 	public static final List<ConfigProperty<?>> KONFIG_PROPERTIES = new ArrayList<>();
 
@@ -104,10 +105,18 @@ public class SchweizerPropertiesSpalte extends BasePropertiesSpalte implements I
 				.intern());
 
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE)
-				.setDefaultVal(SpielplanTeamAnzeige.NR.name())
+				.setDefaultVal(TeamAnzeige.NR.name())
 				.setDescription("config.desc.schweizer.spielplan.team.anzeige"))
-				.addAuswahl(SpielplanTeamAnzeige.NR.name(), "Teamnummer")
-				.addAuswahl(SpielplanTeamAnzeige.NAME.name(), "Teamname"));
+				.addAuswahl(TeamAnzeige.NR.name(), "Teamnummer")
+				.addAuswahl(TeamAnzeige.SPIELERNAMEN.name(), "Spielernamen")
+				.addAuswahl(TeamAnzeige.NAME.name(), "Teamname"));
+
+		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_RANGLISTE_TEAM_ANZEIGE)
+				.setDefaultVal(TeamAnzeige.NAME.name())
+				.setDescription("config.desc.schweizer.rangliste.team.anzeige"))
+				.addAuswahl(TeamAnzeige.NR.name(), "Teamnummer")
+				.addAuswahl(TeamAnzeige.SPIELERNAMEN.name(), "Spielernamen")
+				.addAuswahl(TeamAnzeige.NAME.name(), "Teamname"));
 
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_RANKING_MODUS)
 				.setDefaultVal(SchweizerRankingModus.MIT_BUCHHOLZ.name())
@@ -254,8 +263,11 @@ public class SchweizerPropertiesSpalte extends BasePropertiesSpalte implements I
 		// Rohen Property-Wert prüfen (nicht getSpielplanTeamAnzeige(): dessen defensiver Fallback
 		// würde nach dem Deaktivieren immer NR liefern und den Reset in Zeile unten verhindern —
 		// der gespeicherte Wert bliebe fälschlich auf NAME stehen).
-		if (!anzeigen && readRawSpielplanTeamAnzeige() == SpielplanTeamAnzeige.NAME) {
-			setStringProperty(KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE, SpielplanTeamAnzeige.NR.name());
+		if (!anzeigen && readRawSpielplanTeamAnzeige() == TeamAnzeige.NAME) {
+			setStringProperty(KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE, TeamAnzeige.NR.name());
+		}
+		if (!anzeigen && getRanglisteTeamAnzeige() == TeamAnzeige.NAME) {
+			setStringProperty(KONFIG_PROP_RANGLISTE_TEAM_ANZEIGE, TeamAnzeige.SPIELERNAMEN.name());
 		}
 		setStringProperty(KONFIG_PROP_MELDELISTE_TEAMNAME, anzeigen ? "J" : "N");
 	}
@@ -266,24 +278,26 @@ public class SchweizerPropertiesSpalte extends BasePropertiesSpalte implements I
 	}
 
 	@Override
-	public SpielplanTeamAnzeige getSpielplanTeamAnzeige() {
-		SpielplanTeamAnzeige anzeige = readRawSpielplanTeamAnzeige();
+	public TeamAnzeige getSpielplanTeamAnzeige() {
+		TeamAnzeige anzeige = readRawSpielplanTeamAnzeige();
 		// Defensive Absicherung (z.B. bei älteren Dateien mit inkonsistent gesetzten Properties):
 		// ohne Meldeliste-Teamname gibt es keine Team-Namen zum Auflösen, siehe setMeldeListeTeamnameAnzeigen.
-		if (anzeige == SpielplanTeamAnzeige.NAME && !isMeldeListeTeamnameAnzeigen()) {
-			return SpielplanTeamAnzeige.NR;
+		if (anzeige == TeamAnzeige.NAME && !isMeldeListeTeamnameAnzeigen()) {
+			return TeamAnzeige.NR;
 		}
 		return anzeige;
 	}
 
-	private SpielplanTeamAnzeige readRawSpielplanTeamAnzeige() {
-		return readEnumProperty(KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE, SpielplanTeamAnzeige.class, SpielplanTeamAnzeige.NR);
+	private TeamAnzeige readRawSpielplanTeamAnzeige() {
+		return readEnumProperty(KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE, TeamAnzeige.class, TeamAnzeige.NR);
 	}
 
 	@Override
-	public void setSpielplanTeamAnzeige(SpielplanTeamAnzeige anzeige) {
-		setStringProperty(KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE, anzeige.name());
-		if (anzeige == SpielplanTeamAnzeige.NAME && !isMeldeListeTeamnameAnzeigen()) {
+	public void setSpielplanTeamAnzeige(TeamAnzeige anzeige) {
+		schreibeTeamAnzeige(KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE, anzeige);
+		// Bisheriges Schweizer-Verhalten: der Spielplan-Getter fällt ohne Teamname-Spalte auf NR
+		// zurück, deshalb aktiviert die Wahl von NAME die Spalte.
+		if (anzeige == TeamAnzeige.NAME && !isMeldeListeTeamnameAnzeigen()) {
 			setMeldeListeTeamnameAnzeigen(true);
 		}
 	}

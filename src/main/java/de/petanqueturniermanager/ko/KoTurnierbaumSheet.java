@@ -17,13 +17,13 @@ import com.sun.star.awt.FontWeight;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
-import com.sun.star.uno.UnoRuntime;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.algorithmen.common.CadrageRechner;
 import de.petanqueturniermanager.algorithmen.common.GruppenAufteilungRechner;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeigeHelper;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -57,7 +57,7 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.ko.konfiguration.IKoBracketKonfiguration;
 import de.petanqueturniermanager.ko.konfiguration.KoKonfigurationSheet;
-import de.petanqueturniermanager.ko.konfiguration.KoSpielbaumTeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.ko.meldeliste.KoMeldeListeSheetUpdate;
 import de.petanqueturniermanager.model.TeamMeldungen;
@@ -132,7 +132,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 
 	// Konfigurations-State für die aktuelle Turnierbaum-Erstellung
 	private volatile SpielrundeSpielbahn spielbahn = SpielrundeSpielbahn.X;
-	private volatile KoSpielbaumTeamAnzeige teamAnzeige = KoSpielbaumTeamAnzeige.NR;
+	private volatile TeamAnzeige teamAnzeige = TeamAnzeige.NR;
 	private volatile boolean spielUmPlatz3 = false;
 	private volatile boolean bahnNurRunde1 = true;
 
@@ -938,7 +938,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		int[] setzliste = berechneSetzliste(bracketGroesse);
 		int anzMatchesR1 = bracketGroesse / 2;
 		int letzteZeile = berechneLetzteZeile(anzMatchesR1);
-		int letzteSpalte = (teamAnzeige == KoSpielbaumTeamAnzeige.NAME)
+		int letzteSpalte = !teamAnzeige.istNummer()
 				? siegerSpalte(numRunden)
 				: siegerNameSpalte(numRunden);
 
@@ -1238,7 +1238,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	// ---------------------------------------------------------------
 
 	private void formatiereKolumnen(XSpreadsheet xSheet, int numRunden) throws GenerateException {
-		int teamColWidth = (teamAnzeige == KoSpielbaumTeamAnzeige.NAME) ? NAME_COL_WIDTH : NR_COL_WIDTH;
+		int teamColWidth = !teamAnzeige.istNummer() ? NAME_COL_WIDTH : NR_COL_WIDTH;
 
 		if (mitCadrage) {
 			if (mitBahnInCadrage()) {
@@ -1248,7 +1248,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 			}
 			getSheetHelper().setColumnProperties(xSheet, cadrageTeamSpalte(),
 					ColumnProperties.from().setWidth(teamColWidth)
-							.setHoriJustify(teamAnzeige == KoSpielbaumTeamAnzeige.NAME
+							.setHoriJustify(!teamAnzeige.istNummer()
 									? CellHoriJustify.LEFT : CellHoriJustify.CENTER)
 							.setVertJustify(CellVertJustify2.CENTER));
 			getSheetHelper().setColumnProperties(xSheet, cadrageScoreSpalte(),
@@ -1267,7 +1267,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 			}
 			getSheetHelper().setColumnProperties(xSheet, teamSpalte(r),
 					ColumnProperties.from().setWidth(teamColWidth)
-							.setHoriJustify(teamAnzeige == KoSpielbaumTeamAnzeige.NAME
+							.setHoriJustify(!teamAnzeige.istNummer()
 									? CellHoriJustify.LEFT : CellHoriJustify.CENTER)
 							.setVertJustify(CellVertJustify2.CENTER));
 			getSheetHelper().setColumnProperties(xSheet, scoreSpalte(r),
@@ -1292,7 +1292,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	 * NAME-Modus: siegerSpalte = {@link #SIEGER_NAME_COL_WIDTH}, siegerNameSpalte = versteckt (Breite 0).
 	 */
 	void formatieresSiegerSpalten(XSpreadsheet xSheet, int numRunden) throws GenerateException {
-		if (teamAnzeige == KoSpielbaumTeamAnzeige.NR) {
+		if (teamAnzeige == TeamAnzeige.NR) {
 			getSheetHelper().setColumnProperties(xSheet, siegerSpalte(numRunden),
 					ColumnProperties.from().setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setHoriJustify(CellHoriJustify.CENTER)
 							.setVertJustify(CellVertJustify2.CENTER));
@@ -1309,8 +1309,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	}
 
 	private void schreibeHeader(XSpreadsheet xSheet, int numRunden) throws GenerateException {
-		String teamHeader = (teamAnzeige == KoSpielbaumTeamAnzeige.NAME)
-				? I18n.get("column.header.teamname") : I18n.get("column.header.nr");
+		String teamHeader = I18n.get(TeamAnzeigeHelper.headerI18nKey(teamAnzeige));
 
 		if (mitCadrage) {
 			int titelStartSpalte = mitBahnInCadrage() ? cadrageBahnSpalte() : cadrageTeamSpalte();
@@ -1409,10 +1408,10 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 							.setHoriJustify(CellHoriJustify.CENTER));
 			return;
 		}
-		if (teamAnzeige == KoSpielbaumTeamAnzeige.NAME) {
-			// Teamname via SVERWEIS
-			String formel = MeldeListeHelper.teamNameFormel(String.valueOf(nr),
-					meldeListeTeamnameAnzeigen, meldeListeFormation, meldeListeVereinsnameAnzeigen);
+		if (!teamAnzeige.istNummer()) {
+			String formel = TeamAnzeigeHelper.formel(String.valueOf(nr),
+					teamAnzeige,
+					meldeListeFormation, meldeListeVereinsnameAnzeigen);
 			getSheetHelper().setFormulaInCell(
 					StringCellValue.from(xSheet, Position.from(teamSpalte(1), zeile), formel)
 							.setCellBackColor(farbe)
@@ -1506,7 +1505,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 				+ "\"\")";
 
 		int targetRow = istTeamA ? teamAZeile(runde, match) : teamBZeile(runde, match);
-		CellHoriJustify justify = (teamAnzeige == KoSpielbaumTeamAnzeige.NAME)
+		CellHoriJustify justify = !teamAnzeige.istNummer()
 				? CellHoriJustify.LEFT : CellHoriJustify.CENTER;
 
 		getSheetHelper().setFormulaInCell(
@@ -1561,7 +1560,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 				+ "IF(" + scoreAAddr + "<" + scoreBAddr + ";" + teamBAddr + ";\"?\"));"
 				+ "\"\")";
 
-		CellHoriJustify justify = (teamAnzeige == KoSpielbaumTeamAnzeige.NAME)
+		CellHoriJustify justify = !teamAnzeige.istNummer()
 				? CellHoriJustify.LEFT : CellHoriJustify.CENTER;
 
 		getSheetHelper().setFormulaInCell(
@@ -1573,7 +1572,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 						.setHoriJustify(justify));
 
 		// Im NR-Modus: zusätzlich Teamname via SVERWEIS in der Nebenspalte
-		if (teamAnzeige == KoSpielbaumTeamAnzeige.NR) {
+		if (teamAnzeige == TeamAnzeige.NR) {
 			String siegerNrAddr = Position.from(siegerSp, siegerZeile).getAddressWith$();
 			String siegerNameFormel = "IF(AND(ISNUMBER(" + siegerNrAddr + ");" + siegerNrAddr
 					+ "<>\"\";" + siegerNrAddr + ">0);" + MeldeListeHelper.teamNameFormel(siegerNrAddr,
@@ -1696,9 +1695,10 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 							.setHoriJustify(CellHoriJustify.CENTER));
 			return;
 		}
-		if (teamAnzeige == KoSpielbaumTeamAnzeige.NAME) {
-			String formel = MeldeListeHelper.teamNameFormel(String.valueOf(nr),
-					meldeListeTeamnameAnzeigen, meldeListeFormation, meldeListeVereinsnameAnzeigen);
+		if (!teamAnzeige.istNummer()) {
+			String formel = TeamAnzeigeHelper.formel(String.valueOf(nr),
+					teamAnzeige,
+					meldeListeFormation, meldeListeVereinsnameAnzeigen);
 			getSheetHelper().setFormulaInCell(
 					StringCellValue.from(xSheet, Position.from(spalte, zeile), formel)
 							.setCellBackColor(farbe)
@@ -1741,7 +1741,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 				+ "\"\")";
 
 		int farbe = istSlotA ? teamBFarbe : teamAFarbe;
-		CellHoriJustify justify = (teamAnzeige == KoSpielbaumTeamAnzeige.NAME)
+		CellHoriJustify justify = !teamAnzeige.istNummer()
 				? CellHoriJustify.LEFT : CellHoriJustify.CENTER;
 
 		getSheetHelper().setFormulaInCell(
@@ -1873,7 +1873,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 				+ "IF(" + scoreAAddr + ">" + scoreBAddr + ";" + teamBAddr + ";\"?\"));"
 				+ "\"\")";
 
-		CellHoriJustify justify = (teamAnzeige == KoSpielbaumTeamAnzeige.NAME)
+		CellHoriJustify justify = !teamAnzeige.istNummer()
 				? CellHoriJustify.LEFT : CellHoriJustify.CENTER;
 
 		getSheetHelper().setFormulaInCell(
@@ -1901,7 +1901,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 				+ "IF(" + scoreAAddr + "<" + scoreBAddr + ";" + teamBAddr + ";\"?\"));"
 				+ "\"\")";
 
-		CellHoriJustify justify = (teamAnzeige == KoSpielbaumTeamAnzeige.NAME)
+		CellHoriJustify justify = !teamAnzeige.istNummer()
 				? CellHoriJustify.LEFT : CellHoriJustify.CENTER;
 
 		getSheetHelper().setFormulaInCell(
@@ -1913,7 +1913,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 						.setHoriJustify(justify));
 
 		// Im NR-Modus: Teamname via SVERWEIS in der Nebenspalte
-		if (teamAnzeige == KoSpielbaumTeamAnzeige.NR) {
+		if (teamAnzeige == TeamAnzeige.NR) {
 			String drittePlatzNrAddr = Position.from(siegerSp, siegerZeile).getAddressWith$();
 			String drittePlatzNameFormel = "IF(AND(ISNUMBER(" + drittePlatzNrAddr + ");" + drittePlatzNrAddr
 					+ "<>\"\";" + drittePlatzNrAddr + ">0);" + MeldeListeHelper.teamNameFormel(drittePlatzNrAddr,

@@ -22,9 +22,8 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
-import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterGruppenModus;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
-import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
@@ -78,7 +77,7 @@ public class MaastrichterMeldeListeSheetNew extends SheetRunner implements IShee
 		Optional<MaastrichterTurnierParameterDialog.TurnierParameter> param;
 		try {
 			param = MaastrichterTurnierParameterDialog.from(getWorkingSpreadsheet()).show(
-					Formation.DOUBLETTE, false, false, SpielplanTeamAnzeige.NR,
+					Formation.DOUBLETTE, false, false, TeamAnzeige.NR,
 					konfigurationSheet.getRankingModus(),
 					konfigurationSheet.getAnzVorrunden(),
 					konfigurationSheet.getSpielbaumTeamAnzeige(),
@@ -128,7 +127,7 @@ public class MaastrichterMeldeListeSheetNew extends SheetRunner implements IShee
 	 * Verwendet intern die Schweizer-Delegate-Logik, da das Format identisch ist.
 	 */
 	public void erstelleMeldeliste(Formation formation, boolean teamnameAnzeigen, boolean vereinsnameAnzeigen,
-			SpielplanTeamAnzeige spielplanTeamAnzeige) throws GenerateException {
+			TeamAnzeige spielplanTeamAnzeige) throws GenerateException {
 		var neuesSheet = NewSheet.from(this, SheetNamen.meldeliste(), METADATA_SCHLUESSEL)
 				.pos(DefaultSheetPos.MELDELISTE).hideGrid().tabColor(getKonfigurationSheet().getMeldelisteTabFarbe()).setDocVersionWhenNew().create();
 		if (neuesSheet.isDidCreate()) {

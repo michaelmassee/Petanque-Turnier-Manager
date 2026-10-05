@@ -16,7 +16,7 @@ import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
-import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 
 /**
  * Regressionstest für Formation.NUR_TEAMNAME: Maastrichter verwendet intern das gleiche
@@ -31,7 +31,7 @@ class MaastrichterMeldeListeNurTeamnameUITest extends BaseCalcUITest {
     @Test
     void meldelisteOhneSpielerspaltenWirdKorrektAufgebaut() throws Exception {
         MaastrichterMeldeListeSheetNew meldeListeNew = new MaastrichterMeldeListeSheetNew(wkingSpreadsheet);
-        meldeListeNew.erstelleMeldeliste(Formation.NUR_TEAMNAME, false, false, SpielplanTeamAnzeige.NR);
+        meldeListeNew.erstelleMeldeliste(Formation.NUR_TEAMNAME, false, false, TeamAnzeige.NR);
 
         MaastrichterKonfigurationSheet konfig = new MaastrichterKonfigurationSheet(wkingSpreadsheet);
         assertThat(konfig.getMeldeListeFormation()).isEqualTo(Formation.NUR_TEAMNAME);

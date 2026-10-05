@@ -8,7 +8,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.pagestyle.PageStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.ko.konfiguration.IKoBracketKonfiguration;
-import de.petanqueturniermanager.ko.konfiguration.KoSpielbaumTeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerPropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
@@ -76,11 +76,11 @@ public class MaastrichterKonfigurationSheet extends SchweizerKonfigurationSheet 
 	}
 
 	@Override
-	public KoSpielbaumTeamAnzeige getSpielbaumTeamAnzeige() {
+	public TeamAnzeige getSpielbaumTeamAnzeige() {
 		return getPropertiesSpalte().getSpielbaumTeamAnzeige();
 	}
 
-	public void setSpielbaumTeamAnzeige(KoSpielbaumTeamAnzeige anzeige) {
+	public void setSpielbaumTeamAnzeige(TeamAnzeige anzeige) {
 		getPropertiesSpalte().setSpielbaumTeamAnzeige(anzeige);
 	}
 

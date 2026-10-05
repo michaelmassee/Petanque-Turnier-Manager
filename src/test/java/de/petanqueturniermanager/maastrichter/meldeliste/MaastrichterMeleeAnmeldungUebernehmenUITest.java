@@ -19,7 +19,7 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
-import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 
 /** Regression: derselbe Mêlée-Spieler darf nicht ein zweites Mal übernommen werden. */
 class MaastrichterMeleeAnmeldungUebernehmenUITest extends BaseCalcUITest implements MeleeAnmeldungKonstanten {
@@ -32,7 +32,7 @@ class MaastrichterMeleeAnmeldungUebernehmenUITest extends BaseCalcUITest impleme
 	@Test
 	void zweiteUebernahmeSchreibtKeineDoppeltenTeilnehmer() throws Exception {
 		new MaastrichterMeldeListeSheetNew(wkingSpreadsheet)
-				.erstelleMeldeliste(Formation.TRIPLETTE, false, false, SpielplanTeamAnzeige.NR);
+				.erstelleMeldeliste(Formation.TRIPLETTE, false, false, TeamAnzeige.NR);
 		meldeliste = new MaastrichterMeldeListeSheetUpdate(wkingSpreadsheet);
 		docPropHelper.setBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_MELEE_ANMELDUNG, true);
 		meleeAnmeldungenAnlegen(6);

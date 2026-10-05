@@ -19,6 +19,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.IMeldeliste;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeigeHelper;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -43,7 +44,7 @@ import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationSheet;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
-import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 class JGJMeldeListeDelegate implements MeldeListeKonstanten {
@@ -438,19 +439,17 @@ class JGJMeldeListeDelegate implements MeldeListeKonstanten {
 	}
 
 	String formulaSpielplanTeamName(String nrAdresse) {
-		if (konfigurationSheet.getSpielplanTeamAnzeige() == SpielplanTeamAnzeige.NR) {
-			return nrAdresse;
-		}
-		return formulaSverweisSpielernamen(nrAdresse);
+		return TeamAnzeigeHelper.formel(nrAdresse, konfigurationSheet.getSpielplanTeamAnzeige(),
+				konfigurationSheet.getMeldeListeFormation(), konfigurationSheet.isMeldeListeVereinsnameAnzeigen());
 	}
 
-	Map<Integer, String> leseTeamNamen() throws GenerateException {
+	Map<Integer, String> leseTeamNamen(TeamAnzeige anzeige) throws GenerateException {
 		Map<Integer, String> result = new HashMap<>();
 		XSpreadsheet mlSheet = sheet.getXSpreadSheet();
 		if (mlSheet == null) {
 			return result;
 		}
-		boolean zeigeTeamname = konfigurationSheet.isMeldeListeTeamnameAnzeigen();
+		boolean zeigeTeamname = anzeige == TeamAnzeige.NAME;
 		boolean zeigeVerein = konfigurationSheet.isMeldeListeVereinsnameAnzeigen();
 		Formation formation = konfigurationSheet.getMeldeListeFormation();
 		int anzSpieler = formation.getAnzSpieler();
@@ -470,12 +469,17 @@ class JGJMeldeListeDelegate implements MeldeListeKonstanten {
 			if (nr <= 0) {
 				break;
 			}
-			String name = zeigeTeamname
+			String name = anzeige == TeamAnzeige.NR ? String.valueOf(nr) : zeigeTeamname
 					? (row.size() > 1 ? row.get(1).getStringVal() : "")
 					: bauspielerNamenZusammen(row, anzSpieler, ersterSpielerOffset, spaltenProSpieler);
 			result.put(nr, name != null ? name : "");
 		}
 		return result;
+	}
+
+	Map<Integer, String> leseTeamNamen() throws GenerateException {
+		return leseTeamNamen(konfigurationSheet.isMeldeListeTeamnameAnzeigen()
+				? TeamAnzeige.NAME : TeamAnzeige.SPIELERNAMEN);
 	}
 
 	private String bauspielerNamenZusammen(RowData row, int anzSpieler, int ersterSpielerOffset, int spaltenProSpieler) {

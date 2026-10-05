@@ -25,7 +25,7 @@ import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
-import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
@@ -150,18 +150,18 @@ public class JGJMeldeListeSheet_New extends SheetRunner implements IMeldeliste<T
 	 * Wird auch von TestDaten-Klassen aufgerufen.
 	 */
 	public void createMeldelisteWithParams(Formation formation, boolean teamnameAnzeigen,
-			boolean vereinsnameAnzeigen, SpielplanTeamAnzeige spielplanTeamAnzeige) throws GenerateException {
+			boolean vereinsnameAnzeigen, TeamAnzeige spielplanTeamAnzeige) throws GenerateException {
 		createMeldelisteWithParams(formation, teamnameAnzeigen, vereinsnameAnzeigen, spielplanTeamAnzeige, 0, false);
 	}
 
 	public void createMeldelisteWithParams(Formation formation, boolean teamnameAnzeigen,
-			boolean vereinsnameAnzeigen, SpielplanTeamAnzeige spielplanTeamAnzeige, int gruppengroesse)
+			boolean vereinsnameAnzeigen, TeamAnzeige spielplanTeamAnzeige, int gruppengroesse)
 			throws GenerateException {
 		createMeldelisteWithParams(formation, teamnameAnzeigen, vereinsnameAnzeigen, spielplanTeamAnzeige, gruppengroesse, false);
 	}
 
 	public void createMeldelisteWithParams(Formation formation, boolean teamnameAnzeigen,
-			boolean vereinsnameAnzeigen, SpielplanTeamAnzeige spielplanTeamAnzeige,
+			boolean vereinsnameAnzeigen, TeamAnzeige spielplanTeamAnzeige,
 			int gruppengroesse, boolean mitRueckrunde) throws GenerateException {
 		var neuesSheet = NewSheet.from(this, SheetNamen.meldeliste(), METADATA_SCHLUESSEL)
 				.pos(DefaultSheetPos.MELDELISTE).hideGrid().tabColor(getKonfigurationSheet().getMeldelisteTabFarbe()).setDocVersionWhenNew().create();

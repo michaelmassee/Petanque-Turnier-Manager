@@ -16,7 +16,7 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerPropertiesSpalte;
-import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetTestDaten;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheet;
 
@@ -80,7 +80,7 @@ public class SchweizerZeitplanUITest extends BaseCalcUITest {
 	 */
 	@Test
 	public void featureAus_KeineDurchgangSpaltenUndKeineRundenstartzeit() throws Exception {
-		testDaten = new SchweizerTurnierTestDaten(wkingSpreadsheet, ANZ_TEAMS, SpielplanTeamAnzeige.NR);
+		testDaten = new SchweizerTurnierTestDaten(wkingSpreadsheet, ANZ_TEAMS, TeamAnzeige.NR);
 		assertThat(testDaten.naechsteSpielrunde.getKonfigurationSheet().isZeitplanAktiv())
 				.as("Default muss Zeitplanung deaktiviert sein").isFalse();
 
@@ -123,7 +123,7 @@ public class SchweizerZeitplanUITest extends BaseCalcUITest {
 		new SchweizerMeldeListeSheetTestDaten(wkingSpreadsheet, ANZ_TEAMS).doRun();
 		SchweizerSpielrundeSheetNaechste spielrundeNaechste = new SchweizerSpielrundeSheetNaechste(wkingSpreadsheet);
 		var konfig = spielrundeNaechste.getKonfigurationSheet();
-		konfig.setSpielplanTeamAnzeige(SpielplanTeamAnzeige.NR);
+		konfig.setSpielplanTeamAnzeige(TeamAnzeige.NR);
 		konfig.setSpielrundeSpielbahn(SpielrundeSpielbahn.N);
 		konfig.setZeitplanAktiv(true);
 		konfig.setZeitplanAnzahlBahnen(BAHNEN);
@@ -293,7 +293,7 @@ public class SchweizerZeitplanUITest extends BaseCalcUITest {
 		new SchweizerMeldeListeSheetTestDaten(wkingSpreadsheet, anzTeams).doRun();
 		SchweizerSpielrundeSheetNaechste spielrundeNaechste = new SchweizerSpielrundeSheetNaechste(wkingSpreadsheet);
 		var konfig = spielrundeNaechste.getKonfigurationSheet();
-		konfig.setSpielplanTeamAnzeige(SpielplanTeamAnzeige.NR);
+		konfig.setSpielplanTeamAnzeige(TeamAnzeige.NR);
 		konfig.setSpielrundeSpielbahn(SpielrundeSpielbahn.N);
 		konfig.setZeitplanAktiv(true);
 		konfig.setZeitplanAnzahlBahnen(4);
@@ -327,7 +327,7 @@ public class SchweizerZeitplanUITest extends BaseCalcUITest {
 		new SchweizerMeldeListeSheetTestDaten(wkingSpreadsheet, anzTeams).doRun();
 		SchweizerSpielrundeSheetNaechste spielrundeNaechste = new SchweizerSpielrundeSheetNaechste(wkingSpreadsheet);
 		var konfig = spielrundeNaechste.getKonfigurationSheet();
-		konfig.setSpielplanTeamAnzeige(SpielplanTeamAnzeige.NR);
+		konfig.setSpielplanTeamAnzeige(TeamAnzeige.NR);
 		konfig.setSpielrundeSpielbahn(SpielrundeSpielbahn.N);
 		konfig.setZeitplanAktiv(true);
 		konfig.setDurchgangGleichmaessigAufteilen(false); // erzwingt Chunk-Aufteilung, siehe Bloecke unten
@@ -375,7 +375,7 @@ public class SchweizerZeitplanUITest extends BaseCalcUITest {
 		new SchweizerMeldeListeSheetTestDaten(wkingSpreadsheet, anzTeams).doRun();
 		SchweizerSpielrundeSheetNaechste spielrundeNaechste = new SchweizerSpielrundeSheetNaechste(wkingSpreadsheet);
 		var konfig = spielrundeNaechste.getKonfigurationSheet();
-		konfig.setSpielplanTeamAnzeige(SpielplanTeamAnzeige.NR);
+		konfig.setSpielplanTeamAnzeige(TeamAnzeige.NR);
 		konfig.setSpielrundeSpielbahn(SpielrundeSpielbahn.N);
 		konfig.setZeitplanAktiv(true);
 		konfig.setZeitplanAnzahlBahnen(BAHNEN);
@@ -419,7 +419,7 @@ public class SchweizerZeitplanUITest extends BaseCalcUITest {
 	 */
 	@Test
 	public void featureAn_NaechsteRundeListAlleErgebnisseTrotzDurchgangAufteilungKorrektEin() throws GenerateException {
-		testDaten = new SchweizerTurnierTestDaten(wkingSpreadsheet, ANZ_TEAMS, SpielplanTeamAnzeige.NR);
+		testDaten = new SchweizerTurnierTestDaten(wkingSpreadsheet, ANZ_TEAMS, TeamAnzeige.NR);
 		var konfig = testDaten.naechsteSpielrunde.getKonfigurationSheet();
 		konfig.setZeitplanAktiv(true);
 		konfig.setZeitplanAnzahlBahnen(BAHNEN);
@@ -459,7 +459,7 @@ public class SchweizerZeitplanUITest extends BaseCalcUITest {
 	@Test
 	public void featureAn_NameModusUndFreilosBleibenIntakt() throws GenerateException {
 		int anzTeamsUngerade = ANZ_TEAMS + 1; // erzwingt genau ein Freilos
-		testDaten = new SchweizerTurnierTestDaten(wkingSpreadsheet, anzTeamsUngerade, SpielplanTeamAnzeige.NAME);
+		testDaten = new SchweizerTurnierTestDaten(wkingSpreadsheet, anzTeamsUngerade, TeamAnzeige.NAME);
 		var konfig = testDaten.naechsteSpielrunde.getKonfigurationSheet();
 		konfig.setZeitplanAktiv(true);
 		konfig.setZeitplanAnzahlBahnen(BAHNEN);
@@ -515,7 +515,7 @@ public class SchweizerZeitplanUITest extends BaseCalcUITest {
 		new SchweizerMeldeListeSheetTestDaten(wkingSpreadsheet, ANZ_TEAMS).doRun();
 		SchweizerSpielrundeSheetNaechste spielrundeNaechste = new SchweizerSpielrundeSheetNaechste(wkingSpreadsheet);
 		var konfig = spielrundeNaechste.getKonfigurationSheet();
-		konfig.setSpielplanTeamAnzeige(SpielplanTeamAnzeige.NR);
+		konfig.setSpielplanTeamAnzeige(TeamAnzeige.NR);
 		konfig.setZeitplanAktiv(true);
 		konfig.setZeitplanAnzahlBahnen(BAHNEN);
 		konfig.setZeitplanTurnierStartzeit("09:00");

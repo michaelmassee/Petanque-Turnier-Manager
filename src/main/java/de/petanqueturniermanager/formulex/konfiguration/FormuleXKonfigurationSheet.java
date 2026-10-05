@@ -19,6 +19,7 @@ import de.petanqueturniermanager.helper.pagestyle.PageStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 
 /**
  * Konfigurationssheet für das Formule X Turniersystem.
@@ -140,6 +141,14 @@ public class FormuleXKonfigurationSheet extends BaseKonfigurationSheet
 
     public void setMeldeListeVereinsnameAnzeigen(boolean anzeigen) {
         propertiesSpalte.setMeldeListeVereinsnameAnzeigen(anzeigen);
+    }
+
+    public TeamAnzeige getRanglisteTeamAnzeige() {
+        return propertiesSpalte.getRanglisteTeamAnzeige();
+    }
+
+    public void setRanglisteTeamAnzeige(TeamAnzeige anzeige) {
+        propertiesSpalte.setRanglisteTeamAnzeige(anzeige);
     }
 
     @Override

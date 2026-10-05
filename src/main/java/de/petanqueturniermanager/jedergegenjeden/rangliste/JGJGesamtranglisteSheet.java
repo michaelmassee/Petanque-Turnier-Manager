@@ -11,6 +11,7 @@ import com.sun.star.table.CellVertJustify2;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeigeHelper;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -47,6 +48,7 @@ import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationS
 import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSheet_Update;
 import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteRechner.TeamStats;
 import de.petanqueturniermanager.model.TeamMeldungen;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 
 /**
  * Gruppenübergreifende Gesamtrangliste für das JGJ-Turniersystem.
@@ -195,7 +197,7 @@ public class JGJGesamtranglisteSheet extends SheetRunner implements ISheet {
 
 		List<TeamStats> reihenfolge = berechneReihenfolge(gruppen);
 		Map<Integer, String> gruppeJeTeam = gruppeJeTeam(gruppen);
-		Map<Integer, String> teamNamen = meldeListe.leseTeamNamen();
+		Map<Integer, String> teamNamen = meldeListe.leseTeamNamen(konfigurationSheet.getRanglisteTeamAnzeige());
 
 		insertDaten(sheet, reihenfolge, teamNamen, gruppeJeTeam);
 
@@ -236,6 +238,7 @@ public class JGJGesamtranglisteSheet extends SheetRunner implements ISheet {
 
 	protected void insertHeader(XSpreadsheet sheet) throws GenerateException {
 		Integer headerFarbe = konfigurationSheet.getRanglisteHeaderFarbe();
+		TeamAnzeige teamAnzeige = konfigurationSheet.getRanglisteTeamAnzeige();
 
 		int[][] spaltenBreiten = {
 				{ TEAM_NAME_SPALTE, COL_WIDTH_NAME },
@@ -254,11 +257,12 @@ public class JGJGesamtranglisteSheet extends SheetRunner implements ISheet {
 							.setHoriJustify(CellHoriJustify.CENTER)
 							.setVertJustify(CellVertJustify2.CENTER));
 		}
+		getSheetHelper().setColumnVisible(sheet, TEAM_NAME_SPALTE, !teamAnzeige.istNummer());
 
 		int[] einzelSpalten = { TEAM_NR_SPALTE, TEAM_NAME_SPALTE, GRUPPE_SPALTE, PLATZ_SPALTE };
 		String[] einzelTexte = {
 				I18n.get("column.header.nr"),
-				I18n.get("column.header.name"),
+				I18n.get(TeamAnzeigeHelper.headerI18nKey(teamAnzeige)),
 				I18n.get("column.header.jgj.gruppe"),
 				I18n.get("column.header.platz"),
 		};

@@ -7,6 +7,7 @@ import de.petanqueturniermanager.basesheet.konfiguration.BaseKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.IFormationKonfiguration;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.pagestyle.PageStyle;
@@ -79,6 +80,34 @@ public class PouleKonfigurationSheet extends BaseKonfigurationSheet
     @Override
     public void setMeldeListeVereinsnameAnzeigen(boolean anzeigen) {
         propertiesSpalte.setMeldeListeVereinsnameAnzeigen(anzeigen);
+    }
+
+    @Override
+    public TeamAnzeige getSpielplanTeamAnzeige() {
+        return propertiesSpalte.getSpielplanTeamAnzeige();
+    }
+
+    @Override
+    public void setSpielplanTeamAnzeige(TeamAnzeige anzeige) {
+        propertiesSpalte.setSpielplanTeamAnzeige(anzeige);
+    }
+
+    @Override
+    public TeamAnzeige getRanglisteTeamAnzeige() {
+        return propertiesSpalte.getRanglisteTeamAnzeige();
+    }
+
+    @Override
+    public void setRanglisteTeamAnzeige(TeamAnzeige anzeige) {
+        propertiesSpalte.setRanglisteTeamAnzeige(anzeige);
+    }
+
+    public TeamAnzeige getSpielbaumTeamAnzeige() {
+        return propertiesSpalte.getSpielbaumTeamAnzeige();
+    }
+
+    public void setSpielbaumTeamAnzeige(TeamAnzeige anzeige) {
+        propertiesSpalte.setSpielbaumTeamAnzeige(anzeige);
     }
 
     @Override

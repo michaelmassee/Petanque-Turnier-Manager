@@ -10,9 +10,7 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.beans.PropertyValue;
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.frame.FeatureStateEvent;
-import com.sun.star.frame.XDispatch;
 import com.sun.star.frame.XDispatchProvider;
-import com.sun.star.frame.XDispatchProviderInterception;
 import com.sun.star.frame.XFrame;
 import com.sun.star.frame.XLayoutManager;
 import com.sun.star.frame.XModel;
@@ -54,8 +52,7 @@ public class TurnierModus {
     private final List<String> gespeicherteElemente = new ArrayList<>();
     private final AtomicBoolean startupDurchgefuehrt = new AtomicBoolean(false);
     private Boolean gespeicherteRechnerleiste = null;
-    private KioskFormatierungsSchutz kioskFormatierungsSchutz;
-    private XDispatchProviderInterception kioskDispatchInterception;
+    private final KioskFormatierungsSchutzVerwaltung kioskFormatierungsSchutz = new KioskFormatierungsSchutzVerwaltung();
 
     private TurnierModus() {
     }
@@ -197,12 +194,12 @@ public class TurnierModus {
 
         aktiv = true;
         schuetzeBlattschutzFuerAktivesTournierSystem(ws);
-        aktiviereKioskFormatierungsSchutz(ws);
+        kioskFormatierungsSchutz.aktivieren(holeFrame(ws));
         SidebarAnzeigenListener.zeigePtmSidebar(ws);
     }
 
     private void deaktivierenIntern(XLayoutManager lm, WorkingSpreadsheet ws) {
-        deaktiviereKioskFormatierungsSchutz();
+        kioskFormatierungsSchutz.deaktivieren(holeFrame(ws));
         entsperreBlattschutzFuerAktivesTournierSystem(ws);
         var zuRestaurieren = gespeicherteElemente.isEmpty() ? STANDARD_ELEMENTE : gespeicherteElemente;
         String ptmUrl = ToolbarAnzeigenListener.TOOLBAR_RESOURCE_URL;
@@ -291,35 +288,9 @@ public class TurnierModus {
         }
     }
 
-    private void aktiviereKioskFormatierungsSchutz(WorkingSpreadsheet ws) {
-        deaktiviereKioskFormatierungsSchutz();
-        try {
-            XFrame frame = holeFrame(ws);
-            if (frame == null) return;
-            var interception = Lo.qi(XDispatchProviderInterception.class, frame);
-            if (interception == null) {
-                logger.warn("Dispatch-Interception nicht verfügbar: Kiosk-Formatierungsschutz bleibt inaktiv");
-                return;
-            }
-            var schutz = new KioskFormatierungsSchutz();
-            interception.registerDispatchProviderInterceptor(schutz);
-            kioskFormatierungsSchutz = schutz;
-            kioskDispatchInterception = interception;
-        } catch (Exception e) {
-            logger.warn("Kiosk-Formatierungsschutz konnte nicht aktiviert werden: {}", e.getMessage(), e);
-        }
-    }
-
-    private void deaktiviereKioskFormatierungsSchutz() {
-        if (kioskDispatchInterception == null || kioskFormatierungsSchutz == null) return;
-        try {
-            kioskDispatchInterception.releaseDispatchProviderInterceptor(kioskFormatierungsSchutz);
-        } catch (Exception e) {
-            logger.warn("Kiosk-Formatierungsschutz konnte nicht entfernt werden: {}", e.getMessage(), e);
-        } finally {
-            kioskFormatierungsSchutz = null;
-            kioskDispatchInterception = null;
-        }
+    /** Nur für Tests: ob am Frame des Dokuments der Kiosk-Formatierungsschutz registriert ist. */
+    boolean istKioskFormatierungsSchutzAktiv(WorkingSpreadsheet ws) {
+        return kioskFormatierungsSchutz.istAktiv(holeFrame(ws));
     }
 
     private XFrame holeFrame(WorkingSpreadsheet ws) {

@@ -27,7 +27,7 @@ import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationS
 import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSheet_New;
 import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSheet_Update;
 import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJSpielPlanSheet;
-import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
@@ -100,7 +100,7 @@ public class JGJSetzPositionSpielPlanUITest extends BaseCalcUITest {
 
 	private void meldeListeMitSetzPositionenAnlegen() throws GenerateException {
 		JGJMeldeListeSheet_New meldeListeNew = new JGJMeldeListeSheet_New(wkingSpreadsheet);
-		meldeListeNew.createMeldelisteWithParams(Formation.TETE, false, false, SpielplanTeamAnzeige.NR,
+		meldeListeNew.createMeldelisteWithParams(Formation.TETE, false, false, TeamAnzeige.NR,
 				GRUPPEN_GROESSE);
 
 		JGJKonfigurationSheet konfig = new JGJKonfigurationSheet(wkingSpreadsheet);

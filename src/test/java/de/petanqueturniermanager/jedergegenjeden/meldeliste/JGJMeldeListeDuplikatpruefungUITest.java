@@ -17,7 +17,7 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
-import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 
 /**
  * Regressionstest für {@code getMeldungenSpalte()}: die Dubletten-Prüfung
@@ -33,7 +33,7 @@ class JGJMeldeListeDuplikatpruefungUITest extends BaseCalcUITest {
     @Test
     void unterschiedlicherZweiterSpielerWirdNichtFaelschlichAlsDubletteErkannt() throws Exception {
         JGJMeldeListeSheet_New meldeListeNew = new JGJMeldeListeSheet_New(wkingSpreadsheet);
-        meldeListeNew.createMeldelisteWithParams(Formation.DOUBLETTE, false, false, SpielplanTeamAnzeige.NR);
+        meldeListeNew.createMeldelisteWithParams(Formation.DOUBLETTE, false, false, TeamAnzeige.NR);
 
         RangeData data = new RangeData();
         RowData team1 = data.addNewRow();
@@ -65,7 +65,7 @@ class JGJMeldeListeDuplikatpruefungUITest extends BaseCalcUITest {
     @Test
     void echteDubletteWirdWeiterhinErkannt() throws Exception {
         JGJMeldeListeSheet_New meldeListeNew = new JGJMeldeListeSheet_New(wkingSpreadsheet);
-        meldeListeNew.createMeldelisteWithParams(Formation.DOUBLETTE, false, false, SpielplanTeamAnzeige.NR);
+        meldeListeNew.createMeldelisteWithParams(Formation.DOUBLETTE, false, false, TeamAnzeige.NR);
 
         RangeData data = new RangeData();
         RowData team1 = data.addNewRow();

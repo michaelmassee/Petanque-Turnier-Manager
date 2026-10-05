@@ -17,6 +17,7 @@ import de.petanqueturniermanager.algorithmen.kaskaden.KaskadenFeldBelegung;
 import de.petanqueturniermanager.algorithmen.kaskaden.KaskadenKoRundenPlaner;
 import de.petanqueturniermanager.basesheet.meldeliste.TeilnehmerNamenLeser;
 import de.petanqueturniermanager.basesheet.meldeliste.TeilnehmerNamenLeser.TeilnehmerNamen;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeigeHelper;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -41,6 +42,7 @@ import de.petanqueturniermanager.kaskade.konfiguration.KaskadeKonfigurationSheet
 import de.petanqueturniermanager.kaskade.meldeliste.KaskadeMeldeListeSheetUpdate;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 
 /**
  * Kompakte Übersicht "Nr, Name, Gr" für die im Rahmen der Kaskaden-KO-Runden
@@ -112,6 +114,7 @@ public class KaskadeGruppenUebersichtSheet extends SheetRunner implements ISheet
     private void befuelleGruppenUebersicht() throws GenerateException {
         processBoxinfo("processbox.kaskade.gruppen.uebersicht.einlesen");
         TeamMeldungen aktiveMeldungen = meldeliste.getAktiveMeldungen();
+        TeamAnzeige teamAnzeige = konfigurationSheet.getRanglisteTeamAnzeige();
         boolean teamnameAktiv = konfigurationSheet.isMeldeListeTeamnameAnzeigen();
 
         List<GruppenEintrag> eintraege = new ArrayList<>(aktiveMeldungen.size());
@@ -127,7 +130,11 @@ public class KaskadeGruppenUebersichtSheet extends SheetRunner implements ISheet
 
             for (Team team : aktiveMeldungen.getTeamList()) {
                 int nr = team.getNr();
-                String name = teamnameAktiv ? teamnamen.getOrDefault(nr, "") : spielerNamen.getOrDefault(nr, "");
+                String name = switch (teamAnzeige) {
+                    case NR -> "";
+                    case SPIELERNAMEN -> spielerNamen.getOrDefault(nr, "");
+                    case NAME -> teamnamen.getOrDefault(nr, "");
+                };
                 eintraege.add(new GruppenEintrag(nr, name, teamNrZuGruppe.getOrDefault(nr, "")));
             }
         }
@@ -142,6 +149,7 @@ public class KaskadeGruppenUebersichtSheet extends SheetRunner implements ISheet
         datenSchreiben(sheet, eintraege);
         int letzteZeile = ERSTE_DATEN_ZEILE + eintraege.size() - 1;
         getSheetHelper().setOptimaleBreiteUndHoeheAlles(sheet, HEADER_ZEILE, letzteZeile, SPALTE_NR, SPALTE_NAME);
+        getSheetHelper().setColumnVisible(sheet, SPALTE_NAME, !teamAnzeige.istNummer());
         getSheetHelper().setColumnWidth(sheet, SPALTE_GRUPPE, SPALTE_GRUPPE_BREITE);
     }
 
@@ -168,7 +176,8 @@ public class KaskadeGruppenUebersichtSheet extends SheetRunner implements ISheet
         var headerFarbe = konfigurationSheet.getMeldeListeHeaderFarbe();
         var headerBorder = BorderFactory.from().allThin().boldLn().forBottom().toBorder();
         schreibeHeaderZelle(sheet, SPALTE_NR, "column.header.nr", headerFarbe, headerBorder);
-        schreibeHeaderZelle(sheet, SPALTE_NAME, "column.header.name", headerFarbe, headerBorder);
+        schreibeHeaderZelle(sheet, SPALTE_NAME,
+                TeamAnzeigeHelper.headerI18nKey(konfigurationSheet.getRanglisteTeamAnzeige()), headerFarbe, headerBorder);
         schreibeHeaderZelle(sheet, SPALTE_GRUPPE, "column.header.gruppe.kurz", headerFarbe, headerBorder);
     }
 

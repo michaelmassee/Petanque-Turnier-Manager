@@ -29,7 +29,7 @@ import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
-import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
@@ -227,7 +227,7 @@ public class SchweizerMeldeListeSheetNew extends SheetRunner
 		Optional<SchweizerTurnierParameterDialog.TurnierParameter> param;
 		try {
 			param = SchweizerTurnierParameterDialog.from(getWorkingSpreadsheet()).show(Formation.DOUBLETTE, false, false,
-				SpielplanTeamAnzeige.NR, getKonfigurationSheet().getRankingModus());
+				TeamAnzeige.NR, getKonfigurationSheet().getRankingModus());
 		} catch (Exception e) {
 			String errMsg = I18n.get("error.dialog.parameterdialog", e.getMessage());
 			logger.error(errMsg, e);
@@ -258,11 +258,11 @@ public class SchweizerMeldeListeSheetNew extends SheetRunner
 	 */
 	public void createMeldelisteWithParams(Formation formation, boolean teamnameAnzeigen, boolean vereinsnameAnzeigen)
 			throws GenerateException {
-		createMeldelisteWithParams(formation, teamnameAnzeigen, vereinsnameAnzeigen, SpielplanTeamAnzeige.NR);
+		createMeldelisteWithParams(formation, teamnameAnzeigen, vereinsnameAnzeigen, TeamAnzeige.NR);
 	}
 
 	public void createMeldelisteWithParams(Formation formation, boolean teamnameAnzeigen, boolean vereinsnameAnzeigen,
-			SpielplanTeamAnzeige spielplanTeamAnzeige) throws GenerateException {
+			TeamAnzeige spielplanTeamAnzeige) throws GenerateException {
 		var neuesSheet = NewSheet.from(this, SheetNamen.meldeliste(), METADATA_SCHLUESSEL)
 				.pos(DefaultSheetPos.MELDELISTE).hideGrid().tabColor(getKonfigurationSheet().getMeldelisteTabFarbe()).setDocVersionWhenNew().create();
 		if (neuesSheet.isDidCreate()) {

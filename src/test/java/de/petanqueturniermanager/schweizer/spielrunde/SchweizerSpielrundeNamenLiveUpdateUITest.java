@@ -11,11 +11,11 @@ import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
-import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetTestDaten;
 
 /**
- * Regression: Im Anzeigemodus {@link SpielplanTeamAnzeige#NAME} muss eine Umbenennung eines
+ * Regression: Im Anzeigemodus {@link TeamAnzeige#NAME} muss eine Umbenennung eines
  * Teams in der Meldeliste im bereits erzeugten Spielplan sofort sichtbar werden (Team-Name
  * wird per SVERWEIS-Formel statt statischem Text geschrieben, siehe
  * {@link SchweizerAbstractSpielrundeSheet#teamNamenFormelnSchreiben}).
@@ -32,7 +32,7 @@ public class SchweizerSpielrundeNamenLiveUpdateUITest extends BaseCalcUITest {
 
 		// Erst danach auf NAME-Anzeigemodus umschalten und Runde 1 erzeugen
 		SchweizerSpielrundeSheetNaechste spielrundeNaechste = new SchweizerSpielrundeSheetNaechste(wkingSpreadsheet);
-		spielrundeNaechste.getKonfigurationSheet().setSpielplanTeamAnzeige(SpielplanTeamAnzeige.NAME);
+		spielrundeNaechste.getKonfigurationSheet().setSpielplanTeamAnzeige(TeamAnzeige.NAME);
 		spielrundeNaechste.getKonfigurationSheet().setSpielrundeSpielbahn(SpielrundeSpielbahn.R);
 		spielrundeNaechste.doRun();
 
@@ -76,6 +76,30 @@ public class SchweizerSpielrundeNamenLiveUpdateUITest extends BaseCalcUITest {
 		String aktualisierterText = spielrundeNaechste.getSheetHelper().getTextFromCell(spielrundeSheet,
 				gefundenePos);
 		assertThat(aktualisierterText).isEqualTo(NEUER_NAME);
+	}
+
+	@Test
+	public void zusammengesetzteSpielernamenSindAlsEigeneSpielrundenAnzeigeVerfuegbar() throws GenerateException {
+		new SchweizerMeldeListeSheetTestDaten(wkingSpreadsheet).doRun();
+
+		SchweizerSpielrundeSheetNaechste spielrundeNaechste = new SchweizerSpielrundeSheetNaechste(wkingSpreadsheet);
+		spielrundeNaechste.getKonfigurationSheet().setSpielplanTeamAnzeige(TeamAnzeige.SPIELERNAMEN);
+		spielrundeNaechste.doRun();
+
+		XSpreadsheet spielrundeSheet = spielrundeNaechste.getXSpreadSheet();
+		boolean hatZusammengesetztenNamen = false;
+		for (int zeile = SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE;
+				zeile < SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE + 8; zeile++) {
+			for (int spalte : new int[] { SchweizerAbstractSpielrundeSheet.TEAM_A_SPALTE,
+					SchweizerAbstractSpielrundeSheet.TEAM_B_SPALTE }) {
+				String wert = spielrundeNaechste.getSheetHelper()
+						.getTextFromCell(spielrundeSheet, Position.from(spalte, zeile));
+				hatZusammengesetztenNamen |= wert != null && wert.contains(" / ");
+			}
+		}
+		assertThat(hatZusammengesetztenNamen)
+				.as("Spielernamen-Anzeige muss die Namen aller Teammitglieder zusammensetzen")
+				.isTrue();
 	}
 
 }

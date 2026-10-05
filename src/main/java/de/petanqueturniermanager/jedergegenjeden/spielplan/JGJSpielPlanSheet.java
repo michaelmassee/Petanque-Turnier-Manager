@@ -44,7 +44,7 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.helper.sheet.search.RangeSearchHelper;
 import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationSheet;
 import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSheet_Update;
-import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.model.LigaSpielPlan;
 import de.petanqueturniermanager.jedergegenjeden.JGJGruppenAufteiler;
@@ -259,7 +259,7 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 			List<List<List<TeamPaarung>>> gruppenSpielplaeneH,
 			List<List<List<TeamPaarung>>> gruppenSpielplaeneR) throws GenerateException {
 
-		boolean zeigeNr = konfigurationSheet.getSpielplanTeamAnzeige() == SpielplanTeamAnzeige.NR;
+		boolean zeigeNr = konfigurationSheet.getSpielplanTeamAnzeige() == TeamAnzeige.NR;
 		String freispielText = I18n.get("spielplan.freispiel.name");
 
 		JGJGruppenSpielplaeneSheet aushang = new JGJGruppenSpielplaeneSheet(this, konfigurationSheet);
@@ -472,7 +472,7 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 
 	private void insertFormulaTeamNamen() throws GenerateException {
 		int letzteSpielZeile = letzteSpielZeile();
-		boolean zeigeNr = konfigurationSheet.getSpielplanTeamAnzeige() == SpielplanTeamAnzeige.NR;
+		boolean zeigeNr = konfigurationSheet.getSpielplanTeamAnzeige() == TeamAnzeige.NR;
 		String freispielText = I18n.get("spielplan.freispiel.name");
 
 		RangeData nrData = RangeHelper.from(this, RangePosition.from(

@@ -33,7 +33,7 @@ import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.ko.konfiguration.KoPropertiesSpalte;
-import de.petanqueturniermanager.ko.konfiguration.KoSpielbaumTeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 
 /**
  * Modaler Dialog zur Abfrage der Turnier-Parameter vor dem Anlegen einer neuen
@@ -57,7 +57,7 @@ public class KoTurnierParameterDialog {
 
 	/** Ergebnis des Dialogs. */
 	public record TurnierParameter(Formation formation, boolean teamnameAnzeigen, boolean vereinsnameAnzeigen,
-			boolean meleeAnmeldung, KoSpielbaumTeamAnzeige spielbaumTeamAnzeige, SpielrundeSpielbahn spielbaumSpielbahn,
+			boolean meleeAnmeldung, TeamAnzeige spielbaumTeamAnzeige, SpielrundeSpielbahn spielbaumSpielbahn,
 			boolean spielbaumBahnNurRunde1, boolean spielUmPlatz3, int gruppenGroesse, int minLetzteGruppeGroesse) {
 	}
 
@@ -78,7 +78,7 @@ public class KoTurnierParameterDialog {
 	 * @return Optional mit TurnierParameter bei OK, leer bei Abbrechen
 	 */
 	public Optional<TurnierParameter> show(Formation defaultFormation, boolean defaultTeamnameAnzeigen,
-			boolean defaultVereinsnameAnzeigen, KoSpielbaumTeamAnzeige defaultSpielbaumTeamAnzeige,
+			boolean defaultVereinsnameAnzeigen, TeamAnzeige defaultSpielbaumTeamAnzeige,
 			SpielrundeSpielbahn defaultSpielbahn, boolean defaultSpielUmPlatz3,
 			boolean defaultSpielbaumBahnNurRunde1, int defaultGruppenGroesse,
 			int defaultMinLetzteGruppeGroesse) throws com.sun.star.uno.Exception {
@@ -129,8 +129,9 @@ public class KoTurnierParameterDialog {
 
 		addLabel(xMSF, cont, "lblSpielbaum", I18n.get("dialog.ko.spielbaum.anzeige.label"), 8, 64 + y, 80, 10);
 		addListBox(xMSF, cont, "lstSpielbaum",
-				new String[] { I18n.get("dialog.ko.auswahl.nr"), I18n.get("dialog.ko.auswahl.name") },
-				(short) (defaultSpielbaumTeamAnzeige == KoSpielbaumTeamAnzeige.NAME ? 1 : 0),
+				new String[] { I18n.get("dialog.ko.auswahl.nr"), I18n.get("dialog.ko.auswahl.spieler"),
+						I18n.get("dialog.ko.auswahl.name") },
+				defaultSpielbaumTeamAnzeige.dialogIndex(),
 				92, 62 + y, 60, 12);
 
 		addFixedLine(xMSF, cont, "sep3", 5, 80 + y, 150, 2);
@@ -211,9 +212,7 @@ public class KoTurnierParameterDialog {
 			boolean teamnameAnzeigen = formation == Formation.NUR_TEAMNAME || readCheckBoxState(xcc, "cbTeamname");
 			boolean vereinsnameAnzeigen = readCheckBoxState(xcc, "cbVereinsname");
 			boolean meleeAnmeldung = MeleeAnmeldungDialogOption.istGewaehlt(xcc, formation);
-			KoSpielbaumTeamAnzeige spielbaumAnzeige = readListBoxSelected(xcc, "lstSpielbaum") == 1
-					? KoSpielbaumTeamAnzeige.NAME
-					: KoSpielbaumTeamAnzeige.NR;
+			TeamAnzeige spielbaumAnzeige = TeamAnzeige.ausDialogIndex(readListBoxSelected(xcc, "lstSpielbaum"));
 			SpielrundeSpielbahn spielbahn = switch (readListBoxSelected(xcc, "lstSpielbahn")) {
 				case 1 -> SpielrundeSpielbahn.L;
 				case 2 -> SpielrundeSpielbahn.N;

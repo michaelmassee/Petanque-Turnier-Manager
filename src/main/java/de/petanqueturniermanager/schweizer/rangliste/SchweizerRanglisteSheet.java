@@ -50,6 +50,8 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerRankingModus;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeigeHelper;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetUpdate;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
@@ -303,7 +305,7 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 			fbhzMap = schweizerSystem.berechneFeinbuchholz(ergebnisse, bhzMap);
 		}
 
-		// Teamnamen direkt aus der Meldeliste lesen
+		// Gewählte Teamkennung direkt aus der Meldeliste lesen
 		Map<Integer, String> teamNrZuName = leseTeamnamenAusSheet(meldeliste);
 		insertDatenAlsWerte(sheet, sortiert, bhzMap, fbhzMap, teamNrZuName);
 		getSheetHelper().setOptimaleBreitePlusMarge(sheet, TEAM_NR_SPALTE, SheetHelper.OPTIMALE_BREITE_MARGE);
@@ -376,6 +378,7 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 	private void insertHeader(XSpreadsheet sheet, SchweizerRankingModus modus) throws GenerateException {
 		Integer headerColor = getKonfigurationSheet().getMeldeListeHeaderFarbe();
 		boolean ohneBuchholz = modus == SchweizerRankingModus.OHNE_BUCHHOLZ;
+		boolean nurTeamnummer = getKonfigurationSheet().getRanglisteTeamAnzeige() == TeamAnzeige.NR;
 
 		// ── Spaltenbreiten setzen ──────────────────────────────────────────────────
 		int[][] spaltenBreiten = {
@@ -392,7 +395,8 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 			ColumnProperties props = ColumnProperties.from().setWidth(sw[1])
 					.setHoriJustify(CellHoriJustify.CENTER).setVertJustify(CellVertJustify2.CENTER);
 			// LO ignoriert Width=0 — BHZ/FBHZ müssen via IsVisible=false ausgeblendet werden
-			if (ohneBuchholz && (sw[0] == BHZ_SPALTE || sw[0] == FBHZ_SPALTE)) {
+			if ((ohneBuchholz && (sw[0] == BHZ_SPALTE || sw[0] == FBHZ_SPALTE))
+					|| (nurTeamnummer && sw[0] == TEAM_NAME_SPALTE)) {
 				props.isVisible(false);
 			} else {
 				props.isVisible(true);
@@ -409,8 +413,7 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 				{ BHZ_SPALTE,        0 },
 				{ FBHZ_SPALTE,       0 },
 		};
-		String nameSpalteHeader = getKonfigurationSheet().isMeldeListeTeamnameAnzeigen()
-				? I18n.get("column.header.teamname") : I18n.get("schweizer.rangliste.spalte.team");
+		String nameSpalteHeader = I18n.get(TeamAnzeigeHelper.headerI18nKey(getKonfigurationSheet().getRanglisteTeamAnzeige()));
 		String[] einzelTexte = {
 				I18n.get("column.header.platz"),
 				I18n.get("column.header.nr"),
@@ -470,7 +473,7 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 	}
 
 	/**
-	 * Liest Teamnamen (teamname-Modus) oder Spielernamen (NR-Modus) aus dem Meldeliste-Sheet
+	 * Liest die für die Rangliste gewählte Kennung aus dem Meldeliste-Sheet
 	 * via Bulk-Read in eine Map teamNr → Anzeigename.
 	 */
 	private Map<Integer, String> leseTeamnamenAusSheet(SchweizerMeldeListeSheetUpdate meldeliste)
@@ -483,7 +486,15 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 		int nrSpalte   = meldeliste.getTeamNrSpalte();
 		int ersteZeile = meldeliste.getErsteDatenZiele();
 
-		if (getKonfigurationSheet().isMeldeListeTeamnameAnzeigen()) {
+		if (getKonfigurationSheet().getRanglisteTeamAnzeige() == TeamAnzeige.NR) {
+			for (var meldung : meldeliste.getAktiveUndAusgesetztMeldungen().teams()) {
+				result.put(meldung.getNr(), String.valueOf(meldung.getNr()));
+			}
+			return result;
+		}
+
+		if (getKonfigurationSheet().getRanglisteTeamAnzeige() == TeamAnzeige.NAME
+				&& getKonfigurationSheet().isMeldeListeTeamnameAnzeigen()) {
 			// Teamname-Modus: Nr + Teamname Spalte lesen
 			int nameSpalte = meldeliste.getTeamnameSpalte();
 			int maxSpalte  = Math.max(nrSpalte, nameSpalte);

@@ -6,8 +6,9 @@ package de.petanqueturniermanager.ko.konfiguration;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.basesheet.SheetTabFarben;
-import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
+import de.petanqueturniermanager.basesheet.konfiguration.TeamAnzeigePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.helper.ISheet;
@@ -19,7 +20,7 @@ import de.petanqueturniermanager.konfigdialog.HeaderFooterConfigProperty;
 /**
  * Konfigurationseigenschaften für das K.-O.-Turniersystem.
  */
-public class KoPropertiesSpalte extends BasePropertiesSpalte {
+public class KoPropertiesSpalte extends TeamAnzeigePropertiesSpalte {
 
 	public static final List<ConfigProperty<?>> KONFIG_PROPERTIES = new ArrayList<>();
 
@@ -100,12 +101,7 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 				.addAuswahl("J", "Ja").addAuswahl("N", "Nein")
 				.intern());
 
-		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty
-				.from(KONFIG_PROP_SPIELBAUM_TEAM_ANZEIGE)
-				.setDefaultVal(KoSpielbaumTeamAnzeige.NR.name())
-				.setDescription("config.desc.ko.spielbaum.team.anzeige"))
-				.addAuswahl(KoSpielbaumTeamAnzeige.NR.name(), "Teamnummer")
-				.addAuswahl(KoSpielbaumTeamAnzeige.NAME.name(), "Teamname"));
+		addKoBracketTeamAnzeigeProperty(KONFIG_PROPERTIES);
 
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_SPIELBAUM_SPIELBAHN)
 				.setDefaultVal(SpielrundeSpielbahn.X.name())
@@ -164,12 +160,7 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 	 * Ermöglicht Wiederverwendung in anderen Turniersystemen (z.B. Maastrichter).
 	 */
 	public static void addKoBracketProperties(List<ConfigProperty<?>> props) {
-		props.add(((AuswahlConfigProperty) AuswahlConfigProperty
-				.from(KONFIG_PROP_SPIELBAUM_TEAM_ANZEIGE)
-				.setDefaultVal(KoSpielbaumTeamAnzeige.NR.name())
-				.setDescription("config.desc.ko.spielbaum.team.anzeige"))
-				.addAuswahl(KoSpielbaumTeamAnzeige.NR.name(), "Teamnummer")
-				.addAuswahl(KoSpielbaumTeamAnzeige.NAME.name(), "Teamname"));
+		addKoBracketTeamAnzeigeProperty(props);
 
 		props.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_SPIELBAUM_SPIELBAHN)
 				.setDefaultVal(SpielrundeSpielbahn.X.name())
@@ -191,6 +182,17 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 
 		props.add(buildGruppenGroesseProperty());
 		props.add(buildMinLetzteGruppeGroesseProperty());
+	}
+
+	/** Fügt ausschließlich die gemeinsame Team-Anzeige für K.-o.-Bäume hinzu. */
+	public static void addKoBracketTeamAnzeigeProperty(List<ConfigProperty<?>> props) {
+		props.add(((AuswahlConfigProperty) AuswahlConfigProperty
+				.from(KONFIG_PROP_SPIELBAUM_TEAM_ANZEIGE)
+				.setDefaultVal(TeamAnzeige.NR.name())
+				.setDescription("config.desc.ko.spielbaum.team.anzeige"))
+				.addAuswahl(TeamAnzeige.NR.name(), "Teamnummer")
+				.addAuswahl(TeamAnzeige.SPIELERNAMEN.name(), "Spielernamen")
+				.addAuswahl(TeamAnzeige.NAME.name(), "Teamname"));
 	}
 
 	/**
@@ -272,12 +274,12 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 		setStringProperty(KONFIG_PROP_MELDELISTE_VEREINSNAME, anzeigen ? "J" : "N");
 	}
 
-	public KoSpielbaumTeamAnzeige getSpielbaumTeamAnzeige() {
-		return readEnumProperty(KONFIG_PROP_SPIELBAUM_TEAM_ANZEIGE, KoSpielbaumTeamAnzeige.class, KoSpielbaumTeamAnzeige.NR);
+	public TeamAnzeige getSpielbaumTeamAnzeige() {
+		return leseTeamAnzeige(KONFIG_PROP_SPIELBAUM_TEAM_ANZEIGE, TeamAnzeige.NR);
 	}
 
-	public void setSpielbaumTeamAnzeige(KoSpielbaumTeamAnzeige anzeige) {
-		setStringProperty(KONFIG_PROP_SPIELBAUM_TEAM_ANZEIGE, anzeige.name());
+	public void setSpielbaumTeamAnzeige(TeamAnzeige anzeige) {
+		schreibeTeamAnzeige(KONFIG_PROP_SPIELBAUM_TEAM_ANZEIGE, anzeige);
 	}
 
 	public SpielrundeSpielbahn getSpielbaumSpielbahn() {

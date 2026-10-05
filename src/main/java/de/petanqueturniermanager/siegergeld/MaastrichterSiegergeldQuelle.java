@@ -23,7 +23,7 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.ko.KoTurnierbaumLayout;
-import de.petanqueturniermanager.ko.konfiguration.KoSpielbaumTeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
 import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterMeldeListeSheetUpdate;
 import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterGruppenSpalteHelper;
@@ -123,7 +123,7 @@ final class MaastrichterSiegergeldQuelle implements SiegergeldQuelle {
 
 	private TeamRef leseSieger(XSpreadsheet sheet, int siegerSpalte, int siegerNameSpalte, int zeile,
 			NamenIndex namenIndex) {
-		if (konfigurationSheet.getSpielbaumTeamAnzeige() == KoSpielbaumTeamAnzeige.NR) {
+		if (konfigurationSheet.getSpielbaumTeamAnzeige() == TeamAnzeige.NR) {
 			int nr = leseInt(sheet, siegerSpalte, zeile);
 			String name = sheetHelper.getTextFromCell(sheet, Position.from(siegerNameSpalte, zeile));
 			return TeamRef.fromNr(nr, name, namenIndex);
@@ -133,7 +133,7 @@ final class MaastrichterSiegergeldQuelle implements SiegergeldQuelle {
 	}
 
 	private TeamRef leseTeam(XSpreadsheet sheet, int spalte, int zeile, NamenIndex namenIndex) {
-		if (konfigurationSheet.getSpielbaumTeamAnzeige() == KoSpielbaumTeamAnzeige.NR) {
+		if (konfigurationSheet.getSpielbaumTeamAnzeige() == TeamAnzeige.NR) {
 			return TeamRef.fromNr(leseInt(sheet, spalte, zeile), "", namenIndex);
 		}
 		return TeamRef.fromName(sheetHelper.getTextFromCell(sheet, Position.from(spalte, zeile)), namenIndex);

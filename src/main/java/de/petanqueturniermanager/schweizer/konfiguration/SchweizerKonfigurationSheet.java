@@ -3,6 +3,7 @@
  */
 package de.petanqueturniermanager.schweizer.konfiguration;
 
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.basesheet.konfiguration.BaseKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
@@ -160,13 +161,23 @@ public class SchweizerKonfigurationSheet extends BaseKonfigurationSheet
 	}
 
 	@Override
-	public SpielplanTeamAnzeige getSpielplanTeamAnzeige() {
+	public TeamAnzeige getSpielplanTeamAnzeige() {
 		return propertiesSpalte.getSpielplanTeamAnzeige();
 	}
 
 	@Override
-	public void setSpielplanTeamAnzeige(SpielplanTeamAnzeige anzeige) {
+	public void setSpielplanTeamAnzeige(TeamAnzeige anzeige) {
 		propertiesSpalte.setSpielplanTeamAnzeige(anzeige);
+	}
+
+	@Override
+	public TeamAnzeige getRanglisteTeamAnzeige() {
+		return propertiesSpalte.getRanglisteTeamAnzeige();
+	}
+
+	@Override
+	public void setRanglisteTeamAnzeige(TeamAnzeige anzeige) {
+		propertiesSpalte.setRanglisteTeamAnzeige(anzeige);
 	}
 
 	@Override

@@ -23,7 +23,7 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
-import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 
 /**
  * Prüft, dass "Meldeliste aktualisieren" Lücken schließt: komplett leere Zeilen
@@ -50,7 +50,7 @@ class JGJMeldeListeKompaktierenUITest extends BaseCalcUITest {
     @MethodSource("formationUndTeamname")
     void meldelisteWirdKompaktiert(Formation formation, boolean teamnameAktiv) throws Exception {
         JGJMeldeListeSheet_New meldeListeNew = new JGJMeldeListeSheet_New(wkingSpreadsheet);
-        meldeListeNew.createMeldelisteWithParams(formation, teamnameAktiv, false, SpielplanTeamAnzeige.NR);
+        meldeListeNew.createMeldelisteWithParams(formation, teamnameAktiv, false, TeamAnzeige.NR);
 
         int anzSpieler = formation.getAnzSpieler();
         // Layout ohne Vereinsname (2 Spalten je Spieler): Nr | [Teamname] | (Vorname+Nachname)* | SP | Aktiv
@@ -116,7 +116,7 @@ class JGJMeldeListeKompaktierenUITest extends BaseCalcUITest {
     @Test
     void sortierenNachNrNimmtAktivSpalteMit() throws Exception {
         JGJMeldeListeSheet_New meldeListeNew = new JGJMeldeListeSheet_New(wkingSpreadsheet);
-        meldeListeNew.createMeldelisteWithParams(Formation.TETE, false, false, SpielplanTeamAnzeige.NR);
+        meldeListeNew.createMeldelisteWithParams(Formation.TETE, false, false, TeamAnzeige.NR);
 
         int vornameSpalte = 1;
         int nachnameSpalte = 2;

@@ -1,6 +1,8 @@
 package de.petanqueturniermanager.toolbar;
 
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.sun.star.beans.PropertyValue;
 import com.sun.star.frame.DispatchDescriptor;
@@ -9,6 +11,7 @@ import com.sun.star.frame.XDispatch;
 import com.sun.star.frame.XDispatchProvider;
 import com.sun.star.frame.XDispatchProviderInterceptor;
 import com.sun.star.frame.XStatusListener;
+import com.sun.star.lang.EventObject;
 import com.sun.star.lib.uno.helper.WeakBase;
 import com.sun.star.util.URL;
 
@@ -18,8 +21,13 @@ import com.sun.star.util.URL;
  * <p>
  * Der Blattschutz lässt die vorgesehenen Werteingaben zu. Dieser Filter
  * verhindert ergänzend, dass dabei das Tabellenlayout über Tastaturkürzel,
- * Kontextmenü oder Einfügen verändert wird. Er wird nur für die Dauer des
- * Turniermodus am aktiven Dokumentrahmen registriert.
+ * Kontextmenü oder Einfügen verändert wird. Normales Einfügen bleibt möglich,
+ * wird aber auf „Unformatierten Text einfügen" umgeleitet, damit nur Werte
+ * und keine Zellformate übernommen werden. Er wird nur für die Dauer des
+ * Turniermodus am jeweiligen Dokumentrahmen registriert.
+ * <p>
+ * Nicht abgedeckt ist Drag &amp; Drop von Zellen: dafür gibt es keinen
+ * Dispatch-Befehl, den ein Interceptor abfangen könnte.
  */
 final class KioskFormatierungsSchutz extends WeakBase implements XDispatchProviderInterceptor {
 
@@ -57,12 +65,19 @@ final class KioskFormatierungsSchutz extends WeakBase implements XDispatchProvid
             ".uno:EditStyle",
             ".uno:CurrentConditionalFormatDialog",
             ".uno:CurrentConditionalFormatManagerDialog",
-            // Der Dialog „Inhalte löschen“ und formatiertes Einfügen können
-            // ebenfalls direkte Formatierungen der Eingabezelle entfernen.
+            // Der Dialog „Inhalte löschen“, Ausschneiden (verschiebt die Zellformate)
+            // und Inhalte-einfügen-Varianten können direkte Formatierungen der
+            // Eingabezelle entfernen bzw. überschreiben.
             ".uno:Delete",
-            ".uno:Paste",
+            ".uno:Cut",
             ".uno:PasteSpecial",
             ".uno:PasteTransposed");
+
+    /** Befehle, die statt auf das Original auf eine formatneutrale Variante umgeleitet werden. */
+    private static final Map<String, String> UMGELEITETE_BEFEHLE = Map.of(
+            ".uno:Paste", ".uno:PasteUnformatted");
+
+    private static final String UNO_PROTOKOLL = ".uno:";
 
     private final XDispatch blockierterDispatch = new BlockierterDispatch();
     private volatile XDispatchProvider slave;
@@ -72,13 +87,35 @@ final class KioskFormatierungsSchutz extends WeakBase implements XDispatchProvid
         return BLOCKIERTE_BEFEHLE.contains(completeUrl);
     }
 
+    static boolean istUmgeleiteterBefehl(String completeUrl) {
+        return UMGELEITETE_BEFEHLE.containsKey(completeUrl);
+    }
+
     @Override
     public XDispatch queryDispatch(URL url, String targetFrameName, int searchFlags) {
         if (url != null && istBlockierterBefehl(url.Complete)) {
             return blockierterDispatch;
         }
         XDispatchProvider aktuellerSlave = slave;
-        return aktuellerSlave == null ? null : aktuellerSlave.queryDispatch(url, targetFrameName, searchFlags);
+        if (aktuellerSlave == null) {
+            return null;
+        }
+        if (url != null && istUmgeleiteterBefehl(url.Complete)) {
+            XDispatch ziel = aktuellerSlave.queryDispatch(unoUrl(UMGELEITETE_BEFEHLE.get(url.Complete)),
+                    targetFrameName, searchFlags);
+            return ziel == null ? blockierterDispatch : new UmgeleiteterDispatch(ziel, url);
+        }
+        return aktuellerSlave.queryDispatch(url, targetFrameName, searchFlags);
+    }
+
+    /** Baut eine bereits zerlegte {@code .uno:}-URL, wie sie der URLTransformer liefern würde. */
+    static URL unoUrl(String complete) {
+        var url = new URL();
+        url.Complete = complete;
+        url.Main = complete;
+        url.Protocol = UNO_PROTOKOLL;
+        url.Path = complete.substring(UNO_PROTOKOLL.length());
+        return url;
     }
 
     @Override
@@ -129,5 +166,67 @@ final class KioskFormatierungsSchutz extends WeakBase implements XDispatchProvid
             // Kein Listener-Zustand wird gehalten.
         }
 
+    }
+
+    /**
+     * Führt einen Befehl über den Dispatch eines Ersatzbefehls aus. Statusmeldungen
+     * werden auf die ursprünglich angefragte URL umgeschrieben, damit Menü- und
+     * Toolbar-Controller sie ihrem Eintrag zuordnen.
+     */
+    private static final class UmgeleiteterDispatch extends WeakBase implements XDispatch {
+
+        private final XDispatch ziel;
+        private final URL ursprung;
+        private final Map<XStatusListener, XStatusListener> weiterleitungen = new ConcurrentHashMap<>();
+
+        UmgeleiteterDispatch(XDispatch ziel, URL ursprung) {
+            this.ziel = ziel;
+            this.ursprung = ursprung;
+        }
+
+        @Override
+        public void dispatch(URL url, PropertyValue[] args) {
+            ziel.dispatch(zielUrl(), args);
+        }
+
+        @Override
+        public void addStatusListener(XStatusListener listener, URL url) {
+            if (listener == null) return;
+            XStatusListener weiterleitung = weiterleitungen.computeIfAbsent(listener, UrlUmschreibenderListener::new);
+            ziel.addStatusListener(weiterleitung, zielUrl());
+        }
+
+        @Override
+        public void removeStatusListener(XStatusListener listener, URL url) {
+            if (listener == null) return;
+            XStatusListener weiterleitung = weiterleitungen.remove(listener);
+            if (weiterleitung != null) {
+                ziel.removeStatusListener(weiterleitung, zielUrl());
+            }
+        }
+
+        private URL zielUrl() {
+            return unoUrl(UMGELEITETE_BEFEHLE.get(ursprung.Complete));
+        }
+
+        private final class UrlUmschreibenderListener extends WeakBase implements XStatusListener {
+
+            private final XStatusListener empfaenger;
+
+            UrlUmschreibenderListener(XStatusListener empfaenger) {
+                this.empfaenger = empfaenger;
+            }
+
+            @Override
+            public void statusChanged(FeatureStateEvent event) {
+                empfaenger.statusChanged(new FeatureStateEvent(UmgeleiteterDispatch.this, ursprung,
+                        event.FeatureDescriptor, event.IsEnabled, event.Requery, event.State));
+            }
+
+            @Override
+            public void disposing(EventObject source) {
+                empfaenger.disposing(source);
+            }
+        }
     }
 }
