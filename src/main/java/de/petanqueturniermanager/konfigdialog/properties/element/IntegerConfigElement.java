@@ -43,8 +43,7 @@ public class IntegerConfigElement implements ConfigElement, XTextListener {
 		this.configProperty = checkNotNull(configProperty);
 		this.workingSpreadsheet = checkNotNull(workingSpreadsheet);
 		textAreaDialog = new TextAreaDialog(workingSpreadsheet);
-		var labelText = configProperty.getDescription() != null ? configProperty.getDescription() : configProperty.getKey();
-		labelPlusNumericField = LabelPlusNumericField.from(guiFactoryCreateParam).labelText(labelText).helpText(labelText)
+		labelPlusNumericField = LabelPlusNumericField.from(guiFactoryCreateParam).labelText(configProperty.getLabelText()).helpText(configProperty.getHelpText())
 				.addXTextListener(this).fieldVal(getPropertyValue()).readOnly(readOnly);
 	}
 

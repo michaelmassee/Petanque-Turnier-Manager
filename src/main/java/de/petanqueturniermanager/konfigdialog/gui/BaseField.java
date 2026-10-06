@@ -33,7 +33,7 @@ public abstract class BaseField<T> {
 
 	// Sidebar-Field-Lifecycle: Param wird im Konstruktor gesetzt und in disposing()/setGuiFactoryCreateParam(null) explizit freigegeben.
 	private GuiFactoryCreateParam guiFactoryCreateParam;
-	private Layout hLayout;
+	private Layout layout;
 	private XMultiPropertySet properties;
 	private final String imageUrlDir;
 
@@ -43,8 +43,12 @@ public abstract class BaseField<T> {
 	public static final Rectangle BASE_RECTANGLE = new Rectangle(0, 0, lineWidth, lineHeight);
 
 	protected BaseField(GuiFactoryCreateParam guiFactoryCreateParam) {
+		this(guiFactoryCreateParam, new HorizontalLayout());
+	}
+
+	protected BaseField(GuiFactoryCreateParam guiFactoryCreateParam, Layout layout) {
 		this.guiFactoryCreateParam = guiFactoryCreateParam;
-		hLayout = new HorizontalLayout();
+		this.layout = layout;
 		imageUrlDir = ExtensionsHelper.from(guiFactoryCreateParam.getContext()).getImageUrlDir();
 		doCreate();
 	}
@@ -75,7 +79,7 @@ public abstract class BaseField<T> {
 	 * @return the hLayout
 	 */
 	public final Layout getLayout() {
-		return hLayout;
+		return layout;
 	}
 
 	protected final void setGuiFactoryCreateParam(GuiFactoryCreateParam guiFactoryCreateParam) {
@@ -154,7 +158,7 @@ public abstract class BaseField<T> {
 	}
 
 	protected void disposing() {
-		hLayout = new HorizontalLayout();
+		layout = new HorizontalLayout();
 		properties = null;
 	}
 

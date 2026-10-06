@@ -3,6 +3,7 @@ package de.petanqueturniermanager.triptete.spielplan;
 import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.sun.star.sheet.ConditionOperator;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
@@ -25,6 +26,7 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeFooterHelper;
 import de.petanqueturniermanager.helper.print.PrintArea;
+import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.DatengueltigkeitHelper;
 import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
@@ -424,7 +426,13 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet {
 		// Editierbare Zellen: Ergebnisse aller drei Partien (Bahnen sind systemvergeben und gesperrt)
 		RangePosition ergebnisRange = RangePosition.from(TRI_A_SPALTE, ERSTE_DATEN_ZEILE, TETE_B_SPALTE,
 				letzteSpielZeile);
-		DatengueltigkeitHelper.setzeGanzzahlBereich(this, ergebnisRange, 0, getKonfigurationSheet().getSpielZiel());
+		int spielZiel = getKonfigurationSheet().getSpielZiel();
+		DatengueltigkeitHelper.setzeSpielpunkte(this, ergebnisRange, spielZiel);
+		// Ungültige Ergebnisse bleiben stehen und werden rot markiert; Vorrang vor der Editierbar-Farbe
+		ConditionalFormatHelper.from(this, ergebnisRange).clear()
+				.formula1("0").formula2(String.valueOf(spielZiel)).operator(ConditionOperator.NOT_BETWEEN)
+				.styleIsFehler().applyAndDoReset()
+				.formulaIsText().styleIsFehler().applyAndDoReset();
 		EditierbaresZelleFormatHelper.anwenden(this, ergebnisRange);
 
 		// Trenner: zwischen Runden (= je anzPaarungen Zeilen) ein dicker Strich

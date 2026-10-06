@@ -41,9 +41,8 @@ public class BackgrnColorConfigElement implements ConfigElement {
 		this.configProperty = checkNotNull(configProperty);
 		this.workingSpreadsheet = checkNotNull(workingSpreadsheet);
 		this.parentPeer = guiFactoryCreateParam.getWindowPeer();
-		var labelText = configProperty.getDescription() != null ? configProperty.getDescription() : configProperty.getKey();
-		labelPlusBackgrColorAndColorChooser = LabelPlusBackgrColorAndColorChooser.from(guiFactoryCreateParam).labelText(labelText)
-				.helpText(labelText).addXActionListener(btnXActionListener).color(getPropertyValue());
+		labelPlusBackgrColorAndColorChooser = LabelPlusBackgrColorAndColorChooser.from(guiFactoryCreateParam).labelText(configProperty.getLabelText())
+				.helpText(configProperty.getHelpText()).addXActionListener(btnXActionListener).color(getPropertyValue());
 	}
 
 	@Override

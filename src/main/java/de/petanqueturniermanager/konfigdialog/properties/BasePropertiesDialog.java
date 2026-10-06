@@ -50,6 +50,8 @@ abstract class BasePropertiesDialog extends AbstractUnoDialog {
     private static final int DIALOG_MAX_HEIGHT = 600;
     private static final int DIALOG_WIDTH = 200;
     private static final int BORDER = 5;
+    /** Reserve für die letzte Control-Zeile und den unteren Dialogrand. */
+    private static final int DIALOG_UNTERE_SICHERHEITSRESERVE = 20;
 
     WorkingSpreadsheet currentSpreadsheet;
     Layout layout;
@@ -143,12 +145,22 @@ abstract class BasePropertiesDialog extends AbstractUnoDialog {
         erstelleNachHauptFelder(guiFactoryCreateParam, addConfigElementsToWindow);
 
         // Höhe anpassen
-        int dialogHeight = Math.min(Math.max(layout.getHeight() / 2, DIALOG_MIN_HEIGHT), DIALOG_MAX_HEIGHT);
+        int dialogHeight = berechneDialogHoehe(layout.getHeight());
         try {
             dlgProps.setPropertyValue("Height", Integer.valueOf(dialogHeight));
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
+    }
+
+    /**
+     * Rechnet die Bildschirmhöhe der Layout-Zeilen in LibreOffice-Dialogeinheiten um.
+     * Die Reserve verhindert, dass die unterste Zeile bei verschiedenen Desktop-Skalierungen
+     * am unteren Dialogrand abgeschnitten wird.
+     */
+    static int berechneDialogHoehe(int layoutHoehe) {
+        int inDialogEinheiten = (int) Math.ceil(layoutHoehe / 3.0) + DIALOG_UNTERE_SICHERHEITSRESERVE;
+        return Math.min(Math.max(inDialogEinheiten, DIALOG_MIN_HEIGHT), DIALOG_MAX_HEIGHT);
     }
 
     /**

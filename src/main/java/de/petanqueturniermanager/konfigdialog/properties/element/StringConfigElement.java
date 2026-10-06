@@ -22,6 +22,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.HeaderFooterConfigProperty;
+import de.petanqueturniermanager.konfigdialog.SpielrundeFooterConfigProperty;
 import de.petanqueturniermanager.konfigdialog.gui.LabelPlusTextPlusTextareaBox;
 import de.petanqueturniermanager.sidebar.GuiFactoryCreateParam;
 import de.petanqueturniermanager.sidebar.layout.HorizontalLayout;
@@ -44,8 +45,8 @@ public class StringConfigElement implements ConfigElement, XTextListener {
 		this.configProperty = checkNotNull(configProperty);
 		this.workingSpreadsheet = checkNotNull(workingSpreadsheet);
 		textAreaDialog = new TextAreaDialog(workingSpreadsheet);
-		var labelText = configProperty.getDescription() != null ? configProperty.getDescription() : configProperty.getKey();
-		labelPlusTextPlusTextareaBox = LabelPlusTextPlusTextareaBox.from(guiFactoryCreateParam).labelText(labelText).helpText(labelText)
+		boolean labelInEigenerZeile = configProperty instanceof SpielrundeFooterConfigProperty;
+		labelPlusTextPlusTextareaBox = LabelPlusTextPlusTextareaBox.from(guiFactoryCreateParam, labelInEigenerZeile).labelText(configProperty.getLabelText()).helpText(configProperty.getHelpText())
 				.addXTextListener(this).addXActionListener(btnXActionListener).fieldText(getPropertyValue());
 	}
 

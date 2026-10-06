@@ -11,14 +11,18 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.sun.star.beans.XPropertySet;
+import com.sun.star.sheet.ConditionOperator;
 import com.sun.star.sheet.ValidationType;
 import com.sun.star.sheet.XSheetCondition;
+import com.sun.star.sheet.XSheetConditionalEntries;
+import com.sun.star.sheet.XSheetConditionalEntry;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.cellstyle.FehlerStyle;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.random.RandomSource;
@@ -74,6 +78,18 @@ public class TripTeteTurnierTestDatenUITest extends BaseCalcUITest {
         assertThat(validation.getPropertyValue("Type")).isEqualTo(ValidationType.WHOLE);
         assertThat(Lo.qi(XSheetCondition.class, validation).getFormula1()).isEqualTo("0");
         assertThat(Lo.qi(XSheetCondition.class, validation).getFormula2()).isEqualTo("13");
+        assertThat(validation.getPropertyValue("ShowErrorMessage"))
+                .as("ungültige Ergebnisse bleiben stehen statt abgelehnt zu werden").isEqualTo(Boolean.FALSE);
+        assertThat((String) validation.getPropertyValue("InputMessage")).contains("13");
+
+        XSheetConditionalEntries bedingungen = Lo.qi(XSheetConditionalEntries.class,
+                cellProperties.getPropertyValue("ConditionalFormat"));
+        XSheetCondition bereichsPruefung = Lo.qi(XSheetCondition.class, bedingungen.getByIndex(0));
+        assertThat(bereichsPruefung.getOperator())
+                .as("ungültige Ergebnisse werden rot markiert").isEqualTo(ConditionOperator.NOT_BETWEEN);
+        assertThat(bereichsPruefung.getFormula2()).isEqualTo("13");
+        assertThat(Lo.qi(XSheetConditionalEntry.class, bedingungen.getByIndex(0)).getStyleName())
+                .isEqualTo(new FehlerStyle().getName());
     }
 
     /**

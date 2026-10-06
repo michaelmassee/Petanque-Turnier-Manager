@@ -642,7 +642,7 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 		String formulaGleicheWerte = "AND(NOT(ISBLANK(" + cellA + "));NOT(ISBLANK(" + cellB + "));"
 				+ cellA + "=" + cellB + ")";
 		ConditionalFormatHelper.from(this, ergRange).clear()
-				.formula1("0").formula2("13").operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndDoReset()
+				.formula1("0").formula2(String.valueOf(DatengueltigkeitHelper.MAX_SPIELPUNKTE)).operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndDoReset()
 				.formula1("ISTEXT(" + ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")")
 				.operator(ConditionOperator.FORMULA).styleIsFehler().applyAndDoReset()
 				.formula1(formulaGleicheWerte).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndDoReset();

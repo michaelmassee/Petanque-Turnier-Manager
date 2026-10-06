@@ -62,26 +62,50 @@ public final class DatengueltigkeitHelper {
 			String spaltenKey) {
 	}
 
+	private static final Meldungen SPIELPUNKTE_MELDUNGEN = new Meldungen(
+			"datengueltigkeit.spielpunkte.eingabehilfe.titel", "datengueltigkeit.spielpunkte.eingabehilfe",
+			"datengueltigkeit.zahl.fehler.titel", "datengueltigkeit.zahl.fehler", "datengueltigkeit.spalte.spielpunkte");
+
+	/** Verhalten von Calc bei einer Eingabe, die gegen die Regel verstößt. */
+	private enum Reaktion {
+		/** Eingabe wird abgelehnt. */
+		ABLEHNEN,
+		/** Bestätigbare Warnung, nach Bestätigung bleibt die Eingabe stehen. */
+		WARNEN,
+		/** Keine Meldung, die Eingabe bleibt stehen; die bedingte Formatierung markiert sie rot. */
+		NUR_MARKIEREN
+	}
+
 	private record Regel(ValidationType typ, ConditionOperator operator, String formel1, String formel2,
-			ValidationAlertStyle fehlerStil, boolean auswahlliste, Meldungen meldungen) {
+			Reaktion reaktion, boolean auswahlliste, Meldungen meldungen, List<Object> eingabeParameter) {
+
+		Regel(ValidationType typ, ConditionOperator operator, String formel1, String formel2, Reaktion reaktion,
+				boolean auswahlliste, Meldungen meldungen) {
+			this(typ, operator, formel1, formel2, reaktion, auswahlliste, meldungen, List.of());
+		}
 	}
 
 	private DatengueltigkeitHelper() {
 	}
 
-	public static void setzeGanzzahlBereich(ISheet sheet, RangePosition range, int minimum, int maximum)
-			throws GenerateException {
-		setze(sheet, range, new Regel(ValidationType.WHOLE, ConditionOperator.BETWEEN, String.valueOf(minimum),
-				String.valueOf(maximum), ValidationAlertStyle.STOP, false, ZAHL_MELDUNGEN));
+	public static void setzeSpielpunkte(ISheet sheet, RangePosition range) throws GenerateException {
+		setzeSpielpunkte(sheet, range, MAX_SPIELPUNKTE);
 	}
 
-	public static void setzeSpielpunkte(ISheet sheet, RangePosition range) throws GenerateException {
-		setzeGanzzahlBereich(sheet, range, 0, MAX_SPIELPUNKTE);
+	/**
+	 * Spielergebnisse: ganze Zahl von 0 bis {@code spielZiel}. Ungültige Eingaben werden bewusst
+	 * nicht abgelehnt – sie bleiben stehen, damit die Turnierleitung sieht, was eingetippt wurde, und
+	 * werden vom Aufrufer per bedingter Formatierung ({@code styleIsFehler}) rot markiert. Die
+	 * Eingabehilfe beim Anwählen der Zelle nennt den gültigen Bereich.
+	 */
+	public static void setzeSpielpunkte(ISheet sheet, RangePosition range, int spielZiel) throws GenerateException {
+		setze(sheet, range, new Regel(ValidationType.WHOLE, ConditionOperator.BETWEEN, "0", String.valueOf(spielZiel),
+				Reaktion.NUR_MARKIEREN, false, SPIELPUNKTE_MELDUNGEN, List.of(spielZiel)));
 	}
 
 	public static void setzeNichtNegativeGanzzahl(ISheet sheet, RangePosition range) throws GenerateException {
 		setze(sheet, range, new Regel(ValidationType.WHOLE, ConditionOperator.GREATER_EQUAL, "0", "",
-				ValidationAlertStyle.STOP, false, ZAHL_MELDUNGEN));
+				Reaktion.ABLEHNEN, false, ZAHL_MELDUNGEN));
 	}
 
 	/**
@@ -92,7 +116,7 @@ public final class DatengueltigkeitHelper {
 	 */
 	public static void setzeBahnDatengueltigkeit(ISheet sheet, RangePosition range) throws GenerateException {
 		setze(sheet, range, new Regel(ValidationType.CUSTOM, ConditionOperator.FORMULA, BAHN_FORMEL, "",
-				ValidationAlertStyle.WARNING, false, BAHN_MELDUNGEN));
+				Reaktion.WARNEN, false, BAHN_MELDUNGEN));
 	}
 
 	/** Auswahlliste aus Zahlen, z.B. die Aktiv-Werte 1 und 2. */
@@ -114,7 +138,7 @@ public final class DatengueltigkeitHelper {
 		// "X" allein wird als unvollständige Formel gelesen (Err:509); die geschweiften Klammern
 		// machen daraus eine gültige einspaltige Array-Konstante.
 		setze(sheet, range, new Regel(ValidationType.LIST, ConditionOperator.EQUAL, "{" + eintraege + "}", "",
-				ValidationAlertStyle.STOP, true, meldungen));
+				Reaktion.ABLEHNEN, true, meldungen));
 	}
 
 	private static void setze(ISheet sheet, RangePosition range, Regel regel) throws GenerateException {
@@ -126,7 +150,7 @@ public final class DatengueltigkeitHelper {
 			if (regel.auswahlliste()) {
 				validation.setPropertyValue("ShowList", Short.valueOf(TableValidationVisibility.UNSORTED));
 			}
-			setzeMeldungen(validation, regel.fehlerStil(), regel.meldungen());
+			setzeMeldungen(validation, regel);
 			XSheetCondition condition = Lo.qi(XSheetCondition.class, validation);
 			condition.setOperator(regel.operator());
 			condition.setFormula1(regel.formel1());
@@ -139,15 +163,26 @@ public final class DatengueltigkeitHelper {
 		}
 	}
 
-	private static void setzeMeldungen(XPropertySet validation, ValidationAlertStyle fehlerStil, Meldungen meldungen)
-			throws com.sun.star.uno.Exception {
+	private static void setzeMeldungen(XPropertySet validation, Regel regel) throws com.sun.star.uno.Exception {
+		Meldungen meldungen = regel.meldungen();
 		validation.setPropertyValue("ShowInputMessage", Boolean.TRUE);
 		validation.setPropertyValue("InputTitle", I18n.get(meldungen.eingabeTitelKey()));
-		validation.setPropertyValue("InputMessage", I18n.get(meldungen.eingabeKey()));
-		validation.setPropertyValue("ShowErrorMessage", Boolean.TRUE);
-		validation.setPropertyValue("ErrorAlertStyle", fehlerStil);
+		validation.setPropertyValue("InputMessage",
+				I18n.get(meldungen.eingabeKey(), regel.eingabeParameter().toArray()));
+		// Ohne Fehlermeldung prüft Calc die Eingabe gar nicht (ScInputHandler::EnterHandler, HasErrMsg)
+		// und übernimmt sie unverändert.
+		validation.setPropertyValue("ShowErrorMessage", regel.reaktion() != Reaktion.NUR_MARKIEREN);
+		validation.setPropertyValue("ErrorAlertStyle", alertStil(regel.reaktion()));
 		validation.setPropertyValue("ErrorTitle", I18n.get(meldungen.fehlerTitelKey()));
 		validation.setPropertyValue("ErrorMessage", I18n.get(meldungen.fehlerKey()));
+	}
+
+	private static ValidationAlertStyle alertStil(Reaktion reaktion) {
+		return switch (reaktion) {
+			case ABLEHNEN -> ValidationAlertStyle.STOP;
+			case WARNEN -> ValidationAlertStyle.WARNING;
+			case NUR_MARKIEREN -> ValidationAlertStyle.INFO;
+		};
 	}
 
 	private static XPropertySet rangeProperties(ISheet sheet, RangePosition range) throws GenerateException {

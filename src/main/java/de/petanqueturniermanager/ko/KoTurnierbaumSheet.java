@@ -1099,7 +1099,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	 * <p>
 	 * Pro Paar (Team-A-Zeile, Team-B-Zeile):
 	 * <ol>
-	 *   <li>Fehler-Style bei Wert außerhalb 0–13</li>
+	 *   <li>Fehler-Style bei Wert außerhalb 0–13 (ungültige Eingaben bleiben stehen)</li>
 	 *   <li>Fehler-Style bei Texteingabe</li>
 	 *   <li>Fehler-Style bei Gleichstand (beide Zellen eines Paars erhalten denselben Wert)</li>
 	 *   <li>Orange-Zebra-Hervorhebung editierbarer Felder (togglebar per BOOLEANPROPERTY)</li>
@@ -1124,11 +1124,11 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 
 			// Fehlerprüfungen einzeln pro Zelle – vermeidet Einfärben von Lückenzeilen zwischen den Paaren
 			ConditionalFormatHelper.from(this, rangeA).clear()
-					.formula1("0").formula2("13").operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndDoReset()
+					.formula1("0").formula2(String.valueOf(DatengueltigkeitHelper.MAX_SPIELPUNKTE)).operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndDoReset()
 					.formulaIsText().styleIsFehler().applyAndDoReset()
 					.formula1(gleichstandFormel).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndDoReset();
 			ConditionalFormatHelper.from(this, rangeB).clear()
-					.formula1("0").formula2("13").operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndDoReset()
+					.formula1("0").formula2(String.valueOf(DatengueltigkeitHelper.MAX_SPIELPUNKTE)).operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndDoReset()
 					.formulaIsText().styleIsFehler().applyAndDoReset()
 					.formula1(gleichstandFormel).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndDoReset();
 

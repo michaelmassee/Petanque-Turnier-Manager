@@ -43,9 +43,8 @@ public class SheetAuswahlConfigElement implements ConfigElement, XItemListener {
 		this.configProperty = checkNotNull(configProperty);
 		this.workingSpreadsheet = checkNotNull(workingSpreadsheet);
 		this.auswahl = ermittleAuswahl(workingSpreadsheet);
-		var labelText = configProperty.getDescription() != null ? configProperty.getDescription() : configProperty.getKey();
-		labelPlusCombobox = LabelPlusCombobox.from(guiFactoryCreateParam).labelText(labelText)
-				.helpText(labelText).addAuswahlItems(auswahl)
+		labelPlusCombobox = LabelPlusCombobox.from(guiFactoryCreateParam).labelText(configProperty.getLabelText())
+				.helpText(configProperty.getHelpText()).addAuswahlItems(auswahl)
 				.addListener(this).select(getComboboxItemValue());
 	}
 

@@ -18,6 +18,7 @@ public class ConfigProperty<V> {
 	private final String key;
 	private V defaultVal;
 	private String description;
+	private String shortDescription;
 	private Object[] descriptionArgs;
 	private boolean tabFarbe;    // Tab-Farben-Dialog
 	private boolean intern;      // interner Zustand – nicht in Dialogen anzeigen
@@ -67,6 +68,23 @@ public class ConfigProperty<V> {
 		this.description = description;
 		this.descriptionArgs = args;
 		return this;
+	}
+
+	/** Kurze, sichtbare Beschriftung für Konfigurationsdialoge. */
+	public ConfigProperty<V> setShortDescription(String shortDescription) {
+		this.shortDescription = shortDescription;
+		return this;
+	}
+
+	/** Sichtbare, möglichst kurze Beschriftung; fällt auf die vollständige Beschreibung zurück. */
+	public String getLabelText() {
+		return shortDescription == null ? getHelpText() : I18n.get(shortDescription);
+	}
+
+	/** Vollständige Beschreibung für den Tooltip. */
+	public String getHelpText() {
+		String fullDescription = getDescription();
+		return fullDescription != null ? fullDescription : key;
 	}
 
 	public ConfigPropertyType getType() {

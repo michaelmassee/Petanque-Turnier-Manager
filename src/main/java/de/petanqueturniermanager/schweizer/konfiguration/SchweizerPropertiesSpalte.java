@@ -65,7 +65,8 @@ public class SchweizerPropertiesSpalte extends TeamAnzeigePropertiesSpalte imple
 				.setDescription("config.desc.header.rechts"));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELRUNDE)
-				.setDefaultVal(1).setDescription("config.desc.aktuelle.spielrunde"));
+				.setDefaultVal(1).setDescription("config.desc.aktuelle.spielrunde")
+				.setShortDescription("config.label.aktuelle.spielrunde"));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELRUNDE_COLOR_BACK_GERADE)
 				.setDefaultVal(DEFAULT_GERADE_BACK_COLOR)
@@ -77,7 +78,8 @@ public class SchweizerPropertiesSpalte extends TeamAnzeigePropertiesSpalte imple
 				.setDefaultVal(DEFAULT_HEADER_BACK_COLOR).setDescription("config.desc.spielrunde.header"));
 
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_SPIELRUNDE_SPIELBAHN)
-				.setDefaultVal(SpielrundeSpielbahn.X.name()).setDescription("config.desc.spielbahn"))
+				.setDefaultVal(SpielrundeSpielbahn.X.name()).setDescription("config.desc.spielbahn")
+				.setShortDescription("config.label.spielbahn"))
 				.addAuswahl(SpielrundeSpielbahn.X.name(), "Keine Spalte")
 				.addAuswahl(SpielrundeSpielbahn.L.name(), "Leere Spalte")
 				.addAuswahl(SpielrundeSpielbahn.N.name(), "Durchnummerieren (1-n)")
@@ -106,28 +108,33 @@ public class SchweizerPropertiesSpalte extends TeamAnzeigePropertiesSpalte imple
 
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE)
 				.setDefaultVal(TeamAnzeige.NR.name())
-				.setDescription("config.desc.schweizer.spielplan.team.anzeige"))
+				.setDescription("config.desc.schweizer.spielplan.team.anzeige")
+				.setShortDescription("config.label.spielplan.team.anzeige"))
 				.addAuswahl(TeamAnzeige.NR.name(), "Teamnummer")
 				.addAuswahl(TeamAnzeige.SPIELERNAMEN.name(), "Spielernamen")
 				.addAuswahl(TeamAnzeige.NAME.name(), "Teamname"));
 
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_RANGLISTE_TEAM_ANZEIGE)
 				.setDefaultVal(TeamAnzeige.NAME.name())
-				.setDescription("config.desc.schweizer.rangliste.team.anzeige"))
+				.setDescription("config.desc.schweizer.rangliste.team.anzeige")
+				.setShortDescription("config.label.rangliste.team.anzeige"))
 				.addAuswahl(TeamAnzeige.NR.name(), "Teamnummer")
 				.addAuswahl(TeamAnzeige.SPIELERNAMEN.name(), "Spielernamen")
 				.addAuswahl(TeamAnzeige.NAME.name(), "Teamname"));
 
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_RANKING_MODUS)
 				.setDefaultVal(SchweizerRankingModus.MIT_BUCHHOLZ.name())
-				.setDescription("config.desc.schweizer.ranking.modus"))
+				.setDescription("config.desc.schweizer.ranking.modus")
+				.setShortDescription("config.label.ranking.modus"))
 				.addAuswahl(SchweizerRankingModus.MIT_BUCHHOLZ.name(), "Mit Buchholz (Standard)")
 				.addAuswahl(SchweizerRankingModus.OHNE_BUCHHOLZ.name(), "Ohne Buchholz"));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_FREISPIEL_PUNKTE_PLUS)
-				.setDefaultVal(13).setDescription("config.desc.freispiel.punkte.plus"));
+				.setDefaultVal(13).setDescription("config.desc.freispiel.punkte.plus")
+				.setShortDescription("config.label.freispiel.punkte.plus"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_FREISPIEL_PUNKTE_MINUS)
-				.setDefaultVal(7).setDescription("config.desc.freispiel.punkte.minus"));
+				.setDefaultVal(7).setDescription("config.desc.freispiel.punkte.minus")
+				.setShortDescription("config.label.freispiel.punkte.minus"));
 
 		KONFIG_PROPERTIES.add(ZeitplanConfigProperty.<Boolean>from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_ZEITPLAN_AKTIV)
 				.setDefaultVal(false).setDescription("config.desc.zeitplan.aktiv"));

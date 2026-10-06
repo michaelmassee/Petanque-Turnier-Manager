@@ -14,11 +14,21 @@ Werte und I18n-Schlüssel (`DatengueltigkeitHelper.Meldungen`).
 | Spieltage (Supermelee) | leer, `1` (gespielt), `2` (ausgesetzt) | **abgelehnt** | `MeldeListeHelper.insertFormulaSpieltageSpaltenGeradeUngradeFarbe` |
 | Setzposition (SP) | leer, ganze Zahl ≥ 0 | **abgelehnt** | `DatengueltigkeitHelper.setzeNichtNegativeGanzzahl` |
 | Mêlée-Check-in | leer, `X` | **abgelehnt** | `MeldeListeHelper.setzeMeleeEingechecktDatengueltigkeit` → `setzeTextListe` |
-| Spielergebnisse | leer, ganze Zahl 0–13 (Trip-Tête: 0–Spielziel) | **abgelehnt** | `DatengueltigkeitHelper.setzeSpielpunkte` (`MAX_SPIELPUNKTE`), Trip-Tête `setzeGanzzahlBereich` |
+| Spielergebnisse (Spielrunden, JGJ, KO-Turnierbaum, Trip-Tête) | leer, ganze Zahl 0–13 (Trip-Tête: 0–Spielziel) | **bleibt stehen**, rot markiert (keine Meldung) | `DatengueltigkeitHelper.setzeSpielpunkte` (`MAX_SPIELPUNKTE` bzw. Spielziel) |
 | Spielbahn (manuell, Modus „L“) | leer, positive ganze Zahl, **beliebiger Text** | nur **Warnung**, bestätigbar | `DatengueltigkeitHelper.setzeBahnDatengueltigkeit` |
 
 Leere Zellen sind überall erlaubt (`IgnoreBlankCells`): leer bedeutet „nicht dabei“ bzw. „noch
 kein Ergebnis“.
+
+## Spielergebnisse: stehen lassen und rot markieren
+
+Ein ungültiges Ergebnis (z. B. `15`, `-1`, Text) wird nicht abgelehnt. Die Eingabe bleibt stehen,
+damit die Turnierleitung sieht, was eingetippt wurde, und die bedingte Formatierung
+(`styleIsFehler`, Bereich außerhalb 0–Spielziel, Text, Gleichstand) färbt die Zelle rot.
+Technisch: `ShowErrorMessage = false` – ohne Fehlermeldung prüft Calc die Eingabe gar nicht
+(`ScInputHandler::EnterHandler`, `HasErrMsg`). Die Eingabehilfe beim Anwählen nennt den
+gültigen Bereich konkret (`datengueltigkeit.spielpunkte.eingabehilfe`, Platzhalter `{0}` = Spielziel).
+Jeder Aufrufer von `setzeSpielpunkte` MUSS daher selbst die Fehler-Formatierung setzen.
 
 ## Spielbahn: bewusst locker
 

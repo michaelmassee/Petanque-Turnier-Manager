@@ -49,8 +49,7 @@ public class SimpleTextConfigElement implements ConfigElement, XTextListener {
 			WorkingSpreadsheet workingSpreadsheet) {
 		this.configProperty = checkNotNull(configProperty);
 		this.workingSpreadsheet = checkNotNull(workingSpreadsheet);
-		var labelText = configProperty.getDescription() != null ? configProperty.getDescription() : configProperty.getKey();
-		labelPlusTextBox = LabelPlusTextBox.from(guiFactoryCreateParam).labelText(labelText).helpText(labelText)
+		labelPlusTextBox = LabelPlusTextBox.from(guiFactoryCreateParam).labelText(configProperty.getLabelText()).helpText(configProperty.getHelpText())
 				.addXTextListener(this).fieldText(getPropertyValue());
 		// Ausgangs-Hintergrundfarbe sichern, BEVOR jemals rot eingefaerbt wird (Wert ist beim
 		// frisch erzeugten Control noch unveraendert) — theme-sicher statt eine feste Farbe zu raten.
