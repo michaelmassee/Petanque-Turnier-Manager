@@ -62,50 +62,37 @@ public final class DatengueltigkeitHelper {
 			String spaltenKey) {
 	}
 
-	private static final Meldungen SPIELPUNKTE_MELDUNGEN = new Meldungen(
-			"datengueltigkeit.spielpunkte.eingabehilfe.titel", "datengueltigkeit.spielpunkte.eingabehilfe",
-			"datengueltigkeit.zahl.fehler.titel", "datengueltigkeit.zahl.fehler", "datengueltigkeit.spalte.spielpunkte");
-
-	/** Verhalten von Calc bei einer Eingabe, die gegen die Regel verstößt. */
-	private enum Reaktion {
-		/** Eingabe wird abgelehnt. */
-		ABLEHNEN,
-		/** Bestätigbare Warnung, nach Bestätigung bleibt die Eingabe stehen. */
-		WARNEN,
-		/** Keine Meldung, die Eingabe bleibt stehen; die bedingte Formatierung markiert sie rot. */
-		NUR_MARKIEREN
-	}
-
 	private record Regel(ValidationType typ, ConditionOperator operator, String formel1, String formel2,
-			Reaktion reaktion, boolean auswahlliste, Meldungen meldungen, List<Object> eingabeParameter) {
-
-		Regel(ValidationType typ, ConditionOperator operator, String formel1, String formel2, Reaktion reaktion,
-				boolean auswahlliste, Meldungen meldungen) {
-			this(typ, operator, formel1, formel2, reaktion, auswahlliste, meldungen, List.of());
-		}
+			ValidationAlertStyle fehlerStil, boolean auswahlliste, Meldungen meldungen) {
 	}
 
 	private DatengueltigkeitHelper() {
 	}
 
-	public static void setzeSpielpunkte(ISheet sheet, RangePosition range) throws GenerateException {
-		setzeSpielpunkte(sheet, range, MAX_SPIELPUNKTE);
-	}
-
 	/**
-	 * Spielergebnisse: ganze Zahl von 0 bis {@code spielZiel}. Ungültige Eingaben werden bewusst
-	 * nicht abgelehnt – sie bleiben stehen, damit die Turnierleitung sieht, was eingetippt wurde, und
-	 * werden vom Aufrufer per bedingter Formatierung ({@code styleIsFehler}) rot markiert. Die
-	 * Eingabehilfe beim Anwählen der Zelle nennt den gültigen Bereich.
+	 * Spielergebnisse bekommen bewusst keine Gültigkeitsregel: Ungültige Eingaben bleiben stehen, damit
+	 * die Turnierleitung sieht, was eingetippt wurde, und werden vom Aufrufer per bedingter
+	 * Formatierung ({@code styleIsFehler}) rot markiert. Eine Eingabehilfe würde beim schnellen
+	 * Eintragen nur Nachbarzellen verdecken. Entfernt Regeln aus älteren Dokumentversionen.
 	 */
-	public static void setzeSpielpunkte(ISheet sheet, RangePosition range, int spielZiel) throws GenerateException {
-		setze(sheet, range, new Regel(ValidationType.WHOLE, ConditionOperator.BETWEEN, "0", String.valueOf(spielZiel),
-				Reaktion.NUR_MARKIEREN, false, SPIELPUNKTE_MELDUNGEN, List.of(spielZiel)));
+	public static void entfernePruefungFuerSpielpunkte(ISheet sheet, RangePosition range) throws GenerateException {
+		XPropertySet rangeProperties = rangeProperties(sheet, range);
+		try {
+			XPropertySet validation = Lo.qi(XPropertySet.class, rangeProperties.getPropertyValue("Validation"));
+			validation.setPropertyValue("Type", ValidationType.ANY);
+			validation.setPropertyValue("ShowInputMessage", Boolean.FALSE);
+			validation.setPropertyValue("ShowErrorMessage", Boolean.FALSE);
+			rangeProperties.setPropertyValue("Validation", validation);
+		} catch (com.sun.star.uno.Exception | RuntimeException e) {
+			String spalte = I18n.get(ZAHL_MELDUNGEN.spaltenKey());
+			logger.error("Datengültigkeit der {} konnte nicht entfernt werden", spalte, e);
+			throw new GenerateException(I18n.get("error.datengueltigkeit", spalte, e.getMessage()));
+		}
 	}
 
 	public static void setzeNichtNegativeGanzzahl(ISheet sheet, RangePosition range) throws GenerateException {
 		setze(sheet, range, new Regel(ValidationType.WHOLE, ConditionOperator.GREATER_EQUAL, "0", "",
-				Reaktion.ABLEHNEN, false, ZAHL_MELDUNGEN));
+				ValidationAlertStyle.STOP, false, ZAHL_MELDUNGEN));
 	}
 
 	/**
@@ -116,7 +103,7 @@ public final class DatengueltigkeitHelper {
 	 */
 	public static void setzeBahnDatengueltigkeit(ISheet sheet, RangePosition range) throws GenerateException {
 		setze(sheet, range, new Regel(ValidationType.CUSTOM, ConditionOperator.FORMULA, BAHN_FORMEL, "",
-				Reaktion.WARNEN, false, BAHN_MELDUNGEN));
+				ValidationAlertStyle.WARNING, false, BAHN_MELDUNGEN));
 	}
 
 	/** Auswahlliste aus Zahlen, z.B. die Aktiv-Werte 1 und 2. */
@@ -138,7 +125,7 @@ public final class DatengueltigkeitHelper {
 		// "X" allein wird als unvollständige Formel gelesen (Err:509); die geschweiften Klammern
 		// machen daraus eine gültige einspaltige Array-Konstante.
 		setze(sheet, range, new Regel(ValidationType.LIST, ConditionOperator.EQUAL, "{" + eintraege + "}", "",
-				Reaktion.ABLEHNEN, true, meldungen));
+				ValidationAlertStyle.STOP, true, meldungen));
 	}
 
 	private static void setze(ISheet sheet, RangePosition range, Regel regel) throws GenerateException {
@@ -150,7 +137,7 @@ public final class DatengueltigkeitHelper {
 			if (regel.auswahlliste()) {
 				validation.setPropertyValue("ShowList", Short.valueOf(TableValidationVisibility.UNSORTED));
 			}
-			setzeMeldungen(validation, regel);
+			setzeMeldungen(validation, regel.fehlerStil(), regel.meldungen());
 			XSheetCondition condition = Lo.qi(XSheetCondition.class, validation);
 			condition.setOperator(regel.operator());
 			condition.setFormula1(regel.formel1());
@@ -163,26 +150,15 @@ public final class DatengueltigkeitHelper {
 		}
 	}
 
-	private static void setzeMeldungen(XPropertySet validation, Regel regel) throws com.sun.star.uno.Exception {
-		Meldungen meldungen = regel.meldungen();
+	private static void setzeMeldungen(XPropertySet validation, ValidationAlertStyle fehlerStil, Meldungen meldungen)
+			throws com.sun.star.uno.Exception {
 		validation.setPropertyValue("ShowInputMessage", Boolean.TRUE);
 		validation.setPropertyValue("InputTitle", I18n.get(meldungen.eingabeTitelKey()));
-		validation.setPropertyValue("InputMessage",
-				I18n.get(meldungen.eingabeKey(), regel.eingabeParameter().toArray()));
-		// Ohne Fehlermeldung prüft Calc die Eingabe gar nicht (ScInputHandler::EnterHandler, HasErrMsg)
-		// und übernimmt sie unverändert.
-		validation.setPropertyValue("ShowErrorMessage", regel.reaktion() != Reaktion.NUR_MARKIEREN);
-		validation.setPropertyValue("ErrorAlertStyle", alertStil(regel.reaktion()));
+		validation.setPropertyValue("InputMessage", I18n.get(meldungen.eingabeKey()));
+		validation.setPropertyValue("ShowErrorMessage", Boolean.TRUE);
+		validation.setPropertyValue("ErrorAlertStyle", fehlerStil);
 		validation.setPropertyValue("ErrorTitle", I18n.get(meldungen.fehlerTitelKey()));
 		validation.setPropertyValue("ErrorMessage", I18n.get(meldungen.fehlerKey()));
-	}
-
-	private static ValidationAlertStyle alertStil(Reaktion reaktion) {
-		return switch (reaktion) {
-			case ABLEHNEN -> ValidationAlertStyle.STOP;
-			case WARNEN -> ValidationAlertStyle.WARNING;
-			case NUR_MARKIEREN -> ValidationAlertStyle.INFO;
-		};
 	}
 
 	private static XPropertySet rangeProperties(ISheet sheet, RangePosition range) throws GenerateException {

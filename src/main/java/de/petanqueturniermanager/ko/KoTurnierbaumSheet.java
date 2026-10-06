@@ -1119,8 +1119,8 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 
 			var rangeA = RangePosition.from(posA);
 			var rangeB = RangePosition.from(posB);
-			DatengueltigkeitHelper.setzeSpielpunkte(this, rangeA);
-			DatengueltigkeitHelper.setzeSpielpunkte(this, rangeB);
+			DatengueltigkeitHelper.entfernePruefungFuerSpielpunkte(this, rangeA);
+			DatengueltigkeitHelper.entfernePruefungFuerSpielpunkte(this, rangeB);
 
 			// Fehlerprüfungen einzeln pro Zelle – vermeidet Einfärben von Lückenzeilen zwischen den Paaren
 			ConditionalFormatHelper.from(this, rangeA).clear()

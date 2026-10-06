@@ -204,7 +204,7 @@ public class SpielrundeHelper {
 	 */
 	public void formatiereErgebnissRange(ISheet iSheet, RangePosition ergebnissRange, int ersteErgebnisSpalte)
 			throws GenerateException {
-		DatengueltigkeitHelper.setzeSpielpunkte(iSheet, ergebnissRange);
+		DatengueltigkeitHelper.entfernePruefungFuerSpielpunkte(iSheet, ergebnissRange);
 		String cellA = "INDIRECT(ADDRESS(ROW();" + (ersteErgebnisSpalte + 1) + "))";
 		String cellB = "INDIRECT(ADDRESS(ROW();" + (ersteErgebnisSpalte + 2) + "))";
 		String formulaGleicheWerte = "AND(NOT(ISBLANK(" + cellA + "));NOT(ISBLANK(" + cellB + "));"

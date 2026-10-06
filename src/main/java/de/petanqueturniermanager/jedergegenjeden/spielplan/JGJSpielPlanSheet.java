@@ -636,7 +636,7 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 	}
 
 	private void formatiereErgebnisZellen(RangePosition ergRange) throws GenerateException {
-		DatengueltigkeitHelper.setzeSpielpunkte(this, ergRange);
+		DatengueltigkeitHelper.entfernePruefungFuerSpielpunkte(this, ergRange);
 		String cellA = "INDIRECT(ADDRESS(ROW();" + (SPIELPNKT_A_SPALTE + 1) + "))";
 		String cellB = "INDIRECT(ADDRESS(ROW();" + (SPIELPNKT_B_SPALTE + 1) + "))";
 		String formulaGleicheWerte = "AND(NOT(ISBLANK(" + cellA + "));NOT(ISBLANK(" + cellB + "));"

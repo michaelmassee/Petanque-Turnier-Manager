@@ -67,7 +67,7 @@ public class TripTeteTurnierTestDatenUITest extends BaseCalcUITest {
     }
 
     @Test
-    public void tripTeteErgebnisHatNativeDatengueltigkeitBisZumSpielziel() throws Exception {
+    public void tripTeteErgebnisBleibtBeiFehleingabeStehenUndWirdRotMarkiert() throws Exception {
         new TripTeteSpielPlanSheetTestDaten(wkingSpreadsheet).generate();
 
         XSpreadsheet spielplan = sheetHlp.findByName(SheetNamen.spielplan());
@@ -75,12 +75,11 @@ public class TripTeteTurnierTestDatenUITest extends BaseCalcUITest {
                 TripTeteSpielPlanSheet.TRI_A_SPALTE, TripTeteSpielPlanSheet.ERSTE_DATEN_ZEILE));
         XPropertySet validation = Lo.qi(XPropertySet.class, cellProperties.getPropertyValue("Validation"));
 
-        assertThat(validation.getPropertyValue("Type")).isEqualTo(ValidationType.WHOLE);
-        assertThat(Lo.qi(XSheetCondition.class, validation).getFormula1()).isEqualTo("0");
-        assertThat(Lo.qi(XSheetCondition.class, validation).getFormula2()).isEqualTo("13");
-        assertThat(validation.getPropertyValue("ShowErrorMessage"))
-                .as("ungültige Ergebnisse bleiben stehen statt abgelehnt zu werden").isEqualTo(Boolean.FALSE);
-        assertThat((String) validation.getPropertyValue("InputMessage")).contains("13");
+        assertThat(validation.getPropertyValue("Type"))
+                .as("keine Gültigkeitsregel, ungültige Ergebnisse bleiben stehen").isEqualTo(ValidationType.ANY);
+        assertThat(validation.getPropertyValue("ShowInputMessage"))
+                .as("kein störender Eingabehilfe-Tooltip").isEqualTo(Boolean.FALSE);
+        assertThat(validation.getPropertyValue("ShowErrorMessage")).isEqualTo(Boolean.FALSE);
 
         XSheetConditionalEntries bedingungen = Lo.qi(XSheetConditionalEntries.class,
                 cellProperties.getPropertyValue("ConditionalFormat"));

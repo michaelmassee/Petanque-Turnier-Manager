@@ -427,7 +427,7 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet {
 		RangePosition ergebnisRange = RangePosition.from(TRI_A_SPALTE, ERSTE_DATEN_ZEILE, TETE_B_SPALTE,
 				letzteSpielZeile);
 		int spielZiel = getKonfigurationSheet().getSpielZiel();
-		DatengueltigkeitHelper.setzeSpielpunkte(this, ergebnisRange, spielZiel);
+		DatengueltigkeitHelper.entfernePruefungFuerSpielpunkte(this, ergebnisRange);
 		// Ungültige Ergebnisse bleiben stehen und werden rot markiert; Vorrang vor der Editierbar-Farbe
 		ConditionalFormatHelper.from(this, ergebnisRange).clear()
 				.formula1("0").formula2(String.valueOf(spielZiel)).operator(ConditionOperator.NOT_BETWEEN)
