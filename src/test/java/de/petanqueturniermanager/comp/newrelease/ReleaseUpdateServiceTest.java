@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Test;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.comp.GlobalProperties;
+import de.petanqueturniermanager.comp.PluginOptionen;
 
 class ReleaseUpdateServiceTest {
 
@@ -67,7 +68,7 @@ class ReleaseUpdateServiceTest {
     @Test
     void preReleaseFuehrtBeiAktivierterBetaOptionZuUpdateVerfuegbar() throws Exception {
         var gp = GlobalProperties.get();
-        gp.speichern(false, false, false, true, true, false, "", true, true);
+        gp.speichern(new PluginOptionen(false, false, false, true, true, false, "", true, true, true));
         try {
             var release = new ReleaseInfo("v2.0.0-rc1", "v2.0.0-rc1",
                     Instant.now(), true, null, List.of(), null);
@@ -83,7 +84,7 @@ class ReleaseUpdateServiceTest {
             wartenBisStatusEntweder(service, UpdateStatus.UPDATE_VERFUEGBAR);
             assertThat(service.getStatus()).isEqualTo(UpdateStatus.UPDATE_VERFUEGBAR);
         } finally {
-            gp.speichern(false, false, false, true, true, false, "", true, false);
+            gp.speichern(new PluginOptionen(false, false, false, true, true, false, "", true, false, true));
         }
     }
 

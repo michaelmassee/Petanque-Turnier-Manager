@@ -22,9 +22,10 @@ import com.sun.star.ui.XUIElement;
 import com.sun.star.util.XURLTransformer;
 
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.DokumentKontext;
+import de.petanqueturniermanager.comp.GlobalProperties;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
-import de.petanqueturniermanager.sidebar.SidebarAnzeigenListener;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
@@ -32,7 +33,7 @@ import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
 import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzRegistry;
-import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.sidebar.SidebarAnzeigenListener;
 
 /**
  * Verwaltung des Turnier-Modus (Kiosk-Modus) für LibreOffice Calc.
@@ -116,12 +117,51 @@ public class TurnierModus {
 
             var docProps = new DocumentPropertiesHelper(ws);
             if (docProps.getTurnierSystemAusDocument() != TurnierSystem.KEIN) {
-                docProps.setBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIER_MODUS, neuerZustand);
+                merkeZustandImDokument(docProps, neuerZustand);
             }
         } catch (Exception e) {
             logger.error("Fehler beim Umschalten", e);
             zeigeFehlermeldung(ws);
         }
+    }
+
+    /**
+     * Schaltet das Turnierdokument {@code ws} in den Turniermodus, wenn die Plugin-Option
+     * „Turniermodus automatisch aktivieren" gesetzt ist und der Modus dort noch nicht aktiv ist.
+     * Andere geöffnete Dokumente bleiben unberührt. Muss auf dem LO-Main-Thread laufen.
+     *
+     * @return {@code true}, wenn der Turniermodus dadurch aktiviert wurde
+     */
+    public boolean aktiviereAutomatischFallsNoetig(WorkingSpreadsheet ws) {
+        return aktiviereAutomatischFallsNoetig(ws, GlobalProperties.get().isAutoTurnierModus());
+    }
+
+    /** Wie {@link #aktiviereAutomatischFallsNoetig(WorkingSpreadsheet)}, Option explizit (für Tests). */
+    boolean aktiviereAutomatischFallsNoetig(WorkingSpreadsheet ws, boolean optionAktiv) {
+        try {
+            var docProps = new DocumentPropertiesHelper(ws);
+            if (!sollAutomatischAktivieren(optionAktiv, docProps.getTurnierSystemAusDocument(), istAktiv(ws))) {
+                return false;
+            }
+            var lm = holeLayoutManager(ws);
+            if (lm == null) return false;
+            aktivierenIntern(lm, ws);
+            merkeZustandImDokument(docProps, true);
+            return true;
+        } catch (Exception e) {
+            logger.error("Fehler beim automatischen Aktivieren des Turnier-Modus", e);
+            zeigeFehlermeldung(ws);
+            return false;
+        }
+    }
+
+    /** Entscheidungsregel für {@link #aktiviereAutomatischFallsNoetig(WorkingSpreadsheet)}. */
+    static boolean sollAutomatischAktivieren(boolean optionAktiv, TurnierSystem turnierSystem, boolean bereitsAktiv) {
+        return optionAktiv && turnierSystem != TurnierSystem.KEIN && !bereitsAktiv;
+    }
+
+    private static void merkeZustandImDokument(DocumentPropertiesHelper docProps, boolean aktiv) {
+        docProps.setBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIER_MODUS, aktiv);
     }
 
     public void aktivieren(WorkingSpreadsheet ws) {
@@ -155,7 +195,7 @@ public class TurnierModus {
 
     // -------------------------------------------------------------------------
 
-    private void schuetzeBlattschutzFuerAktivesTournierSystem(WorkingSpreadsheet ws) {
+    private void schuetzeBlattschutzFuerAktivesTurnierSystem(WorkingSpreadsheet ws) {
         try {
             var ts = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();
             BlattschutzRegistry.fuer(ts).ifPresent(k -> BlattschutzManager.get().schuetzen(k, ws));
@@ -164,7 +204,7 @@ public class TurnierModus {
         }
     }
 
-    private void entsperreBlattschutzFuerAktivesTournierSystem(WorkingSpreadsheet ws) {
+    private void entsperreBlattschutzFuerAktivesTurnierSystem(WorkingSpreadsheet ws) {
         try {
             var ts = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();
             BlattschutzRegistry.fuer(ts).ifPresent(k -> BlattschutzManager.get().entsperren(k, ws));
@@ -234,7 +274,7 @@ public class TurnierModus {
         ToolbarAnzeigenListener.zeigeToolbarInAllenFrames(ws.getxContext());
         TimerToolbarSteuerung.anzeigenInAllenFrames(ws.getxContext());
 
-        schuetzeBlattschutzFuerAktivesTournierSystem(ws);
+        schuetzeBlattschutzFuerAktivesTurnierSystem(ws);
         kioskFormatierungsSchutz.aktivieren(frame);
         SidebarAnzeigenListener.zeigePtmSidebar(ws);
     }
@@ -242,7 +282,7 @@ public class TurnierModus {
     private void deaktivierenIntern(XLayoutManager lm, WorkingSpreadsheet ws) {
         XFrame frame = holeFrame(ws);
         kioskFormatierungsSchutz.deaktivieren(frame);
-        entsperreBlattschutzFuerAktivesTournierSystem(ws);
+        entsperreBlattschutzFuerAktivesTurnierSystem(ws);
         Optional<KioskZustand> zustand = kioskZustaende.entfernen(frame);
         List<String> zuRestaurieren = zustand.map(KioskZustand::ausgeblendeteElemente)
                 .filter(elemente -> !elemente.isEmpty()).orElse(STANDARD_ELEMENTE);

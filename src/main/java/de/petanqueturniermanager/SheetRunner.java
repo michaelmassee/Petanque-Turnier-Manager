@@ -27,6 +27,7 @@ import de.petanqueturniermanager.webserver.WebServerManager;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.LoMainThread;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
@@ -331,6 +332,12 @@ public abstract class SheetRunner extends Thread {
 				setzeDokumentModified(docModifiedVorRun);
 			}
 
+			if (istTurnierModusAutomatikAusloeser()) {
+				// Fire-and-forget: kein Warten auf den Main-Thread – Aufrufer mit start()+join()
+				// können selbst auf dem Main-Thread blockieren (Deadlock-Gefahr).
+				LoMainThread.post(getxContext(), this::aktiviereTurnierModusAutomatisch);
+			}
+
 			// Hinweis: ehemals folgte hier ein fokussiereArbeitsDokument()-Aufruf,
 			// der via XFrame.activate() + XTopWindow.toFront() aus dem Worker-Thread
 			// den Fokus auf das Arbeits-Dokument zurückbringen sollte. Auf Wayland
@@ -624,6 +631,30 @@ public abstract class SheetRunner extends Thread {
 
 	public XCalculatable getxCalculatable() {
 		return getWorkingSpreadsheet().getxCalculatable();
+	}
+
+	/**
+	 * Nur erfolgreiche Benutzer-Aktionen (Menü/Toolbar via {@link #start()}) schalten den
+	 * Turniermodus automatisch ein – Hintergrundläufe wie der Tabwechsel-Refresh nicht, sonst
+	 * würde ein manuell ausgeschalteter Turniermodus schon beim nächsten Tabwechsel zurückkehren.
+	 */
+	private boolean istTurnierModusAutomatikAusloeser() {
+		return koordinatorVorgekoppelt && !silentBackground && !istFehlgeschlagen && !documentDisposed
+				&& isDocumentAlive();
+	}
+
+	/**
+	 * Läuft auf dem LO-Main-Thread. Betrifft nur das Dokument dieses Runners, nie das
+	 * gerade fokussierte. Startet inzwischen ein neuer Lauf, wird übersprungen – dessen Ende
+	 * prüft erneut.
+	 */
+	private void aktiviereTurnierModusAutomatisch() {
+		if (isRunning() || !isDocumentAlive()) {
+			return;
+		}
+		if (TurnierModus.get().aktiviereAutomatischFallsNoetig(workingSpreadsheet)) {
+			koordinator.benachrichtigeListener(); // Turniermodus-Haken in der Toolbar aktualisieren
+		}
 	}
 
 	public static boolean isRunning() {

@@ -84,7 +84,7 @@ class GlobalPropertiesTest {
     void testSpeichernUndLesen() {
         var gp = GlobalProperties.get();
 
-        gp.speichern(true, true, false, true, true, true, "debug", true, false);
+        gp.speichern(new PluginOptionen(true, true, false, true, true, true, "debug", true, false, true));
 
         GlobalProperties.resetForTest();
         var gp2 = GlobalProperties.get();
@@ -114,13 +114,32 @@ class GlobalPropertiesTest {
         var gp = GlobalProperties.get();
         assertFalse(gp.isPerformanceLogging(), "Default muss false sein");
 
-        gp.speichern(false, false, false, true, true, true, "", true, false);
+        gp.speichern(pluginOptionen(true, true));
         GlobalProperties.resetForTest();
         assertTrue(GlobalProperties.get().isPerformanceLogging());
 
-        GlobalProperties.get().speichern(false, false, false, true, true, false, "", true, false);
+        GlobalProperties.get().speichern(pluginOptionen(false, true));
         GlobalProperties.resetForTest();
         assertFalse(GlobalProperties.get().isPerformanceLogging());
+    }
+
+    @Test
+    void testAutoTurnierModusDefaultUndRoundtrip() {
+        var gp = GlobalProperties.get();
+        assertTrue(gp.isAutoTurnierModus(), "Default muss true sein");
+
+        gp.speichern(pluginOptionen(false, false));
+        GlobalProperties.resetForTest();
+        assertFalse(GlobalProperties.get().isAutoTurnierModus());
+
+        GlobalProperties.get().speichern(pluginOptionen(false, true));
+        GlobalProperties.resetForTest();
+        assertTrue(GlobalProperties.get().isAutoTurnierModus());
+    }
+
+    private static PluginOptionen pluginOptionen(boolean performanceLogging, boolean autoTurnierModus) {
+        return new PluginOptionen(false, false, false, true, true, performanceLogging, "", true, false,
+                autoTurnierModus);
     }
 
     @Test
@@ -534,7 +553,7 @@ class GlobalPropertiesTest {
 
         Runnable schreibend = () -> {
             for (int i = 0; i < 20; i++) {
-                gp.speichern(i % 2 == 0, i % 3 == 0, false, true, true, false, "info", true, false);
+                gp.speichern(new PluginOptionen(i % 2 == 0, i % 3 == 0, false, true, true, false, "info", true, false, true));
             }
         };
 
