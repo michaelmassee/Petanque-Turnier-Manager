@@ -239,7 +239,9 @@ public class ConditionalFormatHelper extends BaseHelper {
 
 	/**
 	 * Formatierung anwenden und Builder zurücksetzen.<br>
-	 * Fehler wenn irgend ein Sheet hat ein Lock.
+	 * Fehler wenn irgend ein Sheet hat ein Lock.<br>
+	 * Eine reine Zebra-Formel ({@link #istReineZebraFormel}) wird nicht geschrieben, sondern als
+	 * Fehler geloggt und übersprungen – die Generierung läuft weiter.
 	 *
 	 * @return this (für Verkettung weiterer Aufrufe)
 	 * @throws GenerateException bei UNO-API-Fehlern
@@ -249,9 +251,14 @@ public class ConditionalFormatHelper extends BaseHelper {
 		checkNotNull(formula1);
 		checkNotNull(styleName);
 		if (istReineZebraFormel(formula1)) {
-			throw new IllegalArgumentException("Zebra-Zeilenfarbe '" + formula1
-					+ "' darf nicht als bedingte Formatierung gesetzt werden (geht beim HTML-Export verloren). "
-					+ "Stattdessen SheetHelper.faerbeZeilenAbwechselnd verwenden.");
+			// Bewusst kein Abbruch: die Sheet-Generierung muss weiterlaufen. Die verbotene Regel
+			// wird nur übersprungen; der Konventionstest fängt den Fehler bereits beim Build.
+			logger.error("Zebra-Zeilenfarbe '{}' darf nicht als bedingte Formatierung gesetzt werden "
+					+ "(geht beim HTML-Export verloren, verdeckt die Editierfarbe) - Regel übersprungen. "
+					+ "Stattdessen SheetHelper.faerbeZeilenAbwechselnd verwenden. Range: {}",
+					formula1, rangePos, new IllegalArgumentException(formula1));
+			reset();
+			return this;
 		}
 
 		XPropertySet xPropSet = RangeHelper.from(getISheet(), rangePos).getPropertySet();

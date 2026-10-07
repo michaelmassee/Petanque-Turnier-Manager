@@ -218,7 +218,7 @@ Details und Implementierungsmuster: `turniersysteme/BLATTSCHUTZ.md`
 - Editierbare Zellen: `EditierbaresZelleFormatHelper.anwenden()` **nach** dem `clear()`-Aufbau der Fehlerregeln einer Spalte (Fehler hat Vorrang, Editierfarbe danach). Zusammengesetzte Bedingungen wie `AND(ISEVEN(ROW());<Bedingung>)` sind erlaubt.
 - Meldelisten-Aufbau: `formatZeilenfarben()` löscht zuerst alte CF spaltenweise (`ConditionalFormatHelper.clearSpaltenweise`, bereinigt Altdokumente) und schreibt dann das Zebra direkt.
 
-**Quality Gate (dreistufig):** `formulaIsEvenRow()/formulaIsOddRow()` existieren nicht mehr (Compile-Zeit); `ConditionalFormatHelper.applyAndDoReset()` wirft bei reiner Zebra-Formel (`istReineZebraFormel`); `ZebraNichtPerConditionalFormatKonventionTest` (Quelltext-Scan in `arch/`) bricht den Build. UITest-Prüfhilfe: `EditierfarbePruefung` (`src/test/.../helper/sheet/`), Beispiele `*MeldeListeEditierfarbeUITest`.
+**Quality Gate (dreistufig):** `formulaIsEvenRow()/formulaIsOddRow()` existieren nicht mehr (Compile-Zeit); `ConditionalFormatHelper.applyAndDoReset()` überspringt eine reine Zebra-Formel (`istReineZebraFormel`) und loggt sie als Fehler – **bewusst ohne Abbruch**, die Sheet-Generierung darf deswegen nie stoppen; `ZebraNichtPerConditionalFormatKonventionTest` (Quelltext-Scan in `arch/`) bricht den Build. UITest-Prüfhilfe: `EditierfarbePruefung` (`src/test/.../helper/sheet/`), Beispiele `*MeldeListeEditierfarbeUITest`.
 
 ## Native Datengültigkeit (Eingabeprüfung)
 Details und Übersicht aller Regeln: `turniersysteme/DATENGUELTIGKEIT.md`

@@ -31,7 +31,8 @@ import org.junit.jupiter.api.Test;
  * Zellhintergrund geschrieben. Zusammengesetzte Bedingungen wie {@code AND(ISEVEN(ROW());…)}
  * (z.B. Editierfarbe mit Property-Schalter, Ranglisten-Hervorhebungen) bleiben erlaubt.
  * <p>
- * Ergänzt den Laufzeit-Guard {@code ConditionalFormatHelper.istReineZebraFormel}: dieser Test
+ * Ergänzt den Laufzeit-Guard {@code ConditionalFormatHelper.istReineZebraFormel} (der zur Laufzeit nur loggt
+ * und überspringt, damit die Generierung nie abbricht): dieser Test
  * schlägt schon beim Build fehl, nicht erst beim Sheet-Aufbau in LibreOffice.
  */
 class ZebraNichtPerConditionalFormatKonventionTest {
