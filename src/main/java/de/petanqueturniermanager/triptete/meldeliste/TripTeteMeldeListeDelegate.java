@@ -23,8 +23,6 @@ import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.RangeProperties;
-import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeGeradeStyle;
-import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.Position;
@@ -130,6 +128,7 @@ class TripTeteMeldeListeDelegate implements MeldeListeKonstanten {
         meldeListeHelper.updateMeldungenNr(konfigurationSheet.getMeldelisteSortModus());
 
         insertHeaderInSheet(konfigurationSheet.getMeldeListeHeaderFarbe());
+        formatZeilenfarben();
         formatDatenSpalten();
 
         SheetFreeze.from(sheet.getXSpreadSheet(), sheet.getWorkingSpreadsheet()).anzZeilen(3).doFreeze();
@@ -261,9 +260,7 @@ class TripTeteMeldeListeDelegate implements MeldeListeKonstanten {
                         .setCharColor("00599d"));
     }
 
-	private void formatiereDoppelteSpielerNamen(int anzSpieler, int letzteDatenZeile,
-			MeldungenHintergrundFarbeGeradeStyle farbeGerade,
-			MeldungenHintergrundFarbeUnGeradeStyle farbeUngerade) throws GenerateException {
+	private void formatiereDoppelteSpielerNamen(int anzSpieler, int letzteDatenZeile) throws GenerateException {
 		if (anzSpieler == 0) {
 			return;
 		}
@@ -277,11 +274,24 @@ class TripTeteMeldeListeDelegate implements MeldeListeKonstanten {
 				ERSTE_DATEN_ZEILE_OVERRIDE, letzteDatenZeile, sheet);
 	}
 
+    /**
+     * Zeilen-Zebra direkt als Zellhintergrund (nie als bedingte Formatierung: geht beim HTML-Export
+     * verloren und verdeckt die Editierfarbe). Vorher werden alte bedingte Formatierungen des
+     * Datenbereichs entfernt, damit ältere Dokumente mit Zebra-CF beim Aktualisieren bereinigt werden;
+     * die Fehler- und Editierregeln baut {@link #formatDatenSpalten()} danach neu auf.
+     */
+    private void formatZeilenfarben() throws GenerateException {
+        int letzteDatenZeile = getLetzteDatenZeileUseMin();
+        RangePosition datenRange = RangePosition.from(getTeamNrSpalte(), ERSTE_DATEN_ZEILE_OVERRIDE,
+                getAktivSpalte(), letzteDatenZeile);
+        ConditionalFormatHelper.clearSpaltenweise(sheet, datenRange);
+        SheetHelper.faerbeZeilenAbwechselnd(sheet, datenRange,
+                konfigurationSheet.getMeldeListeHintergrundFarbeGeradeStyle().getFarbe(),
+                konfigurationSheet.getMeldeListeHintergrundFarbeUnGeradeStyle().getFarbe());
+    }
+
     private void formatDatenSpalten() throws GenerateException {
         int letzteDatenZeile = getLetzteDatenZeileUseMin();
-
-        MeldungenHintergrundFarbeGeradeStyle farbeGerade = konfigurationSheet.getMeldeListeHintergrundFarbeGeradeStyle();
-        MeldungenHintergrundFarbeUnGeradeStyle farbeUngerade = konfigurationSheet.getMeldeListeHintergrundFarbeUnGeradeStyle();
 
         RangePosition nrRange = RangePosition.from(getTeamNrSpalte(), ERSTE_DATEN_ZEILE_OVERRIDE,
                 getTeamNrSpalte(), letzteDatenZeile);
@@ -295,9 +305,7 @@ class TripTeteMeldeListeDelegate implements MeldeListeKonstanten {
                 .formulaIsText().styleIsFehler().applyAndDoReset()
                 .formula1(kondDoppeltNr).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndDoReset()
                 .formula1("0").formula2("" + MeldungenSpalte.MAX_ANZ_MELDUNGEN)
-                .operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndDoReset()
-                .formulaIsEvenRow().style(farbeGerade).applyAndDoReset()
-                .formulaIsOddRow().style(farbeUngerade).applyAndDoReset();
+                .operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndDoReset();
 
         if (konfigurationSheet.isMeldeListeTeamnameAnzeigen()) {
             RangePosition teamnameRange = RangePosition.from(1, ERSTE_DATEN_ZEILE_OVERRIDE, 1, letzteDatenZeile);
@@ -326,12 +334,11 @@ class TripTeteMeldeListeDelegate implements MeldeListeKonstanten {
 
         meldeListeHelper.bereinigeUngueltigeAktivWerte(getAktivSpalte(), getVornameSpalte(0), ERSTE_DATEN_ZEILE_OVERRIDE,
                 letzteDatenZeile, AKTIV_GUELTIGE_WERTE);
-        meldeListeHelper.formatiereAktivSpalteFehlerfarbe(sheet, aktivRange, AKTIV_GUELTIGE_WERTE, farbeGerade,
-                farbeUngerade);
+        meldeListeHelper.formatiereAktivSpalteFehlerfarbe(sheet, aktivRange, AKTIV_GUELTIGE_WERTE);
 
         EditierbaresZelleFormatHelper.anwenden(sheet,
                 RangePosition.from(1, ERSTE_DATEN_ZEILE_OVERRIDE, getAktivSpalte(), letzteDatenZeile));
-		formatiereDoppelteSpielerNamen(anzSpieler, letzteDatenZeile, farbeGerade, farbeUngerade);
+		formatiereDoppelteSpielerNamen(anzSpieler, letzteDatenZeile);
     }
 
     // ---------------------------------------------------------------

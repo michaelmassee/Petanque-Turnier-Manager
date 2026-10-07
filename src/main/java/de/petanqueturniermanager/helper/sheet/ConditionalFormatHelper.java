@@ -6,6 +6,9 @@ package de.petanqueturniermanager.helper.sheet;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.Locale;
+import java.util.Set;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -32,6 +35,9 @@ public class ConditionalFormatHelper extends BaseHelper {
 	public static final String FORMULA_ISEVEN_ROW = "ISEVEN(ROW())";
 	public static final String FORMULA_ISODD_ROW = "ISODD(ROW())";
 	public static final String FORMULA_CURRENT_CELL = "INDIRECT(ADDRESS(ROW();COLUMN()))";
+
+	/** Reine Zebra-Formeln (normalisiert), die als bedingte Formatierung verboten sind. */
+	private static final Set<String> REINE_ZEBRA_FORMELN = Set.of(FORMULA_ISEVEN_ROW, FORMULA_ISODD_ROW);
 
 	public static String FORMULAISEVENANDEQUALTOINT_STR(int val) {
 		return "AND(" + FORMULA_ISEVEN_ROW + ";" + FORMULA_CURRENT_CELL + "=" + val + ")";
@@ -70,14 +76,52 @@ public class ConditionalFormatHelper extends BaseHelper {
 	public static void clearOnly(ISheet sheet, RangePosition rangePos) {
 		for (int spalte = rangePos.getStartSpalte(); spalte <= rangePos.getEndeSpalte(); spalte++) {
 			for (int zeile = rangePos.getStartZeile(); zeile <= rangePos.getEndeZeile(); zeile++) {
-				clearOnlyEinzelzelle(sheet, RangePosition.from(spalte, zeile, spalte, zeile));
+				clearOnlyBereich(sheet, RangePosition.from(spalte, zeile, spalte, zeile));
 			}
 		}
 	}
 
-	private static void clearOnlyEinzelzelle(ISheet sheet, RangePosition zelle) {
+	/**
+	 * Löscht alle bedingten Formatierungen auf dem angegebenen Bereich spaltenweise.
+	 * <p>
+	 * Schneller als {@link #clearOnly}, setzt aber voraus, dass jede einzelne Spalte des Bereichs
+	 * homogen mit denselben Regeln belegt ist (z.B. Meldelisten, deren Regeln immer über die ganze
+	 * Datenspalte gesetzt werden). Spalten untereinander dürfen sich unterscheiden.
+	 *
+	 * @param sheet    Sheet, auf dem gelöscht wird
+	 * @param rangePos Zellbereich, dessen bedingte Formatierungen entfernt werden
+	 */
+	public static void clearSpaltenweise(ISheet sheet, RangePosition rangePos) {
+		for (int spalte = rangePos.getStartSpalte(); spalte <= rangePos.getEndeSpalte(); spalte++) {
+			clearOnlyBereich(sheet,
+					RangePosition.from(spalte, rangePos.getStartZeile(), spalte, rangePos.getEndeZeile()));
+		}
+	}
+
+	/**
+	 * Prüft, ob eine Formel eine reine Zebra-Zeilenfarbe ({@code ISEVEN(ROW())} bzw.
+	 * {@code ISODD(ROW())}) ohne weitere Bedingung ist.
+	 * <p>
+	 * Eine solche Grund-Zeilenfarbe darf nicht als bedingte Formatierung gesetzt werden: sie geht bei
+	 * der HTML-Generierung verloren und verdeckt (wegen höherer Priorität) nachträglich angehängte
+	 * Regeln wie die Editierfarbe. Zebra wird stattdessen direkt per
+	 * {@link SheetHelper#faerbeZeilenAbwechselnd} geschrieben. Zusammengesetzte Bedingungen wie
+	 * {@code AND(ISEVEN(ROW());…)} bleiben erlaubt.
+	 *
+	 * @param formel zu prüfende Formel, darf {@code null} sein
+	 * @return {@code true}, wenn die Formel nur eine Gerade/Ungerade-Zeilenprüfung ist
+	 */
+	static boolean istReineZebraFormel(String formel) {
+		if (formel == null) {
+			return false;
+		}
+		String normalisiert = formel.replaceAll("\\s+", "").toUpperCase(Locale.ROOT);
+		return REINE_ZEBRA_FORMELN.contains(normalisiert);
+	}
+
+	private static void clearOnlyBereich(ISheet sheet, RangePosition bereich) {
 		try {
-			XPropertySet xPropSet = RangeHelper.from(sheet, zelle).getPropertySet();
+			XPropertySet xPropSet = RangeHelper.from(sheet, bereich).getPropertySet();
 			com.sun.star.sheet.XSheetConditionalEntries xEntries = Lo.qi(
 					com.sun.star.sheet.XSheetConditionalEntries.class,
 					xPropSet.getPropertyValue("ConditionalFormat"));
@@ -122,18 +166,6 @@ public class ConditionalFormatHelper extends BaseHelper {
 
 	public ConditionalFormatHelper formulaIsOddAndEqualToInt(int val) {
 		formula1 = FORMULAISODDANDEQUALTOINT_STR(val);
-		conditionOperator = ConditionOperator.FORMULA;
-		return this;
-	}
-
-	public ConditionalFormatHelper formulaIsEvenRow() {
-		formula1 = FORMULA_ISEVEN_ROW;
-		conditionOperator = ConditionOperator.FORMULA;
-		return this;
-	}
-
-	public ConditionalFormatHelper formulaIsOddRow() {
-		formula1 = FORMULA_ISODD_ROW;
 		conditionOperator = ConditionOperator.FORMULA;
 		return this;
 	}
@@ -216,6 +248,11 @@ public class ConditionalFormatHelper extends BaseHelper {
 		checkNotNull(conditionOperator);
 		checkNotNull(formula1);
 		checkNotNull(styleName);
+		if (istReineZebraFormel(formula1)) {
+			throw new IllegalArgumentException("Zebra-Zeilenfarbe '" + formula1
+					+ "' darf nicht als bedingte Formatierung gesetzt werden (geht beim HTML-Export verloren). "
+					+ "Stattdessen SheetHelper.faerbeZeilenAbwechselnd verwenden.");
+		}
 
 		XPropertySet xPropSet = RangeHelper.from(getISheet(), rangePos).getPropertySet();
 		com.sun.star.sheet.XSheetConditionalEntries xEntries;

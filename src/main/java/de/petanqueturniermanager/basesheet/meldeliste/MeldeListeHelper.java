@@ -256,8 +256,8 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 
 	/**
 	 * Bedingte Formatierung der Aktiv-Spalte: Fehlerfarbe wenn die Zelle weder leer noch in
-	 * {@code gueltigeWerte} enthalten ist. Für Systeme, deren Zeilenfarbe nicht über bedingte
-	 * Formatierung, sondern direkt gesetzt wird (z.B. Poule).
+	 * {@code gueltigeWerte} enthalten ist. Die Zeilenfarbe wird nie als bedingte Formatierung,
+	 * sondern direkt per {@link SheetHelper#faerbeZeilenAbwechselnd} gesetzt.
 	 */
 	public void formatiereAktivSpalteFehlerfarbe(ISheet sheet, RangePosition aktivRange, List<Integer> gueltigeWerte)
 			throws GenerateException {
@@ -265,22 +265,6 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 		ConditionalFormatHelper.from(sheet, aktivRange).clear()
 				.formula1(aktivUngueltigFormel(gueltigeWerte)).operator(ConditionOperator.FORMULA)
 				.styleIsFehler().applyAndDoReset();
-	}
-
-	/**
-	 * Wie {@link #formatiereAktivSpalteFehlerfarbe(ISheet, RangePosition, List)}, hängt aber
-	 * zusätzlich die Zeilenfarbe (gerade/ungerade) als bedingte Formatierung mit niedrigerer
-	 * Priorität an.
-	 */
-	public void formatiereAktivSpalteFehlerfarbe(ISheet sheet, RangePosition aktivRange, List<Integer> gueltigeWerte,
-			MeldungenHintergrundFarbeGeradeStyle farbeGerade, MeldungenHintergrundFarbeUnGeradeStyle farbeUngerade)
-			throws GenerateException {
-		setzeAktivDatengueltigkeit(sheet, aktivRange, gueltigeWerte);
-		ConditionalFormatHelper.from(sheet, aktivRange).clear()
-				.formula1(aktivUngueltigFormel(gueltigeWerte)).operator(ConditionOperator.FORMULA)
-				.styleIsFehler().applyAndDoReset()
-				.formulaIsEvenRow().style(farbeGerade).applyAndDoReset()
-				.formulaIsOddRow().style(farbeUngerade).applyAndDoReset();
 	}
 
 	private static String aktivUngueltigFormel(List<Integer> gueltigeWerte) {
@@ -347,9 +331,9 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 
 	/**
 	 * Bedingte Formatierung der Setzpositions-Spalte: Fehlerfarbe wenn die Zelle weder leer noch eine
-	 * gültige nicht-negative Ganzzahl ist (0 = "kein Setzstatus", erlaubt und beabsichtigt). Für
-	 * Systeme, deren Zeilenfarbe nicht über bedingte Formatierung, sondern direkt gesetzt wird (z.B.
-	 * Schweizer/Poule/JGJ).
+	 * gültige nicht-negative Ganzzahl ist (0 = "kein Setzstatus", erlaubt und beabsichtigt). Die
+	 * Zeilenfarbe wird nie als bedingte Formatierung, sondern direkt per
+	 * {@link SheetHelper#faerbeZeilenAbwechselnd} gesetzt.
 	 */
 	public static void formatiereSetzpositionSpalteFehlerfarbe(ISheet sheet, RangePosition spRange)
 			throws GenerateException {
@@ -357,22 +341,6 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 		ConditionalFormatHelper.from(sheet, spRange).clear()
 				.formula1(setzpositionUngueltigFormel()).operator(ConditionOperator.FORMULA)
 				.styleIsFehler().applyAndDoReset();
-	}
-
-	/**
-	 * Wie {@link #formatiereSetzpositionSpalteFehlerfarbe(ISheet, RangePosition)}, hängt aber
-	 * zusätzlich die Zeilenfarbe (gerade/ungerade) als bedingte Formatierung mit niedrigerer
-	 * Priorität an.
-	 */
-	public static void formatiereSetzpositionSpalteFehlerfarbe(ISheet sheet, RangePosition spRange,
-			MeldungenHintergrundFarbeGeradeStyle farbeGerade, MeldungenHintergrundFarbeUnGeradeStyle farbeUngerade)
-			throws GenerateException {
-		DatengueltigkeitHelper.setzeNichtNegativeGanzzahl(sheet, spRange);
-		ConditionalFormatHelper.from(sheet, spRange).clear()
-				.formula1(setzpositionUngueltigFormel()).operator(ConditionOperator.FORMULA)
-				.styleIsFehler().applyAndDoReset()
-				.formulaIsEvenRow().style(farbeGerade).applyAndDoReset()
-				.formulaIsOddRow().style(farbeUngerade).applyAndDoReset();
 	}
 
 	private static String setzpositionUngueltigFormel() {

@@ -211,6 +211,15 @@ Details und Implementierungsmuster: `turniersysteme/BLATTSCHUTZ.md`
 - Neues System: `FooBlattschutzKonfiguration implements IBlattschutzKonfiguration` + `BlattschutzRegistry.register()`
 - `CellStyleHelper.from(XSpreadsheetDocument, AbstractCellStyleDef).apply()` für Kontexte ohne ISheet
 
+## Zebra-Zeilenfarbe & Editierfarbe
+
+**Regel:** Die Zeilen-Zebrafarbe wird **immer direkt** als Zellhintergrund geschrieben (`SheetHelper.faerbeZeilenAbwechselnd`), **nie** als bedingte Formatierung (CF). Gründe: CF geht bei der HTML-Generierung verloren, und eine unbedingte Zebra-CF (`ISEVEN(ROW())`) greift immer zuerst und verdeckt jede danach angehängte Regel – insbesondere die Editierfarbe (Bug: Formule-X/KO/Kaskade/TripTete-Meldeliste zeigte Teamname/Verein/SP/Aktiv nicht als editierbar).
+
+- Editierbare Zellen: `EditierbaresZelleFormatHelper.anwenden()` **nach** dem `clear()`-Aufbau der Fehlerregeln einer Spalte (Fehler hat Vorrang, Editierfarbe danach). Zusammengesetzte Bedingungen wie `AND(ISEVEN(ROW());<Bedingung>)` sind erlaubt.
+- Meldelisten-Aufbau: `formatZeilenfarben()` löscht zuerst alte CF spaltenweise (`ConditionalFormatHelper.clearSpaltenweise`, bereinigt Altdokumente) und schreibt dann das Zebra direkt.
+
+**Quality Gate (dreistufig):** `formulaIsEvenRow()/formulaIsOddRow()` existieren nicht mehr (Compile-Zeit); `ConditionalFormatHelper.applyAndDoReset()` wirft bei reiner Zebra-Formel (`istReineZebraFormel`); `ZebraNichtPerConditionalFormatKonventionTest` (Quelltext-Scan in `arch/`) bricht den Build. UITest-Prüfhilfe: `EditierfarbePruefung` (`src/test/.../helper/sheet/`), Beispiele `*MeldeListeEditierfarbeUITest`.
+
 ## Native Datengültigkeit (Eingabeprüfung)
 Details und Übersicht aller Regeln: `turniersysteme/DATENGUELTIGKEIT.md`
 
