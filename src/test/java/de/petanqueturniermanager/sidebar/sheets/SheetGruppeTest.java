@@ -5,7 +5,15 @@ package de.petanqueturniermanager.sidebar.sheets;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
 import org.junit.jupiter.api.Test;
+
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 
 /**
  * Sichert die Gruppen-Zuordnung der PTM-Identitäts-Schlüssel ab.
@@ -72,6 +80,47 @@ class SheetGruppeTest {
                 "__PTM_MAASTRICHTER_MELEE_ANMELDUNG__", "__PTM_MAASTRICHTER_MELDELISTE__");
         assertMeleeVorMeldeliste(SheetGruppe.POULE,
                 "__PTM_POULE_MELEE_ANMELDUNG__", "__PTM_POULE_MELDELISTE__");
+    }
+
+    /** Turniersystem-übergreifende Blätter, die bewusst in {@link SheetGruppe#ALLGEMEIN} stehen. */
+    private static final Set<String> BEWUSST_ALLGEMEIN = Set.of(
+            SheetMetadataHelper.SCHLUESSEL_TEILNEHMER,
+            SheetMetadataHelper.SCHLUESSEL_SIEGERGELD,
+            SheetMetadataHelper.SCHLUESSEL_PLANUNGSRECHNER);
+
+    /**
+     * Gate: Jeder Blatt-Schlüssel aus {@link SheetMetadataHelper} muss seinem Turniersystem
+     * zugeordnet sein. Fehlt er in {@link SheetGruppe}, fällt das Blatt auf ALLGEMEIN zurück und
+     * wird alphabetisch einsortiert (Regression: Trip-Tête-Rangliste stand vor dem Spielplan;
+     * Maastrichter-Vorrunden-Rangliste und JGJ-Gesamtrangliste/-Gruppenspielpläne ebenso).
+     */
+    @Test
+    void jederSystemSchluesselHatEineGruppe() throws IllegalAccessException {
+        List<String> ohneGruppe = new ArrayList<>();
+        for (Field feld : SheetMetadataHelper.class.getFields()) {
+            if (!Modifier.isStatic(feld.getModifiers()) || feld.getType() != String.class
+                    || !feld.getName().startsWith("SCHLUESSEL_")) {
+                continue;
+            }
+            String schluessel = (String) feld.get(null);
+            if (!schluessel.startsWith("__PTM_") || BEWUSST_ALLGEMEIN.contains(schluessel)) {
+                continue;
+            }
+            var gruppe = SheetGruppe.fuerSchluessel(schluessel);
+            if (gruppe.isEmpty() || gruppe.get() == SheetGruppe.ALLGEMEIN) {
+                ohneGruppe.add(feld.getName() + " = " + schluessel);
+            }
+        }
+        assertThat(ohneGruppe).as("Schlüssel ohne Turniersystem-Gruppe in SheetGruppe").isEmpty();
+    }
+
+    @Test
+    void tripTeteRanglisteWirdHinterDemSpielplanSortiert() {
+        assertThat(SheetGruppe.TRIPTETE.reihenfolgeDesSchluessels(SheetMetadataHelper.SCHLUESSEL_TRIPTETE_RANGLISTE))
+                .isGreaterThan(SheetGruppe.TRIPTETE
+                        .reihenfolgeDesSchluessels(SheetMetadataHelper.SCHLUESSEL_TRIPTETE_SPIELPLAN));
+        assertCheckinDirektHinterMeldeliste(SheetGruppe.TRIPTETE,
+                SheetMetadataHelper.SCHLUESSEL_TRIPTETE_MELDELISTE, SheetMetadataHelper.SCHLUESSEL_TRIPTETE_CHECKIN_LISTE);
     }
 
     @Test

@@ -35,7 +35,9 @@ public enum SheetGruppe {
             "__PTM_JGJ_MELDELISTE__",
             "__PTM_JGJ_CHECKIN_LISTE__",
             "__PTM_JGJ_SPIELPLAN__",
+            "__PTM_JGJ_GRUPPE_SPIELPLAN_",
             "__PTM_JGJ_RANGLISTE__",
+            "__PTM_JGJ_GESAMTRANGLISTE__",
             "__PTM_JGJ_DIREKTVERGLEICH__",
             "__PTM_JGJ_FINALRUNDE_"
     )),
@@ -73,11 +75,19 @@ public enum SheetGruppe {
             "__PTM_FORMULEX_RANGLISTE__"
     )),
 
+    TRIPTETE("enum.turniersystem.triptete", List.of(
+            "__PTM_TRIPTETE_MELDELISTE__",
+            "__PTM_TRIPTETE_CHECKIN_LISTE__",
+            "__PTM_TRIPTETE_SPIELPLAN__",
+            "__PTM_TRIPTETE_RANGLISTE__"
+    )),
+
     MAASTRICHTER("enum.turniersystem.maastrichter", List.of(
             "__PTM_MAASTRICHTER_MELEE_ANMELDUNG__",
             "__PTM_MAASTRICHTER_MELDELISTE__",
             "__PTM_MAASTRICHTER_CHECKIN_LISTE__",
             "__PTM_MAASTRICHTER_VORRUNDE_",
+            "__PTM_MAASTRICHTER_VORRUNDEN_RANGLISTE__",
             "__PTM_MAASTRICHTER_FINALRUNDE_",
             "__PTM_MAASTRICHTER_GRUPPEN_UEBERSICHT__"
     )),
@@ -108,6 +118,11 @@ public enum SheetGruppe {
     SheetGruppe(String i18nKey, List<String> praefixa) {
         this.i18nKey = i18nKey;
         this.praefixa = praefixa;
+    }
+
+    /** Präfixe der Gruppe in Anzeigereihenfolge (unveränderlich). */
+    List<String> praefixa() {
+        return praefixa;
     }
 
     /** Gibt die übersetzte Gruppenbezeichnung zurück. */
