@@ -171,7 +171,7 @@ public abstract class AbstractPouleVorrundeSheet extends SheetRunner implements 
 
         getSheetHelper().setStringValueInCell(
                 schreibeHeaderZelle(xSheet, SPALTE_TEAM_A_NAME, 1,
-                        TeamAnzeigeHelper.headerI18nKey(konfigurationSheet.getSpielplanTeamAnzeige()), headerFarbe));
+                        I18n.get(TeamAnzeigeHelper.headerI18nKey(konfigurationSheet.getSpielplanTeamAnzeige())), headerFarbe));
 
         getSheetHelper().setStringValueInCell(
                 schreibeHeaderZelle(xSheet, SPALTE_TEAM_B_NR, 1,
@@ -179,13 +179,15 @@ public abstract class AbstractPouleVorrundeSheet extends SheetRunner implements 
 
         getSheetHelper().setStringValueInCell(
                 schreibeHeaderZelle(xSheet, SPALTE_TEAM_B_NAME, 1,
-                        TeamAnzeigeHelper.headerI18nKey(konfigurationSheet.getSpielplanTeamAnzeige()), headerFarbe));
+                        I18n.get(TeamAnzeigeHelper.headerI18nKey(konfigurationSheet.getSpielplanTeamAnzeige())), headerFarbe));
 
         getSheetHelper().setStringValueInCell(
-                schreibeHeaderZelle(xSheet, SPALTE_ERG_A, 1, "A", headerFarbe));
+                schreibeHeaderZelle(xSheet, SPALTE_ERG_A, 1,
+                        I18n.get("poule.vorrunde.header.ergebnis.a"), headerFarbe));
 
         getSheetHelper().setStringValueInCell(
-                schreibeHeaderZelle(xSheet, SPALTE_ERG_B, 1, "B", headerFarbe));
+                schreibeHeaderZelle(xSheet, SPALTE_ERG_B, 1,
+                        I18n.get("poule.vorrunde.header.ergebnis.b"), headerFarbe));
     }
 
     private StringCellValue schreibeHeaderZelle(XSpreadsheet xSheet, int spalte, int zeile,
