@@ -241,7 +241,7 @@ public class ConditionalFormatHelper extends BaseHelper {
 	 * Formatierung anwenden und Builder zurücksetzen.<br>
 	 * Fehler wenn irgend ein Sheet hat ein Lock.<br>
 	 * Eine reine Zebra-Formel ({@link #istReineZebraFormel}) wird nicht geschrieben, sondern als
-	 * Fehler geloggt und übersprungen – die Generierung läuft weiter.
+	 * Warnung geloggt und übersprungen – die Generierung läuft weiter.
 	 *
 	 * @return this (für Verkettung weiterer Aufrufe)
 	 * @throws GenerateException bei UNO-API-Fehlern
@@ -253,7 +253,7 @@ public class ConditionalFormatHelper extends BaseHelper {
 		if (istReineZebraFormel(formula1)) {
 			// Bewusst kein Abbruch: die Sheet-Generierung muss weiterlaufen. Die verbotene Regel
 			// wird nur übersprungen; der Konventionstest fängt den Fehler bereits beim Build.
-			logger.error("Zebra-Zeilenfarbe '{}' darf nicht als bedingte Formatierung gesetzt werden "
+			logger.warn("Zebra-Zeilenfarbe '{}' darf nicht als bedingte Formatierung gesetzt werden "
 					+ "(geht beim HTML-Export verloren, verdeckt die Editierfarbe) - Regel übersprungen. "
 					+ "Stattdessen SheetHelper.faerbeZeilenAbwechselnd verwenden. Range: {}",
 					formula1, rangePos, new IllegalArgumentException(formula1));
