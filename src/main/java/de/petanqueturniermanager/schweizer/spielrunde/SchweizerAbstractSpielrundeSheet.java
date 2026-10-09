@@ -744,10 +744,11 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		Position startPos = Position.from(TEAM_A_SPALTE, ERSTE_DATEN_ZEILE);
 		RangeHelper.from(this, rangeData.getRangePosition(startPos)).setDataInRange(rangeData);
 
+		// Zuerst die technischen Nummern: die Namensformeln schlagen darüber in der Meldeliste nach.
+		technischeTeamNummernSchreiben(paarungen);
 		if (useNames) {
 			teamNamenFormelnSchreiben(paarungen);
 		}
-		technischeTeamNummernSchreiben(paarungen);
 
 		durchgangInfoSpaltenSchreiben(paarungen.size());
 	}
@@ -766,9 +767,10 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 	}
 
 	/**
-	 * Schreibt Team- oder zusammengesetzte Spielernamen als SVERWEIS-Formel (statt statischem
-	 * Text), damit Änderungen in der Meldeliste im Spielplan sofort sichtbar bleiben
-	 * (Rückweg zur Teamnummer: {@link SchweizerTeamNrAufloeser}).
+	 * Schreibt Team- oder zusammengesetzte Spielernamen als Formel (statt statischem Text), damit
+	 * Änderungen in der Meldeliste im Spielplan sofort sichtbar bleiben. Die Formel schlägt die
+	 * Teamnummer aus der versteckten technischen Spalte derselben Zeile in der Meldeliste nach –
+	 * Anzeige und Auswertung ({@link SchweizerTeamNrAufloeser}) haben damit dieselbe Quelle.
 	 */
 	private void teamNamenFormelnSchreiben(List<TeamPaarung> paarungen) throws GenerateException {
 		if (paarungen.isEmpty()) {
@@ -781,12 +783,12 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 
 		String[][] formulas = new String[paarungen.size()][2];
 		for (int i = 0; i < paarungen.size(); i++) {
-			TeamPaarung teamPaarung = paarungen.get(i);
-			formulas[i][0] = TeamAnzeigeHelper.formel(String.valueOf(teamPaarung.getA().getNr()), anzeige,
-					teamnameSpalteAktiv, formation, vereinsnameAnzeigen);
-			formulas[i][1] = teamPaarung.hasB()
-					? TeamAnzeigeHelper.formel(String.valueOf(teamPaarung.getB().getNr()), anzeige,
-							teamnameSpalteAktiv, formation, vereinsnameAnzeigen)
+			int zeile = ERSTE_DATEN_ZEILE + i;
+			formulas[i][0] = TeamAnzeigeHelper.formel(Position.from(TECHNISCHE_TEAM_A_NR_SPALTE, zeile).getAddress(),
+					anzeige, teamnameSpalteAktiv, formation, vereinsnameAnzeigen);
+			formulas[i][1] = paarungen.get(i).hasB()
+					? TeamAnzeigeHelper.formel(Position.from(TECHNISCHE_TEAM_B_NR_SPALTE, zeile).getAddress(),
+							anzeige, teamnameSpalteAktiv, formation, vereinsnameAnzeigen)
 					: "";
 		}
 
