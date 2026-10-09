@@ -3,6 +3,9 @@ package de.petanqueturniermanager.schweizer.spielrunde;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 
 import com.sun.star.sheet.XSpreadsheet;
@@ -217,6 +220,44 @@ public class SchweizerSpielrundeNamenLiveUpdateUITest extends BaseCalcUITest {
 				.hasMessage(I18n.get("schweizer.spielrunde.fehler.team.mehrdeutig", kennung));
 	}
 
+	@Test
+	public void spielernamenAnzeigeMitTeamnameSpalteLiestTeamnameNichtAlsVorname() throws GenerateException {
+		int anzTeams = SchweizerMeldeListeSheetTestDaten.ANZ_TEAMS_DEFAULT;
+		SchweizerTurnierTestDaten testDaten = new SchweizerTurnierTestDaten(wkingSpreadsheet, anzTeams,
+				TeamAnzeige.SPIELERNAMEN);
+		testDaten.generate(1, false);
+
+		SchweizerMeldeListeSheetUpdate meldeListe = testDaten.naechsteSpielrunde.getMeldeListe();
+		assertThat(meldeListe.getTeamnameSpalte()).as("Vorbedingung: Testdaten mit Teamname-Spalte")
+				.isPositive();
+		XSpreadsheet ersteRunde = sheetHlp.findByName("1. " + SchweizerAbstractSpielrundeSheet.SHEET_NAMEN);
+		int teamNrA = sheetHlp.getIntFromCell(ersteRunde, Position.from(
+				SchweizerAbstractSpielrundeSheet.TECHNISCHE_TEAM_A_NR_SPALTE,
+				SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE));
+
+		String erwartet = erwarteteSpielernamen(meldeListe, meldeZeileVonTeam(meldeListe, teamNrA),
+				testDaten.naechsteSpielrunde.getKonfigurationSheet().getMeldeListeFormation().getAnzSpieler());
+		assertThat(sheetHlp.getTextFromCell(ersteRunde, Position.from(SchweizerAbstractSpielrundeSheet.TEAM_A_SPALTE,
+				SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE)))
+				.as("Spielernamen-Anzeige muss bei Spieler 1 beginnen, nicht beim Teamnamen")
+				.isEqualTo(erwartet);
+	}
+
+	/** Baut die erwartete Anzeige unabhängig vom Formatierer direkt aus den Meldelisten-Zellen. */
+	private String erwarteteSpielernamen(SchweizerMeldeListeSheetUpdate meldeListe, int zeile, int anzSpieler)
+			throws GenerateException {
+		XSpreadsheet sheet = meldeListe.getXSpreadSheet();
+		List<String> spieler = new ArrayList<>();
+		for (int idx = 0; idx < anzSpieler; idx++) {
+			String vorname = sheetHlp.getTextFromCell(sheet, Position.from(meldeListe.getVornameSpalte(idx), zeile));
+			String nachname = sheetHlp.getTextFromCell(sheet, Position.from(meldeListe.getNachnameSpalte(idx), zeile));
+			String verein = sheetHlp.getTextFromCell(sheet,
+					Position.from(meldeListe.getVereinsnameSpalte(idx), zeile));
+			spieler.add(vorname + " " + nachname + " (" + verein + ")");
+		}
+		return String.join(" / ", spieler);
+	}
+
 	private void pruefeTechnischeSpaltenAusgeblendet(XSpreadsheet spielrunde) {
 		assertThat(istSpalteSichtbar(spielrunde, SchweizerAbstractSpielrundeSheet.TECHNISCHE_TEAM_A_NR_SPALTE))
 				.as("Technische Teamnummer A muss ausgeblendet sein").isFalse();
@@ -238,15 +279,11 @@ public class SchweizerSpielrundeNamenLiveUpdateUITest extends BaseCalcUITest {
 			throws GenerateException {
 		XSpreadsheet sheet = meldeListe.getXSpreadSheet();
 		var xDoc = wkingSpreadsheet.getWorkingSpreadsheetDocument();
-		int ersteZeile = meldeListe.getErsteDatenZiele();
-		int letzteZeile = meldeListe.getLetzteMitDatenZeileInSpielerNrSpalte();
 		int ersteNamenSpalte = meldeListe.getTeamNrSpalte() + 1;
 		int letzteNamenSpalte = meldeListe.getSetzPositionSpalte() - 1;
 
-		RangeData nummern = RangeHelper.from(sheet, xDoc, RangePosition.from(meldeListe.getTeamNrSpalte(), ersteZeile,
-				meldeListe.getTeamNrSpalte(), letzteZeile)).getDataFromRange();
-		int quellZeile = zeileVonTeam(nummern, quellNr, ersteZeile);
-		int zielZeile = zeileVonTeam(nummern, zielNr, ersteZeile);
+		int quellZeile = meldeZeileVonTeam(meldeListe, quellNr);
+		int zielZeile = meldeZeileVonTeam(meldeListe, zielNr);
 
 		RangeData namen = RangeHelper.from(sheet, xDoc,
 				RangePosition.from(ersteNamenSpalte, quellZeile, letzteNamenSpalte, quellZeile)).getDataFromRange();
@@ -254,7 +291,12 @@ public class SchweizerSpielrundeNamenLiveUpdateUITest extends BaseCalcUITest {
 				.setDataInRange(namen);
 	}
 
-	private static int zeileVonTeam(RangeData nummern, int teamNr, int ersteZeile) {
+	private int meldeZeileVonTeam(SchweizerMeldeListeSheetUpdate meldeListe, int teamNr) throws GenerateException {
+		int ersteZeile = meldeListe.getErsteDatenZiele();
+		RangeData nummern = RangeHelper.from(meldeListe.getXSpreadSheet(), wkingSpreadsheet.getWorkingSpreadsheetDocument(),
+				RangePosition.from(meldeListe.getTeamNrSpalte(), ersteZeile, meldeListe.getTeamNrSpalte(),
+						meldeListe.getLetzteMitDatenZeileInSpielerNrSpalte()))
+				.getDataFromRange();
 		for (int idx = 0; idx < nummern.size(); idx++) {
 			if (nummern.get(idx).get(0).getIntVal(0) == teamNr) {
 				return ersteZeile + idx;

@@ -382,6 +382,7 @@ public class PouleVorrundenRanglisteSheet extends SheetRunner implements ISheet 
         for (int z = HEADER_ZEILEN; z < aktuelleZeile; z++) {
             String teamAnzeige = TeamAnzeigeHelper.formel(Position.from(SPALTE_NR, z).getAddress(),
                     konfigurationSheet.getRanglisteTeamAnzeige(),
+                    konfigurationSheet.isMeldeListeTeamnameAnzeigen(),
                     konfigurationSheet.getMeldeListeFormation(),
                     konfigurationSheet.isMeldeListeVereinsnameAnzeigen());
             getSheetHelper().setFormulaInCell(

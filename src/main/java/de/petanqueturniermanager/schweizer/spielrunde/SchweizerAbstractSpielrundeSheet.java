@@ -777,15 +777,16 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		boolean vereinsnameAnzeigen = getKonfigurationSheet().isMeldeListeVereinsnameAnzeigen();
 		Formation formation = getKonfigurationSheet().getMeldeListeFormation();
 		TeamAnzeige anzeige = getKonfigurationSheet().getSpielplanTeamAnzeige();
+		boolean teamnameSpalteAktiv = getKonfigurationSheet().isMeldeListeTeamnameAnzeigen();
 
 		String[][] formulas = new String[paarungen.size()][2];
 		for (int i = 0; i < paarungen.size(); i++) {
 			TeamPaarung teamPaarung = paarungen.get(i);
 			formulas[i][0] = TeamAnzeigeHelper.formel(String.valueOf(teamPaarung.getA().getNr()), anzeige,
-					formation, vereinsnameAnzeigen);
+					teamnameSpalteAktiv, formation, vereinsnameAnzeigen);
 			formulas[i][1] = teamPaarung.hasB()
-					? TeamAnzeigeHelper.formel(String.valueOf(teamPaarung.getB().getNr()), anzeige, formation,
-							vereinsnameAnzeigen)
+					? TeamAnzeigeHelper.formel(String.valueOf(teamPaarung.getB().getNr()), anzeige,
+							teamnameSpalteAktiv, formation, vereinsnameAnzeigen)
 					: "";
 		}
 

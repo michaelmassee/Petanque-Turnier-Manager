@@ -448,6 +448,7 @@ public abstract class AbstractPouleVorrundeSheet extends SheetRunner implements 
      */
     private String vlookupDirekt(String nrAdresse) {
         return TeamAnzeigeHelper.formel(nrAdresse, konfigurationSheet.getSpielplanTeamAnzeige(),
+                konfigurationSheet.isMeldeListeTeamnameAnzeigen(),
                 konfigurationSheet.getMeldeListeFormation(),
                 konfigurationSheet.isMeldeListeVereinsnameAnzeigen());
     }

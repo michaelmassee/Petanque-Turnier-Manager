@@ -58,6 +58,10 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	/** Gültige Werte einer Spieltag-Spalte: gespielt bzw. ausgesetzt (leer = nicht dabei). */
 	private static final List<Integer> GUELTIGE_SPIELTAG_WERTE = List.of(SpielrundeGespielt.JA.getId(),
 			SpielrundeGespielt.AUSGESETZT.getId());
+	/** Meldelistenzeile für PTM.ALG.TEAMANZEIGE: Index 0 = Teamnummer, Index 1 = Teamname bzw. Spieler 1. */
+	private static final String MELDELISTE_ZEILE_AB_SPALTE_A = "$A$1:$Z$999";
+	/** Wie {@link #MELDELISTE_ZEILE_AB_SPALTE_A}, um die Teamname-Spalte verschoben (Index 1 = Spieler 1). */
+	private static final String MELDELISTE_ZEILE_AB_SPALTE_B = "$B$1:$Z$999";
 
 	private final IMeldeliste<MLD_LIST_TYPE, MLDTYPE> meldeListe;
 	private final String metadatenSchluessel;
@@ -629,24 +633,50 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	}
 
 	/**
-	 * Erzeugt eine VLOOKUP-Formel, die den Anzeigenamen eines Teams anhand der Teamnummer
-	 * aus der Meldeliste liest.<br>
-	 * Bei aktivierter Teamname-Spalte wird der Teamname zurückgegeben (Spalte B). Andernfalls
-	 * werden alle Spielernamen ("Vorname Nachname") konkateniert und mit " / " getrennt – damit
-	 * z.B. eine Doublette ohne Teamname-Spalte beide Spieler vollständig anzeigt.<br>
+	 * Erzeugt eine Formel, die den Anzeigenamen eines Teams anhand der Teamnummer aus der
+	 * Meldeliste liest.<br>
+	 * Bei aktivierter Teamname-Spalte wird der Teamname zurückgegeben (Spalte B), andernfalls
+	 * die zusammengesetzten Spielernamen (siehe {@link #spielerNamenFormel}).<br>
 	 * Der Sheet-Name wird korrekt quotiert, damit lokalisierte Namen mit Leerzeichen funktionieren.
 	 *
 	 * @param nrAdresse           Zell-Adresse oder Literal, das die Teamnummer enthält
-	 * @param teamnameAnzeigen    {@code true} wenn die Meldeliste eine Teamname-Spalte hat
+	 * @param teamnameSpalteAktiv {@code true} wenn die Meldeliste eine Teamname-Spalte hat
 	 * @param formation           Formation der Meldeliste (Anzahl Spieler pro Team)
 	 * @param vereinsnameAnzeigen {@code true} wenn die Meldeliste eine Vereinsname-Spalte pro Spieler hat
 	 * @return Formel-String (ODF/englisch)
 	 */
-	public static String teamNameFormel(String nrAdresse, boolean teamnameAnzeigen,
+	public static String teamNameFormel(String nrAdresse, boolean teamnameSpalteAktiv,
 			Formation formation, boolean vereinsnameAnzeigen) {
-		String range = "$'" + SheetNamen.meldeliste() + "'.$A$1:$Z$999";
-		String nrRange = "$'" + SheetNamen.meldeliste() + "'.$A$1:$A$999";
-		String zeile = "INDEX(" + range + ";MATCH(" + nrAdresse + ";" + nrRange + ";0);0)";
+		if (!teamnameSpalteAktiv) {
+			return spielerNamenFormel(nrAdresse, false, formation, vereinsnameAnzeigen);
+		}
+		return teamAnzeigeFormel(nrAdresse, true, MELDELISTE_ZEILE_AB_SPALTE_A, formation, vereinsnameAnzeigen);
+	}
+
+	/**
+	 * Erzeugt eine Formel, die alle Spielernamen eines Teams ("Vorname Nachname (Verein)")
+	 * mit " / " getrennt aus der Meldeliste liest – unabhängig davon, ob ein Teamname existiert.<br>
+	 * {@code PTM.ALG.TEAMANZEIGE} erwartet den ersten Spieler an Index 1 der übergebenen Zeile.
+	 * Bei aktiver Teamname-Spalte beginnt die Zeile deshalb erst bei Spalte B, damit der
+	 * Teamname auf Index 0 fällt und nicht als Vorname gelesen wird.
+	 *
+	 * @param nrAdresse           Zell-Adresse oder Literal, das die Teamnummer enthält
+	 * @param teamnameSpalteAktiv {@code true} wenn die Meldeliste eine Teamname-Spalte hat
+	 * @param formation           Formation der Meldeliste (Anzahl Spieler pro Team)
+	 * @param vereinsnameAnzeigen {@code true} wenn die Meldeliste eine Vereinsname-Spalte pro Spieler hat
+	 * @return Formel-String (ODF/englisch)
+	 */
+	public static String spielerNamenFormel(String nrAdresse, boolean teamnameSpalteAktiv,
+			Formation formation, boolean vereinsnameAnzeigen) {
+		String zeilenBereich = teamnameSpalteAktiv ? MELDELISTE_ZEILE_AB_SPALTE_B : MELDELISTE_ZEILE_AB_SPALTE_A;
+		return teamAnzeigeFormel(nrAdresse, false, zeilenBereich, formation, vereinsnameAnzeigen);
+	}
+
+	private static String teamAnzeigeFormel(String nrAdresse, boolean teamnameAnzeigen, String zeilenBereich,
+			Formation formation, boolean vereinsnameAnzeigen) {
+		String meldeliste = "$'" + SheetNamen.meldeliste() + "'.";
+		String zeile = "INDEX(" + meldeliste + zeilenBereich + ";MATCH(" + nrAdresse + ";" + meldeliste
+				+ "$A$1:$A$999;0);0)";
 		return GlobalImpl.FORMAT_PTM_TEAM_ANZEIGE(teamnameAnzeigen, formation.getAnzSpieler(),
 				vereinsnameAnzeigen, zeile);
 	}

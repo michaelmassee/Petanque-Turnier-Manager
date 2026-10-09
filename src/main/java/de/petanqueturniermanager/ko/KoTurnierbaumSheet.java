@@ -1413,7 +1413,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		}
 		if (!teamAnzeige.istNummer()) {
 			String formel = TeamAnzeigeHelper.formel(String.valueOf(nr),
-					teamAnzeige,
+					teamAnzeige, meldeListeTeamnameAnzeigen,
 					meldeListeFormation, meldeListeVereinsnameAnzeigen);
 			getSheetHelper().setFormulaInCell(
 					StringCellValue.from(xSheet, Position.from(teamSpalte(1), zeile), formel)
@@ -1700,7 +1700,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		}
 		if (!teamAnzeige.istNummer()) {
 			String formel = TeamAnzeigeHelper.formel(String.valueOf(nr),
-					teamAnzeige,
+					teamAnzeige, meldeListeTeamnameAnzeigen,
 					meldeListeFormation, meldeListeVereinsnameAnzeigen);
 			getSheetHelper().setFormulaInCell(
 					StringCellValue.from(xSheet, Position.from(spalte, zeile), formel)

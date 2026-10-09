@@ -92,6 +92,35 @@ public class MeldeListeHelperTest {
 	}
 
 	@Test
+	public void teamNameFormelMitTeamnameSpalteLiestTeamnameAbSpalteA() {
+		String formel = MeldeListeHelper.teamNameFormel("$G$6", true, Formation.DOUBLETTE, false);
+
+		assertThat(formel)
+				.contains("PTM.ALG.TEAMANZEIGE(1;2;0;")
+				.contains("INDEX($'" + I18n.get("sheet.name.meldeliste") + "'.$A$1:$Z$999;");
+	}
+
+	@Test
+	public void spielerNamenFormelMitTeamnameSpalteBeginntBeiSpalteB() {
+		String formel = MeldeListeHelper.spielerNamenFormel("$G$6", true, Formation.TRIPLETTE, true);
+
+		assertThat(formel)
+				.as("Teamname darf nicht als Vorname von Spieler 1 gelesen werden")
+				.contains("PTM.ALG.TEAMANZEIGE(0;3;1;")
+				.contains("INDEX($'" + I18n.get("sheet.name.meldeliste") + "'.$B$1:$Z$999;")
+				.contains("MATCH($G$6;$'" + I18n.get("sheet.name.meldeliste") + "'.$A$1:$A$999;0);0)");
+	}
+
+	@Test
+	public void spielerNamenFormelOhneTeamnameSpalteBeginntBeiSpalteA() {
+		String formel = MeldeListeHelper.spielerNamenFormel("$G$6", false, Formation.DOUBLETTE, false);
+
+		assertThat(formel)
+				.contains("PTM.ALG.TEAMANZEIGE(0;2;0;")
+				.contains("INDEX($'" + I18n.get("sheet.name.meldeliste") + "'.$A$1:$Z$999;");
+	}
+
+	@Test
 	public void testTestDoppelteNamenMitUmlauten() throws Exception {
 
 		SpielerNrName[] spielerNrNameList = new SpielerNrName[] { new SpielerNrName(32, "Müller"),

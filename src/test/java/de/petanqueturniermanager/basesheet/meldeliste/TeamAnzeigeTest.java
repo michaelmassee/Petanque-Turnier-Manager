@@ -52,6 +52,22 @@ class TeamAnzeigeTest {
 
 	@Test
 	void nummernAnzeigeVerwendetDieNummernzelleDirekt() {
-		assertThat(TeamAnzeigeHelper.formel("A3", TeamAnzeige.NR, Formation.DOUBLETTE, false)).isEqualTo("A3");
+		assertThat(TeamAnzeigeHelper.formel("A3", TeamAnzeige.NR, true, Formation.DOUBLETTE, false)).isEqualTo("A3");
+	}
+
+	@Test
+	void spielernamenBeruecksichtigenDieTeamnameSpalte() {
+		assertThat(TeamAnzeigeHelper.formel("A3", TeamAnzeige.SPIELERNAMEN, true, Formation.DOUBLETTE, false))
+				.isEqualTo(MeldeListeHelper.spielerNamenFormel("A3", true, Formation.DOUBLETTE, false));
+		assertThat(TeamAnzeigeHelper.formel("A3", TeamAnzeige.SPIELERNAMEN, false, Formation.DOUBLETTE, false))
+				.isEqualTo(MeldeListeHelper.spielerNamenFormel("A3", false, Formation.DOUBLETTE, false));
+	}
+
+	@Test
+	void teamnameOhneTeamnameSpalteZeigtSpielernamen() {
+		assertThat(TeamAnzeigeHelper.formel("A3", TeamAnzeige.NAME, false, Formation.DOUBLETTE, false))
+				.isEqualTo(MeldeListeHelper.spielerNamenFormel("A3", false, Formation.DOUBLETTE, false));
+		assertThat(TeamAnzeigeHelper.formel("A3", TeamAnzeige.NAME, true, Formation.DOUBLETTE, false))
+				.isEqualTo(MeldeListeHelper.teamNameFormel("A3", true, Formation.DOUBLETTE, false));
 	}
 }

@@ -440,7 +440,8 @@ class JGJMeldeListeDelegate implements MeldeListeKonstanten {
 
 	String formulaSpielplanTeamName(String nrAdresse) {
 		return TeamAnzeigeHelper.formel(nrAdresse, konfigurationSheet.getSpielplanTeamAnzeige(),
-				konfigurationSheet.getMeldeListeFormation(), konfigurationSheet.isMeldeListeVereinsnameAnzeigen());
+				konfigurationSheet.isMeldeListeTeamnameAnzeigen(), konfigurationSheet.getMeldeListeFormation(),
+				konfigurationSheet.isMeldeListeVereinsnameAnzeigen());
 	}
 
 	Map<Integer, String> leseTeamNamen(TeamAnzeige anzeige) throws GenerateException {

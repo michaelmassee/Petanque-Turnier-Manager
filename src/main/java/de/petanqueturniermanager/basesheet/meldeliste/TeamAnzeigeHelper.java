@@ -14,12 +14,16 @@ public final class TeamAnzeigeHelper {
 	/**
 	 * Liefert für eine Teamnummer entweder die Nummer selbst oder eine dynamische
 	 * Meldelisten-Formel für Team- beziehungsweise zusammengesetzte Spielernamen.
+	 *
+	 * @param teamnameSpalteAktiv ob die Meldeliste eine Teamname-Spalte hat – bestimmt die Lage
+	 *                            der Spielerspalten; ohne Teamname-Spalte wird {@link TeamAnzeige#NAME}
+	 *                            zu Spielernamen (siehe {@link TeamAnzeige#effektiv(boolean)})
 	 */
-	public static String formel(String teamNrAdresse, TeamAnzeige anzeige,
+	public static String formel(String teamNrAdresse, TeamAnzeige anzeige, boolean teamnameSpalteAktiv,
 			Formation formation, boolean vereinsnameAnzeigen) {
-		return switch (anzeige) {
+		return switch (anzeige.effektiv(teamnameSpalteAktiv)) {
 		case NR -> teamNrAdresse;
-		case SPIELERNAMEN -> MeldeListeHelper.teamNameFormel(teamNrAdresse, false, formation,
+		case SPIELERNAMEN -> MeldeListeHelper.spielerNamenFormel(teamNrAdresse, teamnameSpalteAktiv, formation,
 				vereinsnameAnzeigen);
 		case NAME -> MeldeListeHelper.teamNameFormel(teamNrAdresse, true, formation, vereinsnameAnzeigen);
 		};

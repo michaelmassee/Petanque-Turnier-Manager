@@ -6,6 +6,7 @@ package de.petanqueturniermanager.schweizer.meldeliste;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.sun.star.awt.FontWeight;
@@ -560,8 +561,9 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 	/**
 	 * Baut die Zuordnung sichtbarer Spielrunden-Kennungen (Teamname und zusammengesetzte
 	 * Spielernamen) zur Teamnummer auf. Die Meldeliste wird dafür einmal als Block gelesen;
-	 * die Darstellung entsteht über {@link TeamAnzeigeFormatierer}, also identisch zur
-	 * Calc-Formel im Spielplan.
+	 * die Darstellung entsteht über {@link TeamAnzeigeFormatierer} mit derselben Zeilenlage wie
+	 * die Formeln aus {@link MeldeListeHelper#teamNameFormel} und
+	 * {@link MeldeListeHelper#spielerNamenFormel}.
 	 */
 	TeamAnzeigeIndex erstelleTeamAnzeigeIndex() throws GenerateException {
 		TeamAnzeigeIndex index = new TeamAnzeigeIndex();
@@ -571,6 +573,9 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 		}
 		int anzSpieler = konfigurationSheet.getMeldeListeFormation().getAnzSpieler();
 		boolean vereinsnameAnzeigen = konfigurationSheet.isMeldeListeVereinsnameAnzeigen();
+		boolean teamnameSpalteAktiv = konfigurationSheet.isMeldeListeTeamnameAnzeigen();
+		// Spielernamen-Formel übergibt die Zeile so, dass Spieler 1 auf Index 1 liegt
+		int spielerZeilenStart = getErsterSpielerOffset() - 1;
 		int letzteSpalte = Math.max(getTeamNrSpalte(), getLetzteDataSpalte());
 		RangeData zeilen = RangeHelper.from(sheet, getTeamNrSpalte(), ERSTE_DATEN_ZEILE, letzteSpalte, letzteZeile)
 				.getDataFromRange();
@@ -580,10 +585,13 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 				continue;
 			}
 			String[] meldelistenZeile = zeile.stream().map(CellData::getStringVal).toArray(String[]::new);
-			index.hinzufuegen(TeamAnzeigeFormatierer.formatiere(true, anzSpieler, vereinsnameAnzeigen,
-					meldelistenZeile), teamNr);
+			if (teamnameSpalteAktiv) {
+				index.hinzufuegen(TeamAnzeigeFormatierer.formatiere(true, anzSpieler, vereinsnameAnzeigen,
+						meldelistenZeile), teamNr);
+			}
+			String[] spielerZeile = Arrays.copyOfRange(meldelistenZeile, spielerZeilenStart, meldelistenZeile.length);
 			index.hinzufuegen(TeamAnzeigeFormatierer.formatiere(false, anzSpieler, vereinsnameAnzeigen,
-					meldelistenZeile), teamNr);
+					spielerZeile), teamNr);
 		}
 		return index;
 	}
