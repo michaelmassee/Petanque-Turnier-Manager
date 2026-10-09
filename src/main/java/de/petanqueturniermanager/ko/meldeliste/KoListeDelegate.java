@@ -62,7 +62,7 @@ class KoListeDelegate implements MeldeListeKonstanten {
 	/**
 	 * Erste Daten-Zeile: 3 Header-Zeilen (überschreibt MeldeListeKonstanten.ERSTE_DATEN_ZEILE=2).
 	 */
-	static final int ERSTE_DATEN_ZEILE = 3;
+	static final int ERSTE_DATEN_ZEILE = TEAM_MELDELISTE_ERSTE_DATEN_ZEILE;
 
 	static final int AKTIV_WERT_NIMMT_TEIL = 1;
 	static final int AKTIV_WERT_AUSGESTIEGEN = 2;

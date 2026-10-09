@@ -51,7 +51,7 @@ class TripTeteMeldeListeDelegate implements MeldeListeKonstanten {
 
     static final int MIN_ANZAHL_MELDUNGEN_ZEILEN = 16;
     static final int DRITTE_HEADER_ZEILE = 2;
-    static final int ERSTE_DATEN_ZEILE_OVERRIDE = 3;
+    static final int ERSTE_DATEN_ZEILE_OVERRIDE = TEAM_MELDELISTE_ERSTE_DATEN_ZEILE;
     static final int AKTIV_WERT_NIMMT_TEIL = 1;
     static final int AKTIV_WERT_AUSGESTIEGEN = 2;
     private static final List<Integer> AKTIV_GUELTIGE_WERTE = List.of(AKTIV_WERT_NIMMT_TEIL, AKTIV_WERT_AUSGESTIEGEN);

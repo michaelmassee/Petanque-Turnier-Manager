@@ -48,7 +48,7 @@ class PouleListeDelegate implements MeldeListeKonstanten {
     /** Dritte Header-Zeile (Spalten-Namen: Vorname, Nachname, Verein). */
     static final int DRITTE_HEADER_ZEILE = 2;
     /** Erste Daten-Zeile: 3 Header-Zeilen. */
-    static final int ERSTE_DATEN_ZEILE = 3;
+    static final int ERSTE_DATEN_ZEILE = TEAM_MELDELISTE_ERSTE_DATEN_ZEILE;
 
     static final int NR_SPALTE_WIDTH = 800;
     static final int NAME_SPALTE_WIDTH = 3000;

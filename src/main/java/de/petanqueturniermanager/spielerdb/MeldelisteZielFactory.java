@@ -6,6 +6,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.formulex.konfiguration.FormuleXKonfigurationSheet;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
@@ -48,7 +49,7 @@ public final class MeldelisteZielFactory {
         }
         MeldelisteLayout l = layoutOpt.get();
         return SheetMeldelisteAdapter.fuer(ws, SheetNamen.meldeliste(), ts,
-                l.formation(), l.teamnameAktiv(), l.vereinsnameAktiv());
+                l.formation(), l.ersteDatenZeile(), l.teamnameAktiv(), l.vereinsnameAktiv());
     }
 
     /**
@@ -88,9 +89,18 @@ public final class MeldelisteZielFactory {
     }
 
     /**
-     * Layout-Triplet aus dem system-spezifischen KonfigurationSheet.
+     * Layout aus dem system-spezifischen KonfigurationSheet. Die erste Datenzeile ist fest je
+     * Meldelisten-Typ – sie aus dem Sheet zu erraten scheitert an der leeren Meldeliste (keine
+     * Nummern), dort hielt die Heuristik die Spaltenkopf-Zeile für ein Team.
      */
-    private record MeldelisteLayout(Formation formation, boolean teamnameAktiv, boolean vereinsnameAktiv) {}
+    private record MeldelisteLayout(Formation formation, boolean teamnameAktiv, boolean vereinsnameAktiv,
+            int ersteDatenZeile) {
+
+        /** Team-Meldeliste mit drei Header-Zeilen. */
+        MeldelisteLayout(Formation formation, boolean teamnameAktiv, boolean vereinsnameAktiv) {
+            this(formation, teamnameAktiv, vereinsnameAktiv, MeldeListeKonstanten.TEAM_MELDELISTE_ERSTE_DATEN_ZEILE);
+        }
+    }
 
     /**
      * Liest das Meldeliste-Layout aus dem zum Turniersystem passenden Konfigurations-Sheet.
@@ -102,7 +112,8 @@ public final class MeldelisteZielFactory {
     private static Optional<MeldelisteLayout> leseLayout(TurnierSystem ts, WorkingSpreadsheet ws) {
         try {
             return switch (ts) {
-                case SUPERMELEE -> Optional.of(new MeldelisteLayout(Formation.MELEE, false, false));
+                case SUPERMELEE -> Optional.of(new MeldelisteLayout(Formation.MELEE, false, false,
+                        MeldeListeKonstanten.ERSTE_DATEN_ZEILE));
                 case KO -> {
                     KoKonfigurationSheet k = new KoKonfigurationSheet(ws);
                     yield Optional.of(new MeldelisteLayout(k.getMeldeListeFormation(),

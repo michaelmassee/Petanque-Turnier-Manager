@@ -52,7 +52,7 @@ class JGJMeldeListeDelegate implements MeldeListeKonstanten {
 	static final int MIN_ANZAHL_MELDUNGEN_ZEILEN = 32;
 
 	static final int DRITTE_HEADER_ZEILE = 2;
-	static final int ERSTE_DATEN_ZEILE = 3;
+	static final int ERSTE_DATEN_ZEILE = TEAM_MELDELISTE_ERSTE_DATEN_ZEILE;
 
 	static final int NR_SPALTE_WIDTH = 800;
 	static final int NAME_SPALTE_WIDTH = 3000;

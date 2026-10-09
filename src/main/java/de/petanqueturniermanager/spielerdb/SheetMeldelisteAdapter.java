@@ -13,7 +13,6 @@ import com.sun.star.sheet.XSpreadsheetDocument;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
-import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
@@ -45,25 +44,14 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
  * (n = {@link Formation#getAnzSpieler()}) wird als <b>eine</b> Zeile in genau
  * diese Slots geschrieben — Vorname und Nachname kommen aus
  * {@link SpielerMitVerein#vorname()} / {@link SpielerMitVerein#nachname()},
- * der Vereinsname aus {@link SpielerMitVerein#vereinName()}.
+ * der Vereinsname aus {@link SpielerMitVerein#vereinName()}. Die Aktiv-Spalte
+ * (Checkin) bleibt leer – übernommene Teams gelten als angemeldet.
  */
 final class SheetMeldelisteAdapter implements MeldelisteZiel {
 
     private static final Logger logger = LogManager.getLogger(SheetMeldelisteAdapter.class);
 
-    private static final int SPALTE_NR = 0;
-    private static final int HEADER_ZEILE_MAX_SCAN = 5;
     private static final int MAX_DATEN_ZEILE = 999;
-
-    /**
-     * Wert in der Aktiv-Spalte: „nimmt teil". Die Konvention ist über
-     * Schweizer/JGJ/KO/Poule/FormuleX/Kaskade hinweg konstant
-     * ({@code AKTIV_WERT_NIMMT_TEIL = 1}); die Aktiv-Spalte selbst sitzt zwei
-     * Spalten rechts neben der letzten Spielerdaten-Spalte (dazwischen liegt
-     * SP/RNG). Übernommene Teams würden ohne dieses Flag als „inaktiv"
-     * gelten und der Update-Workflow käme mit „Es sind keine Teams aktiv".
-     */
-    private static final int AKTIV_WERT_NIMMT_TEIL = 1;
 
     private final XSpreadsheetDocument doc;
     private final XSpreadsheet sheet;
@@ -102,8 +90,8 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
      * Vermeidet Property-Lookups direkt im Adapter — die Quelle der Wahrheit ist
      * jeweils der zum Turniersystem passende {@code *KonfigurationSheet}.
      */
-    static Optional<MeldelisteZiel> fuer(WorkingSpreadsheet ws, String sheetName,
-            TurnierSystem ts, Formation formation, boolean teamnameAktiv, boolean vereinsnameAktiv) {
+    static Optional<MeldelisteZiel> fuer(WorkingSpreadsheet ws, String sheetName, TurnierSystem ts,
+            Formation formation, int ersteDatenZeile, boolean teamnameAktiv, boolean vereinsnameAktiv) {
         try {
             if (ts == null || ts == TurnierSystem.KEIN) {
                 return Optional.empty();
@@ -113,30 +101,13 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
             if (sheet == null) {
                 return Optional.empty();
             }
-            int datenZeile = ermittleErsteDatenZeile(sh, sheet);
             return Optional.of(new SheetMeldelisteAdapter(
-                    ws.getWorkingSpreadsheetDocument(), sheet, sh, ts, formation, datenZeile,
+                    ws.getWorkingSpreadsheetDocument(), sheet, sh, ts, formation, ersteDatenZeile,
                     teamnameAktiv, vereinsnameAktiv));
         } catch (Exception e) {
             logger.warn("Adapter-Erkennung fehlgeschlagen", e);
             return Optional.empty();
         }
-    }
-
-    private static int ermittleErsteDatenZeile(SheetHelper sh, XSpreadsheet sheet) {
-        for (int zeile = 0; zeile <= HEADER_ZEILE_MAX_SCAN; zeile++) {
-            String inhalt = sicherText(sh, sheet, SPALTE_NR, zeile).strip();
-            if (inhalt.matches("\\d+")) {
-                return zeile;
-            }
-        }
-        // Fallback: erste Zeile direkt nach erkanntem Header — Spalte A leer.
-        for (int zeile = 0; zeile <= HEADER_ZEILE_MAX_SCAN; zeile++) {
-            if (sicherText(sh, sheet, SPALTE_NR, zeile).strip().isEmpty()) {
-                return zeile;
-            }
-        }
-        return 2;
     }
 
     private static String sicherText(SheetHelper sh, XSpreadsheet sheet, int spalte, int zeile) {
@@ -311,18 +282,17 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
             // Range startet immer in Spalte 1 (rechts neben Spalte 0 = Nr).
             RangePosition pos = RangePosition.from(1, zeile, letzteSchreibSpalte, zeile);
             RangeHelper.from(sheet, doc, pos).setDataInRange(rangeData);
-
-            // Aktiv-Spalte (= letzteDatenSpalte + 2) auf „nimmt teil" setzen,
-            // sonst kommt „Meldeliste Aktualisieren" mit der Frage „Es sind
-            // keine Teams aktiv. Sollen alle aktiviert werden?".
-            sheetHelper.setNumberValueInCell(NumberCellValue
-                    .from(sheet, Position.from(aktivSpalte(), zeile)).setValue(AKTIV_WERT_NIMMT_TEIL));
             return spieler.size();
         } catch (Exception e) {
             throw new MeldelisteSchreibException("Schreibvorgang fehlgeschlagen", e);
         }
     }
 
+    /**
+     * Aktiv-Spalte = Checkin: zwei Spalten rechts neben der letzten Spielerdaten-Spalte
+     * (dazwischen liegt SP/RNG). Übernommene Teams bleiben dort leer und zählen damit als
+     * „angemeldet", bis sie eingecheckt werden.
+     */
     private int aktivSpalte() {
         return letzteSchreibSpalte + 2;
     }
