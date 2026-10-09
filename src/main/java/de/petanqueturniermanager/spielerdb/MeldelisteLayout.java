@@ -14,7 +14,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
  * Team.
  *
  * @param aktivSpaltenAbstand Abstand der Aktiv-Spalte (Checkin) zur letzten Spielerdaten-Spalte:
- *        2 mit SP-Spalte dazwischen, 1 ohne (Trip-Tête)
+ *        2 mit SP-Spalte dazwischen, 1 ohne (Trip-Tête), bei Supermelee 1 + aktiver Spieltag
  */
 record MeldelisteLayout(Formation formation, boolean teamnameAktiv, boolean vereinsnameAktiv,
         int ersteDatenZeile, int aktivSpaltenAbstand) {
@@ -34,9 +34,12 @@ record MeldelisteLayout(Formation formation, boolean teamnameAktiv, boolean vere
                 MeldeListeKonstanten.TEAM_MELDELISTE_ERSTE_DATEN_ZEILE, AKTIV_DIREKT_HINTER_SPIELERN);
     }
 
-    /** Supermelee: Einzelspieler ohne Teamname-/Vereinsspalten, zwei Header-Zeilen. */
-    static MeldelisteLayout supermelee() {
+    /**
+     * Supermelee: Einzelspieler ohne Teamname-/Vereinsspalten, zwei Header-Zeilen. Nach der SP-Spalte
+     * folgt je Spieltag eine Aktiv-Spalte; maßgeblich ist die des aktiven Spieltags.
+     */
+    static MeldelisteLayout supermelee(int aktiverSpieltag) {
         return new MeldelisteLayout(Formation.MELEE, false, false, MeldeListeKonstanten.ERSTE_DATEN_ZEILE,
-                AKTIV_HINTER_SP_SPALTE);
+                1 + Math.max(1, aktiverSpieltag));
     }
 }

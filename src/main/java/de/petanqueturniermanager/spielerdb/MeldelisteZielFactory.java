@@ -16,6 +16,7 @@ import de.petanqueturniermanager.ko.konfiguration.KoKonfigurationSheet;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
 import de.petanqueturniermanager.poule.konfiguration.PouleKonfigurationSheet;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
+import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
 import de.petanqueturniermanager.triptete.konfiguration.TripTeteKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
@@ -88,14 +89,16 @@ public final class MeldelisteZielFactory {
     /**
      * Liest das Meldeliste-Layout aus dem zum Turniersystem passenden Konfigurations-Sheet.
      * Supermelee hat keine konfigurierbare Formation — dort gilt immer
-     * {@link Formation#MELEE} und es gibt keine Teamname-/Vereinsname-Spalten.
+     * {@link Formation#MELEE} und es gibt keine Teamname-/Vereinsname-Spalten; die Aktiv-Spalte ist die des
+     * aktiven Spieltags.
      * Für Systeme ohne Spieler-DB-Übernahme-Unterstützung (Liga)
      * liefert die Methode {@link Optional#empty()}.
      */
     private static Optional<MeldelisteLayout> leseLayout(TurnierSystem ts, WorkingSpreadsheet ws) {
         try {
             return switch (ts) {
-                case SUPERMELEE -> Optional.of(MeldelisteLayout.supermelee());
+                case SUPERMELEE -> Optional.of(MeldelisteLayout.supermelee(
+                        new SuperMeleeKonfigurationSheet(ws).getAktiveSpieltag().getNr()));
                 case KO -> {
                     KoKonfigurationSheet k = new KoKonfigurationSheet(ws);
                     yield Optional.of(MeldelisteLayout.team(k.getMeldeListeFormation(),
