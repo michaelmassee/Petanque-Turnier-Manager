@@ -22,6 +22,7 @@ import de.petanqueturniermanager.addin.XGlobal;
 import de.petanqueturniermanager.algorithmen.common.CadrageRechner;
 import de.petanqueturniermanager.algorithmen.liga.Direktvergleich;
 import de.petanqueturniermanager.algorithmen.poule.PouleGruppenRechner;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeigeFormatierer;
 import de.petanqueturniermanager.comp.DocumentHelper;
 import de.petanqueturniermanager.comp.DokumentKontext;
 import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
@@ -288,60 +289,8 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	@Override
 	public String ptmteamanzeige(int teamnameAnzeigen, int anzSpieler, int vereinsnameAnzeigen,
 			String[][] meldelistenZeile) {
-		return teamAnzeigeAusMeldelistenZeile(teamnameAnzeigen != 0, anzSpieler,
-				vereinsnameAnzeigen != 0, meldelistenZeile);
-	}
-
-	static String teamAnzeigeAusMeldelistenZeile(boolean teamnameAnzeigen, int anzSpieler,
-			boolean vereinsnameAnzeigen, String[][] meldelistenZeile) {
-		if (meldelistenZeile == null || meldelistenZeile.length == 0 || meldelistenZeile[0] == null) {
-			return "";
-		}
-		String[] zeile = meldelistenZeile[0];
-		if (teamnameAnzeigen) {
-			return wert(zeile, 1);
-		}
-		int ersterSpielerOffset = 1;
-		int spaltenProSpieler = vereinsnameAnzeigen ? 3 : 2;
-		StringBuilder sb = new StringBuilder();
-		for (int spieler = 0; spieler < Math.max(0, anzSpieler); spieler++) {
-			int vorSpalte = ersterSpielerOffset + spieler * spaltenProSpieler;
-			String name = spielerAnzeige(wert(zeile, vorSpalte), wert(zeile, vorSpalte + 1),
-					vereinsnameAnzeigen ? wert(zeile, vorSpalte + 2) : "");
-			if (!name.isEmpty()) {
-				if (sb.length() > 0) {
-					sb.append(" / ");
-				}
-				sb.append(name);
-			}
-		}
-		return sb.toString();
-	}
-
-	private static String spielerAnzeige(String vorname, String nachname, String verein) {
-		String vn = trim(vorname);
-		String nn = trim(nachname);
-		String vr = trim(verein);
-		String name;
-		if (vn.isEmpty()) {
-			name = nn;
-		} else if (nn.isEmpty()) {
-			name = vn;
-		} else {
-			name = vn + " " + nn;
-		}
-		if (name.isEmpty()) {
-			return "";
-		}
-		return vr.isEmpty() ? name : name + " (" + vr + ")";
-	}
-
-	private static String wert(String[] zeile, int idx) {
-		return idx >= 0 && idx < zeile.length ? trim(zeile[idx]) : "";
-	}
-
-	private static String trim(String wert) {
-		return wert != null ? wert.trim() : "";
+		String[] zeile = meldelistenZeile == null || meldelistenZeile.length == 0 ? null : meldelistenZeile[0];
+		return TeamAnzeigeFormatierer.formatiere(teamnameAnzeigen != 0, anzSpieler, vereinsnameAnzeigen != 0, zeile);
 	}
 
 	@Override

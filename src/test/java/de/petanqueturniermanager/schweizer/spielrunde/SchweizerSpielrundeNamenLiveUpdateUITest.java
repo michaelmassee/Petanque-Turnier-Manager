@@ -7,12 +7,17 @@ import org.junit.jupiter.api.Test;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.BaseCalcUITest;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.Position;
-import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
+import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetTestDaten;
+import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheet;
 
 /**
  * Regression: Im Anzeigemodus {@link TeamAnzeige#NAME} muss eine Umbenennung eines
@@ -100,6 +105,109 @@ public class SchweizerSpielrundeNamenLiveUpdateUITest extends BaseCalcUITest {
 		assertThat(hatZusammengesetztenNamen)
 				.as("Spielernamen-Anzeige muss die Namen aller Teammitglieder zusammensetzen")
 				.isTrue();
+	}
+
+	@Test
+	public void zusammengesetzteSpielernamenBleibenAbZweiterRundeAuslosbarUndInDerRanglisteWertbar()
+			throws GenerateException {
+		int anzTeams = SchweizerMeldeListeSheetTestDaten.ANZ_TEAMS_DEFAULT;
+		SchweizerTurnierTestDaten testDaten = new SchweizerTurnierTestDaten(wkingSpreadsheet, anzTeams,
+				TeamAnzeige.SPIELERNAMEN);
+		testDaten.generate(1, false);
+
+		// Eine Korrektur nach Runde 1 muss in deren Formelanzeige erscheinen und darf die
+		// technische Teamzuordnung für Runde 2 nicht zerstören.
+		XSpreadsheet meldeListe = testDaten.naechsteSpielrunde.getMeldeListe().getXSpreadSheet();
+		int meldeZeile = testDaten.naechsteSpielrunde.getMeldeListe().getErsteDatenZiele();
+		int vornameSpalte = testDaten.naechsteSpielrunde.getMeldeListe().getVornameSpalte(0);
+		testDaten.naechsteSpielrunde.getSheetHelper().setStringValueInCell(
+				StringCellValue.from(meldeListe, Position.from(vornameSpalte, meldeZeile), "Korrigiert"));
+		testDaten.naechsteSpielrunde.getxCalculatable().calculateAll();
+
+		XSpreadsheet ersteRunde = sheetHlp.findByName("1. " + SchweizerAbstractSpielrundeSheet.SHEET_NAMEN);
+		assertThat(hatAnzeigenamen(ersteRunde, "Korrigiert"))
+				.as("Die Namenskorrektur muss in Runde 1 durch die Anzeigeformel sichtbar sein")
+				.isTrue();
+		assertThat(sheetHlp.getIntFromCell(ersteRunde, Position.from(
+				SchweizerAbstractSpielrundeSheet.TECHNISCHE_TEAM_A_NR_SPALTE,
+				SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE)))
+				.as("Runde 1 muss die technische Teamnummer getrennt von der Namensanzeige speichern")
+				.isGreaterThan(0);
+
+		testDaten.naechsteSpielrunde.doRun();
+
+		XSpreadsheet zweiteRunde = sheetHlp.findByName("2. " + SchweizerAbstractSpielrundeSheet.SHEET_NAMEN);
+		assertThat(zweiteRunde).as("Die zweite Runde muss erzeugt werden").isNotNull();
+		assertThat(sheetHlp.getTextFromCell(zweiteRunde,
+				Position.from(SchweizerAbstractSpielrundeSheet.TEAM_A_SPALTE,
+						SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE)))
+				.as("Die zweite Runde muss eine Paarung mit zusammengesetzten Spielernamen enthalten")
+				.contains(" / ");
+		assertThat(sheetHlp.getIntFromCell(zweiteRunde, Position.from(
+				SchweizerAbstractSpielrundeSheet.TECHNISCHE_TEAM_A_NR_SPALTE,
+				SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE)))
+				.as("Die zweite Runde muss für die nächste Auswertung eine technische Teamnummer speichern")
+				.isGreaterThan(0);
+		for (int i = 0; i < anzTeams / 2; i++) {
+			int zeile = SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE + i;
+			sheetHlp.setNumberValueInCell(NumberCellValue.from(zweiteRunde,
+					Position.from(SchweizerAbstractSpielrundeSheet.ERG_TEAM_A_SPALTE, zeile)).setValue(13));
+			sheetHlp.setNumberValueInCell(NumberCellValue.from(zweiteRunde,
+					Position.from(SchweizerAbstractSpielrundeSheet.ERG_TEAM_B_SPALTE, zeile)).setValue(5));
+		}
+		assertThat(siegeInNeuerRangliste(anzTeams)).as("Die Rangliste muss die Siege aus beiden Runden zählen")
+				.isEqualTo(anzTeams);
+	}
+
+	@Test
+	public void alteSpielrundeOhneTechnischeSpaltenWirdUeberDieMeldelisteAusgewertet() throws GenerateException {
+		int anzTeams = SchweizerMeldeListeSheetTestDaten.ANZ_TEAMS_DEFAULT;
+		SchweizerTurnierTestDaten testDaten = new SchweizerTurnierTestDaten(wkingSpreadsheet, anzTeams,
+				TeamAnzeige.SPIELERNAMEN);
+		testDaten.generate(1, false);
+
+		// Zustand einer vor Einführung der technischen Spalten erzeugten Datei nachstellen
+		XSpreadsheet ersteRunde = sheetHlp.findByName("1. " + SchweizerAbstractSpielrundeSheet.SHEET_NAMEN);
+		RangeHelper.from(ersteRunde, wkingSpreadsheet.getWorkingSpreadsheetDocument(), RangePosition.from(
+				SchweizerAbstractSpielrundeSheet.TECHNISCHE_TEAM_A_NR_SPALTE,
+				SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE,
+				SchweizerAbstractSpielrundeSheet.TECHNISCHE_TEAM_B_NR_SPALTE,
+				SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE + anzTeams)).clearRange();
+
+		assertThat(siegeInNeuerRangliste(anzTeams))
+				.as("Ohne technische Spalten müssen die Spielernamen über die Meldeliste aufgelöst werden")
+				.isEqualTo(anzTeams / 2);
+	}
+
+	private int siegeInNeuerRangliste(int anzTeams) throws GenerateException {
+		new SchweizerRanglisteSheet(wkingSpreadsheet).doRun();
+
+		XSpreadsheet rangliste = sheetHlp.findByName(SheetNamen.rangliste());
+		assertThat(rangliste).as("Die Rangliste muss erzeugt werden").isNotNull();
+		var daten = RangeHelper.from(rangliste, wkingSpreadsheet.getWorkingSpreadsheetDocument(), RangePosition.from(
+				SchweizerRanglisteSheet.SIEGE_SPALTE, SchweizerRanglisteSheet.ERSTE_DATEN_ZEILE,
+				SchweizerRanglisteSheet.SIEGE_SPALTE,
+				SchweizerRanglisteSheet.ERSTE_DATEN_ZEILE + anzTeams - 1)).getDataFromRange();
+		int siege = 0;
+		for (var zeile : daten) {
+			siege += zeile.get(0).getIntVal(0);
+		}
+		return siege;
+	}
+
+	private boolean hatAnzeigenamen(XSpreadsheet spielrunde, String teil) throws GenerateException {
+		for (int zeile = SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE;
+				zeile < SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE
+						+ SchweizerMeldeListeSheetTestDaten.ANZ_TEAMS_DEFAULT / 2; zeile++) {
+			for (int spalte : new int[] { SchweizerAbstractSpielrundeSheet.TEAM_A_SPALTE,
+					SchweizerAbstractSpielrundeSheet.TEAM_B_SPALTE }) {
+				String wert = sheetHlp.getTextFromCell(spielrunde, Position.from(spalte, zeile));
+				if (wert != null && wert.contains(teil)) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 }

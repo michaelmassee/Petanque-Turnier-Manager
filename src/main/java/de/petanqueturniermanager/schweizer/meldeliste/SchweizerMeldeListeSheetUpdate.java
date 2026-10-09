@@ -217,6 +217,10 @@ public class SchweizerMeldeListeSheetUpdate extends SheetRunner
 		return delegate.getTeamNrByTeamname(teamname);
 	}
 
+	public TeamAnzeigeIndex erstelleTeamAnzeigeIndex() throws GenerateException {
+		return delegate.erstelleTeamAnzeigeIndex();
+	}
+
 	public String getTeamNameByNr(int teamNr) throws GenerateException {
 		return delegate.getTeamNameByNr(teamNr);
 	}
