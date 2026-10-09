@@ -4,6 +4,8 @@ import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
@@ -15,8 +17,6 @@ import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationSheet;
 import de.petanqueturniermanager.model.TeamMeldungen;
-import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
-import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
  * Erstellung 04.05.2026 / Michael Massee
@@ -29,16 +29,28 @@ public class JGJMeldeListeSheetTestDaten extends SheetRunner implements ISheet {
     private final int gruppengroesse;
     private final JGJMeldeListeSheet_New meldeListe;
     private final TestnamenLoader testnamenLoader;
+    private final boolean teamnameAnzeigen;
+    private final TeamAnzeige spielplanTeamAnzeige;
 
     public JGJMeldeListeSheetTestDaten(WorkingSpreadsheet ws, Formation formation, int anzTeams) {
         this(ws, formation, anzTeams, 0);
     }
 
     public JGJMeldeListeSheetTestDaten(WorkingSpreadsheet ws, Formation formation, int anzTeams, int gruppengroesse) {
+        this(ws, formation, anzTeams, gruppengroesse, false, TeamAnzeige.NR);
+    }
+
+    /**
+     * @param teamnameAnzeigen Meldeliste mit Teamname-Spalte; die Teams heißen „Team 1“, „Team 2“, …
+     */
+    public JGJMeldeListeSheetTestDaten(WorkingSpreadsheet ws, Formation formation, int anzTeams, int gruppengroesse,
+            boolean teamnameAnzeigen, TeamAnzeige spielplanTeamAnzeige) {
         super(ws, TurnierSystem.JGJ, "JGJ-MeldelisteTestDaten");
         this.formation = formation;
         this.anzTeams = anzTeams;
         this.gruppengroesse = gruppengroesse;
+        this.teamnameAnzeigen = teamnameAnzeigen;
+        this.spielplanTeamAnzeige = spielplanTeamAnzeige;
         meldeListe = new JGJMeldeListeSheet_New(ws);
         delegate = new JGJMeldeListeDelegate(meldeListe, ws, TurnierSystem.JGJ);
         testnamenLoader = new TestnamenLoader();
@@ -64,7 +76,8 @@ public class JGJMeldeListeSheetTestDaten extends SheetRunner implements ISheet {
     }
 
     public void erstellenUndBefuellen() throws GenerateException {
-        meldeListe.createMeldelisteWithParams(formation, false, false, TeamAnzeige.NR, gruppengroesse);
+        meldeListe.createMeldelisteWithParams(formation, teamnameAnzeigen, false, spielplanTeamAnzeige,
+                gruppengroesse);
         testNamenEinfuegen();
     }
 
@@ -77,6 +90,9 @@ public class JGJMeldeListeSheetTestDaten extends SheetRunner implements ISheet {
             testDoCancelTask();
             var zeile = data.addNewRow();
             zeile.newInt(team + 1);
+            if (teamnameAnzeigen) {
+                zeile.newString("Team " + (team + 1));
+            }
             for (int s = 0; s < anzSpielerProTeam; s++) {
                 var stn = spieler.get(team * anzSpielerProTeam + s);
                 zeile.newString(stn.vorname());
