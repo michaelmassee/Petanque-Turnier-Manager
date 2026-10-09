@@ -300,6 +300,18 @@ public abstract class BaseSidebarContent extends ComponentBase
 		ausstehendInit = false;
 	}
 
+	/**
+	 * Schließt die UNO-Komponente kontrolliert im Sidebar-Lifecycle. Ohne diesen
+	 * Override würde {@link ComponentBase#finalize()} den Dispose erst auf dem
+	 * JVM-Finalizer-Thread ausführen; ein UNO-Bridge-Aufruf von dort kann nach
+	 * dem LibreOffice-Shutdown nativen SIGSEGV auslösen.
+	 */
+	@Override
+	public void dispose() {
+		bereinigen();
+		super.dispose();
+	}
+
 	@Override
 	public LayoutSize getHeightForWidth(int arg0) {
 		if (layout != null) {

@@ -78,7 +78,11 @@ public abstract class BaseSidebarPanel extends ComponentBase implements XUIEleme
 		logger.debug("BaseSidebarPanel.dispose – bereinige panel");
 		SidebarPanelDelegator.get().entfernen(this);
 		if (panel != null) {
-			panel.bereinigen();
+			// BaseSidebarContent ist selbst ein ComponentBase. Es muss im UNO-
+			// Lifecycle explizit disposed werden; bereinigen() allein ließe die
+			// ComponentBase dem JVM-Finalizer über. Dessen späterer UNO-Aufruf kann
+			// nach dem Abbau der Bridge in libbinaryurplo.so abstürzen.
+			panel.dispose();
 			panel = null;
 		}
 		super.dispose();
