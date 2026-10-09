@@ -132,6 +132,15 @@ public class KaskadeKoFeldSheet extends SheetRunner implements ISheet {
         letzterBezeichner = feld.bezeichner();
 
         var gruppeTeams = feldBelegungZuTeamMeldungen(belegung.teamNrs());
+        // Der Plan beschreibt die Soll-Größe des Feldes. Nach einem Ausstieg kann die
+        // Ergebnisauflösung darin jedoch freie Positionen (0) enthalten. Ein Feld mit
+        // weniger als zwei tatsächlich belegten Plätzen hat kein KO-Spiel und darf nicht
+        // als Bracket angelegt werden.
+        if (gruppeTeams.size() < 2) {
+            LOGGER.info("Feld {} hat nur {} tatsächlich belegte Teams, wird übersprungen.",
+                    feld.bezeichner(), gruppeTeams.size());
+            return null;
+        }
         var sheetName   = SheetNamen.kaskadenFeld(feld.bezeichner());
         var schluessel  = SheetMetadataHelper.schluesselKaskadenFeld(feld.bezeichner());
         return new KoTurnierbaumSheet.GruppenBracketAuftrag(gruppeTeams, sheetName, sheetPos, schluessel, null);
@@ -139,7 +148,9 @@ public class KaskadeKoFeldSheet extends SheetRunner implements ISheet {
 
     private static TeamMeldungen feldBelegungZuTeamMeldungen(List<Integer> teamNrs) {
         var meldungen = new TeamMeldungen();
-        teamNrs.forEach(nr -> meldungen.addTeamWennNichtVorhanden(Team.from(nr)));
+        teamNrs.stream()
+                .filter(nr -> nr != null && nr > 0)
+                .forEach(nr -> meldungen.addTeamWennNichtVorhanden(Team.from(nr)));
         return meldungen;
     }
 
