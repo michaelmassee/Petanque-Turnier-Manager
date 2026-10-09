@@ -1,6 +1,7 @@
 package de.petanqueturniermanager.schweizer.spielrunde;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.Test;
 
@@ -10,13 +11,15 @@ import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetTestDaten;
+import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetUpdate;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheet;
 
 /**
@@ -133,6 +136,7 @@ public class SchweizerSpielrundeNamenLiveUpdateUITest extends BaseCalcUITest {
 				SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE)))
 				.as("Runde 1 muss die technische Teamnummer getrennt von der Namensanzeige speichern")
 				.isGreaterThan(0);
+		pruefeTechnischeSpaltenAusgeblendet(ersteRunde);
 
 		testDaten.naechsteSpielrunde.doRun();
 
@@ -148,13 +152,15 @@ public class SchweizerSpielrundeNamenLiveUpdateUITest extends BaseCalcUITest {
 				SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE)))
 				.as("Die zweite Runde muss für die nächste Auswertung eine technische Teamnummer speichern")
 				.isGreaterThan(0);
+		pruefeTechnischeSpaltenAusgeblendet(zweiteRunde);
+		RangeData ergebnisse = new RangeData();
 		for (int i = 0; i < anzTeams / 2; i++) {
-			int zeile = SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE + i;
-			sheetHlp.setNumberValueInCell(NumberCellValue.from(zweiteRunde,
-					Position.from(SchweizerAbstractSpielrundeSheet.ERG_TEAM_A_SPALTE, zeile)).setValue(13));
-			sheetHlp.setNumberValueInCell(NumberCellValue.from(zweiteRunde,
-					Position.from(SchweizerAbstractSpielrundeSheet.ERG_TEAM_B_SPALTE, zeile)).setValue(5));
+			ergebnisse.addNewRow(13, 5);
 		}
+		RangeHelper.from(zweiteRunde, wkingSpreadsheet.getWorkingSpreadsheetDocument(),
+				ergebnisse.getRangePosition(Position.from(SchweizerAbstractSpielrundeSheet.ERG_TEAM_A_SPALTE,
+						SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE)))
+				.setDataInRange(ergebnisse);
 		assertThat(siegeInNeuerRangliste(anzTeams)).as("Die Rangliste muss die Siege aus beiden Runden zählen")
 				.isEqualTo(anzTeams);
 	}
@@ -168,15 +174,93 @@ public class SchweizerSpielrundeNamenLiveUpdateUITest extends BaseCalcUITest {
 
 		// Zustand einer vor Einführung der technischen Spalten erzeugten Datei nachstellen
 		XSpreadsheet ersteRunde = sheetHlp.findByName("1. " + SchweizerAbstractSpielrundeSheet.SHEET_NAMEN);
-		RangeHelper.from(ersteRunde, wkingSpreadsheet.getWorkingSpreadsheetDocument(), RangePosition.from(
-				SchweizerAbstractSpielrundeSheet.TECHNISCHE_TEAM_A_NR_SPALTE,
-				SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE,
-				SchweizerAbstractSpielrundeSheet.TECHNISCHE_TEAM_B_NR_SPALTE,
-				SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE + anzTeams)).clearRange();
+		technischeSpaltenLoeschen(ersteRunde, anzTeams);
 
 		assertThat(siegeInNeuerRangliste(anzTeams))
 				.as("Ohne technische Spalten müssen die Spielernamen über die Meldeliste aufgelöst werden")
 				.isEqualTo(anzTeams / 2);
+	}
+
+	@Test
+	public void mehrdeutigeAnzeigeInAlterSpielrundeBrichtAbStattFreilosZuWerten() throws GenerateException {
+		int anzTeams = SchweizerMeldeListeSheetTestDaten.ANZ_TEAMS_DEFAULT;
+		SchweizerTurnierTestDaten testDaten = new SchweizerTurnierTestDaten(wkingSpreadsheet, anzTeams,
+				TeamAnzeige.SPIELERNAMEN);
+		testDaten.generate(1, false);
+
+		XSpreadsheet ersteRunde = sheetHlp.findByName("1. " + SchweizerAbstractSpielrundeSheet.SHEET_NAMEN);
+		int teamNrA = sheetHlp.getIntFromCell(ersteRunde, Position.from(
+				SchweizerAbstractSpielrundeSheet.TECHNISCHE_TEAM_A_NR_SPALTE,
+				SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE));
+		int teamNrB = sheetHlp.getIntFromCell(ersteRunde, Position.from(
+				SchweizerAbstractSpielrundeSheet.TECHNISCHE_TEAM_B_NR_SPALTE,
+				SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE));
+		technischeSpaltenLoeschen(ersteRunde, anzTeams);
+
+		// Team A erhält die Spielernamen von Team B → beide Paarungszellen zeigen dieselbe Kennung
+		SchweizerMeldeListeSheetUpdate meldeListe = testDaten.naechsteSpielrunde.getMeldeListe();
+		namenKopieren(meldeListe, teamNrB, teamNrA);
+		testDaten.naechsteSpielrunde.getxCalculatable().calculateAll();
+
+		Position teamAPos = Position.from(SchweizerAbstractSpielrundeSheet.TEAM_A_SPALTE,
+				SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE);
+		Position teamBPos = Position.from(SchweizerAbstractSpielrundeSheet.TEAM_B_SPALTE,
+				SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE);
+		String kennung = sheetHlp.getTextFromCell(ersteRunde, teamAPos);
+		assertThat(sheetHlp.getTextFromCell(ersteRunde, teamBPos))
+				.as("Vorbedingung: beide Teams der Paarung haben dieselbe sichtbare Kennung")
+				.isEqualTo(kennung);
+
+		assertThatThrownBy(() -> new SchweizerRanglisteSheet(wkingSpreadsheet).doRun())
+				.as("Eine mehrdeutige Kennung darf weder als Datenende noch als Freilos gewertet werden")
+				.isInstanceOf(GenerateException.class)
+				.hasMessage(I18n.get("schweizer.spielrunde.fehler.team.mehrdeutig", kennung));
+	}
+
+	private void pruefeTechnischeSpaltenAusgeblendet(XSpreadsheet spielrunde) {
+		assertThat(istSpalteSichtbar(spielrunde, SchweizerAbstractSpielrundeSheet.TECHNISCHE_TEAM_A_NR_SPALTE))
+				.as("Technische Teamnummer A muss ausgeblendet sein").isFalse();
+		assertThat(istSpalteSichtbar(spielrunde, SchweizerAbstractSpielrundeSheet.TECHNISCHE_TEAM_B_NR_SPALTE))
+				.as("Technische Teamnummer B muss ausgeblendet sein").isFalse();
+	}
+
+	/** Stellt den Zustand einer vor Einführung der technischen Spalten erzeugten Datei nach. */
+	private void technischeSpaltenLoeschen(XSpreadsheet spielrunde, int anzTeams) throws GenerateException {
+		RangeHelper.from(spielrunde, wkingSpreadsheet.getWorkingSpreadsheetDocument(), RangePosition.from(
+				SchweizerAbstractSpielrundeSheet.TECHNISCHE_TEAM_A_NR_SPALTE,
+				SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE,
+				SchweizerAbstractSpielrundeSheet.TECHNISCHE_TEAM_B_NR_SPALTE,
+				SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE + anzTeams)).clearRange();
+	}
+
+	/** Kopiert Teamname- und Spielerspalten der Meldelistenzeile von {@code quellNr} nach {@code zielNr}. */
+	private void namenKopieren(SchweizerMeldeListeSheetUpdate meldeListe, int quellNr, int zielNr)
+			throws GenerateException {
+		XSpreadsheet sheet = meldeListe.getXSpreadSheet();
+		var xDoc = wkingSpreadsheet.getWorkingSpreadsheetDocument();
+		int ersteZeile = meldeListe.getErsteDatenZiele();
+		int letzteZeile = meldeListe.getLetzteMitDatenZeileInSpielerNrSpalte();
+		int ersteNamenSpalte = meldeListe.getTeamNrSpalte() + 1;
+		int letzteNamenSpalte = meldeListe.getSetzPositionSpalte() - 1;
+
+		RangeData nummern = RangeHelper.from(sheet, xDoc, RangePosition.from(meldeListe.getTeamNrSpalte(), ersteZeile,
+				meldeListe.getTeamNrSpalte(), letzteZeile)).getDataFromRange();
+		int quellZeile = zeileVonTeam(nummern, quellNr, ersteZeile);
+		int zielZeile = zeileVonTeam(nummern, zielNr, ersteZeile);
+
+		RangeData namen = RangeHelper.from(sheet, xDoc,
+				RangePosition.from(ersteNamenSpalte, quellZeile, letzteNamenSpalte, quellZeile)).getDataFromRange();
+		RangeHelper.from(sheet, xDoc, namen.getRangePosition(Position.from(ersteNamenSpalte, zielZeile)))
+				.setDataInRange(namen);
+	}
+
+	private static int zeileVonTeam(RangeData nummern, int teamNr, int ersteZeile) {
+		for (int idx = 0; idx < nummern.size(); idx++) {
+			if (nummern.get(idx).get(0).getIntVal(0) == teamNr) {
+				return ersteZeile + idx;
+			}
+		}
+		throw new IllegalStateException("Team " + teamNr + " nicht in der Meldeliste gefunden");
 	}
 
 	private int siegeInNeuerRangliste(int anzTeams) throws GenerateException {
