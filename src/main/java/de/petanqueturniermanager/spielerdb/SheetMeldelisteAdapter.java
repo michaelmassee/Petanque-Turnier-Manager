@@ -64,34 +64,34 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
     private final int anzSpieler;
     private final int ersterSpielerOffset;
     private final int spaltenProSpieler;
-    /** Erste Spalte rechts vom letzten Spieler-Block (exklusive). */
+    /** Letzte Spielerdaten-Spalte (inklusive). */
     private final int letzteSchreibSpalte;
+    /** Aktiv-Spalte = Checkin; übernommene Teams bleiben dort leer und zählen als „angemeldet". */
+    private final int aktivSpalte;
 
     private SheetMeldelisteAdapter(XSpreadsheetDocument doc, XSpreadsheet sheet,
-            SheetHelper sheetHelper, TurnierSystem system, Formation formation,
-            int ersteDatenZeile, boolean teamnameAktiv, boolean vereinsnameAktiv) {
+            SheetHelper sheetHelper, TurnierSystem system, MeldelisteLayout layout) {
         this.doc = doc;
         this.sheet = sheet;
         this.sheetHelper = sheetHelper;
         this.system = system;
-        this.formation = formation;
-        this.ersteDatenZeile = ersteDatenZeile;
-        this.teamnameAktiv = teamnameAktiv;
-        this.vereinsnameAktiv = vereinsnameAktiv;
+        this.formation = layout.formation();
+        this.ersteDatenZeile = layout.ersteDatenZeile();
+        this.teamnameAktiv = layout.teamnameAktiv();
+        this.vereinsnameAktiv = layout.vereinsnameAktiv();
         this.anzSpieler = Math.max(1, formation.getAnzSpieler());
         this.ersterSpielerOffset = teamnameAktiv ? 2 : 1;
         this.spaltenProSpieler = vereinsnameAktiv ? 3 : 2;
         this.letzteSchreibSpalte = ersterSpielerOffset + anzSpieler * spaltenProSpieler - 1;
+        this.aktivSpalte = letzteSchreibSpalte + layout.aktivSpaltenAbstand();
     }
 
     /**
-     * Baut einen Adapter aus expliziten Layout-Werten (Formation und Anzeige-Flags),
-     * die der Aufrufer aus dem system-spezifischen KonfigurationSheet gelesen hat.
-     * Vermeidet Property-Lookups direkt im Adapter — die Quelle der Wahrheit ist
-     * jeweils der zum Turniersystem passende {@code *KonfigurationSheet}.
+     * Baut einen Adapter aus dem Layout, das der Aufrufer aus dem system-spezifischen
+     * KonfigurationSheet gelesen hat. Vermeidet Property-Lookups direkt im Adapter.
      */
     static Optional<MeldelisteZiel> fuer(WorkingSpreadsheet ws, String sheetName, TurnierSystem ts,
-            Formation formation, int ersteDatenZeile, boolean teamnameAktiv, boolean vereinsnameAktiv) {
+            MeldelisteLayout layout) {
         try {
             if (ts == null || ts == TurnierSystem.KEIN) {
                 return Optional.empty();
@@ -101,9 +101,7 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
             if (sheet == null) {
                 return Optional.empty();
             }
-            return Optional.of(new SheetMeldelisteAdapter(
-                    ws.getWorkingSpreadsheetDocument(), sheet, sh, ts, formation, ersteDatenZeile,
-                    teamnameAktiv, vereinsnameAktiv));
+            return Optional.of(new SheetMeldelisteAdapter(ws.getWorkingSpreadsheetDocument(), sheet, sh, ts, layout));
         } catch (Exception e) {
             logger.warn("Adapter-Erkennung fehlgeschlagen", e);
             return Optional.empty();
@@ -157,7 +155,6 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
     public MeldelisteStatus getMeldelisteStatus() {
         int checkin = 0;
         int gesamt = 0;
-        int aktivSpalte = aktivSpalte();
         for (int zeile = ersteDatenZeile; zeile <= MAX_DATEN_ZEILE; zeile++) {
             if (!istTeamZeileBelegt(zeile)) {
                 break;
@@ -286,15 +283,6 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
         } catch (Exception e) {
             throw new MeldelisteSchreibException("Schreibvorgang fehlgeschlagen", e);
         }
-    }
-
-    /**
-     * Aktiv-Spalte = Checkin: zwei Spalten rechts neben der letzten Spielerdaten-Spalte
-     * (dazwischen liegt SP/RNG). Übernommene Teams bleiben dort leer und zählen damit als
-     * „angemeldet", bis sie eingecheckt werden.
-     */
-    private int aktivSpalte() {
-        return letzteSchreibSpalte + 2;
     }
 
     /** Erste Zeile, in der kein Spieler eingetragen ist (Vorname + Nachname Slot 0 leer). */
