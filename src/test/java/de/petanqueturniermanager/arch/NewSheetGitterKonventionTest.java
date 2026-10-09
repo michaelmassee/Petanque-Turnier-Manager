@@ -18,37 +18,35 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
 /**
- * Quality Gate: Jede Rangliste wird ohne Tabellengitter angelegt.
+ * Quality Gate: Jedes Turnierblatt wird ohne Tabellengitter angelegt.
  * <p>
  * Das Gitter pro Tabelle ist per UNO nicht auslesbar ({@code ShowGrid} der View ist eine globale
  * Option, {@code .uno:ToggleSheetGrid} wirkt pro Tabelle) – ein UITest kann es daher nicht prüfen.
- * Dieser Test sichert stattdessen im Quelltext ab, dass jede {@code NewSheet.from(...)}-Kette in
- * einer {@code *Rangliste*Sheet}-Klasse {@code hideGrid()} enthält (Bug: Schweizer-/Maastrichter-
- * und Formule-X-Rangliste zeigten das Gitter).
+ * Dieser Test sichert stattdessen im Quelltext ab, dass jede {@code NewSheet.from(...)}-Kette
+ * {@code hideGrid()} enthält oder das Gitter bewusst per {@code showGrid()} anfordert (Bug:
+ * Schweizer-/Maastrichter-/Formule-X-Rangliste, Mêlée-Anmeldung, Cadrage, KO-Gruppe A/B und
+ * Supermelee-Spielrundenplan zeigten das Gitter). Temporäre Arbeitsblätter
+ * ({@code NewSheet.temporary}) sind ausgenommen.
  */
-class RanglisteOhneGitterKonventionTest {
+class NewSheetGitterKonventionTest {
 
 	private static final Pattern NEW_SHEET_KETTE = Pattern.compile("NewSheet\\s*\\.from\\(");
 	private static final String KETTEN_ENDE = ".create()";
 
 	@Test
-	void ranglistenWerdenOhneGitterAngelegt() throws IOException {
+	void blaetterWerdenOhneGitterAngelegt() throws IOException {
 		Path quellWurzel = Paths.get("src/main/java");
 		List<String> verstoesse = new ArrayList<>();
 
 		try (Stream<Path> dateien = Files.walk(quellWurzel)) {
-			dateien.filter(RanglisteOhneGitterKonventionTest::istRanglistenSheet).forEach(datei -> verstoesse
+			dateien.filter(p -> p.toString().endsWith(".java")).forEach(datei -> verstoesse
 					.addAll(findeVerstoesse(quellWurzel.relativize(datei).toString(), liesDatei(datei))));
 		}
 
 		assertThat(verstoesse)
-				.as("Rangliste ohne hideGrid() angelegt. In der NewSheet-Kette .hideGrid() ergänzen.")
+				.as("Blatt ohne Gitter-Angabe angelegt. In der NewSheet-Kette .hideGrid() ergänzen "
+						+ "(oder .showGrid(), wenn das Gitter bewusst sichtbar bleiben soll).")
 				.isEmpty();
-	}
-
-	private static boolean istRanglistenSheet(Path datei) {
-		String name = datei.getFileName().toString();
-		return name.contains("Rangliste") && name.endsWith("Sheet.java");
 	}
 
 	private static List<String> findeVerstoesse(String datei, String inhalt) {
@@ -57,7 +55,7 @@ class RanglisteOhneGitterKonventionTest {
 		while (kette.find()) {
 			int ende = inhalt.indexOf(KETTEN_ENDE, kette.start());
 			String aufruf = ende < 0 ? inhalt.substring(kette.start()) : inhalt.substring(kette.start(), ende);
-			if (!aufruf.contains(".hideGrid()")) {
+			if (!aufruf.contains(".hideGrid()") && !aufruf.contains(".showGrid()")) {
 				int zeile = (int) inhalt.substring(0, kette.start()).chars().filter(c -> c == '\n').count() + 1;
 				funde.add(datei + ":" + zeile);
 			}

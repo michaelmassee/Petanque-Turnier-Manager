@@ -77,7 +77,7 @@ public abstract class AbstractMeleeAnmeldungSheet extends SheetRunner
 		NewSheet.from(this, SheetNamen.meleeAnmeldung(), getMetadatenSchluessel())
 				.tabColor(getKonfigurationSheet().getMeldelisteTabFarbe())
 				.pos(DefaultSheetPos.MELEE_ANMELDUNG)
-				.useIfExist().setActiv().create();
+				.useIfExist().hideGrid().setActiv().create();
 
 		kopfzeileSchreiben();
 		datenSpaltenFormatieren();
