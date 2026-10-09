@@ -233,6 +233,7 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 		NewSheet.from(this, getRanglistenSheetName(), getMetadatenSchluessel())
 				.pos(DefaultSheetPos.SCHWEIZER_ENDRANGLISTE)
 				.forceCreate()
+				.hideGrid()
 				.tabColor(getKonfigurationSheet().getRanglisteTabFarbe())
 				.create();
 

@@ -129,6 +129,7 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
         NewSheet.from(this, SheetNamen.formulexRangliste(), SheetMetadataHelper.SCHLUESSEL_FORMULEX_RANGLISTE)
                 .pos(DefaultSheetPos.SCHWEIZER_ENDRANGLISTE)
                 .forceCreate()
+                .hideGrid()
                 .tabColor(konfigurationSheet.getRanglisteTabFarbe())
                 .create();
 
