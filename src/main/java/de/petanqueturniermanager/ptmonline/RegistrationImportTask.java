@@ -1295,7 +1295,7 @@ public final class RegistrationImportTask {
             String status = rohStatus.get(uuid);
             String name = namen.getOrDefault(uuid, "");
             if (zeile == null) {
-                List<Entscheidung> optionen = OnlineAnmeldeStatus.istStorniert(status)
+                List<Entscheidung> optionen = OnlineAnmeldeStatus.istBeendet(status)
                         ? List.of(Entscheidung.NUR_LOKAL_ENTFERNEN)
                         : List.of(Entscheidung.NUR_LOKAL_ENTFERNEN, Entscheidung.ONLINE_STORNIEREN);
                 faelle.add(new LokalerFall(new KonfliktFall(KonfliktArt.LOKAL_FEHLEND, uuid, List.of(onlineId), name,
@@ -1572,9 +1572,9 @@ public final class RegistrationImportTask {
                 zeileProUuid.size());
     }
 
-    /** Online storniert oder auf der Warteliste: lokal von der Auslosung ausgeschlossen (E-14). */
+    /** Online storniert, abgelehnt oder auf der Warteliste: lokal von der Auslosung ausgeschlossen (E-14, E-26). */
     static boolean istOnlineAusgeschlossen(RegistrationDto registration) {
-        return OnlineAnmeldeStatus.istStorniert(registration.status())
+        return OnlineAnmeldeStatus.istBeendet(registration.status())
                 || OnlineAnmeldeStatus.WARTELISTE.apiWert().equals(registration.status());
     }
 

@@ -19,7 +19,9 @@ public enum OnlineAnmeldeStatus {
     OFFEN("pending", "ptmonline.status.offen"),
     BESTAETIGT("confirmed", "ptmonline.status.bestaetigt"),
     WARTELISTE("waitlist", "ptmonline.status.warteliste"),
-    STORNIERT("cancelled", "ptmonline.status.storniert");
+    STORNIERT("cancelled", "ptmonline.status.storniert"),
+    /** Von der Turnierleitung online abgelehnt; wie eine Stornierung keine aktive Meldung. */
+    ABGELEHNT("rejected", "ptmonline.status.abgelehnt");
 
     private final String apiWert;
     private final String i18nSchluessel;
@@ -43,6 +45,11 @@ public enum OnlineAnmeldeStatus {
 
     public static boolean istStorniert(@Nullable String apiWert) {
         return STORNIERT.apiWert.equals(apiWert);
+    }
+
+    /** Storniert oder abgelehnt: online keine aktive Meldung mehr. */
+    public static boolean istBeendet(@Nullable String apiWert) {
+        return istStorniert(apiWert) || ABGELEHNT.apiWert.equals(apiWert);
     }
 
     /** Lesbare Anzeige fuer das Meldungen-Sheet; unbekannte Werte werden unveraendert angezeigt. */

@@ -33,6 +33,7 @@ public class RegistrationImportFilterTest {
 		assertThat(RegistrationImportTask.istImportierbar(anmeldungMitStatus("pending"))).isFalse();
 		assertThat(RegistrationImportTask.istImportierbar(anmeldungMitStatus("waitlist"))).isFalse();
 		assertThat(RegistrationImportTask.istImportierbar(anmeldungMitStatus("cancelled"))).isFalse();
+		assertThat(RegistrationImportTask.istImportierbar(anmeldungMitStatus("rejected"))).isFalse();
 	}
 
 	private static RegistrationDto anmeldung(String json) {
@@ -68,6 +69,7 @@ public class RegistrationImportFilterTest {
 	public void onlineStornierteUndWartendeMeldungenWerdenAusgeschlossen() {
 		assertThat(RegistrationImportTask.istOnlineAusgeschlossen(anmeldungMitStatus("cancelled"))).isTrue();
 		assertThat(RegistrationImportTask.istOnlineAusgeschlossen(anmeldungMitStatus("waitlist"))).isTrue();
+		assertThat(RegistrationImportTask.istOnlineAusgeschlossen(anmeldungMitStatus("rejected"))).isTrue();
 		assertThat(RegistrationImportTask.istOnlineAusgeschlossen(anmeldungMitStatus("confirmed"))).isFalse();
 		assertThat(RegistrationImportTask.istOnlineAusgeschlossen(anmeldungMitStatus("pending"))).isFalse();
 	}
