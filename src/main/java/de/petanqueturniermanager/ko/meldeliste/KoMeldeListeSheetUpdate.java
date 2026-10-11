@@ -11,9 +11,10 @@ import com.sun.star.sheet.XSpreadsheet;
 import java.util.List;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamNummernPlan;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamNummernVergabe;
 import de.petanqueturniermanager.basesheet.meldeliste.IMeldeliste;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
-import de.petanqueturniermanager.basesheet.meldeliste.MeldelisteSortBereich;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -221,7 +222,7 @@ public class KoMeldeListeSheetUpdate extends SheetRunner
 		}
 		RangePosition range = RangePosition.from(getNrSpalte(), ERSTE_DATEN_ZEILE,
 				delegate.getAktivSpalte(), letzteZeile);
-		SortHelper.from(this, MeldelisteSortBereich.mitLokalerUuidSpalte(this, range, ERSTE_DATEN_ZEILE - 1)).spalteToSort(spalteNr).aufSteigendSortieren(aufsteigend).doSort();
+		SortHelper.from(this, range).spalteToSort(spalteNr).aufSteigendSortieren(aufsteigend).doSort();
 	}
 
 	/**
@@ -297,35 +298,9 @@ public class KoMeldeListeSheetUpdate extends SheetRunner
 	 * Vergibt fehlende Nummern an Zeilen mit Spieler-Vornamen aber ohne Nr.
 	 */
 	private void teamnummernVergeben(XSpreadsheet xSheet) throws GenerateException {
-		int letzteZeile = delegate.letzteZeileMitDaten(xSheet);
-		if (letzteZeile < ERSTE_DATEN_ZEILE) {
-			return;
-		}
-
-		int nrSpalte = getNrSpalte();
-		int vornameSpalte = delegate.getVornameSpalte(0);
-
-		// Höchste vorhandene Nr lesen (absteigend sortieren, dann erste Zeile lesen)
-		RangePosition sortRange = RangePosition.from(nrSpalte, ERSTE_DATEN_ZEILE, delegate.getAktivSpalte(),
-				letzteZeile);
-		SortHelper.from(this, MeldelisteSortBereich.mitLokalerUuidSpalte(this, sortRange, ERSTE_DATEN_ZEILE - 1)).spalteToSort(nrSpalte).abSteigendSortieren().doSort();
-
-		int letztNr = Math.max(0,
-				getSheetHelper().getIntFromCell(xSheet, Position.from(nrSpalte, ERSTE_DATEN_ZEILE)));
-
-		// Fehlende Nummern vergeben (nr <= 0 = leer/kein Wert)
-		for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
-			String vorname = getSheetHelper().getTextFromCell(xSheet, Position.from(vornameSpalte, zeile));
-			if (vorname == null || vorname.isBlank()) {
-				continue;
-			}
-			int nr = getSheetHelper().getIntFromCell(xSheet, Position.from(nrSpalte, zeile));
-			if (nr <= 0) {
-				letztNr++;
-				getSheetHelper().setNumberValueInCell(
-						NumberCellValue.from(xSheet, Position.from(nrSpalte, zeile)).setValue(letztNr));
-			}
-		}
+		// Neue Nummern hinter der höchsten; jede Meldung trägt ihre UUID in der Nr-Zelle.
+		TeamNummernVergabe.from(this, getNrSpalte(), delegate.getVornameSpalte(0), ERSTE_DATEN_ZEILE)
+				.vergebe(delegate.letzteZeileMitDaten(xSheet), TeamNummernPlan.Strategie.HOCHZAEHLEN);
 	}
 
 	/**
@@ -338,7 +313,7 @@ public class KoMeldeListeSheetUpdate extends SheetRunner
 		}
 		RangePosition range = RangePosition.from(getNrSpalte(), ERSTE_DATEN_ZEILE,
 				delegate.getAktivSpalte(), letzteZeile);
-		SortHelper.from(this, MeldelisteSortBereich.mitLokalerUuidSpalte(this, range, ERSTE_DATEN_ZEILE - 1)).spalteToSort(delegate.getRanglisteSpalte())
+		SortHelper.from(this, range).spalteToSort(delegate.getRanglisteSpalte())
 				.aufSteigendSortieren(true).doSort();
 	}
 

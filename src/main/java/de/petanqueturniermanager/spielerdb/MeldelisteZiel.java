@@ -101,8 +101,8 @@ public interface MeldelisteZiel extends AbgleichQuelle {
     }
 
     /**
-     * Wie {@link #getOderErzeugeLokaleUuid} für viele Zeilen auf einmal. Implementierungen lesen und schreiben die
-     * UUID-Spalte dabei als Block statt Zeile für Zeile.
+     * Wie {@link #getOderErzeugeLokaleUuid} für viele Zeilen auf einmal. Implementierungen lesen und schreiben dabei
+     * als Block statt Zeile für Zeile.
      *
      * @return UUID je 1-basierter Sheet-Zeile, in der Reihenfolge von {@code zeilen1Basiert}
      */
@@ -116,19 +116,11 @@ public interface MeldelisteZiel extends AbgleichQuelle {
     }
 
     /**
-     * Liest vorhandene lokale UUIDs, ohne fehlende anzulegen – zum Sichern vor einem Umbau der Meldeliste.
+     * Liest vorhandene lokale UUIDs, ohne fehlende anzulegen.
      *
      * @return UUID je 1-basierter Sheet-Zeile, nur für Zeilen mit UUID
      */
     default Map<Integer, String> leseLokaleUuids(Collection<Integer> zeilen1Basiert) throws MeldelisteSchreibException {
-        throw new MeldelisteSchreibException("Lokale PTM-Online-ID wird von dieser Meldeliste nicht unterstützt");
-    }
-
-    /**
-     * Räumt die Spalte der lokalen UUIDs samt Überschrift, z.&nbsp;B. bevor ein neuer Spieltag genau diese Spalte
-     * belegt. Die UUIDs vorher mit {@link #leseLokaleUuids} sichern.
-     */
-    default void entferneLokaleUuids() throws MeldelisteSchreibException {
         throw new MeldelisteSchreibException("Lokale PTM-Online-ID wird von dieser Meldeliste nicht unterstützt");
     }
 

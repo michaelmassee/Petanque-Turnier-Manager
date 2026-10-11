@@ -43,8 +43,6 @@ import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.SpielerMeldungen;
-import de.petanqueturniermanager.spielerdb.MeldelisteZielFactory;
-import de.petanqueturniermanager.spielerdb.MeldelisteZielFactory.GesicherteLokaleUuids;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
@@ -139,33 +137,8 @@ class SupermeleeListeDelegate implements MeldeListeKonstanten {
 		meldeListeHelper.doSort(spalteNr, isAscending);
 	}
 
+	/** Baut die Meldeliste für den aktuellen Spieltag auf. */
 	void upDateSheet() throws GenerateException {
-		mitGesichertenLokalenUuids(this::aufbauen);
-	}
-
-	/**
-	 * Führt einen Umbau der Meldeliste aus, während die lokalen PTM-Online-IDs im Speicher liegen: ihre Spalte
-	 * direkt hinter dem letzten Spieltag wird vorher geräumt (ein neuer Spieltag belegt genau sie) und danach –
-	 * auch nach einem Fehler – hinter dem jetzt letzten Spieltag wiederhergestellt.
-	 */
-	void mitGesichertenLokalenUuids(MeldelistenUmbau umbau) throws GenerateException {
-		GesicherteLokaleUuids lokaleUuids = MeldelisteZielFactory.sichereUndEntferneLokalePtmOnlineUuids(workingSpreadsheet);
-		try {
-			umbau.ausfuehren();
-		} finally {
-			MeldelisteZielFactory.stelleLokalePtmOnlineUuidsWiederher(workingSpreadsheet, lokaleUuids);
-		}
-		MeldelisteZielFactory.erstelleLokalePtmOnlineUuids(workingSpreadsheet);
-	}
-
-	/** Umbau der Meldeliste für {@link #mitGesichertenLokalenUuids}. */
-	@FunctionalInterface
-	interface MeldelistenUmbau {
-		void ausfuehren() throws GenerateException;
-	}
-
-	/** Baut die Meldeliste für den aktuellen Spieltag auf – nur über {@link #mitGesichertenLokalenUuids}. */
-	void aufbauen() throws GenerateException {
 		PageStyleHelper.from(sheet, PageStyle.PETTURNMNGR).initDefaultFooter().create().applytoSheet();
 		sheet.processBoxinfo("processbox.supermelee.meldeliste.aktualisieren");
 

@@ -366,15 +366,14 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	public void doSort(int spalteNr, boolean isAscending) throws GenerateException {
 		int letzteSpielZeile = meldeListe.getMeldungenSpalte().letzteZeileMitSpielerName();
 		if (letzteSpielZeile > meldeListe.getErsteDatenZiele()) { // daten vorhanden
-			RangePosition rangeToSort = datenBereichMitLokalerUuid(meldeListe.getErsteDatenZiele(), letzteSpielZeile);
+			RangePosition rangeToSort = datenBereich(meldeListe.getErsteDatenZiele(), letzteSpielZeile);
 			SortHelper.from(meldeListe, rangeToSort).spalteToSort(spalteNr).aufSteigendSortieren(isAscending).doSort();
 		}
 	}
 
-	/** Datenzeilen von der Nr-Spalte bis einschließlich der (ausgeblendeten) Spalte mit der lokalen PTM-Online-ID. */
-	private RangePosition datenBereichMitLokalerUuid(int ersteZeile, int letzteZeile) throws GenerateException {
-		return MeldelisteSortBereich.mitLokalerUuidSpalte(meldeListe, RangePosition.from(SPIELER_NR_SPALTE,
-				ersteZeile, meldeListe.letzteSpielTagSpalte(), letzteZeile), meldeListe.getErsteDatenZiele() - 1);
+	/** Datenzeilen von der Nr-Spalte bis einschließlich der letzten Spieltag-Spalte; die UUID steckt in der Nr-Zelle. */
+	private RangePosition datenBereich(int ersteZeile, int letzteZeile) throws GenerateException {
+		return RangePosition.from(SPIELER_NR_SPALTE, ersteZeile, meldeListe.letzteSpielTagSpalte(), letzteZeile);
 	}
 
 	/**
@@ -621,8 +620,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 			if (StringUtils.isBlank(spielerNamen)) {
 				// Ganze Zeile leeren (Nr, Setzposition, Aktiv, Spieltag-Status), nicht nur die
 				// Nr-Zelle – sonst bleiben verwaiste Werte (z.B. Aktiv-Flag) in der Leerzeile stehen.
-				// inkl. lokaler PTM-Online-ID, sonst erbt eine später hier eingetragene Meldung die UUID
-				RangeHelper.from(meldeListe, datenBereichMitLokalerUuid(zeile, zeile)).clearRange();
+				RangeHelper.from(meldeListe, datenBereich(zeile, zeile)).clearRange();
 			}
 		}
 	}
@@ -767,39 +765,10 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 		if (letzteSpielZeile < meldeListe.getErsteDatenZiele()) { // daten vorhanden ?
 			return; // keine Daten
 		}
-		XSpreadsheet xSheet = getXSpreadSheet();
-		doSort(SPIELER_NR_SPALTE, false); // hoechste nummer oben, ohne nummer nach unten
-
-		// Zeile erste Meldung ohne Nummer, weil ohne nummer nach unten sortiert
-		int ersteZeileOhneNummer = meldeListe.naechsteFreieDatenZeileInSpielerNrSpalte(); // letzte Zeile ohne Spieler Nr
-
-		// Bereits vergebene Nummern sammeln, damit freie Lücken (z.B. durch gelöschte
-		// Meldungen) zuerst wiederverwendet werden, statt immer nur hochzuzählen.
-		HashSet<Integer> belegteNummern = new HashSet<>();
-		for (int zeile = meldeListe.getErsteDatenZiele(); zeile < ersteZeileOhneNummer; zeile++) {
-			int nr = meldeListe.getSheetHelper().getIntFromCell(xSheet, Position.from(SPIELER_NR_SPALTE, zeile));
-			if (nr > 0) {
-				belegteNummern.add(nr);
-			}
-		}
-
-		// lücken füllen
-		int naechsteFreieNr = 1;
-		NumberCellValue celVal = NumberCellValue.from(xSheet, Position.from(SPIELER_NR_SPALTE, meldeListe.getErsteDatenZiele()));
-		for (int spielerZeilecntr = ersteZeileOhneNummer; spielerZeilecntr <= letzteSpielZeile; spielerZeilecntr++) {
-			int spielrNr = meldeListe.getSheetHelper().getIntFromCell(xSheet,
-					Position.from(SPIELER_NR_SPALTE, spielerZeilecntr));
-			if (spielrNr == -1) {
-				while (belegteNummern.contains(naechsteFreieNr)) {
-					naechsteFreieNr++;
-				}
-				belegteNummern.add(naechsteFreieNr);
-				meldeListe.getSheetHelper()
-						.setNumberValueInCell(celVal.setValue((double) naechsteFreieNr).zeile(spielerZeilecntr));
-			}
-		}
-		// Meldeliste nach konfiguriertem Modus sortieren; der Sortierbereich nimmt alle
-		// Daten-/Statusspalten mit.
+		// Fehlende Nummern füllen Lücken gelöschter Meldungen zuerst; jede Meldung trägt ihre UUID in der Nr-Zelle.
+		TeamNummernVergabe.from(meldeListe, SPIELER_NR_SPALTE, meldeListe.getMeldungenSpalte().getNamenOderTeamnameSpalte(),
+				meldeListe.getErsteDatenZiele()).vergebe(letzteSpielZeile, TeamNummernPlan.Strategie.LUECKEN_FUELLEN);
+		// Meldeliste nach konfiguriertem Modus sortieren; die UUID steckt in der Nr-Zelle und wandert mit.
 		doSort(sortSpalteFuer(sortModus), true);
 	}
 

@@ -16,10 +16,11 @@ import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamNummernPlan;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamNummernVergabe;
 import de.petanqueturniermanager.basesheet.meldeliste.IMeldeliste;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
-import de.petanqueturniermanager.basesheet.meldeliste.MeldelisteSortBereich;
 import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeigeHelper;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -622,7 +623,7 @@ class JGJMeldeListeDelegate implements MeldeListeKonstanten {
 		int letzteZeile = getLetzteDatenZeileUseMin();
 		RangePosition rangeToSort = RangePosition.from(getTeamNrSpalte(), ERSTE_DATEN_ZEILE,
 				getAktivSpalte(), letzteZeile);
-		SortHelper.from(sheet, MeldelisteSortBereich.mitLokalerUuidSpalte(sheet, rangeToSort, ERSTE_DATEN_ZEILE - 1)).spalteToSort(spalteNr).aufSteigendSortieren(aufsteigend).doSort();
+		SortHelper.from(sheet, rangeToSort).spalteToSort(spalteNr).aufSteigendSortieren(aufsteigend).doSort();
 	}
 
 	// ---------------------------------------------------------------
@@ -671,28 +672,9 @@ class JGJMeldeListeDelegate implements MeldeListeKonstanten {
 	}
 
 	private void teamnummernVergeben(XSpreadsheet xSheet) throws GenerateException {
-		int letzteZeile = letzteZeileMitDaten(xSheet);
-		if (letzteZeile < ERSTE_DATEN_ZEILE) {
-			return;
-		}
-		int vornameSpalte = getZeilenKennungSpalte();
-		RangePosition range = RangePosition.from(getTeamNrSpalte(), ERSTE_DATEN_ZEILE,
-				getAktivSpalte(), letzteZeile);
-		SortHelper.from(sheet, MeldelisteSortBereich.mitLokalerUuidSpalte(sheet, range, ERSTE_DATEN_ZEILE - 1)).spalteToSort(getTeamNrSpalte()).abSteigendSortieren().doSort();
-		int letztNr = Math.max(0,
-				sheet.getSheetHelper().getIntFromCell(xSheet, Position.from(getTeamNrSpalte(), ERSTE_DATEN_ZEILE)));
-		for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
-			String vorname = sheet.getSheetHelper().getTextFromCell(xSheet, Position.from(vornameSpalte, zeile));
-			if (vorname == null || vorname.isEmpty()) {
-				continue;
-			}
-			int nr = sheet.getSheetHelper().getIntFromCell(xSheet, Position.from(getTeamNrSpalte(), zeile));
-			if (nr <= 0) {
-				letztNr++;
-				sheet.getSheetHelper().setNumberValueInCell(
-						NumberCellValue.from(xSheet, Position.from(getTeamNrSpalte(), zeile)).setValue(letztNr));
-			}
-		}
+		// Neue Nummern hinter der höchsten; jede Meldung trägt ihre UUID in der Nr-Zelle.
+		TeamNummernVergabe.from(sheet, getTeamNrSpalte(), getZeilenKennungSpalte(), ERSTE_DATEN_ZEILE)
+				.vergebe(letzteZeileMitDaten(xSheet), TeamNummernPlan.Strategie.HOCHZAEHLEN);
 	}
 
 	private void nachTeamNrSortieren(XSpreadsheet xSheet) throws GenerateException {
@@ -702,7 +684,7 @@ class JGJMeldeListeDelegate implements MeldeListeKonstanten {
 		}
 		RangePosition range = RangePosition.from(getTeamNrSpalte(), ERSTE_DATEN_ZEILE,
 				getAktivSpalte(), letzteZeile);
-		SortHelper.from(sheet, MeldelisteSortBereich.mitLokalerUuidSpalte(sheet, range, ERSTE_DATEN_ZEILE - 1)).spalteToSort(getTeamNrSpalte()).aufSteigendSortieren(true).doSort();
+		SortHelper.from(sheet, range).spalteToSort(getTeamNrSpalte()).aufSteigendSortieren(true).doSort();
 	}
 
 	// ---------------------------------------------------------------

@@ -12,14 +12,14 @@ import com.sun.star.sheet.XSpreadsheet;
 import java.util.List;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamNummernPlan;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamNummernVergabe;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.IMeldeliste;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
-import de.petanqueturniermanager.basesheet.meldeliste.MeldelisteSortBereich;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
@@ -246,7 +246,7 @@ public class SchweizerMeldeListeSheetUpdate extends SheetRunner
 		}
 		RangePosition range = RangePosition.from(getTeamNrSpalte(), ERSTE_DATEN_ZEILE,
 				getAktivSpalte() + 1, letzteZeile);
-		SortHelper.from(this, MeldelisteSortBereich.mitLokalerUuidSpalte(this, range, ERSTE_DATEN_ZEILE - 1)).spalteToSort(spalteNr).aufSteigendSortieren(aufsteigend).doSort();
+		SortHelper.from(this, range).spalteToSort(spalteNr).aufSteigendSortieren(aufsteigend).doSort();
 	}
 
 	// ---------------------------------------------------------------
@@ -274,7 +274,6 @@ public class SchweizerMeldeListeSheetUpdate extends SheetRunner
 		teamnummernVergeben(xSheet);
 		nachTeamNrSortieren(xSheet);
 		upDateSheet();
-		de.petanqueturniermanager.spielerdb.MeldelisteZielFactory.erstelleLokalePtmOnlineUuids(getWorkingSpreadsheet());
 		return true;
 	}
 
@@ -312,33 +311,9 @@ private void stringsBesinigen(XSpreadsheet xSheet) throws GenerateException {
 	}
 
 	private void teamnummernVergeben(XSpreadsheet xSheet) throws GenerateException {
-		int letzteZeile = letzteZeileMitDaten(xSheet);
-		if (letzteZeile < ERSTE_DATEN_ZEILE) {
-			return;
-		}
-		int vornameSpalte = getVornameSpalte(0);
-		// Nr-Spalte absteigend sortieren (höchste Nr zuerst, leere ans Ende)
-		RangePosition range = RangePosition.from(getTeamNrSpalte(), ERSTE_DATEN_ZEILE,
-				getAktivSpalte() + 1, letzteZeile);
-		SortHelper.from(this, MeldelisteSortBereich.mitLokalerUuidSpalte(this, range, ERSTE_DATEN_ZEILE - 1)).spalteToSort(getTeamNrSpalte()).abSteigendSortieren().doSort();
-
-		// Höchste vorhandene Nr lesen
-		int letztNr = Math.max(0,
-				getSheetHelper().getIntFromCell(xSheet, Position.from(getTeamNrSpalte(), ERSTE_DATEN_ZEILE)));
-
-		// Fehlende Nummern vergeben (nr <= 0 bedeutet: leer oder kein Wert vergeben)
-		for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
-			String vorname = getSheetHelper().getTextFromCell(xSheet, Position.from(vornameSpalte, zeile));
-			if (vorname == null || vorname.isEmpty()) {
-				continue;
-			}
-			int nr = getSheetHelper().getIntFromCell(xSheet, Position.from(getTeamNrSpalte(), zeile));
-			if (nr <= 0) {
-				letztNr++;
-				getSheetHelper().setNumberValueInCell(
-						NumberCellValue.from(xSheet, Position.from(getTeamNrSpalte(), zeile)).setValue(letztNr));
-			}
-		}
+		// Neue Nummern hinter der höchsten; jede Meldung trägt ihre UUID in der Nr-Zelle.
+		TeamNummernVergabe.from(this, getTeamNrSpalte(), getVornameSpalte(0), ERSTE_DATEN_ZEILE)
+				.vergebe(letzteZeileMitDaten(xSheet), TeamNummernPlan.Strategie.HOCHZAEHLEN);
 	}
 
 	private void nachTeamNrSortieren(XSpreadsheet xSheet) throws GenerateException {
@@ -348,7 +323,7 @@ private void stringsBesinigen(XSpreadsheet xSheet) throws GenerateException {
 		}
 		RangePosition range = RangePosition.from(getTeamNrSpalte(), ERSTE_DATEN_ZEILE,
 				getAktivSpalte() + 1, letzteZeile);
-		SortHelper.from(this, MeldelisteSortBereich.mitLokalerUuidSpalte(this, range, ERSTE_DATEN_ZEILE - 1)).spalteToSort(getTeamNrSpalte()).aufSteigendSortieren(true).doSort();
+		SortHelper.from(this, range).spalteToSort(getTeamNrSpalte()).aufSteigendSortieren(true).doSort();
 	}
 
 }

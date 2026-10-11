@@ -53,9 +53,9 @@ import de.petanqueturniermanager.triptete.meldeliste.TripTeteMeldeListeSheetNew;
 import de.petanqueturniermanager.triptete.meldeliste.TripTeteTeilnehmerSheet;
 
 /**
- * Die lokale PTM-Online-ID (UUID) einer Meldung steht in einer ausgeblendeten Spalte der Meldeliste. Egal, auf welchem
- * Weg die Meldeliste umsortiert wird, muss jede UUID bei ihrer Meldung bleiben – sonst hängen Online-Anmeldungen an
- * fremden Teams. Geprüft wird das für jedes Turniersystem mit PTM-Online-Anbindung.
+ * Die lokale UUID einer Meldung steht in ihrer Nr-Zelle ({@code PTM.ALG.TNRUUID}). Egal, auf welchem Weg die
+ * Meldeliste umsortiert wird, muss jede UUID bei ihrer Meldung bleiben – sonst hängen Online-Anmeldungen an fremden
+ * Teams. Geprüft wird das für jedes Turniersystem mit PTM-Online-Anbindung.
  */
 class LokaleUuidSortierungUITest extends BaseCalcUITest {
 

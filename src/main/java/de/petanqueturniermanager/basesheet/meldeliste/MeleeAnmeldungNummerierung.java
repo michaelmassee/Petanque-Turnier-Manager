@@ -3,16 +3,19 @@
  */
 package de.petanqueturniermanager.basesheet.meldeliste;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 import com.sun.star.sheet.XSpreadsheet;
 
+import de.petanqueturniermanager.addins.GlobalImpl;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
-import de.petanqueturniermanager.helper.sheet.RangeHelper;
-import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
+import de.petanqueturniermanager.helper.sheet.SheetHelper;
+import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
 
 /**
  * Vergibt fortlaufende Nummern (Spalte {@code Nr}) für alle Zeilen mit Namen im
@@ -33,17 +36,27 @@ public final class MeleeAnmeldungNummerierung implements MeleeAnmeldungKonstante
 	 * Zeilen ohne Namen bleiben unberührt, damit die Nummerierung dem Anwender nicht in leere
 	 * Zeilen „vorläuft". Bereits vergebene Nummern werden überschrieben, sodass Lücken (z.B. durch
 	 * nachträglich per Copy-Paste eingefügte Zeilen ohne Nummer) geschlossen werden.
+	 * <p>
+	 * Die Nr-Zelle trägt die UUID des Spielers ({@code PTM.ALG.TNRUUID}); vorhandene UUIDs bleiben, fehlende
+	 * entstehen neu. Eine per Copy-Paste verdoppelte UUID bekommt in der Kopie eine neue.
 	 */
 	public static void nummerieren(WorkingSpreadsheet ws, XSpreadsheet sheet) throws GenerateException {
 		List<MeleeAnmeldungZeile> zeilen = MeleeAnmeldungLeser.lesen(ws, sheet);
 		if (zeilen.isEmpty()) {
 			return;
 		}
-		RangeData data = new RangeData();
+		SheetHelper helper = new SheetHelper(ws);
+		RangePosition bereich = RangePosition.from(SPALTE_NR, ERSTE_DATEN_ZEILE, SPALTE_NR,
+				ERSTE_DATEN_ZEILE + zeilen.size() - 1);
+		String[][] bisher = helper.getFormulaArrayFromRange(sheet, bereich);
+		Set<String> vergeben = new HashSet<>();
+		String[][] formeln = new String[zeilen.size()][1];
 		for (int idx = 0; idx < zeilen.size(); idx++) {
-			data.addNewRow().newInt(idx + 1);
+			String alt = idx < bisher.length && bisher[idx].length > 0 ? bisher[idx][0] : "";
+			String uuid = TeamUuidFormel.findeUuid(alt).filter(vergeben::add).orElseGet(() -> UUID.randomUUID().toString());
+			vergeben.add(uuid);
+			formeln[idx][0] = GlobalImpl.FORMAT_PTM_TNR_UUID(idx + 1, uuid);
 		}
-		RangePosition bereich = data.getRangePosition(Position.from(SPALTE_NR, ERSTE_DATEN_ZEILE));
-		RangeHelper.from(sheet, ws.getWorkingSpreadsheetDocument(), bereich).setDataInRange(data);
+		BlattschutzManager.get().schreibeEntsperrt(sheet, () -> helper.setFormulaArrayInRange(sheet, bereich, formeln));
 	}
 }

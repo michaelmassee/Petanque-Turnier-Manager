@@ -21,11 +21,11 @@ import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungLeser;
 import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungNummerierung;
 import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungZeile;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.basesheet.meldeliste.NrUuidSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
-import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.Position;
@@ -43,8 +43,7 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
  * Einzelspieler an.
  * <p>
  * Jede Zeile des Mêlée-Sheets ist genau ein Spieler ({@link Formation#TETE}). Die lokale PTM-Online-ID
- * steht in einer ausgeblendeten Spalte rechts neben dem Datenbereich ({@link #SPALTE_PTM_ONLINE_UUID}),
- * damit {@link MeleeAnmeldungLeser}, Nummerierung und Druckbereich unverändert bleiben.
+ * steht in der Nr-Zelle ({@code PTM.ALG.TNRUUID}), siehe {@link NrUuidSpalte}.
  * <p>
  * Das Sheet wird bei jedem Zugriff neu aufgelöst: Das Ziel entsteht auch dann, wenn das Mêlée-Sheet noch
  * fehlt (z.&nbsp;B. beim Rundenstart-Abgleich); Lesen liefert dann nichts, Schreiben scheitert.
@@ -52,9 +51,6 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 public final class MeleeAnmeldungZiel implements MeldelisteZiel, MeleeAnmeldungKonstanten {
 
 	private static final Logger logger = LogManager.getLogger(MeleeAnmeldungZiel.class);
-
-	/** Eine Spalte Abstand zum Datenbereich, wie die UUID-Spalte der Meldeliste. */
-	static final int SPALTE_PTM_ONLINE_UUID = LETZTE_SPALTE + 2;
 
 	private static final int LETZTE_DATEN_ZEILE = ERSTE_DATEN_ZEILE + MAX_ANZ_ANMELDUNGEN - 1;
 
@@ -182,9 +178,10 @@ public final class MeleeAnmeldungZiel implements MeldelisteZiel, MeleeAnmeldungK
 	@Override
 	public Map<Integer, String> getOderErzeugeLokaleUuids(Collection<Integer> zeilen1Basiert)
 			throws MeldelisteSchreibException {
+		pruefeDatenZeilen(zeilen1Basiert);
 		try {
-			return uuidSpalte(zeilen1Basiert).getOderErzeuge(zeilen1Basiert);
-		} catch (GenerateException e) {
+			return nrUuidSpalte(sheet()).getOderErzeuge(zeilen1Basiert);
+		} catch (RuntimeException e) {
 			throw new MeldelisteSchreibException("Lokale PTM-Online-ID konnte nicht geschrieben werden", e);
 		}
 	}
@@ -196,10 +193,11 @@ public final class MeleeAnmeldungZiel implements MeldelisteZiel, MeleeAnmeldungK
 
 	@Override
 	public void setzeLokaleUuids(Map<Integer, String> uuidProZeile) throws MeldelisteSchreibException {
+		pruefeDatenZeilen(uuidProZeile.keySet());
 		try {
-			uuidSpalte(uuidProZeile.keySet()).setze(uuidProZeile);
-		} catch (GenerateException e) {
-			throw new MeldelisteSchreibException("Lokale PTM-Online-ID konnte nicht wiederhergestellt werden", e);
+			nrUuidSpalte(sheet()).setze(uuidProZeile);
+		} catch (RuntimeException e) {
+			throw new MeldelisteSchreibException("Lokale PTM-Online-ID konnte nicht geschrieben werden", e);
 		}
 	}
 
@@ -209,18 +207,18 @@ public final class MeleeAnmeldungZiel implements MeldelisteZiel, MeleeAnmeldungK
 		if (sheet == null) {
 			return Map.of();
 		}
-		return new LokaleUuidSpalte(sheet, ws.getWorkingSpreadsheetDocument(), SPALTE_PTM_ONLINE_UUID)
-				.lese(zeilen1Basiert);
+		return nrUuidSpalte(sheet).lese(zeilen1Basiert);
 	}
 
-	/** Prüft die Zeilen und stellt die Überschrift der UUID-Spalte bereit. */
-	private LokaleUuidSpalte uuidSpalte(Collection<Integer> zeilen1Basiert) throws MeldelisteSchreibException {
+	/** Die UUID steckt in der Nr-Zelle ({@code PTM.ALG.TNRUUID}) und wandert beim Sortieren mit. */
+	private NrUuidSpalte nrUuidSpalte(XSpreadsheet sheet) {
+		return new NrUuidSpalte(sheetHelper, sheet, ws.getWorkingSpreadsheetDocument(), SPALTE_NR, ERSTE_DATEN_ZEILE);
+	}
+
+	private static void pruefeDatenZeilen(Collection<Integer> zeilen1Basiert) throws MeldelisteSchreibException {
 		for (int zeile : zeilen1Basiert) {
 			pruefeDatenZeile(zeile);
 		}
-		XSpreadsheet sheet = sheet();
-		BlattschutzManager.get().schreibeEntsperrt(sheet, () -> stelleUuidSpalteBereit(sheet));
-		return new LokaleUuidSpalte(sheet, ws.getWorkingSpreadsheetDocument(), SPALTE_PTM_ONLINE_UUID);
 	}
 
 	private static void pruefeDatenZeile(int zeile1Basiert) throws MeldelisteSchreibException {
@@ -230,30 +228,11 @@ public final class MeleeAnmeldungZiel implements MeldelisteZiel, MeleeAnmeldungK
 		}
 	}
 
-	/** Überschrift der ausgeblendeten UUID-Spalte, geschrieben nur solange sie fehlt. */
-	private void stelleUuidSpalteBereit(XSpreadsheet sheet) {
-		String header = I18n.get("ptmonline.meldeliste.header.lokaleuuid");
-		Position kopf = Position.from(SPALTE_PTM_ONLINE_UUID, KOPF_ZEILE);
-		if (header.equals(text(sheet, kopf))) {
-			return;
-		}
-		sheetHelper.setStringValueInCell(StringCellValue.from(sheet, kopf, header));
-		sheetHelper.setColumnProperties(sheet, SPALTE_PTM_ONLINE_UUID, ColumnProperties.from().isVisible(false));
-	}
-
-	private String text(XSpreadsheet sheet, Position position) {
-		String wert = sheetHelper.getTextFromCell(sheet, position);
-		return wert == null ? "" : wert.strip();
-	}
-
 	@Override
 	public String formelTeamNrAusLokalerUuid(String uuid) {
-		String blatt = "$'" + SheetNamen.meleeAnmeldung() + "'.";
-		String nummern = blatt + Position.from(SPALTE_NR, ERSTE_DATEN_ZEILE).getAddressWith$() + ":"
-				+ Position.from(SPALTE_NR, LETZTE_DATEN_ZEILE).getAddressWith$();
-		String uuids = blatt + Position.from(SPALTE_PTM_ONLINE_UUID, ERSTE_DATEN_ZEILE).getAddressWith$() + ":"
-				+ Position.from(SPALTE_PTM_ONLINE_UUID, LETZTE_DATEN_ZEILE).getAddressWith$();
-		return "IFNA(INDEX(" + nummern + ";MATCH(\"" + uuid + "\";" + uuids + ";0));\"\")";
+		String nummern = "$'" + SheetNamen.meleeAnmeldung() + "'." + Position.from(SPALTE_NR, ERSTE_DATEN_ZEILE).getAddressWith$()
+				+ ":" + Position.from(SPALTE_NR, LETZTE_DATEN_ZEILE).getAddressWith$();
+		return NrUuidSpalte.formelNrAusUuid(nummern, uuid);
 	}
 
 	@Override
@@ -268,13 +247,13 @@ public final class MeleeAnmeldungZiel implements MeldelisteZiel, MeleeAnmeldungK
 				() -> sheetHelper.setNumberValueInCell(NumberCellValue.from(sheet, position).setValue(setzposition)));
 	}
 
-	/** Leert die ganze Zeile der Einzelanmeldung samt lokaler PTM-Online-ID. */
+	/** Leert die ganze Zeile der Einzelanmeldung samt Nr-Zelle und damit lokaler PTM-Online-ID. */
 	@Override
 	public void entferneMeldung(int zeile1Basiert) throws MeldelisteSchreibException {
 		pruefeDatenZeile(zeile1Basiert);
 		XSpreadsheet sheet = sheet();
 		int zeile = zeile1Basiert - 1;
-		RangePosition bereich = RangePosition.from(SPALTE_NR, zeile, SPALTE_PTM_ONLINE_UUID, zeile);
+		RangePosition bereich = RangePosition.from(SPALTE_NR, zeile, LETZTE_SPALTE, zeile);
 		BlattschutzManager.get().schreibeEntsperrt(sheet,
 				() -> RangeHelper.from(sheet, ws.getWorkingSpreadsheetDocument(), bereich).clearRange());
 	}

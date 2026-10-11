@@ -8,7 +8,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -16,18 +15,18 @@ import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamUuidFormel;
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
-import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 
 /**
- * Die lokale PTM-Online-ID (UUID) eines Spielers steht bei Supermelee direkt rechts vom letzten Spieltag. Ein neuer
- * Spieltag belegt genau diese Spalte: die UUIDs müssen dabei unverändert eine Spalte weiter rechts landen, und die
- * neue Spieltag-Spalte darf keine UUID-Reste enthalten.
+ * Die lokale UUID eines Spielers steht in seiner Nr-Zelle ({@code PTM.ALG.TNRUUID}). Ein Spieltagwechsel baut die
+ * Meldeliste um und hängt eine Spalte an: Jede UUID muss danach unverändert an derselben Spieler-Nr hängen, und
+ * außerhalb der Nr-Spalte darf keine UUID stehen (keine Zusatzspalte).
  */
 class SupermeleeLokaleUuidSpieltagwechselUITest extends BaseCalcUITest {
 
@@ -43,73 +42,65 @@ class SupermeleeLokaleUuidSpieltagwechselUITest extends BaseCalcUITest {
 	}
 
 	@Test
-	void neuerSpieltagPerMenueBehaeltUuidsOhneReste() throws GenerateException {
+	void neuerSpieltagPerMenueBehaeltUuids() throws GenerateException {
 		Map<Integer, String> vorher = uuidsProSpielerNr();
-		int uuidSpalteVorher = uuidSpalte();
 
 		new MeldeListeSheet_NeuerSpieltag(wkingSpreadsheet).naechsteSpieltag();
 
-		pruefeNachSpieltagwechsel(vorher, uuidSpalteVorher);
+		pruefeNachSpieltagwechsel(vorher);
 	}
 
 	@Test
-	void spieltagwechselPerKonfigurationBehaeltUuidsOhneReste() throws GenerateException {
+	void spieltagwechselPerKonfigurationBehaeltUuids() throws GenerateException {
 		Map<Integer, String> vorher = uuidsProSpielerNr();
-		int uuidSpalteVorher = uuidSpalte();
 
 		MeldeListeSheet_Update update = new MeldeListeSheet_Update(wkingSpreadsheet);
 		update.setAktiveSpieltag(SpielTagNr.from(2));
 		update.run();
 
-		pruefeNachSpieltagwechsel(vorher, uuidSpalteVorher);
+		pruefeNachSpieltagwechsel(vorher);
 	}
 
-	private void pruefeNachSpieltagwechsel(Map<Integer, String> vorher, int uuidSpalteVorher)
-			throws GenerateException {
+	private void pruefeNachSpieltagwechsel(Map<Integer, String> vorher) throws GenerateException {
 		assertThat(vorher).as("UUIDs vor dem Wechsel").hasSize(ANZ_MELDUNGEN)
-				.allSatisfy((nr, uuid) -> assertThat(uuid).isNotBlank());
-		assertThat(uuidSpalte()).as("UUID-Spalte rückt hinter den neuen Spieltag").isEqualTo(uuidSpalteVorher + 1);
+				.allSatisfy((nr, uuid) -> assertThat(TeamUuidFormel.istUuid(uuid)).isTrue());
 		assertThat(uuidsProSpielerNr()).as("UUIDs je Spieler unverändert").isEqualTo(vorher);
-		assertThat(datenSpalte(uuidSpalteVorher).values()).as("keine UUID-Reste in der neuen Spieltag-Spalte")
-				.noneMatch(vorher::containsValue);
+		assertThat(anzahlUuidsAusserhalbNrSpalte()).as("keine UUID außerhalb der Nr-Spalte").isZero();
 	}
 
+	/** UUID aus der Formel der Nr-Zelle je angezeigter Spieler-Nr. */
 	private Map<Integer, String> uuidsProSpielerNr() throws GenerateException {
-		Map<Integer, String> nummern = datenSpalte(MeldeListeKonstanten.SPIELER_NR_SPALTE);
-		Map<Integer, String> uuids = datenSpalte(uuidSpalte());
+		RangePosition bereich = datenBereich(MeldeListeKonstanten.SPIELER_NR_SPALTE, MeldeListeKonstanten.SPIELER_NR_SPALTE);
+		String[][] formeln = new SheetHelper(wkingSpreadsheet).getFormulaArrayFromRange(meldeliste(), bereich);
+		RangeData werte = RangeHelper.from(meldeliste(), doc, bereich).getDataFromRange();
 		Map<Integer, String> ergebnis = new LinkedHashMap<>();
-		nummern.forEach((zeile, nr) -> {
-			if (nr.matches("\\d+")) {
-				ergebnis.put(Integer.valueOf(nr), uuids.getOrDefault(zeile, ""));
+		for (int i = 0; i < werte.size(); i++) {
+			int nr = werte.get(i).get(0).getIntVal(0);
+			if (nr > 0) {
+				ergebnis.put(nr, TeamUuidFormel.findeUuid(formeln[i][0]).orElse(""));
 			}
-		});
+		}
 		return ergebnis;
 	}
 
-	private int uuidSpalte() throws GenerateException {
-		String header = I18n.get("ptmonline.meldeliste.header.lokaleuuid");
-		RangeData kopf = RangeHelper.from(meldeliste(), doc, RangePosition.from(0,
-				MeldeListeKonstanten.ZWEITE_HEADER_ZEILE, MAX_SPALTE, MeldeListeKonstanten.ZWEITE_HEADER_ZEILE))
-				.getDataFromRange();
-		RowData zeile = kopf.get(0);
-		for (int spalte = 0; spalte < zeile.size(); spalte++) {
-			if (header.equals(StringUtils.strip(zeile.get(spalte).getStringVal()))) {
-				return spalte;
+	private long anzahlUuidsAusserhalbNrSpalte() throws GenerateException {
+		String[][] formeln = new SheetHelper(wkingSpreadsheet).getFormulaArrayFromRange(meldeliste(),
+				datenBereich(MeldeListeKonstanten.SPIELER_NR_SPALTE + 1, MAX_SPALTE));
+		long anzahl = 0;
+		for (String[] zeile : formeln) {
+			for (String zelle : zeile) {
+				if (TeamUuidFormel.findeUuid(zelle).isPresent()) {
+					anzahl++;
+				}
 			}
 		}
-		throw new AssertionError("Keine UUID-Spalte in der Meldeliste");
+		return anzahl;
 	}
 
-	/** Getrimmter Text je Datenzeile (0-basiert) einer Spalte. */
-	private Map<Integer, String> datenSpalte(int spalte) throws GenerateException {
-		int ersteZeile = MeldeListeKonstanten.ERSTE_DATEN_ZEILE;
-		RangeData daten = RangeHelper.from(meldeliste(), doc,
-				RangePosition.from(spalte, ersteZeile, spalte, ersteZeile + ANZ_MELDUNGEN - 1)).getDataFromRange();
-		Map<Integer, String> ergebnis = new LinkedHashMap<>();
-		for (int i = 0; i < daten.size(); i++) {
-			ergebnis.put(ersteZeile + i, StringUtils.strip(StringUtils.defaultString(daten.get(i).get(0).getStringVal())));
-		}
-		return ergebnis;
+	/** Überschriftenzeilen und Datenzeilen der Meldungen, Spalten {@code von} bis {@code bis}. */
+	private static RangePosition datenBereich(int von, int bis) {
+		return RangePosition.from(von, MeldeListeKonstanten.ERSTE_HEADER_ZEILE, bis,
+				MeldeListeKonstanten.ERSTE_DATEN_ZEILE + ANZ_MELDUNGEN - 1);
 	}
 
 	private XSpreadsheet meldeliste() throws GenerateException {
