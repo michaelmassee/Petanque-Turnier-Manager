@@ -14,6 +14,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import com.sun.star.awt.FontWeight;
@@ -22,21 +24,24 @@ import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
 import com.sun.star.table.TableBorder2;
 
-import de.petanqueturniermanager.helper.random.RandomSource;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.algorithmen.kaskaden.KaskadenKoRunde;
 import de.petanqueturniermanager.algorithmen.kaskaden.KaskadenKoRundenPlan;
 import de.petanqueturniermanager.algorithmen.kaskaden.KaskadenKoRundenPlaner;
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldelisteUuidIndex;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamNummernVergabe;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeFooterHelper;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeHelper;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeUnGeradeStyle;
-import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
@@ -45,10 +50,11 @@ import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.print.PrintArea;
+import de.petanqueturniermanager.helper.random.RandomSource;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
+import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
-import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
@@ -59,7 +65,6 @@ import de.petanqueturniermanager.kaskade.konfiguration.KaskadeKonfigurationSheet
 import de.petanqueturniermanager.kaskade.meldeliste.KaskadeMeldeListeSheetUpdate;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
-import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.ptmonline.PtmOnlineLiveAusloeser;
 import de.petanqueturniermanager.ptmonline.PtmOnlineSpielrundeSync;
 
@@ -266,6 +271,7 @@ public class KaskadeSpielrundeSheet extends SheetRunner implements ISheet, PtmOn
 
         var datenBlock    = new RangeData();
         var gruppeBlocks  = new ArrayList<GruppeBlock>();
+        var teamProZeile  = new TeamZellen();
         int laufendeNr         = 1;
         int aktuelleDatenZeile = ERSTE_DATEN_ZEILE;
 
@@ -283,6 +289,7 @@ public class KaskadeSpielrundeSheet extends SheetRunner implements ISheet, PtmOn
                 zeile.add(new CellData(laufendeNr));
                 zeile.add(teamCellData(gruppenRunde.pfad(), spiel.positionA(), teamNrMap));
                 zeile.add(teamCellData(gruppenRunde.pfad(), spiel.positionB(), teamNrMap));
+                teamProZeile.merke(aktuelleDatenZeile, nrA, nrB);
                 if (aktivA && !aktivB) {
                     zeile.add(new CellData(freispielPlus));
                     zeile.add(new CellData(freispielMinus));
@@ -313,6 +320,7 @@ public class KaskadeSpielrundeSheet extends SheetRunner implements ISheet, PtmOn
                 freilosZeile.add(new CellData(laufendeNr));
                 freilosZeile.add(teamCellData(gruppenRunde.pfad(), gruppenRunde.anzTeams(), teamNrMap));
                 freilosZeile.add(new CellData(""));       // kein Gegner = Freilos
+                teamProZeile.merke(aktuelleDatenZeile, freilosNr, null);
                 // Ein ausgestiegenes Team darf das Freilos nicht als "Sieg" gutgeschrieben
                 // bekommen, sonst würde es über den Sieger-Pfad ewig weiter mitgeführt.
                 freilosZeile.add(new CellData(freilosAktiv ? freispielPlus : freispielMinus));
@@ -326,8 +334,54 @@ public class KaskadeSpielrundeSheet extends SheetRunner implements ISheet, PtmOn
 
         var datenStart = Position.from(SPIEL_NR_SPALTE, ERSTE_DATEN_ZEILE);
         RangeHelper.from(this, datenBlock.getRangePosition(datenStart)).setDataInRange(datenBlock);
+        teamFormelnSchreiben(teamProZeile, aktuelleDatenZeile - 1);
 
         gruppenLabelsSchreiben(gruppeBlocks);
+    }
+
+    /** Teamnummern je Sheet-Zeile und Seite, für die UUID-Formeln der Teamzellen. */
+    private static final class TeamZellen {
+        private final SortedMap<Integer, Integer> teamA = new TreeMap<>();
+        private final SortedMap<Integer, Integer> teamB = new TreeMap<>();
+
+        void merke(int zeile, Integer nrA, Integer nrB) {
+            if (nrA != null) {
+                teamA.put(zeile, nrA);
+            }
+            if (nrB != null) {
+                teamB.put(zeile, nrB);
+            }
+        }
+    }
+
+    /**
+     * Überschreibt die Teamzellen aufgelöster Teams mit einer Formel, die über die UUID des Teams die aktuelle
+     * Teamnummer zeigt. Leser und Folgerunden lesen diese Anzeige; eine geänderte Teamnummer ändert daher nicht die
+     * Zuordnung. Platzhalter ohne Team bleiben Text.
+     */
+    private void teamFormelnSchreiben(TeamZellen teamProZeile, int letzteZeile) throws GenerateException {
+        if (letzteZeile < ERSTE_DATEN_ZEILE) {
+            return;
+        }
+        MeldelisteUuidIndex uuidIndex = MeldelisteUuidIndex.lese(getWorkingSpreadsheet());
+        String nrBereich = MeldeListeHelper.nrBereichMeldeliste();
+        XSpreadsheet sheet = getXSpreadSheet();
+        TeamNummernVergabe.schreibeNrFormeln(getSheetHelper(), sheet, TEAM_A_SPALTE,
+                formeln(teamProZeile.teamA, uuidIndex, nrBereich));
+        TeamNummernVergabe.schreibeNrFormeln(getSheetHelper(), sheet, TEAM_B_SPALTE,
+                formeln(teamProZeile.teamB, uuidIndex, nrBereich));
+        // Die Runden-Erzeugung läuft mit deaktivierter Automatikberechnung; ohne Rechenlauf blieben die neuen
+        // Formelzellen bis zum nächsten Nutzer-Trigger leer.
+        getxCalculatable().calculateAll();
+        getSheetHelper().pruefeBereichAufFormelFehler(sheet,
+                RangePosition.from(TEAM_A_SPALTE, ERSTE_DATEN_ZEILE, TEAM_B_SPALTE, letzteZeile));
+    }
+
+    private static SortedMap<Integer, String> formeln(SortedMap<Integer, Integer> nrProZeile,
+            MeldelisteUuidIndex uuidIndex, String nrBereich) {
+        SortedMap<Integer, String> formeln = new TreeMap<>();
+        nrProZeile.forEach((zeile, nr) -> formeln.put(zeile, uuidIndex.schluessel(nr).nrAnzeige(nrBereich)));
+        return formeln;
     }
 
     /**

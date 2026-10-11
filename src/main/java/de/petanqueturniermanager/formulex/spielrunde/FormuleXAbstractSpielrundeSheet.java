@@ -37,6 +37,9 @@ import de.petanqueturniermanager.algorithmen.formulex.FormuleXRanglisteRechner;
 import de.petanqueturniermanager.algorithmen.formulex.FormuleXTeamErgebnis;
 import de.petanqueturniermanager.basesheet.SheetTabFarben;
 import de.petanqueturniermanager.basesheet.konfiguration.IZeitplanPropertiesSpalte;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldelisteUuidIndex;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.basesheet.spielrunde.IZeitplanSpielrundeSheet;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeFooterHelper;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeHelper;
@@ -73,9 +76,6 @@ import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.model.TeamPaarung;
 import de.petanqueturniermanager.ptmonline.PtmOnlineLiveAusloeser;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
-import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
-import de.petanqueturniermanager.basesheet.meldeliste.MeldelisteUuidIndex;
-import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
  * Abstrakte Basisklasse für alle Formule X Spielrunden-Sheets.
