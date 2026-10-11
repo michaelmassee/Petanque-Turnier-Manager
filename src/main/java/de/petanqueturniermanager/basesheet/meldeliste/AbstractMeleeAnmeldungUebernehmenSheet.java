@@ -5,11 +5,15 @@ package de.petanqueturniermanager.basesheet.meldeliste;
 
 import java.util.List;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.addins.GlobalImpl;
 import de.petanqueturniermanager.algorithmen.common.MeleeAnmeldungTeamBildner;
 import de.petanqueturniermanager.algorithmen.common.MeleeAnmeldungTeamBildner.MeleeSpieler;
 import de.petanqueturniermanager.algorithmen.common.MeleeAnmeldungTeamBildner.MeleeTeam;
@@ -23,7 +27,6 @@ import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.position.Position;
-import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
@@ -43,9 +46,11 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
  * mischen (Setzpositionen werden beachtet); reicht die Spielerzahl nicht für eine ganze Anzahl
  * Teams, bleiben die überzähligen Spieler offen stehen.</li>
  * <li>Teams blockweise ans Ende der Meldeliste schreiben (Teamname, Spielernamen, Setzposition,
- * Aktiv-Kennzeichen) und die Meldeliste aktualisieren.</li>
- * <li>Die übernommenen Mêlée-Zeilen als „Übernommen" markieren – die Zeilen bleiben erhalten und
- * werden dadurch kein zweites Mal übernommen.</li>
+ * Aktiv-Kennzeichen), jedes mit einer neuen Team-UUID in der Nr-Zelle, und die Meldeliste
+ * aktualisieren (die Nummernvergabe behält die UUID).</li>
+ * <li>In den übernommenen Mêlée-Zeilen „Übernommen" auf das Team verweisen lassen: die Formel trägt die
+ * Team-UUID und zeigt die aktuelle Teamnummer. Wird das Team gelöscht, wird die Zelle leer und der
+ * Spieler ist wieder offen. Die Spieler behalten ihre eigene Mêlée-UUID (Nr-Zelle der Anmeldung).</li>
  * </ol>
  * <p>
  * Das Spaltenlayout der Ziel-Meldeliste ist über alle betroffenen Turniersysteme identisch:
@@ -64,6 +69,9 @@ public abstract class AbstractMeleeAnmeldungUebernehmenSheet extends SheetRunner
 	 * ausschließlich aus bereits eingecheckten Spielern und gelten damit automatisch als aktiv.
 	 */
 	protected static final int AKTIV_WERT_NIMMT_TEIL = 1;
+
+	/** Nr-Spalte der Meldeliste: trägt die Team-UUID. */
+	private static final int MELDELISTE_NR_SPALTE = 0;
 
 	/** Erste Spalte des Datenblocks in der Meldeliste (direkt hinter der Nr-Spalte). */
 	private static final int MELDELISTE_ERSTE_BLOCK_SPALTE = 1;
@@ -116,9 +124,10 @@ public abstract class AbstractMeleeAnmeldungUebernehmenSheet extends SheetRunner
 		List<MeleeAnmeldungZeile> tatsaechlichUebernommene = offeneEingecheckte.stream()
 				.filter(z -> uebernommeneZeilen.contains(z.zeile())).toList();
 
-		schreibeTeamsInMeldeliste(teams);
+		List<String> teamUuids = teams.stream().map(team -> UUID.randomUUID().toString()).toList();
+		schreibeTeamsInMeldeliste(teams, teamUuids);
 		meldelisteAktualisieren();
-		markiereAlsUebernommen(alleZeilen, tatsaechlichUebernommene);
+		markiereAlsUebernommen(teamUuidProMeleeZeile(teams, teamUuids));
 
 		int anzahlOffenGeblieben = offeneEingecheckte.size() - tatsaechlichUebernommene.size();
 		if (anzahlOffenGeblieben > 0) {
@@ -132,10 +141,20 @@ public abstract class AbstractMeleeAnmeldungUebernehmenSheet extends SheetRunner
 				.toList();
 	}
 
+	private static SortedMap<Integer, String> teamUuidProMeleeZeile(List<MeleeTeam> teams, List<String> teamUuids) {
+		SortedMap<Integer, String> ergebnis = new TreeMap<>();
+		for (int i = 0; i < teams.size(); i++) {
+			String teamUuid = teamUuids.get(i);
+			teams.get(i).spieler().forEach(spieler -> ergebnis.put(spieler.zeile(), teamUuid));
+		}
+		return ergebnis;
+	}
+
 	/**
-	 * Schreibt die gebildeten Teams als zusammenhängenden Block ans Ende der Meldeliste.
+	 * Schreibt die gebildeten Teams als zusammenhängenden Block ans Ende der Meldeliste, die Nr-Zellen mit
+	 * {@code PTM.ALG.TNRUUID(0;"<team-uuid>")} – die Nummer vergibt anschließend die Meldeliste.
 	 */
-	private void schreibeTeamsInMeldeliste(List<MeleeTeam> teams) throws GenerateException {
+	private void schreibeTeamsInMeldeliste(List<MeleeTeam> teams, List<String> teamUuids) throws GenerateException {
 		Formation formation = getFormationKonfiguration().getMeldeListeFormation();
 		boolean teamnameAktiv = getFormationKonfiguration().isMeldeListeTeamnameAnzeigen();
 		boolean vereinsnameAktiv = getFormationKonfiguration().isMeldeListeVereinsnameAnzeigen();
@@ -166,44 +185,35 @@ public abstract class AbstractMeleeAnmeldungUebernehmenSheet extends SheetRunner
 			zeile.newInt(AKTIV_WERT_NIMMT_TEIL);
 		}
 
-		Position start = Position.from(MELDELISTE_ERSTE_BLOCK_SPALTE, naechsteFreieMeldelisteZeile());
+		int ersteZeile = naechsteFreieMeldelisteZeile();
+		Position start = Position.from(MELDELISTE_ERSTE_BLOCK_SPALTE, ersteZeile);
 		XSpreadsheet meldelisteSheet = getMeldeliste().getXSpreadSheet();
 		RangeHelper.from(meldelisteSheet, getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
 				data.getRangePosition(start)).setDataInRange(data);
+
+		SortedMap<Integer, String> nrFormeln = new TreeMap<>();
+		for (int i = 0; i < teamUuids.size(); i++) {
+			nrFormeln.put(ersteZeile + i, GlobalImpl.FORMAT_PTM_TNR_UUID(0, teamUuids.get(i)));
+		}
+		TeamNummernVergabe.schreibeNrFormeln(getSheetHelper(), meldelisteSheet, MELDELISTE_NR_SPALTE, nrFormeln);
 	}
 
 	/**
-	 * Markiert die übernommenen Zeilen im Mêlée-Anmeldung-Sheet. Geschrieben wird der komplette
-	 * Zeilenbereich von der ersten bis zur letzten übernommenen Zeile am Stück. Dazwischen liegende
-	 * Zeilen behalten ihren bisherigen Zustand: bereits früher übernommene bleiben markiert, noch
-	 * nicht eingecheckte bleiben leer.
+	 * Schreibt in „Übernommen“ der neu übernommenen Mêlée-Zeilen den Verweis auf ihr Team. Nur diese Zellen werden
+	 * geschrieben (zusammenhängende Zeilen blockweise); früher übernommene behalten ihren Verweis bzw. ihre
+	 * Markierung.
 	 */
-	private void markiereAlsUebernommen(List<MeleeAnmeldungZeile> alleZeilen,
-			List<MeleeAnmeldungZeile> neuUebernommene) throws GenerateException {
+	private void markiereAlsUebernommen(SortedMap<Integer, String> teamUuidProMeleeZeile) throws GenerateException {
 		XSpreadsheet meleeSheet = MeleeAnmeldungLeser.findeSheet(getWorkingSpreadsheet(),
 				getMeleeMetadatenSchluessel());
-		if (meleeSheet == null) {
+		if (meleeSheet == null || teamUuidProMeleeZeile.isEmpty()) {
 			return;
 		}
-		int ersteZeile = neuUebernommene.stream().mapToInt(MeleeAnmeldungZeile::zeile).min().orElseThrow();
-		int letzteZeile = neuUebernommene.stream().mapToInt(MeleeAnmeldungZeile::zeile).max().orElseThrow();
-		Set<Integer> neuMarkiert = neuUebernommene.stream().map(MeleeAnmeldungZeile::zeile)
-				.collect(Collectors.toSet());
-		Set<Integer> bereitsMarkiert = alleZeilen.stream().filter(MeleeAnmeldungZeile::uebernommen)
-				.map(MeleeAnmeldungZeile::zeile).collect(Collectors.toSet());
-
-		RangeData data = new RangeData();
-		for (int zeile = ersteZeile; zeile <= letzteZeile; zeile++) {
-			RowData rowData = data.addNewRow();
-			if (neuMarkiert.contains(zeile) || bereitsMarkiert.contains(zeile)) {
-				rowData.newString(MARKIERUNG);
-			} else {
-				rowData.newEmpty();
-			}
-		}
-		RangePosition bereich = data.getRangePosition(Position.from(SPALTE_UEBERNOMMEN, ersteZeile));
-		RangeHelper.from(meleeSheet, getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), bereich)
-				.setDataInRange(data);
+		String nrBereich = MeldeListeHelper.nrBereichMeldeliste();
+		SortedMap<Integer, String> formeln = new TreeMap<>();
+		teamUuidProMeleeZeile.forEach((zeile, teamUuid) -> formeln.put(zeile,
+				NrUuidSpalte.formelNrAusUuid(nrBereich, teamUuid)));
+		TeamNummernVergabe.schreibeNrFormeln(getSheetHelper(), meleeSheet, SPALTE_UEBERNOMMEN, formeln);
 	}
 
 	private void zeigeHinweis(String i18nKey) {

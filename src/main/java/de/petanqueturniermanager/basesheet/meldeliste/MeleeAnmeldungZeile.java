@@ -15,9 +15,17 @@ import org.apache.commons.lang3.StringUtils;
  * @param setzPosition  Setzposition (SP); 0 = kein Setzstatus
  * @param eingecheckt   Spieler ist vor Ort erschienen
  * @param uebernommen   Spieler wurde bereits in ein Team der Meldeliste übernommen
+ * @param teamNr        aktuelle Nummer des Teams, in das der Spieler übernommen wurde – angezeigt von der
+ *                      „Übernommen“-Formel über die Team-UUID; 0, wenn unbekannt (Altbestand mit Markierung)
  */
 public record MeleeAnmeldungZeile(int zeile, int nr, String vorname, String nachname, int setzPosition,
-		boolean eingecheckt, boolean uebernommen) {
+		boolean eingecheckt, boolean uebernommen, int teamNr) {
+
+	/** Zeile ohne bekannte Teamnummer (nicht übernommen oder Altbestand). */
+	public MeleeAnmeldungZeile(int zeile, int nr, String vorname, String nachname, int setzPosition,
+			boolean eingecheckt, boolean uebernommen) {
+		this(zeile, nr, vorname, nachname, setzPosition, eingecheckt, uebernommen, 0);
+	}
 
 	/**
 	 * @return {@code true} wenn die Zeile überhaupt einen Namen enthält

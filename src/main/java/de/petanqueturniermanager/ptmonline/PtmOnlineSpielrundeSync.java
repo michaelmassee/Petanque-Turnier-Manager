@@ -178,7 +178,8 @@ public final class PtmOnlineSpielrundeSync {
                     mapping.getExecutionRevisionenProUuid());
             if (ziel instanceof MeleeAnmeldungZiel melee) {
                 PtmOnlineAuftraege.meleeTeams(bestand, tournamentId,
-                        meleeTeams(tournamentId, MeleeTeilnahme.zeilenProTeam(melee.leseMeleeZeilen(),
+                        meleeTeams(tournamentId, teamUuidProNr(verbindung.meldeliste()),
+                                MeleeTeilnahme.zeilenProTeam(melee.leseMeleeZeilen(),
                                 spielerProTeam(verbindung.meldeliste())),
                                 lokaleUuids(melee, melee.leseMeleeZeilen().stream().map(zeile -> zeile.zeile() + 1)
                                         .toList()),
@@ -245,27 +246,52 @@ public final class PtmOnlineSpielrundeSync {
     }
 
     /**
-     * Mêlée-Teams mit den Online-IDs ihrer Spieler (KP-18). Die Team-UUID ist aus Turnier und Team-Nr abgeleitet und
-     * bleibt so über alle Runden stabil, ohne in der Meldeliste gespeichert zu werden. Spieler ohne Online-Zuordnung
-     * fehlen, Teams ohne einen zugeordneten Spieler entfallen.
+     * Mêlée-Teams mit den Online-IDs ihrer Spieler (KP-18). Die Team-UUID ist die der Meldeliste (Nr-Zelle); sie bleibt
+     * beim Team, wenn sich Nummer, Name oder Mitglieder ändern. Spieler ohne Online-Zuordnung fehlen, Teams ohne einen
+     * zugeordneten Spieler entfallen.
      *
+     * @param teamUuidProNr Team-UUID der Meldeliste je aktueller Team-Nr
      * @param zeilenProTeam Mêlée-Zeilen (1-basiert) je Team-Nr
-     * @param uuidProZeile  lokale UUID je Mêlée-Zeile
-     * @param onlineIds     Online-ID je lokaler UUID
+     * @param uuidProZeile  Mêlée-UUID je Zeile der Mêlée-Anmeldung
+     * @param onlineIds     Online-ID je Mêlée-UUID
      */
-    static List<MeleeTeamDto> meleeTeams(String tournamentId, Map<Integer, List<Integer>> zeilenProTeam,
-            Map<Integer, String> uuidProZeile, Map<String, String> onlineIds) {
+    static List<MeleeTeamDto> meleeTeams(String tournamentId, Map<Integer, String> teamUuidProNr,
+            Map<Integer, List<Integer>> zeilenProTeam, Map<Integer, String> uuidProZeile, Map<String, String> onlineIds) {
         List<MeleeTeamDto> teams = new ArrayList<>();
         zeilenProTeam.forEach((teamNr, zeilen) -> {
             List<String> registrationIds = zeilen.stream().map(uuidProZeile::get).filter(Objects::nonNull)
                     .map(onlineIds::get).filter(Objects::nonNull).distinct().toList();
             if (!registrationIds.isEmpty()) {
-                teams.add(new MeleeTeamDto(meleeTeamUuid(tournamentId, teamNr), registrationIds));
+                String teamUuid = teamUuidProNr.getOrDefault(teamNr, meleeTeamUuid(tournamentId, teamNr));
+                teams.add(new MeleeTeamDto(teamUuid, registrationIds));
             }
         });
         return teams;
     }
 
+    /** Team-UUID der Meldeliste (Nr-Zelle) je aktueller Team-Nr. */
+    static Map<Integer, String> teamUuidProNr(MeldelisteZiel meldeliste) throws GenerateException {
+        Map<Integer, Integer> zeileProTeam = zeileProTeam(meldeliste);
+        Map<Integer, String> uuidProZeile;
+        try {
+            uuidProZeile = meldeliste.leseLokaleUuids(zeileProTeam.values());
+        } catch (MeldelisteZiel.MeldelisteSchreibException e) {
+            throw new GenerateException(e.getMessage());
+        }
+        Map<Integer, String> ergebnis = new LinkedHashMap<>();
+        zeileProTeam.forEach((teamNr, zeile) -> {
+            String uuid = uuidProZeile.get(zeile);
+            if (uuid != null) {
+                ergebnis.put(teamNr, uuid);
+            }
+        });
+        return ergebnis;
+    }
+
+    /**
+     * Nur Rückfall für eine Meldung ohne Team-UUID (Meldeliste noch nicht aktualisiert): aus der Nummer abgeleitet und
+     * daher nicht stabil gegen „Teamnummer ändern“.
+     */
     static String meleeTeamUuid(String tournamentId, int teamNr) {
         return UUID.nameUUIDFromBytes(("ptm-melee-team|" + tournamentId + "|" + teamNr)
                 .getBytes(StandardCharsets.UTF_8)).toString();

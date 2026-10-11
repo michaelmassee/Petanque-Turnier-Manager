@@ -7,7 +7,8 @@
 Zwei getrennte Identitäten (Klarstellung 2026-10-11):
 - **Team-UUID** – Nr-Zelle der Meldeliste, Identität der gebildeten Meldung/des Teams.
 - **Mêlée-UUID** – Nr-Zelle der Mêlée-Anmeldung (eigene Liste, Einzelspieler), losgelöst von der Team-UUID. Die Mêlée-Anmeldung wird mit PTM-Online synchron gehalten (Mapping Mêlée-UUID ↔ Online-Meldungs-ID).
-- **Offen:** Verknüpfung Team ↔ Mêlée-Spieler läuft heute über Namen (`MeleeTeilnahme`, `LiveNummernAufloesung`), weil „Übernommen“ nur `X` enthält. Vorschlag: „Übernommen“ = `IFNA(INDEX(Meldeliste.$A$1:$A$999; UUIDZEILE("<team-uuid>"; …)); "X")` → zeigt die aktuelle Teamnummer, Java liest die Team-UUID daraus; Namen nur noch Rückfall für Altbestand. Rückfrage an den User: Anzeige der Teamnummer ok? Spieler bei gelöschtem Team wieder frei?
+- **Umgesetzt (uncommittete UITests offen):** „Übernommen“ = `IFNA(INDEX(Meldeliste.$A$1:$A$999; UUIDZEILE("<team-uuid>"; …)); "")` – zeigt die aktuelle Teamnummer, leer (= Spieler wieder frei), wenn das Team gelöscht wird. Übernahme schreibt je Team `TNRUUID(0;"<team-uuid>")` in die Meldeliste. `MeleeAnmeldungZeile.teamNr` (nur aus Formel mit UUID), `MeleeTeilnahme`/`LiveNummernAufloesung` ordnen über den Verweis zu, Namen nur Rückfall für Altbestand mit `X`. Online-Team-UUID (`PUT melee-teams`) ist jetzt die Team-UUID der Meldeliste statt aus der Nummer abgeleitet (Server ersetzt die Zuordnungen komplett, keine Leichen). Der Server speichert die lokale UUID je Anmeldung (`local_registration_uuid`, `GET …/mapping`).
+- **Nächster Schritt:** UITests Mêlée-Übernahme (`*MeleeAnmeldung*UITest`) und `ptmonline` laufen lassen.
 
 ## Arbeitsstand (2026-10-11)
 

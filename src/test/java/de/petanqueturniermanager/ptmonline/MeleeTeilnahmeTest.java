@@ -19,6 +19,8 @@ import de.petanqueturniermanager.spielerdb.MeldelisteSpielerDaten;
 
 class MeleeTeilnahmeTest {
 
+    private static final String TEAM_UUID = "aaaaaaaa-0000-4000-8000-000000000001";
+
     private static final Map<Integer, List<MeldelisteSpielerDaten>> TEAMS = Map.of(
             1, List.of(spieler("Hans", "Müller", 3), spieler("Anna", "Schmidt", 3)),
             2, List.of(spieler("Jean-Paul", "Dupont", 4), spieler("Eva", "Klein", 4)));
@@ -88,20 +90,48 @@ class MeleeTeilnahmeTest {
     }
 
     @Test
-    void meleeTeamsTragenNurZugeordneteAnmeldungenUndStabileUuids() {
+    void meleeTeamsTragenNurZugeordneteAnmeldungenUndDieTeamUuidDerMeldeliste() {
         Map<Integer, List<Integer>> zeilenProTeam = new TreeMap<>(Map.of(1, List.of(2, 3), 2, List.of(4)));
 
-        List<MeleeTeamDto> teams = PtmOnlineSpielrundeSync.meleeTeams("t1", zeilenProTeam,
+        List<MeleeTeamDto> teams = PtmOnlineSpielrundeSync.meleeTeams("t1", Map.of(1, TEAM_UUID), zeilenProTeam,
                 Map.of(2, "u2", 3, "u3", 4, "u4"), Map.of("u2", "r2", "u3", "r3"));
 
         assertThat(teams).singleElement().satisfies(team -> {
             assertThat(team.registrationIds()).containsExactly("r2", "r3");
-            assertThat(team.teamUuid()).isEqualTo(PtmOnlineSpielrundeSync.meleeTeamUuid("t1", 1))
-                    .matches("[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}");
+            assertThat(team.teamUuid()).as("Team-UUID der Meldeliste, unabhängig von der Nummer").isEqualTo(TEAM_UUID);
         });
+    }
+
+    @Test
+    void meleeTeamOhneTeamUuidFaelltAufAbgeleiteteUuidZurueck() {
+        List<MeleeTeamDto> teams = PtmOnlineSpielrundeSync.meleeTeams("t1", Map.of(),
+                Map.of(1, List.of(2)), Map.of(2, "u2"), Map.of("u2", "r2"));
+
+        assertThat(teams).singleElement().satisfies(team -> assertThat(team.teamUuid())
+                .isEqualTo(PtmOnlineSpielrundeSync.meleeTeamUuid("t1", 1))
+                .matches("[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}"));
         assertThat(PtmOnlineSpielrundeSync.meleeTeamUuid("t1", 1))
                 .isNotEqualTo(PtmOnlineSpielrundeSync.meleeTeamUuid("t1", 2))
                 .isNotEqualTo(PtmOnlineSpielrundeSync.meleeTeamUuid("t2", 1));
+    }
+
+    @Test
+    void teamVerweisInUebernommenGiltVorDemNamen() {
+        // Name in der Meldeliste korrigiert („Hans“ → „Johannes“): der Verweis auf Team 2 trägt trotzdem.
+        MeleeAnmeldungZeile mitVerweis = new MeleeAnmeldungZeile(1, 1, "Hans", "Müller", 0, true, true, 2);
+
+        List<LokaleOnlineMeldung> meldungen = MeleeTeilnahme.ermittle(List.of(mitVerweis), TEAMS, Set.of(2), Set.of());
+        Map<Integer, List<Integer>> zeilen = MeleeTeilnahme.zeilenProTeam(List.of(mitVerweis), TEAMS);
+
+        assertThat(meldungen).extracting(LokaleOnlineMeldung::teilnahme).containsExactly(OnlineTeilnahme.AKTIV);
+        assertThat(zeilen).containsExactly(Map.entry(2, List.of(2)));
+    }
+
+    @Test
+    void teamVerweisAufUnbekanntesTeamWirdIgnoriert() {
+        MeleeAnmeldungZeile verwaist = new MeleeAnmeldungZeile(1, 1, "Hans", "Müller", 0, true, true, 9);
+
+        assertThat(MeleeTeilnahme.zeilenProTeam(List.of(verwaist), TEAMS)).isEmpty();
     }
 
     private static MeleeAnmeldungZeile uebernommen(int zeile, String vorname, String nachname) {

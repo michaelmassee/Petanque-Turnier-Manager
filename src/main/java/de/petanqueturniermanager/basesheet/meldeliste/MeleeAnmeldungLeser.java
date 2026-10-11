@@ -60,9 +60,15 @@ public final class MeleeAnmeldungLeser implements MeleeAnmeldungKonstanten {
 			RangePosition bereich = RangePosition.from(SPALTE_NR, ERSTE_DATEN_ZEILE, LETZTE_SPALTE,
 					ERSTE_DATEN_ZEILE + MAX_ANZ_ANMELDUNGEN - 1);
 			RangeData data = RangeHelper.from(xSheet, ws.getWorkingSpreadsheetDocument(), bereich).getDataFromRange();
+			String[][] uebernommenFormeln = new SheetHelper(ws).getFormulaArrayFromRange(xSheet,
+					RangePosition.from(SPALTE_UEBERNOMMEN, ERSTE_DATEN_ZEILE, SPALTE_UEBERNOMMEN,
+							ERSTE_DATEN_ZEILE + MAX_ANZ_ANMELDUNGEN - 1));
 			int zeilenIdx = ERSTE_DATEN_ZEILE;
 			for (RowData row : data) {
-				MeleeAnmeldungZeile zeile = ausRowData(zeilenIdx++, row);
+				int index = zeilenIdx - ERSTE_DATEN_ZEILE;
+				String uebernommenFormel = index < uebernommenFormeln.length && uebernommenFormeln[index].length > 0
+						? uebernommenFormeln[index][0] : "";
+				MeleeAnmeldungZeile zeile = ausRowData(zeilenIdx++, row, uebernommenFormel);
 				if (zeile.hatNamen()) {
 					zeilen.add(zeile);
 				}
@@ -92,14 +98,22 @@ public final class MeleeAnmeldungLeser implements MeleeAnmeldungKonstanten {
 				.orElseGet(() -> new SheetHelper(ws).findByName(SheetNamen.meleeAnmeldung()));
 	}
 
-	private static MeleeAnmeldungZeile ausRowData(int zeilenIdx, RowData row) {
+	/**
+	 * @param uebernommenFormel Formel der „Übernommen“-Zelle; trägt sie eine Team-UUID, ist ihr angezeigter Wert die
+	 *                          aktuelle Teamnummer. Eine von Hand eingetragene Zahl gilt nur als Markierung.
+	 */
+	private static MeleeAnmeldungZeile ausRowData(int zeilenIdx, RowData row, String uebernommenFormel) {
+		int teamNr = TeamUuidFormel.findeUuid(uebernommenFormel).isPresent()
+				? Math.max(0, row.get(SPALTE_UEBERNOMMEN).getIntVal(0))
+				: 0;
 		return new MeleeAnmeldungZeile(zeilenIdx,
 				row.get(SPALTE_NR).getIntVal(0),
 				row.get(SPALTE_VORNAME).getStringVal(),
 				row.get(SPALTE_NACHNAME).getStringVal(),
 				Math.max(0, row.get(SPALTE_SETZPOSITION).getIntVal(0)),
 				istMarkiert(row.get(SPALTE_EINGECHECKT).getStringVal()),
-				istMarkiert(row.get(SPALTE_UEBERNOMMEN).getStringVal()));
+				istMarkiert(row.get(SPALTE_UEBERNOMMEN).getStringVal()),
+				teamNr);
 	}
 
 	/**

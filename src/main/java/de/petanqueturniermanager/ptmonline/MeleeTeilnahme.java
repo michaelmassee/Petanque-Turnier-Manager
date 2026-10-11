@@ -4,12 +4,15 @@
 package de.petanqueturniermanager.ptmonline;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+
+import org.jspecify.annotations.Nullable;
 
 import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungZeile;
 import de.petanqueturniermanager.spielerdb.MeldelisteSpielerDaten;
@@ -19,9 +22,10 @@ import de.petanqueturniermanager.spielerdb.MeldelisteSpielerDaten;
  * den lokal gemischten Teams der Meldeliste. Jeder übernommene Mêlée-Spieler erhält die Teilnahme seines
  * Teams, alle anderen gelten als inaktiv.
  * <p>
- * Die Zuordnung Spieler → Team läuft über den Namen ({@link OnlineSpielerName}): „Mêlée übernehmen“
- * schreibt die Namen unverändert in die Meldeliste, und die Meldeliste lässt keine doppelten Namen zu.
- * Steht ein Name trotzdem in mehreren Teams, bleibt der Spieler inaktiv, statt geraten zu werden.
+ * Die Zuordnung Spieler → Team läuft über den Verweis in „Übernommen“: Er trägt die Team-UUID und zeigt die
+ * aktuelle Teamnummer ({@link MeleeAnmeldungZeile#teamNr()}); Namen und Nummer dürfen sich danach ändern.
+ * Nur Altbestand ohne Verweis (Markierung „X“) wird über den Namen ({@link OnlineSpielerName}) zugeordnet; steht
+ * ein Name dort in mehreren Teams, bleibt der Spieler inaktiv, statt geraten zu werden.
  */
 final class MeleeTeilnahme {
 
@@ -29,7 +33,7 @@ final class MeleeTeilnahme {
 
     /**
      * @param meleeZeilen    alle Zeilen der Mêlée-Anmeldung
-     * @param spielerProTeam Spieler der Meldeliste je Team-Nr
+     * @param spielerProTeam Spieler der Meldeliste je Team-Nr (Namen nur für Altbestand ohne Team-Verweis)
      * @param aktive         Team-Nummern, die in der Runde spielen
      * @param ausgestiegen   Team-Nummern, die ausgesetzt haben
      * @return eine Meldung je Mêlée-Zeile, in Sheet-Reihenfolge
@@ -51,17 +55,18 @@ final class MeleeTeilnahme {
     static Map<Integer, List<Integer>> zeilenProTeam(List<MeleeAnmeldungZeile> meleeZeilen,
             Map<Integer, List<MeldelisteSpielerDaten>> spielerProTeam) {
         Map<String, Integer> teamProName = teamProName(spielerProTeam);
-        Map<String, Integer> zeileProName = new HashMap<>();
-        meleeZeilen.stream().filter(MeleeAnmeldungZeile::uebernommen).forEach(zeile -> zeileProName
-                .put(OnlineSpielerName.schluessel(zeile.vorname(), zeile.nachname()), zeile.zeile() + 1));
         Map<Integer, List<Integer>> ergebnis = new TreeMap<>();
-        spielerProTeam.forEach((teamNr, spielerListe) -> spielerListe.forEach(spieler -> {
-            String name = OnlineSpielerName.schluessel(spieler.vorname(), spieler.nachname());
-            Integer zeile = zeileProName.get(name);
-            if (zeile != null && teamNr.equals(teamProName.get(name))) {
-                ergebnis.computeIfAbsent(teamNr, ignored -> new ArrayList<>()).add(zeile);
+        List<MeleeAnmeldungZeile> uebernommene = meleeZeilen.stream().filter(MeleeAnmeldungZeile::uebernommen).toList();
+        for (MeleeAnmeldungZeile zeile : uebernommene) {
+            Integer teamNr = teamNr(zeile, teamProName);
+            if (teamNr != null && spielerProTeam.containsKey(teamNr)) {
+                ergebnis.computeIfAbsent(teamNr, ignored -> new ArrayList<>()).add(zeile.zeile() + 1);
             }
-        }));
+        }
+        Map<Integer, MeleeAnmeldungZeile> zeileNachNr = new HashMap<>();
+        uebernommene.forEach(zeile -> zeileNachNr.put(zeile.zeile() + 1, zeile));
+        ergebnis.forEach((teamNr, zeilen) -> zeilen.sort(Comparator.comparingInt(
+                zeile -> positionInTeam(zeileNachNr.get(zeile), spielerProTeam.get(teamNr)))));
         return ergebnis;
     }
 
@@ -70,15 +75,35 @@ final class MeleeTeilnahme {
         if (!zeile.uebernommen()) {
             return OnlineTeilnahme.INAKTIV;
         }
-        Integer teamNr = teamProName.get(OnlineSpielerName.schluessel(zeile.vorname(), zeile.nachname()));
+        Integer teamNr = teamNr(zeile, teamProName);
         if (teamNr == null) {
             return OnlineTeilnahme.INAKTIV;
         }
         return OnlineTeilnahme.aus(aktive.contains(teamNr), ausgestiegen.contains(teamNr));
     }
 
+    /** Team über den Verweis in „Übernommen“; ohne Verweis (Altbestand) über den eindeutigen Namen. */
+    static @Nullable Integer teamNr(MeleeAnmeldungZeile zeile, Map<String, Integer> teamProName) {
+        if (zeile.teamNr() > 0) {
+            return zeile.teamNr();
+        }
+        return teamProName.get(OnlineSpielerName.schluessel(zeile.vorname(), zeile.nachname()));
+    }
+
+    /** Stelle des Spielers im Team der Meldeliste (über den Namen), unbekannte Namen ans Ende. */
+    private static int positionInTeam(MeleeAnmeldungZeile zeile, List<MeldelisteSpielerDaten> spielerListe) {
+        String name = OnlineSpielerName.schluessel(zeile.vorname(), zeile.nachname());
+        for (int i = 0; i < spielerListe.size(); i++) {
+            MeldelisteSpielerDaten spieler = spielerListe.get(i);
+            if (name.equals(OnlineSpielerName.schluessel(spieler.vorname(), spieler.nachname()))) {
+                return i;
+            }
+        }
+        return spielerListe.size();
+    }
+
     /** Eindeutige Namen → Team-Nr; mehrdeutige Namen fehlen in der Map. */
-    private static Map<String, Integer> teamProName(Map<Integer, List<MeldelisteSpielerDaten>> spielerProTeam) {
+    static Map<String, Integer> teamProName(Map<Integer, List<MeldelisteSpielerDaten>> spielerProTeam) {
         Map<String, Integer> teamProName = new HashMap<>();
         Set<String> mehrdeutig = new HashSet<>();
         spielerProTeam.forEach((teamNr, spielerListe) -> spielerListe.forEach(spieler -> {

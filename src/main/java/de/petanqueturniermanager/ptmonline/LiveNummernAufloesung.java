@@ -5,7 +5,6 @@ package de.petanqueturniermanager.ptmonline;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -25,8 +24,9 @@ import de.petanqueturniermanager.spielerdb.MeleeAnmeldungZiel;
  * Online-Registration-IDs von PTM-Online.
  * <ul>
  * <li>Ohne Mêlée ist jedes Team eine Online-Meldung: Team-Nr → Meldelistenzeile → lokale UUID → Online-ID.</li>
- * <li>Bei Mêlée-Anmeldung gibt es online nur Einzelspieler; ein lokal gemischtes Team wird über die Namen seiner
- * Spieler auf deren Online-IDs abgebildet (wie {@link MeleeTeilnahme}). Mehrdeutige Namen werden nicht geraten.</li>
+ * <li>Bei Mêlée-Anmeldung gibt es online nur Einzelspieler; ein lokal gemischtes Team wird über die Mêlée-Zeilen,
+ * die in „Übernommen“ auf das Team verweisen, auf deren Online-IDs abgebildet ({@link MeleeTeilnahme#zeilenProTeam}).
+ * Altbestand ohne Verweis läuft über die Namen; mehrdeutige Namen werden nicht geraten.</li>
  * </ul>
  * Teams, für die nicht alle Spieler eine Online-ID haben, fehlen in der Zuordnung. Gelesen wird nur: Zeilen ohne
  * lokale UUID haben ohnehin keine Online-Zuordnung, und die Übertragung darf im Hintergrund nichts ins Dokument
@@ -61,21 +61,29 @@ final class LiveNummernAufloesung {
 
     private static Map<Integer, List<String>> meleeTeams(MeleeAnmeldungZiel melee, MeldelisteZiel meldeliste,
             Map<String, String> onlineIdProUuid) throws GenerateException {
-        Map<String, String> onlineIdProName = onlineIdProName(melee, onlineIdProUuid);
+        List<MeleeAnmeldungZeile> meleeZeilen = melee.leseMeleeZeilen();
+        Map<Integer, List<MeldelisteSpielerDaten>> spielerProTeam = PtmOnlineSpielrundeSync.spielerProTeam(meldeliste);
+        Map<Integer, List<Integer>> zeilenProTeam = MeleeTeilnahme.zeilenProTeam(meleeZeilen, spielerProTeam);
+        Map<Integer, String> uuidProZeile = vorhandeneUuids(melee,
+                zeilenProTeam.values().stream().flatMap(List::stream).toList());
+        Set<Integer> mitVerweis = new HashSet<>();
+        meleeZeilen.stream().filter(zeile -> zeile.teamNr() > 0).forEach(zeile -> mitVerweis.add(zeile.teamNr()));
+
         Map<Integer, List<String>> ergebnis = new LinkedHashMap<>();
-        PtmOnlineSpielrundeSync.spielerProTeam(meldeliste).forEach((teamNr, spielerListe) -> {
+        zeilenProTeam.forEach((teamNr, zeilen) -> {
+            // Altbestand: jedes Teammitglied muss über seinen Namen gefunden sein, sonst fehlt das Team.
+            if (!mitVerweis.contains(teamNr) && zeilen.size() != spielerProTeam.get(teamNr).size()) {
+                return;
+            }
             List<String> ids = new ArrayList<>();
-            for (MeldelisteSpielerDaten spieler : spielerListe) {
-                String name = OnlineSpielerName.schluessel(spieler.vorname(), spieler.nachname());
-                String onlineId = onlineIdProName.get(name);
+            for (int zeile : zeilen) {
+                String onlineId = onlineId(onlineIdProUuid, uuidProZeile.get(zeile));
                 if (onlineId == null) {
                     return;
                 }
                 ids.add(onlineId);
             }
-            if (!ids.isEmpty()) {
-                ergebnis.put(teamNr, List.copyOf(ids));
-            }
+            ergebnis.put(teamNr, List.copyOf(ids));
         });
         return ergebnis;
     }
@@ -91,28 +99,5 @@ final class LiveNummernAufloesung {
 
     private static @Nullable String onlineId(Map<String, String> onlineIdProUuid, @Nullable String uuid) {
         return uuid == null ? null : onlineIdProUuid.get(uuid);
-    }
-
-    /** Eindeutige Namen der übernommenen Mêlée-Anmeldungen → Online-ID. */
-    private static Map<String, String> onlineIdProName(MeleeAnmeldungZiel melee, Map<String, String> onlineIdProUuid)
-            throws GenerateException {
-        List<MeleeAnmeldungZeile> zeilen = melee.leseMeleeZeilen().stream().filter(MeleeAnmeldungZeile::uebernommen)
-                .toList();
-        Map<Integer, String> uuidProZeile = vorhandeneUuids(melee,
-                zeilen.stream().map(zeile -> zeile.zeile() + 1).toList());
-        Map<String, String> ergebnis = new HashMap<>();
-        Set<String> mehrdeutig = new HashSet<>();
-        for (MeleeAnmeldungZeile zeile : zeilen) {
-            String onlineId = onlineId(onlineIdProUuid, uuidProZeile.get(zeile.zeile() + 1));
-            if (onlineId == null) {
-                continue;
-            }
-            String name = OnlineSpielerName.schluessel(zeile.vorname(), zeile.nachname());
-            if (ergebnis.putIfAbsent(name, onlineId) != null) {
-                mehrdeutig.add(name);
-            }
-        }
-        mehrdeutig.forEach(ergebnis::remove);
-        return ergebnis;
     }
 }
