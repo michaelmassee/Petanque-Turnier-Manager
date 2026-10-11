@@ -9,18 +9,19 @@ Branch `ptm-online-2`, Haupt-Checkout (Worktree entfernt).
 | 1. `PTM.ALG.TNRUUID` / `PTM.ALG.UUIDZEILE` | erledigt | `d42ad54f` |
 | 1. `PTM.ALG.KOSIEGER` | offen (mit KO-Umbau) | |
 | 2. UUID in der Nr-Zelle, Zusatzspalte entfernt | erledigt | `82c9d1cd`, `c9190752` |
-| 2. Nr-Spalte sperren + Menüpunkt „Teamnummer ändern“ | **offen** | |
-| 3. Formelbauer über `TeamSchluessel` (`Uuid` / `Nr` als Übergang) | erledigt in `MeldeListeHelper`, `TeamAnzeigeHelper` | `7bba57a8` (WIP) |
-| 4. Schweizer/Maastrichter-Vorrunde | Runden schreiben UUID-Formeln, keine technischen Spalten mehr; `SchweizerTeamNrAufloeser` (UUID → Zahl → technische Spalte → Anzeige-Index), `SchweizerRundenLeser`, `LiveZellbereich` lesen die UUID | `7bba57a8` (WIP) |
-| 4. Schweizer-UITests | `SchweizerSpielrundeNamenLiveUpdateUITest` (neu: Nummerntausch in der Meldeliste ändert nur die Anzeige; Fallback technische Spalten) und `MaastrichterVorrundeNamensanzeigeUITest` umgestellt; Pakete `schweizer`, `maastrichter`, `ptmonline`: 154/155 grün | siehe Log |
-| 4. JGJ, Liga, TripTete, FormuleX, Kaskade, KO, Poule, Supermelee, PTM-Online-Leser | offen | |
+| 2. Menüpunkt „Teamnummer ändern“ | erledigt: `ptm:teamnummer_aendern` in `Addons_A0_SpielerDb.xcu` (A0A02); `TeamnummerAenderung` (UNO-frei, Tausch bei vergebener Nr), `TeamnummerAendernDialog`, `TeamnummerAendernSheet` (freigeschaltet nur für `UMGESTELLTE_SYSTEME` = Schweizer). Nr-Spalte ist im Turnier-Modus bereits gesperrt (Blattschutz-Konfiguration). UITest: Tausch über den Runner, Runde + Rangliste ordnen richtig zu | siehe Log |
+| 3. Formelbauer über `TeamSchluessel` (`Uuid` / `Nr` als Übergang) | erledigt in `MeldeListeHelper`, `TeamAnzeigeHelper` | `7bba57a8`, `d40345cd` |
+| 4. Schweizer/Maastrichter-Vorrunde | erledigt: Runden schreiben UUID-Formeln, keine technischen Spalten mehr; `SchweizerTeamNrAufloeser` (UUID → Zahl → technische Spalte → Anzeige-Index), `SchweizerRundenLeser`, `LiveZellbereich` lesen die UUID. Pakete `schweizer`, `maastrichter`, `ptmonline`: 154/155 UITests grün | `7bba57a8`, `d40345cd` |
+| 4. JGJ, Liga, TripTete, FormuleX, Kaskade, KO, Poule, Supermelee, PTM-Online-Leser | offen – je umgestelltem System in `TeamnummerAendernSheet.UMGESTELLTE_SYSTEME` aufnehmen. Maastrichter erst nach dem KO-Umbau (Finalrunde ist ein KO-Baum mit Nummern) | |
 | 5. Migration bestehender Dokumente | offen | |
 
-Neue Klassen: `TeamUuidFormel` (Parser), `MeldelisteUuidIndex` (UUID ↔ Nr), `TeamSchluessel` (Formelausdruck je Schlüsselart), `NrUuidSpalte`, `TeamNummernPlan`/`TeamNummernVergabe`.
+Neue Klassen: `TeamUuidFormel` (Parser), `MeldelisteUuidIndex` (UUID ↔ Nr, `leseNrSpalte`), `TeamSchluessel` (Formelausdruck je Schlüsselart), `NrUuidSpalte`, `TeamNummernPlan`/`TeamNummernVergabe`, `TeamnummerAenderung`/`TeamnummerAendernDialog`/`TeamnummerAendernSheet`. Dialog-Bausteine (`label`, `numericField`, `button`, `Rahmen`) liegen jetzt in `AbstractUnoDialog`.
+
+Bekannte Einschränkung: Nach „Teamnummer ändern“ zeigen Ranglisten (Nummern als Werte) die neue Nummer erst nach dem nächsten Aktualisieren; die Erfolgsmeldung weist darauf hin.
 
 Offen, nicht UUID-bezogen: `PtmOnlineAbgleichSheetRunnerUITest.rundenstartMeldetLokaleSetzpositionStattTeamNr` scheitert reproduzierbar mit „Style/CF-Operation außerhalb eines aktiven BlattschutzScopes“ (`PtmOnlineSyncSheet.schreibeKopf` aus der Testhilfe ohne SheetRunner bei aktivem Turnier-Modus). Vermutlich seit Master-Merge `792bfa3a` (Turnier-Modus pro Dokumentfenster).
 
-Nächste Schritte: „Teamnummer ändern“ (Schritt 2), danach die übrigen Systeme.
+Nächste Schritte: übrige Systeme (Schritt 4), mit dem KO-Umbau `PTM.ALG.KOSIEGER`; danach Migration (Schritt 5).
 
 Entscheidungen „Teamnummer ändern“ (2026-10-11):
 - **Ein** systemübergreifender Menüeintrag (Bereich Spieler-DB/Meldeliste, `Addons_A0_SpielerDb.xcu`), erkennt das aktive Turniersystem selbst; kein Eintrag je Systemmenü, kein Toolbar-Button.

@@ -138,4 +138,48 @@ public abstract class AbstractUnoDialog {
     protected void beiOkGeklickt() throws Exception {
         // Standard: keine Aktion
     }
+
+    /** Fügt ein Beschriftungsfeld ein; {@code mehrzeilig} bricht lange Texte um. */
+    protected static void label(XMultiServiceFactory xMSF, XNameContainer cont, String name, String text,
+            Rahmen rahmen, boolean mehrzeilig) throws com.sun.star.uno.Exception {
+        XPropertySet props = modell(xMSF, "com.sun.star.awt.UnoControlFixedTextModel", rahmen);
+        props.setPropertyValue("Label", text);
+        props.setPropertyValue("MultiLine", Boolean.valueOf(mehrzeilig));
+        cont.insertByName(name, props);
+    }
+
+    /** Fügt ein ganzzahliges Zahlenfeld mit Drehknopf ein. */
+    protected static void numericField(XMultiServiceFactory xMSF, XNameContainer cont, String name, int wert,
+            int min, int max, Rahmen rahmen) throws com.sun.star.uno.Exception {
+        XPropertySet props = modell(xMSF, "com.sun.star.awt.UnoControlNumericFieldModel", rahmen);
+        props.setPropertyValue("Value", (double) wert);
+        props.setPropertyValue("ValueMin", (double) min);
+        props.setPropertyValue("ValueMax", (double) max);
+        props.setPropertyValue("DecimalAccuracy", Short.valueOf((short) 0));
+        props.setPropertyValue("Spin", Boolean.TRUE);
+        cont.insertByName(name, props);
+    }
+
+    /** Fügt eine Schaltfläche ein, {@code pushButtonType} aus {@code com.sun.star.awt.PushButtonType}. */
+    protected static void button(XMultiServiceFactory xMSF, XNameContainer cont, String name, String text,
+            Rahmen rahmen, short pushButtonType) throws com.sun.star.uno.Exception {
+        XPropertySet props = modell(xMSF, "com.sun.star.awt.UnoControlButtonModel", rahmen);
+        props.setPropertyValue("Label", text);
+        props.setPropertyValue("PushButtonType", pushButtonType);
+        cont.insertByName(name, props);
+    }
+
+    private static XPropertySet modell(XMultiServiceFactory xMSF, String service, Rahmen rahmen)
+            throws com.sun.star.uno.Exception {
+        XPropertySet props = Lo.qi(XPropertySet.class, xMSF.createInstance(service));
+        props.setPropertyValue("PositionX", rahmen.x());
+        props.setPropertyValue("PositionY", rahmen.y());
+        props.setPropertyValue("Width", rahmen.breite());
+        props.setPropertyValue("Height", rahmen.hoehe());
+        return props;
+    }
+
+    /** Lage und Größe eines Steuerelements in UNO-Dialogeinheiten. */
+    public record Rahmen(int x, int y, int breite, int hoehe) {
+    }
 }

@@ -108,23 +108,23 @@ final class SiegergeldStartDialog extends AbstractUnoDialog {
 		this.xDialog = dialog;
 		this.xcc = Lo.qi(XControlContainer.class, dialog);
 
-		label(xMSF, cont, "lblModus", I18n.get("siegergeld.dialog.modus"), 8, 8, 90, 10);
-		listBox(xMSF, cont, "lstModus", modusItems(), 0, 105, 6, 135, 32);
-		label(xMSF, cont, "lblGruppen", I18n.get("siegergeld.dialog.gruppen"), 8, 42, 90, 10);
+		label(xMSF, cont, "lblModus", I18n.get("siegergeld.dialog.modus"), new Rahmen(8, 8, 90, 10), false);
+		listBox(xMSF, cont, "lstModus", modusItems(), 0, new Rahmen(105, 6, 135, 32));
+		label(xMSF, cont, "lblGruppen", I18n.get("siegergeld.dialog.gruppen"), new Rahmen(8, 42, 90, 10), false);
 		numericField(xMSF, cont, "nfGruppen", SiegergeldStartOptionen.DEFAULT_GRUPPEN_ANZAHL, 1,
-				SiegergeldStartOptionen.MAX_GRUPPEN, 105, 40, 45, 12);
-		label(xMSF, cont, "lblPlaetze", I18n.get("siegergeld.dialog.plaetze"), 8, 62, 90, 10);
+				SiegergeldStartOptionen.MAX_GRUPPEN, new Rahmen(105, 40, 45, 12));
+		label(xMSF, cont, "lblPlaetze", I18n.get("siegergeld.dialog.plaetze"), new Rahmen(8, 62, 90, 10), false);
 		numericField(xMSF, cont, "nfPlaetze", SiegergeldStartOptionen.DEFAULT_PLAETZE, 1,
-				SiegergeldStartOptionen.MAX_PLAETZE, 105, 60, 45, 12);
-		label(xMSF, cont, "lblTopX", I18n.get("siegergeld.dialog.topx"), 8, 82, 90, 10);
+				SiegergeldStartOptionen.MAX_PLAETZE, new Rahmen(105, 60, 45, 12));
+		label(xMSF, cont, "lblTopX", I18n.get("siegergeld.dialog.topx"), new Rahmen(8, 82, 90, 10), false);
 		numericField(xMSF, cont, "nfTopX", SiegergeldStartOptionen.DEFAULT_PLAETZE, 1,
-				SiegergeldStartOptionen.MAX_PLAETZE, 105, 80, 45, 12);
-		label(xMSF, cont, "lblVorlage", I18n.get("siegergeld.dialog.vorlage"), 8, 104, 90, 10);
-		listBox(xMSF, cont, "lstVorlage", vorlagenItems(), 0, 105, 102, 135, 32);
+				SiegergeldStartOptionen.MAX_PLAETZE, new Rahmen(105, 80, 45, 12));
+		label(xMSF, cont, "lblVorlage", I18n.get("siegergeld.dialog.vorlage"), new Rahmen(8, 104, 90, 10), false);
+		listBox(xMSF, cont, "lstVorlage", vorlagenItems(), 0, new Rahmen(105, 102, 135, 32));
 
-		button(xMSF, cont, "btnOk", I18n.get("dialog.ok"), 55, 124, 55, 14,
+		button(xMSF, cont, "btnOk", I18n.get("dialog.ok"), new Rahmen(55, 124, 55, 14),
 				(short) PushButtonType.STANDARD_value);
-		button(xMSF, cont, "btnAbbrechen", I18n.get("dialog.abbrechen"), 120, 124, 75, 14,
+		button(xMSF, cont, "btnAbbrechen", I18n.get("dialog.abbrechen"), new Rahmen(120, 124, 75, 14),
 				(short) PushButtonType.CANCEL_value);
 		registriereOkButton();
 	}
@@ -194,64 +194,20 @@ final class SiegergeldStartDialog extends AbstractUnoDialog {
 		return items;
 	}
 
-	private static void label(XMultiServiceFactory xMSF, XNameContainer cont,
-			String name, String text, int x, int y, int w, int h) throws com.sun.star.uno.Exception {
-		var model = xMSF.createInstance("com.sun.star.awt.UnoControlFixedTextModel");
-		var props = Lo.qi(XPropertySet.class, model);
-		props.setPropertyValue("Label", text);
-		props.setPropertyValue("PositionX", x);
-		props.setPropertyValue("PositionY", y);
-		props.setPropertyValue("Width", w);
-		props.setPropertyValue("Height", h);
-		cont.insertByName(name, model);
-	}
-
 	private static void listBox(XMultiServiceFactory xMSF, XNameContainer cont,
-			String name, String[] items, int vorauswahl, int x, int y, int w, int h)
-			throws com.sun.star.uno.Exception {
+			String name, String[] items, int vorauswahl, Rahmen rahmen) throws com.sun.star.uno.Exception {
 		var model = xMSF.createInstance("com.sun.star.awt.UnoControlListBoxModel");
 		var props = Lo.qi(XPropertySet.class, model);
-		props.setPropertyValue("PositionX", x);
-		props.setPropertyValue("PositionY", y);
-		props.setPropertyValue("Width", w);
-		props.setPropertyValue("Height", h);
+		props.setPropertyValue("PositionX", rahmen.x());
+		props.setPropertyValue("PositionY", rahmen.y());
+		props.setPropertyValue("Width", rahmen.breite());
+		props.setPropertyValue("Height", rahmen.hoehe());
 		props.setPropertyValue("StringItemList", items);
 		props.setPropertyValue("MultiSelection", Boolean.FALSE);
 		props.setPropertyValue("Dropdown", Boolean.FALSE);
 		if (items.length > 0) {
 			props.setPropertyValue("SelectedItems", new short[] { (short) Math.max(0, vorauswahl) });
 		}
-		cont.insertByName(name, model);
-	}
-
-	private static void numericField(XMultiServiceFactory xMSF, XNameContainer cont,
-			String name, int wert, int min, int max, int x, int y, int w, int h)
-			throws com.sun.star.uno.Exception {
-		var model = xMSF.createInstance("com.sun.star.awt.UnoControlNumericFieldModel");
-		var props = Lo.qi(XPropertySet.class, model);
-		props.setPropertyValue("PositionX", x);
-		props.setPropertyValue("PositionY", y);
-		props.setPropertyValue("Width", w);
-		props.setPropertyValue("Height", h);
-		props.setPropertyValue("Value", (double) wert);
-		props.setPropertyValue("ValueMin", (double) min);
-		props.setPropertyValue("ValueMax", (double) max);
-		props.setPropertyValue("DecimalAccuracy", Short.valueOf((short) 0));
-		props.setPropertyValue("Spin", Boolean.TRUE);
-		cont.insertByName(name, model);
-	}
-
-	private static void button(XMultiServiceFactory xMSF, XNameContainer cont,
-			String name, String text, int x, int y, int w, int h, short pushButtonType)
-			throws com.sun.star.uno.Exception {
-		var model = xMSF.createInstance("com.sun.star.awt.UnoControlButtonModel");
-		var props = Lo.qi(XPropertySet.class, model);
-		props.setPropertyValue("Label", text);
-		props.setPropertyValue("PositionX", x);
-		props.setPropertyValue("PositionY", y);
-		props.setPropertyValue("Width", w);
-		props.setPropertyValue("Height", h);
-		props.setPropertyValue("PushButtonType", pushButtonType);
 		cont.insertByName(name, model);
 	}
 }

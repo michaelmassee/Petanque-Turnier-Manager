@@ -30,7 +30,7 @@
 						<node oor:name="Submenu">
 							<!--
 								Innerhalb eines Submenus sortiert LO Nodes nach (Länge, lexikographisch).
-								Daher alle Slot-Namen 5-stellig (A0A01..A0A13), damit die Reihenfolge stabil ist.
+								Daher alle Slot-Namen 5-stellig (A0A01..A0A14), damit die Reihenfolge stabil ist.
 							-->
 							<!-- A0A01: In Meldeliste übernehmen -->
 							<node oor:name="A0A01" oor:op="replace">
@@ -48,14 +48,30 @@
 									<value>_self</value>
 								</prop>
 							</node>
-							<!-- A0A02: Trenner -->
+							<!-- A0A02: Teamnummer ändern (Meldeliste, UUID bleibt) -->
 							<node oor:name="A0A02" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Teamnummer ändern</value>
+									<value xml:lang="en">Change team number</value>
+									<value xml:lang="es">Cambiar número de equipo</value>
+									<value xml:lang="fr">Modifier le numéro d'équipe</value>
+									<value xml:lang="nl">Teamnummer wijzigen</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:teamnummer_aendern</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+							<!-- A0A03: Trenner -->
+							<node oor:name="A0A03" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
-							<!-- A0A03: Spieler-Verwaltung -->
-							<node oor:name="A0A03" oor:op="replace">
+							<!-- A0A04: Spieler-Verwaltung -->
+							<node oor:name="A0A04" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Spieler-Verwaltung</value>
 									<value xml:lang="en">Player management</value>
@@ -70,8 +86,8 @@
 									<value>_self</value>
 								</prop>
 							</node>
-							<!-- A0A04: Vereins-Verwaltung -->
-							<node oor:name="A0A04" oor:op="replace">
+							<!-- A0A05: Vereins-Verwaltung -->
+							<node oor:name="A0A05" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Vereins-Verwaltung</value>
 									<value xml:lang="en">Club management</value>
@@ -86,8 +102,8 @@
 									<value>_self</value>
 								</prop>
 							</node>
-							<!-- A0A05: Labels-Verwaltung -->
-							<node oor:name="A0A05" oor:op="replace">
+							<!-- A0A06: Labels-Verwaltung -->
+							<node oor:name="A0A06" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Labels-Verwaltung</value>
 									<value xml:lang="en">Label management</value>
@@ -102,14 +118,14 @@
 									<value>_self</value>
 								</prop>
 							</node>
-							<!-- A0A06: Trenner -->
-							<node oor:name="A0A06" oor:op="replace">
+							<!-- A0A07: Trenner -->
+							<node oor:name="A0A07" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
-							<!-- A0A07: Mit Meldeliste abgleichen -->
-							<node oor:name="A0A07" oor:op="replace">
+							<!-- A0A08: Mit Meldeliste abgleichen -->
+							<node oor:name="A0A08" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Mit Meldeliste abgleichen</value>
 									<value xml:lang="en">Sync with entry list</value>
@@ -124,8 +140,8 @@
 									<value>_self</value>
 								</prop>
 							</node>
-							<!-- A0A08: Vorlage erstellen -->
-							<node oor:name="A0A08" oor:op="replace">
+							<!-- A0A09: Vorlage erstellen -->
+							<node oor:name="A0A09" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Vorlage erstellen</value>
 									<value xml:lang="en">Create template</value>
@@ -140,8 +156,8 @@
 									<value>_self</value>
 								</prop>
 							</node>
-							<!-- A0A09: Mit Vorlage abgleichen -->
-							<node oor:name="A0A09" oor:op="replace">
+							<!-- A0A10: Mit Vorlage abgleichen -->
+							<node oor:name="A0A10" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Mit Vorlage abgleichen</value>
 									<value xml:lang="en">Sync with template</value>
@@ -156,14 +172,14 @@
 									<value>_self</value>
 								</prop>
 							</node>
-							<!-- A0A10: Trenner -->
-							<node oor:name="A0A10" oor:op="replace">
+							<!-- A0A11: Trenner -->
+							<node oor:name="A0A11" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
-							<!-- A0A11: Exportieren -->
-							<node oor:name="A0A11" oor:op="replace">
+							<!-- A0A12: Exportieren -->
+							<node oor:name="A0A12" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Exportieren</value>
 									<value xml:lang="en">Export</value>
@@ -178,8 +194,8 @@
 									<value>_self</value>
 								</prop>
 							</node>
-							<!-- A0A12: Importieren -->
-							<node oor:name="A0A12" oor:op="replace">
+							<!-- A0A13: Importieren -->
+							<node oor:name="A0A13" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Importieren</value>
 									<value xml:lang="en">Import</value>
@@ -194,8 +210,8 @@
 									<value>_self</value>
 								</prop>
 							</node>
-							<!-- A0A13: Web-Viewer (read-only Browser-Ansicht) -->
-							<node oor:name="A0A13" oor:op="replace">
+							<!-- A0A14: Web-Viewer (read-only Browser-Ansicht) -->
+							<node oor:name="A0A14" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Web-Viewer</value>
 									<value xml:lang="en">Web viewer</value>

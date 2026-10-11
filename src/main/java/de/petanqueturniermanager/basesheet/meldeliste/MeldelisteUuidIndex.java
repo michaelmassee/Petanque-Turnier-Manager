@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.OptionalInt;
 
 import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.sheet.XSpreadsheetDocument;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
@@ -35,6 +36,14 @@ public final class MeldelisteUuidIndex {
 		this.uuidProNr = uuidProNr;
 	}
 
+	/**
+	 * Formeln und angezeigte Nummern der Nr-Spalte ab Zeile 1, Index = 0-basierte Sheet-Zeile.
+	 *
+	 * @param nummern angezeigte Nummer je Zeile, 0 für leer oder Text
+	 */
+	public record NrSpalte(String[][] formeln, int[] nummern) {
+	}
+
 	/** Liest die Meldeliste des Dokuments; ohne Meldeliste ist der Index leer. */
 	public static MeldelisteUuidIndex lese(WorkingSpreadsheet ws) {
 		SheetHelper helper = new SheetHelper(ws);
@@ -42,13 +51,19 @@ public final class MeldelisteUuidIndex {
 		if (meldeliste == null) {
 			return aus(new String[0][0], new int[0]);
 		}
+		NrSpalte spalte = leseNrSpalte(helper, meldeliste, ws.getWorkingSpreadsheetDocument());
+		return aus(spalte.formeln(), spalte.nummern());
+	}
+
+	/** Liest die Nr-Spalte (A1:A999) der Meldeliste, Formeln und Werte je in einem Zugriff. */
+	public static NrSpalte leseNrSpalte(SheetHelper helper, XSpreadsheet meldeliste, XSpreadsheetDocument doc) {
 		String[][] formeln = helper.getFormulaArrayFromRange(meldeliste, NR_SPALTE);
-		RangeData werte = RangeHelper.from(meldeliste, ws.getWorkingSpreadsheetDocument(), NR_SPALTE).getDataFromRange();
+		RangeData werte = RangeHelper.from(meldeliste, doc, NR_SPALTE).getDataFromRange();
 		int[] nummern = new int[werte.size()];
 		for (int i = 0; i < nummern.length; i++) {
 			nummern[i] = werte.get(i).isEmpty() ? 0 : werte.get(i).get(0).getIntVal(0);
 		}
-		return aus(formeln, nummern);
+		return new NrSpalte(formeln, nummern);
 	}
 
 	/**

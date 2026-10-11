@@ -11,13 +11,16 @@ import org.junit.jupiter.api.Test;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.BaseCalcUITest;
-import de.petanqueturniermanager.addins.GlobalImpl;
+import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldelisteUuidIndex;
 import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeigeHelper;
 import de.petanqueturniermanager.basesheet.meldeliste.TeamUuidFormel;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamnummerAendernSheet;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
@@ -168,7 +171,7 @@ public class SchweizerSpielrundeNamenLiveUpdateUITest extends BaseCalcUITest {
 	}
 
 	@Test
-	public void geaenderteTeamnummerAendertNurDieAnzeigeNichtDieZuordnung() throws GenerateException {
+	public void teamnummerAendernTauschtNurDieAnzeigeNichtDieZuordnung() throws GenerateException {
 		int anzTeams = SchweizerMeldeListeSheetTestDaten.ANZ_TEAMS_DEFAULT;
 		SchweizerTurnierTestDaten testDaten = new SchweizerTurnierTestDaten(wkingSpreadsheet, anzTeams,
 				TeamAnzeige.NR);
@@ -185,9 +188,10 @@ public class SchweizerSpielrundeNamenLiveUpdateUITest extends BaseCalcUITest {
 		MeldelisteUuidIndex vorher = MeldelisteUuidIndex.lese(wkingSpreadsheet);
 		int nrSieger = vorher.nr(uuidSieger).orElseThrow();
 		int nrVerlierer = vorher.nr(uuidVerlierer).orElseThrow();
-		SchweizerMeldeListeSheetUpdate meldeListe = testDaten.naechsteSpielrunde.getMeldeListe();
-		teamnummerSetzen(meldeListe, nrSieger, nrVerlierer, uuidSieger);
-		teamnummerSetzen(meldeListe, nrVerlierer, nrSieger, uuidVerlierer);
+		// Das Property schreibt sonst erst SheetRunner.run(); der Test ruft doRun() direkt.
+		new DocumentPropertiesHelper(wkingSpreadsheet).setIntProperty(
+				BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM, TurnierSystem.SCHWEIZER.getId());
+		new TeamnummerAendernSheet(wkingSpreadsheet).mitEingabe(nrSieger, nrVerlierer).doRun();
 		recalcAll();
 
 		assertThat(sheetHlp.getTextFromCell(ersteRunde, teamAPos))
@@ -321,15 +325,6 @@ public class SchweizerSpielrundeNamenLiveUpdateUITest extends BaseCalcUITest {
 		RangeHelper.from(spielrunde, wkingSpreadsheet.getWorkingSpreadsheetDocument(),
 				ergebnis.getRangePosition(Position.from(SchweizerAbstractSpielrundeSheet.ERG_TEAM_A_SPALTE, zeile)))
 				.setDataInRange(ergebnis);
-	}
-
-	/** Schreibt die Nr-Zelle der Meldung {@code alteNr} neu, die UUID bleibt – wie „Teamnummer ändern“. */
-	private void teamnummerSetzen(SchweizerMeldeListeSheetUpdate meldeListe, int alteNr, int neueNr, String uuid)
-			throws GenerateException {
-		int zeile = meldeZeileVonTeam(meldeListe, alteNr);
-		sheetHlp.setFormulaArrayInRange(meldeListe.getXSpreadSheet(),
-				RangePosition.from(meldeListe.getTeamNrSpalte(), zeile, meldeListe.getTeamNrSpalte(), zeile),
-				new String[][] { { GlobalImpl.FORMAT_PTM_TNR_UUID(neueNr, uuid) } });
 	}
 
 	/**

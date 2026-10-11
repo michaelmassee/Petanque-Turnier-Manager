@@ -46,6 +46,7 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamnummerAendernSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.TeilnehmerListeSortModus;
 import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -414,6 +415,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_SPIELERDB_EXPORT        = "spielerdb_export";
 	public static final String CMD_SPIELERDB_IMPORT        = "spielerdb_import";
 	public static final String CMD_SPIELERDB_WEBVIEW       = "spielerdb_webview";
+	// Meldeliste: Teamnummer ändern, UUID bleibt (alle umgestellten Turniersysteme)
+	public static final String CMD_TEAMNUMMER_AENDERN      = "teamnummer_aendern";
 	// PTM-Online
 	public static final String CMD_PTMONLINE_TURNIER_VERBINDEN       = "ptmonline_turnier_verbinden";
 	public static final String CMD_PTMONLINE_VERBINDUNG_TRENNEN      = "ptmonline_verbindung_trennen";
@@ -955,6 +958,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				break;
 			case CMD_SIEGERGELD_BERECHNEN:
 				new SiegergeldSheet(ws).backUpDocument().start();
+				break;
+			case CMD_TEAMNUMMER_AENDERN:
+				new TeamnummerAendernSheet(ws).backUpDocument().start();
 				break;
 			case CMD_PLANUNGSRECHNER_BERECHNEN:
 				new PlanungsrechnerSheet(ws).backUpDocument().start();
@@ -2441,6 +2447,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_SPIELERDB_IMPORT,
 				 CMD_SPIELERDB_WEBVIEW                      -> true;
 			case CMD_SPIELERDB_IN_MELDELISTE                -> ts != TurnierSystem.KEIN;
+			case CMD_TEAMNUMMER_AENDERN                     -> ts != TurnierSystem.KEIN;
 			case CMD_PTMONLINE_TURNIER_VERBINDEN,
 				 CMD_PTMONLINE_VERBINDUNG_TRENNEN,
 				 CMD_PTMONLINE_ANMELDUNGEN_IMPORTIEREN,
