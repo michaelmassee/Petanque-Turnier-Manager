@@ -4,6 +4,7 @@
 
 #include <com/sun/star/uno/XInterface.idl>
 #include <com/sun/star/sheet/XVolatileResult.idl>
+#include <com/sun/star/table/XCellRange.idl>
 
 // https://api.libreoffice.org/docs/idl/ref/servicecom_1_1sun_1_1star_1_1sheet_1_1AddIn.html
 // https://www.openoffice.org/api/docs/common/ref/com/sun/star/sheet/AddIn.html
@@ -61,6 +62,11 @@ module de { module petanqueturniermanager { module addin {
     sequence< sequence< string > > ptmplanungzeitplan ([in] double start, [in] long anzTeams,
       [in] long anzBahnen, [in] long anzRunden, [in] long durchgangPauseMin, [in] long rundenPauseMin,
       [in] long zeitlimitMin);
+    // Team-Identität per UUID (PTM.ALG.TNRUUID / PTM.ALG.UUIDZEILE) – Indizes 34-35.
+    // TNRUUID: Nr-Zelle der Meldeliste, zeigt die Nr, traegt die UUID als Literal.
+    long ptmtnruuid ([in] long nr, [in] string uuid);
+    // UUIDZEILE: Zeile der UUID im Bereich (wie MATCH), nicht gefunden = leeres any = #N/A.
+    any ptmuuidzeile ([in] string uuid, [in] com::sun::star::table::XCellRange bereich);
   };
 
 }; }; };

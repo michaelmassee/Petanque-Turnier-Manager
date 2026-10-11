@@ -5,6 +5,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.OptionalInt;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.lang3.StringUtils;
@@ -14,7 +15,10 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.lang.XSingleComponentFactory;
 import com.sun.star.lib.uno.helper.Factory;
 import com.sun.star.registry.XRegistryKey;
+import com.sun.star.sheet.XCellRangeFormula;
 import com.sun.star.sheet.XSpreadsheetDocument;
+import com.sun.star.table.XCellRange;
+import com.sun.star.uno.Any;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
@@ -23,6 +27,7 @@ import de.petanqueturniermanager.algorithmen.common.CadrageRechner;
 import de.petanqueturniermanager.algorithmen.liga.Direktvergleich;
 import de.petanqueturniermanager.algorithmen.poule.PouleGruppenRechner;
 import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeigeFormatierer;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamUuidFormel;
 import de.petanqueturniermanager.comp.DocumentHelper;
 import de.petanqueturniermanager.comp.DokumentKontext;
 import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
@@ -62,6 +67,8 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	public static final String PTM_DIREKTVERGLEICH = "PTM.ALG.DIRECTCOMPARISON";
 	public static final String PTM_TURNIERSYSTEM = "PTM.ALG.TURNIERSYSTEM";
 	public static final String PTM_TEAM_ANZEIGE = "PTM.ALG.TEAMANZEIGE";
+	public static final String PTM_TNR_UUID = "PTM.ALG.TNRUUID";
+	public static final String PTM_UUID_ZEILE = "PTM.ALG.UUIDZEILE";
 
 	public static final String PTM_SUPERMELEE_TRIPL_ANZ_DOUBLETTE = "PTM.SUPERMELEE.TRIPL_ANZ_DOUBLETTE";
 	public static final String PTM_SUPERMELEE_TRIPL_ANZ_TRIPLETTE = "PTM.SUPERMELEE.TRIPL_ANZ_TRIPLETTE";
@@ -112,6 +119,16 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 			boolean vereinsnameAnzeigen, String meldelistenZeileFormel) {
 		return PTM_TEAM_ANZEIGE + "(" + (teamnameAnzeigen ? "1" : "0") + ";" + anzSpieler
 				+ ";" + (vereinsnameAnzeigen ? "1" : "0") + ";" + meldelistenZeileFormel + ")";
+	}
+
+	/** Nr-Zelle der Meldeliste: zeigt {@code nr} an und trägt die UUID des Teams als Literal. */
+	public static String FORMAT_PTM_TNR_UUID(int nr, String uuid) {
+		return PTM_TNR_UUID + "(" + nr + ";\"" + uuid + "\")";
+	}
+
+	/** Zeile der UUID im Bereich, Ersatz für {@code MATCH(nr;bereich;0)}. */
+	public static String FORMAT_PTM_UUID_ZEILE(String uuidAusdruck, String bereich) {
+		return PTM_UUID_ZEILE + "(" + uuidAusdruck + ";" + bereich + ")";
 	}
 
 	public static String FORMAT_PTM_PLANUNG_DURCHGAENGE_PRO_RUNDE(String teamsAdresse, String bahnenAdresse) {
@@ -291,6 +308,30 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 			String[][] meldelistenZeile) {
 		String[] zeile = meldelistenZeile == null || meldelistenZeile.length == 0 ? null : meldelistenZeile[0];
 		return TeamAnzeigeFormatierer.formatiere(teamnameAnzeigen != 0, anzSpieler, vereinsnameAnzeigen != 0, zeile);
+	}
+
+	@Override
+	public int ptmtnruuid(int nr, String uuid) {
+		return nr;
+	}
+
+	/**
+	 * Der Bereich kommt als {@link XCellRange} aus dem aufrufenden Dokument (LO erzeugt ihn dort), daher ist kein
+	 * fokus-basierter Dokumentzugriff nötig; Calc führt ihn zugleich als Abhängigkeit der Formel.
+	 */
+	@Override
+	public Object ptmuuidzeile(String uuid, XCellRange bereich) {
+		try {
+			XCellRangeFormula formelBereich = Lo.qi(XCellRangeFormula.class, bereich);
+			if (formelBereich == null) {
+				return Any.VOID;
+			}
+			OptionalInt zeile = TeamUuidFormel.zeileImBereich(uuid, formelBereich.getFormulaArray());
+			return zeile.isPresent() ? Integer.valueOf(zeile.getAsInt()) : Any.VOID;
+		} catch (RuntimeException e) {
+			logger.error("PTM.ALG.UUIDZEILE fehlgeschlagen", e);
+			return Any.VOID;
+		}
 	}
 
 	@Override

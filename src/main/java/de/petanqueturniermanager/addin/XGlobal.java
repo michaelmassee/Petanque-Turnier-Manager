@@ -2,6 +2,7 @@ package de.petanqueturniermanager.addin;
 
 import com.sun.star.lib.uno.typeinfo.MethodTypeInfo;
 import com.sun.star.lib.uno.typeinfo.TypeInfo;
+import com.sun.star.table.XCellRange;
 import com.sun.star.uno.XInterface;
 
 /**
@@ -49,6 +50,8 @@ public interface XGlobal extends XInterface {
         new MethodTypeInfo("ptmplanungzeitlimit",               31, 0),
         new MethodTypeInfo("ptmplanungturnierende",             32, 0),
         new MethodTypeInfo("ptmplanungzeitplan",                33, 0),
+        new MethodTypeInfo("ptmtnruuid",                        34, 0),
+        new MethodTypeInfo("ptmuuidzeile",                      35, TypeInfo.ANY),
     };
 
     String ptmstringproperty(String propname);
@@ -122,5 +125,10 @@ public interface XGlobal extends XInterface {
 
     String[][] ptmplanungzeitplan(double start, int anzTeams, int anzBahnen, int anzRunden,
             int durchgangPauseMin, int rundenPauseMin, int zeitlimitMin);
+
+    int ptmtnruuid(int nr, String uuid);
+
+    /** @return 1-basierter Zeilenindex im Bereich, {@link com.sun.star.uno.Any#VOID} (= #N/A) wenn nicht gefunden */
+    Object ptmuuidzeile(String uuid, XCellRange bereich);
 
 }

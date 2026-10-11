@@ -875,6 +875,62 @@
 					<prop oor:name="Category"><value>Add-In</value></prop>
 				</node>
 
+				<node oor:name="ptmtnruuid" oor:op="replace">
+					<prop oor:name="DisplayName">
+						<value xml:lang="en">PTM.ALG.TNRUUID</value>
+						<value xml:lang="de">PTM.ALG.TNRUUID</value>
+						<value xml:lang="es">PTM.ALG.TNRUUID</value>
+						<value xml:lang="fr">PTM.ALG.TNRUUID</value>
+						<value xml:lang="nl">PTM.ALG.TNRUUID</value>
+					</prop>
+					<prop oor:name="Description">
+						<value xml:lang="en">Petanque Turniermanager: shows the team number and carries the team's internal ID.</value>
+						<value xml:lang="de">Petanque Turniermanager: zeigt die Teamnummer und trägt die interne ID des Teams.</value>
+						<value xml:lang="es">Petanque Turniermanager: muestra el número de equipo y contiene el ID interno del equipo.</value>
+						<value xml:lang="fr">Petanque Turniermanager : affiche le numéro d'équipe et porte l'ID interne de l'équipe.</value>
+						<value xml:lang="nl">Petanque Turniermanager: toont het teamnummer en bevat de interne ID van het team.</value>
+					</prop>
+					<node oor:name="Parameters">
+						<node oor:name="nr" oor:op="replace">
+							<prop oor:name="DisplayName"><value xml:lang="de">Nr</value></prop>
+							<prop oor:name="Description"><value xml:lang="de">Angezeigte Teamnummer.</value></prop>
+						</node>
+						<node oor:name="uuid" oor:op="replace">
+							<prop oor:name="DisplayName"><value xml:lang="de">UUID</value></prop>
+							<prop oor:name="Description"><value xml:lang="de">Interne, unveränderliche ID des Teams.</value></prop>
+						</node>
+					</node>
+					<prop oor:name="Category"><value>Add-In</value></prop>
+				</node>
+
+				<node oor:name="ptmuuidzeile" oor:op="replace">
+					<prop oor:name="DisplayName">
+						<value xml:lang="en">PTM.ALG.UUIDZEILE</value>
+						<value xml:lang="de">PTM.ALG.UUIDZEILE</value>
+						<value xml:lang="es">PTM.ALG.UUIDZEILE</value>
+						<value xml:lang="fr">PTM.ALG.UUIDZEILE</value>
+						<value xml:lang="nl">PTM.ALG.UUIDZEILE</value>
+					</prop>
+					<prop oor:name="Description">
+						<value xml:lang="en">Petanque Turniermanager: row of a team's internal ID within the range, #N/A if missing.</value>
+						<value xml:lang="de">Petanque Turniermanager: Zeile der internen Team-ID im Bereich, #NV wenn nicht vorhanden.</value>
+						<value xml:lang="es">Petanque Turniermanager: fila del ID interno del equipo en el rango, #N/D si no existe.</value>
+						<value xml:lang="fr">Petanque Turniermanager : ligne de l'ID interne de l'équipe dans la plage, #N/A si absent.</value>
+						<value xml:lang="nl">Petanque Turniermanager: rij van de interne team-ID in het bereik, #N/B indien afwezig.</value>
+					</prop>
+					<node oor:name="Parameters">
+						<node oor:name="uuid" oor:op="replace">
+							<prop oor:name="DisplayName"><value xml:lang="de">UUID</value></prop>
+							<prop oor:name="Description"><value xml:lang="de">Interne ID des gesuchten Teams.</value></prop>
+						</node>
+						<node oor:name="bereich" oor:op="replace">
+							<prop oor:name="DisplayName"><value xml:lang="de">Bereich</value></prop>
+							<prop oor:name="Description"><value xml:lang="de">Nr-Spalte der Meldeliste, z.B. $A$1:$A$999.</value></prop>
+						</node>
+					</node>
+					<prop oor:name="Category"><value>Add-In</value></prop>
+				</node>
+
 				<!-- ============================================================ -->
 				<!-- PTM.PLANUNG.* — eigenständiger Planungsrechner (Sheet "Planungsrechner"), -->
 				<!-- Uhrzeiten als "HH:MM"-String, Dauern/Zaehler als Zahl.        -->
