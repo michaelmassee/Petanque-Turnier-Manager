@@ -23,6 +23,7 @@ import de.petanqueturniermanager.algorithmen.common.CadrageRechner;
 import de.petanqueturniermanager.algorithmen.common.GruppenAufteilungRechner;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldelisteUuidIndex;
 import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeigeHelper;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
@@ -170,6 +171,9 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet, PtmOnline
 	/** Bracketgröße der zuletzt erzeugten Gruppe – wird von Testhilfen wie
 	 *  {@link #schreibeRunde1TestErgebnisse(String)} ausgelesen. */
 	private volatile int aktuelleBracketGroesse = 0;
+
+	/** UUID ↔ Nr der Meldeliste, je Bracket-Aufbau neu gelesen (Runde-1-/Cadrage-Zellen tragen die UUID). */
+	private MeldelisteUuidIndex uuidIndex = MeldelisteUuidIndex.aus(new String[0][0], new int[0]);
 
 	private final KoMeldeListeSheetUpdate meldeliste;
 
@@ -922,6 +926,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet, PtmOnline
 		this.meldeListeVereinsnameAnzeigen = konfig.isMeldeListeVereinsnameAnzeigen();
 		this.meldeListeFormation           = konfig.getMeldeListeFormation();
 
+		this.uuidIndex = MeldelisteUuidIndex.lese(getWorkingSpreadsheet());
 		this.aktuelleBracketGroesse = bracketGroesse;
 		this.runde1MatchZeilenAbstand = berechneRunde1MatchZeilenAbstand(meldungen.size(), bracketGroesse);
 		this.runde1SlotAbstand = berechneRunde1SlotAbstand(meldungen.size(), bracketGroesse);
@@ -972,14 +977,14 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet, PtmOnline
 				schreibeCadrageMatch(xSheet, meldungen, seedA);
 				schreibeCadrageGewinnerFormel(xSheet, seedA, rowA, true);
 			} else {
-				schreibeTeamZelleR1(xSheet, rowA, getTeamNrBySeedPosition(meldungen, seedA), true);
+				schreibeTeamZelleInSpalte(xSheet, teamSpalte(1), rowA, getTeamNrBySeedPosition(meldungen, seedA), true);
 			}
 
 			if (mitCadrage && seedB > anzOhneCadrage) {
 				schreibeCadrageMatch(xSheet, meldungen, seedB);
 				schreibeCadrageGewinnerFormel(xSheet, seedB, rowB, false);
 			} else {
-				schreibeTeamZelleR1(xSheet, rowB, getTeamNrBySeedPosition(meldungen, seedB), false);
+				schreibeTeamZelleInSpalte(xSheet, teamSpalte(1), rowB, getTeamNrBySeedPosition(meldungen, seedB), false);
 			}
 
 			schreibeScoreZelle(xSheet, 1, rowA, true);
@@ -1398,50 +1403,6 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet, PtmOnline
 	// ---------------------------------------------------------------
 
 	/**
-	 * Schreibt die Team-Zelle für Runde 1 (direkte Einträge aus der Setzliste).<br>
-	 * NR-Modus: schreibt die Teamnummer direkt.<br>
-	 * NAME-Modus: schreibt eine SVERWEIS-Formel, die den Teamnamen aus der Meldeliste liest.
-	 */
-	private void schreibeTeamZelleR1(XSpreadsheet xSheet, int zeile, int nr, boolean istTeamA)
-			throws GenerateException {
-		int farbe = istTeamA ? teamBFarbe : teamAFarbe;
-		if (nr <= 0) {
-			// Defensiver Fallback: im Cadrage-Modell ist jeder Hauptfeld-Slot mit einem echten
-			// Team belegt (kein Freilos), daher sollte dieser Zweig nicht erreicht werden. Falls
-			// doch, bleibt die Zelle leer statt einen erfundenen Platzhalter anzuzeigen.
-			getSheetHelper().setStringValueInCell(
-					StringCellValue.from(xSheet, Position.from(teamSpalte(1), zeile), "")
-							.setCellBackColor(farbe)
-							.setBorder(BorderFactory.from().allThin().toBorder())
-							.setHoriJustify(CellHoriJustify.CENTER));
-			return;
-		}
-		if (!teamAnzeige.istNummer()) {
-			String formel = TeamAnzeigeHelper.formel(String.valueOf(nr),
-					teamAnzeige, meldeListeTeamnameAnzeigen,
-					meldeListeFormation, meldeListeVereinsnameAnzeigen);
-			getSheetHelper().setFormulaInCell(
-					StringCellValue.from(xSheet, Position.from(teamSpalte(1), zeile), formel)
-							.setCellBackColor(farbe)
-							.setBorder(BorderFactory.from().allThin().toBorder())
-							.setHoriJustify(CellHoriJustify.LEFT));
-			// Früh prüfen, ob die gerade geschriebene Team-Namen-Formel (z.B. wegen einer nicht
-			// auflösbaren PTM.ALG.*-Add-in-Funktion) einen Berechnungsfehler liefert, statt das
-			// erst als schwer verständlichen Folgefehler an anderer Stelle auffallen zu lassen.
-			getSheetHelper().pruefeBereichAufFormelFehler(xSheet,
-					RangePosition.from(teamSpalte(1), zeile, teamSpalte(1), zeile));
-		} else {
-			// Teamnummer direkt
-			getSheetHelper().setNumberValueInCell(
-					NumberCellValue.from(xSheet, Position.from(teamSpalte(1), zeile))
-							.setValue(nr)
-							.setCellBackColor(farbe)
-							.setBorder(BorderFactory.from().allThin().toBorder())
-							.setHoriJustify(CellHoriJustify.CENTER));
-		}
-	}
-
-	/**
 	 * Schreibt eine Bahnnummer als vertikal zusammengeführte Zelle für eine Paarung (rowA..rowB).<br>
 	 * bahnNr=0 → leere editierbare Zelle (Modus L); bahnNr&gt;0 → Nummer zentriert.
 	 */
@@ -1687,15 +1648,16 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet, PtmOnline
 	}
 
 	/**
-	 * Schreibt eine Team-Zelle in eine explizit angegebene Spalte.<br>
-	 * NR-Modus: Teamnummer direkt; NAME-Modus: SVERWEIS-Formel.
+	 * Schreibt eine Team-Zelle aus der Setzliste (Runde 1, Cadrage) als Formel mit der UUID des Teams: je nach
+	 * Anzeige die aktuelle Nummer oder Team- bzw. Spielernamen aus der Meldeliste. Die Sieger-Formeln der
+	 * Folgerunden reichen diese Anzeige weiter; eine geänderte Teamnummer erscheint daher im ganzen Baum.
 	 */
 	private void schreibeTeamZelleInSpalte(XSpreadsheet xSheet, int spalte, int zeile, int nr,
 			boolean istTeamA) throws GenerateException {
 		int farbe = istTeamA ? teamBFarbe : teamAFarbe;
 		if (nr <= 0) {
-			// Defensiver Fallback: jede Cadrage-Paarung besteht aus zwei echten Teams, dieser
-			// Zweig sollte nicht erreicht werden. Falls doch, Zelle leer statt Platzhalter.
+			// Defensiver Fallback: im Cadrage-Modell ist jeder Slot mit einem echten Team belegt (kein
+			// Freilos), dieser Zweig sollte nicht erreicht werden. Falls doch, Zelle leer statt Platzhalter.
 			getSheetHelper().setStringValueInCell(
 					StringCellValue.from(xSheet, Position.from(spalte, zeile), "")
 							.setCellBackColor(farbe)
@@ -1703,27 +1665,17 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet, PtmOnline
 							.setHoriJustify(CellHoriJustify.CENTER));
 			return;
 		}
-		if (!teamAnzeige.istNummer()) {
-			String formel = TeamAnzeigeHelper.formel(String.valueOf(nr),
-					teamAnzeige, meldeListeTeamnameAnzeigen,
-					meldeListeFormation, meldeListeVereinsnameAnzeigen);
-			getSheetHelper().setFormulaInCell(
-					StringCellValue.from(xSheet, Position.from(spalte, zeile), formel)
-							.setCellBackColor(farbe)
-							.setBorder(BorderFactory.from().allThin().toBorder())
-							.setHoriJustify(CellHoriJustify.LEFT));
-			// Früh prüfen, ob die gerade geschriebene Team-Namen-Formel (z.B. wegen einer nicht
-			// auflösbaren PTM.ALG.*-Add-in-Funktion) einen Berechnungsfehler liefert, statt das
-			// erst als schwer verständlichen Folgefehler an anderer Stelle auffallen zu lassen.
-			getSheetHelper().pruefeBereichAufFormelFehler(xSheet, RangePosition.from(spalte, zeile, spalte, zeile));
-		} else {
-			getSheetHelper().setNumberValueInCell(
-					NumberCellValue.from(xSheet, Position.from(spalte, zeile))
-							.setValue(nr)
-							.setCellBackColor(farbe)
-							.setBorder(BorderFactory.from().allThin().toBorder())
-							.setHoriJustify(CellHoriJustify.CENTER));
-		}
+		String formel = TeamAnzeigeHelper.formel(uuidIndex.schluessel(nr), teamAnzeige, meldeListeTeamnameAnzeigen,
+				meldeListeFormation, meldeListeVereinsnameAnzeigen);
+		getSheetHelper().setFormulaInCell(
+				StringCellValue.from(xSheet, Position.from(spalte, zeile), formel)
+						.setCellBackColor(farbe)
+						.setBorder(BorderFactory.from().allThin().toBorder())
+						.setHoriJustify(teamAnzeige.istNummer() ? CellHoriJustify.CENTER : CellHoriJustify.LEFT));
+		// Früh prüfen, ob die gerade geschriebene Formel (z.B. wegen einer nicht auflösbaren
+		// PTM.ALG.*-Add-in-Funktion) einen Berechnungsfehler liefert, statt das erst als schwer
+		// verständlichen Folgefehler an anderer Stelle auffallen zu lassen.
+		getSheetHelper().pruefeBereichAufFormelFehler(xSheet, RangePosition.from(spalte, zeile, spalte, zeile));
 	}
 
 	/**

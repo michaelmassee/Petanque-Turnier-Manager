@@ -93,4 +93,13 @@ public final class MeldelisteUuidIndex {
 	public Optional<String> uuid(int nr) {
 		return Optional.ofNullable(uuidProNr.get(nr));
 	}
+
+	/**
+	 * Schlüssel für Formeln, die das Team mit dieser Nummer referenzieren: die UUID, sonst die Nummer selbst. Die
+	 * Meldelisten-Aktualisierung vor jedem Rundenaufbau vergibt UUIDs; fehlt sie trotzdem, ist die Zelle nur gegen
+	 * Umnummerieren nicht geschützt.
+	 */
+	public TeamSchluessel schluessel(int nr) {
+		return uuid(nr).map(TeamSchluessel::uuidLiteral).orElseGet(() -> TeamSchluessel.nr(String.valueOf(nr)));
+	}
 }

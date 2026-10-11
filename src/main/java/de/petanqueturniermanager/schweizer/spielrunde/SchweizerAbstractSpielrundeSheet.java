@@ -33,7 +33,6 @@ import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldelisteUuidIndex;
 import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeigeHelper;
-import de.petanqueturniermanager.basesheet.meldeliste.TeamSchluessel;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.basesheet.spielrunde.IZeitplanSpielrundeSheet;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeFooterHelper;
@@ -757,10 +756,10 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		String[][] formulas = new String[paarungen.size()][2];
 		for (int i = 0; i < paarungen.size(); i++) {
 			TeamPaarung paarung = paarungen.get(i);
-			formulas[i][0] = TeamAnzeigeHelper.formel(teamSchluessel(uuidIndex, paarung.getA().getNr()), anzeige,
+			formulas[i][0] = TeamAnzeigeHelper.formel(uuidIndex.schluessel(paarung.getA().getNr()), anzeige,
 					teamnameSpalteAktiv, formation, vereinsnameAnzeigen);
 			formulas[i][1] = paarung.hasB()
-					? TeamAnzeigeHelper.formel(teamSchluessel(uuidIndex, paarung.getB().getNr()), anzeige,
+					? TeamAnzeigeHelper.formel(uuidIndex.schluessel(paarung.getB().getNr()), anzeige,
 							teamnameSpalteAktiv, formation, vereinsnameAnzeigen)
 					: "";
 		}
@@ -778,15 +777,6 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		// nicht auflösbaren PTM.ALG.*-Add-in-Funktion) einen Berechnungsfehler liefert –
 		// sonst fällt das erst als schwer verständlicher Folgefehler an anderer Stelle auf.
 		getSheetHelper().pruefeBereichAufFormelFehler(getXSpreadSheet(), teamRange);
-	}
-
-	/**
-	 * Team über seine UUID; die Meldelisten-Aktualisierung vor jeder Runde vergibt sie. Fehlt sie trotzdem, bleibt
-	 * die Nummer als Schlüssel – die Runde ist dann nur gegen Umnummerieren nicht geschützt.
-	 */
-	private TeamSchluessel teamSchluessel(MeldelisteUuidIndex uuidIndex, int teamNr) {
-		return uuidIndex.uuid(teamNr).map(TeamSchluessel::uuidLiteral)
-				.orElseGet(() -> TeamSchluessel.nr(String.valueOf(teamNr)));
 	}
 
 	/**
