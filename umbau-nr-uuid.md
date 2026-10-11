@@ -1,5 +1,31 @@
 # UUID statt Teamnummer als Team-Identität
 
+## Arbeitsstand (2026-10-11)
+
+Branch `ptm-online-2`, Haupt-Checkout (Worktree entfernt).
+
+| Schritt | Stand | Commit |
+|---|---|---|
+| 1. `PTM.ALG.TNRUUID` / `PTM.ALG.UUIDZEILE` | erledigt | `d42ad54f` |
+| 1. `PTM.ALG.KOSIEGER` | offen (mit KO-Umbau) | |
+| 2. UUID in der Nr-Zelle, Zusatzspalte entfernt | erledigt | `82c9d1cd`, `c9190752` |
+| 2. Nr-Spalte sperren + Menüpunkt „Teamnummer ändern“ | **offen** | |
+| 3. Formelbauer über `TeamSchluessel` (`Uuid` / `Nr` als Übergang) | erledigt in `MeldeListeHelper`, `TeamAnzeigeHelper` | `7bba57a8` (WIP) |
+| 4. Schweizer/Maastrichter-Vorrunde | Runden schreiben UUID-Formeln, keine technischen Spalten mehr; `SchweizerTeamNrAufloeser` (UUID → Zahl → technische Spalte → Anzeige-Index), `SchweizerRundenLeser`, `LiveZellbereich` lesen die UUID | `7bba57a8` (WIP) |
+| 4. Schweizer-UITests | `SchweizerSpielrundeNamenLiveUpdateUITest` (neu: Nummerntausch in der Meldeliste ändert nur die Anzeige; Fallback technische Spalten) und `MaastrichterVorrundeNamensanzeigeUITest` umgestellt; Pakete `schweizer`, `maastrichter`, `ptmonline`: 154/155 grün | siehe Log |
+| 4. JGJ, Liga, TripTete, FormuleX, Kaskade, KO, Poule, Supermelee, PTM-Online-Leser | offen | |
+| 5. Migration bestehender Dokumente | offen | |
+
+Neue Klassen: `TeamUuidFormel` (Parser), `MeldelisteUuidIndex` (UUID ↔ Nr), `TeamSchluessel` (Formelausdruck je Schlüsselart), `NrUuidSpalte`, `TeamNummernPlan`/`TeamNummernVergabe`.
+
+Offen, nicht UUID-bezogen: `PtmOnlineAbgleichSheetRunnerUITest.rundenstartMeldetLokaleSetzpositionStattTeamNr` scheitert reproduzierbar mit „Style/CF-Operation außerhalb eines aktiven BlattschutzScopes“ (`PtmOnlineSyncSheet.schreibeKopf` aus der Testhilfe ohne SheetRunner bei aktivem Turnier-Modus). Vermutlich seit Master-Merge `792bfa3a` (Turnier-Modus pro Dokumentfenster).
+
+Nächste Schritte: „Teamnummer ändern“ (Schritt 2), danach die übrigen Systeme.
+
+Entscheidungen „Teamnummer ändern“ (2026-10-11):
+- **Ein** systemübergreifender Menüeintrag (Bereich Spieler-DB/Meldeliste, `Addons_A0_SpielerDb.xcu`), erkennt das aktive Turniersystem selbst; kein Eintrag je Systemmenü, kein Toolbar-Button.
+- Nr-Spalte nur im Turnier-Modus gesperrt (bestehendes Blattschutz-Konzept). Außerhalb davon bleibt sie offen; eine überschriebene Nr bekommt beim nächsten Meldeliste-Update eine neue UUID, bestehende Runden verlieren dann den Bezug zu dieser Meldung. Keine Heilung über gesicherte Zuordnung.
+
 ## Kontext
 
 Heute ist die Teamnummer (Spalte A der Meldeliste, bei Supermelee die Spielernummer) überall die Identität:
