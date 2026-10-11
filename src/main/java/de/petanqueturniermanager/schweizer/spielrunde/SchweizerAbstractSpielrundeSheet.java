@@ -31,7 +31,9 @@ import de.petanqueturniermanager.algorithmen.schweizer.SchweizerTeamNrAufloeser;
 import de.petanqueturniermanager.basesheet.SheetTabFarben;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldelisteUuidIndex;
 import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeigeHelper;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamSchluessel;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.basesheet.spielrunde.IZeitplanSpielrundeSheet;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeFooterHelper;
@@ -105,10 +107,8 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 	public static final int ZEIT_SPALTE = ERG_TEAM_B_SPALTE + 1;
 	public static final int FEHLER_SPALTE = ZEIT_SPALTE + 1;
 	/**
-	 * Ausgeblendete, stabile Identität der sichtbaren Teamzellen. Sichtbare Namen
-	 * dürfen sich durch Korrekturen ändern; Auslosung und Rangliste lesen diese
-	 * Nummern statt der Namensanzeige. Auflösung inkl. Fallback für alte Dateien ohne
-	 * diese Spalten: {@link SchweizerTeamNrAufloeser}.
+	 * Nur Altbestand: ausgeblendete Teamnummern älterer Spielrunden. Neue Runden tragen die UUID in der Formel der
+	 * Teamzelle; gelesen werden diese Spalten nur noch als Fallback ({@link SchweizerTeamNrAufloeser}).
 	 */
 	public static final int TECHNISCHE_TEAM_A_NR_SPALTE = FEHLER_SPALTE + 1;
 	public static final int TECHNISCHE_TEAM_B_NR_SPALTE = TECHNISCHE_TEAM_A_NR_SPALTE + 1;
@@ -284,7 +284,8 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 			int spielrunde = (abSpielrunde > 1) ? abSpielrunde : 1;
 			processBoxinfo("processbox.gespielte.runden.einlesen", spielrunde, bisSpielrunde);
 			var xDoc = getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
-			var teamNrAufloeser = new SchweizerTeamNrAufloeser(getMeldeListe()::erstelleTeamAnzeigeIndex);
+			var teamNrAufloeser = new SchweizerTeamNrAufloeser(getMeldeListe()::erstelleTeamAnzeigeIndex,
+					() -> MeldelisteUuidIndex.lese(getWorkingSpreadsheet()));
 
 			for (; spielrunde <= bisSpielrunde; spielrunde++) {
 				SheetRunner.testDoCancelTask();
@@ -314,22 +315,25 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 				ERSTE_DATEN_ZEILE + 999);
 		RangeData rowsData = RangeHelper
 				.from(sheet, getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), readRange).getDataFromRange();
+		String[][] teamFormeln = getSheetHelper().getFormulaArrayFromRange(sheet, RangePosition.from(TEAM_A_SPALTE,
+				ERSTE_DATEN_ZEILE, TEAM_B_SPALTE, ERSTE_DATEN_ZEILE + 999));
 
-		for (RowData row : rowsData) {
+		for (int i = 0; i < rowsData.size(); i++) {
+			RowData row = rowsData.get(i);
 			if (row.size() < 2) {
 				break;
 			}
-			int nrA = teamNrAufloeser.teamA(row);
-			if (nrA <= 0) {
+			int nrA = teamNrAufloeser.teamA(row, teamFormeln[i][0]);
+			if (nrA == SchweizerTeamNrAufloeser.KEIN_TEAM) {
 				break; // Ende der Daten
 			}
 			Team teamA = aktiveMeldungen.getTeam(nrA);
 			if (teamA == null) {
-				continue; // Team inaktiv, überspringen
+				continue; // Team inaktiv oder gelöscht, überspringen
 			}
 
-			int nrB = teamNrAufloeser.teamB(row);
-			if (nrB <= 0) {
+			int nrB = teamNrAufloeser.teamB(row, teamFormeln[i][1]);
+			if (nrB == SchweizerTeamNrAufloeser.KEIN_TEAM) {
 				// Freilos für Team A – Sieg zählen und die konfigurierten Freispiel-Punkte
 				// verbuchen (in der Zeile bereits als ERG-Werte vorbelegt, siehe
 				// teamPaarungenEinfuegen()). Ohne das wich die Punktedifferenz hier von der
@@ -713,67 +717,34 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 			return;
 		}
 
-		boolean useNames = getKonfigurationSheet().getSpielplanTeamAnzeige() != TeamAnzeige.NR;
 		int freispielPlus = getKonfigurationSheet().getFreispielPunktePlus();
 		int freispielMinus = getKonfigurationSheet().getFreispielPunkteMinus();
 		RangeData rangeData = new RangeData();
 
 		for (TeamPaarung teamPaarung : paarungen) {
 			SheetRunner.testDoCancelTask();
+			RowData row = rangeData.addNewRow();
+			row.add(new CellData("")); // Team A folgt per Formel (teamFormelnSchreiben)
+			row.add(new CellData("")); // Team B bzw. leer = Freilos
 			if (!teamPaarung.hasB()) {
-				// Freilos – Team A ohne Gegner eintragen, ERG mit Freispiel-Werten vorbelegen
-				RowData freilosRow = rangeData.addNewRow();
-				if (useNames) {
-					freilosRow.add(new CellData("")); // Name folgt per Formel (teamNamenFormelnSchreiben)
-				} else {
-					freilosRow.add(new CellData(teamPaarung.getA().getNr()));
-				}
-				freilosRow.add(new CellData("")); // kein Gegner = Freilos
-				freilosRow.add(new CellData(freispielPlus)); // ERG_TEAM_A vorbelegen
-				freilosRow.add(new CellData(freispielMinus)); // ERG_TEAM_B vorbelegen
-				continue;
-			}
-			if (useNames) {
-				RowData row = rangeData.addNewRow();
-				row.add(new CellData("")); // Name folgt per Formel (teamNamenFormelnSchreiben)
-				row.add(new CellData(""));
-			} else {
-				rangeData.addNewRow(teamPaarung.getA().getNr(), teamPaarung.getB().getNr());
+				// Freilos – ERG mit Freispiel-Werten vorbelegen
+				row.add(new CellData(freispielPlus)); // ERG_TEAM_A
+				row.add(new CellData(freispielMinus)); // ERG_TEAM_B
 			}
 		}
 
 		Position startPos = Position.from(TEAM_A_SPALTE, ERSTE_DATEN_ZEILE);
 		RangeHelper.from(this, rangeData.getRangePosition(startPos)).setDataInRange(rangeData);
-
-		// Zuerst die technischen Nummern: die Namensformeln schlagen darüber in der Meldeliste nach.
-		technischeTeamNummernSchreiben(paarungen);
-		if (useNames) {
-			teamNamenFormelnSchreiben(paarungen);
-		}
-
+		teamFormelnSchreiben(paarungen);
 		durchgangInfoSpaltenSchreiben(paarungen.size());
 	}
 
-	/** Schreibt die nicht sichtbare Teamidentität für Auswertung und Folgerunden. */
-	private void technischeTeamNummernSchreiben(List<TeamPaarung> paarungen) throws GenerateException {
-		RangeData nummern = new RangeData();
-		for (TeamPaarung paarung : paarungen) {
-			nummern.addNewRow(paarung.getA().getNr(), paarung.hasB() ? paarung.getB().getNr() : 0);
-		}
-		RangeHelper.from(this, nummern.getRangePosition(
-				Position.from(TECHNISCHE_TEAM_A_NR_SPALTE, ERSTE_DATEN_ZEILE))).setDataInRange(nummern);
-		ColumnProperties verborgen = ColumnProperties.from().isVisible(false);
-		getSheetHelper().setColumnProperties(getXSpreadSheet(), TECHNISCHE_TEAM_A_NR_SPALTE, verborgen);
-		getSheetHelper().setColumnProperties(getXSpreadSheet(), TECHNISCHE_TEAM_B_NR_SPALTE, verborgen);
-	}
-
 	/**
-	 * Schreibt Team- oder zusammengesetzte Spielernamen als Formel (statt statischem Text), damit
-	 * Änderungen in der Meldeliste im Spielplan sofort sichtbar bleiben. Die Formel schlägt die
-	 * Teamnummer aus der versteckten technischen Spalte derselben Zeile in der Meldeliste nach –
-	 * Anzeige und Auswertung ({@link SchweizerTeamNrAufloeser}) haben damit dieselbe Quelle.
+	 * Schreibt jede Teamzelle als Formel mit der UUID des Teams: je nach Anzeige die aktuelle Nummer oder Team- bzw.
+	 * zusammengesetzte Spielernamen aus der Meldeliste. Die UUID ist die Identität für Auswertung und Folgerunden
+	 * ({@link SchweizerTeamNrAufloeser}); eine geänderte Teamnummer ändert daher nur die Anzeige.
 	 */
-	private void teamNamenFormelnSchreiben(List<TeamPaarung> paarungen) throws GenerateException {
+	private void teamFormelnSchreiben(List<TeamPaarung> paarungen) throws GenerateException {
 		if (paarungen.isEmpty()) {
 			return;
 		}
@@ -781,15 +752,16 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		Formation formation = getKonfigurationSheet().getMeldeListeFormation();
 		TeamAnzeige anzeige = getKonfigurationSheet().getSpielplanTeamAnzeige();
 		boolean teamnameSpalteAktiv = getKonfigurationSheet().isMeldeListeTeamnameAnzeigen();
+		MeldelisteUuidIndex uuidIndex = MeldelisteUuidIndex.lese(getWorkingSpreadsheet());
 
 		String[][] formulas = new String[paarungen.size()][2];
 		for (int i = 0; i < paarungen.size(); i++) {
-			int zeile = ERSTE_DATEN_ZEILE + i;
-			formulas[i][0] = TeamAnzeigeHelper.formel(Position.from(TECHNISCHE_TEAM_A_NR_SPALTE, zeile).getAddress(),
-					anzeige, teamnameSpalteAktiv, formation, vereinsnameAnzeigen);
-			formulas[i][1] = paarungen.get(i).hasB()
-					? TeamAnzeigeHelper.formel(Position.from(TECHNISCHE_TEAM_B_NR_SPALTE, zeile).getAddress(),
-							anzeige, teamnameSpalteAktiv, formation, vereinsnameAnzeigen)
+			TeamPaarung paarung = paarungen.get(i);
+			formulas[i][0] = TeamAnzeigeHelper.formel(teamSchluessel(uuidIndex, paarung.getA().getNr()), anzeige,
+					teamnameSpalteAktiv, formation, vereinsnameAnzeigen);
+			formulas[i][1] = paarung.hasB()
+					? TeamAnzeigeHelper.formel(teamSchluessel(uuidIndex, paarung.getB().getNr()), anzeige,
+							teamnameSpalteAktiv, formation, vereinsnameAnzeigen)
 					: "";
 		}
 
@@ -806,6 +778,15 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		// nicht auflösbaren PTM.ALG.*-Add-in-Funktion) einen Berechnungsfehler liefert –
 		// sonst fällt das erst als schwer verständlicher Folgefehler an anderer Stelle auf.
 		getSheetHelper().pruefeBereichAufFormelFehler(getXSpreadSheet(), teamRange);
+	}
+
+	/**
+	 * Team über seine UUID; die Meldelisten-Aktualisierung vor jeder Runde vergibt sie. Fehlt sie trotzdem, bleibt
+	 * die Nummer als Schlüssel – die Runde ist dann nur gegen Umnummerieren nicht geschützt.
+	 */
+	private TeamSchluessel teamSchluessel(MeldelisteUuidIndex uuidIndex, int teamNr) {
+		return uuidIndex.uuid(teamNr).map(TeamSchluessel::uuidLiteral)
+				.orElseGet(() -> TeamSchluessel.nr(String.valueOf(teamNr)));
 	}
 
 	/**

@@ -17,7 +17,9 @@ import com.sun.star.sheet.XSpreadsheet;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldelisteUuidIndex;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
@@ -70,7 +72,8 @@ public final class SchweizerRundenLeser {
 		}
 
 		var xDoc = workingSpreadsheet.getWorkingSpreadsheetDocument();
-		var teamNrAufloeser = new SchweizerTeamNrAufloeser(meldeliste::erstelleTeamAnzeigeIndex);
+		var teamNrAufloeser = new SchweizerTeamNrAufloeser(meldeliste::erstelleTeamAnzeigeIndex,
+				() -> MeldelisteUuidIndex.lese(workingSpreadsheet));
 		for (int runde = 1; runde <= anzRunden; runde++) {
 			SheetRunner.testDoCancelTask();
 			XSpreadsheet rundeSheet = SheetMetadataHelper.findeSheetUndHeile(xDoc,
@@ -107,16 +110,28 @@ public final class SchweizerRundenLeser {
 				.from(rundeSheet, workingSpreadsheet.getWorkingSpreadsheetDocument(), readRange)
 				.getDataFromRange();
 
-		for (RowData row : rowsData) {
-			if (row.size() < 2) break;
+		String[][] teamFormeln = new SheetHelper(workingSpreadsheet).getFormulaArrayFromRange(rundeSheet,
+				RangePosition.from(SchweizerAbstractSpielrundeSheet.TEAM_A_SPALTE,
+						SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE, SchweizerAbstractSpielrundeSheet.TEAM_B_SPALTE,
+						SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE + 999));
 
-			int nrA = teamNrAufloeser.teamA(row);
-			if (nrA <= 0) break; // Ende der Daten
+		for (int i = 0; i < rowsData.size(); i++) {
+			RowData row = rowsData.get(i);
+			if (row.size() < 2) {
+				break;
+			}
+
+			int nrA = teamNrAufloeser.teamA(row, teamFormeln[i][0]);
+			if (nrA == SchweizerTeamNrAufloeser.KEIN_TEAM) {
+				break; // Ende der Daten
+			}
 			Team teamA = aktiveMeldungen.getTeam(nrA);
-			if (teamA == null) continue;
+			if (teamA == null) {
+				continue; // Team inaktiv oder gelöscht
+			}
 
-			int nrB = teamNrAufloeser.teamB(row);
-			if (nrB <= 0) {
+			int nrB = teamNrAufloeser.teamB(row, teamFormeln[i][1]);
+			if (nrB == SchweizerTeamNrAufloeser.KEIN_TEAM) {
 				// Freilos für Team A – Sieg zählen und die konfigurierten Freispiel-Punkte
 				// verbuchen (kein echter Gegner, daher kein Eintrag in gegnerMap für BHZ/FBHZ).
 				int[] statsA = statsMap.computeIfAbsent(nrA, k -> new int[3]);
@@ -126,7 +141,9 @@ public final class SchweizerRundenLeser {
 				continue;
 			}
 			Team teamB = aktiveMeldungen.getTeam(nrB);
-			if (teamB == null) continue;
+			if (teamB == null) {
+				continue;
+			}
 
 			int ergA = (row.size() > 2) ? row.get(2).getIntVal(0) : 0;
 			int ergB = (row.size() > 3) ? row.get(3).getIntVal(0) : 0;

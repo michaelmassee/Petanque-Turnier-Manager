@@ -7,7 +7,9 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -15,6 +17,8 @@ import org.jspecify.annotations.Nullable;
 
 import com.sun.star.sheet.XSpreadsheet;
 
+import de.petanqueturniermanager.basesheet.meldeliste.MeldelisteUuidIndex;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamUuidFormel;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
@@ -26,9 +30,10 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
  * Werte und Formeln eines Blattbereichs, je einmal als Block gelesen. Zugriffe erfolgen mit absoluten
  * (0-basierten) Blattkoordinaten.
  * <p>
- * Team-Zellen enthalten je nach Anzeigemodus die Team-Nr oder den Teamnamen. Namen stehen als Formel
- * {@code …MATCH(<nr>;<Meldeliste>…)} im Blatt (siehe {@code MeldeListeHelper.teamNameFormel}); daraus wird die
- * Nummer gelesen. Weitergereichte Namen (z.&nbsp;B. Sieger im Turnierbaum) werden über die im selben Bereich so
+ * Team-Zellen enthalten je nach Anzeigemodus die Team-Nr oder den Teamnamen. Umgestellte Systeme schreiben die UUID
+ * des Teams als Literal in die Formel ({@code PTM.ALG.UUIDZEILE("<uuid>";…)}); sie wird über die Meldeliste auf die
+ * aktuelle Nummer abgebildet. Ältere Formeln enthalten {@code …MATCH(<nr>;<Meldeliste>…)}; daraus wird die Nummer
+ * direkt gelesen. Weitergereichte Namen (z.&nbsp;B. Sieger im Turnierbaum) werden über die im selben Bereich so
  * aufgelösten Namen zugeordnet; mehrdeutige Namen bleiben unaufgelöst.
  */
 final class LiveZellbereich {
@@ -40,13 +45,17 @@ final class LiveZellbereich {
     private final int ersteZeile;
     private final RangeData werte;
     private final String[][] formeln;
+    private final Supplier<MeldelisteUuidIndex> uuidIndexQuelle;
     private @Nullable Map<String, Integer> nrProName;
+    private @Nullable MeldelisteUuidIndex uuidIndex;
 
-    private LiveZellbereich(int ersteSpalte, int ersteZeile, RangeData werte, String[][] formeln) {
+    private LiveZellbereich(int ersteSpalte, int ersteZeile, RangeData werte, String[][] formeln,
+            Supplier<MeldelisteUuidIndex> uuidIndexQuelle) {
         this.ersteSpalte = ersteSpalte;
         this.ersteZeile = ersteZeile;
         this.werte = werte;
         this.formeln = formeln;
+        this.uuidIndexQuelle = uuidIndexQuelle;
     }
 
     static LiveZellbereich lese(WorkingSpreadsheet ws, XSpreadsheet blatt, int ersteSpalte, int ersteZeile,
@@ -54,7 +63,7 @@ final class LiveZellbereich {
         RangePosition bereich = RangePosition.from(ersteSpalte, ersteZeile, letzteSpalte, letzteZeile);
         RangeData werte = RangeHelper.from(blatt, ws.getWorkingSpreadsheetDocument(), bereich).getDataFromRange();
         String[][] formeln = new SheetHelper(ws).getFormulaArrayFromRange(blatt, bereich);
-        return new LiveZellbereich(ersteSpalte, ersteZeile, werte, formeln);
+        return new LiveZellbereich(ersteSpalte, ersteZeile, werte, formeln, () -> MeldelisteUuidIndex.lese(ws));
     }
 
     int ersteZeile() {
@@ -117,7 +126,7 @@ final class LiveZellbereich {
         if (nr > 0) {
             return nr;
         }
-        int ausFormel = nrAusFormel(formel(spalte, zeile));
+        int ausFormel = nrDerFormel(formel(spalte, zeile));
         if (ausFormel > 0) {
             return ausFormel;
         }
@@ -137,7 +146,7 @@ final class LiveZellbereich {
             Set<String> mehrdeutig = new HashSet<>();
             for (int z = 0; z < formeln.length; z++) {
                 for (int s = 0; s < formeln[z].length; s++) {
-                    int nr = nrAusFormel(formeln[z][s]);
+                    int nr = nrDerFormel(formeln[z][s]);
                     String name = text(s + ersteSpalte, z + ersteZeile);
                     Integer bisher = nr > 0 && name != null ? zuordnung.putIfAbsent(name, nr) : null;
                     if (bisher != null && bisher != nr) {
@@ -149,6 +158,18 @@ final class LiveZellbereich {
             nrProName = zuordnung;
         }
         return nrProName;
+    }
+
+    /** Nummer aus der UUID der Formel (aktuelle Meldeliste), sonst aus einer älteren {@code MATCH(<nr>}-Formel. */
+    private int nrDerFormel(@Nullable String formel) {
+        Optional<String> uuid = TeamUuidFormel.findeUuid(formel);
+        if (uuid.isEmpty()) {
+            return nrAusFormel(formel);
+        }
+        if (uuidIndex == null) {
+            uuidIndex = uuidIndexQuelle.get();
+        }
+        return uuidIndex.nr(uuid.get()).orElse(0);
     }
 
     static int nrAusFormel(@Nullable String formel) {

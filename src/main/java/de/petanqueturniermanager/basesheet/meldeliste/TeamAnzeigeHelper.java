@@ -2,9 +2,8 @@ package de.petanqueturniermanager.basesheet.meldeliste;
 
 
 /**
- * Gemeinsame Auflösung der sichtbaren Teamkennung. Die Teamnummer bleibt in den
- * Spielsystemen die stabile technische Identität; diese Klasse erzeugt ausschließlich
- * den sichtbaren Zellinhalt.
+ * Gemeinsame Auflösung der sichtbaren Teamkennung. Identität eines Teams ist seine UUID ({@link TeamSchluessel});
+ * diese Klasse erzeugt ausschließlich den sichtbaren Zellinhalt.
  */
 public final class TeamAnzeigeHelper {
 
@@ -12,20 +11,29 @@ public final class TeamAnzeigeHelper {
 	}
 
 	/**
-	 * Liefert für eine Teamnummer entweder die Nummer selbst oder eine dynamische
-	 * Meldelisten-Formel für Team- beziehungsweise zusammengesetzte Spielernamen.
+	 * Wie {@link #formel(TeamSchluessel, TeamAnzeige, boolean, Formation, boolean)} für eine Teamnummer – Übergang
+	 * für Systeme, deren Spielrunden noch Nummern speichern.
+	 */
+	public static String formel(String teamNrAdresse, TeamAnzeige anzeige, boolean teamnameSpalteAktiv,
+			Formation formation, boolean vereinsnameAnzeigen) {
+		return formel(TeamSchluessel.nr(teamNrAdresse), anzeige, teamnameSpalteAktiv, formation, vereinsnameAnzeigen);
+	}
+
+	/**
+	 * Liefert für ein Team entweder die aktuelle Nummer oder eine dynamische Meldelisten-Formel für Team-
+	 * beziehungsweise zusammengesetzte Spielernamen.
 	 *
 	 * @param teamnameSpalteAktiv ob die Meldeliste eine Teamname-Spalte hat – bestimmt die Lage
 	 *                            der Spielerspalten; ohne Teamname-Spalte wird {@link TeamAnzeige#NAME}
 	 *                            zu Spielernamen (siehe {@link TeamAnzeige#effektiv(boolean)})
 	 */
-	public static String formel(String teamNrAdresse, TeamAnzeige anzeige, boolean teamnameSpalteAktiv,
+	public static String formel(TeamSchluessel team, TeamAnzeige anzeige, boolean teamnameSpalteAktiv,
 			Formation formation, boolean vereinsnameAnzeigen) {
 		return switch (anzeige.effektiv(teamnameSpalteAktiv)) {
-		case NR -> teamNrAdresse;
-		case SPIELERNAMEN -> MeldeListeHelper.spielerNamenFormel(teamNrAdresse, teamnameSpalteAktiv, formation,
+		case NR -> team.nrAnzeige(MeldeListeHelper.nrBereichMeldeliste());
+		case SPIELERNAMEN -> MeldeListeHelper.spielerNamenFormel(team, teamnameSpalteAktiv, formation,
 				vereinsnameAnzeigen);
-		case NAME -> MeldeListeHelper.teamNameFormel(teamNrAdresse, true, formation, vereinsnameAnzeigen);
+		case NAME -> MeldeListeHelper.teamNameFormel(team, true, formation, vereinsnameAnzeigen);
 		};
 	}
 

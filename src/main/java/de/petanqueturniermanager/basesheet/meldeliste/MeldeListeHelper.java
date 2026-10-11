@@ -670,10 +670,21 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	 */
 	public static String teamNameFormel(String nrAdresse, boolean teamnameSpalteAktiv,
 			Formation formation, boolean vereinsnameAnzeigen) {
+		return teamNameFormel(TeamSchluessel.nr(nrAdresse), teamnameSpalteAktiv, formation, vereinsnameAnzeigen);
+	}
+
+	/** Wie {@link #teamNameFormel(String, boolean, Formation, boolean)}, Team über einen {@link TeamSchluessel}. */
+	public static String teamNameFormel(TeamSchluessel team, boolean teamnameSpalteAktiv,
+			Formation formation, boolean vereinsnameAnzeigen) {
 		if (!teamnameSpalteAktiv) {
-			return spielerNamenFormel(nrAdresse, false, formation, vereinsnameAnzeigen);
+			return spielerNamenFormel(team, false, formation, vereinsnameAnzeigen);
 		}
-		return teamAnzeigeFormel(nrAdresse, true, MELDELISTE_ZEILE_AB_SPALTE_A, formation, vereinsnameAnzeigen);
+		return teamAnzeigeFormel(team, true, MELDELISTE_ZEILE_AB_SPALTE_A, formation, vereinsnameAnzeigen);
+	}
+
+	/** Nr-Spalte der Meldeliste in Formel-Notation, Suchbereich für {@link TeamSchluessel}. */
+	public static String nrBereichMeldeliste() {
+		return "$'" + SheetNamen.meldeliste() + "'.$A$1:$A$999";
 	}
 
 	/**
@@ -691,15 +702,20 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	 */
 	public static String spielerNamenFormel(String nrAdresse, boolean teamnameSpalteAktiv,
 			Formation formation, boolean vereinsnameAnzeigen) {
-		String zeilenBereich = teamnameSpalteAktiv ? MELDELISTE_ZEILE_AB_SPALTE_B : MELDELISTE_ZEILE_AB_SPALTE_A;
-		return teamAnzeigeFormel(nrAdresse, false, zeilenBereich, formation, vereinsnameAnzeigen);
+		return spielerNamenFormel(TeamSchluessel.nr(nrAdresse), teamnameSpalteAktiv, formation, vereinsnameAnzeigen);
 	}
 
-	private static String teamAnzeigeFormel(String nrAdresse, boolean teamnameAnzeigen, String zeilenBereich,
+	/** Wie {@link #spielerNamenFormel(String, boolean, Formation, boolean)}, Team über einen {@link TeamSchluessel}. */
+	public static String spielerNamenFormel(TeamSchluessel team, boolean teamnameSpalteAktiv,
+			Formation formation, boolean vereinsnameAnzeigen) {
+		String zeilenBereich = teamnameSpalteAktiv ? MELDELISTE_ZEILE_AB_SPALTE_B : MELDELISTE_ZEILE_AB_SPALTE_A;
+		return teamAnzeigeFormel(team, false, zeilenBereich, formation, vereinsnameAnzeigen);
+	}
+
+	private static String teamAnzeigeFormel(TeamSchluessel team, boolean teamnameAnzeigen, String zeilenBereich,
 			Formation formation, boolean vereinsnameAnzeigen) {
 		String meldeliste = "$'" + SheetNamen.meldeliste() + "'.";
-		String zeile = "INDEX(" + meldeliste + zeilenBereich + ";MATCH(" + nrAdresse + ";" + meldeliste
-				+ "$A$1:$A$999;0);0)";
+		String zeile = "INDEX(" + meldeliste + zeilenBereich + ";" + team.zeileImBereich(nrBereichMeldeliste()) + ";0)";
 		return GlobalImpl.FORMAT_PTM_TEAM_ANZEIGE(teamnameAnzeigen, formation.getAnzSpieler(),
 				vereinsnameAnzeigen, zeile);
 	}
