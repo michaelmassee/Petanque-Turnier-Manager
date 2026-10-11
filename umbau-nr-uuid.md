@@ -41,7 +41,11 @@ Entscheidungen des Users:
    - Anzeige Nr: `=INDEX(Meldeliste.$A$1:$A$999; PTM.ALG.UUIDZEILE("<uuid>"; Meldeliste.$A$1:$A$999))`.
    - Anzeige Name: dieselbe Zeile über die Formelbauer (`PTM.ALG.TEAMANZEIGE`).
    - Java liest die UUID per `getFormulaArray` und UUID-Regex aus der Zelle. Gemeinsamer Parser: `TeamUuidFormel.findeUuid(String formel)`.
-   - **Weitergabe ohne Hilfsspalte** (KO-Sieger, Poule-Sieger/Verlierer): `PTM.ALG.ZELLUUID(zelle)` liefert die UUID aus dem Formeltext der referenzierten Zelle. Der Parameter ist vom Typ `XCellRange`, die Abhängigkeit wird also verfolgt. Beispiel Siegerzelle: `INDEX(…; UUIDZEILE(IF(scoreA>scoreB; ZELLUUID(A5); ZELLUUID(A6)); …))`. Java findet hier kein Literal und wertet für die Zuordnung die Ergebnisse aus, wie es die Leser heute schon tun.
+   - **Weitergabe ohne Hilfsspalte** (KO-Sieger, Poule-Sieger/Verlierer): `PTM.ALG.KOSIEGER(teamA; teamB; punkteA; punkteB; verlierer)` ersetzt `IF(scoreA>scoreB; …)` und liefert die UUID des Siegers (bzw. mit `verlierer=1` des Verlierers), `#N/A` ohne Ergebnis.
+     - Alle vier Zellen kommen als `XCellRange`; die Abhängigkeiten werden also verfolgt.
+     - Die Teamzellen werden **rekursiv** aufgelöst: Enthält ihre Formel ein UUID-Literal, ist das die UUID. Ist sie selbst eine Siegerzelle, liest die Funktion deren `KOSIEGER`-Argumente (Zellbezüge im Formeltext, über `XSheetCellRange.getSpreadsheet()` aufgelöst) und steigt ab. Die Tiefe entspricht der Rundenzahl (max. ca. 7).
+     - Beispiel Siegerzelle: `TEAMANZEIGE(…; INDEX(…; UUIDZEILE(KOSIEGER(A5;A6;K5;L5;0); …)))`.
+     - Java nutzt für Leser dieselbe Auflösung (gemeinsame UNO-freie Logik, Zugriff auf Zellen über eine schmale Schnittstelle).
 4. **Java-Leser `MeldelisteUuidIndex`** (neu, `basesheet/meldeliste/`):
    - Ein Block-Lesezugriff auf Formeln und Werte der Nr-Spalte ergibt UUID ↔ Nr ↔ Zeile.
    - Die Namen kommen über den vorhandenen `TeilnehmerNamenLeser`.
@@ -55,7 +59,7 @@ Entscheidungen des Users:
 ## Schritte
 
 ### 1. Add-in-Funktionen
-- In `idl/de/petanqueturniermanager/AddInGlobal.idl` die Indizes 34–36 ergänzen: `ptmtnruuid(long nr, string uuid)`, `ptmuuidzeile(string uuid, com::sun::star::table::XCellRange bereich)` und `ptmzelluuid(com::sun::star::table::XCellRange zelle)`.
+- In `idl/de/petanqueturniermanager/AddInGlobal.idl` die Indizes 34–36 ergänzen: `ptmtnruuid(long nr, string uuid)`, `ptmuuidzeile(string uuid, XCellRange bereich)` (erledigt, `d42ad54f`) und `ptmkosieger(XCellRange teamA, XCellRange teamB, XCellRange punkteA, XCellRange punkteB, long verlierer)` → `any` (mit dem KO-Umbau).
 - `addin/XGlobal.java` um `MethodTypeInfo` und Signaturen ergänzen. Muster: `ptmteamanzeige`, Index 29.
 - `addins/GlobalImpl.java` implementieren. Der UUID-Parser liegt in einer UNO-freien Klasse `TeamUuidFormel` (bauen/parsen) und ist unit-getestet.
 - `registry/org/openoffice/Office/GlobalAddIn.xcu` (5 Sprachen) ergänzen und `./gradlew compileIdl` ausführen.
@@ -100,11 +104,11 @@ Muster je System: Wo heute die Nr als Zahl steht (sichtbar oder versteckt), steh
   - Leser: `FormuleXRanglisteSheet`, `KaskadeRundenErgebnisLeser`.
 - **KO (`KoTurnierbaumSheet`, genutzt von KO, Maastrichter-Finale, Poule-KO, Kaskade-Felder, JGJ-Finale):**
   - Runde 1 trägt das UUID-Literal in der Formel statt der Nr.
-  - Die Sieger-Propagation läuft über `ZELLUUID` (siehe Kernmechanik), ohne Hilfszellen.
+  - Die Sieger-Propagation läuft über `KOSIEGER` (siehe Kernmechanik), ohne Hilfszellen.
   - Die zusätzliche Namensspalte im Modus NR (`:1584`, `:1927`) prüfen; vermutlich entfällt sie.
   - `TurnierbaumLiveLeser` liest die UUIDs aus den Formeln bzw. wertet bei Sieger-Zellen die Ergebnisse aus.
 - **Poule-Vorrunde:**
-  - `SPALTE_TEAM_A/B_NR` entfallen; die Namenszellen tragen die UUID-Formel, Sieger/Verlierer über `ZELLUUID`.
+  - `SPALTE_TEAM_A/B_NR` entfallen; die Namenszellen tragen die UUID-Formel, Sieger/Verlierer über `KOSIEGER`.
   - `PouleVorrundenRanglisteSheet` liest sie.
 - **Supermelee:**
   - Die Spieler-Nr-Zellen in `SpielrundeDelegate` werden UUID-Formelzellen; die separaten VLOOKUP-Namensspalten werden geprüft und entfallen ggf. (Meldeliste gleiches `PTM.ALG.TNRUUID`-Schema).
@@ -129,7 +133,7 @@ Einmalig beim ersten Meldeliste-Update bzw. Rundenaufbau (idempotent, als `Sheet
 - `BlattschutzManager.schreibeEntsperrt`
 
 ## Risiken
-- **Sieger-Zellen ohne Literal:** Java muss Sieger aus den Ergebnissen herleiten. Die Leser tun das heute schon weitgehend; je System prüfen.
+- **Siegerzellen ohne Literal:** `KOSIEGER` löst rekursiv auf; Bezüge aus dem Formeltext parsen (relativ/absolut, gleiches Blatt) unit-testen.
 - **Performance:** `UUIDZEILE` liest je Aufruf ca. 1000 Formeln. Bei vielen Formelzellen (KO-Baum, Spielplan) früh messen. Bei Bedarf einen Cache je Bereich mit Invalidierung über den Inhalt der Nr-Spalte.
 - **Ohne installierte Extension** zeigen Nr-Spalten `#NAME?`. Das ist schon heute bei allen `PTM.ALG.*` so.
 - **Größe:** Sehr viele UITest-JSON-Referenzen ändern sich, weil Teamzellen zu Formeln werden und versteckte Nr-Spalten entfallen. Neu erfasste JSONs inhaltlich prüfen (Memory-Regel).
