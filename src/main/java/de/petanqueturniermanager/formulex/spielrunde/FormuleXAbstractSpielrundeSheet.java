@@ -73,6 +73,8 @@ import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.model.TeamPaarung;
 import de.petanqueturniermanager.ptmonline.PtmOnlineLiveAusloeser;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldelisteUuidIndex;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
@@ -440,12 +442,10 @@ public abstract class FormuleXAbstractSpielrundeSheet extends SheetRunner implem
         for (TeamPaarung teamPaarung : paarungen) {
             SheetRunner.testDoCancelTask();
             RowData row = rangeData.addNewRow();
-            row.add(new CellData(teamPaarung.getA().getNr()));
-            if (teamPaarung.hasB()) {
-                row.add(new CellData(teamPaarung.getB().getNr()));
-            } else {
+            row.add(new CellData("")); // Team A folgt per Formel (teamFormelnSchreiben)
+            row.add(new CellData("")); // Team B bzw. leer = Freilos
+            if (!teamPaarung.hasB()) {
                 // Freilos: kein Gegner; ERG-Spalten mit Freispiel-Property-Werten vorbelegen
-                row.add(new CellData(""));
                 row.add(new CellData(freispielPlus));
                 row.add(new CellData(freispielMinus));
             }
@@ -453,8 +453,34 @@ public abstract class FormuleXAbstractSpielrundeSheet extends SheetRunner implem
 
         Position startPos = Position.from(TEAM_A_SPALTE, ERSTE_DATEN_ZEILE);
         RangeHelper.from(this, rangeData.getRangePosition(startPos)).setDataInRange(rangeData);
+        teamFormelnSchreiben(paarungen);
 
         durchgangInfoSpaltenSchreiben(paarungen.size());
+    }
+
+    /**
+     * Schreibt jede Teamzelle als Formel mit der UUID des Teams, die die aktuelle Teamnummer zeigt. Auswertung und
+     * Folgerunden lesen diese Anzeige; eine geänderte Teamnummer ändert daher nicht die Zuordnung.
+     */
+    private void teamFormelnSchreiben(List<TeamPaarung> paarungen) throws GenerateException {
+        if (paarungen.isEmpty()) {
+            return;
+        }
+        MeldelisteUuidIndex uuidIndex = MeldelisteUuidIndex.lese(getWorkingSpreadsheet());
+        String nrBereich = MeldeListeHelper.nrBereichMeldeliste();
+        String[][] formeln = new String[paarungen.size()][2];
+        for (int i = 0; i < paarungen.size(); i++) {
+            TeamPaarung paarung = paarungen.get(i);
+            formeln[i][0] = uuidIndex.schluessel(paarung.getA().getNr()).nrAnzeige(nrBereich);
+            formeln[i][1] = paarung.hasB() ? uuidIndex.schluessel(paarung.getB().getNr()).nrAnzeige(nrBereich) : "";
+        }
+        RangePosition teamBereich = RangePosition.from(TEAM_A_SPALTE, ERSTE_DATEN_ZEILE, TEAM_B_SPALTE,
+                ERSTE_DATEN_ZEILE + paarungen.size() - 1);
+        getSheetHelper().setFormulaArrayInRange(getXSpreadSheet(), teamBereich, formeln);
+        // Die Runden-Erzeugung läuft mit deaktivierter Automatikberechnung; ohne Rechenlauf blieben die neuen
+        // Formelzellen bis zum nächsten Nutzer-Trigger leer.
+        getxCalculatable().calculateAll();
+        getSheetHelper().pruefeBereichAufFormelFehler(getXSpreadSheet(), teamBereich);
     }
 
     private void datenErsteSpalte() throws GenerateException {

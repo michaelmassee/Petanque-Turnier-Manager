@@ -32,7 +32,8 @@ import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 public class TeamnummerAendernSheet extends SheetRunner {
 
 	/** Systeme, deren Spielrunden und Ranglisten Teams über die UUID referenzieren (umbau-nr-uuid.md). */
-	static final Set<TurnierSystem> UMGESTELLTE_SYSTEME = Set.of(TurnierSystem.SCHWEIZER, TurnierSystem.KO);
+	static final Set<TurnierSystem> UMGESTELLTE_SYSTEME = Set.of(TurnierSystem.SCHWEIZER, TurnierSystem.KO,
+			TurnierSystem.FORMULEX);
 
 	/** Nr-Spalte der Meldeliste (A), wie {@link MeldelisteUuidIndex}. */
 	private static final int NR_SPALTE = 0;
