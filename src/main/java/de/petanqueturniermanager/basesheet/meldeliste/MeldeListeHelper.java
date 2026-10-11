@@ -9,6 +9,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
+import java.util.TreeMap;
+import java.util.SortedMap;
+import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -26,7 +30,6 @@ import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGeradeStyle;
-import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
@@ -405,9 +408,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 
 		int spielrNr;
 		String spielerName;
-		NumberCellValue errCelVal = NumberCellValue
-				.from(xSheet, Position.from(SPIELER_NR_SPALTE, meldeListe.getErsteDatenZiele()))
-				.setCharColor(ColorHelper.CHAR_COLOR_ORANGE);
+		String[][] nrFormeln = leseNrFormeln(letzteSpielZeile);
 
 		StringCellValue errStrCelVal = StringCellValue
 				.from(xSheet, Position.from(meldeListe.getMeldungenSpalte().getNamenOderTeamnameSpalte(),
@@ -424,14 +425,15 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 					Position.from(SPIELER_NR_SPALTE, spielerZeilecntr));
 			if (spielrNr > 0) {
 				if (spielrNrInSheet.contains(spielrNr)) {
-					// Error color
-					meldeListe.getSheetHelper()
-							.setNumberValueInCell(errCelVal.setValue((double) spielrNr).zeile(spielerZeilecntr));
+					// Nur einfärben – die Nr-Zelle trägt die UUID, ihr Inhalt bleibt unangetastet.
+					meldeListe.getSheetHelper().setPropertiesInRange(xSheet,
+							RangePosition.from(SPIELER_NR_SPALTE, spielerZeilecntr, SPIELER_NR_SPALTE, spielerZeilecntr),
+							CellProperties.from().setCharColor(ColorHelper.CHAR_COLOR_ORANGE));
 					throw new DoppelteStartnummerException(spielrNr, I18n.get("error.meldeliste.spieler.nr", spielrNr));
 				}
 				spielrNrInSheet.add(spielrNr);
-			} else {
-				// nr ist ungültig einfach löschen
+			} else if (uuidAusNrFormel(nrFormeln, spielerZeilecntr).isEmpty()) {
+				// ungültige Nr ohne UUID einfach löschen; Nr 0 mit UUID (frisch importiert) bekommt ihre Nr gleich
 				meldeListe.getSheetHelper().clearValInCell(xSheet, Position.from(SPIELER_NR_SPALTE, spielerZeilecntr));
 			}
 
@@ -546,10 +548,8 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 			}
 		}
 
-		NumberCellValue neueNrCelVal = NumberCellValue
-				.from(xSheet, Position.from(SPIELER_NR_SPALTE, meldeListe.getErsteDatenZiele()))
-				.setCharColor(ColorHelper.CHAR_COLOR_BLACK);
-
+		String[][] nrFormeln = leseNrFormeln(letzteSpielZeile);
+		SortedMap<Integer, String> neueFormeln = new TreeMap<>();
 		int naechsteFreieNr = 1;
 		boolean ersteFundstelleBehalten = true;
 		for (int zeile = meldeListe.getErsteDatenZiele(); zeile <= letzteSpielZeile; zeile++) {
@@ -565,9 +565,29 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 				naechsteFreieNr++;
 			}
 			belegteNummern.add(naechsteFreieNr);
-			meldeListe.getSheetHelper()
-					.setNumberValueInCell(neueNrCelVal.setValue((double) naechsteFreieNr).zeile(zeile));
+			// Die Meldung behält ihre UUID; nur die angezeigte Nr ändert sich.
+			String uuid = uuidAusNrFormel(nrFormeln, zeile).orElseGet(() -> UUID.randomUUID().toString());
+			neueFormeln.put(zeile, GlobalImpl.FORMAT_PTM_TNR_UUID(naechsteFreieNr, uuid));
+			meldeListe.getSheetHelper().setPropertiesInRange(xSheet,
+					RangePosition.from(SPIELER_NR_SPALTE, zeile, SPIELER_NR_SPALTE, zeile),
+					CellProperties.from().setCharColor(ColorHelper.CHAR_COLOR_BLACK));
 		}
+		TeamNummernVergabe.schreibeNrFormeln(meldeListe.getSheetHelper(), xSheet, SPIELER_NR_SPALTE, neueFormeln);
+	}
+
+	/** Formeln der Nr-Spalte von der ersten Datenzeile bis {@code letzteZeile}, in einem Lesezugriff. */
+	private String[][] leseNrFormeln(int letzteZeile) throws GenerateException {
+		return meldeListe.getSheetHelper().getFormulaArrayFromRange(getXSpreadSheet(),
+				RangePosition.from(SPIELER_NR_SPALTE, meldeListe.getErsteDatenZiele(), SPIELER_NR_SPALTE, letzteZeile));
+	}
+
+	/** UUID aus der Nr-Formel der Zeile (0-basiert), falls vorhanden. */
+	private Optional<String> uuidAusNrFormel(String[][] nrFormeln, int zeile) {
+		int index = zeile - meldeListe.getErsteDatenZiele();
+		if (index < 0 || index >= nrFormeln.length || nrFormeln[index].length == 0) {
+			return Optional.empty();
+		}
+		return TeamUuidFormel.findeUuid(nrFormeln[index][0]);
 	}
 
 	/**

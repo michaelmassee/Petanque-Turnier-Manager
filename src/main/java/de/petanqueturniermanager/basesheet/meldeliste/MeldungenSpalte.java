@@ -10,10 +10,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -198,24 +196,31 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 	}
 
 	/**
-	 * rückwärts suche in der Spalte Spiele Nr nach regex ^\d<br>
-	 * wenn not found dann erste Daten Zeile.
-	 * 
+	 * Letzte Zeile mit einer Spieler-Nr; ohne Nr die erste Datenzeile. Liest die Werte, nicht den Zelltext – die
+	 * Nr-Zelle enthält die Formel {@code PTM.ALG.TNRUUID}.
+	 *
 	 * @return Zeile
 	 * @throws GenerateException
 	 */
-
 	public int sucheLetzteZeileMitSpielerNummer() throws GenerateException {
-		Map<String, Object> searchProp = new HashMap<>();
-		searchProp.put(RangeSearchHelper.SEARCH_BACKWARDS, true);
-		Position result = RangeSearchHelper
-				.from(getISheet(),
-						RangePosition.from(meldungNrSpalte, getErsteDatenZiele(), meldungNrSpalte, MAX_ANZ_MELDUNGEN))
-				.searchNachRegExprInSpalte("^\\d", searchProp);
-		if (result != null) {
-			return result.getZeile();
+		RangeData nummern = leseNrWerte();
+		for (int index = nummern.size() - 1; index >= 0; index--) {
+			if (nrAusZeile(nummern, index) > 0) {
+				return getErsteDatenZiele() + index;
+			}
 		}
 		return getErsteDatenZiele();
+	}
+
+	/** Werte der Nr-Spalte über alle Datenzeilen, in einem Lesezugriff. */
+	private RangeData leseNrWerte() throws GenerateException {
+		return RangeHelper.from(getISheet(),
+				RangePosition.from(meldungNrSpalte, getErsteDatenZiele(), meldungNrSpalte, MAX_ANZ_MELDUNGEN))
+				.getDataFromRange();
+	}
+
+	private static int nrAusZeile(RangeData nummern, int index) {
+		return nummern.get(index).isEmpty() ? -1 : nummern.get(index).get(0).getIntVal(-1);
 	}
 
 	/**
@@ -290,18 +295,12 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 	 */
 	public int getSpielerZeileNr(int spielerNr) throws GenerateException {
 		checkArgument(spielerNr > 0);
-		// muss in komplette spalte wert stehen. Deswegen mit ^ und $
-		Position result = RangeSearchHelper
-				.from(getISheet(),
-						RangePosition.from(meldungNrSpalte, getErsteDatenZiele(), meldungNrSpalte, MAX_ANZ_MELDUNGEN))
-				.searchNachRegExprInSpalte("^" + spielerNr + "$");
-		if (result != null) {
-			// Validieren !
-			Integer intFromCell = getSheetHelper().getIntFromCell(getXSpreadsheet(), result);
-			if (intFromCell != spielerNr) {
-				throw new GenerateException(I18n.get("error.spieler.suchen", spielerNr, result));
+		// Werte statt Zelltext: die Nr-Zelle enthält die Formel PTM.ALG.TNRUUID.
+		RangeData nummern = leseNrWerte();
+		for (int index = 0; index < nummern.size(); index++) {
+			if (nrAusZeile(nummern, index) == spielerNr) {
+				return getErsteDatenZiele() + index;
 			}
-			return result.getZeile();
 		}
 		return -1;
 	}

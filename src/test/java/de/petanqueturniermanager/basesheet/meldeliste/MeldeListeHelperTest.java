@@ -7,6 +7,10 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import java.util.SortedMap;
+import java.util.TreeMap;
+
+import org.assertj.core.api.Condition;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -15,13 +19,16 @@ import org.mockito.Mockito;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.text.XText;
+import com.sun.star.util.XProtectable;
 
+import de.petanqueturniermanager.addins.GlobalImpl;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.DoppelteStartnummerException;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.position.Position;
+import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.SpielerMeldungen;
@@ -44,7 +51,10 @@ public class MeldeListeHelperTest {
 		iMeldelisteMock = Mockito.mock(IMeldeliste.class);
 		sheetHelperMock = Mockito.mock(SheetHelper.class);
 		meldungenSpalteMock = Mockito.mock(MeldungenSpalte.class);
-		xSpreadsheetMock = Mockito.mock(XSpreadsheet.class);
+		// XProtectable: Nr-Formeln werden über BlattschutzManager.schreibeEntsperrt geschrieben
+		xSpreadsheetMock = Mockito.mock(XSpreadsheet.class, Mockito.withSettings().extraInterfaces(XProtectable.class));
+		Mockito.when(sheetHelperMock.getFormulaArrayFromRange(any(XSpreadsheet.class), any(RangePosition.class)))
+				.thenReturn(new String[0][0]);
 		automatischNeuNummerierenAntwortJa = true;
 
 		Mockito.when(iMeldelisteMock.getMeldungenSpalte()).thenReturn(meldungenSpalteMock);
@@ -191,14 +201,11 @@ public class MeldeListeHelperTest {
 
 		meldeListeHelper.korrigiereDoppelteStartnummer(12);
 
-		ArgumentCaptor<NumberCellValue> captor = ArgumentCaptor.forClass(NumberCellValue.class);
-		verify(sheetHelperMock, times(1)).setNumberValueInCell(captor.capture());
-		NumberCellValue neuerWert = captor.getValue();
 		// nur die zweite Fundstelle (Zeile mit "Heinz") wird neu nummeriert, mit der kleinsten
-		// freien Lücke (1 ist frei, da nur 32/12/4 belegt sind) statt max+1.
-		assertThat(neuerWert.getValue()).isEqualTo(1.0);
-		assertThat(neuerWert.getPos().getZeile())
-				.isEqualTo(MeldeListeKonstanten.ERSTE_DATEN_ZEILE + 3);
+		// freien Lücke (1 ist frei, da nur 32/12/4 belegt sind) statt max+1 – als TNRUUID-Formel.
+		assertThat(geschriebeneNrFormeln()).containsOnlyKeys(MeldeListeKonstanten.ERSTE_DATEN_ZEILE + 3)
+				.hasValueSatisfying(new Condition<>(
+						formel -> formel.startsWith(GlobalImpl.PTM_TNR_UUID + "(1;"), "Nr 1 mit UUID"));
 	}
 
 	@Test
@@ -209,20 +216,28 @@ public class MeldeListeHelperTest {
 				new SpielerNrName(3, "Petra"), new SpielerNrName(12, "Klaus"), new SpielerNrName(12, "Heinz") };
 		initReturnSpielerDaten(spielerNrNameList);
 
-		// NumberCellValue ist ein mutabler Builder (setValue()/zeile() ändern dieselbe Instanz),
-		// daher hier Werte beim Aufruf sofort abgreifen statt per ArgumentCaptor am Ende zu lesen
-		// (sonst zeigen alle erfassten Werte fälschlich den letzten, final gesetzten Wert).
-		java.util.List<Double> erfassteWerte = new java.util.ArrayList<>();
-		Mockito.doAnswer(invocation -> {
-			erfassteWerte.add(invocation.<NumberCellValue>getArgument(0).getValue());
-			return null;
-		}).when(sheetHelperMock).setNumberValueInCell(any());
-
 		meldeListeHelper.korrigiereDoppelteStartnummer(12);
 
 		// Erste Fundstelle (Anna) behält 12; Klaus und Heinz bekommen je eine eigene freie Nr.
 		// Belegt sind 12 und 3, also sind 1 und 2 frei.
-		assertThat(erfassteWerte).containsExactly(1.0, 2.0);
+		assertThat(geschriebeneNrFormeln().values()).map(formel -> formel.substring(0, formel.indexOf(';')))
+				.containsExactly(GlobalImpl.PTM_TNR_UUID + "(1", GlobalImpl.PTM_TNR_UUID + "(2");
+	}
+
+	/** Alle per setFormulaArrayInRange geschriebenen Nr-Formeln je Zeile. */
+	private SortedMap<Integer, String> geschriebeneNrFormeln() {
+		ArgumentCaptor<RangePosition> bereiche = ArgumentCaptor.forClass(RangePosition.class);
+		ArgumentCaptor<String[][]> formeln = ArgumentCaptor.forClass(String[][].class);
+		verify(sheetHelperMock, Mockito.atLeastOnce()).setFormulaArrayInRange(any(XSpreadsheet.class),
+				bereiche.capture(), formeln.capture());
+		SortedMap<Integer, String> ergebnis = new TreeMap<>();
+		for (int i = 0; i < bereiche.getAllValues().size(); i++) {
+			String[][] block = formeln.getAllValues().get(i);
+			for (int zeile = 0; zeile < block.length; zeile++) {
+				ergebnis.put(bereiche.getAllValues().get(i).getStartZeile() + zeile, block[zeile][0]);
+			}
+		}
+		return ergebnis;
 	}
 
 	@Test
@@ -256,8 +271,10 @@ public class MeldeListeHelperTest {
 			assertThat(exc.getStartnummer()).isEqualTo(12);
 			assertThat(exc.getMessage()).containsOnlyOnce("Spieler Nr. 12 ist doppelt");
 		}
-		// nur die Rot-Markierung durch testDoppelteMeldungen() selbst, keine zusaetzliche Korrektur
-		verify(sheetHelperMock, times(1)).setNumberValueInCell(any(NumberCellValue.class));
+		// nur die Markierung durch testDoppelteMeldungen() selbst (Zellfarbe), keine Korrektur der Nr-Formeln
+		verify(sheetHelperMock, Mockito.never()).setFormulaArrayInRange(any(XSpreadsheet.class), any(RangePosition.class),
+				any(String[][].class));
+		verify(sheetHelperMock, Mockito.never()).setNumberValueInCell(any(NumberCellValue.class));
 	}
 
 	@Test
@@ -451,6 +468,14 @@ public class MeldeListeHelperTest {
 					.thenReturn(spielerNrName.name);
 			zeileCntr++;
 		}
+
+		// Nr-Formeln wie im Altbestand: reine Zahlen ohne UUID
+		String[][] nrFormeln = new String[spielerNrnameList.length][1];
+		for (int i = 0; i < spielerNrnameList.length; i++) {
+			nrFormeln[i][0] = String.valueOf(spielerNrnameList[i].nr);
+		}
+		Mockito.when(sheetHelperMock.getFormulaArrayFromRange(any(XSpreadsheet.class), any(RangePosition.class)))
+				.thenReturn(nrFormeln);
 
 		Mockito.when(iMeldelisteMock.letzteZeileMitSpielerName())
 				.thenReturn(MeldeListeKonstanten.ERSTE_DATEN_ZEILE + spielerNrnameList.length - 1);

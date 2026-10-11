@@ -59,12 +59,13 @@ class SheetMeldelisteAdapterTeilnahmeUITest extends BaseCalcUITest {
         assertThat(aktivWert(zeile)).isEqualTo("1");
     }
 
+    /** Spieler-DB-Übernahme: Team gilt als angemeldet, eingecheckt wird erst vor Ort. */
     @Test
-    void schreibeBlockAusSpielerDbBleibtAktiv() throws Exception {
+    void schreibeBlockAusSpielerDbLaesstAktivLeer() throws Exception {
         ziel.schreibeBlock(List.of(spieler("Clara", "Datenbank")));
 
         int zeile = ziel.findeZeileMitName("Clara Datenbank");
-        assertThat(aktivWert(zeile)).isEqualTo("1");
+        assertThat(aktivWert(zeile)).isEmpty();
     }
 
     @Test
