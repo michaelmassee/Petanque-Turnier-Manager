@@ -9,6 +9,8 @@ import com.sun.star.sheet.ConditionOperator;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 
+import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldelisteUuidIndex;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.helper.ColorHelper;
@@ -370,24 +372,34 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet, PtmOnlineL
 	private void insertArbeitsspalten(List<List<TeamPaarung>> spielPlanHRunde,
 			List<List<TeamPaarung>> spielPlanRRunde, int startZeile) throws GenerateException {
 
-		RangeData rangeData = new RangeData();
-
 		List<List<TeamPaarung>> alleSpieltage = new ArrayList<>();
 		alleSpieltage.addAll(spielPlanHRunde);
 		alleSpieltage.addAll(spielPlanRRunde);
 
+		// Nr-Arbeitsspalten als Formeln mit der UUID des Teams, die die aktuelle Teamnummer zeigen (Freilos: 0).
+		// Namensformeln, Rangliste und Direktvergleich lesen diese Anzeige; eine geänderte Teamnummer ändert
+		// daher nicht die Zuordnung.
+		MeldelisteUuidIndex uuidIndex = MeldelisteUuidIndex.lese(getWorkingSpreadsheet());
+		String nrBereich = MeldeListeHelper.nrBereichMeldeliste();
+		List<String[]> nrFormeln = new ArrayList<>();
 		for (List<TeamPaarung> spielTag : alleSpieltage) {
 			for (TeamPaarung teamPaarung : spielTag) {
 				SheetRunner.testDoCancelTask();
-				RowData teamPaarungData = rangeData.addNewRow();
-				teamPaarungData.newInt(teamPaarung.getA().getNr());
-				teamPaarungData.newInt(teamPaarung.getOptionalB().isPresent() ? teamPaarung.getB().getNr() : 0);
+				nrFormeln.add(new String[] { uuidIndex.schluessel(teamPaarung.getA().getNr()).nrAnzeige(nrBereich),
+						teamPaarung.getOptionalB().isPresent()
+								? uuidIndex.schluessel(teamPaarung.getB().getNr()).nrAnzeige(nrBereich)
+								: "0" });
 			}
 		}
 
-		Position startPos = Position.from(TEAM_A_NR_SPALTE, startZeile);
-		RangeHelper.from(this, rangeData.getRangePosition(startPos)).setDataInRange(rangeData).setRangeProperties(
-				RangeProperties.from().centerJustify().setBorder(BorderFactory.from().allThin().toBorder()));
+		if (!nrFormeln.isEmpty()) {
+			RangePosition nrBereichSpielplan = RangePosition.from(TEAM_A_NR_SPALTE, startZeile, TEAM_B_NR_SPALTE,
+					startZeile + nrFormeln.size() - 1);
+			getSheetHelper().setFormulaArrayInRange(getXSpreadSheet(), nrBereichSpielplan,
+					nrFormeln.toArray(String[][]::new));
+			RangeHelper.from(this, nrBereichSpielplan).setRangeProperties(
+					RangeProperties.from().centerJustify().setBorder(BorderFactory.from().allThin().toBorder()));
+		}
 
 		XSpreadsheet sheet = getXSpreadSheet();
 

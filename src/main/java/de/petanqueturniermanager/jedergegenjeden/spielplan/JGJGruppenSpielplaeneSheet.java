@@ -143,6 +143,7 @@ public class JGJGruppenSpielplaeneSheet implements ISheet {
 			schreibeSpaltenHeader();
 
 			int letzteDatenZeile = schreibeSpieleDaten(hRunde, rRunde, zeigeNr, teamNameFormel, freispielText);
+			schreibeNrVerweise(letzteDatenZeile, zentraleStartZeile);
 			schreibeErgebnisFormeln(letzteDatenZeile, zentraleStartZeile);
 
 			formatiereSheet(letzteDatenZeile, hRunde, rRunde);
@@ -262,9 +263,8 @@ public class JGJGruppenSpielplaeneSheet implements ISheet {
 
 		RangeHelper.from(this, daten.getRangePosition(startPos)).setDataInRange(daten);
 
-		if (!zeigeNr) {
-			schreibeTeamnameFormeln(letzteDatenZeile, teamNameFormel, freispielText);
-		}
+		// Auch die Nummern-Anzeige per Formel: sie folgt der verwiesenen Nr-Zelle (aktuelle Teamnummer).
+		schreibeTeamnameFormeln(letzteDatenZeile, zeigeNr ? nrAdresse -> nrAdresse : teamNameFormel, freispielText);
 
 		// Border/Formatierung über die komplette Datenzeile (inkl. der per Formel
 		// befüllten Ergebnis-Spalten) anwenden.
@@ -304,6 +304,21 @@ public class JGJGruppenSpielplaeneSheet implements ISheet {
 	@FunctionalInterface
 	public interface TeamNameFormel {
 		String formula(String nrAdresse) throws GenerateException;
+	}
+
+	/**
+	 * Verweist die ausgeblendeten Nr-Spalten auf die Nr-Zellen des zentralen Spielplans. Diese zeigen über die UUID
+	 * die aktuelle Teamnummer; nach „Teamnummer ändern“ stimmt der Aushang damit ohne Neuaufbau.
+	 */
+	private void schreibeNrVerweise(int letzteDatenZeile, int zentraleStartZeile) throws GenerateException {
+		String spielplanRef = "$'" + SheetNamen.spielplan() + "'.";
+		for (int[] spalten : new int[][] { { SPALTE_TEAM_A_NR, JGJSpielPlanSheet.TEAM_A_NR_SPALTE },
+				{ SPALTE_TEAM_B_NR, JGJSpielPlanSheet.TEAM_B_NR_SPALTE } }) {
+			getSheetHelper().setFormulaInCell(StringCellValue.from(aktuellesSheet)
+					.setValue(spielplanRef + Position.from(spalten[1], zentraleStartZeile).getAddress())
+					.setPos(Position.from(spalten[0], ERSTE_DATEN_ZEILE))
+					.setFillAutoDown(letzteDatenZeile));
+		}
 	}
 
 	/**
