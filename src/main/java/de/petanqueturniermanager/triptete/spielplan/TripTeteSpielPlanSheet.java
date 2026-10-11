@@ -1,5 +1,6 @@
 package de.petanqueturniermanager.triptete.spielplan;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -8,6 +9,8 @@ import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.algorithmen.triptete.TripTetePaarungen;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldelisteUuidIndex;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -295,20 +298,31 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet, PtmOn
 		RangeHelper.from(this, rangeData.getRangePosition(startPos)).setDataInRange(rangeData);
 	}
 
+	/**
+	 * Schreibt die ausgeblendeten Nr-Spalten als Formeln mit der UUID des Teams, die die aktuelle Teamnummer zeigen
+	 * (Freilos: 0). Namensformeln und {@link TripTeteSpielPlanLeser} lesen diese Anzeige; eine geänderte Teamnummer
+	 * ändert daher nicht die Zuordnung.
+	 */
 	private void insertArbeitsspalten(List<List<TeamPaarung>> spielPlan) throws GenerateException {
-		RangeData rangeData = new RangeData();
+		MeldelisteUuidIndex uuidIndex = MeldelisteUuidIndex.lese(getWorkingSpreadsheet());
+		String nrBereich = MeldeListeHelper.nrBereichMeldeliste();
+		List<String[]> zeilen = new ArrayList<>();
 		for (List<TeamPaarung> runde : spielPlan) {
 			for (TeamPaarung tp : runde) {
 				SheetRunner.testDoCancelTask();
-				RowData row = rangeData.addNewRow();
-				row.newInt(tp.getA().getNr());
-				row.newInt(tp.getOptionalB().isPresent() ? tp.getB().getNr() : 0);
+				zeilen.add(new String[] { uuidIndex.schluessel(tp.getA().getNr()).nrAnzeige(nrBereich),
+						tp.getOptionalB().isPresent() ? uuidIndex.schluessel(tp.getB().getNr()).nrAnzeige(nrBereich)
+								: "0" });
 			}
 		}
-		Position startPos = Position.from(TEAM_A_NR_SPALTE, ERSTE_DATEN_ZEILE);
-		RangeHelper.from(this, rangeData.getRangePosition(startPos)).setDataInRange(rangeData)
-				.setRangeProperties(RangeProperties.from().centerJustify()
-						.setBorder(BorderFactory.from().allThin().toBorder()));
+		if (zeilen.isEmpty()) {
+			return;
+		}
+		RangePosition bereich = RangePosition.from(TEAM_A_NR_SPALTE, ERSTE_DATEN_ZEILE, TEAM_B_NR_SPALTE,
+				ERSTE_DATEN_ZEILE + zeilen.size() - 1);
+		getSheetHelper().setFormulaArrayInRange(getXSpreadSheet(), bereich, zeilen.toArray(String[][]::new));
+		RangeHelper.from(this, bereich).setRangeProperties(RangeProperties.from().centerJustify()
+				.setBorder(BorderFactory.from().allThin().toBorder()));
 
 		ColumnProperties hidden = ColumnProperties.from().setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH)
 				.isVisible(false);
