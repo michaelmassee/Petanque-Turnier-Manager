@@ -1,5 +1,10 @@
 # UUID statt Teamnummer als Team-Identität
 
+## Alte Dokumente
+
+Alte Dokumente werden nicht auf UUIDs umgestellt. PTM bricht die Verarbeitung ab und zeigt: „Dieses Dokument muss mit dem ursprünglichen Plugin geöffnet werden."
+
+
 ## Grundregel
 
 **Die UUID bleibt fest am Team.** Nummer, Teamname und Teammitglieder (Namen, Austausch einzelner Spieler) dürfen sich ändern; die UUID nie. Eine neue UUID entsteht nur für ein neues Team (neue Meldung, Kopie einer Zeile); mit dem Löschen der Meldung verschwindet sie. Jeder Schreibpfad auf die Meldeliste muss das einhalten (Audit 2026-10-11: Namensänderung, Import, Sortieren, Lücken schließen, Spieltagwechsel, Nummernvergabe, Teamnummer ändern – alle konform). Einzige bewusste Lücke: direktes Überschreiben der Nr-Zelle außerhalb des Turnier-Modus.
@@ -7,8 +12,8 @@
 Zwei getrennte Identitäten (Klarstellung 2026-10-11):
 - **Team-UUID** – Nr-Zelle der Meldeliste, Identität der gebildeten Meldung/des Teams.
 - **Mêlée-UUID** – Nr-Zelle der Mêlée-Anmeldung (eigene Liste, Einzelspieler), losgelöst von der Team-UUID. Die Mêlée-Anmeldung wird mit PTM-Online synchron gehalten (Mapping Mêlée-UUID ↔ Online-Meldungs-ID).
-- **Umgesetzt (uncommittete UITests offen):** „Übernommen“ = `IFNA(INDEX(Meldeliste.$A$1:$A$999; UUIDZEILE("<team-uuid>"; …)); "")` – zeigt die aktuelle Teamnummer, leer (= Spieler wieder frei), wenn das Team gelöscht wird. Übernahme schreibt je Team `TNRUUID(0;"<team-uuid>")` in die Meldeliste. `MeleeAnmeldungZeile.teamNr` (nur aus Formel mit UUID), `MeleeTeilnahme`/`LiveNummernAufloesung` ordnen über den Verweis zu, Namen nur Rückfall für Altbestand mit `X`. Online-Team-UUID (`PUT melee-teams`) ist jetzt die Team-UUID der Meldeliste statt aus der Nummer abgeleitet (Server ersetzt die Zuordnungen komplett, keine Leichen). Der Server speichert die lokale UUID je Anmeldung (`local_registration_uuid`, `GET …/mapping`).
-- **Nächster Schritt:** UITests Mêlée-Übernahme (`*MeleeAnmeldung*UITest`) und `ptmonline` laufen lassen.
+- **Umgesetzt (`65dc1e4e`), UITests `*Melee*` + `ptmonline`: 62/64 grün** (bekannter Blattschutz-Fehler in `PtmOnlineAbgleichSheetRunnerUITest`; `PtmOnlineSpieltagAbgleichSupermeleeUITest` im Gesamtlauf einmal rot durch asynchrones Fehler-Log, einzeln grün): „Übernommen“ = `IFNA(INDEX(Meldeliste.$A$1:$A$999; UUIDZEILE("<team-uuid>"; …)); "")` – zeigt die aktuelle Teamnummer, leer (= Spieler wieder frei), wenn das Team gelöscht wird. Übernahme schreibt je Team `TNRUUID(0;"<team-uuid>")` in die Meldeliste. `MeleeAnmeldungZeile.teamNr` (nur aus Formel mit UUID), `MeleeTeilnahme`/`LiveNummernAufloesung` ordnen über den Verweis zu, Namen nur Rückfall bei einer mit `X` markierten Zeile. Online-Team-UUID (`PUT melee-teams`) ist jetzt die Team-UUID der Meldeliste statt aus der Nummer abgeleitet (Server ersetzt die Zuordnungen komplett, keine Leichen). Der Server speichert die lokale UUID je Anmeldung (`local_registration_uuid`, `GET …/mapping`).
+- **Nächster Schritt:** übrige Systeme (Schritt 4).
 
 ## Arbeitsstand (2026-10-11)
 
@@ -24,7 +29,6 @@ Branch `ptm-online-2`, Haupt-Checkout (Worktree entfernt).
 | 4. Schweizer/Maastrichter-Vorrunde | erledigt: Runden schreiben UUID-Formeln, keine technischen Spalten mehr; `SchweizerTeamNrAufloeser` (UUID → Zahl → technische Spalte → Anzeige-Index), `SchweizerRundenLeser`, `LiveZellbereich` lesen die UUID. Pakete `schweizer`, `maastrichter`, `ptmonline`: 154/155 UITests grün | `7bba57a8`, `d40345cd` |
 | 4. KO-Turnierbaum (`KoTurnierbaumSheet`: KO, Maastrichter-Finale, Poule-KO, Kaskaden-Felder, JGJ-Finale) | erledigt: Runde-1- und Cadrage-Zellen schreiben immer eine UUID-Formel (auch im Nr-Modus, dort `INDEX(…UUIDZEILE)`); Sieger-/Verlierer-Formeln unverändert. KO in `UMGESTELLTE_SYSTEME`; UITest `KoTurnierbaumTeamnummerAendernUITest` | siehe Log |
 | 4. JGJ, Liga, TripTete, FormuleX, Kaskade, KO, Poule, Supermelee, PTM-Online-Leser | offen – je umgestelltem System in `TeamnummerAendernSheet.UMGESTELLTE_SYSTEME` aufnehmen. Maastrichter erst nach dem KO-Umbau (Finalrunde ist ein KO-Baum mit Nummern) | |
-| 5. Migration bestehender Dokumente | offen | |
 
 Neue Klassen: `TeamUuidFormel` (Parser), `MeldelisteUuidIndex` (UUID ↔ Nr, `leseNrSpalte`), `TeamSchluessel` (Formelausdruck je Schlüsselart), `NrUuidSpalte`, `TeamNummernPlan`/`TeamNummernVergabe`, `TeamnummerAenderung`/`TeamnummerAendernDialog`/`TeamnummerAendernSheet`. Dialog-Bausteine (`label`, `numericField`, `button`, `Rahmen`) liegen jetzt in `AbstractUnoDialog`.
 
@@ -32,7 +36,7 @@ Bekannte Einschränkung: Nach „Teamnummer ändern“ zeigen Ranglisten (Nummer
 
 Offen, nicht UUID-bezogen: `PtmOnlineAbgleichSheetRunnerUITest.rundenstartMeldetLokaleSetzpositionStattTeamNr` scheitert reproduzierbar mit „Style/CF-Operation außerhalb eines aktiven BlattschutzScopes“ (`PtmOnlineSyncSheet.schreibeKopf` aus der Testhilfe ohne SheetRunner bei aktivem Turnier-Modus). Vermutlich seit Master-Merge `792bfa3a` (Turnier-Modus pro Dokumentfenster).
 
-Nächste Schritte: übrige Systeme (Schritt 4); danach Migration (Schritt 5).
+Nächste Schritte: übrige Systeme (Schritt 4).
 
 Entscheidung KO-Sieger (2026-10-11): **kein `PTM.ALG.KOSIEGER`.** Nur Setzlisten-Zellen (Runde 1, Cadrage) tragen die UUID; die Sieger-/Verlierer-Formeln reichen wie bisher die *Anzeige* weiter (`IF(scoreA>scoreB; teamA; …)`). Da die Setzlisten-Zellen immer die aktuelle Nr bzw. den aktuellen Namen zeigen, stimmt nach „Teamnummer ändern“ der ganze Baum. Leser (`LiveZellbereich`, Siegergeld, `KoStatusLeser`) lesen wie bisher die Anzeige. Bewusst in Kauf genommen: Sieger-Zellen tragen keine UUID; bei doppelten Teamnamen in der Namensanzeige bleiben sie für Java-Leser mehrdeutig (wie vorher). Gilt sinngemäß auch für Poule-Sieger/Verlierer.
 
@@ -110,7 +114,7 @@ Entscheidungen des Users:
 ### 2. Meldeliste
 - `teamnummernVergeben` in allen `*MeldeListeSheetUpdate`/`*Delegate` (Schweizer, KO, Poule, FormuleX, Kaskade, JGJ, TripTete) sowie `MeldeListeHelper.updateMeldungenNr` (Supermelee, Liga):
   - Neue Nummern werden als `PTM.ALG.TNRUUID`-Formel mit neuer UUID geschrieben, als Block (`RangeHelper`/`setFormulaArray`).
-  - Bestehende reine Zahlen ohne Formel bekommen beim Update eine UUID (Migration).
+  - Dokumente mit bestehenden reinen Zahlen ohne Formel gelten als alte Dokumente und werden mit der Fehlermeldung zum ursprünglichen Plugin abgewiesen.
 - Die Nr-Spalte ist dauerhaft gesperrt. Neuer Menüpunkt „Teamnummer ändern“ (Dialog alte → neue Nr, schreibt nur die erste Konstante der Formel neu):
   - neue XCU in `META-INF/manifest.xml`,
   - `ProtocolHandler`-Konstante,
@@ -135,7 +139,7 @@ Muster je System: Wo heute die Nr als Zahl steht (sichtbar oder versteckt), steh
 
 - **Schweizer/Maastrichter:**
   - `TECHNISCHE_TEAM_A/B_NR_SPALTE` in `SchweizerAbstractSpielrundeSheet` entfällt; `TEAM_A/B_SPALTE` trägt die UUID-Formel.
-  - `SchweizerTeamNrAufloeser` liest die UUID aus der Teamzelle; der Altbestand (Zahl oder technische Spalte, `TeamAnzeigeIndex`) bleibt bis zur Migration als Fallback.
+  - `SchweizerTeamNrAufloeser` liest die UUID aus der Teamzelle.
   - Legacy `maastrichter/korunde/*` prüfen.
 - **JGJ, Liga, TripTete:**
   - Die Nr-Spalten der Spielpläne (14/15 bzw. 19/20) entfallen; die Namensspalten tragen die UUID-Formel.
@@ -159,16 +163,10 @@ Muster je System: Wo heute die Nr als Zahl steht (sichtbar oder versteckt), steh
   - `LiveNummernAufloesung`, `PtmOnlineSpielrundeSync`, `TeamSpielrundenLeser` lesen die UUID direkt aus den Runden, ohne den Umweg Nr → Zeile.
 - **Signatur-Whitelists (`SignaturQuellen`):** Teamzellen sind jetzt Formeln. Die Signatur darf nicht ihren berechneten Wert hashen (Hash-Flapping, siehe Memory), sondern den Formeltext bzw. die UUID.
 
-### 5. Migration bestehender Dokumente
-Einmalig beim ersten Meldeliste-Update bzw. Rundenaufbau (idempotent, als `SheetRunner`-Schritt):
-- UUID aus der alten Zusatzspalte in die Nr-Formel übernehmen, dann die Spalte löschen.
-- Rundenblätter: Nr-Zahlen bzw. technische Nr-Spalten per aktuellem Mapping Nr → UUID in UUID-Formeln umschreiben und die versteckten Spalten löschen.
-- Leser behalten bis dahin den Zahl-Fallback.
-
 ## Wiederverwendung
 - `TeilnehmerNamenLeser` (Namen je Zeile, Block-Read)
 - `TeamAnzeigeFormatierer` / `PTM.ALG.TEAMANZEIGE`
-- `SchweizerTeamNrAufloeser` (Vorlage für UUID → Nr mit Altbestand-Fallback)
+- `SchweizerTeamNrAufloeser` (Vorlage für UUID → Nr)
 - `SheetHelper.getFormulaArrayFromRange` / `setFormulaArray`
 - `RangeHelper`
 - `BlattschutzManager.schreibeEntsperrt`
@@ -186,7 +184,7 @@ Einmalig beim ersten Meldeliste-Update bzw. Rundenaufbau (idempotent, als `Sheet
   - Turnier mit 2 Runden aufbauen, „Teamnummer ändern“ (z. B. 3 ↔ 7) ausführen.
   - Prüfen: Runden zeigen dieselben Paarungen mit neuen Nummern, Ranglisten unverändert bis auf die Nr.
 - **Mehr-Dokument-Test** nach `GlobalImplMehrDokumenteUITest`: zwei Dokumente mit gleicher Nr und verschiedener UUID, Fokus auf dem falschen Dokument; `UUIDZEILE` liefert das richtige.
-- **Migration:** Altdokument mit Zusatzspalte und Nr-Runden öffnen und aktualisieren. Danach Spalte weg, Runden mit UUID, PTM-Online-Sync unverändert zugeordnet.
+- **Altdokument:** Dokument mit alter Nr-/Zusatzspalten-Struktur öffnen; Verarbeitung bricht ab und verweist auf das ursprüngliche Plugin.
 - **Gates und Suites:**
   - `./gradlew test spotbugsMain` (inkl. `ProtocolHandlerCommandsTest`, `LibreOfficeOptionsPackagingTest`),
   - `./gradlew reinstallExtension uiTests`,
