@@ -36,6 +36,8 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
+import de.petanqueturniermanager.helper.sheet.DatengueltigkeitHelper;
+import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
@@ -46,13 +48,20 @@ import de.petanqueturniermanager.model.IMeldungen;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
-import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
  * @author Michael Massee
  *
  */
 public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonstanten {
+
+	/** Gültige Werte einer Spieltag-Spalte: gespielt bzw. ausgesetzt (leer = nicht dabei). */
+	private static final List<Integer> GUELTIGE_SPIELTAG_WERTE = List.of(SpielrundeGespielt.JA.getId(),
+			SpielrundeGespielt.AUSGESETZT.getId());
+	/** Meldelistenzeile für PTM.ALG.TEAMANZEIGE: Index 0 = Teamnummer, Index 1 = Teamname bzw. Spieler 1. */
+	private static final String MELDELISTE_ZEILE_AB_SPALTE_A = "$A$1:$Z$999";
+	/** Wie {@link #MELDELISTE_ZEILE_AB_SPALTE_A}, um die Teamname-Spalte verschoben (Index 1 = Spieler 1). */
+	private static final String MELDELISTE_ZEILE_AB_SPALTE_B = "$B$1:$Z$999";
 
 	private final IMeldeliste<MLD_LIST_TYPE, MLDTYPE> meldeListe;
 	private final String metadatenSchluessel;
@@ -129,10 +138,8 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	 * Vorname 2, Nachname 2); eine einzelne COUNTIFS-Formel über den gesamten
 	 * Bereich würde diese Spalten fälschlich als einen Namen behandeln.
 	 */
-	public void insertFormulaFuerDoppelteSpielerNamenGeradeUngradeFarbe(int[] vornameSpalten, int[] nachnameSpalten,
-			int ersteDatenZeile, int letzteDatenZeile, ISheet sheet,
-			MeldungenHintergrundFarbeGeradeStyle geradeStyle,
-			MeldungenHintergrundFarbeUnGeradeStyle ungeradeStyle) throws GenerateException {
+	public void insertFormulaFuerDoppelteSpielerNamen(int[] vornameSpalten, int[] nachnameSpalten,
+			int ersteDatenZeile, int letzteDatenZeile, ISheet sheet) throws GenerateException {
 		checkArgument(vornameSpalten.length > 0 && vornameSpalten.length == nachnameSpalten.length,
 				"Vor- und Nachnamensspalten müssen paarweise angegeben werden");
 		for (int spieler = 0; spieler < vornameSpalten.length; spieler++) {
@@ -144,7 +151,11 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 					ersteDatenZeile);
 			ConditionalFormatHelper.from(sheet, nameRange).clear()
 					.formula1(formel).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndDoReset();
-			SheetHelper.faerbeZeilenAbwechselnd(sheet, nameRange, geradeStyle.getFarbe(), ungeradeStyle.getFarbe());
+			// Die Duplikat-Prüfung ersetzt ihre bedingten Formate vollständig. Die
+			// Editierfarbe muss deshalb erst danach angehängt werden: Fehler bleibt
+			// vorrangig, leere bzw. gültige Namenszellen bleiben klar als Eingabefeld
+			// erkennbar (statt wieder die blaue Standard-Zeilenfarbe zu erhalten).
+			EditierbaresZelleFormatHelper.anwenden(sheet, nameRange);
 		}
 	}
 
@@ -201,9 +212,12 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 			MeldungenHintergrundFarbeUnGeradeStyle ungeradeStyle) throws GenerateException {
 		var spieltageRangePos = RangePosition.from(ersteSpieltagSpalte(), ERSTE_DATEN_ZEILE,
 				letzteSpieltagSpalte, letzteDatenZeile);
+		setzeAktivDatengueltigkeit(sheet, spieltageRangePos, GUELTIGE_SPIELTAG_WERTE);
+		// Fehlerfarbe nach derselben Regel wie die Datengültigkeit, damit z.B. eine 0 aus älteren
+		// Dateien markiert wird statt still als gültig durchzugehen.
 		ConditionalFormatHelper.from(sheet, spieltageRangePos).clear()
-				.formula1("0").formula2("2").operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndDoReset()
-				.formulaIsText().styleIsFehler().applyAndDoReset();
+				.formula1(aktivUngueltigFormel(GUELTIGE_SPIELTAG_WERTE)).operator(ConditionOperator.FORMULA)
+				.styleIsFehler().applyAndDoReset();
 		SheetHelper.faerbeZeilenAbwechselnd(sheet, spieltageRangePos,
 				geradeStyle.getFarbe(), ungeradeStyle.getFarbe());
 	}
@@ -246,29 +260,15 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 
 	/**
 	 * Bedingte Formatierung der Aktiv-Spalte: Fehlerfarbe wenn die Zelle weder leer noch in
-	 * {@code gueltigeWerte} enthalten ist. Für Systeme, deren Zeilenfarbe nicht über bedingte
-	 * Formatierung, sondern direkt gesetzt wird (z.B. Poule).
+	 * {@code gueltigeWerte} enthalten ist. Die Zeilenfarbe wird nie als bedingte Formatierung,
+	 * sondern direkt per {@link SheetHelper#faerbeZeilenAbwechselnd} gesetzt.
 	 */
 	public void formatiereAktivSpalteFehlerfarbe(ISheet sheet, RangePosition aktivRange, List<Integer> gueltigeWerte)
 			throws GenerateException {
+		setzeAktivDatengueltigkeit(sheet, aktivRange, gueltigeWerte);
 		ConditionalFormatHelper.from(sheet, aktivRange).clear()
 				.formula1(aktivUngueltigFormel(gueltigeWerte)).operator(ConditionOperator.FORMULA)
 				.styleIsFehler().applyAndDoReset();
-	}
-
-	/**
-	 * Wie {@link #formatiereAktivSpalteFehlerfarbe(ISheet, RangePosition, List)}, hängt aber
-	 * zusätzlich die Zeilenfarbe (gerade/ungerade) als bedingte Formatierung mit niedrigerer
-	 * Priorität an.
-	 */
-	public void formatiereAktivSpalteFehlerfarbe(ISheet sheet, RangePosition aktivRange, List<Integer> gueltigeWerte,
-			MeldungenHintergrundFarbeGeradeStyle farbeGerade, MeldungenHintergrundFarbeUnGeradeStyle farbeUngerade)
-			throws GenerateException {
-		ConditionalFormatHelper.from(sheet, aktivRange).clear()
-				.formula1(aktivUngueltigFormel(gueltigeWerte)).operator(ConditionOperator.FORMULA)
-				.styleIsFehler().applyAndDoReset()
-				.formulaIsEvenRow().style(farbeGerade).applyAndDoReset()
-				.formulaIsOddRow().style(farbeUngerade).applyAndDoReset();
 	}
 
 	private static String aktivUngueltigFormel(List<Integer> gueltigeWerte) {
@@ -278,6 +278,35 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 			kondAktivUngueltig.append(';').append(ConditionalFormatHelper.FORMULA_CURRENT_CELL).append("<>").append(wert);
 		}
 		return kondAktivUngueltig.append(')').toString();
+	}
+
+	/**
+	 * Richtet eine native Calc-Auswahlliste für die Aktiv-Spalte ein. Leer bleibt bewusst erlaubt:
+	 * eine leere Zelle bedeutet, dass die Meldung nicht teilnimmt. Die Werte werden weiterhin als
+	 * Zahlen gespeichert, damit bestehende Turnierdateien und die Ausloselogik kompatibel bleiben.
+	 */
+	public static void setzeAktivDatengueltigkeit(ISheet sheet, RangePosition aktivRange,
+			List<Integer> gueltigeWerte) throws GenerateException {
+		boolean nurAktiv = gueltigeWerte.size() == 1;
+		DatengueltigkeitHelper.setzeZahlenListe(sheet, aktivRange, gueltigeWerte,
+				new DatengueltigkeitHelper.Meldungen("meldeliste.aktiv.eingabehilfe.titel",
+						nurAktiv ? "meldeliste.aktiv.eingabehilfe.jgj" : "meldeliste.aktiv.eingabehilfe.standard",
+						"meldeliste.aktiv.fehler.titel",
+						nurAktiv ? "meldeliste.aktiv.fehler.jgj" : "meldeliste.aktiv.fehler.standard",
+						"datengueltigkeit.spalte.aktiv"));
+	}
+
+	/**
+	 * Richtet für die Mêlée-Anmeldung eine native Calc-Auswahlliste für Check-ins ein. Eine leere
+	 * Zelle bedeutet nicht eingecheckt; {@value MeleeAnmeldungKonstanten#MARKIERUNG} markiert die
+	 * Teilnahme an der späteren Team-Auslosung.
+	 */
+	public static void setzeMeleeEingechecktDatengueltigkeit(ISheet sheet, RangePosition eingechecktRange)
+			throws GenerateException {
+		DatengueltigkeitHelper.setzeTextListe(sheet, eingechecktRange, List.of(MeleeAnmeldungKonstanten.MARKIERUNG),
+				new DatengueltigkeitHelper.Meldungen("melee.anmeldung.eingecheckt.eingabehilfe.titel",
+						"melee.anmeldung.eingecheckt.eingabehilfe", "melee.anmeldung.eingecheckt.fehler.titel",
+						"melee.anmeldung.eingecheckt.fehler", "datengueltigkeit.spalte.checkin"));
 	}
 
 	/**
@@ -306,30 +335,16 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 
 	/**
 	 * Bedingte Formatierung der Setzpositions-Spalte: Fehlerfarbe wenn die Zelle weder leer noch eine
-	 * gültige nicht-negative Ganzzahl ist (0 = "kein Setzstatus", erlaubt und beabsichtigt). Für
-	 * Systeme, deren Zeilenfarbe nicht über bedingte Formatierung, sondern direkt gesetzt wird (z.B.
-	 * Schweizer/Poule/JGJ).
+	 * gültige nicht-negative Ganzzahl ist (0 = "kein Setzstatus", erlaubt und beabsichtigt). Die
+	 * Zeilenfarbe wird nie als bedingte Formatierung, sondern direkt per
+	 * {@link SheetHelper#faerbeZeilenAbwechselnd} gesetzt.
 	 */
 	public static void formatiereSetzpositionSpalteFehlerfarbe(ISheet sheet, RangePosition spRange)
 			throws GenerateException {
+		DatengueltigkeitHelper.setzeNichtNegativeGanzzahl(sheet, spRange);
 		ConditionalFormatHelper.from(sheet, spRange).clear()
 				.formula1(setzpositionUngueltigFormel()).operator(ConditionOperator.FORMULA)
 				.styleIsFehler().applyAndDoReset();
-	}
-
-	/**
-	 * Wie {@link #formatiereSetzpositionSpalteFehlerfarbe(ISheet, RangePosition)}, hängt aber
-	 * zusätzlich die Zeilenfarbe (gerade/ungerade) als bedingte Formatierung mit niedrigerer
-	 * Priorität an.
-	 */
-	public static void formatiereSetzpositionSpalteFehlerfarbe(ISheet sheet, RangePosition spRange,
-			MeldungenHintergrundFarbeGeradeStyle farbeGerade, MeldungenHintergrundFarbeUnGeradeStyle farbeUngerade)
-			throws GenerateException {
-		ConditionalFormatHelper.from(sheet, spRange).clear()
-				.formula1(setzpositionUngueltigFormel()).operator(ConditionOperator.FORMULA)
-				.styleIsFehler().applyAndDoReset()
-				.formulaIsEvenRow().style(farbeGerade).applyAndDoReset()
-				.formulaIsOddRow().style(farbeUngerade).applyAndDoReset();
 	}
 
 	private static String setzpositionUngueltigFormel() {
@@ -623,24 +638,50 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	}
 
 	/**
-	 * Erzeugt eine VLOOKUP-Formel, die den Anzeigenamen eines Teams anhand der Teamnummer
-	 * aus der Meldeliste liest.<br>
-	 * Bei aktivierter Teamname-Spalte wird der Teamname zurückgegeben (Spalte B). Andernfalls
-	 * werden alle Spielernamen ("Vorname Nachname") konkateniert und mit " / " getrennt – damit
-	 * z.B. eine Doublette ohne Teamname-Spalte beide Spieler vollständig anzeigt.<br>
+	 * Erzeugt eine Formel, die den Anzeigenamen eines Teams anhand der Teamnummer aus der
+	 * Meldeliste liest.<br>
+	 * Bei aktivierter Teamname-Spalte wird der Teamname zurückgegeben (Spalte B), andernfalls
+	 * die zusammengesetzten Spielernamen (siehe {@link #spielerNamenFormel}).<br>
 	 * Der Sheet-Name wird korrekt quotiert, damit lokalisierte Namen mit Leerzeichen funktionieren.
 	 *
 	 * @param nrAdresse           Zell-Adresse oder Literal, das die Teamnummer enthält
-	 * @param teamnameAnzeigen    {@code true} wenn die Meldeliste eine Teamname-Spalte hat
+	 * @param teamnameSpalteAktiv {@code true} wenn die Meldeliste eine Teamname-Spalte hat
 	 * @param formation           Formation der Meldeliste (Anzahl Spieler pro Team)
 	 * @param vereinsnameAnzeigen {@code true} wenn die Meldeliste eine Vereinsname-Spalte pro Spieler hat
 	 * @return Formel-String (ODF/englisch)
 	 */
-	public static String teamNameFormel(String nrAdresse, boolean teamnameAnzeigen,
+	public static String teamNameFormel(String nrAdresse, boolean teamnameSpalteAktiv,
 			Formation formation, boolean vereinsnameAnzeigen) {
-		String range = "$'" + SheetNamen.meldeliste() + "'.$A$1:$Z$999";
-		String nrRange = "$'" + SheetNamen.meldeliste() + "'.$A$1:$A$999";
-		String zeile = "INDEX(" + range + ";MATCH(" + nrAdresse + ";" + nrRange + ";0);0)";
+		if (!teamnameSpalteAktiv) {
+			return spielerNamenFormel(nrAdresse, false, formation, vereinsnameAnzeigen);
+		}
+		return teamAnzeigeFormel(nrAdresse, true, MELDELISTE_ZEILE_AB_SPALTE_A, formation, vereinsnameAnzeigen);
+	}
+
+	/**
+	 * Erzeugt eine Formel, die alle Spielernamen eines Teams ("Vorname Nachname (Verein)")
+	 * mit " / " getrennt aus der Meldeliste liest – unabhängig davon, ob ein Teamname existiert.<br>
+	 * {@code PTM.ALG.TEAMANZEIGE} erwartet den ersten Spieler an Index 1 der übergebenen Zeile.
+	 * Bei aktiver Teamname-Spalte beginnt die Zeile deshalb erst bei Spalte B, damit der
+	 * Teamname auf Index 0 fällt und nicht als Vorname gelesen wird.
+	 *
+	 * @param nrAdresse           Zell-Adresse oder Literal, das die Teamnummer enthält
+	 * @param teamnameSpalteAktiv {@code true} wenn die Meldeliste eine Teamname-Spalte hat
+	 * @param formation           Formation der Meldeliste (Anzahl Spieler pro Team)
+	 * @param vereinsnameAnzeigen {@code true} wenn die Meldeliste eine Vereinsname-Spalte pro Spieler hat
+	 * @return Formel-String (ODF/englisch)
+	 */
+	public static String spielerNamenFormel(String nrAdresse, boolean teamnameSpalteAktiv,
+			Formation formation, boolean vereinsnameAnzeigen) {
+		String zeilenBereich = teamnameSpalteAktiv ? MELDELISTE_ZEILE_AB_SPALTE_B : MELDELISTE_ZEILE_AB_SPALTE_A;
+		return teamAnzeigeFormel(nrAdresse, false, zeilenBereich, formation, vereinsnameAnzeigen);
+	}
+
+	private static String teamAnzeigeFormel(String nrAdresse, boolean teamnameAnzeigen, String zeilenBereich,
+			Formation formation, boolean vereinsnameAnzeigen) {
+		String meldeliste = "$'" + SheetNamen.meldeliste() + "'.";
+		String zeile = "INDEX(" + meldeliste + zeilenBereich + ";MATCH(" + nrAdresse + ";" + meldeliste
+				+ "$A$1:$A$999;0);0)";
 		return GlobalImpl.FORMAT_PTM_TEAM_ANZEIGE(teamnameAnzeigen, formation.getAnzSpieler(),
 				vereinsnameAnzeigen, zeile);
 	}

@@ -11,10 +11,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import de.petanqueturniermanager.BaseCalcUITest;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
+import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationSheet;
 import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJSpielPlanSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
@@ -87,6 +91,40 @@ public class JGJRanglisteSheetUITest extends BaseCalcUITest {
 	 */
 	@Test
 	public void kioskModus_jgjRanglisteUpdateUnterSchutz() throws GenerateException, IOException {
+		spielplanMitZweiRundenErgebnissen();
+		new JGJRanglisteSheet(wkingSpreadsheet).run();
+
+		mitKioskModus(TurnierSystem.JGJ, () -> new JGJRanglisteSheet(wkingSpreadsheet).run());
+
+		assertThat(sheetHlp.findByName(de.petanqueturniermanager.helper.i18n.SheetNamen.rangliste()))
+				.as("JGJ-Rangliste muss nach Kiosk-Update weiterhin existieren")
+				.isNotNull();
+	}
+
+	/**
+	 * Regression: Im Modus NR muss die Namensspalte über {@code IsVisible} ausgeblendet werden –
+	 * Breite 0 ignoriert LibreOffice.
+	 */
+	@Test
+	public void namensspalteFolgtDerRanglistenTeamAnzeige() throws GenerateException {
+		spielplanMitZweiRundenErgebnissen();
+		var konfig = new JGJKonfigurationSheet(wkingSpreadsheet);
+
+		konfig.setRanglisteTeamAnzeige(TeamAnzeige.NR);
+		var rangliste = new JGJRanglisteSheet(wkingSpreadsheet);
+		rangliste.run();
+		assertThat(istSpalteSichtbar(rangliste.getXSpreadSheet(), JGJRanglisteSheet.TEAM_NAME_SPALTE)).isFalse();
+
+		konfig.setRanglisteTeamAnzeige(TeamAnzeige.SPIELERNAMEN);
+		rangliste = new JGJRanglisteSheet(wkingSpreadsheet);
+		rangliste.run();
+		assertThat(istSpalteSichtbar(rangliste.getXSpreadSheet(), JGJRanglisteSheet.TEAM_NAME_SPALTE)).isTrue();
+		assertThat(sheetHlp.getTextFromCell(rangliste.getXSpreadSheet(),
+				Position.from(JGJRanglisteSheet.TEAM_NAME_SPALTE, JGJRanglisteSheet.HEADER_ZEILE)))
+				.isEqualTo(I18n.get("column.header.spieler"));
+	}
+
+	private void spielplanMitZweiRundenErgebnissen() throws GenerateException {
 		JGJSpielPlanSheet spielPlan = new JGJSpielPlanSheet(wkingSpreadsheet);
 		spielPlan.run();
 
@@ -109,14 +147,6 @@ public class JGJRanglisteSheetUITest extends BaseCalcUITest {
 		RangeHelper.from(spielPlan.getXSpreadSheet(),
 				wkingSpreadsheet.getWorkingSpreadsheetDocument(), rangeErg)
 				.setDataInRange(ergebnisse);
-
-		new JGJRanglisteSheet(wkingSpreadsheet).run();
-
-		mitKioskModus(TurnierSystem.JGJ, () -> new JGJRanglisteSheet(wkingSpreadsheet).run());
-
-		assertThat(sheetHlp.findByName(de.petanqueturniermanager.helper.i18n.SheetNamen.rangliste()))
-				.as("JGJ-Rangliste muss nach Kiosk-Update weiterhin existieren")
-				.isNotNull();
 	}
 
 	private void validateJGJRanglisteToJson(JGJRanglisteSheet ranglist) throws GenerateException {

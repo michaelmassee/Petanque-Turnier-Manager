@@ -144,7 +144,8 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_ANZ_TEILNEHMER_IN_SPALTE)
 				.setDefaultVal(DEFAULT_ANZ_TEILNEHMER_IN_SPALTE)
-				.setDescription("config.desc.teilnehmer.anzahl.spalte"));
+				.setDescription("config.desc.teilnehmer.anzahl.spalte")
+				.setShortDescription("config.label.teilnehmer.anzahl.spalte"));
 
 		// Jedes System hat eine Meldeliste (anders als Checkin-/Teilnehmerliste), daher hier statt
 		// als eigene addXProp()-Methode direkt in ADDBaseProp. Default NUMMER. Achtung: vor
@@ -154,7 +155,8 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty
 				.from(KONFIG_PROP_MELDELISTE_SORT_MODUS)
 				.setDefaultVal(TeilnehmerListeSortModus.NUMMER.getKey())
-				.setDescription("config.desc.meldeliste.sort.modus"))
+				.setDescription("config.desc.meldeliste.sort.modus")
+				.setShortDescription("config.label.meldeliste.sort.modus"))
 				.addAuswahl(TeilnehmerListeSortModus.NUMMER.getKey(), I18n.get("config.teilnehmer.sort.nummer"))
 				.addAuswahl(TeilnehmerListeSortModus.NAME.getKey(), I18n.get("config.teilnehmer.sort.name"))
 				.addAuswahl(TeilnehmerListeSortModus.TEAMNAME.getKey(), I18n.get("config.teilnehmer.sort.teamname")));
@@ -191,7 +193,8 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	protected static void addCheckinSortProp(List<ConfigProperty<?>> KONFIG_PROPERTIES) {
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_CHECKIN_LISTE_SORT_MODUS)
 				.setDefaultVal(TeilnehmerListeSortModus.NAME.getKey())
-				.setDescription("config.desc.checkin.sort.modus"))
+				.setDescription("config.desc.checkin.sort.modus")
+				.setShortDescription("config.label.checkin.sort.modus"))
 				.addAuswahl(TeilnehmerListeSortModus.NUMMER.getKey(), I18n.get("config.teilnehmer.sort.nummer"))
 				.addAuswahl(TeilnehmerListeSortModus.NAME.getKey(), I18n.get("config.teilnehmer.sort.name"))
 				.addAuswahl(TeilnehmerListeSortModus.TEAMNAME.getKey(), I18n.get("config.teilnehmer.sort.teamname")));
@@ -216,6 +219,7 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 		KONFIG_PROPERTIES.add(ConfigProperty.<Boolean>from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_MELEE_ANMELDUNG)
 				.setDefaultVal(false)
 				.setDescription("config.desc.melee.anmeldung")
+				.setShortDescription("config.label.melee.anmeldung")
 				.aktivWenn(MeleeAnmeldungKonfiguration::istMoeglich));
 	}
 
@@ -232,7 +236,8 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty
 				.from(KONFIG_PROP_TEILNEHMER_LISTE_SORT_MODUS)
 				.setDefaultVal(TeilnehmerListeSortModus.NAME.getKey())
-				.setDescription("config.desc.teilnehmer.sort.modus"))
+				.setDescription("config.desc.teilnehmer.sort.modus")
+				.setShortDescription("config.label.teilnehmer.sort.modus"))
 				.addAuswahl(TeilnehmerListeSortModus.NUMMER.getKey(), I18n.get("config.teilnehmer.sort.nummer"))
 				.addAuswahl(TeilnehmerListeSortModus.NAME.getKey(), I18n.get("config.teilnehmer.sort.name"))
 				.addAuswahl(TeilnehmerListeSortModus.TEAMNAME.getKey(), I18n.get("config.teilnehmer.sort.teamname")));

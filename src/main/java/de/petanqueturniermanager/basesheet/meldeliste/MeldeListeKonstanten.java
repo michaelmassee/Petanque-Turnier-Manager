@@ -31,6 +31,8 @@ public interface MeldeListeKonstanten {
 	int CELL_MARGIN = 120;
 
 	int ERSTE_DATEN_ZEILE = 2; // Zeile 3
+	/** Erste Daten-Zeile der Team-Meldelisten mit drei Header-Zeilen (alle Systeme außer Supermelee). */
+	int TEAM_MELDELISTE_ERSTE_DATEN_ZEILE = 3; // Zeile 4
 	int SPIELER_NR_SPALTE = 0; // Spalte A=0
 	int ERSTE_HEADER_ZEILE = ERSTE_DATEN_ZEILE - 2; // Zeile 1
 	int ZWEITE_HEADER_ZEILE = ERSTE_DATEN_ZEILE - 1; // Zeile 2

@@ -20,7 +20,8 @@ import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 public class UITextAreaProperty implements UIProperty {
 
 	private static final int DEFAULT_TEXT_HEIGHT = 30;
-	private static final int GAP_HEIGHT = 7;
+	private static final int LABEL_HEIGHT = 14;
+	private static final int LABEL_TEXT_GAP = 2;
 
 	private static final AtomicInteger PROP_CNTR = new AtomicInteger();
 
@@ -48,7 +49,7 @@ public class UITextAreaProperty implements UIProperty {
 	}
 
 	public int getHeight() {
-		return textHeight + GAP_HEIGHT;
+		return LABEL_HEIGHT + LABEL_TEXT_GAP + textHeight;
 	}
 
 	@Override
@@ -59,13 +60,23 @@ public class UITextAreaProperty implements UIProperty {
 
 	@Override
 	public int doInsert(Object dialogModel, XControlContainer xControlCont, int posY) {
+		return doInsert(dialogModel, xControlCont, posY, 250);
+	}
+
+	/**
+	 * Fügt Beschriftung und Textfeld übereinander über die gesamte Dialogbreite ein.
+	 * Damit bleiben auch längere Property-Namen sichtbar und der Editor nutzt den
+	 * verfügbaren Platz vollständig aus.
+	 */
+	public int doInsert(Object dialogModel, XControlContainer xControlCont, int posY, int dialogWidth) {
+		int rand = 5;
+		int controlWidth = dialogWidth - (2 * rand);
 
 		// @formatter:off
 		UILabel.from(dialogModel)
 				.name(labelName)
 				.label(label + " :")
-				.posX(3).posY(posY).width(40).height(14)
-				.align(2) // Right
+				.posX(rand).posY(posY).width(controlWidth).height(LABEL_HEIGHT)
 				.multiLine()
 				.doInsert(xControlCont);
 		// @formatter:on
@@ -74,7 +85,7 @@ public class UITextAreaProperty implements UIProperty {
 		// @formatter:off
 		uITextArea = UITextArea.from(dialogModel)
 				.name(uiName)
-				.posX(45).posY(posY).width(200).height(textHeight)
+				.posX(rand).posY(posY + LABEL_HEIGHT + LABEL_TEXT_GAP).width(controlWidth).height(textHeight)
 				.multiLine(true).vScroll(true).hScroll(true)
 				.text(propVal)
 				.doInsert(xControlCont);

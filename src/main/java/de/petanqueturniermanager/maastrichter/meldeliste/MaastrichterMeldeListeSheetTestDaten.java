@@ -19,7 +19,7 @@ import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
-import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
@@ -84,7 +84,7 @@ public class MaastrichterMeldeListeSheetTestDaten extends SheetRunner implements
 		konfigSheet.setAktiveSpielRunde(SpielRundeNr.from(1));
 
 		// Meldeliste erstellen (kein Dialog)
-		meldeListeNew.erstelleMeldeliste(TEST_FORMATION, true, true, SpielplanTeamAnzeige.NR);
+		meldeListeNew.erstelleMeldeliste(TEST_FORMATION, true, true, TeamAnzeige.NR);
 
 		// Testnamen + Teamnummern einfügen und Sheet aktualisieren
 		testNamenEinfuegen();

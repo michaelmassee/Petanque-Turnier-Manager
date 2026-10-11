@@ -3,6 +3,7 @@
  */
 package de.petanqueturniermanager.ko.konfiguration;
 
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.basesheet.SheetTabFarben;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
@@ -15,7 +16,7 @@ import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 public interface IKoBracketKonfiguration {
 	int getGruppenGroesse();
 	default int getMinLetzteGruppeGroesse() { return KoPropertiesSpalte.DEFAULT_MIN_LETZTE_GRUPPE_GROESSE; }
-	KoSpielbaumTeamAnzeige getSpielbaumTeamAnzeige();
+	TeamAnzeige getSpielbaumTeamAnzeige();
 	SpielrundeSpielbahn getSpielbaumSpielbahn();
 	boolean isSpielbaumSpielUmPlatz3();
 	default boolean isSpielbaumBahnNurRunde1() { return true; }

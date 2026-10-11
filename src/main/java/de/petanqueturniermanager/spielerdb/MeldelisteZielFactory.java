@@ -154,9 +154,7 @@ public final class MeldelisteZielFactory {
         if (layoutOpt.isEmpty() || layoutOpt.get().formation() == Formation.NUR_TEAMNAME) {
             return Optional.empty();
         }
-        MeldelisteLayout l = layoutOpt.get();
-        return SheetMeldelisteAdapter.fuer(ws, SheetNamen.meldeliste(), ts,
-                l.formation(), l.teamnameAktiv(), l.vereinsnameAktiv(), l.aktiverSpieltag());
+        return SheetMeldelisteAdapter.fuer(ws, SheetNamen.meldeliste(), ts, layoutOpt.get());
     }
 
     /**
@@ -312,19 +310,6 @@ public final class MeldelisteZielFactory {
     }
 
     /**
-     * Layout aus dem system-spezifischen KonfigurationSheet.
-     *
-     * @param aktiverSpieltag nur Supermelee: Spieltag, dessen Spalte als Aktiv-Spalte gilt; sonst 1
-     */
-    private record MeldelisteLayout(Formation formation, boolean teamnameAktiv, boolean vereinsnameAktiv,
-            int aktiverSpieltag) {
-
-        MeldelisteLayout(Formation formation, boolean teamnameAktiv, boolean vereinsnameAktiv) {
-            this(formation, teamnameAktiv, vereinsnameAktiv, 1);
-        }
-    }
-
-    /**
      * Liest das Meldeliste-Layout aus dem zum Turniersystem passenden Konfigurations-Sheet.
      * Supermelee hat keine konfigurierbare Formation — dort gilt immer
      * {@link Formation#MELEE} und es gibt keine Teamname-/Vereinsname-Spalten; die Aktiv-Spalte ist die des
@@ -335,46 +320,46 @@ public final class MeldelisteZielFactory {
     private static Optional<MeldelisteLayout> leseLayout(TurnierSystem ts, WorkingSpreadsheet ws) {
         try {
             return switch (ts) {
-                case SUPERMELEE -> Optional.of(new MeldelisteLayout(Formation.MELEE, false, false,
+                case SUPERMELEE -> Optional.of(MeldelisteLayout.supermelee(
                         new SuperMeleeKonfigurationSheet(ws).getAktiveSpieltag().getNr()));
                 case KO -> {
                     KoKonfigurationSheet k = new KoKonfigurationSheet(ws);
-                    yield Optional.of(new MeldelisteLayout(k.getMeldeListeFormation(),
+                    yield Optional.of(MeldelisteLayout.team(k.getMeldeListeFormation(),
                             k.isMeldeListeTeamnameAnzeigen(), k.isMeldeListeVereinsnameAnzeigen()));
                 }
                 case SCHWEIZER -> {
                     SchweizerKonfigurationSheet k = new SchweizerKonfigurationSheet(ws);
-                    yield Optional.of(new MeldelisteLayout(k.getMeldeListeFormation(),
+                    yield Optional.of(MeldelisteLayout.team(k.getMeldeListeFormation(),
                             k.isMeldeListeTeamnameAnzeigen(), k.isMeldeListeVereinsnameAnzeigen()));
                 }
                 case MAASTRICHTER -> {
                     MaastrichterKonfigurationSheet k = new MaastrichterKonfigurationSheet(ws);
-                    yield Optional.of(new MeldelisteLayout(k.getMeldeListeFormation(),
+                    yield Optional.of(MeldelisteLayout.team(k.getMeldeListeFormation(),
                             k.isMeldeListeTeamnameAnzeigen(), k.isMeldeListeVereinsnameAnzeigen()));
                 }
                 case JGJ -> {
                     JGJKonfigurationSheet k = new JGJKonfigurationSheet(ws);
-                    yield Optional.of(new MeldelisteLayout(k.getMeldeListeFormation(),
+                    yield Optional.of(MeldelisteLayout.team(k.getMeldeListeFormation(),
                             k.isMeldeListeTeamnameAnzeigen(), k.isMeldeListeVereinsnameAnzeigen()));
                 }
                 case POULE -> {
                     PouleKonfigurationSheet k = new PouleKonfigurationSheet(ws);
-                    yield Optional.of(new MeldelisteLayout(k.getMeldeListeFormation(),
+                    yield Optional.of(MeldelisteLayout.team(k.getMeldeListeFormation(),
                             k.isMeldeListeTeamnameAnzeigen(), k.isMeldeListeVereinsnameAnzeigen()));
                 }
                 case KASKADE -> {
                     KaskadeKonfigurationSheet k = new KaskadeKonfigurationSheet(ws);
-                    yield Optional.of(new MeldelisteLayout(k.getMeldeListeFormation(),
+                    yield Optional.of(MeldelisteLayout.team(k.getMeldeListeFormation(),
                             k.isMeldeListeTeamnameAnzeigen(), k.isMeldeListeVereinsnameAnzeigen()));
                 }
                 case FORMULEX -> {
                     FormuleXKonfigurationSheet k = new FormuleXKonfigurationSheet(ws);
-                    yield Optional.of(new MeldelisteLayout(k.getMeldeListeFormation(),
+                    yield Optional.of(MeldelisteLayout.team(k.getMeldeListeFormation(),
                             k.isMeldeListeTeamnameAnzeigen(), k.isMeldeListeVereinsnameAnzeigen()));
                 }
                 case TRIPTETE -> {
                     TripTeteKonfigurationSheet k = new TripTeteKonfigurationSheet(ws);
-                    yield Optional.of(new MeldelisteLayout(Formation.TRIPLETTE,
+                    yield Optional.of(MeldelisteLayout.tripTete(
                             k.isMeldeListeTeamnameAnzeigen(), k.isMeldeListeVereinsnameAnzeigen()));
                 }
                 case LIGA, KEIN -> Optional.empty();

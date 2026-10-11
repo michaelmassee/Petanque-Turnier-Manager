@@ -6,7 +6,7 @@ Checkliste für einen GitHub-Release des Petanque-Turnier-Managers. Der Ablauf i
 - **Hauptprojekt** (`michaelmassee/Petanque-Turnier-Manager`) – baut die OXT, hält das
   kuratierte Release.
 - **Installer-Repo** (`Petanque-Turnier-Manager-Installer`) – baut die nativen Installer
-  (Linux AppImage, Windows exe/msi, macOS dmg) und hängt sie ans Hauptprojekt-Release.
+  (Linux AppImage, Windows exe, macOS dmg für arm64 + Intel) und hängt sie ans Hauptprojekt-Release.
 
 > **Kritische Reihenfolge:** Das **Hauptprojekt-Release mit angehängter OXT muss zuerst
 > existieren.** Der Installer-Workflow lädt die OXT aus diesem Release herunter
@@ -122,7 +122,7 @@ git push origin main vX.Y.Z   # Tag-Push triggert build-installers.yml
 > Aktiver Branch im Installer-Repo ist `main` (Remote `origin`). Ein veralteter `master`
 > existiert daneben – **nicht** dorthin pushen.
 
-Der Workflow erstellt automatisch das Installer-Release und lädt AppImage/exe/msi/dmg
+Der Workflow erstellt automatisch das Installer-Release und lädt AppImage/exe/2× dmg
 zusätzlich ins Hauptprojekt-Release.
 
 > Hinweis: Das **Installer**-Release übernimmt die kuratierten **DE/EN-Notes aus dem
@@ -139,7 +139,7 @@ zusätzlich ins Hauptprojekt-Release.
 # Installer-Workflow beobachten (im Installer-Repo)
 gh run watch
 
-# Hauptprojekt-Release prüfen: OXT + 3 Installer-Assets vorhanden?
+# Hauptprojekt-Release prüfen: OXT + 4 Installer-Assets (AppImage, exe, dmg arm64, dmg intel) vorhanden?
 gh release view vX.Y.Z --repo michaelmassee/Petanque-Turnier-Manager
 ```
 

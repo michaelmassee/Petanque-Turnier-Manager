@@ -12,8 +12,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.pagestyle.PageStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.ko.konfiguration.IKoBracketKonfiguration;
-import de.petanqueturniermanager.ko.konfiguration.KoSpielbaumTeamAnzeige;
-import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 
 /**
  * Erstellung 01.08.2022 / Michael Massee
@@ -131,13 +130,23 @@ public class JGJKonfigurationSheet extends BaseKonfigurationSheet
 	}
 
 	@Override
-	public SpielplanTeamAnzeige getSpielplanTeamAnzeige() {
+	public TeamAnzeige getSpielplanTeamAnzeige() {
 		return propertiesSpalte.getSpielplanTeamAnzeige();
 	}
 
 	@Override
-	public void setSpielplanTeamAnzeige(SpielplanTeamAnzeige anzeige) {
+	public void setSpielplanTeamAnzeige(TeamAnzeige anzeige) {
 		propertiesSpalte.setSpielplanTeamAnzeige(anzeige);
+	}
+
+	@Override
+	public TeamAnzeige getRanglisteTeamAnzeige() {
+		return propertiesSpalte.getRanglisteTeamAnzeige();
+	}
+
+	@Override
+	public void setRanglisteTeamAnzeige(TeamAnzeige anzeige) {
+		propertiesSpalte.setRanglisteTeamAnzeige(anzeige);
 	}
 
 	@Override
@@ -184,11 +193,11 @@ public class JGJKonfigurationSheet extends BaseKonfigurationSheet
 	}
 
 	@Override
-	public KoSpielbaumTeamAnzeige getSpielbaumTeamAnzeige() {
+	public TeamAnzeige getSpielbaumTeamAnzeige() {
 		return propertiesSpalte.getSpielbaumTeamAnzeige();
 	}
 
-	public void setSpielbaumTeamAnzeige(KoSpielbaumTeamAnzeige anzeige) {
+	public void setSpielbaumTeamAnzeige(TeamAnzeige anzeige) {
 		propertiesSpalte.setSpielbaumTeamAnzeige(anzeige);
 	}
 

@@ -10,7 +10,7 @@ import com.sun.star.sheet.XSpreadsheetDocument;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
-import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
@@ -36,7 +36,7 @@ public class JGJTestMeldeListeErstellen {
 
 	public int run() throws GenerateException {
 		meldeListeSheetNew = new JGJMeldeListeSheet_New(wkingSpreadsheet);
-		meldeListeSheetNew.createMeldelisteWithParams(Formation.TETE, false, false, SpielplanTeamAnzeige.NR);
+		meldeListeSheetNew.createMeldelisteWithParams(Formation.TETE, false, false, TeamAnzeige.NR);
 		int anzMeldungen = testMeldungenEinfuegen();
 		JGJMeldeListeSheet_Update meldeListeSheetUpdate = new JGJMeldeListeSheet_Update(wkingSpreadsheet);
 		meldeListeSheetUpdate.run();// do not start a Thread !

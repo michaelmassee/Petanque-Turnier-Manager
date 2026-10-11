@@ -25,7 +25,6 @@ import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterTeilnehmerS
 import de.petanqueturniermanager.poule.meldeliste.PouleCheckinListeSheet;
 import de.petanqueturniermanager.poule.meldeliste.PouleMeldeListeSheetNew;
 import de.petanqueturniermanager.poule.meldeliste.PouleTeilnehmerSheet;
-import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerCheckinListeSheet;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetNew;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerTeilnehmerSheet;
@@ -64,7 +63,7 @@ class LeereMeldelisteListenUITest extends BaseCalcUITest {
     void jederGegenJedenTeilnehmerUndCheckinFunktionierenOhneMeldungen() {
         assertThatCode(() -> {
             new JGJMeldeListeSheet_New(wkingSpreadsheet)
-                    .createMeldelisteWithParams(Formation.DOUBLETTE, false, false, SpielplanTeamAnzeige.NR);
+                    .createMeldelisteWithParams(Formation.DOUBLETTE, false, false, TeamAnzeige.NR);
             new JGJTeilnehmerSheet(wkingSpreadsheet).run();
             new JGJCheckinListeSheet(wkingSpreadsheet).run();
         }).doesNotThrowAnyException();
@@ -85,7 +84,7 @@ class LeereMeldelisteListenUITest extends BaseCalcUITest {
     void maastrichterTeilnehmerUndCheckinFunktionierenOhneMeldungen() {
         assertThatCode(() -> {
             new MaastrichterMeldeListeSheetNew(wkingSpreadsheet)
-                    .erstelleMeldeliste(Formation.DOUBLETTE, false, false, SpielplanTeamAnzeige.NR);
+                    .erstelleMeldeliste(Formation.DOUBLETTE, false, false, TeamAnzeige.NR);
             new MaastrichterTeilnehmerSheet(wkingSpreadsheet).run();
             new MaastrichterCheckinListeSheet(wkingSpreadsheet).run();
         }).doesNotThrowAnyException();

@@ -33,10 +33,9 @@ import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.ko.konfiguration.KoPropertiesSpalte;
-import de.petanqueturniermanager.ko.konfiguration.KoSpielbaumTeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterGruppenModus;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerRankingModus;
-import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 
 /**
  * Modaler Dialog zur Abfrage der Turnier-Parameter für ein neues Maastrichter Turnier.
@@ -46,8 +45,8 @@ public class MaastrichterTurnierParameterDialog {
 
 	/** Ergebnis des Dialogs. */
 	public record TurnierParameter(Formation formation, boolean teamnameAnzeigen, boolean vereinsnameAnzeigen,
-			boolean meleeAnmeldung, SpielplanTeamAnzeige spielplanTeamAnzeige, SchweizerRankingModus rankingModus,
-			int anzVorrunden, KoSpielbaumTeamAnzeige spielbaumTeamAnzeige, SpielrundeSpielbahn spielbaumSpielbahn,
+			boolean meleeAnmeldung, TeamAnzeige spielplanTeamAnzeige, SchweizerRankingModus rankingModus,
+			int anzVorrunden, TeamAnzeige spielbaumTeamAnzeige, SpielrundeSpielbahn spielbaumSpielbahn,
 			boolean spielbaumBahnNurRunde1, boolean spielUmPlatz3, int gruppenGroesse, int minLetzteGruppeGroesse,
 			MaastrichterGruppenModus gruppenModus) {
 	}
@@ -60,9 +59,9 @@ public class MaastrichterTurnierParameterDialog {
 	}
 
 	public Optional<TurnierParameter> show(Formation defaultFormation, boolean defaultTeamnameAnzeigen,
-			boolean defaultVereinsnameAnzeigen, SpielplanTeamAnzeige defaultSpielplanTeamAnzeige,
+			boolean defaultVereinsnameAnzeigen, TeamAnzeige defaultSpielplanTeamAnzeige,
 			SchweizerRankingModus defaultRankingModus, int defaultAnzVorrunden,
-			KoSpielbaumTeamAnzeige defaultSpielbaumTeamAnzeige, SpielrundeSpielbahn defaultSpielbaumSpielbahn,
+			TeamAnzeige defaultSpielbaumTeamAnzeige, SpielrundeSpielbahn defaultSpielbaumSpielbahn,
 			boolean defaultSpielbaumBahnNurRunde1, boolean defaultSpielUmPlatz3, int defaultGruppenGroesse,
 			int defaultMinLetzteGruppeGroesse,
 			MaastrichterGruppenModus defaultGruppenModus)
@@ -111,8 +110,9 @@ public class MaastrichterTurnierParameterDialog {
 		addLabel(xMSF, cont, "lblSpielplan", I18n.get("dialog.maastrichter.spielplan.anzeige.label"), 8, 64 + y, 80, 10);
 		addListBox(xMSF, cont, "lstSpielplan",
 				new String[] { I18n.get("dialog.maastrichter.auswahl.nr"),
+						I18n.get("dialog.maastrichter.auswahl.spieler"),
 						I18n.get("dialog.maastrichter.auswahl.name") },
-				(short) (defaultSpielplanTeamAnzeige == SpielplanTeamAnzeige.NAME ? 1 : 0),
+				defaultSpielplanTeamAnzeige.dialogIndex(),
 				92, 62 + y, 60, 12);
 
 		addFixedLine(xMSF, cont, "sep3", 5, 80 + y, 150, 2);
@@ -132,8 +132,9 @@ public class MaastrichterTurnierParameterDialog {
 				125 + y, 80, 10);
 		addListBox(xMSF, cont, "lstSpielbaum",
 				new String[] { I18n.get("dialog.maastrichter.auswahl.nr"),
+						I18n.get("dialog.maastrichter.auswahl.spieler"),
 						I18n.get("dialog.maastrichter.auswahl.name") },
-				(short) (defaultSpielbaumTeamAnzeige == KoSpielbaumTeamAnzeige.NAME ? 1 : 0),
+				defaultSpielbaumTeamAnzeige.dialogIndex(),
 				92, 123 + y, 60, 12);
 
 		addLabel(xMSF, cont, "lblSpielbahn", I18n.get("dialog.maastrichter.spielbaum.spielbahn.label"), 8,
@@ -213,13 +214,11 @@ public class MaastrichterTurnierParameterDialog {
 			boolean teamnameAnzeigen = formation == Formation.NUR_TEAMNAME || readCheckBoxState(xcc, "cbTeamname");
 			boolean vereinsnameAnzeigen = readCheckBoxState(xcc, "cbVereinsname");
 			boolean meleeAnmeldung = MeleeAnmeldungDialogOption.istGewaehlt(xcc, formation);
-			SpielplanTeamAnzeige spielplanAnzeige = readListBoxSelected(xcc, "lstSpielplan") == 1
-					? SpielplanTeamAnzeige.NAME : SpielplanTeamAnzeige.NR;
+			TeamAnzeige spielplanAnzeige = TeamAnzeige.ausDialogIndex(readListBoxSelected(xcc, "lstSpielplan"));
 			SchweizerRankingModus rankingModus = readListBoxSelected(xcc, "lstRankingModus") == 1
 					? SchweizerRankingModus.OHNE_BUCHHOLZ : SchweizerRankingModus.MIT_BUCHHOLZ;
 			int anzVorrunden = readNumericField(xcc, "nfAnzVorrunden", defaultAnzVorrunden);
-			KoSpielbaumTeamAnzeige spielbaumTeamAnzeige = readListBoxSelected(xcc, "lstSpielbaum") == 1
-					? KoSpielbaumTeamAnzeige.NAME : KoSpielbaumTeamAnzeige.NR;
+			TeamAnzeige spielbaumTeamAnzeige = TeamAnzeige.ausDialogIndex(readListBoxSelected(xcc, "lstSpielbaum"));
 			SpielrundeSpielbahn spielbahn = switch (readListBoxSelected(xcc, "lstSpielbahn")) {
 				case 1 -> SpielrundeSpielbahn.L;
 				case 2 -> SpielrundeSpielbahn.N;

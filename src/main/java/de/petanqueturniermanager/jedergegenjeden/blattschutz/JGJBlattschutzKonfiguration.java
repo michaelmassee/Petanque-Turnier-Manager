@@ -26,6 +26,8 @@ import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.blattschutz.IBlattschutzKonfiguration;
 import de.petanqueturniermanager.helper.sheet.blattschutz.SheetSchutzInfo;
+import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationSheet;
+import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSpalten;
 import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJSpielPlanSheet;
 import de.petanqueturniermanager.ko.KoTurnierbaumSheet;
 
@@ -34,7 +36,8 @@ import de.petanqueturniermanager.ko.KoTurnierbaumSheet;
  * <p>
  * Editierbare Bereiche:
  * <ul>
- *   <li><b>Meldeliste:</b> Name-Spalte (B)</li>
+ *   <li><b>Meldeliste:</b> Alle manuellen Eingabespalten außer Nr: optionaler Teamname,
+ *       Spielername/Verein, SP und Aktiv</li>
  *   <li><b>Spielplan:</b> Spielpunkte A und B (nur bis zur letzten Datenzeile)</li>
  *   <li><b>Rangliste, Gesamtrangliste, Direktvergleich, Checkin-Liste, Gruppen-Aushänge:</b> vollständig gesperrt</li>
  * </ul>
@@ -67,18 +70,28 @@ public class JGJBlattschutzKonfiguration implements IBlattschutzKonfiguration, M
         var xDoc = ws.getWorkingSpreadsheetDocument();
         var infos = new ArrayList<SheetSchutzInfo>();
 
-        sammleMeldelisteSchutzInfo(xDoc, infos);
+        sammleMeldelisteSchutzInfo(xDoc, ws, infos);
         sammleSpielplanSchutzInfo(xDoc, infos);
         sammleVollGesperrteSheets(xDoc, infos);
 
         return infos;
     }
 
-    private void sammleMeldelisteSchutzInfo(XSpreadsheetDocument xDoc, List<SheetSchutzInfo> infos) {
-        SheetMetadataHelper.findeSheet(xDoc, SheetMetadataHelper.SCHLUESSEL_JGJ_MELDELISTE).ifPresent(sheet ->
-                infos.add(SheetSchutzInfo.mitEditierbarenBereichen(sheet, List.of(
-                        RangePosition.from(SPIELER_NR_SPALTE + 1, ERSTE_DATEN_ZEILE,
-                                SPIELER_NR_SPALTE + 1, MeldungenSpalte.MAX_ANZ_MELDUNGEN)))));
+    private void sammleMeldelisteSchutzInfo(XSpreadsheetDocument xDoc, WorkingSpreadsheet ws,
+            List<SheetSchutzInfo> infos) {
+        SheetMetadataHelper.findeSheet(xDoc, SheetMetadataHelper.SCHLUESSEL_JGJ_MELDELISTE).ifPresent(sheet -> {
+            // Fallback wie bisher: nur die Namensspalte, damit die Meldeliste bei
+            // unlesbarer Konfiguration nicht komplett gesperrt wird.
+            int letzteSpalte = SPIELER_NR_SPALTE + 1;
+            try {
+                letzteSpalte = JGJMeldeListeSpalten.aktivSpalte(new JGJKonfigurationSheet(ws));
+            } catch (RuntimeException e) {
+                logger.warn("Editierbare Meldeliste-Spalten konnten nicht berechnet werden: {}", e.getMessage(), e);
+            }
+            infos.add(SheetSchutzInfo.mitEditierbarenBereichen(sheet, List.of(
+                    RangePosition.from(SPIELER_NR_SPALTE + 1, ERSTE_DATEN_ZEILE,
+                            letzteSpalte, MeldungenSpalte.MAX_ANZ_MELDUNGEN))));
+        });
     }
 
     private void sammleSpielplanSchutzInfo(XSpreadsheetDocument xDoc, List<SheetSchutzInfo> infos) {

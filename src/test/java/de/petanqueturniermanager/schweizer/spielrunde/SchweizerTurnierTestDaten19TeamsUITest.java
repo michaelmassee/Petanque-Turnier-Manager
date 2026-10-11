@@ -13,7 +13,7 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
-import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheet;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheetUpdate;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
@@ -23,7 +23,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
  * Besonderheiten:
  * <ul>
  *   <li>19 Teams → pro Runde 9 Paarungen + 1 Freilos</li>
- *   <li>Teamname-Anzeige in der Spielrunde (SpielplanTeamAnzeige.NAME)</li>
+ *   <li>Teamname-Anzeige in der Spielrunde (TeamAnzeige.NAME)</li>
  *   <li>Zufällige Bahnvergabe (SpielrundeSpielbahn.R)</li>
  * </ul>
  */
@@ -38,7 +38,7 @@ public class SchweizerTurnierTestDaten19TeamsUITest extends BaseCalcUITest {
 
 	@BeforeEach
 	public void setup() {
-		testDaten = new SchweizerTurnierTestDaten(wkingSpreadsheet, ANZ_TEAMS, SpielplanTeamAnzeige.NAME);
+		testDaten = new SchweizerTurnierTestDaten(wkingSpreadsheet, ANZ_TEAMS, TeamAnzeige.NAME);
 	}
 
 	@Test
@@ -185,7 +185,7 @@ public class SchweizerTurnierTestDaten19TeamsUITest extends BaseCalcUITest {
 	 */
 	@Test
 	public void gespieltenRundenEinlesenVerbuchtFreispielPunkteBeimFreilos() throws GenerateException {
-		var nrModusTestDaten = new SchweizerTurnierTestDaten(wkingSpreadsheet, ANZ_TEAMS, SpielplanTeamAnzeige.NR);
+		var nrModusTestDaten = new SchweizerTurnierTestDaten(wkingSpreadsheet, ANZ_TEAMS, TeamAnzeige.NR);
 		nrModusTestDaten.generate(1, false);
 
 		XSpreadsheet vorrunde1 = sheetHlp.findByName("1. " + SchweizerAbstractSpielrundeSheet.SHEET_NAMEN);

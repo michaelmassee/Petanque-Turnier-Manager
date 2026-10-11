@@ -37,7 +37,6 @@ import de.petanqueturniermanager.konfigdialog.dialog.element.UITextAreaProperty;
  */
 public class TextAreaDialog {
 
-	private static final int DIALOG_HEIGHT = 100;
 	private static final int DIALOG_WIDTH = 250;
 	private static final int PLATZHALTER_BUTTON_ZEILE_HOEHE = 16;
 
@@ -110,7 +109,7 @@ public class TextAreaDialog {
 
 		// ---------------------------------------------------------------------------------------------------
 		int textAreaPosY = 10;
-		uITextAreaProperty.doInsert(dialogModel, xControlCont, textAreaPosY);
+		uITextAreaProperty.doInsert(dialogModel, xControlCont, textAreaPosY, dialogWidth);
 		int naechsteY = textAreaPosY + uITextAreaProperty.getHeight();
 		// ---------------------------------------------------------------------------------------------------
 
@@ -119,7 +118,7 @@ public class TextAreaDialog {
 		}
 
 		int okCancelPosY = naechsteY + 5;
-		int dialogHeight = platzhalterButtonsAnzeigen ? okCancelPosY + btnHeight + 5 : DIALOG_HEIGHT;
+		int dialogHeight = okCancelPosY + btnHeight + 5;
 
 		// http://www.openoffice.org/api/docs/common/ref/com/sun/star/awt/UnoControlDialogModel.html
 		xPSetDialog.setPropertyValue("PositionX", Integer.valueOf(50));

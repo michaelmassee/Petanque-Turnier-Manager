@@ -17,7 +17,8 @@ public record PluginOptionen(
 		boolean performanceLogging,
 		String logLevel,
 		boolean autoUpdateDialogBeimStart,
-		boolean includeBetaVersions) {
+		boolean includeBetaVersions,
+		boolean autoTurnierModus) {
 
 	public PluginOptionen {
 		logLevel = logLevel == null ? "" : logLevel.trim().toLowerCase(Locale.ROOT);

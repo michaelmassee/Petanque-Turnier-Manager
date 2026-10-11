@@ -28,13 +28,12 @@ import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.RangeProperties;
-import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeGeradeStyle;
-import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -65,7 +64,7 @@ class KaskadeListeDelegate implements MeldeListeKonstanten {
     /**
      * Erste Daten-Zeile: 3 Header-Zeilen (überschreibt MeldeListeKonstanten.ERSTE_DATEN_ZEILE=2).
      */
-    static final int ERSTE_DATEN_ZEILE = 3;
+    static final int ERSTE_DATEN_ZEILE = TEAM_MELDELISTE_ERSTE_DATEN_ZEILE;
 
     static final int AKTIV_WERT_NIMMT_TEIL = 1;
     static final int AKTIV_WERT_AUSGESTIEGEN = 2;
@@ -208,11 +207,11 @@ class KaskadeListeDelegate implements MeldeListeKonstanten {
         int headerFarbe = Integer.parseInt(BasePropertiesSpalte.HEADER_BACK_COLOR.replace("#", ""), 16);
 
         sheet.getSheetHelper().setStringValueInCell(
-                StringCellValue.from(xKonfigSheet, Position.from(0, 0), "Eigenschaft")
+                StringCellValue.from(xKonfigSheet, Position.from(0, 0), I18n.get("column.header.eigenschaft"))
                         .setCharWeight(FontWeight.BOLD)
                         .setCellBackColor(headerFarbe));
         sheet.getSheetHelper().setStringValueInCell(
-                StringCellValue.from(xKonfigSheet, Position.from(1, 0), "Wert")
+                StringCellValue.from(xKonfigSheet, Position.from(1, 0), I18n.get("column.header.wert"))
                         .setCharWeight(FontWeight.BOLD)
                         .setCellBackColor(headerFarbe));
 
@@ -382,10 +381,6 @@ class KaskadeListeDelegate implements MeldeListeKonstanten {
         int anzSpieler = formation.getAnzSpieler();
         int letzteDatenZeile = getLetzteDatenZeileUseMin();
 
-        MeldungenHintergrundFarbeGeradeStyle farbeGerade = konfigurationSheet.getMeldeListeHintergrundFarbeGeradeStyle();
-        MeldungenHintergrundFarbeUnGeradeStyle farbeUngerade = konfigurationSheet
-                .getMeldeListeHintergrundFarbeUnGeradeStyle();
-
         RangePosition nrRange = RangePosition.from(getTeamNrSpalte(), ERSTE_DATEN_ZEILE,
                 getTeamNrSpalte(), letzteDatenZeile);
         RangeHelper.from(sheet, nrRange).setRangeProperties(
@@ -398,9 +393,7 @@ class KaskadeListeDelegate implements MeldeListeKonstanten {
                 .formulaIsText().styleIsFehler().applyAndDoReset()
                 .formula1(kondDoppeltNr).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndDoReset()
                 .formula1("0").formula2("" + MeldungenSpalte.MAX_ANZ_MELDUNGEN)
-                .operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndDoReset()
-                .formulaIsEvenRow().style(farbeGerade).applyAndDoReset()
-                .formulaIsOddRow().style(farbeUngerade).applyAndDoReset();
+                .operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndDoReset();
 
         if (konfigurationSheet.isMeldeListeTeamnameAnzeigen()) {
             RangePosition teamnameRange = RangePosition.from(1, ERSTE_DATEN_ZEILE, 1, letzteDatenZeile);
@@ -430,7 +423,7 @@ class KaskadeListeDelegate implements MeldeListeKonstanten {
         // Teams mit identischer SP werden in Runde 1 nicht gegeneinander ausgelost.
         meldeListeHelper.bereinigeUngueltigeSetzpositionWerte(getSetzPositionSpalte(), getZeilenKennungSpalte(),
                 ERSTE_DATEN_ZEILE, letzteDatenZeile);
-        MeldeListeHelper.formatiereSetzpositionSpalteFehlerfarbe(sheet, spRange, farbeGerade, farbeUngerade);
+        MeldeListeHelper.formatiereSetzpositionSpalteFehlerfarbe(sheet, spRange);
 
         RangePosition aktivRange = RangePosition.from(getAktivSpalte(), ERSTE_DATEN_ZEILE,
                 getAktivSpalte(), letzteDatenZeile);
@@ -440,19 +433,16 @@ class KaskadeListeDelegate implements MeldeListeKonstanten {
 
         meldeListeHelper.bereinigeUngueltigeAktivWerte(getAktivSpalte(), getZeilenKennungSpalte(), ERSTE_DATEN_ZEILE,
                 letzteDatenZeile, AKTIV_GUELTIGE_WERTE);
-        meldeListeHelper.formatiereAktivSpalteFehlerfarbe(sheet, aktivRange, AKTIV_GUELTIGE_WERTE, farbeGerade,
-                farbeUngerade);
+        meldeListeHelper.formatiereAktivSpalteFehlerfarbe(sheet, aktivRange, AKTIV_GUELTIGE_WERTE);
 
         EditierbaresZelleFormatHelper.anwenden(sheet, RangePosition.from(1, ERSTE_DATEN_ZEILE, getAktivSpalte(), letzteDatenZeile));
-		formatiereDoppelteSpielerNamen(anzSpieler, letzteDatenZeile, farbeGerade, farbeUngerade);
+		formatiereDoppelteSpielerNamen(anzSpieler, letzteDatenZeile);
 
         MeldeListeKonstanten.markiereDoppelteTeamnamenBeiNurTeamname(sheet, konfigurationSheet.isMeldeListeTeamnameAnzeigen(),
                 anzSpieler == 0, letzteDatenZeile);
     }
 
-	private void formatiereDoppelteSpielerNamen(int anzSpieler, int letzteDatenZeile,
-			MeldungenHintergrundFarbeGeradeStyle farbeGerade,
-			MeldungenHintergrundFarbeUnGeradeStyle farbeUngerade) throws GenerateException {
+	private void formatiereDoppelteSpielerNamen(int anzSpieler, int letzteDatenZeile) throws GenerateException {
 		if (anzSpieler == 0) return;
 		int[] vornamen = new int[anzSpieler];
 		int[] nachnamen = new int[anzSpieler];
@@ -460,20 +450,24 @@ class KaskadeListeDelegate implements MeldeListeKonstanten {
 			vornamen[s] = getVornameSpalte(s);
 			nachnamen[s] = getNachnameSpalte(s);
 		}
-		meldeListeHelper.insertFormulaFuerDoppelteSpielerNamenGeradeUngradeFarbe(vornamen, nachnamen,
-				ERSTE_DATEN_ZEILE, letzteDatenZeile, sheet, farbeGerade, farbeUngerade);
+		meldeListeHelper.insertFormulaFuerDoppelteSpielerNamen(vornamen, nachnamen,
+				ERSTE_DATEN_ZEILE, letzteDatenZeile, sheet);
 	}
 
+    /**
+     * Zeilen-Zebra direkt als Zellhintergrund (nie als bedingte Formatierung: geht beim HTML-Export
+     * verloren und verdeckt die Editierfarbe). Vorher werden alte bedingte Formatierungen des
+     * Datenbereichs entfernt, damit ältere Dokumente mit Zebra-CF beim Aktualisieren bereinigt werden;
+     * die Fehler- und Editierregeln baut {@link #formatDatenSpalten()} danach neu auf.
+     */
     private void formatZeilenfarben() throws GenerateException {
-        MeldungenHintergrundFarbeGeradeStyle farbeGerade = konfigurationSheet.getMeldeListeHintergrundFarbeGeradeStyle();
-        MeldungenHintergrundFarbeUnGeradeStyle farbeUngerade = konfigurationSheet
-                .getMeldeListeHintergrundFarbeUnGeradeStyle();
         int letzteDatenZeile = getLetzteDatenZeileUseMin();
-
         RangePosition datenRange = RangePosition.from(getTeamNrSpalte(), ERSTE_DATEN_ZEILE,
                 getAktivSpalte(), letzteDatenZeile);
-        ConditionalFormatHelper.from(sheet, datenRange).clear().formulaIsEvenRow().style(farbeGerade).applyAndDoReset();
-        ConditionalFormatHelper.from(sheet, datenRange).formulaIsOddRow().style(farbeUngerade).applyAndDoReset();
+        ConditionalFormatHelper.clearSpaltenweise(sheet, datenRange);
+        SheetHelper.faerbeZeilenAbwechselnd(sheet, datenRange,
+                konfigurationSheet.getMeldeListeHintergrundFarbeGeradeStyle().getFarbe(),
+                konfigurationSheet.getMeldeListeHintergrundFarbeUnGeradeStyle().getFarbe());
     }
 
     // ---------------------------------------------------------------

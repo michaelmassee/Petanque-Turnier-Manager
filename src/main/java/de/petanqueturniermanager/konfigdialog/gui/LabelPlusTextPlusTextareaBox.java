@@ -25,6 +25,9 @@ import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.StringTools;
 import de.petanqueturniermanager.sidebar.GuiFactory;
 import de.petanqueturniermanager.sidebar.GuiFactoryCreateParam;
+import de.petanqueturniermanager.sidebar.layout.HorizontalLayout;
+import de.petanqueturniermanager.sidebar.layout.Layout;
+import de.petanqueturniermanager.sidebar.layout.VerticalLayout;
 
 /**
  * Label mit Text + Btn für TextAreaInput
@@ -44,16 +47,30 @@ public class LabelPlusTextPlusTextareaBox extends BaseField<LabelPlusTextPlusTex
 	// https://www.flaticon.com/free-icon/edit_391171 = textarea-edit
 	public static final String btnImage = "konfig/textarea-edit.png"; // 19x21, nativ angezeigt (kein Scaling)
 
-	private LabelPlusTextPlusTextareaBox(GuiFactoryCreateParam guiFactoryCreateParam) {
-		super(guiFactoryCreateParam);
+	private LabelPlusTextPlusTextareaBox(GuiFactoryCreateParam guiFactoryCreateParam, boolean labelInEigenerZeile) {
+		super(guiFactoryCreateParam, labelInEigenerZeile ? new VerticalLayout(0, 1) : new HorizontalLayout());
 	}
 
 	public static final LabelPlusTextPlusTextareaBox from(GuiFactoryCreateParam guiFactoryCreateParam) {
-		return new LabelPlusTextPlusTextareaBox(guiFactoryCreateParam);
+		return from(guiFactoryCreateParam, false);
+	}
+
+	/**
+	 * Creates a field with its label above the input row. Use this for descriptive labels
+	 * that must remain readable in narrow dialogs.
+	 */
+	public static final LabelPlusTextPlusTextareaBox from(GuiFactoryCreateParam guiFactoryCreateParam,
+			boolean labelInEigenerZeile) {
+		return new LabelPlusTextPlusTextareaBox(guiFactoryCreateParam, labelInEigenerZeile);
 	}
 
 	@Override
 	protected void doCreate() {
+		boolean labelInEigenerZeile = getLayout() instanceof VerticalLayout;
+		Layout eingabeLayout = getLayout();
+		if (labelInEigenerZeile) {
+			eingabeLayout = new HorizontalLayout();
+		}
 		// ---------------------------------------
 		{
 			Map<String, Object> props = new HashMap<>();
@@ -63,6 +80,9 @@ public class LabelPlusTextPlusTextareaBox extends BaseField<LabelPlusTextPlusTex
 			label = Lo.qi(XFixedText.class, labelControl);
 			labelProperties = Lo.qi(XMultiPropertySet.class, labelControl.getModel());
 			getLayout().addControl(labelControl, 1);
+		}
+		if (labelInEigenerZeile) {
+			getLayout().addLayout(eingabeLayout, 1);
 		}
 		// ---------------------------------------
 		{
@@ -75,7 +95,7 @@ public class LabelPlusTextPlusTextareaBox extends BaseField<LabelPlusTextPlusTex
 					props);
 			field = Lo.qi(XTextComponent.class, textfieldControl);
 			setProperties(Lo.qi(XMultiPropertySet.class, textfieldControl.getModel()));
-			getLayout().addControl(textfieldControl, 1);
+			eingabeLayout.addControl(textfieldControl, 1);
 		}
 		// ---------------------------------------
 		{
@@ -92,7 +112,7 @@ public class LabelPlusTextPlusTextareaBox extends BaseField<LabelPlusTextPlusTex
 			Rectangle btnRect = new Rectangle(BASE_RECTANGLE.X, BASE_RECTANGLE.Y, BASE_RECTANGLE.Width, 29);
 			XControl btnControl = GuiFactory.createButton(getGuiFactoryCreateParam(), null, this, btnRect, props);
 			btn = Lo.qi(XButton.class, btnControl);
-			getLayout().addFixedWidthControl(btnControl, 29); // fest 29px breit
+			eingabeLayout.addFixedWidthControl(btnControl, 29); // fest 29px breit
 		}
 		// ---------------------------------------
 	}

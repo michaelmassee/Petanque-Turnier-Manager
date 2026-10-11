@@ -32,7 +32,7 @@ import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerRankingModus;
-import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 
 /**
  * Modaler Dialog zur Abfrage der Turnier-Parameter vor dem Anlegen einer neuen
@@ -51,7 +51,7 @@ public class SchweizerTurnierParameterDialog {
 
 	/** Ergebnis des Dialogs. */
 	public record TurnierParameter(Formation formation, boolean teamnameAnzeigen, boolean vereinsnameAnzeigen,
-			boolean meleeAnmeldung, SpielplanTeamAnzeige spielplanTeamAnzeige, SchweizerRankingModus rankingModus) {
+			boolean meleeAnmeldung, TeamAnzeige spielplanTeamAnzeige, SchweizerRankingModus rankingModus) {
 	}
 
 	private final WorkingSpreadsheet workingSpreadsheet;
@@ -72,7 +72,7 @@ public class SchweizerTurnierParameterDialog {
 	 * @return Optional mit TurnierParameter bei OK, leer bei Abbrechen
 	 */
 	public Optional<TurnierParameter> show(Formation defaultFormation, boolean defaultTeamnameAnzeigen,
-			boolean defaultVereinsnameAnzeigen, SpielplanTeamAnzeige defaultSpielplanTeamAnzeige,
+			boolean defaultVereinsnameAnzeigen, TeamAnzeige defaultSpielplanTeamAnzeige,
 			SchweizerRankingModus defaultRankingModus) throws com.sun.star.uno.Exception {
 
 		ProcessBox.from().hide();
@@ -123,8 +123,9 @@ public class SchweizerTurnierParameterDialog {
 
 		addLabel(xMSF, cont, "lblSpielplan", I18n.get("dialog.schweizer.spielplan.anzeige.label"), 8, 64 + y, 80, 10);
 		addListBox(xMSF, cont, "lstSpielplan",
-				new String[] { I18n.get("dialog.schweizer.auswahl.nr"), I18n.get("dialog.schweizer.auswahl.name") },
-				(short) (defaultSpielplanTeamAnzeige == SpielplanTeamAnzeige.NAME ? 1 : 0),
+				new String[] { I18n.get("dialog.schweizer.auswahl.nr"), I18n.get("dialog.schweizer.auswahl.spieler"),
+						I18n.get("dialog.schweizer.auswahl.name") },
+				defaultSpielplanTeamAnzeige.dialogIndex(),
 				92, 62 + y, 60, 12);
 
 		addFixedLine(xMSF, cont, "sep3", 5, 80 + y, 150, 2);
@@ -184,8 +185,7 @@ public class SchweizerTurnierParameterDialog {
 			boolean teamnameAnzeigen = formation == Formation.NUR_TEAMNAME || readCheckBoxState(xcc, "cbTeamname");
 			boolean vereinsnameAnzeigen = readCheckBoxState(xcc, "cbVereinsname");
 			boolean meleeAnmeldung = MeleeAnmeldungDialogOption.istGewaehlt(xcc, formation);
-			SpielplanTeamAnzeige spielplanAnzeige = readListBoxSelected(xcc, "lstSpielplan") == 1
-					? SpielplanTeamAnzeige.NAME : SpielplanTeamAnzeige.NR;
+			TeamAnzeige spielplanAnzeige = TeamAnzeige.ausDialogIndex(readListBoxSelected(xcc, "lstSpielplan"));
 			SchweizerRankingModus rankingModus = readListBoxSelected(xcc, "lstRankingModus") == 1
 					? SchweizerRankingModus.OHNE_BUCHHOLZ : SchweizerRankingModus.MIT_BUCHHOLZ;
 			result = Optional.of(new TurnierParameter(formation, teamnameAnzeigen, vereinsnameAnzeigen, meleeAnmeldung,

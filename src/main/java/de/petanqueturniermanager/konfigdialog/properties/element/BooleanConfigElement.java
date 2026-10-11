@@ -36,8 +36,7 @@ public class BooleanConfigElement implements ConfigElement, XItemListener {
 			boolean readOnly) {
 		this.configProperty = checkNotNull(configProperty);
 		this.workingSpreadsheet = checkNotNull(workingSpreadsheet);
-		var labelText = configProperty.getDescription() != null ? configProperty.getDescription() : configProperty.getKey();
-		labelPlusCheckBox = LabelPlusCheckBox.from(guiFactoryCreateParam).labelText(labelText).helpText(labelText).addListener(this)
+		labelPlusCheckBox = LabelPlusCheckBox.from(guiFactoryCreateParam).labelText(configProperty.getLabelText()).helpText(configProperty.getHelpText()).addListener(this)
 				.setStat(getPropertyValue()).readOnly(readOnly);
 	}
 

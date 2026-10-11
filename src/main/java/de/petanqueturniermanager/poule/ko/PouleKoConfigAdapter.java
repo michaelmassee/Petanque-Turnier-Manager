@@ -6,7 +6,7 @@ package de.petanqueturniermanager.poule.ko;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.ko.konfiguration.IKoBracketKonfiguration;
-import de.petanqueturniermanager.ko.konfiguration.KoSpielbaumTeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.poule.konfiguration.PouleKonfigurationSheet;
 
 /**
@@ -34,8 +34,8 @@ public class PouleKoConfigAdapter implements IKoBracketKonfiguration {
     }
 
     @Override
-    public KoSpielbaumTeamAnzeige getSpielbaumTeamAnzeige() {
-        return KoSpielbaumTeamAnzeige.NR;
+    public TeamAnzeige getSpielbaumTeamAnzeige() {
+        return konfigurationSheet.getSpielbaumTeamAnzeige();
     }
 
     @Override

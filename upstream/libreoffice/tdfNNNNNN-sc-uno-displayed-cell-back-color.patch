@@ -1,0 +1,287 @@
+From 2ea57e85ac1a20c79605099a48ec8842a3aa0e95 Mon Sep 17 00:00:00 2001
+From: Michael Massee <michael@massee.de>
+Date: Wed, 7 Oct 2026 09:19:38 +0200
+Subject: [PATCH] tdf#NNNNNN sc UNO: add read-only DisplayedCellBackColor to
+ SheetCell
+
+CellBackColor is read from the cell's pattern (direct formatting plus
+cell style) via ScCellRangesBase::GetCurrentAttrsDeep(). Conditional
+formatting is never evaluated in the UNO layer, so there is no API to
+find out which background colour a cell is actually displayed with when
+a condition or a colour scale applies. Extensions that render sheet
+content themselves (e.g. their own HTML export) therefore lose all
+conditionally formatted backgrounds, while the native HTML filter keeps
+them because it calls ScDocument::GetCondResult() directly.
+
+Changing CellBackColor itself is not an option: it is a read/write
+property describing the set formatting, and code copying properties
+between cells would bake the conditional colour into direct formatting.
+
+Add a new read-only SheetCell property DisplayedCellBackColor that uses
+the same precedence as ScDocument::FillInfo() for painting: colour scale
+colour first, then the background of the cell style applied by a
+matching condition, then the cell's own background.
+
+Change-Id: I13529f75132440be612be225801fba01eadc06d4
+---
+ offapi/com/sun/star/sheet/SheetCell.idl | 14 ++++++
+ sc/inc/cellsuno.hxx                     |  2 +
+ sc/inc/unonames.hxx                     |  1 +
+ sc/inc/unowids.hxx                      |  3 +-
+ sc/qa/unit/ucalc_condformat.cxx         | 65 +++++++++++++++++++++++++
+ sc/source/ui/unoobj/cellsuno.cxx        | 40 ++++++++++++++-
+ test/source/sheet/sheetcell.cxx         | 12 +++++
+ 7 files changed, 135 insertions(+), 2 deletions(-)
+
+diff --git a/offapi/com/sun/star/sheet/SheetCell.idl b/offapi/com/sun/star/sheet/SheetCell.idl
+index 00d5054fb5b9..5437c2ef3b50 100644
+--- a/offapi/com/sun/star/sheet/SheetCell.idl
++++ b/offapi/com/sun/star/sheet/SheetCell.idl
+@@ -225,6 +225,20 @@ published service SheetCell
+         @since LibreOffice 6.1
+      */
+     [optional, readonly, property] long FormulaResultType2;
++
++
++    /** contains the background color the cell is actually displayed with.
++
++        <p>Unlike com::sun::star::table::CellProperties::CellBackColor,
++        which only reflects direct formatting and the cell style, this
++        property also takes conditional formatting into account: the color
++        of a matching color scale, otherwise the background of the cell style
++        applied by a matching condition, otherwise the cell's own background.
++        -1 means transparent.</p>
++
++        @since LibreOffice 26.8
++     */
++    [optional, readonly, property] long DisplayedCellBackColor;
+ };
+ 
+ 
+diff --git a/sc/inc/cellsuno.hxx b/sc/inc/cellsuno.hxx
+index d73613bb6cd8..bf2fe4dcf408 100644
+--- a/sc/inc/cellsuno.hxx
++++ b/sc/inc/cellsuno.hxx
+@@ -96,6 +96,7 @@ namespace com::sun::star::table { struct BorderLine; }
+ namespace com::sun::star::table { struct TableBorder2; }
+ namespace com::sun::star::table { struct TableBorder; }
+ 
++class Color;
+ class ScDocShell;
+ class ScMarkData;
+ class ScMemChart;
+@@ -664,6 +665,7 @@ private:
+     void        SetValue_Impl(double fValue);
+     css::table::CellContentType GetContentType_Impl();
+     sal_Int32 GetResultType_Impl() const;
++    Color       GetDisplayedBackColor_Impl() const;
+ 
+     virtual const SfxItemPropertyMap& GetItemPropertyMap() override;
+     virtual void GetOnePropertyValue( const SfxItemPropertyMapEntry* pEntry,
+diff --git a/sc/inc/unonames.hxx b/sc/inc/unonames.hxx
+index 2412a0d2b448..a3b607e60378 100644
+--- a/sc/inc/unonames.hxx
++++ b/sc/inc/unonames.hxx
+@@ -223,6 +223,7 @@ inline constexpr OUString SC_UNONAME_FORMLOC          = u"FormulaLocal"_ustr;
+ inline constexpr OUString SC_UNONAME_FORMRT           = u"FormulaResultType"_ustr;
+ inline constexpr OUString SC_UNONAME_FORMRT2          = u"FormulaResultType2"_ustr;
+ inline constexpr OUString SC_UNONAME_CELLCONTENTTYPE  = u"CellContentType"_ustr;
++inline constexpr OUString SC_UNONAME_DISPCELLBACK     = u"DisplayedCellBackColor"_ustr;
+ 
+ inline constexpr OUString SC_UNONAME_USERDEF          = u"UserDefinedAttributes"_ustr;
+ inline constexpr OUString SC_UNONAME_TEXTUSER         = u"TextUserDefinedAttributes"_ustr;
+diff --git a/sc/inc/unowids.hxx b/sc/inc/unowids.hxx
+index 389b2dda0da2..e80e7a411cbc 100644
+--- a/sc/inc/unowids.hxx
++++ b/sc/inc/unowids.hxx
+@@ -76,7 +76,8 @@
+ #define SC_WID_UNO_CELLCONTENTTYPE  ( SC_WID_UNO_START + 47 )
+ #define SC_WID_UNO_SOLVERSETTINGS   ( SC_WID_UNO_START + 48 )
+ #define SC_WID_UNO_TOTALBELOW       ( SC_WID_UNO_START + 49 )
+-#define SC_WID_UNO_END              ( SC_WID_UNO_START + 49 )
++#define SC_WID_UNO_DISPCELLBACK     ( SC_WID_UNO_START + 50 )
++#define SC_WID_UNO_END              ( SC_WID_UNO_START + 50 )
+ 
+ inline bool IsScUnoWid( sal_uInt16 nWid )
+ {
+diff --git a/sc/qa/unit/ucalc_condformat.cxx b/sc/qa/unit/ucalc_condformat.cxx
+index c6e41b5044a5..f6e55fcd991c 100644
+--- a/sc/qa/unit/ucalc_condformat.cxx
++++ b/sc/qa/unit/ucalc_condformat.cxx
+@@ -22,6 +22,10 @@
+ #include <fillinfo.hxx>
+ #include <compiler.hxx>
+ #include <undomanager.hxx>
++#include <cellsuno.hxx>
++#include <stlpool.hxx>
++
++#include <editeng/brushitem.hxx>
+ 
+ #include <svl/sharedstringpool.hxx>
+ 
+@@ -1570,6 +1574,67 @@ CPPUNIT_TEST_FIXTURE(TestCondformat, testTdf168943)
+     m_pDoc->DeleteTab(0);
+ }
+ 
++CPPUNIT_TEST_FIXTURE(TestCondformat, testDisplayedCellBackColor)
++{
++    m_pDoc->InsertTab(0, u"Test"_ustr);
++
++    // The "Result" style applied by the condition gets a red background.
++    SfxStyleSheetBase* pStyle = m_pDoc->GetStyleSheetPool()->Find(
++        ScResId(STR_STYLENAME_RESULT), SfxStyleFamily::Para);
++    CPPUNIT_ASSERT(pStyle);
++    pStyle->GetItemSet().Put(SvxBrushItem(COL_LIGHTRED, ATTR_BACKGROUND));
++
++    // A1: condition "A1>5" -> "Result" style.
++    auto pCondition = std::make_unique<ScConditionalFormat>(1, *m_pDoc);
++    pCondition->SetRange(ScRangeList(ScRange(0, 0, 0)));
++    pCondition->AddEntry(new ScCondFormatEntry(ScConditionMode::Greater, u"5"_ustr, u""_ustr,
++                                               *m_pDoc, ScAddress(0, 0, 0),
++                                               ScResId(STR_STYLENAME_RESULT)));
++    sal_uInt32 nConditionKey = m_pDoc->AddCondFormat(std::move(pCondition), 0);
++    m_pDoc->AddCondFormatData(ScRange(0, 0, 0), 0, nConditionKey);
++
++    // B1: colour scale BLUE (0) .. RED (2).
++    auto pScale = std::make_unique<ScConditionalFormat>(2, *m_pDoc);
++    pScale->SetRange(ScRangeList(ScRange(1, 0, 0)));
++    ScColorScaleFormat* pColorScale = new ScColorScaleFormat(*m_pDoc);
++    pColorScale->AddEntry(new ScColorScaleEntry(0, COL_BLUE));
++    pColorScale->AddEntry(new ScColorScaleEntry(2, COL_RED));
++    pScale->AddEntry(pColorScale);
++    sal_uInt32 nScaleKey = m_pDoc->AddCondFormat(std::move(pScale), 0);
++    m_pDoc->AddCondFormatData(ScRange(1, 0, 0), 0, nScaleKey);
++
++    rtl::Reference<ScCellObj> xA1(new ScCellObj(m_xDocShell.get(), ScAddress(0, 0, 0)));
++    rtl::Reference<ScCellObj> xB1(new ScCellObj(m_xDocShell.get(), ScAddress(1, 0, 0)));
++    auto getColor = [](const rtl::Reference<ScCellObj>& xCell, const OUString& rName) {
++        Color aColor;
++        CPPUNIT_ASSERT(xCell->getPropertyValue(rName) >>= aColor);
++        return aColor;
++    };
++
++    // Condition not met: nothing is displayed.
++    m_pDoc->SetValue(ScAddress(0, 0, 0), 1.0);
++    CPPUNIT_ASSERT_EQUAL(COL_TRANSPARENT, getColor(xA1, u"DisplayedCellBackColor"_ustr));
++
++    // Condition met: the style background is displayed, but CellBackColor
++    // keeps reporting the (unset) direct/style formatting.
++    m_pDoc->SetValue(ScAddress(0, 0, 0), 10.0);
++    CPPUNIT_ASSERT_EQUAL(COL_LIGHTRED, getColor(xA1, u"DisplayedCellBackColor"_ustr));
++    CPPUNIT_ASSERT_EQUAL(COL_TRANSPARENT, getColor(xA1, u"CellBackColor"_ustr));
++
++    // Colour scale: the scale colour for the cell's value is displayed.
++    m_pDoc->SetValue(ScAddress(1, 0, 0), 2.0);
++    CPPUNIT_ASSERT_EQUAL(COL_RED, getColor(xB1, u"DisplayedCellBackColor"_ustr));
++    CPPUNIT_ASSERT_EQUAL(COL_TRANSPARENT, getColor(xB1, u"CellBackColor"_ustr));
++
++    // Without conditional formatting both properties agree.
++    m_pDoc->ApplyAttr(2, 0, 0, SvxBrushItem(COL_YELLOW, ATTR_BACKGROUND));
++    rtl::Reference<ScCellObj> xC1(new ScCellObj(m_xDocShell.get(), ScAddress(2, 0, 0)));
++    CPPUNIT_ASSERT_EQUAL(COL_YELLOW, getColor(xC1, u"DisplayedCellBackColor"_ustr));
++    CPPUNIT_ASSERT_EQUAL(COL_YELLOW, getColor(xC1, u"CellBackColor"_ustr));
++
++    m_pDoc->DeleteTab(0);
++}
++
+ CPPUNIT_PLUGIN_IMPLEMENT();
+ 
+ /* vim:set shiftwidth=4 softtabstop=4 expandtab: */
+diff --git a/sc/source/ui/unoobj/cellsuno.cxx b/sc/source/ui/unoobj/cellsuno.cxx
+index f5e83309aee9..d7756da05dde 100644
+--- a/sc/source/ui/unoobj/cellsuno.cxx
++++ b/sc/source/ui/unoobj/cellsuno.cxx
+@@ -422,6 +422,7 @@ static const SfxItemPropertySet* lcl_GetCellPropertySet()
+         { SC_UNONAME_FORMRT,   SC_WID_UNO_FORMRT,  cppu::UnoType<table::CellContentType>::get(), 0 | beans::PropertyAttribute::READONLY, 0 },
+         { SC_UNONAME_CELLCONTENTTYPE,   SC_WID_UNO_CELLCONTENTTYPE,  cppu::UnoType<table::CellContentType>::get(), 0 | beans::PropertyAttribute::READONLY, 0 },
+         { SC_UNONAME_FORMRT2,  SC_WID_UNO_FORMRT2, cppu::UnoType<sal_Int32>::get(), 0 | beans::PropertyAttribute::READONLY, 0 },
++        { SC_UNONAME_DISPCELLBACK, SC_WID_UNO_DISPCELLBACK, cppu::UnoType<sal_Int32>::get(), 0 | beans::PropertyAttribute::READONLY, 0 },
+         { SC_UNONAME_CELLHJUS, ATTR_HOR_JUSTIFY,   cppu::UnoType<table::CellHoriJustify>::get(), 0, MID_HORJUST_HORJUST },
+         { SC_UNONAME_CELLHJUS_METHOD, ATTR_HOR_JUSTIFY_METHOD, ::cppu::UnoType<sal_Int32>::get(),   0, 0 },
+         { SC_UNONAME_CELLTRAN, ATTR_BACKGROUND,    cppu::UnoType<bool>::get(),                  0, MID_GRAPHIC_TRANSPARENT },
+@@ -6158,6 +6159,39 @@ sal_Int32 ScCellObj::GetResultType_Impl() const
+     return eRet;
+ }
+ 
++Color ScCellObj::GetDisplayedBackColor_Impl() const
++{
++    SolarMutexGuard aGuard;
++    ScDocShell* pDocSh = GetDocShell();
++    if (!pDocSh)
++        return COL_TRANSPARENT;
++
++    ScDocument& rDoc = pDocSh->GetDocument();
++    const ScPatternAttr* pPattern = rDoc.GetPattern(aCellPos);
++    if (!pPattern)
++        return COL_TRANSPARENT;
++
++    // Same precedence as ScDocument::FillInfo() uses for painting: a colour
++    // scale wins over the background of a matching condition's cell style,
++    // which in turn wins over the cell's own (direct or style) background.
++    if (const ScConditionalFormatList* pCondList = rDoc.GetCondFormList(aCellPos.Tab()))
++    {
++        ScRefCellValue aCell(rDoc, aCellPos);
++        for (sal_uInt32 nKey : pPattern->GetItem(ATTR_CONDITIONAL).GetCondFormatData())
++        {
++            const ScConditionalFormat* pFormat = pCondList->GetFormat(nKey);
++            if (!pFormat)
++                continue;
++            ScCondFormatData aData = pFormat->GetData(aCell, aCellPos);
++            if (aData.mxColorScale)
++                return *aData.mxColorScale;
++        }
++    }
++
++    const SfxItemSet* pCondSet = rDoc.GetCondResult(aCellPos.Col(), aCellPos.Row(), aCellPos.Tab());
++    return pPattern->GetItem(ATTR_BACKGROUND, pCondSet).GetColor();
++}
++
+ table::CellContentType ScCellObj::GetContentType_Impl()
+ {
+     ScDocShell* pDocSh = GetDocShell();
+@@ -6295,7 +6329,7 @@ void ScCellObj::SetOnePropertyValue( const SfxItemPropertyMapEntry* pEntry, cons
+         SetString_Impl(aStrVal, true, false);   // interpret locally
+     }
+     else if ( pEntry->nWID == SC_WID_UNO_FORMRT || pEntry->nWID == SC_WID_UNO_FORMRT2
+-              || pEntry->nWID == SC_WID_UNO_CELLCONTENTTYPE )
++              || pEntry->nWID == SC_WID_UNO_CELLCONTENTTYPE || pEntry->nWID == SC_WID_UNO_DISPCELLBACK )
+     {
+         //  Read-Only
+         //! Exception or so...
+@@ -6324,6 +6358,10 @@ void ScCellObj::GetOnePropertyValue( const SfxItemPropertyMapEntry* pEntry, uno:
+         table::CellContentType eType = GetContentType_Impl();
+         rAny <<= eType;
+     }
++    else if ( pEntry->nWID == SC_WID_UNO_DISPCELLBACK )
++    {
++        rAny <<= GetDisplayedBackColor_Impl();
++    }
+     else
+         ScCellRangeObj::GetOnePropertyValue(pEntry, rAny);
+ }
+diff --git a/test/source/sheet/sheetcell.cxx b/test/source/sheet/sheetcell.cxx
+index ef2f2b2aca90..c6d3e8ef424a 100644
+--- a/test/source/sheet/sheetcell.cxx
++++ b/test/source/sheet/sheetcell.cxx
+@@ -105,6 +105,18 @@ void SheetCell::testSheetCellProperties()
+     CPPUNIT_ASSERT_EQUAL_MESSAGE("Able to set PropertyValue FormulaResultType2",
+                                  aFormulaResultType2Get, aFormulaResultType2Set);
+ 
++    propName = "DisplayedCellBackColor";
++    sal_Int32 aDisplayedCellBackColorGet = 42;
++    CPPUNIT_ASSERT_MESSAGE("Unable to get PropertyValue DisplayedCellBackColor",
++                           xSheetCell->getPropertyValue(propName) >>= aDisplayedCellBackColorGet);
++
++    sal_Int32 aDisplayedCellBackColorSet = 42;
++    aNewValue <<= aDisplayedCellBackColorSet;
++    xSheetCell->setPropertyValue(propName, aNewValue);
++    CPPUNIT_ASSERT(xSheetCell->getPropertyValue(propName) >>= aDisplayedCellBackColorSet);
++    CPPUNIT_ASSERT_EQUAL_MESSAGE("Able to set PropertyValue DisplayedCellBackColor",
++                                 aDisplayedCellBackColorGet, aDisplayedCellBackColorSet);
++
+     uno::Sequence<beans::PropertyValue> aPropValue{ comphelper::makePropertyValue(
+         u"StyleName"_ustr, u"Result2"_ustr) };
+ 
+-- 
+2.43.0
+

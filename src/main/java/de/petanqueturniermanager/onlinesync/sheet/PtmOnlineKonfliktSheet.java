@@ -153,7 +153,7 @@ public class PtmOnlineKonfliktSheet extends SheetRunner implements ISheet {
 		}
 		List<Zeile> sichtbar = zeilen.size() > MAX_ZEILEN ? zeilen.subList(0, MAX_ZEILEN) : zeilen;
 		NewSheet.from(this, SheetNamen.ptmOnlineKonflikte(), SheetMetadataHelper.SCHLUESSEL_PTM_ONLINE_KONFLIKTE)
-				.pos(DefaultSheetPos.SUPERMELEE_WORK).useIfExist().create();
+				.pos(DefaultSheetPos.SUPERMELEE_WORK).useIfExist().hideGrid().create();
 		schreibeKopf(stand, sichtbar.isEmpty());
 		RangeHelper.from(this, RangePosition.from(SPALTE_ART, ERSTE_DATEN_ZEILE, LETZTE_SPALTE, LETZTE_DATEN_ZEILE))
 				.clearRange();

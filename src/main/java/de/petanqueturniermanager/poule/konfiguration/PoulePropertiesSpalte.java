@@ -7,10 +7,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.petanqueturniermanager.basesheet.SheetTabFarben;
-import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
+import de.petanqueturniermanager.basesheet.konfiguration.TeamAnzeigePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.ko.konfiguration.KoPropertiesSpalte;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.konfigdialog.AuswahlConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
@@ -20,13 +21,14 @@ import de.petanqueturniermanager.konfigdialog.HeaderFooterConfigProperty;
  * Konfigurationsspalte für das Poule-A/B-Turniersystem.
  * Verwaltet Formation, Teamname- und Vereinsname-Einstellung sowie Grundfarben.
  */
-public class PoulePropertiesSpalte extends BasePropertiesSpalte implements IPoulePropertiesSpalte {
+public class PoulePropertiesSpalte extends TeamAnzeigePropertiesSpalte implements IPoulePropertiesSpalte {
 
     public static final List<ConfigProperty<?>> KONFIG_PROPERTIES = new ArrayList<>();
 
     private static final String KONFIG_PROP_MELDELISTE_FORMATION   = "Meldeliste Formation";
     private static final String KONFIG_PROP_MELDELISTE_TEAMNAME    = "Meldeliste Teamname";
     private static final String KONFIG_PROP_MELDELISTE_VEREINSNAME = "Meldeliste Vereinsname";
+    private static final String KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE = "Spielplan Team Anzeige";
 
     static {
 
@@ -76,6 +78,21 @@ public class PoulePropertiesSpalte extends BasePropertiesSpalte implements IPoul
                 .addAuswahl("J", "Ja").addAuswahl("N", "Nein")
                 .intern());
 
+        KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE)
+                // Standard NAME: Poule-Spielpläne zeigten schon immer Team- bzw. Spielernamen.
+                .setDefaultVal(TeamAnzeige.NAME.name())
+                .setDescription("config.desc.poule.spielplan.team.anzeige"))
+                .addAuswahl(TeamAnzeige.NR.name(), "Teamnummer")
+                .addAuswahl(TeamAnzeige.SPIELERNAMEN.name(), "Spielernamen")
+                .addAuswahl(TeamAnzeige.NAME.name(), "Teamname"));
+
+        KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_RANGLISTE_TEAM_ANZEIGE)
+                .setDefaultVal(TeamAnzeige.NAME.name())
+                .setDescription("config.desc.poule.rangliste.team.anzeige"))
+                .addAuswahl(TeamAnzeige.NR.name(), "Teamnummer")
+                .addAuswahl(TeamAnzeige.SPIELERNAMEN.name(), "Spielernamen")
+                .addAuswahl(TeamAnzeige.NAME.name(), "Teamname"));
+
         KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_SPIELPLAN_MIT_BAHN)
                 .setDefaultVal("N").setDescription("config.desc.poule.spielplan.mit.bahnspalte"))
                 .addAuswahl("J", "Ja").addAuswahl("N", "Nein"));
@@ -86,6 +103,7 @@ public class PoulePropertiesSpalte extends BasePropertiesSpalte implements IPoul
         KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TAB_COLOR_POULE_VORRUNDEN_RANGL)
                 .setDefaultVal(SheetTabFarben.POULE_VORRUNDEN_RANGLISTE)
                 .setDescription("config.desc.tab.farbe.poule.vorrunden.rangliste").tabFarbe());
+        KoPropertiesSpalte.addKoBracketTeamAnzeigeProperty(KONFIG_PROPERTIES);
         KoPropertiesSpalte.addKoBracketColorProperties(KONFIG_PROPERTIES);
     }
 
@@ -150,6 +168,24 @@ public class PoulePropertiesSpalte extends BasePropertiesSpalte implements IPoul
     @Override
     public void setMeldeListeVereinsnameAnzeigen(boolean anzeigen) {
         setStringProperty(KONFIG_PROP_MELDELISTE_VEREINSNAME, anzeigen ? "J" : "N");
+    }
+
+    @Override
+    public TeamAnzeige getSpielplanTeamAnzeige() {
+        return leseTeamAnzeige(KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE, TeamAnzeige.NAME);
+    }
+
+    @Override
+    public void setSpielplanTeamAnzeige(TeamAnzeige anzeige) {
+        schreibeTeamAnzeige(KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE, anzeige);
+    }
+
+    public TeamAnzeige getSpielbaumTeamAnzeige() {
+        return leseTeamAnzeige(KoPropertiesSpalte.KONFIG_PROP_SPIELBAUM_TEAM_ANZEIGE, TeamAnzeige.NR);
+    }
+
+    public void setSpielbaumTeamAnzeige(TeamAnzeige anzeige) {
+        schreibeTeamAnzeige(KoPropertiesSpalte.KONFIG_PROP_SPIELBAUM_TEAM_ANZEIGE, anzeige);
     }
 
     @Override

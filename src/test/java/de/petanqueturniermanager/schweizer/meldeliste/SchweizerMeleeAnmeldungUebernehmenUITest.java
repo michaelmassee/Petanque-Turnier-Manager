@@ -10,6 +10,9 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+import com.sun.star.beans.XPropertySet;
+import com.sun.star.sheet.ValidationType;
+import com.sun.star.sheet.XSheetCondition;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.BaseCalcUITest;
@@ -18,6 +21,8 @@ import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungLeser;
 import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungZeile;
+import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
@@ -29,6 +34,40 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 class SchweizerMeleeAnmeldungUebernehmenUITest extends BaseCalcUITest implements MeleeAnmeldungKonstanten {
 
 	private SchweizerMeldeListeSheetNew meldeliste;
+
+	@Test
+	void eingechecktSpalteHatNativeDatengueltigkeitUndNormalisiertAlteMarkierung() throws Exception {
+		SchweizerMeleeAnmeldungSheet melee = new SchweizerMeleeAnmeldungSheet(wkingSpreadsheet);
+		melee.generate();
+		RangeData alteAnmeldung = new RangeData();
+		RowData alteZeile = alteAnmeldung.addNewRow();
+		alteZeile.newEmpty();
+		alteZeile.newString("Anna");
+		alteZeile.newString("Altmarkierung");
+		alteZeile.newEmpty();
+		alteZeile.newString("ja");
+		alteZeile.newEmpty();
+		RangeHelper.from(melee.getXSpreadSheet(), doc,
+				alteAnmeldung.getRangePosition(Position.from(SPALTE_NR, ERSTE_DATEN_ZEILE))).setDataInRange(alteAnmeldung);
+
+		melee.generate();
+
+		assertThat(RangeHelper.from(melee.getXSpreadSheet(), doc,
+				RangePosition.from(SPALTE_EINGECHECKT, ERSTE_DATEN_ZEILE, SPALTE_EINGECHECKT, ERSTE_DATEN_ZEILE))
+				.getDataFromRange().get(0).get(0).getStringVal()).isEqualTo(MARKIERUNG);
+		XPropertySet cellProperties = Lo.qi(XPropertySet.class,
+				melee.getXSpreadSheet().getCellByPosition(SPALTE_EINGECHECKT, ERSTE_DATEN_ZEILE));
+		XPropertySet validation = Lo.qi(XPropertySet.class, cellProperties.getPropertyValue("Validation"));
+
+		assertThat(validation.getPropertyValue("Type")).isEqualTo(ValidationType.LIST);
+		assertThat(validation.getPropertyValue("IgnoreBlankCells")).isEqualTo(Boolean.TRUE);
+		assertThat(validation.getPropertyValue("ShowInputMessage")).isEqualTo(Boolean.TRUE);
+		assertThat(validation.getPropertyValue("InputMessage"))
+				.isEqualTo(I18n.get("melee.anmeldung.eingecheckt.eingabehilfe"));
+		assertThat(validation.getPropertyValue("ShowErrorMessage")).isEqualTo(Boolean.TRUE);
+		assertThat(validation.getPropertyValue("ErrorMessage")).isEqualTo(I18n.get("melee.anmeldung.eingecheckt.fehler"));
+		assertThat(Lo.qi(XSheetCondition.class, validation).getFormula1()).isEqualTo("{\"X\"}");
+	}
 
 	@Test
 	void zweiteUebernahmeSchreibtKeineDoppeltenTeilnehmer() throws Exception {

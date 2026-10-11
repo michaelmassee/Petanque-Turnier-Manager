@@ -1,7 +1,7 @@
 package de.petanqueturniermanager.schweizer.spielrunde;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
-import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 
 /**
  * Schweizer-Beispielturnier mit 19 Teams (ungerade Anzahl → 1 Freilos pro Runde,
@@ -12,6 +12,6 @@ import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 public class Schweizer19TeamsTurnierTestDaten extends SchweizerTurnierTestDaten {
 
     public Schweizer19TeamsTurnierTestDaten(WorkingSpreadsheet workingSpreadsheet) {
-        super(workingSpreadsheet, 19, SpielplanTeamAnzeige.NAME);
+        super(workingSpreadsheet, 19, TeamAnzeige.NAME);
     }
 }

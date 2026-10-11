@@ -20,6 +20,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.IMeldeliste;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldelisteSortBereich;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeigeHelper;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -44,7 +45,7 @@ import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationSheet;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
-import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 class JGJMeldeListeDelegate implements MeldeListeKonstanten {
@@ -52,7 +53,7 @@ class JGJMeldeListeDelegate implements MeldeListeKonstanten {
 	static final int MIN_ANZAHL_MELDUNGEN_ZEILEN = 32;
 
 	static final int DRITTE_HEADER_ZEILE = 2;
-	static final int ERSTE_DATEN_ZEILE = 3;
+	static final int ERSTE_DATEN_ZEILE = TEAM_MELDELISTE_ERSTE_DATEN_ZEILE;
 
 	static final int NR_SPALTE_WIDTH = 800;
 	static final int NAME_SPALTE_WIDTH = 3000;
@@ -105,11 +106,11 @@ class JGJMeldeListeDelegate implements MeldeListeKonstanten {
 	}
 
 	int getSpaltenProSpieler() {
-		return konfigurationSheet.isMeldeListeVereinsnameAnzeigen() ? 3 : 2;
+		return JGJMeldeListeSpalten.spaltenProSpieler(konfigurationSheet);
 	}
 
 	int getErsterSpielerOffset() {
-		return konfigurationSheet.isMeldeListeTeamnameAnzeigen() ? 2 : 1;
+		return JGJMeldeListeSpalten.ersterSpielerOffset(konfigurationSheet);
 	}
 
 	int getSpielerNameErsteSpalte() {
@@ -132,16 +133,15 @@ class JGJMeldeListeDelegate implements MeldeListeKonstanten {
 	}
 
 	int getLetzteDataSpalte() {
-		Formation f = konfigurationSheet.getMeldeListeFormation();
-		return getErsterSpielerOffset() + f.getAnzSpieler() * getSpaltenProSpieler() - 1;
+		return JGJMeldeListeSpalten.letzteDataSpalte(konfigurationSheet);
 	}
 
 	int getSetzPositionSpalte() {
-		return getLetzteDataSpalte() + 1;
+		return JGJMeldeListeSpalten.setzPositionSpalte(konfigurationSheet);
 	}
 
 	int getAktivSpalte() {
-		return getSetzPositionSpalte() + 1;
+		return JGJMeldeListeSpalten.aktivSpalte(konfigurationSheet);
 	}
 
 	/** Erste Spieltag-Spalte = direkt nach der Aktiv-Spalte. */
@@ -303,10 +303,8 @@ class JGJMeldeListeDelegate implements MeldeListeKonstanten {
 			vornamen[s] = getVornameSpalte(s);
 			nachnamen[s] = getNachnameSpalte(s);
 		}
-		meldeListeHelper.insertFormulaFuerDoppelteSpielerNamenGeradeUngradeFarbe(vornamen, nachnamen,
-				ERSTE_DATEN_ZEILE, letzteDatenZeile, sheet,
-				konfigurationSheet.getMeldeListeHintergrundFarbeGeradeStyle(),
-				konfigurationSheet.getMeldeListeHintergrundFarbeUnGeradeStyle());
+		meldeListeHelper.insertFormulaFuerDoppelteSpielerNamen(vornamen, nachnamen,
+				ERSTE_DATEN_ZEILE, letzteDatenZeile, sheet);
 	}
 
 	void formatDatenSpalten() throws GenerateException {
@@ -442,19 +440,18 @@ class JGJMeldeListeDelegate implements MeldeListeKonstanten {
 	}
 
 	String formulaSpielplanTeamName(String nrAdresse) {
-		if (konfigurationSheet.getSpielplanTeamAnzeige() == SpielplanTeamAnzeige.NR) {
-			return nrAdresse;
-		}
-		return formulaSverweisSpielernamen(nrAdresse);
+		return TeamAnzeigeHelper.formel(nrAdresse, konfigurationSheet.getSpielplanTeamAnzeige(),
+				konfigurationSheet.isMeldeListeTeamnameAnzeigen(), konfigurationSheet.getMeldeListeFormation(),
+				konfigurationSheet.isMeldeListeVereinsnameAnzeigen());
 	}
 
-	Map<Integer, String> leseTeamNamen() throws GenerateException {
+	Map<Integer, String> leseTeamNamen(TeamAnzeige anzeige) throws GenerateException {
 		Map<Integer, String> result = new HashMap<>();
 		XSpreadsheet mlSheet = sheet.getXSpreadSheet();
 		if (mlSheet == null) {
 			return result;
 		}
-		boolean zeigeTeamname = konfigurationSheet.isMeldeListeTeamnameAnzeigen();
+		boolean zeigeTeamname = anzeige == TeamAnzeige.NAME;
 		boolean zeigeVerein = konfigurationSheet.isMeldeListeVereinsnameAnzeigen();
 		Formation formation = konfigurationSheet.getMeldeListeFormation();
 		int anzSpieler = formation.getAnzSpieler();
@@ -474,12 +471,17 @@ class JGJMeldeListeDelegate implements MeldeListeKonstanten {
 			if (nr <= 0) {
 				break;
 			}
-			String name = zeigeTeamname
+			String name = anzeige == TeamAnzeige.NR ? String.valueOf(nr) : zeigeTeamname
 					? (row.size() > 1 ? row.get(1).getStringVal() : "")
 					: bauspielerNamenZusammen(row, anzSpieler, ersterSpielerOffset, spaltenProSpieler);
 			result.put(nr, name != null ? name : "");
 		}
 		return result;
+	}
+
+	Map<Integer, String> leseTeamNamen() throws GenerateException {
+		return leseTeamNamen(konfigurationSheet.isMeldeListeTeamnameAnzeigen()
+				? TeamAnzeige.NAME : TeamAnzeige.SPIELERNAMEN);
 	}
 
 	private String bauspielerNamenZusammen(RowData row, int anzSpieler, int ersterSpielerOffset, int spaltenProSpieler) {

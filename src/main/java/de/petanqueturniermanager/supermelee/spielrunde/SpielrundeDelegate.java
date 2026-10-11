@@ -529,15 +529,17 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 				.setVertJustify(CellVertJustify2.CENTER).isVisible(false);
 		StringCellValue headerText = StringCellValue.from(xsheet, ersteHeaderZeile)
 				.addColumnProperties(columnProperties);
-		sheet.getSheetHelper().setStringValueInCell(headerText.setValue("Nr"));
+		sheet.getSheetHelper().setStringValueInCell(headerText.setValue(I18n.get("column.header.nr")));
 		sheet.getSheetHelper().setStringValueInCell(
 				headerText.setValue("+").spalte(SPALTE_VERTIKALE_ERGEBNISSE_PLUS).setComment(I18n.get("supermelee.spielrunde.comment.punkte.plus")));
 		sheet.getSheetHelper().setStringValueInCell(
 				headerText.setValue("-").spalte(SPALTE_VERTIKALE_ERGEBNISSE_MINUS).setComment(I18n.get("supermelee.spielrunde.comment.punkte.minus")));
 		sheet.getSheetHelper().setStringValueInCell(
-				headerText.setValue("Tm").spalte(SPALTE_VERTIKALE_ERGEBNISSE_AB).setComment(I18n.get("supermelee.spielrunde.comment.mannschaft")));
+				headerText.setValue(I18n.get("column.header.team.kurz")).spalte(SPALTE_VERTIKALE_ERGEBNISSE_AB)
+						.setComment(I18n.get("supermelee.spielrunde.comment.mannschaft")));
 		sheet.getSheetHelper().setStringValueInCell(
-				headerText.setValue("Ba").spalte(SPALTE_VERTIKALE_ERGEBNISSE_BA_NR).setComment(I18n.get("supermelee.spielrunde.comment.spielbahn.nr")));
+				headerText.setValue(I18n.get("column.header.bahn.kurz")).spalte(SPALTE_VERTIKALE_ERGEBNISSE_BA_NR)
+						.setComment(I18n.get("supermelee.spielrunde.comment.spielbahn.nr")));
 	}
 
 	private void vertikaleErgbnisseEinezeileEinfuegen(Position posSpielrNr, StringCellValue spielrNrFormula)
@@ -657,9 +659,9 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 
 		Integer headerFarbe = konfigurationSheet.getSpielRundeHeaderFarbe();
 
-		String ersteHeader = "Spielrunde " + spielRunde.getNr();
+		String ersteHeader = I18n.get("supermelee.spielrunde.header.spielrunde", spielRunde.getNr());
 		if (konfigurationSheet.getSpielrunde1Header()) {
-			ersteHeader = spieltag.getNr() + ". Spieltag - " + ersteHeader;
+			ersteHeader = I18n.get("supermelee.spielrunde.header.spieltag.spielrunde", spieltag.getNr(), spielRunde.getNr());
 		}
 
 		StringCellValue headerVal = StringCellValue.from(xsheet, ersteHeaderZeile, ersteHeader)

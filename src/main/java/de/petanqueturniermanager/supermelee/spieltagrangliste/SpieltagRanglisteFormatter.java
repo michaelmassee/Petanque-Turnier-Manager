@@ -159,7 +159,7 @@ public class SpieltagRanglisteFormatter extends AbstractSuperMeleeRanglisteForma
 				.setEndPosMergeSpaltePlus(getLetzteSpalte())
 				.addCellProperty(IS_TEXT_WRAPPED, Boolean.TRUE)
 				.addRowProperty("OptimalHeight", Boolean.TRUE)
-				.setValue("Nicht gespielten Runden werden mit " + nichtgespieltPlus + ":" + nichtgespieltMinus + " gewertet"));
+				.setValue(I18n.get("supermelee.spieltagrangliste.hinweis.nicht.gespielt", nichtgespieltPlus, nichtgespieltMinus)));
 
 		return stringVal;
 	}

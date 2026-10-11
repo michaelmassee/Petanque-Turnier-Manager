@@ -25,6 +25,7 @@ import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
@@ -174,7 +175,7 @@ public class MaastrichterTurnierTestDatenUITest extends BaseCalcUITest {
 				.isEqualTo("Bn");
 		assertThat(sheetHlp.getTextFromCell(gruppeB, Position.from(4, 2)))
 				.as("Wenn Cadrage die erste Runde ist, hat Runde 1 keine Bahn-Spalte")
-				.isEqualTo("Nr");
+				.isEqualTo(I18n.get("column.header.nr"));
 		assertThat(sheetHlp.getIntFromCell(gruppeB, Position.from(0, 5)))
 				.as("Cadrage zaehlt als erste KO-Runde und wird nach Gruppe A weiter nummeriert")
 				.isEqualTo(9);

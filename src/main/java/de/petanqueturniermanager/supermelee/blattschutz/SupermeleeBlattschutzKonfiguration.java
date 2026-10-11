@@ -18,6 +18,7 @@ import com.sun.star.table.XCell;
 
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
+import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.cellstyle.CellStyleHelper;
 import de.petanqueturniermanager.helper.cellstyle.EditierbareZelleHintergrundFarbeGeradeStyle;
@@ -28,6 +29,7 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.blattschutz.IBlattschutzKonfiguration;
 import de.petanqueturniermanager.helper.sheet.blattschutz.SheetSchutzInfo;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheetKonstanten;
+import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
 
 /**
  * Blattschutz-Konfiguration für das Supermelee-Turniersystem.
@@ -75,7 +77,7 @@ public class SupermeleeBlattschutzKonfiguration implements IBlattschutzKonfigura
         var infos = new ArrayList<SheetSchutzInfo>();
 
         sammleMeldelisteSchutzInfo(xDoc, infos);
-        sammleSpielrundenSchutzInfos(xDoc, infos);
+        sammleSpielrundenSchutzInfos(xDoc, ws, infos);
         sammleVollGesperrteSheets(xDoc, infos);
 
         return infos;
@@ -94,14 +96,21 @@ public class SupermeleeBlattschutzKonfiguration implements IBlattschutzKonfigura
     }
 
     /** Fügt jede Spielrunde mit ihren editierbaren Ergebnis-Bereichen hinzu. */
-    private void sammleSpielrundenSchutzInfos(XSpreadsheetDocument xDoc,
+    private void sammleSpielrundenSchutzInfos(XSpreadsheetDocument xDoc, WorkingSpreadsheet ws,
             List<SheetSchutzInfo> infos) {
         var schluessel = SheetMetadataHelper.getSchluesselMitPrefix(xDoc,
                 SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_SPIELRUNDE_PREFIX);
+        boolean freieBahnSpalte = new SuperMeleeKonfigurationSheet(ws).getSpielrundeSpielbahn()
+                == SpielrundeSpielbahn.L;
         for (var key : schluessel) {
-            SheetMetadataHelper.findeSheet(xDoc, key).ifPresent(sheet ->
-                    infos.add(SheetSchutzInfo.mitEditierbarenBereichen(sheet,
-                            List.of(berechneSpielrundeErgebnisBereich(sheet)))));
+            SheetMetadataHelper.findeSheet(xDoc, key).ifPresent(sheet -> {
+                var bereiche = new ArrayList<RangePosition>();
+                bereiche.add(berechneSpielrundeErgebnisBereich(sheet));
+                if (freieBahnSpalte) {
+                    bereiche.add(berechneSpielrundeBahnBereich(sheet));
+                }
+                infos.add(SheetSchutzInfo.mitEditierbarenBereichen(sheet, bereiche));
+            });
         }
     }
 
@@ -174,6 +183,14 @@ public class SupermeleeBlattschutzKonfiguration implements IBlattschutzKonfigura
                 SpielrundeSheetKonstanten.ERSTE_SPALTE_ERGEBNISSE,
                 SpielrundeSheetKonstanten.ERSTE_DATEN_ZEILE,
                 SpielrundeSheetKonstanten.ERSTE_SPALTE_ERGEBNISSE + 1,
+                ermittleLetzteSpielrundeZeile(sheet));
+    }
+
+    private RangePosition berechneSpielrundeBahnBereich(XSpreadsheet sheet) {
+        return RangePosition.from(
+                SpielrundeSheetKonstanten.NUMMER_SPALTE_RUNDESPIELPLAN,
+                SpielrundeSheetKonstanten.ERSTE_DATEN_ZEILE,
+                SpielrundeSheetKonstanten.NUMMER_SPALTE_RUNDESPIELPLAN,
                 ermittleLetzteSpielrundeZeile(sheet));
     }
 

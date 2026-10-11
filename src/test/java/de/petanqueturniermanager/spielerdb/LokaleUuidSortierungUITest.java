@@ -40,7 +40,7 @@ import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterTeilnehmerS
 import de.petanqueturniermanager.poule.meldeliste.PouleCheckinListeSheet;
 import de.petanqueturniermanager.poule.meldeliste.PouleMeldeListeSheetNew;
 import de.petanqueturniermanager.poule.meldeliste.PouleTeilnehmerSheet;
-import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerCheckinListeSheet;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetNew;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerTeilnehmerSheet;
@@ -96,7 +96,7 @@ class LokaleUuidSortierungUITest extends BaseCalcUITest {
                         }),
                 new Szenario(TurnierSystem.JGJ,
                         ws -> new JGJMeldeListeSheet_New(ws).createMeldelisteWithParams(Formation.TETE, false, false,
-                                SpielplanTeamAnzeige.NR),
+                                TeamAnzeige.NR),
                         ws -> {
                             new JGJTeilnehmerSheet(ws).run();
                             new JGJCheckinListeSheet(ws).run();
@@ -108,7 +108,7 @@ class LokaleUuidSortierungUITest extends BaseCalcUITest {
                         }),
                 new Szenario(TurnierSystem.MAASTRICHTER,
                         ws -> new MaastrichterMeldeListeSheetNew(ws).erstelleMeldeliste(Formation.TETE, false, false,
-                                SpielplanTeamAnzeige.NR),
+                                TeamAnzeige.NR),
                         ws -> {
                             new MaastrichterTeilnehmerSheet(ws).run();
                             new MaastrichterCheckinListeSheet(ws).run();

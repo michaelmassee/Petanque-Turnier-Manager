@@ -29,7 +29,7 @@ import de.petanqueturniermanager.comp.newrelease.ReleaseUpdateService;
 import de.petanqueturniermanager.helper.i18n.I18n;
 
 /**
- * Event-Handler fuer die PTM-Seite unter Extras -> Optionen.
+ * Event-Handler für die PTM-Seite unter Extras -> Optionen.
  */
 public final class PluginOptionsEventHandler extends WeakBase
 		implements XServiceInfo, XContainerWindowEventHandler {
@@ -49,6 +49,7 @@ public final class PluginOptionsEventHandler extends WeakBase
 	private static final String CTL_BACKUP = "Backup";
 	private static final String CTL_AUTO_UPDATE_DIALOG_STARTUP = "AutoUpdateDialogStartup";
 	private static final String CTL_INCLUDE_BETA_VERSIONS = "IncludeBetaVersions";
+	private static final String CTL_AUTO_TURNIER_MODUS = "AutoTurnierModus";
 	private static final String CTL_PROCESSBOX_SHOW = "ProcessBoxAutomaticallyShow";
 	private static final String CTL_PROCESSBOX_CLOSE = "ProcessBoxAutomaticallyClose";
 	private static final String CTL_PERFORMANCE_LOGGING = "PerformanceLogging";
@@ -91,6 +92,7 @@ public final class PluginOptionsEventHandler extends WeakBase
 		setCheckbox(container, CTL_BACKUP, properties.isCreateBackup());
 		setCheckbox(container, CTL_AUTO_UPDATE_DIALOG_STARTUP, properties.isAutoUpdateDialogBeimStartAktiv());
 		setCheckbox(container, CTL_INCLUDE_BETA_VERSIONS, properties.isIncludeBetaVersions());
+		setCheckbox(container, CTL_AUTO_TURNIER_MODUS, properties.isAutoTurnierModus());
 		setCheckbox(container, CTL_PROCESSBOX_SHOW, properties.isProzessBoxAutomatischAnzeigen());
 		setCheckbox(container, CTL_PROCESSBOX_CLOSE, properties.isProzessBoxAutomatischSchliessen());
 		setCheckbox(container, CTL_PERFORMANCE_LOGGING, properties.isPerformanceLogging());
@@ -100,7 +102,7 @@ public final class PluginOptionsEventHandler extends WeakBase
 	private void speichereAusOberflaeche(XWindow window) {
 		XControlContainer container = container(window);
 		GlobalProperties properties = GlobalProperties.get();
-		properties.speichern(
+		properties.speichern(new PluginOptionen(
 				checkbox(container, CTL_AUTOSAVE),
 				checkbox(container, CTL_BACKUP),
 				properties.isNewVersionCheckGespeichert(),
@@ -109,7 +111,8 @@ public final class PluginOptionsEventHandler extends WeakBase
 				checkbox(container, CTL_PERFORMANCE_LOGGING),
 				text(container, CTL_LOG_LEVEL),
 				checkbox(container, CTL_AUTO_UPDATE_DIALOG_STARTUP),
-				checkbox(container, CTL_INCLUDE_BETA_VERSIONS));
+				checkbox(container, CTL_INCLUDE_BETA_VERSIONS),
+				checkbox(container, CTL_AUTO_TURNIER_MODUS)));
 		try {
 			ReleaseUpdateService.get().loeseListenerAus();
 		} catch (IllegalStateException e) {
@@ -122,6 +125,7 @@ public final class PluginOptionsEventHandler extends WeakBase
 		setLabel(container, CTL_BACKUP, I18n.get("konfig.plugin.backup"));
 		setLabel(container, CTL_AUTO_UPDATE_DIALOG_STARTUP, I18n.get("konfig.plugin.auto.update.dialog.startup"));
 		setLabel(container, CTL_INCLUDE_BETA_VERSIONS, I18n.get("konfig.plugin.include.beta.versions"));
+		setLabel(container, CTL_AUTO_TURNIER_MODUS, I18n.get("konfig.plugin.auto.turnier.modus"));
 		setLabel(container, CTL_PROCESSBOX_SHOW, I18n.get("konfig.prozessbox.automatisch.anzeigen"));
 		setLabel(container, CTL_PROCESSBOX_CLOSE, I18n.get("konfig.prozessbox.automatisch.schliessen"));
 		setLabel(container, CTL_PERFORMANCE_LOGGING, I18n.get("konfig.performance.logging"));

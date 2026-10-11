@@ -26,7 +26,6 @@ import de.petanqueturniermanager.kaskade.meldeliste.KaskadeMeldeListeSheetNew;
 import de.petanqueturniermanager.ko.meldeliste.KoMeldeListeSheetNew;
 import de.petanqueturniermanager.ko.konfiguration.KoKonfigurationSheet;
 import de.petanqueturniermanager.poule.meldeliste.PouleMeldeListeSheetNew;
-import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetNew;
 
 /**
@@ -85,7 +84,7 @@ class MeldeListeSpielerDoppelteNamenFehlerfarbeUITest extends BaseCalcUITest {
 
 	private XSpreadsheet erstelleJGJMeldeliste() throws Exception {
 		JGJMeldeListeSheet_New meldeliste = new JGJMeldeListeSheet_New(wkingSpreadsheet);
-		meldeliste.createMeldelisteWithParams(Formation.DOUBLETTE, false, false, SpielplanTeamAnzeige.NR);
+		meldeliste.createMeldelisteWithParams(Formation.DOUBLETTE, false, false, TeamAnzeige.NR);
 		return meldeliste.getXSpreadSheet();
 	}
 

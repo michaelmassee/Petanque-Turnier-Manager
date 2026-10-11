@@ -13,7 +13,7 @@ import de.petanqueturniermanager.konfigdialog.AuswahlConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
 import de.petanqueturniermanager.ko.konfiguration.KoPropertiesSpalte;
-import de.petanqueturniermanager.ko.konfiguration.KoSpielbaumTeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerPropertiesSpalte;
 
 /**
@@ -81,13 +81,12 @@ public class MaastrichterPropertiesSpalte extends SchweizerPropertiesSpalte {
 		writeIntProperty(KONFIG_PROP_MAX_TEAMS_KO_PHASE, Math.max(0, maxTeamsKoPhase));
 	}
 
-	public KoSpielbaumTeamAnzeige getSpielbaumTeamAnzeige() {
-		return readEnumProperty(KoPropertiesSpalte.KONFIG_PROP_SPIELBAUM_TEAM_ANZEIGE,
-				KoSpielbaumTeamAnzeige.class, KoSpielbaumTeamAnzeige.NR);
+	public TeamAnzeige getSpielbaumTeamAnzeige() {
+		return leseTeamAnzeige(KoPropertiesSpalte.KONFIG_PROP_SPIELBAUM_TEAM_ANZEIGE, TeamAnzeige.NR);
 	}
 
-	public void setSpielbaumTeamAnzeige(KoSpielbaumTeamAnzeige anzeige) {
-		setStringProperty(KoPropertiesSpalte.KONFIG_PROP_SPIELBAUM_TEAM_ANZEIGE, anzeige.name());
+	public void setSpielbaumTeamAnzeige(TeamAnzeige anzeige) {
+		schreibeTeamAnzeige(KoPropertiesSpalte.KONFIG_PROP_SPIELBAUM_TEAM_ANZEIGE, anzeige);
 	}
 
 	public SpielrundeSpielbahn getSpielbaumSpielbahn() {

@@ -27,9 +27,12 @@ import com.sun.star.table.TableBorder2;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.algorithmen.schweizer.SchweizerSystem;
 import de.petanqueturniermanager.algorithmen.schweizer.SchweizerTeamErgebnis;
-import de.petanqueturniermanager.basesheet.konfiguration.IZeitplanPropertiesSpalte;
+import de.petanqueturniermanager.algorithmen.schweizer.SchweizerTeamNrAufloeser;
+import de.petanqueturniermanager.basesheet.SheetTabFarben;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
-import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeigeHelper;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.basesheet.spielrunde.IZeitplanSpielrundeSheet;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeFooterHelper;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeHelper;
@@ -38,11 +41,10 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.border.BorderFactory;
-import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
-import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
@@ -50,11 +52,13 @@ import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
-import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
-import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.print.PrintArea;
+import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
+import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
+import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.CellData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
@@ -62,12 +66,9 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.ptmonline.PtmOnlineLiveAusloeser;
-import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 import de.petanqueturniermanager.model.TeamPaarung;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerRankingModus;
-import de.petanqueturniermanager.basesheet.SheetTabFarben;
-import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetUpdate;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 
@@ -103,6 +104,14 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 	 */
 	public static final int ZEIT_SPALTE = ERG_TEAM_B_SPALTE + 1;
 	public static final int FEHLER_SPALTE = ZEIT_SPALTE + 1;
+	/**
+	 * Ausgeblendete, stabile Identität der sichtbaren Teamzellen. Sichtbare Namen
+	 * dürfen sich durch Korrekturen ändern; Auslosung und Rangliste lesen diese
+	 * Nummern statt der Namensanzeige. Auflösung inkl. Fallback für alte Dateien ohne
+	 * diese Spalten: {@link SchweizerTeamNrAufloeser}.
+	 */
+	public static final int TECHNISCHE_TEAM_A_NR_SPALTE = FEHLER_SPALTE + 1;
+	public static final int TECHNISCHE_TEAM_B_NR_SPALTE = TECHNISCHE_TEAM_A_NR_SPALTE + 1;
 
 	private final SchweizerKonfigurationSheet konfigurationSheet;
 	private final SchweizerMeldeListeSheetUpdate meldeListe;
@@ -275,6 +284,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 			int spielrunde = (abSpielrunde > 1) ? abSpielrunde : 1;
 			processBoxinfo("processbox.gespielte.runden.einlesen", spielrunde, bisSpielrunde);
 			var xDoc = getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
+			var teamNrAufloeser = new SchweizerTeamNrAufloeser(getMeldeListe()::erstelleTeamAnzeigeIndex);
 
 			for (; spielrunde <= bisSpielrunde; spielrunde++) {
 				SheetRunner.testDoCancelTask();
@@ -284,7 +294,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 				if (sheet == null) {
 					continue;
 				}
-				leseRundeEin(sheet, aktiveMeldungen, statsMap, gegnerMap);
+				leseRundeEin(sheet, teamNrAufloeser, aktiveMeldungen, statsMap, gegnerMap);
 			}
 		}
 
@@ -297,9 +307,10 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		return ergebnisse;
 	}
 
-	private void leseRundeEin(XSpreadsheet sheet, TeamMeldungen aktiveMeldungen, Map<Integer, int[]> statsMap,
-			Map<Integer, List<Integer>> gegnerMap) throws GenerateException {
-		RangePosition readRange = RangePosition.from(TEAM_A_SPALTE, ERSTE_DATEN_ZEILE, ERG_TEAM_B_SPALTE,
+	private void leseRundeEin(XSpreadsheet sheet, SchweizerTeamNrAufloeser teamNrAufloeser,
+			TeamMeldungen aktiveMeldungen, Map<Integer, int[]> statsMap, Map<Integer, List<Integer>> gegnerMap)
+			throws GenerateException {
+		RangePosition readRange = RangePosition.from(TEAM_A_SPALTE, ERSTE_DATEN_ZEILE, TECHNISCHE_TEAM_B_NR_SPALTE,
 				ERSTE_DATEN_ZEILE + 999);
 		RangeData rowsData = RangeHelper
 				.from(sheet, getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), readRange).getDataFromRange();
@@ -308,7 +319,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 			if (row.size() < 2) {
 				break;
 			}
-			int nrA = resolveTeamNr(row.get(0)); // TEAM_A_SPALTE (relativ: 0)
+			int nrA = teamNrAufloeser.teamA(row);
 			if (nrA <= 0) {
 				break; // Ende der Daten
 			}
@@ -317,7 +328,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 				continue; // Team inaktiv, überspringen
 			}
 
-			int nrB = resolveTeamNr(row.get(1)); // TEAM_B_SPALTE (relativ: 1)
+			int nrB = teamNrAufloeser.teamB(row);
 			if (nrB <= 0) {
 				// Freilos für Team A – Sieg zählen und die konfigurierten Freispiel-Punkte
 				// verbuchen (in der Zeile bereits als ERG-Werte vorbelegt, siehe
@@ -360,22 +371,6 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 				statsMap.computeIfAbsent(nrA, k -> new int[3])[1] -= ergB - ergA;
 			}
 		}
-	}
-
-	/**
-	 * Löst eine Team-Nr aus einer Zelle auf.
-	 * Versucht zunächst den Integer-Wert, dann Name-Lookup über die Meldeliste.
-	 */
-	private int resolveTeamNr(CellData cell) throws GenerateException {
-		int nr = cell.getIntVal(0);
-		if (nr > 0) {
-			return nr;
-		}
-		String name = cell.getStringVal();
-		if (name != null && !name.isEmpty()) {
-			return getMeldeListe().getTeamNrByTeamname(name);
-		}
-		return 0;
 	}
 
 	/**
@@ -424,7 +419,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 	private void header() throws GenerateException {
 		processBoxinfo("processbox.formatiere.header");
 		Integer headerColor = getKonfigurationSheet().getSpielRundeHeaderFarbe();
-		boolean nameMode = getKonfigurationSheet().getSpielplanTeamAnzeige() == SpielplanTeamAnzeige.NAME;
+		boolean nameMode = getKonfigurationSheet().getSpielplanTeamAnzeige() != TeamAnzeige.NR;
 
 		Position headerStart = Position.from(TEAM_A_SPALTE, ERSTE_HEADER_ZEILE);
 
@@ -490,7 +485,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		getSheetHelper().setPropertyInRange(sheet, datenRangeInclErg, VERT_JUSTIFY, CellVertJustify2.CENTER);
 
 		RangePosition abSpalten = RangePosition.from(datenRangeInclErg).endeSpalte(TEAM_B_SPALTE);
-		if (getKonfigurationSheet().getSpielplanTeamAnzeige() == SpielplanTeamAnzeige.NAME) {
+		if (getKonfigurationSheet().getSpielplanTeamAnzeige() != TeamAnzeige.NR) {
 			// Teamname-Modus: Font 12, an Zellgröße anpassen, Spaltenbreite 6 cm
 			getSheetHelper().setPropertyInRange(sheet, abSpalten, CHAR_HEIGHT, 12);
 			getSheetHelper().setPropertyInRange(sheet, abSpalten, SHRINK_TO_FIT, Boolean.TRUE);
@@ -718,7 +713,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 			return;
 		}
 
-		boolean useTeamname = getKonfigurationSheet().getSpielplanTeamAnzeige() == SpielplanTeamAnzeige.NAME;
+		boolean useNames = getKonfigurationSheet().getSpielplanTeamAnzeige() != TeamAnzeige.NR;
 		int freispielPlus = getKonfigurationSheet().getFreispielPunktePlus();
 		int freispielMinus = getKonfigurationSheet().getFreispielPunkteMinus();
 		RangeData rangeData = new RangeData();
@@ -728,7 +723,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 			if (!teamPaarung.hasB()) {
 				// Freilos – Team A ohne Gegner eintragen, ERG mit Freispiel-Werten vorbelegen
 				RowData freilosRow = rangeData.addNewRow();
-				if (useTeamname) {
+				if (useNames) {
 					freilosRow.add(new CellData("")); // Name folgt per Formel (teamNamenFormelnSchreiben)
 				} else {
 					freilosRow.add(new CellData(teamPaarung.getA().getNr()));
@@ -738,7 +733,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 				freilosRow.add(new CellData(freispielMinus)); // ERG_TEAM_B vorbelegen
 				continue;
 			}
-			if (useTeamname) {
+			if (useNames) {
 				RowData row = rangeData.addNewRow();
 				row.add(new CellData("")); // Name folgt per Formel (teamNamenFormelnSchreiben)
 				row.add(new CellData(""));
@@ -750,34 +745,51 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		Position startPos = Position.from(TEAM_A_SPALTE, ERSTE_DATEN_ZEILE);
 		RangeHelper.from(this, rangeData.getRangePosition(startPos)).setDataInRange(rangeData);
 
-		if (useTeamname) {
+		// Zuerst die technischen Nummern: die Namensformeln schlagen darüber in der Meldeliste nach.
+		technischeTeamNummernSchreiben(paarungen);
+		if (useNames) {
 			teamNamenFormelnSchreiben(paarungen);
 		}
 
 		durchgangInfoSpaltenSchreiben(paarungen.size());
 	}
 
+	/** Schreibt die nicht sichtbare Teamidentität für Auswertung und Folgerunden. */
+	private void technischeTeamNummernSchreiben(List<TeamPaarung> paarungen) throws GenerateException {
+		RangeData nummern = new RangeData();
+		for (TeamPaarung paarung : paarungen) {
+			nummern.addNewRow(paarung.getA().getNr(), paarung.hasB() ? paarung.getB().getNr() : 0);
+		}
+		RangeHelper.from(this, nummern.getRangePosition(
+				Position.from(TECHNISCHE_TEAM_A_NR_SPALTE, ERSTE_DATEN_ZEILE))).setDataInRange(nummern);
+		ColumnProperties verborgen = ColumnProperties.from().isVisible(false);
+		getSheetHelper().setColumnProperties(getXSpreadSheet(), TECHNISCHE_TEAM_A_NR_SPALTE, verborgen);
+		getSheetHelper().setColumnProperties(getXSpreadSheet(), TECHNISCHE_TEAM_B_NR_SPALTE, verborgen);
+	}
+
 	/**
-	 * Schreibt die Team-Namen im Anzeigemodus {@link SpielplanTeamAnzeige#NAME} als
-	 * SVERWEIS-Formel (statt statischem Text), damit eine spätere Umbenennung in der
-	 * Meldeliste im Spielplan sofort sichtbar bleibt (siehe auch {@link #resolveTeamNr}).
+	 * Schreibt Team- oder zusammengesetzte Spielernamen als Formel (statt statischem Text), damit
+	 * Änderungen in der Meldeliste im Spielplan sofort sichtbar bleiben. Die Formel schlägt die
+	 * Teamnummer aus der versteckten technischen Spalte derselben Zeile in der Meldeliste nach –
+	 * Anzeige und Auswertung ({@link SchweizerTeamNrAufloeser}) haben damit dieselbe Quelle.
 	 */
 	private void teamNamenFormelnSchreiben(List<TeamPaarung> paarungen) throws GenerateException {
 		if (paarungen.isEmpty()) {
 			return;
 		}
-		boolean teamnameAnzeigen = getKonfigurationSheet().isMeldeListeTeamnameAnzeigen();
 		boolean vereinsnameAnzeigen = getKonfigurationSheet().isMeldeListeVereinsnameAnzeigen();
 		Formation formation = getKonfigurationSheet().getMeldeListeFormation();
+		TeamAnzeige anzeige = getKonfigurationSheet().getSpielplanTeamAnzeige();
+		boolean teamnameSpalteAktiv = getKonfigurationSheet().isMeldeListeTeamnameAnzeigen();
 
 		String[][] formulas = new String[paarungen.size()][2];
 		for (int i = 0; i < paarungen.size(); i++) {
-			TeamPaarung teamPaarung = paarungen.get(i);
-			formulas[i][0] = MeldeListeHelper.teamNameFormel(String.valueOf(teamPaarung.getA().getNr()),
-					teamnameAnzeigen, formation, vereinsnameAnzeigen);
-			formulas[i][1] = teamPaarung.hasB()
-					? MeldeListeHelper.teamNameFormel(String.valueOf(teamPaarung.getB().getNr()), teamnameAnzeigen,
-							formation, vereinsnameAnzeigen)
+			int zeile = ERSTE_DATEN_ZEILE + i;
+			formulas[i][0] = TeamAnzeigeHelper.formel(Position.from(TECHNISCHE_TEAM_A_NR_SPALTE, zeile).getAddress(),
+					anzeige, teamnameSpalteAktiv, formation, vereinsnameAnzeigen);
+			formulas[i][1] = paarungen.get(i).hasB()
+					? TeamAnzeigeHelper.formel(Position.from(TECHNISCHE_TEAM_B_NR_SPALTE, zeile).getAddress(),
+							anzeige, teamnameSpalteAktiv, formation, vereinsnameAnzeigen)
 					: "";
 		}
 

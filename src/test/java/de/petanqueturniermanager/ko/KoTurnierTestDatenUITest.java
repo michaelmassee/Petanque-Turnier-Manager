@@ -82,10 +82,10 @@ public class KoTurnierTestDatenUITest extends BaseCalcUITest {
 				.isEqualTo(5);
 		assertThat(sheetHlp.getTextFromCell(gruppeB, Position.from(4, 2)))
 				.as("Default: Halbfinale hat keine Bahn-Spalte")
-				.isEqualTo("Nr");
+				.isEqualTo(I18n.get("column.header.nr"));
 		assertThat(sheetHlp.getTextFromCell(gruppeB, Position.from(7, 2)))
 				.as("Default: Finale hat keine Bahn-Spalte")
-				.isEqualTo("Nr");
+				.isEqualTo(I18n.get("column.header.nr"));
 	}
 
 	@Test

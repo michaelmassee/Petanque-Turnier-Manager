@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import com.sun.star.awt.XToolkitExperimental;
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.container.XNamed;
 import com.sun.star.sheet.XCalculatable;
@@ -46,6 +47,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
+import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
@@ -340,6 +342,33 @@ public abstract class BaseCalcUITest {
 
 	}
 
+	/** Liest {@code IsVisible} der Spalte (Breite 0 blendet in LibreOffice nicht aus). */
+	protected boolean istSpalteSichtbar(XSpreadsheet sheet, int spalte) {
+		XPropertySet spaltenProperties = sheetHlp.getColumnPropertySet(sheet, spalte);
+		try {
+			return Boolean.TRUE.equals(spaltenProperties.getPropertyValue(ColumnProperties.ISVISIBLE));
+		} catch (com.sun.star.uno.Exception e) {
+			throw new IllegalStateException("IsVisible der Spalte " + spalte + " nicht lesbar", e);
+		}
+	}
+
+	/**
+	 * Wartet, bis LibreOffice alle anstehenden Ereignisse (Fenster anlegen, aktivieren, Layout)
+	 * abgearbeitet hat. Nötig nach UI-Aktionen über mehrere Fenster, die LO asynchron verarbeitet.
+	 */
+	protected void warteAufLoLeerlauf() {
+		try {
+			Object toolkit = starter.getxComponentContext().getServiceManager()
+					.createInstanceWithContext("com.sun.star.awt.Toolkit", starter.getxComponentContext());
+			XToolkitExperimental experimentell = Lo.qi(XToolkitExperimental.class, toolkit);
+			if (experimentell != null) {
+				experimentell.processEventsToIdle();
+			}
+		} catch (com.sun.star.uno.Exception e) {
+			throw new IllegalStateException("LO-Ereignisschleife nicht erreichbar", e);
+		}
+	}
+
 	protected void recalcAll() {
 		XCalculatable xCalc = Lo.qi(XCalculatable.class, doc);
 		if (xCalc != null) {
@@ -412,7 +441,7 @@ public abstract class BaseCalcUITest {
 
 	/**
 	 * Variante ohne Blattschutz – nur das {@code aktiv}-Flag wird gesetzt. Für Tests
-	 * gedacht, deren Logik {@code TurnierModus.istAktiv()} abfragt, aber kein konkretes
+	 * gedacht, deren Logik {@code TurnierModus.istAktiv(...)} abfragt, aber kein konkretes
 	 * Turniersystem mit Sheets zur Verfügung steht (Helper-, Sidebar-, AddIn-Tests etc.).
 	 */
 	protected void mitKioskModusOhneSchutz(KioskAktion aktion) throws GenerateException {

@@ -35,7 +35,7 @@ import de.petanqueturniermanager.onlinesync.sheet.NeueZuordnung;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationDto;
 import de.petanqueturniermanager.ptmonline.dto.SyncBindingDto;
 import de.petanqueturniermanager.ptmonline.live.LiveStandQuellen;
-import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetTestDaten;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheet;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrundeSheet;
@@ -78,7 +78,7 @@ class PtmOnlineLiveSyncUITest extends BaseCalcUITest {
 
     @Test
     void rundeMitNummernKommtMitPaarungenFreilosUndBahnenAn() throws Exception {
-        SchweizerSpielrundeSheetNaechste runde = ersteRunde(SpielplanTeamAnzeige.NR);
+        SchweizerSpielrundeSheetNaechste runde = ersteRunde(TeamAnzeige.NR);
 
         uebertragen();
 
@@ -94,7 +94,7 @@ class PtmOnlineLiveSyncUITest extends BaseCalcUITest {
 
     @Test
     void rundeMitTeamnamenWirdUeberDieNamensformelnZugeordnet() throws Exception {
-        SchweizerSpielrundeSheetNaechste runde = ersteRunde(SpielplanTeamAnzeige.NAME);
+        SchweizerSpielrundeSheetNaechste runde = ersteRunde(TeamAnzeige.NAME);
 
         uebertragen();
 
@@ -114,7 +114,7 @@ class PtmOnlineLiveSyncUITest extends BaseCalcUITest {
 
     @Test
     void beiPausiertemSyncWirdNichtsUebertragen() throws Exception {
-        ersteRunde(SpielplanTeamAnzeige.NR);
+        ersteRunde(TeamAnzeige.NR);
         PtmOnlineVerbindung verbindung = alleTeamsVerbinden();
         verbindung.mapping().setPausiert(true);
 
@@ -129,7 +129,7 @@ class PtmOnlineLiveSyncUITest extends BaseCalcUITest {
 
     @Test
     void turnierMitErgebnissenUebertraegtAlleRundenUndDieRanglisteDesDokuments() throws Exception {
-        new SchweizerTurnierTestDaten(wkingSpreadsheet, ANZ_TEAMS, SpielplanTeamAnzeige.NR).generate();
+        new SchweizerTurnierTestDaten(wkingSpreadsheet, ANZ_TEAMS, TeamAnzeige.NR).generate();
         docPropHelper.setIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM,
                 TurnierSystem.SCHWEIZER.getId());
 
@@ -172,7 +172,7 @@ class PtmOnlineLiveSyncUITest extends BaseCalcUITest {
         return zeilen;
     }
 
-    private SchweizerSpielrundeSheetNaechste ersteRunde(SpielplanTeamAnzeige anzeige) throws Exception {
+    private SchweizerSpielrundeSheetNaechste ersteRunde(TeamAnzeige anzeige) throws Exception {
         SchweizerSpielrundeSheetNaechste runde = new SchweizerSpielrundeSheetNaechste(wkingSpreadsheet);
         runde.getKonfigurationSheet().setSpielplanTeamAnzeige(anzeige);
         runde.getKonfigurationSheet().setSpielrundeSpielbahn(SpielrundeSpielbahn.N);

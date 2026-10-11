@@ -19,7 +19,7 @@ import de.petanqueturniermanager.helper.sheet.blattschutz.SheetSchutzInfo;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.maastrichter.blattschutz.MaastrichterBlattschutzKonfiguration;
 import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterMeldeListeSheetTestDaten;
-import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrundeSheet;
 
 /**
@@ -72,7 +72,7 @@ public class MaastrichterZeitplanUITest extends BaseCalcUITest {
 		new MaastrichterMeldeListeSheetTestDaten(wkingSpreadsheet, ANZ_TEAMS).erstelleTestdaten();
 		MaastrichterSpielrundeSheetNaechste vorrundeNaechste = new MaastrichterSpielrundeSheetNaechste(wkingSpreadsheet);
 		var konfig = vorrundeNaechste.getKonfigurationSheet();
-		konfig.setSpielplanTeamAnzeige(SpielplanTeamAnzeige.NR);
+		konfig.setSpielplanTeamAnzeige(TeamAnzeige.NR);
 		konfig.setSpielrundeSpielbahn(SpielrundeSpielbahn.N);
 		konfig.setZeitplanAktiv(true);
 		konfig.setZeitplanAnzahlBahnen(BAHNEN);

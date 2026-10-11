@@ -7,10 +7,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.petanqueturniermanager.basesheet.SheetTabFarben;
-import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
+import de.petanqueturniermanager.basesheet.konfiguration.TeamAnzeigePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.ko.konfiguration.KoPropertiesSpalte;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.konfigdialog.AuswahlConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
@@ -19,7 +20,7 @@ import de.petanqueturniermanager.konfigdialog.HeaderFooterConfigProperty;
 /**
  * Konfigurationseigenschaften für das Kaskaden-KO-Turniersystem.
  */
-public class KaskadePropertiesSpalte extends BasePropertiesSpalte {
+public class KaskadePropertiesSpalte extends TeamAnzeigePropertiesSpalte {
 
     public static final List<ConfigProperty<?>> KONFIG_PROPERTIES = new ArrayList<>();
 
@@ -76,11 +77,20 @@ public class KaskadePropertiesSpalte extends BasePropertiesSpalte {
                 .addAuswahl("J", "Ja").addAuswahl("N", "Nein")
                 .intern());
 
+        KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_RANGLISTE_TEAM_ANZEIGE)
+                .setDefaultVal(TeamAnzeige.NAME.name())
+                .setDescription("config.desc.kaskade.rangliste.team.anzeige"))
+                .addAuswahl(TeamAnzeige.NR.name(), "Teamnummer")
+                .addAuswahl(TeamAnzeige.SPIELERNAMEN.name(), "Spielernamen")
+                .addAuswahl(TeamAnzeige.NAME.name(), "Teamname"));
+
         KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_ANZAHL_KASKADEN)
                 .setDefaultVal("2")
                 .setDescription("config.desc.kaskade.anzahl.kaskaden"))
                 .addAuswahl("2", "ACBD")
                 .addAuswahl("3", "ACBDEFGH"));
+
+		KoPropertiesSpalte.addKoBracketTeamAnzeigeProperty(KONFIG_PROPERTIES);
 
         KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_FREISPIEL_PUNKTE_PLUS)
                 .setDefaultVal(13).setDescription("config.desc.freispiel.punkte.plus"));
@@ -154,6 +164,16 @@ public class KaskadePropertiesSpalte extends BasePropertiesSpalte {
 
     public void setMeldeListeVereinsnameAnzeigen(boolean anzeigen) {
         setStringProperty(KONFIG_PROP_MELDELISTE_VEREINSNAME, anzeigen ? "J" : "N");
+    }
+
+
+
+    public TeamAnzeige getSpielbaumTeamAnzeige() {
+        return leseTeamAnzeige(KoPropertiesSpalte.KONFIG_PROP_SPIELBAUM_TEAM_ANZEIGE, TeamAnzeige.NR);
+    }
+
+    public void setSpielbaumTeamAnzeige(TeamAnzeige anzeige) {
+        schreibeTeamAnzeige(KoPropertiesSpalte.KONFIG_PROP_SPIELBAUM_TEAM_ANZEIGE, anzeige);
     }
 
     private static final String KONFIG_PROP_KASKADEN_TAB_FARBE = "Tab-Farbe Kaskaden-KO";

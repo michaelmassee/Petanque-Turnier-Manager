@@ -20,7 +20,6 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
-import de.petanqueturniermanager.helper.sheet.rangedata.CellData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.model.Team;
@@ -71,6 +70,7 @@ public final class SchweizerRundenLeser {
 		}
 
 		var xDoc = workingSpreadsheet.getWorkingSpreadsheetDocument();
+		var teamNrAufloeser = new SchweizerTeamNrAufloeser(meldeliste::erstelleTeamAnzeigeIndex);
 		for (int runde = 1; runde <= anzRunden; runde++) {
 			SheetRunner.testDoCancelTask();
 			XSpreadsheet rundeSheet = SheetMetadataHelper.findeSheetUndHeile(xDoc,
@@ -79,7 +79,7 @@ public final class SchweizerRundenLeser {
 				logger.debug("leseErgebnisse: Runde {} – Sheet nicht gefunden, übersprungen", runde);
 				continue;
 			}
-			leseRundeEin(workingSpreadsheet, rundeSheet, aktiveMeldungen, statsMap, gegnerMap, meldeliste,
+			leseRundeEin(workingSpreadsheet, rundeSheet, aktiveMeldungen, statsMap, gegnerMap, teamNrAufloeser,
 					freispielPunktePlus, freispielPunkteMinus);
 		}
 
@@ -95,13 +95,13 @@ public final class SchweizerRundenLeser {
 
 	private static void leseRundeEin(WorkingSpreadsheet workingSpreadsheet, XSpreadsheet rundeSheet,
 			TeamMeldungen aktiveMeldungen, Map<Integer, int[]> statsMap, Map<Integer, List<Integer>> gegnerMap,
-			SchweizerMeldeListeSheetUpdate meldeliste, int freispielPunktePlus,
+			SchweizerTeamNrAufloeser teamNrAufloeser, int freispielPunktePlus,
 			int freispielPunkteMinus) throws GenerateException {
 
 		RangePosition readRange = RangePosition.from(
 				SchweizerAbstractSpielrundeSheet.TEAM_A_SPALTE,
 				SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE,
-				SchweizerAbstractSpielrundeSheet.ERG_TEAM_B_SPALTE,
+				SchweizerAbstractSpielrundeSheet.TECHNISCHE_TEAM_B_NR_SPALTE,
 				SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE + 999);
 		RangeData rowsData = RangeHelper
 				.from(rundeSheet, workingSpreadsheet.getWorkingSpreadsheetDocument(), readRange)
@@ -110,12 +110,12 @@ public final class SchweizerRundenLeser {
 		for (RowData row : rowsData) {
 			if (row.size() < 2) break;
 
-			int nrA = resolveTeamNr(row.get(0), meldeliste);
+			int nrA = teamNrAufloeser.teamA(row);
 			if (nrA <= 0) break; // Ende der Daten
 			Team teamA = aktiveMeldungen.getTeam(nrA);
 			if (teamA == null) continue;
 
-			int nrB = resolveTeamNr(row.get(1), meldeliste);
+			int nrB = teamNrAufloeser.teamB(row);
 			if (nrB <= 0) {
 				// Freilos für Team A – Sieg zählen und die konfigurierten Freispiel-Punkte
 				// verbuchen (kein echter Gegner, daher kein Eintrag in gegnerMap für BHZ/FBHZ).
@@ -149,18 +149,5 @@ public final class SchweizerRundenLeser {
 				}
 			}
 		}
-	}
-
-	private static int resolveTeamNr(CellData cell, SchweizerMeldeListeSheetUpdate meldeliste)
-			throws GenerateException {
-		int nr = cell.getIntVal(0);
-		if (nr > 0) {
-			return nr;
-		}
-		String name = cell.getStringVal();
-		if (name != null && !name.isEmpty()) {
-			return meldeliste.getTeamNrByTeamname(name);
-		}
-		return 0;
 	}
 }

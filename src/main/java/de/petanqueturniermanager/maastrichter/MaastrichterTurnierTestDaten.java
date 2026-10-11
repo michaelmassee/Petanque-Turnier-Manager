@@ -3,27 +3,28 @@
  */
 package de.petanqueturniermanager.maastrichter;
 
-
-import de.petanqueturniermanager.helper.random.RandomSource;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.NewTestDatenValidator;
-import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
+import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.random.RandomSource;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
+import de.petanqueturniermanager.helper.sheet.rangedata.CellData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
-import de.petanqueturniermanager.helper.i18n.I18n;
-import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.maastrichter.finalrunde.MaastrichterFinalrundeSheet;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterGruppenModus;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
@@ -32,7 +33,6 @@ import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterTeilnehmerS
 import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterVorrundenRanglisteSheet;
 import de.petanqueturniermanager.maastrichter.spielrunde.MaastrichterSpielrundeSheetNaechste;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrundeSheet;
-import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
  * Generiert ein vollständiges Maastrichter Beispielturnier ohne Dialoge:
@@ -52,6 +52,7 @@ public class MaastrichterTurnierTestDaten extends SheetRunner implements ISheet,
 
 	private final int anzVorrunden;
 	private final int gruppenGroesse;
+	private TeamAnzeige spielplanTeamAnzeige = TeamAnzeige.NR;
 
 	private final MaastrichterMeldeListeSheetTestDaten meldelisteTestDaten;
 	final MaastrichterSpielrundeSheetNaechste naechsteVorrunde;
@@ -81,6 +82,12 @@ public class MaastrichterTurnierTestDaten extends SheetRunner implements ISheet,
 		ranglisteSheet = new MaastrichterVorrundenRanglisteSheet(workingSpreadsheet);
 		finalrundeSheet = new MaastrichterFinalrundeSheet(workingSpreadsheet);
 		teilnehmerSheet = new MaastrichterTeilnehmerSheet(workingSpreadsheet);
+	}
+
+	/** Sichtbare Teamkennung in den Vorrunden (Standard: Nummer). */
+	public MaastrichterTurnierTestDaten mitSpielplanTeamAnzeige(TeamAnzeige anzeige) {
+		spielplanTeamAnzeige = anzeige;
+		return this;
 	}
 
 	@Override
@@ -138,6 +145,7 @@ public class MaastrichterTurnierTestDaten extends SheetRunner implements ISheet,
 		// Konfiguration setzen (überschreibt ggf. die Defaults der Testdaten-Klasse)
 		MaastrichterKonfigurationSheet konfigSheet = new MaastrichterKonfigurationSheet(getWorkingSpreadsheet());
 		konfigSheet.setSpielrundeSpielbahn(SpielrundeSpielbahn.R);
+		konfigSheet.setSpielplanTeamAnzeige(spielplanTeamAnzeige);
 		konfigSheet.setAnzVorrunden(anzVorrunden);
 		konfigSheet.setGruppenGroesse(gruppenGroesse);
 		konfigSheet.setMaastrichterGruppenModus(MaastrichterGruppenModus.NACH_GROESSE);
@@ -171,41 +179,45 @@ public class MaastrichterTurnierTestDaten extends SheetRunner implements ISheet,
 	}
 
 	/**
-	 * Füllt alle Paarungen des Vorrunden-Sheets mit Zufallsergebnissen (13:x).
+	 * Füllt alle Paarungen des Vorrunden-Sheets mit Zufallsergebnissen (13:x). Paarungen werden
+	 * über den sichtbaren Zellinhalt erkannt, damit Nummern- und Namensanzeige gleichermaßen
+	 * funktionieren; vorbelegte Freilos-Ergebnisse bleiben unverändert.
 	 */
 	void ergebnisseEinfuegen(XSpreadsheet sheet) throws GenerateException {
-		RangePosition readRange = RangePosition.from(
+		var xDoc = getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
+		RangeData paarungen = RangeHelper.from(sheet, xDoc, RangePosition.from(
 				SchweizerAbstractSpielrundeSheet.TEAM_A_SPALTE,
 				SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE,
 				SchweizerAbstractSpielrundeSheet.ERG_TEAM_B_SPALTE,
-				SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE + 100);
+				SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE + 100)).getDataFromRange();
 
-		RangeData data = RangeHelper
-				.from(sheet, getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), readRange)
-				.getDataFromRange();
-
-		for (int i = 0; i < data.size(); i++) {
-			RowData row = data.get(i);
-			if (row.size() < 2) break;
-
-			int nrA = row.get(0).getIntVal(0);
-			if (nrA <= 0) break;
-			int nrB = row.get(1).getIntVal(0);
-			if (nrB <= 0) continue; // Freilos – kein Ergebnis nötig
-
-			int zeile = SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE + i;
+		RangeData ergebnisse = new RangeData();
+		for (RowData paarung : paarungen) {
+			if (paarung.size() < 4 || istLeer(paarung.get(0))) {
+				break;
+			}
+			if (istLeer(paarung.get(1))) {
+				// Freilos – vorbelegte Zellinhalte unverändert zurückschreiben (leer bleibt leer)
+				RowData freilos = ergebnisse.addNewRow();
+				freilos.add(paarung.get(2));
+				freilos.add(paarung.get(3));
+				continue;
+			}
 			int winner = RandomSource.nextInt(2);
 			int loserPts = RandomSource.nextInt(0, 13);
-			int ergA = (winner == 0) ? 13 : loserPts;
-			int ergB = (winner == 0) ? loserPts : 13;
-
-			getSheetHelper().setNumberValueInCell(NumberCellValue
-					.from(sheet, Position.from(SchweizerAbstractSpielrundeSheet.ERG_TEAM_A_SPALTE, zeile))
-					.setValue(ergA));
-			getSheetHelper().setNumberValueInCell(NumberCellValue
-					.from(sheet, Position.from(SchweizerAbstractSpielrundeSheet.ERG_TEAM_B_SPALTE, zeile))
-					.setValue(ergB));
+			ergebnisse.addNewRow(winner == 0 ? 13 : loserPts, winner == 0 ? loserPts : 13);
 		}
+		if (ergebnisse.isEmpty()) {
+			return;
+		}
+		RangeHelper.from(sheet, xDoc, ergebnisse.getRangePosition(Position.from(
+				SchweizerAbstractSpielrundeSheet.ERG_TEAM_A_SPALTE, SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE)))
+				.setDataInRange(ergebnisse);
+	}
+
+	private static boolean istLeer(CellData zelle) {
+		String inhalt = zelle.getStringVal();
+		return inhalt == null || inhalt.isEmpty();
 	}
 
 }

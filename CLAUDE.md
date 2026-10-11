@@ -212,6 +212,20 @@ Details und Implementierungsmuster: `turniersysteme/BLATTSCHUTZ.md`
 - Neues System: `FooBlattschutzKonfiguration implements IBlattschutzKonfiguration` + `BlattschutzRegistry.register()`
 - `CellStyleHelper.from(XSpreadsheetDocument, AbstractCellStyleDef).apply()` für Kontexte ohne ISheet
 
+## Zebra-Zeilenfarbe & Editierfarbe
+
+**Regel:** Die Zeilen-Zebrafarbe wird **immer direkt** als Zellhintergrund geschrieben (`SheetHelper.faerbeZeilenAbwechselnd`), **nie** als bedingte Formatierung (CF). Gründe: CF geht bei der HTML-Generierung verloren, und eine unbedingte Zebra-CF (`ISEVEN(ROW())`) greift immer zuerst und verdeckt jede danach angehängte Regel – insbesondere die Editierfarbe (Bug: Formule-X/KO/Kaskade/TripTete-Meldeliste zeigte Teamname/Verein/SP/Aktiv nicht als editierbar).
+
+- Editierbare Zellen: `EditierbaresZelleFormatHelper.anwenden()` **nach** dem `clear()`-Aufbau der Fehlerregeln einer Spalte (Fehler hat Vorrang, Editierfarbe danach). Zusammengesetzte Bedingungen wie `AND(ISEVEN(ROW());<Bedingung>)` sind erlaubt.
+- Meldelisten-Aufbau: `formatZeilenfarben()` löscht zuerst alte CF spaltenweise (`ConditionalFormatHelper.clearSpaltenweise`, bereinigt Altdokumente) und schreibt dann das Zebra direkt.
+
+**Quality Gate (dreistufig):** `formulaIsEvenRow()/formulaIsOddRow()` existieren nicht mehr (Compile-Zeit); `ConditionalFormatHelper.applyAndDoReset()` überspringt eine reine Zebra-Formel (`istReineZebraFormel`) und loggt sie als Warnung (mit Stacktrace zur Aufrufstelle) – **bewusst ohne Abbruch**, die Sheet-Generierung darf deswegen nie stoppen; `ZebraNichtPerConditionalFormatKonventionTest` (Quelltext-Scan in `arch/`) bricht den Build. UITest-Prüfhilfe: `EditierfarbePruefung` (`src/test/.../helper/sheet/`), Beispiele `*MeldeListeEditierfarbeUITest`.
+
+## Native Datengültigkeit (Eingabeprüfung)
+Details und Übersicht aller Regeln: `turniersysteme/DATENGUELTIGKEIT.md`
+
+**Kritische Regel:** Die Bahnspalte (manuelle Bahnvergabe) ist **bewusst locker**: Text erlaubt, keine Eindeutigkeitsprüfung, nur Warnung statt Ablehnung. Nicht wieder verschärfen – harte Eindeutigkeit blockiert das Tauschen zweier Bahnen, Bahnbezeichnungen wie „A3" sind üblich.
+
 ## SheetSyncListener – Architekturregeln
 Details und Muster: `turniersysteme/RANGLISTE_LISTENER.md`. Generische Infrastruktur in `helper/sheetsync/` (ehemals `helper/rangliste/`), genutzt für Ranglisten UND andere Sheet-Synchronisationen (z. B. Supermelee-Spieltag-Teilnehmerliste).
 

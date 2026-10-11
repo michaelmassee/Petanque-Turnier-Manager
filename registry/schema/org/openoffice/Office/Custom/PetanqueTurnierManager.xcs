@@ -51,6 +51,10 @@
                 <info><desc>Whether the update check also considers pre-release (beta) versions, not just stable releases.</desc></info>
                 <value>false</value>
             </prop>
+            <prop oor:name="AutoTurnierModus" oor:type="xs:boolean">
+                <info><desc>Switch the current tournament document into tournament (kiosk) mode after every action if it is not active yet.</desc></info>
+                <value>true</value>
+            </prop>
             <prop oor:name="LegacyPropertiesImported" oor:type="xs:boolean">
                 <info><desc>Whether legacy properties have already been imported.</desc></info>
                 <value>false</value>

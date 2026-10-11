@@ -6,6 +6,7 @@ package de.petanqueturniermanager.schweizer.meldeliste;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.sun.star.awt.FontWeight;
@@ -19,27 +20,32 @@ import de.petanqueturniermanager.basesheet.meldeliste.IMeldeliste;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeigeFormatierer;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
-import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
+import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
+import de.petanqueturniermanager.helper.sheet.rangedata.CellData;
+import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
+import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerRankingModus;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
-import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
  * Delegate für Schweizer Team-Meldeliste-Sheets: hält gemeinsamen Zustand und alle Hilfsmethoden.
@@ -53,17 +59,20 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 	/** Dritte Header-Zeile (Spalten-Namen: Vorname, Nachname, Verein). */
 	static final int DRITTE_HEADER_ZEILE = 2;
 	/** Erste Daten-Zeile: 3 Header-Zeilen (überschreibt MeldeListeKonstanten.ERSTE_DATEN_ZEILE=2). */
-	static final int ERSTE_DATEN_ZEILE = 3;
+	static final int ERSTE_DATEN_ZEILE = TEAM_MELDELISTE_ERSTE_DATEN_ZEILE;
 
 	static final int NR_SPALTE_WIDTH = 800;
 	static final int NAME_SPALTE_WIDTH = 3000;
 	static final int TEAMNAME_SPALTE_WIDTH = 3000;
+	static final int NUR_TEAMNAME_SPALTE_WIDTH = TEAMNAME_SPALTE_WIDTH * 2;
 	static final int VEREINSNAME_SPALTE_WIDTH = 2500;
 
 	static final int AKTIV_SPALTE_WIDTH = 700;
 	static final int AKTIV_WERT_NIMMT_TEIL = 1;
 	static final int AKTIV_WERT_AUSGESTIEGEN = 2;
 	private static final List<Integer> AKTIV_GUELTIGE_WERTE = List.of(AKTIV_WERT_NIMMT_TEIL, AKTIV_WERT_AUSGESTIEGEN);
+	/** Suchbereich für die letzte belegte Meldelistenzeile ab {@code ERSTE_DATEN_ZEILE}. */
+	private static final int MAX_DATEN_ZEILEN = 500;
 
 	private final IMeldeliste<TeamMeldungen, Team> sheet;
 	private final SchweizerKonfigurationSheet konfigurationSheet;
@@ -244,10 +253,12 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 
 		// Teamname-Spalte (optional): merged über Zeile 1+2 (ZWEITE + DRITTE Header-Zeile)
 		if (teamnameAktiv) {
+			int teamnameSpalteWidth = formation == Formation.NUR_TEAMNAME
+					? NUR_TEAMNAME_SPALTE_WIDTH : TEAMNAME_SPALTE_WIDTH;
 			StringCellValue teamnameHeader = StringCellValue
 					.from(sheet.getXSpreadSheet(), Position.from(1, ZWEITE_HEADER_ZEILE),
 							I18n.get("column.header.teamname"))
-					.addColumnProperties(colPropName.setWidth(TEAMNAME_SPALTE_WIDTH))
+					.addColumnProperties(colPropName.setWidth(teamnameSpalteWidth))
 					.setCellBackColor(headerColor)
 					.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder())
 					.setVertJustify(CellVertJustify2.CENTER)
@@ -415,10 +426,8 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 			vornamen[s] = getVornameSpalte(s);
 			nachnamen[s] = getNachnameSpalte(s);
 		}
-		meldeListeHelper.insertFormulaFuerDoppelteSpielerNamenGeradeUngradeFarbe(vornamen, nachnamen,
-				ERSTE_DATEN_ZEILE, letzteDatenZeile, sheet,
-				konfigurationSheet.getMeldeListeHintergrundFarbeGeradeStyle(),
-				konfigurationSheet.getMeldeListeHintergrundFarbeUnGeradeStyle());
+		meldeListeHelper.insertFormulaFuerDoppelteSpielerNamen(vornamen, nachnamen,
+				ERSTE_DATEN_ZEILE, letzteDatenZeile, sheet);
 	}
 
 	void formatZeilenfarben() throws GenerateException {
@@ -550,6 +559,44 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 	}
 
 	/**
+	 * Baut die Zuordnung sichtbarer Spielrunden-Kennungen (Teamname und zusammengesetzte
+	 * Spielernamen) zur Teamnummer auf. Die Meldeliste wird dafür einmal als Block gelesen;
+	 * die Darstellung entsteht über {@link TeamAnzeigeFormatierer} mit derselben Zeilenlage wie
+	 * die Formeln aus {@link MeldeListeHelper#teamNameFormel} und
+	 * {@link MeldeListeHelper#spielerNamenFormel}.
+	 */
+	TeamAnzeigeIndex erstelleTeamAnzeigeIndex() throws GenerateException {
+		TeamAnzeigeIndex index = new TeamAnzeigeIndex();
+		int letzteZeile = letzteZeileMitDaten(sheet.getXSpreadSheet());
+		if (letzteZeile < ERSTE_DATEN_ZEILE) {
+			return index;
+		}
+		int anzSpieler = konfigurationSheet.getMeldeListeFormation().getAnzSpieler();
+		boolean vereinsnameAnzeigen = konfigurationSheet.isMeldeListeVereinsnameAnzeigen();
+		boolean teamnameSpalteAktiv = konfigurationSheet.isMeldeListeTeamnameAnzeigen();
+		// Spielernamen-Formel übergibt die Zeile so, dass Spieler 1 auf Index 1 liegt
+		int spielerZeilenStart = getErsterSpielerOffset() - 1;
+		int letzteSpalte = Math.max(getTeamNrSpalte(), getLetzteDataSpalte());
+		RangeData zeilen = RangeHelper.from(sheet, getTeamNrSpalte(), ERSTE_DATEN_ZEILE, letzteSpalte, letzteZeile)
+				.getDataFromRange();
+		for (RowData zeile : zeilen) {
+			int teamNr = zeile.get(0).getIntVal(0);
+			if (teamNr <= 0) {
+				continue;
+			}
+			String[] meldelistenZeile = zeile.stream().map(CellData::getStringVal).toArray(String[]::new);
+			if (teamnameSpalteAktiv) {
+				index.hinzufuegen(TeamAnzeigeFormatierer.formatiere(true, anzSpieler, vereinsnameAnzeigen,
+						meldelistenZeile), teamNr);
+			}
+			String[] spielerZeile = Arrays.copyOfRange(meldelistenZeile, spielerZeilenStart, meldelistenZeile.length);
+			index.hinzufuegen(TeamAnzeigeFormatierer.formatiere(false, anzSpieler, vereinsnameAnzeigen,
+					spielerZeile), teamNr);
+		}
+		return index;
+	}
+
+	/**
 	 * Liest den Teamnamen für die angegebene Teamnummer aus der Meldeliste.
 	 * Gibt null zurück wenn die Teamname-Spalte deaktiviert ist oder die Nr nicht gefunden wird.
 	 */
@@ -579,12 +626,14 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 	 */
 	int letzteZeileMitDaten(XSpreadsheet xSheet) throws GenerateException {
 		int kennungSpalte = getZeilenKennungSpalte();
+		RangeData kennungen = RangeHelper.from(xSheet, sheet.getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
+				RangePosition.from(kennungSpalte, ERSTE_DATEN_ZEILE, kennungSpalte, ERSTE_DATEN_ZEILE + MAX_DATEN_ZEILEN))
+				.getDataFromRange();
 		int letzte = ERSTE_DATEN_ZEILE - 1;
-		int maxZeile = ERSTE_DATEN_ZEILE + 500;
-		for (int zeile = ERSTE_DATEN_ZEILE; zeile <= maxZeile; zeile++) {
-			String vorname = sheet.getSheetHelper().getTextFromCell(xSheet, Position.from(kennungSpalte, zeile));
-			if (vorname != null && !vorname.isEmpty()) {
-				letzte = zeile;
+		for (int idx = 0; idx < kennungen.size(); idx++) {
+			String kennung = kennungen.get(idx).get(0).getStringVal();
+			if (kennung != null && !kennung.isEmpty()) {
+				letzte = ERSTE_DATEN_ZEILE + idx;
 			}
 		}
 		return letzte;

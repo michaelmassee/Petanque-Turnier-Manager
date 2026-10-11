@@ -16,6 +16,7 @@ import com.sun.star.table.CellContentType;
 import com.sun.star.table.XCell;
 
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
+import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellstyle.CellStyleHelper;
@@ -96,11 +97,16 @@ public class SchweizerBlattschutzKonfiguration implements IBlattschutzKonfigurat
             List<SheetSchutzInfo> infos) {
         var schluessel = SheetMetadataHelper.getSchluesselMitPrefix(xDoc,
                 SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_SPIELRUNDE_PREFIX);
-        boolean zeitplanAktiv = new SchweizerKonfigurationSheet(ws).isZeitplanAktiv();
+        var konfigSheet = new SchweizerKonfigurationSheet(ws);
+        boolean zeitplanAktiv = konfigSheet.isZeitplanAktiv();
+        boolean freieBahnSpalte = konfigSheet.getSpielrundeSpielbahn() == SpielrundeSpielbahn.L;
         for (var key : schluessel) {
             SheetMetadataHelper.findeSheet(xDoc, key).ifPresent(sheet -> {
                 var bereiche = new ArrayList<RangePosition>();
                 bereiche.add(berechneSpielrundeErgebnisBereich(sheet));
+                if (freieBahnSpalte) {
+                    bereiche.add(berechneSpielrundeBahnBereich(sheet));
+                }
                 if (zeitplanAktiv) {
                     // Rundenstartzeit-Zelle (einziges haendisches Zeit-Eingabefeld, siehe
                     // SchweizerAbstractSpielrundeSheet.rundenStartzeitFeld)
@@ -132,6 +138,14 @@ public class SchweizerBlattschutzKonfiguration implements IBlattschutzKonfigurat
                 SchweizerAbstractSpielrundeSheet.ERG_TEAM_A_SPALTE,
                 SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE,
                 SchweizerAbstractSpielrundeSheet.ERG_TEAM_B_SPALTE,
+                ermittleLetzteSpielrundeZeile(sheet));
+    }
+
+    private RangePosition berechneSpielrundeBahnBereich(XSpreadsheet sheet) {
+        return RangePosition.from(
+                SchweizerAbstractSpielrundeSheet.BAHN_NR_SPALTE,
+                SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE,
+                SchweizerAbstractSpielrundeSheet.BAHN_NR_SPALTE,
                 ermittleLetzteSpielrundeZeile(sheet));
     }
 

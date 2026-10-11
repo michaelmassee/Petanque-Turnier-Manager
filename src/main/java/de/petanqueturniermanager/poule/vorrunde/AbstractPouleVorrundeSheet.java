@@ -9,7 +9,7 @@ import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
 
 import de.petanqueturniermanager.SheetRunner;
-import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeigeHelper;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeHelper;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -171,7 +171,7 @@ public abstract class AbstractPouleVorrundeSheet extends SheetRunner implements 
 
         getSheetHelper().setStringValueInCell(
                 schreibeHeaderZelle(xSheet, SPALTE_TEAM_A_NAME, 1,
-                        I18n.get("column.header.name"), headerFarbe));
+                        I18n.get(TeamAnzeigeHelper.headerI18nKey(konfigurationSheet.getSpielplanTeamAnzeige())), headerFarbe));
 
         getSheetHelper().setStringValueInCell(
                 schreibeHeaderZelle(xSheet, SPALTE_TEAM_B_NR, 1,
@@ -179,13 +179,15 @@ public abstract class AbstractPouleVorrundeSheet extends SheetRunner implements 
 
         getSheetHelper().setStringValueInCell(
                 schreibeHeaderZelle(xSheet, SPALTE_TEAM_B_NAME, 1,
-                        I18n.get("column.header.name"), headerFarbe));
+                        I18n.get(TeamAnzeigeHelper.headerI18nKey(konfigurationSheet.getSpielplanTeamAnzeige())), headerFarbe));
 
         getSheetHelper().setStringValueInCell(
-                schreibeHeaderZelle(xSheet, SPALTE_ERG_A, 1, "A", headerFarbe));
+                schreibeHeaderZelle(xSheet, SPALTE_ERG_A, 1,
+                        I18n.get("poule.vorrunde.header.ergebnis.a"), headerFarbe));
 
         getSheetHelper().setStringValueInCell(
-                schreibeHeaderZelle(xSheet, SPALTE_ERG_B, 1, "B", headerFarbe));
+                schreibeHeaderZelle(xSheet, SPALTE_ERG_B, 1,
+                        I18n.get("poule.vorrunde.header.ergebnis.b"), headerFarbe));
     }
 
     private StringCellValue schreibeHeaderZelle(XSpreadsheet xSheet, int spalte, int zeile,
@@ -445,7 +447,7 @@ public abstract class AbstractPouleVorrundeSheet extends SheetRunner implements 
      * Direkte VLOOKUP-Formel (R1: Team-Nr ist garantiert eine Zahl).
      */
     private String vlookupDirekt(String nrAdresse) {
-        return MeldeListeHelper.teamNameFormel(nrAdresse,
+        return TeamAnzeigeHelper.formel(nrAdresse, konfigurationSheet.getSpielplanTeamAnzeige(),
                 konfigurationSheet.isMeldeListeTeamnameAnzeigen(),
                 konfigurationSheet.getMeldeListeFormation(),
                 konfigurationSheet.isMeldeListeVereinsnameAnzeigen());

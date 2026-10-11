@@ -25,6 +25,7 @@ import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.rangliste.RangListeSpalte;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrundeSheet;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerTurnierTestDaten;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
@@ -58,6 +59,33 @@ public class SchweizerRanglisteSheetUITest extends BaseCalcUITest {
 		return RangeHelper
 				.from(rangliste, wkingSpreadsheet.getWorkingSpreadsheetDocument(), ranglisteRange)
 				.getDataFromRange();
+	}
+
+	@Test
+	public void ranglisteKannSpielernamenOderTeamnummerUnabhaengigVonDerSpielrundeAnzeigen()
+			throws GenerateException {
+		testDaten.generate(1, false);
+		var konfiguration = testDaten.naechsteSpielrunde.getKonfigurationSheet();
+
+		konfiguration.setRanglisteTeamAnzeige(TeamAnzeige.NAME);
+		new SchweizerRanglisteSheet(wkingSpreadsheet).doRun();
+		assertThat(ladeRanglisteDaten())
+				.extracting(zeile -> zeile.get(SchweizerRanglisteSheet.TEAM_NAME_SPALTE).getStringVal())
+				.anySatisfy(name -> assertThat(name).startsWith("Team "));
+
+		konfiguration.setRanglisteTeamAnzeige(TeamAnzeige.SPIELERNAMEN);
+		new SchweizerRanglisteSheet(wkingSpreadsheet).doRun();
+		RangeData mitSpielernamen = ladeRanglisteDaten();
+		assertThat(mitSpielernamen)
+				.extracting(zeile -> zeile.get(SchweizerRanglisteSheet.TEAM_NAME_SPALTE).getStringVal())
+				.anySatisfy(name -> assertThat(name).contains(" / "));
+
+		konfiguration.setRanglisteTeamAnzeige(TeamAnzeige.NR);
+		new SchweizerRanglisteSheet(wkingSpreadsheet).doRun();
+		for (RowData zeile : ladeRanglisteDaten()) {
+			assertThat(zeile.get(SchweizerRanglisteSheet.TEAM_NAME_SPALTE).getStringVal())
+					.isEqualTo(String.valueOf(zeile.get(SchweizerRanglisteSheet.TEAM_NR_SPALTE).getIntVal()));
+		}
 	}
 
 	@Test
@@ -375,7 +403,7 @@ public class SchweizerRanglisteSheetUITest extends BaseCalcUITest {
 	public void testFreilosBekommtFreispielPunkte() throws GenerateException {
 		int anzTeamsUngerade = ANZ_TEAMS + 1;
 		testDaten = new SchweizerTurnierTestDaten(wkingSpreadsheet, anzTeamsUngerade,
-				de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige.NR);
+				TeamAnzeige.NR);
 		testDaten.generate(1, true);
 
 		int freispielPlus = testDaten.naechsteSpielrunde.getKonfigurationSheet().getFreispielPunktePlus();

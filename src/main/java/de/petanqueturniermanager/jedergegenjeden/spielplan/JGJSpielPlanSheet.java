@@ -33,6 +33,7 @@ import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
+import de.petanqueturniermanager.helper.sheet.DatengueltigkeitHelper;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.RanglisteGeradeUngeradeFormatHelper;
@@ -46,7 +47,7 @@ import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationS
 import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSheet_Update;
 import de.petanqueturniermanager.ptmonline.PtmOnlineLiveAusloeser;
 import de.petanqueturniermanager.ptmonline.PtmOnlineSpielrundeSync;
-import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.model.LigaSpielPlan;
 import de.petanqueturniermanager.jedergegenjeden.JGJGruppenAufteiler;
@@ -264,7 +265,7 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet, PtmOnlineL
 			List<List<List<TeamPaarung>>> gruppenSpielplaeneH,
 			List<List<List<TeamPaarung>>> gruppenSpielplaeneR) throws GenerateException {
 
-		boolean zeigeNr = konfigurationSheet.getSpielplanTeamAnzeige() == SpielplanTeamAnzeige.NR;
+		boolean zeigeNr = konfigurationSheet.getSpielplanTeamAnzeige() == TeamAnzeige.NR;
 		String freispielText = I18n.get("spielplan.freispiel.name");
 
 		JGJGruppenSpielplaeneSheet aushang = new JGJGruppenSpielplaeneSheet(this, konfigurationSheet);
@@ -345,7 +346,7 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet, PtmOnlineL
 				.setShrinkToFit(true);
 		StringCellValue stValHeader = StringCellValue.from(getXSpreadSheet(), headerPos)
 				.setColumnProperties(colPropErsteSpalten);
-		getSheetHelper().setStringValueInCell(stValHeader.setValue("Nr.").setEndPosMergeZeilePlus(1));
+		getSheetHelper().setStringValueInCell(stValHeader.setValue(I18n.get("column.header.nr")).setEndPosMergeZeilePlus(1));
 		colPropErsteSpalten.setWidth(800);
 
 		getSheetHelper().setStringValueInCell(stValHeader
@@ -477,7 +478,7 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet, PtmOnlineL
 
 	private void insertFormulaTeamNamen() throws GenerateException {
 		int letzteSpielZeile = letzteSpielZeile();
-		boolean zeigeNr = konfigurationSheet.getSpielplanTeamAnzeige() == SpielplanTeamAnzeige.NR;
+		boolean zeigeNr = konfigurationSheet.getSpielplanTeamAnzeige() == TeamAnzeige.NR;
 		String freispielText = I18n.get("spielplan.freispiel.name");
 
 		RangeData nrData = RangeHelper.from(this, RangePosition.from(
@@ -640,12 +641,13 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet, PtmOnlineL
 	}
 
 	private void formatiereErgebnisZellen(RangePosition ergRange) throws GenerateException {
+		DatengueltigkeitHelper.entfernePruefungFuerSpielpunkte(this, ergRange);
 		String cellA = "INDIRECT(ADDRESS(ROW();" + (SPIELPNKT_A_SPALTE + 1) + "))";
 		String cellB = "INDIRECT(ADDRESS(ROW();" + (SPIELPNKT_B_SPALTE + 1) + "))";
 		String formulaGleicheWerte = "AND(NOT(ISBLANK(" + cellA + "));NOT(ISBLANK(" + cellB + "));"
 				+ cellA + "=" + cellB + ")";
 		ConditionalFormatHelper.from(this, ergRange).clear()
-				.formula1("0").formula2("13").operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndDoReset()
+				.formula1("0").formula2(String.valueOf(DatengueltigkeitHelper.MAX_SPIELPUNKTE)).operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndDoReset()
 				.formula1("ISTEXT(" + ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")")
 				.operator(ConditionOperator.FORMULA).styleIsFehler().applyAndDoReset()
 				.formula1(formulaGleicheWerte).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndDoReset();

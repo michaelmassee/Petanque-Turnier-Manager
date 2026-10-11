@@ -6,7 +6,8 @@ package de.petanqueturniermanager.schweizer.konfiguration;
 import java.util.ArrayList;
 import java.util.List;
 
-import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
+import de.petanqueturniermanager.basesheet.konfiguration.TeamAnzeigePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.helper.ISheet;
@@ -24,7 +25,7 @@ import de.petanqueturniermanager.supermelee.SpielRundeNr;
  * @author Michael Massee
  *
  */
-public class SchweizerPropertiesSpalte extends BasePropertiesSpalte implements ISchweizerPropertiesSpalte {
+public class SchweizerPropertiesSpalte extends TeamAnzeigePropertiesSpalte implements ISchweizerPropertiesSpalte {
 
 	public static final List<ConfigProperty<?>> KONFIG_PROPERTIES = new ArrayList<>();
 
@@ -64,7 +65,8 @@ public class SchweizerPropertiesSpalte extends BasePropertiesSpalte implements I
 				.setDescription("config.desc.header.rechts"));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELRUNDE)
-				.setDefaultVal(1).setDescription("config.desc.aktuelle.spielrunde"));
+				.setDefaultVal(1).setDescription("config.desc.aktuelle.spielrunde")
+				.setShortDescription("config.label.aktuelle.spielrunde"));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELRUNDE_COLOR_BACK_GERADE)
 				.setDefaultVal(DEFAULT_GERADE_BACK_COLOR)
@@ -76,7 +78,8 @@ public class SchweizerPropertiesSpalte extends BasePropertiesSpalte implements I
 				.setDefaultVal(DEFAULT_HEADER_BACK_COLOR).setDescription("config.desc.spielrunde.header"));
 
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_SPIELRUNDE_SPIELBAHN)
-				.setDefaultVal(SpielrundeSpielbahn.X.name()).setDescription("config.desc.spielbahn"))
+				.setDefaultVal(SpielrundeSpielbahn.X.name()).setDescription("config.desc.spielbahn")
+				.setShortDescription("config.label.spielbahn"))
 				.addAuswahl(SpielrundeSpielbahn.X.name(), "Keine Spalte")
 				.addAuswahl(SpielrundeSpielbahn.L.name(), "Leere Spalte")
 				.addAuswahl(SpielrundeSpielbahn.N.name(), "Durchnummerieren (1-n)")
@@ -104,21 +107,34 @@ public class SchweizerPropertiesSpalte extends BasePropertiesSpalte implements I
 				.intern());
 
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE)
-				.setDefaultVal(SpielplanTeamAnzeige.NR.name())
-				.setDescription("config.desc.schweizer.spielplan.team.anzeige"))
-				.addAuswahl(SpielplanTeamAnzeige.NR.name(), "Teamnummer")
-				.addAuswahl(SpielplanTeamAnzeige.NAME.name(), "Teamname"));
+				.setDefaultVal(TeamAnzeige.NR.name())
+				.setDescription("config.desc.schweizer.spielplan.team.anzeige")
+				.setShortDescription("config.label.spielplan.team.anzeige"))
+				.addAuswahl(TeamAnzeige.NR.name(), "Teamnummer")
+				.addAuswahl(TeamAnzeige.SPIELERNAMEN.name(), "Spielernamen")
+				.addAuswahl(TeamAnzeige.NAME.name(), "Teamname"));
+
+		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_RANGLISTE_TEAM_ANZEIGE)
+				.setDefaultVal(TeamAnzeige.NAME.name())
+				.setDescription("config.desc.schweizer.rangliste.team.anzeige")
+				.setShortDescription("config.label.rangliste.team.anzeige"))
+				.addAuswahl(TeamAnzeige.NR.name(), "Teamnummer")
+				.addAuswahl(TeamAnzeige.SPIELERNAMEN.name(), "Spielernamen")
+				.addAuswahl(TeamAnzeige.NAME.name(), "Teamname"));
 
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_RANKING_MODUS)
 				.setDefaultVal(SchweizerRankingModus.MIT_BUCHHOLZ.name())
-				.setDescription("config.desc.schweizer.ranking.modus"))
+				.setDescription("config.desc.schweizer.ranking.modus")
+				.setShortDescription("config.label.ranking.modus"))
 				.addAuswahl(SchweizerRankingModus.MIT_BUCHHOLZ.name(), "Mit Buchholz (Standard)")
 				.addAuswahl(SchweizerRankingModus.OHNE_BUCHHOLZ.name(), "Ohne Buchholz"));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_FREISPIEL_PUNKTE_PLUS)
-				.setDefaultVal(13).setDescription("config.desc.freispiel.punkte.plus"));
+				.setDefaultVal(13).setDescription("config.desc.freispiel.punkte.plus")
+				.setShortDescription("config.label.freispiel.punkte.plus"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_FREISPIEL_PUNKTE_MINUS)
-				.setDefaultVal(7).setDescription("config.desc.freispiel.punkte.minus"));
+				.setDefaultVal(7).setDescription("config.desc.freispiel.punkte.minus")
+				.setShortDescription("config.label.freispiel.punkte.minus"));
 
 		KONFIG_PROPERTIES.add(ZeitplanConfigProperty.<Boolean>from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_ZEITPLAN_AKTIV)
 				.setDefaultVal(false).setDescription("config.desc.zeitplan.aktiv"));
@@ -254,8 +270,11 @@ public class SchweizerPropertiesSpalte extends BasePropertiesSpalte implements I
 		// Rohen Property-Wert prüfen (nicht getSpielplanTeamAnzeige(): dessen defensiver Fallback
 		// würde nach dem Deaktivieren immer NR liefern und den Reset in Zeile unten verhindern —
 		// der gespeicherte Wert bliebe fälschlich auf NAME stehen).
-		if (!anzeigen && readRawSpielplanTeamAnzeige() == SpielplanTeamAnzeige.NAME) {
-			setStringProperty(KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE, SpielplanTeamAnzeige.NR.name());
+		if (!anzeigen && readRawSpielplanTeamAnzeige() == TeamAnzeige.NAME) {
+			setStringProperty(KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE, TeamAnzeige.NR.name());
+		}
+		if (!anzeigen && getRanglisteTeamAnzeige() == TeamAnzeige.NAME) {
+			setStringProperty(KONFIG_PROP_RANGLISTE_TEAM_ANZEIGE, TeamAnzeige.SPIELERNAMEN.name());
 		}
 		setStringProperty(KONFIG_PROP_MELDELISTE_TEAMNAME, anzeigen ? "J" : "N");
 	}
@@ -266,24 +285,26 @@ public class SchweizerPropertiesSpalte extends BasePropertiesSpalte implements I
 	}
 
 	@Override
-	public SpielplanTeamAnzeige getSpielplanTeamAnzeige() {
-		SpielplanTeamAnzeige anzeige = readRawSpielplanTeamAnzeige();
+	public TeamAnzeige getSpielplanTeamAnzeige() {
+		TeamAnzeige anzeige = readRawSpielplanTeamAnzeige();
 		// Defensive Absicherung (z.B. bei älteren Dateien mit inkonsistent gesetzten Properties):
 		// ohne Meldeliste-Teamname gibt es keine Team-Namen zum Auflösen, siehe setMeldeListeTeamnameAnzeigen.
-		if (anzeige == SpielplanTeamAnzeige.NAME && !isMeldeListeTeamnameAnzeigen()) {
-			return SpielplanTeamAnzeige.NR;
+		if (anzeige == TeamAnzeige.NAME && !isMeldeListeTeamnameAnzeigen()) {
+			return TeamAnzeige.NR;
 		}
 		return anzeige;
 	}
 
-	private SpielplanTeamAnzeige readRawSpielplanTeamAnzeige() {
-		return readEnumProperty(KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE, SpielplanTeamAnzeige.class, SpielplanTeamAnzeige.NR);
+	private TeamAnzeige readRawSpielplanTeamAnzeige() {
+		return readEnumProperty(KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE, TeamAnzeige.class, TeamAnzeige.NR);
 	}
 
 	@Override
-	public void setSpielplanTeamAnzeige(SpielplanTeamAnzeige anzeige) {
-		setStringProperty(KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE, anzeige.name());
-		if (anzeige == SpielplanTeamAnzeige.NAME && !isMeldeListeTeamnameAnzeigen()) {
+	public void setSpielplanTeamAnzeige(TeamAnzeige anzeige) {
+		schreibeTeamAnzeige(KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE, anzeige);
+		// Bisheriges Schweizer-Verhalten: der Spielplan-Getter fällt ohne Teamname-Spalte auf NR
+		// zurück, deshalb aktiviert die Wahl von NAME die Spalte.
+		if (anzeige == TeamAnzeige.NAME && !isMeldeListeTeamnameAnzeigen()) {
 			setMeldeListeTeamnameAnzeigen(true);
 		}
 	}

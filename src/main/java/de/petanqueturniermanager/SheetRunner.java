@@ -29,6 +29,7 @@ import de.petanqueturniermanager.webserver.WebServerManager;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.LoMainThread;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
@@ -242,7 +243,7 @@ public abstract class SheetRunner extends Thread {
 						// Lazy-Unprotect-Scope öffnen: ein einziges entsperren/schuetzen pro Kommando
 						// statt mehrfaches Toggle in jeder Sub-Operation. Echte Entsperrung passiert
 						// erst beim ersten Style-/CF-Trigger (ConditionalFormatHelper / RangeHelper.clearRange).
-						if (turnierSystem != TurnierSystem.KEIN && TurnierModus.get().istAktiv()) {
+						if (turnierSystem != TurnierSystem.KEIN && TurnierModus.get().istAktiv(workingSpreadsheet)) {
 							BlattschutzRegistry.fuer(turnierSystem)
 									.ifPresent(k -> BlattschutzManager.get().beginCommandScope(k, workingSpreadsheet));
 						}
@@ -349,6 +350,12 @@ public abstract class SheetRunner extends Thread {
 				// Erst JETZT lässt sich der Vor-Lauf-Zustand verlässlich wiederherstellen, damit
 				// ein reiner Formatier-/Tab-Wechsel-Lauf das Dokument nicht als geändert markiert.
 				setzeDokumentModified(docModifiedVorRun);
+			}
+
+			if (istTurnierModusAutomatikAusloeser()) {
+				// Fire-and-forget: kein Warten auf den Main-Thread – Aufrufer mit start()+join()
+				// können selbst auf dem Main-Thread blockieren (Deadlock-Gefahr).
+				LoMainThread.post(getxContext(), this::aktiviereTurnierModusAutomatisch);
 			}
 
 			// Hinweis: ehemals folgte hier ein fokussiereArbeitsDokument()-Aufruf,
@@ -661,6 +668,30 @@ public abstract class SheetRunner extends Thread {
 
 	public XCalculatable getxCalculatable() {
 		return getWorkingSpreadsheet().getxCalculatable();
+	}
+
+	/**
+	 * Nur erfolgreiche Benutzer-Aktionen (Menü/Toolbar via {@link #start()}) schalten den
+	 * Turniermodus automatisch ein – Hintergrundläufe wie der Tabwechsel-Refresh nicht, sonst
+	 * würde ein manuell ausgeschalteter Turniermodus schon beim nächsten Tabwechsel zurückkehren.
+	 */
+	private boolean istTurnierModusAutomatikAusloeser() {
+		return koordinatorVorgekoppelt && !silentBackground && !istFehlgeschlagen && !documentDisposed
+				&& isDocumentAlive();
+	}
+
+	/**
+	 * Läuft auf dem LO-Main-Thread. Betrifft nur das Dokument dieses Runners, nie das
+	 * gerade fokussierte. Startet inzwischen ein neuer Lauf, wird übersprungen – dessen Ende
+	 * prüft erneut.
+	 */
+	private void aktiviereTurnierModusAutomatisch() {
+		if (isRunning() || !isDocumentAlive()) {
+			return;
+		}
+		if (TurnierModus.get().aktiviereAutomatischFallsNoetig(workingSpreadsheet)) {
+			koordinator.benachrichtigeListener(); // Turniermodus-Haken in der Toolbar aktualisieren
+		}
 	}
 
 	public static boolean isRunning() {

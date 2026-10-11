@@ -6,7 +6,7 @@ package de.petanqueturniermanager.formulex.konfiguration;
 import java.util.ArrayList;
 import java.util.List;
 
-import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
+import de.petanqueturniermanager.basesheet.konfiguration.TeamAnzeigePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.konfiguration.IFreispielPropertiesSpalte;
 import de.petanqueturniermanager.basesheet.konfiguration.IZeitplanPropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
@@ -21,11 +21,12 @@ import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
 import de.petanqueturniermanager.konfigdialog.HeaderFooterConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ZeitplanConfigProperty;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 
 /**
  * Konfigurationseigenschaften für das Formule X Turniersystem.
  */
-public class FormuleXPropertiesSpalte extends BasePropertiesSpalte
+public class FormuleXPropertiesSpalte extends TeamAnzeigePropertiesSpalte
         implements IFreispielPropertiesSpalte, IZeitplanPropertiesSpalte {
 
     public static final List<ConfigProperty<?>> KONFIG_PROPERTIES = new ArrayList<>();
@@ -106,6 +107,13 @@ public class FormuleXPropertiesSpalte extends BasePropertiesSpalte
                 .setDefaultVal("N").setDescription("config.desc.schweizer.vereinsname"))
                 .addAuswahl("J", "Ja").addAuswahl("N", "Nein")
                 .intern());
+
+        KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_RANGLISTE_TEAM_ANZEIGE)
+                .setDefaultVal(TeamAnzeige.NAME.name())
+                .setDescription("config.desc.formulex.rangliste.team.anzeige"))
+                .addAuswahl(TeamAnzeige.NR.name(), "Teamnummer")
+                .addAuswahl(TeamAnzeige.SPIELERNAMEN.name(), "Spielernamen")
+                .addAuswahl(TeamAnzeige.NAME.name(), "Teamname"));
 
         KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_FREISPIEL_PUNKTE_PLUS)
                 .setDefaultVal(13).setDescription("config.desc.freispiel.punkte.plus"));
@@ -236,6 +244,8 @@ public class FormuleXPropertiesSpalte extends BasePropertiesSpalte
     public void setMeldeListeVereinsnameAnzeigen(boolean anzeigen) {
         setStringProperty(KONFIG_PROP_MELDELISTE_VEREINSNAME, anzeigen ? "J" : "N");
     }
+
+
 
     @Override
     public Integer getFreispielPunktePlus() {

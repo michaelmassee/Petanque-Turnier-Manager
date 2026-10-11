@@ -109,7 +109,7 @@ public class SpielrundePlan extends SheetRunner implements ISheet {
 				.from(this, getSheetName(getSpielTag(), getSpielRundeNr()),
 						SheetMetadataHelper.schluesselSupermeleeSpielrundePlan(getSpielTag().getNr(),
 								getSpielRundeNr().getNr()))
-				.pos(DefaultSheetPos.SUPERMELEE_WORK).spielTagPageStyle(getSpielTag()).setForceCreate(true).setActiv()
+				.pos(DefaultSheetPos.SUPERMELEE_WORK).spielTagPageStyle(getSpielTag()).setForceCreate(true).hideGrid().setActiv()
 				.tabColor(konfigurationSheet.getSpielrundeTabFarbe()).create();
 		if (!neuesSheet.isDidCreate()) {
 			ProcessBox.from().info("Abbruch vom Benutzer, Spielrundeplan wurde nicht erstellt");
@@ -183,7 +183,8 @@ public class SpielrundePlan extends SheetRunner implements ISheet {
 				ERSTE_DATEN_ZEILE + (maxAnzSpielerInSpalte - 1));
 		// Header Spielrunde
 		StringCellValue spielrunde = StringCellValue.from(getXSpreadSheet(), SPIELER_NR_SPALTE, HEADER_ZEILE)
-				.setEndPosMergeSpalte(rechtsUnten.getSpalte()).setValue("Spielrunde " + getSpielRundeNr().getNr())
+				.setEndPosMergeSpalte(rechtsUnten.getSpalte())
+				.setValue(I18n.get("supermelee.spielrunde.header.spielrunde", getSpielRundeNr().getNr()))
 				.centerHoriJustify().centerVertJustify().setCharHeight(14);
 		getSheetHelper().setStringValueInCell(spielrunde);
 		printBereichDefinieren(rechtsUnten);
@@ -201,11 +202,11 @@ public class SpielrundePlan extends SheetRunner implements ISheet {
 		int spielerSpalte = ersteSpielerNr.getSpalte();
 		StringCellValue header = StringCellValue.from(getXSpreadSheet(), ersteHeader).setCharWeight(FontWeight.BOLD)
 				.setCharHeight(8).setShrinkToFit(true);
-		getSheetHelper().setStringValueInCell(header.setValue("Nr."));
+		getSheetHelper().setStringValueInCell(header.setValue(I18n.get("column.header.nr")));
 		getSheetHelper().setStringValueInCell(
-				header.spalte(spielerSpalte).spaltePlus(SPIELER_NAME_OFFS_SPALTE).setValue("Name"));
+				header.spalte(spielerSpalte).spaltePlus(SPIELER_NAME_OFFS_SPALTE).setValue(I18n.get("column.header.name")));
 		getSheetHelper().setStringValueInCell(
-				header.spalte(spielerSpalte).spaltePlus(SPIELER_TEAM_OFFS_SPALTE).setValue("Team"));
+				header.spalte(spielerSpalte).spaltePlus(SPIELER_TEAM_OFFS_SPALTE).setValue(I18n.get("column.header.team")));
 		getSheetHelper().setStringValueInCell(
 				header.spalte(spielerSpalte).spaltePlus(SPIELER_BAHN_NR_OFFS_SPALTE).setValue(I18n.get("column.header.bahn")));
 	}

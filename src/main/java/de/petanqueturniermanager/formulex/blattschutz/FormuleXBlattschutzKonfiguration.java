@@ -14,6 +14,7 @@ import com.sun.star.table.CellContentType;
 import com.sun.star.table.XCell;
 
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
+import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.formulex.konfiguration.FormuleXKonfigurationSheet;
@@ -93,13 +94,20 @@ public class FormuleXBlattschutzKonfiguration implements IBlattschutzKonfigurati
             List<SheetSchutzInfo> infos) {
         var schluessel = SheetMetadataHelper.getSchluesselMitPrefix(xDoc,
                 SheetMetadataHelper.SCHLUESSEL_FORMULEX_SPIELRUNDE_PREFIX);
-        boolean zeitplanAktiv = new FormuleXKonfigurationSheet(ws).isZeitplanAktiv();
+        var konfigSheet = new FormuleXKonfigurationSheet(ws);
+        boolean zeitplanAktiv = konfigSheet.isZeitplanAktiv();
+        boolean freieBahnSpalte = konfigSheet.getSpielrundeSpielbahn() == SpielrundeSpielbahn.L;
         for (var key : schluessel) {
             SheetMetadataHelper.findeSheet(xDoc, key).ifPresent(sheet -> {
                 try {
                     int letzteZeile = ermittleLetzteSpielrundeZeile(sheet);
                     List<RangePosition> editierbar = new ArrayList<>(FormuleXAbstractSpielrundeSheet
                             .ermittleEditierbareErgebnisRanges(sheet, xDoc, letzteZeile));
+                    if (freieBahnSpalte) {
+                        editierbar.add(RangePosition.from(FormuleXAbstractSpielrundeSheet.BAHN_NR_SPALTE,
+                                FormuleXAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE,
+                                FormuleXAbstractSpielrundeSheet.BAHN_NR_SPALTE, letzteZeile));
+                    }
                     if (zeitplanAktiv) {
                         // Rundenstartzeit-Zelle (einziges haendisches Zeit-Eingabefeld, siehe
                         // FormuleXAbstractSpielrundeSheet.rundenStartzeitFeld)

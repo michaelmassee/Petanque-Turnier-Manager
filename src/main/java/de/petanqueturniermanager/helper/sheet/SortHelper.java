@@ -26,6 +26,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
 
 /**
  * @author Michael Massee
@@ -33,10 +34,8 @@ import de.petanqueturniermanager.helper.position.RangePosition;
  */
 public class SortHelper {
 
-	// private static final Logger logger = LogManager.getLogger(SortHelper.class);
 	private final RangePosition rangePositionToSort;
 
-	// private int sortSpalte = 0; // 0 = erste spalte
 	private volatile boolean aufSteigendSortieren = true;
 	private volatile boolean caseSensitive = false;
 	private volatile boolean bindFormatsToContent = false;
@@ -223,6 +222,9 @@ public class SortHelper {
 		propVal.Value = bindFormatsToContent;
 		aSortDesc[1] = propVal;
 
+		// LO bricht das Sortieren eines gesperrten Bereichs per API lautlos ab (SortOperation:
+		// ScEditableTester + bApi) – im Turnier-Modus ist z.B. die Nr-Spalte gesperrt.
+		BlattschutzManager.get().ensureUnprotectedInScope();
 		xSortable.sort(aSortDesc);
 	}
 

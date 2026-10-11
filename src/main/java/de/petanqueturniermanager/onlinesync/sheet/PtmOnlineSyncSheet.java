@@ -211,7 +211,7 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 	 */
 	public void anlegen() throws GenerateException {
 		NewSheet.from(this, sheetName(), metadatenSchluessel()).pos(DefaultSheetPos.SUPERMELEE_WORK).useIfExist()
-				.create();
+				.hideGrid().create();
 		RangeData header = new RangeData();
 		RowData kopfzeile = header.addNewRow();
 		List.of(I18n.get("ptmonline.sheet.mapping.header.spielernr"), I18n.get("ptmonline.sheet.mapping.header.name"),

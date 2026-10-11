@@ -38,9 +38,8 @@ public class AuswahlConfigElement implements ConfigElement, XItemListener {
 			AuswahlConfigProperty configProperty, WorkingSpreadsheet workingSpreadsheet, boolean readOnly) {
 		this.configProperty = checkNotNull(configProperty);
 		this.workingSpreadsheet = checkNotNull(workingSpreadsheet);
-		var labelText = configProperty.getDescription() != null ? configProperty.getDescription() : configProperty.getKey();
-		labelPlusCombobox = LabelPlusCombobox.from(guiFactoryCreateParam).labelText(labelText)
-				.helpText(labelText).addAuswahlItems(configProperty.getAuswahl())
+		labelPlusCombobox = LabelPlusCombobox.from(guiFactoryCreateParam).labelText(configProperty.getLabelText())
+				.helpText(configProperty.getHelpText()).addAuswahlItems(configProperty.getAuswahl())
 				.addListener(this).select(getComboboxItemValue()).enabled(!readOnly);
 	}
 

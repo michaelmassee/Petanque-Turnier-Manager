@@ -47,6 +47,8 @@ import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationS
 import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSheet_Update;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeigeHelper;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
@@ -234,11 +236,12 @@ public class JGJRanglisteSheet extends SheetRunner implements ISheet, IRangliste
     }
 
     private Map<Integer, String> leseTeamNamen(JGJMeldeListeSheet_Update meldeListe) throws GenerateException {
-        return meldeListe.leseTeamNamen();
+        return meldeListe.leseTeamNamen(konfigurationSheet.getRanglisteTeamAnzeige());
     }
 
     protected void insertHeader(XSpreadsheet sheet) throws GenerateException {
         Integer headerFarbe = konfigurationSheet.getRanglisteHeaderFarbe();
+        TeamAnzeige teamAnzeige = konfigurationSheet.getRanglisteTeamAnzeige();
 
         int[][] spaltenBreiten = {
                 { TEAM_NAME_SPALTE, COL_WIDTH_NAME },
@@ -256,6 +259,7 @@ public class JGJRanglisteSheet extends SheetRunner implements ISheet, IRangliste
                             .setHoriJustify(CellHoriJustify.CENTER)
                             .setVertJustify(CellVertJustify2.CENTER));
         }
+        getSheetHelper().setColumnVisible(sheet, TEAM_NAME_SPALTE, !teamAnzeige.istNummer());
 
         int[][] einzelSpalten = {
                 { TEAM_NR_SPALTE, 0 },
@@ -264,7 +268,7 @@ public class JGJRanglisteSheet extends SheetRunner implements ISheet, IRangliste
         };
         String[] einzelTexte = {
                 I18n.get("column.header.nr"),
-                I18n.get("column.header.name"),
+                I18n.get(TeamAnzeigeHelper.headerI18nKey(teamAnzeige)),
                 I18n.get("column.header.platz"),
         };
         for (int i = 0; i < einzelSpalten.length; i++) {

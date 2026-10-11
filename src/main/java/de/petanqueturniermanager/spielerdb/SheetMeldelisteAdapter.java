@@ -58,23 +58,22 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
  * (n = {@link Formation#getAnzSpieler()}) wird als <b>eine</b> Zeile in genau
  * diese Slots geschrieben — Vorname und Nachname kommen aus
  * {@link SpielerMitVerein#vorname()} / {@link SpielerMitVerein#nachname()},
- * der Vereinsname aus {@link SpielerMitVerein#vereinName()}.
+ * der Vereinsname aus {@link SpielerMitVerein#vereinName()}. Bei der Spieler-DB-Übernahme
+ * ({@link #schreibeBlock}) bleibt die Aktiv-Spalte (Checkin) leer – übernommene Teams gelten
+ * als angemeldet.
  */
 final class SheetMeldelisteAdapter implements MeldelisteZiel {
 
     private static final Logger logger = LogManager.getLogger(SheetMeldelisteAdapter.class);
 
     private static final int SPALTE_NR = 0;
-    private static final int HEADER_ZEILE_MAX_SCAN = 5;
     private static final int MAX_DATEN_ZEILE = 999;
     private static final int MAX_UUID_SPALTE_SCAN = 100;
 
     /**
      * Wert in der Aktiv-Spalte: „nimmt teil". Die Konvention ist über
      * Schweizer/JGJ/KO/Poule/FormuleX/Kaskade hinweg konstant
-     * ({@code AKTIV_WERT_NIMMT_TEIL = 1}); die Aktiv-Spalte selbst sitzt zwei
-     * Spalten rechts neben der letzten Spielerdaten-Spalte (dazwischen liegt
-     * SP/RNG). Gesetzt nur für {@link NeueMeldungTeilnahme#AKTIV}.
+     * ({@code AKTIV_WERT_NIMMT_TEIL = 1}). Gesetzt nur für {@link NeueMeldungTeilnahme#AKTIV}.
      */
     private static final int AKTIV_WERT_NIMMT_TEIL = 1;
     /** In allen unterstützten Team-Meldelisten bedeutet 2 „ausgestiegen/abgemeldet“. */
@@ -98,42 +97,39 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
     private final int anzSpieler;
     private final int ersterSpielerOffset;
     private final int spaltenProSpieler;
-    /** Erste Spalte rechts vom letzten Spieler-Block (exklusive). */
+    /** Letzte Spielerdaten-Spalte (inklusive). */
     private final int letzteSchreibSpalte;
-    /** Nur Supermelee: Spieltag, dessen Spalte als Aktiv-Spalte gilt (je Spieltag eine eigene Spalte). */
-    private final int aktiverSpieltag;
+    /**
+     * Aktiv-Spalte (Checkin), Lage je Meldelisten-Typ aus {@link MeldelisteLayout#aktivSpaltenAbstand()}; bei
+     * Supermelee die des aktiven Spieltags.
+     */
+    private final int aktivSpalte;
     /** Einmal ermittelte UUID-Spalte, {@code -1} solange unbekannt (siehe {@link #uuidSpalte()}). */
     private int uuidSpalteCache = -1;
 
     private SheetMeldelisteAdapter(XSpreadsheetDocument doc, XSpreadsheet sheet,
-            SheetHelper sheetHelper, TurnierSystem system, Formation formation,
-            int ersteDatenZeile, boolean teamnameAktiv, boolean vereinsnameAktiv, int aktiverSpieltag) {
+            SheetHelper sheetHelper, TurnierSystem system, MeldelisteLayout layout) {
         this.doc = doc;
         this.sheet = sheet;
         this.sheetHelper = sheetHelper;
         this.system = system;
-        this.formation = formation;
-        this.ersteDatenZeile = ersteDatenZeile;
-        this.teamnameAktiv = teamnameAktiv;
-        this.vereinsnameAktiv = vereinsnameAktiv;
+        this.formation = layout.formation();
+        this.ersteDatenZeile = layout.ersteDatenZeile();
+        this.teamnameAktiv = layout.teamnameAktiv();
+        this.vereinsnameAktiv = layout.vereinsnameAktiv();
         this.anzSpieler = Math.max(1, formation.getAnzSpieler());
-        this.ersterSpielerOffset = ersterSpielerOffset(teamnameAktiv);
+        this.ersterSpielerOffset = teamnameAktiv ? 2 : 1;
         this.spaltenProSpieler = vereinsnameAktiv ? 3 : 2;
         this.letzteSchreibSpalte = ersterSpielerOffset + anzSpieler * spaltenProSpieler - 1;
-        this.aktiverSpieltag = Math.max(1, aktiverSpieltag);
+        this.aktivSpalte = letzteSchreibSpalte + layout.aktivSpaltenAbstand();
     }
 
     /**
-     * Baut einen Adapter aus expliziten Layout-Werten (Formation und Anzeige-Flags),
-     * die der Aufrufer aus dem system-spezifischen KonfigurationSheet gelesen hat.
-     * Vermeidet Property-Lookups direkt im Adapter — die Quelle der Wahrheit ist
-     * jeweils der zum Turniersystem passende {@code *KonfigurationSheet}.
-     *
-     * @param aktiverSpieltag nur Supermelee: aktiver Spieltag, dessen Spalte Check-in und Abmeldung trägt; sonst
-     *                        ohne Bedeutung
+     * Baut einen Adapter aus dem Layout, das der Aufrufer aus dem system-spezifischen
+     * KonfigurationSheet gelesen hat. Vermeidet Property-Lookups direkt im Adapter.
      */
     static Optional<MeldelisteZiel> fuer(WorkingSpreadsheet ws, String sheetName, TurnierSystem ts,
-            Formation formation, boolean teamnameAktiv, boolean vereinsnameAktiv, int aktiverSpieltag) {
+            MeldelisteLayout layout) {
         try {
             if (ts == null || ts == TurnierSystem.KEIN) {
                 return Optional.empty();
@@ -143,46 +139,11 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
             if (sheet == null) {
                 return Optional.empty();
             }
-            int datenZeile = ermittleErsteDatenZeile(sh, sheet, ersterSpielerOffset(teamnameAktiv));
-            return Optional.of(new SheetMeldelisteAdapter(
-                    ws.getWorkingSpreadsheetDocument(), sheet, sh, ts, formation, datenZeile,
-                    teamnameAktiv, vereinsnameAktiv, aktiverSpieltag));
+            return Optional.of(new SheetMeldelisteAdapter(ws.getWorkingSpreadsheetDocument(), sheet, sh, ts, layout));
         } catch (Exception e) {
             logger.warn("Adapter-Erkennung fehlgeschlagen", e);
             return Optional.empty();
         }
-    }
-
-    /** Spalte des ersten Vornamens: rechts neben Nr und ggf. Teamname. */
-    private static int ersterSpielerOffset(boolean teamnameAktiv) {
-        return teamnameAktiv ? 2 : 1;
-    }
-
-    /**
-     * Erste Datenzeile: die erste Zeile mit Nr. Ohne vergebene Nr (leere oder noch nicht
-     * aktualisierte Meldeliste) die Zeile unter der Spaltenüberschrift „Vorname“ – sonst würde
-     * die Überschriftenzeile als Meldung „Vorname Nachname“ gelesen.
-     */
-    private static int ermittleErsteDatenZeile(SheetHelper sh, XSpreadsheet sheet, int vornameSpalte) {
-        for (int zeile = 0; zeile <= HEADER_ZEILE_MAX_SCAN; zeile++) {
-            String inhalt = sicherText(sh, sheet, SPALTE_NR, zeile).strip();
-            if (inhalt.matches("\\d+")) {
-                return zeile;
-            }
-        }
-        String vornameUeberschrift = I18n.get("column.header.vorname");
-        for (int zeile = 0; zeile <= HEADER_ZEILE_MAX_SCAN; zeile++) {
-            if (vornameUeberschrift.equalsIgnoreCase(sicherText(sh, sheet, vornameSpalte, zeile).strip())) {
-                return zeile + 1;
-            }
-        }
-        // Fallback: erste Zeile direkt nach erkanntem Header — Spalte A leer.
-        for (int zeile = 0; zeile <= HEADER_ZEILE_MAX_SCAN; zeile++) {
-            if (sicherText(sh, sheet, SPALTE_NR, zeile).strip().isEmpty()) {
-                return zeile;
-            }
-        }
-        return 2;
     }
 
     private static String sicherText(SheetHelper sh, XSpreadsheet sheet, int spalte, int zeile) {
@@ -232,7 +193,6 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
     public MeldelisteStatus getMeldelisteStatus() {
         int checkin = 0;
         int gesamt = 0;
-        int aktivSpalte = aktivSpalte();
         for (int zeile = ersteDatenZeile; zeile <= MAX_DATEN_ZEILE; zeile++) {
             if (!istTeamZeileBelegt(zeile)) {
                 break;
@@ -316,7 +276,7 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
      */
     @Override
     public int schreibeBlock(List<SpielerMitVerein> spieler) throws MeldelisteSchreibException {
-        return schreibeBlockUndLiefereZeile(spieler, NeueMeldungTeilnahme.AKTIV) < 0 ? 0 : spieler.size();
+        return schreibeBlockUndLiefereZeile(spieler, NeueMeldungTeilnahme.INAKTIV) < 0 ? 0 : spieler.size();
     }
 
     @Override
@@ -364,11 +324,11 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
             RangePosition pos = RangePosition.from(1, zeile, letzteSchreibSpalte, zeile);
             RangeHelper.from(sheet, doc, pos).setDataInRange(rangeData);
 
-            // Aktiv-Spalte (= letzteDatenSpalte + 2) nur bei AKTIV auf „nimmt teil"
+            // Aktiv-Spalte nur bei AKTIV auf „nimmt teil"
             // setzen; INAKTIV lässt sie leer (noch nicht eingecheckt).
             if (teilnahme == NeueMeldungTeilnahme.AKTIV) {
                 BlattschutzManager.get().schreibeEntsperrt(sheet, () -> sheetHelper.setNumberValueInCell(NumberCellValue
-                        .from(sheet, Position.from(aktivSpalte(), zeile)).setValue(AKTIV_WERT_NIMMT_TEIL)));
+                        .from(sheet, Position.from(aktivSpalte, zeile)).setValue(AKTIV_WERT_NIMMT_TEIL)));
             }
             return zeile + 1;
         } catch (Exception e) {
@@ -388,7 +348,7 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
             return Optional.empty();
         }
         RangeData daten = RangeHelper.from(sheet, doc,
-                RangePosition.from(aktivSpalte(), ersteDatenZeile, aktivSpalte(), MAX_DATEN_ZEILE)).getDataFromRange();
+                RangePosition.from(aktivSpalte, ersteDatenZeile, aktivSpalte, MAX_DATEN_ZEILE)).getDataFromRange();
         Set<Integer> zeilen = new HashSet<>();
         for (int index = 0; index < daten.size(); index++) {
             RowData zeile = daten.get(index);
@@ -404,7 +364,7 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
         if (zeile1Basiert <= 0) {
             return -1;
         }
-        return sheetHelper.getIntFromCell(sheet, Position.from(aktivSpalte(), zeile1Basiert - 1));
+        return sheetHelper.getIntFromCell(sheet, Position.from(aktivSpalte, zeile1Basiert - 1));
     }
 
     @Override
@@ -461,7 +421,7 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
         }
         try {
             BlattschutzManager.get().schreibeEntsperrt(sheet, () -> sheetHelper.setNumberValueInCell(
-                    NumberCellValue.from(sheet, Position.from(aktivSpalte(), zeile1Basiert - 1))
+                    NumberCellValue.from(sheet, Position.from(aktivSpalte, zeile1Basiert - 1))
                             .setValue(AKTIV_WERT_ABGEMELDET)));
         } catch (Exception e) {
             throw new MeldelisteSchreibException("Abmeldung konnte nicht markiert werden", e);
@@ -474,7 +434,7 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
             throw new MeldelisteSchreibException("Ungültige Meldelistenzeile");
         }
         try {
-            Position aktiv = Position.from(aktivSpalte(), zeile1Basiert - 1);
+            Position aktiv = Position.from(aktivSpalte, zeile1Basiert - 1);
             if (sheetHelper.getIntFromCell(sheet, aktiv) == AKTIV_WERT_ABGEMELDET) {
                 BlattschutzManager.get().schreibeEntsperrt(sheet, () -> sheetHelper.clearValInCell(sheet, aktiv));
             }
@@ -518,7 +478,7 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
             throw new MeldelisteSchreibException("Ungültige Meldelistenzeile");
         }
         try {
-            Position aktiv = Position.from(aktivSpalte(), zeile1Basiert - 1);
+            Position aktiv = Position.from(aktivSpalte, zeile1Basiert - 1);
             BlattschutzManager.get().schreibeEntsperrt(sheet, () -> {
                 if (aktivWert > 0) {
                     sheetHelper.setNumberValueInCell(NumberCellValue.from(sheet, aktiv).setValue(aktivWert));
@@ -647,7 +607,7 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
             sheetHelper.setColumnProperties(sheet, vorhandeneSpalte, ColumnProperties.from().isVisible(false));
             return vorhandeneSpalte;
         }
-        int letzteBenutzteSpalte = aktivSpalte();
+        int letzteBenutzteSpalte = aktivSpalte;
         for (int spalte = 0; spalte < kopfzeile.length; spalte++) {
             if (!kopfzeile[spalte].isEmpty()) {
                 letzteBenutzteSpalte = Math.max(letzteBenutzteSpalte, spalte);
@@ -707,19 +667,6 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
     /** Setzposition (SP bzw. KO-RNG) direkt vor der Aktiv-Spalte; nur für {@link #SYSTEME_MIT_SETZPOSITION}. */
     private int setzpositionSpalte() {
         return letzteSchreibSpalte + 1;
-    }
-
-    /**
-     * Aktiv-Spalte: bei den meisten Team-Meldelisten zwei Spalten rechts der letzten Spielerdaten-Spalte
-     * (dazwischen SP/RNG), bei Trip-Tête direkt daneben – dort gibt es keine Setzpositionsspalte. Supermelee hat
-     * nach SP je Spieltag eine Spalte; maßgeblich ist die des aktiven Spieltags.
-     */
-    private int aktivSpalte() {
-        return switch (system) {
-            case SUPERMELEE -> letzteSchreibSpalte + 1 + aktiverSpieltag;
-            case TRIPTETE -> letzteSchreibSpalte + 1;
-            default -> letzteSchreibSpalte + 2;
-        };
     }
 
     /** Erste Zeile, in der kein Spieler eingetragen ist (Vorname + Nachname Slot 0 leer). */

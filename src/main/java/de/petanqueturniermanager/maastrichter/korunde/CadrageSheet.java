@@ -64,7 +64,8 @@ public class CadrageSheet extends SheetRunner implements ISheet {
 	protected void doRun() throws GenerateException {
 		vorrunden.getSheet(); // erstellen leer wenn nicht vorhanden
 		NewSheet.from(this, SheetNamen.cadrage(), METADATA_SCHLUESSEL)
-				.tabColor(konfigurationSheet.getCadrageTabFarbe()).pos(DefaultSheetPos.MELEE_WORK).forceCreate().setActiv().create();
+				.tabColor(konfigurationSheet.getCadrageTabFarbe()).pos(DefaultSheetPos.MELEE_WORK).forceCreate().hideGrid().setActiv()
+				.create();
 		cadrageErstellen();
 		rangListeNachCadrageErstellen();
 	}

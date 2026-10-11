@@ -3,6 +3,7 @@
  */
 package de.petanqueturniermanager.schweizer.konfiguration;
 
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.basesheet.konfiguration.IZeitplanPropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
@@ -51,9 +52,13 @@ public interface ISchweizerPropertiesSpalte extends de.petanqueturniermanager.ba
 
 	void setMeldeListeVereinsnameAnzeigen(boolean anzeigen);
 
-	SpielplanTeamAnzeige getSpielplanTeamAnzeige();
+	TeamAnzeige getSpielplanTeamAnzeige();
 
-	void setSpielplanTeamAnzeige(SpielplanTeamAnzeige anzeige);
+	void setSpielplanTeamAnzeige(TeamAnzeige anzeige);
+
+	TeamAnzeige getRanglisteTeamAnzeige();
+
+	void setRanglisteTeamAnzeige(TeamAnzeige anzeige);
 
 	SchweizerRankingModus getRankingModus();
 

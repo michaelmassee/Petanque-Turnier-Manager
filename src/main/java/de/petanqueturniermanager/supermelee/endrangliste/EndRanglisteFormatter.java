@@ -18,6 +18,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.ICommonProperties;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.model.Spieler;
@@ -41,6 +42,14 @@ public class EndRanglisteFormatter extends AbstractSuperMeleeRanglisteFormatter 
 		this.ersteSpielTagSpalte = ersteSpielTagSpalte;
 	}
 
+	/**
+	 * Überschrift über einem Spieltag-Block. Wird beim Aufbau geschrieben und von
+	 * {@link EndranglisteSheet#hatAktuellesSpieltageLayout} wieder gelesen.
+	 */
+	public static String spieltagHeader(int spielTag) {
+		return I18n.get("supermelee.endrangliste.header.spieltag", spielTag);
+	}
+
 	public void updateHeader() throws GenerateException {
 		int anzSpieltagen = rangliste.getAnzahlSpieltage();
 		if (anzSpieltagen < 1) {
@@ -57,7 +66,7 @@ public class EndRanglisteFormatter extends AbstractSuperMeleeRanglisteFormatter 
 		for (int spielTag = 1; spielTag <= anzSpieltagen; spielTag++) {
 			int ersteSpalteSpieltagBlock = ersteSpielTagSpalte + ((spielTag - 1) * anzSpaltenInSpieltag);
 			// ERSTE_KOPFDATEN_ZEILE
-			spieltagheader.spalte(ersteSpalteSpieltagBlock).setValue(spielTag + ". Spieltag")
+			spieltagheader.spalte(ersteSpalteSpieltagBlock).setValue(spieltagHeader(spielTag))
 					.setEndPosMergeSpaltePlus(anzSpaltenInSpieltag - 1);
 			getSheetHelper().setStringValueInCell(spieltagheader);
 			formatZweiteZeileSpielTagSpalten(ersteSpalteSpieltagBlock); // ZWEITE_KOPFDATEN_ZEILE
@@ -122,12 +131,12 @@ public class EndRanglisteFormatter extends AbstractSuperMeleeRanglisteFormatter 
 				.setEndPosMergeSpaltePlus(getLetzteSpalte())
 				.addCellProperty(IS_TEXT_WRAPPED, Boolean.TRUE)
 				.addRowProperty("OptimalHeight", Boolean.TRUE)
-				.setValue("Aus der Endranglistenwertung entfallen eine einmalige Nichtteilnahme bzw. das"));
+				.setValue(I18n.get("supermelee.endrangliste.hinweis.zeile1")));
 		getSheetHelper().setStringValueInCell(stringVal.zeilePlusEins()
 				.setEndPosMergeSpaltePlus(getLetzteSpalte())
 				.addCellProperty(IS_TEXT_WRAPPED, Boolean.TRUE)
 				.addRowProperty("OptimalHeight", Boolean.TRUE)
-				.setValue("schlechteste Tagesergebnis wenn an allen Spieltagen teilgenommen wurde"));
+				.setValue(I18n.get("supermelee.endrangliste.hinweis.zeile2")));
 
 		return stringVal;
 	}
