@@ -20,6 +20,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.sheet.NrZellenTestHilfe;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
@@ -119,6 +120,11 @@ public class JGJSetzPositionSpielPlanUITest extends BaseCalcUITest {
 		}
 		Position startStamm = Position.from(nrSpalte, ersteDatenZeile);
 		RangeHelper.from(sheet, doc, stammdaten.getRangePosition(startStamm)).setDataInRange(stammdaten);
+		List<Integer> nummern = new ArrayList<>();
+		for (int teamNr = 1; teamNr <= ANZAHL_TEAMS; teamNr++) {
+			nummern.add(teamNr);
+		}
+		NrZellenTestHilfe.schreibeNummern(wkingSpreadsheet, sheet, nrSpalte, ersteDatenZeile, nummern);
 
 		// Setzposition + Aktiv-Flag pro Zeile schreiben (alles in einem Block)
 		RangeData kontrollSpalten = new RangeData();

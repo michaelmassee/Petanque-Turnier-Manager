@@ -14,6 +14,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.sheet.NrZellenTestHilfe;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSheet_New;
@@ -68,6 +69,8 @@ public class JGJTestMeldeListeErstellen {
 		Position startPos = Position.from(nrSpalte, ersteDatenZeile);
 		RangePosition rangePos = RangeHelper.from(sheet, doc, data.getRangePosition(startPos)).setDataInRange(data)
 				.getRangePos();
+		NrZellenTestHilfe.schreibeNummern(wkingSpreadsheet, sheet, nrSpalte, ersteDatenZeile,
+				listeMitTestMeldungen.stream().map(row -> (Integer) row[0]).toList());
 
 		int startRow1Basiert = ersteDatenZeile + 1;
 		int endRow1Basiert = startRow1Basiert + listeMitTestMeldungen.size() - 1;
