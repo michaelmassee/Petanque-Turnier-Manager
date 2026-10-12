@@ -72,7 +72,7 @@ class PtmOnlineMeleeZusammenspielTest extends BasePtmOnlineZusammenspielTest {
         for (int zeile : lokaleMeldungen().keySet()) {
             meleeEinchecken(zeile);
         }
-        new SchweizerMeleeAnmeldungUebernehmenSheet(wkingSpreadsheet).uebernehmen();
+        wieImSheetRunner(() -> new SchweizerMeleeAnmeldungUebernehmenSheet(wkingSpreadsheet).uebernehmen());
         MeldelisteZiel meldeliste = MeldelisteZielFactory.fuerAktivesSheet(wkingSpreadsheet).orElseThrow();
         assertThat(meldeliste.leseAlleSpielerRoh()).as("alle 14 in Doublette-Teams").hasSize(14);
 

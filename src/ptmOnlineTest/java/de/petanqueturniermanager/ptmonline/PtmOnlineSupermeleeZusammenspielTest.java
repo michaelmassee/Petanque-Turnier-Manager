@@ -93,7 +93,7 @@ class PtmOnlineSupermeleeZusammenspielTest extends BasePtmOnlineZusammenspielTes
         warteBis("Spieltag 1 online gestartet",
                 () -> "running".equals(online.turnier(spieltag1).get("status").getAsString()));
 
-        new MeldeListeSheet_NeuerSpieltag(wkingSpreadsheet).naechsteSpieltag();
+        wieImSheetRunner(() -> new MeldeListeSheet_NeuerSpieltag(wkingSpreadsheet).naechsteSpieltag());
         aktivenSpieltagUebernehmen();
 
         assertThat(spieltagNr).isEqualTo(2);

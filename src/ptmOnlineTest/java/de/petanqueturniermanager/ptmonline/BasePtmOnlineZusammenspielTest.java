@@ -121,7 +121,7 @@ abstract class BasePtmOnlineZusammenspielTest extends BaseCalcUITest {
     protected void meleeTurnierAnlegen(Formation formation, LocalDate datum) throws Exception {
         schweizerAnlegen("melee", formation, datum);
         MeleeAnmeldungKonfiguration.einschalten(wkingSpreadsheet);
-        new SchweizerMeleeAnmeldungSheet(wkingSpreadsheet).generate();
+        wieImSheetRunner(() -> new SchweizerMeleeAnmeldungSheet(wkingSpreadsheet).generate());
         ziel = MeldelisteZielFactory.fuerPtmOnline(wkingSpreadsheet).orElseThrow();
     }
 
@@ -249,7 +249,7 @@ abstract class BasePtmOnlineZusammenspielTest extends BaseCalcUITest {
         SchweizerSpielrundeSheetNaechste runde = new SchweizerSpielrundeSheetNaechste(wkingSpreadsheet);
         runde.getKonfigurationSheet().setSpielrundeSpielbahn(SpielrundeSpielbahn.N);
         warteBisKeineVerarbeitungLaeuft();
-        runde.doRun();
+        wieImSheetRunner(runde::doRun);
         assertThat(runde.getXSpreadSheet()).as("Spielrunde angelegt").isNotNull();
         letzteRunde = runde;
         int erste = SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE;

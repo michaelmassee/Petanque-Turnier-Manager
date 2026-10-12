@@ -386,6 +386,24 @@ public abstract class BaseCalcUITest {
 		void ausfuehren() throws GenerateException;
 	}
 
+	@FunctionalInterface
+	protected interface LaufAktion {
+		void ausfuehren() throws Exception;
+	}
+
+	/**
+	 * Führt einen direkten Aufruf ({@code doRun()}, {@code uebernehmen()} …) so aus, wie {@code SheetRunner.run()} es
+	 * täte: im Blattschutz-Scope des Turniersystems des Dokuments. Nötig, sobald ein vorheriger {@code start()}-Lauf
+	 * den Turnier-Modus automatisch eingeschaltet hat – Style-Operationen verlangen dann einen Scope. Ohne aktiven
+	 * Turnier-Modus ist der Scope wirkungslos.
+	 */
+	protected void wieImSheetRunner(LaufAktion aktion) throws Exception {
+		TurnierSystem ts = docPropHelper.getTurnierSystemAusDocument();
+		try (var scope = BlattschutzManager.get().scopeFuer(ts, wkingSpreadsheet)) {
+			aktion.ausfuehren();
+		}
+	}
+
 	/**
 	 * Führt {@code aktion} unter aktivem TurnierModus + Blattschutz für das übergebene
 	 * Turniersystem aus. Vorbild ist der bestehende {@code kioskModus_…}-Test in

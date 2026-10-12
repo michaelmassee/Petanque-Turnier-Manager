@@ -51,12 +51,12 @@ Neue Klassen: `TeamUuidFormel` (Parser), `MeldelisteUuidIndex` (UUID ↔ Nr, `le
 
 Bekannte Einschränkung: Nach „Teamnummer ändern“ zeigen Ranglisten (Nummern als Werte) die neue Nummer erst nach dem nächsten Aktualisieren; die Erfolgsmeldung weist darauf hin.
 
-Offen, nicht UUID-bezogen: Dieselbe Ursache trifft in der Zusammenspiel-Suite (`./gradlew ptmOnlineTests`, 15/19 grün) `PtmOnlineMeleeZusammenspielTest`, zwei Tests von `PtmOnlineSchweizerZusammenspielTest` und `PtmOnlineSupermeleeZusammenspielTest` – die Tests rufen `doRun()`/`uebernehmen()` ohne SheetRunner bei aktivem Turnier-Modus auf. Außerdem `PtmOnlineAbgleichSheetRunnerUITest.rundenstartMeldetLokaleSetzpositionStattTeamNr` scheitert reproduzierbar mit „Style/CF-Operation außerhalb eines aktiven BlattschutzScopes“ (`PtmOnlineSyncSheet.schreibeKopf` aus der Testhilfe ohne SheetRunner bei aktivem Turnier-Modus). Vermutlich seit Master-Merge `792bfa3a` (Turnier-Modus pro Dokumentfenster).
+Behoben (2026-10-12), nicht UUID-bezogen: Tests mit „Style/CF-Operation außerhalb eines aktiven BlattschutzScopes“. Ursache: Ein erfolgreicher `start()`-Lauf schaltet den Turnier-Modus automatisch ein (`SheetRunner.aktiviereTurnierModusAutomatisch`); folgende direkte Aufrufe im Test (`doRun()`, `uebernehmen()`, Auftragsversand) liefen ohne Scope. Fix: `BaseCalcUITest.wieImSheetRunner(...)` öffnet den Scope wie `SheetRunner.run()`. `PtmOnlineAbgleichSheetRunnerUITest` 10/10, `./gradlew ptmOnlineTests` 19/19.
 
 Nächste Schritte (Stand 2026-10-12):
 1. Maastrichter prüfen und freischalten (siehe Tabelle).
 2. Alte Dokumente erkennen und Verarbeitung mit Hinweis abbrechen (i18n in 5 Sprachen); danach Rückfallwege für Altbestand prüfen (z. B. `SchweizerTeamNrAufloeser` technische Spalten/Anzeige-Index, Namens-Rückfall in `MeleeTeilnahme`) – ggf. entfernen.
-3. Gesamtlauf `./gradlew reinstallExtension uiTests`, ptmonline-Suite, Online-Projekt auf duplizierte Logik prüfen.
+3. Gesamtlauf `./gradlew reinstallExtension uiTests`, Online-Projekt auf duplizierte Logik prüfen.
 
 Entscheidung KO-Sieger (2026-10-11): **kein `PTM.ALG.KOSIEGER`.** Nur Setzlisten-Zellen (Runde 1, Cadrage) tragen die UUID; die Sieger-/Verlierer-Formeln reichen wie bisher die *Anzeige* weiter (`IF(scoreA>scoreB; teamA; …)`). Da die Setzlisten-Zellen immer die aktuelle Nr bzw. den aktuellen Namen zeigen, stimmt nach „Teamnummer ändern“ der ganze Baum. Leser (`LiveZellbereich`, Siegergeld, `KoStatusLeser`) lesen wie bisher die Anzeige. Bewusst in Kauf genommen: Sieger-Zellen tragen keine UUID; bei doppelten Teamnamen in der Namensanzeige bleiben sie für Java-Leser mehrdeutig (wie vorher). Gilt sinngemäß auch für Poule-Sieger/Verlierer.
 

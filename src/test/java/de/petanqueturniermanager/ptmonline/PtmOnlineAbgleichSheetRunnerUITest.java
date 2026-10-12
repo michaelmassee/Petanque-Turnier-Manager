@@ -302,10 +302,11 @@ class PtmOnlineAbgleichSheetRunnerUITest extends BaseCalcUITest {
                 ziel.getTeamNrAusZeile(ziel.findeZeileMitName("Anna Schmidt")));
 
         var zugang = server.zugangsdaten();
-        PtmOnlineAuftragsTestHilfe.teilnahmeSenden(wkingSpreadsheet, mapping,
+        // Der Abgleich zuvor hat den Turnier-Modus eingeschaltet; der Versand schreibt das Sync-Blatt.
+        wieImSheetRunner(() -> PtmOnlineAuftragsTestHilfe.teilnahmeSenden(wkingSpreadsheet, mapping,
                 new TournamentSyncClient(zugang.baseUrl(), zugang.apiKey(), DOCUMENT_ID, LEASE_TOKEN), TURNIER_ID,
                 PtmOnlineSpielrundeSync.statusAuftrag(ziel, TURNIER_ID,
-                        PtmOnlineSpielrundeSync.lokaleMeldungen(ziel, ziel, teams, teams, Set.of())).eintraege());
+                        PtmOnlineSpielrundeSync.lokaleMeldungen(ziel, ziel, teams, teams, Set.of())).eintraege()));
 
         Map<String, JsonObject> gepusht = server.gepushteErgebnisse().stream()
                 .collect(Collectors.toMap(eintrag -> eintrag.get("id").getAsString(), eintrag -> eintrag));
