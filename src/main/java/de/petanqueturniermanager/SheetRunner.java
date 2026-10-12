@@ -21,11 +21,13 @@ import com.sun.star.uno.XComponentContext;
 import com.sun.star.util.XModifiable;
 
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
+import de.petanqueturniermanager.basesheet.meldeliste.AltesDokumentErkennung;
 import de.petanqueturniermanager.comp.DokumentKontext;
 import de.petanqueturniermanager.comp.GlobalProperties;
 import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.webserver.WebServerManager;
+import de.petanqueturniermanager.exception.AltesDokumentException;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
@@ -236,6 +238,10 @@ public abstract class SheetRunner extends Thread {
 					// werden, wenn gerade ein anderes Dokument den UI-Fokus hält (z.B. während des Anlegens
 					// eines neuen Turniers).
 					DokumentKontext.mitKontextWerfend(workingSpreadsheet.getWorkingSpreadsheetDocument(), () -> {
+						// Alte Dokumente (Teamnummer = Identität) werden nicht umgestellt: vor jeder Änderung abbrechen.
+						if (turnierSystem != TurnierSystem.KEIN && isDocumentAlive()) {
+							AltesDokumentErkennung.pruefe(workingSpreadsheet);
+						}
 						if (turnierSystem != TurnierSystem.KEIN && isUpdateKonfigurationSheetBeforeDoRun()
 								&& isDocumentAlive()) {
 							updateKonfigurationSheet();
@@ -268,6 +274,14 @@ public abstract class SheetRunner extends Thread {
 					// NotebookLM-Export zählt das als Fehlschlag (isLetzterLaufFehlgeschlagen()).
 					istFehlgeschlagen = true;
 					logger.debug("Dokument disposed während SheetRunner – sauberer Abbruch", e);
+				} catch (AltesDokumentException e) {
+					istFehlgeschlagen = true;
+					if (silentBackground) {
+						// Hintergrundlauf (z. B. Tabwechsel): kein Dialog bei jedem Tabwechsel.
+						logger.info("Altes Dokument, Hintergrundlauf {} übersprungen", getClass().getSimpleName());
+					} else {
+						handleGenerateException(e);
+					}
 				} catch (GenerateException e) {
 					istFehlgeschlagen = true;
 					handleGenerateException(e);
