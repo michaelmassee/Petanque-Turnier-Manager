@@ -95,8 +95,8 @@ final class PtmOnlineCheckin {
     static List<PtmOnlineStatusAuftrag.Eintrag> leseStand(PtmOnlineVerbindung verbindung) throws GenerateException {
         TeilnahmeNummern nummern = TeilnahmeNummern.ausAktivSpalte(verbindung.meldeliste());
         MeldelisteZiel ziel = verbindung.ziel();
-        List<LokaleOnlineMeldung> meldungen = PtmOnlineSpielrundeSync.lokaleMeldungen(ziel, verbindung.meldeliste(),
-                nummern.alle(), nummern.aktive(), nummern.ausgesetzt());
+        List<LokaleOnlineMeldung> meldungen = PtmOnlineSpielrundeSync.lokaleMeldungen(ziel, nummern.alle(),
+                nummern.aktive(), nummern.ausgesetzt());
         Map<Integer, String> uuidProZeile = leseLokaleUuids(ziel,
                 meldungen.stream().map(LokaleOnlineMeldung::zeile1Basiert).toList());
         Map<String, String> onlineIds = verbindung.mapping().getOnlineIdsProUuid();

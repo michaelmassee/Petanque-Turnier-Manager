@@ -137,8 +137,7 @@ class PtmOnlineMeleeRundenSyncUITest extends BaseCalcUITest {
 
     private List<String> synchronisiere(Set<Integer> alle, Set<Integer> aktive, Set<Integer> ausgesetzt)
             throws Exception {
-        List<LokaleOnlineMeldung> meldungen = PtmOnlineSpielrundeSync.lokaleMeldungen(ziel, meldeliste, alle, aktive,
-                ausgesetzt);
+        List<LokaleOnlineMeldung> meldungen = PtmOnlineSpielrundeSync.lokaleMeldungen(ziel, alle, aktive, ausgesetzt);
         var zugang = server.zugangsdaten();
         TournamentSyncClient client = new TournamentSyncClient(zugang.baseUrl(), zugang.apiKey(), DOCUMENT_ID,
                 LEASE_TOKEN);

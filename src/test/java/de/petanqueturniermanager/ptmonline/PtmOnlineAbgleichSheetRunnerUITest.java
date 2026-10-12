@@ -306,7 +306,7 @@ class PtmOnlineAbgleichSheetRunnerUITest extends BaseCalcUITest {
         wieImSheetRunner(() -> PtmOnlineAuftragsTestHilfe.teilnahmeSenden(wkingSpreadsheet, mapping,
                 new TournamentSyncClient(zugang.baseUrl(), zugang.apiKey(), DOCUMENT_ID, LEASE_TOKEN), TURNIER_ID,
                 PtmOnlineSpielrundeSync.statusAuftrag(ziel, TURNIER_ID,
-                        PtmOnlineSpielrundeSync.lokaleMeldungen(ziel, ziel, teams, teams, Set.of())).eintraege()));
+                        PtmOnlineSpielrundeSync.lokaleMeldungen(ziel, teams, teams, Set.of())).eintraege()));
 
         Map<String, JsonObject> gepusht = server.gepushteErgebnisse().stream()
                 .collect(Collectors.toMap(eintrag -> eintrag.get("id").getAsString(), eintrag -> eintrag));

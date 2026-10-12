@@ -173,7 +173,7 @@ public final class PtmOnlineSpielrundeSync {
         }
         if (!pausiert) {
             PtmOnlineStatusAuftrag status = statusAuftrag(ziel, tournamentId, lokaleMeldungen(ziel,
-                    verbindung.meldeliste(), alleTeamNummern, aktiveTeamNummern, ausgestiegeneTeamNummern));
+                    alleTeamNummern, aktiveTeamNummern, ausgestiegeneTeamNummern));
             PtmOnlineAuftraege.teilnahme(bestand, tournamentId, status.eintraege(), mapping.getOnlineIdsProUuid(),
                     mapping.getExecutionRevisionenProUuid());
             if (ziel instanceof MeleeAnmeldungZiel melee) {
@@ -227,10 +227,10 @@ public final class PtmOnlineSpielrundeSync {
      * seines lokal gemischten Teams ({@link MeleeTeilnahme}). Gemeldet wird immer die lokale Setzposition – das
      * Turnierdokument ist Master, eine lokal leere Setzposition löscht die online gepflegte.
      */
-    static List<LokaleOnlineMeldung> lokaleMeldungen(MeldelisteZiel ziel, MeldelisteZiel meldeliste,
-            Set<Integer> alle, Set<Integer> aktive, Set<Integer> ausgestiegen) {
+    static List<LokaleOnlineMeldung> lokaleMeldungen(MeldelisteZiel ziel, Set<Integer> alle, Set<Integer> aktive,
+            Set<Integer> ausgestiegen) {
         if (ziel instanceof MeleeAnmeldungZiel melee) {
-            return MeleeTeilnahme.ermittle(melee.leseMeleeZeilen(), spielerProTeam(meldeliste), aktive, ausgestiegen);
+            return MeleeTeilnahme.ermittle(melee.leseMeleeZeilen(), aktive, ausgestiegen);
         }
         Map<Integer, Integer> zeileProTeam = zeileProTeam(ziel);
         return alle.stream()

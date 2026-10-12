@@ -17,17 +17,16 @@ import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrund
 
 /**
  * Ermittelt die aktuelle Teamnummer einer Teamzelle der Spielrunde. Die Werte-Zeile muss ab
- * {@link SchweizerAbstractSpielrundeSheet#TEAM_A_SPALTE} bis
- * {@link SchweizerAbstractSpielrundeSheet#TECHNISCHE_TEAM_B_NR_SPALTE} gelesen sein, dazu die Formel der Teamzelle.
+ * {@link SchweizerAbstractSpielrundeSheet#TEAM_A_SPALTE} bis {@link SchweizerAbstractSpielrundeSheet#TEAM_B_SPALTE}
+ * gelesen sein, dazu die Formel der Teamzelle.
  * <p>
  * Reihenfolge der Auflösung:
  * <ol>
  * <li>UUID in der Formel der Teamzelle – über die Meldeliste auf die aktuelle Nummer abgebildet. Bleibt richtig,
  * wenn die Teamnummer geändert wird.</li>
- * <li>Sichtbare Zahl ohne UUID: Altbestand im Anzeigemodus Nummer oder manuelle Korrektur im Spielplan.</li>
- * <li>Versteckte technische Teamnummer (Altbestand mit Namensanzeige).</li>
- * <li>Sichtbare Kennung über die Meldeliste – nur für noch ältere Dateien. Der {@link TeamAnzeigeIndex} wird dafür
- * erst beim ersten Bedarf und nur einmal geladen.</li>
+ * <li>Sichtbare Zahl ohne UUID: von Hand korrigierte Teamzelle im Anzeigemodus Nummer.</li>
+ * <li>Sichtbare Kennung (Name) über die Meldeliste: von Hand korrigierte Teamzelle im Anzeigemodus Name. Der
+ * {@link TeamAnzeigeIndex} wird dafür erst beim ersten Bedarf und nur einmal geladen.</li>
  * </ol>
  * Eine nicht auflösbare oder mehrdeutige Kennung führt zum Abbruch, weil sie sonst als Datenende bzw. Freilos
  * gewertet würde.
@@ -48,10 +47,6 @@ public final class SchweizerTeamNrAufloeser {
 	private static final int TEAM_A_IDX = 0;
 	private static final int TEAM_B_IDX = SchweizerAbstractSpielrundeSheet.TEAM_B_SPALTE
 			- SchweizerAbstractSpielrundeSheet.TEAM_A_SPALTE;
-	private static final int TECHNISCH_A_IDX = SchweizerAbstractSpielrundeSheet.TECHNISCHE_TEAM_A_NR_SPALTE
-			- SchweizerAbstractSpielrundeSheet.TEAM_A_SPALTE;
-	private static final int TECHNISCH_B_IDX = SchweizerAbstractSpielrundeSheet.TECHNISCHE_TEAM_B_NR_SPALTE
-			- SchweizerAbstractSpielrundeSheet.TEAM_A_SPALTE;
 
 	private final IndexQuelle indexQuelle;
 	private final Supplier<MeldelisteUuidIndex> uuidIndexQuelle;
@@ -69,7 +64,7 @@ public final class SchweizerTeamNrAufloeser {
 	 *         {@link #NICHT_IN_MELDELISTE} wenn die Meldung gelöscht wurde
 	 */
 	public int teamA(RowData zeile, String formel) throws GenerateException {
-		return aufloesen(zeile, formel, TEAM_A_IDX, TECHNISCH_A_IDX);
+		return aufloesen(zeile, formel, TEAM_A_IDX);
 	}
 
 	/**
@@ -78,10 +73,10 @@ public final class SchweizerTeamNrAufloeser {
 	 *         {@link #NICHT_IN_MELDELISTE} wenn die Meldung gelöscht wurde
 	 */
 	public int teamB(RowData zeile, String formel) throws GenerateException {
-		return aufloesen(zeile, formel, TEAM_B_IDX, TECHNISCH_B_IDX);
+		return aufloesen(zeile, formel, TEAM_B_IDX);
 	}
 
-	private int aufloesen(RowData zeile, String formel, int anzeigeIdx, int technischIdx) throws GenerateException {
+	private int aufloesen(RowData zeile, String formel, int anzeigeIdx) throws GenerateException {
 		Optional<String> uuid = TeamUuidFormel.findeUuid(formel);
 		if (uuid.isPresent()) {
 			return uuidIndex().nr(uuid.get()).orElse(NICHT_IN_MELDELISTE);
@@ -90,11 +85,6 @@ public final class SchweizerTeamNrAufloeser {
 		int sichtbareNr = anzeige != null && anzeige.getData() instanceof Number ? anzeige.getIntVal(0) : 0;
 		if (sichtbareNr > 0) {
 			return sichtbareNr;
-		}
-		CellData technisch = zelle(zeile, technischIdx);
-		int technischeNr = technisch != null ? technisch.getIntVal(0) : 0;
-		if (technischeNr > 0) {
-			return technischeNr;
 		}
 		String kennung = anzeige != null ? anzeige.getStringVal() : null;
 		if (kennung == null || kennung.isBlank()) {

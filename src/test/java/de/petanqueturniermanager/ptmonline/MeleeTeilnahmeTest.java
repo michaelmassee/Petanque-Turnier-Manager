@@ -28,9 +28,9 @@ class MeleeTeilnahmeTest {
     @Test
     void uebernommeneSpielerErhaltenTeilnahmeIhresTeams() {
         List<LokaleOnlineMeldung> meldungen = MeleeTeilnahme.ermittle(
-                List.of(uebernommen(1, "Hans", "Müller"), uebernommen(2, "Anna", "Schmidt"),
-                        uebernommen(3, "Jean Paul", "Dupont"), uebernommen(4, "Eva", "Klein")),
-                TEAMS, Set.of(1), Set.of(2));
+                List.of(uebernommen(1, "Hans", "Müller", 1), uebernommen(2, "Anna", "Schmidt", 1),
+                        uebernommen(3, "Jean Paul", "Dupont", 2), uebernommen(4, "Eva", "Klein", 2)),
+                Set.of(1), Set.of(2));
 
         assertThat(meldungen).extracting(LokaleOnlineMeldung::teilnahme).containsExactly(
                 OnlineTeilnahme.AKTIV, OnlineTeilnahme.AKTIV, OnlineTeilnahme.AUSGESETZT, OnlineTeilnahme.AUSGESETZT);
@@ -41,50 +41,41 @@ class MeleeTeilnahmeTest {
     void nichtUebernommeneSpielerSindInaktiv() {
         MeleeAnmeldungZeile offen = new MeleeAnmeldungZeile(1, 1, "Hans", "Müller", 0, true, false);
 
-        List<LokaleOnlineMeldung> meldungen = MeleeTeilnahme.ermittle(List.of(offen), TEAMS, Set.of(1), Set.of());
+        List<LokaleOnlineMeldung> meldungen = MeleeTeilnahme.ermittle(List.of(offen), Set.of(1), Set.of());
 
         assertThat(meldungen).extracting(LokaleOnlineMeldung::teilnahme).containsExactly(OnlineTeilnahme.INAKTIV);
     }
 
     @Test
-    void spielerOhneTeamInDerMeldelisteIstInaktiv() {
-        List<LokaleOnlineMeldung> meldungen = MeleeTeilnahme.ermittle(List.of(uebernommen(1, "Otto", "Normal")),
-                TEAMS, Set.of(1, 2), Set.of());
+    void markiertOhneTeamVerweisIstInaktivStattGeraten() {
+        // „Übernommen“ von Hand markiert: der Name „Hans Müller“ steht zwar in Team 1, zugeordnet wird aber nicht.
+        MeleeAnmeldungZeile ohneVerweis = new MeleeAnmeldungZeile(1, 1, "Hans", "Müller", 0, true, true);
+
+        List<LokaleOnlineMeldung> meldungen = MeleeTeilnahme.ermittle(List.of(ohneVerweis), Set.of(1, 2), Set.of());
 
         assertThat(meldungen).extracting(LokaleOnlineMeldung::teilnahme).containsExactly(OnlineTeilnahme.INAKTIV);
-    }
-
-    @Test
-    void mehrdeutigerNameWirdNichtGeraten() {
-        Map<Integer, List<MeldelisteSpielerDaten>> teams = Map.of(
-                1, List.of(spieler("Hans", "Müller", 3)),
-                2, List.of(spieler("Hans", "Muller", 4)));
-
-        List<LokaleOnlineMeldung> meldungen = MeleeTeilnahme.ermittle(List.of(uebernommen(1, "Hans", "Müller")),
-                teams, Set.of(1, 2), Set.of());
-
-        assertThat(meldungen).extracting(LokaleOnlineMeldung::teilnahme).containsExactly(OnlineTeilnahme.INAKTIV);
+        assertThat(MeleeTeilnahme.zeilenProTeam(List.of(ohneVerweis), TEAMS)).isEmpty();
     }
 
     @Test
     void setzpositionDerMeleeZeileWirdGemeldet() {
-        MeleeAnmeldungZeile gesetzt = new MeleeAnmeldungZeile(1, 1, "Hans", "Müller", 2, true, true);
+        MeleeAnmeldungZeile gesetzt = new MeleeAnmeldungZeile(1, 1, "Hans", "Müller", 2, true, true, 1);
 
         List<LokaleOnlineMeldung> meldungen = MeleeTeilnahme.ermittle(
-                List.of(gesetzt, uebernommen(2, "Anna", "Schmidt")), TEAMS, Set.of(1), Set.of());
+                List.of(gesetzt, uebernommen(2, "Anna", "Schmidt", 1)), Set.of(1), Set.of());
 
         assertThat(meldungen).extracting(LokaleOnlineMeldung::seedingPosition).containsExactly(2, null);
     }
 
     @Test
-    void zeilenProTeamFolgenDerMeldelisteUndLassenUnsicheresWeg() {
+    void zeilenProTeamFolgenDerMeldelisteUndLassenNichtUebernommeneWeg() {
         Map<Integer, List<MeldelisteSpielerDaten>> teams = new LinkedHashMap<>();
         teams.put(2, List.of(spieler("Eva", "Klein", 5), spieler("Jean-Paul", "Dupont", 4)));
         teams.put(1, List.of(spieler("Hans", "Müller", 3), spieler("Otto", "Normal", 6)));
         MeleeAnmeldungZeile offen = new MeleeAnmeldungZeile(5, 5, "Anna", "Schmidt", 0, true, false);
 
-        Map<Integer, List<Integer>> zeilen = MeleeTeilnahme.zeilenProTeam(List.of(uebernommen(1, "Hans", "Müller"),
-                uebernommen(3, "Jean Paul", "Dupont"), uebernommen(4, "Eva", "Klein"), offen), teams);
+        Map<Integer, List<Integer>> zeilen = MeleeTeilnahme.zeilenProTeam(List.of(uebernommen(1, "Hans", "Müller", 1),
+                uebernommen(3, "Jean Paul", "Dupont", 2), uebernommen(4, "Eva", "Klein", 2), offen), teams);
 
         assertThat(zeilen).containsExactly(Map.entry(1, List.of(2)), Map.entry(2, List.of(5, 4)));
     }
@@ -120,7 +111,7 @@ class MeleeTeilnahmeTest {
         // Name in der Meldeliste korrigiert („Hans“ → „Johannes“): der Verweis auf Team 2 trägt trotzdem.
         MeleeAnmeldungZeile mitVerweis = new MeleeAnmeldungZeile(1, 1, "Hans", "Müller", 0, true, true, 2);
 
-        List<LokaleOnlineMeldung> meldungen = MeleeTeilnahme.ermittle(List.of(mitVerweis), TEAMS, Set.of(2), Set.of());
+        List<LokaleOnlineMeldung> meldungen = MeleeTeilnahme.ermittle(List.of(mitVerweis), Set.of(2), Set.of());
         Map<Integer, List<Integer>> zeilen = MeleeTeilnahme.zeilenProTeam(List.of(mitVerweis), TEAMS);
 
         assertThat(meldungen).extracting(LokaleOnlineMeldung::teilnahme).containsExactly(OnlineTeilnahme.AKTIV);
@@ -134,8 +125,9 @@ class MeleeTeilnahmeTest {
         assertThat(MeleeTeilnahme.zeilenProTeam(List.of(verwaist), TEAMS)).isEmpty();
     }
 
-    private static MeleeAnmeldungZeile uebernommen(int zeile, String vorname, String nachname) {
-        return new MeleeAnmeldungZeile(zeile, zeile, vorname, nachname, 0, true, true);
+    /** Übernommene Mêlée-Zeile mit Verweis auf das Team {@code teamNr} der Meldeliste. */
+    private static MeleeAnmeldungZeile uebernommen(int zeile, String vorname, String nachname, int teamNr) {
+        return new MeleeAnmeldungZeile(zeile, zeile, vorname, nachname, 0, true, true, teamNr);
     }
 
     private static MeldelisteSpielerDaten spieler(String vorname, String nachname, int zeile1Basiert) {

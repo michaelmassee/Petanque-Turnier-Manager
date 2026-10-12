@@ -207,38 +207,23 @@ public class SchweizerSpielrundeNamenLiveUpdateUITest extends BaseCalcUITest {
 	}
 
 	@Test
-	public void alteSpielrundeMitTechnischenSpaltenWirdUeberDieseAusgewertet() throws GenerateException {
+	public void teamzellenOhneUuidWerdenUeberDieMeldelisteAusgewertet() throws GenerateException {
 		int anzTeams = SchweizerMeldeListeSheetTestDaten.ANZ_TEAMS_DEFAULT;
 		SchweizerTurnierTestDaten testDaten = new SchweizerTurnierTestDaten(wkingSpreadsheet, anzTeams,
 				TeamAnzeige.SPIELERNAMEN);
 		testDaten.generate(1, false);
 
+		// Teamzellen von Hand überschrieben: Anzeigeformel ohne UUID
 		XSpreadsheet ersteRunde = sheetHlp.findByName("1. " + SchweizerAbstractSpielrundeSheet.SHEET_NAMEN);
-		alteSpielrundeNachstellen(ersteRunde, anzTeams, testDaten.naechsteSpielrunde.getKonfigurationSheet(), true);
+		teamzellenOhneUuid(ersteRunde, anzTeams, testDaten.naechsteSpielrunde.getKonfigurationSheet());
 
 		assertThat(siegeInNeuerRangliste(anzTeams))
-				.as("Runden vor der UUID-Umstellung werden über die technischen Teamnummern ausgewertet")
+				.as("Ohne UUID müssen die Spielernamen über die Meldeliste aufgelöst werden")
 				.isEqualTo(anzTeams / 2);
 	}
 
 	@Test
-	public void alteSpielrundeOhneTechnischeSpaltenWirdUeberDieMeldelisteAusgewertet() throws GenerateException {
-		int anzTeams = SchweizerMeldeListeSheetTestDaten.ANZ_TEAMS_DEFAULT;
-		SchweizerTurnierTestDaten testDaten = new SchweizerTurnierTestDaten(wkingSpreadsheet, anzTeams,
-				TeamAnzeige.SPIELERNAMEN);
-		testDaten.generate(1, false);
-
-		// Zustand einer vor Einführung der technischen Spalten erzeugten Datei nachstellen
-		XSpreadsheet ersteRunde = sheetHlp.findByName("1. " + SchweizerAbstractSpielrundeSheet.SHEET_NAMEN);
-		alteSpielrundeNachstellen(ersteRunde, anzTeams, testDaten.naechsteSpielrunde.getKonfigurationSheet(), false);
-
-		assertThat(siegeInNeuerRangliste(anzTeams))
-				.as("Ohne technische Spalten müssen die Spielernamen über die Meldeliste aufgelöst werden")
-				.isEqualTo(anzTeams / 2);
-	}
-
-	@Test
-	public void mehrdeutigeAnzeigeInAlterSpielrundeBrichtAbStattFreilosZuWerten() throws GenerateException {
+	public void mehrdeutigeAnzeigeOhneUuidBrichtAbStattFreilosZuWerten() throws GenerateException {
 		int anzTeams = SchweizerMeldeListeSheetTestDaten.ANZ_TEAMS_DEFAULT;
 		SchweizerTurnierTestDaten testDaten = new SchweizerTurnierTestDaten(wkingSpreadsheet, anzTeams,
 				TeamAnzeige.SPIELERNAMEN);
@@ -249,7 +234,7 @@ public class SchweizerSpielrundeNamenLiveUpdateUITest extends BaseCalcUITest {
 				SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE);
 		int teamNrB = teamNrInRunde(ersteRunde, SchweizerAbstractSpielrundeSheet.TEAM_B_SPALTE,
 				SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE);
-		alteSpielrundeNachstellen(ersteRunde, anzTeams, testDaten.naechsteSpielrunde.getKonfigurationSheet(), false);
+		teamzellenOhneUuid(ersteRunde, anzTeams, testDaten.naechsteSpielrunde.getKonfigurationSheet());
 
 		// Team A erhält die Spielernamen von Team B → beide Paarungszellen zeigen dieselbe Kennung
 		SchweizerMeldeListeSheetUpdate meldeListe = testDaten.naechsteSpielrunde.getMeldeListe();
@@ -328,38 +313,27 @@ public class SchweizerSpielrundeNamenLiveUpdateUITest extends BaseCalcUITest {
 	}
 
 	/**
-	 * Stellt den Zustand einer vor der UUID-Umstellung erzeugten Datei nach: Die Anzeigeformeln enthalten die
-	 * Teamnummer als Literal oder – mit technischen Spalten – als Bezug auf die ausgeblendete Nummer daneben.
+	 * Überschreibt die Teamzellen mit Anzeigeformeln ohne UUID (Teamnummer als Literal) – wie nach einer Korrektur
+	 * von Hand außerhalb des Turnier-Modus.
 	 */
-	private void alteSpielrundeNachstellen(XSpreadsheet spielrunde, int anzTeams, SchweizerKonfigurationSheet konfig,
-			boolean mitTechnischenSpalten) throws GenerateException {
+	private void teamzellenOhneUuid(XSpreadsheet spielrunde, int anzTeams, SchweizerKonfigurationSheet konfig)
+			throws GenerateException {
 		int ersteZeile = SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE;
 		int anzPaarungen = anzTeams / 2;
-		RangeData nummern = new RangeData();
 		String[][] formeln = new String[anzPaarungen][2];
 		for (int idx = 0; idx < anzPaarungen; idx++) {
 			int zeile = ersteZeile + idx;
 			int nrA = teamNrInRunde(spielrunde, SchweizerAbstractSpielrundeSheet.TEAM_A_SPALTE, zeile);
 			int nrB = teamNrInRunde(spielrunde, SchweizerAbstractSpielrundeSheet.TEAM_B_SPALTE, zeile);
-			nummern.addNewRow(nrA, nrB);
-			formeln[idx][0] = alteAnzeigeFormel(mitTechnischenSpalten
-					? Position.from(SchweizerAbstractSpielrundeSheet.TECHNISCHE_TEAM_A_NR_SPALTE, zeile).getAddress()
-					: String.valueOf(nrA), konfig);
-			formeln[idx][1] = alteAnzeigeFormel(mitTechnischenSpalten
-					? Position.from(SchweizerAbstractSpielrundeSheet.TECHNISCHE_TEAM_B_NR_SPALTE, zeile).getAddress()
-					: String.valueOf(nrB), konfig);
-		}
-		if (mitTechnischenSpalten) {
-			RangeHelper.from(spielrunde, wkingSpreadsheet.getWorkingSpreadsheetDocument(), nummern.getRangePosition(
-					Position.from(SchweizerAbstractSpielrundeSheet.TECHNISCHE_TEAM_A_NR_SPALTE, ersteZeile)))
-					.setDataInRange(nummern);
+			formeln[idx][0] = anzeigeFormelOhneUuid(String.valueOf(nrA), konfig);
+			formeln[idx][1] = anzeigeFormelOhneUuid(String.valueOf(nrB), konfig);
 		}
 		sheetHlp.setFormulaArrayInRange(spielrunde, RangePosition.from(SchweizerAbstractSpielrundeSheet.TEAM_A_SPALTE,
 				ersteZeile, SchweizerAbstractSpielrundeSheet.TEAM_B_SPALTE, ersteZeile + anzPaarungen - 1), formeln);
 		recalcAll();
 	}
 
-	private static String alteAnzeigeFormel(String teamNrAusdruck, SchweizerKonfigurationSheet konfig) {
+	private static String anzeigeFormelOhneUuid(String teamNrAusdruck, SchweizerKonfigurationSheet konfig) {
 		return TeamAnzeigeHelper.formel(teamNrAusdruck, konfig.getSpielplanTeamAnzeige(),
 				konfig.isMeldeListeTeamnameAnzeigen(), konfig.getMeldeListeFormation(),
 				konfig.isMeldeListeVereinsnameAnzeigen());

@@ -104,7 +104,7 @@ public final class SchweizerRundenLeser {
 		RangePosition readRange = RangePosition.from(
 				SchweizerAbstractSpielrundeSheet.TEAM_A_SPALTE,
 				SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE,
-				SchweizerAbstractSpielrundeSheet.TECHNISCHE_TEAM_B_NR_SPALTE,
+				SchweizerAbstractSpielrundeSheet.TEAM_B_SPALTE,
 				SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE + 999);
 		RangeData rowsData = RangeHelper
 				.from(rundeSheet, workingSpreadsheet.getWorkingSpreadsheetDocument(), readRange)

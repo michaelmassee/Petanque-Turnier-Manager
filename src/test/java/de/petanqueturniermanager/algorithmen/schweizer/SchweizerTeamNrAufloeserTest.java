@@ -15,12 +15,8 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.sheet.rangedata.CellData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.schweizer.meldeliste.TeamAnzeigeIndex;
-import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrundeSheet;
 
 class SchweizerTeamNrAufloeserTest {
-
-	private static final int TECHNISCH_A_IDX = SchweizerAbstractSpielrundeSheet.TECHNISCHE_TEAM_A_NR_SPALTE
-			- SchweizerAbstractSpielrundeSheet.TEAM_A_SPALTE;
 
 	private static final String UUID_A = "aaaaaaaa-0000-4000-8000-000000000001";
 	private static final String UUID_B = "bbbbbbbb-0000-4000-8000-000000000002";
@@ -33,9 +29,8 @@ class SchweizerTeamNrAufloeserTest {
 	private final AtomicInteger anzIndexLaden = new AtomicInteger();
 
 	@Test
-	void sichtbareNummerHatVorrangVorTechnischerNummer() throws GenerateException {
-		// Nummern-Anzeige mit manueller Korrektur: sichtbar 7, versteckt noch 3
-		RowData zeile = zeile(7.0, 8.0, 3, 4);
+	void vonHandKorrigierteNummerOhneUuid() throws GenerateException {
+		RowData zeile = zeile(7.0, 8.0);
 
 		var aufloeser = aufloeser(new TeamAnzeigeIndex());
 
@@ -45,22 +40,11 @@ class SchweizerTeamNrAufloeserTest {
 	}
 
 	@Test
-	void namensanzeigeNutztTechnischeNummer() throws GenerateException {
-		RowData zeile = zeile("Anna / Berta", "Carl / Dora", 3, 4);
-
-		var aufloeser = aufloeser(new TeamAnzeigeIndex());
-
-		assertThat(aufloeser.teamA(zeile, "")).isEqualTo(3);
-		assertThat(aufloeser.teamB(zeile, "")).isEqualTo(4);
-		assertThat(anzIndexLaden).hasValue(0);
-	}
-
-	@Test
-	void alteDateiOhneTechnischeSpaltenLoestUeberMeldelisteAuf() throws GenerateException {
+	void vonHandKorrigierterNameLoestUeberMeldelisteAuf() throws GenerateException {
 		TeamAnzeigeIndex index = new TeamAnzeigeIndex();
 		index.hinzufuegen("Anna / Berta", 3);
 		index.hinzufuegen("Carl / Dora", 4);
-		RowData zeile = zeileOhneTechnischeSpalten("Anna / Berta", "Carl / Dora");
+		RowData zeile = zeile("Anna / Berta", "Carl / Dora");
 
 		var aufloeser = aufloeser(index);
 
@@ -71,14 +55,14 @@ class SchweizerTeamNrAufloeserTest {
 
 	@Test
 	void leererGegnerIstFreilos() throws GenerateException {
-		RowData zeile = zeile("Anna / Berta", "", 3, 0);
+		RowData zeile = zeile("Anna / Berta", "");
 
 		assertThat(aufloeser(new TeamAnzeigeIndex()).teamB(zeile, "")).isZero();
 	}
 
 	@Test
 	void leereZeileIstDatenende() throws GenerateException {
-		assertThat(aufloeser(new TeamAnzeigeIndex()).teamA(zeile("", "", "", ""), "")).isZero();
+		assertThat(aufloeser(new TeamAnzeigeIndex()).teamA(zeile("", ""), "")).isZero();
 	}
 
 	@Test
@@ -86,14 +70,14 @@ class SchweizerTeamNrAufloeserTest {
 		TeamAnzeigeIndex index = new TeamAnzeigeIndex();
 		index.hinzufuegen("Anna", 3);
 		index.hinzufuegen("Anna", 5);
-		RowData zeile = zeileOhneTechnischeSpalten("Carl", "Anna");
+		RowData zeile = zeile("Carl", "Anna");
 
 		assertThatThrownBy(() -> aufloeser(index).teamB(zeile, "")).isInstanceOf(GenerateException.class);
 	}
 
 	@Test
 	void unbekannteKennungWirdNichtAlsDatenendeGewertet() {
-		RowData zeile = zeileOhneTechnischeSpalten("Gelöschtes Team", "");
+		RowData zeile = zeile("Gelöschtes Team", "");
 
 		assertThatThrownBy(() -> aufloeser(new TeamAnzeigeIndex()).teamA(zeile, ""))
 				.isInstanceOf(GenerateException.class);
@@ -102,7 +86,7 @@ class SchweizerTeamNrAufloeserTest {
 	@Test
 	void uuidInFormelHatVorrangUndLiefertAktuelleNummer() throws GenerateException {
 		// Team 7 wurde in der Meldeliste auf 12 umnummeriert; die Zelle zeigt noch den alten Wert
-		RowData zeile = zeile(7.0, 8.0, 3, 4);
+		RowData zeile = zeile(7.0, 8.0);
 
 		var aufloeser = aufloeser(new TeamAnzeigeIndex());
 
@@ -113,7 +97,7 @@ class SchweizerTeamNrAufloeserTest {
 
 	@Test
 	void uuidOhneMeldungIstNichtInMeldeliste() throws GenerateException {
-		RowData zeile = zeile("Gelöscht", "", 0, 0);
+		RowData zeile = zeile("Gelöscht", "");
 
 		assertThat(aufloeser(new TeamAnzeigeIndex()).teamA(zeile, formelMit(UUID_GELOESCHT)))
 				.isEqualTo(SchweizerTeamNrAufloeser.NICHT_IN_MELDELISTE);
@@ -130,18 +114,8 @@ class SchweizerTeamNrAufloeserTest {
 		return "=INDEX($'Meldeliste'.$A$1:$A$999;PTM.ALG.UUIDZEILE(\"" + uuid + "\";$'Meldeliste'.$A$1:$A$999))";
 	}
 
-	/** Zeile ab TEAM_A_SPALTE bis einschließlich der technischen Spalten. */
-	private static RowData zeile(Object teamA, Object teamB, Object technischA, Object technischB) {
-		RowData zeile = zeileOhneTechnischeSpalten(teamA, teamB);
-		while (zeile.size() < TECHNISCH_A_IDX) {
-			zeile.add(new CellData(""));
-		}
-		zeile.add(new CellData(technischA));
-		zeile.add(new CellData(technischB));
-		return zeile;
-	}
-
-	private static RowData zeileOhneTechnischeSpalten(Object teamA, Object teamB) {
+	/** Zeile mit den Teamzellen A und B (ab TEAM_A_SPALTE). */
+	private static RowData zeile(Object teamA, Object teamB) {
 		RowData zeile = new RowData();
 		zeile.add(new CellData(teamA));
 		zeile.add(new CellData(teamB));

@@ -5,11 +5,9 @@ package de.petanqueturniermanager.ptmonline;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.jspecify.annotations.Nullable;
 
@@ -26,7 +24,7 @@ import de.petanqueturniermanager.spielerdb.MeleeAnmeldungZiel;
  * <li>Ohne Mêlée ist jedes Team eine Online-Meldung: Team-Nr → Meldelistenzeile → lokale UUID → Online-ID.</li>
  * <li>Bei Mêlée-Anmeldung gibt es online nur Einzelspieler; ein lokal gemischtes Team wird über die Mêlée-Zeilen,
  * die in „Übernommen“ auf das Team verweisen, auf deren Online-IDs abgebildet ({@link MeleeTeilnahme#zeilenProTeam}).
- * Altbestand ohne Verweis läuft über die Namen; mehrdeutige Namen werden nicht geraten.</li>
+ * Spieler ohne Verweis fehlen; ein Team wird nicht geraten.</li>
  * </ul>
  * Teams, für die nicht alle Spieler eine Online-ID haben, fehlen in der Zuordnung. Gelesen wird nur: Zeilen ohne
  * lokale UUID haben ohnehin keine Online-Zuordnung, und die Übertragung darf im Hintergrund nichts ins Dokument
@@ -66,15 +64,8 @@ final class LiveNummernAufloesung {
         Map<Integer, List<Integer>> zeilenProTeam = MeleeTeilnahme.zeilenProTeam(meleeZeilen, spielerProTeam);
         Map<Integer, String> uuidProZeile = vorhandeneUuids(melee,
                 zeilenProTeam.values().stream().flatMap(List::stream).toList());
-        Set<Integer> mitVerweis = new HashSet<>();
-        meleeZeilen.stream().filter(zeile -> zeile.teamNr() > 0).forEach(zeile -> mitVerweis.add(zeile.teamNr()));
-
         Map<Integer, List<String>> ergebnis = new LinkedHashMap<>();
         zeilenProTeam.forEach((teamNr, zeilen) -> {
-            // Altbestand: jedes Teammitglied muss über seinen Namen gefunden sein, sonst fehlt das Team.
-            if (!mitVerweis.contains(teamNr) && zeilen.size() != spielerProTeam.get(teamNr).size()) {
-                return;
-            }
             List<String> ids = new ArrayList<>();
             for (int zeile : zeilen) {
                 String onlineId = onlineId(onlineIdProUuid, uuidProZeile.get(zeile));

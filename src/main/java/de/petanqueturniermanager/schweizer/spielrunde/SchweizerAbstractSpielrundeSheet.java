@@ -105,12 +105,6 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 	 */
 	public static final int ZEIT_SPALTE = ERG_TEAM_B_SPALTE + 1;
 	public static final int FEHLER_SPALTE = ZEIT_SPALTE + 1;
-	/**
-	 * Nur Altbestand: ausgeblendete Teamnummern älterer Spielrunden. Neue Runden tragen die UUID in der Formel der
-	 * Teamzelle; gelesen werden diese Spalten nur noch als Fallback ({@link SchweizerTeamNrAufloeser}).
-	 */
-	public static final int TECHNISCHE_TEAM_A_NR_SPALTE = FEHLER_SPALTE + 1;
-	public static final int TECHNISCHE_TEAM_B_NR_SPALTE = TECHNISCHE_TEAM_A_NR_SPALTE + 1;
 
 	private final SchweizerKonfigurationSheet konfigurationSheet;
 	private final SchweizerMeldeListeSheetUpdate meldeListe;
@@ -310,7 +304,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 	private void leseRundeEin(XSpreadsheet sheet, SchweizerTeamNrAufloeser teamNrAufloeser,
 			TeamMeldungen aktiveMeldungen, Map<Integer, int[]> statsMap, Map<Integer, List<Integer>> gegnerMap)
 			throws GenerateException {
-		RangePosition readRange = RangePosition.from(TEAM_A_SPALTE, ERSTE_DATEN_ZEILE, TECHNISCHE_TEAM_B_NR_SPALTE,
+		RangePosition readRange = RangePosition.from(TEAM_A_SPALTE, ERSTE_DATEN_ZEILE, TEAM_B_SPALTE,
 				ERSTE_DATEN_ZEILE + 999);
 		RangeData rowsData = RangeHelper
 				.from(sheet, getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), readRange).getDataFromRange();
