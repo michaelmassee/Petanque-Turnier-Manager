@@ -70,6 +70,8 @@ module de { module petanqueturniermanager { module addin {
     any ptmuuidzeile ([in] string uuid, [in] com::sun::star::table::XCellRange bereich);
     // Index 36 – SPLRUUID: Nr-Zelle der Melee-Anmeldung (Spieler), wie TNRUUID.
     long ptmsplruuid ([in] long nr, [in] string uuid, [in] any onlineId);
+    // Index 37 – UUIDTEAMNR: aktuelle Teamnummer zur UUID (= INDEX(bereich;UUIDZEILE(uuid;bereich))), sonst #N/A.
+    any ptmuuidteamnr ([in] string uuid, [in] com::sun::star::table::XCellRange bereich);
   };
 
 }; }; };

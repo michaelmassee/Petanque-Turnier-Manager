@@ -59,6 +59,26 @@ public final class TeamUuidFormel {
 		return OptionalInt.empty();
 	}
 
+	/**
+	 * Teamnummer zur UUID – Gegenstück zu {@code INDEX(bereich;MATCH(…))} in einem Schritt.
+	 *
+	 * @param uuid    gesuchte UUID
+	 * @param formeln Formel-Array des Bereichs ({@code XCellRangeFormula.getFormulaArray()})
+	 * @param werte   Werte-Array desselben Bereichs ({@code XCellRangeData.getDataArray()})
+	 * @return angezeigte Nr der Zeile mit der UUID, leer wenn die UUID fehlt oder die Zelle keine Zahl zeigt
+	 */
+	public static OptionalInt nrImBereich(String uuid, String[][] formeln, Object[][] werte) {
+		OptionalInt zeile = zeileImBereich(uuid, formeln);
+		if (zeile.isEmpty() || werte == null || werte.length < zeile.getAsInt()) {
+			return OptionalInt.empty();
+		}
+		Object[] zellen = werte[zeile.getAsInt() - 1];
+		if (zellen != null && zellen.length > 0 && zellen[0] instanceof Number nr) {
+			return OptionalInt.of(nr.intValue());
+		}
+		return OptionalInt.empty();
+	}
+
 	/** @return {@code true}, wenn {@code wert} genau eine UUID ist (Groß-/Kleinschreibung egal) */
 	public static boolean istUuid(String wert) {
 		return wert != null && UUID_MUSTER.matcher(wert).matches();

@@ -18,7 +18,7 @@ class TeamSchluesselTest {
 
 		assertThat(team.zeileImBereich(BEREICH)).isEqualTo("PTM.ALG.UUIDZEILE(\"" + UUID + "\";" + BEREICH + ")");
 		assertThat(team.nrAnzeige(BEREICH))
-				.isEqualTo("INDEX(" + BEREICH + ";PTM.ALG.UUIDZEILE(\"" + UUID + "\";" + BEREICH + "))");
+				.isEqualTo("PTM.ALG.UUIDTEAMNR(\"" + UUID + "\";" + BEREICH + ")");
 	}
 
 	@Test

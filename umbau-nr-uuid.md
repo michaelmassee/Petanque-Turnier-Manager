@@ -101,9 +101,9 @@ Entscheidungen des Users:
      - Ohne Bezug kennt Calc die Abhängigkeit nicht. Es gäbe keine Neuberechnung nach Umnummerieren; die Alternative wäre eine volatile Funktion, die bei jeder Änderung rechnet.
      - Ohne Bereich hätte die Funktion keinen Dokumentbezug (fokus-basiert = verboten).
      - Ohne Bereich müsste der lokalisierte Blattname fest im Code stehen.
-   - Damit wird in allen Formelbauern `MATCH(nr;$A$1:$A$999;0)` zu `PTM.ALG.UUIDZEILE("<uuid>";$A$1:$A$999)`. Im Anzeigemodus NR gilt `INDEX($A$1:$A$999; UUIDZEILE(…))`.
+   - Damit wird in allen Formelbauern `MATCH(nr;$A$1:$A$999;0)` zu `PTM.ALG.UUIDZEILE("<uuid>";$A$1:$A$999)`. Im Anzeigemodus NR gilt `PTM.ALG.UUIDTEAMNR("<uuid>";$A$1:$A$999)` (Index 37, ersetzt `INDEX($A$1:$A$999; UUIDZEILE(…))`; Altformeln bleiben gültig).
 3. **Keine versteckten Spalten, weder in der Meldeliste noch in Runden oder Ranglisten.** Jede Teamzelle trägt ihre UUID als Literal in der eigenen Formel:
-   - Anzeige Nr: `=INDEX(Meldeliste.$A$1:$A$999; PTM.ALG.UUIDZEILE("<uuid>"; Meldeliste.$A$1:$A$999))`.
+   - Anzeige Nr: `=PTM.ALG.UUIDTEAMNR("<uuid>"; Meldeliste.$A$1:$A$999)` (früher `INDEX(…; UUIDZEILE(…))`).
    - Anzeige Name: dieselbe Zeile über die Formelbauer (`PTM.ALG.TEAMANZEIGE`).
    - Java liest die UUID per `getFormulaArray` und UUID-Regex aus der Zelle. Gemeinsamer Parser: `TeamUuidFormel.findeUuid(String formel)`.
    - ~~**Weitergabe ohne Hilfsspalte**~~ (verworfen, siehe Entscheidung KO-Sieger oben) (KO-Sieger, Poule-Sieger/Verlierer): `PTM.ALG.KOSIEGER(teamA; teamB; punkteA; punkteB; verlierer)` ersetzt `IF(scoreA>scoreB; …)` und liefert die UUID des Siegers (bzw. mit `verlierer=1` des Verlierers), `#N/A` ohne Ergebnis.

@@ -167,8 +167,7 @@ public final class NrUuidSpalte {
 	 * @param nrBereich Nr-Spalte in Formel-Notation inkl. Blatt, z.&nbsp;B. {@code $'Meldeliste'.$A$1:$A$1000}
 	 */
 	public static String formelNrAusUuid(String nrBereich, String uuid) {
-		return "IFNA(INDEX(" + nrBereich + ";" + GlobalImpl.FORMAT_PTM_UUID_ZEILE("\"" + uuid + "\"", nrBereich)
-				+ ");\"\")";
+		return "IFNA(" + GlobalImpl.FORMAT_PTM_UUID_TEAMNR("\"" + uuid + "\"", nrBereich) + ";\"\")";
 	}
 
 	private static int maxZeile(Collection<Integer> zeilen1Basiert) {

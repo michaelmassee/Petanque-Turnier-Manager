@@ -15,6 +15,7 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.lang.XSingleComponentFactory;
 import com.sun.star.lib.uno.helper.Factory;
 import com.sun.star.registry.XRegistryKey;
+import com.sun.star.sheet.XCellRangeData;
 import com.sun.star.sheet.XCellRangeFormula;
 import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.table.XCellRange;
@@ -70,6 +71,7 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	public static final String PTM_TEAM_ANZEIGE = "PTM.ALG.TEAMANZEIGE";
 	public static final String PTM_TNR_UUID = "PTM.ALG.TNRUUID";
 	public static final String PTM_UUID_ZEILE = "PTM.ALG.UUIDZEILE";
+	public static final String PTM_UUID_TEAMNR = "PTM.ALG.UUIDTEAMNR";
 	public static final String PTM_SPLR_UUID = "PTM.ALG.SPLRUUID";
 
 	public static final String PTM_SUPERMELEE_TRIPL_ANZ_DOUBLETTE = "PTM.SUPERMELEE.TRIPL_ANZ_DOUBLETTE";
@@ -131,6 +133,11 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	/** Zeile der UUID im Bereich, Ersatz für {@code MATCH(nr;bereich;0)}. */
 	public static String FORMAT_PTM_UUID_ZEILE(String uuidAusdruck, String bereich) {
 		return PTM_UUID_ZEILE + "(" + uuidAusdruck + ";" + bereich + ")";
+	}
+
+	/** Aktuelle Teamnummer zur UUID, Ersatz für {@code INDEX(bereich;UUIDZEILE(uuid;bereich))}. */
+	public static String FORMAT_PTM_UUID_TEAMNR(String uuidAusdruck, String bereich) {
+		return PTM_UUID_TEAMNR + "(" + uuidAusdruck + ";" + bereich + ")";
 	}
 
 	public static String FORMAT_PTM_PLANUNG_DURCHGAENGE_PRO_RUNDE(String teamsAdresse, String bahnenAdresse) {
@@ -337,6 +344,24 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 			return zeile.isPresent() ? Integer.valueOf(zeile.getAsInt()) : Any.VOID;
 		} catch (RuntimeException e) {
 			logger.error("PTM.ALG.UUIDZEILE fehlgeschlagen", e);
+			return Any.VOID;
+		}
+	}
+
+	/** Wie {@link #ptmuuidzeile}, liefert aber direkt die angezeigte Nr der gefundenen Zeile. */
+	@Override
+	public Object ptmuuidteamnr(String uuid, XCellRange bereich) {
+		try {
+			XCellRangeFormula formelBereich = Lo.qi(XCellRangeFormula.class, bereich);
+			XCellRangeData datenBereich = Lo.qi(XCellRangeData.class, bereich);
+			if (formelBereich == null || datenBereich == null) {
+				return Any.VOID;
+			}
+			OptionalInt nr = TeamUuidFormel.nrImBereich(uuid, formelBereich.getFormulaArray(),
+					datenBereich.getDataArray());
+			return nr.isPresent() ? Integer.valueOf(nr.getAsInt()) : Any.VOID;
+		} catch (RuntimeException e) {
+			logger.error("PTM.ALG.UUIDTEAMNR fehlgeschlagen", e);
 			return Any.VOID;
 		}
 	}

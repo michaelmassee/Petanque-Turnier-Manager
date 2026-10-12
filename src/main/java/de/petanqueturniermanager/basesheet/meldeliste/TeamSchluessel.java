@@ -40,7 +40,7 @@ public sealed interface TeamSchluessel {
 
 		@Override
 		public String nrAnzeige(String nrBereich) {
-			return "INDEX(" + nrBereich + ";" + zeileImBereich(nrBereich) + ")";
+			return GlobalImpl.FORMAT_PTM_UUID_TEAMNR(ausdruck, nrBereich);
 		}
 	}
 

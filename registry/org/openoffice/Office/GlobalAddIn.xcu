@@ -935,6 +935,34 @@
 					<prop oor:name="Category"><value>Add-In</value></prop>
 				</node>
 
+				<node oor:name="ptmuuidteamnr" oor:op="replace">
+					<prop oor:name="DisplayName">
+						<value xml:lang="en">PTM.ALG.UUIDTEAMNR</value>
+						<value xml:lang="de">PTM.ALG.UUIDTEAMNR</value>
+						<value xml:lang="es">PTM.ALG.UUIDTEAMNR</value>
+						<value xml:lang="fr">PTM.ALG.UUIDTEAMNR</value>
+						<value xml:lang="nl">PTM.ALG.UUIDTEAMNR</value>
+					</prop>
+					<prop oor:name="Description">
+						<value xml:lang="en">Petanque Turniermanager: current team number for a team's internal ID, #N/A if missing.</value>
+						<value xml:lang="de">Petanque Turniermanager: aktuelle Teamnummer zur internen Team-ID, #NV wenn nicht vorhanden.</value>
+						<value xml:lang="es">Petanque Turniermanager: número de equipo actual para el ID interno del equipo, #N/D si no existe.</value>
+						<value xml:lang="fr">Petanque Turniermanager : numéro d'équipe actuel pour l'ID interne de l'équipe, #N/A si absent.</value>
+						<value xml:lang="nl">Petanque Turniermanager: huidig teamnummer bij de interne team-ID, #N/B indien afwezig.</value>
+					</prop>
+					<node oor:name="Parameters">
+						<node oor:name="uuid" oor:op="replace">
+							<prop oor:name="DisplayName"><value xml:lang="de">UUID</value></prop>
+							<prop oor:name="Description"><value xml:lang="de">Interne ID des gesuchten Teams.</value></prop>
+						</node>
+						<node oor:name="bereich" oor:op="replace">
+							<prop oor:name="DisplayName"><value xml:lang="de">Bereich</value></prop>
+							<prop oor:name="Description"><value xml:lang="de">Nr-Spalte der Meldeliste, z.B. $A$1:$A$999.</value></prop>
+						</node>
+					</node>
+					<prop oor:name="Category"><value>Add-In</value></prop>
+				</node>
+
 				<node oor:name="ptmsplruuid" oor:op="replace">
 					<prop oor:name="DisplayName">
 						<value xml:lang="en">PTM.ALG.SPLRUUID</value>
