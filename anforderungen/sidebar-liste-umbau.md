@@ -21,7 +21,7 @@ Kein neuer UNO-Control-Typ (Risiko bei Sidebar-Rendering). Stattdessen:
 ## Neue Dateien
 
 ### 1. `SheetGruppe.java` (Enum)
-**Pfad:** `src/main/java/de/petanqueturniermanager/sidebar/sheets/SheetGruppe.java`
+**Pfad:** `../src/main/java/de/petanqueturniermanager/sidebar/sheets/SheetGruppe.java`
 
 Enum mit einem Wert pro Turniersystem-Gruppe. Enthält:
 - i18n-Key für Gruppen-Bezeichnung (nutzt `enum.turniersystem.*` die bereits existieren)
@@ -48,7 +48,7 @@ Methoden:
 - `String getAnzeigeBezeichnung()` – `I18n.get(i18nKey)` (für FORME: neuer Key `enum.turniersystem.forme`)
 
 ### 2. `BlattBaumEintrag.java` (sealed interface + Records)
-**Pfad:** `src/main/java/de/petanqueturniermanager/sidebar/sheets/BlattBaumEintrag.java`
+**Pfad:** `../src/main/java/de/petanqueturniermanager/sidebar/sheets/BlattBaumEintrag.java`
 
 ```java
 sealed interface BlattBaumEintrag permits GruppenKopf, BlattKnoten {}
@@ -62,7 +62,7 @@ record BlattKnoten(XSpreadsheet sheet, String anzeigeText, String metadatenSchlu
 ```
 
 ### 3. `SheetBaumOrganisierer.java`
-**Pfad:** `src/main/java/de/petanqueturniermanager/sidebar/sheets/SheetBaumOrganisierer.java`
+**Pfad:** `../src/main/java/de/petanqueturniermanager/sidebar/sheets/SheetBaumOrganisierer.java`
 
 Verantwortlich für:
 1. **`baumAufbauen(List<XSpreadsheet>, XSpreadsheetDocument, Set<SheetGruppe> kollabiert)`**  
@@ -75,7 +75,7 @@ Verantwortlich für:
 ## Geänderte Dateien
 
 ### `SheetListeSidebarContent.java`
-`src/main/java/de/petanqueturniermanager/sidebar/sheets/SheetListeSidebarContent.java`
+`../src/main/java/de/petanqueturniermanager/sidebar/sheets/SheetListeSidebarContent.java`
 
 **Feldänderungen:**
 - Ersetze `List<XSpreadsheet> aktuelleSheets` durch `List<BlattBaumEintrag> baumEintraege`

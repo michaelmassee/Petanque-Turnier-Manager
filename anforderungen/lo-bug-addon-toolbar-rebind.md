@@ -4,7 +4,7 @@
 **Filed as:** [tdf#172207](https://bugs.documentfoundation.org/show_bug.cgi?id=172207)
 
 **Fix eingereicht:** [Gerrit 205731](https://gerrit.libreoffice.org/c/core/+/205731) —
-Patch unter `upstream/libreoffice/tdf172207-toolbar-keep-controllers-on-imagemgr-dispose.patch`.
+Patch unter `../upstream/libreoffice/tdf172207-toolbar-keep-controllers-on-imagemgr-dispose.patch`.
 
 > **Aktualisierte Root-Cause (über die ursprüngliche Analyse hinaus):**
 > Die eigentliche Ursache liegt **nicht** im `ToolbarLayoutManager`-Cache,

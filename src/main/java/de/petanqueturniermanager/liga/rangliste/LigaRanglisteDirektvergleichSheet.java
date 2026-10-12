@@ -191,16 +191,21 @@ public class LigaRanglisteDirektvergleichSheet extends SheetRunner implements IS
 		String spielplanBegegnungenVerweis = ligaSpielPlanVerweis(LigaSpielPlanSheet.TEAM_A_NR_SPALTE);
 		String spielplanSpieleVerweis = ligaSpielPlanVerweis(LigaSpielPlanSheet.SPIELE_A_SPALTE);
 		String spielplanSpielPunkteVerweis = ligaSpielPlanVerweis(LigaSpielPlanSheet.SPIELPNKT_A_SPALTE);
-		for (IMeldung<Team> mldA : alleMeldungen.getMeldungenSortedByNr()) {
-			for (IMeldung<Team> mldB : alleMeldungen.getMeldungenSortedByNr()) {
-				if (mldA.getNr() != mldB.getNr()) {
+		// Zeile/Spalte = Position in der nach Nr sortierten Liste (wie die Teamspalte links), nicht die Nr selbst:
+		// Teamnummern dürfen Lücken haben („Teamnummer ändern“).
+		List<IMeldung<Team>> sortiert = alleMeldungen.getMeldungenSortedByNr();
+		for (int a = 0; a < sortiert.size(); a++) {
+			IMeldung<Team> mldA = sortiert.get(a);
+			for (int b = 0; b < sortiert.size(); b++) {
+				IMeldung<Team> mldB = sortiert.get(b);
+				if (a != b) {
 					String formuleStr = direktVergleichFormula(mldA.getNr(), mldB.getNr(), spielplanBegegnungenVerweis,
 							spielplanSpieleVerweis, spielplanSpielPunkteVerweis);
-					formula.setPos(startTeamNrPos).zeilePlus(mldA.getNr()).spaltePlus(mldB.getNr() - 1)
+					formula.setPos(startTeamNrPos).zeilePlus(a + 1).spaltePlus(b)
 							.setComment(mldA.getNr() + ":" + mldB.getNr()).setValue(formuleStr);
 					getSheetHelper().setFormulaInCell(formula);
 				} else {
-					xStr.setPos(startTeamNrPos).zeilePlus(mldA.getNr()).spaltePlus(mldB.getNr() - 1);
+					xStr.setPos(startTeamNrPos).zeilePlus(a + 1).spaltePlus(b);
 					getSheetHelper().setStringValueInCell(xStr);
 				}
 			}

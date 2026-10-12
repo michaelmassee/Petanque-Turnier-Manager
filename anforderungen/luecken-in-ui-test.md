@@ -6,7 +6,7 @@ Der Auftrag „Prüfe Testabdeckung mit UI-Test" soll Klarheit darüber schaffen
 
 ## Bestand
 
-**41 UI-Test-Klassen** unter `src/test/`. UI-Tests laufen gegen eine headless LibreOffice-Instanz (`OfficeStarter`) mit der vorher installierten Extension (`./gradlew reinstallExtension`).
+**41 UI-Test-Klassen** unter `../src/test`. UI-Tests laufen gegen eine headless LibreOffice-Instanz (`OfficeStarter`) mit der vorher installierten Extension (`./gradlew reinstallExtension`).
 
 ## Abdeckung pro Turniersystem / Feature
 

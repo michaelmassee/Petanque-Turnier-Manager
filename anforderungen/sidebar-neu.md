@@ -49,7 +49,7 @@ Deprecated 3-Arg-Konstruktor durch `WorkingSpreadsheet(context, document)` erset
 
 ### 1. Doppelregistrierung via `.components` — WIRKUNGSLOS
 
-`PetanqueTurnierManager.components` (eingebettet im JAR unter `META-INF/`) referenziert:
+`PetanqueTurnierManager.components` (eingebettet im JAR unter `../META-INF`) referenziert:
 ```xml
 <component loader="com.sun.star.loader.Java2" uri="PetanqueTurnierManager-1.0.0.jar">
 ```
@@ -78,7 +78,7 @@ Passt zum LO-internen Pfad `/org.openoffice.Office.UI.Factories/Registered/UIEle
 
 | Datei | Zustand | Bedeutung |
 |-------|---------|-----------|
-| `META-INF/manifest.xml` | M | Sidebar.xcu + Factories.xcu aktiviert |
+| `../META-INF/manifest.xml` | M | Sidebar.xcu + Factories.xcu aktiviert |
 | `registry/.../Sidebar.xcu` | unverändert | 1 Deck, 1 Panel |
 | `registry/.../Factories.xcu` | neu | Factory-Registrierung (korrekt) |
 | `registry/.../UIElementFactoryManager.xcu` | gelöscht | Alter falscher Pfad |

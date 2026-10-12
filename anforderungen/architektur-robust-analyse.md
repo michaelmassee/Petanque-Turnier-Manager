@@ -4,7 +4,7 @@
 
 Dieses Dokument beschreibt den aktuellen Architektur- und Robustheitsstand des Projekts und dient als kompakter Maßnahmenkatalog. Erledigte Arbeiten sind nur zusammengefasst; Detailhistorie früherer Umsetzungsblöcke ist bewusst entfernt.
 
-Aktueller Projektstand: ca. 676 Java-Dateien in `src/main/java`, ca. 142 Test-/UITest-Klassen, Java 25, GitHub Actions CI, strikte Compiler-Lints für Produktivcode, SpotBugs-Quality-Gate und NullAway/JSpecify-Pilot.
+Aktueller Projektstand: ca. 676 Java-Dateien in `../src/main/java`, ca. 142 Test-/UITest-Klassen, Java 25, GitHub Actions CI, strikte Compiler-Lints für Produktivcode, SpotBugs-Quality-Gate und NullAway/JSpecify-Pilot.
 
 ---
 
@@ -21,7 +21,7 @@ Aktueller Projektstand: ca. 676 Java-Dateien in `src/main/java`, ca. 142 Test-/U
 - **Sehr große Klassen**: `ProtocolHandler` (2141 LOC), `KoTurnierbaumSheet` (1632), `WebServerManager` (1188), `SheetHelper` (1076), `SpielrundeDelegate` (816). Lokale Komplexität und Änderungsrisiko bleiben hoch.
 - **Breites Helper-Paket**: ca. 118 Helper-Java-Dateien; Kohäsion und interne Abhängigkeiten sind schwer überschaubar.
 - **Null-Rückgaben bleiben verbreitet**: ca. 176 `return null`-Treffer in Produktivcode. Nicht alle optionalen APIs sind per JSpecify sichtbar.
-- **SpotBugs ist als Quality Gate aktiv**: `spotbugsMain` erwartet 0 ungefilterte Findings bis LOW confidence; dokumentierte False Positives liegen in `config/spotbugs/exclude.xml`.
+- **SpotBugs ist als Quality Gate aktiv**: `spotbugsMain` erwartet 0 ungefilterte Findings bis LOW confidence; dokumentierte False Positives liegen in `../config/spotbugs/exclude.xml`.
 - **NullAway ist noch Pilot/Teilausbau**: aktiv für `helper.random`, `spielerdb.webview` und `comp.newrelease`, aber noch nicht für breite Helper- oder UI-Flächen.
 
 ---
@@ -44,7 +44,7 @@ Aktuell keine offenen P1-Punkte aus dieser Analyse bekannt.
 
 3. **SpotBugs-Excludes klein halten**
    - Problem: Der harte SpotBugs-Gate ist aktiv, aber Excludes können mit der Zeit zu breit werden.
-   - Ziel: Neue Findings bevorzugt im Code beheben; nur begründete False Positives in `config/spotbugs/exclude.xml` ergänzen.
+   - Ziel: Neue Findings bevorzugt im Code beheben; nur begründete False Positives in `../config/spotbugs/exclude.xml` ergänzen.
 
 4. **NullAway/JSpecify ausweiten**
    - Problem: Nullness ist nur in Teilpaketen erzwungen.
@@ -82,7 +82,7 @@ Aktuell keine offenen P1-Punkte aus dieser Analyse bekannt.
 - NullAway/ErrorProne ist integriert, Standard-ErrorProne-Checks sind deaktiviert, NullAway läuft im JSpecify-Modus.
 - Webserver-HTTP-/SSE-Verhalten ist mit `WebServerInstanzSmokeTest` abgesichert.
 - Algorithmus-/Record-Lücken in FormuleX, Kaskade und Poule wurden durch zusätzliche Tests geschlossen.
-- JSpecify (`org.jspecify.annotations.*`) ist als verbindlicher Nullness-Standard in `CLAUDE.md` festgelegt.
+- JSpecify (`org.jspecify.annotations.*`) ist als verbindlicher Nullness-Standard in `../CLAUDE.md` festgelegt.
 
 ---
 
@@ -99,14 +99,14 @@ Aktuell keine offenen P1-Punkte aus dieser Analyse bekannt.
 
 ## 5. Kritische Dateien für nachfolgende Arbeiten
 
-- `src/main/java/de/petanqueturniermanager/comp/ProtocolHandler.java`
-- `src/main/java/de/petanqueturniermanager/ko/KoTurnierbaumSheet.java`
-- `src/main/java/de/petanqueturniermanager/webserver/WebServerManager.java`
-- `src/main/java/de/petanqueturniermanager/helper/sheet/SheetHelper.java`
-- `src/main/java/de/petanqueturniermanager/helper/msgbox/InfoModal.java`
-- `build.gradle`
-- `.github/workflows/ci.yml`
-- `config/spotbugs/exclude.xml`
+- `../src/main/java/de/petanqueturniermanager/comp/ProtocolHandler.java`
+- `../src/main/java/de/petanqueturniermanager/ko/KoTurnierbaumSheet.java`
+- `../src/main/java/de/petanqueturniermanager/webserver/WebServerManager.java`
+- `../src/main/java/de/petanqueturniermanager/helper/sheet/SheetHelper.java`
+- `../src/main/java/de/petanqueturniermanager/helper/msgbox/InfoModal.java`
+- `../build.gradle`
+- `../.github/workflows/ci.yml`
+- `../config/spotbugs/exclude.xml`
 
 ---
 
