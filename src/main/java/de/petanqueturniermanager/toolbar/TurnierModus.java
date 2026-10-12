@@ -100,6 +100,16 @@ public class TurnierModus {
         this.aktivFuerTest = wert;
     }
 
+    /**
+     * Nur für Tests: vergisst jeden Turnier-Modus-Zustand. Stürzt LibreOffice ab, melden dessen Frames kein
+     * {@code disposing} mehr; ihr Zustand bliebe sonst stehen und ließe den Modus für alle folgenden Tests ohne
+     * Dokument-Kontext als aktiv gelten ({@link #istAktivImAktuellenKontext()}).
+     */
+    public void zuruecksetzenFuerTest() {
+        aktivFuerTest = false;
+        kioskZustaende.leeren();
+    }
+
     public void umschalten(WorkingSpreadsheet ws) {
         try {
             var lm = holeLayoutManager(ws);

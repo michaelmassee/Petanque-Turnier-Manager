@@ -233,6 +233,8 @@ public abstract class BaseCalcUITest {
 		// LibreOffice-Event der async zwischen finally-Block und dem nächsten @BeforeEach feuert)
 		// das laeuft-Flag auf true hält und run()-Aufrufe im nächsten Test als No-Op ausführt.
 		SheetRunner.koordinator.zuruecksetzen();
+		// Ebenso den Turnier-Modus: nach einem LO-Absturz bliebe der Zustand eines toten Frames stehen.
+		TurnierModus.get().zuruecksetzenFuerTest();
 		assertThat(loader).as("LibreOffice loader nicht verfügbar – UITest fehlgeschlagen").isNotNull();
 		doc = OfficeDocumentHelper.from(loader).createCalc();
 		assertThat(doc).as("LibreOffice Calc-Dokument konnte nicht erstellt werden – UITest fehlgeschlagen").isNotNull();

@@ -51,6 +51,11 @@ final class FrameZuordnung<T> {
         return eintrag.map(Eintrag::wert);
     }
 
+    /** Vergisst alle Zuordnungen, auch solche, deren Frame nie {@code disposing} gemeldet hat. */
+    synchronized void leeren() {
+        eintraege.clear();
+    }
+
     synchronized boolean istLeer() {
         return eintraege.isEmpty();
     }

@@ -101,10 +101,11 @@ public final class SchweizerRundenLeser {
 			SchweizerTeamNrAufloeser teamNrAufloeser, int freispielPunktePlus,
 			int freispielPunkteMinus) throws GenerateException {
 
+		// Teamzellen und Ergebnisse (relativ 0..3)
 		RangePosition readRange = RangePosition.from(
 				SchweizerAbstractSpielrundeSheet.TEAM_A_SPALTE,
 				SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE,
-				SchweizerAbstractSpielrundeSheet.TEAM_B_SPALTE,
+				SchweizerAbstractSpielrundeSheet.ERG_TEAM_B_SPALTE,
 				SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE + 999);
 		RangeData rowsData = RangeHelper
 				.from(rundeSheet, workingSpreadsheet.getWorkingSpreadsheetDocument(), readRange)

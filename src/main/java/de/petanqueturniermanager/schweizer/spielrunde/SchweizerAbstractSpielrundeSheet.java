@@ -304,7 +304,8 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 	private void leseRundeEin(XSpreadsheet sheet, SchweizerTeamNrAufloeser teamNrAufloeser,
 			TeamMeldungen aktiveMeldungen, Map<Integer, int[]> statsMap, Map<Integer, List<Integer>> gegnerMap)
 			throws GenerateException {
-		RangePosition readRange = RangePosition.from(TEAM_A_SPALTE, ERSTE_DATEN_ZEILE, TEAM_B_SPALTE,
+		// Teamzellen und Ergebnisse (relativ 0..3)
+		RangePosition readRange = RangePosition.from(TEAM_A_SPALTE, ERSTE_DATEN_ZEILE, ERG_TEAM_B_SPALTE,
 				ERSTE_DATEN_ZEILE + 999);
 		RangeData rowsData = RangeHelper
 				.from(sheet, getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), readRange).getDataFromRange();
