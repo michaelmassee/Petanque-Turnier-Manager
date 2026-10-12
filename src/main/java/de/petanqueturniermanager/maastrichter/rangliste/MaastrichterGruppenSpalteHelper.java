@@ -97,6 +97,41 @@ public final class MaastrichterGruppenSpalteHelper {
 	}
 
 	/**
+	 * Nach „Teamnummer ändern“: zieht die Nr-Werte der Rangliste nach (bei einem Tausch in beide Richtungen). Die
+	 * Gruppe-Spalte ist über diese Nummern dem Team zugeordnet; ohne Nachziehen landeten die Gruppen beim nächsten
+	 * Neuaufbau, in der Gruppenübersicht und im Siegergeld bei der falschen bzw. keiner Nummer.
+	 */
+	public static void nummerAendern(SchweizerRanglisteSheet rangliste, int alteNr, int neueNr)
+			throws GenerateException {
+		XSpreadsheet sheet = rangliste.getXSpreadSheet();
+		if (sheet == null) {
+			return;
+		}
+		RangePosition nrSpalte = RangePosition.from(SchweizerRanglisteSheet.TEAM_NR_SPALTE,
+				SchweizerRanglisteSheet.ERSTE_DATEN_ZEILE, SchweizerRanglisteSheet.TEAM_NR_SPALTE,
+				SchweizerRanglisteSheet.ERSTE_DATEN_ZEILE + 999);
+		RangeData nummern = RangeHelper
+				.from(sheet, rangliste.getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), nrSpalte)
+				.getDataFromRange();
+		RangeData neu = new RangeData();
+		boolean geaendert = false;
+		for (RowData row : nummern) {
+			int nr = row.isEmpty() ? 0 : row.get(0).getIntVal(0);
+			if (nr <= 0) {
+				break;
+			}
+			int ersetzt = nr == alteNr ? neueNr : nr == neueNr ? alteNr : nr;
+			geaendert |= ersetzt != nr;
+			neu.addNewRow().newInt(ersetzt);
+		}
+		if (geaendert) {
+			RangeHelper.from(rangliste, neu.getRangePosition(
+					Position.from(SchweizerRanglisteSheet.TEAM_NR_SPALTE, SchweizerRanglisteSheet.ERSTE_DATEN_ZEILE)))
+					.setDataInRange(neu);
+		}
+	}
+
+	/**
 	 * Schreibt den zweizeiligen Header der Gruppe-Spalte analog zu den anderen Einzel-Spalten
 	 * der Schweizer-Rangliste.
 	 */

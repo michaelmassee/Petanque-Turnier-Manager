@@ -20,6 +20,8 @@ import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
+import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterGruppenSpalteHelper;
+import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterVorrundenRanglisteSheetUpdate;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet;
 
@@ -36,7 +38,8 @@ public class TeamnummerAendernSheet extends SheetRunner {
 	/** Systeme, deren Spielrunden und Ranglisten Teams über die UUID referenzieren (umbau-nr-uuid.md). */
 	static final Set<TurnierSystem> UMGESTELLTE_SYSTEME = Set.of(TurnierSystem.SCHWEIZER, TurnierSystem.KO,
 			TurnierSystem.FORMULEX, TurnierSystem.KASKADE, TurnierSystem.TRIPTETE, TurnierSystem.JGJ,
-			TurnierSystem.LIGA, TurnierSystem.POULE, TurnierSystem.SUPERMELEE);
+			TurnierSystem.LIGA, TurnierSystem.POULE, TurnierSystem.SUPERMELEE,
+			TurnierSystem.MAASTRICHTER);
 
 	/** Nr-Spalte der Meldeliste (A), wie {@link MeldelisteUuidIndex}. */
 	private static final int NR_SPALTE = 0;
@@ -89,12 +92,22 @@ public class TeamnummerAendernSheet extends SheetRunner {
 		TeamnummerAenderung.Plan plan = ergebnis.plan().orElseThrow();
 		TeamNummernVergabe.schreibeNrFormeln(getSheetHelper(), meldeliste, NR_SPALTE, plan.formelProZeile());
 		getxCalculatable().calculateAll();
-		if (getTurnierSystem() == TurnierSystem.SUPERMELEE) {
-			spieltagRanglistenNeuAufbauen();
-		}
+		nachziehen(wunsch);
 		melde(MessageBoxTypeEnum.INFO_OK, plan.getauscht()
 				? I18n.get("teamnummer.aendern.getauscht", wunsch.alteNr(), wunsch.neueNr())
 				: I18n.get("teamnummer.aendern.geaendert", wunsch.alteNr(), wunsch.neueNr()));
+	}
+
+	/** Gespeicherte Nummern-Werte, an denen weitere Daten hängen, auf die neue Nummer bringen. */
+	private void nachziehen(Wunsch wunsch) throws GenerateException {
+		switch (getTurnierSystem()) {
+		case SUPERMELEE -> spieltagRanglistenNeuAufbauen();
+		case MAASTRICHTER -> MaastrichterGruppenSpalteHelper.nummerAendern(
+				new MaastrichterVorrundenRanglisteSheetUpdate(getWorkingSpreadsheet()), wunsch.alteNr(), wunsch.neueNr());
+		default -> {
+			// Ranglisten führen Nummern nur als Anzeige; sie zeigen die neue Nummer nach dem nächsten Aktualisieren.
+		}
+		}
 	}
 
 	/**
