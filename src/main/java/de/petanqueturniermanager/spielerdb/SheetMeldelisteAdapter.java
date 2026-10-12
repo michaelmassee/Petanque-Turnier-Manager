@@ -20,6 +20,7 @@ import com.sun.star.sheet.XSpreadsheetDocument;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.NrUuidSpalte;
+import de.petanqueturniermanager.basesheet.meldeliste.NrZellFormel;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.i18n.I18n;
@@ -534,7 +535,8 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
     }
 
     private NrUuidSpalte nrUuidSpalte() {
-        return new NrUuidSpalte(sheetHelper, sheet, doc, SPALTE_NR, ersteDatenZeile);
+        return new NrUuidSpalte(sheetHelper, sheet, doc, SPALTE_NR, ersteDatenZeile,
+                NrZellFormel.Art.TEAM);
     }
 
     private static void pruefeZeilen(Collection<Integer> zeilen1Basiert) throws MeldelisteSchreibException {

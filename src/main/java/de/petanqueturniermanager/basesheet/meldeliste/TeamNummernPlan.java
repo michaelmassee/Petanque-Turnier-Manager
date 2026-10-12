@@ -10,7 +10,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import de.petanqueturniermanager.addins.GlobalImpl;
 
 /**
  * Berechnet, welche Zellen der Nr-Spalte einer Meldeliste neu geschrieben werden müssen: Jede Zeile mit Namen
@@ -73,16 +72,16 @@ public final class TeamNummernPlan {
 				continue;
 			}
 			boolean hatNr = zelle.nr() > 0;
-			Optional<String> eigeneUuid = TeamUuidFormel.findeUuid(zelle.formel());
-			// Erstes Vorkommen behält die UUID; eine kopierte Zeile mit derselben UUID bekommt eine neue.
-			boolean uuidBleibt = eigeneUuid.isPresent() && vergebeneUuids.add(eigeneUuid.get());
+			Optional<NrZellFormel> eigene = NrZellFormel.lese(zelle.formel(), NrZellFormel.Art.TEAM);
+			// Erstes Vorkommen behält UUID und Online-ID; eine kopierte Zeile wird eine neue Meldung.
+			boolean uuidBleibt = eigene.isPresent() && vergebeneUuids.add(eigene.get().uuid());
 			if (hatNr && uuidBleibt) {
 				continue;
 			}
 			int nr = hatNr ? zelle.nr() : nummern.naechste();
-			String uuid = uuidBleibt ? eigeneUuid.get() : neueUuid.get();
-			vergebeneUuids.add(uuid);
-			aenderungen.add(new Aenderung(index, nr, uuid, GlobalImpl.FORMAT_PTM_TNR_UUID(nr, uuid)));
+			NrZellFormel neu = uuidBleibt ? eigene.get() : NrZellFormel.team(neueUuid.get());
+			vergebeneUuids.add(neu.uuid());
+			aenderungen.add(new Aenderung(index, nr, neu.uuid(), neu.formel(nr)));
 		}
 		return aenderungen;
 	}

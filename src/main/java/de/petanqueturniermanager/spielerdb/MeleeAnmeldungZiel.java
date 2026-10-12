@@ -22,6 +22,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungNummerierung
 import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungZeile;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.basesheet.meldeliste.NrUuidSpalte;
+import de.petanqueturniermanager.basesheet.meldeliste.NrZellFormel;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
@@ -212,7 +213,8 @@ public final class MeleeAnmeldungZiel implements MeldelisteZiel, MeleeAnmeldungK
 
 	/** Die UUID steckt in der Nr-Zelle ({@code PTM.ALG.TNRUUID}) und wandert beim Sortieren mit. */
 	private NrUuidSpalte nrUuidSpalte(XSpreadsheet sheet) {
-		return new NrUuidSpalte(sheetHelper, sheet, ws.getWorkingSpreadsheetDocument(), SPALTE_NR, ERSTE_DATEN_ZEILE);
+		return new NrUuidSpalte(sheetHelper, sheet, ws.getWorkingSpreadsheetDocument(), SPALTE_NR, ERSTE_DATEN_ZEILE,
+				NrZellFormel.Art.SPIELER);
 	}
 
 	private static void pruefeDatenZeilen(Collection<Integer> zeilen1Basiert) throws MeldelisteSchreibException {

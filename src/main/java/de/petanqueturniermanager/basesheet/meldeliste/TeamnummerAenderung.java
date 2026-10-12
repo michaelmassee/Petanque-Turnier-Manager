@@ -7,7 +7,6 @@ import java.util.Optional;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import de.petanqueturniermanager.addins.GlobalImpl;
 
 /**
  * Plant „Teamnummer ändern“ auf der Nr-Spalte der Meldeliste: Nur die angezeigte Zahl in
@@ -78,8 +77,11 @@ public final class TeamnummerAenderung {
 		}
 
 		SortedMap<Integer, String> formelProZeile = new TreeMap<>();
-		formelProZeile.put(zeileAlt, GlobalImpl.FORMAT_PTM_TNR_UUID(neueNr, uuidAlt.get()));
-		uuidNeu.ifPresent(uuid -> formelProZeile.put(zeileNeu, GlobalImpl.FORMAT_PTM_TNR_UUID(alteNr, uuid)));
+		// Nur die Nummer ändert sich; UUID und Online-ID bleiben in der Formel.
+		formelProZeile.put(zeileAlt, zelle(formeln, zeileAlt).formel(neueNr));
+		if (uuidNeu.isPresent()) {
+			formelProZeile.put(zeileNeu, zelle(formeln, zeileNeu).formel(alteNr));
+		}
 		return Ergebnis.von(new Plan(formelProZeile, uuidNeu.isPresent()));
 	}
 
@@ -99,6 +101,11 @@ public final class TeamnummerAenderung {
 			}
 		}
 		return -1;
+	}
+
+	/** Nur für Zeilen mit UUID aufrufen (geprüft in {@link #plane}). */
+	private static NrZellFormel zelle(String[][] formeln, int zeile) {
+		return NrZellFormel.lese(formeln[zeile][0], NrZellFormel.Art.TEAM).orElseThrow();
 	}
 
 	private static Optional<String> uuid(String[][] formeln, int zeile) {

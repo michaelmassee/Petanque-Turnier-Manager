@@ -63,10 +63,13 @@ module de { module petanqueturniermanager { module addin {
       [in] long anzBahnen, [in] long anzRunden, [in] long durchgangPauseMin, [in] long rundenPauseMin,
       [in] long zeitlimitMin);
     // Team-Identität per UUID (PTM.ALG.TNRUUID / PTM.ALG.UUIDZEILE) – Indizes 34-35.
-    // TNRUUID: Nr-Zelle der Meldeliste, zeigt die Nr, traegt die UUID als Literal.
-    long ptmtnruuid ([in] long nr, [in] string uuid);
+    // TNRUUID: Nr-Zelle der Meldeliste, zeigt die Nr, traegt die UUID und optional die PTM-Online-ID als Literal.
+    // any-Parameter sind in Calc optional (SC_ADDINARG_VALUE_OR_ARRAY).
+    long ptmtnruuid ([in] long nr, [in] string uuid, [in] any onlineId);
     // UUIDZEILE: Zeile der UUID im Bereich (wie MATCH), nicht gefunden = leeres any = #N/A.
     any ptmuuidzeile ([in] string uuid, [in] com::sun::star::table::XCellRange bereich);
+    // Index 36 – SPLRUUID: Nr-Zelle der Melee-Anmeldung (Spieler), wie TNRUUID.
+    long ptmsplruuid ([in] long nr, [in] string uuid, [in] any onlineId);
   };
 
 }; }; };

@@ -432,7 +432,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 					throw new DoppelteStartnummerException(spielrNr, I18n.get("error.meldeliste.spieler.nr", spielrNr));
 				}
 				spielrNrInSheet.add(spielrNr);
-			} else if (uuidAusNrFormel(nrFormeln, spielerZeilecntr).isEmpty()) {
+			} else if (nrZelle(nrFormeln, spielerZeilecntr).isEmpty()) {
 				// ungültige Nr ohne UUID einfach löschen; Nr 0 mit UUID (frisch importiert) bekommt ihre Nr gleich
 				meldeListe.getSheetHelper().clearValInCell(xSheet, Position.from(SPIELER_NR_SPALTE, spielerZeilecntr));
 			}
@@ -565,9 +565,10 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 				naechsteFreieNr++;
 			}
 			belegteNummern.add(naechsteFreieNr);
-			// Die Meldung behält ihre UUID; nur die angezeigte Nr ändert sich.
-			String uuid = uuidAusNrFormel(nrFormeln, zeile).orElseGet(() -> UUID.randomUUID().toString());
-			neueFormeln.put(zeile, GlobalImpl.FORMAT_PTM_TNR_UUID(naechsteFreieNr, uuid));
+			// Die Meldung behält UUID und Online-ID; nur die angezeigte Nr ändert sich.
+			NrZellFormel zelle = nrZelle(nrFormeln, zeile)
+					.orElseGet(() -> NrZellFormel.team(UUID.randomUUID().toString()));
+			neueFormeln.put(zeile, zelle.formel(naechsteFreieNr));
 			meldeListe.getSheetHelper().setPropertiesInRange(xSheet,
 					RangePosition.from(SPIELER_NR_SPALTE, zeile, SPIELER_NR_SPALTE, zeile),
 					CellProperties.from().setCharColor(ColorHelper.CHAR_COLOR_BLACK));
@@ -581,13 +582,13 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 				RangePosition.from(SPIELER_NR_SPALTE, meldeListe.getErsteDatenZiele(), SPIELER_NR_SPALTE, letzteZeile));
 	}
 
-	/** UUID aus der Nr-Formel der Zeile (0-basiert), falls vorhanden. */
-	private Optional<String> uuidAusNrFormel(String[][] nrFormeln, int zeile) {
+	/** Inhalt der Nr-Zelle der Zeile (0-basiert), falls sie eine UUID trägt. */
+	private Optional<NrZellFormel> nrZelle(String[][] nrFormeln, int zeile) {
 		int index = zeile - meldeListe.getErsteDatenZiele();
 		if (index < 0 || index >= nrFormeln.length || nrFormeln[index].length == 0) {
 			return Optional.empty();
 		}
-		return TeamUuidFormel.findeUuid(nrFormeln[index][0]);
+		return NrZellFormel.lese(nrFormeln[index][0], NrZellFormel.Art.TEAM);
 	}
 
 	/**

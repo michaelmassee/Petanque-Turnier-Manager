@@ -26,6 +26,7 @@ import de.petanqueturniermanager.addin.XGlobal;
 import de.petanqueturniermanager.algorithmen.common.CadrageRechner;
 import de.petanqueturniermanager.algorithmen.liga.Direktvergleich;
 import de.petanqueturniermanager.algorithmen.poule.PouleGruppenRechner;
+import de.petanqueturniermanager.basesheet.meldeliste.NrZellFormel;
 import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeigeFormatierer;
 import de.petanqueturniermanager.basesheet.meldeliste.TeamUuidFormel;
 import de.petanqueturniermanager.comp.DocumentHelper;
@@ -69,6 +70,7 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	public static final String PTM_TEAM_ANZEIGE = "PTM.ALG.TEAMANZEIGE";
 	public static final String PTM_TNR_UUID = "PTM.ALG.TNRUUID";
 	public static final String PTM_UUID_ZEILE = "PTM.ALG.UUIDZEILE";
+	public static final String PTM_SPLR_UUID = "PTM.ALG.SPLRUUID";
 
 	public static final String PTM_SUPERMELEE_TRIPL_ANZ_DOUBLETTE = "PTM.SUPERMELEE.TRIPL_ANZ_DOUBLETTE";
 	public static final String PTM_SUPERMELEE_TRIPL_ANZ_TRIPLETTE = "PTM.SUPERMELEE.TRIPL_ANZ_TRIPLETTE";
@@ -123,7 +125,7 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 
 	/** Nr-Zelle der Meldeliste: zeigt {@code nr} an und trägt die UUID des Teams als Literal. */
 	public static String FORMAT_PTM_TNR_UUID(int nr, String uuid) {
-		return PTM_TNR_UUID + "(" + nr + ";\"" + uuid + "\")";
+		return NrZellFormel.team(uuid).formel(nr);
 	}
 
 	/** Zeile der UUID im Bereich, Ersatz für {@code MATCH(nr;bereich;0)}. */
@@ -311,7 +313,12 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	}
 
 	@Override
-	public int ptmtnruuid(int nr, String uuid) {
+	public int ptmtnruuid(int nr, String uuid, Object onlineId) {
+		return nr;
+	}
+
+	@Override
+	public int ptmsplruuid(int nr, String uuid, Object onlineId) {
 		return nr;
 	}
 

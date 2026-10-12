@@ -3,6 +3,7 @@ package de.petanqueturniermanager.addins;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.LocalTime;
+import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
@@ -10,6 +11,7 @@ import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
+import de.petanqueturniermanager.basesheet.meldeliste.NrZellFormel;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.planungsrechner.PlanungsrechnerRechner;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleePropertiesSpalte;
@@ -422,5 +424,33 @@ public class GlobalImplUITest extends BaseCalcUITest {
 		assertThat(sheetHlp.getFormulaFromCell(sheet, pos))
 				.as("AddIn-Formel muss auch im Kiosk-Modus geschrieben werden")
 				.containsIgnoringCase("INTPROPERTY");
+	}
+
+	/**
+	 * Nr-Zellen tragen lokale UUID und optional die PTM-Online-ID; der dritte Parameter ist optional ({@code any}) und
+	 * ändert die angezeigte Nummer nicht. Nach dem Lesen bleiben beide IDs in der Formel.
+	 */
+	@Test
+	public void testNrZellFormelnMitUndOhneOnlineId() {
+		XSpreadsheet sheet = sheetHlp.getSheetByIdx(0);
+		String lokal = "0b8c1f8e-3c55-4b7a-9d1e-2f6a7c9e1a01";
+		String online = "7f3e2d1c-0b9a-4876-a5d4-c3b2a1908f7e";
+		Position ohne = Position.from(5, 0);
+		Position mit = Position.from(5, 1);
+		Position spieler = Position.from(5, 2);
+		sheetHlp.setFormulaInCell(sheet, ohne, "=" + NrZellFormel.team(lokal).formel(7));
+		sheetHlp.setFormulaInCell(sheet, mit,
+				"=" + NrZellFormel.team(lokal).mitOnlineId(Optional.of(online)).formel(8));
+		sheetHlp.setFormulaInCell(sheet, spieler,
+				"=" + NrZellFormel.spieler(lokal).mitOnlineId(Optional.of(online)).formel(9));
+
+		assertThat(sheetHlp.getTextFromCell(sheet, ohne)).isEqualTo("7");
+		assertThat(sheetHlp.getTextFromCell(sheet, mit)).isEqualTo("8");
+		assertThat(sheetHlp.getTextFromCell(sheet, spieler)).isEqualTo("9");
+		NrZellFormel gelesen = NrZellFormel.lese(sheetHlp.getFormulaFromCell(sheet, spieler), NrZellFormel.Art.TEAM)
+				.orElseThrow();
+		assertThat(gelesen.art()).isEqualTo(NrZellFormel.Art.SPIELER);
+		assertThat(gelesen.uuid()).isEqualTo(lokal);
+		assertThat(gelesen.onlineId()).contains(online);
 	}
 }

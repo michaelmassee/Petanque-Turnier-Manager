@@ -10,7 +10,6 @@ import java.util.UUID;
 
 import com.sun.star.sheet.XSpreadsheet;
 
-import de.petanqueturniermanager.addins.GlobalImpl;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.position.RangePosition;
@@ -53,9 +52,12 @@ public final class MeleeAnmeldungNummerierung implements MeleeAnmeldungKonstante
 		String[][] formeln = new String[zeilen.size()][1];
 		for (int idx = 0; idx < zeilen.size(); idx++) {
 			String alt = idx < bisher.length && bisher[idx].length > 0 ? bisher[idx][0] : "";
-			String uuid = TeamUuidFormel.findeUuid(alt).filter(vergeben::add).orElseGet(() -> UUID.randomUUID().toString());
-			vergeben.add(uuid);
-			formeln[idx][0] = GlobalImpl.FORMAT_PTM_TNR_UUID(idx + 1, uuid);
+			// Erstes Vorkommen behält UUID und Online-ID; eine kopierte Zeile wird ein neuer Spieler.
+			NrZellFormel zelle = NrZellFormel.lese(alt, NrZellFormel.Art.SPIELER)
+					.filter(vorhanden -> vergeben.add(vorhanden.uuid()))
+					.orElseGet(() -> NrZellFormel.spieler(UUID.randomUUID().toString()));
+			vergeben.add(zelle.uuid());
+			formeln[idx][0] = zelle.formel(idx + 1);
 		}
 		BlattschutzManager.get().schreibeEntsperrt(sheet, () -> helper.setFormulaArrayInRange(sheet, bereich, formeln));
 	}
