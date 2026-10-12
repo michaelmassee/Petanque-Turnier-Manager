@@ -59,8 +59,8 @@ class PtmOnlineAbgleichSheetRunnerUITest extends BaseCalcUITest {
     private static final String TURNIER_ID = "t1";
     private static final String DOCUMENT_ID = "e9e9caec-e0b1-4fe0-8fee-a229279b9f73";
     private static final String LEASE_TOKEN = "01234567890123456789012345678901";
-    /** Spaltenüberschrift „Online-ID“ der Zuordnungstabelle im Blatt „PTMOnline Sync“ (Zeile 7, Spalte F). */
-    private static final Position KOPF_ONLINE_ID = Position.from(5, 6);
+    /** Spaltenüberschrift „Lokale UUID“ der Zuordnungstabelle im Blatt „PTMOnline Sync“ (Zeile 7, Spalte F). */
+    private static final Position KOPF_LOKALE_UUID = Position.from(5, 6);
     private static final String ANMELDUNGEN = """
             {"registrations":[
               {"id":"r1","tournamentId":"t1","firstName":"Anna","lastName":"Schmidt","status":"confirmed"},
@@ -218,15 +218,15 @@ class PtmOnlineAbgleichSheetRunnerUITest extends BaseCalcUITest {
     void abgleichAktualisiertZuordnungstabelleOhneZweitenRunner() throws Exception {
         PtmOnlineSyncSheet syncSheet = new PtmOnlineSyncSheet(wkingSpreadsheet, TurnierSystem.SCHWEIZER, null);
         syncSheet.getSheetHelper().setStringValueInCell(
-                StringCellValue.from(syncSheet.getXSpreadSheet(), KOPF_ONLINE_ID, ""));
+                StringCellValue.from(syncSheet.getXSpreadSheet(), KOPF_LOKALE_UUID, ""));
         PtmOnlineAbgleichSheetRunner runner = neuerRunner();
 
         runner.start();
         runner.join();
 
         assertThat(runner.isLetzterLaufFehlgeschlagen()).isFalse();
-        assertThat(syncSheet.getSheetHelper().getTextFromCell(syncSheet.getXSpreadSheet(), KOPF_ONLINE_ID))
-                .isEqualTo(I18n.get("ptmonline.sheet.mapping.header.onlineid"));
+        assertThat(syncSheet.getSheetHelper().getTextFromCell(syncSheet.getXSpreadSheet(), KOPF_LOKALE_UUID))
+                .isEqualTo(I18n.get("ptmonline.sheet.mapping.header.lokaleuuid"));
     }
 
     /**

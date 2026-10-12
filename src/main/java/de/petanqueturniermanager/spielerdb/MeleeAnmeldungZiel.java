@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
@@ -211,7 +212,27 @@ public final class MeleeAnmeldungZiel implements MeldelisteZiel, MeleeAnmeldungK
 		return nrUuidSpalte(sheet).lese(zeilen1Basiert);
 	}
 
-	/** Die UUID steckt in der Nr-Zelle ({@code PTM.ALG.TNRUUID}) und wandert beim Sortieren mit. */
+	@Override
+	public Map<String, String> leseOnlineIdsProUuid() {
+		XSpreadsheet sheet = MeleeAnmeldungLeser.findeSheet(ws, metadatenSchluessel);
+		return sheet == null ? Map.of() : nrUuidSpalte(sheet).onlineIdsProUuid();
+	}
+
+	@Override
+	public Set<String> setzeOnlineIds(Map<String, Optional<String>> onlineIdProUuid)
+			throws MeldelisteSchreibException {
+		XSpreadsheet sheet = MeleeAnmeldungLeser.findeSheet(ws, metadatenSchluessel);
+		if (sheet == null) {
+			return Set.of();
+		}
+		try {
+			return nrUuidSpalte(sheet).setzeOnlineIds(onlineIdProUuid);
+		} catch (RuntimeException e) {
+			throw new MeldelisteSchreibException("PTM-Online-ID konnte nicht geschrieben werden", e);
+		}
+	}
+
+	/** UUID und Online-ID stecken in der Nr-Zelle ({@code PTM.ALG.SPLRUUID}) und wandern beim Sortieren mit. */
 	private NrUuidSpalte nrUuidSpalte(XSpreadsheet sheet) {
 		return new NrUuidSpalte(sheetHelper, sheet, ws.getWorkingSpreadsheetDocument(), SPALTE_NR, ERSTE_DATEN_ZEILE,
 				NrZellFormel.Art.SPIELER);

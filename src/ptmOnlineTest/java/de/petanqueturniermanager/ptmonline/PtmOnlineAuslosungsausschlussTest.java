@@ -24,6 +24,7 @@ import com.google.gson.JsonObject;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.formulex.meldeliste.FormuleXMeldeListeSheetNew;
@@ -40,7 +41,6 @@ import de.petanqueturniermanager.onlinesync.TurnierSystemOnlineTypMapping;
 import de.petanqueturniermanager.poule.meldeliste.PouleMeldeListeSheetNew;
 import de.petanqueturniermanager.poule.vorrunde.PouleVorrundeSheet;
 import de.petanqueturniermanager.ptmonline.PtmOnlineWebApi.Person;
-import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 import de.petanqueturniermanager.spielerdb.MeldelisteZielFactory;
 
 /**
@@ -93,7 +93,7 @@ class PtmOnlineAuslosungsausschlussTest extends BasePtmOnlineZusammenspielTest {
                 }, KoTurnierbaumSheet::new, 8),
                 new SystemAufbau(TurnierSystem.JGJ,
                         ws -> new JGJMeldeListeSheet_New(ws).createMeldelisteWithParams(Formation.TRIPLETTE, false,
-                                false, SpielplanTeamAnzeige.NR),
+                                false, TeamAnzeige.NR),
                         JGJSpielPlanSheet::new, 7),
                 new SystemAufbau(TurnierSystem.POULE,
                         ws -> new PouleMeldeListeSheetNew(ws).createMeldelisteWithParams(Formation.TRIPLETTE, false,

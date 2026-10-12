@@ -4,13 +4,18 @@
 package de.petanqueturniermanager.ptmonline;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -27,6 +32,8 @@ import de.petanqueturniermanager.ptmonline.dto.SyncBindingDto;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationAnswerDto;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationDto;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationFeeDto;
+import de.petanqueturniermanager.spielerdb.MeldelisteZiel;
+import de.petanqueturniermanager.spielerdb.MeldelisteZielFactory;
 
 /**
  * Bindeglied zum Blatt „PTMOnline Sync“ ({@link PtmOnlineSyncSheet}) einer Online-Turnier-Verbindung. Bei
@@ -36,10 +43,19 @@ import de.petanqueturniermanager.ptmonline.dto.RegistrationFeeDto;
  */
 public class PtmOnlineRegistrationMapping {
 
+    private static final Logger LOGGER = LogManager.getLogger(PtmOnlineRegistrationMapping.class);
+
+    private final WorkingSpreadsheet ws;
     private final PtmOnlineSyncSheet syncSheet;
     private final PtmOnlineKonfliktSheet konfliktSheet;
+    /**
+     * Zuordnungen dieses Laufs, die nicht in einer Nr-Zelle stehen können, weil es die lokale Zeile nicht (mehr)
+     * gibt – vom Server ({@link #ergaenzeAusServer}) oder gerade geschrieben.
+     */
+    private final Map<String, String> ohneZeile = new LinkedHashMap<>();
 
     public PtmOnlineRegistrationMapping(WorkingSpreadsheet ws, TurnierSystem turnierSystem, Integer spieltagNrOderNull) {
+        this.ws = ws;
         this.syncSheet = new PtmOnlineSyncSheet(ws, turnierSystem, spieltagNrOderNull);
         this.konfliktSheet = new PtmOnlineKonfliktSheet(ws, turnierSystem);
     }
@@ -71,33 +87,59 @@ public class PtmOnlineRegistrationMapping {
         syncSheet.entfernen();
     }
 
+    // ── Zuordnung lokale Meldung ↔ Online-Anmeldung ─────────────────────────
+    // Die Online-ID steht in der Nr-Zelle der Meldung (NrZellFormel); das Sync-Blatt führt je lokaler UUID nur
+    // Anzeige, Revision und Vermerke. Gezählt werden nur Meldungen mit einer Zeile im Sync-Blatt dieser Verbindung –
+    // bei Supermelee trägt die Nr-Zelle sonst womöglich die ID eines anderen Spieltags.
+
     public void addMapping(String lokaleUuid, String onlineRegistrationId, String nummerFormel, int executionRevision,
             String lokaleBezeichnung, String onlineStatus) throws GenerateException {
-        syncSheet.addMapping(lokaleUuid, onlineRegistrationId, nummerFormel, executionRevision, lokaleBezeichnung,
-                onlineStatus);
+        addMappings(List.of(new NeueZuordnung(lokaleUuid, onlineRegistrationId, nummerFormel, executionRevision,
+                lokaleBezeichnung, onlineStatus, "", "", "", "", "")));
     }
 
     public Optional<String> getOnlineId(String lokaleUuid) throws GenerateException {
-        return syncSheet.getOnlineId(lokaleUuid);
+        return Optional.ofNullable(getOnlineIdsProUuid().get(lokaleUuid));
     }
 
     /** Ob {@code onlineRegistrationId} bereits einer lokalen Meldung zugeordnet ist (bereits importiert). */
     public boolean istBereitsImportiert(String onlineRegistrationId) throws GenerateException {
-        return syncSheet.istBereitsImportiert(onlineRegistrationId);
+        return getImportierteOnlineIds().contains(onlineRegistrationId);
     }
 
     /** Alle bereits zugeordneten Online-IDs – einmal lesen statt {@link #istBereitsImportiert} je Anmeldung. */
     public Set<String> getImportierteOnlineIds() throws GenerateException {
-        return syncSheet.getOnlineIds();
+        return new LinkedHashSet<>(getOnlineIdsProUuid().values());
     }
 
     /** Entfernt die Zuordnungen dieser lokalen UUIDs; die Online-Anmeldungen gelten danach als nicht importiert. */
     public void entferneZuordnungen(Set<String> lokaleUuids) throws GenerateException {
         syncSheet.entferneZuordnungen(lokaleUuids);
+        Map<String, Optional<String>> ohneId = new LinkedHashMap<>();
+        lokaleUuids.forEach(uuid -> ohneId.put(uuid, Optional.empty()));
+        setzeInNrZellen(ohneId);
+        lokaleUuids.forEach(ohneZeile::remove);
     }
 
     public Optional<String> getLokaleUuid(String onlineRegistrationId) throws GenerateException {
-        return syncSheet.getLokaleUuid(onlineRegistrationId);
+        return getOnlineIdsProUuid().entrySet().stream().filter(e -> e.getValue().equals(onlineRegistrationId))
+                .map(Map.Entry::getKey).findFirst();
+    }
+
+    /**
+     * Ergänzt die Zuordnung für Meldungen, deren lokale Zeile fehlt (gelöscht), aus den Online-Anmeldungen: Der
+     * Server kennt zu jeder abgeglichenen Anmeldung die lokale UUID. Gilt für die Lebensdauer dieses Objekts (ein
+     * Lauf); Nr-Zellen haben Vorrang.
+     */
+    public void ergaenzeAusServer(Collection<RegistrationDto> registrations) throws GenerateException {
+        Set<String> zugeordnet = syncSheet.getLokaleUuids();
+        Map<String, String> inNrZellen = onlineIdsAusNrZellen(zugeordnet);
+        for (RegistrationDto registration : registrations) {
+            String uuid = registration.localRegistrationUuid();
+            if (uuid != null && zugeordnet.contains(uuid) && !inNrZellen.containsKey(uuid)) {
+                ohneZeile.putIfAbsent(uuid, registration.id());
+            }
+        }
     }
 
     /** Ob die zuletzt übernommene Online-Anmeldung dieser lokalen Meldung online storniert ist. */
@@ -108,12 +150,59 @@ public class PtmOnlineRegistrationMapping {
     /** Hängt eine bereits zugeordnete lokale Meldung auf eine andere Online-Anmeldung um. */
     public void ersetzeOnlineId(String lokaleUuid, String onlineRegistrationId, int executionRevision)
             throws GenerateException {
-        syncSheet.ersetzeOnlineId(lokaleUuid, onlineRegistrationId, executionRevision);
+        if (!syncSheet.getLokaleUuids().contains(lokaleUuid)) {
+            throw new GenerateException("Keine PTM-Online-Zuordnung für lokale Meldung " + lokaleUuid);
+        }
+        setzeInNrZellen(Map.of(lokaleUuid, Optional.of(onlineRegistrationId)));
+        syncSheet.setExecutionRevisionen(Map.of(lokaleUuid, executionRevision));
     }
 
     /** Online-ID je lokaler UUID aller Zuordnungen – einmal lesen statt {@link #getOnlineId} je Meldung. */
     public Map<String, String> getOnlineIdsProUuid() throws GenerateException {
-        return syncSheet.getOnlineIdsProUuid();
+        Set<String> zugeordnet = syncSheet.getLokaleUuids();
+        Map<String, String> ergebnis = onlineIdsAusNrZellen(zugeordnet);
+        ohneZeile.forEach((uuid, id) -> {
+            if (zugeordnet.contains(uuid)) {
+                ergebnis.putIfAbsent(uuid, id);
+            }
+        });
+        return ergebnis;
+    }
+
+    private Map<String, String> onlineIdsAusNrZellen(Set<String> zugeordnet) {
+        Map<String, String> ergebnis = new LinkedHashMap<>();
+        ziel().ifPresent(ziel -> ziel.leseOnlineIdsProUuid().forEach((uuid, id) -> {
+            if (zugeordnet.contains(uuid)) {
+                ergebnis.put(uuid, id);
+            }
+        }));
+        return ergebnis;
+    }
+
+    /** Schreibt Online-IDs in die Nr-Zellen; was dort keine Zeile hat, merkt sich der Lauf. */
+    private void setzeInNrZellen(Map<String, Optional<String>> onlineIdProUuid) throws GenerateException {
+        Set<String> geschrieben = Set.of();
+        Optional<MeldelisteZiel> ziel = ziel();
+        if (ziel.isPresent()) {
+            try {
+                geschrieben = ziel.get().setzeOnlineIds(onlineIdProUuid);
+            } catch (MeldelisteZiel.MeldelisteSchreibException e) {
+                LOGGER.error("PTM-Online-IDs konnten nicht in die Nr-Zellen geschrieben werden", e);
+                throw new GenerateException(e.getMessage());
+            }
+        }
+        for (Map.Entry<String, Optional<String>> eintrag : onlineIdProUuid.entrySet()) {
+            if (geschrieben.contains(eintrag.getKey()) || eintrag.getValue().isEmpty()) {
+                ohneZeile.remove(eintrag.getKey());
+            } else {
+                ohneZeile.put(eintrag.getKey(), eintrag.getValue().get());
+            }
+        }
+    }
+
+    /** Liste, deren Nr-Zellen die Meldungen dieser Verbindung tragen (Meldeliste oder Mêlée-Anmeldung). */
+    private Optional<MeldelisteZiel> ziel() {
+        return MeldelisteZielFactory.fuerPtmOnline(ws);
     }
 
     /** Lokale Bezeichnung je lokaler UUID – auch für Meldungen, deren Zeile es nicht mehr gibt. */
@@ -171,7 +260,16 @@ public class PtmOnlineRegistrationMapping {
 
     /** Schreibt mehrere neue Zuordnungen in einem Zugriff (siehe {@link PtmOnlineSyncSheet#addMappings}). */
     public void addMappings(List<NeueZuordnung> zuordnungen) throws GenerateException {
+        Set<String> vorhanden = syncSheet.getLokaleUuids();
         syncSheet.addMappings(zuordnungen);
+        // Wie im Sync-Blatt: Eine schon zugeordnete lokale Meldung behält ihre Online-Anmeldung.
+        Map<String, Optional<String>> neueIds = new LinkedHashMap<>();
+        for (NeueZuordnung zuordnung : zuordnungen) {
+            if (!vorhanden.contains(zuordnung.lokaleUuid())) {
+                neueIds.putIfAbsent(zuordnung.lokaleUuid(), Optional.of(zuordnung.onlineId()));
+            }
+        }
+        setzeInNrZellen(neueIds);
     }
 
     /**

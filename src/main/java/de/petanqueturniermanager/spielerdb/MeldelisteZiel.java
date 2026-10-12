@@ -124,6 +124,25 @@ public interface MeldelisteZiel extends AbgleichQuelle {
         throw new MeldelisteSchreibException("Lokale PTM-Online-ID wird von dieser Meldeliste nicht unterstützt");
     }
 
+    /**
+     * PTM-Online-ID je lokaler UUID, wie sie in den Nr-Zellen steht ({@code NrZellFormel}) – die einzige lokale
+     * Quelle der Zuordnung zur Online-Anmeldung.
+     */
+    default Map<String, String> leseOnlineIdsProUuid() {
+        return Map.of();
+    }
+
+    /**
+     * Setzt oder entfernt ({@link Optional#empty()}) die PTM-Online-ID in den Nr-Zellen der Meldungen mit diesen
+     * lokalen UUIDs. Meldungen, deren Zeile es nicht (mehr) gibt, werden übergangen.
+     *
+     * @return lokale UUIDs, deren Zeile gefunden wurde
+     */
+    default Set<String> setzeOnlineIds(Map<String, Optional<String>> onlineIdProUuid)
+            throws MeldelisteSchreibException {
+        throw new MeldelisteSchreibException("PTM-Online-ID wird von dieser Meldeliste nicht unterstützt");
+    }
+
     /** Wie {@link #setzeLokaleUuid} für viele Zeilen auf einmal (Schlüssel: 1-basierte Sheet-Zeile). */
     default void setzeLokaleUuids(Map<Integer, String> uuidProZeile) throws MeldelisteSchreibException {
         for (Map.Entry<Integer, String> eintrag : uuidProZeile.entrySet()) {

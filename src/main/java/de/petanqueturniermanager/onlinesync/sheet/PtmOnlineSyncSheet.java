@@ -6,8 +6,8 @@ package de.petanqueturniermanager.onlinesync.sheet;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -58,7 +58,8 @@ import de.petanqueturniermanager.ptmonline.auftrag.SyncAuftrag;
 /**
  * „PTMOnline Sync“: das einzige Blatt einer PTM-Online-Verbindung. Oben die Verbindungsdaten, darunter die
  * Zuordnung lokale Meldung ↔ Online-Anmeldung. Sichtbar ist nur, was die Turnierleitung braucht (Nr, Name,
- * Status, Tarife, Fragen); Online-ID, lokale UUID, Revision und Roh-Status stehen in ausgeblendeten Spalten.
+ * Status, Tarife, Fragen); lokale UUID, Revision und Roh-Status stehen in ausgeblendeten Spalten. Die Online-ID der
+ * Anmeldung steht nicht hier, sondern in der Nr-Zelle der Meldung ({@code NrZellFormel}).
  * <p>
  * Bei Supermelee gibt es ein Blatt pro Spieltag ({@code spieltagNr}), sonst genau eines pro Dokument. Das Blatt
  * schreibt nur das Plugin – im Turnier-Modus ist es vollständig gesperrt (siehe {@link BlattschutzManager}).
@@ -89,13 +90,12 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 	private static final int SPALTE_STATUS = 2;
 	private static final int SPALTE_TARIFE = 3;
 	private static final int SPALTE_FRAGEN = 4;
-	private static final int SPALTE_ONLINE_ID = 5;
-	private static final int SPALTE_LOKALE_UUID = 6;
-	private static final int SPALTE_REVISION = 7;
-	private static final int SPALTE_STATUS_ROH = 8;
+	private static final int SPALTE_LOKALE_UUID = 5;
+	private static final int SPALTE_REVISION = 6;
+	private static final int SPALTE_STATUS_ROH = 7;
 	private static final int LETZTE_SICHTBARE_SPALTE = SPALTE_FRAGEN;
 	/** Ausgeblendete Spalte der Statuszeile: sprachneutraler Marker, damit ein Sprachwechsel die Pause nicht bricht. */
-	private static final int SPALTE_PAUSE_MARKER = SPALTE_ONLINE_ID;
+	private static final int SPALTE_PAUSE_MARKER = LETZTE_SICHTBARE_SPALTE + 1;
 	private static final String PAUSE_MARKER = "PAUSIERT";
 	/**
 	 * Archiv: die Verbindung wurde getrennt (Supermelee: neuer Spieltag), Blatt und Zuordnung bleiben zur Einsicht
@@ -218,7 +218,6 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 				I18n.get("ptmonline.sheet.mapping.header.onlinestatus"),
 				I18n.get("ptmonline.sheet.mapping.header.onlinetarife"),
 				I18n.get("ptmonline.sheet.mapping.header.onlinefragen"),
-				I18n.get("ptmonline.sheet.mapping.header.onlineid"),
 				I18n.get("ptmonline.sheet.mapping.header.lokaleuuid"),
 				I18n.get("ptmonline.sheet.mapping.header.revision"),
 				I18n.get("ptmonline.sheet.mapping.header.statusroh")).forEach(kopfzeile::newString);
@@ -257,7 +256,7 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 			spalte(helper, sheet, SPALTE_STATUS, BREITE_STATUS, true);
 			spalte(helper, sheet, SPALTE_TARIFE, BREITE_TEXT, true);
 			spalte(helper, sheet, SPALTE_FRAGEN, BREITE_TEXT, true);
-			for (int spalte = SPALTE_ONLINE_ID; spalte <= LETZTE_PUFFER_SPALTE; spalte++) {
+			for (int spalte = LETZTE_SICHTBARE_SPALTE + 1; spalte <= LETZTE_PUFFER_SPALTE; spalte++) {
 				spalte(helper, sheet, spalte, BREITE_STATUS, false);
 			}
 			helper.setPropertiesInRange(sheet, RangePosition.from(SPALTE_LABEL, ZEILE_TITEL, SPALTE_LABEL, ZEILE_TITEL),
@@ -599,22 +598,16 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 
 	// ── Zuordnung lokale Meldung ↔ Online-Anmeldung ─────────────────────────
 
-	public void addMapping(String lokaleUuid, String onlineId, String nummerFormel, int executionRevision,
-			String lokaleBezeichnung, String onlineStatus) throws GenerateException {
-		addMappings(List.of(new NeueZuordnung(lokaleUuid, onlineId, nummerFormel, executionRevision,
-				lokaleBezeichnung, onlineStatus, "", "", "", "", "")));
-	}
-
 	/**
 	 * Hängt neue Zuordnungen in einem Schreibzugriff hinter die letzte belegte Zeile; lokale Meldungen, die schon
 	 * einer Online-Anmeldung zugeordnet sind, werden übersprungen. Danach Nr-Formeln und Formatierung als Block.
 	 */
 	public void addMappings(List<NeueZuordnung> zuordnungen) throws GenerateException {
 		RangeData daten = leseDaten();
-		Map<String, String> vorhandene = getOnlineIdsProUuid();
+		Set<String> vorhandene = getLokaleUuids();
 		Map<String, NeueZuordnung> neue = new LinkedHashMap<>();
 		for (NeueZuordnung zuordnung : zuordnungen) {
-			if (!vorhandene.containsKey(zuordnung.lokaleUuid())) {
+			if (!vorhandene.contains(zuordnung.lokaleUuid())) {
 				neue.putIfAbsent(zuordnung.lokaleUuid(), zuordnung);
 			}
 		}
@@ -636,7 +629,6 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 			neu.newString(StringUtils.defaultString(zuordnung.onlineStatus()));
 			neu.newString(StringUtils.defaultString(zuordnung.tarife()));
 			neu.newString(StringUtils.defaultString(zuordnung.fragen()));
-			neu.newString(zuordnung.onlineId());
 			neu.newString(zuordnung.lokaleUuid());
 			neu.newInt(Math.max(1, zuordnung.executionRevision()));
 			neu.newString(StringUtils.defaultString(zuordnung.rohStatus()));
@@ -700,46 +692,9 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 				.setDataInRange(rohStatus);
 	}
 
-	public Optional<String> getOnlineId(String lokaleUuid) throws GenerateException {
-		return zeileMitUuid(lokaleUuid).map(zeile -> text(zeile, SPALTE_ONLINE_ID)).filter(id -> !id.isBlank());
-	}
-
-	/** Alle zugeordneten Online-IDs, in einem Lesezugriff. */
-	public Set<String> getOnlineIds() throws GenerateException {
-		Set<String> ergebnis = new HashSet<>();
-		for (RowData zeile : leseDaten()) {
-			String onlineId = text(zeile, SPALTE_ONLINE_ID);
-			if (!onlineId.isBlank()) {
-				ergebnis.add(onlineId);
-			}
-		}
-		return ergebnis;
-	}
-
-	public boolean istBereitsImportiert(String onlineId) throws GenerateException {
-		return leseDaten().stream().anyMatch(zeile -> onlineId.equals(text(zeile, SPALTE_ONLINE_ID)));
-	}
-
-	public Optional<String> getLokaleUuid(String onlineId) throws GenerateException {
-		return leseDaten().stream().filter(zeile -> onlineId.equals(text(zeile, SPALTE_ONLINE_ID)))
-				.map(zeile -> text(zeile, SPALTE_LOKALE_UUID)).filter(uuid -> !uuid.isBlank()).findFirst();
-	}
-
 	/** Anmeldestatus der zuletzt übernommenen Online-Anmeldung, unübersetzt (z.B. {@code cancelled}). */
 	public Optional<String> getRohStatus(String lokaleUuid) throws GenerateException {
 		return zeileMitUuid(lokaleUuid).map(zeile -> text(zeile, SPALTE_STATUS_ROH)).filter(s -> !s.isBlank());
-	}
-
-	/** Hängt eine zugeordnete lokale Meldung auf eine andere Online-Anmeldung um (Neuanmeldung nach Storno). */
-	public void ersetzeOnlineId(String lokaleUuid, String onlineId, int executionRevision) throws GenerateException {
-		int zeile = zeileIndexMitUuid(lokaleUuid).orElseThrow(
-				() -> new GenerateException("Keine PTM-Online-Zuordnung für lokale Meldung " + lokaleUuid));
-		RangeData daten = new RangeData();
-		RowData ids = daten.addNewRow();
-		ids.newString(onlineId);
-		ids.newString(lokaleUuid);
-		ids.newInt(Math.max(1, executionRevision));
-		RangeHelper.from(this, daten.getRangePosition(Position.from(SPALTE_ONLINE_ID, zeile))).setDataInRange(daten);
 	}
 
 	public void setBezeichnung(String lokaleUuid, String lokaleBezeichnung, String onlineStatus)
@@ -802,14 +757,13 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 		}
 	}
 
-	/** Online-ID je lokaler UUID aller Zuordnungen, in einem Lesezugriff. */
-	public Map<String, String> getOnlineIdsProUuid() throws GenerateException {
-		Map<String, String> ergebnis = new LinkedHashMap<>();
+	/** Lokale UUIDs aller Zuordnungen, in einem Lesezugriff. */
+	public Set<String> getLokaleUuids() throws GenerateException {
+		Set<String> ergebnis = new LinkedHashSet<>();
 		for (RowData zeile : leseDaten()) {
 			String uuid = text(zeile, SPALTE_LOKALE_UUID);
-			String onlineId = text(zeile, SPALTE_ONLINE_ID);
-			if (!uuid.isBlank() && !onlineId.isBlank()) {
-				ergebnis.putIfAbsent(uuid, onlineId);
+			if (!uuid.isBlank()) {
+				ergebnis.add(uuid);
 			}
 		}
 		return ergebnis;
@@ -1023,7 +977,7 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 
 	/** RowData enthält auch für leere Calc-Zellen CellData-Objekte; List.isEmpty() ist daher ungeeignet. */
 	private static boolean istLeereZeile(RowData zeile) {
-		return text(zeile, SPALTE_ONLINE_ID).isBlank() && text(zeile, SPALTE_LOKALE_UUID).isBlank();
+		return text(zeile, SPALTE_LOKALE_UUID).isBlank();
 	}
 
 	private static String text(RowData zeile, int spalte) {

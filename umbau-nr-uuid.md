@@ -14,6 +14,16 @@ Zwei getrennte Identitäten (Klarstellung 2026-10-11):
 - **Mêlée-UUID** – Nr-Zelle der Mêlée-Anmeldung (eigene Liste, Einzelspieler), losgelöst von der Team-UUID. Die Mêlée-Anmeldung wird mit PTM-Online synchron gehalten (Mapping Mêlée-UUID ↔ Online-Meldungs-ID).
 - **Umgesetzt (`65dc1e4e`), UITests `*Melee*` + `ptmonline`: 62/64 grün** (bekannter Blattschutz-Fehler in `PtmOnlineAbgleichSheetRunnerUITest`; `PtmOnlineSpieltagAbgleichSupermeleeUITest` im Gesamtlauf einmal rot durch asynchrones Fehler-Log, einzeln grün): „Übernommen“ = `IFNA(INDEX(Meldeliste.$A$1:$A$999; UUIDZEILE("<team-uuid>"; …)); "")` – zeigt die aktuelle Teamnummer, leer (= Spieler wieder frei), wenn das Team gelöscht wird. Übernahme schreibt je Team `TNRUUID(0;"<team-uuid>")` in die Meldeliste. `MeleeAnmeldungZeile.teamNr` (nur aus Formel mit UUID), `MeleeTeilnahme`/`LiveNummernAufloesung` ordnen über den Verweis zu, Namen nur Rückfall bei einer mit `X` markierten Zeile. Online-Team-UUID (`PUT melee-teams`) ist jetzt die Team-UUID der Meldeliste statt aus der Nummer abgeleitet (Server ersetzt die Zuordnungen komplett, keine Leichen). Der Server speichert die lokale UUID je Anmeldung (`local_registration_uuid`, `GET …/mapping`).
 
+## PTM-Online-ID in der Nr-Zelle (Entscheidung 2026-10-12)
+
+Alle Identitäten einer Meldung stehen an **einer** Stelle, der Nr-Zelle; das separate Mapping im Blatt „PTMOnline Sync“ entfällt.
+- Meldeliste (Team): `PTM.ALG.TNRUUID(nr;"lokale-uuid";"online-id")`, Mêlée-Anmeldung (Spieler): `PTM.ALG.SPLRUUID(nr;"lokale-uuid";"online-id")`. Der dritte Parameter ist optional (`any`), ohne Online-Verbindung fehlt er.
+- `NrZellFormel` liest/baut die Zelle (erstes Text-Literal = lokale UUID, zweites = Online-ID). Jeder Umnummerierer behält beide; eine kopierte Zeile wird eine neue Meldung ohne Online-ID.
+- Das Sync-Blatt führt je lokaler UUID nur noch Anzeige, Revision, Rohstatus, Besetzung und Vermerke (Spalte „Online-ID“ entfernt). `PtmOnlineRegistrationMapping` behält seine Schnittstelle und liest/schreibt die IDs über `MeldelisteZiel.leseOnlineIdsProUuid/setzeOnlineIds`. Es zählen nur Meldungen mit Zeile im Sync-Blatt dieser Verbindung.
+- Lokal gelöschte Meldungen: Die Zuordnung kommt je Lauf vom Server (`registration.localRegistrationUuid`, `ergaenzeAusServer` nach jedem Abruf). Lücke: Wird eine Zeile gelöscht, bevor der Server die lokale UUID kennt (Auftrag noch im Puffer), kann die Anmeldung erneut importiert werden.
+- Supermelee: Die Nr-Zelle trägt nur die Online-ID des aktuellen Spieltags; beim Archivieren der vorherigen Spieltage (`PtmOnlineSpieltagWechsel`) werden die IDs geleert.
+- Schreiben der Online-ID berechnet geänderte Zellen sofort (`calculate()`): Bei abgeschalteter automatischer Berechnung zeigten neue Nr-Formeln sonst 0.
+
 ## Arbeitsstand (2026-10-12)
 
 Branch `ptm-online-2`, Haupt-Checkout (Worktree entfernt).
@@ -41,7 +51,7 @@ Neue Klassen: `TeamUuidFormel` (Parser), `MeldelisteUuidIndex` (UUID ↔ Nr, `le
 
 Bekannte Einschränkung: Nach „Teamnummer ändern“ zeigen Ranglisten (Nummern als Werte) die neue Nummer erst nach dem nächsten Aktualisieren; die Erfolgsmeldung weist darauf hin.
 
-Offen, nicht UUID-bezogen: `PtmOnlineAbgleichSheetRunnerUITest.rundenstartMeldetLokaleSetzpositionStattTeamNr` scheitert reproduzierbar mit „Style/CF-Operation außerhalb eines aktiven BlattschutzScopes“ (`PtmOnlineSyncSheet.schreibeKopf` aus der Testhilfe ohne SheetRunner bei aktivem Turnier-Modus). Vermutlich seit Master-Merge `792bfa3a` (Turnier-Modus pro Dokumentfenster).
+Offen, nicht UUID-bezogen: Dieselbe Ursache trifft in der Zusammenspiel-Suite (`./gradlew ptmOnlineTests`, 15/19 grün) `PtmOnlineMeleeZusammenspielTest`, zwei Tests von `PtmOnlineSchweizerZusammenspielTest` und `PtmOnlineSupermeleeZusammenspielTest` – die Tests rufen `doRun()`/`uebernehmen()` ohne SheetRunner bei aktivem Turnier-Modus auf. Außerdem `PtmOnlineAbgleichSheetRunnerUITest.rundenstartMeldetLokaleSetzpositionStattTeamNr` scheitert reproduzierbar mit „Style/CF-Operation außerhalb eines aktiven BlattschutzScopes“ (`PtmOnlineSyncSheet.schreibeKopf` aus der Testhilfe ohne SheetRunner bei aktivem Turnier-Modus). Vermutlich seit Master-Merge `792bfa3a` (Turnier-Modus pro Dokumentfenster).
 
 Nächste Schritte (Stand 2026-10-12):
 1. Maastrichter prüfen und freischalten (siehe Tabelle).

@@ -449,6 +449,7 @@ public final class RegistrationImportTask {
                 TIMEOUT_VOR_TURNIERSTART);
         AnmeldungsAbruf abruf = client.fetchAbgleich(tournamentId, mapping.getLastSync().orElse(Instant.EPOCH));
         List<RegistrationDto> registrations = abruf.registrations();
+        mapping.ergaenzeAusServer(registrations);
         Map<String, List<Integer>> vorhandeneZeilen = vorhandeneZeilenNachBesetzung(ziel);
         List<String> fehlend = new ArrayList<>();
         for (RegistrationDto reg : registrations) {
@@ -594,6 +595,8 @@ public final class RegistrationImportTask {
         Instant since = sammlung.hatEntscheidungen() ? Instant.EPOCH : mapping.getLastSync().orElse(Instant.EPOCH);
         fortschritt.status(I18n.get("ptmonline.fortschritt.anmeldungen_abrufen"));
         List<RegistrationDto> alle = client.fetchRegistrations(tournamentId, since);
+        // Zuordnung lokal gelöschter Meldungen kennt nur der Server (die Nr-Zelle ist mit der Zeile weg).
+        mapping.ergaenzeAusServer(alle);
         fortschritt.status(I18n.get("ptmonline.fortschritt.anmeldungen_abgerufen", alle.size()));
         fortschritt.pruefeAbbruch();
         StatusUebernahme status = uebernehmeOnlineStatus(ziel, mapping, alle);
@@ -1066,6 +1069,7 @@ public final class RegistrationImportTask {
             throws IOException, InterruptedException, GenerateException {
         TournamentSyncClient client = gebundenerClient(config, mapping);
         AnmeldungsAbruf abruf = client.fetchAbgleich(tournamentId, null);
+        mapping.ergaenzeAusServer(abruf.registrations());
         Map<String, RegistrationDto> remoteProId = abruf.registrations().stream()
                 .collect(Collectors.toMap(RegistrationDto::id, registration -> registration));
         Map<String, String> onlineIds = mapping.getOnlineIdsProUuid();

@@ -5,7 +5,9 @@ package de.petanqueturniermanager.ptmonline;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.apache.logging.log4j.LogManager;
@@ -18,6 +20,8 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
+import de.petanqueturniermanager.spielerdb.MeldelisteZiel;
+import de.petanqueturniermanager.spielerdb.MeldelisteZielFactory;
 
 /**
  * Supermelee: jeder Spieltag ist online ein eigenes Turnier. Mit einem neuen Spieltag werden die Verbindungen der
@@ -53,7 +57,27 @@ public final class PtmOnlineSpieltagWechsel {
             getrennt.add(spieltag);
         }
         if (!getrennt.isEmpty()) {
+            entferneOnlineIds(ws);
             zeigeHinweis(ws, getrennt, neuerSpieltag, warnungen);
+        }
+    }
+
+    /**
+     * Die Nr-Zellen tragen nur die Online-ID des aktuellen Spieltags; die der archivierten Spieltage braucht niemand
+     * mehr. Der neue Spieltag schreibt beim Abgleich seine eigenen.
+     */
+    private static void entferneOnlineIds(WorkingSpreadsheet ws) throws GenerateException {
+        Optional<MeldelisteZiel> ziel = MeldelisteZielFactory.fuerPtmOnline(ws);
+        if (ziel.isEmpty()) {
+            return;
+        }
+        Map<String, Optional<String>> ohneId = new LinkedHashMap<>();
+        ziel.get().leseOnlineIdsProUuid().keySet().forEach(uuid -> ohneId.put(uuid, Optional.empty()));
+        try {
+            ziel.get().setzeOnlineIds(ohneId);
+        } catch (MeldelisteZiel.MeldelisteSchreibException e) {
+            logger.error("PTM-Online: Online-IDs der getrennten Spieltage nicht entfernt", e);
+            throw new GenerateException(e.getMessage());
         }
     }
 

@@ -14,10 +14,12 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.UUID;
 
+import com.sun.star.sheet.XCalculatable;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
 
 import de.petanqueturniermanager.addins.GlobalImpl;
+import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
@@ -150,6 +152,11 @@ public final class NrUuidSpalte {
 			});
 		}
 		TeamNummernVergabe.schreibeNrFormeln(sheetHelper, sheet, nrSpalte, formeln);
+		if (!formeln.isEmpty()) {
+			// Neu geschriebene Formeln zeigen bis zur Berechnung 0 – bei abgeschalteter automatischer Berechnung
+			// (Rundenaufbau) läsen Nr-Leser sonst falsche Nummern. calculate() rechnet nur geänderte Zellen.
+			Lo.qi(XCalculatable.class, doc).calculate();
+		}
 		return gefunden;
 	}
 

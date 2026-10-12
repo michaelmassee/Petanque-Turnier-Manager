@@ -534,6 +534,21 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
         return NrUuidSpalte.formelNrAusUuid("$'" + SheetNamen.meldeliste() + "'.$A$1:$A$" + (MAX_DATEN_ZEILE + 1), uuid);
     }
 
+    @Override
+    public Map<String, String> leseOnlineIdsProUuid() {
+        return nrUuidSpalte().onlineIdsProUuid();
+    }
+
+    @Override
+    public Set<String> setzeOnlineIds(Map<String, Optional<String>> onlineIdProUuid)
+            throws MeldelisteSchreibException {
+        try {
+            return nrUuidSpalte().setzeOnlineIds(onlineIdProUuid);
+        } catch (RuntimeException e) {
+            throw new MeldelisteSchreibException("PTM-Online-ID konnte nicht geschrieben werden", e);
+        }
+    }
+
     private NrUuidSpalte nrUuidSpalte() {
         return new NrUuidSpalte(sheetHelper, sheet, doc, SPALTE_NR, ersteDatenZeile,
                 NrZellFormel.Art.TEAM);
