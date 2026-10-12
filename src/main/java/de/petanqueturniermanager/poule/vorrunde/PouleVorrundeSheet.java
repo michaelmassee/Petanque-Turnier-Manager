@@ -9,6 +9,7 @@ import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.algorithmen.poule.PouleGruppenRechner;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldelisteUuidIndex;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.I18n;
@@ -74,6 +75,7 @@ public class PouleVorrundeSheet extends AbstractPouleVorrundeSheet implements Pt
                 .forceCreate().hideGrid().create();
 
         var xSheet = getXSpreadSheet();
+        var uuidIndex = MeldelisteUuidIndex.lese(getWorkingSpreadsheet());
 
         headerSchreiben(xSheet);
         spaltenBreitenSetzen(xSheet);
@@ -85,10 +87,10 @@ public class PouleVorrundeSheet extends AbstractPouleVorrundeSheet implements Pt
             SheetRunner.testDoCancelTask();
             var poule = poules.get(i);
             if (poule.teams().size() == 4) {
-                schreibeViererPoule(xSheet, poule, aktuelleZeile, aktuelleZeile);
+                schreibeViererPoule(xSheet, poule, aktuelleZeile, aktuelleZeile, uuidIndex);
                 aktuelleZeile += VIERER_POULE_ZEILEN;
             } else {
-                schreibeDreierPoule(xSheet, poule, aktuelleZeile, aktuelleZeile);
+                schreibeDreierPoule(xSheet, poule, aktuelleZeile, aktuelleZeile, uuidIndex);
                 aktuelleZeile += DREIER_POULE_ZEILEN;
             }
             if (i < poules.size() - 1) {

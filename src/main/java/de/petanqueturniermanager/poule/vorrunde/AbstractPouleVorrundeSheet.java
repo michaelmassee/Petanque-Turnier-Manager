@@ -9,6 +9,8 @@ import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldelisteUuidIndex;
 import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeigeHelper;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeHelper;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -19,7 +21,6 @@ import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeUnGeradeStyle;
-import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
@@ -243,7 +244,7 @@ public abstract class AbstractPouleVorrundeSheet extends SheetRunner implements 
     // ---------------------------------------------------------------
 
     protected void schreibeViererPoule(XSpreadsheet xSheet, PouleSeedingService.Poule poule,
-            int basisZeile, int vorrundeStartZeile) throws GenerateException {
+            int basisZeile, int vorrundeStartZeile, MeldelisteUuidIndex uuidIndex) throws GenerateException {
 
         var teams = poule.teams();
 
@@ -265,12 +266,12 @@ public abstract class AbstractPouleVorrundeSheet extends SheetRunner implements 
         schreibeSpielZeileR1(xSheet, rSpielA,
                 I18n.get("poule.vorrunde.spiel.a"),
                 teams.get(0).getNr(), teams.get(1).getNr(),
-                vorrundeStartZeile);
+                vorrundeStartZeile, uuidIndex);
 
         schreibeSpielZeileR1(xSheet, rSpielB,
                 I18n.get("poule.vorrunde.spiel.b"),
                 teams.get(2).getNr(), teams.get(3).getNr(),
-                vorrundeStartZeile + 1);
+                vorrundeStartZeile + 1, uuidIndex);
 
         schreibeSpielZeileFormula(xSheet, rSieger,
                 I18n.get("poule.vorrunde.siegerspiel"),
@@ -289,7 +290,7 @@ public abstract class AbstractPouleVorrundeSheet extends SheetRunner implements 
     }
 
     protected void schreibeDreierPoule(XSpreadsheet xSheet, PouleSeedingService.Poule poule,
-            int basisZeile, int vorrundeStartZeile) throws GenerateException {
+            int basisZeile, int vorrundeStartZeile, MeldelisteUuidIndex uuidIndex) throws GenerateException {
 
         var teams = poule.teams();
 
@@ -305,36 +306,40 @@ public abstract class AbstractPouleVorrundeSheet extends SheetRunner implements 
         schreibeSpielZeileR1(xSheet, basisZeile,
                 I18n.get("poule.vorrunde.spiel.1"),
                 teams.get(0).getNr(), teams.get(1).getNr(),
-                vorrundeStartZeile);
+                vorrundeStartZeile, uuidIndex);
 
         schreibeSpielZeileR1(xSheet, basisZeile + 1,
                 I18n.get("poule.vorrunde.spiel.2"),
                 teams.get(0).getNr(), teams.get(2).getNr(),
-                vorrundeStartZeile + 1);
+                vorrundeStartZeile + 1, uuidIndex);
 
         schreibeSpielZeileR1(xSheet, basisZeile + 2,
                 I18n.get("poule.vorrunde.spiel.3"),
                 teams.get(1).getNr(), teams.get(2).getNr(),
-                vorrundeStartZeile + 2);
+                vorrundeStartZeile + 2, uuidIndex);
     }
 
     private void schreibeSpielZeileR1(XSpreadsheet xSheet, int zeile, String beschreibung,
-            int teamANr, int teamBNr, int vorrundeZeile) throws GenerateException {
+            int teamANr, int teamBNr, int vorrundeZeile, MeldelisteUuidIndex uuidIndex) throws GenerateException {
 
         // Bahn-Spalte: nur in Spielplan-Sheets (zeigeBahnSpalte()), dann leer (manuelle Eintragung)
 
         getSheetHelper().setStringValueInCell(
                 StringCellValue.from(xSheet, Position.from(SPALTE_BESCHR, zeile), beschreibung));
 
-        getSheetHelper().setNumberValueInCell(
-                NumberCellValue.from(xSheet, Position.from(SPALTE_TEAM_A_NR, zeile)).setValue(teamANr));
+        // Nr-Zellen der ersten Runde tragen die UUID des Teams und zeigen dessen aktuelle Nummer. Namen,
+        // Sieger-/Verlierer-Formeln und Leser arbeiten mit dieser Anzeige; eine geänderte Teamnummer ändert
+        // daher nicht die Zuordnung.
+        String nrBereich = MeldeListeHelper.nrBereichMeldeliste();
+        getSheetHelper().setFormulaInCell(StringCellValue.from(xSheet, Position.from(SPALTE_TEAM_A_NR, zeile),
+                uuidIndex.schluessel(teamANr).nrAnzeige(nrBereich)));
 
         getSheetHelper().setFormulaInCell(StringCellValue.from(xSheet,
                 Position.from(SPALTE_TEAM_A_NAME, zeile),
                 vlookupDirekt(Position.from(SPALTE_TEAM_A_NR, zeile).getAddress())));
 
-        getSheetHelper().setNumberValueInCell(
-                NumberCellValue.from(xSheet, Position.from(SPALTE_TEAM_B_NR, zeile)).setValue(teamBNr));
+        getSheetHelper().setFormulaInCell(StringCellValue.from(xSheet, Position.from(SPALTE_TEAM_B_NR, zeile),
+                uuidIndex.schluessel(teamBNr).nrAnzeige(nrBereich)));
 
         getSheetHelper().setFormulaInCell(StringCellValue.from(xSheet,
                 Position.from(SPALTE_TEAM_B_NAME, zeile),
