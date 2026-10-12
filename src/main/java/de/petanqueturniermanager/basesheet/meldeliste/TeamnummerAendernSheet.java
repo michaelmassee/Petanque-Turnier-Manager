@@ -20,6 +20,8 @@ import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
+import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet;
 
 /**
  * Menüpunkt „Teamnummer ändern“: ändert die angezeigte Nummer einer Meldung, ihre UUID bleibt. Spielrunden, die
@@ -34,7 +36,7 @@ public class TeamnummerAendernSheet extends SheetRunner {
 	/** Systeme, deren Spielrunden und Ranglisten Teams über die UUID referenzieren (umbau-nr-uuid.md). */
 	static final Set<TurnierSystem> UMGESTELLTE_SYSTEME = Set.of(TurnierSystem.SCHWEIZER, TurnierSystem.KO,
 			TurnierSystem.FORMULEX, TurnierSystem.KASKADE, TurnierSystem.TRIPTETE, TurnierSystem.JGJ,
-			TurnierSystem.LIGA, TurnierSystem.POULE);
+			TurnierSystem.LIGA, TurnierSystem.POULE, TurnierSystem.SUPERMELEE);
 
 	/** Nr-Spalte der Meldeliste (A), wie {@link MeldelisteUuidIndex}. */
 	private static final int NR_SPALTE = 0;
@@ -87,9 +89,25 @@ public class TeamnummerAendernSheet extends SheetRunner {
 		TeamnummerAenderung.Plan plan = ergebnis.plan().orElseThrow();
 		TeamNummernVergabe.schreibeNrFormeln(getSheetHelper(), meldeliste, NR_SPALTE, plan.formelProZeile());
 		getxCalculatable().calculateAll();
+		if (getTurnierSystem() == TurnierSystem.SUPERMELEE) {
+			spieltagRanglistenNeuAufbauen();
+		}
 		melde(MessageBoxTypeEnum.INFO_OK, plan.getauscht()
 				? I18n.get("teamnummer.aendern.getauscht", wunsch.alteNr(), wunsch.neueNr())
 				: I18n.get("teamnummer.aendern.geaendert", wunsch.alteNr(), wunsch.neueNr()));
+	}
+
+	/**
+	 * Die Supermelee-Endrangliste liest die Spieltag-Ranglisten über die Spielernummer (Werte). Ohne Neuaufbau
+	 * führten ältere Spieltage den Spieler weiter unter der alten Nummer.
+	 */
+	private void spieltagRanglistenNeuAufbauen() throws GenerateException {
+		SpieltagRanglisteSheet spieltagRangliste = new SpieltagRanglisteSheet(getWorkingSpreadsheet());
+		int anzRanglisten = spieltagRangliste.countNumberOfRanglisten();
+		for (int spieltag = 1; spieltag <= anzRanglisten; spieltag++) {
+			SheetRunner.testDoCancelTask();
+			spieltagRangliste.generate(SpielTagNr.from(spieltag));
+		}
 	}
 
 	private static String ablehnungsText(Ablehnung ablehnung, Wunsch wunsch) {

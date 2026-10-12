@@ -27,6 +27,8 @@ import com.sun.star.util.CellProtection;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.algorithmen.supermelee.SuperMeleePaarungenV2;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldelisteUuidIndex;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeFooterHelper;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeHelper;
@@ -566,26 +568,32 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 		XSpreadsheet xsheet = sheet.getXSpreadSheet();
 		Position posErsteSpielrNr = Position.from(ERSTE_SPIELERNR_SPALTE, ERSTE_DATEN_ZEILE - 1);
 
-		NumberCellValue numberCellValue = NumberCellValue
+		NumberCellValue spielerNrZelle = NumberCellValue
 				.from(xsheet, posErsteSpielrNr, MeldungenSpalte.MAX_ANZ_MELDUNGEN)
 				.addCellProperty(VERT_JUSTIFY, CellVertJustify2.CENTER);
 
-		StringCellValue validateCellVal = StringCellValue.from(numberCellValue).spalte(EINGABE_VALIDIERUNG_SPALTE)
+		StringCellValue validateCellVal = StringCellValue.from(spielerNrZelle).spalte(EINGABE_VALIDIERUNG_SPALTE)
 				.setCharColor(ColorHelper.CHAR_COLOR_RED).setCharWeight(FontWeight.BOLD).setCharHeight(14)
 				.setHoriJustify(CellHoriJustify.CENTER);
+
+		// Spielernummern als Formeln mit der UUID des Spielers, die dessen aktuelle Nummer zeigen. Namensformeln,
+		// Ranglisten und Leser arbeiten mit dieser Anzeige; eine geänderte Spielernummer ändert daher nicht die
+		// Zuordnung.
+		MeldelisteUuidIndex uuidIndex = MeldelisteUuidIndex.lese(sheet.getWorkingSpreadsheet());
+		String nrBereich = MeldeListeHelper.nrBereichMeldeliste();
 
 		List<Team> teams = spielRunde.teams();
 		for (int teamCntr = 0; teamCntr < teams.size(); teamCntr++) {
 			if ((teamCntr & 1) == 0) {
-				numberCellValue.zeilePlusEins();
-				numberCellValue.getPos().spalte(ERSTE_SPIELERNR_SPALTE);
+				spielerNrZelle.zeilePlusEins();
+				spielerNrZelle.getPos().spalte(ERSTE_SPIELERNR_SPALTE);
 
-				StringCellValue formulaCellValue = StringCellValue.from(numberCellValue).spalte(PAARUNG_CNTR_SPALTE)
+				StringCellValue formulaCellValue = StringCellValue.from(spielerNrZelle).spalte(PAARUNG_CNTR_SPALTE)
 						.setValue("=ROW()-" + ERSTE_DATEN_ZEILE);
 				sheet.getSheetHelper().setFormulaInCell(formulaCellValue);
 
-				String ergA = Position.from(numberCellValue.getPos()).spalte(ERSTE_SPALTE_ERGEBNISSE).getAddress();
-				String ergB = Position.from(numberCellValue.getPos()).spalte(ERSTE_SPALTE_ERGEBNISSE + 1).getAddress();
+				String ergA = Position.from(spielerNrZelle.getPos()).spalte(ERSTE_SPALTE_ERGEBNISSE).getAddress();
+				String ergB = Position.from(spielerNrZelle.getPos()).spalte(ERSTE_SPALTE_ERGEBNISSE + 1).getAddress();
 				// @formatter:off
 			    String valFormula = "IF(" +
 			    		"OR(" +
@@ -604,10 +612,10 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 						")" +
 						";\"\";\"FEHLER\")";
 				// @formatter:on
-				validateCellVal.setValue(valFormula).zeile(numberCellValue.getPos().getZeile());
+				validateCellVal.setValue(valFormula).zeile(spielerNrZelle.getPos().getZeile());
 				sheet.getSheetHelper().setFormulaInCell(validateCellVal);
 			} else {
-				numberCellValue.getPos().spalte(ERSTE_SPIELERNR_SPALTE + 3);
+				spielerNrZelle.getPos().spalte(ERSTE_SPIELERNR_SPALTE + 3);
 			}
 			for (Spieler spieler : teams.get(teamCntr).spieler()) {
 				if (spielrNr.contains(spieler.getNr())) {
@@ -616,19 +624,20 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 					logger.error("Runde:" + spielRunde);
 					throw new RuntimeException("Doppelte Spieler in Runde " + spielRunde + " Spieler " + spieler);
 				}
-				sheet.getSheetHelper().setNumberValueInCell(numberCellValue.setValue((double) spieler.getNr()));
-				verweisAufSpielerNamenEinfuegen(numberCellValue.getPos());
-				numberCellValue.spaltePlusEins();
+				sheet.getSheetHelper().setFormulaInCell(StringCellValue.from(spielerNrZelle)
+						.setValue(uuidIndex.schluessel(spieler.getNr()).nrAnzeige(nrBereich)));
+				verweisAufSpielerNamenEinfuegen(spielerNrZelle.getPos());
+				spielerNrZelle.spaltePlusEins();
 				spielrNr.add(spieler.getNr());
 			}
 			if (teams.get(teamCntr).spieler().size() == 2) {
-				verweisAufSpielerNamenEinfuegen(numberCellValue.getPos());
+				verweisAufSpielerNamenEinfuegen(spielerNrZelle.getPos());
 			}
 		}
 
 		FehlerStyle fehlerStyle = new FehlerStyle();
 		RangePosition datenRange = RangePosition.from(Position.from(ERSTE_SPIELERNR_SPALTE, ERSTE_DATEN_ZEILE),
-				Position.from(ERSTE_SPIELERNR_SPALTE + 5, numberCellValue.getPos().getZeile()));
+				Position.from(ERSTE_SPIELERNR_SPALTE + 5, spielerNrZelle.getPos().getZeile()));
 		Position posSpalteSpielrNr = Position.from(ERSTE_SPALTE_VERTIKALE_ERGEBNISSE, ERSTE_DATEN_ZEILE);
 		String conditionfindDoppelt = "COUNTIF(" + posSpalteSpielrNr.getSpalteAddressWith$() + ";"
 				+ ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")>1";
