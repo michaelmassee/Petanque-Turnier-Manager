@@ -2,6 +2,7 @@ package de.petanqueturniermanager;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Duration;
 import javax.swing.JOptionPane;
 
 import java.io.BufferedWriter;
@@ -19,6 +20,7 @@ import com.sun.star.awt.XToolkitExperimental;
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.container.XNamed;
 import com.sun.star.sheet.XCalculatable;
+import com.sun.star.sheet.XFunctionAccess;
 import com.sun.star.util.CellProtection;
 import com.sun.star.util.XProtectable;
 import de.petanqueturniermanager.helper.Lo;
@@ -70,6 +72,10 @@ import de.petanqueturniermanager.toolbar.TurnierModus;
 public abstract class BaseCalcUITest {
 
 	private static final Logger logger = LogManager.getLogger(BaseCalcUITest.class);
+	/** Programmatischer Name von {@code PTM.ALG.OPERATIONAKTIV} für {@code FunctionAccess}. */
+	private static final String OPERATION_AKTIV_FUNKTION = "de.petanqueturniermanager.addin.GlobalAddIn.ptmoperationaktiv";
+	private static final Duration LO_HINTERGRUND_WARTEZEIT = Duration.ofSeconds(60);
+	private static final long LO_HINTERGRUND_POLL_MS = 100;
 
 	/**
 	 * Default-LibreOffice-Userprofil relativ zu user.home, OS-abhängig.<br>
@@ -366,6 +372,45 @@ public abstract class BaseCalcUITest {
 			}
 		} catch (com.sun.star.uno.Exception e) {
 			throw new IllegalStateException("LO-Ereignisschleife nicht erreichbar", e);
+		}
+	}
+
+	/**
+	 * Wartet, bis die im LibreOffice-Prozess installierte Extension keinen PTM-Lauf mehr ausführt. Sie reagiert selbst
+	 * auf Blattwechsel im Testdokument (z.&nbsp;B. Ranglisten-Refresh nach {@code setActiv()}) und baut dabei Blätter
+	 * asynchron neu auf; {@link SheetRunner#isRunning()} der Test-JVM sieht diese Läufe nicht. Abgefragt wird
+	 * {@code PTM.ALG.OPERATIONAKTIV()} über {@code FunctionAccess} – ohne ins Testdokument zu schreiben.
+	 */
+	protected void warteBisLoHintergrundFertig() {
+		long ende = System.nanoTime() + LO_HINTERGRUND_WARTEZEIT.toNanos();
+		int runden = 0;
+		warteAufLoLeerlauf();
+		while (loLaufAktiv()) {
+			if (System.nanoTime() > ende) {
+				throw new IllegalStateException("PTM-Lauf im LibreOffice-Prozess endet nicht");
+			}
+			runden++;
+			try {
+				Thread.sleep(LO_HINTERGRUND_POLL_MS);
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+				throw new IllegalStateException("Warten auf LibreOffice unterbrochen", e);
+			}
+			warteAufLoLeerlauf();
+		}
+		if (runden > 0) {
+			logger.info("Auf PTM-Hintergrundlauf in LibreOffice gewartet ({} x {} ms)", runden, LO_HINTERGRUND_POLL_MS);
+		}
+	}
+
+	private boolean loLaufAktiv() {
+		try {
+			XFunctionAccess funktionen = Lo.qi(XFunctionAccess.class, starter.getxComponentContext().getServiceManager()
+					.createInstanceWithContext("com.sun.star.sheet.FunctionAccess", starter.getxComponentContext()));
+			Object ergebnis = funktionen.callFunction(OPERATION_AKTIV_FUNKTION, new Object[0]);
+			return ergebnis instanceof Number zahl && zahl.intValue() != 0;
+		} catch (com.sun.star.uno.Exception e) {
+			throw new IllegalStateException("PTM.ALG.OPERATIONAKTIV nicht aufrufbar", e);
 		}
 	}
 

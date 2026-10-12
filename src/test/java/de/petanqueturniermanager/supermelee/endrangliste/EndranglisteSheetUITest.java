@@ -387,6 +387,8 @@ public class EndranglisteSheetUITest extends BaseCalcUITest {
 			spieltagRangliste.run();
 		}
 		endranglisteSheet.run();
+		// Das Aktivieren der Ranglisten stößt in LibreOffice asynchrone Refresh-Läufe an, die das Blatt neu aufbauen.
+		warteBisLoHintergrundFertig();
 	}
 
 	private int summiereEndRanglistePunktePlus() throws GenerateException {
