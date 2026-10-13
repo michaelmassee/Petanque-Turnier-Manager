@@ -27,11 +27,15 @@ public final class LibreOfficePtmOnlineSpeicher {
 	private static final String NODE_PATH = "/org.openoffice.Office.Custom.PetanqueTurnierManager/PtmOnline";
 	private static final String PROP_API_KEY = "ApiKey";
 	private static final String PROP_BASE_URL = "BaseUrl";
+	private static final String PROP_VERBINDUNG_AKTIV = "VerbindungAktiv";
 	private static final String DEFAULT_BASE_URL = "https://ptmonline.org";
 
-	public record Zugangsdaten(String apiKey, String baseUrl) {
+	public record Zugangsdaten(String apiKey, String baseUrl, boolean verbindungAktiv) {
+		public Zugangsdaten(String apiKey, String baseUrl) {
+			this(apiKey, baseUrl, true);
+		}
 		public boolean isConfigured() {
-			return !apiKey.isBlank() && !baseUrl.isBlank();
+			return verbindungAktiv && !apiKey.isBlank() && !baseUrl.isBlank();
 		}
 	}
 
@@ -47,6 +51,7 @@ public final class LibreOfficePtmOnlineSpeicher {
 	/** Nur für Tests: {@code null} hebt die Ersetzung wieder auf. */
 	public static void setZugangsdatenForTest(Zugangsdaten zugangsdaten) {
 		testZugangsdaten = zugangsdaten;
+		PtmOnlineAktivierung.setzenFuerTest(zugangsdaten);
 	}
 
 	public Zugangsdaten laden() {
@@ -58,7 +63,13 @@ public final class LibreOfficePtmOnlineSpeicher {
 		try {
 			props = konfiguration(false);
 			String baseUrl = stringWert(props, PROP_BASE_URL);
-			return new Zugangsdaten(stringWert(props, PROP_API_KEY), baseUrl.isBlank() ? DEFAULT_BASE_URL : baseUrl);
+			boolean aktiv = true;
+			try {
+				aktiv = AnyConverter.toBoolean(props.getPropertyValue(PROP_VERBINDUNG_AKTIV));
+			} catch (Exception e) {
+				// Ältere Konfigurationen ohne diese Option bleiben standardmäßig aktiv.
+			}
+			return new Zugangsdaten(stringWert(props, PROP_API_KEY), baseUrl.isBlank() ? DEFAULT_BASE_URL : baseUrl, aktiv);
 		} catch (Exception e) {
 			throw new IllegalStateException("PTM-Online-Zugangsdaten konnten nicht gelesen werden", e);
 		} finally {
@@ -67,17 +78,24 @@ public final class LibreOfficePtmOnlineSpeicher {
 	}
 
 	public void speichern(String apiKey, String baseUrl) {
+		speichern(apiKey, baseUrl, true);
+	}
+
+	public void speichern(String apiKey, String baseUrl, boolean verbindungAktiv) {
 		XPropertySet props = null;
 		try {
 			props = konfiguration(true);
 			props.setPropertyValue(PROP_API_KEY, apiKey == null ? "" : apiKey);
 			props.setPropertyValue(PROP_BASE_URL, baseUrl == null ? "" : baseUrl);
+			props.setPropertyValue(PROP_VERBINDUNG_AKTIV, verbindungAktiv);
 			commit(props);
 		} catch (Exception e) {
 			throw new IllegalStateException("PTM-Online-Zugangsdaten konnten nicht gespeichert werden", e);
 		} finally {
 			dispose(props);
 		}
+		PtmOnlineAktivierung.aktualisieren(context, new Zugangsdaten(apiKey == null ? "" : apiKey,
+				baseUrl == null || baseUrl.isBlank() ? DEFAULT_BASE_URL : baseUrl, verbindungAktiv));
 	}
 
 	private XPropertySet konfiguration(boolean schreiben) throws com.sun.star.uno.Exception {

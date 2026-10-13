@@ -13,6 +13,7 @@ de.petanqueturniermanager.comp.WhatsAppChatOptionsEventHandler
 de.petanqueturniermanager.comp.TabFarbenOptionsEventHandler
 de.petanqueturniermanager.comp.KiOptionsEventHandler
 de.petanqueturniermanager.comp.PtmOnlineOptionsEventHandler
+de.petanqueturniermanager.comp.PtmOnlineMenuController
 
 # Deactivated components (uncomment if needed)
 #de.petanqueturniermanager.addins.DoublerImpl

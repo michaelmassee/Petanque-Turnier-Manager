@@ -13,6 +13,8 @@ import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.addins.GlobalImpl;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldelisteUuidIndex;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamSchluessel;
+import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -409,17 +411,17 @@ public class LigaSpielPlanSheet extends SheetRunner implements ISheet {
 		alleSpieltage.addAll(spielPlanRRunde);
 
 		// Nr-Arbeitsspalten (Hin- und Rückrunde) als Formeln mit der UUID des Teams, die die aktuelle Teamnummer
-		// zeigen (Freispiel: 0). Namensformeln, Rangliste, Termine und Direktvergleich lesen diese Anzeige; eine
-		// geänderte Teamnummer ändert daher nicht die Zuordnung.
+		// zeigen (Freispiel: 0). Namensformeln übernehmen die UUID; Rangliste, Termine und Direktvergleich
+		// lesen die aktuelle Nummer.
 		MeldelisteUuidIndex uuidIndex = MeldelisteUuidIndex.lese(getWorkingSpreadsheet());
 		String nrBereich = MeldeListeHelper.nrBereichMeldeliste();
 		List<String[]> nrFormeln = new ArrayList<>();
 		for (List<TeamPaarung> spielTag : alleSpieltage) {
 			for (TeamPaarung teamPaarung : spielTag) {
 				SheetRunner.testDoCancelTask();
-				nrFormeln.add(new String[] { uuidIndex.schluessel(teamPaarung.getA().getNr()).nrAnzeige(nrBereich),
+				nrFormeln.add(new String[] { uuidIndex.uuidSchluessel(teamPaarung.getA().getNr()).nrAnzeige(nrBereich),
 						teamPaarung.getOptionalB().isPresent()
-								? uuidIndex.schluessel(teamPaarung.getB().getNr()).nrAnzeige(nrBereich)
+								? uuidIndex.uuidSchluessel(teamPaarung.getB().getNr()).nrAnzeige(nrBereich)
 								: "0" });
 			}
 		}
@@ -497,20 +499,23 @@ public class LigaSpielPlanSheet extends SheetRunner implements ISheet {
 
 	private void insertFormulaTeamNamen() throws GenerateException {
 		int letzteSpielZeile = letzteSpielZeile();
-		// fill down fuer name
-		// erste nr reicht, weil beim filldown zeilenr automatisch hoch
-		String nrA = Position.from(TEAM_A_NR_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE).getAddress();
-		String nrB = Position.from(TEAM_B_NR_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE).getAddress();
-		String formulaNameA = "IF(" + nrA + "<=0;\"\";" + meldeListe.formulaSverweisSpielernamen(nrA) + ")";
-		StringCellValue nameAFormula = StringCellValue.from(getXSpreadSheet()).setValue(formulaNameA)
-				.setPos(Position.from(NAME_A_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE)).setFillAutoDown(letzteSpielZeile);
-		getSheetHelper().setFormulaInCell(nameAFormula);
-
-		String formulaNameB = "IF(" + nrB + "<=0;\"" + I18n.get("spielplan.freispiel.name") + "\";"
-				+ meldeListe.formulaSverweisSpielernamen(nrB) + ")";
-		StringCellValue nameBFormula = StringCellValue.from(getXSpreadSheet()).setValue(formulaNameB)
-				.setPos(Position.from(NAME_B_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE)).setFillAutoDown(letzteSpielZeile);
-		getSheetHelper().setFormulaInCell(nameBFormula);
+		String[][] nrFormeln = getSheetHelper().getFormulaArrayFromRange(getXSpreadSheet(), RangePosition.from(
+				TEAM_A_NR_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE, TEAM_B_NR_SPALTE, letzteSpielZeile));
+		String[][] namen = new String[nrFormeln.length][2];
+		for (int zeile = ERSTE_SPIELTAG_DATEN_ZEILE; zeile <= letzteSpielZeile; zeile++) {
+			String nrA = Position.from(TEAM_A_NR_SPALTE, zeile).getAddress();
+			String nrB = Position.from(TEAM_B_NR_SPALTE, zeile).getAddress();
+			String[] formeln = nrFormeln[zeile - ERSTE_SPIELTAG_DATEN_ZEILE];
+			String nameA = TeamSchluessel.istFreispielNrFormel(formeln[0]) ? "\"\"" : MeldeListeHelper.teamNameFormel(TeamSchluessel.ausNrFormel(formeln[0], nrA),
+					true, Formation.NUR_TEAMNAME, false);
+			String nameB = TeamSchluessel.istFreispielNrFormel(formeln[1]) ? "\"" + I18n.get("spielplan.freispiel.name") + "\""
+					: MeldeListeHelper.teamNameFormel(TeamSchluessel.ausNrFormel(formeln[1], nrB),
+					true, Formation.NUR_TEAMNAME, false);
+			namen[zeile - ERSTE_SPIELTAG_DATEN_ZEILE][0] = "IF(" + nrA + "<=0;\"\";" + nameA + ")";
+			namen[zeile - ERSTE_SPIELTAG_DATEN_ZEILE][1] = "IF(" + nrB + "<=0;\"" + I18n.get("spielplan.freispiel.name") + "\";" + nameB + ")";
+		}
+		getSheetHelper().setFormulaArrayInRange(getXSpreadSheet(), RangePosition.from(
+				NAME_A_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE, NAME_B_SPALTE, letzteSpielZeile), namen);
 	}
 
 	public static boolean istFreispiel(int teamA, int teamB) {

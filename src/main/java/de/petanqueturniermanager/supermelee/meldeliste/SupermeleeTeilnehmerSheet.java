@@ -1,6 +1,9 @@
 package de.petanqueturniermanager.supermelee.meldeliste;
 
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeigeFormatierer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -104,12 +107,11 @@ public class SupermeleeTeilnehmerSheet extends SheetRunner implements ISheet {
 
         List<TeilnehmerEintrag> eintraege = new ArrayList<>(aktiveUndAusgesetzt.size());
         if (aktiveUndAusgesetzt.size() > 0) {
-            Map<Integer, String> spielerNamen = leseSpielerNamenAusMeldeliste();
+            Map<Integer, TeilnehmerName> spielerNamen = leseSpielerNamenAusMeldeliste();
             for (Spieler spieler : aktiveUndAusgesetzt.getSpielerList()) {
                 int nr = spieler.getNr();
-                // Anzeige ist bereits "Nachname, Vorname" → dient zugleich als Sortierschlüssel.
-                String anzeigeName = spielerNamen.getOrDefault(nr, "");
-                eintraege.add(new TeilnehmerEintrag(nr, "", anzeigeName, anzeigeName));
+                TeilnehmerName name = spielerNamen.getOrDefault(nr, new TeilnehmerName("", ""));
+                eintraege.add(new TeilnehmerEintrag(nr, "", name.anzeige(), name.sortName()));
             }
             eintraege.sort(konfigurationSheet.getTeilnehmerListeSortModus().comparator());
         }
@@ -124,6 +126,8 @@ public class SupermeleeTeilnehmerSheet extends SheetRunner implements ISheet {
                 .zebraFarben(konfigurationSheet.getMeldeListeHintergrundFarbeGerade(),
                         konfigurationSheet.getMeldeListeHintergrundFarbeUnGerade())
                 .aufbauen();
+
+        schreibeUuidFormeln(eintraege);
 
         int letzteSpalte = builder.getLetzteDatenSpalte();
         int footerZeile = builder.getLetzteDatenZeile() + 1;
@@ -151,8 +155,22 @@ public class SupermeleeTeilnehmerSheet extends SheetRunner implements ISheet {
         builder.freezeUndPrintbereich(footer.getPos().getZeile());
     }
 
-    private Map<Integer, String> leseSpielerNamenAusMeldeliste() throws GenerateException {
-        Map<Integer, String> result = new HashMap<>();
+    private void schreibeUuidFormeln(List<TeilnehmerEintrag> eintraege) throws GenerateException {
+        int maxProBlock = Math.max(1, konfigurationSheet.getMaxAnzTeilnehmerInSpalte());
+        // TeilnehmerSheetBuilder: Nummer, Spielername, eine leere Trennspalte.
+        for (int start = 0; start < eintraege.size(); start += maxProBlock) {
+            int blockSpalte = (start / maxProBlock) * 3;
+            List<Integer> nummern = eintraege.subList(start, Math.min(start + maxProBlock, eintraege.size()))
+                    .stream().map(TeilnehmerEintrag::nr).toList();
+            MeldungenSpalte<SpielerMeldungen, Spieler> spalten = MeldungenSpalte.builder().sheet(this)
+                    .formation(Formation.MELEE).ersteDatenZiele(TeilnehmerSheetBuilder.ERSTE_DATEN_ZEILE)
+                    .spielerNrSpalte(blockSpalte).anzZeilenInHeader(1).build();
+            spalten.alleSpielerMitUuidEinfuegen(nummern, meldeliste);
+        }
+    }
+
+    private Map<Integer, TeilnehmerName> leseSpielerNamenAusMeldeliste() throws GenerateException {
+        Map<Integer, TeilnehmerName> result = new HashMap<>();
         XSpreadsheet xMeldeliste = meldeliste.getXSpreadSheet();
         if (xMeldeliste == null) {
             return result;
@@ -173,29 +191,34 @@ public class SupermeleeTeilnehmerSheet extends SheetRunner implements ISheet {
             if (nr <= 0) {
                 break;
             }
-            String name = kombiniereName(row, ersteNameSpalte, letzteNameSpalte);
+            TeilnehmerName name = kombiniereName(row, ersteNameSpalte, letzteNameSpalte);
             result.put(nr, name);
         }
         return result;
     }
 
-    /** Liest die Namens-Spalten aus {@code row} und liefert "Nachname, Vorname" (bzw. ein Name bei 1 Spalte). */
-    private static String kombiniereName(RowData row, int ersteNameSpalte, int letzteNameSpalte) {
+    /** Vorschauname für die Spaltenbreite über den gemeinsamen Formatierer; Sortierung nach Nachname. */
+    private static TeilnehmerName kombiniereName(RowData row, int ersteNameSpalte, int letzteNameSpalte) {
         if (ersteNameSpalte == letzteNameSpalte) {
             String name = row.size() > ersteNameSpalte ? row.get(ersteNameSpalte).getStringVal() : "";
-            return name != null ? name.trim() : "";
+            String wert = name != null ? name.trim() : "";
+            return new TeilnehmerName(wert, wert);
         }
         String vorname = row.size() > ersteNameSpalte && row.get(ersteNameSpalte).getStringVal() != null
                 ? row.get(ersteNameSpalte).getStringVal().trim() : "";
         String nachname = row.size() > letzteNameSpalte && row.get(letzteNameSpalte).getStringVal() != null
                 ? row.get(letzteNameSpalte).getStringVal().trim() : "";
         if (nachname.isEmpty()) {
-            return vorname;
+            return new TeilnehmerName(vorname, vorname);
         }
         if (vorname.isEmpty()) {
-            return nachname;
+            return new TeilnehmerName(nachname, nachname);
         }
-        return nachname + ", " + vorname;
+        return new TeilnehmerName(TeamAnzeigeFormatierer.formatiere(false, 1, false,
+                new String[] { "", vorname, nachname }), nachname + ", " + vorname);
+    }
+
+    private record TeilnehmerName(String anzeige, String sortName) {
     }
 
     public String getSheetName(SpielTagNr spieltagNr) {

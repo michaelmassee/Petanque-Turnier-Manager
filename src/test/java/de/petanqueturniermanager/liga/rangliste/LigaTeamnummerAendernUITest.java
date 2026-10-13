@@ -61,6 +61,11 @@ public class LigaTeamnummerAendernUITest extends BaseCalcUITest {
 				LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE);
 		String uuidA = TeamUuidFormel.findeUuid(sheetHlp.getFormulaFromCell(spielplan, nrA)).orElseThrow();
 		int alteNr = MeldelisteUuidIndex.lese(wkingSpreadsheet).nr(uuidA).orElseThrow();
+		Position nameA = Position.from(LigaSpielPlanSheet.NAME_A_SPALTE,
+				LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE);
+		String nameVorher = sheetHlp.getTextFromCell(spielplan, nameA);
+		assertThat(sheetHlp.getFormulaFromCell(spielplan, nameA)).containsIgnoringCase("PTMUUIDTEAMANZEIGE")
+				.contains(uuidA).doesNotContain("MATCH(", "VLOOKUP");
 		List<String> ranglisteVorher = ranglisteJeNr().get(alteNr);
 
 		// Das Property schreibt sonst erst SheetRunner.run(); der Test ruft doRun() direkt.
@@ -70,6 +75,7 @@ public class LigaTeamnummerAendernUITest extends BaseCalcUITest {
 
 		assertThat(sheetHlp.getTextFromCell(spielplan, nrA)).as("Nr-Spalte zeigt die neue Nummer")
 				.isEqualTo(String.valueOf(NEUE_NR));
+		assertThat(sheetHlp.getTextFromCell(spielplan, nameA)).isEqualTo(nameVorher);
 
 		// Ranglisten führen Nummern als Werte und zeigen die neue Nummer erst nach dem Aktualisieren.
 		new LigaRanglisteSheet(wkingSpreadsheet).upDateSheet();

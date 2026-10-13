@@ -256,6 +256,8 @@ public abstract class BaseCalcUITest {
 
 	@AfterAll
 	public static void shutDown() {
+		// Hintergrundarbeit braucht ihren UNO-Kontext bis zum Ende, auch während eines Abbruchs.
+		de.petanqueturniermanager.ptmonline.PtmOnlineLiveBeobachter.zuruecksetzenFuerTest();
 		BaseCalcUITest.starter.closeOffice();
 		// Static-State der Test-JVM zurücksetzen: turnierEventHandler-Dispatcher und sharedContext
 		// zeigen sonst auf die soeben terminierte LO-Instanz und reißen die nächste Test-Klasse

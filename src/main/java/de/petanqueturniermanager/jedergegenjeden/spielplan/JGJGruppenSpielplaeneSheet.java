@@ -11,6 +11,8 @@ import com.sun.star.table.CellHoriJustify;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldelisteUuidIndex;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamSchluessel;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
@@ -264,7 +266,7 @@ public class JGJGruppenSpielplaeneSheet implements ISheet {
 		RangeHelper.from(this, daten.getRangePosition(startPos)).setDataInRange(daten);
 
 		// Auch die Nummern-Anzeige per Formel: sie folgt der verwiesenen Nr-Zelle (aktuelle Teamnummer).
-		schreibeTeamnameFormeln(letzteDatenZeile, zeigeNr ? nrAdresse -> nrAdresse : teamNameFormel, freispielText);
+		schreibeTeamnameFormeln(letzteDatenZeile, zeigeNr, teamNameFormel, freispielText);
 
 		// Border/Formatierung über die komplette Datenzeile (inkl. der per Formel
 		// befüllten Ergebnis-Spalten) anwenden.
@@ -278,17 +280,25 @@ public class JGJGruppenSpielplaeneSheet implements ISheet {
 		return letzteDatenZeile;
 	}
 
-	private void schreibeTeamnameFormeln(int letzteDatenZeile, TeamNameFormel teamNameFormel,
+	private void schreibeTeamnameFormeln(int letzteDatenZeile, boolean zeigeNr, TeamNameFormel teamNameFormel,
 			String freispielText) throws GenerateException {
+		MeldelisteUuidIndex uuidIndex = MeldelisteUuidIndex.lese(getWorkingSpreadsheet());
+		RangeData nummern = RangeHelper.from(this, RangePosition.from(SPALTE_TEAM_A_NR, ERSTE_DATEN_ZEILE,
+				SPALTE_TEAM_B_NR, letzteDatenZeile)).getDataFromRange();
 		for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteDatenZeile; zeile++) {
 			String nrAAdresse = Position.from(SPALTE_TEAM_A_NR, zeile).getAddress();
 			String nrBAdresse = Position.from(SPALTE_TEAM_B_NR, zeile).getAddress();
+			RowData row = nummern.get(zeile - ERSTE_DATEN_ZEILE);
+			String nameA = row.get(0).getIntVal(0) == 0 ? "\"\"" : (zeigeNr ? nrAAdresse
+					: teamNameFormel.formula(uuidIndex.uuidSchluessel(row.get(0).getIntVal(0))));
+			String nameB = row.get(1).getIntVal(0) == 0 ? calcStringLiteral(freispielText) : (zeigeNr ? nrBAdresse
+					: teamNameFormel.formula(uuidIndex.uuidSchluessel(row.get(1).getIntVal(0))));
 
 			getSheetHelper().setFormulaInCell(aktuellesSheet, Position.from(SPALTE_TEAM_A, zeile),
-					"IF(" + nrAAdresse + "<=0;\"\";" + teamNameFormel.formula(nrAAdresse) + ")");
+					"IF(" + nrAAdresse + "<=0;\"\";" + nameA + ")");
 			getSheetHelper().setFormulaInCell(aktuellesSheet, Position.from(SPALTE_TEAM_B, zeile),
 					"IF(" + nrBAdresse + "<=0;" + calcStringLiteral(freispielText) + ";"
-							+ teamNameFormel.formula(nrBAdresse) + ")");
+							+ nameB + ")");
 		}
 		// Früh prüfen, ob eine der gerade geschriebenen Team-Namen-Formeln (z.B. wegen einer
 		// nicht auflösbaren PTM.ALG.*-Add-in-Funktion) einen Berechnungsfehler liefert, statt
@@ -303,7 +313,7 @@ public class JGJGruppenSpielplaeneSheet implements ISheet {
 
 	@FunctionalInterface
 	public interface TeamNameFormel {
-		String formula(String nrAdresse) throws GenerateException;
+		String formula(TeamSchluessel team) throws GenerateException;
 	}
 
 	/**

@@ -33,6 +33,10 @@ import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldelisteUuidIndex;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamSchluessel;
 
 /**
  * eine liste von SpielerNr + Team A/B + Bahnnummer
@@ -101,6 +105,7 @@ public class SpielrundePlan extends SheetRunner implements ISheet {
 		MeldeListeSheet_Update meldeListe = new MeldeListeSheet_Update(getWorkingSpreadsheet());
 		meldeListe.setSpielTag(getKonfigurationSheet().getAktiveSpieltag());
 		SpielerMeldungen meldungen = meldeListe.getAktiveMeldungen();
+		MeldelisteUuidIndex uuidIndex = MeldelisteUuidIndex.lese(getWorkingSpreadsheet());
 
 		// Spielrunde sheet ?
 		processBoxinfo("processbox.neuer.spielrundeplan", getSpielRundeNr().getNr(), getSpielTag().getNr());
@@ -149,11 +154,12 @@ public class SpielrundePlan extends SheetRunner implements ISheet {
 			}
 
 			int spielerNrSpalte = spierNrVal.getPos().getSpalte();
-			spierNrVal.setValue((double) spieler.getNr());
-			getSheetHelper().setNumberValueInCell(spierNrVal);
+			TeamSchluessel spielerSchluessel = uuidIndex.uuidSchluessel(spieler.getNr());
+			getSheetHelper().setFormulaInCell(StringCellValue.from(spierNrVal)
+					.setValue(spielerSchluessel.nrAnzeige(MeldeListeHelper.nrBereichMeldeliste())));
 
-			// spieler name
-			nameFormula.setValue(meldeliste.formulaSverweisSpielernamen(spierNrVal.getPos().getAddress()));
+			// Name direkt über dieselbe UUID: Vorname Nachname.
+			nameFormula.setValue(MeldeListeHelper.spielerNamenFormel(spielerSchluessel, false, Formation.MELEE, false));
 			nameFormula.spalte(spielerNrSpalte).spaltePlus(SPIELER_NAME_OFFS_SPALTE);
 			nameFormula.zeile(spierNrVal.getPos().getZeile());
 			getSheetHelper().setFormulaInCell(nameFormula);

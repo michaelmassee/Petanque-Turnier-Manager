@@ -655,6 +655,8 @@ tasks.withType(Test).configureEach {
     systemProperty 'user.language', 'de'
     systemProperty 'user.country', 'DE'
     systemProperty 'ptm.log.dir', layout.buildDirectory.dir("test-logs/${name}/.petanqueturniermanager").get().asFile.absolutePath
+    // Auch die von UI-Tests gestartete LibreOffice-JVM erbt dieses Diagnose-Level.
+    environment 'PTM_LOG_LEVEL', providers.gradleProperty('ptmLogLevel').getOrElse('INFO')
 }
 
 test {

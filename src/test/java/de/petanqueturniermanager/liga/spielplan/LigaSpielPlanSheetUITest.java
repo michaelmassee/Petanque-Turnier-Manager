@@ -93,40 +93,26 @@ public class LigaSpielPlanSheetUITest extends BaseCalcUITest {
 		}
 	}
 
-	/**
-	 * Prueft, dass die VLOOKUP-Formeln in den Teamnamen-Spalten korrekt auf die Meldeliste verweisen.<br>
-	 * Feste Paarung (Team 1=Alpha vs Team 4=Delta) in Arbeitsspalten schreiben,
-	 * danach werden die Teamnamen aus der Meldeliste gelesen.
-	 */
+	/** Die Namensformeln tragen dieselbe UUID wie die ausgeblendeten Nummernzellen. */
 	@Test
-	public void testSpielplanTeamNamenViaVLOOKUP() throws GenerateException {
-		logger.info("testSpielplanTeamNamenViaVLOOKUP");
+	public void testSpielplanTeamNamenViaUuid() throws GenerateException {
 		LigaSpielPlanSheet spielPlan = new LigaSpielPlanSheet(wkingSpreadsheet);
 		spielPlan.run();
-
-		// Feste Paarung in erste Datenzeile schreiben: Team 1 (Alpha) vs Team 4 (Delta)
-		RangeData paarung = new RangeData(new Object[][] { { 1, 4 } });
-		RangeHelper.from(spielPlan.getXSpreadSheet(), wkingSpreadsheet.getWorkingSpreadsheetDocument(),
-				RangePosition.from(LigaSpielPlanSheet.TEAM_A_NR_SPALTE,
-						LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE,
-						LigaSpielPlanSheet.TEAM_B_NR_SPALTE,
-						LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE))
-				.setDataInRange(paarung);
-
-		// Neuberechnung erzwingen, da VLOOKUP mit blattübergreifenden Referenzen
-		// nach setDataArray nicht automatisch neu berechnet wird
-		Lo.qi(XCalculatable.class, doc).calculateAll();
-
-		// Teamnamen-Formeln auslesen (NAME_A_SPALTE=6, NAME_B_SPALTE=7)
-		RangeData namesData = RangeHelper.from(spielPlan.getXSpreadSheet(),
-				wkingSpreadsheet.getWorkingSpreadsheetDocument(),
-				RangePosition.from(NAME_A_SPALTE, LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE,
-						NAME_B_SPALTE, LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE))
-				.getDataFromRange();
-
-		assertThat(namesData).as("Genau eine Datenzeile erwartet").hasSize(1);
-		assertThat(namesData.get(0).get(0).getStringVal()).as("Heim-Team (Nr. 1 = Alpha)").isEqualTo("Alpha");
-		assertThat(namesData.get(0).get(1).getStringVal()).as("Gast-Team (Nr. 4 = Gamma)").isEqualTo("Gamma");
+		var namen = new de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheetUpdate(wkingSpreadsheet)
+				.leseTeamNamenMap();
+		for (int seite = 0; seite < 2; seite++) {
+			int zeile = LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE;
+			Position nr = Position.from(seite == 0 ? LigaSpielPlanSheet.TEAM_A_NR_SPALTE : LigaSpielPlanSheet.TEAM_B_NR_SPALTE, zeile);
+			Position name = Position.from(seite == 0 ? NAME_A_SPALTE : NAME_B_SPALTE, zeile);
+			int nummer = sheetHlp.getIntFromCell(spielPlan.getXSpreadSheet(), nr);
+			if (nummer > 0) {
+				String uuid = de.petanqueturniermanager.basesheet.meldeliste.TeamUuidFormel
+						.findeUuid(sheetHlp.getFormulaFromCell(spielPlan.getXSpreadSheet(), nr)).orElseThrow();
+				assertThat(sheetHlp.getFormulaFromCell(spielPlan.getXSpreadSheet(), name))
+						.containsIgnoringCase("PTMUUIDTEAMANZEIGE").contains(uuid).doesNotContain("VLOOKUP", "MATCH(");
+				assertThat(sheetHlp.getTextFromCell(spielPlan.getXSpreadSheet(), name)).isEqualTo(namen.get(nummer));
+			}
+		}
 	}
 
 	/**

@@ -73,7 +73,11 @@ public class TurnierSheet {
 	}
 
 	public TurnierSheet setActiv() {
+		if (logger.isTraceEnabled()) {
+			logger.trace("Blattaktivierung BEGIN", new Throwable("Aufrufpfad der Blattaktivierung"));
+		}
 		workingSpreadsheet.getWorkingSpreadsheetView().setActiveSheet(xSpreadsheet);
+		logger.trace("Blattaktivierung ENDE");
 		return this;
 	}
 

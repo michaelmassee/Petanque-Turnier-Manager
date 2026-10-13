@@ -249,7 +249,8 @@ public abstract class SheetRunner extends Thread {
 						// Lazy-Unprotect-Scope öffnen: ein einziges entsperren/schuetzen pro Kommando
 						// statt mehrfaches Toggle in jeder Sub-Operation. Echte Entsperrung passiert
 						// erst beim ersten Style-/CF-Trigger (ConditionalFormatHelper / RangeHelper.clearRange).
-						if (turnierSystem != TurnierSystem.KEIN && TurnierModus.get().istAktiv(workingSpreadsheet)) {
+						if (isBlattschutzScopeBeforeDoRun() && turnierSystem != TurnierSystem.KEIN
+								&& TurnierModus.get().istAktiv(workingSpreadsheet)) {
 							BlattschutzRegistry.fuer(turnierSystem)
 									.ifPresent(k -> BlattschutzManager.get().beginCommandScope(k, workingSpreadsheet));
 						}
@@ -306,7 +307,9 @@ public abstract class SheetRunner extends Thread {
 					koordinator.setLaeuft(false); // Immer an erste stelle diesen flag zurück
 					// Lazy-Unprotect-Scope schließen: wenn unterwegs entsperrt wurde, jetzt einmal schützen.
 					// Idempotent (No-Op falls kein Scope offen war), eigene try/finally-Robustheit im Manager.
-					BlattschutzManager.get().endCommandScope();
+					if (isCloseBlattschutzScopeAfterDoRun()) {
+						BlattschutzManager.get().endCommandScope();
+					}
 					koordinator.setRunner(null);
 					koordinator.benachrichtigeListener(); // Menü reaktivieren
 					if (documentDisposed) {
@@ -318,8 +321,10 @@ public abstract class SheetRunner extends Thread {
 						} else {
 							processBox().visibleWennAutomatisch().info(I18n.get("processbox.fertig.status")).ready();
 						}
+					} else if (silentBackground) {
+						// Ein Hintergrundlauf darf den Auto-Close-Timer eines sichtbaren Kommando-Logs nicht verlängern.
+						logger.debug("{}: {}", logPrefix, I18n.get("processbox.fertig.status"));
 					} else {
-						// Listener-ausgelöst oder silent-Background: nur in ProcessBox loggen, Fenster NICHT aufpoppen
 						processBox().info(I18n.get("processbox.fertig.status"));
 					}
 					if (isDocumentAlive()) {
@@ -645,6 +650,19 @@ public abstract class SheetRunner extends Thread {
 	}
 
 	protected abstract IKonfigurationSheet getKonfigurationSheet();
+
+	/**
+	 * Hintergrundläufe mit einer reinen Lesephase können den Scope erst vor einer tatsächlichen
+	 * Dokumentänderung öffnen. Der zentrale finally-Block schließt auch diesen expliziten Scope.
+	 */
+	protected boolean isBlattschutzScopeBeforeDoRun() {
+		return true;
+	}
+
+	/** Ein Lauf mit bedarfsabhängigem Scope darf ohne eigenen Scope keinen äußeren Scope schließen. */
+	protected boolean isCloseBlattschutzScopeAfterDoRun() {
+		return true;
+	}
 
 	/**
 	 * Steuert, ob {@link #updateKonfigurationSheet()} VOR {@code doRun()} aufgerufen wird.

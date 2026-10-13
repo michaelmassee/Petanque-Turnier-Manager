@@ -13,6 +13,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.onlinesync.SpieltagKontext;
+import de.petanqueturniermanager.onlinesync.sheet.PtmOnlineSyncSheet;
 import de.petanqueturniermanager.spielerdb.MeldelisteZiel;
 import de.petanqueturniermanager.spielerdb.MeldelisteZielFactory;
 
@@ -28,20 +29,27 @@ record PtmOnlineVerbindung(LibreOfficePtmOnlineSpeicher.Zugangsdaten config, Mel
         MeldelisteZiel meldeliste, PtmOnlineRegistrationMapping mapping, String tournamentId,
         @Nullable Integer spieltagNr) {
 
+    /** Rein lokale Vorprüfung: ohne Verbindung weder Zugangsdaten lesen noch einen Hintergrund-Runner starten. */
+    static boolean hatVerbindung(WorkingSpreadsheet ws, TurnierSystem ts) throws GenerateException {
+        return ts != TurnierSystem.KEIN
+                && PtmOnlineSyncSheet.leseStatus(ws, SpieltagKontext.aktiverSpieltagOderNull(ws, ts)).verbunden();
+    }
+
     /**
      * @return leer, wenn kein PTM-Online-Zugang eingerichtet, keine Meldeliste vorhanden oder das Dokument nicht
      *         verbunden ist
      * @throws GenerateException wenn die Verbindungsdaten nicht lesbar sind
      */
     static Optional<PtmOnlineVerbindung> ermitteln(WorkingSpreadsheet ws, TurnierSystem ts) throws GenerateException {
-        var config = new LibreOfficePtmOnlineSpeicher(ws.getxContext()).laden();
-        if (!config.isConfigured()) {
-            return Optional.empty();
-        }
+        if (!de.petanqueturniermanager.comp.PtmOnlineAktivierung.istAktiv()) return Optional.empty();
         Integer spieltagNr = SpieltagKontext.aktiverSpieltagOderNull(ws, ts);
         PtmOnlineRegistrationMapping mapping = new PtmOnlineRegistrationMapping(ws, ts, spieltagNr);
         Optional<String> tournamentId = mapping.getTournamentId();
         if (tournamentId.isEmpty()) {
+            return Optional.empty();
+        }
+        var config = new LibreOfficePtmOnlineSpeicher(ws.getxContext()).laden();
+        if (!config.isConfigured()) {
             return Optional.empty();
         }
         Optional<MeldelisteZiel> ziel = MeldelisteZielFactory.fuerPtmOnline(ws);

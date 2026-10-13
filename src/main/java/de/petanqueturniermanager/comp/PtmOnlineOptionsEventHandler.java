@@ -11,6 +11,7 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.awt.ActionEvent;
 import com.sun.star.awt.XActionListener;
 import com.sun.star.awt.XButton;
+import com.sun.star.awt.XCheckBox;
 import com.sun.star.awt.XContainerWindowEventHandler;
 import com.sun.star.awt.XControl;
 import com.sun.star.awt.XControlContainer;
@@ -60,6 +61,7 @@ public final class PtmOnlineOptionsEventHandler extends WeakBase implements XSer
 	private static final String CTL_VERBINDUNG_TESTEN = "PtmOnlineVerbindungTesten";
 	private static final String CTL_TRENNEN = "PtmOnlineTrennen";
 	private static final String CTL_STATUS = "PtmOnlineStatus";
+	private static final String CTL_AKTIV = "PtmOnlineVerbindungAktiv";
 
 	private final XComponentContext context;
 
@@ -96,12 +98,15 @@ public final class PtmOnlineOptionsEventHandler extends WeakBase implements XSer
 	private void ladeInOberflaeche(XWindow window) {
 		XControlContainer container = container(window);
 		setLabel(container, CTL_LABEL, I18n.get("ptmonline.optionen.bereich"));
+		setLabel(container, CTL_AKTIV, I18n.get("ptmonline.optionen.verbindung_aktiv"));
 		setLabel(container, CTL_API_KEY_LABEL, I18n.get("ptmonline.optionen.label.apikey"));
 		setLabel(container, CTL_BASE_URL_LABEL, I18n.get("ptmonline.optionen.label.baseurl"));
 		setLabel(container, CTL_VERBINDUNG_TESTEN, I18n.get("ptmonline.optionen.btn.testen"));
 		setLabel(container, CTL_TRENNEN, I18n.get("ptmonline.optionen.btn.trennen"));
 
 		var zugangsdaten = new LibreOfficePtmOnlineSpeicher(context).laden();
+		XCheckBox aktiv = control(container, CTL_AKTIV, XCheckBox.class);
+		if (aktiv != null) aktiv.setState((short) (zugangsdaten.verbindungAktiv() ? 1 : 0));
 		setText(container, CTL_API_KEY_FELD, zugangsdaten.apiKey());
 		setText(container, CTL_BASE_URL_FELD, zugangsdaten.baseUrl());
 		aktualisiereStatus(container, zugangsdaten.isConfigured()
@@ -115,7 +120,8 @@ public final class PtmOnlineOptionsEventHandler extends WeakBase implements XSer
 		XControlContainer container = container(window);
 		String apiKey = getText(container, CTL_API_KEY_FELD);
 		String baseUrl = getText(container, CTL_BASE_URL_FELD);
-		new LibreOfficePtmOnlineSpeicher(context).speichern(apiKey, baseUrl);
+		XCheckBox aktiv = control(container, CTL_AKTIV, XCheckBox.class);
+		new LibreOfficePtmOnlineSpeicher(context).speichern(apiKey, baseUrl, aktiv == null || aktiv.getState() == 1);
 	}
 
 	private void registriereListener(XControlContainer container) {
@@ -151,6 +157,8 @@ public final class PtmOnlineOptionsEventHandler extends WeakBase implements XSer
 	 */
 	private void verbindungTesten(XControlContainer container) {
 		String apiKey = getText(container, CTL_API_KEY_FELD);
+		XCheckBox aktiv = control(container, CTL_AKTIV, XCheckBox.class);
+		if (apiKey.isBlank() || (aktiv != null && aktiv.getState() != 1)) return;
 		String baseUrl = getText(container, CTL_BASE_URL_FELD);
 		aktualisiereStatus(container, I18n.get("ptmonline.optionen.test.laeuft"));
 		Thread worker = new Thread(() -> {
@@ -169,7 +177,8 @@ public final class PtmOnlineOptionsEventHandler extends WeakBase implements XSer
 	private void verbindungTrennen(XControlContainer container) {
 		setText(container, CTL_API_KEY_FELD, "");
 		setText(container, CTL_BASE_URL_FELD, "");
-		new LibreOfficePtmOnlineSpeicher(context).speichern("", "");
+		XCheckBox aktiv = control(container, CTL_AKTIV, XCheckBox.class);
+		new LibreOfficePtmOnlineSpeicher(context).speichern("", "", aktiv == null || aktiv.getState() == 1);
 		aktualisiereStatus(container, I18n.get("ptmonline.optionen.status.getrennt"));
 	}
 

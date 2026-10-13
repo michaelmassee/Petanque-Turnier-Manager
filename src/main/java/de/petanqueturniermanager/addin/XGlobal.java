@@ -55,6 +55,8 @@ public interface XGlobal extends XInterface {
         new MethodTypeInfo("ptmuuidzeile",                      35, TypeInfo.ANY),
         new MethodTypeInfo("ptmsplruuid",                       36, 0),
         new MethodTypeInfo("ptmuuidteamnr",                     37, TypeInfo.ANY),
+        new MethodTypeInfo("ptmuuidteamanzeige",                38, TypeInfo.ANY),
+        new ParameterTypeInfo("spielerSpaltenVersatz", "ptmuuidteamanzeige", 5, TypeInfo.ANY),
         new ParameterTypeInfo("onlineId", "ptmtnruuid",         2, TypeInfo.ANY),
         new ParameterTypeInfo("onlineId", "ptmsplruuid",        2, TypeInfo.ANY),
     };
@@ -142,5 +144,7 @@ public interface XGlobal extends XInterface {
 
     /** @return angezeigte Teamnummer der Zeile mit der UUID, {@link com.sun.star.uno.Any#VOID} (= #N/A) wenn nicht gefunden */
     Object ptmuuidteamnr(String uuid, XCellRange bereich);
+    Object ptmuuidteamanzeige(int teamnameAnzeigen, int anzSpieler, int vereinsnameAnzeigen,
+            String uuid, XCellRange bereich, Object spielerSpaltenVersatz);
 
 }

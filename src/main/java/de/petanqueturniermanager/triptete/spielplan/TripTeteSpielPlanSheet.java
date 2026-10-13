@@ -11,6 +11,8 @@ import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.algorithmen.triptete.TripTetePaarungen;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldelisteUuidIndex;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamSchluessel;
+import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -300,8 +302,7 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet, PtmOn
 
 	/**
 	 * Schreibt die ausgeblendeten Nr-Spalten als Formeln mit der UUID des Teams, die die aktuelle Teamnummer zeigen
-	 * (Freilos: 0). Namensformeln und {@link TripTeteSpielPlanLeser} lesen diese Anzeige; eine geänderte Teamnummer
-	 * ändert daher nicht die Zuordnung.
+	 * (Freilos: 0). Namensformeln übernehmen die UUID; {@link TripTeteSpielPlanLeser} liest die aktuelle Nummer.
 	 */
 	private void insertArbeitsspalten(List<List<TeamPaarung>> spielPlan) throws GenerateException {
 		MeldelisteUuidIndex uuidIndex = MeldelisteUuidIndex.lese(getWorkingSpreadsheet());
@@ -310,8 +311,8 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet, PtmOn
 		for (List<TeamPaarung> runde : spielPlan) {
 			for (TeamPaarung tp : runde) {
 				SheetRunner.testDoCancelTask();
-				zeilen.add(new String[] { uuidIndex.schluessel(tp.getA().getNr()).nrAnzeige(nrBereich),
-						tp.getOptionalB().isPresent() ? uuidIndex.schluessel(tp.getB().getNr()).nrAnzeige(nrBereich)
+				zeilen.add(new String[] { uuidIndex.uuidSchluessel(tp.getA().getNr()).nrAnzeige(nrBereich),
+						tp.getOptionalB().isPresent() ? uuidIndex.uuidSchluessel(tp.getB().getNr()).nrAnzeige(nrBereich)
 								: "0" });
 			}
 		}
@@ -333,21 +334,25 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet, PtmOn
 	private void insertFormulaTeamNamen() throws GenerateException {
 		int letzteSpielZeile = letzteSpielZeile();
 
-		String formelA = freispielName(meldeListe.formulaSverweisSpielernamen(
-				Position.from(TEAM_A_NR_SPALTE, ERSTE_DATEN_ZEILE).getAddress()));
-		StringCellValue nameAFormel = StringCellValue.from(getXSpreadSheet())
-				.setValue(formelA)
-				.setPos(Position.from(NAME_A_SPALTE, ERSTE_DATEN_ZEILE))
-				.setFillAutoDown(letzteSpielZeile);
-		getSheetHelper().setFormulaInCell(nameAFormel);
+		String[][] nrFormeln = getSheetHelper().getFormulaArrayFromRange(getXSpreadSheet(), RangePosition.from(
+				TEAM_A_NR_SPALTE, ERSTE_DATEN_ZEILE, TEAM_B_NR_SPALTE, letzteSpielZeile));
+		String[][] namen = new String[nrFormeln.length][2];
+		for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteSpielZeile; zeile++) {
+			for (int seite = 0; seite < 2; seite++) {
+				String nrAdresse = Position.from(seite == 0 ? TEAM_A_NR_SPALTE : TEAM_B_NR_SPALTE, zeile).getAddress();
+				if (TeamSchluessel.istFreispielNrFormel(nrFormeln[zeile - ERSTE_DATEN_ZEILE][seite])) {
+					namen[zeile - ERSTE_DATEN_ZEILE][seite] = "\"" + I18n.get("spielplan.freispiel.name") + "\"";
+					continue;
+				}
+				TeamSchluessel team = TeamSchluessel.ausNrFormel(nrFormeln[zeile - ERSTE_DATEN_ZEILE][seite], nrAdresse);
+				String name = MeldeListeHelper.teamNameFormel(team, konfigurationSheet.isMeldeListeTeamnameAnzeigen(),
+						Formation.TRIPLETTE, konfigurationSheet.isMeldeListeVereinsnameAnzeigen());
+				namen[zeile - ERSTE_DATEN_ZEILE][seite] = name;
+			}
+		}
 
-		String formelB = freispielName(meldeListe.formulaSverweisSpielernamen(
-				Position.from(TEAM_B_NR_SPALTE, ERSTE_DATEN_ZEILE).getAddress()));
-		StringCellValue nameBFormel = StringCellValue.from(getXSpreadSheet())
-				.setValue(formelB)
-				.setPos(Position.from(NAME_B_SPALTE, ERSTE_DATEN_ZEILE))
-				.setFillAutoDown(letzteSpielZeile);
-		getSheetHelper().setFormulaInCell(nameBFormel);
+		getSheetHelper().setFormulaArrayInRange(getXSpreadSheet(), RangePosition.from(
+				NAME_A_SPALTE, ERSTE_DATEN_ZEILE, NAME_B_SPALTE, letzteSpielZeile), namen);
 
 		// generate() läuft mit deaktivierter Automatikberechnung (Performance); ohne expliziten
 		// Rechenlauf blieben die neuen Formelzellen unberechnet. Danach früh prüfen, ob eine
@@ -357,10 +362,6 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet, PtmOn
 		getxCalculatable().calculateAll();
 		getSheetHelper().pruefeBereichAufFormelFehler(getXSpreadSheet(),
 				RangePosition.from(NAME_A_SPALTE, ERSTE_DATEN_ZEILE, NAME_B_SPALTE, letzteSpielZeile));
-	}
-
-	private String freispielName(String formulaName) {
-		return "IFNA(" + formulaName + ";\"" + I18n.get("spielplan.freispiel.name") + "\")";
 	}
 
 	private void insertFormulaWertSpalten() throws GenerateException {

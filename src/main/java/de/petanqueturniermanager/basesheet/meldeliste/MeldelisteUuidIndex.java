@@ -3,6 +3,9 @@
  */
 package de.petanqueturniermanager.basesheet.meldeliste;
 
+import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.i18n.I18n;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -102,4 +105,11 @@ public final class MeldelisteUuidIndex {
 	public TeamSchluessel schluessel(int nr) {
 		return uuid(nr).map(TeamSchluessel::uuidLiteral).orElseGet(() -> TeamSchluessel.nr(String.valueOf(nr)));
 	}
+	/** Schlüssel für echte Teams in UUID-Spielplänen; keine Nummernsuche bei fehlender UUID. */
+	public TeamSchluessel uuidSchluessel(int nr) throws GenerateException {
+		return uuid(nr).map(TeamSchluessel::uuidLiteral).orElseThrow(() ->
+				new GenerateException(
+						I18n.get("spielplan.team.uuid_fehlt", String.valueOf(nr))));
+	}
+
 }

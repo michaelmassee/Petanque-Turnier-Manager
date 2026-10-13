@@ -9,8 +9,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -30,6 +31,9 @@ import com.sun.star.util.XModifyListener;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.comp.PtmOnlineAktivierung;
+import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
+import de.petanqueturniermanager.comp.DocumentHelper;
 import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
@@ -44,8 +48,8 @@ import de.petanqueturniermanager.ptmonline.auftrag.versand.VersandStopp;
 import de.petanqueturniermanager.ptmonline.dto.SyncStandDto;
 
 /**
- * Überträgt Schreibaufträge an PTM-Online, sobald sich ein Turnierdokument ändert: Jedes Turnierdokument erhält einen
- * {@link XModifyListener}; nach einer Änderung wird kurz gewartet (weitere Eingaben werden gebündelt) und dann ein
+ * Überträgt Schreibaufträge an PTM-Online, sobald sich ein verbundenes Turnierdokument ändert: Verbundene Dokumente
+ * erhalten einen {@link XModifyListener}; nach einer Änderung wird kurz gewartet (weitere Eingaben werden gebündelt) und dann ein
  * Durchlauf gestartet. Turnier-Kommandos stoßen ihn über {@link #anstossen} an.
  * <p>
  * Ein Durchlauf hat zwei Seiten (T-09):
@@ -65,7 +69,7 @@ import de.petanqueturniermanager.ptmonline.dto.SyncStandDto;
 public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
 
     private static final Logger logger = LogManager.getLogger(PtmOnlineLiveBeobachter.class);
-    /** Wartezeit nach der letzten Änderung, bevor übertragen wird. */
+    /** Wartezeit ab der ersten Änderung einer gebündelten Änderungswelle. */
     static final long VERZOEGERUNG_MS = 3000;
     /** Wartezeit nach einem Turnier-Kommando: dessen Änderungen sind vollständig. */
     static final long ANSTOSS_MS = 500;
@@ -73,14 +77,31 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
     static final long MAX_WIEDERHOLUNG_MS = 60_000;
 
     private static volatile @Nullable PtmOnlineLiveBeobachter instanz;
+    private static volatile @Nullable XComponentContext reaktivierungsKontext;
 
     private final XComponentContext xContext;
+    private volatile boolean beendet;
     private final Map<String, Beobachtung> beobachtungen = new ConcurrentHashMap<>();
-    private final ScheduledExecutorService ausfuehrung = Executors.newSingleThreadScheduledExecutor(r -> {
+    private final ScheduledExecutorService ausfuehrung = new ScheduledThreadPoolExecutor(1, r -> {
         Thread thread = new Thread(r, "PTM-Online-Live");
         thread.setDaemon(true);
         return thread;
-    });
+    }) {
+        @Override
+        protected void terminated() {
+            // Auch beim regulären Shutdown erst freigeben, wenn alle Kind-Runner beendet sind.
+            synchronized (PtmOnlineLiveBeobachter.class) {
+                beobachtungen.clear();
+                if (instanz == PtmOnlineLiveBeobachter.this) {
+                    instanz = null;
+                }
+            }
+            XComponentContext kontext = reaktivierungsKontext;
+            if (kontext != null && PtmOnlineAktivierung.istAktiv()) {
+                LoMainThread.post(kontext, () -> konfigurationGeaendert(kontext));
+            }
+        }
+    };
 
     private PtmOnlineLiveBeobachter(XComponentContext xContext) {
         this.xContext = xContext;
@@ -89,11 +110,102 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
     /** Einmalig beim Start des Plugins; die Instanz wird als globaler Event-Listener registriert. */
     public static synchronized PtmOnlineLiveBeobachter init(XComponentContext xContext) {
         PtmOnlineLiveBeobachter beobachter = instanz;
+        logger.trace("PTM-Online Live init: angefragter Kontext={}, bestehender Kontext={}",
+                System.identityHashCode(xContext), beobachter == null ? null : System.identityHashCode(beobachter.xContext));
         if (beobachter == null) {
             beobachter = new PtmOnlineLiveBeobachter(xContext);
             instanz = beobachter;
+        } else if (beobachter.beendet) {
+            throw new IllegalStateException("PTM-Online-Live-Beobachter wird noch beendet");
         }
         return beobachter;
+    }
+
+    /**
+     * Regulärer Plugin-Shutdown: verhindert neue Arbeit und bricht geplante und laufende Arbeit ab. Wartet nicht
+     * auf UNO-Kind-Runner: der Aufrufer kann der LibreOffice-Hauptthread sein, den diese Runner noch benötigen.
+     * Der Executor gibt die statische Instanz nach dem Ende der Arbeit selbst frei. Keine UNO-Aufrufe beim Stoppen.
+     */
+    public static void dispose() {
+        reaktivierungsKontext = null;
+        PtmOnlineLiveBeobachter beobachter = instanz;
+        if (beobachter != null) {
+            beobachter.stoppen();
+        }
+    }
+
+    /** Optionsänderung: Stop ohne UNO-Warten; Aktivierung übernimmt auch schon offene Dokumente. */
+    public static void konfigurationGeaendert(XComponentContext context) {
+        PtmOnlineLiveBeobachter bisher = instanz;
+        if (!PtmOnlineAktivierung.istAktiv()) {
+            reaktivierungsKontext = null;
+            if (bisher != null) {
+                PetanqueTurnierMngrSingleton.removeGlobalEventListener(bisher);
+                var entfernen = java.util.List.copyOf(bisher.beobachtungen.values());
+                bisher.stoppen();
+                LoMainThread.post(context, () -> entfernen.forEach(b -> {
+                    try {
+                        b.geschlossen = true;
+                        XModifyBroadcaster broadcaster = Lo.qi(XModifyBroadcaster.class, b.xDoc);
+                        if (broadcaster != null) broadcaster.removeModifyListener(b);
+                    } catch (DisposedException e) {
+                        // Dokument wurde zwischenzeitlich geschlossen.
+                    }
+                }));
+            }
+            return;
+        }
+        boolean neu;
+        synchronized (PtmOnlineLiveBeobachter.class) {
+            bisher = instanz;
+            if (bisher != null && bisher.beendet) {
+                reaktivierungsKontext = context;
+                return;
+            }
+            reaktivierungsKontext = null;
+            neu = bisher == null;
+            if (neu) bisher = init(context);
+        }
+        if (neu) PetanqueTurnierMngrSingleton.addGlobalEventListener(bisher);
+        var desktop = DocumentHelper.getCurrentDesktop(context);
+        if (desktop != null) {
+            var dokumente = desktop.getComponents().createEnumeration();
+            try {
+                while (dokumente.hasMoreElements()) bisher.onLoad(dokumente.nextElement());
+            } catch (com.sun.star.uno.Exception e) {
+                logger.debug("Offene Dokumente für PTM-Online nicht vollständig erfasst", e);
+            }
+        }
+    }
+
+    private void stoppen() {
+        synchronized (this) {
+            beendet = true;
+            for (Runnable aufgabe : ausfuehrung.shutdownNow()) {
+                if (aufgabe instanceof Future<?> future) {
+                    future.cancel(false);
+                }
+            }
+        }
+    }
+
+    /** Nur für Tests: denselben Shutdown ausführen und vor dem Office-Wechsel auf dessen Abschluss warten. */
+    public static void zuruecksetzenFuerTest() {
+        reaktivierungsKontext = null;
+        PtmOnlineLiveBeobachter beobachter = instanz;
+        if (beobachter == null) {
+            return;
+        }
+        beobachter.stoppen();
+        try {
+            if (!beobachter.ausfuehrung.awaitTermination(10, TimeUnit.SECONDS)) {
+                throw new IllegalStateException("PTM-Online-Hintergrundarbeit endet vor dem Office-Wechsel nicht");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Warten auf PTM-Online-Hintergrundarbeit unterbrochen", e);
+        }
+        logger.trace("PTM-Online Live: Test-Beobachter beendet und Kontext freigegeben");
     }
 
     /**
@@ -101,6 +213,7 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
      * dem Plugin-Start geladen oder erst in dieser Sitzung verbunden wurde.
      */
     public static void anstossen(XSpreadsheetDocument xDoc) {
+        if (!PtmOnlineAktivierung.istAktiv()) return;
         PtmOnlineLiveBeobachter beobachter = instanz;
         if (beobachter != null) {
             beobachter.registriere(xDoc).ifPresent(Beobachtung::anstossen);
@@ -141,6 +254,9 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
 
     @Override
     public void onLoad(Object source) {
+        if (beendet || !PtmOnlineAktivierung.istAktiv()) {
+            return;
+        }
         XSpreadsheetDocument xDoc = Lo.qi(XSpreadsheetDocument.class, Lo.qi(XModel.class, source));
         if (xDoc != null && new DocumentPropertiesHelper(xDoc).getTurnierSystemAusDocument() != TurnierSystem.KEIN) {
             // Gespeicherte, noch offene Aufträge nach dem Laden senden (P-55).
@@ -149,6 +265,19 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
     }
 
     private Optional<Beobachtung> registriere(XSpreadsheetDocument xDoc) {
+        if (beendet || !PtmOnlineAktivierung.istAktiv()) {
+            return Optional.empty();
+        }
+        WorkingSpreadsheet ws = new WorkingSpreadsheet(xContext, xDoc);
+        TurnierSystem ts = new DocumentPropertiesHelper(xDoc).getTurnierSystemAusDocument();
+        try {
+            if (!PtmOnlineVerbindung.hatVerbindung(ws, ts)) {
+                return Optional.empty();
+            }
+        } catch (GenerateException e) {
+            logger.debug("PTM-Online Live: lokale Verbindung nicht lesbar, Beobachtung übersprungen", e);
+            return Optional.empty();
+        }
         XModifyBroadcaster broadcaster = Lo.qi(XModifyBroadcaster.class, xDoc);
         if (broadcaster == null) {
             return Optional.empty();
@@ -169,6 +298,7 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
 
         private final String oid;
         private final XSpreadsheetDocument xDoc;
+        private volatile boolean geschlossen;
         private final AtomicBoolean offen = new AtomicBoolean();
         private final AtomicBoolean eingeplant = new AtomicBoolean();
         /** Versand angehalten (Kopie im Einsatz, Bindung abgelöst) bis zu einer neuen Bindung. */
@@ -193,6 +323,7 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
 
         @Override
         public void disposing(EventObject event) {
+            geschlossen = true;
             beobachtungen.remove(oid);
             PtmOnlineAuftraege.vergessen(xDoc);
         }
@@ -208,13 +339,18 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
         }
 
         private void planeEin(long verzoegerungMs) {
-            if (eingeplant.compareAndSet(false, true)) {
-                ausfuehrung.schedule(this::durchlauf, verzoegerungMs, TimeUnit.MILLISECONDS);
+            synchronized (PtmOnlineLiveBeobachter.this) {
+                if (!beendet && !geschlossen && PtmOnlineAktivierung.istAktiv() && eingeplant.compareAndSet(false, true)) {
+                    ausfuehrung.schedule(this::durchlauf, verzoegerungMs, TimeUnit.MILLISECONDS);
+                }
             }
         }
 
         private void durchlauf() {
             eingeplant.set(false);
+            if (beendet || geschlossen || !PtmOnlineAktivierung.istAktiv()) {
+                return;
+            }
             if (SheetRunner.isRunning()) {
                 planeEin(VERZOEGERUNG_MS);
                 return;
@@ -224,9 +360,17 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
             }
             try {
                 TurnierSystem ts = new DocumentPropertiesHelper(xDoc).getTurnierSystemAusDocument();
-                if (ts != TurnierSystem.KEIN) {
-                    uebertrage(new WorkingSpreadsheet(xContext, xDoc), ts);
+                WorkingSpreadsheet ws = new WorkingSpreadsheet(xContext, xDoc);
+                if (!PtmOnlineVerbindung.hatVerbindung(ws, ts)) {
+                    geschlossen = true;
+                    beobachtungen.remove(oid, this);
+                    XModifyBroadcaster broadcaster = Lo.qi(XModifyBroadcaster.class, xDoc);
+                    if (broadcaster != null) {
+                        broadcaster.removeModifyListener(this);
+                    }
+                    return;
                 }
+                uebertrage(ws, ts);
             } catch (DisposedException e) {
                 logger.debug("PTM-Online Live: Dokument {} geschlossen", oid, e);
                 beobachtungen.remove(oid);
@@ -245,7 +389,9 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
         }
 
         private void uebertrage(WorkingSpreadsheet ws, TurnierSystem ts) throws GenerateException, InterruptedException {
+            pruefeNichtBeendet();
             Optional<PtmOnlineErfassungsRunner.Erfassung> erfassung = erfasse(ws, ts);
+            pruefeNichtBeendet();
             if (erfassung.isEmpty()) {
                 return;
             }
@@ -263,6 +409,7 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
                 return;
             }
             VersandStopp stopp = sende(e.bestand(), client, e.pausiert());
+            pruefeNichtBeendet();
             if (!e.bestand().ergebnisseZumAnwenden().isEmpty()) {
                 // Ergebnisse im nächsten Durchlauf im Dokument anwenden.
                 anstossen();
@@ -316,8 +463,12 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
         /** Hält den Versand bis zu einer neuen Bindung an und informiert die Turnierleitung einmal. */
         private void halteAn(String meldungSchluessel) {
             if (angehalten.compareAndSet(false, true)) {
-                LoMainThread.post(xContext, () -> MessageBox.from(xContext, MessageBoxTypeEnum.WARN_OK)
-                        .caption(I18n.get("ptmonline.menu.toplevel")).message(I18n.get(meldungSchluessel)).show());
+                LoMainThread.post(xContext, () -> {
+                    if (!beendet) {
+                        MessageBox.from(xContext, MessageBoxTypeEnum.WARN_OK)
+                                .caption(I18n.get("ptmonline.menu.toplevel")).message(I18n.get(meldungSchluessel)).show();
+                    }
+                });
             }
         }
 
@@ -337,6 +488,9 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
         }
 
         private void zeigeTurnierGeloescht() {
+            if (beendet) {
+                return;
+            }
             MessageBox.from(xContext, MessageBoxTypeEnum.WARN_OK).caption(I18n.get("ptmonline.menu.toplevel"))
                     .message(I18n.get("ptmonline.turnier.geloescht")).show();
         }
@@ -357,13 +511,14 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
         }
 
         /** Führt einen stillen Lauf aus und wartet darauf; ist gerade ein anderer Lauf aktiv, wird verschoben. */
-        private static void fuehreAus(SheetRunner runner, String fehlertext)
+        private void fuehreAus(SheetRunner runner, String fehlertext)
                 throws GenerateException, InterruptedException {
+            pruefeNichtBeendet();
             runner.startSilent();
             if (runner.getState() == Thread.State.NEW) {
                 throw new LaufVerschoben("Lauf verschoben, ein anderer Lauf ist aktiv");
             }
-            runner.join();
+            warteAufRunner(runner);
             if (runner.isLetzterLaufFehlgeschlagen()) {
                 throw new GenerateException(fehlertext);
             }
@@ -373,6 +528,32 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
             offen.set(true);
             planeEin(naechsteWiederholungMs);
             naechsteWiederholungMs = Math.min(naechsteWiederholungMs * 2, MAX_WIEDERHOLUNG_MS);
+        }
+
+        private void pruefeNichtBeendet() throws InterruptedException {
+            if (beendet || !PtmOnlineAktivierung.istAktiv() || Thread.currentThread().isInterrupted()) {
+                throw new InterruptedException("PTM-Online-Live-Beobachter wurde beendet");
+            }
+        }
+    }
+
+    /** Ein Abbruch des wartenden Schedulers darf keinen weiterlaufenden UNO-Kind-Thread zurücklassen. */
+    static void warteAufRunner(Thread runner) throws InterruptedException {
+        try {
+            runner.join();
+        } catch (InterruptedException e) {
+            runner.interrupt();
+            boolean fertig = false;
+            while (!fertig) {
+                try {
+                    runner.join();
+                    fertig = true;
+                } catch (InterruptedException erneut) {
+                    runner.interrupt();
+                }
+            }
+            Thread.currentThread().interrupt();
+            throw e;
         }
     }
 

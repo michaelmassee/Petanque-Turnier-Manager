@@ -4,6 +4,8 @@
 package de.petanqueturniermanager.basesheet.meldeliste;
 
 import de.petanqueturniermanager.addins.GlobalImpl;
+import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.i18n.I18n;
 
 /**
  * Wie eine Formel ein Team in der Meldeliste findet. Ziel ist überall {@link Uuid}: die UUID bleibt, wenn sich die
@@ -28,6 +30,17 @@ public sealed interface TeamSchluessel {
 	/** Team über eine Teamnummer (Zelladresse oder Zahl) – Übergang für noch nicht umgestellte Systeme. */
 	static TeamSchluessel nr(String nrAusdruck) {
 		return new Nr(nrAusdruck);
+	}
+
+	/** Nur der explizite Freispiel-Platzhalter 0, als Wert oder Calc-Formel. */
+	static boolean istFreispielNrFormel(String nrFormel) {
+		return "0".equals(nrFormel) || "=0".equals(nrFormel);
+	}
+
+	/** Verlangt die UUID eines echten Teams; nrAdresse dient nur der Fehlermeldung. */
+	static TeamSchluessel ausNrFormel(String nrFormel, String nrAdresse) throws GenerateException {
+		return TeamUuidFormel.findeUuid(nrFormel).map(TeamSchluessel::uuidLiteral)
+				.orElseThrow(() -> new GenerateException(I18n.get("spielplan.team.uuid_fehlt", nrAdresse)));
 	}
 
 	/** @param ausdruck Formelausdruck, der die UUID als Text liefert */

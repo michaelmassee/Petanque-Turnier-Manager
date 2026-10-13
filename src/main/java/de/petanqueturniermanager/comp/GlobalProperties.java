@@ -2082,7 +2082,11 @@ public class GlobalProperties {
 
 	private void safeSetLogLevel() {
 		try {
-			var logLevel = getLogLevel();
+			// Testprozesse und ihr LibreOffice-Kindprozess setzen ein gemeinsames Diagnose-Level.
+			// Es darf beim Laden gespeicherter Plugin-Optionen nicht wieder herabgesetzt werden.
+			String diagnoseLevel = System.getenv("PTM_LOG_LEVEL");
+			var logLevel = diagnoseLevel != null && !diagnoseLevel.isBlank()
+					? diagnoseLevel.trim().toLowerCase(Locale.ROOT) : getLogLevel();
 			Level level = switch (logLevel) {
 				case "trace" -> Level.TRACE;
 				case "debug" -> Level.DEBUG;

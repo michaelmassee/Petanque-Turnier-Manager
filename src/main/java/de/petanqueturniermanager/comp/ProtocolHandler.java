@@ -419,6 +419,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_TEAMNUMMER_AENDERN      = "teamnummer_aendern";
 	// PTM-Online
 	public static final String CMD_PTMONLINE_TURNIER_VERBINDEN       = "ptmonline_turnier_verbinden";
+	public static final String CMD_PTMONLINE_MENU = "ptmonline_menu";
 	public static final String CMD_PTMONLINE_VERBINDUNG_TRENNEN      = "ptmonline_verbindung_trennen";
 	public static final String CMD_PTMONLINE_ANMELDUNGEN_IMPORTIEREN = "ptmonline_anmeldungen_importieren";
 	public static final String CMD_PTMONLINE_ZUORDNUNG_WIEDERHERSTELLEN = "ptmonline_zuordnung_wiederherstellen";
@@ -911,6 +912,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	@Override
 	public void dispatch(URL url, PropertyValue[] args) {
 		String command = url.Path;
+		if (command.startsWith("ptmonline_") && !PtmOnlineAktivierung.istAktiv()) return;
 		logger.trace("[FOKUS-TRACE] dispatch: cmd='{}' handlerHash={} frameHash={} frameTitle='{}'",
 				command, System.identityHashCode(this),
 				frame == null ? "null" : System.identityHashCode(frame),
@@ -2227,7 +2229,13 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			CMD_TOOLBAR_WHATSAPP_BLATT_POSTEN,
 			CMD_TOOLBAR_WHATSAPP_SELEKTION_POSTEN);
 
+	static boolean istOnlineBefehlAktiv(String command, XSpreadsheetDocument document) {
+		return isEnabled(command, document);
+	}
+
 	private static boolean isEnabled(String command, XSpreadsheetDocument document) {
+		if (command.startsWith("ptmonline_") && !PtmOnlineAktivierung.istAktiv()) return false;
+		if (CMD_PTMONLINE_MENU.equals(command)) return true;
 		if (SheetRunner.isRunning()) {
 			return CMD_ABBRUCH.equals(command);
 		}
@@ -2451,6 +2459,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_PTMONLINE_TURNIER_VERBINDEN,
 				 CMD_PTMONLINE_VERBINDUNG_TRENNEN,
 				 CMD_PTMONLINE_ANMELDUNGEN_IMPORTIEREN,
+				 CMD_PTMONLINE_ZUORDNUNG_WIEDERHERSTELLEN,
 				 CMD_PTMONLINE_SYNC_PAUSIEREN,
 				 CMD_PTMONLINE_SYNC_FORTSETZEN               -> ts != TurnierSystem.KEIN;
 			case CMD_TIMER_STARTEN_DIALOG                   -> timerInaktivOderBeendet();
@@ -2654,6 +2663,10 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	 * Der Turniermodus-Haken spiegelt den Zustand des Dokuments dieses Listeners.
 	 */
 	private static void setzeCommandState(FeatureStateEvent event, String command, XSpreadsheetDocument dokument) {
+		if (command.startsWith("ptmonline_")) {
+			event.State = new com.sun.star.frame.status.Visibility(PtmOnlineAktivierung.istAktiv());
+			return;
+		}
 		int slot = switch (command) {
 			case CMD_WEBSERVER_URL_1  -> 0;
 			case CMD_WEBSERVER_URL_2  -> 1;

@@ -17,6 +17,7 @@ import com.sun.star.lib.uno.helper.Factory;
 import com.sun.star.registry.XRegistryKey;
 import com.sun.star.sheet.XCellRangeData;
 import com.sun.star.sheet.XCellRangeFormula;
+import com.sun.star.sheet.XCellRangeAddressable;
 import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.table.XCellRange;
 import com.sun.star.uno.Any;
@@ -69,6 +70,7 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	public static final String PTM_DIREKTVERGLEICH = "PTM.ALG.DIRECTCOMPARISON";
 	public static final String PTM_TURNIERSYSTEM = "PTM.ALG.TURNIERSYSTEM";
 	public static final String PTM_TEAM_ANZEIGE = "PTM.ALG.TEAMANZEIGE";
+	public static final String PTM_UUID_TEAM_ANZEIGE = "PTM.ALG.UUID.TEAMANZEIGE";
 	public static final String PTM_TNR_UUID = "PTM.ALG.TNRUUID";
 	public static final String PTM_UUID_ZEILE = "PTM.ALG.UUIDZEILE";
 	public static final String PTM_UUID_TEAMNR = "PTM.ALG.UUIDTEAMNR";
@@ -123,6 +125,13 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 			boolean vereinsnameAnzeigen, String meldelistenZeileFormel) {
 		return PTM_TEAM_ANZEIGE + "(" + (teamnameAnzeigen ? "1" : "0") + ";" + anzSpieler
 				+ ";" + (vereinsnameAnzeigen ? "1" : "0") + ";" + meldelistenZeileFormel + ")";
+	}
+
+	public static String FORMAT_PTM_UUID_TEAM_ANZEIGE(boolean teamnameAnzeigen, int anzSpieler,
+			boolean vereinsnameAnzeigen, String uuidAusdruck, String bereich, boolean teamnameSpalteUeberspringen) {
+		return PTM_UUID_TEAM_ANZEIGE + "(" + (teamnameAnzeigen ? "1" : "0") + ";" + anzSpieler
+				+ ";" + (vereinsnameAnzeigen ? "1" : "0") + ";" + uuidAusdruck + ";" + bereich
+				+ (teamnameSpalteUeberspringen ? ";1" : "") + ")";
 	}
 
 	/** Nr-Zelle der Meldeliste: zeigt {@code nr} an und trägt die UUID des Teams als Literal. */
@@ -317,6 +326,45 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 			String[][] meldelistenZeile) {
 		String[] zeile = meldelistenZeile == null || meldelistenZeile.length == 0 ? null : meldelistenZeile[0];
 		return TeamAnzeigeFormatierer.formatiere(teamnameAnzeigen != 0, anzSpieler, vereinsnameAnzeigen != 0, zeile);
+	}
+
+	/** Sucht nur in der ersten Spalte, liest danach ausschließlich die gefundene Zeile. Kein Fokuszugriff. */
+	@Override
+	public Object ptmuuidteamanzeige(int teamnameAnzeigen, int anzSpieler, int vereinsnameAnzeigen,
+			String uuid, XCellRange bereich, Object spielerSpaltenVersatz) {
+		if (!TeamUuidFormel.istUuid(uuid)) return Any.VOID;
+		int versatz = 0;
+		if (spielerSpaltenVersatz != null && !com.sun.star.uno.AnyConverter.isVoid(spielerSpaltenVersatz)) {
+			if (!(spielerSpaltenVersatz instanceof Number zahl)
+					|| (zahl.doubleValue() != 0 && zahl.doubleValue() != 1)) return Any.VOID;
+			versatz = zahl.intValue();
+		}
+		try {
+			XCellRangeAddressable adressierbar = Lo.qi(XCellRangeAddressable.class, bereich);
+			if (adressierbar == null) return Any.VOID;
+			var adresse = adressierbar.getRangeAddress();
+			int letzteZeile = adresse.EndRow - adresse.StartRow;
+			int letzteSpalte = adresse.EndColumn - adresse.StartColumn;
+			if (versatz > letzteSpalte) return Any.VOID;
+			XCellRangeFormula nrSpalte = Lo.qi(XCellRangeFormula.class,
+					bereich.getCellRangeByPosition(0, 0, 0, letzteZeile));
+			if (nrSpalte == null) return Any.VOID;
+			OptionalInt gefunden = TeamUuidFormel.zeileImBereich(uuid, nrSpalte.getFormulaArray());
+			if (gefunden.isEmpty()) return Any.VOID;
+			int zeile = gefunden.getAsInt() - 1;
+			XCellRange daten = bereich.getCellRangeByPosition(versatz, zeile, letzteSpalte, zeile);
+			long benoetigt = teamnameAnzeigen != 0 ? 2 : 1L + Math.max(0, anzSpieler) * (vereinsnameAnzeigen != 0 ? 3L : 2L);
+			String[] namen = new String[(int) Math.min(benoetigt, letzteSpalte - versatz + 1L)];
+			namen[0] = ""; // Nr bzw. übersprungener Teamname wird vom Formatierer nicht verwendet.
+			for (int spalte = 1; spalte < namen.length; spalte++) {
+				var text = Lo.qi(com.sun.star.text.XTextRange.class, daten.getCellByPosition(spalte, 0));
+				namen[spalte] = text == null ? "" : text.getString();
+			}
+			return TeamAnzeigeFormatierer.formatiere(teamnameAnzeigen != 0, anzSpieler, vereinsnameAnzeigen != 0, namen);
+		} catch (com.sun.star.lang.IndexOutOfBoundsException | RuntimeException e) {
+			logger.error("PTM.ALG.UUID.TEAMANZEIGE fehlgeschlagen", e);
+			return Any.VOID;
+		}
 	}
 
 	@Override

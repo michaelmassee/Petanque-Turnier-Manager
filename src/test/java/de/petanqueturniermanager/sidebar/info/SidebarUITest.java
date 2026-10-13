@@ -18,6 +18,7 @@ import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.comp.LibreOfficePtmOnlineSpeicher;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.onlinesync.OnlineTournamentDto;
 import de.petanqueturniermanager.ptmonline.PtmOnlineRegistrationMapping;
@@ -49,6 +50,7 @@ public class SidebarUITest extends BaseCalcUITest {
 			Lo.qi(XComponent.class, panel).dispose();
 			panel = null;
 		}
+		LibreOfficePtmOnlineSpeicher.setZugangsdatenForTest(null);
 	}
 
 	private InfoSidebarPanel neuesPanel() {
@@ -112,6 +114,8 @@ public class SidebarUITest extends BaseCalcUITest {
 	@Test
 	@DisplayName("InfoPanel: PTM-Online-Status nicht verbunden → verbunden → pausiert")
 	void infoPanel_ZeigtPtmOnlineStatus() throws Exception {
+		LibreOfficePtmOnlineSpeicher.setZugangsdatenForTest(
+				new LibreOfficePtmOnlineSpeicher.Zugangsdaten("test", "http://127.0.0.1", true));
 		new SchweizerMeldeListeSheetNew(wkingSpreadsheet).createMeldelisteWithParams(Formation.TETE, false, false);
 		docPropHelper.setIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM,
 				TurnierSystem.SCHWEIZER.getId());
@@ -129,6 +133,13 @@ public class SidebarUITest extends BaseCalcUITest {
 
 		mapping.setPausiert(true);
 		assertThat(content.ptmOnlineStatusAnzeige()).isEqualTo(I18n.get("sidebar.info.ptmonline.pausiert"));
+
+		LibreOfficePtmOnlineSpeicher.setZugangsdatenForTest(
+				new LibreOfficePtmOnlineSpeicher.Zugangsdaten("", "http://127.0.0.1", true));
+		assertThat(content.ptmOnlineStatusAnzeige()).as("Ohne API-Key keine Online-Anzeige").isEmpty();
+		LibreOfficePtmOnlineSpeicher.setZugangsdatenForTest(
+				new LibreOfficePtmOnlineSpeicher.Zugangsdaten("test", "http://127.0.0.1", false));
+		assertThat(content.ptmOnlineStatusAnzeige()).as("Bei deaktivierter Verbindung keine Online-Anzeige").isEmpty();
 	}
 
 	@Test

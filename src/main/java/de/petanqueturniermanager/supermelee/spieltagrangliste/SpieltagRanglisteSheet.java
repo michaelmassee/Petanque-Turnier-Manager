@@ -184,7 +184,8 @@ public class SpieltagRanglisteSheet extends SheetRunner implements ISpielTagRang
 				.forceCreate().spielTagPageStyle(getSpieltagNr()).create();
 
 		Integer headerColor = getKonfigurationSheet().getRanglisteHeaderFarbe();
-		getSpielerSpalte().alleAktiveUndAusgesetzteMeldungenAusmeldelisteEinfuegen(meldeliste);
+		getSpielerSpalte().alleSpielerMitUuidEinfuegen(meldeliste.getAktiveUndAusgesetztMeldungen()
+				.getMeldungen().stream().map(meldung -> meldung.getNr()).toList(), meldeliste);
 		getSpielerSpalte().insertHeaderInSheet(headerColor);
 		ranglisteFormatter.updateHeader();
 

@@ -70,6 +70,9 @@ public class SupermeleeTeamnummerAendernUITest extends BaseCalcUITest {
 		int alteNr = MeldelisteUuidIndex.lese(wkingSpreadsheet).nr(uuid).orElseThrow();
 		new EndranglisteSheet(wkingSpreadsheet).doRun();
 		List<String> endranglisteVorher = endranglisteJeNr().get(alteNr);
+		String nameVorher = endranglisteVorher.get(0);
+		pruefeUuidName(new EndranglisteSheet(wkingSpreadsheet).getXSpreadSheet(), uuid, alteNr, nameVorher);
+		pruefeUuidName(sheetHlp.findByName(SheetNamen.spieltagRangliste(1)), uuid, alteNr, nameVorher);
 
 		// Das Property schreibt sonst erst SheetRunner.run(); der Test ruft doRun() direkt.
 		docPropHelper.setIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM,
@@ -88,6 +91,23 @@ public class SupermeleeTeamnummerAendernUITest extends BaseCalcUITest {
 		assertThat(endranglisteNachher).as("Die alte Nummer gibt es nicht mehr").doesNotContainKey(alteNr);
 		assertThat(endranglisteNachher.get(NEUE_NR)).as("Name, Platz und Ergebnisse unter der neuen Nummer")
 				.isEqualTo(endranglisteVorher);
+		pruefeUuidName(new EndranglisteSheet(wkingSpreadsheet).getXSpreadSheet(), uuid, NEUE_NR, nameVorher);
+		pruefeUuidName(sheetHlp.findByName(SheetNamen.spieltagRangliste(1)), uuid, NEUE_NR, nameVorher);
+	}
+
+	private void pruefeUuidName(XSpreadsheet sheet, String uuid, int nr, String name) {
+		for (int zeile = EndranglisteSheet.ERSTE_DATEN_ZEILE; zeile < MAX_ENDRANGLISTE_ZEILEN; zeile++) {
+			Position nrPos = Position.from(0, zeile);
+			if (TeamUuidFormel.findeUuid(sheetHlp.getFormulaFromCell(sheet, nrPos)).filter(uuid::equals).isPresent()) {
+				assertThat(sheetHlp.getIntFromCell(sheet, nrPos)).isEqualTo(nr);
+				Position namePos = Position.from(1, zeile);
+				assertThat(sheetHlp.getFormulaFromCell(sheet, namePos)).containsIgnoringCase("PTMUUIDTEAMANZEIGE")
+						.contains(uuid).doesNotContain("MATCH(", "VLOOKUP");
+				assertThat(sheetHlp.getTextFromCell(sheet, namePos)).isEqualTo(name);
+				return;
+			}
+		}
+		throw new AssertionError("Rangliste enthält die UUID nicht: " + uuid);
 	}
 
 	/** Endranglistenzeile ohne Nr (Name bis letzte Spalte) je Spielernummer. */

@@ -39,6 +39,7 @@ public final class PtmOnlineSpieltagWechsel {
 
     /** Trennt alle noch verbundenen Spieltage vor {@code neuerSpieltag} und weist auf das Neu-Verbinden hin. */
     public static void trenneVorherigeSpieltage(WorkingSpreadsheet ws, int neuerSpieltag) throws GenerateException {
+        if (!de.petanqueturniermanager.comp.PtmOnlineAktivierung.istAktiv()) return;
         trenneVorherigeSpieltage(ws, neuerSpieltag, new LibreOfficePtmOnlineSpeicher(ws.getxContext()).laden());
     }
 

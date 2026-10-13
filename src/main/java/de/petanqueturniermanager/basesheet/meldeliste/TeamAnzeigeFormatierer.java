@@ -6,7 +6,7 @@ package de.petanqueturniermanager.basesheet.meldeliste;
 /**
  * Formatiert eine Meldelistenzeile zur sichtbaren Teamkennung (Teamname oder
  * zusammengesetzte Spielernamen). Einzige Quelle dieser Darstellung: Die Calc-Funktion
- * {@code PTM.ALG.TEAMANZEIGE} nutzt sie für die Anzeige im Spielplan, die
+ * {@code PTM.ALG.TEAMANZEIGE} und {@code PTM.ALG.UUID.TEAMANZEIGE} nutzen sie für die Anzeige im Spielplan, die
  * Spielrunden-Auswertung für den Rückweg von der Anzeige zur Teamnummer.
  */
 public final class TeamAnzeigeFormatierer {

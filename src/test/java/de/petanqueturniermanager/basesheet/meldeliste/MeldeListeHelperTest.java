@@ -102,6 +102,18 @@ public class MeldeListeHelperTest {
 	}
 
 	@Test
+	public void uuidTeamAnzeigeVerwendetEineEinzigeFunktion() {
+		String uuid = "abba7c10-dbbf-4910-b7ec-b78af3070b1f";
+		String bereich = "$'" + I18n.get("sheet.name.meldeliste") + "'.$A$1:$Z$999";
+		assertThat(MeldeListeHelper.teamNameFormel(TeamSchluessel.uuidLiteral(uuid), false, Formation.DOUBLETTE, false))
+				.isEqualTo("PTM.ALG.UUID.TEAMANZEIGE(0;2;0;\"" + uuid + "\";" + bereich + ")");
+		assertThat(MeldeListeHelper.teamNameFormel(TeamSchluessel.uuidLiteral(uuid), true, Formation.DOUBLETTE, false))
+				.isEqualTo("PTM.ALG.UUID.TEAMANZEIGE(1;2;0;\"" + uuid + "\";" + bereich + ")");
+		assertThat(MeldeListeHelper.spielerNamenFormel(TeamSchluessel.uuidLiteral(uuid), true, Formation.TRIPLETTE, true))
+				.isEqualTo("PTM.ALG.UUID.TEAMANZEIGE(0;3;1;\"" + uuid + "\";" + bereich + ";1)");
+	}
+
+	@Test
 	public void teamNameFormelMitTeamnameSpalteLiestTeamnameAbSpalteA() {
 		String formel = MeldeListeHelper.teamNameFormel("$G$6", true, Formation.DOUBLETTE, false);
 

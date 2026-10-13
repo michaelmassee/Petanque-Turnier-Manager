@@ -18,6 +18,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.sun.star.lang.IndexOutOfBoundsException;
+import com.sun.star.container.XNamed;
+import com.sun.star.sheet.XCalculatable;
+import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.addins.GlobalImpl;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
@@ -315,6 +319,36 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 			spielerNummerList.add(meldung.getNr());
 		});
 		alleSpielerNrEinfuegen(spielerNummerList, meldeliste);
+	}
+
+	/** Fügt Supermêlée-Ranglistenzeilen mit derselben UUID für Nummer und Name ein. */
+	public void alleSpielerMitUuidEinfuegen(Collection<Integer> spielerNummerList,
+			IMeldeliste<MLD_LIST_TYPE, MLDTYPE> meldeliste) throws GenerateException {
+		checkNotNull(spielerNummerList);
+		checkArgument(formation == Formation.MELEE && anzNamenSpalten == 1
+				&& ersteMeldungNameSpalte == meldungNrSpalte + 1);
+		if (spielerNummerList.isEmpty()) {
+			return;
+		}
+		checkNotNull(meldeliste);
+		var doc = getISheet().getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
+		XSpreadsheet quelle = checkNotNull(meldeliste.getXSpreadSheet());
+		var nrSpalte = MeldelisteUuidIndex.leseNrSpalte(getSheetHelper(), quelle, doc);
+		MeldelisteUuidIndex uuidIndex = MeldelisteUuidIndex.aus(nrSpalte.formeln(), nrSpalte.nummern());
+		String quellRef = "$'" + Lo.qi(XNamed.class, quelle).getName().replace("'", "''") + "'.";
+		String[][] formeln = new String[spielerNummerList.size()][2];
+		int zeile = 0;
+		for (int nr : spielerNummerList) {
+			TeamSchluessel spieler = uuidIndex.uuidSchluessel(nr);
+			formeln[zeile][0] = spieler.nrAnzeige(quellRef + "$A$1:$A$999");
+			formeln[zeile][1] = GlobalImpl.FORMAT_PTM_UUID_TEAM_ANZEIGE(false, 1, false,
+					((TeamSchluessel.Uuid) spieler).ausdruck(), quellRef + "$A$1:$Z$999", false);
+			zeile++;
+		}
+		getSheetHelper().setFormulaArrayInRange(getXSpreadsheet(), RangePosition.from(meldungNrSpalte,
+				getErsteDatenZiele(), ersteMeldungNameSpalte, getErsteDatenZiele() + formeln.length - 1), formeln);
+		// Die Ranglisten lesen direkt anschließend die Nummern für ihre Java-Auswertung, auch bei AutoCalc aus.
+		Lo.qi(XCalculatable.class, doc).calculate();
 	}
 
 	public void alleSpielerNrEinfuegen(Collection<Integer> spielerNummerList,

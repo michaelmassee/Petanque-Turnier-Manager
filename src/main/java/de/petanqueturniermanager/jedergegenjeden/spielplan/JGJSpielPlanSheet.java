@@ -50,6 +50,8 @@ import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSheet_U
 import de.petanqueturniermanager.ptmonline.PtmOnlineLiveAusloeser;
 import de.petanqueturniermanager.ptmonline.PtmOnlineSpielrundeSync;
 import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeigeHelper;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamSchluessel;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.model.LigaSpielPlan;
 import de.petanqueturniermanager.jedergegenjeden.JGJGruppenAufteiler;
@@ -275,7 +277,7 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet, PtmOnlineL
 			SheetRunner.testDoCancelTask();
 			aushang.erstelle(gruppenBuchstabe(g), gruppenStartZeilen.get(g),
 					gruppenSpielplaeneH.get(g), gruppenSpielplaeneR.get(g),
-					zeigeNr, meldeListe::formulaSpielplanTeamName, freispielText);
+					zeigeNr, this::spielplanTeamNameFormel, freispielText);
 		}
 
 		// Nach dem Erstellen der Aushänge wieder den zentralen Spielplan aktivieren,
@@ -377,17 +379,16 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet, PtmOnlineL
 		alleSpieltage.addAll(spielPlanRRunde);
 
 		// Nr-Arbeitsspalten als Formeln mit der UUID des Teams, die die aktuelle Teamnummer zeigen (Freilos: 0).
-		// Namensformeln, Rangliste und Direktvergleich lesen diese Anzeige; eine geänderte Teamnummer ändert
-		// daher nicht die Zuordnung.
+		// Namensformeln übernehmen die UUID; Rangliste und Direktvergleich lesen die aktuelle Nummer.
 		MeldelisteUuidIndex uuidIndex = MeldelisteUuidIndex.lese(getWorkingSpreadsheet());
 		String nrBereich = MeldeListeHelper.nrBereichMeldeliste();
 		List<String[]> nrFormeln = new ArrayList<>();
 		for (List<TeamPaarung> spielTag : alleSpieltage) {
 			for (TeamPaarung teamPaarung : spielTag) {
 				SheetRunner.testDoCancelTask();
-				nrFormeln.add(new String[] { uuidIndex.schluessel(teamPaarung.getA().getNr()).nrAnzeige(nrBereich),
+				nrFormeln.add(new String[] { uuidIndex.uuidSchluessel(teamPaarung.getA().getNr()).nrAnzeige(nrBereich),
 						teamPaarung.getOptionalB().isPresent()
-								? uuidIndex.schluessel(teamPaarung.getB().getNr()).nrAnzeige(nrBereich)
+								? uuidIndex.uuidSchluessel(teamPaarung.getB().getNr()).nrAnzeige(nrBereich)
 								: "0" });
 			}
 		}
@@ -513,15 +514,23 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet, PtmOnlineL
 				.setDataInRange(nameData);
 
 		if (!zeigeNr) {
+			String[][] nrFormeln = getSheetHelper().getFormulaArrayFromRange(getXSpreadSheet(), RangePosition.from(
+					TEAM_A_NR_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE, TEAM_B_NR_SPALTE, letzteSpielZeile));
 			for (int zeile = ERSTE_SPIELTAG_DATEN_ZEILE; zeile <= letzteSpielZeile; zeile++) {
 				String nrAAdresse = Position.from(TEAM_A_NR_SPALTE, zeile).getAddress();
 				String nrBAdresse = Position.from(TEAM_B_NR_SPALTE, zeile).getAddress();
+				String[] formeln = nrFormeln[zeile - ERSTE_SPIELTAG_DATEN_ZEILE];
+				if (TeamSchluessel.istFreispielNrFormel(formeln[0])) {
+					continue; // Leere Begegnung, keine Teamidentität.
+				}
 
 				getSheetHelper().setFormulaInCell(getXSpreadSheet(), Position.from(NAME_A_SPALTE, zeile),
-						"IF(" + nrAAdresse + "<=0;\"\";" + meldeListe.formulaSpielplanTeamName(nrAAdresse) + ")");
+						"IF(" + nrAAdresse + "<=0;\"\";" + spielplanTeamNameFormel(
+								TeamSchluessel.ausNrFormel(formeln[0], nrAAdresse)) + ")");
 				getSheetHelper().setFormulaInCell(getXSpreadSheet(), Position.from(NAME_B_SPALTE, zeile),
 						"IF(" + nrBAdresse + "<=0;" + calcStringLiteral(freispielText) + ";"
-								+ meldeListe.formulaSpielplanTeamName(nrBAdresse) + ")");
+								+ (TeamSchluessel.istFreispielNrFormel(formeln[1]) ? calcStringLiteral(freispielText)
+								: spielplanTeamNameFormel(TeamSchluessel.ausNrFormel(formeln[1], nrBAdresse))) + ")");
 			}
 			// Früh prüfen, ob eine der gerade geschriebenen Team-Namen-Formeln (z.B. wegen einer
 			// nicht auflösbaren PTM.ALG.*-Add-in-Funktion) einen Berechnungsfehler liefert, statt
@@ -533,6 +542,12 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet, PtmOnlineL
 
 	private static String calcStringLiteral(String value) {
 		return "\"" + value.replace("\"", "\"\"") + "\"";
+	}
+
+	private String spielplanTeamNameFormel(TeamSchluessel team) {
+		return TeamAnzeigeHelper.formel(team, konfigurationSheet.getSpielplanTeamAnzeige(),
+				konfigurationSheet.isMeldeListeTeamnameAnzeigen(), konfigurationSheet.getMeldeListeFormation(),
+				konfigurationSheet.isMeldeListeVereinsnameAnzeigen());
 	}
 
 	private void insertFormulaValidierung() throws GenerateException {

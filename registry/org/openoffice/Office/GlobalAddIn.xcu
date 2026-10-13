@@ -875,6 +875,123 @@
 					<prop oor:name="Category"><value>Add-In</value></prop>
 				</node>
 
+
+				<node oor:name="ptmuuidteamanzeige" oor:op="replace">
+					<prop oor:name="DisplayName">
+						<value xml:lang="de">PTM.ALG.UUID.TEAMANZEIGE</value>
+						<value xml:lang="en">PTM.ALG.UUID.TEAMANZEIGE</value>
+						<value xml:lang="es">PTM.ALG.UUID.TEAMANZEIGE</value>
+						<value xml:lang="fr">PTM.ALG.UUID.TEAMANZEIGE</value>
+						<value xml:lang="nl">PTM.ALG.UUID.TEAMANZEIGE</value>
+					</prop>
+					<prop oor:name="Description">
+						<value xml:lang="de">Teamanzeige zur UUID aus dem Meldelistenbereich; #NV, wenn das Team fehlt.</value>
+						<value xml:lang="en">Team display for a UUID in the registration range; #N/A if the team is missing.</value>
+						<value xml:lang="es">Texto del equipo por UUID en el rango de inscripciones; #N/D si no existe.</value>
+						<value xml:lang="fr">Affichage de l’équipe par UUID dans la plage des inscriptions ; #N/A si absente.</value>
+						<value xml:lang="nl">Teamweergave bij een UUID in het inschrijvingsbereik; #N/B als het team ontbreekt.</value>
+					</prop>
+					<node oor:name="Parameters">
+						<node oor:name="teamnameAnzeigen" oor:op="replace">
+					<prop oor:name="DisplayName">
+						<value xml:lang="de">Teamname anzeigen</value>
+						<value xml:lang="en">Show team name</value>
+						<value xml:lang="es">Mostrar nombre del equipo</value>
+						<value xml:lang="fr">Afficher le nom d’équipe</value>
+						<value xml:lang="nl">Teamnaam tonen</value>
+					</prop>
+					<prop oor:name="Description">
+						<value xml:lang="de">1: Teamname, 0: Spielernamen.</value>
+						<value xml:lang="en">1: team name, 0: player names.</value>
+						<value xml:lang="es">1: nombre del equipo, 0: nombres de jugadores.</value>
+						<value xml:lang="fr">1 : nom d’équipe, 0 : noms des joueurs.</value>
+						<value xml:lang="nl">1: teamnaam, 0: spelersnamen.</value>
+					</prop>
+						</node>
+						<node oor:name="anzSpieler" oor:op="replace">
+					<prop oor:name="DisplayName">
+						<value xml:lang="de">Anzahl Spieler</value>
+						<value xml:lang="en">Number of players</value>
+						<value xml:lang="es">Número de jugadores</value>
+						<value xml:lang="fr">Nombre de joueurs</value>
+						<value xml:lang="nl">Aantal spelers</value>
+					</prop>
+					<prop oor:name="Description">
+						<value xml:lang="de">Anzahl Spieler je Team.</value>
+						<value xml:lang="en">Number of players per team.</value>
+						<value xml:lang="es">Número de jugadores por equipo.</value>
+						<value xml:lang="fr">Nombre de joueurs par équipe.</value>
+						<value xml:lang="nl">Aantal spelers per team.</value>
+					</prop>
+						</node>
+						<node oor:name="vereinsnameAnzeigen" oor:op="replace">
+					<prop oor:name="DisplayName">
+						<value xml:lang="de">Vereinsname anzeigen</value>
+						<value xml:lang="en">Show club name</value>
+						<value xml:lang="es">Mostrar club</value>
+						<value xml:lang="fr">Afficher le club</value>
+						<value xml:lang="nl">Clubnaam tonen</value>
+					</prop>
+					<prop oor:name="Description">
+						<value xml:lang="de">1: mit Vereinsspalte pro Spieler, sonst 0.</value>
+						<value xml:lang="en">1: includes a club column per player, otherwise 0.</value>
+						<value xml:lang="es">1: incluye una columna de club por jugador; en otro caso 0.</value>
+						<value xml:lang="fr">1 : une colonne de club par joueur, sinon 0.</value>
+						<value xml:lang="nl">1: met clubkolom per speler, anders 0.</value>
+					</prop>
+						</node>
+						<node oor:name="uuid" oor:op="replace">
+					<prop oor:name="DisplayName">
+						<value xml:lang="de">UUID</value>
+						<value xml:lang="en">UUID</value>
+						<value xml:lang="es">UUID</value>
+						<value xml:lang="fr">UUID</value>
+						<value xml:lang="nl">UUID</value>
+					</prop>
+					<prop oor:name="Description">
+						<value xml:lang="de">Unveränderliche UUID des Teams.</value>
+						<value xml:lang="en">Immutable UUID of the team.</value>
+						<value xml:lang="es">UUID inmutable del equipo.</value>
+						<value xml:lang="fr">UUID immuable de l’équipe.</value>
+						<value xml:lang="nl">Onveranderlijke UUID van het team.</value>
+					</prop>
+						</node>
+						<node oor:name="bereich" oor:op="replace">
+					<prop oor:name="DisplayName">
+						<value xml:lang="de">Meldelistenbereich</value>
+						<value xml:lang="en">Registration range</value>
+						<value xml:lang="es">Rango de inscripciones</value>
+						<value xml:lang="fr">Plage des inscriptions</value>
+						<value xml:lang="nl">Inschrijvingsbereik</value>
+					</prop>
+					<prop oor:name="Description">
+						<value xml:lang="de">Bereich mit UUID-Nr-Spalte zuerst, z.B. $Meldeliste.$A$1:$Z$999.</value>
+						<value xml:lang="en">Range starting with the UUID number column, e.g. $Meldeliste.$A$1:$Z$999.</value>
+						<value xml:lang="es">Rango que empieza por la columna de número con UUID, p. ej. $Meldeliste.$A$1:$Z$999.</value>
+						<value xml:lang="fr">Plage commençant par la colonne du numéro avec UUID, p. ex. $Meldeliste.$A$1:$Z$999.</value>
+						<value xml:lang="nl">Bereik met de UUID-nummerkolom eerst, bijv. $Meldeliste.$A$1:$Z$999.</value>
+					</prop>
+						</node>
+						<node oor:name="spielerSpaltenVersatz" oor:op="replace">
+					<prop oor:name="DisplayName">
+						<value xml:lang="de">Spielerspaltenversatz</value>
+						<value xml:lang="en">Player column offset</value>
+						<value xml:lang="es">Desplazamiento de columnas</value>
+						<value xml:lang="fr">Décalage des colonnes</value>
+						<value xml:lang="nl">Spelerkolomverschuiving</value>
+					</prop>
+					<prop oor:name="Description">
+						<value xml:lang="de">Optional, Standard 0. 1 überspringt eine Teamname-Spalte für die Spielernamenanzeige.</value>
+						<value xml:lang="en">Optional, default 0. 1 skips a team name column when displaying player names.</value>
+						<value xml:lang="es">Opcional, predeterminado 0. 1 omite la columna del equipo al mostrar jugadores.</value>
+						<value xml:lang="fr">Facultatif, 0 par défaut. 1 saute la colonne du nom d’équipe pour afficher les joueurs.</value>
+						<value xml:lang="nl">Optioneel, standaard 0. 1 slaat de teamnaamkolom over voor spelersnamen.</value>
+					</prop>
+						</node>
+					</node>
+					<prop oor:name="Category"><value>Add-In</value></prop>
+				</node>
+
 				<node oor:name="ptmtnruuid" oor:op="replace">
 					<prop oor:name="DisplayName">
 						<value xml:lang="en">PTM.ALG.TNRUUID</value>

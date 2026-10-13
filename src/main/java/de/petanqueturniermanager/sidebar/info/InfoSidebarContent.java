@@ -406,6 +406,7 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
      * fokus-basiert, damit bei mehreren offenen Turnieren jede Sidebar ihr eigenes Dokument zeigt.
      */
     String ptmOnlineStatusAnzeige() {
+        if (!de.petanqueturniermanager.comp.PtmOnlineAktivierung.istAktiv()) return "";
         var ws = getCurrentSpreadsheet();
         var system = getTurnierSystemAusDocument();
         if (ws == null || system == null || system == TurnierSystem.KEIN) {

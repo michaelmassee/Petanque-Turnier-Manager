@@ -93,6 +93,7 @@ import de.petanqueturniermanager.comp.turnierevent.ITurnierEventListener;
 import de.petanqueturniermanager.comp.turnierevent.TurnierEventHandler;
 import de.petanqueturniermanager.comp.turnierevent.TurnierEventType;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.LoMainThread;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
@@ -153,6 +154,7 @@ public class PetanqueTurnierMngrSingleton {
 		LoVersionChecker.pruefeUndLoggeKompatibilitaet(context);
 		GlobalProperties.setLibreOfficeContext(context);
 		GlobalProperties.get(); // just do an init, read properties if not already there
+		PtmOnlineAktivierung.initialisieren(context);
 
 		logger.debug("PetanqueTurnierMngrSingleton.init");
 		PerfLog.log(logger, "[STARTUP-TIMING] PetanqueTurnierMngrSingleton.init START jvm-uptime={} ms",
@@ -199,7 +201,10 @@ public class PetanqueTurnierMngrSingleton {
 		addGlobalEventListener(new SidebarAnzeigenListener());
 		t = logTimingAndReset("addGlobalEventListener SidebarAnzeigenListener", t);
 		addGlobalEventListener(SidebarPanelDelegator.get());
-		addGlobalEventListener(PtmOnlineLiveBeobachter.init(context));
+		if (PtmOnlineAktivierung.istAktiv()) {
+			addGlobalEventListener(PtmOnlineLiveBeobachter.init(context));
+			LoMainThread.post(context, () -> PtmOnlineLiveBeobachter.konfigurationGeaendert(context));
+		}
 		t = logTimingAndReset("addGlobalEventListener SidebarPanelDelegator", t);
 		addGlobalEventListener(new UpdatePropertieFunctionsSheetRecalcOnLoad());
 		t = logTimingAndReset("addGlobalEventListener UpdatePropertieFunctionsSheetRecalcOnLoad", t);
@@ -661,6 +666,8 @@ public class PetanqueTurnierMngrSingleton {
 
 	// ---------------------------------------------------------------------------------------------
 	public static void dispose() {
+		PtmOnlineAktivierung.beenden();
+		PtmOnlineLiveBeobachter.dispose();
 		TimerManager.dispose();
 		WebServerManager.get().stoppen();
 		try {
@@ -689,6 +696,7 @@ public class PetanqueTurnierMngrSingleton {
 	 * gar nicht initialisiert wurden (TimerManager, WebServer, ReleaseUpdateService).
 	 */
 	public static void resetForTest() {
+		PtmOnlineLiveBeobachter.zuruecksetzenFuerTest();
 		turnierEventHandler.disposing();
 		sharedContext = null;
 		didRun.set(false);

@@ -10,7 +10,7 @@
 		</Console>
 		<RollingFile name="infofile" fileName="${ptmLogDir}/info.log" ignoreExceptions="false" filePattern="${ptmLogDir}/info-%d{yyyy-MM-dd}.log.gz">
 			<PatternLayout>
-				<Pattern>%d{dd.MM.yyyy HH:mm:ss,SSS} %p %c{1.} %m%n</Pattern>
+				<Pattern>%d{dd.MM.yyyy HH:mm:ss,SSS} %p [%t] %c{1.} %m%n</Pattern>
 			</PatternLayout>
 
 			<Policies>
@@ -33,7 +33,7 @@
 			<AppenderRef ref="Console"/>
 		</Root>
 		<!-- debug  -->
-		<Logger name="de.petanqueturniermanager" level="info">
+		<Logger name="de.petanqueturniermanager" level="${env:PTM_LOG_LEVEL:-info}">
 			<AppenderRef ref="infofile"/>
 		</Logger>
 	</Loggers>

@@ -28,6 +28,8 @@ import com.sun.star.util.CellProtection;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.algorithmen.supermelee.SuperMeleePaarungenV2;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
+import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamSchluessel;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldelisteUuidIndex;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeFooterHelper;
@@ -576,9 +578,8 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 				.setCharColor(ColorHelper.CHAR_COLOR_RED).setCharWeight(FontWeight.BOLD).setCharHeight(14)
 				.setHoriJustify(CellHoriJustify.CENTER);
 
-		// Spielernummern als Formeln mit der UUID des Spielers, die dessen aktuelle Nummer zeigen. Namensformeln,
-		// Ranglisten und Leser arbeiten mit dieser Anzeige; eine geänderte Spielernummer ändert daher nicht die
-		// Zuordnung.
+		// Spielernummern und Namen tragen dieselbe UUID. Die Nummer dient Ranglisten und Lesern als aktuelle
+		// Anzeige; die Namensformel findet den Spieler direkt über seine unveränderliche Identität.
 		MeldelisteUuidIndex uuidIndex = MeldelisteUuidIndex.lese(sheet.getWorkingSpreadsheet());
 		String nrBereich = MeldeListeHelper.nrBereichMeldeliste();
 
@@ -624,14 +625,16 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 					logger.error("Runde:" + spielRunde);
 					throw new RuntimeException("Doppelte Spieler in Runde " + spielRunde + " Spieler " + spieler);
 				}
+				TeamSchluessel spielerSchluessel = uuidIndex.uuidSchluessel(spieler.getNr());
 				sheet.getSheetHelper().setFormulaInCell(StringCellValue.from(spielerNrZelle)
-						.setValue(uuidIndex.schluessel(spieler.getNr()).nrAnzeige(nrBereich)));
-				verweisAufSpielerNamenEinfuegen(spielerNrZelle.getPos());
+						.setValue(spielerSchluessel.nrAnzeige(nrBereich)));
+				verweisAufSpielerNamenEinfuegen(spielerNrZelle.getPos(),
+						MeldeListeHelper.spielerNamenFormel(spielerSchluessel, false, Formation.MELEE, false));
 				spielerNrZelle.spaltePlusEins();
 				spielrNr.add(spieler.getNr());
 			}
 			if (teams.get(teamCntr).spieler().size() == 2) {
-				verweisAufSpielerNamenEinfuegen(spielerNrZelle.getPos());
+				verweisAufSpielerNamenEinfuegen(spielerNrZelle.getPos(), "\"\"");
 			}
 		}
 
@@ -647,10 +650,8 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 				.operator(ConditionOperator.FORMULA).style(fehlerStyle).applyAndDoReset();
 	}
 
-	private void verweisAufSpielerNamenEinfuegen(Position spielerNrPos) throws GenerateException {
+	private void verweisAufSpielerNamenEinfuegen(Position spielerNrPos, String formulaVerweis) throws GenerateException {
 		int anzSpaltenDiv = ERSTE_SPIELERNR_SPALTE - ERSTE_SPALTE_RUNDESPIELPLAN;
-		String spielerNrAddress = spielerNrPos.getAddress();
-		String formulaVerweis = "IFNA(" + getMeldeListe().formulaSverweisSpielernamen(spielerNrAddress) + ";\"\")";
 
 		StringCellValue val = StringCellValue
 				.from(sheet.getXSpreadSheet(), Position.from(spielerNrPos).spaltePlus(-anzSpaltenDiv), formulaVerweis)

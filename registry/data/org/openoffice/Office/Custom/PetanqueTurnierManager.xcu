@@ -164,6 +164,9 @@
         </prop>
     </node>
     <node oor:name="PtmOnline">
+        <prop oor:name="VerbindungAktiv">
+            <value>true</value>
+        </prop>
         <prop oor:name="ApiKey">
             <value/>
         </prop>

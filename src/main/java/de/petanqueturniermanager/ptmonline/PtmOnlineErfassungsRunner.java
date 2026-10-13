@@ -16,6 +16,9 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
+import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzRegistry;
+import de.petanqueturniermanager.toolbar.TurnierModus;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsArt;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsBestand;
 import de.petanqueturniermanager.ptmonline.dto.SyncStandDto;
@@ -25,7 +28,8 @@ import de.petanqueturniermanager.ptmonline.live.LiveStandQuellen;
 /**
  * Dokument-Seite der Live-Übertragung (T-09): wendet die Ergebnisse gesendeter Aufträge im Dokument an und erfasst
  * neue Aufträge aus einem Snapshot – Check-in-Änderungen, Live-Stand, ausstehender Turnierstart. Als stiller
- * {@link SheetRunner}, damit Blattschutz-Scope und „nur ein Lauf gleichzeitig“ gelten; der Hintergrund-Thread des
+ * {@link SheetRunner}, damit „nur ein Lauf gleichzeitig“ gilt. Der Blattschutz-Scope beginnt erst vor einer
+ * tatsächlichen Dokumentänderung; unveränderte Snapshots bleiben reine Lesezugriffe. Der Hintergrund-Thread des
  * {@link PtmOnlineLiveBeobachter} wartet darauf und sendet danach nur noch.
  */
 final class PtmOnlineErfassungsRunner extends SheetRunner {
@@ -51,6 +55,7 @@ final class PtmOnlineErfassungsRunner extends SheetRunner {
     private final PtmOnlineCheckin checkin;
     private final @Nullable OnlineStandAbruf abruf;
     private volatile @Nullable Erfassung erfassung;
+    private boolean schutzScopeGeoeffnet;
 
     /** @param abruf letzter Abruf des Online-Zustands, {@code null} ohne */
     PtmOnlineErfassungsRunner(WorkingSpreadsheet ws, TurnierSystem turnierSystem, PtmOnlineCheckin checkin,
@@ -65,6 +70,29 @@ final class PtmOnlineErfassungsRunner extends SheetRunner {
         return null;
     }
 
+    @Override
+    protected boolean isBlattschutzScopeBeforeDoRun() {
+        return false;
+    }
+
+    @Override
+    protected boolean isCloseBlattschutzScopeAfterDoRun() {
+        return schutzScopeGeoeffnet;
+    }
+
+    /** Öffnet höchstens einen Scope je Lauf; SheetRunner schließt ihn auch bei Fehlern. */
+    private void oeffneSchutzScopeBeiAenderung(AuftragsBestand bestand) {
+        if (schutzScopeGeoeffnet || (!bestand.istGeaendert() && bestand.ergebnisseZumAnwenden().isEmpty())) {
+            return;
+        }
+        if (TurnierModus.get().istAktiv(getWorkingSpreadsheet())) {
+            BlattschutzRegistry.fuer(getTurnierSystem()).ifPresent(k -> {
+                BlattschutzManager.get().beginCommandScope(k, getWorkingSpreadsheet());
+                schutzScopeGeoeffnet = true;
+            });
+        }
+    }
+
     /** Ergebnis des Laufs; leer, wenn das Dokument nicht verbunden ist. */
     Optional<Erfassung> erfassung() {
         return Optional.ofNullable(erfassung);
@@ -72,6 +100,8 @@ final class PtmOnlineErfassungsRunner extends SheetRunner {
 
     @Override
     protected void doRun() throws GenerateException {
+        schutzScopeGeoeffnet = false;
+        erfassung = null;
         Optional<PtmOnlineVerbindung> verbindung;
         try {
             verbindung = PtmOnlineVerbindung.ermitteln(getWorkingSpreadsheet(), getTurnierSystem());
@@ -88,6 +118,7 @@ final class PtmOnlineErfassungsRunner extends SheetRunner {
                 : null;
         PtmOnlineRegistrationMapping mapping = v.mapping();
         AuftragsBestand bestand = PtmOnlineAuftraege.bestand(getWorkingSpreadsheet(), mapping, v.spieltagNr());
+        oeffneSchutzScopeBeiAenderung(bestand);
         PtmOnlineAuftraege.Anwendung anwendung = PtmOnlineAuftraege.anwenden(bestand, mapping);
         boolean pausiert = !PtmOnlineSpielrundeSync.istSyncAktiv(mapping);
         boolean brauchtStand = false;
@@ -96,6 +127,7 @@ final class PtmOnlineErfassungsRunner extends SheetRunner {
             erfasseCheckin(bestand, v);
             brauchtStand = !erfasseLiveStand(bestand, v, passenderAbruf);
         }
+        oeffneSchutzScopeBeiAenderung(bestand);
         PtmOnlineAuftraege.speichern(bestand, mapping);
         erfassung = new Erfassung(v, bestand, pausiert, brauchtStand, anwendung);
     }

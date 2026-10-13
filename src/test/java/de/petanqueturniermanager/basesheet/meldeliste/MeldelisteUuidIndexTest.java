@@ -4,6 +4,9 @@
 package de.petanqueturniermanager.basesheet.meldeliste;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import de.petanqueturniermanager.exception.GenerateException;
 
 import org.junit.jupiter.api.Test;
 
@@ -13,7 +16,7 @@ class MeldelisteUuidIndexTest {
 	private static final String UUID_B = "bbbbbbbb-0000-4000-8000-000000000002";
 
 	@Test
-	void ordnetUuidUndNummerBeidseitigZu() {
+	void ordnetUuidUndNummerBeidseitigZu() throws GenerateException {
 		MeldelisteUuidIndex index = MeldelisteUuidIndex.aus(new String[][] { { "Nr" },
 				{ "=PTM.ALG.TNRUUID(3;\"" + UUID_A + "\")" }, { "=PTM.ALG.TNRUUID(7;\"" + UUID_B + "\")" } },
 				new int[] { 0, 3, 7 });
@@ -21,6 +24,15 @@ class MeldelisteUuidIndexTest {
 		assertThat(index.nr(UUID_A)).hasValue(3);
 		assertThat(index.nr(UUID_B)).hasValue(7);
 		assertThat(index.uuid(7)).contains(UUID_B);
+		assertThat(index.uuidSchluessel(7)).isEqualTo(TeamSchluessel.uuidLiteral(UUID_B));
+	}
+
+	@Test
+	void uuidSpielplanVerweigertNummernOhneUuid() {
+		MeldelisteUuidIndex index = MeldelisteUuidIndex.aus(new String[][] { { "7" } }, new int[] { 7 });
+		for (int nr : new int[] { 7, 8, 0 }) {
+			assertThatThrownBy(() -> index.uuidSchluessel(nr)).isInstanceOf(GenerateException.class);
+		}
 	}
 
 	@Test

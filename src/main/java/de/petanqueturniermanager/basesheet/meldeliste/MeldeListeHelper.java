@@ -716,6 +716,11 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	private static String teamAnzeigeFormel(TeamSchluessel team, boolean teamnameAnzeigen, String zeilenBereich,
 			Formation formation, boolean vereinsnameAnzeigen) {
 		String meldeliste = "$'" + SheetNamen.meldeliste() + "'.";
+		if (team instanceof TeamSchluessel.Uuid uuid) {
+			return GlobalImpl.FORMAT_PTM_UUID_TEAM_ANZEIGE(teamnameAnzeigen, formation.getAnzSpieler(),
+					vereinsnameAnzeigen, uuid.ausdruck(), meldeliste + MELDELISTE_ZEILE_AB_SPALTE_A,
+					MELDELISTE_ZEILE_AB_SPALTE_B.equals(zeilenBereich));
+		}
 		String zeile = "INDEX(" + meldeliste + zeilenBereich + ";" + team.zeileImBereich(nrBereichMeldeliste()) + ";0)";
 		return GlobalImpl.FORMAT_PTM_TEAM_ANZEIGE(teamnameAnzeigen, formation.getAnzSpieler(),
 				vereinsnameAnzeigen, zeile);

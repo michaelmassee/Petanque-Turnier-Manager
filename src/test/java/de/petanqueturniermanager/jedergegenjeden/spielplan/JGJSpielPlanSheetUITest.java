@@ -132,8 +132,15 @@ public class JGJSpielPlanSheetUITest extends BaseCalcUITest {
 		String formulaB = sheetHlp.getFormulaFromCell(sheet,
 				Position.from(NAME_B_SPALTE, JGJSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE));
 
-		assertThat(formulaA).contains("PTMTEAMANZEIGE");
-		assertThat(formulaB).contains("PTMTEAMANZEIGE");
+		assertThat(formulaA).contains("PTMUUIDTEAMANZEIGE");
+		if (sheetHlp.getIntFromCell(sheet, Position.from(JGJSpielPlanSheet.TEAM_B_NR_SPALTE,
+				JGJSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE)) > 0) {
+			assertThat(formulaB).contains("PTMUUIDTEAMANZEIGE");
+		} else {
+			assertThat(formulaB).doesNotContain("PTMTEAMANZEIGE", "PTMUUIDTEAMANZEIGE", "MATCH(");
+			assertThat(sheetHlp.getTextFromCell(sheet, Position.from(NAME_B_SPALTE,
+					JGJSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE))).isEqualTo(I18n.get("spielplan.freispiel.name"));
+		}
 	}
 
 	@Test
@@ -150,10 +157,24 @@ public class JGJSpielPlanSheetUITest extends BaseCalcUITest {
 		String formulaB = sheetHlp.getFormulaFromCell(gruppeA,
 				Position.from(NAME_B_SPALTE, GRUPPEN_ERSTE_DATEN_ZEILE));
 
-		assertThat(formulaA).contains("PTMTEAMANZEIGE");
+		assertThat(formulaA).contains("PTMUUIDTEAMANZEIGE");
 		assertThat(formulaB)
-				.contains("PTMTEAMANZEIGE")
+				.contains("PTMUUIDTEAMANZEIGE")
 				.contains(I18n.get("spielplan.freispiel.name"));
+
+		Position nameA = Position.from(NAME_A_SPALTE, GRUPPEN_ERSTE_DATEN_ZEILE);
+		String nameVorher = sheetHlp.getTextFromCell(gruppeA, nameA);
+		String uuid = de.petanqueturniermanager.basesheet.meldeliste.TeamUuidFormel.findeUuid(formulaA).orElseThrow();
+		int alteNr = de.petanqueturniermanager.basesheet.meldeliste.MeldelisteUuidIndex
+				.lese(wkingSpreadsheet).nr(uuid).orElseThrow();
+		docPropHelper.setIntProperty(
+				de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM,
+				de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem.JGJ.getId());
+		new de.petanqueturniermanager.basesheet.meldeliste.TeamnummerAendernSheet(wkingSpreadsheet)
+				.mitEingabe(alteNr, 42).doRun();
+		recalcAll();
+		assertThat(sheetHlp.getTextFromCell(gruppeA, nameA)).isEqualTo(nameVorher);
+		assertThat(sheetHlp.getTextFromCell(gruppeA, Position.from(5, GRUPPEN_ERSTE_DATEN_ZEILE))).isEqualTo("42");
 	}
 
 	/**
