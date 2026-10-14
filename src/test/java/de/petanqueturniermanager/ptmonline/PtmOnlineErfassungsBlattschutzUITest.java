@@ -59,6 +59,7 @@ class PtmOnlineErfassungsBlattschutzUITest extends BaseCalcUITest {
     @AfterEach
     void aufraeumen() {
         PtmOnlineLiveSync.vergessen("schutz-test");
+        PtmOnlineSpieleinstellungen.vergessen("schutz-test");
         PtmOnlineAuftraege.vergessen(doc);
         LibreOfficePtmOnlineSpeicher.setZugangsdatenForTest(null);
     }
@@ -105,7 +106,9 @@ class PtmOnlineErfassungsBlattschutzUITest extends BaseCalcUITest {
             erfasse();
             assertThat(schutzAufrufe()).isEqualTo(vorher + 1);
             assertThat(bestand.istGeaendert()).isFalse();
-            assertThat(mapping.leseAuftragsBestand().eintraege()).hasSize(1);
+            // Neben dem Spieleinstellungen-Auftrag der ersten Erfassung genau der neue Auftrag.
+            assertThat(mapping.leseAuftragsBestand().eintraege()).extracting(eintrag -> eintrag.auftrag().art())
+                    .containsExactly(AuftragsArt.SPIELEINSTELLUNGEN, AuftragsArt.RUNDE);
             erfasse();
             assertThat(schutzAufrufe()).as("Der nächste unveränderte Lauf öffnet keinen Scope")
                     .isEqualTo(vorher + 1);
