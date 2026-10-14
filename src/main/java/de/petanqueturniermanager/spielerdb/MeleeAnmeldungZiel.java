@@ -90,7 +90,7 @@ public final class MeleeAnmeldungZiel implements MeldelisteZiel, MeleeAnmeldungK
 	private XSpreadsheet sheet() throws MeldelisteSchreibException {
 		XSpreadsheet sheet = MeleeAnmeldungLeser.findeSheet(ws, metadatenSchluessel);
 		if (sheet == null) {
-			throw new MeldelisteSchreibException("Mêlée-Anmeldung-Sheet nicht vorhanden");
+			throw new MeldelisteSchreibException(I18n.get("meldeliste.ziel.fehler.melee_sheet_fehlt"));
 		}
 		return sheet;
 	}
@@ -140,12 +140,12 @@ public final class MeleeAnmeldungZiel implements MeldelisteZiel, MeleeAnmeldungK
 			return 0;
 		}
 		if (spieler.size() > 1) {
-			throw new MeldelisteSchreibException("Mêlée-Anmeldung nimmt nur Einzelspieler an: " + spieler.size());
+			throw new MeldelisteSchreibException(I18n.get("meldeliste.ziel.fehler.melee_nur_einzelspieler", spieler.size()));
 		}
 		XSpreadsheet sheet = sheet();
 		int zeile = naechsteFreieZeile();
 		if (zeile > LETZTE_DATEN_ZEILE) {
-			throw new MeldelisteSchreibException("Keine freie Zeile in der Mêlée-Anmeldung");
+			throw new MeldelisteSchreibException(I18n.get("meldeliste.ziel.fehler.melee_keine_freie_zeile"));
 		}
 		SpielerMitVerein neuer = spieler.getFirst();
 		RangeData data = new RangeData();
@@ -159,7 +159,7 @@ public final class MeleeAnmeldungZiel implements MeldelisteZiel, MeleeAnmeldungK
 					RangePosition.from(SPALTE_VORNAME, zeile, SPALTE_EINGECHECKT, zeile)).setDataInRange(data);
 			MeleeAnmeldungNummerierung.nummerieren(ws, sheet);
 		} catch (GenerateException e) {
-			throw new MeldelisteSchreibException("Schreibvorgang fehlgeschlagen", e);
+			throw new MeldelisteSchreibException(I18n.get("meldeliste.ziel.fehler.schreiben"), e);
 		}
 		return zeile + 1;
 	}
@@ -172,7 +172,7 @@ public final class MeleeAnmeldungZiel implements MeldelisteZiel, MeleeAnmeldungK
 	public String getOderErzeugeLokaleUuid(int zeile1Basiert) throws MeldelisteSchreibException {
 		String uuid = getOderErzeugeLokaleUuids(List.of(zeile1Basiert)).get(zeile1Basiert);
 		if (uuid == null) {
-			throw new MeldelisteSchreibException("Lokale PTM-Online-ID konnte nicht geschrieben werden");
+			throw new MeldelisteSchreibException(I18n.get("meldeliste.ziel.fehler.online_id_schreiben"));
 		}
 		return uuid;
 	}
@@ -184,7 +184,7 @@ public final class MeleeAnmeldungZiel implements MeldelisteZiel, MeleeAnmeldungK
 		try {
 			return nrUuidSpalte(sheet()).getOderErzeuge(zeilen1Basiert);
 		} catch (RuntimeException e) {
-			throw new MeldelisteSchreibException("Lokale PTM-Online-ID konnte nicht geschrieben werden", e);
+			throw new MeldelisteSchreibException(I18n.get("meldeliste.ziel.fehler.online_id_schreiben"), e);
 		}
 	}
 
@@ -199,7 +199,7 @@ public final class MeleeAnmeldungZiel implements MeldelisteZiel, MeleeAnmeldungK
 		try {
 			nrUuidSpalte(sheet()).setze(uuidProZeile);
 		} catch (RuntimeException e) {
-			throw new MeldelisteSchreibException("Lokale PTM-Online-ID konnte nicht geschrieben werden", e);
+			throw new MeldelisteSchreibException(I18n.get("meldeliste.ziel.fehler.online_id_schreiben"), e);
 		}
 	}
 
@@ -228,7 +228,7 @@ public final class MeleeAnmeldungZiel implements MeldelisteZiel, MeleeAnmeldungK
 		try {
 			return nrUuidSpalte(sheet).setzeOnlineIds(onlineIdProUuid);
 		} catch (RuntimeException e) {
-			throw new MeldelisteSchreibException("PTM-Online-ID konnte nicht geschrieben werden", e);
+			throw new MeldelisteSchreibException(I18n.get("meldeliste.ziel.fehler.online_id_schreiben"), e);
 		}
 	}
 
@@ -247,7 +247,7 @@ public final class MeleeAnmeldungZiel implements MeldelisteZiel, MeleeAnmeldungK
 	private static void pruefeDatenZeile(int zeile1Basiert) throws MeldelisteSchreibException {
 		int zeile = zeile1Basiert - 1;
 		if (zeile < ERSTE_DATEN_ZEILE || zeile > LETZTE_DATEN_ZEILE) {
-			throw new MeldelisteSchreibException("Ungültige Zeile der Mêlée-Anmeldung: " + zeile1Basiert);
+			throw new MeldelisteSchreibException(I18n.get("meldeliste.ziel.fehler.melee_ungueltige_zeile", zeile1Basiert));
 		}
 	}
 
@@ -310,7 +310,7 @@ public final class MeleeAnmeldungZiel implements MeldelisteZiel, MeleeAnmeldungK
 	public void ersetzeSpielerNamen(int zeile1Basiert, List<SpielerMitVerein> spieler) throws MeldelisteSchreibException {
 		Optional<MeleeAnmeldungZeile> zeile = zeile(zeile1Basiert);
 		if (zeile.isEmpty() || spieler.size() != 1) {
-			throw new MeldelisteSchreibException("Ungültige Namensänderung für Zeile " + zeile1Basiert);
+			throw new MeldelisteSchreibException(I18n.get("meldeliste.ziel.fehler.namensaenderung_ungueltig", zeile1Basiert));
 		}
 		if (zeile.get().uebernommen()) {
 			throw new MeldelisteSchreibException(I18n.get("ptmonline.hinweis.melee_bereits_uebernommen",
@@ -326,7 +326,7 @@ public final class MeleeAnmeldungZiel implements MeldelisteZiel, MeleeAnmeldungK
 					RangePosition.from(SPALTE_VORNAME, zeile.get().zeile(), SPALTE_VORNAME + 1, zeile.get().zeile()))
 					.setDataInRange(data);
 		} catch (GenerateException e) {
-			throw new MeldelisteSchreibException("Name konnte nicht geändert werden", e);
+			throw new MeldelisteSchreibException(I18n.get("meldeliste.ziel.fehler.namen_aendern"), e);
 		}
 	}
 

@@ -10,10 +10,14 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -51,6 +55,11 @@ public class TournamentSyncClient extends PtmOnlineHttpClient implements Auftrag
      * speichert sie mit der Bindung und verlangt danach beides.
      */
     static final int PROTOKOLL_VERSION = 2;
+
+    private static final Logger logger = LogManager.getLogger(TournamentSyncClient.class);
+
+    /** Liegt nach jedem {@code updated_at}: der Anmeldeabruf liefert damit nur den Turnierzustand. */
+    static final Instant NACH_ALLEN_ANMELDUNGEN = Instant.parse("9999-12-31T00:00:00Z");
 
     public TournamentSyncClient(String baseUrl, String apiKey) {
         super(baseUrl, apiKey);
@@ -175,16 +184,35 @@ public class TournamentSyncClient extends PtmOnlineHttpClient implements Auftrag
         JsonElement stand = payload.get("tournament");
         return new AnmeldungsAbruf(registrations, konflikte != null && konflikte.isJsonObject()
                 ? GSON.fromJson(konflikte, KonfliktListeDto.class) : KonfliktListeDto.leer(),
-                stand != null && stand.isJsonObject() ? GSON.fromJson(stand, SyncStandDto.class) : null);
+                stand != null && stand.isJsonObject() ? GSON.fromJson(stand, SyncStandDto.class) : null,
+                leseCursor(payload));
+    }
+
+    /**
+     * Der Cursor stammt von der Server-Uhr. Er – nicht die lokale Uhrzeit – ist der richtige {@code since}-Wert für
+     * den nächsten Abruf: Geht die PC-Uhr vor, fielen Anmeldungen aus der Zwischenzeit sonst dauerhaft heraus.
+     */
+    private static Optional<Instant> leseCursor(JsonObject payload) {
+        JsonElement cursor = payload.get("cursor");
+        if (cursor == null || !cursor.isJsonPrimitive()) {
+            return Optional.empty();
+        }
+        try {
+            return Optional.of(Instant.parse(cursor.getAsString()));
+        } catch (DateTimeParseException e) {
+            logger.warn("PTM-Online: Cursor {} nicht lesbar", cursor, e);
+            return Optional.empty();
+        }
     }
 
     /**
      * Zustand des Online-Turniers (Status, Anmeldeschluss, Online-Runden, Schreibzähler), ohne Anmeldungen: der
-     * Abruf der Anmeldeliste mit einem Zeitpunkt in der Zukunft liefert nur den Turnierzustand.
+     * Abruf der Anmeldeliste mit einem Zeitpunkt weit in der Zukunft liefert nur den Turnierzustand – fest statt
+     * relativ zur lokalen Uhr, die falsch gehen kann.
      */
     public SyncStandDto fetchSyncStand(String tournamentId) throws IOException, InterruptedException {
         String path = "/api/sync/tournaments/" + encode(tournamentId) + "/registrations?since="
-                + encode(Instant.now().plus(Duration.ofDays(1)).toString());
+                + encode(NACH_ALLEN_ANMELDUNGEN.toString());
         JsonElement stand = pflichtfeld(leseAntwort(get(path)), "tournament");
         if (!stand.isJsonObject()) {
             throw unvollstaendigeAntwort("tournament");

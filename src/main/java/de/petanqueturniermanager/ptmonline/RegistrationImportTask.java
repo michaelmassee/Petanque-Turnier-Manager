@@ -92,8 +92,8 @@ public final class RegistrationImportTask {
     private record GeschriebeneAnmeldung(RegistrationDto registration, String besetzung) {}
 
     /**
-     * Nicht übernommene Anmeldungen werden beim nächsten Abgleich erneut versucht ({@code lastSync}
-     * bleibt dann stehen).
+     * Nicht übernommene Anmeldungen werden beim nächsten Abgleich erneut versucht (Abruf-Cursor
+     * und {@code lastSync} bleiben dann stehen).
      *
      * @param importiert      als neue Meldelistenzeile übernommene Anmeldungen
      * @param namensgleich    Online-Bezeichnungen der Anmeldungen, deren Name bereits in einer anderen,
@@ -434,8 +434,9 @@ public final class RegistrationImportTask {
      * Prüfung vor dem Turnierstart (erste Spielrunde): liest nur und liefert die bestätigten Online-Anmeldungen, die
      * noch in keiner Meldelistenzeile stehen. Steht eine namensgleiche, noch nicht verknüpfte Zeile in der Meldeliste,
      * wird nichts automatisch verknüpft – die Anmeldung erscheint mit dem Hinweis „möglicherweise identisch“, die
-     * Turnierleitung entscheidet im manuellen Abgleich. {@code lastSync} bleibt unverändert. Kurzes Zeitlimit
-     * ({@link #TIMEOUT_VOR_TURNIERSTART}): bei schlechtem Netz fragt der Rundenstart ausdrücklich nach.
+     * Turnierleitung entscheidet im manuellen Abgleich. {@code lastSync} und der Abruf-Cursor bleiben unverändert.
+     * Kurzes Zeitlimit ({@link #TIMEOUT_VOR_TURNIERSTART}): bei schlechtem Netz fragt der Rundenstart ausdrücklich
+     * nach.
      *
      * Zusätzlich aktualisiert die Prüfung den Vermerk der Doppelbelegungen eines Kontos (KP-06 b), damit die
      * Auslosung und {@link #lokaleAusschlussgruende} den aktuellen Stand kennen.
@@ -447,19 +448,23 @@ public final class RegistrationImportTask {
             throws IOException, InterruptedException, GenerateException {
         TournamentSyncClient client = TournamentSyncClient.mitKurzemTimeout(config.baseUrl(), config.apiKey(),
                 TIMEOUT_VOR_TURNIERSTART);
-        AnmeldungsAbruf abruf = client.fetchAbgleich(tournamentId, mapping.getLastSync().orElse(Instant.EPOCH));
+        AnmeldungsAbruf abruf = client.fetchAbgleich(tournamentId, mapping.getAbrufCursor().orElse(Instant.EPOCH));
         List<RegistrationDto> registrations = abruf.registrations();
         mapping.ergaenzeAusServer(registrations);
         Map<String, List<Integer>> vorhandeneZeilen = vorhandeneZeilenNachBesetzung(ziel);
+        // Nur lesen: Zeilen ohne UUID sind nicht verknüpft, ihre UUID entsteht erst beim Abgleich.
+        Map<Integer, String> uuidProZeile = vorhandeneUuidsProZeile(ziel);
+        Map<String, String> onlineIdProUuid = mapping.getOnlineIdsProUuid();
         List<String> fehlend = new ArrayList<>();
         for (RegistrationDto reg : registrations) {
             if (!istImportierbar(reg) || mapping.istBereitsImportiert(reg.id())) {
                 continue;
             }
-            List<Integer> gleicheZeilen = vorhandeneZeilen.getOrDefault(besetzungsSchluessel(reg), List.of());
-            List<Integer> freieZeilen = nichtVerknuepfteZeilen(mapping, ziel, gleicheZeilen, Set.of());
-            fehlend.add(freieZeilen.isEmpty() ? onlineBezeichnung(reg)
-                    : I18n.get("ptmonline.hinweis.moeglicherweise_identisch", onlineBezeichnung(reg)));
+            boolean freieZeileVorhanden = vorhandeneZeilen.getOrDefault(besetzungsSchluessel(reg), List.of()).stream()
+                    .map(uuidProZeile::get).anyMatch(uuid -> uuid == null || !onlineIdProUuid.containsKey(uuid));
+            fehlend.add(freieZeileVorhanden
+                    ? I18n.get("ptmonline.hinweis.moeglicherweise_identisch", onlineBezeichnung(reg))
+                    : onlineBezeichnung(reg));
         }
         aktualisiereKontoKonflikte(mapping, abruf.konflikte());
         return new Vorabcheck(fehlend);
@@ -592,9 +597,10 @@ public final class RegistrationImportTask {
         Instant abgleichStart = Instant.now();
         // Mit Entscheidungen alle Anmeldungen holen: eine nach dem Start eingegangene liefert der since-Abruf sonst
         // nicht mehr, obwohl die Turnierleitung sie übernehmen will.
-        Instant since = sammlung.hatEntscheidungen() ? Instant.EPOCH : mapping.getLastSync().orElse(Instant.EPOCH);
+        Instant since = sammlung.hatEntscheidungen() ? Instant.EPOCH : mapping.getAbrufCursor().orElse(Instant.EPOCH);
         fortschritt.status(I18n.get("ptmonline.fortschritt.anmeldungen_abrufen"));
-        List<RegistrationDto> alle = client.fetchRegistrations(tournamentId, since);
+        AnmeldungsAbruf abruf = client.fetchAbgleich(tournamentId, since);
+        List<RegistrationDto> alle = abruf.registrations();
         // Zuordnung lokal gelöschter Meldungen kennt nur der Server (die Nr-Zelle ist mit der Zeile weg).
         mapping.ergaenzeAusServer(alle);
         fortschritt.status(I18n.get("ptmonline.fortschritt.anmeldungen_abgerufen", alle.size()));
@@ -608,6 +614,11 @@ public final class RegistrationImportTask {
         ImportErgebnis ergebnis = uebernehmeAnmeldungen(alle, mapping, ziel, aktualisierung, fortschritt, sammlung);
         if (ergebnis.vollstaendig()) {
             mapping.setLastSync(abgleichStart);
+            // Nur mit Server-Cursor weiterschalten; ohne ihn holt der nächste Abruf lieber zu viel als zu wenig.
+            Optional<Instant> cursor = abruf.cursor();
+            if (cursor.isPresent()) {
+                mapping.setAbrufCursor(cursor.get());
+            }
         }
         return new ImportLauf(ergebnis, status);
     }
@@ -847,7 +858,7 @@ public final class RegistrationImportTask {
         try {
             ziel.hebeAbmeldungAuf(zeile);
         } catch (MeldelisteZiel.MeldelisteSchreibException e) {
-            throw new GenerateException("Abmeldung konnte nicht aufgehoben werden: " + e.getMessage());
+            throw new GenerateException(I18n.get("ptmonline.fehler.abmeldung_aufheben", e.getMessage()));
         }
         mapping.ersetzeOnlineId(uuid, reg.id(), executionRevision(reg));
         mapping.setBezeichnung(uuid, lokaleBezeichnung(ziel, zeile), onlineStatus(reg));
@@ -865,7 +876,7 @@ public final class RegistrationImportTask {
             mapping.addMapping(uuid, reg.id(), ziel.formelTeamNrAusLokalerUuid(uuid), executionRevision(reg),
                     lokaleBezeichnung(ziel, zeile), onlineStatus(reg));
         } catch (MeldelisteZiel.MeldelisteSchreibException e) {
-            throw new GenerateException("Lokale vorhandene Anmeldung konnte nicht verknüpft werden: " + e.getMessage());
+            throw new GenerateException(I18n.get("ptmonline.fehler.verknuepfen", e.getMessage()));
         }
         mapping.setOnlineDetails(uuid, reg);
         mapping.setZusaetze(Map.of(uuid,
@@ -1584,15 +1595,20 @@ public final class RegistrationImportTask {
 
     /** 1-basierte Meldelistenzeile je vorhandener lokaler UUID; Zeilen ohne UUID fehlen. */
     private static Map<String, Integer> zeileProLokalerUuid(MeldelisteZiel ziel) throws GenerateException {
+        Map<String, Integer> ergebnis = new LinkedHashMap<>();
+        vorhandeneUuidsProZeile(ziel).forEach((zeile, uuid) -> ergebnis.putIfAbsent(uuid, zeile));
+        return ergebnis;
+    }
+
+    /** Vorhandene lokale UUID je 1-basierter Meldelistenzeile, ohne fehlende anzulegen. */
+    private static Map<Integer, String> vorhandeneUuidsProZeile(MeldelisteZiel ziel) throws GenerateException {
         List<Integer> zeilen = ziel.leseAlleSpielerRoh().stream().map(MeldelisteSpielerDaten::zeile1Basiert).distinct()
                 .toList();
-        Map<String, Integer> ergebnis = new LinkedHashMap<>();
         try {
-            ziel.leseLokaleUuids(zeilen).forEach((zeile, uuid) -> ergebnis.putIfAbsent(uuid, zeile));
+            return ziel.leseLokaleUuids(zeilen);
         } catch (MeldelisteZiel.MeldelisteSchreibException e) {
             throw new GenerateException(e.getMessage());
         }
-        return ergebnis;
     }
 
     private static String onlineStatus(RegistrationDto registration) {

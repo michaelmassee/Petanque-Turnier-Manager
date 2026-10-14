@@ -448,7 +448,7 @@ public abstract class BaseCalcUITest {
 	 */
 	protected void wieImSheetRunner(LaufAktion aktion) throws Exception {
 		TurnierSystem ts = docPropHelper.getTurnierSystemAusDocument();
-		try (var scope = BlattschutzManager.get().scopeFuer(ts, wkingSpreadsheet)) {
+		try (var _ = BlattschutzManager.get().scopeFuer(ts, wkingSpreadsheet)) {
 			aktion.ausfuehren();
 		}
 	}

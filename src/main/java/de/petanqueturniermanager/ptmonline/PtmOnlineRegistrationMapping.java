@@ -151,7 +151,7 @@ public class PtmOnlineRegistrationMapping {
     public void ersetzeOnlineId(String lokaleUuid, String onlineRegistrationId, int executionRevision)
             throws GenerateException {
         if (!syncSheet.getLokaleUuids().contains(lokaleUuid)) {
-            throw new GenerateException("Keine PTM-Online-Zuordnung für lokale Meldung " + lokaleUuid);
+            throw new GenerateException(I18n.get("ptmonline.fehler.keine_zuordnung", lokaleUuid));
         }
         setzeInNrZellen(Map.of(lokaleUuid, Optional.of(onlineRegistrationId)));
         syncSheet.setExecutionRevisionen(Map.of(lokaleUuid, executionRevision));
@@ -345,6 +345,15 @@ public class PtmOnlineRegistrationMapping {
 
     public Optional<Instant> getLastSync() throws GenerateException {
         return syncSheet.getLastSync();
+    }
+
+    /** @see PtmOnlineSyncSheet#getAbrufCursor() */
+    public Optional<Instant> getAbrufCursor() throws GenerateException {
+        return syncSheet.getAbrufCursor();
+    }
+
+    public void setAbrufCursor(Instant cursor) throws GenerateException {
+        syncSheet.setAbrufCursor(cursor);
     }
 
     public Optional<String> getTournamentId() throws GenerateException {

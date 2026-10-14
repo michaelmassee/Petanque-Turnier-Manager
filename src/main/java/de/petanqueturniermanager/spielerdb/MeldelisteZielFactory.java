@@ -33,6 +33,7 @@ import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
 import de.petanqueturniermanager.triptete.konfiguration.TripTeteKonfigurationSheet;
 import de.petanqueturniermanager.triptete.meldeliste.TripTeteMeldeListeSheetUpdate;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.helper.i18n.I18n;
 
 /**
  * Erkennt anhand des Dokumenten-Turniersystems das passende Konfigurations-Sheet
@@ -104,7 +105,7 @@ public final class MeldelisteZielFactory {
             case KASKADE -> new KaskadeMeldeListeSheetUpdate(ws).vollstaendigAktualisieren();
             case POULE -> new PouleMeldeListeSheetUpdate(ws).vollstaendigAktualisieren();
             case TRIPTETE -> new TripTeteMeldeListeSheetUpdate(ws).upDateSheet();
-            case LIGA, KEIN -> throw new GenerateException("Meldeliste konnte nicht aktualisiert werden");
+            case LIGA, KEIN -> throw new GenerateException(I18n.get("ptmonline.fehler.meldeliste_aktualisieren"));
         }
     }
 
@@ -135,7 +136,7 @@ public final class MeldelisteZielFactory {
             return;
         }
         AbstractMeleeAnmeldungSheet meleeSheet = MeleeAnmeldungKonfiguration.meleeAnmeldungSheet(ws)
-                .orElseThrow(() -> new GenerateException("Mêlée-Anmeldung konnte nicht aktualisiert werden"));
+                .orElseThrow(() -> new GenerateException(I18n.get("ptmonline.fehler.melee_aktualisieren")));
         meleeSheet.generate();
     }
 

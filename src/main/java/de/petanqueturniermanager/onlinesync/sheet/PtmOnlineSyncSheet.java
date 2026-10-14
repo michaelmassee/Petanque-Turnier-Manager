@@ -115,6 +115,7 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 	private static final int KOPF_CONNECT_ID = 1;
 	private static final int KOPF_RUNNING_AUSSTEHEND = 2;
 	private static final int KOPF_OFFLINE_BESTAETIGT = 3;
+	private static final int KOPF_ABRUF_CURSOR = 4;
 	private static final int SPALTE_AUFTRAG_ID = 10;
 	private static final int SPALTE_AUFTRAG_ZEITPUNKT = 19;
 	private static final int LETZTE_PUFFER_SPALTE = SPALTE_AUFTRAG_ZEITPUNKT;
@@ -191,6 +192,7 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 		kopfZeile(kopf, I18n.get("ptmonline.sheet.label.sync.document"), syncDokumentId);
 		kopfZeile(kopf, I18n.get("ptmonline.sheet.label.sync.lease"), leaseToken);
 		RangeHelper.from(this, kopf.getRangePosition(Position.from(SPALTE_LABEL, ZEILE_TITEL))).setDataInRange(kopf);
+		setAbrufCursor(null);
 		schreibeStatus(SyncStatus.AKTIV);
 	}
 
@@ -317,6 +319,18 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 
 	public void setLastSync(Instant zeitpunkt) throws GenerateException {
 		schreibeWert(ZEILE_LETZTER_SYNC, zeitpunkt == null ? "" : zeitpunkt.toString());
+	}
+
+	/**
+	 * Server-Zeitstempel für den nächsten inkrementellen Anmeldeabruf ({@code since}). Getrennt vom angezeigten
+	 * letzten Abgleich, weil er von der Server-Uhr stammt; leer heißt: alle Anmeldungen abrufen.
+	 */
+	public Optional<Instant> getAbrufCursor() throws GenerateException {
+		return parseZeitpunkt(leseKopf(KOPF_ABRUF_CURSOR));
+	}
+
+	public void setAbrufCursor(Instant cursor) throws GenerateException {
+		schreibeKopf(KOPF_ABRUF_CURSOR, "ptmonline.sheet.label.abruf.cursor", cursor == null ? "" : cursor.toString());
 	}
 
 	public Optional<String> getSyncDocumentId() throws GenerateException {
@@ -487,7 +501,7 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 	public void schreibeAuftragsBestand(AuftragsBestand bestand) throws GenerateException {
 		List<AuftragsBestand.Eintrag> eintraege = bestand.eintraege();
 		if (eintraege.size() > MAX_ZEILEN) {
-			throw new GenerateException("PTM-Online: Auftragspuffer ist voll");
+			throw new GenerateException(I18n.get("ptmonline.fehler.auftragspuffer_voll"));
 		}
 		schreibeKopf(KOPF_ZAEHLER, "ptmonline.sheet.label.schreibzaehler", Long.toString(bestand.zaehler()));
 		schreibePufferKopfzeile();
@@ -617,7 +631,7 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 		int ersteZeile = ERSTE_DATEN_ZEILE + anzahlBelegterZeilen(daten);
 		int letzteZeile = ersteZeile + neue.size() - 1;
 		if (letzteZeile > LETZTE_DATEN_ZEILE) {
-			throw new GenerateException("PTM-Online-Zuordnung ist voll");
+			throw new GenerateException(I18n.get("ptmonline.fehler.zuordnung_voll"));
 		}
 		RangeData zeilen = new RangeData();
 		String[][] formeln = new String[neue.size()][1];
@@ -743,7 +757,7 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 		RangePosition bereich = RangePosition.from(SPALTE_NR, ERSTE_DATEN_ZEILE, SPALTE_NR, ERSTE_DATEN_ZEILE + anzahl - 1);
 		String[][] bisher = helper.getFormulaArrayFromRange(sheet, bereich);
 		if (bisher.length != anzahl) {
-			throw new GenerateException("PTM-Online: Nr-Formeln der Zuordnung nicht lesbar");
+			throw new GenerateException(I18n.get("ptmonline.fehler.nr_formeln_nicht_lesbar"));
 		}
 		String[][] neu = new String[anzahl][1];
 		boolean geaendert = false;

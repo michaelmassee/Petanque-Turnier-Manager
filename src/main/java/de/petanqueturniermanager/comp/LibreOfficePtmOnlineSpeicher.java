@@ -68,6 +68,7 @@ public final class LibreOfficePtmOnlineSpeicher {
 				aktiv = AnyConverter.toBoolean(props.getPropertyValue(PROP_VERBINDUNG_AKTIV));
 			} catch (Exception e) {
 				// Ältere Konfigurationen ohne diese Option bleiben standardmäßig aktiv.
+				logger.debug("Property {} fehlt, Verbindung bleibt aktiv", PROP_VERBINDUNG_AKTIV, e);
 			}
 			return new Zugangsdaten(stringWert(props, PROP_API_KEY), baseUrl.isBlank() ? DEFAULT_BASE_URL : baseUrl, aktiv);
 		} catch (Exception e) {

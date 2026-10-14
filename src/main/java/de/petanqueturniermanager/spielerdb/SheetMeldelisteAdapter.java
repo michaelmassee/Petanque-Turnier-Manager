@@ -289,7 +289,7 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
         }
         int zeile = naechsteFreieZeile();
         if (zeile < 0) {
-            throw new MeldelisteSchreibException("Keine freie Zeile in der Meldeliste");
+            throw new MeldelisteSchreibException(I18n.get("meldeliste.ziel.fehler.keine_freie_zeile"));
         }
 
         try {
@@ -330,7 +330,7 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
             }
             return zeile + 1;
         } catch (Exception e) {
-            throw new MeldelisteSchreibException("Schreibvorgang fehlgeschlagen", e);
+            throw new MeldelisteSchreibException(I18n.get("meldeliste.ziel.fehler.schreiben"), e);
         }
     }
 
@@ -393,7 +393,7 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
                     NumberCellValue.from(sheet, Position.from(setzpositionSpalte(), zeile1Basiert - 1))
                             .setValue(setzposition)));
         } catch (Exception e) {
-            throw new MeldelisteSchreibException("Setzposition konnte nicht geschrieben werden", e);
+            throw new MeldelisteSchreibException(I18n.get("meldeliste.ziel.fehler.setzposition"), e);
         }
     }
 
@@ -401,35 +401,35 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
     @Override
     public void entferneMeldung(int zeile1Basiert) throws MeldelisteSchreibException {
         if (zeile1Basiert <= 0) {
-            throw new MeldelisteSchreibException("Ungültige Meldelistenzeile");
+            throw new MeldelisteSchreibException(I18n.get("meldeliste.ziel.fehler.ungueltige_zeile"));
         }
         try {
             int zeile = zeile1Basiert - 1;
             RangePosition bereich = RangePosition.from(SPALTE_NR, zeile, letzteMeldungsSpalte(), zeile);
             BlattschutzManager.get().schreibeEntsperrt(sheet, () -> RangeHelper.from(sheet, doc, bereich).clearRange());
         } catch (Exception e) {
-            throw new MeldelisteSchreibException("Meldung konnte nicht entfernt werden", e);
+            throw new MeldelisteSchreibException(I18n.get("meldeliste.ziel.fehler.entfernen"), e);
         }
     }
 
     @Override
     public void markiereAlsAbgemeldet(int zeile1Basiert) throws MeldelisteSchreibException {
         if (zeile1Basiert <= 0) {
-            throw new MeldelisteSchreibException("Ungültige Meldelistenzeile");
+            throw new MeldelisteSchreibException(I18n.get("meldeliste.ziel.fehler.ungueltige_zeile"));
         }
         try {
             BlattschutzManager.get().schreibeEntsperrt(sheet, () -> sheetHelper.setNumberValueInCell(
                     NumberCellValue.from(sheet, Position.from(aktivSpalte, zeile1Basiert - 1))
                             .setValue(AKTIV_WERT_ABGEMELDET)));
         } catch (Exception e) {
-            throw new MeldelisteSchreibException("Abmeldung konnte nicht markiert werden", e);
+            throw new MeldelisteSchreibException(I18n.get("meldeliste.ziel.fehler.abmeldung_markieren"), e);
         }
     }
 
     @Override
     public void hebeAbmeldungAuf(int zeile1Basiert) throws MeldelisteSchreibException {
         if (zeile1Basiert <= 0) {
-            throw new MeldelisteSchreibException("Ungültige Meldelistenzeile");
+            throw new MeldelisteSchreibException(I18n.get("meldeliste.ziel.fehler.ungueltige_zeile"));
         }
         try {
             Position aktiv = Position.from(aktivSpalte, zeile1Basiert - 1);
@@ -437,14 +437,14 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
                 BlattschutzManager.get().schreibeEntsperrt(sheet, () -> sheetHelper.clearValInCell(sheet, aktiv));
             }
         } catch (Exception e) {
-            throw new MeldelisteSchreibException("Abmeldung konnte nicht aufgehoben werden", e);
+            throw new MeldelisteSchreibException(I18n.get("meldeliste.ziel.fehler.abmeldung_aufheben"), e);
         }
     }
 
     @Override
     public void ersetzeSpielerNamen(int zeile1Basiert, List<SpielerMitVerein> spieler) throws MeldelisteSchreibException {
         if (zeile1Basiert <= 0 || spieler.isEmpty() || spieler.size() > anzSpieler) {
-            throw new MeldelisteSchreibException("Ungültige Namensänderung für Zeile " + zeile1Basiert);
+            throw new MeldelisteSchreibException(I18n.get("meldeliste.ziel.fehler.namensaenderung_ungueltig", zeile1Basiert));
         }
         try {
             int zeile = zeile1Basiert - 1;
@@ -466,14 +466,14 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
             daten.add(neu);
             RangeHelper.from(sheet, doc, bereich).setDataInRange(daten);
         } catch (Exception e) {
-            throw new MeldelisteSchreibException("Namen konnten nicht geändert werden", e);
+            throw new MeldelisteSchreibException(I18n.get("meldeliste.ziel.fehler.namen_aendern"), e);
         }
     }
 
     @Override
     public void stelleAktivWertWiederHer(int zeile1Basiert, int aktivWert) throws MeldelisteSchreibException {
         if (zeile1Basiert <= 0) {
-            throw new MeldelisteSchreibException("Ungültige Meldelistenzeile");
+            throw new MeldelisteSchreibException(I18n.get("meldeliste.ziel.fehler.ungueltige_zeile"));
         }
         try {
             Position aktiv = Position.from(aktivSpalte, zeile1Basiert - 1);
@@ -485,7 +485,7 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
                 }
             });
         } catch (Exception e) {
-            throw new MeldelisteSchreibException("Teilnahme konnte nicht wiederhergestellt werden", e);
+            throw new MeldelisteSchreibException(I18n.get("meldeliste.ziel.fehler.teilnahme_wiederherstellen"), e);
         }
     }
 
@@ -493,7 +493,7 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
     public String getOderErzeugeLokaleUuid(int zeile1Basiert) throws MeldelisteSchreibException {
         String uuid = getOderErzeugeLokaleUuids(List.of(zeile1Basiert)).get(zeile1Basiert);
         if (uuid == null) {
-            throw new MeldelisteSchreibException("Lokale PTM-Online-ID konnte nicht geschrieben werden");
+            throw new MeldelisteSchreibException(I18n.get("meldeliste.ziel.fehler.online_id_schreiben"));
         }
         return uuid;
     }
@@ -505,7 +505,7 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
         try {
             return nrUuidSpalte().getOderErzeuge(zeilen1Basiert);
         } catch (RuntimeException e) {
-            throw new MeldelisteSchreibException("Lokale PTM-Online-ID konnte nicht geschrieben werden", e);
+            throw new MeldelisteSchreibException(I18n.get("meldeliste.ziel.fehler.online_id_schreiben"), e);
         }
     }
 
@@ -525,7 +525,7 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
         try {
             nrUuidSpalte().setze(uuidProZeile);
         } catch (RuntimeException e) {
-            throw new MeldelisteSchreibException("Lokale PTM-Online-ID konnte nicht geschrieben werden", e);
+            throw new MeldelisteSchreibException(I18n.get("meldeliste.ziel.fehler.online_id_schreiben"), e);
         }
     }
 
@@ -545,7 +545,7 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
         try {
             return nrUuidSpalte().setzeOnlineIds(onlineIdProUuid);
         } catch (RuntimeException e) {
-            throw new MeldelisteSchreibException("PTM-Online-ID konnte nicht geschrieben werden", e);
+            throw new MeldelisteSchreibException(I18n.get("meldeliste.ziel.fehler.online_id_schreiben"), e);
         }
     }
 
@@ -556,7 +556,7 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
 
     private static void pruefeZeilen(Collection<Integer> zeilen1Basiert) throws MeldelisteSchreibException {
         if (zeilen1Basiert.stream().anyMatch(zeile -> zeile <= 0)) {
-            throw new MeldelisteSchreibException("Ungültige Meldelistenzeile");
+            throw new MeldelisteSchreibException(I18n.get("meldeliste.ziel.fehler.ungueltige_zeile"));
         }
     }
 

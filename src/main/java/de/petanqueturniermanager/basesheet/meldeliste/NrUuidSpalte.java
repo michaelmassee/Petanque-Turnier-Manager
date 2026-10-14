@@ -78,6 +78,7 @@ public final class NrUuidSpalte {
 		if (zeilen1Basiert.isEmpty()) {
 			return Map.of();
 		}
+		pruefeImLesebereich(zeilen1Basiert);
 		Block block = leseBlock(maxZeile(zeilen1Basiert));
 		Map<Integer, String> ergebnis = new LinkedHashMap<>();
 		SortedMap<Integer, String> neueFormeln = new TreeMap<>();
@@ -93,7 +94,7 @@ public final class NrUuidSpalte {
 				neueFormeln.put(zeile - 1, zelle.formel(block.nr(zeile)));
 			}
 		}
-		TeamNummernVergabe.schreibeNrFormeln(sheetHelper, sheet, nrSpalte, neueFormeln);
+		schreibeUndBerechne(neueFormeln);
 		return ergebnis;
 	}
 
@@ -105,6 +106,7 @@ public final class NrUuidSpalte {
 		if (uuidProZeile.isEmpty()) {
 			return;
 		}
+		pruefeImLesebereich(uuidProZeile.keySet());
 		Block block = leseBlock(maxZeile(uuidProZeile.keySet()));
 		SortedMap<Integer, String> formeln = new TreeMap<>();
 		uuidProZeile.forEach((zeile, uuid) -> {
@@ -112,7 +114,7 @@ public final class NrUuidSpalte {
 					.orElseGet(() -> new NrZellFormel(art, uuid, Optional.empty()));
 			formeln.put(zeile - 1, zelle.formel(block.nr(zeile)));
 		});
-		TeamNummernVergabe.schreibeNrFormeln(sheetHelper, sheet, nrSpalte, formeln);
+		schreibeUndBerechne(formeln);
 	}
 
 	/** @return Online-ID je lokaler UUID aller Zeilen der Spalte, die eine tragen */
@@ -151,12 +153,7 @@ public final class NrUuidSpalte {
 				}
 			});
 		}
-		TeamNummernVergabe.schreibeNrFormeln(sheetHelper, sheet, nrSpalte, formeln);
-		if (!formeln.isEmpty()) {
-			// Neu geschriebene Formeln zeigen bis zur Berechnung 0 – bei abgeschalteter automatischer Berechnung
-			// (Rundenaufbau) läsen Nr-Leser sonst falsche Nummern. calculate() rechnet nur geänderte Zellen.
-			Lo.qi(XCalculatable.class, doc).calculate();
-		}
+		schreibeUndBerechne(formeln);
 		return gefunden;
 	}
 
@@ -168,6 +165,30 @@ public final class NrUuidSpalte {
 	 */
 	public static String formelNrAusUuid(String nrBereich, String uuid) {
 		return "IFNA(" + GlobalImpl.FORMAT_PTM_UUID_TEAMNR("\"" + uuid + "\"", nrBereich) + ";\"\")";
+	}
+
+	/**
+	 * Neu geschriebene Formeln zeigen bis zur Berechnung 0 – bei abgeschalteter automatischer Berechnung
+	 * (Rundenaufbau) läsen Nr-Leser sonst falsche Nummern. {@code calculate()} rechnet nur geänderte Zellen.
+	 */
+	private void schreibeUndBerechne(SortedMap<Integer, String> formelProZeile) {
+		TeamNummernVergabe.schreibeNrFormeln(sheetHelper, sheet, nrSpalte, formelProZeile);
+		if (!formelProZeile.isEmpty()) {
+			Lo.qi(XCalculatable.class, doc).calculate();
+		}
+	}
+
+	/**
+	 * Nur Datenzeilen bis {@link #MAX_ZEILE} werden gelesen. Eine Zeile außerhalb fände ihre UUID nie wieder und
+	 * bekäme bei jedem Aufruf eine neue – das wäre keine stabile Identität.
+	 */
+	private void pruefeImLesebereich(Collection<Integer> zeilen1Basiert) {
+		for (int zeile : zeilen1Basiert) {
+			if (zeile <= ersteDatenZeile || zeile > MAX_ZEILE + 1) {
+				throw new IllegalArgumentException("Zeile " + zeile + " liegt außerhalb der Datenzeilen "
+						+ (ersteDatenZeile + 1) + " bis " + (MAX_ZEILE + 1));
+			}
+		}
 	}
 
 	private static int maxZeile(Collection<Integer> zeilen1Basiert) {

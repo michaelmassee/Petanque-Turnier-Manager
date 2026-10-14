@@ -17,7 +17,8 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Prüft, dass alle ptm:-Commands in den XCU-Dateien als Konstante in
- * {@link ProtocolHandler} definiert sind – und umgekehrt.
+ * {@link ProtocolHandler} definiert sind – und umgekehrt. Ausgenommen sind die Einträge des PTM-Online-Untermenüs,
+ * das {@link PtmOnlineMenuController} zur Laufzeit aufbaut.
  */
 public class ProtocolHandlerCommandsTest {
 
@@ -83,10 +84,18 @@ public class ProtocolHandlerCommandsTest {
 		Set<String> nichtInXcu = new HashSet<>(constants);
 		nichtInXcu.removeAll(xcu);
 		nichtInXcu.removeAll(VERSTECKTE_COMMANDS_OHNE_XCU);
+		nichtInXcu.removeAll(PtmOnlineMenuController.BEFEHLE);
 
 		assertThat(nichtInXcu)
 				.as("CMD_-Konstanten ohne ptm:-Eintrag in XCU-Dateien")
 				.isEmpty();
+	}
+
+	@Test
+	void ptmOnlineUntermenueHaengtAmMenueController() throws Exception {
+		assertThat(xcuCommands())
+				.as("Das PTM-Online-Untermenü braucht seinen Einstieg in der XCU")
+				.contains(ProtocolHandler.CMD_PTMONLINE_MENU);
 	}
 
 	@Test

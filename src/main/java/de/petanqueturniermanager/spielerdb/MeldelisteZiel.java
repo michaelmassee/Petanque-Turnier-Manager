@@ -9,6 +9,7 @@ import java.util.OptionalInt;
 import java.util.Set;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.helper.i18n.I18n;
 
 /**
  * Schreib-Adapter zwischen {@link de.petanqueturniermanager.spielerdb.ui.SpielerSucheDialog}
@@ -92,12 +93,12 @@ public interface MeldelisteZiel extends AbgleichQuelle {
      * Diese Kennung ist unabhängig von Teamnummer, Namen und Sortierung.
      */
     default String getOderErzeugeLokaleUuid(int zeile1Basiert) throws MeldelisteSchreibException {
-        throw new MeldelisteSchreibException("Lokale PTM-Online-ID wird von dieser Meldeliste nicht unterstützt");
+        throw new MeldelisteSchreibException(I18n.get("meldeliste.ziel.fehler.online_id_nicht_unterstuetzt"));
     }
 
     /** Setzt eine zuvor gesicherte lokale UUID wieder auf die zugehörige Meldelistenzeile. */
     default void setzeLokaleUuid(int zeile1Basiert, String uuid) throws MeldelisteSchreibException {
-        throw new MeldelisteSchreibException("Lokale PTM-Online-ID wird von dieser Meldeliste nicht unterstützt");
+        throw new MeldelisteSchreibException(I18n.get("meldeliste.ziel.fehler.online_id_nicht_unterstuetzt"));
     }
 
     /**
@@ -121,7 +122,7 @@ public interface MeldelisteZiel extends AbgleichQuelle {
      * @return UUID je 1-basierter Sheet-Zeile, nur für Zeilen mit UUID
      */
     default Map<Integer, String> leseLokaleUuids(Collection<Integer> zeilen1Basiert) throws MeldelisteSchreibException {
-        throw new MeldelisteSchreibException("Lokale PTM-Online-ID wird von dieser Meldeliste nicht unterstützt");
+        throw new MeldelisteSchreibException(I18n.get("meldeliste.ziel.fehler.online_id_nicht_unterstuetzt"));
     }
 
     /**
@@ -140,7 +141,7 @@ public interface MeldelisteZiel extends AbgleichQuelle {
      */
     default Set<String> setzeOnlineIds(Map<String, Optional<String>> onlineIdProUuid)
             throws MeldelisteSchreibException {
-        throw new MeldelisteSchreibException("PTM-Online-ID wird von dieser Meldeliste nicht unterstützt");
+        throw new MeldelisteSchreibException(I18n.get("meldeliste.ziel.fehler.online_id_nicht_unterstuetzt"));
     }
 
     /** Wie {@link #setzeLokaleUuid} für viele Zeilen auf einmal (Schlüssel: 1-basierte Sheet-Zeile). */
@@ -155,12 +156,12 @@ public interface MeldelisteZiel extends AbgleichQuelle {
      * nicht eingecheckt). Die Zeile bleibt leer zurück; „Meldeliste aktualisieren“ schließt die Lücke.
      */
     default void entferneMeldung(int zeile1Basiert) throws MeldelisteSchreibException {
-        throw new MeldelisteSchreibException("Entfernen wird von dieser Meldeliste nicht unterstützt");
+        throw new MeldelisteSchreibException(I18n.get("meldeliste.ziel.fehler.entfernen_nicht_unterstuetzt"));
     }
 
     /** Markiert eine Meldung als abgemeldet, ohne die Spieler- oder Teamdaten zu löschen. */
     default void markiereAlsAbgemeldet(int zeile1Basiert) throws MeldelisteSchreibException {
-        throw new MeldelisteSchreibException("Abmelden wird von dieser Meldeliste nicht unterstützt");
+        throw new MeldelisteSchreibException(I18n.get("meldeliste.ziel.fehler.abmelden_nicht_unterstuetzt"));
     }
 
     /**
@@ -184,7 +185,7 @@ public interface MeldelisteZiel extends AbgleichQuelle {
      * geleert (inaktiv, noch nicht eingecheckt). Andere Teilnahme-Werte bleiben unverändert.
      */
     default void hebeAbmeldungAuf(int zeile1Basiert) throws MeldelisteSchreibException {
-        throw new MeldelisteSchreibException("Abmelden wird von dieser Meldeliste nicht unterstützt");
+        throw new MeldelisteSchreibException(I18n.get("meldeliste.ziel.fehler.abmelden_nicht_unterstuetzt"));
     }
 
     /**
@@ -192,7 +193,7 @@ public interface MeldelisteZiel extends AbgleichQuelle {
      * stattfand (E-16). Slots über die Liste hinaus werden geleert; Verein und Teilnahme bleiben unverändert.
      */
     default void ersetzeSpielerNamen(int zeile1Basiert, List<SpielerMitVerein> spieler) throws MeldelisteSchreibException {
-        throw new MeldelisteSchreibException("Namen ersetzen wird von dieser Meldeliste nicht unterstützt");
+        throw new MeldelisteSchreibException(I18n.get("meldeliste.ziel.fehler.namen_ersetzen_nicht_unterstuetzt"));
     }
 
     /**
@@ -201,12 +202,12 @@ public interface MeldelisteZiel extends AbgleichQuelle {
      * Ein Wert {@code <= 0} leert die Spalte.
      */
     default void stelleAktivWertWiederHer(int zeile1Basiert, int aktivWert) throws MeldelisteSchreibException {
-        throw new MeldelisteSchreibException("Teilnahme wird von dieser Meldeliste nicht unterstützt");
+        throw new MeldelisteSchreibException(I18n.get("meldeliste.ziel.fehler.teilnahme_nicht_unterstuetzt"));
     }
 
     /** Formel, die aus der lokalen UUID stets die aktuell angezeigte Team-/Spielernummer ermittelt. */
     default String formelTeamNrAusLokalerUuid(String uuid) throws MeldelisteSchreibException {
-        throw new MeldelisteSchreibException("Lokale PTM-Online-ID wird von dieser Meldeliste nicht unterstützt");
+        throw new MeldelisteSchreibException(I18n.get("meldeliste.ziel.fehler.online_id_nicht_unterstuetzt"));
     }
 
     /** Anfangswert der Aktiv-Spalte für eine neu geschriebene Meldung. */

@@ -275,13 +275,13 @@ public class PtmOnlineKonfliktSheet extends SheetRunner implements ISheet {
 		List<String> alleSchluessel = new ArrayList<>(leseFaelle().keySet());
 		int index = alleSchluessel.indexOf(schluessel);
 		if (index < 0) {
-			throw new GenerateException("Kein Fall " + schluessel);
+			throw new GenerateException(I18n.get("ptmonline.fehler.konflikt_fall_fehlt", schluessel));
 		}
 		// Direkt in die Zelle wie eine Eingabe der Turnierleitung: die Spalte ist auch im Turnier-Modus editierbar.
 		try {
 			getXSpreadSheet().getCellByPosition(SPALTE_ENTSCHEIDUNG, ERSTE_DATEN_ZEILE + index).setFormula(entscheidung);
 		} catch (com.sun.star.lang.IndexOutOfBoundsException e) {
-			throw new GenerateException("Entscheidung konnte nicht eingetragen werden: " + e.getMessage());
+			throw new GenerateException(I18n.get("ptmonline.fehler.entscheidung_eintragen", e.getMessage()));
 		}
 	}
 }

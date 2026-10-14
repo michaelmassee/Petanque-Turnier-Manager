@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.net.http.HttpClient;
 import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
@@ -132,6 +133,23 @@ public class TournamentSyncClientTest {
 	}
 
 	@Test
+	public void fetchAbgleichLiestDenCursorDesServers() throws Exception {
+		TournamentSyncClient client = clientMitAntwort(
+				"{\"registrations\":[],\"cursor\":\"2026-10-14T08:15:30.123Z\"}");
+
+		AnmeldungsAbruf abruf = client.fetchAbgleich("t1", Instant.EPOCH);
+
+		assertThat(abruf.cursor()).contains(Instant.parse("2026-10-14T08:15:30.123Z"));
+	}
+
+	@Test
+	public void fetchAbgleichOhneOderMitUnlesbaremCursorLiefertKeinen() throws Exception {
+		assertThat(clientMitAntwort("{\"registrations\":[]}").fetchAbgleich("t1", Instant.EPOCH).cursor()).isEmpty();
+		assertThat(clientMitAntwort("{\"registrations\":[],\"cursor\":\"gestern\"}").fetchAbgleich("t1",
+				Instant.EPOCH).cursor()).isEmpty();
+	}
+
+	@Test
 	public void fetchSyncStandLiestNurDenTurnierzustand() throws Exception {
 		HttpClient httpClient = httpClientMitAntwort("{\"registrations\":[],\"tournament\":{\"status\":\"running\","
 				+ "\"registrationClosed\":true,\"roundsOnline\":4,\"writeCounter\":7}}");
@@ -142,7 +160,9 @@ public class TournamentSyncClientTest {
 		assertThat(stand.istRunning()).isTrue();
 		assertThat(stand.roundsOnline()).isEqualTo(4);
 		assertThat(stand.writeCounter()).isEqualTo(7);
-		assertThat(gesendeteAnfrage(httpClient).uri().toString()).contains("/api/sync/tournaments/t1/registrations?since=");
+		assertThat(gesendeteAnfrage(httpClient).uri().toString())
+				.as("fester Zeitpunkt nach allen Anmeldungen, unabhängig von der lokalen Uhr")
+				.endsWith("/api/sync/tournaments/t1/registrations?since=9999-12-31T00%3A00%3A00Z");
 	}
 
 	@Test

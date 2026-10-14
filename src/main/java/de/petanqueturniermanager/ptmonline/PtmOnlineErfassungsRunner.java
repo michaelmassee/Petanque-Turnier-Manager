@@ -55,7 +55,9 @@ final class PtmOnlineErfassungsRunner extends SheetRunner {
     private final PtmOnlineCheckin checkin;
     private final @Nullable OnlineStandAbruf abruf;
     private volatile @Nullable Erfassung erfassung;
-    private boolean schutzScopeGeoeffnet;
+    /** Geschrieben in doRun(), gelesen im finally von SheetRunner.run() – derselbe Thread; volatile
+     * macht die Sichtbarkeit unabhängig von dieser Annahme. */
+    private volatile boolean schutzScopeGeoeffnet;
 
     /** @param abruf letzter Abruf des Online-Zustands, {@code null} ohne */
     PtmOnlineErfassungsRunner(WorkingSpreadsheet ws, TurnierSystem turnierSystem, PtmOnlineCheckin checkin,
