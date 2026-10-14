@@ -5,8 +5,8 @@
 package de.petanqueturniermanager.exception;
 
 /**
- * Das Dokument stammt aus einer Plugin-Version, in der die Teamnummer selbst die Identität war (keine UUID in der
- * Nr-Zelle). Solche Dokumente werden nicht umgestellt; die Verarbeitung bricht ab.
+ * Das Dokument stammt aus einer Plugin-Version, von der aus keine Migration möglich ist (siehe
+ * {@code DokumentKompatibilitaet}). Es wird nicht mehr aktualisiert; die Verarbeitung bricht ab.
  */
 @SuppressWarnings("serial")
 public class AltesDokumentException extends GenerateException {

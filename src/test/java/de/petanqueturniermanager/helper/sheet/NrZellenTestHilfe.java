@@ -14,7 +14,8 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 
 /**
  * Schreibt Meldelisten-Nummern in Tests so, wie PTM sie vergibt: als Nr-Zelle mit UUID. Reine Zahlen in der
- * Nr-Spalte gelten als altes Dokument, jeder Lauf bricht dann ab ({@code AltesDokumentErkennung}).
+ * Nr-Spalte eines Dokuments ohne gespeicherte Plugin-Version gelten als altes Dokument, jeder Lauf bricht dann ab
+ * ({@code DokumentKompatibilitaet}).
  */
 public final class NrZellenTestHilfe {
 

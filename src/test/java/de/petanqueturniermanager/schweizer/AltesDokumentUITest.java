@@ -17,6 +17,7 @@ import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.TeamUuidFormel;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.comp.newrelease.ExtensionsHelper;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.RangePosition;
@@ -27,12 +28,14 @@ import de.petanqueturniermanager.schweizer.spielrunde.SchweizerSpielrundeSheetNa
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerTurnierTestDaten;
 
 /**
- * Ein Dokument aus der Zeit, als die Teamnummer die Identität war (reine Zahlen in der Nr-Spalte, keine UUID), wird
- * nicht umgestellt: Jeder Lauf bricht ab, bevor er etwas ändert.
+ * Ein Dokument einer Plugin-Version vor der Team-UUID (5.40.00) wird nicht umgestellt: Jeder Lauf bricht ab, bevor
+ * er etwas ändert, auch die gespeicherte Version bleibt. Entscheidend ist die Version, nicht der Inhalt – eine in ein
+ * aktuelles Dokument eingefügte, nummerierte Liste ohne UUID wird normal übernommen.
  */
 public class AltesDokumentUITest extends BaseCalcUITest {
 
 	private static final int ANZ_RUNDEN = 1;
+	private static final String ALTE_VERSION = "5.39.12";
 	/** Nr-Spalte der Meldeliste (A) bis zur letzten möglichen Zeile. */
 	private static final RangePosition NR_SPALTE = RangePosition.from(0, 0, 0, 998);
 
@@ -49,26 +52,50 @@ public class AltesDokumentUITest extends BaseCalcUITest {
 	}
 
 	@Test
-	public void laufBrichtAbUndStelltNichtUm() throws GenerateException, InterruptedException {
+	public void altesDokumentBrichtAbUndStelltNichtUm() throws GenerateException, InterruptedException {
+		XSpreadsheet meldeliste = turnierMitNummernOhneUuid();
+		docPropHelper.setStringProperty(BasePropertiesSpalte.KONFIG_PROP_ERSTELLT_MIT_VERSION, ALTE_VERSION);
+
+		SchweizerSpielrundeSheetNaechste runde = naechsteRunde();
+
+		assertThat(runde.isLetzterLaufFehlgeschlagen()).as("Lauf abgebrochen").isTrue();
+		assertThat(sheetHlp.findByName(SheetNamen.spielrunde(ANZ_RUNDEN + 1))).as("keine neue Runde").isNull();
+		assertThat(ohneUuid(meldeliste)).as("Meldeliste nicht still umgestellt").isTrue();
+		assertThat(docPropHelper.getStringProperty(BasePropertiesSpalte.KONFIG_PROP_ERSTELLT_MIT_VERSION, ""))
+				.as("gespeicherte Version nicht angehoben").isEqualTo(ALTE_VERSION);
+	}
+
+	@Test
+	public void eingefuegteNummernInAktuellemDokumentWerdenUebernommen() throws GenerateException, InterruptedException {
+		XSpreadsheet meldeliste = turnierMitNummernOhneUuid();
+		docPropHelper.setStringProperty(BasePropertiesSpalte.KONFIG_PROP_ERSTELLT_MIT_VERSION,
+				ExtensionsHelper.from(wkingSpreadsheet.getxContext()).getVersionNummer());
+
+		SchweizerSpielrundeSheetNaechste runde = naechsteRunde();
+
+		assertThat(runde.isLetzterLaufFehlgeschlagen()).as("Lauf erfolgreich").isFalse();
+		assertThat(ohneUuid(meldeliste)).as("Nr-Zellen tragen jetzt UUIDs").isFalse();
+	}
+
+	/** Schweizer Turnier mit einer Runde, die Nr-Zellen danach als reine Werte (wie eingefügt). */
+	private XSpreadsheet turnierMitNummernOhneUuid() throws GenerateException {
 		new SchweizerTurnierTestDaten(wkingSpreadsheet).generate(ANZ_RUNDEN, false);
 		docPropHelper.setIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM,
 				TurnierSystem.SCHWEIZER.getId());
 		XSpreadsheet meldeliste = sheetHlp.findByName(SheetNamen.meldeliste());
-		// Altformat herstellen: Nr-Zellen als reine Werte statt TNRUUID-Formeln.
 		RangeHelper nrSpalte = RangeHelper.from(meldeliste, wkingSpreadsheet.getWorkingSpreadsheetDocument(),
 				NR_SPALTE);
 		RangeData werte = nrSpalte.getDataFromRange();
 		nrSpalte.setDataInRange(werte);
-		assertThat(ohneUuid(meldeliste)).as("Altformat hergestellt").isTrue();
+		assertThat(ohneUuid(meldeliste)).as("Nr-Zellen ohne UUID hergestellt").isTrue();
+		return meldeliste;
+	}
 
+	private SchweizerSpielrundeSheetNaechste naechsteRunde() throws InterruptedException {
 		SchweizerSpielrundeSheetNaechste runde = new SchweizerSpielrundeSheetNaechste(wkingSpreadsheet);
 		runde.start();
 		runde.join();
-
-		assertThat(runde.isLetzterLaufFehlgeschlagen()).as("Lauf abgebrochen").isTrue();
-		assertThat(sheetHlp.findByName(SheetNamen.spielrunde(ANZ_RUNDEN + 1))).as("keine neue Runde")
-				.isNull();
-		assertThat(ohneUuid(meldeliste)).as("Meldeliste nicht still umgestellt").isTrue();
+		return runde;
 	}
 
 	private boolean ohneUuid(XSpreadsheet meldeliste) {

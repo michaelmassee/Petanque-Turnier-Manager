@@ -23,6 +23,7 @@ import com.sun.star.text.XTextDocument;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
+import de.petanqueturniermanager.comp.kompatibilitaet.DokumentKompatibilitaet;
 import de.petanqueturniermanager.comp.newrelease.ExtensionsHelper;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
@@ -186,17 +187,13 @@ public class DocumentHelper {
 	}
 
 	/**
-	 * Speichere Plugin Version im Turnier-Dokument. Nur wenn Turnier-Dokument
-	 * 
-	 * @param workingSpreadsheet
-	 * @throws GenerateException
+	 * Speichert die Plugin-Version im Turnier-Dokument. Nicht bei einem Dokument, das nicht mehr aktualisiert wird,
+	 * und nie über eine neuere Version hinweg ({@link DokumentKompatibilitaet#darfVersionSchreiben}).
 	 */
-
 	public static void setDocErstelltMitVersion(WorkingSpreadsheet workingSpreadsheet) throws GenerateException {
 		DocumentPropertiesHelper docPropHelper = new DocumentPropertiesHelper(workingSpreadsheet);
 		TurnierSystem spielsystem = docPropHelper.getTurnierSystemAusDocument();
-		// haben wir ein Turnier Dokument ?
-		if (spielsystem != TurnierSystem.KEIN) {
+		if (spielsystem != TurnierSystem.KEIN && DokumentKompatibilitaet.darfVersionSchreiben(workingSpreadsheet)) {
 			String pluginVersionNummer = ExtensionsHelper.from(workingSpreadsheet.getxContext())
 					.versionNummerOptional().orElse(I18n.get("version.unbekannt"));
 			docPropHelper.setStringProperty(BasePropertiesSpalte.KONFIG_PROP_ERSTELLT_MIT_VERSION, pluginVersionNummer);

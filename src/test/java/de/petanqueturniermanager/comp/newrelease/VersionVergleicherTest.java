@@ -107,4 +107,32 @@ class VersionVergleicherTest {
     void stabileVersionIstKeinPreRelease(String version) {
         assertThat(VersionVergleicher.istPreRelease(version)).isFalse();
     }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "5.40.00", "v5.40.00-dev", " 5.39.12 ", "5.40.00-rc1" })
+    void alsVersionErkenntVersionsnummern(String version) {
+        assertThat(VersionVergleicher.alsVersion(version)).isPresent();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "unbekannt", "", "   " })
+    void alsVersionOhneZahlIstLeer(String version) {
+        assertThat(VersionVergleicher.alsVersion(version)).isEmpty();
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            // version     , referenz , erwartetAelter
+            "5.39.99       , 5.40.00  , true",
+            "4.99.00       , 5.40.00  , true",
+            "5.40.00       , 5.40.00  , false",
+            "5.40.00-dev   , 5.40.00  , false",
+            "5.40.00-rc1   , 5.40.00  , false",
+            "5.40.01       , 5.40.00  , false",
+            "5.41.00       , 5.40.00  , false",
+            "unbekannt     , 5.40.00  , false"
+    })
+    void istAelterAlsVergleichtDieNumerischenKerne(String version, String referenz, boolean erwartet) {
+        assertThat(VersionVergleicher.istAelterAls(version, referenz)).isEqualTo(erwartet);
+    }
 }

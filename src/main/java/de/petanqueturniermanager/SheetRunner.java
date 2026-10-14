@@ -21,11 +21,11 @@ import com.sun.star.uno.XComponentContext;
 import com.sun.star.util.XModifiable;
 
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
-import de.petanqueturniermanager.basesheet.meldeliste.AltesDokumentErkennung;
 import de.petanqueturniermanager.comp.DokumentKontext;
 import de.petanqueturniermanager.comp.GlobalProperties;
 import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.comp.kompatibilitaet.DokumentKompatibilitaet;
 import de.petanqueturniermanager.webserver.WebServerManager;
 import de.petanqueturniermanager.exception.AltesDokumentException;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -238,9 +238,9 @@ public abstract class SheetRunner extends Thread {
 					// werden, wenn gerade ein anderes Dokument den UI-Fokus hält (z.B. während des Anlegens
 					// eines neuen Turniers).
 					DokumentKontext.mitKontextWerfend(workingSpreadsheet.getWorkingSpreadsheetDocument(), () -> {
-						// Alte Dokumente (Teamnummer = Identität) werden nicht umgestellt: vor jeder Änderung abbrechen.
+						// Vor jeder Änderung: nicht mehr aktualisierbare Dokumente brechen ab, migrierbare werden umgestellt.
 						if (turnierSystem != TurnierSystem.KEIN && isDocumentAlive()) {
-							AltesDokumentErkennung.pruefe(workingSpreadsheet);
+							DokumentKompatibilitaet.stelleAktualisierbarSicher(workingSpreadsheet);
 						}
 						if (turnierSystem != TurnierSystem.KEIN && isUpdateKonfigurationSheetBeforeDoRun()
 								&& isDocumentAlive()) {

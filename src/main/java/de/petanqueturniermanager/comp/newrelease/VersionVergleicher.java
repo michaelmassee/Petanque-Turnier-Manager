@@ -4,6 +4,7 @@
 package de.petanqueturniermanager.comp.newrelease;
 
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Set;
 
 import org.jspecify.annotations.Nullable;
@@ -71,6 +72,33 @@ public final class VersionVergleicher {
             return false;
         }
         return new Version(normNeu).isHigherThan(normInst);
+    }
+
+    /**
+     * Die Angabe als {@link Version} (Präfix {@code v} entfernt).
+     *
+     * @return leer, wenn die Angabe keine Versionsnummer ist (z.&nbsp;B. „unbekannt“)
+     */
+    public static Optional<Version> alsVersion(@Nullable String version) {
+        String normiert = normalisieren(version);
+        if (normiert == null) {
+            return Optional.empty();
+        }
+        Version geparst = new Version(normiert);
+        return geparst.getSubversionNumbers().isEmpty() ? Optional.empty() : Optional.of(geparst);
+    }
+
+    /**
+     * Ob {@code version} kleiner als {@code referenz} ist, ohne Suffix ({@link Version#isAtLeast(Version, boolean)}):
+     * Eine Vorabversion zählt wie ihr Release.
+     *
+     * @return {@code false} auch, wenn eine der beiden keine Versionsnummer ist
+     */
+    public static boolean istAelterAls(@Nullable String version, @Nullable String referenz) {
+        Optional<Version> geparst = alsVersion(version);
+        Optional<Version> referenzVersion = alsVersion(referenz);
+        return geparst.isPresent() && referenzVersion.isPresent()
+                && !geparst.get().isAtLeast(referenzVersion.get(), true);
     }
 
     /**

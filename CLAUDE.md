@@ -273,6 +273,32 @@ Details und Muster: `turniersysteme/RANGLISTE_LISTENER.md`. Generische Infrastru
 
 **Automatisiertes Gate:** `DokumentFokusKonventionTest` (Quelltext-Scan, `src/test/java/de/petanqueturniermanager/arch/`) vergleicht alle Aufrufstellen der o.g. fokus-basierten Methoden gegen eine hart codierte Allowlist. Eine neue Datei oder eine höhere Trefferzahl in einer bestehenden Datei lässt den Test fehlschlagen — jeder neue fokus-basierte Zugriff muss dadurch bewusst geprüft und die Allowlist im selben Commit begründet erweitert werden.
 
+## Dokument-Kompatibilität & Migration (Dokument- vs. Plugin-Version)
+
+Zentrale Stelle: `comp/kompatibilitaet/DokumentKompatibilitaet`. Sie vergleicht die im Dokument gespeicherte Version (`BasePropertiesSpalte.KONFIG_PROP_ERSTELLT_MIT_VERSION`) mit der installierten Plugin-Version und mit der Liste der Migrationsschritte (`SCHRITTE`, je ein `DokumentMigration` pro Versionssprung).
+
+**Ergebnis (`Status`):**
+- `KOMPATIBEL` – nichts zu tun.
+- `MIGRATION_NOETIG` – alle offenen Schritte sind migrierbar: Sie laufen vor dem Lauf nacheinander (aufsteigend nach `abVersion()`), **danach** wird die Plugin-Version ins Dokument geschrieben.
+- `ZU_ALT` – mindestens ein offener Schritt ist nicht migrierbar: Das Dokument wird **nicht** aktualisiert, auch die gespeicherte Version bleibt. Jeder Lauf bricht mit `AltesDokumentException` ab; beim Öffnen erscheint einmal eine Warnung (`DokumentKompatibilitaetsHinweis`), das Dokument öffnet aber normal.
+- `NEUER_ALS_PLUGIN` – Dokument einer neueren Plugin-Version: Warnung beim Öffnen, die gespeicherte Version wird nie heruntergesetzt.
+
+**Einstiegspunkte:**
+- `SheetRunner.run()` ruft `stelleAktualisierbarSicher(ws)` vor jeder Änderung auf (vor `updateKonfigurationSheet()` und vor dem Blattschutz-Scope).
+- `DocumentHelper.setDocErstelltMitVersion()` schreibt nur, wenn `darfVersionSchreiben(ws)` es erlaubt – das schützt auch den Dialog „Version stimmt nicht überein“ (`BaseKonfigurationSheet`).
+
+**Aktuelle Schritte:** `TeamUuidUmstellung` (ab `5.40.00`, **nicht migrierbar**): Seit 5.40.00 identifiziert die UUID in der Nr-Zelle ein Team, vorher die Teamnummer. Ältere Dokumente werden bewusst nicht umgestellt, weil ihre Spielrunden über Nummern auf Teams verweisen.
+
+**Dokumente ohne gespeicherte Version:** Jeder Schritt entscheidet selbst über `istNoetigOhneVersion(ws)` am Inhalt (Team-UUID: nummerierte Meldungen ohne jede UUID). Ohne Merkmal gilt ein Dokument als aktuell – sonst würde ein gerade neu angelegtes Dokument gesperrt. Mit gespeicherter Version entscheidet **nur** die Version, nicht der Inhalt (eine in ein aktuelles Dokument eingefügte nummerierte Liste wird normal übernommen).
+
+**Neuen Migrationsschritt anlegen:**
+1. Klasse in `comp/kompatibilitaet/` mit `implements DokumentMigration`: `abVersion()` = erste Plugin-Version mit dem neuen Format, `istMigrierbar()`, ggf. `istNoetigOhneVersion()`.
+2. Bei migrierbaren Schritten `migriere(ws)` implementieren. Muss **idempotent** sein (die Version wird erst nach allen Schritten angehoben) und läuft noch ohne Blattschutz-Scope → selbst über `BlattschutzManager` absichern; blockweise schreiben (`RangeHelper`).
+3. In `DokumentKompatibilitaet.SCHRITTE` eintragen.
+4. Unit-Test in `DokumentKompatibilitaetTest` (UNO-frei über `bewerte(...)`), bei Bedarf UITest nach dem Muster `AltesDokumentUITest`.
+
+**Versionsvergleich:** ausschließlich über `VersionVergleicher` bzw. `io.github.g00fy2.versioncompare.Version` (`alsVersion`, `istAelterAls` = `isAtLeast(v, ignoreSuffix=true)`, Sortierung über `Version` als `Comparable`). Vorabversionen (`-dev`, `-rc1`) zählen wie ihr Release. Keine eigenen Parser/Comparatoren bauen.
+
 ## Business Logic & Rules
 
 Regeln für jedes Turniersystem sind in `turniersysteme/` dokumentiert:

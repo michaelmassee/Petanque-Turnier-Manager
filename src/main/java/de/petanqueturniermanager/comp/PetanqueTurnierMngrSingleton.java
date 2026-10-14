@@ -14,6 +14,7 @@ import com.sun.star.document.XEventBroadcaster;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.addins.UpdatePropertieFunctionsSheetRecalcOnLoad;
+import de.petanqueturniermanager.comp.kompatibilitaet.DokumentKompatibilitaetsHinweis;
 import de.petanqueturniermanager.helper.sheetsync.EingabeSignatur;
 import de.petanqueturniermanager.helper.sheetsync.SheetAktivierungsDispatcher;
 import de.petanqueturniermanager.helper.sheetsync.SheetSyncListener;
@@ -208,6 +209,7 @@ public class PetanqueTurnierMngrSingleton {
 		t = logTimingAndReset("addGlobalEventListener SidebarPanelDelegator", t);
 		addGlobalEventListener(new UpdatePropertieFunctionsSheetRecalcOnLoad());
 		t = logTimingAndReset("addGlobalEventListener UpdatePropertieFunctionsSheetRecalcOnLoad", t);
+		addGlobalEventListener(new DokumentKompatibilitaetsHinweis(context));
 		sheetAktivierungsDispatcher = new SheetAktivierungsDispatcher();
 		addGlobalEventListener(sheetAktivierungsDispatcher);
 		t = logTimingAndReset("addGlobalEventListener SheetAktivierungsDispatcher", t);
