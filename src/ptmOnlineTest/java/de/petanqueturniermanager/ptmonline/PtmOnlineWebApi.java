@@ -37,7 +37,16 @@ final class PtmOnlineWebApi {
     /** Öffentliches Turnier mit offener Online-Anmeldung, angelegt mit dem API-Schlüssel des Organisators. */
     String turnierAnlegen(String name, String typ, String anmeldeTyp, String formation, LocalDate datum)
             throws IOException, InterruptedException {
-        JsonObject body = new JsonObject();
+        return turnierAnlegen(name, typ, anmeldeTyp, formation, datum, new JsonObject());
+    }
+
+    /**
+     * Wie {@link #turnierAnlegen(String, String, String, String, LocalDate)}, mit zusätzlichen Online-Einstellungen
+     * (z.&nbsp;B. {@code schweizerRankingMode}, {@code playerResultReportingEnabled}).
+     */
+    String turnierAnlegen(String name, String typ, String anmeldeTyp, String formation, LocalDate datum,
+            JsonObject einstellungen) throws IOException, InterruptedException {
+        JsonObject body = einstellungen.deepCopy();
         body.addProperty("name", name);
         body.addProperty("date", datum.toString());
         // Spät am Tag: die Online-Anmeldung schließt automatisch zum Turnierbeginn (E-02), auch bei Turnieren „heute“.
@@ -148,6 +157,64 @@ final class PtmOnlineWebApi {
 
     JsonObject turnier(String turnierId) throws IOException, InterruptedException {
         return senden(mitSession("/api/tournaments/" + turnierId).GET().build(), 200).getAsJsonObject("tournament");
+    }
+
+    /** „Turnier starten“ in der Spielverwaltung; liefert den HTTP-Status. */
+    int turnierStarten(String turnierId) throws IOException, InterruptedException {
+        return status(mitSession("/api/tournaments/" + turnierId + "/start").POST(leer()).build());
+    }
+
+    /** „Runde auslosen“ in der Spielverwaltung; liefert den HTTP-Status. */
+    int rundeAuslosen(String turnierId) throws IOException, InterruptedException {
+        return status(mitSession("/api/tournaments/" + turnierId + "/rounds").POST(leer()).build());
+    }
+
+    /** Ergebniseingabe der Turnierleitung für eine Partie; liefert den HTTP-Status. */
+    int ergebnisSetzen(String turnierId, String partieId, int punkteA, int punkteB)
+            throws IOException, InterruptedException {
+        JsonObject body = new JsonObject();
+        body.addProperty("scoreA", punkteA);
+        body.addProperty("scoreB", punkteB);
+        return status(mitSession("/api/tournaments/" + turnierId + "/matches/" + partieId + "/result")
+                .PUT(HttpRequest.BodyPublishers.ofString(body.toString())).build());
+    }
+
+    /** Bearbeiten des Turniers in der Verwaltung (Eckdaten, Spieleinstellungen); liefert den HTTP-Status. */
+    int turnierBearbeiten(String turnierId, JsonObject body) throws IOException, InterruptedException {
+        return status(mitSession("/api/tournaments/" + turnierId)
+                .PUT(HttpRequest.BodyPublishers.ofString(body.toString())).build());
+    }
+
+    /** „Start zurücksetzen“ der Turnierleitung (E-23). */
+    void startZuruecksetzen(String turnierId) throws IOException, InterruptedException {
+        senden(mitSession("/api/tournaments/" + turnierId + "/reset-running").POST(leer()).build(), 200);
+    }
+
+    /** Persönliche Live-Ansicht einer Anmeldung, wie sie der angemeldete Spieler sieht. */
+    JsonObject live(String anmeldungId, int spielerKonto) throws IOException, InterruptedException {
+        return senden(alsSpieler("/api/live/registrations/" + anmeldungId, spielerKonto).GET().build(), 200);
+    }
+
+    /** Ergebnismeldung des Spielers über die Live-Ansicht; liefert den HTTP-Status. */
+    int ergebnisMelden(String anmeldungId, int spielerKonto, int eigene, int gegner)
+            throws IOException, InterruptedException {
+        JsonObject body = new JsonObject();
+        body.addProperty("ownScore", eigene);
+        body.addProperty("opponentScore", gegner);
+        return status(alsSpieler("/api/live/registrations/" + anmeldungId + "/result", spielerKonto)
+                .POST(HttpRequest.BodyPublishers.ofString(body.toString())).build());
+    }
+
+    private HttpRequest.Builder alsSpieler(String pfad, int spielerKonto) {
+        return anfrage(pfad).header("Cookie", "ptm_session=" + LokalerPtmOnlineServer.spielerSession(spielerKonto));
+    }
+
+    private static HttpRequest.BodyPublisher leer() {
+        return HttpRequest.BodyPublishers.ofString("{}");
+    }
+
+    private int status(HttpRequest anfrage) throws IOException, InterruptedException {
+        return client.send(anfrage, HttpResponse.BodyHandlers.discarding()).statusCode();
     }
 
     private HttpRequest mitApiKey(String methode, String pfad, JsonObject body) {

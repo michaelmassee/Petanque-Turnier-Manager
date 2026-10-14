@@ -32,12 +32,14 @@ public final class LiveStandQuellen {
     private static final RanglistenBlattLeser.Spalten SCHWEIZER_RANGLISTE = new RanglistenBlattLeser.Spalten(
             SchweizerRanglisteSheet.TEAM_NR_SPALTE, SchweizerRanglisteSheet.PLATZ_SPALTE,
             SchweizerRanglisteSheet.SIEGE_SPALTE, SchweizerRanglisteSheet.PUNKTE_PLUS_SPALTE,
-            SchweizerRanglisteSheet.PUNKTE_MINUS_SPALTE);
+            SchweizerRanglisteSheet.PUNKTE_MINUS_SPALTE)
+            .mitBuchholz(SchweizerRanglisteSheet.BHZ_SPALTE, SchweizerRanglisteSheet.FBHZ_SPALTE);
 
     private static final RanglistenBlattLeser.Spalten FORMULEX_RANGLISTE = new RanglistenBlattLeser.Spalten(
             FormuleXRanglisteSheet.TEAM_NR_SPALTE, FormuleXRanglisteSheet.PLATZ_SPALTE,
             FormuleXRanglisteSheet.SIEGE_SPALTE, FormuleXRanglisteSheet.PUNKTE_PLUS_SPALTE,
-            FormuleXRanglisteSheet.PUNKTE_MINUS_SPALTE);
+            FormuleXRanglisteSheet.PUNKTE_MINUS_SPALTE)
+            .mitFormuleXWertung(FormuleXRanglisteSheet.WERTUNG_SPALTE);
 
     private LiveStandQuellen() {}
 

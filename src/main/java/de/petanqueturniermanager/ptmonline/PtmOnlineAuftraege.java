@@ -41,6 +41,7 @@ import de.petanqueturniermanager.ptmonline.dto.NeueOnlineAnmeldung;
 import de.petanqueturniermanager.ptmonline.dto.PersonDto;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationDto;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationResultDto;
+import de.petanqueturniermanager.ptmonline.dto.SpieleinstellungenDto;
 
 /**
  * Schreibaufträge einer Dokumentbindung an PTM-Online (T-09, T-19, T-23): erzeugen, Ergebnisse anwenden, synchron
@@ -209,6 +210,15 @@ public final class PtmOnlineAuftraege {
         String pfad = TournamentSyncClient.ranglistePfad(tournamentId);
         bestand.entferneUeberholte(auftrag -> auftrag.pfad().equals(pfad));
         bestand.erzeuge(AuftragsArt.RANGLISTE, "PUT", pfad, TournamentSyncClient.ranglisteBody(eintraege), "{}");
+    }
+
+    /** Spieleinstellungen des Dokuments; ein ungesendeter älterer Stand entfällt. */
+    static void spieleinstellungen(AuftragsBestand bestand, String tournamentId,
+            SpieleinstellungenDto einstellungen) {
+        String pfad = TournamentSyncClient.spieleinstellungenPfad(tournamentId);
+        bestand.entferneUeberholte(auftrag -> auftrag.pfad().equals(pfad));
+        bestand.erzeuge(AuftragsArt.SPIELEINSTELLUNGEN, "PUT", pfad,
+                TournamentSyncClient.spieleinstellungenBody(einstellungen), "{}");
     }
 
     /**
@@ -386,7 +396,7 @@ public final class PtmOnlineAuftraege {
                                     + "Revisionen bleiben für den nächsten Abgleich", auftrag.zaehler());
                         }
                     }
-                    case START, TRENNEN, RUNDE, RUNDE_LOESCHEN, RANGLISTE, MELEE_TEAMS, ANMELDUNG_STORNIEREN, ENTSCHEIDUNGEN,
+                    case START, TRENNEN, RUNDE, RUNDE_LOESCHEN, RANGLISTE, SPIELEINSTELLUNGEN, MELEE_TEAMS, ANMELDUNG_STORNIEREN, ENTSCHEIDUNGEN,
                             ANMELDUNG_SCHLIESSEN -> {
                         // Nichts im Dokument festzuhalten.
                     }

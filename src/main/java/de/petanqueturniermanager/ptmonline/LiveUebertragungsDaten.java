@@ -18,6 +18,7 @@ import de.petanqueturniermanager.ptmonline.dto.LiveMatchDto;
 import de.petanqueturniermanager.ptmonline.dto.LiveRankingEntryDto;
 import de.petanqueturniermanager.ptmonline.live.LivePartie;
 import de.petanqueturniermanager.ptmonline.live.LiveRanglistenEintrag;
+import de.petanqueturniermanager.ptmonline.live.LiveRanglistenEintrag.Wertungskriterien;
 import de.petanqueturniermanager.ptmonline.live.LiveRunde;
 
 /**
@@ -71,10 +72,17 @@ final class LiveUebertragungsDaten {
         List<LiveRankingEntryDto> ergebnis = new ArrayList<>();
         for (LiveRanglistenEintrag eintrag : eintraege) {
             onlineIdsVon(eintrag.nummern(), onlineIds).filter(ids -> !ids.isEmpty())
-                    .ifPresent(ids -> ergebnis.add(new LiveRankingEntryDto(eintrag.platz(), ids, eintrag.siege(),
-                            nichtNegativ(eintrag.punktePlus()), nichtNegativ(eintrag.punkteMinus()))));
+                    .ifPresent(ids -> ergebnis.add(eintragDto(eintrag, ids)));
         }
         return ergebnis;
+    }
+
+    private static LiveRankingEntryDto eintragDto(LiveRanglistenEintrag eintrag, List<String> ids) {
+        Wertungskriterien wertung = eintrag.wertung();
+        return new LiveRankingEntryDto(eintrag.platz(), ids, eintrag.siege(), nichtNegativ(eintrag.punktePlus()),
+                nichtNegativ(eintrag.punkteMinus()), nichtNegativ(wertung.niederlagen()), wertung.spielDifferenz(),
+                nichtNegativ(wertung.buchholz()), nichtNegativ(wertung.feinBuchholz()),
+                nichtNegativ(wertung.formuleX()));
     }
 
     /** @return leer, wenn mindestens eine Nummer nicht online zugeordnet ist */

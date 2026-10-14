@@ -35,7 +35,8 @@ final class JgjLiveQuelle implements LiveStandQuelle {
             JGJRanglisteSheet.ERSTE_DATEN_ZEILE,
             new RanglistenBlattLeser.Spalten(JGJRanglisteSheet.TEAM_NR_SPALTE, JGJRanglisteSheet.PLATZ_SPALTE,
                     JGJRanglisteSheet.SPIELE_PLUS_SPALTE, JGJRanglisteSheet.SPIELPUNKTE_PLUS_SPALTE,
-                    JGJRanglisteSheet.SPIELPUNKTE_MINUS_SPALTE));
+                    JGJRanglisteSheet.SPIELPUNKTE_MINUS_SPALTE)
+                    .mitNiederlagen(JGJRanglisteSheet.SPIELE_MINUS_SPALTE, JGJRanglisteSheet.SPIELE_DIFF_SPALTE));
 
     private final WorkingSpreadsheet ws;
 

@@ -38,6 +38,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonIOException;
 import com.sun.star.frame.XComponentLoader;
+import com.sun.star.lang.DisposedException;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
 
@@ -236,7 +237,7 @@ public abstract class BaseCalcUITest {
 		// Ebenso den Turnier-Modus: nach einem LO-Absturz bliebe der Zustand eines toten Frames stehen.
 		TurnierModus.get().zuruecksetzenFuerTest();
 		assertThat(loader).as("LibreOffice loader nicht verfügbar – UITest fehlgeschlagen").isNotNull();
-		doc = OfficeDocumentHelper.from(loader).createCalc();
+		doc = neuesCalcDokument();
 		assertThat(doc).as("LibreOffice Calc-Dokument konnte nicht erstellt werden – UITest fehlgeschlagen").isNotNull();
 
 		if (!Boolean.parseBoolean(System.getProperty("uitest.headless", "false"))) {
@@ -254,8 +255,27 @@ public abstract class BaseCalcUITest {
 		ProcessBox.forceinit(starter.getxComponentContext());
 	}
 
+	/**
+	 * Legt das Calc-Dokument des Tests an. Ist LibreOffice im vorigen Test abgestürzt (Bridge getrennt), wird es einmal
+	 * neu gestartet: Ein nativer Absturz kostet so nur den betroffenen Test statt aller folgenden der Klasse.
+	 */
+	private static XSpreadsheetDocument neuesCalcDokument() {
+		try {
+			return OfficeDocumentHelper.from(loader).createCalc();
+		} catch (DisposedException e) {
+			logger.warn("Office-Bridge getrennt (LibreOffice abgestürzt?) – LibreOffice wird neu gestartet", e);
+			officeBeenden();
+			BaseCalcUITest.loader = starter.loadOffice().getComponentLoader();
+			return OfficeDocumentHelper.from(loader).createCalc();
+		}
+	}
+
 	@AfterAll
 	public static void shutDown() {
+		officeBeenden();
+	}
+
+	private static void officeBeenden() {
 		// Hintergrundarbeit braucht ihren UNO-Kontext bis zum Ende, auch während eines Abbruchs.
 		de.petanqueturniermanager.ptmonline.PtmOnlineLiveBeobachter.zuruecksetzenFuerTest();
 		BaseCalcUITest.starter.closeOffice();

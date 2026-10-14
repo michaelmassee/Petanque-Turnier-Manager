@@ -42,13 +42,16 @@ final class TripTeteLiveQuelle implements LiveStandQuelle {
             { TETE_A_SPALTE, TETE_B_SPALTE } };
     private static final int[] BAHNEN = { BAHN_TRI_SPALTE, BAHN_DOU_SPALTE, BAHN_TETE_SPALTE };
 
-    /** Siege = gewonnene Begegnungen, Punkte = Spielpunkte der Einzelpartien. */
+    /**
+     * Siege/Niederlagen = gewonnene/verlorene Begegnungen, Spieldifferenz und Punkte aus den Einzelpartien.
+     */
     private static final RanglistenBlattLeser RANGLISTE = new RanglistenBlattLeser(
             SheetMetadataHelper.SCHLUESSEL_TRIPTETE_RANGLISTE, SheetNamen.LEGACY_RANGLISTE,
             TripTeteRanglisteSheet.ERSTE_DATEN_ZEILE,
             new RanglistenBlattLeser.Spalten(TripTeteRanglisteSheet.TEAM_NR_SPALTE, TripTeteRanglisteSheet.RANG_SPALTE,
                     TripTeteRanglisteSheet.BEG_GEW_SPALTE, TripTeteRanglisteSheet.SP_PUNKTE_PLUS_SPALTE,
-                    TripTeteRanglisteSheet.SP_PUNKTE_MINUS_SPALTE));
+                    TripTeteRanglisteSheet.SP_PUNKTE_MINUS_SPALTE)
+                    .mitNiederlagen(TripTeteRanglisteSheet.BEG_VER_SPALTE, TripTeteRanglisteSheet.PART_DIFF_SPALTE));
 
     private final WorkingSpreadsheet ws;
 

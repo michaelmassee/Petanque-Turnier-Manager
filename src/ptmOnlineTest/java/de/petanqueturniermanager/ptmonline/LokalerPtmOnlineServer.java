@@ -107,6 +107,11 @@ final class LokalerPtmOnlineServer {
         return "e2e-spieler-" + n + "@example.test";
     }
 
+    /** Session des Spielerkontos {@code n} – für Aufrufe der Live-Ansicht als angemeldeter Spieler. */
+    static String spielerSession(int n) {
+        return "e2e-session-spieler-" + n;
+    }
+
     private static LokalerPtmOnlineServer starten() throws IOException, InterruptedException {
         File repo = new File(System.getProperty("ptmonline.repo", "../Petanque-Turnier-Manager-Online"))
                 .getCanonicalFile();
@@ -185,7 +190,10 @@ final class LokalerPtmOnlineServer {
         return new GsonBuilder().setPrettyPrinting().create().toJson(config);
     }
 
-    /** Organisator (verifiziert, mit Session und freigeschaltetem API-Schlüssel) und verifizierte Spielerkonten. */
+    /**
+     * Organisator (verifiziert, mit Session und freigeschaltetem API-Schlüssel) und verifizierte Spielerkonten mit
+     * Session.
+     */
     private static String seedSql(String apiKey, String sessionId) {
         String jetzt = Instant.now().toString();
         String ablauf = Instant.now().plus(2, ChronoUnit.DAYS).toString();
@@ -193,6 +201,8 @@ final class LokalerPtmOnlineServer {
         sql.append(konto(ORGANISATOR_ID, "e2e-leitung@example.test", "E2E", "Leitung", jetzt));
         for (int n = 1; n <= ANZAHL_SPIELERKONTEN; n++) {
             sql.append(konto("e2e-spieler-" + n, spielerEmail(n), "Konto", "Spieler" + n, jetzt));
+            sql.append(String.format("INSERT INTO sessions (id, user_id, expires_at, created_at) VALUES ('%s', '%s', "
+                    + "'%s', '%s');%n", spielerSession(n), "e2e-spieler-" + n, ablauf, jetzt));
         }
         sql.append(String.format("UPDATE users SET tournament_limit = 1000 WHERE id = '%s';%n", ORGANISATOR_ID));
         sql.append(String.format("INSERT INTO sessions (id, user_id, expires_at, created_at) VALUES ('%s', '%s', '%s', '%s');%n",

@@ -127,6 +127,7 @@ final class PtmOnlineErfassungsRunner extends SheetRunner {
         if (!pausiert) {
             startNachholen(bestand, v);
             erfasseCheckin(bestand, v);
+            erfasseSpieleinstellungen(bestand, v);
             brauchtStand = !erfasseLiveStand(bestand, v, passenderAbruf);
         }
         oeffneSchutzScopeBeiAenderung(bestand);
@@ -160,6 +161,14 @@ final class PtmOnlineErfassungsRunner extends SheetRunner {
         checkin.bestaetigen(aenderung.get());
         getLogger().info("PTM-Online: {} geänderte Check-ins als Auftrag erfasst",
                 aenderung.get().auftrag().eintraege().size());
+    }
+
+    /** Das Dokument ist Master: geänderte Spieleinstellungen gehen auch schon in der Anmeldephase nach Online. */
+    private void erfasseSpieleinstellungen(AuftragsBestand bestand, PtmOnlineVerbindung verbindung) {
+        if (PtmOnlineSpieleinstellungen.erfasse(bestand, verbindung.tournamentId(),
+                PtmOnlineSpieleinstellungen.lese(getWorkingSpreadsheet(), getTurnierSystem()))) {
+            getLogger().info("PTM-Online: geänderte Spieleinstellungen als Auftrag erfasst");
+        }
     }
 
     /**

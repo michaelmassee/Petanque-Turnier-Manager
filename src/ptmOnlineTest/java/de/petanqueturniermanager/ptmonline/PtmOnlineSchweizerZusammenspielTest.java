@@ -9,7 +9,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -20,13 +19,7 @@ import org.junit.jupiter.api.Test;
 import com.google.gson.JsonObject;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
-import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
-import de.petanqueturniermanager.helper.position.Position;
-import de.petanqueturniermanager.helper.position.RangePosition;
-import de.petanqueturniermanager.helper.sheet.RangeHelper;
-import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.ptmonline.PtmOnlineWebApi.Person;
-import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrundeSheet;
 
 /**
  * Zusammenspiel PTM ↔ PTM Online an einem Schweizer Triplette-Turnier, gegen den lokal gestarteten Worker: Import,
@@ -279,45 +272,6 @@ class PtmOnlineSchweizerZusammenspielTest extends BasePtmOnlineZusammenspielTest
         warteBis("Online-Anmeldung geschlossen (KP-05)",
                 () -> online.turnier(turnierId).get("registrationClosed").getAsBoolean());
         assertThat(lokaleMeldungen().values()).as("vorher noch übernommen").containsExactly(namen(TEAM_A));
-    }
-
-    /** Vollständige Triplette-Teams, online angemeldet; Online-ID → Team. */
-    private Map<String, Person[]> vollstaendigeTeams(int anzahl) throws Exception {
-        Map<String, Person[]> teams = new LinkedHashMap<>();
-        for (int i = 1; i <= anzahl; i++) {
-            Person[] team = { Person.gast("Voll" + i, "Erster"), Person.gast("Voll" + i, "Zweiter"),
-                    Person.gast("Voll" + i, "Dritter") };
-            teams.put(online.anmelden(turnierId, team), team);
-        }
-        return teams;
-    }
-
-    /** Paarungen der zuletzt ausgelosten Runde: {Blattzeile, Team A, Team B}. */
-    private List<int[]> paareImBlatt() throws Exception {
-        int erste = SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE;
-        List<int[]> paare = new ArrayList<>();
-        int zeile = erste;
-        for (RowData daten : RangeHelper.from(letzteRunde.getXSpreadSheet(),
-                wkingSpreadsheet.getWorkingSpreadsheetDocument(),
-                RangePosition.from(SchweizerAbstractSpielrundeSheet.TEAM_A_SPALTE, erste,
-                        SchweizerAbstractSpielrundeSheet.TEAM_B_SPALTE, erste + 10))
-                .getDataFromRange()) {
-            int teamA = daten.get(0).getIntVal(0);
-            int teamB = daten.get(1).getIntVal(0);
-            if (teamA > 0 && teamB > 0) {
-                paare.add(new int[] { zeile, teamA, teamB });
-            }
-            zeile++;
-        }
-        return paare;
-    }
-
-    private void ergebnisEintragen(int zeile, int punkteA, int punkteB) throws Exception {
-        var blatt = letzteRunde.getXSpreadSheet();
-        sheetHlp.setNumberValueInCell(NumberCellValue.from(blatt,
-                Position.from(SchweizerAbstractSpielrundeSheet.ERG_TEAM_A_SPALTE, zeile)).setValue(punkteA));
-        sheetHlp.setNumberValueInCell(NumberCellValue.from(blatt,
-                Position.from(SchweizerAbstractSpielrundeSheet.ERG_TEAM_B_SPALTE, zeile)).setValue(punkteB));
     }
 
     /** Spiele der ersten Online-Runde (leer, solange sie nicht übertragen ist). */

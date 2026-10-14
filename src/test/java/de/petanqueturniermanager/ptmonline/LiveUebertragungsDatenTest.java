@@ -14,6 +14,7 @@ import de.petanqueturniermanager.ptmonline.dto.LiveMatchDto;
 import de.petanqueturniermanager.ptmonline.dto.LiveRankingEntryDto;
 import de.petanqueturniermanager.ptmonline.live.LivePartie;
 import de.petanqueturniermanager.ptmonline.live.LiveRanglistenEintrag;
+import de.petanqueturniermanager.ptmonline.live.LiveRanglistenEintrag.Wertungskriterien;
 import de.petanqueturniermanager.ptmonline.live.LiveRunde;
 
 class LiveUebertragungsDatenTest {
@@ -111,5 +112,16 @@ class LiveUebertragungsDatenTest {
 
         assertThat(rangliste).containsExactly(new LiveRankingEntryDto(1, List.of("r1"), 3, 39, 20),
                 new LiveRankingEntryDto(2, List.of("r2"), 2, null, 25));
+    }
+
+    @Test
+    void ranglisteUebertraegtWertungskriterienUndBehaeltNegativeSpieldifferenz() {
+        List<LiveRankingEntryDto> rangliste = LiveUebertragungsDaten.rangliste(List.of(LiveRanglistenEintrag.team(1, 1,
+                1, 20, 30, new Wertungskriterien(2, -1, 5, 9, 120)), LiveRanglistenEintrag.team(2, 2, 0, 10, 26,
+                        new Wertungskriterien(-3, null, null, null, null))), ONLINE_IDS);
+
+        assertThat(rangliste).containsExactly(
+                new LiveRankingEntryDto(1, List.of("r1"), 1, 20, 30, 2, -1, 5, 9, 120),
+                new LiveRankingEntryDto(2, List.of("r2"), 0, 10, 26, null, null, null, null, null));
     }
 }

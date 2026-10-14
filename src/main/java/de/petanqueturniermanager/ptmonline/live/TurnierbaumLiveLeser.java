@@ -109,11 +109,12 @@ final class TurnierbaumLiveLeser {
         if (teamA <= 0 || teamB <= 0) {
             return Optional.empty();
         }
+        // Ohne Bahnspalte steht hier die leere Verbinder-Spalte der Vorrunde. Als Text gelesen, damit auch
+        // Bahnbezeichnungen wie „A3“ ankommen (die Bahnspalte erlaubt bewusst Text).
         int bahnSpalte = a.getSpalte() - 2;
-        Integer bahn = bahnSpalte >= 0 && zellen.zahl(bahnSpalte, a.getZeile()) > 0
-                ? zellen.zahl(bahnSpalte, a.getZeile()) : null;
+        String bahn = bahnSpalte >= 0 ? zellen.text(bahnSpalte, a.getZeile()) : null;
         return Optional.of(LivePartie.teams(teamA, teamB, zellen.punkte(a.getSpalte(), a.getZeile()),
-                zellen.punkte(b.getSpalte(), b.getZeile()), bahn == null ? null : String.valueOf(bahn), stufe));
+                zellen.punkte(b.getSpalte(), b.getZeile()), bahn, stufe));
     }
 
     /** @param abstandZumFinale 0 = Finale, 1 = Halbfinale, n = 1/2ⁿ-Finale */

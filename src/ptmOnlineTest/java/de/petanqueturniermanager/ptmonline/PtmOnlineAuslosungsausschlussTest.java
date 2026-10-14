@@ -6,6 +6,7 @@ package de.petanqueturniermanager.ptmonline;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -41,6 +42,7 @@ import de.petanqueturniermanager.onlinesync.TurnierSystemOnlineTypMapping;
 import de.petanqueturniermanager.poule.meldeliste.PouleMeldeListeSheetNew;
 import de.petanqueturniermanager.poule.vorrunde.PouleVorrundeSheet;
 import de.petanqueturniermanager.ptmonline.PtmOnlineWebApi.Person;
+import de.petanqueturniermanager.ptmonline.dto.SpieleinstellungenDto;
 import de.petanqueturniermanager.spielerdb.MeldelisteZielFactory;
 
 /**
@@ -59,8 +61,11 @@ class PtmOnlineAuslosungsausschlussTest extends BasePtmOnlineZusammenspielTest {
     /**
      * Ein Turniersystem: Meldeliste anlegen (Triplette), die erste Auslosung wie über das Menü und die Zahl vollständiger
      * Teams, bei der alle in der ersten übertragenen Runde einen Gegner haben.
+     *
+     * @param mitStufe die übertragenen Partien tragen eine Stufe (Turnierbaum-Runde, Poule, Gruppe)
      */
-    record SystemAufbau(TurnierSystem system, Aktion meldelisteAnlegen, Auslosung auslosung, int anzahlTeams) {
+    record SystemAufbau(TurnierSystem system, Aktion meldelisteAnlegen, Auslosung auslosung, int anzahlTeams,
+            boolean mitStufe) {
         @Override
         public String toString() {
             return system.name();
@@ -82,7 +87,7 @@ class PtmOnlineAuslosungsausschlussTest extends BasePtmOnlineZusammenspielTest {
                 new SystemAufbau(TurnierSystem.FORMULEX,
                         ws -> new FormuleXMeldeListeSheetNew(ws).createMeldelisteWithParams(Formation.TRIPLETTE, false,
                                 false, 4),
-                        FormuleXSpielrundeSheetNaechste::new, 7),
+                        FormuleXSpielrundeSheetNaechste::new, 7, false),
                 new SystemAufbau(TurnierSystem.KO, ws -> {
                     KoKonfigurationSheet konfiguration = new KoKonfigurationSheet(ws);
                     konfiguration.update();
@@ -90,19 +95,19 @@ class PtmOnlineAuslosungsausschlussTest extends BasePtmOnlineZusammenspielTest {
                     new KoMeldeListeSheetNew(ws).createMeldelisteWithParams();
                     // 8 Teams: ohne Cadrage hat jedes Team in der ersten Runde einen Gegner. Partien mit noch offenem
                     // Gegner überträgt PTM nicht.
-                }, KoTurnierbaumSheet::new, 8),
+                }, KoTurnierbaumSheet::new, 8, true),
                 new SystemAufbau(TurnierSystem.JGJ,
                         ws -> new JGJMeldeListeSheet_New(ws).createMeldelisteWithParams(Formation.TRIPLETTE, false,
                                 false, TeamAnzeige.NR),
-                        JGJSpielPlanSheet::new, 7),
+                        JGJSpielPlanSheet::new, 7, false),
                 new SystemAufbau(TurnierSystem.POULE,
                         ws -> new PouleMeldeListeSheetNew(ws).createMeldelisteWithParams(Formation.TRIPLETTE, false,
                                 false),
-                        PouleVorrundeSheet::new, 7),
+                        PouleVorrundeSheet::new, 7, true),
                 new SystemAufbau(TurnierSystem.KASKADE,
                         ws -> new KaskadeMeldeListeSheetNew(ws).createMeldelisteWithParams(Formation.TRIPLETTE, false,
                                 false, 2),
-                        KaskadeSpielrundeSheet::new, 7));
+                        KaskadeSpielrundeSheet::new, 7, true));
     }
 
     @BeforeEach
@@ -129,6 +134,7 @@ class PtmOnlineAuslosungsausschlussTest extends BasePtmOnlineZusammenspielTest {
         verbinden();
         abgleichen();
         assertThat(lokaleMeldungen()).as("alle Online-Anmeldungen übernommen").hasSize(aufbau.anzahlTeams() + 1);
+        warteBis("Spieleinstellungen des Dokuments online", this::spieleinstellungenWieImDokument);
         for (int zeile : lokaleMeldungen().keySet()) {
             ziel.stelleAktivWertWiederHer(zeile, 1);
         }
@@ -143,6 +149,10 @@ class PtmOnlineAuslosungsausschlussTest extends BasePtmOnlineZusammenspielTest {
         warteBis("Auslosung online: alle vollständigen Teams, das unvollständige nicht (P-42)",
                 () -> ausgelostOnline().equals(vollstaendig.keySet()));
         assertThat(ausgelostOnline()).doesNotContain(idZuZweit);
+        if (aufbau.mitStufe()) {
+            assertThat(partienOnline()).as("Stufe je Partie für die Live-Ansicht")
+                    .allSatisfy(spiel -> assertThat(spiel.get("stageLabel").getAsString()).isNotBlank());
+        }
     }
 
     private void anlegen(SystemAufbau aufbau) throws Exception {
@@ -154,7 +164,37 @@ class PtmOnlineAuslosungsausschlussTest extends BasePtmOnlineZusammenspielTest {
         docPropHelper.setIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM, system.getId());
         ziel = MeldelisteZielFactory.fuerPtmOnline(wkingSpreadsheet).orElseThrow();
         assertThat(ziel.getFormation()).isEqualTo(Formation.TRIPLETTE);
-        turnierId = online.turnierAnlegen("E2E " + system.name(), onlineTyp, anmeldeTyp, "triplette", IN_EINEM_MONAT);
+        turnierId = online.turnierAnlegen("E2E " + system.name(), onlineTyp, anmeldeTyp, "triplette", IN_EINEM_MONAT,
+                abweichendVomDokument(PtmOnlineSpieleinstellungen.lese(wkingSpreadsheet, system)));
+    }
+
+    /** Online-Einstellungen, die bewusst vom Dokument abweichen – das Dokument muss sie beim Verbinden überschreiben. */
+    private static JsonObject abweichendVomDokument(SpieleinstellungenDto dokument) {
+        JsonObject einstellungen = new JsonObject();
+        if (dokument.formuleXRounds() != null) {
+            einstellungen.addProperty("formuleXRounds", dokument.formuleXRounds() + 5);
+        }
+        if (dokument.koPlatz3() != null) {
+            einstellungen.addProperty("koPlatz3", !dokument.koPlatz3());
+        }
+        return einstellungen;
+    }
+
+    private boolean spieleinstellungenWieImDokument() throws Exception {
+        SpieleinstellungenDto dokument = PtmOnlineSpieleinstellungen.lese(wkingSpreadsheet, system);
+        JsonObject turnier = online.turnier(turnierId);
+        return (dokument.formation() == null || dokument.formation().equals(turnier.get("formation").getAsString()))
+                && (dokument.formuleXRounds() == null
+                        || dokument.formuleXRounds() == turnier.get("formuleXRounds").getAsInt())
+                && (dokument.koPlatz3() == null || dokument.koPlatz3() == turnier.get("koPlatz3").getAsBoolean());
+    }
+
+    private List<JsonObject> partienOnline() throws Exception {
+        List<JsonObject> partien = new ArrayList<>();
+        for (JsonObject runde : online.runden(turnierId)) {
+            runde.getAsJsonArray("matches").forEach(spiel -> partien.add(spiel.getAsJsonObject()));
+        }
+        return partien;
     }
 
     /** Online-IDs aller Teams, die in einer übertragenen Runde vorkommen. */

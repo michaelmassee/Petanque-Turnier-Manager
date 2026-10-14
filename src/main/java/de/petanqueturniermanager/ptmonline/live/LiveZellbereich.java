@@ -120,6 +120,18 @@ final class LiveZellbereich {
         return istGanzzahl(text) ? zahl(spalte, zeile) : null;
     }
 
+    /** @return ganze Zahl mit Vorzeichen (z.&nbsp;B. eine Differenz), {@code null} wenn leer oder keine Zahl */
+    @Nullable
+    Integer differenz(int spalte, int zeile) {
+        String text = text(spalte, zeile);
+        if (text == null) {
+            return null;
+        }
+        boolean negativ = text.startsWith("-");
+        String betrag = negativ ? text.substring(1) : text;
+        return istGanzzahl(betrag) ? (negativ ? -1 : 1) * Integer.parseInt(betrag) : null;
+    }
+
     /** @return Team-Nr der Zelle (Nummer, Teamnamen-Formel oder bekannter Name), sonst {@code 0} */
     int teamNr(int spalte, int zeile) {
         int nr = zahl(spalte, zeile);

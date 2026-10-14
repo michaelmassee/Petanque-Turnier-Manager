@@ -23,6 +23,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 
+import com.google.gson.JsonObject;
+
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
@@ -110,7 +112,16 @@ abstract class BasePtmOnlineZusammenspielTest extends BaseCalcUITest {
 
     /** Online-Turnier (Schweizer, Formée) und leere lokale Meldeliste in derselben Formation. */
     protected void turnierAnlegen(Formation formation, LocalDate datum) throws Exception {
-        schweizerAnlegen("forme", formation, datum);
+        turnierAnlegen(formation, datum, new JsonObject());
+    }
+
+    /**
+     * Wie {@link #turnierAnlegen(Formation, LocalDate)}; das Online-Turnier erhält zusätzlich die übergebenen
+     * Einstellungen (sie dürfen bewusst vom Dokument abweichen, z.&nbsp;B. Formation oder Ranglistenmodus).
+     */
+    protected void turnierAnlegen(Formation formation, LocalDate datum, JsonObject onlineEinstellungen)
+            throws Exception {
+        schweizerAnlegen("forme", formation, datum, onlineEinstellungen);
         ziel = MeldelisteZielFactory.fuerPtmOnline(wkingSpreadsheet).orElseThrow();
     }
 
@@ -119,19 +130,23 @@ abstract class BasePtmOnlineZusammenspielTest extends BaseCalcUITest {
      * (Sync-Ziel), die Teams der Formation entstehen erst beim Übernehmen in die Meldeliste.
      */
     protected void meleeTurnierAnlegen(Formation formation, LocalDate datum) throws Exception {
-        schweizerAnlegen("melee", formation, datum);
+        schweizerAnlegen("melee", formation, datum, new JsonObject());
         MeleeAnmeldungKonfiguration.einschalten(wkingSpreadsheet);
         wieImSheetRunner(() -> new SchweizerMeleeAnmeldungSheet(wkingSpreadsheet).generate());
         ziel = MeldelisteZielFactory.fuerPtmOnline(wkingSpreadsheet).orElseThrow();
     }
 
-    private void schweizerAnlegen(String typ, Formation formation, LocalDate datum) throws Exception {
+    private void schweizerAnlegen(String typ, Formation formation, LocalDate datum, JsonObject onlineEinstellungen)
+            throws Exception {
         system = TurnierSystem.SCHWEIZER;
         spieltagNr = null;
         anmeldeTyp = typ;
         onlineTyp = "schweizer";
+        String onlineFormation = onlineEinstellungen.has("formation")
+                ? onlineEinstellungen.get("formation").getAsString()
+                : formation.name().toLowerCase(Locale.ROOT);
         turnierId = online.turnierAnlegen("E2E " + getClass().getSimpleName(), "schweizer", anmeldeTyp,
-                formation.name().toLowerCase(Locale.ROOT), datum);
+                onlineFormation, datum, onlineEinstellungen);
         new SchweizerMeldeListeSheetNew(wkingSpreadsheet).createMeldelisteWithParams(formation, false, false);
         docPropHelper.setIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM, system.getId());
     }
@@ -266,6 +281,46 @@ abstract class BasePtmOnlineZusammenspielTest extends BaseCalcUITest {
             }
         }
         return teams;
+    }
+
+    /** Vollständige Triplette-Teams, online angemeldet; Online-ID → Team. */
+    protected Map<String, Person[]> vollstaendigeTeams(int anzahl) throws Exception {
+        Map<String, Person[]> teams = new LinkedHashMap<>();
+        for (int i = 1; i <= anzahl; i++) {
+            Person[] team = { Person.gast("Voll" + i, "Erster"), Person.gast("Voll" + i, "Zweiter"),
+                    Person.gast("Voll" + i, "Dritter") };
+            teams.put(online.anmelden(turnierId, team), team);
+        }
+        return teams;
+    }
+
+    /** Paarungen der zuletzt ausgelosten Runde: {Blattzeile, Team A, Team B}. */
+    protected List<int[]> paareImBlatt() throws Exception {
+        int erste = SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE;
+        List<int[]> paare = new ArrayList<>();
+        int zeile = erste;
+        for (RowData daten : RangeHelper.from(letzteRunde.getXSpreadSheet(),
+                wkingSpreadsheet.getWorkingSpreadsheetDocument(),
+                RangePosition.from(SchweizerAbstractSpielrundeSheet.TEAM_A_SPALTE, erste,
+                        SchweizerAbstractSpielrundeSheet.TEAM_B_SPALTE, erste + 10))
+                .getDataFromRange()) {
+            int teamA = daten.get(0).getIntVal(0);
+            int teamB = daten.get(1).getIntVal(0);
+            if (teamA > 0 && teamB > 0) {
+                paare.add(new int[] { zeile, teamA, teamB });
+            }
+            zeile++;
+        }
+        return paare;
+    }
+
+    /** Ergebnis einer Partie der zuletzt ausgelosten Runde, wie die Turnierleitung es einträgt. */
+    protected void ergebnisEintragen(int zeile, int punkteA, int punkteB) throws Exception {
+        var blatt = letzteRunde.getXSpreadSheet();
+        sheetHlp.setNumberValueInCell(NumberCellValue.from(blatt,
+                Position.from(SchweizerAbstractSpielrundeSheet.ERG_TEAM_A_SPALTE, zeile)).setValue(punkteA));
+        sheetHlp.setNumberValueInCell(NumberCellValue.from(blatt,
+                Position.from(SchweizerAbstractSpielrundeSheet.ERG_TEAM_B_SPALTE, zeile)).setValue(punkteB));
     }
 
     /**

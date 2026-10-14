@@ -237,6 +237,7 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
      */
     public static void nachPauseUebertragen(XSpreadsheetDocument xDoc, String tournamentId) {
         PtmOnlineLiveSync.vergessen(tournamentId);
+        PtmOnlineSpieleinstellungen.vergessen(tournamentId);
         anstossen(xDoc);
     }
 
@@ -482,6 +483,7 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
             logger.warn("PTM-Online: Online-Turnier {} wurde gelöscht, Verbindung wird aufgehoben",
                     verbindung.tournamentId());
             PtmOnlineLiveSync.vergessen(verbindung.tournamentId());
+            PtmOnlineSpieleinstellungen.vergessen(verbindung.tournamentId());
             fuehreAus(new PtmOnlineArchivRunner(ws, ts, verbindung.mapping()),
                     "PTM-Online: Blatt konnte nach dem Löschen des Online-Turniers nicht archiviert werden");
             LoMainThread.post(xContext, this::zeigeTurnierGeloescht);

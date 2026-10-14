@@ -30,6 +30,8 @@ public enum AuftragsArt {
     RUNDE_LOESCHEN,
     /** Ranglisten-Snapshot für die Live-Ansicht. */
     RANGLISTE,
+    /** Spieleinstellungen des Dokuments (Formation, Ranglistenmodus, Rundenzahl, Spiel um Platz 3). */
+    SPIELEINSTELLUNGEN,
     /** Vollständige Zuordnung der Mêlée-Einzelanmeldungen zu den lokal gemischten Teams (KP-18). */
     MELEE_TEAMS,
     /** Online-Stornierung einer lokal gelöschten, verknüpften Meldung (KP-15). */

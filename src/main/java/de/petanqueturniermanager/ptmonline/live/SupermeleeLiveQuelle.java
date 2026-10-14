@@ -71,7 +71,9 @@ final class SupermeleeLiveQuelle implements LiveStandQuelle {
                         SpieltagRanglisteSheet.RANGLISTE_SPALTE,
                         ersteSummenSpalte + SuperMeleeSummenSpalten.SPIELE_PLUS_OFFS,
                         ersteSummenSpalte + SuperMeleeSummenSpalten.PUNKTE_PLUS_OFFS,
-                        ersteSummenSpalte + SuperMeleeSummenSpalten.PUNKTE_MINUS_OFFS)).lese(ws);
+                        ersteSummenSpalte + SuperMeleeSummenSpalten.PUNKTE_MINUS_OFFS)
+                        .mitNiederlagen(ersteSummenSpalte + SuperMeleeSummenSpalten.SPIELE_MINUS_OFFS,
+                                ersteSummenSpalte + SuperMeleeSummenSpalten.SPIELE_DIV_OFFS)).lese(ws);
     }
 
     private static List<LivePartie> lesePartien(LiveZellbereich zellen, boolean mitBahn) {

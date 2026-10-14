@@ -39,6 +39,7 @@ import de.petanqueturniermanager.ptmonline.dto.PersonDto;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationDto;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationResultDto;
 import de.petanqueturniermanager.ptmonline.dto.ServerZuordnungDto;
+import de.petanqueturniermanager.ptmonline.dto.SpieleinstellungenDto;
 import de.petanqueturniermanager.ptmonline.dto.SyncBindingDto;
 import de.petanqueturniermanager.ptmonline.dto.SyncStandDto;
 
@@ -258,6 +259,10 @@ public class TournamentSyncClient extends PtmOnlineHttpClient implements Auftrag
         return turnierPfad(tournamentId) + "/ranking";
     }
 
+    static String spieleinstellungenPfad(String tournamentId) {
+        return turnierPfad(tournamentId) + "/settings";
+    }
+
     static String anmeldungSchliessenPfad(String tournamentId) {
         return turnierPfad(tournamentId) + "/registration-closed";
     }
@@ -314,6 +319,11 @@ public class TournamentSyncClient extends PtmOnlineHttpClient implements Auftrag
         JsonObject body = new JsonObject();
         body.add("matches", GSON.toJsonTree(matches));
         return body.toString();
+    }
+
+    /** Nicht gesetzte Einstellungen ({@code null}) fehlen im Body und bleiben online unverändert. */
+    static String spieleinstellungenBody(SpieleinstellungenDto einstellungen) {
+        return GSON.toJson(einstellungen);
     }
 
     static String ranglisteBody(List<LiveRankingEntryDto> entries) {

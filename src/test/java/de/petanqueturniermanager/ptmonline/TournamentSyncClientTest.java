@@ -33,6 +33,7 @@ import de.petanqueturniermanager.ptmonline.dto.AnmeldungsAbruf;
 import de.petanqueturniermanager.ptmonline.dto.KonfliktListeDto;
 import de.petanqueturniermanager.ptmonline.dto.LiveMatchDto;
 import de.petanqueturniermanager.ptmonline.dto.LiveRankingEntryDto;
+import de.petanqueturniermanager.ptmonline.dto.SpieleinstellungenDto;
 import de.petanqueturniermanager.ptmonline.dto.NeueOnlineAnmeldung;
 import de.petanqueturniermanager.ptmonline.dto.PersonDto;
 import de.petanqueturniermanager.ptmonline.dto.RegistrationDto;
@@ -326,6 +327,20 @@ public class TournamentSyncClientTest {
 		assertThat(TournamentSyncClient.ranglisteBody(List.of(new LiveRankingEntryDto(1, List.of("r1"), 3, 39, 12))))
 				.isEqualTo(
 						"{\"entries\":[{\"place\":1,\"registrationIds\":[\"r1\"],\"wins\":3,\"pointsFor\":39,\"pointsAgainst\":12}]}");
+	}
+
+	@Test
+	public void ranglisteSendetWertungskriterienNurWennVorhanden() {
+		assertThat(TournamentSyncClient.ranglisteBody(List.of(new LiveRankingEntryDto(1, List.of("r1"), 3, 39, 12, 1,
+				-2, 7, 11, null)))).isEqualTo("{\"entries\":[{\"place\":1,\"registrationIds\":[\"r1\"],\"wins\":3,"
+						+ "\"pointsFor\":39,\"pointsAgainst\":12,\"losses\":1,\"gameDiff\":-2,\"bhz\":7,\"fbhz\":11}]}");
+	}
+
+	@Test
+	public void spieleinstellungenSendenNurGesetzteWerte() {
+		assertThat(TournamentSyncClient.spieleinstellungenPfad("t1")).isEqualTo("/api/sync/tournaments/t1/settings");
+		assertThat(TournamentSyncClient.spieleinstellungenBody(new SpieleinstellungenDto("triplette", null, 6, false)))
+				.isEqualTo("{\"formation\":\"triplette\",\"formuleXRounds\":6,\"koPlatz3\":false}");
 	}
 
 	private HttpClient httpClientMitAntwort(String body) throws Exception {
