@@ -20,6 +20,8 @@ import com.sun.star.sheet.XSpreadsheet;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldelisteUuidIndex;
 import de.petanqueturniermanager.basesheet.meldeliste.TeamUuidFormel;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.ko.KoWeitergabeFormel;
+import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
@@ -33,8 +35,9 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
  * Team-Zellen enthalten je nach Anzeigemodus die Team-Nr oder den Teamnamen. Umgestellte Systeme schreiben die UUID
  * des Teams als Literal in die Formel ({@code PTM.ALG.UUIDZEILE("<uuid>";…)}); sie wird über die Meldeliste auf die
  * aktuelle Nummer abgebildet. Ältere Formeln enthalten {@code …MATCH(<nr>;<Meldeliste>…)}; daraus wird die Nummer
- * direkt gelesen. Weitergereichte Namen (z.&nbsp;B. Sieger im Turnierbaum) werden über die im selben Bereich so
- * aufgelösten Namen zugeordnet; mehrdeutige Namen bleiben unaufgelöst.
+ * direkt gelesen. Weitergereichte Zellen im Turnierbaum (Sieger, Verlierer) folgen über die eingetragenen Punkte
+ * ihrem Quellspiel bis zur UUID ({@link KoWeitergabeFormel}). Nur andere Namen ohne Formel werden über die im selben
+ * Bereich so aufgelösten Namen zugeordnet; mehrdeutige Namen bleiben unaufgelöst.
  */
 final class LiveZellbereich {
 
@@ -142,8 +145,33 @@ final class LiveZellbereich {
         if (ausFormel > 0) {
             return ausFormel;
         }
+        Optional<String> weitergereicht = KoWeitergabeFormel.uuid(weitergabeZellen(), Position.from(spalte, zeile));
+        if (weitergereicht.isPresent()) {
+            return uuidIndex().nr(weitergereicht.get()).orElse(0);
+        }
         String name = text(spalte, zeile);
         return name == null ? 0 : nrProName().getOrDefault(name, 0);
+    }
+
+    private KoWeitergabeFormel.Zellen weitergabeZellen() {
+        return new KoWeitergabeFormel.Zellen() {
+            @Override
+            public @Nullable String formel(Position position) {
+                return LiveZellbereich.this.formel(position.getSpalte(), position.getZeile());
+            }
+
+            @Override
+            public Optional<Integer> punkte(Position position) {
+                return Optional.ofNullable(LiveZellbereich.this.punkte(position.getSpalte(), position.getZeile()));
+            }
+        };
+    }
+
+    private MeldelisteUuidIndex uuidIndex() {
+        if (uuidIndex == null) {
+            uuidIndex = uuidIndexQuelle.get();
+        }
+        return uuidIndex;
     }
 
     private @Nullable String formel(int spalte, int zeile) {
@@ -178,10 +206,7 @@ final class LiveZellbereich {
         if (uuid.isEmpty()) {
             return nrAusFormel(formel);
         }
-        if (uuidIndex == null) {
-            uuidIndex = uuidIndexQuelle.get();
-        }
-        return uuidIndex.nr(uuid.get()).orElse(0);
+        return uuidIndex().nr(uuid.get()).orElse(0);
     }
 
     static int nrAusFormel(@Nullable String formel) {

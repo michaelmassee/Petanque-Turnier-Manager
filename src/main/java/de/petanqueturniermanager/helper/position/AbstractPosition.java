@@ -7,6 +7,8 @@ package de.petanqueturniermanager.helper.position;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.Objects;
+
 import com.google.common.base.MoreObjects;
 
 public abstract class AbstractPosition<T> {
@@ -214,8 +216,9 @@ public abstract class AbstractPosition<T> {
 		// @formatter:on
 	}
 
+	/** Passend zu {@link #equals(Object)}: aus Spalte und Zeile. */
 	@Override
 	public int hashCode() {
-		return super.hashCode();
+		return Objects.hash(getSpalte(), getZeile());
 	}
 }

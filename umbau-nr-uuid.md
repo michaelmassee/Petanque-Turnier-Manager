@@ -68,7 +68,9 @@ Release-Hinweis (erstes Release mit UUID-Teams):
 - Dokumente älterer Versionen lassen sich öffnen, aber nicht mehr weiterführen („Dieses Dokument muss mit dem ursprünglichen Plugin geöffnet werden.“).
 - Zeigen neue `PTM.ALG.*`-Formeln (z.&nbsp;B. in der Nr-Spalte) nach dem Update `Err:504` oder `#NAME?`, obwohl die Extension aktuell ist: LO hat alte Add-in-Metadaten im Benutzerprofil zwischengespeichert. LibreOffice schließen, `extensions` und `uno_packages/cache` im Benutzerprofil umbenennen, Extension neu installieren.
 
-Entscheidung KO-Sieger (2026-10-11): **kein `PTM.ALG.KOSIEGER`.** Nur Setzlisten-Zellen (Runde 1, Cadrage) tragen die UUID; die Sieger-/Verlierer-Formeln reichen wie bisher die *Anzeige* weiter (`IF(scoreA>scoreB; teamA; …)`). Da die Setzlisten-Zellen immer die aktuelle Nr bzw. den aktuellen Namen zeigen, stimmt nach „Teamnummer ändern“ der ganze Baum. Leser (`LiveZellbereich`, Siegergeld, `KoStatusLeser`) lesen wie bisher die Anzeige. Bewusst in Kauf genommen: Sieger-Zellen tragen keine UUID; bei doppelten Teamnamen in der Namensanzeige bleiben sie für Java-Leser mehrdeutig (wie vorher). Gilt sinngemäß auch für Poule-Sieger/Verlierer.
+Entscheidung KO-Sieger (2026-10-11): **kein `PTM.ALG.KOSIEGER`.** Nur Setzlisten-Zellen (Runde 1, Cadrage) tragen die UUID; die Sieger-/Verlierer-Formeln reichen wie bisher die *Anzeige* weiter (`IF(scoreA>scoreB; teamA; …)`). Da die Setzlisten-Zellen immer die aktuelle Nr bzw. den aktuellen Namen zeigen, stimmt nach „Teamnummer ändern“ der ganze Baum. Sieger-Zellen tragen keine UUID.
+
+Eindeutige Zuordnung im Namensmodus (behoben 2026-10-15): Java-Leser ordneten weitergereichte Zellen früher über den angezeigten Namen zu; bei gleichnamigen Teams war das mehrdeutig (Live-Übertragung ließ die Partie weg, das Maastrichter-Siegergeld vergab zwei Plätze an dasselbe Team). Jetzt löst `KoWeitergabeFormel` (UNO-frei, `ko/`) die UUID auf: Sie erkennt die feste Form `IF(…;IF(a>b;t1;IF(a<b;t2;"?"));"")` (auch mit vertauschten Vergleichen beim Verlierer), wertet den Vergleich mit den eingetragenen Punkten aus und folgt der gewählten Zelle bis zur UUID der Setzliste (höchstens 16 Ebenen). Genutzt von `LiveZellbereich.teamNr` (vor dem Namensrückfall) und `MaastrichterSiegergeldQuelle` im Namensmodus. Der Name zählt nur noch für von Hand eingetragene Zellen. `KoStatusLeser` prüft nur, ob Ergebnisse eingetragen sind, und ist nicht betroffen. Poule-Sieger/Verlierer verweisen auf die Nr-Spalten und zeigen immer Nummern, sie waren nie mehrdeutig. UITests `TurnierbaumGleichnamigeTeamsUITest`, `MaastrichterSiegergeldGleichnamigeTeamsUITest` (beide ohne den Fix rot), Unit-Test `KoWeitergabeFormelTest`.
 
 Teilnehmer- und Checkin-Listen: Nummern dort sind Werte, ihre Signatur enthält die Nr-Spalte der Meldeliste (`MELDELISTE_BREIT_SPALTEN`) → nach „Teamnummer ändern“ beim nächsten Tab-Wechsel neu aufgebaut.
 
@@ -183,7 +185,7 @@ Muster je System: Wo die Nr früher als Zahl stand (sichtbar oder versteckt), st
 - **KO (`KoTurnierbaumSheet`, genutzt von KO, Maastrichter-Finale, Poule-KO, Kaskade-Felder, JGJ-Finale):**
   - Runde 1 und Cadrage tragen das UUID-Literal in der Formel statt der Nr (erledigt).
   - Sieger-Propagation unverändert über die Anzeige (Entscheidung KO-Sieger); die Namensspalte im Modus NR bleibt (`MATCH` auf die aktuelle Nr).
-  - `TurnierbaumLiveLeser` unverändert (liest die Anzeige, UUID-Formeln über `LiveZellbereich`).
+  - `TurnierbaumLiveLeser` liest über `LiveZellbereich`; weitergereichte Zellen löst `KoWeitergabeFormel` bis zur UUID auf.
 - **Poule-Vorrunde:**
   - **Umgesetzt:** Die Nr-Zellen der ersten Runde (Vorrunde und Gruppen-Spielpläne) tragen `INDEX(…UUIDZEILE)`; Sieger-/Verlierer-/Barrage-Zeilen reichen die Anzeige weiter (wie KO).
   - `PouleVorrundenRanglisteSheet` unverändert (liest die Anzeige).
@@ -205,7 +207,7 @@ Muster je System: Wo die Nr früher als Zahl stand (sichtbar oder versteckt), st
 - `BlattschutzManager.schreibeEntsperrt`
 
 ## Risiken
-- **Siegerzellen ohne Literal:** tragen keine UUID (Entscheidung KO-Sieger); Leser arbeiten mit der Anzeige.
+- **Siegerzellen ohne Literal:** tragen keine UUID (Entscheidung KO-Sieger); Java-Leser lösen sie über `KoWeitergabeFormel` anhand der Punkte bis zur Setzliste auf. Eine von Hand umgeschriebene Weitergabe-Formel fällt auf den Namen zurück.
 - **Performance (gemessen 2026-10-15):** Supermelee-Beispielturnier (100 Spieler, 5 Spieltage, 37 Blätter) mit 1399 `UUIDTEAMNR`- und 1399 `UUIDTEAMANZEIGE`-Zellen: `calculateAll` 2,3 s, nach `295a9f41` (UUIDTEAMNR liest nur noch den Wert der gefundenen Zelle statt aller Werte) 1,7 s. Die reine Java-Suche (Regex über 999 Zeilen) macht davon ~130 ms aus, der Rest ist `getFormulaArray` und Calc selbst. Volle Neuberechnung nur bei Änderungen an der Nr-Spalte oder hartem Recalc, nicht bei Ergebniseingabe. **Kein Cache je Bereich:** Das Add-in-Objekt ist dokumentübergreifend, aus dem übergebenen `XCellRange` lässt sich das Dokument nicht stabil bestimmen – ein Cache könnte Werte zwischen zwei offenen Dokumenten vertauschen.
 - **Ohne installierte Extension** zeigen Nr-Spalten `#NAME?`. Das ist schon heute bei allen `PTM.ALG.*` so.
 - **Größe (eingetreten, abgearbeitet):** Sehr viele UITest-JSON-Referenzen ändern sich, weil Teamzellen zu Formeln werden und versteckte Nr-Spalten entfallen. Neu erfasste JSONs inhaltlich prüfen (Memory-Regel).

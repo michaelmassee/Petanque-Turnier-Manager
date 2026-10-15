@@ -10,9 +10,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 
 import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.table.CellContentType;
+import com.sun.star.table.XCell;
 
+import de.petanqueturniermanager.basesheet.meldeliste.MeldelisteUuidIndex;
 import de.petanqueturniermanager.basesheet.meldeliste.TeilnehmerNamenLeser;
 import de.petanqueturniermanager.basesheet.meldeliste.TeilnehmerNamenLeser.TeilnehmerNamen;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
@@ -23,6 +27,7 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.ko.KoTurnierbaumLayout;
+import de.petanqueturniermanager.ko.KoWeitergabeFormel;
 import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
 import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterMeldeListeSheetUpdate;
@@ -128,15 +133,42 @@ final class MaastrichterSiegergeldQuelle implements SiegergeldQuelle {
 			String name = sheetHelper.getTextFromCell(sheet, Position.from(siegerNameSpalte, zeile));
 			return TeamRef.fromNr(nr, name, namenIndex);
 		}
-		String name = sheetHelper.getTextFromCell(sheet, Position.from(siegerSpalte, zeile));
-		return TeamRef.fromName(name, namenIndex);
+		return leseTeamImNamensModus(sheet, Position.from(siegerSpalte, zeile), namenIndex);
 	}
 
 	private TeamRef leseTeam(XSpreadsheet sheet, int spalte, int zeile, NamenIndex namenIndex) {
 		if (konfigurationSheet.getSpielbaumTeamAnzeige() == TeamAnzeige.NR) {
 			return TeamRef.fromNr(leseInt(sheet, spalte, zeile), "", namenIndex);
 		}
-		return TeamRef.fromName(sheetHelper.getTextFromCell(sheet, Position.from(spalte, zeile)), namenIndex);
+		return leseTeamImNamensModus(sheet, Position.from(spalte, zeile), namenIndex);
+	}
+
+	/**
+	 * Die Zelle zeigt den Namen. Eindeutig ist das Team über die UUID, der die Weitergabe-Formel bis zur Setzliste
+	 * folgt; der Name zählt nur für von Hand eingetragene Zellen.
+	 */
+	private TeamRef leseTeamImNamensModus(XSpreadsheet sheet, Position position, NamenIndex namenIndex) {
+		String name = sheetHelper.getTextFromCell(sheet, position);
+		Optional<String> uuid = KoWeitergabeFormel.uuid(zellen(sheet), position);
+		int nr = uuid.isPresent() ? namenIndex.uuidIndex().nr(uuid.get()).orElse(0) : 0;
+		return nr > 0 ? TeamRef.fromNr(nr, name, namenIndex) : TeamRef.fromName(name, namenIndex);
+	}
+
+	private KoWeitergabeFormel.Zellen zellen(XSpreadsheet sheet) {
+		return new KoWeitergabeFormel.Zellen() {
+			@Override
+			public String formel(Position position) {
+				return sheetHelper.getFormulaFromCell(sheet, position);
+			}
+
+			@Override
+			public Optional<Integer> punkte(Position position) {
+				XCell zelle = sheetHelper.getCell(sheet, position);
+				return zelle != null && zelle.getType() == CellContentType.VALUE
+						? Optional.of((int) zelle.getValue())
+						: Optional.empty();
+			}
+		};
 	}
 
 	private int leseInt(XSpreadsheet sheet, int spalte, int zeile) {
@@ -181,7 +213,7 @@ final class MaastrichterSiegergeldQuelle implements SiegergeldQuelle {
 				nameZuNr.putIfAbsent(key, entry.getKey());
 			}
 		}
-		return new NamenIndex(nrZuName, nameZuNr);
+		return new NamenIndex(nrZuName, nameZuNr, MeldelisteUuidIndex.lese(workingSpreadsheet));
 	}
 
 	private static String normalisiereGruppe(String gruppe) {
@@ -192,7 +224,8 @@ final class MaastrichterSiegergeldQuelle implements SiegergeldQuelle {
 		return name == null ? "" : name.trim().toLowerCase(Locale.ROOT);
 	}
 
-	private record NamenIndex(Map<Integer, String> nrZuName, Map<String, Integer> nameZuNr) {
+	private record NamenIndex(Map<Integer, String> nrZuName, Map<String, Integer> nameZuNr,
+			MeldelisteUuidIndex uuidIndex) {
 	}
 
 	private record TeamRef(int nr, String name) {
