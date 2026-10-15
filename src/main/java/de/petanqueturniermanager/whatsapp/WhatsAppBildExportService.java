@@ -27,6 +27,8 @@ import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.upload.HtmlZuBildKonvertierer;
 import de.petanqueturniermanager.webserver.SheetResolverFactory;
 import de.petanqueturniermanager.webserver.TabelleHtmlRenderer;
+import de.petanqueturniermanager.helper.sheetsync.NachziehModus;
+import de.petanqueturniermanager.helper.sheetsync.SheetSyncNachzieher;
 import de.petanqueturniermanager.webserver.TabelleModel;
 import de.petanqueturniermanager.webserver.TabellenMapper;
 
@@ -56,7 +58,8 @@ public class WhatsAppBildExportService {
 	public ExportiertesBild exportiere(WhatsAppAktion aktion, TurnierSystem ts, Path zielVerzeichnis,
 			boolean mitKopfFusszeile) throws GenerateException {
 		if (aktion == WhatsAppAktion.RANGLISTE) {
-			WhatsAppRanglisteAktualisierer.aktualisiereWennNoetig(ws, ts);
+			// Fehlende oder veraltete Rangliste vor dem Versand aufbauen – wie beim Verzeichnis-Export.
+			SheetSyncNachzieher.get().zieheNach(ws, NachziehModus.FEHLENDE_ANLEGEN);
 		}
 		XSpreadsheet sheet = ermittleSheet(aktion, ts, ws);
 		String sheetName = sheetName(sheet);

@@ -32,6 +32,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.LoMainThread;
+import de.petanqueturniermanager.helper.RueckgaengigSperre;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
@@ -84,6 +85,12 @@ public abstract class SheetRunner extends Thread {
 	}
 
 	private volatile boolean backupDocumentAfterRun;
+
+	/**
+	 * Gesetzt von {@link #ohneRueckgaengig()}: {@code doRun()} läuft mit gesperrter Rückgängig-Liste
+	 * ({@link RueckgaengigSperre}), z.&nbsp;B. für den automatischen Neuaufbau durch die Sheet-Synchronisation.
+	 */
+	private volatile boolean ohneRueckgaengig;
 
 	/**
 	 * Wird {@code true}, sobald das Dokument während der Laufzeit des Runners disposed wird
@@ -255,7 +262,12 @@ public abstract class SheetRunner extends Thread {
 									.ifPresent(k -> BlattschutzManager.get().beginCommandScope(k, workingSpreadsheet));
 						}
 						if (!benoetigtLebendesDokument() || isDocumentAlive()) {
-							doRun();
+							if (ohneRueckgaengig) {
+								RueckgaengigSperre.ohneRueckgaengig(workingSpreadsheet.getWorkingSpreadsheetDocument(),
+										this::doRun);
+							} else {
+								doRun();
+							}
 							if (isDocumentAlive()) {
 								WebServerManager.get().sseRefreshSenden(workingSpreadsheet);
 								// Während des Runners eingetroffene Modify-Events wurden vom Listener
@@ -413,6 +425,25 @@ public abstract class SheetRunner extends Thread {
 			throw new IllegalStateException(I18n.get("processbox.fehler.runner.verschachtelt",
 					getClass().getSimpleName(), koordinator.getRunnerName()));
 		}
+	}
+
+	/**
+	 * Der Lauf soll nicht in der Rückgängig-Liste des Dokuments landen (automatischer Neuaufbau, den der Anwender
+	 * nicht selbst ausgelöst hat).
+	 */
+	public SheetRunner ohneRueckgaengig() {
+		ohneRueckgaengig = true;
+		return this;
+	}
+
+	/**
+	 * Führt die Arbeit dieses Runners synchron im bereits laufenden SheetRunner des aufrufenden Threads aus – ohne
+	 * eigenen Lauf, Koordinator, Blattschutz-Scope oder Nachlauf (diese stellt der äußere Runner). Für generische
+	 * Aufrufer wie den {@link de.petanqueturniermanager.helper.sheetsync.SheetSyncNachzieher}, die nur eine
+	 * Runner-Fabrik kennen; ein verschachteltes {@link #start()} wäre unzulässig.
+	 */
+	public final void fuehreInLaufendemRunnerAus() throws GenerateException {
+		doRun();
 	}
 
 	public SheetRunner backupDocumentAfterRun() {

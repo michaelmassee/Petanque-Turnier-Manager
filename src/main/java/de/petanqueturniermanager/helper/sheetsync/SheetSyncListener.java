@@ -3,7 +3,12 @@ package de.petanqueturniermanager.helper.sheetsync;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.time.Duration;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
@@ -26,6 +31,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEventListener;
+import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.perflog.PerfLog;
@@ -56,6 +62,10 @@ import de.petanqueturniermanager.supermelee.SpielTagNr;
  * löst daher keine Sheet-Aktivierung aus. Reagiert der Listener auf das Event,
  * wird – sofern das Ziel-Sheet gerade aktiv ist – sofort ein Hash-Check geplant; bei
  * geänderter Signatur (Sortier-Zusatzkontext) folgt der Re-Sync live.
+ * <p>
+ * Ohne Tab-Wechsel zieht der {@link SheetSyncNachzieher} alle Einträge synchron nach
+ * ({@link #zieheNach}), bevor Webserver, PTM-Online-Live oder ein Export abgeleitete Blätter lesen.
+ * Jeder Neuaufbau läuft ohne Eintrag in der Rückgängig-Liste.
  */
 public final class SheetSyncListener implements SheetAktivierungsHandler, ITurnierEventListener {
 
@@ -72,6 +82,10 @@ public final class SheetSyncListener implements SheetAktivierungsHandler, ITurni
     private final BiFunction<XSpreadsheetDocument, XSpreadsheet, EingabeSignatur> signaturLieferant;
     /** Persistenz-Schlüssel pro (Doc, Ziel-Sheet). Spieltag-Variante: inkl. Nr. */
     private final BiFunction<XSpreadsheetDocument, XSpreadsheet, String> schluesselLieferant;
+    /** Export-Ausgaben für {@link NachziehModus#FEHLENDE_ANLEGEN}; {@code null} ohne. */
+    private final SheetSyncAusgabe.Lieferant exportAusgaben;
+    /** {@code false}: Update baut Blätter neu an – nicht im Hintergrund ({@link NachziehModus#NUR_VORHANDENE}). */
+    private final boolean imHintergrund;
 
     /**
      * forceNextCheck pro (Doc-IdentityHash + Schlüssel): gesetzt nach erschöpften
@@ -184,16 +198,154 @@ public final class SheetSyncListener implements SheetAktivierungsHandler, ITurni
             BiFunction<XSpreadsheetDocument, XSpreadsheet, EingabeSignatur> signaturLieferant,
             BiFunction<XSpreadsheetDocument, XSpreadsheet, String> schluesselLieferant,
             BiFunction<WorkingSpreadsheet, XSpreadsheet, SheetRunner> runnerFactory) {
+        this(xContext, zielSheetMatch, erwartesTurnierSystem, signaturLieferant, schluesselLieferant,
+                runnerFactory, null, true);
+    }
+
+    private SheetSyncListener(XComponentContext xContext,
+            BiPredicate<XSpreadsheetDocument, XSpreadsheet> zielSheetMatch,
+            TurnierSystem erwartesTurnierSystem,
+            BiFunction<XSpreadsheetDocument, XSpreadsheet, EingabeSignatur> signaturLieferant,
+            BiFunction<XSpreadsheetDocument, XSpreadsheet, String> schluesselLieferant,
+            BiFunction<WorkingSpreadsheet, XSpreadsheet, SheetRunner> runnerFactory,
+            SheetSyncAusgabe.Lieferant exportAusgaben, boolean imHintergrund) {
         this.xContext = checkNotNull(xContext);
         this.zielSheetMatch = checkNotNull(zielSheetMatch);
         this.erwartesTurnierSystem = checkNotNull(erwartesTurnierSystem);
         this.signaturLieferant = checkNotNull(signaturLieferant);
         this.schluesselLieferant = checkNotNull(schluesselLieferant);
         this.runnerFactory = checkNotNull(runnerFactory);
+        this.exportAusgaben = exportAusgaben;
+        this.imHintergrund = imHintergrund;
+    }
+
+    /**
+     * Ergänzt Ausgaben, die vor einem Export ({@link NachziehModus#FEHLENDE_ANLEGEN}) zusätzlich nachgezogen
+     * werden: fehlende Blätter anlegen, abhängige Blätter (z.&nbsp;B. Direktvergleich) neu aufbauen.
+     */
+    public SheetSyncListener mitExportAusgaben(SheetSyncAusgabe.Lieferant ausgaben) {
+        return new SheetSyncListener(xContext, zielSheetMatch, erwartesTurnierSystem, signaturLieferant,
+                schluesselLieferant, runnerFactory, checkNotNull(ausgaben), imHintergrund);
+    }
+
+    /**
+     * Für Einträge, deren Update Blätter löscht und neu anlegt (kein reines Datenbereich-Update): beim
+     * Hintergrund-Nachziehen ({@link NachziehModus#NUR_VORHANDENE}) auslassen, da ein Blattwechsel den Anwender
+     * aus seiner Eingabe reißen könnte. Tab-Wechsel und Export bleiben unverändert.
+     */
+    public SheetSyncListener nichtImHintergrund() {
+        return new SheetSyncListener(xContext, zielSheetMatch, erwartesTurnierSystem, signaturLieferant,
+                schluesselLieferant, runnerFactory, exportAusgaben, false);
+    }
+
+    public TurnierSystem getTurnierSystem() {
+        return erwartesTurnierSystem;
     }
 
     private boolean istPassendesDokument(XSpreadsheetDocument xDoc) {
         return new DocumentPropertiesHelper(xDoc).getTurnierSystemAusDocument() == erwartesTurnierSystem;
+    }
+
+    // ── Nachziehen ohne Tab-Wechsel (vom SheetSyncNachzieher) ───────────────
+
+    /** Ein Ziel-Blatt mit seinem Persistenz-Schlüssel und seiner Signatur. */
+    private record Ziel(String schluessel, XSpreadsheet sheet, EingabeSignatur signatur) {
+    }
+
+    /**
+     * Prüft ohne zu schreiben, ob eines der vorhandenen Ziel-Blätter laut Signatur veraltet ist. Darf außerhalb
+     * eines SheetRunners laufen (nur Lesezugriffe), Aufrufer prüft vorher das Turniersystem.
+     */
+    boolean istVeraltet(XSpreadsheetDocument xDoc, List<XSpreadsheet> blaetter) {
+        if (!imHintergrund) {
+            return false;
+        }
+        for (Ziel ziel : ziele(xDoc, blaetter)) {
+            if (ziel.signatur().berechne(xDoc, 1) instanceof SignaturErgebnis.Ok ok
+                    && !hashUnveraendert(xDoc, ziel.schluessel(), ok.hash())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Zieht alle veralteten Ziel-Blätter synchron nach. <b>Muss im laufenden SheetRunner laufen</b>; der Aufrufer
+     * prüft vorher das Turniersystem und hält die Rückgängig-Liste gesperrt.
+     *
+     * @param blaetter alle Blätter des Dokuments (einmal je Durchlauf ermittelt)
+     * @return {@code true}, wenn mindestens ein Blatt neu aufgebaut wurde
+     */
+    boolean zieheNach(WorkingSpreadsheet ws, List<XSpreadsheet> blaetter, NachziehModus modus,
+            Runnable vorAenderung) throws GenerateException {
+        if (modus == NachziehModus.NUR_VORHANDENE && !imHintergrund) {
+            return false;
+        }
+        XSpreadsheetDocument xDoc = ws.getWorkingSpreadsheetDocument();
+        Set<String> erledigt = new HashSet<>();
+        boolean aktualisiert = false;
+        if (modus == NachziehModus.FEHLENDE_ANLEGEN && exportAusgaben != null) {
+            for (SheetSyncAusgabe ausgabe : exportAusgaben.ermittle(ws)) {
+                if (erledigt.add(ausgabe.persistenzSchluessel())) {
+                    aktualisiert |= aktualisiere(xDoc, ausgabe, vorAenderung);
+                }
+            }
+        }
+        for (Ziel ziel : ziele(xDoc, blaetter)) {
+            if (erledigt.add(ziel.schluessel())) {
+                aktualisiert |= aktualisiere(xDoc, new SheetSyncAusgabe(ziel.schluessel(), ziel.signatur(), false,
+                        () -> runnerFactory.apply(ws, ziel.sheet()).fuehreInLaufendemRunnerAus()), vorAenderung);
+            }
+        }
+        return aktualisiert;
+    }
+
+    /** Vorhandene Ziel-Blätter, je Persistenz-Schlüssel nur das erste (ein Rebuild deckt die Gruppe ab). */
+    private List<Ziel> ziele(XSpreadsheetDocument xDoc, List<XSpreadsheet> blaetter) {
+        Map<String, Ziel> ziele = new LinkedHashMap<>();
+        for (XSpreadsheet sheet : blaetter) {
+            if (!zielSheetMatch.test(xDoc, sheet)) {
+                continue;
+            }
+            String schluessel = schluesselLieferant.apply(xDoc, sheet);
+            if (schluessel == null || ziele.containsKey(schluessel)) {
+                continue;
+            }
+            EingabeSignatur signatur = signaturLieferant.apply(xDoc, sheet);
+            if (signatur != null) {
+                ziele.put(schluessel, new Ziel(schluessel, sheet, signatur));
+            }
+        }
+        return List.copyOf(ziele.values());
+    }
+
+    private static boolean aktualisiere(XSpreadsheetDocument xDoc, SheetSyncAusgabe ausgabe,
+            Runnable vorAenderung) throws GenerateException {
+        String schluessel = ausgabe.persistenzSchluessel();
+        SignaturErgebnis ergebnis = ausgabe.signatur().berechne(xDoc, 1);
+        if (ergebnis instanceof SignaturErgebnis.Ok ok) {
+            if (!ausgabe.ausgabeFehlt() && hashUnveraendert(xDoc, schluessel, ok.hash())) {
+                SheetSyncSignaturStore.aktualisiereVerifyZeit(xDoc, schluessel);
+                return false;
+            }
+            vorAenderung.run();
+            ausgabe.aktion().ausfuehren();
+            SheetSyncSignaturStore.speichereNachRebuild(xDoc, schluessel, ok.hash(),
+                    ausgabe.ausgabeFehlt() ? "nachziehenAusgabeFehlt" : "nachziehen");
+            logger.debug("Sheet-Sync nachgezogen (key={})", schluessel);
+            return true;
+        }
+        if (ausgabe.ausgabeFehlt()) {
+            vorAenderung.run();
+            ausgabe.aktion().ausfuehren();
+            return true;
+        }
+        logger.debug("Nachziehen übersprungen, Signatur nicht berechenbar (key={}): {}", schluessel, ergebnis);
+        return false;
+    }
+
+    private static boolean hashUnveraendert(XSpreadsheetDocument xDoc, String schluessel, String hash) {
+        return SheetSyncSignaturStore.ladeHash(xDoc, schluessel).filter(hash::equals).isPresent();
     }
 
     // ── Sheet-Aktivierung (vom Dispatcher) ──────────────────────────────────
@@ -369,7 +521,7 @@ public final class SheetSyncListener implements SheetAktivierungsHandler, ITurni
         // überein. Sollte der Rebuild scheitern, wird beim nächsten Trigger der dann frische
         // Hash neu verglichen.
         SheetSyncSignaturStore.speichereNachRebuild(xDoc, key, hash, effektiverGrund);
-        runnerFactory.apply(new WorkingSpreadsheet(xContext, xDoc), sheet).startSilent();
+        runnerFactory.apply(new WorkingSpreadsheet(xContext, xDoc), sheet).ohneRueckgaengig().startSilent();
     }
 
     private void handleSheetFehlt(XSpreadsheetDocument xDoc, XSpreadsheet sheet, String key,
@@ -397,7 +549,7 @@ public final class SheetSyncListener implements SheetAktivierungsHandler, ITurni
             logger.debug("Sheet-Sync-Recovery-Runner übersprungen – Dokument bereits geschlossen (key={})", key);
             return;
         }
-        runnerFactory.apply(new WorkingSpreadsheet(xContext, xDoc), sheet).startSilent();
+        runnerFactory.apply(new WorkingSpreadsheet(xContext, xDoc), sheet).ohneRueckgaengig().startSilent();
     }
 
     private void handleTransient(XSpreadsheetDocument xDoc, XSpreadsheet sheet,

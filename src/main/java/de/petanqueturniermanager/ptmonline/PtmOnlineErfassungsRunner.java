@@ -18,6 +18,8 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
 import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzRegistry;
+import de.petanqueturniermanager.helper.sheetsync.NachziehModus;
+import de.petanqueturniermanager.helper.sheetsync.SheetSyncNachzieher;
 import de.petanqueturniermanager.toolbar.TurnierModus;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsArt;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsBestand;
@@ -84,7 +86,13 @@ final class PtmOnlineErfassungsRunner extends SheetRunner {
 
     /** Öffnet höchstens einen Scope je Lauf; SheetRunner schließt ihn auch bei Fehlern. */
     private void oeffneSchutzScopeBeiAenderung(AuftragsBestand bestand) {
-        if (schutzScopeGeoeffnet || (!bestand.istGeaendert() && bestand.ergebnisseZumAnwenden().isEmpty())) {
+        if (bestand.istGeaendert() || !bestand.ergebnisseZumAnwenden().isEmpty()) {
+            oeffneSchutzScope();
+        }
+    }
+
+    private void oeffneSchutzScope() {
+        if (schutzScopeGeoeffnet) {
             return;
         }
         if (TurnierModus.get().istAktiv(getWorkingSpreadsheet())) {
@@ -125,6 +133,10 @@ final class PtmOnlineErfassungsRunner extends SheetRunner {
         boolean pausiert = !PtmOnlineSpielrundeSync.istSyncAktiv(mapping);
         boolean brauchtStand = false;
         if (!pausiert) {
+            // Ranglisten u. a. abgeleitete Blätter vor dem Lesen auf den Stand der Eingaben bringen – auch der
+            // gerade angewendeten Online-Ergebnisse. Ohne Tab-Wechsel wären sie sonst veraltet.
+            SheetSyncNachzieher.get().zieheNach(getWorkingSpreadsheet(), NachziehModus.NUR_VORHANDENE,
+                    this::oeffneSchutzScope);
             startNachholen(bestand, v);
             erfasseCheckin(bestand, v);
             erfasseSpieleinstellungen(bestand, v);

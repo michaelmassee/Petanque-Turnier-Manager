@@ -60,6 +60,49 @@ aktualisiert, kein Rebuild.
 **Bewusst NICHT verwendet:** kein `XModifyListener`/DirtyMarker (redundant zu Hash +
 Debouncer), keine 8 Signatur-Subklassen (Engine + Konfiguration genügt).
 
+## Registry: `comp/SheetSyncKatalog`
+
+Alle Sheet-Synchronisationen stehen in **einer** Liste (`SheetSyncKatalog`). Jeder Eintrag wird beim
+`SheetAktivierungsDispatcher` (Tab-Wechsel) **und** beim `SheetSyncNachzieher` angemeldet. Keine eigenen
+Pro-System-Listen mehr anlegen (die früheren Duplikate `WhatsAppRanglisteAktualisierer`,
+`aktualisiereExportSheetWennDirty` und die Liga-Export-Eigenlogik sind entfallen).
+
+## Nachziehen ohne Tab-Wechsel (`SheetSyncNachzieher`)
+
+Ergebnis-Eingaben lösen nur `modified()` aus – ohne Tab-Wechsel blieben Ranglisten für Leser veraltet.
+Jeder Leser abgeleiteter Blätter ruft deshalb vor dem Lesen `SheetSyncNachzieher.get().zieheNach(ws, modus)`:
+
+| Leser | Einstieg | Modus |
+|---|---|---|
+| Webserver | `WebserverModifyListener.refreshTask` → `istVeraltet` → `SheetSyncNachziehRunner` (still, `join`) | `NUR_VORHANDENE` |
+| PTM-Online-Live | `PtmOnlineErfassungsRunner.doRun` (Blattschutz-Scope bedarfsabhängig via `vorAenderung`) | `NUR_VORHANDENE` |
+| Verzeichnis-Export | `AbstractExportInVerzeichnis.exportiere` | `FEHLENDE_ANLEGEN` |
+| WhatsApp-Rangliste | `WhatsAppBildExportService.exportiere` | `FEHLENDE_ANLEGEN` |
+
+Regeln:
+- Neu aufgebaut wird nur, was laut Signatur veraltet ist; Hash-Schlüssel identisch zum Tab-Wechsel-Pfad.
+- `zieheNach` **muss im laufenden SheetRunner** laufen (`SheetRunner.fuehreInLaufendemRunnerAus()` statt
+  verschachteltem `start()`). `istVeraltet` liest nur und darf vorher außerhalb laufen.
+- `NUR_VORHANDENE` (Hintergrund): nur vorhandene Blätter, nur Datenbereich – **kein Fokuswechsel**. Fehlende
+  Blätter werden nicht angelegt (der `forceCreate`-Fallback eines `*SheetUpdate` könnte das Blatt aktivieren).
+  Einträge, deren Update Blätter löscht/neu anlegt (Liga-Termine), sind per `nichtImHintergrund()` ausgenommen.
+- `FEHLENDE_ANLEGEN` (Export): zusätzlich die `SheetSyncAusgabe`n des Eintrags (`mitExportAusgaben`):
+  fehlende Blätter anlegen, abhängige Blätter wie JGJ-/Liga-Direktvergleich (legt per `forceCreate` an und
+  aktiviert – daher **nie** im Hintergrund) neu aufbauen.
+
+## Rückgängig-Liste
+
+Jeder Sync-Neuaufbau – Tab-Wechsel (`SheetRunner.ohneRueckgaengig()`) wie Nachziehen – läuft über
+`RueckgaengigSperre` in einem **versteckten Undo-Kontext** (`XUndoManager.enterHiddenUndoContext()`): kein eigener
+Eintrag, die Schreibvorgänge hängen an der letzten Aktion. Strg+Z nimmt die Eingabe des Anwenders und den daraus
+folgenden Neuaufbau gemeinsam zurück – die Rangliste bleibt konsistent (geprüft in `SheetSyncNachzieherUITest`).
+
+**Nicht `XUndoManager.lock()` verwenden:** Calc-Operationen sichern ihren eigenen Undo-Schalter und stellen ihn
+danach wieder her (`ScDocument::EnableUndo(bOld)`), damit ist die Sperre mitten im Lauf aufgehoben (im Test landeten
+trotz `lock()` 60 Einträge in der Liste). Die Dokument-Property `IsUndoEnabled=false` scheidet ebenfalls aus: sie setzt
+`SetMaxUndoActionCount(0)` und löscht damit die gesamte Rückgängig-Liste des Anwenders. `lock()` bleibt nur
+Notlösung bei leerer Liste (dann gibt es keine Aktion zum Anhängen).
+
 ## Problem: Race Condition bei forceCreate()
 
 `NewSheet.forceCreate().create()` **löscht** das bestehende Sheet und legt es neu an. Das triggert LibreOffice-interne Events (u.a. `selectionChanged`). Wenn der `SheetSyncListener` dabei das Ziel-Sheet als aktiv erkennt **und** `SheetRunner.isRunning() == false` ist (was bei direkten `doRun()`-Aufrufen immer der Fall ist, da diese den `SheetRunnerKoordinator` umgehen), startet der Listener sofort einen zweiten parallelen Thread → beide Threads schreiben gleichzeitig auf dasselbe Sheet → Datenverlust/Korruption.
@@ -69,7 +112,7 @@ Debouncer), keine 8 Signatur-Subklassen (Engine + Konfiguration genügt).
 **NIEMALS** eine Vollaufbau-Klasse (z. B. `*RanglisteSheet`, `SupermeleeTeilnehmerSheet`) direkt im `SheetSyncListener` registrieren.
 **IMMER** eine `*SheetUpdate`-Klasse (nur Datenbereich) verwenden.
 
-| Listener-Registrierung in `PetanqueTurnierMngrSingleton` | Klasse |
+| Eintrag in `SheetSyncKatalog` | Klasse |
 |---|---|
 | Schweizer Rangliste | `SchweizerRanglisteSheetUpdate` |
 | Maastrichter Vorrunden-Rangliste | `MaastrichterVorrundenRanglisteSheetUpdate` |
@@ -87,7 +130,7 @@ Jeder neue Konsument (Rangliste oder anderer Sheet-Typ), der einen `SheetSyncLis
    - Prüft ob Sheet existiert; falls nicht → Fallback auf Vollaufbau ODER silent return (Teilnehmer-Pattern: Erstaufbau erfolgt nur über Menü, nicht über Listener)
    - Schreibt nur den Datenbereich neu (Rangliste: `berechnungUndSchreiben()`; Teilnehmer: `loescheBisherigenInhalt() + befuelleTeilnehmerDaten(false)`)
    - Löscht überzählige Zeilen wenn Datenmenge gesunken ist (Rangliste: `RanglisteUpdateHelper.loescheDatenzeilen()`; sonst eigener Clear-Range)
-   - Registrierung in `PetanqueTurnierMngrSingleton` via `SheetSyncListener.fuerSchluessel(..., (ws, ignored) -> new FooSheetUpdate(ws))` (bzw. `fuerSpieltagSheet` für spieltag-abhängige Sheets)
+   - Eintrag in `SheetSyncKatalog` via `SheetSyncListener.fuerSchluessel(..., (ws, ignored) -> new FooSheetUpdate(ws))` (bzw. `fuerSpieltagSheet` für spieltag-abhängige Sheets); muss das Blatt vor einem Export ggf. angelegt werden, zusätzlich `mitExportAusgaben(...)`
 
 ## `setActiveSheet()` in `*SheetUpdate` – verboten
 

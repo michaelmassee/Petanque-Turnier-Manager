@@ -233,6 +233,9 @@ Details und Muster: `turniersysteme/RANGLISTE_LISTENER.md`. Generische Infrastru
 - **NIEMALS** Vollaufbau-Klassen (`*RanglisteSheet`, `SupermeleeTeilnehmerSheet`) direkt im Listener registrieren → Race Condition mit `forceCreate()`
 - **IMMER** `*SheetUpdate`-Klasse verwenden (nur Datenbereich, kein `forceCreate`)
 - `setActiveSheet()` in `*SheetUpdate.doRun()` verboten – revertiert LO-Tab-Klick-Handling
+- Neue Sync-Einträge nur in `comp/SheetSyncKatalog` (eine Registry für Tab-Wechsel **und** Nachziehen)
+- Leser abgeleiteter Blätter (Webserver, PTM-Online-Live, Export, WhatsApp, neue Exporte) rufen vor dem Lesen `SheetSyncNachzieher.get().zieheNach(ws, modus)` – keine eigenen Pro-System-Listen
+- Jeder Sync-Neuaufbau läuft ohne eigenen Rückgängig-Eintrag (`RueckgaengigSperre` = versteckter Undo-Kontext, `SheetRunner.ohneRueckgaengig()`); **nicht** `XUndoManager.lock()` (Calc hebt die Sperre per `ScDocument::EnableUndo(bOld)` wieder auf), **nicht** `IsUndoEnabled=false` (löscht die Rückgängig-Liste)
 
 ## Threading: VCL/UNO-UI NUR auf dem LO-Main-Thread
 

@@ -14,6 +14,8 @@ import com.sun.star.util.XModifyListener;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.NativeDialogSperre;
+import de.petanqueturniermanager.helper.sheetsync.SheetSyncNachziehRunner;
+import de.petanqueturniermanager.helper.sheetsync.SheetSyncNachzieher;
 
 /**
  * Lauscht auf Zelländerungen im Calc-Dokument und löst bei Änderungen einen SSE-Refresh aus.
@@ -126,6 +128,7 @@ public class WebserverModifyListener implements XModifyListener {
     }
 
     private void refreshTask() {
+        boolean nachziehenVersucht = false;
         try {
             do {
                 dirty.set(false);
@@ -134,6 +137,17 @@ public class WebserverModifyListener implements XModifyListener {
                 if (current == null) {
                     // ws kann zwischenzeitlich abgemeldet worden sein – Welle als verarbeitet markieren.
                     break;
+                }
+                // Höchstens ein Nachzieh-Versuch je Task: scheitert der Neuaufbau, bleibt die Signatur
+                // veraltet – ein Wiederholen in derselben Schleife liefe endlos.
+                if (!nachziehenVersucht) {
+                    nachziehenVersucht = true;
+                    if (zieheVeralteteSyncBlaetterNach(current)) {
+                        // Der Nachzieh-Lauf sendet am Ende selbst einen SSE-Refresh; die nächste
+                        // Runde rendert den neuen Stand in jedem Fall.
+                        markiereDirty();
+                        continue;
+                    }
                 }
                 try {
                     WebServerManager.get().sseRefreshSenden(current);
@@ -158,6 +172,35 @@ public class WebserverModifyListener implements XModifyListener {
             if (dirty.get()) {
                 scheduleIfNeeded();
             }
+        }
+    }
+
+    /**
+     * Ranglisten u. a. abgeleitete Blätter aktualisieren sich sonst erst beim Tab-Wechsel – der Webserver zeigte bis
+     * dahin veraltete Daten. Ist ein Sync-Blatt laut Signatur veraltet, zieht ein stiller SheetRunner es nach
+     * (nur Datenbereich, kein Fokuswechsel, keine Rückgängig-Einträge).
+     *
+     * @return {@code true}, wenn ein Nachzieh-Lauf stattgefunden hat
+     */
+    private static boolean zieheVeralteteSyncBlaetterNach(WorkingSpreadsheet ws) {
+        if (SheetRunner.isRunning() || NativeDialogSperre.istOffen()) {
+            return false;
+        }
+        try {
+            if (!SheetSyncNachzieher.get().istVeraltet(ws.getWorkingSpreadsheetDocument())) {
+                return false;
+            }
+            SheetSyncNachziehRunner runner = new SheetSyncNachziehRunner(ws);
+            runner.startSilent();
+            runner.join();
+            return true;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            logger.debug("Nachziehen der Sync-Blätter unterbrochen", e);
+            return false;
+        } catch (RuntimeException e) {
+            logger.warn("Nachziehen der Sync-Blätter fehlgeschlagen", e);
+            return false;
         }
     }
 

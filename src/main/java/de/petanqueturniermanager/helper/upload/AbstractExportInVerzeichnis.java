@@ -42,8 +42,8 @@ import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.io.PdfExport;
-import de.petanqueturniermanager.helper.sheetsync.EingabeSignatur;
-import de.petanqueturniermanager.helper.sheetsync.SheetSyncRebuild;
+import de.petanqueturniermanager.helper.sheetsync.NachziehModus;
+import de.petanqueturniermanager.helper.sheetsync.SheetSyncNachzieher;
 import de.petanqueturniermanager.webserver.TabelleHtmlRenderer;
 import de.petanqueturniermanager.webserver.TabelleMarkdownRenderer;
 import de.petanqueturniermanager.webserver.TabelleModel;
@@ -78,7 +78,12 @@ public abstract class AbstractExportInVerzeichnis extends SheetRunner {
         ergebnis.speichern(getWorkingSpreadsheet());
     }
 
+    /**
+     * Zieht vor dem Export alle veralteten oder fehlenden abgeleiteten Blätter nach (Ranglisten, Teilnehmer-,
+     * Checkin-Listen), damit nie ein veralteter Stand exportiert wird.
+     */
     public final ExportErgebnis exportiere() throws GenerateException {
+        SheetSyncNachzieher.get().zieheNach(getWorkingSpreadsheet(), NachziehModus.FEHLENDE_ANLEGEN);
         return exportiereInVerzeichnis(zielVerzeichnis);
     }
 
@@ -88,28 +93,6 @@ public abstract class AbstractExportInVerzeichnis extends SheetRunner {
     }
 
     protected abstract ExportErgebnis exportiereInVerzeichnis(Path zielVerzeichnis) throws GenerateException;
-
-    @FunctionalInterface
-    protected interface ExportUpdateAktion {
-        void aktualisieren() throws GenerateException;
-    }
-
-    protected void aktualisiereExportSheetWennDirty(String persistenzSchluessel,
-            EingabeSignatur signatur, ExportUpdateAktion updateAktion) throws GenerateException {
-        aktualisiereExportSheetWennDirty(persistenzSchluessel, signatur,
-                exportSheetFehlt(persistenzSchluessel), updateAktion);
-    }
-
-    protected void aktualisiereExportSheetWennDirty(String persistenzSchluessel,
-            EingabeSignatur signatur, boolean ausgabeFehlt, ExportUpdateAktion updateAktion)
-            throws GenerateException {
-        SheetSyncRebuild.aktualisiereWennDirty(getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
-                persistenzSchluessel, signatur, ausgabeFehlt, updateAktion::aktualisieren);
-    }
-
-    protected boolean exportSheetFehlt(String schluessel) {
-        return SheetSyncRebuild.sheetFehlt(getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), schluessel);
-    }
 
     protected Path exportierePdfWennTabelleVorhanden(String sheetName, Path zielVerzeichnis)
             throws GenerateException {

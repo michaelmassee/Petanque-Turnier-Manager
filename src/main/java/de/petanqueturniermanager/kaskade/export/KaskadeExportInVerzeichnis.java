@@ -14,15 +14,12 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
-import de.petanqueturniermanager.helper.rangliste.SignaturQuellen;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
-import de.petanqueturniermanager.helper.sheetsync.EingabeSignatur;
 import de.petanqueturniermanager.helper.upload.AbstractExportInVerzeichnis;
 import de.petanqueturniermanager.helper.upload.ExportErgebnis;
 import de.petanqueturniermanager.helper.upload.ExportFormat;
 import de.petanqueturniermanager.helper.upload.ExportHtmlSeite;
 import de.petanqueturniermanager.kaskade.konfiguration.KaskadeKonfigurationSheet;
-import de.petanqueturniermanager.kaskade.spielrunde.KaskadeGruppenRanglisteSheetUpdate;
 
 public class KaskadeExportInVerzeichnis extends AbstractExportInVerzeichnis {
 
@@ -34,9 +31,6 @@ public class KaskadeExportInVerzeichnis extends AbstractExportInVerzeichnis {
     protected ExportErgebnis exportiereInVerzeichnis(Path zielVerzeichnis) throws GenerateException {
         var ws = getWorkingSpreadsheet();
         var konfiguration = new KaskadeKonfigurationSheet(ws);
-        aktualisiereExportSheetWennDirty(SheetMetadataHelper.SCHLUESSEL_KASKADE_GRUPPENRANGLISTE,
-                new EingabeSignatur(SignaturQuellen::fuerKaskade),
-                () -> new KaskadeGruppenRanglisteSheetUpdate(ws).doRun());
 
         String meldelisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_KASKADE_MELDELISTE, SheetNamen.meldeliste());
         String teilnehmerlisteSheetName = sheetNamePerSchluessel(SheetMetadataHelper.SCHLUESSEL_TEILNEHMER, SheetNamen.teilnehmer());
