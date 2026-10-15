@@ -378,9 +378,11 @@ public class KaskadeSpielrundeSheet extends SheetRunner implements ISheet, PtmOn
     }
 
     private static SortedMap<Integer, String> formeln(SortedMap<Integer, Integer> nrProZeile,
-            MeldelisteUuidIndex uuidIndex, String nrBereich) {
+            MeldelisteUuidIndex uuidIndex, String nrBereich) throws GenerateException {
         SortedMap<Integer, String> formeln = new TreeMap<>();
-        nrProZeile.forEach((zeile, nr) -> formeln.put(zeile, uuidIndex.schluessel(nr).nrAnzeige(nrBereich)));
+        for (var eintrag : nrProZeile.entrySet()) {
+            formeln.put(eintrag.getKey(), uuidIndex.uuidSchluessel(eintrag.getValue()).nrAnzeige(nrBereich));
+        }
         return formeln;
     }
 

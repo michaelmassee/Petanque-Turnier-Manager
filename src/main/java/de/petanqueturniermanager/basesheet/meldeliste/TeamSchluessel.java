@@ -8,8 +8,10 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.I18n;
 
 /**
- * Wie eine Formel ein Team in der Meldeliste findet. Ziel ist überall {@link Uuid}: die UUID bleibt, wenn sich die
- * Teamnummer ändert. {@link Nr} gilt nur noch für Systeme, deren Spielrunden noch nicht umgestellt sind.
+ * Wie eine Formel ein Team in der Meldeliste findet. Gespeicherte Teamreferenzen (Setzlisten, Spielrunden, Spielpläne)
+ * verwenden immer {@link Uuid}: die UUID bleibt, wenn sich die Teamnummer ändert. {@link AngezeigteNr} verweist auf
+ * eine Zelle, die selbst die aktuelle Teamnummer anzeigt (Sieger-Weitergabe im KO-Baum, Teilnehmerlisten,
+ * Ranglisten) und deshalb nach einer Nummernänderung von selbst stimmt.
  */
 public sealed interface TeamSchluessel {
 
@@ -27,9 +29,9 @@ public sealed interface TeamSchluessel {
 		return new Uuid("\"" + uuid + "\"");
 	}
 
-	/** Team über eine Teamnummer (Zelladresse oder Zahl) – Übergang für noch nicht umgestellte Systeme. */
-	static TeamSchluessel nr(String nrAusdruck) {
-		return new Nr(nrAusdruck);
+	/** Team über einen Ausdruck, der die aktuell angezeigte Teamnummer liefert (z.&nbsp;B. eine Sieger-Zelle). */
+	static TeamSchluessel angezeigteNr(String nrAusdruck) {
+		return new AngezeigteNr(nrAusdruck);
 	}
 
 	/** Nur der explizite Freispiel-Platzhalter 0, als Wert oder Calc-Formel. */
@@ -57,8 +59,8 @@ public sealed interface TeamSchluessel {
 		}
 	}
 
-	/** @param ausdruck Formelausdruck oder Zelladresse mit der Teamnummer */
-	record Nr(String ausdruck) implements TeamSchluessel {
+	/** @param ausdruck Formelausdruck oder Zelladresse, die die aktuelle Teamnummer anzeigt */
+	record AngezeigteNr(String ausdruck) implements TeamSchluessel {
 
 		@Override
 		public String zeileImBereich(String nrBereich) {

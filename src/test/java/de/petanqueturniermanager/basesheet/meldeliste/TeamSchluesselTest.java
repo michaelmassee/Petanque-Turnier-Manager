@@ -25,8 +25,8 @@ class TeamSchluesselTest {
 	}
 
 	@Test
-	void nrSuchtUeberMatchUndZeigtDenAusdruck() {
-		TeamSchluessel team = TeamSchluessel.nr("C5");
+	void angezeigteNrSuchtUeberMatchUndZeigtDenAusdruck() {
+		TeamSchluessel team = TeamSchluessel.angezeigteNr("C5");
 
 		assertThat(team.zeileImBereich(BEREICH)).isEqualTo("MATCH(C5;" + BEREICH + ";0)");
 		assertThat(team.nrAnzeige(BEREICH)).isEqualTo("C5");

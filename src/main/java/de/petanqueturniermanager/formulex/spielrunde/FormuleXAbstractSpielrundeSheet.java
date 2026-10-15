@@ -471,8 +471,8 @@ public abstract class FormuleXAbstractSpielrundeSheet extends SheetRunner implem
         String[][] formeln = new String[paarungen.size()][2];
         for (int i = 0; i < paarungen.size(); i++) {
             TeamPaarung paarung = paarungen.get(i);
-            formeln[i][0] = uuidIndex.schluessel(paarung.getA().getNr()).nrAnzeige(nrBereich);
-            formeln[i][1] = paarung.hasB() ? uuidIndex.schluessel(paarung.getB().getNr()).nrAnzeige(nrBereich) : "";
+            formeln[i][0] = uuidIndex.uuidSchluessel(paarung.getA().getNr()).nrAnzeige(nrBereich);
+            formeln[i][1] = paarung.hasB() ? uuidIndex.uuidSchluessel(paarung.getB().getNr()).nrAnzeige(nrBereich) : "";
         }
         RangePosition teamBereich = RangePosition.from(TEAM_A_SPALTE, ERSTE_DATEN_ZEILE, TEAM_B_SPALTE,
                 ERSTE_DATEN_ZEILE + paarungen.size() - 1);

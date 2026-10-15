@@ -11,12 +11,12 @@ public final class TeamAnzeigeHelper {
 	}
 
 	/**
-	 * Wie {@link #formel(TeamSchluessel, TeamAnzeige, boolean, Formation, boolean)} für eine Teamnummer – Übergang
-	 * für Systeme, deren Spielrunden noch Nummern speichern.
+	 * Wie {@link #formel(TeamSchluessel, TeamAnzeige, boolean, Formation, boolean)} für eine Zelle, die die aktuelle
+	 * Teamnummer anzeigt ({@link TeamSchluessel#angezeigteNr(String)}).
 	 */
 	public static String formel(String teamNrAdresse, TeamAnzeige anzeige, boolean teamnameSpalteAktiv,
 			Formation formation, boolean vereinsnameAnzeigen) {
-		return formel(TeamSchluessel.nr(teamNrAdresse), anzeige, teamnameSpalteAktiv, formation, vereinsnameAnzeigen);
+		return formel(TeamSchluessel.angezeigteNr(teamNrAdresse), anzeige, teamnameSpalteAktiv, formation, vereinsnameAnzeigen);
 	}
 
 	/**

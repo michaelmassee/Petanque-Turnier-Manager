@@ -663,7 +663,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	 * die zusammengesetzten Spielernamen (siehe {@link #spielerNamenFormel}).<br>
 	 * Der Sheet-Name wird korrekt quotiert, damit lokalisierte Namen mit Leerzeichen funktionieren.
 	 *
-	 * @param nrAdresse           Zell-Adresse oder Literal, das die Teamnummer enthält
+	 * @param nrAdresse           Zell-Adresse, die die aktuelle Teamnummer anzeigt
 	 * @param teamnameSpalteAktiv {@code true} wenn die Meldeliste eine Teamname-Spalte hat
 	 * @param formation           Formation der Meldeliste (Anzahl Spieler pro Team)
 	 * @param vereinsnameAnzeigen {@code true} wenn die Meldeliste eine Vereinsname-Spalte pro Spieler hat
@@ -671,7 +671,8 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	 */
 	public static String teamNameFormel(String nrAdresse, boolean teamnameSpalteAktiv,
 			Formation formation, boolean vereinsnameAnzeigen) {
-		return teamNameFormel(TeamSchluessel.nr(nrAdresse), teamnameSpalteAktiv, formation, vereinsnameAnzeigen);
+		return teamNameFormel(TeamSchluessel.angezeigteNr(nrAdresse), teamnameSpalteAktiv, formation,
+				vereinsnameAnzeigen);
 	}
 
 	/** Wie {@link #teamNameFormel(String, boolean, Formation, boolean)}, Team über einen {@link TeamSchluessel}. */
@@ -695,7 +696,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	 * Bei aktiver Teamname-Spalte beginnt die Zeile deshalb erst bei Spalte B, damit der
 	 * Teamname auf Index 0 fällt und nicht als Vorname gelesen wird.
 	 *
-	 * @param nrAdresse           Zell-Adresse oder Literal, das die Teamnummer enthält
+	 * @param nrAdresse           Zell-Adresse, die die aktuelle Teamnummer anzeigt
 	 * @param teamnameSpalteAktiv {@code true} wenn die Meldeliste eine Teamname-Spalte hat
 	 * @param formation           Formation der Meldeliste (Anzahl Spieler pro Team)
 	 * @param vereinsnameAnzeigen {@code true} wenn die Meldeliste eine Vereinsname-Spalte pro Spieler hat
@@ -703,7 +704,8 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	 */
 	public static String spielerNamenFormel(String nrAdresse, boolean teamnameSpalteAktiv,
 			Formation formation, boolean vereinsnameAnzeigen) {
-		return spielerNamenFormel(TeamSchluessel.nr(nrAdresse), teamnameSpalteAktiv, formation, vereinsnameAnzeigen);
+		return spielerNamenFormel(TeamSchluessel.angezeigteNr(nrAdresse), teamnameSpalteAktiv, formation,
+				vereinsnameAnzeigen);
 	}
 
 	/** Wie {@link #spielerNamenFormel(String, boolean, Formation, boolean)}, Team über einen {@link TeamSchluessel}. */

@@ -98,14 +98,10 @@ public final class MeldelisteUuidIndex {
 	}
 
 	/**
-	 * Schlüssel für Formeln, die das Team mit dieser Nummer referenzieren: die UUID, sonst die Nummer selbst. Die
-	 * Meldelisten-Aktualisierung vor jedem Rundenaufbau vergibt UUIDs; fehlt sie trotzdem, ist die Zelle nur gegen
-	 * Umnummerieren nicht geschützt.
+	 * Schlüssel für Formeln, die das Team mit dieser Nummer referenzieren. Die Meldelisten-Aktualisierung vor jedem
+	 * Rundenaufbau vergibt UUIDs; fehlt sie trotzdem, bricht der Aufbau ab statt eine umnummerierungs-anfällige Zelle
+	 * zu schreiben.
 	 */
-	public TeamSchluessel schluessel(int nr) {
-		return uuid(nr).map(TeamSchluessel::uuidLiteral).orElseGet(() -> TeamSchluessel.nr(String.valueOf(nr)));
-	}
-	/** Schlüssel für echte Teams in UUID-Spielplänen; keine Nummernsuche bei fehlender UUID. */
 	public TeamSchluessel uuidSchluessel(int nr) throws GenerateException {
 		return uuid(nr).map(TeamSchluessel::uuidLiteral).orElseThrow(() ->
 				new GenerateException(

@@ -1665,7 +1665,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet, PtmOnline
 							.setHoriJustify(CellHoriJustify.CENTER));
 			return;
 		}
-		String formel = TeamAnzeigeHelper.formel(uuidIndex.schluessel(nr), teamAnzeige, meldeListeTeamnameAnzeigen,
+		String formel = TeamAnzeigeHelper.formel(uuidIndex.uuidSchluessel(nr), teamAnzeige, meldeListeTeamnameAnzeigen,
 				meldeListeFormation, meldeListeVereinsnameAnzeigen);
 		getSheetHelper().setFormulaInCell(
 				StringCellValue.from(xSheet, Position.from(spalte, zeile), formel)

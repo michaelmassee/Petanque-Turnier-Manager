@@ -332,14 +332,14 @@ public abstract class AbstractPouleVorrundeSheet extends SheetRunner implements 
         // daher nicht die Zuordnung.
         String nrBereich = MeldeListeHelper.nrBereichMeldeliste();
         getSheetHelper().setFormulaInCell(StringCellValue.from(xSheet, Position.from(SPALTE_TEAM_A_NR, zeile),
-                uuidIndex.schluessel(teamANr).nrAnzeige(nrBereich)));
+                uuidIndex.uuidSchluessel(teamANr).nrAnzeige(nrBereich)));
 
         getSheetHelper().setFormulaInCell(StringCellValue.from(xSheet,
                 Position.from(SPALTE_TEAM_A_NAME, zeile),
                 vlookupDirekt(Position.from(SPALTE_TEAM_A_NR, zeile).getAddress())));
 
         getSheetHelper().setFormulaInCell(StringCellValue.from(xSheet, Position.from(SPALTE_TEAM_B_NR, zeile),
-                uuidIndex.schluessel(teamBNr).nrAnzeige(nrBereich)));
+                uuidIndex.uuidSchluessel(teamBNr).nrAnzeige(nrBereich)));
 
         getSheetHelper().setFormulaInCell(StringCellValue.from(xSheet,
                 Position.from(SPALTE_TEAM_B_NAME, zeile),

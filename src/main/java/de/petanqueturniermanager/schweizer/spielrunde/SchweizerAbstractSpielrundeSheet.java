@@ -751,10 +751,10 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		String[][] formulas = new String[paarungen.size()][2];
 		for (int i = 0; i < paarungen.size(); i++) {
 			TeamPaarung paarung = paarungen.get(i);
-			formulas[i][0] = TeamAnzeigeHelper.formel(uuidIndex.schluessel(paarung.getA().getNr()), anzeige,
+			formulas[i][0] = TeamAnzeigeHelper.formel(uuidIndex.uuidSchluessel(paarung.getA().getNr()), anzeige,
 					teamnameSpalteAktiv, formation, vereinsnameAnzeigen);
 			formulas[i][1] = paarung.hasB()
-					? TeamAnzeigeHelper.formel(uuidIndex.schluessel(paarung.getB().getNr()), anzeige,
+					? TeamAnzeigeHelper.formel(uuidIndex.uuidSchluessel(paarung.getB().getNr()), anzeige,
 							teamnameSpalteAktiv, formation, vereinsnameAnzeigen)
 					: "";
 		}
