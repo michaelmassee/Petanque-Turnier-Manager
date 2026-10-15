@@ -156,4 +156,51 @@ class PtmOnlineAuftraegeTest {
             assertThat(auftrag.body()).isEqualTo("{\"closed\":true}");
         });
     }
+
+    @Test
+    void verknuepfungenBuendelnPaareUndLassenOffeneAus() {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        Map<String, String> paare = Map.of("u1", "r1", "u2", "r2");
+
+        assertThat(PtmOnlineAuftraege.verknuepfungen(bestand, TURNIER, paare)).isTrue();
+        assertThat(PtmOnlineAuftraege.verknuepfungen(bestand, TURNIER, paare)).as("schon im offenen Auftrag").isFalse();
+
+        assertThat(bestand.zuSenden(false)).singleElement().satisfies(auftrag -> {
+            assertThat(auftrag.art()).isEqualTo(AuftragsArt.ANMELDUNG_VERKNUEPFEN);
+            assertThat(auftrag.methode()).isEqualTo("POST");
+            assertThat(auftrag.pfad()).endsWith("/t1/registration-links");
+            assertThat(JsonParser.parseString(auftrag.body()).getAsJsonObject().getAsJsonArray("links")).hasSize(2);
+        });
+        assertThat(PtmOnlineAuftraege.offeneVerknuepfungen(bestand)).isEqualTo(paare);
+    }
+
+    @Test
+    void verknuepfungenTeilenSichAufHoechstens200JeAuftrag() {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        Map<String, String> paare = new java.util.LinkedHashMap<>();
+        for (int i = 0; i < 201; i++) {
+            paare.put("u" + i, "r" + i);
+        }
+
+        PtmOnlineAuftraege.verknuepfungen(bestand, TURNIER, paare);
+
+        assertThat(bestand.zuSenden(false)).extracting(auftrag -> JsonParser.parseString(auftrag.body())
+                .getAsJsonObject().getAsJsonArray("links").size()).containsExactly(200, 1);
+    }
+
+    @Test
+    void offeneVerknuepfungenKennenAuchAenderungenUndVergessenAngenommene() {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        bestand.erzeuge(AuftragsArt.ANMELDUNG_AENDERN, "PUT", "/x", "{}", "{\"lokaleUuid\":\"u3\",\"onlineId\":\"r3\"}");
+        PtmOnlineAuftraege.verknuepfungen(bestand, TURNIER, Map.of("u1", "r1"));
+        SyncAuftrag verknuepfung = bestand.zuSenden(false).getLast();
+
+        assertThat(PtmOnlineAuftraege.offeneVerknuepfungen(bestand)).isEqualTo(Map.of("u3", "r3", "u1", "r1"));
+
+        VersandErgebnis angenommen = new VersandErgebnis(verknuepfung, new SyncAntwort(200, "{}", false), true);
+        bestand.gesendet(angenommen);
+        bestand.angewendet(angenommen, "");
+
+        assertThat(PtmOnlineAuftraege.offeneVerknuepfungen(bestand)).isEqualTo(Map.of("u3", "r3"));
+    }
 }

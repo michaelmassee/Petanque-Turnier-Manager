@@ -132,14 +132,31 @@ public class PtmOnlineRegistrationMapping {
      * Lauf); Nr-Zellen haben Vorrang.
      */
     public void ergaenzeAusServer(Collection<RegistrationDto> registrations) throws GenerateException {
-        Set<String> zugeordnet = syncSheet.getLokaleUuids();
-        Map<String, String> inNrZellen = onlineIdsAusNrZellen(zugeordnet);
+        Map<String, String> ausServer = new LinkedHashMap<>();
         for (RegistrationDto registration : registrations) {
-            String uuid = registration.localRegistrationUuid();
-            if (uuid != null && zugeordnet.contains(uuid) && !inNrZellen.containsKey(uuid)) {
-                ohneZeile.putIfAbsent(uuid, registration.id());
+            if (registration.localRegistrationUuid() != null) {
+                ausServer.putIfAbsent(registration.localRegistrationUuid(), registration.id());
             }
         }
+        ergaenzeOhneZeile(ausServer);
+    }
+
+    /**
+     * Wie {@link #ergaenzeAusServer}, aber aus noch nicht angenommenen Verknüpfungs- und Änderungsaufträgen dieser
+     * Bindung: Wurde die Zeile gelöscht, bevor PTM-Online die lokale UUID erfahren hat, kennt sie nur der Auftrag.
+     */
+    public void ergaenzeAusOffenenAuftraegen(AuftragsBestand bestand) throws GenerateException {
+        ergaenzeOhneZeile(PtmOnlineAuftraege.offeneVerknuepfungen(bestand));
+    }
+
+    private void ergaenzeOhneZeile(Map<String, String> onlineIdProUuid) throws GenerateException {
+        Set<String> zugeordnet = syncSheet.getLokaleUuids();
+        Map<String, String> inNrZellen = onlineIdsAusNrZellen(zugeordnet);
+        onlineIdProUuid.forEach((uuid, onlineId) -> {
+            if (zugeordnet.contains(uuid) && !inNrZellen.containsKey(uuid)) {
+                ohneZeile.putIfAbsent(uuid, onlineId);
+            }
+        });
     }
 
     /** Ob die zuletzt übernommene Online-Anmeldung dieser lokalen Meldung online storniert ist. */

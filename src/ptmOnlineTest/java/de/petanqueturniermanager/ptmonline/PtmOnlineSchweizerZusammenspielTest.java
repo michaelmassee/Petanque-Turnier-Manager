@@ -20,6 +20,7 @@ import com.google.gson.JsonObject;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.ptmonline.PtmOnlineWebApi.Person;
+import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetUpdate;
 
 /**
  * Zusammenspiel PTM ↔ PTM Online an einem Schweizer Triplette-Turnier, gegen den lokal gestarteten Worker: Import,
@@ -224,6 +225,31 @@ class PtmOnlineSchweizerZusammenspielTest extends BasePtmOnlineZusammenspielTest
         assertThat(lokaleMeldungen().values()).as("nachgerückt: wieder genau einmal übernommen")
                 .containsExactlyInAnyOrder(namen(TEAM_A), namen(TEAM_B));
         assertThat(mapping.istBereitsImportiert(idA)).isTrue();
+    }
+
+    @Test
+    void geloeschteImportierteMeldungWirdNichtErneutImportiert() throws Exception {
+        turnierAnlegen(Formation.TRIPLETTE, IN_EINEM_MONAT);
+        String idA = online.anmelden(turnierId, TEAM_A);
+        online.anmelden(turnierId, TEAM_B);
+        verbinden();
+        abgleichen();
+        String uuidA = mapping.getLokaleUuid(idA).orElseThrow();
+        assertThat(online.anmeldung(turnierId, idA).orElseThrow().get("localRegistrationUuid").getAsString())
+                .as("PTM-Online kennt die lokale UUID der unveränderten importierten Anmeldung (T-21)")
+                .isEqualTo(uuidA);
+
+        // Wie die Turnierleitung: Zeile leeren, „Meldeliste aktualisieren“ schließt die Lücke.
+        int zeileA = zeile(TEAM_A[0]);
+        wieImSheetRunner(() -> ziel.entferneMeldung(zeileA));
+        wieImSheetRunner(new SchweizerMeldeListeSheetUpdate(wkingSpreadsheet)::upDateSheet);
+        mapping = new PtmOnlineRegistrationMapping(wkingSpreadsheet, system, spieltagNr);
+        abgleichen();
+
+        assertThat(ziel.findeZeileMitName(TEAM_A[0].name())).as("gelöschte Meldung nicht erneut importiert")
+                .isNotPositive();
+        assertThat(lokaleMeldungen().values()).containsExactly(namen(TEAM_B));
+        assertThat(mapping.istBereitsImportiert(idA)).as("Zuordnung vom Server").isTrue();
     }
 
     @Test

@@ -32,6 +32,7 @@ import de.petanqueturniermanager.ptmonline.auftrag.AuftragsArt;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsBestand;
 import de.petanqueturniermanager.ptmonline.auftrag.SyncAuftrag;
 import de.petanqueturniermanager.ptmonline.auftrag.versand.AuftragsVersand;
+import de.petanqueturniermanager.ptmonline.auftrag.versand.SyncAntwort;
 import de.petanqueturniermanager.ptmonline.auftrag.versand.VersandErgebnis;
 import de.petanqueturniermanager.ptmonline.auftrag.versand.VersandStopp;
 import de.petanqueturniermanager.ptmonline.dto.LiveMatchDto;
@@ -61,7 +62,10 @@ public final class PtmOnlineAuftraege {
     private static final String KONTEXT_BEZEICHNUNG = "bezeichnung";
     private static final String KONTEXT_REVISIONEN = "revisionen";
     private static final String CODE_TURNIER_LAEUFT = "tournament_running";
+    private static final String KONTEXT_ONLINE_ID = "onlineId";
+    private static final String KONTEXT_VERKNUEPFUNGEN = "verknuepfungen";
     private static final int MAX_ENTSCHEIDUNGEN_JE_AUFTRAG = 200;
+    private static final int MAX_VERKNUEPFUNGEN_JE_AUFTRAG = 200;
 
     private PtmOnlineAuftraege() {}
 
@@ -183,12 +187,74 @@ public final class PtmOnlineAuftraege {
         revisionen.addProperty(lokaleUuid, erwarteteRevision + 1);
         JsonObject kontext = new JsonObject();
         kontext.addProperty(KONTEXT_UUID, lokaleUuid);
+        kontext.addProperty(KONTEXT_ONLINE_ID, onlineRegistrationId);
         kontext.addProperty(KONTEXT_BEZEICHNUNG, bezeichnung);
         kontext.add(KONTEXT_REVISIONEN, revisionen);
         return bestand.erzeuge(AuftragsArt.ANMELDUNG_AENDERN, "PUT",
                 TournamentSyncClient.anmeldungPfad(tournamentId, lokaleUuid),
                 TournamentSyncClient.aenderungBody(anmeldung, personen, onlineRegistrationId, erwarteteRevision),
                 kontext.toString());
+    }
+
+    /**
+     * Verknüpft zugeordnete Online-Anmeldungen mit ihrer lokalen UUID (T-21), damit PTM-Online die Zuordnung kennt –
+     * auch nach dem Löschen der lokalen Zeile, wenn die Nr-Zelle mit der Online-ID fehlt. Paare, die schon ein
+     * offener Auftrag trägt, entfallen; PTM-Online nimmt höchstens 200 je Aufruf an.
+     *
+     * @param onlineIdProUuid Online-ID je lokaler UUID
+     * @return ob ein Auftrag entstanden ist
+     */
+    static boolean verknuepfungen(AuftragsBestand bestand, String tournamentId, Map<String, String> onlineIdProUuid) {
+        Map<String, String> offen = offeneVerknuepfungen(bestand);
+        List<Map.Entry<String, String>> neu = onlineIdProUuid.entrySet().stream()
+                .filter(paar -> !paar.getValue().equals(offen.get(paar.getKey()))).toList();
+        for (int start = 0; start < neu.size(); start += MAX_VERKNUEPFUNGEN_JE_AUFTRAG) {
+            Map<String, String> teil = new LinkedHashMap<>();
+            neu.subList(start, Math.min(neu.size(), start + MAX_VERKNUEPFUNGEN_JE_AUFTRAG))
+                    .forEach(paar -> teil.put(paar.getKey(), paar.getValue()));
+            JsonObject paare = new JsonObject();
+            teil.forEach(paare::addProperty);
+            JsonObject kontext = new JsonObject();
+            kontext.add(KONTEXT_VERKNUEPFUNGEN, paare);
+            bestand.erzeuge(AuftragsArt.ANMELDUNG_VERKNUEPFEN, "POST",
+                    TournamentSyncClient.verknuepfungenPfad(tournamentId),
+                    TournamentSyncClient.verknuepfungenBody(teil), kontext.toString());
+        }
+        return !neu.isEmpty();
+    }
+
+    /**
+     * Online-ID je lokaler UUID aus offenen Verknüpfungs- und Änderungsaufträgen: Solange sie nicht angenommen sind,
+     * kennt PTM-Online die lokale UUID womöglich noch nicht, der Auftrag aber schon.
+     */
+    static Map<String, String> offeneVerknuepfungen(AuftragsBestand bestand) {
+        Map<String, String> onlineIdProUuid = new LinkedHashMap<>();
+        for (AuftragsBestand.Eintrag eintrag : bestand.eintraege()) {
+            if (eintrag.zustand() != AuftragsBestand.Zustand.OFFEN) {
+                continue;
+            }
+            JsonObject kontext = kontext(eintrag.auftrag());
+            switch (eintrag.auftrag().art()) {
+                case ANMELDUNG_VERKNUEPFEN -> {
+                    JsonElement paare = kontext.get(KONTEXT_VERKNUEPFUNGEN);
+                    if (paare != null && paare.isJsonObject()) {
+                        paare.getAsJsonObject().entrySet()
+                                .forEach(paar -> onlineIdProUuid.put(paar.getKey(), paar.getValue().getAsString()));
+                    }
+                }
+                case ANMELDUNG_AENDERN -> {
+                    String uuid = text(kontext, KONTEXT_UUID);
+                    String onlineId = text(kontext, KONTEXT_ONLINE_ID);
+                    if (!uuid.isEmpty() && !onlineId.isEmpty()) {
+                        onlineIdProUuid.put(uuid, onlineId);
+                    }
+                }
+                default -> {
+                    // Andere Aufträge tragen keine Zuordnung.
+                }
+            }
+        }
+        return onlineIdProUuid;
     }
 
     /** Spielrunde; ein noch ungesendeter älterer Stand derselben Runde entfällt. */
@@ -396,6 +462,7 @@ public final class PtmOnlineAuftraege {
                                     + "Revisionen bleiben für den nächsten Abgleich", auftrag.zaehler());
                         }
                     }
+                    case ANMELDUNG_VERKNUEPFEN -> meldeNichtVerknuepfte(auftrag, ergebnis.antwort());
                     case START, TRENNEN, RUNDE, RUNDE_LOESCHEN, RANGLISTE, SPIELEINSTELLUNGEN, MELEE_TEAMS, ANMELDUNG_STORNIEREN, ENTSCHEIDUNGEN,
                             ANMELDUNG_SCHLIESSEN -> {
                         // Nichts im Dokument festzuhalten.
@@ -458,6 +525,19 @@ public final class PtmOnlineAuftraege {
     }
 
     // ── Kontext ─────────────────────────────────────────────────────────────
+
+    /**
+     * Unbekannte Anmeldungen (online gelöscht) und Konflikte (lokale UUID trägt schon eine andere Anmeldung) ändern
+     * nichts im Dokument; der nächste Abgleich bildet die Zuordnung ohnehin neu.
+     */
+    private static void meldeNichtVerknuepfte(SyncAuftrag auftrag, SyncAntwort antwort) throws IOException {
+        List<String> unbekannt = TournamentSyncClient.textListeAus(antwort, "unknown");
+        List<String> konflikte = TournamentSyncClient.textListeAus(antwort, "conflicts");
+        if (!unbekannt.isEmpty() || !konflikte.isEmpty()) {
+            logger.warn("PTM-Online: Verknüpfungsauftrag {} – unbekannte Anmeldungen {}, Konflikte {}",
+                    auftrag.zaehler(), unbekannt, konflikte);
+        }
+    }
 
     private static JsonObject kontext(SyncAuftrag auftrag) {
         try {

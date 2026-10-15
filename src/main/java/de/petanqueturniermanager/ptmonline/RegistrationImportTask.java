@@ -317,6 +317,8 @@ public final class RegistrationImportTask {
             MeldelistenAktualisierung aktualisierung, AbgleichFortschritt fortschritt)
             throws IOException, InterruptedException, GenerateException {
         mapping.sicherstellen();
+        // Gelöschte Zeilen, deren Verknüpfung PTM-Online noch nicht erreicht hat: Die Zuordnung steht nur im Auftrag.
+        mapping.ergaenzeAusOffenenAuftraegen(bestand);
         // Entscheidungen der vorigen Konfliktliste (A-29) wirken in diesem Lauf; die Liste wird am Ende neu gebildet.
         KonfliktSammlung sammlung = KonfliktSammlung.mit(mapping.konfliktListe().leseEntscheidungen());
         wendeLokaleEntscheidungenAn(ziel, mapping, bestand, tournamentId, sammlung);
@@ -1085,6 +1087,9 @@ public final class RegistrationImportTask {
                 .collect(Collectors.toMap(RegistrationDto::id, registration -> registration));
         Map<String, String> onlineIds = mapping.getOnlineIdsProUuid();
         Map<String, ZuordnungsZusatz> zusaetze = mapping.getZusaetzeProUuid();
+        // Importierte Anmeldungen kennt PTM-Online sonst erst nach einer Besetzungsänderung aus dem Dokument (T-21).
+        boolean verknuepfungNeu = PtmOnlineAuftraege.verknuepfungen(bestand, tournamentId,
+                fehlendeVerknuepfungen(onlineIds, abruf.registrations()));
 
         List<String> onlineUebernommen = new ArrayList<>();
         List<NamensKonflikt> namensKonflikte = new ArrayList<>();
@@ -1143,6 +1148,8 @@ public final class RegistrationImportTask {
                 }
                 registrationProUuid.put(zeile.getKey(), remote);
             }
+        } else if (verknuepfungNeu) {
+            sendeSynchron(config, mapping, bestand);
         }
         mapping.aktualisiereAnzeigen(bezeichnungProUuid, registrationProUuid);
         Map<String, Integer> revisionen = registrationProUuid.entrySet().stream()
@@ -1173,6 +1180,34 @@ public final class RegistrationImportTask {
                 abruf.konflikte().possibleDuplicates().stream()
                         .map(dublette -> bezeichnungen(dublette.registrationIds(), bezeichnungProOnlineId)).toList(),
                 onlineUebernommen, namensKonflikte, abruf.stand());
+    }
+
+    /**
+     * Zuordnungen, deren lokale UUID PTM-Online noch nicht an der Anmeldung führt. Trägt bereits eine andere Anmeldung
+     * die UUID, entfällt das Paar: PTM-Online würde die Verknüpfung als Konflikt ablehnen.
+     *
+     * @param onlineIdProUuid Zuordnungen des Dokuments
+     * @param remote          alle Online-Anmeldungen des Turniers
+     */
+    static Map<String, String> fehlendeVerknuepfungen(Map<String, String> onlineIdProUuid,
+            Collection<RegistrationDto> remote) {
+        Map<String, RegistrationDto> remoteProId = new LinkedHashMap<>();
+        Set<String> serverUuids = new HashSet<>();
+        for (RegistrationDto registration : remote) {
+            remoteProId.put(registration.id(), registration);
+            if (registration.localRegistrationUuid() != null) {
+                serverUuids.add(registration.localRegistrationUuid());
+            }
+        }
+        Map<String, String> fehlend = new LinkedHashMap<>();
+        onlineIdProUuid.forEach((uuid, onlineId) -> {
+            RegistrationDto registration = remoteProId.get(onlineId);
+            if (registration != null && !uuid.equals(registration.localRegistrationUuid())
+                    && !serverUuids.contains(uuid)) {
+                fehlend.put(uuid, onlineId);
+            }
+        });
+        return fehlend;
     }
 
     private static AbgeglicheneBesetzung zuletzt(Map<String, ZuordnungsZusatz> zusaetze, String uuid) {

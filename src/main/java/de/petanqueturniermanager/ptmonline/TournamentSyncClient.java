@@ -13,6 +13,7 @@ import java.time.Instant;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -271,6 +272,10 @@ public class TournamentSyncClient extends PtmOnlineHttpClient implements Auftrag
         return turnierPfad(tournamentId) + "/decisions";
     }
 
+    static String verknuepfungenPfad(String tournamentId) {
+        return turnierPfad(tournamentId) + "/registration-links";
+    }
+
     static String meleeTeamsPfad(String tournamentId) {
         return turnierPfad(tournamentId) + "/melee-teams";
     }
@@ -364,6 +369,20 @@ public class TournamentSyncClient extends PtmOnlineHttpClient implements Auftrag
         return body.toString();
     }
 
+    /** Verknüpfungen Online-Anmeldung ↔ lokale UUID (T-21); {@code onlineIdProUuid} je lokaler UUID. */
+    static String verknuepfungenBody(Map<String, String> onlineIdProUuid) {
+        JsonArray links = new JsonArray();
+        onlineIdProUuid.forEach((lokaleUuid, onlineId) -> {
+            JsonObject link = new JsonObject();
+            link.addProperty("onlineRegistrationId", onlineId);
+            link.addProperty("localRegistrationUuid", lokaleUuid);
+            links.add(link);
+        });
+        JsonObject body = new JsonObject();
+        body.add("links", links);
+        return body.toString();
+    }
+
     static String meleeTeamsBody(List<MeleeTeamDto> teams) {
         JsonObject body = new JsonObject();
         body.add("teams", GSON.toJsonTree(teams));
@@ -384,6 +403,17 @@ public class TournamentSyncClient extends PtmOnlineHttpClient implements Auftrag
     /** Ganzzahliges Pflichtfeld der Antwort (z.&nbsp;B. {@code updatedCount}). */
     static int zahlAus(SyncAntwort antwort, String feld) throws IOException {
         return pflichtZahl(leseAntwort(antwort.body(), JsonObject.class), feld);
+    }
+
+    /** Text-Liste der Antwort (z.&nbsp;B. {@code conflicts}); fehlt das Feld, ist sie leer. */
+    static List<String> textListeAus(SyncAntwort antwort, String feld) throws IOException {
+        JsonElement liste = leseAntwort(antwort.body(), JsonObject.class).get(feld);
+        if (liste == null || !liste.isJsonArray()) {
+            return List.of();
+        }
+        List<String> texte = new ArrayList<>();
+        liste.getAsJsonArray().forEach(element -> texte.add(element.getAsString()));
+        return texte;
     }
 
     private static String turnierPfad(String tournamentId) {

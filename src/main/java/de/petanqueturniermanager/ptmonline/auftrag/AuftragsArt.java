@@ -22,6 +22,8 @@ public enum AuftragsArt {
     ANMELDUNG_ANLEGEN,
     /** Namenskorrektur einer zugeordneten Meldung aus dem Dokument. */
     ANMELDUNG_AENDERN,
+    /** Verknüpfung zugeordneter Online-Anmeldungen mit ihrer lokalen UUID, ohne Datenänderung (T-21). */
+    ANMELDUNG_VERKNUEPFEN,
     /** Teilnahme (Check-in) und Setzposition zugeordneter Meldungen. */
     TEILNAHME,
     /** Paarungen und Ergebnisse einer Spielrunde für die Live-Ansicht. */
