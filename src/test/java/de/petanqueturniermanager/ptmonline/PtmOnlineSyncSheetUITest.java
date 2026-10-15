@@ -19,6 +19,7 @@ import com.sun.star.util.XProtectable;
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.meldeliste.NrUuidSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
@@ -66,7 +67,8 @@ class PtmOnlineSyncSheetUITest extends BaseCalcUITest {
     @Test
     void stornoWirdAmUnuebersetztenStatusErkannt() throws Exception {
         PtmOnlineRegistrationMapping mapping = verbinde(TurnierSystem.SCHWEIZER, null, "t1");
-        mapping.addMapping(LOKALE_UUID, "r1", "1", 1, "Hans Müller", "Bestätigt");
+        mapping.addMapping(LOKALE_UUID, "r1", NrUuidSpalte.formelNrAusUuid("$A$1:$A$999", LOKALE_UUID), 1,
+                "Hans Müller", "Bestätigt");
 
         mapping.setOnlineDetails(LOKALE_UUID, anmeldung("r1", "confirmed"));
         assertThat(mapping.istOnlineStorniert(LOKALE_UUID)).isFalse();

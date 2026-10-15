@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Predicate;
+import java.util.function.Function;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -28,6 +28,7 @@ import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamUuidFormel;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -58,8 +59,9 @@ import de.petanqueturniermanager.ptmonline.auftrag.SyncAuftrag;
 /**
  * „PTMOnline Sync“: das einzige Blatt einer PTM-Online-Verbindung. Oben die Verbindungsdaten, darunter die
  * Zuordnung lokale Meldung ↔ Online-Anmeldung. Sichtbar ist nur, was die Turnierleitung braucht (Nr, Name,
- * Status, Tarife, Fragen); lokale UUID, Revision und Roh-Status stehen in ausgeblendeten Spalten. Die Online-ID der
- * Anmeldung steht nicht hier, sondern in der Nr-Zelle der Meldung ({@code NrZellFormel}).
+ * Status, Tarife, Fragen); Revision und Roh-Status stehen in ausgeblendeten Spalten. Schlüssel einer Zeile ist die
+ * lokale UUID in ihrer Nr-Formel, eine eigene UUID-Spalte gibt es nicht. Die Online-ID der Anmeldung steht ebenfalls
+ * nicht hier, sondern in der Nr-Zelle der Meldung ({@code NrZellFormel}).
  * <p>
  * Bei Supermelee gibt es ein Blatt pro Spieltag ({@code spieltagNr}), sonst genau eines pro Dokument. Das Blatt
  * schreibt nur das Plugin – im Turnier-Modus ist es vollständig gesperrt (siehe {@link BlattschutzManager}).
@@ -90,9 +92,8 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 	private static final int SPALTE_STATUS = 2;
 	private static final int SPALTE_TARIFE = 3;
 	private static final int SPALTE_FRAGEN = 4;
-	private static final int SPALTE_LOKALE_UUID = 5;
-	private static final int SPALTE_REVISION = 6;
-	private static final int SPALTE_STATUS_ROH = 7;
+	private static final int SPALTE_REVISION = 5;
+	private static final int SPALTE_STATUS_ROH = 6;
 	private static final int LETZTE_SICHTBARE_SPALTE = SPALTE_FRAGEN;
 	/** Ausgeblendete Spalte der Statuszeile: sprachneutraler Marker, damit ein Sprachwechsel die Pause nicht bricht. */
 	private static final int SPALTE_PAUSE_MARKER = LETZTE_SICHTBARE_SPALTE + 1;
@@ -220,7 +221,6 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 				I18n.get("ptmonline.sheet.mapping.header.onlinestatus"),
 				I18n.get("ptmonline.sheet.mapping.header.onlinetarife"),
 				I18n.get("ptmonline.sheet.mapping.header.onlinefragen"),
-				I18n.get("ptmonline.sheet.mapping.header.lokaleuuid"),
 				I18n.get("ptmonline.sheet.mapping.header.revision"),
 				I18n.get("ptmonline.sheet.mapping.header.statusroh")).forEach(kopfzeile::newString);
 		RangeHelper.from(this, header.getRangePosition(Position.from(SPALTE_NR, ZEILE_HEADER))).setDataInRange(header);
@@ -273,7 +273,7 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 							.setShrinkToFit(true));
 		});
 		SheetFreeze.from(sheet, getWorkingSpreadsheet()).anzZeilen(ERSTE_DATEN_ZEILE).doFreeze();
-		int anzahl = (int) leseDaten().stream().filter(Predicate.not(PtmOnlineSyncSheet::istLeereZeile)).count();
+		int anzahl = leseTabelle().anzahlZuordnungen();
 		if (anzahl > 0) {
 			formatiereDatenzeilen(ERSTE_DATEN_ZEILE, ERSTE_DATEN_ZEILE + anzahl - 1);
 		}
@@ -617,8 +617,8 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 	 * einer Online-Anmeldung zugeordnet sind, werden übersprungen. Danach Nr-Formeln und Formatierung als Block.
 	 */
 	public void addMappings(List<NeueZuordnung> zuordnungen) throws GenerateException {
-		RangeData daten = leseDaten();
-		Set<String> vorhandene = getLokaleUuids();
+		Tabelle tabelle = leseTabelle();
+		Set<String> vorhandene = tabelle.uuids();
 		Map<String, NeueZuordnung> neue = new LinkedHashMap<>();
 		for (NeueZuordnung zuordnung : zuordnungen) {
 			if (!vorhandene.contains(zuordnung.lokaleUuid())) {
@@ -628,7 +628,7 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 		if (neue.isEmpty()) {
 			return;
 		}
-		int ersteZeile = ERSTE_DATEN_ZEILE + anzahlBelegterZeilen(daten);
+		int ersteZeile = ERSTE_DATEN_ZEILE + tabelle.anzahlBelegterZeilen();
 		int letzteZeile = ersteZeile + neue.size() - 1;
 		if (letzteZeile > LETZTE_DATEN_ZEILE) {
 			throw new GenerateException(I18n.get("ptmonline.fehler.zuordnung_voll"));
@@ -637,13 +637,13 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 		String[][] formeln = new String[neue.size()][1];
 		int index = 0;
 		for (NeueZuordnung zuordnung : neue.values()) {
+			pruefeUuidInFormel(zuordnung);
 			RowData neu = zeilen.addNewRow();
 			neu.newEmpty();
 			neu.newString(StringUtils.defaultString(zuordnung.lokaleBezeichnung()));
 			neu.newString(StringUtils.defaultString(zuordnung.onlineStatus()));
 			neu.newString(StringUtils.defaultString(zuordnung.tarife()));
 			neu.newString(StringUtils.defaultString(zuordnung.fragen()));
-			neu.newString(zuordnung.lokaleUuid());
 			neu.newInt(Math.max(1, zuordnung.executionRevision()));
 			neu.newString(StringUtils.defaultString(zuordnung.rohStatus()));
 			formeln[index++][0] = zuordnung.nummerFormel();
@@ -656,11 +656,17 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 			neu.newString(StringUtils.defaultString(zuordnung.vermerk()));
 		}
 		RangeHelper.from(this, zusatz.getRangePosition(Position.from(SPALTE_BESETZUNG, ersteZeile))).setDataInRange(zusatz);
-		XSpreadsheet sheet = getXSpreadSheet();
-		SheetHelper helper = getSheetHelper();
-		RangePosition nrBereich = RangePosition.from(SPALTE_NR, ersteZeile, SPALTE_NR, letzteZeile);
-		BlattschutzManager.get().schreibeEntsperrt(sheet, () -> helper.setFormulaArrayInRange(sheet, nrBereich, formeln));
+		schreibeNrFormeln(ersteZeile, formeln);
 		formatiereDatenzeilen(ERSTE_DATEN_ZEILE, letzteZeile);
+	}
+
+	/** Die Nr-Formel ist der einzige Träger der lokalen UUID einer Zeile; ohne sie wäre die Zuordnung verloren. */
+	private static void pruefeUuidInFormel(NeueZuordnung zuordnung) {
+		Optional<String> uuid = TeamUuidFormel.findeUuid(zuordnung.nummerFormel());
+		if (uuid.isEmpty() || !uuid.get().equalsIgnoreCase(zuordnung.lokaleUuid())) {
+			throw new IllegalArgumentException(
+					"Nr-Formel ohne die lokale UUID " + zuordnung.lokaleUuid() + ": " + zuordnung.nummerFormel());
+		}
 	}
 
 	/**
@@ -668,16 +674,16 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 	 * Schreibzugriff für die sichtbaren Spalten und den Roh-Status; nicht genannte Zeilen bleiben unverändert.
 	 */
 	public void setAnzeigen(Map<String, ZuordnungsAnzeige> anzeigeProUuid) throws GenerateException {
-		RangeData daten = leseDaten();
-		int anzahl = anzahlBelegterZeilen(daten);
+		Tabelle tabelle = leseTabelle();
+		int anzahl = tabelle.anzahlBelegterZeilen();
 		if (anzahl == 0 || anzeigeProUuid.isEmpty()) {
 			return;
 		}
 		RangeData sichtbar = new RangeData();
 		RangeData rohStatus = new RangeData();
 		for (int i = 0; i < anzahl; i++) {
-			RowData zeile = daten.get(i);
-			ZuordnungsAnzeige anzeige = anzeigeProUuid.get(text(zeile, SPALTE_LOKALE_UUID));
+			RowData zeile = tabelle.zeile(i);
+			ZuordnungsAnzeige anzeige = anzeigeProUuid.get(tabelle.uuid(i));
 			RowData neu = sichtbar.addNewRow();
 			RowData roh = rohStatus.addNewRow();
 			if (anzeige == null) {
@@ -708,147 +714,106 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 
 	/** Anmeldestatus der zuletzt übernommenen Online-Anmeldung, unübersetzt (z.B. {@code cancelled}). */
 	public Optional<String> getRohStatus(String lokaleUuid) throws GenerateException {
-		return zeileMitUuid(lokaleUuid).map(zeile -> text(zeile, SPALTE_STATUS_ROH)).filter(s -> !s.isBlank());
+		Tabelle tabelle = leseTabelle();
+		return tabelle.index(lokaleUuid).map(i -> text(tabelle.zeile(i), SPALTE_STATUS_ROH)).filter(s -> !s.isBlank());
 	}
 
 	public void setBezeichnung(String lokaleUuid, String lokaleBezeichnung, String onlineStatus)
 			throws GenerateException {
-		Optional<Integer> zeile = zeileIndexMitUuid(lokaleUuid);
+		Optional<Integer> zeile = leseTabelle().index(lokaleUuid);
 		if (zeile.isPresent()) {
 			RangeData daten = new RangeData();
 			RowData bezeichnung = daten.addNewRow();
 			bezeichnung.newString(StringUtils.defaultString(lokaleBezeichnung));
 			bezeichnung.newString(StringUtils.defaultString(onlineStatus));
-			RangeHelper.from(this, daten.getRangePosition(Position.from(SPALTE_NAME, zeile.get())))
+			RangeHelper.from(this, daten.getRangePosition(Position.from(SPALTE_NAME, ERSTE_DATEN_ZEILE + zeile.get())))
 					.setDataInRange(daten);
 		}
 	}
 
 	public void setOnlineDetails(String lokaleUuid, String tarife, String fragen, String rohStatus)
 			throws GenerateException {
-		Optional<Integer> zeile = zeileIndexMitUuid(lokaleUuid);
-		if (zeile.isEmpty()) {
+		Optional<Integer> index = leseTabelle().index(lokaleUuid);
+		if (index.isEmpty()) {
 			return;
 		}
+		int zeile = ERSTE_DATEN_ZEILE + index.get();
 		RangeData details = new RangeData();
 		RowData detailZeile = details.addNewRow();
 		detailZeile.newString(StringUtils.defaultString(tarife));
 		detailZeile.newString(StringUtils.defaultString(fragen));
-		RangeHelper.from(this, details.getRangePosition(Position.from(SPALTE_TARIFE, zeile.get())))
-				.setDataInRange(details);
+		RangeHelper.from(this, details.getRangePosition(Position.from(SPALTE_TARIFE, zeile))).setDataInRange(details);
 		RangeData status = new RangeData();
 		status.addNewRow().newString(StringUtils.defaultString(rohStatus));
-		RangeHelper.from(this, status.getRangePosition(Position.from(SPALTE_STATUS_ROH, zeile.get())))
-				.setDataInRange(status);
+		RangeHelper.from(this, status.getRangePosition(Position.from(SPALTE_STATUS_ROH, zeile))).setDataInRange(status);
 	}
 
 	/**
 	 * Aktualisiert die Nr-Formeln (z.B. nachdem sich die Formel des Sync-Ziels geändert hat) in einem
-	 * Schreibzugriff; unveränderte Formeln lösen keinen Schreibzugriff aus.
+	 * Schreibzugriff; unveränderte Formeln lösen keinen Schreibzugriff aus. Jede neue Formel muss die lokale UUID
+	 * ihrer Zeile tragen, sonst ginge die Zuordnung verloren.
 	 */
 	public void aktualisiereAnzeigeFormeln(Map<String, String> formelnProUuid) throws GenerateException {
-		RangeData daten = leseDaten();
-		int anzahl = anzahlBelegterZeilen(daten);
+		Tabelle tabelle = leseTabelle();
+		int anzahl = tabelle.anzahlBelegterZeilen();
 		if (anzahl == 0) {
 			return;
-		}
-		XSpreadsheet sheet = getXSpreadSheet();
-		SheetHelper helper = getSheetHelper();
-		RangePosition bereich = RangePosition.from(SPALTE_NR, ERSTE_DATEN_ZEILE, SPALTE_NR, ERSTE_DATEN_ZEILE + anzahl - 1);
-		String[][] bisher = helper.getFormulaArrayFromRange(sheet, bereich);
-		if (bisher.length != anzahl) {
-			throw new GenerateException(I18n.get("ptmonline.fehler.nr_formeln_nicht_lesbar"));
 		}
 		String[][] neu = new String[anzahl][1];
 		boolean geaendert = false;
 		for (int i = 0; i < anzahl; i++) {
-			String formel = formelnProUuid.get(text(daten.get(i), SPALTE_LOKALE_UUID));
-			neu[i][0] = formel == null ? bisher[i][0] : "=" + formel;
-			geaendert |= !neu[i][0].equals(bisher[i][0]);
+			String uuid = tabelle.uuid(i);
+			String formel = formelnProUuid.get(uuid);
+			if (formel != null && !TeamUuidFormel.findeUuid(formel).map(uuid::equals).orElse(false)) {
+				throw new IllegalArgumentException("Nr-Formel ohne die lokale UUID " + uuid + ": " + formel);
+			}
+			neu[i][0] = formel == null ? tabelle.nrFormel(i) : "=" + formel;
+			geaendert |= !neu[i][0].equals(tabelle.nrFormel(i));
 		}
 		if (geaendert) {
-			BlattschutzManager.get().schreibeEntsperrt(sheet, () -> helper.setFormulaArrayInRange(sheet, bereich, neu));
+			schreibeNrFormeln(ERSTE_DATEN_ZEILE, neu);
 		}
 	}
 
 	/** Lokale UUIDs aller Zuordnungen, in einem Lesezugriff. */
 	public Set<String> getLokaleUuids() throws GenerateException {
-		Set<String> ergebnis = new LinkedHashSet<>();
-		for (RowData zeile : leseDaten()) {
-			String uuid = text(zeile, SPALTE_LOKALE_UUID);
-			if (!uuid.isBlank()) {
-				ergebnis.add(uuid);
-			}
-		}
-		return ergebnis;
+		return leseTabelle().uuids();
 	}
 
 	/** Lokale Bezeichnung (Name) je lokaler UUID aller Zuordnungen, in einem Lesezugriff. */
 	public Map<String, String> getBezeichnungenProUuid() throws GenerateException {
-		Map<String, String> ergebnis = new LinkedHashMap<>();
-		for (RowData zeile : leseDaten()) {
-			String uuid = text(zeile, SPALTE_LOKALE_UUID);
-			if (!uuid.isBlank()) {
-				ergebnis.putIfAbsent(uuid, text(zeile, SPALTE_NAME));
-			}
-		}
-		return ergebnis;
+		return leseTabelle().proUuid(zeile -> text(zeile, SPALTE_NAME));
 	}
 
 	/** Roher Online-Status je lokaler UUID aller Zuordnungen, in einem Lesezugriff. */
 	public Map<String, String> getRohStatusProUuid() throws GenerateException {
-		Map<String, String> ergebnis = new LinkedHashMap<>();
-		for (RowData zeile : leseDaten()) {
-			String uuid = text(zeile, SPALTE_LOKALE_UUID);
-			if (!uuid.isBlank()) {
-				ergebnis.putIfAbsent(uuid, text(zeile, SPALTE_STATUS_ROH));
-			}
-		}
-		return ergebnis;
+		return leseTabelle().proUuid(zeile -> text(zeile, SPALTE_STATUS_ROH));
 	}
 
 	/** Ausführungsrevision je lokaler UUID aller Zuordnungen, in einem Lesezugriff. */
 	public Map<String, Integer> getExecutionRevisionenProUuid() throws GenerateException {
-		Map<String, Integer> ergebnis = new LinkedHashMap<>();
-		for (RowData zeile : leseDaten()) {
-			String uuid = text(zeile, SPALTE_LOKALE_UUID);
-			if (!uuid.isBlank()) {
-				ergebnis.putIfAbsent(uuid, Math.max(1, zeile.get(SPALTE_REVISION).getIntVal(1)));
-			}
-		}
-		return ergebnis;
+		return leseTabelle().proUuid(zeile -> Math.max(1, zeile.get(SPALTE_REVISION).getIntVal(1)));
 	}
 
 	/** Setzt die Ausführungsrevisionen mehrerer Zuordnungen in einem Schreibzugriff. */
 	public void setExecutionRevisionen(Map<String, Integer> revisionProUuid) throws GenerateException {
-		RangeData daten = leseDaten();
-		int anzahl = anzahlBelegterZeilen(daten);
+		Tabelle tabelle = leseTabelle();
+		int anzahl = tabelle.anzahlBelegterZeilen();
 		if (anzahl == 0 || revisionProUuid.isEmpty()) {
 			return;
 		}
 		RangeData revisionen = new RangeData();
 		for (int i = 0; i < anzahl; i++) {
-			RowData zeile = daten.get(i);
-			Integer neu = revisionProUuid.get(text(zeile, SPALTE_LOKALE_UUID));
+			Integer neu = revisionProUuid.get(tabelle.uuid(i));
 			RowData ziel = revisionen.addNewRow();
 			if (neu != null) {
 				ziel.newInt(Math.max(1, neu));
 			} else {
-				ziel.add(zeile.get(SPALTE_REVISION));
+				ziel.add(tabelle.zeile(i).get(SPALTE_REVISION));
 			}
 		}
 		RangeHelper.from(this, revisionen.getRangePosition(Position.from(SPALTE_REVISION, ERSTE_DATEN_ZEILE)))
 				.setDataInRange(revisionen);
-	}
-
-	/** Zeilen bis einschließlich der letzten belegten Zuordnung (Lücken zählen mit). */
-	private static int anzahlBelegterZeilen(RangeData daten) {
-		for (int i = daten.size() - 1; i >= 0; i--) {
-			if (!istLeereZeile(daten.get(i))) {
-				return i + 1;
-			}
-		}
-		return 0;
 	}
 
 	/**
@@ -856,25 +821,20 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 	 * lückenlos nach oben. Eine entfernte Online-Anmeldung gilt danach als nicht importiert.
 	 */
 	public void entferneZuordnungen(Set<String> lokaleUuids) throws GenerateException {
-		RangeData daten = leseDaten();
-		int anzahl = anzahlBelegterZeilen(daten);
+		Tabelle tabelle = leseTabelle();
+		int anzahl = tabelle.anzahlBelegterZeilen();
 		if (anzahl == 0 || lokaleUuids.isEmpty()) {
 			return;
 		}
 		RangeData zusatz = leseZusatz(anzahl);
-		XSpreadsheet sheet = getXSpreadSheet();
-		SheetHelper helper = getSheetHelper();
-		int letzteZeile = ERSTE_DATEN_ZEILE + anzahl - 1;
-		String[][] formeln = helper.getFormulaArrayFromRange(sheet,
-				RangePosition.from(SPALTE_NR, ERSTE_DATEN_ZEILE, SPALTE_NR, letzteZeile));
 		RangeData bleibt = new RangeData();
 		RangeData bleibtZusatz = new RangeData();
 		List<String[]> bleibtFormeln = new ArrayList<>();
 		for (int i = 0; i < anzahl; i++) {
-			RowData zeile = daten.get(i);
-			if (lokaleUuids.contains(text(zeile, SPALTE_LOKALE_UUID))) {
+			if (lokaleUuids.contains(tabelle.uuid(i))) {
 				continue;
 			}
+			RowData zeile = tabelle.zeile(i);
 			RowData neu = bleibt.addNewRow();
 			for (int spalte = SPALTE_NAME; spalte <= LETZTE_SPALTE; spalte++) {
 				if (spalte < zeile.size()) {
@@ -887,11 +847,12 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 			RowData neuZusatz = bleibtZusatz.addNewRow();
 			neuZusatz.newString(rohText(alt, 0));
 			neuZusatz.newString(text(alt, 1));
-			bleibtFormeln.add(new String[] { formeln[i][0] });
+			bleibtFormeln.add(new String[] { tabelle.nrFormel(i) });
 		}
 		if (bleibt.size() == anzahl) {
 			return;
 		}
+		int letzteZeile = ERSTE_DATEN_ZEILE + anzahl - 1;
 		RangeHelper.from(this, RangePosition.from(SPALTE_NR, ERSTE_DATEN_ZEILE, LETZTE_SPALTE, letzteZeile))
 				.clearRange();
 		RangeHelper.from(this, RangePosition.from(SPALTE_BESETZUNG, ERSTE_DATEN_ZEILE, LETZTE_ZUSATZ_SPALTE,
@@ -903,10 +864,14 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 				.setDataInRange(bleibt);
 		RangeHelper.from(this, bleibtZusatz.getRangePosition(Position.from(SPALTE_BESETZUNG, ERSTE_DATEN_ZEILE)))
 				.setDataInRange(bleibtZusatz);
-		RangePosition nrBereich = RangePosition.from(SPALTE_NR, ERSTE_DATEN_ZEILE, SPALTE_NR,
-				ERSTE_DATEN_ZEILE + bleibt.size() - 1);
-		String[][] neueFormeln = bleibtFormeln.toArray(String[][]::new);
-		BlattschutzManager.get().schreibeEntsperrt(sheet, () -> helper.setFormulaArrayInRange(sheet, nrBereich, neueFormeln));
+		schreibeNrFormeln(ERSTE_DATEN_ZEILE, bleibtFormeln.toArray(String[][]::new));
+	}
+
+	private void schreibeNrFormeln(int ersteZeile, String[][] formeln) throws GenerateException {
+		XSpreadsheet sheet = getXSpreadSheet();
+		SheetHelper helper = getSheetHelper();
+		RangePosition bereich = RangePosition.from(SPALTE_NR, ersteZeile, SPALTE_NR, ersteZeile + formeln.length - 1);
+		BlattschutzManager.get().schreibeEntsperrt(sheet, () -> helper.setFormulaArrayInRange(sheet, bereich, formeln));
 	}
 
 	public void leeren() throws GenerateException {
@@ -920,15 +885,15 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 
 	/** Zuletzt abgeglichene Besetzung und Vermerke je lokaler UUID, in einem Lesezugriff je Spaltenblock. */
 	public Map<String, ZuordnungsZusatz> getZusaetzeProUuid() throws GenerateException {
-		RangeData daten = leseDaten();
-		int anzahl = anzahlBelegterZeilen(daten);
+		Tabelle tabelle = leseTabelle();
+		int anzahl = tabelle.anzahlBelegterZeilen();
 		Map<String, ZuordnungsZusatz> ergebnis = new LinkedHashMap<>();
 		if (anzahl == 0) {
 			return ergebnis;
 		}
 		RangeData zusatz = leseZusatz(anzahl);
 		for (int i = 0; i < anzahl; i++) {
-			String uuid = text(daten.get(i), SPALTE_LOKALE_UUID);
+			String uuid = tabelle.uuid(i);
 			RowData zeile = i < zusatz.size() ? zusatz.get(i) : new RowData();
 			if (!uuid.isBlank()) {
 				ergebnis.putIfAbsent(uuid, new ZuordnungsZusatz(rohText(zeile, 0), text(zeile, 1)));
@@ -942,8 +907,8 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 	 * {@code null}-Werte bleiben unverändert.
 	 */
 	public void setZusaetze(Map<String, ZuordnungsZusatz> zusatzProUuid) throws GenerateException {
-		RangeData daten = leseDaten();
-		int anzahl = anzahlBelegterZeilen(daten);
+		Tabelle tabelle = leseTabelle();
+		int anzahl = tabelle.anzahlBelegterZeilen();
 		if (anzahl == 0 || zusatzProUuid.isEmpty()) {
 			return;
 		}
@@ -951,7 +916,7 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 		RangeData neu = new RangeData();
 		for (int i = 0; i < anzahl; i++) {
 			RowData alt = i < bisher.size() ? bisher.get(i) : new RowData();
-			ZuordnungsZusatz zusatz = zusatzProUuid.get(text(daten.get(i), SPALTE_LOKALE_UUID));
+			ZuordnungsZusatz zusatz = zusatzProUuid.get(tabelle.uuid(i));
 			RowData zeile = neu.addNewRow();
 			zeile.newString(zusatz != null && zusatz.besetzung() != null ? zusatz.besetzung() : rohText(alt, 0));
 			zeile.newString(zusatz != null && zusatz.vermerk() != null ? zusatz.vermerk() : text(alt, 1));
@@ -965,33 +930,85 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 				ERSTE_DATEN_ZEILE + anzahl - 1)).getDataFromRange();
 	}
 
-	/** Keine Zeilen, solange das Dokument nicht verbunden ist (Blatt fehlt). */
-	private RangeData leseDaten() throws GenerateException {
+	/** Werte und Nr-Formeln der Zuordnungstabelle; keine Zeilen, solange das Dokument nicht verbunden ist. */
+	private Tabelle leseTabelle() throws GenerateException {
 		if (SheetMetadataHelper.findeSheet(getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
 				metadatenSchluessel()).isEmpty()) {
-			return new RangeData();
+			return new Tabelle(new RangeData(), new String[0][0]);
 		}
-		return RangeHelper.from(this, RangePosition.from(SPALTE_NR, ERSTE_DATEN_ZEILE, LETZTE_SPALTE,
+		RangeData werte = RangeHelper.from(this, RangePosition.from(SPALTE_NR, ERSTE_DATEN_ZEILE, LETZTE_SPALTE,
 				LETZTE_DATEN_ZEILE)).getDataFromRange();
+		String[][] nrFormeln = getSheetHelper().getFormulaArrayFromRange(getXSpreadSheet(),
+				RangePosition.from(SPALTE_NR, ERSTE_DATEN_ZEILE, SPALTE_NR, LETZTE_DATEN_ZEILE));
+		return new Tabelle(werte, nrFormeln);
 	}
 
-	private Optional<RowData> zeileMitUuid(String lokaleUuid) throws GenerateException {
-		return leseDaten().stream().filter(zeile -> lokaleUuid.equals(text(zeile, SPALTE_LOKALE_UUID))).findFirst();
-	}
+	/**
+	 * Zuordnungstabelle ab {@link #ERSTE_DATEN_ZEILE}, Index = Zeile ab dort. Die lokale UUID einer Zeile steht nur
+	 * in ihrer Nr-Formel ({@code IFNA(PTM.ALG.UUIDTEAMNR("<uuid>";…);"")}); eine Zeile ohne UUID ist leer.
+	 */
+	private record Tabelle(RangeData werte, String[][] nrFormeln) {
 
-	private Optional<Integer> zeileIndexMitUuid(String lokaleUuid) throws GenerateException {
-		RangeData daten = leseDaten();
-		for (int i = 0; i < daten.size(); i++) {
-			if (lokaleUuid.equals(text(daten.get(i), SPALTE_LOKALE_UUID))) {
-				return Optional.of(ERSTE_DATEN_ZEILE + i);
-			}
+		int groesse() {
+			return werte.size();
 		}
-		return Optional.empty();
-	}
 
-	/** RowData enthält auch für leere Calc-Zellen CellData-Objekte; List.isEmpty() ist daher ungeeignet. */
-	private static boolean istLeereZeile(RowData zeile) {
-		return text(zeile, SPALTE_LOKALE_UUID).isBlank();
+		RowData zeile(int index) {
+			return werte.get(index);
+		}
+
+		String nrFormel(int index) {
+			return index < nrFormeln.length && nrFormeln[index].length > 0
+					? StringUtils.defaultString(nrFormeln[index][0])
+					: "";
+		}
+
+		String uuid(int index) {
+			return TeamUuidFormel.findeUuid(nrFormel(index)).orElse("");
+		}
+
+		/** Zeilen bis einschließlich der letzten belegten Zuordnung (Lücken zählen mit). */
+		int anzahlBelegterZeilen() {
+			for (int i = groesse() - 1; i >= 0; i--) {
+				if (!uuid(i).isEmpty()) {
+					return i + 1;
+				}
+			}
+			return 0;
+		}
+
+		int anzahlZuordnungen() {
+			int anzahl = 0;
+			for (int i = 0; i < groesse(); i++) {
+				anzahl += uuid(i).isEmpty() ? 0 : 1;
+			}
+			return anzahl;
+		}
+
+		Optional<Integer> index(String lokaleUuid) {
+			for (int i = 0; i < groesse(); i++) {
+				if (lokaleUuid.equals(uuid(i))) {
+					return Optional.of(i);
+				}
+			}
+			return Optional.empty();
+		}
+
+		Set<String> uuids() {
+			return proUuid(zeile -> Boolean.TRUE).keySet();
+		}
+
+		/** Wert je lokaler UUID; bei doppelter UUID gilt die erste Zeile. */
+		<T> Map<String, T> proUuid(Function<RowData, T> wert) {
+			Map<String, T> ergebnis = new LinkedHashMap<>();
+			for (int i = 0; i < groesse(); i++) {
+				String uuid = uuid(i);
+				if (!uuid.isEmpty() && !ergebnis.containsKey(uuid)) {
+					ergebnis.put(uuid, wert.apply(zeile(i)));
+				}
+			}
+			return ergebnis;
+		}
 	}
 
 	private static String text(RowData zeile, int spalte) {
