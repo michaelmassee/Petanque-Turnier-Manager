@@ -15,23 +15,32 @@ import de.petanqueturniermanager.basesheet.meldeliste.TeamnummerAenderung.Ablehn
 import de.petanqueturniermanager.basesheet.meldeliste.TeamnummerAenderung.Ergebnis;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.formulex.rangliste.FormuleXRanglisteSheetUpdate;
+import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
+import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJGesamtranglisteSheetUpdate;
+import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteSheetUpdate;
+import de.petanqueturniermanager.kaskade.spielrunde.KaskadenRanglistenAktualisierer;
+import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheetUpdate;
 import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterGruppenSpalteHelper;
 import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterVorrundenRanglisteSheetUpdate;
+import de.petanqueturniermanager.poule.rangliste.PouleVorrundenRanglisteSheetUpdate;
+import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheetUpdate;
+import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheetUpdate;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet;
+import de.petanqueturniermanager.triptete.rangliste.TripTeteRanglisteSheetUpdate;
 
 /**
  * Menüpunkt „Teamnummer ändern“: ändert die angezeigte Nummer einer Meldung, ihre UUID bleibt. Spielrunden, die
  * Teams über die UUID referenzieren, zeigen danach die neue Nummer; ist die neue Nummer vergeben, tauschen beide
  * Meldungen.
  * <p>
- * Nur für Turniersysteme, deren Spielrunden schon die UUID speichern – in den übrigen würde eine geänderte
- * Nummer die Runden auf ein anderes Team zeigen lassen.
+ * Nur für Turniersysteme, deren Spielrunden die UUID speichern ({@link #UMGESTELLTE_SYSTEME}, inzwischen alle).
  */
 public class TeamnummerAendernSheet extends SheetRunner {
 
@@ -98,15 +107,47 @@ public class TeamnummerAendernSheet extends SheetRunner {
 				: I18n.get("teamnummer.aendern.geaendert", wunsch.alteNr(), wunsch.neueNr()));
 	}
 
-	/** Gespeicherte Nummern-Werte, an denen weitere Daten hängen, auf die neue Nummer bringen. */
+	/**
+	 * Gespeicherte Nummern-Werte auf die neue Nummer bringen: Ranglisten führen Nummern als Werte und werden sofort
+	 * aktualisiert, damit auch Leser ohne Tabwechsel (Webserver, Export, PTM-Online-Live) die neue Nummer sehen.
+	 * Nicht vorhandene Ranglisten werden nicht angelegt.
+	 */
 	private void nachziehen(Wunsch wunsch) throws GenerateException {
+		WorkingSpreadsheet ws = getWorkingSpreadsheet();
 		switch (getTurnierSystem()) {
-		case SUPERMELEE -> spieltagRanglistenNeuAufbauen();
+		case SCHWEIZER -> fallsVorhanden(new SchweizerRanglisteSheetUpdate(ws), SchweizerRanglisteSheetUpdate::doRun);
 		case MAASTRICHTER -> MaastrichterGruppenSpalteHelper.nummerAendern(
-				new MaastrichterVorrundenRanglisteSheetUpdate(getWorkingSpreadsheet()), wunsch.alteNr(), wunsch.neueNr());
-		default -> {
-			// Ranglisten führen Nummern nur als Anzeige; sie zeigen die neue Nummer nach dem nächsten Aktualisieren.
+				new MaastrichterVorrundenRanglisteSheetUpdate(ws), wunsch.alteNr(), wunsch.neueNr());
+		case FORMULEX -> fallsVorhanden(new FormuleXRanglisteSheetUpdate(ws), FormuleXRanglisteSheetUpdate::doRun);
+		case JGJ -> {
+			fallsVorhanden(new JGJRanglisteSheetUpdate(ws), JGJRanglisteSheetUpdate::doRun);
+			fallsVorhanden(new JGJGesamtranglisteSheetUpdate(ws), JGJGesamtranglisteSheetUpdate::doRun);
 		}
+		case LIGA -> fallsVorhanden(new LigaRanglisteSheetUpdate(ws), LigaRanglisteSheetUpdate::doRun);
+		case KASKADE -> new KaskadenRanglistenAktualisierer(ws, getSheetHelper()).aktualisiereRanglisten();
+		case TRIPTETE -> fallsVorhanden(new TripTeteRanglisteSheetUpdate(ws), TripTeteRanglisteSheetUpdate::doRun);
+		case POULE -> fallsVorhanden(new PouleVorrundenRanglisteSheetUpdate(ws),
+				PouleVorrundenRanglisteSheetUpdate::doRun);
+		case SUPERMELEE -> {
+			spieltagRanglistenNeuAufbauen();
+			fallsVorhanden(new EndranglisteSheetUpdate(ws), EndranglisteSheetUpdate::doRun);
+		}
+		default -> {
+			// KO: keine Rangliste; der Turnierbaum zeigt die Nummer über die UUID.
+		}
+		}
+	}
+
+	/** Aktualisierung einer Rangliste, typisiert auf ihre {@code *SheetUpdate}-Klasse. */
+	@FunctionalInterface
+	private interface Aktualisierung<T> {
+		void ausfuehren(T rangliste) throws GenerateException;
+	}
+
+	private static <T extends ISheet> void fallsVorhanden(T rangliste, Aktualisierung<T> aktualisierung)
+			throws GenerateException {
+		if (rangliste.getXSpreadSheet() != null) {
+			aktualisierung.ausfuehren(rangliste);
 		}
 	}
 

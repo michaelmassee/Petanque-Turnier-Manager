@@ -86,7 +86,7 @@ public class SupermeleeTeamnummerAendernUITest extends BaseCalcUITest {
 		assertThat(sheetHlp.getTextFromCell(ersteRunde, ersterSpieler)).as("Spielrunde zeigt die neue Nummer")
 				.isEqualTo(String.valueOf(NEUE_NR));
 
-		new EndranglisteSheet(wkingSpreadsheet).doRun();
+		// Ohne eigenes Aktualisieren: „Teamnummer ändern“ zieht die vorhandene Endrangliste sofort nach.
 		Map<Integer, List<String>> endranglisteNachher = endranglisteJeNr();
 		assertThat(endranglisteNachher).as("Die alte Nummer gibt es nicht mehr").doesNotContainKey(alteNr);
 		assertThat(endranglisteNachher.get(NEUE_NR)).as("Name, Platz und Ergebnisse unter der neuen Nummer")

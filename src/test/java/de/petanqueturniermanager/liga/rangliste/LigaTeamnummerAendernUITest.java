@@ -34,7 +34,7 @@ import de.petanqueturniermanager.liga.spielplan.LigaTurnierTestDaten;
 
 /**
  * Die ausgeblendeten Nr-Spalten des Liga-Spielplans tragen die UUID des Teams und zeigen die aktuelle Nummer. Nach
- * „Teamnummer ändern“ führt die neu aufgebaute Rangliste das Team unter der neuen Nummer mit denselben Ergebnissen.
+ * „Teamnummer ändern“ führt die Rangliste das Team sofort unter der neuen Nummer mit denselben Ergebnissen.
  */
 public class LigaTeamnummerAendernUITest extends BaseCalcUITest {
 
@@ -77,8 +77,7 @@ public class LigaTeamnummerAendernUITest extends BaseCalcUITest {
 				.isEqualTo(String.valueOf(NEUE_NR));
 		assertThat(sheetHlp.getTextFromCell(spielplan, nameA)).isEqualTo(nameVorher);
 
-		// Ranglisten führen Nummern als Werte und zeigen die neue Nummer erst nach dem Aktualisieren.
-		new LigaRanglisteSheet(wkingSpreadsheet).upDateSheet();
+		// Ohne eigenes Aktualisieren: „Teamnummer ändern“ zieht die vorhandene Rangliste sofort nach.
 		Map<Integer, List<String>> ranglisteNachher = ranglisteJeNr();
 		assertThat(ranglisteNachher).as("Die alte Nummer gibt es nicht mehr").doesNotContainKey(alteNr);
 		assertThat(ranglisteNachher.get(NEUE_NR)).as("Name, Platz und Ergebnisse unter der neuen Nummer")

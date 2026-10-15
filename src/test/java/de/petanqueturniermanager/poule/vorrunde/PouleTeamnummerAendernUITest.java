@@ -72,8 +72,7 @@ public class PouleTeamnummerAendernUITest extends BaseCalcUITest {
 		assertThat(sheetHlp.getTextFromCell(vorrunde, nrA)).as("Nr-Zelle zeigt die neue Nummer")
 				.isEqualTo(String.valueOf(NEUE_NR));
 
-		// Ranglisten führen Nummern als Werte und zeigen die neue Nummer erst nach dem Aktualisieren.
-		new PouleVorrundenRanglisteSheet(wkingSpreadsheet).doRun();
+		// Ohne eigenes Aktualisieren: „Teamnummer ändern“ zieht die vorhandene Rangliste sofort nach.
 		Map<Integer, List<String>> ranglisteNachher = ranglisteJeNr();
 		assertThat(ranglisteNachher).as("Die alte Nummer gibt es nicht mehr").doesNotContainKey(alteNr);
 		assertThat(ranglisteNachher.get(NEUE_NR)).as("Platz, Gruppe, Name und Ergebnisse unter der neuen Nummer")
