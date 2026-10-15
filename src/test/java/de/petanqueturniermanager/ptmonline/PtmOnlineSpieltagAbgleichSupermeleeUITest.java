@@ -67,6 +67,10 @@ class PtmOnlineSpieltagAbgleichSupermeleeUITest extends BaseCalcUITest {
         Map<Integer, MeldelisteSpielerDaten> proZeile = new LinkedHashMap<>();
         ziel.leseAlleSpielerRoh().forEach(spieler -> proZeile.putIfAbsent(spieler.zeile1Basiert(), spieler));
         ersteSpieler = List.copyOf(proZeile.values()).subList(0, 3);
+        // Die Extension im LibreOffice-Prozess reagiert selbst auf die Testdaten (Ranglisten, Blattschutz). Ihr
+        // Koordinator kennt die Läufe dieser JVM nicht: Läuft der Abgleich parallel, sperren beide Prozesse dieselben
+        // Blätter, und das Setzen des Zellschutzes scheitert (Fehler-Log im Gesamtlauf).
+        warteBisLoHintergrundFertig();
     }
 
     @AfterEach
@@ -86,6 +90,7 @@ class PtmOnlineSpieltagAbgleichSupermeleeUITest extends BaseCalcUITest {
         MeldelisteSpielerDaten heuteNichtDabei = ersteSpieler.get(2);
         // Stammspieler hat sich online angemeldet, Spieler 2 ist nur lokal für heute gemeldet, Spieler 3 spielt nicht.
         schreibeSpieltagSpalte(List.of("", "1", ""));
+        warteBisLoHintergrundFertig();
         Set<Integer> spieltagZeilen = ziel.zeilenDesAktivenSpieltags().orElseThrow();
         assertThat(spieltagZeilen).contains(gemeldet.zeile1Basiert())
                 .doesNotContain(stammspieler.zeile1Basiert(), heuteNichtDabei.zeile1Basiert());
@@ -96,6 +101,7 @@ class PtmOnlineSpieltagAbgleichSupermeleeUITest extends BaseCalcUITest {
                 TurnierSystem.SUPERMELEE, spieltag, server.zugangsdaten(), mapping, TURNIER_ID, ziel);
         runner.start();
         runner.join();
+        warteBisLoHintergrundFertig();
 
         assertThat(runner.isLetzterLaufFehlgeschlagen()).isFalse();
         int zeileStammspieler = ziel.findeZeileMitName(name(stammspieler));
