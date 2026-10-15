@@ -109,6 +109,8 @@ class PtmOnlineAbgleichSheetRunnerUITest extends BaseCalcUITest {
                 .as("Meldeliste im selben Runner aktualisiert: neue Zeile hat eine Nr").isPositive();
         assertThat(server.anzahlOnlineAngelegt()).as("möglicherweise identische Zeile nicht online angelegt")
                 .isZero();
+        assertThat(server.verknuepfungen()).as("importierte Anmeldung online mit der lokalen UUID verknüpft")
+                .extracting(link -> link.get("onlineRegistrationId").getAsString()).containsExactly("r1");
         String fall = KonfliktFall.schluessel(KonfliktArt.MOEGLICH_IDENTISCH, uuidVonHans(), List.of("r2"));
         assertThat(mapping.konfliktListe().leseFaelle()).containsOnlyKeys(fall);
 

@@ -30,7 +30,8 @@ import de.petanqueturniermanager.comp.LibreOfficePtmOnlineSpeicher;
  * (PUT) und kann Antworten zurückhalten, um einen Abbruch während eines Serveraufrufs zu testen.
  * Online-Anlagen, Status-Pushes ({@code /results}) und Trennungen ({@code /disconnect}) werden für Prüfungen
  * aufgezeichnet, ebenso die Live-Übertragung von Runden ({@code /rounds/<nr>}) und Rangliste
- * ({@code /ranking}) und das Protokoll der Entscheidungen ({@code /decisions}).
+ * ({@code /ranking}), das Protokoll der Entscheidungen ({@code /decisions}) und die Verknüpfungen importierter
+ * Anmeldungen mit ihrer lokalen UUID ({@code /registration-links}).
  */
 final class PtmOnlineTestServer implements AutoCloseable {
 
@@ -47,6 +48,7 @@ final class PtmOnlineTestServer implements AutoCloseable {
     private final Map<Integer, JsonArray> runden = new ConcurrentSkipListMap<>();
     private final List<Integer> geloeschteRunden = new CopyOnWriteArrayList<>();
     private final List<JsonObject> entscheidungen = new CopyOnWriteArrayList<>();
+    private final List<JsonObject> verknuepfungen = new CopyOnWriteArrayList<>();
     private final List<JsonObject> angelegte = new CopyOnWriteArrayList<>();
     private final List<JsonObject> anmeldungGeschlossen = new CopyOnWriteArrayList<>();
     private volatile JsonArray rangliste;
@@ -64,6 +66,7 @@ final class PtmOnlineTestServer implements AutoCloseable {
         server.createContext("/api/sync/tournaments/" + turnierId + "/ranking", this::ranglisteAnnehmen);
         server.createContext("/api/sync/tournaments/" + turnierId + "/decisions", this::entscheidungenAnnehmen);
         server.createContext("/api/sync/tournaments/" + turnierId + "/registration-closed", this::anmeldungSchliessen);
+        server.createContext("/api/sync/tournaments/" + turnierId + "/registration-links", this::verknuepfungenAnnehmen);
         server.start();
     }
 
@@ -113,6 +116,11 @@ final class PtmOnlineTestServer implements AutoCloseable {
     /** Alle protokollierten Entscheidungen, in Eingangsreihenfolge. */
     List<JsonObject> entscheidungen() {
         return List.copyOf(entscheidungen);
+    }
+
+    /** Alle gemeldeten Verknüpfungen Online-Anmeldung ↔ lokale UUID, in Eingangsreihenfolge. */
+    List<JsonObject> verknuepfungen() {
+        return List.copyOf(verknuepfungen);
     }
 
     /** Zuletzt übertragene Rangliste, {@code null} wenn keine übertragen wurde. */
@@ -229,6 +237,17 @@ final class PtmOnlineTestServer implements AutoCloseable {
         decisions.forEach(eintrag -> entscheidungen.add(eintrag.getAsJsonObject()));
         JsonObject antwort = new JsonObject();
         antwort.addProperty("recorded", decisions.size());
+        antworte(exchange, antwort.toString());
+    }
+
+    /** Wie PTM-Online: jede gemeldete Verknüpfung gilt als gesetzt, ohne Unbekannte oder Konflikte. */
+    private void verknuepfungenAnnehmen(HttpExchange exchange) throws IOException {
+        JsonArray links = leseBody(exchange).getAsJsonObject().getAsJsonArray("links");
+        links.forEach(eintrag -> verknuepfungen.add(eintrag.getAsJsonObject()));
+        JsonObject antwort = new JsonObject();
+        antwort.addProperty("linked", links.size());
+        antwort.add("unknown", new JsonArray());
+        antwort.add("conflicts", new JsonArray());
         antworte(exchange, antwort.toString());
     }
 
