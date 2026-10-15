@@ -36,7 +36,7 @@ Branch `ptm-online-2`, Haupt-Checkout (Worktree entfernt).
 | 2. UUID in der Nr-Zelle, Zusatzspalte entfernt | erledigt | `82c9d1cd`, `c9190752` |
 | 2. Menüpunkt „Teamnummer ändern“ | erledigt: `ptm:teamnummer_aendern` in `Addons_A0_SpielerDb.xcu` (A0A02); `TeamnummerAenderung` (UNO-frei, Tausch bei vergebener Nr), `TeamnummerAendernDialog`, `TeamnummerAendernSheet` (freigeschaltet nur für `UMGESTELLTE_SYSTEME`, Stand: alle Systeme). Nr-Spalte ist im Turnier-Modus bereits gesperrt (Blattschutz-Konfiguration). UITest: Tausch über den Runner, Runde + Rangliste ordnen richtig zu | siehe Log |
 | 3. Formelbauer über `TeamSchluessel` | erledigt in `MeldeListeHelper`, `TeamAnzeigeHelper`. Gespeicherte Referenzen nutzen immer `Uuid` (`MeldelisteUuidIndex.uuidSchluessel`, bricht ohne UUID ab; der stille Rückfall auf ein Nummernliteral ist entfernt). `AngezeigteNr` (vormals `Nr`) verweist nur noch auf Zellen, die selbst die aktuelle Nr anzeigen: KO-/Poule-Sieger, Teilnehmerlisten, Ranglisten | `7bba57a8`, `d40345cd`, `46559309` |
-| 4. Schweizer/Maastrichter-Vorrunde | erledigt: Runden schreiben UUID-Formeln, keine technischen Spalten mehr; `SchweizerTeamNrAufloeser` (UUID → Zahl → technische Spalte → Anzeige-Index), `SchweizerRundenLeser`, `LiveZellbereich` lesen die UUID. Pakete `schweizer`, `maastrichter`, `ptmonline`: 154/155 UITests grün | `7bba57a8`, `d40345cd` |
+| 4. Schweizer/Maastrichter-Vorrunde | erledigt: Runden schreiben UUID-Formeln, keine technischen Spalten mehr; `SchweizerTeamNrAufloeser` (UUID → sichtbare Zahl → Anzeige-Index; die technische Spalte ist seit `7ca94614` entfernt), `SchweizerRundenLeser`, `LiveZellbereich` lesen die UUID. Pakete `schweizer`, `maastrichter`, `ptmonline`: 154/155 UITests grün | `7bba57a8`, `d40345cd` |
 | 4. KO-Turnierbaum (`KoTurnierbaumSheet`: KO, Maastrichter-Finale, Poule-KO, Kaskaden-Felder, JGJ-Finale) | erledigt: Runde-1- und Cadrage-Zellen schreiben immer eine UUID-Formel (auch im Nr-Modus, dort `INDEX(…UUIDZEILE)`); Sieger-/Verlierer-Formeln unverändert. KO in `UMGESTELLTE_SYSTEME`; UITest `KoTurnierbaumTeamnummerAendernUITest` | siehe Log |
 | 4. FormuleX | erledigt: Teamzellen der Spielrunde sind Formeln `INDEX(…UUIDZEILE("uuid"))` (Anzeige = aktuelle Nr), Leser unverändert (lesen die Anzeige). FORMULEX in `UMGESTELLTE_SYSTEME`; UITest `FormuleXTeamnummerAendernUITest`; formulex-UITests 31/31 | siehe Log |
 | 4. Kaskade | erledigt: Teamzellen der Kaskadenrunden aufgelöster Teams sind Formeln `INDEX(…UUIDZEILE)`, Platzhalter bleiben Text; KO-Felder über den Turnierbaum; Gruppenübersicht/Gruppenrangliste sind Anzeigen (neu aufgebaut). KASKADE in `UMGESTELLTE_SYSTEME`; UITest `KaskadeTeamnummerAendernUITest` (Folgerunde führt den Sieger mit neuer Nr); kaskade-UITests 19/19 | siehe Log |
@@ -113,7 +113,7 @@ Entscheidungen des Users:
      - Ohne Bereich hätte die Funktion keinen Dokumentbezug (fokus-basiert = verboten).
      - Ohne Bereich müsste der lokalisierte Blattname fest im Code stehen.
    - Damit wird in allen Formelbauern `MATCH(nr;$A$1:$A$999;0)` zu `PTM.ALG.UUIDZEILE("<uuid>";$A$1:$A$999)`. Im Anzeigemodus NR gilt `PTM.ALG.UUIDTEAMNR("<uuid>";$A$1:$A$999)` (Index 37, ersetzt `INDEX($A$1:$A$999; UUIDZEILE(…))`; Altformeln bleiben gültig).
-3. **Keine versteckten Spalten, weder in der Meldeliste noch in Runden oder Ranglisten.** Jede Teamzelle trägt ihre UUID als Literal in der eigenen Formel:
+3. **Keine zusätzlichen UUID-Spalten, weder in der Meldeliste noch in Runden oder Ranglisten.** Jede Teamzelle trägt ihre UUID als Literal in der eigenen Formel. Bereits vorhandene, ausgeblendete Nr-Spalten (JGJ, Liga, TripTete) sind geblieben und tragen jetzt diese Formel:
    - Anzeige Nr: `=PTM.ALG.UUIDTEAMNR("<uuid>"; Meldeliste.$A$1:$A$999)` (früher `INDEX(…; UUIDZEILE(…))`).
    - Anzeige Name: dieselbe Zeile über die Formelbauer (`PTM.ALG.TEAMANZEIGE`).
    - Java liest die UUID per `getFormulaArray` und UUID-Regex aus der Zelle. Gemeinsamer Parser: `TeamUuidFormel.findeUuid(String formel)`.
@@ -132,7 +132,9 @@ Entscheidungen des Users:
    - Geschrieben wird immer die UUID.
    - Vorteil: Kein Umbau der Algorithmen und Modelle; die UUID-Pflicht gilt an der Sheet-Grenze.
 
-## Schritte
+## Schritte (ursprünglicher Plan)
+
+Umgesetzt ist alles; wo die Umsetzung abweicht, ist es unten vermerkt. Den tatsächlichen Stand je System zeigt die Tabelle unter „Arbeitsstand“.
 
 ### 1. Add-in-Funktionen
 - In `idl/de/petanqueturniermanager/AddInGlobal.idl` die Indizes 34–36 ergänzen: `ptmtnruuid(long nr, string uuid)`, `ptmuuidzeile(string uuid, XCellRange bereich)` (erledigt, `d42ad54f`). `ptmkosieger` entfällt (Entscheidung KO-Sieger); hinzugekommen ist `ptmuuidteamnr` (`cbe3438e`).
@@ -165,32 +167,33 @@ Entscheidungen des Users:
 - Damit sind die meisten Anzeigeformeln mit einer Änderung erledigt.
 
 ### 4. Turniersysteme (gespeicherte Referenzen → UUID)
-Muster je System: Wo heute die Nr als Zahl steht (sichtbar oder versteckt), steht künftig **eine** sichtbare Teamzelle mit UUID-Literal in der Formel. Sie zeigt je nach `TeamAnzeige` die Nr oder den Namen. Versteckte Nr-Spalten entfallen. Leser (Rangliste, Live, Sync) parsen die UUID und mappen sie über `MeldelisteUuidIndex` auf die aktuelle Nr.
+Muster je System: Wo die Nr früher als Zahl stand (sichtbar oder versteckt), steht jetzt eine Formel mit UUID-Literal, die die aktuelle Nr anzeigt. Die meisten Leser (Rangliste, Live) lesen weiter diese Anzeige; die Schweizer-Leser (`SchweizerRundenLeser`, `LiveZellbereich`) parsen die UUID und bilden sie über `MeldelisteUuidIndex` auf die aktuelle Nr ab.
 
 - **Schweizer/Maastrichter:**
   - `TECHNISCHE_TEAM_A/B_NR_SPALTE` in `SchweizerAbstractSpielrundeSheet` entfällt; `TEAM_A/B_SPALTE` trägt die UUID-Formel.
   - `SchweizerTeamNrAufloeser` liest die UUID aus der Teamzelle.
   - Legacy `maastrichter/korunde/*` prüfen.
 - **JGJ, Liga, TripTete:**
-  - Die Nr-Spalten der Spielpläne (14/15 bzw. 19/20) entfallen; die Namensspalten tragen die UUID-Formel.
-  - Leser: `JGJRanglisteRechner`, `LigaRanglisteSheet`, `TripTeteSpielPlanLeser`.
+  - Geplant war, die Nr-Spalten der Spielpläne (14/15 bzw. 19/20) zu entfernen. **Umgesetzt:** Die Spalten bleiben und tragen `INDEX(…UUIDZEILE)` (Freilos/Freispiel 0); die Namensformeln sind unverändert.
+  - Leser `JGJRanglisteRechner`, `LigaRanglisteSheet`, `TripTeteSpielPlanLeser` unverändert (lesen die Anzeige).
   - Direktvergleich-Matrizen (`JGJRanglisteDirektvergleichSheet`, Liga) positionieren nicht mehr nach Nr, sondern nach Meldelisten-Reihenfolge, mit Nr-Literalen → UUID.
 - **FormuleX, Kaskade:**
-  - Die sichtbare Teamspalte (heute Zahl) wird zur UUID-Formelzelle.
-  - Leser: `FormuleXRanglisteSheet`, `KaskadeRundenErgebnisLeser`.
+  - Die sichtbare Teamspalte (früher Zahl) ist eine UUID-Formelzelle; bei Kaskaden bleiben Platzhalter noch nicht feststehender Teams Text.
+  - Leser `FormuleXRanglisteSheet`, `KaskadeRundenErgebnisLeser` unverändert (lesen die Anzeige).
 - **KO (`KoTurnierbaumSheet`, genutzt von KO, Maastrichter-Finale, Poule-KO, Kaskade-Felder, JGJ-Finale):**
   - Runde 1 und Cadrage tragen das UUID-Literal in der Formel statt der Nr (erledigt).
   - Sieger-Propagation unverändert über die Anzeige (Entscheidung KO-Sieger); die Namensspalte im Modus NR bleibt (`MATCH` auf die aktuelle Nr).
   - `TurnierbaumLiveLeser` unverändert (liest die Anzeige, UUID-Formeln über `LiveZellbereich`).
 - **Poule-Vorrunde:**
-  - `SPALTE_TEAM_A/B_NR` entfallen; die Namenszellen tragen die UUID-Formel, Sieger/Verlierer reichen die Anzeige weiter (wie KO).
-  - `PouleVorrundenRanglisteSheet` liest sie.
+  - **Umgesetzt:** Die Nr-Zellen der ersten Runde (Vorrunde und Gruppen-Spielpläne) tragen `INDEX(…UUIDZEILE)`; Sieger-/Verlierer-/Barrage-Zeilen reichen die Anzeige weiter (wie KO).
+  - `PouleVorrundenRanglisteSheet` unverändert (liest die Anzeige).
 - **Supermelee:**
-  - Die Spieler-Nr-Zellen in `SpielrundeDelegate` werden UUID-Formelzellen; die separaten VLOOKUP-Namensspalten werden geprüft und entfallen ggf. (Meldeliste gleiches `PTM.ALG.TNRUUID`-Schema).
-  - Leser: `SpielrundeErgebnisLeser`, `EndranglisteSheet`.
+  - Die Spieler-Nr-Zellen in `SpielrundeDelegate` sind UUID-Formelzellen (Meldeliste gleiches `PTM.ALG.TNRUUID`-Schema); die Namensformeln sind geblieben.
+  - Leser `SpielrundeErgebnisLeser`, `EndranglisteSheet` unverändert (lesen die Anzeige). Weil die Endrangliste die Spieltag-Ranglisten über die Nummer liest, baut „Teamnummer ändern“ die Spieltag-Ranglisten neu auf.
 - **PTM-Online:**
-  - `PtmOnlineSyncSheet` behält `SPALTE_LOKALE_UUID`; `SPALTE_NR` wird `INDEX(…UUIDZEILE…)`.
-  - `LiveNummernAufloesung`, `PtmOnlineSpielrundeSync`, `TeamSpielrundenLeser` lesen die UUID direkt aus den Runden, ohne den Umweg Nr → Zeile.
+  - `PtmOnlineSyncSheet` behält `SPALTE_LOKALE_UUID` als Schlüssel seiner Zeilen; `SPALTE_NR` ist eine Formel auf die Meldeliste.
+  - **Abweichung (Entscheidung 2026-10-12):** Die Online-ID steht nicht mehr im Sync-Blatt, sondern als drittes Argument in der Nr-Zelle (siehe „PTM-Online-ID in der Nr-Zelle“).
+  - Die Live-Übertragung liest die Anzeige der Runden und übersetzt die Nummern beim Senden in Online-IDs (`LiveUebertragungsDaten`).
 - **Signatur-Whitelists (`SignaturQuellen`):** Teamzellen sind jetzt Formeln. Die Signatur darf nicht ihren berechneten Wert hashen (Hash-Flapping, siehe Memory), sondern den Formeltext bzw. die UUID.
 
 ## Wiederverwendung
@@ -205,8 +208,8 @@ Muster je System: Wo heute die Nr als Zahl steht (sichtbar oder versteckt), steh
 - **Siegerzellen ohne Literal:** tragen keine UUID (Entscheidung KO-Sieger); Leser arbeiten mit der Anzeige.
 - **Performance (gemessen 2026-10-15):** Supermelee-Beispielturnier (100 Spieler, 5 Spieltage, 37 Blätter) mit 1399 `UUIDTEAMNR`- und 1399 `UUIDTEAMANZEIGE`-Zellen: `calculateAll` 2,3 s, nach `295a9f41` (UUIDTEAMNR liest nur noch den Wert der gefundenen Zelle statt aller Werte) 1,7 s. Die reine Java-Suche (Regex über 999 Zeilen) macht davon ~130 ms aus, der Rest ist `getFormulaArray` und Calc selbst. Volle Neuberechnung nur bei Änderungen an der Nr-Spalte oder hartem Recalc, nicht bei Ergebniseingabe. **Kein Cache je Bereich:** Das Add-in-Objekt ist dokumentübergreifend, aus dem übergebenen `XCellRange` lässt sich das Dokument nicht stabil bestimmen – ein Cache könnte Werte zwischen zwei offenen Dokumenten vertauschen.
 - **Ohne installierte Extension** zeigen Nr-Spalten `#NAME?`. Das ist schon heute bei allen `PTM.ALG.*` so.
-- **Größe:** Sehr viele UITest-JSON-Referenzen ändern sich, weil Teamzellen zu Formeln werden und versteckte Nr-Spalten entfallen. Neu erfasste JSONs inhaltlich prüfen (Memory-Regel).
-- **Logik im Online-Projekt:** Paarung und Rangliste sind dort dupliziert; Auswirkung auf `Petanque-Turnier-Manager-Online` prüfen (Memory-Regel).
+- **Größe (eingetreten, abgearbeitet):** Sehr viele UITest-JSON-Referenzen ändern sich, weil Teamzellen zu Formeln werden und versteckte Nr-Spalten entfallen. Neu erfasste JSONs inhaltlich prüfen (Memory-Regel).
+- ~~**Logik im Online-Projekt**~~ geprüft (2026-10-15): kein Anpassungsbedarf, siehe „Nächste Schritte“ Nr. 2.
 
 ## Verifikation
 - **Unit:** `TeamUuidFormel` (bauen/parsen, Sonderzeichen, Altformat Zahl), `GlobalImpl.ptmtnruuid/ptmuuidzeile` mit gemocktem `XCellRange`.
