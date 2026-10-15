@@ -56,7 +56,12 @@ Behoben (2026-10-12), nicht UUID-bezogen: Tests mit „Style/CF-Operation außer
 
 Nächste Schritte (Stand 2026-10-15):
 1. ~~Rückfallwege für Altbestand~~ erledigt (2026-10-12): Schweizer-technische Spalten (`TECHNISCHE_TEAM_A/B_NR_SPALTE`) und der Namens-Rückfall in `MeleeTeilnahme`/`LiveNummernAufloesung` entfernt. Bewusst behalten (auch für von Hand korrigierte Zellen in neuen Dokumenten): sichtbare Zahl ohne UUID und Name über `TeamAnzeigeIndex` im `SchweizerTeamNrAufloeser`, abgeleitete Team-UUID in `meleeTeams`.
-2. Gesamtlauf `./gradlew reinstallExtension uiTests`, Online-Projekt auf duplizierte Logik prüfen. Bekannt: `PtmOnlineSpieltagAbgleichSupermeleeUITest` im Gesamtlauf rot (asynchrones Fehler-Log), einzeln grün.
+2. ~~Gesamtlauf, Online-Projekt auf duplizierte Logik prüfen~~ erledigt (2026-10-15):
+   - Gesamtlauf `./gradlew uiTests`: 674 Tests in 160 Klassen, rot nur 2 in `PtmOnlineAbgleichSheetRunnerUITest` (Test-Server kannte `/registration-links` nicht, `962e2370`). `PtmOnlineSpieltagAbgleichSupermeleeUITest` war diesmal grün.
+   - Online-Projekt: **kein Anpassungsbedarf.** Der Umbau ändert, woran das Plugin ein Team erkennt, keine Turnierregel. Im Zeitraum des Umbaus gab es keine Änderung an Paarung, Rangliste, Freilos, Cadrage oder Wertung. Der Fix `69fda3a1` betrifft Kaskaden, die online nicht ausgelost werden.
+   - Live-Sync: Das Plugin übersetzt lokale Nummern beim Senden in Online-Anmelde-IDs (`LiveUebertragungsDaten.onlineIdsVon`). Der Server erhält und speichert nur `registrationIds`, nie Teamnummern. „Teamnummer ändern“ ändert online daher nichts.
+   - `seeding_position` ist die Setzpositions-Spalte, nicht die Teamnummer. Mêlée-Teams (`PUT …/melee-teams`) gehen schon mit `teamUuid`.
+   - Die Online-Auslosung (`src/lib/pairing/*`) gilt nur für reine Online-Turniere und arbeitet mit eigenen Team-IDs (`tournament_teams.id`). Sie hat keine Berührung mit Nummern aus dem Dokument.
 3. ~~PTM-Online-Lücke bei gelöschten importierten Meldungen~~ erledigt (2026-10-15), braucht das Deploy des Online-Projekts mit `POST …/registration-links`.
 
 Release-Hinweis (erstes Release mit UUID-Teams):
