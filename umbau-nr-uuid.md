@@ -20,21 +20,22 @@ Alle Identitäten einer Meldung stehen an **einer** Stelle, der Nr-Zelle; das se
 - Meldeliste (Team): `PTM.ALG.TNRUUID(nr;"lokale-uuid";"online-id")`, Mêlée-Anmeldung (Spieler): `PTM.ALG.SPLRUUID(nr;"lokale-uuid";"online-id")`. Der dritte Parameter ist optional (`any`), ohne Online-Verbindung fehlt er.
 - `NrZellFormel` liest/baut die Zelle (erstes Text-Literal = lokale UUID, zweites = Online-ID). Jeder Umnummerierer behält beide; eine kopierte Zeile wird eine neue Meldung ohne Online-ID.
 - Das Sync-Blatt führt je lokaler UUID nur noch Anzeige, Revision, Rohstatus, Besetzung und Vermerke (Spalte „Online-ID“ entfernt). `PtmOnlineRegistrationMapping` behält seine Schnittstelle und liest/schreibt die IDs über `MeldelisteZiel.leseOnlineIdsProUuid/setzeOnlineIds`. Es zählen nur Meldungen mit Zeile im Sync-Blatt dieser Verbindung.
-- Lokal gelöschte Meldungen: Die Zuordnung kommt je Lauf vom Server (`registration.localRegistrationUuid`, `ergaenzeAusServer` nach jedem Abruf). Lücke: Wird eine Zeile gelöscht, bevor der Server die lokale UUID kennt (Auftrag noch im Puffer), kann die Anmeldung erneut importiert werden.
+- Lokal gelöschte Meldungen: Die Zuordnung kommt je Lauf vom Server (`registration.localRegistrationUuid`, `ergaenzeAusServer` nach jedem Abruf). **Lücke (offen, Analyse 2026-10-15):** Der Server erfährt die lokale UUID einer *importierten* Online-Anmeldung nur über einen Änderungsauftrag (`ANMELDUNG_AENDERN` → `upsertDocumentRegistration` mit `onlineRegistrationId`), also erst nach einer lokalen Namens-/Besetzungsänderung. Teilnahme (`RegistrationResultDto`) und Entscheidungen (nur Audit) übertragen sie nicht. Wird die Zeile einer nie geänderten importierten Meldung gelöscht, kennt niemand mehr die Online-ID: Die Anmeldung wird erneut importiert, die Storno-Erkennung (KP-15) greift nicht, und „Zuordnung vom Server wiederherstellen“ findet sie auch nicht. Lokal angelegte Meldungen (`ANMELDUNG_ANLEGEN`) betrifft das nur, solange der Auftrag noch im Puffer liegt.
 - Supermelee: Die Nr-Zelle trägt nur die Online-ID des aktuellen Spieltags; beim Archivieren der vorherigen Spieltage (`PtmOnlineSpieltagWechsel`) werden die IDs geleert.
 - Schreiben der Online-ID berechnet geänderte Zellen sofort (`calculate()`): Bei abgeschalteter automatischer Berechnung zeigten neue Nr-Formeln sonst 0.
 
-## Arbeitsstand (2026-10-12)
+## Arbeitsstand (2026-10-15)
 
 Branch `ptm-online-2`, Haupt-Checkout (Worktree entfernt).
 
 | Schritt | Stand | Commit |
 |---|---|---|
 | 1. `PTM.ALG.TNRUUID` / `PTM.ALG.UUIDZEILE` | erledigt | `d42ad54f` |
+| 1. `PTM.ALG.UUIDTEAMNR` (Teamnummer direkt zur UUID, ersetzt `INDEX(…UUIDZEILE…)`) | erledigt; liest seit `295a9f41` nur noch den Wert der gefundenen Zelle | `cbe3438e` |
 | 1. `PTM.ALG.KOSIEGER` | **entfällt** (Entscheidung 2026-10-11, siehe unten) | |
 | 2. UUID in der Nr-Zelle, Zusatzspalte entfernt | erledigt | `82c9d1cd`, `c9190752` |
 | 2. Menüpunkt „Teamnummer ändern“ | erledigt: `ptm:teamnummer_aendern` in `Addons_A0_SpielerDb.xcu` (A0A02); `TeamnummerAenderung` (UNO-frei, Tausch bei vergebener Nr), `TeamnummerAendernDialog`, `TeamnummerAendernSheet` (freigeschaltet nur für `UMGESTELLTE_SYSTEME`, Stand: alle Systeme). Nr-Spalte ist im Turnier-Modus bereits gesperrt (Blattschutz-Konfiguration). UITest: Tausch über den Runner, Runde + Rangliste ordnen richtig zu | siehe Log |
-| 3. Formelbauer über `TeamSchluessel` (`Uuid` / `Nr` als Übergang) | erledigt in `MeldeListeHelper`, `TeamAnzeigeHelper` | `7bba57a8`, `d40345cd` |
+| 3. Formelbauer über `TeamSchluessel` | erledigt in `MeldeListeHelper`, `TeamAnzeigeHelper`. Gespeicherte Referenzen nutzen immer `Uuid` (`MeldelisteUuidIndex.uuidSchluessel`, bricht ohne UUID ab; der stille Rückfall auf ein Nummernliteral ist entfernt). `AngezeigteNr` (vormals `Nr`) verweist nur noch auf Zellen, die selbst die aktuelle Nr anzeigen: KO-/Poule-Sieger, Teilnehmerlisten, Ranglisten | `7bba57a8`, `d40345cd`, `46559309` |
 | 4. Schweizer/Maastrichter-Vorrunde | erledigt: Runden schreiben UUID-Formeln, keine technischen Spalten mehr; `SchweizerTeamNrAufloeser` (UUID → Zahl → technische Spalte → Anzeige-Index), `SchweizerRundenLeser`, `LiveZellbereich` lesen die UUID. Pakete `schweizer`, `maastrichter`, `ptmonline`: 154/155 UITests grün | `7bba57a8`, `d40345cd` |
 | 4. KO-Turnierbaum (`KoTurnierbaumSheet`: KO, Maastrichter-Finale, Poule-KO, Kaskaden-Felder, JGJ-Finale) | erledigt: Runde-1- und Cadrage-Zellen schreiben immer eine UUID-Formel (auch im Nr-Modus, dort `INDEX(…UUIDZEILE)`); Sieger-/Verlierer-Formeln unverändert. KO in `UMGESTELLTE_SYSTEME`; UITest `KoTurnierbaumTeamnummerAendernUITest` | siehe Log |
 | 4. FormuleX | erledigt: Teamzellen der Spielrunde sind Formeln `INDEX(…UUIDZEILE("uuid"))` (Anzeige = aktuelle Nr), Leser unverändert (lesen die Anzeige). FORMULEX in `UMGESTELLTE_SYSTEME`; UITest `FormuleXTeamnummerAendernUITest`; formulex-UITests 31/31 | siehe Log |
@@ -45,17 +46,22 @@ Branch `ptm-online-2`, Haupt-Checkout (Worktree entfernt).
 | 4. Liga | erledigt: Nr-Arbeitsspalten des Spielplans (14/15) sind Formeln `INDEX(…UUIDZEILE)` (Freispiel 0); Namensformeln, Rangliste, Termine, Status-/Blattschutz-Leser unverändert (lesen die Anzeige); Direktvergleich positioniert nach Reihenfolge statt Nr. LIGA in `UMGESTELLTE_SYSTEME`; UITest `LigaTeamnummerAendernUITest`; liga-UITests 23/23 | siehe Log |
 | 4. Poule-Vorrunde | erledigt: Nr-Zellen der ersten Runde (Vorrunde und Gruppen-Spielpläne) sind Formeln `INDEX(…UUIDZEILE)`; Sieger-/Verlierer-/Barrage-Zeilen reichen die Anzeige weiter (wie KO), Namensformeln und Leser unverändert; Poule-KO über den Turnierbaum. POULE in `UMGESTELLTE_SYSTEME`; UITest `PouleTeamnummerAendernUITest`; Poule-UITests 18/18 | siehe Log |
 | 4. Supermelee | erledigt: Spielernummern der Spielrunden sind Formeln `INDEX(…UUIDZEILE)`; Namensformeln, Ranglisten, Validatoren und Live-Leser unverändert (lesen die Anzeige). Da die Endrangliste die Spieltag-Ranglisten über die Nummer liest, baut „Teamnummer ändern“ bei Supermelee alle Spieltag-Ranglisten sofort neu auf. SUPERMELEE in `UMGESTELLTE_SYSTEME`; UITest `SupermeleeTeamnummerAendernUITest` (100 Spieler, 5 Spieltage); Supermelee-/Mêlée-UITests 90/90 (`PtmOnlineSpieltagAbgleichSupermeleeUITest` wie bekannt im Gesamtlauf rot, einzeln grün) | siehe Log |
-| 5. Alte Dokumente | erledigt: `AltesDokumentErkennung` – alt = Meldeliste hat nummerierte Meldungen, aber keine Nr-Zelle trägt eine UUID (Entscheidung User 2026-10-12). Prüfung in `SheetRunner.run()` vor jeder Änderung, Abbruch mit `AltesDokumentException` („Dieses Dokument muss mit dem ursprünglichen Plugin geöffnet werden.“, 5 Sprachen); Hintergrundläufe brechen still ab (nur Log). UITest `AltesDokumentUITest` | siehe Log |
+| 5. Alte Dokumente | erledigt: zentral in `comp/kompatibilitaet/DokumentKompatibilitaet` (ersetzt `AltesDokumentErkennung`), Schritt `TeamUuidUmstellung` ab `5.40.00`, nicht migrierbar. Mit gespeicherter Version entscheidet die Version; ohne Version gilt ein Dokument als alt, wenn die Meldeliste nummerierte Meldungen, aber keine UUID hat (Entscheidung User 2026-10-12). Prüfung in `SheetRunner.run()` vor jeder Änderung, Abbruch mit `AltesDokumentException`, beim Öffnen einmal Hinweis (`DokumentKompatibilitaetsHinweis`). UITest `AltesDokumentUITest`, Details in CLAUDE.md | `fb19ae21`, `7e38be22` |
 
 Neue Klassen: `TeamUuidFormel` (Parser), `MeldelisteUuidIndex` (UUID ↔ Nr, `leseNrSpalte`), `TeamSchluessel` (Formelausdruck je Schlüsselart), `NrUuidSpalte`, `TeamNummernPlan`/`TeamNummernVergabe`, `TeamnummerAenderung`/`TeamnummerAendernDialog`/`TeamnummerAendernSheet`. Dialog-Bausteine (`label`, `numericField`, `button`, `Rahmen`) liegen jetzt in `AbstractUnoDialog`.
 
-Bekannte Einschränkung: Nach „Teamnummer ändern“ zeigen Ranglisten (Nummern als Werte) die neue Nummer erst nach dem nächsten Aktualisieren; die Erfolgsmeldung weist darauf hin.
+Ranglisten nach „Teamnummer ändern“ (behoben 2026-10-15, `e5526e2f`): Ranglisten führen Nummern als Werte. `TeamnummerAendernSheet.nachziehen` führt jetzt je System das `*SheetUpdate` der vorhandenen Ranglisten synchron aus (fehlende werden nicht angelegt, Supermelee zusätzlich die Endrangliste, Maastrichter wie bisher `MaastrichterGruppenSpalteHelper`). Damit sehen auch Leser ohne Tabwechsel (Webserver, Export, PTM-Online-Live) sofort die neue Nummer; die `*TeamnummerAendernUITest` prüfen die Rangliste ohne eigenes Update.
 
 Behoben (2026-10-12), nicht UUID-bezogen: Tests mit „Style/CF-Operation außerhalb eines aktiven BlattschutzScopes“. Ursache: Ein erfolgreicher `start()`-Lauf schaltet den Turnier-Modus automatisch ein (`SheetRunner.aktiviereTurnierModusAutomatisch`); folgende direkte Aufrufe im Test (`doRun()`, `uebernehmen()`, Auftragsversand) liefen ohne Scope. Fix: `BaseCalcUITest.wieImSheetRunner(...)` öffnet den Scope wie `SheetRunner.run()`. `PtmOnlineAbgleichSheetRunnerUITest` 10/10, `./gradlew ptmOnlineTests` 19/19.
 
-Nächste Schritte (Stand 2026-10-12):
+Nächste Schritte (Stand 2026-10-15):
 1. ~~Rückfallwege für Altbestand~~ erledigt (2026-10-12): Schweizer-technische Spalten (`TECHNISCHE_TEAM_A/B_NR_SPALTE`) und der Namens-Rückfall in `MeleeTeilnahme`/`LiveNummernAufloesung` entfernt. Bewusst behalten (auch für von Hand korrigierte Zellen in neuen Dokumenten): sichtbare Zahl ohne UUID und Name über `TeamAnzeigeIndex` im `SchweizerTeamNrAufloeser`, abgeleitete Team-UUID in `meleeTeams`.
-2. Gesamtlauf `./gradlew reinstallExtension uiTests`, Online-Projekt auf duplizierte Logik prüfen.
+2. Gesamtlauf `./gradlew reinstallExtension uiTests`, Online-Projekt auf duplizierte Logik prüfen. Bekannt: `PtmOnlineSpieltagAbgleichSupermeleeUITest` im Gesamtlauf rot (asynchrones Fehler-Log), einzeln grün.
+3. PTM-Online-Lücke bei gelöschten importierten Meldungen schließen (siehe Abschnitt „PTM-Online-ID in der Nr-Zelle“).
+
+Release-Hinweis (erstes Release mit UUID-Teams):
+- Dokumente älterer Versionen lassen sich öffnen, aber nicht mehr weiterführen („Dieses Dokument muss mit dem ursprünglichen Plugin geöffnet werden.“).
+- Zeigen neue `PTM.ALG.*`-Formeln (z.&nbsp;B. in der Nr-Spalte) nach dem Update `Err:504` oder `#NAME?`, obwohl die Extension aktuell ist: LO hat alte Add-in-Metadaten im Benutzerprofil zwischengespeichert. LibreOffice schließen, `extensions` und `uno_packages/cache` im Benutzerprofil umbenennen, Extension neu installieren.
 
 Entscheidung KO-Sieger (2026-10-11): **kein `PTM.ALG.KOSIEGER`.** Nur Setzlisten-Zellen (Runde 1, Cadrage) tragen die UUID; die Sieger-/Verlierer-Formeln reichen wie bisher die *Anzeige* weiter (`IF(scoreA>scoreB; teamA; …)`). Da die Setzlisten-Zellen immer die aktuelle Nr bzw. den aktuellen Namen zeigen, stimmt nach „Teamnummer ändern“ der ganze Baum. Leser (`LiveZellbereich`, Siegergeld, `KoStatusLeser`) lesen wie bisher die Anzeige. Bewusst in Kauf genommen: Sieger-Zellen tragen keine UUID; bei doppelten Teamnamen in der Namensanzeige bleiben sie für Java-Leser mehrdeutig (wie vorher). Gilt sinngemäß auch für Poule-Sieger/Verlierer.
 
@@ -124,17 +130,17 @@ Entscheidungen des Users:
 ## Schritte
 
 ### 1. Add-in-Funktionen
-- In `idl/de/petanqueturniermanager/AddInGlobal.idl` die Indizes 34–36 ergänzen: `ptmtnruuid(long nr, string uuid)`, `ptmuuidzeile(string uuid, XCellRange bereich)` (erledigt, `d42ad54f`) und `ptmkosieger(XCellRange teamA, XCellRange teamB, XCellRange punkteA, XCellRange punkteB, long verlierer)` → `any` (mit dem KO-Umbau).
+- In `idl/de/petanqueturniermanager/AddInGlobal.idl` die Indizes 34–36 ergänzen: `ptmtnruuid(long nr, string uuid)`, `ptmuuidzeile(string uuid, XCellRange bereich)` (erledigt, `d42ad54f`). `ptmkosieger` entfällt (Entscheidung KO-Sieger); hinzugekommen ist `ptmuuidteamnr` (`cbe3438e`).
 - `addin/XGlobal.java` um `MethodTypeInfo` und Signaturen ergänzen. Muster: `ptmteamanzeige`, Index 29.
 - `addins/GlobalImpl.java` implementieren. Der UUID-Parser liegt in einer UNO-freien Klasse `TeamUuidFormel` (bauen/parsen) und ist unit-getestet.
 - `registry/org/openoffice/Office/GlobalAddIn.xcu` (5 Sprachen) ergänzen und `./gradlew compileIdl` ausführen.
-- Risiko Add-in-Metadaten-Cache (vgl. Err:504-Memory): im Release-Hinweis erwähnen.
+- Risiko Add-in-Metadaten-Cache (vgl. Err:504-Memory): steht im Release-Hinweis unter „Arbeitsstand“.
 
 ### 2. Meldeliste
 - `teamnummernVergeben` in allen `*MeldeListeSheetUpdate`/`*Delegate` (Schweizer, KO, Poule, FormuleX, Kaskade, JGJ, TripTete) sowie `MeldeListeHelper.updateMeldungenNr` (Supermelee, Liga):
   - Neue Nummern werden als `PTM.ALG.TNRUUID`-Formel mit neuer UUID geschrieben, als Block (`RangeHelper`/`setFormulaArray`).
   - Dokumente mit bestehenden reinen Zahlen ohne Formel gelten als alte Dokumente und werden mit der Fehlermeldung zum ursprünglichen Plugin abgewiesen.
-- Die Nr-Spalte ist dauerhaft gesperrt. Neuer Menüpunkt „Teamnummer ändern“ (Dialog alte → neue Nr, schreibt nur die erste Konstante der Formel neu):
+- Die Nr-Spalte ist im Turnier-Modus gesperrt (Entscheidung 2026-10-11, siehe oben). Neuer Menüpunkt „Teamnummer ändern“ (Dialog alte → neue Nr, schreibt nur die erste Konstante der Formel neu):
   - neue XCU in `META-INF/manifest.xml`,
   - `ProtocolHandler`-Konstante,
   - `ProtocolHandlerCommandsTest` mitlaufen lassen.
@@ -192,7 +198,7 @@ Muster je System: Wo heute die Nr als Zahl steht (sichtbar oder versteckt), steh
 
 ## Risiken
 - **Siegerzellen ohne Literal:** tragen keine UUID (Entscheidung KO-Sieger); Leser arbeiten mit der Anzeige.
-- **Performance:** `UUIDZEILE` liest je Aufruf ca. 1000 Formeln. Bei vielen Formelzellen (KO-Baum, Spielplan) früh messen. Bei Bedarf einen Cache je Bereich mit Invalidierung über den Inhalt der Nr-Spalte.
+- **Performance (gemessen 2026-10-15):** Supermelee-Beispielturnier (100 Spieler, 5 Spieltage, 37 Blätter) mit 1399 `UUIDTEAMNR`- und 1399 `UUIDTEAMANZEIGE`-Zellen: `calculateAll` 2,3 s, nach `295a9f41` (UUIDTEAMNR liest nur noch den Wert der gefundenen Zelle statt aller Werte) 1,7 s. Die reine Java-Suche (Regex über 999 Zeilen) macht davon ~130 ms aus, der Rest ist `getFormulaArray` und Calc selbst. Volle Neuberechnung nur bei Änderungen an der Nr-Spalte oder hartem Recalc, nicht bei Ergebniseingabe. **Kein Cache je Bereich:** Das Add-in-Objekt ist dokumentübergreifend, aus dem übergebenen `XCellRange` lässt sich das Dokument nicht stabil bestimmen – ein Cache könnte Werte zwischen zwei offenen Dokumenten vertauschen.
 - **Ohne installierte Extension** zeigen Nr-Spalten `#NAME?`. Das ist schon heute bei allen `PTM.ALG.*` so.
 - **Größe:** Sehr viele UITest-JSON-Referenzen ändern sich, weil Teamzellen zu Formeln werden und versteckte Nr-Spalten entfallen. Neu erfasste JSONs inhaltlich prüfen (Memory-Regel).
 - **Logik im Online-Projekt:** Paarung und Rangliste sind dort dupliziert; Auswirkung auf `Petanque-Turnier-Manager-Online` prüfen (Memory-Regel).
@@ -202,7 +208,7 @@ Muster je System: Wo heute die Nr als Zahl steht (sichtbar oder versteckt), steh
 - **UITests je System:**
   - Turnier mit 2 Runden aufbauen, „Teamnummer ändern“ (z. B. 3 ↔ 7) ausführen.
   - Prüfen: Runden zeigen dieselben Paarungen mit neuen Nummern, Ranglisten unverändert bis auf die Nr.
-- **Mehr-Dokument-Test** nach `GlobalImplMehrDokumenteUITest`: zwei Dokumente mit gleicher Nr und verschiedener UUID, Fokus auf dem falschen Dokument; `UUIDZEILE` liefert das richtige.
+- **Mehr-Dokument-Test** (erledigt, `UuidFunktionenMehrDokumenteUITest`): zwei Dokumente mit gleicher Nr für verschiedene Teams und gleicher UUID unter anderer Nr/Zeile, Fokus auf dem jeweils anderen Dokument; `UUIDZEILE`, `UUIDTEAMNR` und `UUID.TEAMANZEIGE` liefern den Wert des eigenen Dokuments, eine Änderung im zweiten wirkt nicht aufs erste.
 - **Altdokument:** Dokument mit alter Nr-/Zusatzspalten-Struktur öffnen; Verarbeitung bricht ab und verweist auf das ursprüngliche Plugin.
 - **Gates und Suites:**
   - `./gradlew test spotbugsMain` (inkl. `ProtocolHandlerCommandsTest`, `LibreOfficeOptionsPackagingTest`),
