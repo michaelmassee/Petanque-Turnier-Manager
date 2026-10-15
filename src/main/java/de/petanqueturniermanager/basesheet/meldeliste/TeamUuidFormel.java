@@ -60,20 +60,14 @@ public final class TeamUuidFormel {
 	}
 
 	/**
-	 * Teamnummer zur UUID – Gegenstück zu {@code INDEX(bereich;MATCH(…))} in einem Schritt.
+	 * Angezeigte Teamnummer einer einzelnen Nr-Zelle, z.&nbsp;B. der von {@link #zeileImBereich} gefundenen Zeile.
 	 *
-	 * @param uuid    gesuchte UUID
-	 * @param formeln Formel-Array des Bereichs ({@code XCellRangeFormula.getFormulaArray()})
-	 * @param werte   Werte-Array desselben Bereichs ({@code XCellRangeData.getDataArray()})
-	 * @return angezeigte Nr der Zeile mit der UUID, leer wenn die UUID fehlt oder die Zelle keine Zahl zeigt
+	 * @param zelle Werte-Array einer Zelle ({@code XCellRangeData.getDataArray()})
+	 * @return die Nr, leer wenn die Zelle keine Zahl zeigt
 	 */
-	public static OptionalInt nrImBereich(String uuid, String[][] formeln, Object[][] werte) {
-		OptionalInt zeile = zeileImBereich(uuid, formeln);
-		if (zeile.isEmpty() || werte == null || werte.length < zeile.getAsInt()) {
-			return OptionalInt.empty();
-		}
-		Object[] zellen = werte[zeile.getAsInt() - 1];
-		if (zellen != null && zellen.length > 0 && zellen[0] instanceof Number nr) {
+	public static OptionalInt alsNr(Object[][] zelle) {
+		if (zelle != null && zelle.length > 0 && zelle[0] != null && zelle[0].length > 0
+				&& zelle[0][0] instanceof Number nr) {
 			return OptionalInt.of(nr.intValue());
 		}
 		return OptionalInt.empty();

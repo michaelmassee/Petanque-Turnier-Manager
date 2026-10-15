@@ -50,20 +50,16 @@ class TeamUuidFormelTest {
 	}
 
 	@Test
-	void liefertNrDerZeileMitDerUuid() {
-		String[][] formeln = { { "Nr" }, { "=PTM.ALG.TNRUUID(4;\"" + UUID + "\")" } };
-		Object[][] werte = { { "Nr" }, { Double.valueOf(4) } };
-		assertThat(TeamUuidFormel.nrImBereich(UUID, formeln, werte)).hasValue(4);
+	void liefertDieAngezeigteNrDerZelle() {
+		assertThat(TeamUuidFormel.alsNr(new Object[][] { { Double.valueOf(4) } })).hasValue(4);
 	}
 
 	@Test
-	void ohneTrefferOderOhneZahlKeineNr() {
-		String[][] formeln = { { "=PTM.ALG.TNRUUID(4;\"" + UUID + "\")" } };
-		assertThat(TeamUuidFormel.nrImBereich("00000000-0000-0000-0000-000000000000", formeln,
-				new Object[][] { { Double.valueOf(4) } })).isEmpty();
-		assertThat(TeamUuidFormel.nrImBereich(UUID, formeln, new Object[][] { { "" } })).isEmpty();
-		assertThat(TeamUuidFormel.nrImBereich(UUID, formeln, new Object[0][0])).isEmpty();
-		assertThat(TeamUuidFormel.nrImBereich(UUID, formeln, null)).isEmpty();
+	void ohneZahlKeineNr() {
+		assertThat(TeamUuidFormel.alsNr(new Object[][] { { "" } })).isEmpty();
+		assertThat(TeamUuidFormel.alsNr(new Object[][] { {} })).isEmpty();
+		assertThat(TeamUuidFormel.alsNr(new Object[0][0])).isEmpty();
+		assertThat(TeamUuidFormel.alsNr(null)).isEmpty();
 	}
 
 	@Test

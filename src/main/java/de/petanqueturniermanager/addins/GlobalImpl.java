@@ -396,19 +396,26 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 		}
 	}
 
-	/** Wie {@link #ptmuuidzeile}, liefert aber direkt die angezeigte Nr der gefundenen Zeile. */
+	/**
+	 * Wie {@link #ptmuuidzeile}, liefert aber direkt die angezeigte Nr der gefundenen Zeile. Gelesen wird nur deren
+	 * Wert, nicht die Werte des ganzen Bereichs: die Funktion steht in jeder Teamzelle aller Runden.
+	 */
 	@Override
 	public Object ptmuuidteamnr(String uuid, XCellRange bereich) {
 		try {
 			XCellRangeFormula formelBereich = Lo.qi(XCellRangeFormula.class, bereich);
-			XCellRangeData datenBereich = Lo.qi(XCellRangeData.class, bereich);
-			if (formelBereich == null || datenBereich == null) {
+			if (formelBereich == null) {
 				return Any.VOID;
 			}
-			OptionalInt nr = TeamUuidFormel.nrImBereich(uuid, formelBereich.getFormulaArray(),
-					datenBereich.getDataArray());
+			OptionalInt zeile = TeamUuidFormel.zeileImBereich(uuid, formelBereich.getFormulaArray());
+			if (zeile.isEmpty()) {
+				return Any.VOID;
+			}
+			int index = zeile.getAsInt() - 1;
+			XCellRangeData nrZelle = Lo.qi(XCellRangeData.class, bereich.getCellRangeByPosition(0, index, 0, index));
+			OptionalInt nr = nrZelle == null ? OptionalInt.empty() : TeamUuidFormel.alsNr(nrZelle.getDataArray());
 			return nr.isPresent() ? Integer.valueOf(nr.getAsInt()) : Any.VOID;
-		} catch (RuntimeException e) {
+		} catch (com.sun.star.lang.IndexOutOfBoundsException | RuntimeException e) {
 			logger.error("PTM.ALG.UUIDTEAMNR fehlgeschlagen", e);
 			return Any.VOID;
 		}
