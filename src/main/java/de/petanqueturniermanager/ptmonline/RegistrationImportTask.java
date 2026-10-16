@@ -314,7 +314,8 @@ public final class RegistrationImportTask {
      */
     public static AbgleichErgebnis fuehreAbgleichDurch(LibreOfficePtmOnlineSpeicher.Zugangsdaten config,
             PtmOnlineRegistrationMapping mapping, AuftragsBestand bestand, String tournamentId, MeldelisteZiel ziel,
-            MeldelistenAktualisierung aktualisierung, AbgleichFortschritt fortschritt)
+            MeldelistenAktualisierung aktualisierung, AbgleichFortschritt fortschritt,
+            ErgebnismeldungsSchritt ergebnismeldungen)
             throws IOException, InterruptedException, GenerateException {
         mapping.sicherstellen();
         // Gelöschte Zeilen, deren Verknüpfung PTM-Online noch nicht erreicht hat: Die Zuordnung steht nur im Auftrag.
@@ -333,8 +334,11 @@ public final class RegistrationImportTask {
         Bezeichnungsabgleich bezeichnungen = aktualisiereBezeichnungen(config, mapping, bestand, tournamentId, ziel,
                 aktualisierung, sammlung);
         meldeNichtUebertragene(sammlung, importLauf.ergebnis());
+        ergebnismeldungen.verarbeite(sammlung, bestand).forEach(sammlung::melde);
         if (!sammlung.protokoll().isEmpty()) {
             PtmOnlineAuftraege.entscheidungen(bestand, tournamentId, sammlung.protokoll());
+        }
+        if (!sammlung.protokoll().isEmpty() || bestand.hatOffenen(AuftragsArt.ERGEBNISMELDUNGEN)) {
             sendeSynchron(config, mapping, bestand);
         }
         // Zuletzt: auch Ablehnungen dieses Laufs und des Hintergrundversands (A-29).
@@ -349,6 +353,17 @@ public final class RegistrationImportTask {
         return new AbgleichErgebnis(importLauf.ergebnis(), neuanlage.angelegt(), neuanlage.abgelehnt(),
                 neuanlage.nichtAngelegt(), bezeichnungen.ueberKapazitaet(), online, sammlung.faelle(),
                 schliessenAnbieten);
+    }
+
+    /**
+     * Schritt des Abgleichs für Ergebnismeldungen von Spielern (E-27): wendet eingetragene Entscheidungen an und liefert
+     * die offenen Fälle für die Konfliktliste.
+     */
+    @FunctionalInterface
+    public interface ErgebnismeldungsSchritt {
+
+        List<KonfliktFall> verarbeite(KonfliktSammlung sammlung, AuftragsBestand bestand)
+                throws InterruptedException, GenerateException;
     }
 
     /**
@@ -383,7 +398,7 @@ public final class RegistrationImportTask {
         return sendeSynchron(config, mapping, bestand).abgelehnt(AuftragsArt.ANMELDUNG_SCHLIESSEN).isEmpty();
     }
 
-    private static String zeitpunktText(Instant zeitpunkt) {
+    static String zeitpunktText(Instant zeitpunkt) {
         return DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT).withZone(ZoneId.systemDefault())
                 .format(zeitpunkt);
     }

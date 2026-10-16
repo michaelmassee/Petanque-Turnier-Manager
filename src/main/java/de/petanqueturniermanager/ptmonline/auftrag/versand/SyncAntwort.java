@@ -5,6 +5,8 @@ package de.petanqueturniermanager.ptmonline.auftrag.versand;
 
 import java.util.Optional;
 
+import org.jspecify.annotations.Nullable;
+
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
@@ -13,16 +15,23 @@ import com.google.gson.JsonParser;
 /**
  * HTTP-Antwort von PTM-Online auf einen Schreibauftrag, unabhängig vom Statuscode.
  *
- * @param wiederholt {@code true}, wenn PTM-Online die gespeicherte Antwort eines bereits ausgeführten Auftrags
- *                   geliefert hat (Header {@code X-PTM-Replayed})
+ * @param wiederholt         {@code true}, wenn PTM-Online die gespeicherte Antwort eines bereits ausgeführten
+ *                           Auftrags geliefert hat (Header {@code X-PTM-Replayed})
+ * @param ergebnismeldungen Huckepack zu Ergebnismeldungen; {@code null} bei älteren Servern
  */
-public record SyncAntwort(int status, String body, boolean wiederholt) {
+public record SyncAntwort(int status, String body, boolean wiederholt,
+        @Nullable ErgebnismeldungsStand ergebnismeldungen) {
 
     private static final int ERFOLG_MIN = 200;
     private static final int ERFOLG_MAX = 299;
 
     public SyncAntwort {
         body = body == null ? "" : body;
+    }
+
+    /** Antwort ohne Huckepack zu Ergebnismeldungen. */
+    public SyncAntwort(int status, String body, boolean wiederholt) {
+        this(status, body, wiederholt, null);
     }
 
     public boolean erfolgreich() {

@@ -38,7 +38,11 @@ public enum Entscheidung {
     /** Ablehnung eines Schreibauftrags zur Kenntnis genommen; sie verschwindet aus der Konfliktliste. */
     ZUR_KENNTNIS(null),
     /** Erste Runde trotz offener Ausschlussgründe im Vorabcheck gestartet (A-29). */
-    TROTZDEM_STARTEN("start_despite_findings");
+    TROTZDEM_STARTEN("start_despite_findings"),
+    /** Gemeldetes Ergebnis in die Spielrunde eintragen (E-27). */
+    ERGEBNIS_UEBERNEHMEN(null),
+    /** Gemeldetes Ergebnis ablehnen; das Team kann neu melden (E-27). */
+    ERGEBNIS_VERWERFEN(null);
 
     private final @Nullable String serverCode;
 

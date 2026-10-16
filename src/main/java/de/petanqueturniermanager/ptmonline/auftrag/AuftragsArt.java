@@ -41,7 +41,9 @@ public enum AuftragsArt {
     /** Protokoll der Entscheidungen der Turnierleitung aus der Konfliktliste (A-29). */
     ENTSCHEIDUNGEN,
     /** Schließen der Online-Anmeldung vor dem Check-in (KP-05, Vorbeugung). */
-    ANMELDUNG_SCHLIESSEN;
+    ANMELDUNG_SCHLIESSEN,
+    /** Übernommene bzw. verworfene Ergebnismeldungen von Spielern (E-27, E-28). */
+    ERGEBNISMELDUNGEN;
 
     /**
      * Noch nicht gesendete Aufträge dieser Art aus der Zeit vor dem lokalen Turnierstart werden beim Start verworfen

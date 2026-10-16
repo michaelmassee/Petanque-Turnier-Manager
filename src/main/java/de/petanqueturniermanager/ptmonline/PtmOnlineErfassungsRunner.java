@@ -5,6 +5,7 @@ package de.petanqueturniermanager.ptmonline;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
 
@@ -20,9 +21,11 @@ import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
 import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzRegistry;
 import de.petanqueturniermanager.helper.sheetsync.NachziehModus;
 import de.petanqueturniermanager.helper.sheetsync.SheetSyncNachzieher;
+import de.petanqueturniermanager.onlinesync.sheet.PtmOnlineKonfliktSheet;
 import de.petanqueturniermanager.toolbar.TurnierModus;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsArt;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsBestand;
+import de.petanqueturniermanager.ptmonline.dto.ErgebnismeldungDto;
 import de.petanqueturniermanager.ptmonline.dto.SyncStandDto;
 import de.petanqueturniermanager.ptmonline.live.LiveStandQuelle;
 import de.petanqueturniermanager.ptmonline.live.LiveStandQuellen;
@@ -54,19 +57,36 @@ final class PtmOnlineErfassungsRunner extends SheetRunner {
     record OnlineStandAbruf(String tournamentId, Optional<SyncStandDto> stand) {
     }
 
+    /**
+     * Zuletzt vom Hintergrund abgeholte offene Ergebnismeldungen eines Turniers (E-27, E-28).
+     *
+     * @param meldungen leer, wenn keine offen sind oder die Ergebnismeldung abgeschaltet ist
+     */
+    record ErgebnismeldungsAbruf(String tournamentId, List<ErgebnismeldungDto> meldungen) {
+
+        ErgebnismeldungsAbruf {
+            meldungen = List.copyOf(meldungen);
+        }
+    }
+
     private final PtmOnlineCheckin checkin;
     private final @Nullable OnlineStandAbruf abruf;
+    private final @Nullable ErgebnismeldungsAbruf meldungsAbruf;
     private volatile @Nullable Erfassung erfassung;
     /** Geschrieben in doRun(), gelesen im finally von SheetRunner.run() – derselbe Thread; volatile
      * macht die Sichtbarkeit unabhängig von dieser Annahme. */
     private volatile boolean schutzScopeGeoeffnet;
 
-    /** @param abruf letzter Abruf des Online-Zustands, {@code null} ohne */
+    /**
+     * @param abruf         letzter Abruf des Online-Zustands, {@code null} ohne
+     * @param meldungsAbruf letzter Abruf der offenen Ergebnismeldungen, {@code null} ohne
+     */
     PtmOnlineErfassungsRunner(WorkingSpreadsheet ws, TurnierSystem turnierSystem, PtmOnlineCheckin checkin,
-            @Nullable OnlineStandAbruf abruf) {
+            @Nullable OnlineStandAbruf abruf, @Nullable ErgebnismeldungsAbruf meldungsAbruf) {
         super(ws, turnierSystem, "PTM-Online");
         this.checkin = checkin;
         this.abruf = abruf;
+        this.meldungsAbruf = meldungsAbruf;
     }
 
     @Override
@@ -140,6 +160,7 @@ final class PtmOnlineErfassungsRunner extends SheetRunner {
             startNachholen(bestand, v);
             erfasseCheckin(bestand, v);
             erfasseSpieleinstellungen(bestand, v);
+            erfasseErgebnismeldungen(bestand, v);
             brauchtStand = !erfasseLiveStand(bestand, v, passenderAbruf);
         }
         oeffneSchutzScopeBeiAenderung(bestand);
@@ -180,6 +201,26 @@ final class PtmOnlineErfassungsRunner extends SheetRunner {
         if (PtmOnlineSpieleinstellungen.erfasse(bestand, verbindung.tournamentId(),
                 PtmOnlineSpieleinstellungen.lese(getWorkingSpreadsheet(), getTurnierSystem()))) {
             getLogger().info("PTM-Online: geänderte Spieleinstellungen als Auftrag erfasst");
+        }
+    }
+
+    /**
+     * Ergebnismeldungen von Spielern (E-27): eingetragene Entscheidungen der Turnierleitung anwenden und den Block
+     * „Ergebnis gemeldet“ der Konfliktliste auf den abgeholten Stand bringen. Vor dem Live-Stand, damit ein
+     * übernommenes Ergebnis gleich mit übertragen wird.
+     */
+    private void erfasseErgebnismeldungen(AuftragsBestand bestand, PtmOnlineVerbindung verbindung)
+            throws GenerateException {
+        if (meldungsAbruf == null || !meldungsAbruf.tournamentId().equals(verbindung.tournamentId())) {
+            return;
+        }
+        PtmOnlineKonfliktSheet konfliktListe = verbindung.mapping().konfliktListe();
+        Map<String, String> eingetragen = konfliktListe.leseEntscheidungen();
+        List<KonfliktFall> offen = PtmOnlineErgebnismeldungen.verarbeite(getWorkingSpreadsheet(), getTurnierSystem(),
+                verbindung, bestand, meldungsAbruf.meldungen(),
+                fall -> Entscheidung.aus(eingetragen.get(fall.schluessel()), fall.optionen()), this::oeffneSchutzScope);
+        if (PtmOnlineErgebnismeldungen.aktualisiereKonfliktliste(konfliktListe, offen, this::oeffneSchutzScope)) {
+            getLogger().info("PTM-Online: {} offene Ergebnismeldungen in der Konfliktliste", offen.size());
         }
     }
 

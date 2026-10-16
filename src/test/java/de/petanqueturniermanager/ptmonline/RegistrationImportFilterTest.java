@@ -130,7 +130,7 @@ public class RegistrationImportFilterTest {
 	}
 
 	private static SyncStandDto stand(String status, boolean geschlossen, String datum) {
-		return new SyncStandDto(status, geschlossen, null, 0, 0, datum);
+		return new SyncStandDto(status, geschlossen, null, 0, 0, datum, false);
 	}
 
 	@Test

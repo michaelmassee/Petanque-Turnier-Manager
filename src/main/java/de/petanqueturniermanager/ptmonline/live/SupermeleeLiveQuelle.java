@@ -10,6 +10,7 @@ import static de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheetKon
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.IntFunction;
 
 import com.sun.star.sheet.XSpreadsheet;
 
@@ -47,14 +48,14 @@ final class SupermeleeLiveQuelle implements LiveStandQuelle {
         List<List<LivePartie>> runden = new ArrayList<>();
         for (int nr = 1; nr <= LiveBlattLeser.MAX_RUNDEN; nr++) {
             SheetRunner.testDoCancelTask();
-            XSpreadsheet blatt = LiveBlattLeser.blatt(ws,
-                    SheetMetadataHelper.schluesselSupermeleeSpielrunde(spieltagNr, nr),
-                    SheetNamen.supermeleeSpielrunde(spieltagNr, nr));
+            String blattSchluessel = SheetMetadataHelper.schluesselSupermeleeSpielrunde(spieltagNr, nr);
+            String blattName = SheetNamen.supermeleeSpielrunde(spieltagNr, nr);
+            XSpreadsheet blatt = LiveBlattLeser.blatt(ws, blattSchluessel, blattName);
             if (blatt == null) {
                 break;
             }
             runden.add(lesePartien(LiveBlattLeser.datenzeilen(ws, blatt, ERSTE_DATEN_ZEILE, LETZTE_SPIELERNR_SPALTE),
-                    mitBahn));
+                    mitBahn, zeile -> new ErgebnisOrt(blattSchluessel, blattName, zeile, ERSTE_SPALTE_ERGEBNISSE)));
         }
         return new LiveTurnierStand(new LiveRundenFolge().anhaengen(runden).runden(), rangliste(runden.size()));
     }
@@ -76,7 +77,8 @@ final class SupermeleeLiveQuelle implements LiveStandQuelle {
                                 ersteSummenSpalte + SuperMeleeSummenSpalten.SPIELE_DIV_OFFS)).lese(ws);
     }
 
-    private static List<LivePartie> lesePartien(LiveZellbereich zellen, boolean mitBahn) {
+    private static List<LivePartie> lesePartien(LiveZellbereich zellen, boolean mitBahn,
+            IntFunction<ErgebnisOrt> ergebnisOrt) {
         List<LivePartie> partien = new ArrayList<>();
         for (int zeile = zellen.ersteZeile(); zeile <= zellen.letzteZeile(); zeile++) {
             List<Integer> teamA = spieler(zellen, zeile, ERSTE_SPIELERNR_SPALTE);
@@ -85,7 +87,8 @@ final class SupermeleeLiveQuelle implements LiveStandQuelle {
             }
             partien.add(new LivePartie(teamA, spieler(zellen, zeile, ERSTE_SPIELERNR_SPALTE + SPIELER_PRO_TEAM),
                     zellen.punkte(ERSTE_SPALTE_ERGEBNISSE, zeile), zellen.punkte(ERSTE_SPALTE_ERGEBNISSE + 1, zeile),
-                    mitBahn ? zellen.text(NUMMER_SPALTE_RUNDESPIELPLAN, zeile) : null, null));
+                    mitBahn ? zellen.text(NUMMER_SPALTE_RUNDESPIELPLAN, zeile) : null, null,
+                    ergebnisOrt.apply(zeile)));
         }
         return partien;
     }

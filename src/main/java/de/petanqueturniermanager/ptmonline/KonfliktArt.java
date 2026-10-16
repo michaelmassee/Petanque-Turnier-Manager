@@ -32,7 +32,12 @@ public enum KonfliktArt {
     /** Anmeldung oder Meldung, die nicht übertragen werden konnte. */
     NICHT_UEBERTRAGEN(false),
     /** PTM-Online hat einen Schreibauftrag fachlich abgelehnt (A-29). */
-    AUFTRAG_ABGELEHNT(false);
+    AUFTRAG_ABGELEHNT(false),
+    /**
+     * Ein Team hat in der Live-Ansicht ein Ergebnis gemeldet; es wartet auf die Turnierleitung (E-27, E-28). Steht als
+     * letzte Art am Ende der Liste: der Hintergrund ersetzt nur diesen Block.
+     */
+    ERGEBNIS_GEMELDET(false);
 
     private final boolean ausschlussgrund;
 

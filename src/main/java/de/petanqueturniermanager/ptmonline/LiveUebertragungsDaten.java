@@ -85,8 +85,8 @@ final class LiveUebertragungsDaten {
                 nichtNegativ(wertung.formuleX()));
     }
 
-    /** @return leer, wenn mindestens eine Nummer nicht online zugeordnet ist */
-    private static Optional<List<String>> onlineIdsVon(List<Integer> nummern, Map<Integer, List<String>> onlineIds) {
+    /** Online-IDs zu lokalen Nummern; leer, wenn mindestens eine Nummer nicht online zugeordnet ist. */
+    static Optional<List<String>> onlineIdsVon(List<Integer> nummern, Map<Integer, List<String>> onlineIds) {
         List<String> ids = new ArrayList<>();
         for (Integer nummer : nummern) {
             List<String> zugeordnet = onlineIds.get(nummer);

@@ -52,16 +52,19 @@ final class TeamSpielrundenLeser {
         List<List<LivePartie>> runden = new ArrayList<>();
         for (int nr = 1; nr <= LiveBlattLeser.MAX_RUNDEN; nr++) {
             SheetRunner.testDoCancelTask();
-            XSpreadsheet blatt = LiveBlattLeser.blatt(ws, schluessel.apply(nr), fallbackName.apply(nr));
+            String blattSchluessel = schluessel.apply(nr);
+            String blattName = fallbackName.apply(nr);
+            XSpreadsheet blatt = LiveBlattLeser.blatt(ws, blattSchluessel, blattName);
             if (blatt == null) {
                 break;
             }
-            runden.add(lesePartien(LiveBlattLeser.datenzeilen(ws, blatt, ersteDatenZeile, ERGEBNIS_B)));
+            runden.add(lesePartien(LiveBlattLeser.datenzeilen(ws, blatt, ersteDatenZeile, ERGEBNIS_B),
+                    zeile -> new ErgebnisOrt(blattSchluessel, blattName, zeile, ERGEBNIS_A)));
         }
         return runden;
     }
 
-    private List<LivePartie> lesePartien(LiveZellbereich zellen) {
+    private List<LivePartie> lesePartien(LiveZellbereich zellen, IntFunction<ErgebnisOrt> ergebnisOrt) {
         List<LivePartie> partien = new ArrayList<>();
         for (int zeile = zellen.ersteZeile(); zeile <= zellen.letzteZeile(); zeile++) {
             int teamA = zellen.teamNr(TEAM_A, zeile);
@@ -72,7 +75,7 @@ final class TeamSpielrundenLeser {
             int teamB = zellen.teamNr(TEAM_B, zeile);
             partien.add(teamB <= 0 ? LivePartie.freilos(teamA, bahn, null)
                     : LivePartie.teams(teamA, teamB, zellen.punkte(ERGEBNIS_A, zeile),
-                            zellen.punkte(ERGEBNIS_B, zeile), bahn, null));
+                            zellen.punkte(ERGEBNIS_B, zeile), bahn, null).mitErgebnisOrt(ergebnisOrt.apply(zeile)));
         }
         return partien;
     }

@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -44,7 +45,9 @@ import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsBestand;
 import de.petanqueturniermanager.ptmonline.auftrag.versand.AuftragsVersand;
+import de.petanqueturniermanager.ptmonline.auftrag.versand.ErgebnismeldungsStand;
 import de.petanqueturniermanager.ptmonline.auftrag.versand.VersandStopp;
+import de.petanqueturniermanager.ptmonline.dto.ErgebnismeldungenDto;
 import de.petanqueturniermanager.ptmonline.dto.SyncStandDto;
 
 /**
@@ -75,6 +78,11 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
     static final long ANSTOSS_MS = 500;
     /** Obergrenze des Abstands zwischen zwei Versuchen nach Fehlern. */
     static final long MAX_WIEDERHOLUNG_MS = 60_000;
+    /**
+     * Abstand des Abrufs offener Ergebnismeldungen (E-27). Nur solange Spieler Ergebnisse melden dürfen und das
+     * Turnier läuft; der Huckepack der Sync-Antworten löst ihn bei neuen Meldungen sofort aus.
+     */
+    static final long ERGEBNISMELDUNGEN_ABRUF_MS = 60_000;
 
     private static volatile @Nullable PtmOnlineLiveBeobachter instanz;
     private static volatile @Nullable XComponentContext reaktivierungsKontext;
@@ -221,6 +229,17 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
     }
 
     /**
+     * Holt die offenen Ergebnismeldungen sofort ab, statt auf den nächsten regelmäßigen Abruf zu warten (wartet nicht).
+     * Braucht einen vorausgegangenen Durchlauf des Dokuments.
+     */
+    static void ergebnismeldungenAbholen(XSpreadsheetDocument xDoc) {
+        PtmOnlineLiveBeobachter beobachter = instanz;
+        if (beobachter != null) {
+            beobachter.registriere(xDoc).ifPresent(beobachtung -> beobachtung.planeMeldungsAbruf(0));
+        }
+    }
+
+    /**
      * Ein Rundenstart hat den vollständigen Teilnahme-Stand als Auftrag erfasst; die Check-in-Erkennung übernimmt ihn
      * als bekannt. Läuft im SheetRunner des Rundenstarts.
      */
@@ -308,6 +327,13 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
         private final PtmOnlineCheckin checkin = new PtmOnlineCheckin();
         /** Letzter Abruf des Online-Zustands; nach neuer Bindung verworfen. */
         private volatile PtmOnlineErfassungsRunner.@Nullable OnlineStandAbruf onlineStand;
+        /** Zuletzt abgeholte offene Ergebnismeldungen; nach neuer Bindung verworfen. */
+        private volatile PtmOnlineErfassungsRunner.@Nullable ErgebnismeldungsAbruf ergebnismeldungen;
+        /** Client und Turnier des letzten Durchlaufs, für den Abruf der Ergebnismeldungen. */
+        private volatile @Nullable TournamentSyncClient letzterClient;
+        private volatile @Nullable String letzteTurnierId;
+        /** Geplanter Abruf der Ergebnismeldungen; nur unter der Sperre des Beobachters verändert. */
+        private @Nullable ScheduledFuture<?> naechsterMeldungsAbruf;
         /** Nur vom Thread „PTM-Online-Live“ verändert. */
         private long naechsteWiederholungMs = VERZOEGERUNG_MS;
 
@@ -337,6 +363,11 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
         void bindungErneuert() {
             angehalten.set(false);
             onlineStand = null;
+            ergebnismeldungen = null;
+            String tournamentId = letzteTurnierId;
+            if (tournamentId != null) {
+                PtmOnlineErgebnismeldungen.vergessen(tournamentId);
+            }
         }
 
         private void planeEin(long verzoegerungMs) {
@@ -400,9 +431,14 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
             zeigeHinweise(e.anwendung());
             String tournamentId = e.verbindung().tournamentId();
             TournamentSyncClient client = e.verbindung().gebundenerClient();
+            letzterClient = client;
+            letzteTurnierId = tournamentId;
             if (e.brauchtStand()) {
-                onlineStand = new PtmOnlineErfassungsRunner.OnlineStandAbruf(tournamentId,
-                        holeOnlineStand(client, tournamentId));
+                Optional<SyncStandDto> stand = holeOnlineStand(client, tournamentId);
+                onlineStand = new PtmOnlineErfassungsRunner.OnlineStandAbruf(tournamentId, stand);
+                if (stand.filter(s -> s.istRunning() && s.playerResultReportingEnabled()).isPresent()) {
+                    planeMeldungsAbruf(0);
+                }
                 anstossen();
                 return;
             }
@@ -421,7 +457,8 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
         /** Dokument-Seite im eigenen, stillen SheetRunner; der Hintergrund wartet darauf. */
         private Optional<PtmOnlineErfassungsRunner.Erfassung> erfasse(WorkingSpreadsheet ws, TurnierSystem ts)
                 throws GenerateException, InterruptedException {
-            PtmOnlineErfassungsRunner runner = new PtmOnlineErfassungsRunner(ws, ts, checkin, onlineStand);
+            PtmOnlineErfassungsRunner runner = new PtmOnlineErfassungsRunner(ws, ts, checkin, onlineStand,
+                    ergebnismeldungen);
             fuehreAus(runner, "PTM-Online: Aufträge konnten nicht erfasst werden");
             return runner.erfassung();
         }
@@ -440,9 +477,82 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
                 throws InterruptedException {
             bestand.versandSperre().lockInterruptibly();
             try {
-                return AuftragsVersand.sende(bestand.zuSenden(pausiert), client, bestand::gesendet);
+                return AuftragsVersand.sende(bestand.zuSenden(pausiert), client, ergebnis -> {
+                    bestand.gesendet(ergebnis);
+                    beachteHuckepack(ergebnis.antwort().ergebnismeldungen());
+                });
             } finally {
                 bestand.versandSperre().unlock();
+            }
+        }
+
+        /**
+         * Huckepack einer Sync-Antwort: Weicht die Zahl offener Meldungen vom zuletzt abgeholten Stand ab, wird sofort
+         * abgeholt; bei eingeschalteter Meldung läuft sonst der regelmäßige Abruf. Ist die Meldung abgeschaltet und
+         * stehen noch Meldungen in der Liste, räumt ein letzter Abruf sie weg.
+         */
+        private void beachteHuckepack(@Nullable ErgebnismeldungsStand stand) {
+            if (stand == null) {
+                return;
+            }
+            PtmOnlineErfassungsRunner.ErgebnismeldungsAbruf bekannt = ergebnismeldungen;
+            int bekannteOffene = bekannt == null ? -1 : bekannt.meldungen().size();
+            if (stand.aktiv()) {
+                planeMeldungsAbruf(stand.offen() != bekannteOffene ? 0 : ERGEBNISMELDUNGEN_ABRUF_MS);
+            } else if (bekannteOffene > 0) {
+                planeMeldungsAbruf(0);
+            }
+        }
+
+        /** Plant den Abruf der Ergebnismeldungen; ein früher geplanter Abruf bleibt, ein späterer wird vorgezogen. */
+        private void planeMeldungsAbruf(long verzoegerungMs) {
+            synchronized (PtmOnlineLiveBeobachter.this) {
+                if (beendet || geschlossen || !PtmOnlineAktivierung.istAktiv()) {
+                    return;
+                }
+                ScheduledFuture<?> geplant = naechsterMeldungsAbruf;
+                if (geplant != null && !geplant.isDone()) {
+                    if (geplant.getDelay(TimeUnit.MILLISECONDS) <= verzoegerungMs) {
+                        return;
+                    }
+                    geplant.cancel(false);
+                }
+                naechsterMeldungsAbruf = ausfuehrung.schedule(this::holeErgebnismeldungen, verzoegerungMs,
+                        TimeUnit.MILLISECONDS);
+            }
+        }
+
+        /**
+         * Holt die offenen Ergebnismeldungen (Thread „PTM-Online-Live“). Ein geänderter Stand stößt einen Durchlauf
+         * an, der die Konfliktliste nachführt. Weiter abgeholt wird nur, solange die Meldung eingeschaltet ist und das
+         * Turnier läuft – sonst erst wieder nach einem Huckepack.
+         */
+        private void holeErgebnismeldungen() {
+            TournamentSyncClient client = letzterClient;
+            String tournamentId = letzteTurnierId;
+            if (beendet || geschlossen || client == null || tournamentId == null) {
+                return;
+            }
+            ErgebnismeldungenDto abruf;
+            try {
+                abruf = client.fetchErgebnismeldungen(tournamentId);
+            } catch (IOException e) {
+                logger.info("PTM-Online: Ergebnismeldungen von {} nicht abrufbar, neuer Versuch in {} ms", tournamentId,
+                        ERGEBNISMELDUNGEN_ABRUF_MS, e);
+                planeMeldungsAbruf(ERGEBNISMELDUNGEN_ABRUF_MS);
+                return;
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                logger.debug("PTM-Online: Abruf der Ergebnismeldungen unterbrochen", e);
+                return;
+            }
+            var neu = new PtmOnlineErfassungsRunner.ErgebnismeldungsAbruf(tournamentId, abruf.reports());
+            if (!neu.equals(ergebnismeldungen)) {
+                ergebnismeldungen = neu;
+                anstossen();
+            }
+            if (abruf.istAktiv()) {
+                planeMeldungsAbruf(ERGEBNISMELDUNGEN_ABRUF_MS);
             }
         }
 

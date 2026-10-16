@@ -31,6 +31,7 @@ import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheet;
 class PtmOnlineDokumentIstMasterTest extends BasePtmOnlineZusammenspielTest {
 
     private static final LocalDate IN_EINEM_MONAT = LocalDate.now().plusMonths(1);
+    private static final int HTTP_OK = 200;
     private static final int HTTP_KONFLIKT = 409;
     private static final int SPIELERKONTO = 1;
     /** Team mit Konto (Spieler 1), damit die Live-Ansicht als angemeldeter Spieler abrufbar ist. */
@@ -74,8 +75,11 @@ class PtmOnlineDokumentIstMasterTest extends BasePtmOnlineZusammenspielTest {
         String partieId = spieleOnline().getFirst().get("id").getAsString();
         assertThat(online.ergebnisSetzen(turnierId, partieId, 13, 7)).as("Ergebnis der Turnierleitung online")
                 .isEqualTo(HTTP_KONFLIKT);
-        assertThat(online.ergebnisMelden(idMitKonto, SPIELERKONTO, 13, 7)).as("Ergebnismeldung des Spielers")
-                .isEqualTo(HTTP_KONFLIKT);
+        assertThat(online.ergebnisMelden(idMitKonto, SPIELERKONTO, 13, 7))
+                .as("Spielermeldung nur als offene Meldung an das Dokument (E-27)").isEqualTo(HTTP_OK);
+        assertThat(spieleOnline()).as("online weiterhin ohne Ergebnis")
+                .allSatisfy(spiel -> assertThat(!spiel.has("scoreA") || spiel.get("scoreA").isJsonNull()).isTrue());
+        assertThat(online.offeneErgebnismeldungen(turnierId)).as("wartet auf die Turnierleitung").hasSize(1);
         JsonObject live = online.live(idMitKonto, SPIELERKONTO);
         assertThat(live.getAsJsonObject("tournament").get("documentBound").getAsBoolean()).isTrue();
         assertThat(live.getAsJsonObject("live").getAsJsonObject("currentMatch").get("court").getAsString())

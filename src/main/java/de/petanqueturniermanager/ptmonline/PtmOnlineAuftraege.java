@@ -300,6 +300,21 @@ public final class PtmOnlineAuftraege {
         bestand.erzeuge(AuftragsArt.MELEE_TEAMS, "PUT", pfad, TournamentSyncClient.meleeTeamsBody(teams), "{}");
     }
 
+    /**
+     * Entscheidungen der Turnierleitung über Ergebnismeldungen von Spielern (E-27); wird ohne Netz nachgeholt.
+     *
+     * @param uebernommenProMeldung je Meldungs-ID {@code true} = übernommen, {@code false} = verworfen
+     */
+    static void ergebnismeldungen(AuftragsBestand bestand, String tournamentId,
+            Map<String, Boolean> uebernommenProMeldung) {
+        if (uebernommenProMeldung.isEmpty()) {
+            return;
+        }
+        bestand.erzeuge(AuftragsArt.ERGEBNISMELDUNGEN, "POST",
+                TournamentSyncClient.ergebnismeldungEntscheidungenPfad(tournamentId),
+                TournamentSyncClient.ergebnismeldungEntscheidungenBody(uebernommenProMeldung), "{}");
+    }
+
     /** Online-Stornierung einer lokal entfernten, verknüpften Meldung (KP-15); wird ohne Netz nachgeholt. */
     static void storno(AuftragsBestand bestand, String tournamentId, String lokaleUuid, String onlineRegistrationId,
             int erwarteteRevision) {
@@ -464,7 +479,7 @@ public final class PtmOnlineAuftraege {
                     }
                     case ANMELDUNG_VERKNUEPFEN -> meldeNichtVerknuepfte(auftrag, ergebnis.antwort());
                     case START, TRENNEN, RUNDE, RUNDE_LOESCHEN, RANGLISTE, SPIELEINSTELLUNGEN, MELEE_TEAMS, ANMELDUNG_STORNIEREN, ENTSCHEIDUNGEN,
-                            ANMELDUNG_SCHLIESSEN -> {
+                            ANMELDUNG_SCHLIESSEN, ERGEBNISMELDUNGEN -> {
                         // Nichts im Dokument festzuhalten.
                     }
                 }

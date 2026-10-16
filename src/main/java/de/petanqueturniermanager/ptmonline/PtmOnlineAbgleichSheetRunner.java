@@ -6,6 +6,7 @@ package de.petanqueturniermanager.ptmonline;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.jspecify.annotations.Nullable;
 
@@ -20,6 +21,8 @@ import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.ptmonline.RegistrationImportTask.AbgleichErgebnis;
+import de.petanqueturniermanager.ptmonline.auftrag.AuftragsBestand;
+import de.petanqueturniermanager.ptmonline.dto.ErgebnismeldungenDto;
 import de.petanqueturniermanager.spielerdb.MeldelisteZiel;
 import de.petanqueturniermanager.spielerdb.MeldelisteZielFactory;
 import de.petanqueturniermanager.spielerdb.MeleeAnmeldungZiel;
@@ -68,7 +71,7 @@ public final class PtmOnlineAbgleichSheetRunner extends SheetRunner implements P
         try {
             ergebnis = RegistrationImportTask.fuehreAbgleichDurch(config, mapping,
                     PtmOnlineAuftraege.bestand(getWorkingSpreadsheet(), mapping, spieltagNr), tournamentId, ziel,
-                    this::zielAktualisieren, new ProcessBoxFortschritt());
+                    this::zielAktualisieren, new ProcessBoxFortschritt(), this::ergebnismeldungen);
         } catch (InterruptedException e) {
             // Stop-Knopf unterbricht den Thread, auch mitten in einem HTTP-Aufruf. Die Unterbrechung ist
             // damit vollständig als Abbruch behandelt; das Flag bleibt bewusst verbraucht, damit die
@@ -110,6 +113,30 @@ public final class PtmOnlineAbgleichSheetRunner extends SheetRunner implements P
             getLogger().warn("PTM-Online: Online-Anmeldung nicht geschlossen, Auftrag wird nachgeholt", e);
             processBox().fehler(I18n.get("ptmonline.hinweis.anmeldung_schliessen_nachgeholt", PtmOnlineFehlerText.fuer(e)));
         }
+    }
+
+    /**
+     * Holt die offenen Ergebnismeldungen von Spielern und wendet eingetragene Entscheidungen an (E-27). Ist PTM-Online
+     * nicht erreichbar oder kennt die Meldungen noch nicht, läuft der Abgleich ohne sie weiter.
+     */
+    private List<KonfliktFall> ergebnismeldungen(KonfliktSammlung sammlung, AuftragsBestand bestand)
+            throws InterruptedException, GenerateException {
+        Optional<PtmOnlineVerbindung> verbindung = PtmOnlineVerbindung.ermitteln(getWorkingSpreadsheet(),
+                getTurnierSystem());
+        if (verbindung.isEmpty()) {
+            return List.of();
+        }
+        ErgebnismeldungenDto abruf;
+        try {
+            abruf = new TournamentSyncClient(config.baseUrl(), config.apiKey()).fetchErgebnismeldungen(tournamentId);
+        } catch (IOException e) {
+            getLogger().warn("PTM-Online: Ergebnismeldungen nicht abrufbar, Abgleich ohne sie", e);
+            return List.of();
+        }
+        return PtmOnlineErgebnismeldungen.verarbeite(getWorkingSpreadsheet(), getTurnierSystem(), verbindung.get(),
+                bestand, abruf.reports(), sammlung::entscheidung, () -> {
+                    // Der Abgleich läuft bereits im Blattschutz-Scope des SheetRunners.
+                });
     }
 
     private void zielAktualisieren() throws GenerateException {

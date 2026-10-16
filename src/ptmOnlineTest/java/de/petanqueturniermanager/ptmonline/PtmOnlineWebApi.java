@@ -243,6 +243,13 @@ final class PtmOnlineWebApi {
         return senden(alsSpieler("/api/live/registrations/" + anmeldungId, spielerKonto).GET().build(), 200);
     }
 
+    /** Offene Ergebnismeldungen, wie sie das verbundene Dokument abholt (Sync-API mit dem API-Schlüssel). */
+    List<JsonObject> offeneErgebnismeldungen(String turnierId) throws IOException, InterruptedException {
+        HttpRequest anfrage = anfrage("/api/sync/tournaments/" + turnierId + "/result-reports")
+                .header("Authorization", "Bearer " + server.apiKey()).GET().build();
+        return objekte(senden(anfrage, 200).getAsJsonArray("reports"));
+    }
+
     /** Aufruf der persönlichen Live-Ansicht; liefert nur den HTTP-Status. */
     int liveStatus(String anmeldungId, int spielerKonto) throws IOException, InterruptedException {
         return status(alsSpieler("/api/live/registrations/" + anmeldungId, spielerKonto).GET().build());

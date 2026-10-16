@@ -14,9 +14,11 @@ import org.jspecify.annotations.Nullable;
  * @param roundsOnline       Anzahl der online vorhandenen Spielrunden
  * @param writeCounter       zuletzt angenommener Schreibzähler der Bindung
  * @param date               Turniertag ({@code yyyy-MM-dd}), {@code null} bei älteren Servern
+ * @param playerResultReportingEnabled Spieler dürfen Ergebnisse in der Live-Ansicht melden (E-27); ältere Server
+ *                                     liefern das Feld nicht, dann {@code false}
  */
 public record SyncStandDto(String status, boolean registrationClosed, String runningResetAt, int roundsOnline,
-        long writeCounter, @Nullable String date) {
+        long writeCounter, @Nullable String date, boolean playerResultReportingEnabled) {
 
     public boolean istRunning() {
         return "running".equals(status);

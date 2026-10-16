@@ -9,10 +9,16 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.Optional;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.jspecify.annotations.Nullable;
 
 import com.google.gson.Gson;
 
 import de.petanqueturniermanager.ptmonline.auftrag.SyncAuftrag;
+import de.petanqueturniermanager.ptmonline.auftrag.versand.ErgebnismeldungsStand;
 import de.petanqueturniermanager.ptmonline.auftrag.versand.SyncAntwort;
 
 /**
@@ -21,6 +27,8 @@ import de.petanqueturniermanager.ptmonline.auftrag.versand.SyncAntwort;
  * werden von PTM-Online akzeptiert.
  */
 abstract class PtmOnlineHttpClient {
+
+    private static final Logger logger = LogManager.getLogger(PtmOnlineHttpClient.class);
 
     static final Gson GSON = new Gson();
     static final Duration STANDARD_TIMEOUT = Duration.ofSeconds(30);
@@ -88,7 +96,22 @@ abstract class PtmOnlineHttpClient {
         }
         HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
         return new SyncAntwort(response.statusCode(), response.body(),
-                response.headers().firstValue("X-PTM-Replayed").isPresent());
+                response.headers().firstValue("X-PTM-Replayed").isPresent(), ergebnismeldungsStand(response));
+    }
+
+    /** Huckepack zu Ergebnismeldungen aus den Antwort-Headern; {@code null}, wenn der Server sie nicht liefert. */
+    static @Nullable ErgebnismeldungsStand ergebnismeldungsStand(HttpResponse<?> response) {
+        Optional<String> aktiv = response.headers().firstValue("X-PTM-Result-Reporting");
+        Optional<String> offen = response.headers().firstValue("X-PTM-Open-Result-Reports");
+        if (aktiv.isEmpty() || offen.isEmpty()) {
+            return null;
+        }
+        try {
+            return new ErgebnismeldungsStand("1".equals(aktiv.get().strip()), Integer.parseInt(offen.get().strip()));
+        } catch (NumberFormatException e) {
+            logger.warn("PTM-Online: Header zu offenen Ergebnismeldungen nicht lesbar: {}", offen.get(), e);
+            return null;
+        }
     }
 
     private HttpRequest.Builder authorized(HttpRequest.Builder builder) {

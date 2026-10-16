@@ -31,6 +31,7 @@ import de.petanqueturniermanager.ptmonline.auftrag.SyncAuftrag;
 import de.petanqueturniermanager.ptmonline.auftrag.versand.AuftragsSender;
 import de.petanqueturniermanager.ptmonline.auftrag.versand.SyncAntwort;
 import de.petanqueturniermanager.ptmonline.dto.AnmeldungsAbruf;
+import de.petanqueturniermanager.ptmonline.dto.ErgebnismeldungenDto;
 import de.petanqueturniermanager.ptmonline.dto.KonfliktListeDto;
 import de.petanqueturniermanager.ptmonline.dto.LiveMatchDto;
 import de.petanqueturniermanager.ptmonline.dto.LiveRankingEntryDto;
@@ -232,6 +233,14 @@ public class TournamentSyncClient extends PtmOnlineHttpClient implements Auftrag
         return zuordnungen;
     }
 
+    /**
+     * Offene Ergebnismeldungen von Spielern (E-27, E-28). Nur bei eingeschalteter Ergebnismeldung enthält die Antwort
+     * Meldungen; sie nennt immer, ob die Meldung eingeschaltet ist und ob das Turnier läuft.
+     */
+    public ErgebnismeldungenDto fetchErgebnismeldungen(String tournamentId) throws IOException, InterruptedException {
+        return leseAntwort(get(turnierPfad(tournamentId) + "/result-reports"), ErgebnismeldungenDto.class);
+    }
+
     /** Sendet einen gezählten Schreibauftrag (siehe {@link PtmOnlineHttpClient#sendeAuftrag}). */
     @Override
     public SyncAntwort sende(SyncAuftrag auftrag) throws IOException, InterruptedException {
@@ -274,6 +283,10 @@ public class TournamentSyncClient extends PtmOnlineHttpClient implements Auftrag
 
     static String verknuepfungenPfad(String tournamentId) {
         return turnierPfad(tournamentId) + "/registration-links";
+    }
+
+    static String ergebnismeldungEntscheidungenPfad(String tournamentId) {
+        return turnierPfad(tournamentId) + "/result-reports/decisions";
     }
 
     static String meleeTeamsPfad(String tournamentId) {
@@ -380,6 +393,24 @@ public class TournamentSyncClient extends PtmOnlineHttpClient implements Auftrag
         });
         JsonObject body = new JsonObject();
         body.add("links", links);
+        return body.toString();
+    }
+
+    /**
+     * Entscheidungen der Turnierleitung über Ergebnismeldungen.
+     *
+     * @param uebernommenProMeldung je Meldungs-ID {@code true} = ins Dokument übernommen, {@code false} = verworfen
+     */
+    static String ergebnismeldungEntscheidungenBody(Map<String, Boolean> uebernommenProMeldung) {
+        JsonArray decisions = new JsonArray();
+        uebernommenProMeldung.forEach((id, uebernommen) -> {
+            JsonObject decision = new JsonObject();
+            decision.addProperty("id", id);
+            decision.addProperty("decision", Boolean.TRUE.equals(uebernommen) ? "accepted" : "dismissed");
+            decisions.add(decision);
+        });
+        JsonObject body = new JsonObject();
+        body.add("decisions", decisions);
         return body.toString();
     }
 

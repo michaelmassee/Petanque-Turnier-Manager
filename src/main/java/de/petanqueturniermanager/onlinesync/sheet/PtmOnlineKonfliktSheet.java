@@ -162,22 +162,80 @@ public class PtmOnlineKonfliktSheet extends SheetRunner implements ISheet {
 			AuswahllistenHelper.entferneAuswahlliste(sheet, editierbarerBereich());
 			return null;
 		});
-		if (!sichtbar.isEmpty()) {
-			RangeData daten = new RangeData();
-			sichtbar.forEach(zeile -> {
-				RowData row = daten.addNewRow();
-				row.newString(zeile.art());
-				row.newString(zeile.lokal());
-				row.newString(zeile.online());
-				row.newString(zeile.hinweis());
-				row.newString(zeile.optionen().contains(zeile.entscheidung()) ? zeile.entscheidung() : "");
-				row.newString(zeile.schluessel());
-			});
-			RangeHelper.from(this, daten.getRangePosition(Position.from(SPALTE_ART, ERSTE_DATEN_ZEILE)))
-					.setDataInRange(daten);
-			setzeAuswahllisten(sheet, sichtbar);
-		}
+		schreibeZeilen(sheet, sichtbar, 0);
 		formatieren(sichtbar.size());
+	}
+
+	/**
+	 * Ersetzt nur den Block der Fälle, deren Schlüssel mit {@code praefix} beginnt, am Ende der Liste; alle anderen
+	 * Fälle bleiben samt eingetragener Entscheidung unverändert. Der Abgleich sortiert die Fälle nach Art, eine Art am
+	 * Ende des Aufzählungstyps steht daher immer zuletzt.
+	 *
+	 * @param stand Zeitpunkt bzw. Anlass, als Text für die Kopfzeile
+	 */
+	public void ersetzeBlock(String praefix, List<Zeile> zeilen, String stand) throws GenerateException {
+		if (!istVorhanden()) {
+			schreibe(zeilen, stand);
+			return;
+		}
+		List<String> schluessel = new ArrayList<>(leseFaelle().keySet());
+		int blockStart = blockBeginn(schluessel, praefix);
+		int platz = Math.max(MAX_ZEILEN - blockStart, 0);
+		List<Zeile> sichtbar = zeilen.size() > platz ? zeilen.subList(0, platz) : zeilen;
+		int anzahl = blockStart + sichtbar.size();
+		schreibeKopf(stand, anzahl == 0);
+		RangeHelper.from(this, RangePosition.from(SPALTE_ART, ERSTE_DATEN_ZEILE + blockStart, LETZTE_SPALTE,
+				LETZTE_DATEN_ZEILE)).clearRange();
+		XSpreadsheet sheet = getXSpreadSheet();
+		BlattschutzManager.get().mitEntsperrt(sheet, () -> {
+			AuswahllistenHelper.entferneAuswahlliste(sheet, RangePosition.from(SPALTE_ENTSCHEIDUNG,
+					ERSTE_DATEN_ZEILE + blockStart, SPALTE_ENTSCHEIDUNG, LETZTE_DATEN_ZEILE));
+			return null;
+		});
+		schreibeZeilen(sheet, sichtbar, blockStart);
+		formatieren(anzahl);
+	}
+
+	private static int blockBeginn(List<String> schluessel, String praefix) {
+		int index = 0;
+		while (index < schluessel.size() && !schluessel.get(index).startsWith(praefix)) {
+			index++;
+		}
+		return index;
+	}
+
+	/** Zeilen des Blocks, dessen Schlüssel mit {@code praefix} beginnen (ohne Optionen, die stehen nur in der Auswahlliste). */
+	public List<Zeile> leseBlock(String praefix) throws GenerateException {
+		List<Zeile> block = new ArrayList<>();
+		if (!istVorhanden()) {
+			return block;
+		}
+		RangeHelper.from(this, RangePosition.from(SPALTE_ART, ERSTE_DATEN_ZEILE, LETZTE_SPALTE, LETZTE_DATEN_ZEILE))
+				.getDataFromRange().stream()
+				.filter(zeile -> text(zeile, SPALTE_SCHLUESSEL).startsWith(praefix))
+				.forEach(zeile -> block.add(new Zeile(text(zeile, SPALTE_ART), text(zeile, SPALTE_LOKAL),
+						text(zeile, SPALTE_ONLINE), text(zeile, SPALTE_HINWEIS), text(zeile, SPALTE_SCHLUESSEL), List.of(),
+						text(zeile, SPALTE_ENTSCHEIDUNG))));
+		return block;
+	}
+
+	private void schreibeZeilen(XSpreadsheet sheet, List<Zeile> zeilen, int ersterIndex) throws GenerateException {
+		if (zeilen.isEmpty()) {
+			return;
+		}
+		RangeData daten = new RangeData();
+		zeilen.forEach(zeile -> {
+			RowData row = daten.addNewRow();
+			row.newString(zeile.art());
+			row.newString(zeile.lokal());
+			row.newString(zeile.online());
+			row.newString(zeile.hinweis());
+			row.newString(zeile.optionen().contains(zeile.entscheidung()) ? zeile.entscheidung() : "");
+			row.newString(zeile.schluessel());
+		});
+		RangeHelper.from(this, daten.getRangePosition(Position.from(SPALTE_ART, ERSTE_DATEN_ZEILE + ersterIndex)))
+				.setDataInRange(daten);
+		setzeAuswahllisten(sheet, zeilen, ersterIndex);
 	}
 
 	private void schreibeKopf(String stand, boolean keineFaelle) throws GenerateException {
@@ -197,8 +255,13 @@ public class PtmOnlineKonfliktSheet extends SheetRunner implements ISheet {
 				.setDataInRange(header);
 	}
 
-	/** Eine Auswahlliste je zusammenhängendem Block von Zeilen mit denselben Optionen. */
-	private static void setzeAuswahllisten(XSpreadsheet sheet, List<Zeile> zeilen) throws GenerateException {
+	/**
+	 * Eine Auswahlliste je zusammenhängendem Block von Zeilen mit denselben Optionen.
+	 *
+	 * @param ersterIndex Index der ersten Zeile innerhalb der Datenzeilen
+	 */
+	private static void setzeAuswahllisten(XSpreadsheet sheet, List<Zeile> zeilen, int ersterIndex)
+			throws GenerateException {
 		List<int[]> bloecke = new ArrayList<>();
 		for (int i = 0; i < zeilen.size(); i++) {
 			if (zeilen.get(i).optionen().isEmpty()) {
@@ -213,8 +276,8 @@ public class PtmOnlineKonfliktSheet extends SheetRunner implements ISheet {
 			}
 		}
 		for (int[] block : bloecke) {
-			RangePosition bereich = RangePosition.from(SPALTE_ENTSCHEIDUNG, ERSTE_DATEN_ZEILE + block[0],
-					SPALTE_ENTSCHEIDUNG, ERSTE_DATEN_ZEILE + block[1]);
+			RangePosition bereich = RangePosition.from(SPALTE_ENTSCHEIDUNG, ERSTE_DATEN_ZEILE + ersterIndex + block[0],
+					SPALTE_ENTSCHEIDUNG, ERSTE_DATEN_ZEILE + ersterIndex + block[1]);
 			List<String> optionen = zeilen.get(block[0]).optionen();
 			BlattschutzManager.get().mitEntsperrt(sheet, () -> {
 				AuswahllistenHelper.setzeAuswahlliste(sheet, bereich, optionen);

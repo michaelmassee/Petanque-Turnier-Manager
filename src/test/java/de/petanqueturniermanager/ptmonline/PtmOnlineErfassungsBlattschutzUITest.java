@@ -37,7 +37,7 @@ class PtmOnlineErfassungsBlattschutzUITest extends BaseCalcUITest {
     private AuftragsBestand bestand;
     private final PtmOnlineCheckin checkin = new PtmOnlineCheckin();
     private final PtmOnlineErfassungsRunner.OnlineStandAbruf stand = new PtmOnlineErfassungsRunner.OnlineStandAbruf(
-            "schutz-test", Optional.of(new SyncStandDto("running", true, "", 0, 0, null)));
+            "schutz-test", Optional.of(new SyncStandDto("running", true, "", 0, 0, null, false)));
 
     @BeforeEach
     void vorbereiten() throws Exception {
@@ -133,7 +133,7 @@ class PtmOnlineErfassungsBlattschutzUITest extends BaseCalcUITest {
     }
 
     private void erfasse() {
-        var runner = new PtmOnlineErfassungsRunner(wkingSpreadsheet, TurnierSystem.SCHWEIZER, checkin, stand);
+        var runner = new PtmOnlineErfassungsRunner(wkingSpreadsheet, TurnierSystem.SCHWEIZER, checkin, stand, null);
         runner.run();
         assertThat(runner.isLetzterLaufFehlgeschlagen()).isFalse();
         assertThat(runner.erfassung()).isPresent();

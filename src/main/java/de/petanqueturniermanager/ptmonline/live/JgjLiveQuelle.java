@@ -90,7 +90,9 @@ final class JgjLiveQuelle implements LiveStandQuelle {
         int teamB = zellen.zahl(TEAM_B_NR_SPALTE, zeile);
         return teamB <= 0 ? LivePartie.freilos(teamA, null, null)
                 : LivePartie.teams(teamA, teamB, zellen.punkte(SPIELPNKT_A_SPALTE, zeile),
-                        zellen.punkte(SPIELPNKT_B_SPALTE, zeile), null, null);
+                        zellen.punkte(SPIELPNKT_B_SPALTE, zeile), null, null)
+                        .mitErgebnisOrt(new ErgebnisOrt(SheetMetadataHelper.SCHLUESSEL_JGJ_SPIELPLAN,
+                                JGJSpielPlanSheet.LEGACY_SHEET_NAMEN, zeile, SPIELPNKT_A_SPALTE));
     }
 
     private record Gruppe(@Nullable String name, List<LivePartie> zeilen) {
@@ -103,8 +105,7 @@ final class JgjLiveQuelle implements LiveStandQuelle {
             if (!mitGruppenName || name == null) {
                 return zeilen;
             }
-            return zeilen.stream().map(partie -> new LivePartie(partie.teamA(), partie.teamB(), partie.punkteA(),
-                    partie.punkteB(), partie.bahn(), name)).toList();
+            return zeilen.stream().map(partie -> partie.mitStufe(name)).toList();
         }
     }
 }
