@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Optional;
 
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -85,7 +84,30 @@ final class PtmOnlineWebApi {
      * Spieler 1 ist Pflicht; ein Gast ohne Adresse erhält eine eindeutige, keinem Konto gehörende Test-Adresse.
      */
     String anmelden(String turnierId, Person... personen) throws IOException, InterruptedException {
+        return anmeldungAus(senden(anmeldeAnfrage(turnierId, null, personen), 201));
+    }
+
+    /** Wie {@link #anmelden(String, Person...)}, mit Teamname (Turnier mit {@code teamNameEnabled}). */
+    String anmeldenMitTeamname(String turnierId, String teamName, Person... personen)
+            throws IOException, InterruptedException {
+        return anmeldungAus(senden(anmeldeAnfrage(turnierId, teamName, personen), 201));
+    }
+
+    /** Anmeldung mit Teamname, die abgelehnt werden darf; liefert den HTTP-Status. */
+    int anmeldenVersuchen(String turnierId, String teamName, Person... personen)
+            throws IOException, InterruptedException {
+        return status(anmeldeAnfrage(turnierId, teamName, personen));
+    }
+
+    private static String anmeldungAus(JsonObject antwort) {
+        return antwort.getAsJsonObject("registration").get("id").getAsString();
+    }
+
+    private HttpRequest anmeldeAnfrage(String turnierId, String teamName, Person... personen) {
         JsonObject body = new JsonObject();
+        if (teamName != null) {
+            body.addProperty("teamName", teamName);
+        }
         body.addProperty("publicationNoticeAccepted", true);
         body.addProperty("personsConsentAccepted", true);
         body.add("feeSelections", new JsonArray());
@@ -102,9 +124,8 @@ final class PtmOnlineWebApi {
                 body.addProperty("playerEmail", gastEmail(person));
             }
         }
-        HttpRequest anfrage = anfrage("/api/tournaments/" + turnierId + "/registrations")
+        return anfrage("/api/tournaments/" + turnierId + "/registrations")
                 .POST(HttpRequest.BodyPublishers.ofString(body.toString())).build();
-        return senden(anfrage, 201).getAsJsonObject("registration").get("id").getAsString();
     }
 
     private static String gastEmail(Person person) {
@@ -116,11 +137,7 @@ final class PtmOnlineWebApi {
     /** Alle Anmeldungen in der Verwaltungssicht des Organisators. */
     List<JsonObject> anmeldungen(String turnierId) throws IOException, InterruptedException {
         HttpRequest anfrage = mitSession("/api/tournaments/" + turnierId + "/registrations").GET().build();
-        List<JsonObject> liste = new ArrayList<>();
-        for (JsonElement element : senden(anfrage, 200).getAsJsonArray("registrations")) {
-            liste.add(element.getAsJsonObject());
-        }
-        return liste;
+        return objekte(senden(anfrage, 200).getAsJsonArray("registrations"));
     }
 
     Optional<JsonObject> anmeldung(String turnierId, String anmeldungId) throws IOException, InterruptedException {
@@ -134,19 +151,50 @@ final class PtmOnlineWebApi {
 
     /** Setzt den Anmeldestatus in der Verwaltung, z. B. „waitlist“ oder wieder „confirmed“. */
     void statusSetzen(String turnierId, String anmeldungId, String status) throws IOException, InterruptedException {
+        senden(statusAenderung(turnierId, anmeldungId, status), 200);
+    }
+
+    /** Statusänderung im Bearbeiten-Dialog, die abgelehnt werden darf; liefert den HTTP-Status. */
+    int statusSetzenVersuchen(String turnierId, String anmeldungId, String status)
+            throws IOException, InterruptedException {
+        return status(statusAenderung(turnierId, anmeldungId, status));
+    }
+
+    private HttpRequest statusAenderung(String turnierId, String anmeldungId, String status)
+            throws IOException, InterruptedException {
         JsonObject anmeldung = anmeldung(turnierId, anmeldungId).orElseThrow();
         anmeldung.addProperty("status", status);
-        senden(mitApiKey("PUT", "/api/registrations/" + anmeldungId, anmeldung), 200);
+        return mitApiKey("PUT", "/api/registrations/" + anmeldungId, anmeldung);
+    }
+
+    /** Aktion „Ablehnen“ der Turnierleitung für eine offene Anmeldung (E-26), mit Grund. */
+    void ablehnen(String anmeldungId, String grund) throws IOException, InterruptedException {
+        JsonObject body = new JsonObject();
+        body.addProperty("reason", grund);
+        senden(mitApiKey("POST", "/api/registrations/" + anmeldungId + "/reject", body), 200);
+    }
+
+    /** Öffentliche Meldeliste, wie sie ein Besucher ohne Anmeldung sieht. */
+    List<JsonObject> oeffentlicheMeldeliste(String turnierId) throws IOException, InterruptedException {
+        return objekte(senden(anfrage("/api/tournaments/" + turnierId + "/participants").GET().build(), 200)
+                .getAsJsonArray("participants"));
+    }
+
+    /** Postfach des Spielerkontos {@code spielerKonto} (neueste Nachrichten zuerst). */
+    List<JsonObject> postfach(int spielerKonto) throws IOException, InterruptedException {
+        return objekte(senden(alsSpieler("/api/postbox", spielerKonto).GET().build(), 200).getAsJsonArray("messages"));
+    }
+
+    private static List<JsonObject> objekte(JsonArray array) {
+        List<JsonObject> liste = new ArrayList<>();
+        array.forEach(element -> liste.add(element.getAsJsonObject()));
+        return liste;
     }
 
     /** Vom Dokument übertragene Runden mit Paarungen und Ergebnissen, wie sie die Live-Ansicht zeigt. */
     List<JsonObject> runden(String turnierId) throws IOException, InterruptedException {
-        List<JsonObject> runden = new ArrayList<>();
-        for (JsonElement element : senden(mitSession("/api/tournaments/" + turnierId + "/rounds").GET().build(), 200)
-                .getAsJsonArray("rounds")) {
-            runden.add(element.getAsJsonObject());
-        }
-        return runden;
+        return objekte(senden(mitSession("/api/tournaments/" + turnierId + "/rounds").GET().build(), 200)
+                .getAsJsonArray("rounds"));
     }
 
     /** Rangliste online; bei Durchführung im Dokument der übertragene Stand. */
@@ -193,6 +241,11 @@ final class PtmOnlineWebApi {
     /** Persönliche Live-Ansicht einer Anmeldung, wie sie der angemeldete Spieler sieht. */
     JsonObject live(String anmeldungId, int spielerKonto) throws IOException, InterruptedException {
         return senden(alsSpieler("/api/live/registrations/" + anmeldungId, spielerKonto).GET().build(), 200);
+    }
+
+    /** Aufruf der persönlichen Live-Ansicht; liefert nur den HTTP-Status. */
+    int liveStatus(String anmeldungId, int spielerKonto) throws IOException, InterruptedException {
+        return status(alsSpieler("/api/live/registrations/" + anmeldungId, spielerKonto).GET().build());
     }
 
     /** Ergebnismeldung des Spielers über die Live-Ansicht; liefert den HTTP-Status. */
