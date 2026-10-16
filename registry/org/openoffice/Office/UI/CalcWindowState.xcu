@@ -79,6 +79,25 @@
                     <value>false</value>
                 </prop>
             </node>
+            <!-- Sichtbarkeit steuert PtmOnlineToolbarSteuerung: nur bei hinterlegtem PTM-Online-Zugang. -->
+            <node oor:name="private:resource/toolbar/addon_de.petanqueturniermanager.toolbar.ptmonline" oor:op="replace">
+                <prop oor:name="UIName" oor:type="xs:string">
+                    <value xml:lang="en-US">PétTurnMngr PTM-Online</value>
+                    <value xml:lang="de">PétTurnMngr PTM-Online</value>
+                    <value xml:lang="es">PétTurnMngr PTM-Online</value>
+                    <value xml:lang="fr">PétTurnMngr PTM-Online</value>
+                    <value xml:lang="nl">PétTurnMngr PTM-Online</value>
+                </prop>
+                <prop oor:name="Visible" oor:type="xs:boolean">
+                    <value>false</value>
+                </prop>
+                <prop oor:name="Docked" oor:type="xs:boolean">
+                    <value>true</value>
+                </prop>
+                <prop oor:name="ContextSensitive" oor:type="xs:boolean">
+                    <value>false</value>
+                </prop>
+            </node>
         </node>
     </node>
 

@@ -36,9 +36,12 @@ public final class PtmOnlineMenuController extends WeakBase
     /** Befehle des Untermenüs; sie stehen in keiner XCU-Datei, LibreOffice fragt sie bei diesem Controller ab. */
     static final List<String> BEFEHLE = List.of(
         ProtocolHandler.CMD_PTMONLINE_TURNIER_VERBINDEN, ProtocolHandler.CMD_PTMONLINE_ANMELDUNGEN_IMPORTIEREN,
+        ProtocolHandler.CMD_PTMONLINE_KONFLIKTLISTE_OEFFNEN, ProtocolHandler.CMD_PTMONLINE_ERGEBNISMELDUNGEN_ABHOLEN,
         ProtocolHandler.CMD_PTMONLINE_SYNC_PAUSIEREN, ProtocolHandler.CMD_PTMONLINE_SYNC_FORTSETZEN,
+        ProtocolHandler.CMD_PTMONLINE_IM_BROWSER_OEFFNEN,
         ProtocolHandler.CMD_PTMONLINE_VERBINDUNG_TRENNEN, ProtocolHandler.CMD_PTMONLINE_ZUORDNUNG_WIEDERHERSTELLEN);
-    private static final String[] TEXTE = {"verbinden", "abgleichen", "pausieren", "fortsetzen", "trennen", "wiederherstellen"};
+    private static final String[] TEXTE = {"verbinden", "abgleichen", "konfliktliste", "ergebnisse", "pausieren",
+        "fortsetzen", "browser", "trennen", "wiederherstellen"};
     private final XComponentContext context;
     private final List<XEventListener> listener = new CopyOnWriteArrayList<>();
     private XFrame frame;

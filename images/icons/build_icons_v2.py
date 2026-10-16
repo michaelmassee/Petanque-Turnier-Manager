@@ -554,6 +554,67 @@ ICONS["toolbar-ptmonline-sync-fortsetzen"] = svg(f'''
   <path d="M 49 48 L 56 52 L 49 56 Z" fill="{C['paper']}" stroke-linejoin="round"/>
 ''')
 
+def ptm_online_badge(farbe, inhalt):
+    """Badge unten rechts auf der PTM-Online-Wolke; Inhalt in Weiß."""
+    return f'''
+  {ptm_online_wolke()}
+  <circle cx="52" cy="52" r="10" fill="{farbe}" stroke="{C['ink']}" stroke-width="{S}"/>
+  {inhalt}'''
+
+
+# ============================================================
+# 32. PTM-ONLINE TURNIER VERBINDEN — Sync-Wolke mit Ketten-Badge
+# ============================================================
+ICONS["toolbar-ptmonline-verbinden"] = svg(ptm_online_badge(C['go'], f'''
+  <rect x="44.5" y="49" width="8" height="6" rx="3" fill="none" stroke="{C['paper']}" stroke-width="{S*1.3}"/>
+  <rect x="51.5" y="49" width="8" height="6" rx="3" fill="none" stroke="{C['paper']}" stroke-width="{S*1.3}"/>'''))
+
+# ============================================================
+# 33. PTM-ONLINE ABGLEICHEN — Sync-Wolke mit Doppelpfeil-Badge
+# ============================================================
+ICONS["toolbar-ptmonline-abgleichen"] = svg(ptm_online_badge(C['info'], f'''
+  <path d="M 46 49 L 57 49 M 54 46 L 57 49 L 54 52" fill="none" stroke="{C['paper']}" stroke-width="{S*1.3}"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 58 55 L 47 55 M 50 52 L 47 55 L 50 58" fill="none" stroke="{C['paper']}" stroke-width="{S*1.3}"
+        stroke-linecap="round" stroke-linejoin="round"/>'''))
+
+# ============================================================
+# 34. PTM-ONLINE VERBINDUNG TRENNEN — Sync-Wolke mit Kreuz-Badge
+# ============================================================
+ICONS["toolbar-ptmonline-trennen"] = svg(ptm_online_badge(C['stop'], f'''
+  <path d="M 48 48 L 56 56 M 56 48 L 48 56" stroke="{C['paper']}" stroke-width="{S*1.8}" stroke-linecap="round"/>'''))
+
+# ============================================================
+# 35. PTM-ONLINE ZUORDNUNG WIEDERHERSTELLEN — Sync-Wolke mit Rückpfeil-Badge
+# ============================================================
+ICONS["toolbar-ptmonline-wiederherstellen"] = svg(ptm_online_badge(C['gold_d'], f'''
+  <path d="M 47 52 A 5.5 5.5 0 1 0 49 47.5" fill="none" stroke="{C['paper']}" stroke-width="{S*1.3}" stroke-linecap="round"/>
+  <path d="M 46 45 L 49 47.5 L 46 50" fill="none" stroke="{C['paper']}" stroke-width="{S*1.3}"
+        stroke-linecap="round" stroke-linejoin="round"/>'''))
+
+# ============================================================
+# 36. PTM-ONLINE KONFLIKTLISTE — Sync-Wolke mit Ausrufezeichen-Badge
+# ============================================================
+ICONS["toolbar-ptmonline-konfliktliste"] = svg(ptm_online_badge(C['cochon'], f'''
+  <rect x="50.6" y="45.5" width="2.8" height="8" rx="1.2" fill="{C['paper']}"/>
+  <circle cx="52" cy="57.2" r="1.6" fill="{C['paper']}"/>'''))
+
+# ============================================================
+# 37. PTM-ONLINE ERGEBNISMELDUNGEN ABHOLEN — Sync-Wolke mit Download-Badge
+# ============================================================
+ICONS["toolbar-ptmonline-ergebnisse-abholen"] = svg(ptm_online_badge(C['go'], f'''
+  <path d="M 52 45.5 L 52 55 M 48 51.5 L 52 55.5 L 56 51.5" fill="none" stroke="{C['paper']}" stroke-width="{S*1.4}"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="47.5" y1="58" x2="56.5" y2="58" stroke="{C['paper']}" stroke-width="{S*1.2}" stroke-linecap="round"/>'''))
+
+# ============================================================
+# 38. PTM-ONLINE IM BROWSER ÖFFNEN — Sync-Wolke mit Globus-Badge
+# ============================================================
+ICONS["toolbar-ptmonline-browser"] = svg(ptm_online_badge(C['info'], f'''
+  <circle cx="52" cy="52" r="6" fill="none" stroke="{C['paper']}" stroke-width="{S}"/>
+  <ellipse cx="52" cy="52" rx="2.6" ry="6" fill="none" stroke="{C['paper']}" stroke-width="{S*0.8}"/>
+  <line x1="46" y1="52" x2="58" y2="52" stroke="{C['paper']}" stroke-width="{S*0.8}"/>'''))
+
 # ============================================================
 # SCHREIBEN
 # ============================================================

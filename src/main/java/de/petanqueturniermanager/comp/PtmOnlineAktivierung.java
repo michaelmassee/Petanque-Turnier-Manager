@@ -4,6 +4,7 @@ import org.apache.logging.log4j.LogManager;
 import com.sun.star.uno.XComponentContext;
 import de.petanqueturniermanager.helper.LoMainThread;
 import de.petanqueturniermanager.ptmonline.PtmOnlineLiveBeobachter;
+import de.petanqueturniermanager.toolbar.PtmOnlineToolbarSteuerung;
 
 /** Zentrale, rein im Speicher abgefragte Freigabe. Ohne Zugang keine Online-Arbeit. */
 public final class PtmOnlineAktivierung {
@@ -30,11 +31,14 @@ public final class PtmOnlineAktivierung {
 
     static void aktualisieren(XComponentContext context, LibreOfficePtmOnlineSpeicher.Zugangsdaten daten) {
         aktiv = daten.isConfigured();
-        if (!aktiv) PtmOnlineLiveBeobachter.konfigurationGeaendert(context);
+        if (!aktiv) {
+            PtmOnlineLiveBeobachter.konfigurationGeaendert(context);
+        }
         // Options-Callbacks nicht durch synchronen Menüaufbau reentrant betreten.
         LoMainThread.post(context, () -> {
             PtmOnlineLiveBeobachter.konfigurationGeaendert(context);
             PtmOnlineMenuController.aktualisiereAlle();
+            PtmOnlineToolbarSteuerung.aktualisiereInAllenFrames(context);
             ProtocolHandler.notifyAllListeners();
         });
     }

@@ -7,6 +7,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import com.sun.star.beans.XPropertySet;
+import com.sun.star.frame.XFrame;
+import com.sun.star.frame.XLayoutManager;
+import com.sun.star.frame.XModel;
+import com.sun.star.sheet.XSpreadsheetDocument;
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
@@ -17,11 +22,23 @@ import de.petanqueturniermanager.helper.LoMainThread;
 import de.petanqueturniermanager.onlinesync.OnlineTournamentDto;
 import de.petanqueturniermanager.ptmonline.dto.SyncBindingDto;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetNew;
+import de.petanqueturniermanager.comp.OfficeDocumentHelper;
 import de.petanqueturniermanager.comp.PtmOnlineMenuController;
+import de.petanqueturniermanager.toolbar.PtmOnlineToolbarSteuerung;
 
 class PtmOnlineAktivierungUITest extends BaseCalcUITest {
+    private static final String PTMONLINE_TOOLBAR_URL =
+            "private:resource/toolbar/addon_de.petanqueturniermanager.toolbar.ptmonline";
+
+    /** Toolbar-Sichtbarkeit meldet LO nur für sichtbare Fenster; das Testdokument ist versteckt. */
+    private XSpreadsheetDocument sichtbaresDokument;
+
     @AfterEach
     void resetOnline() {
+        if (sichtbaresDokument != null) {
+            OfficeDocumentHelper.closeDoc(sichtbaresDokument);
+            sichtbaresDokument = null;
+        }
         PtmOnlineLiveBeobachter.zuruecksetzenFuerTest();
         LibreOfficePtmOnlineSpeicher.setZugangsdatenForTest(null);
     }
@@ -36,6 +53,8 @@ class PtmOnlineAktivierungUITest extends BaseCalcUITest {
         new PtmOnlineRegistrationMapping(wkingSpreadsheet, TurnierSystem.SCHWEIZER, null)
                 .verbinden(turnier, new SyncBindingDto(true, "e9e9caec-e0b1-4fe0-8fee-a229279b9f73", 1),
                         "01234567890123456789012345678901");
+        sichtbaresDokument = OfficeDocumentHelper.from(loader).createSichtbaresCalc();
+        var sichtbaresFenster = Lo.qi(XModel.class, sichtbaresDokument).getCurrentController().getFrame();
         var context = starter.getxComponentContext();
         var frame = Lo.qi(com.sun.star.frame.XModel.class, doc).getCurrentController().getFrame();
         var popup = Lo.qi(com.sun.star.awt.XPopupMenu.class, context.getServiceManager()
@@ -51,7 +70,8 @@ class PtmOnlineAktivierungUITest extends BaseCalcUITest {
         assertThat(Lo.qi(com.sun.star.frame.XPopupMenuController.class, service)).as("Controller-Service registriert").isNotNull();
         for (int i = 0; i < 2; i++) {
             schalte(menuController, new LibreOfficePtmOnlineSpeicher.Zugangsdaten("test", "http://127.0.0.1", true));
-            assertThat(popup.getItemCount()).as("Alle sechs Online-Befehle wiederhergestellt").isEqualTo((short) 6);
+            assertThat(popup.getItemCount()).as("Alle neun Online-Befehle wiederhergestellt").isEqualTo((short) 9);
+            assertThat(toolbarSichtbar(sichtbaresFenster)).as("PTM-Online-Toolbar mit Freigabe sichtbar").isTrue();
             var instanz = PtmOnlineLiveBeobachter.class.getDeclaredField("instanz");
             instanz.setAccessible(true);
             Object beobachter = instanz.get(null);
@@ -62,6 +82,7 @@ class PtmOnlineAktivierungUITest extends BaseCalcUITest {
 
             schalte(menuController, new LibreOfficePtmOnlineSpeicher.Zugangsdaten(i == 0 ? "" : "test", "http://127.0.0.1", i == 0));
             assertThat(popup.getItemCount()).as("Keine Online-Menüeinträge ohne Freigabe").isZero();
+            assertThat(toolbarSichtbar(sichtbaresFenster)).as("PTM-Online-Toolbar ohne Freigabe ausgeblendet").isFalse();
             PtmOnlineLiveBeobachter.zuruecksetzenFuerTest();
             assertThat(instanz.get(null)).isNull();
         }
@@ -75,6 +96,7 @@ class PtmOnlineAktivierungUITest extends BaseCalcUITest {
             try {
                 PtmOnlineLiveBeobachter.konfigurationGeaendert(starter.getxComponentContext());
                 menuController.updatePopupMenu();
+                PtmOnlineToolbarSteuerung.aktualisiereInAllenFrames(starter.getxComponentContext());
             } catch (Throwable e) {
                 fehler.set(e);
             } finally {
@@ -85,4 +107,9 @@ class PtmOnlineAktivierungUITest extends BaseCalcUITest {
         assertThat(fehler.get()).isNull();
     }
 
+    private static boolean toolbarSichtbar(XFrame frame) throws Exception {
+        var layoutManager = Lo.qi(XLayoutManager.class,
+                Lo.qi(XPropertySet.class, frame).getPropertyValue("LayoutManager"));
+        return layoutManager.isElementVisible(PTMONLINE_TOOLBAR_URL);
+    }
 }

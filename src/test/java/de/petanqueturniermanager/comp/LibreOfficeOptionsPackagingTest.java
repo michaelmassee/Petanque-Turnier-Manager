@@ -30,11 +30,13 @@ class LibreOfficeOptionsPackagingTest {
 	@Test
 	void toolbarUndSidebarIconsSindPaketiert() throws Exception {
 		String manifest = Files.readString(Path.of("META-INF/manifest.xml"));
-		assertThat(manifest).contains("registry/org/openoffice/Office/Addons_Z5_WhatsAppToolbar.xcu");
+		assertThat(manifest).contains("registry/org/openoffice/Office/Addons_Z5_WhatsAppToolbar.xcu")
+				.contains("registry/org/openoffice/Office/Addons_Z6_PtmOnlineToolbar.xcu");
 		for (String xcuPfad : List.of("registry/org/openoffice/Office/Addons_Z2_Toolbar.xcu",
 				"registry/org/openoffice/Office/Addons_Z3_SpieltagToolbar.xcu",
 				"registry/org/openoffice/Office/Addons_Z4_TimerToolbar.xcu",
-				"registry/org/openoffice/Office/Addons_Z5_WhatsAppToolbar.xcu")) {
+				"registry/org/openoffice/Office/Addons_Z5_WhatsAppToolbar.xcu",
+				"registry/org/openoffice/Office/Addons_Z6_PtmOnlineToolbar.xcu")) {
 			assertAlleOriginBilderExistieren(xcuPfad, "registry/org/openoffice/Office");
 		}
 		assertAlleOriginBilderExistieren("registry/org/openoffice/Office/UI/Sidebar.xcu",

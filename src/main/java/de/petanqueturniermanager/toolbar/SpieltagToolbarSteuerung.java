@@ -6,15 +6,10 @@ package de.petanqueturniermanager.toolbar;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.sun.star.beans.XPropertySet;
 import com.sun.star.frame.XFrame;
-import com.sun.star.frame.XFramesSupplier;
-import com.sun.star.frame.XLayoutManager;
 import com.sun.star.sheet.XSpreadsheetDocument;
-import com.sun.star.sheet.XSpreadsheetView;
 import com.sun.star.uno.XComponentContext;
 
-import de.petanqueturniermanager.comp.DocumentHelper;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
@@ -49,75 +44,8 @@ public final class SpieltagToolbarSteuerung {
      * abhängig vom aktiven Turniersystem.
      */
     public static void aktualisiereInAllenFrames(XComponentContext xContext) {
-        try {
-            var xDesktop = DocumentHelper.getCurrentDesktop(xContext);
-            if (xDesktop == null) {
-                logger.debug("aktualisiereInAllenFrames: kein Desktop gefunden");
-                return;
-            }
-            var xFramesSupplier = Lo.qi(XFramesSupplier.class, xDesktop);
-            if (xFramesSupplier == null) {
-                logger.debug("aktualisiereInAllenFrames: XFramesSupplier nicht verfügbar");
-                return;
-            }
-            var xFrames = xFramesSupplier.getFrames();
-            if (xFrames == null) {
-                return;
-            }
-            int anzahl = xFrames.getCount();
-            for (int i = 0; i < anzahl; i++) {
-                try {
-                    var xFrame = Lo.qi(XFrame.class, xFrames.getByIndex(i));
-                    aktualisiereInFrame(xFrame, xContext);
-                } catch (Exception e) {
-                    logger.error("Fehler beim Aktualisieren der Spieltag-Toolbar in Frame {}", i, e);
-                }
-            }
-        } catch (Exception e) {
-            logger.error("Fehler beim Durchsuchen aller Frames für Spieltag-Toolbar", e);
-        }
-    }
-
-    // ---------------------------------------------------------------------------
-
-    private static void aktualisiereInFrame(XFrame xFrame, XComponentContext xContext) {
-        if (xFrame == null) {
-            return;
-        }
-        try {
-            // Druckvorschau-Frames überspringen: ScPreviewController implementiert XSpreadsheetView nicht
-            if (Lo.qi(XSpreadsheetView.class, xFrame.getController()) == null) {
-                logger.debug("aktualisiereInFrame '{}': Druckvorschau-Frame erkannt – übersprungen", xFrame.getName());
-                return;
-            }
-            var xFrameProps = Lo.qi(XPropertySet.class, xFrame);
-            if (xFrameProps == null) {
-                return;
-            }
-            var xLayoutManager = Lo.qi(XLayoutManager.class, xFrameProps.getPropertyValue("LayoutManager"));
-            if (xLayoutManager == null) {
-                return;
-            }
-            boolean sichtbar = ermittleSichtbarkeit(xFrame, xContext);
-            if (sichtbar) {
-                xLayoutManager.requestElement(SPIELTAG_TOOLBAR_URL);
-                xLayoutManager.showElement(SPIELTAG_TOOLBAR_URL);
-            } else {
-                xLayoutManager.hideElement(SPIELTAG_TOOLBAR_URL);
-            }
-            String frameTitel = "<unknown>";
-            try {
-                var xTitle = Lo.qi(com.sun.star.frame.XTitle.class, xFrame);
-                if (xTitle != null) frameTitel = xTitle.getTitle();
-            } catch (Exception e) {
-                logger.debug("Frame-Titel konnte nicht ermittelt werden: {}", e.getMessage());
-            }
-            logger.trace("[FOKUS-TRACE] SpieltagToolbar.aktualisiereInFrame frameTitle='{}' frameHash={} sichtbar={}",
-                    frameTitel, System.identityHashCode(xFrame), sichtbar);
-        } catch (Exception e) {
-            logger.error("Fehler beim Aktualisieren der Spieltag-Toolbar in Frame '{}'",
-                    xFrame.getName(), e);
-        }
+        AddonToolbarSichtbarkeit.setzeInAllenFrames(xContext, SPIELTAG_TOOLBAR_URL,
+                frame -> ermittleSichtbarkeit(frame, xContext));
     }
 
     private static boolean ermittleSichtbarkeit(XFrame xFrame, XComponentContext xContext) {

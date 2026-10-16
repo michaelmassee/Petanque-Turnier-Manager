@@ -37,27 +37,27 @@ Die einheitliche Stoppuhr macht die Gruppe in der Toolbar sofort als zusammengeh
 | Schaltfläche | Code-URL | Icon-Datei |
 |--------------|----------|------------|
 | m1 Turnier starten | `ptm:toolbar_start` | `toolbar-start.png` |
-| m3 Weiter | `ptm:toolbar_weiter` | `toolbar-weiter.png` |
-| m4 Neu Auslosen | `ptm:toolbar_neu_auslosen` | `toolbar-neu-auslosen.png` |
-| m5 Abschlussphase | `ptm:toolbar_abschluss` | `toolbar-abschluss.png` |
-| m6 Vorrunden Rangliste | `ptm:toolbar_vorrunden_rangliste` | `toolbar-vorrunden-rangliste.png` |
-| m7 Teilnehmer | `ptm:toolbar_teilnehmer` | `toolbar-teilnehmer.png` |
-| m8 Checkin | `ptm:toolbar_checkin` | `toolbar-checkin.png` |
-| m9 Turnier Konfiguration | `ptm:konfiguration_turnier` | `toolbar-konfiguration.png` |
-| m11 Turnieransicht (Kiosk) | `ptm:turnier_modus` | `toolbar-turnier-modus.png` |
-| m13 Webserver starten | `ptm:webserver_starten` | `toolbar-webserver-starten.png` |
-| m14 Webserver stoppen | `ptm:webserver_stoppen` | `toolbar-webserver-stoppen.png` |
-| m17 PTM-Online-Sync pausieren | `ptm:ptmonline_sync_pausieren` | `toolbar-ptmonline-sync-pausieren.png` |
-| m18 PTM-Online-Sync fortsetzen | `ptm:ptmonline_sync_fortsetzen` | `toolbar-ptmonline-sync-fortsetzen.png` |
-| m16 Neues Turnier in neuer Datei | `ptm:toolbar_neu_in_neuer_datei` | `toolbar-neu-in-neuer-datei.png` |
-| m17 Öffnen | `ptm:toolbar_oeffnen` | `toolbar-oeffnen.png` |
-| m18 Speichern | `.uno:Save` | *LibreOffice-Standard, nicht eigenes Icon* |
-| m19 Drucken | `ptm:toolbar_drucken` | `toolbar-drucken.png` |
-| m20 Druckvorschau | `ptm:toolbar_druckvorschau` | `toolbar-druckvorschau.png` |
-| m21 Als PDF exportieren | `.uno:ExportToPDF` | *LibreOffice-Standard* |
-| m22 Druckbereich | `.uno:DefinePrintArea` | *LibreOffice-Standard* |
-| m24 Spieler-DB → Meldungen | `ptm:spielerdb_in_meldeliste` | `toolbar-spielerdb-meldungen.png` |
-| m26 Verarbeitung abbrechen | `ptm:abbruch` | `toolbar-abbruch.png` |
+| m3 Meldeliste aktualisieren | `ptm:toolbar_meldeliste_aktualisieren` | `toolbar-meldeliste-aktualisieren.png` |
+| m4 Checkin | `ptm:toolbar_checkin` | `toolbar-checkin.png` |
+| m5 Teilnehmer | `ptm:toolbar_teilnehmer` | `toolbar-teilnehmer.png` |
+| m7 Weiter | `ptm:toolbar_weiter` | `toolbar-weiter.png` |
+| m8 Neu Auslosen | `ptm:toolbar_neu_auslosen` | `toolbar-neu-auslosen.png` |
+| m9 Abschlussphase | `ptm:toolbar_abschluss` | `toolbar-abschluss.png` |
+| m10 Rangliste | `ptm:toolbar_vorrunden_rangliste` | `toolbar-vorrunden-rangliste.png` |
+| m11 Turnier Konfiguration | `ptm:konfiguration_turnier` | `toolbar-konfiguration.png` |
+| m13 Turnieransicht (Kiosk) | `ptm:turnier_modus` | `toolbar-turnier-modus.png` |
+| m15 Webserver starten | `ptm:webserver_starten` | `toolbar-webserver-starten.png` |
+| m16 Webserver stoppen | `ptm:webserver_stoppen` | `toolbar-webserver-stoppen.png` |
+| m18 Neues Turnier in neuer Datei | `ptm:toolbar_neu_in_neuer_datei` | `toolbar-neu-in-neuer-datei.png` |
+| m19 Öffnen | `ptm:toolbar_oeffnen` | `toolbar-oeffnen.png` |
+| m20 Speichern | `.uno:Save` | *LibreOffice-Standard, nicht eigenes Icon* |
+| m21 Drucken | `ptm:toolbar_drucken` | `toolbar-drucken.png` |
+| m22 Druckvorschau | `ptm:toolbar_druckvorschau` | `toolbar-druckvorschau.png` |
+| m23 Als PDF exportieren | `.uno:ExportToPDF` | *LibreOffice-Standard* |
+| m24 Druckbereich | `.uno:DefinePrintArea` | *LibreOffice-Standard* |
+| m26 Spieler-DB → Meldungen | `ptm:spielerdb_in_meldeliste` | `toolbar-spielerdb-meldungen.png` |
+| m28 Verarbeitung abbrechen | `ptm:abbruch` | `toolbar-abbruch.png` |
+| m30 Seitenleiste ein-/ausblenden | `ptm:sidebar_toggle` | `toolbar-sidebar.png` |
 
 ### Spieltag-Toolbar (`Addons_Z3_SpieltagToolbar.xcu`)
 
@@ -69,6 +69,22 @@ Die einheitliche Stoppuhr macht die Gruppe in der Toolbar sofort als zusammengeh
 ### Timer-Toolbar (`Addons_Z4_TimerToolbar.xcu`)
 
 Siehe oben — fünf neue Icons.
+
+### PTM-Online-Toolbar (`Addons_Z6_PtmOnlineToolbar.xcu`)
+
+Nur sichtbar, solange ein PTM-Online-Zugang hinterlegt ist (`PtmOnlineToolbarSteuerung`).
+
+| Schaltfläche | Code-URL | Icon-Datei |
+|--------------|----------|------------|
+| m1 Turnier verbinden | `ptm:ptmonline_turnier_verbinden` | `toolbar-ptmonline-verbinden.png` |
+| m2 Abgleichen | `ptm:ptmonline_anmeldungen_importieren` | `toolbar-ptmonline-abgleichen.png` |
+| m3 Konfliktliste öffnen | `ptm:ptmonline_konfliktliste_oeffnen` | `toolbar-ptmonline-konfliktliste.png` |
+| m4 Gemeldete Ergebnisse abholen | `ptm:ptmonline_ergebnismeldungen_abholen` | `toolbar-ptmonline-ergebnisse-abholen.png` |
+| m6 Sync pausieren | `ptm:ptmonline_sync_pausieren` | `toolbar-ptmonline-sync-pausieren.png` |
+| m7 Sync fortsetzen | `ptm:ptmonline_sync_fortsetzen` | `toolbar-ptmonline-sync-fortsetzen.png` |
+| m9 Im Browser öffnen | `ptm:ptmonline_im_browser_oeffnen` | `toolbar-ptmonline-browser.png` |
+| m11 Zuordnung wiederherstellen | `ptm:ptmonline_zuordnung_wiederherstellen` | `toolbar-ptmonline-wiederherstellen.png` |
+| m12 Verbindung trennen | `ptm:ptmonline_verbindung_trennen` | `toolbar-ptmonline-trennen.png` |
 
 ## Drop-In Installation ins Repo
 

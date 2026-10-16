@@ -133,6 +133,8 @@ public final class PtmOnlineAbgleichSheetRunner extends SheetRunner implements P
             getLogger().warn("PTM-Online: Ergebnismeldungen nicht abrufbar, Abgleich ohne sie", e);
             return List.of();
         }
+        PtmOnlineLiveBeobachter.ergebnismeldungenAbgeholt(getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
+                tournamentId, abruf);
         return PtmOnlineErgebnismeldungen.verarbeite(getWorkingSpreadsheet(), getTurnierSystem(), verbindung.get(),
                 bestand, abruf.reports(), sammlung::entscheidung, () -> {
                     // Der Abgleich läuft bereits im Blattschutz-Scope des SheetRunners.

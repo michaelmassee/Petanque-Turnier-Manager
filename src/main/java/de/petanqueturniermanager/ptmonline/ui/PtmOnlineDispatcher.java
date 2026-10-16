@@ -4,6 +4,8 @@
 package de.petanqueturniermanager.ptmonline.ui;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 
@@ -11,6 +13,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.sun.star.awt.XWindowPeer;
+import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.system.SystemShellExecuteFlags;
+import com.sun.star.system.XSystemShellExecute;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.basesheet.konfiguration.MeleeAnmeldungKonfiguration;
@@ -19,15 +24,19 @@ import de.petanqueturniermanager.comp.LibreOfficePtmOnlineSpeicher;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
+import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.LoMainThread;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
+import de.petanqueturniermanager.helper.sheet.SheetHelper;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.onlinesync.OnlineTournamentDto;
 import de.petanqueturniermanager.onlinesync.SpieltagKontext;
 import de.petanqueturniermanager.onlinesync.TurnierSystemOnlineTypMapping;
+import de.petanqueturniermanager.ptmonline.PtmOnlineErgebnismeldungenRunner;
 import de.petanqueturniermanager.ptmonline.PtmOnlineFehlerText;
 import de.petanqueturniermanager.ptmonline.PtmOnlineRegistrationMapping;
 import de.petanqueturniermanager.ptmonline.PtmOnlineZuordnungWiederherstellRunner;
@@ -245,6 +254,78 @@ public final class PtmOnlineDispatcher {
             new PtmOnlineZuordnungWiederherstellRunner(ws, ts, spieltagNr, config).start();
         } catch (GenerateException e) {
             logger.error("PTM-Online: Zuordnung wiederherstellen fehlgeschlagen", e);
+            zeigeFehler(ctx, e.getMessage());
+        }
+    }
+
+    /** Springt zum Blatt „PTMOnline Konflikte“; gibt es noch keines, erklärt ein Hinweis, wann es entsteht. */
+    public static void konfliktlisteOeffnen(WorkingSpreadsheet ws) {
+        Optional<XSpreadsheet> konfliktListe = SheetMetadataHelper.findeSheet(ws.getWorkingSpreadsheetDocument(),
+                SheetMetadataHelper.SCHLUESSEL_PTM_ONLINE_KONFLIKTE);
+        if (konfliktListe.isEmpty()) {
+            MessageBox.from(ws.getxContext(), MessageBoxTypeEnum.INFO_OK)
+                    .caption(I18n.get("ptmonline.menu.toplevel"))
+                    .message(I18n.get("ptmonline.konfliktliste.keine"))
+                    .show();
+            return;
+        }
+        new SheetHelper(ws).setActiveSheet(konfliktListe.get());
+    }
+
+    /** Holt die offenen Ergebnismeldungen von Spielern sofort ab (E-27). */
+    public static void ergebnismeldungenAbholen(WorkingSpreadsheet ws) {
+        mitVerbindung(ws, (verbindung, config) -> new PtmOnlineErgebnismeldungenRunner(ws, verbindung.ts(),
+                verbindung.spieltagNr(), config, verbindung.tournamentId()).start());
+    }
+
+    /** Öffnet das verbundene Online-Turnier auf PTM-Online im Standardbrowser. */
+    public static void imBrowserOeffnen(WorkingSpreadsheet ws) {
+        mitVerbindung(ws, (verbindung, config) -> {
+            String basis = config.baseUrl().endsWith("/") ? config.baseUrl().substring(0, config.baseUrl().length() - 1)
+                    : config.baseUrl();
+            String url = basis + "/turniere/" + URLEncoder.encode(verbindung.tournamentId(), StandardCharsets.UTF_8);
+            XComponentContext ctx = ws.getxContext();
+            try {
+                XSystemShellExecute shell = Lo.createInstanceMCF(XSystemShellExecute.class,
+                        "com.sun.star.system.SystemShellExecute", ctx.getServiceManager(), ctx);
+                if (shell == null) {
+                    throw new IllegalStateException("SystemShellExecute nicht verfügbar");
+                }
+                shell.execute(url, "", (short) SystemShellExecuteFlags.URIS_ONLY);
+            } catch (com.sun.star.uno.Exception | RuntimeException e) {
+                logger.error("PTM-Online: Browser für {} nicht geöffnet", url, e);
+                zeigeFehler(ctx, I18n.get("ptmonline.browser.fehler", e.getMessage()));
+            }
+        });
+    }
+
+    /** Verbindung des Dokuments (bzw. aktiven Spieltags) mit dem Online-Turnier. */
+    private record Verbindung(TurnierSystem ts, Integer spieltagNr, String tournamentId) {}
+
+    @FunctionalInterface
+    private interface VerbindungsAktion {
+        void ausfuehren(Verbindung verbindung, LibreOfficePtmOnlineSpeicher.Zugangsdaten config);
+    }
+
+    /** Führt die Aktion nur bei konfiguriertem Zugang und verbundenem Dokument aus, sonst ein Hinweis. */
+    private static void mitVerbindung(WorkingSpreadsheet ws, VerbindungsAktion aktion) {
+        XComponentContext ctx = ws.getxContext();
+        LibreOfficePtmOnlineSpeicher.Zugangsdaten config = new LibreOfficePtmOnlineSpeicher(ctx).laden();
+        if (!config.isConfigured()) {
+            zeigeFehler(ctx, I18n.get("ptmonline.fehler.nicht_konfiguriert"));
+            return;
+        }
+        try {
+            TurnierSystem ts = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();
+            Integer spieltagNr = SpieltagKontext.aktiverSpieltagOderNull(ws, ts);
+            Optional<String> tournamentId = new PtmOnlineRegistrationMapping(ws, ts, spieltagNr).getTournamentId();
+            if (tournamentId.isEmpty()) {
+                zeigeFehler(ctx, I18n.get("ptmonline.fehler.turnier_nicht_verbunden"));
+                return;
+            }
+            aktion.ausfuehren(new Verbindung(ts, spieltagNr, tournamentId.get()), config);
+        } catch (GenerateException e) {
+            logger.error("PTM-Online: Verbindung ermitteln fehlgeschlagen", e);
             zeigeFehler(ctx, e.getMessage());
         }
     }

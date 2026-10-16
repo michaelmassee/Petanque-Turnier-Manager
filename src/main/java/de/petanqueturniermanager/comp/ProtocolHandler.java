@@ -201,6 +201,7 @@ import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteS
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet_SortOnly;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet_TestDaten;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRangliste_Validator;
+import de.petanqueturniermanager.toolbar.PtmOnlineToolbarSteuerung;
 import de.petanqueturniermanager.toolbar.SpieltagToolbarSteuerung;
 import de.petanqueturniermanager.toolbar.ToolbarAktionDispatcher;
 import de.petanqueturniermanager.toolbar.ToolbarAnzeigenListener;
@@ -425,6 +426,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_PTMONLINE_ZUORDNUNG_WIEDERHERSTELLEN = "ptmonline_zuordnung_wiederherstellen";
 	public static final String CMD_PTMONLINE_SYNC_PAUSIEREN          = "ptmonline_sync_pausieren";
 	public static final String CMD_PTMONLINE_SYNC_FORTSETZEN         = "ptmonline_sync_fortsetzen";
+	public static final String CMD_PTMONLINE_KONFLIKTLISTE_OEFFNEN   = "ptmonline_konfliktliste_oeffnen";
+	public static final String CMD_PTMONLINE_ERGEBNISMELDUNGEN_ABHOLEN = "ptmonline_ergebnismeldungen_abholen";
+	public static final String CMD_PTMONLINE_IM_BROWSER_OEFFNEN      = "ptmonline_im_browser_oeffnen";
 	// Konfiguration
 	public static final String CMD_KONFIGURATION_TURNIER = "konfiguration_turnier";
 	/**
@@ -575,6 +579,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			PerfLog.log(logger, "[STARTUP-TIMING] ProtocolHandler-ctor WhatsApp-Toolbar (verzögert gepostet): {} ms",
 					(tNachWhatsApp - t) / 1_000_000L);
 			t = tNachWhatsApp;
+			LoMainThread.post(xContext, () -> PtmOnlineToolbarSteuerung.aktualisiereInAllenFrames(xContext));
+			PerfLog.log(logger, "[STARTUP-TIMING] ProtocolHandler-ctor PTM-Online-Toolbar (verzögert gepostet): {} ms",
+					(System.nanoTime() - t) / 1_000_000L);
 		} else {
 			logger.debug("ProtocolHandler Konstruktor: Druckvorschau aktiv – Toolbar-Initialisierung übersprungen");
 		}
@@ -1554,6 +1561,12 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 					.syncPausieren(erzeugeWorkingSpreadsheetFuerDispatch());
 			case CMD_PTMONLINE_SYNC_FORTSETZEN         -> de.petanqueturniermanager.ptmonline.ui.PtmOnlineDispatcher
 					.syncFortsetzen(erzeugeWorkingSpreadsheetFuerDispatch());
+			case CMD_PTMONLINE_KONFLIKTLISTE_OEFFNEN   -> de.petanqueturniermanager.ptmonline.ui.PtmOnlineDispatcher
+					.konfliktlisteOeffnen(erzeugeWorkingSpreadsheetFuerDispatch());
+			case CMD_PTMONLINE_ERGEBNISMELDUNGEN_ABHOLEN -> de.petanqueturniermanager.ptmonline.ui.PtmOnlineDispatcher
+					.ergebnismeldungenAbholen(erzeugeWorkingSpreadsheetFuerDispatch());
+			case CMD_PTMONLINE_IM_BROWSER_OEFFNEN      -> de.petanqueturniermanager.ptmonline.ui.PtmOnlineDispatcher
+					.imBrowserOeffnen(erzeugeWorkingSpreadsheetFuerDispatch());
 			default -> { return false; }
 		}
 		return true;
@@ -2210,8 +2223,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			CMD_TURNIER_MODUS,
 			CMD_WEBSERVER_STARTEN,
 			CMD_WEBSERVER_STOPPEN,
-			CMD_PTMONLINE_SYNC_PAUSIEREN,
-			CMD_PTMONLINE_SYNC_FORTSETZEN,
 			// Z3 SpieltagToolbar
 			CMD_TOOLBAR_GESAMTRANGLISTE,
 			CMD_TOOLBAR_NAECHSTER_SPIELTAG,
@@ -2227,7 +2238,17 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			CMD_TOOLBAR_WHATSAPP_SPIELRUNDE_POSTEN,
 			CMD_TOOLBAR_WHATSAPP_RANGLISTE_POSTEN,
 			CMD_TOOLBAR_WHATSAPP_BLATT_POSTEN,
-			CMD_TOOLBAR_WHATSAPP_SELEKTION_POSTEN);
+			CMD_TOOLBAR_WHATSAPP_SELEKTION_POSTEN,
+			// Z6 PtmOnlineToolbar
+			CMD_PTMONLINE_TURNIER_VERBINDEN,
+			CMD_PTMONLINE_ANMELDUNGEN_IMPORTIEREN,
+			CMD_PTMONLINE_KONFLIKTLISTE_OEFFNEN,
+			CMD_PTMONLINE_ERGEBNISMELDUNGEN_ABHOLEN,
+			CMD_PTMONLINE_SYNC_PAUSIEREN,
+			CMD_PTMONLINE_SYNC_FORTSETZEN,
+			CMD_PTMONLINE_IM_BROWSER_OEFFNEN,
+			CMD_PTMONLINE_ZUORDNUNG_WIEDERHERSTELLEN,
+			CMD_PTMONLINE_VERBINDUNG_TRENNEN);
 
 	static boolean istOnlineBefehlAktiv(String command, XSpreadsheetDocument document) {
 		return isEnabled(command, document);
@@ -2461,7 +2482,10 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_PTMONLINE_ANMELDUNGEN_IMPORTIEREN,
 				 CMD_PTMONLINE_ZUORDNUNG_WIEDERHERSTELLEN,
 				 CMD_PTMONLINE_SYNC_PAUSIEREN,
-				 CMD_PTMONLINE_SYNC_FORTSETZEN               -> ts != TurnierSystem.KEIN;
+				 CMD_PTMONLINE_SYNC_FORTSETZEN,
+				 CMD_PTMONLINE_KONFLIKTLISTE_OEFFNEN,
+				 CMD_PTMONLINE_ERGEBNISMELDUNGEN_ABHOLEN,
+				 CMD_PTMONLINE_IM_BROWSER_OEFFNEN            -> ts != TurnierSystem.KEIN;
 			case CMD_TIMER_STARTEN_DIALOG                   -> timerInaktivOderBeendet();
 			case CMD_TIMER_PAUSE_FORTSETZEN,
 				 CMD_TIMER_STOPPEN,
@@ -2628,7 +2652,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			// ruft requestElement()/showElement() (VCL-Toolbar-Ops) – diese MÜSSEN auf dem
 			// LO-Main-Thread laufen, sonst reißt die Off-Thread-Mutation den Fokus weg und ein
 			// offenes Menü schließt sich (vgl. CLAUDE.md, analog Fix 8e3eb41e für TimerToolbarSteuerung).
-			LoMainThread.post(ctx, () -> SpieltagToolbarSteuerung.aktualisiereInAllenFrames(ctx));
+			// Methodenreferenz statt Lambda: echter Schnitt im ThreadingCallGraphArchTest.
+			LoMainThread.post(ctx, ProtocolHandler::aktualisiereSpieltagToolbarAufMainThread);
 		}
 		long dauerMs = (System.nanoTime() - startNs) / 1_000_000L;
 		logger.trace("[FOKUS-TRACE] notifyAllListeners #{} ENDE listenerAnzahl={} dauerMs={}",
@@ -2636,6 +2661,14 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		if (NOTIFY_ALL_FIRST_LOG.compareAndSet(true, false)) {
 			PerfLog.log(logger, "[STARTUP-TIMING] notifyAllListeners (erster Aufruf): {} ms, Listener-Anzahl={}, thread={}",
 					dauerMs, listenerAnzahl, Thread.currentThread().getName());
+		}
+	}
+
+	/** Nur auf dem LO-Main-Thread (per {@link LoMainThread#post}) aufrufen. */
+	private static void aktualisiereSpieltagToolbarAufMainThread() {
+		var ctx = SHARED_CONTEXT;
+		if (ctx != null) {
+			SpieltagToolbarSteuerung.aktualisiereInAllenFrames(ctx);
 		}
 	}
 

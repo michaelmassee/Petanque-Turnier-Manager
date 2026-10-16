@@ -240,6 +240,26 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
     }
 
     /**
+     * Ein Runner (Abgleich, „Gemeldete Ergebnisse abholen“) hat die Ergebnismeldungen selbst abgeholt und die
+     * Konfliktliste nachgeführt. Der Hintergrund übernimmt diesen Stand, damit sein nächster Durchlauf nicht mit
+     * einem älteren Abruf frisch eingetragene Fälle wieder entfernt.
+     */
+    static void ergebnismeldungenAbgeholt(XSpreadsheetDocument xDoc, String tournamentId,
+            ErgebnismeldungenDto abruf) {
+        PtmOnlineLiveBeobachter beobachter = instanz;
+        if (beobachter == null) {
+            return;
+        }
+        beobachter.registriere(xDoc).ifPresent(beobachtung -> {
+            beobachtung.ergebnismeldungen = new PtmOnlineErfassungsRunner.ErgebnismeldungsAbruf(tournamentId,
+                    abruf.reports());
+            if (abruf.istAktiv()) {
+                beobachtung.planeMeldungsAbruf(ERGEBNISMELDUNGEN_ABRUF_MS);
+            }
+        });
+    }
+
+    /**
      * Ein Rundenstart hat den vollständigen Teilnahme-Stand als Auftrag erfasst; die Check-in-Erkennung übernimmt ihn
      * als bekannt. Läuft im SheetRunner des Rundenstarts.
      */

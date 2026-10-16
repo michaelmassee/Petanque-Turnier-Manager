@@ -32,7 +32,6 @@ HAUPT = [
     "toolbar-vorrunden-rangliste", "toolbar-abschluss", "toolbar-abbruch",
     "toolbar-drucken", "toolbar-druckvorschau",
     "toolbar-webserver-starten", "toolbar-webserver-stoppen",
-    "toolbar-ptmonline-sync-pausieren", "toolbar-ptmonline-sync-fortsetzen",
 ]
 SPIELTAG = ["toolbar-naechster-spieltag", "toolbar-gesamtrangliste"]
 TIMER = [
@@ -44,7 +43,13 @@ WHATSAPP = [
     "toolbar-whatsapp-blatt", "toolbar-whatsapp-selektion",
 ]
 
-ALL = HAUPT + SPIELTAG + TIMER + WHATSAPP
+PTMONLINE = [
+    "toolbar-ptmonline-verbinden", "toolbar-ptmonline-abgleichen", "toolbar-ptmonline-konfliktliste",
+    "toolbar-ptmonline-ergebnisse-abholen", "toolbar-ptmonline-sync-pausieren", "toolbar-ptmonline-sync-fortsetzen",
+    "toolbar-ptmonline-browser", "toolbar-ptmonline-wiederherstellen", "toolbar-ptmonline-trennen",
+]
+
+ALL = HAUPT + SPIELTAG + TIMER + WHATSAPP + PTMONLINE
 
 LABELS = {
     "toolbar-start":              ("Turnier starten",     "ptm:toolbar_start"),
@@ -70,6 +75,13 @@ LABELS = {
     "toolbar-webserver-stoppen":  ("Server stoppen",      "ptm:webserver_stoppen"),
     "toolbar-ptmonline-sync-pausieren":  ("Sync pausieren",  "ptm:ptmonline_sync_pausieren"),
     "toolbar-ptmonline-sync-fortsetzen": ("Sync fortsetzen", "ptm:ptmonline_sync_fortsetzen"),
+    "toolbar-ptmonline-verbinden":   ("Turnier verbinden",  "ptm:ptmonline_turnier_verbinden"),
+    "toolbar-ptmonline-abgleichen":  ("Abgleichen",         "ptm:ptmonline_anmeldungen_importieren"),
+    "toolbar-ptmonline-konfliktliste": ("Konfliktliste",    "ptm:ptmonline_konfliktliste_oeffnen"),
+    "toolbar-ptmonline-ergebnisse-abholen": ("Ergebnisse abholen", "ptm:ptmonline_ergebnismeldungen_abholen"),
+    "toolbar-ptmonline-browser":     ("Im Browser öffnen",  "ptm:ptmonline_im_browser_oeffnen"),
+    "toolbar-ptmonline-wiederherstellen": ("Zuordnung wiederherstellen", "ptm:ptmonline_zuordnung_wiederherstellen"),
+    "toolbar-ptmonline-trennen":     ("Verbindung trennen", "ptm:ptmonline_verbindung_trennen"),
     "toolbar-timer-start":        ("Timer starten",       "ptm:timer_starten_dialog"),
     "toolbar-timer-pause":        ("Timer Pause",         "ptm:timer_pause_fortsetzen"),
     "toolbar-timer-stop":         ("Timer stoppen",       "ptm:timer_stoppen"),
@@ -189,14 +201,15 @@ def section_h(n):
 TITLE_H = 60
 W = COLS * CELL_W + (COLS + 1) * PAD
 H = (TITLE_H + section_h(len(sichtbar(HAUPT))) + section_h(len(sichtbar(SPIELTAG)))
-     + section_h(len(sichtbar(TIMER))) + section_h(len(sichtbar(WHATSAPP))) + 30)
+     + section_h(len(sichtbar(TIMER))) + section_h(len(sichtbar(WHATSAPP)))
+     + section_h(len(sichtbar(PTMONLINE))) + 30)
 
 img = Image.new("RGB", (W, H), (250, 250, 252))
 draw = ImageDraw.Draw(img)
 
 draw.text((PAD, 14), "Petanque-Turnier-Manager — Toolbar Icons",
            fill=(31, 41, 55), font=font_title)
-draw.text((PAD, 40), f"{len(RENDERED)} Icons in 3 Toolbar-Gruppen",
+draw.text((PAD, 40), f"{len(RENDERED)} Icons in 5 Toolbar-Gruppen",
            fill=(107, 114, 128), font=font_subtitle)
 
 y = TITLE_H
@@ -204,6 +217,7 @@ y = build_section(HAUPT, "Haupt-Toolbar  (Addons_Z2_Toolbar.xcu)", PAD, y) + 6
 y = build_section(SPIELTAG, "Spieltag-Toolbar  (Addons_Z3_SpieltagToolbar.xcu)", PAD, y) + 6
 y = build_section(TIMER, "Timer-Toolbar  (Addons_Z4_TimerToolbar.xcu)", PAD, y) + 6
 y = build_section(WHATSAPP, "WhatsApp-Toolbar  (Addons_Z5_WhatsAppToolbar.xcu)", PAD, y) + 6
+y = build_section(PTMONLINE, "PTM-Online-Toolbar  (Addons_Z6_PtmOnlineToolbar.xcu)", PAD, y) + 6
 
 uebersicht = os.path.join(SCRIPT_DIR, "preview-overview-v2.png")
 img.save(uebersicht, optimize=True)
