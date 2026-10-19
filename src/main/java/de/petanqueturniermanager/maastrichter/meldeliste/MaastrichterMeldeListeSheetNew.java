@@ -26,7 +26,7 @@ import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigur
 import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
-import de.petanqueturniermanager.ptmonline.PtmOnlineFormationsSperre;
+import de.petanqueturniermanager.ptmonline.PtmOnlineNeueMeldeliste;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
@@ -97,8 +97,10 @@ public class MaastrichterMeldeListeSheetNew extends SheetRunner implements IShee
 		if (param.isEmpty()) {
 			return;
 		}
-		PtmOnlineFormationsSperre.pruefeAenderung(getWorkingSpreadsheet(), TurnierSystem.MAASTRICHTER,
-				param.get().formation());
+		if (!PtmOnlineNeueMeldeliste.vorbereiten(getWorkingSpreadsheet(), TurnierSystem.MAASTRICHTER,
+				param.get().formation())) {
+			return;
+		}
 
 		// TurnierSystem + Page Styles setzen
 		konfigurationSheet.update();

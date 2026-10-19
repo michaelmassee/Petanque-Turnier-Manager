@@ -31,7 +31,7 @@ import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.poule.konfiguration.PouleKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
-import de.petanqueturniermanager.ptmonline.PtmOnlineFormationsSperre;
+import de.petanqueturniermanager.ptmonline.PtmOnlineNeueMeldeliste;
 
 /**
  * Erstellt eine neue Poule-A/B-Meldeliste nach Benutzereingabe im Parameter-Dialog.
@@ -226,7 +226,10 @@ public class PouleMeldeListeSheetNew extends SheetRunner
         if (param.isEmpty()) {
             return;
         }
-        PtmOnlineFormationsSperre.pruefeAenderung(getWorkingSpreadsheet(), TurnierSystem.POULE, param.get().formation());
+        if (!PtmOnlineNeueMeldeliste.vorbereiten(getWorkingSpreadsheet(), TurnierSystem.POULE,
+                param.get().formation())) {
+            return;
+        }
 
         getKonfigurationSheet().update();
         getSheetHelper().removeAllSheetsExclude();

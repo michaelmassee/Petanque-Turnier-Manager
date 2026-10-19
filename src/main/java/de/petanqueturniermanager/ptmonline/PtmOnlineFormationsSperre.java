@@ -64,9 +64,4 @@ public final class PtmOnlineFormationsSperre {
             throw new GenerateException(I18n.get("ptmonline.formation.gesperrt", bisherige.get().getBezeichnung()));
         }
     }
-
-    /** Wie {@link #pruefeAenderung(WorkingSpreadsheet, TurnierSystem, Formation)} für den Supermêlée-Modus. */
-    public static void pruefeSupermeleeModus(WorkingSpreadsheet ws, boolean triplette) throws GenerateException {
-        pruefeAenderung(ws, TurnierSystem.SUPERMELEE, triplette ? Formation.TRIPLETTE : Formation.DOUBLETTE);
-    }
 }

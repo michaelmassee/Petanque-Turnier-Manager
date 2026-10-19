@@ -4,6 +4,7 @@
 
 package de.petanqueturniermanager.supermelee.meldeliste;
 
+import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 import java.util.List;
@@ -29,7 +30,7 @@ import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.SpielerMeldungen;
-import de.petanqueturniermanager.ptmonline.PtmOnlineFormationsSperre;
+import de.petanqueturniermanager.ptmonline.PtmOnlineNeueMeldeliste;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
@@ -258,7 +259,10 @@ public class MeldeListeSheet_New extends SheetRunner implements IMeldeliste<Spie
 		if (param.isEmpty()) {
 			return; // Benutzer hat abgebrochen – keine Dokument-Änderungen
 		}
-		PtmOnlineFormationsSperre.pruefeSupermeleeModus(getWorkingSpreadsheet(), param.get().triplette());
+		if (!PtmOnlineNeueMeldeliste.vorbereiten(getWorkingSpreadsheet(), TurnierSystem.SUPERMELEE,
+				param.get().triplette() ? Formation.TRIPLETTE : Formation.DOUBLETTE)) {
+			return;
+		}
 
 		// Erst nach Bestätigung: TurnierSystem + Page Styles setzen
 		getKonfigurationSheet().update();

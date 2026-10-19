@@ -30,7 +30,7 @@ import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
-import de.petanqueturniermanager.ptmonline.PtmOnlineFormationsSperre;
+import de.petanqueturniermanager.ptmonline.PtmOnlineNeueMeldeliste;
 
 /**
  * Erstellt ein neues Formule X Turnier: Konfigurationsblatt + Meldeliste.
@@ -248,8 +248,10 @@ public class FormuleXMeldeListeSheetNew extends SheetRunner
         if (param.isEmpty()) {
             return;
         }
-        PtmOnlineFormationsSperre.pruefeAenderung(getWorkingSpreadsheet(), TurnierSystem.FORMULEX,
-                param.get().formation());
+        if (!PtmOnlineNeueMeldeliste.vorbereiten(getWorkingSpreadsheet(), TurnierSystem.FORMULEX,
+                param.get().formation())) {
+            return;
+        }
 
         getKonfigurationSheet().update();
         getSheetHelper().removeAllSheetsExclude();

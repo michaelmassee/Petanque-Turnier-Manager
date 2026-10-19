@@ -29,7 +29,7 @@ import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
-import de.petanqueturniermanager.ptmonline.PtmOnlineFormationsSperre;
+import de.petanqueturniermanager.ptmonline.PtmOnlineNeueMeldeliste;
 
 /**
  * Erstellt ein neues K.-O.-Turnier: Konfigurationsblatt + Meldeliste.
@@ -255,7 +255,9 @@ public class KoMeldeListeSheetNew extends SheetRunner
 
 		// Werte in KonfigSheet speichern
 		var params = result.get();
-		PtmOnlineFormationsSperre.pruefeAenderung(getWorkingSpreadsheet(), TurnierSystem.KO, params.formation());
+		if (!PtmOnlineNeueMeldeliste.vorbereiten(getWorkingSpreadsheet(), TurnierSystem.KO, params.formation())) {
+			return;
+		}
 		konfig.setMeldeListeFormation(params.formation());
 		konfig.setMeldeListeTeamnameAnzeigen(params.teamnameAnzeigen());
 		konfig.setMeldeListeVereinsnameAnzeigen(params.vereinsnameAnzeigen());
