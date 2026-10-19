@@ -1790,6 +1790,12 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	private boolean behandleWebserverBefehl(String command) throws com.sun.star.uno.Exception {
 		switch (command) {
 			case CMD_WEBSERVER_STARTEN -> {
+				if (WebServerManager.get().isLaeuft()) {
+					MessageBox.from(xContext, MessageBoxTypeEnum.INFO_OK)
+							.caption(I18n.get("webserver.starten"))
+							.message(I18n.get("webserver.bereits.gestartet")).show();
+					return true;
+				}
 				var props = GlobalProperties.get();
 				if (props.getCompositeViewKonfigurationen().isEmpty()) {
 					MessageBox.from(xContext, MessageBoxTypeEnum.INFO_OK)
@@ -1811,6 +1817,12 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				}
 			}
 			case CMD_WEBSERVER_STOPPEN -> {
+				if (!WebServerManager.get().isLaeuft()) {
+					MessageBox.from(xContext, MessageBoxTypeEnum.INFO_OK)
+							.caption(I18n.get("webserver.stoppen"))
+							.message(I18n.get("webserver.bereits.gestoppt")).show();
+					return true;
+				}
 				processBoxFuerDispatchFrame().visibleWennAutomatisch().clear().run();
 				try {
 					WebServerManager.get().stoppen();
