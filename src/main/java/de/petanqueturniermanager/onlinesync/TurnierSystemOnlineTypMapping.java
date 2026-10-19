@@ -9,8 +9,8 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
  * Ordnet das lokale {@link TurnierSystem} den passenden {@code type}-/{@code registrationType}-
- * Werten der PTM-Online-API zu (Tabelle {@code tournaments}). Wird sowohl beim Filtern der
- * Online-Turnier-Auswahlliste als auch für spätere Metadaten-Abgleiche verwendet.
+ * Werten der PTM-Online-API zu (Tabelle {@code tournaments}). Grundlage der Verbinden-Auswahl
+ * ({@link OnlineVerbindbarkeit}).
  * <p>
  * Supermelee ist serverseitig <b>kein eigener {@code type}-Wert mehr</b> (Migration
  * {@code 0031_registration_type_supermelee.sql}): dort gilt {@code type="rangliste"} <b>und</b>
@@ -50,17 +50,5 @@ public final class TurnierSystemOnlineTypMapping {
 			return "supermelee";
 		}
 		return meleeAnmeldung ? "melee" : "forme";
-	}
-
-	/**
-	 * Ob das online gemeldete Turnier ({@code type}/{@code registrationType}) zum lokalen {@link TurnierSystem}
-	 * und zur Anmeldeart des Dokuments passt.
-	 */
-	public static boolean passtZu(TurnierSystem ts, boolean meleeAnmeldung, OnlineTournamentDto online) {
-		Optional<String> erwarteterTyp = onlineTyp(ts);
-		if (erwarteterTyp.isEmpty() || !erwarteterTyp.get().equals(online.type)) {
-			return false;
-		}
-		return onlineRegistrationTyp(ts, meleeAnmeldung).equals(online.registrationType);
 	}
 }

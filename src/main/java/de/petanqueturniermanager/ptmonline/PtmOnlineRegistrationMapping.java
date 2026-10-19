@@ -107,6 +107,11 @@ public class PtmOnlineRegistrationMapping {
         return getImportierteOnlineIds().contains(onlineRegistrationId);
     }
 
+    /** Ob dem Online-Turnier bereits Meldungen zugeordnet sind – liest nur das Blatt „PTMOnline Sync“. */
+    public boolean hatZuordnungen() throws GenerateException {
+        return !syncSheet.getLokaleUuids().isEmpty();
+    }
+
     /** Alle bereits zugeordneten Online-IDs – einmal lesen statt {@link #istBereitsImportiert} je Anmeldung. */
     public Set<String> getImportierteOnlineIds() throws GenerateException {
         return new LinkedHashSet<>(getOnlineIdsProUuid().values());

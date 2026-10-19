@@ -28,6 +28,7 @@ import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
+import de.petanqueturniermanager.ptmonline.PtmOnlineFormationsSperre;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
@@ -237,11 +238,13 @@ public class SchweizerMeldeListeSheetNew extends SheetRunner
 		if (param.isEmpty()) {
 			return; // Benutzer hat abgebrochen – keine Dokument-Änderungen
 		}
+		var parameter = param.get();
+		PtmOnlineFormationsSperre.pruefeAenderung(getWorkingSpreadsheet(), TurnierSystem.SCHWEIZER,
+				parameter.formation());
 
 		// Erst nach Bestätigung: TurnierSystem + Page Styles setzen
 		getKonfigurationSheet().update();
 
-		var parameter = param.get();
 		getSheetHelper().removeAllSheetsExclude();
 		getKonfigurationSheet().setRankingModus(parameter.rankingModus());
 		createMeldelisteWithParams(parameter.formation(), parameter.teamnameAnzeigen(), parameter.vereinsnameAnzeigen(),

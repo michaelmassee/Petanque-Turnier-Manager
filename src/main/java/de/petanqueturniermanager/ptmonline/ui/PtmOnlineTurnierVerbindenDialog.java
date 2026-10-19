@@ -37,10 +37,11 @@ import de.petanqueturniermanager.helper.LoMainThread;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.konfigdialog.AbstractUnoDialog;
 import de.petanqueturniermanager.onlinesync.OnlineTournamentDto;
+import de.petanqueturniermanager.onlinesync.OnlineVerbindbarkeit;
 
 /**
- * Auswahldialog "Mit Online-Turnier verbinden": listet die vom Aufrufer bereits nach
- * Turniersystem gefilterten, zum aktiven API-Key gehörenden PTM-Online-Turniere auf.
+ * Auswahldialog "Mit Online-Turnier verbinden": zeigt alle zum aktiven API-Key gehörenden PTM-Online-Turniere in zwei
+ * Listen – oben die verbindbaren zur Auswahl, unten die übrigen mit dem Grund, warum sie nicht passen.
  */
 final class PtmOnlineTurnierVerbindenDialog extends AbstractUnoDialog {
 
@@ -48,7 +49,8 @@ final class PtmOnlineTurnierVerbindenDialog extends AbstractUnoDialog {
 	private static final Duration DIALOG_TIMEOUT = Duration.ofMinutes(30);
 
 	private final XWindowPeer parentPeer;
-	private final List<OnlineTournamentDto> kandidaten;
+	private final List<OnlineTournamentDto> verbindbare;
+	private final List<OnlineVerbindbarkeit.Bewertung> nichtVerbindbare;
 
 	private XControlContainer xcc;
 	private XDialog xDialog;
@@ -57,27 +59,30 @@ final class PtmOnlineTurnierVerbindenDialog extends AbstractUnoDialog {
 	private OnlineTournamentDto ausgewaehlt;
 
 	private PtmOnlineTurnierVerbindenDialog(XComponentContext ctx, XWindowPeer parentPeer,
-			List<OnlineTournamentDto> kandidaten, String eigeneTurnierId) {
+			List<OnlineVerbindbarkeit.Bewertung> bewertungen, String eigeneTurnierId) {
 		super(ctx);
 		this.parentPeer = parentPeer;
-		this.kandidaten = kandidaten;
+		this.verbindbare = bewertungen.stream().filter(OnlineVerbindbarkeit.Bewertung::istVerbindbar)
+				.map(OnlineVerbindbarkeit.Bewertung::turnier).toList();
+		this.nichtVerbindbare = bewertungen.stream().filter(bewertung -> !bewertung.istVerbindbar()).toList();
 		this.eigeneTurnierId = eigeneTurnierId;
 	}
 
 	/**
+	 * @param bewertungen     alle Online-Turniere des API-Keys mit ihrer Verbindbarkeit
 	 * @param eigeneTurnierId Online-Turnier, mit dem dieses Dokument bereits verbunden ist, sonst {@code null} –
 	 *                        für den Verbindungsstatus je Listeneintrag
 	 */
 	static Optional<OnlineTournamentDto> zeigen(XComponentContext ctx, XWindowPeer parentPeer,
-			List<OnlineTournamentDto> kandidaten, String eigeneTurnierId) throws GenerateException {
-		logger.info("PtmOnlineTurnierVerbindenDialog.zeigen(): poste auf Main-Thread (Thread={}, {} Kandidaten)",
-				Thread.currentThread().getName(), kandidaten.size());
+			List<OnlineVerbindbarkeit.Bewertung> bewertungen, String eigeneTurnierId) throws GenerateException {
+		logger.info("PtmOnlineTurnierVerbindenDialog.zeigen(): poste auf Main-Thread (Thread={}, {} Turniere)",
+				Thread.currentThread().getName(), bewertungen.size());
 		var future = new CompletableFuture<Optional<OnlineTournamentDto>>();
 		LoMainThread.post(ctx, () -> {
 			logger.info("PtmOnlineTurnierVerbindenDialog: Main-Thread-Callback laeuft (Thread={})",
 					Thread.currentThread().getName());
 			try {
-				var dialog = new PtmOnlineTurnierVerbindenDialog(ctx, parentPeer, kandidaten, eigeneTurnierId);
+				var dialog = new PtmOnlineTurnierVerbindenDialog(ctx, parentPeer, bewertungen, eigeneTurnierId);
 				dialog.erstelleUndAusfuehren();
 				logger.info("PtmOnlineTurnierVerbindenDialog: erstelleUndAusfuehren() zurueck, ausgewaehlt={}",
 						dialog.ausgewaehlt != null);
@@ -108,12 +113,12 @@ final class PtmOnlineTurnierVerbindenDialog extends AbstractUnoDialog {
 
 	@Override
 	protected int getBreite() {
-		return 260;
+		return 320;
 	}
 
 	@Override
 	protected int getHoehe() {
-		return 160;
+		return 236;
 	}
 
 	@Override
@@ -129,14 +134,22 @@ final class PtmOnlineTurnierVerbindenDialog extends AbstractUnoDialog {
 		this.xcc = Lo.qi(XControlContainer.class, dialog);
 
 		label(xMSF, cont, "lblHinweis",
-				kandidaten.isEmpty()
+				verbindbare.isEmpty()
 						? I18n.get("ptmonline.turnier.verbinden.dialog.keine.turniere")
 						: I18n.get("ptmonline.turnier.verbinden.dialog.hinweis"),
-				8, 8, 244, 20);
-		listBox(xMSF, cont, "lstTurniere", turnierItems(), 0, 8, 30, 244, 100);
+				8, 6, 304, 20);
+		label(xMSF, cont, "lblVerbindbar", I18n.get("ptmonline.turnier.verbinden.dialog.liste.verbindbar"),
+				8, 26, 304, 10);
+		listBox(xMSF, cont, "lstTurniere", verbindbarItems(), false, 8, 37, 304, 74);
+		label(xMSF, cont, "lblNichtVerbindbar", I18n.get("ptmonline.turnier.verbinden.dialog.liste.nicht_verbindbar"),
+				8, 117, 304, 10);
+		listBox(xMSF, cont, "lstNichtVerbindbar", nichtVerbindbarItems(), true, 8, 128, 304, 74);
 
-		button(xMSF, cont, "btnOk", I18n.get("dialog.ok"), 60, 136, 55, 14, (short) PushButtonType.STANDARD_value);
-		button(xMSF, cont, "btnAbbrechen", I18n.get("dialog.abbrechen"), 125, 136, 75, 14, (short) PushButtonType.CANCEL_value);
+		button(xMSF, cont, "btnOk", I18n.get("dialog.ok"), 90, 212, 55, 14, (short) PushButtonType.STANDARD_value);
+		button(xMSF, cont, "btnAbbrechen", I18n.get("dialog.abbrechen"), 155, 212, 75, 14, (short) PushButtonType.CANCEL_value);
+		if (verbindbare.isEmpty()) {
+			Lo.qi(XPropertySet.class, cont.getByName("btnOk")).setPropertyValue("Enabled", Boolean.FALSE);
+		}
 		registriereOkButton();
 	}
 
@@ -163,9 +176,9 @@ final class PtmOnlineTurnierVerbindenDialog extends AbstractUnoDialog {
 	}
 
 	private void beimOkGeklickt() {
-		if (!kandidaten.isEmpty()) {
+		if (!verbindbare.isEmpty()) {
 			int index = listBoxIndex("lstTurniere");
-			ausgewaehlt = kandidaten.get(Math.max(0, Math.min(kandidaten.size() - 1, index)));
+			ausgewaehlt = verbindbare.get(Math.max(0, Math.min(verbindbare.size() - 1, index)));
 		}
 		xDialog.endExecute();
 	}
@@ -176,17 +189,20 @@ final class PtmOnlineTurnierVerbindenDialog extends AbstractUnoDialog {
 		return listBox == null ? 0 : listBox.getSelectedItemPos();
 	}
 
-	private String[] turnierItems() {
-		if (kandidaten.isEmpty()) {
-			return new String[0];
-		}
-		String[] items = new String[kandidaten.size()];
-		for (int i = 0; i < kandidaten.size(); i++) {
-			OnlineTournamentDto t = kandidaten.get(i);
-			items[i] = StringUtils.defaultString(t.name) + "  —  " + StringUtils.defaultString(t.date)
-					+ "  (" + StringUtils.defaultString(t.status) + ")  —  " + verbindungsStatus(t);
-		}
-		return items;
+	private String[] verbindbarItems() {
+		return verbindbare.stream()
+				.map(t -> kopf(t) + "  (" + StringUtils.defaultString(t.status) + ")  —  " + verbindungsStatus(t))
+				.toArray(String[]::new);
+	}
+
+	private String[] nichtVerbindbarItems() {
+		return nichtVerbindbare.stream()
+				.map(bewertung -> kopf(bewertung.turnier()) + "  —  " + bewertung.hinderungsgrund().orElse(""))
+				.toArray(String[]::new);
+	}
+
+	private static String kopf(OnlineTournamentDto turnier) {
+		return StringUtils.defaultString(turnier.name) + "  —  " + StringUtils.defaultString(turnier.date);
 	}
 
 	/** Online und Dokument sind immer 1:1 verbunden – die Liste zeigt, wer ein Turnier gerade hält. */
@@ -211,8 +227,11 @@ final class PtmOnlineTurnierVerbindenDialog extends AbstractUnoDialog {
 		cont.insertByName(name, model);
 	}
 
+	/**
+	 * @param nurAnzeige {@code true}: ohne Auswahl, nur zum Lesen (die nicht verbindbaren Turniere)
+	 */
 	private static void listBox(XMultiServiceFactory xMSF, XNameContainer cont,
-			String name, String[] items, int vorauswahl, int x, int y, int w, int h)
+			String name, String[] items, boolean nurAnzeige, int x, int y, int w, int h)
 			throws com.sun.star.uno.Exception {
 		var model = xMSF.createInstance("com.sun.star.awt.UnoControlListBoxModel");
 		var props = Lo.qi(XPropertySet.class, model);
@@ -223,8 +242,9 @@ final class PtmOnlineTurnierVerbindenDialog extends AbstractUnoDialog {
 		props.setPropertyValue("StringItemList", items);
 		props.setPropertyValue("MultiSelection", Boolean.FALSE);
 		props.setPropertyValue("Dropdown", Boolean.FALSE);
-		if (items.length > 0) {
-			props.setPropertyValue("SelectedItems", new short[] { (short) Math.max(0, vorauswahl) });
+		props.setPropertyValue("ReadOnly", nurAnzeige);
+		if (items.length > 0 && !nurAnzeige) {
+			props.setPropertyValue("SelectedItems", new short[] { 0 });
 		}
 		cont.insertByName(name, model);
 	}

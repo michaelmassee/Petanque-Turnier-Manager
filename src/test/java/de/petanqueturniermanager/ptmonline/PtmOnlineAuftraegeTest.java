@@ -140,6 +140,8 @@ class PtmOnlineAuftraegeTest {
 
         assertThat(PtmOnlineAuftraege.ablehnungsHinweis("composition_locked"))
                 .isEqualTo(I18n.get("ptmonline.konflikt.hinweis.abgelehnt.composition_locked"));
+        assertThat(PtmOnlineAuftraege.ablehnungsHinweis("formation_locked"))
+                .isEqualTo(I18n.get("ptmonline.konflikt.hinweis.abgelehnt.formation_locked"));
         assertThat(PtmOnlineAuftraege.ablehnungsHinweis("HTTP 500")).contains("HTTP 500");
     }
 

@@ -375,8 +375,8 @@ public final class PtmOnlineAuftraege {
     /** Was eine Ablehnung bedeutet und was zu tun ist; unbekannte Gründe erscheinen unverändert. */
     static String ablehnungsHinweis(String grund) {
         return switch (grund) {
-            case "composition_locked", "registration_drawn", "user_id_invalid", "unit_invalid", "execution_conflict",
-                    CODE_TURNIER_LAEUFT -> I18n.get("ptmonline.konflikt.hinweis.abgelehnt." + grund);
+            case "composition_locked", "formation_locked", "registration_drawn", "user_id_invalid", "unit_invalid",
+                    "execution_conflict", CODE_TURNIER_LAEUFT -> I18n.get("ptmonline.konflikt.hinweis.abgelehnt." + grund);
             default -> I18n.get("ptmonline.konflikt.hinweis.abgelehnt", grund);
         };
     }

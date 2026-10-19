@@ -7,19 +7,24 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 
-/** Nur nicht abgeschlossene Online-Turniere lassen sich mit einem Turnierdokument verbinden. */
 class OnlineTournamentDtoTest {
 
 	@Test
-	void abgeschlossenesTurnierIstNichtVerbindbar() {
-		assertThat(turnier("finished").istVerbindbar()).isFalse();
+	void nurBeendetesTurnierIstAbgeschlossen() {
+		assertThat(turnier("finished").istAbgeschlossen()).isTrue();
+		assertThat(turnier("draft").istAbgeschlossen()).isFalse();
+		assertThat(turnier("registration").istAbgeschlossen()).isFalse();
+		assertThat(turnier("running").istAbgeschlossen()).isFalse();
 	}
 
 	@Test
-	void entwurfOffeneAnmeldungUndLaufendesTurnierSindVerbindbar() {
-		assertThat(turnier("draft").istVerbindbar()).isTrue();
-		assertThat(turnier("registration").istVerbindbar()).isTrue();
-		assertThat(turnier("running").istVerbindbar()).isTrue();
+	void andereFormationErsetztGespeicherteTete() {
+		OnlineTournamentDto turnier = turnier("registration");
+		turnier.formation = "tete";
+
+		assertThat(turnier.formationsWert()).isEqualTo("tete");
+		turnier.formationOther = true;
+		assertThat(turnier.formationsWert()).isEqualTo(OnlineTournamentDto.FORMATION_ANDERE);
 	}
 
 	private static OnlineTournamentDto turnier(String status) {

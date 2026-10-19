@@ -12,6 +12,9 @@ import com.google.gson.annotations.SerializedName;
  */
 public class OnlineTournamentDto {
 
+	/** Vergleichswert für die online frei gewählte Formation ohne feste Teamgröße. */
+	public static final String FORMATION_ANDERE = "andere";
+
 	public String id;
 	public String name;
 	public String date;
@@ -20,6 +23,12 @@ public class OnlineTournamentDto {
 	@SerializedName("registrationType")
 	public String registrationType;
 
+	/** {@code tete}, {@code doublette} oder {@code triplette}; bei {@link #formationOther} gespeichert als {@code tete}. */
+	public String formation;
+
+	@SerializedName("formationOther")
+	public boolean formationOther;
+
 	public String status;
 
 	@SerializedName("documentManaged")
@@ -27,9 +36,14 @@ public class OnlineTournamentDto {
 
 	/**
 	 * Abgeschlossene Turniere nehmen kein Turnierdokument mehr an (PTM-Online lehnt das Verbinden mit
-	 * {@code tournament_finished} ab) und erscheinen daher nicht in der Verbinden-Auswahl.
+	 * {@code tournament_finished} ab).
 	 */
-	public boolean istVerbindbar() {
-		return !"finished".equals(status);
+	public boolean istAbgeschlossen() {
+		return "finished".equals(status);
+	}
+
+	/** Formation, wie sie mit der des Dokuments verglichen wird: {@code andere} statt des gespeicherten {@code tete}. */
+	public String formationsWert() {
+		return formationOther ? FORMATION_ANDERE : formation;
 	}
 }

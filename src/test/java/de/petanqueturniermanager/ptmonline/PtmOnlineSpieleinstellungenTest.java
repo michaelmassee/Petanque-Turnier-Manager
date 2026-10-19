@@ -67,8 +67,13 @@ class PtmOnlineSpieleinstellungenTest {
         assertThat(PtmOnlineSpieleinstellungen.onlineFormation(Formation.TRIPLETTE)).isEqualTo("triplette");
         assertThat(PtmOnlineSpieleinstellungen.onlineFormation(Formation.MELEE)).isNull();
         assertThat(PtmOnlineSpieleinstellungen.onlineFormation(Formation.NUR_TEAMNAME)).isNull();
-        assertThat(PtmOnlineSpieleinstellungen.supermeleeFormation(SuperMeleeMode.Doublette)).isEqualTo("doublette");
         assertThat(PtmOnlineSpieleinstellungen.onlineRankingModus(SchweizerRankingModus.OHNE_BUCHHOLZ))
                 .isEqualTo("ohne_buchholz");
+    }
+
+    @Test
+    void supermeleeModusEntsprichtDerFormation() {
+        assertThat(PtmOnlineFormation.ausSupermeleeModus(SuperMeleeMode.Triplette)).isEqualTo(Formation.TRIPLETTE);
+        assertThat(PtmOnlineFormation.ausSupermeleeModus(SuperMeleeMode.Doublette)).isEqualTo(Formation.DOUBLETTE);
     }
 }

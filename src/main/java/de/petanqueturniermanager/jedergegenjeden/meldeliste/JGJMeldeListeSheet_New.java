@@ -27,6 +27,7 @@ import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.ptmonline.PtmOnlineFormationsSperre;
 
 /**
  * Erstellung 01.08.2022 / Michael Massee
@@ -201,6 +202,7 @@ public class JGJMeldeListeSheet_New extends SheetRunner implements IMeldeliste<T
 		if (param.isEmpty()) {
 			return; // Benutzer hat abgebrochen – keine Dokument-Änderungen
 		}
+		PtmOnlineFormationsSperre.pruefeAenderung(getWorkingSpreadsheet(), TurnierSystem.JGJ, param.get().formation());
 
 		// Erst nach Bestätigung: TurnierSystem + Page Styles setzen
 		getKonfigurationSheet().update();

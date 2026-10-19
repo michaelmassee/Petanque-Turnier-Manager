@@ -13,17 +13,12 @@ import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.formulex.konfiguration.FormuleXKonfigurationSheet;
-import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationSheet;
-import de.petanqueturniermanager.kaskade.konfiguration.KaskadeKonfigurationSheet;
 import de.petanqueturniermanager.ko.konfiguration.KoKonfigurationSheet;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
-import de.petanqueturniermanager.poule.konfiguration.PouleKonfigurationSheet;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsBestand;
 import de.petanqueturniermanager.ptmonline.dto.SpieleinstellungenDto;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerRankingModus;
-import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
-import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
 
 /**
  * Überträgt die Spieleinstellungen des Turnierdokuments nach PTM-Online (Formation, Schweizer Ranglistenmodus,
@@ -62,12 +57,8 @@ final class PtmOnlineSpieleinstellungen {
                 yield new SpieleinstellungenDto(onlineFormation(konfiguration.getMeldeListeFormation()), null, null,
                         konfiguration.isSpielbaumSpielUmPlatz3());
             }
-            case JGJ -> nurFormation(new JGJKonfigurationSheet(ws).getMeldeListeFormation());
-            case POULE -> nurFormation(new PouleKonfigurationSheet(ws).getMeldeListeFormation());
-            case KASKADE -> nurFormation(new KaskadeKonfigurationSheet(ws).getMeldeListeFormation());
-            case SUPERMELEE -> new SpieleinstellungenDto(
-                    supermeleeFormation(new SuperMeleeKonfigurationSheet(ws).getSuperMeleeMode()), null, null, null);
-            case TRIPTETE -> nurFormation(Formation.TRIPLETTE);
+            case JGJ, POULE, KASKADE, SUPERMELEE, TRIPTETE ->
+                nurFormation(PtmOnlineFormation.ausDokument(ws, turnierSystem).orElseThrow());
             case LIGA, KEIN -> SpieleinstellungenDto.KEINE;
         };
     }
@@ -96,13 +87,6 @@ final class PtmOnlineSpieleinstellungen {
             case TETE, DOUBLETTE, TRIPLETTE -> formation.name().toLowerCase(Locale.ROOT);
             // Ohne feste Teamgröße gibt es online keine passende Formation.
             case MELEE, NUR_TEAMNAME -> null;
-        };
-    }
-
-    static String supermeleeFormation(SuperMeleeMode modus) {
-        return switch (modus) {
-            case Triplette -> onlineFormation(Formation.TRIPLETTE);
-            case Doublette -> onlineFormation(Formation.DOUBLETTE);
         };
     }
 

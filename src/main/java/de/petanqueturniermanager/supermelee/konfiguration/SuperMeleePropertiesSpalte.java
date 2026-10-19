@@ -9,6 +9,7 @@ import java.util.List;
 
 import de.petanqueturniermanager.basesheet.SheetTabFarben;
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
@@ -18,6 +19,7 @@ import de.petanqueturniermanager.konfigdialog.AuswahlConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
 import de.petanqueturniermanager.konfigdialog.HeaderFooterConfigProperty;
+import de.petanqueturniermanager.ptmonline.PtmOnlineFormationsSperre;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 
@@ -128,9 +130,11 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 				.addAuswahl(SpielrundeSpielbahn.N.name(), "Durchnummerieren (1-n)")
 				.addAuswahl(SpielrundeSpielbahn.R.name(), "Zufällig vergeben"));
 
+		// Bei einem verbundenen Online-Turnier mit Anmeldungen bleibt der Modus (= Online-Formation) fest.
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_SUPERMELEE_MODE)
 				.setDefaultVal(SuperMeleeMode.Triplette.getKey())
-				.setDescription("config.desc.supermelee.modus"))
+				.setDescription("config.desc.supermelee.modus")
+				.aktivWenn(ws -> PtmOnlineFormationsSperre.istAenderbar(ws, TurnierSystem.SUPERMELEE)))
 				.addAuswahl(SuperMeleeMode.Triplette.getKey(), "Triplette")
 				.addAuswahl(SuperMeleeMode.Doublette.getKey(), "Doublette"));
 

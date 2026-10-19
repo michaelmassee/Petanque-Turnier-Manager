@@ -30,6 +30,7 @@ import de.petanqueturniermanager.kaskade.konfiguration.KaskadeKonfigurationSheet
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.ptmonline.PtmOnlineFormationsSperre;
 
 /**
  * Erstellt ein neues Kaskaden-KO-Turnier: Konfigurationsblatt + Meldeliste.
@@ -247,6 +248,8 @@ public class KaskadeMeldeListeSheetNew extends SheetRunner
         if (param.isEmpty()) {
             return;
         }
+        PtmOnlineFormationsSperre.pruefeAenderung(getWorkingSpreadsheet(), TurnierSystem.KASKADE,
+                param.get().formation());
 
         getKonfigurationSheet().update();
         getSheetHelper().removeAllSheetsExclude();
