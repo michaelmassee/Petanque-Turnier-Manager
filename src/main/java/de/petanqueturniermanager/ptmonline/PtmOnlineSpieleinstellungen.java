@@ -49,8 +49,7 @@ final class PtmOnlineSpieleinstellungen {
             }
             case FORMULEX -> {
                 FormuleXKonfigurationSheet konfiguration = new FormuleXKonfigurationSheet(ws);
-                yield new SpieleinstellungenDto(onlineFormation(konfiguration.getMeldeListeFormation()), null,
-                        konfiguration.getAnzahlRunden(), null);
+                yield nurFormation(konfiguration.getMeldeListeFormation());
             }
             case KO -> {
                 KoKonfigurationSheet konfiguration = new KoKonfigurationSheet(ws);

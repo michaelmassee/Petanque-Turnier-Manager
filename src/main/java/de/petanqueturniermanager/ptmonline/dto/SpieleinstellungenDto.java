@@ -12,7 +12,7 @@ import org.jspecify.annotations.Nullable;
  *
  * @param formation            {@code tete}, {@code doublette} oder {@code triplette}
  * @param schweizerRankingMode {@code mit_buchholz} oder {@code ohne_buchholz}
- * @param formuleXRounds       Rundenzahl Formule X
+ * @param formuleXRounds       wird nicht mehr gesendet; Formule X hat keine feste Rundenzahl mehr
  * @param koPlatz3             Spiel um Platz 3 im KO-Turnierbaum
  */
 public record SpieleinstellungenDto(@Nullable String formation, @Nullable String schweizerRankingMode,
