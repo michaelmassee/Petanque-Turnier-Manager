@@ -77,15 +77,6 @@ public class FormuleXSpielrundeSheetNaechste extends FormuleXAbstractSpielrundeS
             neueSpielrundeNr++;
         }
 
-        int maxRunden = getKonfigurationSheet().getAnzahlRunden();
-        if (neueSpielrundeNr > maxRunden) {
-            MessageBox.from(getxContext(), MessageBoxTypeEnum.INFO_OK)
-                    .caption(I18n.get("msg.caption.formulex.max.runden"))
-                    .message(I18n.get("msg.text.formulex.max.runden.erreicht", maxRunden))
-                    .show();
-            return false;
-        }
-
         // Bestehende Rangliste aktualisieren, damit die Sortierung der Paarungen
         // auf dem aktuellen Stand basiert. Nur ab Runde >= 2 sinnvoll.
         if (neueSpielrundeNr >= 2) {

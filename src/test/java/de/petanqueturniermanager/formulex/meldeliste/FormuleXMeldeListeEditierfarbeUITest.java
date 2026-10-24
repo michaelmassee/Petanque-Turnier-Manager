@@ -44,7 +44,7 @@ class FormuleXMeldeListeEditierfarbeUITest extends BaseCalcUITest {
 
     private FormuleXMeldeListeSheetNew erzeugeMeldeliste() throws Exception {
         FormuleXMeldeListeSheetNew meldeListeNew = new FormuleXMeldeListeSheetNew(wkingSpreadsheet);
-        meldeListeNew.createMeldelisteWithParams(Formation.TRIPLETTE, true, true, 4);
+        meldeListeNew.createMeldelisteWithParams(Formation.TRIPLETTE, true, true);
         return meldeListeNew;
     }
 

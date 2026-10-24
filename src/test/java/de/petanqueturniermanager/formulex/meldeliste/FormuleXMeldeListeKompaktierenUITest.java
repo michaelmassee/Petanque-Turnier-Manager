@@ -48,7 +48,7 @@ class FormuleXMeldeListeKompaktierenUITest extends BaseCalcUITest {
     @MethodSource("formationUndTeamname")
     void meldelisteWirdKompaktiert(Formation formation, boolean teamnameAktiv) throws Exception {
         FormuleXMeldeListeSheetNew meldeListeNew = new FormuleXMeldeListeSheetNew(wkingSpreadsheet);
-        meldeListeNew.createMeldelisteWithParams(formation, teamnameAktiv, false, 4);
+        meldeListeNew.createMeldelisteWithParams(formation, teamnameAktiv, false);
 
         int anzSpieler = formation.getAnzSpieler();
         int ersteDatenZeile = FormuleXListeDelegate.ERSTE_DATEN_ZEILE;
@@ -122,7 +122,7 @@ class FormuleXMeldeListeKompaktierenUITest extends BaseCalcUITest {
     @Test
     void zeileMitLeeremVornameAberGefuelltemNachnameBleibtErhalten() throws Exception {
         FormuleXMeldeListeSheetNew meldeListeNew = new FormuleXMeldeListeSheetNew(wkingSpreadsheet);
-        meldeListeNew.createMeldelisteWithParams(Formation.TETE, false, false, 4);
+        meldeListeNew.createMeldelisteWithParams(Formation.TETE, false, false);
 
         int ersteDatenZeile = FormuleXListeDelegate.ERSTE_DATEN_ZEILE;
         int vornameSpalte = meldeListeNew.getVornameSpalte(0);
@@ -168,7 +168,7 @@ class FormuleXMeldeListeKompaktierenUITest extends BaseCalcUITest {
     @Test
     void namenUndTeamnameWerdenGetrimmtUndWhitespaceOnlyGiltAlsLeer() throws Exception {
         FormuleXMeldeListeSheetNew meldeListeNew = new FormuleXMeldeListeSheetNew(wkingSpreadsheet);
-        meldeListeNew.createMeldelisteWithParams(Formation.TETE, true, false, 4);
+        meldeListeNew.createMeldelisteWithParams(Formation.TETE, true, false);
 
         int ersteDatenZeile = FormuleXListeDelegate.ERSTE_DATEN_ZEILE;
         int teamnameSpalte = meldeListeNew.getTeamnameSpalte();

@@ -96,7 +96,7 @@ class MeldeListeSpielerDoppelteNamenFehlerfarbeUITest extends BaseCalcUITest {
 
 	private XSpreadsheet erstelleFormuleXMeldeliste() throws Exception {
 		FormuleXMeldeListeSheetNew meldeliste = new FormuleXMeldeListeSheetNew(wkingSpreadsheet);
-		meldeliste.createMeldelisteWithParams(Formation.DOUBLETTE, false, false, 4);
+		meldeliste.createMeldelisteWithParams(Formation.DOUBLETTE, false, false);
 		return meldeliste.getXSpreadSheet();
 	}
 

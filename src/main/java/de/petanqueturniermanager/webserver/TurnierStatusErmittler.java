@@ -138,12 +138,8 @@ public final class TurnierStatusErmittler {
                 if (!status.spielrundeVorhanden()) {
                     yield I18n.get("sidebar.info.meldungen.erfassen");
                 }
-                if (status.beendet()) {
-                    yield I18n.get("sidebar.info.turnier.beendet");
-                }
                 yield I18n.get("sidebar.info.formulex.schritt",
-                        status.aktuelleRundeNr(), status.anzahlRunden(),
-                        status.rundeGespielt(), status.rundeGesamt());
+                        status.aktuelleRundeNr(), status.rundeGespielt(), status.rundeGesamt());
             }
             default -> "";
         };

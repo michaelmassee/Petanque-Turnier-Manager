@@ -32,7 +32,7 @@ class FormuleXMeldeListeDuplikatpruefungUITest extends BaseCalcUITest {
     @Test
     void unterschiedlicherZweiterSpielerWirdNichtFaelschlichAlsDubletteErkannt() throws Exception {
         FormuleXMeldeListeSheetNew meldeListeNew = new FormuleXMeldeListeSheetNew(wkingSpreadsheet);
-        meldeListeNew.createMeldelisteWithParams(Formation.DOUBLETTE, false, false, 4);
+        meldeListeNew.createMeldelisteWithParams(Formation.DOUBLETTE, false, false);
 
         int ersteDatenZeile = FormuleXListeDelegate.ERSTE_DATEN_ZEILE;
 
@@ -68,7 +68,7 @@ class FormuleXMeldeListeDuplikatpruefungUITest extends BaseCalcUITest {
     @Test
     void echteDubletteWirdWeiterhinErkannt() throws Exception {
         FormuleXMeldeListeSheetNew meldeListeNew = new FormuleXMeldeListeSheetNew(wkingSpreadsheet);
-        meldeListeNew.createMeldelisteWithParams(Formation.DOUBLETTE, false, false, 4);
+        meldeListeNew.createMeldelisteWithParams(Formation.DOUBLETTE, false, false);
 
         int ersteDatenZeile = FormuleXListeDelegate.ERSTE_DATEN_ZEILE;
 

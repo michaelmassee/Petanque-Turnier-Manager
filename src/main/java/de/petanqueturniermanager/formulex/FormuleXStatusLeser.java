@@ -8,9 +8,7 @@ import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellContentType;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
-import de.petanqueturniermanager.formulex.konfiguration.FormuleXPropertiesSpalte;
 import de.petanqueturniermanager.formulex.spielrunde.FormuleXAbstractSpielrundeSheet;
-import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 
 /**
@@ -33,8 +31,6 @@ public class FormuleXStatusLeser {
 
     public FormuleXTurnierSchritt liesStatus() {
         var xDoc = workingSpreadsheet.getWorkingSpreadsheetDocument();
-        var docPropHelper = new DocumentPropertiesHelper(workingSpreadsheet);
-        int anzahlRunden = docPropHelper.getIntProperty(FormuleXPropertiesSpalte.KONFIG_PROP_ANZAHL_RUNDEN, 4);
 
         int hoechsteRunde = 0;
         XSpreadsheet hoechsteRundeSheet = null;
@@ -49,15 +45,11 @@ public class FormuleXStatusLeser {
         }
 
         if (hoechsteRundeSheet == null) {
-            return new FormuleXTurnierSchritt(false, 0, 0, 0, anzahlRunden, false);
+            return new FormuleXTurnierSchritt(false, 0, 0, 0);
         }
 
         int[] zaehler = zaehleSpiele(hoechsteRundeSheet);
-        int gespielt = zaehler[0];
-        int gesamt = zaehler[1];
-
-        boolean beendet = hoechsteRunde >= anzahlRunden && gesamt > 0 && gespielt == gesamt;
-        return new FormuleXTurnierSchritt(true, hoechsteRunde, gespielt, gesamt, anzahlRunden, beendet);
+        return new FormuleXTurnierSchritt(true, hoechsteRunde, zaehler[0], zaehler[1]);
     }
 
     private int[] zaehleSpiele(XSpreadsheet sheet) {

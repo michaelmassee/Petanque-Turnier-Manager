@@ -212,9 +212,9 @@ public class FormuleXMeldeListeSheetNew extends SheetRunner
      * Wird auch von TestDaten-Klassen aufgerufen.
      */
     public void createMeldelisteWithParams(Formation formation, boolean teamnameAnzeigen,
-            boolean vereinsnameAnzeigen, int anzahlRunden) throws GenerateException {
-        logger.info("Erstelle Formule X Meldeliste: formation={}, teamname={}, verein={}, runden={}",
-                formation, teamnameAnzeigen, vereinsnameAnzeigen, anzahlRunden);
+            boolean vereinsnameAnzeigen) throws GenerateException {
+        logger.info("Erstelle Formule X Meldeliste: formation={}, teamname={}, verein={}",
+                formation, teamnameAnzeigen, vereinsnameAnzeigen);
 
         var neuesSheet = NewSheet.from(this, SheetNamen.meldeliste(), METADATA_SCHLUESSEL)
                 .pos(DefaultSheetPos.MELDELISTE).hideGrid().tabColor(getKonfigurationSheet().getMeldelisteTabFarbe()).setDocVersionWhenNew().create();
@@ -222,7 +222,6 @@ public class FormuleXMeldeListeSheetNew extends SheetRunner
             getKonfigurationSheet().setMeldeListeFormation(formation);
             getKonfigurationSheet().setMeldeListeTeamnameAnzeigen(teamnameAnzeigen);
             getKonfigurationSheet().setMeldeListeVereinsnameAnzeigen(vereinsnameAnzeigen);
-            getKonfigurationSheet().setAnzahlRunden(anzahlRunden);
             upDateSheet();
         }
     }
@@ -237,7 +236,7 @@ public class FormuleXMeldeListeSheetNew extends SheetRunner
         Optional<FormuleXTurnierParameterDialog.TurnierParameter> param;
         try {
             param = FormuleXTurnierParameterDialog.from(getWorkingSpreadsheet())
-                    .anzeigen(Formation.TRIPLETTE, true, false, 4);
+                    .anzeigen(Formation.TRIPLETTE, true, false);
         } catch (com.sun.star.uno.Exception e) {
             String errMsg = I18n.get("error.dialog.parameterdialog", e.getMessage());
             logger.error(errMsg, e);
@@ -253,8 +252,7 @@ public class FormuleXMeldeListeSheetNew extends SheetRunner
         createMeldelisteWithParams(
                 param.get().formation(),
                 param.get().teamnameAnzeigen(),
-                param.get().vereinsnameAnzeigen(),
-                param.get().anzahlRunden());
+                param.get().vereinsnameAnzeigen());
         if (param.get().meleeAnmeldung()) {
             MeleeAnmeldungKonfiguration.einschalten(getWorkingSpreadsheet());
             new FormuleXMeleeAnmeldungSheet(getWorkingSpreadsheet()).generate();

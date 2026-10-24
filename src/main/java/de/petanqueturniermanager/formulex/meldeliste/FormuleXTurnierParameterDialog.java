@@ -14,7 +14,6 @@ import com.sun.star.awt.XControlContainer;
 import com.sun.star.awt.XControlModel;
 import com.sun.star.awt.XDialog;
 import com.sun.star.awt.XListBox;
-import com.sun.star.awt.XSpinField;
 import com.sun.star.awt.XToolkit;
 import com.sun.star.awt.XWindow;
 import com.sun.star.beans.XPropertySet;
@@ -42,7 +41,6 @@ import de.petanqueturniermanager.helper.msgbox.ProcessBox;
  *   <li>Teamname anzeigen: Ja / Nein (Checkbox)</li>
  *   <li>Vereinsname anzeigen: Ja / Nein (Checkbox)</li>
  *   <li>Mêlée-Anmeldung (nur bei Doublette/Triplette)</li>
- *   <li>Anzahl Runden (Spinner, Minimum 1)</li>
  * </ul>
  */
 class FormuleXTurnierParameterDialog {
@@ -51,8 +49,7 @@ class FormuleXTurnierParameterDialog {
             Formation formation,
             boolean teamnameAnzeigen,
             boolean vereinsnameAnzeigen,
-            boolean meleeAnmeldung,
-            int anzahlRunden) {
+            boolean meleeAnmeldung) {
     }
 
     private final WorkingSpreadsheet workingSpreadsheet;
@@ -67,7 +64,7 @@ class FormuleXTurnierParameterDialog {
     }
 
     Optional<TurnierParameter> anzeigen(Formation standardFormation, boolean standardTeamnameAnzeigen,
-            boolean standardVereinsnameAnzeigen, int standardAnzahlRunden) throws com.sun.star.uno.Exception {
+            boolean standardVereinsnameAnzeigen) throws com.sun.star.uno.Exception {
 
         ProcessBox.from().hide();
 
@@ -79,7 +76,7 @@ class FormuleXTurnierParameterDialog {
         dlgProps.setPropertyValue("PositionX", Integer.valueOf(50));
         dlgProps.setPropertyValue("PositionY", Integer.valueOf(50));
         dlgProps.setPropertyValue("Width", Integer.valueOf(160));
-        dlgProps.setPropertyValue("Height", Integer.valueOf(130 + MeleeAnmeldungDialogOption.HOEHE));
+        dlgProps.setPropertyValue("Height", Integer.valueOf(108 + MeleeAnmeldungDialogOption.HOEHE));
         dlgProps.setPropertyValue("Title", I18n.get("dialog.formulex.turnier.parameter.titel"));
         dlgProps.setPropertyValue("Moveable", Boolean.TRUE);
 
@@ -110,13 +107,8 @@ class FormuleXTurnierParameterDialog {
         int y = MeleeAnmeldungDialogOption.HOEHE;
         fuegeTrennlinie(xMSF, cont, "sep2", 5, 58 + y, 150, 2);
 
-        fuegeLabel(xMSF, cont, "lblAnzahlRunden", I18n.get("dialog.formulex.label.anzahl.runden"), 8, 64 + y, 100, 10);
-        fuegeSpinner(xMSF, cont, "spinnerRunden", 110, 62 + y, 40, 12, standardAnzahlRunden, 1, 20);
-
-        fuegeTrennlinie(xMSF, cont, "sep3", 5, 80 + y, 150, 2);
-
-        fuegeButton(xMSF, cont, "btnOk", I18n.get("dialog.button.ok"), 22, 108 + y, 50, 14);
-        fuegeButton(xMSF, cont, "btnCancel", I18n.get("dialog.button.abbrechen"), 88, 108 + y, 60, 14);
+        fuegeButton(xMSF, cont, "btnOk", I18n.get("dialog.button.ok"), 22, 86 + y, 50, 14);
+        fuegeButton(xMSF, cont, "btnCancel", I18n.get("dialog.button.abbrechen"), 88, 86 + y, 60, 14);
 
         MeleeAnmeldungDialogOption.anFormationKoppeln(xcc, () -> leseFormation(xcc), "lstFormation");
 
@@ -161,9 +153,8 @@ class FormuleXTurnierParameterDialog {
             boolean teamnameAnzeigen = formation == Formation.NUR_TEAMNAME || leseCheckBoxZustand(xcc, "cbTeamname");
             boolean vereinsnameAnzeigen = leseCheckBoxZustand(xcc, "cbVereinsname");
             boolean meleeAnmeldung = MeleeAnmeldungDialogOption.istGewaehlt(xcc, formation);
-            int anzahlRunden = leseSpinnerWert(xcc, "spinnerRunden", standardAnzahlRunden);
             ergebnis = Optional.of(new TurnierParameter(formation, teamnameAnzeigen, vereinsnameAnzeigen,
-                    meleeAnmeldung, anzahlRunden));
+                    meleeAnmeldung));
         }
 
         Lo.qi(XComponent.class, dialog).dispose();
@@ -210,24 +201,6 @@ class FormuleXTurnierParameterDialog {
         }
         XCheckBox cb = Lo.qi(XCheckBox.class, ctrl);
         return cb != null && cb.getState() == 1;
-    }
-
-    private int leseSpinnerWert(XControlContainer xcc, String name, int fallback) {
-        XControl ctrl = xcc.getControl(name);
-        if (ctrl == null) {
-            return fallback;
-        }
-        XSpinField sf = Lo.qi(XSpinField.class, ctrl);
-        if (sf == null) {
-            return fallback;
-        }
-        try {
-            XPropertySet props = Lo.qi(XPropertySet.class, ctrl.getModel());
-            Object val = props.getPropertyValue("Value");
-            return val instanceof Number n ? n.intValue() : fallback;
-        } catch (Exception e) {
-            return fallback;
-        }
     }
 
     private void haengeButtonListener(XControlContainer xcc, String name, XActionListener listener) {
@@ -282,24 +255,6 @@ class FormuleXTurnierParameterDialog {
         props.setPropertyValue("Width", Integer.valueOf(w));
         props.setPropertyValue("Height", Integer.valueOf(h));
         props.setPropertyValue("State", (short) (angehaekt ? 1 : 0));
-        cont.insertByName(name, model);
-    }
-
-    private void fuegeSpinner(XMultiServiceFactory xMSF, XNameContainer cont,
-            String name, int x, int y, int w, int h, int wert, int min, int max)
-            throws com.sun.star.uno.Exception {
-        Object model = xMSF.createInstance("com.sun.star.awt.UnoControlNumericFieldModel");
-        XPropertySet props = Lo.qi(XPropertySet.class, model);
-        props.setPropertyValue("PositionX", Integer.valueOf(x));
-        props.setPropertyValue("PositionY", Integer.valueOf(y));
-        props.setPropertyValue("Width", Integer.valueOf(w));
-        props.setPropertyValue("Height", Integer.valueOf(h));
-        props.setPropertyValue("Value", (double) wert);
-        props.setPropertyValue("ValueMin", (double) min);
-        props.setPropertyValue("ValueMax", (double) max);
-        props.setPropertyValue("ValueStep", 1.0);
-        props.setPropertyValue("DecimalAccuracy", (short) 0);
-        props.setPropertyValue("Spin", Boolean.TRUE);
         cont.insertByName(name, model);
     }
 
