@@ -118,6 +118,15 @@ Sind alle Paarungen in einem Durchgang unterzubringen (`bloecke.size() <= 1`, z.
 bei 3 Bahnen), findet **keine** Aufteilung statt — weder Zeit-Verkettung zwischen Durchgängen noch
 Trennlinien noch Bahn-Neu-Nummerierung.
 
+### Freilos
+
+Ein Freilos belegt keine Bahn und zählt daher **nicht** zur Auslastung eines Durchgangs. Die
+Spielrunden verwenden `DurchgangAufteilungRechner.berechneZeilen(...)`: Aufgeteilt wird nach der
+Anzahl der tatsächlich gespielten Paarungen, die Freilos-Zeile wird dem Durchgang zugeschlagen, in
+dem sie steht (Freilos am Rundenende → letzter Durchgang). Beispiel: 8 Spiele + 1 Freilos bei 8
+Bahnen → **ein** Durchgang mit 9 Zeilen statt eines zweiten Durchgangs nur für das Freilos. Die
+Bahn-Nr-Zelle der Freilos-Zeile bleibt in allen Modi leer und verbraucht keine Nummer.
+
 ---
 
 ## 4. Zeitplan-Berechnung im Detail

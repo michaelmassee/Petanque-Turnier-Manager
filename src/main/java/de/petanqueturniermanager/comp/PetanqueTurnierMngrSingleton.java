@@ -489,8 +489,8 @@ public class PetanqueTurnierMngrSingleton {
 				SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_SPIELRUNDE_PREFIX,
 				(ws, xSheet) -> new SpielplanFormatiererSheetRunner(ws, xSheet, iSheet -> {
 					Position letzte = RangeSearchHelper.from(iSheet, RangePosition.from(
-							SchweizerAbstractSpielrundeSheet.BAHN_NR_SPALTE, 0,
-							SchweizerAbstractSpielrundeSheet.BAHN_NR_SPALTE, 999))
+							SchweizerAbstractSpielrundeSheet.TEAM_A_SPALTE, 0,
+							SchweizerAbstractSpielrundeSheet.TEAM_A_SPALTE, 999))
 							.searchLastNotEmptyInSpalte();
 					if (letzte == null) return null;
 					int letzteZeile = letzte.getZeile();
@@ -513,8 +513,8 @@ public class PetanqueTurnierMngrSingleton {
 				SheetMetadataHelper.SCHLUESSEL_FORMULEX_SPIELRUNDE_PREFIX,
 				(ws, xSheet) -> new SpielplanFormatiererSheetRunner(ws, xSheet, iSheet -> {
 					Position letzte = RangeSearchHelper.from(iSheet, RangePosition.from(
-							FormuleXAbstractSpielrundeSheet.BAHN_NR_SPALTE, 0,
-							FormuleXAbstractSpielrundeSheet.BAHN_NR_SPALTE, 999))
+							FormuleXAbstractSpielrundeSheet.TEAM_A_SPALTE, 0,
+							FormuleXAbstractSpielrundeSheet.TEAM_A_SPALTE, 999))
 							.searchLastNotEmptyInSpalte();
 					if (letzte == null) return null;
 					int letzteZeile = letzte.getZeile();
@@ -562,8 +562,8 @@ public class PetanqueTurnierMngrSingleton {
 				SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX,
 				(ws, xSheet) -> new SpielplanFormatiererSheetRunner(ws, xSheet, iSheet -> {
 					Position letzte = RangeSearchHelper.from(iSheet, RangePosition.from(
-							SchweizerAbstractSpielrundeSheet.BAHN_NR_SPALTE, 0,
-							SchweizerAbstractSpielrundeSheet.BAHN_NR_SPALTE, 999))
+							SchweizerAbstractSpielrundeSheet.TEAM_A_SPALTE, 0,
+							SchweizerAbstractSpielrundeSheet.TEAM_A_SPALTE, 999))
 							.searchLastNotEmptyInSpalte();
 					if (letzte == null) return null;
 					int letzteZeile = letzte.getZeile();
