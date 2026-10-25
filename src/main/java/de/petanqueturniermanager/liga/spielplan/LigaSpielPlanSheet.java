@@ -44,6 +44,7 @@ import de.petanqueturniermanager.liga.konfiguration.LigaKonfigurationSheet;
 import de.petanqueturniermanager.liga.konfiguration.LigaPropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheetUpdate;
+import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheet;
 import de.petanqueturniermanager.model.LigaSpielPlan;
 import de.petanqueturniermanager.model.SpielErgebnis;
 import de.petanqueturniermanager.model.TeamMeldungen;
@@ -126,6 +127,23 @@ public class LigaSpielPlanSheet extends SheetRunner implements ISheet {
 	protected void doRun() throws GenerateException {
 		meldeListe.upDateSheet();
 		generate(meldeListe.getAlleMeldungen());
+		ranglisteAnlegenFallsFehlt();
+	}
+
+	/**
+	 * Legt die Rangliste an, falls sie noch fehlt. Eine vorhandene Rangliste bleibt unverändert, sie wird über
+	 * den Tab-Wechsel aktualisiert. Der Spielplan bleibt das aktive Blatt.
+	 */
+	private void ranglisteAnlegenFallsFehlt() throws GenerateException {
+		XSpreadsheet spielplan = getXSpreadSheet();
+		if (spielplan == null) {
+			return;
+		}
+		LigaRanglisteSheet rangliste = new LigaRanglisteSheet(getWorkingSpreadsheet());
+		if (rangliste.getXSpreadSheet() == null) {
+			rangliste.upDateSheet();
+			getSheetHelper().setActiveSheet(spielplan);
+		}
 	}
 
 	public void generate(TeamMeldungen meldungen) throws GenerateException {

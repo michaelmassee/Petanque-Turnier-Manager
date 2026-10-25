@@ -10,6 +10,7 @@ import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.rangliste.RanglisteUpdateHelper;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 
@@ -60,5 +61,11 @@ public class PouleVorrundenRanglisteSheetUpdate extends PouleVorrundenRanglisteS
         // Rangliste; ein zusätzliches setActiveSheet aus dem selectionChanged-Handler heraus
         // kollidiert mit LO-internem Tab-Klick-Handling und revertiert den Tab-Wechsel.
         // Bei programmatischen Aufrufen übernimmt der aufrufende Parent-Runner die Aktivierung.
+    }
+
+    @Override
+    protected void vorDemSchreiben(XSpreadsheet xSheet, int anzTeams) throws GenerateException {
+        RanglisteUpdateHelper.loescheAlteZeilenBeiGeaenderterAnzahl(this, SPALTE_PLATZ, HEADER_ZEILEN, LETZTE_SPALTE,
+                anzTeams);
     }
 }

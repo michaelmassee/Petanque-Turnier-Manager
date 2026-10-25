@@ -44,6 +44,7 @@ import de.petanqueturniermanager.model.TeamPaarung;
 import de.petanqueturniermanager.supermelee.AbstractSuperMeleeRanglisteFormatter;
 import de.petanqueturniermanager.triptete.konfiguration.TripTeteKonfigurationSheet;
 import de.petanqueturniermanager.triptete.meldeliste.TripTeteMeldeListeSheetUpdate;
+import de.petanqueturniermanager.triptete.rangliste.TripTeteRanglisteSheet;
 
 /**
  * Trip-Tête-Spielplan: Round-Robin-Paarungen, pro Begegnung drei Partien
@@ -123,6 +124,23 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet {
 	protected void doRun() throws GenerateException {
 		meldeListe.upDateSheet();
 		generate(meldeListe.getAlleMeldungen());
+		ranglisteAnlegenFallsFehlt();
+	}
+
+	/**
+	 * Legt die Rangliste an, falls sie noch fehlt. Eine vorhandene Rangliste bleibt unverändert, sie wird über
+	 * den Tab-Wechsel aktualisiert. Der Spielplan bleibt das aktive Blatt.
+	 */
+	private void ranglisteAnlegenFallsFehlt() throws GenerateException {
+		XSpreadsheet spielplan = getXSpreadSheet();
+		if (spielplan == null) {
+			return;
+		}
+		TripTeteRanglisteSheet rangliste = new TripTeteRanglisteSheet(getWorkingSpreadsheet());
+		if (rangliste.getXSpreadSheet() == null) {
+			rangliste.upDateSheet();
+			getSheetHelper().setActiveSheet(spielplan);
+		}
 	}
 
 	public void generate(TeamMeldungen meldungen) throws GenerateException {

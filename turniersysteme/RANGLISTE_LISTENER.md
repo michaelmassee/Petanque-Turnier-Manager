@@ -99,3 +99,24 @@ Jeder neue Konsument (Rangliste oder anderer Sheet-Typ), der einen `SheetSyncLis
 - Programmatischer Aufruf (z.B. aus `MaastrichterFinalrundeSheet`, `PouleKoSheet`): Der aufrufende Parent-Runner setzt sein eigenes aktives Sheet.
 
 `setActiveSheet()` bleibt zulässig im **Vollaufbau** (`*RanglisteSheet.doRunIntern()` mit `forceCreate()`), weil das Sheet dort gelöscht und neu angelegt wird.
+
+## Rangliste beim Erstellen der ersten Runde anlegen
+
+Der Listener legt keine Rangliste an, das passiert beim Erstellen der ersten Runde bzw. des Spielplans. Danach bleibt das neue Spielblatt aktiv (`setActiveSheet` nach dem Vollaufbau, der die Rangliste aktiv setzt).
+
+| System | Stelle | Verhalten |
+|---|---|---|
+| Schweizer, Maastrichter-Vorrunde, Formule X | `*SpielrundeSheetNaechste.doRun()` nach Runde 1 | `getRanglistenAktualisierer()` (`*RanglisteSheetUpdate`: Vollaufbau, wenn sie fehlt). Ab Runde 2 läuft derselbe Aktualisierer wie bisher vor der neuen Runde. |
+| Supermelee | `SpielrundeSheet_Naechste.doRun()` | Tagesrangliste wird nach jeder neuen Runde per `generate()` vollständig aufgebaut (jede Runde braucht eine eigene Spalte). Die Endrangliste wird weiterhin nicht automatisch angelegt. |
+| JGJ, Liga, Trip-Tête | `*SpielPlanSheet.doRun()` | Rangliste wird nur angelegt, wenn sie fehlt. Eine vorhandene Rangliste bleibt unverändert. |
+| Poule | `PouleVorrundeSheet.doRun()` | Vorrunden-Rangliste wird nur angelegt, wenn sie fehlt. |
+
+Kaskade (Gruppenrangliste erst nach allen Kaskadenrunden) und KO (keine Rangliste) sind bewusst ausgenommen. Die TestDaten-Klassen überschreiben `doRun()` bzw. erben nicht von `*Naechste` und legen ihre Ranglisten weiterhin selbst an.
+
+## Geänderte Teamzahl im Update
+
+Die `*RanglisteSheetUpdate`-Klassen schreiben nur den Datenbereich neu. Vorher müssen alte Zeilen weg:
+- `RanglisteUpdateHelper.loescheDatenzeilen` (Schweizer, Maastrichter, Formule X, JGJ, Liga, Supermelee) leert immer bis einschließlich der alten Fußzeile (`FUSSZEILEN_ABSTAND` unter der alten letzten Datenzeile). Kommen Teams hinzu, beginnt das Leeren ab der alten letzten Datenzeile, weil die alte, verbundene Fußzeile sonst mitten in den neuen Daten läge.
+- `RanglisteUpdateHelper.loescheAlteZeilenBeiGeaenderterAnzahl` (Trip-Tête, Poule) leert nur, wenn sich die Teamzahl geändert hat.
+
+`clearRange()` löscht auch die Attribute und hebt damit die Zellverbindung der alten Fußzeile auf (LO: `ScAttrArray::DeleteArea` → `RemoveAreaMerge`). Absicherung: `RanglisteTeamAnzahlAenderungUITest`.

@@ -142,12 +142,9 @@ public class SpielrundeSheet_Naechste extends SheetRunner
 		if (naechsteSpielrundeEinfuegen()) {
 			new SpielrundeSheet_Validator(getWorkingSpreadsheet()).validateSpieltag(getSpielTag());
 
-			SpieltagRanglisteSheet spieltagRanglisteSheet = new SpieltagRanglisteSheet(getWorkingSpreadsheet());
-			String ranglisteSheetName = spieltagRanglisteSheet.getSheetName(getSpielTag());
-			XSpreadsheet xSpieltagRanglisteSheet = getSheetHelper().findByName(ranglisteSheetName);
-			if (xSpieltagRanglisteSheet != null) {
-				spieltagRanglisteSheet.generate(getSpielTag());
-			}
+			// Vollaufbau statt Update: jede neue Runde braucht eine eigene Spalte in der Tagesrangliste.
+			// Fehlt die Tagesrangliste noch, wird sie hier angelegt.
+			new SpieltagRanglisteSheet(getWorkingSpreadsheet()).generate(getSpielTag());
 
 			getSheetHelper().setActiveSheet(getXSpreadSheet());
 		}
@@ -209,7 +206,8 @@ public class SpielrundeSheet_Naechste extends SheetRunner
 	 * <p>
 	 * Existenzprüfung pro Rangliste: ein nicht angelegtes Sheet wird hier
 	 * absichtlich <em>nicht</em> erstellt – der Hook spiegelt nur den bisherigen
-	 * Stand wider.
+	 * Stand wider. Die Tagesrangliste legt {@link #doRun()} nach dem Einfügen der
+	 * Runde an.
 	 */
 	protected IRanglistenAktualisierer getRanglistenAktualisierer() {
 		return () -> {
