@@ -253,8 +253,8 @@ public class FormuleXMeldeListeSheetNew extends SheetRunner
                 param.get().formation(),
                 param.get().teamnameAnzeigen(),
                 param.get().vereinsnameAnzeigen());
-        if (param.get().meleeAnmeldung()) {
-            MeleeAnmeldungKonfiguration.einschalten(getWorkingSpreadsheet());
+        if (param.get().meleeAnmeldung().isPresent()) {
+            MeleeAnmeldungKonfiguration.einschalten(getWorkingSpreadsheet(), param.get().meleeAnmeldung().orElseThrow());
             new FormuleXMeleeAnmeldungSheet(getWorkingSpreadsheet()).generate();
         }
 

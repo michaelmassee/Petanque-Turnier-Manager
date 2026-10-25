@@ -27,6 +27,7 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungDialogOption;
+import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungModus;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.Lo;
@@ -57,7 +58,7 @@ public class KoTurnierParameterDialog {
 
 	/** Ergebnis des Dialogs. */
 	public record TurnierParameter(Formation formation, boolean teamnameAnzeigen, boolean vereinsnameAnzeigen,
-			boolean meleeAnmeldung, TeamAnzeige spielbaumTeamAnzeige, SpielrundeSpielbahn spielbaumSpielbahn,
+			Optional<MeleeAnmeldungModus> meleeAnmeldung, TeamAnzeige spielbaumTeamAnzeige, SpielrundeSpielbahn spielbaumSpielbahn,
 			boolean spielbaumBahnNurRunde1, boolean spielUmPlatz3, int gruppenGroesse, int minLetzteGruppeGroesse) {
 	}
 
@@ -166,7 +167,10 @@ public class KoTurnierParameterDialog {
 		addButton(xMSF, cont, "btnOk", I18n.get("dialog.button.ok"), 22, 212 + y, 50, 14);
 		addButton(xMSF, cont, "btnCancel", I18n.get("dialog.button.abbrechen"), 88, 212 + y, 60, 14);
 
-		MeleeAnmeldungDialogOption.anFormationKoppeln(xcc, () -> readFormation(xcc), "lstFormation");
+		MeleeAnmeldungDialogOption.anFormationKoppeln(xcc, () -> readFormation(xcc),
+				formation -> MeleeAnmeldungDialogOption.listBoxPositionWaehlen(xcc, "lstFormation",
+						formationIndex(formation)),
+				"lstFormation");
 
 		// 4. Button-Listener anhängen
 		XDialog xDialog = Lo.qi(XDialog.class, dialog);
@@ -211,7 +215,7 @@ public class KoTurnierParameterDialog {
 			// Nur Teamname: Teamname-Anzeige ist die einzige Team-Identität und daher zwingend aktiv.
 			boolean teamnameAnzeigen = formation == Formation.NUR_TEAMNAME || readCheckBoxState(xcc, "cbTeamname");
 			boolean vereinsnameAnzeigen = readCheckBoxState(xcc, "cbVereinsname");
-			boolean meleeAnmeldung = MeleeAnmeldungDialogOption.istGewaehlt(xcc, formation);
+			Optional<MeleeAnmeldungModus> meleeAnmeldung = MeleeAnmeldungDialogOption.leseModus(xcc, formation);
 			TeamAnzeige spielbaumAnzeige = TeamAnzeige.ausDialogIndex(readListBoxSelected(xcc, "lstSpielbaum"));
 			SpielrundeSpielbahn spielbahn = switch (readListBoxSelected(xcc, "lstSpielbahn")) {
 				case 1 -> SpielrundeSpielbahn.L;

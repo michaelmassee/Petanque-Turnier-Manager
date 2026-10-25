@@ -246,8 +246,8 @@ public class SchweizerMeldeListeSheetNew extends SheetRunner
 		getKonfigurationSheet().setRankingModus(parameter.rankingModus());
 		createMeldelisteWithParams(parameter.formation(), parameter.teamnameAnzeigen(), parameter.vereinsnameAnzeigen(),
 				parameter.spielplanTeamAnzeige());
-		if (parameter.meleeAnmeldung()) {
-			MeleeAnmeldungKonfiguration.einschalten(getWorkingSpreadsheet());
+		if (parameter.meleeAnmeldung().isPresent()) {
+			MeleeAnmeldungKonfiguration.einschalten(getWorkingSpreadsheet(), parameter.meleeAnmeldung().orElseThrow());
 			new SchweizerMeleeAnmeldungSheet(getWorkingSpreadsheet()).generate();
 		}
 	}

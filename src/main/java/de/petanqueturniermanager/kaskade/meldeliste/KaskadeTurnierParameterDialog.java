@@ -26,6 +26,7 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungDialogOption;
+import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungModus;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
@@ -50,7 +51,7 @@ class KaskadeTurnierParameterDialog {
             Formation formation,
             boolean teamnameAnzeigen,
             boolean vereinsnameAnzeigen,
-            boolean meleeAnmeldung,
+            Optional<MeleeAnmeldungModus> meleeAnmeldung,
             int anzahlKaskaden) {
     }
 
@@ -123,6 +124,7 @@ class KaskadeTurnierParameterDialog {
         fuegeButton(xMSF, cont, "btnCancel", I18n.get("dialog.button.abbrechen"), 88, 165 + y, 60, 14);
 
         MeleeAnmeldungDialogOption.anFormationKoppeln(xcc, () -> leseFormation(xcc),
+                formation -> setzeFormation(xcc, formation),
                 "radioTete", "radioDoublette", "radioTriplette", "radioNurTeamname");
 
         XDialog xDialog = Lo.qi(XDialog.class, dialog);
@@ -165,7 +167,7 @@ class KaskadeTurnierParameterDialog {
             // Nur Teamname: Teamname-Anzeige ist die einzige Team-Identität und daher zwingend aktiv.
             boolean teamnameAnzeigen = formation == Formation.NUR_TEAMNAME || leseCheckBoxZustand(xcc, "cbTeamname");
             boolean vereinsnameAnzeigen = leseCheckBoxZustand(xcc, "cbVereinsname");
-            boolean meleeAnmeldung = MeleeAnmeldungDialogOption.istGewaehlt(xcc, formation);
+            Optional<MeleeAnmeldungModus> meleeAnmeldung = MeleeAnmeldungDialogOption.leseModus(xcc, formation);
             int anzahlKaskaden = leseAnzahlKaskaden(xcc);
             ergebnis = Optional.of(new TurnierParameter(formation, teamnameAnzeigen, vereinsnameAnzeigen,
                     meleeAnmeldung, anzahlKaskaden));
@@ -192,6 +194,21 @@ class KaskadeTurnierParameterDialog {
             return Formation.NUR_TEAMNAME;
         }
         return Formation.TRIPLETTE;
+    }
+
+    private void setzeFormation(XControlContainer xcc, Formation formation) {
+        setzeRadio(xcc, "radioTete", formation == Formation.TETE);
+        setzeRadio(xcc, "radioDoublette", formation == Formation.DOUBLETTE);
+        setzeRadio(xcc, "radioTriplette", formation == Formation.TRIPLETTE);
+        setzeRadio(xcc, "radioNurTeamname", formation == Formation.NUR_TEAMNAME);
+    }
+
+    private void setzeRadio(XControlContainer xcc, String name, boolean gewaehlt) {
+        XControl ctrl = xcc.getControl(name);
+        XRadioButton radio = ctrl == null ? null : Lo.qi(XRadioButton.class, ctrl);
+        if (radio != null) {
+            radio.setState(gewaehlt);
+        }
     }
 
     private int leseAnzahlKaskaden(XControlContainer xcc) {

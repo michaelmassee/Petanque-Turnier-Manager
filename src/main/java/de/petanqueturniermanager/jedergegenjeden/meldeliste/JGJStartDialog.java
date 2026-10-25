@@ -28,6 +28,7 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungDialogOption;
+import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungModus;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
@@ -51,7 +52,7 @@ public class JGJStartDialog {
 	/** Ergebnis des Dialogs. */
 	public record StartParameter(Formation formation,
 		boolean teamnameAnzeigen, boolean vereinsnameAnzeigen,
-		boolean meleeAnmeldung,
+		Optional<MeleeAnmeldungModus> meleeAnmeldung,
 		TeamAnzeige spielplanTeamAnzeige,
 		int gruppengroesse,
 		boolean mitRueckrunde) {
@@ -138,7 +139,10 @@ public class JGJStartDialog {
 		addButton(xMSF, cont, "btnOk", I18n.get("dialog.button.ok"), 30, 142 + y, 50, 14);
 		addButton(xMSF, cont, "btnCancel", I18n.get("button.abbrechen"), 100, 142 + y, 60, 14);
 
-		MeleeAnmeldungDialogOption.anFormationKoppeln(xcc, () -> readFormation(xcc), "lstFormation");
+		MeleeAnmeldungDialogOption.anFormationKoppeln(xcc, () -> readFormation(xcc),
+				formation -> MeleeAnmeldungDialogOption.listBoxPositionWaehlen(xcc, "lstFormation",
+						formationIndex(formation)),
+				"lstFormation");
 
 		// 4. Button-Listener VOR createPeer() anhängen
 		XDialog xDialog = Lo.qi(XDialog.class, dialog);
@@ -183,7 +187,7 @@ public class JGJStartDialog {
 			// Nur Teamname: Teamname-Anzeige ist die einzige Team-Identität und daher zwingend aktiv.
 			boolean teamnameAnzeigen = formation == Formation.NUR_TEAMNAME || readCheckBoxState(xcc, "cbTeamname");
 			boolean vereinsnameAnzeigen = readCheckBoxState(xcc, "cbVereinsname");
-			boolean meleeAnmeldung = MeleeAnmeldungDialogOption.istGewaehlt(xcc, formation);
+			Optional<MeleeAnmeldungModus> meleeAnmeldung = MeleeAnmeldungDialogOption.leseModus(xcc, formation);
 			TeamAnzeige spielplanAnzeige = spielplanAnzeige(readListBoxSelected(xcc, "lstSpielplanAnzeige"));
 			int gruppengroesse = parseGruppengroesse(readEditText(xcc, "editGruppengroesse"));
 			boolean mitRueckrunde = readCheckBoxState(xcc, "cbRueckrunde");

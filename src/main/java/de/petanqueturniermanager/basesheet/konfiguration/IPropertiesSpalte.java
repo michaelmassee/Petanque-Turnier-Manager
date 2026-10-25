@@ -4,6 +4,7 @@
 package de.petanqueturniermanager.basesheet.konfiguration;
 
 import de.petanqueturniermanager.basesheet.SheetTabFarben;
+import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungModus;
 import de.petanqueturniermanager.basesheet.meldeliste.TeilnehmerListeSortModus;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGeradeStyle;
@@ -122,6 +123,14 @@ public interface IPropertiesSpalte {
 	 */
 	default boolean isMeleeAnmeldungAktiv() {
 		return false;
+	}
+
+	/**
+	 * Art der Team-Bildung beim Übernehmen der Mêlée-Anmeldung. Default
+	 * {@link MeleeAnmeldungModus#EINFACH}.
+	 */
+	default MeleeAnmeldungModus getMeleeAnmeldungModus() {
+		return MeleeAnmeldungModus.EINFACH;
 	}
 
 }

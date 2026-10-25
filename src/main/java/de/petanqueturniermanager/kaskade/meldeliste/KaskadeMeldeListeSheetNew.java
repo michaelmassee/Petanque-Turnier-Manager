@@ -255,8 +255,8 @@ public class KaskadeMeldeListeSheetNew extends SheetRunner
                 param.get().teamnameAnzeigen(),
                 param.get().vereinsnameAnzeigen(),
                 param.get().anzahlKaskaden());
-        if (param.get().meleeAnmeldung()) {
-            MeleeAnmeldungKonfiguration.einschalten(getWorkingSpreadsheet());
+        if (param.get().meleeAnmeldung().isPresent()) {
+            MeleeAnmeldungKonfiguration.einschalten(getWorkingSpreadsheet(), param.get().meleeAnmeldung().orElseThrow());
             new KaskadeMeleeAnmeldungSheet(getWorkingSpreadsheet()).generate();
         }
 

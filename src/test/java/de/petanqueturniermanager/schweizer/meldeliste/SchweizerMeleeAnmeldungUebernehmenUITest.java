@@ -17,9 +17,11 @@ import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
+import de.petanqueturniermanager.basesheet.konfiguration.MeleeAnmeldungKonfiguration;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungLeser;
+import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungModus;
 import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungZeile;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
@@ -140,6 +142,52 @@ class SchweizerMeleeAnmeldungUebernehmenUITest extends BaseCalcUITest implements
 				.containsExactly(1, 2, 3, 4);
 	}
 
+	/**
+	 * „Doublette ohne Freilos": 10 Spieler ergeben wie im Supermêlée 2 Triplettes und 2 Doubletten
+	 * (gerade Teamzahl, kein Freilos) in der Triplette-Meldeliste – bei Doubletten bleibt Spieler 3 leer.
+	 */
+	@Test
+	void doubletteOhneFreilosBildetGemischteTeamsInTripletteMeldeliste() throws Exception {
+		meldeliste = new SchweizerMeldeListeSheetNew(wkingSpreadsheet);
+		meldeliste.createMeldelisteWithParams(Formation.TRIPLETTE, false, false);
+		MeleeAnmeldungKonfiguration.einschalten(wkingSpreadsheet, MeleeAnmeldungModus.DOUBLETTE_OHNE_FREILOS);
+		meleeAnmeldungenAnlegen(10);
+
+		new SchweizerMeleeAnmeldungUebernehmenSheet(wkingSpreadsheet).uebernehmen();
+
+		assertThat(anzahlSpielerJeTeam()).as("2 Triplettes + 2 Doubletten").containsExactlyInAnyOrder(3, 3, 2, 2);
+		assertThat(nachnamenInMeldeliste()).hasSize(10).doesNotHaveDuplicates();
+	}
+
+	/** 7 Spieler lassen sich nicht ohne Freilos aufteilen: 6 Spieler in 2 Teams, Nr. 7 bleibt offen. */
+	@Test
+	void tripletteOhneFreilosLaesstBeiSiebenSpielernLetztenOffen() throws Exception {
+		meldeliste = new SchweizerMeldeListeSheetNew(wkingSpreadsheet);
+		meldeliste.createMeldelisteWithParams(Formation.TRIPLETTE, false, false);
+		MeleeAnmeldungKonfiguration.einschalten(wkingSpreadsheet, MeleeAnmeldungModus.TRIPLETTE_OHNE_FREILOS);
+		meleeAnmeldungenAnlegen(7);
+
+		new SchweizerMeleeAnmeldungUebernehmenSheet(wkingSpreadsheet).uebernehmen();
+
+		assertThat(anzahlSpielerJeTeam().size() % 2).as("gerade Teamzahl").isZero();
+		assertThat(nachnamenInMeldeliste()).hasSize(6).doesNotContain("MeleeTestNachname6");
+	}
+
+	/** Gemischte Teams passen nicht in eine Doublette-Meldeliste: Übernahme bricht ohne Änderung ab. */
+	@Test
+	void ohneFreilosBeiDoubletteMeldelisteUebernimmtNichts() throws Exception {
+		meldeliste = new SchweizerMeldeListeSheetNew(wkingSpreadsheet);
+		meldeliste.createMeldelisteWithParams(Formation.DOUBLETTE, false, false);
+		MeleeAnmeldungKonfiguration.einschalten(wkingSpreadsheet, MeleeAnmeldungModus.DOUBLETTE_OHNE_FREILOS);
+		meleeAnmeldungenAnlegen(10);
+
+		new SchweizerMeleeAnmeldungUebernehmenSheet(wkingSpreadsheet).uebernehmen();
+
+		assertThat(nachnamenInMeldeliste()).isEmpty();
+		assertThat(MeleeAnmeldungLeser.lesen(wkingSpreadsheet, SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_MELEE_ANMELDUNG))
+				.allMatch(MeleeAnmeldungZeile::istOffen);
+	}
+
 	private void meleeAnmeldungenAnlegen(int anzahl) throws Exception {
 		meleeAnmeldungenAnlegen(anzahl, true);
 	}
@@ -166,18 +214,28 @@ class SchweizerMeleeAnmeldungUebernehmenUITest extends BaseCalcUITest implements
 	}
 
 	private List<String> nachnamenInMeldeliste() throws Exception {
+		return nachnamenJeMeldelisteZeile().stream().flatMap(List::stream).toList();
+	}
+
+	private List<Integer> anzahlSpielerJeTeam() throws Exception {
+		return nachnamenJeMeldelisteZeile().stream().map(List::size).filter(anzahl -> anzahl > 0).toList();
+	}
+
+	private List<List<String>> nachnamenJeMeldelisteZeile() throws Exception {
 		RangeData data = RangeHelper.from(meldeliste.getXSpreadSheet(), doc,
 				RangePosition.from(0, SchweizerListeDelegate.ERSTE_DATEN_ZEILE, meldeliste.getAktivSpalte(),
 						SchweizerListeDelegate.ERSTE_DATEN_ZEILE + 30)).getDataFromRange();
-		List<String> nachnamen = new ArrayList<>();
+		List<List<String>> nachnamenJeZeile = new ArrayList<>();
 		for (RowData zeile : data) {
+			List<String> nachnamen = new ArrayList<>();
 			for (int spalte = 0; spalte <= meldeliste.getAktivSpalte(); spalte++) {
 				String wert = zeile.get(spalte).getStringVal();
 				if (wert != null && wert.startsWith("MeleeTestNachname")) {
 					nachnamen.add(wert);
 				}
 			}
+			nachnamenJeZeile.add(nachnamen);
 		}
-		return nachnamen;
+		return nachnamenJeZeile;
 	}
 }

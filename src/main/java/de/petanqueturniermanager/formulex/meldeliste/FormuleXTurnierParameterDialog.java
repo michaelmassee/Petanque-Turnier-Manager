@@ -26,6 +26,7 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungDialogOption;
+import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungModus;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
@@ -49,7 +50,7 @@ class FormuleXTurnierParameterDialog {
             Formation formation,
             boolean teamnameAnzeigen,
             boolean vereinsnameAnzeigen,
-            boolean meleeAnmeldung) {
+            Optional<MeleeAnmeldungModus> meleeAnmeldung) {
     }
 
     private final WorkingSpreadsheet workingSpreadsheet;
@@ -110,7 +111,10 @@ class FormuleXTurnierParameterDialog {
         fuegeButton(xMSF, cont, "btnOk", I18n.get("dialog.button.ok"), 22, 86 + y, 50, 14);
         fuegeButton(xMSF, cont, "btnCancel", I18n.get("dialog.button.abbrechen"), 88, 86 + y, 60, 14);
 
-        MeleeAnmeldungDialogOption.anFormationKoppeln(xcc, () -> leseFormation(xcc), "lstFormation");
+        MeleeAnmeldungDialogOption.anFormationKoppeln(xcc, () -> leseFormation(xcc),
+                formation -> MeleeAnmeldungDialogOption.listBoxPositionWaehlen(xcc, "lstFormation",
+                        formationIndex(formation)),
+                "lstFormation");
 
         XDialog xDialog = Lo.qi(XDialog.class, dialog);
         okGedrueckt = false;
@@ -152,7 +156,7 @@ class FormuleXTurnierParameterDialog {
             // Nur Teamname: Teamname-Anzeige ist die einzige Team-Identität und daher zwingend aktiv.
             boolean teamnameAnzeigen = formation == Formation.NUR_TEAMNAME || leseCheckBoxZustand(xcc, "cbTeamname");
             boolean vereinsnameAnzeigen = leseCheckBoxZustand(xcc, "cbVereinsname");
-            boolean meleeAnmeldung = MeleeAnmeldungDialogOption.istGewaehlt(xcc, formation);
+            Optional<MeleeAnmeldungModus> meleeAnmeldung = MeleeAnmeldungDialogOption.leseModus(xcc, formation);
             ergebnis = Optional.of(new TurnierParameter(formation, teamnameAnzeigen, vereinsnameAnzeigen,
                     meleeAnmeldung));
         }

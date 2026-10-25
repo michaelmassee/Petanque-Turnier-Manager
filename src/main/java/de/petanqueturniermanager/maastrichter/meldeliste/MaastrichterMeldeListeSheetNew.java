@@ -116,8 +116,8 @@ public class MaastrichterMeldeListeSheetNew extends SheetRunner implements IShee
 
 		erstelleMeldeliste(parameter.formation(), parameter.teamnameAnzeigen(), parameter.vereinsnameAnzeigen(),
 				parameter.spielplanTeamAnzeige());
-		if (parameter.meleeAnmeldung()) {
-			MeleeAnmeldungKonfiguration.einschalten(getWorkingSpreadsheet());
+		if (parameter.meleeAnmeldung().isPresent()) {
+			MeleeAnmeldungKonfiguration.einschalten(getWorkingSpreadsheet(), parameter.meleeAnmeldung().orElseThrow());
 			new MaastrichterMeleeAnmeldungSheet(getWorkingSpreadsheet()).generate();
 		}
 	}

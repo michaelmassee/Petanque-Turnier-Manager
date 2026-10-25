@@ -21,6 +21,7 @@ class TurnierDialogTest {
 				property("Spielrunde Spielbahn"),
 				property("Checkin-Liste Sortierung"),
 				property("Editierbare Felder hervorheben"),
+				property("Melee Anmeldung Modus"),
 				property("Melee Anmeldung"),
 				property("Spielrunde"),
 				property("Unbekannte Systemoption"),
@@ -31,6 +32,7 @@ class TurnierDialogTest {
 		assertThat(properties).extracting(ConfigProperty::getKey).containsExactly(
 				"Editierbare Felder hervorheben",
 				"Melee Anmeldung",
+				"Melee Anmeldung Modus",
 				"Checkin-Liste Sortierung",
 				"Spielziel",
 				"Spielrunde",

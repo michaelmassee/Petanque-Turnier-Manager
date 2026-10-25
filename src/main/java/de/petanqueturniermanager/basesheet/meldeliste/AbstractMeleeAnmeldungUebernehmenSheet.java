@@ -4,6 +4,7 @@
 package de.petanqueturniermanager.basesheet.meldeliste;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -29,6 +30,7 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
+import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
 
 /**
  * Übernimmt die offenen, eingecheckten Mêlée-Anmeldungen als Teams in die Meldeliste.
@@ -39,9 +41,11 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
  * – deckt z.B. per Copy-Paste eingefügte Zeilen ab, die noch keine Nummer haben.</li>
  * <li>Mêlée-Anmeldung-Sheet lesen, auf <b>offen</b> (noch nicht übernommen) und <b>eingecheckt</b>
  * filtern – nicht erschienene Spieler bleiben unangetastet stehen.</li>
- * <li>Teams über den {@link MeleeAnmeldungTeamBildner} in der Größe der Meldeliste-Formation
- * mischen (Setzpositionen werden beachtet); reicht die Spielerzahl nicht für eine ganze Anzahl
- * Teams, bleiben die überzähligen Spieler offen stehen.</li>
+ * <li>Teams über den {@link MeleeAnmeldungTeamBildner} mischen (Setzpositionen werden beachtet),
+ * je nach {@link MeleeAnmeldungModus}: {@link MeleeAnmeldungModus#EINFACH} in der Größe der
+ * Meldeliste-Formation, die „ohne Freilos"-Modi als gemischte Doubletten/Triplettes mit gerader
+ * Teamzahl (nur bei Triplette-Meldeliste, bei Doubletten bleibt Spieler 3 leer). Nicht aufteilbare
+ * überzählige Spieler bleiben offen stehen.</li>
  * <li>Teams blockweise ans Ende der Meldeliste schreiben (Teamname, Spielernamen, Setzposition,
  * Aktiv-Kennzeichen) und die Meldeliste aktualisieren.</li>
  * <li>Die übernommenen Mêlée-Zeilen als „Übernommen" markieren – die Zeilen bleiben erhalten und
@@ -101,18 +105,21 @@ public abstract class AbstractMeleeAnmeldungUebernehmenSheet extends SheetRunner
 			return;
 		}
 
-		int teamGroesse = getFormationKonfiguration().getMeldeListeFormation().getAnzSpieler();
-		int anzVerwendbareSpieler = (offeneEingecheckte.size() / teamGroesse) * teamGroesse;
-		if (anzVerwendbareSpieler == 0) {
+		MeleeAnmeldungModus modus = getKonfigurationSheet().getMeleeAnmeldungModus();
+		if (!modus.passtZu(getFormationKonfiguration().getMeldeListeFormation())) {
+			zeigeHinweisMitParameter("msg.text.melee.modus.braucht.triplette", modus.getBezeichnung());
+			return;
+		}
+
+		List<MeleeTeam> teams = bildeTeams(modus, alsMeleeSpieler(offeneEingecheckte));
+		if (teams.isEmpty()) {
 			zeigeHinweis("msg.text.melee.keine.anmeldungen");
 			return;
 		}
 
-		processBoxinfo("processbox.melee.uebernehmen", anzVerwendbareSpieler);
-		List<MeleeTeam> teams = MeleeAnmeldungTeamBildner.bildeTeams(alsMeleeSpieler(offeneEingecheckte), teamGroesse);
-
 		Set<Integer> uebernommeneZeilen = teams.stream().flatMap(t -> t.spieler().stream())
 				.map(MeleeSpieler::zeile).collect(Collectors.toSet());
+		processBoxinfo("processbox.melee.uebernehmen", uebernommeneZeilen.size());
 		List<MeleeAnmeldungZeile> tatsaechlichUebernommene = offeneEingecheckte.stream()
 				.filter(z -> uebernommeneZeilen.contains(z.zeile())).toList();
 
@@ -124,6 +131,19 @@ public abstract class AbstractMeleeAnmeldungUebernehmenSheet extends SheetRunner
 		if (anzahlOffenGeblieben > 0) {
 			zeigeHinweisMitParameter("msg.text.melee.spieler.offen.geblieben", anzahlOffenGeblieben);
 		}
+	}
+
+	/**
+	 * Mischt die Spieler je nach Modus zu Teams fester Größe (Meldeliste-Formation) oder zu
+	 * gemischten Doubletten/Triplettes ohne Freilos.
+	 */
+	private List<MeleeTeam> bildeTeams(MeleeAnmeldungModus modus, List<MeleeSpieler> spieler) {
+		Optional<SuperMeleeMode> superMeleeMode = modus.superMeleeMode();
+		if (superMeleeMode.isPresent()) {
+			return MeleeAnmeldungTeamBildner.bildeTeamsOhneFreilos(spieler, superMeleeMode.get());
+		}
+		int teamGroesse = getFormationKonfiguration().getMeldeListeFormation().getAnzSpieler();
+		return MeleeAnmeldungTeamBildner.bildeTeams(spieler, teamGroesse);
 	}
 
 	private static List<MeleeSpieler> alsMeleeSpieler(List<MeleeAnmeldungZeile> zeilen) {

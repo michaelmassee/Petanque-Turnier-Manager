@@ -209,8 +209,8 @@ public class JGJMeldeListeSheet_New extends SheetRunner implements IMeldeliste<T
 		createMeldelisteWithParams(param.get().formation(),
 				param.get().teamnameAnzeigen(), param.get().vereinsnameAnzeigen(),
 				param.get().spielplanTeamAnzeige(), param.get().gruppengroesse(), param.get().mitRueckrunde());
-		if (param.get().meleeAnmeldung()) {
-			MeleeAnmeldungKonfiguration.einschalten(getWorkingSpreadsheet());
+		if (param.get().meleeAnmeldung().isPresent()) {
+			MeleeAnmeldungKonfiguration.einschalten(getWorkingSpreadsheet(), param.get().meleeAnmeldung().orElseThrow());
 			new JGJMeleeAnmeldungSheet(getWorkingSpreadsheet()).generate();
 		}
 	}

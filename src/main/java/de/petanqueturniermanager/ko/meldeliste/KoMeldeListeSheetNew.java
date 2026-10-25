@@ -263,8 +263,8 @@ public class KoMeldeListeSheetNew extends SheetRunner
 		konfig.setSpielbaumSpielUmPlatz3(params.spielUmPlatz3());
 		konfig.setGruppenGroesse(params.gruppenGroesse());
 		konfig.setMinLetzteGruppeGroesse(params.minLetzteGruppeGroesse());
-		if (params.meleeAnmeldung()) {
-			MeleeAnmeldungKonfiguration.einschalten(getWorkingSpreadsheet());
+		if (params.meleeAnmeldung().isPresent()) {
+			MeleeAnmeldungKonfiguration.einschalten(getWorkingSpreadsheet(), params.meleeAnmeldung().orElseThrow());
 		}
 
 		// KonfigSheet mit neuen Werten neu rendern
@@ -273,7 +273,7 @@ public class KoMeldeListeSheetNew extends SheetRunner
 		// Alle anderen Blätter entfernen, dann Meldeliste erstellen
 		getSheetHelper().removeAllSheetsExclude();
 		createMeldelisteWithParams();
-		if (params.meleeAnmeldung()) {
+		if (params.meleeAnmeldung().isPresent()) {
 			new KoMeleeAnmeldungSheet(getWorkingSpreadsheet()).generate();
 		}
 	}
