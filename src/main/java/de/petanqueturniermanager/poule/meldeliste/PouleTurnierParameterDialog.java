@@ -8,7 +8,6 @@ import java.util.Optional;
 import com.sun.star.awt.ActionEvent;
 import com.sun.star.awt.XActionListener;
 import com.sun.star.awt.XButton;
-import com.sun.star.awt.XCheckBox;
 import com.sun.star.awt.XControl;
 import com.sun.star.awt.XControlContainer;
 import com.sun.star.awt.XControlModel;
@@ -25,6 +24,7 @@ import com.sun.star.lang.XMultiServiceFactory;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldelisteSpaltenDialogOption;
 import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungDialogOption;
 import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungModus;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -113,11 +113,8 @@ class PouleTurnierParameterDialog {
 
         fuegeTrennlinie(xMSF, cont, "sep1", 5, 24, 150, 2);
 
-        fuegeCheckBox(xMSF, cont, "cbTeamname", I18n.get("dialog.poule.label.teamname"),
-                8, 30, 140, 10, standardTeamnameAnzeigen);
-
-        fuegeCheckBox(xMSF, cont, "cbVereinsname", I18n.get("dialog.poule.label.vereinsname"),
-                8, 44, 140, 10, standardVereinsnameAnzeigen);
+        MeldelisteSpaltenDialogOption.hinzufuegen(xMSF, cont, 8, 30, 140, standardFormation, standardTeamnameAnzeigen,
+                standardVereinsnameAnzeigen);
         MeleeAnmeldungDialogOption.hinzufuegen(xMSF, cont, 8, 58, 140, standardFormation);
 
         int y = MeleeAnmeldungDialogOption.HOEHE;
@@ -128,6 +125,7 @@ class PouleTurnierParameterDialog {
                 formation -> MeleeAnmeldungDialogOption.listBoxPositionWaehlen(xcc, "lstFormation",
                         formationIndex(formation)),
                 "lstFormation");
+        MeldelisteSpaltenDialogOption.anFormationKoppeln(xcc, () -> leseFormation(xcc), "lstFormation");
 
         XDialog xDialog = Lo.qi(XDialog.class, dialog);
         okGedrueckt = false;
@@ -166,9 +164,8 @@ class PouleTurnierParameterDialog {
         Optional<TurnierParameter> ergebnis = Optional.empty();
         if (okGedrueckt) {
             Formation formation = leseFormation(xcc);
-            // Nur Teamname: Teamname-Anzeige ist die einzige Team-Identität und daher zwingend aktiv.
-            boolean teamnameAnzeigen = formation == Formation.NUR_TEAMNAME || leseCheckBoxZustand(xcc, "cbTeamname");
-            boolean vereinsnameAnzeigen = leseCheckBoxZustand(xcc, "cbVereinsname");
+            boolean teamnameAnzeigen = MeldelisteSpaltenDialogOption.leseTeamname(xcc, formation);
+            boolean vereinsnameAnzeigen = MeldelisteSpaltenDialogOption.leseVereinsname(xcc);
             Optional<MeleeAnmeldungModus> meleeAnmeldung = MeleeAnmeldungDialogOption.leseModus(xcc, formation);
             ergebnis = Optional.of(new TurnierParameter(formation, teamnameAnzeigen, vereinsnameAnzeigen,
                     meleeAnmeldung));
@@ -211,15 +208,6 @@ class PouleTurnierParameterDialog {
         return lb != null ? lb.getSelectedItemPos() : 0;
     }
 
-    private boolean leseCheckBoxZustand(XControlContainer xcc, String name) {
-        XControl ctrl = xcc.getControl(name);
-        if (ctrl == null) {
-            return false;
-        }
-        XCheckBox cb = Lo.qi(XCheckBox.class, ctrl);
-        return cb != null && cb.getState() == 1;
-    }
-
     private void haengeButtonListener(XControlContainer xcc, String name, XActionListener listener) {
         XControl ctrl = xcc.getControl(name);
         if (ctrl != null) {
@@ -258,20 +246,6 @@ class PouleTurnierParameterDialog {
         props.setPropertyValue("PositionY", Integer.valueOf(y));
         props.setPropertyValue("Width", Integer.valueOf(w));
         props.setPropertyValue("Height", Integer.valueOf(h));
-        cont.insertByName(name, model);
-    }
-
-    private void fuegeCheckBox(XMultiServiceFactory xMSF, XNameContainer cont,
-            String name, String label, int x, int y, int w, int h, boolean angehaekt)
-            throws com.sun.star.uno.Exception {
-        Object model = xMSF.createInstance("com.sun.star.awt.UnoControlCheckBoxModel");
-        XPropertySet props = Lo.qi(XPropertySet.class, model);
-        props.setPropertyValue("Label", label);
-        props.setPropertyValue("PositionX", Integer.valueOf(x));
-        props.setPropertyValue("PositionY", Integer.valueOf(y));
-        props.setPropertyValue("Width", Integer.valueOf(w));
-        props.setPropertyValue("Height", Integer.valueOf(h));
-        props.setPropertyValue("State", (short) (angehaekt ? 1 : 0));
         cont.insertByName(name, model);
     }
 

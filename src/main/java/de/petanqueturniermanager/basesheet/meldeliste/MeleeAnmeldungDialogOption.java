@@ -67,22 +67,33 @@ public final class MeleeAnmeldungDialogOption {
 	 */
 	public static void hinzufuegen(XMultiServiceFactory xMSF, XNameContainer cont, int x, int y, int breite,
 			Formation startFormation) throws com.sun.star.uno.Exception {
+		hinzufuegen(xMSF, cont, x, y, breite, LABEL_BREITE, startFormation);
+	}
+
+	/**
+	 * Wie {@link #hinzufuegen(XMultiServiceFactory, XNameContainer, int, int, int, Formation)}, aber mit
+	 * vorgegebener Label-Breite – damit die Listbox an den übrigen Listboxen des Dialogs ausgerichtet wird.
+	 *
+	 * @param labelBreite Breite des Labels; die Listbox beginnt dahinter mit kleinem Abstand
+	 */
+	public static void hinzufuegen(XMultiServiceFactory xMSF, XNameContainer cont, int x, int y, int breite,
+			int labelBreite, Formation startFormation) throws com.sun.star.uno.Exception {
 		Object labelModel = xMSF.createInstance("com.sun.star.awt.UnoControlFixedTextModel");
 		XPropertySet labelProps = Lo.qi(XPropertySet.class, labelModel);
 		labelProps.setPropertyValue("Label", I18n.get("dialog.melee.anmeldung.label"));
 		labelProps.setPropertyValue("PositionX", Integer.valueOf(x));
 		labelProps.setPropertyValue("PositionY", Integer.valueOf(y + 1));
-		labelProps.setPropertyValue("Width", Integer.valueOf(LABEL_BREITE));
+		labelProps.setPropertyValue("Width", Integer.valueOf(labelBreite));
 		labelProps.setPropertyValue("Height", Integer.valueOf(LABEL_HOEHE));
 		cont.insertByName(LABEL_NAME, labelModel);
 
-		int listBoxX = x + LABEL_BREITE + ABSTAND_LABEL_LISTBOX;
+		int listBoxX = x + labelBreite + ABSTAND_LABEL_LISTBOX;
 		Object model = xMSF.createInstance("com.sun.star.awt.UnoControlListBoxModel");
 		XPropertySet props = Lo.qi(XPropertySet.class, model);
 		props.setPropertyValue("HelpText", I18n.get("dialog.melee.anmeldung.hilfe"));
 		props.setPropertyValue("PositionX", Integer.valueOf(listBoxX));
 		props.setPropertyValue("PositionY", Integer.valueOf(y));
-		props.setPropertyValue("Width", Integer.valueOf(breite - LABEL_BREITE - ABSTAND_LABEL_LISTBOX));
+		props.setPropertyValue("Width", Integer.valueOf(breite - labelBreite - ABSTAND_LABEL_LISTBOX));
 		props.setPropertyValue("Height", Integer.valueOf(LISTBOX_HOEHE));
 		props.setPropertyValue("Dropdown", Boolean.TRUE);
 		props.setPropertyValue("StringItemList", eintraege());

@@ -26,6 +26,7 @@ import com.sun.star.lang.XMultiServiceFactory;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldelisteSpaltenDialogOption;
 import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungDialogOption;
 import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungModus;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
@@ -77,7 +78,7 @@ public class MaastrichterTurnierParameterDialog {
 		XPropertySet dlgProps = Lo.qi(XPropertySet.class, dialogModel);
 		dlgProps.setPropertyValue("PositionX", Integer.valueOf(50));
 		dlgProps.setPropertyValue("PositionY", Integer.valueOf(50));
-		dlgProps.setPropertyValue("Width", Integer.valueOf(160));
+		dlgProps.setPropertyValue("Width", Integer.valueOf(190));
 		dlgProps.setPropertyValue("Height", Integer.valueOf(263 + MeleeAnmeldungDialogOption.HOEHE));
 		dlgProps.setPropertyValue("Title", I18n.get("dialog.maastrichter.titel"));
 		dlgProps.setPropertyValue("Moveable", Boolean.TRUE);
@@ -96,39 +97,37 @@ public class MaastrichterTurnierParameterDialog {
 						Formation.DOUBLETTE.getBezeichnung(),
 						Formation.TRIPLETTE.getBezeichnung(),
 						Formation.NUR_TEAMNAME.getBezeichnung() },
-				formationIndex(defaultFormation), 92, 6, 60, 12);
+				formationIndex(defaultFormation), 92, 6, 90, 12);
 
-		addFixedLine(xMSF, cont, "sep1", 5, 24, 150, 2);
-		addCheckBox(xMSF, cont, "cbTeamname", I18n.get("dialog.maastrichter.teamname.anzeigen"), 8, 30, 140, 10,
-				defaultTeamnameAnzeigen);
-		addCheckBox(xMSF, cont, "cbVereinsname", I18n.get("dialog.maastrichter.vereinsname.anzeigen"), 8, 44, 140, 10,
+		addFixedLine(xMSF, cont, "sep1", 5, 24, 180, 2);
+		MeldelisteSpaltenDialogOption.hinzufuegen(xMSF, cont, 8, 30, 174, defaultFormation, defaultTeamnameAnzeigen,
 				defaultVereinsnameAnzeigen);
 
-		MeleeAnmeldungDialogOption.hinzufuegen(xMSF, cont, 8, 58, 140, defaultFormation);
+		MeleeAnmeldungDialogOption.hinzufuegen(xMSF, cont, 8, 58, 174, 82, defaultFormation);
 
 		int y = MeleeAnmeldungDialogOption.HOEHE;
-		addFixedLine(xMSF, cont, "sep2", 5, 60 + y, 150, 2);
+		addFixedLine(xMSF, cont, "sep2", 5, 60 + y, 180, 2);
 		addLabel(xMSF, cont, "lblSpielplan", I18n.get("dialog.maastrichter.spielplan.anzeige.label"), 8, 64 + y, 80, 10);
 		addListBox(xMSF, cont, "lstSpielplan",
 				new String[] { I18n.get("dialog.maastrichter.auswahl.nr"),
 						I18n.get("dialog.maastrichter.auswahl.spieler"),
 						I18n.get("dialog.maastrichter.auswahl.name") },
 				defaultSpielplanTeamAnzeige.dialogIndex(),
-				92, 62 + y, 60, 12);
+				92, 62 + y, 90, 12);
 
-		addFixedLine(xMSF, cont, "sep3", 5, 80 + y, 150, 2);
+		addFixedLine(xMSF, cont, "sep3", 5, 80 + y, 180, 2);
 		addLabel(xMSF, cont, "lblRankingModus", I18n.get("dialog.maastrichter.ranking.modus.label"), 8, 84 + y, 80, 10);
 		addListBox(xMSF, cont, "lstRankingModus",
 				new String[] { I18n.get("dialog.maastrichter.ranking.mit.buchholz"),
 						I18n.get("dialog.maastrichter.ranking.ohne.buchholz") },
 				(short) (defaultRankingModus == SchweizerRankingModus.OHNE_BUCHHOLZ ? 1 : 0),
-				92, 82 + y, 60, 12);
+				92, 82 + y, 90, 12);
 
-		addFixedLine(xMSF, cont, "sep4", 5, 100 + y, 150, 2);
+		addFixedLine(xMSF, cont, "sep4", 5, 100 + y, 180, 2);
 		addLabel(xMSF, cont, "lblAnzVorrunden", I18n.get("dialog.maastrichter.anz.vorrunden.label"), 8, 104 + y, 100, 10);
 		addNumericField(xMSF, cont, "nfAnzVorrunden", defaultAnzVorrunden, 2, 5, 112, 102 + y, 40, 12);
 
-		addFixedLine(xMSF, cont, "sep5", 5, 121 + y, 150, 2);
+		addFixedLine(xMSF, cont, "sep5", 5, 121 + y, 180, 2);
 		addLabel(xMSF, cont, "lblSpielbaumTeamAnzeige", I18n.get("dialog.maastrichter.spielbaum.anzeige.label"), 8,
 				125 + y, 80, 10);
 		addListBox(xMSF, cont, "lstSpielbaum",
@@ -136,7 +135,7 @@ public class MaastrichterTurnierParameterDialog {
 						I18n.get("dialog.maastrichter.auswahl.spieler"),
 						I18n.get("dialog.maastrichter.auswahl.name") },
 				defaultSpielbaumTeamAnzeige.dialogIndex(),
-				92, 123 + y, 60, 12);
+				92, 123 + y, 90, 12);
 
 		addLabel(xMSF, cont, "lblSpielbahn", I18n.get("dialog.maastrichter.spielbaum.spielbahn.label"), 8,
 				141 + y, 80, 10);
@@ -147,35 +146,36 @@ public class MaastrichterTurnierParameterDialog {
 						I18n.get("dialog.maastrichter.spielbahn.zufaellig") },
 				spielbahnIndex(defaultSpielbaumSpielbahn), 92, 139 + y, 60, 12);
 
-		addCheckBox(xMSF, cont, "cbBahnNurRunde1", I18n.get("dialog.maastrichter.bahn.nur.runde1"), 8, 157 + y, 140, 10,
+		addCheckBox(xMSF, cont, "cbBahnNurRunde1", I18n.get("dialog.maastrichter.bahn.nur.runde1"), 8, 157 + y, 170, 10,
 				defaultSpielbaumBahnNurRunde1);
 
-		addCheckBox(xMSF, cont, "cbSpielUmPlatz3", I18n.get("dialog.maastrichter.spiel.um.platz3"), 8, 171 + y, 140, 10,
+		addCheckBox(xMSF, cont, "cbSpielUmPlatz3", I18n.get("dialog.maastrichter.spiel.um.platz3"), 8, 171 + y, 170, 10,
 				defaultSpielUmPlatz3);
 
-		addFixedLine(xMSF, cont, "sep6", 5, 185 + y, 150, 2);
+		addFixedLine(xMSF, cont, "sep6", 5, 185 + y, 180, 2);
 		addLabel(xMSF, cont, "lblGruppenModus", I18n.get("dialog.maastrichter.gruppen.modus.label"), 8, 189 + y, 80, 10);
 		addListBox(xMSF, cont, "lstGruppenModus",
 				new String[] { I18n.get("dialog.maastrichter.gruppen.modus.nach.siegen"),
 						I18n.get("dialog.maastrichter.gruppen.modus.nach.groesse") },
 				(short) (defaultGruppenModus == MaastrichterGruppenModus.NACH_GROESSE ? 1 : 0),
-				92, 187 + y, 60, 12);
-		addFixedLine(xMSF, cont, "sep7", 5, 203 + y, 150, 2);
+				92, 187 + y, 90, 12);
+		addFixedLine(xMSF, cont, "sep7", 5, 203 + y, 180, 2);
 		addLabel(xMSF, cont, "lblGruppenGroesse", I18n.get("dialog.maastrichter.gruppen.groesse.label"), 8, 207 + y, 80,
 				10);
 		addNumericField(xMSF, cont, "nfGruppenGroesse", defaultGruppenGroesse, 2, 256, 92, 205 + y, 60, 12);
 
-		addFixedLine(xMSF, cont, "sep8", 5, 221 + y, 150, 2);
+		addFixedLine(xMSF, cont, "sep8", 5, 221 + y, 180, 2);
 		addLabel(xMSF, cont, "lblMinLetzteGruppe", I18n.get("dialog.maastrichter.min.letzte.gruppe.label"), 8, 227 + y, 80, 10);
 		addNumericField(xMSF, cont, "nfMinLetzteGruppe", defaultMinLetzteGruppeGroesse, 2, 256, 92, 225 + y, 60, 12);
 
-		addButton(xMSF, cont, "btnOk", I18n.get("dialog.ok"), 22, 242 + y, 50, 14);
-		addButton(xMSF, cont, "btnCancel", I18n.get("dialog.abbrechen"), 88, 242 + y, 60, 14);
+		addButton(xMSF, cont, "btnOk", I18n.get("dialog.ok"), 37, 242 + y, 50, 14);
+		addButton(xMSF, cont, "btnCancel", I18n.get("dialog.abbrechen"), 103, 242 + y, 60, 14);
 
 		MeleeAnmeldungDialogOption.anFormationKoppeln(xcc, () -> readFormation(xcc),
 				formation -> MeleeAnmeldungDialogOption.listBoxPositionWaehlen(xcc, "lstFormation",
 						formationIndex(formation)),
 				"lstFormation");
+		MeldelisteSpaltenDialogOption.anFormationKoppeln(xcc, () -> readFormation(xcc), "lstFormation");
 
 		XDialog xDialog = Lo.qi(XDialog.class, dialog);
 		okPressed = false;
@@ -214,9 +214,8 @@ public class MaastrichterTurnierParameterDialog {
 		Optional<TurnierParameter> result = Optional.empty();
 		if (okPressed) {
 			Formation formation = readFormation(xcc);
-			// Nur Teamname: Teamname-Anzeige ist die einzige Team-Identität und daher zwingend aktiv.
-			boolean teamnameAnzeigen = formation == Formation.NUR_TEAMNAME || readCheckBoxState(xcc, "cbTeamname");
-			boolean vereinsnameAnzeigen = readCheckBoxState(xcc, "cbVereinsname");
+			boolean teamnameAnzeigen = MeldelisteSpaltenDialogOption.leseTeamname(xcc, formation);
+			boolean vereinsnameAnzeigen = MeldelisteSpaltenDialogOption.leseVereinsname(xcc);
 			Optional<MeleeAnmeldungModus> meleeAnmeldung = MeleeAnmeldungDialogOption.leseModus(xcc, formation);
 			TeamAnzeige spielplanAnzeige = TeamAnzeige.ausDialogIndex(readListBoxSelected(xcc, "lstSpielplan"));
 			SchweizerRankingModus rankingModus = readListBoxSelected(xcc, "lstRankingModus") == 1

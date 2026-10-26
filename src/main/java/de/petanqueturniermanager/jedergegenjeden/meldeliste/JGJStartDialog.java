@@ -27,6 +27,7 @@ import com.sun.star.lang.XMultiServiceFactory;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldelisteSpaltenDialogOption;
 import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungDialogOption;
 import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungModus;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -110,10 +111,8 @@ public class JGJStartDialog {
 
 		addFixedLine(xMSF, cont, "sep1", 5, 24, 160, 2);
 
-		addCheckBox(xMSF, cont, "cbTeamname",
-				I18n.get("dialog.jgj.label.teamname"), 8, 30, 150, 10, false);
-		addCheckBox(xMSF, cont, "cbVereinsname",
-				I18n.get("dialog.jgj.label.vereinsname"), 8, 44, 150, 10, false);
+		MeldelisteSpaltenDialogOption.hinzufuegen(xMSF, cont, 8, 30, 150, START_FORMATION, false,
+				false);
 		MeleeAnmeldungDialogOption.hinzufuegen(xMSF, cont, 8, 58, 150, START_FORMATION);
 
 		int y = MeleeAnmeldungDialogOption.HOEHE;
@@ -143,6 +142,7 @@ public class JGJStartDialog {
 				formation -> MeleeAnmeldungDialogOption.listBoxPositionWaehlen(xcc, "lstFormation",
 						formationIndex(formation)),
 				"lstFormation");
+		MeldelisteSpaltenDialogOption.anFormationKoppeln(xcc, () -> readFormation(xcc), "lstFormation");
 
 		// 4. Button-Listener VOR createPeer() anhängen
 		XDialog xDialog = Lo.qi(XDialog.class, dialog);
@@ -184,9 +184,8 @@ public class JGJStartDialog {
 		Optional<StartParameter> result = Optional.empty();
 		if (okPressed) {
 			Formation formation = readFormation(xcc);
-			// Nur Teamname: Teamname-Anzeige ist die einzige Team-Identität und daher zwingend aktiv.
-			boolean teamnameAnzeigen = formation == Formation.NUR_TEAMNAME || readCheckBoxState(xcc, "cbTeamname");
-			boolean vereinsnameAnzeigen = readCheckBoxState(xcc, "cbVereinsname");
+			boolean teamnameAnzeigen = MeldelisteSpaltenDialogOption.leseTeamname(xcc, formation);
+			boolean vereinsnameAnzeigen = MeldelisteSpaltenDialogOption.leseVereinsname(xcc);
 			Optional<MeleeAnmeldungModus> meleeAnmeldung = MeleeAnmeldungDialogOption.leseModus(xcc, formation);
 			TeamAnzeige spielplanAnzeige = spielplanAnzeige(readListBoxSelected(xcc, "lstSpielplanAnzeige"));
 			int gruppengroesse = parseGruppengroesse(readEditText(xcc, "editGruppengroesse"));
