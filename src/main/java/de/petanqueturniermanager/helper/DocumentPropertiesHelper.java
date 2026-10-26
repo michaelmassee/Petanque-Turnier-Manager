@@ -82,6 +82,9 @@ public class DocumentPropertiesHelper {
 	// wiederholten DocumentPropertiesHelper-Konstruktionen für dasselbe Dokument.
 	private static final Set<String> CLOSE_LISTENER_REGISTRIERT = ConcurrentHashMap.newKeySet();
 
+	// Aktiv während nurLesend(...): fehlende Properties werden beim Lesen nicht mit ihrem Default angelegt.
+	private static final ThreadLocal<Boolean> NUR_LESEND = ThreadLocal.withInitial(() -> Boolean.FALSE);
+
 	private final XSpreadsheetDocument xSpreadsheetDocument;
 	private final ConcurrentHashMap<String, String> currentPropListe;
 	private boolean firstLoad = false;
@@ -362,6 +365,9 @@ public class DocumentPropertiesHelper {
 	}
 
 	public void initBooleanPropertyIfAbsent(String propName, boolean defaultVal) {
+		if (istAnlegenFehlenderUnterdrueckt()) {
+			return;
+		}
 		boolean absent = currentPropListe.keySet().stream().noneMatch(key -> key.equalsIgnoreCase(propName));
 		if (absent) {
 			setBooleanProperty(propName, defaultVal);
@@ -377,13 +383,39 @@ public class DocumentPropertiesHelper {
 	 * (Konfig-Sheet vs. extern via {@link #getStringProperty}) divergieren.
 	 */
 	public void initStringPropertyIfAbsent(String propName, String defaultVal) {
-		if (defaultVal == null) {
+		if (defaultVal == null || istAnlegenFehlenderUnterdrueckt()) {
 			return;
 		}
 		boolean absent = currentPropListe.keySet().stream().noneMatch(key -> key.equalsIgnoreCase(propName));
 		if (absent) {
 			setStringProperty(propName, defaultVal);
 		}
+	}
+
+	/** Lesezugriff, der eine geprüfte Exception werfen darf. */
+	@FunctionalInterface
+	public interface LeseAktion<T, E extends Exception> {
+		T lesen() throws E;
+	}
+
+	/**
+	 * Führt {@code aktion} aus, ohne dass Lesezugriffe fehlende Properties mit ihrem Default im Dokument
+	 * anlegen ({@link #initStringPropertyIfAbsent}, {@link #initBooleanPropertyIfAbsent}); die Getter liefern
+	 * weiterhin den Default. Für Abfragen, die das Dokument nicht verändern dürfen – z.B. die Vorbelegung eines
+	 * Start-Dialogs, der noch abgebrochen werden kann. Gilt nur für den aufrufenden Thread.
+	 */
+	public static <T, E extends Exception> T nurLesend(LeseAktion<T, E> aktion) throws E {
+		Boolean vorher = NUR_LESEND.get();
+		NUR_LESEND.set(Boolean.TRUE);
+		try {
+			return aktion.lesen();
+		} finally {
+			NUR_LESEND.set(vorher);
+		}
+	}
+
+	private static boolean istAnlegenFehlenderUnterdrueckt() {
+		return NUR_LESEND.get();
 	}
 
 	public boolean getTurnierModusAusDocument() {

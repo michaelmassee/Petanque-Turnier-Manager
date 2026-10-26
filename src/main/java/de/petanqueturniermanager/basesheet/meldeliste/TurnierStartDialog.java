@@ -82,6 +82,9 @@ public final class TurnierStartDialog {
 	private static final int RAND_OBEN = 4;
 	private static final int RAND_UNTEN = 8;
 
+	// Test-Hook (siehe mitSimuliertemAbbrechen): Dialoge dieses Threads antworten sofort mit „Abbrechen“.
+	private static final ThreadLocal<Boolean> ABBRECHEN_SIMULIERT = ThreadLocal.withInitial(() -> Boolean.FALSE);
+
 	private final XComponentContext context;
 	private final Object dialog;
 	private final XPropertySet dialogProps;
@@ -113,6 +116,20 @@ public final class TurnierStartDialog {
 	public static TurnierStartDialog erstellen(XComponentContext context, String titel)
 			throws com.sun.star.uno.Exception {
 		return new TurnierStartDialog(context, titel);
+	}
+
+	/**
+	 * Nur für Tests: Führt {@code aktion} aus, wobei jeder in diesem Thread angezeigte Start-Dialog vollständig
+	 * aufgebaut, aber nicht angezeigt wird und sofort wie „Abbrechen“ endet. Damit lässt sich automatisiert
+	 * prüfen, dass ein Abbruch das Dokument nicht verändert.
+	 */
+	public static void mitSimuliertemAbbrechen(Runnable aktion) {
+		ABBRECHEN_SIMULIERT.set(Boolean.TRUE);
+		try {
+			aktion.run();
+		} finally {
+			ABBRECHEN_SIMULIERT.remove();
+		}
 	}
 
 	// ---------------------------------------------------------------
@@ -241,6 +258,9 @@ public final class TurnierStartDialog {
 		ProcessBox.from().hide();
 		try {
 			buttonsHinzufuegen();
+			if (ABBRECHEN_SIMULIERT.get()) {
+				return Optional.empty();
+			}
 			XToolkit xToolkit = Lo.qi(XToolkit.class,
 					context.getServiceManager().createInstanceWithContext("com.sun.star.awt.Toolkit", context));
 			XControl xControl = Lo.qi(XControl.class, dialog);
