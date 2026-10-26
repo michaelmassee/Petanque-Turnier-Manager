@@ -51,7 +51,6 @@ public final class MeleeAnmeldungDialogOption {
 
 	private static final int LISTBOX_HOEHE = 12;
 	private static final int LABEL_HOEHE = 10;
-	private static final int LABEL_BREITE = 62;
 	private static final int ABSTAND_LABEL_LISTBOX = 2;
 
 	/** Listbox-Position „Keine“; die Modi folgen in {@link MeleeAnmeldungModus#values()}-Reihenfolge. */
@@ -63,18 +62,9 @@ public final class MeleeAnmeldungDialogOption {
 	/**
 	 * Fügt Label und Listbox (Auswahl „Keine“) zum Dialog-Modell hinzu.
 	 *
+	 * @param labelBreite    Breite des Labels; die Listbox beginnt dahinter mit kleinem Abstand und ist
+	 *                       so an den übrigen Listboxen des Dialogs ausgerichtet
 	 * @param startFormation im Dialog vorausgewählte Formation, bestimmt den initialen Aktiv-Zustand
-	 */
-	public static void hinzufuegen(XMultiServiceFactory xMSF, XNameContainer cont, int x, int y, int breite,
-			Formation startFormation) throws com.sun.star.uno.Exception {
-		hinzufuegen(xMSF, cont, x, y, breite, LABEL_BREITE, startFormation);
-	}
-
-	/**
-	 * Wie {@link #hinzufuegen(XMultiServiceFactory, XNameContainer, int, int, int, Formation)}, aber mit
-	 * vorgegebener Label-Breite – damit die Listbox an den übrigen Listboxen des Dialogs ausgerichtet wird.
-	 *
-	 * @param labelBreite Breite des Labels; die Listbox beginnt dahinter mit kleinem Abstand
 	 */
 	public static void hinzufuegen(XMultiServiceFactory xMSF, XNameContainer cont, int x, int y, int breite,
 			int labelBreite, Formation startFormation) throws com.sun.star.uno.Exception {
