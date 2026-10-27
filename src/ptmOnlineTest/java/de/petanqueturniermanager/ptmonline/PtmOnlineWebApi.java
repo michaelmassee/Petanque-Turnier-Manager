@@ -57,6 +57,11 @@ final class PtmOnlineWebApi {
         body.addProperty("status", "registration");
         body.addProperty("visibility", "public");
         body.addProperty("participantsPublic", true);
+        // Diese Testturniere prüfen die Live-Synchronisation. Ohne explizite Freigabe liefert der
+        // Worker keine Live-Rangliste und lässt auch freigegebene Spieler-Ergebnismeldungen nicht zu.
+        if (!body.has("liveViewEnabled")) {
+            body.addProperty("liveViewEnabled", true);
+        }
         // Mit Koordinaten entfällt die Geokodierung.
         body.addProperty("latitude", 49.4);
         body.addProperty("longitude", 8.7);
