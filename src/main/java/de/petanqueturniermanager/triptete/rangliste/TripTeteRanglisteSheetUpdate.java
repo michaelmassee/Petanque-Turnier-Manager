@@ -7,6 +7,7 @@ import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.rangliste.RanglisteUpdateHelper;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.ptmonline.PtmOnlineLiveAusloeser;
 
@@ -45,6 +46,8 @@ public class TripTeteRanglisteSheetUpdate extends TripTeteRanglisteSheet impleme
 			return;
 		}
 
+		RanglisteUpdateHelper.loescheAlteZeilenBeiGeaenderterAnzahl(this, TEAM_NR_SPALTE, ERSTE_DATEN_ZEILE,
+				LETZTE_SPALTE, meldungen.size());
 		TripTeteRanglisteDatenSchreiber.from(this, getMeldeListe(), getWorkingSpreadsheet()).schreibeDaten();
 		insertFooter(meldungen.size());
 		formatieren(meldungen.size());

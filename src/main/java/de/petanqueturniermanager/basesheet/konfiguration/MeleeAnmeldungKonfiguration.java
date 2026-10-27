@@ -15,6 +15,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.AbstractMeleeAnmeldungShee
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.IFormationKonfiguration;
 import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungLeser;
+import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungModus;
 import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungZeile;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -171,10 +172,13 @@ public final class MeleeAnmeldungKonfiguration {
 	/**
 	 * Schaltet die Mêlée-Anmeldung in der Turnier-Konfiguration des Dokuments ein.
 	 *
-	 * @param ws Dokument, dessen Konfiguration geändert wird
+	 * @param ws    Dokument, dessen Konfiguration geändert wird
+	 * @param modus Art der Team-Bildung beim Übernehmen
 	 */
-	public static void einschalten(WorkingSpreadsheet ws) {
-		new DocumentPropertiesHelper(ws).setBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_MELEE_ANMELDUNG, true);
+	public static void einschalten(WorkingSpreadsheet ws, MeleeAnmeldungModus modus) {
+		DocumentPropertiesHelper properties = new DocumentPropertiesHelper(ws);
+		properties.setStringProperty(BasePropertiesSpalte.KONFIG_PROP_MELEE_ANMELDUNG_MODUS, modus.getKey());
+		properties.setBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_MELEE_ANMELDUNG, true);
 	}
 
 	/**

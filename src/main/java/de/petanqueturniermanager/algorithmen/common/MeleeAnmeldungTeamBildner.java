@@ -13,16 +13,22 @@ import java.util.List;
 import java.util.Set;
 
 import de.petanqueturniermanager.helper.random.RandomSource;
+import de.petanqueturniermanager.supermelee.SuperMeleeTeamRechner;
+import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
 
 /**
- * Mischt eine Liste loser Mêlée-Spieler zu Teams fester Größe.
+ * Mischt eine Liste loser Mêlée-Spieler zu Teams.
  * <p>
- * Die Team-Größe ergibt sich aus der Meldeliste-Formation des Zielsystems (Doublette oder
- * Triplette – die Mêlée-Anmeldung ist nur bei diesen beiden Formationen aktivierbar) und ist damit
- * für alle gebildeten Teams identisch. Reicht die Spielerzahl nicht für eine ganze Anzahl Teams
- * dieser Größe, bleiben die überzähligen Spieler unangetastet offen stehen, bis weitere Spieler
- * dazukommen – es wird bewusst kein Team gebildet, das größer oder kleiner als die vorgegebene
- * Größe ist.
+ * Zwei Arten der Team-Bildung:
+ * <ul>
+ * <li>{@link #bildeTeams(List, int)}: feste Team-Größe aus der Meldeliste-Formation des Zielsystems
+ * (Doublette oder Triplette). Reicht die Spielerzahl nicht für eine ganze Anzahl Teams dieser
+ * Größe, bleiben die überzähligen Spieler unangetastet offen stehen, bis weitere Spieler
+ * dazukommen.</li>
+ * <li>{@link #bildeTeamsOhneFreilos(List, SuperMeleeMode)}: gemischte Doubletten und Triplettes
+ * nach derselben Aufteilung wie im Supermêlée ({@link SuperMeleeTeamRechner}) – die Teamzahl ist
+ * dadurch immer gerade, es entsteht kein Freilos.</li>
+ * </ul>
  * <p>
  * <b>Setzpositionen (SP):</b> Spieler mit identischer, von 0 verschiedener SP dürfen nicht im
  * selben Team landen (typischer Einsatz: alle Spieler eines Vereins bekommen dieselbe SP). Das neu
@@ -36,6 +42,12 @@ public final class MeleeAnmeldungTeamBildner {
 
 	/** Kleinste sinnvolle Team-Größe – darunter kann kein Team gebildet werden. */
 	private static final int MIN_TEAM_GROESSE = 2;
+
+	private static final int DOUBLETTE = 2;
+	private static final int TRIPLETTE = 3;
+
+	/** Weniger Spieler ergeben keine gerade Anzahl gemischter Teams (mindestens zwei Doubletten). */
+	private static final int MIN_SPIELER_OHNE_FREILOS = 4;
 
 	/**
 	 * Maximale Anzahl Misch-Versuche, um die SP-Bedingung zu erfüllen, bevor sie fallen gelassen
@@ -98,6 +110,46 @@ public final class MeleeAnmeldungTeamBildner {
 		}
 		List<MeleeSpieler> zuVerteilen = spieler.subList(0, anzTeams * teamGroesse);
 		return verteile(zuVerteilen, Collections.nCopies(anzTeams, teamGroesse));
+	}
+
+	/**
+	 * Bildet gemischte Doubletten und Triplettes mit gerader Teamzahl (kein Freilos). Die Aufteilung
+	 * übernimmt {@link SuperMeleeTeamRechner} – identisch zur Supermêlée-Spielrunde:
+	 * {@link SuperMeleeMode#Doublette} bevorzugt Doubletten und füllt mit Triplettes auf,
+	 * {@link SuperMeleeMode#Triplette} umgekehrt.
+	 * <p>
+	 * Nicht jede Spielerzahl lässt sich so aufteilen (unter 4 und genau 7 Spieler). Dann wird die
+	 * größte aufteilbare Anzahl verwendet; wie bei {@link #bildeTeams(List, int)} bleiben die
+	 * <b>letzten</b> Spieler in der übergebenen Reihenfolge unverteilt.
+	 *
+	 * @param spieler zu verteilende Spieler in fester Reihenfolge
+	 * @param mode    bevorzugte Team-Größe
+	 * @return gebildete Teams (Triplettes zuerst); leere Liste bei weniger als 4 Spielern
+	 */
+	public static List<MeleeTeam> bildeTeamsOhneFreilos(List<MeleeSpieler> spieler, SuperMeleeMode mode) {
+		checkNotNull(spieler);
+		checkNotNull(mode);
+		int anzVerwendbar = anzahlVerwendbarOhneFreilos(spieler.size());
+		if (anzVerwendbar == 0) {
+			return List.of();
+		}
+		SuperMeleeTeamRechner rechner = new SuperMeleeTeamRechner(anzVerwendbar, mode);
+		List<Integer> teamGroessen = new ArrayList<>(rechner.getAnzPaarungen());
+		teamGroessen.addAll(Collections.nCopies(rechner.getAnzTriplette(), TRIPLETTE));
+		teamGroessen.addAll(Collections.nCopies(rechner.getAnzDoublette(), DOUBLETTE));
+		return verteile(spieler.subList(0, anzVerwendbar), teamGroessen);
+	}
+
+	/**
+	 * @param anzSpieler vorhandene Spieler
+	 * @return größte Spielerzahl &le; {@code anzSpieler}, die sich ohne Freilos in Doubletten und
+	 *         Triplettes aufteilen lässt; 0 wenn das nicht möglich ist
+	 */
+	public static int anzahlVerwendbarOhneFreilos(int anzSpieler) {
+		if (anzSpieler < MIN_SPIELER_OHNE_FREILOS) {
+			return 0;
+		}
+		return new SuperMeleeTeamRechner(anzSpieler).valideAnzahlSpieler() ? anzSpieler : anzSpieler - 1;
 	}
 
 	/**

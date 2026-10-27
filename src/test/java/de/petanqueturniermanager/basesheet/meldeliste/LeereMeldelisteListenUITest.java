@@ -106,7 +106,7 @@ class LeereMeldelisteListenUITest extends BaseCalcUITest {
     void formuleXTeilnehmerUndCheckinFunktionierenOhneMeldungen() {
         assertThatCode(() -> {
             new FormuleXMeldeListeSheetNew(wkingSpreadsheet)
-                    .createMeldelisteWithParams(Formation.DOUBLETTE, false, false, 4);
+                    .createMeldelisteWithParams(Formation.DOUBLETTE, false, false);
             new FormuleXTeilnehmerSheet(wkingSpreadsheet).run();
             new FormuleXCheckinListeSheet(wkingSpreadsheet).run();
         }).doesNotThrowAnyException();

@@ -82,14 +82,6 @@ public class FormuleXKonfigurationSheet extends BaseKonfigurationSheet
         return propertiesSpalte.getAktiveSpielRunde();
     }
 
-    public int getAnzahlRunden() {
-        return propertiesSpalte.getAnzahlRunden();
-    }
-
-    public void setAnzahlRunden(int anzahl) {
-        propertiesSpalte.setAnzahlRunden(anzahl);
-    }
-
     @Override
     public SpielrundeSpielbahn getSpielrundeSpielbahn() {
         return propertiesSpalte.getSpielrundeSpielbahn();

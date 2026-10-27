@@ -49,6 +49,7 @@ import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationS
 import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSheet_Update;
 import de.petanqueturniermanager.ptmonline.PtmOnlineLiveAusloeser;
 import de.petanqueturniermanager.ptmonline.PtmOnlineSpielrundeSync;
+import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeigeHelper;
 import de.petanqueturniermanager.basesheet.meldeliste.TeamSchluessel;
@@ -131,6 +132,23 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet, PtmOnlineL
 					meldeListe.getAlleMeldungen(), aktiveMeldungen);
 			generate(PtmOnlineSpielrundeSync.ohneGesperrte(getWorkingSpreadsheet(), getTurnierSystem(),
 					aktiveMeldungen));
+			ranglisteAnlegenFallsFehlt();
+		}
+	}
+
+	/**
+	 * Legt die Rangliste an, falls sie noch fehlt. Eine vorhandene Rangliste bleibt unverändert, sie wird über
+	 * den Tab-Wechsel aktualisiert. Der Spielplan bleibt das aktive Blatt.
+	 */
+	private void ranglisteAnlegenFallsFehlt() throws GenerateException {
+		XSpreadsheet spielplan = getXSpreadSheet();
+		if (spielplan == null) {
+			return;
+		}
+		JGJRanglisteSheet rangliste = new JGJRanglisteSheet(getWorkingSpreadsheet());
+		if (rangliste.getXSpreadSheet() == null) {
+			rangliste.upDateSheet();
+			getSheetHelper().setActiveSheet(spielplan);
 		}
 	}
 

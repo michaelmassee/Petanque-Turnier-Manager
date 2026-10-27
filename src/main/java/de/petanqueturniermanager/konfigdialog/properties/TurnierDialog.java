@@ -11,6 +11,7 @@ import java.util.function.Predicate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
@@ -28,7 +29,8 @@ public class TurnierDialog extends BasePropertiesDialog {
 	private static final int DIALOG_WIDTH = 300;
 	private static final Map<String, Integer> SORTIER_RANG = Map.ofEntries(
 			Map.entry("Editierbare Felder hervorheben", 0),
-			Map.entry("Melee Anmeldung", 10),
+			Map.entry(BasePropertiesSpalte.KONFIG_PROP_MELEE_ANMELDUNG, 10),
+			Map.entry(BasePropertiesSpalte.KONFIG_PROP_MELEE_ANMELDUNG_MODUS, 11),
 			Map.entry("Teilnehmerliste Anzahl je Spalte", 20),
 			Map.entry("Meldeliste Sortierung", 21),
 			Map.entry("Checkin-Liste Sortierung", 22),

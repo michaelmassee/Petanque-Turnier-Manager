@@ -29,7 +29,7 @@ class FormuleXMeldeListeNurTeamnameDoppelteNamenUITest extends BaseCalcUITest {
 	@Test
 	void teamnameSpalteHatLiveDuplikatPruefungWieTeamNrSpalte() throws Exception {
 		FormuleXMeldeListeSheetNew meldeListeNew = new FormuleXMeldeListeSheetNew(wkingSpreadsheet);
-		meldeListeNew.createMeldelisteWithParams(Formation.NUR_TEAMNAME, false, false, 3);
+		meldeListeNew.createMeldelisteWithParams(Formation.NUR_TEAMNAME, false, false);
 
 		int ersteDatenZeile = FormuleXListeDelegate.ERSTE_DATEN_ZEILE;
 		int teamnameSpalte = meldeListeNew.getTeamnameSpalte();

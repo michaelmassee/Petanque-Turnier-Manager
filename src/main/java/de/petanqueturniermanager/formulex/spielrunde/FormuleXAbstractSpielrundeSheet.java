@@ -418,13 +418,13 @@ public abstract class FormuleXAbstractSpielrundeSheet extends SheetRunner implem
         }
 
         teamPaarungenEinfuegen(paarungen);
-        datenErsteSpalte();
-        bahnNummerierungProDurchgangFallsAktiv(paarungen.size());
+        datenErsteSpalte(paarungen);
+        bahnNummerierungProDurchgangFallsAktiv(paarungen);
         datenformatieren();
         fehlerSpalteFormatieren();
         header();
         trennlinienSetzen();
-        durchgangTrennlinienSetzen(paarungen.size());
+        durchgangTrennlinienSetzen(paarungen);
         druckBereichSetzen();
         SheetFreeze.from(getTurnierSheet()).anzZeilen(ERSTE_DATEN_ZEILE).doFreeze();
 
@@ -455,7 +455,7 @@ public abstract class FormuleXAbstractSpielrundeSheet extends SheetRunner implem
         RangeHelper.from(this, rangeData.getRangePosition(startPos)).setDataInRange(rangeData);
         teamFormelnSchreiben(paarungen);
 
-        durchgangInfoSpaltenSchreiben(paarungen.size());
+        durchgangInfoSpaltenSchreiben(paarungen);
     }
 
     /**
@@ -483,12 +483,13 @@ public abstract class FormuleXAbstractSpielrundeSheet extends SheetRunner implem
         getSheetHelper().pruefeBereichAufFormelFehler(getXSpreadSheet(), teamBereich);
     }
 
-    private void datenErsteSpalte() throws GenerateException {
+    private void datenErsteSpalte(List<TeamPaarung> paarungen) throws GenerateException {
         Integer headerColor = getKonfigurationSheet().getSpielRundeHeaderFarbe();
         Integer letzteZeile = letztePositionRechtsUnten().getZeile();
         SpielrundeSpielbahn spielrundeSpielbahn = getKonfigurationSheet().getSpielrundeSpielbahn();
         spielrundeHelper.datenErsteSpalte(spielrundeSpielbahn, ERSTE_DATEN_ZEILE, letzteZeile, BAHN_NR_SPALTE,
-                ERSTE_HEADER_ZEILE, ZWEITE_HEADER_ZEILE, headerColor);
+                ERSTE_HEADER_ZEILE, ZWEITE_HEADER_ZEILE, headerColor,
+                SpielrundeHelper.freilosIndizes(paarungen));
     }
 
     private void datenformatieren() throws GenerateException {

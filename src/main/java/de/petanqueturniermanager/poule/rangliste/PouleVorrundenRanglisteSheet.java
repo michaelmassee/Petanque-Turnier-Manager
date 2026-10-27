@@ -79,7 +79,7 @@ public class PouleVorrundenRanglisteSheet extends SheetRunner implements ISheet 
     public static final int SPALTE_PKT_MINUS = 7;
     public static final int SPALTE_DIFF      = 8;
     public static final int SPALTE_TURNIER   = 9;
-    private static final int LETZTE_SPALTE  = SPALTE_TURNIER;
+    protected static final int LETZTE_SPALTE  = SPALTE_TURNIER;
 
     public static final int HEADER_ZEILEN  = 2;
 
@@ -184,6 +184,7 @@ public class PouleVorrundenRanglisteSheet extends SheetRunner implements ISheet 
         var gruppenErgebnisse = leseGruppenErgebnisse(vorrundeSheet);
         var sortiertGruppen = sortiereGruppen(gruppenErgebnisse);
         setZuletztSortierteGruppen(sortiertGruppen);
+        vorDemSchreiben(xSheet, sortiertGruppen.stream().mapToInt(List::size).sum());
 
         spaltenBreitenSetzen(xSheet);
         headerSchreiben(xSheet);
@@ -199,6 +200,16 @@ public class PouleVorrundenRanglisteSheet extends SheetRunner implements ISheet 
         if (SheetRunner.isRunning()) {
             SheetFreeze.from(xSheet, getWorkingSpreadsheet()).anzZeilen(HEADER_ZEILEN).doFreeze();
         }
+    }
+
+    /**
+     * Hook vor dem Schreiben der Datenzeilen. Der Vollaufbau schreibt in ein neues Blatt und braucht nichts zu tun.
+     *
+     * @param xSheet   Ranglisten-Sheet
+     * @param anzTeams Anzahl der Datenzeilen, die gleich geschrieben werden
+     */
+    protected void vorDemSchreiben(XSpreadsheet xSheet, int anzTeams) throws GenerateException {
+        // Vollaufbau: neues Blatt, keine alten Zeilen
     }
 
     /**

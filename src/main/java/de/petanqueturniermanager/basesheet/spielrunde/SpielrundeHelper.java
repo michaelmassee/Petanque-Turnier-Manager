@@ -4,13 +4,17 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import com.sun.star.sheet.ConditionOperator;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
 
 import de.petanqueturniermanager.helper.random.RandomSource;
-import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.i18n.I18n;
@@ -26,7 +30,11 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.DatengueltigkeitHelper;
 import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
+import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
+import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
+import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
+import de.petanqueturniermanager.model.TeamPaarung;
 
 /**
  * Erstellung 31.03.2024 / Michael Massee
@@ -73,6 +81,20 @@ public class SpielrundeHelper {
 	 */
 	public void datenErsteSpalte(SpielrundeSpielbahn spielrundeSpielbahnFlagAusKonfig, int erstZeile, int letzteZeile,
 			int nrSpalte, int headerZeile, int headerZeile2, Integer headerColor) throws GenerateException {
+		datenErsteSpalte(spielrundeSpielbahnFlagAusKonfig, erstZeile, letzteZeile, nrSpalte, headerZeile, headerZeile2,
+				headerColor, Set.of());
+	}
+
+	/**
+	 * Wie {@link #datenErsteSpalte(SpielrundeSpielbahn, int, int, int, int, int, Integer)}, zusätzlich bleiben die
+	 * Zeilen der Freilos-Paarungen ohne Bahn-/Paarungsnummer. Ein Freilos belegt keine Bahn, die Nummern der übrigen
+	 * Paarungen laufen lückenlos weiter.
+	 *
+	 * @param freilosIndizes 0-basierte Indizes (relativ zu {@code erstZeile}) der Freilos-Paarungen
+	 */
+	public void datenErsteSpalte(SpielrundeSpielbahn spielrundeSpielbahnFlagAusKonfig, int erstZeile, int letzteZeile,
+			int nrSpalte, int headerZeile, int headerZeile2, Integer headerColor, Set<Integer> freilosIndizes)
+			throws GenerateException {
 
 		sheet.processBoxinfo("processbox.erste.spalte.daten.einfuegen");
 
@@ -121,38 +143,12 @@ public class SpielrundeHelper {
 		int anzPaarungen = letzteZeile - erstZeile + 1;
 
 		// Daten
-		if (spielrundeSpielbahnFlagAusKonfig == SpielrundeSpielbahn.X
-				|| spielrundeSpielbahnFlagAusKonfig == SpielrundeSpielbahn.N) {
-			StringCellValue formulaCellValue = StringCellValue.from(sheet, posErsteDatenZelle);
-			formulaCellValue.setValue("=ROW()-" + erstZeile).setFillAutoDown(letzteZeile);
-			sheet.getSheetHelper().setFormulaInCell(formulaCellValue);
-		} else if (spielrundeSpielbahnFlagAusKonfig == SpielrundeSpielbahn.R) {
-			// R = Spielbahn -> random x 
-			// anzahl paarungen ?
-			ArrayList<Integer> bahnnummern = new ArrayList<>();
-			// fill
-			for (int i = 1; i <= anzPaarungen; i++) {
-				bahnnummern.add(i);
-			}
-			// mishen
-			Collections.shuffle(bahnnummern, RandomSource.asJavaRandom());
-			StringCellValue stringCellValue = StringCellValue.from(sheet, posErsteDatenZelle);
-			for (Integer bahnnr : bahnnummern) {
-				SheetRunner.testDoCancelTask();
-				if (bahnnr > 0) { // es kann sein das wir lücken haben, = teampaarungen ohne bahnnummer
-					stringCellValue.setValue(bahnnr);
-					sheet.getSheetHelper().setStringValueInCell(stringCellValue);
-				}
-				stringCellValue.zeilePlusEins();
-			}
-		} else if (spielrundeSpielbahnFlagAusKonfig == SpielrundeSpielbahn.L) {
-			Position itteratepos = Position.from(posErsteDatenZelle); // orginal nicht verändern
-			// leere spalte
-			for (int i = 1; i <= anzPaarungen; i++) {
-				sheet.getSheetHelper().clearValInCell(sheet.getXSpreadSheet(), itteratepos);
-				itteratepos.zeilePlusEins();
-			}
-		}
+		RangeData bahnNummern = switch (spielrundeSpielbahnFlagAusKonfig) {
+			case L -> leereBahnNummern(anzPaarungen);
+			case R -> zufaelligeBahnNummern(anzPaarungen, freilosIndizes);
+			case X, N -> fortlaufendeBahnNummern(anzPaarungen, freilosIndizes);
+		};
+		RangeHelper.from(sheet, bahnNummern.getRangePosition(posErsteDatenZelle)).setDataInRange(bahnNummern);
 
 		// Formatiere Daten Spalte
 		// erste Spalte, mit prüfung auf doppelte nummer
@@ -175,6 +171,54 @@ public class SpielrundeHelper {
 			DatengueltigkeitHelper.setzeBahnDatengueltigkeit(sheet, rangeErsteSpalte);
 		}
 
+	}
+
+	/** @return 0-basierte Indizes der Freilos-Paarungen (ohne Team B) in {@code paarungen} */
+	public static Set<Integer> freilosIndizes(List<TeamPaarung> paarungen) {
+		return IntStream.range(0, paarungen.size()).filter(i -> paarungen.get(i).isFreilos()).boxed()
+				.collect(Collectors.toUnmodifiableSet());
+	}
+
+	/** Bahnnummern 1..n in Paarungsreihenfolge; Freilos-Zeilen bleiben leer und verbrauchen keine Nummer. */
+	static RangeData fortlaufendeBahnNummern(int anzPaarungen, Set<Integer> freilosIndizes) {
+		RangeData rangeData = new RangeData();
+		int bahnNr = 1;
+		for (int i = 0; i < anzPaarungen; i++) {
+			RowData row = rangeData.addNewRow();
+			if (freilosIndizes.contains(i)) {
+				row.newEmpty();
+			} else {
+				row.newInt(bahnNr++);
+			}
+		}
+		return rangeData;
+	}
+
+	/** Bahnnummern 1..n zufällig verteilt; Freilos-Zeilen bleiben leer und verbrauchen keine Nummer. */
+	static RangeData zufaelligeBahnNummern(int anzPaarungen, Set<Integer> freilosIndizes) {
+		long anzBahnen = IntStream.range(0, anzPaarungen).filter(i -> !freilosIndizes.contains(i)).count();
+		List<Integer> bahnNummern = IntStream.rangeClosed(1, (int) anzBahnen).boxed()
+				.collect(Collectors.toCollection(ArrayList::new));
+		Collections.shuffle(bahnNummern, RandomSource.asJavaRandom());
+		Iterator<Integer> gemischt = bahnNummern.iterator();
+		RangeData rangeData = new RangeData();
+		for (int i = 0; i < anzPaarungen; i++) {
+			RowData row = rangeData.addNewRow();
+			if (freilosIndizes.contains(i)) {
+				row.newEmpty();
+			} else {
+				row.newInt(gemischt.next());
+			}
+		}
+		return rangeData;
+	}
+
+	private static RangeData leereBahnNummern(int anzPaarungen) {
+		RangeData rangeData = new RangeData();
+		for (int i = 0; i < anzPaarungen; i++) {
+			rangeData.addNewRow().newEmpty();
+		}
+		return rangeData;
 	}
 
 	public void formatiereGeradeUngradeSpielpaarungen(ISheet iSheet, int startSpalte, int startZeile, int endSpalte,

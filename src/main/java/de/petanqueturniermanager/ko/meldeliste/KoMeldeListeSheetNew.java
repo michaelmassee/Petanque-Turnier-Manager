@@ -18,6 +18,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.NewTestDatenValidator;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
@@ -226,14 +227,12 @@ public class KoMeldeListeSheetNew extends SheetRunner
 			return;
 		}
 
-		// KonfigSheet anlegen, damit Defaults lesbar sind
-		getKonfigurationSheet().update();
-
-		// Dialog anzeigen
+		// Dialog zuerst – bei Abbruch keine Änderungen am Dokument. nurLesend: das Lesen der
+		// Vorbelegung darf keine fehlenden Properties im Dokument anlegen.
 		KoKonfigurationSheet konfig = getKonfigurationSheet();
 		Optional<KoTurnierParameterDialog.TurnierParameter> result;
 		try {
-			result = KoTurnierParameterDialog.from(getWorkingSpreadsheet())
+			result = DocumentPropertiesHelper.nurLesend(() -> KoTurnierParameterDialog.from(getWorkingSpreadsheet())
 					.show(konfig.getMeldeListeFormation(),
 							konfig.isMeldeListeTeamnameAnzeigen(),
 							konfig.isMeldeListeVereinsnameAnzeigen(),
@@ -242,7 +241,7 @@ public class KoMeldeListeSheetNew extends SheetRunner
 							konfig.isSpielbaumSpielUmPlatz3(),
 							konfig.isSpielbaumBahnNurRunde1(),
 							konfig.getGruppenGroesse(),
-							konfig.getMinLetzteGruppeGroesse());
+							konfig.getMinLetzteGruppeGroesse()));
 		} catch (com.sun.star.uno.Exception e) {
 			String errMsg = I18n.get("error.dialog.parameterdialog", e.getMessage());
 			logger.error(errMsg, e);
@@ -250,8 +249,11 @@ public class KoMeldeListeSheetNew extends SheetRunner
 		}
 
 		if (result.isEmpty()) {
-			return;
+			return; // Benutzer hat abgebrochen – keine Dokument-Änderungen
 		}
+
+		// Erst nach Bestätigung: TurnierSystem + Page Styles setzen
+		konfig.update();
 
 		// Werte in KonfigSheet speichern
 		var params = result.get();
@@ -267,8 +269,8 @@ public class KoMeldeListeSheetNew extends SheetRunner
 		konfig.setSpielbaumSpielUmPlatz3(params.spielUmPlatz3());
 		konfig.setGruppenGroesse(params.gruppenGroesse());
 		konfig.setMinLetzteGruppeGroesse(params.minLetzteGruppeGroesse());
-		if (params.meleeAnmeldung()) {
-			MeleeAnmeldungKonfiguration.einschalten(getWorkingSpreadsheet());
+		if (params.meleeAnmeldung().isPresent()) {
+			MeleeAnmeldungKonfiguration.einschalten(getWorkingSpreadsheet(), params.meleeAnmeldung().orElseThrow());
 		}
 
 		// KonfigSheet mit neuen Werten neu rendern
@@ -277,7 +279,7 @@ public class KoMeldeListeSheetNew extends SheetRunner
 		// Alle anderen Blätter entfernen, dann Meldeliste erstellen
 		getSheetHelper().removeAllSheetsExclude();
 		createMeldelisteWithParams();
-		if (params.meleeAnmeldung()) {
+		if (params.meleeAnmeldung().isPresent()) {
 			new KoMeleeAnmeldungSheet(getWorkingSpreadsheet()).generate();
 		}
 	}

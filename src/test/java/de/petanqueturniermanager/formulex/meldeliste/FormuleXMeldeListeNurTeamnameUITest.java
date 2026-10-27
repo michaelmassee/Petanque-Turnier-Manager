@@ -29,7 +29,7 @@ class FormuleXMeldeListeNurTeamnameUITest extends BaseCalcUITest {
     @Test
     void meldelisteOhneSpielerspaltenWirdKorrektAufgebaut() throws Exception {
         FormuleXMeldeListeSheetNew meldeListeNew = new FormuleXMeldeListeSheetNew(wkingSpreadsheet);
-        meldeListeNew.createMeldelisteWithParams(Formation.NUR_TEAMNAME, false, false, 5);
+        meldeListeNew.createMeldelisteWithParams(Formation.NUR_TEAMNAME, false, false);
 
         FormuleXKonfigurationSheet konfig = new FormuleXKonfigurationSheet(wkingSpreadsheet);
         assertThat(konfig.getMeldeListeFormation()).isEqualTo(Formation.NUR_TEAMNAME);

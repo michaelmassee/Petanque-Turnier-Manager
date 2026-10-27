@@ -3,6 +3,8 @@ package de.petanqueturniermanager.algorithmen.common;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.Set;
+
 import org.junit.jupiter.api.Test;
 
 public class DurchgangAufteilungRechnerTest {
@@ -90,5 +92,33 @@ public class DurchgangAufteilungRechnerTest {
                 .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> DurchgangAufteilungRechner.berechne(16, 0, true))
                 .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void testZeilen_freilosErzwingtKeinenZusaetzlichenDurchgang() {
+        // 8 Spiele + Freilos am Ende, 8 Bahnen: ein Durchgang mit allen 9 Zeilen
+        assertThat(DurchgangAufteilungRechner.berechneZeilen(9, Set.of(8), 8, false)).containsExactly(9);
+    }
+
+    @Test
+    public void testZeilen_freilosWirdLetztemDurchgangZugeschlagen() {
+        // 16 Spiele + Freilos, 8 Bahnen: Freilos-Zeile haengt am zweiten Durchgang
+        assertThat(DurchgangAufteilungRechner.berechneZeilen(17, Set.of(16), 8, false)).containsExactly(8, 9);
+    }
+
+    @Test
+    public void testZeilen_gleichmaessigOhneFreilosInDerZaehlung() {
+        // 13 Spiele + Freilos, 4 Bahnen gleichmaessig: Spiele [4, 3, 3, 3], Freilos im letzten Block
+        assertThat(DurchgangAufteilungRechner.berechneZeilen(14, Set.of(13), 4, true)).containsExactly(4, 3, 3, 4);
+    }
+
+    @Test
+    public void testZeilen_ohneFreilosWieBerechne() {
+        assertThat(DurchgangAufteilungRechner.berechneZeilen(17, Set.of(), 8, false)).containsExactly(8, 8, 1);
+    }
+
+    @Test
+    public void testZeilen_nurFreilosEinBlock() {
+        assertThat(DurchgangAufteilungRechner.berechneZeilen(1, Set.of(0), 8, false)).containsExactly(1);
     }
 }

@@ -35,6 +35,7 @@ import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrund
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerSpielrundeSheetNaechste;
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungModus;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.LibreOfficePtmOnlineSpeicher;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
@@ -131,7 +132,7 @@ abstract class BasePtmOnlineZusammenspielTest extends BaseCalcUITest {
      */
     protected void meleeTurnierAnlegen(Formation formation, LocalDate datum) throws Exception {
         schweizerAnlegen("melee", formation, datum, new JsonObject());
-        MeleeAnmeldungKonfiguration.einschalten(wkingSpreadsheet);
+        MeleeAnmeldungKonfiguration.einschalten(wkingSpreadsheet, MeleeAnmeldungModus.EINFACH);
         wieImSheetRunner(() -> new SchweizerMeleeAnmeldungSheet(wkingSpreadsheet).generate());
         ziel = MeldelisteZielFactory.fuerPtmOnline(wkingSpreadsheet).orElseThrow();
     }

@@ -51,6 +51,7 @@ import de.petanqueturniermanager.ptmonline.PtmOnlineSpielrundeSync;
 import de.petanqueturniermanager.supermelee.AbstractSuperMeleeRanglisteFormatter;
 import de.petanqueturniermanager.triptete.konfiguration.TripTeteKonfigurationSheet;
 import de.petanqueturniermanager.triptete.meldeliste.TripTeteMeldeListeSheetUpdate;
+import de.petanqueturniermanager.triptete.rangliste.TripTeteRanglisteSheet;
 
 /**
  * Trip-Tête-Spielplan: Round-Robin-Paarungen, pro Begegnung drei Partien
@@ -134,6 +135,23 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet, PtmOn
 		PtmOnlineSpielrundeSync.turnierstartAbgleichen(getWorkingSpreadsheet(), getTurnierSystem(), true,
 				alleMeldungen, alleMeldungen);
 		generate(alleMeldungen);
+		ranglisteAnlegenFallsFehlt();
+	}
+
+	/**
+	 * Legt die Rangliste an, falls sie noch fehlt. Eine vorhandene Rangliste bleibt unverändert, sie wird über
+	 * den Tab-Wechsel aktualisiert. Der Spielplan bleibt das aktive Blatt.
+	 */
+	private void ranglisteAnlegenFallsFehlt() throws GenerateException {
+		XSpreadsheet spielplan = getXSpreadSheet();
+		if (spielplan == null) {
+			return;
+		}
+		TripTeteRanglisteSheet rangliste = new TripTeteRanglisteSheet(getWorkingSpreadsheet());
+		if (rangliste.getXSpreadSheet() == null) {
+			rangliste.upDateSheet();
+			getSheetHelper().setActiveSheet(spielplan);
+		}
 	}
 
 	public void generate(TeamMeldungen meldungen) throws GenerateException {
@@ -279,25 +297,42 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet, PtmOn
 	}
 
 	private void insertBahnenSpalten(List<List<TeamPaarung>> spielPlan) throws GenerateException {
-		// Pro Runde werden 2 physische Bahnen pro Begegnung vergeben:
-		//   Bahn-Tri (ungerade): Triplette läuft hier, danach Doublette (sequenziell)
-		//   Bahn-Dou (ungerade): dieselbe Bahn wie Tri – Doublette folgt Triplette
-		//   Bahn-Tête (gerade):  parallel zur Doublette, separate Bahn
+		RangeData rangeData = bahnenDaten(spielPlan);
+		Position startPos = Position.from(BAHN_TRI_SPALTE, ERSTE_DATEN_ZEILE);
+		RangeHelper.from(this, rangeData.getRangePosition(startPos)).setDataInRange(rangeData);
+	}
+
+	/**
+	 * Bahnen je Begegnung (Spalten Tri / Dou / Tête). Pro Runde werden 2 physische Bahnen pro Begegnung vergeben:
+	 * <ul>
+	 * <li>Bahn-Tri (ungerade): Triplette läuft hier, danach Doublette (sequenziell)</li>
+	 * <li>Bahn-Dou (ungerade): dieselbe Bahn wie Tri – Doublette folgt Triplette</li>
+	 * <li>Bahn-Tête (gerade): parallel zur Doublette, separate Bahn</li>
+	 * </ul>
+	 * Ein Freispiel belegt keine Bahn: Die Bahnzellen bleiben leer und die Bahnnummern der übrigen Begegnungen
+	 * laufen lückenlos weiter.
+	 */
+	@VisibleForTesting
+	static RangeData bahnenDaten(List<List<TeamPaarung>> spielPlan) {
 		RangeData rangeData = new RangeData();
 		for (List<TeamPaarung> runde : spielPlan) {
 			int bahnInRunde = 1;
-			for (int i = 0; i < runde.size(); i++) {
-				int bahnTri = 2 * bahnInRunde - 1;
-				int bahnTete = 2 * bahnInRunde;
+			for (TeamPaarung paarung : runde) {
 				RowData row = rangeData.addNewRow();
+				if (paarung.isFreilos()) {
+					row.newEmpty();
+					row.newEmpty();
+					row.newEmpty();
+					continue;
+				}
+				int bahnTri = 2 * bahnInRunde - 1;
 				row.newInt(bahnTri);
-				row.newInt(bahnTri);  // Doublette auf gleicher Bahn wie Triplette (sequenziell)
-				row.newInt(bahnTete); // Tête auf separater Parallelbahn
+				row.newInt(bahnTri);
+				row.newInt(2 * bahnInRunde);
 				bahnInRunde++;
 			}
 		}
-		Position startPos = Position.from(BAHN_TRI_SPALTE, ERSTE_DATEN_ZEILE);
-		RangeHelper.from(this, rangeData.getRangePosition(startPos)).setDataInRange(rangeData);
+		return rangeData;
 	}
 
 	/**

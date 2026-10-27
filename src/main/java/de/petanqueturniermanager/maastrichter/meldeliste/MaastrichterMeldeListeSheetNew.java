@@ -17,6 +17,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.NewTestDatenValidator;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
@@ -77,7 +78,8 @@ public class MaastrichterMeldeListeSheetNew extends SheetRunner implements IShee
 
 		Optional<MaastrichterTurnierParameterDialog.TurnierParameter> param;
 		try {
-			param = MaastrichterTurnierParameterDialog.from(getWorkingSpreadsheet()).show(
+			// nurLesend: das Lesen der Vorbelegung darf keine fehlenden Properties im Dokument anlegen
+			param = DocumentPropertiesHelper.nurLesend(() -> MaastrichterTurnierParameterDialog.from(getWorkingSpreadsheet()).show(
 					Formation.DOUBLETTE, false, false, TeamAnzeige.NR,
 					konfigurationSheet.getRankingModus(),
 					konfigurationSheet.getAnzVorrunden(),
@@ -87,7 +89,7 @@ public class MaastrichterMeldeListeSheetNew extends SheetRunner implements IShee
 					konfigurationSheet.isSpielbaumSpielUmPlatz3(),
 					konfigurationSheet.getGruppenGroesse(),
 					konfigurationSheet.getMinLetzteGruppeGroesse(),
-					konfigurationSheet.getMaastrichterGruppenModus());
+					konfigurationSheet.getMaastrichterGruppenModus()));
 		} catch (Exception e) {
 			String errMsg = I18n.get("error.dialog.parameterdialog", e.getMessage());
 			logger.error(errMsg, e);
@@ -121,8 +123,8 @@ public class MaastrichterMeldeListeSheetNew extends SheetRunner implements IShee
 
 		erstelleMeldeliste(parameter.formation(), parameter.teamnameAnzeigen(), parameter.vereinsnameAnzeigen(),
 				parameter.spielplanTeamAnzeige());
-		if (parameter.meleeAnmeldung()) {
-			MeleeAnmeldungKonfiguration.einschalten(getWorkingSpreadsheet());
+		if (parameter.meleeAnmeldung().isPresent()) {
+			MeleeAnmeldungKonfiguration.einschalten(getWorkingSpreadsheet(), parameter.meleeAnmeldung().orElseThrow());
 			new MaastrichterMeleeAnmeldungSheet(getWorkingSpreadsheet()).generate();
 		}
 	}

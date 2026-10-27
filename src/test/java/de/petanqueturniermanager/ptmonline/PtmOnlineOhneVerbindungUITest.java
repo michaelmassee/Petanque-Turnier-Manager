@@ -205,7 +205,7 @@ class PtmOnlineOhneVerbindungUITest extends BaseCalcUITest {
             case KASKADE -> new KaskadeMeldeListeSheetNew(wkingSpreadsheet)
                     .createMeldelisteWithParams(Formation.DOUBLETTE, false, false, 2);
             case FORMULEX -> new FormuleXMeldeListeSheetNew(wkingSpreadsheet)
-                    .createMeldelisteWithParams(Formation.TRIPLETTE, false, false, 4);
+                    .createMeldelisteWithParams(Formation.TRIPLETTE, false, false);
             case TRIPTETE -> new TripTeteMeldeListeSheetNew(wkingSpreadsheet).createMeldeliste();
             default -> throw new IllegalArgumentException("Kein Turniersystem: " + system);
         }

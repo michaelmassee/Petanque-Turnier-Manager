@@ -7,6 +7,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.IntStream;
 
 /**
  * Berechnet die Größen der Durchgang-Blöcke (Heats) für die optionale Durchgang-Aufteilung
@@ -79,5 +81,48 @@ public class DurchgangAufteilungRechner {
             ergebnis.add(i < rest ? basis + 1 : basis);
         }
         return ergebnis;
+    }
+
+    /**
+     * Berechnet die Durchgang-Blöcke in Sheet-Zeilen für eine Spielrunde, die Freilos-Zeilen enthält.
+     *
+     * <p>Ein Freilos belegt keine Bahn und zählt deshalb nicht zur Auslastung eines Durchgangs: Die
+     * Aufteilung erfolgt über {@link #berechne(int, int, boolean)} mit der Anzahl der tatsächlich
+     * gespielten Paarungen. Freilos-Zeilen werden dem Durchgang zugeschlagen, in dem sie stehen
+     * (Freilose am Ende der Runde also dem letzten Durchgang), damit die Blöcke weiterhin lückenlos
+     * alle Zeilen abdecken. Beispiel: 8 Spiele + 1 Freilos bei 8 Bahnen → {@code [9]} statt
+     * {@code [8, 1]}.
+     *
+     * @param anzahlZeilen           Gesamtanzahl Paarungszeilen inkl. Freilos (muss &gt; 0 sein)
+     * @param freilosIndizes         0-basierte Zeilenindizes der Freilos-Paarungen
+     * @param anzahlBahnen           maximale Spiele pro Durchgang (muss &gt; 0 sein)
+     * @param gleichmaessigAufteilen siehe {@link #berechne(int, int, boolean)}
+     * @return unveränderliche Liste der Durchgang-Größen in Zeilen (Index 0 = Durchgang 1 usw.)
+     * @throws IllegalArgumentException wenn Vorbedingungen verletzt sind
+     */
+    public static List<Integer> berechneZeilen(int anzahlZeilen, Set<Integer> freilosIndizes, int anzahlBahnen,
+            boolean gleichmaessigAufteilen) {
+        checkArgument(anzahlZeilen > 0, "anzahlZeilen muss groesser als 0 sein");
+        int anzahlSpiele = (int) IntStream.range(0, anzahlZeilen).filter(i -> !freilosIndizes.contains(i)).count();
+        if (anzahlSpiele == 0) {
+            return List.of(anzahlZeilen);
+        }
+        List<Integer> spielBloecke = berechne(anzahlSpiele, anzahlBahnen, gleichmaessigAufteilen);
+
+        int[] zeilenProBlock = new int[spielBloecke.size()];
+        int block = 0;
+        int spieleImBlock = 0;
+        for (int zeile = 0; zeile < anzahlZeilen; zeile++) {
+            boolean istSpiel = !freilosIndizes.contains(zeile);
+            if (istSpiel && spieleImBlock == spielBloecke.get(block)) {
+                block++;
+                spieleImBlock = 0;
+            }
+            zeilenProBlock[block]++;
+            if (istSpiel) {
+                spieleImBlock++;
+            }
+        }
+        return IntStream.of(zeilenProBlock).boxed().toList();
     }
 }

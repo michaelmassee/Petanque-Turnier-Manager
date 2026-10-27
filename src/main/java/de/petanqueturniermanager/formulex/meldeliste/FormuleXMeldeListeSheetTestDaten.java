@@ -64,7 +64,7 @@ public class FormuleXMeldeListeSheetTestDaten extends SheetRunner implements ISh
         getSheetHelper().removeAllSheetsExclude();
 
         getKonfigurationSheet().update();
-        meldeListeNew.createMeldelisteWithParams(Formation.TRIPLETTE, true, false, 4);
+        meldeListeNew.createMeldelisteWithParams(Formation.TRIPLETTE, true, false);
 
         teamNamenEinfuegen();
 

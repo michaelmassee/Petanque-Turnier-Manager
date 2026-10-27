@@ -41,7 +41,22 @@ public class FormuleXSpielrundeSheetNaechste extends FormuleXAbstractSpielrundeS
     protected void doRun() throws GenerateException {
         getxCalculatable().enableAutomaticCalculation(false);
         processBoxinfo("processbox.naechste.spielrunde", getSpielRundeNr().getNr());
-        naechsteSpielrundeEinfuegen();
+        if (naechsteSpielrundeEinfuegen()) {
+            ranglisteNachErsterRundeAnlegen();
+        }
+    }
+
+    /**
+     * Nach der ersten Runde gibt es noch keinen Hook vor der Runde, der die Rangliste anlegt.
+     * Der {@link IRanglistenAktualisierer} baut eine fehlende Rangliste vollständig auf.
+     * Die neue Spielrunde bleibt das aktive Blatt.
+     */
+    private void ranglisteNachErsterRundeAnlegen() throws GenerateException {
+        if (getKonfigurationSheet().getAktiveSpielRunde().getNr() != 1) {
+            return;
+        }
+        getRanglistenAktualisierer().aktualisiereRanglisten();
+        getSheetHelper().setActiveSheet(getXSpreadSheet());
     }
 
     public boolean naechsteSpielrundeEinfuegen() throws GenerateException {
@@ -94,17 +109,9 @@ public class FormuleXSpielrundeSheetNaechste extends FormuleXAbstractSpielrundeS
             neueSpielrundeNr++;
         }
 
-        int maxRunden = getKonfigurationSheet().getAnzahlRunden();
-        if (neueSpielrundeNr > maxRunden) {
-            MessageBox.from(getxContext(), MessageBoxTypeEnum.INFO_OK)
-                    .caption(I18n.get("msg.caption.formulex.max.runden"))
-                    .message(I18n.get("msg.text.formulex.max.runden.erreicht", maxRunden))
-                    .show();
-            return false;
-        }
-
         // Bestehende Rangliste aktualisieren, damit die Sortierung der Paarungen
-        // auf dem aktuellen Stand basiert. Nur ab Runde >= 2 sinnvoll.
+        // auf dem aktuellen Stand basiert. Nur ab Runde >= 2 sinnvoll, nach Runde 1
+        // legt doRun() die Rangliste an.
         if (neueSpielrundeNr >= 2) {
             vorNaechsterRunde();
         }

@@ -7,7 +7,5 @@ public record FormuleXTurnierSchritt(
         boolean spielrundeVorhanden,
         int aktuelleRundeNr,
         int rundeGespielt,
-        int rundeGesamt,
-        int anzahlRunden,
-        boolean beendet) {
+        int rundeGesamt) {
 }

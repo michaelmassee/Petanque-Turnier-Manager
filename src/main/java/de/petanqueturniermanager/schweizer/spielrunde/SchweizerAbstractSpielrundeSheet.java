@@ -401,7 +401,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 	 *
 	 * @throws GenerateException
 	 */
-	private void datenErsteSpalte() throws GenerateException {
+	private void datenErsteSpalte(List<TeamPaarung> paarungen) throws GenerateException {
 		Position letztePos = letztePositionRechtsUnten();
 		if (letztePos == null) {
 			throw new GenerateException(I18n.get("schweizer.spielrunde.fehler.keine.paarungen"));
@@ -411,7 +411,8 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		SpielrundeSpielbahn spielrundeSpielbahn = getKonfigurationSheet().getSpielrundeSpielbahn();
 
 		spielrundeHelper.datenErsteSpalte(spielrundeSpielbahn, ERSTE_DATEN_ZEILE, letzteZeile, BAHN_NR_SPALTE,
-				ERSTE_HEADER_ZEILE, ZWEITE_HEADER_ZEILE, headerColor);
+				ERSTE_HEADER_ZEILE, ZWEITE_HEADER_ZEILE, headerColor,
+				SpielrundeHelper.freilosIndizes(paarungen));
 	}
 
 	private void header() throws GenerateException {
@@ -685,13 +686,14 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		}
 
 		teamPaarungenEinfuegen(paarungen);
-		datenErsteSpalte(); // BahnNr
-		bahnNummerierungProDurchgangFallsAktiv(paarungen.size()); // ueberschreibt BahnNr pro Durchgang neu ab 1
+		datenErsteSpalte(paarungen); // BahnNr
+		// ueberschreibt BahnNr pro Durchgang neu ab 1
+		bahnNummerierungProDurchgangFallsAktiv(paarungen);
 		datenformatieren();
 		fehlerSpalteFormatieren();
 		header();
 		trennlinienSetzen();
-		durchgangTrennlinienSetzen(paarungen.size());
+		durchgangTrennlinienSetzen(paarungen);
 		druckBereichSetzen();
 		SheetFreeze.from(getTurnierSheet()).anzZeilen(ERSTE_DATEN_ZEILE).doFreeze();
 
@@ -730,7 +732,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		Position startPos = Position.from(TEAM_A_SPALTE, ERSTE_DATEN_ZEILE);
 		RangeHelper.from(this, rangeData.getRangePosition(startPos)).setDataInRange(rangeData);
 		teamFormelnSchreiben(paarungen);
-		durchgangInfoSpaltenSchreiben(paarungen.size());
+		durchgangInfoSpaltenSchreiben(paarungen);
 	}
 
 	/**

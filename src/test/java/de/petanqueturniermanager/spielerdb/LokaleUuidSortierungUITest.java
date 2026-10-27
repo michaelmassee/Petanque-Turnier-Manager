@@ -122,7 +122,7 @@ class LokaleUuidSortierungUITest extends BaseCalcUITest {
                         }),
                 new Szenario(TurnierSystem.FORMULEX,
                         ws -> new FormuleXMeldeListeSheetNew(ws).createMeldelisteWithParams(Formation.TETE, false,
-                                false, 4),
+                                false),
                         ws -> {
                             new FormuleXTeilnehmerSheet(ws).run();
                             new FormuleXCheckinListeSheet(ws).run();

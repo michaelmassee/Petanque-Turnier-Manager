@@ -21,6 +21,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.NewTestDatenValidator;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
@@ -227,8 +228,10 @@ public class SchweizerMeldeListeSheetNew extends SheetRunner
 		// Dialog zuerst – bei Abbruch keine Änderungen am Dokument
 		Optional<SchweizerTurnierParameterDialog.TurnierParameter> param;
 		try {
-			param = SchweizerTurnierParameterDialog.from(getWorkingSpreadsheet()).show(Formation.DOUBLETTE, false, false,
-				TeamAnzeige.NR, getKonfigurationSheet().getRankingModus());
+			// nurLesend: das Lesen der Vorbelegung darf keine fehlenden Properties im Dokument anlegen
+			param = DocumentPropertiesHelper.nurLesend(() -> SchweizerTurnierParameterDialog
+					.from(getWorkingSpreadsheet()).show(Formation.DOUBLETTE, false, false, TeamAnzeige.NR,
+							getKonfigurationSheet().getRankingModus()));
 		} catch (Exception e) {
 			String errMsg = I18n.get("error.dialog.parameterdialog", e.getMessage());
 			logger.error(errMsg, e);
@@ -251,8 +254,8 @@ public class SchweizerMeldeListeSheetNew extends SheetRunner
 		getKonfigurationSheet().setRankingModus(parameter.rankingModus());
 		createMeldelisteWithParams(parameter.formation(), parameter.teamnameAnzeigen(), parameter.vereinsnameAnzeigen(),
 				parameter.spielplanTeamAnzeige());
-		if (parameter.meleeAnmeldung()) {
-			MeleeAnmeldungKonfiguration.einschalten(getWorkingSpreadsheet());
+		if (parameter.meleeAnmeldung().isPresent()) {
+			MeleeAnmeldungKonfiguration.einschalten(getWorkingSpreadsheet(), parameter.meleeAnmeldung().orElseThrow());
 			new SchweizerMeleeAnmeldungSheet(getWorkingSpreadsheet()).generate();
 		}
 	}

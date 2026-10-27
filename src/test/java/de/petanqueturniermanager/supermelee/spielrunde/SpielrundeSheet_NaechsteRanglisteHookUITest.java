@@ -10,11 +10,15 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.sun.star.container.XNamed;
+import com.sun.star.frame.XModel;
 import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.sheet.XSpreadsheetView;
 
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.Position;
@@ -45,8 +49,9 @@ import de.petanqueturniermanager.toolbar.strategie.SupermeleeToolbarStrategie;
  *     Hook in die Endrangliste übernommen).</li>
  * <li>Die Tagesrangliste reflektiert nach {@code Naechste.run()} die Ergebnisse des
  *     gerade beendeten Spielrunden.</li>
- * <li>Existenz-Guards: weder Tages- noch Endrangliste werden vom Hook angelegt,
- *     wenn sie zuvor nicht erstellt wurden.</li>
+ * <li>Eine fehlende Tagesrangliste legt Naechste nach dem Einfügen der Runde an.</li>
+ * <li>Existenz-Guard: die Endrangliste wird vom Hook nicht angelegt, wenn sie zuvor
+ *     nicht erstellt wurde.</li>
  * </ul>
  */
 public class SpielrundeSheet_NaechsteRanglisteHookUITest extends BaseCalcUITest {
@@ -169,11 +174,11 @@ public class SpielrundeSheet_NaechsteRanglisteHookUITest extends BaseCalcUITest 
 	}
 
 	/**
-	 * Existenz-Guard für die Tagesrangliste: ist sie zuvor nie angelegt worden,
-	 * darf weder der Hook noch das After-Add-{@code generate()} sie erzeugen.
+	 * Fehlt die Tagesrangliste, legt Naechste sie nach dem Einfügen der Runde an.
+	 * Die neue Spielrunde bleibt das aktive Blatt.
 	 */
 	@Test
-	public void testHookErstelltKeineTagesranglisteWennNichtVorhanden() throws GenerateException {
+	public void testNaechsteLegtTagesranglisteAnWennNichtVorhanden() throws GenerateException {
 		testMeldeListeErstellen.initMitAlleDieSpielen(ANZ_MELDUNGEN);
 
 		SpielTagNr spieltag = SpielTagNr.from(1);
@@ -183,16 +188,27 @@ public class SpielrundeSheet_NaechsteRanglisteHookUITest extends BaseCalcUITest 
 		deaktiviereSpielerZweiInSpieltagEins();
 		ranglisteTestDaten.erstelleTestSpielrunden(2, false, spieltag);
 
+		// Die Testspielrunden laufen selbst über Naechste und legen die Tagesrangliste schon an.
 		String tagName = new SpieltagRanglisteSheet(wkingSpreadsheet).getSheetName(spieltag);
+		sheetHlp.removeSheet(tagName);
 		assertThat(sheetHlp.findByName(tagName))
 				.as("Tagesrangliste darf vor Naechste nicht existieren (Vorbedingung)")
 				.isNull();
 
-		new SpielrundeSheet_Naechste(wkingSpreadsheet).run();
+		SpielrundeSheet_Naechste naechste = new SpielrundeSheet_Naechste(wkingSpreadsheet);
+		naechste.run();
 
 		assertThat(sheetHlp.findByName(tagName))
-				.as("Naechste darf keine Tagesrangliste anlegen, wenn sie nicht existiert")
-				.isNull();
+				.as("Naechste muss die fehlende Tagesrangliste anlegen")
+				.isNotNull();
+		assertThat(aktivesSheet())
+				.as("Die neue Spielrunde bleibt das aktive Blatt")
+				.isEqualTo(Lo.qi(XNamed.class, naechste.getXSpreadSheet()).getName());
+	}
+
+	private String aktivesSheet() {
+		XSpreadsheetView view = Lo.qi(XSpreadsheetView.class, Lo.qi(XModel.class, doc).getCurrentController());
+		return Lo.qi(XNamed.class, view.getActiveSheet()).getName();
 	}
 
 	/**

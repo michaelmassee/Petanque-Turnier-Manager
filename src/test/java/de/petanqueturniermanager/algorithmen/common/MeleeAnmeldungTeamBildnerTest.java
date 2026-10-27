@@ -13,11 +13,13 @@ import org.junit.jupiter.api.Test;
 import de.petanqueturniermanager.algorithmen.common.MeleeAnmeldungTeamBildner.MeleeSpieler;
 import de.petanqueturniermanager.algorithmen.common.MeleeAnmeldungTeamBildner.MeleeTeam;
 import de.petanqueturniermanager.helper.random.RandomSource;
+import de.petanqueturniermanager.supermelee.SuperMeleeTeamRechner;
+import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
 
 /**
  * Testet die Team-Bildung aus Mêlée-Anmeldungen: feste Team-Größe (Meldeliste-Formation),
- * korrekter Umgang mit nicht restlos teilbaren Spielerzahlen, SP-Bedingung und die abgeleitete
- * Team-Setzposition.
+ * gemischte Doubletten/Triplettes ohne Freilos, korrekter Umgang mit nicht restlos teilbaren
+ * Spielerzahlen, SP-Bedingung und die abgeleitete Team-Setzposition.
  */
 public class MeleeAnmeldungTeamBildnerTest {
 
@@ -127,6 +129,96 @@ public class MeleeAnmeldungTeamBildnerTest {
 	}
 
 	// ---------------------------------------------------------------
+	// Gemischt ohne Freilos
+	// ---------------------------------------------------------------
+
+	@Test
+	public void testOhneFreilos_liefertGeradeTeamzahlMitSupermeleeAufteilung() {
+		for (SuperMeleeMode mode : SuperMeleeMode.values()) {
+			for (int anzahl = 4; anzahl <= 40; anzahl++) {
+				if (anzahl == 7) {
+					continue;
+				}
+				List<MeleeTeam> teams = MeleeAnmeldungTeamBildner.bildeTeamsOhneFreilos(spieler(anzahl), mode);
+				SuperMeleeTeamRechner rechner = new SuperMeleeTeamRechner(anzahl, mode);
+				assertThat(teams.size() % 2).as("gerade Teamzahl bei %d Spielern, %s", anzahl, mode).isZero();
+				assertThat(teams.stream().filter(team -> team.spieler().size() == 3).count())
+						.as("Triplettes bei %d Spielern, %s", anzahl, mode).isEqualTo(rechner.getAnzTriplette());
+				assertThat(teams.stream().filter(team -> team.spieler().size() == 2).count())
+						.as("Doubletten bei %d Spielern, %s", anzahl, mode).isEqualTo(rechner.getAnzDoublette());
+				assertThat(alleNummern(teams)).as("alle Spieler verteilt bei %d Spielern, %s", anzahl, mode)
+						.hasSize(anzahl).doesNotHaveDuplicates();
+			}
+		}
+	}
+
+	@Test
+	public void testOhneFreilosDoublette_zehnSpieler_liefertZweiTriplettesUndZweiDoubletten() {
+		List<MeleeTeam> teams = MeleeAnmeldungTeamBildner.bildeTeamsOhneFreilos(spieler(10), SuperMeleeMode.Doublette);
+		assertThat(teams).extracting(team -> team.spieler().size()).containsExactlyInAnyOrder(3, 3, 2, 2);
+	}
+
+	@Test
+	public void testOhneFreilosTriplette_zehnSpieler_liefertZweiTriplettesUndZweiDoubletten() {
+		List<MeleeTeam> teams = MeleeAnmeldungTeamBildner.bildeTeamsOhneFreilos(spieler(10), SuperMeleeMode.Triplette);
+		assertThat(teams).extracting(team -> team.spieler().size()).containsExactlyInAnyOrder(3, 3, 2, 2);
+	}
+
+	@Test
+	public void testOhneFreilosTriplette_zwoelfSpieler_liefertVierTriplettes() {
+		List<MeleeTeam> teams = MeleeAnmeldungTeamBildner.bildeTeamsOhneFreilos(spieler(12), SuperMeleeMode.Triplette);
+		assertThat(teams).hasSize(4).allMatch(team -> team.spieler().size() == 3);
+	}
+
+	@Test
+	public void testOhneFreilosDoublette_zwoelfSpieler_liefertSechsDoubletten() {
+		List<MeleeTeam> teams = MeleeAnmeldungTeamBildner.bildeTeamsOhneFreilos(spieler(12), SuperMeleeMode.Doublette);
+		assertThat(teams).hasSize(6).allMatch(team -> team.spieler().size() == 2);
+	}
+
+	/** 7 Spieler lassen sich nicht ohne Freilos aufteilen: 6 werden verteilt, der zuletzt gemeldete bleibt offen. */
+	@Test
+	public void testOhneFreilos_siebenSpieler_lässtDenLetztenOffen() {
+		for (SuperMeleeMode mode : SuperMeleeMode.values()) {
+			List<MeleeTeam> teams = MeleeAnmeldungTeamBildner.bildeTeamsOhneFreilos(spieler(7), mode);
+			assertThat(teams.size() % 2).as(mode.name()).isZero();
+			assertThat(alleNummern(teams)).as(mode.name()).containsExactlyInAnyOrder(1, 2, 3, 4, 5, 6);
+		}
+	}
+
+	@Test
+	public void testOhneFreilos_wenigerAlsVierSpieler_liefertKeineTeams() {
+		for (int anzahl = 0; anzahl < 4; anzahl++) {
+			assertThat(MeleeAnmeldungTeamBildner.bildeTeamsOhneFreilos(spieler(anzahl), SuperMeleeMode.Doublette))
+					.as("%d Spieler", anzahl).isEmpty();
+		}
+	}
+
+	@Test
+	public void testAnzahlVerwendbarOhneFreilos() {
+		assertThat(MeleeAnmeldungTeamBildner.anzahlVerwendbarOhneFreilos(3)).isZero();
+		assertThat(MeleeAnmeldungTeamBildner.anzahlVerwendbarOhneFreilos(4)).isEqualTo(4);
+		assertThat(MeleeAnmeldungTeamBildner.anzahlVerwendbarOhneFreilos(7)).isEqualTo(6);
+		assertThat(MeleeAnmeldungTeamBildner.anzahlVerwendbarOhneFreilos(9)).isEqualTo(9);
+	}
+
+	@Test
+	public void testOhneFreilos_gleicheSetzPositionLandetNichtImSelbenTeam() {
+		// 10 Spieler Doublette ohne Freilos → 2 Triplettes + 2 Doubletten; 4 Spieler mit SP 1.
+		List<MeleeSpieler> spieler = new ArrayList<>();
+		for (int nr = 1; nr <= 10; nr++) {
+			spieler.add(new MeleeSpieler(nr, nr, "Vorname" + nr, "Nachname" + nr, nr <= 4 ? 1 : 0));
+		}
+
+		List<MeleeTeam> teams = MeleeAnmeldungTeamBildner.bildeTeamsOhneFreilos(spieler, SuperMeleeMode.Doublette);
+
+		assertThat(teams).hasSize(4).allSatisfy(team -> {
+			long anzGesetzte = team.spieler().stream().filter(s -> s.setzPosition() > 0).count();
+			assertThat(anzGesetzte).isLessThanOrEqualTo(1);
+		});
+	}
+
+	// ---------------------------------------------------------------
 	// Setzpositionen
 	// ---------------------------------------------------------------
 
@@ -185,6 +277,10 @@ public class MeleeAnmeldungTeamBildnerTest {
 	}
 
 	// ---------------------------------------------------------------
+
+	private static List<Integer> alleNummern(List<MeleeTeam> teams) {
+		return teams.stream().flatMap(t -> t.spieler().stream()).map(MeleeSpieler::nr).toList();
+	}
 
 	private static List<MeleeSpieler> spieler(int anzahl) {
 		List<MeleeSpieler> spieler = new ArrayList<>(anzahl);

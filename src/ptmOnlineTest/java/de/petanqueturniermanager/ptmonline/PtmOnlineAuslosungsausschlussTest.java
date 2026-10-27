@@ -86,7 +86,7 @@ class PtmOnlineAuslosungsausschlussTest extends BasePtmOnlineZusammenspielTest {
         return Stream.of(
                 new SystemAufbau(TurnierSystem.FORMULEX,
                         ws -> new FormuleXMeldeListeSheetNew(ws).createMeldelisteWithParams(Formation.TRIPLETTE, false,
-                                false, 4),
+                                false),
                         FormuleXSpielrundeSheetNaechste::new, 7, false),
                 new SystemAufbau(TurnierSystem.KO, ws -> {
                     KoKonfigurationSheet konfiguration = new KoKonfigurationSheet(ws);

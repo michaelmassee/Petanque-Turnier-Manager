@@ -20,6 +20,7 @@ import de.petanqueturniermanager.basesheet.konfiguration.MeleeAnmeldungKonfigura
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungLeser;
+import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungModus;
 import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungZeile;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
@@ -58,7 +59,7 @@ class RegistrationImportMeleeUITest extends BaseCalcUITest {
         meldeListe.createMeldelisteWithParams(Formation.DOUBLETTE, false, false);
         docPropHelper.setIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM,
                 TurnierSystem.SCHWEIZER.getId());
-        MeleeAnmeldungKonfiguration.einschalten(wkingSpreadsheet);
+        MeleeAnmeldungKonfiguration.einschalten(wkingSpreadsheet, MeleeAnmeldungModus.EINFACH);
         new SchweizerMeleeAnmeldungSheet(wkingSpreadsheet).generate();
         ziel = MeldelisteZielFactory.fuerPtmOnline(wkingSpreadsheet).orElseThrow();
         mapping = new PtmOnlineRegistrationMapping(wkingSpreadsheet, TurnierSystem.SCHWEIZER, null);

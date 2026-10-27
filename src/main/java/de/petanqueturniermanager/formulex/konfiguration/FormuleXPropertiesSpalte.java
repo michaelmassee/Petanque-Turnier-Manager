@@ -42,7 +42,6 @@ public class FormuleXPropertiesSpalte extends TeamAnzeigePropertiesSpalte
     private static final String KONFIG_PROP_KOPF_ZEILE_MITTE      = "Kopfzeile Mitte";
     private static final String KONFIG_PROP_KOPF_ZEILE_RECHTS     = "Kopfzeile Rechts";
 
-    public static final String KONFIG_PROP_ANZAHL_RUNDEN           = "Anzahl Runden";
     public static final String KONFIG_PROP_NAME_SPIELRUNDE         = "Spielrunde";
 
     private static final String KONFIG_PROP_SPIELRUNDE_COLOR_BACK_GERADE   = "Spielrunde Hintergrund Gerade";
@@ -67,9 +66,6 @@ public class FormuleXPropertiesSpalte extends TeamAnzeigePropertiesSpalte
 
         KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELRUNDE)
                 .setDefaultVal(1).setDescription("config.desc.aktuelle.spielrunde"));
-
-        KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_ANZAHL_RUNDEN)
-                .setDefaultVal(4).setDescription("config.desc.formulex.anzahl.runden"));
 
         KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELRUNDE_COLOR_BACK_GERADE)
                 .setDefaultVal(DEFAULT_GERADE_BACK_COLOR)
@@ -173,15 +169,6 @@ public class FormuleXPropertiesSpalte extends TeamAnzeigePropertiesSpalte
 
     public SpielRundeNr getAktiveSpielRunde() {
         return SpielRundeNr.from(readIntProperty(KONFIG_PROP_NAME_SPIELRUNDE));
-    }
-
-    public int getAnzahlRunden() {
-        int val = readIntProperty(KONFIG_PROP_ANZAHL_RUNDEN);
-        return val > 0 ? val : 4;
-    }
-
-    public void setAnzahlRunden(int anzahl) {
-        writeIntProperty(KONFIG_PROP_ANZAHL_RUNDEN, Math.max(1, anzahl));
     }
 
     @Override

@@ -23,6 +23,7 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.ptmonline.PtmOnlineLiveAusloeser;
 import de.petanqueturniermanager.ptmonline.PtmOnlineSpielrundeSync;
+import de.petanqueturniermanager.poule.rangliste.PouleVorrundenRanglisteSheet;
 
 /**
  * Erstellt das Poule-Vorrunde-Sheet für das Poule-A/B-Turniersystem.
@@ -109,6 +110,20 @@ public class PouleVorrundeSheet extends AbstractPouleVorrundeSheet implements Pt
 
         if (SheetRunner.isRunning()) {
             SheetFreeze.from(xSheet, getWorkingSpreadsheet()).anzZeilen(ERSTE_DATEN_ZEILE).doFreeze();
+        }
+
+        ranglisteAnlegenFallsFehlt(xSheet);
+    }
+
+    /**
+     * Legt die Vorrunden-Rangliste an, falls sie noch fehlt. Eine vorhandene Rangliste bleibt unverändert, sie wird
+     * über den Tab-Wechsel aktualisiert. Die Vorrunde bleibt das aktive Blatt.
+     */
+    private void ranglisteAnlegenFallsFehlt(XSpreadsheet vorrunde) throws GenerateException {
+        var rangliste = new PouleVorrundenRanglisteSheet(getWorkingSpreadsheet());
+        if (rangliste.getXSpreadSheet() == null) {
+            rangliste.doRun();
+            getSheetHelper().setActiveSheet(vorrunde);
         }
     }
 }

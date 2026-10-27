@@ -283,6 +283,11 @@ public abstract class BaseKonfigurationSheet extends SheetRunner implements IPro
 		return getPropertiesSpalte().isMeleeAnmeldungAktiv();
 	}
 
+	@Override
+	public final de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungModus getMeleeAnmeldungModus() {
+		return getPropertiesSpalte().getMeleeAnmeldungModus();
+	}
+
 	/**
 	 * @return the propertiesSpalte
 	 */

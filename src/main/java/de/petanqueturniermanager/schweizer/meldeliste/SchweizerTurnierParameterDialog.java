@@ -6,56 +6,36 @@ package de.petanqueturniermanager.schweizer.meldeliste;
 
 import java.util.Optional;
 
-import com.sun.star.awt.ActionEvent;
-import com.sun.star.awt.XActionListener;
-import com.sun.star.awt.XButton;
-import com.sun.star.awt.XCheckBox;
-import com.sun.star.awt.XControl;
-import com.sun.star.awt.XControlContainer;
-import com.sun.star.awt.XControlModel;
-import com.sun.star.awt.XDialog;
-import com.sun.star.awt.XListBox;
-import com.sun.star.awt.XToolkit;
-import com.sun.star.awt.XWindow;
-import com.sun.star.beans.XPropertySet;
-import com.sun.star.container.XNameContainer;
-import com.sun.star.lang.EventObject;
-import com.sun.star.lang.XComponent;
-import com.sun.star.lang.XMultiComponentFactory;
-import com.sun.star.lang.XMultiServiceFactory;
-import com.sun.star.uno.XComponentContext;
-
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
-import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungDialogOption;
-import de.petanqueturniermanager.comp.WorkingSpreadsheet;
-import de.petanqueturniermanager.helper.Lo;
-import de.petanqueturniermanager.helper.i18n.I18n;
-import de.petanqueturniermanager.helper.msgbox.ProcessBox;
-import de.petanqueturniermanager.schweizer.konfiguration.SchweizerRankingModus;
+import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungModus;
 import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierStartDialog;
+import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.schweizer.konfiguration.SchweizerRankingModus;
 
 /**
  * Modaler Dialog zur Abfrage der Turnier-Parameter vor dem Anlegen einer neuen
  * Schweizer Meldeliste.
  * <p>
- * Abgefragt werden:
+ * Abschnitte:
  * <ul>
- * <li>Formation: Tête / Doublette / Triplette / Nur Teamname</li>
- * <li>Teamname und Vereinsname anzeigen</li>
- * <li>Mêlée-Anmeldung (nur bei Doublette/Triplette)</li>
- * <li>Anzeige im Spielplan: Teamnummer / Teamname</li>
- * <li>Ranglisten-Wertung: mit / ohne Buchholz</li>
+ * <li>Meldeliste: Formation, Zusatzspalten „Teamname“ und „Verein“, Mêlée-Anmeldung</li>
+ * <li>Spielplan: Anzeige der Teams (Teamnummer / Spielernamen / Teamname)</li>
+ * <li>Rangliste: Wertung mit / ohne Buchholz</li>
  * </ul>
  */
 public class SchweizerTurnierParameterDialog {
 
 	/** Ergebnis des Dialogs. */
 	public record TurnierParameter(Formation formation, boolean teamnameAnzeigen, boolean vereinsnameAnzeigen,
-			boolean meleeAnmeldung, TeamAnzeige spielplanTeamAnzeige, SchweizerRankingModus rankingModus) {
+			Optional<MeleeAnmeldungModus> meleeAnmeldung, TeamAnzeige spielplanTeamAnzeige, SchweizerRankingModus rankingModus) {
 	}
 
+	private static final String LST_SPIELPLAN = "lstSpielplan";
+	private static final String LST_RANKING = "lstRankingModus";
+
 	private final WorkingSpreadsheet workingSpreadsheet;
-	private volatile boolean okPressed = false;
 
 	public SchweizerTurnierParameterDialog(WorkingSpreadsheet workingSpreadsheet) {
 		this.workingSpreadsheet = workingSpreadsheet;
@@ -75,245 +55,24 @@ public class SchweizerTurnierParameterDialog {
 			boolean defaultVereinsnameAnzeigen, TeamAnzeige defaultSpielplanTeamAnzeige,
 			SchweizerRankingModus defaultRankingModus) throws com.sun.star.uno.Exception {
 
-		ProcessBox.from().hide();
+		TurnierStartDialog dialog = TurnierStartDialog.erstellen(workingSpreadsheet.getxContext(),
+				I18n.get("dialog.schweizer.titel"));
+		dialog.meldeliste(defaultFormation, defaultTeamnameAnzeigen, defaultVereinsnameAnzeigen);
 
-		XComponentContext context = workingSpreadsheet.getxContext();
-		XMultiComponentFactory xMCF = context.getServiceManager();
+		dialog.abschnitt(I18n.get("dialog.gruppe.spielplan"));
+		dialog.auswahl(LST_SPIELPLAN, I18n.get("dialog.label.teams.anzeigen.als"), TeamAnzeige.dialogEintraege(),
+				defaultSpielplanTeamAnzeige.dialogIndex(), I18n.get("dialog.spielplan.teams.hilfe"));
 
-		// 1. Dialog-Modell anlegen und Eigenschaften setzen (VOR setModel)
-		Object dialogModel = xMCF.createInstanceWithContext("com.sun.star.awt.UnoControlDialogModel", context);
-		XPropertySet dlgProps = Lo.qi(XPropertySet.class, dialogModel);
-		dlgProps.setPropertyValue("PositionX", Integer.valueOf(50));
-		dlgProps.setPropertyValue("PositionY", Integer.valueOf(50));
-		dlgProps.setPropertyValue("Width", Integer.valueOf(160));
-		dlgProps.setPropertyValue("Height", Integer.valueOf(121 + MeleeAnmeldungDialogOption.HOEHE));
-		dlgProps.setPropertyValue("Title", I18n.get("dialog.schweizer.titel"));
-		dlgProps.setPropertyValue("Moveable", Boolean.TRUE);
-
-		// 2. Dialog-Control anlegen und Modell setzen
-		Object dialog = xMCF.createInstanceWithContext("com.sun.star.awt.UnoControlDialog", context);
-		XControl xControl = Lo.qi(XControl.class, dialog);
-		xControl.setModel(Lo.qi(XControlModel.class, dialogModel));
-
-		// 3. Child-Controls via XMultiServiceFactory des Dialog-Modells anlegen
-		XMultiServiceFactory xMSF = Lo.qi(XMultiServiceFactory.class, dialogModel);
-		XNameContainer cont = Lo.qi(XNameContainer.class, dialogModel);
-		XControlContainer xcc = Lo.qi(XControlContainer.class, dialog);
-
-		addLabel(xMSF, cont, "lblFormation", I18n.get("dialog.poule.label.formation"), 8, 8, 80, 10);
-		addListBox(xMSF, cont, "lstFormation",
-				new String[] { Formation.TETE.getBezeichnung(),
-						Formation.DOUBLETTE.getBezeichnung(),
-						Formation.TRIPLETTE.getBezeichnung(),
-						Formation.NUR_TEAMNAME.getBezeichnung() },
-				formationIndex(defaultFormation), 92, 6, 60, 12);
-
-		addFixedLine(xMSF, cont, "sep1", 5, 24, 150, 2);
-
-		addCheckBox(xMSF, cont, "cbTeamname", I18n.get("dialog.poule.label.teamname"),
-				8, 30, 140, 10, defaultTeamnameAnzeigen);
-
-		addCheckBox(xMSF, cont, "cbVereinsname", I18n.get("dialog.poule.label.vereinsname"),
-				8, 44, 140, 10, defaultVereinsnameAnzeigen);
-
-		MeleeAnmeldungDialogOption.hinzufuegen(xMSF, cont, 8, 58, 140, defaultFormation);
-
-		int y = MeleeAnmeldungDialogOption.HOEHE;
-		addFixedLine(xMSF, cont, "sep2", 5, 60 + y, 150, 2);
-
-		addLabel(xMSF, cont, "lblSpielplan", I18n.get("dialog.schweizer.spielplan.anzeige.label"), 8, 64 + y, 80, 10);
-		addListBox(xMSF, cont, "lstSpielplan",
-				new String[] { I18n.get("dialog.schweizer.auswahl.nr"), I18n.get("dialog.schweizer.auswahl.spieler"),
-						I18n.get("dialog.schweizer.auswahl.name") },
-				defaultSpielplanTeamAnzeige.dialogIndex(),
-				92, 62 + y, 60, 12);
-
-		addFixedLine(xMSF, cont, "sep3", 5, 80 + y, 150, 2);
-		addLabel(xMSF, cont, "lblRankingModus", I18n.get("dialog.schweizer.ranking.modus.label"), 8, 86 + y, 80, 10);
-		addListBox(xMSF, cont, "lstRankingModus",
+		dialog.abschnitt(I18n.get("dialog.gruppe.rangliste"));
+		dialog.auswahl(LST_RANKING, I18n.get("dialog.label.wertung"),
 				new String[] { I18n.get("dialog.schweizer.ranking.mit.buchholz"),
 						I18n.get("dialog.schweizer.ranking.ohne.buchholz") },
-				(short) (defaultRankingModus == SchweizerRankingModus.OHNE_BUCHHOLZ ? 1 : 0),
-				92, 84 + y, 60, 12);
+				defaultRankingModus == SchweizerRankingModus.OHNE_BUCHHOLZ ? 1 : 0);
 
-		addButton(xMSF, cont, "btnOk", I18n.get("dialog.button.ok"), 22, 102 + y, 50, 14);
-		addButton(xMSF, cont, "btnCancel", I18n.get("dialog.button.abbrechen"), 88, 102 + y, 60, 14);
-
-		MeleeAnmeldungDialogOption.anFormationKoppeln(xcc, () -> readFormation(xcc), "lstFormation");
-
-		// 4. Button-Listener VOR createPeer() anhängen
-		XDialog xDialog = Lo.qi(XDialog.class, dialog);
-		okPressed = false;
-		attachButtonListener(xcc, "btnOk", new XActionListener() {
-			@Override
-			public void disposing(EventObject e) {
-				// keine Ressourcen zu lösen
-			}
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				okPressed = true;
-				xDialog.endExecute();
-			}
-		});
-		attachButtonListener(xcc, "btnCancel", new XActionListener() {
-			@Override
-			public void disposing(EventObject e) {
-				// keine Ressourcen zu lösen
-			}
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				xDialog.endExecute();
-			}
-		});
-
-		// 5. Peer erzeugen (instantiiert alle Child-Controls aus dem Modell)
-		Object toolkit = xMCF.createInstanceWithContext("com.sun.star.awt.Toolkit", context);
-		XToolkit xToolkit = Lo.qi(XToolkit.class, toolkit);
-		XWindow xWindow = Lo.qi(XWindow.class, xControl);
-		xWindow.setVisible(false);
-		xControl.createPeer(xToolkit, null);
-
-		// 6. Dialog anzeigen (blockiert bis endExecute oder Fenster-Schliessen)
-		xDialog.execute();
-
-		Optional<TurnierParameter> result = Optional.empty();
-		if (okPressed) {
-			Formation formation = readFormation(xcc);
-			// Nur Teamname: Teamname-Anzeige ist die einzige Team-Identität und daher zwingend aktiv.
-			boolean teamnameAnzeigen = formation == Formation.NUR_TEAMNAME || readCheckBoxState(xcc, "cbTeamname");
-			boolean vereinsnameAnzeigen = readCheckBoxState(xcc, "cbVereinsname");
-			boolean meleeAnmeldung = MeleeAnmeldungDialogOption.istGewaehlt(xcc, formation);
-			TeamAnzeige spielplanAnzeige = TeamAnzeige.ausDialogIndex(readListBoxSelected(xcc, "lstSpielplan"));
-			SchweizerRankingModus rankingModus = readListBoxSelected(xcc, "lstRankingModus") == 1
-					? SchweizerRankingModus.OHNE_BUCHHOLZ : SchweizerRankingModus.MIT_BUCHHOLZ;
-			result = Optional.of(new TurnierParameter(formation, teamnameAnzeigen, vereinsnameAnzeigen, meleeAnmeldung,
-					spielplanAnzeige, rankingModus));
-		}
-
-		Lo.qi(XComponent.class, dialog).dispose();
-		ProcessBox.from().visibleWennAutomatisch();
-
-		return result;
-	}
-
-	// ---------------------------------------------------------------
-	// Hilfsmethoden – Zustand auslesen
-	// ---------------------------------------------------------------
-
-	private Formation readFormation(XControlContainer xcc) {
-		return switch (readListBoxSelected(xcc, "lstFormation")) {
-			case 1 -> Formation.DOUBLETTE;
-			case 2 -> Formation.TRIPLETTE;
-			case 3 -> Formation.NUR_TEAMNAME;
-			default -> Formation.TETE;
-		};
-	}
-
-	private static short formationIndex(Formation formation) {
-		return switch (formation) {
-			case DOUBLETTE -> 1;
-			case TRIPLETTE -> 2;
-			case NUR_TEAMNAME -> 3;
-			default -> 0;
-		};
-	}
-
-	private short readListBoxSelected(XControlContainer xcc, String name) {
-		XControl ctrl = xcc.getControl(name);
-		if (ctrl == null) {
-			return 0;
-		}
-		XListBox lb = Lo.qi(XListBox.class, ctrl);
-		return lb != null ? lb.getSelectedItemPos() : 0;
-	}
-
-	private boolean readCheckBoxState(XControlContainer xcc, String name) {
-		XControl ctrl = xcc.getControl(name);
-		if (ctrl == null) {
-			return false;
-		}
-		XCheckBox cb = Lo.qi(XCheckBox.class, ctrl);
-		return cb != null && cb.getState() == 1;
-	}
-
-	private void attachButtonListener(XControlContainer xcc, String name, XActionListener listener) {
-		XControl ctrl = xcc.getControl(name);
-		if (ctrl != null) {
-			XButton btn = Lo.qi(XButton.class, ctrl);
-			if (btn != null) {
-				btn.addActionListener(listener);
-			}
-		}
-	}
-
-	// ---------------------------------------------------------------
-	// Hilfsmethoden – Controls zum Dialog-Modell hinzufügen
-	// ---------------------------------------------------------------
-
-	private void addLabel(XMultiServiceFactory xMSF, XNameContainer cont,
-			String name, String text, int x, int y, int w, int h) throws com.sun.star.uno.Exception {
-		Object model = xMSF.createInstance("com.sun.star.awt.UnoControlFixedTextModel");
-		XPropertySet props = Lo.qi(XPropertySet.class, model);
-		props.setPropertyValue("Label", text);
-		props.setPropertyValue("PositionX", Integer.valueOf(x));
-		props.setPropertyValue("PositionY", Integer.valueOf(y));
-		props.setPropertyValue("Width", Integer.valueOf(w));
-		props.setPropertyValue("Height", Integer.valueOf(h));
-		cont.insertByName(name, model);
-	}
-
-	private void addListBox(XMultiServiceFactory xMSF, XNameContainer cont,
-			String name, String[] items, short selectedIndex, int x, int y, int w, int h)
-			throws com.sun.star.uno.Exception {
-		Object model = xMSF.createInstance("com.sun.star.awt.UnoControlListBoxModel");
-		XPropertySet props = Lo.qi(XPropertySet.class, model);
-		props.setPropertyValue("Dropdown", Boolean.TRUE);
-		props.setPropertyValue("StringItemList", items);
-		props.setPropertyValue("SelectedItems", new short[] { selectedIndex });
-		props.setPropertyValue("PositionX", Integer.valueOf(x));
-		props.setPropertyValue("PositionY", Integer.valueOf(y));
-		props.setPropertyValue("Width", Integer.valueOf(w));
-		props.setPropertyValue("Height", Integer.valueOf(h));
-		cont.insertByName(name, model);
-	}
-
-	private void addCheckBox(XMultiServiceFactory xMSF, XNameContainer cont,
-			String name, String label, int x, int y, int w, int h, boolean checked)
-			throws com.sun.star.uno.Exception {
-		Object model = xMSF.createInstance("com.sun.star.awt.UnoControlCheckBoxModel");
-		XPropertySet props = Lo.qi(XPropertySet.class, model);
-		props.setPropertyValue("Label", label);
-		props.setPropertyValue("PositionX", Integer.valueOf(x));
-		props.setPropertyValue("PositionY", Integer.valueOf(y));
-		props.setPropertyValue("Width", Integer.valueOf(w));
-		props.setPropertyValue("Height", Integer.valueOf(h));
-		props.setPropertyValue("State", (short) (checked ? 1 : 0));
-		cont.insertByName(name, model);
-	}
-
-	private void addButton(XMultiServiceFactory xMSF, XNameContainer cont,
-			String name, String label, int x, int y, int w, int h) throws com.sun.star.uno.Exception {
-		Object model = xMSF.createInstance("com.sun.star.awt.UnoControlButtonModel");
-		XPropertySet props = Lo.qi(XPropertySet.class, model);
-		props.setPropertyValue("Label", label);
-		props.setPropertyValue("PositionX", Integer.valueOf(x));
-		props.setPropertyValue("PositionY", Integer.valueOf(y));
-		props.setPropertyValue("Width", Integer.valueOf(w));
-		props.setPropertyValue("Height", Integer.valueOf(h));
-		cont.insertByName(name, model);
-	}
-
-	private void addFixedLine(XMultiServiceFactory xMSF, XNameContainer cont,
-			String name, int x, int y, int w, int h) throws com.sun.star.uno.Exception {
-		Object model = xMSF.createInstance("com.sun.star.awt.UnoControlFixedLineModel");
-		XPropertySet props = Lo.qi(XPropertySet.class, model);
-		props.setPropertyValue("PositionX", Integer.valueOf(x));
-		props.setPropertyValue("PositionY", Integer.valueOf(y));
-		props.setPropertyValue("Width", Integer.valueOf(w));
-		props.setPropertyValue("Height", Integer.valueOf(h));
-		cont.insertByName(name, model);
+		return dialog.anzeigen(d -> new TurnierParameter(d.formation(), d.teamname(), d.vereinsname(),
+				d.meleeAnmeldung(), TeamAnzeige.ausDialogIndex(d.gewaehlt(LST_SPIELPLAN)),
+				d.gewaehlt(LST_RANKING) == 1 ? SchweizerRankingModus.OHNE_BUCHHOLZ
+						: SchweizerRankingModus.MIT_BUCHHOLZ));
 	}
 
 	public static SchweizerTurnierParameterDialog from(WorkingSpreadsheet workingSpreadsheet) {

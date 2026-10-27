@@ -20,6 +20,7 @@ import de.petanqueturniermanager.helper.StringTools;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGeradeStyle;
+import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungModus;
 import de.petanqueturniermanager.basesheet.meldeliste.TeilnehmerListeSortModus;
 import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.konfigdialog.AuswahlConfigProperty;
@@ -74,6 +75,7 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	public static final String KONFIG_PROP_MELDELISTE_SORT_MODUS = "Meldeliste Sortierung";
 
 	public static final String KONFIG_PROP_MELEE_ANMELDUNG = "Melee Anmeldung";
+	public static final String KONFIG_PROP_MELEE_ANMELDUNG_MODUS = "Melee Anmeldung Modus";
 
 	// Export
 	public static final String KONFIG_PROP_MELDELISTE_EXPORTIEREN = "Meldeliste exportieren";
@@ -201,12 +203,13 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	}
 
 	/**
-	 * Fügt den Ein/Aus-Schalter der Mêlée-Anmeldung hinzu ({@link #KONFIG_PROP_MELEE_ANMELDUNG}).
-	 * Die Team-Größe ergibt sich beim Übernehmen ausschließlich aus der im Turnier eingestellten
-	 * Meldeliste-Formation (Doublette oder Triplette) – ein separater Team-Mix-Modus ist nicht
-	 * nötig, da die Meldeliste ohnehin nur eine feste Team-Größe kennt.
+	 * Fügt den Ein/Aus-Schalter der Mêlée-Anmeldung ({@link #KONFIG_PROP_MELEE_ANMELDUNG}) und die
+	 * Art der Team-Bildung ({@link #KONFIG_PROP_MELEE_ANMELDUNG_MODUS}, Default
+	 * {@link MeleeAnmeldungModus#EINFACH}) hinzu. Bei {@link MeleeAnmeldungModus#EINFACH} ergibt sich
+	 * die Team-Größe aus der Meldeliste-Formation, die „ohne Freilos"-Modi bilden gemischte
+	 * Doubletten und Triplettes und setzen eine Triplette-Meldeliste voraus.
 	 * <p>
-	 * Das Property ist im Options-Dialog immer <b>sichtbar</b>, wird aber <b>ausgegraut</b>
+	 * Beide Properties sind im Options-Dialog immer <b>sichtbar</b>, werden aber <b>ausgegraut</b>
 	 * dargestellt, wenn die im Turnier eingestellte Formation keine Mêlée-Anmeldung zulässt (siehe
 	 * {@link MeleeAnmeldungKonfiguration#istMoeglich(de.petanqueturniermanager.comp.WorkingSpreadsheet)}).
 	 * <p>
@@ -221,6 +224,17 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 				.setDescription("config.desc.melee.anmeldung")
 				.setShortDescription("config.label.melee.anmeldung")
 				.aktivWenn(MeleeAnmeldungKonfiguration::istMoeglich));
+		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty
+				.from(KONFIG_PROP_MELEE_ANMELDUNG_MODUS)
+				.setDefaultVal(MeleeAnmeldungModus.EINFACH.getKey())
+				.setDescription("config.desc.melee.anmeldung.modus")
+				.setShortDescription("config.label.melee.anmeldung.modus")
+				.aktivWenn(MeleeAnmeldungKonfiguration::istMoeglich))
+				.addAuswahl(MeleeAnmeldungModus.EINFACH.getKey(), MeleeAnmeldungModus.EINFACH.getBezeichnung())
+				.addAuswahl(MeleeAnmeldungModus.DOUBLETTE_OHNE_FREILOS.getKey(),
+						MeleeAnmeldungModus.DOUBLETTE_OHNE_FREILOS.getBezeichnung())
+				.addAuswahl(MeleeAnmeldungModus.TRIPLETTE_OHNE_FREILOS.getKey(),
+						MeleeAnmeldungModus.TRIPLETTE_OHNE_FREILOS.getBezeichnung()));
 	}
 
 	/**
@@ -543,6 +557,12 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	@Override
 	public boolean isMeleeAnmeldungAktiv() {
 		return Boolean.TRUE.equals(readBooleanProperty(KONFIG_PROP_MELEE_ANMELDUNG));
+	}
+
+	@Override
+	public MeleeAnmeldungModus getMeleeAnmeldungModus() {
+		return readEnumProperty(KONFIG_PROP_MELEE_ANMELDUNG_MODUS, MeleeAnmeldungModus.class,
+				MeleeAnmeldungModus.EINFACH);
 	}
 
 	@Override

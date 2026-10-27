@@ -6,6 +6,7 @@ package de.petanqueturniermanager.basesheet.spielrunde;
 import static de.petanqueturniermanager.helper.cellvalue.properties.ICommonProperties.TABLE_BORDER2;
 
 import java.util.List;
+import java.util.Set;
 
 import com.sun.star.container.XNamed;
 import com.sun.star.sheet.ConditionOperator;
@@ -32,6 +33,8 @@ import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
+import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
+import de.petanqueturniermanager.model.TeamPaarung;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 
 /**
@@ -201,13 +204,8 @@ public interface IZeitplanSpielrundeSheet extends ISheet {
 	 * Durchgaenge werden stattdessen rein optisch per doppelter Trennlinie unterschieden, siehe
 	 * {@link #durchgangTrennlinienSetzen}.
 	 */
-	default void durchgangInfoSpaltenSchreiben(int anzahlPaarungen) throws GenerateException {
-		if (!getKonfigurationSheet().isDurchgangAufteilungWirksam() || anzahlPaarungen <= 0) {
-			return;
-		}
-		int bahnen = getKonfigurationSheet().getZeitplanAnzahlBahnen();
-		List<Integer> bloecke = DurchgangAufteilungRechner.berechne(anzahlPaarungen, bahnen,
-				getKonfigurationSheet().isDurchgangGleichmaessigAufgeteilt());
+	default void durchgangInfoSpaltenSchreiben(List<TeamPaarung> paarungen) throws GenerateException {
+		List<Integer> bloecke = durchgangBloecke(paarungen);
 		if (bloecke.size() <= 1) {
 			return; // Paarungen passen in einen Durchgang, keine Aufteilung noetig
 		}
@@ -272,13 +270,8 @@ public interface IZeitplanSpielrundeSheet extends ISheet {
 	 * ueberschreiben wuerde; nur die obere Linie wird gesetzt (IsTopLineValid=true), alle anderen
 	 * Seiten bleiben unveraendert.
 	 */
-	default void durchgangTrennlinienSetzen(int anzahlPaarungen) throws GenerateException {
-		if (!getKonfigurationSheet().isDurchgangAufteilungWirksam() || anzahlPaarungen <= 0) {
-			return;
-		}
-		List<Integer> bloecke = DurchgangAufteilungRechner.berechne(anzahlPaarungen,
-				getKonfigurationSheet().getZeitplanAnzahlBahnen(),
-				getKonfigurationSheet().isDurchgangGleichmaessigAufgeteilt());
+	default void durchgangTrennlinienSetzen(List<TeamPaarung> paarungen) throws GenerateException {
+		List<Integer> bloecke = durchgangBloecke(paarungen);
 		if (bloecke.size() <= 1) {
 			return;
 		}
@@ -299,18 +292,29 @@ public interface IZeitplanSpielrundeSheet extends ISheet {
 	/**
 	 * Muss NACH dem Schreiben der Standard-Bahn-Nr-Spalte (fortlaufend 1..Anzahl Paarungen)
 	 * aufgerufen werden, da {@link #bahnNummerierungProDurchgang} diese gezielt ueberschreibt.
+	 * Freilos-Paarungen erhalten keine Bahn-Nummer.
 	 */
-	default void bahnNummerierungProDurchgangFallsAktiv(int anzahlPaarungen) throws GenerateException {
-		if (!getKonfigurationSheet().isDurchgangAufteilungWirksam() || anzahlPaarungen <= 0) {
-			return;
-		}
-		List<Integer> bloecke = DurchgangAufteilungRechner.berechne(anzahlPaarungen,
-				getKonfigurationSheet().getZeitplanAnzahlBahnen(),
-				getKonfigurationSheet().isDurchgangGleichmaessigAufgeteilt());
+	default void bahnNummerierungProDurchgangFallsAktiv(List<TeamPaarung> paarungen) throws GenerateException {
+		List<Integer> bloecke = durchgangBloecke(paarungen);
 		if (bloecke.size() <= 1) {
 			return;
 		}
-		bahnNummerierungProDurchgang(bloecke);
+		bahnNummerierungProDurchgang(bloecke, SpielrundeHelper.freilosIndizes(paarungen));
+	}
+
+	/**
+	 * Durchgang-Bloecke der Runde in Sheet-Zeilen (Index 0 = Durchgang 1). Freilos-Paarungen belegen
+	 * keine Bahn und zaehlen daher nicht zur Auslastung eines Durchgangs, siehe
+	 * {@link DurchgangAufteilungRechner#berechneZeilen}. Leer, wenn die Durchgang-Aufteilung nicht
+	 * wirksam ist oder keine Paarungen vorhanden sind.
+	 */
+	private List<Integer> durchgangBloecke(List<TeamPaarung> paarungen) {
+		if (!getKonfigurationSheet().isDurchgangAufteilungWirksam() || paarungen.isEmpty()) {
+			return List.of();
+		}
+		return DurchgangAufteilungRechner.berechneZeilen(paarungen.size(), SpielrundeHelper.freilosIndizes(paarungen),
+				getKonfigurationSheet().getZeitplanAnzahlBahnen(),
+				getKonfigurationSheet().isDurchgangGleichmaessigAufgeteilt());
 	}
 
 	/**
@@ -320,23 +324,38 @@ public interface IZeitplanSpielrundeSheet extends ISheet {
 	 * 1..Anzahl Paarungen) geschrieben wurden. Nur fuer die "nummerierten"
 	 * {@link SpielrundeSpielbahn}-Modi X/N sinnvoll — L (haendisch) und R (zufaellig) bleiben
 	 * unveraendert, diese Property ist unabhaengig von {@link SpielrundeSpielbahn} und veraendert
-	 * dessen bestehende Semantik nicht.
+	 * dessen bestehende Semantik nicht. Freilos-Paarungen belegen keine Bahn: ihre Zeile bleibt leer
+	 * und die Nummern im Durchgang laufen lueckenlos weiter.
 	 */
-	default void bahnNummerierungProDurchgang(List<Integer> bloecke) throws GenerateException {
+	default void bahnNummerierungProDurchgang(List<Integer> bloecke, Set<Integer> freilosIndizes)
+			throws GenerateException {
 		SpielrundeSpielbahn modus = getKonfigurationSheet().getSpielrundeSpielbahn();
 		if (modus != SpielrundeSpielbahn.X && modus != SpielrundeSpielbahn.N) {
 			return;
 		}
-		RangeData rangeData = new RangeData();
-		for (int groesse : bloecke) {
-			for (int n = 1; n <= groesse; n++) {
-				rangeData.addNewRow(n);
-			}
-		}
+		RangeData rangeData = bahnNummernProDurchgang(bloecke, freilosIndizes);
 		Position startPos = Position.from(getBahnNrSpalte(), getErsteDatenZeile());
 		RangeHelper.from(this, rangeData.getRangePosition(startPos)).setDataInRange(rangeData);
 
 		bahnNrDuplikatPruefungProDurchgang(bloecke);
+	}
+
+	/** Bahn-Nummern je Durchgang-Block ab 1; Freilos-Zeilen bleiben leer und verbrauchen keine Nummer. */
+	static RangeData bahnNummernProDurchgang(List<Integer> bloecke, Set<Integer> freilosIndizes) {
+		RangeData rangeData = new RangeData();
+		int index = 0;
+		for (int groesse : bloecke) {
+			int bahnNr = 1;
+			for (int n = 0; n < groesse; n++, index++) {
+				RowData row = rangeData.addNewRow();
+				if (freilosIndizes.contains(index)) {
+					row.newEmpty();
+				} else {
+					row.newInt(bahnNr++);
+				}
+			}
+		}
+		return rangeData;
 	}
 
 	/**

@@ -74,12 +74,10 @@ public class FormuleXTurnierTestDaten extends FormuleXAbstractSpielrundeSheet {
         meldelisteTestDaten.erstelleMeldelisteWithTestdaten();
         naechsteSpielrunde.getKonfigurationSheet().setSpielrundeSpielbahn(SpielrundeSpielbahn.R);
 
-        naechsteSpielrunde.getKonfigurationSheet().setAnzahlRunden(ANZ_RUNDEN);
-
         // 2. Spielrunden erstellen und mit Zufallsergebnissen füllen
         for (int runde = 1; runde <= anzRunden; runde++) {
             SheetRunner.testDoCancelTask();
-            processBoxinfo("processbox.erstelle.spielrunde", runde, ANZ_RUNDEN);
+            processBoxinfo("processbox.erstelle.spielrunde", runde, anzRunden);
             naechsteSpielrunde.doRun();
 
             XSpreadsheet sheet = SheetMetadataHelper.findeSheetUndHeile(
