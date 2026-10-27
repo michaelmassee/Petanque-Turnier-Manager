@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.sun.star.awt.XWindow2;
 import com.sun.star.beans.PropertyValue;
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.frame.FeatureStateEvent;
@@ -370,6 +371,16 @@ public class TurnierModus {
 
     private void setzeRechnerleiste(WorkingSpreadsheet ws, boolean anzeigen) {
         try {
+            XFrame frame = holeFrame(ws);
+            XWindow2 fenster = frame == null ? null : Lo.qi(XWindow2.class, frame.getContainerWindow());
+            // Calc 26.2.6.3 lässt beim Abbau der Eingabezeile eines versteckten Frames einen Verweis
+            // auf das bereits disposed ScInputWindow stehen. Der nächste Blattwechsel greift auf
+            // dessen gelöschtes Textfenster zu und beendet LO nativ. UI-Leisten deshalb nur an
+            // sichtbaren Fenstern ändern; Blattschutz und dokumentbezogener Turniermodus bleiben aktiv.
+            if (fenster == null || !fenster.isVisible()) {
+                logger.debug("Rechenleiste eines unsichtbaren Dokumentfensters bleibt unverändert");
+                return;
+            }
             var pv = new PropertyValue();
             pv.Name = "InputLineVisible";
             pv.Value = Boolean.valueOf(anzeigen);
