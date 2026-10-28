@@ -5,9 +5,12 @@ package de.petanqueturniermanager.algorithmen.schweizer;
 import de.petanqueturniermanager.algorithmen.liga.Direktvergleich;
 import de.petanqueturniermanager.algorithmen.common.IsEvenOrOdd;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Deque;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -17,7 +20,6 @@ import java.util.stream.Stream;
 import org.apache.commons.collections4.ListUtils;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
 
 import de.petanqueturniermanager.helper.random.RandomSource;
 import de.petanqueturniermanager.model.Team;
@@ -37,6 +39,12 @@ import de.petanqueturniermanager.schweizer.konfiguration.SchweizerRankingModus;
  * @see <a href="SchweizerTurnierSystem.md">SchweizerTurnierSystem.md</a>
  */
 public class SchweizerSystem {
+
+	/**
+	 * Obergrenze der Suchschritte je Stufe erlaubter Wiederholungen. Schützt große Felder vor exponentieller
+	 * Laufzeit; reicht sie nicht, wird die nächste Stufe (eine Wiederholung mehr) versucht.
+	 */
+	private static final int MAX_SUCHSCHRITTE = 200_000;
 
 	/**
 	 * Sortiert eine Liste von Teamergebnissen nach den Auswertungskriterien des Schweizer Systems:
@@ -229,7 +237,7 @@ public class SchweizerSystem {
 
 		List<Team> aktivTeams = teams.stream().filter(t -> !t.isHatGegner()).toList();
 		List<List<Team>> gruppen = baueSiegeGruppen(aktivTeams, siegeProTeam);
-		paareGruppen(gruppen, teamPaarungList, teams);
+		paareGruppen(gruppen, teamPaarungList);
 
 		return teamPaarungList.stream().sorted((tp1, tp2) -> {
 			// Freilos an letzter Stelle
@@ -282,152 +290,66 @@ public class SchweizerSystem {
 	}
 
 	/**
-	 * Paart Teams innerhalb jeder Sieggruppe.
-	 * Greedy: erstes unpaartes Team bekommt den ersten erlaubten Gegner aus seiner Gruppe.
-	 * Falls kein direkter Gegner frei: Tausch-Versuch mit bereits gepaartem Team.
+	 * Paart die Teams von oben nach unten: Jedes Team bekommt den ersten Gegner in Ranglistenreihenfolge, gegen den
+	 * es noch nicht gespielt hat – zuerst aus der eigenen Sieggruppe, sonst aus den tieferen (Float). Führt eine
+	 * Wahl in eine Sackgasse, wird sie zurückgenommen (Backtracking, Kapitel 4 in {@code 03_Schweizer.md}).
+	 * <p>
+	 * Erst wenn keine wiederholungsfreie Paarung existiert, werden Gegnerwiederholungen zugelassen – so wenige wie
+	 * möglich. Die frühere gruppenweise Greedy-Paarung erzeugte eine vermeidbare Wiederholung, sobald die oberste
+	 * Gruppe festsaß: ein Tausch war nur mit schon gebildeten Paarungen möglich, und davon gab es noch keine.
 	 *
-	 * @param gruppen        Sieggruppen (jede gerade Größe)
+	 * @param gruppen         Sieggruppen in Ranglistenreihenfolge (jede gerade Größe)
 	 * @param teamPaarungList Ergebnisliste (wird befüllt)
-	 * @param alleTeams      alle Teams (für Tauschsuche über Gruppengrenzen)
 	 */
-	private void paareGruppen(List<List<Team>> gruppen, List<TeamPaarung> teamPaarungList, List<Team> alleTeams) {
-		for (List<Team> gruppe : gruppen) {
-			for (Team team : gruppe) {
-				if (!team.isHatGegner()) {
-					List<Team> restTeams = gruppe.stream().filter(t -> !t.isHatGegner() && !team.equals(t)).toList();
-					if (!restTeams.isEmpty()) {
-						Team gegner = findeGegner(team, restTeams);
-						if (gegner != null) {
-							teamPaarungList.add(new TeamPaarung(team, gegner).addGegner().setHatGegner());
-						} else {
-							// alle in der Gruppe bereits Gegner – Tausch versuchen
-							TeamPaarung invalid = new TeamPaarung(team, restTeams.getFirst());
-							TeamPaarung kannTauschenMit = kannTauschenMit(invalid, teamPaarungList, alleTeams);
-							if (kannTauschenMit != null) {
-								tauschenTeamsInPaarung(invalid, kannTauschenMit);
-								restTeams.getFirst().addGegner(team);
-							}
-							teamPaarungList.add(invalid.addGegner().setHatGegner());
-						}
-					}
+	private void paareGruppen(List<List<Team>> gruppen, List<TeamPaarung> teamPaarungList) {
+		List<Team> reihenfolge = gruppen.stream().flatMap(List::stream).toList();
+		for (int erlaubteWiederholungen = 0; erlaubteWiederholungen <= reihenfolge.size() / 2; erlaubteWiederholungen++) {
+			Deque<Team> gewaehlt = new ArrayDeque<>();
+			int[] restSchritte = { MAX_SUCHSCHRITTE };
+			if (paareRekursiv(new ArrayList<>(reihenfolge), erlaubteWiederholungen, gewaehlt, restSchritte)) {
+				Iterator<Team> teams = gewaehlt.descendingIterator();
+				while (teams.hasNext()) {
+					teamPaarungList.add(new TeamPaarung(teams.next(), teams.next()).addGegner().setHatGegner());
 				}
+				return;
 			}
 		}
 	}
 
-	@VisibleForTesting
-	boolean tauschenTeamsInPaarung(TeamPaarung paarA, TeamPaarung paarB) {
-		if (!paarA.hasB() || !paarB.hasB()) {
+	/**
+	 * @param offen                  noch ungepaarte Teams in Ranglistenreihenfolge
+	 * @param erlaubteWiederholungen wie viele Gegnerwiederholungen noch zulässig sind
+	 * @param gewaehlt               gebildete Paarungen als Folge A, B, A, B … (Stapel)
+	 * @param restSchritte           Suchbudget; bei Erschöpfung gilt die Stufe als nicht lösbar
+	 * @return {@code true} wenn alle offenen Teams gepaart wurden
+	 */
+	private boolean paareRekursiv(List<Team> offen, int erlaubteWiederholungen, Deque<Team> gewaehlt,
+			int[] restSchritte) {
+		if (offen.isEmpty()) {
+			return true;
+		}
+		if (--restSchritte[0] < 0) {
 			return false;
 		}
-
-		boolean didChange = false;
-
-		// tausche B: A1:B2 <-> A2:B1
-		if (!paarA.getA().hatAlsGegner(paarB.getB()) && !paarB.getA().hatAlsGegner(paarA.getB())) {
-			paarA.removeGegner();
-			paarB.removeGegner();
-			Team A_Bteam = paarA.getB();
-			paarA.setB(paarB.getB());
-			paarB.setB(A_Bteam);
-			didChange = true;
-		}
-		// tausche A+B: A1:A2 <-> B1:B2
-		if (!didChange && !paarA.getA().hatAlsGegner(paarB.getA()) && !paarB.getB().hatAlsGegner(paarA.getB())) {
-			paarA.removeGegner();
-			paarB.removeGegner();
-			Team A_Bteam = paarA.getB();
-			paarA.setB(paarB.getA());
-			paarB.setA(A_Bteam);
-			didChange = true;
-		}
-
-		if (didChange) {
-			paarA.setHatGegner();
-			paarA.addGegner();
-			paarB.setHatGegner();
-			paarB.addGegner();
-		}
-
-		return didChange;
-	}
-
-	/**
-	 * Suche rückwärts in der Teamliste nach einer Gegner-Paarung zum Tauschen.
-	 *
-	 * @param invalidTeamPaarung Paarung, die noch keinen gültigen Gegner hat
-	 * @param paarungen          bereits zugeordnete Paarungen
-	 * @param teamListe          alle Teams in Reihenfolge (für rückwärtige Suche)
-	 * @return eine Paarung, mit der getauscht werden kann, oder null
-	 */
-	@VisibleForTesting
-	TeamPaarung kannTauschenMit(TeamPaarung invalidTeamPaarung, List<TeamPaarung> paarungen, List<Team> teamListe) {
-
-		Team teamAInvalid = invalidTeamPaarung.getA();
-		Team teamBInvalid = invalidTeamPaarung.getB();
-		if (teamBInvalid == null) {
-			return null;
-		}
-
-		// team suchen zum tauschen
-		List<Team> reverseTeamliste = Lists.reverse(teamListe); // original wird nicht verändert
-
-		Team tauschTeam = reverseTeamliste.stream().filter(teamRev -> {
-			return teamRev.isHatGegner() && !teamRev.equals(teamAInvalid) && !teamRev.equals(teamBInvalid);
-		}).filter(teamRev2 -> {
-			// ist a- oder b-Team?
-			boolean isA = isATeam(teamRev2, paarungen);
-			// Gegner vom potenziellen Tauschteam suchen
-			Team gegnerVonteamRev2 = findGegnerAusTeamPaarungen(teamRev2, paarungen);
-
-			if (gegnerVonteamRev2 == null) {
-				return false;
+		Team team = offen.removeFirst();
+		for (int i = 0; i < offen.size(); i++) {
+			Team gegner = offen.get(i);
+			boolean wiederholung = team.hatAlsGegner(gegner) || gegner.hatAlsGegner(team);
+			if (wiederholung && erlaubteWiederholungen == 0) {
+				continue;
 			}
-
-			if (isA) {
-				// kann gegen Spielen, A Invalid kann getauscht werden
-				return teamRev2.hatAlsGegner(teamBInvalid) && !gegnerVonteamRev2.hatAlsGegner(teamAInvalid);
+			offen.remove(i);
+			gewaehlt.push(team);
+			gewaehlt.push(gegner);
+			if (paareRekursiv(offen, erlaubteWiederholungen - (wiederholung ? 1 : 0), gewaehlt, restSchritte)) {
+				return true;
 			}
-			// kann gegen Spielen, B Invalid kann getauscht werden
-			return !teamRev2.hatAlsGegner(teamAInvalid) && !gegnerVonteamRev2.hatAlsGegner(teamBInvalid);
-		}).findFirst().orElse(null);
-
-		if (tauschTeam != null) {
-			return paarungen.stream().filter(paarung -> paarung.isInPaarung(tauschTeam)).findFirst().orElse(null);
+			gewaehlt.pop();
+			gewaehlt.pop();
+			offen.add(i, gegner);
 		}
-		return null;
-	}
-
-	/**
-	 * Findet die Paarung mit team und gibt zurück, ob es das A-Team ist.
-	 *
-	 * @param team      das gesuchte Team
-	 * @param paarungen die Liste der Paarungen
-	 * @return true wenn A, false wenn B; wenn nicht in Liste gefunden: true
-	 */
-	@VisibleForTesting
-	boolean isATeam(Team team, List<TeamPaarung> paarungen) {
-		return paarungen.stream()
-				.filter(teamPaarung -> teamPaarung.isInPaarung(team))
-				.findFirst()
-				.map(teamPaarung2 -> teamPaarung2.getA().equals(team))
-				.orElse(true);
-	}
-
-	/**
-	 * Findet die Paarung mit team1 und gibt den Gegner zurück.
-	 *
-	 * @param team1     das Team, dessen Gegner gesucht wird
-	 * @param paarungen die Liste der Paarungen
-	 * @return der Gegner von team1, oder null wenn kein Gegner oder nicht gefunden
-	 */
-	@VisibleForTesting
-	Team findGegnerAusTeamPaarungen(Team team1, List<TeamPaarung> paarungen) {
-		return paarungen.stream()
-				.filter(teamPaarung -> teamPaarung.isInPaarung(team1))
-				.findFirst()
-				.map(teamPaarung2 -> teamPaarung2.getGegner(team1))
-				.orElse(null);
+		offen.addFirst(team);
+		return false;
 	}
 
 	/**
@@ -442,20 +364,5 @@ public class SchweizerSystem {
 				.flatMap(tp -> Stream.concat(Stream.of(tp.getA()), tp.getOptionalB().stream()))
 				.sorted(Comparator.comparingInt(Team::getNr))
 				.toList();
-	}
-
-	/**
-	 * Findet einen geeigneten Gegner für ein Team aus der Restliste.
-	 * Ein Gegner ist geeignet, wenn die Teams noch nicht gegeneinander gespielt haben.
-	 *
-	 * @param team      das Team, das einen Gegner sucht
-	 * @param restTeams mögliche Gegner
-	 * @return ein geeignetes Gegnerteam, oder null wenn keines gefunden
-	 */
-	@VisibleForTesting
-	Team findeGegner(Team team, List<Team> restTeams) {
-		return restTeams.stream().filter(teamAusRest -> {
-			return !teamAusRest.equals(team) && !team.hatAlsGegner(teamAusRest) && !teamAusRest.hatAlsGegner(team);
-		}).findFirst().orElse(null);
 	}
 }
