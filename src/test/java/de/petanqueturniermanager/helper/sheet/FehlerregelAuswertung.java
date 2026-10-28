@@ -15,6 +15,7 @@ import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.XCell;
 
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.position.Position;
 
 /**
  * Prüf-Hilfe für UITests: wertet die Fehlerregel (erste bedingte Formatierung) einer Zelle in LibreOffice
@@ -23,7 +24,9 @@ import de.petanqueturniermanager.helper.Lo;
  * <p>
  * Ausgewertet wird wie in LibreOffice: Die relativen Zeilenbezüge ({@code $B4}) gelten ab der Quellposition der
  * Bedingung und werden auf die zu prüfende Zeile umgerechnet, absolute ({@code $B$4}) bleiben. Eine falsche
- * Quellposition (Zeilenversatz) fällt dadurch auf. Spaltenbezüge der Regel müssen absolut sein.
+ * Quellposition (Zeilenversatz) fällt dadurch auf. Spaltenbezüge der Regel müssen absolut sein;
+ * {@link ConditionalFormatHelper#FORMULA_CURRENT_CELL} wird durch die Adresse der geprüften Zelle ersetzt, weil
+ * die Hilfszelle in einer anderen Spalte liegt.
  */
 public final class FehlerregelAuswertung {
 
@@ -47,7 +50,8 @@ public final class FehlerregelAuswertung {
 				properties.getPropertyValue("ConditionalFormat"));
 		assertThat(entries.getCount()).as("Zelle %d/%d hat keine bedingte Formatierung", spalte, zeile).isPositive();
 		XSheetCondition fehlerregel = Lo.qi(XSheetCondition.class, entries.getByIndex(0));
-		String formel = fuerZeile(fehlerregel.getFormula1(), zeile - fehlerregel.getSourcePosition().Row);
+		String formel = fuerZeile(fehlerregel.getFormula1(), zeile - fehlerregel.getSourcePosition().Row)
+				.replace(ConditionalFormatHelper.FORMULA_CURRENT_CELL, Position.from(spalte, zeile).getAddressWith$());
 
 		XCell hilfszelle = sheet.getCellByPosition(HILFS_SPALTE, zeile);
 		try {

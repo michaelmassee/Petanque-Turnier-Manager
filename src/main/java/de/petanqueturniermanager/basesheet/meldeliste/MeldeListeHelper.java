@@ -107,7 +107,8 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 					+ ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")>1";
 		} else {
 			// Mehrere Namens-Spalten (z.B. Vorname+Nachname): Kombination per COUNTIFS prüfen.
-			// Spalten absolut, Zeile relativ ($B3 / $C3) damit die Formel pro Zeile mitläuft.
+			// Suchbereich absolut ($B$3:$B$1000), Suchkriterium mit relativer Zeile ($B3), damit es pro Zeile
+			// mitläuft.
 			final int ankerZeile = ERSTE_DATEN_ZEILE + 1; // 1-basiert für Zell-Adresse
 			final int endZeile = MeldungenSpalte.MAX_ANZ_MELDUNGEN + 1;
 			StringBuilder sb = new StringBuilder("COUNTIFS(");
@@ -115,9 +116,11 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 				if (sp > erstNameSpalte) {
 					sb.append(';');
 				}
-				String spalteAbs = Position.from(sp, 0).getSpalteAddressWith$();
-				sb.append(spalteAbs).append(ankerZeile).append(":").append(spalteAbs).append(endZeile).append(';')
-						.append(spalteAbs).append(ankerZeile);
+				// Nur der Spaltenbuchstabe – getSpalteAddressWith$() liefert die ganze Spalte ("$B:$B"), mit
+				// angehängter Zeile entstand "$B:$B3:$B:$B1000" (Err:525, die Regel griff nie).
+				String spalteAbs = "$" + Position.from(sp, 0).getSpalteString();
+				sb.append(spalteAbs).append('$').append(ankerZeile).append(":").append(spalteAbs).append('$')
+						.append(endZeile).append(';').append(spalteAbs).append(ankerZeile);
 			}
 			sb.append(")>1");
 			conditionfindDoppeltNamen = sb.toString();
