@@ -672,6 +672,9 @@ public class SchweizerSystemTest {
 				.doesNotContain(paarung.getB().getNr()));
 		assertThat(new SchweizerSystem().flattenTeampaarungen(runde4)).extracting(Team::getNr)
 				.containsExactly(1, 2, 3, 4, 5, 6);
+		// Erwartet: 5 bekommt den ersten freien Gegner in Ranglistenreihenfolge (2), danach 3–6 und 4–1
+		assertThat(runde4).extracting(paarung -> paarung.getA().getNr() + "–" + paarung.getB().getNr())
+				.containsExactly("5–2", "3–6", "4–1");
 	}
 
 }
