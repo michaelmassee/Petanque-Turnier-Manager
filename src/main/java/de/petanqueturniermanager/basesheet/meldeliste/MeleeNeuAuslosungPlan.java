@@ -102,6 +102,29 @@ public final class MeleeNeuAuslosungPlan {
 	}
 
 	/**
+	 * Vergibt die Teamnummern in der Reihenfolge der Teams (aufsteigend nach Teamgröße wie im Supermêlée). Die
+	 * Meldeliste sortiert neue Zeilen vor der eigenen Nummernvergabe nach Namen – ohne feste Nummern ginge diese
+	 * Reihenfolge verloren.
+	 *
+	 * @param bisherigeNummern Nummern der Zeilen, die die Teams übernehmen (bisherige Mêlée-Teams); werden
+	 *                         aufsteigend wiederverwendet, Werte &le; 0 zählen nicht
+	 * @param anzTeams         Anzahl Teams
+	 * @param hoechsteNr       höchste Nummer der Meldeliste; weitere Teams zählen von dort hoch
+	 * @return Nummer je Team in Team-Reihenfolge
+	 */
+	public static List<Integer> teamNummern(List<Integer> bisherigeNummern, int anzTeams, int hoechsteNr) {
+		checkNotNull(bisherigeNummern);
+		checkArgument(anzTeams >= 0, "anzTeams darf nicht negativ sein");
+		List<Integer> nummern = new ArrayList<>(bisherigeNummern.stream().filter(nr -> nr > 0).sorted().limit(anzTeams)
+				.toList());
+		int naechsteNr = Math.max(hoechsteNr, 0);
+		while (nummern.size() < anzTeams) {
+			nummern.add(++naechsteNr);
+		}
+		return nummern;
+	}
+
+	/**
 	 * @param belegungen Belegungen aufsteigend nach Zeile
 	 * @return zusammenhängende Zeilenbereiche, damit jeder Bereich als Block geschrieben werden kann
 	 */

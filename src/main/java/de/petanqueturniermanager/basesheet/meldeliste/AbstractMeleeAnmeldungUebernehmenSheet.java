@@ -69,8 +69,9 @@ import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
  * <pre>
  * Nr | [Teamname] | (Vorname | Nachname | [Verein]) je Spieler | SP | Aktiv
  * </pre>
- * Der Block wird daher ab Spalte&nbsp;1 (direkt hinter der Nr-Spalte) am Stück geschrieben – die
- * laufende Nummer vergibt anschließend die Meldeliste selbst.
+ * Der Block wird daher ab der Nr-Spalte am Stück geschrieben. Die Nummern vergibt die Übernahme selbst, in der
+ * Reihenfolge der Teams (Doubletten vor Triplettes wie im Supermêlée): Die Meldeliste sortiert neue Zeilen vor
+ * ihrer eigenen Nummernvergabe nach Namen, die Reihenfolge ginge sonst verloren.
  */
 public abstract class AbstractMeleeAnmeldungUebernehmenSheet extends SheetRunner
 		implements ISheet, MeleeAnmeldungKonstanten {
@@ -82,8 +83,8 @@ public abstract class AbstractMeleeAnmeldungUebernehmenSheet extends SheetRunner
 	 */
 	protected static final int AKTIV_WERT_NIMMT_TEIL = 1;
 
-	/** Erste Spalte des Datenblocks in der Meldeliste (direkt hinter der Nr-Spalte). */
-	private static final int MELDELISTE_ERSTE_BLOCK_SPALTE = 1;
+	/** Nr-Spalte der Meldeliste – erste Spalte des geschriebenen Blocks. */
+	private static final int MELDELISTE_NR_SPALTE = 0;
 
 	protected AbstractMeleeAnmeldungUebernehmenSheet(WorkingSpreadsheet workingSpreadsheet,
 			TurnierSystem turnierSystem, String logPrefix) {
@@ -146,7 +147,7 @@ public abstract class AbstractMeleeAnmeldungUebernehmenSheet extends SheetRunner
 		List<MeleeAnmeldungZeile> tatsaechlichUebernommene = offeneEingecheckte.stream()
 				.filter(z -> uebernommeneZeilen.contains(z.zeile())).toList();
 
-		schreibeTeamsInMeldeliste(teams);
+		schreibeTeamsInMeldeliste(teams, leseMeldeliste(naechsteFreieMeldelisteZeile()).hoechsteNr());
 		meldelisteAktualisieren();
 		markiereAlsUebernommen(alleZeilen, tatsaechlichUebernommene);
 		meldeOffenGebliebene(offeneEingecheckte.size() - tatsaechlichUebernommene.size());
@@ -166,7 +167,8 @@ public abstract class AbstractMeleeAnmeldungUebernehmenSheet extends SheetRunner
 	private boolean neuAuslosen(SuperMeleeMode mode, List<MeleeAnmeldungZeile> alleZeilen,
 			List<MeleeAnmeldungZeile> neue) throws GenerateException {
 		int ersteFreieZeile = naechsteFreieMeldelisteZeile();
-		List<Set<String>> spielerJeZeile = leseSpielerJeMeldelisteZeile(ersteFreieZeile);
+		MeldelisteInhalt meldeliste = leseMeldeliste(ersteFreieZeile);
+		List<Set<String>> spielerJeZeile = meldeliste.spielerJeZeile();
 		Set<String> uebernommeneNamen = alleZeilen.stream().filter(MeleeAnmeldungZeile::uebernommen)
 				.map(AbstractMeleeAnmeldungUebernehmenSheet::namensSchluessel).collect(Collectors.toSet());
 		List<Integer> meleeTeamIndizes = MeleeNeuAuslosungPlan.meleeTeamZeilen(spielerJeZeile, uebernommeneNamen);
@@ -201,7 +203,9 @@ public abstract class AbstractMeleeAnmeldungUebernehmenSheet extends SheetRunner
 		processBoxinfo("processbox.melee.neu.auslosen", verteilteZeilen.size());
 		List<Integer> bisherigeZeilen = meleeTeamIndizes.stream()
 				.map(index -> MeldeListeKonstanten.TEAM_MELDELISTE_ERSTE_DATEN_ZEILE + index).toList();
-		schreibeNeuAusgeloste(teams, MeleeNeuAuslosungPlan.zeilenZuordnung(bisherigeZeilen, teams.size(),
+		List<Integer> nummern = MeleeNeuAuslosungPlan.teamNummern(
+				meleeTeamIndizes.stream().map(meldeliste.nummern()::get).toList(), teams.size(), meldeliste.hoechsteNr());
+		schreibeNeuAusgeloste(teams, nummern, MeleeNeuAuslosungPlan.zeilenZuordnung(bisherigeZeilen, teams.size(),
 				ersteFreieZeile));
 		meldelisteAktualisieren();
 		markiereAlsUebernommen(alleZeilen, neuVerteilt);
@@ -250,13 +254,15 @@ public abstract class AbstractMeleeAnmeldungUebernehmenSheet extends SheetRunner
 	}
 
 	/**
-	 * Schreibt die gebildeten Teams als zusammenhängenden Block ans Ende der Meldeliste.
+	 * Schreibt die gebildeten Teams als zusammenhängenden Block ans Ende der Meldeliste, nummeriert hinter der
+	 * höchsten vorhandenen Nummer.
 	 */
-	private void schreibeTeamsInMeldeliste(List<MeleeTeam> teams) throws GenerateException {
+	private void schreibeTeamsInMeldeliste(List<MeleeTeam> teams, int hoechsteNr) throws GenerateException {
+		List<Integer> nummern = MeleeNeuAuslosungPlan.teamNummern(List.of(), teams.size(), hoechsteNr);
 		RangeData data = new RangeData();
-		for (MeleeTeam team : teams) {
+		for (int i = 0; i < teams.size(); i++) {
 			testDoCancelTask();
-			fuelleTeamZeile(data.addNewRow(), team);
+			fuelleTeamZeile(data.addNewRow(), nummern.get(i), teams.get(i));
 		}
 		schreibeInMeldeliste(data, naechsteFreieMeldelisteZeile());
 	}
@@ -266,7 +272,8 @@ public abstract class AbstractMeleeAnmeldungUebernehmenSheet extends SheetRunner
 	 * Jeder zusammenhängende Zeilenbereich wird am Stück geschrieben; von Hand gemeldete Teams dazwischen
 	 * bleiben unberührt.
 	 */
-	private void schreibeNeuAusgeloste(List<MeleeTeam> teams, List<Belegung> belegungen) throws GenerateException {
+	private void schreibeNeuAusgeloste(List<MeleeTeam> teams, List<Integer> nummern, List<Belegung> belegungen)
+			throws GenerateException {
 		int anzBlockSpalten = anzahlBlockSpalten();
 		int index = 0;
 		for (Bereich bereich : MeleeNeuAuslosungPlan.zusammenhaengendeBereiche(belegungen)) {
@@ -280,15 +287,16 @@ public abstract class AbstractMeleeAnmeldungUebernehmenSheet extends SheetRunner
 						rowData.newEmpty();
 					}
 				} else {
-					fuelleTeamZeile(rowData, teams.get(belegung.teamIndex()));
+					fuelleTeamZeile(rowData, nummern.get(belegung.teamIndex()), teams.get(belegung.teamIndex()));
 				}
 			}
 			schreibeInMeldeliste(data, bereich.von());
 		}
 	}
 
-	/** Eine Meldelisten-Zeile ab der Spalte hinter der Nr: [Teamname], je Spieler Vorname, Nachname, [Verein], SP, Aktiv. */
-	private void fuelleTeamZeile(RowData zeile, MeleeTeam team) {
+	/** Eine Meldelisten-Zeile: Nr, [Teamname], je Spieler Vorname, Nachname, [Verein], SP, Aktiv. */
+	private void fuelleTeamZeile(RowData zeile, int nr, MeleeTeam team) {
+		zeile.newInt(nr);
 		if (getFormationKonfiguration().isMeldeListeTeamnameAnzeigen()) {
 			// Freier Teamname bleibt leer – bei einer Mêlée-Auslosung gibt es keinen
 			// gemeldeten Teamnamen; der Anwender kann ihn nachtragen.
@@ -314,27 +322,39 @@ public abstract class AbstractMeleeAnmeldungUebernehmenSheet extends SheetRunner
 	private void schreibeInMeldeliste(RangeData data, int ersteZeile) throws GenerateException {
 		XSpreadsheet meldelisteSheet = getMeldeliste().getXSpreadSheet();
 		RangeHelper.from(meldelisteSheet, getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
-				data.getRangePosition(Position.from(MELDELISTE_ERSTE_BLOCK_SPALTE, ersteZeile))).setDataInRange(data);
+				data.getRangePosition(Position.from(MELDELISTE_NR_SPALTE, ersteZeile))).setDataInRange(data);
 	}
 
 	/**
-	 * Liest die Spielernamen aller Meldungen in einem Zugriff.
+	 * Inhalt der Meldeliste ab der ersten Datenzeile.
 	 *
-	 * @return je Meldelisten-Zeile ab der ersten Datenzeile die Namensschlüssel ihrer Spieler
+	 * @param nummern        Teamnummer je Zeile (0 wenn leer)
+	 * @param spielerJeZeile Namensschlüssel der Spieler je Zeile
 	 */
-	private List<Set<String>> leseSpielerJeMeldelisteZeile(int ersteFreieZeile) throws GenerateException {
+	private record MeldelisteInhalt(List<Integer> nummern, List<Set<String>> spielerJeZeile) {
+
+		int hoechsteNr() {
+			return nummern.stream().mapToInt(Integer::intValue).max().orElse(0);
+		}
+	}
+
+	/** Liest Nummern und Spielernamen aller Meldungen in einem Zugriff. */
+	private MeldelisteInhalt leseMeldeliste(int ersteFreieZeile) throws GenerateException {
 		int ersteZeile = MeldeListeKonstanten.TEAM_MELDELISTE_ERSTE_DATEN_ZEILE;
 		if (ersteFreieZeile <= ersteZeile) {
-			return List.of();
+			return new MeldelisteInhalt(List.of(), List.of());
 		}
-		RangePosition bereich = RangePosition.from(MELDELISTE_ERSTE_BLOCK_SPALTE, ersteZeile,
-				MELDELISTE_ERSTE_BLOCK_SPALTE + anzahlBlockSpalten() - 1, ersteFreieZeile - 1);
+		RangePosition bereich = RangePosition.from(MELDELISTE_NR_SPALTE, ersteZeile,
+				MELDELISTE_NR_SPALTE + anzahlBlockSpalten() - 1, ersteFreieZeile - 1);
 		RangeData data = RangeHelper.from(getMeldeliste().getXSpreadSheet(),
 				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), bereich).getDataFromRange();
-		int ersteSpielerSpalte = getFormationKonfiguration().isMeldeListeTeamnameAnzeigen() ? 1 : 0;
+		int ersteSpielerSpalte = MELDELISTE_NR_SPALTE + 1
+				+ (getFormationKonfiguration().isMeldeListeTeamnameAnzeigen() ? 1 : 0);
 		int spaltenJeSpieler = spaltenJeSpieler();
+		List<Integer> nummern = new ArrayList<>(data.size());
 		List<Set<String>> spielerJeZeile = new ArrayList<>(data.size());
 		for (RowData zeile : data) {
+			nummern.add(zeile.get(MELDELISTE_NR_SPALTE).getIntVal(0));
 			Set<String> spieler = new HashSet<>();
 			for (int idx = 0; idx < anzahlSpielerSpalten(); idx++) {
 				int spalte = ersteSpielerSpalte + idx * spaltenJeSpieler;
@@ -346,7 +366,7 @@ public abstract class AbstractMeleeAnmeldungUebernehmenSheet extends SheetRunner
 			}
 			spielerJeZeile.add(spieler);
 		}
-		return spielerJeZeile;
+		return new MeldelisteInhalt(nummern, spielerJeZeile);
 	}
 
 	private int anzahlSpielerSpalten() {
@@ -357,10 +377,10 @@ public abstract class AbstractMeleeAnmeldungUebernehmenSheet extends SheetRunner
 		return getFormationKonfiguration().isMeldeListeVereinsnameAnzeigen() ? 3 : 2;
 	}
 
-	/** Breite des Datenblocks hinter der Nr-Spalte: [Teamname], Spielerspalten, SP, Aktiv. */
+	/** Breite des Datenblocks: Nr, [Teamname], Spielerspalten, SP, Aktiv. */
 	private int anzahlBlockSpalten() {
 		int teamname = getFormationKonfiguration().isMeldeListeTeamnameAnzeigen() ? 1 : 0;
-		return teamname + anzahlSpielerSpalten() * spaltenJeSpieler() + 2;
+		return 1 + teamname + anzahlSpielerSpalten() * spaltenJeSpieler() + 2;
 	}
 
 	/**

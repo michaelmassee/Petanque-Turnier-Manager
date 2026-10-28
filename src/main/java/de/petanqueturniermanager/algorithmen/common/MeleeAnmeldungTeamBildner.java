@@ -124,7 +124,7 @@ public final class MeleeAnmeldungTeamBildner {
 	 *
 	 * @param spieler zu verteilende Spieler in fester Reihenfolge
 	 * @param mode    bevorzugte Team-Größe
-	 * @return gebildete Teams (Triplettes zuerst); leere Liste bei weniger als 4 Spielern
+	 * @return gebildete Teams aufsteigend nach Größe (Doubletten zuerst); leere Liste bei weniger als 4 Spielern
 	 */
 	public static List<MeleeTeam> bildeTeamsOhneFreilos(List<MeleeSpieler> spieler, SuperMeleeMode mode) {
 		checkNotNull(spieler);
@@ -134,9 +134,10 @@ public final class MeleeAnmeldungTeamBildner {
 			return List.of();
 		}
 		SuperMeleeTeamRechner rechner = new SuperMeleeTeamRechner(anzVerwendbar, mode);
+		// Aufsteigend nach Teamgröße wie die Supermêlée-Spielrunde: erst Doubletten, dann Triplettes.
 		List<Integer> teamGroessen = new ArrayList<>(rechner.getAnzPaarungen());
-		teamGroessen.addAll(Collections.nCopies(rechner.getAnzTriplette(), TRIPLETTE));
 		teamGroessen.addAll(Collections.nCopies(rechner.getAnzDoublette(), DOUBLETTE));
+		teamGroessen.addAll(Collections.nCopies(rechner.getAnzTriplette(), TRIPLETTE));
 		return verteile(spieler.subList(0, anzVerwendbar), teamGroessen);
 	}
 

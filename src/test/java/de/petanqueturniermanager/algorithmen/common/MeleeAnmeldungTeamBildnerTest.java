@@ -164,6 +164,13 @@ public class MeleeAnmeldungTeamBildnerTest {
 		assertThat(teams).extracting(team -> team.spieler().size()).containsExactlyInAnyOrder(3, 3, 2, 2);
 	}
 
+	/** Reihenfolge wie die Supermêlée-Spielrunde: aufsteigend nach Teamgröße, Doubletten zuerst. */
+	@Test
+	public void testOhneFreilos_liefertDoublettenVorTriplettes() {
+		List<MeleeTeam> teams = MeleeAnmeldungTeamBildner.bildeTeamsOhneFreilos(spieler(11), SuperMeleeMode.Triplette);
+		assertThat(teams).extracting(team -> team.spieler().size()).isSorted().contains(2, 3);
+	}
+
 	@Test
 	public void testOhneFreilosTriplette_zwoelfSpieler_liefertVierTriplettes() {
 		List<MeleeTeam> teams = MeleeAnmeldungTeamBildner.bildeTeamsOhneFreilos(spieler(12), SuperMeleeMode.Triplette);

@@ -61,6 +61,21 @@ class MeleeNeuAuslosungPlanTest {
 	}
 
 	@Test
+	void teamNummernVerwendetBisherigeAufsteigendUndZaehltHoch() {
+		assertThat(MeleeNeuAuslosungPlan.teamNummern(List.of(7, 3, 5), 5, 9)).containsExactly(3, 5, 7, 10, 11);
+	}
+
+	@Test
+	void teamNummernBeiWenigerTeamsNurDieKleinstenBisherigen() {
+		assertThat(MeleeNeuAuslosungPlan.teamNummern(List.of(7, 3, 5), 2, 9)).containsExactly(3, 5);
+	}
+
+	@Test
+	void teamNummernOhneBisherigeZaehltAbHoechsterNrHoch() {
+		assertThat(MeleeNeuAuslosungPlan.teamNummern(List.of(0), 3, 0)).containsExactly(1, 2, 3);
+	}
+
+	@Test
 	void zusammenhaengendeBereicheFasstLueckenloseZeilenZusammen() {
 		List<Belegung> belegungen = List.of(new Belegung(3, 0), new Belegung(4, 1), new Belegung(6, 2),
 				new Belegung(9, 3), new Belegung(10, 4));

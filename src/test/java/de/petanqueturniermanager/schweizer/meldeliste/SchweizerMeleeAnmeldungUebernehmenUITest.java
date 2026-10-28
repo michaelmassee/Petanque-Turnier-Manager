@@ -155,7 +155,8 @@ class SchweizerMeleeAnmeldungUebernehmenUITest extends BaseCalcUITest implements
 
 		new SchweizerMeleeAnmeldungUebernehmenSheet(wkingSpreadsheet).uebernehmen();
 
-		assertThat(anzahlSpielerJeTeam()).as("2 Triplettes + 2 Doubletten").containsExactlyInAnyOrder(3, 3, 2, 2);
+		assertThat(anzahlSpielerJeTeam()).as("2 Doubletten + 2 Triplettes, Doubletten zuerst nummeriert")
+				.containsExactly(2, 2, 3, 3);
 		assertThat(nachnamenInMeldeliste()).hasSize(10).doesNotHaveDuplicates();
 	}
 
@@ -205,8 +206,8 @@ class SchweizerMeleeAnmeldungUebernehmenUITest extends BaseCalcUITest implements
 		meleeAnmeldungenAnlegen(16, 1, true);
 		new SchweizerMeleeAnmeldungUebernehmenSheet(wkingSpreadsheet).uebernehmen();
 
-		assertThat(anzahlSpielerJeTeam()).as("17 Spieler = 7 Doubletten + 1 Triplette")
-				.containsExactlyInAnyOrder(2, 2, 2, 2, 2, 2, 2, 3);
+		assertThat(anzahlSpielerJeTeam()).as("17 Spieler = 7 Doubletten + 1 Triplette, nach Nr sortiert "
+				+ "Doubletten vor Triplettes wie im Supermêlée").containsExactly(2, 2, 2, 2, 2, 2, 2, 3);
 		assertThat(nachnamenInMeldeliste()).hasSize(17).doesNotHaveDuplicates().contains("MeleeTestNachname16");
 		assertThat(MeleeAnmeldungLeser.lesen(wkingSpreadsheet, SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_MELEE_ANMELDUNG))
 				.as("alle 17 Anmeldungen sind übernommen").noneMatch(MeleeAnmeldungZeile::istOffen);
