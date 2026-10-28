@@ -3,6 +3,8 @@
  */
 package de.petanqueturniermanager.maastrichter.meldeliste;
 
+import java.util.List;
+
 import de.petanqueturniermanager.basesheet.meldeliste.AbstractMeleeAnmeldungUebernehmenSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.IFormationKonfiguration;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
@@ -35,6 +37,11 @@ public class MaastrichterMeleeAnmeldungUebernehmenSheet extends AbstractMeleeAnm
 	@Override
 	protected IFormationKonfiguration getFormationKonfiguration() {
 		return konfigurationSheet;
+	}
+
+	@Override
+	protected List<String> getSpielrundenSchluesselPraefixe() {
+		return List.of(SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX);
 	}
 
 	@Override

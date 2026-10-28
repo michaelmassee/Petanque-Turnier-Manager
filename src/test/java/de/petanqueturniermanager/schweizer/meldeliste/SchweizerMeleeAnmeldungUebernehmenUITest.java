@@ -188,15 +188,74 @@ class SchweizerMeleeAnmeldungUebernehmenUITest extends BaseCalcUITest implements
 				.allMatch(MeleeAnmeldungZeile::istOffen);
 	}
 
+	/**
+	 * „Doublette ohne Freilos": Ein einzelner Nachzügler passt in kein eigenes Team. Vor der ersten
+	 * Spielrunde werden deshalb alle Mêlée-Teams zusammen mit ihm neu ausgelost – 17 Spieler ergeben
+	 * 7 Doubletten und 1 Triplette (gerade Teamzahl), niemand wird doppelt übernommen.
+	 */
+	@Test
+	void einzelnerNachzueglerWirdVorErsterSpielrundeMitAllenNeuAusgelost() throws Exception {
+		meldeliste = new SchweizerMeldeListeSheetNew(wkingSpreadsheet);
+		meldeliste.createMeldelisteWithParams(Formation.TRIPLETTE, false, false);
+		MeleeAnmeldungKonfiguration.einschalten(wkingSpreadsheet, MeleeAnmeldungModus.DOUBLETTE_OHNE_FREILOS);
+		meleeAnmeldungenAnlegen(16);
+		new SchweizerMeleeAnmeldungUebernehmenSheet(wkingSpreadsheet).uebernehmen();
+		assertThat(anzahlSpielerJeTeam()).as("16 Spieler = 8 Doubletten").hasSize(8).containsOnly(2);
+
+		meleeAnmeldungenAnlegen(16, 1, true);
+		new SchweizerMeleeAnmeldungUebernehmenSheet(wkingSpreadsheet).uebernehmen();
+
+		assertThat(anzahlSpielerJeTeam()).as("17 Spieler = 7 Doubletten + 1 Triplette")
+				.containsExactlyInAnyOrder(2, 2, 2, 2, 2, 2, 2, 3);
+		assertThat(nachnamenInMeldeliste()).hasSize(17).doesNotHaveDuplicates().contains("MeleeTestNachname16");
+		assertThat(MeleeAnmeldungLeser.lesen(wkingSpreadsheet, SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_MELEE_ANMELDUNG))
+				.as("alle 17 Anmeldungen sind übernommen").noneMatch(MeleeAnmeldungZeile::istOffen);
+	}
+
+	/** Nach Beginn der ersten Spielrunde bleiben die Teams unverändert; der Nachzügler bleibt offen. */
+	@Test
+	void nachzueglerBleibtNachErsterSpielrundeOffen() throws Exception {
+		meldeliste = new SchweizerMeldeListeSheetNew(wkingSpreadsheet);
+		meldeliste.createMeldelisteWithParams(Formation.TRIPLETTE, false, false);
+		MeleeAnmeldungKonfiguration.einschalten(wkingSpreadsheet, MeleeAnmeldungModus.DOUBLETTE_OHNE_FREILOS);
+		meleeAnmeldungenAnlegen(16);
+		new SchweizerMeleeAnmeldungUebernehmenSheet(wkingSpreadsheet).uebernehmen();
+		List<List<String>> teamsVorher = nachnamenJeMeldelisteZeile();
+		spielrundeRegistrieren();
+
+		meleeAnmeldungenAnlegen(16, 1, true);
+		new SchweizerMeleeAnmeldungUebernehmenSheet(wkingSpreadsheet).uebernehmen();
+
+		assertThat(nachnamenJeMeldelisteZeile()).as("bestehende Teams unverändert").isEqualTo(teamsVorher);
+		assertThat(MeleeAnmeldungLeser.lesen(wkingSpreadsheet, SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_MELEE_ANMELDUNG))
+				.filteredOn(MeleeAnmeldungZeile::istOffen).extracting(MeleeAnmeldungZeile::nachname)
+				.containsExactly("MeleeTestNachname16");
+	}
+
+	/** Ein Blatt mit dem Metadaten-Schlüssel der 1. Spielrunde kennzeichnet das Turnier als begonnen. */
+	private void spielrundeRegistrieren() throws Exception {
+		String name = "Test Spielrunde";
+		doc.getSheets().insertNewByName(name, (short) doc.getSheets().getElementNames().length);
+		XSpreadsheet spielrunde = Lo.qi(XSpreadsheet.class, doc.getSheets().getByName(name));
+		SheetMetadataHelper.schreibeSheetMetadaten(doc, spielrunde, SheetMetadataHelper.schluesselSchweizerSpielrunde(1));
+	}
+
 	private void meleeAnmeldungenAnlegen(int anzahl) throws Exception {
 		meleeAnmeldungenAnlegen(anzahl, true);
 	}
 
 	private void meleeAnmeldungenAnlegen(int anzahl, boolean mitNr) throws Exception {
+		meleeAnmeldungenAnlegen(0, anzahl, mitNr);
+	}
+
+	/**
+	 * @param ab Index der ersten neuen Anmeldung (ab 0) – Zeile, Nr und Name ergeben sich daraus
+	 */
+	private void meleeAnmeldungenAnlegen(int ab, int anzahl, boolean mitNr) throws Exception {
 		SchweizerMeleeAnmeldungSheet melee = new SchweizerMeleeAnmeldungSheet(wkingSpreadsheet);
 		melee.generate();
 		RangeData data = new RangeData();
-		for (int i = 0; i < anzahl; i++) {
+		for (int i = ab; i < ab + anzahl; i++) {
 			RowData zeile = data.addNewRow();
 			if (mitNr) {
 				zeile.newInt(i + 1);
@@ -210,7 +269,7 @@ class SchweizerMeleeAnmeldungUebernehmenUITest extends BaseCalcUITest implements
 			zeile.newEmpty();
 		}
 		RangeHelper.from(melee.getXSpreadSheet(), doc,
-				data.getRangePosition(Position.from(SPALTE_NR, ERSTE_DATEN_ZEILE))).setDataInRange(data);
+				data.getRangePosition(Position.from(SPALTE_NR, ERSTE_DATEN_ZEILE + ab))).setDataInRange(data);
 	}
 
 	private List<String> nachnamenInMeldeliste() throws Exception {

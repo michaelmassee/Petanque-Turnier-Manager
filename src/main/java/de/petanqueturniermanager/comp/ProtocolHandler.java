@@ -188,8 +188,6 @@ import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_TestDaten
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
 import de.petanqueturniermanager.supermelee.meldeliste.SupermeleeTeilnehmerSheet;
 import de.petanqueturniermanager.basesheet.konfiguration.MeleeAnmeldungKonfiguration;
-import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungLeser;
-import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundePlan;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Naechste;
@@ -2274,8 +2272,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_MAASTRICHTER_GRUPPEN_UEBERSICHT -> ts == TurnierSystem.MAASTRICHTER;
 			case CMD_MAASTRICHTER_AKTUELLE_VORRUNDE         -> ts == TurnierSystem.MAASTRICHTER && hatMaastrichterVorrunde(ws);
 			case CMD_MAASTRICHTER_MELEE_ANMELDUNG   -> ts == TurnierSystem.MAASTRICHTER && meleeAnmeldungAktiv(ws);
-			case CMD_MAASTRICHTER_MELEE_UEBERNEHMEN -> ts == TurnierSystem.MAASTRICHTER && meleeAnmeldungAktiv(ws)
-					&& hatOffeneMeleeAnmeldungen(ws, SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_MELEE_ANMELDUNG);
+			case CMD_MAASTRICHTER_MELEE_UEBERNEHMEN -> ts == TurnierSystem.MAASTRICHTER && meleeAnmeldungAktiv(ws);
 			case CMD_MAASTRICHTER_TESTDATEN_TURNIER,
 				 CMD_MAASTRICHTER_TESTDATEN_TURNIER_57,
 				 CMD_MAASTRICHTER_TESTDATEN_TURNIER_35      -> ts == TurnierSystem.KEIN || ts == TurnierSystem.MAASTRICHTER;
@@ -2323,23 +2320,17 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			// Mêlée-Anmeldung: nur bei aktiv geschalteter Option (Formation Doublette/Triplette).
 			// "Uebernehmen" zusaetzlich nur, wenn es offene, eingecheckte Anmeldungen gibt.
 			case CMD_SCHWEIZER_MELEE_ANMELDUNG   -> ts == TurnierSystem.SCHWEIZER && meleeAnmeldungAktiv(ws);
-			case CMD_SCHWEIZER_MELEE_UEBERNEHMEN -> ts == TurnierSystem.SCHWEIZER && meleeAnmeldungAktiv(ws)
-					&& hatOffeneMeleeAnmeldungen(ws, SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_MELEE_ANMELDUNG);
+			case CMD_SCHWEIZER_MELEE_UEBERNEHMEN -> ts == TurnierSystem.SCHWEIZER && meleeAnmeldungAktiv(ws);
 			case CMD_JGJ_MELEE_ANMELDUNG   -> ts == TurnierSystem.JGJ && meleeAnmeldungAktiv(ws);
-			case CMD_JGJ_MELEE_UEBERNEHMEN -> ts == TurnierSystem.JGJ && meleeAnmeldungAktiv(ws)
-					&& hatOffeneMeleeAnmeldungen(ws, SheetMetadataHelper.SCHLUESSEL_JGJ_MELEE_ANMELDUNG);
+			case CMD_JGJ_MELEE_UEBERNEHMEN -> ts == TurnierSystem.JGJ && meleeAnmeldungAktiv(ws);
 			case CMD_KO_MELEE_ANMELDUNG   -> ts == TurnierSystem.KO && meleeAnmeldungAktiv(ws);
-			case CMD_KO_MELEE_UEBERNEHMEN -> ts == TurnierSystem.KO && meleeAnmeldungAktiv(ws)
-					&& hatOffeneMeleeAnmeldungen(ws, SheetMetadataHelper.SCHLUESSEL_KO_MELEE_ANMELDUNG);
+			case CMD_KO_MELEE_UEBERNEHMEN -> ts == TurnierSystem.KO && meleeAnmeldungAktiv(ws);
 			case CMD_KASKADE_MELEE_ANMELDUNG   -> ts == TurnierSystem.KASKADE && meleeAnmeldungAktiv(ws);
-			case CMD_KASKADE_MELEE_UEBERNEHMEN -> ts == TurnierSystem.KASKADE && meleeAnmeldungAktiv(ws)
-					&& hatOffeneMeleeAnmeldungen(ws, SheetMetadataHelper.SCHLUESSEL_KASKADE_MELEE_ANMELDUNG);
+			case CMD_KASKADE_MELEE_UEBERNEHMEN -> ts == TurnierSystem.KASKADE && meleeAnmeldungAktiv(ws);
 			case CMD_POULE_MELEE_ANMELDUNG   -> ts == TurnierSystem.POULE && meleeAnmeldungAktiv(ws);
-			case CMD_POULE_MELEE_UEBERNEHMEN -> ts == TurnierSystem.POULE && meleeAnmeldungAktiv(ws)
-					&& hatOffeneMeleeAnmeldungen(ws, SheetMetadataHelper.SCHLUESSEL_POULE_MELEE_ANMELDUNG);
+			case CMD_POULE_MELEE_UEBERNEHMEN -> ts == TurnierSystem.POULE && meleeAnmeldungAktiv(ws);
 			case CMD_FORMULEX_MELEE_ANMELDUNG   -> ts == TurnierSystem.FORMULEX && meleeAnmeldungAktiv(ws);
-			case CMD_FORMULEX_MELEE_UEBERNEHMEN -> ts == TurnierSystem.FORMULEX && meleeAnmeldungAktiv(ws)
-					&& hatOffeneMeleeAnmeldungen(ws, SheetMetadataHelper.SCHLUESSEL_FORMULEX_MELEE_ANMELDUNG);
+			case CMD_FORMULEX_MELEE_UEBERNEHMEN -> ts == TurnierSystem.FORMULEX && meleeAnmeldungAktiv(ws);
 			case CMD_SCHWEIZER_TESTDATEN_MELDELISTE,
 					 CMD_SCHWEIZER_TESTDATEN_TURNIER,
 					 CMD_SCHWEIZER_TESTDATEN_TURNIER_19,
@@ -2479,21 +2470,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			return MeleeAnmeldungKonfiguration.istAktiv(ws);
 		} catch (Exception e) {
 			logger.debug("Mêlée-Anmeldung-Status konnte nicht ermittelt werden: {}", e.getMessage());
-			return false;
-		}
-	}
-
-	/**
-	 * Ob es im Mêlée-Anmeldung-Sheet mindestens zwei noch nicht uebernommene, eingecheckte
-	 * Anmeldungen gibt - erst dann laesst sich ueberhaupt ein Team bilden.
-	 */
-	private static boolean hatOffeneMeleeAnmeldungen(WorkingSpreadsheet ws, String metadatenSchluessel) {
-		try {
-			return MeleeAnmeldungLeser.lesen(ws, metadatenSchluessel).stream()
-					.filter(zeile -> zeile.istOffen() && zeile.eingecheckt())
-					.limit(2).count() == 2;
-		} catch (Exception e) {
-			logger.debug("Offene Mêlée-Anmeldungen konnten nicht ermittelt werden: {}", e.getMessage());
 			return false;
 		}
 	}

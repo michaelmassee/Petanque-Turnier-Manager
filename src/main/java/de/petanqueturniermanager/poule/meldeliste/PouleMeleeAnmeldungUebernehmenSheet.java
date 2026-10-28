@@ -3,6 +3,8 @@
  */
 package de.petanqueturniermanager.poule.meldeliste;
 
+import java.util.List;
+
 import de.petanqueturniermanager.basesheet.meldeliste.AbstractMeleeAnmeldungUebernehmenSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.IFormationKonfiguration;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
@@ -34,6 +36,12 @@ public class PouleMeleeAnmeldungUebernehmenSheet extends AbstractMeleeAnmeldungU
 	@Override
 	protected IFormationKonfiguration getFormationKonfiguration() {
 		return konfigurationSheet;
+	}
+
+	@Override
+	protected List<String> getSpielrundenSchluesselPraefixe() {
+		return List.of(SheetMetadataHelper.SCHLUESSEL_POULE_VORRUNDE,
+				SheetMetadataHelper.SCHLUESSEL_POULE_SPIELPLAN_PREFIX);
 	}
 
 	@Override

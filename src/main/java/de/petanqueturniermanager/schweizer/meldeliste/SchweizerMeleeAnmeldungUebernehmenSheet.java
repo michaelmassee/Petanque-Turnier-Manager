@@ -3,6 +3,8 @@
  */
 package de.petanqueturniermanager.schweizer.meldeliste;
 
+import java.util.List;
+
 import de.petanqueturniermanager.basesheet.meldeliste.AbstractMeleeAnmeldungUebernehmenSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.IFormationKonfiguration;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
@@ -34,6 +36,11 @@ public class SchweizerMeleeAnmeldungUebernehmenSheet extends AbstractMeleeAnmeld
 	@Override
 	protected IFormationKonfiguration getFormationKonfiguration() {
 		return konfigurationSheet;
+	}
+
+	@Override
+	protected List<String> getSpielrundenSchluesselPraefixe() {
+		return List.of(SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_SPIELRUNDE_PREFIX);
 	}
 
 	@Override
