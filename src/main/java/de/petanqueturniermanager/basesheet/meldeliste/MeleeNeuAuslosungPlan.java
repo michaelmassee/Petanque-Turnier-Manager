@@ -62,17 +62,22 @@ public final class MeleeNeuAuslosungPlan {
 
 	/**
 	 * @param spielerJeZeile Namensschlüssel der Spieler je Meldelisten-Zeile (leere Spielerplätze fehlen)
+	 * @param aktivJeZeile   je Meldelisten-Zeile, ob das Team teilnimmt (Aktiv-Spalte)
 	 * @param uebernommene   Namensschlüssel aller als „Übernommen" markierten Mêlée-Anmeldungen
 	 * @return Indizes der Zeilen, deren Spieler alle aus der Mêlée-Anmeldung stammen – also die bisherigen
-	 *         Mêlée-Teams. Von Hand gemeldete Teams und Zeilen ohne Spieler zählen nicht.
+	 *         Mêlée-Teams. Von Hand gemeldete Teams, Zeilen ohne Spieler und von Hand inaktiv gesetzte Teams
+	 *         zählen nicht; Letztere bleiben beim Neu-Auslosen unverändert stehen.
 	 */
-	public static List<Integer> meleeTeamZeilen(List<Set<String>> spielerJeZeile, Set<String> uebernommene) {
+	public static List<Integer> meleeTeamZeilen(List<Set<String>> spielerJeZeile, List<Boolean> aktivJeZeile,
+			Set<String> uebernommene) {
 		checkNotNull(spielerJeZeile);
+		checkNotNull(aktivJeZeile);
 		checkNotNull(uebernommene);
+		checkArgument(aktivJeZeile.size() == spielerJeZeile.size(), "aktivJeZeile passt nicht zu spielerJeZeile");
 		List<Integer> zeilen = new ArrayList<>();
 		for (int index = 0; index < spielerJeZeile.size(); index++) {
 			Set<String> spieler = spielerJeZeile.get(index);
-			if (!spieler.isEmpty() && uebernommene.containsAll(spieler)) {
+			if (aktivJeZeile.get(index) && !spieler.isEmpty() && uebernommene.containsAll(spieler)) {
 				zeilen.add(index);
 			}
 		}

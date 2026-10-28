@@ -6,7 +6,12 @@ package de.petanqueturniermanager.schweizer.meldeliste;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
+import org.apache.commons.lang3.StringUtils;
 
 import org.junit.jupiter.api.Test;
 
@@ -34,8 +39,10 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 
-/** Regression: derselbe Mêlée-Spieler darf nicht ein zweites Mal übernommen werden. */
+/** Regressionen der Mêlée-Übernahme: keine doppelten Spieler, Neu-Auslosen ohne Datenverlust. */
 class SchweizerMeleeAnmeldungUebernehmenUITest extends BaseCalcUITest implements MeleeAnmeldungKonstanten {
+
+	private static final String VEREIN_PRAEFIX = "Verein ";
 
 	private SchweizerMeldeListeSheetNew meldeliste;
 
@@ -126,6 +133,37 @@ class SchweizerMeleeAnmeldungUebernehmenUITest extends BaseCalcUITest implements
 		assertThat(schweizerMeleeZeilen()).allMatch(MeleeAnmeldungZeile::istOffen);
 		assertThat(schriftfarbe(meleeSheet, ERSTE_DATEN_ZEILE)).isEqualTo(ColorHelper.CHAR_COLOR_RED);
 		assertThat(schriftfarbe(meldeliste.getXSpreadSheet(), meldelisteZeile)).isEqualTo(ColorHelper.CHAR_COLOR_RED);
+	}
+
+	/**
+	 * Regression: Wird bei einem übernommenen Spieler der Check-in entfernt und derselbe Name neu eingecheckt,
+	 * darf er nicht ein zweites Mal in die Meldeliste kommen.
+	 */
+	@Test
+	void uebernommenerSpielerOhneCheckinWirdNichtErneutUebernommen() throws Exception {
+		meldeliste = new SchweizerMeldeListeSheetNew(wkingSpreadsheet);
+		meldeliste.createMeldelisteWithParams(Formation.DOUBLETTE, false, false);
+		docPropHelper.setBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_MELEE_ANMELDUNG, true);
+		XSpreadsheet meleeSheet = meleeNamenAnlegen("Max", "Muster", "Eva", "Beispiel");
+		new SchweizerMeleeAnmeldungUebernehmenSheet(wkingSpreadsheet).uebernehmen();
+
+		meleeSheet.getCellByPosition(SPALTE_EINGECHECKT, ERSTE_DATEN_ZEILE).setFormula("");
+		RangeData nachtrag = new RangeData();
+		RowData zeile = nachtrag.addNewRow();
+		zeile.newEmpty();
+		zeile.newString("max");
+		zeile.newString("muster");
+		zeile.newEmpty();
+		zeile.newString(MARKIERUNG);
+		zeile.newEmpty();
+		RangeHelper.from(meleeSheet, doc, nachtrag.getRangePosition(Position.from(SPALTE_NR, ERSTE_DATEN_ZEILE + 2)))
+				.setDataInRange(nachtrag);
+		new SchweizerMeleeAnmeldungUebernehmenSheet(wkingSpreadsheet).uebernehmen();
+
+		assertThat(schweizerMeleeZeilen()).filteredOn(MeleeAnmeldungZeile::istOffen)
+				.extracting(MeleeAnmeldungZeile::zeile).as("Nachtrag bleibt offen")
+				.containsExactly(ERSTE_DATEN_ZEILE + 2);
+		assertThat(schriftfarbe(meleeSheet, ERSTE_DATEN_ZEILE + 2)).isEqualTo(ColorHelper.CHAR_COLOR_RED);
 	}
 
 	/** Legt eingecheckte Mêlée-Anmeldungen mit den Namen (Vorname, Nachname, …) an. */
@@ -309,6 +347,99 @@ class SchweizerMeleeAnmeldungUebernehmenUITest extends BaseCalcUITest implements
 				.as("alle 17 Anmeldungen sind übernommen").noneMatch(MeleeAnmeldungZeile::istOffen);
 	}
 
+	/**
+	 * Regression: In der Meldeliste nachgetragene Vereine bleiben beim Neu-Auslosen beim jeweiligen Spieler; der
+	 * Nachzügler hat noch keinen Verein.
+	 */
+	@Test
+	void neuAuslosenBehaeltVereineDerBisherigenSpieler() throws Exception {
+		meldeliste = new SchweizerMeldeListeSheetNew(wkingSpreadsheet);
+		meldeliste.createMeldelisteWithParams(Formation.TRIPLETTE, false, true);
+		MeleeAnmeldungKonfiguration.einschalten(wkingSpreadsheet, MeleeAnmeldungModus.DOUBLETTE_OHNE_FREILOS);
+		meleeAnmeldungenAnlegen(16);
+		new SchweizerMeleeAnmeldungUebernehmenSheet(wkingSpreadsheet).uebernehmen();
+		vereineNachtragen();
+
+		meleeAnmeldungenAnlegen(16, 1, true);
+		new SchweizerMeleeAnmeldungUebernehmenSheet(wkingSpreadsheet).uebernehmen();
+
+		Map<String, String> vereine = vereinJeNachname();
+		assertThat(vereine).as("alle 17 Spieler neu ausgelost").hasSize(17);
+		vereine.forEach((nachname, verein) -> assertThat(verein).as(nachname)
+				.isEqualTo("MeleeTestNachname16".equals(nachname) ? "" : VEREIN_PRAEFIX + nachname));
+	}
+
+	/** Ein von Hand inaktiv gesetztes Mêlée-Team bleibt beim Neu-Auslosen unverändert stehen. */
+	@Test
+	void neuAuslosenLaesstInaktivesTeamUnveraendert() throws Exception {
+		meldeliste = new SchweizerMeldeListeSheetNew(wkingSpreadsheet);
+		meldeliste.createMeldelisteWithParams(Formation.TRIPLETTE, false, false);
+		MeleeAnmeldungKonfiguration.einschalten(wkingSpreadsheet, MeleeAnmeldungModus.DOUBLETTE_OHNE_FREILOS);
+		meleeAnmeldungenAnlegen(16);
+		new SchweizerMeleeAnmeldungUebernehmenSheet(wkingSpreadsheet).uebernehmen();
+		List<String> inaktivesTeam = nachnamenJeMeldelisteZeile().get(0);
+		meldeliste.getXSpreadSheet().getCellByPosition(meldeliste.getAktivSpalte(), SchweizerListeDelegate.ERSTE_DATEN_ZEILE)
+				.setValue(SchweizerListeDelegate.AKTIV_WERT_AUSGESTIEGEN);
+
+		meleeAnmeldungenAnlegen(16, 1, true);
+		new SchweizerMeleeAnmeldungUebernehmenSheet(wkingSpreadsheet).uebernehmen();
+
+		assertThat(nachnamenInMeldeliste()).hasSize(17).doesNotHaveDuplicates().contains("MeleeTestNachname16");
+		assertThat(aktivJeTeam()).as("inaktives Team unverändert und weiterhin ausgestiegen")
+				.containsEntry(inaktivesTeam, SchweizerListeDelegate.AKTIV_WERT_AUSGESTIEGEN);
+	}
+
+	/** Trägt je Spieler den Verein „Verein &lt;Nachname&gt;" ein – spaltenweise am Stück. */
+	private void vereineNachtragen() throws Exception {
+		int ersteZeile = SchweizerListeDelegate.ERSTE_DATEN_ZEILE;
+		RangeData data = meldelisteDaten();
+		for (int vereinSpalte : vereinSpalten()) {
+			RangeData verein = new RangeData();
+			for (RowData zeile : data) {
+				String nachname = zeile.get(vereinSpalte - 1).getStringVal();
+				verein.addNewRow().newString(StringUtils.isNotBlank(nachname) ? VEREIN_PRAEFIX + nachname : "");
+			}
+			RangeHelper.from(meldeliste.getXSpreadSheet(), doc,
+					verein.getRangePosition(Position.from(vereinSpalte, ersteZeile))).setDataInRange(verein);
+		}
+	}
+
+	private Map<String, String> vereinJeNachname() throws Exception {
+		Map<String, String> vereine = new HashMap<>();
+		for (RowData zeile : meldelisteDaten()) {
+			for (int vereinSpalte : vereinSpalten()) {
+				String nachname = zeile.get(vereinSpalte - 1).getStringVal();
+				if (StringUtils.isNotBlank(nachname)) {
+					vereine.put(nachname, Objects.toString(zeile.get(vereinSpalte).getStringVal(), ""));
+				}
+			}
+		}
+		return vereine;
+	}
+
+	/** Vereinsspalten der Triplette-Meldeliste ohne Teamname: Nr | (Vorname | Nachname | Verein) x 3 | SP | Aktiv. */
+	private static List<Integer> vereinSpalten() {
+		return List.of(3, 6, 9);
+	}
+
+	private Map<List<String>, Integer> aktivJeTeam() throws Exception {
+		List<List<String>> nachnamen = nachnamenJeMeldelisteZeile();
+		RangeData data = meldelisteDaten();
+		Map<List<String>, Integer> aktiv = new HashMap<>();
+		for (int i = 0; i < nachnamen.size(); i++) {
+			if (!nachnamen.get(i).isEmpty()) {
+				aktiv.put(nachnamen.get(i), data.get(i).get(meldeliste.getAktivSpalte()).getIntVal(0));
+			}
+		}
+		return aktiv;
+	}
+
+	private RangeData meldelisteDaten() throws Exception {
+		return RangeHelper.from(meldeliste.getXSpreadSheet(), doc,
+				RangePosition.from(0, SchweizerListeDelegate.ERSTE_DATEN_ZEILE, meldeliste.getAktivSpalte(),
+						SchweizerListeDelegate.ERSTE_DATEN_ZEILE + 30)).getDataFromRange();
+	}
+
 	/** Nach Beginn der ersten Spielrunde bleiben die Teams unverändert; der Nachzügler bleibt offen. */
 	@Test
 	void nachzueglerBleibtNachErsterSpielrundeOffen() throws Exception {
@@ -378,9 +509,7 @@ class SchweizerMeleeAnmeldungUebernehmenUITest extends BaseCalcUITest implements
 	}
 
 	private List<List<String>> nachnamenJeMeldelisteZeile() throws Exception {
-		RangeData data = RangeHelper.from(meldeliste.getXSpreadSheet(), doc,
-				RangePosition.from(0, SchweizerListeDelegate.ERSTE_DATEN_ZEILE, meldeliste.getAktivSpalte(),
-						SchweizerListeDelegate.ERSTE_DATEN_ZEILE + 30)).getDataFromRange();
+		RangeData data = meldelisteDaten();
 		List<List<String>> nachnamenJeZeile = new ArrayList<>();
 		for (RowData zeile : data) {
 			List<String> nachnamen = new ArrayList<>();

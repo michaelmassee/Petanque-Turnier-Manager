@@ -47,6 +47,19 @@ class MeleeDoppelteNamenTest {
 		assertThat(ergebnis.meldelisteSchluessel()).containsExactly(namensSchluessel("Anna", "Müller"));
 	}
 
+	@Test
+	void offenerSpielerMitNamenEinesUebernommenenOhneCheckinIstKonflikt() {
+		Ergebnis ergebnis = MeleeDoppelteNamen.pruefe(List.of(
+				zeile(1, "Max", "Muster", false, true),
+				zeile(7, "max", "muster", true, false)),
+				Set.of(namensSchluessel("Max", "Muster")));
+
+		assertThat(ergebnis.doppelteMeleeZeilen()).as("Check-in der ersten Zeile entfernt").isEmpty();
+		assertThat(ergebnis.meldelisteKonflikte()).as("Max steht schon aus der früheren Übernahme in der Meldeliste")
+				.containsExactly(7);
+		assertThat(ergebnis.istFehlerfrei()).isFalse();
+	}
+
 	private static MeleeAnmeldungZeile zeile(int zeile, String vorname, String nachname, boolean eingecheckt,
 			boolean uebernommen) {
 		return new MeleeAnmeldungZeile(zeile, zeile, vorname, nachname, 0, eingecheckt, uebernommen);

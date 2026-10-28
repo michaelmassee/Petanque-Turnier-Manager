@@ -40,9 +40,20 @@ class MeleeNeuAuslosungPlanTest {
 				Set.of(),
 				Set.of(CARL, DORA));
 
-		assertThat(MeleeNeuAuslosungPlan.meleeTeamZeilen(spielerJeZeile, Set.of(ANNA, BERT, CARL, DORA)))
+		assertThat(MeleeNeuAuslosungPlan.meleeTeamZeilen(spielerJeZeile, List.of(true, true, true, true),
+				Set.of(ANNA, BERT, CARL, DORA)))
 				.as("gemischtes Team mit von Hand gemeldetem Spieler und Leerzeile zählen nicht")
 				.containsExactly(0, 3);
+	}
+
+	@Test
+	void meleeTeamZeilenUebergehtInaktiveTeams() {
+		List<Set<String>> spielerJeZeile = List.of(Set.of(ANNA, BERT), Set.of(CARL, DORA));
+
+		assertThat(MeleeNeuAuslosungPlan.meleeTeamZeilen(spielerJeZeile, List.of(false, true),
+				Set.of(ANNA, BERT, CARL, DORA)))
+				.as("von Hand inaktiv gesetztes Mêlée-Team wird nicht neu ausgelost")
+				.containsExactly(1);
 	}
 
 	@Test

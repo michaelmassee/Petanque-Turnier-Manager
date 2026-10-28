@@ -26,7 +26,7 @@ public final class MeleeDoppelteNamen {
 	 *
 	 * @param doppelteMeleeZeilen     Zeilen des Mêlée-Blatts, deren Name dort mehrfach eingecheckt ist
 	 * @param meldelisteKonflikte     Zeilen des Mêlée-Blatts mit einem neuen Spieler, der schon in der
-	 *                                Meldeliste steht (dort nicht aus der Mêlée-Anmeldung)
+	 *                                Meldeliste steht
 	 * @param meldelisteSchluessel    Namensschlüssel dieser Konflikte, um sie in der Meldeliste zu markieren
 	 */
 	public record Ergebnis(Set<Integer> doppelteMeleeZeilen, Set<Integer> meldelisteKonflikte,
@@ -40,8 +40,8 @@ public final class MeleeDoppelteNamen {
 	/**
 	 * @param zeilen              alle Zeilen des Mêlée-Blatts
 	 * @param namenInMeldeliste   Namensschlüssel aller Spieler der Meldeliste
-	 * @return doppelte eingecheckte Namen im Mêlée-Blatt und offene eingecheckte Spieler, die bereits als
-	 *         von Hand gemeldeter Spieler in der Meldeliste stehen
+	 * @return doppelte eingecheckte Namen im Mêlée-Blatt und offene eingecheckte Spieler, die bereits in der
+	 *         Meldeliste stehen (von Hand gemeldet oder früher übernommen)
 	 */
 	public static Ergebnis pruefe(List<MeleeAnmeldungZeile> zeilen, Set<String> namenInMeldeliste) {
 		checkNotNull(zeilen);
@@ -52,15 +52,13 @@ public final class MeleeDoppelteNamen {
 		Set<Integer> doppelte = new TreeSet<>();
 		zeilenJeName.values().stream().filter(gleicheZeilen -> gleicheZeilen.size() > 1).forEach(doppelte::addAll);
 
-		// Übernommene Mêlée-Spieler stehen selbst in der Meldeliste – nur fremde Meldungen sind Konflikte.
-		Set<String> uebernommene = new TreeSet<>();
-		zeilen.stream().filter(MeleeAnmeldungZeile::uebernommen).map(MeleeDoppelteNamen::schluessel)
-				.forEach(uebernommene::add);
+		// Jeder offene Spieler, dessen Name schon in der Meldeliste steht, ist ein Duplikat – egal ob von Hand
+		// gemeldet oder aus einer früheren Übernahme (deren Check-in kann inzwischen entfernt sein).
 		Set<Integer> konflikte = new TreeSet<>();
 		Set<String> konfliktSchluessel = new TreeSet<>();
 		zeilen.stream().filter(MeleeAnmeldungZeile::istOffen).filter(MeleeAnmeldungZeile::eingecheckt)
 				.filter(MeleeAnmeldungZeile::hatNamen)
-				.filter(z -> namenInMeldeliste.contains(schluessel(z)) && !uebernommene.contains(schluessel(z)))
+				.filter(z -> namenInMeldeliste.contains(schluessel(z)))
 				.forEach(z -> {
 					konflikte.add(z.zeile());
 					konfliktSchluessel.add(schluessel(z));
