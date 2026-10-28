@@ -101,6 +101,63 @@ public class SchweizerSystemTest {
 		assertThat(ersteRunde.get(0).getB().getSetzPos()).isEqualTo(1);
 	}
 
+	/**
+	 * Setzgruppen, die über die Hälfte der sortierten Liste reichten, wurden früher gegeneinander gelost (3× SetzPos 1,
+	 * 3× SetzPos 2, 2 Ungesetzte: immer ein 1–1 oder 2–2), obwohl 1–2, 1–2, 1–2 und 0–0 möglich ist.
+	 */
+	@Test
+	public void testErsteRundeGleicheSetzPosNurWennUnvermeidbar() {
+		for (int durchlauf = 0; durchlauf < 200; durchlauf++) {
+			List<Team> teams = new ArrayList<>();
+			int[] setzPos = { 0, 0, 1, 1, 1, 2, 2, 2 };
+			for (int i = 0; i < setzPos.length; i++) {
+				teams.add(Team.from(i + 1).setSetzPos(setzPos[i]));
+			}
+			List<TeamPaarung> ersteRunde = new SchweizerSystem().ersteRunde(teams);
+			assertThat(ersteRunde).hasSize(4);
+			assertThat(new SchweizerSystem().flattenTeampaarungen(ersteRunde)).hasSize(8);
+			assertThat(ersteRunde).noneMatch(paarung -> paarung.getA().getSetzPos() > 0
+					&& paarung.getA().getSetzPos() == paarung.getB().getSetzPos());
+		}
+	}
+
+	/**
+	 * 7 Teams, davon 4 gesetzt: das Freilos geht an ein ungesetztes Team, und von den übrigen 4 gesetzten unter 6
+	 * Teams muss genau ein Paar gegeneinander spielen.
+	 */
+	@Test
+	public void testErsteRundeFreilosNichtAnGesetzteTeams() {
+		for (int durchlauf = 0; durchlauf < 200; durchlauf++) {
+			List<Team> teams = new ArrayList<>();
+			for (int i = 1; i <= 7; i++) {
+				teams.add(Team.from(i).setSetzPos(i <= 3 ? 0 : 1));
+			}
+			List<TeamPaarung> ersteRunde = new SchweizerSystem().ersteRunde(teams);
+			assertThat(ersteRunde).hasSize(4);
+			TeamPaarung freilos = ersteRunde.get(3);
+			assertThat(freilos.isFreilos()).isTrue();
+			assertThat(freilos.getA().getSetzPos()).isZero();
+			assertThat(freilos.getA().isHatteFreilos()).isTrue();
+			assertThat(ersteRunde.subList(0, 3)).filteredOn(paarung -> paarung.getA().getSetzPos() == 1
+					&& paarung.getB().getSetzPos() == 1).hasSize(1);
+		}
+	}
+
+	/**
+	 * Hatten alle Teams schon ein Freilos, bekommt das schlechteste Team (letzter Ranglistenplatz) das nächste.
+	 */
+	@Test
+	public void testWeitereRundeFreilosAlleHattenSchonEinsGehtAnSchlechtestes() {
+		List<Team> teams = new ArrayList<>();
+		for (int i = 1; i <= 7; i++) {
+			teams.add(Team.from(i).setHatteFreilos(true));
+		}
+		List<TeamPaarung> paarungen = new SchweizerSystem().weitereRunde(teams, List.of());
+		TeamPaarung freilos = paarungen.get(paarungen.size() - 1);
+		assertThat(freilos.isFreilos()).isTrue();
+		assertThat(freilos.getA().getNr()).isEqualTo(7);
+	}
+
 	@Test
 	public void testWeitereRundeGeradeAnzahl() throws Exception {
 

@@ -9,13 +9,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
-
-import org.apache.commons.collections4.ListUtils;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -136,46 +135,45 @@ public class SchweizerSystem {
 	 * Die erste Runde wird frei ausgelost, wobei ein Setzen der vermeintlich stärksten Teams sinnvoll ist
 	 * (mit dem Ziel, diese nicht in der ersten Runde aufeinandertreffen zu lassen, und, bei ungerader Teilnehmerzahl,
 	 * diese nicht mit einem Freilos beginnen zu lassen).
+	 * <p>
+	 * Das Freilos bekommt ein zufälliges ungesetztes Team (SetzPos 0), nur ohne ungesetzte Teams eines aus der größten
+	 * Setzgruppe. Die übrigen Teams stehen in einer Reihe – Ungesetzte, dann jede Setzgruppe als zusammenhängender
+	 * Block in zufälliger Reihenfolge – und Platz i spielt gegen Platz i + n/2. Ein Block mit höchstens n/2 Teams
+	 * enthält so kein Paar; nur eine größere Setzgruppe muss gegeneinander spielen, und dann so selten wie möglich.
 	 *
-	 * @param teams die Liste der teilnehmenden Teams; Teams mit gleicher SetzPos werden nicht gegeneinander ausgelost
-	 * @return eine Liste der Paarungen für die erste Runde
+	 * @param teams die Liste der teilnehmenden Teams; Teams mit gleicher SetzPos &gt; 0 werden nicht gegeneinander
+	 *              ausgelost, solange es vermeidbar ist
+	 * @return eine Liste der Paarungen für die erste Runde (Freilos am Ende)
 	 */
 	public List<TeamPaarung> ersteRunde(List<Team> teams) {
-		boolean freiSpiel = IsEvenOrOdd.isOdd(teams.size());
-		int letzteMeldungNr = freiSpiel ? teams.size() + 1 : teams.size();
-		int anzTeamPaarungen = letzteMeldungNr / 2;
+		List<Team> gemischt = new ArrayList<>(teams);
+		Collections.shuffle(gemischt, RandomSource.asJavaRandom());
 
-		// first shuffle
-		List<Team> shuffled = new ArrayList<>(teams);
-		Collections.shuffle(shuffled, RandomSource.asJavaRandom());
+		List<Team> ungesetzt = gemischt.stream().filter(team -> team.getSetzPos() <= 0)
+				.collect(Collectors.toCollection(ArrayList::new));
+		// Reihenfolge der Setzgruppen = erstes Auftreten in der gemischten Liste, also zufällig
+		List<List<Team>> setzGruppen = new ArrayList<>(gemischt.stream().filter(team -> team.getSetzPos() > 0)
+				.collect(Collectors.groupingBy(Team::getSetzPos, LinkedHashMap::new,
+						Collectors.toCollection(ArrayList::new)))
+				.values());
 
-		// now sort nach Setzpos
-		List<Team> sortedTeamList = shuffled.stream()
-				.sorted((m1, m2) -> Integer.compare(m1.getSetzPos(), m2.getSetzPos())).toList();
+		Team freilosTeam = null;
+		if (IsEvenOrOdd.isOdd(gemischt.size())) {
+			freilosTeam = !ungesetzt.isEmpty() ? ungesetzt.removeLast()
+					: setzGruppen.stream().max(Comparator.comparingInt(List::size)).orElseThrow().removeLast();
+		}
 
-		// split into 2 List Team A/Team B
-		List<List<Team>> partition = ListUtils.partition(sortedTeamList, anzTeamPaarungen);
-
-		// merge A+B list together in one list TeamPaarung
-		List<Team> listATeams = partition.get(0);
-		List<Team> listBTeams = partition.get(1);
-		int listBSize = listBTeams.size();
-		return IntStream.range(0, anzTeamPaarungen).mapToObj(i -> {
-			Team teamA = listATeams.get(i);
-			Team teamB = (((anzTeamPaarungen - i) <= listBSize) ? listBTeams.get(anzTeamPaarungen - i - 1) : null);
-			if (teamB == null) {
-				teamA.setHatteFreilos(true);
-			}
-			return new TeamPaarung(teamA, teamB).addGegner();
-		}).sorted((tp1, tp2) -> {
-			// Freilos an letzte Stelle
-			if (tp1.getB() == null) {
-				return 1;
-			} else if (tp2.getB() == null) {
-				return -1;
-			}
-			return Integer.compare(tp1.getA().getNr(), tp2.getA().getNr());
-		}).toList();
+		List<Team> reihe = new ArrayList<>(ungesetzt);
+		setzGruppen.forEach(reihe::addAll);
+		int anzTeamPaarungen = reihe.size() / 2;
+		List<TeamPaarung> paarungen = new ArrayList<>(IntStream.range(0, anzTeamPaarungen)
+				.mapToObj(i -> new TeamPaarung(reihe.get(i), reihe.get(i + anzTeamPaarungen)).addGegner())
+				.sorted(Comparator.comparingInt(paarung -> paarung.getA().getNr())).toList());
+		if (freilosTeam != null) {
+			freilosTeam.setHatteFreilos(true);
+			paarungen.add(new TeamPaarung(freilosTeam).addGegner());
+		}
+		return paarungen;
 	}
 
 	/**
@@ -213,11 +211,11 @@ public class SchweizerSystem {
 		// sicher gehen dass hatgegner flag auf false
 		teams.forEach(team -> team.setHatGegner(false));
 
-		// zuerst freilos vergeben
+		// zuerst freilos vergeben: schlechtestes Team ohne Freilos, hatten alle schon eins, das schlechteste Team
 		if (freiSpiel) {
 			Team freilosTeam = IntStream.range(0, teams.size())
 					.mapToObj(i -> teams.get(teams.size() - i - 1))
-					.filter(team -> !team.isHatteFreilos()).findFirst().orElse(teams.get(0));
+					.filter(team -> !team.isHatteFreilos()).findFirst().orElse(teams.get(teams.size() - 1));
 			freilosTeam.setHatteFreilos(true);
 			freilosTeam.setHatGegner(true);
 			teamPaarungList.add(new TeamPaarung(freilosTeam));
