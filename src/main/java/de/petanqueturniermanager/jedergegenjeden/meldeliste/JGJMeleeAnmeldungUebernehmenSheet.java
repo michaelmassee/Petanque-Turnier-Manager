@@ -3,6 +3,8 @@
  */
 package de.petanqueturniermanager.jedergegenjeden.meldeliste;
 
+import java.util.List;
+
 import de.petanqueturniermanager.basesheet.meldeliste.AbstractMeleeAnmeldungUebernehmenSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.IFormationKonfiguration;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
@@ -34,6 +36,12 @@ public class JGJMeleeAnmeldungUebernehmenSheet extends AbstractMeleeAnmeldungUeb
 	@Override
 	protected IFormationKonfiguration getFormationKonfiguration() {
 		return konfigurationSheet;
+	}
+
+	@Override
+	protected List<String> getSpielrundenSchluesselPraefixe() {
+		return List.of(SheetMetadataHelper.SCHLUESSEL_JGJ_SPIELPLAN,
+				SheetMetadataHelper.SCHLUESSEL_JGJ_GRUPPE_SPIELPLAN_PREFIX);
 	}
 
 	@Override
