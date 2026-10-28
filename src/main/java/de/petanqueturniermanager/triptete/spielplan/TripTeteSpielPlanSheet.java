@@ -6,6 +6,9 @@ import com.google.common.annotations.VisibleForTesting;
 import com.sun.star.sheet.ConditionOperator;
 import com.sun.star.sheet.XSpreadsheet;
 
+import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamSpaltenBreite;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.algorithmen.triptete.TripTetePaarungen;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
@@ -85,6 +88,9 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet {
 	public static final int TEAM_B_NR_SPALTE    = TEAM_A_NR_SPALTE + 1;
 
 	private static final int PUNKTE_NR_WIDTH = AbstractSuperMeleeRanglisteFormatter.ENDSUMME_NUMBER_WIDTH;
+
+	/** Breite der Namensspalten bei Teamnamen: 6 cm. */
+	private static final int NAME_SPALTE_BREITE = 6000;
 
 	private final TripTeteKonfigurationSheet konfigurationSheet;
 	private final TripTeteMeldeListeSheetUpdate meldeListe;
@@ -235,8 +241,9 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet {
 				stValHeader.setValue(I18n.get("column.header.sp.punkte")).spalte(SP_PUNKTE_A)
 						.setEndPosMergeSpaltePlus(1));
 
-		// Name-Spaltenbreite
-		ColumnProperties colPropName = ColumnProperties.from().setWidth(6000);
+		// Name-Spaltenbreite: die Namensformel zeigt den Teamnamen, ohne Teamname-Spalte die drei Spielernamen
+		ColumnProperties colPropName = ColumnProperties.from().setWidth(TeamSpaltenBreite.fuer(TeamAnzeige.NAME,
+				getKonfigurationSheet().isMeldeListeTeamnameAnzeigen(), Formation.TRIPLETTE, NAME_SPALTE_BREITE));
 		getSheetHelper().setColumnProperties(getXSpreadSheet(), NAME_A_SPALTE, colPropName);
 		getSheetHelper().setColumnProperties(getXSpreadSheet(), NAME_B_SPALTE, colPropName);
 

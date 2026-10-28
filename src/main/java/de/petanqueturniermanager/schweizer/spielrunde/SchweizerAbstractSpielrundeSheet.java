@@ -24,6 +24,7 @@ import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
 import com.sun.star.table.TableBorder2;
 
+import de.petanqueturniermanager.basesheet.meldeliste.TeamSpaltenBreite;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.algorithmen.schweizer.SchweizerSystem;
 import de.petanqueturniermanager.algorithmen.schweizer.SchweizerTeamErgebnis;
@@ -89,10 +90,8 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 	public static final int NR_CHARHEIGHT = 18;
 	public static final int BAHN_NR_SPALTE = 0;
 	public static final int TEAM_A_SPALTE = BAHN_NR_SPALTE + 1;
-	/** Breite der Mannschaftsspalten im Teamnamen-Modus: 6 cm. */
-	private static final int TEAM_SPALTE_MIN_BREITE = 6000;
-	/** Breite je Spieler im Spielernamen-Modus: 4 cm wie die Spielerspalten der Supermêlée-Spielrunde. */
-	private static final int TEAM_SPALTE_BREITE_JE_SPIELER = 4000;
+	/** Breite der Mannschaftsspalten im Namens-Modus: 6 cm (Spielernamen siehe {@link TeamSpaltenBreite}). */
+	private static final int TEAM_SPALTE_NAME_BREITE = 6000;
 	public static final int TEAM_B_SPALTE = TEAM_A_SPALTE + 1;
 	public static final int ERG_TEAM_A_SPALTE = TEAM_B_SPALTE + 1;
 	public static final int ERG_TEAM_B_SPALTE = ERG_TEAM_A_SPALTE + 1;
@@ -456,19 +455,10 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		rundenStartzeitFeld();
 	}
 
-	/**
-	 * Breite der Mannschaftsspalten (1/100 mm): Im Spielernamen-Modus 4 cm je Spieler wie in der
-	 * Supermêlée-Spielrunde, damit Triplettes nicht auf eine unlesbare Schrift eingeschrumpft werden;
-	 * Teamnamen 6 cm.
-	 */
 	private int teamSpaltenBreite() throws GenerateException {
-		boolean spielernamen = getKonfigurationSheet().getSpielplanTeamAnzeige()
-				.effektiv(getKonfigurationSheet().isMeldeListeTeamnameAnzeigen()) == TeamAnzeige.SPIELERNAMEN;
-		if (!spielernamen) {
-			return TEAM_SPALTE_MIN_BREITE;
-		}
-		return Math.max(TEAM_SPALTE_MIN_BREITE,
-				getKonfigurationSheet().getMeldeListeFormation().getAnzSpieler() * TEAM_SPALTE_BREITE_JE_SPIELER);
+		return TeamSpaltenBreite.fuer(getKonfigurationSheet().getSpielplanTeamAnzeige(),
+				getKonfigurationSheet().isMeldeListeTeamnameAnzeigen(), getKonfigurationSheet().getMeldeListeFormation(),
+				TEAM_SPALTE_NAME_BREITE);
 	}
 
 	/**
