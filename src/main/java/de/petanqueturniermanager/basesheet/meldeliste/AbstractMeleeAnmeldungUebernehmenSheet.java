@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -27,7 +28,9 @@ import de.petanqueturniermanager.basesheet.meldeliste.MeleeNeuAuslosungPlan.Bele
 import de.petanqueturniermanager.basesheet.meldeliste.MeleeNeuAuslosungPlan.Bereich;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
@@ -36,6 +39,7 @@ import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
@@ -119,6 +123,10 @@ public abstract class AbstractMeleeAnmeldungUebernehmenSheet extends SheetRunner
 			return;
 		}
 
+		if (!namenEindeutig(alleZeilen)) {
+			return;
+		}
+
 		MeleeAnmeldungModus modus = getKonfigurationSheet().getMeleeAnmeldungModus();
 		if (!modus.passtZu(getFormationKonfiguration().getMeldeListeFormation())) {
 			zeigeWarnung("msg.text.melee.modus.braucht.triplette", modus.getBezeichnung());
@@ -151,6 +159,56 @@ public abstract class AbstractMeleeAnmeldungUebernehmenSheet extends SheetRunner
 		meldelisteAktualisieren();
 		markiereAlsUebernommen(alleZeilen, tatsaechlichUebernommene);
 		meldeOffenGebliebene(offeneEingecheckte.size() - tatsaechlichUebernommene.size());
+	}
+
+	/**
+	 * Prüft vor der Übernahme auf doppelte Namen: mehrfach eingecheckt im Mêlée-Blatt oder schon von Hand in der
+	 * Meldeliste. Betroffene Namen werden in beiden Blättern rot markiert, die Übernahme bricht mit einer Meldung
+	 * ab. Bewusst keine Live-Regel im Mêlée-Blatt – die würde jede Eingabe bremsen. Die Markierung eines früheren
+	 * Laufs wird im Mêlée-Blatt hier zurückgesetzt, in der Meldeliste bei deren Aktualisieren.
+	 */
+	private boolean namenEindeutig(List<MeleeAnmeldungZeile> alleZeilen) throws GenerateException {
+		XSpreadsheet meleeSheet = MeleeAnmeldungLeser.findeSheet(getWorkingSpreadsheet(), getMeleeMetadatenSchluessel());
+		int letzteZeile = alleZeilen.stream().mapToInt(MeleeAnmeldungZeile::zeile).max().orElse(ERSTE_DATEN_ZEILE);
+		if (meleeSheet != null) {
+			setzeNamensSchrift(meleeSheet, RangePosition.from(SPALTE_VORNAME, ERSTE_DATEN_ZEILE, SPALTE_NACHNAME,
+					letzteZeile), ColorHelper.CHAR_COLOR_BLACK);
+		}
+		MeldelisteInhalt meldeliste = leseMeldeliste(naechsteFreieMeldelisteZeile());
+		MeleeDoppelteNamen.Ergebnis ergebnis = MeleeDoppelteNamen.pruefe(alleZeilen,
+				meldeliste.spielerJeZeile().stream().flatMap(Set::stream).collect(Collectors.toSet()));
+		if (ergebnis.istFehlerfrei()) {
+			return true;
+		}
+
+		Set<Integer> fehlerZeilen = new TreeSet<>(ergebnis.doppelteMeleeZeilen());
+		fehlerZeilen.addAll(ergebnis.meldelisteKonflikte());
+		if (meleeSheet != null) {
+			for (int zeile : fehlerZeilen) {
+				setzeNamensSchrift(meleeSheet, RangePosition.from(SPALTE_VORNAME, zeile, SPALTE_NACHNAME, zeile),
+						ColorHelper.CHAR_COLOR_RED);
+			}
+		}
+		XSpreadsheet meldelisteSheet = getMeldeliste().getXSpreadSheet();
+		for (SpielerZelle zelle : meldeliste.spielerZellen()) {
+			if (ergebnis.meldelisteSchluessel().contains(zelle.schluessel())) {
+				setzeNamensSchrift(meldelisteSheet, RangePosition.from(zelle.vornameSpalte(), zelle.zeile(),
+						zelle.vornameSpalte() + 1, zelle.zeile()), ColorHelper.CHAR_COLOR_RED);
+			}
+		}
+
+		String inMeldeliste = I18n.get("melee.doppelt.in.meldeliste");
+		String namen = alleZeilen.stream().filter(z -> fehlerZeilen.contains(z.zeile()))
+				.map(z -> "• " + z.anzeigeName()
+						+ (ergebnis.meldelisteKonflikte().contains(z.zeile()) ? " (" + inMeldeliste + ")" : ""))
+				.distinct().collect(Collectors.joining("\n"));
+		zeigeWarnung("msg.text.melee.doppelte.namen", namen);
+		return false;
+	}
+
+	private void setzeNamensSchrift(XSpreadsheet sheet, RangePosition bereich, int farbe) throws GenerateException {
+		BlattschutzManager.get().ensureUnprotectedInScope();
+		getSheetHelper().setPropertiesInRange(sheet, bereich, CellProperties.from().setCharColor(farbe));
 	}
 
 	private static boolean alleOhneFreilosVerteilbar(int anzSpieler) {
@@ -330,19 +388,31 @@ public abstract class AbstractMeleeAnmeldungUebernehmenSheet extends SheetRunner
 	 *
 	 * @param nummern        Teamnummer je Zeile (0 wenn leer)
 	 * @param spielerJeZeile Namensschlüssel der Spieler je Zeile
+	 * @param spielerZellen  Position jedes Spielers (für die Fehlermarkierung)
 	 */
-	private record MeldelisteInhalt(List<Integer> nummern, List<Set<String>> spielerJeZeile) {
+	private record MeldelisteInhalt(List<Integer> nummern, List<Set<String>> spielerJeZeile,
+			List<SpielerZelle> spielerZellen) {
 
 		int hoechsteNr() {
 			return nummern.stream().mapToInt(Integer::intValue).max().orElse(0);
 		}
 	}
 
+	/**
+	 * Ein Spieler der Meldeliste.
+	 *
+	 * @param zeile         Blattzeile
+	 * @param vornameSpalte Spalte des Vornamens (der Nachname steht rechts daneben)
+	 * @param schluessel    Namensschlüssel
+	 */
+	private record SpielerZelle(int zeile, int vornameSpalte, String schluessel) {
+	}
+
 	/** Liest Nummern und Spielernamen aller Meldungen in einem Zugriff. */
 	private MeldelisteInhalt leseMeldeliste(int ersteFreieZeile) throws GenerateException {
 		int ersteZeile = MeldeListeKonstanten.TEAM_MELDELISTE_ERSTE_DATEN_ZEILE;
 		if (ersteFreieZeile <= ersteZeile) {
-			return new MeldelisteInhalt(List.of(), List.of());
+			return new MeldelisteInhalt(List.of(), List.of(), List.of());
 		}
 		RangePosition bereich = RangePosition.from(MELDELISTE_NR_SPALTE, ersteZeile,
 				MELDELISTE_NR_SPALTE + anzahlBlockSpalten() - 1, ersteFreieZeile - 1);
@@ -353,6 +423,8 @@ public abstract class AbstractMeleeAnmeldungUebernehmenSheet extends SheetRunner
 		int spaltenJeSpieler = spaltenJeSpieler();
 		List<Integer> nummern = new ArrayList<>(data.size());
 		List<Set<String>> spielerJeZeile = new ArrayList<>(data.size());
+		List<SpielerZelle> spielerZellen = new ArrayList<>();
+		int blattZeile = ersteZeile;
 		for (RowData zeile : data) {
 			nummern.add(zeile.get(MELDELISTE_NR_SPALTE).getIntVal(0));
 			Set<String> spieler = new HashSet<>();
@@ -361,12 +433,15 @@ public abstract class AbstractMeleeAnmeldungUebernehmenSheet extends SheetRunner
 				String vorname = zeile.get(spalte).getStringVal();
 				String nachname = zeile.get(spalte + 1).getStringVal();
 				if (StringUtils.isNotBlank(vorname) || StringUtils.isNotBlank(nachname)) {
-					spieler.add(MeleeNeuAuslosungPlan.namensSchluessel(vorname, nachname));
+					String schluessel = MeleeNeuAuslosungPlan.namensSchluessel(vorname, nachname);
+					spieler.add(schluessel);
+					spielerZellen.add(new SpielerZelle(blattZeile, spalte, schluessel));
 				}
 			}
 			spielerJeZeile.add(spieler);
+			blattZeile++;
 		}
-		return new MeldelisteInhalt(nummern, spielerJeZeile);
+		return new MeldelisteInhalt(nummern, spielerJeZeile, spielerZellen);
 	}
 
 	private int anzahlSpielerSpalten() {

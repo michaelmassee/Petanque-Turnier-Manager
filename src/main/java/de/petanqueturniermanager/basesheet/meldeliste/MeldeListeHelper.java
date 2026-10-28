@@ -161,22 +161,22 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 
 	private static String doppelteSpielerNamenFormel(int[] vornameSpalten, int[] nachnameSpalten, int vornameSpalte,
 			int nachnameSpalte, int ersteDatenZeile) {
-		String vornameAktuell = cleanString(absoluteSpalteRelativeZeile(vornameSpalte, ersteDatenZeile));
-		String nachnameAktuell = cleanString(absoluteSpalteRelativeZeile(nachnameSpalte, ersteDatenZeile));
-		// SUMPRODUCT statt COUNTIFS: COUNTIFS verlangt echte Zellbereiche und liefert für die bereinigten
-		// Arrays (TRIM/CLEAN über den Bereich) Err:504 – die Regel griffe dann nie.
+		String vornameAktuell = absoluteSpalteRelativeZeile(vornameSpalte, ersteDatenZeile);
+		String nachnameAktuell = absoluteSpalteRelativeZeile(nachnameSpalte, ersteDatenZeile);
+		// COUNTIFS direkt auf den Zellbereichen: ignoriert Groß-/Kleinschreibung und ist schnell (LO puffert
+		// die Bereiche). Bereinigte Arrays (TRIM/CLEAN über den Bereich) gehen nicht – COUNTIFS liefert dafür
+		// Err:504 –, und SUMPRODUCT darüber macht jede Eingabe spürbar langsam.
 		StringBuilder treffer = new StringBuilder();
 		for (int spieler = 0; spieler < vornameSpalten.length; spieler++) {
 			if (spieler > 0) {
 				treffer.append('+');
 			}
-			treffer.append("SUMPRODUCT((")
-					.append(cleanString(absoluteBereich(vornameSpalten[spieler], ersteDatenZeile))).append('=')
-					.append(vornameAktuell).append(")*(")
-					.append(cleanString(absoluteBereich(nachnameSpalten[spieler], ersteDatenZeile))).append('=')
-					.append(nachnameAktuell).append("))");
+			treffer.append("COUNTIFS(")
+					.append(absoluteBereich(vornameSpalten[spieler], ersteDatenZeile)).append(';').append(vornameAktuell)
+					.append(';').append(absoluteBereich(nachnameSpalten[spieler], ersteDatenZeile)).append(';')
+					.append(nachnameAktuell).append(')');
 		}
-		return "AND(" + vornameAktuell + "<>\"\";" + nachnameAktuell + "<>\"\";( " + treffer + ")>1)";
+		return "AND(" + vornameAktuell + "<>\"\";" + nachnameAktuell + "<>\"\";(" + treffer + ")>1)";
 	}
 
 	private static String absoluteBereich(int spalte, int ersteDatenZeile) {
@@ -186,14 +186,6 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 
 	private static String absoluteSpalteRelativeZeile(int spalte, int ersteDatenZeile) {
 		return "$" + Position.from(spalte, ersteDatenZeile).getSpalteString() + (ersteDatenZeile + 1);
-	}
-
-	private static String cleanString(String referenz) {
-		// CLEAN entfernt Tabs und Steuerzeichen; geschützte Leerzeichen entstehen
-		// häufig beim Einfügen aus Web-Seiten und werden davor zu normalen Leerzeichen.
-		// LOWER: der Vergleich mit "=" beachtet je nach Calc-Einstellung Groß-/Kleinschreibung, die
-		// Duplikatprüfung der Meldeliste (normalisiereName) ignoriert sie.
-		return "LOWER(TRIM(CLEAN(SUBSTITUTE(" + referenz + ";CHAR(160);\" \"))))";
 	}
 
 	private static int letzteMeldungZeile() {

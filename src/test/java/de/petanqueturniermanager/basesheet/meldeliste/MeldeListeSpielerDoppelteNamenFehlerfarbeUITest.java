@@ -109,9 +109,9 @@ class MeldeListeSpielerDoppelteNamenFehlerfarbeUITest extends BaseCalcUITest {
 	private void assertDublettenFehlerregel(String system, SheetErsteller ersteller) throws Exception {
 		XSpreadsheet sheet = ersteller.erstelle();
 		assertThat(conditionalFormatFormeln(sheet, Position.from(1, 3)))
-				.as("%s: Vorname braucht eine bereinigte Fehlerregel für doppelte Namen", system)
-				.anySatisfy(formel -> assertThat(formel).containsIgnoringCase("SUMPRODUCT")
-						.containsIgnoringCase("CLEAN").doesNotContain("#REF!"));
+				.as("%s: Vorname braucht eine Fehlerregel für doppelte Namen", system)
+				.anySatisfy(formel -> assertThat(formel).containsIgnoringCase("COUNTIFS")
+						.doesNotContain("#REF!"));
 	}
 
 	private List<String> conditionalFormatFormeln(XSpreadsheet sheet, Position pos) throws GenerateException {

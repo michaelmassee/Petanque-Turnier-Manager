@@ -29,6 +29,7 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
+import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
@@ -141,12 +142,15 @@ public abstract class AbstractMeleeAnmeldungSheet extends SheetRunner
 				RangePosition.from(SPALTE_EINGECHECKT, ERSTE_DATEN_ZEILE, SPALTE_EINGECHECKT, letzteZeile));
 		normalisiereEingecheckteMarkierungen(letzteZeile);
 
-		// Doppelte Vor-/Nachname-Kombination rot wie in den Meldelisten; setzt für die Namensspalten auch die
-		// Editierfarbe (nach der Fehlerregel, damit der Fehler Vorrang hat).
-		MeldeListeHelper.insertFormulaFuerDoppelteSpielerNamen(new int[] { SPALTE_VORNAME },
-				new int[] { SPALTE_NACHNAME }, ERSTE_DATEN_ZEILE, letzteZeile, this);
+		// Bewusst keine Live-Regel für doppelte Namen (bremst jede Eingabe) – geprüft und rot markiert wird bei der
+		// Übernahme. Alte Regeln der Namens- und Check-in-Spalten entfernen, sonst häuft sich die angehängte
+		// Editierfarbe bei jedem Aufbau an.
+		ConditionalFormatHelper.clearSpaltenweise(this,
+				RangePosition.from(SPALTE_VORNAME, ERSTE_DATEN_ZEILE, SPALTE_NACHNAME, letzteZeile));
+		ConditionalFormatHelper.clearSpaltenweise(this,
+				RangePosition.from(SPALTE_EINGECHECKT, ERSTE_DATEN_ZEILE, SPALTE_EINGECHECKT, letzteZeile));
 		EditierbaresZelleFormatHelper.anwenden(this,
-				RangePosition.from(SPALTE_SETZPOSITION, ERSTE_DATEN_ZEILE, SPALTE_EINGECHECKT, letzteZeile));
+				RangePosition.from(SPALTE_VORNAME, ERSTE_DATEN_ZEILE, SPALTE_EINGECHECKT, letzteZeile));
 	}
 
 	/**

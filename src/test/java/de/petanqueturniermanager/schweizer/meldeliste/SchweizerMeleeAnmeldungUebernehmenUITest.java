@@ -24,9 +24,8 @@ import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungLeser;
 import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungModus;
 import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungZeile;
+import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.Lo;
-import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
-import de.petanqueturniermanager.helper.sheet.FehlerregelAuswertung;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
@@ -75,38 +74,86 @@ class SchweizerMeleeAnmeldungUebernehmenUITest extends BaseCalcUITest implements
 	}
 
 	/**
-	 * Doppelte Vor-/Nachname-Kombinationen müssen wie in den Meldelisten rot auffallen – geprüft wird die
-	 * tatsächliche Auswertung in LibreOffice (Leerzeichen und Groß-/Kleinschreibung zählen nicht), nicht nur
-	 * der Formeltext.
+	 * Doppelt eingecheckte Namen (ohne Groß-/Kleinschreibung) brechen die Übernahme ab und werden rot markiert;
+	 * nach der Korrektur läuft die Übernahme und die Markierung verschwindet. Eine Live-Regel gibt es im
+	 * Mêlée-Blatt bewusst nicht (sie bremste jede Eingabe).
 	 */
 	@Test
-	void doppelteNamenWerdenRotMarkiertUndBleibenEditierbar() throws Exception {
+	void doppelteNamenBrechenUebernahmeAbUndWerdenRotMarkiert() throws Exception {
+		meldeliste = new SchweizerMeldeListeSheetNew(wkingSpreadsheet);
+		meldeliste.createMeldelisteWithParams(Formation.DOUBLETTE, false, false);
+		docPropHelper.setBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_MELEE_ANMELDUNG, true);
+		XSpreadsheet meleeSheet = meleeNamenAnlegen("sa", "wqe", "as", "qw", "SA", "Wqe", "x", "y");
+
+		assertThat(conditionalFormatFormeln(meleeSheet, SPALTE_VORNAME, ERSTE_DATEN_ZEILE))
+				.as("keine Live-Regel für doppelte Namen").noneSatisfy(formel -> assertThat(formel).contains("COUNTIF"));
+
+		new SchweizerMeleeAnmeldungUebernehmenSheet(wkingSpreadsheet).uebernehmen();
+
+		assertThat(schweizerMeleeZeilen()).as("nichts übernommen").allMatch(MeleeAnmeldungZeile::istOffen);
+		assertThat(schriftfarbe(meleeSheet, ERSTE_DATEN_ZEILE)).isEqualTo(ColorHelper.CHAR_COLOR_RED);
+		assertThat(schriftfarbe(meleeSheet, ERSTE_DATEN_ZEILE + 1)).isEqualTo(ColorHelper.CHAR_COLOR_BLACK);
+		assertThat(schriftfarbe(meleeSheet, ERSTE_DATEN_ZEILE + 2)).isEqualTo(ColorHelper.CHAR_COLOR_RED);
+
+		meleeSheet.getCellByPosition(SPALTE_VORNAME, ERSTE_DATEN_ZEILE + 2).setFormula("neu");
+		new SchweizerMeleeAnmeldungUebernehmenSheet(wkingSpreadsheet).uebernehmen();
+
+		assertThat(schweizerMeleeZeilen()).as("nach der Korrektur alle übernommen").noneMatch(MeleeAnmeldungZeile::istOffen);
+		assertThat(schriftfarbe(meleeSheet, ERSTE_DATEN_ZEILE)).as("Markierung zurückgesetzt")
+				.isEqualTo(ColorHelper.CHAR_COLOR_BLACK);
+	}
+
+	/** Ein neuer Mêlée-Spieler, der schon von Hand in der Meldeliste steht, wird in beiden Blättern rot. */
+	@Test
+	void spielerSchonInMeldelisteBrichtUebernahmeAb() throws Exception {
+		meldeliste = new SchweizerMeldeListeSheetNew(wkingSpreadsheet);
+		meldeliste.createMeldelisteWithParams(Formation.DOUBLETTE, false, false);
+		docPropHelper.setBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_MELEE_ANMELDUNG, true);
+		int meldelisteZeile = SchweizerListeDelegate.ERSTE_DATEN_ZEILE;
+		RangeData team = new RangeData();
+		RowData zeile = team.addNewRow();
+		zeile.newInt(1);
+		zeile.newString("Anna");
+		zeile.newString("Müller");
+		zeile.newString("Bert");
+		zeile.newString("Becker");
+		RangeHelper.from(meldeliste.getXSpreadSheet(), doc, team.getRangePosition(Position.from(0, meldelisteZeile)))
+				.setDataInRange(team);
+		XSpreadsheet meleeSheet = meleeNamenAnlegen("anna", "müller", "c", "d");
+
+		new SchweizerMeleeAnmeldungUebernehmenSheet(wkingSpreadsheet).uebernehmen();
+
+		assertThat(schweizerMeleeZeilen()).allMatch(MeleeAnmeldungZeile::istOffen);
+		assertThat(schriftfarbe(meleeSheet, ERSTE_DATEN_ZEILE)).isEqualTo(ColorHelper.CHAR_COLOR_RED);
+		assertThat(schriftfarbe(meldeliste.getXSpreadSheet(), meldelisteZeile)).isEqualTo(ColorHelper.CHAR_COLOR_RED);
+	}
+
+	/** Legt eingecheckte Mêlée-Anmeldungen mit den Namen (Vorname, Nachname, …) an. */
+	private XSpreadsheet meleeNamenAnlegen(String... namen) throws Exception {
 		SchweizerMeleeAnmeldungSheet melee = new SchweizerMeleeAnmeldungSheet(wkingSpreadsheet);
 		melee.generate();
 		RangeData data = new RangeData();
-		for (String[] name : List.of(new String[] { "sa", "wqe" }, new String[] { "as", "qw" },
-				new String[] { " SA ", "Wqe" })) {
+		for (int i = 0; i < namen.length; i += 2) {
 			RowData zeile = data.addNewRow();
 			zeile.newEmpty();
-			zeile.newString(name[0]);
-			zeile.newString(name[1]);
+			zeile.newString(namen[i]);
+			zeile.newString(namen[i + 1]);
+			zeile.newEmpty();
+			zeile.newString(MARKIERUNG);
+			zeile.newEmpty();
 		}
 		XSpreadsheet meleeSheet = melee.getXSpreadSheet();
 		RangeHelper.from(meleeSheet, doc, data.getRangePosition(Position.from(SPALTE_NR, ERSTE_DATEN_ZEILE)))
 				.setDataInRange(data);
-		melee.generate();
+		return meleeSheet;
+	}
 
-		for (int spalte : List.of(SPALTE_VORNAME, SPALTE_NACHNAME)) {
-			assertThat(FehlerregelAuswertung.greift(meleeSheet, spalte, ERSTE_DATEN_ZEILE, ERSTE_DATEN_ZEILE)).as("doppelt, Spalte %d", spalte)
-					.isTrue();
-			assertThat(FehlerregelAuswertung.greift(meleeSheet, spalte, ERSTE_DATEN_ZEILE + 1, ERSTE_DATEN_ZEILE))
-					.as("eindeutig, Spalte %d", spalte).isFalse();
-			assertThat(FehlerregelAuswertung.greift(meleeSheet, spalte, ERSTE_DATEN_ZEILE + 2, ERSTE_DATEN_ZEILE))
-					.as("doppelt trotz Leerzeichen/Großschreibung, Spalte %d", spalte).isTrue();
-			assertThat(conditionalFormatFormeln(meleeSheet, spalte, ERSTE_DATEN_ZEILE))
-					.as("Spalte %d: Editierfarbe hinter der Fehlerregel", spalte)
-					.anySatisfy(formel -> assertThat(formel).contains(EditierbaresZelleFormatHelper.PROPERTY_KEY));
-		}
+	private List<MeleeAnmeldungZeile> schweizerMeleeZeilen() throws Exception {
+		return MeleeAnmeldungLeser.lesen(wkingSpreadsheet, SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_MELEE_ANMELDUNG);
+	}
+
+	private static int schriftfarbe(XSpreadsheet sheet, int zeile) throws Exception {
+		return (int) Lo.qi(XPropertySet.class, sheet.getCellByPosition(SPALTE_VORNAME, zeile)).getPropertyValue("CharColor");
 	}
 
 	private static List<String> conditionalFormatFormeln(XSpreadsheet sheet, int spalte, int zeile) throws Exception {

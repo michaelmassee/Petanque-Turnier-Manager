@@ -6,18 +6,24 @@ package de.petanqueturniermanager.helper.sheet;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.sun.star.beans.PropertyState;
 import com.sun.star.beans.PropertyValue;
 import com.sun.star.beans.PropertyVetoException;
 import com.sun.star.beans.UnknownPropertyException;
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.lang.WrappedTargetException;
 import com.sun.star.sheet.ConditionOperator;
+import com.sun.star.sheet.XCellRangeAddressable;
+import com.sun.star.table.CellAddress;
+import com.sun.star.table.CellRangeAddress;
 
 import de.petanqueturniermanager.addins.GlobalImpl;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -261,7 +267,8 @@ public class ConditionalFormatHelper extends BaseHelper {
 			return this;
 		}
 
-		XPropertySet xPropSet = RangeHelper.from(getISheet(), rangePos).getPropertySet();
+		RangeHelper rangeHelper = RangeHelper.from(getISheet(), rangePos);
+		XPropertySet xPropSet = rangeHelper.getPropertySet();
 		com.sun.star.sheet.XSheetConditionalEntries xEntries;
 		try {
 			xEntries = Lo.qi(com.sun.star.sheet.XSheetConditionalEntries.class,
@@ -272,35 +279,22 @@ public class ConditionalFormatHelper extends BaseHelper {
 
 			// create a condition and apply it to the range
 			// https://www.openoffice.org/api/docs/common/ref/com/sun/star/sheet/XSheetConditionalEntries.html
-			PropertyValue[] aCondition;
-			if (formula2 != null) {
-				aCondition = new PropertyValue[4];
-			} else {
-				aCondition = new PropertyValue[3];
-			}
-			int idx = 0;
-			aCondition[idx] = new com.sun.star.beans.PropertyValue();
-			aCondition[idx].Name = "Operator";
-			aCondition[idx].Value = conditionOperator;
-
+			List<PropertyValue> bedingung = new ArrayList<>();
+			bedingung.add(new PropertyValue("Operator", 0, conditionOperator, PropertyState.DIRECT_VALUE));
 			// string Formula1 contains the value or formula for the operation.
-			idx++;
-			aCondition[idx] = new com.sun.star.beans.PropertyValue();
-			aCondition[idx].Name = "Formula1";
-			aCondition[idx].Value = formula1;
-
-			// string Formula2 contains the second value or formula for the operation (used with ConditionOperator::BETWEEN or ConditionOperator::NOT_BETWEEN operations).
+			bedingung.add(new PropertyValue("Formula1", 0, formula1, PropertyState.DIRECT_VALUE));
+			// Formula2: zweiter Wert für ConditionOperator::BETWEEN / NOT_BETWEEN.
 			if (formula2 != null) {
-				idx++;
-				aCondition[idx] = new com.sun.star.beans.PropertyValue();
-				aCondition[idx].Name = "Formula2";
-				aCondition[idx].Value = formula2;
+				bedingung.add(new PropertyValue("Formula2", 0, formula2, PropertyState.DIRECT_VALUE));
 			}
-
-			idx++;
-			aCondition[idx] = new com.sun.star.beans.PropertyValue();
-			aCondition[idx].Name = "StyleName";
-			aCondition[idx].Value = styleName;
+			// Relative Bezüge der Formel gelten ab der linken oberen Zelle des Bereichs. Ohne SourcePosition
+			// rechnet LO sie ab A1 (sc/source/ui/unoobj/fmtuno.cxx) – z.B. "$B2" für eine Regel ab Zeile 2 läse
+			// dann in jeder Zelle die nächste Zeile.
+			CellRangeAddress bereich = Lo.qi(XCellRangeAddressable.class, rangeHelper.getCellRange()).getRangeAddress();
+			bedingung.add(new PropertyValue("SourcePosition", 0,
+					new CellAddress(bereich.Sheet, bereich.StartColumn, bereich.StartRow), PropertyState.DIRECT_VALUE));
+			bedingung.add(new PropertyValue("StyleName", 0, styleName, PropertyState.DIRECT_VALUE));
+			PropertyValue[] aCondition = bedingung.toArray(PropertyValue[]::new);
 			xEntries.addNew(aCondition);
 			// LO verwirft setPropertyValue("ConditionalFormat") lautlos bei tab-geschütztem Sheet
 			// und löscht dabei den alten Eintrag – Scope sicherstellt dass Sheet entsperrt ist.

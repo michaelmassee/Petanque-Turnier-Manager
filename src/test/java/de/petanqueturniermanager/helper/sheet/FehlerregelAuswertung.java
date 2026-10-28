@@ -21,9 +21,9 @@ import de.petanqueturniermanager.helper.Lo;
  * tatsächlich aus. Ein reiner Textvergleich der Formel genügt nicht – eine syntaktisch vorhandene Regel kann
  * zur Laufzeit einen Fehler liefern (z.B. Err:504) und greift dann nie.
  * <p>
- * LibreOffice liefert die Formel relativ zur ersten Zeile des Regelbereichs (die Quellposition der Bedingung
- * bleibt 0/0). Die relativen Zeilenbezüge ({@code $B4}) werden deshalb auf die zu prüfende Zeile umgerechnet,
- * absolute ({@code $B$4}) bleiben. Spaltenbezüge der Regel müssen absolut sein.
+ * Ausgewertet wird wie in LibreOffice: Die relativen Zeilenbezüge ({@code $B4}) gelten ab der Quellposition der
+ * Bedingung und werden auf die zu prüfende Zeile umgerechnet, absolute ({@code $B$4}) bleiben. Eine falsche
+ * Quellposition (Zeilenversatz) fällt dadurch auf. Spaltenbezüge der Regel müssen absolut sein.
  */
 public final class FehlerregelAuswertung {
 
@@ -38,17 +38,16 @@ public final class FehlerregelAuswertung {
 	}
 
 	/**
-	 * @param ersteRegelZeile erste Zeile des Bereichs, für den die Regel angelegt wurde (erste Datenzeile)
 	 * @return {@code true} wenn die Fehlerregel der Zelle für diese Zeile WAHR ergibt; schlägt fehl, wenn die
 	 *         Regel nicht fehlerfrei auswertbar ist
 	 */
-	public static boolean greift(XSpreadsheet sheet, int spalte, int zeile, int ersteRegelZeile) throws Exception {
+	public static boolean greift(XSpreadsheet sheet, int spalte, int zeile) throws Exception {
 		XPropertySet properties = Lo.qi(XPropertySet.class, sheet.getCellByPosition(spalte, zeile));
 		XSheetConditionalEntries entries = Lo.qi(XSheetConditionalEntries.class,
 				properties.getPropertyValue("ConditionalFormat"));
 		assertThat(entries.getCount()).as("Zelle %d/%d hat keine bedingte Formatierung", spalte, zeile).isPositive();
-		String formel = fuerZeile(Lo.qi(XSheetCondition.class, entries.getByIndex(0)).getFormula1(),
-				zeile - ersteRegelZeile);
+		XSheetCondition fehlerregel = Lo.qi(XSheetCondition.class, entries.getByIndex(0));
+		String formel = fuerZeile(fehlerregel.getFormula1(), zeile - fehlerregel.getSourcePosition().Row);
 
 		XCell hilfszelle = sheet.getCellByPosition(HILFS_SPALTE, zeile);
 		try {
