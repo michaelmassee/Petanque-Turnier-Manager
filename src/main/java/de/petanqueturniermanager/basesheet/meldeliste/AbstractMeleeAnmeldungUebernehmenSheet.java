@@ -10,10 +10,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
@@ -30,6 +34,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.helper.LoMainThread;
 import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
@@ -86,6 +91,8 @@ public abstract class AbstractMeleeAnmeldungUebernehmenSheet extends SheetRunner
 	 * ausschließlich aus bereits eingecheckten Spielern und gelten damit automatisch als aktiv.
 	 */
 	protected static final int AKTIV_WERT_NIMMT_TEIL = 1;
+
+	private static final Logger logger = LogManager.getLogger(AbstractMeleeAnmeldungUebernehmenSheet.class);
 
 	/** Nr-Spalte der Meldeliste – erste Spalte des geschriebenen Blocks. */
 	private static final int MELDELISTE_NR_SPALTE = 0;
@@ -250,10 +257,9 @@ public abstract class AbstractMeleeAnmeldungUebernehmenSheet extends SheetRunner
 			return false;
 		}
 
-		MessageBoxResult antwort = MessageBox.from(getxContext(), MessageBoxTypeEnum.QUESTION_YES_NO)
+		MessageBoxResult antwort = zeigeAufHauptthread(MessageBox.from(getxContext(), MessageBoxTypeEnum.QUESTION_YES_NO)
 				.caption(I18n.get("msg.caption.melee.uebernehmen"))
-				.message(I18n.get("msg.text.melee.neu.auslosen.frage", neue.size(), meleeTeamIndizes.size()))
-				.show();
+				.message(I18n.get("msg.text.melee.neu.auslosen.frage", neue.size(), meleeTeamIndizes.size())));
 		if (antwort != MessageBoxResult.YES) {
 			return true;
 		}
@@ -282,7 +288,7 @@ public abstract class AbstractMeleeAnmeldungUebernehmenSheet extends SheetRunner
 				.anyMatch(schluessel -> SheetMetadataHelper.findeSheet(xDoc, schluessel).isPresent());
 	}
 
-	private void meldeOffenGebliebene(int anzahlOffenGeblieben) {
+	private void meldeOffenGebliebene(int anzahlOffenGeblieben) throws GenerateException {
 		if (anzahlOffenGeblieben > 0) {
 			zeigeHinweis("msg.text.melee.spieler.offen.geblieben", anzahlOffenGeblieben);
 		}
@@ -492,20 +498,47 @@ public abstract class AbstractMeleeAnmeldungUebernehmenSheet extends SheetRunner
 				.setDataInRange(data);
 	}
 
-	private void zeigeHinweis(String i18nKey, Object... args) {
+	private void zeigeHinweis(String i18nKey, Object... args) throws GenerateException {
 		zeigeMeldung(MessageBoxTypeEnum.INFO_OK, i18nKey, args);
 	}
 
 	/** Für Fälle, in denen nichts übernommen werden kann – der Menüpunkt bleibt bewusst immer aktiv. */
-	private void zeigeWarnung(String i18nKey, Object... args) {
+	private void zeigeWarnung(String i18nKey, Object... args) throws GenerateException {
 		zeigeMeldung(MessageBoxTypeEnum.WARN_OK, i18nKey, args);
 	}
 
-	private void zeigeMeldung(MessageBoxTypeEnum typ, String i18nKey, Object... args) {
-		MessageBox.from(getxContext(), typ)
+	private void zeigeMeldung(MessageBoxTypeEnum typ, String i18nKey, Object... args) throws GenerateException {
+		zeigeAufHauptthread(MessageBox.from(getxContext(), typ)
 				.caption(I18n.get("msg.caption.melee.uebernehmen"))
-				.message(I18n.get(i18nKey, args))
-				.show();
+				.message(I18n.get(i18nKey, args)));
+	}
+
+	/**
+	 * Zeigt den Dialog auf dem LO-Hauptthread und wartet auf die Antwort. Die Übernahme läuft im
+	 * SheetRunner-Thread; ein dort ausgeführter modaler Dialog (Rückfrage zum Neu-Auslosen) ließ nach dem
+	 * anschließenden Wechsel zur Meldeliste Tabreiter und Seitenleiste auf dem Mêlée-Blatt stehen.
+	 * <p>
+	 * Darf nie vom Hauptthread aus aufgerufen werden – das Warten blockierte dann genau den Thread, der den
+	 * Dialog ausführen soll. {@link #uebernehmen()} läuft im SheetRunner-Thread bzw. im Testthread.
+	 */
+	private MessageBoxResult zeigeAufHauptthread(MessageBox dialog) throws GenerateException {
+		CompletableFuture<MessageBoxResult> antwort = new CompletableFuture<>();
+		LoMainThread.post(getxContext(), () -> {
+			try {
+				antwort.complete(dialog.show());
+			} catch (RuntimeException e) {
+				antwort.completeExceptionally(e);
+			}
+		});
+		try {
+			return antwort.get();
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			throw new GenerateException(e.getMessage());
+		} catch (ExecutionException e) {
+			logger.error("Dialog der Mêlée-Übernahme fehlgeschlagen", e);
+			throw new GenerateException(String.valueOf(e.getCause()));
+		}
 	}
 
 	@Override
