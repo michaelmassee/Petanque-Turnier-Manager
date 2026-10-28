@@ -969,13 +969,42 @@ processResources.dependsOn 'generateLoVersionInfo'
 // Build-Task
 def pluginOxtDatei = layout.buildDirectory.file("distributions/${project.name}-${version}.oxt")
 
+// Update-Feed für die LO-Erweiterungsverwaltung. description.xml verweist per <update-information> auf
+// releases/latest/download/update.xml – die Datei muss daher an jedem GitHub-Release hängen (RELEASE.md, Schritt 6).
+def updateXmlDatei = layout.buildDirectory.file('distributions/update.xml')
+
+tasks.register('generateUpdateXml') {
+    group = 'LibreOffice'
+    description = 'Erzeugt build/distributions/update.xml (Update-Feed der Extension) für das GitHub-Release'
+    def identifier = descriptionXml.identifier.@value.text()
+    def pluginVersion = version.toString()
+    def oxtName = "${project.name}-${version}.oxt"
+    inputs.file('description.xml')
+    outputs.file(updateXmlDatei)
+
+    doLast {
+        def downloadUrl = "https://github.com/michaelmassee/Petanque-Turnier-Manager/releases/download/v${pluginVersion}/${oxtName}"
+        updateXmlDatei.get().asFile.text = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<description xmlns="http://openoffice.org/extensions/update/2006" xmlns:xlink="http://www.w3.org/1999/xlink">
+\t<identifier value="${identifier}"/>
+\t<version value="${pluginVersion}"/>
+\t<update-download>
+\t\t<src xlink:href="${downloadUrl}"/>
+\t</update-download>
+</description>
+"""
+    }
+}
+
 tasks.register('buildPlugin') {
     group = 'LibreOffice'
-    description = 'High-level Task: Baut die OXT und zeigt Ausgabepfad'
-    dependsOn 'buildOXT'
+    description = 'High-level Task: Baut die OXT samt Update-Feed und zeigt Ausgabepfad'
+    dependsOn 'buildOXT', 'generateUpdateXml'
 
     doLast {
         println "Plugin erfolgreich gebaut: ${pluginOxtDatei.get().asFile}"
+        println "Update-Feed: ${updateXmlDatei.get().asFile}"
     }
 }
 
