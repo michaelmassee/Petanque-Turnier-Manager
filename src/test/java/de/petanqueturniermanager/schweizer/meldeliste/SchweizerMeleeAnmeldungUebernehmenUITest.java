@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.sheet.ValidationType;
 import com.sun.star.sheet.XSheetCondition;
+import com.sun.star.sheet.XSheetConditionalEntries;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.BaseCalcUITest;
@@ -69,6 +70,32 @@ class SchweizerMeleeAnmeldungUebernehmenUITest extends BaseCalcUITest implements
 		assertThat(validation.getPropertyValue("ShowErrorMessage")).isEqualTo(Boolean.TRUE);
 		assertThat(validation.getPropertyValue("ErrorMessage")).isEqualTo(I18n.get("melee.anmeldung.eingecheckt.fehler"));
 		assertThat(Lo.qi(XSheetCondition.class, validation).getFormula1()).isEqualTo("{\"X\"}");
+	}
+
+	/** Doppelte Vor-/Nachname-Kombinationen müssen wie in den Meldelisten rot auffallen. */
+	@Test
+	void doppelteNamenHabenFehlerregelUndEditierfarbe() throws Exception {
+		meleeAnmeldungenAnlegen(3);
+
+		XSpreadsheet meleeSheet = new SchweizerMeleeAnmeldungSheet(wkingSpreadsheet).getXSpreadSheet();
+		for (int spalte : List.of(SPALTE_VORNAME, SPALTE_NACHNAME)) {
+			List<String> formeln = conditionalFormatFormeln(meleeSheet, spalte, ERSTE_DATEN_ZEILE);
+			assertThat(formeln).as("Spalte %d: Fehlerregel für doppelte Namen", spalte)
+					.anySatisfy(formel -> assertThat(formel).containsIgnoringCase("COUNTIFS").doesNotContain("#REF!"));
+			assertThat(formeln).as("Spalte %d: Fehlerregel vor der Editierfarbe", spalte).hasSizeGreaterThan(1);
+			assertThat(formeln.get(0)).containsIgnoringCase("COUNTIFS");
+		}
+	}
+
+	private static List<String> conditionalFormatFormeln(XSpreadsheet sheet, int spalte, int zeile) throws Exception {
+		XPropertySet properties = Lo.qi(XPropertySet.class, sheet.getCellByPosition(spalte, zeile));
+		XSheetConditionalEntries entries = Lo.qi(XSheetConditionalEntries.class,
+				properties.getPropertyValue("ConditionalFormat"));
+		List<String> formeln = new ArrayList<>();
+		for (int i = 0; i < entries.getCount(); i++) {
+			formeln.add(Lo.qi(XSheetCondition.class, entries.getByIndex(i)).getFormula1());
+		}
+		return formeln;
 	}
 
 	@Test

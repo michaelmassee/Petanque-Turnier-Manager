@@ -141,8 +141,12 @@ public abstract class AbstractMeleeAnmeldungSheet extends SheetRunner
 				RangePosition.from(SPALTE_EINGECHECKT, ERSTE_DATEN_ZEILE, SPALTE_EINGECHECKT, letzteZeile));
 		normalisiereEingecheckteMarkierungen(letzteZeile);
 
+		// Doppelte Vor-/Nachname-Kombination rot wie in den Meldelisten; setzt für die Namensspalten auch die
+		// Editierfarbe (nach der Fehlerregel, damit der Fehler Vorrang hat).
+		MeldeListeHelper.insertFormulaFuerDoppelteSpielerNamen(new int[] { SPALTE_VORNAME },
+				new int[] { SPALTE_NACHNAME }, ERSTE_DATEN_ZEILE, letzteZeile, this);
 		EditierbaresZelleFormatHelper.anwenden(this,
-				RangePosition.from(SPALTE_VORNAME, ERSTE_DATEN_ZEILE, SPALTE_EINGECHECKT, letzteZeile));
+				RangePosition.from(SPALTE_SETZPOSITION, ERSTE_DATEN_ZEILE, SPALTE_EINGECHECKT, letzteZeile));
 	}
 
 	/**
