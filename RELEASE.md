@@ -60,6 +60,7 @@ git log "$(git describe --tags --abbrev=0)"..HEAD --oneline
 ```bash
 ./gradlew buildPlugin
 # Ergebnis: build/distributions/PetanqueTurnierManager-X.Y.Z.oxt
+#           build/distributions/update.xml  (Update-Feed für die LO-Erweiterungsverwaltung)
 ```
 
 > Muss auf **Linux** mit installiertem LibreOffice-SDK laufen
@@ -103,10 +104,16 @@ gh release create vX.Y.Z \
   --repo michaelmassee/Petanque-Turnier-Manager \
   --title "Release vX.Y.Z" \
   --notes-file notes.md \
-  build/distributions/PetanqueTurnierManager-X.Y.Z.oxt
+  build/distributions/PetanqueTurnierManager-X.Y.Z.oxt \
+  build/distributions/update.xml
 ```
 
 > Dieses Release MUSS existieren, bevor das Installer-Repo getaggt wird.
+
+> **`update.xml` nicht vergessen:** `description.xml` verweist für „Extras > Extensions >
+> Nach Updates suchen“ auf `releases/latest/download/update.xml`. Fehlt die Datei am neuesten
+> Release, meldet LibreOffice bei jeder Update-Suche einen Fehler. Nachträglich:
+> `gh release upload vX.Y.Z build/distributions/update.xml --repo michaelmassee/Petanque-Turnier-Manager`
 
 ## 7. Installer-Repo nachziehen & taggen (löst Installer-Build aus)
 

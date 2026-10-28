@@ -3,8 +3,8 @@
 	<version value="5.40.00"/>
 	<identifier value="de.petanqueturniermanager"/>
 	<platform value="all"/>
-<update-information>
-		<src xlink:href="https://github.com/michaelmassee/Petanque-Turnier-Manager/releases"/>
+	<update-information>
+		<src xlink:href="https://github.com/michaelmassee/Petanque-Turnier-Manager/releases/latest/download/update.xml"/>
 	</update-information>
 	<publisher>
 		<name lang="de" xlink:href="https://github.com/michaelmassee/Petanque-Turnier-Manager">Michael Massee</name>
