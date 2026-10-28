@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
@@ -675,6 +676,55 @@ public class SchweizerSystemTest {
 		// Erwartet: 5 bekommt den ersten freien Gegner in Ranglistenreihenfolge (2), danach 3–6 und 4–1
 		assertThat(runde4).extracting(paarung -> paarung.getA().getNr() + "–" + paarung.getB().getNr())
 				.containsExactly("5–2", "3–6", "4–1");
+	}
+
+	/**
+	 * Regression (Online-Review, 32 Teams, Runde 16): Das frühere Backtracking mit Schrittbudget wertete ein
+	 * erschöpftes Budget als „unlösbar“ und lieferte acht Gegnerwiederholungen, obwohl eine Paarung ohne
+	 * Wiederholung existiert.
+	 */
+	@Test
+	public void testSpaeteRundeGrossesFeldOhneVermeidbareWiederholung() {
+		// Gegner der Runden 1–15 und Rangfolge/Siege nach Runde 15
+		String gespielt = "1-32 2-31 3-30 4-29 5-28 6-27 7-26 8-25 9-24 10-23 11-22 12-21 13-20 14-19 15-18 16-17 27-4 5-17 "
+				+ "8-18 26-13 32-23 2-9 12-19 22-30 3-11 14-21 24-31 10-1 20-7 15-25 16-28 29-6 8-26 5-30 2-4 32-12 "
+				+ "19-27 3-31 17-1 23-7 29-28 18-13 25-9 22-14 21-15 24-10 11-20 16-6 30-12 8-4 26-19 5-32 2-3 14-25 "
+				+ "13-7 28-1 27-22 29-21 31-18 9-23 17-11 6-24 20-15 10-16 12-4 8-30 26-32 13-3 28-14 19-5 2-29 7-27 "
+				+ "1-18 25-23 17-24 22-21 31-9 11-6 20-16 10-15 4-30 12-3 32-14 8-19 26-2 13-27 28-18 23-17 5-22 7-1 "
+				+ "29-31 11-25 20-24 21-9 6-10 16-15 4-3 14-12 30-19 13-32 2-18 17-8 26-5 27-29 7-28 23-20 25-22 31-1 "
+				+ "11-21 24-16 6-15 9-10 4-14 3-19 13-2 17-12 30-32 5-18 28-25 29-20 8-27 26-11 7-24 1-23 22-15 31-6 "
+				+ "21-10 16-9 4-19 3-14 13-12 32-2 5-29 28-17 30-26 27-18 7-25 1-20 8-11 23-21 6-9 15-24 22-10 31-16 "
+				+ "4-13 3-32 14-29 19-28 12-2 30-18 5-1 17-25 27-26 7-11 20-21 6-8 24-22 31-10 23-16 15-9 4-28 3-5 "
+				+ "13-14 19-32 30-2 29-17 12-27 18-7 1-25 20-26 8-24 11-10 22-9 21-16 6-23 31-15 4-32 3-28 14-30 13-19 "
+				+ "29-12 2-5 7-17 1-26 27-25 18-6 8-31 11-9 20-10 22-16 21-24 23-15 4-17 3-29 13-28 14-2 30-7 19-1 12-5 "
+				+ "32-25 26-18 11-16 20-9 27-15 8-10 31-22 6-21 24-23 4-1 3-17 14-11 13-30 28-12 29-19 32-7 2-8 5-9 "
+				+ "26-15 18-24 25-16 31-21 20-6 27-10 23-22 4-18 3-1 14-17 13-29 28-30 12-8 19-2 32-20 11-15 5-21 26-9 "
+				+ "7-16 27-24 25-10 31-23 6-22";
+		List<Integer> rangfolge = List.of(4, 3, 28, 14, 13, 19, 12, 30, 29, 17, 1, 32, 11, 2, 5, 18, 26, 8, 27, 20, 7, 25, 21, 31, 22, 16, 23, 6, 9, 15, 24, 10);
+		List<Integer> siege = List.of(12, 10, 10, 10, 10, 9, 9, 9, 9, 9, 9, 8, 8, 7, 7, 7, 7, 7, 7, 7, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 5, 4);
+
+		Map<Integer, Team> teams = rangfolge.stream().collect(Collectors.toMap(nr -> nr, Team::from));
+		Map<Integer, List<Integer>> gegner = new java.util.HashMap<>();
+		for (String paar : gespielt.split(" ")) {
+			int a = Integer.parseInt(paar.split("-")[0]);
+			int b = Integer.parseInt(paar.split("-")[1]);
+			teams.get(a).addGegner(teams.get(b));
+			gegner.computeIfAbsent(a, k -> new ArrayList<>()).add(b);
+			gegner.computeIfAbsent(b, k -> new ArrayList<>()).add(a);
+		}
+		List<SchweizerTeamErgebnis> ergebnisse = IntStream.range(0, rangfolge.size())
+				.mapToObj(i -> new SchweizerTeamErgebnis(rangfolge.get(i), siege.get(i), 0, 0,
+						gegner.get(rangfolge.get(i))))
+				.toList();
+
+		List<TeamPaarung> runde16 = new SchweizerSystem()
+				.weitereRunde(rangfolge.stream().map(teams::get).toList(), ergebnisse);
+
+		assertThat(runde16).hasSize(16);
+		assertThat(new SchweizerSystem().flattenTeampaarungen(runde16)).hasSize(32);
+		assertThat(runde16).allSatisfy(paarung -> assertThat(gegner.get(paarung.getA().getNr()))
+				.as("Wiederholung %d–%d", paarung.getA().getNr(), paarung.getB().getNr())
+				.doesNotContain(paarung.getB().getNr()));
 	}
 
 }

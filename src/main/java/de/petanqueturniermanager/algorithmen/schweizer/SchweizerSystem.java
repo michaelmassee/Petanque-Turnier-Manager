@@ -5,12 +5,10 @@ package de.petanqueturniermanager.algorithmen.schweizer;
 import de.petanqueturniermanager.algorithmen.liga.Direktvergleich;
 import de.petanqueturniermanager.algorithmen.common.IsEvenOrOdd;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Deque;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -39,12 +37,6 @@ import de.petanqueturniermanager.schweizer.konfiguration.SchweizerRankingModus;
  * @see <a href="SchweizerTurnierSystem.md">SchweizerTurnierSystem.md</a>
  */
 public class SchweizerSystem {
-
-	/**
-	 * Obergrenze der Suchschritte je Stufe erlaubter Wiederholungen. Schützt große Felder vor exponentieller
-	 * Laufzeit; reicht sie nicht, wird die nächste Stufe (eine Wiederholung mehr) versucht.
-	 */
-	private static final int MAX_SUCHSCHRITTE = 200_000;
 
 	/**
 	 * Sortiert eine Liste von Teamergebnissen nach den Auswertungskriterien des Schweizer Systems:
@@ -290,66 +282,178 @@ public class SchweizerSystem {
 	}
 
 	/**
-	 * Paart die Teams von oben nach unten: Jedes Team bekommt den ersten Gegner in Ranglistenreihenfolge, gegen den
-	 * es noch nicht gespielt hat – zuerst aus der eigenen Sieggruppe, sonst aus den tieferen (Float). Führt eine
-	 * Wahl in eine Sackgasse, wird sie zurückgenommen (Backtracking, Kapitel 4 in {@code 03_Schweizer.md}).
+	 * Paart die Teams von oben nach unten: Jedes Team bekommt den ersten Gegner in Ranglistenreihenfolge – zuerst aus
+	 * der eigenen Sieggruppe, sonst aus den tieferen (Float) –, mit dem die kleinstmögliche Zahl an
+	 * Gegnerwiederholungen erreichbar bleibt (Kapitel 4 in {@code 03_Schweizer.md}).
 	 * <p>
-	 * Erst wenn keine wiederholungsfreie Paarung existiert, werden Gegnerwiederholungen zugelassen – so wenige wie
-	 * möglich. Die frühere gruppenweise Greedy-Paarung erzeugte eine vermeidbare Wiederholung, sobald die oberste
-	 * Gruppe festsaß: ein Tausch war nur mit schon gebildeten Paarungen möglich, und davon gab es noch keine.
+	 * Ob ein Kandidat zur besten Lösung führt, prüft ein maximales Matching über die noch nicht gespielten Paare
+	 * (Edmonds-Blüten) exakt. Das Ergebnis entspricht einer vollständigen Rücksetz-Suche, braucht aber keine
+	 * Suchgrenze: Ein Backtracking mit Schrittbudget wertete ein erschöpftes Budget als „unlösbar“ und ließ dann
+	 * vermeidbare Wiederholungen zu (32 Teams, Runde 16: acht statt keiner).
 	 *
 	 * @param gruppen         Sieggruppen in Ranglistenreihenfolge (jede gerade Größe)
 	 * @param teamPaarungList Ergebnisliste (wird befüllt)
 	 */
 	private void paareGruppen(List<List<Team>> gruppen, List<TeamPaarung> teamPaarungList) {
 		List<Team> reihenfolge = gruppen.stream().flatMap(List::stream).toList();
-		for (int erlaubteWiederholungen = 0; erlaubteWiederholungen <= reihenfolge.size() / 2; erlaubteWiederholungen++) {
-			Deque<Team> gewaehlt = new ArrayDeque<>();
-			int[] restSchritte = { MAX_SUCHSCHRITTE };
-			if (paareRekursiv(new ArrayList<>(reihenfolge), erlaubteWiederholungen, gewaehlt, restSchritte)) {
-				Iterator<Team> teams = gewaehlt.descendingIterator();
-				while (teams.hasNext()) {
-					teamPaarungList.add(new TeamPaarung(teams.next(), teams.next()).addGegner().setHatGegner());
+		int n = reihenfolge.size();
+		boolean[][] erlaubt = new boolean[n][n];
+		for (int a = 0; a < n; a++) {
+			for (int b = 0; b < n; b++) {
+				Team teamA = reihenfolge.get(a);
+				Team teamB = reihenfolge.get(b);
+				erlaubt[a][b] = a != b && !teamA.hatAlsGegner(teamB) && !teamB.hatAlsGegner(teamA);
+			}
+		}
+		boolean[] aktiv = new boolean[n];
+		Arrays.fill(aktiv, true);
+		int[] partner = new int[n];
+		Arrays.fill(partner, -1);
+		int groesse = 0;
+		// Gieriger Start in Ranglistenreihenfolge: meist ist der gesuchte Gegner dann schon Matching-Partner und die
+		// Prüfung kommt ohne Augmentierung aus.
+		for (int a = 0; a < n; a++) {
+			for (int b = a + 1; b < n && partner[a] < 0; b++) {
+				if (partner[b] < 0 && erlaubt[a][b]) {
+					partner[a] = b;
+					partner[b] = a;
+					groesse++;
 				}
-				return;
+			}
+		}
+		for (int i = 0; i < n; i++) {
+			if (partner[i] < 0 && augmentiere(i, erlaubt, partner, aktiv)) {
+				groesse++;
+			}
+		}
+
+		for (int team = 0; team < n; team++) {
+			if (!aktiv[team]) {
+				continue;
+			}
+			aktiv[team] = false;
+			for (int gegner = team + 1; gegner < n; gegner++) {
+				if (!aktiv[gegner]) {
+					continue;
+				}
+				// Maximales Matching ohne team und gegner; mehr als groesse minus (team, gegner) ist nicht möglich.
+				int[] neu = partner.clone();
+				int neueGroesse = groesse;
+				int ziel = groesse - (erlaubt[team][gegner] ? 1 : 0);
+				aktiv[gegner] = false;
+				for (int entfernt : new int[] { team, gegner }) {
+					if (neu[entfernt] >= 0) {
+						neu[neu[entfernt]] = -1;
+						neu[entfernt] = -1;
+						neueGroesse--;
+					}
+				}
+				for (int frei = 0; frei < n && neueGroesse < ziel; frei++) {
+					if (aktiv[frei] && neu[frei] < 0 && augmentiere(frei, erlaubt, neu, aktiv)) {
+						neueGroesse++;
+					}
+				}
+				if (neueGroesse == ziel) {
+					partner = neu;
+					groesse = neueGroesse;
+					teamPaarungList.add(new TeamPaarung(reihenfolge.get(team), reihenfolge.get(gegner)).addGegner()
+							.setHatGegner());
+					break;
+				}
+				aktiv[gegner] = true;
 			}
 		}
 	}
 
 	/**
-	 * @param offen                  noch ungepaarte Teams in Ranglistenreihenfolge
-	 * @param erlaubteWiederholungen wie viele Gegnerwiederholungen noch zulässig sind
-	 * @param gewaehlt               gebildete Paarungen als Folge A, B, A, B … (Stapel)
-	 * @param restSchritte           Suchbudget; bei Erschöpfung gilt die Stufe als nicht lösbar
-	 * @return {@code true} wenn alle offenen Teams gepaart wurden
+	 * Sucht vom freien Knoten {@code wurzel} einen augmentierenden Pfad (Edmonds-Blüten-Algorithmus) und erweitert
+	 * das Matching entlang dieses Pfads.
+	 *
+	 * @param wurzel  freier, aktiver Knoten
+	 * @param erlaubt Kanten (noch nicht gespielte Paare)
+	 * @param partner Matching, {@code -1} = frei; wird bei Erfolg geändert
+	 * @param aktiv   noch nicht gepaarte Knoten
+	 * @return {@code true} wenn das Matching um eine Kante wuchs
 	 */
-	private boolean paareRekursiv(List<Team> offen, int erlaubteWiederholungen, Deque<Team> gewaehlt,
-			int[] restSchritte) {
-		if (offen.isEmpty()) {
-			return true;
-		}
-		if (--restSchritte[0] < 0) {
-			return false;
-		}
-		Team team = offen.removeFirst();
-		for (int i = 0; i < offen.size(); i++) {
-			Team gegner = offen.get(i);
-			boolean wiederholung = team.hatAlsGegner(gegner) || gegner.hatAlsGegner(team);
-			if (wiederholung && erlaubteWiederholungen == 0) {
-				continue;
+	private static boolean augmentiere(int wurzel, boolean[][] erlaubt, int[] partner, boolean[] aktiv) {
+		int n = partner.length;
+		boolean[] besucht = new boolean[n];
+		int[] vorgaenger = new int[n];
+		Arrays.fill(vorgaenger, -1);
+		int[] basis = IntStream.range(0, n).toArray();
+		int[] warteschlange = new int[n];
+		int kopf = 0;
+		int ende = 0;
+		besucht[wurzel] = true;
+		warteschlange[ende++] = wurzel;
+		while (kopf < ende) {
+			int v = warteschlange[kopf++];
+			for (int zu = 0; zu < n; zu++) {
+				if (!aktiv[zu] || !erlaubt[v][zu] || basis[v] == basis[zu] || partner[v] == zu) {
+					continue;
+				}
+				if (zu == wurzel || (partner[zu] >= 0 && vorgaenger[partner[zu]] >= 0)) {
+					int bluetenBasis = gemeinsameBasis(v, zu, basis, partner, vorgaenger);
+					boolean[] bluete = new boolean[n];
+					markierePfad(v, bluetenBasis, zu, bluete, basis, partner, vorgaenger);
+					markierePfad(zu, bluetenBasis, v, bluete, basis, partner, vorgaenger);
+					for (int i = 0; i < n; i++) {
+						if (aktiv[i] && bluete[basis[i]]) {
+							basis[i] = bluetenBasis;
+							if (!besucht[i]) {
+								besucht[i] = true;
+								warteschlange[ende++] = i;
+							}
+						}
+					}
+				} else if (vorgaenger[zu] < 0) {
+					vorgaenger[zu] = v;
+					if (partner[zu] < 0) {
+						for (int u = zu; u >= 0;) {
+							int pv = vorgaenger[u];
+							int naechster = partner[pv];
+							partner[u] = pv;
+							partner[pv] = u;
+							u = naechster;
+						}
+						return true;
+					}
+					besucht[partner[zu]] = true;
+					warteschlange[ende++] = partner[zu];
+				}
 			}
-			offen.remove(i);
-			gewaehlt.push(team);
-			gewaehlt.push(gegner);
-			if (paareRekursiv(offen, erlaubteWiederholungen - (wiederholung ? 1 : 0), gewaehlt, restSchritte)) {
-				return true;
-			}
-			gewaehlt.pop();
-			gewaehlt.pop();
-			offen.add(i, gegner);
 		}
-		offen.addFirst(team);
 		return false;
+	}
+
+	private static int gemeinsameBasis(int a, int b, int[] basis, int[] partner, int[] vorgaenger) {
+		boolean[] gesehen = new boolean[partner.length];
+		while (true) {
+			a = basis[a];
+			gesehen[a] = true;
+			if (partner[a] < 0) {
+				break;
+			}
+			a = vorgaenger[partner[a]];
+		}
+		while (true) {
+			b = basis[b];
+			if (gesehen[b]) {
+				return b;
+			}
+			b = vorgaenger[partner[b]];
+		}
+	}
+
+	private static void markierePfad(int v, int bluetenBasis, int kind, boolean[] bluete, int[] basis, int[] partner,
+			int[] vorgaenger) {
+		while (basis[v] != bluetenBasis) {
+			bluete[basis[v]] = true;
+			bluete[basis[partner[v]]] = true;
+			vorgaenger[v] = kind;
+			kind = partner[v];
+			v = vorgaenger[partner[v]];
+		}
 	}
 
 	/**
