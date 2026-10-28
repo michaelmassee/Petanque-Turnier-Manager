@@ -929,7 +929,10 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			}
 			// Reine Dialog-/Anzeige-Befehle ohne ProcessBox-Aktivierung,
 			// damit die ProcessBox nicht in den Vordergrund kommt und Dialoge nicht überdeckt.
-			if (behandleDialogBefehl(command)) {
+			// Sie laufen ohne SheetRunner: Der Dokumentkontext des Frames muss gesetzt sein, sonst
+			// entscheiden Turniermodus und Blattschutz über "irgendein Dokument" – bei zwei offenen
+			// Dokumenten scheiterte z.B. das Schreiben der Spieler-DB in ein Dokument ohne Turniermodus.
+			if (DokumentKontext.mitKontextAufruf(ermittleDokumentAusFrame(), () -> behandleDialogBefehl(command))) {
 				return;
 			}
 			// WICHTIG: WorkingSpreadsheet VOR ProcessBox.visibleWennAutomatisch erzeugen
