@@ -33,15 +33,23 @@ public final class PtmOnlineMenuController extends WeakBase
         implements XPopupMenuController, XInitialization, XMenuListener, XComponent, XServiceInfo {
     private static final String SERVICE = "de.petanqueturniermanager.PtmOnlineMenuController";
     private static final Map<PtmOnlineMenuController, Boolean> controller = new WeakHashMap<>();
-    /** Befehle des Untermenüs; sie stehen in keiner XCU-Datei, LibreOffice fragt sie bei diesem Controller ab. */
-    static final List<String> BEFEHLE = List.of(
-        ProtocolHandler.CMD_PTMONLINE_TURNIER_VERBINDEN, ProtocolHandler.CMD_PTMONLINE_ANMELDUNGEN_IMPORTIEREN,
-        ProtocolHandler.CMD_PTMONLINE_KONFLIKTLISTE_OEFFNEN, ProtocolHandler.CMD_PTMONLINE_ERGEBNISMELDUNGEN_ABHOLEN,
-        ProtocolHandler.CMD_PTMONLINE_SYNC_PAUSIEREN, ProtocolHandler.CMD_PTMONLINE_SYNC_FORTSETZEN,
-        ProtocolHandler.CMD_PTMONLINE_IM_BROWSER_OEFFNEN,
-        ProtocolHandler.CMD_PTMONLINE_VERBINDUNG_TRENNEN, ProtocolHandler.CMD_PTMONLINE_ZUORDNUNG_WIEDERHERSTELLEN);
-    private static final String[] TEXTE = {"verbinden", "abgleichen", "konfliktliste", "ergebnisse", "pausieren",
-        "fortsetzen", "browser", "trennen", "wiederherstellen"};
+    /** Eintrag des Untermenüs: Befehl und Suffix des i18n-Keys {@code ptmonline.menu.<textKey>}. */
+    private record MenuEintrag(String befehl, String textKey) {
+    }
+
+    /** Einträge des Untermenüs; sie stehen in keiner XCU-Datei, LibreOffice fragt sie bei diesem Controller ab. */
+    private static final List<MenuEintrag> EINTRAEGE = List.of(
+        new MenuEintrag(ProtocolHandler.CMD_PTMONLINE_TURNIER_VERBINDEN, "verbinden"),
+        new MenuEintrag(ProtocolHandler.CMD_PTMONLINE_ANMELDUNGEN_IMPORTIEREN, "abgleichen"),
+        new MenuEintrag(ProtocolHandler.CMD_PTMONLINE_KONFLIKTLISTE_OEFFNEN, "konfliktliste"),
+        new MenuEintrag(ProtocolHandler.CMD_PTMONLINE_ERGEBNISMELDUNGEN_ABHOLEN, "ergebnisse"),
+        new MenuEintrag(ProtocolHandler.CMD_PTMONLINE_SYNC_PAUSIEREN, "pausieren"),
+        new MenuEintrag(ProtocolHandler.CMD_PTMONLINE_SYNC_FORTSETZEN, "fortsetzen"),
+        new MenuEintrag(ProtocolHandler.CMD_PTMONLINE_IM_BROWSER_OEFFNEN, "browser"),
+        new MenuEintrag(ProtocolHandler.CMD_PTMONLINE_VERBINDUNG_TRENNEN, "trennen"),
+        new MenuEintrag(ProtocolHandler.CMD_PTMONLINE_ZUORDNUNG_WIEDERHERSTELLEN, "wiederherstellen"));
+    /** Befehle des Untermenüs in Menü-Reihenfolge. */
+    static final List<String> BEFEHLE = EINTRAEGE.stream().map(MenuEintrag::befehl).toList();
     private final XComponentContext context;
     private final List<XEventListener> listener = new CopyOnWriteArrayList<>();
     private XFrame frame;
@@ -76,11 +84,12 @@ public final class PtmOnlineMenuController extends WeakBase
         if (!PtmOnlineAktivierung.istAktiv()) return;
         XSpreadsheetDocument doc = frame == null || frame.getController() == null ? null
                 : Lo.qi(XSpreadsheetDocument.class, frame.getController().getModel());
-        for (short i = 0; i < BEFEHLE.size(); i++) {
+        for (short i = 0; i < EINTRAEGE.size(); i++) {
+            MenuEintrag eintrag = EINTRAEGE.get(i);
             short id = (short) (i + 1);
-            popup.insertItem(id, I18n.get("ptmonline.menu." + TEXTE[i]), (short) 0, i);
-            popup.setCommand(id, "ptm:" + BEFEHLE.get(i));
-            popup.enableItem(id, ProtocolHandler.istOnlineBefehlAktiv(BEFEHLE.get(i), doc));
+            popup.insertItem(id, I18n.get("ptmonline.menu." + eintrag.textKey()), (short) 0, i);
+            popup.setCommand(id, "ptm:" + eintrag.befehl());
+            popup.enableItem(id, ProtocolHandler.istOnlineBefehlAktiv(eintrag.befehl(), doc));
         }
     }
 
