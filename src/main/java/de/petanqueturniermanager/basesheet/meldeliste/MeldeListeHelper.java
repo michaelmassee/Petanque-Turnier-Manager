@@ -163,15 +163,18 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 			int nachnameSpalte, int ersteDatenZeile) {
 		String vornameAktuell = cleanString(absoluteSpalteRelativeZeile(vornameSpalte, ersteDatenZeile));
 		String nachnameAktuell = cleanString(absoluteSpalteRelativeZeile(nachnameSpalte, ersteDatenZeile));
+		// SUMPRODUCT statt COUNTIFS: COUNTIFS verlangt echte Zellbereiche und liefert für die bereinigten
+		// Arrays (TRIM/CLEAN über den Bereich) Err:504 – die Regel griffe dann nie.
 		StringBuilder treffer = new StringBuilder();
 		for (int spieler = 0; spieler < vornameSpalten.length; spieler++) {
 			if (spieler > 0) {
 				treffer.append('+');
 			}
-			treffer.append("COUNTIFS(")
-					.append(cleanString(absoluteBereich(vornameSpalten[spieler], ersteDatenZeile))).append(';').append(vornameAktuell)
-					.append(';').append(cleanString(absoluteBereich(nachnameSpalten[spieler], ersteDatenZeile))).append(';')
-					.append(nachnameAktuell).append(')');
+			treffer.append("SUMPRODUCT((")
+					.append(cleanString(absoluteBereich(vornameSpalten[spieler], ersteDatenZeile))).append('=')
+					.append(vornameAktuell).append(")*(")
+					.append(cleanString(absoluteBereich(nachnameSpalten[spieler], ersteDatenZeile))).append('=')
+					.append(nachnameAktuell).append("))");
 		}
 		return "AND(" + vornameAktuell + "<>\"\";" + nachnameAktuell + "<>\"\";( " + treffer + ")>1)";
 	}
@@ -188,7 +191,9 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	private static String cleanString(String referenz) {
 		// CLEAN entfernt Tabs und Steuerzeichen; geschützte Leerzeichen entstehen
 		// häufig beim Einfügen aus Web-Seiten und werden davor zu normalen Leerzeichen.
-		return "TRIM(CLEAN(SUBSTITUTE(" + referenz + ";CHAR(160);\" \")))";
+		// LOWER: der Vergleich mit "=" beachtet je nach Calc-Einstellung Groß-/Kleinschreibung, die
+		// Duplikatprüfung der Meldeliste (normalisiereName) ignoriert sie.
+		return "LOWER(TRIM(CLEAN(SUBSTITUTE(" + referenz + ";CHAR(160);\" \"))))";
 	}
 
 	private static int letzteMeldungZeile() {

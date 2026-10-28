@@ -109,7 +109,7 @@ class SchweizerMeldeListeSpAktivFehlerfarbeUITest extends BaseCalcUITest {
 				Position.from(meldeListeNew.getVornameSpalte(0), SchweizerListeDelegate.ERSTE_DATEN_ZEILE));
 
 		assertThat(formeln.getFirst()).as("Die Duplikat-Prüfung muss vor der Editierfarbe Vorrang haben")
-				.containsIgnoringCase("COUNTIFS");
+				.containsIgnoringCase("SUMPRODUCT");
 		assertThat(formeln).as("Vor- und Nachname bleiben als editierbare Eingabefelder hervorgehoben")
 				.anySatisfy(formel -> assertThat(formel).contains(EditierbaresZelleFormatHelper.PROPERTY_KEY));
 	}

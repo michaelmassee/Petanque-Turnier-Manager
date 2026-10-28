@@ -25,6 +25,8 @@ import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungLeser;
 import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungModus;
 import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungZeile;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
+import de.petanqueturniermanager.helper.sheet.FehlerregelAuswertung;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
@@ -72,18 +74,38 @@ class SchweizerMeleeAnmeldungUebernehmenUITest extends BaseCalcUITest implements
 		assertThat(Lo.qi(XSheetCondition.class, validation).getFormula1()).isEqualTo("{\"X\"}");
 	}
 
-	/** Doppelte Vor-/Nachname-Kombinationen müssen wie in den Meldelisten rot auffallen. */
+	/**
+	 * Doppelte Vor-/Nachname-Kombinationen müssen wie in den Meldelisten rot auffallen – geprüft wird die
+	 * tatsächliche Auswertung in LibreOffice (Leerzeichen und Groß-/Kleinschreibung zählen nicht), nicht nur
+	 * der Formeltext.
+	 */
 	@Test
-	void doppelteNamenHabenFehlerregelUndEditierfarbe() throws Exception {
-		meleeAnmeldungenAnlegen(3);
+	void doppelteNamenWerdenRotMarkiertUndBleibenEditierbar() throws Exception {
+		SchweizerMeleeAnmeldungSheet melee = new SchweizerMeleeAnmeldungSheet(wkingSpreadsheet);
+		melee.generate();
+		RangeData data = new RangeData();
+		for (String[] name : List.of(new String[] { "sa", "wqe" }, new String[] { "as", "qw" },
+				new String[] { " SA ", "Wqe" })) {
+			RowData zeile = data.addNewRow();
+			zeile.newEmpty();
+			zeile.newString(name[0]);
+			zeile.newString(name[1]);
+		}
+		XSpreadsheet meleeSheet = melee.getXSpreadSheet();
+		RangeHelper.from(meleeSheet, doc, data.getRangePosition(Position.from(SPALTE_NR, ERSTE_DATEN_ZEILE)))
+				.setDataInRange(data);
+		melee.generate();
 
-		XSpreadsheet meleeSheet = new SchweizerMeleeAnmeldungSheet(wkingSpreadsheet).getXSpreadSheet();
 		for (int spalte : List.of(SPALTE_VORNAME, SPALTE_NACHNAME)) {
-			List<String> formeln = conditionalFormatFormeln(meleeSheet, spalte, ERSTE_DATEN_ZEILE);
-			assertThat(formeln).as("Spalte %d: Fehlerregel für doppelte Namen", spalte)
-					.anySatisfy(formel -> assertThat(formel).containsIgnoringCase("COUNTIFS").doesNotContain("#REF!"));
-			assertThat(formeln).as("Spalte %d: Fehlerregel vor der Editierfarbe", spalte).hasSizeGreaterThan(1);
-			assertThat(formeln.get(0)).containsIgnoringCase("COUNTIFS");
+			assertThat(FehlerregelAuswertung.greift(meleeSheet, spalte, ERSTE_DATEN_ZEILE, ERSTE_DATEN_ZEILE)).as("doppelt, Spalte %d", spalte)
+					.isTrue();
+			assertThat(FehlerregelAuswertung.greift(meleeSheet, spalte, ERSTE_DATEN_ZEILE + 1, ERSTE_DATEN_ZEILE))
+					.as("eindeutig, Spalte %d", spalte).isFalse();
+			assertThat(FehlerregelAuswertung.greift(meleeSheet, spalte, ERSTE_DATEN_ZEILE + 2, ERSTE_DATEN_ZEILE))
+					.as("doppelt trotz Leerzeichen/Großschreibung, Spalte %d", spalte).isTrue();
+			assertThat(conditionalFormatFormeln(meleeSheet, spalte, ERSTE_DATEN_ZEILE))
+					.as("Spalte %d: Editierfarbe hinter der Fehlerregel", spalte)
+					.anySatisfy(formel -> assertThat(formel).contains(EditierbaresZelleFormatHelper.PROPERTY_KEY));
 		}
 	}
 

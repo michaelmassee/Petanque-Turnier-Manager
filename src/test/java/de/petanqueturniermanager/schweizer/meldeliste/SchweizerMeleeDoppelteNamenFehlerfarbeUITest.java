@@ -20,6 +20,7 @@ import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.sheet.FehlerregelAuswertung;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
@@ -59,11 +60,18 @@ class SchweizerMeleeDoppelteNamenFehlerfarbeUITest extends BaseCalcUITest {
 
 		new SchweizerMeldeListeSheetUpdate(wkingSpreadsheet).doRun();
 
+		// „Anna Müller" ist in Team 1 Spieler 1 und in Team 2 Spieler 2, „Klaus Weber" ist eindeutig.
+		assertThat(FehlerregelAuswertung.greift(sheet, meldeliste.getVornameSpalte(0), ersteZeile, ersteZeile))
+				.as("Anna Müller, Team 1").isTrue();
+		assertThat(FehlerregelAuswertung.greift(sheet, meldeliste.getVornameSpalte(1), ersteZeile + 1, ersteZeile))
+				.as("Anna Müller, Team 2").isTrue();
+		assertThat(FehlerregelAuswertung.greift(sheet, meldeliste.getVornameSpalte(0), ersteZeile + 1, ersteZeile))
+				.as("Klaus Weber ist eindeutig").isFalse();
 		for (int zeile : List.of(ersteZeile, ersteZeile + 1)) {
 			List<String> formeln = conditionalFormatFormeln(sheet, Position.from(meldeliste.getVornameSpalte(0), zeile));
 			assertThat(formeln)
-					.as("doppelter Spieler in Zeile %d braucht eine COUNTIFS-Fehlerregel", zeile)
-					.anySatisfy(formel -> assertThat(formel).containsIgnoringCase("COUNTIFS").doesNotContain("#REF!"));
+					.as("doppelter Spieler in Zeile %d braucht eine Fehlerregel", zeile)
+					.anySatisfy(formel -> assertThat(formel).containsIgnoringCase("SUMPRODUCT").doesNotContain("#REF!"));
 		}
 	}
 
