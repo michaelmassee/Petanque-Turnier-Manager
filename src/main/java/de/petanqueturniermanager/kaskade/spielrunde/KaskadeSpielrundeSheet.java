@@ -28,6 +28,8 @@ import de.petanqueturniermanager.algorithmen.kaskaden.KaskadenKoRunde;
 import de.petanqueturniermanager.algorithmen.kaskaden.KaskadenKoRundenPlan;
 import de.petanqueturniermanager.algorithmen.kaskaden.KaskadenKoRundenPlaner;
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.basesheet.spielrunde.ErgebnisEingabe;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeFooterHelper;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeHelper;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -59,7 +61,6 @@ import de.petanqueturniermanager.kaskade.konfiguration.KaskadeKonfigurationSheet
 import de.petanqueturniermanager.kaskade.meldeliste.KaskadeMeldeListeSheetUpdate;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
-import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
  * Erstellt das Rundenplan-Sheet für die nächste Kaskadenrunde.
@@ -600,9 +601,7 @@ public class KaskadeSpielrundeSheet extends SheetRunner implements ISheet {
             if (teamBStr == null || teamBStr.isEmpty()) {
                 continue;
             }
-            int ergA = row.size() > 3 ? row.get(3).getIntVal(0) : 0;
-            int ergB = row.size() > 4 ? row.get(4).getIntVal(0) : 0;
-            if (ergA == 0 && ergB == 0) {
+            if (!ErgebnisEingabe.istEingetragen(row.get(3), row.get(4))) {
                 return false;
             }
         }
