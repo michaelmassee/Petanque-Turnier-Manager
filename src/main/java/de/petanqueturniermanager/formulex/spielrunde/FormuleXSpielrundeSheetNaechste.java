@@ -8,6 +8,7 @@ import java.util.Set;
 
 import com.sun.star.sheet.XSpreadsheet;
 
+import de.petanqueturniermanager.basesheet.spielrunde.ErgebnisEingabe;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.formulex.rangliste.FormuleXRanglisteSheetUpdate;
@@ -163,9 +164,7 @@ public class FormuleXSpielrundeSheetNaechste extends FormuleXAbstractSpielrundeS
             if (nrB <= 0) {
                 continue; // Freilos-Zeile, kein Ergebnis nötig
             }
-            int ergA = (row.size() > 2) ? row.get(2).getIntVal(0) : 0;
-            int ergB = (row.size() > 3) ? row.get(3).getIntVal(0) : 0;
-            if (ergA == 0 && ergB == 0) {
+            if (!ErgebnisEingabe.istEingetragen(row.get(2), row.get(3))) {
                 return false;
             }
         }

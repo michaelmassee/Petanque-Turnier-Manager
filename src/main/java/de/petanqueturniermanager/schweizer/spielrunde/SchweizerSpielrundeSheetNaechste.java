@@ -24,6 +24,7 @@ import de.petanqueturniermanager.ptmonline.PtmOnlineSpielrundeSync;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheetUpdate;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.basesheet.spielrunde.ErgebnisEingabe;
 
 /**
  * Erstellung 26.03.2024 / Michael Massee
@@ -169,7 +170,7 @@ public class SchweizerSpielrundeSheetNaechste extends SchweizerAbstractSpielrund
 
 	/**
 	 * Prüft ob in der angegebenen Runde alle Paarungen (ohne Freilos) ein Ergebnis haben.
-	 * Ein Ergebnis gilt als eingetragen wenn erg_A + erg_B > 0.
+	 * Eingetragen bedeutet: beide Ergebniszellen enthalten eine Zahl ({@link ErgebnisEingabe}).
 	 */
 	private boolean alleErgebnisseEingetragen(SpielRundeNr spielRundeNr) throws GenerateException {
 		var xDoc = getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
@@ -203,11 +204,8 @@ public class SchweizerSpielrundeSheetNaechste extends SchweizerAbstractSpielrund
 					continue; // Freilos-Zeile
 				}
 			}
-			// Ergebnisse prüfen
-			int ergA = (row.size() > 2) ? row.get(2).getIntVal(0) : 0;
-			int ergB = (row.size() > 3) ? row.get(3).getIntVal(0) : 0;
-			if (ergA == 0 && ergB == 0) {
-				return false; // Ergebnis fehlt
+			if (!ErgebnisEingabe.istEingetragen(row.get(2), row.get(3))) {
+				return false;
 			}
 		}
 		return true;

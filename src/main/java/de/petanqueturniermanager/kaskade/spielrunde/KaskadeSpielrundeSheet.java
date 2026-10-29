@@ -33,6 +33,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldelisteUuidIndex;
 import de.petanqueturniermanager.basesheet.meldeliste.TeamNummernVergabe;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.basesheet.spielrunde.ErgebnisEingabe;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeFooterHelper;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeHelper;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -665,9 +666,7 @@ public class KaskadeSpielrundeSheet extends SheetRunner implements ISheet, PtmOn
             if (teamBStr == null || teamBStr.isEmpty()) {
                 continue;
             }
-            int ergA = row.size() > 3 ? row.get(3).getIntVal(0) : 0;
-            int ergB = row.size() > 4 ? row.get(4).getIntVal(0) : 0;
-            if (ergA == 0 && ergB == 0) {
+            if (!ErgebnisEingabe.istEingetragen(row.get(3), row.get(4))) {
                 return false;
             }
         }
