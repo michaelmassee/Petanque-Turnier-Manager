@@ -40,9 +40,20 @@ class MeleeNeuAuslosungPlanTest {
 				Set.of(),
 				Set.of(CARL, DORA));
 
-		assertThat(MeleeNeuAuslosungPlan.meleeTeamZeilen(spielerJeZeile, Set.of(ANNA, BERT, CARL, DORA)))
+		assertThat(MeleeNeuAuslosungPlan.meleeTeamZeilen(spielerJeZeile, List.of(true, true, true, true),
+				Set.of(ANNA, BERT, CARL, DORA)))
 				.as("gemischtes Team mit von Hand gemeldetem Spieler und Leerzeile zählen nicht")
 				.containsExactly(0, 3);
+	}
+
+	@Test
+	void meleeTeamZeilenUebergehtInaktiveTeams() {
+		List<Set<String>> spielerJeZeile = List.of(Set.of(ANNA, BERT), Set.of(CARL, DORA));
+
+		assertThat(MeleeNeuAuslosungPlan.meleeTeamZeilen(spielerJeZeile, List.of(false, true),
+				Set.of(ANNA, BERT, CARL, DORA)))
+				.as("von Hand inaktiv gesetztes Mêlée-Team wird nicht neu ausgelost")
+				.containsExactly(1);
 	}
 
 	@Test
@@ -58,6 +69,21 @@ class MeleeNeuAuslosungPlanTest {
 		assertThat(belegungen).containsExactly(new Belegung(3, 0), new Belegung(4, 1),
 				new Belegung(5, Belegung.LEEREN));
 		assertThat(belegungen.get(2).istLeeren()).isTrue();
+	}
+
+	@Test
+	void teamNummernVerwendetBisherigeAufsteigendUndZaehltHoch() {
+		assertThat(MeleeNeuAuslosungPlan.teamNummern(List.of(7, 3, 5), 5, 9)).containsExactly(3, 5, 7, 10, 11);
+	}
+
+	@Test
+	void teamNummernBeiWenigerTeamsNurDieKleinstenBisherigen() {
+		assertThat(MeleeNeuAuslosungPlan.teamNummern(List.of(7, 3, 5), 2, 9)).containsExactly(3, 5);
+	}
+
+	@Test
+	void teamNummernOhneBisherigeZaehltAbHoechsterNrHoch() {
+		assertThat(MeleeNeuAuslosungPlan.teamNummern(List.of(0), 3, 0)).containsExactly(1, 2, 3);
 	}
 
 	@Test

@@ -6,13 +6,19 @@ package de.petanqueturniermanager.schweizer.meldeliste;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
+import org.apache.commons.lang3.StringUtils;
 
 import org.junit.jupiter.api.Test;
 
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.sheet.ValidationType;
 import com.sun.star.sheet.XSheetCondition;
+import com.sun.star.sheet.XSheetConditionalEntries;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.BaseCalcUITest;
@@ -23,6 +29,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungLeser;
 import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungModus;
 import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungZeile;
+import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.position.Position;
@@ -32,8 +39,10 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 
-/** Regression: derselbe Mêlée-Spieler darf nicht ein zweites Mal übernommen werden. */
+/** Regressionen der Mêlée-Übernahme: keine doppelten Spieler, Neu-Auslosen ohne Datenverlust. */
 class SchweizerMeleeAnmeldungUebernehmenUITest extends BaseCalcUITest implements MeleeAnmeldungKonstanten {
+
+	private static final String VEREIN_PRAEFIX = "Verein ";
 
 	private SchweizerMeldeListeSheetNew meldeliste;
 
@@ -69,6 +78,131 @@ class SchweizerMeleeAnmeldungUebernehmenUITest extends BaseCalcUITest implements
 		assertThat(validation.getPropertyValue("ShowErrorMessage")).isEqualTo(Boolean.TRUE);
 		assertThat(validation.getPropertyValue("ErrorMessage")).isEqualTo(I18n.get("melee.anmeldung.eingecheckt.fehler"));
 		assertThat(Lo.qi(XSheetCondition.class, validation).getFormula1()).isEqualTo("{\"X\"}");
+	}
+
+	/**
+	 * Doppelt eingecheckte Namen (ohne Groß-/Kleinschreibung) brechen die Übernahme ab und werden rot markiert;
+	 * nach der Korrektur läuft die Übernahme und die Markierung verschwindet. Eine Live-Regel gibt es im
+	 * Mêlée-Blatt bewusst nicht (sie bremste jede Eingabe).
+	 */
+	@Test
+	void doppelteNamenBrechenUebernahmeAbUndWerdenRotMarkiert() throws Exception {
+		meldeliste = new SchweizerMeldeListeSheetNew(wkingSpreadsheet);
+		meldeliste.createMeldelisteWithParams(Formation.DOUBLETTE, false, false);
+		docPropHelper.setBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_MELEE_ANMELDUNG, true);
+		XSpreadsheet meleeSheet = meleeNamenAnlegen("sa", "wqe", "as", "qw", "SA", "Wqe", "x", "y");
+
+		assertThat(conditionalFormatFormeln(meleeSheet, SPALTE_VORNAME, ERSTE_DATEN_ZEILE))
+				.as("keine Live-Regel für doppelte Namen").noneSatisfy(formel -> assertThat(formel).contains("COUNTIF"));
+
+		new SchweizerMeleeAnmeldungUebernehmenSheet(wkingSpreadsheet).uebernehmen();
+
+		assertThat(schweizerMeleeZeilen()).as("nichts übernommen").allMatch(MeleeAnmeldungZeile::istOffen);
+		assertThat(schriftfarbe(meleeSheet, ERSTE_DATEN_ZEILE)).isEqualTo(ColorHelper.CHAR_COLOR_RED);
+		assertThat(schriftfarbe(meleeSheet, ERSTE_DATEN_ZEILE + 1)).isEqualTo(ColorHelper.CHAR_COLOR_BLACK);
+		assertThat(schriftfarbe(meleeSheet, ERSTE_DATEN_ZEILE + 2)).isEqualTo(ColorHelper.CHAR_COLOR_RED);
+
+		meleeSheet.getCellByPosition(SPALTE_VORNAME, ERSTE_DATEN_ZEILE + 2).setFormula("neu");
+		new SchweizerMeleeAnmeldungUebernehmenSheet(wkingSpreadsheet).uebernehmen();
+
+		assertThat(schweizerMeleeZeilen()).as("nach der Korrektur alle übernommen").noneMatch(MeleeAnmeldungZeile::istOffen);
+		assertThat(schriftfarbe(meleeSheet, ERSTE_DATEN_ZEILE)).as("Markierung zurückgesetzt")
+				.isEqualTo(ColorHelper.CHAR_COLOR_BLACK);
+	}
+
+	/** Ein neuer Mêlée-Spieler, der schon von Hand in der Meldeliste steht, wird in beiden Blättern rot. */
+	@Test
+	void spielerSchonInMeldelisteBrichtUebernahmeAb() throws Exception {
+		meldeliste = new SchweizerMeldeListeSheetNew(wkingSpreadsheet);
+		meldeliste.createMeldelisteWithParams(Formation.DOUBLETTE, false, false);
+		docPropHelper.setBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_MELEE_ANMELDUNG, true);
+		int meldelisteZeile = SchweizerListeDelegate.ERSTE_DATEN_ZEILE;
+		RangeData team = new RangeData();
+		RowData zeile = team.addNewRow();
+		zeile.newInt(1);
+		zeile.newString("Anna");
+		zeile.newString("Müller");
+		zeile.newString("Bert");
+		zeile.newString("Becker");
+		RangeHelper.from(meldeliste.getXSpreadSheet(), doc, team.getRangePosition(Position.from(0, meldelisteZeile)))
+				.setDataInRange(team);
+		XSpreadsheet meleeSheet = meleeNamenAnlegen("anna", "müller", "c", "d");
+
+		new SchweizerMeleeAnmeldungUebernehmenSheet(wkingSpreadsheet).uebernehmen();
+
+		assertThat(schweizerMeleeZeilen()).allMatch(MeleeAnmeldungZeile::istOffen);
+		assertThat(schriftfarbe(meleeSheet, ERSTE_DATEN_ZEILE)).isEqualTo(ColorHelper.CHAR_COLOR_RED);
+		assertThat(schriftfarbe(meldeliste.getXSpreadSheet(), meldelisteZeile)).isEqualTo(ColorHelper.CHAR_COLOR_RED);
+	}
+
+	/**
+	 * Regression: Wird bei einem übernommenen Spieler der Check-in entfernt und derselbe Name neu eingecheckt,
+	 * darf er nicht ein zweites Mal in die Meldeliste kommen.
+	 */
+	@Test
+	void uebernommenerSpielerOhneCheckinWirdNichtErneutUebernommen() throws Exception {
+		meldeliste = new SchweizerMeldeListeSheetNew(wkingSpreadsheet);
+		meldeliste.createMeldelisteWithParams(Formation.DOUBLETTE, false, false);
+		docPropHelper.setBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_MELEE_ANMELDUNG, true);
+		XSpreadsheet meleeSheet = meleeNamenAnlegen("Max", "Muster", "Eva", "Beispiel");
+		new SchweizerMeleeAnmeldungUebernehmenSheet(wkingSpreadsheet).uebernehmen();
+
+		meleeSheet.getCellByPosition(SPALTE_EINGECHECKT, ERSTE_DATEN_ZEILE).setFormula("");
+		RangeData nachtrag = new RangeData();
+		RowData zeile = nachtrag.addNewRow();
+		zeile.newEmpty();
+		zeile.newString("max");
+		zeile.newString("muster");
+		zeile.newEmpty();
+		zeile.newString(MARKIERUNG);
+		zeile.newEmpty();
+		RangeHelper.from(meleeSheet, doc, nachtrag.getRangePosition(Position.from(SPALTE_NR, ERSTE_DATEN_ZEILE + 2)))
+				.setDataInRange(nachtrag);
+		new SchweizerMeleeAnmeldungUebernehmenSheet(wkingSpreadsheet).uebernehmen();
+
+		assertThat(schweizerMeleeZeilen()).filteredOn(MeleeAnmeldungZeile::istOffen)
+				.extracting(MeleeAnmeldungZeile::zeile).as("Nachtrag bleibt offen")
+				.containsExactly(ERSTE_DATEN_ZEILE + 2);
+		assertThat(schriftfarbe(meleeSheet, ERSTE_DATEN_ZEILE + 2)).isEqualTo(ColorHelper.CHAR_COLOR_RED);
+	}
+
+	/** Legt eingecheckte Mêlée-Anmeldungen mit den Namen (Vorname, Nachname, …) an. */
+	private XSpreadsheet meleeNamenAnlegen(String... namen) throws Exception {
+		SchweizerMeleeAnmeldungSheet melee = new SchweizerMeleeAnmeldungSheet(wkingSpreadsheet);
+		melee.generate();
+		RangeData data = new RangeData();
+		for (int i = 0; i < namen.length; i += 2) {
+			RowData zeile = data.addNewRow();
+			zeile.newEmpty();
+			zeile.newString(namen[i]);
+			zeile.newString(namen[i + 1]);
+			zeile.newEmpty();
+			zeile.newString(MARKIERUNG);
+			zeile.newEmpty();
+		}
+		XSpreadsheet meleeSheet = melee.getXSpreadSheet();
+		RangeHelper.from(meleeSheet, doc, data.getRangePosition(Position.from(SPALTE_NR, ERSTE_DATEN_ZEILE)))
+				.setDataInRange(data);
+		return meleeSheet;
+	}
+
+	private List<MeleeAnmeldungZeile> schweizerMeleeZeilen() throws Exception {
+		return MeleeAnmeldungLeser.lesen(wkingSpreadsheet, SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_MELEE_ANMELDUNG);
+	}
+
+	private static int schriftfarbe(XSpreadsheet sheet, int zeile) throws Exception {
+		return (int) Lo.qi(XPropertySet.class, sheet.getCellByPosition(SPALTE_VORNAME, zeile)).getPropertyValue("CharColor");
+	}
+
+	private static List<String> conditionalFormatFormeln(XSpreadsheet sheet, int spalte, int zeile) throws Exception {
+		XPropertySet properties = Lo.qi(XPropertySet.class, sheet.getCellByPosition(spalte, zeile));
+		XSheetConditionalEntries entries = Lo.qi(XSheetConditionalEntries.class,
+				properties.getPropertyValue("ConditionalFormat"));
+		List<String> formeln = new ArrayList<>();
+		for (int i = 0; i < entries.getCount(); i++) {
+			formeln.add(Lo.qi(XSheetCondition.class, entries.getByIndex(i)).getFormula1());
+		}
+		return formeln;
 	}
 
 	@Test
@@ -155,7 +289,8 @@ class SchweizerMeleeAnmeldungUebernehmenUITest extends BaseCalcUITest implements
 
 		new SchweizerMeleeAnmeldungUebernehmenSheet(wkingSpreadsheet).uebernehmen();
 
-		assertThat(anzahlSpielerJeTeam()).as("2 Triplettes + 2 Doubletten").containsExactlyInAnyOrder(3, 3, 2, 2);
+		assertThat(anzahlSpielerJeTeam()).as("2 Doubletten + 2 Triplettes, Doubletten zuerst nummeriert")
+				.containsExactly(2, 2, 3, 3);
 		assertThat(nachnamenInMeldeliste()).hasSize(10).doesNotHaveDuplicates();
 	}
 
@@ -205,11 +340,104 @@ class SchweizerMeleeAnmeldungUebernehmenUITest extends BaseCalcUITest implements
 		meleeAnmeldungenAnlegen(16, 1, true);
 		new SchweizerMeleeAnmeldungUebernehmenSheet(wkingSpreadsheet).uebernehmen();
 
-		assertThat(anzahlSpielerJeTeam()).as("17 Spieler = 7 Doubletten + 1 Triplette")
-				.containsExactlyInAnyOrder(2, 2, 2, 2, 2, 2, 2, 3);
+		assertThat(anzahlSpielerJeTeam()).as("17 Spieler = 7 Doubletten + 1 Triplette, nach Nr sortiert "
+				+ "Doubletten vor Triplettes wie im Supermêlée").containsExactly(2, 2, 2, 2, 2, 2, 2, 3);
 		assertThat(nachnamenInMeldeliste()).hasSize(17).doesNotHaveDuplicates().contains("MeleeTestNachname16");
 		assertThat(MeleeAnmeldungLeser.lesen(wkingSpreadsheet, SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_MELEE_ANMELDUNG))
 				.as("alle 17 Anmeldungen sind übernommen").noneMatch(MeleeAnmeldungZeile::istOffen);
+	}
+
+	/**
+	 * Regression: In der Meldeliste nachgetragene Vereine bleiben beim Neu-Auslosen beim jeweiligen Spieler; der
+	 * Nachzügler hat noch keinen Verein.
+	 */
+	@Test
+	void neuAuslosenBehaeltVereineDerBisherigenSpieler() throws Exception {
+		meldeliste = new SchweizerMeldeListeSheetNew(wkingSpreadsheet);
+		meldeliste.createMeldelisteWithParams(Formation.TRIPLETTE, false, true);
+		MeleeAnmeldungKonfiguration.einschalten(wkingSpreadsheet, MeleeAnmeldungModus.DOUBLETTE_OHNE_FREILOS);
+		meleeAnmeldungenAnlegen(16);
+		new SchweizerMeleeAnmeldungUebernehmenSheet(wkingSpreadsheet).uebernehmen();
+		vereineNachtragen();
+
+		meleeAnmeldungenAnlegen(16, 1, true);
+		new SchweizerMeleeAnmeldungUebernehmenSheet(wkingSpreadsheet).uebernehmen();
+
+		Map<String, String> vereine = vereinJeNachname();
+		assertThat(vereine).as("alle 17 Spieler neu ausgelost").hasSize(17);
+		vereine.forEach((nachname, verein) -> assertThat(verein).as(nachname)
+				.isEqualTo("MeleeTestNachname16".equals(nachname) ? "" : VEREIN_PRAEFIX + nachname));
+	}
+
+	/** Ein von Hand inaktiv gesetztes Mêlée-Team bleibt beim Neu-Auslosen unverändert stehen. */
+	@Test
+	void neuAuslosenLaesstInaktivesTeamUnveraendert() throws Exception {
+		meldeliste = new SchweizerMeldeListeSheetNew(wkingSpreadsheet);
+		meldeliste.createMeldelisteWithParams(Formation.TRIPLETTE, false, false);
+		MeleeAnmeldungKonfiguration.einschalten(wkingSpreadsheet, MeleeAnmeldungModus.DOUBLETTE_OHNE_FREILOS);
+		meleeAnmeldungenAnlegen(16);
+		new SchweizerMeleeAnmeldungUebernehmenSheet(wkingSpreadsheet).uebernehmen();
+		List<String> inaktivesTeam = nachnamenJeMeldelisteZeile().get(0);
+		meldeliste.getXSpreadSheet().getCellByPosition(meldeliste.getAktivSpalte(), SchweizerListeDelegate.ERSTE_DATEN_ZEILE)
+				.setValue(SchweizerListeDelegate.AKTIV_WERT_AUSGESTIEGEN);
+
+		meleeAnmeldungenAnlegen(16, 1, true);
+		new SchweizerMeleeAnmeldungUebernehmenSheet(wkingSpreadsheet).uebernehmen();
+
+		assertThat(nachnamenInMeldeliste()).hasSize(17).doesNotHaveDuplicates().contains("MeleeTestNachname16");
+		assertThat(aktivJeTeam()).as("inaktives Team unverändert und weiterhin ausgestiegen")
+				.containsEntry(inaktivesTeam, SchweizerListeDelegate.AKTIV_WERT_AUSGESTIEGEN);
+	}
+
+	/** Trägt je Spieler den Verein „Verein &lt;Nachname&gt;" ein – spaltenweise am Stück. */
+	private void vereineNachtragen() throws Exception {
+		int ersteZeile = SchweizerListeDelegate.ERSTE_DATEN_ZEILE;
+		RangeData data = meldelisteDaten();
+		for (int vereinSpalte : vereinSpalten()) {
+			RangeData verein = new RangeData();
+			for (RowData zeile : data) {
+				String nachname = zeile.get(vereinSpalte - 1).getStringVal();
+				verein.addNewRow().newString(StringUtils.isNotBlank(nachname) ? VEREIN_PRAEFIX + nachname : "");
+			}
+			RangeHelper.from(meldeliste.getXSpreadSheet(), doc,
+					verein.getRangePosition(Position.from(vereinSpalte, ersteZeile))).setDataInRange(verein);
+		}
+	}
+
+	private Map<String, String> vereinJeNachname() throws Exception {
+		Map<String, String> vereine = new HashMap<>();
+		for (RowData zeile : meldelisteDaten()) {
+			for (int vereinSpalte : vereinSpalten()) {
+				String nachname = zeile.get(vereinSpalte - 1).getStringVal();
+				if (StringUtils.isNotBlank(nachname)) {
+					vereine.put(nachname, Objects.toString(zeile.get(vereinSpalte).getStringVal(), ""));
+				}
+			}
+		}
+		return vereine;
+	}
+
+	/** Vereinsspalten der Triplette-Meldeliste ohne Teamname: Nr | (Vorname | Nachname | Verein) x 3 | SP | Aktiv. */
+	private static List<Integer> vereinSpalten() {
+		return List.of(3, 6, 9);
+	}
+
+	private Map<List<String>, Integer> aktivJeTeam() throws Exception {
+		List<List<String>> nachnamen = nachnamenJeMeldelisteZeile();
+		RangeData data = meldelisteDaten();
+		Map<List<String>, Integer> aktiv = new HashMap<>();
+		for (int i = 0; i < nachnamen.size(); i++) {
+			if (!nachnamen.get(i).isEmpty()) {
+				aktiv.put(nachnamen.get(i), data.get(i).get(meldeliste.getAktivSpalte()).getIntVal(0));
+			}
+		}
+		return aktiv;
+	}
+
+	private RangeData meldelisteDaten() throws Exception {
+		return RangeHelper.from(meldeliste.getXSpreadSheet(), doc,
+				RangePosition.from(0, SchweizerListeDelegate.ERSTE_DATEN_ZEILE, meldeliste.getAktivSpalte(),
+						SchweizerListeDelegate.ERSTE_DATEN_ZEILE + 30)).getDataFromRange();
 	}
 
 	/** Nach Beginn der ersten Spielrunde bleiben die Teams unverändert; der Nachzügler bleibt offen. */
@@ -281,9 +509,7 @@ class SchweizerMeleeAnmeldungUebernehmenUITest extends BaseCalcUITest implements
 	}
 
 	private List<List<String>> nachnamenJeMeldelisteZeile() throws Exception {
-		RangeData data = RangeHelper.from(meldeliste.getXSpreadSheet(), doc,
-				RangePosition.from(0, SchweizerListeDelegate.ERSTE_DATEN_ZEILE, meldeliste.getAktivSpalte(),
-						SchweizerListeDelegate.ERSTE_DATEN_ZEILE + 30)).getDataFromRange();
+		RangeData data = meldelisteDaten();
 		List<List<String>> nachnamenJeZeile = new ArrayList<>();
 		for (RowData zeile : data) {
 			List<String> nachnamen = new ArrayList<>();

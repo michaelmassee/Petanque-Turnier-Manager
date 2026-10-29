@@ -20,19 +20,26 @@ import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.formulex.meldeliste.FormuleXMeldeListeSheetNew;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.sheet.FehlerregelAuswertung;
+import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
+import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSheet_New;
 import de.petanqueturniermanager.kaskade.meldeliste.KaskadeMeldeListeSheetNew;
+import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheetNew;
 import de.petanqueturniermanager.ko.meldeliste.KoMeldeListeSheetNew;
 import de.petanqueturniermanager.ko.konfiguration.KoKonfigurationSheet;
 import de.petanqueturniermanager.poule.meldeliste.PouleMeldeListeSheetNew;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetNew;
+import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
+import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_New;
+import de.petanqueturniermanager.triptete.meldeliste.TripTeteMeldeListeSheetNew;
 
 /**
- * Jede teamorientierte Meldeliste muss doppelte Vor-/Nachnamen durch eine
- * bedingte Fehlerformatierung rot markieren. Die Systeme verwenden denselben
- * {@link MeldeListeHelper}; daher darf die Regel nicht nur in einem Delegate
- * eingebunden sein.
+ * Jede Meldeliste muss doppelte Vor-/Nachnamen durch eine bedingte Fehlerformatierung rot markieren. Die Regel
+ * wird über {@link FehlerregelAuswertung} wie in LibreOffice tatsächlich ausgewertet – ein Textvergleich der
+ * Formel genügte nicht (die Regel lieferte jahrelang Err:504 bzw. las die falsche Zeile).
  */
 class MeldeListeSpielerDoppelteNamenFehlerfarbeUITest extends BaseCalcUITest {
 
@@ -106,12 +113,75 @@ class MeldeListeSpielerDoppelteNamenFehlerfarbeUITest extends BaseCalcUITest {
 		return meldeliste.getXSpreadSheet();
 	}
 
+	@Test
+	void tripTeteHatEineDublettenFehlerregel() throws Exception {
+		assertDublettenFehlerregel("Trip-Tête", () -> {
+			TripTeteMeldeListeSheetNew meldeliste = new TripTeteMeldeListeSheetNew(wkingSpreadsheet);
+			meldeliste.createMeldeliste();
+			return meldeliste.getXSpreadSheet();
+		});
+	}
+
+	/** Supermêlée: ein Spieler je Zeile (Vorname, Nachname), eigene Regel. */
+	@Test
+	void supermeleeMarkiertDoppelteSpieler() throws Exception {
+		MeldeListeSheet_New meldeliste = new MeldeListeSheet_New(wkingSpreadsheet);
+		meldeliste.createMeldelisteWithParams(SuperMeleeMode.Triplette);
+		XSpreadsheet sheet = meldeliste.getXSpreadSheet();
+		int ersteZeile = meldeliste.getMeldungenSpalte().getErsteDatenZiele();
+		int vornameSpalte = meldeliste.getSpielerNameErsteSpalte();
+		schreibeZeilen(sheet, vornameSpalte, ersteZeile, List.of("Anna", "Müller"), List.of("Klaus", "Weber"),
+				List.of("anna", "MÜLLER"));
+
+		for (int spalte : List.of(vornameSpalte, vornameSpalte + 1)) {
+			assertThat(FehlerregelAuswertung.greift(sheet, spalte, ersteZeile)).as("Anna Müller").isTrue();
+			assertThat(FehlerregelAuswertung.greift(sheet, spalte, ersteZeile + 1)).as("Klaus Weber").isFalse();
+			assertThat(FehlerregelAuswertung.greift(sheet, spalte, ersteZeile + 2)).as("anna MÜLLER").isTrue();
+		}
+	}
+
+	/** Liga: ein Mannschaftsname je Zeile. */
+	@Test
+	void ligaMarkiertDoppelteMannschaften() throws Exception {
+		LigaMeldeListeSheetNew meldeliste = new LigaMeldeListeSheetNew(wkingSpreadsheet);
+		meldeliste.createMeldelisteWithParams("TestGruppe");
+		XSpreadsheet sheet = meldeliste.getXSpreadSheet();
+		int ersteZeile = MeldeListeKonstanten.ERSTE_DATEN_ZEILE;
+		schreibeZeilen(sheet, 1, ersteZeile, List.of("Boule Club"), List.of("Kugelfreunde"), List.of("Boule Club"));
+
+		assertThat(FehlerregelAuswertung.greift(sheet, 1, ersteZeile)).as("Boule Club").isTrue();
+		assertThat(FehlerregelAuswertung.greift(sheet, 1, ersteZeile + 1)).as("Kugelfreunde").isFalse();
+		assertThat(FehlerregelAuswertung.greift(sheet, 1, ersteZeile + 2)).as("Boule Club, 2. Zeile").isTrue();
+	}
+
+	/**
+	 * Teamlisten (Doublette, ohne Teamname/Verein): Nr | Vorname 1 | Nachname 1 | Vorname 2 | Nachname 2. „Anna
+	 * Müller“ steht in Team 1 als Spieler 1 und in Team 2 – anders geschrieben – als Spieler 2.
+	 */
 	private void assertDublettenFehlerregel(String system, SheetErsteller ersteller) throws Exception {
 		XSpreadsheet sheet = ersteller.erstelle();
-		assertThat(conditionalFormatFormeln(sheet, Position.from(1, 3)))
-				.as("%s: Vorname braucht eine bereinigte COUNTIFS-Fehlerregel für doppelte Namen", system)
-				.anySatisfy(formel -> assertThat(formel).containsIgnoringCase("COUNTIFS")
-						.containsIgnoringCase("CLEAN").doesNotContain("#REF!"));
+		int zeile = MeldeListeKonstanten.TEAM_MELDELISTE_ERSTE_DATEN_ZEILE;
+		assertThat(conditionalFormatFormeln(sheet, Position.from(1, zeile)))
+				.as("%s: Vorname braucht eine Fehlerregel für doppelte Namen", system)
+				.anySatisfy(formel -> assertThat(formel).containsIgnoringCase("COUNTIFS").doesNotContain("#REF!"));
+		schreibeZeilen(sheet, 1, zeile, List.of("Anna", "Müller", "Peter", "Schmidt"),
+				List.of("Klaus", "Weber", "anna", "MÜLLER"));
+
+		assertThat(FehlerregelAuswertung.greift(sheet, 1, zeile)).as("%s: Anna Müller, Team 1", system).isTrue();
+		assertThat(FehlerregelAuswertung.greift(sheet, 3, zeile + 1)).as("%s: Anna Müller, Team 2", system).isTrue();
+		assertThat(FehlerregelAuswertung.greift(sheet, 1, zeile + 1)).as("%s: Klaus Weber", system).isFalse();
+		assertThat(FehlerregelAuswertung.greift(sheet, 3, zeile)).as("%s: Peter Schmidt", system).isFalse();
+	}
+
+	@SafeVarargs
+	private void schreibeZeilen(XSpreadsheet sheet, int ersteSpalte, int ersteZeile, List<String>... zeilen)
+			throws GenerateException {
+		RangeData data = new RangeData();
+		for (List<String> werte : zeilen) {
+			RowData zeile = data.addNewRow();
+			werte.forEach(zeile::newString);
+		}
+		RangeHelper.from(sheet, doc, data.getRangePosition(Position.from(ersteSpalte, ersteZeile))).setDataInRange(data);
 	}
 
 	private List<String> conditionalFormatFormeln(XSpreadsheet sheet, Position pos) throws GenerateException {

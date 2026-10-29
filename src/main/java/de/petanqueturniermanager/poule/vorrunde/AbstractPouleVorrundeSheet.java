@@ -8,6 +8,7 @@ import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
 
+import de.petanqueturniermanager.basesheet.meldeliste.TeamSpaltenBreite;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldelisteUuidIndex;
@@ -220,12 +221,15 @@ public abstract class AbstractPouleVorrundeSheet extends SheetRunner implements 
                 ColumnProperties.from().setWidth(POULE_NR_SPALTE_BREITE).setHoriJustify(CellHoriJustify.CENTER));
         getSheetHelper().setColumnProperties(xSheet, SPALTE_TEAM_A_NR,
                 ColumnProperties.from().setWidth(TEAM_NR_SPALTE_BREITE).setHoriJustify(CellHoriJustify.CENTER));
+        int teamNameBreite = TeamSpaltenBreite.fuer(konfigurationSheet.getSpielplanTeamAnzeige(),
+                konfigurationSheet.isMeldeListeTeamnameAnzeigen(), konfigurationSheet.getMeldeListeFormation(),
+                TEAM_NAME_SPALTE_BREITE);
         getSheetHelper().setColumnProperties(xSheet, SPALTE_TEAM_A_NAME,
-                ColumnProperties.from().setWidth(TEAM_NAME_SPALTE_BREITE));
+                ColumnProperties.from().setWidth(teamNameBreite));
         getSheetHelper().setColumnProperties(xSheet, SPALTE_TEAM_B_NR,
                 ColumnProperties.from().setWidth(TEAM_NR_SPALTE_BREITE).setHoriJustify(CellHoriJustify.CENTER));
         getSheetHelper().setColumnProperties(xSheet, SPALTE_TEAM_B_NAME,
-                ColumnProperties.from().setWidth(TEAM_NAME_SPALTE_BREITE));
+                ColumnProperties.from().setWidth(teamNameBreite));
         getSheetHelper().setColumnProperties(xSheet, SPALTE_ERG_A,
                 ColumnProperties.from().setWidth(ERG_SPALTE_BREITE).setHoriJustify(CellHoriJustify.CENTER));
         getSheetHelper().setColumnProperties(xSheet, SPALTE_ERG_B,

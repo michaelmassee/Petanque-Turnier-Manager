@@ -574,10 +574,12 @@ public class MaastrichterTurnierTestDatenUITest extends BaseCalcUITest {
 		XSpreadsheet sheet = sheetHlp.findByName(sheetName);
 		assertThat(sheet).as("Vorrunden-Sheet '%s' muss existieren", sheetName).isNotNull();
 
-		// Schweizer-Format: anzTeams/2 Paarungen pro Runde, Spalten 0..6.
+		// Schweizer-Format: aufgerundet anzTeams/2 Paarungen pro Runde (bei ungerader Anzahl inkl. Freilos-Zeile),
+		// Spalten 0..6.
+		int anzPaarungen = (anzTeams + 1) / 2;
 		RangePosition vorrundenRange = RangePosition.from(
 				0, SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE,
-				6, SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE + (anzTeams / 2) - 1);
+				6, SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE + anzPaarungen - 1);
 
 		// writeToJson(referenzDatei, vorrundenRange, sheet, wkingSpreadsheet.getWorkingSpreadsheetDocument());
 

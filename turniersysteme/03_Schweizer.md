@@ -79,6 +79,8 @@ Diese Logik wird häufig in Turniersoftware eingesetzt.
 
 ## 5.1 Ungerade Teamzahl → Freilos
 - schlechtestes Team ohne Freilos erhält ein BYE
+- hatten schon alle Teams ein Freilos, erhält es das schlechteste Team
+- Runde 1: ein zufälliges ungesetztes Team; nur wenn alle gesetzt sind, eines aus der größten Setzgruppe
 - Wertung: 13:7 oder 13:0
 
 ## 5.2 Score‑Gruppe ungerade → Float
@@ -86,6 +88,11 @@ Das letzte Team wird in die nächste Gruppe verschoben.
 
 ## 5.3 Keine rematch‑freie Paarung möglich
 → Backtracking + ggf. Gegnerwiederholung minimal zulassen.
+
+## 5.4 Setzen in Runde 1
+Teams mit gleicher Setzposition (> 0) werden in Runde 1 nicht gegeneinander gelost, solange das vermeidbar ist.
+Nur wenn eine Setzgruppe mehr als die Hälfte der Teams stellt, spielen so wenige ihrer Teams wie möglich
+gegeneinander.
 
 ---
 # 6. Komplexe Beispiele

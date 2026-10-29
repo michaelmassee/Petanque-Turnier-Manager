@@ -110,7 +110,8 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 					+ ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")>1";
 		} else {
 			// Mehrere Namens-Spalten (z.B. Vorname+Nachname): Kombination per COUNTIFS prüfen.
-			// Spalten absolut, Zeile relativ ($B3 / $C3) damit die Formel pro Zeile mitläuft.
+			// Suchbereich absolut ($B$3:$B$1000), Suchkriterium mit relativer Zeile ($B3), damit es pro Zeile
+			// mitläuft.
 			final int ankerZeile = ERSTE_DATEN_ZEILE + 1; // 1-basiert für Zell-Adresse
 			final int endZeile = MeldungenSpalte.MAX_ANZ_MELDUNGEN + 1;
 			StringBuilder sb = new StringBuilder("COUNTIFS(");
@@ -118,9 +119,11 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 				if (sp > erstNameSpalte) {
 					sb.append(';');
 				}
-				String spalteAbs = Position.from(sp, 0).getSpalteAddressWith$();
-				sb.append(spalteAbs).append(ankerZeile).append(":").append(spalteAbs).append(endZeile).append(';')
-						.append(spalteAbs).append(ankerZeile);
+				// Nur der Spaltenbuchstabe – getSpalteAddressWith$() liefert die ganze Spalte ("$B:$B"), mit
+				// angehängter Zeile entstand "$B:$B3:$B:$B1000" (Err:525, die Regel griff nie).
+				String spalteAbs = "$" + Position.from(sp, 0).getSpalteString();
+				sb.append(spalteAbs).append('$').append(ankerZeile).append(":").append(spalteAbs).append('$')
+						.append(endZeile).append(';').append(spalteAbs).append(ankerZeile);
 			}
 			sb.append(")>1");
 			conditionfindDoppeltNamen = sb.toString();
@@ -141,7 +144,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	 * Vorname 2, Nachname 2); eine einzelne COUNTIFS-Formel über den gesamten
 	 * Bereich würde diese Spalten fälschlich als einen Namen behandeln.
 	 */
-	public void insertFormulaFuerDoppelteSpielerNamen(int[] vornameSpalten, int[] nachnameSpalten,
+	public static void insertFormulaFuerDoppelteSpielerNamen(int[] vornameSpalten, int[] nachnameSpalten,
 			int ersteDatenZeile, int letzteDatenZeile, ISheet sheet) throws GenerateException {
 		checkArgument(vornameSpalten.length > 0 && vornameSpalten.length == nachnameSpalten.length,
 				"Vor- und Nachnamensspalten müssen paarweise angegeben werden");
@@ -162,39 +165,36 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 		}
 	}
 
-	private String doppelteSpielerNamenFormel(int[] vornameSpalten, int[] nachnameSpalten, int vornameSpalte,
+	private static String doppelteSpielerNamenFormel(int[] vornameSpalten, int[] nachnameSpalten, int vornameSpalte,
 			int nachnameSpalte, int ersteDatenZeile) {
-		String vornameAktuell = cleanString(absoluteSpalteRelativeZeile(vornameSpalte, ersteDatenZeile));
-		String nachnameAktuell = cleanString(absoluteSpalteRelativeZeile(nachnameSpalte, ersteDatenZeile));
+		String vornameAktuell = absoluteSpalteRelativeZeile(vornameSpalte, ersteDatenZeile);
+		String nachnameAktuell = absoluteSpalteRelativeZeile(nachnameSpalte, ersteDatenZeile);
+		// COUNTIFS direkt auf den Zellbereichen: ignoriert Groß-/Kleinschreibung und ist schnell (LO puffert
+		// die Bereiche). Bereinigte Arrays (TRIM/CLEAN über den Bereich) gehen nicht – COUNTIFS liefert dafür
+		// Err:504 –, und SUMPRODUCT darüber macht jede Eingabe spürbar langsam.
 		StringBuilder treffer = new StringBuilder();
 		for (int spieler = 0; spieler < vornameSpalten.length; spieler++) {
 			if (spieler > 0) {
 				treffer.append('+');
 			}
 			treffer.append("COUNTIFS(")
-					.append(cleanString(absoluteBereich(vornameSpalten[spieler], ersteDatenZeile))).append(';').append(vornameAktuell)
-					.append(';').append(cleanString(absoluteBereich(nachnameSpalten[spieler], ersteDatenZeile))).append(';')
+					.append(absoluteBereich(vornameSpalten[spieler], ersteDatenZeile)).append(';').append(vornameAktuell)
+					.append(';').append(absoluteBereich(nachnameSpalten[spieler], ersteDatenZeile)).append(';')
 					.append(nachnameAktuell).append(')');
 		}
-		return "AND(" + vornameAktuell + "<>\"\";" + nachnameAktuell + "<>\"\";( " + treffer + ")>1)";
+		return "AND(" + vornameAktuell + "<>\"\";" + nachnameAktuell + "<>\"\";(" + treffer + ")>1)";
 	}
 
-	private String absoluteBereich(int spalte, int ersteDatenZeile) {
+	private static String absoluteBereich(int spalte, int ersteDatenZeile) {
 		return "$" + Position.from(spalte, ersteDatenZeile).getSpalteString() + "$" + (ersteDatenZeile + 1)
 				+ ":$" + Position.from(spalte, letzteMeldungZeile()).getSpalteString() + "$" + (letzteMeldungZeile() + 1);
 	}
 
-	private String absoluteSpalteRelativeZeile(int spalte, int ersteDatenZeile) {
+	private static String absoluteSpalteRelativeZeile(int spalte, int ersteDatenZeile) {
 		return "$" + Position.from(spalte, ersteDatenZeile).getSpalteString() + (ersteDatenZeile + 1);
 	}
 
-	private String cleanString(String referenz) {
-		// CLEAN entfernt Tabs und Steuerzeichen; geschützte Leerzeichen entstehen
-		// häufig beim Einfügen aus Web-Seiten und werden davor zu normalen Leerzeichen.
-		return "TRIM(CLEAN(SUBSTITUTE(" + referenz + ";CHAR(160);\" \")))";
-	}
-
-	private int letzteMeldungZeile() {
+	private static int letzteMeldungZeile() {
 		return MeldungenSpalte.MAX_ANZ_MELDUNGEN;
 	}
 

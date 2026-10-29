@@ -11,6 +11,7 @@ import com.sun.star.table.CellHoriJustify;
 
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldelisteUuidIndex;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamSpaltenBreite;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.helper.ColorHelper;
@@ -378,7 +379,9 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet, PtmOnlineL
 		getSheetHelper().setStringValueInCell(
 				stValHeader.setValue(I18n.get("column.header.ergebnis")).spalte(SPIELPNKT_A_SPALTE).setEndPosMergeSpaltePlus(1));
 
-		ColumnProperties colProp = ColumnProperties.from().setWidth(JGJKonfigurationSheet.MELDUNG_NAME_WIDTH);
+		ColumnProperties colProp = ColumnProperties.from().setWidth(TeamSpaltenBreite.fuer(
+				konfigurationSheet.getSpielplanTeamAnzeige(), konfigurationSheet.isMeldeListeTeamnameAnzeigen(),
+				konfigurationSheet.getMeldeListeFormation(), JGJKonfigurationSheet.MELDUNG_NAME_WIDTH));
 		stValHeader.setEndPosMerge(null).zeilePlusEins().setColumnProperties(colProp).centerJustify();
 		getSheetHelper().setStringValueInCell(stValHeader.setValue("A").spalte(NAME_A_SPALTE));
 		getSheetHelper().setStringValueInCell(stValHeader.setValue("B").spalte(NAME_B_SPALTE));

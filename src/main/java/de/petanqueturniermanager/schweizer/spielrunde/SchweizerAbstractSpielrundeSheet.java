@@ -24,6 +24,7 @@ import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
 import com.sun.star.table.TableBorder2;
 
+import de.petanqueturniermanager.basesheet.meldeliste.TeamSpaltenBreite;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.algorithmen.schweizer.SchweizerSystem;
 import de.petanqueturniermanager.algorithmen.schweizer.SchweizerTeamErgebnis;
@@ -91,6 +92,8 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 	public static final int NR_CHARHEIGHT = 18;
 	public static final int BAHN_NR_SPALTE = 0;
 	public static final int TEAM_A_SPALTE = BAHN_NR_SPALTE + 1;
+	/** Breite der Mannschaftsspalten im Namens-Modus: 6 cm (Spielernamen siehe {@link TeamSpaltenBreite}). */
+	private static final int TEAM_SPALTE_NAME_BREITE = 6000;
 	public static final int TEAM_B_SPALTE = TEAM_A_SPALTE + 1;
 	public static final int ERG_TEAM_A_SPALTE = TEAM_B_SPALTE + 1;
 	public static final int ERG_TEAM_B_SPALTE = ERG_TEAM_A_SPALTE + 1;
@@ -451,6 +454,12 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		rundenStartzeitFeld();
 	}
 
+	private int teamSpaltenBreite() throws GenerateException {
+		return TeamSpaltenBreite.fuer(getKonfigurationSheet().getSpielplanTeamAnzeige(),
+				getKonfigurationSheet().isMeldeListeTeamnameAnzeigen(), getKonfigurationSheet().getMeldeListeFormation(),
+				TEAM_SPALTE_NAME_BREITE);
+	}
+
 	/**
 	 * spalten Teampaarungen + Ergebnis
 	 * 
@@ -485,11 +494,12 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 
 		RangePosition abSpalten = RangePosition.from(datenRangeInclErg).endeSpalte(TEAM_B_SPALTE);
 		if (getKonfigurationSheet().getSpielplanTeamAnzeige() != TeamAnzeige.NR) {
-			// Teamname-Modus: Font 12, an Zellgröße anpassen, Spaltenbreite 6 cm
+			// Namens-Modus: Font 12, an Zellgröße anpassen
 			getSheetHelper().setPropertyInRange(sheet, abSpalten, CHAR_HEIGHT, 12);
 			getSheetHelper().setPropertyInRange(sheet, abSpalten, SHRINK_TO_FIT, Boolean.TRUE);
-			getSheetHelper().setColumnWidth(sheet, TEAM_A_SPALTE, 6000); // 6 cm = 6000 (1/100 mm)
-			getSheetHelper().setColumnWidth(sheet, TEAM_B_SPALTE, 6000);
+			int breite = teamSpaltenBreite();
+			getSheetHelper().setColumnWidth(sheet, TEAM_A_SPALTE, breite);
+			getSheetHelper().setColumnWidth(sheet, TEAM_B_SPALTE, breite);
 		} else {
 			// Teamnummer-Modus: große Schrift für A/B-Spalten
 			getSheetHelper().setPropertyInRange(sheet, abSpalten, CHAR_HEIGHT, 32);

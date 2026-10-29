@@ -18,6 +18,7 @@ import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
 
+import de.petanqueturniermanager.basesheet.meldeliste.TeamSpaltenBreite;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.algorithmen.common.CadrageRechner;
 import de.petanqueturniermanager.algorithmen.common.GruppenAufteilungRechner;
@@ -1251,7 +1252,8 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet, PtmOnline
 	// ---------------------------------------------------------------
 
 	private void formatiereKolumnen(XSpreadsheet xSheet, int numRunden) throws GenerateException {
-		int teamColWidth = !teamAnzeige.istNummer() ? NAME_COL_WIDTH : NR_COL_WIDTH;
+		int teamColWidth = teamAnzeige.istNummer() ? NR_COL_WIDTH
+				: TeamSpaltenBreite.fuer(teamAnzeige, meldeListeTeamnameAnzeigen, meldeListeFormation, NAME_COL_WIDTH);
 
 		if (mitCadrage) {
 			if (mitBahnInCadrage()) {

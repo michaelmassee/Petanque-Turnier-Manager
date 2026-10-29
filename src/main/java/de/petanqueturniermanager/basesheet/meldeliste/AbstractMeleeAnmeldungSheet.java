@@ -29,6 +29,7 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
+import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
@@ -141,6 +142,13 @@ public abstract class AbstractMeleeAnmeldungSheet extends SheetRunner
 				RangePosition.from(SPALTE_EINGECHECKT, ERSTE_DATEN_ZEILE, SPALTE_EINGECHECKT, letzteZeile));
 		normalisiereEingecheckteMarkierungen(letzteZeile);
 
+		// Bewusst keine Live-Regel für doppelte Namen (bremst jede Eingabe) – geprüft und rot markiert wird bei der
+		// Übernahme. Alte Regeln der Namens- und Check-in-Spalten entfernen, sonst häuft sich die angehängte
+		// Editierfarbe bei jedem Aufbau an.
+		ConditionalFormatHelper.clearSpaltenweise(this,
+				RangePosition.from(SPALTE_VORNAME, ERSTE_DATEN_ZEILE, SPALTE_NACHNAME, letzteZeile));
+		ConditionalFormatHelper.clearSpaltenweise(this,
+				RangePosition.from(SPALTE_EINGECHECKT, ERSTE_DATEN_ZEILE, SPALTE_EINGECHECKT, letzteZeile));
 		EditierbaresZelleFormatHelper.anwenden(this,
 				RangePosition.from(SPALTE_VORNAME, ERSTE_DATEN_ZEILE, SPALTE_EINGECHECKT, letzteZeile));
 	}

@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
@@ -100,19 +101,61 @@ public class SchweizerSystemTest {
 		assertThat(ersteRunde.get(0).getB().getSetzPos()).isEqualTo(1);
 	}
 
+	/**
+	 * Setzgruppen, die über die Hälfte der sortierten Liste reichten, wurden früher gegeneinander gelost (3× SetzPos 1,
+	 * 3× SetzPos 2, 2 Ungesetzte: immer ein 1–1 oder 2–2), obwohl 1–2, 1–2, 1–2 und 0–0 möglich ist.
+	 */
 	@Test
-	public void testFindeGegner() throws Exception {
-		schweizerSystem = new SchweizerSystem();
-
-		List<Team> restTeams = new ArrayList<>();
-
-		for (int i = 1; i < 6; i++) {
-			restTeams.add(Team.from(i));
+	public void testErsteRundeGleicheSetzPosNurWennUnvermeidbar() {
+		for (int durchlauf = 0; durchlauf < 200; durchlauf++) {
+			List<Team> teams = new ArrayList<>();
+			int[] setzPos = { 0, 0, 1, 1, 1, 2, 2, 2 };
+			for (int i = 0; i < setzPos.length; i++) {
+				teams.add(Team.from(i + 1).setSetzPos(setzPos[i]));
+			}
+			List<TeamPaarung> ersteRunde = new SchweizerSystem().ersteRunde(teams);
+			assertThat(ersteRunde).hasSize(4);
+			assertThat(new SchweizerSystem().flattenTeampaarungen(ersteRunde)).hasSize(8);
+			assertThat(ersteRunde).noneMatch(paarung -> paarung.getA().getSetzPos() > 0
+					&& paarung.getA().getSetzPos() == paarung.getB().getSetzPos());
 		}
-		restTeams.get(0).addGegner(Team.from(3));
-		Team result = schweizerSystem.findeGegner(Team.from(3), restTeams);
-		assertThat(result).isNotNull();
-		assertThat(result.getNr()).isEqualTo(2);
+	}
+
+	/**
+	 * 7 Teams, davon 4 gesetzt: das Freilos geht an ein ungesetztes Team, und von den übrigen 4 gesetzten unter 6
+	 * Teams muss genau ein Paar gegeneinander spielen.
+	 */
+	@Test
+	public void testErsteRundeFreilosNichtAnGesetzteTeams() {
+		for (int durchlauf = 0; durchlauf < 200; durchlauf++) {
+			List<Team> teams = new ArrayList<>();
+			for (int i = 1; i <= 7; i++) {
+				teams.add(Team.from(i).setSetzPos(i <= 3 ? 0 : 1));
+			}
+			List<TeamPaarung> ersteRunde = new SchweizerSystem().ersteRunde(teams);
+			assertThat(ersteRunde).hasSize(4);
+			TeamPaarung freilos = ersteRunde.get(3);
+			assertThat(freilos.isFreilos()).isTrue();
+			assertThat(freilos.getA().getSetzPos()).isZero();
+			assertThat(freilos.getA().isHatteFreilos()).isTrue();
+			assertThat(ersteRunde.subList(0, 3)).filteredOn(paarung -> paarung.getA().getSetzPos() == 1
+					&& paarung.getB().getSetzPos() == 1).hasSize(1);
+		}
+	}
+
+	/**
+	 * Hatten alle Teams schon ein Freilos, bekommt das schlechteste Team (letzter Ranglistenplatz) das nächste.
+	 */
+	@Test
+	public void testWeitereRundeFreilosAlleHattenSchonEinsGehtAnSchlechtestes() {
+		List<Team> teams = new ArrayList<>();
+		for (int i = 1; i <= 7; i++) {
+			teams.add(Team.from(i).setHatteFreilos(true));
+		}
+		List<TeamPaarung> paarungen = new SchweizerSystem().weitereRunde(teams, List.of());
+		TeamPaarung freilos = paarungen.get(paarungen.size() - 1);
+		assertThat(freilos.isFreilos()).isTrue();
+		assertThat(freilos.getA().getNr()).isEqualTo(7);
 	}
 
 	@Test
@@ -249,91 +292,6 @@ public class SchweizerSystemTest {
 				assertThat(gegnerTeam.hatAlsGegner(team)).isTrue();
 			}
 		}
-	}
-
-	@Test
-	public void testFindGegnerAusTeamPaarungen() throws Exception {
-		schweizerSystem = new SchweizerSystem();
-
-		List<TeamPaarung> paarungen = new ArrayList<>();
-
-		paarungen.add(new TeamPaarung(1, 2).addGegner());
-		paarungen.add(new TeamPaarung(6, 8).addGegner());
-		paarungen.add(new TeamPaarung(9).addGegner());
-		paarungen.add(new TeamPaarung(10, 11).addGegner());
-
-		Team result = schweizerSystem.findGegnerAusTeamPaarungen(Team.from(8), paarungen);
-		assertThat(result).isNotNull().isEqualTo(Team.from(6));
-
-		Team result2 = schweizerSystem.findGegnerAusTeamPaarungen(Team.from(9), paarungen);
-		assertThat(result2).isNull();
-
-		Team result3 = schweizerSystem.findGegnerAusTeamPaarungen(Team.from(23), paarungen);
-		assertThat(result3).isNull();
-	}
-
-	@Test
-	public void testKannTauschenMit() throws Exception {
-
-		TeamMeldungen testmeldungen = newTestmeldungen();
-
-		schweizerSystem = new SchweizerSystem();
-
-		// neue Team Paarungen 2 Runde fest vorgeben zum testen
-		List<TeamPaarung> paarungen = new ArrayList<>();
-
-		paarungen.add(new TeamPaarung(testmeldungen.getTeam(1), testmeldungen.getTeam(2)).addGegner().setHatGegner());
-		paarungen.add(new TeamPaarung(testmeldungen.getTeam(6), testmeldungen.getTeam(4)).addGegner().setHatGegner());
-		paarungen.add(new TeamPaarung(testmeldungen.getTeam(5), testmeldungen.getTeam(8)).addGegner().setHatGegner());
-
-		// letzte paarung wäre 3:7 haben aber bereits gegeneinander gespielt!
-		// geht nicht, also suchen paarung zum tauschen für 3 und 7
-		TeamPaarung invalidTeamP = new TeamPaarung(testmeldungen.getTeam(3), testmeldungen.getTeam(7));
-		TeamPaarung kannTauschenMit = schweizerSystem.kannTauschenMit(invalidTeamP, paarungen, testmeldungen.teams());
-		assertThat(kannTauschenMit).isNotNull();
-		assertThat(kannTauschenMit.getA()).isNotNull().isEqualTo(Team.from(5));
-		assertThat(kannTauschenMit.getB()).isNotNull().isEqualTo(Team.from(8));
-	}
-
-	@Test
-	public void testKannTauschenMit_invalidOhneBTeam_liefertNull() throws Exception {
-		schweizerSystem = new SchweizerSystem();
-
-		TeamPaarung invalidOhneB = new TeamPaarung(Team.from(101));
-
-		TeamPaarung result = schweizerSystem.kannTauschenMit(invalidOhneB, List.of(), List.of(Team.from(101)));
-		assertThat(result).isNull();
-	}
-
-	/**
-	 * Kandidat hat {@code hatGegner=true}, ist aber in keiner der übergebenen Paarungen enthalten
-	 * (inkonsistenter Zwischenzustand) — {@code findGegnerAusTeamPaarungen} liefert dafür {@code null},
-	 * der Kandidat wird also verworfen. Ohne weitere Kandidaten bleibt das Ergebnis {@code null}.
-	 */
-	@Test
-	public void testKannTauschenMit_kandidatOhneGegnerInfo_liefertNull() throws Exception {
-		schweizerSystem = new SchweizerSystem();
-
-		Team teamA = Team.from(201);
-		Team teamB = Team.from(202);
-		TeamPaarung invalid = new TeamPaarung(teamA, teamB);
-
-		Team kandidatOhnePaarung = Team.from(203);
-		kandidatOhnePaarung.setHatGegner(true);
-
-		TeamPaarung result = schweizerSystem.kannTauschenMit(invalid, List.of(), List.of(teamA, teamB, kandidatOhnePaarung));
-		assertThat(result).isNull();
-	}
-
-	@Test
-	public void testTauschenTeamsInPaarung_paarOhneBTeam_liefertFalse() throws Exception {
-		schweizerSystem = new SchweizerSystem();
-
-		TeamPaarung paarOhneB = new TeamPaarung(Team.from(111));
-		TeamPaarung paarMitB = new TeamPaarung(Team.from(112), Team.from(113));
-
-		assertThat(schweizerSystem.tauschenTeamsInPaarung(paarOhneB, paarMitB)).isFalse();
-		assertThat(schweizerSystem.tauschenTeamsInPaarung(paarMitB, paarOhneB)).isFalse();
 	}
 
 	@Test
@@ -475,22 +433,6 @@ public class SchweizerSystemTest {
 		return meldungen;
 	}
 
-	@Test
-	public void testTauschenTeamsInPaarung() throws Exception {
-		schweizerSystem = new SchweizerSystem();
-
-		TeamPaarung paarA = new TeamPaarung(Team.from(2), Team.from(3));
-		TeamPaarung paarB = new TeamPaarung(Team.from(7), Team.from(8));
-
-		// A1:B2 <-> A2:B1
-		boolean result = schweizerSystem.tauschenTeamsInPaarung(paarA, paarB);
-		assertThat(result).isTrue();
-		assertThat(paarA.getA()).isEqualTo(Team.from(2));
-		assertThat(paarA.getB()).isEqualTo(Team.from(8));
-		assertThat(paarB.getA()).isEqualTo(Team.from(7));
-		assertThat(paarB.getB()).isEqualTo(Team.from(3));
-	}
-
 	/**
 	 * Rechenbeispiel aus SchweizerTurnierSystem.md:
 	 * 6 Teams, 3 Runden. Erwartet: A(1.), E(2.), C(3.) usw.
@@ -599,27 +541,6 @@ public class SchweizerSystemTest {
 				SchweizerRankingModus.MIT_BUCHHOLZ);
 
 		assertThat(tatsaechlich).containsExactlyElementsOf(erwartet);
-	}
-
-	@Test
-	public void testTauschenTeamsInPaarungHatGegner() throws Exception {
-		schweizerSystem = new SchweizerSystem();
-
-		Team teamAA = Team.from(2);
-		Team teamBB = Team.from(8);
-
-		teamAA.addGegner(teamBB);
-
-		TeamPaarung paarA = new TeamPaarung(teamAA, Team.from(3));
-		TeamPaarung paarB = new TeamPaarung(Team.from(7), teamBB);
-
-		// A1:A2 <-> B1:B2
-		boolean result = schweizerSystem.tauschenTeamsInPaarung(paarA, paarB);
-		assertThat(result).isTrue();
-		assertThat(paarA.getA()).isEqualTo(Team.from(2));
-		assertThat(paarA.getB()).isEqualTo(Team.from(7));
-		assertThat(paarB.getA()).isEqualTo(Team.from(3));
-		assertThat(paarB.getB()).isEqualTo(Team.from(8));
 	}
 
 	/**
@@ -737,15 +658,9 @@ public class SchweizerSystemTest {
 	}
 
 	/**
-	 * Deadlock-Fall in {@code paareGruppen()}: Team 1 hat innerhalb seiner Sieggruppe
-	 * bereits gegen alle anderen Teams gespielt (3, 4, 5), sodass {@code findeGegner()}
-	 * keinen rematch-freien Gegner mehr findet. Zu diesem Zeitpunkt ist noch keine
-	 * Paarung dieser Runde eingetragen, daher findet auch {@code kannTauschenMit()}
-	 * keinen Tauschpartner. Der Algorithmus paart Team 1 trotzdem zwangsweise mit dem
-	 * ersten verbliebenen Team (2) – ein erzwungenes Rematch.
-	 * <p>
-	 * Team 3 und Team 4 haben dagegen noch nicht gegeneinander gespielt und werden
-	 * korrekt neu gepaart.
+	 * Unvermeidbare Wiederholung: Team 1 hat bereits gegen alle anderen Teams gespielt (2, 3, 4). Erst wenn keine
+	 * wiederholungsfreie Paarung existiert, lässt die Suche eine Wiederholung zu – genau eine: 1–2, die übrigen
+	 * Teams 3 und 4 werden regulär neu gepaart.
 	 */
 	@Test
 	public void testWeitereRundeDeadlock_erzwingtRematchWennKeinGegnerFrei() {
@@ -786,6 +701,87 @@ public class SchweizerSystemTest {
 		TeamPaarung neuePaarung = paarungen.get(1);
 		assertThat(neuePaarung.getA()).isEqualByComparingTo(team3);
 		assertThat(neuePaarung.getB()).isEqualByComparingTo(team4);
+	}
+
+	/**
+	 * Regression (test-schweizer.ods, 6 Teams, Runde 4): Der Tabellenführer (3 Siege) bildet mit dem Zweiten
+	 * (2 Siege, schon Gegner in Runde 2) die oberste Gruppe. Die gruppenweise Paarung fand keinen anderen Gegner,
+	 * der Tausch scheiterte mangels bereits gebildeter Paarungen – es entstand eine vermeidbare Gegnerwiederholung.
+	 */
+	@Test
+	public void testKeineVermeidbareWiederholungWennObersteGruppeFestsitzt() {
+		// Gegner der Runden 1–3: 3–2, 5–4, 6–1 | 5–3, 1–2, 6–4 | 4–2, 3–1, 6–5
+		Map<Integer, List<Integer>> gegner = Map.of(1, List.of(6, 2, 3), 2, List.of(3, 1, 4), 3, List.of(2, 5, 1),
+				4, List.of(5, 6, 2), 5, List.of(4, 3, 6), 6, List.of(1, 4, 5));
+		Map<Integer, Integer> siege = Map.of(5, 3, 3, 2, 6, 1, 4, 1, 2, 1, 1, 1);
+		List<Integer> rangfolge = List.of(5, 3, 6, 4, 2, 1);
+
+		Map<Integer, Team> teams = rangfolge.stream().collect(Collectors.toMap(nr -> nr, Team::from));
+		gegner.forEach((nr, gegnerNrn) -> gegnerNrn.forEach(g -> teams.get(nr).addGegner(teams.get(g))));
+		List<SchweizerTeamErgebnis> ergebnisse = rangfolge.stream()
+				.map(nr -> new SchweizerTeamErgebnis(nr, siege.get(nr), 0, 0, gegner.get(nr))).toList();
+
+		List<TeamPaarung> runde4 = new SchweizerSystem().weitereRunde(rangfolge.stream().map(teams::get).toList(),
+				ergebnisse);
+
+		assertThat(runde4).hasSize(3);
+		assertThat(runde4).allSatisfy(paarung -> assertThat(gegner.get(paarung.getA().getNr()))
+				.as("Wiederholung %d–%d", paarung.getA().getNr(), paarung.getB().getNr())
+				.doesNotContain(paarung.getB().getNr()));
+		assertThat(new SchweizerSystem().flattenTeampaarungen(runde4)).extracting(Team::getNr)
+				.containsExactly(1, 2, 3, 4, 5, 6);
+		// Erwartet: 5 bekommt den ersten freien Gegner in Ranglistenreihenfolge (2), danach 3–6 und 4–1
+		assertThat(runde4).extracting(paarung -> paarung.getA().getNr() + "–" + paarung.getB().getNr())
+				.containsExactly("5–2", "3–6", "4–1");
+	}
+
+	/**
+	 * Regression (Online-Review, 32 Teams, Runde 16): Das frühere Backtracking mit Schrittbudget wertete ein
+	 * erschöpftes Budget als „unlösbar“ und lieferte acht Gegnerwiederholungen, obwohl eine Paarung ohne
+	 * Wiederholung existiert.
+	 */
+	@Test
+	public void testSpaeteRundeGrossesFeldOhneVermeidbareWiederholung() {
+		// Gegner der Runden 1–15 und Rangfolge/Siege nach Runde 15
+		String gespielt = "1-32 2-31 3-30 4-29 5-28 6-27 7-26 8-25 9-24 10-23 11-22 12-21 13-20 14-19 15-18 16-17 27-4 5-17 "
+				+ "8-18 26-13 32-23 2-9 12-19 22-30 3-11 14-21 24-31 10-1 20-7 15-25 16-28 29-6 8-26 5-30 2-4 32-12 "
+				+ "19-27 3-31 17-1 23-7 29-28 18-13 25-9 22-14 21-15 24-10 11-20 16-6 30-12 8-4 26-19 5-32 2-3 14-25 "
+				+ "13-7 28-1 27-22 29-21 31-18 9-23 17-11 6-24 20-15 10-16 12-4 8-30 26-32 13-3 28-14 19-5 2-29 7-27 "
+				+ "1-18 25-23 17-24 22-21 31-9 11-6 20-16 10-15 4-30 12-3 32-14 8-19 26-2 13-27 28-18 23-17 5-22 7-1 "
+				+ "29-31 11-25 20-24 21-9 6-10 16-15 4-3 14-12 30-19 13-32 2-18 17-8 26-5 27-29 7-28 23-20 25-22 31-1 "
+				+ "11-21 24-16 6-15 9-10 4-14 3-19 13-2 17-12 30-32 5-18 28-25 29-20 8-27 26-11 7-24 1-23 22-15 31-6 "
+				+ "21-10 16-9 4-19 3-14 13-12 32-2 5-29 28-17 30-26 27-18 7-25 1-20 8-11 23-21 6-9 15-24 22-10 31-16 "
+				+ "4-13 3-32 14-29 19-28 12-2 30-18 5-1 17-25 27-26 7-11 20-21 6-8 24-22 31-10 23-16 15-9 4-28 3-5 "
+				+ "13-14 19-32 30-2 29-17 12-27 18-7 1-25 20-26 8-24 11-10 22-9 21-16 6-23 31-15 4-32 3-28 14-30 13-19 "
+				+ "29-12 2-5 7-17 1-26 27-25 18-6 8-31 11-9 20-10 22-16 21-24 23-15 4-17 3-29 13-28 14-2 30-7 19-1 12-5 "
+				+ "32-25 26-18 11-16 20-9 27-15 8-10 31-22 6-21 24-23 4-1 3-17 14-11 13-30 28-12 29-19 32-7 2-8 5-9 "
+				+ "26-15 18-24 25-16 31-21 20-6 27-10 23-22 4-18 3-1 14-17 13-29 28-30 12-8 19-2 32-20 11-15 5-21 26-9 "
+				+ "7-16 27-24 25-10 31-23 6-22";
+		List<Integer> rangfolge = List.of(4, 3, 28, 14, 13, 19, 12, 30, 29, 17, 1, 32, 11, 2, 5, 18, 26, 8, 27, 20, 7, 25, 21, 31, 22, 16, 23, 6, 9, 15, 24, 10);
+		List<Integer> siege = List.of(12, 10, 10, 10, 10, 9, 9, 9, 9, 9, 9, 8, 8, 7, 7, 7, 7, 7, 7, 7, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 5, 4);
+
+		Map<Integer, Team> teams = rangfolge.stream().collect(Collectors.toMap(nr -> nr, Team::from));
+		Map<Integer, List<Integer>> gegner = new java.util.HashMap<>();
+		for (String paar : gespielt.split(" ")) {
+			int a = Integer.parseInt(paar.split("-")[0]);
+			int b = Integer.parseInt(paar.split("-")[1]);
+			teams.get(a).addGegner(teams.get(b));
+			gegner.computeIfAbsent(a, k -> new ArrayList<>()).add(b);
+			gegner.computeIfAbsent(b, k -> new ArrayList<>()).add(a);
+		}
+		List<SchweizerTeamErgebnis> ergebnisse = IntStream.range(0, rangfolge.size())
+				.mapToObj(i -> new SchweizerTeamErgebnis(rangfolge.get(i), siege.get(i), 0, 0,
+						gegner.get(rangfolge.get(i))))
+				.toList();
+
+		List<TeamPaarung> runde16 = new SchweizerSystem()
+				.weitereRunde(rangfolge.stream().map(teams::get).toList(), ergebnisse);
+
+		assertThat(runde16).hasSize(16);
+		assertThat(new SchweizerSystem().flattenTeampaarungen(runde16)).hasSize(32);
+		assertThat(runde16).allSatisfy(paarung -> assertThat(gegner.get(paarung.getA().getNr()))
+				.as("Wiederholung %d–%d", paarung.getA().getNr(), paarung.getB().getNr())
+				.doesNotContain(paarung.getB().getNr()));
 	}
 
 }

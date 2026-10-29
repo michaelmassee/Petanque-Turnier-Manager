@@ -304,7 +304,7 @@ class JGJMeldeListeDelegate implements MeldeListeKonstanten {
 			vornamen[s] = getVornameSpalte(s);
 			nachnamen[s] = getNachnameSpalte(s);
 		}
-		meldeListeHelper.insertFormulaFuerDoppelteSpielerNamen(vornamen, nachnamen,
+		MeldeListeHelper.insertFormulaFuerDoppelteSpielerNamen(vornamen, nachnamen,
 				ERSTE_DATEN_ZEILE, letzteDatenZeile, sheet);
 	}
 

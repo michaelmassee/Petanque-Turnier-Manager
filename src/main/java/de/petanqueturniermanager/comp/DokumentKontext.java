@@ -3,6 +3,8 @@
  */
 package de.petanqueturniermanager.comp;
 
+import java.util.concurrent.Callable;
+
 import com.sun.star.sheet.XSpreadsheetDocument;
 
 import de.petanqueturniermanager.exception.GenerateException;
@@ -41,6 +43,19 @@ public final class DokumentKontext {
 		XSpreadsheetDocument vorher = push(doc);
 		try {
 			aktion.ausfuehren();
+		} finally {
+			restore(vorher);
+		}
+	}
+
+	/**
+	 * Wie {@link #mitKontext}, für Aktionen mit Rückgabewert, die beliebige Exceptions werfen dürfen (z.B. die
+	 * Dialog-Befehle im {@code ProtocolHandler}, die ohne {@code SheetRunner} laufen).
+	 */
+	public static <T> T mitKontextAufruf(XSpreadsheetDocument doc, Callable<T> aktion) throws Exception {
+		XSpreadsheetDocument vorher = push(doc);
+		try {
+			return aktion.call();
 		} finally {
 			restore(vorher);
 		}
