@@ -4,6 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.List;
+import java.util.Random;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
 
@@ -165,48 +168,112 @@ public class KoRundeTeamPaarungenTest {
 	}
 
 	// ──────────────────────────────────────────────────────────
-	// Doppel-Paarung (alle Kombinationen bereits gespielt)
+	// Wiederholungen nur, wenn unvermeidbar
 	// ──────────────────────────────────────────────────────────
 
 	@Test
-	public void testVierTeams_doppelPaarung() {
-		// Team 1 hat 3 und 4 gespielt, Team 2 hat 3 gespielt → keine valide Paarung für 2 möglich
-		var rangliste = ranglisteVon(1, 2, 3, 4);
-		Team team1 = rangliste.get(0);
-		Team team2 = rangliste.get(1);
-		Team team3 = rangliste.get(2);
-
-		team1.addGegner(team3);
-		team2.addGegner(team3);
-
-		var paarungen = new KoRundeTeamPaarungen(rangliste);
-		FormeSpielrunde spielrunde = paarungen.generiereSpielrunde();
-
-		assertThat(paarungen.isDoppelteGespieltePaarungenVorhanden()).isTrue();
-		assertPaarung(spielrunde.getTeamPaarungen().get(0), 1, 4);
-		assertPaarung(spielrunde.getTeamPaarungen().get(1), 2, 3);
-	}
-
-	@Test
-	public void testDoppelteGespieltePaarungen_korrektesFormat_eineDoppelPaarung() {
-		// Team 1 hat 3, Team 2 hat 3 → Doppel-Paarung "2:3"
+	public void testVierTeams_vermeidbareWiederholung_wirdVermieden() {
+		// 1 und 2 haben beide schon gegen 3 gespielt. 1–4 ließe nur noch 2–3 übrig (Wiederholung);
+		// ohne Wiederholung geht es mit 1–2, 3–4.
 		var rangliste = ranglisteVon(1, 2, 3, 4);
 		rangliste.get(0).addGegner(rangliste.get(2)); // 1 vs 3
 		rangliste.get(1).addGegner(rangliste.get(2)); // 2 vs 3
 
 		var paarungen = new KoRundeTeamPaarungen(rangliste);
-		paarungen.generiereSpielrunde();
+		FormeSpielrunde spielrunde = paarungen.generiereSpielrunde();
 
-		assertThat(paarungen.getDoppelteGespieltePaarungen()).isEqualTo("2:3");
+		assertThat(paarungen.isDoppelteGespieltePaarungenVorhanden()).isFalse();
+		assertPaarung(spielrunde.getTeamPaarungen().get(0), 1, 2);
+		assertPaarung(spielrunde.getTeamPaarungen().get(1), 3, 4);
+	}
+
+	@Test
+	public void testSechsTeams_tauschUeberMehrerePaare() {
+		// 1 nimmt 6, 2 nimmt 5; dann bleiben 3 und 4, die schon gespielt haben. Ein einzelner Tausch mit 1–6 oder
+		// 2–5 hilft nicht, weil 3 und 4 auch gegen 5 und 6 gespielt haben – ohne Wiederholung geht es nur, wenn
+		// 1 und 2 die Teams 3 und 4 nehmen: 1–4, 2–3, 5–6.
+		var rangliste = ranglisteVon(1, 2, 3, 4, 5, 6);
+		Team t3 = rangliste.get(2);
+		Team t4 = rangliste.get(3);
+		t3.addGegner(t4);
+		t3.addGegner(rangliste.get(4));
+		t3.addGegner(rangliste.get(5));
+		t4.addGegner(rangliste.get(4));
+		t4.addGegner(rangliste.get(5));
+
+		var paarungen = new KoRundeTeamPaarungen(rangliste);
+		FormeSpielrunde spielrunde = paarungen.generiereSpielrunde();
+
+		assertThat(paarungen.isDoppelteGespieltePaarungenVorhanden()).isFalse();
+		assertPaarung(spielrunde.getTeamPaarungen().get(0), 1, 4);
+		assertPaarung(spielrunde.getTeamPaarungen().get(1), 2, 3);
+		assertPaarung(spielrunde.getTeamPaarungen().get(2), 5, 6);
+	}
+
+	@Test
+	public void testZufaelligeHistorien_nurUnvermeidbareWiederholungen() {
+		Random random = new Random(20261029L);
+		for (int fall = 0; fall < 400; fall++) {
+			int anzahl = 4 + 2 * random.nextInt(4);
+			int runden = 1 + random.nextInt(anzahl - 2);
+			boolean[][] gespielt = WiederholungsMinimum.zufaelligeHistorie(anzahl, runden, random);
+			var rangliste = ranglisteVon(IntStream.rangeClosed(1, anzahl).toArray());
+			for (int a = 0; a < anzahl; a++) {
+				for (int b = a + 1; b < anzahl; b++) {
+					if (gespielt[a][b]) {
+						rangliste.get(a).addGegner(rangliste.get(b));
+					}
+				}
+			}
+
+			FormeSpielrunde spielrunde = new KoRundeTeamPaarungen(rangliste).generiereSpielrunde();
+
+			List<TeamPaarung> teamPaarungen = spielrunde.getTeamPaarungen();
+			assertThat(teamPaarungen.stream().flatMap(p -> Stream.of(p.getA().getNr(), p.getB().getNr())).sorted())
+					.as("Fall %d: jedes Team genau einmal", fall)
+					.containsExactlyElementsOf(IntStream.rangeClosed(1, anzahl).boxed().toList());
+			assertThat(teamPaarungen.stream().filter(p -> gespielt[p.getA().getNr() - 1][p.getB().getNr() - 1]).count())
+					.as("Fall %d: %d Teams nach %d Runden", fall, anzahl, runden)
+					.isEqualTo(WiederholungsMinimum.berechne(anzahl, (a, b) -> gespielt[a][b]));
+		}
+	}
+
+	// ──────────────────────────────────────────────────────────
+	// Doppel-Paarung (unvermeidbar)
+	// ──────────────────────────────────────────────────────────
+
+	@Test
+	public void testDoppelteGespieltePaarungen_korrektesFormat_eineDoppelPaarung() {
+		// Team 1 hat gegen alle gespielt → genau eine Wiederholung, Team 1 bekommt das letzte Team: "1:4"
+		var rangliste = ranglisteVon(1, 2, 3, 4);
+		Team t1 = rangliste.get(0);
+		t1.addGegner(rangliste.get(1));
+		t1.addGegner(rangliste.get(2));
+		t1.addGegner(rangliste.get(3));
+
+		var paarungen = new KoRundeTeamPaarungen(rangliste);
+		FormeSpielrunde spielrunde = paarungen.generiereSpielrunde();
+
+		assertThat(paarungen.isDoppelteGespieltePaarungenVorhanden()).isTrue();
+		assertThat(paarungen.getDoppelteGespieltePaarungen()).isEqualTo("1:4");
+		assertPaarung(spielrunde.getTeamPaarungen().get(0), 1, 4);
+		assertPaarung(spielrunde.getTeamPaarungen().get(1), 2, 3);
 	}
 
 	@Test
 	public void testDoppelteGespieltePaarungen_korrektesFormat_zweiDoppelPaarungen() {
 		// Alle Teams haben gegeneinander gespielt → zwei Doppel-Paarungen "1:4 2:3"
 		var rangliste = ranglisteVon(1, 2, 3, 4);
-		Team t1 = rangliste.get(0), t2 = rangliste.get(1), t3 = rangliste.get(2), t4 = rangliste.get(3);
-		t1.addGegner(t2); t1.addGegner(t3); t1.addGegner(t4);
-		t2.addGegner(t3); t2.addGegner(t4);
+		Team t1 = rangliste.get(0);
+		Team t2 = rangliste.get(1);
+		Team t3 = rangliste.get(2);
+		Team t4 = rangliste.get(3);
+		t1.addGegner(t2);
+		t1.addGegner(t3);
+		t1.addGegner(t4);
+		t2.addGegner(t3);
+		t2.addGegner(t4);
+		t3.addGegner(t4);
 
 		var paarungen = new KoRundeTeamPaarungen(rangliste);
 		paarungen.generiereSpielrunde();
@@ -216,131 +283,19 @@ public class KoRundeTeamPaarungenTest {
 
 	@Test
 	public void testDoppelteReset_nachZweitenAufruf() {
-		// Erster Aufruf: Doppel-Paarung entsteht. Zweiter Aufruf: Reset des Flags.
+		// Team 1 hat gegen alle gespielt → Doppel-Paarung; der zweite Aufruf baut die Meldung neu auf statt anzuhängen
 		var rangliste = ranglisteVon(1, 2, 3, 4);
-		rangliste.get(0).addGegner(rangliste.get(2)); // 1 vs 3
-		rangliste.get(1).addGegner(rangliste.get(2)); // 2 vs 3
+		Team t1 = rangliste.get(0);
+		t1.addGegner(rangliste.get(1));
+		t1.addGegner(rangliste.get(2));
+		t1.addGegner(rangliste.get(3));
 
 		var paarungen = new KoRundeTeamPaarungen(rangliste);
 		paarungen.generiereSpielrunde();
 		assertThat(paarungen.isDoppelteGespieltePaarungenVorhanden()).isTrue();
 
-		// Zweiter Aufruf mit gleichen Daten → Doppel immer noch vorhanden, aber String wird neu aufgebaut
 		paarungen.generiereSpielrunde();
-		assertThat(paarungen.getDoppelteGespieltePaarungen()).isEqualTo("2:3");
-	}
-
-	// ──────────────────────────────────────────────────────────
-	// sucheGegnerFuer – direkte Unit-Tests
-	// ──────────────────────────────────────────────────────────
-
-	@Test
-	public void testSucheGegnerFuer_findetLetzten() {
-		var rangliste = ranglisteVon(1, 2, 3, 4);
-		var paarungen = new KoRundeTeamPaarungen(rangliste);
-		Team team1 = rangliste.get(0);
-
-		Team gegner = paarungen.sucheGegnerFuer(team1, rangliste.getCloneTeamListe());
-
-		assertThat(gegner).isEqualTo(rangliste.get(3)); // Team 4
-	}
-
-	@Test
-	public void testSucheGegnerFuer_ueberspringstBereitsGespielte() {
-		var rangliste = ranglisteVon(1, 2, 3, 4);
-		Team team1 = rangliste.get(0);
-		Team team4 = rangliste.get(3);
-		team1.addGegner(team4); // 1 hat 4 bereits gespielt
-
-		var paarungen = new KoRundeTeamPaarungen(rangliste);
-		Team gegner = paarungen.sucheGegnerFuer(team1, rangliste.getCloneTeamListe());
-
-		assertThat(gegner).isEqualTo(rangliste.get(2)); // fällt auf Team 3 zurück
-	}
-
-	@Test
-	public void testSucheGegnerFuer_alleHabenGespielt_gibtNullZurueck() {
-		var rangliste = ranglisteVon(1, 2, 3, 4);
-		Team team1 = rangliste.get(0);
-		team1.addGegner(rangliste.get(1));
-		team1.addGegner(rangliste.get(2));
-		team1.addGegner(rangliste.get(3));
-
-		var paarungen = new KoRundeTeamPaarungen(rangliste);
-		Team gegner = paarungen.sucheGegnerFuer(team1, rangliste.getCloneTeamListe());
-
-		assertThat(gegner).isNull();
-	}
-
-	@Test
-	public void testSucheGegnerFuer_nurEinKandidat() {
-		// Nur 2 Teams in der Arbeitsliste
-		var rangliste = ranglisteVon(1, 2);
-		var paarungen = new KoRundeTeamPaarungen(rangliste);
-		Team team1 = rangliste.get(0);
-
-		Team gegner = paarungen.sucheGegnerFuer(team1, rangliste.getCloneTeamListe());
-
-		assertThat(gegner).isEqualTo(rangliste.get(1));
-	}
-
-	// ──────────────────────────────────────────────────────────
-	// kanntauschenMit – direkte Unit-Tests
-	// ──────────────────────────────────────────────────────────
-
-	@Test
-	public void testKanntauschenMit_findetTausch() {
-		// 4 Teams: 1, 2, 3, 4. Team 2 hat 3 gespielt.
-		// Spielrunde enthält bereits 1 vs 4. Verbleibende Liste: [2, 3].
-		// kanntauschenMit(2, [2,3], {1vs4}) → TauschTeams(3, 1vs4)
-		var rangliste = ranglisteVon(1, 2, 3, 4);
-		Team t2 = rangliste.get(1), t3 = rangliste.get(2);
-		t2.addGegner(t3);
-
-		FormeSpielrunde spielrunde = new FormeSpielrunde(1);
-		spielrunde.addPaarungWennNichtVorhanden(new TeamPaarung(rangliste.get(0), rangliste.get(3)));
-
-		var paarungen = new KoRundeTeamPaarungen(rangliste);
-		List<Team> restListe = List.of(t2, t3);
-
-		TauschTeams tausch = paarungen.kanntauschenMit(t2, restListe, spielrunde);
-
-		assertThat(tausch).isNotNull();
-		assertThat(tausch.teamAusRangliste()).isEqualTo(t3);
-	}
-
-	@Test
-	public void testKanntauschenMit_keineTauschKandidaten_gibtNullZurueck() {
-		// Spielrunde ist leer → kein B-Team vorhanden, kein Tausch möglich
-		var rangliste = ranglisteVon(1, 2);
-		Team t1 = rangliste.get(0), t2 = rangliste.get(1);
-		t1.addGegner(t2);
-
-		FormeSpielrunde leereSpielrunde = new FormeSpielrunde(1);
-		var paarungen = new KoRundeTeamPaarungen(rangliste);
-
-		TauschTeams tausch = paarungen.kanntauschenMit(t1, rangliste.getCloneTeamListe(), leereSpielrunde);
-
-		assertThat(tausch).isNull();
-	}
-
-	@Test
-	public void testKanntauschenMit_teamAHatBTeamBereitsGespielt_gibtNullZurueck() {
-		// 4 Teams: 1, 2, 3, 4. 2 hat 3 gespielt, 2 hat 4 gespielt.
-		// Spielrunde enthält 1 vs 4. Rest: [2, 3].
-		// kanntauschenMit(2, [2,3], {1vs4}): B=4, aber 2 hat 4 gespielt → kein Tausch
-		var rangliste = ranglisteVon(1, 2, 3, 4);
-		Team t2 = rangliste.get(1), t3 = rangliste.get(2), t4 = rangliste.get(3);
-		t2.addGegner(t3);
-		t2.addGegner(t4);
-
-		FormeSpielrunde spielrunde = new FormeSpielrunde(1);
-		spielrunde.addPaarungWennNichtVorhanden(new TeamPaarung(rangliste.get(0), t4));
-
-		var paarungen = new KoRundeTeamPaarungen(rangliste);
-		TauschTeams tausch = paarungen.kanntauschenMit(t2, List.of(t2, t3), spielrunde);
-
-		assertThat(tausch).isNull();
+		assertThat(paarungen.getDoppelteGespieltePaarungen()).isEqualTo("1:4");
 	}
 
 	// ──────────────────────────────────────────────────────────

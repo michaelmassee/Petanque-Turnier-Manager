@@ -5,12 +5,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import de.petanqueturniermanager.algorithmen.common.WiederholungsMinimum;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.model.TeamPaarung;
@@ -196,14 +199,66 @@ public class FormuleXTest {
 
 		List<TeamPaarung> paarungen = formuleX.weitereRunde(rangliste);
 
-		// Sollte gültige Paarungen ohne Rematch produzieren (oder Rematch akzeptieren)
+		// Ohne Wiederholung möglich (z. B. 1–4, 2–3, 5–6). Geprüft über die Gegnerlisten der Rangliste – die Teams
+		// der Paarungen tragen keine Gegner-Historie, hatAlsGegner() wäre dort immer false.
 		assertThat(paarungen).hasSize(3);
-		// Keine Paarung sollte doppelt vorkommen
-		for (TeamPaarung paarung : paarungen) {
-			if (paarung.getB() != null) {
-				assertThat(paarung.getA().hatAlsGegner(paarung.getB())).isFalse();
-			}
+		assertThat(wiederholungen(paarungen, rangliste)).isZero();
+	}
+
+	// ========================================================================
+	// Tests: Wiederholungen nur, wenn unvermeidbar
+	// ========================================================================
+
+	@Test
+	public void testLetztesPaarSchonGespielt_keineWiederholung() {
+		// 5 und 6 haben schon gegeneinander gespielt. Unter dem letzten Paar gibt es kein Paar mehr zum Tauschen,
+		// ohne Wiederholung geht es trotzdem: 1–2, 3–5, 4–6.
+		List<FormuleXErgebnis> rangliste = List.of(
+				new FormuleXErgebnis(1, 13, 7, List.of(), false),
+				new FormuleXErgebnis(2, 12, 7, List.of(), false),
+				new FormuleXErgebnis(3, 11, 7, List.of(), false),
+				new FormuleXErgebnis(4, 10, 7, List.of(), false),
+				new FormuleXErgebnis(5, 9, 7, List.of(6), false),
+				new FormuleXErgebnis(6, 8, 7, List.of(5), false));
+
+		List<TeamPaarung> paarungen = formuleX.weitereRunde(rangliste);
+
+		assertThat(paarungen).extracting(p -> List.of(p.getA().getNr(), p.getB().getNr()))
+				.containsExactly(List.of(1, 2), List.of(3, 5), List.of(4, 6));
+	}
+
+	@Test
+	public void testZufaelligeHistorien_nurUnvermeidbareWiederholungen() {
+		Random random = new Random(20261029L);
+		for (int fall = 0; fall < 400; fall++) {
+			int anzahl = 4 + 2 * random.nextInt(4);
+			int runden = 1 + random.nextInt(anzahl - 2);
+			boolean[][] gespielt = WiederholungsMinimum.zufaelligeHistorie(anzahl, runden, random);
+			List<FormuleXErgebnis> rangliste = IntStream.range(0, anzahl)
+					.mapToObj(i -> new FormuleXErgebnis(i + 1, 0, 0, gegnerNrn(gespielt, i), false)).toList();
+
+			List<TeamPaarung> paarungen = formuleX.weitereRunde(rangliste);
+
+			assertThat(formuleX.flattenTeampaarungen(paarungen)).extracting(Team::getNr)
+					.as("Fall %d: jedes Team genau einmal", fall)
+					.containsExactlyElementsOf(IntStream.rangeClosed(1, anzahl).boxed().toList());
+			assertThat(wiederholungen(paarungen, rangliste))
+					.as("Fall %d: %d Teams nach %d Runden", fall, anzahl, runden)
+					.isEqualTo(WiederholungsMinimum.berechne(anzahl, (a, b) -> gespielt[a][b]));
 		}
+	}
+
+	private static List<Integer> gegnerNrn(boolean[][] gespielt, int index) {
+		return IntStream.range(0, gespielt.length).filter(gegner -> gespielt[index][gegner]).map(gegner -> gegner + 1)
+				.boxed().toList();
+	}
+
+	/** Zahl der Paarungen, deren Teams laut Gegnerliste der Rangliste schon gegeneinander gespielt haben. */
+	private static long wiederholungen(List<TeamPaarung> paarungen, List<FormuleXErgebnis> rangliste) {
+		Map<Integer, FormuleXErgebnis> ergebnisMap = rangliste.stream()
+				.collect(Collectors.toMap(FormuleXErgebnis::teamNr, e -> e));
+		return paarungen.stream().filter(p -> p.getB() != null)
+				.filter(p -> ergebnisMap.get(p.getA().getNr()).gegnerNrn().contains(p.getB().getNr())).count();
 	}
 
 	// ========================================================================
@@ -356,16 +411,9 @@ public class FormuleXTest {
 		assertThat(paarungen.get(0).getB().getNr()).isEqualTo(2);
 	}
 
-	// ========================================================================
-	// Tests: Swap-Strategie – zweiter Pfad (A,D) und (C,B)
-	// ========================================================================
-
 	@Test
-	public void testSwapZweiterPfadAD_CB() {
-		// Team 1 vs 2: Rematch → Swap wird versucht
-		// Team 1 vs 3: gespielt → erster Swap-Pfad (A,C)+(B,D) schlägt fehl
-		// Team 1 vs 4: nicht gespielt, Team 3 vs 2: nicht gespielt
-		// → zweiter Swap-Pfad (A,D)+(C,B) greift: (1,4) und (3,2)
+	public void testZweiterKandidat_wennErsterZurWiederholungZwingt() {
+		// 1 hat gegen 2 und 3 gespielt → 1 nimmt 4; übrig bleiben 2–3 (nicht gespielt): (1,4) und (2,3)
 		List<FormuleXErgebnis> rangliste = List.of(
 				new FormuleXErgebnis(1, 13, 7, List.of(2, 3), false), // Rang 1: gegen 2+3
 				new FormuleXErgebnis(2, 10, 4, List.of(1), false),    // Rang 2: gegen 1
@@ -375,11 +423,8 @@ public class FormuleXTest {
 
 		List<TeamPaarung> paarungen = formuleX.weitereRunde(rangliste);
 
-		assertThat(paarungen).hasSize(2);
-		assertThat(paarungen.get(0).getA().getNr()).isEqualTo(1);
-		assertThat(paarungen.get(0).getB().getNr()).isEqualTo(4);
-		assertThat(paarungen.get(1).getA().getNr()).isEqualTo(3);
-		assertThat(paarungen.get(1).getB().getNr()).isEqualTo(2);
+		assertThat(paarungen).extracting(p -> List.of(p.getA().getNr(), p.getB().getNr()))
+				.containsExactly(List.of(1, 4), List.of(2, 3));
 	}
 
 	// ========================================================================
