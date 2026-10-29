@@ -101,8 +101,12 @@ Wenn 1 schon gegen 2 gespielt hat:
   citeturn37search58
 
 ### 4.1 Rematch‑Vermeidung
-Die Turniersoftware nutzt denselben Backtracking‑Mechanismus wie beim Schweizer System:
-- Prüfen → Tauschen → Tieferes Tauschschema → Float falls nötig.
+Die Turniersoftware nutzt dasselbe Verfahren wie beim Schweizer System (`WiederholungsarmePaarung`):
+- Von oben nach unten nimmt jedes Team den nächstplatzierten freien Gegner – aber nur, wenn danach für die ganze
+  Runde noch die kleinstmögliche Zahl an Wiederholungen erreichbar ist (exakte Prüfung per maximalem Matching).
+- Wiederholungen gibt es also nur, wenn keine Paarung ohne Wiederholung existiert, und dann so wenige wie möglich.
+- Ein reiner Tausch mit dem nächsten Paar reicht nicht: Ist z. B. das letzte Paar schon gegeneinander angetreten,
+  gibt es darunter kein Paar mehr zum Tauschen (bis Version 5.37.80 entstand dort eine vermeidbare Wiederholung).
 
 ### 4.2 Freilos (BYE)
 - Nur bei ungerader Teamzahl.  

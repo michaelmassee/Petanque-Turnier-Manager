@@ -6,10 +6,8 @@ package de.petanqueturniermanager.algorithmen.formulex;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -18,6 +16,7 @@ import org.apache.commons.collections4.ListUtils;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import de.petanqueturniermanager.algorithmen.common.WiederholungsarmePaarung;
 import de.petanqueturniermanager.helper.random.RandomSource;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamPaarung;
@@ -39,7 +38,7 @@ import de.petanqueturniermanager.model.TeamPaarung;
  * <ul>
  *   <li>Runde 1: freie Losung</li>
  *   <li>Runde ≥2: 1vs2, 3vs4, 5vs6, ... nach Wertungspunkten sortiert</li>
- *   <li>Rematch-Vermeidung durch Swap-Strategie</li>
+ *   <li>Gegnerwiederholungen nur, wenn unvermeidbar ({@link WiederholungsarmePaarung})</li>
  * </ul>
  *
  * @see <a href="../turniersysteme/08_Formule_X.md">08_Formule_X.md</a>
@@ -146,7 +145,7 @@ public class FormuleX {
 	 * <ol>
 	 *   <li>Rangliste nach Wertungspunkten sortieren</li>
 	 *   <li>Paarung: 1vs2, 3vs4, 5vs6, ...</li>
-	 *   <li>Rematch-Vermeidung durch Swap-Strategie</li>
+	 *   <li>Gegnerwiederholungen nur, wenn unvermeidbar</li>
 	 *   <li>Freilos (BYE) für schlechtest platziertes Team ohne vorheriges BYE</li>
 	 * </ol>
 	 *
@@ -172,7 +171,7 @@ public class FormuleX {
 			zuPaarende = new ArrayList<>(teamsInRangfolge);
 		}
 
-		List<TeamPaarung> paarungen = new ArrayList<>(paareLinearMitSwap(zuPaarende, rangliste));
+		List<TeamPaarung> paarungen = new ArrayList<>(paareNachRangliste(zuPaarende, rangliste));
 		if (freilosPaarung != null) {
 			paarungen.add(freilosPaarung);
 		}
@@ -207,76 +206,21 @@ public class FormuleX {
 	}
 
 	/**
-	 * Paart Teams linear nach Rangliste mit Swap-Strategie bei Rematch.
-	 * <p>
-	 * <b>Algorithmus:</b>
-	 * <ol>
-	 *   <li>Gehe Liste paarweise durch (1vs2, 3vs4, ...)</li>
-	 *   <li>Prüfe ob Paarung schon gespielt (Rematch)</li>
-	 *   <li>Wenn Rematch: suche Swap-Partner (nächstes Paar, dann weiter)</li>
-	 *   <li>Wenn kein Swap möglich: akzeptiere Rematch (Fail-Safe)</li>
-	 * </ol>
+	 * Paart die Teams nach Rangliste 1–2, 3–4, …; Gegnerwiederholungen nur, wenn sie unvermeidbar sind, und dann so
+	 * wenige wie möglich ({@link WiederholungsarmePaarung}).
 	 *
-	 * @param rangliste Teams in Ranglisten-Reihenfolge
-	 * @param ergebnisse Ergebnisse für Rematch-Prüfung
-	 * @return Liste der Paarungen
+	 * @param rangliste  Teams in Ranglisten-Reihenfolge (gerade Anzahl)
+	 * @param ergebnisse Ergebnisse mit den bisherigen Gegnern
+	 * @return Liste der Paarungen, nach dem besser platzierten Team geordnet
 	 */
 	@VisibleForTesting
-	List<TeamPaarung> paareLinearMitSwap(List<Team> rangliste, List<FormuleXErgebnis> ergebnisse) {
-		List<TeamPaarung> paarungen = new ArrayList<>();
+	List<TeamPaarung> paareNachRangliste(List<Team> rangliste, List<FormuleXErgebnis> ergebnisse) {
 		Map<Integer, FormuleXErgebnis> ergebnisMap = ergebnisse.stream()
 				.collect(Collectors.toMap(FormuleXErgebnis::teamNr, e -> e));
-		Set<Integer> verarbeitet = new HashSet<>();
-
-		for (int i = 0; i < rangliste.size() - 1; i += 2) {
-			if (verarbeitet.contains(i)) {
-				continue;
-			}
-
-			Team teamA = rangliste.get(i);
-			Team teamB = rangliste.get(i + 1);
-
-			if (!hatGegeneinanderGespielt(teamA, teamB, ergebnisMap)) {
-				paarungen.add(new TeamPaarung(teamA, teamB));
-			} else {
-				boolean swapErfolgreich = false;
-
-				for (int j = i + 2; j + 1 < rangliste.size(); j += 2) {
-					if (verarbeitet.contains(j)) {
-						continue;
-					}
-					Team teamC = rangliste.get(j);
-					Team teamD = rangliste.get(j + 1);
-
-					// Teste Swap B↔D: (A,C) und (B,D)
-					if (!hatGegeneinanderGespielt(teamA, teamC, ergebnisMap)
-							&& !hatGegeneinanderGespielt(teamB, teamD, ergebnisMap)) {
-						paarungen.add(new TeamPaarung(teamA, teamC));
-						paarungen.add(new TeamPaarung(teamB, teamD));
-						verarbeitet.add(j);
-						swapErfolgreich = true;
-						break;
-					}
-
-					// Teste Swap A↔C: (A,D) und (C,B)
-					if (!hatGegeneinanderGespielt(teamA, teamD, ergebnisMap)
-							&& !hatGegeneinanderGespielt(teamC, teamB, ergebnisMap)) {
-						paarungen.add(new TeamPaarung(teamA, teamD));
-						paarungen.add(new TeamPaarung(teamC, teamB));
-						verarbeitet.add(j);
-						swapErfolgreich = true;
-						break;
-					}
-				}
-
-				if (!swapErfolgreich) {
-					// Fail-Safe: Rematch akzeptieren
-					paarungen.add(new TeamPaarung(teamA, teamB));
-				}
-			}
-		}
-
-		return paarungen;
+		return WiederholungsarmePaarung.paare(rangliste.size(),
+				(a, b) -> hatGegeneinanderGespielt(rangliste.get(a), rangliste.get(b), ergebnisMap),
+				WiederholungsarmePaarung.GegnerWahl.NAECHSTER_IN_RANGLISTE).stream()
+				.map(paar -> new TeamPaarung(rangliste.get(paar.a()), rangliste.get(paar.b()))).toList();
 	}
 
 	/**

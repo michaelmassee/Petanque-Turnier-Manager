@@ -89,7 +89,7 @@ Each tournament system typically has sheet classes for: Meldeliste (entry list),
 
   | Sub-Package | Inhalt |
   |---|---|
-  | `algorithmen/common/` | Querschnitt-Utilities: `CadrageRechner`, `GruppenAufteilungRechner`, `KoRundeTeamPaarungen`, `IsEvenOrOdd`, `TauschTeams` |
+  | `algorithmen/common/` | Querschnitt-Utilities: `CadrageRechner`, `GruppenAufteilungRechner`, `KoRundeTeamPaarungen`, `IsEvenOrOdd`, `WiederholungsarmePaarung` (gemeinsame Paarung mit minimalen Gegnerwiederholungen für Schweizer, Formule X und KO-Runde – keine eigene Tauschlogik mehr bauen) |
   | `algorithmen/liga/` | `JederGegenJeden`, `Direktvergleich`, `DirektvergleichResult` |
   | `algorithmen/schweizer/` | `SchweizerSystem`, `SchweizerTeamErgebnis` |
   | `algorithmen/poule/` | `PouleRanglisteRechner`, `PouleGruppenRechner`, `PouleTeamErgebnis` |
