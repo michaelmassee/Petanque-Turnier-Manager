@@ -369,6 +369,32 @@ class SchweizerMeleeAnmeldungUebernehmenUITest extends BaseCalcUITest implements
 				.isEqualTo("MeleeTestNachname16".equals(nachname) ? "" : VEREIN_PRAEFIX + nachname));
 	}
 
+	/**
+	 * Regression: Ein übernommener Spieler, dessen Check-in vor der ersten Spielrunde entfernt wurde, fällt beim
+	 * Neu-Auslosen heraus und seine Anmeldung ist danach wieder offen (Bug: er wurde mit ausgelost und blieb als
+	 * „Übernommen" markiert).
+	 */
+	@Test
+	void neuAuslosenLaesstAusgechecktenSpielerWeg() throws Exception {
+		meldeliste = new SchweizerMeldeListeSheetNew(wkingSpreadsheet);
+		meldeliste.createMeldelisteWithParams(Formation.TRIPLETTE, false, false);
+		MeleeAnmeldungKonfiguration.einschalten(wkingSpreadsheet, MeleeAnmeldungModus.DOUBLETTE_OHNE_FREILOS);
+		meleeAnmeldungenAnlegen(16);
+		new SchweizerMeleeAnmeldungUebernehmenSheet(wkingSpreadsheet).uebernehmen();
+		XSpreadsheet meleeSheet = new SchweizerMeleeAnmeldungSheet(wkingSpreadsheet).getXSpreadSheet();
+		meleeSheet.getCellByPosition(SPALTE_EINGECHECKT, ERSTE_DATEN_ZEILE).setFormula("");
+
+		meleeAnmeldungenAnlegen(16, 1, true);
+		new SchweizerMeleeAnmeldungUebernehmenSheet(wkingSpreadsheet).uebernehmen();
+
+		assertThat(nachnamenInMeldeliste()).as("15 bisherige + Nachzügler, ohne den ausgecheckten Spieler")
+				.hasSize(16).doesNotHaveDuplicates().doesNotContain("MeleeTestNachname0")
+				.contains("MeleeTestNachname16");
+		assertThat(schweizerMeleeZeilen()).filteredOn(MeleeAnmeldungZeile::istOffen)
+				.extracting(MeleeAnmeldungZeile::nachname).as("Übernommen-Markierung zurückgesetzt")
+				.containsExactly("MeleeTestNachname0");
+	}
+
 	/** Ein von Hand inaktiv gesetztes Mêlée-Team bleibt beim Neu-Auslosen unverändert stehen. */
 	@Test
 	void neuAuslosenLaesstInaktivesTeamUnveraendert() throws Exception {

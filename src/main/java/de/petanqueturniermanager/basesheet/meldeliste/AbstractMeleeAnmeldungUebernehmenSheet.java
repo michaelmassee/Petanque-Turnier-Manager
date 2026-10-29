@@ -74,7 +74,8 @@ import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
  * <li>„Ohne Freilos" und noch keine Spielrunde: Lassen sich die neuen Spieler nicht vollständig zu eigenen
  * Teams formen (z.B. ein einzelner Nachzügler), werden die bisherigen aktiven Mêlée-Teams nach Rückfrage
  * zusammen mit den neuen Spielern komplett neu ausgelost ({@link MeleeNeuAuslosungPlan}). In der Meldeliste
- * nachgetragene Vereine bleiben dabei beim jeweiligen Spieler.</li>
+ * nachgetragene Vereine bleiben dabei beim jeweiligen Spieler. Übernommene Spieler ohne Check-in fallen dabei
+ * heraus und ihre Anmeldung wird wieder offen.</li>
  * <li>Teams blockweise ans Ende der Meldeliste schreiben (Teamname, Spielernamen, Setzposition,
  * Aktiv-Kennzeichen), jedes mit einer neuen Team-UUID in der Nr-Zelle, und die Meldeliste
  * aktualisieren (die Nummernvergabe behält die UUID).</li>
@@ -181,7 +182,7 @@ public abstract class AbstractMeleeAnmeldungUebernehmenSheet extends SheetRunner
 				leseMeldeliste(naechsteFreieMeldelisteZeile()).hoechsteNr());
 		schreibeTeamsInMeldeliste(teams, nummern, teamUuids);
 		meldelisteAktualisieren();
-		markiereAlsUebernommen(teamUuidProMeleeZeile(teams, teamUuids));
+		markiereAlsUebernommen(teamUuidProMeleeZeile(teams, teamUuids), List.of());
 		meldeOffenGebliebene(offeneEingecheckte.size() - tatsaechlichUebernommene.size());
 	}
 
@@ -261,10 +262,15 @@ public abstract class AbstractMeleeAnmeldungUebernehmenSheet extends SheetRunner
 
 		// Nur Spieler, die noch in einem Mêlée-Team der Meldeliste stehen – von Hand gelöschte Teams
 		// kommen nicht zurück. Die neuen Spieler stehen hinten: bleibt ein Spieler übrig, ist es ein neuer.
+		// Wem der Check-in entzogen wurde, fällt heraus und wird wieder offen.
 		Set<String> namenInMeleeTeams = meleeTeamIndizes.stream().flatMap(i -> spielerJeZeile.get(i).stream())
 				.collect(Collectors.toSet());
-		List<MeleeAnmeldungZeile> bisherige = alleZeilen.stream().filter(MeleeAnmeldungZeile::uebernommen)
-				.filter(z -> namenInMeleeTeams.contains(namensSchluessel(z))).toList();
+		Map<Boolean, List<MeleeAnmeldungZeile>> bisherigeNachCheckin = alleZeilen.stream()
+				.filter(MeleeAnmeldungZeile::uebernommen)
+				.filter(z -> namenInMeleeTeams.contains(namensSchluessel(z)))
+				.collect(Collectors.partitioningBy(MeleeAnmeldungZeile::eingecheckt));
+		List<MeleeAnmeldungZeile> bisherige = bisherigeNachCheckin.get(true);
+		List<MeleeAnmeldungZeile> ausgecheckte = bisherigeNachCheckin.get(false);
 		List<MeleeTeam> teams = MeleeAnmeldungTeamBildner.bildeTeamsOhneFreilos(
 				alsMeleeSpieler(Stream.concat(bisherige.stream(), neue.stream()).toList()), mode);
 		Set<Integer> verteilteZeilen = teams.stream().flatMap(t -> t.spieler().stream())
@@ -293,7 +299,7 @@ public abstract class AbstractMeleeAnmeldungUebernehmenSheet extends SheetRunner
 		schreibeNeuAusgeloste(new NeueTeams(teams, nummern, teamUuids), MeleeNeuAuslosungPlan.zeilenZuordnung(
 				bisherigeZeilen, teams.size(), ersteFreieZeile), meldeliste.vereinJeSpieler());
 		meldelisteAktualisieren();
-		markiereAlsUebernommen(teamUuidProMeleeZeile(teams, teamUuids));
+		markiereAlsUebernommen(teamUuidProMeleeZeile(teams, teamUuids), ausgecheckte);
 		meldeOffenGebliebene(neue.size() - neuVerteilt.size());
 		return true;
 	}
@@ -547,20 +553,24 @@ public abstract class AbstractMeleeAnmeldungUebernehmenSheet extends SheetRunner
 	}
 
 	/**
-	 * Schreibt in „Übernommen“ der neu übernommenen Mêlée-Zeilen den Verweis auf ihr Team. Nur diese Zellen werden
-	 * geschrieben (zusammenhängende Zeilen blockweise); früher übernommene behalten ihren Verweis bzw. ihre
-	 * Markierung.
+	 * Schreibt in „Übernommen“ der neu übernommenen Mêlée-Zeilen den Verweis auf ihr Team und leert die Zellen der
+	 * aus den Teams genommenen Spieler. Nur diese Zellen werden geschrieben (zusammenhängende Zeilen blockweise);
+	 * früher übernommene behalten ihren Verweis bzw. ihre Markierung.
+	 *
+	 * @param entfernte übernommene Spieler, die nicht mehr in der Meldeliste stehen – wieder offen
 	 */
-	private void markiereAlsUebernommen(SortedMap<Integer, String> teamUuidProMeleeZeile) throws GenerateException {
+	private void markiereAlsUebernommen(SortedMap<Integer, String> teamUuidProMeleeZeile,
+			List<MeleeAnmeldungZeile> entfernte) throws GenerateException {
 		XSpreadsheet meleeSheet = MeleeAnmeldungLeser.findeSheet(getWorkingSpreadsheet(),
 				getMeleeMetadatenSchluessel());
-		if (meleeSheet == null || teamUuidProMeleeZeile.isEmpty()) {
+		if (meleeSheet == null) {
 			return;
 		}
 		String nrBereich = MeldeListeHelper.nrBereichMeldeliste();
 		SortedMap<Integer, String> formeln = new TreeMap<>();
 		teamUuidProMeleeZeile.forEach((zeile, teamUuid) -> formeln.put(zeile,
 				NrUuidSpalte.formelNrAusUuid(nrBereich, teamUuid)));
+		entfernte.forEach(zeile -> formeln.put(zeile.zeile(), ""));
 		TeamNummernVergabe.schreibeNrFormeln(getSheetHelper(), meleeSheet, SPALTE_UEBERNOMMEN, formeln);
 	}
 
