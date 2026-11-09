@@ -98,6 +98,7 @@ public class SchweizerSystem {
 	/**
 	 * Berechnet den Buchholz-Wert für jedes Team.
 	 * BHZ = Summe der Siege aller Gegner am Turnierend.
+	 * Ein Freilos ist kein Gegner und liefert keinen Beitrag (BPV-Regel, siehe 03_Schweizer.md, 5.1).
 	 *
 	 * @param ergebnisse alle Teamergebnisse
 	 * @return Map von teamNr → BHZ-Wert
@@ -117,6 +118,7 @@ public class SchweizerSystem {
 	/**
 	 * Berechnet den Feinbuchholz-Wert für jedes Team.
 	 * FBHZ = Summe der BHZ-Werte aller Gegner.
+	 * Ein Freilos liefert keinen Beitrag (BPV-Regel, siehe 03_Schweizer.md, 5.1).
 	 *
 	 * @param ergebnisse alle Teamergebnisse
 	 * @param bhzMap     vorberechnete BHZ-Werte

@@ -40,10 +40,10 @@ Jede Runde folgt der gleichen Struktur:
 Das wichtigste Kriterium.
 
 ## 3.2 Buchholz (BHZ)
-Summe der Siege aller Gegner.
+Summe der Siege aller Gegner. Ein Freilos ist kein Gegner und liefert keinen Beitrag (siehe 5.1).
 
 ## 3.3 Feinbuchholz (FBHZ)
-Summe der BHZ‑Werte aller Gegner.
+Summe der BHZ‑Werte aller Gegner. Ein Freilos liefert keinen Beitrag (siehe 5.1).
 
 ## 3.4 Punktedifferenz
 (+) erzielte Punkte
@@ -82,6 +82,18 @@ Diese Logik wird häufig in Turniersoftware eingesetzt.
 - hatten schon alle Teams ein Freilos, erhält es das schlechteste Team
 - Runde 1: ein zufälliges ungesetztes Team; nur wenn alle gesetzt sind, eines aus der größten Setzgruppe
 - Wertung: 13:7 oder 13:0
+
+### Freilos und Buchholz
+Das Freilos zählt als Sieg mit den konfigurierten Freispiel-Punkten, bringt aber **0 BHZ- und 0 FBHZ-Punkte**
+(es gibt keinen Gegner). Für die anderen Teams zählt der Freilos-Sieg in deren BHZ normal mit.
+
+Quelle: Bayerischer Pétanque Verband, [„Schweizer System“](https://www.petanque-bayern.de/files/0010_Allgemeine%20Informationen/Verband/Dokumente/Schweizer%20System.pdf):
+„Das Team erhält einen Siegpunkt, aber keine Buchholz- oder Feinbuchholzpunkte für das Freilos.“
+
+Begründung: Der geschenkte Sieg wird im Tie-Break nicht zusätzlich belohnt. Abweichende Ansätze wurden geprüft und
+bewusst nicht umgesetzt (Issue #35):
+- FAQ des Pétanque-Verbands NRW: Freilos zählt die BHZ des schlechtesten Teams – nur FAQ, ohne Bezug auf eine Ordnung.
+- FIDE C.07 Art. 16.4 (Schach): virtueller Gegner mit eigener Punktzahl – schachspezifisch.
 
 ## 5.2 Score‑Gruppe ungerade → Float (Herunterlosen)
 Ist eine Sieggruppe ungerade, wird ein Team in die nächsttiefere Gruppe heruntergelost und dort zuerst gepaart.
