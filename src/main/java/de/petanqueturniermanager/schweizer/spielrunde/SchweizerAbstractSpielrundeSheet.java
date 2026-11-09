@@ -26,6 +26,7 @@ import com.sun.star.table.TableBorder2;
 
 import de.petanqueturniermanager.basesheet.meldeliste.TeamSpaltenBreite;
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.algorithmen.schweizer.HerunterlosChronik;
 import de.petanqueturniermanager.algorithmen.schweizer.SchweizerSystem;
 import de.petanqueturniermanager.algorithmen.schweizer.SchweizerTeamErgebnis;
 import de.petanqueturniermanager.algorithmen.schweizer.SchweizerTeamNrAufloeser;
@@ -281,6 +282,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 			statsMap.put(team.getNr(), new int[3]);
 			gegnerMap.put(team.getNr(), new ArrayList<>());
 		}
+		var chronik = new HerunterlosChronik();
 
 		if (bisSpielrunde >= abSpielrunde && bisSpielrunde >= 1) {
 			int spielrunde = (abSpielrunde > 1) ? abSpielrunde : 1;
@@ -296,7 +298,10 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 				if (sheet == null) {
 					continue;
 				}
-				leseRundeEin(sheet, teamNrAufloeser, aktiveMeldungen, statsMap, gegnerMap);
+				Map<Integer, Integer> siegeVorRunde = siegeJeTeam(statsMap);
+				List<HerunterlosChronik.Begegnung> begegnungen = new ArrayList<>();
+				leseRundeEin(sheet, teamNrAufloeser, aktiveMeldungen, statsMap, gegnerMap, begegnungen);
+				chronik.vermerkeRunde(spielrunde, begegnungen, siegeVorRunde);
 			}
 		}
 
@@ -304,14 +309,21 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		for (Team team : aktiveMeldungen.teams()) {
 			int[] stats = statsMap.getOrDefault(team.getNr(), new int[3]);
 			List<Integer> gegnerNrn = gegnerMap.getOrDefault(team.getNr(), new ArrayList<>());
-			ergebnisse.add(new SchweizerTeamErgebnis(team.getNr(), stats[0], stats[1], stats[2], gegnerNrn));
+			ergebnisse.add(new SchweizerTeamErgebnis(team.getNr(), stats[0], stats[1], stats[2], gegnerNrn,
+					chronik.rundenFuer(team.getNr())));
 		}
 		return ergebnisse;
 	}
 
+	private static Map<Integer, Integer> siegeJeTeam(Map<Integer, int[]> statsMap) {
+		Map<Integer, Integer> siege = new HashMap<>();
+		statsMap.forEach((teamNr, stats) -> siege.put(teamNr, stats[0]));
+		return siege;
+	}
+
 	private void leseRundeEin(XSpreadsheet sheet, SchweizerTeamNrAufloeser teamNrAufloeser,
-			TeamMeldungen aktiveMeldungen, Map<Integer, int[]> statsMap, Map<Integer, List<Integer>> gegnerMap)
-			throws GenerateException {
+			TeamMeldungen aktiveMeldungen, Map<Integer, int[]> statsMap, Map<Integer, List<Integer>> gegnerMap,
+			List<HerunterlosChronik.Begegnung> begegnungen) throws GenerateException {
 		RangePosition readRange = RangePosition.from(TEAM_A_SPALTE, ERSTE_DATEN_ZEILE, TECHNISCHE_TEAM_B_NR_SPALTE,
 				ERSTE_DATEN_ZEILE + 999);
 		RangeData rowsData = RangeHelper
@@ -352,6 +364,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 			}
 
 			teamA.addGegner(teamB); // registriert gegenseitig
+			begegnungen.add(new HerunterlosChronik.Begegnung(nrA, nrB));
 
 			gegnerMap.computeIfAbsent(nrA, k -> new ArrayList<>()).add(nrB);
 			gegnerMap.computeIfAbsent(nrB, k -> new ArrayList<>()).add(nrA);
@@ -693,7 +706,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		if (neueSpielrundeNr.getNr() == 1) {
 			paarungen = schweizerSystem.ersteRunde(meldungen.teams());
 		} else {
-			paarungen = schweizerSystem.weitereRunde(meldungen.teams(), ergebnisse);
+			paarungen = schweizerSystem.weitereRunde(meldungen.teams(), ergebnisse, neueSpielrundeNr.getNr());
 		}
 
 		teamPaarungenEinfuegen(paarungen);

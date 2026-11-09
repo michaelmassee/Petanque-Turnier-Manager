@@ -71,6 +71,7 @@ public final class SchweizerRundenLeser {
 
 		var xDoc = workingSpreadsheet.getWorkingSpreadsheetDocument();
 		var teamNrAufloeser = new SchweizerTeamNrAufloeser(meldeliste::erstelleTeamAnzeigeIndex);
+		var chronik = new HerunterlosChronik();
 		for (int runde = 1; runde <= anzRunden; runde++) {
 			SheetRunner.testDoCancelTask();
 			XSpreadsheet rundeSheet = SheetMetadataHelper.findeSheetUndHeile(xDoc,
@@ -79,8 +80,11 @@ public final class SchweizerRundenLeser {
 				logger.debug("leseErgebnisse: Runde {} – Sheet nicht gefunden, übersprungen", runde);
 				continue;
 			}
-			leseRundeEin(workingSpreadsheet, rundeSheet, aktiveMeldungen, statsMap, gegnerMap, teamNrAufloeser,
-					freispielPunktePlus, freispielPunkteMinus);
+			Map<Integer, Integer> siegeVorRunde = siegeJeTeam(statsMap);
+			List<HerunterlosChronik.Begegnung> begegnungen = new ArrayList<>();
+			leseRundeEin(workingSpreadsheet, rundeSheet, aktiveMeldungen, statsMap, gegnerMap, begegnungen,
+					teamNrAufloeser, freispielPunktePlus, freispielPunkteMinus);
+			chronik.vermerkeRunde(runde, begegnungen, siegeVorRunde);
 		}
 
 		List<SchweizerTeamErgebnis> ergebnisse = new ArrayList<>();
@@ -88,14 +92,22 @@ public final class SchweizerRundenLeser {
 			int[] stats = statsMap.getOrDefault(team.getNr(), new int[3]);
 			List<Integer> gegnerNrn = gegnerMap.getOrDefault(team.getNr(), new ArrayList<>());
 			int punkteDiff = stats[1] - stats[2];
-			ergebnisse.add(new SchweizerTeamErgebnis(team.getNr(), stats[0], punkteDiff, stats[1], gegnerNrn));
+			ergebnisse.add(new SchweizerTeamErgebnis(team.getNr(), stats[0], punkteDiff, stats[1], gegnerNrn,
+					chronik.rundenFuer(team.getNr())));
 		}
 		return ergebnisse;
 	}
 
+	private static Map<Integer, Integer> siegeJeTeam(Map<Integer, int[]> statsMap) {
+		Map<Integer, Integer> siege = new HashMap<>();
+		statsMap.forEach((teamNr, stats) -> siege.put(teamNr, stats[0]));
+		return siege;
+	}
+
 	private static void leseRundeEin(WorkingSpreadsheet workingSpreadsheet, XSpreadsheet rundeSheet,
 			TeamMeldungen aktiveMeldungen, Map<Integer, int[]> statsMap, Map<Integer, List<Integer>> gegnerMap,
-			SchweizerTeamNrAufloeser teamNrAufloeser, int freispielPunktePlus,
+			List<HerunterlosChronik.Begegnung> begegnungen, SchweizerTeamNrAufloeser teamNrAufloeser,
+			int freispielPunktePlus,
 			int freispielPunkteMinus) throws GenerateException {
 
 		RangePosition readRange = RangePosition.from(
@@ -127,6 +139,7 @@ public final class SchweizerRundenLeser {
 			}
 			Team teamB = aktiveMeldungen.getTeam(nrB);
 			if (teamB == null) continue;
+			begegnungen.add(new HerunterlosChronik.Begegnung(nrA, nrB));
 
 			int ergA = (row.size() > 2) ? row.get(2).getIntVal(0) : 0;
 			int ergB = (row.size() > 3) ? row.get(3).getIntVal(0) : 0;

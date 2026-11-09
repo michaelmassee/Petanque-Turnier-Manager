@@ -12,6 +12,7 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -191,20 +192,23 @@ public class SchweizerSystem {
 	 *       die durch {@code sortiereNachAuswertungskriterien()} (Siege→BHZ→FBHZ→Punktediff)
 	 *       bestimmt wird. BHZ wirkt also <em>indirekt</em>: es legt fest, wer in der Gruppe
 	 *       oben steht und damit gegen wen gepaart wird – aber nicht, in welche Gruppe ein Team fällt.</li>
-	 *   <li>Ist eine Gruppe ungerade, wird das rangniedrigste Team in die nächsttiefere
-	 *       Gruppe „gefloatet" (Carry-Over).</li>
+	 *   <li>Ist eine Gruppe ungerade, wird ein Team in die nächsttiefere Gruppe heruntergelost
+	 *       („gefloatet", Carry-Over) – bevorzugt eines, das bisher nicht heruntergelost wurde
+	 *       (siehe {@link #baueSiegeGruppen}).</li>
 	 * </ol>
 	 * <p>
 	 * Gibt es keine Ergebnis-Information ({@code ergebnisse} leer), landen alle Teams in einer
 	 * Gruppe – identisches Verhalten wie die klassische globale Paarung.
 	 *
-	 * @param teams      die Teams in aktueller Ranglisten-Reihenfolge (Siege absteigend,
-	 *                   Tie-Breaks via {@code sortiereNachAuswertungskriterien()})
-	 * @param ergebnisse bisherige Spielergebnisse (nur Siegzahl wird für Gruppen verwendet);
-	 *                   leer = globale Paarung ohne Gruppenbildung
+	 * @param teams       die Teams in aktueller Ranglisten-Reihenfolge (Siege absteigend,
+	 *                    Tie-Breaks via {@code sortiereNachAuswertungskriterien()})
+	 * @param ergebnisse  bisherige Spielergebnisse (Siegzahl für die Gruppen, Herunterlos-Historie für die
+	 *                    Floater-Wahl); leer = globale Paarung ohne Gruppenbildung
+	 * @param neueRundeNr Nummer der auszulosenden Runde
 	 * @return eine Liste der Paarungen für die nächste Runde (Freilos am Ende)
 	 */
-	public List<TeamPaarung> weitereRunde(List<Team> teams, List<SchweizerTeamErgebnis> ergebnisse) {
+	public List<TeamPaarung> weitereRunde(List<Team> teams, List<SchweizerTeamErgebnis> ergebnisse,
+			int neueRundeNr) {
 		boolean freiSpiel = IsEvenOrOdd.isOdd(teams.size());
 		List<TeamPaarung> teamPaarungList = new ArrayList<>();
 
@@ -224,9 +228,11 @@ public class SchweizerSystem {
 		// Sieggruppen bauen und innerhalb paaren
 		Map<Integer, Integer> siegeProTeam = ergebnisse.stream()
 				.collect(Collectors.toMap(SchweizerTeamErgebnis::teamNr, SchweizerTeamErgebnis::siege));
+		Map<Integer, List<Integer>> herunterlosProTeam = ergebnisse.stream()
+				.collect(Collectors.toMap(SchweizerTeamErgebnis::teamNr, SchweizerTeamErgebnis::heruntergelostInRunden));
 
 		List<Team> aktivTeams = teams.stream().filter(t -> !t.isHatGegner()).toList();
-		List<List<Team>> gruppen = baueSiegeGruppen(aktivTeams, siegeProTeam);
+		List<List<Team>> gruppen = baueSiegeGruppen(aktivTeams, siegeProTeam, herunterlosProTeam, neueRundeNr);
 		paareGruppen(gruppen, teamPaarungList);
 
 		return teamPaarungList.stream().sorted((tp1, tp2) -> {
@@ -241,18 +247,73 @@ public class SchweizerSystem {
 	}
 
 	/**
-	 * Gruppiert die sortierten Teams nach Siegzahl.
-	 * Ungerade Gruppen werden durch Float des letzten Teams in die nächste Gruppe ausgeglichen.
+	 * Gruppiert die sortierten Teams nach Siegzahl und gleicht ungerade Gruppen durch Herunterlosen aus.
+	 * <p>
+	 * Die Gruppen werden von oben nach unten verarbeitet. Ein heruntergeloster Floater steht vorn in der nächsten
+	 * Gruppe und wird dort zuerst gepaart. Ist eine Gruppe (inklusive eingehendem Floater) ungerade, wird aus ihren
+	 * eigenen Teams der Floater gewählt (siehe {@link #waehleFloater}) und an die erste Stelle der nächsten Gruppe
+	 * verschoben; die übrigen Teams behalten ihre Reihenfolge.
 	 * <p>
 	 * Gibt es keine Sieginformation (leere siegeProTeam-Map), landen alle Teams in einer Gruppe
 	 * und der Algorithmus verhält sich wie die klassische globale Paarung.
 	 *
-	 * @param sortierteTeams Teams in Ranglistenreihenfolge (Siegzahl absteigend)
-	 * @param siegeProTeam   Map teamNr → Siegzahl
+	 * @param sortierteTeams     Teams in Ranglistenreihenfolge (Siegzahl absteigend)
+	 * @param siegeProTeam       Map teamNr → Siegzahl
+	 * @param herunterlosProTeam Map teamNr → Runden, in denen das Team heruntergelost wurde (fehlend = nie)
+	 * @param neueRundeNr        Nummer der auszulosenden Runde
 	 * @return Liste von Sieggruppen; jede Gruppe hat gerade Größe (nach Float-Ausgleich)
 	 */
 	@VisibleForTesting
-	List<List<Team>> baueSiegeGruppen(List<Team> sortierteTeams, Map<Integer, Integer> siegeProTeam) {
+	List<List<Team>> baueSiegeGruppen(List<Team> sortierteTeams, Map<Integer, Integer> siegeProTeam,
+			Map<Integer, List<Integer>> herunterlosProTeam, int neueRundeNr) {
+		List<List<Team>> gruppen = gruppiereNachSiegen(sortierteTeams, siegeProTeam);
+
+		boolean hatEingehendenFloater = false;
+		for (int i = 0; i < gruppen.size() - 1; i++) {
+			List<Team> gruppe = gruppen.get(i);
+			boolean floatet = IsEvenOrOdd.isOdd(gruppe.size());
+			if (floatet) {
+				// Der eingehende Floater wurde in dieser Runde schon heruntergelost – nur wenn er allein ist, erneut
+				List<Team> kandidaten = hatEingehendenFloater && gruppe.size() > 1 ? gruppe.subList(1, gruppe.size())
+						: gruppe;
+				Team floater = waehleFloater(kandidaten, herunterlosProTeam, neueRundeNr);
+				gruppe.remove(floater);
+				gruppen.get(i + 1).addFirst(floater); // Floater wird in der nächsten Gruppe zuerst gepaart
+			}
+			hatEingehendenFloater = floatet;
+		}
+		gruppen.removeIf(List::isEmpty);
+		return gruppen;
+	}
+
+	/**
+	 * Wählt das Team, das aus einer ungeraden Sieggruppe heruntergelost wird. Herunterlosen ist ein
+	 * Optimierungskriterium, kein Verbot – es wird immer ein Team gewählt. Vorrang in dieser Reihenfolge:
+	 * <ol>
+	 *   <li>nicht in der letzten Runde heruntergelost</li>
+	 *   <li>nicht in der vorletzten Runde heruntergelost</li>
+	 *   <li>möglichst selten heruntergelost</li>
+	 *   <li>rangniedrigstes Team</li>
+	 * </ol>
+	 *
+	 * @param kandidaten         Teams der Gruppe in Ranglistenreihenfolge (ohne eingehenden Floater), nicht leer
+	 * @param herunterlosProTeam Map teamNr → Runden, in denen das Team heruntergelost wurde
+	 * @param neueRundeNr        Nummer der auszulosenden Runde
+	 * @return das herunterzulosende Team
+	 */
+	private static Team waehleFloater(List<Team> kandidaten, Map<Integer, List<Integer>> herunterlosProTeam,
+			int neueRundeNr) {
+		Function<Team, List<Integer>> runden = team -> herunterlosProTeam.getOrDefault(team.getNr(), List.of());
+		Comparator<Integer> vorrang = Comparator
+				.comparing((Integer pos) -> runden.apply(kandidaten.get(pos)).contains(neueRundeNr - 1))
+				.thenComparing(pos -> runden.apply(kandidaten.get(pos)).contains(neueRundeNr - 2))
+				.thenComparingInt(pos -> runden.apply(kandidaten.get(pos)).size())
+				.thenComparing(Comparator.reverseOrder());
+		return IntStream.range(0, kandidaten.size()).boxed().min(vorrang).map(kandidaten::get).orElseThrow();
+	}
+
+	private static List<List<Team>> gruppiereNachSiegen(List<Team> sortierteTeams,
+			Map<Integer, Integer> siegeProTeam) {
 		List<List<Team>> gruppen = new ArrayList<>();
 		List<Team> aktuelleGruppe = null;
 		int letztesSiege = Integer.MIN_VALUE;
@@ -266,16 +327,6 @@ public class SchweizerSystem {
 			}
 			aktuelleGruppe.add(team);
 		}
-
-		// Ungerade Gruppen: schwächstes Team in nächsttiefere Gruppe floaten (Carry-Over)
-		for (int i = 0; i < gruppen.size() - 1; i++) {
-			List<Team> gruppe = gruppen.get(i);
-			if (gruppe.size() % 2 != 0) {
-				Team floatTeam = gruppe.removeLast();
-				gruppen.get(i + 1).addFirst(floatTeam); // Float-Team wird zuerst gepaart
-			}
-		}
-		gruppen.removeIf(List::isEmpty);
 		return gruppen;
 	}
 

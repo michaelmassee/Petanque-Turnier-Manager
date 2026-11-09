@@ -83,8 +83,23 @@ Diese Logik wird häufig in Turniersoftware eingesetzt.
 - Runde 1: ein zufälliges ungesetztes Team; nur wenn alle gesetzt sind, eines aus der größten Setzgruppe
 - Wertung: 13:7 oder 13:0
 
-## 5.2 Score‑Gruppe ungerade → Float
-Das letzte Team wird in die nächste Gruppe verschoben.
+## 5.2 Score‑Gruppe ungerade → Float (Herunterlosen)
+Ist eine Sieggruppe ungerade, wird ein Team in die nächsttiefere Gruppe heruntergelost und dort zuerst gepaart.
+Welches Team, entscheidet diese Reihenfolge:
+1. nicht in der letzten Runde heruntergelost
+2. nicht in der vorletzten Runde heruntergelost
+3. bisher möglichst selten heruntergelost
+4. rangniedrigstes Team der Gruppe
+
+Ein Team, das in dieser Runde schon aus einer höheren Gruppe heruntergelost wurde, wird nicht gleich weiter
+heruntergelost (außer es ist allein in seiner Gruppe).
+
+Ein Team gilt in Runde r als heruntergelost, wenn sein Gegner vor Runde r weniger Siege hatte; Freilose zählen
+nicht. Die Historie wird aus den Spielrunden abgeleitet.
+
+Das ist ein Optimierungskriterium, kein Verbot (vgl. FIDE Dutch C.04.3, Kriterien C14/C16): Die Auslosung blockiert
+nie. Die Vermeidung von Gegnerwiederholungen (Kapitel 4) hat Vorrang – erzwingt sie eine andere Paarung, kann auch
+ein geschütztes Team die Gruppe verlassen.
 
 ## 5.3 Keine rematch‑freie Paarung möglich
 → Backtracking + ggf. Gegnerwiederholung minimal zulassen.
