@@ -251,7 +251,7 @@ C: 19 Teams → Ziel = 16 → Diff = 3 → Cadrage = 6 Teams → 3 Spiele
 aktiven Blatts aus der Wertung nehmen, z. B. eine versehentlich ausgeloste oder vor Ort abgesagte
 Runde. Ein zweiter Aufruf nimmt die Runde wieder in die Wertung auf.
 
-- Das Blatt und die Nummerierung aller Runden bleiben unverändert, der Tab wird grau.
+- Das Blatt und die Nummerierung aller Runden bleiben unverändert, der Tab wird grau, und in der Sidebar-Blätterliste erscheint der Blattname durchgestrichen.
 - Die Runde zählt **nicht in der Rangliste** (Siege, Punkte, BHZ/FBHZ).
 - Die Runde zählt **nicht in der Paarungshistorie**: Weitere Auslosungen dürfen ihre Paarungen wiederholen.
 - Bereits ausgeloste spätere Runden bleiben unverändert.

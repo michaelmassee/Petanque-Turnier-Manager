@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -34,6 +35,8 @@ import de.petanqueturniermanager.helper.random.RandomSource;
 import de.petanqueturniermanager.helper.sheet.RundenWertungHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.model.TeamMeldungen;
+import de.petanqueturniermanager.sidebar.sheets.BlattBaumEintrag.BlattKnoten;
+import de.petanqueturniermanager.sidebar.sheets.SheetBaumOrganisierer;
 
 /**
  * „Spielrunde werten / nicht werten" im Schweizer System: Eine nicht gewertete Runde zählt weder in
@@ -43,6 +46,7 @@ class SchweizerSpielrundeWertungUITest extends BaseCalcUITest {
 
 	private static final int ANZ_RUNDEN = 3;
 	private static final int NICHT_GEWERTETE_RUNDE = 2;
+	private static final String DURCHSTRICH = "\u0336";
 
 	private SchweizerTurnierTestDaten testDaten;
 	private XSpreadsheetDocument zweitesDokument;
@@ -153,6 +157,24 @@ class SchweizerSpielrundeWertungUITest extends BaseCalcUITest {
 		assertThat(SheetMetadataHelper.getSchluesselMitPrefix(doc,
 				SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_SPIELRUNDE_PREFIX))
 				.as("Markierung zählt nicht als Spielrunde").hasSize(ANZ_RUNDEN);
+	}
+
+	@Test
+	void sidebarListeStreichtNichtGewerteteRundeDurch() throws Exception {
+		turnierMitDreiRundenErstellen();
+		markiereRunde2();
+
+		Map<String, String> anzeige = new SheetBaumOrganisierer()
+				.baumAufbauen(doc, Set.of(), Set.of(), Set.of()).stream()
+				.filter(BlattKnoten.class::isInstance).map(BlattKnoten.class::cast)
+				.collect(Collectors.toMap(BlattKnoten::metadatenSchluessel, BlattKnoten::anzeigeText));
+
+		assertThat(anzeige.get(SheetMetadataHelper.schluesselSchweizerSpielrunde(NICHT_GEWERTETE_RUNDE)))
+				.as("nicht gewertete Runde durchgestrichen").contains(DURCHSTRICH);
+		assertThat(anzeige.get(SheetMetadataHelper.schluesselSchweizerSpielrunde(1)))
+				.as("gewertete Runde unverändert").isNotNull().doesNotContain(DURCHSTRICH);
+		assertThat(anzeige.get(SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_RANGLISTE))
+				.as("Rangliste unverändert").isNotNull().doesNotContain(DURCHSTRICH);
 	}
 
 	/**
