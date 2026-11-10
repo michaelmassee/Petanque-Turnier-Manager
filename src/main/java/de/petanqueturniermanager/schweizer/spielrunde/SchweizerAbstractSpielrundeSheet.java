@@ -59,6 +59,7 @@ import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.sheet.RundenWertungHelper;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
@@ -293,9 +294,11 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 			for (; spielrunde <= bisSpielrunde; spielrunde++) {
 				SheetRunner.testDoCancelTask();
 				// Iterations-Lookup: Metadaten-first (überlebt Umbenennung), Fallback auf Namen
+				String rundenSchluessel = getSpielrundeSchluessel(spielrunde);
 				XSpreadsheet sheet = SheetMetadataHelper.findeSheetUndHeile(xDoc,
-						getSpielrundeSchluessel(spielrunde), getSheetName(SpielRundeNr.from(spielrunde)));
-				if (sheet == null) {
+						rundenSchluessel, getSheetName(SpielRundeNr.from(spielrunde)));
+				if (sheet == null || RundenWertungHelper.istNichtGewertet(xDoc, sheet, rundenSchluessel)) {
+					// nicht gewertete Runden zählen auch nicht zur Paarungshistorie
 					continue;
 				}
 				Map<Integer, Integer> siegeVorRunde = siegeJeTeam(statsMap);

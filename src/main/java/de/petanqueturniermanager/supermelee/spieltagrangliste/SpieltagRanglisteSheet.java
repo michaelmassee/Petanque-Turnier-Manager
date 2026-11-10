@@ -43,6 +43,7 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.sheet.RundenWertungHelper;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
@@ -320,6 +321,12 @@ public class SpieltagRanglisteSheet extends SheetRunner implements ISpielTagRang
 			boolean hatLuecke = false;
 
 			for (int rundeNr = 1; rundeNr <= anzSpielRunden; rundeNr++) {
+				if (ergebnisse.istRundeNichtGewertet(rundeNr)) {
+					// Spalten der Runde bleiben leer, keine Ersatzpunkte, keine Lücke.
+					rundenRow.newEmpty();
+					rundenRow.newEmpty();
+					continue;
+				}
 				Optional<RundenErgebnis> erg = ergebnisse.ergebnis(rundeNr, spielerNr);
 				int plus;
 				int minus;
@@ -627,6 +634,12 @@ public class SpieltagRanglisteSheet extends SheetRunner implements ISpielTagRang
 	@Override
 	public int getAnzahlRunden() throws GenerateException {
 		return aktuelleSpielrundeSheet.countNumberOfSpielRundenSheets(getSpieltagNr());
+	}
+
+	@Override
+	public boolean istRundeNichtGewertet(int rundeNr) {
+		return RundenWertungHelper.istNichtGewertet(getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
+				SheetMetadataHelper.schluesselSupermeleeSpielrunde(getSpieltagNr().getNr(), rundeNr));
 	}
 
 	@Override

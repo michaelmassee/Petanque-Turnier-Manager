@@ -245,6 +245,22 @@ C: 19 Teams → Ziel = 16 → Diff = 3 → Cadrage = 6 Teams → 3 Spiele
 - aufwendige Software nötig (Schweizer)
 
 ---
+# 9.0 Spielrunde nicht werten (PTM)
+
+Über **„Spielrunde werten / nicht werten"** im Turniermenü lässt sich die Vorrunde des gerade
+aktiven Blatts aus der Wertung nehmen, z. B. eine versehentlich ausgeloste oder vor Ort abgesagte
+Runde. Ein zweiter Aufruf nimmt die Runde wieder in die Wertung auf.
+
+- Das Blatt und die Nummerierung aller Runden bleiben unverändert, der Tab wird grau.
+- Die Runde zählt **nicht in der Rangliste** (Siege, Punkte, BHZ/FBHZ).
+- Die Runde zählt **nicht in der Paarungshistorie**: Weitere Auslosungen dürfen ihre Paarungen wiederholen.
+- Bereits ausgeloste spätere Runden bleiben unverändert.
+- Wird die Runde neu ausgelost, ist sie wieder gewertet.
+- Nur möglich, solange noch keine Finalrunde erzeugt wurde – danach sind die Finalgruppen festgelegt.
+
+Technisch: blattgebundener Named Range `__PTM_NICHT_GEWERTET_<Rundenschlüssel>` (`RundenWertungHelper`).
+
+---
 # 9.1 Optionales Zeitplan-Feature: Rundenzeitplanung mit Durchgang-Aufteilung
 
 Die Schweizer Vorrunde des Maastrichter Systems übernimmt vollständig das Zeitplan-Feature des

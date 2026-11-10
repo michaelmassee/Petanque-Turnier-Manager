@@ -11,6 +11,7 @@ import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterCheckinList
 import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterVorrundenRanglisteSheet;
 import de.petanqueturniermanager.maastrichter.spielrunde.MaastrichterSpielrundeSheetNaechste;
 import de.petanqueturniermanager.maastrichter.spielrunde.MaastrichterSpielrundeSheetUpdate;
+import de.petanqueturniermanager.maastrichter.spielrunde.MaastrichterVorrundeWertungUmschalten;
 import de.petanqueturniermanager.toolbar.ITurnierSystemToolbarStrategie;
 
 /**
@@ -51,6 +52,16 @@ public class MaastrichterToolbarStrategie implements ITurnierSystemToolbarStrate
     @Override
     public void neuAuslosen(WorkingSpreadsheet ws) throws Exception {
         new MaastrichterSpielrundeSheetUpdate(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+    }
+
+    @Override
+    public boolean hatSpielrundeWertung() {
+        return true;
+    }
+
+    @Override
+    public void spielrundeWertungUmschalten(WorkingSpreadsheet ws) throws Exception {
+        new MaastrichterVorrundeWertungUmschalten(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
     }
 
     @Override

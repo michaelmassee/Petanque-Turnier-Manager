@@ -35,7 +35,7 @@ public class FormuleXStatusLeser {
         int hoechsteRunde = 0;
         XSpreadsheet hoechsteRundeSheet = null;
         for (int n = 1; n < 1000; n++) {
-            var schluessel = SheetMetadataHelper.SCHLUESSEL_FORMULEX_SPIELRUNDE_PREFIX + n;
+            var schluessel = SheetMetadataHelper.schluesselFormuleXSpielrunde(n);
             var sheetOpt = SheetMetadataHelper.findeSheet(xDoc, schluessel);
             if (sheetOpt.isEmpty()) {
                 break;

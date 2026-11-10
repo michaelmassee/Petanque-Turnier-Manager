@@ -10,6 +10,7 @@ import de.petanqueturniermanager.formulex.meldeliste.FormuleXCheckinListeSheet;
 import de.petanqueturniermanager.formulex.rangliste.FormuleXRanglisteSheet;
 import de.petanqueturniermanager.formulex.spielrunde.FormuleXSpielrundeSheetNaechste;
 import de.petanqueturniermanager.formulex.spielrunde.FormuleXSpielrundeSheetUpdate;
+import de.petanqueturniermanager.formulex.spielrunde.FormuleXSpielrundeWertungUmschalten;
 import de.petanqueturniermanager.toolbar.ITurnierSystemToolbarStrategie;
 
 /**
@@ -57,6 +58,16 @@ public class FormuleXToolbarStrategie implements ITurnierSystemToolbarStrategie 
     @Override
     public void neuAuslosen(WorkingSpreadsheet ws) throws Exception {
         new FormuleXSpielrundeSheetUpdate(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+    }
+
+    @Override
+    public boolean hatSpielrundeWertung() {
+        return true;
+    }
+
+    @Override
+    public void spielrundeWertungUmschalten(WorkingSpreadsheet ws) throws Exception {
+        new FormuleXSpielrundeWertungUmschalten(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
     }
 
     @Override

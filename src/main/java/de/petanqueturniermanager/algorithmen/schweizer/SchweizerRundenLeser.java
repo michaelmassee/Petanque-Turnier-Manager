@@ -19,6 +19,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.sheet.RundenWertungHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
@@ -49,7 +50,8 @@ public final class SchweizerRundenLeser {
 
 	/**
 	 * Liest die Runden 1..anzRunden ein und berechnet je Team in {@code aktiveMeldungen}
-	 * Siege, Punktedifferenz und Gegnerliste.
+	 * Siege, Punktedifferenz und Gegnerliste. Als „nicht gewertet" markierte Runden
+	 * ({@link RundenWertungHelper}) werden übersprungen.
 	 *
 	 * @param rundenMetadatenSchluessel liefert für eine Rundennummer den Named-Range-Schlüssel
 	 *                                  fürs Sheet-Lookup (Metadaten-first, überlebt Umbenennung)
@@ -74,10 +76,15 @@ public final class SchweizerRundenLeser {
 		var chronik = new HerunterlosChronik();
 		for (int runde = 1; runde <= anzRunden; runde++) {
 			SheetRunner.testDoCancelTask();
+			String rundenSchluessel = rundenMetadatenSchluessel.apply(runde);
 			XSpreadsheet rundeSheet = SheetMetadataHelper.findeSheetUndHeile(xDoc,
-					rundenMetadatenSchluessel.apply(runde), runde + ". " + rundenBasisName);
+					rundenSchluessel, runde + ". " + rundenBasisName);
 			if (rundeSheet == null) {
 				logger.debug("leseErgebnisse: Runde {} – Sheet nicht gefunden, übersprungen", runde);
+				continue;
+			}
+			if (RundenWertungHelper.istNichtGewertet(xDoc, rundeSheet, rundenSchluessel)) {
+				logger.debug("leseErgebnisse: Runde {} – nicht gewertet, übersprungen", runde);
 				continue;
 			}
 			Map<Integer, Integer> siegeVorRunde = siegeJeTeam(statsMap);

@@ -10,6 +10,7 @@ import de.petanqueturniermanager.schweizer.spielrunde.SchweizerSpielrundeSheetUp
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetUpdate;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerTeilnehmerSheet;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerCheckinListeSheet;
+import de.petanqueturniermanager.schweizer.spielrunde.SchweizerSpielrundeWertungUmschalten;
 import de.petanqueturniermanager.toolbar.ITurnierSystemToolbarStrategie;
 
 /**
@@ -52,6 +53,16 @@ public class SchweizerToolbarStrategie implements ITurnierSystemToolbarStrategie
     @Override
     public void neuAuslosen(WorkingSpreadsheet ws) throws Exception {
         new SchweizerSpielrundeSheetUpdate(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+    }
+
+    @Override
+    public boolean hatSpielrundeWertung() {
+        return true;
+    }
+
+    @Override
+    public void spielrundeWertungUmschalten(WorkingSpreadsheet ws) throws Exception {
+        new SchweizerSpielrundeWertungUmschalten(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
     }
 
     @Override

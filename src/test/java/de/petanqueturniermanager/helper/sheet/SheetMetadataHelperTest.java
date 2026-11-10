@@ -343,4 +343,42 @@ class SheetMetadataHelperTest {
 		assertThat(SheetMetadataHelper.schluesselKoTurnierbaum("A"))
 				.isEqualTo("__PTM_KO_TURNIERBAUM_A__");
 	}
+
+	// ── Zusatz-Schlüssel „nicht gewertet" ────────────────────────────────────
+
+	@Test
+	void schluesselNichtGewertet_leitetAusRundenSchluesselAb() {
+		assertThat(SheetMetadataHelper.schluesselNichtGewertet(SheetMetadataHelper.schluesselSchweizerSpielrunde(3)))
+				.isEqualTo("__PTM_NICHT_GEWERTET_SCHWEIZER_SPIELRUNDE_3__");
+		assertThat(SheetMetadataHelper.schluesselNichtGewertet(SheetMetadataHelper.schluesselSupermeleeSpielrunde(2, 4)))
+				.isEqualTo("__PTM_NICHT_GEWERTET_SUPERMELEE_SPIELRUNDE_2_4__");
+	}
+
+	@Test
+	void schluesselNichtGewertet_wirdNichtAlsRundenSchluesselMitgezaehlt() {
+		String markierung = SheetMetadataHelper
+				.schluesselNichtGewertet(SheetMetadataHelper.schluesselSchweizerSpielrunde(3));
+
+		assertThat(markierung).doesNotStartWith(SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_SPIELRUNDE_PREFIX);
+	}
+
+	@Test
+	void istZusatzSchluessel_erkenntScoreUndNichtGewertet() {
+		assertThat(SheetMetadataHelper.istZusatzSchluessel("__PTM_SCORE_KO_TURNIERBAUM_A__")).isTrue();
+		assertThat(SheetMetadataHelper.istZusatzSchluessel("__PTM_NICHT_GEWERTET_SCHWEIZER_SPIELRUNDE_1__")).isTrue();
+		assertThat(SheetMetadataHelper.istZusatzSchluessel("__PTM_SCHWEIZER_SPIELRUNDE_1__")).isFalse();
+		assertThat(SheetMetadataHelper.istZusatzSchluessel("__PTM_SCHWEIZER_RANGLISTE__")).isFalse();
+	}
+
+	@Test
+	void schreibeSheetMetadaten_zusatzSchluesselRaeumtKeineIdentitaetsSchluesselAb() throws Exception {
+		String markierung = "__PTM_NICHT_GEWERTET_SCHWEIZER_SPIELRUNDE_2__";
+		when(mockRanges.hasByName(markierung)).thenReturn(false);
+
+		SheetMetadataHelper.schreibeSheetMetadaten(mockRanges, "2. Spielrunde", 4, markierung);
+
+		// Blatt-Eindeutigkeits-Bereinigung wird für Zusatz-Schlüssel gar nicht erst durchlaufen
+		verify(mockRanges, never()).getElementNames();
+		verify(mockRanges).addNewByName(eq(markierung), eq("$'2. Spielrunde'.$A$1"), any(CellAddress.class), eq(0));
+	}
 }

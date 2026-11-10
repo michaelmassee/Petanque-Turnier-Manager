@@ -55,6 +55,11 @@ public class TripTeteToolbarStrategie implements ITurnierSystemToolbarStrategie 
     }
 
     @Override
+    public void spielrundeWertungUmschalten(WorkingSpreadsheet ws) throws Exception {
+        fallback.spielrundeWertungUmschalten(ws);
+    }
+
+    @Override
     public void abschluss(WorkingSpreadsheet ws) throws Exception {
         fallback.abschluss(ws);
     }

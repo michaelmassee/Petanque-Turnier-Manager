@@ -12,6 +12,7 @@ import de.petanqueturniermanager.supermelee.meldeliste.SupermeleeTeilnehmerSheet
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Naechste;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Update;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet;
+import de.petanqueturniermanager.supermelee.spielrunde.SupermeleeSpielrundeWertungUmschalten;
 import de.petanqueturniermanager.toolbar.ITurnierSystemToolbarStrategie;
 
 /**
@@ -54,6 +55,16 @@ public class SupermeleeToolbarStrategie implements ITurnierSystemToolbarStrategi
     @Override
     public void neuAuslosen(WorkingSpreadsheet ws) throws Exception {
         new SpielrundeSheet_Update(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+    }
+
+    @Override
+    public boolean hatSpielrundeWertung() {
+        return true;
+    }
+
+    @Override
+    public void spielrundeWertungUmschalten(WorkingSpreadsheet ws) throws Exception {
+        new SupermeleeSpielrundeWertungUmschalten(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
     }
 
     @Override

@@ -69,10 +69,19 @@ public class SpieltagRanglisteFormatter extends AbstractSuperMeleeRanglisteForma
 
 		for (int spielRunde = 1; spielRunde <= anzRunden; spielRunde++) {
 			int plusSpalte = ersteSpielRundeSpalte + ((spielRunde - 1) * 2);
+			boolean nichtGewertet = rangliste.istRundeNichtGewertet(spielRunde);
+			String kennzeichenPlus = nichtGewertet ? I18n.get("supermelee.spieltagrangliste.header.nicht.gewertet") : "+";
+			String kennzeichenMinus = nichtGewertet ? I18n.get("supermelee.spieltagrangliste.header.nicht.gewertet") : "-";
+			String kommentarPlus = nichtGewertet
+					? I18n.get("supermelee.spieltagrangliste.comment.runde.nicht.gewertet", spielRunde)
+					: I18n.get("supermelee.spieltagrangliste.comment.runde.punkte.plus", spielRunde);
+			String kommentarMinus = nichtGewertet
+					? I18n.get("supermelee.spieltagrangliste.comment.runde.nicht.gewertet", spielRunde)
+					: I18n.get("supermelee.spieltagrangliste.comment.runde.punkte.minus", spielRunde);
 			getSheetHelper().setStringValueInCell(
-					headerPlus.spalte(plusSpalte).setComment(I18n.get("supermelee.spieltagrangliste.comment.runde.punkte.plus", spielRunde)));
+					headerPlus.spalte(plusSpalte).setValue(kennzeichenPlus).setComment(kommentarPlus));
 			getSheetHelper().setStringValueInCell(
-					headerMinus.spalte(plusSpalte + 1).setComment(I18n.get("supermelee.spieltagrangliste.comment.runde.punkte.minus", spielRunde)));
+					headerMinus.spalte(plusSpalte + 1).setValue(kennzeichenMinus).setComment(kommentarMinus));
 
 			// Runden Counter
 			StringCellValue headerRndCounter = StringCellValue.from(headerPlus).setValue(spielRunde)

@@ -86,7 +86,7 @@ public class SheetBaumOrganisierer {
         // in SheetMetadataHelper bereinigt sie dauerhaft bei der nächsten Metadaten-Schreibung).
         var belegteBlaetter = new HashSet<String>();
         for (var schluessel : allKeys) {
-            if (schluessel.startsWith("__PTM_SCORE_")) {
+            if (SheetMetadataHelper.istZusatzSchluessel(schluessel)) {
                 continue;
             }
             var gruppeOpt = SheetGruppe.fuerSchluessel(schluessel);

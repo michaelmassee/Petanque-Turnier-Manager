@@ -66,6 +66,18 @@ public interface ITurnierSystemToolbarStrategie {
     }
 
     /**
+     * Schaltet für das aktive Spielrunden-Blatt um, ob die Runde gewertet wird (Rangliste und
+     * Paarungshistorie). Nur für Systeme mit frei ausgelosten Spielrunden implementiert;
+     * alle anderen Systeme delegieren an {@link de.petanqueturniermanager.toolbar.strategie.NichtVerfuegbarToolbarStrategie}.
+     */
+    void spielrundeWertungUmschalten(WorkingSpreadsheet ws) throws Exception;
+
+    /** Gibt zurück, ob dieses Turniersystem „Spielrunde werten / nicht werten" unterstützt. */
+    default boolean hatSpielrundeWertung() {
+        return false;
+    }
+
+    /**
      * Wechselt zum nächsten Spieltag. Nur relevant für Systeme mit mehreren Spieltagen.
      * Standard-Implementierung wirft {@link UnsupportedOperationException}.
      */

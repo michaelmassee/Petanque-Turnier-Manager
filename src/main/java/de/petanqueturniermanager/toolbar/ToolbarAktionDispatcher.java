@@ -66,6 +66,14 @@ public final class ToolbarAktionDispatcher {
     }
 
     /**
+     * Schaltet die Wertung der aktiven Spielrunde des aktiven Turniersystems um.
+     */
+    public static void spielrundeWertungUmschalten(WorkingSpreadsheet ws) throws Exception {
+        TurnierSystem system = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();
+        TurnierSystemToolbarStrategieRegistry.get(system).spielrundeWertungUmschalten(ws);
+    }
+
+    /**
      * Startet die Abschlussphase des aktiven Turniersystems.
      */
     public static void abschluss(WorkingSpreadsheet ws) throws Exception {

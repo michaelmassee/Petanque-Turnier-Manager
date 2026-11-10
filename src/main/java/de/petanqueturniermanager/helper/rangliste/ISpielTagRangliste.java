@@ -8,4 +8,9 @@ import de.petanqueturniermanager.exception.GenerateException;
 
 public interface ISpielTagRangliste extends IRangliste {
 	int getAnzahlRunden() throws GenerateException;
+
+	/**
+	 * @return true, wenn die Spielrunde {@code rundeNr} des Spieltags als „nicht gewertet" markiert ist
+	 */
+	boolean istRundeNichtGewertet(int rundeNr);
 }

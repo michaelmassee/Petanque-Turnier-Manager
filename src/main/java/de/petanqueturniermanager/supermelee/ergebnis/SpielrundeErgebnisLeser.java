@@ -21,6 +21,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.sheet.RundenWertungHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
@@ -61,7 +62,8 @@ public final class SpielrundeErgebnisLeser {
 	 * Liest alle {@code anzRunden} Spielrunden des Spieltags.
 	 *
 	 * @param anzRunden Anzahl Spielrunden ({@code 1..anzRunden}); werden positiv erwartet
-	 * @return Aggregat mit Ergebnis-Maps pro Runde sowie der Menge nicht gespielter Runden
+	 * @return Aggregat mit Ergebnis-Maps pro Runde sowie den Mengen nicht gespielter und
+	 *         nicht gewerteter Runden
 	 */
 	public SpieltagErgebnisse lese(int anzRunden) throws GenerateException {
 		SpieltagErgebnisse ergebnisse = new SpieltagErgebnisse();
@@ -74,6 +76,11 @@ public final class SpielrundeErgebnisLeser {
 			if (sheet == null) {
 				logger.warn("Spielrunde-Sheet {}.{} nicht gefunden", spielTag.getNr(), rundeNr);
 				ergebnisse.nichtGespielteRunden.add(rundeNr);
+				continue;
+			}
+			if (RundenWertungHelper.istNichtGewertet(xDoc, sheet, schluessel)) {
+				// Nicht gewertete Runde: weder Ergebnisse noch Ersatzpunkte für "nicht gespielt".
+				ergebnisse.nichtGewerteteRunden.add(rundeNr);
 				continue;
 			}
 			// Vertikale Ergebnis-Spalten T/U sind formel-getrieben aus den horizontalen
@@ -151,6 +158,7 @@ public final class SpielrundeErgebnisLeser {
 
 		private final Map<Integer, Map<Integer, RundenErgebnis>> proRunde = new HashMap<>();
 		private final Set<Integer> nichtGespielteRunden = new HashSet<>();
+		private final Set<Integer> nichtGewerteteRunden = new HashSet<>();
 
 		SpieltagErgebnisse() { }
 
@@ -171,6 +179,14 @@ public final class SpielrundeErgebnisLeser {
 		/** True, wenn die Runde keine Ergebnisse enthält (oder das Sheet fehlt). */
 		public boolean istRundeNichtGespielt(int rundeNr) {
 			return nichtGespielteRunden.contains(rundeNr);
+		}
+
+		/**
+		 * True, wenn die Runde als „nicht gewertet" markiert ist. Sie zählt dann weder mit
+		 * Ergebnissen noch mit Ersatzpunkten in der Rangliste.
+		 */
+		public boolean istRundeNichtGewertet(int rundeNr) {
+			return nichtGewerteteRunden.contains(rundeNr);
 		}
 	}
 }

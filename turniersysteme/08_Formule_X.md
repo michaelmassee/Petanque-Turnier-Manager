@@ -241,6 +241,22 @@ Große Unterschiede in der Spielstärke werden durch hohe Siegaufschläge verst�
 - Formule‑X wird idealerweise mit Turniersoftware (PTM etc.) gespielt
 
 ---
+# 8.3a Spielrunde nicht werten (PTM)
+
+Über **„Spielrunde werten / nicht werten"** im Turniermenü lässt sich die Spielrunde des gerade
+aktiven Blatts aus der Wertung nehmen, z. B. eine versehentlich ausgeloste oder vor Ort abgesagte
+Runde. Ein zweiter Aufruf nimmt die Runde wieder in die Wertung auf.
+
+- Das Blatt und die Nummerierung aller Runden bleiben unverändert, der Tab wird grau.
+- Die Runde zählt **nicht in der Rangliste** (Siege, Punkte).
+- Die Runde zählt **nicht in der Paarungshistorie**: Weitere Auslosungen dürfen ihre Paarungen wiederholen.
+- Bereits ausgeloste spätere Runden bleiben unverändert.
+- Wird die Runde neu ausgelost, ist sie wieder gewertet.
+- Der Siegaufschlag richtet sich weiterhin nach der Anzahl der Spielrunden des Turniers.
+
+Technisch: blattgebundener Named Range `__PTM_NICHT_GEWERTET_<Rundenschlüssel>` (`RundenWertungHelper`).
+
+---
 # 8.4 Optionales Zeitplan-Feature: Rundenzeitplanung mit Durchgang-Aufteilung
 
 Reichen die verfügbaren Bahnen nicht für alle Paarungen einer Runde, kann PTM die Runde
