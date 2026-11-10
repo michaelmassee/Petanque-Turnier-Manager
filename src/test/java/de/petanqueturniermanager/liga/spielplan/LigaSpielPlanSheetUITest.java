@@ -16,6 +16,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellvalue.properties.ICommonProperties;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.sheet.FehlerregelAuswertung;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.XPropertyHelper;
 import de.petanqueturniermanager.helper.sheet.numberformat.NumberFormatHelper;
@@ -143,12 +144,13 @@ public class LigaSpielPlanSheetUITest extends BaseCalcUITest {
 		// Zeile 1: Team A gewinnt (SiegeA=1, SiegeB=0)
 		// Zeile 2: Team B gewinnt (SiegeA=0, SiegeB=1)
 		// Zeile 3: noch kein Ergebnis (SiegeA/SiegeB leer)
-		RangeData siege = new RangeData(new Object[][] { { 1, 0 }, { 0, 1 }, { "", "" } });
+		// Zeile 4: ungültiger Gleichstand (Liga kennt kein Unentschieden)
+		RangeData siege = new RangeData(new Object[][] { { 1, 0 }, { 0, 1 }, { "", "" }, { 2, 2 } });
 		RangeHelper.from(spielPlan.getXSpreadSheet(), wkingSpreadsheet.getWorkingSpreadsheetDocument(),
 				RangePosition.from(LigaSpielPlanSheet.SPIELE_A_SPALTE,
 						LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE,
 						LigaSpielPlanSheet.SPIELE_B_SPALTE,
-						LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE + 2))
+						LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE + 3))
 				.setDataInRange(siege);
 		Lo.qi(XCalculatable.class, doc).calculateAll();
 
@@ -158,10 +160,10 @@ public class LigaSpielPlanSheetUITest extends BaseCalcUITest {
 				RangePosition.from(LigaSpielPlanSheet.PUNKTE_A_SPALTE,
 						LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE,
 						LigaSpielPlanSheet.PUNKTE_B_SPALTE,
-						LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE + 2))
+						LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE + 3))
 				.getDataFromRange();
 
-		assertThat(punkte).as("Drei Ergebniszeilen erwartet").hasSize(3);
+		assertThat(punkte).as("Vier Ergebniszeilen erwartet").hasSize(4);
 		// Zeile 1: Team A gewinnt
 		assertThat(punkte.get(0).get(0).getIntVal()).as("Zeile 1: Punkte A (Gewinner)").isEqualTo(1);
 		assertThat(punkte.get(0).get(1).getIntVal()).as("Zeile 1: Punkte B (Verlierer)").isEqualTo(0);
@@ -171,6 +173,37 @@ public class LigaSpielPlanSheetUITest extends BaseCalcUITest {
 		// Zeile 3: noch kein Ergebnis
 		assertThat(punkte.get(2).get(0).getStringVal()).as("Zeile 3: Punkte A leer").isEmpty();
 		assertThat(punkte.get(2).get(1).getStringVal()).as("Zeile 3: Punkte B leer").isEmpty();
+		// Zeile 4: Gleichstand wird nicht als 0 : 0 gewertet
+		assertThat(punkte.get(3).get(0).getStringVal()).as("Zeile 4: Punkte A leer bei Gleichstand").isEmpty();
+		assertThat(punkte.get(3).get(1).getStringVal()).as("Zeile 4: Punkte B leer bei Gleichstand").isEmpty();
+	}
+
+	/**
+	 * Gleich viele Siege sind in der Liga ungültig: beide Siege-Zellen der Zeile werden rot markiert,
+	 * gültige oder noch leere Ergebnisse nicht.
+	 */
+	@Test
+	public void testSiegeGleichstandWirdRotMarkiert() throws Exception {
+		LigaSpielPlanSheet spielPlan = new LigaSpielPlanSheet(wkingSpreadsheet);
+		spielPlan.run();
+		XSpreadsheet sheet = spielPlan.getXSpreadSheet();
+		int ersteZeile = LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE;
+
+		RangeData siege = new RangeData(new Object[][] { { 3, 2 }, { "", "" }, { 3, 3 } });
+		RangeHelper.from(sheet, wkingSpreadsheet.getWorkingSpreadsheetDocument(),
+				RangePosition.from(LigaSpielPlanSheet.SPIELE_A_SPALTE, ersteZeile,
+						LigaSpielPlanSheet.SPIELE_B_SPALTE, ersteZeile + 2))
+				.setDataInRange(siege);
+		Lo.qi(XCalculatable.class, doc).calculateAll();
+
+		for (int spalte : new int[] { LigaSpielPlanSheet.SPIELE_A_SPALTE, LigaSpielPlanSheet.SPIELE_B_SPALTE }) {
+			assertThat(FehlerregelAuswertung.greift(sheet, spalte, ersteZeile))
+					.as("3 : 2 ist gültig, Spalte %d", spalte).isFalse();
+			assertThat(FehlerregelAuswertung.greift(sheet, spalte, ersteZeile + 1))
+					.as("leeres Ergebnis ist kein Fehler, Spalte %d", spalte).isFalse();
+			assertThat(FehlerregelAuswertung.greift(sheet, spalte, ersteZeile + 2))
+					.as("3 : 3 ist ungültig, Spalte %d", spalte).isTrue();
+		}
 	}
 
 	@Test

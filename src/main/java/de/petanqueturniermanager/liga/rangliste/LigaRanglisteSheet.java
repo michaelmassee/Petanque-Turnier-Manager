@@ -258,14 +258,24 @@ public class LigaRanglisteSheet extends SheetRunner implements ISheet, IRanglist
 				continue;
 			}
 
-			if (pktA <= 0 && pktB <= 0 && spA <= 0 && spB <= 0 && spPktA <= 0 && spPktB <= 0) {
-				continue; // noch nicht gespielt
+			if (!hatEindeutigenSieger(spA, spB)) {
+				// noch nicht gespielt oder ungültiger Gleichstand (Liga kennt kein Unentschieden,
+				// der Spielplan markiert ihn rot) → zählt nicht in die Rangliste
+				continue;
 			}
 
 			statsMap.computeIfPresent(nrA, (k, s) -> s.plus(pktA, pktB, spA, spB, spPktA, spPktB));
 			statsMap.computeIfPresent(nrB, (k, s) -> s.plus(pktB, pktA, spB, spA, spPktB, spPktA));
 		}
 		return statsMap;
+	}
+
+	/**
+	 * Eine Begegnung zählt erst, wenn eine Mannschaft mehr Siege hat. Gleich viele Siege (auch 0 : 0 = noch nicht
+	 * gespielt) sind in der Liga kein gültiges Ergebnis.
+	 */
+	static boolean hatEindeutigenSieger(int siegeHeim, int siegeGast) {
+		return siegeHeim != siegeGast;
 	}
 
 	private void schreibeDatenAlsWerte(XSpreadsheet sheet, List<LigaTeamStats> sortiert) throws GenerateException {

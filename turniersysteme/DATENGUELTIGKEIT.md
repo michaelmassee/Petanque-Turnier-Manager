@@ -15,6 +15,7 @@ Werte und I18n-Schlüssel (`DatengueltigkeitHelper.Meldungen`).
 | Setzposition (SP) | leer, ganze Zahl ≥ 0 | **abgelehnt** | `DatengueltigkeitHelper.setzeNichtNegativeGanzzahl` |
 | Mêlée-Check-in | leer, `X` | **abgelehnt** | `MeldeListeHelper.setzeMeleeEingechecktDatengueltigkeit` → `setzeTextListe` |
 | Spielergebnisse (Spielrunden, JGJ, KO-Turnierbaum, Trip-Tête) | leer, ganze Zahl 0–13 (Trip-Tête: 0–Spielziel) | **bleibt stehen**, rot markiert – **keine** Gültigkeitsregel, keine Eingabehilfe | nur bedingte Formatierung; `DatengueltigkeitHelper.entfernePruefungFuerSpielpunkte` räumt alte Regeln ab |
+| Siege (Liga-Spielplan) | leer, ungleiche Siege Heim/Gast | Gleichstand **bleibt stehen**, beide Zellen rot (Liga kennt kein Unentschieden); Punkte H/G bleiben leer, Begegnung zählt nicht in der Rangliste | nur bedingte Formatierung, `LigaSpielPlanSheet.formelSiegeGleichstand` |
 | Spielbahn (manuell, Modus „L“) | leer, positive ganze Zahl, **beliebiger Text** | nur **Warnung**, bestätigbar | `DatengueltigkeitHelper.setzeBahnDatengueltigkeit` |
 
 Leere Zellen sind überall erlaubt (`IgnoreBlankCells`): leer bedeutet „nicht dabei“ bzw. „noch
