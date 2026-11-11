@@ -139,7 +139,7 @@ class SchweizerMeldeListeNeueZeileUITest extends BaseCalcUITest {
 		try {
 			TurnierModus.get().setAktivForTest(true);
 			BlattschutzManager.get().schuetzen(SchweizerBlattschutzKonfiguration.get(), wkingSpreadsheet);
-			try (var scope = BlattschutzManager.get().scopeFuer(TurnierSystem.SCHWEIZER, wkingSpreadsheet)) {
+			try (var _ = BlattschutzManager.get().scopeFuer(TurnierSystem.SCHWEIZER, wkingSpreadsheet)) {
 				meldeListe.doSort(meldeListe.getTeamNrSpalte(), false);
 			}
 			assertThat(sheetHlp.getIntFromCell(meldeListe.getXSpreadSheet(),
@@ -154,7 +154,7 @@ class SchweizerMeldeListeNeueZeileUITest extends BaseCalcUITest {
 	/** Wie der Spieler-DB-Dialog: Schreiben im eigenen Blattschutz-Scope. */
 	private void uebernehmen(String[][] meldungen) throws MeldelisteSchreibException {
 		MeldelisteZiel ziel = MeldelisteZielFactory.fuerAktivesSheet(wkingSpreadsheet).orElseThrow();
-		try (var scope = BlattschutzManager.get().scopeFuer(TurnierSystem.SCHWEIZER, wkingSpreadsheet)) {
+		try (var _ = BlattschutzManager.get().scopeFuer(TurnierSystem.SCHWEIZER, wkingSpreadsheet)) {
 			for (String[] meldung : meldungen) {
 				ziel.schreibeBlock(List.of(spieler(meldung[0], meldung[1]), spieler(meldung[2], meldung[3])));
 			}
