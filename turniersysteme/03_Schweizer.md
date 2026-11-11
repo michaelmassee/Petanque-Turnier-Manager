@@ -92,8 +92,8 @@ deren BHZ normal mit. Welchen BHZ/FBHZ-Beitrag das Freilos dem Freilos-Team selb
 
 | Modus | Beitrag je Freilos | Verwendung |
 |---|---|---|
-| **NULL** | 0 BHZ, 0 FBHZ | BPV-Regel; Bestandsturniere ohne Einstellung |
-| **NEUTRAL** | BHZ `⌊(r − 1) / 2⌋`, FBHZ `eigene Siege + (r − 1) · r / 2` | Standard für neu angelegte Turniere |
+| **NULL** | 0 BHZ, 0 FBHZ | BPV-Regel; **Standard** (auch für neu angelegte Turniere) |
+| **NEUTRAL** | BHZ `⌊(r − 1) / 2⌋`, FBHZ `eigene Siege + (r − 1) · r / 2` | Option; bevorzugt Freilos-Teams (siehe unten) |
 
 `r` = Anzahl gewerteter Runden mit mindestens einem eingetragenen Ergebnis. Ein Freilos zählt nur, wenn seine Runde
 in `r` zählt – eine ausgeloste, aber ungespielte Runde verändert BHZ/FBHZ nicht.
@@ -113,9 +113,24 @@ Produkt zweier aufeinanderfolgender Zahlen gerade ist.
 | 4 | 3 | 1 | 9 |
 | 5 | 3 | 2 | 13 |
 
-Nach Runde 1 hat das Freilos-Team damit BHZ 0 / FBHZ 1 – genau wie jeder andere Sieger. Mit NULL hätte es FBHZ 0,
-stünde systematisch am Ende der Sieger und läge nach 5 Runden typischerweise 2–3 BHZ-Punkte hinter einem gleich
-starken Team.
+Nach Runde 1 hat das Freilos-Team damit BHZ 0 / FBHZ 1 – genau wie jeder andere Sieger. Mit NULL hat es FBHZ 0,
+steht am Ende seiner Sieggruppe und liegt nach 5 Runden typischerweise 2–3 BHZ-Punkte hinter einem gleich starken
+Team.
+
+**Warum NULL der Standard ist (Simulation, Issue #38):** Das Freilos ist ein geschenkter Sieg – gegen einen
+typischen Gegner im Schnitt rund 0,6 Siege wert. Dadurch landet das Freilos-Team in einer höheren Sieggruppe, als es
+erspielt hat. NULL setzt es dort ans Ende und gleicht den geschenkten Sieg so weitgehend aus; NEUTRAL nimmt diesen
+Ausgleich weg. Simulation mit der Online-Auslosung (Teams mit bekannter Spielstärke, 5 Runden; Vorteil = Plätze
+besser als ein gleich starkes Team ohne Freilos, Freilos ab Runde 2 im Vergleich zum Team direkt darüber):
+
+| Feld | NULL (Freilos R1 / ab R2) | NEUTRAL (Freilos R1 / ab R2) | BHZ des schlechtesten Teams (NRW) |
+|---|---|---|---|
+| 15 Teams | −0,8 / −0,5 | +0,2 / +0,1 | +2,1 / +1,4 |
+| 25 Teams | ±0 / +0,4 | +1,8 / +1,3 | +4,4 / +3,6 |
+| 57 Teams | +2,2 / +2,3 | +6,6 / +4,7 | +11,5 / +10,4 |
+
+NULL kommt einer fairen Wertung am nächsten; NEUTRAL bleibt als Option für Ausrichter, die das Freilos-Team nicht
+ans Ende seiner Sieggruppe setzen wollen.
 
 Berechnung in zwei Schritten, ohne Rekursion: (1) BHZ = Siege der echten Gegner + Freilos-Beiträge; (2) FBHZ =
 **korrigierte** BHZ der echten Gegner + eigene FBHZ-Freilos-Beiträge. So profitieren auch die echten Gegner des

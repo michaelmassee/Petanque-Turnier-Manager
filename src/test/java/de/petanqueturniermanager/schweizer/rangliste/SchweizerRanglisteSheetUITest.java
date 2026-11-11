@@ -646,8 +646,8 @@ public class SchweizerRanglisteSheetUITest extends BaseCalcUITest {
 	// ── Issue #38 Punkt 1: Freilos-Buchholz NEUTRAL ─────────────────────────────
 
 	/**
-	 * Neue Turniere rechnen mit Freilos-Buchholz NEUTRAL: Nach Runde 1 (15 Teams, ein Freilos) hat das Freilos-Team
-	 * BHZ 0 und FBHZ 1 wie jeder andere Sieger. Eine danach nur ausgeloste, ungespielte Runde 2 zählt nicht als
+	 * Neue Turniere starten mit Freilos-Buchholz NULL. Mit NEUTRAL hat das Freilos-Team nach Runde 1 (15 Teams, ein
+	 * Freilos) BHZ 0 und FBHZ 1 wie jeder andere Sieger. Eine danach nur ausgeloste, ungespielte Runde 2 zählt nicht als
 	 * gewertete Runde – sonst stiege die FBHZ von 1 auf 2.
 	 */
 	@Test
@@ -656,9 +656,11 @@ public class SchweizerRanglisteSheetUITest extends BaseCalcUITest {
 		int anzTeams = 15;
 		var ungeradeTestDaten = new SchweizerTurnierTestDaten(wkingSpreadsheet, anzTeams, TeamAnzeige.NR);
 		ungeradeTestDaten.generate(1, false);
-		assertThat(ungeradeTestDaten.naechsteSpielrunde.getKonfigurationSheet().getFreilosBuchholzModus())
-				.as("Neu angelegtes Turnier muss Freilos-Buchholz NEUTRAL haben")
-				.isEqualTo(SchweizerFreilosBuchholzModus.NEUTRAL);
+		var konfig = ungeradeTestDaten.naechsteSpielrunde.getKonfigurationSheet();
+		assertThat(konfig.getFreilosBuchholzModus())
+				.as("Neu angelegtes Turnier muss Freilos-Buchholz NULL haben")
+				.isEqualTo(SchweizerFreilosBuchholzModus.NULL);
+		konfig.setFreilosBuchholzModus(SchweizerFreilosBuchholzModus.NEUTRAL);
 		int freilosTeamNr = freilosTeamNr(1);
 
 		new SchweizerRanglisteSheet(wkingSpreadsheet).doRun();

@@ -133,8 +133,8 @@ public class SchweizerPropertiesSpalte extends TeamAnzeigePropertiesSpalte imple
 				.addAuswahl(SchweizerRankingModus.OHNE_BUCHHOLZ.name(),
 						I18n.get("dialog.schweizer.ranking.ohne.buchholz")));
 
-		// Default NULL: Bestandsdokumente ohne diese Property rechnen unverändert (BPV-Regel). Neue Turniere
-		// setzen beim Anlegen NEUTRAL (SchweizerMeldeListeSheetNew / MaastrichterMeldeListeSheetNew).
+		// Default NULL (BPV-Regel), auch für neue Turniere: NULL gleicht den geschenkten Sieg des Freiloses am besten
+		// aus, NEUTRAL bevorzugt Freilos-Teams (Simulation, 03_Schweizer.md 5.1).
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_FREILOS_BUCHHOLZ)
 				.setDefaultVal(SchweizerFreilosBuchholzModus.NULL.name())
 				.setDescription("config.desc.schweizer.freilos.buchholz")
