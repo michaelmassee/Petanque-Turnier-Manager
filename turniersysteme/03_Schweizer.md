@@ -125,6 +125,13 @@ Quellen und Abgrenzung:
 - NEUTRAL ist eine eigene PTM-Regel. Geprüft und nicht übernommen (Issue #35/#38): FAQ des Pétanque-Verbands NRW
   (BHZ des schlechtesten Teams) und FIDE C.07 Art. 16.4 (virtueller Gegner, schachspezifisch).
 
+### Freilos-Spalte in der Rangliste (Issue #18)
+Die Rangliste zeigt rechts eine Spalte „Freilos“ mit den Runden, in denen ein Team ein Freilos hatte („2“ bzw.
+„1, 3, 6“, ohne Freilos leer). Gezählt wird jede ausgeloste, gewertete Runde – auch wenn dort noch kein Ergebnis
+eingetragen ist, denn das Freilos zählt bereits als Sieg. Nicht gewertete Runden fehlen. Die Spalte ist nur
+sichtbar, wenn die Einstellung „Rangliste Freilos Spalte“ aktiv ist (Default: an) **und** mindestens ein Freilos
+vergeben wurde. Sie ist kein Sortierkriterium und wird bei jedem Ranglisten-Update neu geschrieben.
+
 ## 5.2 Score‑Gruppe ungerade → Float (Herunterlosen)
 Ist eine Sieggruppe ungerade, wird ein Team in die nächsttiefere Gruppe heruntergelost und dort zuerst gepaart.
 Welches Team, entscheidet diese Reihenfolge:

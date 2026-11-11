@@ -2,7 +2,9 @@ package de.petanqueturniermanager.schweizer.rangliste;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -444,6 +446,88 @@ public class SchweizerRanglisteSheetUITest extends BaseCalcUITest {
 		assertThat(freilosZeile.get(SchweizerRanglisteSheet.PUNKTE_DIFF_SPALTE).getIntVal(Integer.MIN_VALUE))
 				.as("Punkte-Differenz des Freilos-Teams muss Freispiel+ - Freispiel- sein")
 				.isEqualTo(freispielPlus - freispielMinus);
+	}
+
+	/**
+	 * Issue #18: Die Freilos-Spalte zeigt je Team die Runden mit Freilos („1, 3“), Teams ohne Freilos
+	 * bleiben leer. Bei ungerader Teamanzahl ist die Spalte sichtbar.
+	 */
+	@Test
+	public void testFreilosSpalteZeigtFreilosRunden() throws GenerateException {
+		int anzTeamsUngerade = ANZ_TEAMS + 1;
+		testDaten = new SchweizerTurnierTestDaten(wkingSpreadsheet, anzTeamsUngerade, TeamAnzeige.NR);
+		testDaten.generate(ANZ_RUNDEN, true);
+
+		Map<Integer, String> erwartet = erwarteteFreilosTexte(anzTeamsUngerade);
+		assertThat(erwartet).as("Bei ungerader Teamanzahl muss es Freilose geben").isNotEmpty();
+
+		var rangliste = new SchweizerRanglisteSheetUpdate(wkingSpreadsheet);
+		XSpreadsheet sheet = rangliste.getXSpreadSheet();
+		assertThat(istSpalteSichtbar(sheet, rangliste.freilosSpalte()))
+				.as("Freilos-Spalte muss bei vergebenem Freilos sichtbar sein").isTrue();
+		assertThat(leseFreilosTexte(sheet, rangliste.freilosSpalte(), anzTeamsUngerade))
+				.as("Freilos-Spalte muss je Team die Freilos-Runden zeigen")
+				.isEqualTo(erwartet);
+	}
+
+	@Test
+	public void testFreilosSpalteAusgeblendetOhneFreilos() throws GenerateException {
+		testDaten.generate(1, true);
+
+		var rangliste = new SchweizerRanglisteSheetUpdate(wkingSpreadsheet);
+		assertThat(istSpalteSichtbar(rangliste.getXSpreadSheet(), rangliste.freilosSpalte()))
+				.as("Bei gerader Teamanzahl gibt es kein Freilos – Spalte muss ausgeblendet sein").isFalse();
+	}
+
+	@Test
+	public void testFreilosSpalteFolgtDerEinstellungImUpdatePfad() throws GenerateException {
+		testDaten = new SchweizerTurnierTestDaten(wkingSpreadsheet, ANZ_TEAMS + 1, TeamAnzeige.NR);
+		testDaten.generate(1, true);
+		var konfiguration = testDaten.naechsteSpielrunde.getKonfigurationSheet();
+		assertThat(konfiguration.isRanglisteFreilosSpalteAnzeigen()).as("Default der Einstellung").isTrue();
+
+		konfiguration.setRanglisteFreilosSpalteAnzeigen(false);
+		var rangliste = new SchweizerRanglisteSheetUpdate(wkingSpreadsheet);
+		rangliste.doRun();
+		assertThat(istSpalteSichtbar(rangliste.getXSpreadSheet(), rangliste.freilosSpalte()))
+				.as("Einstellung aus – Spalte muss ausgeblendet sein").isFalse();
+
+		konfiguration.setRanglisteFreilosSpalteAnzeigen(true);
+		rangliste = new SchweizerRanglisteSheetUpdate(wkingSpreadsheet);
+		rangliste.doRun();
+		assertThat(istSpalteSichtbar(rangliste.getXSpreadSheet(), rangliste.freilosSpalte()))
+				.as("Einstellung wieder an – Spalte muss sichtbar sein").isTrue();
+	}
+
+	/** Ermittelt aus allen Spielrunden TeamNr → erwarteter Text der Freilos-Spalte. */
+	private Map<Integer, String> erwarteteFreilosTexte(int anzTeams) throws GenerateException {
+		Map<Integer, String> erwartet = new HashMap<>();
+		for (int runde = 1; runde <= ANZ_RUNDEN; runde++) {
+			XSpreadsheet rundeSheet = sheetHlp.findByName(runde + ". " + SchweizerAbstractSpielrundeSheet.SHEET_NAMEN);
+			assertThat(rundeSheet).as("%d. Spielrunde muss existieren", runde).isNotNull();
+			int freilosTeamNr = ermittleFreilosTeamNr(rundeSheet, anzTeams);
+			if (freilosTeamNr > 0) {
+				erwartet.merge(freilosTeamNr, String.valueOf(runde), (alt, neu) -> alt + ", " + neu);
+			}
+		}
+		return erwartet;
+	}
+
+	/** Liest TeamNr → Inhalt der Freilos-Spalte; leere Zellen werden ausgelassen. */
+	private Map<Integer, String> leseFreilosTexte(XSpreadsheet sheet, int freilosSpalte, int anzTeams)
+			throws GenerateException {
+		RangePosition range = RangePosition.from(SchweizerRanglisteSheet.TEAM_NR_SPALTE,
+				SchweizerRanglisteSheet.ERSTE_DATEN_ZEILE, freilosSpalte,
+				SchweizerRanglisteSheet.ERSTE_DATEN_ZEILE + anzTeams - 1);
+		Map<Integer, String> texte = new HashMap<>();
+		for (RowData row : RangeHelper.from(sheet, wkingSpreadsheet.getWorkingSpreadsheetDocument(), range)
+				.getDataFromRange()) {
+			String text = row.get(freilosSpalte).getStringVal();
+			if (text != null && !text.isEmpty()) {
+				texte.put(row.get(SchweizerRanglisteSheet.TEAM_NR_SPALTE).getIntVal(-1), text);
+			}
+		}
+		return texte;
 	}
 
 	/**

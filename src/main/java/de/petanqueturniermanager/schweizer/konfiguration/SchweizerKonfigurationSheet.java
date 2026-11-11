@@ -201,6 +201,16 @@ public class SchweizerKonfigurationSheet extends BaseKonfigurationSheet
 	}
 
 	@Override
+	public boolean isRanglisteFreilosSpalteAnzeigen() {
+		return propertiesSpalte.isRanglisteFreilosSpalteAnzeigen();
+	}
+
+	@Override
+	public void setRanglisteFreilosSpalteAnzeigen(boolean anzeigen) {
+		propertiesSpalte.setRanglisteFreilosSpalteAnzeigen(anzeigen);
+	}
+
+	@Override
 	public Integer getFreispielPunktePlus() {
 		return getPropertiesSpalte().getFreispielPunktePlus();
 	}

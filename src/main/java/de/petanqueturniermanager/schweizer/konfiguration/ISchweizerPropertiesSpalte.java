@@ -68,4 +68,12 @@ public interface ISchweizerPropertiesSpalte extends de.petanqueturniermanager.ba
 
 	void setFreilosBuchholzModus(SchweizerFreilosBuchholzModus modus);
 
+	/**
+	 * @return {@code true}, wenn die Rangliste die Spalte mit den Freilos-Runden je Team zeigen soll (sichtbar nur,
+	 *         wenn tatsächlich ein Freilos vergeben wurde)
+	 */
+	boolean isRanglisteFreilosSpalteAnzeigen();
+
+	void setRanglisteFreilosSpalteAnzeigen(boolean anzeigen);
+
 }

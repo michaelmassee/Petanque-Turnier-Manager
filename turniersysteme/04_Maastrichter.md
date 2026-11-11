@@ -44,6 +44,9 @@ Gleiche Regeln wie im Schweizer System (siehe Kapitel 3):
 - Float bei ungerader Gruppenanzahl
 - Freilos bei ungerader Gesamtzahl
 
+Die Vorrunden-Rangliste zeigt rechts der Gruppe-Spalte die Freilos-Runden je Team (Einstellung „Rangliste Freilos
+Spalte“, siehe Kapitel 3, Abschnitt 5.1).
+
 ---
 # 3. Aufteilung in A-, B-, C- und D-Turniere
 

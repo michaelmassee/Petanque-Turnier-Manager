@@ -324,14 +324,14 @@ public class MaastrichterTurnierTestDatenUITest extends BaseCalcUITest {
 				SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDEN_RANGLISTE, null);
 		assertThat(rangliste).as("Maastrichter Vorrunden-Rangliste muss existieren").isNotNull();
 
-		int letzteDatenZeile = new MaastrichterVorrundenRanglisteSheetUpdate(wkingSpreadsheet)
-				.sucheLetzteZeileMitSpielerNummer();
+		var ranglisteUpdate = new MaastrichterVorrundenRanglisteSheetUpdate(wkingSpreadsheet);
+		int letzteDatenZeile = ranglisteUpdate.sucheLetzteZeileMitSpielerNummer();
 		assertThat(letzteDatenZeile)
 				.as("Die Vorrunden-Rangliste muss genau %d Teamzeilen haben", anzTeams)
 				.isEqualTo(SchweizerRanglisteSheet.ERSTE_DATEN_ZEILE + anzTeams - 1);
 		int ersteZeileUnterDaten = letzteDatenZeile + 1;
 		int footerZeile = ersteZeileUnterDaten + 1;
-		for (int spalte = SchweizerRanglisteSheet.TEAM_NR_SPALTE; spalte <= SchweizerRanglisteSheet.VALIDATE_SPALTE; spalte++) {
+		for (int spalte = SchweizerRanglisteSheet.TEAM_NR_SPALTE; spalte <= ranglisteUpdate.validateSpalte(); spalte++) {
 			assertThat(cellBackColor(rangliste, spalte, ersteZeileUnterDaten))
 					.as("Leerzeile unterhalb der Vorrunden-Rangliste darf keine Zebra-Farbe haben, Spalte %d", spalte)
 					.isEqualTo(TRANSPARENT);

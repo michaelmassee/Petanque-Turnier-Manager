@@ -56,6 +56,7 @@ public class SchweizerPropertiesSpalte extends TeamAnzeigePropertiesSpalte imple
 	private static final String KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE = "Spielplan Team Anzeige";
 	private static final String KONFIG_PROP_RANKING_MODUS = "Schweizer Ranking Modus";
 	public static final String KONFIG_PROP_FREILOS_BUCHHOLZ = "Schweizer Freilos Buchholz";
+	public static final String KONFIG_PROP_RANGLISTE_FREILOS_SPALTE = "Rangliste Freilos Spalte";
 
 	static {
 
@@ -142,6 +143,10 @@ public class SchweizerPropertiesSpalte extends TeamAnzeigePropertiesSpalte imple
 						I18n.get("config.schweizer.freilos.buchholz.null"))
 				.addAuswahl(SchweizerFreilosBuchholzModus.NEUTRAL.name(),
 						I18n.get("config.schweizer.freilos.buchholz.neutral")));
+
+		KONFIG_PROPERTIES.add(ConfigProperty.<Boolean>from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_RANGLISTE_FREILOS_SPALTE)
+				.setDefaultVal(true)
+				.setDescription("config.desc.schweizer.rangliste.freilos.spalte"));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_FREISPIEL_PUNKTE_PLUS)
 				.setDefaultVal(13).setDescription("config.desc.freispiel.punkte.plus")
@@ -343,6 +348,16 @@ public class SchweizerPropertiesSpalte extends TeamAnzeigePropertiesSpalte imple
 	@Override
 	public void setFreilosBuchholzModus(SchweizerFreilosBuchholzModus modus) {
 		setStringProperty(KONFIG_PROP_FREILOS_BUCHHOLZ, modus.name());
+	}
+
+	@Override
+	public boolean isRanglisteFreilosSpalteAnzeigen() {
+		return readBooleanProperty(KONFIG_PROP_RANGLISTE_FREILOS_SPALTE);
+	}
+
+	@Override
+	public void setRanglisteFreilosSpalteAnzeigen(boolean anzeigen) {
+		setStringProperty(KONFIG_PROP_RANGLISTE_FREILOS_SPALTE, StringTools.booleanToString(anzeigen));
 	}
 
 	@Override

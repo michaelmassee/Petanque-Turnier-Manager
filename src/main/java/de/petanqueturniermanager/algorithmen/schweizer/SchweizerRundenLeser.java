@@ -77,6 +77,7 @@ public final class SchweizerRundenLeser {
 		var teamNrAufloeser = new SchweizerTeamNrAufloeser(meldeliste::erstelleTeamAnzeigeIndex);
 		var chronik = new HerunterlosChronik();
 		Map<Integer, Integer> freiloseJeTeam = new HashMap<>();
+		Map<Integer, List<Integer>> freilosRundenJeTeam = new HashMap<>();
 		int anzGewerteteRunden = 0;
 		for (int runde = 1; runde <= anzRunden; runde++) {
 			SheetRunner.testDoCancelTask();
@@ -97,6 +98,9 @@ public final class SchweizerRundenLeser {
 			boolean hatErgebnis = leseRundeEin(workingSpreadsheet, rundeSheet, aktiveMeldungen, statsMap, gegnerMap,
 					begegnungen, freilosTeams, teamNrAufloeser, freispielPunktePlus, freispielPunkteMinus);
 			chronik.vermerkeRunde(runde, begegnungen, freilosTeams, siegeVorRunde);
+			int freilosRunde = runde;
+			freilosTeams.forEach(teamNr -> freilosRundenJeTeam.computeIfAbsent(teamNr, k -> new ArrayList<>())
+					.add(freilosRunde));
 			if (hatErgebnis) {
 				anzGewerteteRunden++;
 				freilosTeams.forEach(teamNr -> freiloseJeTeam.merge(teamNr, 1, Integer::sum));
@@ -109,7 +113,8 @@ public final class SchweizerRundenLeser {
 			List<Integer> gegnerNrn = gegnerMap.getOrDefault(team.getNr(), new ArrayList<>());
 			int punkteDiff = stats[1] - stats[2];
 			ergebnisse.add(new SchweizerTeamErgebnis(team.getNr(), stats[0], punkteDiff, stats[1], gegnerNrn,
-					chronik.rundenFuer(team.getNr()), freiloseJeTeam.getOrDefault(team.getNr(), 0)));
+					chronik.rundenFuer(team.getNr()), freiloseJeTeam.getOrDefault(team.getNr(), 0),
+					freilosRundenJeTeam.getOrDefault(team.getNr(), List.of())));
 		}
 		return new SchweizerAuswertung(ergebnisse, anzGewerteteRunden);
 	}

@@ -18,6 +18,7 @@ import de.petanqueturniermanager.helper.sheet.numberformat.UserNumberFormat;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.algorithmen.schweizer.FreilosBuchholz;
+import de.petanqueturniermanager.algorithmen.schweizer.FreilosRundenText;
 import de.petanqueturniermanager.algorithmen.schweizer.SchweizerAuswertung;
 import de.petanqueturniermanager.algorithmen.schweizer.SchweizerRundenLeser;
 import de.petanqueturniermanager.algorithmen.schweizer.SchweizerSystem;
@@ -95,11 +96,13 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 	public static final int PUNKTE_PLUS_SPALTE    = 6;  // G
 	public static final int PUNKTE_MINUS_SPALTE   = 7;  // H
 	public static final int PUNKTE_DIFF_SPALTE    = 8;  // I
-	public static final int VALIDATE_SPALTE       = PUNKTE_DIFF_SPALTE + 1;  // J (versteckt)
+	// Danach folgen die Erweiterungsspalten der Subklassen (z.B. Maastrichter: Gruppe), die
+	// Freilos-Spalte und die versteckte Validate-Spalte, siehe freilosSpalte() und validateSpalte().
 
-	private static final int COL_WIDTH_NR   = 800;
-	private static final int COL_WIDTH_NAME = 7000;
-	private static final int COL_WIDTH_DATA = 1400;
+	private static final int COL_WIDTH_NR      = 800;
+	private static final int COL_WIDTH_NAME    = 7000;
+	private static final int COL_WIDTH_DATA    = 1400;
+	private static final int COL_WIDTH_FREILOS = 1800;
 
 	private static final Logger logger = LogManager.getLogger(SchweizerRanglisteSheet.class);
 
@@ -188,14 +191,29 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 	}
 
 	/**
-	 * Letzte sichtbare Datenspalte (vor der versteckten Validate-Spalte).
+	 * Letzte Spalte vor der Freilos-Spalte.
 	 * <p>
-	 * Subklassen (z.B. Maastrichter mit zusätzlicher Gruppe-Spalte) überschreiben
-	 * diesen Hook, damit Druckbereich, Zebra-Bereich und Validate-Spaltenposition
-	 * automatisch mitwachsen.
+	 * Subklassen mit zusätzlichen Datenspalten (z.B. Maastrichter mit Gruppe-Spalte) überschreiben
+	 * diesen Hook. Freilos-Spalte, Druckbereich, Zebra-Bereich und Validate-Spalte wachsen dadurch
+	 * automatisch mit.
 	 */
-	protected int letzteAnzeigeSpalte() {
+	protected int letzteErweiterungsSpalte() {
 		return PUNKTE_DIFF_SPALTE;
+	}
+
+	/**
+	 * Spalte mit den Freilos-Runden je Team – direkt rechts der Erweiterungsspalten.
+	 */
+	public final int freilosSpalte() {
+		return letzteErweiterungsSpalte() + 1;
+	}
+
+	/**
+	 * Letzte Datenspalte vor der versteckten Validate-Spalte (die Freilos-Spalte, auch wenn sie
+	 * ausgeblendet ist).
+	 */
+	protected final int letzteAnzeigeSpalte() {
+		return freilosSpalte();
 	}
 
 	/**
@@ -336,6 +354,7 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 
 		// Erweiterungen für Subklassen (z.B. Maastrichter: Gruppe-Spalte)
 		erweitereDaten(sheet, sortiert, ERSTE_DATEN_ZEILE + sortiert.size() - 1);
+		schreibeFreilosSpalte(sheet, sortiert);
 
 		// Footer und Druckbereich
 		int letzteZeile;
@@ -362,6 +381,47 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 		if (!sortiert.isEmpty()) {
 			formatiereFussbereich(sheet, ERSTE_DATEN_ZEILE + sortiert.size() - 1);
 		}
+	}
+
+	/**
+	 * Schreibt Header und Daten der Freilos-Spalte und blendet sie ein oder aus.
+	 * <p>
+	 * Läuft im Vollaufbau und im Update-Pfad (der den Header sonst nicht neu schreibt), damit ein
+	 * neu vergebenes Freilos oder eine geänderte Einstellung ohne Neuaufbau sichtbar wird. Die Spalte
+	 * ist nur sichtbar, wenn die Einstellung aktiv ist und mindestens ein Team ein Freilos hatte.
+	 */
+	private void schreibeFreilosSpalte(XSpreadsheet sheet, List<SchweizerTeamErgebnis> sortiert)
+			throws GenerateException {
+		int spalte = freilosSpalte();
+		boolean freilosVergeben = sortiert.stream().anyMatch(erg -> !erg.freilosInRunden().isEmpty());
+		boolean sichtbar = freilosVergeben && getKonfigurationSheet().isRanglisteFreilosSpalteAnzeigen();
+		getSheetHelper().setColumnProperties(sheet, spalte, ColumnProperties.from().setWidth(COL_WIDTH_FREILOS)
+				.setHoriJustify(CellHoriJustify.CENTER).setVertJustify(CellVertJustify2.CENTER)
+				.isVisible(sichtbar));
+
+		getSheetHelper().setStringValueInCell(StringCellValue
+				.from(sheet, Position.from(spalte, HEADER_ZEILE), I18n.get("schweizer.rangliste.spalte.freilos"))
+				.setCellBackColor(getKonfigurationSheet().getMeldeListeHeaderFarbe())
+				.setBorder(BorderFactory.from().allThin().boldLn().forBottom().toBorder())
+				.setHoriJustify(CellHoriJustify.CENTER)
+				.setVertJustify(CellVertJustify2.CENTER)
+				.setEndPosMergeZeilePlus(1) // vertikal Row 0 + Row 1
+				.setShrinkToFit(true));
+
+		if (sortiert.isEmpty()) {
+			return;
+		}
+		RangeData block = new RangeData();
+		for (SchweizerTeamErgebnis erg : sortiert) {
+			block.addNewRow().newString(FreilosRundenText.alsText(erg.freilosInRunden()));
+		}
+		RangeHelper.from(this, block.getRangePosition(Position.from(spalte, ERSTE_DATEN_ZEILE)))
+				.setDataInRange(block);
+		int letzteZeile = ERSTE_DATEN_ZEILE + sortiert.size() - 1;
+		getSheetHelper().setPropertiesInRange(sheet,
+				RangePosition.from(spalte, ERSTE_DATEN_ZEILE, spalte, letzteZeile),
+				CellProperties.from().margin(MeldeListeKonstanten.CELL_MARGIN).setAllThinBorder().centerJustify()
+						.setShrinkToFit(true));
 	}
 
 	private void formatiereFussbereich(XSpreadsheet sheet, int letzteDatenZeile) throws GenerateException {

@@ -16,12 +16,25 @@ import java.util.List;
  *                               (siehe {@link HerunterlosChronik})
  * @param anzFreilose            Freilose in gewerteten Runden mit Ergebnissen (für den Freilos-Buchholz, siehe
  *                               {@link FreilosBuchholz})
+ * @param freilosInRunden        aufsteigende Rundennummern aller ausgelosten, gewerteten Runden mit Freilos – auch
+ *                               solche ohne eingetragenes Ergebnis (für die Freilos-Spalte der Rangliste)
  */
 public record SchweizerTeamErgebnis(int teamNr, int siege, int punktedifferenz, int erzieltePunkte,
-		List<Integer> gegnerNrn, List<Integer> heruntergelostInRunden, int anzFreilose) {
+		List<Integer> gegnerNrn, List<Integer> heruntergelostInRunden, int anzFreilose,
+		List<Integer> freilosInRunden) {
 
 	public SchweizerTeamErgebnis {
 		heruntergelostInRunden = List.copyOf(heruntergelostInRunden);
+		freilosInRunden = List.copyOf(freilosInRunden);
+	}
+
+	/**
+	 * Teamergebnis ohne Angabe der Freilos-Runden.
+	 */
+	public SchweizerTeamErgebnis(int teamNr, int siege, int punktedifferenz, int erzieltePunkte,
+			List<Integer> gegnerNrn, List<Integer> heruntergelostInRunden, int anzFreilose) {
+		this(teamNr, siege, punktedifferenz, erzieltePunkte, gegnerNrn, heruntergelostInRunden, anzFreilose,
+				List.of());
 	}
 
 	/**
@@ -29,7 +42,7 @@ public record SchweizerTeamErgebnis(int teamNr, int siege, int punktedifferenz, 
 	 */
 	public SchweizerTeamErgebnis(int teamNr, int siege, int punktedifferenz, int erzieltePunkte,
 			List<Integer> gegnerNrn, List<Integer> heruntergelostInRunden) {
-		this(teamNr, siege, punktedifferenz, erzieltePunkte, gegnerNrn, heruntergelostInRunden, 0);
+		this(teamNr, siege, punktedifferenz, erzieltePunkte, gegnerNrn, heruntergelostInRunden, 0, List.of());
 	}
 
 	/**
@@ -37,6 +50,6 @@ public record SchweizerTeamErgebnis(int teamNr, int siege, int punktedifferenz, 
 	 */
 	public SchweizerTeamErgebnis(int teamNr, int siege, int punktedifferenz, int erzieltePunkte,
 			List<Integer> gegnerNrn) {
-		this(teamNr, siege, punktedifferenz, erzieltePunkte, gegnerNrn, List.of(), 0);
+		this(teamNr, siege, punktedifferenz, erzieltePunkte, gegnerNrn, List.of(), 0, List.of());
 	}
 }
