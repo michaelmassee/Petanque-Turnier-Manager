@@ -12,7 +12,8 @@ import java.util.List;
  * @param punktedifferenz        Erzielte minus kassierte Punkte (über alle Spiele)
  * @param erzieltePunkte         Erzielte Punkte (Punkte+, für Ranking ohne Buchholz)
  * @param gegnerNrn              Team-Nummern aller bisherigen Gegner (für BHZ/FBHZ-Berechnung)
- * @param heruntergelostInRunden Runden, in denen das Team heruntergelost wurde (siehe {@link HerunterlosChronik})
+ * @param heruntergelostInRunden Runden, in denen das Team heruntergelost wurde, inkl. Freilos-Runden
+ *                               (siehe {@link HerunterlosChronik})
  */
 public record SchweizerTeamErgebnis(int teamNr, int siege, int punktedifferenz, int erzieltePunkte,
 		List<Integer> gegnerNrn, List<Integer> heruntergelostInRunden) {

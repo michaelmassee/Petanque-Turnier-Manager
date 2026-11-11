@@ -303,8 +303,9 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 				}
 				Map<Integer, Integer> siegeVorRunde = siegeJeTeam(statsMap);
 				List<HerunterlosChronik.Begegnung> begegnungen = new ArrayList<>();
-				leseRundeEin(sheet, teamNrAufloeser, aktiveMeldungen, statsMap, gegnerMap, begegnungen);
-				chronik.vermerkeRunde(spielrunde, begegnungen, siegeVorRunde);
+				List<Integer> freilosTeams = new ArrayList<>();
+				leseRundeEin(sheet, teamNrAufloeser, aktiveMeldungen, statsMap, gegnerMap, begegnungen, freilosTeams);
+				chronik.vermerkeRunde(spielrunde, begegnungen, freilosTeams, siegeVorRunde);
 			}
 		}
 
@@ -326,7 +327,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 
 	private void leseRundeEin(XSpreadsheet sheet, SchweizerTeamNrAufloeser teamNrAufloeser,
 			TeamMeldungen aktiveMeldungen, Map<Integer, int[]> statsMap, Map<Integer, List<Integer>> gegnerMap,
-			List<HerunterlosChronik.Begegnung> begegnungen) throws GenerateException {
+			List<HerunterlosChronik.Begegnung> begegnungen, List<Integer> freilosTeams) throws GenerateException {
 		RangePosition readRange = RangePosition.from(TEAM_A_SPALTE, ERSTE_DATEN_ZEILE, TECHNISCHE_TEAM_B_NR_SPALTE,
 				ERSTE_DATEN_ZEILE + 999);
 		RangeData rowsData = RangeHelper
@@ -356,6 +357,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 				int[] statsA = statsMap.computeIfAbsent(nrA, k -> new int[3]);
 				int freispielPlus = getKonfigurationSheet().getFreispielPunktePlus();
 				int freispielMinus = getKonfigurationSheet().getFreispielPunkteMinus();
+				freilosTeams.add(nrA); // Freilos = Runde ohne gleich starken Gegner, zählt als Herunterlosung
 				statsA[0]++; // siege
 				statsA[1] += freispielPlus - freispielMinus; // punktediff
 				statsA[2] += freispielPlus; // punkte+

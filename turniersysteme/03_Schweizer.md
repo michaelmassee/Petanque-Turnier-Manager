@@ -106,8 +106,17 @@ Welches Team, entscheidet diese Reihenfolge:
 Ein Team, das in dieser Runde schon aus einer höheren Gruppe heruntergelost wurde, wird nicht gleich weiter
 heruntergelost (außer es ist allein in seiner Gruppe).
 
-Ein Team gilt in Runde r als heruntergelost, wenn sein Gegner vor Runde r weniger Siege hatte; Freilose zählen
-nicht. Die Historie wird aus den Spielrunden abgeleitet.
+Ein Team gilt in Runde r als heruntergelost, wenn sein Gegner vor Runde r weniger Siege hatte. Die Historie wird
+aus den Spielrunden abgeleitet.
+
+**Freilos zählt als Herunterlosung** (Issue #38, feste Regel ohne Einstellung): Ein Freilos ist wie ein Downfloat
+eine Runde ohne gleich starken Gegner. Diese Sonderrolle soll reihum gehen, deshalb wird das Freilos-Team in der
+Folgerunde möglichst nicht auch noch heruntergelost (vgl. FIDE Dutch: wer eine Runde nicht spielt, gilt als
+heruntergelost). Die Freilos-Runde wird wie eine Herunterlosung in der Historie vermerkt (pro Runde höchstens einmal).
+
+Aktueller Anlass: Ohne Gegner bekommt das Freilos-Team derzeit 0 BHZ/FBHZ (siehe 5.1) und steht damit z. B. bei
+9 Teams vor Runde 2 als letzter der 5 Sieger – es wäre sonst erster Kandidat fürs Herunterlosen. Die Regel gilt
+unabhängig von der Buchholz-Wertung des Freiloses; sie korrigiert die Wertung nicht, sondern nur die Floater-Wahl.
 
 Das ist ein Optimierungskriterium, kein Verbot (vgl. FIDE Dutch C.04.3, Kriterien C14/C16): Die Auslosung blockiert
 nie. Die Vermeidung von Gegnerwiederholungen (Kapitel 4) hat Vorrang – erzwingt sie eine andere Paarung, kann auch

@@ -865,4 +865,33 @@ public class SchweizerSystemTest {
 				.containsExactly("1–3", "2–4", "5–6", "7–8");
 	}
 
+	/**
+	 * Issue #38: Ein Freilos zählt als Herunterlosung. Das Freilos-Team aus Runde 1 steht als rangletzter Sieger in der
+	 * ungeraden 1-Sieg-Gruppe, wird aber geschont – ein anderer Sieger wird heruntergelost.
+	 */
+	@Test
+	public void testWeitereRundeLostFreilosTeamDerVorrundeNichtHerunter() {
+		// Runde 1: 1–6, 2–7, 3–8, 4–9 (Sieger 1–4), Team 5 Freilos
+		var chronik = new HerunterlosChronik();
+		chronik.vermerkeRunde(1, List.of(new HerunterlosChronik.Begegnung(1, 6), new HerunterlosChronik.Begegnung(2, 7),
+				new HerunterlosChronik.Begegnung(3, 8), new HerunterlosChronik.Begegnung(4, 9)), List.of(5), Map.of());
+		List<Team> teams = teams(9);
+		teams.get(4).setHatteFreilos(true);
+		List<SchweizerTeamErgebnis> ergebnisse = teams.stream()
+				.map(team -> new SchweizerTeamErgebnis(team.getNr(), team.getNr() <= 5 ? 1 : 0, 0, 0, List.of(),
+						chronik.rundenFuer(team.getNr())))
+				.toList();
+
+		List<TeamPaarung> paarungen = new SchweizerSystem().weitereRunde(teams, ergebnisse, 2);
+
+		assertThat(gegnerVon(paarungen, 5)).isBetween(1, 3);
+		assertThat(gegnerVon(paarungen, 4)).isBetween(6, 8);
+	}
+
+	private static int gegnerVon(List<TeamPaarung> paarungen, int teamNr) {
+		TeamPaarung paarung = paarungen.stream().filter(p -> !p.isFreilos())
+				.filter(p -> p.getA().getNr() == teamNr || p.getB().getNr() == teamNr).findFirst().orElseThrow();
+		return paarung.getA().getNr() == teamNr ? paarung.getB().getNr() : paarung.getA().getNr();
+	}
+
 }

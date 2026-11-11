@@ -89,9 +89,10 @@ public final class SchweizerRundenLeser {
 			}
 			Map<Integer, Integer> siegeVorRunde = siegeJeTeam(statsMap);
 			List<HerunterlosChronik.Begegnung> begegnungen = new ArrayList<>();
+			List<Integer> freilosTeams = new ArrayList<>();
 			leseRundeEin(workingSpreadsheet, rundeSheet, aktiveMeldungen, statsMap, gegnerMap, begegnungen,
-					teamNrAufloeser, freispielPunktePlus, freispielPunkteMinus);
-			chronik.vermerkeRunde(runde, begegnungen, siegeVorRunde);
+					freilosTeams, teamNrAufloeser, freispielPunktePlus, freispielPunkteMinus);
+			chronik.vermerkeRunde(runde, begegnungen, freilosTeams, siegeVorRunde);
 		}
 
 		List<SchweizerTeamErgebnis> ergebnisse = new ArrayList<>();
@@ -113,8 +114,8 @@ public final class SchweizerRundenLeser {
 
 	private static void leseRundeEin(WorkingSpreadsheet workingSpreadsheet, XSpreadsheet rundeSheet,
 			TeamMeldungen aktiveMeldungen, Map<Integer, int[]> statsMap, Map<Integer, List<Integer>> gegnerMap,
-			List<HerunterlosChronik.Begegnung> begegnungen, SchweizerTeamNrAufloeser teamNrAufloeser,
-			int freispielPunktePlus,
+			List<HerunterlosChronik.Begegnung> begegnungen, List<Integer> freilosTeams,
+			SchweizerTeamNrAufloeser teamNrAufloeser, int freispielPunktePlus,
 			int freispielPunkteMinus) throws GenerateException {
 
 		RangePosition readRange = RangePosition.from(
@@ -139,6 +140,7 @@ public final class SchweizerRundenLeser {
 				// Freilos für Team A – Sieg zählen und die konfigurierten Freispiel-Punkte
 				// verbuchen (kein echter Gegner, daher kein Eintrag in gegnerMap für BHZ/FBHZ).
 				int[] statsA = statsMap.computeIfAbsent(nrA, k -> new int[3]);
+				freilosTeams.add(nrA); // Freilos = Runde ohne gleich starken Gegner, zählt als Herunterlosung
 				statsA[0]++; // siege
 				statsA[1] += freispielPunktePlus;
 				statsA[2] += freispielPunkteMinus;

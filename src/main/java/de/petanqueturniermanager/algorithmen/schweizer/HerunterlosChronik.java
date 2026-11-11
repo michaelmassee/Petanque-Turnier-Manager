@@ -12,9 +12,11 @@ import java.util.Map;
  * Hält fest, in welchen Runden ein Team heruntergelost wurde (Downfloat).
  * <p>
  * Ein Team gilt in Runde r als heruntergelost, wenn es in Runde r gegen einen Gegner gepaart war, der vor Runde r
- * weniger Siege hatte. Maßgeblich ist die Paarung, nicht das Ergebnis; Freilose zählen nicht. Die Chronik wird beim
- * Einlesen der Spielrunden aufgebaut und von {@link SchweizerSystem} genutzt, um wiederholtes Herunterlosen zu
- * vermeiden.
+ * weniger Siege hatte. Maßgeblich ist die Paarung, nicht das Ergebnis.
+ * <p>
+ * Ein Freilos zählt wie eine Herunterlosung: Beides ist eine Runde ohne gleich starken Gegner. Diese Sonderrolle soll
+ * reihum gehen, das Freilos-Team wird deshalb in der Folgerunde möglichst nicht auch noch heruntergelost. Die Chronik
+ * wird beim Einlesen der Spielrunden aufgebaut und von {@link SchweizerSystem} genutzt, um wiederholtes Herunterlosen zu vermeiden.
  */
 public final class HerunterlosChronik {
 
@@ -34,9 +36,12 @@ public final class HerunterlosChronik {
 	 *
 	 * @param runde          Rundennummer
 	 * @param begegnungen    alle Begegnungen der Runde ohne Freilose
+	 * @param freilosTeams   Nummern der Teams mit Freilos in dieser Runde
 	 * @param siegeVorRunde  Siege je Team vor dieser Runde (fehlend = 0)
 	 */
-	public void vermerkeRunde(int runde, List<Begegnung> begegnungen, Map<Integer, Integer> siegeVorRunde) {
+	public void vermerkeRunde(int runde, List<Begegnung> begegnungen, List<Integer> freilosTeams,
+			Map<Integer, Integer> siegeVorRunde) {
+		freilosTeams.forEach(teamNr -> vermerke(teamNr, runde));
 		for (Begegnung begegnung : begegnungen) {
 			int siegeA = siegeVorRunde.getOrDefault(begegnung.nrA(), 0);
 			int siegeB = siegeVorRunde.getOrDefault(begegnung.nrB(), 0);
@@ -57,6 +62,9 @@ public final class HerunterlosChronik {
 	}
 
 	private void vermerke(int teamNr, int runde) {
-		rundenProTeam.computeIfAbsent(teamNr, k -> new ArrayList<>()).add(runde);
+		List<Integer> runden = rundenProTeam.computeIfAbsent(teamNr, k -> new ArrayList<>());
+		if (!runden.contains(runde)) {
+			runden.add(runde);
+		}
 	}
 }
