@@ -106,12 +106,12 @@ class SchweizerSpielrundeWertungUITest extends BaseCalcUITest {
 		turnierMitDreiRundenErstellen();
 		var auslosung = new SchweizerSpielrundeSheetNaechste(wkingSpreadsheet);
 		TeamMeldungen aktive = auslosung.getMeldeListe().getAktiveMeldungen();
-		var alle = nachTeam(auslosung.gespieltenRundenEinlesen(aktive, 1, ANZ_RUNDEN));
+		var alle = nachTeam(auslosung.gespieltenRundenEinlesen(aktive, 1, ANZ_RUNDEN).ergebnisse());
 		var nurRunde2 = nachTeam(auslosung.gespieltenRundenEinlesen(aktive, NICHT_GEWERTETE_RUNDE,
-				NICHT_GEWERTETE_RUNDE));
+				NICHT_GEWERTETE_RUNDE).ergebnisse());
 
 		markiereRunde2();
-		var ohneRunde2 = nachTeam(auslosung.gespieltenRundenEinlesen(aktive, 1, ANZ_RUNDEN));
+		var ohneRunde2 = nachTeam(auslosung.gespieltenRundenEinlesen(aktive, 1, ANZ_RUNDEN).ergebnisse());
 
 		ohneRunde2.forEach((teamNr, erg) -> {
 			List<Integer> erwarteteGegner = new ArrayList<>(alle.get(teamNr).gegnerNrn());
@@ -284,7 +284,7 @@ class SchweizerSpielrundeWertungUITest extends BaseCalcUITest {
 		return nachTeam(SchweizerRundenLeser.leseErgebnisse(ws, meldeliste.getAktiveMeldungen(),
 				anzRunden, SheetMetadataHelper::schluesselSchweizerSpielrunde,
 				SchweizerAbstractSpielrundeSheet.SHEET_NAMEN, meldeliste, konfig.getFreispielPunktePlus(),
-				konfig.getFreispielPunkteMinus()));
+				konfig.getFreispielPunkteMinus()).ergebnisse());
 	}
 
 	private static Map<Integer, SchweizerTeamErgebnis> nachTeam(List<SchweizerTeamErgebnis> ergebnisse) {

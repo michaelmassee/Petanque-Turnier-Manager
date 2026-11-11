@@ -64,4 +64,8 @@ public interface ISchweizerPropertiesSpalte extends de.petanqueturniermanager.ba
 
 	void setRankingModus(SchweizerRankingModus modus);
 
+	SchweizerFreilosBuchholzModus getFreilosBuchholzModus();
+
+	void setFreilosBuchholzModus(SchweizerFreilosBuchholzModus modus);
+
 }

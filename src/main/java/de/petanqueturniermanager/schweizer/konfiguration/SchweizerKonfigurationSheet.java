@@ -191,6 +191,16 @@ public class SchweizerKonfigurationSheet extends BaseKonfigurationSheet
 	}
 
 	@Override
+	public SchweizerFreilosBuchholzModus getFreilosBuchholzModus() {
+		return propertiesSpalte.getFreilosBuchholzModus();
+	}
+
+	@Override
+	public void setFreilosBuchholzModus(SchweizerFreilosBuchholzModus modus) {
+		propertiesSpalte.setFreilosBuchholzModus(modus);
+	}
+
+	@Override
 	public Integer getFreispielPunktePlus() {
 		return getPropertiesSpalte().getFreispielPunktePlus();
 	}

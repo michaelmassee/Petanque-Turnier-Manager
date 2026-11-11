@@ -44,8 +44,8 @@ Stand: 2026-03-30
 #### Buchholz / Feinbuchholz-Wertung — ✅ Korrekt
 | | Beschreibung |
 |---|---|
-| **Spezifikation** | Siege → BHZ (Summe Siege aller Gegner) → FBHZ (Summe BHZ aller Gegner) → Punktedifferenz |
-| **Implementierung** | `SchweizerSystem.sortiereNachAuswertungskriterien()`: identische 4-stufige Sortierung |
+| **Spezifikation** | Siege → BHZ (Summe Siege aller Gegner) → FBHZ (Summe BHZ aller Gegner) → Punktedifferenz; Freilos-Beitrag einstellbar NULL/NEUTRAL (03_Schweizer.md, 5.1) |
+| **Implementierung** | `SchweizerSystem.sortiereNachAuswertungskriterien()`: identische 4-stufige Sortierung; Freilos-Beitrag über `FreilosBuchholz`, BHZ/FBHZ als Dezimalwerte (eine Nachkommastelle) |
 | **Bewertung** | Entspricht der Spezifikation |
 
 #### Paarungsalgorithmus — 🟡 Teilabweichung

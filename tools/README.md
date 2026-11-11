@@ -77,6 +77,10 @@ die aus den Spielrunden-Sheets nachgerechneten Werte:
    Paarungen (Ergebnis 0:0, z.B. bereits ausgeloste aber noch nicht
    gespielte Folgerunde) zählen dabei **nicht** als Gegner.
 3. **Feinbuchholz (FBHZ)** = Summe der BHZ-Werte aller Gegner.
+   Freilos-Buchholz aus Property `Schweizer Freilos Buchholz` (fehlend = `NULL`):
+   bei `NEUTRAL` je Freilos BHZ `(r-1)/2` und FBHZ `eigene Siege + (r-1)·r/2`,
+   `r` = Spielrunden mit eingetragenem Ergebnis (siehe `03_Schweizer.md`, 5.1).
+   BHZ/FBHZ werden als Dezimalwerte verglichen.
 4. **Rangliste-Sortierung** gegen `Siege ↓ → BHZ ↓ → FBHZ ↓ → Punktediff ↓
    → Punkte+ ↓` (`SchweizerSystem.sortiereNachAuswertungskriterien`).
 

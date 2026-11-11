@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.model.TeamPaarung;
+import de.petanqueturniermanager.schweizer.konfiguration.SchweizerFreilosBuchholzModus;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerRankingModus;
 
 public class SchweizerSystemTest {
@@ -459,18 +460,18 @@ public class SchweizerSystemTest {
 		);
 
 		// BHZ prüfen: A=1+2+2=5, B=3+2+1=6, C=1+3+0=4, D=2+0+1=3, E=0+1+3=4, F=2+1+2=5
-		Map<Integer, Integer> bhz = schweizerSystem.berechneBuchholz(ergebnisse);
-		assertThat(bhz.get(1)).isEqualTo(5); // A
-		assertThat(bhz.get(2)).isEqualTo(6); // B
-		assertThat(bhz.get(3)).isEqualTo(4); // C
-		assertThat(bhz.get(4)).isEqualTo(3); // D
-		assertThat(bhz.get(5)).isEqualTo(4); // E
-		assertThat(bhz.get(6)).isEqualTo(5); // F
+		Map<Integer, Double> bhz = schweizerSystem.berechneBuchholz(ergebnisse);
+		assertThat(bhz.get(1)).isEqualTo(5.0); // A
+		assertThat(bhz.get(2)).isEqualTo(6.0); // B
+		assertThat(bhz.get(3)).isEqualTo(4.0); // C
+		assertThat(bhz.get(4)).isEqualTo(3.0); // D
+		assertThat(bhz.get(5)).isEqualTo(4.0); // E
+		assertThat(bhz.get(6)).isEqualTo(5.0); // F
 
 		// FBHZ prüfen: C=BHZ(D)+BHZ(A)+BHZ(F)=3+5+5=13, E=BHZ(F)+BHZ(B)+BHZ(A)=5+6+5=16
-		Map<Integer, Integer> fbhz = schweizerSystem.berechneFeinbuchholz(ergebnisse, bhz);
-		assertThat(fbhz.get(3)).isEqualTo(13); // C
-		assertThat(fbhz.get(5)).isEqualTo(16); // E
+		Map<Integer, Double> fbhz = schweizerSystem.berechneFeinbuchholz(ergebnisse, bhz);
+		assertThat(fbhz.get(3)).isEqualTo(13.0); // C
+		assertThat(fbhz.get(5)).isEqualTo(16.0); // E
 
 		// Sortierung prüfen: 1.A(3 Siege), 2.E(2S,4BHZ,16FBHZ), 3.C(2S,4BHZ,13FBHZ),
 		// 4.B(1S,6BHZ), 5.D(1S,3BHZ), 6.F(0 Siege)
@@ -892,6 +893,83 @@ public class SchweizerSystemTest {
 		TeamPaarung paarung = paarungen.stream().filter(p -> !p.isFreilos())
 				.filter(p -> p.getA().getNr() == teamNr || p.getB().getNr() == teamNr).findFirst().orElseThrow();
 		return paarung.getA().getNr() == teamNr ? paarung.getB().getNr() : paarung.getA().getNr();
+	}
+
+	// ── Issue #38 Punkt 1: Freilos-Buchholz ─────────────────────────────────────
+
+	/**
+	 * Drei Runden (r = 3), Team 1 hatte in Runde 1 ein Freilos und spielte danach gegen 2 und 3.
+	 * NEUTRAL: je Freilos BHZ (3−1)/2 = 1, FBHZ 2 Siege + 2·3/2 = 5.
+	 */
+	private static final List<SchweizerTeamErgebnis> MIT_FREILOS = List.of(
+			new SchweizerTeamErgebnis(1, 2, 0, 0, List.of(2, 3), List.of(1), 1),
+			new SchweizerTeamErgebnis(2, 1, 0, 0, List.of(1)),
+			new SchweizerTeamErgebnis(3, 0, 0, 0, List.of(1)));
+
+	@Test
+	public void testFreilosBuchholzNullLiefertKeinenBeitrag() {
+		var system = new SchweizerSystem();
+		var freilos = new FreilosBuchholz(SchweizerFreilosBuchholzModus.NULL, 3);
+
+		Map<Integer, Double> bhz = system.berechneBuchholz(MIT_FREILOS, freilos);
+		Map<Integer, Double> fbhz = system.berechneFeinbuchholz(MIT_FREILOS, bhz, freilos);
+
+		assertThat(bhz).containsExactlyInAnyOrderEntriesOf(Map.of(1, 1.0, 2, 2.0, 3, 2.0));
+		assertThat(fbhz).containsExactlyInAnyOrderEntriesOf(Map.of(1, 4.0, 2, 1.0, 3, 1.0));
+	}
+
+	/** Die Gegner des Freilos-Teams erhalten über ihre FBHZ dessen korrigierte BHZ (2 statt 1). */
+	@Test
+	public void testFreilosBuchholzNeutralKorrigiertAuchFeinbuchholzDerGegner() {
+		var system = new SchweizerSystem();
+		var freilos = new FreilosBuchholz(SchweizerFreilosBuchholzModus.NEUTRAL, 3);
+
+		Map<Integer, Double> bhz = system.berechneBuchholz(MIT_FREILOS, freilos);
+		Map<Integer, Double> fbhz = system.berechneFeinbuchholz(MIT_FREILOS, bhz, freilos);
+
+		assertThat(bhz).containsExactlyInAnyOrderEntriesOf(Map.of(1, 2.0, 2, 2.0, 3, 2.0));
+		assertThat(fbhz).containsExactlyInAnyOrderEntriesOf(Map.of(1, 9.0, 2, 2.0, 3, 2.0));
+	}
+
+	/** Nach Runde 1 hat das Freilos-Team dieselben Werte wie ein Sieger mit echtem Gegner: BHZ 0, FBHZ 1. */
+	@Test
+	public void testFreilosBuchholzNeutralNachRundeEinsWieEchterSieger() {
+		var system = new SchweizerSystem();
+		var freilos = new FreilosBuchholz(SchweizerFreilosBuchholzModus.NEUTRAL, 1);
+		List<SchweizerTeamErgebnis> ergebnisse = List.of(
+				new SchweizerTeamErgebnis(1, 1, 0, 0, List.of(2)),
+				new SchweizerTeamErgebnis(2, 0, 0, 0, List.of(1)),
+				new SchweizerTeamErgebnis(3, 1, 0, 0, List.of(), List.of(1), 1));
+
+		Map<Integer, Double> bhz = system.berechneBuchholz(ergebnisse, freilos);
+		Map<Integer, Double> fbhz = system.berechneFeinbuchholz(ergebnisse, bhz, freilos);
+
+		assertThat(bhz.get(3)).isEqualTo(bhz.get(1)).isZero();
+		assertThat(fbhz.get(3)).isEqualTo(fbhz.get(1)).isEqualTo(1.0);
+	}
+
+	/**
+	 * Nach zwei Runden bringt das Freilos einen halben BHZ-Punkt: Team 1 (BHZ 1,5) steht vor Team 2 (BHZ 1), obwohl
+	 * Team 2 die bessere Punktedifferenz hat. Ohne Freilos-Beitrag entscheidet die Punktedifferenz.
+	 */
+	@Test
+	public void testFreilosBuchholzHalbePunkteEntscheidenSortierung() {
+		var system = new SchweizerSystem();
+		List<SchweizerTeamErgebnis> ergebnisse = List.of(
+				new SchweizerTeamErgebnis(1, 2, 5, 26, List.of(3), List.of(1), 1),
+				new SchweizerTeamErgebnis(2, 2, 10, 26, List.of(4)),
+				new SchweizerTeamErgebnis(3, 1, 0, 0, List.of(1)),
+				new SchweizerTeamErgebnis(4, 1, 0, 0, List.of(2)));
+
+		List<Integer> neutral = system.sortiereNachAuswertungskriterien(ergebnisse,
+				SchweizerRankingModus.MIT_BUCHHOLZ, new FreilosBuchholz(SchweizerFreilosBuchholzModus.NEUTRAL, 2))
+				.stream().map(SchweizerTeamErgebnis::teamNr).toList();
+		List<Integer> ohneBeitrag = system.sortiereNachAuswertungskriterien(ergebnisse,
+				SchweizerRankingModus.MIT_BUCHHOLZ, new FreilosBuchholz(SchweizerFreilosBuchholzModus.NULL, 2))
+				.stream().map(SchweizerTeamErgebnis::teamNr).toList();
+
+		assertThat(neutral).startsWith(1, 2);
+		assertThat(ohneBeitrag).startsWith(2, 1);
 	}
 
 }

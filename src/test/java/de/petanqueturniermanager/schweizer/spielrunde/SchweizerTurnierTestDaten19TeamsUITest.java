@@ -199,7 +199,7 @@ public class SchweizerTurnierTestDaten19TeamsUITest extends BaseCalcUITest {
 		int freispielMinus = naechsteSpielrunde.getKonfigurationSheet().getFreispielPunkteMinus();
 
 		var aktiveMeldungen = naechsteSpielrunde.getMeldeListe().getAktiveMeldungen();
-		var ergebnisse = naechsteSpielrunde.gespieltenRundenEinlesen(aktiveMeldungen, 1, 1);
+		var ergebnisse = naechsteSpielrunde.gespieltenRundenEinlesen(aktiveMeldungen, 1, 1).ergebnisse();
 
 		var freilosErgebnis = ergebnisse.stream()
 				.filter(erg -> erg.teamNr() == freilosTeamNr)

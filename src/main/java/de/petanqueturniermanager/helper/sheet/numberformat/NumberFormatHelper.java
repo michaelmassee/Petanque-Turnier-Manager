@@ -43,13 +43,15 @@ public class NumberFormatHelper implements ICommonProperties {
 
 		XNumberFormatsSupplier xNumberFormatsSupplier = Lo.qi(XNumberFormatsSupplier.class, xSpreadsheetDocument);
 		XNumberFormats xNumberFormats = xNumberFormatsSupplier.getNumberFormats();
+		String formatCode = userNumberFormat.getPattern().orElseGet(() -> xNumberFormats.generateFormat(0, locale,
+				false, false, (short) userNumberFormat.getNachkommastellen(), (short) 1));
 		try {
-			index = xNumberFormats.queryKey(userNumberFormat.getPattern(), locale, false);
+			index = xNumberFormats.queryKey(formatCode, locale, false);
 			if (index == -1) {
-				index = xNumberFormats.addNew(userNumberFormat.getPattern(), locale);
+				index = xNumberFormats.addNew(formatCode, locale);
 			}
 		} catch (MalformedNumberFormatException e) {
-			logger.error(e);
+			logger.error(e.getMessage(), e);
 		}
 		return index;
 	}

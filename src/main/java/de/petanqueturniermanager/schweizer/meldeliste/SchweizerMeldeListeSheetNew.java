@@ -4,6 +4,7 @@
 
 package de.petanqueturniermanager.schweizer.meldeliste;
 
+import de.petanqueturniermanager.schweizer.konfiguration.SchweizerFreilosBuchholzModus;
 import java.util.List;
 import java.util.Optional;
 
@@ -273,6 +274,8 @@ public class SchweizerMeldeListeSheetNew extends SheetRunner
 			getKonfigurationSheet().setMeldeListeTeamnameAnzeigen(teamnameAnzeigen);
 			getKonfigurationSheet().setMeldeListeVereinsnameAnzeigen(vereinsnameAnzeigen);
 			getKonfigurationSheet().setSpielplanTeamAnzeige(spielplanTeamAnzeige);
+			// neue Turniere: Freilos-Buchholz neutral (Bestandsdokumente ohne Property bleiben bei NULL)
+			getKonfigurationSheet().setFreilosBuchholzModus(SchweizerFreilosBuchholzModus.NEUTRAL);
 			upDateSheet();
 		}
 	}

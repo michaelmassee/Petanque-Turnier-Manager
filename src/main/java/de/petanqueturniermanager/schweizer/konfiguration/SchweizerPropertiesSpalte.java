@@ -14,6 +14,7 @@ import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.StringTools;
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeUnGeradeStyle;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.konfigdialog.AuswahlConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
@@ -54,6 +55,7 @@ public class SchweizerPropertiesSpalte extends TeamAnzeigePropertiesSpalte imple
 	private static final String KONFIG_PROP_MELDELISTE_VEREINSNAME = "Meldeliste Vereinsname";
 	private static final String KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE = "Spielplan Team Anzeige";
 	private static final String KONFIG_PROP_RANKING_MODUS = "Schweizer Ranking Modus";
+	public static final String KONFIG_PROP_FREILOS_BUCHHOLZ = "Schweizer Freilos Buchholz";
 
 	static {
 
@@ -126,8 +128,20 @@ public class SchweizerPropertiesSpalte extends TeamAnzeigePropertiesSpalte imple
 				.setDefaultVal(SchweizerRankingModus.MIT_BUCHHOLZ.name())
 				.setDescription("config.desc.schweizer.ranking.modus")
 				.setShortDescription("config.label.ranking.modus"))
-				.addAuswahl(SchweizerRankingModus.MIT_BUCHHOLZ.name(), "Mit Buchholz (Standard)")
-				.addAuswahl(SchweizerRankingModus.OHNE_BUCHHOLZ.name(), "Ohne Buchholz"));
+				.addAuswahl(SchweizerRankingModus.MIT_BUCHHOLZ.name(), I18n.get("dialog.schweizer.ranking.mit.buchholz"))
+				.addAuswahl(SchweizerRankingModus.OHNE_BUCHHOLZ.name(),
+						I18n.get("dialog.schweizer.ranking.ohne.buchholz")));
+
+		// Default NULL: Bestandsdokumente ohne diese Property rechnen unverändert (BPV-Regel). Neue Turniere
+		// setzen beim Anlegen NEUTRAL (SchweizerMeldeListeSheetNew / MaastrichterMeldeListeSheetNew).
+		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_FREILOS_BUCHHOLZ)
+				.setDefaultVal(SchweizerFreilosBuchholzModus.NULL.name())
+				.setDescription("config.desc.schweizer.freilos.buchholz")
+				.setShortDescription("config.label.schweizer.freilos.buchholz"))
+				.addAuswahl(SchweizerFreilosBuchholzModus.NULL.name(),
+						I18n.get("config.schweizer.freilos.buchholz.null"))
+				.addAuswahl(SchweizerFreilosBuchholzModus.NEUTRAL.name(),
+						I18n.get("config.schweizer.freilos.buchholz.neutral")));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_FREISPIEL_PUNKTE_PLUS)
 				.setDefaultVal(13).setDescription("config.desc.freispiel.punkte.plus")
@@ -318,6 +332,17 @@ public class SchweizerPropertiesSpalte extends TeamAnzeigePropertiesSpalte imple
 	@Override
 	public void setRankingModus(SchweizerRankingModus modus) {
 		setStringProperty(KONFIG_PROP_RANKING_MODUS, modus.name());
+	}
+
+	@Override
+	public SchweizerFreilosBuchholzModus getFreilosBuchholzModus() {
+		return readEnumProperty(KONFIG_PROP_FREILOS_BUCHHOLZ, SchweizerFreilosBuchholzModus.class,
+				SchweizerFreilosBuchholzModus.NULL);
+	}
+
+	@Override
+	public void setFreilosBuchholzModus(SchweizerFreilosBuchholzModus modus) {
+		setStringProperty(KONFIG_PROP_FREILOS_BUCHHOLZ, modus.name());
 	}
 
 	@Override

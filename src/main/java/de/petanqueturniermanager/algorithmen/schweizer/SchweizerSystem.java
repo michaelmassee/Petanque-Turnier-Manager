@@ -47,91 +47,125 @@ public class SchweizerSystem {
 	 *   <li>Punktedifferenz = erzielte minus kassierte Punkte (absteigend)</li>
 	 *   <li>Punkte+ = erzielte Punkte (absteigend)</li>
 	 * </ol>
-	 * Hinweis: Direktvergleich (Kriterium 6) und Los (Kriterium 7) werden hier nicht berechnet
-	 * und müssen bei Bedarf nachgelagert behandelt werden.
+	 * Ein Freilos liefert hier keinen Buchholz-Beitrag (BPV-Regel). Hinweis: Direktvergleich (Kriterium 6) und Los
+	 * (Kriterium 7) werden nicht berechnet und müssen bei Bedarf nachgelagert behandelt werden.
 	 *
 	 * @param ergebnisse die Teamergebnisse mit Siegen, Punktedifferenz und Gegnerliste
 	 * @return neue Liste, sortiert nach Auswertungskriterien (beste Team zuerst)
 	 */
 	public List<SchweizerTeamErgebnis> sortiereNachAuswertungskriterien(List<SchweizerTeamErgebnis> ergebnisse) {
-		// BHZ (Buchholz) für jedes Team berechnen: Summe der Siege aller Gegner
-		Map<Integer, Integer> bhzMap = berechneBuchholz(ergebnisse);
+		return sortiereNachAuswertungskriterien(ergebnisse, SchweizerRankingModus.MIT_BUCHHOLZ,
+				FreilosBuchholz.OHNE_BEITRAG);
+	}
 
-		// FBHZ (Feinbuchholz) berechnen: Summe der BHZ-Werte aller Gegner
-		Map<Integer, Integer> fbhzMap = berechneFeinbuchholz(ergebnisse, bhzMap);
-
-		Comparator<SchweizerTeamErgebnis> comparator = Comparator
-				.comparingInt(SchweizerTeamErgebnis::siege).reversed()
-				.thenComparing(Comparator.comparingInt(
-						(SchweizerTeamErgebnis e) -> bhzMap.getOrDefault(e.teamNr(), 0)).reversed())
-				.thenComparing(Comparator.comparingInt(
-						(SchweizerTeamErgebnis e) -> fbhzMap.getOrDefault(e.teamNr(), 0)).reversed())
-				.thenComparing(Comparator.comparingInt(SchweizerTeamErgebnis::punktedifferenz).reversed())
-				.thenComparing(Comparator.comparingInt(SchweizerTeamErgebnis::erzieltePunkte).reversed());
-
-		return ergebnisse.stream().sorted(comparator).collect(Collectors.toList());
+	/**
+	 * Sortiert nach Auswertungskriterien mit wählbarem Ranking-Modus, ohne Buchholz-Beitrag für Freilose.
+	 *
+	 * @param ergebnisse die Teamergebnisse
+	 * @param modus      gewünschter Ranking-Modus
+	 * @return sortierte Liste
+	 * @see #sortiereNachAuswertungskriterien(List, SchweizerRankingModus, FreilosBuchholz)
+	 */
+	public List<SchweizerTeamErgebnis> sortiereNachAuswertungskriterien(List<SchweizerTeamErgebnis> ergebnisse,
+			SchweizerRankingModus modus) {
+		return sortiereNachAuswertungskriterien(ergebnisse, modus, FreilosBuchholz.OHNE_BEITRAG);
 	}
 
 	/**
 	 * Sortiert nach Auswertungskriterien mit wählbarem Modus.
 	 * <p>
 	 * Bei {@code OHNE_BUCHHOLZ}: Siege → Punktedifferenz → Punkte+<br>
-	 * Bei {@code MIT_BUCHHOLZ}: delegiert an {@link #sortiereNachAuswertungskriterien(List)}
-	 * (Siege → BHZ → FBHZ → Punktedifferenz → Punkte+).
+	 * Bei {@code MIT_BUCHHOLZ}: Siege → BHZ → FBHZ → Punktedifferenz → Punkte+, Freilose gemäß
+	 * {@code freilosBuchholz}.
 	 *
-	 * @param ergebnisse die Teamergebnisse
-	 * @param modus      gewünschter Ranking-Modus
-	 * @return sortierte Liste
+	 * @param ergebnisse      die Teamergebnisse
+	 * @param modus           gewünschter Ranking-Modus
+	 * @param freilosBuchholz Buchholz-Beitrag eines Freiloses
+	 * @return neue, sortierte Liste (bestes Team zuerst)
 	 */
 	public List<SchweizerTeamErgebnis> sortiereNachAuswertungskriterien(List<SchweizerTeamErgebnis> ergebnisse,
-			SchweizerRankingModus modus) {
-		if (modus == SchweizerRankingModus.OHNE_BUCHHOLZ) {
-			return ergebnisse.stream()
-					.sorted(Comparator.comparingInt(SchweizerTeamErgebnis::siege).reversed()
-							.thenComparing(Comparator.comparingInt(SchweizerTeamErgebnis::punktedifferenz).reversed())
-							.thenComparing(Comparator.comparingInt(SchweizerTeamErgebnis::erzieltePunkte).reversed()))
-					.collect(Collectors.toList());
+			SchweizerRankingModus modus, FreilosBuchholz freilosBuchholz) {
+		Comparator<SchweizerTeamErgebnis> comparator = Comparator.comparingInt(SchweizerTeamErgebnis::siege)
+				.reversed();
+		if (modus != SchweizerRankingModus.OHNE_BUCHHOLZ) {
+			Map<Integer, Double> bhzMap = berechneBuchholz(ergebnisse, freilosBuchholz);
+			Map<Integer, Double> fbhzMap = berechneFeinbuchholz(ergebnisse, bhzMap, freilosBuchholz);
+			comparator = comparator
+					.thenComparing(Comparator.comparingDouble(
+							(SchweizerTeamErgebnis e) -> bhzMap.getOrDefault(e.teamNr(), 0.0)).reversed())
+					.thenComparing(Comparator.comparingDouble(
+							(SchweizerTeamErgebnis e) -> fbhzMap.getOrDefault(e.teamNr(), 0.0)).reversed());
 		}
-		return sortiereNachAuswertungskriterien(ergebnisse);
+		comparator = comparator
+				.thenComparing(Comparator.comparingInt(SchweizerTeamErgebnis::punktedifferenz).reversed())
+				.thenComparing(Comparator.comparingInt(SchweizerTeamErgebnis::erzieltePunkte).reversed());
+		return ergebnisse.stream().sorted(comparator).collect(Collectors.toList());
+	}
+
+	/**
+	 * Berechnet den Buchholz-Wert für jedes Team ohne Buchholz-Beitrag für Freilose (BPV-Regel).
+	 *
+	 * @param ergebnisse alle Teamergebnisse
+	 * @return Map von teamNr → BHZ-Wert
+	 * @see #berechneBuchholz(List, FreilosBuchholz)
+	 */
+	@VisibleForTesting
+	public Map<Integer, Double> berechneBuchholz(List<SchweizerTeamErgebnis> ergebnisse) {
+		return berechneBuchholz(ergebnisse, FreilosBuchholz.OHNE_BEITRAG);
 	}
 
 	/**
 	 * Berechnet den Buchholz-Wert für jedes Team.
-	 * BHZ = Summe der Siege aller Gegner am Turnierend.
-	 * Ein Freilos ist kein Gegner und liefert keinen Beitrag (BPV-Regel, siehe 03_Schweizer.md, 5.1).
+	 * BHZ = Summe der Siege aller Gegner plus je Freilos {@link FreilosBuchholz#bhzBeitrag()}
+	 * (siehe 03_Schweizer.md, 5.1).
 	 *
-	 * @param ergebnisse alle Teamergebnisse
-	 * @return Map von teamNr → BHZ-Wert
+	 * @param ergebnisse      alle Teamergebnisse
+	 * @param freilosBuchholz Buchholz-Beitrag eines Freiloses
+	 * @return Map von teamNr → BHZ-Wert (Vielfache von 0,5)
 	 */
 	@VisibleForTesting
-	public Map<Integer, Integer> berechneBuchholz(List<SchweizerTeamErgebnis> ergebnisse) {
+	public Map<Integer, Double> berechneBuchholz(List<SchweizerTeamErgebnis> ergebnisse,
+			FreilosBuchholz freilosBuchholz) {
 		Map<Integer, Integer> siegeMap = ergebnisse.stream()
 				.collect(Collectors.toMap(SchweizerTeamErgebnis::teamNr, SchweizerTeamErgebnis::siege));
 
 		return ergebnisse.stream().collect(Collectors.toMap(
 				SchweizerTeamErgebnis::teamNr,
-				e -> e.gegnerNrn().stream()
-						.mapToInt(gegnerNr -> siegeMap.getOrDefault(gegnerNr, 0))
-						.sum()));
+				e -> e.gegnerNrn().stream().mapToInt(gegnerNr -> siegeMap.getOrDefault(gegnerNr, 0)).sum()
+						+ e.anzFreilose() * freilosBuchholz.bhzBeitrag()));
 	}
 
 	/**
-	 * Berechnet den Feinbuchholz-Wert für jedes Team.
-	 * FBHZ = Summe der BHZ-Werte aller Gegner.
-	 * Ein Freilos liefert keinen Beitrag (BPV-Regel, siehe 03_Schweizer.md, 5.1).
+	 * Berechnet den Feinbuchholz-Wert für jedes Team ohne Buchholz-Beitrag für Freilose (BPV-Regel).
 	 *
 	 * @param ergebnisse alle Teamergebnisse
 	 * @param bhzMap     vorberechnete BHZ-Werte
 	 * @return Map von teamNr → FBHZ-Wert
+	 * @see #berechneFeinbuchholz(List, Map, FreilosBuchholz)
 	 */
 	@VisibleForTesting
-	public Map<Integer, Integer> berechneFeinbuchholz(List<SchweizerTeamErgebnis> ergebnisse,
-			Map<Integer, Integer> bhzMap) {
+	public Map<Integer, Double> berechneFeinbuchholz(List<SchweizerTeamErgebnis> ergebnisse,
+			Map<Integer, Double> bhzMap) {
+		return berechneFeinbuchholz(ergebnisse, bhzMap, FreilosBuchholz.OHNE_BEITRAG);
+	}
+
+	/**
+	 * Berechnet den Feinbuchholz-Wert für jedes Team.
+	 * FBHZ = Summe der (bereits um Freilose korrigierten) BHZ-Werte aller Gegner plus je eigenem Freilos
+	 * {@link FreilosBuchholz#fbhzBeitrag(int)} (siehe 03_Schweizer.md, 5.1).
+	 *
+	 * @param ergebnisse      alle Teamergebnisse
+	 * @param bhzMap          vorberechnete BHZ-Werte (mit demselben {@code freilosBuchholz})
+	 * @param freilosBuchholz Buchholz-Beitrag eines Freiloses
+	 * @return Map von teamNr → FBHZ-Wert (Vielfache von 0,5)
+	 */
+	@VisibleForTesting
+	public Map<Integer, Double> berechneFeinbuchholz(List<SchweizerTeamErgebnis> ergebnisse,
+			Map<Integer, Double> bhzMap, FreilosBuchholz freilosBuchholz) {
 		return ergebnisse.stream().collect(Collectors.toMap(
 				SchweizerTeamErgebnis::teamNr,
-				e -> e.gegnerNrn().stream()
-						.mapToInt(gegnerNr -> bhzMap.getOrDefault(gegnerNr, 0))
-						.sum()));
+				e -> e.gegnerNrn().stream().mapToDouble(gegnerNr -> bhzMap.getOrDefault(gegnerNr, 0.0)).sum()
+						+ e.anzFreilose() * freilosBuchholz.fbhzBeitrag(e.siege())));
 	}
 
 	/**

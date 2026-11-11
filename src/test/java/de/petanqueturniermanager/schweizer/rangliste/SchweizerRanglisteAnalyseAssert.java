@@ -14,6 +14,7 @@ import com.google.common.base.Preconditions;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
 
+import de.petanqueturniermanager.algorithmen.schweizer.FreilosBuchholz;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
@@ -22,6 +23,7 @@ import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
+import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerRankingModus;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrundeSheet;
 
@@ -37,8 +39,10 @@ import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrund
  *       ("N. Spielrunde") aufsummierten Werte, inkl. Freilos-Buchung mit den konfigurierten
  *       Freispiel-Punkten.</li>
  *   <li>BHZ (Buchholz) = Summe der Siege aller Gegner. Ungespielte Paarungen (Ergebnis 0:0)
- *       zählen dabei nicht als Gegner (analog {@code SchweizerRanglisteSheet.leseRundeEin}).</li>
- *   <li>FBHZ (Feinbuchholz) = Summe der BHZ-Werte aller Gegner.</li>
+ *       zählen dabei nicht als Gegner (analog {@code SchweizerRanglisteSheet.leseRundeEin}).
+ *       Bei Freilos-Buchholz NEUTRAL je Freilos (r − 1) / 2, r = Runden mit eingetragenem Ergebnis.</li>
+ *   <li>FBHZ (Feinbuchholz) = Summe der BHZ-Werte aller Gegner, bei NEUTRAL je Freilos
+ *       eigene Siege + (r − 1) · r / 2.</li>
  *   <li>Rangliste-Sortierung: Siege ↓ → BHZ ↓ → FBHZ ↓ → Punktedifferenz ↓ → Punkte+ ↓.</li>
  * </ol>
  *
@@ -68,50 +72,48 @@ public class SchweizerRanglisteAnalyseAssert {
 	}
 
 	/**
-	 * Prüft die Rangliste-Werte und deren Sortierung.
+	 * Prüft die Rangliste-Werte und deren Sortierung mit den Einstellungen aus der Konfiguration (Freispiel-Punkte,
+	 * Ranking-Modus, Freilos-Buchholz). Bei {@link SchweizerRankingModus#OHNE_BUCHHOLZ} entfallen BHZ/FBHZ im
+	 * Wertvergleich und im Sortierschlüssel (Siege ↓ → Punktedifferenz ↓ → Punkte+ ↓).
 	 *
 	 * @param ranglisteSheetName sichtbarer Name des Rangliste-Sheets (z.B. {@link SheetNamen#rangliste()}
 	 *                           oder {@link SheetNamen#maastrichterVorrundenRangliste()})
 	 * @param anzRunden          Anzahl der auszuwertenden Spielrunden ("1. Spielrunde" … "N. Spielrunde")
-	 * @param freispielPlus      konfigurierte Freispiel-Punkte+ (bei Freilos)
-	 * @param freispielMinus     konfigurierte Freispiel-Punkte- (bei Freilos)
+	 * @param konfig             Konfiguration des Turniers (Schweizer oder Maastrichter)
 	 */
-	public void pruefe(String ranglisteSheetName, int anzRunden, int freispielPlus, int freispielMinus)
+	public void pruefe(String ranglisteSheetName, int anzRunden, SchweizerKonfigurationSheet konfig)
 			throws GenerateException {
-		pruefe(ranglisteSheetName, anzRunden, freispielPlus, freispielMinus, SchweizerRankingModus.MIT_BUCHHOLZ);
-	}
-
-	/**
-	 * Wie {@link #pruefe(String, int, int, int)}, aber mit explizitem Ranking-Modus: bei
-	 * {@link SchweizerRankingModus#OHNE_BUCHHOLZ} entfallen BHZ/FBHZ im Wertvergleich und im
-	 * Sortierschlüssel (Siege ↓ → Punktedifferenz ↓ → Punkte+ ↓), da
-	 * {@code SchweizerRanglisteSheet} dort 0 in die BHZ/FBHZ-Spalten schreibt und
-	 * {@code SchweizerSystem.sortiereNachAuswertungskriterien} ohne BHZ/FBHZ sortiert.
-	 */
-	public void pruefe(String ranglisteSheetName, int anzRunden, int freispielPlus, int freispielMinus,
-			SchweizerRankingModus modus) throws GenerateException {
-		Map<Integer, TeamStats> statsProTeam = leseSpielrunden(anzRunden, freispielPlus, freispielMinus);
-		Map<Integer, Integer> bhzMap = berechneBuchholz(statsProTeam);
-		Map<Integer, Integer> fbhzMap = berechneFeinbuchholz(statsProTeam, bhzMap);
-		boolean ohneBuchholz = modus == SchweizerRankingModus.OHNE_BUCHHOLZ;
-		pruefeRanglisteKorrektheit(ranglisteSheetName, statsProTeam, bhzMap, fbhzMap, ohneBuchholz);
+		RundenStats rundenStats = leseSpielrunden(anzRunden, konfig.getFreispielPunktePlus(),
+				konfig.getFreispielPunkteMinus());
+		var freilos = new FreilosBuchholz(konfig.getFreilosBuchholzModus(), rundenStats.anzGewerteteRunden());
+		Map<Integer, Double> bhzMap = berechneBuchholz(rundenStats.statsProTeam(), freilos);
+		Map<Integer, Double> fbhzMap = berechneFeinbuchholz(rundenStats.statsProTeam(), bhzMap, freilos);
+		boolean ohneBuchholz = konfig.getRankingModus() == SchweizerRankingModus.OHNE_BUCHHOLZ;
+		pruefeRanglisteKorrektheit(ranglisteSheetName, rundenStats.statsProTeam(), bhzMap, fbhzMap, ohneBuchholz);
 	}
 
 	// ----- Spielrunden lesen -----
 
-	private Map<Integer, TeamStats> leseSpielrunden(int anzRunden, int freispielPlus, int freispielMinus) {
+	private RundenStats leseSpielrunden(int anzRunden, int freispielPlus, int freispielMinus) {
 		Map<Integer, TeamStats> statsProTeam = new HashMap<>();
+		int anzGewerteteRunden = 0;
 
 		for (int rundeNr = 1; rundeNr <= anzRunden; rundeNr++) {
 			String sheetName = SheetNamen.spielrunde(rundeNr);
 			XSpreadsheet sheet = sheetHelper.findByName(sheetName);
 			assertThat(sheet).as("Spielrunden-Sheet '%s' muss existieren", sheetName).isNotNull();
-			verarbeiteSpielrundeSheet(sheet, statsProTeam, freispielPlus, freispielMinus);
+			if (verarbeiteSpielrundeSheet(sheet, statsProTeam, freispielPlus, freispielMinus)) {
+				anzGewerteteRunden++;
+			}
 		}
-		return statsProTeam;
+		return new RundenStats(statsProTeam, anzGewerteteRunden);
 	}
 
-	private void verarbeiteSpielrundeSheet(XSpreadsheet sheet, Map<Integer, TeamStats> statsProTeam,
+	/**
+	 * @return {@code true}, wenn die Runde mindestens ein eingetragenes Ergebnis hat; nur dann zählen ihre Freilose
+	 *         für den Freilos-Buchholz
+	 */
+	private boolean verarbeiteSpielrundeSheet(XSpreadsheet sheet, Map<Integer, TeamStats> statsProTeam,
 			int freispielPlus, int freispielMinus) {
 		RangeData data = RangeHelper.from(sheet, xDoc,
 				RangePosition.from(SchweizerAbstractSpielrundeSheet.TEAM_A_SPALTE,
@@ -120,6 +122,8 @@ public class SchweizerRanglisteAnalyseAssert {
 						SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE + MAX_DATEN_ZEILEN - 1))
 				.getDataFromRange();
 
+		boolean hatErgebnis = false;
+		List<TeamStats> freilosTeams = new ArrayList<>();
 		for (RowData row : data) {
 			if (row.size() < 2) {
 				break;
@@ -136,6 +140,7 @@ public class SchweizerRanglisteAnalyseAssert {
 				statsA.siege++;
 				statsA.punktePlus += freispielPlus;
 				statsA.punkteMinus += freispielMinus;
+				freilosTeams.add(statsA);
 				continue;
 			}
 
@@ -143,6 +148,7 @@ public class SchweizerRanglisteAnalyseAssert {
 			int ergB = row.size() > 3 ? row.get(3).getIntVal(0) : 0;
 
 			if (ergA > 0 || ergB > 0) {
+				hatErgebnis = true;
 				TeamStats statsA = statsProTeam.computeIfAbsent(nrA, k -> new TeamStats());
 				TeamStats statsB = statsProTeam.computeIfAbsent(nrB, k -> new TeamStats());
 				statsA.gegnerNrn.add(nrB);
@@ -158,37 +164,35 @@ public class SchweizerRanglisteAnalyseAssert {
 				}
 			}
 		}
+		if (hatErgebnis) {
+			freilosTeams.forEach(stats -> stats.anzFreilose++);
+		}
+		return hatErgebnis;
 	}
 
 	// ----- BHZ / FBHZ -----
 
-	private Map<Integer, Integer> berechneBuchholz(Map<Integer, TeamStats> statsProTeam) {
-		Map<Integer, Integer> bhzMap = new HashMap<>();
-		for (var entry : statsProTeam.entrySet()) {
-			int bhz = entry.getValue().gegnerNrn.stream()
-					.mapToInt(gegnerNr -> statsProTeam.getOrDefault(gegnerNr, new TeamStats()).siege)
-					.sum();
-			bhzMap.put(entry.getKey(), bhz);
-		}
+	private Map<Integer, Double> berechneBuchholz(Map<Integer, TeamStats> statsProTeam, FreilosBuchholz freilos) {
+		Map<Integer, Double> bhzMap = new HashMap<>();
+		statsProTeam.forEach((nr, stats) -> bhzMap.put(nr, stats.gegnerNrn.stream()
+				.mapToInt(gegnerNr -> statsProTeam.getOrDefault(gegnerNr, new TeamStats()).siege).sum()
+				+ stats.anzFreilose * freilos.bhzBeitrag()));
 		return bhzMap;
 	}
 
-	private Map<Integer, Integer> berechneFeinbuchholz(Map<Integer, TeamStats> statsProTeam,
-			Map<Integer, Integer> bhzMap) {
-		Map<Integer, Integer> fbhzMap = new HashMap<>();
-		for (var entry : statsProTeam.entrySet()) {
-			int fbhz = entry.getValue().gegnerNrn.stream()
-					.mapToInt(gegnerNr -> bhzMap.getOrDefault(gegnerNr, 0))
-					.sum();
-			fbhzMap.put(entry.getKey(), fbhz);
-		}
+	private Map<Integer, Double> berechneFeinbuchholz(Map<Integer, TeamStats> statsProTeam,
+			Map<Integer, Double> bhzMap, FreilosBuchholz freilos) {
+		Map<Integer, Double> fbhzMap = new HashMap<>();
+		statsProTeam.forEach((nr, stats) -> fbhzMap.put(nr, stats.gegnerNrn.stream()
+				.mapToDouble(gegnerNr -> bhzMap.getOrDefault(gegnerNr, 0.0)).sum()
+				+ stats.anzFreilose * freilos.fbhzBeitrag(stats.siege)));
 		return fbhzMap;
 	}
 
 	// ----- Rangliste-Korrektheit -----
 
 	private void pruefeRanglisteKorrektheit(String ranglisteSheetName, Map<Integer, TeamStats> statsProTeam,
-			Map<Integer, Integer> bhzMap, Map<Integer, Integer> fbhzMap, boolean ohneBuchholz)
+			Map<Integer, Double> bhzMap, Map<Integer, Double> fbhzMap, boolean ohneBuchholz)
 			throws GenerateException {
 		XSpreadsheet sheet = sheetHelper.findByName(ranglisteSheetName);
 		assertThat(sheet).as("Rangliste-Sheet '%s' muss existieren", ranglisteSheetName).isNotNull();
@@ -209,15 +213,15 @@ public class SchweizerRanglisteAnalyseAssert {
 			}
 			TeamStats stats = statsProTeam.getOrDefault(nr, new TeamStats());
 			int erwSiege = stats.siege;
-			int erwBhz = bhzMap.getOrDefault(nr, 0);
-			int erwFbhz = fbhzMap.getOrDefault(nr, 0);
+			double erwBhz = bhzMap.getOrDefault(nr, 0.0);
+			double erwFbhz = fbhzMap.getOrDefault(nr, 0.0);
 			int erwPlus = stats.punktePlus;
 			int erwMinus = stats.punkteMinus;
 			int erwDiff = erwPlus - erwMinus;
 
 			int istSiege = row.get(SchweizerRanglisteSheet.SIEGE_SPALTE).getIntVal(Integer.MIN_VALUE);
-			int istBhz = row.get(SchweizerRanglisteSheet.BHZ_SPALTE).getIntVal(Integer.MIN_VALUE);
-			int istFbhz = row.get(SchweizerRanglisteSheet.FBHZ_SPALTE).getIntVal(Integer.MIN_VALUE);
+			double istBhz = row.get(SchweizerRanglisteSheet.BHZ_SPALTE).getDoubleVal(Double.NaN);
+			double istFbhz = row.get(SchweizerRanglisteSheet.FBHZ_SPALTE).getDoubleVal(Double.NaN);
 			int istPlus = row.get(SchweizerRanglisteSheet.PUNKTE_PLUS_SPALTE).getIntVal(Integer.MIN_VALUE);
 			int istMinus = row.get(SchweizerRanglisteSheet.PUNKTE_MINUS_SPALTE).getIntVal(Integer.MIN_VALUE);
 			int istDiff = row.get(SchweizerRanglisteSheet.PUNKTE_DIFF_SPALTE).getIntVal(Integer.MIN_VALUE);
@@ -247,8 +251,8 @@ public class SchweizerRanglisteAnalyseAssert {
 						.thenComparingInt(e -> -e.diff())
 						.thenComparingInt(e -> -e.punktePlus())
 				: Comparator.<RanglisteEintrag>comparingInt(e -> -e.siege())
-						.thenComparingInt(e -> -e.bhz())
-						.thenComparingInt(e -> -e.fbhz())
+						.thenComparingDouble(e -> -e.bhz())
+						.thenComparingDouble(e -> -e.fbhz())
 						.thenComparingInt(e -> -e.diff())
 						.thenComparingInt(e -> -e.punktePlus());
 
@@ -267,9 +271,13 @@ public class SchweizerRanglisteAnalyseAssert {
 		int siege;
 		int punktePlus;
 		int punkteMinus;
+		int anzFreilose;
 		final List<Integer> gegnerNrn = new ArrayList<>();
 	}
 
-	record RanglisteEintrag(int nr, int siege, int bhz, int fbhz, int diff, int punktePlus) {
+	private record RundenStats(Map<Integer, TeamStats> statsProTeam, int anzGewerteteRunden) {
+	}
+
+	record RanglisteEintrag(int nr, int siege, double bhz, double fbhz, int diff, int punktePlus) {
 	}
 }

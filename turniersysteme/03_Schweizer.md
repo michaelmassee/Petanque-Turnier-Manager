@@ -40,10 +40,12 @@ Jede Runde folgt der gleichen Struktur:
 Das wichtigste Kriterium.
 
 ## 3.2 Buchholz (BHZ)
-Summe der Siege aller Gegner. Ein Freilos ist kein Gegner und liefert keinen Beitrag (siehe 5.1).
+Summe der Siege aller Gegner. Ein Freilos liefert je nach Einstellung „Freilos-Buchholz“ keinen Beitrag (NULL) oder
+den Beitrag eines fiktiven Durchschnittsgegners (NEUTRAL), siehe 5.1. Anzeige mit einer Nachkommastelle.
 
 ## 3.3 Feinbuchholz (FBHZ)
-Summe der BHZ‑Werte aller Gegner. Ein Freilos liefert keinen Beitrag (siehe 5.1).
+Summe der BHZ‑Werte aller Gegner (bei NEUTRAL bereits um deren Freilose korrigiert) plus ggf. der eigene
+Freilos-Beitrag, siehe 5.1.
 
 ## 3.4 Punktedifferenz
 (+) erzielte Punkte
@@ -83,17 +85,45 @@ Diese Logik wird häufig in Turniersoftware eingesetzt.
 - Runde 1: ein zufälliges ungesetztes Team; nur wenn alle gesetzt sind, eines aus der größten Setzgruppe
 - Wertung: 13:7 oder 13:0
 
-### Freilos und Buchholz
-Das Freilos zählt als Sieg mit den konfigurierten Freispiel-Punkten, bringt aber **0 BHZ- und 0 FBHZ-Punkte**
-(es gibt keinen Gegner). Für die anderen Teams zählt der Freilos-Sieg in deren BHZ normal mit.
+### Freilos und Buchholz (Einstellung „Freilos-Buchholz“, Issue #38)
+Das Freilos zählt als Sieg mit den konfigurierten Freispiel-Punkten. Für die anderen Teams zählt der Freilos-Sieg in
+deren BHZ normal mit. Welchen BHZ/FBHZ-Beitrag das Freilos dem Freilos-Team selbst bringt, ist einstellbar
+(Konfiguration, Schweizer und Maastrichter; PTM-Online: Turnieroptionen):
 
-Quelle: Bayerischer Pétanque Verband, [„Schweizer System“](https://www.petanque-bayern.de/files/0010_Allgemeine%20Informationen/Verband/Dokumente/Schweizer%20System.pdf):
-„Das Team erhält einen Siegpunkt, aber keine Buchholz- oder Feinbuchholzpunkte für das Freilos.“
+| Modus | Beitrag je Freilos | Verwendung |
+|---|---|---|
+| **NULL** | 0 BHZ, 0 FBHZ | BPV-Regel; Bestandsturniere ohne Einstellung |
+| **NEUTRAL** | BHZ `(r − 1) / 2`, FBHZ `eigene Siege + (r − 1) · r / 2` | Standard für neu angelegte Turniere |
 
-Begründung: Der geschenkte Sieg wird im Tie-Break nicht zusätzlich belohnt. Abweichende Ansätze wurden geprüft und
-bewusst nicht umgesetzt (Issue #35):
-- FAQ des Pétanque-Verbands NRW: Freilos zählt die BHZ des schlechtesten Teams – nur FAQ, ohne Bezug auf eine Ordnung.
-- FIDE C.07 Art. 16.4 (Schach): virtueller Gegner mit eigener Punktzahl – schachspezifisch.
+`r` = Anzahl gewerteter Runden mit mindestens einem eingetragenen Ergebnis. Ein Freilos zählt nur, wenn seine Runde
+in `r` zählt – eine ausgeloste, aber ungespielte Runde verändert BHZ/FBHZ nicht.
+
+**Herleitung NEUTRAL (PTM-Regel):** Das Freilos wird als fiktiver Durchschnittsgegner gewertet. Er verliert in der
+Freilos-Runde gegen das eigene Team und gewinnt in den übrigen `r − 1` Runden rechnerisch die Hälfte → BHZ-Beitrag
+`(r − 1) / 2`. Seine eigene BHZ besteht aus den Siegen des eigenen Teams plus `r − 1` Durchschnittsgegnern mit je
+`r / 2` Siegen → FBHZ-Beitrag `eigene Siege + (r − 1) · r / 2`.
+
+| Gewertete Runden r | Eigene Siege | BHZ je Freilos | FBHZ je Freilos |
+|---|---|---|---|
+| 1 | 1 | 0 | 1 |
+| 2 | 2 | 0,5 | 3 |
+| 3 | 2 | 1 | 5 |
+| 5 | 3 | 2 | 13 |
+
+Nach Runde 1 hat das Freilos-Team damit BHZ 0 / FBHZ 1 – genau wie jeder andere Sieger. Mit NULL hätte es FBHZ 0,
+stünde systematisch am Ende der Sieger und läge nach 5 Runden typischerweise 2–3 BHZ-Punkte hinter einem gleich
+starken Team.
+
+Berechnung in zwei Schritten, ohne Rekursion: (1) BHZ = Siege der echten Gegner + Freilos-Beiträge; (2) FBHZ =
+**korrigierte** BHZ der echten Gegner + eigene FBHZ-Freilos-Beiträge. So profitieren auch die echten Gegner des
+Freilos-Teams über ihre FBHZ von dessen korrigierter BHZ. Werte sind Vielfache von 0,5 und werden mit einer
+Nachkommastelle angezeigt. Im Ranglisten-Modus OHNE_BUCHHOLZ hat die Einstellung keine Wirkung.
+
+Quellen und Abgrenzung:
+- NULL entspricht Bayerischer Pétanque Verband, [„Schweizer System“](https://www.petanque-bayern.de/files/0010_Allgemeine%20Informationen/Verband/Dokumente/Schweizer%20System.pdf):
+  „Das Team erhält einen Siegpunkt, aber keine Buchholz- oder Feinbuchholzpunkte für das Freilos.“
+- NEUTRAL ist eine eigene PTM-Regel. Geprüft und nicht übernommen (Issue #35/#38): FAQ des Pétanque-Verbands NRW
+  (BHZ des schlechtesten Teams) und FIDE C.07 Art. 16.4 (virtueller Gegner, schachspezifisch).
 
 ## 5.2 Score‑Gruppe ungerade → Float (Herunterlosen)
 Ist eine Sieggruppe ungerade, wird ein Team in die nächsttiefere Gruppe heruntergelost und dort zuerst gepaart.
@@ -114,9 +144,9 @@ eine Runde ohne gleich starken Gegner. Diese Sonderrolle soll reihum gehen, desh
 Folgerunde möglichst nicht auch noch heruntergelost (vgl. FIDE Dutch: wer eine Runde nicht spielt, gilt als
 heruntergelost). Die Freilos-Runde wird wie eine Herunterlosung in der Historie vermerkt (pro Runde höchstens einmal).
 
-Aktueller Anlass: Ohne Gegner bekommt das Freilos-Team derzeit 0 BHZ/FBHZ (siehe 5.1) und steht damit z. B. bei
-9 Teams vor Runde 2 als letzter der 5 Sieger – es wäre sonst erster Kandidat fürs Herunterlosen. Die Regel gilt
-unabhängig von der Buchholz-Wertung des Freiloses; sie korrigiert die Wertung nicht, sondern nur die Floater-Wahl.
+Die Regel gilt unabhängig von der Freilos-Buchholz-Einstellung (5.1): Diese korrigiert die Wertung, die
+Herunterlos-Regel nur die Floater-Wahl. Besonders wichtig ist sie bei NULL, weil das Freilos-Team dort mangels
+Gegner (0 BHZ/FBHZ) z. B. bei 9 Teams vor Runde 2 als letzter der 5 Sieger erster Kandidat fürs Herunterlosen wäre.
 
 Das ist ein Optimierungskriterium, kein Verbot (vgl. FIDE Dutch C.04.3, Kriterien C14/C16): Die Auslosung blockiert
 nie. Die Vermeidung von Gegnerwiederholungen (Kapitel 4) hat Vorrang – erzwingt sie eine andere Paarung, kann auch

@@ -3,6 +3,7 @@
  */
 package de.petanqueturniermanager.maastrichter.meldeliste;
 
+import de.petanqueturniermanager.schweizer.konfiguration.SchweizerFreilosBuchholzModus;
 import java.util.Optional;
 
 import org.apache.logging.log4j.LogManager;
@@ -137,6 +138,8 @@ public class MaastrichterMeldeListeSheetNew extends SheetRunner implements IShee
 			konfigurationSheet.setMeldeListeTeamnameAnzeigen(teamnameAnzeigen);
 			konfigurationSheet.setMeldeListeVereinsnameAnzeigen(vereinsnameAnzeigen);
 			konfigurationSheet.setSpielplanTeamAnzeige(spielplanTeamAnzeige);
+			// neue Turniere: Freilos-Buchholz neutral (Bestandsdokumente ohne Property bleiben bei NULL)
+			konfigurationSheet.setFreilosBuchholzModus(SchweizerFreilosBuchholzModus.NEUTRAL);
 			// Layout via MaastrichterMeldeListeSheetUpdate aufbauen (Format identisch mit Schweizer)
 			new MaastrichterMeldeListeSheetUpdate(getWorkingSpreadsheet()).upDateSheet();
 		}

@@ -2,6 +2,8 @@ package de.petanqueturniermanager.schweizer.rangliste;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.List;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,6 +29,7 @@ import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrund
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerTurnierTestDaten;
 import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.schweizer.konfiguration.SchweizerFreilosBuchholzModus;
 
 /**
  * UI-Tests für das Schweizer Rangliste-Sheet.
@@ -103,13 +106,13 @@ public class SchweizerRanglisteSheetUITest extends BaseCalcUITest {
 
 		assertThat(data)
 				.as("BHZ muss >= 0 sein")
-				.extracting(row -> row.get(SchweizerRanglisteSheet.BHZ_SPALTE).getIntVal(-1))
-				.allSatisfy(bhz -> assertThat(bhz).isGreaterThanOrEqualTo(0));
+				.extracting(row -> row.get(SchweizerRanglisteSheet.BHZ_SPALTE).getDoubleVal(-1))
+				.allSatisfy(bhz -> assertThat(bhz).isGreaterThanOrEqualTo(0.0));
 
 		assertThat(data)
 				.as("FBHZ muss >= 0 sein")
-				.extracting(row -> row.get(SchweizerRanglisteSheet.FBHZ_SPALTE).getIntVal(-1))
-				.allSatisfy(fbhz -> assertThat(fbhz).isGreaterThanOrEqualTo(0));
+				.extracting(row -> row.get(SchweizerRanglisteSheet.FBHZ_SPALTE).getDoubleVal(-1))
+				.allSatisfy(fbhz -> assertThat(fbhz).isGreaterThanOrEqualTo(0.0));
 
 		assertThat(data)
 				.as("PLATZ muss zwischen 1 und " + ANZ_TEAMS + " liegen")
@@ -181,10 +184,10 @@ public class SchweizerRanglisteSheetUITest extends BaseCalcUITest {
 
 			int siegeI   = rowI.get(SchweizerRanglisteSheet.SIEGE_SPALTE).getIntVal(0);
 			int siegeIp1 = rowIp1.get(SchweizerRanglisteSheet.SIEGE_SPALTE).getIntVal(0);
-			int bhzI     = rowI.get(SchweizerRanglisteSheet.BHZ_SPALTE).getIntVal(0);
-			int bhzIp1   = rowIp1.get(SchweizerRanglisteSheet.BHZ_SPALTE).getIntVal(0);
-			int fbhzI    = rowI.get(SchweizerRanglisteSheet.FBHZ_SPALTE).getIntVal(0);
-			int fbhzIp1  = rowIp1.get(SchweizerRanglisteSheet.FBHZ_SPALTE).getIntVal(0);
+			double bhzI    = rowI.get(SchweizerRanglisteSheet.BHZ_SPALTE).getDoubleVal(0);
+			double bhzIp1  = rowIp1.get(SchweizerRanglisteSheet.BHZ_SPALTE).getDoubleVal(0);
+			double fbhzI   = rowI.get(SchweizerRanglisteSheet.FBHZ_SPALTE).getDoubleVal(0);
+			double fbhzIp1 = rowIp1.get(SchweizerRanglisteSheet.FBHZ_SPALTE).getDoubleVal(0);
 			int diffI    = rowI.get(SchweizerRanglisteSheet.PUNKTE_DIFF_SPALTE).getIntVal(0);
 			int diffIp1  = rowIp1.get(SchweizerRanglisteSheet.PUNKTE_DIFF_SPALTE).getIntVal(0);
 			int plusI    = rowI.get(SchweizerRanglisteSheet.PUNKTE_PLUS_SPALTE).getIntVal(0);
@@ -212,13 +215,13 @@ public class SchweizerRanglisteSheetUITest extends BaseCalcUITest {
 
 		assertThat(data)
 				.as("BHZ_SPALTE muss 0 sein bei OHNE_BUCHHOLZ")
-				.extracting(row -> row.get(SchweizerRanglisteSheet.BHZ_SPALTE).getIntVal(-1))
-				.allSatisfy(bhz -> assertThat(bhz).isEqualTo(0));
+				.extracting(row -> row.get(SchweizerRanglisteSheet.BHZ_SPALTE).getDoubleVal(-1))
+				.allSatisfy(bhz -> assertThat(bhz).isZero());
 
 		assertThat(data)
 				.as("FBHZ_SPALTE muss 0 sein bei OHNE_BUCHHOLZ")
-				.extracting(row -> row.get(SchweizerRanglisteSheet.FBHZ_SPALTE).getIntVal(-1))
-				.allSatisfy(fbhz -> assertThat(fbhz).isEqualTo(0));
+				.extracting(row -> row.get(SchweizerRanglisteSheet.FBHZ_SPALTE).getDoubleVal(-1))
+				.allSatisfy(fbhz -> assertThat(fbhz).isZero());
 
 		assertThat(data)
 				.as("Siege müssen befüllt sein")
@@ -270,8 +273,8 @@ public class SchweizerRanglisteSheetUITest extends BaseCalcUITest {
 					i + 1,
 					row.get(SchweizerRanglisteSheet.TEAM_NR_SPALTE).getIntVal(-1),
 					row.get(SchweizerRanglisteSheet.SIEGE_SPALTE).getIntVal(-1),
-					row.get(SchweizerRanglisteSheet.BHZ_SPALTE).getIntVal(-1),
-					row.get(SchweizerRanglisteSheet.FBHZ_SPALTE).getIntVal(-1),
+					row.get(SchweizerRanglisteSheet.BHZ_SPALTE).getDoubleVal(-1),
+					row.get(SchweizerRanglisteSheet.FBHZ_SPALTE).getDoubleVal(-1),
 					row.get(SchweizerRanglisteSheet.PUNKTE_PLUS_SPALTE).getIntVal(-1),
 					row.get(SchweizerRanglisteSheet.PUNKTE_MINUS_SPALTE).getIntVal(-1),
 					row.get(SchweizerRanglisteSheet.PUNKTE_DIFF_SPALTE).getIntVal(-1));
@@ -385,10 +388,10 @@ public class SchweizerRanglisteSheetUITest extends BaseCalcUITest {
 
 		for (RowData row : data) {
 			int siege = row.get(SchweizerRanglisteSheet.SIEGE_SPALTE).getIntVal(-1);
-			int bhz = row.get(SchweizerRanglisteSheet.BHZ_SPALTE).getIntVal(-1);
+			double bhz = row.get(SchweizerRanglisteSheet.BHZ_SPALTE).getDoubleVal(-1);
 			assertThat(bhz)
 					.as("Nach Runde 1 (Runde 2 nur gepaart, ungespielt) muss BHZ = 1 - Siege(=%d) sein", siege)
-					.isEqualTo(1 - siege);
+					.isEqualTo(1.0 - siege);
 		}
 	}
 
@@ -555,4 +558,71 @@ public class SchweizerRanglisteSheetUITest extends BaseCalcUITest {
 					NumberCellValue.from(sheet, Position.from(SchweizerAbstractSpielrundeSheet.ERG_TEAM_B_SPALTE, zeile)).setValue(0));
 		}
 	}
+
+	// ── Issue #38 Punkt 1: Freilos-Buchholz NEUTRAL ─────────────────────────────
+
+	/**
+	 * Neue Turniere rechnen mit Freilos-Buchholz NEUTRAL: Nach Runde 1 (15 Teams, ein Freilos) hat das Freilos-Team
+	 * BHZ 0 und FBHZ 1 wie jeder andere Sieger. Eine danach nur ausgeloste, ungespielte Runde 2 zählt nicht als
+	 * gewertete Runde – BHZ bliebe sonst nicht bei 0, sondern stiege auf 0,5.
+	 */
+	@Test
+	public void testFreilosBuchholzNeutral_FreilosTeamWieSiegerUndUngespielteRundeZaehltNicht()
+			throws GenerateException {
+		int anzTeams = 15;
+		var ungeradeTestDaten = new SchweizerTurnierTestDaten(wkingSpreadsheet, anzTeams, TeamAnzeige.NR);
+		ungeradeTestDaten.generate(1, false);
+		assertThat(ungeradeTestDaten.naechsteSpielrunde.getKonfigurationSheet().getFreilosBuchholzModus())
+				.as("Neu angelegtes Turnier muss Freilos-Buchholz NEUTRAL haben")
+				.isEqualTo(SchweizerFreilosBuchholzModus.NEUTRAL);
+		int freilosTeamNr = freilosTeamNr(1);
+
+		new SchweizerRanglisteSheet(wkingSpreadsheet).doRun();
+		pruefeBuchholzNachRundeEins(anzTeams, freilosTeamNr);
+
+		ungeradeTestDaten.naechsteSpielrunde.doRun(); // Runde 2 nur paaren, keine Ergebnisse
+		new SchweizerRanglisteSheet(wkingSpreadsheet).doRun();
+		RowData freilosZeile = ranglisteZeilen(anzTeams).stream()
+				.filter(zeile -> zeile.get(SchweizerRanglisteSheet.TEAM_NR_SPALTE).getIntVal() == freilosTeamNr)
+				.findFirst().orElseThrow();
+		assertThat(freilosZeile.get(SchweizerRanglisteSheet.BHZ_SPALTE).getDoubleVal(-1))
+				.as("Ungespielte Runde 2 darf den Freilos-Buchholz nicht erhöhen").isZero();
+		assertThat(freilosZeile.get(SchweizerRanglisteSheet.FBHZ_SPALTE).getDoubleVal(-1)).isEqualTo(1.0);
+	}
+
+	private void pruefeBuchholzNachRundeEins(int anzTeams, int freilosTeamNr) throws GenerateException {
+		var zeilen = ranglisteZeilen(anzTeams);
+		assertThat(zeilen).hasSize(anzTeams);
+		for (RowData zeile : zeilen) {
+			int nr = zeile.get(SchweizerRanglisteSheet.TEAM_NR_SPALTE).getIntVal();
+			int siege = zeile.get(SchweizerRanglisteSheet.SIEGE_SPALTE).getIntVal(-1);
+			assertThat(zeile.get(SchweizerRanglisteSheet.BHZ_SPALTE).getDoubleVal(-1))
+					.as("Team %d (Freilos-Team %d): BHZ nach Runde 1", nr, freilosTeamNr).isEqualTo(1.0 - siege);
+			assertThat(zeile.get(SchweizerRanglisteSheet.FBHZ_SPALTE).getDoubleVal(-1))
+					.as("Team %d (Freilos-Team %d): FBHZ nach Runde 1 = Siege", nr, freilosTeamNr)
+					.isEqualTo((double) siege);
+		}
+	}
+
+	private List<RowData> ranglisteZeilen(int anzTeams) throws GenerateException {
+		XSpreadsheet rangliste = sheetHlp.findByName(SheetNamen.rangliste());
+		RangePosition bereich = RangePosition.from(SchweizerRanglisteSheet.TEAM_NR_SPALTE,
+				SchweizerRanglisteSheet.ERSTE_DATEN_ZEILE, SchweizerRanglisteSheet.PUNKTE_DIFF_SPALTE,
+				SchweizerRanglisteSheet.ERSTE_DATEN_ZEILE + anzTeams - 1);
+		return RangeHelper.from(rangliste, wkingSpreadsheet.getWorkingSpreadsheetDocument(), bereich)
+				.getDataFromRange().stream()
+				.filter(zeile -> zeile.get(SchweizerRanglisteSheet.TEAM_NR_SPALTE).getIntVal() > 0).toList();
+	}
+
+	private int freilosTeamNr(int runde) throws GenerateException {
+		XSpreadsheet spielrunde = sheetHlp.findByName(SheetNamen.spielrunde(runde));
+		RangePosition bereich = RangePosition.from(SchweizerAbstractSpielrundeSheet.TEAM_A_SPALTE,
+				SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE, SchweizerAbstractSpielrundeSheet.TEAM_A_SPALTE + 1,
+				SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE + 99);
+		return RangeHelper.from(spielrunde, wkingSpreadsheet.getWorkingSpreadsheetDocument(), bereich)
+				.getDataFromRange().stream()
+				.filter(zeile -> zeile.get(0).getIntVal() > 0 && zeile.get(1).getIntVal(0) <= 0)
+				.mapToInt(zeile -> zeile.get(0).getIntVal()).findFirst().orElseThrow();
+	}
+
 }

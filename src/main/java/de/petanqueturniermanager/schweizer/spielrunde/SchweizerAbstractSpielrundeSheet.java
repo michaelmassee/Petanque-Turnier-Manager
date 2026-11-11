@@ -26,7 +26,9 @@ import com.sun.star.table.TableBorder2;
 
 import de.petanqueturniermanager.basesheet.meldeliste.TeamSpaltenBreite;
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.algorithmen.schweizer.FreilosBuchholz;
 import de.petanqueturniermanager.algorithmen.schweizer.HerunterlosChronik;
+import de.petanqueturniermanager.algorithmen.schweizer.SchweizerAuswertung;
 import de.petanqueturniermanager.algorithmen.schweizer.SchweizerSystem;
 import de.petanqueturniermanager.algorithmen.schweizer.SchweizerTeamErgebnis;
 import de.petanqueturniermanager.algorithmen.schweizer.SchweizerTeamNrAufloeser;
@@ -268,13 +270,15 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 	 *   <li>Team-Gegner-Beziehungen (für Auslosung der nächsten Runde)</li>
 	 *   <li>Freilos-Flags</li>
 	 * </ul>
+	 * Freilose zählen für den Freilos-Buchholz nur in Runden mit mindestens einem eingetragenen Ergebnis
+	 * (gleiche Regel wie {@link de.petanqueturniermanager.algorithmen.schweizer.SchweizerRundenLeser}).
 	 *
 	 * @param aktiveMeldungen aktive Teams
 	 * @param abSpielrunde    erste einzulesende Runde (inkl.)
 	 * @param bisSpielrunde   letzte einzulesende Runde (inkl.)
-	 * @return Auswertungsdaten je Team (Siege, Punktedifferenz, Gegnerliste)
+	 * @return Auswertungsdaten je Team (Siege, Punktedifferenz, Gegnerliste, Freilose) und Anzahl gewerteter Runden
 	 */
-	protected List<SchweizerTeamErgebnis> gespieltenRundenEinlesen(TeamMeldungen aktiveMeldungen, int abSpielrunde,
+	protected SchweizerAuswertung gespieltenRundenEinlesen(TeamMeldungen aktiveMeldungen, int abSpielrunde,
 			int bisSpielrunde) throws GenerateException {
 
 		Map<Integer, int[]> statsMap = new HashMap<>(); // teamNr → [0]=siege, [1]=punktediff, [2]=punkte+
@@ -284,6 +288,8 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 			gegnerMap.put(team.getNr(), new ArrayList<>());
 		}
 		var chronik = new HerunterlosChronik();
+		Map<Integer, Integer> freiloseJeTeam = new HashMap<>();
+		int anzGewerteteRunden = 0;
 
 		if (bisSpielrunde >= abSpielrunde && bisSpielrunde >= 1) {
 			int spielrunde = (abSpielrunde > 1) ? abSpielrunde : 1;
@@ -304,8 +310,13 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 				Map<Integer, Integer> siegeVorRunde = siegeJeTeam(statsMap);
 				List<HerunterlosChronik.Begegnung> begegnungen = new ArrayList<>();
 				List<Integer> freilosTeams = new ArrayList<>();
-				leseRundeEin(sheet, teamNrAufloeser, aktiveMeldungen, statsMap, gegnerMap, begegnungen, freilosTeams);
+				boolean hatErgebnis = leseRundeEin(sheet, teamNrAufloeser, aktiveMeldungen, statsMap, gegnerMap,
+						begegnungen, freilosTeams);
 				chronik.vermerkeRunde(spielrunde, begegnungen, freilosTeams, siegeVorRunde);
+				if (hatErgebnis) {
+					anzGewerteteRunden++;
+					freilosTeams.forEach(teamNr -> freiloseJeTeam.merge(teamNr, 1, Integer::sum));
+				}
 			}
 		}
 
@@ -314,9 +325,9 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 			int[] stats = statsMap.getOrDefault(team.getNr(), new int[3]);
 			List<Integer> gegnerNrn = gegnerMap.getOrDefault(team.getNr(), new ArrayList<>());
 			ergebnisse.add(new SchweizerTeamErgebnis(team.getNr(), stats[0], stats[1], stats[2], gegnerNrn,
-					chronik.rundenFuer(team.getNr())));
+					chronik.rundenFuer(team.getNr()), freiloseJeTeam.getOrDefault(team.getNr(), 0)));
 		}
-		return ergebnisse;
+		return new SchweizerAuswertung(ergebnisse, anzGewerteteRunden);
 	}
 
 	private static Map<Integer, Integer> siegeJeTeam(Map<Integer, int[]> statsMap) {
@@ -325,7 +336,10 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		return siege;
 	}
 
-	private void leseRundeEin(XSpreadsheet sheet, SchweizerTeamNrAufloeser teamNrAufloeser,
+	/**
+	 * @return {@code true}, wenn die Runde mindestens ein eingetragenes Ergebnis hat
+	 */
+	private boolean leseRundeEin(XSpreadsheet sheet, SchweizerTeamNrAufloeser teamNrAufloeser,
 			TeamMeldungen aktiveMeldungen, Map<Integer, int[]> statsMap, Map<Integer, List<Integer>> gegnerMap,
 			List<HerunterlosChronik.Begegnung> begegnungen, List<Integer> freilosTeams) throws GenerateException {
 		RangePosition readRange = RangePosition.from(TEAM_A_SPALTE, ERSTE_DATEN_ZEILE, TECHNISCHE_TEAM_B_NR_SPALTE,
@@ -333,6 +347,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		RangeData rowsData = RangeHelper
 				.from(sheet, getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), readRange).getDataFromRange();
 
+		boolean hatErgebnis = false;
 		for (RowData row : rowsData) {
 			if (row.size() < 2) {
 				break;
@@ -377,31 +392,34 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 			int ergA = (row.size() > 2) ? row.get(2).getIntVal(0) : 0; // ERG_TEAM_A_SPALTE (relativ: 2)
 			int ergB = (row.size() > 3) ? row.get(3).getIntVal(0) : 0; // ERG_TEAM_B_SPALTE (relativ: 3)
 
-			// Punkte+ für beide Teams
-			statsMap.computeIfAbsent(nrA, k -> new int[3])[2] += ergA;
-			statsMap.computeIfAbsent(nrB, k -> new int[3])[2] += ergB;
+			hatErgebnis |= ergA > 0 || ergB > 0;
 
+			int[] statsA = statsMap.computeIfAbsent(nrA, k -> new int[3]);
+			int[] statsB = statsMap.computeIfAbsent(nrB, k -> new int[3]);
+			statsA[2] += ergA; // punkte+
+			statsB[2] += ergB; // punkte+
+			statsA[1] += ergA - ergB; // punktediff
+			statsB[1] += ergB - ergA; // punktediff
 			if (ergA > ergB) {
-				statsMap.computeIfAbsent(nrA, k -> new int[3])[0]++;
-				statsMap.computeIfAbsent(nrA, k -> new int[3])[1] += ergA - ergB;
-				statsMap.computeIfAbsent(nrB, k -> new int[3])[1] -= ergA - ergB;
+				statsA[0]++; // siege
 			} else if (ergB > ergA) {
-				statsMap.computeIfAbsent(nrB, k -> new int[3])[0]++;
-				statsMap.computeIfAbsent(nrB, k -> new int[3])[1] += ergB - ergA;
-				statsMap.computeIfAbsent(nrA, k -> new int[3])[1] -= ergB - ergA;
+				statsB[0]++; // siege
 			}
 		}
+		return hatErgebnis;
 	}
 
 	/**
 	 * Sortiert die aktiven Teams nach Ranglisten-Kriterien (Schweizer System)
 	 * und gibt eine neue TeamMeldungen-Liste in dieser Reihenfolge zurück.
 	 */
-	protected TeamMeldungen sortierteTeamMeldungen(TeamMeldungen aktiveMeldungen,
-			List<SchweizerTeamErgebnis> ergebnisse) throws GenerateException {
+	protected TeamMeldungen sortierteTeamMeldungen(TeamMeldungen aktiveMeldungen, SchweizerAuswertung auswertung)
+			throws GenerateException {
 		SchweizerRankingModus modus = getKonfigurationSheet().getRankingModus();
-		SchweizerSystem sortierer = new SchweizerSystem();
-		List<SchweizerTeamErgebnis> sortiert = sortierer.sortiereNachAuswertungskriterien(ergebnisse, modus);
+		var freilosBuchholz = new FreilosBuchholz(getKonfigurationSheet().getFreilosBuchholzModus(),
+				auswertung.anzGewerteteRunden());
+		List<SchweizerTeamErgebnis> sortiert = new SchweizerSystem()
+				.sortiereNachAuswertungskriterien(auswertung.ergebnisse(), modus, freilosBuchholz);
 
 		TeamMeldungen sortierteMeldungen = new TeamMeldungen();
 		for (SchweizerTeamErgebnis erg : sortiert) {
