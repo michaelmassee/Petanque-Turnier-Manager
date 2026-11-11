@@ -52,8 +52,15 @@ Freilos-Beitrag, siehe 5.1.
 (-) kassierte Punkte
 
 ## 3.5 Pluspunkte
-Letztes Tie‑Break‑Kriterium nach Punktedifferenz (Modus MIT_BUCHHOLZ) bzw. direkt nach
+Letztes Wertungskriterium nach Punktedifferenz (Modus MIT_BUCHHOLZ) bzw. direkt nach
 Punktedifferenz, wenn BHZ/FBHZ nicht genutzt werden (Modus OHNE_BUCHHOLZ).
+
+## 3.6 Gleicher Platz
+Sind zwei Teams in allen Wertungskriterien gleich, **teilen sie sich den Platz** (z. B. 1, 1, 3). Einen
+Direktvergleich oder Losentscheid gibt es nicht. Die **Teamnummer ist kein Wertungskriterium**: Sie legt nur fest, in
+welcher Reihenfolge Teams mit geteiltem Platz in der Liste stehen (aufsteigend), damit Rangliste und Auslosung der
+nächsten Runde eindeutig sind. Gleiche Regel in PTM-Online (`sortSwiss`);
+gemeinsame Testfälle: `src/test/resources/de/petanqueturniermanager/schweizer/schweizer-wertung-faelle.json`.
 
 ---
 # 4. Paarungsalgorithmus (Schweizer‑Backtracking)

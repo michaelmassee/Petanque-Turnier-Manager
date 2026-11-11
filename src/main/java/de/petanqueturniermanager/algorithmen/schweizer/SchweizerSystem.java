@@ -74,9 +74,13 @@ public class SchweizerSystem {
 	/**
 	 * Sortiert nach Auswertungskriterien mit wählbarem Modus.
 	 * <p>
-	 * Bei {@code OHNE_BUCHHOLZ}: Siege → Punktedifferenz → Punkte+<br>
-	 * Bei {@code MIT_BUCHHOLZ}: Siege → BHZ → FBHZ → Punktedifferenz → Punkte+, Freilose gemäß
+	 * Wertung bei {@code OHNE_BUCHHOLZ}: Siege → Punktedifferenz → Punkte+<br>
+	 * Wertung bei {@code MIT_BUCHHOLZ}: Siege → BHZ → FBHZ → Punktedifferenz → Punkte+, Freilose gemäß
 	 * {@code freilosBuchholz}.
+	 * <p>
+	 * Die Teamnummer ist <b>kein</b> Wertungskriterium: Teams mit gleicher Wertung teilen sich den Platz
+	 * (Platz-Formel der Rangliste). Sie legt nur fest, in welcher Reihenfolge solche Teams in der Liste stehen
+	 * (aufsteigend), damit die Liste eindeutig ist. Gleiche Reihenfolge wie {@code sortSwiss} in PTM-Online.
 	 *
 	 * @param ergebnisse      die Teamergebnisse
 	 * @param modus           gewünschter Ranking-Modus
@@ -98,7 +102,9 @@ public class SchweizerSystem {
 		}
 		comparator = comparator
 				.thenComparing(Comparator.comparingInt(SchweizerTeamErgebnis::punktedifferenz).reversed())
-				.thenComparing(Comparator.comparingInt(SchweizerTeamErgebnis::erzieltePunkte).reversed());
+				.thenComparing(Comparator.comparingInt(SchweizerTeamErgebnis::erzieltePunkte).reversed())
+				// keine Wertung, nur eindeutige Reihenfolge bei geteiltem Platz
+				.thenComparingInt(SchweizerTeamErgebnis::teamNr);
 		return ergebnisse.stream().sorted(comparator).collect(Collectors.toList());
 	}
 
