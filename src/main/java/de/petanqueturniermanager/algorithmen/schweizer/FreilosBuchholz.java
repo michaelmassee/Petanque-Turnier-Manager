@@ -43,7 +43,8 @@ public record FreilosBuchholz(SchweizerFreilosBuchholzModus modus, int anzRunden
 		if (!liefertBeitrag()) {
 			return 0;
 		}
-		return (anzRunden - 1) / 2; // Ganzzahldivision = abgerundet, keine halben Punkte
+		int abgerundeteHaelfte = (anzRunden - 1) / 2; // bewusst Ganzzahldivision = abgerundet, keine halben Punkte
+		return abgerundeteHaelfte;
 	}
 
 	/**

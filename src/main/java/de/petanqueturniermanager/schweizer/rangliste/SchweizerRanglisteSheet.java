@@ -98,10 +98,9 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 	// Danach folgen die Erweiterungsspalten der Subklassen (z.B. Maastrichter: Gruppe), die
 	// Freilos-Spalte und die versteckte Validate-Spalte, siehe freilosSpalte() und validateSpalte().
 
-	private static final int COL_WIDTH_NR      = 800;
-	private static final int COL_WIDTH_NAME    = 7000;
-	private static final int COL_WIDTH_DATA    = 1400;
-	private static final int COL_WIDTH_FREILOS = 1800;
+	private static final int COL_WIDTH_NR   = 800;
+	private static final int COL_WIDTH_NAME = 7000;
+	private static final int COL_WIDTH_DATA = 1400;
 
 	private static final Logger logger = LogManager.getLogger(SchweizerRanglisteSheet.class);
 
@@ -394,7 +393,7 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 		int spalte = freilosSpalte();
 		boolean freilosVergeben = sortiert.stream().anyMatch(erg -> !erg.freilosInRunden().isEmpty());
 		boolean sichtbar = freilosVergeben && getKonfigurationSheet().isRanglisteFreilosSpalteAnzeigen();
-		getSheetHelper().setColumnProperties(sheet, spalte, ColumnProperties.from().setWidth(COL_WIDTH_FREILOS)
+		getSheetHelper().setColumnProperties(sheet, spalte, ColumnProperties.from().setWidth(COL_WIDTH_DATA)
 				.setHoriJustify(CellHoriJustify.CENTER).setVertJustify(CellVertJustify2.CENTER)
 				.isVisible(sichtbar));
 
