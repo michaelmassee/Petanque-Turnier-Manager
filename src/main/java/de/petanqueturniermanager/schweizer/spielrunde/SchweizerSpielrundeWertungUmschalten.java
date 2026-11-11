@@ -35,6 +35,12 @@ public class SchweizerSpielrundeWertungUmschalten extends AbstractSpielrundeWert
 	}
 
 	@Override
+	protected int letzteTabellenSpalte() {
+		return konfigurationSheet.isZeitplanAktiv() ? SchweizerAbstractSpielrundeSheet.ZEIT_SPALTE
+				: SchweizerAbstractSpielrundeSheet.ERG_TEAM_B_SPALTE;
+	}
+
+	@Override
 	protected void ranglisteNeuAufbauen(String rundenSchluessel) throws GenerateException {
 		wennVorhanden(SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_RANGLISTE,
 				() -> new SchweizerRanglisteSheet(getWorkingSpreadsheet()).doRun());

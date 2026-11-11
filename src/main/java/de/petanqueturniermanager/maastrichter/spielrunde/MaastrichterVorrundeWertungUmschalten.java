@@ -17,6 +17,7 @@ import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
 import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterVorrundenRanglisteSheet;
+import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrundeSheet;
 
 /**
  * Maastrichter: aktive Vorrunde werten bzw. nicht werten.
@@ -53,6 +54,12 @@ public class MaastrichterVorrundeWertungUmschalten extends AbstractSpielrundeWer
 		return finalrundeVorhanden
 				? Optional.of(I18n.get("maastrichter.spielrunde.wertung.finalrunde.vorhanden"))
 				: Optional.empty();
+	}
+
+	@Override
+	protected int letzteTabellenSpalte() {
+		return konfigurationSheet.isZeitplanAktiv() ? SchweizerAbstractSpielrundeSheet.ZEIT_SPALTE
+				: SchweizerAbstractSpielrundeSheet.ERG_TEAM_B_SPALTE;
 	}
 
 	@Override

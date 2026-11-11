@@ -45,6 +45,18 @@ public class SupermeleeSpielrundeWertungUmschalten extends AbstractSpielrundeWer
 	}
 
 	@Override
+	protected int letzteTabellenSpalte() {
+		// Ergebnis Team B; Validierungs- und Hilfsspalten gehören nicht zur sichtbaren Tabelle
+		return SpielrundeSheetKonstanten.ERSTE_SPALTE_ERGEBNISSE + 1;
+	}
+
+	@Override
+	protected int belegteDatenSpalte() {
+		// Spielernummer A1 ist in jeder Paarungszeile gesetzt, unabhängig von der Namensanzeige
+		return SpielrundeSheetKonstanten.ERSTE_SPIELERNR_SPALTE;
+	}
+
+	@Override
 	protected void ranglisteNeuAufbauen(String rundenSchluessel) throws GenerateException {
 		SpielTagNr spieltag = spieltagAusSchluessel(rundenSchluessel);
 		wennVorhanden(SheetMetadataHelper.schluesselSpieltagRangliste(spieltag.getNr()),

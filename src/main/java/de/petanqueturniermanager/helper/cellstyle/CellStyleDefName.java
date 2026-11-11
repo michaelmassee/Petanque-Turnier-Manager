@@ -32,6 +32,8 @@ public enum CellStyleDefName {
 	LigaTerminStatusVerloren,
 	//---------------------------------------
 	EditierbareZelleHintergrundFarbeGerade,
-	EditierbareZelleHintergrundFarbeUnGerade
+	EditierbareZelleHintergrundFarbeUnGerade,
+	//---------------------------------------
+	NichtGewertet
 	// @formatter:on
 }

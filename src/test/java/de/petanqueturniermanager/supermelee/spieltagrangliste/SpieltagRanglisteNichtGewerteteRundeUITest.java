@@ -14,6 +14,7 @@ import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.sheet.NichtGewertetFormatHelper;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.RundenWertungHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
@@ -24,6 +25,7 @@ import de.petanqueturniermanager.supermelee.RanglisteTestDaten;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.SuperMeleeSummenSpalten;
 import de.petanqueturniermanager.supermelee.meldeliste.TestSuperMeleeMeldeListeErstellen;
+import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheetKonstanten;
 import de.petanqueturniermanager.supermelee.spielrunde.SupermeleeSpielrundeWertungUmschalten;
 
 /**
@@ -62,11 +64,17 @@ class SpieltagRanglisteNichtGewerteteRundeUITest extends BaseCalcUITest {
 		MessageBox.setDialogeUeberspringen(true);
 		String rundenSchluessel = SheetMetadataHelper.schluesselSupermeleeSpielrunde(SPIELTAG.getNr(),
 				NICHT_GEWERTETE_RUNDE);
-		sheetHlp.setActiveSheet(SheetMetadataHelper.findeSheet(doc, rundenSchluessel).orElseThrow());
+		XSpreadsheet runde2 = SheetMetadataHelper.findeSheet(doc, rundenSchluessel).orElseThrow();
+		sheetHlp.setActiveSheet(runde2);
 
 		new SupermeleeSpielrundeWertungUmschalten(wkingSpreadsheet).doRun();
 
 		assertThat(RundenWertungHelper.istNichtGewertet(doc, rundenSchluessel)).isTrue();
+		assertThat(NichtGewertetFormatHelper.istVorangestellt(doc, runde2,
+				SpielrundeSheetKonstanten.ERSTE_SPALTE_ERGEBNISSE, SpielrundeSheetKonstanten.ERSTE_DATEN_ZEILE))
+				.as("Ergebniszelle der Spielrunde grau/durchgestrichen").isTrue();
+		assertThat(NichtGewertetFormatHelper.istVorangestellt(doc, runde2, SpielrundeSheetKonstanten.ERSTE_SPIELERNR_SPALTE,
+				SpielrundeSheetKonstanten.ERSTE_DATEN_ZEILE)).as("Hilfsspalten bleiben unberührt").isFalse();
 		SpieltagRanglisteSheet neueRangliste = new SpieltagRanglisteSheet(wkingSpreadsheet, SPIELTAG);
 		neueRangliste.setSpieltagNr(SPIELTAG);
 		pruefeRanglisteOhneRunde2(neueRangliste);

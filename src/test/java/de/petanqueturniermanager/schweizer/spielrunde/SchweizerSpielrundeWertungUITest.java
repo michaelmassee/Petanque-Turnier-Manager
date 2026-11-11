@@ -20,8 +20,10 @@ import com.sun.star.awt.XTopWindow;
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.frame.XFrame;
 import com.sun.star.frame.XModel;
+import com.sun.star.sheet.XSheetConditionalEntries;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
+import com.sun.star.text.XText;
 
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.algorithmen.schweizer.SchweizerRundenLeser;
@@ -30,8 +32,10 @@ import de.petanqueturniermanager.basesheet.spielrunde.AbstractSpielrundeWertungU
 import de.petanqueturniermanager.comp.OfficeDocumentHelper;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.random.RandomSource;
+import de.petanqueturniermanager.helper.sheet.NichtGewertetFormatHelper;
 import de.petanqueturniermanager.helper.sheet.RundenWertungHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.model.TeamMeldungen;
@@ -47,6 +51,12 @@ class SchweizerSpielrundeWertungUITest extends BaseCalcUITest {
 	private static final int ANZ_RUNDEN = 3;
 	private static final int NICHT_GEWERTETE_RUNDE = 2;
 	private static final String DURCHSTRICH = "\u0336";
+	private static final int TEAM_A = SchweizerAbstractSpielrundeSheet.TEAM_A_SPALTE;
+	private static final int ERG_A = SchweizerAbstractSpielrundeSheet.ERG_TEAM_A_SPALTE;
+	private static final int ERSTE_DATEN_ZEILE = SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE;
+	/** Titel, Bahn, Team A und Ergebnis A der ersten Datenzeile – {spalte, zeile}. */
+	private static final int[][] PRUEF_ZELLEN = { { 1, 0 }, { 0, ERSTE_DATEN_ZEILE }, { TEAM_A, ERSTE_DATEN_ZEILE },
+			{ ERG_A, ERSTE_DATEN_ZEILE } };
 
 	private SchweizerTurnierTestDaten testDaten;
 	private XSpreadsheetDocument zweitesDokument;
@@ -132,6 +142,47 @@ class SchweizerSpielrundeWertungUITest extends BaseCalcUITest {
 
 		assertThat(RundenWertungHelper.istNichtGewertet(doc, rundenSchluessel)).as("Runde 2 wieder gewertet").isFalse();
 		assertThat(tabFarbe(runde2)).isEqualTo(testDaten.getKonfigurationSheet().getSpielrundeTabFarbe());
+	}
+
+	/**
+	 * Die Tabelle wird per bedingter Formatierung grau/durchgestrichen dargestellt: Die Regel steht
+	 * vor allen vorhandenen Regeln (sonst verdeckt die Editier- bzw. Fehlerregel sie), der Titel
+	 * erhält den Zusatz; beim Zurückschalten bleiben die übrigen Regeln unverändert erhalten.
+	 */
+	@Test
+	void umschaltenKennzeichnetTabellePerBedingterFormatierung() throws Exception {
+		turnierMitDreiRundenErstellen();
+		MessageBox.setDialogeUeberspringen(true);
+		XSpreadsheet runde2 = SheetMetadataHelper
+				.findeSheet(doc, SheetMetadataHelper.schluesselSchweizerSpielrunde(NICHT_GEWERTETE_RUNDE)).orElseThrow();
+		String titelVorher = titel(runde2);
+		int regelnErgebnisVorher = anzahlRegeln(runde2, ERG_A, ERSTE_DATEN_ZEILE);
+		assertThat(regelnErgebnisVorher).as("Ergebniszelle trägt Fehler-/Editierregeln").isPositive();
+
+		sheetHlp.setActiveSheet(runde2);
+		new SchweizerSpielrundeWertungUmschalten(wkingSpreadsheet).doRun();
+
+		for (int[] zelle : PRUEF_ZELLEN) {
+			assertThat(NichtGewertetFormatHelper.istVorangestellt(doc, runde2, zelle[0], zelle[1]))
+					.as("Regel 'nicht gewertet' wirkt in Zelle (%d,%d)", zelle[0], zelle[1]).isTrue();
+		}
+		assertThat(anzahlRegeln(runde2, ERG_A, ERSTE_DATEN_ZEILE)).as("vorhandene Regeln bleiben dahinter erhalten")
+				.isEqualTo(regelnErgebnisVorher + 1);
+		assertThat(titel(runde2)).isEqualTo(titelVorher + I18n.get("spielrunde.wertung.titel.zusatz"));
+		assertThat(NichtGewertetFormatHelper.istVorangestellt(doc, gewerteteRunde(), ERG_A, ERSTE_DATEN_ZEILE))
+				.as("andere Runden bleiben unverändert").isFalse();
+
+		sheetHlp.setActiveSheet(runde2);
+		new SchweizerSpielrundeWertungUmschalten(wkingSpreadsheet).doRun();
+
+		for (int[] zelle : PRUEF_ZELLEN) {
+			assertThat(NichtGewertetFormatHelper.istVorangestellt(doc, runde2, zelle[0], zelle[1]))
+					.as("Regel 'nicht gewertet' entfernt in Zelle (%d,%d)", zelle[0], zelle[1]).isFalse();
+		}
+		assertThat(anzahlRegeln(runde2, ERG_A, ERSTE_DATEN_ZEILE)).as("übrige Regeln unverändert")
+				.isEqualTo(regelnErgebnisVorher);
+		assertThat(anzahlRegeln(runde2, TEAM_A, ERSTE_DATEN_ZEILE)).as("Team-Zelle wieder ohne Regel").isZero();
+		assertThat(titel(runde2)).isEqualTo(titelVorher);
 	}
 
 	@Test
@@ -248,6 +299,19 @@ class SchweizerSpielrundeWertungUITest extends BaseCalcUITest {
 		if (topWindow != null) {
 			topWindow.toFront();
 		}
+	}
+
+	private XSpreadsheet gewerteteRunde() {
+		return SheetMetadataHelper.findeSheet(doc, SheetMetadataHelper.schluesselSchweizerSpielrunde(1)).orElseThrow();
+	}
+
+	private static String titel(XSpreadsheet sheet) throws Exception {
+		return Lo.qi(XText.class, sheet.getCellByPosition(1, 0)).getString();
+	}
+
+	private static int anzahlRegeln(XSpreadsheet sheet, int spalte, int zeile) throws Exception {
+		XPropertySet zelle = Lo.qi(XPropertySet.class, sheet.getCellByPosition(spalte, zeile));
+		return Lo.qi(XSheetConditionalEntries.class, zelle.getPropertyValue("ConditionalFormat")).getCount();
 	}
 
 	private static int tabFarbe(XSpreadsheet sheet) throws Exception {

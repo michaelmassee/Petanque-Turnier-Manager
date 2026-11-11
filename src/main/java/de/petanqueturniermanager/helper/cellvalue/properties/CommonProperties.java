@@ -84,6 +84,15 @@ public abstract class CommonProperties<T> extends HashMap<String, Object> implem
 		return put(CHAR_COLOR, Integer.valueOf(StringUtils.strip(StringUtils.strip(hexCharColor), "#"), 16));
 	}
 
+	/**
+	 * property "CharStrikeout"
+	 *
+	 * @param strikeout = com.sun.star.awt.FontStrikeout.*
+	 */
+	public T setCharStrikeout(short strikeout) {
+		return put(CHAR_STRIKEOUT, strikeout);
+	}
+
 	public T setCharHeight(int height) {
 		return put(CHAR_HEIGHT, height);
 	}

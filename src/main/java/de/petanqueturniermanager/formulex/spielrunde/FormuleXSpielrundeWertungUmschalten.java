@@ -35,6 +35,12 @@ public class FormuleXSpielrundeWertungUmschalten extends AbstractSpielrundeWertu
     }
 
     @Override
+    protected int letzteTabellenSpalte() {
+        return konfigurationSheet.isZeitplanAktiv() ? FormuleXAbstractSpielrundeSheet.ZEIT_SPALTE
+                : FormuleXAbstractSpielrundeSheet.ERG_TEAM_B_SPALTE;
+    }
+
+    @Override
     protected void ranglisteNeuAufbauen(String rundenSchluessel) throws GenerateException {
         wennVorhanden(SheetMetadataHelper.SCHLUESSEL_FORMULEX_RANGLISTE,
                 () -> new FormuleXRanglisteSheet(getWorkingSpreadsheet()).doRun());
