@@ -20,8 +20,8 @@ public enum UserNumberFormat {
 	DATE("TT.MM.JJJJ"),
 	DATE_SHORT("TT.MM.JJ"),
 	TIME("HH:MM"),
-	/** Zahl mit genau einer Nachkommastelle, z. B. 1,5 bzw. 1.5 */
-	ZAHL_EINE_NACHKOMMASTELLE(1);
+	/** Ganze Zahl ohne Nachkommastellen, z. B. 12 */
+	ZAHL_GANZ(0);
 
 	private final String pattern;
 	private final int nachkommastellen;

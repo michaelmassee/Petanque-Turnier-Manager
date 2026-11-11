@@ -41,7 +41,7 @@ Das wichtigste Kriterium.
 
 ## 3.2 Buchholz (BHZ)
 Summe der Siege aller Gegner. Ein Freilos liefert je nach Einstellung „Freilos-Buchholz“ keinen Beitrag (NULL) oder
-den Beitrag eines fiktiven Durchschnittsgegners (NEUTRAL), siehe 5.1. Anzeige mit einer Nachkommastelle.
+den Beitrag eines fiktiven Durchschnittsgegners (NEUTRAL), siehe 5.1. Ganzzahlig, Anzeige ohne Nachkommastelle.
 
 ## 3.3 Feinbuchholz (FBHZ)
 Summe der BHZ‑Werte aller Gegner (bei NEUTRAL bereits um deren Freilose korrigiert) plus ggf. der eigene
@@ -93,21 +93,24 @@ deren BHZ normal mit. Welchen BHZ/FBHZ-Beitrag das Freilos dem Freilos-Team selb
 | Modus | Beitrag je Freilos | Verwendung |
 |---|---|---|
 | **NULL** | 0 BHZ, 0 FBHZ | BPV-Regel; Bestandsturniere ohne Einstellung |
-| **NEUTRAL** | BHZ `(r − 1) / 2`, FBHZ `eigene Siege + (r − 1) · r / 2` | Standard für neu angelegte Turniere |
+| **NEUTRAL** | BHZ `⌊(r − 1) / 2⌋`, FBHZ `eigene Siege + (r − 1) · r / 2` | Standard für neu angelegte Turniere |
 
 `r` = Anzahl gewerteter Runden mit mindestens einem eingetragenen Ergebnis. Ein Freilos zählt nur, wenn seine Runde
 in `r` zählt – eine ausgeloste, aber ungespielte Runde verändert BHZ/FBHZ nicht.
 
 **Herleitung NEUTRAL (PTM-Regel):** Das Freilos wird als fiktiver Durchschnittsgegner gewertet. Er verliert in der
-Freilos-Runde gegen das eigene Team und gewinnt in den übrigen `r − 1` Runden rechnerisch die Hälfte → BHZ-Beitrag
-`(r − 1) / 2`. Seine eigene BHZ besteht aus den Siegen des eigenen Teams plus `r − 1` Durchschnittsgegnern mit je
-`r / 2` Siegen → FBHZ-Beitrag `eigene Siege + (r − 1) · r / 2`.
+Freilos-Runde gegen das eigene Team und gewinnt in den übrigen `r − 1` Runden rechnerisch die Hälfte, abgerundet →
+BHZ-Beitrag `⌊(r − 1) / 2⌋`. Abgerundet wird, weil es im Pétanque kein Unentschieden und damit keine halben
+Buchholz-Punkte gibt (anders als im Schach). Seine eigene BHZ besteht aus den Siegen des eigenen Teams plus `r − 1` Durchschnittsgegnern mit je
+`r / 2` Siegen → FBHZ-Beitrag `eigene Siege + (r − 1) · r / 2`. Dieser ist immer ganzzahlig, weil `(r − 1) · r` als
+Produkt zweier aufeinanderfolgender Zahlen gerade ist.
 
 | Gewertete Runden r | Eigene Siege | BHZ je Freilos | FBHZ je Freilos |
 |---|---|---|---|
 | 1 | 1 | 0 | 1 |
-| 2 | 2 | 0,5 | 3 |
+| 2 | 2 | 0 | 3 |
 | 3 | 2 | 1 | 5 |
+| 4 | 3 | 1 | 9 |
 | 5 | 3 | 2 | 13 |
 
 Nach Runde 1 hat das Freilos-Team damit BHZ 0 / FBHZ 1 – genau wie jeder andere Sieger. Mit NULL hätte es FBHZ 0,
@@ -116,7 +119,7 @@ starken Team.
 
 Berechnung in zwei Schritten, ohne Rekursion: (1) BHZ = Siege der echten Gegner + Freilos-Beiträge; (2) FBHZ =
 **korrigierte** BHZ der echten Gegner + eigene FBHZ-Freilos-Beiträge. So profitieren auch die echten Gegner des
-Freilos-Teams über ihre FBHZ von dessen korrigierter BHZ. Werte sind Vielfache von 0,5 und werden mit einer
+Freilos-Teams über ihre FBHZ von dessen korrigierter BHZ. Alle Werte sind ganzzahlig und werden ohne
 Nachkommastelle angezeigt. Im Ranglisten-Modus OHNE_BUCHHOLZ hat die Einstellung keine Wirkung.
 
 Quellen und Abgrenzung:

@@ -11,7 +11,7 @@ public enum SchweizerFreilosBuchholzModus {
 	NULL,
 	/**
 	 * PTM-Regel: Das Freilos zählt als fiktiver Durchschnittsgegner, der gegen das eigene Team verliert und in den
-	 * übrigen Runden eine ausgeglichene Bilanz hat.
+	 * übrigen Runden eine ausgeglichene Bilanz hat (abgerundet, keine halben Punkte).
 	 */
 	NEUTRAL
 }

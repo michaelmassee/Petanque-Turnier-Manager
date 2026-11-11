@@ -949,11 +949,12 @@ public class SchweizerSystemTest {
 	}
 
 	/**
-	 * Nach zwei Runden bringt das Freilos einen halben BHZ-Punkt: Team 1 (BHZ 1,5) steht vor Team 2 (BHZ 1), obwohl
-	 * Team 2 die bessere Punktedifferenz hat. Ohne Freilos-Beitrag entscheidet die Punktedifferenz.
+	 * Nach zwei Runden bringt das Freilos keinen BHZ-Punkt (⌊(2 − 1) / 2⌋ = 0, keine halben Punkte), aber den
+	 * FBHZ-Beitrag 2 + 1 = 3: Team 1 (BHZ 2, FBHZ 5) steht vor Team 2 (BHZ 2, FBHZ 2), obwohl Team 2 die bessere
+	 * Punktedifferenz hat. Ohne Freilos-Beitrag hat Team 1 FBHZ 2 und die Punktedifferenz entscheidet.
 	 */
 	@Test
-	public void testFreilosBuchholzHalbePunkteEntscheidenSortierung() {
+	public void testFreilosBuchholzGanzzahligFbhzEntscheidetSortierung() {
 		var system = new SchweizerSystem();
 		List<SchweizerTeamErgebnis> ergebnisse = List.of(
 				new SchweizerTeamErgebnis(1, 2, 5, 26, List.of(3), List.of(1), 1),

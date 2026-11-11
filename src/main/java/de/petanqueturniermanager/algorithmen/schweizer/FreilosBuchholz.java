@@ -12,10 +12,11 @@ import de.petanqueturniermanager.schweizer.konfiguration.SchweizerFreilosBuchhol
  * Buchholz-Beitrag eines Freiloses im Schweizer System.
  * <p>
  * Bei {@link SchweizerFreilosBuchholzModus#NEUTRAL} zählt das Freilos als fiktiver Durchschnittsgegner: Er verliert
- * in der Freilos-Runde gegen das eigene Team und gewinnt in den übrigen {@code r − 1} Runden rechnerisch die Hälfte.
+ * in der Freilos-Runde gegen das eigene Team und gewinnt in den übrigen {@code r − 1} Runden rechnerisch die Hälfte,
+ * abgerundet – im Pétanque gibt es kein Unentschieden und damit keine halben Buchholz-Punkte.
  * Pro Freilos ergibt das
  * <ul>
- *   <li>BHZ-Beitrag {@code (r − 1) / 2} (Siege des fiktiven Gegners)</li>
+ *   <li>BHZ-Beitrag {@code ⌊(r − 1) / 2⌋} (Siege des fiktiven Gegners)</li>
  *   <li>FBHZ-Beitrag {@code eigeneSiege + (r − 1) · r / 2} (BHZ des fiktiven Gegners: das eigene Team plus
  *       {@code r − 1} Durchschnittsgegner mit je {@code r / 2} Siegen)</li>
  * </ul>
@@ -42,7 +43,7 @@ public record FreilosBuchholz(SchweizerFreilosBuchholzModus modus, int anzRunden
 		if (!liefertBeitrag()) {
 			return 0;
 		}
-		return (anzRunden - 1) / 2.0;
+		return (anzRunden - 1) / 2; // Ganzzahldivision = abgerundet, keine halben Punkte
 	}
 
 	/**
@@ -53,7 +54,8 @@ public record FreilosBuchholz(SchweizerFreilosBuchholzModus modus, int anzRunden
 		if (!liefertBeitrag()) {
 			return 0;
 		}
-		return eigeneSiege + (anzRunden - 1) * anzRunden / 2.0;
+		// (r − 1) · r ist immer gerade, die Division also exakt
+		return eigeneSiege + (anzRunden - 1) * anzRunden / 2;
 	}
 
 	private boolean liefertBeitrag() {

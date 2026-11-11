@@ -13,9 +13,8 @@ class FreilosBuchholzTest {
 
 	/** Tabelle aus 03_Schweizer.md, 5.1: Runden, eigene Siege → BHZ- und FBHZ-Beitrag je Freilos. */
 	@ParameterizedTest
-	@CsvSource({ "1, 1, 0.0, 1.0", "2, 2, 0.5, 3.0", "3, 2, 1.0, 5.0", "5, 3, 2.0, 13.0" })
-	void neutralLiefertBeitragDesFiktivenDurchschnittsgegners(int anzRunden, int eigeneSiege, double bhz,
-			double fbhz) {
+	@CsvSource({ "1, 1, 0, 1", "2, 2, 0, 3", "3, 2, 1, 5", "4, 3, 1, 9", "5, 3, 2, 13" })
+	void neutralLiefertBeitragDesFiktivenDurchschnittsgegners(int anzRunden, int eigeneSiege, int bhz, int fbhz) {
 		var freilos = new FreilosBuchholz(SchweizerFreilosBuchholzModus.NEUTRAL, anzRunden);
 
 		assertThat(freilos.bhzBeitrag()).isEqualTo(bhz);

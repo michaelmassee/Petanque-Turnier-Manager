@@ -648,7 +648,7 @@ public class SchweizerRanglisteSheetUITest extends BaseCalcUITest {
 	/**
 	 * Neue Turniere rechnen mit Freilos-Buchholz NEUTRAL: Nach Runde 1 (15 Teams, ein Freilos) hat das Freilos-Team
 	 * BHZ 0 und FBHZ 1 wie jeder andere Sieger. Eine danach nur ausgeloste, ungespielte Runde 2 zählt nicht als
-	 * gewertete Runde – BHZ bliebe sonst nicht bei 0, sondern stiege auf 0,5.
+	 * gewertete Runde – sonst stiege die FBHZ von 1 auf 2.
 	 */
 	@Test
 	public void testFreilosBuchholzNeutral_FreilosTeamWieSiegerUndUngespielteRundeZaehltNicht()

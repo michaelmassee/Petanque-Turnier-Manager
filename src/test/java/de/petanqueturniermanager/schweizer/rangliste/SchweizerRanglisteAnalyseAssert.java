@@ -40,7 +40,7 @@ import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrund
  *       Freispiel-Punkten.</li>
  *   <li>BHZ (Buchholz) = Summe der Siege aller Gegner. Ungespielte Paarungen (Ergebnis 0:0)
  *       zählen dabei nicht als Gegner (analog {@code SchweizerRanglisteSheet.leseRundeEin}).
- *       Bei Freilos-Buchholz NEUTRAL je Freilos (r − 1) / 2, r = Runden mit eingetragenem Ergebnis.</li>
+ *       Bei Freilos-Buchholz NEUTRAL je Freilos ⌊(r − 1) / 2⌋, r = Runden mit eingetragenem Ergebnis.</li>
  *   <li>FBHZ (Feinbuchholz) = Summe der BHZ-Werte aller Gegner, bei NEUTRAL je Freilos
  *       eigene Siege + (r − 1) · r / 2.</li>
  *   <li>Rangliste-Sortierung: Siege ↓ → BHZ ↓ → FBHZ ↓ → Punktedifferenz ↓ → Punkte+ ↓.</li>

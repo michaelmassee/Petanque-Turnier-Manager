@@ -78,8 +78,7 @@ import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrund
  *   <li>Punkte+ (absteigend)</li>
  * </ol>
  * Der Buchholz-Beitrag eines Freiloses folgt der Einstellung „Freilos-Buchholz" (NULL/NEUTRAL, siehe
- * {@link de.petanqueturniermanager.algorithmen.schweizer.FreilosBuchholz}); BHZ/FBHZ werden mit einer
- * Nachkommastelle angezeigt.
+ * {@link de.petanqueturniermanager.algorithmen.schweizer.FreilosBuchholz}); BHZ/FBHZ sind ganzzahlig.
  */
 public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 
@@ -685,10 +684,10 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 				RangePosition.from(SIEGE_SPALTE, ERSTE_DATEN_ZEILE, PUNKTE_DIFF_SPALTE, letzteZeile),
 				CellProperties.from().margin(MeldeListeKonstanten.CELL_MARGIN).setAllThinBorder().centerJustify());
 
-		// BHZ/FBHZ: eine Nachkommastelle (Freilos-Buchholz NEUTRAL liefert halbe Punkte)
+		// BHZ/FBHZ ganzzahlig; setzt auch das frühere Format mit einer Nachkommastelle in bestehenden Ranglisten zurück
 		getSheetHelper().setPropertiesInRange(sheet,
 				RangePosition.from(BHZ_SPALTE, ERSTE_DATEN_ZEILE, FBHZ_SPALTE, letzteZeile),
-				CellProperties.from().numberFormat(UserNumberFormat.ZAHL_EINE_NACHKOMMASTELLE));
+				CellProperties.from().numberFormat(UserNumberFormat.ZAHL_GANZ));
 	}
 
 	// ── IRangliste ──────────────────────────────────────────────────────────────

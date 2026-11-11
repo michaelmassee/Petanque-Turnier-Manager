@@ -121,7 +121,7 @@ public class SchweizerSystem {
 	 *
 	 * @param ergebnisse      alle Teamergebnisse
 	 * @param freilosBuchholz Buchholz-Beitrag eines Freiloses
-	 * @return Map von teamNr → BHZ-Wert (Vielfache von 0,5)
+	 * @return Map von teamNr → BHZ-Wert (ganzzahlig)
 	 */
 	@VisibleForTesting
 	public Map<Integer, Double> berechneBuchholz(List<SchweizerTeamErgebnis> ergebnisse,
@@ -157,7 +157,7 @@ public class SchweizerSystem {
 	 * @param ergebnisse      alle Teamergebnisse
 	 * @param bhzMap          vorberechnete BHZ-Werte (mit demselben {@code freilosBuchholz})
 	 * @param freilosBuchholz Buchholz-Beitrag eines Freiloses
-	 * @return Map von teamNr → FBHZ-Wert (Vielfache von 0,5)
+	 * @return Map von teamNr → FBHZ-Wert (ganzzahlig)
 	 */
 	@VisibleForTesting
 	public Map<Integer, Double> berechneFeinbuchholz(List<SchweizerTeamErgebnis> ergebnisse,

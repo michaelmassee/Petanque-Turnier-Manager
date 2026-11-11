@@ -14,10 +14,10 @@ Rangliste-Werte gegen die Spielrunden-Sheets nach:
      (SchweizerRanglisteSheet.leseRundeEin).
   3. Feinbuchholz (FBHZ) = Summe der BHZ-Werte aller Gegner.
      Freilos-Buchholz (Property "Schweizer Freilos Buchholz", fehlend = NULL):
-     NULL = Freilos liefert 0 BHZ/FBHZ; NEUTRAL = je Freilos BHZ (r-1)/2 und
+     NULL = Freilos liefert 0 BHZ/FBHZ; NEUTRAL = je Freilos BHZ (r-1)//2 (abgerundet) und
      FBHZ eigene Siege + (r-1)*r/2, r = Spielrunden mit mindestens einem
      eingetragenen Ergebnis; Freilose zählen nur in solchen Runden
-     (FreilosBuchholz.java, 03_Schweizer.md 5.1). BHZ/FBHZ sind Dezimalwerte.
+     (FreilosBuchholz.java, 03_Schweizer.md 5.1). BHZ/FBHZ sind ganzzahlig.
   4. Rangliste-Sortierung: Siege ↓ → BHZ ↓ → FBHZ ↓ → Punktediff ↓ →
      Punkte+ ↓ (SchweizerSystem.sortiereNachAuswertungskriterien).
      Der Ranking-Modus wird aus der User-Defined-Property "Schweizer Ranking
@@ -307,11 +307,11 @@ def lese_spielergebnisse(root, spielrunden, freispiel_plus, freispiel_minus, nam
 
 
 def freilos_bhz_beitrag(modus, r):
-    return (r - 1) / 2 if modus == FREILOS_BUCHHOLZ_NEUTRAL and r > 0 else 0.0
+    return (r - 1) // 2 if modus == FREILOS_BUCHHOLZ_NEUTRAL and r > 0 else 0
 
 
 def freilos_fbhz_beitrag(modus, r, eigene_siege):
-    return eigene_siege + (r - 1) * r / 2 if modus == FREILOS_BUCHHOLZ_NEUTRAL and r > 0 else 0.0
+    return eigene_siege + (r - 1) * r // 2 if modus == FREILOS_BUCHHOLZ_NEUTRAL and r > 0 else 0
 
 
 def berechne_buchholz(teams, siege, gegner, freilose, modus, r):
