@@ -247,6 +247,7 @@ Details und Muster: `turniersysteme/RANGLISTE_LISTENER.md`. Generische Infrastru
 - `SheetRunner.benachrichtigeListener()` → SheetRunner-Worker-Thread
 - `TimerManager.emittiere()` → `PTM-Timer`-Executor-Thread (jeder Tick)
 - `WebServerManager` / `ReleaseUpdateService`-StatusListener → eigene Threads
+- `PtmOnlineAenderungsKanal` (WebSocket-Sofort-Signal von PTM-Online) → Listener auf `HttpClient`-Threads; ruft nur `planeMeldungsAbruf` auf, nie UNO/VCL
 
 **Pflicht:** In jedem Listener/Callback, der aus einem dieser Threads feuert, NIE direkt UI anfassen. Stattdessen Zustand im Fremd-Thread lesen, dann die UI-Arbeit per **`LoMainThread.post(xContext, () -> ...)`** auf den Main-Thread marshallen. `LoMainThread.post` reiht das Runnable via `AsyncCallback`/`PostUserEvent` in die Main-Thread-Queue ein (FIFO, läuft erst nach dem aktuellen Event → löst zugleich Thread-Wechsel UND VCL-Re-Entranz). Referenz-Implementierungen: `ProcessBox` (`runOnMain`), `InfoSidebarContent` (`aufMainThread`), `SheetListeSidebarContent`, `TimerToolbarSteuerung`.
 

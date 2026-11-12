@@ -15,6 +15,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -83,6 +84,13 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
      * Turnier läuft; der Huckepack der Sync-Antworten löst ihn bei neuen Meldungen sofort aus.
      */
     static final long ERGEBNISMELDUNGEN_ABRUF_MS = 60_000;
+    /**
+     * Abstand des Abrufs, solange das Sofort-Signal ({@link PtmOnlineAenderungsKanal}) verbunden ist: nur noch
+     * Sicherheitsnetz, neue Meldungen kündigt das Signal an.
+     */
+    static final long ERGEBNISMELDUNGEN_SICHERHEITSNETZ_MS = 300_000;
+    /** Bündelt mehrere kurz aufeinander folgende Signale zu einem Abruf. */
+    static final long SIGNAL_BUENDELUNG_MS = 1_000;
 
     private static volatile @Nullable PtmOnlineLiveBeobachter instanz;
     private static volatile @Nullable XComponentContext reaktivierungsKontext;
@@ -187,6 +195,8 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
     }
 
     private void stoppen() {
+        // Sofort-Signale ohne UNO trennen, bevor die Ausführung (Ping, Neuverbinden) endet.
+        beobachtungen.values().forEach(Beobachtung::aenderungsKanalSchliessen);
         synchronized (this) {
             beendet = true;
             for (Runnable aufgabe : ausfuehrung.shutdownNow()) {
@@ -239,6 +249,15 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
         }
     }
 
+    /** Nur für Tests: ob das Sofort-Signal von PTM-Online für dieses Dokument verbunden ist. */
+    static boolean istSofortSignalVerbunden(XSpreadsheetDocument xDoc) {
+        PtmOnlineLiveBeobachter beobachter = instanz;
+        Beobachtung beobachtung = beobachter == null ? null
+                : beobachter.beobachtungen.get(UnoRuntime.generateOid(xDoc));
+        PtmOnlineAenderungsKanal kanal = beobachtung == null ? null : beobachtung.aenderungsKanal.get();
+        return kanal != null && kanal.istVerbunden();
+    }
+
     /**
      * Ein Runner (Abgleich, „Gemeldete Ergebnisse abholen“) hat die Ergebnismeldungen selbst abgeholt und die
      * Konfliktliste nachgeführt. Der Hintergrund übernimmt diesen Stand, damit sein nächster Durchlauf nicht mit
@@ -254,7 +273,7 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
             beobachtung.ergebnismeldungen = new PtmOnlineErfassungsRunner.ErgebnismeldungsAbruf(tournamentId,
                     abruf.reports());
             if (abruf.istAktiv()) {
-                beobachtung.planeMeldungsAbruf(ERGEBNISMELDUNGEN_ABRUF_MS);
+                beobachtung.planeMeldungsAbruf(beobachtung.meldungsAbrufAbstand());
             }
         });
     }
@@ -354,6 +373,8 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
         private volatile @Nullable String letzteTurnierId;
         /** Geplanter Abruf der Ergebnismeldungen; nur unter der Sperre des Beobachters verändert. */
         private @Nullable ScheduledFuture<?> naechsterMeldungsAbruf;
+        /** Sofort-Signal, solange Ergebnismeldungen abgeholt werden. */
+        private final AtomicReference<@Nullable PtmOnlineAenderungsKanal> aenderungsKanal = new AtomicReference<>();
         /** Nur vom Thread „PTM-Online-Live“ verändert. */
         private long naechsteWiederholungMs = VERZOEGERUNG_MS;
 
@@ -371,6 +392,7 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
         @Override
         public void disposing(EventObject event) {
             geschlossen = true;
+            aenderungsKanalSchliessen();
             beobachtungen.remove(oid);
             PtmOnlineAuftraege.vergessen(xDoc);
         }
@@ -381,6 +403,8 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
         }
 
         void bindungErneuert() {
+            // Neue Bindung = neues Lease: das Sofort-Signal verbindet beim nächsten Abruf neu.
+            aenderungsKanalSchliessen();
             angehalten.set(false);
             onlineStand = null;
             ergebnismeldungen = null;
@@ -415,6 +439,7 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
                 WorkingSpreadsheet ws = new WorkingSpreadsheet(xContext, xDoc);
                 if (!PtmOnlineVerbindung.hatVerbindung(ws, ts)) {
                     geschlossen = true;
+                    aenderungsKanalSchliessen();
                     beobachtungen.remove(oid, this);
                     XModifyBroadcaster broadcaster = Lo.qi(XModifyBroadcaster.class, xDoc);
                     if (broadcaster != null) {
@@ -518,7 +543,7 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
             PtmOnlineErfassungsRunner.ErgebnismeldungsAbruf bekannt = ergebnismeldungen;
             int bekannteOffene = bekannt == null ? -1 : bekannt.meldungen().size();
             if (stand.aktiv()) {
-                planeMeldungsAbruf(stand.offen() != bekannteOffene ? 0 : ERGEBNISMELDUNGEN_ABRUF_MS);
+                planeMeldungsAbruf(stand.offen() != bekannteOffene ? 0 : meldungsAbrufAbstand());
             } else if (bekannteOffene > 0) {
                 planeMeldungsAbruf(0);
             }
@@ -572,7 +597,44 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
                 anstossen();
             }
             if (abruf.istAktiv()) {
-                planeMeldungsAbruf(ERGEBNISMELDUNGEN_ABRUF_MS);
+                aenderungsKanalSicherstellen(client, tournamentId);
+                planeMeldungsAbruf(meldungsAbrufAbstand());
+            } else {
+                aenderungsKanalSchliessen();
+            }
+        }
+
+        /** Mit verbundenem Sofort-Signal reicht ein seltener Abruf als Sicherheitsnetz. */
+        long meldungsAbrufAbstand() {
+            PtmOnlineAenderungsKanal kanal = aenderungsKanal.get();
+            return kanal != null && kanal.istVerbunden() ? ERGEBNISMELDUNGEN_SICHERHEITSNETZ_MS
+                    : ERGEBNISMELDUNGEN_ABRUF_MS;
+        }
+
+        /**
+         * Öffnet das Sofort-Signal des Turniers, falls noch keins besteht. Ein aufgegebenes Signal (Zugang abgelehnt,
+         * zu viele Verbindungen) bleibt bis zur nächsten Bindung zu, damit nicht bei jedem Abruf neu verbunden wird.
+         */
+        private void aenderungsKanalSicherstellen(TournamentSyncClient client, String tournamentId) {
+            PtmOnlineAenderungsKanal bisher = aenderungsKanal.get();
+            if ((bisher != null && bisher.gehoertZu(tournamentId)) || beendet || geschlossen) {
+                return;
+            }
+            var neu = new PtmOnlineAenderungsKanal(tournamentId, ausfuehrung,
+                    listener -> client.oeffneAenderungsSignal(tournamentId, listener),
+                    () -> planeMeldungsAbruf(SIGNAL_BUENDELUNG_MS));
+            if (aenderungsKanal.compareAndSet(bisher, neu)) {
+                if (bisher != null) {
+                    bisher.stoppen();
+                }
+                neu.starten();
+            }
+        }
+
+        void aenderungsKanalSchliessen() {
+            PtmOnlineAenderungsKanal kanal = aenderungsKanal.getAndSet(null);
+            if (kanal != null) {
+                kanal.stoppen();
             }
         }
 
@@ -593,6 +655,7 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
 
         /** Hält den Versand bis zu einer neuen Bindung an und informiert die Turnierleitung einmal. */
         private void halteAn(String meldungSchluessel) {
+            aenderungsKanalSchliessen();
             if (angehalten.compareAndSet(false, true)) {
                 LoMainThread.post(xContext, () -> {
                     if (!beendet) {
@@ -612,6 +675,7 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
                 throws GenerateException, InterruptedException {
             logger.warn("PTM-Online: Online-Turnier {} wurde gelöscht, Verbindung wird aufgehoben",
                     verbindung.tournamentId());
+            aenderungsKanalSchliessen();
             PtmOnlineLiveSync.vergessen(verbindung.tournamentId());
             PtmOnlineSpieleinstellungen.vergessen(verbindung.tournamentId());
             fuehreAus(new PtmOnlineArchivRunner(ws, ts, verbindung.mapping()),

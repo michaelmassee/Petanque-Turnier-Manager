@@ -13,6 +13,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 import com.google.gson.JsonObject;
+import com.sun.star.sheet.XSpreadsheetDocument;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.helper.position.RangePosition;
@@ -72,6 +73,24 @@ class PtmOnlineErgebnismeldungZusammenspielTest extends BasePtmOnlineZusammenspi
         assertThat(online.ergebnisMelden(idMitKonto, SPIELERKONTO, 13, 9)).as("erneute Meldung").isEqualTo(200);
     }
 
+    /**
+     * Mit verbundenem Sofort-Signal holt PTM die Meldung ohne Anstoß ab: Der nächste regelmäßige Abruf liegt dann
+     * {@link PtmOnlineLiveBeobachter#ERGEBNISMELDUNGEN_SICHERHEITSNETZ_MS} entfernt, weit nach der Wartezeit.
+     */
+    @Test
+    void meldungKommtUeberDasSofortSignalOhneAbrufAn() throws Exception {
+        rundeMitMeldungEinrichten(true);
+        XSpreadsheetDocument xDoc = wkingSpreadsheet.getWorkingSpreadsheetDocument();
+        PtmOnlineLiveBeobachter.ergebnismeldungenAbholen(xDoc);
+        warteBis("Sofort-Signal verbunden", () -> PtmOnlineLiveBeobachter.istSofortSignalVerbunden(xDoc));
+        // Der Abruf direkt nach dem Verbinden soll vor der Meldung erledigt sein, sonst brächte er sie mit.
+        Thread.sleep(3 * PtmOnlineLiveBeobachter.SIGNAL_BUENDELUNG_MS);
+
+        assertThat(online.ergebnisMelden(idMitKonto, SPIELERKONTO, 13, 7)).as("Meldung des Spielers").isEqualTo(200);
+
+        assertThat(warteAufFall()).startsWith(PtmOnlineErgebnismeldungen.SCHLUESSEL_PRAEFIX);
+    }
+
     @Test
     void ohneEingeschalteteErgebnismeldungNimmtPtmOnlineNichtsAn() throws Exception {
         rundeMitMeldungEinrichten(false);
@@ -108,6 +127,10 @@ class PtmOnlineErgebnismeldungZusammenspielTest extends BasePtmOnlineZusammenspi
      */
     private String warteAufFallInDerKonfliktliste() throws Exception {
         PtmOnlineLiveBeobachter.ergebnismeldungenAbholen(wkingSpreadsheet.getWorkingSpreadsheetDocument());
+        return warteAufFall();
+    }
+
+    private String warteAufFall() throws Exception {
         List<String> gefunden = new ArrayList<>();
         warteBis("Meldung in der Konfliktliste", () -> {
             gefunden.clear();

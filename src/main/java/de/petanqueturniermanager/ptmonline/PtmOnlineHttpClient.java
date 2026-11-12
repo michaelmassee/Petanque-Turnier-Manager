@@ -8,8 +8,10 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.net.http.WebSocket;
 import java.time.Duration;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -65,6 +67,31 @@ abstract class PtmOnlineHttpClient {
 
     final URI uri(String path) {
         return URI.create(baseUrl + (path.startsWith("/") ? path : "/" + path));
+    }
+
+    /**
+     * Öffnet einen WebSocket mit denselben Zugangsdaten wie die übrigen Aufrufe (API-Schlüssel, bei einem gebundenen
+     * Client auch Dokumentbindung und Schreib-Lease). Wartet nicht; das Ergebnis meldet die Future.
+     */
+    final CompletableFuture<WebSocket> oeffneWebSocket(String path, WebSocket.Listener listener) {
+        WebSocket.Builder builder = httpClient.newWebSocketBuilder().connectTimeout(timeout)
+                .header("Authorization", "Bearer " + apiKey);
+        if (syncDocumentId != null && leaseToken != null) {
+            builder.header("X-PTM-Sync-Document", syncDocumentId).header("X-PTM-Sync-Lease", leaseToken);
+        }
+        return builder.buildAsync(webSocketUri(path), listener);
+    }
+
+    /** Adresse eines WebSocket-Endpunkts: {@code https} wird zu {@code wss}, {@code http} zu {@code ws}. */
+    final URI webSocketUri(String path) {
+        String adresse = uri(path).toString();
+        if (adresse.startsWith("https://")) {
+            return URI.create("wss://" + adresse.substring("https://".length()));
+        }
+        if (adresse.startsWith("http://")) {
+            return URI.create("ws://" + adresse.substring("http://".length()));
+        }
+        return URI.create(adresse);
     }
 
     final HttpResponse<String> get(String path) throws IOException, InterruptedException {

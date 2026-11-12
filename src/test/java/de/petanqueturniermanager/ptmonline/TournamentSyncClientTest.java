@@ -8,6 +8,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -15,9 +16,11 @@ import java.net.http.HttpClient;
 import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.net.http.WebSocket;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Flow;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -388,5 +391,36 @@ public class TournamentSyncClientTest {
 		HttpResponse<String> response = mockResponse(200, body);
 		when(httpClient.<String>send(any(HttpRequest.class), any())).thenReturn(response);
 		return new TournamentSyncClient(httpClient, "https://ptm-online.example.com", "ptm_secret");
+	}
+
+	@Test
+	public void sofortSignalVerbindetPerWebSocketMitDokumentbindung() {
+		HttpClient httpClient = mock(HttpClient.class);
+		WebSocket.Builder builder = mock(WebSocket.Builder.class);
+		when(httpClient.newWebSocketBuilder()).thenReturn(builder);
+		when(builder.connectTimeout(any())).thenReturn(builder);
+		when(builder.header(any(), any())).thenReturn(builder);
+		CompletableFuture<WebSocket> aufbau = new CompletableFuture<>();
+		when(builder.buildAsync(any(), any())).thenReturn(aufbau);
+		WebSocket.Listener listener = mock(WebSocket.Listener.class);
+
+		TournamentSyncClient client = new TournamentSyncClient(httpClient, "https://ptm-online.example.com/",
+				"ptm_secret", "dok-1", "lease-1");
+
+		assertThat(client.oeffneAenderungsSignal("t 1", listener)).isSameAs(aufbau);
+		verify(builder).buildAsync(URI.create("wss://ptm-online.example.com/api/sync/tournaments/t+1/socket"),
+				listener);
+		verify(builder).header("Authorization", "Bearer ptm_secret");
+		verify(builder).header("X-PTM-Sync-Document", "dok-1");
+		verify(builder).header("X-PTM-Sync-Lease", "lease-1");
+	}
+
+	@Test
+	public void sofortSignalNutztOhneTlsWs() {
+		TournamentSyncClient client = new TournamentSyncClient(mock(HttpClient.class), "http://localhost:8787",
+				"ptm_secret");
+
+		assertThat(client.webSocketUri("/api/sync/tournaments/t1/socket"))
+				.hasToString("ws://localhost:8787/api/sync/tournaments/t1/socket");
 	}
 }

@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
+import java.net.http.WebSocket;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -89,6 +91,12 @@ public class TournamentSyncClient extends PtmOnlineHttpClient implements Auftrag
 
     TournamentSyncClient(HttpClient httpClient, String baseUrl, String apiKey) {
         super(httpClient, baseUrl, apiKey);
+    }
+
+    /** Gebundener Client mit eigenem {@link HttpClient} (Tests). */
+    TournamentSyncClient(HttpClient httpClient, String baseUrl, String apiKey, String syncDocumentId,
+            String leaseToken) {
+        super(httpClient, baseUrl, apiKey, syncDocumentId, leaseToken);
     }
 
     /**
@@ -239,6 +247,18 @@ public class TournamentSyncClient extends PtmOnlineHttpClient implements Auftrag
      */
     public ErgebnismeldungenDto fetchErgebnismeldungen(String tournamentId) throws IOException, InterruptedException {
         return leseAntwort(get(turnierPfad(tournamentId) + "/result-reports"), ErgebnismeldungenDto.class);
+    }
+
+    /**
+     * Öffnet das Sofort-Signal des Turniers (WebSocket): PTM-Online meldet darüber jede Änderung mit ihrer Quelle,
+     * siehe {@link PtmOnlineAenderungsKanal}. Nur ein gebundener Client (Dokumentbindung und Lease) wird angenommen.
+     */
+    CompletableFuture<WebSocket> oeffneAenderungsSignal(String tournamentId, WebSocket.Listener listener) {
+        return oeffneWebSocket(aenderungsSignalPfad(tournamentId), listener);
+    }
+
+    static String aenderungsSignalPfad(String tournamentId) {
+        return turnierPfad(tournamentId) + "/socket";
     }
 
     /** Sendet einen gezählten Schreibauftrag (siehe {@link PtmOnlineHttpClient#sendeAuftrag}). */
