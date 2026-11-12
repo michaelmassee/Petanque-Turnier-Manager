@@ -12,6 +12,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
+import de.petanqueturniermanager.schweizer.konfiguration.SchweizerPropertiesSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
@@ -41,7 +42,8 @@ public class TurnierDialog extends BasePropertiesDialog {
 			Map.entry("Schweizer Ranking Modus", 40),
 			Map.entry("Rangliste Team Anzeige", 41),
 			Map.entry("Freispiel Punkte +", 50),
-			Map.entry("Freispiel Punkte -", 51));
+			Map.entry("Freispiel Punkte -", 51),
+			Map.entry(SchweizerPropertiesSpalte.KONFIG_PROP_FREILOS_BUCHHOLZ, 52));
 
 	public TurnierDialog(WorkingSpreadsheet currentSpreadsheet) {
 		super(currentSpreadsheet);

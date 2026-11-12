@@ -65,6 +65,7 @@ import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.sheet.RundenWertungHelper;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
@@ -140,7 +141,7 @@ public abstract class FormuleXAbstractSpielrundeSheet extends SheetRunner implem
 
     @Override
     public String getSpielrundeSchluessel(int rundeNr) {
-        return SheetMetadataHelper.SCHLUESSEL_FORMULEX_SPIELRUNDE_PREFIX + rundeNr;
+        return SheetMetadataHelper.schluesselFormuleXSpielrunde(rundeNr);
     }
 
     @Override
@@ -297,9 +298,11 @@ public abstract class FormuleXAbstractSpielrundeSheet extends SheetRunner implem
 
             for (; spielrunde <= bisSpielrunde; spielrunde++) {
                 SheetRunner.testDoCancelTask();
+                String rundenSchluessel = getSpielrundeSchluessel(spielrunde);
                 XSpreadsheet sheet = SheetMetadataHelper.findeSheetUndHeile(xDoc,
-                        getSpielrundeSchluessel(spielrunde), getSheetName(SpielRundeNr.from(spielrunde)));
-                if (sheet == null) {
+                        rundenSchluessel, getSheetName(SpielRundeNr.from(spielrunde)));
+                if (sheet == null || RundenWertungHelper.istNichtGewertet(xDoc, sheet, rundenSchluessel)) {
+                    // nicht gewertete Runden zählen weder in Wertung noch in Paarungshistorie
                     continue;
                 }
                 leseRundeEin(sheet, aktiveMeldungen, rawPointsMap, gegnerMap, freilosTeams,

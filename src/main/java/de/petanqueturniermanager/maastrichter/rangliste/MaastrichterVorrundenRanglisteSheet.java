@@ -43,7 +43,7 @@ public class MaastrichterVorrundenRanglisteSheet extends SchweizerRanglisteSheet
 	}
 
 	@Override
-	protected int letzteAnzeigeSpalte() {
+	protected int letzteErweiterungsSpalte() {
 		return MaastrichterGruppenSpalteHelper.GRUPPE_SPALTE;
 	}
 

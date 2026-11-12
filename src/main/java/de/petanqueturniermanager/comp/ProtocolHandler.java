@@ -511,6 +511,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_TOOLBAR_NEU_IN_NEUER_DATEI    = "toolbar_neu_in_neuer_datei";
 	public static final String CMD_TOOLBAR_OEFFNEN               = "toolbar_oeffnen";
 	public static final String CMD_TOOLBAR_NEU_AUSLOSEN          = "toolbar_neu_auslosen";
+	/** Menü (Supermêlée, Schweizer, Maastrichter, Formule X): aktive Spielrunde werten / nicht werten. */
+	public static final String CMD_SPIELRUNDE_WERTUNG            = "spielrunde_wertung";
 	public static final String CMD_TOOLBAR_ABSCHLUSS             = "toolbar_abschluss";
 	public static final String CMD_TOOLBAR_NAECHSTER_SPIELTAG    = "toolbar_naechster_spieltag";
 	public static final String CMD_TOOLBAR_GESAMTRANGLISTE       = "toolbar_gesamtrangliste";
@@ -1441,6 +1443,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				break;
 			case CMD_TOOLBAR_NEU_AUSLOSEN:
 				ToolbarAktionDispatcher.neuAuslosen(ws);
+				break;
+			case CMD_SPIELRUNDE_WERTUNG:
+				ToolbarAktionDispatcher.spielrundeWertungUmschalten(ws);
 				break;
 			case CMD_TOOLBAR_ABSCHLUSS:
 				ToolbarAktionDispatcher.abschluss(ws);
@@ -2456,6 +2461,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_TOOLBAR_CHECKIN                        -> ts != TurnierSystem.KEIN;
 			case CMD_TOOLBAR_NEU_AUSLOSEN -> ts != TurnierSystem.KEIN
 					&& TurnierSystemToolbarStrategieRegistry.get(ts).hatNeuAuslosen();
+			case CMD_SPIELRUNDE_WERTUNG   -> ts != TurnierSystem.KEIN
+					&& TurnierSystemToolbarStrategieRegistry.get(ts).hatSpielrundeWertung();
 			case CMD_TOOLBAR_ABSCHLUSS    -> ts != TurnierSystem.KEIN
 					&& TurnierSystemToolbarStrategieRegistry.get(ts).hatAbschlussphase();
 			case CMD_TOOLBAR_NAECHSTER_SPIELTAG,

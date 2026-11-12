@@ -17,6 +17,8 @@ public interface ICommonProperties {
 	String CHAR_COLOR = "CharColor";
 	String CHAR_WEIGHT = "CharWeight";
 	String CHAR_HEIGHT = "CharHeight";
+	// com.sun.star.awt.FontStrikeout.*
+	String CHAR_STRIKEOUT = "CharStrikeout";
 	// public static final String TABLE_BORDER = "TableBorder";
 	String TABLE_BORDER2 = "TableBorder2";
 	String HEIGHT = "Height";

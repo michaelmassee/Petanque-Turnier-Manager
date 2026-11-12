@@ -60,6 +60,13 @@ class SheetBaumOrganisiererTest {
 				SheetMetadataHelper.SCHLUESSEL_TRIPTETE_RANGLISTE);
 	}
 
+	@Test
+	void durchgestrichenSetztNachJedemZeichenDenDurchstrich() {
+		assertThat(SheetBaumOrganisierer.durchgestrichen("R 2")).isEqualTo("R\u0336 \u0336" + "2\u0336");
+		assertThat(SheetBaumOrganisierer.durchgestrichen("Ä")).as("Umlaut bleibt ein Zeichen").isEqualTo("Ä\u0336");
+		assertThat(SheetBaumOrganisierer.durchgestrichen("")).isEmpty();
+	}
+
 	private static List<String> angezeigteSchluessel(Map<SheetGruppe, List<BlattKnoten>> gruppen) {
 		var map = new EnumMap<SheetGruppe, List<BlattKnoten>>(SheetGruppe.class);
 		map.putAll(gruppen);

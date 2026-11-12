@@ -56,8 +56,9 @@ import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
-import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.sheet.RundenWertungHelper;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.model.MeleeSpielRunde;
 import de.petanqueturniermanager.model.Spieler;
@@ -354,11 +355,13 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 		for (; spielrunde <= bisSpielrunde; spielrunde++) {
 			SheetRunner.testDoCancelTask();
 			// Iterations-Lookup: Metadaten-first (überlebt Umbenennung), Fallback auf Namen
-			XSpreadsheet xsheet = SheetMetadataHelper.findeSheetUndHeile(xDoc,
-					SheetMetadataHelper.schluesselSupermeleeSpielrunde(spielTagNr.getNr(), spielrunde),
+			String rundenSchluessel = SheetMetadataHelper.schluesselSupermeleeSpielrunde(spielTagNr.getNr(),
+					spielrunde);
+			XSpreadsheet xsheet = SheetMetadataHelper.findeSheetUndHeile(xDoc, rundenSchluessel,
 					getSheetName(spielTagNr, SpielRundeNr.from(spielrunde)));
 
-			if (xsheet == null) {
+			if (xsheet == null || RundenWertungHelper.istNichtGewertet(xDoc, xsheet, rundenSchluessel)) {
+				// nicht gewertete Runden zählen nicht zur Paarungshistorie
 				continue;
 			}
 			Position pospielerNr = Position.from(ERSTE_SPIELERNR_SPALTE, ERSTE_DATEN_ZEILE);

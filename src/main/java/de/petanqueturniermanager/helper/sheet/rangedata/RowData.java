@@ -54,9 +54,12 @@ public class RowData extends ArrayList<CellData> {
 		return cellData;
 	}
 
-	/**
-	 *
-	 */
+	public CellData newDouble(double val) {
+		CellData cellData = new CellData(Double.valueOf(val));
+		this.add(cellData);
+		return cellData;
+	}
+
 	public CellData newEmpty() {
 		CellData cellData = new CellData("");
 		this.add(cellData);

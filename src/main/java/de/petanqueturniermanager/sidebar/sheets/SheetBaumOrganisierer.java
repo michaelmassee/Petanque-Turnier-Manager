@@ -19,6 +19,7 @@ import com.sun.star.sheet.XSpreadsheetDocument;
 
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.sheet.RundenWertungHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.sidebar.sheets.BlattBaumEintrag.BlattKnoten;
 import de.petanqueturniermanager.sidebar.sheets.BlattBaumEintrag.GruppenKopf;
@@ -42,6 +43,9 @@ public class SheetBaumOrganisierer {
     static final String MAASTRICHTER_FINALRUNDE_GRUPPE_ID = "MAASTRICHTER_FINALRUNDE";
     static final String KASKADE_RUNDEN_GRUPPE_ID = "KASKADE_RUNDEN";
     static final String KASKADE_KO_GRUPPE_ID = "KASKADE_KO";
+
+    /** Kombinierendes Zeichen „langer Durchstrich" für nicht gewertete Spielrunden. */
+    private static final char DURCHSTRICH = '\u0336';
 
     private static final String SUPERMELEE_MELDELISTE_SCHLUESSEL = "__PTM_SUPERMELEE_MELDELISTE__";
     private static final String SUPERMELEE_ENDRANGLISTE_SCHLUESSEL = "__PTM_SUPERMELEE_ENDRANGLISTE__";
@@ -77,7 +81,8 @@ public class SheetBaumOrganisierer {
     private Map<SheetGruppe, List<BlattKnoten>> schluesselNachGruppenSortieren(
             XSpreadsheetDocument xDoc) {
         var gruppenMap = new EnumMap<SheetGruppe, List<BlattKnoten>>(SheetGruppe.class);
-        var allKeys = SheetMetadataHelper.getSchluesselMitPrefix(xDoc, "__PTM_");
+        var allKeys = SheetMetadataHelper.getSchluesselMitPrefix(xDoc, SheetMetadataHelper.PRAEFIX_PTM);
+        var vorhandeneSchluessel = new HashSet<>(Arrays.asList(allKeys));
         // Deterministische Reihenfolge, damit bei (in Alt-Dokumenten möglichen) Mehrfach-Schlüsseln
         // auf demselben Blatt stets derselbe Eintrag gewinnt.
         Arrays.sort(allKeys);
@@ -87,7 +92,7 @@ public class SheetBaumOrganisierer {
         // in SheetMetadataHelper bereinigt sie dauerhaft bei der nächsten Metadaten-Schreibung).
         var belegteBlaetter = new HashSet<String>();
         for (var schluessel : allKeys) {
-            if (schluessel.startsWith("__PTM_SCORE_")) {
+            if (SheetMetadataHelper.istZusatzSchluessel(schluessel)) {
                 continue;
             }
             var gruppeOpt = SheetGruppe.fuerSchluessel(schluessel);
@@ -104,7 +109,8 @@ public class SheetBaumOrganisierer {
                         || gruppe == SheetGruppe.SCHWEIZER || gruppe == SheetGruppe.KO
                         || gruppe == SheetGruppe.FORMULEX || gruppe == SheetGruppe.JGJ
                         || gruppe == SheetGruppe.TRIPTETE) ? "" : "  ";
-                var knoten = knoten(sheet, schluessel, einrueckung);
+                var nichtGewertet = istNichtGewertet(xDoc, sheet, schluessel, vorhandeneSchluessel);
+                var knoten = knoten(sheet, schluessel, einrueckung, nichtGewertet);
                 if (knoten != null) {
                     gruppenMap.computeIfAbsent(gruppe, g -> new ArrayList<>()).add(knoten);
                 }
@@ -114,13 +120,35 @@ public class SheetBaumOrganisierer {
         return gruppenMap;
     }
 
-    private BlattKnoten knoten(XSpreadsheet sheet, String schluessel, String einrueckung) {
+    private BlattKnoten knoten(XSpreadsheet sheet, String schluessel, String einrueckung, boolean nichtGewertet) {
         var named = Lo.qi(XNamed.class, sheet);
         if (named == null) {
             logger.warn("BlattKnoten: XNamed nicht verfügbar für Schlüssel '{}'", schluessel);
             return null;
         }
-        return new BlattKnoten(einrueckung + named.getName(), schluessel);
+        var name = nichtGewertet ? durchgestrichen(named.getName()) : named.getName();
+        return new BlattKnoten(einrueckung + name, schluessel);
+    }
+
+    /**
+     * Prüft, ob das Blatt eine als „nicht gewertet" markierte Spielrunde ist. Die vorab gelesene
+     * Schlüsselmenge erspart für die (fast immer) unmarkierten Blätter den Named-Range-Zugriff.
+     */
+    private static boolean istNichtGewertet(XSpreadsheetDocument xDoc, XSpreadsheet sheet, String schluessel,
+            Set<String> vorhandeneSchluessel) {
+        return vorhandeneSchluessel.contains(SheetMetadataHelper.schluesselNichtGewertet(schluessel))
+                && RundenWertungHelper.istNichtGewertet(xDoc, sheet, schluessel);
+    }
+
+    /**
+     * Stellt den Text durchgestrichen dar. Die UNO-ListBox kennt keine Schriftattribute je
+     * Eintrag, daher wird nach jedem Zeichen der kombinierende Durchstrich U+0336 eingefügt.
+     * Paketsichtbar für {@code SheetBaumOrganisiererTest}.
+     */
+    static String durchgestrichen(String text) {
+        var sb = new StringBuilder(text.length() * 2);
+        text.codePoints().forEach(zeichen -> sb.appendCodePoint(zeichen).append(DURCHSTRICH));
+        return sb.toString();
     }
 
     /** Paketsichtbar für {@code SheetBaumOrganisiererTest} (prüft, dass kein Blatt verschluckt wird). */

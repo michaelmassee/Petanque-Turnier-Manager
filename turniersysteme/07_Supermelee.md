@@ -190,6 +190,23 @@ Partien pro Runde = `N / 2` (gerundet). Beispiel:
 - falsche Behandlung von Fehlrunden
 
 ---
+# 8.5 Spielrunde nicht werten (PTM)
+
+Über **„Spielrunde werten / nicht werten"** im Turniermenü lässt sich die Spielrunde des gerade
+aktiven Blatts aus der Wertung nehmen, z. B. eine versehentlich ausgeloste oder vor Ort abgesagte
+Runde. Ein zweiter Aufruf nimmt die Runde wieder in die Wertung auf.
+
+- Das Blatt und die Nummerierung aller Runden bleiben unverändert, der Tab wird grau, und in der Sidebar-Blätterliste erscheint der Blattname durchgestrichen.
+- Im Blatt selbst ist die Runde deutlich gekennzeichnet: Die ganze Tabelle (Kopf und alle Paarungen) erscheint per **bedingter Formatierung** hellgrau mit grauer, durchgestrichener Schrift, und der Titel erhält den Zusatz „– NICHT GEWERTET“. Der Titelzusatz ist direkt geschrieben und damit auch im HTML-/Webserver-/PDF-Export sichtbar; die bedingte Formatierung gilt nur in Calc. Beim Wiederaufnehmen wird beides entfernt, die übrigen Regeln (Fehler-, Editierfarbe) bleiben unverändert.
+- Die Runde zählt **nicht in der Rangliste** (Siege, Punkte).
+- Die Runde zählt **nicht in der Paarungshistorie**: Weitere Auslosungen dürfen ihre Paarungen wiederholen.
+- Bereits ausgeloste spätere Runden bleiben unverändert.
+- Wird die Runde neu ausgelost, ist sie wieder gewertet.
+- In der Spieltag-Rangliste bleiben die Spalten der Runde leer (Kopf „n.g."), es werden **keine** Ersatzpunkte für „nicht gespielt" gebucht. Die Endrangliste übernimmt die Summen des Spieltags.
+
+Technisch: blattgebundener Named Range `__PTM_NICHT_GEWERTET_<Rundenschlüssel>` (`RundenWertungHelper`); Kennzeichnung im Blatt über `NichtGewertetFormatHelper` (Regel wird allen vorhandenen Regeln vorangestellt, da bei LO das erste passende Format gewinnt).
+
+---
 # 9. Zusammenfassung
 Das Supermêlée ist:
 - extrem flexibel

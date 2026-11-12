@@ -56,6 +56,11 @@ public class NichtVerfuegbarToolbarStrategie implements ITurnierSystemToolbarStr
     }
 
     @Override
+    public void spielrundeWertungUmschalten(WorkingSpreadsheet ws) throws Exception {
+        zeigeNichtVerfuegbar(ws, I18n.get("toolbar.spielrunde.wertung.nicht.verfuegbar"));
+    }
+
+    @Override
     public void naechsterSpieltag(WorkingSpreadsheet ws) throws Exception {
         zeigeNichtVerfuegbar(ws, I18n.get("toolbar.naechster.spieltag.nicht.verfuegbar"));
     }

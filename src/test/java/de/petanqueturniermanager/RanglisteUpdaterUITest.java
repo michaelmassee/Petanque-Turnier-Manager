@@ -359,8 +359,8 @@ class RanglisteUpdaterUITest extends BaseCalcUITest {
 
             int platz  = row.get(PLATZ).getIntVal(-1);
             int siege  = row.get(SIEGE).getIntVal(-1);
-            int bhz    = row.get(BHZ).getIntVal(-1);
-            int fbhz   = row.get(FBHZ).getIntVal(-1);
+            double bhz  = row.get(BHZ).getDoubleVal(-1);
+            double fbhz = row.get(FBHZ).getDoubleVal(-1);
             int pplus  = row.get(PPLUS).getIntVal(-1);
             int pminus = row.get(PMINUS).getIntVal(-1);
             int pdiff  = row.get(PDIFF).getIntVal(-1);
@@ -380,10 +380,10 @@ class RanglisteUpdaterUITest extends BaseCalcUITest {
                     .isLessThanOrEqualTo(letzteSiege);
             soft.assertThat(bhz)
                     .as("[%s] Zeile %d: BHZ muss ≥ 0 sein", bezeichnung, zeile)
-                    .isGreaterThanOrEqualTo(0);
+                    .isGreaterThanOrEqualTo(0.0);
             soft.assertThat(fbhz)
                     .as("[%s] Zeile %d: FBHZ muss ≥ 0 sein", bezeichnung, zeile)
-                    .isGreaterThanOrEqualTo(0);
+                    .isGreaterThanOrEqualTo(0.0);
             soft.assertThat(pplus)
                     .as("[%s] Zeile %d: PUNKTE_PLUS muss ≥ 0 sein", bezeichnung, zeile)
                     .isGreaterThanOrEqualTo(0);

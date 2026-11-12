@@ -1,0 +1,191 @@
+{
+  "_quelle": "Hauptprojekt src/test/resources/de/petanqueturniermanager/schweizer/schweizer-wertung-faelle.json; identische Kopie in PTM-Online src/lib/pairing/schweizer-wertung-faelle.json. Beide Projekte prüfen diese Fälle (SchweizerWertungFaelleTest / schweizer-wertung-faelle.test.js). Nur gemeinsam ändern.",
+  "_format": {
+    "runden": "je Runde Liste von Partien [teamA, teamB, punkteA, punkteB]; Freilos [teamA, null] (zählt 13:7); ausgelost ohne Ergebnis [teamA, teamB, null, null]",
+    "teams": "Teamnummern in Meldelisten-Reihenfolge",
+    "erwartet": "[platz, team, siege, bhz, fbhz, punktedifferenz, punktePlus] in Ranglisten-Reihenfolge; Teams mit gleichem Platz stehen nach Teamnummer (keine Wertung, nur Reihenfolge)"
+  },
+  "faelle": [
+    {
+      "name": "Kompletter Gleichstand: geteilter Platz, Reihenfolge nach Teamnummer",
+      "rankingModus": "MIT_BUCHHOLZ",
+      "freilosBuchholz": "NULL",
+      "teams": [3, 1, 4, 2],
+      "runden": [
+        [
+          [3, 4, 13, 7],
+          [1, 2, 13, 7]
+        ]
+      ],
+      "erwartet": [
+        [1, 1, 1, 0, 1, 6, 13],
+        [1, 3, 1, 0, 1, 6, 13],
+        [3, 2, 0, 1, 0, -6, 7],
+        [3, 4, 0, 1, 0, -6, 7]
+      ]
+    },
+    {
+      "name": "Kompletter Gleichstand ohne Buchholz",
+      "rankingModus": "OHNE_BUCHHOLZ",
+      "freilosBuchholz": "NULL",
+      "teams": [4, 2, 3, 1],
+      "runden": [
+        [
+          [3, 4, 13, 7],
+          [1, 2, 13, 7]
+        ]
+      ],
+      "erwartet": [
+        [1, 1, 1, 0, 1, 6, 13],
+        [1, 3, 1, 0, 1, 6, 13],
+        [3, 2, 0, 1, 0, -6, 7],
+        [3, 4, 0, 1, 0, -6, 7]
+      ]
+    },
+    {
+      "name": "5 Teams, 3 Runden, Freilos-Buchholz NULL",
+      "rankingModus": "MIT_BUCHHOLZ",
+      "freilosBuchholz": "NULL",
+      "teams": [1, 2, 3, 4, 5],
+      "runden": [
+        [
+          [1, 2, 13, 5],
+          [3, 4, 13, 10],
+          [5, null]
+        ],
+        [
+          [1, 3, 13, 11],
+          [5, 2, 13, 8],
+          [4, null]
+        ],
+        [
+          [1, 5, 9, 13],
+          [3, 4, 13, 6],
+          [2, null]
+        ]
+      ],
+      "erwartet": [
+        [1, 5, 3, 3, 11, 15, 39],
+        [2, 1, 2, 6, 12, 6, 35],
+        [3, 3, 2, 4, 14, 8, 37],
+        [4, 2, 1, 5, 9, -7, 26],
+        [5, 4, 1, 4, 8, -4, 29]
+      ]
+    },
+    {
+      "name": "5 Teams, 3 Runden, Freilos-Buchholz NEUTRAL (r = 3: BHZ 1 je Freilos)",
+      "rankingModus": "MIT_BUCHHOLZ",
+      "freilosBuchholz": "NEUTRAL",
+      "teams": [1, 2, 3, 4, 5],
+      "runden": [
+        [
+          [1, 2, 13, 5],
+          [3, 4, 13, 10],
+          [5, null]
+        ],
+        [
+          [1, 3, 13, 11],
+          [5, 2, 13, 8],
+          [4, null]
+        ],
+        [
+          [1, 5, 9, 13],
+          [3, 4, 13, 6],
+          [2, null]
+        ]
+      ],
+      "erwartet": [
+        [1, 5, 3, 4, 18, 15, 39],
+        [2, 1, 2, 6, 14, 6, 35],
+        [3, 3, 2, 4, 16, 8, 37],
+        [4, 2, 1, 6, 14, -7, 26],
+        [5, 4, 1, 5, 12, -4, 29]
+      ]
+    },
+    {
+      "name": "5 Teams, 2 Runden, NEUTRAL abgerundet (r = 2: BHZ 0 je Freilos)",
+      "rankingModus": "MIT_BUCHHOLZ",
+      "freilosBuchholz": "NEUTRAL",
+      "teams": [1, 2, 3, 4, 5],
+      "runden": [
+        [
+          [1, 2, 13, 5],
+          [3, 4, 13, 10],
+          [5, null]
+        ],
+        [
+          [1, 3, 13, 11],
+          [5, 2, 13, 8],
+          [4, null]
+        ]
+      ],
+      "erwartet": [
+        [1, 1, 2, 1, 7, 10, 26],
+        [2, 5, 2, 0, 7, 11, 26],
+        [3, 3, 1, 3, 2, 1, 24],
+        [4, 4, 1, 1, 5, 3, 23],
+        [5, 2, 0, 4, 1, -13, 13]
+      ]
+    },
+    {
+      "name": "5 Teams, 3 Runden, ohne Buchholz",
+      "rankingModus": "OHNE_BUCHHOLZ",
+      "freilosBuchholz": "NEUTRAL",
+      "teams": [1, 2, 3, 4, 5],
+      "runden": [
+        [
+          [1, 2, 13, 5],
+          [3, 4, 13, 10],
+          [5, null]
+        ],
+        [
+          [1, 3, 13, 11],
+          [5, 2, 13, 8],
+          [4, null]
+        ],
+        [
+          [1, 5, 9, 13],
+          [3, 4, 13, 6],
+          [2, null]
+        ]
+      ],
+      "erwartet": [
+        [1, 5, 3, 4, 18, 15, 39],
+        [2, 3, 2, 4, 16, 8, 37],
+        [3, 1, 2, 6, 14, 6, 35],
+        [4, 4, 1, 5, 12, -4, 29],
+        [5, 2, 1, 6, 14, -7, 26]
+      ]
+    },
+    {
+      "name": "Ausgeloste Runde ohne Ergebnis: Freilos zählt als Sieg, aber nicht für den Buchholz",
+      "rankingModus": "MIT_BUCHHOLZ",
+      "freilosBuchholz": "NEUTRAL",
+      "teams": [1, 2, 3, 4, 5],
+      "runden": [
+        [
+          [1, 2, 13, 5],
+          [3, 4, 13, 10],
+          [5, null]
+        ],
+        [
+          [1, 3, 13, 11],
+          [5, 2, 13, 8],
+          [4, null]
+        ],
+        [
+          [1, 5, null, null],
+          [3, 4, null, null],
+          [2, null]
+        ]
+      ],
+      "erwartet": [
+        [1, 1, 2, 2, 7, 10, 26],
+        [2, 5, 2, 1, 7, 11, 26],
+        [3, 2, 1, 4, 3, -7, 26],
+        [4, 3, 1, 3, 3, 1, 24],
+        [5, 4, 1, 1, 5, 3, 23]
+      ]
+    }
+  ]
+}

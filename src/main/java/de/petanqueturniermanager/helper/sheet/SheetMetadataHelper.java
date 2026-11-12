@@ -193,6 +193,20 @@ public class SheetMetadataHelper {
      */
     public static final String SCHLUESSEL_SUFFIX = "__";
 
+    // ── Konstanten: Zusatz-Schlüssel (keine Blatt-Identität) ─────────────────
+
+    /** Gemeinsames Präfix aller PTM-Metadaten-Schlüssel. */
+    public static final String PRAEFIX_PTM = "__PTM_";
+
+    /** Präfix der Score-Positions-Schlüssel, siehe {@link #scoreSchluessel(String)}. */
+    public static final String PRAEFIX_SCORE = "__PTM_SCORE_";
+
+    /**
+     * Präfix der Markierung „Spielrunde wird nicht gewertet", siehe
+     * {@link #schluesselNichtGewertet(String)}.
+     */
+    public static final String PRAEFIX_NICHT_GEWERTET = "__PTM_NICHT_GEWERTET_";
+
     private SheetMetadataHelper() {
     }
 
@@ -277,7 +291,32 @@ public class SheetMetadataHelper {
      * </ul>
      */
     public static String scoreSchluessel(String bracketSchluessel) {
-        return bracketSchluessel.replace("__PTM_", "__PTM_SCORE_");
+        return bracketSchluessel.replace(PRAEFIX_PTM, PRAEFIX_SCORE);
+    }
+
+    /**
+     * Leitet den Schlüssel der Markierung „nicht gewertet" aus dem Identitäts-Schlüssel eines
+     * Spielrunden-Blatts ab. Die Markierung zeigt auf dasselbe Blatt wie der Rundenschlüssel und
+     * verschwindet mit dem Blatt (verwaiste Metadaten werden bereinigt).
+     * <p>
+     * Beispiel: {@code __PTM_SCHWEIZER_SPIELRUNDE_3__} → {@code __PTM_NICHT_GEWERTET_SCHWEIZER_SPIELRUNDE_3__}
+     * <p>
+     * Bewusst eigenes Präfix: Ein Schlüssel wie {@code __PTM_SCHWEIZER_SPIELRUNDE_3__NG} würde von der
+     * präfixbasierten Rundenzählung ({@link #getSchluesselMitPrefix}) mitgezählt.
+     */
+    public static String schluesselNichtGewertet(String rundenSchluessel) {
+        return PRAEFIX_NICHT_GEWERTET + rundenSchluessel.substring(PRAEFIX_PTM.length());
+    }
+
+    /**
+     * Zusatz-Schlüssel tragen Zusatzinformationen zu einem Blatt (Score-Positionen, Markierung
+     * „nicht gewertet"), aber nicht dessen Identität. Sie koexistieren mit dem Identitäts-Schlüssel
+     * auf demselben Blatt, erzeugen keinen eigenen Sidebar-Eintrag und werden von der
+     * Blatt-Eindeutigkeits-Bereinigung nicht entfernt.
+     */
+    public static boolean istZusatzSchluessel(String schluessel) {
+        return schluessel.startsWith(PRAEFIX_SCORE)
+                || schluessel.startsWith(PRAEFIX_NICHT_GEWERTET);
     }
 
     /**
@@ -458,7 +497,9 @@ public class SheetMetadataHelper {
     static void schreibeSheetMetadaten(XNamedRanges namedRanges,
                                        String sheetName, int sheetIdx, String namedRangeKey) {
         try {
-            entferneFremdeIdentitaetsSchluessel(namedRanges, sheetIdx, namedRangeKey);
+            if (!istZusatzSchluessel(namedRangeKey)) {
+                entferneFremdeIdentitaetsSchluessel(namedRanges, sheetIdx, namedRangeKey);
+            }
             if (namedRanges.hasByName(namedRangeKey)) {
                 namedRanges.removeByName(namedRangeKey);
             }
@@ -477,8 +518,8 @@ public class SheetMetadataHelper {
 
     /**
      * Erzwingt die Invariante <em>„höchstens ein Identitäts-Schlüssel pro Blatt"</em>: entfernt
-     * alle {@code __PTM_*}-Schlüssel (außer {@code __PTM_SCORE_*}, die legitim mit dem
-     * Identitäts-Schlüssel auf Bracket-Blättern koexistieren), die bereits auf das Ziel-Blatt
+     * alle {@code __PTM_*}-Schlüssel (außer Zusatz-Schlüsseln, siehe {@link #istZusatzSchluessel},
+     * die legitim mit dem Identitäts-Schlüssel koexistieren), die bereits auf das Ziel-Blatt
      * {@code sheetIdx} zeigen – außer dem gerade zu schreibenden {@code behalteSchluessel}.
      * <p>
      * Hintergrund: Generische Blattnamen (z.B. „Meldeliste", „Rangliste", „Teilnehmer") werden
@@ -500,7 +541,7 @@ public class SheetMetadataHelper {
         }
         List<String> zuEntfernen = new ArrayList<>();
         for (String name : namen) {
-            if (!name.startsWith("__PTM_") || name.startsWith("__PTM_SCORE_") || name.equals(behalteSchluessel)) {
+            if (!name.startsWith(PRAEFIX_PTM) || istZusatzSchluessel(name) || name.equals(behalteSchluessel)) {
                 continue;
             }
             try {
@@ -697,16 +738,28 @@ public class SheetMetadataHelper {
      */
     public static boolean hatPraefixSchluessel(XSpreadsheetDocument xDoc,
                                                XSpreadsheet xSheet, String praefix) {
+        return findeSchluesselMitPrefix(xDoc, xSheet, praefix).isPresent();
+    }
+
+    /**
+     * Liefert den ersten Metadaten-Schlüssel mit dem Präfix {@code praefix}, der auf das
+     * angegebene Sheet zeigt – z.B. {@code __PTM_SCHWEIZER_SPIELRUNDE_3__} für das Blatt der
+     * dritten Schweizer Spielrunde.
+     *
+     * @return gefundener Schlüssel, sonst {@link Optional#empty()}
+     */
+    public static Optional<String> findeSchluesselMitPrefix(XSpreadsheetDocument xDoc,
+                                                            XSpreadsheet xSheet, String praefix) {
         try {
             XNamedRanges namedRanges = namedRangesAusDoc(xDoc);
-            if (namedRanges == null) return false;
+            if (namedRanges == null) return Optional.empty();
             int targetIdx = sheetIndex(xDoc, xSheet);
             for (String name : namedRanges.getElementNames()) {
                 if (!name.startsWith(praefix)) continue;
                 try {
                     Object rangeObj = namedRanges.getByName(name);
                     Integer idx = sheetIndexAusNamedRangeObj(rangeObj);
-                    if (idx != null && idx == targetIdx) return true;
+                    if (idx != null && idx == targetIdx) return Optional.of(name);
                 } catch (Exception e) {
                     LogUtil.warn(logger, "Named-Range '" + name + "' Präfix-Check fehlgeschlagen", e);
                 } catch (Error e) {
@@ -718,7 +771,23 @@ public class SheetMetadataHelper {
         } catch (Error e) {
             throw e;
         }
-        return false;
+        return Optional.empty();
+    }
+
+    /**
+     * Entfernt den Metadaten-Schlüssel {@code namedRangeKey}, falls vorhanden.
+     */
+    public static void entferneSchluessel(XSpreadsheetDocument xDoc, String namedRangeKey) {
+        try {
+            XNamedRanges namedRanges = namedRangesAusDoc(xDoc);
+            if (namedRanges != null && namedRanges.hasByName(namedRangeKey)) {
+                namedRanges.removeByName(namedRangeKey);
+            }
+        } catch (Exception e) {
+            LogUtil.error(logger, "Metadaten-Schlüssel '" + namedRangeKey + "' entfernen fehlgeschlagen", e);
+        } catch (Error e) {
+            throw e;
+        }
     }
 
     /**

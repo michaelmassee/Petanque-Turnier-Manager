@@ -193,12 +193,26 @@
 							</node>
 
 							<node oor:name="C8A12" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Spielrunde werten / nicht werten</value>
+									<value xml:lang="en">Count / Do Not Count Round</value>
+									<value xml:lang="es">Puntuar / no puntuar la ronda</value>
+									<value xml:lang="fr">Compter / ne pas compter la manche</value>
+									<value xml:lang="nl">Ronde wel / niet meetellen</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:spielrunde_wertung</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string"><value>_self</value></prop>
+							</node>
+
+							<node oor:name="C8A13" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
 
-							<node oor:name="C8A13" oor:op="replace">
+							<node oor:name="C8A14" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Ranking</value>
 									<value xml:lang="de">Rangliste</value>
@@ -212,7 +226,7 @@
 								<prop oor:name="Target" oor:type="xs:string"><value>_self</value></prop>
 							</node>
 
-							<node oor:name="C8A14" oor:op="replace">
+							<node oor:name="C8A15" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Sort Ranking</value>
 									<value xml:lang="de">Rangliste Sortieren</value>

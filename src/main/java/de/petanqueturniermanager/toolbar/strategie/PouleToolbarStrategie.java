@@ -50,6 +50,11 @@ public class PouleToolbarStrategie implements ITurnierSystemToolbarStrategie {
     }
 
     @Override
+    public void spielrundeWertungUmschalten(WorkingSpreadsheet ws) throws Exception {
+        fallback.spielrundeWertungUmschalten(ws);
+    }
+
+    @Override
     public boolean hatAbschlussphase() {
         return true;
     }

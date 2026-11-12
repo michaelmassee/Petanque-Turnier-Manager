@@ -44,6 +44,9 @@ Gleiche Regeln wie im Schweizer System (siehe Kapitel 3):
 - Float bei ungerader Gruppenanzahl
 - Freilos bei ungerader Gesamtzahl
 
+Die Vorrunden-Rangliste zeigt rechts der Gruppe-Spalte die Freilos-Runden je Team (Einstellung „Rangliste Freilos
+Spalte“, siehe Kapitel 3, Abschnitt 5.1).
+
 ---
 # 3. Aufteilung in A-, B-, C- und D-Turniere
 
@@ -243,6 +246,23 @@ C: 19 Teams → Ziel = 16 → Diff = 3 → Cadrage = 6 Teams → 3 Spiele
 # 9. Nachteile
 - Turnierdauer höher als Poule-System
 - aufwendige Software nötig (Schweizer)
+
+---
+# 9.0 Spielrunde nicht werten (PTM)
+
+Über **„Spielrunde werten / nicht werten"** im Turniermenü lässt sich die Vorrunde des gerade
+aktiven Blatts aus der Wertung nehmen, z. B. eine versehentlich ausgeloste oder vor Ort abgesagte
+Runde. Ein zweiter Aufruf nimmt die Runde wieder in die Wertung auf.
+
+- Das Blatt und die Nummerierung aller Runden bleiben unverändert, der Tab wird grau, und in der Sidebar-Blätterliste erscheint der Blattname durchgestrichen.
+- Im Blatt selbst ist die Runde deutlich gekennzeichnet: Die ganze Tabelle (Kopf und alle Paarungen) erscheint per **bedingter Formatierung** hellgrau mit grauer, durchgestrichener Schrift, und der Titel erhält den Zusatz „– NICHT GEWERTET“. Der Titelzusatz ist direkt geschrieben und damit auch im HTML-/Webserver-/PDF-Export sichtbar; die bedingte Formatierung gilt nur in Calc. Beim Wiederaufnehmen wird beides entfernt, die übrigen Regeln (Fehler-, Editierfarbe) bleiben unverändert.
+- Die Runde zählt **nicht in der Rangliste** (Siege, Punkte, BHZ/FBHZ).
+- Die Runde zählt **nicht in der Paarungshistorie**: Weitere Auslosungen dürfen ihre Paarungen wiederholen.
+- Bereits ausgeloste spätere Runden bleiben unverändert.
+- Wird die Runde neu ausgelost, ist sie wieder gewertet.
+- Nur möglich, solange noch keine Finalrunde erzeugt wurde – danach sind die Finalgruppen festgelegt.
+
+Technisch: blattgebundener Named Range `__PTM_NICHT_GEWERTET_<Rundenschlüssel>` (`RundenWertungHelper`); Kennzeichnung im Blatt über `NichtGewertetFormatHelper` (Regel wird allen vorhandenen Regeln vorangestellt, da bei LO das erste passende Format gewinnt).
 
 ---
 # 9.1 Optionales Zeitplan-Feature: Rundenzeitplanung mit Durchgang-Aufteilung

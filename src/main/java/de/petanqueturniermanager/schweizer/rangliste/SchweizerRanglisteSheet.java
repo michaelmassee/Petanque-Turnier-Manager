@@ -14,8 +14,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.helper.sheet.numberformat.UserNumberFormat;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
+import de.petanqueturniermanager.algorithmen.schweizer.FreilosBuchholz;
+import de.petanqueturniermanager.algorithmen.schweizer.FreilosRundenText;
+import de.petanqueturniermanager.algorithmen.schweizer.SchweizerAuswertung;
 import de.petanqueturniermanager.algorithmen.schweizer.SchweizerRundenLeser;
 import de.petanqueturniermanager.algorithmen.schweizer.SchweizerSystem;
 import de.petanqueturniermanager.helper.print.PrintArea;
@@ -49,6 +53,7 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
+import de.petanqueturniermanager.schweizer.konfiguration.SchweizerFreilosBuchholzModus;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerRankingModus;
 import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeigeHelper;
@@ -72,6 +77,8 @@ import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrund
  *   <li>Punktedifferenz (absteigend)</li>
  *   <li>Punkte+ (absteigend)</li>
  * </ol>
+ * Der Buchholz-Beitrag eines Freiloses folgt der Einstellung „Freilos-Buchholz" (NULL/NEUTRAL, siehe
+ * {@link de.petanqueturniermanager.algorithmen.schweizer.FreilosBuchholz}); BHZ/FBHZ sind ganzzahlig.
  */
 public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 
@@ -88,7 +95,8 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 	public static final int PUNKTE_PLUS_SPALTE    = 6;  // G
 	public static final int PUNKTE_MINUS_SPALTE   = 7;  // H
 	public static final int PUNKTE_DIFF_SPALTE    = 8;  // I
-	public static final int VALIDATE_SPALTE       = PUNKTE_DIFF_SPALTE + 1;  // J (versteckt)
+	// Danach folgen die Erweiterungsspalten der Subklassen (z.B. Maastrichter: Gruppe), die
+	// Freilos-Spalte und die versteckte Validate-Spalte, siehe freilosSpalte() und validateSpalte().
 
 	private static final int COL_WIDTH_NR   = 800;
 	private static final int COL_WIDTH_NAME = 7000;
@@ -181,14 +189,29 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 	}
 
 	/**
-	 * Letzte sichtbare Datenspalte (vor der versteckten Validate-Spalte).
+	 * Letzte Spalte vor der Freilos-Spalte.
 	 * <p>
-	 * Subklassen (z.B. Maastrichter mit zusätzlicher Gruppe-Spalte) überschreiben
-	 * diesen Hook, damit Druckbereich, Zebra-Bereich und Validate-Spaltenposition
-	 * automatisch mitwachsen.
+	 * Subklassen mit zusätzlichen Datenspalten (z.B. Maastrichter mit Gruppe-Spalte) überschreiben
+	 * diesen Hook. Freilos-Spalte, Druckbereich, Zebra-Bereich und Validate-Spalte wachsen dadurch
+	 * automatisch mit.
 	 */
-	protected int letzteAnzeigeSpalte() {
+	protected int letzteErweiterungsSpalte() {
 		return PUNKTE_DIFF_SPALTE;
+	}
+
+	/**
+	 * Spalte mit den Freilos-Runden je Team – direkt rechts der Erweiterungsspalten.
+	 */
+	public final int freilosSpalte() {
+		return letzteErweiterungsSpalte() + 1;
+	}
+
+	/**
+	 * Letzte Datenspalte vor der versteckten Validate-Spalte (die Freilos-Spalte, auch wenn sie
+	 * ausgeblendet ist).
+	 */
+	protected final int letzteAnzeigeSpalte() {
+		return freilosSpalte();
 	}
 
 	/**
@@ -283,27 +306,30 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 		logger.debug("berechnungUndSchreiben – {} Spielrunden, Modus={}, Thread='{}'",
 				bisSpielrunde, modus, Thread.currentThread().getName());
 
-		List<SchweizerTeamErgebnis> ergebnisse = SchweizerRundenLeser.leseErgebnisse(getWorkingSpreadsheet(),
+		SchweizerAuswertung auswertung = SchweizerRundenLeser.leseErgebnisse(getWorkingSpreadsheet(),
 				aktiveMeldungen, bisSpielrunde, this::getSpielrundenMetadatenSchluessel, getSpielrundenBasisName(),
 				meldeliste, getKonfigurationSheet().getFreispielPunktePlus(),
 				getKonfigurationSheet().getFreispielPunkteMinus());
+		List<SchweizerTeamErgebnis> ergebnisse = auswertung.ergebnisse();
+		var freilosBuchholz = new FreilosBuchholz(getKonfigurationSheet().getFreilosBuchholzModus(),
+				auswertung.anzGewerteteRunden());
 		logger.debug("berechnungUndSchreiben – {} Teams, Siege-Summe={}",
 				ergebnisse.size(), ergebnisse.stream().mapToInt(SchweizerTeamErgebnis::siege).sum());
 
-		List<SchweizerTeamErgebnis> sortiert = new SchweizerSystem().sortiereNachAuswertungskriterien(ergebnisse,
-				modus);
+		var schweizerSystem = new SchweizerSystem();
+		List<SchweizerTeamErgebnis> sortiert = schweizerSystem.sortiereNachAuswertungskriterien(ergebnisse, modus,
+				freilosBuchholz);
 		setZuletztSortierteErgebnisse(sortiert);
 
 		// BHZ/FBHZ nur berechnen wenn der Modus es erfordert – bei OHNE_BUCHHOLZ bleiben die Spalten leer (0)
-		var schweizerSystem = new SchweizerSystem();
-		Map<Integer, Integer> bhzMap;
-		Map<Integer, Integer> fbhzMap;
+		Map<Integer, Double> bhzMap;
+		Map<Integer, Double> fbhzMap;
 		if (modus == SchweizerRankingModus.OHNE_BUCHHOLZ) {
-			bhzMap  = new HashMap<>();
-			fbhzMap = new HashMap<>();
+			bhzMap  = Map.of();
+			fbhzMap = Map.of();
 		} else {
-			bhzMap  = schweizerSystem.berechneBuchholz(ergebnisse);
-			fbhzMap = schweizerSystem.berechneFeinbuchholz(ergebnisse, bhzMap);
+			bhzMap  = schweizerSystem.berechneBuchholz(ergebnisse, freilosBuchholz);
+			fbhzMap = schweizerSystem.berechneFeinbuchholz(ergebnisse, bhzMap, freilosBuchholz);
 		}
 
 		// Gewählte Teamkennung direkt aus der Meldeliste lesen
@@ -326,13 +352,14 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 
 		// Erweiterungen für Subklassen (z.B. Maastrichter: Gruppe-Spalte)
 		erweitereDaten(sheet, sortiert, ERSTE_DATEN_ZEILE + sortiert.size() - 1);
+		schreibeFreilosSpalte(sheet, sortiert);
 
 		// Footer und Druckbereich
 		int letzteZeile;
 		if (sortiert.isEmpty()) {
 			letzteZeile = ZWEITE_HEADER_ZEILE;
 		} else {
-			insertFooter(sheet, sortiert.size(), modus);
+			insertFooter(sheet, sortiert.size(), modus, freilosBuchholz.modus());
 			letzteZeile = ERSTE_DATEN_ZEILE + sortiert.size() + 1;
 		}
 
@@ -352,6 +379,47 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 		if (!sortiert.isEmpty()) {
 			formatiereFussbereich(sheet, ERSTE_DATEN_ZEILE + sortiert.size() - 1);
 		}
+	}
+
+	/**
+	 * Schreibt Header und Daten der Freilos-Spalte und blendet sie ein oder aus.
+	 * <p>
+	 * Läuft im Vollaufbau und im Update-Pfad (der den Header sonst nicht neu schreibt), damit ein
+	 * neu vergebenes Freilos oder eine geänderte Einstellung ohne Neuaufbau sichtbar wird. Die Spalte
+	 * ist nur sichtbar, wenn die Einstellung aktiv ist und mindestens ein Team ein Freilos hatte.
+	 */
+	private void schreibeFreilosSpalte(XSpreadsheet sheet, List<SchweizerTeamErgebnis> sortiert)
+			throws GenerateException {
+		int spalte = freilosSpalte();
+		boolean freilosVergeben = sortiert.stream().anyMatch(erg -> !erg.freilosInRunden().isEmpty());
+		boolean sichtbar = freilosVergeben && getKonfigurationSheet().isRanglisteFreilosSpalteAnzeigen();
+		getSheetHelper().setColumnProperties(sheet, spalte, ColumnProperties.from().setWidth(COL_WIDTH_DATA)
+				.setHoriJustify(CellHoriJustify.CENTER).setVertJustify(CellVertJustify2.CENTER)
+				.isVisible(sichtbar));
+
+		getSheetHelper().setStringValueInCell(StringCellValue
+				.from(sheet, Position.from(spalte, HEADER_ZEILE), I18n.get("schweizer.rangliste.spalte.freilos"))
+				.setCellBackColor(getKonfigurationSheet().getMeldeListeHeaderFarbe())
+				.setBorder(BorderFactory.from().allThin().boldLn().forBottom().toBorder())
+				.setHoriJustify(CellHoriJustify.CENTER)
+				.setVertJustify(CellVertJustify2.CENTER)
+				.setEndPosMergeZeilePlus(1) // vertikal Row 0 + Row 1
+				.setShrinkToFit(true));
+
+		if (sortiert.isEmpty()) {
+			return;
+		}
+		RangeData block = new RangeData();
+		for (SchweizerTeamErgebnis erg : sortiert) {
+			block.addNewRow().newString(FreilosRundenText.alsText(erg.freilosInRunden()));
+		}
+		RangeHelper.from(this, block.getRangePosition(Position.from(spalte, ERSTE_DATEN_ZEILE)))
+				.setDataInRange(block);
+		int letzteZeile = ERSTE_DATEN_ZEILE + sortiert.size() - 1;
+		getSheetHelper().setPropertiesInRange(sheet,
+				RangePosition.from(spalte, ERSTE_DATEN_ZEILE, spalte, letzteZeile),
+				CellProperties.from().margin(MeldeListeKonstanten.CELL_MARGIN).setAllThinBorder().centerJustify()
+						.setShrinkToFit(true));
 	}
 
 	private void formatiereFussbereich(XSpreadsheet sheet, int letzteDatenZeile) throws GenerateException {
@@ -560,7 +628,7 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 	 * Block 2 (Spalten D–I): Siege, BHZ, FBHZ, Punkte+, Punkte-, PunkteDiff
 	 */
 	private void insertDatenAlsWerte(XSpreadsheet sheet, List<SchweizerTeamErgebnis> sortiert,
-			Map<Integer, Integer> bhzMap, Map<Integer, Integer> fbhzMap,
+			Map<Integer, Double> bhzMap, Map<Integer, Double> fbhzMap,
 			Map<Integer, String> teamNrZuName) throws GenerateException {
 		if (sortiert.isEmpty()) return;
 
@@ -584,8 +652,8 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 			int punkteMinus = erg.erzieltePunkte() - erg.punktedifferenz();
 			RowData row = block2.addNewRow();
 			row.newInt(erg.siege());
-			row.newInt(bhzMap.getOrDefault(erg.teamNr(), 0));
-			row.newInt(fbhzMap.getOrDefault(erg.teamNr(), 0));
+			row.newDouble(bhzMap.getOrDefault(erg.teamNr(), 0.0));
+			row.newDouble(fbhzMap.getOrDefault(erg.teamNr(), 0.0));
 			row.newInt(punktePlus);
 			row.newInt(punkteMinus);
 			row.newInt(erg.punktedifferenz());
@@ -614,6 +682,11 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 		getSheetHelper().setPropertiesInRange(sheet,
 				RangePosition.from(SIEGE_SPALTE, ERSTE_DATEN_ZEILE, PUNKTE_DIFF_SPALTE, letzteZeile),
 				CellProperties.from().margin(MeldeListeKonstanten.CELL_MARGIN).setAllThinBorder().centerJustify());
+
+		// BHZ/FBHZ ganzzahlig; setzt auch das frühere Format mit einer Nachkommastelle in bestehenden Ranglisten zurück
+		getSheetHelper().setPropertiesInRange(sheet,
+				RangePosition.from(BHZ_SPALTE, ERSTE_DATEN_ZEILE, FBHZ_SPALTE, letzteZeile),
+				CellProperties.from().numberFormat(UserNumberFormat.ZAHL_GANZ));
 	}
 
 	// ── IRangliste ──────────────────────────────────────────────────────────────
@@ -685,14 +758,21 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 
 	// ── Hilfsmethoden ────────────────────────────────────────────────────────────
 
-	private void insertFooter(XSpreadsheet sheet, int anzTeams, SchweizerRankingModus modus) throws GenerateException {
+	private void insertFooter(XSpreadsheet sheet, int anzTeams, SchweizerRankingModus modus,
+			SchweizerFreilosBuchholzModus freilosModus) throws GenerateException {
 		processBoxinfo("processbox.fusszeile.einfuegen");
 		int footerZeile = ERSTE_DATEN_ZEILE + anzTeams + 1;
-		String schluessel = modus == SchweizerRankingModus.OHNE_BUCHHOLZ
-				? "schweizer.rangliste.reihenfolge.platzierung.ohnebuchholz"
-				: "schweizer.rangliste.reihenfolge.platzierung";
+		String text;
+		if (modus == SchweizerRankingModus.OHNE_BUCHHOLZ) {
+			text = I18n.get("schweizer.rangliste.reihenfolge.platzierung.ohnebuchholz");
+		} else if (freilosModus == SchweizerFreilosBuchholzModus.NEUTRAL) {
+			text = I18n.get("schweizer.rangliste.reihenfolge.platzierung") + " – "
+					+ I18n.get("schweizer.rangliste.freilos.buchholz.neutral");
+		} else {
+			text = I18n.get("schweizer.rangliste.reihenfolge.platzierung");
+		}
 		getSheetHelper().setStringValueInCell(StringCellValue
-				.from(sheet, Position.from(TEAM_NR_SPALTE, footerZeile), I18n.get(schluessel))
+				.from(sheet, Position.from(TEAM_NR_SPALTE, footerZeile), text)
 				.setHoriJustify(CellHoriJustify.LEFT)
 				.setCharHeight(8)
 				.setEndPosMergeSpalte(letzteAnzeigeSpalte()));

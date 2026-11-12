@@ -45,6 +45,7 @@ import de.petanqueturniermanager.helper.rangliste.SignaturQuellen;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.sheet.RundenWertungHelper;
 import de.petanqueturniermanager.helper.sheet.RanglisteGeradeUngeradeFormatHelper;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
@@ -243,11 +244,15 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
         var xDoc = getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
         for (int runde = 1; runde <= bisSpielrunde; runde++) {
             SheetRunner.testDoCancelTask();
+            String rundenSchluessel = SheetMetadataHelper.schluesselFormuleXSpielrunde(runde);
             XSpreadsheet rundeSheet = SheetMetadataHelper.findeSheetUndHeile(xDoc,
-                    SheetMetadataHelper.SCHLUESSEL_FORMULEX_SPIELRUNDE_PREFIX + runde,
-                    SpielRundeNr.from(runde).getNr() + ". Spielrunde");
+                    rundenSchluessel, SpielRundeNr.from(runde).getNr() + ". Spielrunde");
             if (rundeSheet == null) {
                 LOGGER.debug("leseAlleRunden: Runde {} – Sheet nicht gefunden, übersprungen", runde);
+                continue;
+            }
+            if (RundenWertungHelper.istNichtGewertet(xDoc, rundeSheet, rundenSchluessel)) {
+                LOGGER.debug("leseAlleRunden: Runde {} – nicht gewertet, übersprungen", runde);
                 continue;
             }
             leseRundeEin(rundeSheet, aktiveMeldungen, statsMap, spielErgebnisseMap, siegaufschlag);

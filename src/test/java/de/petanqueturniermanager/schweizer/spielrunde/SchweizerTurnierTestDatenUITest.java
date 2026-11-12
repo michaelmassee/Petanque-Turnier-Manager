@@ -113,20 +113,19 @@ public class SchweizerTurnierTestDatenUITest extends BaseCalcUITest {
 		// BHZ und FBHZ: nicht negativ
 		assertThat(ranglisteData)
 				.as("BHZ muss >= 0 sein")
-				.extracting(row -> row.get(SchweizerRanglisteSheet.BHZ_SPALTE).getIntVal(-1))
-				.allSatisfy(bhz -> assertThat(bhz).isGreaterThanOrEqualTo(0));
+				.extracting(row -> row.get(SchweizerRanglisteSheet.BHZ_SPALTE).getDoubleVal(-1))
+				.allSatisfy(bhz -> assertThat(bhz).isGreaterThanOrEqualTo(0.0));
 
 		assertThat(ranglisteData)
 				.as("FBHZ muss >= 0 sein")
-				.extracting(row -> row.get(SchweizerRanglisteSheet.FBHZ_SPALTE).getIntVal(-1))
-				.allSatisfy(fbhz -> assertThat(fbhz).isGreaterThanOrEqualTo(0));
+				.extracting(row -> row.get(SchweizerRanglisteSheet.FBHZ_SPALTE).getDoubleVal(-1))
+				.allSatisfy(fbhz -> assertThat(fbhz).isGreaterThanOrEqualTo(0.0));
 
 		// 4. Siege/BHZ/FBHZ/Punkte unabhängig aus den Spielrunden nachrechnen und mit der
 		// Rangliste vergleichen (inkl. Sortierprüfung)
 		var konfig = new SchweizerKonfigurationSheet(wkingSpreadsheet);
 		SchweizerRanglisteAnalyseAssert.fuer(wkingSpreadsheet)
-				.pruefe(SheetNamen.rangliste(), ANZ_RUNDEN,
-						konfig.getFreispielPunktePlus(), konfig.getFreispielPunkteMinus(), konfig.getRankingModus());
+				.pruefe(SheetNamen.rangliste(), ANZ_RUNDEN, konfig);
 	}
 
 	@Test

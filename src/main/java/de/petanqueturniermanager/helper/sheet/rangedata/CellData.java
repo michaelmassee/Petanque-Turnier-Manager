@@ -39,38 +39,49 @@ public class CellData {
 	}
 
 	/**
-	 * wenn data = null or not a number then return defaultval
-	 * 
-	 * @return
+	 * @return Ganzzahl-Wert; -1 wenn data null oder keine Zahl ist
 	 */
 	public int getIntVal() {
 		return getIntVal(-1);
 	}
 
 	/**
-	 * @param defaultval wenn data = null or not a number then return defaultval
+	 * @param defaultval Rückgabe, wenn data null oder keine Zahl ist
+	 * @return Ganzzahl-Wert (Nachkommastellen werden abgeschnitten)
 	 */
 	public int getIntVal(int defaultval) {
-		if (data != null) {
-			if (data instanceof String string && NumberUtils.isParsable(string)) {
-				return NumberUtils.toInt(string);
-			} else if (data instanceof Number) {
-				return (int) ((Number) data).doubleValue();
-			}
+		if (data instanceof String string && NumberUtils.isParsable(string)) {
+			return NumberUtils.toInt(string);
+		}
+		if (data instanceof Number number) {
+			return (int) number.doubleValue();
 		}
 		return defaultval;
 	}
 
 	/**
-	 * when data of type int then return String
+	 * @param defaultval Rückgabe, wenn data null oder keine Zahl ist
+	 * @return Zahlenwert inklusive Nachkommastellen
+	 */
+	public double getDoubleVal(double defaultval) {
+		if (data instanceof String string && NumberUtils.isParsable(string)) {
+			return NumberUtils.toDouble(string);
+		}
+		if (data instanceof Number number) {
+			return number.doubleValue();
+		}
+		return defaultval;
+	}
+
+	/**
+	 * @return Zeichenkette; Zahlen als Ganzzahl-Text, null wenn data null ist
 	 */
 	public String getStringVal() {
-		if (data != null) {
-			if (data instanceof String) {
-				return (String) data;
-			} else if (data instanceof Number) {
-				return "" + getIntVal(-1);
-			}
+		if (data instanceof String string) {
+			return string;
+		}
+		if (data instanceof Number) {
+			return String.valueOf(getIntVal(-1));
 		}
 		return null;
 	}

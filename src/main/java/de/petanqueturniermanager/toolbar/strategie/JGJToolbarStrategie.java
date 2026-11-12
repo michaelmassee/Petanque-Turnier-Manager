@@ -52,6 +52,11 @@ public class JGJToolbarStrategie implements ITurnierSystemToolbarStrategie {
     }
 
     @Override
+    public void spielrundeWertungUmschalten(WorkingSpreadsheet ws) throws Exception {
+        fallback.spielrundeWertungUmschalten(ws);
+    }
+
+    @Override
     public void abschluss(WorkingSpreadsheet ws) throws Exception {
         new JGJFinalrundeSheet(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
     }

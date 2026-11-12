@@ -13,6 +13,11 @@ Rangliste-Werte gegen die Spielrunden-Sheets nach:
      Paarungen (Ergebnis 0:0) zählen dabei NICHT als Gegner
      (SchweizerRanglisteSheet.leseRundeEin).
   3. Feinbuchholz (FBHZ) = Summe der BHZ-Werte aller Gegner.
+     Freilos-Buchholz (Property "Schweizer Freilos Buchholz", fehlend = NULL):
+     NULL = Freilos liefert 0 BHZ/FBHZ; NEUTRAL = je Freilos BHZ (r-1)//2 (abgerundet) und
+     FBHZ eigene Siege + (r-1)*r/2, r = Spielrunden mit mindestens einem
+     eingetragenen Ergebnis; Freilose zählen nur in solchen Runden
+     (FreilosBuchholz.java, 03_Schweizer.md 5.1). BHZ/FBHZ sind ganzzahlig.
   4. Rangliste-Sortierung: Siege ↓ → BHZ ↓ → FBHZ ↓ → Punktediff ↓ →
      Punkte+ ↓ (SchweizerSystem.sortiereNachAuswertungskriterien).
      Der Ranking-Modus wird aus der User-Defined-Property "Schweizer Ranking
@@ -67,6 +72,10 @@ DEFAULT_FREISPIEL_PUNKTE_MINUS = 7
 DEFAULT_RANKING_MODUS = 'MIT_BUCHHOLZ'
 RANKING_MODUS_KEY = 'Schweizer Ranking Modus'
 RANKING_MODUS_OHNE_BUCHHOLZ = 'OHNE_BUCHHOLZ'
+FREILOS_BUCHHOLZ_KEY = 'Schweizer Freilos Buchholz'
+DEFAULT_FREILOS_BUCHHOLZ = 'NULL'
+FREILOS_BUCHHOLZ_NEUTRAL = 'NEUTRAL'
+TOLERANZ = 1e-9
 
 # Layout-Konstanten (SchweizerAbstractSpielrundeSheet.java / SchweizerRanglisteSheet.java)
 SR_ERSTE_DATEN_ZEILE = 2
@@ -130,6 +139,15 @@ def to_int(v):
         return None
     try:
         return int(float(v))
+    except (TypeError, ValueError):
+        return None
+
+
+def to_float(v):
+    if v is None:
+        return None
+    try:
+        return float(v)
     except (TypeError, ValueError):
         return None
 
@@ -231,15 +249,20 @@ def resolve_team_nr(zelle, name_zu_nr):
 
 
 def lese_spielergebnisse(root, spielrunden, freispiel_plus, freispiel_minus, name_zu_nr):
-    """Aggregiert je Team: Siege, Punkte+, Punkte-, Gegner-Liste (nur gespielte Paarungen)."""
+    """Aggregiert je Team: Siege, Punkte+, Punkte-, Gegner-Liste (nur gespielte Paarungen),
+    Freilose (nur in Runden mit Ergebnis) sowie die Anzahl dieser Runden (r)."""
     siege = defaultdict(int)
     punkte_plus = defaultdict(int)
     punkte_minus = defaultdict(int)
     gegner = defaultdict(list)
+    freilose = defaultdict(int)
+    anz_runden_mit_ergebnis = 0
 
     for _, sname in spielrunden:
         table = find_sheet(root, sname)
         rows = sheet_rows(table)
+        hat_ergebnis = False
+        freilos_teams = []
         for z in range(SR_ERSTE_DATEN_ZEILE, len(rows)):
             r = rows[z]
             if len(r) <= SR_TEAM_A_SPALTE:
@@ -254,6 +277,7 @@ def lese_spielergebnisse(root, spielrunden, freispiel_plus, freispiel_minus, nam
                 siege[nr_a] += 1
                 punkte_plus[nr_a] += freispiel_plus
                 punkte_minus[nr_a] += freispiel_minus
+                freilos_teams.append(nr_a)
                 continue
 
             erg_a = to_int(r[SR_ERG_TEAM_A_SPALTE]) if len(r) > SR_ERG_TEAM_A_SPALTE else None
@@ -262,6 +286,7 @@ def lese_spielergebnisse(root, spielrunden, freispiel_plus, freispiel_minus, nam
             erg_b = erg_b or 0
 
             if erg_a > 0 or erg_b > 0:
+                hat_ergebnis = True
                 gegner[nr_a].append(nr_b)
                 gegner[nr_b].append(nr_a)
                 punkte_plus[nr_a] += erg_a
@@ -273,15 +298,34 @@ def lese_spielergebnisse(root, spielrunden, freispiel_plus, freispiel_minus, nam
                 elif erg_b > erg_a:
                     siege[nr_b] += 1
 
-    return siege, punkte_plus, punkte_minus, gegner
+        if hat_ergebnis:
+            anz_runden_mit_ergebnis += 1
+            for nr in freilos_teams:
+                freilose[nr] += 1
+
+    return siege, punkte_plus, punkte_minus, gegner, freilose, anz_runden_mit_ergebnis
 
 
-def berechne_buchholz(teams, siege, gegner):
-    return {nr: sum(siege.get(g, 0) for g in gegner.get(nr, [])) for nr in teams}
+def freilos_bhz_beitrag(modus, r):
+    return (r - 1) // 2 if modus == FREILOS_BUCHHOLZ_NEUTRAL and r > 0 else 0
 
 
-def berechne_feinbuchholz(teams, bhz, gegner):
-    return {nr: sum(bhz.get(g, 0) for g in gegner.get(nr, [])) for nr in teams}
+def freilos_fbhz_beitrag(modus, r, eigene_siege):
+    return eigene_siege + (r - 1) * r // 2 if modus == FREILOS_BUCHHOLZ_NEUTRAL and r > 0 else 0
+
+
+def berechne_buchholz(teams, siege, gegner, freilose, modus, r):
+    return {nr: sum(siege.get(g, 0) for g in gegner.get(nr, []))
+            + freilose.get(nr, 0) * freilos_bhz_beitrag(modus, r) for nr in teams}
+
+
+def berechne_feinbuchholz(teams, bhz, gegner, siege, freilose, modus, r):
+    return {nr: sum(bhz.get(g, 0) for g in gegner.get(nr, []))
+            + freilose.get(nr, 0) * freilos_fbhz_beitrag(modus, r, siege.get(nr, 0)) for nr in teams}
+
+
+def gleich(a, b):
+    return a is not None and b is not None and abs(a - b) < TOLERANZ
 
 
 def lese_rangliste(rl_table):
@@ -299,8 +343,8 @@ def lese_rangliste(rl_table):
             'nr': nr,
             'name': r[RL_TEAM_NAME_SPALTE] if len(r) > RL_TEAM_NAME_SPALTE else '',
             'siege': to_int(r[RL_SIEGE_SPALTE]) if len(r) > RL_SIEGE_SPALTE else None,
-            'bhz':   to_int(r[RL_BHZ_SPALTE]) if len(r) > RL_BHZ_SPALTE else None,
-            'fbhz':  to_int(r[RL_FBHZ_SPALTE]) if len(r) > RL_FBHZ_SPALTE else None,
+            'bhz':   to_float(r[RL_BHZ_SPALTE]) if len(r) > RL_BHZ_SPALTE else None,
+            'fbhz':  to_float(r[RL_FBHZ_SPALTE]) if len(r) > RL_FBHZ_SPALTE else None,
             'pp':    to_int(r[RL_PUNKTE_PLUS_SPALTE]) if len(r) > RL_PUNKTE_PLUS_SPALTE else None,
             'pm':    to_int(r[RL_PUNKTE_MINUS_SPALTE]) if len(r) > RL_PUNKTE_MINUS_SPALTE else None,
             'diff':  to_int(r[RL_PUNKTE_DIFF_SPALTE]) if len(r) > RL_PUNKTE_DIFF_SPALTE else None,
@@ -333,6 +377,7 @@ def main():
     freispiel_minus = lese_konfig(meta_xml, 'Freispiel Punkte -', DEFAULT_FREISPIEL_PUNKTE_MINUS)
     ranking_modus = lese_konfig_str(meta_xml, RANKING_MODUS_KEY, DEFAULT_RANKING_MODUS)
     ohne_buchholz = ranking_modus == RANKING_MODUS_OHNE_BUCHHOLZ
+    freilos_modus = lese_konfig_str(meta_xml, FREILOS_BUCHHOLZ_KEY, DEFAULT_FREILOS_BUCHHOLZ)
 
     print('=' * 72)
     print(f'  Schweizer/Maastrichter-Rangliste-Analyse: {args.ods}')
@@ -344,17 +389,18 @@ def main():
         print('       (Default aus SchweizerPropertiesSpalte.java — nicht explizit in der Datei gesetzt)')
     print(f'  Ranking-Modus: {ranking_modus}' +
           (' (BHZ/FBHZ werden nicht geprüft)' if ohne_buchholz else ''))
+    print(f'  Freilos-Buchholz: {freilos_modus}')
     print()
 
     name_zu_nr = lese_meldeliste_namen(root)
-    siege, punkte_plus, punkte_minus, gegner = lese_spielergebnisse(
+    siege, punkte_plus, punkte_minus, gegner, freilose, anz_runden = lese_spielergebnisse(
         root, spielrunden, freispiel_plus, freispiel_minus, name_zu_nr)
     # Teamuniversum: nicht nur siege.keys() (Team mit 0 Siegen hätte sonst keinen
     # Eintrag) — punkte_plus wird für jedes Team gebucht, das gespielt oder ein
     # Freilos hatte (Sieger UND Verlierer).
     alle_teams = sorted(set(punkte_plus.keys()) | set(punkte_minus.keys()) | set(gegner.keys()))
-    bhz = berechne_buchholz(alle_teams, siege, gegner)
-    fbhz = berechne_feinbuchholz(alle_teams, bhz, gegner)
+    bhz = berechne_buchholz(alle_teams, siege, gegner, freilose, freilos_modus, anz_runden)
+    fbhz = berechne_feinbuchholz(alle_teams, bhz, gegner, siege, freilose, freilos_modus, anz_runden)
 
     rangliste = lese_rangliste(rl_table)
     rl_by_nr = {rl['nr']: rl for rl in rangliste}
@@ -382,9 +428,9 @@ def main():
         diffs = []
         if ist['siege'] != soll_siege:
             diffs.append(f"Siege(sheet={ist['siege']},berechnet={soll_siege})")
-        if not ohne_buchholz and ist['bhz'] != soll_bhz:
+        if not ohne_buchholz and not gleich(ist['bhz'], soll_bhz):
             diffs.append(f"BHZ(sheet={ist['bhz']},berechnet={soll_bhz})")
-        if not ohne_buchholz and ist['fbhz'] != soll_fbhz:
+        if not ohne_buchholz and not gleich(ist['fbhz'], soll_fbhz):
             diffs.append(f"FBHZ(sheet={ist['fbhz']},berechnet={soll_fbhz})")
         if ist['pp'] != soll_pp:
             diffs.append(f"Punkte+(sheet={ist['pp']},berechnet={soll_pp})")

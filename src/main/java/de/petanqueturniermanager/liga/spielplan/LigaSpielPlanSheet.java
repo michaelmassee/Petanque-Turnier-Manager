@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.sun.star.sheet.ConditionOperator;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
@@ -32,6 +33,7 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeFooterHelper;
 import de.petanqueturniermanager.helper.print.PrintArea;
+import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
@@ -278,10 +280,7 @@ public class LigaSpielPlanSheet extends SheetRunner implements ISheet {
 		List<List<TeamPaarung>> alleSpieltage = new ArrayList<>();
 		alleSpieltage.addAll(spielPlanHRunde);
 		alleSpieltage.addAll(spielPlanRRunde);
-		formatiereEditierbareEchteBegegnungen(alleSpieltage, DATUM_SPALTE, ORT_SPALTE);
-		// Punkte H/G (PUNKTE_A/PUNKTE_B) sind Formelspalten → NICHT editierbar, keine Editierbar-
-		// Hintergrundfarbe. Editierbar nur Siege + SpPunkte (SPIELE_A..SPIELPNKT_B) echter Begegnungen.
-		formatiereEditierbareEchteBegegnungen(alleSpieltage, SPIELE_A_SPALTE, SPIELPNKT_B_SPALTE);
+		formatiereEchteBegegnungen(alleSpieltage);
 
 		RangeProperties horTrennerDouble = RangeProperties.from()
 				.setBorder(BorderFactory.from().doubleLn().forBottom().toBorder());
@@ -341,8 +340,30 @@ public class LigaSpielPlanSheet extends SheetRunner implements ISheet {
 
 	}
 
-	private void formatiereEditierbareEchteBegegnungen(List<List<TeamPaarung>> alleSpieltage, int startSpalte,
-			int endeSpalte) throws GenerateException {
+	/**
+	 * Formatiert die Eingabefelder echter Begegnungen (Freispiel-Zeilen ausgenommen): Termin (Datum..Ort),
+	 * Siege und Spielpunkte erhalten die Editierfarbe, Siege zusätzlich vorrangig die Fehlerfarbe bei
+	 * Gleichstand. Punkte H/G sind Formelspalten und bleiben ohne Editierfarbe.
+	 */
+	private void formatiereEchteBegegnungen(List<List<TeamPaarung>> alleSpieltage) throws GenerateException {
+		for (ZeilenBlock block : zeilenBloeckeEchterBegegnungen(alleSpieltage)) {
+			EditierbaresZelleFormatHelper.anwenden(this, block.bereich(DATUM_SPALTE, ORT_SPALTE));
+			formatiereSiegeFehlerBeiGleichstand(block);
+			EditierbaresZelleFormatHelper.anwenden(this, block.bereich(SPIELE_A_SPALTE, SPIELPNKT_B_SPALTE));
+		}
+	}
+
+	/** Fehlerregel spaltenweise und vor der Editierfarbe, damit sie Vorrang hat. */
+	private void formatiereSiegeFehlerBeiGleichstand(ZeilenBlock block) throws GenerateException {
+		String gleichstand = formelSiegeGleichstand(block.startZeile());
+		for (int spalte = SPIELE_A_SPALTE; spalte <= SPIELE_B_SPALTE; spalte++) {
+			ConditionalFormatHelper.from(this, block.bereich(spalte, spalte)).clear().formula1(gleichstand)
+					.operator(ConditionOperator.FORMULA).styleIsFehler().applyAndDoReset();
+		}
+	}
+
+	private static List<ZeilenBlock> zeilenBloeckeEchterBegegnungen(List<List<TeamPaarung>> alleSpieltage) {
+		List<ZeilenBlock> bloecke = new ArrayList<>();
 		int zeile = ERSTE_SPIELTAG_DATEN_ZEILE;
 		Integer startZeile = null;
 		for (List<TeamPaarung> spielTag : alleSpieltage) {
@@ -352,16 +373,22 @@ public class LigaSpielPlanSheet extends SheetRunner implements ISheet {
 						startZeile = zeile;
 					}
 				} else if (startZeile != null) {
-					EditierbaresZelleFormatHelper.anwenden(this,
-							RangePosition.from(startSpalte, startZeile, endeSpalte, zeile - 1));
+					bloecke.add(new ZeilenBlock(startZeile, zeile - 1));
 					startZeile = null;
 				}
 				zeile++;
 			}
 		}
 		if (startZeile != null) {
-			EditierbaresZelleFormatHelper.anwenden(this,
-					RangePosition.from(startSpalte, startZeile, endeSpalte, zeile - 1));
+			bloecke.add(new ZeilenBlock(startZeile, zeile - 1));
+		}
+		return bloecke;
+	}
+
+	/** Zusammenhängende Zeilen echter Begegnungen (ohne Freispiel). */
+	private record ZeilenBlock(int startZeile, int endeZeile) {
+		RangePosition bereich(int startSpalte, int endeSpalte) {
+			return RangePosition.from(startSpalte, startZeile, endeSpalte, endeZeile);
 		}
 	}
 
@@ -486,33 +513,38 @@ public class LigaSpielPlanSheet extends SheetRunner implements ISheet {
 	private void insertFormulaPunkte() throws GenerateException {
 		int letzteSpielZeile = letzteSpielZeile();
 
-		// http://www.ooowiki.de/DeutschEnglischCalcFunktionen.html
-		// erste nr reicht, weil beim filldown zeilenr automatisch hoch
-		{
-			String spieleA = Position.from(SPIELE_A_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE).getAddress();
-			String spieleB = Position.from(SPIELE_B_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE).getAddress();
-			String formulaHeimPunkteStr = "IF(AND(ISBLANK(" + spieleA + ");ISBLANK(" + spieleB + "));\"\";IF("
-					+ spieleA + ">" + spieleB + ";1;0))";
+		// erste Zeile reicht, beim Fill-Down zählt die Zeilennummer automatisch hoch
+		String siegeHeim = Position.from(SPIELE_A_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE).getAddress();
+		String siegeGast = Position.from(SPIELE_B_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE).getAddress();
+		schreibePunkteFormel(PUNKTE_A_SPALTE, formelPunkte(siegeHeim, siegeGast), letzteSpielZeile);
+		schreibePunkteFormel(PUNKTE_B_SPALTE, formelPunkte(siegeGast, siegeHeim), letzteSpielZeile);
+	}
 
-			StringCellValue formulaHeimPunkte = StringCellValue.from(getXSpreadSheet()).setValue(formulaHeimPunkteStr)
-					.setPos(Position.from(PUNKTE_A_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE))
-					.setFillAutoDown(letzteSpielZeile);
-			getSheetHelper().setFormulaInCell(formulaHeimPunkte);
-		}
+	private void schreibePunkteFormel(int spalte, String formel, int letzteSpielZeile) throws GenerateException {
+		getSheetHelper().setFormulaInCell(StringCellValue.from(getXSpreadSheet()).setValue(formel)
+				.setPos(Position.from(spalte, ERSTE_SPIELTAG_DATEN_ZEILE)).setFillAutoDown(letzteSpielZeile));
+	}
 
-		// ------------------------------------------------------------------------------------
-		{
-			String spieleA = Position.from(SPIELE_A_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE).getAddress();
-			String spieleB = Position.from(SPIELE_B_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE).getAddress();
-			String formulaGastPunkteStr = "IF(AND(ISBLANK(" + spieleA + ");ISBLANK(" + spieleB + "));\"\";IF("
-					+ spieleB + ">" + spieleA + ";1;0))";
+	/**
+	 * Punkte einer Mannschaft: 1 bei mehr Siegen als der Gegner, sonst 0. Ohne eindeutigen Sieger (noch kein
+	 * Ergebnis oder gleich viele Siege) bleibt die Zelle leer – in der Liga gibt es kein Unentschieden, ein
+	 * Gleichstand ist ein Eingabefehler und darf nicht als 0 : 0 gewertet werden.
+	 */
+	@VisibleForTesting
+	static String formelPunkte(String eigeneSiege, String gegnerSiege) {
+		return "IF(OR(AND(ISBLANK(" + eigeneSiege + ");ISBLANK(" + gegnerSiege + "));" + eigeneSiege + "="
+				+ gegnerSiege + ");\"\";IF(" + eigeneSiege + ">" + gegnerSiege + ";1;0))";
+	}
 
-			StringCellValue formulaGastPunkte = StringCellValue.from(getXSpreadSheet()).setValue(formulaGastPunkteStr)
-					.setPos(Position.from(PUNKTE_B_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE))
-					.setFillAutoDown(letzteSpielZeile);
-			getSheetHelper().setFormulaInCell(formulaGastPunkte);
-		}
-
+	/**
+	 * Bedingung für die Fehlerfarbe der Siege-Zellen: beide Seiten eingetragen und gleich viele Siege.
+	 * Spalten absolut, Zeile relativ zur ersten Zeile des formatierten Bereichs.
+	 */
+	@VisibleForTesting
+	static String formelSiegeGleichstand(int ersteZeile) {
+		String siegeHeim = "$" + Position.from(SPIELE_A_SPALTE, ersteZeile).getAddress();
+		String siegeGast = "$" + Position.from(SPIELE_B_SPALTE, ersteZeile).getAddress();
+		return "AND(ISNUMBER(" + siegeHeim + ");ISNUMBER(" + siegeGast + ");" + siegeHeim + "=" + siegeGast + ")";
 	}
 
 	private void insertFormulaTeamNamen() throws GenerateException {

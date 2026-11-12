@@ -1,10 +1,9 @@
 package de.petanqueturniermanager.schweizer.spielrunde;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
-import de.petanqueturniermanager.algorithmen.schweizer.SchweizerTeamErgebnis;
+import de.petanqueturniermanager.algorithmen.schweizer.SchweizerAuswertung;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.model.TeamMeldungen;
@@ -53,15 +52,15 @@ public class SchweizerSpielrundeSheetUpdate extends SchweizerAbstractSpielrundeS
 			return;
 		}
 
-		List<SchweizerTeamErgebnis> ergebnisse = gespieltenRundenEinlesen(aktiveMeldungen, 1,
+		SchweizerAuswertung auswertung = gespieltenRundenEinlesen(aktiveMeldungen, 1,
 				aktuelleSpielrunde.getNr() - 1);
 
 		// Teams nach Rangliste sortieren (ab Runde 2)
 		TeamMeldungen meldungenFuerAuslosung = (aktuelleSpielrunde.getNr() > 1)
-				? sortierteTeamMeldungen(aktiveMeldungen, ergebnisse)
+				? sortierteTeamMeldungen(aktiveMeldungen, auswertung)
 				: aktiveMeldungen;
 
-		neueSpielrunde(meldungenFuerAuslosung, aktuelleSpielrunde, ergebnisse);
+		neueSpielrunde(meldungenFuerAuslosung, aktuelleSpielrunde, auswertung.ergebnisse());
 	}
 
 
