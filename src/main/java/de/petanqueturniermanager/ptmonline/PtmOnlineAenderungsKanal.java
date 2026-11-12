@@ -49,8 +49,11 @@ final class PtmOnlineAenderungsKanal {
 
     private static final Logger logger = LogManager.getLogger(PtmOnlineAenderungsKanal.class);
 
-    /** Keepalive; die Plattform beantwortet es selbst, ohne den Hub aufzuwecken. */
-    static final long PING_ABSTAND_MS = 30_000;
+    /**
+     * Keepalive gegen das Kappen ruhender Verbindungen (NAT, Proxy, Cloudflare); die Plattform beantwortet es
+     * selbst, ohne den Hub aufzuwecken. Gleicher Abstand wie bei den Webseiten ({@code LIVE_SOCKET_PING_MS}).
+     */
+    static final long PING_ABSTAND_MS = 50_000;
     static final long ERSTE_WIEDERHOLUNG_MS = 2_000;
     static final long MAX_WIEDERHOLUNG_MS = 60_000;
     /** Server ohne Sofort-Signal (ältere PTM-Online-Version): nur selten erneut versuchen. */
