@@ -160,6 +160,28 @@ class PtmOnlineAuftraegeTest {
     }
 
     @Test
+    void abschlussIstEinGezaehlterAuftragUndErsetztEinenNochNichtGesendeten() {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        PtmOnlineAuftraege.abschluss(bestand, TURNIER, false, false);
+        PtmOnlineAuftraege.abschluss(bestand, TURNIER, true, true);
+
+        assertThat(bestand.zuSenden(false)).singleElement().satisfies(auftrag -> {
+            assertThat(auftrag.art()).isEqualTo(AuftragsArt.ABSCHLUSS);
+            assertThat(auftrag.methode()).isEqualTo("POST");
+            assertThat(auftrag.pfad()).endsWith("/t1/finish");
+            assertThat(auftrag.body()).isEqualTo("{\"publishRanking\":true,\"notify\":true}");
+        });
+    }
+
+    @Test
+    void benachrichtigtWirdNurZusammenMitDerVeroeffentlichung() {
+        assertThat(TournamentSyncClient.abschlussBody(false, true))
+                .isEqualTo("{\"publishRanking\":false,\"notify\":false}");
+        assertThat(TournamentSyncClient.abschlussBody(true, false))
+                .isEqualTo("{\"publishRanking\":true,\"notify\":false}");
+    }
+
+    @Test
     void verknuepfungenBuendelnPaareUndLassenOffeneAus() {
         AuftragsBestand bestand = AuftragsBestand.leer();
         Map<String, String> paare = Map.of("u1", "r1", "u2", "r2");

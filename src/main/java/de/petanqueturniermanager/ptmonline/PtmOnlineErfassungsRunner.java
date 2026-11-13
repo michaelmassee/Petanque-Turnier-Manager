@@ -257,8 +257,9 @@ final class PtmOnlineErfassungsRunner extends SheetRunner {
         }
         Optional<SyncStandDto> onlineStand = standAbruf == null ? Optional.empty() : standAbruf.stand();
         PtmOnlineLiveSync.Momentaufnahme momentaufnahme = PtmOnlineLiveSync.lese(verbindung, quelle.get());
+        // Ein online abgeschlossenes Turnier wird nicht automatisch wieder aufgenommen, nur durch einen Rundenstart.
         if (ersterStand && !momentaufnahme.stand().runden().isEmpty()
-                && onlineStand.filter(stand -> !stand.istRunning()).isPresent()
+                && onlineStand.filter(stand -> !stand.istRunning() && !stand.istAbgeschlossen()).isPresent()
                 && !bestand.hatOffenen(AuftragsArt.START)) {
             List<?> verworfen = PtmOnlineAuftraege.start(bestand, verbindung.tournamentId(), Instant.now(),
                     I18n.get("ptmonline.auftrag.verworfen.turnierstart"));

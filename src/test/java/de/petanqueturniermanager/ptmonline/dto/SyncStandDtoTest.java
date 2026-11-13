@@ -20,6 +20,15 @@ class SyncStandDtoTest {
     }
 
     @Test
+    void erkenntDenAbschluss() {
+        assertThat(ENTWURF.istAbgeschlossen()).isFalse();
+        assertThat(ENTWURF.mitGemeldetemStatus("finished")).hasValueSatisfying(stand -> {
+            assertThat(stand.istAbgeschlossen()).isTrue();
+            assertThat(stand.istRunning()).isFalse();
+        });
+    }
+
+    @Test
     void unveraenderterOderFehlenderStatusLiefertNichts() {
         assertThat(ENTWURF.mitGemeldetemStatus("draft")).isEmpty();
         assertThat(ENTWURF.mitGemeldetemStatus(null)).isEmpty();

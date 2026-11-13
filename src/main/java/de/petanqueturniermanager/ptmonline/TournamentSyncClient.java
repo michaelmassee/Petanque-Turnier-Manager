@@ -277,6 +277,18 @@ public class TournamentSyncClient extends PtmOnlineHttpClient implements Auftrag
         return turnierPfad(tournamentId) + "/start";
     }
 
+    static String abschlussPfad(String tournamentId) {
+        return turnierPfad(tournamentId) + "/finish";
+    }
+
+    /** Nutzlast des Turnierabschlusses; benachrichtigt wird nur zusammen mit der Veröffentlichung. */
+    static String abschlussBody(boolean ranglisteVeroeffentlichen, boolean teilnehmerBenachrichtigen) {
+        JsonObject body = new JsonObject();
+        body.addProperty("publishRanking", ranglisteVeroeffentlichen);
+        body.addProperty("notify", ranglisteVeroeffentlichen && teilnehmerBenachrichtigen);
+        return body.toString();
+    }
+
     static String anmeldungPfad(String tournamentId, String lokaleUuid) {
         return turnierPfad(tournamentId) + "/registrations/" + encode(lokaleUuid);
     }

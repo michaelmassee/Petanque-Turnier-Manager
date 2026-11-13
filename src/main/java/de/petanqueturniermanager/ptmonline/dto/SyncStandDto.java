@@ -34,6 +34,11 @@ public record SyncStandDto(String status, boolean registrationClosed, String run
                 writeCounter, date, playerResultReportingEnabled));
     }
 
+    /** Online abgeschlossen; ein Rundenstart aus dem Dokument würde das Turnier wieder aufnehmen. */
+    public boolean istAbgeschlossen() {
+        return "finished".equals(status);
+    }
+
     public boolean istRunning() {
         return "running".equals(status);
     }

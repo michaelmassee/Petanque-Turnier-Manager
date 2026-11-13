@@ -43,7 +43,9 @@ public enum AuftragsArt {
     /** Schließen der Online-Anmeldung vor dem Check-in (KP-05, Vorbeugung). */
     ANMELDUNG_SCHLIESSEN,
     /** Übernommene bzw. verworfene Ergebnismeldungen von Spielern (E-27, E-28). */
-    ERGEBNISMELDUNGEN;
+    ERGEBNISMELDUNGEN,
+    /** Abschluss des Online-Turniers, auf Wunsch mit Veröffentlichung der Endrangliste und Benachrichtigung. */
+    ABSCHLUSS;
 
     /**
      * Noch nicht gesendete Aufträge dieser Art aus der Zeit vor dem lokalen Turnierstart werden beim Start verworfen

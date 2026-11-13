@@ -47,6 +47,7 @@ public final class PtmOnlineMenuController extends WeakBase
         new MenuEintrag(ProtocolHandler.CMD_PTMONLINE_SYNC_FORTSETZEN, "fortsetzen"),
         new MenuEintrag(ProtocolHandler.CMD_PTMONLINE_IM_BROWSER_OEFFNEN, "browser"),
         new MenuEintrag(ProtocolHandler.CMD_PTMONLINE_TURNIERSEITE_OEFFNEN, "turnierseite"),
+        new MenuEintrag(ProtocolHandler.CMD_PTMONLINE_TURNIER_ABSCHLIESSEN, "abschliessen"),
         new MenuEintrag(ProtocolHandler.CMD_PTMONLINE_VERBINDUNG_TRENNEN, "trennen"),
         new MenuEintrag(ProtocolHandler.CMD_PTMONLINE_ZUORDNUNG_WIEDERHERSTELLEN, "wiederherstellen"));
     /** Befehle des Untermenüs in Menü-Reihenfolge. */

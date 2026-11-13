@@ -40,6 +40,7 @@ import de.petanqueturniermanager.onlinesync.OnlineTurnierAnlage;
 import de.petanqueturniermanager.onlinesync.OnlineVerbindbarkeit;
 import de.petanqueturniermanager.onlinesync.SpieltagKontext;
 import de.petanqueturniermanager.onlinesync.TurnierSystemOnlineTypMapping;
+import de.petanqueturniermanager.ptmonline.PtmOnlineAbschlussRunner;
 import de.petanqueturniermanager.ptmonline.PtmOnlineErgebnismeldungenRunner;
 import de.petanqueturniermanager.ptmonline.PtmOnlineFehlerText;
 import de.petanqueturniermanager.ptmonline.PtmOnlineFormation;
@@ -347,6 +348,12 @@ public final class PtmOnlineDispatcher {
     public static void ergebnismeldungenAbholen(WorkingSpreadsheet ws) {
         mitVerbindung(ws, (verbindung, config) -> new PtmOnlineErgebnismeldungenRunner(ws, verbindung.ts(),
                 verbindung.spieltagNr(), config, verbindung.tournamentId()).start());
+    }
+
+    /** Schließt das verbundene Online-Turnier nach Rückfrage ab, auf Wunsch mit Endrangliste und Benachrichtigung. */
+    public static void turnierAbschliessen(WorkingSpreadsheet ws) {
+        mitVerbindung(ws, (verbindung, config) -> new PtmOnlineAbschlussRunner(ws, verbindung.ts(),
+                verbindung.spieltagNr()).start());
     }
 
     /** Öffnet das verbundene Online-Turnier (Detailseite mit Anmeldung) auf PTM-Online im Standardbrowser. */

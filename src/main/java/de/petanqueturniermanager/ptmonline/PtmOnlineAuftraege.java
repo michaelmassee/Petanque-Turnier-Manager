@@ -64,6 +64,8 @@ public final class PtmOnlineAuftraege {
     private static final String CODE_TURNIER_LAEUFT = "tournament_running";
     /** Status, den PTM-Online nach angenommenem Turnierstart meldet. */
     private static final String ONLINE_STATUS_LAEUFT = "running";
+    /** Status, den PTM-Online nach angenommenem Turnierabschluss meldet. */
+    private static final String ONLINE_STATUS_ABGESCHLOSSEN = "finished";
     private static final String KONTEXT_ONLINE_ID = "onlineId";
     private static final String KONTEXT_VERKNUEPFUNGEN = "verknuepfungen";
     private static final int MAX_ENTSCHEIDUNGEN_JE_AUFTRAG = 200;
@@ -341,6 +343,15 @@ public final class PtmOnlineAuftraege {
         }
     }
 
+    /** Abschluss des Online-Turniers; ein noch nicht gesendeter früherer Abschluss geht in diesem auf. */
+    static SyncAuftrag abschluss(AuftragsBestand bestand, String tournamentId, boolean ranglisteVeroeffentlichen,
+            boolean teilnehmerBenachrichtigen) {
+        String pfad = TournamentSyncClient.abschlussPfad(tournamentId);
+        bestand.entferneUeberholte(auftrag -> auftrag.pfad().equals(pfad));
+        return bestand.erzeuge(AuftragsArt.ABSCHLUSS, "POST", pfad,
+                TournamentSyncClient.abschlussBody(ranglisteVeroeffentlichen, teilnehmerBenachrichtigen), "{}");
+    }
+
     /** Schließt die Online-Anmeldung, damit bis zum Rundenstart keine Anmeldungen mehr eingehen (KP-05). */
     static void anmeldungSchliessen(AuftragsBestand bestand, String tournamentId) {
         String pfad = TournamentSyncClient.anmeldungSchliessenPfad(tournamentId);
@@ -413,9 +424,11 @@ public final class PtmOnlineAuftraege {
      * @param nachStart     Bezeichnungen lokaler Meldungen, die wegen des Turnierstarts nicht mehr angelegt wurden
      * @param geaendert     Online-Stand nach einer Namenskorrektur je lokaler UUID
      * @param abgelehnteAuftraege alle fachlich abgelehnten Aufträge samt Antwort
+     * @param abschluss     Antwort auf einen angenommenen Turnierabschluss dieses Laufs, sonst leer
      */
     record Anwendung(int angelegt, List<String> abgelehnt, List<String> nachStart,
-            Map<String, RegistrationDto> geaendert, List<VersandErgebnis> abgelehnteAuftraege) {
+            Map<String, RegistrationDto> geaendert, List<VersandErgebnis> abgelehnteAuftraege,
+            Optional<SyncAntwort> abschluss) {
 
         Anwendung {
             abgelehnt = List.copyOf(abgelehnt);
@@ -444,6 +457,7 @@ public final class PtmOnlineAuftraege {
         List<String> nachStart = new ArrayList<>();
         boolean startErledigt = false;
         boolean startAngenommen = false;
+        SyncAntwort abschluss = null;
         for (VersandErgebnis ergebnis : ergebnisse) {
             SyncAuftrag auftrag = ergebnis.auftrag();
             JsonObject kontext = kontext(auftrag);
@@ -482,6 +496,7 @@ public final class PtmOnlineAuftraege {
                         }
                     }
                     case ANMELDUNG_VERKNUEPFEN -> meldeNichtVerknuepfte(auftrag, ergebnis.antwort());
+                    case ABSCHLUSS -> abschluss = ergebnis.antwort();
                     case START, TRENNEN, RUNDE, RUNDE_LOESCHEN, RANGLISTE, SPIELEINSTELLUNGEN, MELEE_TEAMS, ANMELDUNG_STORNIEREN, ENTSCHEIDUNGEN,
                             ANMELDUNG_SCHLIESSEN, ERGEBNISMELDUNGEN -> {
                         // Nichts im Dokument festzuhalten.
@@ -504,12 +519,15 @@ public final class PtmOnlineAuftraege {
         if (startAngenommen) {
             mapping.setOnlineStatus(ONLINE_STATUS_LAEUFT);
         }
+        if (abschluss != null) {
+            mapping.setOnlineStatus(ONLINE_STATUS_ABGESCHLOSSEN);
+        }
         for (VersandErgebnis ergebnis : ergebnisse) {
             bestand.angewendet(ergebnis, ablehnungsGrund(ergebnis));
         }
         speichern(bestand, mapping);
         return new Anwendung(zuordnungen.size(), abgelehnt, nachStart, geaendert,
-                ergebnisse.stream().filter(ergebnis -> !ergebnis.angenommen()).toList());
+                ergebnisse.stream().filter(ergebnis -> !ergebnis.angenommen()).toList(), Optional.ofNullable(abschluss));
     }
 
     private static String ablehnungsGrund(VersandErgebnis ergebnis) {
