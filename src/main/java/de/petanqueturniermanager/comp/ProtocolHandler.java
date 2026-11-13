@@ -2257,16 +2257,12 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			CMD_TOOLBAR_WHATSAPP_RANGLISTE_POSTEN,
 			CMD_TOOLBAR_WHATSAPP_BLATT_POSTEN,
 			CMD_TOOLBAR_WHATSAPP_SELEKTION_POSTEN,
-			// Z6 PtmOnlineToolbar
-			CMD_PTMONLINE_TURNIER_VERBINDEN,
+			// Z6 PtmOnlineToolbar (Verbinden, Trennen, Zuordnung wiederherstellen und Ergebnisse abholen nur im Menü)
 			CMD_PTMONLINE_ANMELDUNGEN_IMPORTIEREN,
 			CMD_PTMONLINE_KONFLIKTLISTE_OEFFNEN,
-			CMD_PTMONLINE_ERGEBNISMELDUNGEN_ABHOLEN,
 			CMD_PTMONLINE_SYNC_PAUSIEREN,
 			CMD_PTMONLINE_SYNC_FORTSETZEN,
-			CMD_PTMONLINE_IM_BROWSER_OEFFNEN,
-			CMD_PTMONLINE_ZUORDNUNG_WIEDERHERSTELLEN,
-			CMD_PTMONLINE_VERBINDUNG_TRENNEN);
+			CMD_PTMONLINE_IM_BROWSER_OEFFNEN);
 
 	static boolean istOnlineBefehlAktiv(String command, XSpreadsheetDocument document) {
 		return isEnabled(command, document);

@@ -76,15 +76,14 @@ Nur sichtbar, solange ein PTM-Online-Zugang hinterlegt ist (`PtmOnlineToolbarSte
 
 | Schaltfläche | Code-URL | Icon-Datei |
 |--------------|----------|------------|
-| m1 Turnier verbinden | `ptm:ptmonline_turnier_verbinden` | `toolbar-ptmonline-verbinden.png` |
-| m2 Abgleichen | `ptm:ptmonline_anmeldungen_importieren` | `toolbar-ptmonline-abgleichen.png` |
-| m3 Konfliktliste öffnen | `ptm:ptmonline_konfliktliste_oeffnen` | `toolbar-ptmonline-konfliktliste.png` |
-| m4 Gemeldete Ergebnisse abholen | `ptm:ptmonline_ergebnismeldungen_abholen` | `toolbar-ptmonline-ergebnisse-abholen.png` |
-| m6 Sync pausieren | `ptm:ptmonline_sync_pausieren` | `toolbar-ptmonline-sync-pausieren.png` |
-| m7 Sync fortsetzen | `ptm:ptmonline_sync_fortsetzen` | `toolbar-ptmonline-sync-fortsetzen.png` |
-| m9 Im Browser öffnen | `ptm:ptmonline_im_browser_oeffnen` | `toolbar-ptmonline-browser.png` |
-| m11 Zuordnung wiederherstellen | `ptm:ptmonline_zuordnung_wiederherstellen` | `toolbar-ptmonline-wiederherstellen.png` |
-| m12 Verbindung trennen | `ptm:ptmonline_verbindung_trennen` | `toolbar-ptmonline-trennen.png` |
+| m1 Abgleichen | `ptm:ptmonline_anmeldungen_importieren` | `toolbar-ptmonline-abgleichen.png` |
+| m2 Konfliktliste öffnen | `ptm:ptmonline_konfliktliste_oeffnen` | `toolbar-ptmonline-konfliktliste.png` |
+| m4 Sync pausieren | `ptm:ptmonline_sync_pausieren` | `toolbar-ptmonline-sync-pausieren.png` |
+| m5 Sync fortsetzen | `ptm:ptmonline_sync_fortsetzen` | `toolbar-ptmonline-sync-fortsetzen.png` |
+| m7 Im Browser öffnen | `ptm:ptmonline_im_browser_oeffnen` | `toolbar-ptmonline-browser.png` |
+
+Turnier verbinden, Verbindung trennen, Zuordnung wiederherstellen und Gemeldete Ergebnisse abholen gibt es nur im
+Untermenü PTM-Online (`PtmOnlineMenuController`).
 
 ## Drop-In Installation ins Repo
 

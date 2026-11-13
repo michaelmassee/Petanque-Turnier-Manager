@@ -1,7 +1,9 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <!--
-    PTM-Online-Toolbar: alle Funktionen des Untermenüs PTM-Online plus Konfliktliste, Ergebnismeldungen und
-    Online-Turnier im Browser. Sichtbar nur bei hinterlegtem PTM-Online-Zugang (PtmOnlineToolbarSteuerung).
+    PTM-Online-Toolbar: nur die im laufenden Turnier häufigen Funktionen (Meldungen abgleichen, Konfliktliste,
+    Sync pausieren/fortsetzen, Online-Turnier im Browser). Verbinden, Trennen, Zuordnung wiederherstellen und
+    Ergebnisse abholen (kommen per Sofort-Signal) gibt es nur im Untermenü PTM-Online.
+    Sichtbar nur bei hinterlegtem PTM-Online-Zugang (PtmOnlineToolbarSteuerung).
     Buttons bleiben immer klickbar (LO-Bug tdf#172207, TOOLBAR_ONLY_CMDS); passt der Zustand nicht, erklärt ein
     Hinweis beim Klick, warum nichts passiert. Node-Namen strikt sequenziell (m1, m2, …), siehe CLAUDE.md.
 -->
@@ -32,21 +34,6 @@
 
                 <node oor:name="m1" oor:op="replace">
                     <prop oor:name="URL" oor:type="xs:string">
-                        <value>ptm:ptmonline_turnier_verbinden</value>
-                    </prop>
-                    <prop oor:name="Title">
-                        <value xml:lang="de">Mit Online-Turnier verbinden</value>
-                        <value xml:lang="en">Connect to online tournament</value>
-                        <value xml:lang="es">Conectar con torneo en línea</value>
-                        <value xml:lang="fr">Se connecter à un tournoi en ligne</value>
-                        <value xml:lang="nl">Verbinden met online toernooi</value>
-                    </prop>
-                    <prop oor:name="Target" oor:type="xs:string"><value>_self</value></prop>
-                    <prop oor:name="Context" oor:type="xs:string"><value>com.sun.star.sheet.SpreadsheetDocument</value></prop>
-                </node>
-
-                <node oor:name="m2" oor:op="replace">
-                    <prop oor:name="URL" oor:type="xs:string">
                         <value>ptm:ptmonline_anmeldungen_importieren</value>
                     </prop>
                     <prop oor:name="Title">
@@ -60,7 +47,7 @@
                     <prop oor:name="Context" oor:type="xs:string"><value>com.sun.star.sheet.SpreadsheetDocument</value></prop>
                 </node>
 
-                <node oor:name="m3" oor:op="replace">
+                <node oor:name="m2" oor:op="replace">
                     <prop oor:name="URL" oor:type="xs:string">
                         <value>ptm:ptmonline_konfliktliste_oeffnen</value>
                     </prop>
@@ -75,28 +62,13 @@
                     <prop oor:name="Context" oor:type="xs:string"><value>com.sun.star.sheet.SpreadsheetDocument</value></prop>
                 </node>
 
-                <node oor:name="m4" oor:op="replace">
-                    <prop oor:name="URL" oor:type="xs:string">
-                        <value>ptm:ptmonline_ergebnismeldungen_abholen</value>
-                    </prop>
-                    <prop oor:name="Title">
-                        <value xml:lang="de">Gemeldete Ergebnisse abholen</value>
-                        <value xml:lang="en">Fetch reported results</value>
-                        <value xml:lang="es">Obtener resultados comunicados</value>
-                        <value xml:lang="fr">Récupérer les résultats déclarés</value>
-                        <value xml:lang="nl">Gemelde uitslagen ophalen</value>
-                    </prop>
-                    <prop oor:name="Target" oor:type="xs:string"><value>_self</value></prop>
-                    <prop oor:name="Context" oor:type="xs:string"><value>com.sun.star.sheet.SpreadsheetDocument</value></prop>
-                </node>
-
-                <node oor:name="m5" oor:op="replace">
+                <node oor:name="m3" oor:op="replace">
                     <prop oor:name="URL" oor:type="xs:string">
                         <value>private:separator</value>
                     </prop>
                 </node>
 
-                <node oor:name="m6" oor:op="replace">
+                <node oor:name="m4" oor:op="replace">
                     <prop oor:name="URL" oor:type="xs:string">
                         <value>ptm:ptmonline_sync_pausieren</value>
                     </prop>
@@ -111,7 +83,7 @@
                     <prop oor:name="Context" oor:type="xs:string"><value>com.sun.star.sheet.SpreadsheetDocument</value></prop>
                 </node>
 
-                <node oor:name="m7" oor:op="replace">
+                <node oor:name="m5" oor:op="replace">
                     <prop oor:name="URL" oor:type="xs:string">
                         <value>ptm:ptmonline_sync_fortsetzen</value>
                     </prop>
@@ -126,13 +98,13 @@
                     <prop oor:name="Context" oor:type="xs:string"><value>com.sun.star.sheet.SpreadsheetDocument</value></prop>
                 </node>
 
-                <node oor:name="m8" oor:op="replace">
+                <node oor:name="m6" oor:op="replace">
                     <prop oor:name="URL" oor:type="xs:string">
                         <value>private:separator</value>
                     </prop>
                 </node>
 
-                <node oor:name="m9" oor:op="replace">
+                <node oor:name="m7" oor:op="replace">
                     <prop oor:name="URL" oor:type="xs:string">
                         <value>ptm:ptmonline_im_browser_oeffnen</value>
                     </prop>
@@ -146,59 +118,10 @@
                     <prop oor:name="Target" oor:type="xs:string"><value>_self</value></prop>
                     <prop oor:name="Context" oor:type="xs:string"><value>com.sun.star.sheet.SpreadsheetDocument</value></prop>
                 </node>
-
-                <node oor:name="m10" oor:op="replace">
-                    <prop oor:name="URL" oor:type="xs:string">
-                        <value>private:separator</value>
-                    </prop>
-                </node>
-
-                <node oor:name="m11" oor:op="replace">
-                    <prop oor:name="URL" oor:type="xs:string">
-                        <value>ptm:ptmonline_zuordnung_wiederherstellen</value>
-                    </prop>
-                    <prop oor:name="Title">
-                        <value xml:lang="de">Zuordnung vom Server wiederherstellen</value>
-                        <value xml:lang="en">Restore mapping from server</value>
-                        <value xml:lang="es">Restaurar asignación desde el servidor</value>
-                        <value xml:lang="fr">Restaurer les correspondances depuis le serveur</value>
-                        <value xml:lang="nl">Toewijzing van server herstellen</value>
-                    </prop>
-                    <prop oor:name="Target" oor:type="xs:string"><value>_self</value></prop>
-                    <prop oor:name="Context" oor:type="xs:string"><value>com.sun.star.sheet.SpreadsheetDocument</value></prop>
-                </node>
-
-                <node oor:name="m12" oor:op="replace">
-                    <prop oor:name="URL" oor:type="xs:string">
-                        <value>ptm:ptmonline_verbindung_trennen</value>
-                    </prop>
-                    <prop oor:name="Title">
-                        <value xml:lang="de">Verbindung trennen</value>
-                        <value xml:lang="en">Disconnect</value>
-                        <value xml:lang="es">Desconectar</value>
-                        <value xml:lang="fr">Déconnecter</value>
-                        <value xml:lang="nl">Verbinding verbreken</value>
-                    </prop>
-                    <prop oor:name="Target" oor:type="xs:string"><value>_self</value></prop>
-                    <prop oor:name="Context" oor:type="xs:string"><value>com.sun.star.sheet.SpreadsheetDocument</value></prop>
-                </node>
             </node>
         </node>
 
         <node oor:name="Images">
-            <node oor:name="de.petanqueturniermanager.toolbar.ptmonline.verbinden" oor:op="replace">
-                <prop oor:name="URL" oor:type="xs:string">
-                    <value>ptm:ptmonline_turnier_verbinden</value>
-                </prop>
-                <node oor:name="UserDefinedImages">
-                    <prop oor:name="ImageSmallURL" oor:type="xs:string">
-                        <value>%origin%/images/16/toolbar-ptmonline-verbinden.png</value>
-                    </prop>
-                    <prop oor:name="ImageBigURL" oor:type="xs:string">
-                        <value>%origin%/images/24/toolbar-ptmonline-verbinden.png</value>
-                    </prop>
-                </node>
-            </node>
             <node oor:name="de.petanqueturniermanager.toolbar.ptmonline.abgleichen" oor:op="replace">
                 <prop oor:name="URL" oor:type="xs:string">
                     <value>ptm:ptmonline_anmeldungen_importieren</value>
@@ -222,19 +145,6 @@
                     </prop>
                     <prop oor:name="ImageBigURL" oor:type="xs:string">
                         <value>%origin%/images/24/toolbar-ptmonline-konfliktliste.png</value>
-                    </prop>
-                </node>
-            </node>
-            <node oor:name="de.petanqueturniermanager.toolbar.ptmonline.ergebnisse" oor:op="replace">
-                <prop oor:name="URL" oor:type="xs:string">
-                    <value>ptm:ptmonline_ergebnismeldungen_abholen</value>
-                </prop>
-                <node oor:name="UserDefinedImages">
-                    <prop oor:name="ImageSmallURL" oor:type="xs:string">
-                        <value>%origin%/images/16/toolbar-ptmonline-ergebnisse-abholen.png</value>
-                    </prop>
-                    <prop oor:name="ImageBigURL" oor:type="xs:string">
-                        <value>%origin%/images/24/toolbar-ptmonline-ergebnisse-abholen.png</value>
                     </prop>
                 </node>
             </node>
@@ -274,32 +184,6 @@
                     </prop>
                     <prop oor:name="ImageBigURL" oor:type="xs:string">
                         <value>%origin%/images/24/toolbar-ptmonline-browser.png</value>
-                    </prop>
-                </node>
-            </node>
-            <node oor:name="de.petanqueturniermanager.toolbar.ptmonline.wiederherstellen" oor:op="replace">
-                <prop oor:name="URL" oor:type="xs:string">
-                    <value>ptm:ptmonline_zuordnung_wiederherstellen</value>
-                </prop>
-                <node oor:name="UserDefinedImages">
-                    <prop oor:name="ImageSmallURL" oor:type="xs:string">
-                        <value>%origin%/images/16/toolbar-ptmonline-wiederherstellen.png</value>
-                    </prop>
-                    <prop oor:name="ImageBigURL" oor:type="xs:string">
-                        <value>%origin%/images/24/toolbar-ptmonline-wiederherstellen.png</value>
-                    </prop>
-                </node>
-            </node>
-            <node oor:name="de.petanqueturniermanager.toolbar.ptmonline.trennen" oor:op="replace">
-                <prop oor:name="URL" oor:type="xs:string">
-                    <value>ptm:ptmonline_verbindung_trennen</value>
-                </prop>
-                <node oor:name="UserDefinedImages">
-                    <prop oor:name="ImageSmallURL" oor:type="xs:string">
-                        <value>%origin%/images/16/toolbar-ptmonline-trennen.png</value>
-                    </prop>
-                    <prop oor:name="ImageBigURL" oor:type="xs:string">
-                        <value>%origin%/images/24/toolbar-ptmonline-trennen.png</value>
                     </prop>
                 </node>
             </node>
