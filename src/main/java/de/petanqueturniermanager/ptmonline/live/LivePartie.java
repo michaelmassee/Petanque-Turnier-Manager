@@ -18,25 +18,28 @@ import org.jspecify.annotations.Nullable;
  * @param stufe       Anzeige über der Partie (z.&nbsp;B. „Halbfinale“, „Poule 3“), {@code null} wenn nicht nötig
  * @param ergebnisOrt Zellen des Ergebnisses, {@code null} wo eine gemeldete Partie nicht direkt eingetragen werden
  *                    kann (Turnierbaum, Poule, Kaskade, Trip-Tête)
+ * @param teamNummern {@code true}, wenn jede Seite genau eine Team-Nr der Meldeliste ist; bei Spielerlisten
+ *                    (Supermelee) gibt es keine Teamnummer
  */
 public record LivePartie(List<Integer> teamA, List<Integer> teamB, @Nullable Integer punkteA,
-        @Nullable Integer punkteB, @Nullable String bahn, @Nullable String stufe, @Nullable ErgebnisOrt ergebnisOrt) {
+        @Nullable Integer punkteB, @Nullable String bahn, @Nullable String stufe, @Nullable ErgebnisOrt ergebnisOrt,
+        boolean teamNummern) {
 
     public LivePartie {
         teamA = List.copyOf(teamA);
         teamB = List.copyOf(teamB);
     }
 
-    /** Partie ohne bekannten Ergebnisort. */
+    /** Partie zweier Spielerlisten (Supermelee) ohne bekannten Ergebnisort und ohne Teamnummern. */
     public LivePartie(List<Integer> teamA, List<Integer> teamB, @Nullable Integer punkteA, @Nullable Integer punkteB,
             @Nullable String bahn, @Nullable String stufe) {
-        this(teamA, teamB, punkteA, punkteB, bahn, stufe, null);
+        this(teamA, teamB, punkteA, punkteB, bahn, stufe, null, false);
     }
 
     /** Partie zweier Teams mit je einer Team-Nr. */
     public static LivePartie teams(int teamA, int teamB, @Nullable Integer punkteA, @Nullable Integer punkteB,
             @Nullable String bahn, @Nullable String stufe) {
-        return new LivePartie(List.of(teamA), List.of(teamB), punkteA, punkteB, bahn, stufe);
+        return new LivePartie(List.of(teamA), List.of(teamB), punkteA, punkteB, bahn, stufe, null, true);
     }
 
     /** Freilos für ein Team, ohne Ergebnis im Blatt. */
@@ -47,20 +50,34 @@ public record LivePartie(List<Integer> teamA, List<Integer> teamB, @Nullable Int
     /** Freilos für ein Team mit der Wertung, die das Blatt für das Freilos einträgt (z.&nbsp;B. 13:7). */
     public static LivePartie freilos(int team, @Nullable Integer punkteA, @Nullable Integer punkteB,
             @Nullable String bahn, @Nullable String stufe) {
-        return new LivePartie(List.of(team), List.of(), punkteA, punkteB, bahn, stufe);
+        return new LivePartie(List.of(team), List.of(), punkteA, punkteB, bahn, stufe, null, true);
     }
 
     public boolean istFreilos() {
         return teamB.isEmpty();
     }
 
+    /** Team-Nr der Seite A aus der Meldeliste, {@code null} bei Spielerlisten. */
+    public @Nullable Integer teamNummerA() {
+        return teamNummer(teamA);
+    }
+
+    /** Team-Nr der Seite B aus der Meldeliste, {@code null} bei Spielerlisten und beim Freilos. */
+    public @Nullable Integer teamNummerB() {
+        return teamNummer(teamB);
+    }
+
+    private @Nullable Integer teamNummer(List<Integer> seite) {
+        return teamNummern && seite.size() == 1 ? seite.getFirst() : null;
+    }
+
     /** Dieselbe Partie mit den Zellen ihres Ergebnisses. */
     public LivePartie mitErgebnisOrt(ErgebnisOrt ort) {
-        return new LivePartie(teamA, teamB, punkteA, punkteB, bahn, stufe, ort);
+        return new LivePartie(teamA, teamB, punkteA, punkteB, bahn, stufe, ort, teamNummern);
     }
 
     /** Dieselbe Partie mit einer anderen Anzeige über der Partie. */
     public LivePartie mitStufe(@Nullable String andereStufe) {
-        return new LivePartie(teamA, teamB, punkteA, punkteB, bahn, andereStufe, ergebnisOrt);
+        return new LivePartie(teamA, teamB, punkteA, punkteB, bahn, andereStufe, ergebnisOrt, teamNummern);
     }
 }

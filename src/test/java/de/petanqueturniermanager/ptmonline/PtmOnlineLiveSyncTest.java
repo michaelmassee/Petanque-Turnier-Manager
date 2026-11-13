@@ -39,7 +39,8 @@ class PtmOnlineLiveSyncTest {
                 tuple(AuftragsArt.RUNDE_LOESCHEN, "/api/sync/tournaments/t1/rounds/4"),
                 tuple(AuftragsArt.RANGLISTE, "/api/sync/tournaments/t1/ranking"));
         assertThat(auftraege().getFirst().body()).isEqualTo(
-                "{\"matches\":[{\"teamA\":[\"r1\"],\"teamB\":[\"r2\"],\"scoreA\":13,\"scoreB\":5}]}");
+                "{\"matches\":[{\"teamA\":[\"r1\"],\"teamB\":[\"r2\"],\"scoreA\":13,\"scoreB\":5,"
+                        + "\"teamANumber\":1,\"teamBNumber\":2}]}");
     }
 
     @Test

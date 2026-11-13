@@ -62,7 +62,8 @@ final class LiveUebertragungsDaten {
             eingeteilt.addAll(beide);
             boolean ergebnisGueltig = istGueltig(partie.punkteA()) && istGueltig(partie.punkteB());
             matches.add(new LiveMatchDto(teamA.get(), teamB.get(), ergebnisGueltig ? partie.punkteA() : null,
-                    ergebnisGueltig ? partie.punkteB() : null, bahn(partie.bahn()), leerAlsNull(partie.stufe())));
+                    ergebnisGueltig ? partie.punkteB() : null, bahn(partie.bahn()), leerAlsNull(partie.stufe()),
+                    partie.teamNummerA(), partie.teamNummerB()));
         }
         return matches;
     }

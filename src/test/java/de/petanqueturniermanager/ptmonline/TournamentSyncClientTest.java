@@ -325,6 +325,13 @@ public class TournamentSyncClientTest {
 	}
 
 	@Test
+	public void rundeSendetTeamnummern() {
+		assertThat(TournamentSyncClient.rundeBody(List.of(new LiveMatchDto(List.of("r1"), List.of("r2"), null, null,
+				null, null, 4, 6)))).isEqualTo(
+						"{\"matches\":[{\"teamA\":[\"r1\"],\"teamB\":[\"r2\"],\"teamANumber\":4,\"teamBNumber\":6}]}");
+	}
+
+	@Test
 	public void ranglisteSendetEintraege() {
 		assertThat(TournamentSyncClient.ranglistePfad("t1")).isEqualTo("/api/sync/tournaments/t1/ranking");
 		assertThat(TournamentSyncClient.ranglisteBody(List.of(new LiveRankingEntryDto(1, List.of("r1"), 3, 39, 12))))

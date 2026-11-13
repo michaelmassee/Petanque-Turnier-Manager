@@ -28,7 +28,7 @@ class LiveUebertragungsDatenTest {
         List<LiveMatchDto> matches = LiveUebertragungsDaten.matches(
                 new LiveRunde(1, List.of(LivePartie.teams(1, 2, 13, 7, " 5 ", "Halbfinale"))), ONLINE_IDS);
 
-        assertThat(matches).containsExactly(new LiveMatchDto(List.of("r1"), List.of("r2"), 13, 7, "5", "Halbfinale"));
+        assertThat(matches).containsExactly(new LiveMatchDto(List.of("r1"), List.of("r2"), 13, 7, "5", "Halbfinale", 1, 2));
     }
 
     @Test
@@ -36,7 +36,7 @@ class LiveUebertragungsDatenTest {
         List<LiveMatchDto> matches = LiveUebertragungsDaten.matches(
                 new LiveRunde(1, List.of(LivePartie.freilos(3, null, null))), ONLINE_IDS);
 
-        assertThat(matches).containsExactly(new LiveMatchDto(List.of("r3"), List.of(), null, null, null, null));
+        assertThat(matches).containsExactly(new LiveMatchDto(List.of("r3"), List.of(), null, null, null, null, 3, null));
     }
 
     @Test
@@ -44,7 +44,7 @@ class LiveUebertragungsDatenTest {
         List<LiveMatchDto> matches = LiveUebertragungsDaten.matches(
                 new LiveRunde(1, List.of(LivePartie.freilos(3, 13, 7, null, null))), ONLINE_IDS);
 
-        assertThat(matches).containsExactly(new LiveMatchDto(List.of("r3"), List.of(), 13, 7, null, null));
+        assertThat(matches).containsExactly(new LiveMatchDto(List.of("r3"), List.of(), 13, 7, null, null, 3, null));
     }
 
     @Test
@@ -55,6 +55,19 @@ class LiveUebertragungsDatenTest {
         assertThat(matches).singleElement().satisfies(match -> {
             assertThat(match.teamA()).containsExactly("m1", "m2");
             assertThat(match.teamB()).containsExactly("m3", "m4");
+            assertThat(match.teamANumber()).as("Nr des Mêlée-Teams aus der Meldeliste").isEqualTo(7);
+            assertThat(match.teamBNumber()).isEqualTo(8);
+        });
+    }
+
+    @Test
+    void supermeleeSpielerlistenHabenKeineTeamnummer() {
+        List<LiveMatchDto> matches = LiveUebertragungsDaten.matches(
+                new LiveRunde(1, List.of(new LivePartie(List.of(1), List.of(2), null, null, null, null))), ONLINE_IDS);
+
+        assertThat(matches).singleElement().satisfies(match -> {
+            assertThat(match.teamANumber()).isNull();
+            assertThat(match.teamBNumber()).isNull();
         });
     }
 

@@ -87,8 +87,8 @@ final class SupermeleeLiveQuelle implements LiveStandQuelle {
             }
             partien.add(new LivePartie(teamA, spieler(zellen, zeile, ERSTE_SPIELERNR_SPALTE + SPIELER_PRO_TEAM),
                     zellen.punkte(ERSTE_SPALTE_ERGEBNISSE, zeile), zellen.punkte(ERSTE_SPALTE_ERGEBNISSE + 1, zeile),
-                    mitBahn ? zellen.text(NUMMER_SPALTE_RUNDESPIELPLAN, zeile) : null, null,
-                    ergebnisOrt.apply(zeile)));
+                    mitBahn ? zellen.text(NUMMER_SPALTE_RUNDESPIELPLAN, zeile) : null, null)
+                    .mitErgebnisOrt(ergebnisOrt.apply(zeile)));
         }
         return partien;
     }
