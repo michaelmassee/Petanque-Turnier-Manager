@@ -191,6 +191,29 @@ public final class AuftragsBestand {
         kuerzeProtokoll();
     }
 
+    /**
+     * Dieses Dokument gilt (das Desktop-Dokument ist maßgeblich): PTM-Online kennt bereits einen höheren Zählerstand
+     * dieser Bindung, etwa weil ein älterer, nicht gespeicherter Stand der Datei geöffnet wurde. Offene, noch nicht
+     * gesendete Aufträge erhalten der Reihe nach neue Zählerstände oberhalb von Server und Dokument. Auftrags-ID und
+     * Nutzlast bleiben, damit PTM-Online einen bereits ausgeführten Auftrag weiterhin an seiner ID erkennt.
+     */
+    public synchronized void uebernehmeServerZaehler(long serverZaehler) {
+        zaehler = Math.max(zaehler, serverZaehler);
+        List<String> neuZuNummerieren = eintraege.stream()
+                .filter(eintrag -> eintrag.zustand() == Zustand.OFFEN
+                        && !ergebnisse.containsKey(eintrag.auftrag().auftragsId()))
+                .map(Eintrag::auftrag).sorted(Comparator.comparingLong(SyncAuftrag::zaehler))
+                .map(SyncAuftrag::auftragsId).toList();
+        for (String auftragsId : neuZuNummerieren) {
+            long neuerZaehler = ++zaehler;
+            eintraege.replaceAll(eintrag -> eintrag.auftrag().auftragsId().equals(auftragsId)
+                    ? new Eintrag(eintrag.auftrag().mitZaehler(neuerZaehler), eintrag.zustand(), eintrag.grund(),
+                            eintrag.zeitpunkt())
+                    : eintrag);
+        }
+        geaendert = true;
+    }
+
     /** Ob noch Aufträge offen sind (gesendet oder nicht). */
     public synchronized boolean hatOffene() {
         return eintraege.stream().anyMatch(eintrag -> eintrag.zustand() == Zustand.OFFEN);

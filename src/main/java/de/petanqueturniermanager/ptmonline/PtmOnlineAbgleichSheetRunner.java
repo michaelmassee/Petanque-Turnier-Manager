@@ -69,8 +69,24 @@ public final class PtmOnlineAbgleichSheetRunner extends SheetRunner implements P
         }
         AbgleichErgebnis ergebnis;
         try {
-            ergebnis = RegistrationImportTask.fuehreAbgleichDurch(config, mapping,
-                    PtmOnlineAuftraege.bestand(getWorkingSpreadsheet(), mapping, spieltagNr), tournamentId, ziel,
+            ergebnis = gleicheAb();
+        } catch (PtmOnlineDokumentGeforktException e) {
+            getLogger().warn("PTM-Online: Abgleich angehalten, PTM-Online kennt neuere Aufträge dieses Dokuments", e);
+            if (!PtmOnlineDokumentstand.frageUebernahme(getxContext())) {
+                throw e;
+            }
+            uebernehmeDokumentstand();
+            ergebnis = gleicheAb();
+        }
+        zeigeErgebnis(ergebnis);
+        if (ergebnis.schliessenAnbieten()) {
+            bieteAnmeldungSchliessenAn();
+        }
+    }
+
+    private AbgleichErgebnis gleicheAb() throws GenerateException {
+        try {
+            return RegistrationImportTask.fuehreAbgleichDurch(config, mapping, bestand(), tournamentId, ziel,
                     this::zielAktualisieren, new ProcessBoxFortschritt(), this::ergebnismeldungen);
         } catch (InterruptedException e) {
             // Stop-Knopf unterbricht den Thread, auch mitten in einem HTTP-Aufruf. Die Unterbrechung ist
@@ -82,10 +98,33 @@ public final class PtmOnlineAbgleichSheetRunner extends SheetRunner implements P
             getLogger().error("PTM-Online: Abgleich der Meldungen fehlgeschlagen", e);
             throw new GenerateException(PtmOnlineFehlerText.fuer(e));
         }
-        zeigeErgebnis(ergebnis);
-        if (ergebnis.schliessenAnbieten()) {
-            bieteAnmeldungSchliessenAn();
+    }
+
+    /**
+     * Der Stand dieses Dokuments gilt: Server-Zähler übernehmen, damit der wiederholte Abgleich durchgeht; der
+     * Hintergrund überträgt danach Runden, Rangliste und Einstellungen vollständig.
+     */
+    private void uebernehmeDokumentstand() throws GenerateException {
+        Optional<PtmOnlineVerbindung> verbindung = PtmOnlineVerbindung.ermitteln(getWorkingSpreadsheet(),
+                getTurnierSystem());
+        if (verbindung.isEmpty()) {
+            throw new GenerateException(I18n.get("ptmonline.fehler.dokumentbindung_unvollstaendig"));
         }
+        try {
+            PtmOnlineDokumentstand.uebernehme(bestand(), verbindung.get().gebundenerClient(), tournamentId);
+        } catch (InterruptedException e) {
+            getLogger().debug("PTM-Online: Übernahme des Dokumentstands abgebrochen", e);
+            throw verarbeitungAbgebrochen();
+        } catch (IOException e) {
+            getLogger().error("PTM-Online: Zählerstand für die Übernahme nicht abrufbar", e);
+            throw new GenerateException(PtmOnlineFehlerText.fuer(e));
+        }
+        PtmOnlineLiveBeobachter.bindungErneuert(getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
+                tournamentId);
+    }
+
+    private AuftragsBestand bestand() throws GenerateException {
+        return PtmOnlineAuftraege.bestand(getWorkingSpreadsheet(), mapping, spieltagNr);
     }
 
     /**
@@ -100,8 +139,7 @@ public final class PtmOnlineAbgleichSheetRunner extends SheetRunner implements P
             return;
         }
         try {
-            if (RegistrationImportTask.schliesseOnlineAnmeldung(config, mapping,
-                    PtmOnlineAuftraege.bestand(getWorkingSpreadsheet(), mapping, spieltagNr), tournamentId)) {
+            if (RegistrationImportTask.schliesseOnlineAnmeldung(config, mapping, bestand(), tournamentId)) {
                 processBox().info(I18n.get("ptmonline.erfolg.anmeldung_geschlossen"));
             } else {
                 processBox().fehler(I18n.get("ptmonline.hinweis.anmeldung_schliessen_abgelehnt"));

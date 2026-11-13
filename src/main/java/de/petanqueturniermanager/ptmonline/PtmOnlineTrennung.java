@@ -59,7 +59,7 @@ public final class PtmOnlineTrennung {
             case BINDUNG_ABGELOEST, TURNIER_GELOESCHT -> logger.info(
                     "PTM-Online: Turnier {} online nicht mehr an dieses Dokument gebunden oder gelöscht, trenne nur lokal",
                     tournamentId.get());
-            case DOKUMENT_GEFORKT -> throw new GenerateException(I18n.get("ptmonline.fehler.dokument_geforkt"));
+            case DOKUMENT_GEFORKT -> throw new PtmOnlineDokumentGeforktException();
             case NETZ, SERVERFEHLER, NICHT_BERECHTIGT -> throw new IOException(
                     I18n.get("ptmonline.fehler.trennen_nicht_gesendet", versand.stopp()));
         }

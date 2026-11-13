@@ -988,7 +988,7 @@ public final class RegistrationImportTask {
             case FERTIG -> {
                 return versand.anwendung();
             }
-            case DOKUMENT_GEFORKT -> throw new GenerateException(I18n.get("ptmonline.fehler.dokument_geforkt"));
+            case DOKUMENT_GEFORKT -> throw new PtmOnlineDokumentGeforktException();
             case BINDUNG_ABGELOEST -> throw new GenerateException(I18n.get("ptmonline.fehler.bindung_abgeloest"));
             case TURNIER_GELOESCHT -> throw new GenerateException(I18n.get("ptmonline.turnier.geloescht"));
             case NETZ, SERVERFEHLER, NICHT_BERECHTIGT -> throw new IOException(

@@ -66,9 +66,11 @@ import de.petanqueturniermanager.ptmonline.dto.SyncStandDto;
  * </ol>
  * Auslosen und Ergebnis-Eingabe warten nie auf das Netz. Scheitert der Versand am Netz oder Server, bleiben die
  * Aufträge offen und werden mit wachsendem Abstand ({@link #VERZOEGERUNG_MS} bis {@link #MAX_WIEDERHOLUNG_MS})
- * erneut gesendet – auch nach einem Neustart von LibreOffice, mit denselben Auftrags-IDs. Schreibt eine Kopie des
- * Dokuments parallel ({@code document_forked}) oder hat ein anderes Dokument übernommen, hält der Versand an und die
- * Turnierleitung wird einmal informiert.
+ * erneut gesendet – auch nach einem Neustart von LibreOffice, mit denselben Auftrags-IDs. Kennt PTM-Online schon
+ * neuere Aufträge dieses Dokuments ({@code document_forked}, z.&nbsp;B. nach einem Neustart ohne Speichern), hält der
+ * Versand an und die Turnierleitung wird einmal gefragt, ob der Stand dieses Dokuments gelten soll
+ * ({@link PtmOnlineDokumentstand}). Hat ein anderes Dokument übernommen, hält der Versand an und die Turnierleitung
+ * wird einmal informiert.
  */
 public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
 
@@ -300,8 +302,9 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
     }
 
     /**
-     * Neue Bindung (Verbinden, Übernehmen): ein wegen Kopie oder Ablösung angehaltener Versand läuft wieder, der
-     * Live-Stand wird vollständig neu erfasst.
+     * Neue Bindung (Verbinden, Übernehmen) oder nach Rückfrage übernommener Dokumentstand ({@link
+     * PtmOnlineDokumentstand}): ein wegen Kopie oder Ablösung angehaltener Versand läuft wieder, der Live-Stand wird
+     * vollständig neu erfasst.
      */
     public static void bindungErneuert(XSpreadsheetDocument xDoc, String tournamentId) {
         PtmOnlineLiveBeobachter beobachter = instanz;
@@ -362,6 +365,8 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
         private final AtomicBoolean eingeplant = new AtomicBoolean();
         /** Versand angehalten (Kopie im Einsatz, Bindung abgelöst) bis zu einer neuen Bindung. */
         private final AtomicBoolean angehalten = new AtomicBoolean();
+        /** Offene Rückfrage nach {@code document_forked}, bis die Turnierleitung geantwortet hat. */
+        private final AtomicReference<@Nullable DokumentstandFrage> dokumentstandFrage = new AtomicReference<>();
         /** Nur in SheetRunnern dieses Dokuments verwendet (nie gleichzeitig). */
         private final PtmOnlineCheckin checkin = new PtmOnlineCheckin();
         /** Letzter Abruf des Online-Zustands; nach neuer Bindung verworfen. */
@@ -496,7 +501,7 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
                 // Ergebnisse im nächsten Durchlauf im Dokument anwenden.
                 anstossen();
             }
-            reagiere(stopp, ws, ts, e.verbindung());
+            reagiere(stopp, ws, ts, e.verbindung(), e.bestand());
         }
 
         /** Dokument-Seite im eigenen, stillen SheetRunner; der Hintergrund wartet darauf. */
@@ -639,7 +644,7 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
         }
 
         private void reagiere(VersandStopp stopp, WorkingSpreadsheet ws, TurnierSystem ts,
-                PtmOnlineVerbindung verbindung) throws GenerateException, InterruptedException {
+                PtmOnlineVerbindung verbindung, AuftragsBestand bestand) throws GenerateException, InterruptedException {
             switch (stopp) {
                 case FERTIG -> naechsteWiederholungMs = VERZOEGERUNG_MS;
                 case NETZ, SERVERFEHLER, NICHT_BERECHTIGT -> {
@@ -647,7 +652,8 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
                             naechsteWiederholungMs);
                     wiederholen();
                 }
-                case DOKUMENT_GEFORKT -> halteAn("ptmonline.fehler.dokument_geforkt");
+                case DOKUMENT_GEFORKT -> frageNachDokumentstand(
+                        new DokumentstandFrage(bestand, verbindung.gebundenerClient(), verbindung.tournamentId()));
                 case BINDUNG_ABGELOEST -> halteAn("ptmonline.fehler.bindung_abgeloest");
                 case TURNIER_GELOESCHT -> verbindungAufheben(ws, ts, verbindung);
             }
@@ -663,6 +669,68 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
                                 .caption(I18n.get("ptmonline.menu.toplevel")).message(I18n.get(meldungSchluessel)).show();
                     }
                 });
+            }
+        }
+
+        /**
+         * PTM-Online kennt neuere Aufträge dieses Dokuments: Versand anhalten und die Turnierleitung einmal fragen,
+         * ob der Stand dieses Dokuments gelten soll. Die Rückfrage läuft auf dem Main-Thread.
+         */
+        private void frageNachDokumentstand(DokumentstandFrage frage) {
+            aenderungsKanalSchliessen();
+            if (angehalten.compareAndSet(false, true)) {
+                dokumentstandFrage.set(frage);
+                LoMainThread.post(xContext, this::stelleDokumentstandFrage);
+            }
+        }
+
+        /** Main-Thread: Rückfrage; bei „Ja“ übernimmt der Hintergrund den Server-Zähler. */
+        private void stelleDokumentstandFrage() {
+            DokumentstandFrage frage = dokumentstandFrage.get();
+            if (beendet || geschlossen || frage == null) {
+                return;
+            }
+            if (!PtmOnlineDokumentstand.frageUebernahme(xContext)) {
+                dokumentstandFrage.compareAndSet(frage, null);
+                logger.info("PTM-Online: Stand des Dokuments soll nicht gelten, Versand bleibt angehalten");
+                return;
+            }
+            planeDokumentstandUebernahme(0);
+        }
+
+        /** Hintergrund: Server-Zähler übernehmen und den vollständigen Stand des Dokuments neu erfassen. */
+        private void uebernehmeDokumentstand() {
+            DokumentstandFrage frage = dokumentstandFrage.getAndSet(null);
+            if (frage == null || beendet || geschlossen) {
+                return;
+            }
+            try {
+                PtmOnlineDokumentstand.uebernehme(frage.bestand(), frage.client(), frage.tournamentId());
+            } catch (IOException e) {
+                // Die Antwort der Turnierleitung gilt weiter: nur der Abruf des Zählerstands wird wiederholt.
+                logger.warn("PTM-Online: Zählerstand nicht abrufbar, neuer Versuch in {} ms", naechsteWiederholungMs,
+                        e);
+                dokumentstandFrage.set(frage);
+                planeDokumentstandUebernahme(naechsteWiederholungMs);
+                naechsteWiederholungMs = Math.min(naechsteWiederholungMs * 2, MAX_WIEDERHOLUNG_MS);
+                return;
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                logger.debug("PTM-Online: Übernahme des Dokumentstands unterbrochen", e);
+                return;
+            }
+            // Versand läuft wieder; die nächste Erfassung überträgt Runden, Rangliste und Einstellungen vollständig.
+            bindungErneuert();
+            PtmOnlineLiveSync.vergessen(frage.tournamentId());
+            PtmOnlineSpieleinstellungen.vergessen(frage.tournamentId());
+            anstossen();
+        }
+
+        private void planeDokumentstandUebernahme(long verzoegerungMs) {
+            synchronized (PtmOnlineLiveBeobachter.this) {
+                if (!beendet && !geschlossen) {
+                    ausfuehrung.schedule(this::uebernehmeDokumentstand, verzoegerungMs, TimeUnit.MILLISECONDS);
+                }
             }
         }
 
@@ -732,6 +800,9 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
             }
         }
     }
+
+    /** Offene Rückfrage nach {@code document_forked}: was bei „Ja“ übernommen wird. */
+    private record DokumentstandFrage(AuftragsBestand bestand, TournamentSyncClient client, String tournamentId) {}
 
     /** Ein Abbruch des wartenden Schedulers darf keinen weiterlaufenden UNO-Kind-Thread zurücklassen. */
     static void warteAufRunner(Thread runner) throws InterruptedException {

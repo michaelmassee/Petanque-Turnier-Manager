@@ -4,6 +4,7 @@
 package de.petanqueturniermanager.ptmonline.auftrag;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 
 import java.util.List;
 
@@ -106,6 +107,37 @@ class AuftragsBestandTest {
 
         assertThat(bestand.zuSenden(false)).isEmpty();
         assertThat(erzeuge(bestand, AuftragsArt.TEILNAHME).zaehler()).isEqualTo(1);
+    }
+
+    @Test
+    void uebernimmtServerZaehlerUndNummeriertOffeneAuftraegeMitGleicherIdNeu() {
+        // Älterer, nicht gespeicherter Stand: Dokument bei 23, PTM-Online hat 24–29 schon angenommen.
+        AuftragsBestand bestand = AuftragsBestand.aus(23, List.of());
+        SyncAuftrag teilnahme = erzeuge(bestand, AuftragsArt.TEILNAHME);
+        SyncAuftrag gesendet = erzeuge(bestand, AuftragsArt.SPIELEINSTELLUNGEN);
+        SyncAuftrag runde = erzeuge(bestand, AuftragsArt.RUNDE);
+        bestand.gesendet(ergebnis(gesendet, true));
+        bestand.gespeichert();
+
+        bestand.uebernehmeServerZaehler(29);
+
+        assertThat(bestand.zuSenden(false)).extracting(SyncAuftrag::auftragsId, SyncAuftrag::zaehler)
+                .containsExactly(tuple(teilnahme.auftragsId(), 30L), tuple(runde.auftragsId(), 31L));
+        assertThat(bestand.ergebnisseZumAnwenden()).singleElement()
+                .satisfies(ergebnis -> assertThat(ergebnis.auftrag().zaehler()).isEqualTo(gesendet.zaehler()));
+        assertThat(erzeuge(bestand, AuftragsArt.RANGLISTE).zaehler()).isEqualTo(32);
+        assertThat(bestand.istGeaendert()).isTrue();
+    }
+
+    @Test
+    void serverZaehlerUnterDemDokumentSetztDenZaehlerNieZurueck() {
+        AuftragsBestand bestand = AuftragsBestand.aus(41, List.of());
+        SyncAuftrag offen = erzeuge(bestand, AuftragsArt.RUNDE);
+
+        bestand.uebernehmeServerZaehler(29);
+
+        assertThat(bestand.zuSenden(false)).extracting(SyncAuftrag::auftragsId, SyncAuftrag::zaehler)
+                .containsExactly(tuple(offen.auftragsId(), 43L));
     }
 
     @Test

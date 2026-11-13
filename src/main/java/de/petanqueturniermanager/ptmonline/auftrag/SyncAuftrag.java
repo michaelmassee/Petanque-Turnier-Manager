@@ -33,4 +33,9 @@ public record SyncAuftrag(String auftragsId, long zaehler, AuftragsArt art, Stri
             throw new IllegalArgumentException("Schreibzähler muss positiv sein: " + zaehler);
         }
     }
+
+    /** Derselbe Auftrag (gleiche Auftrags-ID und Nutzlast) mit neuem Schreibzähler. */
+    public SyncAuftrag mitZaehler(long neuerZaehler) {
+        return new SyncAuftrag(auftragsId, neuerZaehler, art, methode, pfad, body, kontext);
+    }
 }
