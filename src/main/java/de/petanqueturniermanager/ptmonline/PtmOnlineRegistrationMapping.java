@@ -361,6 +361,16 @@ public class PtmOnlineRegistrationMapping {
         syncSheet.archivieren();
     }
 
+    /** @see PtmOnlineSyncSheet#getOnlineStatus() */
+    public Optional<String> getOnlineStatus() throws GenerateException {
+        return syncSheet.getOnlineStatus();
+    }
+
+    /** @see PtmOnlineSyncSheet#setOnlineStatus(String) */
+    public void setOnlineStatus(String onlineStatus) throws GenerateException {
+        syncSheet.setOnlineStatus(onlineStatus);
+    }
+
     public void setLastSync(Instant zeitpunkt) throws GenerateException {
         syncSheet.setLastSync(zeitpunkt);
     }

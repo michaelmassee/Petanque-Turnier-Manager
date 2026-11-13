@@ -62,6 +62,8 @@ public final class PtmOnlineAuftraege {
     private static final String KONTEXT_BEZEICHNUNG = "bezeichnung";
     private static final String KONTEXT_REVISIONEN = "revisionen";
     private static final String CODE_TURNIER_LAEUFT = "tournament_running";
+    /** Status, den PTM-Online nach angenommenem Turnierstart meldet. */
+    private static final String ONLINE_STATUS_LAEUFT = "running";
     private static final String KONTEXT_ONLINE_ID = "onlineId";
     private static final String KONTEXT_VERKNUEPFUNGEN = "verknuepfungen";
     private static final int MAX_ENTSCHEIDUNGEN_JE_AUFTRAG = 200;
@@ -441,11 +443,13 @@ public final class PtmOnlineAuftraege {
         List<String> abgelehnt = new ArrayList<>();
         List<String> nachStart = new ArrayList<>();
         boolean startErledigt = false;
+        boolean startAngenommen = false;
         for (VersandErgebnis ergebnis : ergebnisse) {
             SyncAuftrag auftrag = ergebnis.auftrag();
             JsonObject kontext = kontext(auftrag);
             // Auch ein abgelehnter Start ist erledigt: er würde sonst bei jedem Durchlauf neu erzeugt.
             startErledigt |= auftrag.art() == AuftragsArt.START;
+            startAngenommen |= auftrag.art() == AuftragsArt.START && ergebnis.angenommen();
             if (!ergebnis.angenommen()) {
                 if (auftrag.art() == AuftragsArt.ANMELDUNG_ANLEGEN) {
                     String bezeichnung = text(kontext, KONTEXT_BEZEICHNUNG);
@@ -496,6 +500,9 @@ public final class PtmOnlineAuftraege {
         }
         if (startErledigt) {
             mapping.setRunningAusstehendSeit(null);
+        }
+        if (startAngenommen) {
+            mapping.setOnlineStatus(ONLINE_STATUS_LAEUFT);
         }
         for (VersandErgebnis ergebnis : ergebnisse) {
             bestand.angewendet(ergebnis, ablehnungsGrund(ergebnis));

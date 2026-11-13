@@ -345,6 +345,9 @@ public final class RegistrationImportTask {
         PtmOnlineAuftraege.abgelehnteFaelle(bestand).forEach(abgelehnt -> sammlung.melde(abgelehnt.fall()));
         PtmOnlineAuftraege.speichern(bestand, mapping);
         mapping.konfliktListe().schreibe(sammlung.zeilen(), zeitpunktText(Instant.now()));
+        if (bezeichnungen.stand() != null) {
+            mapping.setOnlineStatus(bezeichnungen.stand().status());
+        }
         OnlineBefunde online = new OnlineBefunde(importLauf.status().entfernt(), importLauf.status().ausgeschlossen(),
                 importLauf.status().wiederBestaetigt(), bezeichnungen.kontoKonflikte(),
                 bezeichnungen.moeglicheDubletten(), bezeichnungen.onlineUebernommen(), bezeichnungen.namensKonflikte());

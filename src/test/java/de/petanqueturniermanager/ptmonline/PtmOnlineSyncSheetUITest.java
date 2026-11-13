@@ -7,13 +7,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Optional;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
+import com.sun.star.awt.XTopWindow;
+import com.sun.star.frame.XFrame;
+import com.sun.star.frame.XModel;
 import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.sheet.XSpreadsheetDocument;
+import com.sun.star.util.XModifiable;
 import com.sun.star.util.XProtectable;
 
 import de.petanqueturniermanager.BaseCalcUITest;
@@ -21,7 +27,11 @@ import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.NrUuidSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.comp.OfficeDocumentHelper;
+import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
@@ -42,6 +52,16 @@ class PtmOnlineSyncSheetUITest extends BaseCalcUITest {
     private static final String DOCUMENT_ID = "e9e9caec-e0b1-4fe0-8fee-a229279b9f73";
     private static final String LEASE_TOKEN = "01234567890123456789012345678901";
     private static final String LOKALE_UUID = "3b0b8a3e-6c52-4f2d-9d57-1c2c7c1d9e10";
+
+    private XSpreadsheetDocument zweitesDokument;
+
+    @AfterEach
+    void zweitesDokumentSchliessen() {
+        if (zweitesDokument != null) {
+            OfficeDocumentHelper.closeDoc(zweitesDokument);
+            zweitesDokument = null;
+        }
+    }
 
     /** Im echten Dokument gibt es immer eine Meldeliste – LO löscht nie das letzte Blatt. */
     @BeforeEach
@@ -106,12 +126,65 @@ class PtmOnlineSyncSheetUITest extends BaseCalcUITest {
         assertThat(mapping.getTournamentId()).as("Verbindung bleibt bestehen").contains("t1");
         assertThat(PtmOnlineSpielrundeSync.istSyncAktiv(mapping)).isFalse();
         assertThat(PtmOnlineSyncSheet.leseStatus(wkingSpreadsheet, null))
-                .isEqualTo(new PtmOnlineSyncStatus(true, true, Optional.empty()));
+                .isEqualTo(new PtmOnlineSyncStatus(true, true, Optional.empty(), Optional.of("draft")));
 
         mapping.setPausiert(false);
 
         assertThat(mapping.istPausiert()).isFalse();
         assertThat(PtmOnlineSpielrundeSync.istSyncAktiv(mapping)).isTrue();
+    }
+
+    @Test
+    void verbindenUebernimmtDenOnlineStatusUndZeigtIhnUebersetztAn() throws Exception {
+        PtmOnlineRegistrationMapping mapping = verbinde(TurnierSystem.SCHWEIZER, null, "t1");
+
+        assertThat(mapping.getOnlineStatus()).contains("draft");
+        XSpreadsheet sync = syncBlatt(wkingSpreadsheet.getWorkingSpreadsheetDocument());
+        assertThat(sheetHlp.getTextFromCell(sync, Position.from(2, 1)))
+                .isEqualTo(I18n.get("ptmonline.sheet.label.onlinestatus"));
+        assertThat(sheetHlp.getTextFromCell(sync, Position.from(3, 1)))
+                .isEqualTo(I18n.get("ptmonline.onlinestatus.draft"));
+
+        mapping.setOnlineStatus("registration");
+
+        assertThat(mapping.getOnlineStatus()).contains("registration");
+        assertThat(sheetHlp.getTextFromCell(sync, Position.from(3, 1)))
+                .isEqualTo(I18n.get("ptmonline.onlinestatus.registration"));
+        assertThat(PtmOnlineSyncSheet.leseStatus(wkingSpreadsheet, null).onlineStatusAnzeige())
+                .contains(I18n.get("ptmonline.onlinestatus.registration"));
+    }
+
+    @Test
+    void unveraendertenOnlineStatusSchreibtDasDokumentNichtNeu() throws Exception {
+        PtmOnlineRegistrationMapping mapping = verbinde(TurnierSystem.SCHWEIZER, null, "t1");
+        XModifiable modifiable = Lo.qi(XModifiable.class, wkingSpreadsheet.getWorkingSpreadsheetDocument());
+        modifiable.setModified(false);
+
+        mapping.setOnlineStatus("draft");
+        mapping.setOnlineStatus("");
+
+        assertThat(modifiable.isModified()).as("gleicher oder leerer Status ändert nichts").isFalse();
+        assertThat(mapping.getOnlineStatus()).contains("draft");
+    }
+
+    /**
+     * Zwei Turnierdokumente gleichzeitig offen, Fokus auf dem anderen: Jedes zeigt seinen eigenen Online-Status
+     * (Pflicht-Regressionstest für dokumentbezogenen Zustand, siehe CLAUDE.md).
+     */
+    @Test
+    void onlineStatusGehoertZumEigenenDokumentTrotzFokusAufAnderem() throws Exception {
+        verbinde(TurnierSystem.SCHWEIZER, null, "t1").setOnlineStatus("running");
+        zweitesDokument = OfficeDocumentHelper.from(loader).createSichtbaresCalc();
+        WorkingSpreadsheet zweitesWs = new WorkingSpreadsheet(starter.getxComponentContext(), zweitesDokument);
+        new SchweizerMeldeListeSheetNew(zweitesWs).createMeldelisteWithParams(Formation.TETE, false, false);
+        PtmOnlineRegistrationMapping zweites = new PtmOnlineRegistrationMapping(zweitesWs, TurnierSystem.SCHWEIZER,
+                null);
+        zweites.verbinden(turnier("t2", "registration"), new SyncBindingDto(true, DOCUMENT_ID, 1), LEASE_TOKEN);
+
+        fokussiere(zweitesDokument);
+
+        assertThat(PtmOnlineSyncSheet.leseStatus(wkingSpreadsheet, null).onlineStatus()).contains("running");
+        assertThat(PtmOnlineSyncSheet.leseStatus(zweitesWs, null).onlineStatus()).contains("registration");
     }
 
     @Test
@@ -153,11 +226,31 @@ class PtmOnlineSyncSheetUITest extends BaseCalcUITest {
     private PtmOnlineRegistrationMapping verbinde(TurnierSystem system, Integer spieltagNr, String turnierId)
             throws Exception {
         PtmOnlineRegistrationMapping mapping = new PtmOnlineRegistrationMapping(wkingSpreadsheet, system, spieltagNr);
+        mapping.verbinden(turnier(turnierId, "draft"), new SyncBindingDto(true, DOCUMENT_ID, 1), LEASE_TOKEN);
+        return mapping;
+    }
+
+    private static OnlineTournamentDto turnier(String turnierId, String status) {
         OnlineTournamentDto turnier = new OnlineTournamentDto();
         turnier.id = turnierId;
         turnier.name = "Testturnier " + turnierId;
-        mapping.verbinden(turnier, new SyncBindingDto(true, DOCUMENT_ID, 1), LEASE_TOKEN);
-        return mapping;
+        turnier.status = status;
+        return turnier;
+    }
+
+    private static XSpreadsheet syncBlatt(XSpreadsheetDocument dokument) {
+        return SheetMetadataHelper.findeSheet(dokument, SheetMetadataHelper.SCHLUESSEL_PTM_ONLINE_SYNC)
+                .orElseThrow();
+    }
+
+    /** Fokus auf das Dokument legen, wie es ein Klick des Anwenders täte. */
+    private static void fokussiere(XSpreadsheetDocument dokument) {
+        XFrame frame = Lo.qi(XModel.class, dokument).getCurrentController().getFrame();
+        frame.activate();
+        XTopWindow topWindow = Lo.qi(XTopWindow.class, frame.getContainerWindow());
+        if (topWindow != null) {
+            topWindow.toFront();
+        }
     }
 
     private boolean sheetVorhanden(String schluessel) {

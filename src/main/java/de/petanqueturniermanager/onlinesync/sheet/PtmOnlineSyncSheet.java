@@ -117,6 +117,10 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 	private static final int KOPF_RUNNING_AUSSTEHEND = 2;
 	private static final int KOPF_OFFLINE_BESTAETIGT = 3;
 	private static final int KOPF_ABRUF_CURSOR = 4;
+	/** Sprachneutraler Status des Online-Turniers; sichtbar übersetzt neben der Online-Turnier-Id. */
+	private static final int KOPF_ONLINE_STATUS = 5;
+	private static final int SPALTE_ONLINE_STATUS_LABEL = 2;
+	private static final int SPALTE_ONLINE_STATUS_ANZEIGE = 3;
 	private static final int SPALTE_AUFTRAG_ID = 10;
 	private static final int SPALTE_AUFTRAG_ZEITPUNKT = 19;
 	private static final int LETZTE_PUFFER_SPALTE = SPALTE_AUFTRAG_ZEITPUNKT;
@@ -195,6 +199,7 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 		RangeHelper.from(this, kopf.getRangePosition(Position.from(SPALTE_LABEL, ZEILE_TITEL))).setDataInRange(kopf);
 		setAbrufCursor(null);
 		schreibeStatus(SyncStatus.AKTIV);
+		schreibeOnlineStatus(StringUtils.defaultString(turnier.status).strip());
 	}
 
 	@Override
@@ -267,6 +272,10 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 					RangePosition.from(SPALTE_LABEL, ZEILE_TURNIER_ID, SPALTE_LABEL, ZEILE_SYNC_STATUS),
 					CellProperties.from().setCharWeight(FontWeight.BOLD));
 			helper.setPropertiesInRange(sheet,
+					RangePosition.from(SPALTE_ONLINE_STATUS_LABEL, ZEILE_TURNIER_ID, SPALTE_ONLINE_STATUS_LABEL,
+							ZEILE_TURNIER_ID),
+					CellProperties.from().setCharWeight(FontWeight.BOLD));
+			helper.setPropertiesInRange(sheet,
 					RangePosition.from(SPALTE_NR, ZEILE_HEADER, LETZTE_SICHTBARE_SPALTE, ZEILE_HEADER),
 					CellProperties.from().setCharWeight(FontWeight.BOLD).setBorder(HEADER_BORDER)
 							.setCellBackColor(BasePropertiesSpalte.DEFAULT_HEADER_BACK_COLOR).centerJustify()
@@ -331,6 +340,34 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 
 	public void setAbrufCursor(Instant cursor) throws GenerateException {
 		schreibeKopf(KOPF_ABRUF_CURSOR, "ptmonline.sheet.label.abruf.cursor", cursor == null ? "" : cursor.toString());
+	}
+
+	/** Zuletzt bekannter Status des Online-Turniers ({@code draft}, {@code registration}, …), leer wenn unbekannt. */
+	public Optional<String> getOnlineStatus() throws GenerateException {
+		return optional(leseKopf(KOPF_ONLINE_STATUS));
+	}
+
+	/**
+	 * Hält den Status des Online-Turniers fest, sprachneutral in der ausgeblendeten Kopfspalte und übersetzt neben
+	 * der Online-Turnier-Id. Schreibt nur bei Änderung, damit ein unveränderter Status das Dokument nicht als
+	 * geändert markiert. Ein leerer Status wird ignoriert.
+	 */
+	public void setOnlineStatus(String onlineStatus) throws GenerateException {
+		String status = StringUtils.defaultString(onlineStatus).strip();
+		if (status.isEmpty() || !blattVorhanden() || status.equals(leseKopf(KOPF_ONLINE_STATUS))) {
+			return;
+		}
+		schreibeOnlineStatus(status);
+	}
+
+	private void schreibeOnlineStatus(String status) throws GenerateException {
+		schreibeKopf(KOPF_ONLINE_STATUS, "ptmonline.sheet.label.onlinestatus", status);
+		RangeData anzeige = new RangeData();
+		RowData zeile = anzeige.addNewRow();
+		zeile.newString(status.isEmpty() ? "" : I18n.get("ptmonline.sheet.label.onlinestatus"));
+		zeile.newString(status.isEmpty() ? "" : PtmOnlineSyncStatus.statusAnzeige(status));
+		RangeHelper.from(this, anzeige.getRangePosition(Position.from(SPALTE_ONLINE_STATUS_LABEL, ZEILE_TURNIER_ID)))
+				.setDataInRange(anzeige);
 	}
 
 	public Optional<String> getSyncDocumentId() throws GenerateException {
@@ -418,14 +455,15 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 		}
 		try {
 			RangeData daten = RangeHelper.from(sheet.get(), xDoc,
-					RangePosition.from(SPALTE_LABEL, ZEILE_TURNIER_ID, SPALTE_PAUSE_MARKER, ZEILE_SYNC_STATUS))
+					RangePosition.from(SPALTE_LABEL, ZEILE_TURNIER_ID, SPALTE_KOPF_WERT, ZEILE_SYNC_STATUS))
 					.getDataFromRange();
 			SyncStatus status = SyncStatus.ausMarker(kopfWert(daten, ZEILE_SYNC_STATUS, SPALTE_PAUSE_MARKER));
 			boolean verbunden = !kopfWert(daten, ZEILE_TURNIER_ID, SPALTE_WERT).isBlank()
 					&& status != SyncStatus.ARCHIVIERT;
 			boolean pausiert = status == SyncStatus.PAUSIERT;
 			return new PtmOnlineSyncStatus(verbunden, pausiert,
-					parseZeitpunkt(kopfWert(daten, ZEILE_LETZTER_SYNC, SPALTE_WERT)));
+					parseZeitpunkt(kopfWert(daten, ZEILE_LETZTER_SYNC, SPALTE_WERT)),
+					optional(kopfWert(daten, KOPF_ONLINE_STATUS, SPALTE_KOPF_WERT)));
 		} catch (RuntimeException e) {
 			LOGGER.warn("PTM-Online: Verbindungszustand nicht lesbar", e);
 			return PtmOnlineSyncStatus.NICHT_VERBUNDEN;

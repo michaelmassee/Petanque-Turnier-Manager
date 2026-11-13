@@ -4,6 +4,8 @@
 package de.petanqueturniermanager.ptmonline;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -93,6 +95,11 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
     static final long ERGEBNISMELDUNGEN_SICHERHEITSNETZ_MS = 300_000;
     /** Bündelt mehrere kurz aufeinander folgende Signale zu einem Abruf. */
     static final long SIGNAL_BUENDELUNG_MS = 1_000;
+    /**
+     * Mindestabstand, in dem ein Durchlauf den Online-Zustand neu abruft – damit der im Sync-Blatt und in der Sidebar
+     * angezeigte Turnierstatus (z.&nbsp;B. Entwurf → Anmeldung) nachgeführt wird.
+     */
+    static final Duration ONLINE_STAND_ABSTAND = Duration.ofMinutes(5);
 
     private static volatile @Nullable PtmOnlineLiveBeobachter instanz;
     private static volatile @Nullable XComponentContext reaktivierungsKontext;
@@ -371,6 +378,8 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
         private final PtmOnlineCheckin checkin = new PtmOnlineCheckin();
         /** Letzter Abruf des Online-Zustands; nach neuer Bindung verworfen. */
         private volatile PtmOnlineErfassungsRunner.@Nullable OnlineStandAbruf onlineStand;
+        /** Zeitpunkt des letzten erfolgreichen Abrufs von {@link #onlineStand}. */
+        private volatile @Nullable Instant onlineStandAbgerufen;
         /** Zuletzt abgeholte offene Ergebnismeldungen; nach neuer Bindung verworfen. */
         private volatile PtmOnlineErfassungsRunner.@Nullable ErgebnismeldungsAbruf ergebnismeldungen;
         /** Client und Turnier des letzten Durchlaufs, für den Abruf der Ergebnismeldungen. */
@@ -412,6 +421,7 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
             aenderungsKanalSchliessen();
             angehalten.set(false);
             onlineStand = null;
+            onlineStandAbgerufen = null;
             ergebnismeldungen = null;
             String tournamentId = letzteTurnierId;
             if (tournamentId != null) {
@@ -486,6 +496,9 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
             if (e.brauchtStand()) {
                 Optional<SyncStandDto> stand = holeOnlineStand(client, tournamentId);
                 onlineStand = new PtmOnlineErfassungsRunner.OnlineStandAbruf(tournamentId, stand);
+                if (stand.isPresent()) {
+                    onlineStandAbgerufen = Instant.now();
+                }
                 if (stand.filter(s -> s.istRunning() && s.playerResultReportingEnabled()).isPresent()) {
                     planeMeldungsAbruf(0);
                 }
@@ -502,6 +515,34 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
                 anstossen();
             }
             reagiere(stopp, ws, ts, e.verbindung(), e.bestand());
+            if (stopp == VersandStopp.FERTIG) {
+                aktualisiereOnlineStandBeiBedarf(client, tournamentId);
+            }
+        }
+
+        /**
+         * Ruft den Online-Zustand höchstens alle {@link #ONLINE_STAND_ABSTAND} neu ab. Hat sich der Turnierstatus
+         * geändert, übernimmt ihn der nächste Durchlauf ins Sync-Blatt. Ein gescheiterter Abruf behält den bisherigen
+         * Stand.
+         */
+        private void aktualisiereOnlineStandBeiBedarf(TournamentSyncClient client, String tournamentId)
+                throws InterruptedException {
+            Instant zuletzt = onlineStandAbgerufen;
+            if (zuletzt != null && zuletzt.plus(ONLINE_STAND_ABSTAND).isAfter(Instant.now())) {
+                return;
+            }
+            Optional<SyncStandDto> stand = holeOnlineStand(client, tournamentId);
+            if (stand.isEmpty()) {
+                return;
+            }
+            onlineStandAbgerufen = Instant.now();
+            PtmOnlineErfassungsRunner.OnlineStandAbruf bisher = onlineStand;
+            Optional<String> bisherigerStatus = bisher == null || !bisher.tournamentId().equals(tournamentId)
+                    ? Optional.empty() : bisher.stand().map(SyncStandDto::status);
+            onlineStand = new PtmOnlineErfassungsRunner.OnlineStandAbruf(tournamentId, stand);
+            if (!bisherigerStatus.equals(Optional.ofNullable(stand.get().status()))) {
+                anstossen();
+            }
         }
 
         /** Dokument-Seite im eigenen, stillen SheetRunner; der Hintergrund wartet darauf. */

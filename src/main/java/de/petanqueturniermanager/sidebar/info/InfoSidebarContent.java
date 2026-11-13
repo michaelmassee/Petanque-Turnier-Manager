@@ -422,13 +422,14 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
         if (!status.verbunden()) {
             return I18n.get("sidebar.info.ptmonline.nicht_verbunden");
         }
-        if (status.pausiert()) {
-            return I18n.get("sidebar.info.ptmonline.pausiert");
-        }
-        return status.letzterSync()
-                .map(zeitpunkt -> I18n.get("sidebar.info.ptmonline.verbunden",
-                        UHRZEIT.format(zeitpunkt.atZone(ZoneId.systemDefault()))))
-                .orElse(I18n.get("sidebar.info.ptmonline.verbunden_ohne_sync"));
+        String verbindung = status.pausiert() ? I18n.get("sidebar.info.ptmonline.pausiert")
+                : status.letzterSync()
+                        .map(zeitpunkt -> I18n.get("sidebar.info.ptmonline.verbunden",
+                                UHRZEIT.format(zeitpunkt.atZone(ZoneId.systemDefault()))))
+                        .orElse(I18n.get("sidebar.info.ptmonline.verbunden_ohne_sync"));
+        return status.onlineStatusAnzeige()
+                .map(onlineStatus -> I18n.get("sidebar.info.ptmonline.mit_onlinestatus", verbindung, onlineStatus))
+                .orElse(verbindung);
     }
 
     private void ptmOnlineStatusAktualisieren() {
