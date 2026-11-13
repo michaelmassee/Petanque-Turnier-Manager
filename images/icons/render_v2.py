@@ -46,7 +46,7 @@ WHATSAPP = [
 PTMONLINE = [
     "toolbar-ptmonline-verbinden", "toolbar-ptmonline-abgleichen", "toolbar-ptmonline-konfliktliste",
     "toolbar-ptmonline-ergebnisse-abholen", "toolbar-ptmonline-sync-pausieren", "toolbar-ptmonline-sync-fortsetzen",
-    "toolbar-ptmonline-browser", "toolbar-ptmonline-wiederherstellen", "toolbar-ptmonline-trennen",
+    "toolbar-ptmonline-browser", "toolbar-ptmonline-turnierseite", "toolbar-ptmonline-wiederherstellen", "toolbar-ptmonline-trennen",
 ]
 
 ALL = HAUPT + SPIELTAG + TIMER + WHATSAPP + PTMONLINE
@@ -80,6 +80,7 @@ LABELS = {
     "toolbar-ptmonline-konfliktliste": ("Konfliktliste",    "ptm:ptmonline_konfliktliste_oeffnen"),
     "toolbar-ptmonline-ergebnisse-abholen": ("Ergebnisse abholen", "ptm:ptmonline_ergebnismeldungen_abholen"),
     "toolbar-ptmonline-browser":     ("Im Browser öffnen",  "ptm:ptmonline_im_browser_oeffnen"),
+    "toolbar-ptmonline-turnierseite": ("Turnierseite öffnen", "ptm:ptmonline_turnierseite_oeffnen"),
     "toolbar-ptmonline-wiederherstellen": ("Zuordnung wiederherstellen", "ptm:ptmonline_zuordnung_wiederherstellen"),
     "toolbar-ptmonline-trennen":     ("Verbindung trennen", "ptm:ptmonline_verbindung_trennen"),
     "toolbar-timer-start":        ("Timer starten",       "ptm:timer_starten_dialog"),

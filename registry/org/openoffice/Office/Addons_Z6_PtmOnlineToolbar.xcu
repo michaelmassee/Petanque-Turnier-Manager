@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <!--
     PTM-Online-Toolbar: nur die im laufenden Turnier häufigen Funktionen (Meldungen abgleichen, Konfliktliste,
-    Sync pausieren/fortsetzen, Online-Turnier im Browser). Verbinden, Trennen, Zuordnung wiederherstellen und
+    Sync pausieren/fortsetzen, Online-Turnier und Live-Turnierseite im Browser). Verbinden, Trennen, Zuordnung wiederherstellen und
     Ergebnisse abholen (kommen per Sofort-Signal) gibt es nur im Untermenü PTM-Online.
     Sichtbar nur bei hinterlegtem PTM-Online-Zugang (PtmOnlineToolbarSteuerung).
     Buttons bleiben immer klickbar (LO-Bug tdf#172207, TOOLBAR_ONLY_CMDS); passt der Zustand nicht, erklärt ein
@@ -118,6 +118,21 @@
                     <prop oor:name="Target" oor:type="xs:string"><value>_self</value></prop>
                     <prop oor:name="Context" oor:type="xs:string"><value>com.sun.star.sheet.SpreadsheetDocument</value></prop>
                 </node>
+
+                <node oor:name="m8" oor:op="replace">
+                    <prop oor:name="URL" oor:type="xs:string">
+                        <value>ptm:ptmonline_turnierseite_oeffnen</value>
+                    </prop>
+                    <prop oor:name="Title">
+                        <value xml:lang="de">Live-Turnierseite öffnen</value>
+                        <value xml:lang="en">Open live tournament page</value>
+                        <value xml:lang="es">Abrir página del torneo en directo</value>
+                        <value xml:lang="fr">Ouvrir la page du tournoi en direct</value>
+                        <value xml:lang="nl">Live toernooipagina openen</value>
+                    </prop>
+                    <prop oor:name="Target" oor:type="xs:string"><value>_self</value></prop>
+                    <prop oor:name="Context" oor:type="xs:string"><value>com.sun.star.sheet.SpreadsheetDocument</value></prop>
+                </node>
             </node>
         </node>
 
@@ -184,6 +199,19 @@
                     </prop>
                     <prop oor:name="ImageBigURL" oor:type="xs:string">
                         <value>%origin%/images/24/toolbar-ptmonline-browser.png</value>
+                    </prop>
+                </node>
+            </node>
+            <node oor:name="de.petanqueturniermanager.toolbar.ptmonline.turnierseite" oor:op="replace">
+                <prop oor:name="URL" oor:type="xs:string">
+                    <value>ptm:ptmonline_turnierseite_oeffnen</value>
+                </prop>
+                <node oor:name="UserDefinedImages">
+                    <prop oor:name="ImageSmallURL" oor:type="xs:string">
+                        <value>%origin%/images/16/toolbar-ptmonline-turnierseite.png</value>
+                    </prop>
+                    <prop oor:name="ImageBigURL" oor:type="xs:string">
+                        <value>%origin%/images/24/toolbar-ptmonline-turnierseite.png</value>
                     </prop>
                 </node>
             </node>

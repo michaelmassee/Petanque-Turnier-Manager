@@ -427,6 +427,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_PTMONLINE_KONFLIKTLISTE_OEFFNEN   = "ptmonline_konfliktliste_oeffnen";
 	public static final String CMD_PTMONLINE_ERGEBNISMELDUNGEN_ABHOLEN = "ptmonline_ergebnismeldungen_abholen";
 	public static final String CMD_PTMONLINE_IM_BROWSER_OEFFNEN      = "ptmonline_im_browser_oeffnen";
+	public static final String CMD_PTMONLINE_TURNIERSEITE_OEFFNEN    = "ptmonline_turnierseite_oeffnen";
 	// Konfiguration
 	public static final String CMD_KONFIGURATION_TURNIER = "konfiguration_turnier";
 	/**
@@ -1573,6 +1574,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 					.ergebnismeldungenAbholen(erzeugeWorkingSpreadsheetFuerDispatch());
 			case CMD_PTMONLINE_IM_BROWSER_OEFFNEN      -> de.petanqueturniermanager.ptmonline.ui.PtmOnlineDispatcher
 					.imBrowserOeffnen(erzeugeWorkingSpreadsheetFuerDispatch());
+			case CMD_PTMONLINE_TURNIERSEITE_OEFFNEN    -> de.petanqueturniermanager.ptmonline.ui.PtmOnlineDispatcher
+					.turnierseiteOeffnen(erzeugeWorkingSpreadsheetFuerDispatch());
 			default -> { return false; }
 		}
 		return true;
@@ -2262,7 +2265,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			CMD_PTMONLINE_KONFLIKTLISTE_OEFFNEN,
 			CMD_PTMONLINE_SYNC_PAUSIEREN,
 			CMD_PTMONLINE_SYNC_FORTSETZEN,
-			CMD_PTMONLINE_IM_BROWSER_OEFFNEN);
+			CMD_PTMONLINE_IM_BROWSER_OEFFNEN,
+			CMD_PTMONLINE_TURNIERSEITE_OEFFNEN);
 
 	static boolean istOnlineBefehlAktiv(String command, XSpreadsheetDocument document) {
 		return isEnabled(command, document);
@@ -2495,7 +2499,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_PTMONLINE_SYNC_FORTSETZEN,
 				 CMD_PTMONLINE_KONFLIKTLISTE_OEFFNEN,
 				 CMD_PTMONLINE_ERGEBNISMELDUNGEN_ABHOLEN,
-				 CMD_PTMONLINE_IM_BROWSER_OEFFNEN            -> ts != TurnierSystem.KEIN;
+				 CMD_PTMONLINE_IM_BROWSER_OEFFNEN,
+				 CMD_PTMONLINE_TURNIERSEITE_OEFFNEN          -> ts != TurnierSystem.KEIN;
 			case CMD_TIMER_STARTEN_DIALOG                   -> timerInaktivOderBeendet();
 			case CMD_TIMER_PAUSE_FORTSETZEN,
 				 CMD_TIMER_STOPPEN,

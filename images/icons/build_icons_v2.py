@@ -616,6 +616,16 @@ ICONS["toolbar-ptmonline-browser"] = svg(ptm_online_badge(C['info'], f'''
   <line x1="46" y1="52" x2="58" y2="52" stroke="{C['paper']}" stroke-width="{S*0.8}"/>'''))
 
 # ============================================================
+# 39. PTM-ONLINE TURNIERSEITE ÖFFNEN — Sync-Wolke mit Anzeige-Badge (Spielplan/Rangliste)
+# ============================================================
+ICONS["toolbar-ptmonline-turnierseite"] = svg(ptm_online_badge(C['screen_d'], f'''
+  <rect x="45.5" y="46.5" width="13" height="9" rx="1.2" fill="none" stroke="{C['paper']}" stroke-width="{S}"/>
+  <line x1="48" y1="49.5" x2="56" y2="49.5" stroke="{C['paper']}" stroke-width="{S*0.8}" stroke-linecap="round"/>
+  <line x1="48" y1="52.5" x2="54" y2="52.5" stroke="{C['paper']}" stroke-width="{S*0.8}" stroke-linecap="round"/>
+  <line x1="52" y1="55.5" x2="52" y2="58" stroke="{C['paper']}" stroke-width="{S}"/>
+  <line x1="48.5" y1="58.2" x2="55.5" y2="58.2" stroke="{C['paper']}" stroke-width="{S}" stroke-linecap="round"/>'''))
+
+# ============================================================
 # SCHREIBEN
 # ============================================================
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "svg")

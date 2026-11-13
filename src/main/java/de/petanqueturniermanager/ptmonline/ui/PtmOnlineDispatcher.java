@@ -349,12 +349,25 @@ public final class PtmOnlineDispatcher {
                 verbindung.spieltagNr(), config, verbindung.tournamentId()).start());
     }
 
-    /** Öffnet das verbundene Online-Turnier auf PTM-Online im Standardbrowser. */
+    /** Öffnet das verbundene Online-Turnier (Detailseite mit Anmeldung) auf PTM-Online im Standardbrowser. */
     public static void imBrowserOeffnen(WorkingSpreadsheet ws) {
+        oeffneImBrowser(ws, "/turniere/");
+    }
+
+    /**
+     * Öffnet die Live-Turnierseite des verbundenen Online-Turniers (Spielplan, Ergebnisse, Rangliste) im
+     * Standardbrowser – dieselbe Seite, die Spieler und Zuschauer sehen.
+     */
+    public static void turnierseiteOeffnen(WorkingSpreadsheet ws) {
+        oeffneImBrowser(ws, "/turnierseite/");
+    }
+
+    /** Öffnet {@code <Server><pfadPraefix><Turnier-Id>} im Standardbrowser. */
+    private static void oeffneImBrowser(WorkingSpreadsheet ws, String pfadPraefix) {
         mitVerbindung(ws, (verbindung, config) -> {
             String basis = config.baseUrl().endsWith("/") ? config.baseUrl().substring(0, config.baseUrl().length() - 1)
                     : config.baseUrl();
-            String url = basis + "/turniere/" + URLEncoder.encode(verbindung.tournamentId(), StandardCharsets.UTF_8);
+            String url = basis + pfadPraefix + URLEncoder.encode(verbindung.tournamentId(), StandardCharsets.UTF_8);
             XComponentContext ctx = ws.getxContext();
             try {
                 XSystemShellExecute shell = Lo.createInstanceMCF(XSystemShellExecute.class,
