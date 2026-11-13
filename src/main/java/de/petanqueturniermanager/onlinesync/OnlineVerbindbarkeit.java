@@ -18,6 +18,10 @@ import de.petanqueturniermanager.helper.i18n.I18n;
  * Entscheidet für jedes Online-Turnier, ob sich das Dokument damit verbinden lässt, und nennt sonst den Grund:
  * abgeschlossen, anderes Turniersystem, andere Anmeldeart oder andere Formation. Die Verbinden-Auswahl zeigt so alle
  * Turniere des API-Keys, nicht verbindbare mit Begründung.
+ * <p>
+ * Ein leeres Dokument ({@link #fuerLeeresDokument()}) legt Turniersystem, Formation und Anmeldeart erst aus dem
+ * gewählten Online-Turnier an ({@link OnlineTurnierAnlage}). Verbindbar ist dort jedes abbildbare Turnier, das weder
+ * abgeschlossen noch mit einem anderen Dokument verbunden ist.
  */
 public final class OnlineVerbindbarkeit {
 
@@ -30,6 +34,9 @@ public final class OnlineVerbindbarkeit {
 			return hinderungsgrund.isEmpty();
 		}
 	}
+
+	private static final OnlineVerbindbarkeit LEERES_DOKUMENT = new OnlineVerbindbarkeit(TurnierSystem.KEIN, false,
+			Optional.empty());
 
 	private final TurnierSystem turnierSystem;
 	private final boolean meleeAnmeldung;
@@ -49,6 +56,15 @@ public final class OnlineVerbindbarkeit {
 	public static OnlineVerbindbarkeit fuer(TurnierSystem turnierSystem, boolean meleeAnmeldung,
 			Optional<String> dokumentFormation) {
 		return new OnlineVerbindbarkeit(turnierSystem, meleeAnmeldung, dokumentFormation);
+	}
+
+	/** Bewertung für ein Dokument ohne Turniersystem, das erst aus dem gewählten Online-Turnier angelegt wird. */
+	public static OnlineVerbindbarkeit fuerLeeresDokument() {
+		return LEERES_DOKUMENT;
+	}
+
+	public boolean istLeeresDokument() {
+		return turnierSystem == TurnierSystem.KEIN;
 	}
 
 	/** Formation so, wie PTM-Online sie in der Turnierliste meldet; ohne feste Teamgröße {@code andere}. */
@@ -71,6 +87,9 @@ public final class OnlineVerbindbarkeit {
 		if (turnier.istAbgeschlossen()) {
 			return Optional.of(I18n.get("ptmonline.turnier.verbinden.grund.abgeschlossen"));
 		}
+		if (istLeeresDokument()) {
+			return hinderungsgrundLeeresDokument(turnier);
+		}
 		if (!TurnierSystemOnlineTypMapping.onlineTyp(turnierSystem).orElse("").equals(turnier.type)) {
 			return Optional.of(I18n.get("ptmonline.turnier.verbinden.grund.turniersystem",
 					turnierSystemBezeichnung(turnier)));
@@ -84,6 +103,16 @@ public final class OnlineVerbindbarkeit {
 		if (dokumentFormation.isPresent() && !dokumentFormation.get().equals(turnier.formationsWert())) {
 			return Optional.of(I18n.get("ptmonline.turnier.verbinden.grund.formation",
 					formationBezeichnung(turnier.formationsWert()), formationBezeichnung(dokumentFormation.get())));
+		}
+		return Optional.empty();
+	}
+
+	private static Optional<String> hinderungsgrundLeeresDokument(OnlineTournamentDto turnier) {
+		if (turnier.documentManaged) {
+			return Optional.of(I18n.get("ptmonline.turnier.verbinden.grund.bereits_verbunden"));
+		}
+		if (OnlineTurnierAnlage.aus(turnier).isEmpty()) {
+			return Optional.of(I18n.get("ptmonline.turnier.verbinden.grund.nicht_unterstuetzt"));
 		}
 		return Optional.empty();
 	}

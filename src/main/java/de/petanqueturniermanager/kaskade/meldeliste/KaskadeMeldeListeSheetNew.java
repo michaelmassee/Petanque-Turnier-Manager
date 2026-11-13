@@ -11,6 +11,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.sun.star.sheet.XSpreadsheet;
 
+import de.petanqueturniermanager.onlinesync.OnlineTurnierAnlage;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.konfiguration.MeleeAnmeldungKonfiguration;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
@@ -245,23 +246,35 @@ public class KaskadeMeldeListeSheetNew extends SheetRunner
             throw new GenerateException(errMsg);
         }
 
-        if (param.isEmpty()) {
-            return;
+        if (param.isPresent()) {
+            legeAn(param.get());
         }
+    }
+
+    /**
+     * Legt die Meldeliste ohne Dialog für ein Online-Turnier an; alle übrigen Einstellungen wie die Vorbelegung des
+     * Start-Dialogs.
+     */
+    public void legeAnFuerOnline(OnlineTurnierAnlage anlage) throws GenerateException {
+        legeAn(new KaskadeTurnierParameterDialog.TurnierParameter(anlage.meldelisteFormation(),
+                anlage.teamnameAnzeigen(true), false, anlage.meleeAnmeldung(), 2));
+    }
+
+    private void legeAn(KaskadeTurnierParameterDialog.TurnierParameter param) throws GenerateException {
         if (!PtmOnlineNeueMeldeliste.vorbereiten(getWorkingSpreadsheet(), TurnierSystem.KASKADE,
-                param.get().formation())) {
+                param.formation())) {
             return;
         }
 
         getKonfigurationSheet().update();
         getSheetHelper().removeAllSheetsExclude();
         createMeldelisteWithParams(
-                param.get().formation(),
-                param.get().teamnameAnzeigen(),
-                param.get().vereinsnameAnzeigen(),
-                param.get().anzahlKaskaden());
-        if (param.get().meleeAnmeldung().isPresent()) {
-            MeleeAnmeldungKonfiguration.einschalten(getWorkingSpreadsheet(), param.get().meleeAnmeldung().orElseThrow());
+                param.formation(),
+                param.teamnameAnzeigen(),
+                param.vereinsnameAnzeigen(),
+                param.anzahlKaskaden());
+        if (param.meleeAnmeldung().isPresent()) {
+            MeleeAnmeldungKonfiguration.einschalten(getWorkingSpreadsheet(), param.meleeAnmeldung().orElseThrow());
             new KaskadeMeleeAnmeldungSheet(getWorkingSpreadsheet()).generate();
         }
 

@@ -113,6 +113,39 @@ class OnlineVerbindbarkeitTest {
                 .isEqualTo(OnlineTournamentDto.FORMATION_ANDERE);
     }
 
+    @Test
+    void leeresDokumentVerbindetJedesFreieAbbildbareTurnier() {
+        OnlineVerbindbarkeit leer = OnlineVerbindbarkeit.fuerLeeresDokument();
+
+        assertThat(leer.bewerte(online("ko", "forme", "triplette")).istVerbindbar()).isTrue();
+        assertThat(leer.bewerte(online("rangliste", "supermelee", "doublette")).istVerbindbar()).isTrue();
+        assertThat(leer.bewerte(online("schweizer", "melee", "doublette")).istVerbindbar()).isTrue();
+    }
+
+    @Test
+    void leeresDokumentLehntGebundeneTurniereAb() {
+        OnlineTournamentDto gebunden = online("ko", "forme", "triplette");
+        gebunden.documentManaged = true;
+
+        assertThat(OnlineVerbindbarkeit.fuerLeeresDokument().bewerte(gebunden).hinderungsgrund())
+                .contains(I18n.get("ptmonline.turnier.verbinden.grund.bereits_verbunden"));
+    }
+
+    @Test
+    void leeresDokumentLehntAbgeschlosseneTurniereAb() {
+        OnlineTournamentDto abgeschlossen = online("ko", "forme", "triplette");
+        abgeschlossen.status = "finished";
+
+        assertThat(OnlineVerbindbarkeit.fuerLeeresDokument().bewerte(abgeschlossen).hinderungsgrund())
+                .contains(I18n.get("ptmonline.turnier.verbinden.grund.abgeschlossen"));
+    }
+
+    @Test
+    void leeresDokumentLehntNichtAbbildbareTurniereAb() {
+        assertThat(OnlineVerbindbarkeit.fuerLeeresDokument().bewerte(online("unbekannt", "forme", "tete"))
+                .hinderungsgrund()).contains(I18n.get("ptmonline.turnier.verbinden.grund.nicht_unterstuetzt"));
+    }
+
     private static OnlineTournamentDto online(String type, String registrationType, String formation) {
         OnlineTournamentDto dto = new OnlineTournamentDto();
         dto.type = type;

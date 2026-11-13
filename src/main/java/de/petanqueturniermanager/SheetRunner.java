@@ -148,6 +148,11 @@ public abstract class SheetRunner extends Thread {
 		return new GenerateException(VERARBEITUNG_ABGEBROCHEN);
 	}
 
+	/** Ob die Exception einen Abbruch durch den Anwender (Stop-Knopf) meldet, keinen Fehler. */
+	public static boolean istAbbruch(GenerateException e) {
+		return VERARBEITUNG_ABGEBROCHEN.equals(e.getMessage());
+	}
+
 	public static final void cancelRunner() {
 		koordinator.abbrechen();
 	}
@@ -660,7 +665,7 @@ public abstract class SheetRunner extends Thread {
 	}
 
 	protected void handleGenerateException(GenerateException e) {
-		if (VERARBEITUNG_ABGEBROCHEN.equals(e.getMessage())) {
+		if (istAbbruch(e)) {
 			processBox().info(I18n.get("msg.text.verarbeitung.abgebrochen"));
 			MessageBox.from(getxContext(), MessageBoxTypeEnum.WARN_OK)
 					.caption(I18n.get("msg.caption.abbruch"))

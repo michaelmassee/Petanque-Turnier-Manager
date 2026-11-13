@@ -12,6 +12,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.sun.star.sheet.XSpreadsheet;
 
+import de.petanqueturniermanager.onlinesync.OnlineTurnierAnlage;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.meldeliste.IMeldeliste;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
@@ -177,15 +178,21 @@ public class LigaMeldeListeSheetNew extends SheetRunner implements IMeldeliste<T
 			throw new GenerateException(errMsg);
 		}
 
-		if (param.isEmpty()) {
-			return; // Benutzer hat abgebrochen – keine Dokument-Änderungen
+		if (param.isPresent()) {
+			legeAn(param.get().gruppenname());
 		}
+	}
 
+	/** Legt die Meldeliste ohne Dialog für ein Online-Turnier an; dessen Name wird der Gruppenname. */
+	public void legeAnFuerOnline(OnlineTurnierAnlage anlage) throws GenerateException {
+		legeAn(anlage.name());
+	}
+
+	private void legeAn(String gruppenname) throws GenerateException {
 		// Erst nach Bestätigung: TurnierSystem + Page Styles setzen
 		getKonfigurationSheet().update();
 
 		getSheetHelper().removeAllSheetsExclude();
-		createMeldelisteWithParams(param.get().gruppenname());
+		createMeldelisteWithParams(gruppenname);
 	}
-
 }

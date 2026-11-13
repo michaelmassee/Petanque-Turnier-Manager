@@ -2490,8 +2490,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_SPIELERDB_WEBVIEW                      -> true;
 			case CMD_SPIELERDB_IN_MELDELISTE                -> ts != TurnierSystem.KEIN;
 			case CMD_TEAMNUMMER_AENDERN                     -> ts != TurnierSystem.KEIN;
-			case CMD_PTMONLINE_TURNIER_VERBINDEN,
-				 CMD_PTMONLINE_VERBINDUNG_TRENNEN,
+			// Ein leeres Dokument legt beim Verbinden die Meldeliste aus dem Online-Turnier an.
+			case CMD_PTMONLINE_TURNIER_VERBINDEN            -> true;
+			case CMD_PTMONLINE_VERBINDUNG_TRENNEN,
 				 CMD_PTMONLINE_ANMELDUNGEN_IMPORTIEREN,
 				 CMD_PTMONLINE_ZUORDNUNG_WIEDERHERSTELLEN,
 				 CMD_PTMONLINE_SYNC_PAUSIEREN,

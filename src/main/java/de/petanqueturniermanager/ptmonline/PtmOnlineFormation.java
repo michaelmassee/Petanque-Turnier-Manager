@@ -48,7 +48,7 @@ public final class PtmOnlineFormation {
         return ausDokument(ws, turnierSystem).map(OnlineVerbindbarkeit::vergleichswert);
     }
 
-    static Formation ausSupermeleeModus(SuperMeleeMode modus) {
+    public static Formation ausSupermeleeModus(SuperMeleeMode modus) {
         return switch (modus) {
             case Triplette -> Formation.TRIPLETTE;
             case Doublette -> Formation.DOUBLETTE;

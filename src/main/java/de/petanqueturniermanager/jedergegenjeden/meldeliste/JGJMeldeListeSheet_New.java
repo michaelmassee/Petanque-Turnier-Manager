@@ -8,6 +8,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.sun.star.sheet.XSpreadsheet;
 
+import de.petanqueturniermanager.onlinesync.OnlineTurnierAnlage;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.konfiguration.MeleeAnmeldungKonfiguration;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
@@ -199,10 +200,22 @@ public class JGJMeldeListeSheet_New extends SheetRunner implements IMeldeliste<T
 			throw new GenerateException(errMsg);
 		}
 
-		if (param.isEmpty()) {
-			return; // Benutzer hat abgebrochen – keine Dokument-Änderungen
+		if (param.isPresent()) {
+			legeAn(param.get());
 		}
-		if (!PtmOnlineNeueMeldeliste.vorbereiten(getWorkingSpreadsheet(), TurnierSystem.JGJ, param.get().formation())) {
+	}
+
+	/**
+	 * Legt die Meldeliste ohne Dialog für ein Online-Turnier an; alle übrigen Einstellungen wie die Vorbelegung des
+	 * Start-Dialogs.
+	 */
+	public void legeAnFuerOnline(OnlineTurnierAnlage anlage) throws GenerateException {
+		legeAn(new JGJStartDialog.StartParameter(anlage.meldelisteFormation(), anlage.teamnameAnzeigen(false), false,
+				anlage.meleeAnmeldung(), TeamAnzeige.NR, 0, false));
+	}
+
+	private void legeAn(JGJStartDialog.StartParameter param) throws GenerateException {
+		if (!PtmOnlineNeueMeldeliste.vorbereiten(getWorkingSpreadsheet(), TurnierSystem.JGJ, param.formation())) {
 			return;
 		}
 
@@ -210,11 +223,10 @@ public class JGJMeldeListeSheet_New extends SheetRunner implements IMeldeliste<T
 		getKonfigurationSheet().update();
 
 		getSheetHelper().removeAllSheetsExclude();
-		createMeldelisteWithParams(param.get().formation(),
-				param.get().teamnameAnzeigen(), param.get().vereinsnameAnzeigen(),
-				param.get().spielplanTeamAnzeige(), param.get().gruppengroesse(), param.get().mitRueckrunde());
-		if (param.get().meleeAnmeldung().isPresent()) {
-			MeleeAnmeldungKonfiguration.einschalten(getWorkingSpreadsheet(), param.get().meleeAnmeldung().orElseThrow());
+		createMeldelisteWithParams(param.formation(), param.teamnameAnzeigen(), param.vereinsnameAnzeigen(),
+				param.spielplanTeamAnzeige(), param.gruppengroesse(), param.mitRueckrunde());
+		if (param.meleeAnmeldung().isPresent()) {
+			MeleeAnmeldungKonfiguration.einschalten(getWorkingSpreadsheet(), param.meleeAnmeldung().orElseThrow());
 			new JGJMeleeAnmeldungSheet(getWorkingSpreadsheet()).generate();
 		}
 	}

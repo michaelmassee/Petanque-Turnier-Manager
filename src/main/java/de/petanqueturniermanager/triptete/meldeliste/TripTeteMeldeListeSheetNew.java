@@ -158,6 +158,15 @@ public class TripTeteMeldeListeSheetNew extends SheetRunner implements IMeldelis
             return;
         }
 
+        legeAn();
+    }
+
+    /** Legt die Meldeliste ohne Dialog für ein Online-Turnier an; Trip-Tête hat keine weiteren Einstellungen. */
+    public void legeAnFuerOnline() throws GenerateException {
+        legeAn();
+    }
+
+    private void legeAn() throws GenerateException {
         getKonfigurationSheet().update();
         getSheetHelper().removeAllSheetsExclude();
         createMeldeliste();

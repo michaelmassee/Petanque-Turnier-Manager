@@ -12,6 +12,7 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.uno.Exception;
 
+import de.petanqueturniermanager.onlinesync.OnlineTurnierAnlage;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.konfiguration.MeleeAnmeldungKonfiguration;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
@@ -223,19 +224,31 @@ public class PouleMeldeListeSheetNew extends SheetRunner
             throw new GenerateException(errMsg);
         }
 
-        if (param.isEmpty()) {
-            return;
+        if (param.isPresent()) {
+            legeAn(param.get());
         }
+    }
+
+    /**
+     * Legt die Meldeliste ohne Dialog für ein Online-Turnier an; alle übrigen Einstellungen wie die Vorbelegung des
+     * Start-Dialogs.
+     */
+    public void legeAnFuerOnline(OnlineTurnierAnlage anlage) throws GenerateException {
+        legeAn(new PouleTurnierParameterDialog.TurnierParameter(anlage.meldelisteFormation(),
+                anlage.teamnameAnzeigen(false), false, anlage.meleeAnmeldung()));
+    }
+
+    private void legeAn(PouleTurnierParameterDialog.TurnierParameter param) throws GenerateException {
         if (!PtmOnlineNeueMeldeliste.vorbereiten(getWorkingSpreadsheet(), TurnierSystem.POULE,
-                param.get().formation())) {
+                param.formation())) {
             return;
         }
 
         getKonfigurationSheet().update();
         getSheetHelper().removeAllSheetsExclude();
-        createMeldelisteWithParams(param.get().formation(), param.get().teamnameAnzeigen(), param.get().vereinsnameAnzeigen());
-        if (param.get().meleeAnmeldung().isPresent()) {
-            MeleeAnmeldungKonfiguration.einschalten(getWorkingSpreadsheet(), param.get().meleeAnmeldung().orElseThrow());
+        createMeldelisteWithParams(param.formation(), param.teamnameAnzeigen(), param.vereinsnameAnzeigen());
+        if (param.meleeAnmeldung().isPresent()) {
+            MeleeAnmeldungKonfiguration.einschalten(getWorkingSpreadsheet(), param.meleeAnmeldung().orElseThrow());
             new PouleMeleeAnmeldungSheet(getWorkingSpreadsheet()).generate();
         }
     }

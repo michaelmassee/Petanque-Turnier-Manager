@@ -11,6 +11,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.sun.star.sheet.XSpreadsheet;
 
+import de.petanqueturniermanager.onlinesync.OnlineTurnierAnlage;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.konfiguration.MeleeAnmeldungKonfiguration;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
@@ -244,22 +245,34 @@ public class FormuleXMeldeListeSheetNew extends SheetRunner
             throw new GenerateException(errMsg);
         }
 
-        if (param.isEmpty()) {
-            return;
+        if (param.isPresent()) {
+            legeAn(param.get());
         }
+    }
+
+    /**
+     * Legt die Meldeliste ohne Dialog für ein Online-Turnier an; alle übrigen Einstellungen wie die Vorbelegung des
+     * Start-Dialogs.
+     */
+    public void legeAnFuerOnline(OnlineTurnierAnlage anlage) throws GenerateException {
+        legeAn(new FormuleXTurnierParameterDialog.TurnierParameter(anlage.meldelisteFormation(),
+                anlage.teamnameAnzeigen(true), false, anlage.meleeAnmeldung()));
+    }
+
+    private void legeAn(FormuleXTurnierParameterDialog.TurnierParameter param) throws GenerateException {
         if (!PtmOnlineNeueMeldeliste.vorbereiten(getWorkingSpreadsheet(), TurnierSystem.FORMULEX,
-                param.get().formation())) {
+                param.formation())) {
             return;
         }
 
         getKonfigurationSheet().update();
         getSheetHelper().removeAllSheetsExclude();
         createMeldelisteWithParams(
-                param.get().formation(),
-                param.get().teamnameAnzeigen(),
-                param.get().vereinsnameAnzeigen());
-        if (param.get().meleeAnmeldung().isPresent()) {
-            MeleeAnmeldungKonfiguration.einschalten(getWorkingSpreadsheet(), param.get().meleeAnmeldung().orElseThrow());
+                param.formation(),
+                param.teamnameAnzeigen(),
+                param.vereinsnameAnzeigen());
+        if (param.meleeAnmeldung().isPresent()) {
+            MeleeAnmeldungKonfiguration.einschalten(getWorkingSpreadsheet(), param.meleeAnmeldung().orElseThrow());
             new FormuleXMeleeAnmeldungSheet(getWorkingSpreadsheet()).generate();
         }
 

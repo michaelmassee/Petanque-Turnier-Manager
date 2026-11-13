@@ -3,6 +3,7 @@
  */
 package de.petanqueturniermanager.onlinesync;
 
+import java.util.Arrays;
 import java.util.Optional;
 
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
@@ -50,5 +51,16 @@ public final class TurnierSystemOnlineTypMapping {
 			return "supermelee";
 		}
 		return meleeAnmeldung ? "melee" : "forme";
+	}
+
+	/**
+	 * Umkehrung von {@link #onlineTyp} für ein Dokument ohne Turniersystem: {@code rangliste} ist nur zusammen mit
+	 * {@code registrationType="supermelee"} ein Supermêlée, und Supermêlée gibt es nur mit {@code rangliste}.
+	 */
+	public static Optional<TurnierSystem> turnierSystem(String onlineTyp, String registrationTyp) {
+		boolean supermeleeAnmeldung = "supermelee".equals(registrationTyp);
+		return Arrays.stream(TurnierSystem.values())
+				.filter(ts -> onlineTyp(ts).filter(typ -> typ.equals(onlineTyp)).isPresent())
+				.filter(ts -> (ts == TurnierSystem.SUPERMELEE) == supermeleeAnmeldung).findFirst();
 	}
 }

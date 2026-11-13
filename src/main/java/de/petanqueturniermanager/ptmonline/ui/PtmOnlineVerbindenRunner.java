@@ -21,10 +21,13 @@ import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.onlinesync.OnlineTournamentDto;
+import de.petanqueturniermanager.onlinesync.OnlineTurnierAnlage;
+import de.petanqueturniermanager.onlinesync.SpieltagKontext;
 import de.petanqueturniermanager.ptmonline.PtmOnlineAuftraege;
 import de.petanqueturniermanager.ptmonline.PtmOnlineFehlerText;
 import de.petanqueturniermanager.ptmonline.PtmOnlineHttpException;
 import de.petanqueturniermanager.ptmonline.PtmOnlineLiveBeobachter;
+import de.petanqueturniermanager.ptmonline.PtmOnlineMeldelistenAnlage;
 import de.petanqueturniermanager.ptmonline.PtmOnlineRegistrationMapping;
 import de.petanqueturniermanager.ptmonline.PtmOnlineTrennung;
 import de.petanqueturniermanager.ptmonline.TournamentSyncClient;
@@ -37,19 +40,44 @@ import de.petanqueturniermanager.ptmonline.dto.SyncBindingDto;
  * „PTMOnline Sync“ und Freigabe des bisherigen Turniers in einem einzigen {@link SheetRunner}. Läuft bereits ein
  * anderer Runner, lehnt {@link #start()} ab, bevor der Server berührt wird: Online und Dokument können so nicht
  * auseinanderlaufen. Das bisherige Turnier wird erst freigegeben, wenn das neue lokal eingetragen ist.
+ * <p>
+ * Ein leeres Dokument ({@link #fuerLeeresDokument}) bekommt im selben Lauf zuerst die zum Online-Turnier passende
+ * Meldeliste ({@link PtmOnlineMeldelistenAnlage}); erst danach steht der Spieltag fest und es wird verbunden.
  */
 final class PtmOnlineVerbindenRunner extends SheetRunner {
 
     private final LibreOfficePtmOnlineSpeicher.Zugangsdaten config;
-    private final Integer spieltagNr;
     private final OnlineTournamentDto turnier;
+    private final Optional<OnlineTurnierAnlage> anlage;
+    private Integer spieltagNr;
+    /** Wird vom aufrufenden Hintergrund-Thread nach {@code join()} gelesen. */
+    private volatile boolean verbunden;
 
     PtmOnlineVerbindenRunner(WorkingSpreadsheet ws, TurnierSystem turnierSystem, Integer spieltagNrOderNull,
             LibreOfficePtmOnlineSpeicher.Zugangsdaten config, OnlineTournamentDto turnier) {
+        this(ws, turnierSystem, spieltagNrOderNull, config, turnier, Optional.empty());
+    }
+
+    private PtmOnlineVerbindenRunner(WorkingSpreadsheet ws, TurnierSystem turnierSystem, Integer spieltagNrOderNull,
+            LibreOfficePtmOnlineSpeicher.Zugangsdaten config, OnlineTournamentDto turnier,
+            Optional<OnlineTurnierAnlage> anlage) {
         super(ws, turnierSystem, "PTM-Online");
         this.config = config;
         this.spieltagNr = spieltagNrOderNull;
         this.turnier = turnier;
+        this.anlage = anlage;
+    }
+
+    /** Legt im leeren Dokument die Meldeliste für das Online-Turnier an und verbindet anschließend. */
+    static PtmOnlineVerbindenRunner fuerLeeresDokument(WorkingSpreadsheet ws,
+            LibreOfficePtmOnlineSpeicher.Zugangsdaten config, OnlineTournamentDto turnier,
+            OnlineTurnierAnlage anlage) {
+        return new PtmOnlineVerbindenRunner(ws, anlage.turnierSystem(), null, config, turnier, Optional.of(anlage));
+    }
+
+    /** Ob der letzte Lauf das Dokument verbunden hat; nur nach {@code start()} + {@code join()} aussagekräftig. */
+    boolean istVerbunden() {
+        return verbunden;
     }
 
     @Override
@@ -59,6 +87,32 @@ final class PtmOnlineVerbindenRunner extends SheetRunner {
 
     @Override
     protected void doRun() throws GenerateException {
+        if (anlage.isPresent()) {
+            legeMeldelisteAn(anlage.get());
+            try {
+                verbinde();
+            } catch (GenerateException e) {
+                if (istAbbruch(e)) {
+                    throw e;
+                }
+                getLogger().warn("PTM-Online: Meldeliste angelegt, Verbinden fehlgeschlagen", e);
+                throw new GenerateException(I18n.get("ptmonline.leeres_dokument.verbinden_fehlgeschlagen",
+                        e.getMessage()));
+            }
+        } else {
+            verbinde();
+        }
+    }
+
+    private void legeMeldelisteAn(OnlineTurnierAnlage onlineAnlage) throws GenerateException {
+        PtmOnlineMeldelistenAnlage.legeAn(getWorkingSpreadsheet(), onlineAnlage);
+        // Erst die neue Meldeliste legt den Spieltag fest (Supermêlée: Spieltag 1).
+        spieltagNr = SpieltagKontext.aktiverSpieltagOderNull(getWorkingSpreadsheet(), getTurnierSystem());
+        processBox().info(I18n.get("ptmonline.leeres_dokument.meldeliste_angelegt",
+                StringUtils.defaultString(turnier.name), getTurnierSystem().getBezeichnung()));
+    }
+
+    private void verbinde() throws GenerateException {
         PtmOnlineRegistrationMapping mapping = new PtmOnlineRegistrationMapping(getWorkingSpreadsheet(),
                 getTurnierSystem(), spieltagNr);
         LokaleBindung bisherige = LokaleBindung.aus(mapping);
@@ -96,6 +150,12 @@ final class PtmOnlineVerbindenRunner extends SheetRunner {
             throw new GenerateException(I18n.get("ptmonline.sheet.fehler.anlegen"));
         }
         PtmOnlineLiveBeobachter.bindungErneuert(getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), turnier.id);
+        verbunden = true;
+        if (anlage.isPresent()) {
+            // Der anschließende Abgleich meldet das Ergebnis; eine zweite Box davor wäre nur ein Klick mehr.
+            processBox().info(I18n.get("ptmonline.erfolg.turnier_verbunden", turnier.name));
+            return;
+        }
         MessageBox.from(getxContext(), MessageBoxTypeEnum.INFO_OK)
                 .caption(I18n.get("ptmonline.menu.toplevel"))
                 .message(I18n.get("ptmonline.erfolg.turnier_verbunden", turnier.name))

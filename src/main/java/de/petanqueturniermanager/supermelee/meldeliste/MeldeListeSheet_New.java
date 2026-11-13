@@ -4,6 +4,8 @@
 
 package de.petanqueturniermanager.supermelee.meldeliste;
 
+import de.petanqueturniermanager.ptmonline.PtmOnlineFormation;
+import de.petanqueturniermanager.onlinesync.OnlineTurnierAnlage;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
@@ -256,11 +258,23 @@ public class MeldeListeSheet_New extends SheetRunner implements IMeldeliste<Spie
 			throw new GenerateException(errMsg);
 		}
 
-		if (param.isEmpty()) {
-			return; // Benutzer hat abgebrochen – keine Dokument-Änderungen
+		if (param.isPresent()) {
+			legeAn(param.get().triplette() ? SuperMeleeMode.Triplette : SuperMeleeMode.Doublette);
 		}
+	}
+
+	/**
+	 * Legt die Meldeliste ohne Dialog für ein Online-Turnier an; alle übrigen Einstellungen wie die Vorbelegung des
+	 * Start-Dialogs.
+	 */
+	public void legeAnFuerOnline(OnlineTurnierAnlage anlage) throws GenerateException {
+		legeAn(anlage.meldelisteFormation() == Formation.TRIPLETTE ? SuperMeleeMode.Triplette
+				: SuperMeleeMode.Doublette);
+	}
+
+	private void legeAn(SuperMeleeMode mode) throws GenerateException {
 		if (!PtmOnlineNeueMeldeliste.vorbereiten(getWorkingSpreadsheet(), TurnierSystem.SUPERMELEE,
-				param.get().triplette() ? Formation.TRIPLETTE : Formation.DOUBLETTE)) {
+				PtmOnlineFormation.ausSupermeleeModus(mode))) {
 			return;
 		}
 
@@ -268,6 +282,6 @@ public class MeldeListeSheet_New extends SheetRunner implements IMeldeliste<Spie
 		getKonfigurationSheet().update();
 
 		getSheetHelper().removeAllSheetsExclude();
-		createMeldelisteWithParams(param.get().triplette() ? SuperMeleeMode.Triplette : SuperMeleeMode.Doublette);
+		createMeldelisteWithParams(mode);
 	}
 }

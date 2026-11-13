@@ -111,7 +111,8 @@ public final class MeldelisteSpaltenDialogOption {
 		return istAngehakt(xcc, CB_VEREINSNAME);
 	}
 
-	private static boolean teamnameErzwungen(Formation formation) {
+	/** Ohne Spielernamen braucht die Meldeliste den Teamnamen. */
+	public static boolean teamnameErzwungen(Formation formation) {
 		return formation == Formation.NUR_TEAMNAME;
 	}
 

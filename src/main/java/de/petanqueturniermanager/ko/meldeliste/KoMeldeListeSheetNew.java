@@ -11,6 +11,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.sun.star.sheet.XSpreadsheet;
 
+import de.petanqueturniermanager.onlinesync.OnlineTurnierAnlage;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.konfiguration.MeleeAnmeldungKonfiguration;
 import de.petanqueturniermanager.basesheet.meldeliste.IMeldeliste;
@@ -248,18 +249,33 @@ public class KoMeldeListeSheetNew extends SheetRunner
 			throw new GenerateException(errMsg);
 		}
 
-		if (result.isEmpty()) {
-			return; // Benutzer hat abgebrochen – keine Dokument-Änderungen
+		if (result.isPresent()) {
+			legeAn(result.get());
 		}
+	}
 
-		// Erst nach Bestätigung: TurnierSystem + Page Styles setzen
-		konfig.update();
+	/**
+	 * Legt die Meldeliste ohne Dialog für ein Online-Turnier an; alle übrigen Einstellungen wie die Vorbelegung des
+	 * Start-Dialogs.
+	 */
+	public void legeAnFuerOnline(OnlineTurnierAnlage anlage) throws GenerateException {
+		KoKonfigurationSheet konfig = getKonfigurationSheet();
+		legeAn(new KoTurnierParameterDialog.TurnierParameter(anlage.meldelisteFormation(),
+				anlage.teamnameAnzeigen(konfig.isMeldeListeTeamnameAnzeigen()), konfig.isMeldeListeVereinsnameAnzeigen(),
+				anlage.meleeAnmeldung(), konfig.getSpielbaumTeamAnzeige(), konfig.getSpielbaumSpielbahn(),
+				konfig.isSpielbaumBahnNurRunde1(), konfig.isSpielbaumSpielUmPlatz3(), konfig.getGruppenGroesse(),
+				konfig.getMinLetzteGruppeGroesse()));
+	}
 
-		// Werte in KonfigSheet speichern
-		var params = result.get();
+	private void legeAn(KoTurnierParameterDialog.TurnierParameter params) throws GenerateException {
 		if (!PtmOnlineNeueMeldeliste.vorbereiten(getWorkingSpreadsheet(), TurnierSystem.KO, params.formation())) {
 			return;
 		}
+		// Erst nach Bestätigung: TurnierSystem + Page Styles setzen
+		KoKonfigurationSheet konfig = getKonfigurationSheet();
+		konfig.update();
+
+		// Werte in KonfigSheet speichern
 		konfig.setMeldeListeFormation(params.formation());
 		konfig.setMeldeListeTeamnameAnzeigen(params.teamnameAnzeigen());
 		konfig.setMeldeListeVereinsnameAnzeigen(params.vereinsnameAnzeigen());

@@ -34,6 +34,7 @@ import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationS
 import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.onlinesync.OnlineTurnierAnlage;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
@@ -238,10 +239,22 @@ public class SchweizerMeldeListeSheetNew extends SheetRunner
 			throw new GenerateException(errMsg);
 		}
 
-		if (param.isEmpty()) {
-			return; // Benutzer hat abgebrochen – keine Dokument-Änderungen
+		if (param.isPresent()) {
+			legeAn(param.get());
 		}
-		var parameter = param.get();
+	}
+
+	/**
+	 * Legt die Meldeliste ohne Dialog für ein Online-Turnier an; alle übrigen Einstellungen wie die Vorbelegung des
+	 * Start-Dialogs.
+	 */
+	public void legeAnFuerOnline(OnlineTurnierAnlage anlage) throws GenerateException {
+		legeAn(new SchweizerTurnierParameterDialog.TurnierParameter(anlage.meldelisteFormation(),
+				anlage.teamnameAnzeigen(false), false, anlage.meleeAnmeldung(), TeamAnzeige.NR,
+				getKonfigurationSheet().getRankingModus()));
+	}
+
+	private void legeAn(SchweizerTurnierParameterDialog.TurnierParameter parameter) throws GenerateException {
 		if (!PtmOnlineNeueMeldeliste.vorbereiten(getWorkingSpreadsheet(), TurnierSystem.SCHWEIZER,
 				parameter.formation())) {
 			return;

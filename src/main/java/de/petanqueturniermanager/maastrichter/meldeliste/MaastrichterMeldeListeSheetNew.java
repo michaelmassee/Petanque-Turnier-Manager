@@ -10,6 +10,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.sun.star.sheet.XSpreadsheet;
 
+import de.petanqueturniermanager.onlinesync.OnlineTurnierAnlage;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.konfiguration.MeleeAnmeldungKonfiguration;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
@@ -96,11 +97,28 @@ public class MaastrichterMeldeListeSheetNew extends SheetRunner implements IShee
 			throw new GenerateException(errMsg);
 		}
 
-		if (param.isEmpty()) {
-			return;
+		if (param.isPresent()) {
+			legeAn(param.get());
 		}
+	}
+
+	/**
+	 * Legt die Meldeliste ohne Dialog für ein Online-Turnier an; alle übrigen Einstellungen wie die Vorbelegung des
+	 * Start-Dialogs.
+	 */
+	public void legeAnFuerOnline(OnlineTurnierAnlage anlage) throws GenerateException {
+		legeAn(new MaastrichterTurnierParameterDialog.TurnierParameter(anlage.meldelisteFormation(),
+				anlage.teamnameAnzeigen(false), false, anlage.meleeAnmeldung(), TeamAnzeige.NR,
+				konfigurationSheet.getRankingModus(), konfigurationSheet.getAnzVorrunden(),
+				konfigurationSheet.getSpielbaumTeamAnzeige(), konfigurationSheet.getSpielbaumSpielbahn(),
+				konfigurationSheet.isSpielbaumBahnNurRunde1(), konfigurationSheet.isSpielbaumSpielUmPlatz3(),
+				konfigurationSheet.getGruppenGroesse(), konfigurationSheet.getMinLetzteGruppeGroesse(),
+				konfigurationSheet.getMaastrichterGruppenModus()));
+	}
+
+	private void legeAn(MaastrichterTurnierParameterDialog.TurnierParameter parameter) throws GenerateException {
 		if (!PtmOnlineNeueMeldeliste.vorbereiten(getWorkingSpreadsheet(), TurnierSystem.MAASTRICHTER,
-				param.get().formation())) {
+				parameter.formation())) {
 			return;
 		}
 
@@ -109,7 +127,6 @@ public class MaastrichterMeldeListeSheetNew extends SheetRunner implements IShee
 
 		getSheetHelper().removeAllSheetsExclude();
 
-		var parameter = param.get();
 		konfigurationSheet.setRankingModus(parameter.rankingModus());
 		konfigurationSheet.setAnzVorrunden(parameter.anzVorrunden());
 		konfigurationSheet.setAktiveSpielRunde(SpielRundeNr.from(1));

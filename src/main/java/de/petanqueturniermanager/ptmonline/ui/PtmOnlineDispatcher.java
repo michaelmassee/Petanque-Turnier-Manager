@@ -34,6 +34,7 @@ import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.onlinesync.OnlineTournamentDto;
+import de.petanqueturniermanager.onlinesync.OnlineTurnierAnlage;
 import de.petanqueturniermanager.onlinesync.OnlineVerbindbarkeit;
 import de.petanqueturniermanager.onlinesync.SpieltagKontext;
 import de.petanqueturniermanager.onlinesync.TurnierSystemOnlineTypMapping;
@@ -64,6 +65,9 @@ public final class PtmOnlineDispatcher {
      * Turniersystem, Anmeldeart und Formation des Dokuments ({@link OnlineVerbindbarkeit}), lässt den
      * Nutzer ein verbindbares auswählen und legt anschließend das Blatt "PTMOnline Sync" an.
      * <p>
+     * Ein leeres Dokument (ohne Turniersystem) kann sich mit jedem freien Online-Turnier verbinden: Die Meldeliste
+     * entsteht dann ohne Start-Dialog aus dem gewählten Turnier, danach werden die Online-Meldungen übernommen.
+     * <p>
      * Alles, was aus dem Dokument gebraucht wird (Turniersystem, Spieltag, bisherige Verbindung, Fenster für den
      * Dialog), wird hier vor dem Thread-Start gelesen; der Hintergrund-Thread lädt nur noch übers Netz und zeigt
      * den Dialog per {@code LoMainThread.post}.
@@ -78,37 +82,50 @@ public final class PtmOnlineDispatcher {
             return;
         }
 
-        TurnierSystem ts;
-        Integer spieltagNr;
-        try {
-            ts = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();
-            spieltagNr = SpieltagKontext.aktiverSpieltagOderNull(ws, ts);
-        } catch (GenerateException e) {
-            logger.error("PTM-Online: aktiven Spieltag ermitteln fehlgeschlagen", e);
-            zeigeFehler(ctx, e.getMessage());
-            return;
-        }
-        logger.info("PTM-Online: Turniersystem={}, Spieltag={}", ts, spieltagNr);
+        TurnierSystem ts = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();
+        Optional<VerbindenAuftrag> auftrag = ts == null || ts == TurnierSystem.KEIN
+                ? Optional.of(auftragFuerLeeresDokument(ws, config))
+                : auftragFuerTurnierDokument(ws, config, ts);
+        auftrag.ifPresent(PtmOnlineDispatcher::starteVerbinden);
+    }
 
+    /**
+     * Leeres Dokument: Jedes freie, nicht abgeschlossene Online-Turnier ist wählbar; Turniersystem, Formation und
+     * Anmeldeart der Meldeliste kommen aus dem gewählten Turnier.
+     */
+    private static VerbindenAuftrag auftragFuerLeeresDokument(WorkingSpreadsheet ws,
+            LibreOfficePtmOnlineSpeicher.Zugangsdaten config) {
+        logger.info("PTM-Online: leeres Dokument, Meldeliste wird aus dem Online-Turnier angelegt");
+        return new VerbindenAuftrag(ws, config, TurnierSystem.KEIN, null, OnlineVerbindbarkeit.fuerLeeresDokument(),
+                null, ws.getContainerWindowPeer());
+    }
+
+    /** @return leer, wenn der Fehler schon gemeldet wurde */
+    private static Optional<VerbindenAuftrag> auftragFuerTurnierDokument(WorkingSpreadsheet ws,
+            LibreOfficePtmOnlineSpeicher.Zugangsdaten config, TurnierSystem ts) {
+        XComponentContext ctx = ws.getxContext();
         if (TurnierSystemOnlineTypMapping.onlineTyp(ts).isEmpty()) {
             logger.info("PTM-Online: Turniersystem {} nicht unterstuetzt, breche ab", ts);
             zeigeFehler(ctx, I18n.get("ptmonline.turnier.verbinden.dialog.fehler.system_nicht_unterstuetzt"));
-            return;
+            return Optional.empty();
         }
-
-        String eigeneTurnierId;
         try {
-            eigeneTurnierId = new PtmOnlineRegistrationMapping(ws, ts, spieltagNr).getTournamentId().orElse(null);
+            Integer spieltagNr = SpieltagKontext.aktiverSpieltagOderNull(ws, ts);
+            logger.info("PTM-Online: Turniersystem={}, Spieltag={}", ts, spieltagNr);
+            String eigeneTurnierId = new PtmOnlineRegistrationMapping(ws, ts, spieltagNr).getTournamentId()
+                    .orElse(null);
+            var verbindbarkeit = OnlineVerbindbarkeit.fuer(ts, MeleeAnmeldungKonfiguration.istAktiv(ws),
+                    PtmOnlineFormation.vergleichswertAusDokument(ws, ts));
+            return Optional.of(new VerbindenAuftrag(ws, config, ts, spieltagNr, verbindbarkeit, eigeneTurnierId,
+                    ws.getContainerWindowPeer()));
         } catch (GenerateException e) {
-            logger.error("PTM-Online: bisherige Verbindung lesen fehlgeschlagen", e);
+            logger.error("PTM-Online: Spieltag oder bisherige Verbindung ermitteln fehlgeschlagen", e);
             zeigeFehler(ctx, e.getMessage());
-            return;
+            return Optional.empty();
         }
-        var verbindbarkeit = OnlineVerbindbarkeit.fuer(ts, MeleeAnmeldungKonfiguration.istAktiv(ws),
-                PtmOnlineFormation.vergleichswertAusDokument(ws, ts));
-        var auftrag = new VerbindenAuftrag(ws, config, ts, spieltagNr, verbindbarkeit, eigeneTurnierId,
-                ws.getContainerWindowPeer());
+    }
 
+    private static void starteVerbinden(VerbindenAuftrag auftrag) {
         Thread worker = new Thread(() -> verbindenImHintergrund(auftrag), "PTM-Online-Verbinden");
         worker.start();
         logger.info("PTM-Online: Hintergrund-Thread gestartet, turnierVerbinden() kehrt zurueck");
@@ -147,9 +164,43 @@ public final class PtmOnlineDispatcher {
         logger.info("PTM-Online: zeige Auswahldialog");
         Optional<OnlineTournamentDto> auswahl = zeigeAuswahlDialog(auftrag, bewertungen);
         logger.info("PTM-Online: Auswahldialog beendet, Auswahl vorhanden={}", auswahl.isPresent());
+        if (auswahl.isEmpty()) {
+            return;
+        }
+        if (auftrag.verbindbarkeit().istLeeresDokument()) {
+            verbindeLeeresDokument(auftrag, auswahl.get());
+            return;
+        }
         // Server-Bindung und Sync-Blatt in einem Runner: läuft schon einer, bleibt auch der Server unberührt.
-        auswahl.ifPresent(turnier -> new PtmOnlineVerbindenRunner(auftrag.ws(), auftrag.ts(), auftrag.spieltagNr(),
-                config, turnier).start());
+        new PtmOnlineVerbindenRunner(auftrag.ws(), auftrag.ts(), auftrag.spieltagNr(), config, auswahl.get()).start();
+    }
+
+    /**
+     * Meldeliste anlegen und verbinden in einem Runner; danach sofort die Online-Meldungen übernehmen wie
+     * „Anmeldungen importieren“. Läuft auf dem Hintergrund-Thread, deshalb darf hier auf den Runner gewartet werden –
+     * der Abgleich ist ein eigener Runner, nicht in den ersten verschachtelt.
+     */
+    private static void verbindeLeeresDokument(VerbindenAuftrag auftrag, OnlineTournamentDto turnier) {
+        Optional<OnlineTurnierAnlage> anlage = OnlineTurnierAnlage.aus(turnier);
+        if (anlage.isEmpty()) {
+            // Die Auswahl lässt nur abbildbare Turniere zu; das hier wäre ein Programmfehler.
+            logger.error("PTM-Online: Turnier {} lässt sich nicht als Dokument anlegen", turnier.id);
+            return;
+        }
+        var runner = PtmOnlineVerbindenRunner.fuerLeeresDokument(auftrag.ws(), auftrag.config(), turnier,
+                anlage.get());
+        runner.start();
+        try {
+            runner.join();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            logger.debug("PTM-Online: Warten auf das Verbinden unterbrochen", e);
+            return;
+        }
+        if (runner.istVerbunden()) {
+            logger.info("PTM-Online: leeres Dokument verbunden, übernehme die Online-Meldungen");
+            RegistrationImportTask.starte(auftrag.ws());
+        }
     }
 
     /**
