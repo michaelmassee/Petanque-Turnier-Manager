@@ -70,7 +70,7 @@ class PtmOnlineAktivierungUITest extends BaseCalcUITest {
         assertThat(Lo.qi(com.sun.star.frame.XPopupMenuController.class, service)).as("Controller-Service registriert").isNotNull();
         for (int i = 0; i < 2; i++) {
             schalte(menuController, new LibreOfficePtmOnlineSpeicher.Zugangsdaten("test", "http://127.0.0.1", true));
-            assertThat(popup.getItemCount()).as("Alle neun Online-Befehle wiederhergestellt").isEqualTo((short) 9);
+            assertThat(popup.getItemCount()).as("Alle zehn Online-Befehle wiederhergestellt").isEqualTo((short) 10);
             assertThat(toolbarSichtbar(sichtbaresFenster)).as("PTM-Online-Toolbar mit Freigabe sichtbar").isTrue();
             var instanz = PtmOnlineLiveBeobachter.class.getDeclaredField("instanz");
             instanz.setAccessible(true);
