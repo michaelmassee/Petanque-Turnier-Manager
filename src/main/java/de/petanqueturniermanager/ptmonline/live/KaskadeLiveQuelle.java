@@ -62,9 +62,10 @@ final class KaskadeLiveQuelle implements LiveStandQuelle {
             String gruppeInZeile = zellen.text(GRUPPE_SPALTE, zeile);
             gruppe = gruppeInZeile == null ? gruppe : gruppeInZeile;
             int teamB = zellen.teamNr(TEAM_B_SPALTE, zeile);
-            partien.add(teamB <= 0 ? LivePartie.freilos(teamA, null, gruppe)
-                    : LivePartie.teams(teamA, teamB, zellen.punkte(ERG_TEAM_A_SPALTE, zeile),
-                            zellen.punkte(ERG_TEAM_B_SPALTE, zeile), null, gruppe));
+            Integer punkteA = zellen.punkte(ERG_TEAM_A_SPALTE, zeile);
+            Integer punkteB = zellen.punkte(ERG_TEAM_B_SPALTE, zeile);
+            partien.add(teamB <= 0 ? LivePartie.freilos(teamA, punkteA, punkteB, null, gruppe)
+                    : LivePartie.teams(teamA, teamB, punkteA, punkteB, null, gruppe));
         }
         return partien;
     }

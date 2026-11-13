@@ -40,6 +40,14 @@ class LiveUebertragungsDatenTest {
     }
 
     @Test
+    void freilosUebertraegtDieWertungAusDemBlatt() {
+        List<LiveMatchDto> matches = LiveUebertragungsDaten.matches(
+                new LiveRunde(1, List.of(LivePartie.freilos(3, 13, 7, null, null))), ONLINE_IDS);
+
+        assertThat(matches).containsExactly(new LiveMatchDto(List.of("r3"), List.of(), 13, 7, null, null));
+    }
+
+    @Test
     void meleeTeamWirdAufAlleSpielerIdsAbgebildet() {
         List<LiveMatchDto> matches = LiveUebertragungsDaten.matches(
                 new LiveRunde(1, List.of(LivePartie.teams(7, 8, null, null, null, null))), ONLINE_IDS);

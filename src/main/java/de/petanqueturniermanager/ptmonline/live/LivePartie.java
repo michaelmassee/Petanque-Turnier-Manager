@@ -39,9 +39,15 @@ public record LivePartie(List<Integer> teamA, List<Integer> teamB, @Nullable Int
         return new LivePartie(List.of(teamA), List.of(teamB), punkteA, punkteB, bahn, stufe);
     }
 
-    /** Freilos für ein Team. */
+    /** Freilos für ein Team, ohne Ergebnis im Blatt. */
     public static LivePartie freilos(int team, @Nullable String bahn, @Nullable String stufe) {
-        return new LivePartie(List.of(team), List.of(), null, null, bahn, stufe);
+        return freilos(team, null, null, bahn, stufe);
+    }
+
+    /** Freilos für ein Team mit der Wertung, die das Blatt für das Freilos einträgt (z.&nbsp;B. 13:7). */
+    public static LivePartie freilos(int team, @Nullable Integer punkteA, @Nullable Integer punkteB,
+            @Nullable String bahn, @Nullable String stufe) {
+        return new LivePartie(List.of(team), List.of(), punkteA, punkteB, bahn, stufe);
     }
 
     public boolean istFreilos() {

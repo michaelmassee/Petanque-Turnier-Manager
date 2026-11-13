@@ -73,9 +73,11 @@ final class TeamSpielrundenLeser {
             }
             String bahn = mitBahn ? zellen.text(BAHN, zeile) : null;
             int teamB = zellen.teamNr(TEAM_B, zeile);
-            partien.add(teamB <= 0 ? LivePartie.freilos(teamA, bahn, null)
-                    : LivePartie.teams(teamA, teamB, zellen.punkte(ERGEBNIS_A, zeile),
-                            zellen.punkte(ERGEBNIS_B, zeile), bahn, null).mitErgebnisOrt(ergebnisOrt.apply(zeile)));
+            Integer punkteA = zellen.punkte(ERGEBNIS_A, zeile);
+            Integer punkteB = zellen.punkte(ERGEBNIS_B, zeile);
+            partien.add(teamB <= 0 ? LivePartie.freilos(teamA, punkteA, punkteB, bahn, null)
+                    : LivePartie.teams(teamA, teamB, punkteA, punkteB, bahn, null)
+                            .mitErgebnisOrt(ergebnisOrt.apply(zeile)));
         }
         return partien;
     }

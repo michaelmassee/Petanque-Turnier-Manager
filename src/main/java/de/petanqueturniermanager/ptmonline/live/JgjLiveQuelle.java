@@ -88,9 +88,10 @@ final class JgjLiveQuelle implements LiveStandQuelle {
 
     private static LivePartie partie(LiveZellbereich zellen, int zeile, int teamA) {
         int teamB = zellen.zahl(TEAM_B_NR_SPALTE, zeile);
-        return teamB <= 0 ? LivePartie.freilos(teamA, null, null)
-                : LivePartie.teams(teamA, teamB, zellen.punkte(SPIELPNKT_A_SPALTE, zeile),
-                        zellen.punkte(SPIELPNKT_B_SPALTE, zeile), null, null)
+        Integer punkteA = zellen.punkte(SPIELPNKT_A_SPALTE, zeile);
+        Integer punkteB = zellen.punkte(SPIELPNKT_B_SPALTE, zeile);
+        return teamB <= 0 ? LivePartie.freilos(teamA, punkteA, punkteB, null, null)
+                : LivePartie.teams(teamA, teamB, punkteA, punkteB, null, null)
                         .mitErgebnisOrt(new ErgebnisOrt(SheetMetadataHelper.SCHLUESSEL_JGJ_SPIELPLAN,
                                 JGJSpielPlanSheet.LEGACY_SHEET_NAMEN, zeile, SPIELPNKT_A_SPALTE));
     }
