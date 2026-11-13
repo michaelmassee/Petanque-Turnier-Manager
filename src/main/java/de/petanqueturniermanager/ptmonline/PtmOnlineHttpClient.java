@@ -123,7 +123,14 @@ abstract class PtmOnlineHttpClient {
         }
         HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
         return new SyncAntwort(response.statusCode(), response.body(),
-                response.headers().firstValue("X-PTM-Replayed").isPresent(), ergebnismeldungsStand(response));
+                response.headers().firstValue("X-PTM-Replayed").isPresent(), ergebnismeldungsStand(response),
+                turnierStatus(response));
+    }
+
+    /** Huckepack mit dem Status des Online-Turniers; {@code null}, wenn der Server ihn nicht liefert. */
+    static @Nullable String turnierStatus(HttpResponse<?> response) {
+        return response.headers().firstValue("X-PTM-Tournament-Status").map(String::strip)
+                .filter(status -> !status.isEmpty()).orElse(null);
     }
 
     /** Huckepack zu Ergebnismeldungen aus den Antwort-Headern; {@code null}, wenn der Server sie nicht liefert. */

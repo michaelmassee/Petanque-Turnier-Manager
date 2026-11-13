@@ -3,6 +3,8 @@
  */
 package de.petanqueturniermanager.ptmonline.dto;
 
+import java.util.Optional;
+
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -19,6 +21,18 @@ import org.jspecify.annotations.Nullable;
  */
 public record SyncStandDto(String status, boolean registrationClosed, String runningResetAt, int roundsOnline,
         long writeCounter, @Nullable String date, boolean playerResultReportingEnabled) {
+
+    /**
+     * Derselbe Stand mit dem per Huckepack gemeldeten Status; leer, wenn kein Status gemeldet wurde oder er sich nicht
+     * geändert hat.
+     */
+    public Optional<SyncStandDto> mitGemeldetemStatus(@Nullable String gemeldeterStatus) {
+        if (gemeldeterStatus == null || gemeldeterStatus.isBlank() || gemeldeterStatus.equals(status)) {
+            return Optional.empty();
+        }
+        return Optional.of(new SyncStandDto(gemeldeterStatus, registrationClosed, runningResetAt, roundsOnline,
+                writeCounter, date, playerResultReportingEnabled));
+    }
 
     public boolean istRunning() {
         return "running".equals(status);

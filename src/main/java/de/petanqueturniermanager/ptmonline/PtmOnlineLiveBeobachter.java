@@ -97,7 +97,8 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
     static final long SIGNAL_BUENDELUNG_MS = 1_000;
     /**
      * Mindestabstand, in dem ein Durchlauf den Online-Zustand neu abruft – damit der im Sync-Blatt und in der Sidebar
-     * angezeigte Turnierstatus (z.&nbsp;B. Entwurf → Anmeldung) nachgeführt wird.
+     * angezeigte Turnierstatus (z.&nbsp;B. Entwurf → Anmeldung) nachgeführt wird. Nur für Server, die den Status noch
+     * nicht per Huckepack ({@code X-PTM-Tournament-Status}) melden.
      */
     static final Duration ONLINE_STAND_ABSTAND = Duration.ofMinutes(5);
 
@@ -380,6 +381,8 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
         private volatile PtmOnlineErfassungsRunner.@Nullable OnlineStandAbruf onlineStand;
         /** Zeitpunkt des letzten erfolgreichen Abrufs von {@link #onlineStand}. */
         private volatile @Nullable Instant onlineStandAbgerufen;
+        /** Der Server meldet den Turnierstatus per Huckepack; der regelmäßige Abruf entfällt dann. */
+        private volatile boolean statusPerHuckepack;
         /** Zuletzt abgeholte offene Ergebnismeldungen; nach neuer Bindung verworfen. */
         private volatile PtmOnlineErfassungsRunner.@Nullable ErgebnismeldungsAbruf ergebnismeldungen;
         /** Client und Turnier des letzten Durchlaufs, für den Abruf der Ergebnismeldungen. */
@@ -521,14 +524,14 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
         }
 
         /**
-         * Ruft den Online-Zustand höchstens alle {@link #ONLINE_STAND_ABSTAND} neu ab. Hat sich der Turnierstatus
-         * geändert, übernimmt ihn der nächste Durchlauf ins Sync-Blatt. Ein gescheiterter Abruf behält den bisherigen
-         * Stand.
+         * Rückfall für Server ohne Status-Huckepack: ruft den Online-Zustand höchstens alle
+         * {@link #ONLINE_STAND_ABSTAND} neu ab. Hat sich der Turnierstatus geändert, übernimmt ihn der nächste
+         * Durchlauf ins Sync-Blatt. Ein gescheiterter Abruf behält den bisherigen Stand.
          */
         private void aktualisiereOnlineStandBeiBedarf(TournamentSyncClient client, String tournamentId)
                 throws InterruptedException {
             Instant zuletzt = onlineStandAbgerufen;
-            if (zuletzt != null && zuletzt.plus(ONLINE_STAND_ABSTAND).isAfter(Instant.now())) {
+            if (statusPerHuckepack || (zuletzt != null && zuletzt.plus(ONLINE_STAND_ABSTAND).isAfter(Instant.now()))) {
                 return;
             }
             Optional<SyncStandDto> stand = holeOnlineStand(client, tournamentId);
@@ -571,6 +574,7 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
                 return AuftragsVersand.sende(bestand.zuSenden(pausiert), client, ergebnis -> {
                     bestand.gesendet(ergebnis);
                     beachteHuckepack(ergebnis.antwort().ergebnismeldungen());
+                    beachteTurnierStatus(ergebnis.antwort().turnierStatus());
                 });
             } finally {
                 bestand.versandSperre().unlock();
@@ -593,6 +597,26 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
             } else if (bekannteOffene > 0) {
                 planeMeldungsAbruf(0);
             }
+        }
+
+        /**
+         * Huckepack mit dem Turnierstatus: Weicht er vom bekannten Online-Zustand ab (z.&nbsp;B. online von Entwurf auf
+         * Anmeldung gestellt), übernimmt ihn der nächste Durchlauf ins Sync-Blatt. Ohne bekannten Zustand nichts zu
+         * tun – den holt der erste Durchlauf nach dem Öffnen oder Verbinden ohnehin.
+         */
+        private void beachteTurnierStatus(@Nullable String turnierStatus) {
+            if (turnierStatus == null) {
+                return;
+            }
+            statusPerHuckepack = true;
+            PtmOnlineErfassungsRunner.OnlineStandAbruf bekannt = onlineStand;
+            if (bekannt == null) {
+                return;
+            }
+            bekannt.stand().flatMap(stand -> stand.mitGemeldetemStatus(turnierStatus)).ifPresent(neu -> {
+                onlineStand = new PtmOnlineErfassungsRunner.OnlineStandAbruf(bekannt.tournamentId(), Optional.of(neu));
+                anstossen();
+            });
         }
 
         /** Plant den Abruf der Ergebnismeldungen; ein früher geplanter Abruf bleibt, ein späterer wird vorgezogen. */

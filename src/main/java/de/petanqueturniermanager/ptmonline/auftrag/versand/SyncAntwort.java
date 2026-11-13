@@ -18,9 +18,11 @@ import com.google.gson.JsonParser;
  * @param wiederholt         {@code true}, wenn PTM-Online die gespeicherte Antwort eines bereits ausgeführten
  *                           Auftrags geliefert hat (Header {@code X-PTM-Replayed})
  * @param ergebnismeldungen Huckepack zu Ergebnismeldungen; {@code null} bei älteren Servern
+ * @param turnierStatus      Huckepack mit dem aktuellen Status des Online-Turniers (Header
+ *                           {@code X-PTM-Tournament-Status}); {@code null} bei älteren Servern
  */
 public record SyncAntwort(int status, String body, boolean wiederholt,
-        @Nullable ErgebnismeldungsStand ergebnismeldungen) {
+        @Nullable ErgebnismeldungsStand ergebnismeldungen, @Nullable String turnierStatus) {
 
     private static final int ERFOLG_MIN = 200;
     private static final int ERFOLG_MAX = 299;
@@ -29,9 +31,9 @@ public record SyncAntwort(int status, String body, boolean wiederholt,
         body = body == null ? "" : body;
     }
 
-    /** Antwort ohne Huckepack zu Ergebnismeldungen. */
+    /** Antwort ohne Huckepack. */
     public SyncAntwort(int status, String body, boolean wiederholt) {
-        this(status, body, wiederholt, null);
+        this(status, body, wiederholt, null, null);
     }
 
     public boolean erfolgreich() {
