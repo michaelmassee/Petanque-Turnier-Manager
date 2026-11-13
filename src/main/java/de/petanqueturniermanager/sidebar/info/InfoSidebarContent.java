@@ -3,8 +3,6 @@
  */
 package de.petanqueturniermanager.sidebar.info;
 
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,11 +21,6 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.comp.newrelease.ExtensionsHelper;
 import de.petanqueturniermanager.comp.newrelease.ReleaseUpdateService;
 import de.petanqueturniermanager.SheetRunner;
-import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
-import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.onlinesync.SpieltagKontext;
-import de.petanqueturniermanager.onlinesync.sheet.PtmOnlineSyncSheet;
-import de.petanqueturniermanager.onlinesync.sheet.PtmOnlineSyncStatus;
 import de.petanqueturniermanager.webserver.TurnierStatusErmittler;
 import de.petanqueturniermanager.webserver.WebServerManager;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
@@ -43,8 +36,8 @@ import de.petanqueturniermanager.timer.TimerManager;
 import de.petanqueturniermanager.timer.TimerState;
 
 /**
- * Zeigt die installierte Plugin-Version, das aktuelle Turniersystem, den Turnier-Timer, den Webserver-Status
- * und den Zustand der PTM-Online-Verbindung.
+ * Zeigt die installierte Plugin-Version, das aktuelle Turniersystem, den Turnier-Timer und den Webserver-Status.
+ * Der Zustand der PTM-Online-Verbindung hat ein eigenes Panel ({@code PtmOnlineSidebarContent}).
  *
  * @author Michael Massee
  */
@@ -59,7 +52,6 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
     private volatile XControl timerIconControl;
     private volatile XControl webserverIconControl;
     private volatile XFixedText webserverStatusLabel;
-    private volatile XFixedText ptmOnlineStatusLabel;
     // Diese Listener feuern aus Hintergrund-Threads (SheetRunner-Worker, WebServerManager,
     // ReleaseUpdateService). Ihre Rümpfe rufen label.setText(...) auf – eine VCL-Operation,
     // die NUR auf dem LO-Main-Thread laufen darf (sonst Freeze/Deadlock auf der SolarMutex,
@@ -80,7 +72,6 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
     }
 
     private static final int VERSION_UPDATE_TEXT_COLOR = 0xFF0000;
-    private static final DateTimeFormatter UHRZEIT = DateTimeFormatter.ofPattern("HH:mm");
 
     @Override
     protected void felderHinzufuegen() {
@@ -121,16 +112,6 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
 
         timerZeileHinzufuegen();
         webserverZeileHinzufuegen();
-        ptmOnlineZeileHinzufuegen();
-    }
-
-    private void ptmOnlineZeileHinzufuegen() {
-        XControl ptmOnlineCtrl = GuiFactory.createLabel(getGuiFactoryCreateParam(), ptmOnlineStatusAnzeige(),
-                new Rectangle(0, 0, 200, 20), null);
-        if (ptmOnlineCtrl != null) {
-            ptmOnlineStatusLabel = Lo.qi(XFixedText.class, ptmOnlineCtrl);
-            getLayout().addLayout(new ControlLayout(ptmOnlineCtrl), 1);
-        }
     }
 
     /**
@@ -233,7 +214,6 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
                 logger.error("Fehler beim Aktualisieren des TurnierSchritt-Labels", e);
             }
         }
-        ptmOnlineStatusAktualisieren();
     }
 
     @Override
@@ -245,7 +225,6 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
         turnierSchrittLabel = null;
         webserverStatusLabel = null;
         webserverIconControl = null;
-        ptmOnlineStatusLabel = null;
     }
 
     @Override
@@ -257,7 +236,6 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
         turnierSchrittLabel = null;
         webserverStatusLabel = null;
         webserverIconControl = null;
-        ptmOnlineStatusLabel = null;
         if (TimerManager.istInitialisiert()) {
             try {
                 TimerManager.get().removeListener(this);
@@ -291,8 +269,6 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
         if (SheetRunner.isRunning()) {
             return;
         }
-        // Verbinden, Abgleich, Pausieren/Fortsetzen und Trennen laufen als SheetRunner.
-        ptmOnlineStatusAktualisieren();
         var label = turnierSchrittLabel;
         if (label == null) {
             return;
@@ -399,51 +375,6 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
             case PAUSIERT -> "sidebar/timer-pause-20px.png";
             default -> "sidebar/timer-stop-20px.png";
         };
-    }
-
-    /**
-     * PTM-Online-Zustand des Dokuments dieser Sidebar (bei Supermelee des aktiven Spieltags) – bewusst nicht
-     * fokus-basiert, damit bei mehreren offenen Turnieren jede Sidebar ihr eigenes Dokument zeigt.
-     */
-    String ptmOnlineStatusAnzeige() {
-        if (!de.petanqueturniermanager.comp.PtmOnlineAktivierung.istAktiv()) return "";
-        var ws = getCurrentSpreadsheet();
-        var system = getTurnierSystemAusDocument();
-        if (ws == null || system == null || system == TurnierSystem.KEIN) {
-            return I18n.get("sidebar.info.ptmonline.nicht_verbunden");
-        }
-        Integer spieltagNr = null;
-        try {
-            spieltagNr = SpieltagKontext.aktiverSpieltagOderNull(ws, system);
-        } catch (GenerateException e) {
-            logger.warn("Aktiver Spieltag für den PTM-Online-Status nicht ermittelbar", e);
-        }
-        PtmOnlineSyncStatus status = PtmOnlineSyncSheet.leseStatus(ws, spieltagNr);
-        if (!status.verbunden()) {
-            return I18n.get("sidebar.info.ptmonline.nicht_verbunden");
-        }
-        String verbindung = status.pausiert() ? I18n.get("sidebar.info.ptmonline.pausiert")
-                : status.letzterSync()
-                        .map(zeitpunkt -> I18n.get("sidebar.info.ptmonline.verbunden",
-                                UHRZEIT.format(zeitpunkt.atZone(ZoneId.systemDefault()))))
-                        .orElse(I18n.get("sidebar.info.ptmonline.verbunden_ohne_sync"));
-        return status.onlineStatusAnzeige()
-                .map(onlineStatus -> I18n.get("sidebar.info.ptmonline.mit_onlinestatus", verbindung, onlineStatus))
-                .orElse(verbindung);
-    }
-
-    private void ptmOnlineStatusAktualisieren() {
-        var label = ptmOnlineStatusLabel;
-        if (label == null) {
-            return;
-        }
-        try {
-            label.setText(ptmOnlineStatusAnzeige());
-        } catch (com.sun.star.lang.DisposedException e) {
-            logger.debug("Dokument bereits disposed beim PTM-Online-Status-Update – ignoriert", e);
-        } catch (Exception e) {
-            logger.error("Fehler beim Aktualisieren des PTM-Online-Status", e);
-        }
     }
 
     private String webserverStatusAnzeige() {

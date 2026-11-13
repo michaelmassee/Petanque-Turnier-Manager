@@ -57,6 +57,31 @@
                 </prop>
             </node>
 
+            <node oor:name="PetanqueTurnierManagerPtmOnlinePanel" oor:op="replace">
+                <prop oor:name="Title" oor:type="xs:string">
+                    <value>PTM-Online</value>
+                </prop>
+                <prop oor:name="Id" oor:type="xs:string">
+                    <value>PetanqueTurnierManagerPtmOnlinePanel</value>
+                </prop>
+                <prop oor:name="DeckId" oor:type="xs:string">
+                    <value>PetanqueTurnierManagerDeck</value>
+                </prop>
+                <prop oor:name="ImplementationURL" oor:type="xs:string">
+                    <value>private:resource/toolpanel/PetanqueTurnierManagerPanelFactory/PtmOnlinePanel</value>
+                </prop>
+                <prop oor:name="ContextList">
+                    <value oor:separator=";">
+                        Calc, any, visible
+                    </value>
+                </prop>
+                <prop oor:name="OrderIndex" oor:type="xs:int">
+                    <value>150</value>
+                </prop>
+                <prop oor:name="WantsAWT" oor:type="xs:boolean">
+                    <value>true</value>
+                </prop>
+            </node>
             <node oor:name="PetanqueTurnierManagerSheetListePanel" oor:op="replace">
                 <prop oor:name="Title" oor:type="xs:string">
                     <value xml:lang="de">Turniertabellen</value>
