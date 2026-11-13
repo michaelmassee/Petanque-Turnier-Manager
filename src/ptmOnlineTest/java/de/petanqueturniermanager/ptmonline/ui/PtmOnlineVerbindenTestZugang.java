@@ -30,4 +30,15 @@ public final class PtmOnlineVerbindenTestZugang {
         starter.accept(runner);
         return !runner.isLetzterLaufFehlgeschlagen();
     }
+
+    /**
+     * Wie der Menüpunkt im leeren Dokument nach der Turnierauswahl: Meldeliste anlegen, verbinden, Abgleich starten.
+     * Der Abgleich läuft danach noch im Hintergrund.
+     *
+     * @return {@code true}, wenn verbunden wurde
+     */
+    public static boolean verbindenLeeresDokument(WorkingSpreadsheet ws,
+            LibreOfficePtmOnlineSpeicher.Zugangsdaten zugang, OnlineTournamentDto turnier) {
+        return PtmOnlineDispatcher.verbindeLeeresDokument(ws, zugang, turnier);
+    }
 }

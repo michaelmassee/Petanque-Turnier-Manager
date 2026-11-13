@@ -6,6 +6,7 @@ package de.petanqueturniermanager.ptmonline.ui;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,6 +19,7 @@ import com.sun.star.system.SystemShellExecuteFlags;
 import com.sun.star.system.XSystemShellExecute;
 import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.konfiguration.MeleeAnmeldungKonfiguration;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.LibreOfficePtmOnlineSpeicher;
@@ -56,6 +58,9 @@ import de.petanqueturniermanager.ptmonline.TournamentSyncClient;
 public final class PtmOnlineDispatcher {
 
     private static final Logger logger = LogManager.getLogger(PtmOnlineDispatcher.class);
+
+    private static final Duration MAX_WARTEZEIT_VERARBEITUNG = Duration.ofSeconds(30);
+    private static final long WARTEINTERVALL_MS = 200;
 
     private PtmOnlineDispatcher() {}
 
@@ -168,7 +173,7 @@ public final class PtmOnlineDispatcher {
             return;
         }
         if (auftrag.verbindbarkeit().istLeeresDokument()) {
-            verbindeLeeresDokument(auftrag, auswahl.get());
+            verbindeLeeresDokument(auftrag.ws(), config, auswahl.get());
             return;
         }
         // Server-Bindung und Sync-Blatt in einem Runner: läuft schon einer, bleibt auch der Server unberührt.
@@ -179,27 +184,40 @@ public final class PtmOnlineDispatcher {
      * Meldeliste anlegen und verbinden in einem Runner; danach sofort die Online-Meldungen übernehmen wie
      * „Anmeldungen importieren“. Läuft auf dem Hintergrund-Thread, deshalb darf hier auf den Runner gewartet werden –
      * der Abgleich ist ein eigener Runner, nicht in den ersten verschachtelt.
+     *
+     * @return {@code true}, wenn das Dokument verbunden wurde (der Abgleich ist dann gestartet)
      */
-    private static void verbindeLeeresDokument(VerbindenAuftrag auftrag, OnlineTournamentDto turnier) {
+    static boolean verbindeLeeresDokument(WorkingSpreadsheet ws, LibreOfficePtmOnlineSpeicher.Zugangsdaten config,
+            OnlineTournamentDto turnier) {
         Optional<OnlineTurnierAnlage> anlage = OnlineTurnierAnlage.aus(turnier);
         if (anlage.isEmpty()) {
             // Die Auswahl lässt nur abbildbare Turniere zu; das hier wäre ein Programmfehler.
             logger.error("PTM-Online: Turnier {} lässt sich nicht als Dokument anlegen", turnier.id);
-            return;
+            return false;
         }
-        var runner = PtmOnlineVerbindenRunner.fuerLeeresDokument(auftrag.ws(), auftrag.config(), turnier,
-                anlage.get());
-        runner.start();
+        var runner = PtmOnlineVerbindenRunner.fuerLeeresDokument(ws, config, turnier, anlage.get());
         try {
+            runner.start();
             runner.join();
+            if (!runner.istVerbunden()) {
+                return false;
+            }
+            // Der Beobachter kann nach der neuen Bindung kurz selbst laufen; der Abgleich würde sonst abgewiesen.
+            warteAufFreieVerarbeitung();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             logger.debug("PTM-Online: Warten auf das Verbinden unterbrochen", e);
-            return;
+            return false;
         }
-        if (runner.istVerbunden()) {
-            logger.info("PTM-Online: leeres Dokument verbunden, übernehme die Online-Meldungen");
-            RegistrationImportTask.starte(auftrag.ws());
+        logger.info("PTM-Online: leeres Dokument verbunden, übernehme die Online-Meldungen");
+        RegistrationImportTask.starte(ws);
+        return true;
+    }
+
+    private static void warteAufFreieVerarbeitung() throws InterruptedException {
+        long frist = System.nanoTime() + MAX_WARTEZEIT_VERARBEITUNG.toNanos();
+        while (SheetRunner.isRunning() && System.nanoTime() < frist) {
+            Thread.sleep(WARTEINTERVALL_MS);
         }
     }
 
