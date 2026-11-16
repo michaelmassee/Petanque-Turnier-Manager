@@ -63,12 +63,28 @@
 							</node>
 							<!-- ****************************************************************** -->
 							<node oor:name="X3C" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Webserver-Regie öffnen</value>
+									<value xml:lang="en">Open web server control page</value>
+									<value xml:lang="es">Abrir la página de control del servidor web</value>
+									<value xml:lang="fr">Ouvrir la page de régie du serveur web</value>
+									<value xml:lang="nl">Webserver-regiepagina openen</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:webserver_regie_oeffnen</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+							<!-- ****************************************************************** -->
+							<node oor:name="X3D" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
 							<!-- ****************************************************************** -->
-							<node oor:name="X3D" oor:op="replace">
+							<node oor:name="X3E" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">—</value>
 									<value xml:lang="en">—</value>
@@ -84,7 +100,7 @@
 								</prop>
 							</node>
 							<!-- ****************************************************************** -->
-							<node oor:name="X3E" oor:op="replace">
+							<node oor:name="X3F" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">—</value>
 									<value xml:lang="en">—</value>
@@ -100,7 +116,7 @@
 								</prop>
 							</node>
 							<!-- ****************************************************************** -->
-							<node oor:name="X3F" oor:op="replace">
+							<node oor:name="X3G" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">—</value>
 									<value xml:lang="en">—</value>
@@ -116,7 +132,7 @@
 								</prop>
 							</node>
 							<!-- ****************************************************************** -->
-							<node oor:name="X3G" oor:op="replace">
+							<node oor:name="X3H" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">—</value>
 									<value xml:lang="en">—</value>
@@ -132,7 +148,7 @@
 								</prop>
 							</node>
 							<!-- ****************************************************************** -->
-							<node oor:name="X3H" oor:op="replace">
+							<node oor:name="X3I" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">—</value>
 									<value xml:lang="en">—</value>
@@ -148,7 +164,7 @@
 								</prop>
 							</node>
 							<!-- ****************************************************************** -->
-							<node oor:name="X3I" oor:op="replace">
+							<node oor:name="X3J" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">—</value>
 									<value xml:lang="en">—</value>
@@ -164,7 +180,7 @@
 								</prop>
 							</node>
 							<!-- ****************************************************************** -->
-							<node oor:name="X3J" oor:op="replace">
+							<node oor:name="X3K" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">—</value>
 									<value xml:lang="en">—</value>
@@ -180,7 +196,7 @@
 								</prop>
 							</node>
 							<!-- ****************************************************************** -->
-							<node oor:name="X3K" oor:op="replace">
+							<node oor:name="X3L" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">—</value>
 									<value xml:lang="en">—</value>
@@ -196,7 +212,7 @@
 								</prop>
 							</node>
 							<!-- ****************************************************************** -->
-							<node oor:name="X3L" oor:op="replace">
+							<node oor:name="X3M" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">—</value>
 									<value xml:lang="en">—</value>
@@ -212,7 +228,7 @@
 								</prop>
 							</node>
 							<!-- ****************************************************************** -->
-							<node oor:name="X3M" oor:op="replace">
+							<node oor:name="X3N" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">—</value>
 									<value xml:lang="en">—</value>

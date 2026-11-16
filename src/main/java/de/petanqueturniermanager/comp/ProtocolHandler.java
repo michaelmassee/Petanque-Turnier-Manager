@@ -386,6 +386,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	// Webserver
 	public static final String CMD_WEBSERVER_STARTEN = "webserver_starten";
 	public static final String CMD_WEBSERVER_STOPPEN = "webserver_stoppen";
+	public static final String CMD_WEBSERVER_REGIE_OEFFNEN = "webserver_regie_oeffnen";
 	public static final String CMD_WEBSERVER_URL_1  = "webserver_url_1";
 	public static final String CMD_WEBSERVER_URL_2  = "webserver_url_2";
 	public static final String CMD_WEBSERVER_URL_3  = "webserver_url_3";
@@ -1843,6 +1844,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 					processBoxFuerDispatchFrame().ready();
 				}
 			}
+			case CMD_WEBSERVER_REGIE_OEFFNEN -> oeffneRegieSeite();
 			case CMD_WEBSERVER_URL_1  -> oeffneBrowserUrlFuerSlot(0);
 			case CMD_WEBSERVER_URL_2  -> oeffneBrowserUrlFuerSlot(1);
 			case CMD_WEBSERVER_URL_3  -> oeffneBrowserUrlFuerSlot(2);
@@ -1876,6 +1878,26 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			ProcessBox.from().info(I18n.get("webserver.prozessbox.slot.nicht.aktiv", slot + 1));
 			logger.warn("Dispatch auf URL-Slot {} ohne aktive Instanz", slot);
 		}
+	}
+
+	/**
+	 * Öffnet die Übersichtsseite der Webserver-Regie im Standardbrowser. Läuft der Webserver oder die Regie
+	 * nicht, erscheint ein Hinweis statt eines deaktivierten Befehls (LO-Toolbar-Bug bei enable/disable).
+	 */
+	private void oeffneRegieSeite() {
+		var manager = WebServerManager.get();
+		var url = manager.getRegieUrl();
+		if (url != null) {
+			processBoxFuerDispatchFrame().visibleWennAutomatisch();
+			oeffneBrowserUrl(url);
+			return;
+		}
+		String hinweis = manager.isLaeuft()
+				? I18n.get("webserver.regie.oeffnen.nicht.aktiv")
+				: I18n.get("webserver.regie.oeffnen.webserver.gestoppt");
+		MessageBox.from(xContext, MessageBoxTypeEnum.INFO_OK)
+				.caption(I18n.get("webserver.regie.oeffnen"))
+				.message(hinweis).show();
 	}
 
 	private void oeffneBrowserUrl(String url) {
@@ -2247,6 +2269,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			CMD_TURNIER_MODUS,
 			CMD_WEBSERVER_STARTEN,
 			CMD_WEBSERVER_STOPPEN,
+			CMD_WEBSERVER_REGIE_OEFFNEN,
 			// Z3 SpieltagToolbar
 			CMD_TOOLBAR_GESAMTRANGLISTE,
 			CMD_TOOLBAR_NAECHSTER_SPIELTAG,
@@ -2451,6 +2474,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_LOGFILE_ANZEIGEN,
 				 CMD_PROCESSBOX_ANZEIGEN,
 				 CMD_PROJEKT_SEITE_OEFFNEN,
+				 CMD_WEBSERVER_REGIE_OEFFNEN,
 				 CMD_FEHLER_MELDEN                          -> true;
 			case CMD_ABBRUCH                                -> false;
 			case CMD_TOOLBAR_START                          -> ts == TurnierSystem.KEIN;

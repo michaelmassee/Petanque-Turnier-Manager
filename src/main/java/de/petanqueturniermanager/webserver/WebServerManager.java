@@ -1486,6 +1486,17 @@ public final class WebServerManager implements TimerListener {
     }
 
     /**
+     * Adresse der Webserver-Regie-Übersicht ({@code http://<Host>:<Regie-Port>/}), oder {@code null}, wenn die
+     * Regie gerade nicht läuft (Webserver gestoppt, Regie deaktiviert oder Port belegt).
+     */
+    public synchronized String getRegieUrl() {
+        var aktuelleRegieInstanz = regieInstanz;
+        return aktuelleRegieInstanz != null && aktuelleRegieInstanz.laeuft()
+                ? buildUrl(aktuelleRegieInstanz.getPort())
+                : null;
+    }
+
+    /**
      * Gibt die URL (Hostname:PORT) für den angegebenen Slot zurück, oder {@code null} wenn kein aktiver Port.
      * Gibt {@code null} zurück wenn slot außerhalb des gültigen Bereichs – kein Crash.
      */

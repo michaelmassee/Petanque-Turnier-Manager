@@ -626,6 +626,25 @@ ICONS["toolbar-ptmonline-turnierseite"] = svg(ptm_online_badge(C['screen_d'], f'
   <line x1="48.5" y1="58.2" x2="55.5" y2="58.2" stroke="{C['paper']}" stroke-width="{S}" stroke-linecap="round"/>'''))
 
 # ============================================================
+# 40. WEBSERVER-REGIE ÖFFNEN — Server-Rack mit Anzeige-Badge (Regie-Seite im Browser)
+# ============================================================
+ICONS["toolbar-webserver-regie"] = svg(f'''
+  <rect x="10" y="10" width="36" height="46" rx="3" fill="{C['paper2']}" stroke="{C['ink']}" stroke-width="{S}"/>
+  <rect x="14" y="14" width="28" height="10" rx="1.5" fill="{C['paper']}" stroke="{C['ink']}" stroke-width="{S}"/>
+  <circle cx="38" cy="19" r="1.5" fill="{C['info']}"/>
+  <rect x="14" y="27" width="28" height="10" rx="1.5" fill="{C['paper']}" stroke="{C['ink']}" stroke-width="{S}"/>
+  <circle cx="38" cy="32" r="1.5" fill="{C['info']}"/>
+  <rect x="14" y="40" width="28" height="10" rx="1.5" fill="{C['paper']}" stroke="{C['ink']}" stroke-width="{S}"/>
+  <circle cx="38" cy="45" r="1.5" fill="{C['info']}"/>
+  <circle cx="50" cy="48" r="11" fill="{C['screen_d']}" stroke="{C['ink']}" stroke-width="{S}"/>
+  <rect x="43.5" y="42.5" width="13" height="9" rx="1.2" fill="none" stroke="{C['paper']}" stroke-width="{S}"/>
+  <line x1="46" y1="45.5" x2="54" y2="45.5" stroke="{C['paper']}" stroke-width="{S*0.8}" stroke-linecap="round"/>
+  <line x1="46" y1="48.5" x2="52" y2="48.5" stroke="{C['paper']}" stroke-width="{S*0.8}" stroke-linecap="round"/>
+  <line x1="50" y1="51.5" x2="50" y2="54" stroke="{C['paper']}" stroke-width="{S}"/>
+  <line x1="46.5" y1="54.2" x2="53.5" y2="54.2" stroke="{C['paper']}" stroke-width="{S}" stroke-linecap="round"/>
+''')
+
+# ============================================================
 # SCHREIBEN
 # ============================================================
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "svg")
