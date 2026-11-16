@@ -6,6 +6,7 @@ package de.petanqueturniermanager.ptmonline;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.jspecify.annotations.Nullable;
@@ -87,7 +88,7 @@ public final class PtmOnlineAbgleichSheetRunner extends SheetRunner implements P
     private AbgleichErgebnis gleicheAb() throws GenerateException {
         try {
             return RegistrationImportTask.fuehreAbgleichDurch(config, mapping, bestand(), tournamentId, ziel,
-                    this::zielAktualisieren, new ProcessBoxFortschritt(), this::ergebnismeldungen);
+                    this::zielAktualisieren, new ProcessBoxFortschritt(), this::ergebnismeldungen, this::checkinAbgleichen);
         } catch (InterruptedException e) {
             // Stop-Knopf unterbricht den Thread, auch mitten in einem HTTP-Aufruf. Die Unterbrechung ist
             // damit vollständig als Abbruch behandelt; das Flag bleibt bewusst verbraucht, damit die
@@ -177,6 +178,32 @@ public final class PtmOnlineAbgleichSheetRunner extends SheetRunner implements P
                 bestand, abruf.reports(), sammlung::entscheidung, () -> {
                     // Der Abgleich läuft bereits im Blattschutz-Scope des SheetRunners.
                 });
+    }
+
+    /**
+     * Setzt die Online-Teilnahme auf den Check-in-Stand des Dokuments (E-28) und meldet diesen Stand der
+     * Check-in-Erkennung des Hintergrunds als bekannt, damit sie ihn nicht erneut sendet.
+     */
+    private boolean checkinAbgleichen(Map<String, String> teilnahmeProOnlineId, AuftragsBestand bestand)
+            throws GenerateException {
+        Optional<PtmOnlineVerbindung> verbindung = PtmOnlineVerbindung.ermitteln(getWorkingSpreadsheet(),
+                getTurnierSystem());
+        if (verbindung.isEmpty()) {
+            return false;
+        }
+        List<PtmOnlineStatusAuftrag.Eintrag> lokal = PtmOnlineCheckin.leseStand(verbindung.get());
+        Map<String, String> onlineIds = mapping.getOnlineIdsProUuid();
+        List<PtmOnlineStatusAuftrag.Eintrag> abweichend = PtmOnlineCheckin.abweichendVonOnline(lokal, onlineIds,
+                teilnahmeProOnlineId);
+        boolean erfasst = PtmOnlineAuftraege.teilnahme(bestand, tournamentId, abweichend, onlineIds,
+                mapping.getExecutionRevisionenProUuid()).isPresent();
+        if (erfasst) {
+            getLogger().info("PTM-Online: Abgleich setzt {} abweichende Check-ins online auf den Stand des Dokuments",
+                    abweichend.size());
+        }
+        PtmOnlineLiveBeobachter.teilnahmeErfasst(getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
+                new PtmOnlineStatusAuftrag(tournamentId, lokal));
+        return erfasst;
     }
 
     private void zielAktualisieren() throws GenerateException {

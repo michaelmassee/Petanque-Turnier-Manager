@@ -315,7 +315,7 @@ public final class RegistrationImportTask {
     public static AbgleichErgebnis fuehreAbgleichDurch(LibreOfficePtmOnlineSpeicher.Zugangsdaten config,
             PtmOnlineRegistrationMapping mapping, AuftragsBestand bestand, String tournamentId, MeldelisteZiel ziel,
             MeldelistenAktualisierung aktualisierung, AbgleichFortschritt fortschritt,
-            ErgebnismeldungsSchritt ergebnismeldungen)
+            ErgebnismeldungsSchritt ergebnismeldungen, CheckinSchritt checkin)
             throws IOException, InterruptedException, GenerateException {
         mapping.sicherstellen();
         // Gelöschte Zeilen, deren Verknüpfung PTM-Online noch nicht erreicht hat: Die Zuordnung steht nur im Auftrag.
@@ -333,6 +333,10 @@ public final class RegistrationImportTask {
         fortschritt.status(I18n.get("ptmonline.fortschritt.details_aktualisieren"));
         Bezeichnungsabgleich bezeichnungen = aktualisiereBezeichnungen(config, mapping, bestand, tournamentId, ziel,
                 aktualisierung, sammlung);
+        fortschritt.pruefeAbbruch();
+        if (checkin.gleicheAb(bezeichnungen.teilnahmeProOnlineId(), bestand)) {
+            sendeSynchron(config, mapping, bestand);
+        }
         meldeNichtUebertragene(sammlung, importLauf.ergebnis());
         ergebnismeldungen.verarbeite(sammlung, bestand).forEach(sammlung::melde);
         if (!sammlung.protokoll().isEmpty()) {
@@ -367,6 +371,21 @@ public final class RegistrationImportTask {
 
         List<KonfliktFall> verarbeite(KonfliktSammlung sammlung, AuftragsBestand bestand)
                 throws InterruptedException, GenerateException;
+    }
+
+    /**
+     * Schritt des Abgleichs für den Check-in: Das Dokument ist ab dem Verbinden Master (E-28), daher setzt der Abgleich
+     * die Online-Teilnahme auf den lokalen Stand – auch zurück auf nicht eingecheckt, etwa nachdem ein neues Dokument
+     * die Verbindung übernommen und die Meldungen ohne Check-in importiert hat.
+     */
+    @FunctionalInterface
+    public interface CheckinSchritt {
+
+        /**
+         * @param teilnahmeProOnlineId Online-Teilnahme ({@link OnlineTeilnahme#apiWert()}) bestätigter Anmeldungen
+         * @return ob ein Teilnahme-Auftrag erfasst wurde, der noch zu senden ist
+         */
+        boolean gleicheAb(Map<String, String> teilnahmeProOnlineId, AuftragsBestand bestand) throws GenerateException;
     }
 
     /**
@@ -448,7 +467,7 @@ public final class RegistrationImportTask {
      */
     private record Bezeichnungsabgleich(int ueberKapazitaet, List<String> kontoKonflikte,
             List<String> moeglicheDubletten, List<String> onlineUebernommen, List<NamensKonflikt> namensKonflikte,
-            @Nullable SyncStandDto stand) {}
+            @Nullable SyncStandDto stand, Map<String, String> teilnahmeProOnlineId) {}
 
     /**
      * Prüfung vor dem Turnierstart (erste Spielrunde): liest nur und liefert die bestätigten Online-Anmeldungen, die
@@ -1197,7 +1216,15 @@ public final class RegistrationImportTask {
                         .map(konflikt -> bezeichnungen(konflikt.registrationIds(), bezeichnungProOnlineId)).toList(),
                 abruf.konflikte().possibleDuplicates().stream()
                         .map(dublette -> bezeichnungen(dublette.registrationIds(), bezeichnungProOnlineId)).toList(),
-                onlineUebernommen, namensKonflikte, abruf.stand());
+                onlineUebernommen, namensKonflikte, abruf.stand(), teilnahmeBestaetigter(abruf.registrations()));
+    }
+
+    /** Online-Teilnahme je Anmeldungs-ID, nur für bestätigte Anmeldungen mit gemeldeter Teilnahme. */
+    private static Map<String, String> teilnahmeBestaetigter(List<RegistrationDto> registrations) {
+        return registrations.stream()
+                .filter(registration -> istImportierbar(registration) && registration.participation() != null)
+                .collect(Collectors.toMap(RegistrationDto::id, RegistrationDto::participation, (links, rechts) -> rechts,
+                        LinkedHashMap::new));
     }
 
     /**

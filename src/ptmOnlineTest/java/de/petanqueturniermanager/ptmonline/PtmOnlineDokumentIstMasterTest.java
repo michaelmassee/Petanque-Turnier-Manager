@@ -142,6 +142,35 @@ class PtmOnlineDokumentIstMasterTest extends BasePtmOnlineZusammenspielTest {
         assertThat(online.rangliste(turnierId)).as("Snapshot des Dokuments").hasSize(teams.size() + 1);
     }
 
+    /**
+     * Regression: Ein neues Dokument übernimmt die Verbindung und importiert die Meldungen ohne Check-in. Der Abgleich
+     * setzt die Online-Teilnahme auf den Stand des Dokuments – auch zurück auf nicht eingecheckt.
+     */
+    @Test
+    void abgleichSetztOnlineCheckinAufDenStandDesDokuments() throws Exception {
+        turnierAnlegen(Formation.TRIPLETTE, IN_EINEM_MONAT);
+        Map<String, Person[]> teams = vollstaendigeTeams(2);
+        List<String> ids = new ArrayList<>(teams.keySet());
+        String onlineEingecheckt = ids.getFirst();
+        String lokalEingecheckt = ids.getLast();
+        online.teilnahmeSetzen(onlineEingecheckt, "active");
+
+        verbinden();
+        abgleichen();
+
+        assertThat(teilnahme(onlineEingecheckt)).as("lokal nicht eingecheckt").isEqualTo("inactive");
+
+        einchecken(zeile(teams.get(lokalEingecheckt)[0]));
+        abgleichen();
+
+        assertThat(teilnahme(lokalEingecheckt)).as("lokal eingecheckt").isEqualTo("active");
+        assertThat(teilnahme(onlineEingecheckt)).as("weiterhin nicht eingecheckt").isEqualTo("inactive");
+    }
+
+    private String teilnahme(String anmeldungId) throws Exception {
+        return online.anmeldung(turnierId, anmeldungId).orElseThrow().get("participation").getAsString();
+    }
+
     private static JsonObject mitErgebnismeldung() {
         JsonObject einstellungen = new JsonObject();
         einstellungen.addProperty("playerResultReportingEnabled", true);

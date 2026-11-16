@@ -260,7 +260,7 @@ Alle Prüfungen und das Anlegen der Anmeldung laufen in einer atomaren Operation
 
 4. Ausdrückliche Bestätigung → der Server ersetzt Bindung und Lease atomar (A-19). Führt nicht der Turnierersteller die Übernahme aus, erhält er eine Benachrichtigung (T-22).
 
-5. Abgleich → bestätigte Online-Anmeldungen werden importiert, alle ohne Check-in.
+5. Abgleich → bestätigte Online-Anmeldungen werden importiert, alle ohne Check-in. Weil das Dokument ab dem Verbinden Master ist (E-28), setzt derselbe Abgleich die Online-Teilnahme auf den lokalen Stand zurück: Online noch eingecheckte Meldungen gelten danach auch online als nicht eingecheckt (Entscheidung vom 2026-11-16).
 
 6. Die Turnierleitung wiederholt den Check-in.
 

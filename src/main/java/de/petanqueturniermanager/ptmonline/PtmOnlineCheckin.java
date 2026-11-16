@@ -21,9 +21,11 @@ import de.petanqueturniermanager.spielerdb.MeldelisteZiel;
  * Turniertag mehrfach wechselt. Bei Supermelee ist jeder Spieltag ein eigenes Online-Turnier.
  * <p>
  * Gepusht werden nur Änderungen gegenüber dem zuletzt bekannten Stand je Online-Turnier. Ist für eine Meldung noch
- * keiner bekannt (Dokument gerade geöffnet, verbunden oder Meldung neu zugeordnet), geht sie nur als aktiv hinaus: ein
- * lokal leerer Check-in nimmt einen online erfolgten nicht zurück. Online-Anlage, fehlende lokale IDs und Turnierstart
- * bleiben dem Rundenstart vorbehalten – hier wird das Dokument nur gelesen.
+ * keiner bekannt (Dokument gerade geöffnet, verbunden oder Meldung neu zugeordnet), geht sie im Hintergrund nur als
+ * aktiv hinaus, weil der Hintergrund die Online-Teilnahme nicht kennt. Den Rest erledigt der manuelle Abgleich: Er
+ * vergleicht mit der Online-Teilnahme ({@link #abweichendVonOnline}) und setzt sie auf den Stand des Dokuments, das ab
+ * dem Verbinden Master ist (E-28) – auch zurück auf nicht eingecheckt. Online-Anlage, fehlende lokale IDs und
+ * Turnierstart bleiben Abgleich und Rundenstart vorbehalten – hier wird das Dokument nur gelesen.
  * <p>
  * Nur im Dokument-Kontext der Auftragserfassung verwendet ({@link PtmOnlineLiveBeobachter}).
  */
@@ -73,6 +75,23 @@ final class PtmOnlineCheckin {
             return aktuell == OnlineTeilnahme.AKTIV;
         }
         return bekannt != aktuell;
+    }
+
+    /**
+     * Manueller Abgleich: lokale Einträge, deren Teilnahme von der Online-Teilnahme abweicht. Meldungen ohne bekannte
+     * Online-Teilnahme (nicht zugeordnet oder online nicht bestätigt) bleiben unberührt.
+     *
+     * @param lokal                je online zugeordneter Meldung Teilnahme und Setzposition ({@link #leseStand})
+     * @param onlineIdProUuid      Online-Anmeldungs-ID je lokaler UUID
+     * @param teilnahmeProOnlineId Online-Teilnahme ({@link OnlineTeilnahme#apiWert()}) bestätigter Anmeldungen
+     */
+    static List<PtmOnlineStatusAuftrag.Eintrag> abweichendVonOnline(List<PtmOnlineStatusAuftrag.Eintrag> lokal,
+            Map<String, String> onlineIdProUuid, Map<String, String> teilnahmeProOnlineId) {
+        return lokal.stream().filter(eintrag -> {
+            String onlineTeilnahme = Optional.ofNullable(onlineIdProUuid.get(eintrag.lokaleUuid()))
+                    .map(teilnahmeProOnlineId::get).orElse(null);
+            return onlineTeilnahme != null && !onlineTeilnahme.equals(eintrag.teilnahme().apiWert());
+        }).toList();
     }
 
     /** Die Änderung ist als Auftrag gespeichert; ihr Stand gilt als bekannt. */

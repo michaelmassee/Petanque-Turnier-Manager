@@ -172,6 +172,13 @@ final class PtmOnlineWebApi {
         return mitApiKey("PUT", "/api/registrations/" + anmeldungId, anmeldung);
     }
 
+    /** Check-in in der Online-Verwaltung (Turnier ohne Dokumentbindung), z. B. „active“. */
+    void teilnahmeSetzen(String anmeldungId, String teilnahme) throws IOException, InterruptedException {
+        JsonObject body = new JsonObject();
+        body.addProperty("participation", teilnahme);
+        senden(mitApiKey("PUT", "/api/registrations/" + anmeldungId + "/participation", body), 200);
+    }
+
     /** Aktion „Ablehnen“ der Turnierleitung für eine offene Anmeldung (E-26), mit Grund. */
     void ablehnen(String anmeldungId, String grund) throws IOException, InterruptedException {
         JsonObject body = new JsonObject();
