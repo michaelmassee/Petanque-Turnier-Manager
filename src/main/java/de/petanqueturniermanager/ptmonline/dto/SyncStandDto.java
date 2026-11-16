@@ -43,6 +43,14 @@ public record SyncStandDto(String status, boolean registrationClosed, String run
         return "running".equals(status);
     }
 
+    /**
+     * Der Turnierstart wurde in PTM-Online ausdrücklich zurückgesetzt (E-23) und seither nicht neu gesendet. Nur ein
+     * neuer Rundenstart im Dokument nimmt das Turnier wieder auf, kein automatisches Nachholen.
+     */
+    public boolean istStartZurueckgesetzt() {
+        return runningResetAt != null && !runningResetAt.isBlank() && !istRunning();
+    }
+
     /** Online-Anmeldung läuft und ist nicht von der Turnierleitung geschlossen. */
     public boolean istAnmeldungOffen() {
         return "registration".equals(status) && !registrationClosed;

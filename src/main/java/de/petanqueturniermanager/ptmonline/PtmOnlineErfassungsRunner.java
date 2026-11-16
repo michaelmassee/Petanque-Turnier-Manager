@@ -257,18 +257,32 @@ final class PtmOnlineErfassungsRunner extends SheetRunner {
         }
         Optional<SyncStandDto> onlineStand = standAbruf == null ? Optional.empty() : standAbruf.stand();
         PtmOnlineLiveSync.Momentaufnahme momentaufnahme = PtmOnlineLiveSync.lese(verbindung, quelle.get());
-        // Ein online abgeschlossenes Turnier wird nicht automatisch wieder aufgenommen, nur durch einen Rundenstart.
-        if (ersterStand && !momentaufnahme.stand().runden().isEmpty()
-                && onlineStand.filter(stand -> !stand.istRunning() && !stand.istAbgeschlossen()).isPresent()
-                && !bestand.hatOffenen(AuftragsArt.START)) {
-            List<?> verworfen = PtmOnlineAuftraege.start(bestand, verbindung.tournamentId(), Instant.now(),
-                    I18n.get("ptmonline.auftrag.verworfen.turnierstart"));
-            getLogger().info("PTM-Online: Turnierstart nachgeholt (online nicht laufend), {} Aufträge verworfen",
-                    verworfen.size());
+        if (ersterStand && !momentaufnahme.stand().runden().isEmpty() && !bestand.hatOffenen(AuftragsArt.START)) {
+            onlineStand.ifPresent(stand -> holeStartNach(bestand, verbindung, stand));
         }
         OptionalInt rundenOnline = onlineStand.map(stand -> OptionalInt.of(stand.roundsOnline()))
                 .orElse(OptionalInt.empty());
         PtmOnlineLiveSync.erfasse(bestand, verbindung.tournamentId(), momentaufnahme, rundenOnline);
         return true;
+    }
+
+    /**
+     * Lokal laufen schon Runden, online ist das Turnier nicht laufend: Start nachholen (z.&nbsp;B. nach neuer
+     * Bindung). Ein online abgeschlossenes oder ausdrücklich zurückgesetztes Turnier (E-23) wird nicht automatisch
+     * wieder aufgenommen, nur durch einen Rundenstart.
+     */
+    private void holeStartNach(AuftragsBestand bestand, PtmOnlineVerbindung verbindung, SyncStandDto stand) {
+        if (stand.istRunning() || stand.istAbgeschlossen()) {
+            return;
+        }
+        if (stand.istStartZurueckgesetzt()) {
+            getLogger().info("PTM-Online: Turnierstart online zurückgesetzt ({}), wird nicht nachgeholt",
+                    stand.runningResetAt());
+            return;
+        }
+        List<?> verworfen = PtmOnlineAuftraege.start(bestand, verbindung.tournamentId(), Instant.now(),
+                I18n.get("ptmonline.auftrag.verworfen.turnierstart"));
+        getLogger().info("PTM-Online: Turnierstart nachgeholt (online nicht laufend), {} Aufträge verworfen",
+                verworfen.size());
     }
 }

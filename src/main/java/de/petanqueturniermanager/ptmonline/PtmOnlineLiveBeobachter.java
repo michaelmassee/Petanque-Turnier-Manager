@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalLong;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
@@ -394,6 +395,9 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
         private final AtomicReference<@Nullable PtmOnlineAenderungsKanal> aenderungsKanal = new AtomicReference<>();
         /** Nur vom Thread „PTM-Online-Live“ verändert. */
         private long naechsteWiederholungMs = VERZOEGERUNG_MS;
+        /** Nur vom Thread „PTM-Online-Live“ verwendet. */
+        private final PtmOnlineStandAbrufWiederholung standAbrufWiederholung = new PtmOnlineStandAbrufWiederholung(
+                VERZOEGERUNG_MS, MAX_WIEDERHOLUNG_MS);
 
         Beobachtung(String oid, XSpreadsheetDocument xDoc) {
             this.oid = oid;
@@ -529,7 +533,9 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
          * Durchlauf ins Sync-Blatt. Ein gescheiterter Abruf behält den bisherigen Stand.
          * <p>
          * Sind die online vorhandenen Runden noch nicht abgeglichen (erster Abruf gescheitert), wird nach jedem
-         * erfolgreichen Versand sofort erneut abgerufen; der nächste Durchlauf löscht dann überzählige Runden.
+         * erfolgreichen Versand sofort erneut abgerufen; der nächste Durchlauf löscht dann überzählige Runden. Scheitert
+         * auch dieser Abruf, wird mit wachsendem Abstand ein neuer Durchlauf eingeplant – auch ohne weitere
+         * Dokumentänderung.
          */
         private void aktualisiereOnlineStandBeiBedarf(TournamentSyncClient client, String tournamentId)
                 throws InterruptedException {
@@ -540,6 +546,12 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
                 return;
             }
             Optional<SyncStandDto> stand = holeOnlineStand(client, tournamentId);
+            OptionalLong wiederholung = standAbrufWiederholung.nachAbruf(rundenOffen, stand.isPresent());
+            if (wiederholung.isPresent()) {
+                logger.info("PTM-Online: Runden-Abgleich offen, neuer Abruf in {} ms", wiederholung.getAsLong());
+                offen.set(true);
+                planeEin(wiederholung.getAsLong());
+            }
             if (stand.isEmpty()) {
                 return;
             }

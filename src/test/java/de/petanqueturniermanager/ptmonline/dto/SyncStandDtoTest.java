@@ -34,4 +34,18 @@ class SyncStandDtoTest {
         assertThat(ENTWURF.mitGemeldetemStatus(null)).isEmpty();
         assertThat(ENTWURF.mitGemeldetemStatus(" ")).isEmpty();
     }
+
+    @Test
+    void erkenntDenZurueckgesetztenStart() {
+        String zurueckgesetzt = "2026-11-16T10:00:00Z";
+        assertThat(stand("registration", zurueckgesetzt).istStartZurueckgesetzt()).isTrue();
+        assertThat(stand("running", zurueckgesetzt).istStartZurueckgesetzt())
+                .as("nach dem Zurücksetzen erneut gestartet").isFalse();
+        assertThat(stand("registration", null).istStartZurueckgesetzt()).isFalse();
+        assertThat(stand("registration", "").istStartZurueckgesetzt()).isFalse();
+    }
+
+    private static SyncStandDto stand(String status, String runningResetAt) {
+        return new SyncStandDto(status, true, runningResetAt, 1, 0, null, false);
+    }
 }
