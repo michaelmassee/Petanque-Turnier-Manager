@@ -62,6 +62,8 @@ public final class PtmOnlineDispatcher {
 
     private static final Duration MAX_WARTEZEIT_VERARBEITUNG = Duration.ofSeconds(30);
     private static final long WARTEINTERVALL_MS = 200;
+    /** Der Anzeige-Schlüssel wird auf dem Dispatch-Thread geholt; bei schlechtem Netz nicht lange blockieren. */
+    private static final Duration TIMEOUT_ANZEIGE_SCHLUESSEL = Duration.ofSeconds(5);
 
     private PtmOnlineDispatcher() {}
 
@@ -358,36 +360,63 @@ public final class PtmOnlineDispatcher {
 
     /** Öffnet das verbundene Online-Turnier (Detailseite mit Anmeldung) auf PTM-Online im Standardbrowser. */
     public static void imBrowserOeffnen(WorkingSpreadsheet ws) {
-        oeffneImBrowser(ws, "/turniere/");
+        mitVerbindung(ws, (verbindung, config) -> oeffneImBrowser(ws.getxContext(),
+                turnierUrl(config.baseUrl(), "/turniere/", verbindung.tournamentId())));
     }
 
     /**
      * Öffnet die Live-Turnierseite des verbundenen Online-Turniers (Spielplan, Ergebnisse, Rangliste) im
-     * Standardbrowser – dieselbe Seite, die Spieler und Zuschauer sehen.
+     * Standardbrowser – dieselbe Seite, die Spieler und Zuschauer sehen. Der Link trägt den Anzeige-Schlüssel des
+     * Turniers, damit die Seite auch auf einem nicht angemeldeten Bildschirm vor Ort Spielplan und Rangliste zeigt
+     * (auch bei nicht veröffentlichter Meldeliste und bei online nicht durchführbaren Turniersystemen).
      */
     public static void turnierseiteOeffnen(WorkingSpreadsheet ws) {
-        oeffneImBrowser(ws, "/turnierseite/");
+        mitVerbindung(ws, (verbindung, config) -> {
+            XComponentContext ctx = ws.getxContext();
+            String schluessel;
+            try {
+                schluessel = TournamentSyncClient
+                        .mitKurzemTimeout(config.baseUrl(), config.apiKey(), TIMEOUT_ANZEIGE_SCHLUESSEL)
+                        .holeAnzeigeSchluessel(verbindung.tournamentId());
+            } catch (IOException e) {
+                logger.error("PTM-Online: Anzeige-Schlüssel für Turnier {} nicht abgerufen", verbindung.tournamentId(),
+                        e);
+                zeigeNetzwerkFehler(ctx, e);
+                return;
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                logger.debug("PTM-Online: Abruf des Anzeige-Schlüssels unterbrochen", e);
+                return;
+            }
+            oeffneImBrowser(ctx, turnierseitenUrl(config.baseUrl(), verbindung.tournamentId(), schluessel));
+        });
     }
 
-    /** Öffnet {@code <Server><pfadPraefix><Turnier-Id>} im Standardbrowser. */
-    private static void oeffneImBrowser(WorkingSpreadsheet ws, String pfadPraefix) {
-        mitVerbindung(ws, (verbindung, config) -> {
-            String basis = config.baseUrl().endsWith("/") ? config.baseUrl().substring(0, config.baseUrl().length() - 1)
-                    : config.baseUrl();
-            String url = basis + pfadPraefix + URLEncoder.encode(verbindung.tournamentId(), StandardCharsets.UTF_8);
-            XComponentContext ctx = ws.getxContext();
-            try {
-                XSystemShellExecute shell = Lo.createInstanceMCF(XSystemShellExecute.class,
-                        "com.sun.star.system.SystemShellExecute", ctx.getServiceManager(), ctx);
-                if (shell == null) {
-                    throw new IllegalStateException("SystemShellExecute nicht verfügbar");
-                }
-                shell.execute(url, "", (short) SystemShellExecuteFlags.URIS_ONLY);
-            } catch (com.sun.star.uno.Exception | RuntimeException e) {
-                logger.error("PTM-Online: Browser für {} nicht geöffnet", url, e);
-                zeigeFehler(ctx, I18n.get("ptmonline.browser.fehler", e.getMessage()));
+    /** {@code <Server><pfadPraefix><Turnier-Id>}; ein abschließender Schrägstrich der Server-Adresse entfällt. */
+    static String turnierUrl(String baseUrl, String pfadPraefix, String tournamentId) {
+        String basis = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
+        return basis + pfadPraefix + URLEncoder.encode(tournamentId, StandardCharsets.UTF_8);
+    }
+
+    /** Turnierseite mit Anzeige-Schlüssel ({@code ?share=}), wie der Anzeige-Link in PTM-Online. */
+    static String turnierseitenUrl(String baseUrl, String tournamentId, String anzeigeSchluessel) {
+        return turnierUrl(baseUrl, "/turnierseite/", tournamentId) + "?share="
+                + URLEncoder.encode(anzeigeSchluessel, StandardCharsets.UTF_8);
+    }
+
+    private static void oeffneImBrowser(XComponentContext ctx, String url) {
+        try {
+            XSystemShellExecute shell = Lo.createInstanceMCF(XSystemShellExecute.class,
+                    "com.sun.star.system.SystemShellExecute", ctx.getServiceManager(), ctx);
+            if (shell == null) {
+                throw new IllegalStateException("SystemShellExecute nicht verfügbar");
             }
-        });
+            shell.execute(url, "", (short) SystemShellExecuteFlags.URIS_ONLY);
+        } catch (com.sun.star.uno.Exception | RuntimeException e) {
+            // Die URL enthält den Anzeige-Schlüssel: nicht ins Log schreiben.
+            logger.error("PTM-Online: Browser nicht geöffnet", e);
+            zeigeFehler(ctx, I18n.get("ptmonline.browser.fehler", e.getMessage()));
+        }
     }
 
     /** Verbindung des Dokuments (bzw. aktiven Spieltags) mit dem Online-Turnier. */

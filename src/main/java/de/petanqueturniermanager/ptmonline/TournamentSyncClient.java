@@ -167,6 +167,19 @@ public class TournamentSyncClient extends PtmOnlineHttpClient implements Auftrag
     }
 
     /**
+     * Holt den Anzeige-Schlüssel des Turniers (legt ihn beim ersten Abruf an). Mit ihm öffnet die Turnierseite
+     * Spielplan und Rangliste ohne Anmeldung, z.&nbsp;B. auf einem Bildschirm vor Ort.
+     */
+    public String holeAnzeigeSchluessel(String tournamentId) throws IOException, InterruptedException {
+        JsonObject payload = leseAntwort(post(turnierPfad(tournamentId) + "/display-link", "{}"));
+        JsonElement schluessel = pflichtfeld(payload, "displayToken");
+        if (!schluessel.isJsonPrimitive() || schluessel.getAsString().isBlank()) {
+            throw unvollstaendigeAntwort("displayToken");
+        }
+        return schluessel.getAsString();
+    }
+
+    /**
      * Holt online eingegangene Anmeldungen eines Turniers, optional nur die seit {@code since}
      * geaenderten (fuer inkrementellen Abgleich).
      */

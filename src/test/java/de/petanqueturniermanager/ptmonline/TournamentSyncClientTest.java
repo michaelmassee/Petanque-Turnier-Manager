@@ -353,6 +353,28 @@ public class TournamentSyncClientTest {
 				.isEqualTo("{\"formation\":\"triplette\",\"formuleXRounds\":6,\"koPlatz3\":false}");
 	}
 
+	@Test
+	public void holeAnzeigeSchluesselFragtDenDisplayLinkDesTurniersAb() throws Exception {
+		HttpClient httpClient = httpClientMitAntwort("{\"displayToken\":\"abc123\"}");
+		TournamentSyncClient client = new TournamentSyncClient(httpClient, "https://ptm-online.example.com", "ptm_secret");
+
+		assertThat(client.holeAnzeigeSchluessel("t 1")).isEqualTo("abc123");
+
+		HttpRequest anfrage = gesendeteAnfrage(httpClient);
+		assertThat(anfrage.method()).isEqualTo("POST");
+		assertThat(anfrage.uri().toString())
+				.isEqualTo("https://ptm-online.example.com/api/sync/tournaments/t+1/display-link");
+	}
+
+	@Test
+	public void holeAnzeigeSchluesselOhneSchluesselInDerAntwortWirft() throws Exception {
+		TournamentSyncClient client = new TournamentSyncClient(httpClientMitAntwort("{\"displayToken\":\" \"}"),
+				"https://ptm-online.example.com", "ptm_secret");
+
+		assertThatThrownBy(() -> client.holeAnzeigeSchluessel("t1")).isInstanceOf(IOException.class)
+				.hasMessageContaining("displayToken");
+	}
+
 	private HttpClient httpClientMitAntwort(String body) throws Exception {
 		HttpClient httpClient = mock(HttpClient.class);
 		HttpResponse<String> response = mockResponse(200, body);
