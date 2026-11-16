@@ -20,8 +20,11 @@ import java.util.List;
  *   <li>Eigene Punkte (absteigend) – Tie-Breaker</li>
  *   <li>Direktvergleich – nur bei genau 2 gleichrangigen Teams, sofern sie
  *       gegeneinander gespielt haben</li>
- *   <li>Teamnummer (aufsteigend) – „das Los", garantiert stabile, totale Ordnung als Fallback</li>
+ *   <li>Teamnummer (aufsteigend) – garantiert stabile, totale Ordnung als Fallback</li>
  * </ol>
+ *
+ * <p>Kriterien 5 und 6 legen nur die Zeilenreihenfolge fest: Die Platz-Spalte der Rangliste vergleicht nur
+ * Kriterien 1–4, Teams mit Gleichstand darin teilen sich den Platz (kein Losentscheid).
  *
  * <p>Bei einem zyklischen Dreier-Gleichstand (A schlägt B, B schlägt C, C schlägt A)
  * ist der Direktvergleich nicht anwendbar. Die Sortierung nach Teamnummer (Kriterium 6)

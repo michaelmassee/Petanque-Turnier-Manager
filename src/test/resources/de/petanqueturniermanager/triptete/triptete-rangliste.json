@@ -267,7 +267,7 @@
   ],
   [
     {
-      "data": "Reihenfolge zur Ermittlung der Platzierung: 1. Punkte +, 2. Siege +, 3. Spielpunkte +, 4. Spielpunkte-Δ, 5. das Los"
+      "data": "Reihenfolge zur Ermittlung der Platzierung: 1. Punkte +, 2. Siege +, 3. Spielpunkte +, 4. Spielpunkte-Δ, bei Gleichstand gleicher Platz"
     },
     {
       "data": ""

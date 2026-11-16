@@ -67,8 +67,12 @@ Ab hier greifen die Tie-Breaker (nur bei Gleichstand in 1+2):
 
 3. **Punktedifferenz** (Spielpunkte+ minus Spielpunkte-, absteigend)
 4. **Eigene Spielpunkte** (absteigend)
-5. **Direktvergleich** – sofern die betroffenen Teams in derselben Runde gegeneinander gespielt haben
-6. **Losentscheid** – deterministisch anhand der Teamnummer, falls auch der Direktvergleich kein Ergebnis liefert (z. B. bei zyklischem Dreier-Gleichstand)
+
+Sind Teams in allen vier Kriterien gleich, **teilen sie sich den Platz** (z. B. 1, 1, 3). Einen Losentscheid gibt
+es nicht. Innerhalb eines geteilten Platzes legt PTM nur die **Zeilenreihenfolge** fest:
+
+- **Direktvergleich** – bei genau zwei gleichen Teams, sofern sie gegeneinander gespielt haben
+- sonst **Teamnummer** aufsteigend (z. B. bei zyklischem Dreier-Gleichstand)
 
 Implementierung: `algorithmen/formulex/FormuleXRanglisteRechner.java`.
 

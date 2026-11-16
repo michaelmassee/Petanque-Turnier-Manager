@@ -21,7 +21,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
  * UITest fuer die Liga-Rangliste.<br>
- * Sortierkriterien: 1. Punkte+, 2. Spiele+, 3. Spielpunkte+, 4. Spielpunkte Δ, 5. Direktvergleich (manuell), 6. das Los (manuell)
+ * Sortierkriterien: 1. Punkte+, 2. Spiele+, 3. Spielpunkte+, 4. Spielpunkte Δ; bei Gleichstand gleicher Platz (Direktvergleich manuell über eigenes Blatt)
  */
 public class LigaRanglisteSheetUITest extends BaseCalcUITest {
 
