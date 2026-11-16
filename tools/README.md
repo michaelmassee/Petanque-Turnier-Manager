@@ -82,7 +82,20 @@ die aus den Spielrunden-Sheets nachgerechneten Werte:
    `r` = Spielrunden mit eingetragenem Ergebnis (siehe `03_Schweizer.md`, 5.1).
    BHZ/FBHZ sind ganzzahlig.
 4. **Rangliste-Sortierung** gegen `Siege ↓ → BHZ ↓ → FBHZ ↓ → Punktediff ↓
-   → Punkte+ ↓` (`SchweizerSystem.sortiereNachAuswertungskriterien`).
+   → Punkte+ ↓`, bei Gleichstand Teamnummer ↑
+   (`SchweizerSystem.sortiereNachAuswertungskriterien`).
+5. **Platz-Spalte** (geteilter Platz bei Gleichstand in allen Kriterien, z. B. 1, 1, 3)
+   und **FL-Spalte** (Freilos-Runden „1, 3“).
+6. **Auslosung** je Runde: alle Teams genau einmal, kein Unentschieden, Freilos-Ergebnis
+   = Freispiel-Punkte, Gegnerwiederholungen. Ab Runde 2 wird die Auslosung exakt
+   nachgebildet (Port von `SchweizerSystem.weitereRunde`: Freilos, Sieggruppen,
+   Floater-Wahl mit Herunterlos-Chronik, `WiederholungsarmePaarung`) und Paarung für
+   Paarung mit dem Blatt verglichen. Runde 1 ist zufällig und wird nur auf
+   Vollständigkeit geprüft. „Nicht gewertete“ Runden (`__PTM_NICHT_GEWERTET_*`)
+   werden übersprungen.
+
+Team-Spalten werden als Nummer, Teamname oder Spielernamen („Vorname Nachname /
+Vorname Nachname“, wie `TeamAnzeigeFormatierer`) aufgelöst.
 
 Erkennt automatisch, ob es sich um eine Schweizer-Rangliste (Sheet
 "Rangliste") oder eine Maastrichter-Vorrunden-Rangliste (Sheet
