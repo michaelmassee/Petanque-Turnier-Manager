@@ -882,7 +882,8 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
         private void fuehreAus(SheetRunner runner, String fehlertext)
                 throws GenerateException, InterruptedException {
             pruefeNichtBeendet();
-            runner.startSilent();
+            // Läuft während der Ergebniserfassung – die Zelleingabe des Anwenders darf nicht abbrechen.
+            runner.eingabeschonend().startSilent();
             if (runner.getState() == Thread.State.NEW) {
                 throw new LaufVerschoben("Lauf verschoben, ein anderer Lauf ist aktiv");
             }

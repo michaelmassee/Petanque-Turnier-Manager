@@ -263,6 +263,15 @@ Details und Muster: `turniersysteme/RANGLISTE_LISTENER.md`. Generische Infrastru
 
 **Wichtig zum Freeze:** Eingefrorene Einträge sind NICHT automatisch „ok". ArchUnit faltet inline-Lambdas (`LoMainThread.post(ctx, () -> …)`) in die umschließende Methode → der Marshalling-Schnitt ist im Graph unsichtbar, korrekt-marshallte Pfade erscheinen daher als (akzeptierte) Verstöße. **Methodenreferenzen** (`post(ctx, this::foo)`) wirken dagegen als echter Schnitt und tauchen gar nicht erst auf — bei neuem Marshalling-Code daher Methodenreferenz bevorzugen. Re-Freeze nur nach manueller Prüfung, dass der neue Pfad wirklich über `LoMainThread.post`/`runOnMain` läuft: `freeze.refreeze=true` in `src/test/resources/archunit.properties` setzen, einmal laufen lassen, Store committen, Flag zurücknehmen.
 
+## Hintergrundläufe: keine Neuberechnung während der Zelleingabe
+
+`XCalculatable.calculate()`/`calculateAll()` schließen in LO eine laufende Zelleingabe ab (`ScDocShell::DoRecalc` → `ScModule::InputEnterHandler()`, `sc/source/ui/docshell/docsh4.cxx`). Läuft das im Hintergrund, während der Anwender zügig „13“ tippt, wird die „1“ übernommen und die „3“ überschreibt sie – die erste Ziffer verschwindet.
+
+- `XCalculatable` nur über `WorkingSpreadsheet.getxCalculatable()` bzw. `helper/Neuberechnung` beziehen.
+- Automatische Läufe während der Ergebniserfassung (Sheet-Sync beim Tabwechsel, Nachzieher des Webservers, PTM-Online) starten mit `SheetRunner.eingabeschonend()`: Die Automatik bleibt an (`enableAutomaticCalculation(false)` wird ignoriert), `calculate()`/`calculateAll()` laufen nur bei ausgeschalteter Automatik – Calc rechnet veraltete Formeln beim Lesen/Sortieren ohnehin nach.
+- Webserver-Leser: `Neuberechnung.nurFallsAutomatikAus(...)`.
+- Gate: `NeuberechnungEingabeschonendKonventionTest` (Quelltext-Scan nach `XCalculatable.class`, begründete Allowlist).
+
 ## Mehrere offene Turnier-Dokumente: kein fokus-basierter Dokumentzugriff
 
 **Bug-Klasse (zwei Fixes am 2026-08-19, `286754dc` und `e828766b`):** Code, der für ein bestimmtes, konkretes Dokument gelten soll (ein Hintergrund-Thread, der Sheets für Dokument B aufbaut; ein Toolbar-Status-Listener, der zu Dokument A/dessen Frame gehört), löste das relevante `XSpreadsheetDocument` fokus-basiert auf (`DocumentHelper.getCurrentSpreadsheetDocument(...)`, `getCurrentSpreadsheetDocumentFrom(...)`, `ProtocolHandler.holeAktivesDokument()`). Ist parallel ein zweites Turnier-Dokument geöffnet und hält gerade den UI-Fokus, liefert dieser Pfad das falsche Dokument — Properties (`PTM.ALG.INTPROPERTY(...)`), Toolbar-Enabled-Status oder Sortier-Dropdown-Häkchen "lecken" dann zwischen den Dokumenten.

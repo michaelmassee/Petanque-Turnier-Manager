@@ -23,6 +23,7 @@ import com.sun.star.sheet.XSpreadsheetView;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.Neuberechnung;
 
 /**
  * @author Michael Massee <br>
@@ -165,8 +166,12 @@ public class WorkingSpreadsheet {
 		return interfaceObj;
 	}
 
+	/**
+	 * Berechnungs-Schnittstelle des Dokuments; innerhalb eines eingabeschonenden Laufs (siehe
+	 * {@link Neuberechnung}) bricht sie die Zelleingabe des Anwenders nicht ab.
+	 */
 	public XCalculatable getxCalculatable() {
-		return Lo.qi(XCalculatable.class, workingSpreadsheetDocument);
+		return Neuberechnung.fuer(Lo.qi(XCalculatable.class, workingSpreadsheetDocument));
 	}
 
 	public XMultiServiceFactory getXMultiServiceFactory() {

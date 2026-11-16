@@ -21,6 +21,7 @@ import com.sun.star.lang.IndexOutOfBoundsException;
 import com.sun.star.container.XNamed;
 import com.sun.star.sheet.XCalculatable;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.Neuberechnung;
 import de.petanqueturniermanager.addins.GlobalImpl;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
@@ -348,7 +349,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 		getSheetHelper().setFormulaArrayInRange(getXSpreadsheet(), RangePosition.from(meldungNrSpalte,
 				getErsteDatenZiele(), ersteMeldungNameSpalte, getErsteDatenZiele() + formeln.length - 1), formeln);
 		// Die Ranglisten lesen direkt anschließend die Nummern für ihre Java-Auswertung, auch bei AutoCalc aus.
-		Lo.qi(XCalculatable.class, doc).calculate();
+		Neuberechnung.fuer(Lo.qi(XCalculatable.class, doc)).calculate();
 	}
 
 	public void alleSpielerNrEinfuegen(Collection<Integer> spielerNummerList,

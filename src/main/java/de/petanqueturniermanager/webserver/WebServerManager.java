@@ -40,6 +40,7 @@ import de.petanqueturniermanager.formulex.konfiguration.FormuleXKonfigurationShe
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.LoMainThread;
+import de.petanqueturniermanager.helper.Neuberechnung;
 import de.petanqueturniermanager.helper.NativeDialogSperre;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
@@ -1018,10 +1019,10 @@ public final class WebServerManager implements TimerListener {
         }
         try {
             registriereModifyListenerFallsNoetig(ws);
-            // Genau ein calculate() pro Refresh-Welle, vor der Composite-Schleife –
-            // spart bei N Compositen N-1 Recalc-Durchläufe und stellt sicher, dass
-            // abhängige Formelzellen (z.B. Rangliste) den aktuellen Stand spiegeln.
-            forceRecalc(ws);
+            // Höchstens eine Neuberechnung pro Refresh-Welle, vor der Composite-Schleife –
+            // nur bei abgeschalteter Automatik nötig, damit abhängige Formelzellen den
+            // aktuellen Stand spiegeln.
+            berechneNeuFallsNoetig(ws);
             for (var instanz : compositeInstanzen) {
                 renderUndPushenComposite(instanz, ws);
             }
@@ -1040,19 +1041,20 @@ public final class WebServerManager implements TimerListener {
         }
     }
 
-    private void forceRecalc(WorkingSpreadsheet ws) {
+    /**
+     * Rechnet nur nach, wenn die automatische Berechnung aus ist – sonst rechnet Calc veraltete Formeln beim
+     * Lesen selbst nach. Ein unbedingtes {@code calculate()} würde eine gerade laufende Zelleingabe des
+     * Anwenders abbrechen (siehe {@link Neuberechnung}).
+     */
+    private void berechneNeuFallsNoetig(WorkingSpreadsheet ws) {
         var doc = ws.getWorkingSpreadsheetDocument();
         if (doc == null) {
             return;
         }
-        var calc = Lo.qi(XCalculatable.class, doc);
-        if (calc == null) {
-            return;
-        }
         try {
-            calc.calculate();
+            Neuberechnung.nurFallsAutomatikAus(Lo.qi(XCalculatable.class, doc));
         } catch (RuntimeException ex) {
-            logger.debug("Recalc übersprungen: {}", ex.getMessage());
+            logger.debug("Recalc übersprungen: {}", ex.getMessage(), ex);
         }
     }
 

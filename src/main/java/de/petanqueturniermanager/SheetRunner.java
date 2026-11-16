@@ -31,6 +31,7 @@ import de.petanqueturniermanager.exception.AltesDokumentException;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.Neuberechnung;
 import de.petanqueturniermanager.helper.LoMainThread;
 import de.petanqueturniermanager.helper.RueckgaengigSperre;
 import de.petanqueturniermanager.helper.i18n.I18n;
@@ -91,6 +92,9 @@ public abstract class SheetRunner extends Thread {
 	 * ({@link RueckgaengigSperre}), z.&nbsp;B. für den automatischen Neuaufbau durch die Sheet-Synchronisation.
 	 */
 	private volatile boolean ohneRueckgaengig;
+
+	/** Gesetzt von {@link #eingabeschonend()}: {@code doRun()} läuft ohne explizite Neuberechnungen. */
+	private volatile boolean eingabeschonend;
 
 	/**
 	 * Wird {@code true}, sobald das Dokument während der Laufzeit des Runners disposed wird
@@ -267,12 +271,7 @@ public abstract class SheetRunner extends Thread {
 									.ifPresent(k -> BlattschutzManager.get().beginCommandScope(k, workingSpreadsheet));
 						}
 						if (!benoetigtLebendesDokument() || isDocumentAlive()) {
-							if (ohneRueckgaengig) {
-								RueckgaengigSperre.ohneRueckgaengig(workingSpreadsheet.getWorkingSpreadsheetDocument(),
-										this::doRun);
-							} else {
-								doRun();
-							}
+							fuehreDoRunAus();
 							if (isDocumentAlive()) {
 								WebServerManager.get().sseRefreshSenden(workingSpreadsheet);
 								// Während des Runners eingetroffene Modify-Events wurden vom Listener
@@ -430,6 +429,28 @@ public abstract class SheetRunner extends Thread {
 			throw new IllegalStateException(I18n.get("processbox.fehler.runner.verschachtelt",
 					getClass().getSimpleName(), koordinator.getRunnerName()));
 		}
+	}
+
+	private void fuehreDoRunAus() throws GenerateException {
+		RueckgaengigSperre.Aktion lauf = ohneRueckgaengig
+				? () -> RueckgaengigSperre.ohneRueckgaengig(workingSpreadsheet.getWorkingSpreadsheetDocument(),
+						this::doRun)
+				: this::doRun;
+		if (eingabeschonend) {
+			Neuberechnung.eingabeschonend(lauf::ausfuehren);
+		} else {
+			lauf.ausfuehren();
+		}
+	}
+
+	/**
+	 * Der Lauf darf eine gerade laufende Zelleingabe des Anwenders nicht abbrechen (automatischer Hintergrundlauf
+	 * während der Ergebniserfassung): explizite Neuberechnungen entfallen, die automatische Berechnung bleibt an
+	 * (siehe {@link Neuberechnung}).
+	 */
+	public SheetRunner eingabeschonend() {
+		eingabeschonend = true;
+		return this;
 	}
 
 	/**

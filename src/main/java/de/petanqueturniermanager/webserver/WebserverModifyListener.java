@@ -191,7 +191,7 @@ public class WebserverModifyListener implements XModifyListener {
                 return false;
             }
             SheetSyncNachziehRunner runner = new SheetSyncNachziehRunner(ws);
-            runner.startSilent();
+            runner.eingabeschonend().startSilent();
             runner.join();
             return true;
         } catch (InterruptedException e) {

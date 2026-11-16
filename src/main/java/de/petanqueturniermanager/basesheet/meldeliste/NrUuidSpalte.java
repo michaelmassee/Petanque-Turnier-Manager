@@ -20,6 +20,7 @@ import com.sun.star.sheet.XSpreadsheetDocument;
 
 import de.petanqueturniermanager.addins.GlobalImpl;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.Neuberechnung;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
@@ -174,7 +175,7 @@ public final class NrUuidSpalte {
 	private void schreibeUndBerechne(SortedMap<Integer, String> formelProZeile) {
 		TeamNummernVergabe.schreibeNrFormeln(sheetHelper, sheet, nrSpalte, formelProZeile);
 		if (!formelProZeile.isEmpty()) {
-			Lo.qi(XCalculatable.class, doc).calculate();
+			Neuberechnung.fuer(Lo.qi(XCalculatable.class, doc)).calculate();
 		}
 	}
 

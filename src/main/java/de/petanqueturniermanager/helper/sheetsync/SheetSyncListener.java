@@ -521,7 +521,8 @@ public final class SheetSyncListener implements SheetAktivierungsHandler, ITurni
         // überein. Sollte der Rebuild scheitern, wird beim nächsten Trigger der dann frische
         // Hash neu verglichen.
         SheetSyncSignaturStore.speichereNachRebuild(xDoc, key, hash, effektiverGrund);
-        runnerFactory.apply(new WorkingSpreadsheet(xContext, xDoc), sheet).ohneRueckgaengig().startSilent();
+        runnerFactory.apply(new WorkingSpreadsheet(xContext, xDoc), sheet).ohneRueckgaengig().eingabeschonend()
+                .startSilent();
     }
 
     private void handleSheetFehlt(XSpreadsheetDocument xDoc, XSpreadsheet sheet, String key,
