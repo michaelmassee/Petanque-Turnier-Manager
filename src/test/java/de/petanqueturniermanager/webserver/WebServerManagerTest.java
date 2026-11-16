@@ -24,6 +24,18 @@ class WebServerManagerTest {
     }
 
     @Test
+    void startetAuchNurMitRegieOderStartseite() {
+        assertThat(WebServerManager.istEtwasZumStartenKonfiguriert(false, false, true)).isTrue();
+        assertThat(WebServerManager.istEtwasZumStartenKonfiguriert(false, true, false)).isTrue();
+        assertThat(WebServerManager.istEtwasZumStartenKonfiguriert(true, false, false)).isTrue();
+    }
+
+    @Test
+    void startetNichtOhneJedenServer() {
+        assertThat(WebServerManager.istEtwasZumStartenKonfiguriert(false, false, false)).isFalse();
+    }
+
+    @Test
     void startseiteLogoUrlIstRelativFuerRegieZiele() {
         assertThat(WebServerManager.startseiteLogoUrl("/tmp/logo.png", 7))
                 .isEqualTo("turnierlogo?v=7");

@@ -253,9 +253,7 @@ public final class WebServerManager implements TimerListener {
             return;
         }
         var compositeKonfigs = new ArrayList<>(GlobalProperties.get().getCompositeViewKonfigurationen());
-        boolean startseiteAktiv = GlobalProperties.get().isStartseiteAktiv();
-        boolean regieAktiv = GlobalProperties.get().isWebserverRegieAktiv();
-        if (compositeKonfigs.isEmpty() && !startseiteAktiv && !regieAktiv) {
+        if (!istEtwasZumStartenKonfiguriert()) {
             logger.info("Keine Webserver-Ports konfiguriert, kein Start");
             return;
         }
@@ -1483,6 +1481,21 @@ public final class WebServerManager implements TimerListener {
     /** true wenn irgendein Slot eine aktive Instanz hat (für Separator-Sichtbarkeit). */
     public synchronized boolean hatIrgendeinenAktivenSlot() {
         return slots.stream().anyMatch(i -> i != null && i.laeuft());
+    }
+
+    /**
+     * Prüft, ob der Webserver beim Start mindestens einen Server hochfahren würde: eine Composite View, die
+     * Turnier-Startseite oder die Webserver-Regie. Einzige Regel für Menü/Toolbar und {@link #starten}.
+     */
+    public static boolean istEtwasZumStartenKonfiguriert() {
+        var props = GlobalProperties.get();
+        return istEtwasZumStartenKonfiguriert(!props.getCompositeViewKonfigurationen().isEmpty(),
+                props.isStartseiteAktiv(), props.isWebserverRegieAktiv());
+    }
+
+    static boolean istEtwasZumStartenKonfiguriert(boolean hatCompositeViews, boolean startseiteAktiv,
+            boolean regieAktiv) {
+        return hatCompositeViews || startseiteAktiv || regieAktiv;
     }
 
     /**

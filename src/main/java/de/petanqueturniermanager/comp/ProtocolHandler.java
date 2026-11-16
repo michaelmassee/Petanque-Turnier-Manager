@@ -1809,8 +1809,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 							.message(I18n.get("webserver.bereits.gestartet")).show();
 					return true;
 				}
-				var props = GlobalProperties.get();
-				if (props.getCompositeViewKonfigurationen().isEmpty()) {
+				if (!WebServerManager.istEtwasZumStartenKonfiguriert()) {
 					MessageBox.from(xContext, MessageBoxTypeEnum.INFO_OK)
 							.caption(I18n.get("webserver.starten"))
 							.message(I18n.get("webserver.keine.ports.konfiguriert")).show();
