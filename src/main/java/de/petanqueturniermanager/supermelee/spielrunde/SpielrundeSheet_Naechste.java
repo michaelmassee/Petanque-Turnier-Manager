@@ -25,6 +25,7 @@ import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.ptmonline.PtmOnlineLiveAusloeser;
 import de.petanqueturniermanager.ptmonline.PtmOnlineSpielrundeSync;
 import de.petanqueturniermanager.ptmonline.PtmOnlineTurnierstart;
+import de.petanqueturniermanager.ptmonline.Rundenstart;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheetUpdate;
@@ -166,7 +167,7 @@ public class SpielrundeSheet_Naechste extends SheetRunner
 		// unveraendert - eine automatische Stornierung wuerde serverseitig eine Stornierungs-Mail
 		// sowie Freigabe von Warteliste-/Kapazitaetsplaetzen ausloesen.
 		PtmOnlineTurnierstart turnierstart = PtmOnlineSpielrundeSync.abgleichen(getWorkingSpreadsheet(),
-				getTurnierSystem(), istErsteRunde,
+				getTurnierSystem(), Rundenstart.neueRunde(istErsteRunde),
 				PtmOnlineSpielrundeSync.nummern(getMeldeListe().getAlleMeldungen()),
 				PtmOnlineSpielrundeSync.nummern(getMeldeListe().getAktiveMeldungen()),
 				PtmOnlineSpielrundeSync.nummern(getMeldeListe().getAusgesetztMeldungen()));

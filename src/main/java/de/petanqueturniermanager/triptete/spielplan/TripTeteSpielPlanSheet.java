@@ -52,6 +52,7 @@ import de.petanqueturniermanager.model.TeamPaarung;
 import de.petanqueturniermanager.ptmonline.PtmOnlineLiveAusloeser;
 import de.petanqueturniermanager.ptmonline.PtmOnlineSpielrundeSync;
 import de.petanqueturniermanager.ptmonline.PtmOnlineTurnierstart;
+import de.petanqueturniermanager.ptmonline.Rundenstart;
 import de.petanqueturniermanager.supermelee.AbstractSuperMeleeRanglisteFormatter;
 import de.petanqueturniermanager.triptete.konfiguration.TripTeteKonfigurationSheet;
 import de.petanqueturniermanager.triptete.meldeliste.TripTeteMeldeListeSheetUpdate;
@@ -140,7 +141,7 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet, PtmOn
 		TeamMeldungen alleMeldungen = meldeListe.getAlleMeldungen();
 		// Trip-Tête spielt immer mit allen Meldungen
 		PtmOnlineTurnierstart turnierstart = PtmOnlineSpielrundeSync.turnierstartAbgleichen(getWorkingSpreadsheet(),
-				getTurnierSystem(), true, alleMeldungen, alleMeldungen);
+				getTurnierSystem(), Rundenstart.ERSTE_RUNDE, alleMeldungen, alleMeldungen);
 		if (generate(alleMeldungen)) {
 			turnierstart.bestaetigen();
 		}

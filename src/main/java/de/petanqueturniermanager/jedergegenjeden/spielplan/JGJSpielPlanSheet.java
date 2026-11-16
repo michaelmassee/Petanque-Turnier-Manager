@@ -51,6 +51,7 @@ import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSheet_U
 import de.petanqueturniermanager.ptmonline.PtmOnlineLiveAusloeser;
 import de.petanqueturniermanager.ptmonline.PtmOnlineSpielrundeSync;
 import de.petanqueturniermanager.ptmonline.PtmOnlineTurnierstart;
+import de.petanqueturniermanager.ptmonline.Rundenstart;
 import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeigeHelper;
@@ -131,7 +132,7 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet, PtmOnlineL
 		TeamMeldungen aktiveMeldungen = ladeAktiveMeldungen();
 		if (aktiveMeldungen != null) {
 			PtmOnlineTurnierstart turnierstart = PtmOnlineSpielrundeSync.turnierstartAbgleichen(
-					getWorkingSpreadsheet(), getTurnierSystem(), true, meldeListe.getAlleMeldungen(), aktiveMeldungen);
+					getWorkingSpreadsheet(), getTurnierSystem(), Rundenstart.ERSTE_RUNDE, meldeListe.getAlleMeldungen(), aktiveMeldungen);
 			if (generate(PtmOnlineSpielrundeSync.ohneGesperrte(getWorkingSpreadsheet(), getTurnierSystem(),
 					aktiveMeldungen))) {
 				turnierstart.bestaetigen();

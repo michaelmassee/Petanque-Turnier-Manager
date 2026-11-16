@@ -620,6 +620,10 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
          * Huckepack mit dem Turnierstatus: Weicht er vom bekannten Online-Zustand ab (z.&nbsp;B. online von Entwurf auf
          * Anmeldung gestellt), übernimmt ihn der nächste Durchlauf ins Sync-Blatt. Ohne bekannten Zustand nichts zu
          * tun – den holt der erste Durchlauf nach dem Öffnen oder Verbinden ohnehin.
+         * <p>
+         * Der Huckepack nennt nur den Status; der nachgeführte Stand gilt daher als unvollständig (z.&nbsp;B. fehlt nach
+         * einem online zurückgesetzten Start dessen {@code runningResetAt}). Braucht eine Erfassung den vollständigen
+         * Stand (erster Live-Stand nach Abgleich), ruft sie ihn erst ab.
          */
         private void beachteTurnierStatus(@Nullable String turnierStatus) {
             if (turnierStatus == null) {
@@ -630,8 +634,8 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
             if (bekannt == null) {
                 return;
             }
-            bekannt.stand().flatMap(stand -> stand.mitGemeldetemStatus(turnierStatus)).ifPresent(neu -> {
-                onlineStand = new PtmOnlineErfassungsRunner.OnlineStandAbruf(bekannt.tournamentId(), Optional.of(neu));
+            bekannt.mitGemeldetemStatus(turnierStatus).ifPresent(neu -> {
+                onlineStand = neu;
                 anstossen();
             });
         }

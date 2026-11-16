@@ -6,12 +6,13 @@ package de.petanqueturniermanager.ptmonline;
 import de.petanqueturniermanager.exception.GenerateException;
 
 /**
- * Vorgemerkter Online-Turnierstart der ersten Spielrunde (KP-05). Der Übergang zu {@code running} und der
- * Teilnahme-Stand dieser Runde entstehen erst mit {@link #bestaetigen()}, also nachdem die Runde tatsächlich erstellt
- * ist. Scheitert die Erstellung an einer späteren Vorprüfung (zu wenige Meldungen, Abbruch), bleibt das Online-Turnier
- * in der Anmeldephase – kein Startauftrag, kein ausstehender Start.
+ * Vorgemerkter Online-Turnierstart der ersten Spielrunde (KP-05) oder Wiederaufnahme eines online zurückgesetzten
+ * bzw. abgeschlossenen Turniers durch eine Folgerunde. Der Übergang zu {@code running} und der Teilnahme-Stand dieser
+ * Runde entstehen erst mit {@link #bestaetigen()}, also nachdem die Runde tatsächlich erstellt ist. Scheitert die
+ * Erstellung an einer späteren Vorprüfung (zu wenige Meldungen, Abbruch), bleibt das Online-Turnier, wie es ist – kein
+ * Startauftrag, kein ausstehender Start.
  * <p>
- * Ohne Verbindung und ab der zweiten Runde ist der Abgleich bereits vollständig erfasst; {@link #bestaetigen()} tut
+ * Ohne Verbindung und ohne nötigen Start ist der Abgleich bereits vollständig erfasst; {@link #bestaetigen()} tut
  * dann nichts.
  */
 public final class PtmOnlineTurnierstart {
@@ -44,7 +45,7 @@ public final class PtmOnlineTurnierstart {
     }
 
     /**
-     * Die erste Runde ist erstellt: Startauftrag und Teilnahme-Stand erfassen. Höchstens einmal wirksam.
+     * Die Runde ist erstellt: Startauftrag und Teilnahme-Stand erfassen. Höchstens einmal wirksam.
      */
     public synchronized void bestaetigen() throws GenerateException {
         Erfassung erfassung = offen;

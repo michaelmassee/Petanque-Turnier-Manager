@@ -52,9 +52,23 @@ final class PtmOnlineErfassungsRunner extends SheetRunner {
     /**
      * Abruf des Online-Zustands eines Turniers durch den Hintergrund.
      *
-     * @param stand leer, wenn der Abruf gescheitert ist (z.&nbsp;B. ohne Netz)
+     * @param stand        leer, wenn der Abruf gescheitert ist (z.&nbsp;B. ohne Netz)
+     * @param vollstaendig {@code false}, wenn nur der Status per Huckepack nachgeführt wurde: Die übrigen Felder
+     *                     (u.&nbsp;a. {@code runningResetAt}, Rundenzahl) können veraltet sein und taugen nicht für die
+     *                     Entscheidung über einen nachzuholenden Start
      */
-    record OnlineStandAbruf(String tournamentId, Optional<SyncStandDto> stand) {
+    record OnlineStandAbruf(String tournamentId, Optional<SyncStandDto> stand, boolean vollstaendig) {
+
+        /** Vollständiger Abruf (oder gescheiterter Abruf). */
+        OnlineStandAbruf(String tournamentId, Optional<SyncStandDto> stand) {
+            this(tournamentId, stand, true);
+        }
+
+        /** Derselbe Stand mit per Huckepack gemeldetem Status; leer, wenn sich der Status nicht geändert hat. */
+        Optional<OnlineStandAbruf> mitGemeldetemStatus(@Nullable String turnierStatus) {
+            return stand.flatMap(bekannt -> bekannt.mitGemeldetemStatus(turnierStatus))
+                    .map(neu -> new OnlineStandAbruf(tournamentId, Optional.of(neu), false));
+        }
     }
 
     /**
@@ -238,8 +252,10 @@ final class PtmOnlineErfassungsRunner extends SheetRunner {
     }
 
     /**
-     * Ist noch kein Live-Stand erfasst (nach Öffnen oder Verbinden), wird zuerst der Online-Zustand abgerufen: er
-     * nennt die online vorhandenen Runden (überzählige werden gelöscht) und ob das Turnier online läuft.
+     * Ist noch kein Live-Stand erfasst (nach Öffnen, Verbinden oder Abgleich), wird zuerst der Online-Zustand
+     * vollständig abgerufen: er nennt die online vorhandenen Runden (überzählige werden gelöscht), ob das Turnier
+     * online läuft und ob sein Start dort zurückgesetzt wurde. Ein nur per Huckepack nachgeführter Stand reicht dafür
+     * nicht.
      *
      * @param standAbruf Abruf des Online-Zustands dieses Turniers, {@code null} ohne
      * @return {@code false}, wenn zuerst der Online-Zustand abzurufen ist
@@ -252,7 +268,7 @@ final class PtmOnlineErfassungsRunner extends SheetRunner {
             return true;
         }
         boolean ersterStand = !PtmOnlineLiveSync.hatStand(verbindung.tournamentId());
-        if (ersterStand && standAbruf == null) {
+        if (ersterStand && (standAbruf == null || !standAbruf.vollstaendig())) {
             return false;
         }
         Optional<SyncStandDto> onlineStand = standAbruf == null ? Optional.empty() : standAbruf.stand();

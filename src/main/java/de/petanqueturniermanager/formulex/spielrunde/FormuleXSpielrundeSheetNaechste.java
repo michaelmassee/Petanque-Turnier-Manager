@@ -25,6 +25,7 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.ptmonline.PtmOnlineSpielrundeSync;
 import de.petanqueturniermanager.ptmonline.PtmOnlineTurnierstart;
+import de.petanqueturniermanager.ptmonline.Rundenstart;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 
 /**
@@ -72,7 +73,7 @@ public class FormuleXSpielrundeSheetNaechste extends FormuleXAbstractSpielrundeS
         Set<Integer> ausgestiegeneNr = new HashSet<>(PtmOnlineSpielrundeSync.nummern(aktivUndAusgesetztVorSync));
         ausgestiegeneNr.removeAll(aktiveNrVorSync);
         PtmOnlineTurnierstart turnierstart = PtmOnlineSpielrundeSync.abgleichen(getWorkingSpreadsheet(),
-                getTurnierSystem(), istErsteRunde,
+                getTurnierSystem(), Rundenstart.neueRunde(istErsteRunde),
                 PtmOnlineSpielrundeSync.nummern(getMeldeListe().getAlleMeldungen()), aktiveNrVorSync, ausgestiegeneNr);
 
         getMeldeListe().vollstaendigAktualisieren();

@@ -19,6 +19,7 @@ import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.ptmonline.PtmOnlineLiveAusloeser;
 import de.petanqueturniermanager.ptmonline.PtmOnlineSpielrundeSync;
+import de.petanqueturniermanager.ptmonline.Rundenstart;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
@@ -148,7 +149,7 @@ public class SpielrundeSheet_Update extends SheetRunner
 		getMeldeListe().upDateSheet();
 		// Wie beim Anlegen der nächsten Runde: auch eine erneute Auslosung muss den
 		// Online-Teilnahme und nachträgliche Anmeldungen abgleichen (siehe SpielrundeSheet_Naechste).
-		PtmOnlineSpielrundeSync.abgleichen(getWorkingSpreadsheet(), getTurnierSystem(), false,
+		PtmOnlineSpielrundeSync.abgleichen(getWorkingSpreadsheet(), getTurnierSystem(), Rundenstart.KEINER,
 				PtmOnlineSpielrundeSync.nummern(getMeldeListe().getAlleMeldungen()),
 				PtmOnlineSpielrundeSync.nummern(getMeldeListe().getAktiveMeldungen()),
 				PtmOnlineSpielrundeSync.nummern(getMeldeListe().getAusgesetztMeldungen()));

@@ -69,6 +69,7 @@ import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.ptmonline.PtmOnlineLiveAusloeser;
 import de.petanqueturniermanager.ptmonline.PtmOnlineSpielrundeSync;
 import de.petanqueturniermanager.ptmonline.PtmOnlineTurnierstart;
+import de.petanqueturniermanager.ptmonline.Rundenstart;
 
 /**
  * Erstellt das Rundenplan-Sheet für die nächste Kaskadenrunde.
@@ -187,7 +188,7 @@ public class KaskadeSpielrundeSheet extends SheetRunner implements ISheet, PtmOn
             meldeListe.upDateSheet();
         }
         PtmOnlineTurnierstart turnierstart = PtmOnlineSpielrundeSync.turnierstartAbgleichen(getWorkingSpreadsheet(),
-                getTurnierSystem(), naechsteRundeNr == 1, meldeListe.getAlleMeldungen(),
+                getTurnierSystem(), Rundenstart.neueRunde(naechsteRundeNr == 1), meldeListe.getAlleMeldungen(),
                 meldeListe.getAktiveMeldungen());
         var meldungenNachSP = meldeListe.getMeldungenSortiertNachSetzposition();
         if (naechsteRundeNr == 1) {

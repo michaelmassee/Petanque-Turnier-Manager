@@ -24,6 +24,7 @@ import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.ptmonline.PtmOnlineLiveAusloeser;
 import de.petanqueturniermanager.ptmonline.PtmOnlineSpielrundeSync;
 import de.petanqueturniermanager.ptmonline.PtmOnlineTurnierstart;
+import de.petanqueturniermanager.ptmonline.Rundenstart;
 import de.petanqueturniermanager.poule.rangliste.PouleVorrundenRanglisteSheet;
 
 /**
@@ -58,7 +59,7 @@ public class PouleVorrundeSheet extends AbstractPouleVorrundeSheet implements Pt
 
         var meldungen = meldeliste.getAktiveMeldungen();
         PtmOnlineTurnierstart turnierstart = PtmOnlineSpielrundeSync.turnierstartAbgleichen(getWorkingSpreadsheet(),
-                getTurnierSystem(), true, meldeliste.getAlleMeldungen(), meldungen);
+                getTurnierSystem(), Rundenstart.ERSTE_RUNDE, meldeliste.getAlleMeldungen(), meldungen);
         meldungen = PtmOnlineSpielrundeSync.ohneGesperrte(getWorkingSpreadsheet(), getTurnierSystem(), meldungen);
         int anzTeams = meldungen.size();
 

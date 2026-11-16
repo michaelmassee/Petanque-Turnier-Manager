@@ -59,7 +59,8 @@ import de.petanqueturniermanager.spielerdb.MeleeAnmeldungZiel;
  * Zeitlimit, und das Speichern der Schreibaufträge ({@link PtmOnlineAuftraege}). Die erste Runde verwirft
  * ungesendete Aufträge der Anmeldephase und setzt {@code running} als nächsten Auftrag (KP-05); danach folgt der
  * vollständige Teilnahme-Stand. Beides entsteht erst, wenn der Aufrufer die erstellte Runde bestätigt
- * ({@link PtmOnlineTurnierstart}). Gesendet wird im Hintergrund ({@link PtmOnlineLiveBeobachter}) mit Wiederholung bei
+ * ({@link PtmOnlineTurnierstart}). Ebenso nimmt eine Folgerunde ein online zurückgesetztes oder abgeschlossenes
+ * Turnier wieder auf ({@link Rundenstart#FOLGERUNDE}). Gesendet wird im Hintergrund ({@link PtmOnlineLiveBeobachter}) mit Wiederholung bei
  * Netzfehlern: die Auslosung wartet nie auf das Netz. Lokale Meldungen ohne Online-Zuordnung bleiben ab dem Start rein
  * lokal (E-13).
  * <p>
@@ -70,6 +71,8 @@ public final class PtmOnlineSpielrundeSync {
 
     private static final Logger logger = LogManager.getLogger(PtmOnlineSpielrundeSync.class);
     private static final int MAX_NAMEN_IN_RUECKFRAGE = 15;
+    /** Online-Status, in denen ein Rundenstart das Turnier wieder aufnimmt ({@code running} senden). */
+    private static final Set<String> ONLINE_STATUS_WIEDERAUFZUNEHMEN = Set.of("registration", "finished");
 
     private PtmOnlineSpielrundeSync() {}
 
@@ -83,10 +86,10 @@ public final class PtmOnlineSpielrundeSync {
     }
 
     /**
-     * @param istErsteRunde        {@code true}, wenn dieser Aufruf die allererste Spielrunde des
-     *                             Turniers (bzw. bei Supermelee: des Spieltags) erzeugt — prüft dann, ob
-     *                             online noch bestätigte Meldungen fehlen (Rückfrage), und startet das
-     *                             Online-Turnier.
+     * @param rundenstart          Anlass: bei {@link Rundenstart#ERSTE_RUNDE} wird geprüft, ob online noch
+     *                             bestätigte Meldungen fehlen (Rückfrage), und das Online-Turnier gestartet; bei
+     *                             {@link Rundenstart#FOLGERUNDE} ein online nicht laufendes (zurückgesetztes oder
+     *                             abgeschlossenes) Turnier wieder aufgenommen.
      * @param alleTeamNummern      Team-/Spieler-Nummern aller aktuell in der Meldeliste erfassten
      *                             Teams (entspricht der Zeilennummerierung, die auch
      *                             {@link PtmOnlineRegistrationMapping} als Team-Nr verwendet).
@@ -97,17 +100,18 @@ public final class PtmOnlineSpielrundeSync {
      *                             gemeldet, der online verwaltete Anmeldestatus bleibt unverändert.
      *                             Teams, die weder aktiv noch ausgesetzt sind, gelten als
      *                             {@link OnlineTeilnahme#INAKTIV}.
-     * @return bei der ersten Runde der vorgemerkte Start: Der Aufrufer bestätigt ihn erst, wenn die Runde erstellt
-     *         ist ({@link PtmOnlineTurnierstart#bestaetigen()}); sonst entstehen weder Start- noch Teilnahme-Aufträge
+     * @return bei Turnierstart oder Wiederaufnahme der vorgemerkte Start: Der Aufrufer bestätigt ihn erst, wenn die
+     *         Runde erstellt ist ({@link PtmOnlineTurnierstart#bestaetigen()}); sonst entstehen weder Start- noch
+     *         Teilnahme-Aufträge
      */
-    public static PtmOnlineTurnierstart abgleichen(WorkingSpreadsheet ws, TurnierSystem ts, boolean istErsteRunde,
+    public static PtmOnlineTurnierstart abgleichen(WorkingSpreadsheet ws, TurnierSystem ts, Rundenstart rundenstart,
             Set<Integer> alleTeamNummern, Set<Integer> aktiveTeamNummern, Set<Integer> ausgestiegeneTeamNummern)
             throws GenerateException {
         Optional<PtmOnlineVerbindung> verbindung = verbindung(ws, ts);
         if (verbindung.isEmpty()) {
             return PtmOnlineTurnierstart.keiner();
         }
-        return abgleichen(ws, verbindung.get(), istErsteRunde, alleTeamNummern, aktiveTeamNummern,
+        return abgleichen(ws, verbindung.get(), rundenstart, alleTeamNummern, aktiveTeamNummern,
                 ausgestiegeneTeamNummern);
     }
 
@@ -121,7 +125,7 @@ public final class PtmOnlineSpielrundeSync {
      * @return wie {@link #abgleichen}: der erst nach erstellter Runde zu bestätigende Start
      */
     public static PtmOnlineTurnierstart turnierstartAbgleichen(WorkingSpreadsheet ws, TurnierSystem ts,
-            boolean istErsteRunde, IMeldungen<?, ?> alleMeldungen, IMeldungen<?, ?> aktiveMeldungen)
+            Rundenstart rundenstart, IMeldungen<?, ?> alleMeldungen, IMeldungen<?, ?> aktiveMeldungen)
             throws GenerateException {
         Optional<PtmOnlineVerbindung> verbindung = verbindung(ws, ts);
         if (verbindung.isEmpty()) {
@@ -130,7 +134,7 @@ public final class PtmOnlineSpielrundeSync {
         Set<Integer> aktive = nummern(aktiveMeldungen);
         Set<Integer> ausgestiegene = ausgestiegeneTeamNummern(verbindung.get().meldeliste());
         ausgestiegene.removeAll(aktive);
-        return abgleichen(ws, verbindung.get(), istErsteRunde, nummern(alleMeldungen), aktive, ausgestiegene);
+        return abgleichen(ws, verbindung.get(), rundenstart, nummern(alleMeldungen), aktive, ausgestiegene);
     }
 
     private static Set<Integer> ausgestiegeneTeamNummern(MeldelisteZiel ziel) {
@@ -138,12 +142,12 @@ public final class PtmOnlineSpielrundeSync {
     }
 
     /**
-     * Synchron: Nr-Formeln und vor der ersten Runde die Rückfragen. Die Schreibaufträge entstehen ab der zweiten Runde
-     * sofort, bei der ersten erst mit der Bestätigung des Starts – ein Start ohne erstellte Runde beendet sonst online
-     * die Anmeldung.
+     * Synchron: Nr-Formeln und vor der ersten Runde die Rückfragen. Ohne Start entstehen die Schreibaufträge sofort,
+     * mit Start (erste Runde oder Wiederaufnahme) erst mit seiner Bestätigung – ein Start ohne erstellte Runde beendet
+     * sonst online die Anmeldung.
      */
     private static PtmOnlineTurnierstart abgleichen(WorkingSpreadsheet ws, PtmOnlineVerbindung verbindung,
-            boolean istErsteRunde, Set<Integer> alleTeamNummern, Set<Integer> aktiveTeamNummern,
+            Rundenstart rundenstart, Set<Integer> alleTeamNummern, Set<Integer> aktiveTeamNummern,
             Set<Integer> ausgestiegeneTeamNummern) throws GenerateException {
         XComponentContext ctx = ws.getxContext();
         boolean pausiert = !istSyncAktiv(verbindung.mapping());
@@ -152,15 +156,11 @@ public final class PtmOnlineSpielrundeSync {
         if (!pausiert) {
             aktualisiereNrFormeln(verbindung.ziel(), verbindung.mapping(), fehler);
         }
-        boolean startSenden = true;
-        boolean trotzBefunden = false;
-        if (istErsteRunde) {
-            if (pausiert) {
-                startSenden = nurStartSendenTrotzPause(ctx);
-            } else {
-                trotzBefunden = vorabcheckBestaetigt(ctx, verbindung);
-            }
-        }
+        Turnierbeginn beginn = switch (rundenstart) {
+            case ERSTE_RUNDE -> turnierbeginn(ctx, verbindung, pausiert);
+            case FOLGERUNDE -> wiederaufnahme(verbindung.mapping(), pausiert);
+            case KEINER -> null;
+        };
         if (!fehler.isEmpty()) {
             zeigeFehlerSammlung(ctx, fehler);
         }
@@ -168,23 +168,48 @@ public final class PtmOnlineSpielrundeSync {
         // Teilnahme-Stand jetzt lesen: so wie er vor der Auslosung galt.
         Teilnahme teilnahme = pausiert ? null
                 : leseTeilnahme(verbindung, alleTeamNummern, aktiveTeamNummern, ausgestiegeneTeamNummern);
-        Turnierbeginn beginn = istErsteRunde ? new Turnierbeginn(startSenden, trotzBefunden) : null;
         PtmOnlineTurnierstart.Erfassung erfassung = () -> erfasseAuftraege(ws, verbindung, beginn, teilnahme);
-        if (istErsteRunde) {
+        if (beginn != null) {
             return PtmOnlineTurnierstart.vorgemerkt(erfassung);
         }
         erfassung.erfasse();
         return PtmOnlineTurnierstart.keiner();
     }
 
+    /** Erste Runde: bei pausiertem Sync Rückfrage, ob {@code running} trotzdem gesendet wird, sonst Vorabcheck. */
+    private static Turnierbeginn turnierbeginn(XComponentContext ctx, PtmOnlineVerbindung verbindung,
+            boolean pausiert) throws GenerateException {
+        if (pausiert) {
+            return new Turnierbeginn(nurStartSendenTrotzPause(ctx), false, false);
+        }
+        return new Turnierbeginn(true, vorabcheckBestaetigt(ctx, verbindung), false);
+    }
+
     /**
-     * Rückfragen-Ergebnis zum Turnierbeginn.
-     *
-     * @param startSenden   {@code running} sofort senden; bei pausiertem Sync nur auf Wunsch, sonst bleibt der Start
-     *                      ausstehend bis zum Fortsetzen
-     * @param trotzBefunden trotz fehlender Meldungen oder Ausschlussgründe gestartet (wird protokolliert)
+     * Folgerunde: Ist das Turnier online nicht laufend (dort zurückgesetzt, E-23, oder abgeschlossen), nimmt dieser
+     * ausdrückliche Rundenstart es wieder auf – ohne Rückfragen, bei pausiertem Sync erst beim Fortsetzen. Sonst
+     * {@code null}: kein Start nötig, oder der Online-Status ist (noch) unbekannt.
      */
-    private record Turnierbeginn(boolean startSenden, boolean trotzBefunden) {
+    private static @Nullable Turnierbeginn wiederaufnahme(PtmOnlineRegistrationMapping mapping, boolean pausiert)
+            throws GenerateException {
+        Optional<String> onlineStatus = mapping.getOnlineStatus();
+        if (onlineStatus.filter(ONLINE_STATUS_WIEDERAUFZUNEHMEN::contains).isEmpty()) {
+            return null;
+        }
+        logger.info("PTM-Online: Turnier online '{}', neuer Rundenstart nimmt es wieder auf", onlineStatus.get());
+        return new Turnierbeginn(!pausiert, false, true);
+    }
+
+    /**
+     * Start-Entscheidung zum Rundenstart.
+     *
+     * @param startSenden    {@code running} sofort senden; bei pausiertem Sync nur auf Wunsch, sonst bleibt der Start
+     *                       ausstehend bis zum Fortsetzen
+     * @param trotzBefunden  trotz fehlender Meldungen oder Ausschlussgründe gestartet (wird protokolliert)
+     * @param wiederaufnahme ein online zurückgesetztes oder abgeschlossenes Turnier wird wieder aufgenommen: der
+     *                       Live-Stand wird danach komplett neu übertragen, weil der Start ungesendete Aufträge verwirft
+     */
+    private record Turnierbeginn(boolean startSenden, boolean trotzBefunden, boolean wiederaufnahme) {
     }
 
     /**
@@ -211,7 +236,7 @@ public final class PtmOnlineSpielrundeSync {
     }
 
     /**
-     * @param beginn    nur bei der ersten Runde
+     * @param beginn    nur bei Turnierstart oder Wiederaufnahme
      * @param teilnahme {@code null} bei pausiertem Sync
      */
     private static void erfasseAuftraege(WorkingSpreadsheet ws, PtmOnlineVerbindung verbindung,
@@ -242,8 +267,11 @@ public final class PtmOnlineSpielrundeSync {
         List<SyncAuftrag> verworfen = PtmOnlineAuftraege.start(bestand, tournamentId, lokalerStart,
                 I18n.get("ptmonline.auftrag.verworfen.turnierstart"));
         if (!verworfen.isEmpty()) {
-            logger.info("PTM-Online: {} ungesendete Aufträge der Anmeldephase beim Turnierstart verworfen",
-                    verworfen.size());
+            logger.info("PTM-Online: {} ungesendete Aufträge beim Turnierstart verworfen", verworfen.size());
+        }
+        if (beginn.wiederaufnahme()) {
+            // Verworfene oder abgelehnte Runden-/Ranglistenaufträge: nächste Erfassung überträgt alles neu.
+            PtmOnlineLiveSync.vergessen(tournamentId);
         }
         // Nach running, damit der Start der erste Schreibvorgang bleibt (KP-05).
         if (beginn.trotzBefunden()) {
