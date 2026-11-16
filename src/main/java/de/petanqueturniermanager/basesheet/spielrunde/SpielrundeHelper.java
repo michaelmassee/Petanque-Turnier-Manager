@@ -42,8 +42,17 @@ import de.petanqueturniermanager.model.TeamPaarung;
 
 public class SpielrundeHelper {
 
-	private static int DEFAULT_HEADER_CHAR_HEIGHT = 14;
-	private static int DEFAULT_NR_CHAR_HEIGHT = 16;
+	private static final int DEFAULT_HEADER_CHAR_HEIGHT = 14;
+	private static final int DEFAULT_NR_CHAR_HEIGHT = 16;
+
+	/** Mindestbreite (1/100 mm) der Spalte mit laufender Paarungsnummer. */
+	static final int MIN_BREITE_LAUFENDE_NR = 500;
+	/** Mindestbreite (1/100 mm) der Bahnspalte; der Kopf „Bahn“ steht gedreht. */
+	static final int MIN_BREITE_BAHN = 900;
+	/** Breite einer Ziffer je Punkt Schriftgröße in 1/100 mm (≈ 0,6 em, 1 pt = 35,28 1/100 mm). */
+	private static final double ZIFFERN_BREITE_JE_PUNKT = 21.0;
+	/** Innenabstand und Rahmen der Nummernspalte in 1/100 mm. */
+	private static final int RAND_NR_SPALTE = 150;
 
 	private final ISheet sheet;
 	private final int headerCharHeight;
@@ -108,6 +117,7 @@ public class SpielrundeHelper {
 		// -------------------------
 		// spalte paarungen Nr oder Spielbahn-Nummer
 		// -------------------------
+		int anzPaarungen = letzteZeile - erstZeile + 1;
 		ColumnProperties columnProperties = ColumnProperties.from().setVertJustify(CellVertJustify2.CENTER)
 				.setHoriJustify(CellHoriJustify.CENTER);
 		if (spielrundeSpielbahnFlagAusKonfig == SpielrundeSpielbahn.X) {
@@ -119,7 +129,7 @@ public class SpielrundeHelper {
 				sheet.getSheetHelper().setStringValueInCell(headerValue);
 			}
 
-			columnProperties.setWidth(500); // Paarungen cntr
+			columnProperties.setWidth(nrSpaltenBreite(anzPaarungen, nrCharHeight, MIN_BREITE_LAUFENDE_NR));
 			sheet.getSheetHelper().setColumnProperties(sheet, nrSpalte, columnProperties);
 		} else {
 			// Spielbahn Spalte header
@@ -132,15 +142,13 @@ public class SpielrundeHelper {
 						.setComment(I18n.get("comment.spielbahn"));
 				sheet.getSheetHelper().setStringValueInCell(headerValue);
 			}
-			columnProperties.setWidth(900);
+			columnProperties.setWidth(nrSpaltenBreite(anzPaarungen, nrCharHeight, MIN_BREITE_BAHN));
 			sheet.getSheetHelper().setColumnProperties(sheet, nrSpalte, columnProperties);
 		}
 
 		RangePosition nbrRangeOhneHeader = RangePosition.from(posErsteDatenZelle, posLetztDatenZelle);
 		sheet.getSheetHelper().setPropertiesInRange(sheet, nbrRangeOhneHeader,
 				CellProperties.from().setCharHeight(nrCharHeight).setBorder(BorderFactory.from().allThin().toBorder()));
-
-		int anzPaarungen = letzteZeile - erstZeile + 1;
 
 		// Daten
 		RangeData bahnNummern = switch (spielrundeSpielbahnFlagAusKonfig) {
@@ -171,6 +179,18 @@ public class SpielrundeHelper {
 			DatengueltigkeitHelper.setzeBahnDatengueltigkeit(sheet, rangeErsteSpalte);
 		}
 
+	}
+
+	/**
+	 * Breite der Nummernspalte, damit auch die größte Nummer ({@code anzPaarungen}) in der Schriftgröße der Nummern
+	 * ganz sichtbar ist (sonst zeigt Calc ab zweistelligen Nummern „###“).
+	 *
+	 * @return Breite in 1/100 mm, mindestens {@code mindestBreite}
+	 */
+	static int nrSpaltenBreite(int anzPaarungen, int nrCharHeight, int mindestBreite) {
+		int ziffern = String.valueOf(Math.max(1, anzPaarungen)).length();
+		int breite = (int) Math.round(ziffern * nrCharHeight * ZIFFERN_BREITE_JE_PUNKT) + RAND_NR_SPALTE;
+		return Math.max(mindestBreite, breite);
 	}
 
 	/** @return 0-basierte Indizes der Freilos-Paarungen (ohne Team B) in {@code paarungen} */
