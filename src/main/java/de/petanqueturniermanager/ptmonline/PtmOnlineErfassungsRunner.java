@@ -172,6 +172,7 @@ final class PtmOnlineErfassungsRunner extends SheetRunner {
             // gerade angewendeten Online-Ergebnisse. Ohne Tab-Wechsel wären sie sonst veraltet.
             SheetSyncNachzieher.get().zieheNach(getWorkingSpreadsheet(), NachziehModus.NUR_VORHANDENE,
                     this::oeffneSchutzScope);
+            startNachRundenstartVormerken(bestand, v, passenderAbruf);
             startNachholen(bestand, v);
             erfasseCheckin(bestand, v);
             erfasseSpieleinstellungen(bestand, v);
@@ -193,6 +194,34 @@ final class PtmOnlineErfassungsRunner extends SheetRunner {
         }
         oeffneSchutzScope();
         mapping.setOnlineStatus(status.get());
+    }
+
+    /**
+     * Online wurde der Start zurückgesetzt (E-23), im Dokument danach aber eine Folgerunde angelegt: Das ist der
+     * ausdrückliche Rundenstart, der das Turnier wieder aufnimmt. Nötig, weil das Dokument vom Zurücksetzen oft erst
+     * nach dem Anlegen der Runde erfährt – die Ablehnungen der Rundenübertragung nennen den Status nicht, erst der
+     * danach abgerufene vollständige Online-Stand. Der Start wird als ausstehend vorgemerkt und gleich nachgeholt;
+     * die abgelehnten Runden überträgt die nächste Erfassung komplett neu.
+     */
+    private void startNachRundenstartVormerken(AuftragsBestand bestand, PtmOnlineVerbindung verbindung,
+            @Nullable OnlineStandAbruf standAbruf) throws GenerateException {
+        if (standAbruf == null || !standAbruf.vollstaendig() || bestand.hatOffenen(AuftragsArt.START)) {
+            return;
+        }
+        Optional<Instant> zurueckgesetzt = standAbruf.stand().flatMap(SyncStandDto::zurueckgesetztAm);
+        if (zurueckgesetzt.isEmpty()) {
+            return;
+        }
+        PtmOnlineRegistrationMapping mapping = verbindung.mapping();
+        Optional<Instant> rundenstart = mapping.getLetzterRundenstart().filter(zurueckgesetzt.get()::isBefore);
+        if (rundenstart.isEmpty() || mapping.getRunningAusstehendSeit().isPresent()) {
+            return;
+        }
+        getLogger().info("PTM-Online: Folgerunde ({}) nach online zurückgesetztem Start ({}), Turnier wird wieder "
+                + "aufgenommen", rundenstart.get(), zurueckgesetzt.get());
+        oeffneSchutzScope();
+        mapping.setRunningAusstehendSeit(rundenstart.get());
+        PtmOnlineLiveSync.vergessen(verbindung.tournamentId());
     }
 
     /**

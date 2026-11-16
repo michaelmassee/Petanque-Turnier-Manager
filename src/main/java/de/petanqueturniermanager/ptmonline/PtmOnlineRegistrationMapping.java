@@ -427,6 +427,16 @@ public class PtmOnlineRegistrationMapping {
         syncSheet.setRunningAusstehendSeit(lokalerStart);
     }
 
+    /** @see PtmOnlineSyncSheet#getLetzterRundenstart() */
+    public Optional<Instant> getLetzterRundenstart() throws GenerateException {
+        return syncSheet.getLetzterRundenstart();
+    }
+
+    /** @see PtmOnlineSyncSheet#setLetzterRundenstart(Instant) */
+    public void setLetzterRundenstart(Instant rundenstart) throws GenerateException {
+        syncSheet.setLetzterRundenstart(rundenstart);
+    }
+
     public void protokolliereOfflineBestaetigung(Instant zeitpunkt, Instant letzterSync) throws GenerateException {
         syncSheet.protokolliereOfflineBestaetigung(zeitpunkt, letzterSync);
     }

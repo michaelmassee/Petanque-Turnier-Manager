@@ -5,6 +5,8 @@ package de.petanqueturniermanager.ptmonline.dto;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Instant;
+
 import org.junit.jupiter.api.Test;
 
 class SyncStandDtoTest {
@@ -43,6 +45,16 @@ class SyncStandDtoTest {
                 .as("nach dem Zurücksetzen erneut gestartet").isFalse();
         assertThat(stand("registration", null).istStartZurueckgesetzt()).isFalse();
         assertThat(stand("registration", "").istStartZurueckgesetzt()).isFalse();
+    }
+
+    @Test
+    void liefertDenZeitpunktDesZuruecksetzens() {
+        String zurueckgesetzt = "2026-11-16T10:00:00.123Z";
+        assertThat(stand("registration", zurueckgesetzt).zurueckgesetztAm())
+                .contains(Instant.parse(zurueckgesetzt));
+        assertThat(stand("running", zurueckgesetzt).zurueckgesetztAm()).as("wieder gestartet").isEmpty();
+        assertThat(stand("registration", null).zurueckgesetztAm()).isEmpty();
+        assertThat(stand("registration", "kein Zeitpunkt").zurueckgesetztAm()).as("unlesbar").isEmpty();
     }
 
     private static SyncStandDto stand(String status, String runningResetAt) {

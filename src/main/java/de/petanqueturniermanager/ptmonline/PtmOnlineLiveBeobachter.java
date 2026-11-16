@@ -50,6 +50,7 @@ import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsBestand;
 import de.petanqueturniermanager.ptmonline.auftrag.versand.AuftragsVersand;
 import de.petanqueturniermanager.ptmonline.auftrag.versand.ErgebnismeldungsStand;
+import de.petanqueturniermanager.ptmonline.auftrag.versand.VersandErgebnis;
 import de.petanqueturniermanager.ptmonline.auftrag.versand.VersandStopp;
 import de.petanqueturniermanager.ptmonline.dto.ErgebnismeldungenDto;
 import de.petanqueturniermanager.ptmonline.dto.SyncStandDto;
@@ -78,6 +79,8 @@ import de.petanqueturniermanager.ptmonline.dto.SyncStandDto;
 public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
 
     private static final Logger logger = LogManager.getLogger(PtmOnlineLiveBeobachter.class);
+    /** Ablehnung wegen Konflikt mit dem Online-Zustand. */
+    private static final int HTTP_KONFLIKT = 409;
     /** Wartezeit ab der ersten Änderung einer gebündelten Änderungswelle. */
     static final long VERZOEGERUNG_MS = 3000;
     /** Wartezeit nach einem Turnier-Kommando: dessen Änderungen sind vollständig. */
@@ -384,6 +387,11 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
         private volatile @Nullable Instant onlineStandAbgerufen;
         /** Der Server meldet den Turnierstatus per Huckepack; der regelmäßige Abruf entfällt dann. */
         private volatile boolean statusPerHuckepack;
+        /**
+         * Ein Auftrag wurde mit 409 abgelehnt: Ablehnungen tragen keinen Huckepack, der Online-Zustand kann sich also
+         * unbemerkt geändert haben (z.&nbsp;B. Start online zurückgesetzt). Der nächste Durchlauf ruft ihn neu ab.
+         */
+        private volatile boolean standVeraltet;
         /** Zuletzt abgeholte offene Ergebnismeldungen; nach neuer Bindung verworfen. */
         private volatile PtmOnlineErfassungsRunner.@Nullable ErgebnismeldungsAbruf ergebnismeldungen;
         /** Client und Turnier des letzten Durchlaufs, für den Abruf der Ergebnismeldungen. */
@@ -541,7 +549,8 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
                 throws InterruptedException {
             boolean rundenOffen = PtmOnlineLiveSync.brauchtOnlineRunden(tournamentId);
             Instant zuletzt = onlineStandAbgerufen;
-            if (!rundenOffen && (statusPerHuckepack
+            boolean veraltet = standVeraltet;
+            if (!rundenOffen && !veraltet && (statusPerHuckepack
                     || (zuletzt != null && zuletzt.plus(ONLINE_STAND_ABSTAND).isAfter(Instant.now())))) {
                 return;
             }
@@ -556,11 +565,12 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
                 return;
             }
             onlineStandAbgerufen = Instant.now();
+            standVeraltet = false;
             PtmOnlineErfassungsRunner.OnlineStandAbruf bisher = onlineStand;
             Optional<String> bisherigerStatus = bisher == null || !bisher.tournamentId().equals(tournamentId)
                     ? Optional.empty() : bisher.stand().map(SyncStandDto::status);
             onlineStand = new PtmOnlineErfassungsRunner.OnlineStandAbruf(tournamentId, stand);
-            if (rundenOffen || !bisherigerStatus.equals(Optional.ofNullable(stand.get().status()))) {
+            if (rundenOffen || veraltet || !bisherigerStatus.equals(Optional.ofNullable(stand.get().status()))) {
                 anstossen();
             }
         }
@@ -590,11 +600,19 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
             try {
                 return AuftragsVersand.sende(bestand.zuSenden(pausiert), client, ergebnis -> {
                     bestand.gesendet(ergebnis);
+                    beachteAblehnung(ergebnis);
                     beachteHuckepack(ergebnis.antwort().ergebnismeldungen());
                     beachteTurnierStatus(ergebnis.antwort().turnierStatus());
                 });
             } finally {
                 bestand.versandSperre().unlock();
+            }
+        }
+
+        /** Eine Ablehnung wegen Konflikt (409) kann auf einen online geänderten Zustand zurückgehen. */
+        private void beachteAblehnung(VersandErgebnis ergebnis) {
+            if (!ergebnis.angenommen() && ergebnis.antwort().status() == HTTP_KONFLIKT) {
+                standVeraltet = true;
             }
         }
 

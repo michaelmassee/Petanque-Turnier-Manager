@@ -3,6 +3,8 @@
  */
 package de.petanqueturniermanager.ptmonline.dto;
 
+import java.time.Instant;
+import java.time.format.DateTimeParseException;
 import java.util.Optional;
 
 import org.jspecify.annotations.Nullable;
@@ -49,6 +51,18 @@ public record SyncStandDto(String status, boolean registrationClosed, String run
      */
     public boolean istStartZurueckgesetzt() {
         return runningResetAt != null && !runningResetAt.isBlank() && !istRunning();
+    }
+
+    /** Zeitpunkt des online zurückgesetzten Starts; leer ohne Zurücksetzen oder bei unlesbarem Wert. */
+    public Optional<Instant> zurueckgesetztAm() {
+        if (!istStartZurueckgesetzt()) {
+            return Optional.empty();
+        }
+        try {
+            return Optional.of(Instant.parse(runningResetAt.strip()));
+        } catch (DateTimeParseException e) {
+            return Optional.empty();
+        }
     }
 
     /** Online-Anmeldung läuft und ist nicht von der Turnierleitung geschlossen. */

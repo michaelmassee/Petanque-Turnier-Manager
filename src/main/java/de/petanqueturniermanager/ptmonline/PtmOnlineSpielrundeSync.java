@@ -169,11 +169,28 @@ public final class PtmOnlineSpielrundeSync {
         Teilnahme teilnahme = pausiert ? null
                 : leseTeilnahme(verbindung, alleTeamNummern, aktiveTeamNummern, ausgestiegeneTeamNummern);
         PtmOnlineTurnierstart.Erfassung erfassung = () -> erfasseAuftraege(ws, verbindung, beginn, teilnahme);
+        boolean folgerunde = rundenstart == Rundenstart.FOLGERUNDE;
         if (beginn != null) {
-            return PtmOnlineTurnierstart.vorgemerkt(erfassung);
+            return PtmOnlineTurnierstart.vorgemerkt(() -> {
+                erfassung.erfasse();
+                merkeRundenstart(verbindung, folgerunde);
+            });
         }
         erfassung.erfasse();
-        return PtmOnlineTurnierstart.keiner();
+        return folgerunde ? PtmOnlineTurnierstart.vorgemerkt(() -> merkeRundenstart(verbindung, true))
+                : PtmOnlineTurnierstart.keiner();
+    }
+
+    /**
+     * Hält eine erstellte Folgerunde fest: Erfährt das Dokument erst danach, dass der Start online zurückgesetzt wurde
+     * (die Ablehnungen nennen den Status nicht), holt die Erfassung den Start nach, sofern die Runde jünger ist als
+     * das Zurücksetzen ({@link PtmOnlineErfassungsRunner}).
+     */
+    private static void merkeRundenstart(PtmOnlineVerbindung verbindung, boolean folgerunde)
+            throws GenerateException {
+        if (folgerunde) {
+            verbindung.mapping().setLetzterRundenstart(Instant.now());
+        }
     }
 
     /** Erste Runde: bei pausiertem Sync Rückfrage, ob {@code running} trotzdem gesendet wird, sonst Vorabcheck. */

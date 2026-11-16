@@ -119,6 +119,10 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 	private static final int KOPF_ABRUF_CURSOR = 4;
 	/** Sprachneutraler Status des Online-Turniers; sichtbar übersetzt neben der Online-Turnier-Id. */
 	private static final int KOPF_ONLINE_STATUS = 5;
+	/** Zweite Kopfspalte (Label | Wert) rechts der ersten, ebenfalls ausgeblendet. */
+	private static final int SPALTE_KOPF2_LABEL = 12;
+	private static final int SPALTE_KOPF2_WERT = 13;
+	private static final int KOPF2_LETZTER_RUNDENSTART = 0;
 	private static final int SPALTE_ONLINE_STATUS_LABEL = 2;
 	private static final int SPALTE_ONLINE_STATUS_ANZEIGE = 3;
 	private static final int SPALTE_AUFTRAG_ID = 10;
@@ -573,6 +577,19 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 				lokalerStart == null ? "" : lokalerStart.toString());
 	}
 
+	/**
+	 * Zeitpunkt, zu dem im Dokument zuletzt eine Folgerunde angelegt wurde. Ein online danach erkannter
+	 * zurückgesetzter Start (E-23) gilt dadurch als ausdrücklich wieder aufgenommen.
+	 */
+	public Optional<Instant> getLetzterRundenstart() throws GenerateException {
+		return parseZeitpunkt(leseKopf(SPALTE_KOPF2_WERT, KOPF2_LETZTER_RUNDENSTART));
+	}
+
+	public void setLetzterRundenstart(Instant rundenstart) throws GenerateException {
+		schreibeKopf(SPALTE_KOPF2_LABEL, KOPF2_LETZTER_RUNDENSTART, "ptmonline.sheet.label.letzter.rundenstart",
+				rundenstart.toString());
+	}
+
 	/** Protokolliert die ausdrückliche Bestätigung, ohne letzten Abgleich zu starten (P-25). */
 	public void protokolliereOfflineBestaetigung(Instant zeitpunkt, Instant letzterSync) throws GenerateException {
 		schreibeKopf(KOPF_OFFLINE_BESTAETIGT, "ptmonline.sheet.label.offline.bestaetigt",
@@ -585,19 +602,28 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 	}
 
 	private String leseKopf(int zeile) throws GenerateException {
+		return leseKopf(SPALTE_KOPF_WERT, zeile);
+	}
+
+	private String leseKopf(int wertSpalte, int zeile) throws GenerateException {
 		if (!blattVorhanden()) {
 			return "";
 		}
 		return StringUtils.defaultString(getSheetHelper().getTextFromCell(getXSpreadSheet(),
-				Position.from(SPALTE_KOPF_WERT, zeile))).strip();
+				Position.from(wertSpalte, zeile))).strip();
 	}
 
 	private void schreibeKopf(int zeile, String labelSchluessel, String wert) throws GenerateException {
+		schreibeKopf(SPALTE_KOPF_LABEL, zeile, labelSchluessel, wert);
+	}
+
+	private void schreibeKopf(int labelSpalte, int zeile, String labelSchluessel, String wert)
+			throws GenerateException {
 		RangeData daten = new RangeData();
 		RowData kopf = daten.addNewRow();
 		kopf.newString(I18n.get(labelSchluessel));
 		kopf.newString(StringUtils.defaultString(wert));
-		RangeHelper.from(this, daten.getRangePosition(Position.from(SPALTE_KOPF_LABEL, zeile))).setDataInRange(daten);
+		RangeHelper.from(this, daten.getRangePosition(Position.from(labelSpalte, zeile))).setDataInRange(daten);
 	}
 
 	private void schreibePufferKopfzeile() throws GenerateException {
