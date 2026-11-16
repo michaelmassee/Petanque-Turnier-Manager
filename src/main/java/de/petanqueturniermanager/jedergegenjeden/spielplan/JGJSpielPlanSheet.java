@@ -50,6 +50,7 @@ import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationS
 import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSheet_Update;
 import de.petanqueturniermanager.ptmonline.PtmOnlineLiveAusloeser;
 import de.petanqueturniermanager.ptmonline.PtmOnlineSpielrundeSync;
+import de.petanqueturniermanager.ptmonline.PtmOnlineTurnierstart;
 import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeigeHelper;
@@ -129,10 +130,12 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet, PtmOnlineL
 		meldeListe.vollstaendigAktualisieren();
 		TeamMeldungen aktiveMeldungen = ladeAktiveMeldungen();
 		if (aktiveMeldungen != null) {
-			PtmOnlineSpielrundeSync.turnierstartAbgleichen(getWorkingSpreadsheet(), getTurnierSystem(), true,
-					meldeListe.getAlleMeldungen(), aktiveMeldungen);
-			generate(PtmOnlineSpielrundeSync.ohneGesperrte(getWorkingSpreadsheet(), getTurnierSystem(),
-					aktiveMeldungen));
+			PtmOnlineTurnierstart turnierstart = PtmOnlineSpielrundeSync.turnierstartAbgleichen(
+					getWorkingSpreadsheet(), getTurnierSystem(), true, meldeListe.getAlleMeldungen(), aktiveMeldungen);
+			if (generate(PtmOnlineSpielrundeSync.ohneGesperrte(getWorkingSpreadsheet(), getTurnierSystem(),
+					aktiveMeldungen))) {
+				turnierstart.bestaetigen();
+			}
 			ranglisteAnlegenFallsFehlt();
 		}
 	}
@@ -173,19 +176,22 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet, PtmOnlineL
 		return null;
 	}
 
-	public void generate(TeamMeldungen meldungen) throws GenerateException {
+	/**
+	 * @return ob der Spielplan erstellt wurde
+	 */
+	public boolean generate(TeamMeldungen meldungen) throws GenerateException {
 		int gruppengroesse = getKonfigurationSheet().getGruppengroesse();
 		boolean gruppenModus = gruppengroesse > 0 && meldungen.size() > gruppengroesse;
 
 		if (gruppenModus) {
 			if (meldungen.size() < 2) {
 				zeigeUngueltigeMeldungenFehler();
-				return;
+				return false;
 			}
 		} else {
 			if (!meldungen.isValid()) {
 				zeigeUngueltigeMeldungenFehler();
-				return;
+				return false;
 			}
 		}
 
@@ -193,7 +199,7 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet, PtmOnlineL
 				.pos(DefaultSheetPos.JGJ_WORK).setActiv().hideGrid()
 				.tabColor(getKonfigurationSheet().getSpielrundeTabFarbe()).create().isDidCreate()) {
 			ProcessBox.from().info("Abbruch vom Benutzer, Jeder gegen Jeden SpielPlan wurde nicht erstellt");
-			return;
+			return false;
 		}
 
 		insertDatenHeaderUndSpalteBreite();
@@ -219,6 +225,7 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet, PtmOnlineL
 
 		printBereichDefinieren();
 		SheetFreeze.from(getTurnierSheet()).anzZeilen(2).doFreeze();
+		return true;
 	}
 
 	private void zeigeUngueltigeMeldungenFehler() throws GenerateException {

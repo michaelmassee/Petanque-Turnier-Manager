@@ -20,6 +20,7 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.ptmonline.PtmOnlineSpielrundeSync;
+import de.petanqueturniermanager.ptmonline.PtmOnlineTurnierstart;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheetUpdate;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
@@ -72,7 +73,8 @@ public class SchweizerSpielrundeSheetNaechste extends SchweizerAbstractSpielrund
 		Set<Integer> aktiveNrVorSync = PtmOnlineSpielrundeSync.nummern(getMeldeListe().getAktiveMeldungen());
 		Set<Integer> ausgestiegeneNr = new HashSet<>(PtmOnlineSpielrundeSync.nummern(aktivUndAusgesetztVorSync));
 		ausgestiegeneNr.removeAll(aktiveNrVorSync);
-		PtmOnlineSpielrundeSync.abgleichen(getWorkingSpreadsheet(), getTurnierSystem(), istErsteRunde,
+		PtmOnlineTurnierstart turnierstart = PtmOnlineSpielrundeSync.abgleichen(getWorkingSpreadsheet(),
+				getTurnierSystem(), istErsteRunde,
 				PtmOnlineSpielrundeSync.nummern(getMeldeListe().getAlleMeldungen()), aktiveNrVorSync, ausgestiegeneNr);
 
 		getMeldeListe().vollstaendigAktualisieren();
@@ -136,7 +138,12 @@ public class SchweizerSpielrundeSheetNaechste extends SchweizerAbstractSpielrund
 				? sortierteTeamMeldungen(aktiveMeldungen, auswertung)
 				: aktiveMeldungen;
 
-		return neueSpielrunde(meldungenFuerAuslosung, SpielRundeNr.from(neueSpielrunde), auswertung.ergebnisse());
+		boolean erstellt = neueSpielrunde(meldungenFuerAuslosung, SpielRundeNr.from(neueSpielrunde),
+				auswertung.ergebnisse());
+		if (erstellt) {
+			turnierstart.bestaetigen();
+		}
+		return erstellt;
 	}
 
 	/**

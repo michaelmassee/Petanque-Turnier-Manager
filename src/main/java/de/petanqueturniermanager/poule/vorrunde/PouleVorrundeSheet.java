@@ -23,6 +23,7 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.ptmonline.PtmOnlineLiveAusloeser;
 import de.petanqueturniermanager.ptmonline.PtmOnlineSpielrundeSync;
+import de.petanqueturniermanager.ptmonline.PtmOnlineTurnierstart;
 import de.petanqueturniermanager.poule.rangliste.PouleVorrundenRanglisteSheet;
 
 /**
@@ -56,8 +57,8 @@ public class PouleVorrundeSheet extends AbstractPouleVorrundeSheet implements Pt
         meldeliste.upDateSheet();
 
         var meldungen = meldeliste.getAktiveMeldungen();
-        PtmOnlineSpielrundeSync.turnierstartAbgleichen(getWorkingSpreadsheet(), getTurnierSystem(), true,
-                meldeliste.getAlleMeldungen(), meldungen);
+        PtmOnlineTurnierstart turnierstart = PtmOnlineSpielrundeSync.turnierstartAbgleichen(getWorkingSpreadsheet(),
+                getTurnierSystem(), true, meldeliste.getAlleMeldungen(), meldungen);
         meldungen = PtmOnlineSpielrundeSync.ohneGesperrte(getWorkingSpreadsheet(), getTurnierSystem(), meldungen);
         int anzTeams = meldungen.size();
 
@@ -112,6 +113,7 @@ public class PouleVorrundeSheet extends AbstractPouleVorrundeSheet implements Pt
             SheetFreeze.from(xSheet, getWorkingSpreadsheet()).anzZeilen(ERSTE_DATEN_ZEILE).doFreeze();
         }
 
+        turnierstart.bestaetigen();
         ranglisteAnlegenFallsFehlt(xSheet);
     }
 

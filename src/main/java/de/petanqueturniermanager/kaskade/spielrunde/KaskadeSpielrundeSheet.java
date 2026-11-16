@@ -68,6 +68,7 @@ import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.ptmonline.PtmOnlineLiveAusloeser;
 import de.petanqueturniermanager.ptmonline.PtmOnlineSpielrundeSync;
+import de.petanqueturniermanager.ptmonline.PtmOnlineTurnierstart;
 
 /**
  * Erstellt das Rundenplan-Sheet für die nächste Kaskadenrunde.
@@ -185,8 +186,9 @@ public class KaskadeSpielrundeSheet extends SheetRunner implements ISheet, PtmOn
         } else {
             meldeListe.upDateSheet();
         }
-        PtmOnlineSpielrundeSync.turnierstartAbgleichen(getWorkingSpreadsheet(), getTurnierSystem(),
-                naechsteRundeNr == 1, meldeListe.getAlleMeldungen(), meldeListe.getAktiveMeldungen());
+        PtmOnlineTurnierstart turnierstart = PtmOnlineSpielrundeSync.turnierstartAbgleichen(getWorkingSpreadsheet(),
+                getTurnierSystem(), naechsteRundeNr == 1, meldeListe.getAlleMeldungen(),
+                meldeListe.getAktiveMeldungen());
         var meldungenNachSP = meldeListe.getMeldungenSortiertNachSetzposition();
         if (naechsteRundeNr == 1) {
             // PTM-Online: gesperrte Meldungen nicht in die Eröffnung; ab Runde 2 ist die Gruppenstruktur fixiert.
@@ -248,6 +250,7 @@ public class KaskadeSpielrundeSheet extends SheetRunner implements ISheet, PtmOn
         druckBereichSetzen();
 
         konfigurationSheet.setAktiveKaskadenRunde(naechsteRundeNr);
+        turnierstart.bestaetigen();
     }
 
     // ---------------------------------------------------------------

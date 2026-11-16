@@ -82,11 +82,57 @@ class PtmOnlineLiveSyncTest {
     }
 
     @Test
-    void ohneRundenWerdenAlleOnlineRundenGeloescht() {
+    void ohneRundenWerdenAlleOnlineRundenUndDieRanglisteGeleert() {
         erfasse(LiveTurnierStand.ohneRangliste(List.of()), OptionalInt.of(2));
 
         assertThat(auftraege()).extracting(SyncAuftrag::art)
-                .containsExactly(AuftragsArt.RUNDE_LOESCHEN, AuftragsArt.RUNDE_LOESCHEN);
+                .containsExactly(AuftragsArt.RUNDE_LOESCHEN, AuftragsArt.RUNDE_LOESCHEN, AuftragsArt.RANGLISTE);
+        assertThat(auftraege().getLast().body()).isEqualTo("{\"entries\":[]}");
+    }
+
+    @Test
+    void ueberzaehligeOnlineRundenWerdenNachGescheitertemErstenAbrufNachgeholt() {
+        LiveTurnierStand nurRunde1 = LiveTurnierStand.ohneRangliste(List.of(runde(1, 13)));
+        erfasse(nurRunde1, OptionalInt.empty());
+        assertThat(gedaechtnis.letzter("t1")).hasValueSatisfying(
+                stand -> assertThat(stand.onlineRundenAbgeglichen()).isFalse());
+
+        erfasse(nurRunde1, OptionalInt.of(3));
+
+        assertThat(auftraege()).extracting(SyncAuftrag::art, SyncAuftrag::pfad).containsExactly(
+                tuple(AuftragsArt.RUNDE, "/api/sync/tournaments/t1/rounds/1"),
+                tuple(AuftragsArt.RUNDE_LOESCHEN, "/api/sync/tournaments/t1/rounds/2"),
+                tuple(AuftragsArt.RUNDE_LOESCHEN, "/api/sync/tournaments/t1/rounds/3"),
+                tuple(AuftragsArt.RANGLISTE, "/api/sync/tournaments/t1/ranking"));
+        assertThat(gedaechtnis.letzter("t1")).hasValueSatisfying(
+                stand -> assertThat(stand.onlineRundenAbgeglichen()).isTrue());
+    }
+
+    @Test
+    void nachDemAbgleichZaehltEinVeralteterOnlineRundenstandNichtMehr() {
+        LiveTurnierStand nurRunde1 = new LiveTurnierStand(List.of(runde(1, 13)), RANGLISTE);
+        erfasse(nurRunde1, OptionalInt.of(1));
+        int vorher = auftraege().size();
+
+        assertThat(erfasse(nurRunde1, OptionalInt.of(3))).isZero();
+        assertThat(auftraege()).hasSize(vorher);
+    }
+
+    @Test
+    void geleerteRanglisteErsetztDenWartendenAltenStand() {
+        erfasse(new LiveTurnierStand(List.of(runde(1, 13)), RANGLISTE), OptionalInt.of(1));
+
+        erfasse(LiveTurnierStand.ohneRangliste(List.of(runde(1, 13))), OptionalInt.empty());
+
+        assertThat(auftraege()).filteredOn(auftrag -> auftrag.art() == AuftragsArt.RANGLISTE).singleElement()
+                .extracting(SyncAuftrag::body).isEqualTo("{\"entries\":[]}");
+    }
+
+    @Test
+    void leereRanglisteOhneOnlineStandErzeugtKeinenAuftrag() {
+        erfasse(LiveTurnierStand.ohneRangliste(List.of(runde(1, 13))), OptionalInt.of(0));
+
+        assertThat(auftraege()).extracting(SyncAuftrag::art).containsExactly(AuftragsArt.RUNDE);
     }
 
     private int erfasse(LiveTurnierStand stand, OptionalInt rundenOnline) {

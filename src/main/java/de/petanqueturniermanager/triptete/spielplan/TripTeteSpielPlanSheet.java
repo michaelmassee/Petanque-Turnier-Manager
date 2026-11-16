@@ -51,6 +51,7 @@ import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.model.TeamPaarung;
 import de.petanqueturniermanager.ptmonline.PtmOnlineLiveAusloeser;
 import de.petanqueturniermanager.ptmonline.PtmOnlineSpielrundeSync;
+import de.petanqueturniermanager.ptmonline.PtmOnlineTurnierstart;
 import de.petanqueturniermanager.supermelee.AbstractSuperMeleeRanglisteFormatter;
 import de.petanqueturniermanager.triptete.konfiguration.TripTeteKonfigurationSheet;
 import de.petanqueturniermanager.triptete.meldeliste.TripTeteMeldeListeSheetUpdate;
@@ -138,9 +139,11 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet, PtmOn
 		meldeListe.upDateSheet();
 		TeamMeldungen alleMeldungen = meldeListe.getAlleMeldungen();
 		// Trip-Tête spielt immer mit allen Meldungen
-		PtmOnlineSpielrundeSync.turnierstartAbgleichen(getWorkingSpreadsheet(), getTurnierSystem(), true,
-				alleMeldungen, alleMeldungen);
-		generate(alleMeldungen);
+		PtmOnlineTurnierstart turnierstart = PtmOnlineSpielrundeSync.turnierstartAbgleichen(getWorkingSpreadsheet(),
+				getTurnierSystem(), true, alleMeldungen, alleMeldungen);
+		if (generate(alleMeldungen)) {
+			turnierstart.bestaetigen();
+		}
 		ranglisteAnlegenFallsFehlt();
 	}
 
@@ -160,20 +163,23 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet, PtmOn
 		}
 	}
 
-	public void generate(TeamMeldungen meldungen) throws GenerateException {
+	/**
+	 * @return ob der Spielplan erstellt wurde
+	 */
+	public boolean generate(TeamMeldungen meldungen) throws GenerateException {
 		if (!meldungen.isValid()) {
 			processBoxinfo("processbox.abbruch");
 			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK)
 					.caption(I18n.get("msg.caption.triptete.spielplan"))
 					.message(I18n.get("msg.text.ungueltige.anzahl.meldungen")).show();
-			return;
+			return false;
 		}
 
 		if (!NewSheet.from(this, sheetName(), METADATA_SCHLUESSEL)
 				.pos(DefaultSheetPos.TRIPTETE_WORK).setActiv().hideGrid()
 				.tabColor(konfigurationSheet.getSpielrundeTabFarbe()).create().isDidCreate()) {
 			ProcessBox.from().info("Abbruch vom Benutzer, Trip-Tête-Spielplan wurde nicht erstellt");
-			return;
+			return false;
 		}
 
 		List<List<TeamPaarung>> spielPlan = TripTetePaarungen.jederGegenJeden(meldungen);
@@ -192,6 +198,7 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet, PtmOn
 		} finally {
 			getxCalculatable().enableAutomaticCalculation(true);
 		}
+		return true;
 	}
 
 	private void printBereichDefinieren() throws GenerateException {

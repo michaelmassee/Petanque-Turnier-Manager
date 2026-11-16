@@ -67,6 +67,7 @@ import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.ptmonline.PtmOnlineLiveAusloeser;
 import de.petanqueturniermanager.ptmonline.PtmOnlineSpielrundeSync;
+import de.petanqueturniermanager.ptmonline.PtmOnlineTurnierstart;
 
 /**
  * Erstellt und aktualisiert den K.-O.-Turnierbaum als Spreadsheet.<br>
@@ -692,8 +693,8 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet, PtmOnline
 
 		meldeliste.aktualisiereMeldeliste();
 		pruefeUndFragObAlleAktivieren();
-		PtmOnlineSpielrundeSync.turnierstartAbgleichen(getWorkingSpreadsheet(), getTurnierSystem(), true,
-				meldeliste.getAlleMeldungen(), meldeliste.getAktiveMeldungen());
+		PtmOnlineTurnierstart turnierstart = PtmOnlineSpielrundeSync.turnierstartAbgleichen(getWorkingSpreadsheet(),
+				getTurnierSystem(), true, meldeliste.getAlleMeldungen(), meldeliste.getAktiveMeldungen());
 
 		String rangFehler = meldeliste.validiereRangSpalte();
 		if (rangFehler != null) {
@@ -720,6 +721,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet, PtmOnline
 		int gruppenGroesse = getKonfigurationSheet().getGruppenGroesse();
 		int minLetzteGruppe = getKonfigurationSheet().getMinLetzteGruppeGroesse();
 		erstelleAlleGruppenBaeume(alleMeldungen, gruppenGroesse, minLetzteGruppe);
+		turnierstart.bestaetigen();
 	}
 
 	private void pruefeUndFragObAlleAktivieren() throws GenerateException {

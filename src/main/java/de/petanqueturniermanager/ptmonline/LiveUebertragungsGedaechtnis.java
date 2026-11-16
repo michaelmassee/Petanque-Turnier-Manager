@@ -19,8 +19,14 @@ import de.petanqueturniermanager.ptmonline.dto.LiveRankingEntryDto;
  */
 final class LiveUebertragungsGedaechtnis {
 
-    /** Übertragener Stand: Partien je Rundennummer und Rangliste. */
-    record Stand(Map<Integer, List<LiveMatchDto>> runden, List<LiveRankingEntryDto> rangliste) {
+    /**
+     * Übertragener Stand: Partien je Rundennummer und Rangliste.
+     *
+     * @param onlineRundenAbgeglichen die online vorhandenen Runden waren bei einer Erfassung bekannt, überzählige sind
+     *                                gelöscht; sonst wird das nachgeholt, sobald ihre Anzahl bekannt ist
+     */
+    record Stand(Map<Integer, List<LiveMatchDto>> runden, List<LiveRankingEntryDto> rangliste,
+            boolean onlineRundenAbgeglichen) {
 
         Stand {
             runden = Map.copyOf(runden);

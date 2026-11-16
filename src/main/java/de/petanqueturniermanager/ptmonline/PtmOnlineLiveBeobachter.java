@@ -527,11 +527,16 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
          * Rückfall für Server ohne Status-Huckepack: ruft den Online-Zustand höchstens alle
          * {@link #ONLINE_STAND_ABSTAND} neu ab. Hat sich der Turnierstatus geändert, übernimmt ihn der nächste
          * Durchlauf ins Sync-Blatt. Ein gescheiterter Abruf behält den bisherigen Stand.
+         * <p>
+         * Sind die online vorhandenen Runden noch nicht abgeglichen (erster Abruf gescheitert), wird nach jedem
+         * erfolgreichen Versand sofort erneut abgerufen; der nächste Durchlauf löscht dann überzählige Runden.
          */
         private void aktualisiereOnlineStandBeiBedarf(TournamentSyncClient client, String tournamentId)
                 throws InterruptedException {
+            boolean rundenOffen = PtmOnlineLiveSync.brauchtOnlineRunden(tournamentId);
             Instant zuletzt = onlineStandAbgerufen;
-            if (statusPerHuckepack || (zuletzt != null && zuletzt.plus(ONLINE_STAND_ABSTAND).isAfter(Instant.now()))) {
+            if (!rundenOffen && (statusPerHuckepack
+                    || (zuletzt != null && zuletzt.plus(ONLINE_STAND_ABSTAND).isAfter(Instant.now())))) {
                 return;
             }
             Optional<SyncStandDto> stand = holeOnlineStand(client, tournamentId);
@@ -543,7 +548,7 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
             Optional<String> bisherigerStatus = bisher == null || !bisher.tournamentId().equals(tournamentId)
                     ? Optional.empty() : bisher.stand().map(SyncStandDto::status);
             onlineStand = new PtmOnlineErfassungsRunner.OnlineStandAbruf(tournamentId, stand);
-            if (!bisherigerStatus.equals(Optional.ofNullable(stand.get().status()))) {
+            if (rundenOffen || !bisherigerStatus.equals(Optional.ofNullable(stand.get().status()))) {
                 anstossen();
             }
         }
