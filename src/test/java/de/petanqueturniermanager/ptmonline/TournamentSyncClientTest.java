@@ -418,6 +418,44 @@ public class TournamentSyncClientTest {
 				.hasMessageContaining("url");
 	}
 
+	@Test
+	public void holeFreigabeFragtDenFreigabelinkDesTurniersAb() throws Exception {
+		HttpClient httpClient = httpClientMitAntwort("{\"private\":true,\"active\":false}");
+		TournamentSyncClient client = new TournamentSyncClient(httpClient, "https://ptm-online.example.com", "ptm_secret");
+
+		TournamentSyncClient.Freigabe freigabe = client.holeFreigabe("t 1");
+
+		assertThat(freigabe).isEqualTo(new TournamentSyncClient.Freigabe(true, false));
+		assertThat(freigabe.fehlt()).isTrue();
+		HttpRequest anfrage = gesendeteAnfrage(httpClient);
+		assertThat(anfrage.method()).isEqualTo("GET");
+		assertThat(anfrage.uri().toString())
+				.isEqualTo("https://ptm-online.example.com/api/sync/tournaments/t+1/share-link");
+	}
+
+	@Test
+	public void aktiviereFreigabelinkPerPost() throws Exception {
+		HttpClient httpClient = httpClientMitAntwort("{\"private\":true,\"active\":true}");
+		TournamentSyncClient client = new TournamentSyncClient(httpClient, "https://ptm-online.example.com", "ptm_secret");
+
+		assertThat(client.aktiviereFreigabelink("t1").fehlt()).isFalse();
+		assertThat(gesendeteAnfrage(httpClient).method()).isEqualTo("POST");
+	}
+
+	@Test
+	public void oeffentlichesTurnierBrauchtKeinenFreigabelink() {
+		assertThat(new TournamentSyncClient.Freigabe(false, true).fehlt()).isFalse();
+		assertThat(new TournamentSyncClient.Freigabe(true, true).fehlt()).isFalse();
+	}
+
+	@Test
+	public void freigabeOhneWahrheitswertInDerAntwortWirft() throws Exception {
+		TournamentSyncClient client = new TournamentSyncClient(httpClientMitAntwort("{\"private\":\"ja\"}"),
+				"https://ptm-online.example.com", "ptm_secret");
+
+		assertThatThrownBy(() -> client.holeFreigabe("t1")).isInstanceOf(IOException.class).hasMessageContaining("private");
+	}
+
 	private HttpClient httpClientMitAntwort(String body) throws Exception {
 		HttpClient httpClient = mock(HttpClient.class);
 		HttpResponse<String> response = mockResponse(200, body);

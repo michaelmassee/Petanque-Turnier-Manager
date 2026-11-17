@@ -318,6 +318,47 @@ public class TournamentSyncClient extends PtmOnlineHttpClient implements Auftrag
         return turnierPfad(tournamentId) + "/finish";
     }
 
+    /**
+     * Freigabelink des Online-Turniers.
+     *
+     * @param privat das Turnier ist privat; Teilnehmer öffnen seine Seite nur über den Freigabelink
+     * @param aktiv  die Turnierseite ist für Teilnehmer erreichbar (öffentlich oder mit aktivem Freigabelink)
+     */
+    public record Freigabe(boolean privat, boolean aktiv) {
+
+        /** Privat ohne aktiven Freigabelink: Teilnehmer könnten einen Link auf die Turnierseite nicht öffnen. */
+        public boolean fehlt() {
+            return privat && !aktiv;
+        }
+    }
+
+    /** Ob das Turnier einen Freigabelink braucht und ob er aktiv ist (vor dem Abschluss mit Benachrichtigung). */
+    public Freigabe holeFreigabe(String tournamentId) throws IOException, InterruptedException {
+        return leseFreigabe(get(freigabelinkPfad(tournamentId)));
+    }
+
+    /** Aktiviert den Freigabelink eines privaten Turniers – nur auf ausdrücklichen Wunsch der Turnierleitung. */
+    public Freigabe aktiviereFreigabelink(String tournamentId) throws IOException, InterruptedException {
+        return leseFreigabe(post(freigabelinkPfad(tournamentId), "{}"));
+    }
+
+    static String freigabelinkPfad(String tournamentId) {
+        return turnierPfad(tournamentId) + "/share-link";
+    }
+
+    private static Freigabe leseFreigabe(HttpResponse<String> response) throws IOException {
+        JsonObject payload = leseAntwort(response);
+        return new Freigabe(pflichtWahrheitswert(payload, "private"), pflichtWahrheitswert(payload, "active"));
+    }
+
+    private static boolean pflichtWahrheitswert(JsonObject payload, String feld) throws IOException {
+        JsonElement wert = pflichtfeld(payload, feld);
+        if (!wert.isJsonPrimitive() || !wert.getAsJsonPrimitive().isBoolean()) {
+            throw unvollstaendigeAntwort(feld);
+        }
+        return wert.getAsBoolean();
+    }
+
     /** Nutzlast des Turnierabschlusses; benachrichtigt wird nur zusammen mit der Veröffentlichung. */
     static String abschlussBody(boolean ranglisteVeroeffentlichen, boolean teilnehmerBenachrichtigen) {
         JsonObject body = new JsonObject();

@@ -63,15 +63,16 @@ public final class PtmOnlineAbschlussRunner extends SheetRunner implements PtmOn
     protected void doRun() throws GenerateException {
         PtmOnlineVerbindung verbindung = PtmOnlineVerbindung.ermitteln(getWorkingSpreadsheet(), getTurnierSystem())
                 .orElseThrow(() -> new GenerateException(I18n.get("ptmonline.fehler.turnier_nicht_verbunden")));
-        Optional<Wahl> wahl = frageNach();
-        if (wahl.isEmpty()) {
-            getLogger().info("PTM-Online: Abschluss von Turnier {} abgebrochen", verbindung.tournamentId());
-            return;
-        }
-        processBox().info(I18n.get("ptmonline.fortschritt.abschluss"));
         TournamentSyncClient client = verbindung.gebundenerClient();
-        AuftragsBestand bestand = PtmOnlineAuftraege.bestand(getWorkingSpreadsheet(), verbindung.mapping(), spieltagNr);
         try {
+            Optional<Wahl> wahl = frageNach(client, verbindung.tournamentId());
+            if (wahl.isEmpty()) {
+                getLogger().info("PTM-Online: Abschluss von Turnier {} abgebrochen", verbindung.tournamentId());
+                return;
+            }
+            processBox().info(I18n.get("ptmonline.fortschritt.abschluss"));
+            AuftragsBestand bestand = PtmOnlineAuftraege.bestand(getWorkingSpreadsheet(), verbindung.mapping(),
+                    spieltagNr);
             erfasseVollstaendigenStand(verbindung, bestand, client);
             PtmOnlineAuftraege.abschluss(bestand, verbindung.tournamentId(), wahl.get().ranglisteVeroeffentlichen(),
                     wahl.get().teilnehmerBenachrichtigen());
@@ -85,16 +86,54 @@ public final class PtmOnlineAbschlussRunner extends SheetRunner implements PtmOn
         }
     }
 
-    /** Drei Rückfragen: abschließen, Endrangliste veröffentlichen, Teilnehmer benachrichtigen. */
-    private Optional<Wahl> frageNach() {
+    /**
+     * Rückfragen: abschließen, Endrangliste veröffentlichen, Teilnehmer benachrichtigen – und bei einem privaten
+     * Turnier ohne Freigabelink, ob er dafür aktiviert werden soll.
+     */
+    private Optional<Wahl> frageNach(TournamentSyncClient client, String tournamentId)
+            throws GenerateException, InterruptedException {
         if (!ja(MessageBoxTypeEnum.WARN_YES_NO, I18n.get("ptmonline.frage.abschluss"))) {
             return Optional.empty();
         }
         boolean veroeffentlichen = ja(MessageBoxTypeEnum.QUESTION_YES_NO,
                 I18n.get("ptmonline.frage.abschluss.rangliste"));
         boolean benachrichtigen = veroeffentlichen
-                && ja(MessageBoxTypeEnum.QUESTION_YES_NO, I18n.get("ptmonline.frage.abschluss.mail"));
+                && ja(MessageBoxTypeEnum.QUESTION_YES_NO, I18n.get("ptmonline.frage.abschluss.mail"))
+                && freigabeFuerBenachrichtigung(client, tournamentId);
         return Optional.of(new Wahl(veroeffentlichen, benachrichtigen));
+    }
+
+    /**
+     * Teilnehmer eines privaten Turniers öffnen die Endrangliste aus der Benachrichtigung nur über den Freigabelink.
+     * PTM-Online aktiviert ihn nie stillschweigend; fehlt er, wird gefragt. Ohne Zustimmung wird ohne Benachrichtigung
+     * abgeschlossen, statt den ganzen Abschluss scheitern zu lassen.
+     *
+     * @return ob benachrichtigt werden soll
+     */
+    private boolean freigabeFuerBenachrichtigung(TournamentSyncClient client, String tournamentId)
+            throws GenerateException, InterruptedException {
+        TournamentSyncClient.Freigabe freigabe;
+        try {
+            freigabe = client.holeFreigabe(tournamentId);
+        } catch (IOException e) {
+            // Älterer Server ohne Endpunkt oder kein Netz: PTM-Online prüft beim Abschluss ohnehin selbst.
+            getLogger().info("PTM-Online: Freigabelink von Turnier {} nicht abfragbar", tournamentId, e);
+            return true;
+        }
+        if (!freigabe.fehlt()) {
+            return true;
+        }
+        if (!ja(MessageBoxTypeEnum.QUESTION_YES_NO, I18n.get("ptmonline.frage.abschluss.freigabelink"))) {
+            getLogger().info("PTM-Online: Freigabelink nicht gewünscht, Abschluss ohne Benachrichtigung");
+            return false;
+        }
+        try {
+            return !client.aktiviereFreigabelink(tournamentId).fehlt();
+        } catch (IOException e) {
+            getLogger().error("PTM-Online: Freigabelink von Turnier {} nicht aktiviert", tournamentId, e);
+            throw new GenerateException(
+                    I18n.get("ptmonline.fehler.abschluss.freigabelink_aktivieren", PtmOnlineFehlerText.fuer(e)));
+        }
     }
 
     private boolean ja(MessageBoxTypeEnum typ, String text) {
