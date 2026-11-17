@@ -399,7 +399,7 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
         private volatile @Nullable String letzteTurnierId;
         /** Geplanter Abruf der Ergebnismeldungen; nur unter der Sperre des Beobachters verändert. */
         private @Nullable ScheduledFuture<?> naechsterMeldungsAbruf;
-        /** Sofort-Signal, solange Ergebnismeldungen abgeholt werden. */
+        /** Sofort-Signal, solange das Dokument verbunden ist und der Versand nicht angehalten wurde. */
         private final AtomicReference<@Nullable PtmOnlineAenderungsKanal> aenderungsKanal = new AtomicReference<>();
         /** Nur vom Thread „PTM-Online-Live“ verändert. */
         private long naechsteWiederholungMs = VERZOEGERUNG_MS;
@@ -523,6 +523,7 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
             if (angehalten.get()) {
                 return;
             }
+            aenderungsKanalSicherstellen(client, tournamentId);
             VersandStopp stopp = sende(e.bestand(), client, e.pausiert());
             pruefeNichtBeendet();
             if (!e.bestand().ergebnisseZumAnwenden().isEmpty()) {
@@ -678,8 +679,9 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
 
         /**
          * Holt die offenen Ergebnismeldungen (Thread „PTM-Online-Live“). Ein geänderter Stand stößt einen Durchlauf
-         * an, der die Konfliktliste nachführt. Weiter abgeholt wird nur, solange die Meldung eingeschaltet ist und das
-         * Turnier läuft – sonst erst wieder nach einem Huckepack.
+         * an, der die Konfliktliste nachführt; ein geänderter Turnierstatus ebenso. Regelmäßig abgeholt wird nur,
+         * solange die Meldung eingeschaltet ist und das Turnier läuft – sonst erst wieder nach einem Huckepack oder
+         * einem Sofort-Signal.
          */
         private void holeErgebnismeldungen() {
             TournamentSyncClient client = letzterClient;
@@ -705,12 +707,29 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
                 ergebnismeldungen = neu;
                 anstossen();
             }
+            beachteAbgerufenenStatus(tournamentId, abruf.status());
+            aenderungsKanalSicherstellen(client, tournamentId);
             if (abruf.istAktiv()) {
-                aenderungsKanalSicherstellen(client, tournamentId);
                 planeMeldungsAbruf(meldungsAbrufAbstand());
-            } else {
-                aenderungsKanalSchliessen();
             }
+        }
+
+        /**
+         * Der Abruf der Ergebnismeldungen nennt auch den Turnierstatus. Weicht er vom bekannten Online-Zustand ab
+         * (z.&nbsp;B. online von Entwurf auf Anmeldung gestellt, ohne dass das Dokument seither etwas gesendet hat),
+         * ruft der nächste Durchlauf den vollständigen Online-Zustand ab und übernimmt ihn ins Sync-Blatt und damit in
+         * die Sidebar.
+         */
+        private void beachteAbgerufenenStatus(String tournamentId, String status) {
+            if (status.isBlank()) {
+                return;
+            }
+            PtmOnlineErfassungsRunner.OnlineStandAbruf bekannt = onlineStand;
+            if (bekannt != null && bekannt.kenntStatus(tournamentId, status)) {
+                return;
+            }
+            standVeraltet = true;
+            anstossen();
         }
 
         /** Mit verbundenem Sofort-Signal reicht ein seltener Abruf als Sicherheitsnetz. */
@@ -726,7 +745,7 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
          */
         private void aenderungsKanalSicherstellen(TournamentSyncClient client, String tournamentId) {
             PtmOnlineAenderungsKanal bisher = aenderungsKanal.get();
-            if ((bisher != null && bisher.gehoertZu(tournamentId)) || beendet || geschlossen) {
+            if ((bisher != null && bisher.gehoertZu(tournamentId)) || beendet || geschlossen || angehalten.get()) {
                 return;
             }
             var neu = new PtmOnlineAenderungsKanal(tournamentId, ausfuehrung,

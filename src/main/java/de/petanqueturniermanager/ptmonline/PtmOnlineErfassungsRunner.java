@@ -69,6 +69,12 @@ final class PtmOnlineErfassungsRunner extends SheetRunner {
             return stand.flatMap(bekannt -> bekannt.mitGemeldetemStatus(turnierStatus))
                     .map(neu -> new OnlineStandAbruf(tournamentId, Optional.of(neu), false));
         }
+
+        /** Ob dieser Abruf für das Turnier bereits genau diesen Status kennt. */
+        boolean kenntStatus(String turnierId, String status) {
+            return tournamentId.equals(turnierId)
+                    && stand.map(SyncStandDto::status).filter(status::equals).isPresent();
+        }
     }
 
     /**
