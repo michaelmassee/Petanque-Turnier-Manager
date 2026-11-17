@@ -5,9 +5,11 @@ package de.petanqueturniermanager.ptmonline;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -243,6 +245,21 @@ final class PtmOnlineWebApi {
     int turnierBearbeiten(String turnierId, JsonObject body) throws IOException, InterruptedException {
         return status(mitSession("/api/tournaments/" + turnierId)
                 .PUT(HttpRequest.BodyPublishers.ofString(body.toString())).build());
+    }
+
+    /** Sichtbarkeit („public“, „private“) in der Veröffentlichung der Verwaltung; der Turnierstatus bleibt. */
+    void sichtbarkeitSetzen(String turnierId, String sichtbarkeit) throws IOException, InterruptedException {
+        JsonObject body = new JsonObject();
+        body.addProperty("status", turnier(turnierId).get("status").getAsString());
+        body.addProperty("visibility", sichtbarkeit);
+        senden(mitSession("/api/tournaments/" + turnierId + "/publication")
+                .PUT(HttpRequest.BodyPublishers.ofString(body.toString())).build(), 200);
+    }
+
+    /** Persönliche Live-Ansicht über den Token des Live-Links, wie sie der QR-Code ohne Anmeldung öffnet. */
+    JsonObject liveUeberToken(String token) throws IOException, InterruptedException {
+        return senden(anfrage("/api/live/token/" + URLEncoder.encode(token, StandardCharsets.UTF_8)).GET().build(),
+                200);
     }
 
     /** „Start zurücksetzen“ der Turnierleitung (E-23). */

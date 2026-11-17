@@ -14,10 +14,12 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
@@ -40,8 +42,8 @@ import de.petanqueturniermanager.comp.LibreOfficePtmOnlineSpeicher;
  * <ul>
  * <li>eigene, bei jedem Lauf frische D1 unter {@code build/ptmonline-e2e/state} – die Entwicklungsdatenbank des
  * Online-Repos bleibt unberührt,</li>
- * <li>eigene Wrangler-Konfiguration ohne Routen und Crons, ohne {@code .dev.vars}: kein Mailversand, keine
- * Geokodierung, keine externen Dienste,</li>
+ * <li>eigene Wrangler-Konfiguration ohne Routen und Crons, eigene {@code .dev.vars} nur mit einem zufälligen
+ * {@code LIVE_LINK_KEY}: kein Mailversand, keine Geokodierung, keine externen Dienste,</li>
  * <li>nur auf 127.0.0.1 an einem freien Port.</li>
  * </ul>
  * Konten, Session und API-Schlüssel des Organisators schreibt der Starter direkt in die lokale D1 – Zufallswerte je
@@ -129,8 +131,10 @@ final class LokalerPtmOnlineServer {
         File config = new File(verzeichnis, "wrangler.jsonc");
         Files.writeString(config.toPath(), konfiguration(repo), StandardCharsets.UTF_8);
         // Ohne eigene .dev.vars neben der Konfiguration greift keine fremde (die des Online-Repos enthält Zugänge).
-        Files.writeString(new File(verzeichnis, ".dev.vars").toPath(), "# bewusst leer: keine externen Dienste\n",
-                StandardCharsets.UTF_8);
+        // Nur ein frischer, lokaler Schlüssel: Wie in Produktion speichert PTM-Online persönliche Live-Links dann
+        // verschlüsselt, sodass die Turnierleitung sie für den QR-Code wieder abrufen kann.
+        Files.writeString(new File(verzeichnis, ".dev.vars").toPath(),
+                "# keine externen Dienste\nLIVE_LINK_KEY=" + zufallsSchluessel() + "\n", StandardCharsets.UTF_8);
 
         List<String> basis = List.of(wrangler.getAbsolutePath());
         List<String> d1 = List.of("--local", "--config", config.getAbsolutePath(), "--persist-to",
@@ -169,6 +173,13 @@ final class LokalerPtmOnlineServer {
      * Konfiguration des Online-Repos mit absoluten Pfaden, ohne Routen, Crons und Absenderadressen; die D1 hat einen
      * eigenen Namen, damit sie nie mit der Entwicklungsdatenbank verwechselt wird.
      */
+    /** 256-Bit-Schlüssel (Base64), wie ihn PTM-Online für {@code LIVE_LINK_KEY} erwartet. */
+    private static String zufallsSchluessel() {
+        byte[] schluessel = new byte[32];
+        new SecureRandom().nextBytes(schluessel);
+        return Base64.getEncoder().encodeToString(schluessel);
+    }
+
     private static String konfiguration(File repo) throws IOException {
         JsonObject config = JsonParser.parseString(
                 Files.readString(new File(repo, "wrangler.jsonc").toPath(), StandardCharsets.UTF_8)).getAsJsonObject();
