@@ -39,8 +39,11 @@ import de.petanqueturniermanager.ptmonline.live.LiveTurnierStand;
  * Ergebnismeldungen von Spielern bei einem verbundenen Turnierdokument (E-27, E-28). Jede offene Meldung steht als
  * Fall „Ergebnis gemeldet“ in der Konfliktliste. Wählt die Turnierleitung „Ergebnis übernehmen“, trägt PTM das
  * Ergebnis in die Spielrunde ein; bei „Meldung verwerfen“ bleibt die Spielrunde unverändert. Beide Entscheidungen
- * gehen als Auftrag an PTM-Online. Eingetragen werden kann nur in zeilenbasierte Spielrunden (Schweizer, Formule X,
- * Maastrichter-Vorrunden, Supermêlée, Jeder gegen Jeden); bei anderen Partien bleibt nur Verwerfen.
+ * gehen als Auftrag an PTM-Online. Eingetragen werden kann in zeilenbasierte Spielrunden (Schweizer, Formule X,
+ * Maastrichter-Vorrunden, Supermêlée, Jeder gegen Jeden), in die Poule-Vorrunde und in Turnierbäume (KO,
+ * Maastrichter-Finalrunden, Poule-KO, Kaskaden-Felder), wo der Sieger über die Formeln vorrückt. Trip-Tête: PTM-Online
+ * schaltet die Spielermeldung dort vorerst ab, weil eine Meldung nur ein Ergebnis je Begegnung nennt, das Dokument
+ * aber die drei Einzelpartien braucht (TODO in anforderungen/turnieranmeldung-ptmonline.md).
  */
 final class PtmOnlineErgebnismeldungen {
 

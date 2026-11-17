@@ -32,8 +32,8 @@ import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrund
 /**
  * Ein komplettes Maastrichter Turnier gegen den lokal gestarteten Worker: Online-Anmeldungen, zwei Vorrunden im
  * Schweizer System, KO-Finalgruppen A und B bis zum Finale, Abschluss. Ein Spieler meldet Ergebnisse über die
- * Live-Ansicht: In der Vorrunde trägt PTM die übernommene Meldung in die Spielrunde ein; im Turnierbaum kann die
- * Turnierleitung eine Meldung nur verwerfen und trägt das Ergebnis selbst ein.
+ * Live-Ansicht, die Turnierleitung übernimmt sie: In der Vorrunde trägt PTM das Ergebnis in die Spielrunde ein, im
+ * Halbfinale und im Finale in die Ergebnis-Zellen des Turnierbaums (untereinander, der Sieger rückt per Formel vor).
  */
 class PtmOnlineMaastrichterZusammenspielTest extends BasePtmOnlineZusammenspielTest {
 
@@ -98,19 +98,30 @@ class PtmOnlineMaastrichterZusammenspielTest extends BasePtmOnlineZusammenspielT
         assertThat(spiele(ANZ_VORRUNDEN + 1)).as("je Gruppe zwei Halbfinals").hasSize(4)
                 .allSatisfy(spiel -> assertThat(text(spiel, "stageLabel")).isNotBlank());
 
-        // Meldung im Turnierbaum: nur Verwerfen, die Turnierleitung trägt selbst ein.
-        KoPartie koPartieMitKonto = offeneKoPartien().stream()
-                .filter(partie -> teamNr(partie, partie.punkteA()) == nrMitKonto
-                        || teamNr(partie, partie.punkteB()) == nrMitKonto)
-                .findFirst().orElseThrow();
+        // Meldung im Halbfinale: übernommen, der Sieger rückt im Turnierbaum ins Finale vor.
+        KoPartie halbfinale = offeneKoPartieVon(nrMitKonto);
         assertThat(online.ergebnisMelden(idMitKonto, SPIELERKONTO, 13, 9)).as("Meldung im Halbfinale")
                 .isEqualTo(HttpURLConnection.HTTP_OK);
-        entscheide(warteAufMeldung(), Entscheidung.ERGEBNIS_VERWERFEN);
-        warteBis("Meldung im Halbfinale online verworfen", () -> online.offeneErgebnismeldungen(turnierId).isEmpty());
-        assertThat(istOffen(koPartieMitKonto)).as("Turnierbaum unverändert").isTrue();
+        entscheide(warteAufMeldung(), Entscheidung.ERGEBNIS_UEBERNEHMEN);
+        warteBis("gemeldetes Halbfinale im Turnierbaum eingetragen",
+                () -> koErgebnis(halbfinale).equals(ausSichtDesBaums(halbfinale, nrMitKonto, 13, 9)));
+        warteBis("Meldung im Halbfinale online erledigt", () -> online.offeneErgebnismeldungen(turnierId).isEmpty());
+        assertThat(koErgebnisseEintragen()).as("die übrigen drei Halbfinals").isEqualTo(3);
 
-        assertThat(koErgebnisseEintragen()).as("vier Halbfinals").isEqualTo(4);
-        assertThat(koErgebnisseEintragen()).as("zwei Finals (ggf. mit Spiel um Platz 3)").isBetween(2, 4);
+        // Meldung im Finale: eine Spalte weiter rechts im Baum, ebenfalls übernommen.
+        KoPartie finalspiel = offeneKoPartieVon(nrMitKonto);
+        assertThat(finalspiel.punkteA().getSpalte()).as("Finale rechts vom Halbfinale")
+                .isGreaterThan(halbfinale.punkteA().getSpalte());
+        warteBis("Finals online", () -> online.runden(turnierId).size() == ANZ_RUNDEN_ONLINE);
+        assertThat(online.ergebnisMelden(idMitKonto, SPIELERKONTO, 13, 11))
+                .as("Meldung im Finale (nur der Sieger meldet)")
+                .isEqualTo(HttpURLConnection.HTTP_OK);
+        entscheide(warteAufMeldung(), Entscheidung.ERGEBNIS_UEBERNEHMEN);
+        warteBis("gemeldetes Finale im Turnierbaum eingetragen",
+                () -> koErgebnis(finalspiel).equals(ausSichtDesBaums(finalspiel, nrMitKonto, 13, 11)));
+        warteBis("Meldung im Finale online erledigt", () -> online.offeneErgebnismeldungen(turnierId).isEmpty());
+
+        assertThat(koErgebnisseEintragen()).as("übrige Finals (ggf. mit Spiel um Platz 3)").isBetween(1, 3);
         assertThat(koErgebnisseEintragen()).as("alle KO-Partien gespielt").isZero();
         warteBis("Finals online", () -> online.runden(turnierId).size() == ANZ_RUNDEN_ONLINE);
         warteBis("Turnierbaum online vollständig", () -> rundeVollstaendig(ANZ_VORRUNDEN + 1)
@@ -198,6 +209,27 @@ class PtmOnlineMaastrichterZusammenspielTest extends BasePtmOnlineZusammenspielT
             sheetHlp.setNumberValueInCell(NumberCellValue.from(partie.blatt(), partie.punkteB()).setValue(7));
         }
         return offen.size();
+    }
+
+    /** Die offene KO-Partie des Teams. */
+    private KoPartie offeneKoPartieVon(int teamNr) {
+        return offeneKoPartien().stream()
+                .filter(partie -> teamNr(partie, partie.punkteA()) == teamNr
+                        || teamNr(partie, partie.punkteB()) == teamNr)
+                .findFirst().orElseThrow();
+    }
+
+    /** Punkte der KO-Partie wie im Baum: Seite A oben, Seite B unten ({@code null} = leer). */
+    private List<Integer> koErgebnis(KoPartie partie) {
+        List<Integer> punkte = new ArrayList<>();
+        punkte.add(punkte(partie.blatt(), partie.punkteA()));
+        punkte.add(punkte(partie.blatt(), partie.punkteB()));
+        return punkte;
+    }
+
+    /** Gemeldetes Ergebnis (eigene : gegnerische Punkte) in der Reihenfolge der Seiten im Baum. */
+    private List<Integer> ausSichtDesBaums(KoPartie partie, int teamNr, int eigene, int gegner) {
+        return teamNr(partie, partie.punkteA()) == teamNr ? List.of(eigene, gegner) : List.of(gegner, eigene);
     }
 
     /** KO-Partien aller Finalgruppen mit feststehenden Teams und ohne Ergebnis. */

@@ -22,6 +22,7 @@ import com.sun.star.sheet.XSpreadsheet;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
+import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.poule.konfiguration.PouleKonfigurationSheet;
 
@@ -29,7 +30,8 @@ import de.petanqueturniermanager.poule.konfiguration.PouleKonfigurationSheet;
  * Poule: die Vorrunde führt je Poule einen Block (Vierer-Poule: Spiel A/B, Sieger-/Verliererspiel, Barrage;
  * Dreier-Poule: Spiel 1–3), alle Poules spielen gleichzeitig in drei Runden. Partien späterer Runden stehen erst
  * fest, wenn die Ergebnisse davor eingetragen sind. Bahnen stehen in den Spielplänen je Poule. Danach folgen die
- * KO-Turnierbäume (A-/B-Finale).
+ * KO-Turnierbäume (A-/B-Finale). Jede Partie kennt ihre Ergebnis-Zellen in der Vorrunde, damit eine übernommene
+ * Spieler-Ergebnismeldung dort eingetragen werden kann; Sieger- und Verliererspiel ergeben sich dann per Formel.
  */
 final class PouleLiveQuelle implements LiveStandQuelle {
 
@@ -95,7 +97,10 @@ final class PouleLiveQuelle implements LiveStandQuelle {
             String beschreibung = zellen.text(SPALTE_BESCHR, zeile);
             String stufe = poule == null ? beschreibung : poule + " · " + beschreibung;
             runden.get(runde).add(LivePartie.teams(teamA, teamB, zellen.punkte(SPALTE_ERG_A, zeile),
-                    zellen.punkte(SPALTE_ERG_B, zeile), bahn, stufe));
+                    zellen.punkte(SPALTE_ERG_B, zeile), bahn, stufe)
+                    .mitErgebnisOrt(ErgebnisOrt.inZellen(SheetMetadataHelper.SCHLUESSEL_POULE_VORRUNDE,
+                            SheetNamen.pouleVorrunde(), Position.from(SPALTE_ERG_A, zeile),
+                            Position.from(SPALTE_ERG_B, zeile))));
         }
         return runden;
     }

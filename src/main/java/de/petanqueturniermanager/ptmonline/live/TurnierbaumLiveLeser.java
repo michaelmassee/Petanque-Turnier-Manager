@@ -14,9 +14,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jspecify.annotations.Nullable;
 
+import com.sun.star.container.XNamed;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
@@ -28,7 +30,8 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
  * Layout je Partie: Team-Zelle links neben der Ergebnis-Zelle, Bahn (sofern geführt) links neben der
  * Team-Zelle der Seite A. Jede Ergebnis-Spalte ist eine Runde; eine erste Spalte mit weniger Partien als für
  * einen vollständigen Baum nötig ist die Cadrage. Die zweite Partie der Finalspalte ist das Spiel um Platz 3.
- * Partien, deren Teams noch nicht feststehen, entfallen.
+ * Partien, deren Teams noch nicht feststehen, entfallen. Jede Partie kennt ihre beiden Ergebnis-Zellen, damit eine
+ * übernommene Spieler-Ergebnismeldung dort eingetragen werden kann.
  */
 final class TurnierbaumLiveLeser {
 
@@ -75,6 +78,7 @@ final class TurnierbaumLiveLeser {
         int letzteSpalte = positionen.stream().mapToInt(Position::getSpalte).max().orElse(0);
         int letzteZeile = positionen.stream().mapToInt(Position::getZeile).max().orElse(0);
         LiveZellbereich zellen = LiveZellbereich.lese(ws, blatt.get(), 0, 0, letzteSpalte, letzteZeile);
+        String blattName = Lo.qi(XNamed.class, blatt.get()).getName();
 
         Map<Integer, List<Position[]>> paareProSpalte = new TreeMap<>();
         for (int i = 0; i + 1 < positionen.size(); i += 2) {
@@ -93,7 +97,10 @@ final class TurnierbaumLiveLeser {
             for (int p = 0; p < paare.size(); p++) {
                 boolean platz3 = s == spalten.size() - 1 && p > 0;
                 String titel = platz3 ? I18n.get("dialog.ko.spiel.um.platz3") : rundenTitel;
-                partie(zellen, paare.get(p), praefix == null ? titel : praefix + " · " + titel)
+                Position[] paar = paare.get(p);
+                partie(zellen, paar, praefix == null ? titel : praefix + " · " + titel)
+                        .map(partie -> partie.mitErgebnisOrt(
+                                ErgebnisOrt.inZellen(baumSchluessel, blattName, paar[0], paar[1])))
                         .ifPresent(partien::add);
             }
             runden.add(partien);

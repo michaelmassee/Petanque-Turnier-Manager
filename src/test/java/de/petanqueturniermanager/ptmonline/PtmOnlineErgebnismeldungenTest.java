@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.ptmonline.dto.ErgebnismeldungDto;
 import de.petanqueturniermanager.ptmonline.live.ErgebnisOrt;
 import de.petanqueturniermanager.ptmonline.live.LivePartie;
@@ -22,7 +23,7 @@ class PtmOnlineErgebnismeldungenTest {
 
     private static final Map<Integer, List<String>> ONLINE_IDS = Map.of(1, List.of("r1"), 2, List.of("r2"), 3,
             List.of("r3"), 4, List.of("r4"));
-    private static final ErgebnisOrt ORT = new ErgebnisOrt("schluessel", "1. Spielrunde", 3, 3);
+    private static final ErgebnisOrt ORT = ErgebnisOrt.inZeile("schluessel", "1. Spielrunde", 3, 3);
 
     @BeforeAll
     static void uebersetzungen() {
@@ -50,6 +51,27 @@ class PtmOnlineErgebnismeldungenTest {
                 Entscheidung.ERGEBNIS_VERWERFEN);
     }
 
+    /** Im Turnierbaum stehen die Ergebnis-Zellen untereinander; übernommen werden kann trotzdem. */
+    @Test
+    void partieImTurnierbaumLaesstSichUebernehmen() {
+        ErgebnisOrt imBaum = ErgebnisOrt.inZellen("baum", "A-Finale", Position.from(4, 6), Position.from(4, 8));
+        LivePartie partie = LivePartie.teams(3, 4, null, null, null, "A-Finale · Halbfinale").mitErgebnisOrt(imBaum);
+        var zuordnung = PtmOnlineErgebnismeldungen.ordneZu(List.of(meldung("m1", 3, "r4", "r3", 13, 9)),
+                LiveTurnierStand.ohneRangliste(List.of(new LiveRunde(3, List.of(partie)))), ONLINE_IDS).getFirst();
+
+        assertThat(zuordnung.ort()).isEqualTo(imBaum);
+        assertThat(List.of(zuordnung.punkteA(), zuordnung.punkteB())).as("Seiten im Baum vertauscht")
+                .containsExactly(9, 13);
+        assertThat(zuordnung.fall().optionen()).containsExactly(Entscheidung.ERGEBNIS_UEBERNEHMEN,
+                Entscheidung.ERGEBNIS_VERWERFEN);
+    }
+
+    @Test
+    void ergebnisOrtInDerZeileHatSeiteBRechtsDaneben() {
+        assertThat(ORT.punkteA()).isEqualTo(Position.from(3, 3));
+        assertThat(ORT.punkteB()).isEqualTo(Position.from(4, 3));
+    }
+
     @Test
     void drehtDiePunkteWennDieSeitenImDokumentVertauschtSind() {
         LivePartie partie = LivePartie.teams(4, 3, null, null, null, null).mitErgebnisOrt(ORT);
@@ -65,12 +87,12 @@ class PtmOnlineErgebnismeldungenTest {
         LivePartie ohneOrt = LivePartie.teams(3, 4, null, null, null, null);
         var andereRunde = PtmOnlineErgebnismeldungen.ordneZu(List.of(meldung("m1", 2, "r3", "r4", 13, 7)),
                 runde1(ohneOrt.mitErgebnisOrt(ORT)), ONLINE_IDS).getFirst();
-        var turnierbaum = PtmOnlineErgebnismeldungen.ordneZu(List.of(meldung("m2", 1, "r3", "r4", 13, 7)),
+        var ohneErgebnisZellen = PtmOnlineErgebnismeldungen.ordneZu(List.of(meldung("m2", 1, "r3", "r4", 13, 7)),
                 runde1(ohneOrt), ONLINE_IDS).getFirst();
 
         assertThat(andereRunde.partie()).isNull();
         assertThat(andereRunde.fall().optionen()).containsExactly(Entscheidung.ERGEBNIS_VERWERFEN);
-        assertThat(turnierbaum.fall().optionen()).containsExactly(Entscheidung.ERGEBNIS_VERWERFEN);
+        assertThat(ohneErgebnisZellen.fall().optionen()).containsExactly(Entscheidung.ERGEBNIS_VERWERFEN);
         assertThat(andereRunde.fall().lokal()).contains("3").contains("4");
     }
 

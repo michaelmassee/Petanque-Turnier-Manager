@@ -59,7 +59,7 @@ final class TeamSpielrundenLeser {
                 break;
             }
             runden.add(lesePartien(LiveBlattLeser.datenzeilen(ws, blatt, ersteDatenZeile, ERGEBNIS_B),
-                    zeile -> new ErgebnisOrt(blattSchluessel, blattName, zeile, ERGEBNIS_A)));
+                    zeile -> ErgebnisOrt.inZeile(blattSchluessel, blattName, zeile, ERGEBNIS_A)));
         }
         return runden;
     }

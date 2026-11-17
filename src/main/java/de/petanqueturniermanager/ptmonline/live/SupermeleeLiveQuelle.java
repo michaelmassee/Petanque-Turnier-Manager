@@ -55,7 +55,7 @@ final class SupermeleeLiveQuelle implements LiveStandQuelle {
                 break;
             }
             runden.add(lesePartien(LiveBlattLeser.datenzeilen(ws, blatt, ERSTE_DATEN_ZEILE, LETZTE_SPIELERNR_SPALTE),
-                    mitBahn, zeile -> new ErgebnisOrt(blattSchluessel, blattName, zeile, ERSTE_SPALTE_ERGEBNISSE)));
+                    mitBahn, zeile -> ErgebnisOrt.inZeile(blattSchluessel, blattName, zeile, ERSTE_SPALTE_ERGEBNISSE)));
         }
         return new LiveTurnierStand(new LiveRundenFolge().anhaengen(runden).runden(), rangliste(runden.size()));
     }
