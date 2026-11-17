@@ -34,7 +34,9 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrundeSheet;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerSpielrundeSheetNaechste;
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
+import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
 import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungModus;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.LibreOfficePtmOnlineSpeicher;
@@ -45,6 +47,11 @@ import de.petanqueturniermanager.onlinesync.OnlineTournamentDto;
 import de.petanqueturniermanager.ptmonline.PtmOnlineWebApi.Person;
 import de.petanqueturniermanager.ptmonline.ui.PtmOnlineVerbindenTestZugang;
 import de.petanqueturniermanager.basesheet.konfiguration.MeleeAnmeldungKonfiguration;
+import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterGruppenModus;
+import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
+import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterMeldeListeSheetNew;
+import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterMeldeListeSheetUpdate;
+import de.petanqueturniermanager.maastrichter.spielrunde.MaastrichterSpielrundeSheetNaechste;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetNew;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeleeAnmeldungSheet;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetUpdate;
@@ -152,6 +159,30 @@ abstract class BasePtmOnlineZusammenspielTest extends BaseCalcUITest {
         docPropHelper.setIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM, system.getId());
     }
 
+    /**
+     * Maastrichter: Online-Turnier (Formée) und leere lokale Meldeliste. Vorrunden im Schweizer System, danach
+     * KO-Finalgruppen à {@code gruppenGroesse} Teams; im Turnierbaum stehen Teamnummern, keine Bahnen.
+     */
+    protected void maastrichterTurnierAnlegen(Formation formation, LocalDate datum, JsonObject onlineEinstellungen,
+            int anzVorrunden, int gruppenGroesse) throws Exception {
+        system = TurnierSystem.MAASTRICHTER;
+        spieltagNr = null;
+        anmeldeTyp = "forme";
+        onlineTyp = "maastrichter";
+        turnierId = online.turnierAnlegen("E2E " + getClass().getSimpleName(), onlineTyp, anmeldeTyp,
+                formation.name().toLowerCase(Locale.ROOT), datum, onlineEinstellungen);
+        docPropHelper.setIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM, system.getId());
+        MaastrichterKonfigurationSheet konfiguration = new MaastrichterKonfigurationSheet(wkingSpreadsheet);
+        konfiguration.setAnzVorrunden(anzVorrunden);
+        konfiguration.setGruppenGroesse(gruppenGroesse);
+        konfiguration.setMaastrichterGruppenModus(MaastrichterGruppenModus.NACH_GROESSE);
+        konfiguration.setSpielbaumTeamAnzeige(TeamAnzeige.NR);
+        konfiguration.setSpielbaumSpielbahn(SpielrundeSpielbahn.X);
+        wieImSheetRunner(() -> new MaastrichterMeldeListeSheetNew(wkingSpreadsheet).erstelleMeldeliste(formation,
+                false, false, TeamAnzeige.NR));
+        ziel = MeldelisteZielFactory.fuerPtmOnline(wkingSpreadsheet).orElseThrow();
+    }
+
     /** Leere Supermêlée-Meldeliste (Triplette) mit Spieltag 1 als aktivem Spieltag. */
     protected void supermeleeMeldelisteAnlegen() throws Exception {
         system = TurnierSystem.SUPERMELEE;
@@ -208,7 +239,10 @@ abstract class BasePtmOnlineZusammenspielTest extends BaseCalcUITest {
             spieler.add(new SpielerMitVerein(0, person.vorname(), person.nachname(), null, null, List.of(), List.of(),
                     null));
         }
-        return ziel.schreibeBlockUndLiefereZeile(spieler, NeueMeldungTeilnahme.INAKTIV);
+        // Wie die Erfassung über die Spieler-Datenbank: im Blattschutz-Scope (der Turnier-Modus kann schon an sein).
+        int[] zeile = new int[1];
+        wieImSheetRunner(() -> zeile[0] = ziel.schreibeBlockUndLiefereZeile(spieler, NeueMeldungTeilnahme.INAKTIV));
+        return zeile[0];
     }
 
     /**
@@ -223,7 +257,9 @@ abstract class BasePtmOnlineZusammenspielTest extends BaseCalcUITest {
                     .setValue(1));
             return;
         }
-        SchweizerMeldeListeSheetUpdate meldeliste = new SchweizerMeldeListeSheetUpdate(wkingSpreadsheet);
+        SchweizerMeldeListeSheetUpdate meldeliste = system == TurnierSystem.MAASTRICHTER
+                ? new MaastrichterMeldeListeSheetUpdate(wkingSpreadsheet)
+                : new SchweizerMeldeListeSheetUpdate(wkingSpreadsheet);
         sheetHlp.setNumberValueInCell(NumberCellValue.from(meldeliste.getXSpreadSheet(),
                 Position.from(meldeliste.getAktivSpalte(), zeile1Basiert - 1))
                 .setValue(SchweizerMeldeListeSheetUpdate.AKTIV_WERT_NIMMT_TEIL));
@@ -262,7 +298,15 @@ abstract class BasePtmOnlineZusammenspielTest extends BaseCalcUITest {
 
     /** Nächste Schweizer Spielrunde wie über das Menü; liefert die ausgelosten Team-Nummern. */
     protected Set<Integer> schweizerRundeAuslosen() throws Exception {
-        SchweizerSpielrundeSheetNaechste runde = new SchweizerSpielrundeSheetNaechste(wkingSpreadsheet);
+        return rundeAuslosen(new SchweizerSpielrundeSheetNaechste(wkingSpreadsheet));
+    }
+
+    /** Nächste Maastrichter-Vorrunde (Schweizer System) wie über das Menü; liefert die ausgelosten Team-Nummern. */
+    protected Set<Integer> maastrichterVorrundeAuslosen() throws Exception {
+        return rundeAuslosen(new MaastrichterSpielrundeSheetNaechste(wkingSpreadsheet));
+    }
+
+    private Set<Integer> rundeAuslosen(SchweizerSpielrundeSheetNaechste runde) throws Exception {
         runde.getKonfigurationSheet().setSpielrundeSpielbahn(SpielrundeSpielbahn.N);
         warteBisKeineVerarbeitungLaeuft();
         wieImSheetRunner(runde::doRun);
@@ -322,6 +366,47 @@ abstract class BasePtmOnlineZusammenspielTest extends BaseCalcUITest {
                 Position.from(SchweizerAbstractSpielrundeSheet.ERG_TEAM_A_SPALTE, zeile)).setValue(punkteA));
         sheetHlp.setNumberValueInCell(NumberCellValue.from(blatt,
                 Position.from(SchweizerAbstractSpielrundeSheet.ERG_TEAM_B_SPALTE, zeile)).setValue(punkteB));
+    }
+
+    /**
+     * Direkte Aufrufe ({@code doRun()}, {@code uebernehmen()} …) laufen hier in einem echten SheetRunner statt nur im
+     * Blattschutz-Scope: Der PTM-Online-Beobachter startet seinen Erfassungslauf nach jeder Dokumentänderung, sobald
+     * kein Lauf aktiv ist. Ohne Laufsperre sperrte er am Ende seines Scopes die Blätter, während der Test noch schrieb
+     * (leere RuntimeException aus {@code setFormulaArray}, meist im ersten Test der JVM).
+     */
+    @Override
+    protected void wieImSheetRunner(LaufAktion aktion) throws Exception {
+        TestLauf lauf = new TestLauf(aktion);
+        starteUndWarte(lauf);
+        if (lauf.fehler != null) {
+            throw new AssertionError("Direkter Aufruf fehlgeschlagen", lauf.fehler);
+        }
+    }
+
+    /** Führt eine Testaktion als Lauf aus; ihr Fehler wird an den Test zurückgegeben statt nur geloggt. */
+    private final class TestLauf extends SheetRunner {
+
+        private final LaufAktion aktion;
+        private volatile Throwable fehler;
+
+        TestLauf(LaufAktion aktion) {
+            super(wkingSpreadsheet, docPropHelper.getTurnierSystemAusDocument(), "E2E");
+            this.aktion = aktion;
+        }
+
+        @Override
+        protected IKonfigurationSheet getKonfigurationSheet() {
+            return null;
+        }
+
+        @Override
+        protected void doRun() {
+            try {
+                aktion.ausfuehren();
+            } catch (Exception | AssertionError e) {
+                fehler = e;
+            }
+        }
     }
 
     /**

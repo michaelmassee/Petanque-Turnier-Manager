@@ -320,11 +320,17 @@ public abstract class SheetRunner extends Thread {
 					}
 				} finally {
 					istFehlgeschlagen = istFehlgeschlagen || isFehler;
-					koordinator.setLaeuft(false); // Immer an erste stelle diesen flag zurück
-					// Lazy-Unprotect-Scope schließen: wenn unterwegs entsperrt wurde, jetzt einmal schützen.
-					// Idempotent (No-Op falls kein Scope offen war), eigene try/finally-Robustheit im Manager.
-					if (isCloseBlattschutzScopeAfterDoRun()) {
-						BlattschutzManager.get().endCommandScope();
+					try {
+						// Lazy-Unprotect-Scope schließen: wenn unterwegs entsperrt wurde, jetzt einmal schützen.
+						// Idempotent (No-Op falls kein Scope offen war), eigene try/finally-Robustheit im Manager.
+						// Noch als laufend markiert: Ein folgender Lauf (z. B. der PTM-Online-Beobachter) würde
+						// sonst schon schreiben, während dieser Lauf die Blätter wieder sperrt – setFormulaArray
+						// & Co. scheitern dann mit einer leeren RuntimeException (Bereich nicht editierbar).
+						if (isCloseBlattschutzScopeAfterDoRun()) {
+							BlattschutzManager.get().endCommandScope();
+						}
+					} finally {
+						koordinator.setLaeuft(false); // in jedem Fall zurücksetzen, sonst bleibt PTM gesperrt
 					}
 					koordinator.setRunner(null);
 					koordinator.benachrichtigeListener(); // Menü reaktivieren
