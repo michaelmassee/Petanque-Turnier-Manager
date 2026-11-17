@@ -120,6 +120,24 @@ public final class PtmOnlineHttpException extends IOException {
                 .isPresent();
     }
 
+    /** Für das Turnier ist die Live-Ansicht nicht freigeschaltet ({@code live_view_disabled}). */
+    public boolean istLiveAnsichtAus() {
+        return hatKonfliktCode("live_view_disabled");
+    }
+
+    /** Einen Live-Link gibt es nur für bestätigte Anmeldungen ({@code registration_not_confirmed}). */
+    public boolean istMeldungNichtBestaetigt() {
+        return hatKonfliktCode("registration_not_confirmed");
+    }
+
+    /**
+     * Der bisherige Live-Link der Meldung ist nur als Hash gespeichert und lässt sich nicht anzeigen
+     * ({@code live_link_not_recoverable}); ein neuer macht ihn ungültig.
+     */
+    public boolean istLiveLinkNichtWiederherstellbar() {
+        return hatKonfliktCode("live_link_not_recoverable");
+    }
+
     /** Feld {@code error} der Antwort. */
     private Optional<String> fehlertext() {
         return antwortJson().map(json -> json.get("error")).filter(JsonElement::isJsonPrimitive)

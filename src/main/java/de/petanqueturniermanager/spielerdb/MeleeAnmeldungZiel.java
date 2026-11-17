@@ -15,6 +15,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.uno.UnoRuntime;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungKonstanten;
@@ -210,6 +211,12 @@ public final class MeleeAnmeldungZiel implements MeldelisteZiel, MeleeAnmeldungK
 			return Map.of();
 		}
 		return nrUuidSpalte(sheet).lese(zeilen1Basiert);
+	}
+
+	@Override
+	public boolean liegtAufBlatt(XSpreadsheet blatt) {
+		XSpreadsheet sheet = MeleeAnmeldungLeser.findeSheet(ws, metadatenSchluessel);
+		return sheet != null && UnoRuntime.areSame(sheet, blatt);
 	}
 
 	@Override

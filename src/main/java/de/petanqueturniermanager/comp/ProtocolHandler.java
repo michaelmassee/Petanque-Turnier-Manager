@@ -429,6 +429,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_PTMONLINE_ERGEBNISMELDUNGEN_ABHOLEN = "ptmonline_ergebnismeldungen_abholen";
 	public static final String CMD_PTMONLINE_IM_BROWSER_OEFFNEN      = "ptmonline_im_browser_oeffnen";
 	public static final String CMD_PTMONLINE_TURNIERSEITE_OEFFNEN    = "ptmonline_turnierseite_oeffnen";
+	public static final String CMD_PTMONLINE_LIVE_QR_OEFFNEN         = "ptmonline_live_qr_oeffnen";
 	public static final String CMD_PTMONLINE_TURNIER_ABSCHLIESSEN    = "ptmonline_turnier_abschliessen";
 	// Konfiguration
 	public static final String CMD_KONFIGURATION_TURNIER = "konfiguration_turnier";
@@ -1578,6 +1579,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 					.imBrowserOeffnen(erzeugeWorkingSpreadsheetFuerDispatch());
 			case CMD_PTMONLINE_TURNIERSEITE_OEFFNEN    -> de.petanqueturniermanager.ptmonline.ui.PtmOnlineDispatcher
 					.turnierseiteOeffnen(erzeugeWorkingSpreadsheetFuerDispatch());
+			case CMD_PTMONLINE_LIVE_QR_OEFFNEN         -> de.petanqueturniermanager.ptmonline.ui.PtmOnlineDispatcher
+					.liveQrCodeOeffnen(erzeugeWorkingSpreadsheetFuerDispatch());
 			case CMD_PTMONLINE_TURNIER_ABSCHLIESSEN    -> de.petanqueturniermanager.ptmonline.ui.PtmOnlineDispatcher
 					.turnierAbschliessen(erzeugeWorkingSpreadsheetFuerDispatch());
 			default -> { return false; }
@@ -2527,6 +2530,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_PTMONLINE_ERGEBNISMELDUNGEN_ABHOLEN,
 				 CMD_PTMONLINE_IM_BROWSER_OEFFNEN,
 				 CMD_PTMONLINE_TURNIERSEITE_OEFFNEN,
+				 CMD_PTMONLINE_LIVE_QR_OEFFNEN,
 				 CMD_PTMONLINE_TURNIER_ABSCHLIESSEN          -> ts != TurnierSystem.KEIN;
 			case CMD_TIMER_STARTEN_DIALOG                   -> timerInaktivOderBeendet();
 			case CMD_TIMER_PAUSE_FORTSETZEN,

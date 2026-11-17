@@ -85,6 +85,23 @@ class PtmOnlineHttpExceptionTest {
     }
 
     @Test
+    void liveLinkKonflikteWerdenUnterschieden() {
+        var aus = new PtmOnlineHttpException(409, "{\"error\":\"x\",\"details\":{\"code\":\"live_view_disabled\"}}");
+        var unbestaetigt = new PtmOnlineHttpException(409,
+                "{\"error\":\"x\",\"details\":{\"code\":\"registration_not_confirmed\"}}");
+        var alt = new PtmOnlineHttpException(409,
+                "{\"error\":\"x\",\"details\":{\"code\":\"live_link_not_recoverable\"}}");
+
+        assertThat(aus.istLiveAnsichtAus()).isTrue();
+        assertThat(aus.istMeldungNichtBestaetigt()).isFalse();
+        assertThat(unbestaetigt.istMeldungNichtBestaetigt()).isTrue();
+        assertThat(alt.istLiveLinkNichtWiederherstellbar()).isTrue();
+        assertThat(alt.istLiveAnsichtAus()).isFalse();
+        assertThat(new PtmOnlineHttpException(404, "{\"error\":\"Anmeldung nicht gefunden\"}").istLiveAnsichtAus())
+                .isFalse();
+    }
+
+    @Test
     void meldungBleibtKompatibelZurBisherigenIoException() {
         assertThat(new PtmOnlineHttpException(401, "unauthorized").getMessage())
                 .isEqualTo("PTM-Online API Fehler 401: unauthorized");

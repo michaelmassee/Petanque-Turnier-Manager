@@ -17,6 +17,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
+import com.sun.star.uno.UnoRuntime;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.NrUuidSpalte;
@@ -512,6 +513,11 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
     @Override
     public Map<Integer, String> leseLokaleUuids(Collection<Integer> zeilen1Basiert) {
         return nrUuidSpalte().lese(zeilen1Basiert);
+    }
+
+    @Override
+    public boolean liegtAufBlatt(XSpreadsheet blatt) {
+        return UnoRuntime.areSame(sheet, blatt);
     }
 
     @Override

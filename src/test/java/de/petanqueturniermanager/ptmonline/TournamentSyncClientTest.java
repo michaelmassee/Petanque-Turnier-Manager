@@ -375,6 +375,49 @@ public class TournamentSyncClientTest {
 				.hasMessageContaining("displayToken");
 	}
 
+	@Test
+	public void holeLiveLinkFragtDenBestehendenLinkDerMeldungAb() throws Exception {
+		HttpClient httpClient = httpClientMitAntwort("{\"url\":\"https://ptm.example/live/t/abc\"}");
+		TournamentSyncClient client = new TournamentSyncClient(httpClient, "https://ptm-online.example.com", "ptm_secret");
+
+		assertThat(client.holeLiveLink("t 1", "r/1", false)).isEqualTo("https://ptm.example/live/t/abc");
+
+		HttpRequest anfrage = gesendeteAnfrage(httpClient);
+		assertThat(anfrage.method()).isEqualTo("GET");
+		assertThat(anfrage.uri().toString()).isEqualTo(
+				"https://ptm-online.example.com/api/sync/tournaments/t+1/registrations/r%2F1/live-link");
+	}
+
+	@Test
+	public void holeLiveLinkErneuertPerPost() throws Exception {
+		HttpClient httpClient = httpClientMitAntwort("{\"url\":\"https://ptm.example/live/t/neu\"}");
+		TournamentSyncClient client = new TournamentSyncClient(httpClient, "https://ptm-online.example.com", "ptm_secret");
+
+		assertThat(client.holeLiveLink("t1", "r1", true)).isEqualTo("https://ptm.example/live/t/neu");
+		assertThat(gesendeteAnfrage(httpClient).method()).isEqualTo("POST");
+	}
+
+	@Test
+	public void holeLiveLinkMeldetDenKonfliktCode() throws Exception {
+		HttpClient httpClient = mock(HttpClient.class);
+		HttpResponse<String> response = mockResponse(409,
+				"{\"error\":\"x\",\"details\":{\"code\":\"live_view_disabled\"}}");
+		when(httpClient.<String>send(any(HttpRequest.class), any())).thenReturn(response);
+		TournamentSyncClient client = new TournamentSyncClient(httpClient, "https://ptm-online.example.com", "ptm_secret");
+
+		assertThatThrownBy(() -> client.holeLiveLink("t1", "r1", false)).isInstanceOfSatisfying(
+				PtmOnlineHttpException.class, e -> assertThat(e.istLiveAnsichtAus()).isTrue());
+	}
+
+	@Test
+	public void holeLiveLinkOhneUrlInDerAntwortWirft() throws Exception {
+		TournamentSyncClient client = new TournamentSyncClient(httpClientMitAntwort("{\"url\":\"\"}"),
+				"https://ptm-online.example.com", "ptm_secret");
+
+		assertThatThrownBy(() -> client.holeLiveLink("t1", "r1", false)).isInstanceOf(IOException.class)
+				.hasMessageContaining("url");
+	}
+
 	private HttpClient httpClientMitAntwort(String body) throws Exception {
 		HttpClient httpClient = mock(HttpClient.class);
 		HttpResponse<String> response = mockResponse(200, body);

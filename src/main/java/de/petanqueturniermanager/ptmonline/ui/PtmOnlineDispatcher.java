@@ -8,16 +8,22 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalInt;
+import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.sun.star.awt.XWindowPeer;
+import com.sun.star.sheet.XCellRangeAddressable;
 import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.table.CellRangeAddress;
 import com.sun.star.system.SystemShellExecuteFlags;
 import com.sun.star.system.XSystemShellExecute;
 import com.sun.star.uno.XComponentContext;
+import com.sun.star.view.XSelectionSupplier;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.konfiguration.MeleeAnmeldungKonfiguration;
@@ -44,10 +50,13 @@ import de.petanqueturniermanager.ptmonline.PtmOnlineAbschlussRunner;
 import de.petanqueturniermanager.ptmonline.PtmOnlineErgebnismeldungenRunner;
 import de.petanqueturniermanager.ptmonline.PtmOnlineFehlerText;
 import de.petanqueturniermanager.ptmonline.PtmOnlineFormation;
+import de.petanqueturniermanager.ptmonline.PtmOnlineHttpException;
 import de.petanqueturniermanager.ptmonline.PtmOnlineRegistrationMapping;
 import de.petanqueturniermanager.ptmonline.PtmOnlineZuordnungWiederherstellRunner;
 import de.petanqueturniermanager.ptmonline.RegistrationImportTask;
 import de.petanqueturniermanager.ptmonline.TournamentSyncClient;
+import de.petanqueturniermanager.spielerdb.MeldelisteZiel;
+import de.petanqueturniermanager.spielerdb.MeldelisteZielFactory;
 
 /**
  * Bindeglied zwischen {@link de.petanqueturniermanager.comp.ProtocolHandler} und der PTM-Online-
@@ -64,6 +73,9 @@ public final class PtmOnlineDispatcher {
     private static final long WARTEINTERVALL_MS = 200;
     /** Der Anzeige-Schlüssel wird auf dem Dispatch-Thread geholt; bei schlechtem Netz nicht lange blockieren. */
     private static final Duration TIMEOUT_ANZEIGE_SCHLUESSEL = Duration.ofSeconds(5);
+    /** Anhang an den persönlichen Live-Link: PTM-Online zeigt dort dessen QR-Code. */
+    static final String LIVE_QR_SEITE = "/qr";
+    private static final int HTTP_NICHT_GEFUNDEN = 404;
 
     private PtmOnlineDispatcher() {}
 
@@ -392,6 +404,123 @@ public final class PtmOnlineDispatcher {
         });
     }
 
+    /**
+     * Öffnet im Standardbrowser den QR-Code zum persönlichen Live-Link der Meldung, in deren Zeile der Cursor in der
+     * Meldeliste (bei Supermelee in der Mêlée-Anmeldung) steht – zum Vorzeigen, etwa für Teams ohne E-Mail-Adresse.
+     * Gibt es ihn nicht (Meldung nicht verbunden oder nicht bestätigt, Live-Ansicht aus), erscheint ein Hinweis.
+     */
+    public static void liveQrCodeOeffnen(WorkingSpreadsheet ws) {
+        mitVerbindung(ws, (verbindung, config) -> {
+            XComponentContext ctx = ws.getxContext();
+            Optional<MeldelisteZiel> ziel = MeldelisteZielFactory.fuerPtmOnline(ws);
+            OptionalInt zeile = ziel.isEmpty() ? OptionalInt.empty() : markierteMeldungsZeile(ws, ziel.get());
+            if (ziel.isEmpty() || zeile.isEmpty()) {
+                zeigeHinweis(ctx, I18n.get("ptmonline.liveqr.zeile_waehlen"));
+                return;
+            }
+            Optional<String> onlineId;
+            try {
+                onlineId = onlineIdDerZeile(ziel.get().leseLokaleUuids(Set.of(zeile.getAsInt())),
+                        zeile.getAsInt(), ziel.get().leseOnlineIdsProUuid());
+            } catch (MeldelisteZiel.MeldelisteSchreibException e) {
+                logger.error("PTM-Online: Meldung der markierten Zeile nicht lesbar", e);
+                zeigeFehler(ctx, e.getMessage());
+                return;
+            }
+            if (onlineId.isEmpty()) {
+                zeigeHinweis(ctx, I18n.get("ptmonline.liveqr.nicht_verbunden"));
+                return;
+            }
+            TournamentSyncClient client = TournamentSyncClient.mitKurzemTimeout(config.baseUrl(), config.apiKey(),
+                    TIMEOUT_ANZEIGE_SCHLUESSEL);
+            holeLiveLink(ctx, client, verbindung.tournamentId(), onlineId.get())
+                    .ifPresent(url -> oeffneImBrowser(ctx, url + LIVE_QR_SEITE));
+        });
+    }
+
+    /**
+     * 1-basierte Zeile der markierten Zelle; leer, wenn das aktive Blatt nicht das der Meldungen ist oder mehr als
+     * eine Zeile markiert ist.
+     */
+    private static OptionalInt markierteMeldungsZeile(WorkingSpreadsheet ws, MeldelisteZiel ziel) {
+        if (!ziel.liegtAufBlatt(ws.getWorkingSpreadsheetView().getActiveSheet())) {
+            return OptionalInt.empty();
+        }
+        OptionalInt zeile = markierteZeile(ws);
+        return zeile.isEmpty() ? zeile : OptionalInt.of(zeile.getAsInt() + 1);
+    }
+
+    /** Online-ID der Meldung in dieser Zeile; leer ohne lokale UUID oder ohne Online-Zuordnung. */
+    static Optional<String> onlineIdDerZeile(Map<Integer, String> uuidProZeile, int zeile1Basiert,
+            Map<String, String> onlineIdProUuid) {
+        return Optional.ofNullable(uuidProZeile.get(zeile1Basiert)).map(onlineIdProUuid::get);
+    }
+
+    /** 0-basierte Zeile der markierten Zelle bzw. des markierten Bereichs, sofern er genau eine Zeile umfasst. */
+    private static OptionalInt markierteZeile(WorkingSpreadsheet ws) {
+        XSelectionSupplier auswahl = Lo.qi(XSelectionSupplier.class, ws.getWorkingSpreadsheetView());
+        XCellRangeAddressable bereich = auswahl == null ? null
+                : Lo.qi(XCellRangeAddressable.class, auswahl.getSelection());
+        if (bereich == null) {
+            return OptionalInt.empty();
+        }
+        CellRangeAddress adresse = bereich.getRangeAddress();
+        return adresse.StartRow == adresse.EndRow ? OptionalInt.of(adresse.StartRow) : OptionalInt.empty();
+    }
+
+    /**
+     * Fragt den Live-Link bei PTM-Online ab. Ein nicht wiederherstellbarer Link (vor dieser Funktion per Mail
+     * verschickt) wird nur nach Rückfrage ersetzt, weil der alte damit ungültig wird.
+     *
+     * @return leer, wenn es keinen Link gibt; der Grund wurde bereits angezeigt
+     */
+    private static Optional<String> holeLiveLink(XComponentContext ctx, TournamentSyncClient client,
+            String tournamentId, String onlineId) {
+        try {
+            try {
+                return Optional.of(client.holeLiveLink(tournamentId, onlineId, false));
+            } catch (PtmOnlineHttpException e) {
+                if (!e.istLiveLinkNichtWiederherstellbar()) {
+                    throw e;
+                }
+                logger.info("PTM-Online: Live-Link der Meldung {} nicht wiederherstellbar", onlineId, e);
+                if (!erneuernBestaetigt(ctx)) {
+                    return Optional.empty();
+                }
+                return Optional.of(client.holeLiveLink(tournamentId, onlineId, true));
+            }
+        } catch (PtmOnlineHttpException e) {
+            logger.warn("PTM-Online: kein Live-Link für Meldung {} (HTTP {})", onlineId, e.getStatusCode(), e);
+            keinLiveLinkHinweis(ctx, e);
+        } catch (IOException e) {
+            logger.error("PTM-Online: Live-Link für Meldung {} nicht abgerufen", onlineId, e);
+            zeigeNetzwerkFehler(ctx, e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            logger.debug("PTM-Online: Abruf des Live-Links unterbrochen", e);
+        }
+        return Optional.empty();
+    }
+
+    private static boolean erneuernBestaetigt(XComponentContext ctx) {
+        return MessageBox.from(ctx, MessageBoxTypeEnum.WARN_YES_NO)
+                .caption(I18n.get("ptmonline.menu.toplevel"))
+                .message(I18n.get("ptmonline.liveqr.erneuern_frage"))
+                .show() == MessageBoxResult.YES;
+    }
+
+    private static void keinLiveLinkHinweis(XComponentContext ctx, PtmOnlineHttpException e) {
+        if (e.istLiveAnsichtAus()) {
+            zeigeHinweis(ctx, I18n.get("ptmonline.liveqr.live_ansicht_aus"));
+        } else if (e.istMeldungNichtBestaetigt()) {
+            zeigeHinweis(ctx, I18n.get("ptmonline.liveqr.nicht_bestaetigt"));
+        } else if (e.getStatusCode() == HTTP_NICHT_GEFUNDEN) {
+            zeigeHinweis(ctx, I18n.get("ptmonline.liveqr.nicht_gefunden"));
+        } else {
+            zeigeNetzwerkFehler(ctx, e);
+        }
+    }
+
     /** {@code <Server><pfadPraefix><Turnier-Id>}; ein abschließender Schrägstrich der Server-Adresse entfällt. */
     static String turnierUrl(String baseUrl, String pfadPraefix, String tournamentId) {
         String basis = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
@@ -413,7 +542,7 @@ public final class PtmOnlineDispatcher {
             }
             shell.execute(url, "", (short) SystemShellExecuteFlags.URIS_ONLY);
         } catch (com.sun.star.uno.Exception | RuntimeException e) {
-            // Die URL enthält den Anzeige-Schlüssel: nicht ins Log schreiben.
+            // Die URL enthält den Anzeige-Schlüssel bzw. den persönlichen Live-Link: nicht ins Log schreiben.
             logger.error("PTM-Online: Browser nicht geöffnet", e);
             zeigeFehler(ctx, I18n.get("ptmonline.browser.fehler", e.getMessage()));
         }
@@ -452,6 +581,13 @@ public final class PtmOnlineDispatcher {
 
     private static void zeigeNetzwerkFehler(XComponentContext ctx, IOException e) {
         zeigeFehler(ctx, PtmOnlineFehlerText.fuer(e));
+    }
+
+    private static void zeigeHinweis(XComponentContext ctx, String meldung) {
+        MessageBox.from(ctx, MessageBoxTypeEnum.INFO_OK)
+                .caption(I18n.get("ptmonline.menu.toplevel"))
+                .message(meldung)
+                .show();
     }
 
     private static void zeigeFehler(XComponentContext ctx, String meldung) {

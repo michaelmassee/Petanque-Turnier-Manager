@@ -180,6 +180,30 @@ public class TournamentSyncClient extends PtmOnlineHttpClient implements Auftrag
     }
 
     /**
+     * Persönlicher Live-Link einer Meldung für ihren QR-Code (Turnierleitung im Turnierdokument). Ohne
+     * {@code erneuern} der bestehende Link; mit {@code erneuern} ersetzt PTM-Online einen nicht wiederherstellbaren
+     * und macht den alten ungültig.
+     *
+     * @throws PtmOnlineHttpException u.&nbsp;a. mit {@link PtmOnlineHttpException#istLiveAnsichtAus()},
+     *                                {@link PtmOnlineHttpException#istMeldungNichtBestaetigt()} oder
+     *                                {@link PtmOnlineHttpException#istLiveLinkNichtWiederherstellbar()}
+     */
+    public String holeLiveLink(String tournamentId, String registrationId, boolean erneuern)
+            throws IOException, InterruptedException {
+        String pfad = liveLinkPfad(tournamentId, registrationId);
+        JsonObject payload = leseAntwort(erneuern ? post(pfad, "{}") : get(pfad));
+        JsonElement url = pflichtfeld(payload, "url");
+        if (!url.isJsonPrimitive() || url.getAsString().isBlank()) {
+            throw unvollstaendigeAntwort("url");
+        }
+        return url.getAsString();
+    }
+
+    static String liveLinkPfad(String tournamentId, String registrationId) {
+        return turnierPfad(tournamentId) + "/registrations/" + encode(registrationId) + "/live-link";
+    }
+
+    /**
      * Holt online eingegangene Anmeldungen eines Turniers, optional nur die seit {@code since}
      * geaenderten (fuer inkrementellen Abgleich).
      */

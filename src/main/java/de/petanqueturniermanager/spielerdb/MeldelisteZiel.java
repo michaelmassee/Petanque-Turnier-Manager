@@ -8,6 +8,8 @@ import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
 
+import com.sun.star.sheet.XSpreadsheet;
+
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.helper.i18n.I18n;
 
@@ -123,6 +125,11 @@ public interface MeldelisteZiel extends AbgleichQuelle {
      */
     default Map<Integer, String> leseLokaleUuids(Collection<Integer> zeilen1Basiert) throws MeldelisteSchreibException {
         throw new MeldelisteSchreibException(I18n.get("meldeliste.ziel.fehler.online_id_nicht_unterstuetzt"));
+    }
+
+    /** Ob die Meldungen dieses Ziels auf diesem Blatt stehen, z.&nbsp;B. um die Zeile der Cursor-Zelle zu deuten. */
+    default boolean liegtAufBlatt(XSpreadsheet blatt) {
+        return false;
     }
 
     /**
