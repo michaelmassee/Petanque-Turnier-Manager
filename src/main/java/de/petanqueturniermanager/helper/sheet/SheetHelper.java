@@ -932,6 +932,19 @@ public class SheetHelper {
 	}
 
 	/**
+	 * Ob zwei Blatt-Referenzen desselben Dokuments dasselbe Blatt meinen. Nicht über Objektidentität
+	 * ({@code UnoRuntime.areSame}): Calc liefert z.&nbsp;B. bei {@code XSpreadsheetView.getActiveSheet()} bei jedem Aufruf
+	 * ein neues Blatt-Objekt ({@code sc/source/ui/unoobj/viewuno.cxx}, {@code ScTabViewObj::getActiveScSheet}).
+	 * Maßgeblich ist daher der Blattindex.
+	 */
+	public static boolean istGleichesBlatt(XSpreadsheet erstes, XSpreadsheet zweites) {
+		XCellRangeAddressable erstesBlatt = Lo.qi(XCellRangeAddressable.class, erstes);
+		XCellRangeAddressable zweitesBlatt = Lo.qi(XCellRangeAddressable.class, zweites);
+		return erstesBlatt != null && zweitesBlatt != null
+				&& erstesBlatt.getRangeAddress().Sheet == zweitesBlatt.getRangeAddress().Sheet;
+	}
+
+	/**
 	 * Färbt Zeilen im angegebenen Bereich abwechselnd direkt (nicht via bedingte Formatierung).<br>
 	 * Gerade Zeilen (ROW()-basiert, 1-indiziert) erhalten {@code geradeFarbe}, ungerade {@code ungeradeFarbe}.
 	 * Bereits korrekt gefärbte Zeilengruppen bleiben unangetastet.

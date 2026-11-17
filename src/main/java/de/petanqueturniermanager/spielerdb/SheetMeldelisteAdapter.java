@@ -17,7 +17,6 @@ import org.apache.logging.log4j.Logger;
 
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
-import com.sun.star.uno.UnoRuntime;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.NrUuidSpalte;
@@ -517,7 +516,7 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
 
     @Override
     public boolean liegtAufBlatt(XSpreadsheet blatt) {
-        return UnoRuntime.areSame(sheet, blatt);
+        return SheetHelper.istGleichesBlatt(sheet, blatt);
     }
 
     @Override
