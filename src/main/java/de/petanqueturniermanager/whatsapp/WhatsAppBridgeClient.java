@@ -69,6 +69,13 @@ public class WhatsAppBridgeClient {
 		postJson("/send-image", payload);
 	}
 
+	public void sendeText(String chatId, String text) throws WhatsAppBridgeException {
+		JsonObject payload = new JsonObject();
+		payload.addProperty("chatId", chatId);
+		payload.addProperty("text", text);
+		postJson("/send-text", payload);
+	}
+
 	public URI qrCodeUri() {
 		return baseUri.resolve("/qr");
 	}
@@ -98,6 +105,10 @@ public class WhatsAppBridgeClient {
 			if (response.statusCode() == 409) {
 				throw new WhatsAppBridgeException(
 						I18n.get("whatsapp.bridge.nicht.bereit", statusAusFehlerBody(response.body())));
+			}
+			if (response.statusCode() == 404) {
+				throw new WhatsAppBridgeEndpunktFehltException("WhatsApp-Bridge kennt " + request.uri().getPath()
+						+ " nicht (HTTP 404)");
 			}
 			if (response.statusCode() < 200 || response.statusCode() >= 300) {
 				throw new WhatsAppBridgeException("WhatsApp-Bridge HTTP " + response.statusCode() + ": "

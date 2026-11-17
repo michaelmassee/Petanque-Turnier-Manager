@@ -1,6 +1,7 @@
 package de.petanqueturniermanager.whatsapp;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -49,6 +50,39 @@ class WhatsAppBridgeClientTest {
 				.contains("\"chatId\":\"123@g.us\"")
 				.contains("\"caption\":\"Rangliste\"")
 				.contains("\"imageBase64\":\"AQID\"");
+	}
+
+	@Test
+	void sendetText() throws Exception {
+		var gesendeterBody = new StringBuilder();
+		server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+		server.createContext("/send-text", exchange -> {
+			gesendeterBody.append(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
+			antwort(exchange, "{\"ok\":true}");
+		});
+		server.start();
+
+		bridgeClient().sendeText("123@g.us", "📢 Ankündigung: Runde 3");
+
+		assertThat(gesendeterBody.toString())
+				.contains("\"chatId\":\"123@g.us\"")
+				.contains("\"text\":\"📢 Ankündigung: Runde 3\"");
+	}
+
+	@Test
+	void alteBridgeOhneTextversandWirdErkannt() throws Exception {
+		server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+		server.createContext("/status", exchange -> antwort(exchange, "{\"status\":\"ready\",\"qr\":\"\"}"));
+		server.start();
+
+		var client = bridgeClient();
+
+		assertThatThrownBy(() -> client.sendeText("123@g.us", "Hallo"))
+				.isInstanceOf(WhatsAppBridgeEndpunktFehltException.class);
+	}
+
+	private WhatsAppBridgeClient bridgeClient() {
+		return new WhatsAppBridgeClient(URI.create("http://127.0.0.1:" + server.getAddress().getPort()));
 	}
 
 	private static void antwort(com.sun.net.httpserver.HttpExchange exchange, String json) throws IOException {

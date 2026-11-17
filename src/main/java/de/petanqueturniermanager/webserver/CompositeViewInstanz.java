@@ -50,6 +50,7 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot, Re
     private final HttpServer httpServer;
     private final ScheduledExecutorService keepAliveExecutor;
     private final CopyOnWriteArrayList<SseVerbindung> sseVerbindungen = new CopyOnWriteArrayList<>();
+    private final AnkuendigungsStand ankuendigung = new AnkuendigungsStand();
 
     /**
      * Gecachter vollständiger Zustand aller Panels als JSON.
@@ -115,11 +116,18 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot, Re
 
     @Override
     public String[] getInitZusatzJsons() {
-        return new String[0];
+        return ankuendigung.initZusatzJsons();
     }
 
     public void sseNachrichtPushen(String json) {
         sseVerbindungen.forEach(v -> v.senden(json));
+    }
+
+    /** Verteilt eine geänderte Ankündigung an alle verbundenen Browser und merkt sie für neue Verbindungen. */
+    public void ankuendigungSetzen(String json) {
+        if (ankuendigung.setze(json)) {
+            sseNachrichtPushen(json);
+        }
     }
 
     public void verbindungEntfernen(SseVerbindung verbindung) {

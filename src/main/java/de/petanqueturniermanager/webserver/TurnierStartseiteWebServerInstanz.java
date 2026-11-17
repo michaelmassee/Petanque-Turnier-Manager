@@ -40,6 +40,7 @@ public class TurnierStartseiteWebServerInstanz implements SseElternInstanz, WebS
     private final HttpServer httpServer;
     private final ScheduledExecutorService keepAliveExecutor;
     private final CopyOnWriteArrayList<SseVerbindung> sseVerbindungen = new CopyOnWriteArrayList<>();
+    private final AnkuendigungsStand ankuendigung = new AnkuendigungsStand();
 
     private volatile String cachedInitJson;
     private volatile boolean laeuft = false;
@@ -116,6 +117,18 @@ public class TurnierStartseiteWebServerInstanz implements SseElternInstanz, WebS
 
     public void sseNachrichtPushen(String json) {
         sseVerbindungen.forEach(v -> v.senden(json));
+    }
+
+    @Override
+    public String[] getInitZusatzJsons() {
+        return ankuendigung.initZusatzJsons();
+    }
+
+    /** Verteilt eine geänderte Ankündigung an alle verbundenen Browser und merkt sie für neue Verbindungen. */
+    public void ankuendigungSetzen(String json) {
+        if (ankuendigung.setze(json)) {
+            sseNachrichtPushen(json);
+        }
     }
 
     @Override

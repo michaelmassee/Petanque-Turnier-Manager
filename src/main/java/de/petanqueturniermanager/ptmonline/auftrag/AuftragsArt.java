@@ -45,7 +45,9 @@ public enum AuftragsArt {
     /** Übernommene bzw. verworfene Ergebnismeldungen von Spielern (E-27, E-28). */
     ERGEBNISMELDUNGEN,
     /** Abschluss des Online-Turniers, auf Wunsch mit Veröffentlichung der Endrangliste und Benachrichtigung. */
-    ABSCHLUSS;
+    ABSCHLUSS,
+    /** Ankündigung der Turnierleitung für Turnier- und Live-Seite; leerer Text löscht sie. */
+    ANKUENDIGUNG;
 
     /**
      * Noch nicht gesendete Aufträge dieser Art aus der Zeit vor dem lokalen Turnierstart werden beim Start verworfen

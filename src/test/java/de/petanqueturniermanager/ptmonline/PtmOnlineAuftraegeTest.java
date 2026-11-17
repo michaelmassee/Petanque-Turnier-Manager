@@ -160,6 +160,30 @@ class PtmOnlineAuftraegeTest {
     }
 
     @Test
+    void ankuendigungIstEinGezaehlterAuftragUndNurDieLetzteWirdGesendet() {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        PtmOnlineAuftraege.ankuendigung(bestand, TURNIER, "Runde 3 startet");
+        PtmOnlineAuftraege.ankuendigung(bestand, TURNIER, "Runde 3 startet \"später\"");
+
+        assertThat(bestand.zuSenden(false)).singleElement().satisfies(auftrag -> {
+            assertThat(auftrag.art()).isEqualTo(AuftragsArt.ANKUENDIGUNG);
+            assertThat(auftrag.methode()).isEqualTo("PUT");
+            assertThat(auftrag.pfad()).endsWith("/t1/announcement");
+            assertThat(JsonParser.parseString(auftrag.body()).getAsJsonObject().get("text").getAsString())
+                    .isEqualTo("Runde 3 startet \"später\"");
+        });
+    }
+
+    @Test
+    void leereAnkuendigungLoeschtOnline() {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        PtmOnlineAuftraege.ankuendigung(bestand, TURNIER, "");
+
+        assertThat(bestand.zuSenden(false)).singleElement()
+                .satisfies(auftrag -> assertThat(auftrag.body()).isEqualTo("{\"text\":\"\"}"));
+    }
+
+    @Test
     void abschlussIstEinGezaehlterAuftragUndErsetztEinenNochNichtGesendeten() {
         AuftragsBestand bestand = AuftragsBestand.leer();
         PtmOnlineAuftraege.abschluss(bestand, TURNIER, false, false);

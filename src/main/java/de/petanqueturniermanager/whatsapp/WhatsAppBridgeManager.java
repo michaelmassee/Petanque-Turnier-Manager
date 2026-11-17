@@ -20,6 +20,8 @@ import java.util.function.Consumer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import de.petanqueturniermanager.helper.i18n.I18n;
+
 public final class WhatsAppBridgeManager {
 
 	private static final Logger logger = LogManager.getLogger(WhatsAppBridgeManager.class);
@@ -28,6 +30,9 @@ public final class WhatsAppBridgeManager {
 
 	/** Anzahl der zuletzt vom Bridge-Prozess gelesenen Ausgabezeilen, die für Fehlermeldungen vorgehalten werden. */
 	private static final int MAX_AUSGABE_ZEILEN = 40;
+
+	/** So lange darf eine neu gestartete Bridge brauchen, bis WhatsApp wieder verbunden ist. */
+	private static final int NEUSTART_VERBINDUNG_SEKUNDEN = 30;
 
 	private static volatile Process process;
 
@@ -67,6 +72,41 @@ public final class WhatsAppBridgeManager {
 		}
 		throw new WhatsAppBridgeException("WhatsApp-Bridge wurde gestartet, antwortet aber nicht auf Port "
 				+ PORT + "." + ausgabeAnhang());
+	}
+
+	/**
+	 * Sendet eine Textnachricht. Kennt eine noch laufende Bridge aus einer älteren Plugin-Version den Textversand
+	 * nicht, wird sie einmal neu gestartet und der Versand wiederholt, sobald WhatsApp wieder verbunden ist.
+	 */
+	public static void sendeText(String chatId, String text) throws WhatsAppBridgeException {
+		try {
+			starteOderVerbinde().sendeText(chatId, text);
+		} catch (WhatsAppBridgeEndpunktFehltException e) {
+			logger.info("WhatsApp-Bridge veraltet, starte neu", e);
+			beenden();
+			WhatsAppBridgeClient neu = starteOderVerbinde();
+			warteBisVerbunden(neu);
+			try {
+				neu.sendeText(chatId, text);
+			} catch (WhatsAppBridgeEndpunktFehltException weiterhinVeraltet) {
+				throw new WhatsAppBridgeException(I18n.get("whatsapp.bridge.veraltet"), weiterhinVeraltet);
+			}
+		}
+	}
+
+	private static void warteBisVerbunden(WhatsAppBridgeClient client) throws WhatsAppBridgeException {
+		long ende = System.nanoTime() + TimeUnit.SECONDS.toNanos(NEUSTART_VERBINDUNG_SEKUNDEN);
+		while (System.nanoTime() < ende) {
+			if (client.status().verbunden()) {
+				return;
+			}
+			try {
+				Thread.sleep(500);
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+				throw new WhatsAppBridgeException("WhatsApp-Bridge-Neustart wurde unterbrochen", e);
+			}
+		}
 	}
 
 	private static String ausgabeAnhang() {

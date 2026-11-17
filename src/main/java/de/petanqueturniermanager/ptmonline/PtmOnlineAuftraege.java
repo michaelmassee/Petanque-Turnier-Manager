@@ -359,6 +359,13 @@ public final class PtmOnlineAuftraege {
         bestand.erzeuge(AuftragsArt.ANMELDUNG_SCHLIESSEN, "PUT", pfad, "{\"closed\":true}", "{}");
     }
 
+    /** Ankündigung der Turnierleitung; eine noch nicht gesendete ältere entfällt, online gilt nur die letzte. */
+    static void ankuendigung(AuftragsBestand bestand, String tournamentId, String text) {
+        String pfad = TournamentSyncClient.ankuendigungPfad(tournamentId);
+        bestand.entferneUeberholte(auftrag -> auftrag.pfad().equals(pfad));
+        bestand.erzeuge(AuftragsArt.ANKUENDIGUNG, "PUT", pfad, TournamentSyncClient.ankuendigungBody(text), "{}");
+    }
+
     /** Ein abgelehnter, noch nicht zur Kenntnis genommener Auftrag als Fall der Konfliktliste. */
     record AbgelehnterFall(String auftragsId, KonfliktFall fall) {}
 
@@ -498,7 +505,7 @@ public final class PtmOnlineAuftraege {
                     case ANMELDUNG_VERKNUEPFEN -> meldeNichtVerknuepfte(auftrag, ergebnis.antwort());
                     case ABSCHLUSS -> abschluss = ergebnis.antwort();
                     case START, TRENNEN, RUNDE, RUNDE_LOESCHEN, RANGLISTE, SPIELEINSTELLUNGEN, MELEE_TEAMS, ANMELDUNG_STORNIEREN, ENTSCHEIDUNGEN,
-                            ANMELDUNG_SCHLIESSEN, ERGEBNISMELDUNGEN -> {
+                            ANMELDUNG_SCHLIESSEN, ERGEBNISMELDUNGEN, ANKUENDIGUNG -> {
                         // Nichts im Dokument festzuhalten.
                     }
                 }

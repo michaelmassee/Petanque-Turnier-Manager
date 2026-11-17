@@ -1,4 +1,5 @@
 import { useReducer, useEffect, useRef, useState } from 'react';
+import AnkuendigungBanner from './AnkuendigungBanner.jsx';
 import CompositeApp from './CompositeApp';
 import EinzelApp from './EinzelApp';
 import StartseiteApp from './StartseiteApp';
@@ -303,6 +304,8 @@ function reducer(state, action) {
     }
     case 'HINWEIS':
       return { ...state, hinweis: action.payload };
+    case 'ANKUENDIGUNG':
+      return { ...state, ankuendigung: action.payload };
     case 'VERBINDUNG_STATUS':
       return { ...state, verbunden: action.payload.verbunden };
     case 'I18N':
@@ -335,6 +338,7 @@ export default function App() {
     startseite: null,
     verbunden: true,
     i18n: {},
+    ankuendigung: null,
   });
 
   const versionRef = useRef(0);
@@ -408,6 +412,11 @@ export default function App() {
           dispatch({ type: 'HINWEIS', payload: msg });
           return;
         }
+        // Ankündigung der Turnierleitung: eigener Zustand ohne Version, überlebt Init und Hinweis.
+        if (msg.typ === 'ankuendigung') {
+          dispatch({ type: 'ANKUENDIGUNG', payload: msg });
+          return;
+        }
 
         // Init-Nachrichten umgehen den Versions-Filter und setzen ihn hart auf den
         // neuen Wert. Damit funktioniert auch ein Reconnect nach Server-Restart, bei dem
@@ -467,7 +476,7 @@ export default function App() {
     };
   }, []);
 
-  const { table, hinweis, composite, startseite, verbunden, i18n } = state;
+  const { table, hinweis, composite, startseite, verbunden, i18n, ankuendigung } = state;
   const timerPanels = timerPanelsAusState(state);
   const hatTimerPanel = timerPanels.length > 0;
   const alarmAktiv = timerAlarmAktiv(timerPanels);
@@ -527,6 +536,7 @@ export default function App() {
           <div className="hinweis-text">{hinweis.hinweisText}</div>
         </div>
         <Signatur />
+        <AnkuendigungBanner ankuendigung={ankuendigung} />
         <VerbindungsStatus verbunden={verbunden} i18n={i18n} />
       </>
     );
@@ -548,6 +558,7 @@ export default function App() {
         hinweis: i18n?.tonNichtAktivHinweis || 'OK drücken / antippen für Ton',
       }} /> : <LeereAnsicht />}
       {mitSignatur && <Signatur links={viewKey === 'composite'} />}
+      <AnkuendigungBanner ankuendigung={ankuendigung} />
       <VerbindungsStatus verbunden={verbunden} i18n={i18n} />
     </>
   );

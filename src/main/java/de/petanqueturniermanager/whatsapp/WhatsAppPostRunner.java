@@ -26,7 +26,8 @@ import de.petanqueturniermanager.whatsapp.WhatsAppChatAuswahlDialog.WhatsAppPost
 public class WhatsAppPostRunner extends SheetRunner {
 
 	private static final Logger logger = LogManager.getLogger(WhatsAppPostRunner.class);
-	private static final String PROP_LETZTER_WHATSAPP_CHAT = "WhatsApp Letzter Chat";
+	/** Zuletzt im Dokument gewählter WhatsApp-Chat; auch Vorbelegung im Ankündigungsdialog. */
+	public static final String PROP_LETZTER_WHATSAPP_CHAT = "WhatsApp Letzter Chat";
 	private static final String PROP_WHATSAPP_KOPF_FUSSZEILE = "WhatsApp Kopf Fusszeile";
 
 	private final WhatsAppAktion aktion;

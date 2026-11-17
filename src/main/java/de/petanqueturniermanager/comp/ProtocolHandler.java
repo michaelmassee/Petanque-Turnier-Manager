@@ -45,6 +45,7 @@ import com.sun.star.util.URL;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.ankuendigung.AnkuendigungAktion;
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.TeamnummerAendernSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.TeilnehmerListeSortModus;
@@ -397,6 +398,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_WEBSERVER_URL_8  = "webserver_url_8";
 	public static final String CMD_WEBSERVER_URL_9  = "webserver_url_9";
 	public static final String CMD_WEBSERVER_URL_10 = "webserver_url_10";
+	// Ankündigung der Turnierleitung (Webserver, PTM-Online, optional WhatsApp)
+	public static final String CMD_ANKUENDIGUNG = "ankuendigung";
 	// Timer
 	public static final String CMD_TIMER_STARTEN_DIALOG   = "timer_starten_dialog";
 	public static final String CMD_TIMER_PAUSE_FORTSETZEN = "timer_pause_fortsetzen";
@@ -1531,6 +1534,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 					new TurnierSystemNeueDateiAuswahlDialog(erzeugeWorkingSpreadsheetFuerDispatch()).zeige();
 			case CMD_KI_NEUES_TURNIER ->
 					new KiNeuesTurnierDialog(erzeugeWorkingSpreadsheetFuerDispatch()).zeige();
+			case CMD_ANKUENDIGUNG -> AnkuendigungAktion.ausfuehren(erzeugeWorkingSpreadsheetFuerDispatch());
 			case CMD_TOOLBAR_OEFFNEN            -> erzeugeWorkingSpreadsheetFuerDispatch()
 					.executeDispatch(".uno:Open", "_self", 0, new PropertyValue[0]);
 			case CMD_TOOLBAR_DRUCKEN            -> erzeugeWorkingSpreadsheetFuerDispatch()
@@ -2519,6 +2523,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_SPIELERDB_WEBVIEW                      -> true;
 			case CMD_SPIELERDB_IN_MELDELISTE                -> ts != TurnierSystem.KEIN;
 			case CMD_TEAMNUMMER_AENDERN                     -> ts != TurnierSystem.KEIN;
+			case CMD_ANKUENDIGUNG                           -> ts != TurnierSystem.KEIN;
 			// Ein leeres Dokument legt beim Verbinden die Meldeliste aus dem Online-Turnier an.
 			case CMD_PTMONLINE_TURNIER_VERBINDEN            -> true;
 			case CMD_PTMONLINE_VERBINDUNG_TRENNEN,

@@ -114,6 +114,24 @@ app.post('/send-image', async (req, res) => {
   }
 });
 
+app.post('/send-text', async (req, res) => {
+  if (status !== 'ready') {
+    res.status(409).json({ error: 'WhatsApp is not ready', status });
+    return;
+  }
+  const { chatId, text } = req.body || {};
+  if (!chatId || !text) {
+    res.status(400).json({ error: 'chatId and text are required' });
+    return;
+  }
+  try {
+    await sock.sendMessage(chatId, { text: String(text) });
+    res.json({ ok: true });
+  } catch (error) {
+    res.status(502).json({ error: error.message });
+  }
+});
+
 app.listen(port, '127.0.0.1', () => {
   console.log(`PTM WhatsApp bridge listening on http://127.0.0.1:${port}`);
 });

@@ -33,6 +33,7 @@ import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.uno.XComponentContext;
 import com.sun.star.util.XModifyBroadcaster;
 
+import de.petanqueturniermanager.ankuendigung.Ankuendigung;
 import de.petanqueturniermanager.comp.GlobalProperties;
 import de.petanqueturniermanager.comp.GlobalProperties.CompositeViewEintragRoh;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -547,6 +548,37 @@ public final class WebServerManager implements TimerListener {
     }
 
     /**
+     * Die Ankündigung des Dokuments hat sich geändert: sofort an alle Webserver-Seiten verteilen, ohne auf die
+     * nächste Refresh-Welle zu warten. Gilt nur für das Owner-Dokument; die Ankündigung eines anderen offenen
+     * Turnierdokuments erscheint nie auf diesem Webserver.
+     */
+    public void ankuendigungGeaendert(WorkingSpreadsheet ws) {
+        if (!laeuft || !istOwnerDocument(ws.getWorkingSpreadsheetDocument())) {
+            return;
+        }
+        verteileAnkuendigung(ws);
+    }
+
+    /**
+     * Verteilt die aktuelle Ankündigung an alle Composite-Views und die Startseite (die Regie hängt an deren
+     * Verbindungen). Jede Instanz pusht nur bei geändertem Stand; neue Browser bekommen sie mit dem Init.
+     */
+    private void verteileAnkuendigung(WorkingSpreadsheet ws) {
+        String json;
+        try {
+            json = GSON.toJson(AnkuendigungSseNachricht.von(Ankuendigung.lese(ws), I18n.get("ankuendigung.titel")));
+        } catch (RuntimeException e) {
+            logger.debug("Ankündigung nicht lesbar: {}", e.getMessage(), e);
+            return;
+        }
+        compositeInstanzen.forEach(instanz -> instanz.ankuendigungSetzen(json));
+        var startseite = startseiteInstanz;
+        if (startseite != null) {
+            startseite.ankuendigungSetzen(json);
+        }
+    }
+
+    /**
      * Aktualisiert Zoom und Zentrieren aller laufenden Instanzen aus den gespeicherten GlobalProperties
      * und pusht den neuen Zustand sofort an alle verbundenen Browser-Clients.
      * <p>
@@ -1029,6 +1061,7 @@ public final class WebServerManager implements TimerListener {
             // Entkoppelter Mini-Push-Pfad für die Startseite — kein Tabellen-Mapping,
             // keine Diff-Engine, nur zwei Integer + Diff-Cache.
             pushStartseiteFallsAktiv(ws);
+            verteileAnkuendigung(ws);
             lastSuccessfulRefreshAt = System.currentTimeMillis();
         } finally {
             refreshLock.unlock();

@@ -387,6 +387,17 @@ public class TournamentSyncClient extends PtmOnlineHttpClient implements Auftrag
         return turnierPfad(tournamentId) + "/registration-closed";
     }
 
+    static String ankuendigungPfad(String tournamentId) {
+        return turnierPfad(tournamentId) + "/announcement";
+    }
+
+    /** Nutzlast der Ankündigung; ein leerer Text löscht sie online. */
+    static String ankuendigungBody(String text) {
+        JsonObject body = new JsonObject();
+        body.addProperty("text", text);
+        return body.toString();
+    }
+
     static String entscheidungenPfad(String tournamentId) {
         return turnierPfad(tournamentId) + "/decisions";
     }
