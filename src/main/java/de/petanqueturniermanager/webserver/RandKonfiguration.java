@@ -27,6 +27,10 @@ public record RandKonfiguration(int dicke, String art, int farbe, int transparen
     /** Default: kein Rahmen. */
     public static final RandKonfiguration KEINER = new RandKonfiguration(0, ART_KEIN, 0x000000, 0, ANIMATION_KEINE);
 
+    /** Vorbelegung für neu angelegte Composite Views: 8 px, doppelt, #28B2E9, 80 % transparent. */
+    public static final RandKonfiguration NEUE_VIEW_STANDARD =
+            new RandKonfiguration(8, ART_DOUBLE, 0x28B2E9, 80, ANIMATION_KEINE);
+
     public RandKonfiguration {
         dicke = Math.max(0, Math.min(MAX_DICKE, dicke));
         art = normiereArt(art);

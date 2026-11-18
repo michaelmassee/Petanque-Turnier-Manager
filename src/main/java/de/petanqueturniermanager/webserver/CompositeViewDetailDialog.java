@@ -303,7 +303,7 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         }
         ausgewaehlterPanelIndex = 0;
 
-        var rand = initialerEintrag != null ? initialerEintrag.rand() : RandKonfiguration.KEINER;
+        var rand = initialerEintrag != null ? initialerEintrag.rand() : RandKonfiguration.NEUE_VIEW_STANDARD;
         randDicke = rand.dicke();
         randArt = rand.art();
         randFarbe = rand.farbe();

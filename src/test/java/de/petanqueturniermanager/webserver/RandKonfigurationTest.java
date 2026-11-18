@@ -26,6 +26,16 @@ class RandKonfigurationTest {
     }
 
     @Test
+    void standardFuerNeueViewIstDoppelterBlauerRahmen() {
+        RandDaten daten = RandKonfiguration.NEUE_VIEW_STANDARD.toDaten();
+        assertThat(daten).isNotNull();
+        assertThat(daten.dicke()).isEqualTo(8);
+        assertThat(daten.art()).isEqualTo("double");
+        assertThat(daten.farbe()).isEqualTo("rgba(40,178,233,0.20)");
+        assertThat(daten.animation()).isEqualTo("keine");
+    }
+
+    @Test
     void rgbaUmrechnungOhneTransparenz() {
         var rand = new RandKonfiguration(3, RandKonfiguration.ART_SOLID, 0xFF0000, 0, RandKonfiguration.ANIMATION_KEINE);
         RandDaten daten = rand.toDaten();
