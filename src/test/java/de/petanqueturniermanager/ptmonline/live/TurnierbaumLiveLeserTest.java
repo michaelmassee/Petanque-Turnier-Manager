@@ -18,6 +18,20 @@ class TurnierbaumLiveLeserTest {
     }
 
     @Test
+    void verbinderZeichenSindKeineBahn() {
+        assertThat(TurnierbaumLiveLeser.ohneVerbinder("┘")).isNull();
+        assertThat(TurnierbaumLiveLeser.ohneVerbinder("┐")).isNull();
+        assertThat(TurnierbaumLiveLeser.ohneVerbinder("│")).isNull();
+        assertThat(TurnierbaumLiveLeser.ohneVerbinder(null)).isNull();
+    }
+
+    @Test
+    void bahnBezeichnungBleibtErhalten() {
+        assertThat(TurnierbaumLiveLeser.ohneVerbinder("4")).isEqualTo("4");
+        assertThat(TurnierbaumLiveLeser.ohneVerbinder("A3")).isEqualTo("A3");
+    }
+
+    @Test
     void ohneScoreDatenKeinePositionen() {
         assertThat(TurnierbaumLiveLeser.scorePositionen(null)).isEmpty();
         assertThat(TurnierbaumLiveLeser.scorePositionen("etwas anderes")).isEmpty();

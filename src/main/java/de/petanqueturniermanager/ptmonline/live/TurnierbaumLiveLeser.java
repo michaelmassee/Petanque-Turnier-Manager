@@ -116,12 +116,25 @@ final class TurnierbaumLiveLeser {
         if (teamA <= 0 || teamB <= 0) {
             return Optional.empty();
         }
-        // Ohne Bahnspalte steht hier die leere Verbinder-Spalte der Vorrunde. Als Text gelesen, damit auch
-        // Bahnbezeichnungen wie „A3“ ankommen (die Bahnspalte erlaubt bewusst Text).
+        // Als Text gelesen, damit auch Bahnbezeichnungen wie „A3“ ankommen (die Bahnspalte erlaubt bewusst Text).
         int bahnSpalte = a.getSpalte() - 2;
-        String bahn = bahnSpalte >= 0 ? zellen.text(bahnSpalte, a.getZeile()) : null;
+        String bahn = bahnSpalte >= 0 ? ohneVerbinder(zellen.text(bahnSpalte, a.getZeile())) : null;
         return Optional.of(LivePartie.teams(teamA, teamB, zellen.punkte(a.getSpalte(), a.getZeile()),
                 zellen.punkte(b.getSpalte(), b.getZeile()), bahn, stufe));
+    }
+
+    /**
+     * Runden ohne Bahnspalte (z.&nbsp;B. „Bahn nur in Runde 1“) haben links neben der Team-Zelle die Verbinder-Spalte
+     * der Vorrunde. Deren Linienzeichen (┐ │ ┘) sind keine Bahn.
+     *
+     * @return die Bahn, {@code null} bei leerer Zelle oder reinen Linienzeichen
+     */
+    static @Nullable String ohneVerbinder(@Nullable String zellText) {
+        if (zellText == null || zellText.codePoints()
+                .allMatch(zeichen -> Character.UnicodeBlock.of(zeichen) == Character.UnicodeBlock.BOX_DRAWING)) {
+            return null;
+        }
+        return zellText;
     }
 
     /** @param abstandZumFinale 0 = Finale, 1 = Halbfinale, n = 1/2ⁿ-Finale */
