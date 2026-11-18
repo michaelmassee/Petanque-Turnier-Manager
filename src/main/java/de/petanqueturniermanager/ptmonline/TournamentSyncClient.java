@@ -36,6 +36,7 @@ import de.petanqueturniermanager.ptmonline.dto.AnmeldungsAbruf;
 import de.petanqueturniermanager.ptmonline.dto.ErgebnismeldungenDto;
 import de.petanqueturniermanager.ptmonline.dto.KonfliktListeDto;
 import de.petanqueturniermanager.ptmonline.dto.LiveMatchDto;
+import de.petanqueturniermanager.ptmonline.dto.LiveKoWinnerDto;
 import de.petanqueturniermanager.ptmonline.dto.LiveRankingEntryDto;
 import de.petanqueturniermanager.ptmonline.dto.MeleeTeamDto;
 import de.petanqueturniermanager.ptmonline.dto.NeueOnlineAnmeldung;
@@ -465,9 +466,13 @@ public class TournamentSyncClient extends PtmOnlineHttpClient implements Auftrag
         return GSON.toJson(einstellungen);
     }
 
-    static String ranglisteBody(List<LiveRankingEntryDto> entries) {
+    /** Ranglisten-Snapshot, dazu die KO-Sieger ({@code koWinners}) – nur wenn es welche gibt. */
+    static String ranglisteBody(List<LiveRankingEntryDto> entries, List<LiveKoWinnerDto> koWinners) {
         JsonObject body = new JsonObject();
         body.add("entries", GSON.toJsonTree(entries));
+        if (!koWinners.isEmpty()) {
+            body.add("koWinners", GSON.toJsonTree(koWinners));
+        }
         return body.toString();
     }
 

@@ -5,6 +5,8 @@ package de.petanqueturniermanager.ptmonline.live;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 
 import de.petanqueturniermanager.helper.position.Position;
@@ -37,6 +39,25 @@ class TurnierbaumLiveLeserTest {
         var bahnSpalten = new TurnierbaumLiveLeser.BahnSpalten(false, false);
         assertThat(bahnSpalten.inSpalte(0)).isFalse();
         assertThat(bahnSpalten.inSpalte(1)).isFalse();
+    }
+
+    @Test
+    void siegerDesFeldsIstDieSeiteMitMehrPunktenImFinale() {
+        assertThat(feld(LivePartie.teams(3, 7, 9, 13, null, null)).sieger())
+                .contains(new LiveKoSieger("A-Finale", List.of(7)));
+        assertThat(feld(LivePartie.teams(3, 7, 13, 2, null, null)).sieger())
+                .contains(new LiveKoSieger("A-Finale", List.of(3)));
+    }
+
+    @Test
+    void ohneEntschiedenesFinaleKeinSieger() {
+        assertThat(feld(null).sieger()).isEmpty();
+        assertThat(feld(LivePartie.teams(3, 7, 13, null, null, null)).sieger()).isEmpty();
+        assertThat(feld(LivePartie.teams(3, 7, 10, 10, null, null)).sieger()).isEmpty();
+    }
+
+    private static TurnierbaumLiveLeser.Feld feld(LivePartie finale) {
+        return new TurnierbaumLiveLeser.Feld("A-Finale", List.of(), finale);
     }
 
     @Test

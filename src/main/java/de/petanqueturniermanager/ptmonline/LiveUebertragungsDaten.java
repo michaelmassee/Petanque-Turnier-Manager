@@ -14,8 +14,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jspecify.annotations.Nullable;
 
+import de.petanqueturniermanager.ptmonline.dto.LiveKoWinnerDto;
 import de.petanqueturniermanager.ptmonline.dto.LiveMatchDto;
 import de.petanqueturniermanager.ptmonline.dto.LiveRankingEntryDto;
+import de.petanqueturniermanager.ptmonline.live.LiveKoSieger;
 import de.petanqueturniermanager.ptmonline.live.LivePartie;
 import de.petanqueturniermanager.ptmonline.live.LiveRanglistenEintrag;
 import de.petanqueturniermanager.ptmonline.live.LiveRanglistenEintrag.Wertungskriterien;
@@ -72,8 +74,24 @@ final class LiveUebertragungsDaten {
             Map<Integer, List<String>> onlineIds) {
         List<LiveRankingEntryDto> ergebnis = new ArrayList<>();
         for (LiveRanglistenEintrag eintrag : eintraege) {
-            onlineIdsVon(eintrag.nummern(), onlineIds).filter(ids -> !ids.isEmpty())
-                    .ifPresent(ids -> ergebnis.add(eintragDto(eintrag, ids)));
+            Optional<List<String>> ids = onlineIdsVon(eintrag.nummern(), onlineIds).filter(liste -> !liste.isEmpty());
+            if (ids.isPresent()) {
+                ergebnis.add(eintragDto(eintrag, ids.get()));
+            } else {
+                // Wie bei den Partien: läuft bei jeder Erfassung, daher nur im Debug-Log.
+                logger.debug("PTM-Online Live: Platz {} (Nr. {}) ohne Online-Zuordnung, nicht in der Rangliste",
+                        eintrag.platz(), eintrag.nummern());
+            }
+        }
+        return ergebnis;
+    }
+
+    /** KO-Sieger mit Online-IDs; Sieger ohne vollständige Online-Zuordnung entfallen wie in der Rangliste. */
+    static List<LiveKoWinnerDto> koSieger(List<LiveKoSieger> sieger, Map<Integer, List<String>> onlineIds) {
+        List<LiveKoWinnerDto> ergebnis = new ArrayList<>();
+        for (LiveKoSieger eintrag : sieger) {
+            onlineIdsVon(eintrag.team(), onlineIds).filter(ids -> !ids.isEmpty())
+                    .ifPresent(ids -> ergebnis.add(new LiveKoWinnerDto(eintrag.feld(), ids)));
         }
         return ergebnis;
     }

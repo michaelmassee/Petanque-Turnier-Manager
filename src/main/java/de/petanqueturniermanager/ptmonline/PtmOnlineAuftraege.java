@@ -36,6 +36,7 @@ import de.petanqueturniermanager.ptmonline.auftrag.versand.SyncAntwort;
 import de.petanqueturniermanager.ptmonline.auftrag.versand.VersandErgebnis;
 import de.petanqueturniermanager.ptmonline.auftrag.versand.VersandStopp;
 import de.petanqueturniermanager.ptmonline.dto.LiveMatchDto;
+import de.petanqueturniermanager.ptmonline.dto.LiveKoWinnerDto;
 import de.petanqueturniermanager.ptmonline.dto.LiveRankingEntryDto;
 import de.petanqueturniermanager.ptmonline.dto.MeleeTeamDto;
 import de.petanqueturniermanager.ptmonline.dto.NeueOnlineAnmeldung;
@@ -293,11 +294,16 @@ public final class PtmOnlineAuftraege {
         bestand.erzeuge(AuftragsArt.RUNDE_LOESCHEN, "DELETE", pfad, "", "{}");
     }
 
-    /** Ranglisten-Snapshot; ein ungesendeter älterer Snapshot entfällt. */
-    static void rangliste(AuftragsBestand bestand, String tournamentId, List<LiveRankingEntryDto> eintraege) {
+    /**
+     * Ranglisten-Snapshot samt KO-Siegern (zweiter Teil der Maastrichter-Endrangliste); ein ungesendeter älterer
+     * Snapshot entfällt.
+     */
+    static void rangliste(AuftragsBestand bestand, String tournamentId, List<LiveRankingEntryDto> eintraege,
+            List<LiveKoWinnerDto> koSieger) {
         String pfad = TournamentSyncClient.ranglistePfad(tournamentId);
         bestand.entferneUeberholte(auftrag -> auftrag.pfad().equals(pfad));
-        bestand.erzeuge(AuftragsArt.RANGLISTE, "PUT", pfad, TournamentSyncClient.ranglisteBody(eintraege), "{}");
+        bestand.erzeuge(AuftragsArt.RANGLISTE, "PUT", pfad, TournamentSyncClient.ranglisteBody(eintraege, koSieger),
+                "{}");
     }
 
     /** Spieleinstellungen des Dokuments; ein ungesendeter älterer Stand entfällt. */

@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
+import de.petanqueturniermanager.ptmonline.dto.LiveKoWinnerDto;
 import de.petanqueturniermanager.ptmonline.dto.LiveMatchDto;
 import de.petanqueturniermanager.ptmonline.dto.LiveRankingEntryDto;
 
@@ -20,17 +21,18 @@ import de.petanqueturniermanager.ptmonline.dto.LiveRankingEntryDto;
 final class LiveUebertragungsGedaechtnis {
 
     /**
-     * Übertragener Stand: Partien je Rundennummer und Rangliste.
+     * Übertragener Stand: Partien je Rundennummer, Rangliste und KO-Sieger (zweiter Teil der Endrangliste).
      *
      * @param onlineRundenAbgeglichen die online vorhandenen Runden waren bei einer Erfassung bekannt, überzählige sind
      *                                gelöscht; sonst wird das nachgeholt, sobald ihre Anzahl bekannt ist
      */
     record Stand(Map<Integer, List<LiveMatchDto>> runden, List<LiveRankingEntryDto> rangliste,
-            boolean onlineRundenAbgeglichen) {
+            List<LiveKoWinnerDto> koSieger, boolean onlineRundenAbgeglichen) {
 
         Stand {
             runden = Map.copyOf(runden);
             rangliste = List.copyOf(rangliste);
+            koSieger = List.copyOf(koSieger);
         }
     }
 

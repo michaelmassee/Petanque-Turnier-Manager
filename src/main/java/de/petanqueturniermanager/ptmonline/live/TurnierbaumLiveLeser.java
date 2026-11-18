@@ -33,7 +33,8 @@ import de.petanqueturniermanager.ko.konfiguration.IKoBracketKonfiguration;
  * welchen Runden, bestimmt die Turnierbaum-Konfiguration ({@link BahnSpalten}). Jede Ergebnis-Spalte ist eine
  * Runde; eine erste Spalte mit weniger Partien als für einen vollständigen Baum nötig ist die Cadrage. Die zweite Partie der Finalspalte ist das Spiel um Platz 3.
  * Partien, deren Teams noch nicht feststehen, entfallen. Jede Partie kennt ihre beiden Ergebnis-Zellen, damit eine
- * übernommene Spieler-Ergebnismeldung dort eingetragen werden kann.
+ * übernommene Spieler-Ergebnismeldung dort eingetragen werden kann. Ist das Finale entschieden, liefert
+ * {@link Feld#sieger()} den Sieger des Baums.
  */
 final class TurnierbaumLiveLeser {
 
@@ -55,16 +56,54 @@ final class TurnierbaumLiveLeser {
      */
     static List<List<List<LivePartie>>> leseBaeume(WorkingSpreadsheet ws, UnaryOperator<String> schluessel,
             UnaryOperator<String> praefix, IKoBracketKonfiguration konfig) {
+        return leseFelder(ws, schluessel, praefix, konfig).stream().map(Feld::runden).toList();
+    }
+
+    /**
+     * Wie {@link #leseBaeume}, je Baum mit seiner Bezeichnung und dem Finale.
+     *
+     * @return je vorhandenem Baum das Feld, in der Reihenfolge „A“ bis „H“
+     */
+    static List<Feld> leseFelder(WorkingSpreadsheet ws, UnaryOperator<String> schluessel,
+            UnaryOperator<String> praefix, IKoBracketKonfiguration konfig) {
         BahnSpalten bahnSpalten = BahnSpalten.aus(konfig);
-        List<List<List<LivePartie>>> baeume = new ArrayList<>();
+        List<Feld> felder = new ArrayList<>();
         for (String buchstabe : BAUM_BUCHSTABEN) {
-            List<List<LivePartie>> runden = leseRunden(ws, schluessel.apply(buchstabe), praefix.apply(buchstabe),
-                    bahnSpalten);
-            if (!runden.isEmpty()) {
-                baeume.add(runden);
+            String bezeichnung = praefix.apply(buchstabe);
+            Baum baum = leseBaum(ws, schluessel.apply(buchstabe), bezeichnung, bahnSpalten);
+            if (!baum.runden().isEmpty()) {
+                felder.add(new Feld(bezeichnung, baum.runden(), baum.finale()));
             }
         }
-        return baeume;
+        return felder;
+    }
+
+    /**
+     * Ein gelesener Turnierbaum mit Bezeichnung.
+     *
+     * @param finale Finalpartie, {@code null} solange ihre Teams noch nicht feststehen
+     */
+    record Feld(String bezeichnung, List<List<LivePartie>> runden, @Nullable LivePartie finale) {
+
+        Feld {
+            runden = List.copyOf(runden);
+        }
+
+        /** Sieger des Felds, sobald das Finale entschieden ist (beide Ergebnisse eingetragen, kein Gleichstand). */
+        Optional<LiveKoSieger> sieger() {
+            if (finale == null || finale.punkteA() == null || finale.punkteB() == null
+                    || finale.punkteA().equals(finale.punkteB())) {
+                return Optional.empty();
+            }
+            List<Integer> team = finale.punkteA() > finale.punkteB() ? finale.teamA() : finale.teamB();
+            return Optional.of(new LiveKoSieger(bezeichnung, team));
+        }
+    }
+
+    /** Runden eines Baums und sein Finale ({@code null}, solange dessen Teams nicht feststehen). */
+    private record Baum(List<List<LivePartie>> runden, @Nullable LivePartie finale) {
+
+        static final Baum LEER = new Baum(List.of(), null);
     }
 
     /**
@@ -75,12 +114,17 @@ final class TurnierbaumLiveLeser {
      */
     static List<List<LivePartie>> leseRunden(WorkingSpreadsheet ws, String baumSchluessel, @Nullable String praefix,
             BahnSpalten bahnSpalten) {
+        return leseBaum(ws, baumSchluessel, praefix, bahnSpalten).runden();
+    }
+
+    private static Baum leseBaum(WorkingSpreadsheet ws, String baumSchluessel, @Nullable String praefix,
+            BahnSpalten bahnSpalten) {
         var xDoc = ws.getWorkingSpreadsheetDocument();
         Optional<XSpreadsheet> blatt = SheetMetadataHelper.findeSheet(xDoc, baumSchluessel);
         List<Position> positionen = scorePositionen(
                 SheetMetadataHelper.leseScoreText(xDoc, SheetMetadataHelper.scoreSchluessel(baumSchluessel)));
         if (blatt.isEmpty() || positionen.size() < 2) {
-            return List.of();
+            return Baum.LEER;
         }
         int letzteSpalte = positionen.stream().mapToInt(Position::getSpalte).max().orElse(0);
         int letzteZeile = positionen.stream().mapToInt(Position::getZeile).max().orElse(0);
@@ -96,6 +140,7 @@ final class TurnierbaumLiveLeser {
         boolean mitCadrage = spalten.size() > 1 && spalten.get(0).size() < (1 << (spalten.size() - 1));
 
         List<List<LivePartie>> runden = new ArrayList<>();
+        LivePartie finale = null;
         for (int s = 0; s < spalten.size(); s++) {
             String rundenTitel = mitCadrage && s == 0 ? I18n.get("column.header.cadrage")
                     : rundenTitel(spalten.size() - 1 - s);
@@ -106,14 +151,18 @@ final class TurnierbaumLiveLeser {
                 boolean platz3 = s == spalten.size() - 1 && p > 0;
                 String titel = platz3 ? I18n.get("dialog.ko.spiel.um.platz3") : rundenTitel;
                 Position[] paar = paare.get(p);
-                partie(zellen, paar, mitBahn, praefix == null ? titel : praefix + " · " + titel)
-                        .map(partie -> partie.mitErgebnisOrt(
-                                ErgebnisOrt.inZellen(baumSchluessel, blattName, paar[0], paar[1])))
-                        .ifPresent(partien::add);
+                Optional<LivePartie> partie = partie(zellen, paar, mitBahn,
+                        praefix == null ? titel : praefix + " · " + titel)
+                        .map(gelesen -> gelesen.mitErgebnisOrt(
+                                ErgebnisOrt.inZellen(baumSchluessel, blattName, paar[0], paar[1])));
+                partie.ifPresent(partien::add);
+                if (s == spalten.size() - 1 && p == 0) {
+                    finale = partie.orElse(null);
+                }
             }
             runden.add(partien);
         }
-        return runden;
+        return new Baum(runden, finale);
     }
 
     private static Optional<LivePartie> partie(LiveZellbereich zellen, Position[] paar, boolean mitBahn,

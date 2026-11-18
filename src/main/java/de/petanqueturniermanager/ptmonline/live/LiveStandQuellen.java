@@ -84,22 +84,27 @@ public final class LiveStandQuellen {
         return new LiveTurnierStand(new LiveRundenFolge().anhaengen(runden).runden(), rangliste.lese(ws));
     }
 
-    /** Vorrunden im Schweizer Layout, danach die gleichzeitig gespielten Finalrunden; Rangliste der Vorrunden. */
+    /**
+     * Vorrunden im Schweizer Layout, danach die gleichzeitig gespielten Finalrunden. Die Endrangliste hat zwei Teile:
+     * die Rangliste der Vorrunden und die Sieger der entschiedenen Finalfelder.
+     */
     private static LiveTurnierStand maastrichter(WorkingSpreadsheet ws) throws GenerateException {
         MaastrichterKonfigurationSheet konfig = new MaastrichterKonfigurationSheet(ws);
         boolean mitBahn = mitBahn(konfig.getSpielrundeSpielbahn());
         List<List<LivePartie>> vorrunden = new TeamSpielrundenLeser(ws,
                 SheetMetadataHelper::schluesselMaastrichterVorrunde, SheetNamen::maastrichterVorrunde,
                 SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE, mitBahn).leseRunden();
-        List<List<List<LivePartie>>> finalrunden = TurnierbaumLiveLeser.leseBaeume(ws,
+        List<TurnierbaumLiveLeser.Feld> felder = TurnierbaumLiveLeser.leseFelder(ws,
                 SheetMetadataHelper::schluesselMaastrichterFinalrunde, SheetNamen::koFinaleGruppe, konfig);
+        List<List<List<LivePartie>>> finalrunden = felder.stream().map(TurnierbaumLiveLeser.Feld::runden).toList();
+        List<LiveKoSieger> koSieger = felder.stream().flatMap(feld -> feld.sieger().stream()).toList();
         RanglistenBlattLeser rangliste = new RanglistenBlattLeser(
                 SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDEN_RANGLISTE,
                 SheetNamen.maastrichterVorrundenRangliste(), SchweizerRanglisteSheet.ERSTE_DATEN_ZEILE,
                 SCHWEIZER_RANGLISTE);
         return new LiveTurnierStand(
                 new LiveRundenFolge().anhaengen(vorrunden).parallelAnhaengen(finalrunden).runden(),
-                rangliste.lese(ws));
+                rangliste.lese(ws), koSieger);
     }
 
     /** Ein einzelner Turnierbaum oder gleichzeitig gespielte Turnierbäume A–H. */

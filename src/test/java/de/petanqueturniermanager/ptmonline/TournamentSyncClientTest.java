@@ -35,6 +35,7 @@ import de.petanqueturniermanager.ptmonline.auftrag.versand.SyncAntwort;
 import de.petanqueturniermanager.ptmonline.dto.AnmeldungsAbruf;
 import de.petanqueturniermanager.ptmonline.dto.KonfliktListeDto;
 import de.petanqueturniermanager.ptmonline.dto.LiveMatchDto;
+import de.petanqueturniermanager.ptmonline.dto.LiveKoWinnerDto;
 import de.petanqueturniermanager.ptmonline.dto.LiveRankingEntryDto;
 import de.petanqueturniermanager.ptmonline.dto.SpieleinstellungenDto;
 import de.petanqueturniermanager.ptmonline.dto.NeueOnlineAnmeldung;
@@ -334,7 +335,7 @@ public class TournamentSyncClientTest {
 	@Test
 	public void ranglisteSendetEintraege() {
 		assertThat(TournamentSyncClient.ranglistePfad("t1")).isEqualTo("/api/sync/tournaments/t1/ranking");
-		assertThat(TournamentSyncClient.ranglisteBody(List.of(new LiveRankingEntryDto(1, List.of("r1"), 3, 39, 12))))
+		assertThat(TournamentSyncClient.ranglisteBody(List.of(new LiveRankingEntryDto(1, List.of("r1"), 3, 39, 12)), List.of()))
 				.isEqualTo(
 						"{\"entries\":[{\"place\":1,\"registrationIds\":[\"r1\"],\"wins\":3,\"pointsFor\":39,\"pointsAgainst\":12}]}");
 	}
@@ -342,8 +343,15 @@ public class TournamentSyncClientTest {
 	@Test
 	public void ranglisteSendetWertungskriterienNurWennVorhanden() {
 		assertThat(TournamentSyncClient.ranglisteBody(List.of(new LiveRankingEntryDto(1, List.of("r1"), 3, 39, 12, 1,
-				-2, 7, 11, null)))).isEqualTo("{\"entries\":[{\"place\":1,\"registrationIds\":[\"r1\"],\"wins\":3,"
+				-2, 7, 11, null)), List.of())).isEqualTo("{\"entries\":[{\"place\":1,\"registrationIds\":[\"r1\"],\"wins\":3,"
 						+ "\"pointsFor\":39,\"pointsAgainst\":12,\"losses\":1,\"gameDiff\":-2,\"bhz\":7,\"fbhz\":11}]}");
+	}
+
+	@Test
+	public void ranglisteSendetKoSiegerAlsZweitenTeil() {
+		assertThat(TournamentSyncClient.ranglisteBody(List.of(),
+				List.of(new LiveKoWinnerDto("A-Finale", List.of("r1", "r2")))))
+				.isEqualTo("{\"entries\":[],\"koWinners\":[{\"label\":\"A-Finale\",\"registrationIds\":[\"r1\",\"r2\"]}]}");
 	}
 
 	@Test

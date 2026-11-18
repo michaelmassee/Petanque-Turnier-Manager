@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsArt;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsBestand;
 import de.petanqueturniermanager.ptmonline.auftrag.SyncAuftrag;
+import de.petanqueturniermanager.ptmonline.live.LiveKoSieger;
 import de.petanqueturniermanager.ptmonline.live.LivePartie;
 import de.petanqueturniermanager.ptmonline.live.LiveRanglistenEintrag;
 import de.petanqueturniermanager.ptmonline.live.LiveRunde;
@@ -126,6 +127,21 @@ class PtmOnlineLiveSyncTest {
 
         assertThat(auftraege()).filteredOn(auftrag -> auftrag.art() == AuftragsArt.RANGLISTE).singleElement()
                 .extracting(SyncAuftrag::body).isEqualTo("{\"entries\":[]}");
+    }
+
+    @Test
+    void entschiedenesFinaleSendetDieRanglisteMitDemKoSiegerErneut() {
+        LiveRunde finale = runde(1, 13);
+        erfasse(new LiveTurnierStand(List.of(finale), RANGLISTE), OptionalInt.of(1));
+        bestand.entferneUeberholte(auftrag -> true);
+
+        erfasse(new LiveTurnierStand(List.of(finale), RANGLISTE, List.of(new LiveKoSieger("A-Finale", List.of(2)))),
+                OptionalInt.empty());
+
+        assertThat(auftraege()).singleElement().extracting(SyncAuftrag::art, SyncAuftrag::body).containsExactly(
+                AuftragsArt.RANGLISTE, "{\"entries\":[{\"place\":1,\"registrationIds\":[\"r1\"],\"wins\":2,"
+                        + "\"pointsFor\":26,\"pointsAgainst\":10}],"
+                        + "\"koWinners\":[{\"label\":\"A-Finale\",\"registrationIds\":[\"r2\"]}]}");
     }
 
     @Test

@@ -75,7 +75,7 @@ class PtmOnlineAuftraegeTest {
     @Test
     void startTrotzPauseGehtVorAelterenAuftraegenAllein() {
         AuftragsBestand bestand = AuftragsBestand.leer();
-        PtmOnlineAuftraege.rangliste(bestand, TURNIER, List.of());
+        PtmOnlineAuftraege.rangliste(bestand, TURNIER, List.of(), List.of());
 
         PtmOnlineAuftraege.startTrotzPause(bestand, TURNIER, Instant.EPOCH, "Start");
 

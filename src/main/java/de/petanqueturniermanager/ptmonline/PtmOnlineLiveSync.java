@@ -66,8 +66,7 @@ public final class PtmOnlineLiveSync {
         int anzahl = erfasseRunden(bestand, tournamentId, neu.runden(), bisherigeRunden);
         anzahl += erfasseRundenLoeschungen(bestand, tournamentId, neu.runden(), bisherigeRunden,
                 abzugleichendeOnlineRunden);
-        if (erfasseRangliste(bestand, tournamentId, neu.rangliste(),
-                bisher.map(LiveUebertragungsGedaechtnis.Stand::rangliste), abzugleichendeOnlineRunden)) {
+        if (erfasseRangliste(bestand, tournamentId, neu, bisher, abzugleichendeOnlineRunden)) {
             anzahl++;
         }
         gedaechtnis.merke(tournamentId, neu);
@@ -104,18 +103,21 @@ public final class PtmOnlineLiveSync {
     }
 
     /**
-     * Eine geänderte Rangliste ersetzt den Online-Stand samt eines noch wartenden älteren Auftrags – auch eine
-     * geleerte. Werden gerade online vorhandene Runden abgeglichen, kann dort eine ältere Rangliste stehen: dann wird
+     * Eine geänderte Rangliste (samt KO-Siegern) ersetzt den Online-Stand samt eines noch wartenden älteren Auftrags –
+     * auch eine geleerte. Werden gerade online vorhandene Runden abgeglichen, kann dort eine ältere Rangliste stehen: dann wird
      * sie auch unverändert gesendet. Eine leere Rangliste nur, wenn online eine ältere stehen kann (zuletzt erfasst oder
      * online Runden vorhanden); vor dem Turnierstart lehnt PTM-Online sie sonst ab.
      *
      * @return ob ein Auftrag entstanden ist
      */
     private static boolean erfasseRangliste(AuftragsBestand bestand, String tournamentId,
-            List<LiveRankingEntryDto> rangliste, Optional<List<LiveRankingEntryDto>> bisherigeRangliste,
+            LiveUebertragungsGedaechtnis.Stand neu, Optional<LiveUebertragungsGedaechtnis.Stand> bisher,
             OptionalInt abzugleichendeOnlineRunden) {
+        List<LiveRankingEntryDto> rangliste = neu.rangliste();
+        Optional<List<LiveRankingEntryDto>> bisherigeRangliste = bisher.map(LiveUebertragungsGedaechtnis.Stand::rangliste);
         boolean onlineRundenVorhanden = abzugleichendeOnlineRunden.orElse(0) > 0;
-        boolean unveraendert = bisherigeRangliste.filter(rangliste::equals).isPresent();
+        boolean unveraendert = bisherigeRangliste.filter(rangliste::equals).isPresent()
+                && bisher.map(LiveUebertragungsGedaechtnis.Stand::koSieger).filter(neu.koSieger()::equals).isPresent();
         if (unveraendert && !onlineRundenVorhanden) {
             return false;
         }
@@ -124,7 +126,7 @@ public final class PtmOnlineLiveSync {
         if (rangliste.isEmpty() && !onlineKannRanglisteHaben) {
             return false;
         }
-        PtmOnlineAuftraege.rangliste(bestand, tournamentId, rangliste);
+        PtmOnlineAuftraege.rangliste(bestand, tournamentId, rangliste, neu.koSieger());
         return true;
     }
 
@@ -155,6 +157,7 @@ public final class PtmOnlineLiveSync {
         Map<Integer, List<LiveMatchDto>> runden = new TreeMap<>();
         stand.runden().forEach(runde -> runden.put(runde.nr(), LiveUebertragungsDaten.matches(runde, onlineIds)));
         return new LiveUebertragungsGedaechtnis.Stand(runden,
-                LiveUebertragungsDaten.rangliste(stand.rangliste(), onlineIds), onlineRundenAbgeglichen);
+                LiveUebertragungsDaten.rangliste(stand.rangliste(), onlineIds),
+                LiveUebertragungsDaten.koSieger(stand.koSieger(), onlineIds), onlineRundenAbgeglichen);
     }
 }
