@@ -18,6 +18,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jspecify.annotations.Nullable;
 
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
@@ -46,6 +48,8 @@ import de.petanqueturniermanager.ptmonline.live.LiveTurnierStand;
  * aber die drei Einzelpartien braucht (TODO in anforderungen/turnieranmeldung-ptmonline.md).
  */
 final class PtmOnlineErgebnismeldungen {
+
+    private static final Logger logger = LogManager.getLogger(PtmOnlineErgebnismeldungen.class);
 
     /** Schlüsselanfang der Fälle in der Konfliktliste; der Block steht dort immer am Ende. */
     static final String SCHLUESSEL_PRAEFIX = KonfliktArt.ERGEBNIS_GEMELDET.name() + "|";
@@ -183,7 +187,8 @@ final class PtmOnlineErgebnismeldungen {
 
     /**
      * Wendet die eingetragenen Entscheidungen an. „Ergebnis übernehmen“ schreibt das Ergebnis in die Spielrunde; ist
-     * das Blatt inzwischen verschwunden, bleibt der Fall offen. Nur im Dokument-Kontext eines SheetRunners.
+     * das Blatt inzwischen verschwunden, bleibt der Fall offen. Jede Entscheidung wird protokolliert, damit sich später
+     * nachvollziehen lässt, welches Ergebnis woher kam. Nur im Dokument-Kontext eines SheetRunners.
      *
      * @param entscheidung  eingetragene Entscheidung je Fall
      * @param vorAenderung  öffnet den Blattschutz-Scope, bevor das Dokument geändert wird
@@ -200,16 +205,37 @@ final class PtmOnlineErgebnismeldungen {
             if (gewaehlt.filter(Entscheidung.ERGEBNIS_UEBERNEHMEN::equals).isPresent() && ort != null) {
                 vorAenderung.run();
                 if (ErgebnisSchreiber.schreibe(ws, ort, zuordnung.punkteA(), zuordnung.punkteB())) {
+                    logger.info("PTM-Online: Ergebnismeldung übernommen – {}", protokoll(zuordnung, fall));
                     entschieden.put(zuordnung.meldung().id(), Boolean.TRUE);
                     continue;
                 }
+                logger.warn("PTM-Online: Ergebnismeldung nicht eingetragen, Spielrunde nicht mehr vorhanden – {}",
+                        protokoll(zuordnung, fall));
             } else if (gewaehlt.filter(Entscheidung.ERGEBNIS_VERWERFEN::equals).isPresent()) {
+                logger.info("PTM-Online: Ergebnismeldung verworfen – {}", protokoll(zuordnung, fall));
                 entschieden.put(zuordnung.meldung().id(), Boolean.FALSE);
                 continue;
             }
             offen.add(fall);
         }
         return new Anwendung(entschieden, offen);
+    }
+
+    /**
+     * Protokollzeile einer Entscheidung: Meldung, Partie im Dokument, gemeldetes und bisheriges Ergebnis sowie die
+     * beschriebenen Zellen. Nur für das Log, nicht für die Anzeige.
+     */
+    static String protokoll(Zuordnung zuordnung, KonfliktFall fall) {
+        ErgebnismeldungDto meldung = zuordnung.meldung();
+        LivePartie partie = zuordnung.partie();
+        ErgebnisOrt ort = zuordnung.ort();
+        String bisher = partie == null || partie.punkteA() == null || partie.punkteB() == null ? "–"
+                : partie.punkteA() + ":" + partie.punkteB();
+        String zellen = ort == null ? "–"
+                : ort.blattName() + " " + ort.punkteA().getAddress() + "/" + ort.punkteB().getAddress();
+        return "Meldung " + meldung.id() + ", " + fall.lokal() + ", gemeldet " + zuordnung.punkteA() + ":"
+                + zuordnung.punkteB() + (zuordnung.vertauscht() ? " (Seiten vertauscht)" : "") + " von '"
+                + meldung.reportedBy() + "' am " + meldung.createdAt() + ", bisher " + bisher + ", Zellen " + zellen;
     }
 
     /**

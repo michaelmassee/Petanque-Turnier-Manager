@@ -98,6 +98,26 @@ class PtmOnlineErgebnismeldungenTest {
     }
 
     @Test
+    void protokollNenntMeldungBisherigesErgebnisUndZellen() {
+        LivePartie partie = LivePartie.teams(4, 3, 13, 11, null, null).mitErgebnisOrt(ORT);
+        var zuordnung = PtmOnlineErgebnismeldungen.ordneZu(List.of(meldung("m1", 1, "r3", "r4", 13, 7)),
+                runde1(partie), ONLINE_IDS).getFirst();
+
+        assertThat(PtmOnlineErgebnismeldungen.protokoll(zuordnung, zuordnung.fall())).contains("Meldung m1")
+                .contains("gemeldet 7:13 (Seiten vertauscht)").contains("von 'Team r3'").contains("bisher 13:11")
+                .contains("1. Spielrunde " + ORT.punkteA().getAddress() + "/" + ORT.punkteB().getAddress());
+    }
+
+    @Test
+    void protokollOhneEintragbarePartie() {
+        var zuordnung = PtmOnlineErgebnismeldungen.ordneZu(List.of(meldung("m1", 2, "r3", "r4", 13, 7)),
+                runde1(LivePartie.teams(3, 4, null, null, null, null)), ONLINE_IDS).getFirst();
+
+        assertThat(PtmOnlineErgebnismeldungen.protokoll(zuordnung, zuordnung.fall())).contains("bisher –")
+                .endsWith("Zellen –");
+    }
+
+    @Test
     void nenntEinBereitsEingetragenesErgebnis() {
         LivePartie partie = LivePartie.teams(3, 4, 13, 11, null, null).mitErgebnisOrt(ORT);
         var fall = PtmOnlineErgebnismeldungen.ordneZu(List.of(meldung("m1", 1, "r3", "r4", 13, 7)), runde1(partie),
