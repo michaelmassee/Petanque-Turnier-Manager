@@ -25,6 +25,7 @@ import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.poule.konfiguration.PouleKonfigurationSheet;
+import de.petanqueturniermanager.poule.ko.PouleKoConfigAdapter;
 
 /**
  * Poule: die Vorrunde führt je Poule einen Block (Vierer-Poule: Spiel A/B, Sieger-/Verliererspiel, Barrage;
@@ -50,8 +51,9 @@ final class PouleLiveQuelle implements LiveStandQuelle {
         LiveRundenFolge folge = new LiveRundenFolge();
         XSpreadsheet vorrunde = LiveBlattLeser.blatt(ws, SheetMetadataHelper.SCHLUESSEL_POULE_VORRUNDE,
                 SheetNamen.pouleVorrunde());
+        PouleKonfigurationSheet konfig = new PouleKonfigurationSheet(ws);
         if (vorrunde != null) {
-            boolean mitBahn = new PouleKonfigurationSheet(ws).isSpielplanMitBahnspalte();
+            boolean mitBahn = konfig.isSpielplanMitBahnspalte();
             List<List<List<LivePartie>>> poules = new ArrayList<>();
             LiveZellbereich zellen = LiveBlattLeser.datenzeilen(ws, vorrunde, ERSTE_DATEN_ZEILE, SPALTE_ERG_B);
             List<List<Integer>> bloecke = bloecke(zellen);
@@ -61,7 +63,7 @@ final class PouleLiveQuelle implements LiveStandQuelle {
             folge.parallelAnhaengen(poules);
         }
         folge.parallelAnhaengen(TurnierbaumLiveLeser.leseBaeume(ws, SheetMetadataHelper::schluesselPouleKo,
-                SheetNamen::koFinaleGruppe));
+                SheetNamen::koFinaleGruppe, new PouleKoConfigAdapter(konfig)));
         return LiveTurnierStand.ohneRangliste(folge.runden());
     }
 

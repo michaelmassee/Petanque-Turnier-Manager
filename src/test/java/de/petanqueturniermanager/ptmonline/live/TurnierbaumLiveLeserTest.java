@@ -18,17 +18,25 @@ class TurnierbaumLiveLeserTest {
     }
 
     @Test
-    void verbinderZeichenSindKeineBahn() {
-        assertThat(TurnierbaumLiveLeser.ohneVerbinder("┘")).isNull();
-        assertThat(TurnierbaumLiveLeser.ohneVerbinder("┐")).isNull();
-        assertThat(TurnierbaumLiveLeser.ohneVerbinder("│")).isNull();
-        assertThat(TurnierbaumLiveLeser.ohneVerbinder(null)).isNull();
+    void bahnNurInRunde1HatNurDieErsteErgebnisSpalteEineBahn() {
+        var bahnSpalten = new TurnierbaumLiveLeser.BahnSpalten(true, true);
+        assertThat(bahnSpalten.inSpalte(0)).isTrue();
+        assertThat(bahnSpalten.inSpalte(1)).isFalse();
+        assertThat(bahnSpalten.inSpalte(2)).isFalse();
     }
 
     @Test
-    void bahnBezeichnungBleibtErhalten() {
-        assertThat(TurnierbaumLiveLeser.ohneVerbinder("4")).isEqualTo("4");
-        assertThat(TurnierbaumLiveLeser.ohneVerbinder("A3")).isEqualTo("A3");
+    void bahnInAllenRundenHatJedeErgebnisSpalteEineBahn() {
+        var bahnSpalten = new TurnierbaumLiveLeser.BahnSpalten(true, false);
+        assertThat(bahnSpalten.inSpalte(0)).isTrue();
+        assertThat(bahnSpalten.inSpalte(3)).isTrue();
+    }
+
+    @Test
+    void ohneSpielbahnHatKeineErgebnisSpalteEineBahn() {
+        var bahnSpalten = new TurnierbaumLiveLeser.BahnSpalten(false, false);
+        assertThat(bahnSpalten.inSpalte(0)).isFalse();
+        assertThat(bahnSpalten.inSpalte(1)).isFalse();
     }
 
     @Test

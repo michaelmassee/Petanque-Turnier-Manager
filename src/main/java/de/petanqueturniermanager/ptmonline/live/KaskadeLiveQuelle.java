@@ -21,6 +21,8 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
+import de.petanqueturniermanager.kaskade.konfiguration.KaskadeKoBracketKonfigAdapter;
+import de.petanqueturniermanager.kaskade.konfiguration.KaskadeKonfigurationSheet;
 
 /**
  * Kaskade: ein Blatt je Kaskadenrunde, darin alle Gruppen untereinander (Gruppenname in der ersten Zeile des
@@ -50,7 +52,7 @@ final class KaskadeLiveQuelle implements LiveStandQuelle {
         }
         LiveRundenFolge folge = new LiveRundenFolge().anhaengen(runden);
         folge.parallelAnhaengen(TurnierbaumLiveLeser.leseBaeume(ws, SheetMetadataHelper::schluesselKaskadenFeld,
-                SheetNamen::kaskadenFeld));
+                SheetNamen::kaskadenFeld, new KaskadeKoBracketKonfigAdapter(new KaskadeKonfigurationSheet(ws))));
         return LiveTurnierStand.ohneRangliste(folge.runden());
     }
 

@@ -17,19 +17,21 @@ import org.jspecify.annotations.Nullable;
 import com.sun.star.container.XNamed;
 import com.sun.star.sheet.XSpreadsheet;
 
+import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
+import de.petanqueturniermanager.ko.konfiguration.IKoBracketKonfiguration;
 
 /**
  * Liest einen KO-Turnierbaum (KO, Poule-KO, Maastrichter-Finalrunden, Kaskaden-Felder) über die beim Erzeugen
  * gespeicherten Positionen der Ergebnis-Zellen ({@code PTM_EDIT:spalte,zeile|…}, je Partie Team A und Team B).
  * <p>
- * Layout je Partie: Team-Zelle links neben der Ergebnis-Zelle, Bahn (sofern geführt) links neben der
- * Team-Zelle der Seite A. Jede Ergebnis-Spalte ist eine Runde; eine erste Spalte mit weniger Partien als für
- * einen vollständigen Baum nötig ist die Cadrage. Die zweite Partie der Finalspalte ist das Spiel um Platz 3.
+ * Layout je Partie: Team-Zelle links neben der Ergebnis-Zelle, Bahn links neben der Team-Zelle der Seite A – in
+ * welchen Runden, bestimmt die Turnierbaum-Konfiguration ({@link BahnSpalten}). Jede Ergebnis-Spalte ist eine
+ * Runde; eine erste Spalte mit weniger Partien als für einen vollständigen Baum nötig ist die Cadrage. Die zweite Partie der Finalspalte ist das Spiel um Platz 3.
  * Partien, deren Teams noch nicht feststehen, entfallen. Jede Partie kennt ihre beiden Ergebnis-Zellen, damit eine
  * übernommene Spieler-Ergebnismeldung dort eingetragen werden kann.
  */
@@ -48,13 +50,16 @@ final class TurnierbaumLiveLeser {
      *
      * @param schluessel Metadaten-Schlüssel je Buchstabe
      * @param praefix    Anzeige vor der Rundenbezeichnung je Buchstabe
+     * @param konfig     Turnierbaum-Konfiguration des Systems (Bahnspalten)
      * @return je Baum die Partien je Runde
      */
     static List<List<List<LivePartie>>> leseBaeume(WorkingSpreadsheet ws, UnaryOperator<String> schluessel,
-            UnaryOperator<String> praefix) {
+            UnaryOperator<String> praefix, IKoBracketKonfiguration konfig) {
+        BahnSpalten bahnSpalten = BahnSpalten.aus(konfig);
         List<List<List<LivePartie>>> baeume = new ArrayList<>();
         for (String buchstabe : BAUM_BUCHSTABEN) {
-            List<List<LivePartie>> runden = leseRunden(ws, schluessel.apply(buchstabe), praefix.apply(buchstabe));
+            List<List<LivePartie>> runden = leseRunden(ws, schluessel.apply(buchstabe), praefix.apply(buchstabe),
+                    bahnSpalten);
             if (!runden.isEmpty()) {
                 baeume.add(runden);
             }
@@ -65,9 +70,11 @@ final class TurnierbaumLiveLeser {
     /**
      * @param baumSchluessel Metadaten-Schlüssel des Turnierbaum-Blatts
      * @param praefix        Anzeige vor der Rundenbezeichnung (z.&nbsp;B. „Poule A“), {@code null} wenn keine
+     * @param bahnSpalten    Runden mit Bahnspalte laut Konfiguration
      * @return Partien je Runde des Baums; leer, wenn der Baum (noch) nicht existiert
      */
-    static List<List<LivePartie>> leseRunden(WorkingSpreadsheet ws, String baumSchluessel, @Nullable String praefix) {
+    static List<List<LivePartie>> leseRunden(WorkingSpreadsheet ws, String baumSchluessel, @Nullable String praefix,
+            BahnSpalten bahnSpalten) {
         var xDoc = ws.getWorkingSpreadsheetDocument();
         Optional<XSpreadsheet> blatt = SheetMetadataHelper.findeSheet(xDoc, baumSchluessel);
         List<Position> positionen = scorePositionen(
@@ -94,11 +101,12 @@ final class TurnierbaumLiveLeser {
                     : rundenTitel(spalten.size() - 1 - s);
             List<LivePartie> partien = new ArrayList<>();
             List<Position[]> paare = spalten.get(s);
+            boolean mitBahn = bahnSpalten.inSpalte(s);
             for (int p = 0; p < paare.size(); p++) {
                 boolean platz3 = s == spalten.size() - 1 && p > 0;
                 String titel = platz3 ? I18n.get("dialog.ko.spiel.um.platz3") : rundenTitel;
                 Position[] paar = paare.get(p);
-                partie(zellen, paar, praefix == null ? titel : praefix + " · " + titel)
+                partie(zellen, paar, mitBahn, praefix == null ? titel : praefix + " · " + titel)
                         .map(partie -> partie.mitErgebnisOrt(
                                 ErgebnisOrt.inZellen(baumSchluessel, blattName, paar[0], paar[1])))
                         .ifPresent(partien::add);
@@ -108,7 +116,8 @@ final class TurnierbaumLiveLeser {
         return runden;
     }
 
-    private static Optional<LivePartie> partie(LiveZellbereich zellen, Position[] paar, String stufe) {
+    private static Optional<LivePartie> partie(LiveZellbereich zellen, Position[] paar, boolean mitBahn,
+            String stufe) {
         Position a = paar[0];
         Position b = paar[1];
         int teamA = zellen.teamNr(a.getSpalte() - 1, a.getZeile());
@@ -117,24 +126,26 @@ final class TurnierbaumLiveLeser {
             return Optional.empty();
         }
         // Als Text gelesen, damit auch Bahnbezeichnungen wie „A3“ ankommen (die Bahnspalte erlaubt bewusst Text).
-        int bahnSpalte = a.getSpalte() - 2;
-        String bahn = bahnSpalte >= 0 ? ohneVerbinder(zellen.text(bahnSpalte, a.getZeile())) : null;
+        String bahn = mitBahn ? zellen.text(a.getSpalte() - 2, a.getZeile()) : null;
         return Optional.of(LivePartie.teams(teamA, teamB, zellen.punkte(a.getSpalte(), a.getZeile()),
                 zellen.punkte(b.getSpalte(), b.getZeile()), bahn, stufe));
     }
 
     /**
-     * Runden ohne Bahnspalte (z.&nbsp;B. „Bahn nur in Runde 1“) haben links neben der Team-Zelle die Verbinder-Spalte
-     * der Vorrunde. Deren Linienzeichen (┐ │ ┘) sind keine Bahn.
-     *
-     * @return die Bahn, {@code null} bei leerer Zelle oder reinen Linienzeichen
+     * Ergebnis-Spalten mit Bahnspalte, nach derselben Regel wie beim Erzeugen des Turnierbaums
+     * ({@code KoTurnierbaumLayout#mitBahnInRunde}): Mit „Bahn nur in Runde 1“ hat nur die erste Spalte (Cadrage bzw.
+     * erste Hauptrunde) eine Bahn; die späteren Runden haben dort die Verbinder-Spalte der Vorrunde.
      */
-    static @Nullable String ohneVerbinder(@Nullable String zellText) {
-        if (zellText == null || zellText.codePoints()
-                .allMatch(zeichen -> Character.UnicodeBlock.of(zeichen) == Character.UnicodeBlock.BOX_DRAWING)) {
-            return null;
+    record BahnSpalten(boolean mitBahn, boolean nurErsteSpalte) {
+
+        static BahnSpalten aus(IKoBracketKonfiguration konfig) {
+            return new BahnSpalten(konfig.getSpielbaumSpielbahn() != SpielrundeSpielbahn.X,
+                    konfig.isSpielbaumBahnNurRunde1());
         }
-        return zellText;
+
+        boolean inSpalte(int spaltenIndex) {
+            return mitBahn && (!nurErsteSpalte || spaltenIndex == 0);
+        }
     }
 
     /** @param abstandZumFinale 0 = Finale, 1 = Halbfinale, n = 1/2ⁿ-Finale */

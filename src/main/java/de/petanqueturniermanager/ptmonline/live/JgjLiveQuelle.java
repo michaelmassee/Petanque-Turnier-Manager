@@ -20,6 +20,7 @@ import com.sun.star.sheet.XSpreadsheet;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
+import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationSheet;
 import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteSheet;
 import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJSpielPlanSheet;
 
@@ -57,7 +58,7 @@ final class JgjLiveQuelle implements LiveStandQuelle {
                     .map(gruppe -> RundenBloecke.inRundenTeilen(gruppe.partien(mitGruppenName))).toList());
         }
         folge.parallelAnhaengen(TurnierbaumLiveLeser.leseBaeume(ws, SheetMetadataHelper::schluesselJgjFinalrunde,
-                SheetNamen::koFinaleGruppe));
+                SheetNamen::koFinaleGruppe, new JGJKonfigurationSheet(ws)));
         return new LiveTurnierStand(folge.runden(), RANGLISTE.lese(ws));
     }
 

@@ -63,7 +63,8 @@ class TurnierbaumGleichnamigeTeamsUITest extends BaseCalcUITest {
 				.isNotBlank().isEqualTo(sheetHlp.getTextFromCell(baum, finaleB));
 
 		List<List<LivePartie>> runden = TurnierbaumLiveLeser.leseRunden(wkingSpreadsheet,
-				SheetMetadataHelper.schluesselKoTurnierbaum(""), null);
+				SheetMetadataHelper.schluesselKoTurnierbaum(""), null,
+				TurnierbaumLiveLeser.BahnSpalten.aus(new KoKonfigurationSheet(wkingSpreadsheet)));
 		MeldelisteUuidIndex index = MeldelisteUuidIndex.lese(wkingSpreadsheet);
 		assertThat(runden.get(1)).as("Finale übertragen").first().satisfies(finale -> {
 			assertThat(finale.teamA()).containsExactly(index.nr(uuidA).orElseThrow());

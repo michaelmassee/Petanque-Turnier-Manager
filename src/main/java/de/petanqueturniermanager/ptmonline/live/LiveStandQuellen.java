@@ -17,6 +17,7 @@ import de.petanqueturniermanager.formulex.rangliste.FormuleXRanglisteSheet;
 import de.petanqueturniermanager.formulex.spielrunde.FormuleXAbstractSpielrundeSheet;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
+import de.petanqueturniermanager.ko.konfiguration.KoKonfigurationSheet;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheet;
@@ -85,12 +86,13 @@ public final class LiveStandQuellen {
 
     /** Vorrunden im Schweizer Layout, danach die gleichzeitig gespielten Finalrunden; Rangliste der Vorrunden. */
     private static LiveTurnierStand maastrichter(WorkingSpreadsheet ws) throws GenerateException {
-        boolean mitBahn = mitBahn(new MaastrichterKonfigurationSheet(ws).getSpielrundeSpielbahn());
+        MaastrichterKonfigurationSheet konfig = new MaastrichterKonfigurationSheet(ws);
+        boolean mitBahn = mitBahn(konfig.getSpielrundeSpielbahn());
         List<List<LivePartie>> vorrunden = new TeamSpielrundenLeser(ws,
                 SheetMetadataHelper::schluesselMaastrichterVorrunde, SheetNamen::maastrichterVorrunde,
                 SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE, mitBahn).leseRunden();
         List<List<List<LivePartie>>> finalrunden = TurnierbaumLiveLeser.leseBaeume(ws,
-                SheetMetadataHelper::schluesselMaastrichterFinalrunde, SheetNamen::koFinaleGruppe);
+                SheetMetadataHelper::schluesselMaastrichterFinalrunde, SheetNamen::koFinaleGruppe, konfig);
         RanglistenBlattLeser rangliste = new RanglistenBlattLeser(
                 SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDEN_RANGLISTE,
                 SheetNamen.maastrichterVorrundenRangliste(), SchweizerRanglisteSheet.ERSTE_DATEN_ZEILE,
@@ -102,12 +104,13 @@ public final class LiveStandQuellen {
 
     /** Ein einzelner Turnierbaum oder gleichzeitig gespielte Turnierbäume A–H. */
     private static LiveTurnierStand ko(WorkingSpreadsheet ws) {
+        KoKonfigurationSheet konfig = new KoKonfigurationSheet(ws);
         List<List<LivePartie>> einzel = TurnierbaumLiveLeser.leseRunden(ws,
-                SheetMetadataHelper.schluesselKoTurnierbaum(""), null);
+                SheetMetadataHelper.schluesselKoTurnierbaum(""), null, TurnierbaumLiveLeser.BahnSpalten.aus(konfig));
         LiveRundenFolge folge = new LiveRundenFolge();
         if (einzel.isEmpty()) {
             folge.parallelAnhaengen(TurnierbaumLiveLeser.leseBaeume(ws, SheetMetadataHelper::schluesselKoTurnierbaum,
-                    SheetNamen::koTurnierbaumGruppe));
+                    SheetNamen::koTurnierbaumGruppe, konfig));
         } else {
             folge.anhaengen(einzel);
         }
