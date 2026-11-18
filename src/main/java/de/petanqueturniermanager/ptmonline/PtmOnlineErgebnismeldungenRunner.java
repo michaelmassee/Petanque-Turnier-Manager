@@ -66,7 +66,8 @@ public final class PtmOnlineErgebnismeldungenRunner extends SheetRunner implemen
         List<KonfliktFall> offen = PtmOnlineErgebnismeldungen.verarbeite(getWorkingSpreadsheet(), getTurnierSystem(),
                 verbindung.get(), bestand, abruf.reports(),
                 fall -> Entscheidung.aus(eingetragen.get(fall.schluessel()), fall.optionen()), imScope);
-        PtmOnlineErgebnismeldungen.aktualisiereKonfliktliste(konfliktListe, offen, imScope);
+        // Ausdrücklicher Anstoß der Turnierleitung: erledigte Zeilen dürfen hier entfallen.
+        PtmOnlineErgebnismeldungen.aktualisiereKonfliktliste(konfliktListe, offen, true, imScope);
         PtmOnlineAuftraege.speichern(bestand, mapping);
         PtmOnlineLiveBeobachter.ergebnismeldungenAbgeholt(getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
                 tournamentId, abruf);

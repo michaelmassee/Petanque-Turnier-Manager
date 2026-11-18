@@ -50,6 +50,9 @@ final class PtmOnlineErgebnismeldungen {
     /** Schlüsselanfang der Fälle in der Konfliktliste; der Block steht dort immer am Ende. */
     static final String SCHLUESSEL_PRAEFIX = KonfliktArt.ERGEBNIS_GEMELDET.name() + "|";
 
+    /** Schlüsselende einer erledigten Zeile, die nur stehen bleibt, damit die übrigen nicht verrutschen. */
+    static final String ERLEDIGT_SUFFIX = "|erledigt";
+
     private static final List<Entscheidung> OPTIONEN = List.of(Entscheidung.ERGEBNIS_UEBERNEHMEN,
             Entscheidung.ERGEBNIS_VERWERFEN);
 
@@ -264,24 +267,77 @@ final class PtmOnlineErgebnismeldungen {
      * bleiben unberührt. Eine eingetragene, noch nicht angewendete Wahl bleibt stehen. Ohne Änderung wird nichts
      * geschrieben.
      *
-     * @param vorAenderung öffnet den Blattschutz-Scope, bevor das Dokument geändert wird
+     * @param zusammenschieben {@code true} nur bei einem ausdrücklichen Anstoß der Turnierleitung: dann entfallen
+     *                         erledigte Zeilen; sonst bleiben die Zeilen an ihrer Stelle (siehe {@link #stabilerBlock})
+     * @param vorAenderung     öffnet den Blattschutz-Scope, bevor das Dokument geändert wird
      * @return {@code true}, wenn der Block neu geschrieben wurde
      */
     static boolean aktualisiereKonfliktliste(PtmOnlineKonfliktSheet konfliktListe, List<KonfliktFall> offen,
-            Runnable vorAenderung) throws GenerateException {
+            boolean zusammenschieben, Runnable vorAenderung) throws GenerateException {
         List<PtmOnlineKonfliktSheet.Zeile> bisher = konfliktListe.leseBlock(SCHLUESSEL_PRAEFIX);
         Map<String, String> eingetragen = new HashMap<>();
         bisher.stream().filter(zeile -> !zeile.entscheidung().isEmpty())
                 .forEach(zeile -> eingetragen.put(zeile.schluessel(), zeile.entscheidung()));
         KonfliktSammlung sammlung = KonfliktSammlung.mit(eingetragen);
         offen.forEach(sammlung::melde);
-        List<PtmOnlineKonfliktSheet.Zeile> neu = sammlung.zeilen();
+        List<PtmOnlineKonfliktSheet.Zeile> neu = stabilerBlock(bisher, sammlung.zeilen(), zusammenschieben);
         if (inhalt(bisher).equals(inhalt(neu))) {
             return false;
         }
         vorAenderung.run();
         konfliktListe.ersetzeBlock(SCHLUESSEL_PRAEFIX, neu, RegistrationImportTask.zeitpunktText(Instant.now()));
         return true;
+    }
+
+    /**
+     * Neuer Block mit festen Zeilenpositionen. Eine Wahl der Turnierleitung gehört zu der Zeile, in der sie steht; der
+     * Hintergrund schreibt den Block aber jederzeit neu. Rückten die übrigen Zeilen beim Wegfall eines Falls nach oben,
+     * landete eine gerade getroffene Wahl bei einem anderen Fall. Deshalb gilt, solange noch ein Fall offen ist:
+     * <ul>
+     * <li>ein offener Fall bleibt in seiner Zeile,</li>
+     * <li>ein nicht mehr offener Fall bleibt als „erledigt“ ohne Auswahlliste stehen,</li>
+     * <li>neue Fälle kommen ans Ende,</li>
+     * <li>erledigte Zeilen am Ende entfallen (darunter verschiebt sich nichts).</li>
+     * </ul>
+     * Ohne offenen Fall ist der Block leer.
+     *
+     * @param bisher           Zeilen des Blocks in Blattreihenfolge
+     * @param offen            Zeilen der offenen Fälle, eine noch gültige Wahl eingetragen
+     * @param zusammenschieben erledigte Zeilen entfernen und nur die offenen Fälle in ihrer Reihenfolge liefern
+     */
+    static List<PtmOnlineKonfliktSheet.Zeile> stabilerBlock(List<PtmOnlineKonfliktSheet.Zeile> bisher,
+            List<PtmOnlineKonfliktSheet.Zeile> offen, boolean zusammenschieben) {
+        if (offen.isEmpty() || zusammenschieben) {
+            return List.copyOf(offen);
+        }
+        Map<String, PtmOnlineKonfliktSheet.Zeile> nochNichtPlatziert = new LinkedHashMap<>();
+        offen.forEach(zeile -> nochNichtPlatziert.put(zeile.schluessel(), zeile));
+        List<PtmOnlineKonfliktSheet.Zeile> neu = new ArrayList<>();
+        for (PtmOnlineKonfliktSheet.Zeile zeile : bisher) {
+            PtmOnlineKonfliktSheet.Zeile offeneZeile = nochNichtPlatziert.remove(zeile.schluessel());
+            neu.add(offeneZeile != null ? offeneZeile : alsErledigt(zeile));
+        }
+        neu.addAll(nochNichtPlatziert.values());
+        while (!neu.isEmpty() && istErledigt(neu.getLast())) {
+            neu.removeLast();
+        }
+        return List.copyOf(neu);
+    }
+
+    /** Ein erledigter Fall trägt einen eigenen Schlüssel: Er passt zu keinem offenen Fall und keiner Wahl mehr. */
+    private static PtmOnlineKonfliktSheet.Zeile alsErledigt(PtmOnlineKonfliktSheet.Zeile zeile) {
+        if (istErledigt(zeile)) {
+            return zeile;
+        }
+        String anzeige = zeile.entscheidung().isEmpty() ? I18n.get("ptmonline.konflikt.ergebnis.erledigt")
+                : I18n.get("ptmonline.konflikt.ergebnis.erledigt_mit", zeile.entscheidung());
+        return new PtmOnlineKonfliktSheet.Zeile(zeile.art(), zeile.lokal(), zeile.online(),
+                I18n.get("ptmonline.konflikt.hinweis.ergebnis_erledigt"), zeile.schluessel() + ERLEDIGT_SUFFIX,
+                List.of(), anzeige);
+    }
+
+    static boolean istErledigt(PtmOnlineKonfliktSheet.Zeile zeile) {
+        return zeile.schluessel().endsWith(ERLEDIGT_SUFFIX);
     }
 
     /** Vergleichbarer Inhalt ohne Optionen (die stehen nur in der Auswahlliste, nicht in den Zellen). */

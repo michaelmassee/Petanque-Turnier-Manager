@@ -281,7 +281,8 @@ final class PtmOnlineErfassungsRunner extends SheetRunner {
         List<KonfliktFall> offen = PtmOnlineErgebnismeldungen.verarbeite(getWorkingSpreadsheet(), getTurnierSystem(),
                 verbindung, bestand, meldungsAbruf.meldungen(),
                 fall -> Entscheidung.aus(eingetragen.get(fall.schluessel()), fall.optionen()), this::oeffneSchutzScope);
-        if (PtmOnlineErgebnismeldungen.aktualisiereKonfliktliste(konfliktListe, offen, this::oeffneSchutzScope)) {
+        if (PtmOnlineErgebnismeldungen.aktualisiereKonfliktliste(konfliktListe, offen, false,
+                this::oeffneSchutzScope)) {
             getLogger().info("PTM-Online: {} offene Ergebnismeldungen in der Konfliktliste", offen.size());
         }
     }

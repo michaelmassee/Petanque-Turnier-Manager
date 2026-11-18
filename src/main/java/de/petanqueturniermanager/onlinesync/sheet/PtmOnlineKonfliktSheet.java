@@ -230,12 +230,23 @@ public class PtmOnlineKonfliktSheet extends SheetRunner implements ISheet {
 			row.newString(zeile.lokal());
 			row.newString(zeile.online());
 			row.newString(zeile.hinweis());
-			row.newString(zeile.optionen().contains(zeile.entscheidung()) ? zeile.entscheidung() : "");
+			row.newString(entscheidungsText(zeile));
 			row.newString(zeile.schluessel());
 		});
 		RangeHelper.from(this, daten.getRangePosition(Position.from(SPALTE_ART, ERSTE_DATEN_ZEILE + ersterIndex)))
 				.setDataInRange(daten);
 		setzeAuswahllisten(sheet, zeilen, ersterIndex);
+	}
+
+	/**
+	 * Wählbare Zeile: nur eine Wahl aus ihren Optionen. Zeile ohne Optionen (Hinweis, erledigter Fall): ihr fester
+	 * Text, den der Abgleich selbst vergibt.
+	 */
+	private static String entscheidungsText(Zeile zeile) {
+		if (zeile.optionen().isEmpty() || zeile.optionen().contains(zeile.entscheidung())) {
+			return zeile.entscheidung();
+		}
+		return "";
 	}
 
 	private void schreibeKopf(String stand, boolean keineFaelle) throws GenerateException {

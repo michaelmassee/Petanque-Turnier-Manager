@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.position.Position;
+import de.petanqueturniermanager.onlinesync.sheet.PtmOnlineKonfliktSheet.Zeile;
 import de.petanqueturniermanager.ptmonline.dto.ErgebnismeldungDto;
 import de.petanqueturniermanager.ptmonline.live.ErgebnisOrt;
 import de.petanqueturniermanager.ptmonline.live.LivePartie;
@@ -116,6 +117,92 @@ class PtmOnlineErgebnismeldungenTest {
 
         assertThat(zuordnung.partie()).isEqualTo(partie);
         assertThat(List.of(zuordnung.punkteA(), zuordnung.punkteB())).containsExactly(2, 13);
+    }
+
+    /**
+     * Die Turnierleitung wählt in Zeile 1 „übernehmen“ und gleich danach in Zeile 2. Schreibt der Hintergrund den
+     * Block dazwischen neu, muss Zeile 2 noch denselben Fall zeigen – sonst landete die Wahl beim Fall aus Zeile 3.
+     */
+    @Test
+    void entschiedenerFallBleibtStehenDamitDieNaechsteWahlBeimGemeintenFallLandet() {
+        String uebernehmen = Entscheidung.ERGEBNIS_UEBERNEHMEN.anzeige();
+        List<Zeile> bisher = List.of(waehlbar("m1", uebernehmen), waehlbar("m2", ""), waehlbar("m3", ""));
+
+        List<Zeile> neu = PtmOnlineErgebnismeldungen.stabilerBlock(bisher,
+                List.of(waehlbar("m2", ""), waehlbar("m3", "")), false);
+
+        assertThat(neu).extracting(Zeile::schluessel).containsExactly(
+                schluessel("m1") + PtmOnlineErgebnismeldungen.ERLEDIGT_SUFFIX, schluessel("m2"), schluessel("m3"));
+        Zeile erledigt = neu.getFirst();
+        assertThat(PtmOnlineErgebnismeldungen.istErledigt(erledigt)).isTrue();
+        assertThat(erledigt.optionen()).as("keine Auswahlliste mehr").isEmpty();
+        assertThat(erledigt.entscheidung()).contains(uebernehmen);
+        assertThat(neu.get(1)).as("Zeile 2 zeigt weiter m2").isEqualTo(waehlbar("m2", ""));
+    }
+
+    @Test
+    void eineEingetrageneWahlBleibtBeiIhremFall() {
+        String verwerfen = Entscheidung.ERGEBNIS_VERWERFEN.anzeige();
+        List<Zeile> neu = PtmOnlineErgebnismeldungen.stabilerBlock(
+                List.of(waehlbar("m1", ""), waehlbar("m2", "")),
+                List.of(waehlbar("m1", ""), waehlbar("m2", verwerfen)), false);
+
+        assertThat(neu).containsExactly(waehlbar("m1", ""), waehlbar("m2", verwerfen));
+    }
+
+    @Test
+    void neueMeldungKommtAnsEndeAuchWennPtmOnlineSieVorneLiefert() {
+        List<Zeile> neu = PtmOnlineErgebnismeldungen.stabilerBlock(List.of(waehlbar("m1", ""), waehlbar("m2", "")),
+                List.of(waehlbar("m0", ""), waehlbar("m1", ""), waehlbar("m2", "")), false);
+
+        assertThat(neu).extracting(Zeile::schluessel).containsExactly(schluessel("m1"), schluessel("m2"),
+                schluessel("m0"));
+    }
+
+    @Test
+    void erledigteZeilenEntfallenNurAmEnde() {
+        List<Zeile> bisher = List.of(waehlbar("m1", ""), waehlbar("m2", ""), waehlbar("m3", ""), waehlbar("m4", ""));
+
+        List<Zeile> neu = PtmOnlineErgebnismeldungen.stabilerBlock(bisher,
+                List.of(waehlbar("m1", ""), waehlbar("m3", "")), false);
+
+        assertThat(neu).extracting(Zeile::schluessel).containsExactly(schluessel("m1"),
+                schluessel("m2") + PtmOnlineErgebnismeldungen.ERLEDIGT_SUFFIX, schluessel("m3"));
+    }
+
+    @Test
+    void ohneOffenenFallIstDerBlockLeer() {
+        assertThat(PtmOnlineErgebnismeldungen.stabilerBlock(List.of(waehlbar("m1", ""), waehlbar("m2", "")),
+                List.of(), false)).isEmpty();
+    }
+
+    /** Ein zweiter Durchlauf ohne Änderung liefert denselben Block, es wird also nichts neu geschrieben. */
+    @Test
+    void erledigteZeileBleibtBeimNaechstenDurchlaufUnveraendert() {
+        List<Zeile> offen = List.of(waehlbar("m2", ""));
+        List<Zeile> erster = PtmOnlineErgebnismeldungen.stabilerBlock(
+                List.of(waehlbar("m1", ""), waehlbar("m2", "")), offen, false);
+
+        assertThat(PtmOnlineErgebnismeldungen.stabilerBlock(erster, offen, false)).isEqualTo(erster);
+    }
+
+    @Test
+    void zusammenschiebenEntferntErledigteZeilen() {
+        List<Zeile> erster = PtmOnlineErgebnismeldungen.stabilerBlock(
+                List.of(waehlbar("m1", ""), waehlbar("m2", "")), List.of(waehlbar("m2", "")), false);
+
+        assertThat(PtmOnlineErgebnismeldungen.stabilerBlock(erster, List.of(waehlbar("m2", "")), true))
+                .containsExactly(waehlbar("m2", ""));
+    }
+
+    private static String schluessel(String meldungsId) {
+        return PtmOnlineErgebnismeldungen.SCHLUESSEL_PRAEFIX + "|" + meldungsId;
+    }
+
+    private static Zeile waehlbar(String meldungsId, String entscheidung) {
+        return new Zeile("Ergebnis gemeldet", "Runde 1: " + meldungsId, "13:7", "Hinweis", schluessel(meldungsId),
+                List.of(Entscheidung.ERGEBNIS_UEBERNEHMEN.anzeige(), Entscheidung.ERGEBNIS_VERWERFEN.anzeige()),
+                entscheidung);
     }
 
     @Test
