@@ -81,6 +81,12 @@ public class TurnierSheet {
 		return this;
 	}
 
+	/** Ob dieses Blatt gerade das aktive Blatt der Ansicht ist (Vergleich über den Blattindex). */
+	public boolean istAktiv() {
+		XSpreadsheet aktiv = workingSpreadsheet.getWorkingSpreadsheetView().getActiveSheet();
+		return aktiv != null && SheetHelper.istGleichesBlatt(xSpreadsheet, aktiv);
+	}
+
 	/**
 	 * Keine änderungen am sheet mehr erlaubt
 	 *

@@ -139,12 +139,22 @@ public class PtmOnlineKonfliktSheet extends SheetRunner implements ISheet {
 	}
 
 	/**
-	 * Schreibt die Liste neu. Ohne offene Fälle wird ein noch nicht vorhandenes Blatt nicht angelegt; ein vorhandenes
-	 * wird geleert und meldet „keine offenen Fälle“.
+	 * Schreibt die Liste neu (Abgleich durch die Turnierleitung). Ohne offene Fälle wird ein noch nicht vorhandenes
+	 * Blatt nicht angelegt; ein vorhandenes wird geleert und meldet „keine offenen Fälle“.
 	 *
 	 * @param stand Zeitpunkt bzw. Anlass des Abgleichs, als Text für die Kopfzeile
 	 */
 	public void schreibe(List<Zeile> zeilen, String stand) throws GenerateException {
+		schreibe(zeilen, stand, true);
+	}
+
+	/**
+	 * @param blattwechselErlaubt {@code false} im Hintergrund: Gitter ausblenden und Kopfzeilen fixieren wirken in
+	 *                            Calc nur auf das aktive Blatt; ein Blattwechsel nähme der Turnierleitung mitten in
+	 *                            der Ergebniseingabe den Fokus. Dann bleibt das Gitter sichtbar, die Fixierung folgt
+	 *                            beim nächsten Schreiben, während das Blatt angezeigt wird.
+	 */
+	private void schreibe(List<Zeile> zeilen, String stand, boolean blattwechselErlaubt) throws GenerateException {
 		if (zeilen.isEmpty() && !istVorhanden()) {
 			return;
 		}
@@ -152,8 +162,12 @@ public class PtmOnlineKonfliktSheet extends SheetRunner implements ISheet {
 			LOGGER.warn("PTM-Online: {} offene Fälle, die Konfliktliste zeigt nur {}", zeilen.size(), MAX_ZEILEN);
 		}
 		List<Zeile> sichtbar = zeilen.size() > MAX_ZEILEN ? zeilen.subList(0, MAX_ZEILEN) : zeilen;
-		NewSheet.from(this, SheetNamen.ptmOnlineKonflikte(), SheetMetadataHelper.SCHLUESSEL_PTM_ONLINE_KONFLIKTE)
-				.pos(DefaultSheetPos.SUPERMELEE_WORK).useIfExist().hideGrid().create();
+		NewSheet neu = NewSheet.from(this, SheetNamen.ptmOnlineKonflikte(),
+				SheetMetadataHelper.SCHLUESSEL_PTM_ONLINE_KONFLIKTE).pos(DefaultSheetPos.SUPERMELEE_WORK).useIfExist();
+		if (blattwechselErlaubt) {
+			neu.hideGrid();
+		}
+		neu.create();
 		schreibeKopf(stand, sichtbar.isEmpty());
 		RangeHelper.from(this, RangePosition.from(SPALTE_ART, ERSTE_DATEN_ZEILE, LETZTE_SPALTE, LETZTE_DATEN_ZEILE))
 				.clearRange();
@@ -163,19 +177,20 @@ public class PtmOnlineKonfliktSheet extends SheetRunner implements ISheet {
 			return null;
 		});
 		schreibeZeilen(sheet, sichtbar, 0);
-		formatieren(sichtbar.size());
+		formatieren(sichtbar.size(), blattwechselErlaubt);
 	}
 
 	/**
 	 * Ersetzt nur den Block der Fälle, deren Schlüssel mit {@code praefix} beginnt, am Ende der Liste; alle anderen
 	 * Fälle bleiben samt eingetragener Entscheidung unverändert. Der Abgleich sortiert die Fälle nach Art, eine Art am
-	 * Ende des Aufzählungstyps steht daher immer zuletzt.
+	 * Ende des Aufzählungstyps steht daher immer zuletzt. Läuft auch im Hintergrund und wechselt daher nie das aktive
+	 * Blatt.
 	 *
 	 * @param stand Zeitpunkt bzw. Anlass, als Text für die Kopfzeile
 	 */
 	public void ersetzeBlock(String praefix, List<Zeile> zeilen, String stand) throws GenerateException {
 		if (!istVorhanden()) {
-			schreibe(zeilen, stand);
+			schreibe(zeilen, stand, false);
 			return;
 		}
 		List<String> schluessel = new ArrayList<>(leseFaelle().keySet());
@@ -193,7 +208,7 @@ public class PtmOnlineKonfliktSheet extends SheetRunner implements ISheet {
 			return null;
 		});
 		schreibeZeilen(sheet, sichtbar, blockStart);
-		formatieren(anzahl);
+		formatieren(anzahl, false);
 	}
 
 	private static int blockBeginn(List<String> schluessel, String praefix) {
@@ -297,7 +312,7 @@ public class PtmOnlineKonfliktSheet extends SheetRunner implements ISheet {
 		}
 	}
 
-	private void formatieren(int anzahl) throws GenerateException {
+	private void formatieren(int anzahl, boolean blattwechselErlaubt) throws GenerateException {
 		XSpreadsheet sheet = getXSpreadSheet();
 		SheetHelper helper = getSheetHelper();
 		BlattschutzManager.get().schreibeEntsperrt(sheet, () -> {
@@ -320,7 +335,12 @@ public class PtmOnlineKonfliktSheet extends SheetRunner implements ISheet {
 						CellProperties.from().setAllThinBorder().put(ICommonProperties.IS_TEXT_WRAPPED, Boolean.TRUE));
 			}
 		});
-		SheetFreeze.from(sheet, getWorkingSpreadsheet()).anzZeilen(ERSTE_DATEN_ZEILE).doFreeze();
+		SheetFreeze fixierung = SheetFreeze.from(sheet, getWorkingSpreadsheet()).anzZeilen(ERSTE_DATEN_ZEILE);
+		if (blattwechselErlaubt) {
+			fixierung.doFreeze();
+		} else {
+			fixierung.doFreezeOhneBlattwechsel();
+		}
 	}
 
 	private static void spalte(SheetHelper helper, XSpreadsheet sheet, int spalte, int breite, boolean sichtbar) {

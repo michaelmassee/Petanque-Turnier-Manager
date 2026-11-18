@@ -54,4 +54,16 @@ public class SheetFreeze {
 		return this;
 	}
 
+	/**
+	 * Fixiert nur, wenn das Blatt schon aktiv ist, und wechselt sonst nicht das Blatt. Für Hintergrund-Läufe: Ein
+	 * Blattwechsel nähme der Turnierleitung mitten in der Eingabe den Fokus. Die Fixierung folgt beim nächsten
+	 * Schreiben, während das Blatt angezeigt wird.
+	 */
+	public SheetFreeze doFreezeOhneBlattwechsel() {
+		if (turnierSheet.istAktiv()) {
+			sheetFreeze.freezeAtPosition(this.anzSpalten, this.anzZeilen);
+		}
+		return this;
+	}
+
 }
