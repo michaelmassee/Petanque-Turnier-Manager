@@ -32,7 +32,8 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
  * Werte und Formeln eines Blattbereichs, je einmal als Block gelesen. Zugriffe erfolgen mit absoluten
  * (0-basierten) Blattkoordinaten.
  * <p>
- * Team-Zellen enthalten je nach Anzeigemodus die Team-Nr oder den Teamnamen. Umgestellte Systeme schreiben die UUID
+ * Team-Zellen enthalten je nach Anzeigemodus die Team-Nr oder den Teamnamen; die Formel hat Vorrang vor dem
+ * angezeigten Wert, weil auch ein Teamname nur aus Ziffern bestehen kann. Umgestellte Systeme schreiben die UUID
  * des Teams als Literal in die Formel ({@code PTM.ALG.UUIDZEILE("<uuid>";…)}); sie wird über die Meldeliste auf die
  * aktuelle Nummer abgebildet. Ältere Formeln enthalten {@code …MATCH(<nr>;<Meldeliste>…)}; daraus wird die Nummer
  * direkt gelesen. Weitergereichte Zellen im Turnierbaum (Sieger, Verlierer) folgen über die eingetragenen Punkte
@@ -67,6 +68,12 @@ final class LiveZellbereich {
         RangeData werte = RangeHelper.from(blatt, ws.getWorkingSpreadsheetDocument(), bereich).getDataFromRange();
         String[][] formeln = new SheetHelper(ws).getFormulaArrayFromRange(blatt, bereich);
         return new LiveZellbereich(ersteSpalte, ersteZeile, werte, formeln, () -> MeldelisteUuidIndex.lese(ws));
+    }
+
+    /** UNO-frei: bereits gelesene Werte und Formeln desselben Bereichs. */
+    static LiveZellbereich aus(int ersteSpalte, int ersteZeile, RangeData werte, String[][] formeln,
+            MeldelisteUuidIndex uuidIndex) {
+        return new LiveZellbereich(ersteSpalte, ersteZeile, werte, formeln, () -> uuidIndex);
     }
 
     int ersteZeile() {
@@ -135,12 +142,14 @@ final class LiveZellbereich {
         return istGanzzahl(betrag) ? (negativ ? -1 : 1) * Integer.parseInt(betrag) : null;
     }
 
-    /** @return Team-Nr der Zelle (Nummer, Teamnamen-Formel oder bekannter Name), sonst {@code 0} */
+    /**
+     * Team-Nr der Zelle. Die Formel geht dem angezeigten Wert vor: Ein rein numerischer Teamname (z.&nbsp;B. „2“ für
+     * Team 1) darf nicht als Team-Nr gelesen werden. Reihenfolge: UUID bzw. Nummer der Formel, weitergereichte Zelle,
+     * angezeigte Nummer, bekannter Name.
+     *
+     * @return Team-Nr, sonst {@code 0}
+     */
     int teamNr(int spalte, int zeile) {
-        int nr = zahl(spalte, zeile);
-        if (nr > 0) {
-            return nr;
-        }
         int ausFormel = nrDerFormel(formel(spalte, zeile));
         if (ausFormel > 0) {
             return ausFormel;
@@ -148,6 +157,10 @@ final class LiveZellbereich {
         Optional<String> weitergereicht = KoWeitergabeFormel.uuid(weitergabeZellen(), Position.from(spalte, zeile));
         if (weitergereicht.isPresent()) {
             return uuidIndex().nr(weitergereicht.get()).orElse(0);
+        }
+        int nr = zahl(spalte, zeile);
+        if (nr > 0) {
+            return nr;
         }
         String name = text(spalte, zeile);
         return name == null ? 0 : nrProName().getOrDefault(name, 0);

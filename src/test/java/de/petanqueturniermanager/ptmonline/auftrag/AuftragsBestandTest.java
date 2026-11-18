@@ -84,6 +84,24 @@ class AuftragsBestandTest {
     }
 
     @Test
+    void ziehtEinenUngesendetenAuftragVorUndBehaeltDieZaehlerstaende() {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        SyncAuftrag gesendet = erzeuge(bestand, AuftragsArt.RUNDE);
+        SyncAuftrag einstellungen = erzeuge(bestand, AuftragsArt.SPIELEINSTELLUNGEN);
+        SyncAuftrag rangliste = erzeuge(bestand, AuftragsArt.RANGLISTE);
+        SyncAuftrag start = erzeuge(bestand, AuftragsArt.START);
+        bestand.gesendet(ergebnis(gesendet, true));
+
+        bestand.zieheVor(start.auftragsId());
+
+        assertThat(bestand.zuSenden(false)).extracting(SyncAuftrag::auftragsId, SyncAuftrag::zaehler).containsExactly(
+                tuple(start.auftragsId(), 2L), tuple(einstellungen.auftragsId(), 3L),
+                tuple(rangliste.auftragsId(), 4L));
+        assertThat(bestand.zuSenden(true)).extracting(SyncAuftrag::auftragsId).containsExactly(start.auftragsId());
+        assertThat(bestand.zaehler()).isEqualTo(4);
+    }
+
+    @Test
     void sendetInDerPauseNurDenStartAmAnfangDerReihe() {
         AuftragsBestand bestand = AuftragsBestand.leer();
         SyncAuftrag start = erzeuge(bestand, AuftragsArt.START);

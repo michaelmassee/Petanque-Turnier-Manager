@@ -4,6 +4,7 @@
 package de.petanqueturniermanager.ptmonline;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 
 import java.time.Instant;
 import java.util.List;
@@ -69,6 +70,18 @@ class PtmOnlineAuftraegeTest {
         assertThat(verworfen).extracting(SyncAuftrag::art).containsExactly(AuftragsArt.TEILNAHME);
         assertThat(bestand.zuSenden(false)).extracting(SyncAuftrag::art).containsExactly(AuftragsArt.RUNDE,
                 AuftragsArt.START);
+    }
+
+    @Test
+    void startTrotzPauseGehtVorAelterenAuftraegenAllein() {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        PtmOnlineAuftraege.rangliste(bestand, TURNIER, List.of());
+
+        PtmOnlineAuftraege.startTrotzPause(bestand, TURNIER, Instant.EPOCH, "Start");
+
+        assertThat(bestand.zuSenden(true)).extracting(SyncAuftrag::art).containsExactly(AuftragsArt.START);
+        assertThat(bestand.zuSenden(false)).extracting(SyncAuftrag::art).containsExactly(AuftragsArt.START,
+                AuftragsArt.RANGLISTE);
     }
 
     @Test
@@ -162,8 +175,8 @@ class PtmOnlineAuftraegeTest {
     @Test
     void ankuendigungIstEinGezaehlterAuftragUndNurDieLetzteWirdGesendet() {
         AuftragsBestand bestand = AuftragsBestand.leer();
-        PtmOnlineAuftraege.ankuendigung(bestand, TURNIER, "Runde 3 startet");
-        PtmOnlineAuftraege.ankuendigung(bestand, TURNIER, "Runde 3 startet \"später\"");
+        PtmOnlineAuftraege.ankuendigung(bestand, TURNIER, "Runde 3 startet", false);
+        PtmOnlineAuftraege.ankuendigung(bestand, TURNIER, "Runde 3 startet \"später\"", false);
 
         assertThat(bestand.zuSenden(false)).singleElement().satisfies(auftrag -> {
             assertThat(auftrag.art()).isEqualTo(AuftragsArt.ANKUENDIGUNG);
@@ -175,9 +188,20 @@ class PtmOnlineAuftraegeTest {
     }
 
     @Test
+    void ankuendigungGehtInDerPauseAllein() {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        PtmOnlineAuftraege.runde(bestand, TURNIER, 2, List.of());
+        PtmOnlineAuftraege.ankuendigung(bestand, TURNIER, "Mittagspause", true);
+
+        assertThat(bestand.zuSenden(true)).extracting(SyncAuftrag::art).containsExactly(AuftragsArt.ANKUENDIGUNG);
+        assertThat(bestand.zuSenden(false)).extracting(SyncAuftrag::art, SyncAuftrag::zaehler)
+                .containsExactly(tuple(AuftragsArt.ANKUENDIGUNG, 1L), tuple(AuftragsArt.RUNDE, 2L));
+    }
+
+    @Test
     void leereAnkuendigungLoeschtOnline() {
         AuftragsBestand bestand = AuftragsBestand.leer();
-        PtmOnlineAuftraege.ankuendigung(bestand, TURNIER, "");
+        PtmOnlineAuftraege.ankuendigung(bestand, TURNIER, "", false);
 
         assertThat(bestand.zuSenden(false)).singleElement()
                 .satisfies(auftrag -> assertThat(auftrag.body()).isEqualTo("{\"text\":\"\"}"));

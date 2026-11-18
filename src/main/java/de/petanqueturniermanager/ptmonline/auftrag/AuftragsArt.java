@@ -62,8 +62,12 @@ public enum AuftragsArt {
         return I18n.get("ptmonline.auftrag.art." + name().toLowerCase(Locale.ROOT));
     }
 
-    /** Nur der Übergang zu {@code running} darf auch bei pausiertem Sync gesendet werden (KP-05, P-58). */
+    /**
+     * Auch bei pausiertem Sync gesendet werden nur ausdrückliche Einzelaktionen der Turnierleitung: der bestätigte
+     * Übergang zu {@code running} (KP-05, P-58) und eine Ankündigung. Sie werden dazu vor ältere ungesendete Aufträge
+     * gezogen ({@link AuftragsBestand#zieheVor}).
+     */
     public boolean inPauseErlaubt() {
-        return this == START;
+        return this == START || this == ANKUENDIGUNG;
     }
 }

@@ -197,9 +197,9 @@ public final class PtmOnlineSpielrundeSync {
     private static Turnierbeginn turnierbeginn(XComponentContext ctx, PtmOnlineVerbindung verbindung,
             boolean pausiert) throws GenerateException {
         if (pausiert) {
-            return new Turnierbeginn(nurStartSendenTrotzPause(ctx), false, false);
+            return new Turnierbeginn(nurStartSendenTrotzPause(ctx), false, false, true);
         }
-        return new Turnierbeginn(true, vorabcheckBestaetigt(ctx, verbindung), false);
+        return new Turnierbeginn(true, vorabcheckBestaetigt(ctx, verbindung), false, false);
     }
 
     /**
@@ -214,7 +214,7 @@ public final class PtmOnlineSpielrundeSync {
             return null;
         }
         logger.info("PTM-Online: Turnier online '{}', neuer Rundenstart nimmt es wieder auf", onlineStatus.get());
-        return new Turnierbeginn(!pausiert, false, true);
+        return new Turnierbeginn(!pausiert, false, true, false);
     }
 
     /**
@@ -225,8 +225,10 @@ public final class PtmOnlineSpielrundeSync {
      * @param trotzBefunden  trotz fehlender Meldungen oder Ausschlussgründe gestartet (wird protokolliert)
      * @param wiederaufnahme ein online zurückgesetztes oder abgeschlossenes Turnier wird wieder aufgenommen: der
      *                       Live-Stand wird danach komplett neu übertragen, weil der Start ungesendete Aufträge verwirft
+     * @param trotzPause     Start bei pausiertem Sync: {@code running} geht allein vor älteren Aufträgen hinaus
      */
-    private record Turnierbeginn(boolean startSenden, boolean trotzBefunden, boolean wiederaufnahme) {
+    private record Turnierbeginn(boolean startSenden, boolean trotzBefunden, boolean wiederaufnahme,
+            boolean trotzPause) {
     }
 
     /**
@@ -281,8 +283,10 @@ public final class PtmOnlineSpielrundeSync {
         if (!beginn.startSenden()) {
             return;
         }
-        List<SyncAuftrag> verworfen = PtmOnlineAuftraege.start(bestand, tournamentId, lokalerStart,
-                I18n.get("ptmonline.auftrag.verworfen.turnierstart"));
+        String grund = I18n.get("ptmonline.auftrag.verworfen.turnierstart");
+        List<SyncAuftrag> verworfen = beginn.trotzPause()
+                ? PtmOnlineAuftraege.startTrotzPause(bestand, tournamentId, lokalerStart, grund)
+                : PtmOnlineAuftraege.start(bestand, tournamentId, lokalerStart, grund);
         if (!verworfen.isEmpty()) {
             logger.info("PTM-Online: {} ungesendete Aufträge beim Turnierstart verworfen", verworfen.size());
         }

@@ -17,7 +17,8 @@ import de.petanqueturniermanager.ptmonline.auftrag.versand.VersandErgebnis;
 /**
  * Ankündigung der Turnierleitung an ein verbundenes PTM-Online-Turnier (Turnierseite, Live-Ansicht, Live-Push).
  * Die Ankündigung ist ein gezählter Auftrag und geht synchron hinaus; ohne Netz bleibt sie gespeichert und wird mit
- * dem nächsten Versand nachgeholt. Läuft im Hintergrund-Thread eines {@code SheetRunner}.
+ * dem nächsten Versand nachgeholt. Bei pausiertem Sync geht nur die Ankündigung hinaus, alle anderen offenen
+ * Aufträge bleiben bis zum Fortsetzen lokal. Läuft im Hintergrund-Thread eines {@code SheetRunner}.
  */
 public final class PtmOnlineAnkuendigung {
 
@@ -50,9 +51,10 @@ public final class PtmOnlineAnkuendigung {
         TournamentSyncClient client = verbindung.get().gebundenerClient();
         AuftragsBestand bestand = PtmOnlineAuftraege.bestand(ws, verbindung.get().mapping(),
                 verbindung.get().spieltagNr());
-        PtmOnlineAuftraege.ankuendigung(bestand, verbindung.get().tournamentId(), text);
+        boolean pausiert = verbindung.get().mapping().istPausiert();
+        PtmOnlineAuftraege.ankuendigung(bestand, verbindung.get().tournamentId(), text, pausiert);
         PtmOnlineAuftraege.SynchronerVersand versand = PtmOnlineAuftraege.sendeSynchron(bestand,
-                verbindung.get().mapping(), client, false);
+                verbindung.get().mapping(), client, pausiert);
         pruefeVersand(versand);
         return Ergebnis.GESENDET;
     }

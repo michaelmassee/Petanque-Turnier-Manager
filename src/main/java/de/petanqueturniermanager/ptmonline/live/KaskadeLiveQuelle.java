@@ -12,6 +12,7 @@ import static de.petanqueturniermanager.kaskade.spielrunde.KaskadeSpielrundeShee
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.IntFunction;
 
 import com.sun.star.sheet.XSpreadsheet;
 
@@ -38,12 +39,14 @@ final class KaskadeLiveQuelle implements LiveStandQuelle {
         List<List<LivePartie>> runden = new ArrayList<>();
         for (int nr = 1; nr <= LiveBlattLeser.MAX_RUNDEN; nr++) {
             SheetRunner.testDoCancelTask();
-            XSpreadsheet blatt = LiveBlattLeser.blatt(ws, SheetMetadataHelper.schluesselKaskadenRunde(nr),
-                    SheetNamen.kaskadenRunde(nr));
+            String blattSchluessel = SheetMetadataHelper.schluesselKaskadenRunde(nr);
+            String blattName = SheetNamen.kaskadenRunde(nr);
+            XSpreadsheet blatt = LiveBlattLeser.blatt(ws, blattSchluessel, blattName);
             if (blatt == null) {
                 break;
             }
-            runden.add(lesePartien(LiveBlattLeser.datenzeilen(ws, blatt, ERSTE_DATEN_ZEILE, ERG_TEAM_B_SPALTE)));
+            runden.add(lesePartien(LiveBlattLeser.datenzeilen(ws, blatt, ERSTE_DATEN_ZEILE, ERG_TEAM_B_SPALTE),
+                    zeile -> ErgebnisOrt.inZeile(blattSchluessel, blattName, zeile, ERG_TEAM_A_SPALTE)));
         }
         LiveRundenFolge folge = new LiveRundenFolge().anhaengen(runden);
         folge.parallelAnhaengen(TurnierbaumLiveLeser.leseBaeume(ws, SheetMetadataHelper::schluesselKaskadenFeld,
@@ -51,7 +54,8 @@ final class KaskadeLiveQuelle implements LiveStandQuelle {
         return LiveTurnierStand.ohneRangliste(folge.runden());
     }
 
-    private static List<LivePartie> lesePartien(LiveZellbereich zellen) {
+    /** Freilose bleiben ohne Ergebnisort: für sie gibt es keine Ergebnismeldung. */
+    static List<LivePartie> lesePartien(LiveZellbereich zellen, IntFunction<ErgebnisOrt> ergebnisOrt) {
         List<LivePartie> partien = new ArrayList<>();
         String gruppe = null;
         for (int zeile = zellen.ersteZeile(); zeile <= zellen.letzteZeile(); zeile++) {
@@ -65,7 +69,8 @@ final class KaskadeLiveQuelle implements LiveStandQuelle {
             Integer punkteA = zellen.punkte(ERG_TEAM_A_SPALTE, zeile);
             Integer punkteB = zellen.punkte(ERG_TEAM_B_SPALTE, zeile);
             partien.add(teamB <= 0 ? LivePartie.freilos(teamA, punkteA, punkteB, null, gruppe)
-                    : LivePartie.teams(teamA, teamB, punkteA, punkteB, null, gruppe));
+                    : LivePartie.teams(teamA, teamB, punkteA, punkteB, null, gruppe)
+                            .mitErgebnisOrt(ergebnisOrt.apply(zeile)));
         }
         return partien;
     }

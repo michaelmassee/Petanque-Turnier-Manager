@@ -132,9 +132,27 @@ public final class PtmOnlineAuftraege {
     static List<SyncAuftrag> start(AuftragsBestand bestand, String tournamentId, Instant lokalerStart,
             String grundVerworfen) {
         List<SyncAuftrag> verworfen = bestand.verwerfe(AuftragsArt::wirdBeimStartVerworfen, grundVerworfen);
-        bestand.erzeuge(AuftragsArt.START, "POST", TournamentSyncClient.startPfad(tournamentId),
-                TournamentSyncClient.startBody(lokalerStart), "{}");
+        erzeugeStart(bestand, tournamentId, lokalerStart);
         return verworfen;
+    }
+
+    /**
+     * Turnierstart bei pausiertem Sync, den die Turnierleitung ausdrücklich bestätigt hat (P-58): wie
+     * {@link #start}, aber {@code running} wird vor ältere ungesendete Aufträge gezogen (z.&nbsp;B. Spieleinstellungen
+     * nach einem Netzfehler), damit es in der Pause allein hinausgeht. Die übrigen bleiben bis zum Fortsetzen offen.
+     *
+     * @return die verworfenen Aufträge
+     */
+    static List<SyncAuftrag> startTrotzPause(AuftragsBestand bestand, String tournamentId, Instant lokalerStart,
+            String grundVerworfen) {
+        List<SyncAuftrag> verworfen = bestand.verwerfe(AuftragsArt::wirdBeimStartVerworfen, grundVerworfen);
+        bestand.zieheVor(erzeugeStart(bestand, tournamentId, lokalerStart).auftragsId());
+        return verworfen;
+    }
+
+    private static SyncAuftrag erzeugeStart(AuftragsBestand bestand, String tournamentId, Instant lokalerStart) {
+        return bestand.erzeuge(AuftragsArt.START, "POST", TournamentSyncClient.startPfad(tournamentId),
+                TournamentSyncClient.startBody(lokalerStart), "{}");
     }
 
     /**
@@ -359,11 +377,19 @@ public final class PtmOnlineAuftraege {
         bestand.erzeuge(AuftragsArt.ANMELDUNG_SCHLIESSEN, "PUT", pfad, "{\"closed\":true}", "{}");
     }
 
-    /** Ankündigung der Turnierleitung; eine noch nicht gesendete ältere entfällt, online gilt nur die letzte. */
-    static void ankuendigung(AuftragsBestand bestand, String tournamentId, String text) {
+    /**
+     * Ankündigung der Turnierleitung; eine noch nicht gesendete ältere entfällt, online gilt nur die letzte. Bei
+     * pausiertem Sync wird sie vor ältere ungesendete Aufträge gezogen und geht allein hinaus; die übrigen bleiben bis
+     * zum Fortsetzen offen.
+     */
+    static void ankuendigung(AuftragsBestand bestand, String tournamentId, String text, boolean pausiert) {
         String pfad = TournamentSyncClient.ankuendigungPfad(tournamentId);
         bestand.entferneUeberholte(auftrag -> auftrag.pfad().equals(pfad));
-        bestand.erzeuge(AuftragsArt.ANKUENDIGUNG, "PUT", pfad, TournamentSyncClient.ankuendigungBody(text), "{}");
+        SyncAuftrag auftrag = bestand.erzeuge(AuftragsArt.ANKUENDIGUNG, "PUT", pfad,
+                TournamentSyncClient.ankuendigungBody(text), "{}");
+        if (pausiert) {
+            bestand.zieheVor(auftrag.auftragsId());
+        }
     }
 
     /** Ein abgelehnter, noch nicht zur Kenntnis genommener Auftrag als Fall der Konfliktliste. */

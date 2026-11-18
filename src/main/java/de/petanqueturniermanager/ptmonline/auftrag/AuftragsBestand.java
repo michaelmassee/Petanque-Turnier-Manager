@@ -101,13 +101,46 @@ public final class AuftragsBestand {
      * gesendet werden, sonst lehnt PTM-Online den früheren als veraltet ab.
      */
     public synchronized List<SyncAuftrag> zuSenden(boolean pausiert) {
-        List<SyncAuftrag> offen = eintraege.stream().filter(eintrag -> eintrag.zustand() == Zustand.OFFEN)
-                .map(Eintrag::auftrag).filter(auftrag -> !ergebnisse.containsKey(auftrag.auftragsId()))
-                .sorted(Comparator.comparingLong(SyncAuftrag::zaehler)).toList();
+        List<SyncAuftrag> offen = ungesendeteOffene();
         if (!pausiert) {
             return offen;
         }
         return offen.stream().takeWhile(auftrag -> auftrag.art().inPauseErlaubt()).toList();
+    }
+
+    /**
+     * Zieht einen offenen, noch nicht gesendeten Auftrag vor alle übrigen ungesendeten: Er übernimmt den kleinsten
+     * ihrer Zählerstände, die übrigen rücken in ihrer Reihenfolge je einen Stand nach. So kann ein in der Pause
+     * erlaubter Auftrag allein hinausgehen, ohne dass ältere ihn blockieren oder PTM-Online sie später als veraltet
+     * ablehnt. Auftrags-ID und Nutzlast bleiben, Zählerstände kommen keine hinzu.
+     */
+    public synchronized void zieheVor(String auftragsId) {
+        List<SyncAuftrag> ungesendet = ungesendeteOffene();
+        if (ungesendet.stream().noneMatch(auftrag -> auftrag.auftragsId().equals(auftragsId))) {
+            return;
+        }
+        List<String> reihenfolge = new ArrayList<>();
+        reihenfolge.add(auftragsId);
+        ungesendet.stream().map(SyncAuftrag::auftragsId).filter(id -> !id.equals(auftragsId))
+                .forEach(reihenfolge::add);
+        Map<String, Long> neuerZaehler = new LinkedHashMap<>();
+        for (int i = 0; i < reihenfolge.size(); i++) {
+            neuerZaehler.put(reihenfolge.get(i), ungesendet.get(i).zaehler());
+        }
+        eintraege.replaceAll(eintrag -> {
+            Long zaehlerNeu = neuerZaehler.get(eintrag.auftrag().auftragsId());
+            return zaehlerNeu == null ? eintrag
+                    : new Eintrag(eintrag.auftrag().mitZaehler(zaehlerNeu), eintrag.zustand(), eintrag.grund(),
+                            eintrag.zeitpunkt());
+        });
+        geaendert = true;
+    }
+
+    /** Offene, noch nicht gesendete Aufträge in Zählerreihenfolge. */
+    private List<SyncAuftrag> ungesendeteOffene() {
+        return eintraege.stream().filter(eintrag -> eintrag.zustand() == Zustand.OFFEN)
+                .map(Eintrag::auftrag).filter(auftrag -> !ergebnisse.containsKey(auftrag.auftragsId()))
+                .sorted(Comparator.comparingLong(SyncAuftrag::zaehler)).toList();
     }
 
     /** Merkt das Ergebnis eines gesendeten Auftrags, bis es im Dokument angewendet ist. */
@@ -199,11 +232,7 @@ public final class AuftragsBestand {
      */
     public synchronized void uebernehmeServerZaehler(long serverZaehler) {
         zaehler = Math.max(zaehler, serverZaehler);
-        List<String> neuZuNummerieren = eintraege.stream()
-                .filter(eintrag -> eintrag.zustand() == Zustand.OFFEN
-                        && !ergebnisse.containsKey(eintrag.auftrag().auftragsId()))
-                .map(Eintrag::auftrag).sorted(Comparator.comparingLong(SyncAuftrag::zaehler))
-                .map(SyncAuftrag::auftragsId).toList();
+        List<String> neuZuNummerieren = ungesendeteOffene().stream().map(SyncAuftrag::auftragsId).toList();
         for (String auftragsId : neuZuNummerieren) {
             long neuerZaehler = ++zaehler;
             eintraege.replaceAll(eintrag -> eintrag.auftrag().auftragsId().equals(auftragsId)
