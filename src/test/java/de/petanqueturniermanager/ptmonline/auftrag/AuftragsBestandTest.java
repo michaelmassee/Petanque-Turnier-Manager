@@ -84,10 +84,10 @@ class AuftragsBestandTest {
     }
 
     @Test
-    void ziehtEinenUngesendetenAuftragVorUndBehaeltDieZaehlerstaende() {
+    void ziehtEinenAuftragVorOhneVergebeneZaehlerstaendeNeuZuVerteilen() {
         AuftragsBestand bestand = AuftragsBestand.leer();
         SyncAuftrag gesendet = erzeuge(bestand, AuftragsArt.RUNDE);
-        SyncAuftrag einstellungen = erzeuge(bestand, AuftragsArt.SPIELEINSTELLUNGEN);
+        SyncAuftrag antwortVerloren = erzeuge(bestand, AuftragsArt.SPIELEINSTELLUNGEN);
         SyncAuftrag rangliste = erzeuge(bestand, AuftragsArt.RANGLISTE);
         SyncAuftrag start = erzeuge(bestand, AuftragsArt.START);
         bestand.gesendet(ergebnis(gesendet, true));
@@ -95,10 +95,12 @@ class AuftragsBestandTest {
         bestand.zieheVor(start.auftragsId());
 
         assertThat(bestand.zuSenden(false)).extracting(SyncAuftrag::auftragsId, SyncAuftrag::zaehler).containsExactly(
-                tuple(start.auftragsId(), 2L), tuple(einstellungen.auftragsId(), 3L),
-                tuple(rangliste.auftragsId(), 4L));
+                tuple(start.auftragsId(), 4L), tuple(antwortVerloren.auftragsId(), 5L),
+                tuple(rangliste.auftragsId(), 6L));
         assertThat(bestand.zuSenden(true)).extracting(SyncAuftrag::auftragsId).containsExactly(start.auftragsId());
-        assertThat(bestand.zaehler()).isEqualTo(4);
+        assertThat(bestand.zaehler()).isEqualTo(6);
+        assertThat(bestand.zuSenden(false)).extracting(SyncAuftrag::zaehler)
+                .as("Zählerstände 2 und 3 können online schon verbraucht sein").doesNotContain(2L, 3L);
     }
 
     @Test

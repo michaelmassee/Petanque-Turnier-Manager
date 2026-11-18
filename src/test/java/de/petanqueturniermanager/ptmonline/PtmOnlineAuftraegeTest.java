@@ -195,7 +195,7 @@ class PtmOnlineAuftraegeTest {
 
         assertThat(bestand.zuSenden(true)).extracting(SyncAuftrag::art).containsExactly(AuftragsArt.ANKUENDIGUNG);
         assertThat(bestand.zuSenden(false)).extracting(SyncAuftrag::art, SyncAuftrag::zaehler)
-                .containsExactly(tuple(AuftragsArt.ANKUENDIGUNG, 1L), tuple(AuftragsArt.RUNDE, 2L));
+                .containsExactly(tuple(AuftragsArt.ANKUENDIGUNG, 2L), tuple(AuftragsArt.RUNDE, 3L));
     }
 
     @Test

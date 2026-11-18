@@ -109,23 +109,23 @@ public final class AuftragsBestand {
     }
 
     /**
-     * Zieht einen offenen, noch nicht gesendeten Auftrag vor alle übrigen ungesendeten: Er übernimmt den kleinsten
-     * ihrer Zählerstände, die übrigen rücken in ihrer Reihenfolge je einen Stand nach. So kann ein in der Pause
-     * erlaubter Auftrag allein hinausgehen, ohne dass ältere ihn blockieren oder PTM-Online sie später als veraltet
-     * ablehnt. Auftrags-ID und Nutzlast bleiben, Zählerstände kommen keine hinzu.
+     * Zieht einen offenen, noch nicht gesendeten Auftrag vor alle übrigen ungesendeten, damit ein in der Pause
+     * erlaubter Auftrag allein hinausgehen kann. Dazu erhalten die übrigen der Reihe nach neue Zählerstände
+     * <em>oberhalb</em> des bisher höchsten; der vorgezogene behält seinen. Ein schon vergebener Zählerstand wird nie an
+     * einen anderen Auftrag weitergegeben: Fehlt nur die Antwort, kann PTM-Online ihn bereits verbraucht haben, und
+     * ein neuer Auftrag mit diesem Stand würde als Dokumentkopie abgelehnt ({@code document_forked}). Auftrags-ID und
+     * Nutzlast der umnummerierten Aufträge bleiben, damit PTM-Online einen bereits ausgeführten an seiner ID erkennt.
      */
     public synchronized void zieheVor(String auftragsId) {
         List<SyncAuftrag> ungesendet = ungesendeteOffene();
         if (ungesendet.stream().noneMatch(auftrag -> auftrag.auftragsId().equals(auftragsId))) {
             return;
         }
-        List<String> reihenfolge = new ArrayList<>();
-        reihenfolge.add(auftragsId);
-        ungesendet.stream().map(SyncAuftrag::auftragsId).filter(id -> !id.equals(auftragsId))
-                .forEach(reihenfolge::add);
         Map<String, Long> neuerZaehler = new LinkedHashMap<>();
-        for (int i = 0; i < reihenfolge.size(); i++) {
-            neuerZaehler.put(reihenfolge.get(i), ungesendet.get(i).zaehler());
+        for (SyncAuftrag auftrag : ungesendet) {
+            if (!auftrag.auftragsId().equals(auftragsId)) {
+                neuerZaehler.put(auftrag.auftragsId(), ++zaehler);
+            }
         }
         eintraege.replaceAll(eintrag -> {
             Long zaehlerNeu = neuerZaehler.get(eintrag.auftrag().auftragsId());
