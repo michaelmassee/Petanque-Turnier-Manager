@@ -44,6 +44,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.LoMainThread;
+import de.petanqueturniermanager.helper.NativeDialogSperre;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
@@ -457,7 +458,9 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
             if (beendet || geschlossen || !PtmOnlineAktivierung.istAktiv()) {
                 return;
             }
-            if (SheetRunner.isRunning()) {
+            // Ein modaler Dialog mit eigener Event-Loop (z. B. Farbwahl) ist offen: UNO-Zugriff aus diesem
+            // Hintergrund-Thread bringt LibreOffice zum Absturz (siehe NativeDialogSperre) – später erneut.
+            if (SheetRunner.isRunning() || NativeDialogSperre.istOffen()) {
                 planeEin(VERZOEGERUNG_MS);
                 return;
             }

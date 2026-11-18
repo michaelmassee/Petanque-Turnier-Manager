@@ -16,6 +16,10 @@ import java.util.concurrent.atomic.AtomicInteger;
  * {@code XDialog#execute()} gewoehnlicher UNO-Dialoge – daher wird die Sperre auch um
  * {@link de.petanqueturniermanager.webserver.CompositeViewDetailDialog#zeigen()} gelegt,
  * nicht nur um native Picker-Dialoge.
+ *
+ * <p>Jeder periodische Hintergrund-Thread mit UNO-Zugriff muss diese Sperre prüfen und seinen Lauf
+ * verschieben: aktuell der Webserver-Refresh ({@code WebServerManager}, {@code WebserverModifyListener})
+ * und der PTM-Online-Abgleich ({@code PtmOnlineLiveBeobachter}).
  */
 public final class NativeDialogSperre {
 
