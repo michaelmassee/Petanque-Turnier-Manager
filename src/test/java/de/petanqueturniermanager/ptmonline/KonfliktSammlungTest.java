@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.ptmonline.dto.SyncStandDto;
 
 class KonfliktSammlungTest {
 
@@ -90,5 +91,35 @@ class KonfliktSammlungTest {
                 .isEqualTo(I18n.get("ptmonline.frage.turnierstart"));
         assertThat(PtmOnlineSpielrundeSync.vorabcheckText(List.of("Anna"), List.of("Konto: A / B")))
                 .contains("Anna").contains("Konto: A / B");
+    }
+
+    @Test
+    void ohneBefundUndMitGeschlossenerAnmeldungStartetDieRundeOhneRueckfrage() {
+        assertThat(PtmOnlineSpielrundeSync.brauchtStartRueckfrage(false, true)).isFalse();
+        // Solange online noch angemeldet werden kann, schließt der Start die Anmeldung (E-23).
+        assertThat(PtmOnlineSpielrundeSync.brauchtStartRueckfrage(false, false)).isTrue();
+        assertThat(PtmOnlineSpielrundeSync.brauchtStartRueckfrage(true, true)).isTrue();
+        assertThat(PtmOnlineSpielrundeSync.brauchtStartRueckfrage(true, false)).isTrue();
+    }
+
+    @Test
+    void titelNenntFehlendeMeldungenNurBeiEinemBefund() {
+        assertThat(PtmOnlineSpielrundeSync.vorabcheckTitel(false))
+                .isEqualTo(I18n.get("ptmonline.frage.turnierstart.titel"));
+        assertThat(PtmOnlineSpielrundeSync.vorabcheckTitel(true))
+                .isEqualTo(I18n.get("ptmonline.frage.fehlende_meldungen.titel"));
+    }
+
+    @Test
+    void anmeldungGiltAlsGeschlossenWennOnlineGeschlossenOderLaufend() {
+        assertThat(RegistrationImportTask.anmeldungOnlineGeschlossen(stand("registration", true))).isTrue();
+        assertThat(RegistrationImportTask.anmeldungOnlineGeschlossen(stand("running", false))).isTrue();
+        assertThat(RegistrationImportTask.anmeldungOnlineGeschlossen(stand("registration", false))).isFalse();
+        // Älterer Server ohne Turnierzustand: lieber nachfragen.
+        assertThat(RegistrationImportTask.anmeldungOnlineGeschlossen(null)).isFalse();
+    }
+
+    private static SyncStandDto stand(String status, boolean registrationClosed) {
+        return new SyncStandDto(status, registrationClosed, null, 0, 0L, null, false);
     }
 }

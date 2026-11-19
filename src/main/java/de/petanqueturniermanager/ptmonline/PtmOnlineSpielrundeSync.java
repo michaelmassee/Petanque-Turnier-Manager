@@ -451,6 +451,9 @@ public final class PtmOnlineSpielrundeSync {
      * unvollständige Teams, Mêlée-Spieler ohne Team). Die lokalen Gründe kennt das Dokument auch ohne Netz. Ist
      * PTM-Online nicht erreichbar, nennt die Rückfrage den letzten erfolgreichen Abgleich; die Bestätigung wird im
      * Sync-Blatt protokolliert (P-25). Übernommen wird hier nichts – dafür ist der manuelle Abgleich da.
+     * <p>
+     * Ohne Befund und bei online bereits geschlossener Anmeldung entfällt die Rückfrage: Der Start schließt dann nichts
+     * mehr, worauf hinzuweisen wäre (E-23).
      *
      * @return ob trotz fehlender Meldungen oder offener Ausschlussgründe gestartet wird; ohne Bestätigung wird die
      *         Runde abgebrochen
@@ -466,8 +469,11 @@ public final class PtmOnlineSpielrundeSync {
             // Nach der Prüfung: sie hat die Doppelbelegungen eines Kontos aktualisiert.
             List<String> ausschluss = RegistrationImportTask.lokaleAusschlussgruende(mapping, verbindung.ziel());
             befunde = !check.fehlend().isEmpty() || !ausschluss.isEmpty();
-            antwort = MessageBox.from(ctx, MessageBoxTypeEnum.WARN_YES_NO)
-                    .caption(I18n.get("ptmonline.frage.fehlende_meldungen.titel"))
+            if (!brauchtStartRueckfrage(befunde, check.anmeldungOnlineGeschlossen())) {
+                logger.info("PTM-Online: Vorabcheck ohne Befund, Anmeldung online geschlossen – Start ohne Rückfrage");
+                return false;
+            }
+            antwort = MessageBox.from(ctx, MessageBoxTypeEnum.WARN_YES_NO).caption(vorabcheckTitel(befunde))
                     .message(vorabcheckText(check.fehlend(), ausschluss)).show();
         } catch (IOException e) {
             logger.warn("PTM-Online: Online-Meldungen vor Turnierstart nicht prüfbar", e);
@@ -571,6 +577,19 @@ public final class PtmOnlineSpielrundeSync {
         logger.info("PTM-Online: {} gesperrte Meldungen nicht ausgelost", entfernt.size());
         MessageBox.from(ctx, MessageBoxTypeEnum.WARN_OK).caption(I18n.get("ptmonline.auslosung.gesperrt.titel"))
                 .message(I18n.get("ptmonline.auslosung.gesperrt", namensListe(entfernt))).show();
+    }
+
+    /**
+     * Rückfrage vor dem Start nur bei einem Befund oder solange online noch angemeldet werden kann – dann schließt der
+     * Start die Anmeldung, und die Turnierleitung muss das bestätigen (E-23).
+     */
+    static boolean brauchtStartRueckfrage(boolean befunde, boolean anmeldungOnlineGeschlossen) {
+        return befunde || !anmeldungOnlineGeschlossen;
+    }
+
+    /** Titel der Startrückfrage: „Online-Meldungen fehlen“ nur bei einem Befund, sonst „Turnier starten“. */
+    static String vorabcheckTitel(boolean befunde) {
+        return I18n.get(befunde ? "ptmonline.frage.fehlende_meldungen.titel" : "ptmonline.frage.turnierstart.titel");
     }
 
     /** Text der Startrückfrage: ohne Befunde die schlichte Bestätigung, sonst fehlende Meldungen und Gründe. */

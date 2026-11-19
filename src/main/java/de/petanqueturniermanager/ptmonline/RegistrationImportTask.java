@@ -480,7 +480,8 @@ public final class RegistrationImportTask {
      * Zusätzlich aktualisiert die Prüfung den Vermerk der Doppelbelegungen eines Kontos (KP-06 b), damit die
      * Auslosung und {@link #lokaleAusschlussgruende} den aktuellen Stand kennen.
      *
-     * @return fehlende Anmeldungen, leer wenn die Meldeliste vollständig ist
+     * @return fehlende Anmeldungen, leer wenn die Meldeliste vollständig ist, und ob online überhaupt noch angemeldet
+     *         werden kann
      */
     public static Vorabcheck pruefeVorTurnierstart(LibreOfficePtmOnlineSpeicher.Zugangsdaten config,
             PtmOnlineRegistrationMapping mapping, String tournamentId, MeldelisteZiel ziel)
@@ -506,15 +507,25 @@ public final class RegistrationImportTask {
                     : onlineBezeichnung(reg));
         }
         aktualisiereKontoKonflikte(mapping, abruf.konflikte());
-        return new Vorabcheck(fehlend);
+        return new Vorabcheck(fehlend, anmeldungOnlineGeschlossen(abruf.stand()));
+    }
+
+    /**
+     * Online ist keine neue Anmeldung mehr möglich: von der Turnierleitung geschlossen oder das Turnier läuft schon.
+     * Ein älterer Server ohne Turnierzustand gilt als offen – dann bleibt die Rückfrage vor dem Start.
+     */
+    static boolean anmeldungOnlineGeschlossen(@Nullable SyncStandDto stand) {
+        return stand != null && (stand.registrationClosed() || stand.istRunning());
     }
 
     /**
      * Ergebnis der Prüfung vor dem Turnierstart.
      *
-     * @param fehlend bestätigte Online-Anmeldungen, die noch in keiner Meldelistenzeile stehen
+     * @param fehlend                    bestätigte Online-Anmeldungen, die noch in keiner Meldelistenzeile stehen
+     * @param anmeldungOnlineGeschlossen online ist keine neue Anmeldung mehr möglich; der Start schließt dann nichts
+     *                                   mehr, worauf die Turnierleitung hingewiesen werden müsste
      */
-    public record Vorabcheck(List<String> fehlend) {
+    public record Vorabcheck(List<String> fehlend, boolean anmeldungOnlineGeschlossen) {
 
         public Vorabcheck {
             fehlend = List.copyOf(fehlend);
