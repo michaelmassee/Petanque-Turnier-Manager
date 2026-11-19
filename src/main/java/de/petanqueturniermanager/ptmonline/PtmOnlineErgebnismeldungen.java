@@ -22,15 +22,18 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jspecify.annotations.Nullable;
 
+import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.onlinesync.sheet.PtmOnlineKonfliktSheet;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsBestand;
 import de.petanqueturniermanager.ptmonline.dto.ErgebnismeldungDto;
 import de.petanqueturniermanager.ptmonline.live.ErgebnisOrt;
 import de.petanqueturniermanager.ptmonline.live.ErgebnisSchreiber;
+import de.petanqueturniermanager.ptmonline.live.ErgebnisSchreiber.DirektEintrag;
 import de.petanqueturniermanager.ptmonline.live.LivePartie;
 import de.petanqueturniermanager.ptmonline.live.LiveRunde;
 import de.petanqueturniermanager.ptmonline.live.LiveStandQuelle;
@@ -46,6 +49,10 @@ import de.petanqueturniermanager.ptmonline.live.LiveTurnierStand;
  * Maastrichter-Finalrunden, Poule-KO, Kaskaden-Felder), wo der Sieger über die Formeln vorrückt. Trip-Tête: PTM-Online
  * schaltet die Spielermeldung dort vorerst ab, weil eine Meldung nur ein Ergebnis je Begegnung nennt, das Dokument
  * aber die drei Einzelpartien braucht (TODO in anforderungen/turnieranmeldung-ptmonline.md).
+ * <p>
+ * Mit der Turnier-Option {@link BasePropertiesSpalte#KONFIG_PROP_PTMONLINE_ERGEBNISSE_DIREKT} trägt PTM eine Meldung
+ * ohne Entscheidung direkt ein, sofern die Partie in der Spielrunde noch kein Ergebnis hat. Steht dort schon ein anderes
+ * (die Turnierleitung tippt parallel), bleibt es stehen und die Meldung kommt wie ohne Option in die Konfliktliste.
  */
 final class PtmOnlineErgebnismeldungen {
 
@@ -186,15 +193,27 @@ final class PtmOnlineErgebnismeldungen {
     }
 
     /**
+     * Ob Meldungen ohne Entscheidung direkt eingetragen werden sollen. Liest nur: Eine fehlende Property wird nicht im
+     * Dokument angelegt (läuft auch im Hintergrund).
+     */
+    static boolean direktEintragen(WorkingSpreadsheet ws) {
+        return DocumentPropertiesHelper.nurLesend(() -> new DocumentPropertiesHelper(ws)
+                .getBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_ERGEBNISSE_DIREKT, false));
+    }
+
+    /**
      * Wendet die eingetragenen Entscheidungen an. „Ergebnis übernehmen“ schreibt das Ergebnis in die Spielrunde; ist
-     * das Blatt inzwischen verschwunden, bleibt der Fall offen. Jede Entscheidung wird protokolliert, damit sich später
-     * nachvollziehen lässt, welches Ergebnis woher kam. Nur im Dokument-Kontext eines SheetRunners.
+     * das Blatt inzwischen verschwunden, bleibt der Fall offen. Ohne Entscheidung und mit {@code direkt} wird das
+     * Ergebnis eingetragen, wenn die Partie noch keines hat (siehe {@link ErgebnisSchreiber#schreibeWennLeer}). Jede
+     * Entscheidung wird protokolliert, damit sich später nachvollziehen lässt, welches Ergebnis woher kam. Nur im
+     * Dokument-Kontext eines SheetRunners.
      *
-     * @param entscheidung  eingetragene Entscheidung je Fall
+     * @param entscheidung  eingetragene Entscheidung je Fall; hat Vorrang vor dem Direkt-Eintrag
+     * @param direkt        Meldungen ohne Entscheidung direkt eintragen
      * @param vorAenderung  öffnet den Blattschutz-Scope, bevor das Dokument geändert wird
      */
     static Anwendung wendeAn(WorkingSpreadsheet ws, List<Zuordnung> zuordnungen,
-            Function<KonfliktFall, Optional<Entscheidung>> entscheidung, Runnable vorAenderung)
+            Function<KonfliktFall, Optional<Entscheidung>> entscheidung, boolean direkt, Runnable vorAenderung)
             throws GenerateException {
         Map<String, Boolean> entschieden = new LinkedHashMap<>();
         List<KonfliktFall> offen = new ArrayList<>();
@@ -202,7 +221,12 @@ final class PtmOnlineErgebnismeldungen {
             KonfliktFall fall = zuordnung.fall();
             Optional<Entscheidung> gewaehlt = entscheidung.apply(fall);
             ErgebnisOrt ort = zuordnung.ort();
-            if (gewaehlt.filter(Entscheidung.ERGEBNIS_UEBERNEHMEN::equals).isPresent() && ort != null) {
+            if (gewaehlt.isEmpty() && direkt && ort != null) {
+                if (tragDirektEin(ws, zuordnung, fall, ort, vorAenderung)) {
+                    entschieden.put(zuordnung.meldung().id(), Boolean.TRUE);
+                    continue;
+                }
+            } else if (gewaehlt.filter(Entscheidung.ERGEBNIS_UEBERNEHMEN::equals).isPresent() && ort != null) {
                 vorAenderung.run();
                 if (ErgebnisSchreiber.schreibe(ws, ort, zuordnung.punkteA(), zuordnung.punkteB())) {
                     logger.info("PTM-Online: Ergebnismeldung übernommen – {}", protokoll(zuordnung, fall));
@@ -219,6 +243,25 @@ final class PtmOnlineErgebnismeldungen {
             offen.add(fall);
         }
         return new Anwendung(entschieden, offen);
+    }
+
+    /** @return {@code true}, wenn die Meldung als übernommen gilt */
+    private static boolean tragDirektEin(WorkingSpreadsheet ws, Zuordnung zuordnung, KonfliktFall fall,
+            ErgebnisOrt ort, Runnable vorAenderung) throws GenerateException {
+        DirektEintrag eintrag = ErgebnisSchreiber.schreibeWennLeer(ws, ort, zuordnung.punkteA(), zuordnung.punkteB(),
+                vorAenderung);
+        switch (eintrag) {
+            case GESCHRIEBEN -> logger.info("PTM-Online: Ergebnismeldung direkt eingetragen – {}",
+                    protokoll(zuordnung, fall));
+            case BEREITS_GLEICH -> logger.info("PTM-Online: Ergebnismeldung direkt übernommen, Ergebnis stand schon "
+                    + "in der Spielrunde – {}", protokoll(zuordnung, fall));
+            // Wiederholt sich bei jedem Durchlauf, solange der Fall offen ist.
+            case ABWEICHEND -> logger.debug("PTM-Online: Ergebnismeldung nicht direkt eingetragen, in der Spielrunde "
+                    + "steht ein anderes Ergebnis – {}", protokoll(zuordnung, fall));
+            case BLATT_FEHLT -> logger.warn("PTM-Online: Ergebnismeldung nicht direkt eingetragen, Spielrunde nicht "
+                    + "mehr vorhanden – {}", protokoll(zuordnung, fall));
+        }
+        return eintrag.istUebernommen();
     }
 
     /**
@@ -244,12 +287,13 @@ final class PtmOnlineErgebnismeldungen {
      *
      * @param meldungen    zuletzt von PTM-Online abgeholte offene Meldungen
      * @param entscheidung eingetragene Entscheidung je Fall
+     * @param direkt       Meldungen ohne Entscheidung direkt eintragen, wenn die Partie noch kein Ergebnis hat
      * @param vorAenderung öffnet den Blattschutz-Scope, bevor das Dokument geändert wird
      * @return Fälle ohne Entscheidung
      */
     static List<KonfliktFall> verarbeite(WorkingSpreadsheet ws, TurnierSystem turnierSystem,
             PtmOnlineVerbindung verbindung, AuftragsBestand bestand, List<ErgebnismeldungDto> meldungen,
-            Function<KonfliktFall, Optional<Entscheidung>> entscheidung, Runnable vorAenderung)
+            Function<KonfliktFall, Optional<Entscheidung>> entscheidung, boolean direkt, Runnable vorAenderung)
             throws GenerateException {
         String tournamentId = verbindung.tournamentId();
         List<ErgebnismeldungDto> offen = unentschieden(tournamentId, meldungen);
@@ -259,7 +303,7 @@ final class PtmOnlineErgebnismeldungen {
         Optional<LiveStandQuelle> quelle = LiveStandQuellen.fuer(ws, turnierSystem, verbindung.spieltagNr());
         LiveTurnierStand stand = quelle.isPresent() ? quelle.get().lese() : LiveTurnierStand.ohneRangliste(List.of());
         Anwendung anwendung = wendeAn(ws, ordneZu(offen, stand, LiveNummernAufloesung.ermitteln(verbindung)),
-                entscheidung, vorAenderung);
+                entscheidung, direkt, vorAenderung);
         PtmOnlineAuftraege.ergebnismeldungen(bestand, tournamentId, anwendung.entscheidungen());
         merkeEntschieden(tournamentId, anwendung.entscheidungen().keySet());
         return anwendung.offen();

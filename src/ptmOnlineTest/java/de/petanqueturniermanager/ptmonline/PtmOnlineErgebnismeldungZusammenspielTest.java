@@ -15,7 +15,9 @@ import org.junit.jupiter.api.Test;
 import com.google.gson.JsonObject;
 import com.sun.star.sheet.XSpreadsheetDocument;
 
+import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
@@ -25,7 +27,8 @@ import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrund
 /**
  * Ergebnismeldung durch Spieler bei einem verbundenen Turnierdokument (E-27, E-28) gegen den lokal gestarteten
  * Worker: Ein Spieler meldet in der Live-Ansicht, PTM holt die Meldung im Hintergrund ab und stellt sie in die
- * Konfliktliste. Erst die Entscheidung der Turnierleitung trägt das Ergebnis ein bzw. verwirft die Meldung.
+ * Konfliktliste. Erst die Entscheidung der Turnierleitung trägt das Ergebnis ein bzw. verwirft die Meldung – oder,
+ * mit eingeschalteter Turnier-Option, PTM trägt die Meldung direkt in die noch leere Partie ein.
  */
 class PtmOnlineErgebnismeldungZusammenspielTest extends BasePtmOnlineZusammenspielTest {
 
@@ -54,6 +57,22 @@ class PtmOnlineErgebnismeldungZusammenspielTest extends BasePtmOnlineZusammenspi
         warteBis("Meldung online erledigt", () -> online.offeneErgebnismeldungen(turnierId).isEmpty());
         warteBis("Fall aus der Konfliktliste entfernt", () -> mapping.konfliktListe().leseFaelle().keySet().stream()
                 .noneMatch(key -> key.startsWith(PtmOnlineErgebnismeldungen.SCHLUESSEL_PRAEFIX)));
+    }
+
+    @Test
+    void mitDirektEintragStehtDieMeldungOhneEntscheidungInDerSpielrunde() throws Exception {
+        rundeMitMeldungEinrichten(true);
+        new DocumentPropertiesHelper(wkingSpreadsheet)
+                .setBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_ERGEBNISSE_DIREKT, true);
+
+        assertThat(online.ergebnisMelden(idMitKonto, SPIELERKONTO, 13, 7)).as("Meldung des Spielers").isEqualTo(200);
+        PtmOnlineLiveBeobachter.ergebnismeldungenAbholen(wkingSpreadsheet.getWorkingSpreadsheetDocument());
+
+        warteBis("Ergebnis aus Sicht des Teams direkt eingetragen", () -> ergebnisImBlatt()
+                .equals(kontoIstTeamA ? List.of(13, 7) : List.of(7, 13)));
+        warteBis("Meldung online erledigt", () -> online.offeneErgebnismeldungen(turnierId).isEmpty());
+        assertThat(mapping.konfliktListe().leseFaelle().keySet()).as("kein Fall in der Konfliktliste")
+                .noneMatch(key -> key.startsWith(PtmOnlineErgebnismeldungen.SCHLUESSEL_PRAEFIX));
     }
 
     @Test

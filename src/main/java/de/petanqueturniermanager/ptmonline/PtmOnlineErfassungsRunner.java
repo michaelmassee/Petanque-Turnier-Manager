@@ -267,7 +267,8 @@ final class PtmOnlineErfassungsRunner extends SheetRunner {
     }
 
     /**
-     * Ergebnismeldungen von Spielern (E-27): eingetragene Entscheidungen der Turnierleitung anwenden und den Block
+     * Ergebnismeldungen von Spielern (E-27): eingetragene Entscheidungen der Turnierleitung anwenden (bzw. Meldungen
+     * direkt eintragen, falls in der Turnier-Konfiguration eingeschaltet) und den Block
      * „Ergebnis gemeldet“ der Konfliktliste auf den abgeholten Stand bringen. Vor dem Live-Stand, damit ein
      * übernommenes Ergebnis gleich mit übertragen wird.
      */
@@ -280,7 +281,8 @@ final class PtmOnlineErfassungsRunner extends SheetRunner {
         Map<String, String> eingetragen = konfliktListe.leseEntscheidungen();
         List<KonfliktFall> offen = PtmOnlineErgebnismeldungen.verarbeite(getWorkingSpreadsheet(), getTurnierSystem(),
                 verbindung, bestand, meldungsAbruf.meldungen(),
-                fall -> Entscheidung.aus(eingetragen.get(fall.schluessel()), fall.optionen()), this::oeffneSchutzScope);
+                fall -> Entscheidung.aus(eingetragen.get(fall.schluessel()), fall.optionen()),
+                PtmOnlineErgebnismeldungen.direktEintragen(getWorkingSpreadsheet()), this::oeffneSchutzScope);
         if (PtmOnlineErgebnismeldungen.aktualisiereKonfliktliste(konfliktListe, offen, false,
                 this::oeffneSchutzScope)) {
             getLogger().info("PTM-Online: {} offene Ergebnismeldungen in der Konfliktliste", offen.size());

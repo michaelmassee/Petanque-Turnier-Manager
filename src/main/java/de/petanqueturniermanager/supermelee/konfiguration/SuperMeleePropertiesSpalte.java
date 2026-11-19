@@ -30,6 +30,7 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	static {
 		ADDBaseProp(KONFIG_PROPERTIES);
 		addCheckinSortProp(KONFIG_PROPERTIES);
+		addPtmOnlineErgebnisDirektProp(KONFIG_PROPERTIES);
 		addTeilnehmerListeSortProp(KONFIG_PROPERTIES);
 	}
 

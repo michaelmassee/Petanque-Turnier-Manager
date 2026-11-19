@@ -175,7 +175,8 @@ public final class PtmOnlineAbgleichSheetRunner extends SheetRunner implements P
         PtmOnlineLiveBeobachter.ergebnismeldungenAbgeholt(getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
                 tournamentId, abruf);
         return PtmOnlineErgebnismeldungen.verarbeite(getWorkingSpreadsheet(), getTurnierSystem(), verbindung.get(),
-                bestand, abruf.reports(), sammlung::entscheidung, () -> {
+                bestand, abruf.reports(), sammlung::entscheidung,
+                PtmOnlineErgebnismeldungen.direktEintragen(getWorkingSpreadsheet()), () -> {
                     // Der Abgleich läuft bereits im Blattschutz-Scope des SheetRunners.
                 });
     }

@@ -77,6 +77,9 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	public static final String KONFIG_PROP_MELEE_ANMELDUNG = "Melee Anmeldung";
 	public static final String KONFIG_PROP_MELEE_ANMELDUNG_MODUS = "Melee Anmeldung Modus";
 
+	// PTM-Online
+	public static final String KONFIG_PROP_PTMONLINE_ERGEBNISSE_DIREKT = "PTM-Online Ergebnismeldungen direkt eintragen";
+
 	// Export
 	public static final String KONFIG_PROP_MELDELISTE_EXPORTIEREN = "Meldeliste exportieren";
 	public static final String KONFIG_PROP_SPIELRUNDEN_EXPORTIEREN = "Spielrunden exportieren";
@@ -235,6 +238,23 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 						MeleeAnmeldungModus.DOUBLETTE_OHNE_FREILOS.getBezeichnung())
 				.addAuswahl(MeleeAnmeldungModus.TRIPLETTE_OHNE_FREILOS.getKey(),
 						MeleeAnmeldungModus.TRIPLETTE_OHNE_FREILOS.getBezeichnung()));
+	}
+
+	/**
+	 * Fügt den Schalter {@link #KONFIG_PROP_PTMONLINE_ERGEBNISSE_DIREKT} hinzu (Default {@code false}): Ergebnismeldungen
+	 * von Spielern über PTM-Online werden direkt in die Spielrunde eingetragen, sofern die Partie dort noch kein
+	 * Ergebnis hat; sonst landen sie wie ohne Schalter in der Konfliktliste.
+	 * <p>
+	 * Aufzurufen von jedem System, in dessen Spielrunden PTM-Online-Meldungen eingetragen werden können (nicht Liga,
+	 * nicht Trip-Tête).
+	 *
+	 * @param KONFIG_PROPERTIES Property-Liste des jeweiligen Systems
+	 */
+	protected static void addPtmOnlineErgebnisDirektProp(List<ConfigProperty<?>> KONFIG_PROPERTIES) {
+		KONFIG_PROPERTIES.add(ConfigProperty.<Boolean>from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_PTMONLINE_ERGEBNISSE_DIREKT)
+				.setDefaultVal(false)
+				.setDescription("config.desc.ptmonline.ergebnisse.direkt")
+				.setShortDescription("config.label.ptmonline.ergebnisse.direkt"));
 	}
 
 	/**

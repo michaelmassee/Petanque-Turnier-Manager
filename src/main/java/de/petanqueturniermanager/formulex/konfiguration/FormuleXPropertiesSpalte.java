@@ -34,6 +34,7 @@ public class FormuleXPropertiesSpalte extends TeamAnzeigePropertiesSpalte
     static {
         ADDBaseProp(KONFIG_PROPERTIES);
         addCheckinSortProp(KONFIG_PROPERTIES);
+        addPtmOnlineErgebnisDirektProp(KONFIG_PROPERTIES);
         addTeilnehmerListeSortProp(KONFIG_PROPERTIES);
         addMeleeAnmeldungProp(KONFIG_PROPERTIES);
     }

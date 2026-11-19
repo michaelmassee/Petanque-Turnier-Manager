@@ -3,6 +3,8 @@
  */
 package de.petanqueturniermanager.ptmonline.live;
 
+import org.jspecify.annotations.Nullable;
+
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -20,7 +22,68 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
  */
 public final class ErgebnisSchreiber {
 
+    /** Ausgang von {@link #schreibeWennLeer}. */
+    public enum DirektEintrag {
+        /** Beide Ergebniszellen waren leer, das Ergebnis steht jetzt in der Spielrunde. */
+        GESCHRIEBEN,
+        /** In der Spielrunde stand bereits genau dieses Ergebnis; nichts geschrieben. */
+        BEREITS_GLEICH,
+        /** In der Spielrunde steht (zumindest teilweise) ein anderes Ergebnis; nichts geschrieben. */
+        ABWEICHEND,
+        /** Das Blatt der Partie existiert nicht mehr; nichts geschrieben. */
+        BLATT_FEHLT;
+
+        /** Die Meldung gilt als übernommen. */
+        public boolean istUebernommen() {
+            return this == GESCHRIEBEN || this == BEREITS_GLEICH;
+        }
+    }
+
     private ErgebnisSchreiber() {}
+
+    /**
+     * Trägt das Ergebnis nur ein, wenn die Partie noch keines hat. Die Turnierleitung tippt parallel Ergebnisse ein;
+     * deshalb werden beide Ergebniszellen unmittelbar vor dem Schreiben neu gelesen und eine Eingabe der
+     * Turnierleitung nie überschrieben.
+     *
+     * @param vorAenderung öffnet den Blattschutz-Scope, bevor tatsächlich geschrieben wird
+     */
+    public static DirektEintrag schreibeWennLeer(WorkingSpreadsheet ws, ErgebnisOrt ort, int punkteA, int punkteB,
+            Runnable vorAenderung) throws GenerateException {
+        XSpreadsheet blatt = LiveBlattLeser.blatt(ws, ort.blattSchluessel(), ort.blattName());
+        if (blatt == null) {
+            return DirektEintrag.BLATT_FEHLT;
+        }
+        DirektEintrag eintrag = bewerte(text(ws, blatt, ort.punkteA()), text(ws, blatt, ort.punkteB()), punkteA,
+                punkteB);
+        if (eintrag == DirektEintrag.GESCHRIEBEN) {
+            vorAenderung.run();
+            schreibeInZellen(ws, blatt, ort, punkteA, punkteB);
+        }
+        return eintrag;
+    }
+
+    /**
+     * UNO-frei: Was mit einer Meldung geschieht, wenn in den Ergebniszellen die angegebenen Texte stehen.
+     *
+     * @param textA Inhalt der linken Ergebniszelle, {@code null} wenn leer
+     * @param textB wie {@code textA} für die rechte Ergebniszelle
+     * @return {@link DirektEintrag#GESCHRIEBEN}, wenn beide Zellen leer sind und geschrieben werden soll
+     */
+    static DirektEintrag bewerte(@Nullable String textA, @Nullable String textB, int punkteA, int punkteB) {
+        if (textA == null && textB == null) {
+            return DirektEintrag.GESCHRIEBEN;
+        }
+        if (String.valueOf(punkteA).equals(textA) && String.valueOf(punkteB).equals(textB)) {
+            return DirektEintrag.BEREITS_GLEICH;
+        }
+        return DirektEintrag.ABWEICHEND;
+    }
+
+    private static @Nullable String text(WorkingSpreadsheet ws, XSpreadsheet blatt, Position zelle) {
+        return LiveZellbereich.lese(ws, blatt, zelle.getSpalte(), zelle.getZeile(), zelle.getSpalte(),
+                zelle.getZeile()).text(zelle.getSpalte(), zelle.getZeile());
+    }
 
     /** @return {@code false}, wenn das Blatt der Partie nicht mehr existiert */
     public static boolean schreibe(WorkingSpreadsheet ws, ErgebnisOrt ort, int punkteA, int punkteB)
@@ -29,6 +92,12 @@ public final class ErgebnisSchreiber {
         if (blatt == null) {
             return false;
         }
+        schreibeInZellen(ws, blatt, ort, punkteA, punkteB);
+        return true;
+    }
+
+    private static void schreibeInZellen(WorkingSpreadsheet ws, XSpreadsheet blatt, ErgebnisOrt ort, int punkteA,
+            int punkteB) throws GenerateException {
         Position a = ort.punkteA();
         Position b = ort.punkteB();
         if (a.getZeile() == b.getZeile() && b.getSpalte() == a.getSpalte() + 1) {
@@ -37,7 +106,6 @@ public final class ErgebnisSchreiber {
             schreibe(ws, blatt, a, punkteA);
             schreibe(ws, blatt, b, punkteB);
         }
-        return true;
     }
 
     /** Ein Block ab {@code start}, die Punkte nebeneinander. */

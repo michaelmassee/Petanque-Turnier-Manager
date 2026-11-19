@@ -44,6 +44,7 @@ public class KaskadePropertiesSpalte extends TeamAnzeigePropertiesSpalte {
         ADDAbschlussSheetExportProp(KONFIG_PROPERTIES);
         ADDBaseProp(KONFIG_PROPERTIES);
         addCheckinSortProp(KONFIG_PROPERTIES);
+        addPtmOnlineErgebnisDirektProp(KONFIG_PROPERTIES);
         addTeilnehmerListeSortProp(KONFIG_PROPERTIES);
         addMeleeAnmeldungProp(KONFIG_PROPERTIES);
     }
