@@ -56,6 +56,7 @@ public class TurnierDialog extends BasePropertiesDialog {
 				&& !(konfigprop instanceof HeaderFooterConfigProperty)
 				&& !(konfigprop instanceof SpielrundeFooterConfigProperty)
 				&& !(konfigprop instanceof ZeitplanConfigProperty)
+				&& !PtmOnlineKonfigDialog.istPtmOnlineEinstellung(konfigprop)
 				&& !konfigprop.isIntern()
 				&& !konfigprop.isExportKonfig();
 	}

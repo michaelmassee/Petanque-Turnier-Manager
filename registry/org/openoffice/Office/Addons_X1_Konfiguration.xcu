@@ -50,6 +50,23 @@
 							</node>
 							
 							<!-- ****************************************************************** -->
+							<node oor:name="X1X1_Online" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">PTM-Online</value>
+									<value xml:lang="en">PTM-Online</value>
+									<value xml:lang="es">PTM-Online</value>
+									<value xml:lang="fr">PTM-Online</value>
+									<value xml:lang="nl">PTM-Online</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:konfiguration_ptmonline</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+							<!-- ****************************************************************** -->
 							<node oor:name="X1X2" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Kopf/Fußzeilen</value>
