@@ -16,11 +16,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.sun.star.awt.ActionEvent;
+import com.sun.star.awt.ItemEvent;
 import com.sun.star.awt.PushButtonType;
 import com.sun.star.awt.XActionListener;
 import com.sun.star.awt.XButton;
 import com.sun.star.awt.XControlContainer;
 import com.sun.star.awt.XDialog;
+import com.sun.star.awt.XFixedText;
+import com.sun.star.awt.XItemListener;
 import com.sun.star.awt.XListBox;
 import com.sun.star.awt.XToolkit;
 import com.sun.star.awt.XWindowPeer;
@@ -37,16 +40,22 @@ import de.petanqueturniermanager.helper.LoMainThread;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.konfigdialog.AbstractUnoDialog;
 import de.petanqueturniermanager.onlinesync.OnlineTournamentDto;
+import de.petanqueturniermanager.onlinesync.OnlineTurnierEckdaten;
 import de.petanqueturniermanager.onlinesync.OnlineVerbindbarkeit;
 
 /**
  * Auswahldialog "Mit Online-Turnier verbinden": zeigt alle zum aktiven API-Key gehörenden PTM-Online-Turniere in zwei
- * Listen – oben die verbindbaren zur Auswahl, unten die übrigen mit dem Grund, warum sie nicht passen.
+ * Listen – oben die verbindbaren zur Auswahl, unten die übrigen mit dem Grund, warum sie nicht passen. Jeder Eintrag
+ * nennt die Eckdaten des Turniersystems (System, Formation, Anmeldeart); zum ausgewählten Turnier zeigt der Dialog
+ * zusätzlich Beginn, Status, Teilnehmergrenze und Ort.
  */
 final class PtmOnlineTurnierVerbindenDialog extends AbstractUnoDialog {
 
 	private static final Logger logger = LogManager.getLogger(PtmOnlineTurnierVerbindenDialog.class);
 	private static final Duration DIALOG_TIMEOUT = Duration.ofMinutes(30);
+	private static final String LISTE_VERBINDBAR = "lstTurniere";
+	private static final String ECKDATEN = "lblEckdatenWerte";
+	private static final String TRENNER = "  —  ";
 
 	private final XWindowPeer parentPeer;
 	private final List<OnlineTournamentDto> verbindbare;
@@ -113,12 +122,12 @@ final class PtmOnlineTurnierVerbindenDialog extends AbstractUnoDialog {
 
 	@Override
 	protected int getBreite() {
-		return 320;
+		return 400;
 	}
 
 	@Override
 	protected int getHoehe() {
-		return 236;
+		return 294;
 	}
 
 	@Override
@@ -137,19 +146,23 @@ final class PtmOnlineTurnierVerbindenDialog extends AbstractUnoDialog {
 				verbindbare.isEmpty()
 						? I18n.get("ptmonline.turnier.verbinden.dialog.keine.turniere")
 						: I18n.get("ptmonline.turnier.verbinden.dialog.hinweis"),
-				8, 6, 304, 20);
+				8, 6, 384, 20);
 		label(xMSF, cont, "lblVerbindbar", I18n.get("ptmonline.turnier.verbinden.dialog.liste.verbindbar"),
-				8, 26, 304, 10);
-		listBox(xMSF, cont, "lstTurniere", verbindbarItems(), false, 8, 37, 304, 74);
+				8, 26, 384, 10);
+		listBox(xMSF, cont, LISTE_VERBINDBAR, verbindbarItems(), false, 8, 37, 384, 74);
+		label(xMSF, cont, "lblEckdaten", I18n.get("ptmonline.turnier.verbinden.dialog.eckdaten"), 8, 115, 384, 10);
+		label(xMSF, cont, ECKDATEN, eckdatenZu(0), 16, 126, 376, 30);
 		label(xMSF, cont, "lblNichtVerbindbar", I18n.get("ptmonline.turnier.verbinden.dialog.liste.nicht_verbindbar"),
-				8, 117, 304, 10);
-		listBox(xMSF, cont, "lstNichtVerbindbar", nichtVerbindbarItems(), true, 8, 128, 304, 74);
+				8, 160, 384, 10);
+		listBox(xMSF, cont, "lstNichtVerbindbar", nichtVerbindbarItems(), true, 8, 171, 384, 92);
 
-		button(xMSF, cont, "btnOk", I18n.get("dialog.ok"), 90, 212, 55, 14, (short) PushButtonType.STANDARD_value);
-		button(xMSF, cont, "btnAbbrechen", I18n.get("dialog.abbrechen"), 155, 212, 75, 14, (short) PushButtonType.CANCEL_value);
+		button(xMSF, cont, "btnOk", I18n.get("dialog.ok"), 130, 272, 55, 14, (short) PushButtonType.STANDARD_value);
+		button(xMSF, cont, "btnAbbrechen", I18n.get("dialog.abbrechen"), 195, 272, 75, 14,
+				(short) PushButtonType.CANCEL_value);
 		if (verbindbare.isEmpty()) {
 			Lo.qi(XPropertySet.class, cont.getByName("btnOk")).setPropertyValue("Enabled", Boolean.FALSE);
 		}
+		registriereAuswahlListener();
 		registriereOkButton();
 	}
 
@@ -175,9 +188,44 @@ final class PtmOnlineTurnierVerbindenDialog extends AbstractUnoDialog {
 		});
 	}
 
+	/** Auswahl-Ereignisse kommen vom Dialog selbst und laufen damit bereits auf dem Main-Thread. */
+	private void registriereAuswahlListener() {
+		var ctrl = xcc.getControl(LISTE_VERBINDBAR);
+		XListBox listBox = ctrl == null ? null : Lo.qi(XListBox.class, ctrl);
+		if (listBox == null) {
+			return;
+		}
+		listBox.addItemListener(new XItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				zeigeEckdaten(listBoxIndex(LISTE_VERBINDBAR));
+			}
+
+			@Override
+			public void disposing(EventObject e) {
+				// nichts zu tun
+			}
+		});
+	}
+
+	private void zeigeEckdaten(int index) {
+		var ctrl = xcc.getControl(ECKDATEN);
+		XFixedText text = ctrl == null ? null : Lo.qi(XFixedText.class, ctrl);
+		if (text != null) {
+			text.setText(eckdatenZu(index));
+		}
+	}
+
+	private String eckdatenZu(int index) {
+		if (index < 0 || index >= verbindbare.size()) {
+			return "";
+		}
+		return OnlineTurnierEckdaten.details(verbindbare.get(index));
+	}
+
 	private void beimOkGeklickt() {
 		if (!verbindbare.isEmpty()) {
-			int index = listBoxIndex("lstTurniere");
+			int index = listBoxIndex(LISTE_VERBINDBAR);
 			ausgewaehlt = verbindbare.get(Math.max(0, Math.min(verbindbare.size() - 1, index)));
 		}
 		xDialog.endExecute();
@@ -191,18 +239,19 @@ final class PtmOnlineTurnierVerbindenDialog extends AbstractUnoDialog {
 
 	private String[] verbindbarItems() {
 		return verbindbare.stream()
-				.map(t -> kopf(t) + "  (" + StringUtils.defaultString(t.status) + ")  —  " + verbindungsStatus(t))
+				.map(t -> kopf(t) + TRENNER + verbindungsStatus(t))
 				.toArray(String[]::new);
 	}
 
 	private String[] nichtVerbindbarItems() {
 		return nichtVerbindbare.stream()
-				.map(bewertung -> kopf(bewertung.turnier()) + "  —  " + bewertung.hinderungsgrund().orElse(""))
+				.map(bewertung -> kopf(bewertung.turnier()) + TRENNER + bewertung.hinderungsgrund().orElse(""))
 				.toArray(String[]::new);
 	}
 
 	private static String kopf(OnlineTournamentDto turnier) {
-		return StringUtils.defaultString(turnier.name) + "  —  " + StringUtils.defaultString(turnier.date);
+		return StringUtils.defaultString(turnier.name) + TRENNER + StringUtils.defaultString(turnier.date) + TRENNER
+				+ OnlineTurnierEckdaten.kurz(turnier);
 	}
 
 	/** Online und Dokument sind immer 1:1 verbunden – die Liste zeigt, wer ein Turnier gerade hält. */

@@ -5,6 +5,7 @@ package de.petanqueturniermanager.ptmonline;
 
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.jspecify.annotations.Nullable;
@@ -49,22 +50,22 @@ final class PtmOnlineSpieleinstellungen {
             DocumentPropertiesHelper properties = new DocumentPropertiesHelper(ws);
             return einstellungen.mitLive(
                     schalter(properties.getStringProperty(BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_LIVE_ANSICHT,
-                            BasePropertiesSpalte.PTMONLINE_SCHALTER_ONLINE)),
+                            BasePropertiesSpalte.PTMONLINE_SCHALTER_ONLINE)).orElse(null),
                     turnierSystem == TurnierSystem.TRIPTETE ? null
                             : schalter(properties.getStringProperty(BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_ERGEBNISMELDUNG,
-                                    BasePropertiesSpalte.PTMONLINE_SCHALTER_ONLINE)));
+                                    BasePropertiesSpalte.PTMONLINE_SCHALTER_ONLINE)).orElse(null));
         });
     }
 
-    /** {@code J} → ein, {@code N} → aus, sonst (Standard „wie in PTM-Online“) {@code null}: nicht übertragen. */
-    static @Nullable Boolean schalter(@Nullable String wert) {
+    /** {@code J} → ein, {@code N} → aus, sonst (Standard „wie in PTM-Online“) leer: nicht übertragen. */
+    static Optional<Boolean> schalter(@Nullable String wert) {
         if (BasePropertiesSpalte.PTMONLINE_SCHALTER_JA.equals(wert)) {
-            return Boolean.TRUE;
+            return Optional.of(Boolean.TRUE);
         }
         if (BasePropertiesSpalte.PTMONLINE_SCHALTER_NEIN.equals(wert)) {
-            return Boolean.FALSE;
+            return Optional.of(Boolean.FALSE);
         }
-        return null;
+        return Optional.empty();
     }
 
     private static SpieleinstellungenDto leseSystem(WorkingSpreadsheet ws, TurnierSystem turnierSystem) {

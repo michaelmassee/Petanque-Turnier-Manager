@@ -3,12 +3,9 @@
  */
 package de.petanqueturniermanager.onlinesync;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
-
-import org.apache.commons.lang3.StringUtils;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
@@ -92,17 +89,17 @@ public final class OnlineVerbindbarkeit {
 		}
 		if (!TurnierSystemOnlineTypMapping.onlineTyp(turnierSystem).orElse("").equals(turnier.type)) {
 			return Optional.of(I18n.get("ptmonline.turnier.verbinden.grund.turniersystem",
-					turnierSystemBezeichnung(turnier)));
+					OnlineTurnierEckdaten.turnierSystem(turnier)));
 		}
 		String erwarteteAnmeldeart = TurnierSystemOnlineTypMapping.onlineRegistrationTyp(turnierSystem,
 				meleeAnmeldung);
 		if (!erwarteteAnmeldeart.equals(turnier.registrationType)) {
 			return Optional.of(I18n.get("ptmonline.turnier.verbinden.grund.anmeldeart",
-					anmeldeartBezeichnung(turnier.registrationType), anmeldeartBezeichnung(erwarteteAnmeldeart)));
+					OnlineTurnierEckdaten.anmeldeart(turnier.registrationType), OnlineTurnierEckdaten.anmeldeart(erwarteteAnmeldeart)));
 		}
 		if (dokumentFormation.isPresent() && !dokumentFormation.get().equals(turnier.formationsWert())) {
 			return Optional.of(I18n.get("ptmonline.turnier.verbinden.grund.formation",
-					formationBezeichnung(turnier.formationsWert()), formationBezeichnung(dokumentFormation.get())));
+					OnlineTurnierEckdaten.formationBezeichnung(turnier.formationsWert()), OnlineTurnierEckdaten.formationBezeichnung(dokumentFormation.get())));
 		}
 		return Optional.empty();
 	}
@@ -115,28 +112,5 @@ public final class OnlineVerbindbarkeit {
 			return Optional.of(I18n.get("ptmonline.turnier.verbinden.grund.nicht_unterstuetzt"));
 		}
 		return Optional.empty();
-	}
-
-	/** Bezeichnung des lokalen Turniersystems zum Online-Typ; ein unbekannter Typ erscheint unverändert. */
-	private static String turnierSystemBezeichnung(OnlineTournamentDto turnier) {
-		return Arrays.stream(TurnierSystem.values())
-				.filter(ts -> TurnierSystemOnlineTypMapping.onlineTyp(ts).orElse("").equals(turnier.type))
-				.findFirst().map(TurnierSystem::getBezeichnung).orElse(StringUtils.defaultString(turnier.type));
-	}
-
-	private static String anmeldeartBezeichnung(String anmeldeart) {
-		return switch (StringUtils.defaultString(anmeldeart)) {
-			case "forme", "melee", "supermelee" -> I18n.get("ptmonline.anmeldeart." + anmeldeart);
-			default -> StringUtils.defaultString(anmeldeart);
-		};
-	}
-
-	private static String formationBezeichnung(String formation) {
-		return Arrays.stream(Formation.values())
-				.filter(f -> f != Formation.MELEE && f != Formation.NUR_TEAMNAME)
-				.filter(f -> vergleichswert(f).equals(formation)).findFirst().map(Formation::getBezeichnung)
-				.orElseGet(() -> OnlineTournamentDto.FORMATION_ANDERE.equals(formation)
-						? I18n.get("ptmonline.formation.andere")
-						: StringUtils.defaultString(formation));
 	}
 }

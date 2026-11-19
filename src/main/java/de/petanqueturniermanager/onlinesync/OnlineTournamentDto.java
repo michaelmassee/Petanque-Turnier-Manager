@@ -18,6 +18,18 @@ public class OnlineTournamentDto {
 	public String id;
 	public String name;
 	public String date;
+
+	/** Beginn am Turniertag als {@code HH:mm}; kann fehlen. */
+	@SerializedName("startTime")
+	public String startTime;
+
+	/** Spielort als formatierte Adresse; kann fehlen. */
+	public String location;
+
+	/** Teilnehmergrenze; {@code 0} bedeutet unbegrenzt. */
+	@SerializedName("maxRegistrations")
+	public int maxRegistrations;
+
 	public String type;
 
 	@SerializedName("registrationType")

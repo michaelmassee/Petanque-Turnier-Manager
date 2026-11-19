@@ -28,11 +28,11 @@ class PtmOnlineSpieleinstellungenTest {
 
     @Test
     void schalterUebertraegtNurEineBewussteWahl() {
-        assertThat(PtmOnlineSpieleinstellungen.schalter("J")).isTrue();
-        assertThat(PtmOnlineSpieleinstellungen.schalter("N")).isFalse();
+        assertThat(PtmOnlineSpieleinstellungen.schalter("J")).contains(true);
+        assertThat(PtmOnlineSpieleinstellungen.schalter("N")).contains(false);
         // Standard „wie in PTM-Online“ (auch bestehende Dokumente ohne Property): online bleibt der Stand.
-        assertThat(PtmOnlineSpieleinstellungen.schalter("ONLINE")).isNull();
-        assertThat(PtmOnlineSpieleinstellungen.schalter(null)).isNull();
+        assertThat(PtmOnlineSpieleinstellungen.schalter("ONLINE")).isEmpty();
+        assertThat(PtmOnlineSpieleinstellungen.schalter(null)).isEmpty();
     }
 
     @Test
