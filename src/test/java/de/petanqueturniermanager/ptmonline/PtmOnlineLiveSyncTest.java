@@ -140,7 +140,7 @@ class PtmOnlineLiveSyncTest {
 
         assertThat(auftraege()).singleElement().extracting(SyncAuftrag::art, SyncAuftrag::body).containsExactly(
                 AuftragsArt.RANGLISTE, "{\"entries\":[{\"place\":1,\"registrationIds\":[\"r1\"],\"wins\":2,"
-                        + "\"pointsFor\":26,\"pointsAgainst\":10}],"
+                        + "\"pointsFor\":26,\"pointsAgainst\":10,\"teamNumber\":1}],"
                         + "\"koWinners\":[{\"label\":\"A-Finale\",\"registrationIds\":[\"r2\"]}]}");
     }
 

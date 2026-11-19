@@ -101,7 +101,8 @@ final class LiveUebertragungsDaten {
         return new LiveRankingEntryDto(eintrag.platz(), ids, eintrag.siege(), nichtNegativ(eintrag.punktePlus()),
                 nichtNegativ(eintrag.punkteMinus()), nichtNegativ(wertung.niederlagen()), wertung.spielDifferenz(),
                 nichtNegativ(wertung.buchholz()), nichtNegativ(wertung.feinBuchholz()),
-                nichtNegativ(wertung.formuleX()), eintrag.zusatz().gruppe(), eintrag.zusatz().freilosRunden());
+                nichtNegativ(wertung.formuleX()), eintrag.zusatz().gruppe(), eintrag.zusatz().freilosRunden(),
+                eintrag.nummern().size() == 1 ? eintrag.nummern().getFirst() : null);
     }
 
     /** Online-IDs zu lokalen Nummern; leer, wenn mindestens eine Nummer nicht online zugeordnet ist. */

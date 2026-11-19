@@ -133,8 +133,9 @@ class LiveUebertragungsDatenTest {
                 LiveRanglistenEintrag.team(1, 1, 3, 39, 20), LiveRanglistenEintrag.team(2, 99, 2, 30, 25),
                 LiveRanglistenEintrag.team(2, 2, 2, -1, 25)), ONLINE_IDS);
 
-        assertThat(rangliste).containsExactly(new LiveRankingEntryDto(1, List.of("r1"), 3, 39, 20),
-                new LiveRankingEntryDto(2, List.of("r2"), 2, null, 25));
+        assertThat(rangliste).containsExactly(
+                new LiveRankingEntryDto(1, List.of("r1"), 3, 39, 20, null, null, null, null, null, null, null, 1),
+                new LiveRankingEntryDto(2, List.of("r2"), 2, null, 25, null, null, null, null, null, null, null, 2));
     }
 
     @Test
@@ -144,8 +145,8 @@ class LiveUebertragungsDatenTest {
                         new Wertungskriterien(-3, null, null, null, null))), ONLINE_IDS);
 
         assertThat(rangliste).containsExactly(
-                new LiveRankingEntryDto(1, List.of("r1"), 1, 20, 30, 2, -1, 5, 9, 120),
-                new LiveRankingEntryDto(2, List.of("r2"), 0, 10, 26, null, null, null, null, null));
+                new LiveRankingEntryDto(1, List.of("r1"), 1, 20, 30, 2, -1, 5, 9, 120, null, null, 1),
+                new LiveRankingEntryDto(2, List.of("r2"), 0, 10, 26, null, null, null, null, null, null, null, 2));
     }
 
     @Test
@@ -156,5 +157,15 @@ class LiveUebertragungsDatenTest {
 
         assertThat(rangliste).extracting(LiveRankingEntryDto::group, LiveRankingEntryDto::byeRounds)
                 .containsExactly(tuple("A", null), tuple("B", "1, 3"));
+    }
+
+    @Test
+    void ranglisteUebertraegtDieNrDesDokumentsNurBeiEinerNummer() {
+        List<LiveRankingEntryDto> rangliste = LiveUebertragungsDaten.rangliste(List.of(
+                LiveRanglistenEintrag.team(1, 2, 3, 38, 10),
+                new LiveRanglistenEintrag(2, List.of(1, 2), 2, 28, 22, Wertungskriterien.KEINE, Zusatzspalten.KEINE)),
+                ONLINE_IDS);
+
+        assertThat(rangliste).extracting(LiveRankingEntryDto::teamNumber).containsExactly(2, null);
     }
 }

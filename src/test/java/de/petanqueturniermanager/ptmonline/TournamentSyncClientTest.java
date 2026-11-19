@@ -352,10 +352,11 @@ public class TournamentSyncClientTest {
 	}
 
 	@Test
-	public void ranglisteSendetGruppeUndFreilosNurWennVorhanden() {
+	public void ranglisteSendetGruppeFreilosUndNrNurWennVorhanden() {
 		assertThat(TournamentSyncClient.ranglisteBody(List.of(new LiveRankingEntryDto(1, List.of("r1"), 3, 38, 10, null,
-				null, 5, 16, null, "A", "2")), List.of())).isEqualTo("{\"entries\":[{\"place\":1,\"registrationIds\":[\"r1\"],"
-						+ "\"wins\":3,\"pointsFor\":38,\"pointsAgainst\":10,\"bhz\":5,\"fbhz\":16,\"group\":\"A\",\"byeRounds\":\"2\"}]}");
+				null, 5, 16, null, "A", "2", 7)), List.of())).isEqualTo("{\"entries\":[{\"place\":1,\"registrationIds\":[\"r1\"],"
+						+ "\"wins\":3,\"pointsFor\":38,\"pointsAgainst\":10,\"bhz\":5,\"fbhz\":16,\"group\":\"A\",\"byeRounds\":\"2\","
+						+ "\"teamNumber\":7}]}");
 	}
 
 	@Test
