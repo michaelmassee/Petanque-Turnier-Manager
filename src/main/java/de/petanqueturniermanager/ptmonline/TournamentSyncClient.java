@@ -27,6 +27,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+import com.google.gson.JsonParser;
 
 import de.petanqueturniermanager.onlinesync.OnlineTournamentDto;
 import de.petanqueturniermanager.helper.i18n.I18n;
@@ -70,6 +71,9 @@ public class TournamentSyncClient extends PtmOnlineHttpClient implements Auftrag
     /** Grenzen des Online-Timers (99:59, Bezeichnung bis 60 Zeichen); darüber lehnt PTM-Online ab. */
     private static final long TIMER_MAX_SEKUNDEN = 99L * 60 + 59;
     private static final int TIMER_LABEL_MAX = 60;
+    private static final String TIMER_ZUSTAND = "state";
+    private static final String TIMER_LAEUFT = "running";
+    private static final String TIMER_RESTZEIT = "remainingSec";
 
     /** Liegt nach jedem {@code updated_at}: der Anmeldeabruf liefert damit nur den Turnierzustand. */
     static final Instant NACH_ALLEN_ANMELDUNGEN = Instant.parse("9999-12-31T00:00:00Z");
@@ -417,19 +421,37 @@ public class TournamentSyncClient extends PtmOnlineHttpClient implements Auftrag
     static String timerBody(TimerState state, long dauerSekunden) {
         JsonObject body = new JsonObject();
         String zustand = switch (state.zustand()) {
-            case LAEUFT, BEENDET -> "running";
+            case LAEUFT, BEENDET -> TIMER_LAEUFT;
             case PAUSIERT -> "paused";
             case INAKTIV -> "stopped";
         };
-        body.addProperty("state", zustand);
+        body.addProperty(TIMER_ZUSTAND, zustand);
         if (state.zustand() != TimerZustand.INAKTIV) {
-            body.addProperty("remainingSec", Math.clamp(state.sekunden(), 0, TIMER_MAX_SEKUNDEN));
+            body.addProperty(TIMER_RESTZEIT, Math.clamp(state.sekunden(), 0, TIMER_MAX_SEKUNDEN));
         }
         if (dauerSekunden > 0 && dauerSekunden <= TIMER_MAX_SEKUNDEN) {
             body.addProperty("durationSec", dauerSekunden);
         }
         body.addProperty("label", StringUtils.left(StringUtils.defaultString(state.bezeichnung()), TIMER_LABEL_MAX));
         return body.toString();
+    }
+
+    /**
+     * Nutzlast eines laufenden Timers, die erst {@code verstrichen} nach ihrem Stand hinausgeht: PTM-Online rechnet das
+     * Ende ab Eingang, die Restzeit wird daher um die verstrichene Zeit gekürzt.
+     *
+     * @return leer, wenn sich nichts ändert (Timer nicht laufend oder schon abgelaufen)
+     */
+    static Optional<String> timerBodyNachgestellt(String body, Duration verstrichen) {
+        JsonObject timer = JsonParser.parseString(body).getAsJsonObject();
+        JsonElement zustand = timer.get(TIMER_ZUSTAND);
+        JsonElement restzeit = timer.get(TIMER_RESTZEIT);
+        if (zustand == null || !TIMER_LAEUFT.equals(zustand.getAsString()) || restzeit == null
+                || restzeit.getAsLong() == 0) {
+            return Optional.empty();
+        }
+        timer.addProperty(TIMER_RESTZEIT, Math.max(0, restzeit.getAsLong() - verstrichen.toSeconds()));
+        return Optional.of(timer.toString());
     }
 
     static String entscheidungenPfad(String tournamentId) {

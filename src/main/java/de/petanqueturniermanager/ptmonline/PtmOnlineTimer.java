@@ -3,19 +3,17 @@
  */
 package de.petanqueturniermanager.ptmonline;
 
+import java.time.Instant;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import com.sun.star.sheet.XSpreadsheetDocument;
+import com.sun.star.uno.UnoRuntime;
 
-import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
-import de.petanqueturniermanager.comp.DokumentKontext;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
-import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
-import de.petanqueturniermanager.ptmonline.auftrag.AuftragsBestand;
 import de.petanqueturniermanager.timer.TimerState;
 import de.petanqueturniermanager.timer.TimerSteuerung;
 import de.petanqueturniermanager.timer.TimerSteuerungListener;
@@ -23,17 +21,23 @@ import de.petanqueturniermanager.timer.TimerSteuerungListener;
 /**
  * Gibt die Bedienung des Rundenzeit-Timers an das PTM-Online-Turnier des Dokuments weiter, aus dem der Timer gestartet
  * wurde: Start, Pause, Fortsetzen, Zeitkorrektur und Stopp. Turnier- und Live-Ansicht zeigen den Timer dann wie einen
- * online gestarteten. Gesendet wird der absolute Stand; PTM-Online rechnet die Endzeit ab Eingang.
+ * online gestarteten. Gesendet wird der absolute Stand; PTM-Online rechnet die Endzeit ab Eingang, eine
+ * Versandverzögerung gleicht {@link PtmOnlineAuftraege#timerNachstellen} aus.
  * <p>
- * Der Versand läuft auf einem eigenen Hintergrund-Thread, nie auf dem LO-Main-Thread der Bedienung und unabhängig von
- * einem gerade laufenden {@code SheetRunner}. Ohne Netz bleibt der Auftrag offen und geht mit dem nächsten Versand
- * hinaus; ein neuerer Stand ersetzt ihn. Fehler werden nur protokolliert – der Timer selbst läuft immer lokal.
+ * Die Bedienung merkt den Stand je Dokument nur vor und stößt den {@link PtmOnlineLiveBeobachter} an. Dessen
+ * {@link PtmOnlineErfassungsRunner} erfasst ihn als Auftrag – als SheetRunner mit Blattschutz-Scope, denn der
+ * Auftrag wird im Sync-Blatt gespeichert – und der Hintergrund sendet ihn. Ohne Netz bleibt der Auftrag offen und
+ * geht mit dem nächsten Versand hinaus; ein neuerer Stand ersetzt ihn. Der Timer selbst läuft immer lokal.
  */
 public final class PtmOnlineTimer implements TimerSteuerungListener {
 
-    private static final Logger logger = LogManager.getLogger(PtmOnlineTimer.class);
+    /** Bedienter Timer-Stand eines Dokuments, der noch als Auftrag zu erfassen ist. */
+    record Vormerkung(String body, Instant stand) {}
 
-    private final ExecutorService versand = Executors.newSingleThreadExecutor(r -> {
+    private static final Map<String, Vormerkung> VORMERKUNGEN = new ConcurrentHashMap<>();
+
+    /** Das Anstoßen liest das Dokument; das gehört nicht auf den Thread der Bedienung. */
+    private final ExecutorService anstoss = Executors.newSingleThreadExecutor(r -> {
         Thread thread = new Thread(r, "PTM-Online-Timer");
         thread.setDaemon(true);
         return thread;
@@ -45,39 +49,28 @@ public final class PtmOnlineTimer implements TimerSteuerungListener {
         if (ursprung.isEmpty()) {
             return;
         }
-        String body = TournamentSyncClient.timerBody(state, steuerung.dauerSekunden());
-        versand.execute(() -> sendeImKontext(ursprung.get(), body));
+        XSpreadsheetDocument xDoc = ursprung.get().getWorkingSpreadsheetDocument();
+        VORMERKUNGEN.put(schluessel(xDoc),
+                new Vormerkung(TournamentSyncClient.timerBody(state, steuerung.dauerSekunden()), Instant.now()));
+        anstoss.execute(() -> PtmOnlineLiveBeobachter.anstossen(xDoc));
     }
 
-    private static void sendeImKontext(WorkingSpreadsheet ws, String body) {
-        try {
-            DokumentKontext.mitKontextWerfend(ws.getWorkingSpreadsheetDocument(), () -> sende(ws, body));
-        } catch (GenerateException | RuntimeException e) {
-            logger.warn("PTM-Online: Timer nicht übertragen", e);
-        }
+    /** Der zuletzt bediente, noch nicht erfasste Stand des Dokuments. */
+    static Optional<Vormerkung> vorgemerkt(XSpreadsheetDocument xDoc) {
+        return Optional.ofNullable(VORMERKUNGEN.get(schluessel(xDoc)));
     }
 
-    private static void sende(WorkingSpreadsheet ws, String body) throws GenerateException {
-        TurnierSystem ts = DocumentPropertiesHelper
-                .nurLesend(() -> new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument());
-        if (!PtmOnlineVerbindung.hatVerbindung(ws, ts)) {
-            return;
-        }
-        Optional<PtmOnlineVerbindung> verbindung = PtmOnlineVerbindung.ermitteln(ws, ts);
-        if (verbindung.isEmpty()) {
-            return;
-        }
-        PtmOnlineRegistrationMapping mapping = verbindung.get().mapping();
-        AuftragsBestand bestand = PtmOnlineAuftraege.bestand(ws, mapping, verbindung.get().spieltagNr());
-        boolean pausiert = mapping.istPausiert();
-        PtmOnlineAuftraege.timer(bestand, verbindung.get().tournamentId(), body, pausiert);
-        try {
-            PtmOnlineAuftraege.SynchronerVersand ergebnis = PtmOnlineAuftraege.sendeSynchron(bestand, mapping,
-                    verbindung.get().gebundenerClient(), pausiert);
-            logger.info("PTM-Online: Timer übertragen ({})", ergebnis.stopp());
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            logger.warn("PTM-Online: Timer-Versand unterbrochen", e);
-        }
+    /** Der Stand ist als Auftrag gespeichert; ein inzwischen neuer bedienter Stand bleibt vorgemerkt. */
+    static void erfasst(XSpreadsheetDocument xDoc, Vormerkung vormerkung) {
+        VORMERKUNGEN.remove(schluessel(xDoc), vormerkung);
+    }
+
+    /** Vergisst den Stand eines geschlossenen Dokuments. */
+    static void vergessen(XSpreadsheetDocument xDoc) {
+        VORMERKUNGEN.remove(schluessel(xDoc));
+    }
+
+    private static String schluessel(XSpreadsheetDocument xDoc) {
+        return UnoRuntime.generateOid(xDoc);
     }
 }

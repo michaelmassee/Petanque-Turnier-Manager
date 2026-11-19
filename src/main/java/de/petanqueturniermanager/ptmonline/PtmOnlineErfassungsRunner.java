@@ -172,6 +172,7 @@ final class PtmOnlineErfassungsRunner extends SheetRunner {
         PtmOnlineAuftraege.Anwendung anwendung = PtmOnlineAuftraege.anwenden(bestand, mapping);
         uebernehmeOnlineStatus(mapping, passenderAbruf);
         boolean pausiert = !PtmOnlineSpielrundeSync.istSyncAktiv(mapping);
+        Optional<PtmOnlineTimer.Vormerkung> timer = erfasseTimer(bestand, v, pausiert);
         boolean brauchtStand = false;
         if (!pausiert) {
             // Ranglisten u. a. abgeleitete Blätter vor dem Lesen auf den Stand der Eingaben bringen – auch der
@@ -187,6 +188,7 @@ final class PtmOnlineErfassungsRunner extends SheetRunner {
         }
         oeffneSchutzScopeBeiAenderung(bestand);
         PtmOnlineAuftraege.speichern(bestand, mapping);
+        timer.ifPresent(stand -> PtmOnlineTimer.erfasst(getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), stand));
         erfassung = new Erfassung(v, bestand, pausiert, brauchtStand, anwendung);
     }
 
@@ -243,6 +245,22 @@ final class PtmOnlineErfassungsRunner extends SheetRunner {
             PtmOnlineAuftraege.start(bestand, verbindung.tournamentId(), ausstehend.get(),
                     I18n.get("ptmonline.auftrag.verworfen.turnierstart"));
         }
+    }
+
+    /**
+     * Zuletzt bedienter Timer-Stand ({@link PtmOnlineTimer}); geht auch bei pausiertem Sync hinaus.
+     *
+     * @return der erfasste Stand; erst nach dem Speichern des Bestands als erledigt zu melden
+     */
+    private Optional<PtmOnlineTimer.Vormerkung> erfasseTimer(AuftragsBestand bestand, PtmOnlineVerbindung verbindung,
+            boolean pausiert) {
+        Optional<PtmOnlineTimer.Vormerkung> timer = PtmOnlineTimer
+                .vorgemerkt(getWorkingSpreadsheet().getWorkingSpreadsheetDocument());
+        timer.ifPresent(stand -> {
+            PtmOnlineAuftraege.timer(bestand, verbindung.tournamentId(), stand.body(), stand.stand(), pausiert);
+            getLogger().info("PTM-Online: Timer-Stand als Auftrag erfasst");
+        });
+        return timer;
     }
 
     private void erfasseCheckin(AuftragsBestand bestand, PtmOnlineVerbindung verbindung) throws GenerateException {

@@ -54,13 +54,22 @@ public final class ErgebnisSchreiber {
         if (blatt == null) {
             return DirektEintrag.BLATT_FEHLT;
         }
-        DirektEintrag eintrag = bewerte(text(ws, blatt, ort.punkteA()), text(ws, blatt, ort.punkteB()), punkteA,
-                punkteB);
+        DirektEintrag vorher = bewerteZellen(ws, blatt, ort, punkteA, punkteB);
+        if (vorher != DirektEintrag.GESCHRIEBEN) {
+            return vorher;
+        }
+        // Das Öffnen des Blattschutz-Scopes dauert; eine in dieser Zeit getippte Eingabe hat Vorrang.
+        vorAenderung.run();
+        DirektEintrag eintrag = bewerteZellen(ws, blatt, ort, punkteA, punkteB);
         if (eintrag == DirektEintrag.GESCHRIEBEN) {
-            vorAenderung.run();
             schreibeInZellen(ws, blatt, ort, punkteA, punkteB);
         }
         return eintrag;
+    }
+
+    private static DirektEintrag bewerteZellen(WorkingSpreadsheet ws, XSpreadsheet blatt, ErgebnisOrt ort,
+            int punkteA, int punkteB) {
+        return bewerte(text(ws, blatt, ort.punkteA()), text(ws, blatt, ort.punkteB()), punkteA, punkteB);
     }
 
     /**

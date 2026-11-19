@@ -42,10 +42,11 @@ final class PtmOnlineSpieleinstellungen {
      * Ergebnismeldung durch Spieler, sofern im Dokument gewählt (Standard „wie in PTM-Online“ überträgt nichts).
      */
     static SpieleinstellungenDto lese(WorkingSpreadsheet ws, TurnierSystem turnierSystem) {
-        SpieleinstellungenDto einstellungen = leseSystem(ws, turnierSystem);
-        if (einstellungen.istLeer()) {
-            return einstellungen;
+        if (!hatOnlineGegenstueck(turnierSystem)) {
+            return SpieleinstellungenDto.KEINE;
         }
+        // Auch ohne online abbildbare Formation (z. B. „Nur Teamname“) gelten die Live-Schalter.
+        SpieleinstellungenDto einstellungen = leseSystem(ws, turnierSystem);
         return DocumentPropertiesHelper.nurLesend(() -> {
             DocumentPropertiesHelper properties = new DocumentPropertiesHelper(ws);
             return einstellungen.mitLive(
@@ -57,7 +58,11 @@ final class PtmOnlineSpieleinstellungen {
         });
     }
 
-    /** {@code J} → ein, {@code N} → aus, sonst (Standard „wie in PTM-Online“) leer: nicht übertragen. */
+    static boolean hatOnlineGegenstueck(TurnierSystem turnierSystem) {
+        return turnierSystem != TurnierSystem.LIGA && turnierSystem != TurnierSystem.KEIN;
+    }
+
+    /** {@code J} → ein,{@code N} → aus, sonst (Standard „wie in PTM-Online“) leer: nicht übertragen. */
     static Optional<Boolean> schalter(@Nullable String wert) {
         if (BasePropertiesSpalte.PTMONLINE_SCHALTER_JA.equals(wert)) {
             return Optional.of(Boolean.TRUE);

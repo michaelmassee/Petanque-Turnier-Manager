@@ -28,6 +28,7 @@ import de.petanqueturniermanager.timer.TimerZustand;
 class PtmOnlineAuftraegeTest {
 
     private static final String TURNIER = "t1";
+    private static final Instant JETZT = Instant.parse("2026-11-19T10:00:00Z");
 
     private static PtmOnlineStatusAuftrag.Eintrag aktiv(String uuid) {
         return new PtmOnlineStatusAuftrag.Eintrag(uuid, OnlineTeilnahme.AKTIV, null);
@@ -193,9 +194,9 @@ class PtmOnlineAuftraegeTest {
     void timerIstEinGezaehlterAuftragUndNurDerLetzteStandWirdGesendet() {
         AuftragsBestand bestand = AuftragsBestand.leer();
         PtmOnlineAuftraege.timer(bestand, TURNIER, TournamentSyncClient.timerBody(
-                new TimerState("10:00", 600, TimerZustand.LAEUFT, "Runde 1", "#000000", false), 600), false);
+                new TimerState("10:00", 600, TimerZustand.LAEUFT, "Runde 1", "#000000", false), 600), JETZT, false);
         PtmOnlineAuftraege.timer(bestand, TURNIER, TournamentSyncClient.timerBody(
-                new TimerState("09:00", 540, TimerZustand.PAUSIERT, "Runde 1", "#000000", false), 600), false);
+                new TimerState("09:00", 540, TimerZustand.PAUSIERT, "Runde 1", "#000000", false), 600), JETZT, false);
 
         assertThat(bestand.zuSenden(false)).singleElement().satisfies(auftrag -> {
             assertThat(auftrag.art()).isEqualTo(AuftragsArt.TIMER);
@@ -210,9 +211,81 @@ class PtmOnlineAuftraegeTest {
     void timerGehtInDerPauseAllein() {
         AuftragsBestand bestand = AuftragsBestand.leer();
         PtmOnlineAuftraege.runde(bestand, TURNIER, 2, List.of());
-        PtmOnlineAuftraege.timer(bestand, TURNIER, "{\"state\":\"stopped\"}", true);
+        PtmOnlineAuftraege.timer(bestand, TURNIER, "{\"state\":\"stopped\"}", JETZT, true);
 
         assertThat(bestand.zuSenden(true)).extracting(SyncAuftrag::art).containsExactly(AuftragsArt.TIMER);
+    }
+
+    private static String laufenderTimer(long restSekunden) {
+        return TournamentSyncClient.timerBody(
+                new TimerState("", restSekunden, TimerZustand.LAEUFT, "Runde 1", "#000000", false), 600);
+    }
+
+    private static long restzeit(SyncAuftrag auftrag) {
+        return JsonParser.parseString(auftrag.body()).getAsJsonObject().get("remainingSec").getAsLong();
+    }
+
+    @Test
+    void verzoegerterLaufenderTimerGehtMitVerbleibenderRestzeitAlsNeuerAuftragHinaus() {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        PtmOnlineAuftraege.timer(bestand, TURNIER, laufenderTimer(600), JETZT, false);
+        SyncAuftrag liegengeblieben = bestand.zuSenden(false).getFirst();
+
+        PtmOnlineAuftraege.timerNachstellen(bestand, JETZT.plusSeconds(300), false);
+
+        assertThat(bestand.zuSenden(false)).singleElement().satisfies(auftrag -> {
+            assertThat(restzeit(auftrag)).isEqualTo(300);
+            // Neue ID: Eine schon angekommene ID mit anderer Nutzlast lehnt PTM-Online ab.
+            assertThat(auftrag.auftragsId()).isNotEqualTo(liegengeblieben.auftragsId());
+            assertThat(auftrag.zaehler()).isGreaterThan(liegengeblieben.zaehler());
+        });
+    }
+
+    @Test
+    void abgelaufenerTimerBleibtBeiRestzeitNull() {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        PtmOnlineAuftraege.timer(bestand, TURNIER, laufenderTimer(60), JETZT, false);
+
+        PtmOnlineAuftraege.timerNachstellen(bestand, JETZT.plusSeconds(300), false);
+
+        assertThat(bestand.zuSenden(false)).singleElement().extracting(PtmOnlineAuftraegeTest::restzeit)
+                .isEqualTo(0L);
+    }
+
+    @Test
+    void timerInnerhalbDerToleranzBleibtUnveraendert() {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        PtmOnlineAuftraege.timer(bestand, TURNIER, laufenderTimer(600), JETZT, false);
+        SyncAuftrag vorher = bestand.zuSenden(false).getFirst();
+
+        PtmOnlineAuftraege.timerNachstellen(bestand, JETZT.plus(PtmOnlineAuftraege.TIMER_NACHSTELLEN_AB).minusMillis(1),
+                false);
+
+        assertThat(bestand.zuSenden(false)).containsExactly(vorher);
+    }
+
+    @Test
+    void pausierterTimerWirdNichtNachgestellt() {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        PtmOnlineAuftraege.timer(bestand, TURNIER, TournamentSyncClient.timerBody(
+                new TimerState("", 540, TimerZustand.PAUSIERT, "Runde 1", "#000000", false), 600), JETZT, false);
+        SyncAuftrag vorher = bestand.zuSenden(false).getFirst();
+
+        PtmOnlineAuftraege.timerNachstellen(bestand, JETZT.plusSeconds(300), false);
+
+        assertThat(bestand.zuSenden(false)).containsExactly(vorher);
+    }
+
+    @Test
+    void nachgestellterTimerGehtInDerPauseWeiterAllein() {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        PtmOnlineAuftraege.runde(bestand, TURNIER, 2, List.of());
+        PtmOnlineAuftraege.timer(bestand, TURNIER, laufenderTimer(600), JETZT, true);
+
+        PtmOnlineAuftraege.timerNachstellen(bestand, JETZT.plusSeconds(60), true);
+
+        assertThat(bestand.zuSenden(true)).singleElement().extracting(PtmOnlineAuftraegeTest::restzeit)
+                .isEqualTo(540L);
     }
 
     @Test

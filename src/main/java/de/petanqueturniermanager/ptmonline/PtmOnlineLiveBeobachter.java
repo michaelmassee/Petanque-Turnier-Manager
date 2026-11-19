@@ -425,6 +425,7 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
             aenderungsKanalSchliessen();
             beobachtungen.remove(oid);
             PtmOnlineAuftraege.vergessen(xDoc);
+            PtmOnlineTimer.vergessen(xDoc);
         }
 
         void anstossen() {
@@ -602,6 +603,7 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
                 throws InterruptedException {
             bestand.versandSperre().lockInterruptibly();
             try {
+                PtmOnlineAuftraege.timerNachstellen(bestand, Instant.now(), pausiert);
                 return AuftragsVersand.sende(bestand.zuSenden(pausiert), client, ergebnis -> {
                     bestand.gesendet(ergebnis);
                     beachteAblehnung(ergebnis);

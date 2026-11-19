@@ -4,7 +4,9 @@
 package de.petanqueturniermanager.ptmonline;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.time.Instant;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -62,6 +64,9 @@ public final class PtmOnlineAuftraege {
     private static final String KONTEXT_NUMMER_FORMEL = "nummerFormel";
     private static final String KONTEXT_BEZEICHNUNG = "bezeichnung";
     private static final String KONTEXT_REVISIONEN = "revisionen";
+    private static final String KONTEXT_TIMER_STAND = "timerStand";
+    /** Kürzere Verzögerungen bleiben unberücksichtigt; sonst entstünde fast jeder Timer-Auftrag zweimal. */
+    static final Duration TIMER_NACHSTELLEN_AB = Duration.ofSeconds(2);
     private static final String CODE_TURNIER_LAEUFT = "tournament_running";
     /** Status, den PTM-Online nach angenommenem Turnierstart meldet. */
     private static final String ONLINE_STATUS_LAEUFT = "running";
@@ -399,15 +404,55 @@ public final class PtmOnlineAuftraege {
     }
 
     /**
-     * Stand des Timers; ein noch nicht gesendeter älterer Stand entfällt, online gilt nur der letzte. Bei pausiertem
-     * Sync wird er wie die Ankündigung vorgezogen und geht allein hinaus.
+     * Stand des Timers zum Zeitpunkt {@code stand}; ein noch nicht gesendeter älterer Stand entfällt, online gilt nur
+     * der letzte. Bei pausiertem Sync wird er wie die Ankündigung vorgezogen und geht allein hinaus.
      */
-    static void timer(AuftragsBestand bestand, String tournamentId, String body, boolean pausiert) {
-        String pfad = TournamentSyncClient.timerPfad(tournamentId);
+    static void timer(AuftragsBestand bestand, String tournamentId, String body, Instant stand, boolean pausiert) {
+        erfasseTimer(bestand, TournamentSyncClient.timerPfad(tournamentId), body, stand, pausiert);
+    }
+
+    private static void erfasseTimer(AuftragsBestand bestand, String pfad, String body, Instant stand,
+            boolean pausiert) {
         bestand.entferneUeberholte(auftrag -> auftrag.pfad().equals(pfad));
-        SyncAuftrag auftrag = bestand.erzeuge(AuftragsArt.TIMER, "PUT", pfad, body, "{}");
+        JsonObject kontext = new JsonObject();
+        kontext.addProperty(KONTEXT_TIMER_STAND, stand.toString());
+        SyncAuftrag auftrag = bestand.erzeuge(AuftragsArt.TIMER, "PUT", pfad, body, kontext.toString());
         if (pausiert) {
             bestand.zieheVor(auftrag.auftragsId());
+        }
+    }
+
+    /**
+     * PTM-Online rechnet das Ende eines laufenden Timers ab Eingang. Ein liegengebliebener, noch nicht bestätigter
+     * Timer-Stand (ohne Netz, Dokument gerade belegt) wird daher unmittelbar vor dem Senden durch einen neuen Auftrag
+     * mit der bis jetzt verbleibenden Restzeit ersetzt. Neuer Auftrag statt geänderter Nutzlast: Eine schon
+     * angekommene Auftrags-ID mit anderem Inhalt lehnt PTM-Online ab ({@code idempotency_mismatch}); ein doppelt
+     * angekommener Timer-Stand ist dagegen harmlos, er ist absolut. Nur unter der Versandsperre aufrufen.
+     */
+    static void timerNachstellen(AuftragsBestand bestand, Instant jetzt, boolean pausiert) {
+        for (SyncAuftrag auftrag : bestand.zuSenden(false)) {
+            if (auftrag.art() == AuftragsArt.TIMER) {
+                nachgestellterTimerBody(auftrag, jetzt)
+                        .ifPresent(body -> erfasseTimer(bestand, auftrag.pfad(), body, jetzt, pausiert));
+            }
+        }
+    }
+
+    private static Optional<String> nachgestellterTimerBody(SyncAuftrag auftrag, Instant jetzt) {
+        String stand = text(kontext(auftrag), KONTEXT_TIMER_STAND);
+        if (stand.isEmpty()) {
+            return Optional.empty();
+        }
+        try {
+            Duration verstrichen = Duration.between(Instant.parse(stand), jetzt);
+            if (verstrichen.compareTo(TIMER_NACHSTELLEN_AB) < 0) {
+                return Optional.empty();
+            }
+            return TournamentSyncClient.timerBodyNachgestellt(auftrag.body(), verstrichen);
+        } catch (DateTimeParseException | JsonParseException | IllegalStateException | UnsupportedOperationException e) {
+            logger.warn("PTM-Online: Timer-Auftrag {} nicht nachstellbar, geht unverändert hinaus", auftrag.zaehler(),
+                    e);
+            return Optional.empty();
         }
     }
 
@@ -601,10 +646,11 @@ public final class PtmOnlineAuftraege {
      */
     static SynchronerVersand sendeSynchron(AuftragsBestand bestand, PtmOnlineRegistrationMapping mapping,
             TournamentSyncClient client, boolean pausiert) throws GenerateException, InterruptedException {
-        speichern(bestand, mapping);
         VersandStopp stopp;
         bestand.versandSperre().lockInterruptibly();
         try {
+            timerNachstellen(bestand, Instant.now(), pausiert);
+            speichern(bestand, mapping);
             stopp = AuftragsVersand.sende(bestand.zuSenden(pausiert), client, bestand::gesendet);
         } finally {
             bestand.versandSperre().unlock();

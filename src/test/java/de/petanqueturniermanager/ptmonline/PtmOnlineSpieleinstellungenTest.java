@@ -9,6 +9,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsArt;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsBestand;
 import de.petanqueturniermanager.ptmonline.dto.SpieleinstellungenDto;
@@ -76,6 +77,26 @@ class PtmOnlineSpieleinstellungenTest {
 
         assertThat(PtmOnlineSpieleinstellungen.erfasse(bestand, TURNIER, SpieleinstellungenDto.KEINE)).isFalse();
         assertThat(bestand.hatOffene()).isFalse();
+    }
+
+    @Test
+    void liveSchalterGehenAuchOhneOnlineFormationHinaus() {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        // „Nur Teamname“ hat online keine Formation – die Live-Schalter gelten trotzdem.
+        SpieleinstellungenDto nurTeamname = new SpieleinstellungenDto(
+                PtmOnlineSpieleinstellungen.onlineFormation(Formation.NUR_TEAMNAME), null, null, null);
+
+        assertThat(PtmOnlineSpieleinstellungen.erfasse(bestand, TURNIER, nurTeamname.mitLive(true, true))).isTrue();
+        assertThat(bestand.eintraege()).singleElement()
+                .satisfies(eintrag -> assertThat(eintrag.auftrag().body()).contains("\"liveViewEnabled\":true"));
+    }
+
+    @Test
+    void nurSystemeMitOnlineGegenstueckUebertragenEinstellungen() {
+        assertThat(PtmOnlineSpieleinstellungen.hatOnlineGegenstueck(TurnierSystem.FORMULEX)).isTrue();
+        assertThat(PtmOnlineSpieleinstellungen.hatOnlineGegenstueck(TurnierSystem.JGJ)).isTrue();
+        assertThat(PtmOnlineSpieleinstellungen.hatOnlineGegenstueck(TurnierSystem.LIGA)).isFalse();
+        assertThat(PtmOnlineSpieleinstellungen.hatOnlineGegenstueck(TurnierSystem.KEIN)).isFalse();
     }
 
     @Test
