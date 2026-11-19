@@ -37,23 +37,26 @@ public final class PtmOnlineMenuController extends WeakBase
     private record MenuEintrag(String befehl, String textKey) {
     }
 
-    /** Einträge des Untermenüs; sie stehen in keiner XCU-Datei, LibreOffice fragt sie bei diesem Controller ab. */
-    private static final List<MenuEintrag> EINTRAEGE = List.of(
-        new MenuEintrag(ProtocolHandler.CMD_PTMONLINE_TURNIER_VERBINDEN, "verbinden"),
-        new MenuEintrag(ProtocolHandler.CMD_PTMONLINE_ANMELDUNGEN_IMPORTIEREN, "abgleichen"),
-        new MenuEintrag(ProtocolHandler.CMD_PTMONLINE_KONFLIKTLISTE_OEFFNEN, "konfliktliste"),
-        new MenuEintrag(ProtocolHandler.CMD_PTMONLINE_ERGEBNISMELDUNGEN_ABHOLEN, "ergebnisse"),
-        new MenuEintrag(ProtocolHandler.CMD_PTMONLINE_SYNC_PAUSIEREN, "pausieren"),
-        new MenuEintrag(ProtocolHandler.CMD_PTMONLINE_SYNC_FORTSETZEN, "fortsetzen"),
-        new MenuEintrag(ProtocolHandler.CMD_PTMONLINE_IM_BROWSER_OEFFNEN, "browser"),
-        new MenuEintrag(ProtocolHandler.CMD_PTMONLINE_TURNIERSEITE_OEFFNEN, "turnierseite"),
-        new MenuEintrag(ProtocolHandler.CMD_PTMONLINE_LIVE_QR_OEFFNEN, "liveqr"),
-        new MenuEintrag(ProtocolHandler.CMD_ANKUENDIGUNG, "ankuendigung"),
-        new MenuEintrag(ProtocolHandler.CMD_PTMONLINE_TURNIER_ABSCHLIESSEN, "abschliessen"),
-        new MenuEintrag(ProtocolHandler.CMD_PTMONLINE_VERBINDUNG_TRENNEN, "trennen"),
-        new MenuEintrag(ProtocolHandler.CMD_PTMONLINE_ZUORDNUNG_WIEDERHERSTELLEN, "wiederherstellen"));
+    /**
+     * Einträge des Untermenüs in Gruppen nach dem Ablauf eines Turniers, zwischen den Gruppen eine Trennlinie. Sie
+     * stehen in keiner XCU-Datei, LibreOffice fragt sie bei diesem Controller ab.
+     */
+    private static final List<List<MenuEintrag>> GRUPPEN = List.of(
+        List.of(new MenuEintrag(ProtocolHandler.CMD_PTMONLINE_TURNIER_VERBINDEN, "verbinden")),
+        List.of(new MenuEintrag(ProtocolHandler.CMD_PTMONLINE_ANMELDUNGEN_IMPORTIEREN, "abgleichen"),
+            new MenuEintrag(ProtocolHandler.CMD_PTMONLINE_KONFLIKTLISTE_OEFFNEN, "konfliktliste")),
+        List.of(new MenuEintrag(ProtocolHandler.CMD_PTMONLINE_ERGEBNISMELDUNGEN_ABHOLEN, "ergebnisse"),
+            new MenuEintrag(ProtocolHandler.CMD_ANKUENDIGUNG, "ankuendigung")),
+        List.of(new MenuEintrag(ProtocolHandler.CMD_PTMONLINE_IM_BROWSER_OEFFNEN, "browser"),
+            new MenuEintrag(ProtocolHandler.CMD_PTMONLINE_TURNIERSEITE_OEFFNEN, "turnierseite"),
+            new MenuEintrag(ProtocolHandler.CMD_PTMONLINE_LIVE_QR_OEFFNEN, "liveqr")),
+        List.of(new MenuEintrag(ProtocolHandler.CMD_PTMONLINE_SYNC_PAUSIEREN, "pausieren"),
+            new MenuEintrag(ProtocolHandler.CMD_PTMONLINE_SYNC_FORTSETZEN, "fortsetzen")),
+        List.of(new MenuEintrag(ProtocolHandler.CMD_PTMONLINE_TURNIER_ABSCHLIESSEN, "abschliessen"),
+            new MenuEintrag(ProtocolHandler.CMD_PTMONLINE_ZUORDNUNG_WIEDERHERSTELLEN, "wiederherstellen"),
+            new MenuEintrag(ProtocolHandler.CMD_PTMONLINE_VERBINDUNG_TRENNEN, "trennen")));
     /** Befehle des Untermenüs in Menü-Reihenfolge. */
-    static final List<String> BEFEHLE = EINTRAEGE.stream().map(MenuEintrag::befehl).toList();
+    static final List<String> BEFEHLE = GRUPPEN.stream().flatMap(List::stream).map(MenuEintrag::befehl).toList();
     private final XComponentContext context;
     private final List<XEventListener> listener = new CopyOnWriteArrayList<>();
     private XFrame frame;
@@ -88,12 +91,18 @@ public final class PtmOnlineMenuController extends WeakBase
         if (!PtmOnlineAktivierung.istAktiv()) return;
         XSpreadsheetDocument doc = frame == null || frame.getController() == null ? null
                 : Lo.qi(XSpreadsheetDocument.class, frame.getController().getModel());
-        for (short i = 0; i < EINTRAEGE.size(); i++) {
-            MenuEintrag eintrag = EINTRAEGE.get(i);
-            short id = (short) (i + 1);
-            popup.insertItem(id, I18n.get("ptmonline.menu." + eintrag.textKey()), (short) 0, i);
-            popup.setCommand(id, "ptm:" + eintrag.befehl());
-            popup.enableItem(id, ProtocolHandler.istOnlineBefehlAktiv(eintrag.befehl(), doc));
+        short id = 0;
+        short position = 0;
+        for (List<MenuEintrag> gruppe : GRUPPEN) {
+            if (position > 0) {
+                popup.insertSeparator(position++);
+            }
+            for (MenuEintrag eintrag : gruppe) {
+                id++;
+                popup.insertItem(id, I18n.get("ptmonline.menu." + eintrag.textKey()), (short) 0, position++);
+                popup.setCommand(id, "ptm:" + eintrag.befehl());
+                popup.enableItem(id, ProtocolHandler.istOnlineBefehlAktiv(eintrag.befehl(), doc));
+            }
         }
     }
 
