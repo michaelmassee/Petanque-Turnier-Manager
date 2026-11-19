@@ -2,9 +2,8 @@ package de.petanqueturniermanager.timer;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
-
-import de.petanqueturniermanager.webserver.WebServerManager;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -15,9 +14,11 @@ import org.apache.logging.log4j.Logger;
 
 import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
+import de.petanqueturniermanager.webserver.WebServerManager;
 
 /**
  * Verwaltet den Rundenzeit-Timer.
@@ -28,7 +29,8 @@ import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
  * Countdown-Berechnung basiert auf {@link System#nanoTime()} um Drift zu vermeiden.
  * <p>
  * Alle Zustandsänderungen werden über den {@link TimerListener}-Mechanismus
- * an registrierte Listener emittiert (Observer-Pattern).
+ * an registrierte Listener emittiert (Observer-Pattern). Bedienaktionen ohne die Sekunden-Ticks melden zusätzlich
+ * die {@link TimerSteuerungListener}.
  */
 public class TimerManager {
 
@@ -39,6 +41,7 @@ public class TimerManager {
     private final XComponentContext xContext;
     private final ScheduledExecutorService executor;
     private final List<TimerListener> listeners = new CopyOnWriteArrayList<>();
+    private final List<TimerSteuerungListener> steuerungsListeners = new CopyOnWriteArrayList<>();
 
     private volatile TimerZustand zustand = TimerZustand.INAKTIV;
     private volatile long endNanos;
@@ -47,6 +50,7 @@ public class TimerManager {
     private volatile String hintergrundFarbeHex = "#000000";
     private volatile ScheduledFuture<?> tickTask;
     private volatile boolean snoozed;
+    private volatile TimerSteuerung steuerung = TimerSteuerung.OHNE_URSPRUNG;
 
     private TimerManager(XComponentContext xContext) {
         this.xContext = xContext;
@@ -102,7 +106,8 @@ public class TimerManager {
         synchronized (TimerManager.class) {
             var tm = instanz;
             if (tm != null) {
-                tm.stoppen();
+                // Beim Herunterfahren nur lokal stoppen: kein Weiterreichen an Steuerungs-Listener (z. B. PTM-Online).
+                tm.stoppeLokal();
                 tm.executor.shutdownNow();
                 instanz = null;
                 logger.debug("TimerManager disposed");
@@ -122,6 +127,16 @@ public class TimerManager {
         listeners.remove(listener);
     }
 
+    /** Registriert einen Listener für Bedienaktionen (ohne Sekunden-Ticks). */
+    public void addSteuerungsListener(TimerSteuerungListener listener) {
+        steuerungsListeners.add(listener);
+    }
+
+    /** Entfernt einen Listener für Bedienaktionen. */
+    public void removeSteuerungsListener(TimerSteuerungListener listener) {
+        steuerungsListeners.remove(listener);
+    }
+
     /** Gibt den aktuellen Zustand zurück (für Polling, z.B. durch Statusleiste bei Update). */
     public TimerState getAktuellerZustand() {
         return aktuellerState();
@@ -136,8 +151,10 @@ public class TimerManager {
      * @param bezeichnung      optionaler Rundenname (darf null sein)
      * @param port             Webserver-Port für die Timer-Anzeige
      * @param hintergrundFarbe Hintergrundfarbe als RGB-Integer (z.B. {@code 0x1a2b3c})
+     * @param ursprung         Dokument, aus dem der Timer gestartet wird; Ziel der Weitergabe an PTM-Online
      */
-    public synchronized void starten(long dauerSekunden, String bezeichnung, int port, int hintergrundFarbe) {
+    public synchronized void starten(long dauerSekunden, String bezeichnung, int port, int hintergrundFarbe,
+            WorkingSpreadsheet ursprung) {
         if (dauerSekunden <= 0) {
             logger.warn("starten() mit ungültiger Dauer aufgerufen: {}", dauerSekunden);
             return;
@@ -158,7 +175,9 @@ public class TimerManager {
 
         endNanos = System.nanoTime() + dauerSekunden * 1_000_000_000L;
         zustand = TimerZustand.LAEUFT;
+        steuerung = new TimerSteuerung(Optional.of(ursprung), dauerSekunden);
         tickTask = executor.scheduleAtFixedRate(this::tick, 0, 1, TimeUnit.SECONDS);
+        meldeSteuerung(aktuellerState());
 
         logger.info("Timer gestartet: {} Sekunden, Port {}", dauerSekunden, port);
     }
@@ -172,12 +191,14 @@ public class TimerManager {
                 stoppeTickTask();
                 zustand = TimerZustand.PAUSIERT;
                 emittiere(aktuellerState());
+                meldeSteuerung(aktuellerState());
                 logger.debug("Timer pausiert, restNanos={}", restNanos);
             }
             case PAUSIERT -> {
                 endNanos = System.nanoTime() + restNanos;
                 zustand = TimerZustand.LAEUFT;
                 tickTask = executor.scheduleAtFixedRate(this::tick, 0, 1, TimeUnit.SECONDS);
+                meldeSteuerung(aktuellerState());
                 logger.debug("Timer fortgesetzt");
             }
             default -> logger.debug("pauseOderFortsetzen() im Zustand {} ignoriert", zustand);
@@ -199,19 +220,28 @@ public class TimerManager {
             restNanos = Math.max(0, restNanos + deltaSekunden * 1_000_000_000L);
         }
         emittiere(aktuellerState());
+        meldeSteuerung(aktuellerState());
         logger.debug("Zeit angepasst um {} s, neuer Zustand: {}", deltaSekunden, aktuellerState().anzeige());
     }
 
     /** Stoppt den Timer und setzt den Zustand auf INAKTIV zurück. */
     public synchronized void stoppen() {
+        TimerState gestoppt = stoppeLokal();
+        meldeSteuerung(gestoppt);
+        steuerung = TimerSteuerung.OHNE_URSPRUNG;
+    }
+
+    private synchronized TimerState stoppeLokal() {
         stoppeTickTask();
         zustand = TimerZustand.INAKTIV;
         bezeichnung = "";
         snoozed = false;
         // hintergrundFarbeHex wird bewusst nicht zurückgesetzt –
         // die zuletzt gewählte Farbe bleibt im INAKTIV-Zustand sichtbar.
-        emittiere(new TimerState("--:--", 0, TimerZustand.INAKTIV, "", hintergrundFarbeHex, false));
+        TimerState gestoppt = new TimerState("--:--", 0, TimerZustand.INAKTIV, "", hintergrundFarbeHex, false);
+        emittiere(gestoppt);
         logger.debug("Timer gestoppt");
+        return gestoppt;
     }
 
     /**
@@ -270,6 +300,17 @@ public class TimerManager {
                 l.onChange(state);
             } catch (Exception e) {
                 logger.error("Fehler in TimerListener", e);
+            }
+        });
+    }
+
+    private void meldeSteuerung(TimerState state) {
+        TimerSteuerung aktuell = steuerung;
+        steuerungsListeners.forEach(l -> {
+            try {
+                l.onSteuerung(state, aktuell);
+            } catch (Exception e) {
+                logger.error("Fehler in TimerSteuerungListener", e);
             }
         });
     }

@@ -46,6 +46,7 @@ import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheetKonstanten
 import de.petanqueturniermanager.triptete.blattschutz.TripTeteBlattschutzKonfiguration;
 import de.petanqueturniermanager.triptete.konfiguration.TripTeteKonfigurationSheet;
 import de.petanqueturniermanager.triptete.spielplan.TripTeteSpielPlanSheet;
+import de.petanqueturniermanager.ptmonline.PtmOnlineTimer;
 import de.petanqueturniermanager.timer.TimerManager;
 import de.petanqueturniermanager.webserver.WebServerManager;
 import de.petanqueturniermanager.comp.adapter.GlobalEventListener;
@@ -151,7 +152,8 @@ public class PetanqueTurnierMngrSingleton {
 		TimerManager.get().addListener(WebServerManager.get());
 		TimerManager.get().addListener(new TimerToolbarSteuerung(context));
 		TimerManager.get().addListener(state -> ProtocolHandler.notifyAllListeners());
-		t = logTimingAndReset("TimerManager.init + 4 Listener", t);
+		TimerManager.get().addSteuerungsListener(new PtmOnlineTimer());
+		t = logTimingAndReset("TimerManager.init + 5 Listener", t);
 		TerminateListener.addThisListenerOnce(context);
 		t = logTimingAndReset("TerminateListener.addThisListenerOnce", t);
 		ReleaseUpdateService.init(context);

@@ -209,7 +209,7 @@ public class TimerDialog extends AbstractUnoDialog {
         docProps.setIntProperty(DOC_PROP_TIMER_PORT, port);
         docProps.setStringProperty(DOC_PROP_TIMER_BEZEICHNUNG, bezeichnung);
         docProps.setIntProperty(DOC_PROP_TIMER_HINTERGRUNDFARBE, hintergrundFarbeInt);
-        TimerManager.get().starten(dauerSekunden, bezeichnung, port, hintergrundFarbeInt);
+        TimerManager.get().starten(dauerSekunden, bezeichnung, port, hintergrundFarbeInt, currentSpreadsheet);
         logger.info("Timer gestartet via Dialog: {} s, Port {}, Farbe #{}", dauerSekunden, port,
                 String.format("%06x", hintergrundFarbeInt & 0xFFFFFF));
     }

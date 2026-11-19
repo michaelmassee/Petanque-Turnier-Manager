@@ -398,6 +398,19 @@ public final class PtmOnlineAuftraege {
         }
     }
 
+    /**
+     * Stand des Timers; ein noch nicht gesendeter älterer Stand entfällt, online gilt nur der letzte. Bei pausiertem
+     * Sync wird er wie die Ankündigung vorgezogen und geht allein hinaus.
+     */
+    static void timer(AuftragsBestand bestand, String tournamentId, String body, boolean pausiert) {
+        String pfad = TournamentSyncClient.timerPfad(tournamentId);
+        bestand.entferneUeberholte(auftrag -> auftrag.pfad().equals(pfad));
+        SyncAuftrag auftrag = bestand.erzeuge(AuftragsArt.TIMER, "PUT", pfad, body, "{}");
+        if (pausiert) {
+            bestand.zieheVor(auftrag.auftragsId());
+        }
+    }
+
     /** Ein abgelehnter, noch nicht zur Kenntnis genommener Auftrag als Fall der Konfliktliste. */
     record AbgelehnterFall(String auftragsId, KonfliktFall fall) {}
 
@@ -537,7 +550,7 @@ public final class PtmOnlineAuftraege {
                     case ANMELDUNG_VERKNUEPFEN -> meldeNichtVerknuepfte(auftrag, ergebnis.antwort());
                     case ABSCHLUSS -> abschluss = ergebnis.antwort();
                     case START, TRENNEN, RUNDE, RUNDE_LOESCHEN, RANGLISTE, SPIELEINSTELLUNGEN, MELEE_TEAMS, ANMELDUNG_STORNIEREN, ENTSCHEIDUNGEN,
-                            ANMELDUNG_SCHLIESSEN, ERGEBNISMELDUNGEN, ANKUENDIGUNG -> {
+                            ANMELDUNG_SCHLIESSEN, ERGEBNISMELDUNGEN, ANKUENDIGUNG, TIMER -> {
                         // Nichts im Dokument festzuhalten.
                     }
                 }

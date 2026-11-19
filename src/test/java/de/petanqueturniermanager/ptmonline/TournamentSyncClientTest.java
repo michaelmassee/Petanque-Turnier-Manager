@@ -27,6 +27,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+import com.google.gson.JsonParser;
+
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.onlinesync.OnlineTournamentDto;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsArt;
@@ -45,6 +47,8 @@ import de.petanqueturniermanager.ptmonline.dto.RegistrationResultDto;
 import de.petanqueturniermanager.ptmonline.dto.ServerZuordnungDto;
 import de.petanqueturniermanager.ptmonline.dto.SyncBindingDto;
 import de.petanqueturniermanager.ptmonline.dto.SyncStandDto;
+import de.petanqueturniermanager.timer.TimerState;
+import de.petanqueturniermanager.timer.TimerZustand;
 
 public class TournamentSyncClientTest {
 
@@ -545,4 +549,35 @@ public class TournamentSyncClientTest {
 		assertThat(client.webSocketUri("/api/sync/tournaments/t1/socket"))
 				.hasToString("ws://localhost:8787/api/sync/tournaments/t1/socket");
 	}
+
+    @Test
+    void timerBodyUebertraegtDenAbsolutenStand() {
+        assertThat(JsonParser.parseString(TournamentSyncClient.timerBody(
+                new TimerState("29:21", 1761, TimerZustand.LAEUFT, "Test", "#000000", false), 3000)))
+                .isEqualTo(JsonParser.parseString(
+                        "{\"state\":\"running\",\"remainingSec\":1761,\"durationSec\":3000,\"label\":\"Test\"}"));
+        assertThat(JsonParser.parseString(TournamentSyncClient.timerBody(
+                new TimerState("05:00", 300, TimerZustand.PAUSIERT, "", "#000000", false), 600)))
+                .isEqualTo(JsonParser.parseString(
+                        "{\"state\":\"paused\",\"remainingSec\":300,\"durationSec\":600,\"label\":\"\"}"));
+    }
+
+    @Test
+    void timerBodyNachStoppOhneRestzeit() {
+        assertThat(JsonParser.parseString(TournamentSyncClient.timerBody(TimerState.inaktiv(), 600)))
+                .isEqualTo(JsonParser.parseString("{\"state\":\"stopped\",\"durationSec\":600,\"label\":\"\"}"));
+    }
+
+    @Test
+    void timerBodyHaeltDieGrenzenVonPtmOnlineEin() {
+        var body = JsonParser.parseString(TournamentSyncClient.timerBody(
+                new TimerState("00:00", 0, TimerZustand.BEENDET, "x".repeat(80), "#000000", false), 0))
+                .getAsJsonObject();
+
+        assertThat(body.get("state").getAsString()).isEqualTo("running");
+        assertThat(body.get("remainingSec").getAsLong()).isZero();
+        assertThat(body.has("durationSec")).isFalse();
+        assertThat(body.get("label").getAsString()).hasSize(60);
+    }
 }
+

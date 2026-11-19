@@ -22,6 +22,8 @@ import de.petanqueturniermanager.ptmonline.auftrag.SyncAuftrag;
 import de.petanqueturniermanager.ptmonline.auftrag.versand.SyncAntwort;
 import de.petanqueturniermanager.ptmonline.auftrag.versand.VersandErgebnis;
 import de.petanqueturniermanager.ptmonline.dto.MeleeTeamDto;
+import de.petanqueturniermanager.timer.TimerState;
+import de.petanqueturniermanager.timer.TimerZustand;
 
 class PtmOnlineAuftraegeTest {
 
@@ -185,6 +187,32 @@ class PtmOnlineAuftraegeTest {
             assertThat(JsonParser.parseString(auftrag.body()).getAsJsonObject().get("text").getAsString())
                     .isEqualTo("Runde 3 startet \"später\"");
         });
+    }
+
+    @Test
+    void timerIstEinGezaehlterAuftragUndNurDerLetzteStandWirdGesendet() {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        PtmOnlineAuftraege.timer(bestand, TURNIER, TournamentSyncClient.timerBody(
+                new TimerState("10:00", 600, TimerZustand.LAEUFT, "Runde 1", "#000000", false), 600), false);
+        PtmOnlineAuftraege.timer(bestand, TURNIER, TournamentSyncClient.timerBody(
+                new TimerState("09:00", 540, TimerZustand.PAUSIERT, "Runde 1", "#000000", false), 600), false);
+
+        assertThat(bestand.zuSenden(false)).singleElement().satisfies(auftrag -> {
+            assertThat(auftrag.art()).isEqualTo(AuftragsArt.TIMER);
+            assertThat(auftrag.methode()).isEqualTo("PUT");
+            assertThat(auftrag.pfad()).endsWith("/t1/timer");
+            assertThat(JsonParser.parseString(auftrag.body()).getAsJsonObject().get("state").getAsString())
+                    .isEqualTo("paused");
+        });
+    }
+
+    @Test
+    void timerGehtInDerPauseAllein() {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        PtmOnlineAuftraege.runde(bestand, TURNIER, 2, List.of());
+        PtmOnlineAuftraege.timer(bestand, TURNIER, "{\"state\":\"stopped\"}", true);
+
+        assertThat(bestand.zuSenden(true)).extracting(SyncAuftrag::art).containsExactly(AuftragsArt.TIMER);
     }
 
     @Test

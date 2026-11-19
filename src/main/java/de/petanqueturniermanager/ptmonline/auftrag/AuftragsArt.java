@@ -47,7 +47,9 @@ public enum AuftragsArt {
     /** Abschluss des Online-Turniers, auf Wunsch mit Veröffentlichung der Endrangliste und Benachrichtigung. */
     ABSCHLUSS,
     /** Ankündigung der Turnierleitung für Turnier- und Live-Seite; leerer Text löscht sie. */
-    ANKUENDIGUNG;
+    ANKUENDIGUNG,
+    /** Stand des Rundenzeit-Timers für Turnier- und Live-Seite (läuft, pausiert oder gestoppt). */
+    TIMER;
 
     /**
      * Noch nicht gesendete Aufträge dieser Art aus der Zeit vor dem lokalen Turnierstart werden beim Start verworfen
@@ -64,10 +66,10 @@ public enum AuftragsArt {
 
     /**
      * Auch bei pausiertem Sync gesendet werden nur ausdrückliche Einzelaktionen der Turnierleitung: der bestätigte
-     * Übergang zu {@code running} (KP-05, P-58) und eine Ankündigung. Sie werden dazu vor ältere ungesendete Aufträge
-     * gezogen ({@link AuftragsBestand#zieheVor}).
+     * Übergang zu {@code running} (KP-05, P-58), eine Ankündigung und die Bedienung des Timers. Sie werden dazu vor
+     * ältere ungesendete Aufträge gezogen ({@link AuftragsBestand#zieheVor}).
      */
     public boolean inPauseErlaubt() {
-        return this == START || this == ANKUENDIGUNG;
+        return this == START || this == ANKUENDIGUNG || this == TIMER;
     }
 }

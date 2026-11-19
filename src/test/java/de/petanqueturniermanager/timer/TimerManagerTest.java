@@ -6,12 +6,16 @@ import static org.mockito.Mockito.mock;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import com.sun.star.uno.XComponentContext;
+
+import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 
 /**
  * {@code XComponentContext} wird nie tatsächlich dereferenziert (nur beim
@@ -22,6 +26,7 @@ import com.sun.star.uno.XComponentContext;
 class TimerManagerTest {
 
     private static final XComponentContext MOCK_CONTEXT = mock(XComponentContext.class);
+    private static final WorkingSpreadsheet URSPRUNG = mock(WorkingSpreadsheet.class);
 
     @AfterEach
     void tearDown() {
@@ -124,7 +129,7 @@ class TimerManagerTest {
     @Test
     void starten_mitUngueltigerDauer_wirdIgnoriert() throws Exception {
         TimerManager.init(MOCK_CONTEXT);
-        TimerManager.get().starten(0, "x", freienPortFinden(), 0x123456);
+        TimerManager.get().starten(0, "x", freienPortFinden(), 0x123456, URSPRUNG);
         assertThat(TimerManager.get().getZustand()).isEqualTo(TimerZustand.INAKTIV);
     }
 
@@ -165,7 +170,7 @@ class TimerManagerTest {
         var empfangen = new CopyOnWriteArrayList<TimerState>();
         TimerManager.get().addListener(empfangen::add);
 
-        TimerManager.get().starten(30, "Testrunde", port, 0x112233);
+        TimerManager.get().starten(30, "Testrunde", port, 0x112233, URSPRUNG);
         assertThat(TimerManager.get().getZustand()).isEqualTo(TimerZustand.LAEUFT);
 
         TimerManager.get().pauseOderFortsetzen();
@@ -185,6 +190,44 @@ class TimerManagerTest {
         assertThat(TimerManager.get().getZustand()).isEqualTo(TimerZustand.INAKTIV);
     }
 
+    // ── Bedienaktionen für PTM-Online ────────────────────────────────────────
+
+    private record Steuerung(TimerZustand zustand, Optional<WorkingSpreadsheet> ursprung, long dauer) {}
+
+    @Test
+    void bedienaktionen_meldenUrsprungUndDauer_ohneSekundenTicks() throws Exception {
+        TimerManager.init(MOCK_CONTEXT);
+        var gemeldet = new CopyOnWriteArrayList<Steuerung>();
+        TimerManager.get().addSteuerungsListener((state, steuerung) -> gemeldet
+                .add(new Steuerung(state.zustand(), steuerung.ursprung(), steuerung.dauerSekunden())));
+
+        TimerManager.get().starten(30, "Runde", freienPortFinden(), 0, URSPRUNG);
+        TimerManager.get().pauseOderFortsetzen();
+        TimerManager.get().pauseOderFortsetzen();
+        TimerManager.get().zeitAnpassen(60);
+        Thread.sleep(1_200); // mindestens ein Sekunden-Tick: darf nicht gemeldet werden
+        TimerManager.get().stoppen();
+
+        assertThat(gemeldet).extracting(Steuerung::zustand).containsExactly(TimerZustand.LAEUFT,
+                TimerZustand.PAUSIERT, TimerZustand.LAEUFT, TimerZustand.LAEUFT, TimerZustand.INAKTIV);
+        assertThat(gemeldet).allSatisfy(s -> {
+            assertThat(s.ursprung()).containsSame(URSPRUNG);
+            assertThat(s.dauer()).isEqualTo(30);
+        });
+    }
+
+    @Test
+    void dispose_meldetKeinenStopp() throws Exception {
+        TimerManager.init(MOCK_CONTEXT);
+        TimerManager.get().starten(30, "Runde", freienPortFinden(), 0, URSPRUNG);
+        List<TimerState> gemeldet = new CopyOnWriteArrayList<>();
+        TimerManager.get().addSteuerungsListener((state, steuerung) -> gemeldet.add(state));
+
+        TimerManager.dispose();
+
+        assertThat(gemeldet).isEmpty();
+    }
+
     @Test
     void timerLaeuftAb_wechseltZuBeendetUndSnoozeStummschaltet() throws Exception {
         TimerManager.init(MOCK_CONTEXT);
@@ -192,7 +235,7 @@ class TimerManagerTest {
         var empfangen = new CopyOnWriteArrayList<TimerState>();
         TimerManager.get().addListener(empfangen::add);
 
-        TimerManager.get().starten(1, null, port, 0);
+        TimerManager.get().starten(1, null, port, 0, URSPRUNG);
 
         // Bis zu 5s auf BEENDET warten (Tick-Intervall 1s + Toleranz)
         long deadline = System.nanoTime() + 5_000_000_000L;

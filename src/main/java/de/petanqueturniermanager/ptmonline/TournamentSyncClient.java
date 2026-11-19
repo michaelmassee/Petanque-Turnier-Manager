@@ -19,6 +19,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -47,6 +48,8 @@ import de.petanqueturniermanager.ptmonline.dto.ServerZuordnungDto;
 import de.petanqueturniermanager.ptmonline.dto.SpieleinstellungenDto;
 import de.petanqueturniermanager.ptmonline.dto.SyncBindingDto;
 import de.petanqueturniermanager.ptmonline.dto.SyncStandDto;
+import de.petanqueturniermanager.timer.TimerState;
+import de.petanqueturniermanager.timer.TimerZustand;
 
 /**
  * Client fuer die PTM-Online REST-API: legt Turniere an und gleicht Anmeldungen/Ergebnisse
@@ -63,6 +66,10 @@ public class TournamentSyncClient extends PtmOnlineHttpClient implements Auftrag
     static final int PROTOKOLL_VERSION = 2;
 
     private static final Logger logger = LogManager.getLogger(TournamentSyncClient.class);
+
+    /** Grenzen des Online-Timers (99:59, Bezeichnung bis 60 Zeichen); darüber lehnt PTM-Online ab. */
+    private static final long TIMER_MAX_SEKUNDEN = 99L * 60 + 59;
+    private static final int TIMER_LABEL_MAX = 60;
 
     /** Liegt nach jedem {@code updated_at}: der Anmeldeabruf liefert damit nur den Turnierzustand. */
     static final Instant NACH_ALLEN_ANMELDUNGEN = Instant.parse("9999-12-31T00:00:00Z");
@@ -396,6 +403,32 @@ public class TournamentSyncClient extends PtmOnlineHttpClient implements Auftrag
     static String ankuendigungBody(String text) {
         JsonObject body = new JsonObject();
         body.addProperty("text", text);
+        return body.toString();
+    }
+
+    static String timerPfad(String tournamentId) {
+        return turnierPfad(tournamentId) + "/timer";
+    }
+
+    /**
+     * Nutzlast des Timers als absoluter Stand: {@code running} bzw. {@code paused} mit Restzeit, sonst
+     * {@code stopped}. Ein abgelaufener Timer wird als laufend mit Restzeit 0 übertragen („Zeit abgelaufen“).
+     */
+    static String timerBody(TimerState state, long dauerSekunden) {
+        JsonObject body = new JsonObject();
+        String zustand = switch (state.zustand()) {
+            case LAEUFT, BEENDET -> "running";
+            case PAUSIERT -> "paused";
+            case INAKTIV -> "stopped";
+        };
+        body.addProperty("state", zustand);
+        if (state.zustand() != TimerZustand.INAKTIV) {
+            body.addProperty("remainingSec", Math.clamp(state.sekunden(), 0, TIMER_MAX_SEKUNDEN));
+        }
+        if (dauerSekunden > 0 && dauerSekunden <= TIMER_MAX_SEKUNDEN) {
+            body.addProperty("durationSec", dauerSekunden);
+        }
+        body.addProperty("label", StringUtils.left(StringUtils.defaultString(state.bezeichnung()), TIMER_LABEL_MAX));
         return body.toString();
     }
 
