@@ -49,16 +49,17 @@ Die einheitliche Stoppuhr macht die Gruppe in der Toolbar sofort als zusammengeh
 | m15 Webserver starten | `ptm:webserver_starten` | `toolbar-webserver-starten.png` |
 | m16 Webserver stoppen | `ptm:webserver_stoppen` | `toolbar-webserver-stoppen.png` |
 | m17 Webserver-Regie öffnen | `ptm:webserver_regie_oeffnen` | `toolbar-webserver-regie.png` |
-| m19 Neues Turnier in neuer Datei | `ptm:toolbar_neu_in_neuer_datei` | `toolbar-neu-in-neuer-datei.png` |
-| m20 Öffnen | `ptm:toolbar_oeffnen` | `toolbar-oeffnen.png` |
-| m21 Speichern | `.uno:Save` | *LibreOffice-Standard, nicht eigenes Icon* |
-| m22 Drucken | `ptm:toolbar_drucken` | `toolbar-drucken.png` |
-| m23 Druckvorschau | `ptm:toolbar_druckvorschau` | `toolbar-druckvorschau.png` |
-| m24 Als PDF exportieren | `.uno:ExportToPDF` | *LibreOffice-Standard* |
-| m25 Druckbereich | `.uno:DefinePrintArea` | *LibreOffice-Standard* |
-| m27 Spieler-DB → Meldungen | `ptm:spielerdb_in_meldeliste` | `toolbar-spielerdb-meldungen.png` |
-| m29 Verarbeitung abbrechen | `ptm:abbruch` | `toolbar-abbruch.png` |
-| m31 Seitenleiste ein-/ausblenden | `ptm:sidebar_toggle` | `toolbar-sidebar.png` |
+| m18 Turnier-Startseite öffnen | `ptm:webserver_startseite_oeffnen` | `toolbar-webserver-startseite.png` |
+| m20 Neues Turnier in neuer Datei | `ptm:toolbar_neu_in_neuer_datei` | `toolbar-neu-in-neuer-datei.png` |
+| m21 Öffnen | `ptm:toolbar_oeffnen` | `toolbar-oeffnen.png` |
+| m22 Speichern | `.uno:Save` | *LibreOffice-Standard, nicht eigenes Icon* |
+| m23 Drucken | `ptm:toolbar_drucken` | `toolbar-drucken.png` |
+| m24 Druckvorschau | `ptm:toolbar_druckvorschau` | `toolbar-druckvorschau.png` |
+| m25 Als PDF exportieren | `.uno:ExportToPDF` | *LibreOffice-Standard* |
+| m26 Druckbereich | `.uno:DefinePrintArea` | *LibreOffice-Standard* |
+| m28 Spieler-DB → Meldungen | `ptm:spielerdb_in_meldeliste` | `toolbar-spielerdb-meldungen.png` |
+| m30 Verarbeitung abbrechen | `ptm:abbruch` | `toolbar-abbruch.png` |
+| m32 Seitenleiste ein-/ausblenden | `ptm:sidebar_toggle` | `toolbar-sidebar.png` |
 
 ### Spieltag-Toolbar (`Addons_Z3_SpieltagToolbar.xcu`)
 

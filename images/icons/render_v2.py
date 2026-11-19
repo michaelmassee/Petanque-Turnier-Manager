@@ -32,6 +32,7 @@ HAUPT = [
     "toolbar-vorrunden-rangliste", "toolbar-abschluss", "toolbar-abbruch",
     "toolbar-drucken", "toolbar-druckvorschau",
     "toolbar-webserver-starten", "toolbar-webserver-stoppen", "toolbar-webserver-regie",
+    "toolbar-webserver-startseite",
 ]
 SPIELTAG = ["toolbar-naechster-spieltag", "toolbar-gesamtrangliste"]
 TIMER = [
@@ -74,6 +75,7 @@ LABELS = {
     "toolbar-webserver-starten":  ("Server starten",      "ptm:webserver_starten"),
     "toolbar-webserver-stoppen":  ("Server stoppen",      "ptm:webserver_stoppen"),
     "toolbar-webserver-regie":    ("Regie-Seite",         "ptm:webserver_regie_oeffnen"),
+    "toolbar-webserver-startseite": ("Turnier-Startseite", "ptm:webserver_startseite_oeffnen"),
     "toolbar-ptmonline-sync-pausieren":  ("Sync pausieren",  "ptm:ptmonline_sync_pausieren"),
     "toolbar-ptmonline-sync-fortsetzen": ("Sync fortsetzen", "ptm:ptmonline_sync_fortsetzen"),
     "toolbar-ptmonline-verbinden":   ("Turnier verbinden",  "ptm:ptmonline_turnier_verbinden"),

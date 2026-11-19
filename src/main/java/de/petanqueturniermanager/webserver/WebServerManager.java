@@ -1545,6 +1545,17 @@ public final class WebServerManager implements TimerListener {
     }
 
     /**
+     * Adresse der Turnier-Startseite ({@code http://<Host>:<Startseite-Port>/}), oder {@code null}, wenn sie gerade
+     * nicht läuft (Webserver gestoppt, Startseite deaktiviert oder Port belegt).
+     */
+    public synchronized String getStartseiteUrl() {
+        var aktuelleStartseite = startseiteInstanz;
+        return aktuelleStartseite != null && aktuelleStartseite.laeuft()
+                ? buildUrl(aktuelleStartseite.getPort())
+                : null;
+    }
+
+    /**
      * Gibt die URL (Hostname:PORT) für den angegebenen Slot zurück, oder {@code null} wenn kein aktiver Port.
      * Gibt {@code null} zurück wenn slot außerhalb des gültigen Bereichs – kein Crash.
      */

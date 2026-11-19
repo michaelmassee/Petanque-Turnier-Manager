@@ -645,6 +645,25 @@ ICONS["toolbar-webserver-regie"] = svg(f'''
 ''')
 
 # ============================================================
+# 41. TURNIER-STARTSEITE ÖFFNEN — Server-Rack mit Haus-Badge (Startseite im Browser)
+# ============================================================
+ICONS["toolbar-webserver-startseite"] = svg(f'''
+  <rect x="10" y="10" width="36" height="46" rx="3" fill="{C['paper2']}" stroke="{C['ink']}" stroke-width="{S}"/>
+  <rect x="14" y="14" width="28" height="10" rx="1.5" fill="{C['paper']}" stroke="{C['ink']}" stroke-width="{S}"/>
+  <circle cx="38" cy="19" r="1.5" fill="{C['info']}"/>
+  <rect x="14" y="27" width="28" height="10" rx="1.5" fill="{C['paper']}" stroke="{C['ink']}" stroke-width="{S}"/>
+  <circle cx="38" cy="32" r="1.5" fill="{C['info']}"/>
+  <rect x="14" y="40" width="28" height="10" rx="1.5" fill="{C['paper']}" stroke="{C['ink']}" stroke-width="{S}"/>
+  <circle cx="38" cy="45" r="1.5" fill="{C['info']}"/>
+  <circle cx="50" cy="48" r="11" fill="{C['go']}" stroke="{C['ink']}" stroke-width="{S}"/>
+  <path d="M 43.5 48 L 50 42 L 56.5 48" fill="none" stroke="{C['paper']}" stroke-width="{S*1.2}"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 45.5 47 L 45.5 54 L 54.5 54 L 54.5 47" fill="none" stroke="{C['paper']}" stroke-width="{S}"
+        stroke-linejoin="round"/>
+  <rect x="48.6" y="50" width="2.8" height="4" fill="{C['paper']}"/>
+''')
+
+# ============================================================
 # SCHREIBEN
 # ============================================================
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "svg")
