@@ -59,6 +59,9 @@ public class TripTetePropertiesSpalte extends BasePropertiesSpalte implements IT
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_SPIELZIEL)
 				.setDefaultVal(13).setDescription("config.desc.triptete.spielziel"));
 
+		// Trip-Tête: Live-Ansicht ja, Spielermeldung nicht (drei Partien je Begegnung).
+		addPtmOnlineLiveProps(KONFIG_PROPERTIES, false);
+
 		ADDUploadProp(KONFIG_PROPERTIES);
 		ADDTeilnehmerlisteExportProp(KONFIG_PROPERTIES);
 		ADDAbschlussSheetExportProp(KONFIG_PROPERTIES);

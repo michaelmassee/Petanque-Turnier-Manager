@@ -39,6 +39,7 @@ public class PoulePropertiesSpalte extends TeamAnzeigePropertiesSpalte implement
         ADDBaseProp(KONFIG_PROPERTIES, false); // Rangliste-Farben noch nicht benötigt
         addCheckinSortProp(KONFIG_PROPERTIES);
         addPtmOnlineErgebnisDirektProp(KONFIG_PROPERTIES);
+        addPtmOnlineLiveProps(KONFIG_PROPERTIES, true);
         addTeilnehmerListeSortProp(KONFIG_PROPERTIES);
         addMeleeAnmeldungProp(KONFIG_PROPERTIES);
     }

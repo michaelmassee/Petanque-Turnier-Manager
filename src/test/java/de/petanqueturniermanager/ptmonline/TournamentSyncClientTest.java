@@ -359,6 +359,10 @@ public class TournamentSyncClientTest {
 		assertThat(TournamentSyncClient.spieleinstellungenPfad("t1")).isEqualTo("/api/sync/tournaments/t1/settings");
 		assertThat(TournamentSyncClient.spieleinstellungenBody(new SpieleinstellungenDto("triplette", null, 6, false)))
 				.isEqualTo("{\"formation\":\"triplette\",\"formuleXRounds\":6,\"koPlatz3\":false}");
+		// Live-Ansicht und Ergebnismeldung nur, wenn im Dokument gewählt
+		assertThat(TournamentSyncClient.spieleinstellungenBody(
+				new SpieleinstellungenDto("triplette", null, null, null).mitLive(true, false)))
+				.isEqualTo("{\"formation\":\"triplette\",\"liveViewEnabled\":true,\"playerResultReportingEnabled\":false}");
 	}
 
 	@Test

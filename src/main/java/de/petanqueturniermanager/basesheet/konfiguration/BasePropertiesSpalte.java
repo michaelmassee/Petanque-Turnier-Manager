@@ -79,6 +79,12 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 
 	// PTM-Online
 	public static final String KONFIG_PROP_PTMONLINE_ERGEBNISSE_DIREKT = "PTM-Online Ergebnismeldungen direkt eintragen";
+	public static final String KONFIG_PROP_PTMONLINE_LIVE_ANSICHT = "PTM-Online Live-Ansicht";
+	public static final String KONFIG_PROP_PTMONLINE_ERGEBNISMELDUNG = "PTM-Online Ergebnismeldung durch Spieler";
+	/** Auswahl der PTM-Online-Schalter: Online-Einstellung beibehalten (Standard), ein, aus. */
+	public static final String PTMONLINE_SCHALTER_ONLINE = "ONLINE";
+	public static final String PTMONLINE_SCHALTER_JA = "J";
+	public static final String PTMONLINE_SCHALTER_NEIN = "N";
 
 	// Export
 	public static final String KONFIG_PROP_MELDELISTE_EXPORTIEREN = "Meldeliste exportieren";
@@ -255,6 +261,33 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 				.setDefaultVal(false)
 				.setDescription("config.desc.ptmonline.ergebnisse.direkt")
 				.setShortDescription("config.label.ptmonline.ergebnisse.direkt"));
+	}
+
+	/**
+	 * Fügt die Schalter für Live-Ansicht und Ergebnismeldung durch Spieler in PTM-Online hinzu. Das verbundene Dokument
+	 * ist Master und überträgt sie mit den Spieleinstellungen. Standard „wie in PTM-Online“: Dann überträgt das Dokument
+	 * nichts und der online eingestellte Stand bleibt (bestehende Dokumente ändern online nichts).
+	 *
+	 * @param KONFIG_PROPERTIES  Property-Liste des jeweiligen Systems
+	 * @param mitErgebnismeldung {@code false} bei Systemen ohne Spielermeldung (Trip-Tête)
+	 */
+	protected static void addPtmOnlineLiveProps(List<ConfigProperty<?>> KONFIG_PROPERTIES, boolean mitErgebnismeldung) {
+		KONFIG_PROPERTIES.add(ptmOnlineSchalter(KONFIG_PROP_PTMONLINE_LIVE_ANSICHT,
+				"config.desc.ptmonline.live.ansicht", "config.label.ptmonline.live.ansicht"));
+		if (mitErgebnismeldung) {
+			KONFIG_PROPERTIES.add(ptmOnlineSchalter(KONFIG_PROP_PTMONLINE_ERGEBNISMELDUNG,
+					"config.desc.ptmonline.ergebnismeldung", "config.label.ptmonline.ergebnismeldung"));
+		}
+	}
+
+	private static ConfigProperty<?> ptmOnlineSchalter(String name, String descKey, String labelKey) {
+		return ((AuswahlConfigProperty) AuswahlConfigProperty.from(name)
+				.setDefaultVal(PTMONLINE_SCHALTER_ONLINE)
+				.setDescription(descKey)
+				.setShortDescription(labelKey))
+				.addAuswahl(PTMONLINE_SCHALTER_ONLINE, I18n.get("config.ptmonline.schalter.online"))
+				.addAuswahl(PTMONLINE_SCHALTER_JA, I18n.get("config.ptmonline.schalter.ja"))
+				.addAuswahl(PTMONLINE_SCHALTER_NEIN, I18n.get("config.ptmonline.schalter.nein"));
 	}
 
 	/**

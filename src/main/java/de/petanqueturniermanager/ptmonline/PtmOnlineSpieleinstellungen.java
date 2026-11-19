@@ -9,10 +9,12 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.jspecify.annotations.Nullable;
 
+import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.formulex.konfiguration.FormuleXKonfigurationSheet;
+import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.ko.konfiguration.KoKonfigurationSheet;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsBestand;
@@ -22,7 +24,7 @@ import de.petanqueturniermanager.schweizer.konfiguration.SchweizerRankingModus;
 
 /**
  * Überträgt die Spieleinstellungen des Turnierdokuments nach PTM-Online (Formation, Schweizer Ranglistenmodus,
- * Formule-X-Rundenzahl, Spiel um Platz 3). Ein verbundenes Dokument ist Master: Online gelten danach dieselben Werte,
+ * Spiel um Platz 3, Live-Ansicht, Ergebnismeldung durch Spieler). Ein verbundenes Dokument ist Master: Online gelten danach dieselben Werte,
  * die Live-Ansicht zeigt die Spalten passend zum Dokument.
  * <p>
  * Erfasst wird nur bei einer Änderung gegenüber dem zuletzt erfassten Stand; nach dem Öffnen oder Verbinden wird der
@@ -34,8 +36,38 @@ final class PtmOnlineSpieleinstellungen {
 
     private PtmOnlineSpieleinstellungen() {}
 
-    /** Liest die Spieleinstellungen des Dokuments; leer bei Systemen ohne Online-Gegenstück. */
+    /**
+     * Liest die Spieleinstellungen des Dokuments; leer bei Systemen ohne Online-Gegenstück. Dazu Live-Ansicht und
+     * Ergebnismeldung durch Spieler, sofern im Dokument gewählt (Standard „wie in PTM-Online“ überträgt nichts).
+     */
     static SpieleinstellungenDto lese(WorkingSpreadsheet ws, TurnierSystem turnierSystem) {
+        SpieleinstellungenDto einstellungen = leseSystem(ws, turnierSystem);
+        if (einstellungen.istLeer()) {
+            return einstellungen;
+        }
+        return DocumentPropertiesHelper.nurLesend(() -> {
+            DocumentPropertiesHelper properties = new DocumentPropertiesHelper(ws);
+            return einstellungen.mitLive(
+                    schalter(properties.getStringProperty(BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_LIVE_ANSICHT,
+                            BasePropertiesSpalte.PTMONLINE_SCHALTER_ONLINE)),
+                    turnierSystem == TurnierSystem.TRIPTETE ? null
+                            : schalter(properties.getStringProperty(BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_ERGEBNISMELDUNG,
+                                    BasePropertiesSpalte.PTMONLINE_SCHALTER_ONLINE)));
+        });
+    }
+
+    /** {@code J} → ein, {@code N} → aus, sonst (Standard „wie in PTM-Online“) {@code null}: nicht übertragen. */
+    static @Nullable Boolean schalter(@Nullable String wert) {
+        if (BasePropertiesSpalte.PTMONLINE_SCHALTER_JA.equals(wert)) {
+            return Boolean.TRUE;
+        }
+        if (BasePropertiesSpalte.PTMONLINE_SCHALTER_NEIN.equals(wert)) {
+            return Boolean.FALSE;
+        }
+        return null;
+    }
+
+    private static SpieleinstellungenDto leseSystem(WorkingSpreadsheet ws, TurnierSystem turnierSystem) {
         return switch (turnierSystem) {
             case SCHWEIZER -> {
                 SchweizerKonfigurationSheet konfiguration = new SchweizerKonfigurationSheet(ws);
