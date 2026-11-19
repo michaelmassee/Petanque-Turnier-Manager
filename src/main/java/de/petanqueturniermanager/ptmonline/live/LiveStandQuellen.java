@@ -19,6 +19,7 @@ import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.ko.konfiguration.KoKonfigurationSheet;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
+import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterGruppenSpalteHelper;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheet;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrundeSheet;
@@ -29,12 +30,20 @@ import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrund
  */
 public final class LiveStandQuellen {
 
-    /** Schweizer Rangliste; die Maastrichter-Vorrunden-Rangliste hat dasselbe Layout. */
-    private static final RanglistenBlattLeser.Spalten SCHWEIZER_RANGLISTE = new RanglistenBlattLeser.Spalten(
+    /** Gemeinsames Layout der Schweizer Rangliste und der Maastrichter-Vorrunden-Rangliste. */
+    private static final RanglistenBlattLeser.Spalten SCHWEIZER_LAYOUT = new RanglistenBlattLeser.Spalten(
             SchweizerRanglisteSheet.TEAM_NR_SPALTE, SchweizerRanglisteSheet.PLATZ_SPALTE,
             SchweizerRanglisteSheet.SIEGE_SPALTE, SchweizerRanglisteSheet.PUNKTE_PLUS_SPALTE,
             SchweizerRanglisteSheet.PUNKTE_MINUS_SPALTE)
             .mitBuchholz(SchweizerRanglisteSheet.BHZ_SPALTE, SchweizerRanglisteSheet.FBHZ_SPALTE);
+
+    private static final RanglistenBlattLeser.Spalten SCHWEIZER_RANGLISTE = SCHWEIZER_LAYOUT.mitFreilos(
+            SchweizerRanglisteSheet.freilosSpalteNach(SchweizerRanglisteSheet.PUNKTE_DIFF_SPALTE));
+
+    /** Wie die Schweizer Rangliste, dazu die Gruppe der Finalrunde vor der Freilos-Spalte. */
+    private static final RanglistenBlattLeser.Spalten MAASTRICHTER_VORRUNDEN_RANGLISTE = SCHWEIZER_LAYOUT
+            .mitGruppe(MaastrichterGruppenSpalteHelper.GRUPPE_SPALTE)
+            .mitFreilos(SchweizerRanglisteSheet.freilosSpalteNach(MaastrichterGruppenSpalteHelper.GRUPPE_SPALTE));
 
     private static final RanglistenBlattLeser.Spalten FORMULEX_RANGLISTE = new RanglistenBlattLeser.Spalten(
             FormuleXRanglisteSheet.TEAM_NR_SPALTE, FormuleXRanglisteSheet.PLATZ_SPALTE,
@@ -101,7 +110,7 @@ public final class LiveStandQuellen {
         RanglistenBlattLeser rangliste = new RanglistenBlattLeser(
                 SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDEN_RANGLISTE,
                 SheetNamen.maastrichterVorrundenRangliste(), SchweizerRanglisteSheet.ERSTE_DATEN_ZEILE,
-                SCHWEIZER_RANGLISTE);
+                MAASTRICHTER_VORRUNDEN_RANGLISTE);
         return new LiveTurnierStand(
                 new LiveRundenFolge().anhaengen(vorrunden).parallelAnhaengen(finalrunden).runden(),
                 rangliste.lese(ws), koSieger);

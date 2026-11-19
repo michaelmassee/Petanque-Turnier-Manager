@@ -4,6 +4,7 @@
 package de.petanqueturniermanager.ptmonline;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 
 import java.util.List;
 import java.util.Map;
@@ -15,6 +16,7 @@ import de.petanqueturniermanager.ptmonline.dto.LiveRankingEntryDto;
 import de.petanqueturniermanager.ptmonline.live.LivePartie;
 import de.petanqueturniermanager.ptmonline.live.LiveRanglistenEintrag;
 import de.petanqueturniermanager.ptmonline.live.LiveRanglistenEintrag.Wertungskriterien;
+import de.petanqueturniermanager.ptmonline.live.LiveRanglistenEintrag.Zusatzspalten;
 import de.petanqueturniermanager.ptmonline.live.LiveRunde;
 
 class LiveUebertragungsDatenTest {
@@ -144,5 +146,15 @@ class LiveUebertragungsDatenTest {
         assertThat(rangliste).containsExactly(
                 new LiveRankingEntryDto(1, List.of("r1"), 1, 20, 30, 2, -1, 5, 9, 120),
                 new LiveRankingEntryDto(2, List.of("r2"), 0, 10, 26, null, null, null, null, null));
+    }
+
+    @Test
+    void ranglisteUebertraegtGruppeUndFreilosRundenDesDokuments() {
+        List<LiveRankingEntryDto> rangliste = LiveUebertragungsDaten.rangliste(List.of(
+                LiveRanglistenEintrag.team(1, 1, 3, 38, 10).mitZusatz(new Zusatzspalten("A", null)),
+                LiveRanglistenEintrag.team(2, 2, 2, 28, 22).mitZusatz(new Zusatzspalten("B", "1, 3"))), ONLINE_IDS);
+
+        assertThat(rangliste).extracting(LiveRankingEntryDto::group, LiveRankingEntryDto::byeRounds)
+                .containsExactly(tuple("A", null), tuple("B", "1, 3"));
     }
 }

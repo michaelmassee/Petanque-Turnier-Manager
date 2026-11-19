@@ -203,7 +203,12 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 	 * Spalte mit den Freilos-Runden je Team – direkt rechts der Erweiterungsspalten.
 	 */
 	public final int freilosSpalte() {
-		return letzteErweiterungsSpalte() + 1;
+		return freilosSpalteNach(letzteErweiterungsSpalte());
+	}
+
+	/** Freilos-Spalte bei gegebener letzter Erweiterungsspalte – auch für Leser ohne Blatt-Instanz. */
+	public static int freilosSpalteNach(int letzteErweiterungsSpalte) {
+		return letzteErweiterungsSpalte + 1;
 	}
 
 	/**

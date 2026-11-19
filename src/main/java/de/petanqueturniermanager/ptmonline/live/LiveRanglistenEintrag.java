@@ -13,9 +13,11 @@ import org.jspecify.annotations.Nullable;
  * @param platz   Platz (bei Gleichstand mehrfach vergeben)
  * @param nummern lokale Team- bzw. Spieler-Nummern des Eintrags
  * @param wertung systemabhängige Wertungskriterien; leer, wenn das System sie nicht führt
+ * @param zusatz  weitere Spalten, die das Dokument zeigt (Gruppe, Freilos-Runden)
  */
 public record LiveRanglistenEintrag(int platz, List<Integer> nummern, @Nullable Integer siege,
-        @Nullable Integer punktePlus, @Nullable Integer punkteMinus, Wertungskriterien wertung) {
+        @Nullable Integer punktePlus, @Nullable Integer punkteMinus, Wertungskriterien wertung,
+        Zusatzspalten zusatz) {
 
     public LiveRanglistenEintrag {
         nummern = List.copyOf(nummern);
@@ -28,7 +30,23 @@ public record LiveRanglistenEintrag(int platz, List<Integer> nummern, @Nullable 
 
     public static LiveRanglistenEintrag team(int platz, int nummer, @Nullable Integer siege,
             @Nullable Integer punktePlus, @Nullable Integer punkteMinus, Wertungskriterien wertung) {
-        return new LiveRanglistenEintrag(platz, List.of(nummer), siege, punktePlus, punkteMinus, wertung);
+        return new LiveRanglistenEintrag(platz, List.of(nummer), siege, punktePlus, punkteMinus, wertung,
+                Zusatzspalten.KEINE);
+    }
+
+    public LiveRanglistenEintrag mitZusatz(Zusatzspalten neuerZusatz) {
+        return new LiveRanglistenEintrag(platz, nummern, siege, punktePlus, punkteMinus, wertung, neuerZusatz);
+    }
+
+    /**
+     * Spalten ohne Einfluss auf den Platz, die das Dokument je nach Stand zeigt.
+     *
+     * @param gruppe        Gruppe der Maastrichter-Finalrunde, sobald zugeteilt
+     * @param freilosRunden Runden mit Freilos, z.&nbsp;B. {@code 2} oder {@code 1, 3}; nur bei sichtbarer Spalte
+     */
+    public record Zusatzspalten(@Nullable String gruppe, @Nullable String freilosRunden) {
+
+        public static final Zusatzspalten KEINE = new Zusatzspalten(null, null);
     }
 
     /**

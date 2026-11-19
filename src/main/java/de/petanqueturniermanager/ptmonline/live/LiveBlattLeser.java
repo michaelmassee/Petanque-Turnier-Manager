@@ -9,10 +9,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jspecify.annotations.Nullable;
 
+import com.sun.star.beans.XPropertySet;
 import com.sun.star.container.NoSuchElementException;
 import com.sun.star.lang.WrappedTargetException;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheets;
+import com.sun.star.table.XColumnRowRange;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.Lo;
@@ -50,6 +52,18 @@ final class LiveBlattLeser {
         } catch (NoSuchElementException | WrappedTargetException e) {
             logger.debug("PTM-Online Live: Blatt '{}' nicht lesbar", fallbackName, e);
             return null;
+        }
+    }
+
+    /** Ob die Spalte im Blatt eingeblendet ist; im Zweifel (nicht lesbar) ausgeblendet. */
+    static boolean spalteSichtbar(XSpreadsheet blatt, int spalte) {
+        try {
+            XColumnRowRange bereich = Lo.qi(XColumnRowRange.class, blatt);
+            XPropertySet eigenschaften = Lo.qi(XPropertySet.class, bereich.getColumns().getByIndex(spalte));
+            return Boolean.TRUE.equals(eigenschaften.getPropertyValue("IsVisible"));
+        } catch (com.sun.star.uno.Exception e) {
+            logger.debug("PTM-Online Live: Sichtbarkeit der Spalte {} nicht lesbar", spalte, e);
+            return false;
         }
     }
 

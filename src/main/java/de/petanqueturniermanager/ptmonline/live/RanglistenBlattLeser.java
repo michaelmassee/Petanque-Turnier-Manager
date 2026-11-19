@@ -13,10 +13,11 @@ import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.ptmonline.live.LiveRanglistenEintrag.Wertungskriterien;
+import de.petanqueturniermanager.ptmonline.live.LiveRanglistenEintrag.Zusatzspalten;
 
 /**
  * Liest ein Ranglisten-Blatt mit einer Zeile je Team bzw. Spieler: Nummer, Platz, Siege, Punkte+ und Punkte−
- * stehen in festen Spalten, dazu die systemabhängigen Wertungskriterien. Übernommen wird, was das Turnierdokument
+ * stehen in festen Spalten, dazu die systemabhängigen Wertungskriterien und die Zusatzspalten Gruppe und Freilos. Übernommen wird, was das Turnierdokument
  * anzeigt – das Dokument ist Referenz für die Rangliste der Live-Ansicht.
  *
  * @param schluessel      Metadaten-Schlüssel des Ranglisten-Blatts
@@ -29,34 +30,46 @@ record RanglistenBlattLeser(String schluessel, String fallbackName, int ersteDat
     static final int KEINE = -1;
 
     /**
-     * Spalten (0-basiert) von Nummer, Platz, Siegen, Punkte+ und Punkte− sowie der Wertungskriterien ({@link #KEINE},
-     * wenn das Blatt sie nicht führt).
+     * Spalten (0-basiert) von Nummer, Platz, Siegen, Punkte+ und Punkte− sowie der Wertungskriterien und
+     * Zusatzspalten ({@link #KEINE}, wenn das Blatt sie nicht führt).
      */
     record Spalten(int nummer, int platz, int siege, int punktePlus, int punkteMinus, int niederlagen,
-            int spielDifferenz, int buchholz, int feinBuchholz, int formuleXWertung) {
+            int spielDifferenz, int buchholz, int feinBuchholz, int formuleXWertung, int gruppe, int freilos) {
 
         Spalten(int nummer, int platz, int siege, int punktePlus, int punkteMinus) {
-            this(nummer, platz, siege, punktePlus, punkteMinus, KEINE, KEINE, KEINE, KEINE, KEINE);
+            this(nummer, platz, siege, punktePlus, punkteMinus, KEINE, KEINE, KEINE, KEINE, KEINE, KEINE, KEINE);
         }
 
         Spalten mitNiederlagen(int niederlagenSpalte, int spielDifferenzSpalte) {
             return new Spalten(nummer, platz, siege, punktePlus, punkteMinus, niederlagenSpalte, spielDifferenzSpalte,
-                    buchholz, feinBuchholz, formuleXWertung);
+                    buchholz, feinBuchholz, formuleXWertung, gruppe, freilos);
         }
 
         Spalten mitBuchholz(int buchholzSpalte, int feinBuchholzSpalte) {
             return new Spalten(nummer, platz, siege, punktePlus, punkteMinus, niederlagen, spielDifferenz,
-                    buchholzSpalte, feinBuchholzSpalte, formuleXWertung);
+                    buchholzSpalte, feinBuchholzSpalte, formuleXWertung, gruppe, freilos);
         }
 
         Spalten mitFormuleXWertung(int wertungSpalte) {
             return new Spalten(nummer, platz, siege, punktePlus, punkteMinus, niederlagen, spielDifferenz, buchholz,
-                    feinBuchholz, wertungSpalte);
+                    feinBuchholz, wertungSpalte, gruppe, freilos);
+        }
+
+        /** Gruppe der Finalrunde; leere Zellen (noch nicht zugeteilt) werden nicht übertragen. */
+        Spalten mitGruppe(int gruppeSpalte) {
+            return new Spalten(nummer, platz, siege, punktePlus, punkteMinus, niederlagen, spielDifferenz, buchholz,
+                    feinBuchholz, formuleXWertung, gruppeSpalte, freilos);
+        }
+
+        /** Freilos-Runden; übertragen nur, solange das Dokument die Spalte zeigt. */
+        Spalten mitFreilos(int freilosSpalte) {
+            return new Spalten(nummer, platz, siege, punktePlus, punkteMinus, niederlagen, spielDifferenz, buchholz,
+                    feinBuchholz, formuleXWertung, gruppe, freilosSpalte);
         }
 
         int letzte() {
             return IntStream.of(nummer, platz, siege, punktePlus, punkteMinus, niederlagen, spielDifferenz, buchholz,
-                    feinBuchholz, formuleXWertung).max().orElse(nummer);
+                    feinBuchholz, formuleXWertung, gruppe, freilos).max().orElse(nummer);
         }
     }
 
@@ -67,6 +80,9 @@ record RanglistenBlattLeser(String schluessel, String fallbackName, int ersteDat
             return List.of();
         }
         LiveZellbereich zellen = LiveBlattLeser.datenzeilen(ws, blatt, ersteDatenZeile, spalten.letzte());
+        int freilosSpalte = spalten.freilos() != KEINE && LiveBlattLeser.spalteSichtbar(blatt, spalten.freilos())
+                ? spalten.freilos()
+                : KEINE;
         List<LiveRanglistenEintrag> eintraege = new ArrayList<>();
         for (int zeile = zellen.ersteZeile(); zeile <= zellen.letzteZeile(); zeile++) {
             int nummer = zellen.zahl(spalten.nummer(), zeile);
@@ -77,7 +93,7 @@ record RanglistenBlattLeser(String schluessel, String fallbackName, int ersteDat
             if (platz > 0) {
                 eintraege.add(LiveRanglistenEintrag.team(platz, nummer, zellen.punkte(spalten.siege(), zeile),
                         zellen.punkte(spalten.punktePlus(), zeile), zellen.punkte(spalten.punkteMinus(), zeile),
-                        wertung(zellen, zeile)));
+                        wertung(zellen, zeile)).mitZusatz(zusatz(zellen, zeile, freilosSpalte)));
             }
         }
         return eintraege;
@@ -88,6 +104,14 @@ record RanglistenBlattLeser(String schluessel, String fallbackName, int ersteDat
                 spalten.spielDifferenz() == KEINE ? null : zellen.differenz(spalten.spielDifferenz(), zeile),
                 anzahl(zellen, spalten.buchholz(), zeile), anzahl(zellen, spalten.feinBuchholz(), zeile),
                 anzahl(zellen, spalten.formuleXWertung(), zeile));
+    }
+
+    private Zusatzspalten zusatz(LiveZellbereich zellen, int zeile, int freilosSpalte) {
+        return new Zusatzspalten(text(zellen, spalten.gruppe(), zeile), text(zellen, freilosSpalte, zeile));
+    }
+
+    private static @Nullable String text(LiveZellbereich zellen, int spalte, int zeile) {
+        return spalte == KEINE ? null : zellen.text(spalte, zeile);
     }
 
     private static @Nullable Integer anzahl(LiveZellbereich zellen, int spalte, int zeile) {
