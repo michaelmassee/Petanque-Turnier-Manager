@@ -37,7 +37,7 @@ import de.petanqueturniermanager.ptmonline.live.LiveStandQuellen;
  * „Turnier online abschließen“: Nach Rückfrage überträgt das Dokument Spielrunden, Rangliste und Spieleinstellungen
  * vollständig und schließt das Online-Turnier ab – auf Wunsch mit Veröffentlichung der Endrangliste und
  * Benachrichtigung der Teilnehmer. Der Abschluss ist ein gezählter Auftrag und geht synchron hinaus; ohne Netz bleibt
- * er gespeichert und wird mit dem nächsten Versand nachgeholt.
+ * er gespeichert und wird mit dem nächsten Versand nachgeholt. Jeder Schritt erscheint in der ProcessBox.
  */
 public final class PtmOnlineAbschlussRunner extends SheetRunner implements PtmOnlineLiveAusloeser {
 
@@ -68,6 +68,7 @@ public final class PtmOnlineAbschlussRunner extends SheetRunner implements PtmOn
             Optional<Wahl> wahl = frageNach(client, verbindung.tournamentId());
             if (wahl.isEmpty()) {
                 getLogger().info("PTM-Online: Abschluss von Turnier {} abgebrochen", verbindung.tournamentId());
+                processBox().info(I18n.get("ptmonline.fortschritt.abschluss.abgebrochen"));
                 return;
             }
             processBox().info(I18n.get("ptmonline.fortschritt.abschluss"));
@@ -76,9 +77,11 @@ public final class PtmOnlineAbschlussRunner extends SheetRunner implements PtmOn
             erfasseVollstaendigenStand(verbindung, bestand, client);
             PtmOnlineAuftraege.abschluss(bestand, verbindung.tournamentId(), wahl.get().ranglisteVeroeffentlichen(),
                     wahl.get().teilnehmerBenachrichtigen());
+            processBox().info(I18n.get("ptmonline.fortschritt.abschluss.senden"));
             PtmOnlineAuftraege.SynchronerVersand versand = PtmOnlineAuftraege.sendeSynchron(bestand,
                     verbindung.mapping(), client, false);
             pruefeVersand(versand);
+            processBox().info(I18n.get("ptmonline.fortschritt.abschluss.gesendet"));
             zeigeErgebnis(versand.anwendung());
         } catch (InterruptedException e) {
             getLogger().debug("PTM-Online: Abschluss abgebrochen", e);
@@ -148,9 +151,11 @@ public final class PtmOnlineAbschlussRunner extends SheetRunner implements PtmOn
      */
     private void erfasseVollstaendigenStand(PtmOnlineVerbindung verbindung, AuftragsBestand bestand,
             TournamentSyncClient client) throws GenerateException, InterruptedException {
+        processBox().info(I18n.get("ptmonline.fortschritt.abschluss.nachziehen"));
         SheetSyncNachzieher.get().zieheNach(getWorkingSpreadsheet(), NachziehModus.NUR_VORHANDENE, () -> {
             // Der Runner läuft bereits im Blattschutz-Scope des SheetRunners.
         });
+        processBox().info(I18n.get("ptmonline.fortschritt.abschluss.erfassen"));
         String tournamentId = verbindung.tournamentId();
         PtmOnlineLiveSync.vergessen(tournamentId);
         PtmOnlineSpieleinstellungen.vergessen(tournamentId);

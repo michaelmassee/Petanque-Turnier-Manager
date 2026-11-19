@@ -1494,6 +1494,10 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_TOOLBAR_WHATSAPP_SELEKTION_POSTEN:
 				starteWhatsAppPost(ws, WhatsAppAktion.SELEKTION);
 				break;
+			// Längerer Lauf mit Übertragung: wie die übrigen Runner mit sichtbarer ProcessBox, nicht als Dialog-Befehl.
+			case CMD_PTMONLINE_TURNIER_ABSCHLIESSEN:
+				de.petanqueturniermanager.ptmonline.ui.PtmOnlineDispatcher.turnierAbschliessen(ws);
+				break;
 			default:
 				ProcessBox.from().fehler("ungueltige Aktion " + command);
 				logger.warn("Unbekannter Befehl: {}", command);
@@ -1589,8 +1593,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 					.turnierseiteOeffnen(erzeugeWorkingSpreadsheetFuerDispatch());
 			case CMD_PTMONLINE_LIVE_QR_OEFFNEN         -> de.petanqueturniermanager.ptmonline.ui.PtmOnlineDispatcher
 					.liveQrCodeOeffnen(erzeugeWorkingSpreadsheetFuerDispatch());
-			case CMD_PTMONLINE_TURNIER_ABSCHLIESSEN    -> de.petanqueturniermanager.ptmonline.ui.PtmOnlineDispatcher
-					.turnierAbschliessen(erzeugeWorkingSpreadsheetFuerDispatch());
 			default -> { return false; }
 		}
 		return true;
