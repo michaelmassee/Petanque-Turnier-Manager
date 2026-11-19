@@ -7,6 +7,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import com.sun.star.awt.MenuItemType;
+import com.sun.star.awt.XPopupMenu;
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.frame.XFrame;
 import com.sun.star.frame.XLayoutManager;
@@ -70,7 +72,7 @@ class PtmOnlineAktivierungUITest extends BaseCalcUITest {
         assertThat(Lo.qi(com.sun.star.frame.XPopupMenuController.class, service)).as("Controller-Service registriert").isNotNull();
         for (int i = 0; i < 2; i++) {
             schalte(menuController, new LibreOfficePtmOnlineSpeicher.Zugangsdaten("test", "http://127.0.0.1", true));
-            assertThat(popup.getItemCount()).as("Alle dreizehn Online-Befehle wiederhergestellt").isEqualTo((short) 13);
+            assertThat(anzahlBefehle(popup)).as("Alle dreizehn Online-Befehle wiederhergestellt").isEqualTo(13);
             assertThat(toolbarSichtbar(sichtbaresFenster)).as("PTM-Online-Toolbar mit Freigabe sichtbar").isTrue();
             var instanz = PtmOnlineLiveBeobachter.class.getDeclaredField("instanz");
             instanz.setAccessible(true);
@@ -105,6 +107,17 @@ class PtmOnlineAktivierungUITest extends BaseCalcUITest {
         });
         assertThat(fertig.await(10, TimeUnit.SECONDS)).isTrue();
         assertThat(fehler.get()).isNull();
+    }
+
+    /** Menübefehle ohne die Trennlinien zwischen den Gruppen. */
+    private static int anzahlBefehle(XPopupMenu popup) {
+        int befehle = 0;
+        for (short position = 0; position < popup.getItemCount(); position++) {
+            if (popup.getItemType(position) != MenuItemType.SEPARATOR) {
+                befehle++;
+            }
+        }
+        return befehle;
     }
 
     private static boolean toolbarSichtbar(XFrame frame) throws Exception {
