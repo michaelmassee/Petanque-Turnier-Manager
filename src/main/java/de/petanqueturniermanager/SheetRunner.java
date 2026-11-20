@@ -666,6 +666,11 @@ public abstract class SheetRunner extends Thread {
 			// Dokument niemals speichern – sie verändern den Speicher-Zustand nicht.
 			return;
 		}
+		if (silentBackground) {
+			// Stille Hintergrundläufe (PTM-Online, Webserver, Sheet-Sync) speichern nie: Das Modified-Flag
+			// stammt meist von der Zelleingabe des Anwenders, sonst würde bei jeder Eingabe gespeichert.
+			return;
+		}
 		if (!GlobalProperties.get().isAutoSave()) {
 			return;
 		}
