@@ -123,7 +123,8 @@ final class PtmOnlineCheckin {
         for (LokaleOnlineMeldung meldung : meldungen) {
             String uuid = uuidProZeile.get(meldung.zeile1Basiert());
             if (uuid != null && onlineIds.containsKey(uuid)) {
-                eintraege.add(new PtmOnlineStatusAuftrag.Eintrag(uuid, meldung.teilnahme(), meldung.seedingPosition()));
+                eintraege.add(new PtmOnlineStatusAuftrag.Eintrag(uuid, meldung.teilnahme(), meldung.seedingPosition(),
+                        meldung.teamNummer()));
             }
         }
         return eintraege;

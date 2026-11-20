@@ -12,6 +12,8 @@ import org.jspecify.annotations.Nullable;
  * @param teilnahme       zu meldende Teilnahme; nur {@link OnlineTeilnahme#AKTIV} wird bei fehlender
  *                        Online-Zuordnung neu angelegt
  * @param seedingPosition Wert für {@code seeding_position}; {@code null} löscht ihn online
+ * @param teamNummer      Nr. der Meldeliste; {@code null} bei Einzelanmeldungen ohne feste Teamnummer (Mêlée)
  */
-record LokaleOnlineMeldung(int zeile1Basiert, OnlineTeilnahme teilnahme, @Nullable Integer seedingPosition) {
+record LokaleOnlineMeldung(int zeile1Basiert, OnlineTeilnahme teilnahme, @Nullable Integer seedingPosition,
+        @Nullable Integer teamNummer) {
 }

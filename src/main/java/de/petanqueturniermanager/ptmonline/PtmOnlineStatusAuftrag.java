@@ -8,7 +8,7 @@ import java.util.List;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Teilnahme und Setzposition der lokalen Meldungen einer Verbindung, im Dokument-Kontext gelesen. Daraus entsteht
+ * Teilnahme, Setzposition und Teamnummer der lokalen Meldungen einer Verbindung, im Dokument-Kontext gelesen. Daraus entsteht
  * ein Teilnahme-Auftrag ({@link PtmOnlineAuftraege#teilnahme}); Meldungen ohne Online-Zuordnung werden dabei
  * übergangen.
  */
@@ -21,7 +21,9 @@ record PtmOnlineStatusAuftrag(String tournamentId, List<Eintrag> eintraege) {
     /**
      * @param lokaleUuid      dauerhafte Kennung der Meldelistenzeile
      * @param seedingPosition lokale Setzposition, {@code null} = keine (löscht die online gepflegte)
+     * @param teamNummer      Nr. der Meldeliste für die Live-Ansicht, {@code null} = online unverändert
      */
-    record Eintrag(String lokaleUuid, OnlineTeilnahme teilnahme, @Nullable Integer seedingPosition) {
+    record Eintrag(String lokaleUuid, OnlineTeilnahme teilnahme, @Nullable Integer seedingPosition,
+            @Nullable Integer teamNummer) {
     }
 }

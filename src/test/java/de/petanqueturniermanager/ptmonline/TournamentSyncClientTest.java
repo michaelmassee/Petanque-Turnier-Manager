@@ -211,10 +211,11 @@ public class TournamentSyncClientTest {
 	@Test
 	public void ergebnisPayloadMeldetTeilnahmeUndKeinenAnmeldestatus() {
 		String json = TournamentSyncClient.ergebnisseBody(
-				List.of(new RegistrationResultDto("r1", null, 3, OnlineTeilnahme.INAKTIV.apiWert(), 2)));
+				List.of(new RegistrationResultDto("r1", null, 3, OnlineTeilnahme.INAKTIV.apiWert(), null, 2)));
 
 		assertThat(json).contains("\"participation\":\"inactive\"").doesNotContain("\"active\"")
-				.doesNotContain("\"status\"").contains("\"expectedExecutionRevision\":2");
+				.doesNotContain("\"status\"").as("ohne Teamnummer bleibt die online gespeicherte")
+				.doesNotContain("teamNumber").contains("\"expectedExecutionRevision\":2");
 	}
 
 	@Test

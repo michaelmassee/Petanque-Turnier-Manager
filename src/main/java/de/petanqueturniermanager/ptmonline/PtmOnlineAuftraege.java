@@ -162,7 +162,7 @@ public final class PtmOnlineAuftraege {
     }
 
     /**
-     * Teilnahme und Setzposition zugeordneter Meldungen. Die erwartete Ausführungsrevision berücksichtigt noch offene
+     * Teilnahme, Setzposition und Teamnummer zugeordneter Meldungen. Die erwartete Ausführungsrevision berücksichtigt noch offene
      * Aufträge derselben Meldung: gelingen sie, erhöht jeder die Revision um eins.
      *
      * @return leer, wenn keine der Meldungen online zugeordnet ist
@@ -181,7 +181,7 @@ public final class PtmOnlineAuftraege {
             int erwartet = Math.max(revisionen.getOrDefault(eintrag.lokaleUuid(), 1),
                     offeneRevisionen.getOrDefault(eintrag.lokaleUuid(), 0));
             results.add(new RegistrationResultDto(onlineId, null, eintrag.seedingPosition(),
-                    eintrag.teilnahme().apiWert(), erwartet));
+                    eintrag.teilnahme().apiWert(), eintrag.teamNummer(), erwartet));
             neueRevisionen.addProperty(eintrag.lokaleUuid(), erwartet + 1);
         }
         if (results.isEmpty()) {

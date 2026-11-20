@@ -136,7 +136,7 @@ class PtmOnlineCheckinTest {
     }
 
     private static PtmOnlineStatusAuftrag.Eintrag eintrag(String uuid, OnlineTeilnahme teilnahme) {
-        return new PtmOnlineStatusAuftrag.Eintrag(uuid, teilnahme, null);
+        return new PtmOnlineStatusAuftrag.Eintrag(uuid, teilnahme, null, null);
     }
 
     private static List<String> uuids(PtmOnlineCheckin.Aenderung aenderung) {

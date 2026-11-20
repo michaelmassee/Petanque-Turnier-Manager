@@ -39,7 +39,7 @@ final class MeleeTeilnahme {
             Set<Integer> ausgestiegen) {
         return meleeZeilen.stream()
                 .map(zeile -> new LokaleOnlineMeldung(zeile.zeile() + 1, teilnahme(zeile, aktive, ausgestiegen),
-                        zeile.setzPosition() > 0 ? zeile.setzPosition() : null))
+                        zeile.setzPosition() > 0 ? zeile.setzPosition() : null, null))
                 .toList();
     }
 

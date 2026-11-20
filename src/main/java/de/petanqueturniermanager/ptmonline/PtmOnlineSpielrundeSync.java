@@ -341,14 +341,16 @@ public final class PtmOnlineSpielrundeSync {
         Map<Integer, Integer> zeileProTeam = zeileProTeam(ziel);
         return alle.stream()
                 .filter(zeileProTeam::containsKey)
-                .map(teamNr -> teamMeldung(ziel, zeileProTeam.get(teamNr),
+                .map(teamNr -> teamMeldung(ziel, zeileProTeam.get(teamNr), teamNr,
                         OnlineTeilnahme.aus(aktive.contains(teamNr), ausgestiegen.contains(teamNr))))
                 .toList();
     }
 
-    private static LokaleOnlineMeldung teamMeldung(MeldelisteZiel ziel, int zeile, OnlineTeilnahme teilnahme) {
+    private static LokaleOnlineMeldung teamMeldung(MeldelisteZiel ziel, int zeile, int teamNr,
+            OnlineTeilnahme teilnahme) {
         OptionalInt setzposition = ziel.getSetzpositionAusZeile(zeile);
-        return new LokaleOnlineMeldung(zeile, teilnahme, setzposition.isPresent() ? setzposition.getAsInt() : null);
+        return new LokaleOnlineMeldung(zeile, teilnahme, setzposition.isPresent() ? setzposition.getAsInt() : null,
+                teamNr);
     }
 
     /**
@@ -632,7 +634,8 @@ public final class PtmOnlineSpielrundeSync {
         for (LokaleOnlineMeldung meldung : meldungen) {
             String uuid = uuidProZeile.get(meldung.zeile1Basiert());
             if (uuid != null) {
-                eintraege.add(new PtmOnlineStatusAuftrag.Eintrag(uuid, meldung.teilnahme(), meldung.seedingPosition()));
+                eintraege.add(new PtmOnlineStatusAuftrag.Eintrag(uuid, meldung.teilnahme(), meldung.seedingPosition(),
+                        meldung.teamNummer()));
             }
         }
         return new PtmOnlineStatusAuftrag(tournamentId, eintraege);

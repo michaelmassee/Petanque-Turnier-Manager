@@ -31,7 +31,7 @@ class PtmOnlineAuftraegeTest {
     private static final Instant JETZT = Instant.parse("2026-11-19T10:00:00Z");
 
     private static PtmOnlineStatusAuftrag.Eintrag aktiv(String uuid) {
-        return new PtmOnlineStatusAuftrag.Eintrag(uuid, OnlineTeilnahme.AKTIV, null);
+        return new PtmOnlineStatusAuftrag.Eintrag(uuid, OnlineTeilnahme.AKTIV, null, null);
     }
 
     private static int erwarteteRevision(SyncAuftrag auftrag) {
@@ -60,6 +60,20 @@ class PtmOnlineAuftraegeTest {
 
         assertThat(erwarteteRevision(erster)).isEqualTo(3);
         assertThat(erwarteteRevision(zweiter)).as("der offene erste Auftrag erhöht die Revision").isEqualTo(4);
+    }
+
+    @Test
+    void teilnahmeSendetDieTeamnummerDerMeldeliste() {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        PtmOnlineStatusAuftrag.Eintrag eingecheckt = new PtmOnlineStatusAuftrag.Eintrag("u1", OnlineTeilnahme.AKTIV,
+                null, 7);
+
+        SyncAuftrag auftrag = PtmOnlineAuftraege
+                .teilnahme(bestand, TURNIER, List.of(eingecheckt), Map.of("u1", "r1"), Map.of()).orElseThrow();
+
+        JsonObject meldung = JsonParser.parseString(auftrag.body()).getAsJsonObject().getAsJsonArray("registrations")
+                .get(0).getAsJsonObject();
+        assertThat(meldung.get("teamNumber").getAsInt()).isEqualTo(7);
     }
 
     @Test
