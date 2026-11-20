@@ -8,7 +8,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.OptionalLong;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.logging.log4j.LogManager;
@@ -28,8 +30,13 @@ import de.petanqueturniermanager.helper.i18n.I18n;
 class SheetRunnerKoordinator {
 
     private static final Logger logger = LogManager.getLogger(SheetRunnerKoordinator.class);
+    private static final long WARTE_INTERVALL_MS = 50;
 
     private final AtomicBoolean laeuft = new AtomicBoolean();
+    /** Ob der aktive Lauf ein stiller Hintergrundlauf ist ({@link SheetRunner#startSilent()}). */
+    private volatile boolean stillBelegt;
+    /** Anzahl vom Anwender gestarteter Läufe, die auf das Ende eines stillen Hintergrundlaufs warten. */
+    private final AtomicInteger wartendeVordergrundLaeufe = new AtomicInteger();
     /** Zählt jeden begonnenen Lauf; erkennt Läufe, die während eines Lesevorgangs begonnen und geendet haben. */
     private final AtomicLong laufZaehler = new AtomicLong();
     private volatile SheetRunner aktuellerRunner = null;
@@ -138,7 +145,58 @@ class SheetRunnerKoordinator {
 
     /** Setzt das Lauf-Flag direkt. */
     void setLaeuft(boolean wert) {
+        if (!wert) {
+            stillBelegt = false;
+        }
         zaehleLaufbeginn(laeuft.getAndSet(wert), wert);
+    }
+
+    /**
+     * Belegt den Koordinator für einen Lauf, falls keiner aktiv ist.
+     *
+     * @param still {@code true} für einen stillen Hintergrundlauf
+     * @return {@code true}, wenn der Aufrufer jetzt laufen darf
+     */
+    boolean belege(boolean still) {
+        if (still && wartendeVordergrundLaeufe.get() > 0) {
+            return false; // ein wartender Anwender-Lauf hat Vorrang
+        }
+        if (getAndSetLaeuft(true)) {
+            return false;
+        }
+        stillBelegt = still;
+        return true;
+    }
+
+    /** Ob gerade ein stiller Hintergrundlauf aktiv ist, auf dessen Ende ein Anwender-Lauf warten darf. */
+    boolean istStillBelegt() {
+        return laeuft.get() && stillBelegt;
+    }
+
+    /**
+     * Wartet, bis der aktive stille Hintergrundlauf endet, und belegt dann den Koordinator für einen Anwender-Lauf.
+     * Neue stille Läufe starten währenddessen nicht. Darf nicht auf dem LO-Main-Thread laufen: Der Hintergrundlauf
+     * braucht die SolarMutex, die der Main-Thread hält.
+     *
+     * @return {@code false}, wenn stattdessen ein anderer Anwender-Lauf aktiv ist oder die Wartezeit abläuft
+     */
+    boolean warteUndBelege(long maxWartezeitMs) throws InterruptedException {
+        wartendeVordergrundLaeufe.incrementAndGet();
+        try {
+            long ende = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(maxWartezeitMs);
+            while (System.nanoTime() < ende) {
+                if (belege(false)) {
+                    return true;
+                }
+                if (!istStillBelegt()) {
+                    return false;
+                }
+                TimeUnit.MILLISECONDS.sleep(WARTE_INTERVALL_MS);
+            }
+            return false;
+        } finally {
+            wartendeVordergrundLaeufe.decrementAndGet();
+        }
     }
 
     /** Erst nach dem Setzen des Flags zählen: ein Leser sieht so entweder das Flag oder den neuen Zählerstand. */
@@ -180,6 +238,8 @@ class SheetRunnerKoordinator {
     /** Setzt den gesamten Zustand zurück – ausschließlich für Tests. */
     void zuruecksetzen() {
         laeuft.set(false);
+        stillBelegt = false;
+        wartendeVordergrundLaeufe.set(0);
         aktuellerRunner = null;
         zustandsListener.clear();
         selectionChangeUnterdrücken.set(false);

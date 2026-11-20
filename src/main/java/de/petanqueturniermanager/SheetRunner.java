@@ -79,6 +79,16 @@ public abstract class SheetRunner extends Thread {
 	 */
 	private volatile boolean silentBackground = false;
 
+	/**
+	 * Gesetzt von {@link #start()}, wenn beim Klick gerade nur ein stiller Hintergrundlauf aktiv war (Sheet-Sync,
+	 * Webserver, PTM-Online): Der Thread wartet in {@link #run()} auf dessen Ende, statt sofort „Verarbeitung läuft“
+	 * zu melden. Gewartet wird im eigenen Thread, nie auf dem Main-Thread.
+	 */
+	private volatile boolean wartetAufHintergrundlauf = false;
+
+	/** Höchstens so lange wartet ein Anwender-Lauf auf einen stillen Hintergrundlauf. */
+	private static final long MAX_WARTEZEIT_HINTERGRUNDLAUF_MS = 30_000;
+
 	private String logPrefix = null;
 
 	protected String getLogPrefix() {
@@ -182,8 +192,13 @@ public abstract class SheetRunner extends Thread {
 	@Override
 	public final synchronized void start() {
 		verbieteStartInLaufendemRunner();
-		if (!koordinator.getAndSetLaeuft(true)) {
+		if (koordinator.belege(false)) {
 			koordinatorVorgekoppelt = true;
+			super.start();
+		} else if (koordinator.istStillBelegt()) {
+			logger.info("Warte auf Hintergrundlauf {} vor {}", koordinator.getRunnerName(),
+					getClass().getSimpleName());
+			wartetAufHintergrundlauf = true;
 			super.start();
 		} else {
 			MessageBox.from(getxContext(), MessageBoxTypeEnum.WARN_OK)
@@ -204,7 +219,7 @@ public abstract class SheetRunner extends Thread {
 	 */
 	public final synchronized void startSilent() {
 		verbieteStartInLaufendemRunner();
-		if (!koordinator.getAndSetLaeuft(true)) {
+		if (koordinator.belege(true)) {
 			koordinatorVorgekoppelt = true;
 			silentBackground = true;
 			super.start();
@@ -214,7 +229,10 @@ public abstract class SheetRunner extends Thread {
 	@Override
 	public final void run() {
 		verbieteStartInLaufendemRunner();
-		boolean laueftJetzt = koordinatorVorgekoppelt || !koordinator.getAndSetLaeuft(true);
+		if (wartetAufHintergrundlauf) {
+			koordinatorVorgekoppelt = warteAufHintergrundlauf();
+		}
+		boolean laueftJetzt = koordinatorVorgekoppelt || !wartetAufHintergrundlauf && !koordinator.getAndSetLaeuft(true);
 		if (laueftJetzt) {
 			logger.debug("Start SheetRunner");
 			long runStartNs = System.nanoTime();
@@ -417,6 +435,16 @@ public abstract class SheetRunner extends Thread {
 			MessageBox.from(getxContext(), MessageBoxTypeEnum.WARN_OK)
 					.caption(I18n.get("msg.caption.aktive.verarbeitung"))
 					.message(I18n.get("msg.text.verarbeitung.laeuft")).show();
+		}
+	}
+
+	private boolean warteAufHintergrundlauf() {
+		try {
+			return koordinator.warteUndBelege(MAX_WARTEZEIT_HINTERGRUNDLAUF_MS);
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			logger.warn("Warten auf Hintergrundlauf unterbrochen: {}", getClass().getSimpleName(), e);
+			return false;
 		}
 	}
 

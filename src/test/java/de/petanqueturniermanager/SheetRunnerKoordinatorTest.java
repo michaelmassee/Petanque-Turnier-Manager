@@ -6,6 +6,8 @@ package de.petanqueturniermanager;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.OptionalLong;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.Test;
 
@@ -60,5 +62,35 @@ class SheetRunnerKoordinatorTest {
         koordinator.setLaeuft(false);
 
         assertThat(koordinator.unveraendertSeit(stand)).isTrue();
+    }
+
+    @Test
+    void anwenderLaufWartetAufStillenHintergrundlaufUndHatVorrang() throws Exception {
+        assertThat(koordinator.belege(true)).isTrue();
+        assertThat(koordinator.istStillBelegt()).isTrue();
+
+        CompletableFuture<Boolean> wartend = CompletableFuture
+                .supplyAsync(() -> {
+                    try {
+                        return koordinator.warteUndBelege(5_000);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        return false;
+                    }
+                });
+        TimeUnit.MILLISECONDS.sleep(150);
+        koordinator.setLaeuft(false);
+
+        assertThat(wartend.get(5, TimeUnit.SECONDS)).isTrue();
+        assertThat(koordinator.istStillBelegt()).as("jetzt läuft der Anwender-Lauf").isFalse();
+        assertThat(koordinator.belege(true)).isFalse();
+    }
+
+    @Test
+    void anwenderLaufWartetNichtAufAnderenAnwenderLauf() throws Exception {
+        assertThat(koordinator.belege(false)).isTrue();
+
+        assertThat(koordinator.istStillBelegt()).isFalse();
+        assertThat(koordinator.warteUndBelege(5_000)).isFalse();
     }
 }
