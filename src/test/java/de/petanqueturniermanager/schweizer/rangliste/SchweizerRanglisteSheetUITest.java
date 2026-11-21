@@ -450,18 +450,20 @@ public class SchweizerRanglisteSheetUITest extends BaseCalcUITest {
 
 	/**
 	 * Issue #18: Die Freilos-Spalte zeigt je Team die Runden mit Freilos („1, 3“), Teams ohne Freilos
-	 * bleiben leer. Bei ungerader Teamanzahl ist die Spalte sichtbar.
+	 * bleiben leer. Ist die Spalte eingeschaltet, ist sie bei ungerader Teamanzahl sichtbar.
 	 */
 	@Test
 	public void testFreilosSpalteZeigtFreilosRunden() throws GenerateException {
 		int anzTeamsUngerade = ANZ_TEAMS + 1;
 		testDaten = new SchweizerTurnierTestDaten(wkingSpreadsheet, anzTeamsUngerade, TeamAnzeige.NR);
 		testDaten.generate(ANZ_RUNDEN, true);
+		testDaten.naechsteSpielrunde.getKonfigurationSheet().setRanglisteFreilosSpalteAnzeigen(true);
 
 		Map<Integer, String> erwartet = erwarteteFreilosTexte(anzTeamsUngerade);
 		assertThat(erwartet).as("Bei ungerader Teamanzahl muss es Freilose geben").isNotEmpty();
 
 		var rangliste = new SchweizerRanglisteSheetUpdate(wkingSpreadsheet);
+		rangliste.doRun();
 		XSpreadsheet sheet = rangliste.getXSpreadSheet();
 		assertThat(istSpalteSichtbar(sheet, rangliste.freilosSpalte()))
 				.as("Freilos-Spalte muss bei vergebenem Freilos sichtbar sein").isTrue();
@@ -484,19 +486,23 @@ public class SchweizerRanglisteSheetUITest extends BaseCalcUITest {
 		testDaten = new SchweizerTurnierTestDaten(wkingSpreadsheet, ANZ_TEAMS + 1, TeamAnzeige.NR);
 		testDaten.generate(1, true);
 		var konfiguration = testDaten.naechsteSpielrunde.getKonfigurationSheet();
-		assertThat(konfiguration.isRanglisteFreilosSpalteAnzeigen()).as("Default der Einstellung").isTrue();
-
-		konfiguration.setRanglisteFreilosSpalteAnzeigen(false);
+		assertThat(konfiguration.isRanglisteFreilosSpalteAnzeigen()).as("Default der Einstellung").isFalse();
 		var rangliste = new SchweizerRanglisteSheetUpdate(wkingSpreadsheet);
 		rangliste.doRun();
 		assertThat(istSpalteSichtbar(rangliste.getXSpreadSheet(), rangliste.freilosSpalte()))
-				.as("Einstellung aus – Spalte muss ausgeblendet sein").isFalse();
+				.as("Default aus – Spalte muss trotz Freilos ausgeblendet sein").isFalse();
 
 		konfiguration.setRanglisteFreilosSpalteAnzeigen(true);
 		rangliste = new SchweizerRanglisteSheetUpdate(wkingSpreadsheet);
 		rangliste.doRun();
 		assertThat(istSpalteSichtbar(rangliste.getXSpreadSheet(), rangliste.freilosSpalte()))
-				.as("Einstellung wieder an – Spalte muss sichtbar sein").isTrue();
+				.as("Einstellung an – Spalte muss sichtbar sein").isTrue();
+
+		konfiguration.setRanglisteFreilosSpalteAnzeigen(false);
+		rangliste = new SchweizerRanglisteSheetUpdate(wkingSpreadsheet);
+		rangliste.doRun();
+		assertThat(istSpalteSichtbar(rangliste.getXSpreadSheet(), rangliste.freilosSpalte()))
+				.as("Einstellung wieder aus – Spalte muss ausgeblendet sein").isFalse();
 	}
 
 	/** Ermittelt aus allen Spielrunden TeamNr → erwarteter Text der Freilos-Spalte. */

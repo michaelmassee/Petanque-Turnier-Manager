@@ -147,7 +147,7 @@ public class SchweizerPropertiesSpalte extends TeamAnzeigePropertiesSpalte imple
 						I18n.get("config.schweizer.freilos.buchholz.neutral")));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.<Boolean>from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_RANGLISTE_FREILOS_SPALTE)
-				.setDefaultVal(true)
+				.setDefaultVal(false)
 				.setDescription("config.desc.schweizer.rangliste.freilos.spalte"));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_FREISPIEL_PUNKTE_PLUS)
