@@ -71,7 +71,7 @@ public final class PtmOnlineDispatcher {
 
     private static final Duration MAX_WARTEZEIT_VERARBEITUNG = Duration.ofSeconds(30);
     private static final long WARTEINTERVALL_MS = 200;
-    /** Der Anzeige-Schlüssel wird auf dem Dispatch-Thread geholt; bei schlechtem Netz nicht lange blockieren. */
+    /** Anzeige-Schlüssel und Live-Link: bei schlechtem Netz rasch eine Meldung statt langen Wartens. */
     private static final Duration TIMEOUT_ANZEIGE_SCHLUESSEL = Duration.ofSeconds(5);
     /** Anhang an den persönlichen Live-Link: PTM-Online zeigt dort dessen QR-Code. */
     static final String LIVE_QR_SEITE = "/qr";
@@ -385,23 +385,30 @@ public final class PtmOnlineDispatcher {
     public static void turnierseiteOeffnen(WorkingSpreadsheet ws) {
         mitVerbindung(ws, (verbindung, config) -> {
             XComponentContext ctx = ws.getxContext();
-            String schluessel;
-            try {
-                schluessel = TournamentSyncClient
-                        .mitKurzemTimeout(config.baseUrl(), config.apiKey(), TIMEOUT_ANZEIGE_SCHLUESSEL)
-                        .holeAnzeigeSchluessel(verbindung.tournamentId());
-            } catch (IOException e) {
-                logger.error("PTM-Online: Anzeige-Schlüssel für Turnier {} nicht abgerufen", verbindung.tournamentId(),
-                        e);
-                zeigeNetzwerkFehler(ctx, e);
-                return;
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                logger.debug("PTM-Online: Abruf des Anzeige-Schlüssels unterbrochen", e);
-                return;
-            }
-            oeffneImBrowser(ctx, turnierseitenUrl(config.baseUrl(), verbindung.tournamentId(), schluessel));
+            imHintergrund("PTM-Online-Turnierseite", ctx,
+                    () -> oeffneTurnierseite(ctx, config, verbindung.tournamentId()));
         });
+    }
+
+    /** Hintergrund-Thread: holt den Anzeige-Schlüssel; Browser und Meldungen laufen auf dem Main-Thread. */
+    private static void oeffneTurnierseite(XComponentContext ctx, LibreOfficePtmOnlineSpeicher.Zugangsdaten config,
+            String tournamentId) {
+        String schluessel;
+        try {
+            schluessel = TournamentSyncClient
+                    .mitKurzemTimeout(config.baseUrl(), config.apiKey(), TIMEOUT_ANZEIGE_SCHLUESSEL)
+                    .holeAnzeigeSchluessel(tournamentId);
+        } catch (IOException e) {
+            logger.error("PTM-Online: Anzeige-Schlüssel für Turnier {} nicht abgerufen", tournamentId, e);
+            LoMainThread.post(ctx, () -> zeigeNetzwerkFehler(ctx, e));
+            return;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            logger.debug("PTM-Online: Abruf des Anzeige-Schlüssels unterbrochen", e);
+            return;
+        }
+        String url = turnierseitenUrl(config.baseUrl(), tournamentId, schluessel);
+        LoMainThread.post(ctx, () -> oeffneImBrowser(ctx, url));
     }
 
     /**
@@ -431,10 +438,9 @@ public final class PtmOnlineDispatcher {
                 zeigeHinweis(ctx, I18n.get("ptmonline.liveqr.nicht_verbunden"));
                 return;
             }
-            TournamentSyncClient client = TournamentSyncClient.mitKurzemTimeout(config.baseUrl(), config.apiKey(),
-                    TIMEOUT_ANZEIGE_SCHLUESSEL);
-            holeLiveLink(ctx, client, verbindung.tournamentId(), onlineId.get())
-                    .ifPresent(url -> oeffneImBrowser(ctx, url + LIVE_QR_SEITE));
+            var abruf = new LiveLinkAbruf(ctx, TournamentSyncClient.mitKurzemTimeout(config.baseUrl(),
+                    config.apiKey(), TIMEOUT_ANZEIGE_SCHLUESSEL), verbindung.tournamentId(), onlineId.get());
+            imHintergrund("PTM-Online-Live-QR", ctx, () -> holeLiveLink(abruf, false));
         });
     }
 
@@ -468,38 +474,59 @@ public final class PtmOnlineDispatcher {
         return adresse.StartRow == adresse.EndRow ? OptionalInt.of(adresse.StartRow) : OptionalInt.empty();
     }
 
+    /** Für den Live-Link nötige Angaben, im Dispatch aus dem Dokument gelesen. */
+    private record LiveLinkAbruf(XComponentContext ctx, TournamentSyncClient client, String tournamentId,
+            String onlineId) {}
+
     /**
-     * Fragt den Live-Link bei PTM-Online ab. Ein nicht wiederherstellbarer Link (vor dieser Funktion per Mail
-     * verschickt) wird nur nach Rückfrage ersetzt, weil der alte damit ungültig wird.
-     *
-     * @return leer, wenn es keinen Link gibt; der Grund wurde bereits angezeigt
+     * Hintergrund-Thread: holt den persönlichen Live-Link und öffnet dessen QR-Code. Lässt er sich nicht
+     * wiederherstellen, fragt der Main-Thread, ob er erneuert werden soll ({@link #frageErneuern}).
      */
-    private static Optional<String> holeLiveLink(XComponentContext ctx, TournamentSyncClient client,
-            String tournamentId, String onlineId) {
+    private static void holeLiveLink(LiveLinkAbruf abruf, boolean erneuern) {
+        XComponentContext ctx = abruf.ctx();
         try {
-            try {
-                return Optional.of(client.holeLiveLink(tournamentId, onlineId, false));
-            } catch (PtmOnlineHttpException e) {
-                if (!e.istLiveLinkNichtWiederherstellbar()) {
-                    throw e;
-                }
-                logger.info("PTM-Online: Live-Link der Meldung {} nicht wiederherstellbar", onlineId, e);
-                if (!erneuernBestaetigt(ctx)) {
-                    return Optional.empty();
-                }
-                return Optional.of(client.holeLiveLink(tournamentId, onlineId, true));
-            }
+            String url = abruf.client().holeLiveLink(abruf.tournamentId(), abruf.onlineId(), erneuern);
+            LoMainThread.post(ctx, () -> oeffneImBrowser(ctx, url + LIVE_QR_SEITE));
         } catch (PtmOnlineHttpException e) {
-            logger.warn("PTM-Online: kein Live-Link für Meldung {} (HTTP {})", onlineId, e.getStatusCode(), e);
-            keinLiveLinkHinweis(ctx, e);
+            if (!erneuern && e.istLiveLinkNichtWiederherstellbar()) {
+                logger.info("PTM-Online: Live-Link der Meldung {} nicht wiederherstellbar", abruf.onlineId(), e);
+                LoMainThread.post(ctx, () -> frageErneuern(abruf));
+                return;
+            }
+            logger.warn("PTM-Online: kein Live-Link für Meldung {} (HTTP {})", abruf.onlineId(), e.getStatusCode(),
+                    e);
+            LoMainThread.post(ctx, () -> keinLiveLinkHinweis(ctx, e));
         } catch (IOException e) {
-            logger.error("PTM-Online: Live-Link für Meldung {} nicht abgerufen", onlineId, e);
-            zeigeNetzwerkFehler(ctx, e);
+            logger.error("PTM-Online: Live-Link für Meldung {} nicht abgerufen", abruf.onlineId(), e);
+            LoMainThread.post(ctx, () -> zeigeNetzwerkFehler(ctx, e));
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             logger.debug("PTM-Online: Abruf des Live-Links unterbrochen", e);
         }
-        return Optional.empty();
+    }
+
+    /** Main-Thread: Nach Bestätigung wird der Live-Link im Hintergrund erneuert. */
+    private static void frageErneuern(LiveLinkAbruf abruf) {
+        if (erneuernBestaetigt(abruf.ctx())) {
+            imHintergrund("PTM-Online-Live-QR", abruf.ctx(), () -> holeLiveLink(abruf, true));
+        }
+    }
+
+    /**
+     * Startet einen Netzabruf außerhalb der Dispatch-Aufrufkette, damit Calc nicht bis zum Timeout blockiert.
+     * Unerwartete Fehler werden protokolliert und auf dem Main-Thread gemeldet.
+     */
+    private static void imHintergrund(String name, XComponentContext ctx, Runnable aufgabe) {
+        Thread thread = new Thread(() -> {
+            try {
+                aufgabe.run();
+            } catch (RuntimeException e) {
+                logger.error("PTM-Online: {} fehlgeschlagen", name, e);
+                LoMainThread.post(ctx, () -> zeigeFehler(ctx, String.valueOf(e.getMessage())));
+            }
+        }, name);
+        thread.setDaemon(true);
+        thread.start();
     }
 
     private static boolean erneuernBestaetigt(XComponentContext ctx) {
