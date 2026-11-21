@@ -55,6 +55,11 @@ public class MessageBox extends AbstractMessageBox {
 		dialogeUeberspringen = ueberspringen;
 	}
 
+	/** Ob Dialoge im Test übersprungen werden; eigene modale Dialoge richten sich ebenfalls danach. */
+	public static boolean istDialogeUeberspringen() {
+		return dialogeUeberspringen;
+	}
+
 	/**
 	 * wenn true dann kein Box sondern ja nach msgbox typ, MessageBoxResult ok return
 	 *

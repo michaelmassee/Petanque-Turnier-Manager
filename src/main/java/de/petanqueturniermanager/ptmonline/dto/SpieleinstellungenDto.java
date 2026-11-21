@@ -14,8 +14,9 @@ import org.jspecify.annotations.Nullable;
  * @param schweizerRankingMode {@code mit_buchholz} oder {@code ohne_buchholz}
  * @param formuleXRounds       wird nicht mehr gesendet; Formule X hat keine feste Rundenzahl mehr
  * @param koPlatz3             Spiel um Platz 3 im KO-Turnierbaum
- * @param liveViewEnabled      Live-Ansicht freigeschaltet; {@code null}: Online-Einstellung beibehalten
- * @param playerResultReportingEnabled Spieler dürfen Ergebnisse melden; {@code null}: Online-Einstellung beibehalten
+ * @param liveViewEnabled      Live-Ansicht freigeschaltet; {@code null} nur bei Systemen ohne Online-Gegenstück
+ * @param playerResultReportingEnabled Spieler dürfen Ergebnisse melden; {@code null} bei Systemen ohne Spielermeldung
+ *                             (Trip-Tête): Online-Einstellung beibehalten
  */
 public record SpieleinstellungenDto(@Nullable String formation, @Nullable String schweizerRankingMode,
         @Nullable Integer formuleXRounds, @Nullable Boolean koPlatz3, @Nullable Boolean liveViewEnabled,

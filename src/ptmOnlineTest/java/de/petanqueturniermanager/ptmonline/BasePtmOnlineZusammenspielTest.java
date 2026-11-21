@@ -157,6 +157,24 @@ abstract class BasePtmOnlineZusammenspielTest extends BaseCalcUITest {
                 onlineFormation, datum, onlineEinstellungen);
         new SchweizerMeldeListeSheetNew(wkingSpreadsheet).createMeldelisteWithParams(formation, false, false);
         docPropHelper.setIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM, system.getId());
+        dokumentSchalterWieOnline(onlineEinstellungen);
+    }
+
+    /**
+     * Das verbundene Dokument ist Master und überträgt Live-Ansicht und Ergebnismeldung (Default an). Was ein Test
+     * online vorgibt, setzt er deshalb auch im Dokument. Ergebnismeldungen laufen hier über die Konfliktliste; das
+     * direkte Eintragen schaltet ein Test ausdrücklich ein.
+     */
+    protected void dokumentSchalterWieOnline(JsonObject onlineEinstellungen) {
+        if (onlineEinstellungen.has("liveViewEnabled")) {
+            docPropHelper.setBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_LIVE_ANSICHT,
+                    onlineEinstellungen.get("liveViewEnabled").getAsBoolean());
+        }
+        if (onlineEinstellungen.has("playerResultReportingEnabled")) {
+            docPropHelper.setBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_ERGEBNISMELDUNG,
+                    onlineEinstellungen.get("playerResultReportingEnabled").getAsBoolean());
+        }
+        docPropHelper.setBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_ERGEBNISSE_DIREKT, false);
     }
 
     /**
@@ -172,6 +190,7 @@ abstract class BasePtmOnlineZusammenspielTest extends BaseCalcUITest {
         turnierId = online.turnierAnlegen("E2E " + getClass().getSimpleName(), onlineTyp, anmeldeTyp,
                 formation.name().toLowerCase(Locale.ROOT), datum, onlineEinstellungen);
         docPropHelper.setIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM, system.getId());
+        dokumentSchalterWieOnline(onlineEinstellungen);
         MaastrichterKonfigurationSheet konfiguration = new MaastrichterKonfigurationSheet(wkingSpreadsheet);
         konfiguration.setAnzVorrunden(anzVorrunden);
         konfiguration.setGruppenGroesse(gruppenGroesse);

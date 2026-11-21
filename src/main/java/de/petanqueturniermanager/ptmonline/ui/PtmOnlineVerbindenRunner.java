@@ -6,16 +6,20 @@ package de.petanqueturniermanager.ptmonline.ui;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.OptionalLong;
+import java.util.Set;
 import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
+import de.petanqueturniermanager.basesheet.konfiguration.KonfigurationSingleton;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.LibreOfficePtmOnlineSpeicher;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
@@ -43,6 +47,9 @@ import de.petanqueturniermanager.ptmonline.dto.SyncBindingDto;
  * <p>
  * Ein leeres Dokument ({@link #fuerLeeresDokument}) bekommt im selben Lauf zuerst die zum Online-Turnier passende
  * Meldeliste ({@link PtmOnlineMeldelistenAnlage}); erst danach steht der Spieltag fest und es wird verbunden.
+ * <p>
+ * Beim ersten Verbinden eines Dokuments fragt der Runner die PTM-Online-Schalter ab ({@link
+ * PtmOnlineErsteinstellungen}), bevor der Live-Stand zum ersten Mal übertragen wird.
  */
 final class PtmOnlineVerbindenRunner extends SheetRunner {
 
@@ -149,6 +156,7 @@ final class PtmOnlineVerbindenRunner extends SheetRunner {
             }
             throw new GenerateException(I18n.get("ptmonline.sheet.fehler.anlegen"));
         }
+        frageErsteinstellungen();
         PtmOnlineLiveBeobachter.bindungErneuert(getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), turnier.id);
         verbunden = true;
         if (anlage.isPresent()) {
@@ -160,6 +168,35 @@ final class PtmOnlineVerbindenRunner extends SheetRunner {
                 .caption(I18n.get("ptmonline.menu.toplevel"))
                 .message(I18n.get("ptmonline.erfolg.turnier_verbunden", turnier.name))
                 .show();
+    }
+
+    /**
+     * Einmal je Dokument: PTM-Online-Schalter abfragen. Geschrieben wird ohne TurnierEvent – der Runner läuft nicht auf
+     * dem Main-Thread, und {@code bindungErneuert} überträgt den Stand danach ohnehin vollständig. Der Merker wird
+     * auch bei Abbrechen gesetzt; die Schalter bleiben dann auf ihrem Stand (Default an).
+     */
+    private void frageErsteinstellungen() throws GenerateException {
+        WorkingSpreadsheet ws = getWorkingSpreadsheet();
+        Set<String> vorhanden = PtmOnlineErsteinstellungen
+                .vorhandeneSchalter(KonfigurationSingleton.getKonfigProperties(ws));
+        boolean schonAbgefragt = DocumentPropertiesHelper.nurLesend(() -> new DocumentPropertiesHelper(ws)
+                .getBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_ERSTEINSTELLUNGEN_ABGEFRAGT, false));
+        if (!PtmOnlineErsteinstellungen.istAbzufragen(schonAbgefragt, vorhanden)) {
+            return;
+        }
+        PtmOnlineErsteinstellungen.Auswahl vorbelegung = DocumentPropertiesHelper.nurLesend(() -> {
+            DocumentPropertiesHelper properties = new DocumentPropertiesHelper(ws);
+            return PtmOnlineErsteinstellungen.vorbelegung(properties::getBooleanProperty);
+        });
+        Optional<PtmOnlineErsteinstellungen.Auswahl> auswahl = PtmOnlineErsteinstellungenDialog.zeigen(ws,
+                turnier.name, vorbelegung, vorhanden);
+        DocumentPropertiesHelper properties = new DocumentPropertiesHelper(ws);
+        auswahl.ifPresent(gewaehlt -> PtmOnlineErsteinstellungen.uebernehmen(gewaehlt, vorhanden,
+                properties::setBooleanPropertyOhneEvent));
+        properties.setBooleanPropertyOhneEvent(BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_ERSTEINSTELLUNGEN_ABGEFRAGT,
+                true);
+        getLogger().info("PTM-Online: Ersteinstellungen für Turnier {} {}", turnier.id,
+                auswahl.map(gewaehlt -> "übernommen: " + gewaehlt).orElse("nicht geändert"));
     }
 
     /**

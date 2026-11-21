@@ -160,6 +160,20 @@ public abstract class AbstractUnoDialog {
         cont.insertByName(name, props);
     }
 
+    /**
+     * Fügt ein Kontrollkästchen ein.
+     *
+     * @return Modell des Kästchens: Property {@code State} (1 = angehakt) und {@code Enabled}
+     */
+    protected static XPropertySet checkBox(XMultiServiceFactory xMSF, XNameContainer cont, String name, String text,
+            Rahmen rahmen, boolean angehakt) throws com.sun.star.uno.Exception {
+        XPropertySet props = modell(xMSF, "com.sun.star.awt.UnoControlCheckBoxModel", rahmen);
+        props.setPropertyValue("Label", text);
+        props.setPropertyValue("State", Short.valueOf((short) (angehakt ? 1 : 0)));
+        cont.insertByName(name, props);
+        return props;
+    }
+
     /** Fügt eine Schaltfläche ein, {@code pushButtonType} aus {@code com.sun.star.awt.PushButtonType}. */
     protected static void button(XMultiServiceFactory xMSF, XNameContainer cont, String name, String text,
             Rahmen rahmen, short pushButtonType) throws com.sun.star.uno.Exception {

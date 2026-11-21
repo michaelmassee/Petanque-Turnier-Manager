@@ -198,7 +198,7 @@ final class PtmOnlineErgebnismeldungen {
      */
     static boolean direktEintragen(WorkingSpreadsheet ws) {
         return DocumentPropertiesHelper.nurLesend(() -> new DocumentPropertiesHelper(ws)
-                .getBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_ERGEBNISSE_DIREKT, false));
+                .getBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_ERGEBNISSE_DIREKT, true));
     }
 
     /**

@@ -28,21 +28,12 @@ class PtmOnlineSpieleinstellungenTest {
     }
 
     @Test
-    void schalterUebertraegtNurEineBewussteWahl() {
-        assertThat(PtmOnlineSpieleinstellungen.schalter("J")).contains(true);
-        assertThat(PtmOnlineSpieleinstellungen.schalter("N")).contains(false);
-        // Standard „wie in PTM-Online“ (auch bestehende Dokumente ohne Property): online bleibt der Stand.
-        assertThat(PtmOnlineSpieleinstellungen.schalter("ONLINE")).isEmpty();
-        assertThat(PtmOnlineSpieleinstellungen.schalter(null)).isEmpty();
-    }
-
-    @Test
     void erfasstEineGeaenderteLiveFreigabe() {
         AuftragsBestand bestand = AuftragsBestand.leer();
-        assertThat(PtmOnlineSpieleinstellungen.erfasse(bestand, TURNIER, SCHWEIZER)).isTrue();
         assertThat(PtmOnlineSpieleinstellungen.erfasse(bestand, TURNIER, SCHWEIZER.mitLive(true, true))).isTrue();
+        assertThat(PtmOnlineSpieleinstellungen.erfasse(bestand, TURNIER, SCHWEIZER.mitLive(false, true))).isTrue();
         assertThat(bestand.eintraege()).singleElement()
-                .satisfies(eintrag -> assertThat(eintrag.auftrag().body()).contains("\"liveViewEnabled\":true"));
+                .satisfies(eintrag -> assertThat(eintrag.auftrag().body()).contains("\"liveViewEnabled\":false"));
     }
 
     @Test

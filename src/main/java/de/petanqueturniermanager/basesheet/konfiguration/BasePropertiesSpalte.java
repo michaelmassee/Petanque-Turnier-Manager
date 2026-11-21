@@ -81,10 +81,11 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	public static final String KONFIG_PROP_PTMONLINE_ERGEBNISSE_DIREKT = "PTM-Online Ergebnismeldungen direkt eintragen";
 	public static final String KONFIG_PROP_PTMONLINE_LIVE_ANSICHT = "PTM-Online Live-Ansicht";
 	public static final String KONFIG_PROP_PTMONLINE_ERGEBNISMELDUNG = "PTM-Online Ergebnismeldung durch Spieler";
-	/** Auswahl der PTM-Online-Schalter: Online-Einstellung beibehalten (Standard), ein, aus. */
-	public static final String PTMONLINE_SCHALTER_ONLINE = "ONLINE";
-	public static final String PTMONLINE_SCHALTER_JA = "J";
-	public static final String PTMONLINE_SCHALTER_NEIN = "N";
+	/**
+	 * Merker (in keinem Dialog): Die PTM-Online-Schalter wurden beim ersten Verbinden schon abgefragt. Gilt für das
+	 * ganze Dokument, auch für weitere Supermêlée-Spieltage.
+	 */
+	public static final String KONFIG_PROP_PTMONLINE_ERSTEINSTELLUNGEN_ABGEFRAGT = "PTM-Online Ersteinstellungen abgefragt";
 
 	// Export
 	public static final String KONFIG_PROP_MELDELISTE_EXPORTIEREN = "Meldeliste exportieren";
@@ -247,7 +248,7 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	}
 
 	/**
-	 * Fügt den Schalter {@link #KONFIG_PROP_PTMONLINE_ERGEBNISSE_DIREKT} hinzu (Default {@code false}): Ergebnismeldungen
+	 * Fügt den Schalter {@link #KONFIG_PROP_PTMONLINE_ERGEBNISSE_DIREKT} hinzu (Default {@code true}): Ergebnismeldungen
 	 * von Spielern über PTM-Online werden direkt in die Spielrunde eingetragen, sofern die Partie dort noch kein
 	 * Ergebnis hat; sonst landen sie wie ohne Schalter in der Konfliktliste.
 	 * <p>
@@ -258,15 +259,15 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	 */
 	protected static void addPtmOnlineErgebnisDirektProp(List<ConfigProperty<?>> KONFIG_PROPERTIES) {
 		KONFIG_PROPERTIES.add(ConfigProperty.<Boolean>from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_PTMONLINE_ERGEBNISSE_DIREKT)
-				.setDefaultVal(false)
+				.setDefaultVal(true)
 				.setDescription("config.desc.ptmonline.ergebnisse.direkt")
 				.setShortDescription("config.label.ptmonline.ergebnisse.direkt"));
 	}
 
 	/**
-	 * Fügt die Schalter für Live-Ansicht und Ergebnismeldung durch Spieler in PTM-Online hinzu. Das verbundene Dokument
-	 * ist Master und überträgt sie mit den Spieleinstellungen. Standard „wie in PTM-Online“: Dann überträgt das Dokument
-	 * nichts und der online eingestellte Stand bleibt (bestehende Dokumente ändern online nichts).
+	 * Fügt die Schalter für Live-Ansicht und Ergebnismeldung durch Spieler in PTM-Online hinzu (Default jeweils
+	 * {@code true}). Ein Turnier wird entweder in PTM-Online oder im Dokument geführt: Das verbundene Dokument ist Master
+	 * und überträgt beide mit den Spieleinstellungen.
 	 *
 	 * @param KONFIG_PROPERTIES  Property-Liste des jeweiligen Systems
 	 * @param mitErgebnismeldung {@code false} bei Systemen ohne Spielermeldung (Trip-Tête)
@@ -280,14 +281,11 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 		}
 	}
 
-	private static ConfigProperty<?> ptmOnlineSchalter(String name, String descKey, String labelKey) {
-		return ((AuswahlConfigProperty) AuswahlConfigProperty.from(name)
-				.setDefaultVal(PTMONLINE_SCHALTER_ONLINE)
+	private static ConfigProperty<Boolean> ptmOnlineSchalter(String name, String descKey, String labelKey) {
+		return ConfigProperty.<Boolean>from(ConfigPropertyType.BOOLEAN, name)
+				.setDefaultVal(true)
 				.setDescription(descKey)
-				.setShortDescription(labelKey))
-				.addAuswahl(PTMONLINE_SCHALTER_ONLINE, I18n.get("config.ptmonline.schalter.online"))
-				.addAuswahl(PTMONLINE_SCHALTER_JA, I18n.get("config.ptmonline.schalter.ja"))
-				.addAuswahl(PTMONLINE_SCHALTER_NEIN, I18n.get("config.ptmonline.schalter.nein"));
+				.setShortDescription(labelKey);
 	}
 
 	/**

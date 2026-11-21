@@ -99,6 +99,7 @@ class PtmOnlinePouleErgebnismeldungZusammenspielTest extends BasePtmOnlineZusamm
         einstellungen.addProperty("playerResultReportingEnabled", true);
         turnierId = online.turnierAnlegen("E2E " + getClass().getSimpleName(), onlineTyp, anmeldeTyp, "triplette",
                 IN_EINEM_MONAT, einstellungen);
+        dokumentSchalterWieOnline(einstellungen);
     }
 
     /** Zeile der Vorrunde mit der Partie des Teams, die noch kein Ergebnis hat. */
