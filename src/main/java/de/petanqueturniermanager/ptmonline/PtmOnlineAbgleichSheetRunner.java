@@ -182,10 +182,10 @@ public final class PtmOnlineAbgleichSheetRunner extends SheetRunner implements P
     }
 
     /**
-     * Setzt die Online-Teilnahme auf den Check-in-Stand des Dokuments (E-28) und meldet diesen Stand der
+     * Setzt Online-Teilnahme und Teamnummer auf den Check-in-Stand des Dokuments (E-28) und meldet diesen Stand der
      * Check-in-Erkennung des Hintergrunds als bekannt, damit sie ihn nicht erneut sendet.
      */
-    private boolean checkinAbgleichen(Map<String, String> teilnahmeProOnlineId, AuftragsBestand bestand)
+    private boolean checkinAbgleichen(Map<String, OnlineMeldungsStand> onlineStandProOnlineId, AuftragsBestand bestand)
             throws GenerateException {
         Optional<PtmOnlineVerbindung> verbindung = PtmOnlineVerbindung.ermitteln(getWorkingSpreadsheet(),
                 getTurnierSystem());
@@ -195,7 +195,7 @@ public final class PtmOnlineAbgleichSheetRunner extends SheetRunner implements P
         List<PtmOnlineStatusAuftrag.Eintrag> lokal = PtmOnlineCheckin.leseStand(verbindung.get());
         Map<String, String> onlineIds = mapping.getOnlineIdsProUuid();
         List<PtmOnlineStatusAuftrag.Eintrag> abweichend = PtmOnlineCheckin.abweichendVonOnline(lokal, onlineIds,
-                teilnahmeProOnlineId);
+                onlineStandProOnlineId);
         boolean erfasst = PtmOnlineAuftraege.teilnahme(bestand, tournamentId, abweichend, onlineIds,
                 mapping.getExecutionRevisionenProUuid()).isPresent();
         if (erfasst) {

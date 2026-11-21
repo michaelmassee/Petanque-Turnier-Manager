@@ -334,7 +334,7 @@ public final class RegistrationImportTask {
         Bezeichnungsabgleich bezeichnungen = aktualisiereBezeichnungen(config, mapping, bestand, tournamentId, ziel,
                 aktualisierung, sammlung);
         fortschritt.pruefeAbbruch();
-        if (checkin.gleicheAb(bezeichnungen.teilnahmeProOnlineId(), bestand)) {
+        if (checkin.gleicheAb(bezeichnungen.onlineStandProOnlineId(), bestand)) {
             sendeSynchron(config, mapping, bestand);
         }
         meldeNichtUebertragene(sammlung, importLauf.ergebnis());
@@ -382,10 +382,11 @@ public final class RegistrationImportTask {
     public interface CheckinSchritt {
 
         /**
-         * @param teilnahmeProOnlineId Online-Teilnahme ({@link OnlineTeilnahme#apiWert()}) bestätigter Anmeldungen
+         * @param onlineStandProOnlineId Online-Teilnahme und Teamnummer bestätigter Anmeldungen
          * @return ob ein Teilnahme-Auftrag erfasst wurde, der noch zu senden ist
          */
-        boolean gleicheAb(Map<String, String> teilnahmeProOnlineId, AuftragsBestand bestand) throws GenerateException;
+        boolean gleicheAb(Map<String, OnlineMeldungsStand> onlineStandProOnlineId, AuftragsBestand bestand)
+                throws GenerateException;
     }
 
     /**
@@ -467,7 +468,7 @@ public final class RegistrationImportTask {
      */
     private record Bezeichnungsabgleich(int ueberKapazitaet, List<String> kontoKonflikte,
             List<String> moeglicheDubletten, List<String> onlineUebernommen, List<NamensKonflikt> namensKonflikte,
-            @Nullable SyncStandDto stand, Map<String, String> teilnahmeProOnlineId) {}
+            @Nullable SyncStandDto stand, Map<String, OnlineMeldungsStand> onlineStandProOnlineId) {}
 
     /**
      * Prüfung vor dem Turnierstart (erste Spielrunde): liest nur und liefert die bestätigten Online-Anmeldungen, die
@@ -1227,15 +1228,16 @@ public final class RegistrationImportTask {
                         .map(konflikt -> bezeichnungen(konflikt.registrationIds(), bezeichnungProOnlineId)).toList(),
                 abruf.konflikte().possibleDuplicates().stream()
                         .map(dublette -> bezeichnungen(dublette.registrationIds(), bezeichnungProOnlineId)).toList(),
-                onlineUebernommen, namensKonflikte, abruf.stand(), teilnahmeBestaetigter(abruf.registrations()));
+                onlineUebernommen, namensKonflikte, abruf.stand(), onlineStandBestaetigter(abruf.registrations()));
     }
 
-    /** Online-Teilnahme je Anmeldungs-ID, nur für bestätigte Anmeldungen mit gemeldeter Teilnahme. */
-    private static Map<String, String> teilnahmeBestaetigter(List<RegistrationDto> registrations) {
+    /** Online-Teilnahme und Teamnummer je Anmeldungs-ID, nur für bestätigte Anmeldungen mit gemeldeter Teilnahme. */
+    private static Map<String, OnlineMeldungsStand> onlineStandBestaetigter(List<RegistrationDto> registrations) {
         return registrations.stream()
                 .filter(registration -> istImportierbar(registration) && registration.participation() != null)
-                .collect(Collectors.toMap(RegistrationDto::id, RegistrationDto::participation, (links, rechts) -> rechts,
-                        LinkedHashMap::new));
+                .collect(Collectors.toMap(RegistrationDto::id,
+                        registration -> new OnlineMeldungsStand(registration.participation(), registration.teamNumber()),
+                        (links, rechts) -> rechts, LinkedHashMap::new));
     }
 
     /**

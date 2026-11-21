@@ -9,6 +9,8 @@ import java.util.List;
 /**
  * Spiegelt das JSON-Feld {@code registration} / {@code registrations[]} der PTM-Online REST-API
  * (siehe {@code toPublicRegistration()} in {@code src/worker.js}).
+ * <p>
+ * {@code teamNumber} ist die online gespeicherte Nr. der Meldeliste ({@code null} = keine oder älterer Server).
  */
 public record RegistrationDto(
         String id,
@@ -50,7 +52,8 @@ public record RegistrationDto(
         Boolean accountConflict,
         Boolean possibleDuplicate,
         Boolean incomplete,
-        String meleeTeamUuid) {
+        String meleeTeamUuid,
+        Integer teamNumber) {
 
     /** Nachmeldung der Turnierleitung über die Online-Kapazität hinaus (T-24). */
     public boolean istUeberKapazitaet() {

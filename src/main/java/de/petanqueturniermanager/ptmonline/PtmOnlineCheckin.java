@@ -20,7 +20,8 @@ import de.petanqueturniermanager.spielerdb.MeldelisteZiel;
  * Rundenstart. Damit erhalten die Spieler die Postfach-Nachricht „Du bist eingecheckt“ schon beim Einchecken. PTM-Online verschickt sie je Meldung und Online-Turnier nur einmal – auch wenn die Teilnahme am
  * Turniertag mehrfach wechselt. Bei Supermelee ist jeder Spieltag ein eigenes Online-Turnier.
  * <p>
- * Gepusht werden nur Änderungen gegenüber dem zuletzt bekannten Stand je Online-Turnier. Ist für eine Meldung noch
+ * Gepusht werden nur Änderungen gegenüber dem zuletzt bekannten Stand je Online-Turnier – Teilnahme oder Teamnummer,
+ * denn die persönliche Live-Ansicht zeigt die Nr. der Meldeliste. Ist für eine Meldung noch
  * keiner bekannt (Dokument gerade geöffnet, verbunden oder Meldung neu zugeordnet), geht sie im Hintergrund nur als
  * aktiv hinaus, weil der Hintergrund die Online-Teilnahme nicht kennt. Den Rest erledigt der manuelle Abgleich: Er
  * vergleicht mit der Online-Teilnahme ({@link #abweichendVonOnline}) und setzt sie auf den Stand des Dokuments, das ab
@@ -31,15 +32,23 @@ import de.petanqueturniermanager.spielerdb.MeldelisteZiel;
  */
 final class PtmOnlineCheckin {
 
-    /** Zuletzt an PTM-Online gemeldete Teilnahme je Online-Turnier und lokaler UUID. */
-    private final Map<String, Map<String, OnlineTeilnahme>> bekannterStand = new HashMap<>();
+    /** Zuletzt an PTM-Online gemeldeter Stand je Online-Turnier und lokaler UUID. */
+    private final Map<String, Map<String, Gemeldet>> bekannterStand = new HashMap<>();
+
+    /** An PTM-Online gemeldete Teilnahme und Teamnummer einer Meldung. */
+    record Gemeldet(OnlineTeilnahme teilnahme, @Nullable Integer teamNummer) {
+
+        static Gemeldet aus(PtmOnlineStatusAuftrag.Eintrag eintrag) {
+            return new Gemeldet(eintrag.teilnahme(), eintrag.teamNummer());
+        }
+    }
 
     /**
      * Zu sendende Änderungen und der Stand, der nach erfolgreichem Senden als bekannt gilt.
      *
-     * @param stand Teilnahme aller zugeordneten Meldungen je lokaler UUID
+     * @param stand Teilnahme und Teamnummer aller zugeordneten Meldungen je lokaler UUID
      */
-    record Aenderung(PtmOnlineStatusAuftrag auftrag, Map<String, OnlineTeilnahme> stand) {
+    record Aenderung(PtmOnlineStatusAuftrag auftrag, Map<String, Gemeldet> stand) {
 
         Aenderung {
             stand = Map.copyOf(stand);
@@ -54,12 +63,12 @@ final class PtmOnlineCheckin {
      * @return leer, wenn nichts zu senden ist
      */
     Optional<Aenderung> ermittle(String tournamentId, List<PtmOnlineStatusAuftrag.Eintrag> aktuell) {
-        Map<String, OnlineTeilnahme> bekannt = bekannterStand.getOrDefault(tournamentId, Map.of());
-        Map<String, OnlineTeilnahme> stand = new LinkedHashMap<>();
+        Map<String, Gemeldet> bekannt = bekannterStand.getOrDefault(tournamentId, Map.of());
+        Map<String, Gemeldet> stand = new LinkedHashMap<>();
         List<PtmOnlineStatusAuftrag.Eintrag> geaendert = new ArrayList<>();
         for (PtmOnlineStatusAuftrag.Eintrag eintrag : aktuell) {
-            stand.put(eintrag.lokaleUuid(), eintrag.teilnahme());
-            if (istZuMelden(bekannt.get(eintrag.lokaleUuid()), eintrag.teilnahme())) {
+            stand.put(eintrag.lokaleUuid(), Gemeldet.aus(eintrag));
+            if (istZuMelden(bekannt.get(eintrag.lokaleUuid()), eintrag)) {
                 geaendert.add(eintrag);
             }
         }
@@ -70,28 +79,32 @@ final class PtmOnlineCheckin {
         return Optional.of(new Aenderung(new PtmOnlineStatusAuftrag(tournamentId, geaendert), stand));
     }
 
-    private static boolean istZuMelden(@Nullable OnlineTeilnahme bekannt, OnlineTeilnahme aktuell) {
+    private static boolean istZuMelden(@Nullable Gemeldet bekannt, PtmOnlineStatusAuftrag.Eintrag aktuell) {
         if (bekannt == null) {
-            return aktuell == OnlineTeilnahme.AKTIV;
+            return aktuell.teilnahme() == OnlineTeilnahme.AKTIV;
         }
-        return bekannt != aktuell;
+        return bekannt.teilnahme() != aktuell.teilnahme()
+                || OnlineMeldungsStand.teamNummerAbweichend(aktuell.teamNummer(), bekannt.teamNummer());
     }
 
     /**
-     * Manueller Abgleich: lokale Einträge, deren Teilnahme von der Online-Teilnahme abweicht. Meldungen ohne bekannte
-     * Online-Teilnahme (nicht zugeordnet oder online nicht bestätigt) bleiben unberührt.
+     * Manueller Abgleich: lokale Einträge, deren Teilnahme oder Teamnummer vom Online-Stand abweicht. Meldungen ohne
+     * bekannten Online-Stand (nicht zugeordnet oder online nicht bestätigt) bleiben unberührt.
      *
-     * @param lokal                je online zugeordneter Meldung Teilnahme und Setzposition ({@link #leseStand})
-     * @param onlineIdProUuid      Online-Anmeldungs-ID je lokaler UUID
-     * @param teilnahmeProOnlineId Online-Teilnahme ({@link OnlineTeilnahme#apiWert()}) bestätigter Anmeldungen
+     * @param lokal                 je online zugeordneter Meldung Teilnahme, Setzposition und Teamnummer
+     *                              ({@link #leseStand})
+     * @param onlineIdProUuid       Online-Anmeldungs-ID je lokaler UUID
+     * @param onlineStandProOnlineId Online-Stand bestätigter Anmeldungen
      */
     static List<PtmOnlineStatusAuftrag.Eintrag> abweichendVonOnline(List<PtmOnlineStatusAuftrag.Eintrag> lokal,
-            Map<String, String> onlineIdProUuid, Map<String, String> teilnahmeProOnlineId) {
-        return lokal.stream().filter(eintrag -> {
-            String onlineTeilnahme = Optional.ofNullable(onlineIdProUuid.get(eintrag.lokaleUuid()))
-                    .map(teilnahmeProOnlineId::get).orElse(null);
-            return onlineTeilnahme != null && !onlineTeilnahme.equals(eintrag.teilnahme().apiWert());
-        }).toList();
+            Map<String, String> onlineIdProUuid, Map<String, OnlineMeldungsStand> onlineStandProOnlineId) {
+        return lokal.stream().filter(eintrag -> Optional.ofNullable(onlineIdProUuid.get(eintrag.lokaleUuid()))
+                .map(onlineStandProOnlineId::get).filter(online -> weichtAb(eintrag, online)).isPresent()).toList();
+    }
+
+    private static boolean weichtAb(PtmOnlineStatusAuftrag.Eintrag lokal, OnlineMeldungsStand online) {
+        return !online.teilnahme().equals(lokal.teilnahme().apiWert())
+                || OnlineMeldungsStand.teamNummerAbweichend(lokal.teamNummer(), online.teamNummer());
     }
 
     /** Die Änderung ist als Auftrag gespeichert; ihr Stand gilt als bekannt. */
@@ -102,9 +115,9 @@ final class PtmOnlineCheckin {
 
     /** Ein gesendeter Rundenstart-Abgleich hat die Teilnahme seiner Meldungen gemeldet. */
     void uebernehmen(PtmOnlineStatusAuftrag gesendet) {
-        Map<String, OnlineTeilnahme> bekannt = bekannterStand.computeIfAbsent(gesendet.tournamentId(),
+        Map<String, Gemeldet> bekannt = bekannterStand.computeIfAbsent(gesendet.tournamentId(),
                 id -> new HashMap<>());
-        gesendet.eintraege().forEach(eintrag -> bekannt.put(eintrag.lokaleUuid(), eintrag.teilnahme()));
+        gesendet.eintraege().forEach(eintrag -> bekannt.put(eintrag.lokaleUuid(), Gemeldet.aus(eintrag)));
     }
 
     /**
