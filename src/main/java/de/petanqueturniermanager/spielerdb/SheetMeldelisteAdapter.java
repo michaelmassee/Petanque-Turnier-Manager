@@ -233,6 +233,8 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
 
     /**
      * Liest alle Spieler in einem Blockzugriff – der PTM-Online-Hintergrund ruft das nach jeder Dokumentänderung auf.
+     * Leere Zeilen oder einzelne leere Spieler-Slots beenden den Scan nicht: Vor „Meldeliste aktualisieren“ können
+     * noch Meldungen dahinter stehen, die der automatische Abgleich sonst irrtümlich als gelöscht behandeln würde.
      */
     @Override
     public List<MeldelisteSpielerDaten> leseAlleSpielerRoh() {
@@ -243,10 +245,6 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
         List<MeldelisteSpielerDaten> result = new ArrayList<>();
         for (int index = 0; index < daten.size(); index++) {
             RowData zeile = daten.get(index);
-            if (zellText(zeile, vornameSpalte(0) - ersteSpalte).isEmpty()
-                    && zellText(zeile, nachnameSpalte(0) - ersteSpalte).isEmpty()) {
-                break;
-            }
             for (int s = 0; s < anzSpieler; s++) {
                 String vor = zellText(zeile, vornameSpalte(s) - ersteSpalte);
                 String nach = zellText(zeile, nachnameSpalte(s) - ersteSpalte);

@@ -589,4 +589,3 @@ public class TournamentSyncClientTest {
         assertThat(body.get("label").getAsString()).hasSize(60);
     }
 }
-

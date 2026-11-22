@@ -39,6 +39,31 @@ class PtmOnlineMeldelistenSyncTest {
     private final PtmOnlineMeldelistenSync sync = new PtmOnlineMeldelistenSync();
 
     @Test
+    void abgleichStandErkenntLoeschungVorDemErstenHintergrundlauf() {
+        sync.uebernehmen(new PtmOnlineStatusAuftrag(TURNIER, List.of(
+                new PtmOnlineStatusAuftrag.Eintrag(UUID_A, OnlineTeilnahme.INAKTIV, null, 1))),
+                Map.of(UUID_A, ONLINE_A));
+
+        assertThat(ermittle(List.of(meldungB()), zuordnungAB()).nachlauf()).isTrue();
+        assertThat(ermittle(List.of(meldungB()), zuordnungAB()).aktionen()).filteredOn(Storno.class::isInstance)
+                .containsExactly(new Storno(UUID_A, ONLINE_A));
+    }
+
+    @Test
+    void abgleichEinerZurueckgekehrtenZeileSetztDieLoeschbestaetigungZurueck() {
+        ermittle(List.of(meldungA("Anna", "Adler", null), meldungB()), zuordnungAB());
+        ermittle(List.of(meldungB()), zuordnungAB());
+        sync.uebernehmen(new PtmOnlineStatusAuftrag(TURNIER, List.of(
+                new PtmOnlineStatusAuftrag.Eintrag(UUID_A, OnlineTeilnahme.INAKTIV, null, 1))),
+                Map.of(UUID_A, ONLINE_A));
+
+        Ergebnis erneutFehlend = ermittle(List.of(meldungB()), zuordnungAB());
+
+        assertThat(erneutFehlend.aktionen()).filteredOn(Storno.class::isInstance).isEmpty();
+        assertThat(erneutFehlend.nachlauf()).isTrue();
+    }
+
+    @Test
     void unveraenderteMeldungErzeugtKeinenAuftrag() {
         assertThat(ermittle(List.of(meldungA("Anna", "Adler", null)), zuordnungA("Les Boulistes")).aktionen())
                 .isEmpty();
@@ -125,7 +150,12 @@ class PtmOnlineMeldelistenSyncTest {
         assertThat(zweiterLauf.aktionen()).filteredOn(Storno.class::isInstance).singleElement()
                 .isEqualTo(new Storno(UUID_A, ONLINE_A));
         assertThat(zweiterLauf.nachlauf()).isFalse();
-        assertThat(ermittle(List.of(andere), zuordnungen).aktionen()).as("nur einmal").isEmpty();
+        Zuordnungen stornoOffen = new Zuordnungen(zuordnungen.onlineIdProUuid(), zuordnungen.zusatzProUuid(),
+                zuordnungen.rohStatusProUuid(), Set.of(UUID_A));
+        assertThat(ermittle(List.of(andere), stornoOffen).aktionen()).as("kein Doppelauftrag").isEmpty();
+        Zuordnungen storniert = new Zuordnungen(zuordnungen.onlineIdProUuid(), zuordnungen.zusatzProUuid(),
+                Map.of(UUID_A, "cancelled", UUID_B, BESTAETIGT), Set.of());
+        assertThat(ermittle(List.of(andere), storniert).aktionen()).as("nach Bestätigung erledigt").isEmpty();
     }
 
     @Test
@@ -138,6 +168,37 @@ class PtmOnlineMeldelistenSyncTest {
 
         assertThat(ermittle(List.of(andere, anna), zuordnungen).aktionen()).as("ausgeschnitten und eingefügt")
                 .isEmpty();
+    }
+
+    @Test
+    void loeschungWaehrendOffenemAenderungsauftragBleibtBisZurFreigabeVorgemerkt() {
+        Zuordnungen zuordnungen = zuordnungAB();
+        ermittle(List.of(meldungA("Anna", "Adler", null), meldungB()), zuordnungen);
+        Zuordnungen gesperrt = new Zuordnungen(zuordnungen.onlineIdProUuid(), zuordnungen.zusatzProUuid(),
+                zuordnungen.rohStatusProUuid(), Set.of(UUID_A));
+
+        for (int i = 0; i < 3; i++) {
+            Ergebnis lauf = ermittle(List.of(meldungB()), gesperrt);
+            assertThat(lauf.aktionen()).filteredOn(Storno.class::isInstance).isEmpty();
+            assertThat(lauf.nachlauf()).as("ein offener Auftrag braucht keinen zusätzlichen Erfassungslauf").isFalse();
+        }
+
+        assertThat(ermittle(List.of(meldungB()), zuordnungen).aktionen()).filteredOn(Storno.class::isInstance)
+                .containsExactly(new Storno(UUID_A, ONLINE_A));
+    }
+
+    @Test
+    void leererZwischenstandVergisstBekannteMeldungenNichtUndBestaetigtKeineLoeschung() {
+        Zuordnungen zuordnungen = zuordnungAB();
+        ermittle(List.of(meldungA("Anna", "Adler", null), meldungB()), zuordnungen);
+        ermittle(List.of(meldungB()), zuordnungen);
+        assertThat(ermittle(List.of(), zuordnungen).aktionen()).isEmpty();
+
+        Ergebnis ersterVollstaendigerLauf = ermittle(List.of(meldungB()), zuordnungen);
+        assertThat(ersterVollstaendigerLauf.aktionen()).filteredOn(Storno.class::isInstance).isEmpty();
+        assertThat(ersterVollstaendigerLauf.nachlauf()).isTrue();
+        assertThat(ermittle(List.of(meldungB()), zuordnungen).aktionen()).filteredOn(Storno.class::isInstance)
+                .containsExactly(new Storno(UUID_A, ONLINE_A));
     }
 
     @Test

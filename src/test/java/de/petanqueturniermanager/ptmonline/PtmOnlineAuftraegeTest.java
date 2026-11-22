@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -29,6 +31,22 @@ class PtmOnlineAuftraegeTest {
 
     private static final String TURNIER = "t1";
     private static final Instant JETZT = Instant.parse("2026-11-19T10:00:00Z");
+
+    @ParameterizedTest
+    @EnumSource(value = AuftragsArt.class, names = { "ANMELDUNG_ANLEGEN", "ANMELDUNG_AENDERN", "ANMELDUNG_STORNIEREN" })
+    void fachlicheAblehnungBlockiertAutomatischeWiederholungenBisZurQuittierung(AuftragsArt art) {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        SyncAuftrag auftrag = bestand.erzeuge(art, "PUT", "/test", "{}", "{\"lokaleUuid\":\"u1\"}");
+        assertThat(PtmOnlineAuftraege.gesperrteMeldungen(bestand)).containsExactly("u1");
+
+        VersandErgebnis abgelehnt = new VersandErgebnis(auftrag, new SyncAntwort(409, "{}", false), false);
+        bestand.gesendet(abgelehnt);
+        bestand.angewendet(abgelehnt, "registration_drawn");
+
+        assertThat(PtmOnlineAuftraege.gesperrteMeldungen(bestand)).containsExactly("u1");
+        bestand.quittiere(auftrag.auftragsId());
+        assertThat(PtmOnlineAuftraege.gesperrteMeldungen(bestand)).isEmpty();
+    }
 
     private static PtmOnlineStatusAuftrag.Eintrag aktiv(String uuid) {
         return new PtmOnlineStatusAuftrag.Eintrag(uuid, OnlineTeilnahme.AKTIV, null, null);

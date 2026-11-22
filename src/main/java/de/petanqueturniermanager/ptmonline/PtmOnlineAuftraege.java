@@ -400,8 +400,9 @@ public final class PtmOnlineAuftraege {
 
     /**
      * Meldungen, für die der automatische Meldelisten-Abgleich keinen Auftrag erzeugen darf: offene Anlage-, Änderungs-
-     * und Stornoaufträge (keine Doppelaufträge) sowie abgelehnte, noch nicht quittierte Anlagen (sonst würde eine
-     * Dublette oder eine Anlage nach dem Turnierstart bei jeder Änderung neu versucht).
+     * und Stornoaufträge (keine Doppelaufträge) sowie fachlich abgelehnte, noch nicht quittierte Aufträge dieser
+     * Arten. Ohne Klärung würde sonst dieselbe Ablehnung bei jeder Erfassung erneut entstehen. Revisionskonflikte
+     * werden nach Übernahme der Online-Revision von {@link #anwenden} quittiert und dürfen erneut gesendet werden.
      */
     static Set<String> gesperrteMeldungen(AuftragsBestand bestand) {
         Set<String> gesperrt = new HashSet<>();
@@ -410,7 +411,7 @@ public final class PtmOnlineAuftraege {
             boolean anmeldung = art == AuftragsArt.ANMELDUNG_ANLEGEN || art == AuftragsArt.ANMELDUNG_AENDERN
                     || art == AuftragsArt.ANMELDUNG_STORNIEREN;
             boolean sperrt = eintrag.zustand() == AuftragsBestand.Zustand.OFFEN
-                    || eintrag.zustand() == AuftragsBestand.Zustand.ABGELEHNT && art == AuftragsArt.ANMELDUNG_ANLEGEN;
+                    || eintrag.zustand() == AuftragsBestand.Zustand.ABGELEHNT;
             String uuid = text(kontext(eintrag.auftrag()), KONTEXT_UUID);
             if (anmeldung && sperrt && !uuid.isEmpty()) {
                 gesperrt.add(uuid);

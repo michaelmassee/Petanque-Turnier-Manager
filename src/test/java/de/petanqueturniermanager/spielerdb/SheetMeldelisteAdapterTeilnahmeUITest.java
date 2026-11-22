@@ -9,6 +9,8 @@ import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import com.sun.star.sheet.XSpreadsheet;
 
@@ -41,6 +43,41 @@ class SheetMeldelisteAdapterTeilnahmeUITest extends BaseCalcUITest {
     @Test
     void leereMeldelisteLiefertKeineUeberschriftAlsMeldung() {
         assertThat(ziel.leseAlleSpielerRoh()).isEmpty();
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = { 0, 1 })
+    void geloeschteZeileVerdecktKeineNachfolgendenMeldungen(int geloeschterIndex) throws Exception {
+        int anna = ziel.schreibeBlockUndLiefereZeile(List.of(spieler("Anna", "Adler")), NeueMeldungTeilnahme.INAKTIV);
+        int ben = ziel.schreibeBlockUndLiefereZeile(List.of(spieler("Ben", "Berg")), NeueMeldungTeilnahme.INAKTIV);
+        int clara = ziel.schreibeBlockUndLiefereZeile(List.of(spieler("Clara", "Club")), NeueMeldungTeilnahme.INAKTIV);
+
+        ziel.entferneMeldung(geloeschterIndex == 0 ? anna : ben);
+
+        var gelesen = ziel.leseAlleSpielerRoh();
+        assertThat(gelesen).extracting(MeldelisteSpielerDaten::vorname)
+                .containsExactly(geloeschterIndex == 0 ? "Ben" : "Anna", "Clara");
+        assertThat(gelesen).extracting(MeldelisteSpielerDaten::zeile1Basiert)
+                .containsExactly(geloeschterIndex == 0 ? ben : anna, clara);
+    }
+
+    @Test
+    void leererErsterSpielerslotVerdecktWederPartnerNochFolgendeTeams() throws Exception {
+        meldeListe.createMeldelisteWithParams(Formation.DOUBLETTE, false, false);
+        ziel = SheetMeldelisteAdapter.fuer(wkingSpreadsheet, SheetNamen.meldeliste(), TurnierSystem.SCHWEIZER,
+                MeldelisteLayout.team(Formation.DOUBLETTE, false, false)).orElseThrow();
+        int ersteZeile = ziel.schreibeBlockUndLiefereZeile(List.of(spieler("Anna", "Adler"), spieler("Ben", "Berg")),
+                NeueMeldungTeilnahme.INAKTIV);
+        int zweiteZeile = ziel.schreibeBlockUndLiefereZeile(List.of(spieler("Clara", "Club"), spieler("Dora", "Dorf")),
+                NeueMeldungTeilnahme.INAKTIV);
+
+        meldeListe.getXSpreadSheet().getCellByPosition(1, ersteZeile - 1).setFormula("");
+        meldeListe.getXSpreadSheet().getCellByPosition(2, ersteZeile - 1).setFormula("");
+
+        var gelesen = ziel.leseAlleSpielerRoh();
+        assertThat(gelesen).extracting(MeldelisteSpielerDaten::vorname).containsExactly("Ben", "Clara", "Dora");
+        assertThat(gelesen).extracting(MeldelisteSpielerDaten::zeile1Basiert)
+                .containsExactly(ersteZeile, zweiteZeile, zweiteZeile);
     }
 
     @Test

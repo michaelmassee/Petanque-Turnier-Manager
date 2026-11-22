@@ -203,7 +203,7 @@ public final class PtmOnlineAbgleichSheetRunner extends SheetRunner implements P
                     abweichend.size());
         }
         PtmOnlineLiveBeobachter.teilnahmeErfasst(getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
-                new PtmOnlineStatusAuftrag(tournamentId, lokal));
+                new PtmOnlineStatusAuftrag(tournamentId, lokal), onlineIds);
         return erfasst;
     }
 

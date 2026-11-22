@@ -47,10 +47,29 @@ final class PtmOnlineMeldelistenSync {
 
     private static final Logger logger = LogManager.getLogger(PtmOnlineMeldelistenSync.class);
 
-    /** Zugeordnete Meldungen mit Zeile im letzten Lauf und deren Online-ID, je Online-Turnier. */
+    /** Gesehene Zuordnungen samt Online-ID, bis ihre Zeile zurückkehrt oder die Stornierung bestätigt ist. */
     private final Map<String, Map<String, String>> gesehen = new HashMap<>();
     /** Zugeordnete Meldungen, deren Zeile im letzten Lauf fehlte, je Online-Turnier. */
     private final Map<String, Set<String>> fehlend = new HashMap<>();
+
+    /**
+     * Übernimmt die vorhandenen Zuordnungen eines manuellen Abgleichs oder Rundenstarts im Dokument-Kontext.
+     * So sind sofort danach gelöschte Zeilen auch vor dem ersten Hintergrundlauf bekannt. Bereits vorgemerkte
+     * Löschungen bleiben erhalten; wieder vorhandene Zeilen müssen bei erneutem Fehlen neu bestätigt werden.
+     */
+    void uebernehmen(PtmOnlineStatusAuftrag status, Map<String, String> onlineIds) {
+        Map<String, String> bekannt = gesehen.computeIfAbsent(status.tournamentId(), id -> new LinkedHashMap<>());
+        Set<String> bisherFehlend = fehlend.get(status.tournamentId());
+        for (PtmOnlineStatusAuftrag.Eintrag eintrag : status.eintraege()) {
+            String onlineId = onlineIds.get(eintrag.lokaleUuid());
+            if (onlineId != null) {
+                bekannt.put(eintrag.lokaleUuid(), onlineId);
+                if (bisherFehlend != null) {
+                    bisherFehlend.remove(eintrag.lokaleUuid());
+                }
+            }
+        }
+    }
 
     /**
      * Eine Meldelistenzeile mit lokaler UUID.
@@ -223,40 +242,50 @@ final class PtmOnlineMeldelistenSync {
                         meldung.teamname()), PtmOnlineMeldungsInhalt.bezeichnung(meldung.spieler())));
             }
         }
-        aktionen.addAll(stornos(tournamentId, proUuid, zuordnungen));
-        return new Ergebnis(aktionen, !fehlend.getOrDefault(tournamentId, Set.of()).isEmpty());
+        Ergebnis stornierungen = stornos(tournamentId, proUuid, zuordnungen);
+        aktionen.addAll(stornierungen.aktionen());
+        return new Ergebnis(aktionen, stornierungen.nachlauf());
     }
 
     /**
      * Zugeordnete Meldungen, deren Zeile in diesem und im vorigen Lauf fehlt. Liest die Meldeliste keine einzige
-     * Meldung (Blatt neu aufgebaut, nicht lesbar), wird nichts storniert.
+     * Meldung (Blatt neu aufgebaut, nicht lesbar), wird nichts storniert und die Bestätigung beginnt von vorn.
+     * Offene Aufträge blockieren nur das Erzeugen, nicht das Merken der Löschung. Erst ein bestätigter Storno oder
+     * eine entfernte Zuordnung beendet die Vormerkung, damit ein Revisionskonflikt erneut versucht werden kann.
      */
-    private List<Storno> stornos(String tournamentId, Map<String, LokaleMeldung> proUuid, Zuordnungen zuordnungen) {
+    private Ergebnis stornos(String tournamentId, Map<String, LokaleMeldung> proUuid, Zuordnungen zuordnungen) {
+        if (proUuid.isEmpty()) {
+            fehlend.remove(tournamentId);
+            return new Ergebnis(List.of(), false);
+        }
         Map<String, String> bisherGesehen = gesehen.getOrDefault(tournamentId, Map.of());
         Set<String> bisherFehlend = fehlend.getOrDefault(tournamentId, Set.of());
         Map<String, String> jetztGesehen = new LinkedHashMap<>();
         proUuid.keySet().forEach(uuid -> Optional.ofNullable(zuordnungen.onlineIdProUuid().get(uuid))
                 .ifPresent(onlineId -> jetztGesehen.put(uuid, onlineId)));
         Set<String> jetztFehlend = new LinkedHashSet<>();
-        List<Storno> stornos = new ArrayList<>();
-        if (!proUuid.isEmpty()) {
-            bisherGesehen.forEach((uuid, onlineId) -> {
-                if (proUuid.containsKey(uuid) || !zuordnungen.rohStatusProUuid().containsKey(uuid)
-                        || zuordnungen.istLokalEntfernt(uuid) || zuordnungen.istAbgeschlossen(uuid)
-                        || zuordnungen.gesperrt().contains(uuid)) {
-                    return;
-                }
-                if (bisherFehlend.contains(uuid)) {
-                    stornos.add(new Storno(uuid, onlineId));
-                } else {
-                    jetztFehlend.add(uuid);
-                    jetztGesehen.put(uuid, onlineId);
-                }
-            });
+        List<Aktion> stornos = new ArrayList<>();
+        boolean nachlauf = false;
+        for (Map.Entry<String, String> eintrag : bisherGesehen.entrySet()) {
+            String uuid = eintrag.getKey();
+            if (proUuid.containsKey(uuid) || !zuordnungen.rohStatusProUuid().containsKey(uuid)
+                    || zuordnungen.istLokalEntfernt(uuid) || zuordnungen.istAbgeschlossen(uuid)) {
+                continue;
+            }
+            jetztGesehen.put(uuid, eintrag.getValue());
+            jetztFehlend.add(uuid);
+            if (zuordnungen.gesperrt().contains(uuid)) {
+                continue;
+            }
+            if (bisherFehlend.contains(uuid)) {
+                stornos.add(new Storno(uuid, eintrag.getValue()));
+            } else {
+                nachlauf = true;
+            }
         }
         gesehen.put(tournamentId, jetztGesehen);
         fehlend.put(tournamentId, jetztFehlend);
-        return stornos;
+        return new Ergebnis(stornos, nachlauf);
     }
 
     /** Änderungsauftrag, wenn Besetzung oder Teamname vom zuletzt abgeglichenen Stand abweichen. */
