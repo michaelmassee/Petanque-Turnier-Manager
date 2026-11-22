@@ -235,7 +235,7 @@ public class KoMeldeListeSheetNew extends SheetRunner
 		try {
 			result = DocumentPropertiesHelper.nurLesend(() -> KoTurnierParameterDialog.from(getWorkingSpreadsheet())
 					.show(konfig.getMeldeListeFormation(),
-							konfig.isMeldeListeTeamnameAnzeigen(),
+							false, // wie alle Systeme: Vorbelegung „kein Teamname“ (TeamnameModus.KEIN)
 							konfig.isMeldeListeVereinsnameAnzeigen(),
 							konfig.getSpielbaumTeamAnzeige(),
 							konfig.getSpielbaumSpielbahn(),
