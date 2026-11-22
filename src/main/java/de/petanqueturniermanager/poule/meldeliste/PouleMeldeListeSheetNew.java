@@ -12,6 +12,7 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.uno.Exception;
 
+import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.onlinesync.OnlineTurnierAnlage;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.konfiguration.MeleeAnmeldungKonfiguration;
@@ -216,8 +217,9 @@ public class PouleMeldeListeSheetNew extends SheetRunner
 
         Optional<PouleTurnierParameterDialog.TurnierParameter> param;
         try {
-            param = PouleTurnierParameterDialog.from(getWorkingSpreadsheet())
-                    .anzeigen(Formation.TRIPLETTE, false, false);
+            // nurLesend: das Lesen der Vorbelegung darf keine fehlenden Properties im Dokument anlegen
+            param = DocumentPropertiesHelper.nurLesend(() -> PouleTurnierParameterDialog.from(getWorkingSpreadsheet())
+                    .anzeigen(Formation.TRIPLETTE, getKonfigurationSheet().isMeldeListeTeamnameAnzeigen(), false));
         } catch (Exception e) {
             String errMsg = I18n.get("error.dialog.parameterdialog", e.getMessage());
             logger.error(errMsg, e);

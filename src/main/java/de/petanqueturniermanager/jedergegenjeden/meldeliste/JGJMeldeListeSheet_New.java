@@ -8,6 +8,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.sun.star.sheet.XSpreadsheet;
 
+import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.onlinesync.OnlineTurnierAnlage;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.konfiguration.MeleeAnmeldungKonfiguration;
@@ -193,7 +194,9 @@ public class JGJMeldeListeSheet_New extends SheetRunner implements IMeldeliste<T
 		// Dialog zuerst – bei Abbruch keine Änderungen am Dokument
 		Optional<JGJStartDialog.StartParameter> param;
 		try {
-			param = JGJStartDialog.from(getWorkingSpreadsheet()).show();
+			// nurLesend: das Lesen der Vorbelegung darf keine fehlenden Properties im Dokument anlegen
+			param = DocumentPropertiesHelper.nurLesend(() -> JGJStartDialog.from(getWorkingSpreadsheet())
+					.show(getKonfigurationSheet().isMeldeListeTeamnameAnzeigen()));
 		} catch (com.sun.star.uno.Exception e) {
 			String errMsg = I18n.get("error.dialog.startdialog", e.getMessage());
 			logger.error(errMsg, e);

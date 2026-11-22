@@ -81,7 +81,7 @@ public class MaastrichterMeldeListeSheetNew extends SheetRunner implements IShee
 		try {
 			// nurLesend: das Lesen der Vorbelegung darf keine fehlenden Properties im Dokument anlegen
 			param = DocumentPropertiesHelper.nurLesend(() -> MaastrichterTurnierParameterDialog.from(getWorkingSpreadsheet()).show(
-					Formation.DOUBLETTE, false, false, TeamAnzeige.NR,
+					Formation.DOUBLETTE, konfigurationSheet.isMeldeListeTeamnameAnzeigen(), false, TeamAnzeige.NR,
 					konfigurationSheet.getRankingModus(),
 					konfigurationSheet.getAnzVorrunden(),
 					konfigurationSheet.getSpielbaumTeamAnzeige(),

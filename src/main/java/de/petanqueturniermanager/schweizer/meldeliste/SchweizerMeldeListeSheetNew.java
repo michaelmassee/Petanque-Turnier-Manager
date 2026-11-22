@@ -231,7 +231,8 @@ public class SchweizerMeldeListeSheetNew extends SheetRunner
 		try {
 			// nurLesend: das Lesen der Vorbelegung darf keine fehlenden Properties im Dokument anlegen
 			param = DocumentPropertiesHelper.nurLesend(() -> SchweizerTurnierParameterDialog
-					.from(getWorkingSpreadsheet()).show(Formation.DOUBLETTE, false, false, TeamAnzeige.NR,
+					.from(getWorkingSpreadsheet()).show(Formation.DOUBLETTE,
+							getKonfigurationSheet().isMeldeListeTeamnameAnzeigen(), false, TeamAnzeige.NR,
 							getKonfigurationSheet().getRankingModus()));
 		} catch (Exception e) {
 			String errMsg = I18n.get("error.dialog.parameterdialog", e.getMessage());

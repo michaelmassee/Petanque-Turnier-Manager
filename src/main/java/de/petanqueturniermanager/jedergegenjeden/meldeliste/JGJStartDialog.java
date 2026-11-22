@@ -50,12 +50,13 @@ public class JGJStartDialog {
 	/**
 	 * Zeigt den Dialog an und gibt das Ergebnis zurück.
 	 *
+	 * @param teamnameVorbelegung Vorbelegung der Teamname-Spalte aus der Konfiguration
 	 * @return Optional mit StartParameter bei OK, leer bei Abbrechen
 	 */
-	public Optional<StartParameter> show() throws com.sun.star.uno.Exception {
+	public Optional<StartParameter> show(boolean teamnameVorbelegung) throws com.sun.star.uno.Exception {
 		TurnierStartDialog dialog = TurnierStartDialog.erstellen(workingSpreadsheet.getxContext(),
 				I18n.get("dialog.jgj.title.neue.meldeliste"));
-		dialog.meldeliste(START_FORMATION, false, false);
+		dialog.meldeliste(START_FORMATION, teamnameVorbelegung, false);
 
 		dialog.abschnitt(I18n.get("dialog.gruppe.spielplan"));
 		dialog.auswahl(LST_SPIELPLAN, I18n.get("dialog.label.teams.anzeigen.als"), TeamAnzeige.dialogEintraege(),
