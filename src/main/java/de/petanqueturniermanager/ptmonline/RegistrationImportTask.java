@@ -799,7 +799,7 @@ public final class RegistrationImportTask {
                     geschrieben.add(new GeschriebeneAnmeldung(reg, besetzung));
                     fortschritt.status(I18n.get("ptmonline.fortschritt.meldung_uebernommen", onlineBezeichnung(reg)));
                     geschriebeneZeilen.add(zeile);
-                    uebernehmeSetzposition(ziel, reg, zeile);
+                    uebernehmeOnlineZusatzangaben(ziel, reg, zeile);
                     vorhandeneZeilen.computeIfAbsent(besetzung, ignored -> new ArrayList<>()).add(zeile);
                 }
             } catch (MeldelisteZiel.MeldelisteSchreibException e) {
@@ -916,7 +916,7 @@ public final class RegistrationImportTask {
         mapping.setOnlineDetails(uuid, reg);
         mapping.setZusaetze(Map.of(uuid, new ZuordnungsZusatz(
                 AbgeglicheneBesetzung.ausOnline(reg.personen()).alsText(), "")));
-        uebernehmeSetzposition(ziel, reg, zeile);
+        uebernehmeOnlineZusatzangaben(ziel, reg, zeile);
         logger.info("PTM-Online: Neuanmeldung {} nach Storno mit bestehender Meldelistenzeile {} verknüpft", reg.id(), zeile);
     }
 
@@ -932,7 +932,28 @@ public final class RegistrationImportTask {
         mapping.setOnlineDetails(uuid, reg);
         mapping.setZusaetze(Map.of(uuid,
                 ZuordnungsZusatz.nurBesetzung(AbgeglicheneBesetzung.ausOnline(reg.personen()).alsText())));
-        uebernehmeSetzposition(ziel, reg, zeile);
+        uebernehmeOnlineZusatzangaben(ziel, reg, zeile);
+    }
+
+    /** Online gepflegte Setzposition und Teamname übernehmen, soweit die Zeile sie noch nicht hat. */
+    private static void uebernehmeOnlineZusatzangaben(MeldelisteZiel ziel, RegistrationDto reg, int zeile1Basiert) {
+        uebernehmeSetzposition(ziel, reg, zeile1Basiert);
+        uebernehmeTeamname(ziel, reg, zeile1Basiert);
+    }
+
+    /**
+     * Online angegebenen Teamnamen übernehmen, sofern die Meldeliste eine Teamname-Spalte hat und die Zeile noch
+     * keinen Teamnamen trägt. Scheitert das, bleibt die Anmeldung trotzdem übernommen.
+     */
+    private static void uebernehmeTeamname(MeldelisteZiel ziel, RegistrationDto reg, int zeile1Basiert) {
+        if (reg.teamName() == null || reg.teamName().isBlank()) {
+            return;
+        }
+        try {
+            ziel.uebernehmeOnlineTeamname(zeile1Basiert, reg.teamName());
+        } catch (MeldelisteZiel.MeldelisteSchreibException e) {
+            logger.warn("PTM-Online: Teamname der Anmeldung {} nicht übernommen", reg.id(), e);
+        }
     }
 
     /**

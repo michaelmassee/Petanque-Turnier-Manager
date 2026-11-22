@@ -23,6 +23,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.NrUuidSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.NrZellFormel;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
+import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.Position;
@@ -66,6 +67,7 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
     private static final Logger logger = LogManager.getLogger(SheetMeldelisteAdapter.class);
 
     private static final int SPALTE_NR = 0;
+    private static final int SPALTE_TEAMNAME = 1;
     private static final int MAX_DATEN_ZEILE = 999;
     /** So viele Spalten hinter dem ersten Spieltag werden bei Supermelee nach weiteren Spieltagen durchsucht. */
     private static final int MAX_SPIELTAGE = 100;
@@ -297,7 +299,7 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
             // anschließende „Meldeliste Aktualisieren"-Lauf vergibt fortlaufend
             // konsistente Nummern für alle aktiven Teams.
             RowData row = new RowData();
-            // Teamname-Slot bleibt leer — User füllt das ggf. manuell.
+            // Teamname-Slot bleibt leer – User füllt ihn ggf. manuell, PTM-Online über uebernehmeOnlineTeamname.
             if (teamnameAktiv) {
                 row.newEmpty();
             }
@@ -394,6 +396,23 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
                             .setValue(setzposition)));
         } catch (Exception e) {
             throw new MeldelisteSchreibException(I18n.get("meldeliste.ziel.fehler.setzposition"), e);
+        }
+    }
+
+    @Override
+    public void uebernehmeOnlineTeamname(int zeile1Basiert, String teamname) throws MeldelisteSchreibException {
+        if (!teamnameAktiv || StringUtils.isBlank(teamname) || zeile1Basiert <= 0) {
+            return;
+        }
+        Position zelle = Position.from(SPALTE_TEAMNAME, zeile1Basiert - 1);
+        if (!sicherText(sheetHelper, sheet, zelle.getColumn(), zelle.getRow()).isBlank()) {
+            return;
+        }
+        try {
+            BlattschutzManager.get().schreibeEntsperrt(sheet, () -> sheetHelper.setStringValueInCell(
+                    StringCellValue.from(sheet, zelle).setValue(teamname.strip())));
+        } catch (Exception e) {
+            throw new MeldelisteSchreibException(I18n.get("meldeliste.ziel.fehler.teamname"), e);
         }
     }
 

@@ -180,6 +180,14 @@ public interface MeldelisteZiel extends AbgleichQuelle {
     }
 
     /**
+     * Übernimmt den online gemeldeten Teamnamen, sofern die Zeile noch keinen hat – lokale Teamnamen haben Vorrang.
+     * Ziele ohne Teamname-Spalte ignorieren ihn.
+     */
+    default void uebernehmeOnlineTeamname(int zeile1Basiert, String teamname) throws MeldelisteSchreibException {
+        // Ziel ohne Teamname-Spalte: nichts zu übernehmen
+    }
+
+    /**
      * Setzposition einer Zeile ({@code > 0}), leer wenn keine gesetzt ist oder das Ziel keine
      * Setzpositionsspalte hat.
      */
