@@ -188,6 +188,21 @@ public interface MeldelisteZiel extends AbgleichQuelle {
     }
 
     /**
+     * Teamnamen je 1-basierter Sheet-Zeile in einem Lesezugriff, nur Zeilen mit Teamnamen; leer, wenn die
+     * Meldeliste keine Teamname-Spalte hat.
+     */
+    default Optional<Map<Integer, String>> leseTeamnamen() {
+        return Optional.empty();
+    }
+
+    /**
+     * Überschreibt den Teamnamen einer Zeile, z.&nbsp;B. wenn er nur online geändert wurde; {@code ""} leert ihn.
+     */
+    default void ersetzeTeamname(int zeile1Basiert, String teamname) throws MeldelisteSchreibException {
+        throw new MeldelisteSchreibException(I18n.get("meldeliste.ziel.fehler.teamname"));
+    }
+
+    /**
      * Setzposition einer Zeile ({@code > 0}), leer wenn keine gesetzt ist oder das Ziel keine
      * Setzpositionsspalte hat.
      */

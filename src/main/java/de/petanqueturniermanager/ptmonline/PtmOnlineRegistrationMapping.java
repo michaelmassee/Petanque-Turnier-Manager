@@ -95,7 +95,7 @@ public class PtmOnlineRegistrationMapping {
     public void addMapping(String lokaleUuid, String onlineRegistrationId, String nummerFormel, int executionRevision,
             String lokaleBezeichnung, String onlineStatus) throws GenerateException {
         addMappings(List.of(new NeueZuordnung(lokaleUuid, onlineRegistrationId, nummerFormel, executionRevision,
-                lokaleBezeichnung, onlineStatus, "", "", "", "", "")));
+                lokaleBezeichnung, onlineStatus, "", "", "", "", "", "")));
     }
 
     public Optional<String> getOnlineId(String lokaleUuid) throws GenerateException {
@@ -267,10 +267,11 @@ public class PtmOnlineRegistrationMapping {
         return new NeueZuordnung(lokaleUuid, registration.id(), nummerFormel,
                 registration.executionRevision() == null ? 1 : registration.executionRevision(), lokaleBezeichnung,
                 OnlineAnmeldeStatus.anzeige(registration.status()), details.tarife(), details.fragen(),
-                details.rohStatus(), AbgeglicheneBesetzung.ausOnline(registration.personen()).alsText(), "");
+                details.rohStatus(), AbgeglicheneBesetzung.ausOnline(registration.personen()).alsText(), "",
+                AbgeglichenerTeamname.alsText(registration.teamName()));
     }
 
-    /** Zuletzt abgeglichene Besetzung und Vermerke je lokaler UUID (T-15, T-17). */
+    /** Zuletzt abgeglichene Besetzung, Teamname und Vermerke je lokaler UUID (T-15, T-17). */
     public Map<String, ZuordnungsZusatz> getZusaetzeProUuid() throws GenerateException {
         return syncSheet.getZusaetzeProUuid();
     }

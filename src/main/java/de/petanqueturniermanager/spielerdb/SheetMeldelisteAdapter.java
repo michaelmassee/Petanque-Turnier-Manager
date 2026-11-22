@@ -3,6 +3,7 @@ package de.petanqueturniermanager.spielerdb;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Locale;
@@ -401,16 +402,41 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
 
     @Override
     public void uebernehmeOnlineTeamname(int zeile1Basiert, String teamname) throws MeldelisteSchreibException {
-        if (!teamnameAktiv || StringUtils.isBlank(teamname) || zeile1Basiert <= 0) {
+        if (!teamnameAktiv || StringUtils.isBlank(teamname) || zeile1Basiert <= 0
+                || !sicherText(sheetHelper, sheet, SPALTE_TEAMNAME, zeile1Basiert - 1).isBlank()) {
             return;
         }
-        Position zelle = Position.from(SPALTE_TEAMNAME, zeile1Basiert - 1);
-        if (!sicherText(sheetHelper, sheet, zelle.getColumn(), zelle.getRow()).isBlank()) {
-            return;
+        ersetzeTeamname(zeile1Basiert, teamname);
+    }
+
+    @Override
+    public Optional<Map<Integer, String>> leseTeamnamen() {
+        if (!teamnameAktiv) {
+            return Optional.empty();
+        }
+        RangeData daten = RangeHelper.from(sheet, doc,
+                RangePosition.from(SPALTE_TEAMNAME, ersteDatenZeile, SPALTE_TEAMNAME, MAX_DATEN_ZEILE))
+                .getDataFromRange();
+        Map<Integer, String> teamnamen = new LinkedHashMap<>();
+        for (int index = 0; index < daten.size(); index++) {
+            RowData zeile = daten.get(index);
+            String teamname = zeile.isEmpty() ? "" : StringUtils.defaultString(zeile.get(0).getStringVal()).strip();
+            if (!teamname.isEmpty()) {
+                teamnamen.put(ersteDatenZeile + index + 1, teamname);
+            }
+        }
+        return Optional.of(teamnamen);
+    }
+
+    @Override
+    public void ersetzeTeamname(int zeile1Basiert, String teamname) throws MeldelisteSchreibException {
+        if (!teamnameAktiv || zeile1Basiert <= 0) {
+            throw new MeldelisteSchreibException(I18n.get("meldeliste.ziel.fehler.teamname"));
         }
         try {
             BlattschutzManager.get().schreibeEntsperrt(sheet, () -> sheetHelper.setStringValueInCell(
-                    StringCellValue.from(sheet, zelle).setValue(teamname.strip())));
+                    StringCellValue.from(sheet, Position.from(SPALTE_TEAMNAME, zeile1Basiert - 1))
+                            .setValue(StringUtils.strip(teamname))));
         } catch (Exception e) {
             throw new MeldelisteSchreibException(I18n.get("meldeliste.ziel.fehler.teamname"), e);
         }

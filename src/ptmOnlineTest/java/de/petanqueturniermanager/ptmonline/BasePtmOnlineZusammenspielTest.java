@@ -155,7 +155,10 @@ abstract class BasePtmOnlineZusammenspielTest extends BaseCalcUITest {
                 : formation.name().toLowerCase(Locale.ROOT);
         turnierId = online.turnierAnlegen("E2E " + getClass().getSimpleName(), "schweizer", anmeldeTyp,
                 onlineFormation, datum, onlineEinstellungen);
-        new SchweizerMeldeListeSheetNew(wkingSpreadsheet).createMeldelisteWithParams(formation, false, false);
+        // Teamname-Spalte wie beim Verbinden eines leeren Dokuments: genau dann, wenn online Teamnamen erfasst werden.
+        boolean teamnameSpalte = onlineEinstellungen.has("teamNameEnabled")
+                && onlineEinstellungen.get("teamNameEnabled").getAsBoolean();
+        new SchweizerMeldeListeSheetNew(wkingSpreadsheet).createMeldelisteWithParams(formation, teamnameSpalte, false);
         docPropHelper.setIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM, system.getId());
         dokumentSchalterWieOnline(onlineEinstellungen);
     }

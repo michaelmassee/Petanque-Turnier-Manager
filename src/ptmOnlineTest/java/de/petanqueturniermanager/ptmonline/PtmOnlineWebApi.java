@@ -161,6 +161,14 @@ final class PtmOnlineWebApi {
         senden(statusAenderung(turnierId, anmeldungId, status), 200);
     }
 
+    /** Ändert den Teamnamen einer Anmeldung im Bearbeiten-Dialog der Verwaltung. */
+    void teamnameSetzen(String turnierId, String anmeldungId, String teamName)
+            throws IOException, InterruptedException {
+        JsonObject anmeldung = anmeldung(turnierId, anmeldungId).orElseThrow();
+        anmeldung.addProperty("teamName", teamName);
+        senden(mitApiKey("PUT", "/api/registrations/" + anmeldungId, anmeldung), 200);
+    }
+
     /** Statusänderung im Bearbeiten-Dialog, die abgelehnt werden darf; liefert den HTTP-Status. */
     int statusSetzenVersuchen(String turnierId, String anmeldungId, String status)
             throws IOException, InterruptedException {

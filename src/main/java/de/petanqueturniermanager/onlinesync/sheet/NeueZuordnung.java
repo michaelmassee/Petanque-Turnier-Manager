@@ -11,8 +11,9 @@ package de.petanqueturniermanager.onlinesync.sheet;
  * @param rohStatus    unübersetzter Online-Anmeldestatus (Storno-Erkennung)
  * @param besetzung    zuletzt abgeglichene Besetzung samt Benutzer-IDs (Zellinhalt, siehe {@link ZuordnungsZusatz})
  * @param vermerk      sprachneutrale Vermerke der Zuordnung
+ * @param teamname     zuletzt abgeglichener Teamname (Zellinhalt, siehe {@link ZuordnungsZusatz}); leer = unbekannt
  */
 public record NeueZuordnung(String lokaleUuid, String onlineId, String nummerFormel, int executionRevision,
         String lokaleBezeichnung, String onlineStatus, String tarife, String fragen, String rohStatus,
-        String besetzung, String vermerk) {
+        String besetzung, String vermerk, String teamname) {
 }

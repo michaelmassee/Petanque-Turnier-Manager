@@ -130,11 +130,16 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 	private static final int LETZTE_PUFFER_SPALTE = SPALTE_AUFTRAG_ZEITPUNKT;
 	/*
 	 * Zusatz je Zuordnung rechts des Auftragspuffers (T-15, T-17, T-18): die zuletzt abgeglichene Besetzung samt
-	 * Benutzer-IDs und sprachneutrale Vermerke (z.&nbsp;B. „lokal entfernt“). Gleiche Zeile wie die Zuordnung.
+	 * Benutzer-IDs, sprachneutrale Vermerke (z.&nbsp;B. „lokal entfernt“) und der zuletzt abgeglichene Teamname.
+	 * Gleiche Zeile wie die Zuordnung; Spaltenindex im Zusatzblock = Position im {@link ZuordnungsZusatz}.
 	 */
 	private static final int SPALTE_BESETZUNG = 20;
 	private static final int SPALTE_VERMERK = 21;
-	private static final int LETZTE_ZUSATZ_SPALTE = SPALTE_VERMERK;
+	private static final int SPALTE_TEAMNAME = 22;
+	private static final int LETZTE_ZUSATZ_SPALTE = SPALTE_TEAMNAME;
+	private static final int ZUSATZ_BESETZUNG = SPALTE_BESETZUNG - SPALTE_BESETZUNG;
+	private static final int ZUSATZ_VERMERK = SPALTE_VERMERK - SPALTE_BESETZUNG;
+	private static final int ZUSATZ_TEAMNAME = SPALTE_TEAMNAME - SPALTE_BESETZUNG;
 
 	private static final int BREITE_NR = 1400;
 	private static final int BREITE_NAME = 6000;
@@ -237,6 +242,7 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 		RowData zusatzZeile = zusatzKopf.addNewRow();
 		zusatzZeile.newString(I18n.get("ptmonline.sheet.mapping.header.besetzung"));
 		zusatzZeile.newString(I18n.get("ptmonline.sheet.mapping.header.vermerk"));
+		zusatzZeile.newString(I18n.get("ptmonline.sheet.mapping.header.teamname"));
 		RangeHelper.from(this, zusatzKopf.getRangePosition(Position.from(SPALTE_BESETZUNG, ZEILE_HEADER)))
 				.setDataInRange(zusatzKopf);
 		schreibeStatus(leseSyncStatus());
@@ -718,6 +724,7 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 			RowData neu = zusatz.addNewRow();
 			neu.newString(StringUtils.defaultString(zuordnung.besetzung()));
 			neu.newString(StringUtils.defaultString(zuordnung.vermerk()));
+			neu.newString(StringUtils.defaultString(zuordnung.teamname()));
 		}
 		RangeHelper.from(this, zusatz.getRangePosition(Position.from(SPALTE_BESETZUNG, ersteZeile))).setDataInRange(zusatz);
 		schreibeNrFormeln(ersteZeile, formeln);
@@ -909,8 +916,9 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 			}
 			RowData alt = i < zusatz.size() ? zusatz.get(i) : new RowData();
 			RowData neuZusatz = bleibtZusatz.addNewRow();
-			neuZusatz.newString(rohText(alt, 0));
-			neuZusatz.newString(text(alt, 1));
+			neuZusatz.newString(rohText(alt, ZUSATZ_BESETZUNG));
+			neuZusatz.newString(text(alt, ZUSATZ_VERMERK));
+			neuZusatz.newString(rohText(alt, ZUSATZ_TEAMNAME));
 			bleibtFormeln.add(new String[] { tabelle.nrFormel(i) });
 		}
 		if (bleibt.size() == anzahl) {
@@ -960,14 +968,15 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 			String uuid = tabelle.uuid(i);
 			RowData zeile = i < zusatz.size() ? zusatz.get(i) : new RowData();
 			if (!uuid.isBlank()) {
-				ergebnis.putIfAbsent(uuid, new ZuordnungsZusatz(rohText(zeile, 0), text(zeile, 1)));
+				ergebnis.putIfAbsent(uuid, new ZuordnungsZusatz(rohText(zeile, ZUSATZ_BESETZUNG),
+						text(zeile, ZUSATZ_VERMERK), rohText(zeile, ZUSATZ_TEAMNAME)));
 			}
 		}
 		return ergebnis;
 	}
 
 	/**
-	 * Setzt Besetzung und/oder Vermerk mehrerer Zuordnungen in einem Schreibzugriff; nicht genannte Zeilen und
+	 * Setzt Besetzung, Vermerk und/oder Teamname mehrerer Zuordnungen in einem Schreibzugriff; nicht genannte Zeilen und
 	 * {@code null}-Werte bleiben unverändert.
 	 */
 	public void setZusaetze(Map<String, ZuordnungsZusatz> zusatzProUuid) throws GenerateException {
@@ -982,8 +991,11 @@ public class PtmOnlineSyncSheet extends SheetRunner implements ISheet {
 			RowData alt = i < bisher.size() ? bisher.get(i) : new RowData();
 			ZuordnungsZusatz zusatz = zusatzProUuid.get(tabelle.uuid(i));
 			RowData zeile = neu.addNewRow();
-			zeile.newString(zusatz != null && zusatz.besetzung() != null ? zusatz.besetzung() : rohText(alt, 0));
-			zeile.newString(zusatz != null && zusatz.vermerk() != null ? zusatz.vermerk() : text(alt, 1));
+			zeile.newString(zusatz != null && zusatz.besetzung() != null ? zusatz.besetzung()
+					: rohText(alt, ZUSATZ_BESETZUNG));
+			zeile.newString(zusatz != null && zusatz.vermerk() != null ? zusatz.vermerk() : text(alt, ZUSATZ_VERMERK));
+			zeile.newString(zusatz != null && zusatz.teamname() != null ? zusatz.teamname()
+					: rohText(alt, ZUSATZ_TEAMNAME));
 		}
 		RangeHelper.from(this, neu.getRangePosition(Position.from(SPALTE_BESETZUNG, ERSTE_DATEN_ZEILE)))
 				.setDataInRange(neu);
