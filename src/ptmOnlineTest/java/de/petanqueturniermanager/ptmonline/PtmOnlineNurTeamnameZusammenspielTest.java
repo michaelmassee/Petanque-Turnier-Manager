@@ -60,6 +60,23 @@ class PtmOnlineNurTeamnameZusammenspielTest extends BasePtmOnlineZusammenspielTe
     }
 
     @Test
+    void konfliktlisteZeigtDenTeamnamenStattDerKontaktperson() throws Exception {
+        String id = importierteAnmeldung();
+        online.teamnameSetzen(turnierId, id, "Online-Name");
+        int zeile = ziel.findeZeileMitName(TEAMNAME);
+        wieImSheetRunner(() -> ziel.ersetzeSpielerNamen(zeile, List.of(teamname("Lokal-Name"))));
+
+        abgleichen();
+
+        assertThat(mapping.konfliktListe().leseBlock(KonfliktArt.NAMENSKONFLIKT.name() + "|")).singleElement()
+                .satisfies(fall -> {
+                    assertThat(fall.lokal()).isEqualTo("Lokal-Name");
+                    assertThat(fall.online()).as("Teamname, nicht Kontaktperson %s", KONTAKT.name())
+                            .isEqualTo("Online-Name");
+                });
+    }
+
+    @Test
     void vorOrtErfassteMeldungWirdOhneKontaktpersonOnlineAngelegt() throws Exception {
         nurTeamnameTurnierAnlegen();
         wieImSheetRunner(() -> ziel.schreibeBlockUndLiefereZeile(List.of(teamname("Vor-Ort-Team")),
