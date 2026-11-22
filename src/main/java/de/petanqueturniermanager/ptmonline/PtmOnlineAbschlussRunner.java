@@ -130,6 +130,7 @@ public final class PtmOnlineAbschlussRunner extends SheetRunner implements PtmOn
             getLogger().info("PTM-Online: Freigabelink nicht gewünscht, Abschluss ohne Benachrichtigung");
             return false;
         }
+        processBox().info(I18n.get("ptmonline.fortschritt.abschluss.freigabelink"));
         try {
             return !client.aktiviereFreigabelink(tournamentId).fehlt();
         } catch (IOException e) {
@@ -139,9 +140,15 @@ public final class PtmOnlineAbschlussRunner extends SheetRunner implements PtmOn
         }
     }
 
+    /**
+     * Die modale Rückfrage legt sich vor die ProcessBox; danach wird sie wieder nach vorn geholt, damit die
+     * Turnierleitung den Fortschritt sofort sieht und nicht glaubt, es passiere nichts.
+     */
     private boolean ja(MessageBoxTypeEnum typ, String text) {
-        return MessageBox.from(getxContext(), typ).caption(I18n.get("ptmonline.frage.abschluss.titel")).message(text)
-                .show() == MessageBoxResult.YES;
+        boolean ja = MessageBox.from(getxContext(), typ).caption(I18n.get("ptmonline.frage.abschluss.titel"))
+                .message(text).show() == MessageBoxResult.YES;
+        processBox().visibleWennAutomatisch().toFront();
+        return ja;
     }
 
     /**
