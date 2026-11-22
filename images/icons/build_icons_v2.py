@@ -626,6 +626,16 @@ ICONS["toolbar-ptmonline-turnierseite"] = svg(ptm_online_badge(C['screen_d'], f'
   <line x1="48.5" y1="58.2" x2="55.5" y2="58.2" stroke="{C['paper']}" stroke-width="{S}" stroke-linecap="round"/>'''))
 
 # ============================================================
+# 39a. PTM-ONLINE TURNIER ABSCHLIESSEN — Sync-Wolke mit Zielflaggen-Badge
+# ============================================================
+ICONS["toolbar-ptmonline-abschliessen"] = svg(ptm_online_badge(C['go'], f'''
+  <line x1="47" y1="45" x2="47" y2="59" stroke="{C['paper']}" stroke-width="{S*1.2}" stroke-linecap="round"/>
+  <rect x="47.5" y="45.5" width="9" height="7" fill="{C['paper']}"/>
+  <rect x="50.5" y="45.5" width="3" height="3.5" fill="{C['ink']}"/>
+  <rect x="47.5" y="49" width="3" height="3.5" fill="{C['ink']}"/>
+  <rect x="53.5" y="49" width="3" height="3.5" fill="{C['ink']}"/>'''))
+
+# ============================================================
 # 40. WEBSERVER-REGIE ÖFFNEN — Server-Rack mit Anzeige-Badge (Regie-Seite im Browser)
 # ============================================================
 ICONS["toolbar-webserver-regie"] = svg(f'''

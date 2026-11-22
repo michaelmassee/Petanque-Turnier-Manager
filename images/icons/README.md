@@ -84,6 +84,7 @@ Nur sichtbar, solange ein PTM-Online-Zugang hinterlegt ist (`PtmOnlineToolbarSte
 | m5 Sync fortsetzen | `ptm:ptmonline_sync_fortsetzen` | `toolbar-ptmonline-sync-fortsetzen.png` |
 | m7 Im Browser öffnen | `ptm:ptmonline_im_browser_oeffnen` | `toolbar-ptmonline-browser.png` |
 | m8 Live-Turnierseite öffnen | `ptm:ptmonline_turnierseite_oeffnen` | `toolbar-ptmonline-turnierseite.png` |
+| m10 Turnier online abschließen | `ptm:ptmonline_turnier_abschliessen` | `toolbar-ptmonline-abschliessen.png` |
 
 Turnier verbinden, Verbindung trennen, Zuordnung wiederherstellen und Gemeldete Ergebnisse abholen gibt es nur im
 Untermenü PTM-Online (`PtmOnlineMenuController`).

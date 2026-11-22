@@ -2311,7 +2311,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			CMD_PTMONLINE_SYNC_PAUSIEREN,
 			CMD_PTMONLINE_SYNC_FORTSETZEN,
 			CMD_PTMONLINE_IM_BROWSER_OEFFNEN,
-			CMD_PTMONLINE_TURNIERSEITE_OEFFNEN);
+			CMD_PTMONLINE_TURNIERSEITE_OEFFNEN,
+			CMD_PTMONLINE_TURNIER_ABSCHLIESSEN);
 
 	static boolean istOnlineBefehlAktiv(String command, XSpreadsheetDocument document) {
 		return isEnabled(command, document);
