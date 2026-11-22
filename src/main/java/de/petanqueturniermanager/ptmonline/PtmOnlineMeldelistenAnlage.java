@@ -19,8 +19,8 @@ import de.petanqueturniermanager.triptete.meldeliste.TripTeteMeldeListeSheetNew;
 
 /**
  * Legt in einem leeren Dokument die Meldeliste für ein Online-Turnier an, ohne Start-Dialog: Turniersystem,
- * Formation und Anmeldeart kommen aus dem Online-Turnier, alles Übrige wie die Vorbelegung des jeweiligen
- * Start-Dialogs. Läuft synchron im aufrufenden SheetRunner – die Meldelisten-Klassen werden nicht gestartet.
+ * Formation, Anmeldeart und Teamname-Spalte kommen aus dem Online-Turnier, alles Übrige wie die Vorbelegung des
+ * jeweiligen Start-Dialogs. Läuft synchron im aufrufenden SheetRunner – die Meldelisten-Klassen werden nicht gestartet.
  */
 public final class PtmOnlineMeldelistenAnlage {
 

@@ -235,7 +235,7 @@ public class PouleMeldeListeSheetNew extends SheetRunner
      */
     public void legeAnFuerOnline(OnlineTurnierAnlage anlage) throws GenerateException {
         legeAn(new PouleTurnierParameterDialog.TurnierParameter(anlage.meldelisteFormation(),
-                anlage.teamnameAnzeigen(false), false, anlage.meleeAnmeldung()));
+                anlage.teamnameAnzeigen(), false, anlage.meleeAnmeldung()));
     }
 
     private void legeAn(PouleTurnierParameterDialog.TurnierParameter param) throws GenerateException {

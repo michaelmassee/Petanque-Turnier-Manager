@@ -257,7 +257,7 @@ public class KaskadeMeldeListeSheetNew extends SheetRunner
      */
     public void legeAnFuerOnline(OnlineTurnierAnlage anlage) throws GenerateException {
         legeAn(new KaskadeTurnierParameterDialog.TurnierParameter(anlage.meldelisteFormation(),
-                anlage.teamnameAnzeigen(true), false, anlage.meleeAnmeldung(), 2));
+                anlage.teamnameAnzeigen(), false, anlage.meleeAnmeldung(), 2));
     }
 
     private void legeAn(KaskadeTurnierParameterDialog.TurnierParameter param) throws GenerateException {

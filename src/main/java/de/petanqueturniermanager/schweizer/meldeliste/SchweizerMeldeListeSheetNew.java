@@ -250,7 +250,7 @@ public class SchweizerMeldeListeSheetNew extends SheetRunner
 	 */
 	public void legeAnFuerOnline(OnlineTurnierAnlage anlage) throws GenerateException {
 		legeAn(new SchweizerTurnierParameterDialog.TurnierParameter(anlage.meldelisteFormation(),
-				anlage.teamnameAnzeigen(false), false, anlage.meleeAnmeldung(), TeamAnzeige.NR,
+				anlage.teamnameAnzeigen(), false, anlage.meleeAnmeldung(), TeamAnzeige.NR,
 				getKonfigurationSheet().getRankingModus()));
 	}
 

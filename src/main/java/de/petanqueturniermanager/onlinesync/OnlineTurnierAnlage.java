@@ -18,9 +18,10 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
  * @param formation      Formation der Meldeliste, bei Supermêlée der Spielrunden-Modus; leer bei der Liga
  * @param meleeAnmeldung vorhanden, wenn online Einzelspieler angemeldet werden (Mêlée-Anmeldeliste)
  * @param name           Name des Online-Turniers, bei der Liga der Gruppenname
+ * @param teamnameZusatz ob online zusätzlich zu den Spielern ein Teamname angegeben wird
  */
 public record OnlineTurnierAnlage(TurnierSystem turnierSystem, Optional<Formation> formation,
-		Optional<MeleeAnmeldungModus> meleeAnmeldung, String name) {
+		Optional<MeleeAnmeldungModus> meleeAnmeldung, String name, boolean teamnameZusatz) {
 
 	private static final String ANMELDEART_MELEE = "melee";
 	private static final String ANMELDEART_FORME = "forme";
@@ -34,14 +35,15 @@ public record OnlineTurnierAnlage(TurnierSystem turnierSystem, Optional<Formatio
 	private static Optional<OnlineTurnierAnlage> fuer(TurnierSystem ts, OnlineTournamentDto turnier) {
 		Optional<Formation> online = formation(turnier);
 		String name = turnier.name == null ? "" : turnier.name;
+		boolean teamnameZusatz = turnier.teamNameEnabled;
 		return switch (ts) {
 			case SUPERMELEE -> online.filter(Formation::erlaubtMeleeAnmeldung)
-					.map(f -> new OnlineTurnierAnlage(ts, Optional.of(f), Optional.empty(), name));
+					.map(f -> new OnlineTurnierAnlage(ts, Optional.of(f), Optional.empty(), name, teamnameZusatz));
 			case LIGA -> nurTeamAnmeldung(turnier)
-					? Optional.of(new OnlineTurnierAnlage(ts, Optional.empty(), Optional.empty(), name))
+					? Optional.of(new OnlineTurnierAnlage(ts, Optional.empty(), Optional.empty(), name, teamnameZusatz))
 					: Optional.empty();
 			case TRIPTETE -> online.filter(f -> f == Formation.TRIPLETTE).filter(f -> nurTeamAnmeldung(turnier))
-					.map(f -> new OnlineTurnierAnlage(ts, Optional.of(f), Optional.empty(), name));
+					.map(f -> new OnlineTurnierAnlage(ts, Optional.of(f), Optional.empty(), name, teamnameZusatz));
 			case SCHWEIZER, MAASTRICHTER, JGJ, KO, POULE, KASKADE, FORMULEX -> mitAnmeldeart(ts, online, turnier, name);
 			case KEIN -> Optional.empty();
 		};
@@ -50,14 +52,16 @@ public record OnlineTurnierAnlage(TurnierSystem turnierSystem, Optional<Formatio
 	/** Systeme mit Meldeliste und optionaler Mêlée-Anmeldung (alle Formationen des Start-Dialogs). */
 	private static Optional<OnlineTurnierAnlage> mitAnmeldeart(TurnierSystem ts, Optional<Formation> online,
 			OnlineTournamentDto turnier, String name) {
+		boolean teamnameZusatz = turnier.teamNameEnabled;
 		if (ANMELDEART_MELEE.equals(turnier.registrationType)) {
 			return online.filter(Formation::erlaubtMeleeAnmeldung).map(
-					f -> new OnlineTurnierAnlage(ts, Optional.of(f), Optional.of(MeleeAnmeldungModus.EINFACH), name));
+					f -> new OnlineTurnierAnlage(ts, Optional.of(f), Optional.of(MeleeAnmeldungModus.EINFACH), name,
+							teamnameZusatz));
 		}
 		if (!nurTeamAnmeldung(turnier)) {
 			return Optional.empty();
 		}
-		return online.map(f -> new OnlineTurnierAnlage(ts, Optional.of(f), Optional.empty(), name));
+		return online.map(f -> new OnlineTurnierAnlage(ts, Optional.of(f), Optional.empty(), name, teamnameZusatz));
 	}
 
 	private static boolean nurTeamAnmeldung(OnlineTournamentDto turnier) {
@@ -83,9 +87,12 @@ public record OnlineTurnierAnlage(TurnierSystem turnierSystem, Optional<Formatio
 		return formation.orElseThrow(() -> new IllegalStateException("Keine Formation für " + turnierSystem));
 	}
 
-	/** Teamname-Spalte wie im Start-Dialog: Vorbelegung des Systems, ohne Spielernamen immer. */
-	public boolean teamnameAnzeigen(boolean vorbelegung) {
-		return vorbelegung || MeldelisteSpaltenDialogOption.teamnameErzwungen(meldelisteFormation());
+	/**
+	 * Teamname-Spalte der Meldeliste, allein aus dem Online-Turnier: bei „Nur Teamname“ immer, sonst als Zusatzspalte
+	 * zu den Spielern genau dann, wenn online ein Teamname angegeben werden kann.
+	 */
+	public boolean teamnameAnzeigen() {
+		return teamnameZusatz || MeldelisteSpaltenDialogOption.teamnameErzwungen(meldelisteFormation());
 	}
 
 	/** Verbindbarkeit, die das angelegte Dokument haben wird. */

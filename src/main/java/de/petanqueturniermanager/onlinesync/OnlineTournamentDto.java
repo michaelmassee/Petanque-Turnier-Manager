@@ -43,6 +43,10 @@ public class OnlineTournamentDto {
 
 	public String status;
 
+	/** Ob online zusätzlich zu den Spielern ein Teamname angegeben werden kann. */
+	@SerializedName("teamNameEnabled")
+	public boolean teamNameEnabled;
+
 	@SerializedName("documentManaged")
 	public boolean documentManaged;
 

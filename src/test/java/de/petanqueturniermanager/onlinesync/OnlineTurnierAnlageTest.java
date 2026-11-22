@@ -72,11 +72,22 @@ class OnlineTurnierAnlageTest {
     void teamnameIstOhneSpielernamenPflicht() {
         OnlineTournamentDto turnier = online("ko", "forme", "tete");
         turnier.formationOther = true;
-        OnlineTurnierAnlage nurTeamname = OnlineTurnierAnlage.aus(turnier).orElseThrow();
-        OnlineTurnierAnlage doublette = OnlineTurnierAnlage.aus(online("ko", "forme", "doublette")).orElseThrow();
 
-        assertThat(nurTeamname.teamnameAnzeigen(false)).isTrue();
-        assertThat(doublette.teamnameAnzeigen(false)).isFalse();
+        assertThat(OnlineTurnierAnlage.aus(turnier).orElseThrow().teamnameAnzeigen()).isTrue();
+    }
+
+    @ParameterizedTest
+    @MethodSource("abbildbareTurniere")
+    void teamnameZusatzspalteNurWennOnlineEingeschaltet(String typ, String anmeldeart, String formation,
+            boolean formationAndere, TurnierSystem system, Formation erwarteteFormation) {
+        OnlineTournamentDto turnier = online(typ, anmeldeart, formation);
+        turnier.formationOther = formationAndere;
+        boolean nurTeamname = erwarteteFormation == Formation.NUR_TEAMNAME;
+
+        assertThat(OnlineTurnierAnlage.aus(turnier).orElseThrow().teamnameAnzeigen()).isEqualTo(nurTeamname);
+
+        turnier.teamNameEnabled = true;
+        assertThat(OnlineTurnierAnlage.aus(turnier).orElseThrow().teamnameAnzeigen()).isTrue();
     }
 
     @Test

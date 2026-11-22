@@ -256,7 +256,7 @@ public class FormuleXMeldeListeSheetNew extends SheetRunner
      */
     public void legeAnFuerOnline(OnlineTurnierAnlage anlage) throws GenerateException {
         legeAn(new FormuleXTurnierParameterDialog.TurnierParameter(anlage.meldelisteFormation(),
-                anlage.teamnameAnzeigen(true), false, anlage.meleeAnmeldung()));
+                anlage.teamnameAnzeigen(), false, anlage.meleeAnmeldung()));
     }
 
     private void legeAn(FormuleXTurnierParameterDialog.TurnierParameter param) throws GenerateException {

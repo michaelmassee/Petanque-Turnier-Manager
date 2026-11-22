@@ -261,7 +261,7 @@ public class KoMeldeListeSheetNew extends SheetRunner
 	public void legeAnFuerOnline(OnlineTurnierAnlage anlage) throws GenerateException {
 		KoKonfigurationSheet konfig = getKonfigurationSheet();
 		legeAn(new KoTurnierParameterDialog.TurnierParameter(anlage.meldelisteFormation(),
-				anlage.teamnameAnzeigen(konfig.isMeldeListeTeamnameAnzeigen()), konfig.isMeldeListeVereinsnameAnzeigen(),
+				anlage.teamnameAnzeigen(), konfig.isMeldeListeVereinsnameAnzeigen(),
 				anlage.meleeAnmeldung(), konfig.getSpielbaumTeamAnzeige(), konfig.getSpielbaumSpielbahn(),
 				konfig.isSpielbaumBahnNurRunde1(), konfig.isSpielbaumSpielUmPlatz3(), konfig.getGruppenGroesse(),
 				konfig.getMinLetzteGruppeGroesse()));

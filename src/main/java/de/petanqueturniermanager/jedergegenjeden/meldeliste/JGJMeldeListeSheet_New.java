@@ -210,7 +210,7 @@ public class JGJMeldeListeSheet_New extends SheetRunner implements IMeldeliste<T
 	 * Start-Dialogs.
 	 */
 	public void legeAnFuerOnline(OnlineTurnierAnlage anlage) throws GenerateException {
-		legeAn(new JGJStartDialog.StartParameter(anlage.meldelisteFormation(), anlage.teamnameAnzeigen(false), false,
+		legeAn(new JGJStartDialog.StartParameter(anlage.meldelisteFormation(), anlage.teamnameAnzeigen(), false,
 				anlage.meleeAnmeldung(), TeamAnzeige.NR, 0, false));
 	}
 

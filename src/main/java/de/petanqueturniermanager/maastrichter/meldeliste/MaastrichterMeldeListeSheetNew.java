@@ -108,7 +108,7 @@ public class MaastrichterMeldeListeSheetNew extends SheetRunner implements IShee
 	 */
 	public void legeAnFuerOnline(OnlineTurnierAnlage anlage) throws GenerateException {
 		legeAn(new MaastrichterTurnierParameterDialog.TurnierParameter(anlage.meldelisteFormation(),
-				anlage.teamnameAnzeigen(false), false, anlage.meleeAnmeldung(), TeamAnzeige.NR,
+				anlage.teamnameAnzeigen(), false, anlage.meleeAnmeldung(), TeamAnzeige.NR,
 				konfigurationSheet.getRankingModus(), konfigurationSheet.getAnzVorrunden(),
 				konfigurationSheet.getSpielbaumTeamAnzeige(), konfigurationSheet.getSpielbaumSpielbahn(),
 				konfigurationSheet.isSpielbaumBahnNurRunde1(), konfigurationSheet.isSpielbaumSpielUmPlatz3(),
