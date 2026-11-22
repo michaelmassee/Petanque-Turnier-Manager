@@ -238,7 +238,7 @@ public class FormuleXMeldeListeSheetNew extends SheetRunner
         Optional<FormuleXTurnierParameterDialog.TurnierParameter> param;
         try {
             param = FormuleXTurnierParameterDialog.from(getWorkingSpreadsheet())
-                    .anzeigen(Formation.TRIPLETTE, true, false);
+                    .anzeigen(Formation.TRIPLETTE, false, false);
         } catch (com.sun.star.uno.Exception e) {
             String errMsg = I18n.get("error.dialog.parameterdialog", e.getMessage());
             logger.error(errMsg, e);

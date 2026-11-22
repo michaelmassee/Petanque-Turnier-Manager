@@ -14,6 +14,7 @@ import com.google.gson.JsonObject;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.ptmonline.PtmOnlineWebApi.Person;
+import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 import de.petanqueturniermanager.spielerdb.SpielerMitVerein;
 
 /**
@@ -105,6 +106,19 @@ class PtmOnlineTeamnameZusammenspielTest extends BasePtmOnlineZusammenspielTest 
 
         assertThat(onlineTeamname(id)).as("„lokal behalten“ überträgt den lokalen Teamnamen").isEqualTo("Lokal-Name");
         assertThat(konfliktArten()).doesNotContain(KonfliktArt.TEAMNAMENSKONFLIKT);
+    }
+
+    @Test
+    void verbindenUebertraegtDenTeamnameModusDesDokuments() throws Exception {
+        turnierAnlegen(Formation.DOUBLETTE, IN_EINEM_MONAT);
+        assertThat(online.turnier(turnierId).get("teamNameEnabled").getAsBoolean()).isFalse();
+        new SchweizerKonfigurationSheet(wkingSpreadsheet).setMeldeListeTeamnameAnzeigen(true);
+
+        verbinden();
+        PtmOnlineLiveBeobachter.anstossen(wkingSpreadsheet.getWorkingSpreadsheetDocument());
+
+        warteBis("Dokument ist Master: Teamname-Spalte schaltet den Teamnamen online ein",
+                () -> online.turnier(turnierId).get("teamNameEnabled").getAsBoolean());
     }
 
     /** Turnier mit Teamnamen, eine Online-Anmeldung mit Teamnamen, verbunden und abgeglichen. */

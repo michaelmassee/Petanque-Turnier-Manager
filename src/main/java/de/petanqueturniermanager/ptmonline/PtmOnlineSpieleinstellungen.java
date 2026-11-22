@@ -11,12 +11,14 @@ import org.jspecify.annotations.Nullable;
 
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamnameModus;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.formulex.konfiguration.FormuleXKonfigurationSheet;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.ko.konfiguration.KoKonfigurationSheet;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
+import de.petanqueturniermanager.onlinesync.OnlineTournamentDto;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsBestand;
 import de.petanqueturniermanager.ptmonline.dto.SpieleinstellungenDto;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
@@ -38,14 +40,15 @@ final class PtmOnlineSpieleinstellungen {
 
     /**
      * Liest die Spieleinstellungen des Dokuments; leer bei Systemen ohne Online-Gegenstück. Dazu Live-Ansicht und
-     * Ergebnismeldung durch Spieler (Default jeweils an); Trip-Tête kennt keine Ergebnismeldung.
+     * Ergebnismeldung durch Spieler (Default jeweils an; Trip-Tête kennt keine Ergebnismeldung) und der Teamname-Modus
+     * ({@link TeamnameModus}) – in allen Systemen gleich, das Dokument ist Master.
      */
     static SpieleinstellungenDto lese(WorkingSpreadsheet ws, TurnierSystem turnierSystem) {
         if (!hatOnlineGegenstueck(turnierSystem)) {
             return SpieleinstellungenDto.KEINE;
         }
-        // Auch ohne online abbildbare Formation (z. B. „Nur Teamname“) gelten die Live-Schalter.
-        SpieleinstellungenDto einstellungen = leseSystem(ws, turnierSystem);
+        SpieleinstellungenDto einstellungen = leseSystem(ws, turnierSystem).mitTeamname(PtmOnlineFormation
+                .teamnameModusAusDokument(ws, turnierSystem).map(TeamnameModus::teamnameSpalte).orElse(null));
         return DocumentPropertiesHelper.nurLesend(() -> {
             DocumentPropertiesHelper properties = new DocumentPropertiesHelper(ws);
             return einstellungen.mitLive(
@@ -109,8 +112,9 @@ final class PtmOnlineSpieleinstellungen {
     static @Nullable String onlineFormation(Formation formation) {
         return switch (formation) {
             case TETE, DOUBLETTE, TRIPLETTE -> formation.name().toLowerCase(Locale.ROOT);
-            // Ohne feste Teamgröße gibt es online keine passende Formation.
-            case MELEE, NUR_TEAMNAME -> null;
+            case NUR_TEAMNAME -> OnlineTournamentDto.FORMATION_ANDERE;
+            // Supermêlée-Spieler ohne feste Teamgröße: online bleibt die Formation des Spielrunden-Modus.
+            case MELEE -> null;
         };
     }
 

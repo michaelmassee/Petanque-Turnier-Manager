@@ -9,6 +9,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamnameModus;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsArt;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsBestand;
@@ -71,15 +72,24 @@ class PtmOnlineSpieleinstellungenTest {
     }
 
     @Test
-    void liveSchalterGehenAuchOhneOnlineFormationHinaus() {
+    void nurTeamnameGehtAlsFormationAndereMitTeamnamenHinaus() {
         AuftragsBestand bestand = AuftragsBestand.leer();
-        // „Nur Teamname“ hat online keine Formation – die Live-Schalter gelten trotzdem.
         SpieleinstellungenDto nurTeamname = new SpieleinstellungenDto(
-                PtmOnlineSpieleinstellungen.onlineFormation(Formation.NUR_TEAMNAME), null, null, null);
+                PtmOnlineSpieleinstellungen.onlineFormation(Formation.NUR_TEAMNAME), null, null, null)
+                .mitTeamname(TeamnameModus.NUR_TEAMNAME.teamnameSpalte());
 
         assertThat(PtmOnlineSpieleinstellungen.erfasse(bestand, TURNIER, nurTeamname.mitLive(true, true))).isTrue();
-        assertThat(bestand.eintraege()).singleElement()
-                .satisfies(eintrag -> assertThat(eintrag.auftrag().body()).contains("\"liveViewEnabled\":true"));
+        assertThat(bestand.eintraege()).singleElement().satisfies(eintrag -> assertThat(eintrag.auftrag().body())
+                .contains("\"formation\":\"andere\"", "\"teamNameEnabled\":true", "\"liveViewEnabled\":true"));
+    }
+
+    @Test
+    void geaenderterTeamnameModusWirdErneutErfasst() {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        assertThat(PtmOnlineSpieleinstellungen.erfasse(bestand, TURNIER, SCHWEIZER.mitTeamname(false))).isTrue();
+        assertThat(PtmOnlineSpieleinstellungen.erfasse(bestand, TURNIER, SCHWEIZER.mitTeamname(false))).isFalse();
+        assertThat(PtmOnlineSpieleinstellungen.erfasse(bestand, TURNIER, SCHWEIZER.mitTeamname(true)))
+                .as("Teamname-Spalte eingeschaltet").isTrue();
     }
 
     @Test
@@ -96,7 +106,7 @@ class PtmOnlineSpieleinstellungenTest {
         assertThat(PtmOnlineSpieleinstellungen.onlineFormation(Formation.DOUBLETTE)).isEqualTo("doublette");
         assertThat(PtmOnlineSpieleinstellungen.onlineFormation(Formation.TRIPLETTE)).isEqualTo("triplette");
         assertThat(PtmOnlineSpieleinstellungen.onlineFormation(Formation.MELEE)).isNull();
-        assertThat(PtmOnlineSpieleinstellungen.onlineFormation(Formation.NUR_TEAMNAME)).isNull();
+        assertThat(PtmOnlineSpieleinstellungen.onlineFormation(Formation.NUR_TEAMNAME)).isEqualTo("andere");
         assertThat(PtmOnlineSpieleinstellungen.onlineRankingModus(SchweizerRankingModus.OHNE_BUCHHOLZ))
                 .isEqualTo("ohne_buchholz");
     }

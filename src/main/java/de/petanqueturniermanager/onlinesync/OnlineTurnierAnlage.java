@@ -6,8 +6,8 @@ package de.petanqueturniermanager.onlinesync;
 import java.util.Optional;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
-import de.petanqueturniermanager.basesheet.meldeliste.MeldelisteSpaltenDialogOption;
 import de.petanqueturniermanager.basesheet.meldeliste.MeleeAnmeldungModus;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamnameModus;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
@@ -18,7 +18,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
  * @param formation      Formation der Meldeliste, bei Supermêlée der Spielrunden-Modus; leer bei der Liga
  * @param meleeAnmeldung vorhanden, wenn online Einzelspieler angemeldet werden (Mêlée-Anmeldeliste)
  * @param name           Name des Online-Turniers, bei der Liga der Gruppenname
- * @param teamnameZusatz ob online zusätzlich zu den Spielern ein Teamname angegeben wird
+ * @param teamnameZusatz ob online zusätzlich zu den Spielern ein Teamname angegeben wird ({@code teamNameEnabled})
  */
 public record OnlineTurnierAnlage(TurnierSystem turnierSystem, Optional<Formation> formation,
 		Optional<MeleeAnmeldungModus> meleeAnmeldung, String name, boolean teamnameZusatz) {
@@ -87,12 +87,10 @@ public record OnlineTurnierAnlage(TurnierSystem turnierSystem, Optional<Formatio
 		return formation.orElseThrow(() -> new IllegalStateException("Keine Formation für " + turnierSystem));
 	}
 
-	/**
-	 * Teamname-Spalte der Meldeliste, allein aus dem Online-Turnier: bei „Nur Teamname“ immer, sonst als Zusatzspalte
-	 * zu den Spielern genau dann, wenn online ein Teamname angegeben werden kann.
-	 */
+	/** Teamname-Spalte der Meldeliste, allein aus dem Online-Turnier ({@link TeamnameModus}). */
 	public boolean teamnameAnzeigen() {
-		return teamnameZusatz || MeldelisteSpaltenDialogOption.teamnameErzwungen(meldelisteFormation());
+		return TeamnameModus.ausOnline(meldelisteFormation() == Formation.NUR_TEAMNAME, teamnameZusatz)
+				.teamnameSpalte();
 	}
 
 	/** Verbindbarkeit, die das angelegte Dokument haben wird. */

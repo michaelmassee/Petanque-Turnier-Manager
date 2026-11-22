@@ -6,6 +6,8 @@ package de.petanqueturniermanager.ptmonline;
 import java.util.Optional;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.meldeliste.IFormationKonfiguration;
+import de.petanqueturniermanager.basesheet.meldeliste.TeamnameModus;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.formulex.konfiguration.FormuleXKonfigurationSheet;
@@ -18,10 +20,11 @@ import de.petanqueturniermanager.poule.konfiguration.PouleKonfigurationSheet;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
+import de.petanqueturniermanager.triptete.konfiguration.TripTeteKonfigurationSheet;
 
 /**
- * Formation des Turnierdokuments, so wie PTM-Online sie kennt: bei Supermêlée der Spielrunden-Modus, bei Trip-Tête
- * immer Triplette. Die Liga hat keine Formation.
+ * Formation und Teamname-Modus des Turnierdokuments, so wie PTM-Online sie kennt: bei Supermêlée der
+ * Spielrunden-Modus, bei Trip-Tête immer Triplette. Die Liga hat keine Formation.
  */
 public final class PtmOnlineFormation {
 
@@ -29,17 +32,41 @@ public final class PtmOnlineFormation {
 
     /** Formation des Dokuments; leer bei Turniersystemen ohne Formation. */
     public static Optional<Formation> ausDokument(WorkingSpreadsheet ws, TurnierSystem turnierSystem) {
+        return switch (turnierSystem) {
+            case SUPERMELEE -> Optional.of(ausSupermeleeModus(new SuperMeleeKonfigurationSheet(ws).getSuperMeleeMode()));
+            case TRIPTETE -> Optional.of(Formation.TRIPLETTE);
+            default -> formationKonfiguration(ws, turnierSystem).map(IFormationKonfiguration::getMeldeListeFormation);
+        };
+    }
+
+    /**
+     * Teamname-Modus des Dokuments, wie er PTM-Online übertragen wird; leer bei Turniersystemen ohne Formation (Liga).
+     * Supermêlée meldet Einzelspieler und hat nie Teamnamen.
+     */
+    public static Optional<TeamnameModus> teamnameModusAusDokument(WorkingSpreadsheet ws,
+            TurnierSystem turnierSystem) {
+        return switch (turnierSystem) {
+            case SUPERMELEE -> Optional.of(TeamnameModus.KEIN);
+            case TRIPTETE -> Optional.of(TeamnameModus.von(Formation.TRIPLETTE,
+                    new TripTeteKonfigurationSheet(ws).isMeldeListeTeamnameAnzeigen()));
+            default -> formationKonfiguration(ws, turnierSystem).map(
+                    konfiguration -> TeamnameModus.von(konfiguration.getMeldeListeFormation(),
+                            konfiguration.isMeldeListeTeamnameAnzeigen()));
+        };
+    }
+
+    /** Konfiguration der Systeme mit einstellbarer Formation; leer für alle übrigen. */
+    private static Optional<IFormationKonfiguration> formationKonfiguration(WorkingSpreadsheet ws,
+            TurnierSystem turnierSystem) {
         return Optional.ofNullable(switch (turnierSystem) {
-            case SCHWEIZER -> new SchweizerKonfigurationSheet(ws).getMeldeListeFormation();
-            case MAASTRICHTER -> new MaastrichterKonfigurationSheet(ws).getMeldeListeFormation();
-            case FORMULEX -> new FormuleXKonfigurationSheet(ws).getMeldeListeFormation();
-            case KO -> new KoKonfigurationSheet(ws).getMeldeListeFormation();
-            case JGJ -> new JGJKonfigurationSheet(ws).getMeldeListeFormation();
-            case POULE -> new PouleKonfigurationSheet(ws).getMeldeListeFormation();
-            case KASKADE -> new KaskadeKonfigurationSheet(ws).getMeldeListeFormation();
-            case SUPERMELEE -> ausSupermeleeModus(new SuperMeleeKonfigurationSheet(ws).getSuperMeleeMode());
-            case TRIPTETE -> Formation.TRIPLETTE;
-            case LIGA, KEIN -> null;
+            case SCHWEIZER -> new SchweizerKonfigurationSheet(ws);
+            case MAASTRICHTER -> new MaastrichterKonfigurationSheet(ws);
+            case FORMULEX -> new FormuleXKonfigurationSheet(ws);
+            case KO -> new KoKonfigurationSheet(ws);
+            case JGJ -> new JGJKonfigurationSheet(ws);
+            case POULE -> new PouleKonfigurationSheet(ws);
+            case KASKADE -> new KaskadeKonfigurationSheet(ws);
+            case SUPERMELEE, TRIPTETE, LIGA, KEIN -> null;
         });
     }
 

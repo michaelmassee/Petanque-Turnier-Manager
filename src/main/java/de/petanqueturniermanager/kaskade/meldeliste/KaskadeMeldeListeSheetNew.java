@@ -239,7 +239,7 @@ public class KaskadeMeldeListeSheetNew extends SheetRunner
         Optional<KaskadeTurnierParameterDialog.TurnierParameter> param;
         try {
             param = KaskadeTurnierParameterDialog.from(getWorkingSpreadsheet())
-                    .anzeigen(Formation.DOUBLETTE, true, false, 2);
+                    .anzeigen(Formation.DOUBLETTE, false, false, 2);
         } catch (com.sun.star.uno.Exception e) {
             String errMsg = I18n.get("error.dialog.parameterdialog", e.getMessage());
             logger.error(errMsg, e);
