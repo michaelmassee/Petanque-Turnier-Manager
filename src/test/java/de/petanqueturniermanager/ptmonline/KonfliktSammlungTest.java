@@ -16,7 +16,7 @@ import de.petanqueturniermanager.ptmonline.dto.SyncStandDto;
 
 class KonfliktSammlungTest {
 
-    private static final List<Entscheidung> NAMENS_OPTIONEN = List.of(Entscheidung.ONLINE_UEBERNEHMEN,
+    private static final List<Entscheidung> OPTIONEN = List.of(Entscheidung.NUR_LOKAL_ENTFERNEN,
             Entscheidung.LOKAL_BEHALTEN);
 
     @BeforeAll
@@ -25,7 +25,7 @@ class KonfliktSammlungTest {
     }
 
     private static KonfliktFall namensKonflikt(String lokal, String online) {
-        return new KonfliktFall(KonfliktArt.NAMENSKONFLIKT, "u1", List.of("r1"), lokal, online, "", NAMENS_OPTIONEN);
+        return new KonfliktFall(KonfliktArt.NAMENSKONFLIKT, "u1", List.of("r1"), lokal, online, "", OPTIONEN);
     }
 
     @Test
@@ -49,8 +49,8 @@ class KonfliktSammlungTest {
 
         assertThat(KonfliktSammlung.mit(Map.of(fall.schluessel(), Entscheidung.LOKAL_BEHALTEN.anzeige()))
                 .entscheidung(fall)).contains(Entscheidung.LOKAL_BEHALTEN);
-        assertThat(KonfliktSammlung.mit(Map.of(fall.schluessel(), " online_uebernehmen ")).entscheidung(fall))
-                .contains(Entscheidung.ONLINE_UEBERNEHMEN);
+        assertThat(KonfliktSammlung.mit(Map.of(fall.schluessel(), " nur_lokal_entfernen ")).entscheidung(fall))
+                .contains(Entscheidung.NUR_LOKAL_ENTFERNEN);
         assertThat(KonfliktSammlung.mit(Map.of(fall.schluessel(), Entscheidung.BEHALTEN.name())).entscheidung(fall))
                 .as("passt nicht zum Fall").isEmpty();
     }
@@ -67,7 +67,7 @@ class KonfliktSammlungTest {
             assertThat(zeilen.get(0).schluessel()).startsWith("MOEGLICH_IDENTISCH");
             assertThat(zeilen.get(0).entscheidung()).isEmpty();
             assertThat(zeilen.get(1).entscheidung()).isEqualTo(Entscheidung.LOKAL_BEHALTEN.anzeige());
-            assertThat(zeilen.get(1).optionen()).containsExactly(Entscheidung.ONLINE_UEBERNEHMEN.anzeige(),
+            assertThat(zeilen.get(1).optionen()).containsExactly(Entscheidung.NUR_LOKAL_ENTFERNEN.anzeige(),
                     Entscheidung.LOKAL_BEHALTEN.anzeige());
         });
         assertThat(sammlung.ausschlussgruende()).extracting(KonfliktFall::art)
@@ -78,7 +78,7 @@ class KonfliktSammlungTest {
     void protokollTraegtNurEntscheidungenMitServerCode() {
         String body = TournamentSyncClient.entscheidungenBody(List.of(
                 new KonfliktSammlung.Protokoll(Entscheidung.VERKNUEPFEN, "u1", "r1"),
-                new KonfliktSammlung.Protokoll(Entscheidung.ONLINE_UEBERNEHMEN, "u2", "r2"),
+                new KonfliktSammlung.Protokoll(Entscheidung.LOKAL_BEHALTEN, "u2", "r2"),
                 new KonfliktSammlung.Protokoll(Entscheidung.TROTZDEM_STARTEN, null, null)));
 
         assertThat(body).isEqualTo("{\"decisions\":[{\"decision\":\"link\",\"onlineRegistrationId\":\"r1\","

@@ -71,7 +71,7 @@ final class PtmOnlineAuftragsTestHilfe {
                         .NeueOnlineAnmeldung(erster.vorname(), erster.nachname(), null, null, null, null, null, null,
                                 null, true, true, List.of(), List.of()),
                         meldung.teilnahme(), meldung.seedingPosition(), ziel.formelTeamNrAusLokalerUuid(uuid),
-                        erster.vorname() + " " + erster.nachname());
+                        erster.vorname() + " " + erster.nachname(), false);
             }
         }
         PtmOnlineAuftraege.teilnahme(bestand, tournamentId, status.eintraege(), onlineIds,

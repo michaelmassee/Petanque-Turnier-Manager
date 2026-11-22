@@ -67,6 +67,12 @@ public record SyncAntwort(int status, String body, boolean wiederholt,
                 .map(JsonElement::getAsString);
     }
 
+    /** Objekt {@code details.<feld>} einer Ablehnung, z.&nbsp;B. der Online-Stand bei {@code execution_conflict}. */
+    public Optional<JsonObject> detailObjekt(String feld) {
+        return details().map(details -> details.get(feld)).filter(JsonElement::isJsonObject)
+                .map(JsonElement::getAsJsonObject);
+    }
+
     private Optional<JsonObject> details() {
         return json().map(json -> json.get("details")).filter(JsonElement::isJsonObject)
                 .map(JsonElement::getAsJsonObject);

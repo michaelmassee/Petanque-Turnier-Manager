@@ -231,28 +231,41 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
         return nachnameSpalte(slotIndex) + 1;
     }
 
+    /**
+     * Liest alle Spieler in einem Blockzugriff – der PTM-Online-Hintergrund ruft das nach jeder Dokumentänderung auf.
+     */
     @Override
     public List<MeldelisteSpielerDaten> leseAlleSpielerRoh() {
+        int ersteSpalte = vornameSpalte(0);
+        RangeData daten = RangeHelper.from(sheet, doc,
+                RangePosition.from(ersteSpalte, ersteDatenZeile, letzteSchreibSpalte, MAX_DATEN_ZEILE))
+                .getDataFromRange();
         List<MeldelisteSpielerDaten> result = new ArrayList<>();
-        for (int zeile = ersteDatenZeile; zeile <= MAX_DATEN_ZEILE; zeile++) {
-            String erstesVor = sicherText(sheetHelper, sheet, vornameSpalte(0), zeile).strip();
-            String erstesNach = sicherText(sheetHelper, sheet, nachnameSpalte(0), zeile).strip();
-            if (erstesVor.isEmpty() && erstesNach.isEmpty()) {
+        for (int index = 0; index < daten.size(); index++) {
+            RowData zeile = daten.get(index);
+            if (zellText(zeile, vornameSpalte(0) - ersteSpalte).isEmpty()
+                    && zellText(zeile, nachnameSpalte(0) - ersteSpalte).isEmpty()) {
                 break;
             }
             for (int s = 0; s < anzSpieler; s++) {
-                String vor  = sicherText(sheetHelper, sheet, vornameSpalte(s), zeile).strip();
-                String nach = sicherText(sheetHelper, sheet, nachnameSpalte(s), zeile).strip();
+                String vor = zellText(zeile, vornameSpalte(s) - ersteSpalte);
+                String nach = zellText(zeile, nachnameSpalte(s) - ersteSpalte);
                 if (vor.isEmpty() && nach.isEmpty()) {
                     continue;
                 }
-                String verein = vereinsnameAktiv
-                        ? sicherText(sheetHelper, sheet, vereinSpalte(s), zeile).strip()
-                        : null;
-                result.add(new MeldelisteSpielerDaten(vor, nach, verein, zeile + 1));
+                String verein = vereinsnameAktiv ? zellText(zeile, vereinSpalte(s) - ersteSpalte) : null;
+                result.add(new MeldelisteSpielerDaten(vor, nach, verein, ersteDatenZeile + index + 1));
             }
         }
         return result;
+    }
+
+    /** Getrimmter Text einer Zelle aus einem Blockzugriff; leer außerhalb der Zeile (z.&nbsp;B. {@link #KEINE_SPALTE}). */
+    private static String zellText(RowData zeile, int index) {
+        if (index < 0 || index >= zeile.size()) {
+            return "";
+        }
+        return StringUtils.defaultString(zeile.get(index).getStringVal()).strip();
     }
 
     @Override

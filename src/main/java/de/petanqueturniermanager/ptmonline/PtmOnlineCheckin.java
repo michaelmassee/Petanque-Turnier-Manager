@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.jspecify.annotations.Nullable;
@@ -20,8 +21,9 @@ import de.petanqueturniermanager.spielerdb.MeldelisteZiel;
  * Rundenstart. Damit erhalten die Spieler die Postfach-Nachricht „Du bist eingecheckt“ schon beim Einchecken. PTM-Online verschickt sie je Meldung und Online-Turnier nur einmal – auch wenn die Teilnahme am
  * Turniertag mehrfach wechselt. Bei Supermelee ist jeder Spieltag ein eigenes Online-Turnier.
  * <p>
- * Gepusht werden nur Änderungen gegenüber dem zuletzt bekannten Stand je Online-Turnier – Teilnahme oder Teamnummer,
- * denn die persönliche Live-Ansicht zeigt die Nr. der Meldeliste. Ist für eine Meldung noch
+ * Gepusht werden nur Änderungen gegenüber dem zuletzt bekannten Stand je Online-Turnier – Teilnahme, Setzposition
+ * (das Dokument ist Master der Meldeliste) oder Teamnummer, denn die persönliche Live-Ansicht zeigt die Nr. der
+ * Meldeliste. Ist für eine Meldung noch
  * keiner bekannt (Dokument gerade geöffnet, verbunden oder Meldung neu zugeordnet), geht sie im Hintergrund nur als
  * aktiv hinaus, weil der Hintergrund die Online-Teilnahme nicht kennt. Den Rest erledigt der manuelle Abgleich: Er
  * vergleicht mit der Online-Teilnahme ({@link #abweichendVonOnline}) und setzt sie auf den Stand des Dokuments, das ab
@@ -35,11 +37,11 @@ final class PtmOnlineCheckin {
     /** Zuletzt an PTM-Online gemeldeter Stand je Online-Turnier und lokaler UUID. */
     private final Map<String, Map<String, Gemeldet>> bekannterStand = new HashMap<>();
 
-    /** An PTM-Online gemeldete Teilnahme und Teamnummer einer Meldung. */
-    record Gemeldet(OnlineTeilnahme teilnahme, @Nullable Integer teamNummer) {
+    /** An PTM-Online gemeldete Teilnahme, Setzposition und Teamnummer einer Meldung. */
+    record Gemeldet(OnlineTeilnahme teilnahme, @Nullable Integer seedingPosition, @Nullable Integer teamNummer) {
 
         static Gemeldet aus(PtmOnlineStatusAuftrag.Eintrag eintrag) {
-            return new Gemeldet(eintrag.teilnahme(), eintrag.teamNummer());
+            return new Gemeldet(eintrag.teilnahme(), eintrag.seedingPosition(), eintrag.teamNummer());
         }
     }
 
@@ -84,6 +86,7 @@ final class PtmOnlineCheckin {
             return aktuell.teilnahme() == OnlineTeilnahme.AKTIV;
         }
         return bekannt.teilnahme() != aktuell.teilnahme()
+                || !Objects.equals(bekannt.seedingPosition(), aktuell.seedingPosition())
                 || OnlineMeldungsStand.teamNummerAbweichend(aktuell.teamNummer(), bekannt.teamNummer());
     }
 

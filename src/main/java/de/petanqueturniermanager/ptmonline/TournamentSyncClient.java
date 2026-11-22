@@ -22,6 +22,7 @@ import java.util.concurrent.CompletableFuture;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jspecify.annotations.Nullable;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -477,12 +478,21 @@ public class TournamentSyncClient extends PtmOnlineHttpClient implements Auftrag
         return body.toString();
     }
 
-    /** Nutzlast einer Online-Anlage samt Teilnahme und Setzposition der neuen Meldung. */
-    static String anlageBody(NeueOnlineAnmeldung anmeldung, String teilnahme, Integer setzposition) {
+    /**
+     * Nutzlast einer Online-Anlage samt Teilnahme und Setzposition der neuen Meldung.
+     *
+     * @param dublettenSchutz automatische Anlage: PTM-Online lehnt ab ({@code possible_same_registration}), wenn eine
+     *                        gleichnamige, noch nicht verknüpfte Online-Anmeldung besteht – die verknüpft der Abgleich
+     */
+    static String anlageBody(NeueOnlineAnmeldung anmeldung, String teilnahme, @Nullable Integer setzposition,
+            boolean dublettenSchutz) {
         JsonObject body = GSON.toJsonTree(anmeldung).getAsJsonObject();
         body.addProperty("participation", teilnahme);
         if (setzposition != null) {
             body.addProperty("seedingPosition", setzposition);
+        }
+        if (dublettenSchutz) {
+            body.addProperty("holdIfSameRegistration", true);
         }
         return body.toString();
     }
@@ -610,6 +620,12 @@ public class TournamentSyncClient extends PtmOnlineHttpClient implements Auftrag
             throw unvollstaendigeAntwort("registration");
         }
         return GSON.fromJson(registration, RegistrationDto.class);
+    }
+
+    /** Online-Stand der Anmeldung aus einer Ablehnung wegen {@code execution_conflict}; leer ohne. */
+    static Optional<RegistrationDto> konfliktRegistrationAus(SyncAntwort antwort) {
+        return antwort.detailObjekt("registration").map(registration -> GSON.fromJson(registration,
+                RegistrationDto.class));
     }
 
     /** Ganzzahliges Pflichtfeld der Antwort (z.&nbsp;B. {@code updatedCount}). */

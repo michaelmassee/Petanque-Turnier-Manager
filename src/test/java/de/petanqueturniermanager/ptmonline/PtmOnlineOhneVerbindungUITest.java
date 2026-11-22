@@ -164,7 +164,7 @@ class PtmOnlineOhneVerbindungUITest extends BaseCalcUITest {
             assertThat(timerVorher).isNotNull();
 
             PtmOnlineErfassungsRunner runner = new PtmOnlineErfassungsRunner(wkingSpreadsheet,
-                    system, new PtmOnlineCheckin(), null, null);
+                    system, new PtmOnlineCheckin(), new PtmOnlineMeldelistenSync(), null, null);
             runner.startSilent();
             runner.join();
             pb.flushUiUpdatesForTest();

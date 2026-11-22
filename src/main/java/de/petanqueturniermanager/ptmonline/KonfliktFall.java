@@ -30,15 +30,12 @@ public record KonfliktFall(KonfliktArt art, @Nullable String lokaleUuid, List<St
     }
 
     /**
-     * Sprachneutraler, stabiler Schlüssel: Art, lokale UUID und Online-IDs. Ein Namens- oder Teamnamenskonflikt trägt
-     * zusätzlich die
-     * beiden Stände, damit eine Wahl nicht auf einen inzwischen anders geänderten Konflikt angewendet wird. Fälle
+     * Sprachneutraler, stabiler Schlüssel: Art, lokale UUID und Online-IDs. Ein Namenskonflikt trägt zusätzlich die beiden Stände, damit eine Wahl nicht auf einen inzwischen anders geänderten Konflikt angewendet wird. Fälle
      * ohne IDs und abgelehnte Aufträge (Bezeichnung mit Schreibzähler) werden über ihre Bezeichnungen unterschieden.
      */
     public String schluessel() {
         String basis = schluessel(art, lokaleUuid, onlineIds);
-        if (art == KonfliktArt.NAMENSKONFLIKT || art == KonfliktArt.TEAMNAMENSKONFLIKT
-                || art == KonfliktArt.AUFTRAG_ABGELEHNT
+        if (art == KonfliktArt.NAMENSKONFLIKT || art == KonfliktArt.AUFTRAG_ABGELEHNT
                 || (lokaleUuid == null && onlineIds.isEmpty())) {
             return basis + "|" + Integer.toHexString((lokal + "\u0000" + online).hashCode());
         }

@@ -39,9 +39,9 @@ class TeamnameAbgleichTest {
     }
 
     @Test
-    void beidseitigGeaendertIstKonflikt() {
+    void beidseitigGeaendertGehtDasDokumentVor() {
         assertThat(RegistrationImportTask.teamnameRichtung("Lokal", "Online", Optional.of("Alt")))
-                .isEqualTo(BesetzungsRichtung.KONFLIKT);
+                .isEqualTo(BesetzungsRichtung.BEIDSEITIG);
     }
 
     @Test

@@ -121,6 +121,7 @@ class PtmOnlineStartZurueckgesetztUITest extends BaseCalcUITest {
 
     private PtmOnlineErfassungsRunner.Erfassung erfasse(PtmOnlineErfassungsRunner.OnlineStandAbruf abruf) {
         var runner = new PtmOnlineErfassungsRunner(wkingSpreadsheet, TurnierSystem.SCHWEIZER, new PtmOnlineCheckin(),
+                new PtmOnlineMeldelistenSync(),
                 abruf, null);
         runner.run();
         assertThat(runner.isLetzterLaufFehlgeschlagen()).isFalse();

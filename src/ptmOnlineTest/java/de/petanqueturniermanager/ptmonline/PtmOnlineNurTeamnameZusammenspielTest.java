@@ -60,7 +60,7 @@ class PtmOnlineNurTeamnameZusammenspielTest extends BasePtmOnlineZusammenspielTe
     }
 
     @Test
-    void konfliktlisteZeigtDenTeamnamenStattDerKontaktperson() throws Exception {
+    void beidseitigGeaenderterTeamnameUebernimmtDenDesDokuments() throws Exception {
         String id = importierteAnmeldung();
         online.teamnameSetzen(turnierId, id, "Online-Name");
         int zeile = ziel.findeZeileMitName(TEAMNAME);
@@ -68,12 +68,12 @@ class PtmOnlineNurTeamnameZusammenspielTest extends BasePtmOnlineZusammenspielTe
 
         abgleichen();
 
-        assertThat(mapping.konfliktListe().leseBlock(KonfliktArt.NAMENSKONFLIKT.name() + "|")).singleElement()
-                .satisfies(fall -> {
-                    assertThat(fall.lokal()).isEqualTo("Lokal-Name");
-                    assertThat(fall.online()).as("Teamname, nicht Kontaktperson %s", KONTAKT.name())
-                            .isEqualTo("Online-Name");
-                });
+        JsonObject anmeldung = online.anmeldung(turnierId, id).orElseThrow();
+        assertThat(anmeldung.get("teamName").getAsString()).as("das Dokument ist Master").isEqualTo("Lokal-Name");
+        assertThat(anmeldung.get("firstName").getAsString()).as("Kontaktperson %s unverändert", KONTAKT.name())
+                .isEqualTo("Hans");
+        assertThat(lokaleTeamnamen()).containsExactly("Lokal-Name");
+        assertThat(konfliktArten()).doesNotContain(KonfliktArt.NAMENSKONFLIKT);
     }
 
     @Test

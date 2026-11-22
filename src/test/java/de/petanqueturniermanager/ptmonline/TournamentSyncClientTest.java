@@ -223,7 +223,7 @@ public class TournamentSyncClientTest {
 		NeueOnlineAnmeldung anmeldung = new NeueOnlineAnmeldung("Max", "Muster", null, null,
 				null, null, null, null, null, true, true, List.of(), List.of());
 
-		assertThat(TournamentSyncClient.anlageBody(anmeldung, OnlineTeilnahme.AKTIV.apiWert(), 4))
+		assertThat(TournamentSyncClient.anlageBody(anmeldung, OnlineTeilnahme.AKTIV.apiWert(), 4, false))
 				.contains("\"registrationAnswers\":[]").contains("\"participation\":\"active\"")
 				.contains("\"seedingPosition\":4");
 	}

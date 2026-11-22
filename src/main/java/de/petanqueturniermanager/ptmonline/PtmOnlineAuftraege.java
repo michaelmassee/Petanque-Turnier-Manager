@@ -8,11 +8,14 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.logging.log4j.LogManager;
@@ -30,6 +33,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.onlinesync.sheet.NeueZuordnung;
+import de.petanqueturniermanager.onlinesync.sheet.ZuordnungsZusatz;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsArt;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsBestand;
 import de.petanqueturniermanager.ptmonline.auftrag.SyncAuftrag;
@@ -74,6 +78,12 @@ public final class PtmOnlineAuftraege {
     private static final String ONLINE_STATUS_ABGESCHLOSSEN = "finished";
     private static final String KONTEXT_ONLINE_ID = "onlineId";
     private static final String KONTEXT_VERKNUEPFUNGEN = "verknuepfungen";
+    /** Gesendete Besetzung einer Änderung; nach der Annahme die zuletzt abgeglichene. */
+    private static final String KONTEXT_BESETZUNG = "besetzung";
+    /** Gesendeter Teamname einer Änderung; nach der Annahme der zuletzt abgeglichene. */
+    private static final String KONTEXT_TEAMNAME = "teamname";
+    private static final String CODE_AUSFUEHRUNGSKONFLIKT = "execution_conflict";
+    private static final String CODE_GLEICHE_ANMELDUNG = "possible_same_registration";
     private static final int MAX_ENTSCHEIDUNGEN_JE_AUFTRAG = 200;
     private static final int MAX_VERKNUEPFUNGEN_JE_AUFTRAG = 200;
 
@@ -194,23 +204,34 @@ public final class PtmOnlineAuftraege {
                 kontext.toString()));
     }
 
-    /** Online-Anlage einer lokalen Meldung samt ihrer Teilnahme und Setzposition (T-24). */
+    /**
+     * Online-Anlage einer lokalen Meldung samt ihrer Teilnahme und Setzposition (T-24).
+     *
+     * @param automatisch Anlage durch den automatischen Meldelisten-Abgleich: PTM-Online legt keine Dublette einer
+     *                    gleichnamigen, noch nicht verknüpften Online-Anmeldung an
+     */
     static SyncAuftrag anlage(AuftragsBestand bestand, String tournamentId, String lokaleUuid,
             NeueOnlineAnmeldung anmeldung, OnlineTeilnahme teilnahme, @Nullable Integer setzposition,
-            String nummerFormel, String bezeichnung) {
+            String nummerFormel, String bezeichnung, boolean automatisch) {
         JsonObject kontext = new JsonObject();
         kontext.addProperty(KONTEXT_UUID, lokaleUuid);
         kontext.addProperty(KONTEXT_NUMMER_FORMEL, nummerFormel);
         kontext.addProperty(KONTEXT_BEZEICHNUNG, bezeichnung);
         return bestand.erzeuge(AuftragsArt.ANMELDUNG_ANLEGEN, "PUT",
                 TournamentSyncClient.anmeldungPfad(tournamentId, lokaleUuid),
-                TournamentSyncClient.anlageBody(anmeldung, teilnahme.apiWert(), setzposition), kontext.toString());
+                TournamentSyncClient.anlageBody(anmeldung, teilnahme.apiWert(), setzposition, automatisch),
+                kontext.toString());
     }
 
-    /** Namenskorrektur einer zugeordneten Meldung aus dem Dokument; die lokale UUID wird dabei online vermerkt. */
+    /**
+     * Namenskorrektur einer zugeordneten Meldung aus dem Dokument; die lokale UUID wird dabei online vermerkt. Nach der
+     * Annahme gelten die gesendete Besetzung und der gesendete Teamname als zuletzt abgeglichen.
+     *
+     * @param besetzung gesendete Besetzung samt Benutzer-IDs (bei „Nur Teamname“ der Teamname)
+     */
     static SyncAuftrag aenderung(AuftragsBestand bestand, String tournamentId, String lokaleUuid,
             String onlineRegistrationId, NeueOnlineAnmeldung anmeldung, List<PersonDto> personen,
-            int erwarteteRevision, String bezeichnung) {
+            AbgeglicheneBesetzung besetzung, int erwarteteRevision, String bezeichnung) {
         JsonObject revisionen = new JsonObject();
         revisionen.addProperty(lokaleUuid, erwarteteRevision + 1);
         JsonObject kontext = new JsonObject();
@@ -218,6 +239,8 @@ public final class PtmOnlineAuftraege {
         kontext.addProperty(KONTEXT_ONLINE_ID, onlineRegistrationId);
         kontext.addProperty(KONTEXT_BEZEICHNUNG, bezeichnung);
         kontext.add(KONTEXT_REVISIONEN, revisionen);
+        kontext.addProperty(KONTEXT_BESETZUNG, besetzung.alsText());
+        kontext.addProperty(KONTEXT_TEAMNAME, AbgeglichenerTeamname.alsText(anmeldung.teamName()));
         return bestand.erzeuge(AuftragsArt.ANMELDUNG_AENDERN, "PUT",
                 TournamentSyncClient.anmeldungPfad(tournamentId, lokaleUuid),
                 TournamentSyncClient.aenderungBody(anmeldung, personen, onlineRegistrationId, erwarteteRevision),
@@ -348,11 +371,52 @@ public final class PtmOnlineAuftraege {
                 TournamentSyncClient.ergebnismeldungEntscheidungenBody(uebernommenProMeldung), "{}");
     }
 
-    /** Online-Stornierung einer lokal entfernten, verknüpften Meldung (KP-15); wird ohne Netz nachgeholt. */
+    /**
+     * Online-Stornierung einer lokal entfernten, verknüpften Meldung (KP-15); wird ohne Netz nachgeholt. Nach der
+     * Annahme ist die Zuordnung als „lokal entfernt“ vermerkt.
+     */
     static void storno(AuftragsBestand bestand, String tournamentId, String lokaleUuid, String onlineRegistrationId,
             int erwarteteRevision) {
+        JsonObject kontext = new JsonObject();
+        kontext.addProperty(KONTEXT_UUID, lokaleUuid);
         bestand.erzeuge(AuftragsArt.ANMELDUNG_STORNIEREN, "PUT", TournamentSyncClient.anmeldungPfad(tournamentId,
-                lokaleUuid), TournamentSyncClient.stornoBody(onlineRegistrationId, erwarteteRevision), "{}");
+                lokaleUuid), TournamentSyncClient.stornoBody(onlineRegistrationId, erwarteteRevision),
+                kontext.toString());
+    }
+
+    /** Ob das Online-Turnier laut Sync-Blatt läuft oder abgeschlossen ist; danach lehnt PTM-Online Anlagen ab. */
+    static boolean istGestartet(Optional<String> onlineStatus) {
+        return onlineStatus.filter(status -> ONLINE_STATUS_LAEUFT.equals(status)
+                || ONLINE_STATUS_ABGESCHLOSSEN.equals(status)).isPresent();
+    }
+
+    /**
+     * Erwartete Ausführungsrevision für einen neuen Auftrag zu einer Meldung: die gespeicherte, erhöht um noch offene
+     * Teilnahme- und Änderungsaufträge derselben Meldung.
+     */
+    static int erwarteteRevision(AuftragsBestand bestand, String lokaleUuid, Map<String, Integer> gespeichert) {
+        return Math.max(gespeichert.getOrDefault(lokaleUuid, 1), offeneRevisionen(bestand).getOrDefault(lokaleUuid, 0));
+    }
+
+    /**
+     * Meldungen, für die der automatische Meldelisten-Abgleich keinen Auftrag erzeugen darf: offene Anlage-, Änderungs-
+     * und Stornoaufträge (keine Doppelaufträge) sowie abgelehnte, noch nicht quittierte Anlagen (sonst würde eine
+     * Dublette oder eine Anlage nach dem Turnierstart bei jeder Änderung neu versucht).
+     */
+    static Set<String> gesperrteMeldungen(AuftragsBestand bestand) {
+        Set<String> gesperrt = new HashSet<>();
+        for (AuftragsBestand.Eintrag eintrag : bestand.eintraege()) {
+            AuftragsArt art = eintrag.auftrag().art();
+            boolean anmeldung = art == AuftragsArt.ANMELDUNG_ANLEGEN || art == AuftragsArt.ANMELDUNG_AENDERN
+                    || art == AuftragsArt.ANMELDUNG_STORNIEREN;
+            boolean sperrt = eintrag.zustand() == AuftragsBestand.Zustand.OFFEN
+                    || eintrag.zustand() == AuftragsBestand.Zustand.ABGELEHNT && art == AuftragsArt.ANMELDUNG_ANLEGEN;
+            String uuid = text(kontext(eintrag.auftrag()), KONTEXT_UUID);
+            if (anmeldung && sperrt && !uuid.isEmpty()) {
+                gesperrt.add(uuid);
+            }
+        }
+        return gesperrt;
     }
 
     /**
@@ -486,7 +550,7 @@ public final class PtmOnlineAuftraege {
     static String ablehnungsHinweis(String grund) {
         return switch (grund) {
             case "composition_locked", "formation_locked", "registration_drawn", "user_id_invalid", "unit_invalid",
-                    "execution_conflict", CODE_TURNIER_LAEUFT -> I18n.get("ptmonline.konflikt.hinweis.abgelehnt." + grund);
+                    CODE_AUSFUEHRUNGSKONFLIKT, CODE_GLEICHE_ANMELDUNG, CODE_TURNIER_LAEUFT -> I18n.get("ptmonline.konflikt.hinweis.abgelehnt." + grund);
             default -> I18n.get("ptmonline.konflikt.hinweis.abgelehnt", grund);
         };
     }
@@ -552,6 +616,9 @@ public final class PtmOnlineAuftraege {
         Map<String, RegistrationDto> geaendert = new LinkedHashMap<>();
         List<String> abgelehnt = new ArrayList<>();
         List<String> nachStart = new ArrayList<>();
+        Map<String, ZuordnungsZusatz> zusaetze = new LinkedHashMap<>();
+        Set<String> storniert = new LinkedHashSet<>();
+        List<VersandErgebnis> ueberholt = new ArrayList<>();
         boolean startErledigt = false;
         boolean startAngenommen = false;
         SyncAntwort abschluss = null;
@@ -562,6 +629,9 @@ public final class PtmOnlineAuftraege {
             startErledigt |= auftrag.art() == AuftragsArt.START;
             startAngenommen |= auftrag.art() == AuftragsArt.START && ergebnis.angenommen();
             if (!ergebnis.angenommen()) {
+                if (uebernehmeOnlineRevision(ergebnis, kontext, revisionen)) {
+                    ueberholt.add(ergebnis);
+                }
                 if (auftrag.art() == AuftragsArt.ANMELDUNG_ANLEGEN) {
                     String bezeichnung = text(kontext, KONTEXT_BEZEICHNUNG);
                     if (ergebnis.antwort().nenntFeld()) {
@@ -580,8 +650,19 @@ public final class PtmOnlineAuftraege {
                             TournamentSyncClient.registrationAus(ergebnis.antwort())));
                     case ANMELDUNG_AENDERN -> {
                         RegistrationDto registration = TournamentSyncClient.registrationAus(ergebnis.antwort());
-                        geaendert.put(text(kontext, KONTEXT_UUID), registration);
-                        revisionen.put(text(kontext, KONTEXT_UUID), Objects.requireNonNullElse(registration.executionRevision(), 1));
+                        String uuid = text(kontext, KONTEXT_UUID);
+                        geaendert.put(uuid, registration);
+                        revisionen.put(uuid, Objects.requireNonNullElse(registration.executionRevision(), 1));
+                        if (kontext.has(KONTEXT_BESETZUNG)) {
+                            zusaetze.put(uuid, ZuordnungsZusatz.besetzungUndTeamname(
+                                    text(kontext, KONTEXT_BESETZUNG), text(kontext, KONTEXT_TEAMNAME)));
+                        }
+                    }
+                    case ANMELDUNG_STORNIEREN -> {
+                        String uuid = text(kontext, KONTEXT_UUID);
+                        if (!uuid.isEmpty()) {
+                            storniert.add(uuid);
+                        }
                     }
                     case TEILNAHME -> {
                         Map<String, Integer> erwartet = revisionenAusKontext(auftrag);
@@ -594,7 +675,7 @@ public final class PtmOnlineAuftraege {
                     }
                     case ANMELDUNG_VERKNUEPFEN -> meldeNichtVerknuepfte(auftrag, ergebnis.antwort());
                     case ABSCHLUSS -> abschluss = ergebnis.antwort();
-                    case START, TRENNEN, RUNDE, RUNDE_LOESCHEN, RANGLISTE, SPIELEINSTELLUNGEN, MELEE_TEAMS, ANMELDUNG_STORNIEREN, ENTSCHEIDUNGEN,
+                    case START, TRENNEN, RUNDE, RUNDE_LOESCHEN, RANGLISTE, SPIELEINSTELLUNGEN, MELEE_TEAMS, ENTSCHEIDUNGEN,
                             ANMELDUNG_SCHLIESSEN, ERGEBNISMELDUNGEN, ANKUENDIGUNG, TIMER -> {
                         // Nichts im Dokument festzuhalten.
                     }
@@ -610,6 +691,10 @@ public final class PtmOnlineAuftraege {
         if (!revisionen.isEmpty()) {
             mapping.setExecutionRevisionen(revisionen);
         }
+        vermerkeLokalEntfernt(storniert, mapping, zusaetze);
+        if (!zusaetze.isEmpty()) {
+            mapping.setZusaetze(zusaetze);
+        }
         if (startErledigt) {
             mapping.setRunningAusstehendSeit(null);
         }
@@ -622,9 +707,46 @@ public final class PtmOnlineAuftraege {
         for (VersandErgebnis ergebnis : ergebnisse) {
             bestand.angewendet(ergebnis, ablehnungsGrund(ergebnis));
         }
+        // Das Dokument ist Master: Mit der übernommenen Online-Revision sendet der nächste Lauf den Stand erneut.
+        ueberholt.forEach(ergebnis -> bestand.quittiere(ergebnis.auftrag().auftragsId()));
         speichern(bestand, mapping);
         return new Anwendung(zuordnungen.size(), abgelehnt, nachStart, geaendert,
                 ergebnisse.stream().filter(ergebnis -> !ergebnis.angenommen()).toList(), Optional.ofNullable(abschluss));
+    }
+
+    /**
+     * Eine Änderung oder Stornierung scheiterte an einer zwischenzeitlich online geänderten Anmeldung
+     * ({@code execution_conflict}): Deren Revision gilt nun als gespeichert.
+     *
+     * @return ob die Revision übernommen wurde
+     */
+    private static boolean uebernehmeOnlineRevision(VersandErgebnis ergebnis, JsonObject kontext,
+            Map<String, Integer> revisionen) {
+        AuftragsArt art = ergebnis.auftrag().art();
+        String uuid = text(kontext, KONTEXT_UUID);
+        if (art != AuftragsArt.ANMELDUNG_AENDERN && art != AuftragsArt.ANMELDUNG_STORNIEREN || uuid.isEmpty()
+                || ergebnis.antwort().code().filter(CODE_AUSFUEHRUNGSKONFLIKT::equals).isEmpty()) {
+            return false;
+        }
+        Optional<Integer> online = TournamentSyncClient.konfliktRegistrationAus(ergebnis.antwort())
+                .map(RegistrationDto::executionRevision);
+        online.ifPresent(revision -> revisionen.put(uuid, revision));
+        return online.isPresent();
+    }
+
+    /** Ergänzt bei online stornierten Meldungen den Vermerk „lokal entfernt“, ohne andere Vermerke zu verlieren. */
+    private static void vermerkeLokalEntfernt(Set<String> storniert, PtmOnlineRegistrationMapping mapping,
+            Map<String, ZuordnungsZusatz> zusaetze) throws GenerateException {
+        if (storniert.isEmpty()) {
+            return;
+        }
+        Map<String, ZuordnungsZusatz> bisher = mapping.getZusaetzeProUuid();
+        for (String uuid : storniert) {
+            String vermerk = ZuordnungsVermerke.lese(Optional.ofNullable(bisher.get(uuid))
+                    .map(ZuordnungsZusatz::vermerk).orElse(null)).mit(ZuordnungsVermerke.LOKAL_ENTFERNT).alsText();
+            zusaetze.merge(uuid, ZuordnungsZusatz.nurVermerk(vermerk),
+                    (alt, neu) -> new ZuordnungsZusatz(alt.besetzung(), neu.vermerk(), alt.teamname()));
+        }
     }
 
     private static String ablehnungsGrund(VersandErgebnis ergebnis) {

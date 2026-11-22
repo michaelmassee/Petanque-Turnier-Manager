@@ -14,8 +14,8 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Check-in-Push am Turniertag: nur Änderungen werden gemeldet, ohne bekannten Stand nur aktive Meldungen, und jeder
- * Stand gilt je Online-Turnier (Supermelee: je Spieltag). Eine geänderte Teamnummer zählt wie eine geänderte
- * Teilnahme. Der manuelle Abgleich vergleicht dagegen mit dem Online-Stand und findet Abweichungen in beide Richtungen.
+ * Stand gilt je Online-Turnier (Supermelee: je Spieltag). Eine geänderte Teamnummer oder Setzposition zählt wie eine
+ * geänderte Teilnahme. Der manuelle Abgleich vergleicht dagegen mit dem Online-Stand und findet Abweichungen in beide Richtungen.
  */
 class PtmOnlineCheckinTest {
 
@@ -111,6 +111,20 @@ class PtmOnlineCheckinTest {
                 eintrag("b", OnlineTeilnahme.AKTIV)))).isEmpty();
     }
 
+    /** Das Dokument ist Master der Meldeliste: eine geänderte Setzposition geht ohne Abgleich online. */
+    @Test
+    void geaenderteSetzpositionWirdGemeldet() {
+        bestaetige(checkin.ermittle(TURNIER, List.of(mitSetzposition("a", 3))));
+
+        Optional<PtmOnlineCheckin.Aenderung> umgesetzt = checkin.ermittle(TURNIER, List.of(mitSetzposition("a", 1)));
+
+        assertThat(umgesetzt.map(a -> a.auftrag().eintraege().get(0).seedingPosition())).contains(1);
+        bestaetige(umgesetzt);
+        assertThat(checkin.ermittle(TURNIER, List.of(mitSetzposition("a", 1)))).isEmpty();
+        assertThat(checkin.ermittle(TURNIER, List.of(eintrag("a", OnlineTeilnahme.AKTIV))))
+                .as("entfernte Setzposition").isPresent();
+    }
+
     /** Regression: Nr. 1 → 42 in der Meldeliste erzeugte keinen Auftrag, die Live-Ansicht zeigte weiter Nr. 1. */
     @Test
     void geaenderteTeamnummerWirdGemeldet() {
@@ -181,6 +195,10 @@ class PtmOnlineCheckinTest {
 
     private static PtmOnlineStatusAuftrag.Eintrag eintrag(String uuid, OnlineTeilnahme teilnahme) {
         return eintrag(uuid, teilnahme, null);
+    }
+
+    private static PtmOnlineStatusAuftrag.Eintrag mitSetzposition(String uuid, int setzposition) {
+        return new PtmOnlineStatusAuftrag.Eintrag(uuid, OnlineTeilnahme.AKTIV, setzposition, null);
     }
 
     private static PtmOnlineStatusAuftrag.Eintrag eintrag(String uuid, OnlineTeilnahme teilnahme,

@@ -382,6 +382,8 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
         private final AtomicReference<@Nullable DokumentstandFrage> dokumentstandFrage = new AtomicReference<>();
         /** Nur in SheetRunnern dieses Dokuments verwendet (nie gleichzeitig). */
         private final PtmOnlineCheckin checkin = new PtmOnlineCheckin();
+        /** Nur in SheetRunnern dieses Dokuments verwendet (nie gleichzeitig). */
+        private final PtmOnlineMeldelistenSync meldelistenSync = new PtmOnlineMeldelistenSync();
         /** Letzter Abruf des Online-Zustands; nach neuer Bindung verworfen. */
         private volatile PtmOnlineErfassungsRunner.@Nullable OnlineStandAbruf onlineStand;
         /** Zeitpunkt des letzten erfolgreichen Abrufs von {@link #onlineStand}. */
@@ -508,6 +510,11 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
             }
             PtmOnlineErfassungsRunner.Erfassung e = erfassung.get();
             zeigeHinweise(e.anwendung());
+            if (e.nachlauf()) {
+                // Gelöschte Meldungen erst nach einem weiteren Lauf stornieren – auch ohne weitere Dokumentänderung.
+                offen.set(true);
+                planeEin(VERZOEGERUNG_MS);
+            }
             String tournamentId = e.verbindung().tournamentId();
             TournamentSyncClient client = e.verbindung().gebundenerClient();
             letzterClient = client;
@@ -583,7 +590,7 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
         /** Dokument-Seite im eigenen, stillen SheetRunner; der Hintergrund wartet darauf. */
         private Optional<PtmOnlineErfassungsRunner.Erfassung> erfasse(WorkingSpreadsheet ws, TurnierSystem ts)
                 throws GenerateException, InterruptedException {
-            PtmOnlineErfassungsRunner runner = new PtmOnlineErfassungsRunner(ws, ts, checkin, onlineStand,
+            PtmOnlineErfassungsRunner runner = new PtmOnlineErfassungsRunner(ws, ts, checkin, meldelistenSync, onlineStand,
                     ergebnismeldungen);
             fuehreAus(runner, "PTM-Online: Aufträge konnten nicht erfasst werden");
             return runner.erfassung();

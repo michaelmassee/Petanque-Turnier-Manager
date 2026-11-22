@@ -15,10 +15,8 @@ public enum KonfliktArt {
 
     /** Lokal und online gleichnamig erfasst, noch nicht verknüpft (KP-06 a2). */
     MOEGLICH_IDENTISCH(true),
-    /** Namen oder Besetzung lokal und online unterschiedlich geändert (KP-16, KP-20). */
+    /** Online geänderte Besetzung lässt sich lokal nicht übernehmen (KP-16, KP-20). */
     NAMENSKONFLIKT(false),
-    /** Teamname lokal und online unterschiedlich geändert (wie KP-16). */
-    TEAMNAMENSKONFLIKT(false),
     /** Online storniert oder auf der Warteliste, lokal von der Auslosung ausgeschlossen (KP-14). */
     ONLINE_AUSGESCHLOSSEN(true),
     /** Verknüpfte Meldung fehlt lokal, ohne dass über die Online-Wirkung entschieden wurde (KP-15). */

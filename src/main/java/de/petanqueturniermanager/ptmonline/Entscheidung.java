@@ -21,9 +21,7 @@ public enum Entscheidung {
     VERKNUEPFEN("link"),
     /** Bewusst getrennt: die lokale Meldung wird normal online angelegt (KP-06 a2). */
     GETRENNT("separate"),
-    /** Online-Besetzung in die Meldeliste übernehmen (KP-16). */
-    ONLINE_UEBERNEHMEN(null),
-    /** Lokale Besetzung behalten und online übertragen (KP-16). */
+    /** Lokale Besetzung behalten und online übertragen, wenn sich die Online-Besetzung nicht übernehmen lässt (KP-16). */
     LOKAL_BEHALTEN(null),
     /** Online stornierte Meldung bewusst behalten; der Ausschluss entfällt (KP-14). */
     BEHALTEN("keep_despite_online_status"),

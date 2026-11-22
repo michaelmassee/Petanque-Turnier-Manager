@@ -104,10 +104,10 @@ public class RegistrationImportFilterTest {
 	}
 
 	@Test
-	public void beidseitigUnterschiedlichGeaendertIstKonflikt() {
+	public void beidseitigUnterschiedlichGeaendertGehtDasDokumentVor() {
 		assertThat(RegistrationImportTask.richtung(besetzung("Anna", "Adler", "Dora", "Dietz"),
 				besetzung("Anna", "Adler", "Ben", "Berg"), besetzung("Anna", "Adler", "Carl", "Cramer")))
-				.isEqualTo(RegistrationImportTask.BesetzungsRichtung.KONFLIKT);
+				.isEqualTo(RegistrationImportTask.BesetzungsRichtung.BEIDSEITIG);
 	}
 
 	@Test
@@ -117,9 +117,9 @@ public class RegistrationImportFilterTest {
 	}
 
 	@Test
-	public void namensKonfliktZeigtGrundStattVorauswahl() {
+	public void namensKonfliktZeigtDenGrund() {
 		RegistrationImportTask.NamensKonflikt mitGrund = new RegistrationImportTask.NamensKonflikt("u1", "Adler",
-				"Berg", false, "schon übernommen");
+				"Berg", "schon übernommen");
 		assertThat(mitGrund.hinweis()).isEqualTo("schon übernommen");
 	}
 

@@ -133,7 +133,8 @@ class PtmOnlineErfassungsBlattschutzUITest extends BaseCalcUITest {
     }
 
     private void erfasse() {
-        var runner = new PtmOnlineErfassungsRunner(wkingSpreadsheet, TurnierSystem.SCHWEIZER, checkin, stand, null);
+        var runner = new PtmOnlineErfassungsRunner(wkingSpreadsheet, TurnierSystem.SCHWEIZER, checkin,
+                new PtmOnlineMeldelistenSync(), stand, null);
         runner.run();
         assertThat(runner.isLetzterLaufFehlgeschlagen()).isFalse();
         assertThat(runner.erfassung()).isPresent();

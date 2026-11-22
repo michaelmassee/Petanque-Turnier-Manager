@@ -19,8 +19,8 @@ import de.petanqueturniermanager.spielerdb.SpielerMitVerein;
 
 /**
  * Teamnamen im Zusammenspiel PTM ↔ PTM Online (Schweizer Doublette mit Teamname-Spalte), gegen den lokal gestarteten
- * Worker: Import, Abgleich in beide Richtungen wie die Besetzung (E-16), Konflikt bei beidseitiger Änderung und kein
- * Verlust des Online-Teamnamens bei einer reinen Besetzungsänderung.
+ * Worker: Import, Abgleich in beide Richtungen wie die Besetzung (E-16), bei beidseitiger Änderung gewinnt das
+ * Dokument, und kein Verlust des Online-Teamnamens bei einer reinen Besetzungsänderung.
  */
 class PtmOnlineTeamnameZusammenspielTest extends BasePtmOnlineZusammenspielTest {
 
@@ -45,7 +45,7 @@ class PtmOnlineTeamnameZusammenspielTest extends BasePtmOnlineZusammenspielTest 
         abgleichen();
 
         assertThat(lokalerTeamname(TEAM_A[0])).isEqualTo("Carreau-Club");
-        assertThat(konfliktArten()).doesNotContain(KonfliktArt.TEAMNAMENSKONFLIKT);
+        assertThat(konfliktArten()).doesNotContain(KonfliktArt.NAMENSKONFLIKT);
     }
 
     @Test
@@ -87,25 +87,16 @@ class PtmOnlineTeamnameZusammenspielTest extends BasePtmOnlineZusammenspielTest 
     }
 
     @Test
-    void beidseitigGeaenderterTeamnameIstKonfliktBisZurEntscheidung() throws Exception {
+    void beidseitigGeaenderterTeamnameUebernimmtDenTeamnamenDesDokuments() throws Exception {
         String id = importierteAnmeldung();
         online.teamnameSetzen(turnierId, id, "Online-Name");
         lokalenTeamnamenSetzen(TEAM_A[0], "Lokal-Name");
 
         abgleichen();
 
-        assertThat(konfliktArten()).contains(KonfliktArt.TEAMNAMENSKONFLIKT);
-        assertThat(lokalerTeamname(TEAM_A[0])).as("keine Seite gewinnt still").isEqualTo("Lokal-Name");
-        assertThat(onlineTeamname(id)).isEqualTo("Online-Name");
-
-        String schluessel = mapping.konfliktListe().leseFaelle().keySet().stream()
-                .filter(fall -> fall.startsWith(KonfliktArt.TEAMNAMENSKONFLIKT.name() + "|")).findFirst()
-                .orElseThrow();
-        mapping.konfliktListe().setzeEntscheidung(schluessel, Entscheidung.LOKAL_BEHALTEN.anzeige());
-        abgleichen();
-
-        assertThat(onlineTeamname(id)).as("„lokal behalten“ überträgt den lokalen Teamnamen").isEqualTo("Lokal-Name");
-        assertThat(konfliktArten()).doesNotContain(KonfliktArt.TEAMNAMENSKONFLIKT);
+        assertThat(onlineTeamname(id)).as("das Dokument ist Master").isEqualTo("Lokal-Name");
+        assertThat(lokalerTeamname(TEAM_A[0])).isEqualTo("Lokal-Name");
+        assertThat(konfliktArten()).doesNotContain(KonfliktArt.NAMENSKONFLIKT);
     }
 
     @Test

@@ -32,7 +32,8 @@ import de.petanqueturniermanager.ptmonline.live.LiveStandQuellen;
 
 /**
  * Dokument-Seite der Live-Übertragung (T-09): wendet die Ergebnisse gesendeter Aufträge im Dokument an und erfasst
- * neue Aufträge aus einem Snapshot – Check-in-Änderungen, Live-Stand, ausstehender Turnierstart. Als stiller
+ * neue Aufträge aus einem Snapshot – Check-in-Änderungen, Meldelisten-Änderungen, Live-Stand, ausstehender
+ * Turnierstart. Als stiller
  * {@link SheetRunner}, damit „nur ein Lauf gleichzeitig“ gilt. Der Blattschutz-Scope beginnt erst vor einer
  * tatsächlichen Dokumentänderung; unveränderte Snapshots bleiben reine Lesezugriffe. Der Hintergrund-Thread des
  * {@link PtmOnlineLiveBeobachter} wartet darauf und sendet danach nur noch.
@@ -44,9 +45,10 @@ final class PtmOnlineErfassungsRunner extends SheetRunner {
      *
      * @param brauchtStand der Live-Stand wurde nicht erfasst, weil zuerst der Online-Zustand abzurufen ist
      * @param anwendung    angewendete Ergebnisse (für Hinweise an die Turnierleitung)
+     * @param nachlauf     ein weiterer Lauf ist auch ohne Dokumentänderung nötig (gelöschte Meldungen bestätigen)
      */
     record Erfassung(PtmOnlineVerbindung verbindung, AuftragsBestand bestand, boolean pausiert, boolean brauchtStand,
-            PtmOnlineAuftraege.Anwendung anwendung) {
+            PtmOnlineAuftraege.Anwendung anwendung, boolean nachlauf) {
     }
 
     /**
@@ -90,6 +92,7 @@ final class PtmOnlineErfassungsRunner extends SheetRunner {
     }
 
     private final PtmOnlineCheckin checkin;
+    private final PtmOnlineMeldelistenSync meldelistenSync;
     private final @Nullable OnlineStandAbruf abruf;
     private final @Nullable ErgebnismeldungsAbruf meldungsAbruf;
     private volatile @Nullable Erfassung erfassung;
@@ -102,9 +105,11 @@ final class PtmOnlineErfassungsRunner extends SheetRunner {
      * @param meldungsAbruf letzter Abruf der offenen Ergebnismeldungen, {@code null} ohne
      */
     PtmOnlineErfassungsRunner(WorkingSpreadsheet ws, TurnierSystem turnierSystem, PtmOnlineCheckin checkin,
-            @Nullable OnlineStandAbruf abruf, @Nullable ErgebnismeldungsAbruf meldungsAbruf) {
+            PtmOnlineMeldelistenSync meldelistenSync, @Nullable OnlineStandAbruf abruf,
+            @Nullable ErgebnismeldungsAbruf meldungsAbruf) {
         super(ws, turnierSystem, "PTM-Online");
         this.checkin = checkin;
+        this.meldelistenSync = meldelistenSync;
         this.abruf = abruf;
         this.meldungsAbruf = meldungsAbruf;
     }
@@ -174,6 +179,7 @@ final class PtmOnlineErfassungsRunner extends SheetRunner {
         boolean pausiert = !PtmOnlineSpielrundeSync.istSyncAktiv(mapping);
         Optional<PtmOnlineTimer.Vormerkung> timer = erfasseTimer(bestand, v, pausiert);
         boolean brauchtStand = false;
+        boolean nachlauf = false;
         if (!pausiert) {
             // Ranglisten u. a. abgeleitete Blätter vor dem Lesen auf den Stand der Eingaben bringen – auch der
             // gerade angewendeten Online-Ergebnisse. Ohne Tab-Wechsel wären sie sonst veraltet.
@@ -182,6 +188,8 @@ final class PtmOnlineErfassungsRunner extends SheetRunner {
             startNachRundenstartVormerken(bestand, v, passenderAbruf);
             startNachholen(bestand, v);
             erfasseCheckin(bestand, v);
+            // Das Dokument ist Master der Meldeliste: Namen, Teamnamen, neue und gelöschte Meldungen gehen online.
+            nachlauf = meldelistenSync.erfasse(bestand, v);
             erfasseSpieleinstellungen(bestand, v);
             erfasseErgebnismeldungen(bestand, v);
             brauchtStand = !erfasseLiveStand(bestand, v, passenderAbruf);
@@ -189,7 +197,7 @@ final class PtmOnlineErfassungsRunner extends SheetRunner {
         oeffneSchutzScopeBeiAenderung(bestand);
         PtmOnlineAuftraege.speichern(bestand, mapping);
         timer.ifPresent(stand -> PtmOnlineTimer.erfasst(getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), stand));
-        erfassung = new Erfassung(v, bestand, pausiert, brauchtStand, anwendung);
+        erfassung = new Erfassung(v, bestand, pausiert, brauchtStand, anwendung, nachlauf);
     }
 
     /** Zeigt den zuletzt abgerufenen Status des Online-Turniers im Sync-Blatt an; schreibt nur bei Änderung. */
