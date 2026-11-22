@@ -111,7 +111,7 @@ public final class MeldelisteZielFactory {
 
     /**
      * Sync-Ziel für PTM-Online: bei aktiver Mêlée-Anmeldung das Mêlée-Anmeldung-Sheet (ein Online-Mêlée-Turnier
-     * nimmt nur Einzelspieler an), sonst die Meldeliste wie {@link #fuerAktivesSheet}. Das Mêlée-Ziel entsteht
+     * nimmt nur Einzelspieler an), sonst die Meldeliste ({@link #fuerPtmOnlineMeldeliste}). Das Mêlée-Ziel entsteht
      * auch, wenn das Sheet noch fehlt; {@link #aktualisiereZielSynchron} legt es an.
      */
     public static Optional<MeldelisteZiel> fuerPtmOnline(WorkingSpreadsheet ws) {
@@ -122,7 +122,7 @@ public final class MeldelisteZielFactory {
                 return Optional.of(new MeleeAnmeldungZiel(ws, ts, schluessel.get()));
             }
         }
-        return fuerAktivesSheet(ws);
+        return fuerPtmOnlineMeldeliste(ws);
     }
 
     /**
@@ -140,13 +140,26 @@ public final class MeldelisteZielFactory {
         meleeSheet.generate();
     }
 
+    /** Meldeliste für die Spieler-DB-Übernahme; bei „Nur Teamname“ gibt es keine Spieler und damit kein Ziel. */
     public static Optional<MeldelisteZiel> fuerAktivesSheet(WorkingSpreadsheet ws) {
+        return meldeliste(ws, false);
+    }
+
+    /**
+     * Meldeliste für den Abgleich mit PTM-Online, auch bei „Nur Teamname“: Dort ist der Teamname die Besetzung der
+     * Meldung ({@link SheetMeldelisteAdapter} liest ihn als einzigen Namens-Slot).
+     */
+    public static Optional<MeldelisteZiel> fuerPtmOnlineMeldeliste(WorkingSpreadsheet ws) {
+        return meldeliste(ws, true);
+    }
+
+    private static Optional<MeldelisteZiel> meldeliste(WorkingSpreadsheet ws, boolean mitNurTeamname) {
         TurnierSystem ts = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();
         if (ts == null || ts == TurnierSystem.KEIN) {
             return Optional.empty();
         }
         Optional<MeldelisteLayout> layoutOpt = leseLayout(ts, ws);
-        if (layoutOpt.isEmpty() || layoutOpt.get().formation() == Formation.NUR_TEAMNAME) {
+        if (layoutOpt.isEmpty() || (!mitNurTeamname && layoutOpt.get().formation() == Formation.NUR_TEAMNAME)) {
             return Optional.empty();
         }
         return SheetMeldelisteAdapter.fuer(ws, SheetNamen.meldeliste(), ts, layoutOpt.get());

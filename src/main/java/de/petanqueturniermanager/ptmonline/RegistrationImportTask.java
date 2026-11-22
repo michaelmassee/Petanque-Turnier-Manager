@@ -502,7 +502,8 @@ public final class RegistrationImportTask {
             if (!istImportierbar(reg) || mapping.istBereitsImportiert(reg.id())) {
                 continue;
             }
-            boolean freieZeileVorhanden = vorhandeneZeilen.getOrDefault(besetzungsSchluessel(reg), List.of()).stream()
+            boolean freieZeileVorhanden = vorhandeneZeilen
+                    .getOrDefault(besetzungsSchluessel(reg, ziel.getFormation()), List.of()).stream()
                     .map(uuidProZeile::get).anyMatch(uuid -> uuid == null || !onlineIdProUuid.containsKey(uuid));
             fehlend.add(freieZeileVorhanden
                     ? I18n.get("ptmonline.hinweis.moeglicherweise_identisch", onlineBezeichnung(reg))
@@ -626,8 +627,15 @@ public final class RegistrationImportTask {
         return gruende;
     }
 
-    /** Besetzung einer Online-Anmeldung aus allen angegebenen Spielernamen, unabhängig von der Formation. */
-    private static String besetzungsSchluessel(RegistrationDto reg) {
+    /**
+     * Besetzung einer Online-Anmeldung aus allen angegebenen Spielernamen, unabhängig von der Teamgröße; bei „Nur
+     * Teamname“ der Teamname.
+     */
+    private static String besetzungsSchluessel(RegistrationDto reg, Formation formation) {
+        if (formation == Formation.NUR_TEAMNAME) {
+            return besetzungsSchluessel(onlineBesetzung(reg, formation).personen().stream()
+                    .map(person -> OnlineSpielerName.schluessel(person.vorname(), person.nachname())));
+        }
         return besetzungsSchluessel(Stream.of(
                         new String[] { reg.firstName(), reg.lastName() },
                         new String[] { reg.partnerFirstName(), reg.partnerLastName() },
@@ -830,7 +838,8 @@ public final class RegistrationImportTask {
             String uuid = uuidProZeile.get(zeile);
             try {
                 zuordnungen.add(PtmOnlineRegistrationMapping.neueZuordnung(uuid, ziel.formelTeamNrAusLokalerUuid(uuid),
-                        bezeichnungProZeile.getOrDefault(zeile, ""), reg));
+                        bezeichnungProZeile.getOrDefault(zeile, ""), reg,
+                        onlineBesetzung(reg, ziel.getFormation())));
             } catch (MeldelisteZiel.MeldelisteSchreibException e) {
                 logger.warn("PTM-Online: Nummernformel für importierte Anmeldung {} nicht ermittelt", reg.id(), e);
                 nichtZuordenbar.add(onlineBezeichnung(reg));
@@ -916,7 +925,7 @@ public final class RegistrationImportTask {
         mapping.setBezeichnung(uuid, lokaleBezeichnung(ziel, zeile), onlineStatus(reg));
         mapping.setOnlineDetails(uuid, reg);
         mapping.setZusaetze(Map.of(uuid, new ZuordnungsZusatz(
-                AbgeglicheneBesetzung.ausOnline(reg.personen()).alsText(), "",
+                onlineBesetzung(reg, ziel.getFormation()).alsText(), "",
                 AbgeglichenerTeamname.alsText(reg.teamName()))));
         uebernehmeOnlineZusatzangaben(ziel, reg, zeile);
         logger.info("PTM-Online: Neuanmeldung {} nach Storno mit bestehender Meldelistenzeile {} verknüpft", reg.id(), zeile);
@@ -933,7 +942,7 @@ public final class RegistrationImportTask {
         }
         mapping.setOnlineDetails(uuid, reg);
         mapping.setZusaetze(Map.of(uuid, ZuordnungsZusatz.besetzungUndTeamname(
-                AbgeglicheneBesetzung.ausOnline(reg.personen()).alsText(),
+                onlineBesetzung(reg, ziel.getFormation()).alsText(),
                 AbgeglichenerTeamname.alsText(reg.teamName()))));
         uebernehmeOnlineZusatzangaben(ziel, reg, zeile);
     }
@@ -1027,7 +1036,8 @@ public final class RegistrationImportTask {
                 continue;
             }
             PtmOnlineAuftraege.anlage(bestand, tournamentId, uuid,
-                    zuOnlineAnmeldung(eintrag.getValue(), teamnamen.get(eintrag.getKey())),
+                    ziel.getFormation() == Formation.NUR_TEAMNAME ? nurTeamnameAnmeldung(eintrag.getValue())
+                            : zuOnlineAnmeldung(eintrag.getValue(), teamnamen.get(eintrag.getKey())),
                     OnlineTeilnahme.INAKTIV, null, formelTeamNr(ziel, uuid), bezeichnung(eintrag.getValue()));
         }
         PtmOnlineAuftraege.Anwendung anwendung = sendeSynchron(config, mapping, bestand);
@@ -1101,15 +1111,34 @@ public final class RegistrationImportTask {
     }
 
     /**
+     * „Nur Teamname“: Die Meldung hat keine Personen, nur den Teamnamen (einziger Namens-Slot). PTM-Online legt sie
+     * ohne Kontaktperson an.
+     */
+    private static NeueOnlineAnmeldung nurTeamnameAnmeldung(List<MeldelisteSpielerDaten> spieler) {
+        return new NeueOnlineAnmeldung("", "", null, null, null, null, null, null, spieler.getFirst().vorname(), true,
+                true, List.of(), List.of());
+    }
+
+    /**
+     * „Nur Teamname“: Änderung einer zugeordneten Meldung. Die Online-Kontaktperson bleibt unverändert – PTM-Online
+     * übernimmt bei einer Änderung aus dem Dokument alle Namen –, nur der Teamname kommt aus der Meldeliste.
+     */
+    private static NeueOnlineAnmeldung nurTeamnameAenderung(RegistrationDto remote, String teamname) {
+        return new NeueOnlineAnmeldung(remote.firstName(), remote.lastName(), remote.club(), remote.licenseNr(),
+                remote.partnerFirstName(), remote.partnerLastName(), remote.partner2FirstName(),
+                remote.partner2LastName(), teamname, true, true, List.of(), List.of());
+    }
+
+    /**
      * Lokale Meldung als Online-Anmeldung. Der Teamname wird immer mitgeschickt: PTM-Online übernimmt ihn bei einer
      * Änderung aus dem Dokument auch dann, wenn er fehlt, und würde den Online-Teamnamen sonst löschen.
      */
-    private static de.petanqueturniermanager.ptmonline.dto.NeueOnlineAnmeldung zuOnlineAnmeldung(
+    private static NeueOnlineAnmeldung zuOnlineAnmeldung(
             List<MeldelisteSpielerDaten> spieler, @Nullable String teamname) {
         MeldelisteSpielerDaten erster = spieler.get(0);
         MeldelisteSpielerDaten zweiter = spieler.size() > 1 ? spieler.get(1) : null;
         MeldelisteSpielerDaten dritter = spieler.size() > 2 ? spieler.get(2) : null;
-        return new de.petanqueturniermanager.ptmonline.dto.NeueOnlineAnmeldung(
+        return new NeueOnlineAnmeldung(
                 erster.vorname(), erster.nachname(), erster.vereinName(), null,
                 zweiter == null ? null : zweiter.vorname(), zweiter == null ? null : zweiter.nachname(),
                 dritter == null ? null : dritter.vorname(), dritter == null ? null : dritter.nachname(),
@@ -1218,7 +1247,7 @@ public final class RegistrationImportTask {
             }
             registrationProUuid.put(uuid, remote);
             List<AbgeglicheneBesetzung.Person> lokal = personen(spielerProZeile.get(zeile));
-            AbgeglicheneBesetzung online = AbgeglicheneBesetzung.ausOnline(remote.personen());
+            AbgeglicheneBesetzung online = onlineBesetzung(remote, ziel.getFormation());
             boolean besetzungOffen = konfliktUuids.contains(uuid);
             boolean besetzungNachOnline = !besetzungOffen && richtung(AbgeglicheneBesetzung.von(lokal), online,
                     zuletzt(zusaetze, uuid)) == BesetzungsRichtung.NACH_ONLINE;
@@ -1228,9 +1257,17 @@ public final class RegistrationImportTask {
                 String teamname = teamnameNachOnline ? teamnamen.nachOnline().get(uuid) : remote.teamName();
                 // Benutzer-IDs aus dem aktuellen Online-Stand: Hat sich online ein Konto gelöst, wäre eine gemerkte ID
                 // veraltet und PTM-Online würde den ganzen Auftrag als fremde ID ablehnen (T-17).
-                PtmOnlineAuftraege.aenderung(bestand, tournamentId, uuid, onlineId,
-                        zuOnlineAnmeldung(spielerProZeile.get(zeile), teamname), online.fuerUebertragung(lokal),
-                        executionRevision(remote), bezeichnungProZeile.get(zeile));
+                if (ziel.getFormation() == Formation.NUR_TEAMNAME) {
+                    AbgeglicheneBesetzung kontakt = AbgeglicheneBesetzung.ausOnline(remote.personen());
+                    PtmOnlineAuftraege.aenderung(bestand, tournamentId, uuid, onlineId,
+                            nurTeamnameAenderung(remote, spielerProZeile.get(zeile).getFirst().vorname()),
+                            kontakt.fuerUebertragung(kontakt.personen()), executionRevision(remote),
+                            bezeichnungProZeile.get(zeile));
+                } else {
+                    PtmOnlineAuftraege.aenderung(bestand, tournamentId, uuid, onlineId,
+                            zuOnlineAnmeldung(spielerProZeile.get(zeile), teamname), online.fuerUebertragung(lokal),
+                            executionRevision(remote), bezeichnungProZeile.get(zeile));
+                }
                 geaenderteZeilen.put(uuid, bezeichnungProZeile.get(zeile));
             }
         }
@@ -1258,7 +1295,7 @@ public final class RegistrationImportTask {
         Map<String, ZuordnungsZusatz> besetzungen = new LinkedHashMap<>();
         registrationProUuid.forEach((uuid, registration) -> besetzungen.put(uuid, new ZuordnungsZusatz(
                 konfliktUuids.contains(uuid) ? null
-                        : AbgeglicheneBesetzung.ausOnline(registration.personen()).alsText(),
+                        : onlineBesetzung(registration, ziel.getFormation()).alsText(),
                 null, teamnamen.konflikte().contains(uuid) ? null
                         : AbgeglichenerTeamname.alsText(registration.teamName()))));
         mapping.setZusaetze(besetzungen);
@@ -1425,7 +1462,7 @@ public final class RegistrationImportTask {
             }
             String lokalText = bezeichnung(spielerProZeile.get(zeile));
             AbgeglicheneBesetzung lokal = AbgeglicheneBesetzung.von(personen(spielerProZeile.get(zeile)));
-            AbgeglicheneBesetzung online = AbgeglicheneBesetzung.ausOnline(remote.personen());
+            AbgeglicheneBesetzung online = onlineBesetzung(remote, ziel.getFormation());
             BesetzungsRichtung richtung = richtung(lokal, online, zuletzt(zusaetze, uuid));
             if (richtung == BesetzungsRichtung.KONFLIKT) {
                 NamensKonflikt konflikt = new NamensKonflikt(uuid, lokalText, onlineBezeichnung(remote),
@@ -1836,6 +1873,10 @@ public final class RegistrationImportTask {
      * mit weniger Personen als die Formation ist zulässig und wird unvollständig importiert.
      */
     static @Nullable List<SpielerMitVerein> zuSpielerListe(RegistrationDto reg, Formation formation) {
+        if (formation == Formation.NUR_TEAMNAME) {
+            String teamname = AbgeglichenerTeamname.normalisiert(reg.teamName());
+            return teamname.isEmpty() ? null : List.of(neuerSpieler(teamname, "", null, null));
+        }
         List<PersonDto> personen = reg.personen().stream()
                 .filter(person -> !istLeer(person.firstName()) && !istLeer(person.lastName())).toList();
         int hoechstens = Math.max(1, formation.getAnzSpieler());
@@ -1846,6 +1887,19 @@ public final class RegistrationImportTask {
         return personen.stream()
                 .map(person -> neuerSpieler(person.firstName(), person.lastName(), reg.club(), person.licenseNr()))
                 .toList();
+    }
+
+    /**
+     * Besetzung einer Online-Anmeldung, wie sie in der Meldeliste steht: bei „Nur Teamname“ der Teamname als einziger
+     * Namens-Slot (die Kontaktperson gehört online zur Anmeldung, nicht zur Meldeliste), sonst die Personen-Slots.
+     */
+    static AbgeglicheneBesetzung onlineBesetzung(RegistrationDto reg, Formation formation) {
+        if (formation != Formation.NUR_TEAMNAME) {
+            return AbgeglicheneBesetzung.ausOnline(reg.personen());
+        }
+        String teamname = AbgeglichenerTeamname.normalisiert(reg.teamName());
+        return teamname.isEmpty() ? AbgeglicheneBesetzung.leer()
+                : AbgeglicheneBesetzung.von(List.of(new AbgeglicheneBesetzung.Person(teamname, "", null)));
     }
 
     private static boolean istLeer(@Nullable String wert) {

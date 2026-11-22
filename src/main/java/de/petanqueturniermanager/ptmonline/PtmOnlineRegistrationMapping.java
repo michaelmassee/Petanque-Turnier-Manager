@@ -263,12 +263,18 @@ public class PtmOnlineRegistrationMapping {
      */
     public static NeueZuordnung neueZuordnung(String lokaleUuid, String nummerFormel, String lokaleBezeichnung,
             RegistrationDto registration) {
+        return neueZuordnung(lokaleUuid, nummerFormel, lokaleBezeichnung, registration,
+                AbgeglicheneBesetzung.ausOnline(registration.personen()));
+    }
+
+    /** @param besetzung Online-Besetzung, wie sie in der Meldeliste steht (bei „Nur Teamname“ der Teamname) */
+    public static NeueZuordnung neueZuordnung(String lokaleUuid, String nummerFormel, String lokaleBezeichnung,
+            RegistrationDto registration, AbgeglicheneBesetzung besetzung) {
         ZuordnungsAnzeige.OnlineDetails details = onlineDetails(registration);
         return new NeueZuordnung(lokaleUuid, registration.id(), nummerFormel,
                 registration.executionRevision() == null ? 1 : registration.executionRevision(), lokaleBezeichnung,
                 OnlineAnmeldeStatus.anzeige(registration.status()), details.tarife(), details.fragen(),
-                details.rohStatus(), AbgeglicheneBesetzung.ausOnline(registration.personen()).alsText(), "",
-                AbgeglichenerTeamname.alsText(registration.teamName()));
+                details.rohStatus(), besetzung.alsText(), "", AbgeglichenerTeamname.alsText(registration.teamName()));
     }
 
     /** Zuletzt abgeglichene Besetzung, Teamname und Vermerke je lokaler UUID (T-15, T-17). */

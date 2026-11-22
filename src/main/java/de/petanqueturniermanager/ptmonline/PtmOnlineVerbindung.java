@@ -53,7 +53,7 @@ record PtmOnlineVerbindung(LibreOfficePtmOnlineSpeicher.Zugangsdaten config, Mel
             return Optional.empty();
         }
         Optional<MeldelisteZiel> ziel = MeldelisteZielFactory.fuerPtmOnline(ws);
-        Optional<MeldelisteZiel> meldeliste = MeldelisteZielFactory.fuerAktivesSheet(ws);
+        Optional<MeldelisteZiel> meldeliste = MeldelisteZielFactory.fuerPtmOnlineMeldeliste(ws);
         if (ziel.isEmpty() || meldeliste.isEmpty()) {
             return Optional.empty();
         }

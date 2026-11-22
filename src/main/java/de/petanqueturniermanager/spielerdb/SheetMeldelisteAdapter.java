@@ -68,6 +68,8 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
     private static final Logger logger = LogManager.getLogger(SheetMeldelisteAdapter.class);
 
     private static final int SPALTE_NR = 0;
+    /** Spaltenindex für „gibt es nicht“; {@link #sicherText} liefert dafür leer. */
+    private static final int KEINE_SPALTE = -1;
     private static final int SPALTE_TEAMNAME = 1;
     private static final int MAX_DATEN_ZEILE = 999;
     /** So viele Spalten hinter dem ersten Spieltag werden bei Supermelee nach weiteren Spieltagen durchsucht. */
@@ -95,6 +97,7 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
     private final TurnierSystem system;
     private final Formation formation;
     private final int ersteDatenZeile;
+    private final boolean nurTeamname;
     private final boolean teamnameAktiv;
     private final boolean vereinsnameAktiv;
     private final int anzSpieler;
@@ -116,11 +119,14 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
         this.system = system;
         this.formation = layout.formation();
         this.ersteDatenZeile = layout.ersteDatenZeile();
-        this.teamnameAktiv = layout.teamnameAktiv();
-        this.vereinsnameAktiv = layout.vereinsnameAktiv();
+        // „Nur Teamname“: Die Teamname-Spalte ist der einzige Namens-Slot (Vorname = Teamname, kein Nachname, kein
+        // Verein) – so gilt der Teamname überall als Besetzung der Meldung.
+        this.nurTeamname = formation == Formation.NUR_TEAMNAME;
+        this.teamnameAktiv = !nurTeamname && layout.teamnameAktiv();
+        this.vereinsnameAktiv = !nurTeamname && layout.vereinsnameAktiv();
         this.anzSpieler = Math.max(1, formation.getAnzSpieler());
         this.ersterSpielerOffset = teamnameAktiv ? 2 : 1;
-        this.spaltenProSpieler = vereinsnameAktiv ? 3 : 2;
+        this.spaltenProSpieler = nurTeamname ? 1 : vereinsnameAktiv ? 3 : 2;
         this.letzteSchreibSpalte = ersterSpielerOffset + anzSpieler * spaltenProSpieler - 1;
         this.aktivSpalte = letzteSchreibSpalte + layout.aktivSpaltenAbstand();
     }
@@ -148,6 +154,9 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
     }
 
     private static String sicherText(SheetHelper sh, XSpreadsheet sheet, int spalte, int zeile) {
+        if (spalte < 0) {
+            return "";
+        }
         try {
             String s = sh.getTextFromCell(sheet, Position.from(spalte, zeile));
             return s == null ? "" : s;
@@ -164,9 +173,9 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
         return ersterSpielerOffset + slotIndex * spaltenProSpieler;
     }
 
-    /** Spaltenindex der Nachnamen-Zelle für Spieler-Slot {@code i} (0-basiert). */
+    /** Spaltenindex der Nachnamen-Zelle für Spieler-Slot {@code i} (0-basiert); {@link #KEINE_SPALTE} bei „Nur Teamname“. */
     private int nachnameSpalte(int slotIndex) {
-        return vornameSpalte(slotIndex) + 1;
+        return nurTeamname ? KEINE_SPALTE : vornameSpalte(slotIndex) + 1;
     }
 
     @Override
@@ -306,7 +315,9 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
             }
             for (SpielerMitVerein s : spieler) {
                 row.newString(s.vorname());
-                row.newString(s.nachname());
+                if (!nurTeamname) {
+                    row.newString(s.nachname());
+                }
                 if (vereinsnameAktiv) {
                     row.newString(s.vereinName() == null ? "" : s.vereinName());
                 }
@@ -500,7 +511,9 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
             for (int slot = 0; slot < anzSpieler; slot++) {
                 boolean belegt = slot < spieler.size();
                 neu.newString(belegt ? spieler.get(slot).vorname() : "");
-                neu.newString(belegt ? spieler.get(slot).nachname() : "");
+                if (!nurTeamname) {
+                    neu.newString(belegt ? spieler.get(slot).nachname() : "");
+                }
                 if (vereinsnameAktiv) {
                     int vereinIndex = slot * spaltenProSpieler + 2;
                     String verein = vereinIndex < alt.size() ? StringUtils.defaultString(alt.get(vereinIndex).getStringVal()) : "";
