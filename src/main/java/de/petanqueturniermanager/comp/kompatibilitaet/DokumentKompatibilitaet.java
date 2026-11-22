@@ -76,12 +76,14 @@ public final class DokumentKompatibilitaet {
 	}
 
 	/**
-	 * Vor jeder Änderung durch einen Lauf: Ein zu altes Dokument bricht ab, bevor etwas geändert wird; ein
-	 * migrierbares wird umgestellt und bekommt danach die aktuelle Plugin-Version.
+	 * Vor jeder Änderung durch einen Lauf: Blätter mit überholtem übersetztem Namen werden umbenannt
+	 * ({@link AlteBlattnamen}). Ein zu altes Dokument bricht ab, bevor etwas geändert wird; ein migrierbares wird
+	 * umgestellt und bekommt danach die aktuelle Plugin-Version.
 	 *
 	 * @throws AltesDokumentException wenn das Dokument nicht mehr aktualisiert wird
 	 */
 	public static void stelleAktualisierbarSicher(WorkingSpreadsheet ws) throws GenerateException {
+		AlteBlattnamen.heile(ws);
 		Ergebnis ergebnis = pruefe(ws);
 		switch (ergebnis.status()) {
 		case ZU_ALT -> throw new AltesDokumentException(I18n.get("dokument.alt.urspruengliches.plugin",

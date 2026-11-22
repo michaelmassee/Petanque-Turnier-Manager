@@ -70,7 +70,7 @@ Het grootste unieke verkoopargument van deze toernooimanager is waarschijnlijk d
 
 ## 👥 Geïntegreerde spelersdatabase – één keer onderhouden, altijd opnieuw gebruiken
 
-In plaats van bij elk toernooi de deelnemerslijst opnieuw in te tikken, biedt de Pétanque Toernooi Manager een **geïntegreerde spelersdatabase** binnen de extensie. Spelers, clubs en labels worden één keer ingevoerd en zijn meteen klaar voor elk volgend toernooi.
+In plaats van bij elk toernooi de inschrijflijst opnieuw in te tikken, biedt de Pétanque Toernooi Manager een **geïntegreerde spelersdatabase** binnen de extensie. Spelers, clubs en labels worden één keer ingevoerd en zijn meteen klaar voor elk volgend toernooi.
 
 * 🧑‍🤝‍🧑 **Centraal beheer van spelers & clubs** – voornaam, achternaam, club, licentienummer en vrije labels (bijv. „Dames", „Jeugd", „Eigen club").
 * 🔍 **Snelle zoekfunctie & filters** – zoek vanaf 2 tekens, te combineren met club- en labelfilters.

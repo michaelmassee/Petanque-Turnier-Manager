@@ -83,9 +83,9 @@
 								<prop oor:name="Title">
 									<value xml:lang="en">Refresh Entrylist</value>
 									<value xml:lang="de">Meldeliste aktualisieren</value>
-									<value xml:lang="es">Actualizar lista de inscripciones</value>
-									<value xml:lang="fr">Actualiser la liste d'inscriptions</value>
-									<value xml:lang="nl">Deelnemerslijst bijwerken</value>
+									<value xml:lang="es">Actualizar lista de inscritoses</value>
+									<value xml:lang="fr">Actualiser la liste des inscrits</value>
+									<value xml:lang="nl">Inschrijflijst bijwerken</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:update_meldeliste</value>

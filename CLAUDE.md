@@ -298,6 +298,7 @@ Zentrale Stelle: `comp/kompatibilitaet/DokumentKompatibilitaet`. Sie vergleicht 
 
 **Einstiegspunkte:**
 - `SheetRunner.run()` ruft `stelleAktualisierbarSicher(ws)` vor jeder Änderung auf (vor `updateKonfigurationSheet()` und vor dem Blattschutz-Scope).
+- Geänderte Übersetzung eines Blattnamens (`sheet.name.*`): alten Namen in `AlteBlattnamen.UMBENENNUNGEN` eintragen. Formeln werden mit dem aktuellen Namen aufgebaut; `stelleAktualisierbarSicher` benennt den alten Reiter versionsunabhängig um, Calc zieht die Bezüge mit.
 - `DocumentHelper.setDocErstelltMitVersion()` schreibt nur, wenn `darfVersionSchreiben(ws)` es erlaubt – das schützt auch den Dialog „Version stimmt nicht überein“ (`BaseKonfigurationSheet`).
 
 **Aktuelle Schritte:** `TeamUuidUmstellung` (ab `5.40.00`, **nicht migrierbar**): Seit 5.40.00 identifiziert die UUID in der Nr-Zelle ein Team, vorher die Teamnummer. Ältere Dokumente werden bewusst nicht umgestellt, weil ihre Spielrunden über Nummern auf Teams verweisen.

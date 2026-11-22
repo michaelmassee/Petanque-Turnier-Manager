@@ -61,9 +61,9 @@
 										<prop oor:name="Title">
 											<value xml:lang="de">Meldeliste (17 Teams)</value>
 											<value xml:lang="en">Entry List (17 Teams)</value>
-											<value xml:lang="es">Lista de inscripciones (17 equipos)</value>
-											<value xml:lang="fr">Liste d'inscriptions (17 équipes)</value>
-											<value xml:lang="nl">Deelnemerslijst (17 teams)</value>
+											<value xml:lang="es">Lista de inscritoses (17 equipos)</value>
+											<value xml:lang="fr">Liste des inscrits (17 équipes)</value>
+											<value xml:lang="nl">Inschrijflijst (17 teams)</value>
 										</prop>
 										<prop oor:name="URL">
 											<value>ptm:formulex_testdaten_meldeliste</value>
@@ -183,9 +183,9 @@
 										<prop oor:name="Title">
 											<value xml:lang="de">Nur Meldeliste (8 Teams)</value>
 											<value xml:lang="en">Entrylist only (8 Teams)</value>
-											<value xml:lang="es">Solo lista de inscripciones (8 equipos)</value>
-											<value xml:lang="fr">Liste d'inscriptions uniquement (8 équipes)</value>
-											<value xml:lang="nl">Alleen deelnemerslijst (8 teams)</value>
+											<value xml:lang="es">Solo lista de inscritoses (8 equipos)</value>
+											<value xml:lang="fr">Liste des inscrits uniquement (8 équipes)</value>
+											<value xml:lang="nl">Alleen inschrijflijst (8 teams)</value>
 										</prop>
 										<prop oor:name="URL">
 											<value>ptm:ko_testdaten_nur_meldeliste</value>
@@ -268,9 +268,9 @@
 										<prop oor:name="Title">
 											<value xml:lang="de">Meldeliste (73 Teams)</value>
 											<value xml:lang="en">Entry List (73 Teams)</value>
-											<value xml:lang="es">Lista de inscripciones (73 equipos)</value>
-											<value xml:lang="fr">Liste d'inscriptions (73 équipes)</value>
-											<value xml:lang="nl">Deelnemerslijst (73 teams)</value>
+											<value xml:lang="es">Lista de inscritoses (73 equipos)</value>
+											<value xml:lang="fr">Liste des inscrits (73 équipes)</value>
+											<value xml:lang="nl">Inschrijflijst (73 teams)</value>
 										</prop>
 										<prop oor:name="URL">
 											<value>ptm:kaskade_testdaten_meldeliste</value>
@@ -321,9 +321,9 @@
 										<prop oor:name="Title">
 											<value xml:lang="de">Meldeliste</value>
 											<value xml:lang="en">Teamlist</value>
-											<value xml:lang="es">Lista de inscripciones</value>
+											<value xml:lang="es">Lista de inscritoses</value>
 											<value xml:lang="fr">Liste</value>
-											<value xml:lang="nl">Deelnemerslijst</value>
+											<value xml:lang="nl">Inschrijflijst</value>
 										</prop>
 										<prop oor:name="URL">
 											<value>ptm:liga_testdaten_meldeliste</value>
@@ -459,9 +459,9 @@
 										<prop oor:name="Title">
 											<value xml:lang="de">Nur Meldeliste (16 Teams)</value>
 											<value xml:lang="en">Entry List only (16 Teams)</value>
-											<value xml:lang="es">Solo lista de inscripciones (16 equipos)</value>
-											<value xml:lang="fr">Liste d'inscriptions uniquement (16 équipes)</value>
-											<value xml:lang="nl">Alleen deelnemerslijst (16 teams)</value>
+											<value xml:lang="es">Solo lista de inscritoses (16 equipos)</value>
+											<value xml:lang="fr">Liste des inscrits uniquement (16 équipes)</value>
+											<value xml:lang="nl">Alleen inschrijflijst (16 teams)</value>
 										</prop>
 										<prop oor:name="URL">
 											<value>ptm:poule_testdaten_meldeliste</value>
@@ -528,9 +528,9 @@
 										<prop oor:name="Title">
 											<value xml:lang="de">Meldeliste mit 16 Teams</value>
 											<value xml:lang="en">Entry List with 16 Teams</value>
-											<value xml:lang="es">Lista de inscripciones con 16 equipos</value>
+											<value xml:lang="es">Lista de inscritoses con 16 equipos</value>
 											<value xml:lang="fr">Liste avec 16 équipes</value>
-											<value xml:lang="nl">Deelnemerslijst met 16 teams</value>
+											<value xml:lang="nl">Inschrijflijst met 16 teams</value>
 										</prop>
 										<prop oor:name="URL">
 											<value>ptm:schweizer_testdaten_meldeliste</value>
@@ -613,9 +613,9 @@
 										<prop oor:name="Title">
 											<value xml:lang="de">Meldeliste mit 100 Meldungen</value>
 											<value xml:lang="en">Entry List with 100 Entries</value>
-											<value xml:lang="es">Lista de inscripciones con 100 entradas</value>
+											<value xml:lang="es">Lista de inscritoses con 100 entradas</value>
 											<value xml:lang="fr">Liste avec 100 inscriptions</value>
-											<value xml:lang="nl">Deelnemerslijst met 100 inschrijvingen</value>
+											<value xml:lang="nl">Inschrijflijst met 100 inschrijvingen</value>
 										</prop>
 										<prop oor:name="URL">
 											<value>ptm:meldeliste_testdaten</value>

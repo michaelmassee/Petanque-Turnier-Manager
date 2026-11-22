@@ -111,9 +111,9 @@
 								<prop oor:name="Title">
 									<value xml:lang="en">Update Entrylist</value>
 									<value xml:lang="de">Meldeliste Aktualisieren</value>
-									<value xml:lang="es">Actualizar lista de inscripciones</value>
-									<value xml:lang="fr">Actualiser la liste d'inscriptions</value>
-									<value xml:lang="nl">Deelnemerslijst bijwerken</value>
+									<value xml:lang="es">Actualizar lista de inscritoses</value>
+									<value xml:lang="fr">Actualiser la liste des inscrits</value>
+									<value xml:lang="nl">Inschrijflijst bijwerken</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:kaskade_update_meldeliste</value>
