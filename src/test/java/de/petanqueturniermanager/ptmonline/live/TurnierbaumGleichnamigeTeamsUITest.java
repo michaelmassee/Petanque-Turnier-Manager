@@ -35,12 +35,17 @@ import de.petanqueturniermanager.ko.meldeliste.KoMeldeListeSheetTestDaten;
 class TurnierbaumGleichnamigeTeamsUITest extends BaseCalcUITest {
 
 	private static final int ANZ_TEAMS = 4;
-	/** Namensspalten der KO-Meldeliste rechts der Nr-Spalte, die für die Anzeige gleichgezogen werden. */
+	/**
+	 * Namensspalten der KO-Meldeliste rechts der Nr-Spalte, die für die Anzeige gleichgezogen werden: Teamname und zwei
+	 * Spieler (Doublette mit Teamname-Spalte).
+	 */
 	private static final int NAMEN_SPALTEN = 3;
 
 	@Test
 	void finaleZweierGleichnamigerTeamsWirdUeberDieUuidZugeordnet() throws GenerateException {
-		new KoKonfigurationSheet(wkingSpreadsheet).setSpielbaumTeamAnzeige(TeamAnzeige.NAME);
+		KoKonfigurationSheet konfiguration = new KoKonfigurationSheet(wkingSpreadsheet);
+		konfiguration.setMeldeListeTeamnameAnzeigen(true);
+		konfiguration.setSpielbaumTeamAnzeige(TeamAnzeige.NAME);
 		new KoMeldeListeSheetTestDaten(wkingSpreadsheet, ANZ_TEAMS).erstelleMeldelisteWithTestdaten();
 		new KoTurnierbaumSheet(wkingSpreadsheet).erstelleTurnierbaumOhneDialog();
 		XSpreadsheet baum = ersterTurnierbaum();

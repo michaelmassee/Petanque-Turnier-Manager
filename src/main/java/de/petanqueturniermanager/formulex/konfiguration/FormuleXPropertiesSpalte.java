@@ -97,7 +97,7 @@ public class FormuleXPropertiesSpalte extends TeamAnzeigePropertiesSpalte
                 .intern());
 
         KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_MELDELISTE_TEAMNAME)
-                .setDefaultVal("J").setDescription("config.desc.meldeliste.teamname"))
+                .setDefaultVal("N").setDescription("config.desc.meldeliste.teamname"))
                 .addAuswahl("J", "Ja").addAuswahl("N", "Nein")
                 .intern());
 

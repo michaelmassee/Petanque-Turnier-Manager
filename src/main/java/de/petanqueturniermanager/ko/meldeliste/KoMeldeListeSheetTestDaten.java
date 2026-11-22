@@ -62,7 +62,7 @@ public class KoMeldeListeSheetTestDaten extends SheetRunner implements ISheet, M
 	public void erstelleMeldelisteWithTestdaten() throws GenerateException {
 		getSheetHelper().removeAllSheetsExclude();
 
-		// Konfigurationsblatt und Meldeliste anlegen
+		// Konfigurationsblatt und Meldeliste anlegen (Formation und Teamname-Spalte aus der Konfiguration)
 		getKonfigurationSheet().update();
 		meldeListeNew.createMeldelisteWithParams();
 
@@ -79,6 +79,8 @@ public class KoMeldeListeSheetTestDaten extends SheetRunner implements ISheet, M
 				.prefix(getLogPrefix()).validate()) {
 			return;
 		}
+		// Testdaten aus dem Menü mit Teamnamen, wie bei den übrigen Systemen
+		getKonfigurationSheet().setMeldeListeTeamnameAnzeigen(true);
 		erstelleMeldelisteWithTestdaten();
 	}
 

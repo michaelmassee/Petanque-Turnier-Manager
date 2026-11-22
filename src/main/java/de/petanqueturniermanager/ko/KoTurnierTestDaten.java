@@ -76,6 +76,7 @@ public class KoTurnierTestDaten extends SheetRunner implements ISheet, MeldeList
 
 		// 1. Konfiguration
 		var konfig = getKonfigurationSheet();
+		konfig.setMeldeListeTeamnameAnzeigen(true);
 		konfig.setSpielbaumSpielbahn(SpielrundeSpielbahn.N);
 		// Bei 16 Teams: 2 Gruppen à 8 erstellen (demonstriert Gruppen-Feature)
 		if (anzTeams == 16) {
