@@ -25,9 +25,11 @@ import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSheet_New;
 import de.petanqueturniermanager.kaskade.meldeliste.KaskadeMeldeListeSheetNew;
 import de.petanqueturniermanager.ko.meldeliste.KoMeldeListeSheetNew;
+import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheetNew;
 import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterMeldeListeSheetNew;
 import de.petanqueturniermanager.poule.meldeliste.PouleMeldeListeSheetNew;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetNew;
+import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_New;
 
 /**
  * Bricht der Anwender den Start-Dialog eines Turniersystems ab, darf das Dokument in keiner Weise
@@ -40,7 +42,8 @@ class StartDialogAbbrechenUITest extends BaseCalcUITest {
 	static Stream<Arguments> startRunner() {
 		return Stream.<Function<WorkingSpreadsheet, SheetRunner>>of(SchweizerMeldeListeSheetNew::new,
 				MaastrichterMeldeListeSheetNew::new, KoMeldeListeSheetNew::new, JGJMeldeListeSheet_New::new,
-				PouleMeldeListeSheetNew::new, FormuleXMeldeListeSheetNew::new, KaskadeMeldeListeSheetNew::new)
+				PouleMeldeListeSheetNew::new, FormuleXMeldeListeSheetNew::new, KaskadeMeldeListeSheetNew::new,
+				MeldeListeSheet_New::new, LigaMeldeListeSheetNew::new)
 				.map(Arguments::of);
 	}
 

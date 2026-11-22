@@ -132,6 +132,14 @@ public final class TurnierStartDialog {
 		}
 	}
 
+	/**
+	 * Ob Start-Dialoge dieses Threads gerade „Abbrechen“ simulieren ({@link #mitSimuliertemAbbrechen}); für eigene
+	 * Start-Dialoge außerhalb dieser Klasse (Supermêlée, Liga).
+	 */
+	public static boolean istAbbrechenSimuliert() {
+		return ABBRECHEN_SIMULIERT.get();
+	}
+
 	// ---------------------------------------------------------------
 	// Aufbau
 	// ---------------------------------------------------------------

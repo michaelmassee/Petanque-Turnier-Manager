@@ -24,6 +24,7 @@ import com.sun.star.lang.XMultiComponentFactory;
 import com.sun.star.lang.XMultiServiceFactory;
 import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierStartDialog;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
@@ -122,8 +123,10 @@ public class SupermeleeStartDialog {
 		xWindow.setVisible(false);
 		xControl.createPeer(xToolkit, null);
 
-		// 6. Dialog anzeigen (blockiert)
-		xDialog.execute();
+		// 6. Dialog anzeigen (blockiert); im Abbruch-Test sofort „Abbrechen“
+		if (!TurnierStartDialog.istAbbrechenSimuliert()) {
+			xDialog.execute();
+		}
 
 		Optional<StartParameter> result = Optional.empty();
 		if (okPressed) {
