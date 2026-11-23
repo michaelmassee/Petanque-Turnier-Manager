@@ -170,7 +170,7 @@ final class PtmOnlineErsteinstellungenDialog extends AbstractUnoDialog {
         return switch (schalter) {
             case BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_LIVE_ANSICHT -> "config.label.ptmonline.live.ansicht";
             case BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_ERGEBNISMELDUNG -> "config.label.ptmonline.ergebnismeldung";
-            default -> "config.label.ptmonline.ergebnisse.direkt";
+            default -> "config.label.ptmonline.ergebnisse.pruefen";
         };
     }
 
@@ -178,7 +178,7 @@ final class PtmOnlineErsteinstellungenDialog extends AbstractUnoDialog {
         return switch (schalter) {
             case BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_LIVE_ANSICHT -> vorbelegung.liveAnsicht();
             case BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_ERGEBNISMELDUNG -> vorbelegung.ergebnismeldung();
-            default -> vorbelegung.direktEintragen();
+            default -> vorbelegung.turnierleitungPrueft();
         };
     }
 
@@ -201,18 +201,24 @@ final class PtmOnlineErsteinstellungenDialog extends AbstractUnoDialog {
         });
     }
 
-    /** Ergebnismeldung nur mit Live-Ansicht, direktes Eintragen nur mit Ergebnismeldung. */
+    /** Ergebnismeldung nur mit Live-Ansicht, Prüfung durch die Turnierleitung nur mit Ergebnismeldung. */
     private void aktualisiereAbhaengigkeiten() {
         boolean live = angehaktOderFehlend(BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_LIVE_ANSICHT);
         setzeWaehlbar(BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_ERGEBNISMELDUNG, live);
         boolean meldung = live && angehaktOderFehlend(BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_ERGEBNISMELDUNG);
-        setzeWaehlbar(BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_ERGEBNISSE_DIREKT, meldung);
+        setzeWaehlbar(BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_ERGEBNISSE_PRUEFEN, meldung);
     }
 
     /** Ein Schalter, den das System nicht kennt, sperrt die abhängigen nicht. */
     private boolean angehaktOderFehlend(String schalter) {
         XPropertySet modell = kaestchen.get(schalter);
         return modell == null || istAngehakt(modell);
+    }
+
+    /** Ein Schalter, den das System nicht kennt, gilt als nicht angehakt. */
+    private boolean angehakt(String schalter) {
+        XPropertySet modell = kaestchen.get(schalter);
+        return modell != null && istAngehakt(modell);
     }
 
     private void setzeWaehlbar(String schalter, boolean waehlbar) {
@@ -240,7 +246,7 @@ final class PtmOnlineErsteinstellungenDialog extends AbstractUnoDialog {
     protected void beiOkGeklickt() {
         boolean live = angehaktOderFehlend(BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_LIVE_ANSICHT);
         boolean meldung = live && angehaktOderFehlend(BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_ERGEBNISMELDUNG);
-        boolean direkt = meldung && angehaktOderFehlend(BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_ERGEBNISSE_DIREKT);
-        auswahl = new PtmOnlineErsteinstellungen.Auswahl(live, meldung, direkt);
+        boolean pruefen = meldung && angehakt(BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_ERGEBNISSE_PRUEFEN);
+        auswahl = new PtmOnlineErsteinstellungen.Auswahl(live, meldung, pruefen);
     }
 }

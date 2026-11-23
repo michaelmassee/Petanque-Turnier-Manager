@@ -12,7 +12,7 @@ import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 
 /**
  * Abfrage der PTM-Online-Schalter beim ersten Verbinden eines Dokuments: Live-Ansicht, Ergebnismeldung durch Spieler
- * und direktes Eintragen der Meldungen. Gefragt wird einmal je Dokument und nur nach den Schaltern, die das
+ * und Prüfung der Meldungen durch die Turnierleitung. Gefragt wird einmal je Dokument und nur nach den Schaltern, die das
  * Turniersystem kennt (Trip-Tête: nur Live-Ansicht). Diese Klasse enthält die Entscheidungen ohne UNO; den Dialog zeigt
  * {@link PtmOnlineErsteinstellungenDialog}.
  */
@@ -21,14 +21,15 @@ final class PtmOnlineErsteinstellungen {
     /** Die abgefragten Schalter in Anzeigereihenfolge. */
     static final List<String> SCHALTER = List.of(BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_LIVE_ANSICHT,
             BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_ERGEBNISMELDUNG,
-            BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_ERGEBNISSE_DIREKT);
+            BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_ERGEBNISSE_PRUEFEN);
 
-    private static final boolean SCHALTER_DEFAULT = true;
+    private static final boolean LIVE_UND_MELDUNG_DEFAULT = true;
+    private static final boolean PRUEFEN_DEFAULT = false;
 
     private PtmOnlineErsteinstellungen() {}
 
     /** Gewählte Werte der Schalter; ein Schalter, den das System nicht kennt, wird nicht geschrieben. */
-    record Auswahl(boolean liveAnsicht, boolean ergebnismeldung, boolean direktEintragen) {}
+    record Auswahl(boolean liveAnsicht, boolean ergebnismeldung, boolean turnierleitungPrueft) {}
 
     /** Liest einen Boolean-Schalter des Dokuments. */
     @FunctionalInterface
@@ -58,11 +59,14 @@ final class PtmOnlineErsteinstellungen {
         return !schonAbgefragt && !vorhandeneSchalter.isEmpty();
     }
 
-    /** Vorbelegung des Dialogs mit dem Stand des Dokuments (Default jeweils an). */
+    /**
+     * Vorbelegung des Dialogs mit dem Stand des Dokuments (Default: Live-Ansicht und Ergebnismeldung an, Prüfung durch
+     * die Turnierleitung aus).
+     */
     static Auswahl vorbelegung(SchalterLeser leser) {
-        return new Auswahl(leser.lese(BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_LIVE_ANSICHT, SCHALTER_DEFAULT),
-                leser.lese(BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_ERGEBNISMELDUNG, SCHALTER_DEFAULT),
-                leser.lese(BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_ERGEBNISSE_DIREKT, SCHALTER_DEFAULT));
+        return new Auswahl(leser.lese(BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_LIVE_ANSICHT, LIVE_UND_MELDUNG_DEFAULT),
+                leser.lese(BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_ERGEBNISMELDUNG, LIVE_UND_MELDUNG_DEFAULT),
+                leser.lese(BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_ERGEBNISSE_PRUEFEN, PRUEFEN_DEFAULT));
     }
 
     /** Schreibt die Auswahl für die Schalter, die das Turniersystem kennt. */
@@ -71,7 +75,7 @@ final class PtmOnlineErsteinstellungen {
                 vorhandeneSchalter, schreiber);
         schreibeFallsVorhanden(BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_ERGEBNISMELDUNG, auswahl.ergebnismeldung(),
                 vorhandeneSchalter, schreiber);
-        schreibeFallsVorhanden(BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_ERGEBNISSE_DIREKT, auswahl.direktEintragen(),
+        schreibeFallsVorhanden(BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_ERGEBNISSE_PRUEFEN, auswahl.turnierleitungPrueft(),
                 vorhandeneSchalter, schreiber);
     }
 

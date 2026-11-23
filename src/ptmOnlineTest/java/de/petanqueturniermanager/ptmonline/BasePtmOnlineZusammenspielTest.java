@@ -165,8 +165,8 @@ abstract class BasePtmOnlineZusammenspielTest extends BaseCalcUITest {
 
     /**
      * Das verbundene Dokument ist Master und überträgt Live-Ansicht und Ergebnismeldung (Default an). Was ein Test
-     * online vorgibt, setzt er deshalb auch im Dokument. Ergebnismeldungen laufen hier über die Konfliktliste; das
-     * direkte Eintragen schaltet ein Test ausdrücklich ein.
+     * online vorgibt, setzt er deshalb auch im Dokument. Ergebnismeldungen prüft hier die Turnierleitung in der
+     * Konfliktliste; das direkte Eintragen schaltet ein Test ausdrücklich ein.
      */
     protected void dokumentSchalterWieOnline(JsonObject onlineEinstellungen) {
         if (onlineEinstellungen.has("liveViewEnabled")) {
@@ -177,7 +177,7 @@ abstract class BasePtmOnlineZusammenspielTest extends BaseCalcUITest {
             docPropHelper.setBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_ERGEBNISMELDUNG,
                     onlineEinstellungen.get("playerResultReportingEnabled").getAsBoolean());
         }
-        docPropHelper.setBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_ERGEBNISSE_DIREKT, false);
+        docPropHelper.setBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_ERGEBNISSE_PRUEFEN, true);
     }
 
     /**

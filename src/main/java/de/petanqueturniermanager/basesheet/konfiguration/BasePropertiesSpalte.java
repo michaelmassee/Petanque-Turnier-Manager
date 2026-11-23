@@ -78,7 +78,7 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	public static final String KONFIG_PROP_MELEE_ANMELDUNG_MODUS = "Melee Anmeldung Modus";
 
 	// PTM-Online
-	public static final String KONFIG_PROP_PTMONLINE_ERGEBNISSE_DIREKT = "PTM-Online Ergebnismeldungen direkt eintragen";
+	public static final String KONFIG_PROP_PTMONLINE_ERGEBNISSE_PRUEFEN = "PTM-Online Ergebnismeldungen durch Turnierleitung prüfen";
 	public static final String KONFIG_PROP_PTMONLINE_LIVE_ANSICHT = "PTM-Online Live-Ansicht";
 	public static final String KONFIG_PROP_PTMONLINE_ERGEBNISMELDUNG = "PTM-Online Ergebnismeldung durch Spieler";
 	/**
@@ -248,20 +248,21 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	}
 
 	/**
-	 * Fügt den Schalter {@link #KONFIG_PROP_PTMONLINE_ERGEBNISSE_DIREKT} hinzu (Default {@code true}): Ergebnismeldungen
-	 * von Spielern über PTM-Online werden direkt in die Spielrunde eingetragen, sofern die Partie dort noch kein
-	 * Ergebnis hat; sonst landen sie wie ohne Schalter in der Konfliktliste.
+	 * Fügt den Schalter {@link #KONFIG_PROP_PTMONLINE_ERGEBNISSE_PRUEFEN} hinzu (Default {@code false}): Eingeschaltet
+	 * landen Ergebnismeldungen von Spielern über PTM-Online immer in der Konfliktliste und die Turnierleitung prüft sie.
+	 * Ausgeschaltet trägt PTM eine Meldung direkt in die Spielrunde ein, sofern die Partie dort noch kein Ergebnis hat;
+	 * steht dort schon ein anderes, kommt sie ebenfalls in die Konfliktliste.
 	 * <p>
 	 * Aufzurufen von jedem System, in dessen Spielrunden PTM-Online-Meldungen eingetragen werden können (nicht Liga,
 	 * nicht Trip-Tête).
 	 *
 	 * @param KONFIG_PROPERTIES Property-Liste des jeweiligen Systems
 	 */
-	protected static void addPtmOnlineErgebnisDirektProp(List<ConfigProperty<?>> KONFIG_PROPERTIES) {
-		KONFIG_PROPERTIES.add(ConfigProperty.<Boolean>from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_PTMONLINE_ERGEBNISSE_DIREKT)
-				.setDefaultVal(true)
-				.setDescription("config.desc.ptmonline.ergebnisse.direkt")
-				.setShortDescription("config.label.ptmonline.ergebnisse.direkt"));
+	protected static void addPtmOnlineErgebnisPruefenProp(List<ConfigProperty<?>> KONFIG_PROPERTIES) {
+		KONFIG_PROPERTIES.add(ConfigProperty.<Boolean>from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_PTMONLINE_ERGEBNISSE_PRUEFEN)
+				.setDefaultVal(false)
+				.setDescription("config.desc.ptmonline.ergebnisse.pruefen")
+				.setShortDescription("config.label.ptmonline.ergebnisse.pruefen"));
 	}
 
 	/**

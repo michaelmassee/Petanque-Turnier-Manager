@@ -28,7 +28,7 @@ import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrund
  * Ergebnismeldung durch Spieler bei einem verbundenen Turnierdokument (E-27, E-28) gegen den lokal gestarteten
  * Worker: Ein Spieler meldet in der Live-Ansicht, PTM holt die Meldung im Hintergrund ab und stellt sie in die
  * Konfliktliste. Erst die Entscheidung der Turnierleitung trägt das Ergebnis ein bzw. verwirft die Meldung – oder,
- * mit eingeschalteter Turnier-Option, PTM trägt die Meldung direkt in die noch leere Partie ein.
+ * ohne Prüfung durch die Turnierleitung (Turnier-Option aus), PTM trägt die Meldung direkt in die noch leere Partie ein.
  */
 class PtmOnlineErgebnismeldungZusammenspielTest extends BasePtmOnlineZusammenspielTest {
 
@@ -63,7 +63,7 @@ class PtmOnlineErgebnismeldungZusammenspielTest extends BasePtmOnlineZusammenspi
     void mitDirektEintragStehtDieMeldungOhneEntscheidungInDerSpielrunde() throws Exception {
         rundeMitMeldungEinrichten(true);
         new DocumentPropertiesHelper(wkingSpreadsheet)
-                .setBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_ERGEBNISSE_DIREKT, true);
+                .setBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_ERGEBNISSE_PRUEFEN, false);
 
         assertThat(online.ergebnisMelden(idMitKonto, SPIELERKONTO, 13, 7)).as("Meldung des Spielers").isEqualTo(200);
         PtmOnlineLiveBeobachter.ergebnismeldungenAbholen(wkingSpreadsheet.getWorkingSpreadsheetDocument());

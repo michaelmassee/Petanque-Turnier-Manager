@@ -50,9 +50,10 @@ import de.petanqueturniermanager.ptmonline.live.LiveTurnierStand;
  * schaltet die Spielermeldung dort vorerst ab, weil eine Meldung nur ein Ergebnis je Begegnung nennt, das Dokument
  * aber die drei Einzelpartien braucht (TODO in anforderungen/turnieranmeldung-ptmonline.md).
  * <p>
- * Mit der Turnier-Option {@link BasePropertiesSpalte#KONFIG_PROP_PTMONLINE_ERGEBNISSE_DIREKT} trägt PTM eine Meldung
- * ohne Entscheidung direkt ein, sofern die Partie in der Spielrunde noch kein Ergebnis hat. Steht dort schon ein anderes
- * (die Turnierleitung tippt parallel), bleibt es stehen und die Meldung kommt wie ohne Option in die Konfliktliste.
+ * Ohne die Turnier-Option {@link BasePropertiesSpalte#KONFIG_PROP_PTMONLINE_ERGEBNISSE_PRUEFEN} (Standard) trägt PTM
+ * eine Meldung ohne Entscheidung direkt ein, sofern die Partie in der Spielrunde noch kein Ergebnis hat. Steht dort schon
+ * ein anderes (die Turnierleitung tippt parallel), bleibt es stehen und die Meldung kommt in die Konfliktliste. Mit der
+ * Option prüft die Turnierleitung jede Meldung in der Konfliktliste.
  */
 final class PtmOnlineErgebnismeldungen {
 
@@ -193,12 +194,12 @@ final class PtmOnlineErgebnismeldungen {
     }
 
     /**
-     * Ob Meldungen ohne Entscheidung direkt eingetragen werden sollen. Liest nur: Eine fehlende Property wird nicht im
-     * Dokument angelegt (läuft auch im Hintergrund).
+     * Ob Meldungen ohne Entscheidung direkt eingetragen werden sollen, also die Turnierleitung sie nicht prüfen muss.
+     * Liest nur: Eine fehlende Property wird nicht im Dokument angelegt (läuft auch im Hintergrund).
      */
     static boolean direktEintragen(WorkingSpreadsheet ws) {
-        return DocumentPropertiesHelper.nurLesend(() -> new DocumentPropertiesHelper(ws)
-                .getBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_ERGEBNISSE_DIREKT, true));
+        return !DocumentPropertiesHelper.nurLesend(() -> new DocumentPropertiesHelper(ws)
+                .getBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_ERGEBNISSE_PRUEFEN, false));
     }
 
     /**

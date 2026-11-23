@@ -21,22 +21,22 @@ import de.petanqueturniermanager.triptete.konfiguration.TripTetePropertiesSpalte
 
 /**
  * Ersteinstellungen beim ersten Verbinden: einmal je Dokument, nur für die Schalter des Turniersystems, vorbelegt mit
- * dem Stand des Dokuments (Default an).
+ * dem Stand des Dokuments (Default: Live-Ansicht und Ergebnismeldung an, Prüfung durch die Turnierleitung aus).
  */
 class PtmOnlineErsteinstellungenTest {
 
     private static final String LIVE = BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_LIVE_ANSICHT;
     private static final String MELDUNG = BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_ERGEBNISMELDUNG;
-    private static final String DIREKT = BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_ERGEBNISSE_DIREKT;
+    private static final String PRUEFEN = BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_ERGEBNISSE_PRUEFEN;
 
     @Test
     void systemeKennenAlleDreiSchalter() {
         assertThat(PtmOnlineErsteinstellungen.vorhandeneSchalter(SchweizerPropertiesSpalte.KONFIG_PROPERTIES))
-                .containsExactly(LIVE, MELDUNG, DIREKT);
+                .containsExactly(LIVE, MELDUNG, PRUEFEN);
         assertThat(PtmOnlineErsteinstellungen.vorhandeneSchalter(JGJPropertiesSpalte.KONFIG_PROPERTIES))
-                .containsExactly(LIVE, MELDUNG, DIREKT);
+                .containsExactly(LIVE, MELDUNG, PRUEFEN);
         assertThat(PtmOnlineErsteinstellungen.vorhandeneSchalter(MaastrichterPropertiesSpalte.KONFIG_PROPERTIES))
-                .containsExactly(LIVE, MELDUNG, DIREKT);
+                .containsExactly(LIVE, MELDUNG, PRUEFEN);
     }
 
     @Test
@@ -55,17 +55,17 @@ class PtmOnlineErsteinstellungenTest {
     }
 
     @Test
-    void ohneGespeichertenStandIstAllesAn() {
+    void ohneGespeichertenStandSindLiveUndMeldungAnUndPruefungAus() {
         assertThat(PtmOnlineErsteinstellungen.vorbelegung((schalter, defaultWert) -> defaultWert))
-                .isEqualTo(new PtmOnlineErsteinstellungen.Auswahl(true, true, true));
+                .isEqualTo(new PtmOnlineErsteinstellungen.Auswahl(true, true, false));
     }
 
     @Test
     void vorbelegungFolgtDemDokument() {
-        Map<String, Boolean> dokument = Map.of(LIVE, true, MELDUNG, false, DIREKT, false);
+        Map<String, Boolean> dokument = Map.of(LIVE, true, MELDUNG, false, PRUEFEN, true);
 
         assertThat(PtmOnlineErsteinstellungen.vorbelegung((schalter, defaultWert) -> dokument.get(schalter)))
-                .isEqualTo(new PtmOnlineErsteinstellungen.Auswahl(true, false, false));
+                .isEqualTo(new PtmOnlineErsteinstellungen.Auswahl(true, false, true));
     }
 
     @Test
@@ -83,9 +83,9 @@ class PtmOnlineErsteinstellungenTest {
         Map<String, Boolean> geschrieben = new LinkedHashMap<>();
 
         PtmOnlineErsteinstellungen.uebernehmen(new PtmOnlineErsteinstellungen.Auswahl(true, true, false),
-                Set.copyOf(List.of(LIVE, MELDUNG, DIREKT)), geschrieben::put);
+                Set.copyOf(List.of(LIVE, MELDUNG, PRUEFEN)), geschrieben::put);
 
         assertThat(geschrieben).containsExactly(Map.entry(LIVE, true), Map.entry(MELDUNG, true),
-                Map.entry(DIREKT, false));
+                Map.entry(PRUEFEN, false));
     }
 }

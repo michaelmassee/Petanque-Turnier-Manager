@@ -15,7 +15,7 @@ public class PtmOnlineKonfigDialog extends BasePropertiesDialog {
 	private static final List<String> EIGENSCHAFTEN = List.of(
 			BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_LIVE_ANSICHT,
 			BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_ERGEBNISMELDUNG,
-			BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_ERGEBNISSE_DIREKT);
+			BasePropertiesSpalte.KONFIG_PROP_PTMONLINE_ERGEBNISSE_PRUEFEN);
 
 	public PtmOnlineKonfigDialog(WorkingSpreadsheet currentSpreadsheet) {
 		super(currentSpreadsheet);
