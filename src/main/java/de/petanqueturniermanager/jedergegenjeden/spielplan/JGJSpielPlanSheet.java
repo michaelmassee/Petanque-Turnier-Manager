@@ -1,12 +1,15 @@
 package de.petanqueturniermanager.jedergegenjeden.spielplan;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.sun.star.awt.FontWeight;
 import com.sun.star.sheet.ConditionOperator;
 import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.table.CellHoriJustify;
 
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
@@ -19,7 +22,6 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.border.BorderFactory;
-import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.RangeProperties;
@@ -32,6 +34,7 @@ import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeFooterHelper;
+import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeHelper;
 import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
@@ -431,22 +434,61 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet, PtmOnlineL
 					RangeProperties.from().centerJustify().setBorder(BorderFactory.from().allThin().toBorder()));
 		}
 
-		XSpreadsheet sheet = getXSpreadSheet();
+		schreibeFreispielErgebnisse(alleSpieltage, startZeile);
+	}
 
+	/** Belegt die Ergebnisse der Freispiel-Paarungen mit den konfigurierten Freispiel-Punkten vor. */
+	private void schreibeFreispielErgebnisse(List<List<TeamPaarung>> alleSpieltage, int startZeile)
+			throws GenerateException {
 		int freispielPlus = getKonfigurationSheet().getFreispielPunktePlus();
 		int freispielMinus = getKonfigurationSheet().getFreispielPunkteMinus();
-		int zeile = startZeile;
+		RangeData ergebnisse = new RangeData();
 		for (List<TeamPaarung> spielTag : alleSpieltage) {
 			for (TeamPaarung teamPaarung : spielTag) {
-				if (!teamPaarung.getOptionalB().isPresent()) {
-					getSheetHelper().setNumberValueInCell(
-							NumberCellValue.from(sheet, SPIELPNKT_A_SPALTE, zeile, freispielPlus));
-					getSheetHelper().setNumberValueInCell(
-							NumberCellValue.from(sheet, SPIELPNKT_B_SPALTE, zeile, freispielMinus));
+				RowData row = ergebnisse.addNewRow();
+				if (teamPaarung.getOptionalB().isPresent()) {
+					row.newEmpty();
+					row.newEmpty();
+				} else {
+					row.newInt(freispielPlus);
+					row.newInt(freispielMinus);
 				}
-				zeile++;
 			}
 		}
+		if (!ergebnisse.isEmpty()) {
+			RangeHelper.from(this, ergebnisse.getRangePosition(Position.from(SPIELPNKT_A_SPALTE, startZeile)))
+					.setDataInRange(ergebnisse);
+		}
+	}
+
+	/** @return absolute Zeilennummern der Freispiel-Paarungen (ohne Team B) ab {@code startZeile} */
+	static Set<Integer> freispielZeilen(List<List<TeamPaarung>> spielPlanHRunde,
+			List<List<TeamPaarung>> spielPlanRRunde, int startZeile) {
+		Set<Integer> freispiele = new HashSet<>();
+		int zeile = startZeile;
+		for (List<List<TeamPaarung>> runde : List.of(spielPlanHRunde, spielPlanRRunde)) {
+			for (List<TeamPaarung> spielTag : runde) {
+				for (TeamPaarung teamPaarung : spielTag) {
+					if (teamPaarung.getOptionalB().isEmpty()) {
+						freispiele.add(zeile);
+					}
+					zeile++;
+				}
+			}
+		}
+		return freispiele;
+	}
+
+	/**
+	 * Editierbare Ergebnis-Bereiche des Spielplans ohne Freispiel-Zeilen (Nr Team B &le; 0) und ohne
+	 * Gruppen-Kopfzeilen, damit deren Ergebnis weder die Editierfarbe noch eine Freigabe im Blattschutz erhält.
+	 *
+	 * @param letzteZeile letzte Datenzeile (inklusive)
+	 */
+	public static List<RangePosition> ermittleEditierbareErgebnisBereiche(XSpreadsheet sheet,
+			XSpreadsheetDocument xDoc, int letzteZeile) throws GenerateException {
+		return SpielrundeHelper.ergebnisBereicheOhneFreilos(sheet, xDoc, TEAM_B_NR_SPALTE, SPIELPNKT_A_SPALTE,
+				SPIELPNKT_B_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE, letzteZeile);
 	}
 
 	private void verbergeArbeitsspalten() throws GenerateException {
@@ -638,7 +680,12 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet, PtmOnlineL
 
 		RangePosition ergRange = RangePosition.from(SPIELPNKT_A_SPALTE, startZeile, SPIELPNKT_B_SPALTE, letzteSpielZeile);
 		formatiereErgebnisZellen(ergRange);
-		EditierbaresZelleFormatHelper.anwenden(this, ergRange);
+		// Freispiel-Ergebnisse sind vorbelegt und bleiben gesperrt (siehe JGJBlattschutzKonfiguration)
+		for (RangePosition bereich : SpielrundeHelper.ergebnisBereicheOhneFreilos(SPIELPNKT_A_SPALTE,
+				SPIELPNKT_B_SPALTE, startZeile, letzteSpielZeile,
+				freispielZeilen(spielPlanHRunde, spielPlanRRunde, startZeile))) {
+			EditierbaresZelleFormatHelper.anwenden(this, bereich);
+		}
 
 		RangeProperties horTrennerDouble = RangeProperties.from()
 				.setBorder(BorderFactory.from().doubleLn().forBottom().toBorder());

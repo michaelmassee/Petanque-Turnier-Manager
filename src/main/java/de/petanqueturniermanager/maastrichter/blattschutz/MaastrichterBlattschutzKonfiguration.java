@@ -35,7 +35,7 @@ import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrund
  * Editierbare Bereiche:
  * <ul>
  *   <li><b>Meldeliste:</b> Alle Spalten außer Nr (Spalte 0): Teamname, Spielernamen, SP, Aktiv</li>
- *   <li><b>Vorrunden:</b> Ergebnis A und B (bis zur letzten Datenzeile)</li>
+ *   <li><b>Vorrunden:</b> Ergebnis A und B (bis zur letzten Datenzeile, ohne Freilos-Zeilen)</li>
  *   <li><b>Finalrunden:</b> Nur die konkreten Score-Zellen (aus {@code KoTurnierbaumSheet} gespeichert)</li>
  *   <li><b>Vorrunden-Rangliste:</b> vollständig gesperrt</li>
  * </ul>
@@ -122,10 +122,11 @@ public class MaastrichterBlattschutzKonfiguration implements IBlattschutzKonfigu
         boolean freieBahnSpalte = konfigSheet.getSpielrundeSpielbahn() == SpielrundeSpielbahn.L;
         for (var key : schluessel) {
             SheetMetadataHelper.findeSheet(xDoc, key).ifPresent(sheet -> {
-                var bereiche = new ArrayList<RangePosition>();
-                bereiche.add(berechneVorrundeErgebnisBereich(sheet));
+                int letzteZeile = ermittleLetzteVorrundeZeile(sheet);
+                var bereiche = new ArrayList<RangePosition>(berechneVorrundeErgebnisBereiche(sheet, xDoc,
+                        letzteZeile));
                 if (freieBahnSpalte) {
-                    bereiche.add(berechneVorrundeBahnBereich(sheet));
+                    bereiche.add(berechneVorrundeBahnBereich(letzteZeile));
                 }
                 if (zeitplanAktiv) {
                     // Rundenstartzeit-Zelle (einziges haendisches Zeit-Eingabefeld, analog
@@ -161,23 +162,26 @@ public class MaastrichterBlattschutzKonfiguration implements IBlattschutzKonfigu
     }
 
     /**
-     * Berechnet den editierbaren Ergebnis-Bereich einer Vorrunde.
-     * Gleiche Spaltenstruktur wie Schweizer Spielrunden.
+     * Berechnet die editierbaren Ergebnis-Bereiche einer Vorrunde (gleiche Spaltenstruktur wie Schweizer
+     * Spielrunden). Freilos-Zeilen bleiben gesperrt; kann das Blatt nicht gelesen werden, bleibt der
+     * Ergebnisbereich gesperrt statt Freilos-Zellen freizugeben.
      */
-    private RangePosition berechneVorrundeErgebnisBereich(XSpreadsheet sheet) {
-        return RangePosition.from(
-                SchweizerAbstractSpielrundeSheet.ERG_TEAM_A_SPALTE,
-                SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE,
-                SchweizerAbstractSpielrundeSheet.ERG_TEAM_B_SPALTE,
-                ermittleLetzteVorrundeZeile(sheet));
+    private List<RangePosition> berechneVorrundeErgebnisBereiche(XSpreadsheet sheet, XSpreadsheetDocument xDoc,
+            int letzteZeile) {
+        try {
+            return SchweizerAbstractSpielrundeSheet.ermittleEditierbareErgebnisBereiche(sheet, xDoc, letzteZeile);
+        } catch (GenerateException e) {
+            logger.error("Editierbare Ergebnis-Bereiche konnten nicht ermittelt werden: {}", e.getMessage(), e);
+            return List.of();
+        }
     }
 
-    private RangePosition berechneVorrundeBahnBereich(XSpreadsheet sheet) {
+    private RangePosition berechneVorrundeBahnBereich(int letzteZeile) {
         return RangePosition.from(
                 SchweizerAbstractSpielrundeSheet.BAHN_NR_SPALTE,
                 SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE,
                 SchweizerAbstractSpielrundeSheet.BAHN_NR_SPALTE,
-                ermittleLetzteVorrundeZeile(sheet));
+                letzteZeile);
     }
 
     private int ermittleLetzteVorrundeZeile(XSpreadsheet sheet) {

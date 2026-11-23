@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 
 import com.sun.star.awt.FontWeight;
 import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
 import com.sun.star.table.TableBorder2;
@@ -520,6 +521,18 @@ public class KaskadeSpielrundeSheet extends SheetRunner implements ISheet, PtmOn
         getSheetHelper().setStringValueInCell(ergebnisValue);
     }
 
+    /**
+     * Editierbare Ergebnis-Bereiche einer Kaskadenrunde ohne Freilos-Zeilen (Team B leer), damit deren vorbelegtes
+     * Ergebnis weder die Editierfarbe noch eine Freigabe im Blattschutz erhält.
+     *
+     * @param letzteZeile letzte Datenzeile (inklusive)
+     */
+    public static List<RangePosition> ermittleEditierbareErgebnisBereiche(XSpreadsheet sheet,
+            XSpreadsheetDocument xDoc, int letzteZeile) throws GenerateException {
+        return SpielrundeHelper.ergebnisBereicheOhneFreilos(sheet, xDoc, TEAM_B_SPALTE, ERG_TEAM_A_SPALTE,
+                ERG_TEAM_B_SPALTE, ERSTE_DATEN_ZEILE, letzteZeile);
+    }
+
     private void datenFormatieren(KaskadenKoRunde runde) throws GenerateException {
         processBoxinfo("processbox.formatiere.daten");
         var sheet       = getXSpreadSheet();
@@ -557,7 +570,12 @@ public class KaskadeSpielrundeSheet extends SheetRunner implements ISheet, PtmOn
                 BasePropertiesSpalte.DEFAULT_UNGERADE_BACK_COLOR);
 
         spielrundeHelper.formatiereErgebnissRange(this, ergRange, ERG_TEAM_A_SPALTE);
-        EditierbaresZelleFormatHelper.anwenden(this, ergRange);
+        // Freilos-Ergebnis ist per Freispiel-Property vorbelegt und bleibt gesperrt
+        // (siehe KaskadeBlattschutzKonfiguration) – daher ohne Editierfarbe.
+        for (var bereich : ermittleEditierbareErgebnisBereiche(sheet,
+                getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), letzteZeile)) {
+            EditierbaresZelleFormatHelper.anwenden(this, bereich);
+        }
 
         fehlerSpalteFormatieren(letzteZeile);
         gruppentrennlinienSetzen(runde);

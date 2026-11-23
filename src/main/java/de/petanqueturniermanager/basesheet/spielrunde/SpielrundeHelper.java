@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -11,6 +12,8 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import com.sun.star.sheet.ConditionOperator;
+import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
 
@@ -32,6 +35,7 @@ import de.petanqueturniermanager.helper.sheet.DatengueltigkeitHelper;
 import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
+import de.petanqueturniermanager.helper.sheet.rangedata.CellData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.model.TeamPaarung;
@@ -197,6 +201,48 @@ public class SpielrundeHelper {
 	public static Set<Integer> freilosIndizes(List<TeamPaarung> paarungen) {
 		return IntStream.range(0, paarungen.size()).filter(i -> paarungen.get(i).isFreilos()).boxed()
 				.collect(Collectors.toUnmodifiableSet());
+	}
+
+	/**
+	 * Liest die Gegner-Spalte einer Spielrunde und liefert die Freilos-Zeilen. Ein Freilos hat keinen Gegner: Die
+	 * Zelle ist leer oder zeigt eine Teamnummer &le; 0 (Nummern-Formel eines Freispiels).
+	 *
+	 * @param gegnerSpalte Spalte mit Nummer oder Name von Team B
+	 * @return absolute Zeilennummern der Freilos-Paarungen
+	 */
+	public static Set<Integer> freilosZeilen(XSpreadsheet sheet, XSpreadsheetDocument xDoc, int gegnerSpalte,
+			int ersteZeile, int letzteZeile) throws GenerateException {
+		if (letzteZeile < ersteZeile) {
+			return Set.of();
+		}
+		RangeData gegner = RangeHelper
+				.from(sheet, xDoc, RangePosition.from(gegnerSpalte, ersteZeile, gegnerSpalte, letzteZeile))
+				.getDataFromRange();
+		Set<Integer> freilos = new HashSet<>();
+		for (int i = 0; i < gegner.size(); i++) {
+			RowData zeile = gegner.get(i);
+			if (zeile.isEmpty() || istOhneGegner(zeile.get(0))) {
+				freilos.add(ersteZeile + i);
+			}
+		}
+		return freilos;
+	}
+
+	/** Leer oder Teamnummer &le; 0; ein Teamname ist nicht als Zahl lesbar und zählt als Gegner. */
+	static boolean istOhneGegner(CellData gegner) {
+		String text = gegner.getStringVal();
+		return text == null || text.isBlank() || gegner.getIntVal(1) <= 0;
+	}
+
+	/**
+	 * Editierbare Ergebnis-Bereiche einer Spielrunde ohne die Freilos-Zeilen, die aus der Gegner-Spalte ermittelt
+	 * werden (siehe {@link #freilosZeilen}).
+	 */
+	public static List<RangePosition> ergebnisBereicheOhneFreilos(XSpreadsheet sheet, XSpreadsheetDocument xDoc,
+			int gegnerSpalte, int ergASpalte, int ergBSpalte, int ersteZeile, int letzteZeile)
+			throws GenerateException {
+		return ergebnisBereicheOhneFreilos(ergASpalte, ergBSpalte, ersteZeile, letzteZeile,
+				freilosZeilen(sheet, xDoc, gegnerSpalte, ersteZeile, letzteZeile));
 	}
 
 	/**

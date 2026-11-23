@@ -35,7 +35,7 @@ import de.petanqueturniermanager.ko.KoTurnierbaumSheet;
  * Editierbare Bereiche:
  * <ul>
  *   <li><b>Meldeliste:</b> Alle Spalten außer Nr (Spalte 0): Teamname, Spielernamen, SP, Aktiv</li>
- *   <li><b>Kaskaden-Runden:</b> Ergebnis-Spalten A und B (bis zur letzten Datenzeile)</li>
+ *   <li><b>Kaskaden-Runden:</b> Ergebnis-Spalten A und B (bis zur letzten Datenzeile, ohne Freilos-Zeilen)</li>
  *   <li><b>Kaskaden-Felder (KO-Brackets):</b> Nur die gespeicherten Score-Zellen</li>
  *   <li><b>Gruppenrangliste:</b> vollständig gesperrt</li>
  * </ul>
@@ -107,16 +107,22 @@ public class KaskadeBlattschutzKonfiguration implements IBlattschutzKonfiguratio
         for (var key : schluessel) {
             SheetMetadataHelper.findeSheet(xDoc, key).ifPresent(sheet ->
                     infos.add(SheetSchutzInfo.mitEditierbarenBereichen(sheet,
-                            List.of(berechneRundeErgebnisBereich(sheet)))));
+                            berechneRundeErgebnisBereiche(sheet, xDoc))));
         }
     }
 
-    private RangePosition berechneRundeErgebnisBereich(XSpreadsheet sheet) {
-        return RangePosition.from(
-                KaskadeSpielrundeSheet.ERG_TEAM_A_SPALTE,
-                KaskadeSpielrundeSheet.ERSTE_DATEN_ZEILE,
-                KaskadeSpielrundeSheet.ERG_TEAM_B_SPALTE,
-                ermittleLetzteRundeZeile(sheet));
+    /**
+     * Ergebnis-Bereiche einer Kaskadenrunde ohne Freilos-Zeilen. Kann das Blatt nicht gelesen werden, bleibt der
+     * Ergebnisbereich gesperrt statt Freilos-Zellen freizugeben.
+     */
+    private List<RangePosition> berechneRundeErgebnisBereiche(XSpreadsheet sheet, XSpreadsheetDocument xDoc) {
+        try {
+            return KaskadeSpielrundeSheet.ermittleEditierbareErgebnisBereiche(sheet, xDoc,
+                    ermittleLetzteRundeZeile(sheet));
+        } catch (GenerateException e) {
+            logger.error("Editierbare Ergebnis-Bereiche konnten nicht ermittelt werden: {}", e.getMessage(), e);
+            return List.of();
+        }
     }
 
     private int ermittleLetzteRundeZeile(XSpreadsheet sheet) {

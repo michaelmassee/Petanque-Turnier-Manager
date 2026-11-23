@@ -11,6 +11,7 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.sheet.rangedata.CellData;
 
 /**
  * Freilos-Zeilen werden aus den editierbaren Ergebnis-Bereichen ausgespart, damit sie im Turniermodus gesperrt
@@ -43,6 +44,25 @@ class ErgebnisBereicheOhneFreilosTest {
 	@Test
 	void nurFreilosKeinBereich() {
 		assertThat(adressen(2, Set.of(2))).isEmpty();
+	}
+
+	@Test
+	void leereGegnerZelleIstFreilos() {
+		assertThat(SpielrundeHelper.istOhneGegner(new CellData(""))).isTrue();
+	}
+
+	@Test
+	void gegnerNummerNullIstFreilos() {
+		assertThat(SpielrundeHelper.istOhneGegner(new CellData(0.0))).isTrue();
+		assertThat(SpielrundeHelper.istOhneGegner(new CellData("0"))).isTrue();
+	}
+
+	@Test
+	void gegnerNummerOderNameIstBegegnung() {
+		assertThat(SpielrundeHelper.istOhneGegner(new CellData(5.0))).isFalse();
+		assertThat(SpielrundeHelper.istOhneGegner(new CellData("12"))).isFalse();
+		assertThat(SpielrundeHelper.istOhneGegner(new CellData("Leander Fessler / Siska Erl"))).isFalse();
+		assertThat(SpielrundeHelper.istOhneGegner(new CellData("A-1"))).isFalse();
 	}
 
 	private static List<String> adressen(int letzteZeile, Set<Integer> freilosZeilen) {

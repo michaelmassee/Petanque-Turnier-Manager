@@ -10,10 +10,8 @@ import static de.petanqueturniermanager.helper.cellvalue.properties.ICommonPrope
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.IntStream;
 
 import org.apache.logging.log4j.LogManager;
@@ -573,30 +571,8 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 	 */
 	public static List<RangePosition> ermittleEditierbareErgebnisBereiche(XSpreadsheet sheet,
 			XSpreadsheetDocument xDoc, int letzteZeile) throws GenerateException {
-		return SpielrundeHelper.ergebnisBereicheOhneFreilos(ERG_TEAM_A_SPALTE, ERG_TEAM_B_SPALTE, ERSTE_DATEN_ZEILE,
-				letzteZeile, ermittleFreilosZeilen(sheet, xDoc, letzteZeile));
-	}
-
-	/**
-	 * Freilos-Zeilen haben keine Formel in Team B; eine Begegnung zeigt dort immer Nummer oder Name des Gegners.
-	 */
-	private static Set<Integer> ermittleFreilosZeilen(XSpreadsheet sheet, XSpreadsheetDocument xDoc,
-			int letzteZeile) throws GenerateException {
-		if (letzteZeile < ERSTE_DATEN_ZEILE) {
-			return Set.of();
-		}
-		RangeData teamBDaten = RangeHelper
-				.from(sheet, xDoc, RangePosition.from(TEAM_B_SPALTE, ERSTE_DATEN_ZEILE, TEAM_B_SPALTE, letzteZeile))
-				.getDataFromRange();
-		Set<Integer> freilosZeilen = new HashSet<>();
-		for (int i = 0; i < teamBDaten.size(); i++) {
-			RowData zeile = teamBDaten.get(i);
-			String teamB = zeile.isEmpty() ? null : zeile.get(0).getStringVal();
-			if (teamB == null || teamB.isBlank()) {
-				freilosZeilen.add(ERSTE_DATEN_ZEILE + i);
-			}
-		}
-		return freilosZeilen;
+		return SpielrundeHelper.ergebnisBereicheOhneFreilos(sheet, xDoc, TEAM_B_SPALTE, ERG_TEAM_A_SPALTE,
+				ERG_TEAM_B_SPALTE, ERSTE_DATEN_ZEILE, letzteZeile);
 	}
 
 	/**

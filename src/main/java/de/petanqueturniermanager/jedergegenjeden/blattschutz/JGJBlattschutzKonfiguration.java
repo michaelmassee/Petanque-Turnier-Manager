@@ -18,6 +18,7 @@ import com.sun.star.table.XCell;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellstyle.CellStyleHelper;
 import de.petanqueturniermanager.helper.cellstyle.EditierbareZelleHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.EditierbareZelleHintergrundFarbeUnGeradeStyle;
@@ -38,7 +39,7 @@ import de.petanqueturniermanager.ko.KoTurnierbaumSheet;
  * <ul>
  *   <li><b>Meldeliste:</b> Alle manuellen Eingabespalten außer Nr: optionaler Teamname,
  *       Spielername/Verein, SP und Aktiv</li>
- *   <li><b>Spielplan:</b> Spielpunkte A und B (nur bis zur letzten Datenzeile)</li>
+ *   <li><b>Spielplan:</b> Spielpunkte A und B (nur bis zur letzten Datenzeile, ohne Freispiel-Zeilen)</li>
  *   <li><b>Rangliste, Gesamtrangliste, Direktvergleich, Checkin-Liste, Gruppen-Aushänge:</b> vollständig gesperrt</li>
  * </ul>
  */
@@ -96,13 +97,22 @@ public class JGJBlattschutzKonfiguration implements IBlattschutzKonfiguration, M
 
     private void sammleSpielplanSchutzInfo(XSpreadsheetDocument xDoc, List<SheetSchutzInfo> infos) {
         SheetMetadataHelper.findeSheet(xDoc, SheetMetadataHelper.SCHLUESSEL_JGJ_SPIELPLAN).ifPresent(sheet -> {
-            int ersteDatenZeile = JGJSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE;
-            int letzteZeile = ermittleLetzteSpielplanZeile(sheet);
-            var bereiche = List.of(
-                    RangePosition.from(JGJSpielPlanSheet.SPIELPNKT_A_SPALTE, ersteDatenZeile,
-                            JGJSpielPlanSheet.SPIELPNKT_B_SPALTE, letzteZeile));
-            infos.add(SheetSchutzInfo.mitEditierbarenBereichen(sheet, bereiche));
+            infos.add(SheetSchutzInfo.mitEditierbarenBereichen(sheet, berechneSpielplanErgebnisBereiche(sheet, xDoc)));
         });
+    }
+
+    /**
+     * Ergebnis-Bereiche des Spielplans ohne Freispiel-Zeilen. Kann das Blatt nicht gelesen werden, bleibt der
+     * Ergebnisbereich gesperrt statt Freispiel-Zellen freizugeben.
+     */
+    private List<RangePosition> berechneSpielplanErgebnisBereiche(XSpreadsheet sheet, XSpreadsheetDocument xDoc) {
+        try {
+            return JGJSpielPlanSheet.ermittleEditierbareErgebnisBereiche(sheet, xDoc,
+                    ermittleLetzteSpielplanZeile(sheet));
+        } catch (GenerateException e) {
+            logger.error("Editierbare Ergebnis-Bereiche konnten nicht ermittelt werden: {}", e.getMessage(), e);
+            return List.of();
+        }
     }
 
     private int ermittleLetzteSpielplanZeile(XSpreadsheet sheet) {
