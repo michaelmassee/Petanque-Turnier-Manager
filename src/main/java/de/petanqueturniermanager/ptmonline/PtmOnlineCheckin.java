@@ -4,12 +4,15 @@
 package de.petanqueturniermanager.ptmonline;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 import org.jspecify.annotations.Nullable;
 
@@ -36,6 +39,8 @@ final class PtmOnlineCheckin {
 
     /** Zuletzt an PTM-Online gemeldeter Stand je Online-Turnier und lokaler UUID. */
     private final Map<String, Map<String, Gemeldet>> bekannterStand = new HashMap<>();
+    /** Meldungen je Online-Turnier, deren gemeldeter Stand verloren ging (abgelehnter Auftrag). */
+    private final Map<String, Set<String>> erneutZuMelden = new HashMap<>();
 
     /** An PTM-Online gemeldete Teilnahme, Setzposition und Teamnummer einer Meldung. */
     record Gemeldet(OnlineTeilnahme teilnahme, @Nullable Integer seedingPosition, @Nullable Integer teamNummer) {
@@ -66,11 +71,12 @@ final class PtmOnlineCheckin {
      */
     Optional<Aenderung> ermittle(String tournamentId, List<PtmOnlineStatusAuftrag.Eintrag> aktuell) {
         Map<String, Gemeldet> bekannt = bekannterStand.getOrDefault(tournamentId, Map.of());
+        Set<String> erneut = erneutZuMelden.getOrDefault(tournamentId, Set.of());
         Map<String, Gemeldet> stand = new LinkedHashMap<>();
         List<PtmOnlineStatusAuftrag.Eintrag> geaendert = new ArrayList<>();
         for (PtmOnlineStatusAuftrag.Eintrag eintrag : aktuell) {
             stand.put(eintrag.lokaleUuid(), Gemeldet.aus(eintrag));
-            if (istZuMelden(bekannt.get(eintrag.lokaleUuid()), eintrag)) {
+            if (erneut.contains(eintrag.lokaleUuid()) || istZuMelden(bekannt.get(eintrag.lokaleUuid()), eintrag)) {
                 geaendert.add(eintrag);
             }
         }
@@ -114,6 +120,7 @@ final class PtmOnlineCheckin {
     void bestaetigen(Aenderung aenderung) {
         // Veränderbare Kopie: ein späterer Rundenstart-Abgleich ergänzt den Stand ({@link #uebernehmen}).
         bekannterStand.put(aenderung.auftrag().tournamentId(), new HashMap<>(aenderung.stand()));
+        vergissErneutZuMelden(aenderung.auftrag());
     }
 
     /** Ein gesendeter Rundenstart-Abgleich hat die Teilnahme seiner Meldungen gemeldet. */
@@ -121,6 +128,24 @@ final class PtmOnlineCheckin {
         Map<String, Gemeldet> bekannt = bekannterStand.computeIfAbsent(gesendet.tournamentId(),
                 id -> new HashMap<>());
         gesendet.eintraege().forEach(eintrag -> bekannt.put(eintrag.lokaleUuid(), Gemeldet.aus(eintrag)));
+        vergissErneutZuMelden(gesendet);
+    }
+
+    /**
+     * Der Teilnahme-Auftrag dieser Meldungen wurde abgelehnt ({@link PtmOnlineAuftraege#folgefehlerTeilnahme}): Ihr
+     * Stand gilt nicht mehr als gemeldet, die nächste Erkennung sendet ihn erneut – auch eine Abmeldung.
+     */
+    void erneutMelden(String tournamentId, Collection<String> lokaleUuids) {
+        if (!lokaleUuids.isEmpty()) {
+            erneutZuMelden.computeIfAbsent(tournamentId, id -> new HashSet<>()).addAll(lokaleUuids);
+        }
+    }
+
+    private void vergissErneutZuMelden(PtmOnlineStatusAuftrag gemeldet) {
+        Set<String> erneut = erneutZuMelden.get(gemeldet.tournamentId());
+        if (erneut != null) {
+            gemeldet.eintraege().forEach(eintrag -> erneut.remove(eintrag.lokaleUuid()));
+        }
     }
 
     /**

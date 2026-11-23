@@ -17,6 +17,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -84,6 +85,7 @@ public final class PtmOnlineAuftraege {
     private static final String KONTEXT_TEAMNAME = "teamname";
     private static final String CODE_AUSFUEHRUNGSKONFLIKT = "execution_conflict";
     private static final String CODE_GLEICHE_ANMELDUNG = "possible_same_registration";
+    private static final String BODY_ONLINE_ID = "onlineRegistrationId";
     private static final int MAX_ENTSCHEIDUNGEN_JE_AUFTRAG = 200;
     private static final int MAX_VERKNUEPFUNGEN_JE_AUFTRAG = 200;
 
@@ -384,6 +386,33 @@ public final class PtmOnlineAuftraege {
                 kontext.toString());
     }
 
+    /**
+     * Nimmt noch nicht gesendete Stornierungen von Meldungen zurück, deren Zeile wieder in der Meldeliste steht
+     * (Löschen rückgängig gemacht, ausgeschnitten und wieder eingefügt). Hält dazu kurz die Versandsperre, damit kein
+     * Storno zwischen Prüfen und Entfernen hinausgeht; sendet gerade der Hintergrund, bleibt es beim nächsten Lauf.
+     *
+     * @param vorhandeneUuids lokale UUIDs aller Zeilen der Meldeliste
+     * @return {@code false}, wenn ein zurückzunehmender Storno wegen eines laufenden Versands noch aussteht
+     */
+    static boolean stornosZuruecknehmen(AuftragsBestand bestand, Set<String> vorhandeneUuids) {
+        Predicate<SyncAuftrag> zurueckgekehrt = auftrag -> auftrag.art() == AuftragsArt.ANMELDUNG_STORNIEREN
+                && vorhandeneUuids.contains(text(kontext(auftrag), KONTEXT_UUID));
+        if (!bestand.versandSperre().tryLock()) {
+            return bestand.zuSenden(false).stream().noneMatch(zurueckgekehrt);
+        }
+        try {
+            List<SyncAuftrag> zurueck = bestand.zuSenden(false).stream().filter(zurueckgekehrt).toList();
+            if (!zurueck.isEmpty()) {
+                bestand.entferneUeberholte(zurueck::contains);
+                logger.info("PTM-Online: {} Stornierungen zurückgenommen, die Zeilen stehen wieder in der Meldeliste",
+                        zurueck.size());
+            }
+            return true;
+        } finally {
+            bestand.versandSperre().unlock();
+        }
+    }
+
     /** Ob das Online-Turnier laut Sync-Blatt läuft oder abgeschlossen ist; danach lehnt PTM-Online Anlagen ab. */
     static boolean istGestartet(Optional<String> onlineStatus) {
         return onlineStatus.filter(status -> ONLINE_STATUS_LAEUFT.equals(status)
@@ -402,14 +431,13 @@ public final class PtmOnlineAuftraege {
      * Meldungen, für die der automatische Meldelisten-Abgleich keinen Auftrag erzeugen darf: offene Anlage-, Änderungs-
      * und Stornoaufträge (keine Doppelaufträge) sowie fachlich abgelehnte, noch nicht quittierte Aufträge dieser
      * Arten. Ohne Klärung würde sonst dieselbe Ablehnung bei jeder Erfassung erneut entstehen. Revisionskonflikte
-     * werden nach Übernahme der Online-Revision von {@link #anwenden} quittiert und dürfen erneut gesendet werden.
+     * werden nach Übernahme der Online-Revision von {@link #anwenden} quittiert und dürfen erneut gesendet werden;
+     * eine Stornierung erzeugt {@link #anwenden} dabei gleich neu ({@link #stornoErneut}).
      */
     static Set<String> gesperrteMeldungen(AuftragsBestand bestand) {
         Set<String> gesperrt = new HashSet<>();
         for (AuftragsBestand.Eintrag eintrag : bestand.eintraege()) {
-            AuftragsArt art = eintrag.auftrag().art();
-            boolean anmeldung = art == AuftragsArt.ANMELDUNG_ANLEGEN || art == AuftragsArt.ANMELDUNG_AENDERN
-                    || art == AuftragsArt.ANMELDUNG_STORNIEREN;
+            boolean anmeldung = eintrag.auftrag().art().sperrtMeldungBisZurKlaerung();
             boolean sperrt = eintrag.zustand() == AuftragsBestand.Zustand.OFFEN
                     || eintrag.zustand() == AuftragsBestand.Zustand.ABGELEHNT;
             String uuid = text(kontext(eintrag.auftrag()), KONTEXT_UUID);
@@ -620,6 +648,8 @@ public final class PtmOnlineAuftraege {
         Map<String, ZuordnungsZusatz> zusaetze = new LinkedHashMap<>();
         Set<String> storniert = new LinkedHashSet<>();
         List<VersandErgebnis> ueberholt = new ArrayList<>();
+        Map<SyncAuftrag, Integer> stornosErneut = new LinkedHashMap<>();
+        List<VersandErgebnis> teilnahmeKonflikte = new ArrayList<>();
         boolean startErledigt = false;
         boolean startAngenommen = false;
         SyncAntwort abschluss = null;
@@ -630,8 +660,16 @@ public final class PtmOnlineAuftraege {
             startErledigt |= auftrag.art() == AuftragsArt.START;
             startAngenommen |= auftrag.art() == AuftragsArt.START && ergebnis.angenommen();
             if (!ergebnis.angenommen()) {
-                if (uebernehmeOnlineRevision(ergebnis, kontext, revisionen)) {
+                Optional<Integer> onlineRevision = onlineRevision(ergebnis, kontext);
+                onlineRevision.ifPresent(revision -> {
+                    revisionen.put(text(kontext, KONTEXT_UUID), revision);
                     ueberholt.add(ergebnis);
+                    if (auftrag.art() == AuftragsArt.ANMELDUNG_STORNIEREN) {
+                        stornosErneut.put(auftrag, revision);
+                    }
+                });
+                if (auftrag.art() == AuftragsArt.TEILNAHME && istAusfuehrungskonflikt(ergebnis)) {
+                    teilnahmeKonflikte.add(ergebnis);
                 }
                 if (auftrag.art() == AuftragsArt.ANMELDUNG_ANLEGEN) {
                     String bezeichnung = text(kontext, KONTEXT_BEZEICHNUNG);
@@ -692,6 +730,18 @@ public final class PtmOnlineAuftraege {
         if (!revisionen.isEmpty()) {
             mapping.setExecutionRevisionen(revisionen);
         }
+        if (!teilnahmeKonflikte.isEmpty()) {
+            Map<String, Integer> gespeichert = mapping.getExecutionRevisionenProUuid();
+            for (VersandErgebnis konflikt : teilnahmeKonflikte) {
+                Set<String> erneut = folgefehlerTeilnahme(konflikt.auftrag(), gespeichert);
+                if (!erneut.isEmpty()) {
+                    bestand.teilnahmeErneutMelden(erneut);
+                    ueberholt.add(konflikt);
+                    logger.info("PTM-Online: Teilnahme-Auftrag {} scheiterte an einem vorausgehenden abgelehnten "
+                            + "Auftrag; {} Check-ins werden erneut gemeldet", konflikt.auftrag().zaehler(), erneut.size());
+                }
+            }
+        }
         vermerkeLokalEntfernt(storniert, mapping, zusaetze);
         if (!zusaetze.isEmpty()) {
             mapping.setZusaetze(zusaetze);
@@ -710,6 +760,7 @@ public final class PtmOnlineAuftraege {
         }
         // Das Dokument ist Master: Mit der übernommenen Online-Revision sendet der nächste Lauf den Stand erneut.
         ueberholt.forEach(ergebnis -> bestand.quittiere(ergebnis.auftrag().auftragsId()));
+        stornosErneut.forEach((storno, revision) -> stornoErneut(bestand, storno, revision));
         speichern(bestand, mapping);
         return new Anwendung(zuordnungen.size(), abgelehnt, nachStart, geaendert,
                 ergebnisse.stream().filter(ergebnis -> !ergebnis.angenommen()).toList(), Optional.ofNullable(abschluss));
@@ -717,22 +768,50 @@ public final class PtmOnlineAuftraege {
 
     /**
      * Eine Änderung oder Stornierung scheiterte an einer zwischenzeitlich online geänderten Anmeldung
-     * ({@code execution_conflict}): Deren Revision gilt nun als gespeichert.
+     * ({@code execution_conflict}): Deren Revision gilt danach als gespeichert.
      *
-     * @return ob die Revision übernommen wurde
+     * @return die Online-Revision, sofern die Antwort sie nennt
      */
-    private static boolean uebernehmeOnlineRevision(VersandErgebnis ergebnis, JsonObject kontext,
-            Map<String, Integer> revisionen) {
+    private static Optional<Integer> onlineRevision(VersandErgebnis ergebnis, JsonObject kontext) {
         AuftragsArt art = ergebnis.auftrag().art();
-        String uuid = text(kontext, KONTEXT_UUID);
-        if (art != AuftragsArt.ANMELDUNG_AENDERN && art != AuftragsArt.ANMELDUNG_STORNIEREN || uuid.isEmpty()
-                || ergebnis.antwort().code().filter(CODE_AUSFUEHRUNGSKONFLIKT::equals).isEmpty()) {
-            return false;
+        if ((art != AuftragsArt.ANMELDUNG_AENDERN && art != AuftragsArt.ANMELDUNG_STORNIEREN)
+                || text(kontext, KONTEXT_UUID).isEmpty() || !istAusfuehrungskonflikt(ergebnis)) {
+            return Optional.empty();
         }
-        Optional<Integer> online = TournamentSyncClient.konfliktRegistrationAus(ergebnis.antwort())
-                .map(RegistrationDto::executionRevision);
-        online.ifPresent(revision -> revisionen.put(uuid, revision));
-        return online.isPresent();
+        return TournamentSyncClient.konfliktRegistrationAus(ergebnis.antwort()).map(RegistrationDto::executionRevision);
+    }
+
+    private static boolean istAusfuehrungskonflikt(VersandErgebnis ergebnis) {
+        return ergebnis.antwort().code().filter(CODE_AUSFUEHRUNGSKONFLIKT::equals).isPresent();
+    }
+
+    /**
+     * Neuer Versuch einer Stornierung, die an einem Revisionskonflikt scheiterte, mit der übernommenen Online-Revision.
+     * Das Dokument ist Master; anders als bei einer Namensänderung erkennt der nächste Lauf eine Löschung aber nicht
+     * zuverlässig wieder (das Löschgedächtnis lebt nur im Speicher, nach einem Neustart fehlt es). Steht die Zeile
+     * inzwischen wieder in der Meldeliste, nimmt {@link #stornosZuruecknehmen} den Auftrag zurück.
+     */
+    static SyncAuftrag stornoErneut(AuftragsBestand bestand, SyncAuftrag gescheitert, int onlineRevision) {
+        String onlineId = text(json(gescheitert.body(), gescheitert), BODY_ONLINE_ID);
+        return bestand.erzeuge(AuftragsArt.ANMELDUNG_STORNIEREN, "PUT", gescheitert.pfad(),
+                TournamentSyncClient.stornoBody(onlineId, onlineRevision), gescheitert.kontext());
+    }
+
+    /**
+     * Ein Teilnahme-Auftrag scheiterte am Revisionskonflikt. PTM-Online lehnt dann den ganzen Auftrag ab, nennt aber
+     * keine Revision. Erwartete er für eine Meldung eine andere Revision als die jetzt gespeicherte, war ein
+     * vorausgehender Auftrag derselben Meldung eingerechnet, der abgelehnt wurde – ein Folgefehler. Dann ist die
+     * Teilnahme aller Meldungen des Auftrags erneut zu melden. Stimmt die Revision überein, hat sich die Anmeldung
+     * online geändert; das klärt der manuelle Abgleich (sonst scheiterte jede Wiederholung erneut).
+     *
+     * @param gespeichert gespeicherte Ausführungsrevision je lokaler UUID nach dem Anwenden
+     * @return die erneut zu meldenden Meldungen, leer ohne Folgefehler
+     */
+    static Set<String> folgefehlerTeilnahme(SyncAuftrag teilnahme, Map<String, Integer> gespeichert) {
+        Map<String, Integer> nachher = revisionenAusKontext(teilnahme);
+        boolean folgefehler = nachher.entrySet().stream()
+                .anyMatch(eintrag -> eintrag.getValue() - 1 != gespeichert.getOrDefault(eintrag.getKey(), 1));
+        return folgefehler ? Set.copyOf(nachher.keySet()) : Set.of();
     }
 
     /** Ergänzt bei online stornierten Meldungen den Vermerk „lokal entfernt“, ohne andere Vermerke zu verlieren. */
@@ -801,11 +880,15 @@ public final class PtmOnlineAuftraege {
     }
 
     private static JsonObject kontext(SyncAuftrag auftrag) {
+        return json(auftrag.kontext(), auftrag);
+    }
+
+    private static JsonObject json(String text, SyncAuftrag auftrag) {
         try {
-            JsonElement element = JsonParser.parseString(auftrag.kontext());
+            JsonElement element = JsonParser.parseString(text);
             return element.isJsonObject() ? element.getAsJsonObject() : new JsonObject();
         } catch (JsonParseException e) {
-            logger.warn("PTM-Online: Kontext von Auftrag {} unlesbar", auftrag.zaehler(), e);
+            logger.warn("PTM-Online: JSON von Auftrag {} unlesbar", auftrag.zaehler(), e);
             return new JsonObject();
         }
     }

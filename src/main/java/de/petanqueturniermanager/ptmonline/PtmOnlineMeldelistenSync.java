@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -35,7 +36,8 @@ import de.petanqueturniermanager.spielerdb.MeldelisteZiel;
  * Stände werden überschrieben,</li>
  * <li>neue Meldungen mit lokaler UUID → Online-Anlage (bis zum Turnierstart; eine gleichnamige, noch nicht verknüpfte
  * Online-Anmeldung lehnt PTM-Online ab, die verknüpft der manuelle Abgleich),</li>
- * <li>gelöschte Meldungen → Online-Stornierung, erst wenn die Zeile in zwei aufeinanderfolgenden Läufen fehlt.</li>
+ * <li>gelöschte Meldungen → Online-Stornierung, erst wenn die Zeile in zwei aufeinanderfolgenden Läufen fehlt. Kehrt
+ * die Zeile vor dem Versand zurück, wird die Stornierung zurückgenommen.</li>
  * </ul>
  * Die Setzposition meldet die Check-in-Erkennung ({@link PtmOnlineCheckin}) mit der Teilnahme. Die Gegenrichtung
  * (Online-Anmeldungen und -Änderungen ins Dokument) bleibt dem manuellen Abgleich vorbehalten; hier wird das Dokument
@@ -151,16 +153,20 @@ final class PtmOnlineMeldelistenSync {
     /**
      * Liest Meldeliste und Zuordnungen und erzeugt die nötigen Aufträge im Bestand.
      *
-     * @return ob ein weiterer Lauf nötig ist, um gelöschte Meldungen zu bestätigen
+     * @return ob ein weiterer Lauf nötig ist, um gelöschte Meldungen zu bestätigen oder eine Stornierung
+     *         zurückzunehmen
      */
     boolean erfasse(AuftragsBestand bestand, PtmOnlineVerbindung verbindung) throws GenerateException {
         PtmOnlineRegistrationMapping mapping = verbindung.mapping();
         MeldelisteZiel ziel = verbindung.ziel();
         String tournamentId = verbindung.tournamentId();
+        List<LokaleMeldung> meldungen = leseMeldungen(ziel);
+        boolean ruecknahmeErledigt = PtmOnlineAuftraege.stornosZuruecknehmen(bestand,
+                meldungen.stream().map(LokaleMeldung::uuid).collect(Collectors.toSet()));
         Zuordnungen zuordnungen = new Zuordnungen(mapping.getOnlineIdsProUuid(), mapping.getZusaetzeProUuid(),
                 mapping.getRohStatusProUuid(), PtmOnlineAuftraege.gesperrteMeldungen(bestand));
         Ergebnis ergebnis = ermittle(tournamentId, ziel.getFormation(),
-                !PtmOnlineAuftraege.istGestartet(mapping.getOnlineStatus()), leseMeldungen(ziel), zuordnungen);
+                !PtmOnlineAuftraege.istGestartet(mapping.getOnlineStatus()), meldungen, zuordnungen);
         Map<String, Integer> revisionen = mapping.getExecutionRevisionenProUuid();
         for (Aktion aktion : ergebnis.aktionen()) {
             switch (aktion) {
@@ -175,7 +181,7 @@ final class PtmOnlineMeldelistenSync {
         if (!ergebnis.aktionen().isEmpty()) {
             logger.info("PTM-Online: {} Meldelisten-Änderungen als Auftrag erfasst", ergebnis.aktionen().size());
         }
-        return ergebnis.nachlauf();
+        return ergebnis.nachlauf() || !ruecknahmeErledigt;
     }
 
     private static void legeAn(AuftragsBestand bestand, String tournamentId, MeldelisteZiel ziel, Anlage anlage)

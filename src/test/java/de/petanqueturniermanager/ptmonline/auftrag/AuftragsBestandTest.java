@@ -214,4 +214,33 @@ class AuftragsBestandTest {
         assertThat(bestand.eintraege().getFirst().grund()).isEqualTo("composition_locked");
         assertThat(bestand.istGeaendert()).isTrue();
     }
+
+    @Test
+    void ungeklaerteSperrendeAblehnungFaelltNieAusDemProtokoll() {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        SyncAuftrag storno = erzeuge(bestand, AuftragsArt.ANMELDUNG_STORNIEREN);
+        bestand.gesendet(ergebnis(storno, false));
+        bestand.angewendet(ergebnis(storno, false), "registration_drawn");
+        for (int i = 0; i < AuftragsBestand.MAX_PROTOKOLL + 5; i++) {
+            bestand.angewendet(ergebnis(erzeuge(bestand, AuftragsArt.TEILNAHME), false), "x");
+        }
+
+        assertThat(bestand.eintraege()).hasSize(AuftragsBestand.MAX_PROTOKOLL + 1);
+        assertThat(bestand.eintraege().getFirst().auftrag()).isEqualTo(storno);
+
+        bestand.quittiere(storno.auftragsId());
+        bestand.angewendet(ergebnis(erzeuge(bestand, AuftragsArt.TEILNAHME), false), "x");
+
+        assertThat(bestand.eintraege()).as("quittiert darf sie weichen").extracting(AuftragsBestand.Eintrag::auftrag)
+                .doesNotContain(storno);
+    }
+
+    @Test
+    void erneutZuMeldendeTeilnahmenWerdenEinmalEntnommen() {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        bestand.teilnahmeErneutMelden(List.of("u1", "u2"));
+
+        assertThat(bestand.entnehmeTeilnahmeErneutMelden()).containsExactlyInAnyOrder("u1", "u2");
+        assertThat(bestand.entnehmeTeilnahmeErneutMelden()).isEmpty();
+    }
 }

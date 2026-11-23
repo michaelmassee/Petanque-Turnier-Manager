@@ -60,6 +60,15 @@ public enum AuftragsArt {
         return this == ANMELDUNG_ANLEGEN || this == ANMELDUNG_AENDERN || this == TEILNAHME;
     }
 
+    /**
+     * Eine fachliche Ablehnung dieser Art sperrt den automatischen Meldelisten-Abgleich für die betroffene Meldung, bis
+     * die Turnierleitung sie quittiert hat – sonst entstünde dieselbe Ablehnung bei jeder Erfassung neu. Solche
+     * Ablehnungen fallen daher nie aus dem Protokoll ({@link AuftragsBestand}).
+     */
+    public boolean sperrtMeldungBisZurKlaerung() {
+        return this == ANMELDUNG_ANLEGEN || this == ANMELDUNG_AENDERN || this == ANMELDUNG_STORNIEREN;
+    }
+
     public String anzeige() {
         return I18n.get("ptmonline.auftrag.art." + name().toLowerCase(Locale.ROOT));
     }

@@ -9,6 +9,8 @@ import static org.assertj.core.api.Assertions.tuple;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -407,5 +409,120 @@ class PtmOnlineAuftraegeTest {
         bestand.angewendet(angenommen, "");
 
         assertThat(PtmOnlineAuftraege.offeneVerknuepfungen(bestand)).isEqualTo(Map.of("u3", "r3"));
+    }
+
+    @Test
+    void zurueckgekehrteZeileNimmtIhrenUngesendetenStornoZurueck() {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        PtmOnlineAuftraege.storno(bestand, TURNIER, "u1", "r1", 2);
+        PtmOnlineAuftraege.storno(bestand, TURNIER, "u2", "r2", 1);
+
+        assertThat(PtmOnlineAuftraege.stornosZuruecknehmen(bestand, Set.of("u1", "u3"))).isTrue();
+
+        assertThat(PtmOnlineAuftraege.gesperrteMeldungen(bestand)).containsExactly("u2");
+        assertThat(bestand.zuSenden(false)).singleElement()
+                .satisfies(auftrag -> assertThat(auftrag.pfad()).contains("u2"));
+    }
+
+    @Test
+    void gesendeterStornoWirdNichtZurueckgenommen() {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        PtmOnlineAuftraege.storno(bestand, TURNIER, "u1", "r1", 2);
+        SyncAuftrag storno = bestand.zuSenden(false).getFirst();
+        bestand.gesendet(new VersandErgebnis(storno, new SyncAntwort(200, "{}", false), true));
+
+        assertThat(PtmOnlineAuftraege.stornosZuruecknehmen(bestand, Set.of("u1"))).isTrue();
+
+        assertThat(bestand.ergebnisseZumAnwenden()).hasSize(1);
+        assertThat(PtmOnlineAuftraege.gesperrteMeldungen(bestand)).containsExactly("u1");
+    }
+
+    @Test
+    void waehrendDesVersandsBleibtDerStornoBisZumNaechstenLauf() throws Exception {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        PtmOnlineAuftraege.storno(bestand, TURNIER, "u1", "r1", 2);
+        CountDownLatch gesperrt = new CountDownLatch(1);
+        CountDownLatch freigeben = new CountDownLatch(1);
+        Thread versand = Thread.ofPlatform().start(() -> {
+            bestand.versandSperre().lock();
+            try {
+                gesperrt.countDown();
+                freigeben.await();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } finally {
+                bestand.versandSperre().unlock();
+            }
+        });
+        try {
+            gesperrt.await();
+
+            assertThat(PtmOnlineAuftraege.stornosZuruecknehmen(bestand, Set.of("u1"))).as("Nachlauf nötig").isFalse();
+            assertThat(PtmOnlineAuftraege.stornosZuruecknehmen(bestand, Set.of("u2"))).as("nichts zurückzunehmen")
+                    .isTrue();
+        } finally {
+            freigeben.countDown();
+            versand.join();
+        }
+        assertThat(PtmOnlineAuftraege.stornosZuruecknehmen(bestand, Set.of("u1"))).isTrue();
+        assertThat(bestand.hatOffene()).isFalse();
+    }
+
+    @Test
+    void stornoNachRevisionskonfliktEntstehtMitDerOnlineRevisionNeu() {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        PtmOnlineAuftraege.storno(bestand, TURNIER, "u1", "r1", 2);
+        SyncAuftrag gescheitert = bestand.zuSenden(false).getFirst();
+
+        SyncAuftrag neu = PtmOnlineAuftraege.stornoErneut(bestand, gescheitert, 5);
+
+        JsonObject body = JsonParser.parseString(neu.body()).getAsJsonObject();
+        assertThat(neu.art()).isEqualTo(AuftragsArt.ANMELDUNG_STORNIEREN);
+        assertThat(neu.auftragsId()).isNotEqualTo(gescheitert.auftragsId());
+        assertThat(neu.pfad()).isEqualTo(gescheitert.pfad());
+        assertThat(body.get("onlineRegistrationId").getAsString()).isEqualTo("r1");
+        assertThat(body.get("expectedExecutionRevision").getAsInt()).isEqualTo(5);
+        assertThat(PtmOnlineAuftraege.gesperrteMeldungen(bestand)).as("Kontext bleibt").containsExactly("u1");
+    }
+
+    @Test
+    void teilnahmeNachAbgelehnterAenderungIstFolgefehlerUndWirdErneutGemeldet() {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        Map<String, String> onlineIds = Map.of("u1", "r1", "u2", "r2");
+        Map<String, Integer> gespeichert = Map.of("u1", 3, "u2", 1);
+        bestand.erzeuge(AuftragsArt.ANMELDUNG_AENDERN, "PUT", "/x", "{}",
+                "{\"lokaleUuid\":\"u1\",\"revisionen\":{\"u1\":4}}");
+        SyncAuftrag teilnahme = PtmOnlineAuftraege
+                .teilnahme(bestand, TURNIER, List.of(aktiv("u1"), aktiv("u2")), onlineIds, gespeichert).orElseThrow();
+
+        assertThat(PtmOnlineAuftraege.folgefehlerTeilnahme(teilnahme, gespeichert))
+                .as("erwartete Revision 4 statt der gespeicherten 3").containsExactlyInAnyOrder("u1", "u2");
+    }
+
+    @Test
+    void teilnahmeKonfliktOhneVorausgehendenAuftragIstKeinFolgefehler() {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        Map<String, Integer> gespeichert = Map.of("u1", 3);
+        SyncAuftrag teilnahme = PtmOnlineAuftraege
+                .teilnahme(bestand, TURNIER, List.of(aktiv("u1")), Map.of("u1", "r1"), gespeichert).orElseThrow();
+
+        assertThat(PtmOnlineAuftraege.folgefehlerTeilnahme(teilnahme, gespeichert))
+                .as("online geändert – eine Wiederholung scheiterte erneut").isEmpty();
+    }
+
+    @Test
+    void ungeklaerteAblehnungSperrtAuchNachLangemProtokoll() {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        PtmOnlineAuftraege.storno(bestand, TURNIER, "u1", "r1", 2);
+        SyncAuftrag storno = bestand.zuSenden(false).getFirst();
+        VersandErgebnis abgelehnt = new VersandErgebnis(storno, new SyncAntwort(409, "{}", false), false);
+        bestand.gesendet(abgelehnt);
+        bestand.angewendet(abgelehnt, "registration_drawn");
+        for (int i = 0; i < 150; i++) {
+            SyncAuftrag runde = bestand.erzeuge(AuftragsArt.RUNDE, "PUT", "/r" + i, "{}", "{}");
+            bestand.angewendet(new VersandErgebnis(runde, new SyncAntwort(409, "{}", false), false), "HTTP 409");
+        }
+
+        assertThat(PtmOnlineAuftraege.gesperrteMeldungen(bestand)).containsExactly("u1");
     }
 }

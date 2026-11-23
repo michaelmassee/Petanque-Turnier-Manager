@@ -272,6 +272,7 @@ final class PtmOnlineErfassungsRunner extends SheetRunner {
     }
 
     private void erfasseCheckin(AuftragsBestand bestand, PtmOnlineVerbindung verbindung) throws GenerateException {
+        checkin.erneutMelden(verbindung.tournamentId(), bestand.entnehmeTeilnahmeErneutMelden());
         Optional<PtmOnlineCheckin.Aenderung> aenderung = checkin.ermittle(verbindung.tournamentId(),
                 PtmOnlineCheckin.leseStand(verbindung));
         if (aenderung.isEmpty()) {

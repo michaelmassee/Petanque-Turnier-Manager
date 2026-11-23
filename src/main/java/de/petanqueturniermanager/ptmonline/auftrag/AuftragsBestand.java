@@ -5,11 +5,14 @@ package de.petanqueturniermanager.ptmonline.auftrag;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Predicate;
@@ -27,7 +30,10 @@ import de.petanqueturniermanager.ptmonline.auftrag.versand.VersandErgebnis;
  */
 public final class AuftragsBestand {
 
-    /** Höchstzahl erledigter Protokollzeilen (verworfen/abgelehnt), die im Puffer stehen bleiben. */
+    /**
+     * Höchstzahl erledigter Protokollzeilen (verworfen/abgelehnt/quittiert), die im Puffer stehen bleiben. Ungeklärte
+     * Ablehnungen, die eine Meldung sperren ({@link AuftragsArt#sperrtMeldungBisZurKlaerung()}), zählen nicht dazu.
+     */
     static final int MAX_PROTOKOLL = 100;
 
     /** Zustand einer Pufferzeile; angenommene Aufträge verschwinden aus dem Puffer. */
@@ -56,6 +62,8 @@ public final class AuftragsBestand {
     private final List<Eintrag> eintraege = new ArrayList<>();
     private final Map<String, VersandErgebnis> ergebnisse = new LinkedHashMap<>();
     private final ReentrantLock versandSperre = new ReentrantLock();
+    /** Lokale UUIDs, deren Teilnahme nach einem Folgefehler erneut zu melden ist; nur im Speicher. */
+    private final Set<String> teilnahmeErneutMelden = new LinkedHashSet<>();
     private long zaehler;
     private boolean geaendert;
 
@@ -201,6 +209,21 @@ public final class AuftragsBestand {
     }
 
     /**
+     * Die Teilnahme dieser Meldungen ging wegen eines vorausgehenden, abgelehnten Auftrags verloren und ist erneut zu
+     * melden. Die Check-in-Erkennung holt die Liste mit {@link #entnehmeTeilnahmeErneutMelden()} ab.
+     */
+    public synchronized void teilnahmeErneutMelden(Collection<String> lokaleUuids) {
+        teilnahmeErneutMelden.addAll(lokaleUuids);
+    }
+
+    /** Erneut zu meldende Teilnahmen; die Liste ist danach leer. */
+    public synchronized Set<String> entnehmeTeilnahmeErneutMelden() {
+        Set<String> entnommen = Set.copyOf(teilnahmeErneutMelden);
+        teilnahmeErneutMelden.clear();
+        return entnommen;
+    }
+
+    /**
      * Entfernt offene, noch nicht gesendete Aufträge, die ein neuer Auftrag vollständig ersetzt (z.&nbsp;B. ein
      * älterer Stand derselben Spielrunde). Sie werden nicht protokolliert – ihr Inhalt geht im neueren auf.
      */
@@ -219,6 +242,7 @@ public final class AuftragsBestand {
                 ? new Eintrag(eintrag.auftrag(), Zustand.VERWORFEN, grund, Instant.now())
                 : eintrag);
         ergebnisse.clear();
+        teilnahmeErneutMelden.clear();
         zaehler = serverZaehler;
         geaendert = true;
         kuerzeProtokoll();
@@ -278,16 +302,25 @@ public final class AuftragsBestand {
                 : eintrag);
     }
 
-    /** Hält den Puffer klein: die ältesten Protokollzeilen fallen weg, offene Aufträge nie. */
+    /**
+     * Hält den Puffer klein: die ältesten Protokollzeilen fallen weg – offene Aufträge und ungeklärte, sperrende
+     * Ablehnungen nie. Ohne diese Ablehnung erzeugte der automatische Abgleich den abgelehnten Auftrag erneut, und die
+     * Turnierleitung sähe den Fall nie in der Konfliktliste.
+     */
     private void kuerzeProtokoll() {
-        long protokoll = eintraege.stream().filter(eintrag -> eintrag.zustand() != Zustand.OFFEN).count();
+        long protokoll = eintraege.stream().filter(eintrag -> !bleibtStehen(eintrag)).count();
         for (int i = 0; i < eintraege.size() && protokoll > MAX_PROTOKOLL;) {
-            if (eintraege.get(i).zustand() == Zustand.OFFEN) {
+            if (bleibtStehen(eintraege.get(i))) {
                 i++;
             } else {
                 eintraege.remove(i);
                 protokoll--;
             }
         }
+    }
+
+    private static boolean bleibtStehen(Eintrag eintrag) {
+        return eintrag.zustand() == Zustand.OFFEN || (eintrag.zustand() == Zustand.ABGELEHNT
+                && eintrag.auftrag().art().sperrtMeldungBisZurKlaerung());
     }
 }
