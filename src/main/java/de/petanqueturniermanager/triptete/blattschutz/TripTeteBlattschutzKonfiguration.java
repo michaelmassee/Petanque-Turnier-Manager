@@ -14,6 +14,7 @@ import com.sun.star.table.XCell;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellstyle.CellStyleHelper;
 import de.petanqueturniermanager.helper.cellstyle.EditierbareZelleHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.EditierbareZelleHintergrundFarbeUnGeradeStyle;
@@ -30,7 +31,7 @@ import de.petanqueturniermanager.triptete.spielplan.TripTeteSpielPlanSheet;
  * Editierbare Bereiche:
  * <ul>
  *   <li><b>Meldeliste:</b> Spieler-Name-Spalte (B)</li>
- *   <li><b>Spielplan:</b> Triplette-/Doublette-/Tête-Ergebnis-Spalten (Bahnen sind systemvergeben und gesperrt)</li>
+ *   <li><b>Spielplan:</b> Triplette-/Doublette-/Tête-Ergebnis-Spalten ohne Freispiel-Zeilen (Bahnen sind systemvergeben und gesperrt)</li>
  *   <li><b>Rangliste:</b> vollständig gesperrt</li>
  * </ul>
  */
@@ -83,13 +84,22 @@ public final class TripTeteBlattschutzKonfiguration implements IBlattschutzKonfi
 
 	private void sammleSpielplanSchutzInfo(XSpreadsheetDocument xDoc, List<SheetSchutzInfo> infos) {
 		SheetMetadataHelper.findeSheet(xDoc, SheetMetadataHelper.SCHLUESSEL_TRIPTETE_SPIELPLAN).ifPresent(sheet -> {
-			int ersteDatenZeile = TripTeteSpielPlanSheet.ERSTE_DATEN_ZEILE;
-			int letzteZeile = ermittleLetzteSpielplanZeile(sheet);
-			var bereiche = List.of(
-					RangePosition.from(TripTeteSpielPlanSheet.TRI_A_SPALTE, ersteDatenZeile,
-							TripTeteSpielPlanSheet.TETE_B_SPALTE, letzteZeile));
-			infos.add(SheetSchutzInfo.mitEditierbarenBereichen(sheet, bereiche));
+			infos.add(SheetSchutzInfo.mitEditierbarenBereichen(sheet, berechneSpielplanErgebnisBereiche(sheet, xDoc)));
 		});
+	}
+
+	/**
+	 * Ergebnis-Bereiche des Spielplans ohne Freispiel-Zeilen. Kann das Blatt nicht gelesen werden, bleibt der
+	 * Ergebnisbereich gesperrt statt Freispiel-Zellen freizugeben.
+	 */
+	private List<RangePosition> berechneSpielplanErgebnisBereiche(XSpreadsheet sheet, XSpreadsheetDocument xDoc) {
+		try {
+			return TripTeteSpielPlanSheet.ermittleEditierbareErgebnisBereiche(sheet, xDoc,
+					ermittleLetzteSpielplanZeile(sheet));
+		} catch (GenerateException e) {
+			logger.error("Editierbare Ergebnis-Bereiche konnten nicht ermittelt werden: {}", e.getMessage(), e);
+			return List.of();
+		}
 	}
 
 	private int ermittleLetzteSpielplanZeile(XSpreadsheet sheet) {

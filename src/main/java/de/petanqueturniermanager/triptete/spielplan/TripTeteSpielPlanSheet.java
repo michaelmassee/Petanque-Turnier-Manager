@@ -1,11 +1,14 @@
 package de.petanqueturniermanager.triptete.spielplan;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.sun.star.sheet.ConditionOperator;
 import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.sheet.XSpreadsheetDocument;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.TeamAnzeige;
@@ -33,6 +36,7 @@ import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeFooterHelper;
+import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeHelper;
 import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
@@ -479,6 +483,33 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet, PtmOn
 		return triB.getAddress() + "+" + douB.getAddress() + "+" + teteB.getAddress();
 	}
 
+	/** @return absolute Zeilennummern der Freispiel-Paarungen (ohne Team B) */
+	static Set<Integer> freispielZeilen(List<List<TeamPaarung>> spielPlan) {
+		Set<Integer> freispiele = new HashSet<>();
+		int zeile = ERSTE_DATEN_ZEILE;
+		for (List<TeamPaarung> runde : spielPlan) {
+			for (TeamPaarung paarung : runde) {
+				if (paarung.isFreilos()) {
+					freispiele.add(zeile);
+				}
+				zeile++;
+			}
+		}
+		return freispiele;
+	}
+
+	/**
+	 * Editierbare Ergebnis-Bereiche (Triplette bis Tête) ohne Freispiel-Zeilen (Nr Team B &le; 0), damit diese
+	 * weder die Editierfarbe noch eine Freigabe im Blattschutz erhalten.
+	 *
+	 * @param letzteZeile letzte Datenzeile (inklusive)
+	 */
+	public static List<RangePosition> ermittleEditierbareErgebnisBereiche(XSpreadsheet sheet,
+			XSpreadsheetDocument xDoc, int letzteZeile) throws GenerateException {
+		return SpielrundeHelper.ergebnisBereicheOhneFreilos(sheet, xDoc, TEAM_B_NR_SPALTE, TRI_A_SPALTE,
+				TETE_B_SPALTE, ERSTE_DATEN_ZEILE, letzteZeile);
+	}
+
 	private void formatieren(List<List<TeamPaarung>> spielPlan) throws GenerateException {
 		int letzteSpielZeile = letzteSpielZeile();
 		RangePosition allDataMitHeader = RangePosition.from(SPIEL_NR_SPALTE, ERSTE_HEADER_ZEILE,
@@ -504,7 +535,11 @@ public class TripTeteSpielPlanSheet extends SheetRunner implements ISheet, PtmOn
 				.formula1("0").formula2(String.valueOf(spielZiel)).operator(ConditionOperator.NOT_BETWEEN)
 				.styleIsFehler().applyAndDoReset()
 				.formulaIsText().styleIsFehler().applyAndDoReset();
-		EditierbaresZelleFormatHelper.anwenden(this, ergebnisRange);
+		// Freispiel-Zeilen haben kein Ergebnis und bleiben gesperrt (siehe TripTeteBlattschutzKonfiguration)
+		for (RangePosition bereich : SpielrundeHelper.ergebnisBereicheOhneFreilos(TRI_A_SPALTE, TETE_B_SPALTE,
+				ERSTE_DATEN_ZEILE, letzteSpielZeile, freispielZeilen(spielPlan))) {
+			EditierbaresZelleFormatHelper.anwenden(this, bereich);
+		}
 
 		// Trenner: zwischen Runden (= je anzPaarungen Zeilen) ein dicker Strich
 		RangeProperties trenner = RangeProperties.from()
