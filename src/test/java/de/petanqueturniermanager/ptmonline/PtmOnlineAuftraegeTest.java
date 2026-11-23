@@ -13,11 +13,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
+import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -494,7 +496,7 @@ class PtmOnlineAuftraegeTest {
                 List.of(aktiv("u1"), new PtmOnlineStatusAuftrag.Eintrag("u2", OnlineTeilnahme.INAKTIV, 7, 12)),
                 Map.of("u1", "r1", "u2", "r2"), Map.of("u1", 3, "u2", 1)).orElseThrow();
 
-        SyncAuftrag neu = PtmOnlineAuftraege.teilnahmeErneut(bestand, gescheitert, Map.of("u1", 3, "u2", 1))
+        SyncAuftrag neu = PtmOnlineAuftraege.teilnahmeErneut(bestand, gescheitert, Map.of("u1", 3, "u2", 1), Set.of())
                 .orElseThrow();
 
         JsonArray registrations = JsonParser.parseString(neu.body()).getAsJsonObject().getAsJsonArray("registrations");
@@ -564,5 +566,69 @@ class PtmOnlineAuftraegeTest {
         }
 
         assertThat(PtmOnlineAuftraege.gesperrteMeldungen(bestand)).containsExactly("u1");
+    }
+
+    @Test
+    void neuererAngenommenerCheckinWirdNichtVonEinerAelterenWiederholungUeberschrieben() {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        Map<String, String> onlineIds = Map.of("u1", "r1");
+        Map<String, Integer> gespeichert = Map.of("u1", 3);
+        SyncAuftrag aenderung = bestand.erzeuge(AuftragsArt.ANMELDUNG_AENDERN, "PUT", "/x", "{}",
+                "{\"lokaleUuid\":\"u1\",\"revisionen\":{\"u1\":4}}");
+        SyncAuftrag aktiv = teilnahme(bestand, "u1", OnlineTeilnahme.AKTIV, onlineIds, gespeichert);
+        SyncAuftrag inaktiv = teilnahme(bestand, "u1", OnlineTeilnahme.INAKTIV, onlineIds, gespeichert);
+        SyncAuftrag wiederAktiv = teilnahme(bestand, "u1", OnlineTeilnahme.AKTIV, onlineIds, gespeichert);
+        List<VersandErgebnis> ergebnisse = List.of(abgelehnt(aenderung, "composition_locked"),
+                abgelehnt(aktiv, "execution_conflict"), abgelehnt(inaktiv, "execution_conflict"),
+                new VersandErgebnis(wiederAktiv, new SyncAntwort(200, "{\"updatedCount\":1}", false), true));
+        ergebnisse.forEach(ergebnis -> bestand.angewendet(ergebnis, ergebnis.angenommen() ? "" : "x"));
+
+        PtmOnlineAuftraege.wiederholeTeilnahmen(bestand, ergebnisse, ergebnisse.subList(1, 3), gespeichert);
+
+        assertThat(bestand.zuSenden(false)).as("der neuere Check-in gilt").isEmpty();
+        assertThat(PtmOnlineAuftraege.abgelehnteFaelle(bestand)).extracting(PtmOnlineAuftraege.AbgelehnterFall::auftragsId)
+                .as("überholte Folgefehler sind erledigt").containsExactly(aenderung.auftragsId());
+    }
+
+    @Test
+    void nurDerNeuesteGescheiterteCheckinWirdWiederholt() {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        Map<String, String> onlineIds = Map.of("u1", "r1", "u2", "r2");
+        Map<String, Integer> gespeichert = Map.of("u1", 3, "u2", 1);
+        bestand.erzeuge(AuftragsArt.ANMELDUNG_AENDERN, "PUT", "/x", "{}",
+                "{\"lokaleUuid\":\"u1\",\"revisionen\":{\"u1\":4}}");
+        SyncAuftrag beide = PtmOnlineAuftraege.teilnahme(bestand, TURNIER, List.of(aktiv("u1"), aktiv("u2")),
+                onlineIds, gespeichert).orElseThrow();
+        SyncAuftrag abmeldung = teilnahme(bestand, "u1", OnlineTeilnahme.INAKTIV, onlineIds, gespeichert);
+        List<VersandErgebnis> konflikte = List.of(abgelehnt(beide, "execution_conflict"),
+                abgelehnt(abmeldung, "execution_conflict"));
+        konflikte.forEach(ergebnis -> bestand.angewendet(ergebnis, "execution_conflict"));
+        bestand.eintraege().stream().filter(eintrag -> eintrag.auftrag().art() == AuftragsArt.ANMELDUNG_AENDERN)
+                .forEach(eintrag -> bestand.angewendet(abgelehnt(eintrag.auftrag(), "composition_locked"), "x"));
+
+        PtmOnlineAuftraege.wiederholeTeilnahmen(bestand, konflikte, konflikte, gespeichert);
+
+        List<SyncAuftrag> wiederholt = bestand.zuSenden(false);
+        assertThat(wiederholt).hasSize(2);
+        assertThat(teilnahmen(wiederholt.get(0))).as("u1 trägt der neuere Auftrag").containsExactly(tuple("r2", "active"));
+        assertThat(teilnahmen(wiederholt.get(1))).containsExactly(tuple("r1", "inactive"));
+    }
+
+    private static SyncAuftrag teilnahme(AuftragsBestand bestand, String uuid, OnlineTeilnahme teilnahme,
+            Map<String, String> onlineIds, Map<String, Integer> gespeichert) {
+        return PtmOnlineAuftraege.teilnahme(bestand, TURNIER,
+                List.of(new PtmOnlineStatusAuftrag.Eintrag(uuid, teilnahme, null, null)), onlineIds, gespeichert)
+                .orElseThrow();
+    }
+
+    private static VersandErgebnis abgelehnt(SyncAuftrag auftrag, String code) {
+        return new VersandErgebnis(auftrag, new SyncAntwort(409,
+                "{\"error\":\"x\",\"details\":{\"code\":\"" + code + "\"}}", false), false);
+    }
+
+    private static List<Tuple> teilnahmen(SyncAuftrag auftrag) {
+        return JsonParser.parseString(auftrag.body()).getAsJsonObject().getAsJsonArray("registrations").asList()
+                .stream().map(JsonElement::getAsJsonObject)
+                .map(e -> tuple(e.get("id").getAsString(), e.get("participation").getAsString())).toList();
     }
 }

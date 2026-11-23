@@ -754,7 +754,9 @@ public final class PtmOnlineAuftraege {
         // Das Dokument ist Master: Mit der übernommenen Online-Revision sendet der nächste Lauf den Stand erneut.
         ueberholt.forEach(ergebnis -> bestand.quittiere(ergebnis.auftrag().auftragsId()));
         stornosErneut.forEach((storno, revision) -> stornoErneut(bestand, storno, revision));
-        wiederholeTeilnahmenNachFolgefehler(bestand, mapping, teilnahmeKonflikte);
+        if (!teilnahmeKonflikte.isEmpty()) {
+            wiederholeTeilnahmen(bestand, ergebnisse, teilnahmeKonflikte, mapping.getExecutionRevisionenProUuid());
+        }
         speichern(bestand, mapping);
         return new Anwendung(zuordnungen.size(), abgelehnt, nachStart, geaendert,
                 ergebnisse.stream().filter(ergebnis -> !ergebnis.angenommen()).toList(), Optional.ofNullable(abschluss));
@@ -794,19 +796,45 @@ public final class PtmOnlineAuftraege {
     /**
      * Teilnahme-Aufträge, die nur an einem vorausgehenden abgelehnten Auftrag scheiterten, entstehen neu; ihre
      * Ablehnung gilt damit als erledigt. Echte Online-Konflikte bleiben für den Abgleich stehen.
+     * <p>
+     * Die Wiederholung erhält den nächsten Schreibzähler und geht damit nach allen schon erzeugten Aufträgen hinaus.
+     * Meldungen, die ein neuerer Teilnahme-Auftrag trägt, entfallen daher – sonst überschriebe der ältere Stand den
+     * neueren. Ein neuerer Auftrag steht entweder unter den Ergebnissen dieses Anwendens (angenommen: sein Stand gilt;
+     * abgelehnt: er wird selbst wiederholt) oder offen im Bestand (er geht noch hinaus). Ältere Ergebnisse gibt es
+     * nicht: Gesendet wird in Zählerreihenfolge, und alle Ergebnisse seit dem letzten Anwenden liegen hier vor.
+     *
+     * @param ergebnisse alle Ergebnisse dieses Anwendens
+     * @param konflikte  Teilnahme-Aufträge mit Revisionskonflikt
+     * @param gespeichert gespeicherte Ausführungsrevision je lokaler UUID nach dem Anwenden
      */
-    private static void wiederholeTeilnahmenNachFolgefehler(AuftragsBestand bestand,
-            PtmOnlineRegistrationMapping mapping, List<VersandErgebnis> teilnahmeKonflikte) throws GenerateException {
-        if (teilnahmeKonflikte.isEmpty()) {
-            return;
-        }
-        Map<String, Integer> gespeichert = mapping.getExecutionRevisionenProUuid();
-        for (VersandErgebnis konflikt : teilnahmeKonflikte) {
-            if (!folgefehlerTeilnahme(konflikt.auftrag(), gespeichert).isEmpty()
-                    && teilnahmeErneut(bestand, konflikt.auftrag(), gespeichert).isPresent()) {
-                bestand.quittiere(konflikt.auftrag().auftragsId());
+    static void wiederholeTeilnahmen(AuftragsBestand bestand, List<VersandErgebnis> ergebnisse,
+            List<VersandErgebnis> konflikte, Map<String, Integer> gespeichert) {
+        List<SyncAuftrag> teilnahmen = new ArrayList<>();
+        ergebnisse.stream().map(VersandErgebnis::auftrag).filter(auftrag -> auftrag.art() == AuftragsArt.TEILNAHME)
+                .forEach(teilnahmen::add);
+        bestand.eintraege().stream().filter(eintrag -> eintrag.zustand() == AuftragsBestand.Zustand.OFFEN)
+                .map(AuftragsBestand.Eintrag::auftrag).filter(auftrag -> auftrag.art() == AuftragsArt.TEILNAHME)
+                .forEach(teilnahmen::add);
+        // Vor dem ersten neuen Auftrag bestimmt, damit eine Wiederholung nicht als neuerer Stand zählt.
+        Map<SyncAuftrag, Set<String>> neuerGemeldet = new LinkedHashMap<>();
+        konflikte.stream().map(VersandErgebnis::auftrag)
+                .filter(auftrag -> !folgefehlerTeilnahme(auftrag, gespeichert).isEmpty())
+                .forEach(auftrag -> neuerGemeldet.put(auftrag, neuerGemeldet(auftrag, teilnahmen)));
+        neuerGemeldet.forEach((gescheitert, ueberholt) -> {
+            boolean allesNeuer = ueberholt.containsAll(revisionenAusKontext(gescheitert).keySet());
+            if (allesNeuer || teilnahmeErneut(bestand, gescheitert, gespeichert, ueberholt).isPresent()) {
+                bestand.quittiere(gescheitert.auftragsId());
             }
-        }
+        });
+    }
+
+    /** Meldungen eines Teilnahme-Auftrags, die ein neuerer (höherer Schreibzähler) ebenfalls trägt. */
+    private static Set<String> neuerGemeldet(SyncAuftrag auftrag, List<SyncAuftrag> teilnahmen) {
+        Set<String> uuids = new HashSet<>();
+        teilnahmen.stream().filter(andere -> andere.zaehler() > auftrag.zaehler())
+                .forEach(andere -> uuids.addAll(revisionenAusKontext(andere).keySet()));
+        uuids.retainAll(revisionenAusKontext(auftrag).keySet());
+        return uuids;
     }
 
     /**
@@ -815,10 +843,12 @@ public final class PtmOnlineAuftraege {
      * Dokument gespeichert und geht auch nach Pause oder Neuladen hinaus. Scheitert er erneut an einem davor
      * eingereihten Auftrag, erkennt der nächste Durchlauf wieder einen Folgefehler mit dann aktueller Revision.
      *
-     * @return der neue Auftrag, leer bei unlesbarer Nutzlast (der abgelehnte bleibt dann für den Abgleich stehen)
+     * @param ausgenommen Meldungen, deren neueren Stand ein anderer Auftrag trägt; sie entfallen
+     * @return der neue Auftrag, leer bei unlesbarer Nutzlast (der abgelehnte bleibt dann für den Abgleich stehen) oder
+     *         wenn keine Meldung übrig bleibt
      */
     static Optional<SyncAuftrag> teilnahmeErneut(AuftragsBestand bestand, SyncAuftrag gescheitert,
-            Map<String, Integer> gespeichert) {
+            Map<String, Integer> gespeichert, Set<String> ausgenommen) {
         List<String> uuids = List.copyOf(revisionenAusKontext(gescheitert).keySet());
         JsonObject body = json(gescheitert.body(), gescheitert).deepCopy();
         JsonElement registrations = body.get(BODY_REGISTRATIONS);
@@ -828,17 +858,27 @@ public final class PtmOnlineAuftraege {
                     gescheitert.zaehler());
             return Optional.empty();
         }
-        JsonArray eintraege = registrations.getAsJsonArray();
+        JsonArray bisher = registrations.getAsJsonArray();
+        JsonArray eintraege = new JsonArray();
         JsonObject neueRevisionen = new JsonObject();
         for (int i = 0; i < uuids.size(); i++) {
+            if (ausgenommen.contains(uuids.get(i))) {
+                continue;
+            }
             int erwartet = gespeichert.getOrDefault(uuids.get(i), 1);
-            eintraege.get(i).getAsJsonObject().addProperty(BODY_ERWARTETE_REVISION, erwartet);
+            JsonObject eintrag = bisher.get(i).getAsJsonObject();
+            eintrag.addProperty(BODY_ERWARTETE_REVISION, erwartet);
+            eintraege.add(eintrag);
             neueRevisionen.addProperty(uuids.get(i), erwartet + 1);
         }
+        if (eintraege.isEmpty()) {
+            return Optional.empty();
+        }
+        body.add(BODY_REGISTRATIONS, eintraege);
         JsonObject kontext = kontext(gescheitert).deepCopy();
         kontext.add(KONTEXT_REVISIONEN, neueRevisionen);
         logger.info("PTM-Online: Teilnahme-Auftrag {} scheiterte an einem vorausgehenden abgelehnten Auftrag; {} "
-                + "Check-ins werden erneut gemeldet", gescheitert.zaehler(), uuids.size());
+                + "Check-ins werden erneut gemeldet", gescheitert.zaehler(), eintraege.size());
         return Optional.of(bestand.erzeuge(AuftragsArt.TEILNAHME, gescheitert.methode(), gescheitert.pfad(),
                 body.toString(), kontext.toString()));
     }
