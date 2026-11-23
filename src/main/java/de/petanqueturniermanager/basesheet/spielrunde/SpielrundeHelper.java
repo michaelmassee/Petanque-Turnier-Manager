@@ -199,6 +199,37 @@ public class SpielrundeHelper {
 				.collect(Collectors.toUnmodifiableSet());
 	}
 
+	/**
+	 * Editierbare Ergebnis-Bereiche einer Spielrunde ohne die Freilos-Zeilen: Freilos-Ergebnisse sind per
+	 * Freispiel-Property vorbelegt und dürfen weder die Editierfarbe noch eine Blattschutz-Freigabe erhalten.
+	 *
+	 * @param ergASpalte erste Ergebnis-Spalte
+	 * @param ergBSpalte letzte Ergebnis-Spalte
+	 * @param ersteZeile erste Datenzeile
+	 * @param letzteZeile letzte Datenzeile (inklusive)
+	 * @param freilosZeilen absolute Zeilennummern der Freilos-Paarungen
+	 * @return zusammenhängende Bereiche zwischen den Freilos-Zeilen
+	 */
+	public static List<RangePosition> ergebnisBereicheOhneFreilos(int ergASpalte, int ergBSpalte, int ersteZeile,
+			int letzteZeile, Set<Integer> freilosZeilen) {
+		List<RangePosition> bereiche = new ArrayList<>();
+		int blockStart = -1;
+		for (int zeile = ersteZeile; zeile <= letzteZeile; zeile++) {
+			if (freilosZeilen.contains(zeile)) {
+				if (blockStart >= 0) {
+					bereiche.add(RangePosition.from(ergASpalte, blockStart, ergBSpalte, zeile - 1));
+					blockStart = -1;
+				}
+			} else if (blockStart < 0) {
+				blockStart = zeile;
+			}
+		}
+		if (blockStart >= 0) {
+			bereiche.add(RangePosition.from(ergASpalte, blockStart, ergBSpalte, letzteZeile));
+		}
+		return bereiche;
+	}
+
 	/** Bahnnummern 1..n in Paarungsreihenfolge; Freilos-Zeilen bleiben leer und verbrauchen keine Nummer. */
 	static RangeData fortlaufendeBahnNummern(int anzPaarungen, Set<Integer> freilosIndizes) {
 		RangeData rangeData = new RangeData();

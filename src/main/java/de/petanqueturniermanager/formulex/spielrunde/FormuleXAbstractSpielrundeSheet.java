@@ -551,23 +551,8 @@ public abstract class FormuleXAbstractSpielrundeSheet extends SheetRunner implem
      */
     public static List<RangePosition> ermittleEditierbareErgebnisRanges(XSpreadsheet sheet,
             XSpreadsheetDocument xDoc, int letzteZeile) throws GenerateException {
-        Set<Integer> freilosZeilen = ermittleFreilosZeilen(sheet, xDoc, letzteZeile);
-        List<RangePosition> ranges = new ArrayList<>();
-        int blockStart = -1;
-        for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
-            if (freilosZeilen.contains(zeile)) {
-                if (blockStart >= 0) {
-                    ranges.add(RangePosition.from(ERG_TEAM_A_SPALTE, blockStart, ERG_TEAM_B_SPALTE, zeile - 1));
-                    blockStart = -1;
-                }
-            } else if (blockStart < 0) {
-                blockStart = zeile;
-            }
-        }
-        if (blockStart >= 0) {
-            ranges.add(RangePosition.from(ERG_TEAM_A_SPALTE, blockStart, ERG_TEAM_B_SPALTE, letzteZeile));
-        }
-        return ranges;
+        return SpielrundeHelper.ergebnisBereicheOhneFreilos(ERG_TEAM_A_SPALTE, ERG_TEAM_B_SPALTE,
+                ERSTE_DATEN_ZEILE, letzteZeile, ermittleFreilosZeilen(sheet, xDoc, letzteZeile));
     }
 
     private static Set<Integer> ermittleFreilosZeilen(XSpreadsheet sheet,
