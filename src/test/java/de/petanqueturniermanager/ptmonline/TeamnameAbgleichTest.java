@@ -45,6 +45,15 @@ class TeamnameAbgleichTest {
     }
 
     @Test
+    void lokalOderBeidseitigGeaendertGehtOnlineSonstNicht() {
+        assertThat(RegistrationImportTask.gehtOnline(BesetzungsRichtung.NACH_ONLINE)).isTrue();
+        assertThat(RegistrationImportTask.gehtOnline(BesetzungsRichtung.BEIDSEITIG)).as("das Dokument ist Master")
+                .isTrue();
+        assertThat(RegistrationImportTask.gehtOnline(BesetzungsRichtung.NACH_LOKAL)).isFalse();
+        assertThat(RegistrationImportTask.gehtOnline(BesetzungsRichtung.GLEICH)).isFalse();
+    }
+
+    @Test
     void ohneGespeichertenStandUebernimmtLeererLokalerTeamnameDenOnlineNamen() {
         assertThat(RegistrationImportTask.teamnameRichtung("", "Online", Optional.empty()))
                 .isEqualTo(BesetzungsRichtung.NACH_LOKAL);

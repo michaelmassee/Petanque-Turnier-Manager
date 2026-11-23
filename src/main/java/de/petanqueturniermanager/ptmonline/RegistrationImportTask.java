@@ -1129,6 +1129,11 @@ public final class RegistrationImportTask {
         return richtung(lokal, online, zuletzt.orElse(lokal.isEmpty() ? lokal : online));
     }
 
+    /** Ob der lokale Stand online gehen muss: lokal oder beidseitig geändert – das Dokument ist Master. */
+    static boolean gehtOnline(BesetzungsRichtung richtung) {
+        return richtung == BesetzungsRichtung.NACH_ONLINE || richtung == BesetzungsRichtung.BEIDSEITIG;
+    }
+
     private static BesetzungsRichtung richtung(String l, String o, String z) {
         if (l.equals(o)) {
             return BesetzungsRichtung.GLEICH;
@@ -1143,10 +1148,10 @@ public final class RegistrationImportTask {
     }
 
     /**
-     * Gleicht die Besetzung zugeordneter Meldungen in beide Richtungen ab (KP-16, KP-20): nur lokal geändert geht per
-     * Änderungsauftrag online (samt Benutzer-IDs des aktuellen Online-Stands, T-17), nur online geändert wird lokal
-     * übernommen, beidseitig unterschiedlich ist ein Konflikt ohne Datenänderung. Danach werden Anzeige,
-     * Ausführungsrevisionen und – außer bei Konflikten – die zuletzt abgeglichene Besetzung aktualisiert.
+     * Gleicht die Besetzung zugeordneter Meldungen in beide Richtungen ab (KP-16, KP-20): lokal oder beidseitig
+     * geändert geht per Änderungsauftrag online (samt Benutzer-IDs des aktuellen Online-Stands, T-17) – das Dokument
+     * ist Master –, nur online geändert wird lokal übernommen. Danach werden Anzeige, Ausführungsrevisionen und – außer
+     * bei offenen Konflikten – die zuletzt abgeglichene Besetzung aktualisiert.
      */
     private static Bezeichnungsabgleich aktualisiereBezeichnungen(LibreOfficePtmOnlineSpeicher.Zugangsdaten config,
             PtmOnlineRegistrationMapping mapping, AuftragsBestand bestand, String tournamentId, MeldelisteZiel ziel,
@@ -1203,8 +1208,8 @@ public final class RegistrationImportTask {
             List<AbgeglicheneBesetzung.Person> lokal = PtmOnlineMeldungsInhalt.personen(spielerProZeile.get(zeile));
             AbgeglicheneBesetzung online = onlineBesetzung(remote, ziel.getFormation());
             boolean besetzungOffen = konfliktUuids.contains(uuid);
-            boolean besetzungNachOnline = !besetzungOffen && richtung(AbgeglicheneBesetzung.von(lokal), online,
-                    zuletzt(zusaetze, uuid)) == BesetzungsRichtung.NACH_ONLINE;
+            boolean besetzungNachOnline = !besetzungOffen
+                    && gehtOnline(richtung(AbgeglicheneBesetzung.von(lokal), online, zuletzt(zusaetze, uuid)));
             boolean teamnameNachOnline = !besetzungOffen && teamnamen.nachOnline().containsKey(uuid);
             if (besetzungNachOnline || teamnameNachOnline || lokalBehalten.contains(uuid)) {
                 // Ohne lokale Teamnamen-Änderung geht der Online-Teamname unverändert zurück, sonst ginge er verloren.
@@ -1342,7 +1347,7 @@ public final class RegistrationImportTask {
             Optional<String> zuletzt = Optional.ofNullable(zusaetze.get(uuid))
                     .flatMap(zusatz -> AbgeglichenerTeamname.lese(zusatz.teamname()));
             BesetzungsRichtung richtung = teamnameRichtung(lokal, online, zuletzt);
-            if (richtung == BesetzungsRichtung.NACH_ONLINE || richtung == BesetzungsRichtung.BEIDSEITIG) {
+            if (gehtOnline(richtung)) {
                 nachOnline.put(uuid, lokal);
             } else if (richtung == BesetzungsRichtung.NACH_LOKAL) {
                 try {
@@ -1390,7 +1395,7 @@ public final class RegistrationImportTask {
                     .von(PtmOnlineMeldungsInhalt.personen(spielerProZeile.get(zeile)));
             AbgeglicheneBesetzung online = onlineBesetzung(remote, ziel.getFormation());
             if (richtung(lokal, online, zuletzt(zusaetze, uuid)) != BesetzungsRichtung.NACH_LOKAL) {
-                // Gleich: nichts zu tun. Lokal oder beidseitig geändert: übernimmt der Änderungsauftrag im Hauptlauf.
+                // Gleich: nichts zu tun. Lokal oder beidseitig geändert: geht per Änderungsauftrag online.
                 continue;
             }
             geaendert |= uebernehmeOnlineBesetzung(ziel, zeile, uuid, lokalText, remote, sammlung, befunde);
