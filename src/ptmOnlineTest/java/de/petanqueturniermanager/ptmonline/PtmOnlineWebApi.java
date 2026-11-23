@@ -77,8 +77,13 @@ final class PtmOnlineWebApi {
             return new Person(vorname, nachname, null);
         }
 
-        static Person konto(String vorname, String nachname, int kontoNr) {
-            return new Person(vorname, nachname, LokalerPtmOnlineServer.spielerEmail(kontoNr));
+        /**
+         * Inhaber des Spielerkontos {@code kontoNr}. Name und E-Mail stammen vom Konto: Online verknüpft einen Slot
+         * nur mit einem Konto, wenn zur E-Mail auch der Name passt (E-06/E-22).
+         */
+        static Person konto(int kontoNr) {
+            return new Person(LokalerPtmOnlineServer.spielerVorname(), LokalerPtmOnlineServer.spielerNachname(kontoNr),
+                    LokalerPtmOnlineServer.spielerEmail(kontoNr));
         }
 
         String name() {

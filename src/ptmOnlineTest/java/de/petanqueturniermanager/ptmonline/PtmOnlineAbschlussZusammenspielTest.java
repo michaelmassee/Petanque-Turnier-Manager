@@ -26,7 +26,7 @@ class PtmOnlineAbschlussZusammenspielTest extends BasePtmOnlineZusammenspielTest
 
     private static final LocalDate IN_EINEM_MONAT = LocalDate.now().plusMonths(1);
     private static final int SPIELERKONTO = 10;
-    private static final Person[] TEAM_MIT_KONTO = { Person.konto("Fiona", "Finale", SPIELERKONTO),
+    private static final Person[] TEAM_MIT_KONTO = { Person.konto(SPIELERKONTO),
             Person.gast("Felix", "Finale"), Person.gast("Frida", "Finale") };
     private static final String EREIGNIS_ENDRANGLISTE = "tournament_ranking_published";
 

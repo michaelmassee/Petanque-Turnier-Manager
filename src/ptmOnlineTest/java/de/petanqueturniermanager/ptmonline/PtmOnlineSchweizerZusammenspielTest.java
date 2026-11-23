@@ -100,8 +100,8 @@ class PtmOnlineSchweizerZusammenspielTest extends BasePtmOnlineZusammenspielTest
     @Test
     void kontoInZweiAnmeldungenSperrtBeideBisVerschiedenePersonen() throws Exception {
         turnierAnlegen(Formation.TRIPLETTE, IN_EINEM_MONAT);
-        Person[] mitKonto = { Person.konto("Kai", "Kunz", 1), Person.gast("Kim", "Kurz"), Person.gast("Kurt", "Kolb") };
-        Person[] auchMitKonto = { Person.gast("Mia", "Moll"), Person.konto("Kai", "Kunz", 1), Person.gast("Max", "Mohr") };
+        Person[] mitKonto = { Person.konto(1), Person.gast("Kim", "Kurz"), Person.gast("Kurt", "Kolb") };
+        Person[] auchMitKonto = { Person.gast("Mia", "Moll"), Person.konto(1), Person.gast("Max", "Mohr") };
         String id1 = online.anmelden(turnierId, mitKonto);
         String id2 = online.anmelden(turnierId, auchMitKonto);
         assertThat(online.anmeldungen(turnierId)).as("Server markiert die Doppelbelegung (KP-06 b)")

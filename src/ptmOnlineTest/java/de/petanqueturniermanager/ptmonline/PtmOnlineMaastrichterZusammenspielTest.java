@@ -46,7 +46,7 @@ class PtmOnlineMaastrichterZusammenspielTest extends BasePtmOnlineZusammenspielT
     private static final List<String> GRUPPEN = List.of("A", "B");
     private static final String SCORE_PRAEFIX = "PTM_EDIT:";
     private static final int SPIELERKONTO = 11;
-    private static final Person[] TEAM_MIT_KONTO = { Person.konto("Mia", "Maas", SPIELERKONTO),
+    private static final Person[] TEAM_MIT_KONTO = { Person.konto(SPIELERKONTO),
             Person.gast("Max", "Maas") };
 
     private String idMitKonto;

@@ -109,6 +109,14 @@ final class LokalerPtmOnlineServer {
         return "e2e-spieler-" + n + "@example.test";
     }
 
+    static String spielerVorname() {
+        return "Konto";
+    }
+
+    static String spielerNachname(int n) {
+        return "Spieler" + n;
+    }
+
     /** Session des Spielerkontos {@code n} – für Aufrufe der Live-Ansicht als angemeldeter Spieler. */
     static String spielerSession(int n) {
         return "e2e-session-spieler-" + n;
@@ -211,7 +219,7 @@ final class LokalerPtmOnlineServer {
         StringBuilder sql = new StringBuilder();
         sql.append(konto(ORGANISATOR_ID, "e2e-leitung@example.test", "E2E", "Leitung", jetzt));
         for (int n = 1; n <= ANZAHL_SPIELERKONTEN; n++) {
-            sql.append(konto("e2e-spieler-" + n, spielerEmail(n), "Konto", "Spieler" + n, jetzt));
+            sql.append(konto("e2e-spieler-" + n, spielerEmail(n), spielerVorname(), spielerNachname(n), jetzt));
             sql.append(String.format("INSERT INTO sessions (id, user_id, expires_at, created_at) VALUES ('%s', '%s', "
                     + "'%s', '%s');%n", spielerSession(n), "e2e-spieler-" + n, ablauf, jetzt));
         }

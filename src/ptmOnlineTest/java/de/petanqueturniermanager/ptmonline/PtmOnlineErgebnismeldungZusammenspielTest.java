@@ -34,7 +34,7 @@ class PtmOnlineErgebnismeldungZusammenspielTest extends BasePtmOnlineZusammenspi
 
     private static final LocalDate IN_EINEM_MONAT = LocalDate.now().plusMonths(1);
     private static final int SPIELERKONTO = 9;
-    private static final Person[] TEAM_MIT_KONTO = { Person.konto("Mara", "Melder", SPIELERKONTO),
+    private static final Person[] TEAM_MIT_KONTO = { Person.konto(SPIELERKONTO),
             Person.gast("Max", "Melder"), Person.gast("Mia", "Melder") };
 
     private String idMitKonto;

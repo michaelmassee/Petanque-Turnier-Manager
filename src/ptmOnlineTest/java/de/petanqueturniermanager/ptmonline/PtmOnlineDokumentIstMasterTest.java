@@ -35,7 +35,7 @@ class PtmOnlineDokumentIstMasterTest extends BasePtmOnlineZusammenspielTest {
     private static final int HTTP_KONFLIKT = 409;
     private static final int SPIELERKONTO = 1;
     /** Team mit Konto (Spieler 1), damit die Live-Ansicht als angemeldeter Spieler abrufbar ist. */
-    private static final Person[] TEAM_MIT_KONTO = { Person.konto("Kim", "Konto", SPIELERKONTO),
+    private static final Person[] TEAM_MIT_KONTO = { Person.konto(SPIELERKONTO),
             Person.gast("Kai", "Kern"), Person.gast("Kurt", "Kolb") };
 
     @Test

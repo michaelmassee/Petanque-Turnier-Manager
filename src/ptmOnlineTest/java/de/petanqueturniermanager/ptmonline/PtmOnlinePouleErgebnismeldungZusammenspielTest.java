@@ -44,7 +44,7 @@ class PtmOnlinePouleErgebnismeldungZusammenspielTest extends BasePtmOnlineZusamm
     /** Zeilen, in denen die Vorrunde gesucht wird (zwei Vierer-Poules à fünf Zeilen, mit Reserve). */
     private static final int ZEILEN_VORRUNDE = 20;
     private static final int SPIELERKONTO = 12;
-    private static final Person[] TEAM_MIT_KONTO = { Person.konto("Paula", "Poule", SPIELERKONTO),
+    private static final Person[] TEAM_MIT_KONTO = { Person.konto(SPIELERKONTO),
             Person.gast("Paul", "Poule"), Person.gast("Pia", "Poule") };
 
     @Test

@@ -34,7 +34,7 @@ class PtmOnlineAblehnungZusammenspielTest extends BasePtmOnlineZusammenspielTest
     /** Spieler 1 der abgelehnten Anmeldung hat ein Konto: Postfach und Live-Ansicht sind prüfbar. */
     private static final int SPIELERKONTO = 7;
 
-    private static final Person[] TEAM_MIT_KONTO = { Person.konto("Rita", "Roth", SPIELERKONTO),
+    private static final Person[] TEAM_MIT_KONTO = { Person.konto(SPIELERKONTO),
             Person.gast("Rolf", "Rahn"), Person.gast("Rosa", "Ries") };
     private static final Person[] TEAM_A = { Person.gast("Anna", "Adler"), Person.gast("Arno", "Amsel"),
             Person.gast("Ada", "Auer") };
