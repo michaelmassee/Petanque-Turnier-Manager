@@ -93,4 +93,22 @@ class SheetRunnerKoordinatorTest {
         assertThat(koordinator.istStillBelegt()).isFalse();
         assertThat(koordinator.warteUndBelege(5_000)).isFalse();
     }
+
+    @Test
+    void belegeFuerAnwenderMeldetHalterDesKoordinators() {
+        assertThat(koordinator.belege(true)).isTrue();
+        assertThat(koordinator.belegeFuerAnwender()).isEqualTo(SheetRunnerKoordinator.Belegung.HINTERGRUNDLAUF_AKTIV);
+
+        koordinator.setLaeuft(false);
+        assertThat(koordinator.belegeFuerAnwender()).isEqualTo(SheetRunnerKoordinator.Belegung.BELEGT);
+        assertThat(koordinator.belegeFuerAnwender()).isEqualTo(SheetRunnerKoordinator.Belegung.BESETZT);
+    }
+
+    @Test
+    void anwenderLaufBelegtAuchBeiSofortEndendemHintergrundlauf() throws Exception {
+        assertThat(koordinator.belege(true)).isTrue();
+        koordinator.setLaeuft(false);
+
+        assertThat(koordinator.warteUndBelege(5_000)).as("freier Koordinator darf nicht als besetzt gelten").isTrue();
+    }
 }

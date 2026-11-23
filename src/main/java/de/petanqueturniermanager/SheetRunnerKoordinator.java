@@ -32,9 +32,24 @@ class SheetRunnerKoordinator {
     private static final Logger logger = LogManager.getLogger(SheetRunnerKoordinator.class);
     private static final long WARTE_INTERVALL_MS = 50;
 
+    /**
+     * Ergebnis eines Belegungsversuchs für einen vom Anwender gestarteten Lauf. Prüfen und Belegen geschehen in
+     * einem Schritt, damit ein dazwischen endender Hintergrundlauf nicht als fremder Anwender-Lauf erscheint.
+     */
+    enum Belegung {
+        /** Der Aufrufer darf jetzt laufen. */
+        BELEGT,
+        /** Ein stiller Hintergrundlauf ist aktiv; auf sein Ende darf gewartet werden. */
+        HINTERGRUNDLAUF_AKTIV,
+        /** Ein anderer Anwender-Lauf ist aktiv. */
+        BESETZT
+    }
+
+    /** Schützt den Übergang von {@link #laeuft} zusammen mit {@link #stillBelegt}. */
+    private final Object belegungsSperre = new Object();
     private final AtomicBoolean laeuft = new AtomicBoolean();
     /** Ob der aktive Lauf ein stiller Hintergrundlauf ist ({@link SheetRunner#startSilent()}). */
-    private volatile boolean stillBelegt;
+    private boolean stillBelegt;
     /** Anzahl vom Anwender gestarteter Läufe, die auf das Ende eines stillen Hintergrundlaufs warten. */
     private final AtomicInteger wartendeVordergrundLaeufe = new AtomicInteger();
     /** Zählt jeden begonnenen Lauf; erkennt Läufe, die während eines Lesevorgangs begonnen und geendet haben. */
@@ -129,9 +144,11 @@ class SheetRunnerKoordinator {
      * @return der vorherige Wert
      */
     boolean getAndSetLaeuft(boolean neuerWert) {
-        boolean vorher = laeuft.getAndSet(neuerWert);
-        zaehleLaufbeginn(vorher, neuerWert);
-        return vorher;
+        synchronized (belegungsSperre) {
+            boolean vorher = laeuft.getAndSet(neuerWert);
+            zaehleLaufbeginn(vorher, neuerWert);
+            return vorher;
+        }
     }
 
     /**
@@ -145,10 +162,12 @@ class SheetRunnerKoordinator {
 
     /** Setzt das Lauf-Flag direkt. */
     void setLaeuft(boolean wert) {
-        if (!wert) {
-            stillBelegt = false;
+        synchronized (belegungsSperre) {
+            if (!wert) {
+                stillBelegt = false;
+            }
+            zaehleLaufbeginn(laeuft.getAndSet(wert), wert);
         }
-        zaehleLaufbeginn(laeuft.getAndSet(wert), wert);
     }
 
     /**
@@ -158,19 +177,37 @@ class SheetRunnerKoordinator {
      * @return {@code true}, wenn der Aufrufer jetzt laufen darf
      */
     boolean belege(boolean still) {
-        if (still && wartendeVordergrundLaeufe.get() > 0) {
-            return false; // ein wartender Anwender-Lauf hat Vorrang
+        synchronized (belegungsSperre) {
+            if (still && wartendeVordergrundLaeufe.get() > 0) {
+                return false; // ein wartender Anwender-Lauf hat Vorrang
+            }
+            if (getAndSetLaeuft(true)) {
+                return false;
+            }
+            stillBelegt = still;
+            return true;
         }
-        if (getAndSetLaeuft(true)) {
-            return false;
+    }
+
+    /**
+     * Versucht, den Koordinator für einen Anwender-Lauf zu belegen, und meldet sonst atomar, wer ihn hält.
+     *
+     * @return {@link Belegung#BELEGT}, wenn der Aufrufer jetzt laufen darf
+     */
+    Belegung belegeFuerAnwender() {
+        synchronized (belegungsSperre) {
+            if (belege(false)) {
+                return Belegung.BELEGT;
+            }
+            return stillBelegt ? Belegung.HINTERGRUNDLAUF_AKTIV : Belegung.BESETZT;
         }
-        stillBelegt = still;
-        return true;
     }
 
     /** Ob gerade ein stiller Hintergrundlauf aktiv ist, auf dessen Ende ein Anwender-Lauf warten darf. */
     boolean istStillBelegt() {
-        return laeuft.get() && stillBelegt;
+        synchronized (belegungsSperre) {
+            return laeuft.get() && stillBelegt;
+        }
     }
 
     /**
@@ -185,13 +222,15 @@ class SheetRunnerKoordinator {
         try {
             long ende = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(maxWartezeitMs);
             while (System.nanoTime() < ende) {
-                if (belege(false)) {
-                    return true;
+                switch (belegeFuerAnwender()) {
+                    case BELEGT -> {
+                        return true;
+                    }
+                    case BESETZT -> {
+                        return false;
+                    }
+                    case HINTERGRUNDLAUF_AKTIV -> TimeUnit.MILLISECONDS.sleep(WARTE_INTERVALL_MS);
                 }
-                if (!istStillBelegt()) {
-                    return false;
-                }
-                TimeUnit.MILLISECONDS.sleep(WARTE_INTERVALL_MS);
             }
             return false;
         } finally {
@@ -237,8 +276,10 @@ class SheetRunnerKoordinator {
 
     /** Setzt den gesamten Zustand zurück – ausschließlich für Tests. */
     void zuruecksetzen() {
-        laeuft.set(false);
-        stillBelegt = false;
+        synchronized (belegungsSperre) {
+            laeuft.set(false);
+            stillBelegt = false;
+        }
         wartendeVordergrundLaeufe.set(0);
         aktuellerRunner = null;
         zustandsListener.clear();

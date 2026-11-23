@@ -192,16 +192,18 @@ public abstract class SheetRunner extends Thread {
 	@Override
 	public final synchronized void start() {
 		verbieteStartInLaufendemRunner();
-		if (koordinator.belege(false)) {
-			koordinatorVorgekoppelt = true;
-			super.start();
-		} else if (koordinator.istStillBelegt()) {
-			logger.info("Warte auf Hintergrundlauf {} vor {}", koordinator.getRunnerName(),
-					getClass().getSimpleName());
-			wartetAufHintergrundlauf = true;
-			super.start();
-		} else {
-			MessageBox.from(getxContext(), MessageBoxTypeEnum.WARN_OK)
+		switch (koordinator.belegeFuerAnwender()) {
+			case BELEGT -> {
+				koordinatorVorgekoppelt = true;
+				super.start();
+			}
+			case HINTERGRUNDLAUF_AKTIV -> {
+				logger.info("Warte auf Hintergrundlauf {} vor {}", koordinator.getRunnerName(),
+						getClass().getSimpleName());
+				wartetAufHintergrundlauf = true;
+				super.start();
+			}
+			case BESETZT -> MessageBox.from(getxContext(), MessageBoxTypeEnum.WARN_OK)
 					.caption(I18n.get("msg.caption.aktive.verarbeitung"))
 					.message(I18n.get("msg.text.verarbeitung.laeuft")).show();
 		}
