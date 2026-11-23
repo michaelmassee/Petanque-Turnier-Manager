@@ -6,7 +6,7 @@ import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfiguratio
 
 /**
  * Generiert ein vollständiges Supermelee-Beispielturnier:
- * Meldeliste + 5 komplette Spieltage mit Spielrunden und Spieltag-Ranglisten.
+ * Meldeliste + komplette Spieltage (Standard: 5) mit Spielrunden und Spieltag-Ranglisten.
  * <p>
  * Wrapper für {@link SpieltagRanglisteSheet_TestDaten} mit öffentlicher
  * {@code generate()}-Methode für den direkten Aufruf in Tests.
@@ -15,6 +15,13 @@ public class SupermeleeTurnierTestDaten extends SpieltagRanglisteSheet_TestDaten
 
     public SupermeleeTurnierTestDaten(WorkingSpreadsheet workingSpreadsheet) {
         super(workingSpreadsheet);
+    }
+
+    /**
+     * @param anzahlSpieltage Anzahl der zu erzeugenden Spieltage, mindestens 1
+     */
+    public SupermeleeTurnierTestDaten(WorkingSpreadsheet workingSpreadsheet, int anzahlSpieltage) {
+        super(workingSpreadsheet, anzahlSpieltage);
     }
 
     /**

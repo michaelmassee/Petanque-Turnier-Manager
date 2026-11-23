@@ -15,14 +15,15 @@ import java.util.stream.Stream;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.api.io.TempDir;
 
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.forme.export.KoExportInVerzeichnis;
 import de.petanqueturniermanager.formulex.export.FormuleXExportInVerzeichnis;
@@ -52,6 +53,12 @@ class ExportInVerzeichnisSmokeUITest extends BaseCalcUITest {
 
     private static final long SEED_FUER_TESTS = 42L;
 
+    /**
+     * Zwei Spieltage reichen für einen Streichspieltag (Endrangliste) und halten die Laufzeit
+     * deutlich unter dem UITest-Timeout; fünf Spieltage dauerten über drei Minuten.
+     */
+    private static final int SUPERMELEE_ANZAHL_SPIELTAGE = 2;
+
     @AfterEach
     void resetRandom() {
         RandomSource.reset();
@@ -60,10 +67,7 @@ class ExportInVerzeichnisSmokeUITest extends BaseCalcUITest {
     static Stream<ExportFall> exportFaelle() {
         return Stream.of(
                 fall(TurnierSystem.SUPERMELEE,
-                        ws -> {
-                            new SupermeleeTurnierTestDaten(ws).generate();
-                            new EndranglisteSheet(ws).run();
-                        },
+                        ExportInVerzeichnisSmokeUITest::erzeugeSupermeleeMitEndrangliste,
                         (test, ziel) -> new SupermeleeExportInVerzeichnis(test.wkingSpreadsheet, ziel, ExportFormat.HTML_UND_PDFS)),
                 fall(TurnierSystem.LIGA,
                         ws -> new LigaTurnierTestDaten(ws).erzeugeBeispielturnier(),
@@ -158,8 +162,7 @@ class ExportInVerzeichnisSmokeUITest extends BaseCalcUITest {
             throws Exception {
         RandomSource.setSeed(SEED_FUER_TESTS);
 
-        new SupermeleeTurnierTestDaten(wkingSpreadsheet).generate();
-        new EndranglisteSheet(wkingSpreadsheet).run();
+        erzeugeSupermeleeMitEndrangliste(wkingSpreadsheet);
         new DocumentPropertiesHelper(wkingSpreadsheet)
                 .setIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM, TurnierSystem.SUPERMELEE.getId());
 
@@ -247,13 +250,18 @@ class ExportInVerzeichnisSmokeUITest extends BaseCalcUITest {
                 .isEqualTo("%PDF-");
     }
 
+    private static void erzeugeSupermeleeMitEndrangliste(WorkingSpreadsheet ws) throws GenerateException {
+        new SupermeleeTurnierTestDaten(ws, SUPERMELEE_ANZAHL_SPIELTAGE).generate();
+        new EndranglisteSheet(ws).run();
+    }
+
     private static ExportFall fall(TurnierSystem system, ExportGenerator generator, ExporterFactory exporter) {
         return new ExportFall(system, generator, exporter);
     }
 
     @FunctionalInterface
     private interface ExportGenerator {
-        void generiere(de.petanqueturniermanager.comp.WorkingSpreadsheet ws) throws GenerateException;
+        void generiere(WorkingSpreadsheet ws) throws GenerateException;
     }
 
     @FunctionalInterface
