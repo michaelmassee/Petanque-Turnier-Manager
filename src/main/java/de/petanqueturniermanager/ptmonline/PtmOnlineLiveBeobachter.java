@@ -616,7 +616,7 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
             bestand.versandSperre().lockInterruptibly();
             try {
                 PtmOnlineAuftraege.timerNachstellen(bestand, Instant.now(), pausiert);
-                return AuftragsVersand.sende(bestand.zuSenden(pausiert), client, ergebnis -> {
+                return AuftragsVersand.sende(bestand.zuSenden(pausiert), bestand.mitVersandVermerk(client), ergebnis -> {
                     bestand.gesendet(ergebnis);
                     beachteAblehnung(ergebnis);
                     beachteHuckepack(ergebnis.antwort().ergebnismeldungen());

@@ -6,12 +6,15 @@ package de.petanqueturniermanager.ptmonline.auftrag;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
+import java.io.IOException;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+import de.petanqueturniermanager.ptmonline.auftrag.versand.AuftragsVersand;
 import de.petanqueturniermanager.ptmonline.auftrag.versand.SyncAntwort;
 import de.petanqueturniermanager.ptmonline.auftrag.versand.VersandErgebnis;
+import de.petanqueturniermanager.ptmonline.auftrag.versand.VersandStopp;
 
 class AuftragsBestandTest {
 
@@ -236,11 +239,28 @@ class AuftragsBestandTest {
     }
 
     @Test
-    void erneutZuMeldendeTeilnahmenWerdenEinmalEntnommen() {
+    void auftragOhneAntwortGiltAlsMoeglicherweiseAngekommen() throws Exception {
         AuftragsBestand bestand = AuftragsBestand.leer();
-        bestand.teilnahmeErneutMelden(List.of("u1", "u2"));
+        SyncAuftrag ohneAntwort = erzeuge(bestand, AuftragsArt.ANMELDUNG_STORNIEREN);
+        SyncAuftrag nieGesendet = erzeuge(bestand, AuftragsArt.ANMELDUNG_STORNIEREN);
 
-        assertThat(bestand.entnehmeTeilnahmeErneutMelden()).containsExactlyInAnyOrder("u1", "u2");
-        assertThat(bestand.entnehmeTeilnahmeErneutMelden()).isEmpty();
+        VersandStopp stopp = AuftragsVersand.sende(List.of(ohneAntwort), bestand.mitVersandVermerk(auftrag -> {
+            throw new IOException("Zeitlimit – PTM-Online hat womöglich schon ausgeführt");
+        }), bestand::gesendet);
+
+        assertThat(stopp).isEqualTo(VersandStopp.NETZ);
+        assertThat(bestand.zuSenden(false)).as("wird wiederholt").containsExactly(ohneAntwort, nieGesendet);
+        assertThat(bestand.nieGesendete()).containsExactly(nieGesendet);
+    }
+
+    @Test
+    void nachDemLadenOffeneAuftraegeGeltenAlsMoeglicherweiseAngekommen() {
+        AuftragsBestand vorher = AuftragsBestand.leer();
+        erzeuge(vorher, AuftragsArt.ANMELDUNG_STORNIEREN);
+
+        AuftragsBestand geladen = AuftragsBestand.aus(vorher.zaehler(), vorher.eintraege());
+        SyncAuftrag neu = erzeuge(geladen, AuftragsArt.ANMELDUNG_STORNIEREN);
+
+        assertThat(geladen.nieGesendete()).containsExactly(neu);
     }
 }

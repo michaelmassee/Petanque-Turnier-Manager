@@ -6,6 +6,7 @@ package de.petanqueturniermanager.ptmonline;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -23,6 +25,7 @@ import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsArt;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsBestand;
 import de.petanqueturniermanager.ptmonline.auftrag.SyncAuftrag;
+import de.petanqueturniermanager.ptmonline.auftrag.versand.AuftragsVersand;
 import de.petanqueturniermanager.ptmonline.auftrag.versand.SyncAntwort;
 import de.petanqueturniermanager.ptmonline.auftrag.versand.VersandErgebnis;
 import de.petanqueturniermanager.ptmonline.dto.MeleeTeamDto;
@@ -466,6 +469,43 @@ class PtmOnlineAuftraegeTest {
         }
         assertThat(PtmOnlineAuftraege.stornosZuruecknehmen(bestand, Set.of("u1"))).isTrue();
         assertThat(bestand.hatOffene()).isFalse();
+    }
+
+    @Test
+    void stornoOhneAntwortWirdNichtZurueckgenommen() throws Exception {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        PtmOnlineAuftraege.storno(bestand, TURNIER, "u1", "r1", 2);
+        AuftragsVersand.sende(bestand.zuSenden(false), bestand.mitVersandVermerk(auftrag -> {
+            throw new IOException("Antwort verloren");
+        }), bestand::gesendet);
+
+        assertThat(PtmOnlineAuftraege.stornosZuruecknehmen(bestand, Set.of("u1"))).isTrue();
+
+        assertThat(bestand.zuSenden(false)).as("geht erneut hinaus, PTM-Online liefert die gespeicherte Antwort")
+                .hasSize(1);
+    }
+
+    @Test
+    void wiederholterTeilnahmeAuftragErwartetDieGespeicherteRevision() {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        bestand.erzeuge(AuftragsArt.ANMELDUNG_AENDERN, "PUT", "/x", "{}",
+                "{\"lokaleUuid\":\"u1\",\"revisionen\":{\"u1\":4}}");
+        SyncAuftrag gescheitert = PtmOnlineAuftraege.teilnahme(bestand, TURNIER,
+                List.of(aktiv("u1"), new PtmOnlineStatusAuftrag.Eintrag("u2", OnlineTeilnahme.INAKTIV, 7, 12)),
+                Map.of("u1", "r1", "u2", "r2"), Map.of("u1", 3, "u2", 1)).orElseThrow();
+
+        SyncAuftrag neu = PtmOnlineAuftraege.teilnahmeErneut(bestand, gescheitert, Map.of("u1", 3, "u2", 1))
+                .orElseThrow();
+
+        JsonArray registrations = JsonParser.parseString(neu.body()).getAsJsonObject().getAsJsonArray("registrations");
+        assertThat(neu.art()).isEqualTo(AuftragsArt.TEILNAHME);
+        assertThat(neu.zaehler()).isGreaterThan(gescheitert.zaehler());
+        assertThat(registrations).extracting(e -> e.getAsJsonObject().get("expectedExecutionRevision").getAsInt())
+                .containsExactly(3, 1);
+        assertThat(registrations.get(1).getAsJsonObject().get("participation").getAsString())
+                .as("auch eine Abmeldung geht erneut hinaus").isEqualTo(OnlineTeilnahme.INAKTIV.apiWert());
+        assertThat(PtmOnlineAuftraege.folgefehlerTeilnahme(neu, Map.of("u1", 3, "u2", 1)))
+                .as("passt zur gespeicherten Revision").isEmpty();
     }
 
     @Test

@@ -213,27 +213,4 @@ class PtmOnlineCheckinTest {
     private static List<String> uuids(PtmOnlineCheckin.Aenderung aenderung) {
         return aenderung.auftrag().eintraege().stream().map(PtmOnlineStatusAuftrag.Eintrag::lokaleUuid).toList();
     }
-
-    @Test
-    void abgelehnterCheckinWirdErneutGemeldetAuchAlsAbmeldung() {
-        bestaetige(checkin.ermittle(TURNIER, List.of(eintrag("a", OnlineTeilnahme.AKTIV))));
-        bestaetige(checkin.ermittle(TURNIER, List.of(eintrag("a", OnlineTeilnahme.INAKTIV))));
-        assertThat(checkin.ermittle(TURNIER, List.of(eintrag("a", OnlineTeilnahme.INAKTIV)))).isEmpty();
-
-        checkin.erneutMelden(TURNIER, List.of("a"));
-
-        Optional<PtmOnlineCheckin.Aenderung> erneut = checkin.ermittle(TURNIER,
-                List.of(eintrag("a", OnlineTeilnahme.INAKTIV)));
-        assertThat(erneut.map(PtmOnlineCheckinTest::uuids)).contains(List.of("a"));
-        bestaetige(erneut);
-        assertThat(checkin.ermittle(TURNIER, List.of(eintrag("a", OnlineTeilnahme.INAKTIV))))
-                .as("nach dem erneuten Melden erledigt").isEmpty();
-    }
-
-    @Test
-    void erneutZuMeldenGiltNurFuerSeinOnlineTurnier() {
-        checkin.erneutMelden(SPIELTAG_2, List.of("a"));
-
-        assertThat(checkin.ermittle(TURNIER, List.of(eintrag("a", OnlineTeilnahme.INAKTIV)))).isEmpty();
-    }
 }

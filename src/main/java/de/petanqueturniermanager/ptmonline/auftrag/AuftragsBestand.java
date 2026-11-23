@@ -5,7 +5,6 @@ package de.petanqueturniermanager.ptmonline.auftrag;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -17,6 +16,7 @@ import java.util.UUID;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Predicate;
 
+import de.petanqueturniermanager.ptmonline.auftrag.versand.AuftragsSender;
 import de.petanqueturniermanager.ptmonline.auftrag.versand.VersandErgebnis;
 
 /**
@@ -62,14 +62,20 @@ public final class AuftragsBestand {
     private final List<Eintrag> eintraege = new ArrayList<>();
     private final Map<String, VersandErgebnis> ergebnisse = new LinkedHashMap<>();
     private final ReentrantLock versandSperre = new ReentrantLock();
-    /** Lokale UUIDs, deren Teilnahme nach einem Folgefehler erneut zu melden ist; nur im Speicher. */
-    private final Set<String> teilnahmeErneutMelden = new LinkedHashSet<>();
+    /**
+     * Auftrags-IDs offener Aufträge, die PTM-Online erreicht haben können: einmal an den Sender übergeben oder schon
+     * beim Laden offen (ihre Vorgeschichte ist unbekannt). Fehlt nur die Antwort, hat PTM-Online sie womöglich
+     * ausgeführt; sie dürfen dann nicht mehr stillschweigend entfallen.
+     */
+    private final Set<String> moeglicherweiseAngekommen = new LinkedHashSet<>();
     private long zaehler;
     private boolean geaendert;
 
     private AuftragsBestand(long zaehler, List<Eintrag> eintraege) {
         this.zaehler = zaehler;
         this.eintraege.addAll(eintraege);
+        eintraege.stream().filter(eintrag -> eintrag.zustand() == Zustand.OFFEN)
+                .forEach(eintrag -> moeglicherweiseAngekommen.add(eintrag.auftrag().auftragsId()));
     }
 
     /** Leerer Bestand einer neuen Bindung. */
@@ -144,6 +150,30 @@ public final class AuftragsBestand {
         geaendert = true;
     }
 
+    /**
+     * Offene Aufträge, die PTM-Online sicher nie erreicht haben: in dieser Sitzung erzeugt und nie an den Sender
+     * übergeben. Nur sie dürfen ersatzlos zurückgenommen werden.
+     */
+    public synchronized List<SyncAuftrag> nieGesendete() {
+        return ungesendeteOffene().stream()
+                .filter(auftrag -> !moeglicherweiseAngekommen.contains(auftrag.auftragsId())).toList();
+    }
+
+    /**
+     * Sender, der jeden Auftrag vor dem Senden als möglicherweise angekommen vermerkt – auch wenn danach die Antwort
+     * ausbleibt (Netzfehler, Zeitlimit).
+     */
+    public AuftragsSender mitVersandVermerk(AuftragsSender sender) {
+        return auftrag -> {
+            vermerkeVersand(auftrag.auftragsId());
+            return sender.sende(auftrag);
+        };
+    }
+
+    private synchronized void vermerkeVersand(String auftragsId) {
+        moeglicherweiseAngekommen.add(auftragsId);
+    }
+
     /** Offene, noch nicht gesendete Aufträge in Zählerreihenfolge. */
     private List<SyncAuftrag> ungesendeteOffene() {
         return eintraege.stream().filter(eintrag -> eintrag.zustand() == Zustand.OFFEN)
@@ -168,6 +198,7 @@ public final class AuftragsBestand {
     public synchronized void angewendet(VersandErgebnis ergebnis, String grundBeiAblehnung) {
         String id = ergebnis.auftrag().auftragsId();
         ergebnisse.remove(id);
+        moeglicherweiseAngekommen.remove(id);
         if (ergebnis.angenommen()) {
             eintraege.removeIf(eintrag -> eintrag.auftrag().auftragsId().equals(id));
         } else {
@@ -209,21 +240,6 @@ public final class AuftragsBestand {
     }
 
     /**
-     * Die Teilnahme dieser Meldungen ging wegen eines vorausgehenden, abgelehnten Auftrags verloren und ist erneut zu
-     * melden. Die Check-in-Erkennung holt die Liste mit {@link #entnehmeTeilnahmeErneutMelden()} ab.
-     */
-    public synchronized void teilnahmeErneutMelden(Collection<String> lokaleUuids) {
-        teilnahmeErneutMelden.addAll(lokaleUuids);
-    }
-
-    /** Erneut zu meldende Teilnahmen; die Liste ist danach leer. */
-    public synchronized Set<String> entnehmeTeilnahmeErneutMelden() {
-        Set<String> entnommen = Set.copyOf(teilnahmeErneutMelden);
-        teilnahmeErneutMelden.clear();
-        return entnommen;
-    }
-
-    /**
      * Entfernt offene, noch nicht gesendete Aufträge, die ein neuer Auftrag vollständig ersetzt (z.&nbsp;B. ein
      * älterer Stand derselben Spielrunde). Sie werden nicht protokolliert – ihr Inhalt geht im neueren auf.
      */
@@ -242,7 +258,7 @@ public final class AuftragsBestand {
                 ? new Eintrag(eintrag.auftrag(), Zustand.VERWORFEN, grund, Instant.now())
                 : eintrag);
         ergebnisse.clear();
-        teilnahmeErneutMelden.clear();
+        moeglicherweiseAngekommen.clear();
         zaehler = serverZaehler;
         geaendert = true;
         kuerzeProtokoll();
