@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.jspecify.annotations.Nullable;
 
@@ -35,7 +36,7 @@ import de.petanqueturniermanager.spielerdb.MeldelisteZiel;
 final class PtmOnlineCheckin {
 
     /** Zuletzt an PTM-Online gemeldeter Stand je Online-Turnier und lokaler UUID. */
-    private final Map<String, Map<String, Gemeldet>> bekannterStand = new HashMap<>();
+    private final Map<String, Map<String, Gemeldet>> bekannterStand = new ConcurrentHashMap<>();
 
     /** An PTM-Online gemeldete Teilnahme, Setzposition und Teamnummer einer Meldung. */
     record Gemeldet(OnlineTeilnahme teilnahme, @Nullable Integer seedingPosition, @Nullable Integer teamNummer) {
@@ -114,6 +115,14 @@ final class PtmOnlineCheckin {
     void bestaetigen(Aenderung aenderung) {
         // Veränderbare Kopie: ein späterer Rundenstart-Abgleich ergänzt den Stand ({@link #uebernehmen}).
         bekannterStand.put(aenderung.auftrag().tournamentId(), new HashMap<>(aenderung.stand()));
+    }
+
+    /**
+     * Neue Bindung: Sie verwirft offene Teilnahme-Aufträge, ihr Stand ist damit nicht mehr gemeldet. Danach geht jede
+     * aktive Meldung erneut hinaus.
+     */
+    void vergessen() {
+        bekannterStand.clear();
     }
 
     /** Ein gesendeter Rundenstart-Abgleich hat die Teilnahme seiner Meldungen gemeldet. */

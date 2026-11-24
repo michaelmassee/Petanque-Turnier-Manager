@@ -53,9 +53,17 @@ public final class PtmOnlineTrennung {
         }
         AuftragsBestand bestand = PtmOnlineAuftraege.bestand(ws, mapping, spieltagNr);
         SyncAuftrag trennen = PtmOnlineAuftraege.trennen(bestand, tournamentId.get());
-        PtmOnlineAuftraege.SynchronerVersand versand = PtmOnlineAuftraege.sendeAllein(bestand, mapping,
-                new TournamentSyncClient(config.baseUrl(), config.apiKey(), documentId.get(), leaseToken.get()),
-                trennen);
+        PtmOnlineAuftraege.SynchronerVersand versand;
+        try {
+            versand = PtmOnlineAuftraege.sendeAllein(bestand, mapping,
+                    new TournamentSyncClient(config.baseUrl(), config.apiKey(), documentId.get(), leaseToken.get()),
+                    trennen);
+        } catch (InterruptedException | GenerateException e) {
+            // Abgebrochen oder nicht gespeichert: Ein liegengebliebenes Trennen schickte sonst der Hintergrund,
+            // obwohl die Verbindung weiter genutzt wird.
+            nimmZurueckTrotz(e, bestand, mapping, trennen);
+            throw e;
+        }
         switch (versand.stopp()) {
             case FERTIG -> pruefeAblehnung(versand.anwendung().abgelehnt(AuftragsArt.TRENNEN));
             case BINDUNG_ABGELOEST, TURNIER_GELOESCHT -> logger.info(
@@ -79,6 +87,17 @@ public final class PtmOnlineTrennung {
             throws GenerateException {
         PtmOnlineAuftraege.trennenZuruecknehmen(bestand, trennen);
         PtmOnlineAuftraege.speichern(bestand, mapping);
+    }
+
+    /** Wie {@link #nimmZurueck}, ohne den eigentlichen Fehler zu verdecken. */
+    private static void nimmZurueckTrotz(Exception fehler, AuftragsBestand bestand,
+            PtmOnlineRegistrationMapping mapping, SyncAuftrag trennen) {
+        try {
+            nimmZurueck(bestand, mapping, trennen);
+        } catch (GenerateException e) {
+            logger.error("PTM-Online: abgebrochenes Trennen konnte nicht aus dem Auftragspuffer entfernt werden", e);
+            fehler.addSuppressed(e);
+        }
     }
 
     private static void pruefeAblehnung(Optional<VersandErgebnis> ablehnung) throws GenerateException {

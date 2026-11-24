@@ -447,6 +447,8 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
             onlineStand = null;
             onlineStandAbgerufen = null;
             ergebnismeldungen = null;
+            // Die neue Bindung verwirft offene Teilnahme-Aufträge; ohne Zurücksetzen gälte ihr Check-in als gemeldet.
+            checkin.vergessen();
             String tournamentId = letzteTurnierId;
             if (tournamentId != null) {
                 PtmOnlineErgebnismeldungen.vergessen(xDoc, tournamentId);

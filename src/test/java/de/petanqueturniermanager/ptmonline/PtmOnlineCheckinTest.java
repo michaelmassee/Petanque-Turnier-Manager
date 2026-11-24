@@ -53,6 +53,19 @@ class PtmOnlineCheckinTest {
     }
 
     @Test
+    void nachNeuerBindungGehtEinGemerkterCheckinErneutHinaus() {
+        // Offline erfasst: der Auftrag wartet, der Stand gilt schon als gemeldet.
+        bestaetige(checkin.ermittle(TURNIER, List.of(eintrag("a", OnlineTeilnahme.AKTIV))));
+
+        // Erneutes Verbinden verwirft den offenen Auftrag.
+        checkin.vergessen();
+
+        assertThat(checkin.ermittle(TURNIER, List.of(eintrag("a", OnlineTeilnahme.AKTIV))))
+                .as("Ersatzauftrag für den verworfenen Check-in").map(PtmOnlineCheckinTest::uuids)
+                .contains(List.of("a"));
+    }
+
+    @Test
     void wechselAmTurniertagWirdJeweilsGemeldet() {
         bestaetige(checkin.ermittle(TURNIER, List.of(eintrag("a", OnlineTeilnahme.AKTIV))));
 
