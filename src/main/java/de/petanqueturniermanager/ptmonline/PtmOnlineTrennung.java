@@ -16,13 +16,15 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsArt;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsBestand;
+import de.petanqueturniermanager.ptmonline.auftrag.SyncAuftrag;
 import de.petanqueturniermanager.ptmonline.auftrag.versand.VersandErgebnis;
 
 /**
  * Löst die Bindung eines Turnierdokuments (bzw. Supermelee-Spieltags) an sein Online-Turnier serverseitig: hebt
  * {@code document_managed} auf und damit die Bearbeitungssperre in der Web-UI. Gemeinsam genutzt von „Verbindung
- * trennen“ und dem Supermelee-Spieltagwechsel. Das Trennen ist ein gezählter Auftrag (Auftragsmatrix); noch offene
- * Aufträge der Bindung werden dabei verworfen. Läuft synchron im SheetRunner.
+ * trennen“ und dem Supermelee-Spieltagwechsel. Das Trennen ist ein gezählter Auftrag (Auftragsmatrix) und geht allein
+ * vor allen anderen hinaus. Erst wenn es gelungen ist, werden die noch offenen Aufträge der Bindung verworfen; scheitert
+ * es, bleiben sie unverändert und das Trennen entfällt. Läuft synchron im SheetRunner.
  */
 public final class PtmOnlineTrennung {
 
@@ -50,20 +52,33 @@ public final class PtmOnlineTrennung {
             throw new GenerateException(I18n.get("ptmonline.fehler.dokumentbindung_unvollstaendig"));
         }
         AuftragsBestand bestand = PtmOnlineAuftraege.bestand(ws, mapping, spieltagNr);
-        PtmOnlineAuftraege.trennen(bestand, tournamentId.get(), I18n.get("ptmonline.auftrag.verworfen.trennen"));
-        PtmOnlineAuftraege.SynchronerVersand versand = PtmOnlineAuftraege.sendeSynchron(bestand, mapping,
+        SyncAuftrag trennen = PtmOnlineAuftraege.trennen(bestand, tournamentId.get());
+        PtmOnlineAuftraege.SynchronerVersand versand = PtmOnlineAuftraege.sendeAllein(bestand, mapping,
                 new TournamentSyncClient(config.baseUrl(), config.apiKey(), documentId.get(), leaseToken.get()),
-                false);
+                trennen);
         switch (versand.stopp()) {
             case FERTIG -> pruefeAblehnung(versand.anwendung().abgelehnt(AuftragsArt.TRENNEN));
             case BINDUNG_ABGELOEST, TURNIER_GELOESCHT -> logger.info(
                     "PTM-Online: Turnier {} online nicht mehr an dieses Dokument gebunden oder gelöscht, trenne nur lokal",
                     tournamentId.get());
-            case DOKUMENT_GEFORKT -> throw new PtmOnlineDokumentGeforktException();
-            case NETZ, SERVERFEHLER, NICHT_BERECHTIGT -> throw new IOException(
-                    I18n.get("ptmonline.fehler.trennen_nicht_gesendet", versand.stopp()));
+            case DOKUMENT_GEFORKT -> {
+                nimmZurueck(bestand, mapping, trennen);
+                throw new PtmOnlineDokumentGeforktException();
+            }
+            case NETZ, SERVERFEHLER, NICHT_BERECHTIGT -> {
+                nimmZurueck(bestand, mapping, trennen);
+                throw new IOException(I18n.get("ptmonline.fehler.trennen_nicht_gesendet", versand.stopp()));
+            }
         }
+        PtmOnlineAuftraege.nachTrennen(bestand, I18n.get("ptmonline.auftrag.verworfen.trennen"));
         logger.info("PTM-Online: Turnier {} getrennt", tournamentId.get());
+    }
+
+    /** Gespeichert, damit auch das Dokument das gescheiterte Trennen nicht mehr als offenen Auftrag führt. */
+    private static void nimmZurueck(AuftragsBestand bestand, PtmOnlineRegistrationMapping mapping, SyncAuftrag trennen)
+            throws GenerateException {
+        PtmOnlineAuftraege.trennenZuruecknehmen(bestand, trennen);
+        PtmOnlineAuftraege.speichern(bestand, mapping);
     }
 
     private static void pruefeAblehnung(Optional<VersandErgebnis> ablehnung) throws GenerateException {

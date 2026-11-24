@@ -11,6 +11,8 @@ import java.util.Optional;
 
 import org.jspecify.annotations.Nullable;
 
+import com.sun.star.sheet.XSpreadsheetDocument;
+
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
@@ -62,8 +64,9 @@ public final class PtmOnlineAbgleichSheetRunner extends SheetRunner implements P
         processBox().info(I18n.get("ptmonline.fortschritt.abgleich_start"));
         // Manueller Abgleich überträgt Live-Stand und Spieleinstellungen komplett neu, auch wenn sie unverändert
         // scheinen.
-        PtmOnlineLiveSync.vergessen(tournamentId);
-        PtmOnlineSpieleinstellungen.vergessen(tournamentId);
+        XSpreadsheetDocument xDoc = getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
+        PtmOnlineLiveSync.vergessen(xDoc, tournamentId);
+        PtmOnlineSpieleinstellungen.vergessen(xDoc, tournamentId);
         if (ziel instanceof MeleeAnmeldungZiel) {
             // Mêlée-Anmeldung-Sheet anlegen, falls es fehlt – sonst hätten Online-Anmeldungen kein Ziel.
             zielAktualisieren();

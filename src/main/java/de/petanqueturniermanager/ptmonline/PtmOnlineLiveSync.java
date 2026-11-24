@@ -9,6 +9,8 @@ import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.TreeMap;
 
+import com.sun.star.sheet.XSpreadsheetDocument;
+
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.ptmonline.auftrag.AuftragsBestand;
 import de.petanqueturniermanager.ptmonline.dto.LiveMatchDto;
@@ -30,8 +32,6 @@ import de.petanqueturniermanager.ptmonline.live.LiveTurnierStand;
  */
 public final class PtmOnlineLiveSync {
 
-    private static final LiveUebertragungsGedaechtnis GEDAECHTNIS = new LiveUebertragungsGedaechtnis();
-
     private PtmOnlineLiveSync() {}
 
     /** Aus dem Dokument gelesener Live-Stand samt Zuordnung der lokalen Nummern zu Online-IDs. */
@@ -51,7 +51,7 @@ public final class PtmOnlineLiveSync {
     static int erfasse(AuftragsBestand bestand, String tournamentId, Momentaufnahme momentaufnahme,
             OptionalInt rundenOnline) {
         return erfasse(bestand, tournamentId, momentaufnahme.stand(), momentaufnahme.onlineIds(), rundenOnline,
-                GEDAECHTNIS);
+                gedaechtnis(bestand));
     }
 
     static int erfasse(AuftragsBestand bestand, String tournamentId, LiveTurnierStand stand,
@@ -134,22 +134,36 @@ public final class PtmOnlineLiveSync {
         return runden.keySet().stream().mapToInt(Integer::intValue).max().orElse(0);
     }
 
+    /**
+     * Zuletzt erfasster Stand dieses Dokuments: Er hängt am Auftragspuffer, nicht am Online-Turnier – sonst unterdrückte
+     * eine abgewiesene Dokumentkopie desselben Turniers die Übertragung des Originals.
+     */
+    private static LiveUebertragungsGedaechtnis gedaechtnis(AuftragsBestand bestand) {
+        return bestand.zwischenstand(LiveUebertragungsGedaechtnis.class, LiveUebertragungsGedaechtnis::new);
+    }
+
     /** Ob für das Turnier schon ein Stand erfasst ist; sonst wird beim nächsten Mal alles erfasst. */
-    static boolean hatStand(String tournamentId) {
-        return GEDAECHTNIS.letzter(tournamentId).isPresent();
+    static boolean hatStand(AuftragsBestand bestand, String tournamentId) {
+        return gedaechtnis(bestand).letzter(tournamentId).isPresent();
     }
 
     /**
      * Ob die online vorhandenen Runden noch abzugleichen sind, weil ihre Anzahl bei keiner Erfassung bekannt war
      * (z.&nbsp;B. erster Abruf ohne Netz); dann ist der Online-Zustand erneut abzurufen.
      */
-    static boolean brauchtOnlineRunden(String tournamentId) {
-        return GEDAECHTNIS.letzter(tournamentId).filter(stand -> !stand.onlineRundenAbgeglichen()).isPresent();
+    static boolean brauchtOnlineRunden(AuftragsBestand bestand, String tournamentId) {
+        return gedaechtnis(bestand).letzter(tournamentId).filter(stand -> !stand.onlineRundenAbgeglichen())
+                .isPresent();
     }
 
     /** Gedächtnis verwerfen: die nächste Erfassung überträgt den kompletten Stand (manueller Abgleich, Fortsetzen). */
-    static void vergessen(String tournamentId) {
-        GEDAECHTNIS.vergessen(tournamentId);
+    static void vergessen(AuftragsBestand bestand, String tournamentId) {
+        gedaechtnis(bestand).vergessen(tournamentId);
+    }
+
+    /** Wie {@link #vergessen(AuftragsBestand, String)}, für alle geladenen Bindungen dieses Dokuments. */
+    static void vergessen(XSpreadsheetDocument xDoc, String tournamentId) {
+        PtmOnlineAuftraege.geladene(xDoc).forEach(bestand -> vergessen(bestand, tournamentId));
     }
 
     private static LiveUebertragungsGedaechtnis.Stand neuerStand(LiveTurnierStand stand,

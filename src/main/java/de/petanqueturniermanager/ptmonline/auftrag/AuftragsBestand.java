@@ -13,8 +13,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 import de.petanqueturniermanager.ptmonline.auftrag.versand.AuftragsSender;
 import de.petanqueturniermanager.ptmonline.auftrag.versand.VersandErgebnis;
@@ -68,6 +70,8 @@ public final class AuftragsBestand {
      * ausgeführt; sie dürfen dann nicht mehr stillschweigend entfallen.
      */
     private final Set<String> moeglicherweiseAngekommen = new LinkedHashSet<>();
+    /** Flüchtige Zwischenstände der Erfasser je Typ, siehe {@link #zwischenstand}. */
+    private final Map<Class<?>, Object> zwischenstaende = new ConcurrentHashMap<>();
     private long zaehler;
     private boolean geaendert;
 
@@ -90,6 +94,16 @@ public final class AuftragsBestand {
     public static AuftragsBestand aus(long zaehler, List<Eintrag> eintraege) {
         long hoechster = eintraege.stream().mapToLong(eintrag -> eintrag.auftrag().zaehler()).max().orElse(0);
         return new AuftragsBestand(Math.max(zaehler, hoechster), eintraege);
+    }
+
+    /**
+     * Flüchtiger Zwischenstand eines Erfassers, z.&nbsp;B. der zuletzt als Auftrag erfasste Live-Stand. Er gehört zu
+     * diesem Puffer, also zu einem Dokument (bzw. Spieltag) – nicht zum Online-Turnier: Eine Kopie desselben Turniers
+     * hat ihren eigenen Puffer und darf das Original nicht beeinflussen, etwa wenn PTM-Online ihre Aufträge als
+     * Dokumentkopie ablehnt. Wird nicht gespeichert; eine neue Bindung verwirft ihn.
+     */
+    public <T> T zwischenstand(Class<T> typ, Supplier<T> neu) {
+        return typ.cast(zwischenstaende.computeIfAbsent(typ, ignored -> neu.get()));
     }
 
     /**
@@ -147,6 +161,33 @@ public final class AuftragsBestand {
                     : new Eintrag(eintrag.auftrag().mitZaehler(zaehlerNeu), eintrag.zustand(), eintrag.grund(),
                             eintrag.zeitpunkt());
         });
+        geaendert = true;
+    }
+
+    /**
+     * Wiederholt offene, noch nicht beantwortete Aufträge der passenden Arten hinter allen übrigen, z.&nbsp;B. einen
+     * wartenden Turnierabschluss nach einer danach erfassten Ranglistenkorrektur. Jeder erhält eine <em>neue</em>
+     * Auftrags-ID und einen neuen Zählerstand oberhalb des bisher höchsten; die Nutzlast bleibt. Die neue ID ist nötig:
+     * Fehlt nur die Antwort, hat PTM-Online den Auftrag womöglich schon ausgeführt und lieferte unter der alten ID bloß
+     * die gespeicherte Antwort – die Wiederholung soll aber den neuen Stand erfassen. Ein noch laufender Versand unter
+     * der alten ID ändert daran nichts; sein Ergebnis betrifft keinen Eintrag mehr.
+     */
+    public synchronized void wiederholeAmEnde(Predicate<AuftragsArt> arten) {
+        Map<String, SyncAuftrag> erneuert = new LinkedHashMap<>();
+        for (SyncAuftrag auftrag : ungesendeteOffene()) {
+            if (arten.test(auftrag.art())) {
+                erneuert.put(auftrag.auftragsId(), new SyncAuftrag(UUID.randomUUID().toString(), ++zaehler,
+                        auftrag.art(), auftrag.methode(), auftrag.pfad(), auftrag.body(), auftrag.kontext()));
+            }
+        }
+        if (erneuert.isEmpty()) {
+            return;
+        }
+        eintraege.replaceAll(eintrag -> {
+            SyncAuftrag neu = erneuert.get(eintrag.auftrag().auftragsId());
+            return neu == null ? eintrag : new Eintrag(neu, eintrag.zustand(), eintrag.grund(), Instant.now());
+        });
+        moeglicherweiseAngekommen.removeAll(erneuert.keySet());
         geaendert = true;
     }
 
@@ -259,6 +300,7 @@ public final class AuftragsBestand {
                 : eintrag);
         ergebnisse.clear();
         moeglicherweiseAngekommen.clear();
+        zwischenstaende.clear();
         zaehler = serverZaehler;
         geaendert = true;
         kuerzeProtokoll();

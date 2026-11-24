@@ -165,7 +165,7 @@ final class PtmOnlineMeldelistenSync {
                 meldungen.stream().map(LokaleMeldung::uuid).collect(Collectors.toSet()));
         Zuordnungen zuordnungen = new Zuordnungen(mapping.getOnlineIdsProUuid(), mapping.getZusaetzeProUuid(),
                 mapping.getRohStatusProUuid(), PtmOnlineAuftraege.gesperrteMeldungen(bestand));
-        Ergebnis ergebnis = ermittle(tournamentId, ziel.getFormation(),
+        Ergebnis ergebnis = ermittle(tournamentId, ziel.getFormation(), ziel.hatVereinsspalte(),
                 !PtmOnlineAuftraege.istGestartet(mapping.getOnlineStatus()), meldungen, zuordnungen);
         Map<String, Integer> revisionen = mapping.getExecutionRevisionenProUuid();
         for (Aktion aktion : ergebnis.aktionen()) {
@@ -225,10 +225,11 @@ final class PtmOnlineMeldelistenSync {
     /**
      * Vergleicht die Meldeliste mit den Zuordnungen (ohne Dokumentzugriff).
      *
+     * @param vereinsspalte die Meldeliste führt den Verein; sonst geht der zuletzt abgeglichene Online-Verein zurück
      * @param anlageErlaubt das Online-Turnier läuft noch nicht – danach lehnt PTM-Online Anlagen ab
      */
-    Ergebnis ermittle(String tournamentId, Formation formation, boolean anlageErlaubt, List<LokaleMeldung> meldungen,
-            Zuordnungen zuordnungen) {
+    Ergebnis ermittle(String tournamentId, Formation formation, boolean vereinsspalte, boolean anlageErlaubt,
+            List<LokaleMeldung> meldungen, Zuordnungen zuordnungen) {
         List<Aktion> aktionen = new ArrayList<>();
         Map<String, LokaleMeldung> proUuid = new LinkedHashMap<>();
         meldungen.forEach(meldung -> proUuid.putIfAbsent(meldung.uuid(), meldung));
@@ -239,7 +240,8 @@ final class PtmOnlineMeldelistenSync {
             String onlineId = zuordnungen.onlineIdProUuid().get(meldung.uuid());
             if (onlineId != null) {
                 if (!zuordnungen.istAbgeschlossen(meldung.uuid())) {
-                    aenderung(meldung, onlineId, formation, zuordnungen.zusatzProUuid().get(meldung.uuid()))
+                    aenderung(meldung, onlineId, formation, vereinsspalte,
+                            zuordnungen.zusatzProUuid().get(meldung.uuid()))
                             .ifPresent(aktionen::add);
                 }
             } else if (anlageErlaubt && meldung.amAktivenSpieltag()
@@ -296,7 +298,7 @@ final class PtmOnlineMeldelistenSync {
 
     /** Änderungsauftrag, wenn Besetzung oder Teamname vom zuletzt abgeglichenen Stand abweichen. */
     private static Optional<Aktion> aenderung(LokaleMeldung meldung, String onlineId, Formation formation,
-            @Nullable ZuordnungsZusatz zusatz) {
+            boolean vereinsspalte, @Nullable ZuordnungsZusatz zusatz) {
         if (zusatz == null) {
             return Optional.empty();
         }
@@ -329,7 +331,8 @@ final class PtmOnlineMeldelistenSync {
         // Ohne Teamname-Spalte geht der zuletzt abgeglichene zurück, sonst löschte PTM-Online den Online-Teamnamen.
         String teamname = meldung.teamname() != null ? meldung.teamname() : zuletztTeamname.orElse(null);
         return Optional.of(new Aenderung(meldung.uuid(), onlineId,
-                PtmOnlineMeldungsInhalt.anmeldung(formation, meldung.spieler(), teamname),
+                PtmOnlineMeldungsInhalt.anmeldung(formation, meldung.spieler(), teamname,
+                        PtmOnlineMeldungsInhalt.verein(meldung.spieler(), vereinsspalte, zuletzt)),
                 zuletzt.fuerUebertragung(lokal), zuletzt.mitBenutzerIdsFuer(lokal), bezeichnung));
     }
 }

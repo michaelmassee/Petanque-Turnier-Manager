@@ -114,7 +114,7 @@ abstract class BasePtmOnlineZusammenspielTest extends BaseCalcUITest {
         LibreOfficePtmOnlineSpeicher.setZugangsdatenForTest(null);
         MessageBox.setDialogeUeberspringen(false);
         if (turnierId != null) {
-            PtmOnlineLiveSync.vergessen(turnierId);
+            PtmOnlineLiveSync.vergessen(wkingSpreadsheet.getWorkingSpreadsheetDocument(), turnierId);
         }
     }
 

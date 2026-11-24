@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.onlinesync.sheet.PtmOnlineKonfliktSheet.Zeile;
+import de.petanqueturniermanager.ptmonline.auftrag.AuftragsBestand;
 import de.petanqueturniermanager.ptmonline.dto.ErgebnismeldungDto;
 import de.petanqueturniermanager.ptmonline.live.ErgebnisOrt;
 import de.petanqueturniermanager.ptmonline.live.LivePartie;
@@ -35,7 +36,8 @@ class PtmOnlineErgebnismeldungenTest {
         return LiveTurnierStand.ohneRangliste(List.of(new LiveRunde(1, List.of(partien))));
     }
 
-    private static ErgebnismeldungDto meldung(String id, int runde, String a, String b, int punkteA, int punkteB) {
+    /** Offene Meldung von Team {@code a} gegen Team {@code b}; auch von anderen Tests dieses Pakets genutzt. */
+    static ErgebnismeldungDto meldung(String id, int runde, String a, String b, int punkteA, int punkteB) {
         return new ErgebnismeldungDto(id, runde, List.of(a), List.of(b), punkteA, punkteB, "Team " + a, "");
     }
 
@@ -228,16 +230,28 @@ class PtmOnlineErgebnismeldungenTest {
     @Test
     void vergisstEntschiedeneMeldungenErstWennPtmOnlineSieNichtMehrLiefert() {
         String turnier = "t-unentschieden";
+        AuftragsBestand bestand = AuftragsBestand.leer();
         ErgebnismeldungDto m1 = meldung("m1", 1, "r1", "r2", 13, 7);
         ErgebnismeldungDto m2 = meldung("m2", 1, "r3", "r4", 13, 7);
-        PtmOnlineErgebnismeldungen.vergessen(turnier);
-        assertThat(PtmOnlineErgebnismeldungen.unentschieden(turnier, List.of(m1, m2))).containsExactly(m1, m2);
+        assertThat(PtmOnlineErgebnismeldungen.unentschieden(bestand, turnier, List.of(m1, m2))).containsExactly(m1, m2);
 
-        PtmOnlineErgebnismeldungen.merkeEntschieden(turnier, List.of("m1"));
+        PtmOnlineErgebnismeldungen.merkeEntschieden(bestand, turnier, List.of("m1"));
 
-        assertThat(PtmOnlineErgebnismeldungen.unentschieden(turnier, List.of(m1, m2))).containsExactly(m2);
-        assertThat(PtmOnlineErgebnismeldungen.unentschieden(turnier, List.of(m2))).containsExactly(m2);
-        assertThat(PtmOnlineErgebnismeldungen.unentschieden(turnier, List.of(m1, m2)))
+        assertThat(PtmOnlineErgebnismeldungen.unentschieden(bestand, turnier, List.of(m1, m2))).containsExactly(m2);
+        assertThat(PtmOnlineErgebnismeldungen.unentschieden(bestand, turnier, List.of(m2))).containsExactly(m2);
+        assertThat(PtmOnlineErgebnismeldungen.unentschieden(bestand, turnier, List.of(m1, m2)))
                 .as("nicht mehr geliefert, also vergessen: ein erneut offenes m1 erscheint wieder").containsExactly(m1, m2);
+    }
+
+    @Test
+    void entscheidungEinerKopieGiltNichtFuerDasOriginal() {
+        String turnier = "t-kopie";
+        AuftragsBestand original = AuftragsBestand.leer();
+        AuftragsBestand kopie = AuftragsBestand.leer();
+        ErgebnismeldungDto m1 = meldung("m1", 1, "r1", "r2", 13, 7);
+
+        PtmOnlineErgebnismeldungen.merkeEntschieden(kopie, turnier, List.of("m1"));
+
+        assertThat(PtmOnlineErgebnismeldungen.unentschieden(original, turnier, List.of(m1))).containsExactly(m1);
     }
 }

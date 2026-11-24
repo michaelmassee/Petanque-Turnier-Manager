@@ -432,6 +432,11 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
     }
 
     @Override
+    public boolean hatVereinsspalte() {
+        return vereinsnameAktiv;
+    }
+
+    @Override
     public Optional<Map<Integer, String>> leseTeamnamen() {
         if (!teamnameAktiv) {
             return Optional.empty();

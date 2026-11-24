@@ -151,6 +151,25 @@ class PtmOnlineLiveSyncTest {
         assertThat(auftraege()).extracting(SyncAuftrag::art).containsExactly(AuftragsArt.RUNDE);
     }
 
+    @Test
+    void abgewieseneKopieUnterdruecktDieUebertragungDesOriginalsNicht() {
+        AuftragsBestand original = AuftragsBestand.leer();
+        AuftragsBestand kopie = AuftragsBestand.leer();
+        PtmOnlineLiveSync.erfasse(original, "t1", momentaufnahme(7), OptionalInt.of(1));
+        // Die Kopie erfasst 13:8; PTM-Online lehnt ihre Aufträge später als Dokumentkopie ab.
+        PtmOnlineLiveSync.erfasse(kopie, "t1", momentaufnahme(8), OptionalInt.of(1));
+
+        int imOriginal = PtmOnlineLiveSync.erfasse(original, "t1", momentaufnahme(8), OptionalInt.of(1));
+
+        assertThat(imOriginal).as("das Original überträgt seine Änderung auf 13:8").isPositive();
+        assertThat(PtmOnlineLiveSync.hatStand(AuftragsBestand.leer(), "t1")).as("ohne geteilten Stand").isFalse();
+    }
+
+    private static PtmOnlineLiveSync.Momentaufnahme momentaufnahme(int punkteB) {
+        return new PtmOnlineLiveSync.Momentaufnahme(LiveTurnierStand.ohneRangliste(
+                List.of(new LiveRunde(1, List.of(LivePartie.teams(1, 2, 13, punkteB, null, null))))), ONLINE_IDS);
+    }
+
     private int erfasse(LiveTurnierStand stand, OptionalInt rundenOnline) {
         return PtmOnlineLiveSync.erfasse(bestand, "t1", stand, ONLINE_IDS, rundenOnline, gedaechtnis);
     }

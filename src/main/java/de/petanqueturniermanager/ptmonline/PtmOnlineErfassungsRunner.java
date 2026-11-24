@@ -237,7 +237,7 @@ final class PtmOnlineErfassungsRunner extends SheetRunner {
                 + "aufgenommen", rundenstart.get(), zurueckgesetzt.get());
         oeffneSchutzScope();
         mapping.setRunningAusstehendSeit(rundenstart.get());
-        PtmOnlineLiveSync.vergessen(verbindung.tournamentId());
+        PtmOnlineLiveSync.vergessen(bestand, verbindung.tournamentId());
     }
 
     /**
@@ -331,7 +331,7 @@ final class PtmOnlineErfassungsRunner extends SheetRunner {
         if (quelle.isEmpty()) {
             return true;
         }
-        boolean ersterStand = !PtmOnlineLiveSync.hatStand(verbindung.tournamentId());
+        boolean ersterStand = !PtmOnlineLiveSync.hatStand(bestand, verbindung.tournamentId());
         if (ersterStand && (standAbruf == null || !standAbruf.vollstaendig())) {
             return false;
         }

@@ -63,7 +63,7 @@ class PtmOnlineLiveSyncUITest extends BaseCalcUITest {
         RandomSource.setSeed(42L);
         MessageBox.setDialogeUeberspringen(true);
         server = new PtmOnlineTestServer(TURNIER_ID, "{\"registrations\":[]}");
-        PtmOnlineLiveSync.vergessen(TURNIER_ID);
+        PtmOnlineLiveSync.vergessen(doc, TURNIER_ID);
         new SchweizerMeldeListeSheetTestDaten(wkingSpreadsheet, ANZ_TEAMS).doRun();
         docPropHelper.setIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM,
                 TurnierSystem.SCHWEIZER.getId());

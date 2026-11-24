@@ -9,6 +9,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.jspecify.annotations.Nullable;
 
+import com.sun.star.sheet.XSpreadsheetDocument;
+
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.TeamnameModus;
@@ -34,7 +36,10 @@ import de.petanqueturniermanager.schweizer.konfiguration.SchweizerRankingModus;
  */
 final class PtmOnlineSpieleinstellungen {
 
-    private static final Map<String, SpieleinstellungenDto> GEDAECHTNIS = new ConcurrentHashMap<>();
+    /** Zuletzt erfasste Einstellungen je Online-Turnier, am Auftragspuffer des Dokuments (siehe {@link #erfasse}). */
+    private static final class Gedaechtnis {
+        private final Map<String, SpieleinstellungenDto> proTurnier = new ConcurrentHashMap<>();
+    }
 
     private PtmOnlineSpieleinstellungen() {}
 
@@ -96,17 +101,31 @@ final class PtmOnlineSpieleinstellungen {
      * @return {@code true}, wenn ein Auftrag erfasst wurde
      */
     static boolean erfasse(AuftragsBestand bestand, String tournamentId, SpieleinstellungenDto einstellungen) {
-        if (einstellungen.istLeer() || einstellungen.equals(GEDAECHTNIS.get(tournamentId))) {
+        Map<String, SpieleinstellungenDto> erfasst = gedaechtnis(bestand);
+        if (einstellungen.istLeer() || einstellungen.equals(erfasst.get(tournamentId))) {
             return false;
         }
         PtmOnlineAuftraege.spieleinstellungen(bestand, tournamentId, einstellungen);
-        GEDAECHTNIS.put(tournamentId, einstellungen);
+        erfasst.put(tournamentId, einstellungen);
         return true;
     }
 
     /** Die nächste Erfassung überträgt die Einstellungen erneut (manueller Abgleich, neue Bindung). */
-    static void vergessen(String tournamentId) {
-        GEDAECHTNIS.remove(tournamentId);
+    static void vergessen(AuftragsBestand bestand, String tournamentId) {
+        gedaechtnis(bestand).remove(tournamentId);
+    }
+
+    /** Wie {@link #vergessen(AuftragsBestand, String)}, für alle geladenen Bindungen dieses Dokuments. */
+    static void vergessen(XSpreadsheetDocument xDoc, String tournamentId) {
+        PtmOnlineAuftraege.geladene(xDoc).forEach(bestand -> vergessen(bestand, tournamentId));
+    }
+
+    /**
+     * Zuletzt erfasster Stand dieses Dokuments: Er hängt am Auftragspuffer, nicht am Online-Turnier – sonst unterdrückte
+     * eine abgewiesene Dokumentkopie desselben Turniers die Übertragung des Originals.
+     */
+    private static Map<String, SpieleinstellungenDto> gedaechtnis(AuftragsBestand bestand) {
+        return bestand.zwischenstand(Gedaechtnis.class, Gedaechtnis::new).proTurnier;
     }
 
     static @Nullable String onlineFormation(Formation formation) {

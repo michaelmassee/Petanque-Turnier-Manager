@@ -32,13 +32,28 @@ public final class AbgeglicheneBesetzung {
     private static final Gson GSON = new Gson();
     private static final AbgeglicheneBesetzung LEER = new AbgeglicheneBesetzung(List.of());
 
-    /** Eine Person der Besetzung; {@code u} ist die Benutzer-ID oder {@code null}. Kurze Feldnamen sparen Zellinhalt. */
-    public record Person(String v, String n, @Nullable String u) {
+    /**
+     * Eine Person der Besetzung; {@code u} ist die Benutzer-ID, {@code l} die Lizenznummer und {@code c} der Verein aus
+     * PTM-Online, jeweils {@code null} wenn unbekannt. PTM-Online führt den Verein der Anmeldung bei der ersten Person.
+     * Kurze Feldnamen sparen Zellinhalt; ältere Zellinhalte ohne {@code l}/{@code c} bleiben lesbar.
+     */
+    public record Person(String v, String n, @Nullable String u, @Nullable String l, @Nullable String c) {
 
         public Person {
             v = Objects.toString(v, "").strip();
             n = Objects.toString(n, "").strip();
-            u = u == null || u.isBlank() ? null : u.strip();
+            u = ohneLeer(u);
+            l = ohneLeer(l);
+            c = ohneLeer(c);
+        }
+
+        /** Person ohne Angaben aus PTM-Online außer der Benutzer-ID (lokale Besetzung, Teamname). */
+        public Person(String v, String n, @Nullable String u) {
+            this(v, n, u, null, null);
+        }
+
+        private static @Nullable String ohneLeer(@Nullable String wert) {
+            return wert == null || wert.isBlank() ? null : wert.strip();
         }
 
         public String vorname() {
@@ -51,6 +66,20 @@ public final class AbgeglicheneBesetzung {
 
         public Optional<String> benutzerId() {
             return Optional.ofNullable(u);
+        }
+
+        public Optional<String> lizenzNr() {
+            return Optional.ofNullable(l);
+        }
+
+        public Optional<String> verein() {
+            return Optional.ofNullable(c);
+        }
+
+        /** Diese Person (Name aus dem Dokument) mit den Online-Angaben der zuletzt abgeglichenen. */
+        private Person mitOnlineAngabenVon(Optional<Person> bisher) {
+            return new Person(v, n, bisher.map(Person::u).orElse(null), bisher.map(Person::l).orElse(null),
+                    bisher.map(Person::c).orElse(null));
         }
 
         String schluessel() {
@@ -72,10 +101,19 @@ public final class AbgeglicheneBesetzung {
         return personen.isEmpty() ? LEER : new AbgeglicheneBesetzung(personen);
     }
 
-    /** Besetzung einer Online-Anmeldung in Slot-Reihenfolge, samt Benutzer-IDs. */
+    /** Besetzung einer Online-Anmeldung in Slot-Reihenfolge, samt Benutzer-IDs und Lizenznummern. */
     public static AbgeglicheneBesetzung ausOnline(List<PersonDto> personen) {
-        return von(personen.stream().map(person -> new Person(person.firstName(), person.lastName(), person.userId()))
-                .toList());
+        return ausOnline(personen, null);
+    }
+
+    /** Wie {@link #ausOnline(List)}, zusätzlich mit dem Verein der Anmeldung bei der ersten Person. */
+    public static AbgeglicheneBesetzung ausOnline(List<PersonDto> personen, @Nullable String verein) {
+        List<Person> ergebnis = new ArrayList<>();
+        for (PersonDto person : personen) {
+            ergebnis.add(new Person(person.firstName(), person.lastName(), person.userId(), person.licenseNr(),
+                    ergebnis.isEmpty() ? verein : null));
+        }
+        return von(ergebnis);
     }
 
     /** Liest den gespeicherten Zellinhalt; Unlesbares gilt als „noch nie abgeglichen“ und wird protokolliert. */
@@ -111,31 +149,56 @@ public final class AbgeglicheneBesetzung {
     }
 
     /**
-     * Personen für die Übertragung an PTM-Online: die lokale Besetzung in Slot-Reihenfolge, jede Person mit der
-     * Benutzer-ID, die sie zuletzt trug. Steht eine Person nicht mehr in der Besetzung (Personenwechsel), wird sie ohne
-     * Benutzer-ID gesendet; PTM-Online löst dann die Kontoverknüpfung dieses Slots (P-45).
+     * Personen für die Übertragung an PTM-Online: die lokale Besetzung in Slot-Reihenfolge, jede Person mit Benutzer-ID
+     * und Lizenznummer, die sie zuletzt trug. Das Dokument kennt keine Lizenznummern; PTM-Online übernimmt aber die
+     * gesendete (auch eine fehlende) – ohne Rückgabe ginge sie bei jeder Änderung verloren, etwa des Teamnamens. Steht
+     * eine Person nicht mehr in der Besetzung (Personenwechsel), wird sie ohne beides gesendet; PTM-Online löst dann die
+     * Kontoverknüpfung dieses Slots (P-45).
      */
     public List<PersonDto> fuerUebertragung(List<Person> lokal) {
-        List<String> vergeben = new ArrayList<>();
+        List<Person> zugeordnet = mitOnlineAngabenFuer(lokal);
         List<PersonDto> ergebnis = new ArrayList<>();
-        for (int i = 0; i < lokal.size(); i++) {
-            Person person = lokal.get(i);
-            String benutzerId = personen.stream()
-                    .filter(bisher -> bisher.u() != null && !vergeben.contains(bisher.u()))
-                    .filter(bisher -> bisher.schluessel().equals(person.schluessel()))
-                    .map(Person::u).findFirst().orElse(null);
-            if (benutzerId != null) {
-                vergeben.add(benutzerId);
-            }
-            ergebnis.add(new PersonDto(i + 1, person.vorname(), person.nachname(), null, benutzerId));
+        for (int i = 0; i < zugeordnet.size(); i++) {
+            Person person = zugeordnet.get(i);
+            ergebnis.add(new PersonDto(i + 1, person.vorname(), person.nachname(), person.l(), person.u()));
         }
         return ergebnis;
     }
 
-    /** Lokale Besetzung mit den Benutzer-IDs, die {@link #fuerUebertragung} vergeben würde. */
+    /**
+     * Verein, den PTM-Online für die lokale Besetzung behalten soll, wenn die Meldeliste keine Vereinsspalte hat: der
+     * zuletzt abgeglichene der Person, die lokal an erster Stelle steht. Steht dort eine neue Person, ist er unbekannt.
+     */
+    public Optional<String> vereinFuer(List<Person> lokal) {
+        return mitOnlineAngabenFuer(lokal).stream().findFirst().flatMap(Person::verein);
+    }
+
+    /** Lokale Besetzung mit den Online-Angaben, die {@link #fuerUebertragung} vergeben würde. */
     public AbgeglicheneBesetzung mitBenutzerIdsFuer(List<Person> lokal) {
-        return von(fuerUebertragung(lokal).stream()
-                .map(person -> new Person(person.firstName(), person.lastName(), person.userId())).toList());
+        return von(mitOnlineAngabenFuer(lokal));
+    }
+
+    /** Ordnet jeder lokalen Person die zuletzt abgeglichene gleichen Namens zu und übernimmt deren Online-Angaben. */
+    private List<Person> mitOnlineAngabenFuer(List<Person> lokal) {
+        List<Person> frei = new ArrayList<>(personen);
+        List<Person> ergebnis = new ArrayList<>();
+        for (Person person : lokal) {
+            Optional<Person> bisher = bisherigePerson(frei, person);
+            bisher.ifPresent(frei::remove);
+            ergebnis.add(person.mitOnlineAngabenVon(bisher));
+        }
+        return ergebnis;
+    }
+
+    /**
+     * Zuletzt abgeglichene Person mit demselben Namen, die noch keiner lokalen Person zugeteilt ist. Eine mit Benutzer-ID
+     * hat Vorrang: Bei Namensgleichheit im Team bekommt so jede ID genau eine Person.
+     */
+    private static Optional<Person> bisherigePerson(List<Person> frei, Person person) {
+        List<Person> gleichnamig = frei.stream().filter(bisher -> bisher.schluessel().equals(person.schluessel()))
+                .toList();
+        return gleichnamig.stream().filter(bisher -> bisher.u() != null).findFirst()
+                .or(() -> gleichnamig.stream().findFirst());
     }
 
     @Override

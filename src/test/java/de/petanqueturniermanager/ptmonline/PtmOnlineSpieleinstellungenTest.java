@@ -5,7 +5,6 @@ package de.petanqueturniermanager.ptmonline;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
@@ -22,11 +21,6 @@ class PtmOnlineSpieleinstellungenTest {
     private static final String TURNIER = "spieleinstellungen-test";
     private static final SpieleinstellungenDto SCHWEIZER = new SpieleinstellungenDto("triplette", "mit_buchholz", null,
             null);
-
-    @AfterEach
-    void gedaechtnisLeeren() {
-        PtmOnlineSpieleinstellungen.vergessen(TURNIER);
-    }
 
     @Test
     void erfasstEineGeaenderteLiveFreigabe() {
@@ -58,9 +52,18 @@ class PtmOnlineSpieleinstellungenTest {
         AuftragsBestand bestand = AuftragsBestand.leer();
         PtmOnlineSpieleinstellungen.erfasse(bestand, TURNIER, SCHWEIZER);
 
-        PtmOnlineSpieleinstellungen.vergessen(TURNIER);
+        PtmOnlineSpieleinstellungen.vergessen(bestand, TURNIER);
 
         assertThat(PtmOnlineSpieleinstellungen.erfasse(bestand, TURNIER, SCHWEIZER)).isTrue();
+    }
+
+    @Test
+    void kopieDesselbenTurniersUnterdruecktDieEinstellungenDesOriginalsNicht() {
+        AuftragsBestand original = AuftragsBestand.leer();
+        AuftragsBestand kopie = AuftragsBestand.leer();
+        PtmOnlineSpieleinstellungen.erfasse(kopie, TURNIER, SCHWEIZER);
+
+        assertThat(PtmOnlineSpieleinstellungen.erfasse(original, TURNIER, SCHWEIZER)).isTrue();
     }
 
     @Test

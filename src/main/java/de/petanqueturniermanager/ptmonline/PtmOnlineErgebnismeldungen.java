@@ -22,6 +22,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jspecify.annotations.Nullable;
 
+import com.sun.star.sheet.XSpreadsheetDocument;
+
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -68,8 +70,13 @@ final class PtmOnlineErgebnismeldungen {
     private static final List<Entscheidung> OPTIONEN = List.of(Entscheidung.ERGEBNIS_UEBERNEHMEN,
             Entscheidung.ERGEBNIS_VERWERFEN);
 
-    /** Bereits entschiedene Meldungen je Turnier, bis PTM-Online sie nicht mehr als offen liefert. */
-    private static final Map<String, Set<String>> ENTSCHIEDEN = new ConcurrentHashMap<>();
+    /**
+     * Bereits entschiedene Meldungen je Turnier, bis PTM-Online sie nicht mehr als offen liefert. Am Auftragspuffer des
+     * Dokuments: Entscheidungen einer (womöglich abgewiesenen) Kopie desselben Turniers gelten nicht für das Original.
+     */
+    private static final class Entschieden {
+        private final Map<String, Set<String>> proTurnier = new ConcurrentHashMap<>();
+    }
 
     private PtmOnlineErgebnismeldungen() {}
 
@@ -297,7 +304,10 @@ final class PtmOnlineErgebnismeldungen {
             Function<KonfliktFall, Optional<Entscheidung>> entscheidung, boolean direkt, Runnable vorAenderung)
             throws GenerateException {
         String tournamentId = verbindung.tournamentId();
-        List<ErgebnismeldungDto> offen = unentschieden(tournamentId, meldungen);
+        // Das Gedächtnis ist flüchtig; nach einem Neustart zählt die im Dokument gespeicherte, noch ungesendete
+        // Entscheidung – sonst erschiene eine verworfene Meldung erneut oder würde gar direkt eingetragen.
+        merkeEntschieden(bestand, tournamentId, PtmOnlineAuftraege.beauftragteErgebnismeldungen(bestand));
+        List<ErgebnismeldungDto> offen = unentschieden(bestand, tournamentId, meldungen);
         if (offen.isEmpty()) {
             return List.of();
         }
@@ -306,20 +316,21 @@ final class PtmOnlineErgebnismeldungen {
         Anwendung anwendung = wendeAn(ws, ordneZu(offen, stand, LiveNummernAufloesung.ermitteln(verbindung)),
                 entscheidung, direkt, vorAenderung);
         PtmOnlineAuftraege.ergebnismeldungen(bestand, tournamentId, anwendung.entscheidungen());
-        merkeEntschieden(tournamentId, anwendung.entscheidungen().keySet());
+        merkeEntschieden(bestand, tournamentId, anwendung.entscheidungen().keySet());
         return anwendung.offen();
     }
 
     /** Merkt entschiedene Meldungen, damit sie bis zur Annahme der Entscheidung nicht erneut als Fall erscheinen. */
-    static void merkeEntschieden(String tournamentId, Collection<String> meldungsIds) {
-        ENTSCHIEDEN.computeIfAbsent(tournamentId, id -> ConcurrentHashMap.newKeySet()).addAll(meldungsIds);
+    static void merkeEntschieden(AuftragsBestand bestand, String tournamentId, Collection<String> meldungsIds) {
+        entschieden(bestand).computeIfAbsent(tournamentId, id -> ConcurrentHashMap.newKeySet()).addAll(meldungsIds);
     }
 
     /**
      * Meldungen ohne bereits getroffene Entscheidung. Was PTM-Online nicht mehr als offen liefert, wird vergessen.
      */
-    static List<ErgebnismeldungDto> unentschieden(String tournamentId, List<ErgebnismeldungDto> meldungen) {
-        Set<String> entschieden = ENTSCHIEDEN.get(tournamentId);
+    static List<ErgebnismeldungDto> unentschieden(AuftragsBestand bestand, String tournamentId,
+            List<ErgebnismeldungDto> meldungen) {
+        Set<String> entschieden = entschieden(bestand).get(tournamentId);
         if (entschieden == null) {
             return meldungen;
         }
@@ -328,9 +339,13 @@ final class PtmOnlineErgebnismeldungen {
         return meldungen.stream().filter(meldung -> !entschieden.contains(meldung.id())).toList();
     }
 
-    /** Neue Bindung oder Turnier gelöscht: Entscheidungsgedächtnis verwerfen. */
-    static void vergessen(String tournamentId) {
-        ENTSCHIEDEN.remove(tournamentId);
+    /** Neue Bindung oder Turnier gelöscht: Entscheidungsgedächtnis aller geladenen Bindungen des Dokuments verwerfen. */
+    static void vergessen(XSpreadsheetDocument xDoc, String tournamentId) {
+        PtmOnlineAuftraege.geladene(xDoc).forEach(bestand -> entschieden(bestand).remove(tournamentId));
+    }
+
+    private static Map<String, Set<String>> entschieden(AuftragsBestand bestand) {
+        return bestand.zwischenstand(Entschieden.class, Entschieden::new).proTurnier;
     }
 
     /**

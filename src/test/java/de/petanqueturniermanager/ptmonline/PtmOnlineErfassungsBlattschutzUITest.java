@@ -58,8 +58,7 @@ class PtmOnlineErfassungsBlattschutzUITest extends BaseCalcUITest {
 
     @AfterEach
     void aufraeumen() {
-        PtmOnlineLiveSync.vergessen("schutz-test");
-        PtmOnlineSpieleinstellungen.vergessen("schutz-test");
+        // Verwirft mit den Auftragspuffern auch Live-Stand und Spieleinstellungen, die daran hängen.
         PtmOnlineAuftraege.vergessen(doc);
         LibreOfficePtmOnlineSpeicher.setZugangsdatenForTest(null);
     }

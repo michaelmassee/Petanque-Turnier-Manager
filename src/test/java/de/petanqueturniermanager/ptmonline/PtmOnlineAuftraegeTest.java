@@ -4,10 +4,12 @@
 package de.petanqueturniermanager.ptmonline;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -138,13 +140,102 @@ class PtmOnlineAuftraegeTest {
     }
 
     @Test
-    void trennenVerwirftAlleOffenenAuftraege() {
+    void wartenderAbschlussBleibtHinterSpaeterErfassterRanglisteUndRunde() {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        PtmOnlineAuftraege.rangliste(bestand, TURNIER, List.of(), List.of());
+        String abschlussId = PtmOnlineAuftraege.abschluss(bestand, TURNIER, true, false).auftragsId();
+
+        // Ergebniskorrektur nach einem Netzfehler: der alte Snapshot entfällt, der neue kommt hinzu.
+        PtmOnlineAuftraege.runde(bestand, TURNIER, 3, List.of());
+        PtmOnlineAuftraege.rangliste(bestand, TURNIER, List.of(), List.of());
+
+        assertThat(bestand.zuSenden(false)).extracting(SyncAuftrag::art).containsExactly(AuftragsArt.RUNDE,
+                AuftragsArt.RANGLISTE, AuftragsArt.ABSCHLUSS);
+        assertThat(bestand.zuSenden(false).getLast().auftragsId())
+                .as("neue Auftrags-ID: PTM-Online friert den neuen Stand ein, auch wenn der alte Abschluss ankam")
+                .isNotEqualTo(abschlussId);
+    }
+
+    @Test
+    void wiederholterAbschlussNachVerlorenerAntwortBekommtNeueAuftragsId() {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        PtmOnlineAuftraege.abschluss(bestand, TURNIER, true, false);
+        SyncAuftrag gesendet = bestand.zuSenden(false).getFirst();
+        // Versand ohne Antwort: PTM-Online kann den Abschluss schon ausgeführt haben.
+        assertThatThrownBy(() -> bestand.mitVersandVermerk(auftrag -> {
+            throw new IOException("Antwort verloren");
+        }).sende(gesendet)).isInstanceOf(IOException.class);
+
+        PtmOnlineAuftraege.rangliste(bestand, TURNIER, List.of(), List.of());
+
+        List<SyncAuftrag> zuSenden = bestand.zuSenden(false);
+        assertThat(zuSenden).extracting(SyncAuftrag::art).containsExactly(AuftragsArt.RANGLISTE,
+                AuftragsArt.ABSCHLUSS);
+        assertThat(zuSenden.getLast().auftragsId()).isNotEqualTo(gesendet.auftragsId());
+        assertThat(zuSenden.getLast().body()).isEqualTo(gesendet.body());
+        assertThat(bestand.nieGesendete()).as("die Wiederholung hat PTM-Online noch nie erreicht")
+                .extracting(SyncAuftrag::art).contains(AuftragsArt.ABSCHLUSS);
+    }
+
+    @Test
+    void mehrAls200ErgebnismeldungsEntscheidungenVerteilenSichAufMehrereAuftraege() {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        Map<String, Boolean> entscheidungen = new LinkedHashMap<>();
+        for (int i = 1; i <= 401; i++) {
+            entscheidungen.put("m" + i, i % 2 == 0);
+        }
+
+        PtmOnlineAuftraege.ergebnismeldungen(bestand, TURNIER, entscheidungen);
+
+        assertThat(bestand.zuSenden(false)).extracting(auftrag -> JsonParser.parseString(auftrag.body())
+                .getAsJsonObject().getAsJsonArray("decisions").size()).containsExactly(200, 200, 1);
+        assertThat(PtmOnlineAuftraege.beauftragteErgebnismeldungen(bestand)).hasSize(401);
+    }
+
+    @Test
+    void ungesendeteErgebnismeldungsEntscheidungUeberstehtDasNeuLaden() {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        PtmOnlineAuftraege.ergebnismeldungen(bestand, TURNIER, Map.of("m-verworfen", Boolean.FALSE));
+        PtmOnlineAuftraege.ergebnismeldungen(bestand, TURNIER, Map.of("m-uebernommen", Boolean.TRUE));
+        AuftragsBestand neuGeladen = AuftragsBestand.aus(bestand.zaehler(), bestand.eintraege());
+
+        assertThat(PtmOnlineAuftraege.beauftragteErgebnismeldungen(neuGeladen))
+                .containsExactlyInAnyOrder("m-verworfen", "m-uebernommen");
+    }
+
+    @Test
+    void trennenGehtVorUndVerwirftDieUebrigenErstNachDemErfolg() {
         AuftragsBestand bestand = AuftragsBestand.leer();
         PtmOnlineAuftraege.runde(bestand, TURNIER, 1, List.of());
 
-        PtmOnlineAuftraege.trennen(bestand, TURNIER, "getrennt");
+        PtmOnlineAuftraege.trennen(bestand, TURNIER);
 
-        assertThat(bestand.zuSenden(false)).extracting(SyncAuftrag::art).containsExactly(AuftragsArt.TRENNEN);
+        assertThat(bestand.zuSenden(false)).extracting(SyncAuftrag::art).containsExactly(AuftragsArt.TRENNEN,
+                AuftragsArt.RUNDE);
+
+        PtmOnlineAuftraege.nachTrennen(bestand, "getrennt");
+
+        assertThat(bestand.zuSenden(false)).isEmpty();
+    }
+
+    @Test
+    void gescheitertesTrennenLaesstDieOffenenAuftraegeUnveraendert() {
+        AuftragsBestand bestand = AuftragsBestand.leer();
+        PtmOnlineAuftraege.runde(bestand, TURNIER, 1, List.of());
+        String rundeId = bestand.zuSenden(false).getFirst().auftragsId();
+        SyncAuftrag trennen = PtmOnlineAuftraege.trennen(bestand, TURNIER);
+        // Versand scheitert am Netz, „nur lokal trennen“ abgelehnt.
+        assertThatThrownBy(() -> bestand.mitVersandVermerk(auftrag -> {
+            throw new IOException("HTTP 503");
+        }).sende(trennen)).isInstanceOf(IOException.class);
+
+        PtmOnlineAuftraege.trennenZuruecknehmen(bestand, trennen);
+
+        assertThat(bestand.zuSenden(false)).as("kein Trennen mehr, das der Hintergrund später senden könnte")
+                .extracting(SyncAuftrag::art, SyncAuftrag::auftragsId)
+                .containsExactly(tuple(AuftragsArt.RUNDE, rundeId));
+        assertThat(bestand.eintraege()).extracting(AuftragsBestand.Eintrag::zustand)
+                .containsOnly(AuftragsBestand.Zustand.OFFEN);
     }
 
     @Test
@@ -389,7 +480,7 @@ class PtmOnlineAuftraegeTest {
     @Test
     void verknuepfungenTeilenSichAufHoechstens200JeAuftrag() {
         AuftragsBestand bestand = AuftragsBestand.leer();
-        Map<String, String> paare = new java.util.LinkedHashMap<>();
+        Map<String, String> paare = new LinkedHashMap<>();
         for (int i = 0; i < 201; i++) {
             paare.put("u" + i, "r" + i);
         }

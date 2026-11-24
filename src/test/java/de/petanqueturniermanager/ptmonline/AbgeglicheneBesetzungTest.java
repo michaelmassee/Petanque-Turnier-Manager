@@ -56,6 +56,53 @@ public class AbgeglicheneBesetzungTest {
 	}
 
 	@Test
+	public void unveraendertePersonenBehaltenIhreLizenznummer() {
+		AbgeglicheneBesetzung online = AbgeglicheneBesetzung.ausOnline(List.of(
+				new PersonDto(1, "Anna", "Adler", "L-111", "u-anna"), new PersonDto(2, "Gast", "Grün", "L-222", null)));
+		List<Person> lokal = List.of(new Person("Anna", "Adler", null), new Person("Gast", "Grün", null));
+
+		assertThat(online.fuerUebertragung(lokal)).extracting(PersonDto::licenseNr)
+				.as("z. B. nur der Teamname geändert: Lizenzen gehen unverändert zurück").containsExactly("L-111", "L-222");
+		assertThat(AbgeglicheneBesetzung.lese(online.mitBenutzerIdsFuer(lokal).alsText()).fuerUebertragung(lokal))
+				.as("auch aus der gespeicherten Besetzung").extracting(PersonDto::licenseNr)
+				.containsExactly("L-111", "L-222");
+	}
+
+	@Test
+	public void ersetztePersonVerliertDieLizenznummerDesSlots() {
+		AbgeglicheneBesetzung online = AbgeglicheneBesetzung.ausOnline(List.of(
+				new PersonDto(1, "Anna", "Adler", "L-111", null), new PersonDto(2, "Gast", "Grün", "L-222", null)));
+
+		assertThat(online.fuerUebertragung(List.of(new Person("Anna", "Adler", null),
+				new Person("Yvonne", "Ypsilon", null)))).extracting(PersonDto::licenseNr).containsExactly("L-111", null);
+	}
+
+	@Test
+	public void vereinGehoertZurErstenPersonUndBleibtNurBeiIhr() {
+		AbgeglicheneBesetzung online = AbgeglicheneBesetzung.ausOnline(List.of(
+				new PersonDto(1, "Anna", "Adler", null, null), new PersonDto(2, "Ben", "Berg", null, null)), "BC Linden");
+		AbgeglicheneBesetzung gespeichert = AbgeglicheneBesetzung.lese(online.alsText());
+
+		assertThat(gespeichert.vereinFuer(List.of(new Person("Anna", "Adler", null), new Person("Ben", "Berg", null))))
+				.contains("BC Linden");
+		assertThat(gespeichert.vereinFuer(List.of(new Person("Yvonne", "Ypsilon", null), new Person("Ben", "Berg",
+				null)))).as("neue Person an erster Stelle: Verein unbekannt").isEmpty();
+		assertThat(gespeichert.mitBenutzerIdsFuer(List.of(new Person("Anna", "Adler", null)))
+				.vereinFuer(List.of(new Person("Anna", "Adler", null)))).as("bleibt nach einer Änderung gespeichert")
+				.contains("BC Linden");
+	}
+
+	@Test
+	public void gespeicherteBesetzungOhneLizenzfeldBleibtLesbar() {
+		AbgeglicheneBesetzung alt = AbgeglicheneBesetzung.lese("[{\"v\":\"Anna\",\"n\":\"Adler\",\"u\":\"u-anna\"}]");
+
+		assertThat(alt.personen()).singleElement().satisfies(person -> {
+			assertThat(person.benutzerId()).contains("u-anna");
+			assertThat(person.lizenzNr()).isEmpty();
+		});
+	}
+
+	@Test
 	public void namensSchluesselIstReihenfolgeunabhaengig() {
 		AbgeglicheneBesetzung umgekehrt = AbgeglicheneBesetzung.von(
 				List.of(new Person("Ben", "Berg", null), new Person("Anna", "Adler", "u-anna")));

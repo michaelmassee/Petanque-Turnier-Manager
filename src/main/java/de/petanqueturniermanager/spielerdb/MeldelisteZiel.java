@@ -188,6 +188,14 @@ public interface MeldelisteZiel extends AbgleichQuelle {
     }
 
     /**
+     * Ob die Liste eine Vereinsspalte führt. Ohne sie ist der Verein einer Meldung unbekannt – nicht leer – und
+     * {@link MeldelisteSpielerDaten#vereinName()} liefert immer {@code null}.
+     */
+    default boolean hatVereinsspalte() {
+        return false;
+    }
+
+    /**
      * Teamnamen je 1-basierter Sheet-Zeile in einem Lesezugriff, nur Zeilen mit Teamnamen; leer, wenn die
      * Meldeliste keine Teamname-Spalte hat.
      */

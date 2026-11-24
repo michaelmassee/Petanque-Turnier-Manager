@@ -164,8 +164,8 @@ public final class PtmOnlineAbschlussRunner extends SheetRunner implements PtmOn
         });
         processBox().info(I18n.get("ptmonline.fortschritt.abschluss.erfassen"));
         String tournamentId = verbindung.tournamentId();
-        PtmOnlineLiveSync.vergessen(tournamentId);
-        PtmOnlineSpieleinstellungen.vergessen(tournamentId);
+        PtmOnlineLiveSync.vergessen(bestand, tournamentId);
+        PtmOnlineSpieleinstellungen.vergessen(bestand, tournamentId);
         PtmOnlineSpieleinstellungen.erfasse(bestand, tournamentId,
                 PtmOnlineSpieleinstellungen.lese(getWorkingSpreadsheet(), getTurnierSystem()));
         Optional<LiveStandQuelle> quelle = LiveStandQuellen.fuer(getWorkingSpreadsheet(), getTurnierSystem(),

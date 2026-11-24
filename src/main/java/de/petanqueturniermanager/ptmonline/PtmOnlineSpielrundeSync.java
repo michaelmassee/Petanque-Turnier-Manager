@@ -293,7 +293,7 @@ public final class PtmOnlineSpielrundeSync {
         }
         if (beginn.wiederaufnahme()) {
             // Verworfene oder abgelehnte Runden-/Ranglistenaufträge: nächste Erfassung überträgt alles neu.
-            PtmOnlineLiveSync.vergessen(tournamentId);
+            PtmOnlineLiveSync.vergessen(bestand, tournamentId);
         }
         // Nach running, damit der Start der erste Schreibvorgang bleibt (KP-05).
         if (beginn.trotzBefunden()) {

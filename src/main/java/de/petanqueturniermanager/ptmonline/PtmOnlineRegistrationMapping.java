@@ -264,7 +264,7 @@ public class PtmOnlineRegistrationMapping {
     public static NeueZuordnung neueZuordnung(String lokaleUuid, String nummerFormel, String lokaleBezeichnung,
             RegistrationDto registration) {
         return neueZuordnung(lokaleUuid, nummerFormel, lokaleBezeichnung, registration,
-                AbgeglicheneBesetzung.ausOnline(registration.personen()));
+                AbgeglicheneBesetzung.ausOnline(registration.personen(), registration.club()));
     }
 
     /** @param besetzung Online-Besetzung, wie sie in der Meldeliste steht (bei „Nur Teamname“ der Teamname) */

@@ -314,8 +314,8 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
      * gegenüber der letzten Erfassung unverändert scheint.
      */
     public static void nachPauseUebertragen(XSpreadsheetDocument xDoc, String tournamentId) {
-        PtmOnlineLiveSync.vergessen(tournamentId);
-        PtmOnlineSpieleinstellungen.vergessen(tournamentId);
+        PtmOnlineLiveSync.vergessen(xDoc, tournamentId);
+        PtmOnlineSpieleinstellungen.vergessen(xDoc, tournamentId);
         anstossen(xDoc);
     }
 
@@ -449,7 +449,7 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
             ergebnismeldungen = null;
             String tournamentId = letzteTurnierId;
             if (tournamentId != null) {
-                PtmOnlineErgebnismeldungen.vergessen(tournamentId);
+                PtmOnlineErgebnismeldungen.vergessen(xDoc, tournamentId);
             }
         }
 
@@ -548,7 +548,7 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
             }
             reagiere(stopp, ws, ts, e.verbindung(), e.bestand());
             if (stopp == VersandStopp.FERTIG) {
-                aktualisiereOnlineStandBeiBedarf(client, tournamentId);
+                aktualisiereOnlineStandBeiBedarf(client, e.bestand(), tournamentId);
             }
         }
 
@@ -562,9 +562,9 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
          * auch dieser Abruf, wird mit wachsendem Abstand ein neuer Durchlauf eingeplant – auch ohne weitere
          * Dokumentänderung.
          */
-        private void aktualisiereOnlineStandBeiBedarf(TournamentSyncClient client, String tournamentId)
-                throws InterruptedException {
-            boolean rundenOffen = PtmOnlineLiveSync.brauchtOnlineRunden(tournamentId);
+        private void aktualisiereOnlineStandBeiBedarf(TournamentSyncClient client, AuftragsBestand bestand,
+                String tournamentId) throws InterruptedException {
+            boolean rundenOffen = PtmOnlineLiveSync.brauchtOnlineRunden(bestand, tournamentId);
             Instant zuletzt = onlineStandAbgerufen;
             boolean veraltet = standVeraltet;
             if (!rundenOffen && !veraltet && (statusPerHuckepack
@@ -861,8 +861,8 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
             }
             // Versand läuft wieder; die nächste Erfassung überträgt Runden, Rangliste und Einstellungen vollständig.
             bindungErneuert();
-            PtmOnlineLiveSync.vergessen(frage.tournamentId());
-            PtmOnlineSpieleinstellungen.vergessen(frage.tournamentId());
+            PtmOnlineLiveSync.vergessen(frage.bestand(), frage.tournamentId());
+            PtmOnlineSpieleinstellungen.vergessen(frage.bestand(), frage.tournamentId());
             anstossen();
         }
 
@@ -884,8 +884,8 @@ public final class PtmOnlineLiveBeobachter implements IGlobalEventListener {
             logger.warn("PTM-Online: Online-Turnier {} wurde gelöscht, Verbindung wird aufgehoben",
                     verbindung.tournamentId());
             aenderungsKanalSchliessen();
-            PtmOnlineLiveSync.vergessen(verbindung.tournamentId());
-            PtmOnlineSpieleinstellungen.vergessen(verbindung.tournamentId());
+            PtmOnlineLiveSync.vergessen(ws.getWorkingSpreadsheetDocument(), verbindung.tournamentId());
+            PtmOnlineSpieleinstellungen.vergessen(ws.getWorkingSpreadsheetDocument(), verbindung.tournamentId());
             fuehreAus(new PtmOnlineArchivRunner(ws, ts, verbindung.mapping()),
                     "PTM-Online: Blatt konnte nach dem Löschen des Online-Turniers nicht archiviert werden");
             LoMainThread.post(xContext, this::zeigeTurnierGeloescht);

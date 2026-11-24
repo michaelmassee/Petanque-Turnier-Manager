@@ -35,8 +35,7 @@ class PtmOnlineTurnierstartUITest extends BaseCalcUITest {
 
     @AfterEach
     void aufraeumen() {
-        PtmOnlineLiveSync.vergessen(TURNIER_ID);
-        PtmOnlineSpieleinstellungen.vergessen(TURNIER_ID);
+        // Verwirft mit den Auftragspuffern auch Live-Stand und Spieleinstellungen, die daran hängen.
         PtmOnlineAuftraege.vergessen(doc);
         LibreOfficePtmOnlineSpeicher.setZugangsdatenForTest(null);
     }

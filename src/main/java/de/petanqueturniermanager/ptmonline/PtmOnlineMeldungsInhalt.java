@@ -41,6 +41,15 @@ final class PtmOnlineMeldungsInhalt {
      */
     static NeueOnlineAnmeldung anmeldung(Formation formation, List<MeldelisteSpielerDaten> spieler,
             @Nullable String teamname) {
+        return anmeldung(formation, spieler, teamname, spieler.getFirst().vereinName());
+    }
+
+    /**
+     * Wie {@link #anmeldung(Formation, List, String)}, mit ausdrücklichem Verein (siehe {@link #verein}). PTM-Online
+     * übernimmt den Verein bei einer Änderung aus dem Dokument immer – ein fehlender löscht den Online-Verein.
+     */
+    static NeueOnlineAnmeldung anmeldung(Formation formation, List<MeldelisteSpielerDaten> spieler,
+            @Nullable String teamname, @Nullable String verein) {
         if (formation == Formation.NUR_TEAMNAME) {
             return new NeueOnlineAnmeldung("", "", null, null, null, null, null, null, spieler.getFirst().vorname(),
                     true, true, List.of(), List.of());
@@ -49,10 +58,21 @@ final class PtmOnlineMeldungsInhalt {
         MeldelisteSpielerDaten zweiter = spieler.size() > 1 ? spieler.get(1) : null;
         MeldelisteSpielerDaten dritter = spieler.size() > 2 ? spieler.get(2) : null;
         return new NeueOnlineAnmeldung(
-                erster.vorname(), erster.nachname(), erster.vereinName(), null,
+                erster.vorname(), erster.nachname(), verein, null,
                 zweiter == null ? null : zweiter.vorname(), zweiter == null ? null : zweiter.nachname(),
                 dritter == null ? null : dritter.vorname(), dritter == null ? null : dritter.nachname(),
                 StringUtils.trimToNull(teamname), true, true, List.of(), List.of());
+    }
+
+    /**
+     * Verein einer geänderten Meldung: aus der Vereinsspalte, sonst der zuletzt abgeglichene Online-Verein – das
+     * Dokument kennt ihn dann nicht und darf ihn online nicht löschen, etwa bei einer reinen Teamnamenänderung.
+     *
+     * @param zuletzt zuletzt abgeglichene (oder aktuelle Online-)Besetzung samt Verein
+     */
+    static @Nullable String verein(List<MeldelisteSpielerDaten> spieler, boolean vereinsspalte,
+            AbgeglicheneBesetzung zuletzt) {
+        return vereinsspalte ? spieler.getFirst().vereinName() : zuletzt.vereinFuer(personen(spieler)).orElse(null);
     }
 
     /** Personen der Meldung ohne Benutzer-IDs, für den Vergleich mit der zuletzt abgeglichenen Besetzung. */

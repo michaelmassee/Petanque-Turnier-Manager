@@ -35,6 +35,8 @@ class PtmOnlineMeldelistenSyncTest {
     private static final String ONLINE_A = "online-a";
     private static final String UUID_B = "uuid-b";
     private static final String BESTAETIGT = "confirmed";
+    private static final boolean MIT_VEREINSSPALTE = true;
+    private static final boolean OHNE_VEREINSSPALTE = false;
 
     private final PtmOnlineMeldelistenSync sync = new PtmOnlineMeldelistenSync();
 
@@ -125,7 +127,7 @@ class PtmOnlineMeldelistenSyncTest {
                     assertThat(anlage.anmeldung().firstName()).isEqualTo("Lena");
                     assertThat(anlage.anmeldung().teamName()).isEqualTo("Vor-Ort");
                 });
-        assertThat(sync.ermittle(TURNIER, Formation.DOUBLETTE, false, List.of(neu),
+        assertThat(sync.ermittle(TURNIER, Formation.DOUBLETTE, MIT_VEREINSSPALTE, false, List.of(neu),
                 zuordnungen(Map.of(), Map.of(), Set.of())).aktionen()).as("nach dem Start").isEmpty();
     }
 
@@ -218,7 +220,7 @@ class PtmOnlineMeldelistenSyncTest {
                 Set.of());
         LokaleMeldung meldung = new LokaleMeldung(2, UUID_A, List.of(spieler("Carreau-Club", "", 2)), null, true);
 
-        assertThat(sync.ermittle(TURNIER, Formation.NUR_TEAMNAME, true, List.of(meldung), zuordnungen).aktionen())
+        assertThat(sync.ermittle(TURNIER, Formation.NUR_TEAMNAME, MIT_VEREINSSPALTE, true, List.of(meldung), zuordnungen).aktionen())
                 .singleElement().isInstanceOfSatisfying(Aenderung.class, aenderung -> {
                     assertThat(aenderung.anmeldung().teamName()).isEqualTo("Carreau-Club");
                     assertThat(aenderung.anmeldung().firstName()).as("Kontaktperson bleibt online").isEmpty();
@@ -226,8 +228,26 @@ class PtmOnlineMeldelistenSyncTest {
                 });
     }
 
+    @Test
+    void teamnamenaenderungOhneVereinsspalteBehaeltDenOnlineVerein() {
+        Zuordnungen zuordnungen = zuordnungen(Map.of(UUID_A, ONLINE_A), Map.of(UUID_A, new ZuordnungsZusatz(
+                AbgeglicheneBesetzung.ausOnline(List.of(new PersonDto(1, "Anna", "Adler", "L-111", "konto-anna")),
+                        "BC Linden").alsText(), "", AbgeglichenerTeamname.alsText("Les Boulistes"))), Set.of());
+        List<LokaleMeldung> nurTeamnameGeaendert = List.of(meldungA("Anna", "Adler", "Neuer Name"));
+
+        assertThat(sync.ermittle(TURNIER, Formation.DOUBLETTE, OHNE_VEREINSSPALTE, true, nurTeamnameGeaendert,
+                zuordnungen).aktionen()).singleElement().isInstanceOfSatisfying(Aenderung.class, aenderung -> {
+                    assertThat(aenderung.anmeldung().teamName()).isEqualTo("Neuer Name");
+                    assertThat(aenderung.anmeldung().club()).as("Dokument kennt keinen Verein").isEqualTo("BC Linden");
+                    assertThat(aenderung.personen()).extracting(PersonDto::licenseNr).containsExactly("L-111");
+                });
+        assertThat(sync.ermittle(TURNIER, Formation.DOUBLETTE, MIT_VEREINSSPALTE, true, nurTeamnameGeaendert,
+                zuordnungen).aktionen()).singleElement().isInstanceOfSatisfying(Aenderung.class,
+                        aenderung -> assertThat(aenderung.anmeldung().club()).as("leere Vereinszelle gilt").isNull());
+    }
+
     private Ergebnis ermittle(List<LokaleMeldung> meldungen, Zuordnungen zuordnungen) {
-        return sync.ermittle(TURNIER, Formation.DOUBLETTE, true, meldungen, zuordnungen);
+        return sync.ermittle(TURNIER, Formation.DOUBLETTE, MIT_VEREINSSPALTE, true, meldungen, zuordnungen);
     }
 
     private static LokaleMeldung meldungA(String vorname, String nachname, @Nullable String teamname) {

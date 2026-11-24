@@ -125,6 +125,13 @@ public final class PtmOnlineAuftraege {
         mapping.schreibeAuftragsBestand(bestand);
     }
 
+    /** Alle geladenen Bestände eines Dokuments, je Bindung (Supermêlée: je Spieltag) einer. */
+    static List<AuftragsBestand> geladene(XSpreadsheetDocument xDoc) {
+        String praefix = UnoRuntime.generateOid(xDoc) + "|";
+        return BESTAENDE.entrySet().stream().filter(eintrag -> eintrag.getKey().startsWith(praefix))
+                .map(Map.Entry::getValue).toList();
+    }
+
     /** Vergisst alle Bestände eines geschlossenen Dokuments. */
     static void vergessen(XSpreadsheetDocument xDoc) {
         String praefix = UnoRuntime.generateOid(xDoc) + "|";
@@ -318,6 +325,7 @@ public final class PtmOnlineAuftraege {
         String pfad = TournamentSyncClient.rundePfad(tournamentId, rundeNr);
         bestand.entferneUeberholte(auftrag -> auftrag.pfad().equals(pfad));
         bestand.erzeuge(AuftragsArt.RUNDE, "PUT", pfad, TournamentSyncClient.rundeBody(matches), "{}");
+        abschlussZuletzt(bestand);
     }
 
     /** Löschen einer lokal nicht mehr vorhandenen Runde; ein ungesendeter Stand derselben Runde entfällt. */
@@ -325,6 +333,7 @@ public final class PtmOnlineAuftraege {
         String pfad = TournamentSyncClient.rundePfad(tournamentId, rundeNr);
         bestand.entferneUeberholte(auftrag -> auftrag.pfad().equals(pfad));
         bestand.erzeuge(AuftragsArt.RUNDE_LOESCHEN, "DELETE", pfad, "", "{}");
+        abschlussZuletzt(bestand);
     }
 
     /**
@@ -337,6 +346,17 @@ public final class PtmOnlineAuftraege {
         bestand.entferneUeberholte(auftrag -> auftrag.pfad().equals(pfad));
         bestand.erzeuge(AuftragsArt.RANGLISTE, "PUT", pfad, TournamentSyncClient.ranglisteBody(eintraege, koSieger),
                 "{}");
+        abschlussZuletzt(bestand);
+    }
+
+    /**
+     * Ein wartender Abschluss friert online Endrangliste und Ergebnisse ein und muss daher nach jeder später erfassten
+     * Runde oder Rangliste gesendet werden – sonst veröffentlicht er einen veralteten Zwischenstand, den der danach
+     * gesendete Stand nicht mehr korrigiert. War er schon unterwegs (Antwort verloren), friert ihn die Wiederholung
+     * unter neuer Auftrags-ID neu ein; PTM-Online benachrichtigt dabei niemanden ein zweites Mal.
+     */
+    private static void abschlussZuletzt(AuftragsBestand bestand) {
+        bestand.wiederholeAmEnde(AuftragsArt.ABSCHLUSS::equals);
     }
 
     /** Spieleinstellungen des Dokuments; ein ungesendeter älterer Stand entfällt. */
@@ -363,17 +383,47 @@ public final class PtmOnlineAuftraege {
 
     /**
      * Entscheidungen der Turnierleitung über Ergebnismeldungen von Spielern (E-27); wird ohne Netz nachgeholt.
+     * PTM-Online nimmt höchstens 200 je Aufruf an, mehr verteilen sich auf
+     * mehrere Aufträge.
      *
      * @param uebernommenProMeldung je Meldungs-ID {@code true} = übernommen, {@code false} = verworfen
      */
     static void ergebnismeldungen(AuftragsBestand bestand, String tournamentId,
             Map<String, Boolean> uebernommenProMeldung) {
-        if (uebernommenProMeldung.isEmpty()) {
-            return;
+        List<Map.Entry<String, Boolean>> alle = List.copyOf(uebernommenProMeldung.entrySet());
+        for (int start = 0; start < alle.size(); start += MAX_ENTSCHEIDUNGEN_JE_AUFTRAG) {
+            Map<String, Boolean> teil = new LinkedHashMap<>();
+            alle.subList(start, Math.min(alle.size(), start + MAX_ENTSCHEIDUNGEN_JE_AUFTRAG))
+                    .forEach(eintrag -> teil.put(eintrag.getKey(), eintrag.getValue()));
+            bestand.erzeuge(AuftragsArt.ERGEBNISMELDUNGEN, "POST",
+                    TournamentSyncClient.ergebnismeldungEntscheidungenPfad(tournamentId),
+                    TournamentSyncClient.ergebnismeldungEntscheidungenBody(teil), "{}");
         }
-        bestand.erzeuge(AuftragsArt.ERGEBNISMELDUNGEN, "POST",
-                TournamentSyncClient.ergebnismeldungEntscheidungenPfad(tournamentId),
-                TournamentSyncClient.ergebnismeldungEntscheidungenBody(uebernommenProMeldung), "{}");
+    }
+
+    /**
+     * IDs der Ergebnismeldungen, deren Entscheidung als offener Auftrag auf den Versand oder die Antwort wartet. Der
+     * Auftragspuffer wird mit dem Dokument gespeichert; so bleibt eine Entscheidung auch nach einem Neustart gültig,
+     * wenn PTM-Online die Meldung bis dahin noch als offen liefert.
+     */
+    static Set<String> beauftragteErgebnismeldungen(AuftragsBestand bestand) {
+        Set<String> ids = new LinkedHashSet<>();
+        for (AuftragsBestand.Eintrag eintrag : bestand.eintraege()) {
+            if (eintrag.zustand() != AuftragsBestand.Zustand.OFFEN
+                    || eintrag.auftrag().art() != AuftragsArt.ERGEBNISMELDUNGEN) {
+                continue;
+            }
+            JsonElement entscheidungen = json(eintrag.auftrag().body(), eintrag.auftrag()).get("decisions");
+            if (entscheidungen != null && entscheidungen.isJsonArray()) {
+                entscheidungen.getAsJsonArray().forEach(entscheidung -> {
+                    String id = entscheidung.isJsonObject() ? text(entscheidung.getAsJsonObject(), "id") : "";
+                    if (!id.isEmpty()) {
+                        ids.add(id);
+                    }
+                });
+            }
+        }
+        return ids;
     }
 
     /**
@@ -589,11 +639,26 @@ public final class PtmOnlineAuftraege {
         };
     }
 
-    /** Trennen: offene Aufträge sind danach sinnlos und werden verworfen. */
-    static SyncAuftrag trennen(AuftragsBestand bestand, String tournamentId, String grundVerworfen) {
+    /**
+     * Trennen, vor alle offenen Aufträge gezogen, um es allein zu senden ({@link #sendeAllein}). Die übrigen bleiben
+     * offen, bis das Trennen gelungen ist ({@link #nachTrennen}); scheitert es, nimmt {@link #trennenZuruecknehmen} es
+     * wieder heraus – sonst trennte der Hintergrund später doch noch, obwohl die Turnierleitung abgebrochen hat.
+     */
+    static SyncAuftrag trennen(AuftragsBestand bestand, String tournamentId) {
+        SyncAuftrag trennen = bestand.erzeuge(AuftragsArt.TRENNEN, "POST",
+                TournamentSyncClient.trennenPfad(tournamentId), "{}", "{}");
+        bestand.zieheVor(trennen.auftragsId());
+        return trennen;
+    }
+
+    /** Nach dem Trennen (oder online bereits gelöster Bindung) sind die übrigen offenen Aufträge sinnlos. */
+    static void nachTrennen(AuftragsBestand bestand, String grundVerworfen) {
         bestand.verwerfe(art -> true, grundVerworfen);
-        return bestand.erzeuge(AuftragsArt.TRENNEN, "POST", TournamentSyncClient.trennenPfad(tournamentId), "{}",
-                "{}");
+    }
+
+    /** Gescheitertes Trennen: Der Auftrag entfällt, die übrigen bleiben unverändert offen. */
+    static void trennenZuruecknehmen(AuftragsBestand bestand, SyncAuftrag trennen) {
+        bestand.entferneUeberholte(auftrag -> auftrag.auftragsId().equals(trennen.auftragsId()));
     }
 
     /** Höchste erwartete Revision je UUID nach allen offenen Teilnahme- und Änderungsaufträgen. */
@@ -941,6 +1006,22 @@ public final class PtmOnlineAuftraege {
             speichern(bestand, mapping);
             stopp = AuftragsVersand.sende(bestand.zuSenden(pausiert), bestand.mitVersandVermerk(client),
                     bestand::gesendet);
+        } finally {
+            bestand.versandSperre().unlock();
+        }
+        return new SynchronerVersand(stopp, anwenden(bestand, mapping));
+    }
+
+    /** Sendet nur diesen einen offenen Auftrag, sofort und unabhängig von einer Pause; die übrigen bleiben liegen. */
+    static SynchronerVersand sendeAllein(AuftragsBestand bestand, PtmOnlineRegistrationMapping mapping,
+            TournamentSyncClient client, SyncAuftrag auftrag) throws GenerateException, InterruptedException {
+        VersandStopp stopp;
+        bestand.versandSperre().lockInterruptibly();
+        try {
+            speichern(bestand, mapping);
+            List<SyncAuftrag> nurDieser = bestand.zuSenden(false).stream()
+                    .filter(offen -> offen.auftragsId().equals(auftrag.auftragsId())).toList();
+            stopp = AuftragsVersand.sende(nurDieser, bestand.mitVersandVermerk(client), bestand::gesendet);
         } finally {
             bestand.versandSperre().unlock();
         }
