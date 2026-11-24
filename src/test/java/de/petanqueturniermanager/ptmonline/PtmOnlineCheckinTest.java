@@ -194,11 +194,37 @@ class PtmOnlineCheckinTest {
 
         List<PtmOnlineStatusAuftrag.Eintrag> abweichend = PtmOnlineCheckin.abweichendVonOnline(lokal,
                 Map.of("umnummeriert", "o1", "onlineOhneNr", "o2", "gleich", "o3", "lokalOhneNr", "o4"),
-                Map.of("o1", new OnlineMeldungsStand("active", 1), "o2", online("active"),
-                        "o3", new OnlineMeldungsStand("active", 3), "o4", new OnlineMeldungsStand("active", 4)));
+                Map.of("o1", new OnlineMeldungsStand("active", 1, null), "o2", online("active"),
+                        "o3", new OnlineMeldungsStand("active", 3, null), "o4", new OnlineMeldungsStand("active", 4, null)));
 
         assertThat(abweichend).extracting(PtmOnlineStatusAuftrag.Eintrag::lokaleUuid)
                 .containsExactly("umnummeriert", "onlineOhneNr");
+    }
+
+    @Test
+    void abgleichFindetAlleinGeaenderteSetzposition() {
+        List<PtmOnlineStatusAuftrag.Eintrag> lokal = List.of(mitSetzposition("gesetzt", 3),
+                mitSetzposition("gleich", 2), eintrag("lokalOhne", OnlineTeilnahme.AKTIV));
+
+        List<PtmOnlineStatusAuftrag.Eintrag> abweichend = PtmOnlineCheckin.abweichendVonOnline(lokal,
+                Map.of("gesetzt", "o1", "gleich", "o2", "lokalOhne", "o3"),
+                Map.of("o1", online("active"), "o2", new OnlineMeldungsStand("active", null, 2),
+                        "o3", new OnlineMeldungsStand("active", null, 5)));
+
+        assertThat(abweichend).as("Teilnahme und Teamnummer gleich, nur die Setzposition weicht ab")
+                .extracting(PtmOnlineStatusAuftrag.Eintrag::lokaleUuid).containsExactly("gesetzt", "lokalOhne");
+    }
+
+    @Test
+    void vergessenEinesTurniersLaesstAndereUnberuehrt() {
+        bestaetige(checkin.ermittle(TURNIER, List.of(eintrag("a", OnlineTeilnahme.AKTIV))));
+        bestaetige(checkin.ermittle(SPIELTAG_2, List.of(eintrag("a", OnlineTeilnahme.AKTIV))));
+
+        // Der nachgeholte Start von TURNIER hat dessen Teilnahme-Auftrag verworfen.
+        checkin.vergessen(TURNIER);
+
+        assertThat(checkin.ermittle(TURNIER, List.of(eintrag("a", OnlineTeilnahme.AKTIV)))).isPresent();
+        assertThat(checkin.ermittle(SPIELTAG_2, List.of(eintrag("a", OnlineTeilnahme.AKTIV)))).isEmpty();
     }
 
     private void bestaetige(Optional<PtmOnlineCheckin.Aenderung> aenderung) {
@@ -220,7 +246,7 @@ class PtmOnlineCheckinTest {
     }
 
     private static OnlineMeldungsStand online(String teilnahme) {
-        return new OnlineMeldungsStand(teilnahme, null);
+        return new OnlineMeldungsStand(teilnahme, null, null);
     }
 
     private static List<String> uuids(PtmOnlineCheckin.Aenderung aenderung) {

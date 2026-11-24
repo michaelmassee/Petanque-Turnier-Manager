@@ -92,7 +92,7 @@ final class PtmOnlineCheckin {
     }
 
     /**
-     * Manueller Abgleich: lokale Einträge, deren Teilnahme oder Teamnummer vom Online-Stand abweicht. Meldungen ohne
+     * Manueller Abgleich: lokale Einträge, deren Teilnahme, Teamnummer oder Setzposition vom Online-Stand abweicht. Meldungen ohne
      * bekannten Online-Stand (nicht zugeordnet oder online nicht bestätigt) bleiben unberührt.
      *
      * @param lokal                 je online zugeordneter Meldung Teilnahme, Setzposition und Teamnummer
@@ -108,7 +108,8 @@ final class PtmOnlineCheckin {
 
     private static boolean weichtAb(PtmOnlineStatusAuftrag.Eintrag lokal, OnlineMeldungsStand online) {
         return !online.teilnahme().equals(lokal.teilnahme().apiWert())
-                || OnlineMeldungsStand.teamNummerAbweichend(lokal.teamNummer(), online.teamNummer());
+                || OnlineMeldungsStand.teamNummerAbweichend(lokal.teamNummer(), online.teamNummer())
+                || OnlineMeldungsStand.setzpositionAbweichend(lokal.seedingPosition(), online.setzposition());
     }
 
     /** Die Änderung ist als Auftrag gespeichert; ihr Stand gilt als bekannt. */
@@ -123,6 +124,14 @@ final class PtmOnlineCheckin {
      */
     void vergessen() {
         bekannterStand.clear();
+    }
+
+    /**
+     * Wie {@link #vergessen()}, nur für ein Online-Turnier: Der Turnierstart hat seine offenen Teilnahme-Aufträge
+     * verworfen (KP-05).
+     */
+    void vergessen(String tournamentId) {
+        bekannterStand.remove(tournamentId);
     }
 
     /** Ein gesendeter Rundenstart-Abgleich hat die Teilnahme seiner Meldungen gemeldet. */

@@ -1288,7 +1288,8 @@ public final class RegistrationImportTask {
         return registrations.stream()
                 .filter(registration -> istImportierbar(registration) && registration.participation() != null)
                 .collect(Collectors.toMap(RegistrationDto::id,
-                        registration -> new OnlineMeldungsStand(registration.participation(), registration.teamNumber()),
+                        registration -> new OnlineMeldungsStand(registration.participation(), registration.teamNumber(),
+                                registration.seedingPosition()),
                         (links, rechts) -> rechts, LinkedHashMap::new));
     }
 
