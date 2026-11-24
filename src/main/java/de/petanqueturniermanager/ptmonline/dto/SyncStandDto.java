@@ -20,9 +20,26 @@ import org.jspecify.annotations.Nullable;
  * @param date               Turniertag ({@code yyyy-MM-dd}), {@code null} bei älteren Servern
  * @param playerResultReportingEnabled Spieler dürfen Ergebnisse in der Live-Ansicht melden (E-27); ältere Server
  *                                     liefern das Feld nicht, dann {@code false}
+ * @param highestRoundOnline höchste online vorhandene Rundennummer; {@code null} bei älteren Servern
  */
 public record SyncStandDto(String status, boolean registrationClosed, String runningResetAt, int roundsOnline,
-        long writeCounter, @Nullable String date, boolean playerResultReportingEnabled) {
+        long writeCounter, @Nullable String date, boolean playerResultReportingEnabled,
+        @Nullable Integer highestRoundOnline) {
+
+    /** Stand ohne bekannte höchste Rundennummer (älterer Server); es gilt die Anzahl der Runden. */
+    public SyncStandDto(String status, boolean registrationClosed, String runningResetAt, int roundsOnline,
+            long writeCounter, @Nullable String date, boolean playerResultReportingEnabled) {
+        this(status, registrationClosed, runningResetAt, roundsOnline, writeCounter, date, playerResultReportingEnabled,
+                null);
+    }
+
+    /**
+     * Bis zu welcher Rundennummer online Runden stehen können. Nach einer abgelehnten früheren Runde hat die Nummerierung
+     * Lücken, dann liegt die höchste über der Anzahl; ein älterer Server nennt nur die Anzahl.
+     */
+    public int hoechsteRundeOnline() {
+        return highestRoundOnline == null ? roundsOnline : Math.max(highestRoundOnline, roundsOnline);
+    }
 
     /**
      * Derselbe Stand mit dem per Huckepack gemeldeten Status; leer, wenn kein Status gemeldet wurde oder er sich nicht
@@ -33,7 +50,7 @@ public record SyncStandDto(String status, boolean registrationClosed, String run
             return Optional.empty();
         }
         return Optional.of(new SyncStandDto(gemeldeterStatus, registrationClosed, runningResetAt, roundsOnline,
-                writeCounter, date, playerResultReportingEnabled));
+                writeCounter, date, playerResultReportingEnabled, highestRoundOnline));
     }
 
     /** Online abgeschlossen; ein Rundenstart aus dem Dokument würde das Turnier wieder aufnehmen. */

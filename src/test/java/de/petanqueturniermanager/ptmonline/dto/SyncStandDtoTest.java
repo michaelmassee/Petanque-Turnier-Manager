@@ -22,6 +22,15 @@ class SyncStandDtoTest {
     }
 
     @Test
+    void hoechsteRundeOnlineBeruecksichtigtLueckenUndAeltereServer() {
+        SyncStandDto mitLuecke = new SyncStandDto("running", true, null, 1, 0, null, false, 2);
+        SyncStandDto aelterServer = new SyncStandDto("running", true, null, 3, 0, null, false);
+
+        assertThat(mitLuecke.hoechsteRundeOnline()).as("Runde 1 abgelehnt, Runde 2 online").isEqualTo(2);
+        assertThat(aelterServer.hoechsteRundeOnline()).as("ohne Angabe gilt die Anzahl").isEqualTo(3);
+    }
+
+    @Test
     void erkenntDenAbschluss() {
         assertThat(ENTWURF.istAbgeschlossen()).isFalse();
         assertThat(ENTWURF.mitGemeldetemStatus("finished")).hasValueSatisfying(stand -> {

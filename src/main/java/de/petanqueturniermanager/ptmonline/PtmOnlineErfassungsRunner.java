@@ -353,7 +353,7 @@ final class PtmOnlineErfassungsRunner extends SheetRunner {
             // Nach running erneut erfassen: Der Start hat den Check-in dieses Durchlaufs verworfen.
             erfasseCheckin(bestand, verbindung);
         }
-        OptionalInt rundenOnline = onlineStand.map(stand -> OptionalInt.of(stand.roundsOnline()))
+        OptionalInt rundenOnline = onlineStand.map(stand -> OptionalInt.of(stand.hoechsteRundeOnline()))
                 .orElse(OptionalInt.empty());
         PtmOnlineLiveSync.erfasse(bestand, verbindung.tournamentId(), momentaufnahme, rundenOnline);
         return true;

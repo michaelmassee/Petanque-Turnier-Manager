@@ -43,7 +43,7 @@ public final class PtmOnlineLiveSync {
     }
 
     /**
-     * @param rundenOnline Anzahl der online vorhandenen Runden, sofern bekannt – gebraucht, solange sie seit dem
+     * @param rundenOnline höchste online vorhandene Rundennummer, sofern bekannt – gebraucht, solange sie seit dem
      *                     Öffnen oder Verbinden noch nicht abgeglichen sind, um online überzählige Runden zu löschen
      *                     (auch nachträglich, wenn der erste Abruf gescheitert ist)
      * @return Anzahl der erzeugten Aufträge

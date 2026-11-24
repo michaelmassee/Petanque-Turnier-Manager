@@ -161,13 +161,14 @@ public class TournamentSyncClientTest {
 	@Test
 	public void fetchSyncStandLiestNurDenTurnierzustand() throws Exception {
 		HttpClient httpClient = httpClientMitAntwort("{\"registrations\":[],\"tournament\":{\"status\":\"running\","
-				+ "\"registrationClosed\":true,\"roundsOnline\":4,\"writeCounter\":7}}");
+				+ "\"registrationClosed\":true,\"roundsOnline\":4,\"highestRoundOnline\":6,\"writeCounter\":7}}");
 		TournamentSyncClient client = new TournamentSyncClient(httpClient, "https://ptm-online.example.com", "ptm_secret");
 
 		SyncStandDto stand = client.fetchSyncStand("t1");
 
 		assertThat(stand.istRunning()).isTrue();
 		assertThat(stand.roundsOnline()).isEqualTo(4);
+		assertThat(stand.hoechsteRundeOnline()).as("Lücke in den Rundennummern").isEqualTo(6);
 		assertThat(stand.writeCounter()).isEqualTo(7);
 		assertThat(gesendeteAnfrage(httpClient).uri().toString())
 				.as("fester Zeitpunkt nach allen Anmeldungen, unabhängig von der lokalen Uhr")
@@ -177,13 +178,15 @@ public class TournamentSyncClientTest {
 	@Test
 	public void fetchMappingLiefertDieServerZuordnungen() throws Exception {
 		TournamentSyncClient client = clientMitAntwort("{\"mappings\":[{\"onlineRegistrationId\":\"r1\","
-				+ "\"localRegistrationUuid\":\"u1\",\"status\":\"confirmed\",\"executionRevision\":3}]}");
+				+ "\"localRegistrationUuid\":\"u1\",\"status\":\"confirmed\",\"executionRevision\":3,"
+				+ "\"club\":\"BC Linden\"}]}");
 
 		List<ServerZuordnungDto> zuordnungen = client.fetchMapping("t1");
 
 		assertThat(zuordnungen).singleElement().satisfies(zuordnung -> {
 			assertThat(zuordnung.localRegistrationUuid()).isEqualTo("u1");
 			assertThat(zuordnung.revision()).isEqualTo(3);
+			assertThat(zuordnung.club()).as("Verein für die wiederhergestellte Besetzung").isEqualTo("BC Linden");
 		});
 	}
 

@@ -40,7 +40,7 @@ public final class PtmOnlineZuordnungWiederherstellung {
                     + StringUtils.defaultString(server.lastName())).strip();
             fehlende.add(new NeueZuordnung(uuid, server.onlineRegistrationId(), formel(ziel, uuid), server.revision(),
                     name, OnlineAnmeldeStatus.anzeige(server.status()), "", "", server.status(),
-                    AbgeglicheneBesetzung.ausOnline(server.personen()).alsText(), "", ""));
+                    AbgeglicheneBesetzung.ausOnline(server.personen(), server.club()).alsText(), "", ""));
         }
         mapping.addMappings(fehlende);
         return fehlende.size();

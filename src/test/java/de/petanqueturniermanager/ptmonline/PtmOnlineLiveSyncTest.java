@@ -152,6 +152,16 @@ class PtmOnlineLiveSyncTest {
     }
 
     @Test
+    void ohneLokaleRundeWirdOnlineBisZurHoechstenRundennummerGeloescht() {
+        // Online steht nur Runde 2 (Runde 1 wurde abgelehnt); übergeben wird die höchste Nummer, nicht die Anzahl 1.
+        erfasse(LiveTurnierStand.ohneRangliste(List.of()), OptionalInt.of(2));
+
+        assertThat(auftraege()).extracting(SyncAuftrag::art, SyncAuftrag::pfad).contains(
+                tuple(AuftragsArt.RUNDE_LOESCHEN, "/api/sync/tournaments/t1/rounds/1"),
+                tuple(AuftragsArt.RUNDE_LOESCHEN, "/api/sync/tournaments/t1/rounds/2"));
+    }
+
+    @Test
     void abgewieseneKopieUnterdruecktDieUebertragungDesOriginalsNicht() {
         AuftragsBestand original = AuftragsBestand.leer();
         AuftragsBestand kopie = AuftragsBestand.leer();

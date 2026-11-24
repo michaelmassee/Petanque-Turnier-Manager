@@ -179,7 +179,7 @@ public final class PtmOnlineAbschlussRunner extends SheetRunner implements PtmOn
     private OptionalInt rundenOnline(TournamentSyncClient client, String tournamentId) throws InterruptedException {
         try {
             SyncStandDto stand = client.fetchSyncStand(tournamentId);
-            return OptionalInt.of(stand.roundsOnline());
+            return OptionalInt.of(stand.hoechsteRundeOnline());
         } catch (IOException e) {
             getLogger().info("PTM-Online: Online-Zustand vor dem Abschluss nicht abrufbar", e);
             return OptionalInt.empty();
