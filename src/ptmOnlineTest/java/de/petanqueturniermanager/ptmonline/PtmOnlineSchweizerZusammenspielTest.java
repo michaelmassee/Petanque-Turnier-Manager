@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -250,6 +251,85 @@ class PtmOnlineSchweizerZusammenspielTest extends BasePtmOnlineZusammenspielTest
                 .isNotPositive();
         assertThat(lokaleMeldungen().values()).containsExactly(namen(TEAM_B));
         assertThat(mapping.istBereitsImportiert(idA)).as("Zuordnung vom Server").isTrue();
+    }
+
+    @Test
+    void onlineStornierenEinerGeloeschtenMeldungWirktImNaechstenAbgleich() throws Exception {
+        String idA = geloeschteMeldungMitKonflikt();
+        String uuidA = mapping.getLokaleUuid(idA).orElseThrow();
+        mapping.konfliktListe().setzeEntscheidung(KonfliktFall.schluessel(KonfliktArt.LOKAL_FEHLEND, uuidA,
+                List.of(idA)), Entscheidung.ONLINE_STORNIEREN.anzeige());
+        neuerLaufWieUeberDasMenue();
+
+        abgleichen();
+
+        assertThat(online.anmeldung(turnierId, idA).orElseThrow().get("status").getAsString())
+                .as("Storno gesendet, obwohl die Zuordnung nur der Server kennt").isEqualTo("cancelled");
+        assertThat(konfliktArten()).as("Konflikt erledigt").doesNotContain(KonfliktArt.LOKAL_FEHLEND);
+    }
+
+    @Test
+    void nurLokalEntfernenEinerGeloeschtenMeldungWirktImNaechstenAbgleich() throws Exception {
+        String idA = geloeschteMeldungMitKonflikt();
+        String uuidA = mapping.getLokaleUuid(idA).orElseThrow();
+        mapping.konfliktListe().setzeEntscheidung(KonfliktFall.schluessel(KonfliktArt.LOKAL_FEHLEND, uuidA,
+                List.of(idA)), Entscheidung.NUR_LOKAL_ENTFERNEN.anzeige());
+        neuerLaufWieUeberDasMenue();
+
+        abgleichen();
+
+        assertThat(ZuordnungsVermerke.lese(mapping.getZusaetzeProUuid().get(uuidA).vermerk())
+                .hat(ZuordnungsVermerke.LOKAL_ENTFERNT)).as("Entfernt-Vermerk gesetzt").isTrue();
+        assertThat(online.anmeldung(turnierId, idA).orElseThrow().get("status").getAsString())
+                .as("online unverändert").isNotEqualTo("cancelled");
+        assertThat(konfliktArten()).as("Konflikt erledigt").doesNotContain(KonfliktArt.LOKAL_FEHLEND);
+    }
+
+    @Test
+    void wiederherstellungTraegtFehlendeOnlineIdBeiVorhandenerSyncZeileNach() throws Exception {
+        turnierAnlegen(Formation.TRIPLETTE, IN_EINEM_MONAT);
+        String idA = online.anmelden(turnierId, TEAM_A);
+        verbinden();
+        abgleichen();
+        String uuidA = mapping.getLokaleUuid(idA).orElseThrow();
+        // Online-ID in der Nr-Zelle verloren, Zeile im Sync-Blatt bleibt.
+        wieImSheetRunner(() -> ziel.setzeOnlineIds(Map.of(uuidA, Optional.empty())));
+        neuerLaufWieUeberDasMenue();
+        assertThat(mapping.getOnlineId(uuidA)).as("Ausgangslage: Online-ID fehlt").isEmpty();
+
+        int[] anzahl = new int[1];
+        wieImSheetRunner(() -> anzahl[0] = PtmOnlineZuordnungWiederherstellung.ausfuehren(gebundenerClient(),
+                mapping, turnierId, ziel));
+
+        assertThat(anzahl[0]).isEqualTo(1);
+        neuerLaufWieUeberDasMenue();
+        assertThat(mapping.getOnlineId(uuidA)).as("Online-ID wieder in der Nr-Zelle").contains(idA);
+    }
+
+    /** Importierte Meldung A gelöscht; der Abgleich meldet sie als lokal fehlend. Liefert die Online-ID von A. */
+    private String geloeschteMeldungMitKonflikt() throws Exception {
+        turnierAnlegen(Formation.TRIPLETTE, IN_EINEM_MONAT);
+        String idA = online.anmelden(turnierId, TEAM_A);
+        online.anmelden(turnierId, TEAM_B);
+        verbinden();
+        abgleichen();
+        int zeileA = zeile(TEAM_A[0]);
+        wieImSheetRunner(() -> ziel.entferneMeldung(zeileA));
+        wieImSheetRunner(new SchweizerMeldeListeSheetUpdate(wkingSpreadsheet)::upDateSheet);
+        neuerLaufWieUeberDasMenue();
+        abgleichen();
+        assertThat(konfliktArten()).contains(KonfliktArt.LOKAL_FEHLEND);
+        return idA;
+    }
+
+    /** Jeder Menüaufruf baut ein frisches Mapping; was ein Lauf nur vom Server weiß, ist dann vergessen. */
+    private void neuerLaufWieUeberDasMenue() {
+        mapping = new PtmOnlineRegistrationMapping(wkingSpreadsheet, system, spieltagNr);
+    }
+
+    private TournamentSyncClient gebundenerClient() throws Exception {
+        return new TournamentSyncClient(server.zugangsdaten().baseUrl(), server.zugangsdaten().apiKey(),
+                mapping.getSyncDocumentId().orElseThrow(), mapping.getLeaseToken().orElseThrow());
     }
 
     @Test

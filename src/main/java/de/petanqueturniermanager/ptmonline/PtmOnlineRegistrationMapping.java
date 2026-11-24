@@ -287,18 +287,31 @@ public class PtmOnlineRegistrationMapping {
         syncSheet.setZusaetze(zusatzProUuid);
     }
 
-    /** Schreibt mehrere neue Zuordnungen in einem Zugriff (siehe {@link PtmOnlineSyncSheet#addMappings}). */
+    /**
+     * Schreibt mehrere neue Zuordnungen in einem Zugriff (siehe {@link PtmOnlineSyncSheet#addMappings}). Eine lokale
+     * Meldung, die schon eine Online-Anmeldung hat, behält sie. Steht die Meldung bereits im Sync-Blatt, fehlt aber
+     * ihre Online-ID (z.&nbsp;B. Nr-Zelle überschrieben), wird nur die ID samt Ausführungsrevision nachgetragen.
+     */
     public void addMappings(List<NeueZuordnung> zuordnungen) throws GenerateException {
-        Set<String> vorhanden = syncSheet.getLokaleUuids();
+        Set<String> imSyncBlatt = syncSheet.getLokaleUuids();
+        Map<String, String> bestehendeIds = getOnlineIdsProUuid();
         syncSheet.addMappings(zuordnungen);
-        // Wie im Sync-Blatt: Eine schon zugeordnete lokale Meldung behält ihre Online-Anmeldung.
         Map<String, Optional<String>> neueIds = new LinkedHashMap<>();
+        Map<String, Integer> nachgetrageneRevisionen = new LinkedHashMap<>();
         for (NeueZuordnung zuordnung : zuordnungen) {
-            if (!vorhanden.contains(zuordnung.lokaleUuid())) {
-                neueIds.putIfAbsent(zuordnung.lokaleUuid(), Optional.of(zuordnung.onlineId()));
+            String uuid = zuordnung.lokaleUuid();
+            if (bestehendeIds.containsKey(uuid) || neueIds.containsKey(uuid)) {
+                continue;
+            }
+            neueIds.put(uuid, Optional.of(zuordnung.onlineId()));
+            if (imSyncBlatt.contains(uuid)) {
+                nachgetrageneRevisionen.put(uuid, Math.max(1, zuordnung.executionRevision()));
             }
         }
         setzeInNrZellen(neueIds);
+        if (!nachgetrageneRevisionen.isEmpty()) {
+            syncSheet.setExecutionRevisionen(nachgetrageneRevisionen);
+        }
     }
 
     /**

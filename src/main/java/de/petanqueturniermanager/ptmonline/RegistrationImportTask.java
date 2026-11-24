@@ -323,8 +323,12 @@ public final class RegistrationImportTask {
         mapping.ergaenzeAusOffenenAuftraegen(bestand);
         // Entscheidungen der vorigen Konfliktliste (A-29) wirken in diesem Lauf; die Liste wird am Ende neu gebildet.
         KonfliktSammlung sammlung = KonfliktSammlung.mit(mapping.konfliktListe().leseEntscheidungen());
+        // Vor den Entscheidungen abrufen: Die Zuordnung lokal gelöschter Meldungen kennt nur der Server – ohne sie
+        // fehlen diese Fälle beim Anwenden, und „online stornieren“/„nur lokal entfernen“ bliebe wirkungslos.
+        Instant abgleichStart = Instant.now();
+        AnmeldungsAbruf abruf = holeAnmeldungen(config, mapping, tournamentId, fortschritt, sammlung);
         wendeLokaleEntscheidungenAn(ziel, mapping, bestand, tournamentId, sammlung);
-        ImportLauf importLauf = fuehreImportDurch(config, mapping, tournamentId, ziel, aktualisierung, fortschritt,
+        ImportLauf importLauf = fuehreImportDurch(abruf, abgleichStart, mapping, ziel, aktualisierung, fortschritt,
                 sammlung);
         fortschritt.pruefeAbbruch();
         fortschritt.status(I18n.get("ptmonline.fortschritt.lokale_meldungen_anlegen"));
@@ -633,26 +637,34 @@ public final class RegistrationImportTask {
     }
 
     /**
-     * Holt neue Online-Anmeldungen, schreibt sie in die Meldeliste und aktualisiert das Mapping.
-     * Synchron und blockierend; läuft innerhalb des {@link PtmOnlineAbgleichSheetRunner}, nie auf dem
-     * LO-Main-Thread.
+     * Ruft die Online-Anmeldungen ab und ergänzt die Zuordnung lokal gelöschter Meldungen, die nur der Server kennt
+     * (die Nr-Zelle ist mit der Zeile weg). Synchron und blockierend; läuft innerhalb des
+     * {@link PtmOnlineAbgleichSheetRunner}, nie auf dem LO-Main-Thread.
      */
-    private static ImportLauf fuehreImportDurch(LibreOfficePtmOnlineSpeicher.Zugangsdaten config,
-            PtmOnlineRegistrationMapping mapping, String tournamentId, MeldelisteZiel ziel,
-            MeldelistenAktualisierung aktualisierung, AbgleichFortschritt fortschritt, KonfliktSammlung sammlung)
-            throws IOException, InterruptedException, GenerateException {
+    private static AnmeldungsAbruf holeAnmeldungen(LibreOfficePtmOnlineSpeicher.Zugangsdaten config,
+            PtmOnlineRegistrationMapping mapping, String tournamentId, AbgleichFortschritt fortschritt,
+            KonfliktSammlung sammlung) throws IOException, InterruptedException, GenerateException {
         TournamentSyncClient client = new TournamentSyncClient(config.baseUrl(), config.apiKey());
-        Instant abgleichStart = Instant.now();
         // Mit Entscheidungen alle Anmeldungen holen: eine nach dem Start eingegangene liefert der since-Abruf sonst
         // nicht mehr, obwohl die Turnierleitung sie übernehmen will.
         Instant since = sammlung.hatEntscheidungen() ? Instant.EPOCH : mapping.getAbrufCursor().orElse(Instant.EPOCH);
         fortschritt.status(I18n.get("ptmonline.fortschritt.anmeldungen_abrufen"));
         AnmeldungsAbruf abruf = client.fetchAbgleich(tournamentId, since);
-        List<RegistrationDto> alle = abruf.registrations();
-        // Zuordnung lokal gelöschter Meldungen kennt nur der Server (die Nr-Zelle ist mit der Zeile weg).
-        mapping.ergaenzeAusServer(alle);
-        fortschritt.status(I18n.get("ptmonline.fortschritt.anmeldungen_abgerufen", alle.size()));
+        mapping.ergaenzeAusServer(abruf.registrations());
+        fortschritt.status(I18n.get("ptmonline.fortschritt.anmeldungen_abgerufen", abruf.registrations().size()));
         fortschritt.pruefeAbbruch();
+        return abruf;
+    }
+
+    /**
+     * Schreibt die abgerufenen neuen Online-Anmeldungen in die Meldeliste und aktualisiert das Mapping.
+     *
+     * @param abgleichStart Zeitpunkt vor dem Abruf; wird bei vollständigem Import als {@code lastSync} gespeichert
+     */
+    private static ImportLauf fuehreImportDurch(AnmeldungsAbruf abruf, Instant abgleichStart,
+            PtmOnlineRegistrationMapping mapping, MeldelisteZiel ziel, MeldelistenAktualisierung aktualisierung,
+            AbgleichFortschritt fortschritt, KonfliktSammlung sammlung) throws InterruptedException, GenerateException {
+        List<RegistrationDto> alle = abruf.registrations();
         StatusUebernahme status = uebernehmeOnlineStatus(ziel, mapping, alle);
         if (!status.entfernt().isEmpty() && !ziel.istSpielerpool()) {
             // Entfernte Meldungen hinterlassen leere Zeilen; erst das Aktualisieren schließt die Lücken, sonst sieht der
