@@ -90,8 +90,8 @@ public final class PtmOnlineAbschlussRunner extends SheetRunner implements PtmOn
     }
 
     /**
-     * Rückfragen: abschließen, Endrangliste veröffentlichen, Teilnehmer benachrichtigen – und bei einem privaten
-     * Turnier ohne Freigabelink, ob er dafür aktiviert werden soll.
+     * Rückfragen: abschließen, Endrangliste veröffentlichen, Teilnehmer benachrichtigen. Bei einem privaten Turnier
+     * ohne Freigabelink wird dieser für die Benachrichtigung ohne weitere Rückfrage aktiviert.
      */
     private Optional<Wahl> frageNach(TournamentSyncClient client, String tournamentId)
             throws GenerateException, InterruptedException {
@@ -108,8 +108,8 @@ public final class PtmOnlineAbschlussRunner extends SheetRunner implements PtmOn
 
     /**
      * Teilnehmer eines privaten Turniers öffnen die Endrangliste aus der Benachrichtigung nur über den Freigabelink.
-     * PTM-Online aktiviert ihn nie stillschweigend; fehlt er, wird gefragt. Ohne Zustimmung wird ohne Benachrichtigung
-     * abgeschlossen, statt den ganzen Abschluss scheitern zu lassen.
+     * PTM-Online aktiviert ihn nie stillschweigend; die Turnierleitung hat der Benachrichtigung aber schon zugestimmt,
+     * daher aktiviert das Plugin ihn hier ausdrücklich, falls er fehlt.
      *
      * @return ob benachrichtigt werden soll
      */
@@ -125,10 +125,6 @@ public final class PtmOnlineAbschlussRunner extends SheetRunner implements PtmOn
         }
         if (!freigabe.fehlt()) {
             return true;
-        }
-        if (!ja(MessageBoxTypeEnum.QUESTION_YES_NO, I18n.get("ptmonline.frage.abschluss.freigabelink"))) {
-            getLogger().info("PTM-Online: Freigabelink nicht gewünscht, Abschluss ohne Benachrichtigung");
-            return false;
         }
         processBox().info(I18n.get("ptmonline.fortschritt.abschluss.freigabelink"));
         try {
