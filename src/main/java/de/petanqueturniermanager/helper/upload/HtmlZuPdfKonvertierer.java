@@ -74,6 +74,10 @@ public class HtmlZuPdfKonvertierer {
             dokument("/System/Library/Fonts/Supplemental/Hiragino Sans GB.ttc", 400),
             dokument("/System/Library/Fonts/ヒラギノ角ゴシック W3.ttc", 400));
 
+    static {
+        OpenHtmlToPdfProtokoll.nurWarnungenUndFehler();
+    }
+
     private HtmlZuPdfKonvertierer() {
     }
 

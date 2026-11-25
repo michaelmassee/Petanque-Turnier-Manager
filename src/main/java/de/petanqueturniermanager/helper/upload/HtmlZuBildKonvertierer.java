@@ -45,6 +45,10 @@ public class HtmlZuBildKonvertierer {
      */
     private static final int GROSSZUEGIGE_SEITENBREITE_PX = 3500;
 
+    static {
+        OpenHtmlToPdfProtokoll.nurWarnungenUndFehler();
+    }
+
     private HtmlZuBildKonvertierer() {
     }
 
