@@ -46,20 +46,21 @@ Die einheitliche Stoppuhr macht die Gruppe in der Toolbar sofort als zusammengeh
 | m10 Rangliste | `ptm:toolbar_vorrunden_rangliste` | `toolbar-vorrunden-rangliste.png` |
 | m11 Turnier Konfiguration | `ptm:konfiguration_turnier` | `toolbar-konfiguration.png` |
 | m13 Turnieransicht (Kiosk) | `ptm:turnier_modus` | `toolbar-turnier-modus.png` |
-| m15 Webserver starten | `ptm:webserver_starten` | `toolbar-webserver-starten.png` |
-| m16 Webserver stoppen | `ptm:webserver_stoppen` | `toolbar-webserver-stoppen.png` |
-| m17 Webserver-Regie öffnen | `ptm:webserver_regie_oeffnen` | `toolbar-webserver-regie.png` |
-| m18 Turnier-Startseite öffnen | `ptm:webserver_startseite_oeffnen` | `toolbar-webserver-startseite.png` |
-| m20 Neues Turnier in neuer Datei | `ptm:toolbar_neu_in_neuer_datei` | `toolbar-neu-in-neuer-datei.png` |
-| m21 Öffnen | `ptm:toolbar_oeffnen` | `toolbar-oeffnen.png` |
-| m22 Speichern | `.uno:Save` | *LibreOffice-Standard, nicht eigenes Icon* |
-| m23 Drucken | `ptm:toolbar_drucken` | `toolbar-drucken.png` |
-| m24 Druckvorschau | `ptm:toolbar_druckvorschau` | `toolbar-druckvorschau.png` |
-| m25 Als PDF exportieren | `.uno:ExportToPDF` | *LibreOffice-Standard* |
-| m26 Druckbereich | `.uno:DefinePrintArea` | *LibreOffice-Standard* |
-| m28 Spieler-DB → Meldungen | `ptm:spielerdb_in_meldeliste` | `toolbar-spielerdb-meldungen.png` |
-| m30 Verarbeitung abbrechen | `ptm:abbruch` | `toolbar-abbruch.png` |
-| m32 Seitenleiste ein-/ausblenden | `ptm:sidebar_toggle` | `toolbar-sidebar.png` |
+| m14 Ankündigung | `ptm:ankuendigung` | `toolbar-ankuendigung.png` |
+| m16 Webserver starten | `ptm:webserver_starten` | `toolbar-webserver-starten.png` |
+| m17 Webserver stoppen | `ptm:webserver_stoppen` | `toolbar-webserver-stoppen.png` |
+| m18 Webserver-Regie öffnen | `ptm:webserver_regie_oeffnen` | `toolbar-webserver-regie.png` |
+| m19 Turnier-Startseite öffnen | `ptm:webserver_startseite_oeffnen` | `toolbar-webserver-startseite.png` |
+| m21 Neues Turnier in neuer Datei | `ptm:toolbar_neu_in_neuer_datei` | `toolbar-neu-in-neuer-datei.png` |
+| m22 Öffnen | `ptm:toolbar_oeffnen` | `toolbar-oeffnen.png` |
+| m23 Speichern | `.uno:Save` | *LibreOffice-Standard, nicht eigenes Icon* |
+| m24 Drucken | `ptm:toolbar_drucken` | `toolbar-drucken.png` |
+| m25 Druckvorschau | `ptm:toolbar_druckvorschau` | `toolbar-druckvorschau.png` |
+| m26 Als PDF exportieren | `.uno:ExportToPDF` | *LibreOffice-Standard* |
+| m27 Druckbereich | `.uno:DefinePrintArea` | *LibreOffice-Standard* |
+| m29 Spieler-DB → Meldungen | `ptm:spielerdb_in_meldeliste` | `toolbar-spielerdb-meldungen.png` |
+| m31 Verarbeitung abbrechen | `ptm:abbruch` | `toolbar-abbruch.png` |
+| m33 Seitenleiste ein-/ausblenden | `ptm:sidebar_toggle` | `toolbar-sidebar.png` |
 
 ### Spieltag-Toolbar (`Addons_Z3_SpieltagToolbar.xcu`)
 

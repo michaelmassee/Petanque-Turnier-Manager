@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+
+  <!-- Griff -->
+  <path d="M 18 40 L 22 54 L 29 54 L 26 41" fill="#1F2937" stroke="#1F2937" stroke-width="1.5"
+        stroke-linejoin="round"/>
+  <!-- Trichter -->
+  <path d="M 14 24 L 40 10 L 40 50 L 14 38 Z" fill="#F59E0B" stroke="#1F2937" stroke-width="1.5"
+        stroke-linejoin="round"/>
+  <!-- Mundstück -->
+  <rect x="6" y="23" width="9" height="16" rx="2" fill="#F3F4F6" stroke="#1F2937" stroke-width="1.5"/>
+  <!-- Schallwellen -->
+  <path d="M 47 22 Q 52 30 47 38" fill="none" stroke="#2563EB" stroke-width="2.25" stroke-linecap="round"/>
+  <path d="M 53 16 Q 61 30 53 44" fill="none" stroke="#2563EB" stroke-width="2.25" stroke-linecap="round"/>
+
+</svg>

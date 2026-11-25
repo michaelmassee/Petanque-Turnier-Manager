@@ -2248,7 +2248,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	// Workaround tdf#172207: URL-Commands die NUR auf der PétTurnMngr-Toolbar
 	// vorkommen (toolbar_*-Prefix) werden permanent als enabled zurückgegeben.
 	// Damit erscheinen sie nach dem LO-Bug-Trigger nicht „eingefroren disabled".
-	// Geteilte URLs (auch im Menü vorhanden — abbruch, turnier_modus,
+	// Geteilte URLs (auch im Menü vorhanden — abbruch, turnier_modus, ankuendigung,
 	// konfiguration_turnier, spielerdb_in_meldeliste, webserver_*, timer_*)
 	// folgen weiterhin der normalen Logik, weil das Menü ihre State-Genauigkeit
 	// braucht.
@@ -2285,6 +2285,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			CMD_KONFIGURATION_TURNIER,
 			CMD_SPIELERDB_IN_MELDELISTE,
 			CMD_TURNIER_MODUS,
+			CMD_ANKUENDIGUNG,
 			CMD_WEBSERVER_STARTEN,
 			CMD_WEBSERVER_STOPPEN,
 			CMD_WEBSERVER_REGIE_OEFFNEN,

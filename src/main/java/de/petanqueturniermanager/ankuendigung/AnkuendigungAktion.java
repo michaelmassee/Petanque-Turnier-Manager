@@ -11,6 +11,9 @@ import de.petanqueturniermanager.comp.GlobalProperties;
 import de.petanqueturniermanager.comp.GlobalProperties.WhatsAppChatEintrag;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
+import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.msgbox.MessageBox;
+import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.whatsapp.WhatsAppPostRunner;
 
 /**
@@ -27,6 +30,13 @@ public final class AnkuendigungAktion {
     /** Muss auf dem LO-Main-Thread laufen (modaler Dialog, Properties-Event). */
     public static void ausfuehren(WorkingSpreadsheet ws) throws com.sun.star.uno.Exception {
         DocumentPropertiesHelper docProps = new DocumentPropertiesHelper(ws);
+        TurnierSystem ts = docProps.getTurnierSystemAusDocument();
+        if (ts == TurnierSystem.KEIN) {
+            // Der Toolbar-Button ist wegen tdf#172207 immer klickbar → hier abfangen.
+            MessageBox.from(ws, MessageBoxTypeEnum.INFO_OK).caption(I18n.get("ankuendigung.titel"))
+                    .message(I18n.get("msg.text.kein.turnier")).show();
+            return;
+        }
         Optional<AnkuendigungDialog.Eingabe> eingabe = new AnkuendigungDialog(ws, Ankuendigung.lese(ws),
                 waehlbareChats(), docProps.getStringProperty(WhatsAppPostRunner.PROP_LETZTER_WHATSAPP_CHAT, ""),
                 docProps.getBooleanProperty(PROP_WHATSAPP_VERSAND, false)).zeige();
@@ -38,7 +48,6 @@ public final class AnkuendigungAktion {
         if (!text.isEmpty()) {
             merkeWhatsAppWahl(docProps, chat);
         }
-        TurnierSystem ts = docProps.getTurnierSystemAusDocument();
         new AnkuendigungVersandRunner(ws, ts, text, chat.orElse(null)).start();
     }
 

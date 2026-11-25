@@ -674,6 +674,23 @@ ICONS["toolbar-webserver-startseite"] = svg(f'''
 ''')
 
 # ============================================================
+# 42. ANKÜNDIGUNG — Megafon mit Schallwellen (Webserver, PTM-Online, WhatsApp)
+# ============================================================
+ICONS["toolbar-ankuendigung"] = svg(f'''
+  <!-- Griff -->
+  <path d="M 18 40 L 22 54 L 29 54 L 26 41" fill="{C['ink']}" stroke="{C['ink']}" stroke-width="{S}"
+        stroke-linejoin="round"/>
+  <!-- Trichter -->
+  <path d="M 14 24 L 40 10 L 40 50 L 14 38 Z" fill="{C['cochon']}" stroke="{C['ink']}" stroke-width="{S}"
+        stroke-linejoin="round"/>
+  <!-- Mundstück -->
+  <rect x="6" y="23" width="9" height="16" rx="2" fill="{C['paper2']}" stroke="{C['ink']}" stroke-width="{S}"/>
+  <!-- Schallwellen -->
+  <path d="M 47 22 Q 52 30 47 38" fill="none" stroke="{C['info']}" stroke-width="{S*1.5}" stroke-linecap="round"/>
+  <path d="M 53 16 Q 61 30 53 44" fill="none" stroke="{C['info']}" stroke-width="{S*1.5}" stroke-linecap="round"/>
+''')
+
+# ============================================================
 # SCHREIBEN
 # ============================================================
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "svg")
