@@ -92,6 +92,22 @@ class PtmOnlineMeldelistenSyncTest {
         });
     }
 
+    /**
+     * Nach „Zuordnung vom Server wiederherstellen“ ohne bekannten Online-Teamnamen: Ein Partnerwechsel in einer
+     * Meldeliste ohne Teamname-Spalte darf ihn online nicht löschen. Die Änderung wartet, bis der Import den
+     * Teamnamen nachgetragen hat.
+     */
+    @Test
+    void partnerwechselOhneTeamnameSpalteUndUnbekanntenTeamnamenLoeschtIhnNicht() {
+        Zuordnungen zuordnungen = zuordnungen(Map.of(UUID_A, ONLINE_A), Map.of(UUID_A, new ZuordnungsZusatz(
+                AbgeglicheneBesetzung.von(List.of(new AbgeglicheneBesetzung.Person("Anna", "Adler", null),
+                        new AbgeglicheneBesetzung.Person("Ben", "Berg", null))).alsText(), "", "")), Set.of());
+        LokaleMeldung partnerGewechselt = new LokaleMeldung(2, UUID_A,
+                List.of(spieler("Anna", "Adler", 2), spieler("Bodo", "Brand", 2)), null, true);
+
+        assertThat(ermittle(List.of(partnerGewechselt), zuordnungen).aktionen()).isEmpty();
+    }
+
     @Test
     void geaenderterTeamnameGehtOnline() {
         List<Aktion> aktionen = ermittle(List.of(meldungA("Anna", "Adler", "Carreau-Club")),

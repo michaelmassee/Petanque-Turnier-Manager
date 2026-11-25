@@ -315,6 +315,11 @@ final class PtmOnlineMeldelistenSync {
         if (zuletzt.istLeer()) {
             return Optional.empty();
         }
+        // Ohne Teamname-Spalte geht der zuletzt abgeglichene Teamname zurück. Ist er unbekannt, löschte die Änderung
+        // ihn online (PTM-Online übernimmt den Teamnamen immer); der nächste Import trägt ihn nach.
+        if (meldung.teamname() == null && zuletztTeamname.isEmpty()) {
+            return Optional.empty();
+        }
         List<AbgeglicheneBesetzung.Person> lokal = PtmOnlineMeldungsInhalt.personen(meldung.spieler());
         boolean besetzungGeaendert = !AbgeglicheneBesetzung.von(lokal).namensSchluessel()
                 .equals(zuletzt.namensSchluessel());
@@ -323,8 +328,7 @@ final class PtmOnlineMeldelistenSync {
         if (!besetzungGeaendert && !teamnameGeaendert) {
             return Optional.empty();
         }
-        // Ohne Teamname-Spalte geht der zuletzt abgeglichene zurück, sonst löschte PTM-Online den Online-Teamnamen.
-        String teamname = meldung.teamname() != null ? meldung.teamname() : zuletztTeamname.orElse(null);
+        String teamname = meldung.teamname() != null ? meldung.teamname() : zuletztTeamname.orElseThrow();
         return Optional.of(new Aenderung(meldung.uuid(), onlineId,
                 PtmOnlineMeldungsInhalt.anmeldung(formation, meldung.spieler(), teamname,
                         PtmOnlineMeldungsInhalt.verein(meldung.spieler(), vereinsspalte, zuletzt)),
