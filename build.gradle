@@ -322,48 +322,88 @@ tasks.register('cleanCache', Delete) {
     delete "dist/.ooo-debug/user/uno_packages/cache"
 }
 
-def defaultLibreOfficeUserDir() {
-    new File(System.getProperty('user.home'), '.config/libreoffice/4/user')
+// LO-Benutzerprofil; für Tests des Purge-Tasks per -Pptm.loUserDir=<Verzeichnis> überschreibbar.
+def libreOfficeUserDir(String ueberschreibung) {
+    ueberschreibung ? new File(ueberschreibung) : new File(System.getProperty('user.home'), '.config/libreoffice/4/user')
 }
 
-def defaultLibreOfficeUserPackagesCacheDir() {
-    new File(defaultLibreOfficeUserDir(), 'uno_packages/cache')
+/*
+ * Extension-Repositories im LO-Benutzerprofil, die der Purge-Task prüft:
+ * - uno_packages/cache: alle Benutzer-Erweiterungen (Verzeichnis uno_packages.pmap, Pakete in uno_packages/lu*.tmp_)
+ * - extensions/tmp: temporäres Repository von unopkg (extensions.pmap, Pakete in extensions/lu*.tmp_). Ein dort
+ *   zurückgebliebener PTM-Eintrag, dessen Paketordner fehlt, lässt jedes weitere "unopkg add" mit
+ *   "Error binding package ... NOT_EXISTING" scheitern.
+ */
+def libreOfficeExtensionRepositories(File userDir) {
+    [[verzeichnis: new File(userDir, 'uno_packages/cache'), pmap: 'uno_packages.pmap', pakete: 'uno_packages'],
+     [verzeichnis: new File(userDir, 'extensions/tmp'), pmap: 'extensions.pmap', pakete: 'extensions']]
 }
 
-// Temporäres Extension-Repository von unopkg. Ein dort zurückgebliebener PTM-Eintrag in extensions.pmap, dessen
-// lu*.tmp_-Ordner fehlt, lässt jedes weitere "unopkg add" mit "Error binding package ... NOT_EXISTING" scheitern.
-def defaultLibreOfficeTmpExtensionsDir() {
-    new File(defaultLibreOfficeUserDir(), 'extensions/tmp')
+/*
+ * Liest eine LO-PersistentMap (desktop/source/deployment/dp_persmap.cxx): nach "Pmp1" Zeilenpaare aus Schlüssel und
+ * Wert, abgeschlossen durch eine Leerzeile. Schlüssel aktiver Pakete ist 0xFF + Extension-ID, der Wert besteht aus
+ * 0xFF-getrennten Feldern (temporärer Paketname, Dateiname, Medientyp, Version, ...).
+ * @return Extension-ID (bzw. Altschlüssel) -> Wertfelder; leer bei fehlender oder fremd formatierter Datei
+ */
+def leseExtensionPmap(File pmap) {
+    if (!pmap.isFile()) {
+        return [:]
+    }
+    String inhalt = new String(pmap.bytes, java.nio.charset.StandardCharsets.ISO_8859_1)
+    if (!inhalt.startsWith('Pmp1')) {
+        return [:]
+    }
+    String[] zeilen = inhalt.substring(4).split('\n', -1)
+    Map<String, List<String>> eintraege = [:]
+    for (int i = 0; i + 1 < zeilen.length && !zeilen[i].isEmpty(); i += 2) {
+        eintraege[zeilen[i].replaceFirst('^\u00FF', '')] = zeilen[i + 1].split('\u00FF', -1) as List<String>
+    }
+    eintraege
 }
 
-def fileContainsAnyMarker(File file, List<String> markers) {
-    if (!file.isFile()) {
+def istPtmPaket(String schluessel, List<String> felder, String extensionId, String dateiPraefix) {
+    schluessel == extensionId || felder.any { feld -> feld.startsWith(dateiPraefix) }
+}
+
+/** IDs fremder Erweiterungen: Einträge im Repository-Verzeichnis und Paketordner mit fremden Dateien. */
+def fremdeExtensions(Map repository, String extensionId, String dateiPraefix) {
+    Set<String> fremde = new TreeSet<>()
+    leseExtensionPmap(new File(repository.verzeichnis, repository.pmap)).each { schluessel, felder ->
+        if (!istPtmPaket(schluessel, felder, extensionId, dateiPraefix)) {
+            fremde << schluessel
+        }
+    }
+    new File(repository.verzeichnis, repository.pakete).listFiles()?.findAll { it.isDirectory() }?.each { ordner ->
+        ordner.listFiles()?.findAll { !it.name.startsWith(dateiPraefix) }?.each { datei ->
+            fremde << "${ordner.name}/${datei.name}".toString()
+        }
+    }
+    fremde
+}
+
+/*
+ * PTM-Spuren im Repository: Eintrag im Repository-Verzeichnis oder in den Registry-Metadaten der Backends.
+ * log.txt zählt bewusst nicht – es ist ein fortlaufendes Protokoll und nennt PTM nach der ersten Installation immer.
+ */
+def hatPtmSpuren(Map repository, String extensionId, String dateiPraefix) {
+    boolean imVerzeichnis = leseExtensionPmap(new File(repository.verzeichnis, repository.pmap)).any { schluessel, felder ->
+        istPtmPaket(schluessel, felder, extensionId, dateiPraefix)
+    }
+    if (imVerzeichnis) {
+        return true
+    }
+    File registry = new File(repository.verzeichnis, 'registry')
+    if (!registry.isDirectory()) {
         return false
     }
-    String content = new String(file.bytes, java.nio.charset.StandardCharsets.ISO_8859_1)
-    markers.any { marker -> content.contains(marker) }
-}
-
-def extensionCacheMetadataContainsAnyMarker(File directory, List<String> markers) {
-    if (!directory.exists()) {
-        return false
-    }
-    boolean found = false
-    directory.eachFileRecurse { file ->
-        if (found || !file.isFile()) {
-            return
-        }
-        String fileName = file.name
-        boolean isLibreOfficeExtensionMetadata = fileName == 'uno_packages.pmap'
-                || fileName == 'extensions.pmap'
-                || fileName == 'log.txt'
-                || fileName == 'backenddb.xml'
-                || fileName.endsWith('properties')
-        if (isLibreOfficeExtensionMetadata && fileContainsAnyMarker(file, markers)) {
-            found = true
+    boolean gefunden = false
+    registry.eachFileRecurse { datei ->
+        if (!gefunden && datei.isFile() && (datei.name == 'backenddb.xml' || datei.name.endsWith('properties'))) {
+            String inhalt = new String(datei.bytes, java.nio.charset.StandardCharsets.ISO_8859_1)
+            gefunden = inhalt.contains(extensionId) || inhalt.contains(dateiPraefix)
         }
     }
-    found
+    gefunden
 }
 
 tasks.register('purgeBrokenLibreOfficePtmExtensionCache') {
@@ -372,14 +412,22 @@ tasks.register('purgeBrokenLibreOfficePtmExtensionCache') {
     dependsOn 'uninstallExtension'
     mustRunAfter 'uninstallExtension'
 
+    String userDirUeberschreibung = findProperty('ptm.loUserDir')
     doLast {
-        // Läuft nach der Deinstallation: Jede verbliebene PTM-Spur ist eine Altlast.
-        List<String> markers = [extensionId, project.name]
-        [defaultLibreOfficeUserPackagesCacheDir(), defaultLibreOfficeTmpExtensionsDir()].each { File verzeichnis ->
-            if (extensionCacheMetadataContainsAnyMarker(verzeichnis, markers)) {
-                println "Bereinige LibreOffice-Extension-Verzeichnis mit PTM-Altlasten: ${verzeichnis}"
-                delete verzeichnis
+        // Läuft nach der Deinstallation: Jede verbliebene PTM-Spur ist eine Altlast. Ein Repository wird nur ganz
+        // entfernt, wenn darin keine fremde Erweiterung liegt – sonst gingen andere Benutzer-Erweiterungen verloren.
+        libreOfficeExtensionRepositories(libreOfficeUserDir(userDirUeberschreibung)).each { Map repository ->
+            if (!hatPtmSpuren(repository, extensionId, project.name)) {
+                return
             }
+            Set<String> fremde = fremdeExtensions(repository, extensionId, project.name)
+            if (fremde) {
+                logger.warn("PTM-Altlasten in ${repository.verzeichnis}, aber auch fremde Erweiterungen ${fremde}: "
+                        + 'nicht bereinigt. Bei Installationsfehlern PTM-Einträge dort von Hand entfernen.')
+                return
+            }
+            println "Bereinige LibreOffice-Extension-Verzeichnis mit PTM-Altlasten: ${repository.verzeichnis}"
+            delete repository.verzeichnis
         }
     }
 }
