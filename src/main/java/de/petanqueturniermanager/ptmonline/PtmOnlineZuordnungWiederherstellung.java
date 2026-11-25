@@ -24,9 +24,9 @@ import de.petanqueturniermanager.spielerdb.MeldelisteZiel;
  * Baut fehlende Zuordnungen lokale UUID → Online-ID ausschließlich aus dem Mapping des Servers wieder auf (T-21). Nur
  * UUIDs, die in der Meldeliste stehen, werden zugeordnet – nie per Name, nie blind einer Zeile.
  * <p>
- * Der zuletzt abgeglichene Teamname kommt aus den Online-Anmeldungen (das Mapping liefert ihn nicht). Ohne ihn
- * schickte der Meldelisten-Abgleich einer Meldeliste ohne Teamname-Spalte bei der nächsten Änderung einen leeren
- * Teamnamen und löschte ihn online.
+ * Der zuletzt abgeglichene Teamname kommt aus dem Mapping. Ohne ihn schickte der Meldelisten-Abgleich einer Meldeliste
+ * ohne Teamname-Spalte bei der nächsten Änderung einen leeren Teamnamen und löschte ihn online. Liefert ein älterer
+ * Server ihn noch nicht, kommt er aus den Online-Anmeldungen.
  */
 public final class PtmOnlineZuordnungWiederherstellung {
 
@@ -50,7 +50,8 @@ public final class PtmOnlineZuordnungWiederherstellung {
         if (fehlende.isEmpty()) {
             return 0;
         }
-        Map<String, String> teamnamen = teamnamenProOnlineId(client.fetchRegistrations(tournamentId, null));
+        Map<String, String> teamnamen = fehlende.stream().allMatch(server -> server.teamName() != null) ? Map.of()
+                : teamnamenProOnlineId(client.fetchRegistrations(tournamentId, null));
         mapping.addMappings(fehlende.stream().map(server -> zuordnung(server, teamnamen)).toList());
         return fehlende.size();
     }
@@ -58,7 +59,8 @@ public final class PtmOnlineZuordnungWiederherstellung {
     /**
      * Zuordnung aus dem Server-Mapping samt zuletzt abgeglichenem Teamnamen.
      *
-     * @param teamnamen gespeicherter Teamname-Stand je Online-ID; fehlt die Anmeldung, bleibt er unbekannt
+     * @param teamnamen gespeicherter Teamname-Stand je Online-ID, nur für ein Mapping ohne Teamnamen (älterer Server);
+     *                  fehlt die Anmeldung auch dort, bleibt er unbekannt
      */
     static NeueZuordnung zuordnung(ServerZuordnungDto server, Map<String, String> teamnamen) {
         String name = (StringUtils.defaultString(server.firstName()) + " "
@@ -66,7 +68,8 @@ public final class PtmOnlineZuordnungWiederherstellung {
         return new NeueZuordnung(server.localRegistrationUuid(), server.onlineRegistrationId(), server.revision(),
                 name, OnlineAnmeldeStatus.anzeige(server.status()), "", "", server.status(),
                 AbgeglicheneBesetzung.ausOnline(server.personen(), server.club()).alsText(), "",
-                teamnamen.getOrDefault(server.onlineRegistrationId(), TEAMNAME_UNBEKANNT));
+                server.teamName() != null ? AbgeglichenerTeamname.alsText(server.teamName())
+                        : teamnamen.getOrDefault(server.onlineRegistrationId(), TEAMNAME_UNBEKANNT));
     }
 
     /** Gespeicherter Teamname-Stand je Online-ID ({@link AbgeglichenerTeamname#alsText}). */

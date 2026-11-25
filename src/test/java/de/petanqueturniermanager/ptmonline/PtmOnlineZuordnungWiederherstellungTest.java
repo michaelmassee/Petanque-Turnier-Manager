@@ -18,8 +18,9 @@ import de.petanqueturniermanager.ptmonline.dto.RegistrationDto;
 import de.petanqueturniermanager.ptmonline.dto.ServerZuordnungDto;
 
 /**
- * Wiederherstellung der Zuordnung vom Server (T-21): Der zuletzt abgeglichene Teamname kommt aus den
- * Online-Anmeldungen, sonst löschte die nächste Änderung einer Meldeliste ohne Teamname-Spalte ihn online.
+ * Wiederherstellung der Zuordnung vom Server (T-21): Der zuletzt abgeglichene Teamname kommt aus dem Mapping, bei
+ * einem älteren Server ohne das Feld aus den Online-Anmeldungen. Sonst löschte die nächste Änderung einer Meldeliste
+ * ohne Teamname-Spalte ihn online.
  */
 class PtmOnlineZuordnungWiederherstellungTest {
 
@@ -28,11 +29,26 @@ class PtmOnlineZuordnungWiederherstellungTest {
     private static final String LOKALE_UUID = "11111111-2222-4333-8444-555555555555";
 
     @Test
-    void wiederhergestellteZuordnungKenntDenOnlineTeamnamen() {
+    void teamnameKommtAusDemMapping() {
+        NeueZuordnung zuordnung = PtmOnlineZuordnungWiederherstellung.zuordnung(serverZuordnung("Boule-Asse"),
+                Map.of());
+
+        assertThat(AbgeglichenerTeamname.lese(zuordnung.teamname())).contains("Boule-Asse");
+    }
+
+    @Test
+    void mappingOhneTeamnamenGiltAlsOhneTeamnamenAbgeglichen() {
+        NeueZuordnung zuordnung = PtmOnlineZuordnungWiederherstellung.zuordnung(serverZuordnung(""), Map.of());
+
+        assertThat(AbgeglichenerTeamname.lese(zuordnung.teamname())).contains("");
+    }
+
+    @Test
+    void aeltererServerOhneTeamnamenNimmtIhnAusDenAnmeldungen() {
         Map<String, String> teamnamen = PtmOnlineZuordnungWiederherstellung
                 .teamnamenProOnlineId(List.of(anmeldung(ONLINE_ID, "Boule-Asse")));
 
-        NeueZuordnung zuordnung = PtmOnlineZuordnungWiederherstellung.zuordnung(serverZuordnung(), teamnamen);
+        NeueZuordnung zuordnung = PtmOnlineZuordnungWiederherstellung.zuordnung(serverZuordnung(null), teamnamen);
 
         assertThat(AbgeglichenerTeamname.lese(zuordnung.teamname())).contains("Boule-Asse");
         assertThat(zuordnung.onlineId()).isEqualTo(ONLINE_ID);
@@ -40,28 +56,30 @@ class PtmOnlineZuordnungWiederherstellungTest {
     }
 
     @Test
-    void anmeldungOhneTeamnamenGiltAlsOhneTeamnamenAbgeglichen() {
+    void aeltererServerUndAnmeldungOhneTeamnamenGiltAlsOhneTeamnamenAbgeglichen() {
         Map<String, String> teamnamen = PtmOnlineZuordnungWiederherstellung
                 .teamnamenProOnlineId(List.of(anmeldung(ONLINE_ID, null)));
 
-        NeueZuordnung zuordnung = PtmOnlineZuordnungWiederherstellung.zuordnung(serverZuordnung(), teamnamen);
+        NeueZuordnung zuordnung = PtmOnlineZuordnungWiederherstellung.zuordnung(serverZuordnung(null), teamnamen);
 
         assertThat(AbgeglichenerTeamname.lese(zuordnung.teamname())).contains("");
     }
 
     @Test
-    void fehlendeAnmeldungLaesstDenTeamnamenUnbekannt() {
-        NeueZuordnung zuordnung = PtmOnlineZuordnungWiederherstellung.zuordnung(serverZuordnung(), Map.of());
+    void aeltererServerUndFehlendeAnmeldungLassenDenTeamnamenUnbekannt() {
+        NeueZuordnung zuordnung = PtmOnlineZuordnungWiederherstellung.zuordnung(serverZuordnung(null), Map.of());
 
         assertThat(AbgeglichenerTeamname.lese(zuordnung.teamname())).isEmpty();
     }
 
-    private static ServerZuordnungDto serverZuordnung() {
+    /** @param teamname {@code null}: Feld fehlt wie bei einem älteren Server */
+    private static ServerZuordnungDto serverZuordnung(@Nullable String teamname) {
+        String teamnameFeld = teamname == null ? "" : ", \"teamName\": \"%s\"".formatted(teamname);
         return GSON.fromJson("""
                 {"onlineRegistrationId": "%s", "localRegistrationUuid": "%s", "status": "confirmed",
                  "firstName": "Anna", "lastName": "Adler", "partnerFirstName": "Ben", "partnerLastName": "Berg",
-                 "executionRevision": 2, "persons": [], "club": null}
-                """.formatted(ONLINE_ID, LOKALE_UUID), ServerZuordnungDto.class);
+                 "executionRevision": 2, "persons": [], "club": null%s}
+                """.formatted(ONLINE_ID, LOKALE_UUID, teamnameFeld), ServerZuordnungDto.class);
     }
 
     private static RegistrationDto anmeldung(String id, @Nullable String teamname) {
